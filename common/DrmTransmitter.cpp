@@ -91,10 +91,10 @@ void CDRMTransmitter::InitTransmitter()
 	/* Read parameters */
 	StartParameters(TransmParam);
 
-	/* Defines no of cells, important! */
+	/* Defines number of cells, important! */
 	OFDMCellMapping.Init(TransmParam, CarMapBuf);
 
-	/* Defines No of SDC bits per super-frame */
+	/* Defines number of SDC bits per super-frame */
 	SDCMLCEncoder.Init(TransmParam, SDCMapBuf);
 	
 	MSCMLCEncoder.Init(TransmParam, MLCEncBuf);
@@ -120,7 +120,7 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 
 	/* Use 6.3.6 to set this two parameters! */
 	Param.FACRepitition[0] = 0;
-	Param.FACNoRep = 1;
+	Param.FACNumRep = 1;
 
 	/* Date, time */
 	Param.iDay = 0;
@@ -135,8 +135,8 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 
 	/**************************************************************************/
 	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
-	Param.iNoAudioService = 1;
-	Param.iNoDataService = 0;
+	Param.iNumAudioService = 1;
+	Param.iNumDataService = 0;
 	Param.Service[0].AudioParam.iStreamID = 0;
 
 	Param.MSCPrLe.iPartA = 0;
@@ -152,5 +152,5 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	Param.eSDCCodingScheme = CParameter::CS_2_SM;
 
 	/* Set the number of MSC frames we want to generate */
-	ReadData.SetNoTransBlocks(20);
+	ReadData.SetNumTransBlocks(20);
 }

@@ -43,7 +43,7 @@
 
 /* Definitions ****************************************************************/
 /* In case of random-noise, define number of blocks */
-#define DEFAULT_NO_SIM_BLOCKS		50
+#define DEFAULT_NUM_SIM_BLOCKS		50
 
 
 /* Classes ********************************************************************/
@@ -51,13 +51,13 @@
 class CReadData : public CTransmitterModul<_BINARY, _BINARY>
 {
 public:
-	CReadData() : iNoTransBlocks(DEFAULT_NO_SIM_BLOCKS) {}
+	CReadData() : iNumTransBlocks(DEFAULT_NUM_SIM_BLOCKS) {}
 	virtual ~CReadData() {}
 
-	void SetNoTransBlocks(int iNewNo) {iNoTransBlocks = iNewNo;}
+	void SetNumTransBlocks(int iNewNum) {iNumTransBlocks = iNewNum;}
 
 protected:
-	int iNoTransBlocks;
+	int iNumTransBlocks;
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);
@@ -82,21 +82,21 @@ protected:
 class CGenSimData : public CTransmitterModul<_BINARY, _BINARY>
 {
 public:
-	CGenSimData() : iNoSimBlocks(DEFAULT_NO_SIM_BLOCKS), eCntType(CT_TIME),
-		iCounter(0), iNoErrors(0), strFileName("SimTime.dat"), tiStartTime(0) {}
+	CGenSimData() : iNumSimBlocks(DEFAULT_NUM_SIM_BLOCKS), eCntType(CT_TIME),
+		iCounter(0), iNumErrors(0), strFileName("SimTime.dat"), tiStartTime(0) {}
 	virtual ~CGenSimData() {}
 
 	void SetSimTime(int iNewTi, string strNewFileName);
-	void SetNoErrors(int iNewNE, string strNewFileName);
-	int GetNoErrors() {return iNoErrors;}
+	void SetNumErrors(int iNewNE, string strNewFileName);
+	int GetNumErrors() {return iNumErrors;}
 
 protected:
 	enum ECntType {CT_TIME, CT_ERRORS};
 	ECntType	eCntType;
-	int			iNoSimBlocks;
-	int			iNoErrors;
+	int			iNumSimBlocks;
+	int			iNumErrors;
 	int			iCounter;
-	int			iMinNoBlocks;
+	int			iMinNumBlocks;
 	string		strFileName;
 	time_t		tiStartTime;
 
@@ -112,7 +112,7 @@ public:
 
 protected:
 	int		iIniCnt;
-	int		iNoAccBitErrRate;
+	int		iNumAccBitErrRate;
 	_REAL	rAccBitErrRate;
 
 	virtual void InitInternal(CParameter& ReceiverParam);

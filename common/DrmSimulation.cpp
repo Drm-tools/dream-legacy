@@ -163,10 +163,10 @@ case CParameter::ST_BITERROR:
 
 void CDRMSimulation::Init()
 {
-	/* Defines no of cells, important! */
+	/* Defines number of cells, important! */
 	OFDMCellMapping.Init(Param, CarMapBuf);
 
-	/* Defines No of SDC bits per super-frame */
+	/* Defines number of SDC bits per super-frame */
 	SDCMLCEncoder.Init(Param, SDCMapBuf);
 	
 	MSCMLCEncoder.Init(Param, MLCEncBuf);
@@ -266,7 +266,7 @@ CDRMSimulation::CDRMSimulation()
 
 	/* Use 6.3.6 to set this two parameters! */
 	Param.FACRepitition[0] = 0;
-	Param.FACNoRep = 1;
+	Param.FACNumRep = 1;
 
 	/* Date, time */
 	Param.iDay = 0;
@@ -286,8 +286,8 @@ CDRMSimulation::CDRMSimulation()
 	Param.iTimingOffsTrack = 0;
 
 	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
-	Param.iNoAudioService = 1;
-	Param.iNoDataService = 0;
+	Param.iNumAudioService = 1;
+	Param.iNumDataService = 0;
 	Param.Service[0].AudioParam.iStreamID = 0;
 
 	Param.MSCPrLe.iPartA = 1;

@@ -219,12 +219,12 @@ void CDRMReceiver::DetectAcqui()
 		   detected or WITHOUT successfully received any signal */
 		if (eAcquiState == AS_WITH_SIGNAL)
 		{
-			if (iAcquDetecCnt > NO_FAC_FRA_U_ACQ_WITH)
+			if (iAcquDetecCnt > NUM_FAC_FRA_U_ACQ_WITH)
 				SetInStartMode();
 		}
 		else
 		{
-			if (iAcquDetecCnt > NO_FAC_FRA_U_ACQ_WITHOUT)
+			if (iAcquDetecCnt > NUM_FAC_FRA_U_ACQ_WITHOUT)
 				SetInStartMode();			
 		}
 	}
@@ -401,8 +401,8 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 	Param.MSCPrLe.iHierarch = 0;
 
 	/* Number of audio and data services */
-	Param.iNoAudioService = 0;
-	Param.iNoDataService = 0;
+	Param.iNumAudioService = 0;
+	Param.iNumDataService = 0;
 
 	/* Date, time */
 	Param.iDay = 0;
@@ -474,9 +474,9 @@ void CDRMReceiver::InitsForWaveMode()
 	SyncUsingPil.SetInitFlag();
 	ChannelEstimation.SetInitFlag();
 	OFDMCellDemapping.SetInitFlag();
-	SymbDeinterleaver.SetInitFlag(); // Because of "iNoUsefMSCCellsPerFrame"
-	MSCMLCDecoder.SetInitFlag(); // Because of "iNoUsefMSCCellsPerFrame"
-	SDCMLCDecoder.SetInitFlag(); // Because of "iNoSDCCellsPerSFrame"
+	SymbDeinterleaver.SetInitFlag(); // Because of "iNumUsefMSCCellsPerFrame"
+	MSCMLCDecoder.SetInitFlag(); // Because of "iNumUsefMSCCellsPerFrame"
+	SDCMLCDecoder.SetInitFlag(); // Because of "iNumSDCCellsPerSFrame"
 }
 
 void CDRMReceiver::InitsForSpectrumOccup()
@@ -486,9 +486,9 @@ void CDRMReceiver::InitsForSpectrumOccup()
 	SyncUsingPil.SetInitFlag();
 	ChannelEstimation.SetInitFlag();
 	OFDMCellDemapping.SetInitFlag();
-	SymbDeinterleaver.SetInitFlag(); // Because of "iNoUsefMSCCellsPerFrame"
-	MSCMLCDecoder.SetInitFlag(); // Because of "iNoUsefMSCCellsPerFrame"
-	SDCMLCDecoder.SetInitFlag(); // Because of "iNoSDCCellsPerSFrame"
+	SymbDeinterleaver.SetInitFlag(); // Because of "iNumUsefMSCCellsPerFrame"
+	MSCMLCDecoder.SetInitFlag(); // Because of "iNumUsefMSCCellsPerFrame"
+	SDCMLCDecoder.SetInitFlag(); // Because of "iNumSDCCellsPerSFrame"
 }
 
 

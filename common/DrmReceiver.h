@@ -55,13 +55,13 @@
 
 
 /* Definitions ****************************************************************/
-/* No of FAC frames until the acquisition is activated in case a signal
+/* Number of FAC frames until the acquisition is activated in case a signal
    was successfully decoded */
-#define	NO_FAC_FRA_U_ACQ_WITH			12
+#define	NUM_FAC_FRA_U_ACQ_WITH			12
 
-/* No of FAC frames until the acquisition is activated in case no signal
+/* Number of FAC frames until the acquisition is activated in case no signal
    could be decoded after previous acquisition try */
-#define	NO_FAC_FRA_U_ACQ_WITHOUT		7
+#define	NUM_FAC_FRA_U_ACQ_WITHOUT		7
 
 /* Number of FAC blocks for delayed tracking mode switch (caused by time needed
    for initalizing the channel estimation */

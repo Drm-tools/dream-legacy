@@ -173,14 +173,14 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 void CAMDemodulation::SetFilterTaps(_REAL rNewOffsetNorm)
 {
 	/* Calculate filter taps for complex Hilbert filter */
-	rvecBReal.Init(NO_TAPS_HILB_FILT);
-	rvecBImag.Init(NO_TAPS_HILB_FILT);
+	rvecBReal.Init(NUM_TAPS_HILB_FILT);
+	rvecBImag.Init(NUM_TAPS_HILB_FILT);
 	rvecA.Init(1);
 
 	/* The filter should be on the right of the DC carrier */
 	rNewOffsetNorm += (_REAL) HILB_FILT_BNDWIDTH / 2 / SOUNDCRD_SAMPLE_RATE;
 
-	for (int i = 0; i < NO_TAPS_HILB_FILT; i++)
+	for (int i = 0; i < NUM_TAPS_HILB_FILT; i++)
 	{
 		rvecBReal[i] =
 			fHilLPProt[i] * Cos((_REAL) 2.0 * crPi * rNewOffsetNorm * i);
@@ -193,6 +193,6 @@ void CAMDemodulation::SetFilterTaps(_REAL rNewOffsetNorm)
 	rvecA[0] = (CReal) 1.0;
 
 	/* Init state vector for filtering with zeros */
-	rvecZReal.Init(NO_TAPS_HILB_FILT - 1, (CReal) 0.0);
-	rvecZImag.Init(NO_TAPS_HILB_FILT - 1, (CReal) 0.0);
+	rvecZReal.Init(NUM_TAPS_HILB_FILT - 1, (CReal) 0.0);
+	rvecZImag.Init(NUM_TAPS_HILB_FILT - 1, (CReal) 0.0);
 }

@@ -40,7 +40,7 @@ void CReadData::ProcessDataInternal(CParameter& TransmParam)
 
 	/* Stop simulation if defined number of blocks are generated */
 	iCounter++;
-	if (iCounter == iNoTransBlocks)
+	if (iCounter == iNumTransBlocks)
 		TransmParam.bRunThread = FALSE;
 
 	/* Write your data in (*pvecOutputData)[i],
@@ -55,7 +55,7 @@ void CReadData::ProcessDataInternal(CParameter& TransmParam)
 void CReadData::InitInternal(CParameter& TransmParam)
 {
 	/* Define output block size */
-	iOutputBlockSize = TransmParam.iNoDecodedBitsMSC;
+	iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
 }
 
 /* Receiver */
@@ -99,14 +99,14 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 		try
 		{
 			/* Estimate remaining time */
-			lReTi = (long int) (((_REAL) iNoSimBlocks - iCounter) /
+			lReTi = (long int) (((_REAL) iNumSimBlocks - iCounter) /
 				iCounter * tiElTi);
 
 			/* Store current counter position in file */
 			pFileCurPos = fopen(strFileName.c_str(), "w");
 			fprintf(pFileCurPos,
 				"%d / %d (%d min elapsed, estimated time remaining: %d min)",
-				iCounter, iNoSimBlocks, tiElTi / 60, lReTi / 60);
+				iCounter, iNumSimBlocks, tiElTi / 60, lReTi / 60);
 
 			/* Add current value of BER */
 			fprintf(pFileCurPos, "\n%e %e", TransmParam.rSimSNRdB,
@@ -119,7 +119,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 			/* Catch all file errors to avoid stopping the simulation */
 		}
 
-		if (iCounter == iNoSimBlocks)
+		if (iCounter == iNumSimBlocks)
 		{
 			TransmParam.bRunThread = FALSE;
 			iCounter = 0;
@@ -129,18 +129,19 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 	case CT_ERRORS:
 		try
 		{
-			if (iCounter >= iMinNoBlocks)
+			if (iCounter >= iMinNumBlocks)
 			{
 				/* Estimate remaining time */
-				lReTi =
-					(long int) (((_REAL) iNoErrors - TransmParam.iNoBitErrors) /
-					TransmParam.iNoBitErrors * tiElTi);
+				lReTi = (long int)
+					(((_REAL) iNumErrors - TransmParam.iNumBitErrors) /
+					TransmParam.iNumBitErrors * tiElTi);
 
 				/* Store current counter position in file */
 				pFileCurPos = fopen(strFileName.c_str(), "w");
 				fprintf(pFileCurPos,
 					"%d / %d (%d min elapsed, estimated time remaining: %d min)",
-					TransmParam.iNoBitErrors, iNoErrors, tiElTi / 60, lReTi / 60);
+					TransmParam.iNumBitErrors, iNumErrors,
+					tiElTi / 60, lReTi / 60);
 
 				/* Add current value of BER */
 				fprintf(pFileCurPos, "\n%e %e", TransmParam.rSimSNRdB,
@@ -151,19 +152,23 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 			{
 				/* Estimate remaining time */
 				lReTi = (long int) 
-					(((_REAL) iMinNoBlocks - iCounter) / iCounter * tiElTi);
+					(((_REAL) iMinNumBlocks - iCounter) / iCounter * tiElTi);
 
 				/* Store current counter position in file */
 				pFileCurPos = fopen(strFileName.c_str(), "w");
 				fprintf(pFileCurPos,
-					"%d / %d (%d min elapsed, estimated minimum time remaining: %d min)\n",
-					iCounter, iMinNoBlocks, tiElTi / 60, lReTi / 60);
+					"%d / %d (%d min elapsed, estimated minimum"
+					" time remaining: %d min)\n",
+					iCounter, iMinNumBlocks, tiElTi / 60, lReTi / 60);
 
-				lReTi = (long int) (((_REAL) iNoErrors - TransmParam.iNoBitErrors) /
-					TransmParam.iNoBitErrors * tiElTi);
+				lReTi = (long int)
+					(((_REAL) iNumErrors - TransmParam.iNumBitErrors) /
+					TransmParam.iNumBitErrors * tiElTi);
 				fprintf(pFileCurPos,
-					"%d / %d (%d min elapsed, estimated time remaining: %d min)", 
-					TransmParam.iNoBitErrors, iNoErrors, tiElTi / 60, lReTi / 60);
+					"%d / %d (%d min elapsed, estimated"
+					" time remaining: %d min)",
+					TransmParam.iNumBitErrors, iNumErrors, tiElTi / 60,
+					lReTi / 60);
 
 				/* Add current value of BER */
 				fprintf(pFileCurPos, "\n%e %e", TransmParam.rSimSNRdB,
@@ -177,10 +182,10 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 			/* Catch all file errors to avoid stopping the simulation */
 		}
 
-		if (TransmParam.iNoBitErrors >= iNoErrors)
+		if (TransmParam.iNumBitErrors >= iNumErrors)
 		{
 			/* A minimum simulation time must be elapsed */
-			if (iCounter >= iMinNoBlocks)
+			if (iCounter >= iMinNumBlocks)
 			{
 				TransmParam.bRunThread = FALSE;
 				iCounter = 0;
@@ -220,44 +225,44 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 void CGenSimData::InitInternal(CParameter& TransmParam)
 {
 	/* Define output block size */
-	iOutputBlockSize = TransmParam.iNoDecodedBitsMSC;
+	iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
 
 	/* Minimum simulation time depends on the selected channel */
 	switch (TransmParam.iDRMChannelNo)
 	{
 	case 1:
 		/* AWGN: No fading */
-		iMinNoBlocks = (int) ((_REAL) 2000.0 / (_REAL) 0.4);
+		iMinNumBlocks = (int) ((_REAL) 2000.0 / (_REAL) 0.4);
 		break;
 
 	case 2:
 		/* Rice with delay: 0.1 Hz */
-		iMinNoBlocks = (int) ((_REAL) 5000.0 / (_REAL) 0.4);
+		iMinNumBlocks = (int) ((_REAL) 5000.0 / (_REAL) 0.4);
 		break;
 
 	case 3:
 		/* US Consortium: slowest 0.1 Hz */
-		iMinNoBlocks = (int) ((_REAL) 15000.0 / (_REAL) 0.4);
+		iMinNumBlocks = (int) ((_REAL) 15000.0 / (_REAL) 0.4);
 		break;
 
 	case 4:
 		/* CCIR Poor: 1 Hz */
-		iMinNoBlocks = (int) ((_REAL) 4000.0 / (_REAL) 0.4);
+		iMinNumBlocks = (int) ((_REAL) 4000.0 / (_REAL) 0.4);
 		break;
 
 	case 5:
 		/* Channel no 5: 2 Hz -> 30 sec */
-		iMinNoBlocks = (int) ((_REAL) 3000.0 / (_REAL) 0.4);
+		iMinNumBlocks = (int) ((_REAL) 3000.0 / (_REAL) 0.4);
 		break;
 
 	case 6:
 		/* Channel no 6: same as case "2" */
-		iMinNoBlocks = (int) ((_REAL) 2000.0 / (_REAL) 0.4);
+		iMinNumBlocks = (int) ((_REAL) 2000.0 / (_REAL) 0.4);
 		break;
 
 	default:
 		/* My own channels */
-		iMinNoBlocks = (int) ((_REAL) 2000.0 / (_REAL) 0.4);
+		iMinNumBlocks = (int) ((_REAL) 2000.0 / (_REAL) 0.4);
 		break;
 	}
 
@@ -272,7 +277,7 @@ void CGenSimData::InitInternal(CParameter& TransmParam)
 void CGenSimData::SetSimTime(int iNewTi, string strNewFileName)
 {
 	/* One MSC frame is 400 ms long */
-	iNoSimBlocks = (int) ((_REAL) iNewTi /* sec */ / (_REAL) 0.4);
+	iNumSimBlocks = (int) ((_REAL) iNewTi /* sec */ / (_REAL) 0.4);
 
 	/* Set simulation count type */
 	eCntType = CT_TIME;
@@ -285,9 +290,9 @@ void CGenSimData::SetSimTime(int iNewTi, string strNewFileName)
 		string("test/") + strNewFileName + "__SIMTIME" + string(".dat");
 }
 
-void CGenSimData::SetNoErrors(int iNewNE, string strNewFileName)
+void CGenSimData::SetNumErrors(int iNewNE, string strNewFileName)
 {
-	iNoErrors = iNewNE;
+	iNumErrors = iNewNE;
 
 	/* Set simulation count type */
 	eCntType = CT_ERRORS;
@@ -305,7 +310,7 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 	_UINT32BIT		iTempShiftRegister1;
 	_BINARY			biPRBSbit;
 	_UINT32BIT		iShiftRegister;
-	int				iNoBitErrors;
+	int				iNumBitErrors;
 	int				i;
 
 	/* -------------------------------------------------------------------------
@@ -315,7 +320,7 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 	   receiver AND transmitter!) */
 	iShiftRegister = ReceiverParam.RawSimDa.Get();
 
-	iNoBitErrors = 0;
+	iNumBitErrors = 0;
 
 	for (i = 0; i < iInputBlockSize; i++)
 	{
@@ -333,7 +338,7 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Count bit errors */
 		if (biPRBSbit != (*pvecInputData)[i])
-			iNoBitErrors++;
+			iNumBitErrors++;
 	}
 
 	/* Save bit error rate, debar initialization blocks */
@@ -341,11 +346,11 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 		iIniCnt--;
 	else
 	{
-		rAccBitErrRate += (_REAL) iNoBitErrors / iInputBlockSize;
-		iNoAccBitErrRate++;
+		rAccBitErrRate += (_REAL) iNumBitErrors / iInputBlockSize;
+		iNumAccBitErrRate++;
 
-		ReceiverParam.rBitErrRate = rAccBitErrRate / iNoAccBitErrRate;
-		ReceiverParam.iNoBitErrors += iNoBitErrors;
+		ReceiverParam.rBitErrRate = rAccBitErrRate / iNumAccBitErrRate;
+		ReceiverParam.iNumBitErrors += iNumBitErrors;
 	}
 }
 
@@ -353,17 +358,17 @@ void CEvaSimData::InitInternal(CParameter& ReceiverParam)
 {
 	/* Reset bit error rate parameters */
 	rAccBitErrRate = (_REAL) 0.0;
-	iNoAccBitErrRate = 0;
+	iNumAccBitErrRate = 0;
 
 	/* Number of blocks at the beginning we do not want to use */
 	iIniCnt = 10;
 
 	/* Init global parameters */
 	ReceiverParam.rBitErrRate = (_REAL) 0.0;
-	ReceiverParam.iNoBitErrors = 0;
+	ReceiverParam.iNumBitErrors = 0;
 
 	/* Define block-size for input */
-	iInputBlockSize = ReceiverParam.iNoDecodedBitsMSC;
+	iInputBlockSize = ReceiverParam.iNumDecodedBitsMSC;
 }
 
 
@@ -379,7 +384,7 @@ void CGenerateFACData::ProcessDataInternal(CParameter& TransmParam)
 void CGenerateFACData::InitInternal(CParameter& TransmParam)
 {
 	/* Define block-size for output */
-	iOutputBlockSize = NO_FAC_BITS_PER_BLOCK;
+	iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 }
 
 /* Receiver */
@@ -414,7 +419,7 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 		   no FAC data is used, we have to increase the counter here */
 		ReceiverParam.iFrameIDReceiv++;
 
-		if (ReceiverParam.iFrameIDReceiv == NO_FRAMES_IN_SUPERFRAME)
+		if (ReceiverParam.iFrameIDReceiv == NUM_FRAMES_IN_SUPERFRAME)
 			ReceiverParam.iFrameIDReceiv = 0;
 	}
 }
@@ -425,13 +430,13 @@ void CUtilizeFACData::InitInternal(CParameter& ReceiverParam)
 // This should be in FAC class in an Init() routine which has to be defined, this
 // would be cleaner code! TODO
 /* Init frame ID so that a "0" comes after increasing the init value once */
-ReceiverParam.iFrameIDReceiv = NO_FRAMES_IN_SUPERFRAME - 1;
+ReceiverParam.iFrameIDReceiv = NUM_FRAMES_IN_SUPERFRAME - 1;
 
 	/* Reset flag */
 	bCRCOk = FALSE;
 
 	/* Define block-size for input */
-	iInputBlockSize = NO_FAC_BITS_PER_BLOCK;
+	iInputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 }
 
 
@@ -447,7 +452,7 @@ void CGenerateSDCData::ProcessDataInternal(CParameter& TransmParam)
 void CGenerateSDCData::InitInternal(CParameter& TransmParam)
 {
 	/* Define block-size for output */
-	iOutputBlockSize = TransmParam.iNoSDCBitsPerSFrame;
+	iOutputBlockSize = TransmParam.iNumSDCBitsPerSFrame;
 }
 
 /* Receiver */
@@ -466,5 +471,5 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 void CUtilizeSDCData::InitInternal(CParameter& ReceiverParam)
 {
 	/* Define block-size for input */
-	iInputBlockSize = ReceiverParam.iNoSDCBitsPerSFrame;
+	iInputBlockSize = ReceiverParam.iNumSDCBitsPerSFrame;
 }

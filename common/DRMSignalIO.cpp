@@ -163,7 +163,7 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 	}
 
 	/* Init vector for saving input data for spectrum */
-	vecrInpData.Init(NO_SMPLS_4_INPUT_SPECTRUM);
+	vecrInpData.Init(NUM_SMPLS_4_INPUT_SPECTRUM);
 
 	/* Define output block-size */
 	iOutputBlockSize = iSpecificOutBlockSize;

@@ -47,7 +47,7 @@
 /* Length of vector for input spectrum. We use approx. 0.2 sec
    of sampled data for spectrum calculation, this is 2^13 = 8192 to 
    make the FFT work more efficient */
-#define NO_SMPLS_4_INPUT_SPECTRUM	8192
+#define NUM_SMPLS_4_INPUT_SPECTRUM	8192
 
 
 /* Classes ********************************************************************/
