@@ -49,7 +49,11 @@
 
 /* This value MUST BE AT LEAST 2, because otherwise we would get an overrun
    when we try to add a complete symbol to the buffer! */
-#define NUM_BLOCKS_4_FREQ_ACQU			5
+#ifdef USE_FRQOFFS_TRACK_GUARDCORR
+# define NUM_BLOCKS_4_FREQ_ACQU			30 /* Accuracy must be higher */
+#else
+# define NUM_BLOCKS_4_FREQ_ACQU			5
+#endif
 
 /* Number of blocks before using the average of input spectrum */
 #define NUM_BLOCKS_BEFORE_US_AV			10
