@@ -112,6 +112,9 @@ protected:
 
 	ERobMode				eCurRobMode;
 
+	CReal					rPrevSamRateOffset;
+	CReal					rAvFreqPilDistToDC;
+
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };

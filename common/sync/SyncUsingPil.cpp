@@ -220,6 +220,32 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 		/* Frequency offset ------------------------------------------------- */
+		/* Correct frequency offset estimation for resample offset corrections.
+		   When a sample rate offset correction was applied, the frequency
+		   offset is shifted proportional to this correction. */
+		/* Get sample rate offset change */
+		CReal rDiffSamOffset =
+			rPrevSamRateOffset - ReceiverParam.rResampleOffset;
+
+		/* Correct sample-rate offset correction according to the proportional
+		   rule. Use relative DC frequency offset plus relative average offset
+		   of frequency pilots to the DC frequency */
+		CReal rCorDiffSamOffset = ((ReceiverParam.rFreqOffsetTrack +
+			ReceiverParam.rFreqOffsetAcqui) + rAvFreqPilDistToDC) *
+			rDiffSamOffset;
+
+		/* Normalize this offset so that it can be used as a phase correction
+		   for frequency offset estimation */
+		CReal rPhaseCorr =
+			rCorDiffSamOffset / SOUNDCRD_SAMPLE_RATE / rNormConstFOE;
+
+		/* Actual correction (rotate vector) */
+		cFreqOffVec *= _COMPLEX(Cos(rPhaseCorr), Sin(rPhaseCorr));
+
+		/* Save current resample offset for next symbol */
+		rPrevSamRateOffset = ReceiverParam.rResampleOffset;
+
+
 		/* Average vector, real and imaginary part separately */
 		IIR1(cFreqOffVec, cFreqOffEstVecSym, rLamFreqOff);
 
@@ -246,8 +272,9 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 			(iPosFreqPil[2] - iPosFreqPil[0])) / (_REAL) 2.0;
 
 		/* Integrate the result for controling the resampling */
-		ReceiverParam.rResampleOffset +=
-			CONTR_SAMP_OFF_INTEGRATION * rSampFreqOffsetEst;
+// This is currently done in time-sync file
+//		ReceiverParam.rResampleOffset +=
+//			CONTR_SAMP_OFF_INTEGRATION * rSampFreqOffsetEst;
 
 
 #ifdef _DEBUG_
@@ -362,14 +389,23 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	/* Frequency and sample rate offset estimation -------------------------- */
 	/* Get position of frequency pilots */
 	int iFreqPilCount = 0;
+	int iAvPilPos = 0;
 	for (i = 0; i < iNumCarrier - 1; i++)
 	{
 		if (_IsFreqPil(ReceiverParam.matiMapTab[0][i]))
 		{
+			/* For average frequency pilot position to DC carrier */
+			iAvPilPos += i + ReceiverParam.iCarrierKmin;
+			
 			iPosFreqPil[iFreqPilCount] = i;
 			iFreqPilCount++;
 		}
 	}
+
+	/* Average distance of the frequency pilots from the DC carrier. Needed for
+	   corrections for sample rate offset changes. Normalized to sample rate! */
+	rAvFreqPilDistToDC =
+		(CReal) iAvPilPos / NUM_FREQ_PILOTS / ReceiverParam.iFFTSizeN;
 
 	/* Init memory for "old" frequency pilots and actual phase differences */
 	for (i = 0; i < NUM_FREQ_PILOTS; i++)
@@ -388,6 +424,11 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 
 	/* Init vector for averaging the frequency offset estimation */
 	cFreqOffVec = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
+
+	/* Init value for previous estimated sample rate offset with the current
+	   setting. This can be non-zero if, e.g., an initial sample rate offset
+	   was set by command line arguments */
+	rPrevSamRateOffset = ReceiverParam.rResampleOffset;
 
 
 	/* Init time constant for IIR filter for sample rate offset estimation */
