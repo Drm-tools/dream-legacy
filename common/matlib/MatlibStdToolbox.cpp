@@ -219,7 +219,7 @@ CMatlibVector<CComplex> Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPl
 		cvReturn[i] = CComplex(pFftwComplexOut[i].re, pFftwComplexOut[i].im);
 
 	if (!FftPlans.IsInitialized())
-		delete[] pCurPlan;
+		delete pCurPlan;
 
 	return cvReturn;
 }
@@ -272,7 +272,7 @@ CMatlibVector<CComplex> Ifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftP
 			pFftwComplexOut[i].im * scale);
 
 	if (!FftPlans.IsInitialized())
-		delete[] pCurPlan;
+		delete pCurPlan;
 
 	return cvReturn;
 }
