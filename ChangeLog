@@ -8,3 +8,9 @@
 	- Improved metric for MLC decoder
 	- Improved (sample) frequency offset tracking, better averaging functions
 	- Bug fix in Windows sound interface
+0.9.3
+	- SBR support (needs new faad2 library)
+	- AM mode  (analog demodulation)
+	- MOT Slide Show decoding (DAB)
+	- improved log file
+	- command line parameters
