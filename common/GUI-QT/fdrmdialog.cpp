@@ -716,34 +716,10 @@ QString	FDRMDialog::SetServParamStr(int iServiceID)
 				}
 			}
 			else
-			{
-				strReturn += "Packet Mode";
-				
-				switch (DRMReceiver.GetParameters()->Service[iServiceID].
-					DataParam.eDataUnitInd)
-				{
-				case CParameter::DU_SINGLE_PACKETS:
-					strReturn += " (Single Packets)";
-					break;
-
-				case CParameter::DU_DATA_UNITS:
-					strReturn += " (Data Units)";
-					break;
-				}
-
-				QString strTemp;
-
-				strTemp.setNum(DRMReceiver.GetParameters()->
-					Service[iServiceID].DataParam.iPacketID);
-				strReturn += " / ID: " + strTemp;
-
-				strTemp.setNum(DRMReceiver.GetParameters()->
-					Service[iServiceID].DataParam.iPacketLen);
-				strReturn += " / Len: " + strTemp;
-			}
+				strReturn += "Unknown Service";
 		}
 		else
-			strReturn += " Synchronous Stream Mode";
+			strReturn += "Unknown Service";
 	}
 
 	return strReturn;
