@@ -39,6 +39,11 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	_REAL		rCurSNREst;
 	_REAL		rOffsPDSEst;
 
+	/* Check if symbol ID index has changed by the synchronization unit. If it
+	   has changed, use the init-counter debar initialization phase */
+	if ((*pvecInputData).GetExData().bSymbolIDHasChanged == TRUE)
+		iInitCnt = iLenHistBuff;
+
 	/* Move data in history-buffer (from iLenHistBuff - 1 towards 0) */
 	for (j = 0; j < iLenHistBuff - 1; j++)
 	{
@@ -257,14 +262,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 				IIR1(rSignalEst, SqMag(cModChanEst), rLamSNREstFast);
 
 				/* Calculate final result (signal to noise ratio) */
-				if (rNoiseEst != 0)
-					rCurSNREst = rSignalEst / rNoiseEst;
-				else
-					rCurSNREst = (_REAL) 1.0;
-
-				/* Bound the SNR at 0 dB */
-				if (rCurSNREst < (_REAL) 1.0)
-					rCurSNREst = (_REAL) 1.0;
+				rCurSNREst = CalAndBoundSNR(rSignalEst, rNoiseEst);
 
 				/* Average the SNR with a two sided recursion */
 				IIR1TwoSided(rSNREstimate, rCurSNREst, rLamSNREstFast,
@@ -276,9 +274,33 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			/* SNR estimation with initialization */
 			if (iSNREstInitCnt > 0)
 			{
-				/* Initial signal estimate. Use channel estimation from all
-				   cells. Apply averaging */
-				rSignalEst += (*pvecOutputData)[i].rChan;
+				/* Only use the last frame of the initialization phase for
+				   initial SNR estimation to debar initialization phase of
+				   synchronization and channel estimation units */
+				if (iSNREstInitCnt < iNumSymPerFrame * iNumCarrier)
+				{
+					const int iCurCellFlag =
+						ReceiverParam.matiMapTab[iModSymNum][i];
+
+					/* Initial signal estimate. Use channel estimation from all
+					   data and pilot cells. Apply averaging */
+					if ((_IsData(iCurCellFlag)) || (_IsPilot(iCurCellFlag)))
+					{
+						/* Signal estimation */
+						rSignalEst += (*pvecOutputData)[i].rChan;
+						iSNREstIniSigAvCnt++;
+					}
+
+					/* Noise estimation from all data cells from tentative
+					   decisions */
+					if (_IsFAC(iCurCellFlag)) /* FAC cell */
+					{
+						rNoiseEst += SqMag(Dec4QAM((*pvecOutputData)[i].cSig)) *
+							(*pvecOutputData)[i].rChan;
+
+						iSNREstIniNoiseAvCnt++;
+					}
+				}
 
 				iSNREstInitCnt--;
 			}
@@ -286,15 +308,13 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			{
 				/* Only right after initialization phase apply initial SNR
 				   value */
-				if (bWasSNRInit == TRUE)
+				if (bSNRInitPhase == TRUE)
 				{
 					/* Normalize average */
-					rSignalEst /= iNumCellsSNRInit;
+					rSignalEst /= iSNREstIniSigAvCnt;
+					rNoiseEst /= iSNREstIniNoiseAvCnt;
 
-					/* Apply initial SNR value */
-					rNoiseEst = rSignalEst / rSNREstimate;
-
-					bWasSNRInit = FALSE;
+					bSNRInitPhase = FALSE;
 				}
 
 				/* Only use FAC cells for this SNR estimation method */
@@ -316,14 +336,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 						rLamSNREstFast);
 
 					/* Calculate final result (signal to noise ratio) */
-					if (rNoiseEst != (_REAL) 0.0)
-						rCurSNREst = rSignalEst / rNoiseEst;
-					else
-						rCurSNREst = (_REAL) 1.0;
-
-					/* Bound the SNR at 0 dB */
-					if (rCurSNREst < (_REAL) 1.0)
-						rCurSNREst = (_REAL) 1.0;
+					rCurSNREst = CalAndBoundSNR(rSignalEst, rNoiseEst);
 
 					/* The channel estimation algorithms need the SNR normalized
 					   to the energy of the pilots */
@@ -333,6 +346,23 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			break;
 		}
 	}
+}
+
+_REAL CChannelEstimation::CalAndBoundSNR(_REAL rSignalEst, _REAL rNoiseEst)
+{
+	_REAL rReturn;
+
+	/* "rNoiseEst" must not be zero */
+	if (rNoiseEst != (_REAL) 0.0)
+		rReturn = rSignalEst / rNoiseEst;
+	else
+		rReturn = (_REAL) 1.0;
+
+	/* Bound the SNR at 0 dB */
+	if (rReturn < (_REAL) 1.0)
+		rReturn = (_REAL) 1.0;
+
+	return rReturn;
 }
 
 void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
@@ -433,19 +463,36 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	matcHistory.Init(iLenHistBuff, iNumCarrier,
 		_COMPLEX((_REAL) 0.0, (_REAL) 0.0));
 
-	/* After an initialization we do not put out data befor the number symbols
+	/* After an initialization we do not put out data before the number symbols
 	   of the channel estimation delay have been processed */
-	iInitCnt = iLenHistBuff - 1;
+	iInitCnt = iLenHistBuff;
+
+	/* SNR correction factor. We need this factor since we evalute the 
+	   signal-to-noise ratio only on the pilots and these have a higher power as
+	   the other cells */
+	rSNRCorrectFact =
+		ReceiverParam.rAvPilPowPerSym /	ReceiverParam.rAvPowPerSymbol;
 
 	/* Inits for SNR estimation (noise and signal averages) */
-	rSNREstimate = (_REAL) pow(10, INIT_VALUE_SNR_ESTIM_DB / 10);
 	rSignalEst = (_REAL) 0.0;
 	rNoiseEst = (_REAL) 0.0;
+	rSNREstimate =
+		(_REAL) pow(10, INIT_VALUE_SNR_ESTIM_DB / 10) / rSNRCorrectFact;
 
 	/* For SNR estimation initialization */
-	iNumCellsSNRInit = iNumSymPerFrame * iNumCarrier; /* 1 DRM frame */
-	iSNREstInitCnt = iNumCellsSNRInit;
-	bWasSNRInit = TRUE;
+	iSNREstIniSigAvCnt = 0;
+	iSNREstIniNoiseAvCnt = 0;
+
+	/* We only have an initialization phase for SNR estimation method based on
+	   the tentative decisions of FAC cells */
+	if (TypeSNREst == SNR_FAC)
+		bSNRInitPhase = TRUE;
+	else
+		bSNRInitPhase = FALSE;
+
+	/* 5 DRM frames to start initial SNR estimation after initialization phase
+	   of other units */
+	iSNREstInitCnt = 5 * iNumSymPerFrame * iNumCarrier;
 
 	/* Lambda for IIR filter */
 	rLamSNREstFast = IIR1Lam(TICONST_SNREST_FAST, (CReal) SOUNDCRD_SAMPLE_RATE /
@@ -453,12 +500,6 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	rLamSNREstSlow = IIR1Lam(TICONST_SNREST_SLOW, (CReal) SOUNDCRD_SAMPLE_RATE /
 		ReceiverParam.iSymbolBlockSize);
 
-
-	/* SNR correction factor. We need this factor since we evalute the 
-	   signal-to-noise ratio only on the pilots and these have a higher power as
-	   the other cells */
-	rSNRCorrectFact = 
-		ReceiverParam.rAvPilPowPerSym /	ReceiverParam.rAvPowPerSymbol;
 
 	/* Init delay spread length estimation (index) */
 	rLenPDSEst = (_REAL) 0.0;
@@ -655,13 +696,21 @@ fflush(pFile);
 	}
 }
 
-_REAL CChannelEstimation::GetSNREstdB() const
+_BOOLEAN CChannelEstimation::GetSNREstdB(_REAL& rSNREstRes) const
 {
 	/* Bound the SNR at 0 dB */
-	if (rSNREstimate * rSNRCorrectFact > (_REAL) 1.0)
-		return 10 * log10(rSNREstimate * rSNRCorrectFact);
+	if ((rSNREstimate * rSNRCorrectFact > (_REAL) 1.0) &&
+		(bSNRInitPhase == FALSE))
+	{
+		rSNREstRes = 10 * log10(rSNREstimate * rSNRCorrectFact);
+	}
 	else
-		return (_REAL) 0.0;
+		rSNREstRes = (_REAL) 0.0;
+
+	if (bSNRInitPhase == TRUE)
+		return FALSE;
+	else
+		return TRUE;
 }
 
 _REAL CChannelEstimation::GetDelay() const

@@ -105,10 +105,10 @@ public:
 	ETypeIntTime GetTimeInt() const {return TypeIntTime;}
 
 	/* Which SNR estimation algorithm */
-	void SetSNREst(ETypeSNREst eNewTy) {TypeSNREst = eNewTy;}
+	void SetSNREst(ETypeSNREst eNewTy) {TypeSNREst = eNewTy; SetInitFlag();}
 	ETypeSNREst GetSNREst() {return TypeSNREst;}
 
-	_REAL GetSNREstdB() const;
+	_BOOLEAN GetSNREstdB(_REAL& rSNREstRes) const;
 	_REAL GetSigma() {return TimeWiener.GetSigma();}
 	_REAL GetDelay() const;
 
@@ -116,61 +116,68 @@ public:
 
 protected:
 	enum EDFTWinType {DFT_WIN_RECT, DFT_WIN_HAMM};
-	EDFTWinType			eDFTWindowingMethod;
+	EDFTWinType				eDFTWindowingMethod;
 
-	int					iNumSymPerFrame;
+	int						iNumSymPerFrame;
 
-	CChanEstTime*		pTimeInt;
+	CChanEstTime*			pTimeInt;
 
-	CTimeLinear			TimeLinear;
-	CTimeWiener			TimeWiener;
+	CTimeLinear				TimeLinear;
+	CTimeWiener				TimeWiener;
 
-	CTimeSyncTrack		TimeSyncTrack;
+	CTimeSyncTrack			TimeSyncTrack;
 
-	ETypeIntFreq		TypeIntFreq;
-	ETypeIntTime		TypeIntTime;
-	ETypeSNREst			TypeSNREst;
+	ETypeIntFreq			TypeIntFreq;
+	ETypeIntTime			TypeIntTime;
+	ETypeSNREst				TypeSNREst;
 
-	int					iNumCarrier;
+	int						iNumCarrier;
 
-	CMatrix<_COMPLEX>	matcHistory;
+	CMatrix<_COMPLEX>		matcHistory;
 
-	int					iLenHistBuff;
+	int						iLenHistBuff;
 
-	int					iScatPilFreqInt; /* Frequency interpolation */
-	int					iScatPilTimeInt; /* Time interpolation */
+	int						iScatPilFreqInt; /* Frequency interpolation */
+	int						iScatPilTimeInt; /* Time interpolation */
 
-	CComplexVector		veccChanEst;
+	CComplexVector			veccChanEst;
 
-	int					iFFTSizeN;
+	int						iFFTSizeN;
 
-	CReal				rGuardSizeFFT;
+	CReal					rGuardSizeFFT;
 
-	CRealVector			vecrDFTWindow;
-	CRealVector			vecrDFTwindowInv;
+	CRealVector				vecrDFTWindow;
+	CRealVector				vecrDFTwindowInv;
 
-	int					iLongLenFreq;
-	CComplexVector		veccPilots;
-	CComplexVector		veccIntPil;
-	CFftPlans			FftPlanShort;
-	CFftPlans			FftPlanLong;
+	int						iLongLenFreq;
+	CComplexVector			veccPilots;
+	CComplexVector			veccIntPil;
+	CFftPlans				FftPlanShort;
+	CFftPlans				FftPlanLong;
 
-	int					iNumIntpFreqPil;
+	int						iNumIntpFreqPil;
 
-	CReal				rLamSNREstFast;
-	CReal				rLamSNREstSlow;
+	CReal					rLamSNREstFast;
+	CReal					rLamSNREstSlow;
 
-	_REAL				rNoiseEst;
-	_REAL				rSignalEst;
-	_REAL				rSNREstimate;
-	_REAL				rSNRCorrectFact;
-	int					iUpCntWienFilt;
+	_REAL					rNoiseEst;
+	_REAL					rSignalEst;
+	_REAL					rSNREstimate;
+	_REAL					rSNRCorrectFact;
+	int						iUpCntWienFilt;
 
-	_REAL				rLenPDSEst; /* Needed for GetDelay() */
-	_REAL				rMaxLenPDSInFra;
-	_REAL				rMinOffsPDSInFra;
+	_REAL					rLenPDSEst; /* Needed for GetDelay() */
+	_REAL					rMaxLenPDSInFra;
+	_REAL					rMinOffsPDSInFra;
 
-	int					iStartZeroPadding;
+	int						iStartZeroPadding;
+
+	int						iInitCnt;
+	int						iSNREstIniSigAvCnt;
+	int						iSNREstIniNoiseAvCnt;
+	int						iSNREstInitCnt;
+	_BOOLEAN				bSNRInitPhase;
+	_REAL CalAndBoundSNR(_REAL rSignalEst, _REAL rNoiseEst);
 
 
 	/* Wiener interpolation in frequency direction */
@@ -181,21 +188,16 @@ protected:
 									 CReal rRatPDSLen, CReal rRatPDSOffs,
 									 int iLength);
 	CComplex FreqCorrFct(int iCurPos, CReal rRatPDSLen, CReal rRatPDSOffs);
-	CMatrix<_COMPLEX>	matcFiltFreq;
-	int					iLengthWiener;
-	CVector<int>		veciPilOffTab;
+	CMatrix<_COMPLEX>		matcFiltFreq;
+	int						iLengthWiener;
+	CVector<int>			veciPilOffTab;
 
-	int					iDCPos;
-	int					iPilOffset;
-	int					iNoWienerFilt;
-	CComplexMatrix		matcWienerFilter;
+	int						iDCPos;
+	int						iPilOffset;
+	int						iNoWienerFilt;
+	CComplexMatrix			matcWienerFilter;
 
-	int					iInitCnt;
-	int					iSNREstInitCnt;
-	int					iNumCellsSNRInit;
-	_BOOLEAN			bWasSNRInit;
 
-	
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
