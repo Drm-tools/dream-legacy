@@ -234,7 +234,9 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 /* Command line argument parser ***********************************************/
 _BOOLEAN ParseArguments(int argc, char** argv)
 {
-	_BOOLEAN bIsReceiver = TRUE;
+	_BOOLEAN	bIsReceiver = TRUE;
+	_REAL		rArgument;
+	string		strArgument;
 
 	/* QT docu: argv()[0] is the program name, argv()[1] is the first
 	   argument and argv()[argc()-1] is the last argument.
@@ -242,8 +244,7 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 	for (int i = 1; i < argc; i++)
 	{
 		/* DRM transmitter mode flag ---------------------------------------- */
-		if ((!strcmp(argv[i], "--transmitter")) ||
-			(!strcmp(argv[i], "-t")))
+		if (GetFlagArgument(argc, argv, i, "-t", "--transmitter") == TRUE)
 		{
 			bIsReceiver = FALSE;
 			continue;
@@ -251,8 +252,7 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 
 		
 		/* Flip spectrum flag ----------------------------------------------- */
-		if ((!strcmp(argv[i], "--flipspectrum")) ||
-			(!strcmp(argv[i], "-p")))
+		if (GetFlagArgument(argc, argv, i, "-p", "--flipspectrum") == TRUE)
 		{
 			DRMReceiver.GetReceiver()->SetFlippedSpectrum(TRUE);
 			continue;
@@ -260,251 +260,114 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 
 
 		/* Mute audio flag -------------------------------------------------- */
-		if ((!strcmp(argv[i], "--muteaudio")) ||
-			(!strcmp(argv[i], "-m")))
+		if (GetFlagArgument(argc, argv, i, "-m", "--muteaudio") == TRUE)
 		{
 			DRMReceiver.GetWriteData()->MuteAudio(TRUE);
 			continue;
 		}
 
 
-		/* Number of iterations for MLC setting ----------------------------- */
-		if ((!strcmp(argv[i], "--mlciter")) ||
-			(!strcmp(argv[i], "-i")))
-		{
-			if (++i >= argc)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--mlciter' needs a numeric argument between 0 and 4."
-					<< endl;
-				exit(1);
-			}
-
-			char *p;
-			int n = strtol(argv[i], &p, 10);
-			if (*p || n < 0 || n > 4)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--mlciter' needs a numeric argument between 0 and 4."
-					<< endl;
-				exit(1);
-			}
-
-			DRMReceiver.GetMSCMLC()->SetNumIterations(n);
-			continue;
-		}
-
-
 		/* Start log file flag ---------------------------------------------- */
-		if ((!strcmp(argv[i], "--startlog")) ||
-			(!strcmp(argv[i], "-l")))
+		if (GetFlagArgument(argc, argv, i, "-l", "--startlog") == TRUE)
 		{
 			DRMReceiver.GetParameters()->ReceptLog.SetDelLogStart();
 			continue;
 		}
 
+		
+		/* Number of iterations for MLC setting ----------------------------- */
+		if (GetNumericArgument(argc, argv, i, "-i", "--mlciter", 0, 4,
+			rArgument) == TRUE)
+		{
+			DRMReceiver.GetMSCMLC()->SetNumIterations((int) rArgument);
+			continue;
+		}
+
 
 		/* Frequency for log file ------------------------------------------- */
-		if ((!strcmp(argv[i], "--frequency")) ||
-			(!strcmp(argv[i], "-r")))
+		if (GetNumericArgument(argc, argv, i, "-r", "--frequency", 0, 30000,
+			rArgument) == TRUE)
 		{
-			if (++i >= argc)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--frequency' needs a numeric argument."
-					<< endl;
-				exit(1);
-			}
-
-			char *p;
-			int n = strtol(argv[i], &p, 10);
-			if (*p || n < 0)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--frequency' needs a numeric argument."
-					<< endl;
-				exit(1);
-			}
-
-			DRMReceiver.GetParameters()->ReceptLog.SetFrequency(n);
+			DRMReceiver.GetParameters()->ReceptLog.
+				SetFrequency((int) rArgument);
 			continue;
 		}
 
 
 		/* Do not use sound card, read from file ---------------------------- */
-		if ((!strcmp(argv[i], "--fileio")) ||
-			(!strcmp(argv[i], "-f")))
+		if (GetStringArgument(argc, argv, i, "-f", "--fileio",
+			strArgument) == TRUE)
 		{
-			if (++i >= argc)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--fileio' needs a string argument."
-					<< endl;
-				exit(1);
-			}
-
-			DRMReceiver.SetReadDRMFromFile(argv[i]);
+			DRMReceiver.SetReadDRMFromFile(strArgument);
 			continue;
 		}
 
 
 		/* Sound In device -------------------------------------------------- */
-		if ((!strcmp(argv[i], "--snddevin")) ||
-			(!strcmp(argv[i], "-I")))
+		if (GetNumericArgument(argc, argv, i, "-I", "--snddevin", 0, 1000,
+			rArgument) == TRUE)
 		{
-			if (++i >= argc)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--snddevin' needs a numeric argument."
-					<< endl;
-				exit(1);
-			}
-
-			char *p;
-			int n = strtol(argv[i], &p, 10);
-			if (*p || n < 0)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--snddevin' needs a numeric argument."
-					<< endl;
-				exit(1);
-			}
-
-			DRMReceiver.SetSoundCrdDevIn(n);
+			DRMReceiver.SetSoundCrdDevIn((int) rArgument);
 			continue;
 		}
 
 
 		/* Sound Out device ------------------------------------------------- */
-		if ((!strcmp(argv[i], "--snddevout")) ||
-			(!strcmp(argv[i], "-O")))
+		if (GetNumericArgument(argc, argv, i, "-O", "--snddevout", 0, 1000,
+			rArgument) == TRUE)
 		{
-			if (++i >= argc)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--snddevout' needs a numeric argument."
-					<< endl;
-				exit(1);
-			}
-
-			char *p;
-			int n = strtol(argv[i], &p, 10);
-			if (*p || n < 0)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--snddevout' needs a numeric argument."
-					<< endl;
-				exit(1);
-			}
-
-			DRMReceiver.SetSoundCrdDevOut(n);
+			DRMReceiver.SetSoundCrdDevOut((int) rArgument);
 			continue;
 		}
 
 
 		/* Latitude string for log file ------------------------------------- */
-		if ((!strcmp(argv[i], "--latitude")) ||
-			(!strcmp(argv[i], "-a")))
+		if (GetStringArgument(argc, argv, i, "-a", "--latitude",
+			strArgument) == TRUE)
 		{
-			if (++i >= argc)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--latitude' needs a string argument."
-					<< endl;
-				exit(1);
-			}
-
-			DRMReceiver.GetParameters()->ReceptLog.SetLatitude(argv[i]);
+			DRMReceiver.GetParameters()->ReceptLog.SetLatitude(strArgument);
 			continue;
 		}
 
 
 		/* Longitude string for log file ------------------------------------ */
-		if ((!strcmp(argv[i], "--longitude")) ||
-			(!strcmp(argv[i], "-o")))
+		if (GetStringArgument(argc, argv, i, "-o", "--longitude",
+			strArgument) == TRUE)
 		{
-			if (++i >= argc)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--longitude' needs a string argument."
-					<< endl;
-				exit(1);
-			}
-
-			DRMReceiver.GetParameters()->ReceptLog.SetLongitude(argv[i]);
+			DRMReceiver.GetParameters()->ReceptLog.SetLongitude(strArgument);
 			continue;
 		}
+
 
 
 		/* Sample rate offset start value ----------------------------------- */
-		if ((!strcmp(argv[i], "--sampleoff")) ||
-			(!strcmp(argv[i], "-s")))
+		if (GetNumericArgument(argc, argv, i, "-s", "--sampleoff", -200, 200,
+			rArgument) == TRUE)
 		{
-			if (++i >= argc)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--sampleoff' needs a numeric argument between -200.0"
-					" and 200.0." << endl;
-				exit(1);
-			}
-
-			char *p;
-			_REAL r = strtod(argv[i], &p);
-			if (*p || r < (_REAL) -200.0 || r > (_REAL) 200.0)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--sampleoff' needs a numeric argument between -200.0"
-					" and 200.0." << endl;
-				exit(1);
-			}
-
-			DRMReceiver.SetInitResOff(r);
+			DRMReceiver.SetInitResOff(rArgument);
 			continue;
 		}
+
 
 #ifdef HAVE_LIBHAMLIB
 		/* Hamlib Model ID -------------------------------------------------- */
-		if ((!strcmp(argv[i], "--hamlib-config")) ||
-			(!strcmp(argv[i], "-C")))
+		if (GetStringArgument(argc, argv, i, "-C", "--hamlib-config",
+			strArgument) == TRUE)
 		{
-			if (++i >= argc)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--hamlib-config' needs a string argument."
-					<< endl;
-				exit(1);
-			}
-
-			DRMReceiver.SetHamlibConf(argv[i]);
+			DRMReceiver.SetHamlibConf(strArgument);
 			continue;
 		}
 
+
 		/* Hamlib config string --------------------------------------------- */
-		if ((!strcmp(argv[i], "--hamlib-model")) ||
-			(!strcmp(argv[i], "-M")))
+		if (GetNumericArgument(argc, argv, i, "-M", "--hamlib-model", 0,
+			32768, rArgument) == TRUE)
 		{
-			if (++i >= argc)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--hamlib-model' needs a numeric argument greater "
-					"than 0" << endl;
-				exit(1);
-			}
-
-			char *p;
-			int n = strtol(argv[i], &p, 10);
-			if (*p || n < 1)
-			{
-				cerr << argv[0] << ": ";
-				cerr << "'--hamlib-model' needs a numeric argument greater "
-					"than 0" << endl;
-				exit(1);
-			}
-
-			DRMReceiver.SetHamlibModel(n);
+			DRMReceiver.SetHamlibModel((int) rArgument);
 			continue;
 		}
 #endif
+
 
 		/* Help (usage) flag ------------------------------------------------ */
 		if ((!strcmp(argv[i], "--help")) ||
@@ -566,4 +429,63 @@ void UsageArguments(char** argv)
 	cerr << "Example: " << argv[0] <<
 		" -p --sampleoff -0.23 -i 2 -r 6140 -a 50°13\\'N -o 8°34\\'E" << endl;
 	cerr << endl;
+}
+
+_BOOLEAN GetFlagArgument(int argc, char** argv, int& i, string strShortOpt,
+						 string strLongOpt)
+{
+	if ((!strShortOpt.compare(argv[i])) || (!strLongOpt.compare(argv[i])))
+		return TRUE;
+	else
+		return FALSE;
+}
+
+_BOOLEAN GetStringArgument(int argc, char** argv, int& i, string strShortOpt,
+							string strLongOpt, string& strArg)
+{
+	if ((!strShortOpt.compare(argv[i])) || (!strLongOpt.compare(argv[i])))
+	{
+		if (++i >= argc)
+		{
+			cerr << argv[0] << ": ";
+			cerr << "'" << strLongOpt << "' needs a string argument" << endl;
+			exit(1);
+		}
+
+		strArg = argv[i];
+
+		return TRUE;
+	}
+	else
+		return FALSE;
+}
+
+_BOOLEAN GetNumericArgument(int argc, char** argv, int& i, string strShortOpt,
+							string strLongOpt, _REAL rRangeStart,
+							_REAL rRangeStop, _REAL& rValue)
+{
+	if ((!strShortOpt.compare(argv[i])) || (!strLongOpt.compare(argv[i])))
+	{
+		if (++i >= argc)
+		{
+			cerr << argv[0] << ": ";
+			cerr << "'" << strLongOpt << "' needs a numeric argument between "
+				<< rRangeStart << " and " << rRangeStop << endl;
+			exit(1);
+		}
+
+		char *p;
+		rValue = strtod(argv[i], &p);
+		if (*p || rValue < rRangeStart || rValue > rRangeStop)
+		{
+			cerr << argv[0] << ": ";
+			cerr << "'" << strLongOpt << "' needs a numeric argument between "
+				<< rRangeStart << " and " << rRangeStop << endl;
+			exit(1);
+		}
+
+		return TRUE;
+	}
+	else
+		return FALSE;
 }

@@ -46,4 +46,14 @@
 _BOOLEAN	ParseArguments(int argc, char** argv);
 void		UsageArguments(char** argv);
 
+_BOOLEAN	GetFlagArgument(int argc, char** argv, int& i, string strShortOpt,
+							string strLongOpt);
+_BOOLEAN	GetNumericArgument(int argc, char** argv, int& i,
+							   string strShortOpt, string strLongOpt,
+							   _REAL rRangeStart, _REAL rRangeStop,
+							   _REAL& rValue);
+_BOOLEAN	GetStringArgument(int argc, char** argv, int& i, string strShortOpt,
+							  string strLongOpt, string& strArg);
+
+
 #endif // !defined(MAIN_H__3B0BA660_CA63_4344_BB2B_23DSG9876D31912__INCLUDED_)
