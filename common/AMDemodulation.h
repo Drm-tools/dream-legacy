@@ -80,7 +80,7 @@
 class CNoiseReduction
 {
 public:
-	CNoiseReduction() : NoiRedDegree(NR_MEDIUM) {}
+	CNoiseReduction() : eNoiRedDegree(NR_MEDIUM) {}
 	virtual ~CNoiseReduction() {}
 
 	enum ENoiRedDegree {NR_LOW, NR_MEDIUM, NR_HIGH};
@@ -88,12 +88,12 @@ public:
 	void Init(const int iNewBlockLen);
 	void Process(CRealVector& vecrIn);
 
-	void SetNoiRedDegree(const ENoiRedDegree eNND) {NoiRedDegree = eNND;}
-	ENoiRedDegree GetNoiRedDegree() {return NoiRedDegree;}
+	void SetNoiRedDegree(const ENoiRedDegree eNND) {eNoiRedDegree = eNND;}
+	ENoiRedDegree GetNoiRedDegree() {return eNoiRedDegree;}
 
 protected:
 	void UpdateNoiseEst(CRealVector& vecrNoisePSD,
-		const CRealVector& vecrSqMagSigFreq, const ENoiRedDegree NoiRedDegree);
+		const CRealVector& vecrSqMagSigFreq, const ENoiRedDegree eNoiRedDegree);
 	CRealVector OptimalFilter(const CComplexVector& vecrSigFreq,
 		const CRealVector& vecrSqMagSigFreq, const CRealVector& vecrNoisePSD);
 
@@ -119,7 +119,7 @@ protected:
 	CRealVector		vecrOptFiltTime;
 	CRealVector		vecrFiltResult;
 
-	ENoiRedDegree	NoiRedDegree;
+	ENoiRedDegree	eNoiRedDegree;
 };
 
 class CAMDemodulation : public CReceiverModul<_REAL, _SAMPLE>

@@ -451,7 +451,7 @@ void CNoiseReduction::Process(CRealVector& vecrIn)
 
 	/* Update minimum statistic for noise PSD estimation. This update is made
 	   only once a regular (non-shited) block */
-	UpdateNoiseEst(vecrNoisePSD, vecrSqMagSigFreq, NoiRedDegree);
+	UpdateNoiseEst(vecrNoisePSD, vecrSqMagSigFreq, eNoiRedDegree);
 
 	/* Actual noise reducation filtering based on the noise PSD estimation and
 	   the current squared magnitude of the input signal */
@@ -518,14 +518,14 @@ CRealVector CNoiseReduction::OptimalFilter(const CComplexVector& veccSigFreq,
 
 void CNoiseReduction::UpdateNoiseEst(CRealVector& vecrNoisePSD,
 									 const CRealVector& vecrSqMagSigFreq,
-									 const ENoiRedDegree NoiRedDegree)
+									 const ENoiRedDegree eNoiRedDegree)
 {
 /*
 	Implements a mimium statistic proposed by R. Martin
 */
 	/* Set weightning factor for minimum statistic */
 	CReal rWeiFact;
-	switch (NoiRedDegree)
+	switch (eNoiRedDegree)
 	{
 	case NR_LOW:
 		rWeiFact = MIN_STAT_WEIGTH_FACTOR_LOW;
