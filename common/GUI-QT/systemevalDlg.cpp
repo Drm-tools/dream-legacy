@@ -43,7 +43,7 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	SliderNoOfIterations->setRange(0, 4);
 	SliderNoOfIterations->
 		setValue(DRMReceiver.GetMSCMLC()->GetInitNumIterations());
-	TextNoOfIterations->setText("MLC: Number of Iterations: " +
+	TextNumOfIterations->setText("MLC: Number of Iterations: " +
 		QString().setNum(DRMReceiver.GetMSCMLC()->GetInitNumIterations()));
 
 
@@ -380,38 +380,38 @@ void systemevalDlg::OnTimer()
 	QString strFACInfo;
 
 	/* Robustness mode #################### */
-	strFACInfo = "DRM Mode / Bandwidth: \t" + GetRobModeStr() + " / " +
-		GetSpecOccStr();
+	strFACInfo = GetRobModeStr() + " / " + GetSpecOccStr();
 
-	FACDRMModeBW->setText(strFACInfo);
+	FACDRMModeBWL->setText("DRM Mode / Bandwidth:"); /* Label */
+	FACDRMModeBWV->setText(strFACInfo); /* Value */
+
 
 	/* Interleaver Depth #################### */
-	strFACInfo = "Interleaver Depth: \t\t";
 	switch (DRMReceiver.GetParameters()->eSymbolInterlMode)
 	{
 	case CParameter::SI_LONG:
-		strFACInfo += "2 s (Long Interleaving)";
+		strFACInfo = "2 s (Long Interleaving)";
 		break;
 
 	case CParameter::SI_SHORT:
-		strFACInfo += "400 ms (Short Interleaving)";
+		strFACInfo = "400 ms (Short Interleaving)";
 		break;
 	}
 
-	FACInterleaverDepth->setText(strFACInfo);
+	FACInterleaverDepthL->setText("Interleaver Depth:"); /* Label */
+	FACInterleaverDepthV->setText(strFACInfo); /* Value */
+
 
 	/* SDC, MSC mode #################### */
-	strFACInfo = "SDC / MSC Mode: \t\t";
-
 	/* SDC */
 	switch (DRMReceiver.GetParameters()->eSDCCodingScheme)
 	{
 	case CParameter::CS_1_SM:
-		strFACInfo += "4-QAM / ";
+		strFACInfo = "4-QAM / ";
 		break;
 
 	case CParameter::CS_2_SM:
-		strFACInfo += "16-QAM / ";
+		strFACInfo = "16-QAM / ";
 		break;
 	}
 
@@ -435,27 +435,30 @@ void systemevalDlg::OnTimer()
 		break;
 	}
 
-	FACSDCMSCMode->setText(strFACInfo);
+	FACSDCMSCModeL->setText("SDC / MSC Mode:"); /* Label */
+	FACSDCMSCModeV->setText(strFACInfo); /* Value */
+
 
 	/* Code rates #################### */
-	strFACInfo = "Prot. Level (B / A): \t\t";
-	strFACInfo += QString().setNum(DRMReceiver.GetParameters()->MSCPrLe.iPartB);
+	strFACInfo = QString().setNum(DRMReceiver.GetParameters()->MSCPrLe.iPartB);
 	strFACInfo += " / ";
 	strFACInfo += QString().setNum(DRMReceiver.GetParameters()->MSCPrLe.iPartA);
 
-	FACCodeRate->setText(strFACInfo);
+	FACCodeRateL->setText("Prot. Level (B / A):"); /* Label */
+	FACCodeRateV->setText(strFACInfo); /* Value */
+
 
 	/* Number of services #################### */
-	strFACInfo = "Number of Services: \t\tAudio: ";
-	strFACInfo += QString().setNum(DRMReceiver.GetParameters()->iNumAudioService);
+	strFACInfo = "Audio: ";
+	strFACInfo = QString().setNum(DRMReceiver.GetParameters()->iNumAudioService);
 	strFACInfo += " / Data: ";
 	strFACInfo +=QString().setNum(DRMReceiver.GetParameters()->iNumDataService);
 
-	FACNumServices->setText(strFACInfo);
+	FACNumServicesL->setText("Number of Services:"); /* Label */
+	FACNumServicesV->setText(strFACInfo); /* Value */
+
 
 	/* Time, date #################### */
-	strFACInfo = "Received time - date: \t\t";
-
 	if ((DRMReceiver.GetParameters()->iUTCHour == 0) &&
 		(DRMReceiver.GetParameters()->iUTCMin == 0) &&
 		(DRMReceiver.GetParameters()->iDay == 0) &&
@@ -463,7 +466,7 @@ void systemevalDlg::OnTimer()
 		(DRMReceiver.GetParameters()->iYear == 0))
 	{
 		/* No time service available */
-		strFACInfo += "Service not available";
+		strFACInfo = "Service not available";
 	}
 	else
 	{
@@ -476,7 +479,7 @@ void systemevalDlg::OnTimer()
 		DateTime.setTime(QTime(DRMReceiver.GetParameters()->iUTCHour,
 			DRMReceiver.GetParameters()->iUTCMin));
 
-		strFACInfo += DateTime.toString();
+		strFACInfo = DateTime.toString();
 #else
 		/* Set time and date */
 		QString strMin;
@@ -490,7 +493,7 @@ void systemevalDlg::OnTimer()
 	
 		strMin += QString().setNum(iMin);
 
-		strFACInfo +=
+		strFACInfo =
 			/* Time */
 			QString().setNum(DRMReceiver.GetParameters()->iUTCHour) + ":" +
 			strMin + "  -  " +
@@ -501,7 +504,8 @@ void systemevalDlg::OnTimer()
 #endif
 	}
 
-	FACTimeDate->setText(strFACInfo);
+	FACTimeDateL->setText("Received time - date:"); /* Label */
+	FACTimeDateV->setText(strFACInfo); /* Value */
 
 
 	/* Check the receiver mode. In case of AM demodulation, only show spectrum */
@@ -593,7 +597,7 @@ void systemevalDlg::OnSliderIterChange(int value)
 	DRMReceiver.GetMSCMLC()->SetNumIterations(value);
 
 	/* Show the new value in the label control */
-	TextNoOfIterations->setText("MLC: Number of Iterations: " +
+	TextNumOfIterations->setText("MLC: Number of Iterations: " +
 		QString().setNum(value));
 }
 
