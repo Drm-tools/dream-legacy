@@ -41,6 +41,7 @@
 #include <qlayout.h>
 #include <qftp.h>
 #include <qthread.h>
+#include <qwt_counter.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/StationsDlgbase.h"
@@ -150,6 +151,8 @@ protected:
 		RC_JRC_NRD535, RC_TT_RX320D};
 	enum ECOMNumber {CN_COM1, CN_COM2, CN_COM3};
 
+	void			SetFrequency(const int iFreqkHz);
+
 	_BOOLEAN		SetFrequencyWinradio(const int iFreqkHz);
 	_BOOLEAN		SetFrequencyAOR7030(const ECOMNumber eCOMNumber, const int iFreqkHz);
 	_BOOLEAN		SetFrequencyNRD535(const ECOMNumber eCOMNumber, const int iFreqkHz);
@@ -183,4 +186,5 @@ public slots:
 	void OnRemoteMenu(int iID);
 	void OnComPortMenu(int iID);
 	void OnGetUpdate();
+	void OnFreqCntNewValue(double dVal);
 };

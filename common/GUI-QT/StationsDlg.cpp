@@ -258,6 +258,17 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	ListViewStations->addColumn("Site");
 	ListViewStations->addColumn("Language");
 
+	/* Set up frequency selector control (QWTCounter control) */
+	QwtCounterFrequency->setRange(0.0, 30000.0, 1.0);
+	QwtCounterFrequency->setNumButtons(3); /* Three buttons on each side */
+	QwtCounterFrequency->setIncSteps(QwtCounter::Button1, 1); /* Increment */
+	QwtCounterFrequency->setIncSteps(QwtCounter::Button2, 10);
+	QwtCounterFrequency->setIncSteps(QwtCounter::Button3, 100);
+
+	/* Init with current setting in log file */
+	QwtCounterFrequency->
+		setValue(DRMReceiver.GetParameters()->ReceptLog.GetFrequency());
+
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
@@ -355,6 +366,9 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnListItemClicked(QListViewItem*)));
 	connect(&UrlUpdateSchedule, SIGNAL(finished(QNetworkOperation*)),
 		this, SLOT(OnUrlFinished(QNetworkOperation*)));
+
+	connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
+		this, SLOT(OnFreqCntNewValue(double)));
 
 
 	/* Set up timer */
@@ -566,6 +580,15 @@ void StationsDlg::SetStationsView()
 	}
 }
 
+void StationsDlg::OnFreqCntNewValue(double dVal)
+{
+	/* Set frequency to front-end */
+	SetFrequency((int) dVal);
+
+	/* Set selected frequency in log file class */
+	DRMReceiver.GetParameters()->ReceptLog.SetFrequency((int) dVal);
+}
+
 void StationsDlg::OnListItemClicked(QListViewItem* item)
 {
 	/* If no item is selected, return */
@@ -575,34 +598,16 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 	/* Third text of list view item is frequency -> text(2) */
 	const int iCurFreqkHz = QString(item->text(2)).toInt();
 
-	switch (eWhichRemoteControl)
-	{
-	case RC_WINRADIO:
-		SetFrequencyWinradio(iCurFreqkHz);
-		break;
-
-	case RC_AOR7030:
-		SetFrequencyAOR7030(eComNumber, iCurFreqkHz);
-		break;
-
-	case RC_ELEKTOR304:
-		SetFrequencyElektor304(eComNumber, iCurFreqkHz);
-		break;
-
-	case RC_JRC_NRD535:
-		SetFrequencyNRD535(eComNumber, iCurFreqkHz);
-		break;
-
-	case RC_TT_RX320D:
-		SetFrequencyRX320D(eComNumber, iCurFreqkHz);
-		break;
-	}
+	SetFrequency(iCurFreqkHz);
 
 	/* Now tell the receiver that the frequency has changed */
 	DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
 
 	/* Set selected frequency in log file class */
 	DRMReceiver.GetParameters()->ReceptLog.SetFrequency(iCurFreqkHz);
+
+	/* Set value in frequency counter control QWT */
+	QwtCounterFrequency->setValue(iCurFreqkHz);
 }
 
 void StationsDlg::OnRemoteMenu(int iID)
@@ -682,6 +687,32 @@ void StationsDlg::OnComPortMenu(int iID)
 	pRemoteMenu->setItemChecked(100, 100 == iID);
 	pRemoteMenu->setItemChecked(101, 101 == iID);
 	pRemoteMenu->setItemChecked(102, 102 == iID);
+}
+
+void StationsDlg::SetFrequency(const int iFreqkHz)
+{	
+	switch (eWhichRemoteControl)
+	{
+	case RC_WINRADIO:
+		SetFrequencyWinradio(iFreqkHz);
+		break;
+
+	case RC_AOR7030:
+		SetFrequencyAOR7030(eComNumber, iFreqkHz);
+		break;
+
+	case RC_ELEKTOR304:
+		SetFrequencyElektor304(eComNumber, iFreqkHz);
+		break;
+
+	case RC_JRC_NRD535:
+		SetFrequencyNRD535(eComNumber, iFreqkHz);
+		break;
+
+	case RC_TT_RX320D:
+		SetFrequencyRX320D(eComNumber, iFreqkHz);
+		break;
+	}
 }
 
 
