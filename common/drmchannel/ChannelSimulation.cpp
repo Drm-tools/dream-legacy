@@ -482,7 +482,8 @@ void CTapgain::gausstp(_REAL taps[], _REAL& s, int& over) const
 
 int CTapgain::DelMs2Sam(const _REAL rDelay) const
 {
-	/* Delay in samples */
+	/* Delay in samples. The channel taps are shifted to the taps that are 
+	   possible for the given sample rate -> approximation! */
 	return (int) (rDelay /* ms */ * SOUNDCRD_SAMPLE_RATE / 1000);	
 }
 
