@@ -92,7 +92,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 		}
 	}
 
-
+#if 1
 	/* Update sigma estimation ---------------------------------------------- */
 	if (bTracking == TRUE)
 	{
@@ -131,7 +131,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			rAvSNR = (_REAL) 0.0;
 		}
 	}
-
+#endif
 
 	/* Wiener interpolation, filtering and prediction ----------------------- */
 	for (i = 0; i < iNumCarrier; i += iScatPilFreqInt)
@@ -304,8 +304,11 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 		/* Init SNR value */
 		rSNR = pow(10, INIT_VALUE_SNR_WIEN_TIME_DB / 10);
 
-		/* Init sigma value with maximum value */
-		rSigma = rSigmaMax;
+		/* Init sigma with a very large value. This make the acquisition more
+		   robust in case of a large sample frequency offset. But we get more
+		   aliasing in the time domain and this could make the timing unit
+		   perform worse. Therefore, this is only a trade-off */
+		rSigma = rSigmaMax * 4;
 	}
 	else
 	{
