@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>380</width>
+            <width>376</width>
             <height>361</height>
         </rect>
     </property>
@@ -50,26 +50,65 @@
             <number>6</number>
         </property>
         <widget>
-            <class>QLabel</class>
+            <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>PixmapFhGIIS</cstring>
+                <cstring>Layout2</cstring>
             </property>
-            <property stdset="1">
-                <name>sizePolicy</name>
-                <sizepolicy>
-                    <hsizetype>0</hsizetype>
-                    <vsizetype>0</vsizetype>
-                </sizepolicy>
-            </property>
-            <property stdset="1">
-                <name>pixmap</name>
-                <pixmap>image1</pixmap>
-            </property>
-            <property stdset="1">
-                <name>scaledContents</name>
-                <bool>true</bool>
-            </property>
+            <hbox>
+                <property stdset="1">
+                    <name>margin</name>
+                    <number>0</number>
+                </property>
+                <property stdset="1">
+                    <name>spacing</name>
+                    <number>6</number>
+                </property>
+                <widget>
+                    <class>QLabel</class>
+                    <property stdset="1">
+                        <name>name</name>
+                        <cstring>PixmapFhGIIS</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>sizePolicy</name>
+                        <sizepolicy>
+                            <hsizetype>0</hsizetype>
+                            <vsizetype>0</vsizetype>
+                        </sizepolicy>
+                    </property>
+                    <property stdset="1">
+                        <name>pixmap</name>
+                        <pixmap>image1</pixmap>
+                    </property>
+                    <property stdset="1">
+                        <name>scaledContents</name>
+                        <bool>true</bool>
+                    </property>
+                </widget>
+                <widget>
+                    <class>QLabel</class>
+                    <property stdset="1">
+                        <name>name</name>
+                        <cstring>PixmapLogoJournaline</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>sizePolicy</name>
+                        <sizepolicy>
+                            <hsizetype>0</hsizetype>
+                            <vsizetype>0</vsizetype>
+                        </sizepolicy>
+                    </property>
+                    <property stdset="1">
+                        <name>pixmap</name>
+                        <pixmap>image2</pixmap>
+                    </property>
+                    <property stdset="1">
+                        <name>scaledContents</name>
+                        <bool>false</bool>
+                    </property>
+                </widget>
+            </hbox>
         </widget>
         <widget>
             <class>QTextBrowser</class>
@@ -158,7 +197,7 @@
                     </property>
                     <property stdset="1">
                         <name>pixmap</name>
-                        <pixmap>image2</pixmap>
+                        <pixmap>image3</pixmap>
                     </property>
                 </widget>
                 <widget>
@@ -173,7 +212,7 @@
                     </property>
                     <property stdset="1">
                         <name>pixmap</name>
-                        <pixmap>image3</pixmap>
+                        <pixmap>image4</pixmap>
                     </property>
                 </widget>
                 <widget>
@@ -217,7 +256,7 @@
                     </property>
                     <property stdset="1">
                         <name>pixmap</name>
-                        <pixmap>image4</pixmap>
+                        <pixmap>image5</pixmap>
                     </property>
                 </widget>
                 <widget>
@@ -232,7 +271,7 @@
                     </property>
                     <property stdset="1">
                         <name>pixmap</name>
-                        <pixmap>image5</pixmap>
+                        <pixmap>image6</pixmap>
                     </property>
                 </widget>
                 <spacer>
@@ -292,7 +331,7 @@
             <hordata>5</hordata>
             <verdata>5</verdata>
         </sizepolicy>
-        <pixmap>image6</pixmap>
+        <pixmap>image7</pixmap>
     </customwidget>
 </customwidgets>
 <images>
@@ -306,22 +345,26 @@
     </image>
     <image>
         <name>image2</name>
-        <data format="XPM.GZ" length="435">789cd3d7528808f055d0d2e72a2e492cc94c5648ce482c52d04a29cdcdad8c8eb5ade65232345530b45430523054d2e15252564856f0cbcf4b05b1f5806c650330007341401906f4d085802c34213d0c213d74213d3d74213d0c213d0c213dda0a61b1119bbbb0b91e9b1fb186043cbc9451809e52ad35170094374b56</data>
+        <data format="XPM.GZ" length="4325">789cb557516f13310c7edfaf38cd6f13ba75136843889f00e21109f1603b89e06120c1784088ff8e3f3b69bb6baed7b236d15d633be72f766c27bdbe1a3e7e78375c5d5ffc7ce4c7af3ae817fe315ca55f0f0fbf3f7d7efbe7e2f266b51a5eae86fbe1e6f2c5c5e538e8f0fefbb78c71b631dddea3832c205fdda0834c20efeed1410ac8d7051d2483d4153a4802996fd1412ac87287eea08b8d389ae8f2dc7e5bc60106c52ffd2fca328e81d4df67802ce20887a39ee1b0037038850d2a6c8f8fb8376bb208ea593e8fa3899b22d3431914a50e8c4e5c7a1c8e960653d411605c07473a261e8353eaaac4610c418d63389a52019cc1523170c27a9cc99224615d3ca694d4798b3822d59a0c18060215b5b708d98e90a91a438fe95367b2814020ec363a6f09474b83f1d451f798c585291711a6c4a6c3480f014ece64374c5d64cd794b38356b28c32c4499ef8c9811f12d0688130f7cb38fdb37e649aef63cd9b8199c0855caa5c2d40848be3f494c354c16682de63e673a0e15c30319bc457b1ca76073767246eb4b37c3fada0c54b779f338ae3c2167e8b0b85d6a73f166ea395b8c1d5ad664761e5b3cd09e3ce59c8f289e88cbd42b82241630a2f375a7e4633c966d65b92710832f2ab338f0dae18dba1881538a8cb33894f33147019759099b45427338ee354ac5ab297b1ed8db52c48290a5099c9b0a9236666d44f8f5cfc4ebd05c9ec26b946d078117f9868a86cc340dd96a5714be5c8c577c863f4dc4fe1b879695ad199cf09a4f13f348acbd84ab6de0f5134c5f058c01e14f15691c579b5debe3644ce33cd6b95e4c47e3456c04696ae3f0832160b5072289fdcaebbce8e224b724b9528bd61ab066a27fd748aa33809843be16a51c6d2f0e7bf91c631bcd9e305fdb604dd619a616acf6b8a8c8446707476319d529e681085ade1a8ce1d59ac959c16a8f8bd234f93a385108ecb44a0eca1eb408a53aa8efb2653158ed71914cf3761747b039b8c3e02cd55262e954726af1dda23c0e7578791dd66b91470cef397f2c69c67a5312dbc814169a8d08eb88ef16e5081813a5adb05e8b14dfecb987e8932add06345783745632114d70f4b82a7d787b82631721ec099daef57098ec6c433129a76bbb794a76f5a033396d8303148b8169169f1ac7234c778ac5a971b815e0f3e2c4152d9d13c671fc0e9d9ef7fff3101cbb10cb19b72670febeb9f807eedbabc7</data>
     </image>
     <image>
         <name>image3</name>
-        <data format="XPM.GZ" length="397">789cd3d7528808f055d0d2e72a2e492cc94c5648ce482c52d04a29cdcdad8c8eb5ade65232345630b45430523054d2e152d2534856f0cbcf4b05b195816c650330004b21016554016565540165340165540165655401653401655401656554016534016574010c15986660da82c51d982ec5f40b16df62860738c46aadb9008bbf41d6</data>
+        <data format="XPM.GZ" length="435">789cd3d7528808f055d0d2e72a2e492cc94c5648ce482c52d04a29cdcdad8c8eb5ade65232345530b45430523054d2e15252564856f0cbcf4b05b1f5806c650330007341401906f4d085802c34213d0c213d74213d3d74213d0c213d0c213dda0a61b1119bbbb0b91e9b1fb186043cbc9451809e52ad35170094374b56</data>
     </image>
     <image>
         <name>image4</name>
-        <data format="XPM.GZ" length="397">789cd3d7528808f055d0d2e72a2e492cc94c5648ce482c52d04a29cdcdad8c8eb5ade65232345630b45430523054d2e15252564856f0cbcf4b05b1f5806c650330007395910058400f4300490826a08721a0872100154216d0c310d0c310000aa10be8115041c816022e25e05bf4f04009b15a6b2e00e6d74265</data>
+        <data format="XPM.GZ" length="397">789cd3d7528808f055d0d2e72a2e492cc94c5648ce482c52d04a29cdcdad8c8eb5ade65232345630b45430523054d2e152d2534856f0cbcf4b05b195816c650330004b21016554016565540165340165540165655401653401655401656554016534016574010c15986660da82c51d982ec5f40b16df62860738c46aadb9008bbf41d6</data>
     </image>
     <image>
         <name>image5</name>
-        <data format="XPM.GZ" length="435">789cd3d7528808f055d0d2e72a2e492cc94c5648ce482c52d04a29cdcdad8c8eb5ade65232345530b45430523054d2e15252564856f0cbcf4b05b1f5806c65033000739561400f04c0427a5884608228427a5884f4b00881043184f4b008e9d15688087711e34722c24b190528d55a73010072f54b2a</data>
+        <data format="XPM.GZ" length="397">789cd3d7528808f055d0d2e72a2e492cc94c5648ce482c52d04a29cdcdad8c8eb5ade65232345630b45430523054d2e15252564856f0cbcf4b05b1f5806c650330007395910058400f4300490826a08721a0872100154216d0c310d0c310000aa10be8115041c816022e25e05bf4f04009b15a6b2e00e6d74265</data>
     </image>
     <image>
         <name>image6</name>
+        <data format="XPM.GZ" length="435">789cd3d7528808f055d0d2e72a2e492cc94c5648ce482c52d04a29cdcdad8c8eb5ade65232345530b45430523054d2e15252564856f0cbcf4b05b1f5806c65033000739561400f04c0427a5884608228427a5884f4b00881043184f4b008e9d15688087711e34722c24b190528d55a73010072f54b2a</data>
+    </image>
+    <image>
+        <name>image7</name>
         <data format="XPM.GZ" length="646">789c6dd2c10ac2300c00d07bbf2234b7229d1ddec44f503c0ae2a154410f53d0ed20e2bf6bdb656dd6861dd23d9a66591b0587fd1654235ebded6f0edcd53e419d87ae7b1f4f9b8f906d0bfe012317426a70b07bdc2f3ec77f8ed6b89559061a0343d06a124cc105596482585094bc0ae599b04646c9018926491b2205e140c485cace25755c175d0a967b622ff900b8cc9c7d29af594ea722d589167f813aa852ba07d94b9dce296e883fe7bb163f23896753</data>
     </image>
 </images>

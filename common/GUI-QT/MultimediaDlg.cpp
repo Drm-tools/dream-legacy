@@ -35,10 +35,13 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal,
 	/* Picture controls should be invisable. These controls are only used for
 	   storing the resources */
 	PixmapFhGIIS->hide();
+	PixmapLogoJournaline->hide();
 
-	/* Set picture in source factory */
+	/* Set pictures in source factory */
 	QMimeSourceFactory::defaultFactory()->setImage("PixmapFhGIIS",
 		PixmapFhGIIS->pixmap()->convertToImage());
+	QMimeSourceFactory::defaultFactory()->setImage("PixmapLogoJournaline",
+		PixmapLogoJournaline->pixmap()->convertToImage());
 
 	/* Set FhG IIS text */
 	strFhGIISText = "<table><tr><td><img source=\"PixmapFhGIIS\"></td>"
@@ -46,6 +49,12 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal,
 		"Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
 		"Germany. For more information visit http://www.iis.fhg.de/dab"
 		"</font></td></tr></table>";
+
+	/* Set Journaline headline text */
+	strJournalineHeadText =
+		"<table><tr><td><img source=\"PixmapLogoJournaline\"></td>"
+		"<td><h2>NewsService Journaline" + QString(QChar(174)) /* (R) */ +
+		"</h2></td></tr></table>";
 
 
 	/* Set Menu ***************************************************************/
@@ -223,8 +232,7 @@ void MultimediaDlg::SetJournalineText()
 	   is used to identify whether normal text is displayed or an ID was set */
 	QString strAllText =
 		"<table>"
-		"<tr><th><h2>NewsService Journaline" + QString(QChar(174)) +
-		"</h2></th></tr>"
+		"<tr><th>" + strJournalineHeadText + "</th></tr>"
 		"<tr><td><hr></td></tr>" /* horizontial line */
 		"<tr><th>" + strTitle + "</th></tr>"
 		"<tr><td><ul type=\"square\">" + strItems + "</ul></td></tr>"

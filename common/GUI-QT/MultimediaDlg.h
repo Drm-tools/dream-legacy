@@ -110,6 +110,7 @@ protected:
 	CVector<CMOTObject>		vecRawImages;
 	int						iCurImagePos;
 	QString					strFhGIISText;
+	QString					strJournalineHeadText;
 	int						iCurJourObjID;
 	CDataDecoder::EAppType	eAppType;
 	CNewIDHistory			NewIDHistory;
