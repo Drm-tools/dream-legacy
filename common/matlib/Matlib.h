@@ -124,6 +124,8 @@ public:
 	CMatlibVector() : iVectorLength(0), pData(NULL), eVType(VTY_CONST) {}
 	CMatlibVector(const int iNLen, const EVecTy eNTy = VTY_CONST) : 
 		iVectorLength(0), pData(NULL), eVType(eNTy) {Init(iNLen);}
+	CMatlibVector(const int iNLen, const T tIniVal) : 
+		iVectorLength(0), pData(NULL), eVType(VTY_CONST) {Init(iNLen, tIniVal);}
 	CMatlibVector(CMatlibVector<T>& vecI);
 	CMatlibVector(const CMatlibVector<T>& vecI);
 	virtual ~CMatlibVector() {if (pData != NULL) delete[] pData;}
@@ -155,8 +157,7 @@ public:
 	CMatlibVector<T> operator()(const int iFrom, const int iStep, const int iTo) const;
 
 	inline int GetSize() const {return iVectorLength;}
-	void Init(const int iIniLen);
-	void Init(const int iIniLen, const T tIniVal);
+	void Init(const int iIniLen, const T tIniVal = 0);
 	CMatlibVector<T>& PutIn(const int iFrom, const int iTo, CMatlibVector<T>& fvA);
 	CMatlibVector<T>& Merge(const CMatlibVector<T>& vecA, T& tB);
 	CMatlibVector<T>& Merge(const CMatlibVector<T>& vecA, const CMatlibVector<T>& vecB);
@@ -381,7 +382,7 @@ CMatlibVector<T>::CMatlibVector(const CMatlibVector<T>& vecI) :
 }
 
 template<class T>
-void CMatlibVector<T>::Init(const int iIniLen)
+void CMatlibVector<T>::Init(const int iIniLen, const T tIniVal)
 {
 	iVectorLength = iIniLen;
 
@@ -393,20 +394,10 @@ void CMatlibVector<T>::Init(const int iIniLen)
 
 		pData = new T[iVectorLength];
 
-		/* Init with zeros */
+		/* Init with init value */
 		for (int i = 0; i < iVectorLength; i++)
-			pData[i] = 0;
+			pData[i] = tIniVal;
 	}
-}
-
-template<class T>
-void CMatlibVector<T>::Init(const int iIniLen, const T tIniVal)
-{
-	/* Init vector and set all values to init value parameter */
-	Init(iIniLen);
-
-	for (int i = 0; i < iIniLen; i++)
-		operator[](i) = tIniVal;
 }
 
 template<class T> inline
@@ -547,8 +538,7 @@ public:
 
 	virtual ~CMatlibMatrix() {if (ppData != NULL) delete[] ppData;}
 
-	void Init(const int iNRowLen, const int iNColLen);
-	void Init(const int iNRowLen, const int iNColLen, const T tIniVal);
+	void Init(const int iNRowLen, const int iNColLen, const T tIniVal = 0);
 	inline int GetRowSize() const
 		{return iRowSize;}
 	inline int GetColSize() const
@@ -692,7 +682,7 @@ CMatlibMatrix<T>::CMatlibMatrix(const CMatlibMatrix<T>& matI) :
 }
 
 template<class T>
-void CMatlibMatrix<T>::Init(const int iNRowLen, const int iNColLen)
+void CMatlibMatrix<T>::Init(const int iNRowLen, const int iNColLen, const T tIniVal)
 {
 	iRowSize = iNRowLen;
 
@@ -704,24 +694,9 @@ void CMatlibMatrix<T>::Init(const int iNRowLen, const int iNColLen)
 
 		ppData = new CMatlibVector<T>[iRowSize];
 
-		/* Init column vectors and zero out */
+		/* Init column vectors and set to init value */
 		for (int i = 0; i < iRowSize; i++)
-			ppData[i].Init(iNColLen, 0);
-	}
-}
-
-template<class T>
-void CMatlibMatrix<T>::Init(const int iNRowLen, const int iNColLen, const T tIniVal)
-{
-	/* Init vector and set all values to init value parameter */
-	Init(iNRowLen, iNColLen);
-
-	/* Set all values to the init value */
-	for (int i = 0; i < iNRowLen; i++)
-	{
-		const int iSize = ppData[i].GetSize();
-		for (int j = 0; j < iSize; j++)
-			ppData[i][j] = tIniVal;
+			ppData[i].Init(iNColLen, tIniVal);
 	}
 }
 
