@@ -62,7 +62,7 @@ public:
 	void	SetInDev(int iNewDev) {}
 
 #if WITH_SOUND
-	void InitRecording(int iNewBufferSize);
+	void InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
 	void InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
 	_BOOLEAN Read(CVector<short>& psData);
 	_BOOLEAN Write(CVector<short>& psData);
@@ -79,7 +79,7 @@ protected:
 	
 #else
 	/* Dummy definitions */
-	void InitRecording(int iNewBufferSize){}
+	void InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE){}
 	void InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE){}
 	_BOOLEAN Read(CVector<short>& psData){return FALSE;}
 	_BOOLEAN Write(CVector<short>& psData){return FALSE;}

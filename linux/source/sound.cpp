@@ -511,7 +511,7 @@ protected:
 
 /* Wave in ********************************************************************/
 
-void CSound::InitRecording(int iNewBufferSize)
+void CSound::InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
 	qDebug("initrec %d", iNewBufferSize);
 
