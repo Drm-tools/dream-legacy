@@ -350,23 +350,41 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			break;
 		}
 	}
-}
 
-_REAL CChannelEstimation::CalAndBoundSNR(_REAL rSignalEst, _REAL rNoiseEst)
-{
-	_REAL rReturn;
 
-	/* "rNoiseEst" must not be zero */
-	if (rNoiseEst != (_REAL) 0.0)
-		rReturn = rSignalEst / rNoiseEst;
-	else
-		rReturn = (_REAL) 1.0;
+	/* WMER on MSC cells estimation ----------------------------------------- */
+	for (i = 0; i < iNumCarrier; i++)
+	{
+		/* Use MSC cells for this SNR estimation method */
+		if (_IsMSC(ReceiverParam.matiMapTab[iModSymNum][i]))
+		{
+			CReal rCurErrPow;
 
-	/* Bound the SNR at 0 dB */
-	if (rReturn < (_REAL) 1.0)
-		rReturn = (_REAL) 1.0;
+			/* Get tentative decision for this MSC QAM symbol and calculate
+			   squared distance as a measure for the noise. MSC can be 16 or
+			   64 QAM */
+			switch (eMSCCodSch)
+			{
+			case CParameter::CS_3_SM:
+			case CParameter::CS_3_HMSYM:
+			case CParameter::CS_3_HMMIX:
+				rCurErrPow = SqMag(Dec64QAM((*pvecOutputData)[i].cSig));
+				break;
 
-	return rReturn;
+			case CParameter::CS_2_SM:
+				rCurErrPow = SqMag(Dec16QAM((*pvecOutputData)[i].cSig));
+				break;
+			}
+
+			/* Use decision together with channel estimate to get
+			   estimates for signal and noise (for each carrier) */
+			IIR1(vecrNoiseEstMSC[i], rCurErrPow * vecrSqMagChanEst[i],
+				rLamMSCSNREst);
+
+			IIR1(vecrSigEstMSC[i], vecrSqMagChanEst[i],
+				rLamMSCSNREst);
+		}
+	}
 }
 
 void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
@@ -378,6 +396,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	iNumCarrier = ReceiverParam.iNumCarrier;
 	iFFTSizeN = ReceiverParam.iFFTSizeN;
 	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
+	eMSCCodSch = ReceiverParam.eMSCCodingScheme;
 
 	/* Length of guard-interval with respect to FFT-size! */
 	rGuardSizeFFT = (_REAL) iNumCarrier *
@@ -488,6 +507,8 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	rSignalEst = (_REAL) 0.0;
 	rNoiseEst = (_REAL) 0.0;
 	rSNREstimate = (_REAL) pow(10, INIT_VALUE_SNR_ESTIM_DB / 10);
+	vecrNoiseEstMSC.Init(iNumCarrier, (_REAL) 0.0);
+	vecrSigEstMSC.Init(iNumCarrier, (_REAL) 0.0);
 
 	/* For SNR estimation initialization */
 	iSNREstIniSigAvCnt = 0;
@@ -509,7 +530,8 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 		ReceiverParam.iSymbolBlockSize);
 	rLamSNREstSlow = IIR1Lam(TICONST_SNREST_SLOW, (CReal) SOUNDCRD_SAMPLE_RATE /
 		ReceiverParam.iSymbolBlockSize);
-
+	rLamMSCSNREst = IIR1Lam(TICONST_SNREST_MSC, (CReal) SOUNDCRD_SAMPLE_RATE /
+		ReceiverParam.iSymbolBlockSize);
 
 	/* Init delay spread length estimation (index) */
 	rLenPDSEst = (_REAL) 0.0;
@@ -725,6 +747,24 @@ fflush(pFile);
 	}
 }
 
+_REAL CChannelEstimation::CalAndBoundSNR(const _REAL rSignalEst,
+										 const _REAL rNoiseEst)
+{
+	_REAL rReturn;
+
+	/* "rNoiseEst" must not be zero */
+	if (rNoiseEst != (_REAL) 0.0)
+		rReturn = rSignalEst / rNoiseEst;
+	else
+		rReturn = (_REAL) 1.0;
+
+	/* Bound the SNR at 0 dB */
+	if (rReturn < (_REAL) 1.0)
+		rReturn = (_REAL) 1.0;
+
+	return rReturn;
+}
+
 _BOOLEAN CChannelEstimation::GetSNREstdB(_REAL& rSNREstRes) const
 {
 	const _REAL rNomBWSNR = rSNREstimate * rSNRSysToNomBWCorrFact;
@@ -842,6 +882,67 @@ void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 
 			/* Scale (carrier index) */
 			vecrScale[i] = i;
+		}
+
+		/* Release resources */
+		Unlock();
+	}
+}
+
+void CChannelEstimation::GetSNRProfile(CVector<_REAL>& vecrData,
+									   CVector<_REAL>& vecrScale)
+{
+	int i;
+
+	/* Init output vectors */
+	vecrData.Init(iNumCarrier, (_REAL) 0.0);
+	vecrScale.Init(iNumCarrier, (_REAL) 0.0);
+
+	/* Do copying of data only if vector is of non-zero length which means that
+	   the module was already initialized */
+	if (iNumCarrier != 0)
+	{
+		/* Lock resources */
+		Lock();
+
+		/* We want to suppress the carriers on which no SNR measurement can be
+		   performed (DC carrier, frequency pilots carriers) */
+		int iNewNumCar = 0;
+		for (i = 0; i < iNumCarrier; i++)
+		{
+			if (vecrSigEstMSC[i] != (_REAL) 0.0)
+				iNewNumCar++;
+		}
+
+		/* Init output vectors for new size */
+		vecrData.Init(iNewNumCar, (_REAL) 0.0);
+		vecrScale.Init(iNewNumCar, (_REAL) 0.0);
+
+		/* Copy data in output vector and set scale 
+		   (carrier index as x-scale) */
+		int iCurOutIndx = 0;
+		for (i = 0; i < iNumCarrier; i++)
+		{
+			/* Suppress carriers where no SNR measurement is possible */
+			if (vecrSigEstMSC[i] != (_REAL) 0.0)
+			{
+				/* Calculate final result (signal to noise ratio). Consider
+				   correction factor for average signal energy */
+				const _REAL rNomBWSNR =
+					CalAndBoundSNR(vecrSigEstMSC[i], vecrNoiseEstMSC[i]) *
+					rSNRFACSigCorrFact * rSNRSysToNomBWCorrFact;
+
+				/* Bound the SNR at 0 dB */
+				if ((rNomBWSNR > (_REAL) 1.0) && (bSNRInitPhase == FALSE))
+					vecrData[iCurOutIndx] = (_REAL) 10.0 * Log10(rNomBWSNR);
+				else
+					vecrData[iCurOutIndx] = (_REAL) 0.0;
+
+				/* Scale (carrier index) */
+				vecrScale[iCurOutIndx] = i;
+
+				iCurOutIndx++;
+			}
 		}
 
 		/* Release resources */

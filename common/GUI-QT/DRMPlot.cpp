@@ -631,10 +631,22 @@ void CDRMPlot::SetupPSD()
 	setAxisScale(QwtPlot::xBottom,
 		(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
 
+	setAxisScale(QwtPlot::yLeft, MIN_VAL_SHIF_PSD_Y_AXIS_DB,
+		MAX_VAL_SHIF_PSD_Y_AXIS_DB);
+
 	/* Insert line for DC carrier */
 	clear();
 	curve1 = insertCurve(tr("DC carrier"));
 	setCurvePen(curve1, QPen(SpecLine1ColorPlot, 1, DotLine));
+
+	double dX[2], dY[2];
+	dX[0] = dX[1] = (_REAL) VIRTUAL_INTERMED_FREQ / 1000;
+
+	/* Take the min-max values from scale to get vertical line */
+	dY[0] = MIN_VAL_SHIF_PSD_Y_AXIS_DB;
+	dY[1] = MAX_VAL_SHIF_PSD_Y_AXIS_DB;
+
+	setCurveData(curve1, dX, dY, 2);
 
 	/* Add main curve */
 	main1curve = insertCurve(tr("Shifted PSD"));
@@ -653,19 +665,46 @@ void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 		SetupPSD();
 	}
 
+	/* Set actual data */
+	SetData(vecrData, vecrScale);
+	replot();
+}
+
+void CDRMPlot::SetupSNRSpectrum()
+{
+	/* Init chart for power spectram density estimation */
+	setTitle(tr("SNR Spectrum (Weighted MER on MSC Cells)"));
+	enableAxis(QwtPlot::yRight, FALSE);
+	enableGridX(TRUE);
+	enableGridY(TRUE);
+	setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
+	setAxisTitle(QwtPlot::yLeft, tr("WMER [dB]"));
+
 	/* Fixed scale */
-	const double cdAxMinLeft = (double) -85.0;
-	const double cdAxMaxLeft = (double) -35.0;
-	setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
+	setAxisScale(QwtPlot::yLeft, MIN_VAL_SNR_SPEC_Y_AXIS_DB,
+		MAX_VAL_SNR_SPEC_Y_AXIS_DB);
 
-	double dX[2], dY[2];
-	dX[0] = dX[1] = (_REAL) VIRTUAL_INTERMED_FREQ / 1000;
+	/* Add main curve */
+	clear();
+	main1curve = insertCurve(tr("SNR Spectrum"));
+	
+	/* Curve color */
+	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
+		RoundJoin));
+}
 
-	/* Take the min-max values from scale to get vertical line */
-	dY[0] = cdAxMinLeft;
-	dY[1] = cdAxMaxLeft;
+void CDRMPlot::SetSNRSpectrum(CVector<_REAL>& vecrData,
+							  CVector<_REAL>& vecrScale)
+{
+	/* First check if plot must be set up */
+	if (CurCharType != SNR_SPECTRUM)
+	{
+		CurCharType = SNR_SPECTRUM;
+		SetupSNRSpectrum();
+	}
 
-	setCurveData(curve1, dX, dY, 2);
+	/* Fixed scale */
+	setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) vecrScale.Size());
 
 	/* Set actual data */
 	SetData(vecrData, vecrScale);

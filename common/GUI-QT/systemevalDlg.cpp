@@ -99,6 +99,7 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 	/* Inser actual items. The list is not sorted -> items which are inserted
 	   first show up at the end of the list */
 	/* Spectrum */
+	new CCharSelItem(pSpectrumLiViIt, tr("SNR Spectrum"), SNR_SPECTRUM);
 	CCharSelItem* pListItAudSpec = new CCharSelItem(pSpectrumLiViIt,
 		tr("Audio Spectrum"), AUDIO_SPECTRUM);
 	new CCharSelItem(pSpectrumLiViIt, tr("Shifted PSD"), POWER_SPEC_DENSITY);
@@ -421,6 +422,14 @@ void systemevalDlg::OnTimerChart()
 		MainPlot->SetPSD(vecrData, vecrScale);
 		break;
 
+	case SNR_SPECTRUM:
+		/* Get data from module */
+		DRMReceiver.GetChanEst()->GetSNRProfile(vecrData, vecrScale);
+
+		/* Prepare graph and set data */
+		MainPlot->SetSNRSpectrum(vecrData, vecrScale);
+		break;
+
 	case INPUTSPECTRUM_NO_AV:
 		/* Get data from module */
 		DRMReceiver.GetReceiver()->GetInputSpec(vecrData, vecrScale);
@@ -534,6 +543,7 @@ void systemevalDlg::SetupChart(const ECharType eNewType)
 		case TRANSFERFUNCTION:
 		case POWER_SPEC_DENSITY:
 		case INPUT_SIG_PSD:
+		case SNR_SPECTRUM:
 			/* Fast update */
 			TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME_FAST);
 			break;
@@ -1411,6 +1421,14 @@ void systemevalDlg::AddWhatsThisHelpChar(const ECharType NCharType)
 			"the actual DRM spectrum, the DRM signal has zero crossings "
 			"because of the orthogonality. Therefore this spectrum represents "
 			"NOT the actual spectrum but the \"idealized\" OFDM spectrum.");
+		break;
+
+	case SNR_SPECTRUM:
+		/* SNR Spectrum (Weighted MER on MSC Cells) */
+		strCurPlotHelp =
+			"<b>" + tr("SNR Spectrum (Weighted MER on MSC Cells):") + "</b> " +
+			tr("This plot shows the Weighted MER on MSC cells for each carrier "
+			"separately.");
 		break;
 
 	case INPUTSPECTRUM_NO_AV:

@@ -71,6 +71,14 @@
 #define MIN_VAL_INP_SPEC_Y_AXIS_DB				((double) -125.0)
 #define MAX_VAL_INP_SPEC_Y_AXIS_DB				((double) -25.0)
 
+/* Maximum and minimum values of x-axis of input PSD (shifted) */
+#define MIN_VAL_SHIF_PSD_Y_AXIS_DB				((double) -85.0)
+#define MAX_VAL_SHIF_PSD_Y_AXIS_DB				((double) -35.0)
+
+/* Maximum and minimum values of x-axis of SNR spectrum */
+#define MIN_VAL_SNR_SPEC_Y_AXIS_DB				((double) 0.0)
+#define MAX_VAL_SNR_SPEC_Y_AXIS_DB				((double) 35.0)
+
 
 /* Classes ********************************************************************/
 class CDRMPlot : public QwtPlot
@@ -89,6 +97,7 @@ public:
 					CVector<_REAL>& vecrScale);
 	void SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void SetSNRSpectrum(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 					const _REAL rDCFreq);
 	void SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
@@ -118,7 +127,7 @@ protected:
 		FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION,
 		POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM,
 		FREQ_SAM_OFFS_HIST, DOPPLER_DELAY_HIST, ALL_CONSTELLATION,
-		SNR_AUDIO_HIST, INPUT_SIG_PSD};
+		SNR_AUDIO_HIST, INPUT_SIG_PSD, SNR_SPECTRUM};
 
 	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
@@ -138,6 +147,7 @@ protected:
 	void SetupDopplerDelayHist();
 	void SetupSNRAudHist();
 	void SetupPSD();
+	void SetupSNRSpectrum();
 	void SetupInpSpec();
 	void SetupFACConst();
 	void SetupSDCConst(const CParameter::ECodScheme eNewCoSc);

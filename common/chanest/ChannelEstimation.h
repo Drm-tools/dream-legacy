@@ -58,6 +58,9 @@
 /* Time constant for IIR averaging of slow signal power estimation */
 #define TICONST_SNREST_SLOW				((CReal) 100.0) /* sec */
 
+/* Time constant for IIR averaging of MSC signal / noise power estimation */
+#define TICONST_SNREST_MSC				((CReal) 1.0) /* sec */
+
 /* Initial value for SNR */
 #define INIT_VALUE_SNR_WIEN_FREQ_DB		((_REAL) 30.0) /* dB */
 
@@ -73,7 +76,7 @@
    therefore the delay is usually estimated as too long, it is better for the
    log file to use the minimum value in a certain time period for a good
    estimate of the true delay */
-#define LEN_HIST_DELAY_LOG_FILE_S			((CReal) 1.0) /* sec */
+#define LEN_HIST_DELAY_LOG_FILE_S		((CReal) 1.0) /* sec */
 
 
 /* Classes ********************************************************************/
@@ -95,7 +98,7 @@ public:
 					 _REAL& rLowerBound, _REAL& rHigherBound,
 					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
 					 _REAL& rPDSEnd);
-
+	void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
 	CTimeLinear* GetTimeLinear() {return &TimeLinear;}
 	CTimeWiener* GetTimeWiener() {return &TimeWiener;}
@@ -165,14 +168,19 @@ protected:
 
 	CReal					rLamSNREstFast;
 	CReal					rLamSNREstSlow;
+	CReal					rLamMSCSNREst;
 
 	_REAL					rNoiseEst;
 	_REAL					rSignalEst;
+	CVector<_REAL>			vecrNoiseEstMSC;
+	CVector<_REAL>			vecrSigEstMSC;
 	_REAL					rSNREstimate;
 	_REAL					rSNRChanEstCorrFact;
 	_REAL					rSNRFACSigCorrFact;
 	_REAL					rSNRTotToPilCorrFact;
 	_REAL					rSNRSysToNomBWCorrFact;
+	CParameter::ECodScheme	eMSCCodSch;
+
 
 	/* Needed for GetDelay() */
 	_REAL					rLenPDSEst;
@@ -186,7 +194,7 @@ protected:
 	int						iSNREstIniNoiseAvCnt;
 	int						iSNREstInitCnt;
 	_BOOLEAN				bSNRInitPhase;
-	_REAL CalAndBoundSNR(_REAL rSignalEst, _REAL rNoiseEst);
+	_REAL CalAndBoundSNR(const _REAL rSignalEst, const _REAL rNoiseEst);
 
 
 	/* Wiener interpolation in frequency direction */
