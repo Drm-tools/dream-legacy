@@ -598,18 +598,37 @@ void CGenerateSDCData::InitInternal(CParameter& TransmParam)
 /* Receiver */
 void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	_BOOLEAN bCRCOk;
-
-	bCRCOk = SDCReceive.SDCParam(pvecInputData, ReceiverParam);
+	/* Decode SDC block and return CRC status */
+	const _BOOLEAN bCRCOk = SDCReceive.SDCParam(pvecInputData, ReceiverParam);
 
 	if (bCRCOk)
-		PostWinMessage(MS_SDC_CRC, 0);
+		PostWinMessage(MS_SDC_CRC, 0); /* Green light */
 	else
-		PostWinMessage(MS_SDC_CRC, 2);
+	{
+		/* SDC block depends on only a few parameters: robustness mode,
+		   DRM bandwidth and coding scheme (can be 4 or 16 QAM). If we
+		   initialize these parameters with resonable parameters it might
+		   be possible that these are the correct parameters. Therefore
+		   try to decode SDC even in case FAC wasn't decoded. That might
+		   speed up the DRM signal acqisition. But quite often it is the
+		   case that the parameters are not correct. In this case show a
+		   yellow light for the first decoding result instead of a red
+		   light to show that this was just "a guess" result */
+		if (bFirstBlock == TRUE)
+			PostWinMessage(MS_SDC_CRC, 1); /* Yellow light */
+		else
+			PostWinMessage(MS_SDC_CRC, 2); /* Red light */
+	}
+
+	/* Reset "first block" flag */
+	bFirstBlock = FALSE;
 }
 
 void CUtilizeSDCData::InitInternal(CParameter& ReceiverParam)
 {
+	/* Init "first block" flag */
+	bFirstBlock = TRUE;
+
 	/* Define block-size for input */
 	iInputBlockSize = ReceiverParam.iNumSDCBitsPerSFrame;
 }

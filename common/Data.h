@@ -219,6 +219,7 @@ public:
 
 protected:
 	CSDCReceive SDCReceive;
+	_BOOLEAN	bFirstBlock;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
