@@ -46,15 +46,20 @@
 /* Set the number of blocks used for carrier frequency acquisition */
 #define NUM_BLOCKS_CARR_ACQUISITION			10
 
+/* Percentage of aquisition search window half size relative to the useful
+   spectrum bandwidth */
+#define PERC_SEARCH_WIN_HALF_SIZE			((CReal) 5.0 /* % */ / 100)
+
 
 /* Classes ********************************************************************/
 class CAMDemodulation : public CReceiverModul<_REAL, _SAMPLE>
 {
 public:
-	CAMDemodulation() : bAcquisition(TRUE) {}
+	CAMDemodulation() : bAcquisition(TRUE), bSearWinWasSet(FALSE) {}
 	virtual ~CAMDemodulation() {}
 
-	void SetFilterTaps(_REAL rNewOffsetNorm);
+	void SetFilterTaps(CReal rNewOffsetNorm);
+	void SetAcqFreq(CReal rNewNormCenter);
 
 protected:
 	CRealVector					rvecA;
@@ -82,6 +87,10 @@ protected:
 	CRealVector					vecrPSD;
 	int							iHalfBuffer;
 
+	int							iSearchWinStart;
+	int							iSearchWinEnd;
+	_BOOLEAN					bSearWinWasSet;
+	CReal						rNormCenter;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

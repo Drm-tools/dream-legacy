@@ -101,6 +101,8 @@ public:
 	void					SetInitResOff(_REAL rNRO)
 								{rInitResampleOffset = rNRO;}
 
+	void					SetAMDemodAcq(_REAL rNewNorCen);
+
 	/* Get pointer to internal modules */
 	CUtilizeFACData*		GetFAC() {return &UtilizeFACData;}
 	CUtilizeSDCData*		GetSDC() {return &UtilizeSDCData;}

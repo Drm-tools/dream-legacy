@@ -302,6 +302,20 @@ void CDRMReceiver::Stop()
 	SoundInterface.Close();
 }
 
+void CDRMReceiver::SetAMDemodAcq(_REAL rNewNorCen)
+{
+	/* Set the frequency where the AM demodulation should look for the
+	   aquisition. Receiver must be in AM demodulation mode */
+	if (eReceiverMode == RM_AM)
+	{
+		/* Set normalized frequency */
+		AMDemodulation.SetAcqFreq(rNewNorCen);
+
+		/* Re-init receiver so that the module can switch to the new paramter */
+		eNewReceiverMode = RM_AM;
+	}
+}
+
 void CDRMReceiver::SetInStartMode()
 {
 	/* Load start parameters for all modules */

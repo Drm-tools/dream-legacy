@@ -64,8 +64,8 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 			/* Calculate frequency from maximum peak in spectrum */
 			rMaxPeak = (CReal) 0.0;
-			iIndMaxPeak = 1;
-			for (i = 1; i < iHalfBuffer; i++)
+			iIndMaxPeak = iSearchWinStart;
+			for (i = iSearchWinStart; i < iSearchWinEnd; i++)
 			{
 				if (vecrPSD[i] > rMaxPeak)
 				{
@@ -160,6 +160,32 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iTotalBufferSize);
 
+	/* Search window indices for aquisition */
+	if (bSearWinWasSet == TRUE)
+	{
+		const int iWinCenter = (int) (rNormCenter * iHalfBuffer);
+		const int iHalfWidth = (int) (PERC_SEARCH_WIN_HALF_SIZE * iHalfBuffer);
+
+		iSearchWinStart = iWinCenter - iHalfWidth;
+		iSearchWinEnd = iWinCenter + iHalfWidth;
+
+		/* Check the values that they are within the valid range */
+		if (iSearchWinStart < 1)
+			iSearchWinStart = 1;
+
+		if (iSearchWinEnd > iHalfBuffer)
+			iSearchWinEnd = iHalfBuffer;
+
+		/* Reset flag */
+		bSearWinWasSet = FALSE;
+	}
+	else
+	{
+		/* If there is no search window defined, use entire bandwidth */
+		iSearchWinStart = 1;
+		iSearchWinEnd = iHalfBuffer;
+	}
+
 
 	/* Define block-sizes for input and output */
 	iMaxOutputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
@@ -195,4 +221,15 @@ void CAMDemodulation::SetFilterTaps(_REAL rNewOffsetNorm)
 	/* Init state vector for filtering with zeros */
 	rvecZReal.Init(NUM_TAPS_HILB_FILT_5 - 1, (CReal) 0.0);
 	rvecZImag.Init(NUM_TAPS_HILB_FILT_5 - 1, (CReal) 0.0);
+}
+
+void CAMDemodulation::SetAcqFreq(_REAL rNewNormCenter)
+{
+	/* Define search window for center frequency (used when aquisistion is
+	   active) */
+	rNormCenter = rNewNormCenter;
+
+	/* Set the flag so that the parameters are not overwritten in the init
+	   function */
+	bSearWinWasSet = TRUE;
 }
