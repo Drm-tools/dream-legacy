@@ -183,7 +183,6 @@ protected:
 	_REAL					rSNRFACSigCorrFact;
 	_REAL					rSNRTotToPilCorrFact;
 	_REAL					rSNRSysToNomBWCorrFact;
-	CParameter::ECodScheme	eMSCCodSch;
 
 	_BOOLEAN				bInterfConsid;
 

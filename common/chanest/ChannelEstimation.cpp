@@ -363,7 +363,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			/* Get tentative decision for this MSC QAM symbol and calculate
 			   squared distance as a measure for the noise. MSC can be 16 or
 			   64 QAM */
-			switch (eMSCCodSch)
+			switch (ReceiverParam.eMSCCodingScheme)
 			{
 			case CParameter::CS_3_SM:
 			case CParameter::CS_3_HMSYM:
@@ -410,7 +410,6 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	iNumCarrier = ReceiverParam.iNumCarrier;
 	iFFTSizeN = ReceiverParam.iFFTSizeN;
 	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
-	eMSCCodSch = ReceiverParam.eMSCCodingScheme;
 
 	/* Length of guard-interval with respect to FFT-size! */
 	rGuardSizeFFT = (_REAL) iNumCarrier *
