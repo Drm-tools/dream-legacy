@@ -119,6 +119,7 @@ drmwithoutqt_SOURCES = ../common/SimulationParameters.cpp \
 if USE_QT
 
 drmqtonly_SOURCES = \
+	../common/GUI-QT/DialogUtil.cpp \
 	../common/GUI-QT/DRMPlot.cpp \
 	../common/GUI-QT/fdrmdialog.cpp \
 	../common/GUI-QT/TransmDlg.cpp \
@@ -140,11 +141,12 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/TransmDlg.h \
 	../common/GUI-QT/MultColorLED.h \
 	../common/GUI-QT/systemevalDlg.h \
+	../common/GUI-QT/DialogUtil.h \
 	../common/GUI-QT/DRMPlot.h \
 	../common/GUI-QT/StationsDlg.h \
 	../common/GUI-QT/AnalogDemDlg.h \
 	../common/MDI.h
-	
+
 drm_SOURCES = $(drmwithoutqt_SOURCES) $(drmqtonly_SOURCES)
 
 
@@ -152,6 +154,7 @@ drm_SOURCES = $(drmwithoutqt_SOURCES) $(drmqtonly_SOURCES)
 
 BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_DRMPlot.cpp \
+	moc/moc_DialogUtil.cpp \
 	moc/moc_fdrmdialog.cpp moc/moc_fdrmdialogbase.cpp moc/fdrmdialogbase.h moc/fdrmdialogbase.cpp \
 	moc/moc_TransmDlg.cpp moc/moc_TransmDlgbase.cpp moc/TransmDlgbase.h moc/TransmDlgbase.cpp \
 	moc/moc_systemevalDlg.cpp  moc/moc_systemevalDlgbase.cpp moc/systemevalDlgbase.h \
@@ -172,13 +175,16 @@ dist-hook:
 
 moc/moc_MultColorLED.cpp: ../common/GUI-QT/MultColorLED.h
 	$(MOC) ../common/GUI-QT/MultColorLED.h -o moc/moc_MultColorLED.cpp
-	
+
 moc/moc_DRMPlot.cpp: ../common/GUI-QT/DRMPlot.h
 	$(MOC) ../common/GUI-QT/DRMPlot.h -o moc/moc_DRMPlot.cpp
 
+moc/moc_DialogUtil.cpp: ../common/GUI-QT/DialogUtil.h
+	$(MOC) ../common/GUI-QT/DialogUtil.h -o moc/moc_DialogUtil.cpp
+
 moc/moc_MDI.cpp: ../common/MDI.h
 	$(MOC) ../common/MDI.h -o moc/moc_MDI.cpp
-
+	
 
 moc/moc_AboutDlgbase.cpp: moc/AboutDlgbase.h
 	$(MOC) moc/AboutDlgbase.h -o moc/moc_AboutDlgbase.cpp
