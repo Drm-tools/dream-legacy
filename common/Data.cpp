@@ -63,7 +63,7 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	/* Send data to sound interface if audio is not muted */
 	if (bMuteAudio == FALSE)
-		Sound.Write((*pvecInputData));
+		pSound->Write((*pvecInputData));
 }
 
 void CWriteData::InitInternal(CParameter& ReceiverParam)
@@ -74,7 +74,7 @@ void CWriteData::InitInternal(CParameter& ReceiverParam)
 		(_REAL) 0.4 /* 400ms */ * 2 /* stereo */);
 
 	/* Init sound interface */
-	Sound.InitPlayback(iInputBlockSize);
+	pSound->InitPlayback(iInputBlockSize);
 }
 
 /* Simulation */
@@ -88,7 +88,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 	time_t		tiElTi;
 	long int	lReTi;
 
-	/* Get elapsed time since this run was started (in minutes) */
+	/* Get elapsed time since this run was started (seconds) */
 	tiElTi = time(NULL) - tiStartTime;
 
 	/* Stop simulation if stop condition is true */
@@ -133,7 +133,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 			{
 				/* Estimate remaining time */
 				lReTi =
-					(long int) (((_REAL) TransmParam.iNoBitErrors - iNoErrors) /
+					(long int) (((_REAL) iNoErrors - TransmParam.iNoBitErrors) /
 					iNoErrors * tiElTi);
 
 				/* Store current counter position in file */
@@ -159,7 +159,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 					"%d / %d (%d min elapsed, estimated minimum time remaining: %d min)\n",
 					iCounter, iMinNoBlocks, tiElTi / 60, lReTi / 60);
 
-				lReTi = (long int) (((_REAL) TransmParam.iNoBitErrors - iNoErrors) /
+				lReTi = (long int) (((_REAL) iNoErrors - TransmParam.iNoBitErrors) /
 					iNoErrors * tiElTi);
 				fprintf(pFileCurPos,
 					"%d / %d (%d min elapsed, estimated time remaining: %d min)", 
@@ -464,132 +464,4 @@ void CUtilizeSDCData::InitInternal(CParameter& ReceiverParam)
 {
 	/* Define block-size for input */
 	iInputBlockSize = ReceiverParam.iNoSDCBitsPerSFrame;
-}
-
-
-/******************************************************************************\
-* Simulation for channel estimation											   *
-\******************************************************************************/
-void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
-{
-	int i, j;
-
-	/* Calculation of channel tranfer function ------------------------------ */
-	/*	pvecInputData.cSig		equalized signal \hat{s}(t)
-		pvecInputData2.tOut		received signal r(t)
-		pvecInputData2.tIn		transmitted signal s(t)
-		pvecInputData2.tRef		received signal without noise (channel
-									reference signal) */
-	for (i = 0; i < iNoCarrier; i++)
-	{
-		veccEstChan[i] = (*pvecInputData2)[i].tOut / (*pvecInputData)[i].cSig;
-		veccRefChan[i] = (*pvecInputData2)[i].tRef / (*pvecInputData2)[i].tIn;
-	}
-
-	/* Debar DC carriers, set them to zero */
-	for (i = 0; i < iNoDCCarriers; i++)
-	{
-		veccEstChan[i + iStartDCCar] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
-		veccRefChan[i + iStartDCCar] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
-	}
-
-	/* Start evaluation results after exceeding the start count */
-	if (iStartCnt > 0)
-		iStartCnt--;
-	else
-	{
-		/* MSE for all carriers */
-		for (i = 0; i < iNoCarrier; i++)
-			vecrMSEAverage[i] += SqMag(veccEstChan[i] - veccRefChan[i]);
-
-		/* New values have been added, increase counter for final result
-		   calculation */
-		lAvCnt++;
-	}
-
-
-	/* Equalize the output vector ------------------------------------------- */
-	/* Write to output vector. Also, ship the channel state at a certain cell */
-	for (i = 0; i < iNoCarrier; i++)
-	{
-		(*pvecOutputData)[i].cSig = (*pvecInputData2)[i].tOut / veccRefChan[i];
-		(*pvecOutputData)[i].rChan = SqMag(veccRefChan[i]);
-	}
-
-	/* Set symbol number for output vector */
-	(*pvecOutputData).GetExData().iSymbolNo = 
-		(*pvecInputData).GetExData().iSymbolNo;
-}
-
-void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
-{
-	/* Init base class for modifying the pilots (rotation) */
-	CPilotModiClass::InitRot(ReceiverParam);
-
-	/* Get local parameters */
-	iNoCarrier = ReceiverParam.iNoCarrier;
-	iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
-
-	iNumTapsChan = ReceiverParam.iNumTaps;
-
-	/* Init and calculate rotation matrix */
-	matcRot.Init(iNoCarrier, iNumTapsChan);
-	for (int i = 0; i < iNoCarrier; i++)
-		for (int j = 0; j < iNumTapsChan; j++)
-			matcRot[i][j] =
-				Rotate((CReal) 1.0, i, ReceiverParam.iPathDelay[j] +
-				ReceiverParam.iOffUsfExtr);
-
-
-	/* Parameters for debaring the DC carriers from evaluation. First check if
-	   we have only useful part on the right side of the DC carrier */
-	if (ReceiverParam.iCarrierKmin > 0)
-	{
-		/* In this case, no DC carriers are in the useful spectrum */
-		iNoDCCarriers = 0;
-		iStartDCCar = 0;
-	}
-	else
-	{
-		if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_A)
-		{
-			iNoDCCarriers = 3;
-			iStartDCCar = abs(ReceiverParam.iCarrierKmin) - 1;
-		}
-		else
-		{
-			iNoDCCarriers = 1;
-			iStartDCCar = abs(ReceiverParam.iCarrierKmin);
-		}
-	}
-
-	/* Init average counter */
-	lAvCnt = 0;
-
-	/* Init start count (debar initialization of channel estimation) */
-	iStartCnt = 20;
-
-	/* Additional delay from long interleaving has to be considered */
-	if (ReceiverParam.GetInterleaverDepth() == CParameter::SI_LONG)
-		iStartCnt += ReceiverParam.iNoSymPerFrame * D_LENGTH_LONG_INTERL;
-
-
-	/* Allocate memory for intermedia results */
-	veccEstChan.Init(iNoCarrier);
-	veccRefChan.Init(iNoCarrier);
-	vecrMSEAverage.Init(iNoCarrier, (_REAL) 0.0); /* Reset average with zeros */
-
-	/* Define block-sizes for inputs and output */
-	iInputBlockSize = iNoCarrier;
-	iInputBlockSize2 = iNoCarrier;
-	iOutputBlockSize = iNoCarrier;
-}
-
-void CIdealChanEst::GetResults(CVector<_REAL>& vecrResults)
-{
-	vecrResults.Init(iNoCarrier, (_REAL) 0.0);
-
-	/* Copy data in return vector */
-	for (int i = 0; i < iNoCarrier; i++)
-		vecrResults[i] = vecrMSEAverage[i] / lAvCnt;
 }
