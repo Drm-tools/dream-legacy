@@ -43,9 +43,16 @@ void CPilotModiClass::InitRot(CParameter& Parameter)
 _COMPLEX CPilotModiClass::Rotate(const _COMPLEX cI, const int iCN, 
 								 const int iTiDi) const
 {
-	/* First calculate the argument */
-	_REAL rArg = rArgMult * iTiDi * (iKminAbs + iCN);
+	/* If "iTiDi" equals "0", rArg is also "0", we need no cos or sin
+	   function */
+	if (iTiDi != 0)
+	{
+		/* First calculate the argument */
+		_REAL rArg = rArgMult * iTiDi * (iKminAbs + iCN);
 
-	/* * exp(2 * pi * TimeDiff / norm) */
-	return _COMPLEX(cos(rArg), sin(rArg)) * cI;
+		/* * exp(2 * pi * TimeDiff / norm) */
+		return _COMPLEX(cos(rArg), sin(rArg)) * cI;
+	}
+	else
+		return cI;
 }
