@@ -354,6 +354,8 @@ public:
 
 	int					iNumTaps;
 	int					iPathDelay[MAX_NUM_TAPS_DRM_CHAN];
+	_REAL				rGainCorr;
+	int					iOffUsfExtr;
 
 
 	/* Simulation raw-data management. We have to implement a shift register
