@@ -44,7 +44,7 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	if (bTextMessageUsed == TRUE)
 	{
 		/* Decode last for bytes of input block for text message */
-		for (i = 0; i < SIZEOF__BYTE * 4; i++)
+		for (i = 0; i < SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR; i++)
 			vecbiTextMessBuf[i] = (*pvecInputData)[iTotalFrameSize + i];
 
 		TextMessage.Decode(vecbiTextMessBuf);
@@ -332,10 +332,10 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 			/* Total frame size is input block size minus the bytes for the text
 			   message */
 			iTotalFrameSize = iInputBlockSize -
-				SIZEOF__BYTE * NO_BYTES_TEXT_MESS_IN_AUD_STR;
+				SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
 
 			/* Init vector for text message bytes */
-			vecbiTextMessBuf.Init(SIZEOF__BYTE * NO_BYTES_TEXT_MESS_IN_AUD_STR);
+			vecbiTextMessBuf.Init(SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
 			break;
 
 		case FALSE:

@@ -84,7 +84,7 @@
 /* The text message (when present) shall occupy the last four bytes of the 
    lower protected part of each logical frame carrying an audio stream 
    (6.5.1) */
-#define NO_BYTES_TEXT_MESS_IN_AUD_STR	4
+#define NUM_BYTES_TEXT_MESS_IN_AUD_STR	4
 
 /* Transform length: the transform length is 960 to ensure that one 
    audio frame corresponds to 80 ms or 40 ms in time. This is required 
