@@ -1,4 +1,3 @@
-
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
  * Copyright (c) 2001
@@ -60,9 +59,6 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 		else
 		{
-			/* Real-valued FFTW */
-			rfftw_one(RFFTWPlan, &vecrFFTHistory[0], &vecrFFTOutput[0]);
-
 			/* Introduce a time-out for the averaging in case of no detected
 			   peak in a certain time interval */
 			iAverTimeOutCnt++;
@@ -74,19 +70,15 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 				vecrPSD = Zeros(iHalfBuffer);
 			}
 
-			/* Calculate power spectrum (X = real(F)^2 + imag(F)^2)*/
+			/* Real-valued FFTW */
+			rfftw_one(RFFTWPlan, &vecrFFTHistory[0], &vecrFFTOutput[0]);
+
+			/* Calculate power spectrum (X = real(F)^2 + imag(F)^2) and average
+			   results */
 			for (i = 1; i < iHalfBuffer; i++)
 				vecrPSD[i] += vecrFFTOutput[i] * vecrFFTOutput[i] + 
 					vecrFFTOutput[iTotalBufferSize - i] * 
 					vecrFFTOutput[iTotalBufferSize - i];
-
-			/* Correlate known frequency-pilot structure with power spectrum and
-			   average results by adding them together */
-			for (i = 0; i < iSearchWinSize; i++)
-				vecrPSDPilCor[i] = 
-					vecrPSD[i + piTableFreqPilots[0]] +
-					vecrPSD[i + piTableFreqPilots[1]] +
-					vecrPSD[i + piTableFreqPilots[2]];
 
 			/* Wait until we have sufficiant data averaged */
 			if (iAverageCounter > 0)
@@ -96,18 +88,27 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 			}
 			else
 			{
+				/* Correlate known frequency-pilot structure with power
+				   spectrum */
+				for (i = 0; i < iSearchWinSize; i++)
+					vecrPSDPilCor[i] = 
+						vecrPSD[i + piTableFreqPilots[0]] +
+						vecrPSD[i + piTableFreqPilots[1]] +
+						vecrPSD[i + piTableFreqPilots[2]];
+
+
 				/* -------------------------------------------------------------
 				   Low pass filtering over frequency axis. We do the filtering 
 				   from both sides, once from right to left and then from left 
 				   to the right side. Afterwards, these results are averaged */
 				const CReal rLambdaF = 0.9;
-				/* From left to right */
+				/* From the left edge to the right edge */
 				vecrFiltResLR[0] = vecrPSDPilCor[0];
 				for (i = 1; i < iSearchWinSize; i++)
 					vecrFiltResLR[i] = rLambdaF * (vecrFiltResLR[i - 1] -
 						vecrPSDPilCor[i]) + vecrPSDPilCor[i];
 
-				/* From right to left */
+				/* From the right edge to the left edge */
 				vecrFiltResRL[iSearchWinSize - 1] =
 					vecrPSDPilCor[iSearchWinSize - 1];
 				for (i = iSearchWinSize - 2; i >= 0; i--)
@@ -254,14 +255,6 @@ fclose(pFile1);
 						ReceiverParam.rFreqOffsetAcqui =
 							rNewOffsetNorm - rDesFreqPosNorm;
 
-						/* Calculate IIR filter taps for 4.5 kHz filter with the
-						   new detected frequency offset */
-						GetIIRTaps(rvecB, rvecA, rNewOffsetNorm * 2);
-
-						/* Init state vector for filtering with zeros */
-						rvecZ.Init(Size(rvecB));
-						rvecZ = Zeros(Size(rvecB));
-
 						/* Reset acquisition flag */
 						bAquisition = FALSE;
 					}
@@ -278,31 +271,10 @@ fclose(pFile1);
 		/* Use the same block size as input block size */
 		iOutputBlockSize = iInputBlockSize;
 
-		if (bIIRFiltEnabled == TRUE)
-		{
-			/* -----------------------------------------------------------------
-			   Data must be band-pass-filtered before applying the algorithms,
-			   because we do not know which mode is active when we synchronize
-			   the timing and we must assume the worst-case, therefore use only
-			   from DC to 4.5 kHz */
-			/* Copy CVector data in CMatlibVector */
-			for (i = 0; i < iInputBlockSize; i++)
-				rvecInpTmp[i] = (*pvecInputData)[i];
-
-			/* Actual filter routine */
-			rvecOutTmp = Filter(rvecB, rvecA, rvecInpTmp, rvecZ);
-	
-			/* Use filtered data for copying to output vector */
-			for (i = 0; i < iInputBlockSize; i++)
-				(*pvecOutputData)[i] = rvecOutTmp[i];
-		}
-		else
-		{
-			/* Copy data from input to the output. Data is not modified in this
-			   module */
-			for (i = 0; i < iOutputBlockSize; i++)
-				(*pvecOutputData)[i] = (*pvecInputData)[i];
-		}
+		/* Copy data from input to the output. Data is not modified in this
+		   module */
+		for (i = 0; i < iOutputBlockSize; i++)
+			(*pvecOutputData)[i] = (*pvecInputData)[i];
 	}
 
 	/* If synchronized DRM input stream is used, overwrite the detected
@@ -426,10 +398,6 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	/* Index memory for detected peaks (assume worst case with the size) */
 	veciPeakIndex.Init(iHalfBuffer);
 
-	/* Allocate memory for IIR filter intermediate buffers */
-	rvecInpTmp.Init(iSymbolBlockSize);
-	rvecOutTmp.Init(iSymbolBlockSize);
-
 	/* Create plan for rfftw */
 	if (RFFTWPlan != NULL)
 		fftw_destroy_plan(RFFTWPlan);
@@ -462,12 +430,8 @@ void CFreqSyncAcq::SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize)
 void CFreqSyncAcq::StartAcquisition()
 {
 	/* Set flag so that the actual acquisition routine is entered */
-	bAquisition = TRUE; 
+	bAquisition = TRUE;
 
-	/* If frequency acquisition was started, after that the data has to be
-	   filtered -> set flag */
-	bIIRFiltEnabled = TRUE;
-	
 	/* Reset (or init) counters */
 	iAquisitionCounter = NO_BLOCKS_4_FREQ_ACQU;
 	iAverageCounter = NO_BLOCKS_BEFORE_US_AV;

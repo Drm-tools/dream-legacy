@@ -53,8 +53,8 @@
 #define NO_BLOCKS_BEFORE_US_AV			8
 
 /* The average symbol duration of all possible robustness modes is 22.5 ms. A
-   timeout of 5 seconds corresponds from that to 222 */
-#define AVERAGE_TIME_OUT_NUMBER			222
+   timeout of approx. 2 seconds corresponds from that to 100 */
+#define AVERAGE_TIME_OUT_NUMBER			100
 
 /* Ratio between highest and second highest peak at the frequency pilot
    positions in the PSD estimation (after peak detection) */
@@ -67,14 +67,13 @@ class CFreqSyncAcq : public CReceiverModul<_REAL, _REAL>
 public:
 	CFreqSyncAcq() : RFFTWPlan(NULL), bSyncInput(FALSE), bAquisition(FALSE), 
 		rCenterFreq((_REAL) 0.0),
-		rWinSize((_REAL) 0.0), bIIRFiltEnabled(FALSE) {}
+		rWinSize((_REAL) 0.0) {}
 	virtual ~CFreqSyncAcq();
 
 	void SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize);
 
 	void StartAcquisition();
 	_BOOLEAN GetAcquisition() {return bAquisition;}
-	void DisableIIFFilter() {bIIRFiltEnabled = FALSE;}
 
 	/* To set the module up for synchronized DRM input data stream */
 	void SetSyncInput(_BOOLEAN bNewS) {bSyncInput = bNewS;}
@@ -101,14 +100,6 @@ protected:
 	_REAL						rWinSize;
 	int							iStartDCSearch;
 	int							iEndDCSearch;
-
-	_BOOLEAN					bIIRFiltEnabled;
-
-	CRealVector					rvecA;
-	CRealVector					rvecB;
-	CRealVector					rvecZ;
-	CRealVector					rvecInpTmp;
-	CRealVector					rvecOutTmp;
 
 	CRealVector					vecrPSDPilCor;
 	CRealVector					vecrPSD;

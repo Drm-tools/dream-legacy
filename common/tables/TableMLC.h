@@ -40,7 +40,7 @@
    value exept of the zero-state. This can be done since we actually KNOW that
    the zero state MUST be the transmitted one. The initialization vaule should
    be fairly high */
-#define MC_METRIC_INIT_VALUE		1000
+#define MC_METRIC_INIT_VALUE		(1e30)
 
 /* Generator polynomials used for channel coding (octal form, defined by 
    a leading "0"!). We must bit-reverse the octal-forms given in the standard 

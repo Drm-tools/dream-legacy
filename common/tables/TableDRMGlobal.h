@@ -68,6 +68,8 @@
 #define MAX_NO_STREAMS					4
 #define MAX_NO_SERVICES					4
 
+#define NUM_ROBUSTNESS_MODES			4
+
 
 /* Service ID has 24 bits, define a number which cannot be an ID and fits into
    the 32 bits of the length of the variable (e.g.: 1 << 25) */

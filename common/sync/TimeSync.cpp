@@ -11,6 +11,8 @@
  * possible FFT-window positions are found, the next time no new block is
  * requested.
  *
+ * Robustness-mode detection
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -35,139 +37,215 @@
 /* Implementation *************************************************************/
 void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	int				i, k;
+	int				i, j, k;
 	int				iMaxIndex;
 	_REAL			rMaxValue;
-	CVector<int>	iNewStartIndexField(5); // "5" for safety reasons. Could be "2"
 	int				iNewStIndCount; 
 	int				iIntDiffToCenter;
 	int				iCurPos;
-	_REAL			rCurCorrPowRes;
 	int				iStartIndex;
+	CReal			rMaxValRMCorr;
+	CReal			rSecHighPeak;
+	int				iDetectedRModeInd;
+	int				iDecInpuSize;
+	CRealVector		rResMode(NUM_ROBUSTNESS_MODES);
+	/* Max number of detected peaks ("5" for safety reasons. Could be "2") */
+	CVector<int>	iNewStartIndexField(5);
 
 	/* Write new block of data at the end of shift register */
 	HistoryBuf.AddEnd((*pvecInputData), iInputBlockSize);
 
-	if (bAquisition == TRUE)
+	if ((bTimingAcqu == TRUE) || (bRobModAcqu == TRUE))
 	{
+		/* ---------------------------------------------------------------------
+		   Data must be band-pass-filtered before applying the algorithms,
+		   because we do not know which mode is active when we synchronize
+		   the timing and we must assume the worst-case, therefore use only
+		   from DC to 4.5 kHz */
+
+		/* The FIR filter intermediate buffer must be adjusted to the new 
+		   input block size since the size can be vary */
+		rvecInpTmp.Init(iInputBlockSize);
+
+		/* Copy CVector data in CMatlibVector */
+		for (i = 0; i < iInputBlockSize; i++)
+			rvecInpTmp[i] = (*pvecInputData)[i];
+
+		/* Complex Hilbert filter. We use the copy constructor for storing
+		   the result since the sizes of the output vector varies with time.
+		   We decimate the signal with this function, too, because we only
+		   analyze a spectrum bandwith of approx. 5 kHz */
+		CComplexVector cvecOutTmp(
+			FirFiltDec(cvecB, rvecInpTmp, rvecZ, GRDCRR_DEC_FACT));
+
+		/* Get size of new output vector */
+		iDecInpuSize = Size(cvecOutTmp);
+
+		/* Copy data from Matlib vector in regular vector for storing in 
+		   shift register */
+		cvecOutTmpInterm.Init(iDecInpuSize);
+		for (i = 0; i < iDecInpuSize; i++)
+			cvecOutTmpInterm[i] = cvecOutTmp[i];
+
+		/* Write new block of data at the end of shift register */
+		HistoryBufCorr.AddEnd(cvecOutTmpInterm, iDecInpuSize);
+
+
 		/* Guard-interval correlation --------------------------------------- */
 		/* Set position pointer back for this block */
-		iTimeSyncPos -= iInputBlockSize;
+		iTimeSyncPos -= iDecInpuSize;
 
 		/* Init start-index count */
 		iNewStIndCount = 0;
 
 		/* We use the block in the middle of the buffer for observation */
-		for (i = iSymbolBlockSize + iSymbolBlockSize - iInputBlockSize; 
-			i < iSymbolBlockSize + iSymbolBlockSize; i++)
+		for (i = iDecSymBS + iDecSymBS - iDecInpuSize;
+			i < iDecSymBS + iDecSymBS; i++)
 		{
 			/* Only every "iStepSizeGuardCorr"'th value is calculated for
 			   efficiency reasons */
 			if (i == iTimeSyncPos)
 			{
-				/* Guard-interval correlation ------------------------------- */
-				/* Speed optimized calculation of the guard-interval 
-				   correlation. We devide the total block, which has to be 
-				   computed, in parts of length "iStepSizeGuardCorr". The 
-				   results of these blocks are stored in a vector. Now, only
-				   one new part has to be calculated and one old one has to be
-				   subtracted from the global result. Special care has to be
-				   taken since "iGuardSize" must not be a multiple of 
-				   "iStepSizeGuardCorr". Therefore the "if"-condition */
-				/* First subtract correlation values shifted out */
-				rGuardCorr -= vecrIntermCorrRes[iPosInIntermCResBuf];
-				rGuardPow -= vecrIntermPowRes[iPosInIntermCResBuf];
-
-				/* Calculate new block and add in memory */
-				for (k = iLengthOverlap; k < iGuardSize; k++)
+				/* Do the following guard interval correlation for all
+				   possible robustness modes (this is needed for robustness 
+				   mode detection) */
+				for (j = 0; j < NUM_ROBUSTNESS_MODES; j++)
 				{
-					/* Actual correlation */
-					iCurPos = iTimeSyncPos + k;
-					rGuardCorrBlock += 
-						HistoryBuf[iCurPos] * HistoryBuf[iCurPos + iDFTSize];
+					/* Guard-interval correlation --------------------------- */
+					/* Speed optimized calculation of the guard-interval 
+					   correlation. We devide the total block, which has to be 
+					   computed, in parts of length "iStepSizeGuardCorr". The 
+					   results of these blocks are stored in a vector. Now, only
+					   one new part has to be calculated and one old one has to
+					   be subtracted from the global result. Special care has to
+					   be taken since "iGuardSize" must not be a multiple of
+					   "iStepSizeGuardCorr". Therefore the "if"-condition */
+					/* First subtract correlation values shifted out */
+					cGuardCorr[j] -= 
+						veccIntermCorrRes[j][iPosInIntermCResBuf[j]];
+					rGuardPow[j] -= 
+						vecrIntermPowRes[j][iPosInIntermCResBuf[j]];
 
-					rGuardPowBlock +=
-						HistoryBuf[iCurPos] * HistoryBuf[iCurPos] + 
-						HistoryBuf[iCurPos + iDFTSize] * 
-						HistoryBuf[iCurPos + iDFTSize];
-
-					/* If one complete block is ready -> store it. We need to 
-					   add "1" to the k, because otherwise "iLengthOverlap" 
-					   would satisfy the "if"-condition */
-					if (((k + 1) % iStepSizeGuardCorr) == 0)
+					/* Calculate new block and add in memory */
+					for (k = iLengthOverlap[j]; k < iLenGuardInt[j]; k++)
 					{
-						vecrIntermCorrRes[iPosInIntermCResBuf] = 
-							rGuardCorrBlock;
+						/* Actual correlation */
+						iCurPos = iTimeSyncPos + k;
+						cGuardCorrBlock[j] += HistoryBufCorr[iCurPos] * 
+							conj(HistoryBufCorr[iCurPos + iLenUsefPart[j]]);
 
-						vecrIntermPowRes[iPosInIntermCResBuf] =
-							rGuardPowBlock;
+						/* Energy calculation for ML solution */
+						rGuardPowBlock[j] += HistoryBufCorr[iCurPos].real() *
+							HistoryBufCorr[iCurPos].real() +
+							HistoryBufCorr[iCurPos].imag() *
+							HistoryBufCorr[iCurPos].imag() +
+							HistoryBufCorr[iCurPos + iLenUsefPart[j]].real() *
+							HistoryBufCorr[iCurPos + iLenUsefPart[j]].real() +
+							HistoryBufCorr[iCurPos + iLenUsefPart[j]].imag() *
+							HistoryBufCorr[iCurPos + iLenUsefPart[j]].imag();
 
-						/* Add the new block to the global result */
-						rGuardCorr += rGuardCorrBlock;
-						rGuardPow += rGuardPowBlock;
+						/* If one complete block is ready -> store it. We need
+						   to add "1" to the k, because otherwise
+						   "iLengthOverlap" would satisfy the "if"-condition */
+						if (((k + 1) % iStepSizeGuardCorr) == 0)
+						{
+							veccIntermCorrRes[j][iPosInIntermCResBuf[j]] = 
+								cGuardCorrBlock[j];
 
-						/* Reset block result */
-						rGuardCorrBlock = (_REAL) 0.0;
-						rGuardPowBlock = (_REAL) 0.0;
+							vecrIntermPowRes[j][iPosInIntermCResBuf[j]] =
+								rGuardPowBlock[j];
 
-						/* Increase position pointer and test if wrap */
-						iPosInIntermCResBuf++;
-						if (iPosInIntermCResBuf == iLengthIntermCRes)
-							iPosInIntermCResBuf = 0;
+							/* Add the new block to the global result */
+							cGuardCorr[j] += cGuardCorrBlock[j];
+							rGuardPow[j] += rGuardPowBlock[j];
+
+							/* Reset block result */
+							cGuardCorrBlock[j] = (_REAL) 0.0;
+							rGuardPowBlock[j] = (_REAL) 0.0;
+
+							/* Increase position pointer and test if wrap */
+							iPosInIntermCResBuf[j]++;
+							if (iPosInIntermCResBuf[j] == iLengthIntermCRes[j])
+								iPosInIntermCResBuf[j] = 0;
+						}
 					}
+
+					/* Save correlation results in shift register */
+					for (k = 0; k < iRMCorrBufSize - 1; k++)
+						vecrRMCorrBuffer[j][k] = vecrRMCorrBuffer[j][k + 1];
+
+					/* ML solution */
+					vecrRMCorrBuffer[j][iRMCorrBufSize - 1] =
+						abs(cGuardCorr[j] + cGuardCorrBlock[j]) - 
+						(rGuardPow[j] + rGuardPowBlock[j]) / 2;
 				}
 
-				/* Add additional part to the global result to get current 
-				   result (ML solution) */
-				rCurCorrPowRes = fabs(rGuardCorr + rGuardCorrBlock) - 
-					(rGuardPow + rGuardPowBlock) / 2;
 
-
-				/* Energy of guard-interval correlation --------------------- */
-				/* Optimized calculation of the guard-interval energy. We only
-				   add a new value und subtract the old value from the result. 
-				   We only need one addition and a history buffer */
-				/* Subtract oldest value */
-				rGuardEnergy -= pMovAvBuffer[iPosInMovAvBuffer];
-
-				/* Add new value and write in memory */
-				rGuardEnergy += rCurCorrPowRes;
-				pMovAvBuffer[iPosInMovAvBuffer] = rCurCorrPowRes;
-
-				/* Increase position pointer and test if wrap */
-				iPosInMovAvBuffer++;
-				if (iPosInMovAvBuffer == iMovAvBufSize)
-					iPosInMovAvBuffer = 0;
-
-
-				/* Detection buffer ----------------------------------------- */
-				/* Update buffer for storing the moving average results */
-				pMaxDetBuffer.AddEnd(rGuardEnergy);
-
-				/* Search for maximum */
-				iMaxIndex = 0;
-				rMaxValue = (_REAL) -3.4e38; // Init value
-				for (k = 0; k < iMaxDetBufSize; k++)
+				/* Energy of guard intervall calculation and detection of
+				   peak is only needed if timing aquisition is true */
+				if (bTimingAcqu == TRUE)
 				{
-					if (pMaxDetBuffer[k] > rMaxValue)
+					/* Average the correlation results */
+					vecCorrAvBuf[iCorrAvInd] = (1 - rLambdaCoAv) * 
+						vecCorrAvBuf[iCorrAvInd] + rLambdaCoAv * 
+						vecrRMCorrBuffer[iSelectedMode][iRMCorrBufSize - 1];
+
+					/* We use a "cyclic buffer" structure. This index defines
+					   the position in the buffer */
+					iCorrAvInd++;
+					if (iCorrAvInd == iMaxDetBufSize)
+						iCorrAvInd = 0;
+
+
+					/* Energy of guard-interval correlation ----------------- */
+					/* Optimized calculation of the guard-interval energy. We
+					   only add a new value und subtract the old value from the
+					   result. We only need one addition and a history buffer */
+					/* Subtract oldest value */
+					rGuardEnergy -= pMovAvBuffer[iPosInMovAvBuffer];
+
+					/* Add new value and write in memory */
+					rGuardEnergy += vecCorrAvBuf[iCorrAvInd];
+					pMovAvBuffer[iPosInMovAvBuffer] = vecCorrAvBuf[iCorrAvInd];
+
+					/* Increase position pointer and test if wrap */
+					iPosInMovAvBuffer++;
+					if (iPosInMovAvBuffer == iMovAvBufSize)
+						iPosInMovAvBuffer = 0;
+
+
+					/* Detection buffer ------------------------------------- */
+					/* Update buffer for storing the moving average results */
+					pMaxDetBuffer.AddEnd(rGuardEnergy);
+
+					/* Search for maximum */
+					iMaxIndex = 0;
+					rMaxValue = (_REAL) -3.4e38; /* Init value */
+					for (k = 0; k < iMaxDetBufSize; k++)
 					{
-						rMaxValue = pMaxDetBuffer[k];
-						iMaxIndex = k;
+						if (pMaxDetBuffer[k] > rMaxValue)
+						{
+							rMaxValue = pMaxDetBuffer[k];
+							iMaxIndex = k;
+						}
 					}
-				}
 
-				/* If maximum is in the middle of the interval, mark position
-				   as the beginning of the FFT window */
-				if (iMaxIndex == iCenterOfMaxDetBuf)
-				{
-					/* The optimal start position for the FFT-window is the
-					   middle of the "MaxDetBuffer" (iTimeSyncPos - 
-					   iSymbolBlockSize / 2) plus a correction term for our
-					   method (iStepSizeGuardCorr) */
-					iNewStartIndexField[iNewStIndCount] = iTimeSyncPos - 
-						iSymbolBlockSize / 2 + iStepSizeGuardCorr;
+					/* If maximum is in the middle of the interval, mark 
+					   position as the beginning of the FFT window */
+					if (iMaxIndex == iCenterOfMaxDetBuf)
+					{
+						/* The optimal start position for the FFT-window is the
+						   middle of the "MaxDetBuffer" */
+						iNewStartIndexField[iNewStIndCount] = 
+							(iTimeSyncPos + 1) * GRDCRR_DEC_FACT - 
+							iSymbolBlockSize / 2 +
+							/* Compensate for Hilbert-filter delay. The delay is
+							   introduced in the downsampled domain, therefore
+							   devide it by "GRDCRR_DEC_FACT" */
+							NO_TAPS_HILB_FILT / 2 / GRDCRR_DEC_FACT;
 
-					iNewStIndCount++;
+						iNewStIndCount++;
+					}
 				}
 
 				/* Set position pointer to next step */
@@ -175,6 +253,60 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 			}
 		}
 
+		/* Adaptation of the lambda parameter for guard-interval correlation
+		   averaging IIR filter. With this adaptation we achieve better
+		   averaging results. A lower bound is defined for this parameter */
+		if (rLambdaCoAv <= 0.1)
+			rLambdaCoAv = 0.1;
+		else
+			rLambdaCoAv /= 2;
+
+
+		/* Robustness mode detection ---------------------------------------- */
+		/* Correlation of guard-interval correlation with prepared cos-vector.
+		   store highest peak */
+		rMaxValRMCorr = (CReal) 0.0;
+		for (j = 0; j < NUM_ROBUSTNESS_MODES; j++)
+		{
+			/* Correlation with symbol rate frequency (Correlations must
+			   be normalized to be comparable! ("/ iGuardSizeX")) */
+			rResMode[j] = Abs(Sum(vecrRMCorrBuffer[j] * vecrCos[j])) / 
+				iLenGuardInt[j];
+
+			/* Search for maximum */
+			if (rResMode[j] > rMaxValRMCorr)
+			{
+				rMaxValRMCorr = rResMode[j];
+				iDetectedRModeInd = j;
+			}
+		}
+
+		/* Get second highest peak */
+		rSecHighPeak = (_REAL) 0.0;
+		for (j = 0; j < NUM_ROBUSTNESS_MODES; j++)
+		{
+			if ((rResMode[j] > rSecHighPeak) && (iDetectedRModeInd != j))
+				rSecHighPeak = rResMode[j];
+		}
+
+		/* Find out if we have a reliable measure (distance to next peak) */
+		if ((rMaxValRMCorr / rSecHighPeak) > THRESHOLD_RELI_MEASURE)
+		{
+			/* Reset aquisition flag for robustness mode detection */
+			bRobModAcqu = FALSE;
+
+			/* Set wave mode */
+			if (ReceiverParam.SetWaveMode(GetRModeFromInd(iDetectedRModeInd)))
+			{
+				/* Reset output cyclic-buffer because wave mode has changed and
+				   the data written in the buffer is not valid any more */
+				SetBufReset1();
+			}
+		}
+	}
+
+	if (bTimingAcqu == TRUE)
+	{
 		/* Use all measured FFT-window start points for determining the "real" 
 		   one */	
 		for (i = 0; i < iNewStIndCount; i++)
@@ -188,7 +320,8 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				/* New measurement is in range -> use it for filtering */
 				/* Low-pass filter detected start of frame */
 				rStartIndex = LAMBDA_LOW_PASS_START * rStartIndex + 
-					(1 - LAMBDA_LOW_PASS_START) * (_REAL) iNewStartIndexField[i];
+					(1 - LAMBDA_LOW_PASS_START) * 
+					(_REAL) iNewStartIndexField[i];
 
 				/* Reset counters for non-linear correction algorithm */
 				iCorrCounter = 0;
@@ -230,10 +363,8 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 #ifdef _DEBUG_
 /* Plot estimated positions of timing */
-static _REAL rTempAccuStartInd = (_REAL) 0.0;
-rTempAccuStartInd -= (int) (iCenterOfBuf - (int) rStartIndex);
 static FILE* pFile = fopen("test/testtime.dat", "w");
-fprintf(pFile, "%e %d %d\n", rTempAccuStartInd, iNewStartIndexField[i], iInputBlockSize);
+fprintf(pFile, "%d %d\n", iNewStartIndexField[i], iInputBlockSize);
 fflush(pFile);
 #endif
 		}
@@ -248,8 +379,8 @@ fflush(pFile);
 		{
 			bAcqWasActive = FALSE;
 
-			/* Reset also the tracking value since the tracking could not get right
-			   parameters since the timing was not yet correct */
+			/* Reset also the tracking value since the tracking could not get 
+			   right parameters since the timing was not yet correct */
 			ReceiverParam.rTimingOffsTrack = (_REAL) 0.0;
 		}
 
@@ -263,7 +394,6 @@ fflush(pFile);
 	   Cut out the estimated optimal time window and write it to the output
 	   vector. Add the acquisition and tracking offset together for the final
 	   timing */
-
 	/* Check range of "iStartIndex" to prevent from vector overwrites. It must 
 	   be larger than "0" since then the input block size would be also "0" and
 	   than the processing routine of the modul would not be called any more */
@@ -271,7 +401,6 @@ fflush(pFile);
 		iStartIndex = 1;
 	if (iStartIndex >= iSymbolBlockSize + iSymbolBlockSize)
 		iStartIndex = iSymbolBlockSize + iSymbolBlockSize;
-
 	for (k = iStartIndex; k < iStartIndex + iDFTSize; k++)
 		(*pvecOutputData)[k - iStartIndex] = HistoryBuf[k];
 
@@ -304,7 +433,7 @@ fflush(pFile);
 
 	/* In case of tracking the tracking offset must be reset since the 
 	   acquisition result is constant after switching to tracking */
-	if (bAquisition == TRUE)
+	if (bTimingAcqu == TRUE)
 		rStartIndex += (_REAL) iIntDiffToCenter;
 	else
 		ReceiverParam.rTimingOffsTrack += (_REAL) iIntDiffToCenter;
@@ -320,25 +449,39 @@ fflush(pFile);
 
 void CTimeSync::InitInternal(CParameter& ReceiverParam)
 {
-	/* Length of guard-interval measured in "time-bins" */
+	int		i, j;
+	int		iMaxSymbolBlockSize;
+	int		iObservedFreqBin;
+	_REAL	rArgTemp;
+	int		iCorrBuffSize;
+
+	/* Get parameters from info class */
 	iGuardSize = ReceiverParam.iGuardSize;
 	iDFTSize = ReceiverParam.iFFTSizeN;
-
-	/* Symbol block size is the guard-interval plus the useful part */
 	iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
 
+	/* Decimated symbol block size */
+	iDecSymBS = iSymbolBlockSize / GRDCRR_DEC_FACT;
+
+	/* Calculate maximum symbol block size (This is Rob. Mode A) */
+	iMaxSymbolBlockSize = RMA_FFT_SIZE_N + 
+		RMA_FFT_SIZE_N * RMA_ENUM_TG_TU / RMA_DENOM_TG_TU;
+
 	/* We need at least two blocks of data for determining the timing */
-	iTotalBufferSize = 3 * iSymbolBlockSize;
+	iTotalBufferSize = 2 * iSymbolBlockSize + iMaxSymbolBlockSize;
+	iCorrBuffSize = iTotalBufferSize / GRDCRR_DEC_FACT;
 
 	/* Set step size of the guard-interval correlation */
 	iStepSizeGuardCorr = STEP_SIZE_GUARD_CORR;
 
 	/* Size for moving average buffer for guard-interval correlation */
-	iMovAvBufSize = (int) (iGuardSize / iStepSizeGuardCorr);
+	iMovAvBufSize = 
+		(int) ((_REAL) iGuardSize / GRDCRR_DEC_FACT / iStepSizeGuardCorr);
 
 	/* Size of buffer, storing the moving-average results for 
 	   maximum detection */
-	iMaxDetBufSize = (int) (iSymbolBlockSize / iStepSizeGuardCorr);
+	iMaxDetBufSize = 
+		(int) ((_REAL) iDecSymBS / iStepSizeGuardCorr);
 
 	/* Center of maximum detection buffer */
 	iCenterOfMaxDetBuf = (iMaxDetBufSize - 1) / 2;
@@ -349,13 +492,13 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 
 	/* Start position of this value must be at the end of the observation
        window because we reset it at the beginning of the loop */
-	iTimeSyncPos = 2 * iSymbolBlockSize;
+	iTimeSyncPos = 2 * iDecSymBS;
 
 	/* Calculate center of buffer */
 	iCenterOfBuf = iSymbolBlockSize;
 
 	/* Init rStartIndex only if acquisition was activated */
-	if (bAquisition == TRUE)
+	if (bTimingAcqu == TRUE)
 		rStartIndex = (_REAL) iCenterOfBuf;
 
 	/* Some inits */
@@ -368,37 +511,111 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	HistoryBuf.Init(iTotalBufferSize, (_REAL) 0.0);
 	pMovAvBuffer.Init(iMovAvBufSize, (_REAL) 0.0);
 	pMaxDetBuffer.Init(iMaxDetBufSize, (_REAL) 0.0);
+	HistoryBufCorr.Init(iCorrBuffSize, (_REAL) 0.0);
 
 
-	/* Inits for guard-interval correlation --------------------------------- */
-	rGuardCorr = (_REAL) 0.0;
-	rGuardPow = (_REAL) 0.0;
-	rGuardCorrBlock = (_REAL) 0.0;
-	rGuardPowBlock = (_REAL) 0.0;
-	iPosInIntermCResBuf = 0;
+	/* Inits for averaging the guard-interval correlation */
+	vecCorrAvBuf.Init(iMaxDetBufSize, (_REAL) 0.0);
+	iCorrAvInd = 0;
 
-	/* Number of correlation result blocks to be stored in a vector. This is the
-	   total length of the guard-interval divided by the step size. Since the
-	   guard-size must not be a multiple of "iStepSizeGuardCorr", we need to 
-	   cut-off the fractional part */
-	iLengthIntermCRes = (int) (iGuardSize / iStepSizeGuardCorr);
 
-	/* Intermediate correlation results vector (init, zero out) */
-	vecrIntermCorrRes.Init(iLengthIntermCRes, (_REAL) 0.0);
-	vecrIntermPowRes.Init(iLengthIntermCRes, (_REAL) 0.0);
+	/* Set the selected robustness mode index */
+	iSelectedMode = GetIndFromRMode(ReceiverParam.GetWaveMode());
 
-	/* This length is the start point for the "for"-loop */
-	iLengthOverlap = iGuardSize - iStepSizeGuardCorr;
+
+	/* Inits for guard-interval correlation and robustness mode detection --- */
+	/* Size for robustness mode correlation buffer */
+	iRMCorrBufSize = (int) ((_REAL) NO_BLOCKS_FOR_RM_CORR * iDecSymBS
+		/ STEP_SIZE_GUARD_CORR);
+
+	for (i = 0; i < NUM_ROBUSTNESS_MODES; i++)
+	{
+		cGuardCorr[i] = (_REAL) 0.0;
+		cGuardCorrBlock[i] = (_REAL) 0.0;
+		rGuardPow[i] = (_REAL) 0.0;
+		rGuardPowBlock[i] = (_REAL) 0.0;
+		iPosInIntermCResBuf[i] = 0;
+
+		/* Set length of the useful part of the symbol and guard size */
+		switch (i)
+		{
+		case 0:
+			iLenUsefPart[i] = RMA_FFT_SIZE_N / GRDCRR_DEC_FACT;
+			iLenGuardInt[i] = (int) ((_REAL) RMA_FFT_SIZE_N * 
+				RMA_ENUM_TG_TU / RMA_DENOM_TG_TU / GRDCRR_DEC_FACT);
+			break;
+
+		case 1:
+			iLenUsefPart[i] = RMB_FFT_SIZE_N / GRDCRR_DEC_FACT;
+			iLenGuardInt[i] = (int) ((_REAL) RMB_FFT_SIZE_N * 
+				RMB_ENUM_TG_TU / RMB_DENOM_TG_TU / GRDCRR_DEC_FACT);
+			break;
+
+		case 2:
+			iLenUsefPart[i] = RMC_FFT_SIZE_N / GRDCRR_DEC_FACT;
+			iLenGuardInt[i] = (int) ((_REAL) RMC_FFT_SIZE_N * 
+				RMC_ENUM_TG_TU / RMC_DENOM_TG_TU / GRDCRR_DEC_FACT);
+			break;
+
+		case 3:
+			iLenUsefPart[i] = RMD_FFT_SIZE_N / GRDCRR_DEC_FACT;
+			iLenGuardInt[i] = (int) ((_REAL) RMD_FFT_SIZE_N * 
+				RMD_ENUM_TG_TU / RMD_DENOM_TG_TU / GRDCRR_DEC_FACT);
+			break;
+		}
+
+		/* Number of correlation result blocks to be stored in a vector. This is
+		   the total length of the guard-interval divided by the step size.
+		   Since the guard-size must not be a multiple of "iStepSizeGuardCorr",
+		   we need to cut-off the fractional part */
+		iLengthIntermCRes[i] = (int) ((_REAL) iLenGuardInt[i] / 
+			iStepSizeGuardCorr);
+
+		/* This length is the start point for the "for"-loop */
+		iLengthOverlap[i] = iLenGuardInt[i] - 
+			iStepSizeGuardCorr;
+
+		/* Intermediate correlation results vector (init, zero out) */
+		veccIntermCorrRes[i].Init(iLengthIntermCRes[i], (_REAL) 0.0);
+		vecrIntermPowRes[i].Init(iLengthIntermCRes[i], (_REAL) 0.0);
+
+		/* Allocate memory for correlation input buffers */
+		vecrRMCorrBuffer[i].Init(iRMCorrBufSize);
+
+		/* Tables for sin and cos function for the desired frequency band */
+		/* First, allocate memory for vector */
+		vecrCos[i].Init(iRMCorrBufSize);
+
+		/* Build table */
+		for (j = 0; j < iRMCorrBufSize; j++)
+		{
+			/* Calculate frequency bins which has to be observed for each
+			   mode.
+			   Mode A: f_A = 1 / T_s = 1 / 26.66 ms = 37.5 Hz
+			   Mode B: f_B = 1 / T_s = 1 / 26.66 ms = 37.5 Hz
+			   Mode C: f_C = 1 / T_s = 1 / 20 ms = 50 Hz
+			   Mode D: f_D = 1 / T_s = 1 / 16.66 ms = 60 Hz */
+			iObservedFreqBin = 
+				(int) ((_REAL) iRMCorrBufSize * STEP_SIZE_GUARD_CORR /
+				(iLenUsefPart[i] + iLenGuardInt[i]));
+
+			rArgTemp = (_REAL) 2.0 * crPi / iRMCorrBufSize * j;
+
+			vecrCos[i][j] = cos(rArgTemp * iObservedFreqBin);
+		}
+	}
+
 
 	/* Define block-sizes for input and output */
-	iInputBlockSize = iSymbolBlockSize; // For the first loop
+	iInputBlockSize = iSymbolBlockSize; /* For the first loop */
 	iOutputBlockSize = iDFTSize;
 }
 
 void CTimeSync::StartAcquisition() 
 {
-	/* The regular acquisition flag */
-	bAquisition = TRUE;
+	/* The regular acquisition flags */
+	bTimingAcqu = TRUE;
+	bRobModAcqu = TRUE;
 
 	/* Set the init flag so that the "rStartIndex" can be initialized with the
 	   center of the buffer */
@@ -411,4 +628,68 @@ void CTimeSync::StartAcquisition()
 	/* Set correction counter so that a non-linear correction is performed right
 	   at the beginning */
 	iCorrCounter = NO_SYM_BEFORE_RESET;
+
+	/* Reset the buffers which are storing data for correlation (for robustness
+	   mode detection) */
+	for (int i = 0; i < NUM_ROBUSTNESS_MODES; i++)
+		vecrRMCorrBuffer[i] = Zeros(iRMCorrBufSize);
+
+	/* Reset lambda for averaging the guard-interval correlation results */
+	rLambdaCoAv = (_REAL) 1.0;
+}
+
+void CTimeSync::SetFilterTaps(_REAL rNewOffsetNorm)
+{
+	/* Calculate filter taps for complex Hilbert filter */
+	cvecB.Init(NO_TAPS_HILB_FILT);
+
+	/* The filter should be on the right of the DC carrier */
+	rNewOffsetNorm += (_REAL) HILB_FILT_BNDWIDTH / 2 / SOUNDCRD_SAMPLE_RATE;
+
+	for (int i = 0; i < NO_TAPS_HILB_FILT; i++)
+		cvecB[i] = CComplex(
+			fHilLPProt[i] * Cos((_REAL) 2.0 * crPi * rNewOffsetNorm * i),
+			fHilLPProt[i] * Sin((_REAL) 2.0 * crPi * rNewOffsetNorm * i));
+
+	/* Init state vector for filtering with zeros */
+	rvecZ.Init(NO_TAPS_HILB_FILT - 1);
+	rvecZ = Zeros(NO_TAPS_HILB_FILT - 1);
+}
+
+int CTimeSync::GetIndFromRMode(ERobMode eNewMode)
+{
+	/* Get the robustness mode index. We define:
+	   A: 0, B: 1, C: 2, D: 3 */
+	switch (eNewMode)
+	{
+	case RM_ROBUSTNESS_MODE_A:
+		return 0;
+	case RM_ROBUSTNESS_MODE_B:
+		return 1;
+	case RM_ROBUSTNESS_MODE_C:
+		return 2;
+	case RM_ROBUSTNESS_MODE_D:
+		return 3;
+	default:
+		return 0;
+	}
+}
+
+ERobMode CTimeSync::GetRModeFromInd(int iNewInd)
+{
+	/* Get the robustness mode index. We define:
+	   A: 0, B: 1, C: 2, D: 3 */
+	switch (iNewInd)
+	{
+	case 0:
+		return RM_ROBUSTNESS_MODE_A;
+	case 1:
+		return RM_ROBUSTNESS_MODE_B;
+	case 2:
+		return RM_ROBUSTNESS_MODE_C;
+	case 3:
+		return RM_ROBUSTNESS_MODE_D;
+	default:
+		return RM_ROBUSTNESS_MODE_A;
+	}
 }
