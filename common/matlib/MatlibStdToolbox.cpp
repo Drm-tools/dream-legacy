@@ -33,8 +33,7 @@ CMatlibVector<CReal> Sort(const CMatlibVector<CReal>& rvI)
 {
 	const int iSize = rvI.GetSize();
 	const int iEnd = iSize - 1;
-	CMatlibVector<CReal>	fvRet(iSize, VTY_TEMP);
-	CReal					rSwap;
+	CMatlibVector<CReal> fvRet(iSize, VTY_TEMP);
 
 	/* Copy input vector in output vector */
 	fvRet = rvI;
@@ -48,7 +47,7 @@ CMatlibVector<CReal> Sort(const CMatlibVector<CReal>& rvI)
 			/* Compare the values and switch if necessary */
 			if (fvRet[j] > fvRet[j + 1])
 			{
-				rSwap = fvRet[j];
+				const CReal rSwap = fvRet[j];
 				fvRet[j] = fvRet[j + 1];
 				fvRet[j + 1] = rSwap;
 			}
