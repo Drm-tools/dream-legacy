@@ -1584,10 +1584,6 @@ Bandwidth        </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Signal to Noise Ratio (SNR) estimation.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>DRM Mode / Bandwidth:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1789,6 +1785,10 @@ Bandwidth        </source>
     </message>
     <message>
         <source>Based on the information from the SNR versus sub-carrier estimation, the metric for the Viterbi decoder can be modified so that sub-carriers with high noise are attenuated and do not contribute too much to the decoding result. That can improve reception under bad conditions but may worsen the reception in situations where a lot of fading happens and no interferer are present since the SNR estimation may be not correct.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Signal to Noise Ratio (SNR) estimation based on FAC cells. Since the FAC cells are only located approximately in the region 0-5 kHz relative to the DRM DC frequency, it may happen that the SNR value is very high although the DRM spectrum on the left side of the DRM DC frequency is heavily distorted or disturbed by an interferer so that the true overall SNR is lower as indicated by the SNR value. Similarly, the SNR value might show a very low value but audio can still be decoded if only the right side of the DRM spectrum is degraded by an interferer.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

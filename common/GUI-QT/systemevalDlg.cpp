@@ -1277,7 +1277,15 @@ void systemevalDlg::AddWhatsThisHelp()
 	/* SNR */
 	const QString strSNREst =
 		"<b>" + tr("SNR:") + "</b> " + tr("Signal to Noise Ratio (SNR) "
-		"estimation.");
+		"estimation based on FAC cells. Since the FAC cells are only "
+		"located approximately in the region 0-5 kHz relative to the DRM DC "
+		"frequency, it may happen that the SNR value is very high "
+		"although the DRM spectrum on the left side of the DRM DC frequency "
+		"is heavily distorted or disturbed by an interferer so that the true "
+		"overall SNR is lower as indicated by the SNR value. Similarly, "
+		"the SNR value might show a very low value but audio can still be "
+		"decoded if only the right side of the DRM spectrum is degraded "
+		"by an interferer.");
 
 	QWhatsThis::add(ValueSNR, strSNREst);
 	QWhatsThis::add(TextSNRText, strSNREst);
