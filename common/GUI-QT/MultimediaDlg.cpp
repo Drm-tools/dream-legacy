@@ -434,8 +434,15 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 void MultimediaDlg::OnSave()
 {
 	/* Show "save file" dialog */
+	/* Set file name */
+	QString strDefFileName = vecRawImages[iCurImagePos].strName.c_str();
+
+	/* Use default file name if no file name was transmitted */
+	if (strDefFileName.length() == 0)
+		strDefFileName = "RecPic";
+
 	QString strFileName =
-		QFileDialog::getSaveFileName("RecPic." +
+		QFileDialog::getSaveFileName(strDefFileName + "." +
 		QString(vecRawImages[iCurImagePos].strFormat.c_str()),
 		"*." + QString(vecRawImages[iCurImagePos].strFormat.c_str()), this);
 
@@ -455,10 +462,17 @@ void MultimediaDlg::OnSaveAll()
 		/* Loop over all pictures received yet */
 		for (int j = 0; j < GetIDLastPicture() + 1; j++)
 		{
-			/* Construct file name from date and picture number */
-			QString strFileName = strDirName + "Dream_" + 
-				QDate().currentDate().toString() + "_#" +
-				QString().setNum(j) + "." +
+			QString strFileName = vecRawImages[j].strName.c_str();
+
+			if (strFileName.length() == 0)
+			{
+				/* Construct file name from date and picture number (default) */
+				strFileName = "Dream_" + QDate().currentDate().toString() +
+					"_#" + QString().setNum(j);
+			}
+
+			/* Add directory and ending */
+			strFileName = strDirName + strFileName + "." +
 				QString(vecRawImages[j].strFormat.c_str());
 
 			SavePicture(j, strFileName);
@@ -589,9 +603,13 @@ void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
 			/* Copy new data in internal storage vector. Write at current iPos
 			   and increment position. Check for out-of-range, too */
 			for (unsigned int c = 0; c < count; c++)
+			{
 				for (unsigned int i = 0; i < size; i++)
+				{
 					if (memIO->iPos < memIO->vecbyData.Size())
 						*tmpBuf++ = memIO->vecbyData[memIO->iPos++];
+				}
+			}
 
 			return count;
 		}
@@ -611,8 +629,10 @@ void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
 
 			/* Copy data */
 			for (unsigned int c = 0; c < count; c++)
+			{
 				for (unsigned int i = 0; i < size; i++)
 					memIO->vecbyData[memIO->iPos++] = *tmpBuf++;
+			}
 
 			return count;
 		}
