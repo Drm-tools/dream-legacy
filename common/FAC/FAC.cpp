@@ -56,7 +56,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	case 0:
 		/* Assuming AFS is valid (AFS not used here), if AFS is not valid, the
 		   parameter must be 3 (11) */
-		(*pbiFACData).Enqueue(0 /* 00 */, 2);
+		(*pbiFACData).Enqueue(3 /* 11 */, 2);
 		break;
 
 	case 1:
@@ -157,9 +157,9 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	/* Service parameters --------------------------------------------------- */
 	/* Transmit service-information of service signalled in the FAC-repetition
 	   array */
-	iCurShortID = Parameter.FACRepetition[FACRepetitionCounter];
+	iCurShortID = FACRepetition[FACRepetitionCounter];
 	FACRepetitionCounter++;
-	if (FACRepetitionCounter == Parameter.FACNumRep)
+	if (FACRepetitionCounter == FACNumRep)
 		FACRepetitionCounter = 0;
 
 	/* Service identifier */
@@ -216,6 +216,165 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	/* Now, pointer in "enqueue"-function is back at the same place, 
 	   add CRC */
 	(*pbiFACData).Enqueue(CRCObject.GetCRC(), 8);
+}
+
+void CFACTransmit::Init(CParameter& Parameter)
+{
+	int				i;
+	CVector<int>	veciActServ;
+
+	/* Get active services */
+	Parameter.GetActiveServices(veciActServ);
+	const int iTotNumServices = veciActServ.Size();
+
+	/* Check how many audio and data services present */
+	CVector<int>	veciAudioServ(0);
+	CVector<int>	veciDataServ(0);
+	int				iNumAudio = 0;
+	int				iNumData = 0;
+
+	for (i = 0; i < iTotNumServices; i++)
+	{
+		if (Parameter.Service[veciActServ[i]].
+			eAudDataFlag ==	CParameter::SF_AUDIO)
+		{
+			veciAudioServ.Enlarge(1);
+			veciAudioServ[iNumAudio] = i;
+			iNumAudio++;
+		}
+		else
+		{
+			veciDataServ.Enlarge(1);
+			veciDataServ[iNumData] = i;
+			iNumData++;
+		}
+	}
+
+
+	/* Now check special cases which are defined in 6.3.6-------------------- */
+	/* If we have only data or only audio services. When all services are of
+	   the same type (e.g. all audio or all data) then the services shall be
+	   signalled sequentially */
+	if ((iNumAudio == iTotNumServices) || (iNumData == iTotNumServices))
+	{
+		/* Init repetion vector */
+		FACNumRep = iTotNumServices;
+		FACRepetition.Init(FACNumRep);
+
+		for (i = 0; i < FACNumRep; i++)
+			FACRepetition[i] = veciActServ[i];
+	}
+	else
+	{
+		/* Special cases according to Table 60 (Service parameter repetition
+		   patterns for mixtures of audio and data services) */
+		if (iNumAudio == 1)
+		{
+			if (iNumData == 1)
+			{
+				/* Init repetion vector */
+				FACNumRep = 5;
+				FACRepetition.Init(FACNumRep);
+
+				/* A1A1A1A1D1 */
+				FACRepetition[0] = veciAudioServ[0];
+				FACRepetition[1] = veciAudioServ[0];
+				FACRepetition[2] = veciAudioServ[0];
+				FACRepetition[3] = veciAudioServ[0];
+				FACRepetition[4] = veciDataServ[0];
+			}
+			else if (iNumData == 2)
+			{
+				/* Init repetion vector */
+				FACNumRep = 10;
+				FACRepetition.Init(FACNumRep);
+
+				/* A1A1A1A1D1A1A1A1A1D2 */
+				FACRepetition[0] = veciAudioServ[0];
+				FACRepetition[1] = veciAudioServ[0];
+				FACRepetition[2] = veciAudioServ[0];
+				FACRepetition[3] = veciAudioServ[0];
+				FACRepetition[4] = veciDataServ[0];
+				FACRepetition[5] = veciAudioServ[0];
+				FACRepetition[6] = veciAudioServ[0];
+				FACRepetition[7] = veciAudioServ[0];
+				FACRepetition[8] = veciAudioServ[0];
+				FACRepetition[9] = veciDataServ[1];
+			}
+			else /* iNumData == 3 */
+			{
+				/* Init repetion vector */
+				FACNumRep = 15;
+				FACRepetition.Init(FACNumRep);
+
+				/* A1A1A1A1D1A1A1A1A1D2A1A1A1A1D3 */
+				FACRepetition[0] = veciAudioServ[0];
+				FACRepetition[1] = veciAudioServ[0];
+				FACRepetition[2] = veciAudioServ[0];
+				FACRepetition[3] = veciAudioServ[0];
+				FACRepetition[4] = veciDataServ[0];
+				FACRepetition[5] = veciAudioServ[0];
+				FACRepetition[6] = veciAudioServ[0];
+				FACRepetition[7] = veciAudioServ[0];
+				FACRepetition[8] = veciAudioServ[0];
+				FACRepetition[9] = veciDataServ[1];
+				FACRepetition[10] = veciAudioServ[0];
+				FACRepetition[11] = veciAudioServ[0];
+				FACRepetition[12] = veciAudioServ[0];
+				FACRepetition[13] = veciAudioServ[0];
+				FACRepetition[14] = veciDataServ[2];
+			}
+		}
+		else if (iNumAudio == 2)
+		{
+			if (iNumData == 1)
+			{
+				/* Init repetion vector */
+				FACNumRep = 5;
+				FACRepetition.Init(FACNumRep);
+
+				/* A1A2A1A2D1 */
+				FACRepetition[0] = veciAudioServ[0];
+				FACRepetition[1] = veciAudioServ[1];
+				FACRepetition[2] = veciAudioServ[0];
+				FACRepetition[3] = veciAudioServ[1];
+				FACRepetition[4] = veciDataServ[0];
+			}
+			else /* iNumData == 2 */
+			{
+				/* Init repetion vector */
+				FACNumRep = 10;
+				FACRepetition.Init(FACNumRep);
+
+				/* A1A2A1A2D1A1A2A1A2D2 */
+				FACRepetition[0] = veciAudioServ[0];
+				FACRepetition[1] = veciAudioServ[1];
+				FACRepetition[2] = veciAudioServ[0];
+				FACRepetition[3] = veciAudioServ[1];
+				FACRepetition[4] = veciDataServ[0];
+				FACRepetition[5] = veciAudioServ[0];
+				FACRepetition[6] = veciAudioServ[1];
+				FACRepetition[7] = veciAudioServ[0];
+				FACRepetition[8] = veciAudioServ[1];
+				FACRepetition[9] = veciDataServ[1];
+			}
+		}
+		else /* iNumAudio == 3 */
+		{
+			/* Init repetion vector */
+			FACNumRep = 7;
+			FACRepetition.Init(FACNumRep);
+
+			/* A1A2A3A1A2A3D1 */
+			FACRepetition[0] = veciAudioServ[0];
+			FACRepetition[1] = veciAudioServ[1];
+			FACRepetition[2] = veciAudioServ[2];
+			FACRepetition[3] = veciAudioServ[0];
+			FACRepetition[4] = veciAudioServ[1];
+			FACRepetition[5] = veciAudioServ[2];
+			FACRepetition[6] = veciDataServ[0];
+		}
+	}
 }
 
 

@@ -45,9 +45,13 @@ public:
 
 	/* "pbiFACData" contains 72 bits */
 	void FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter);
+	void Init(CParameter& Parameter);
 
 protected:
 	CCRC CRCObject;
+
+	CVector<int>	FACRepetition; /* See 6.3.6 */
+	int				FACNumRep;
 };
 
 class CFACReceive
