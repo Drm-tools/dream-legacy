@@ -151,7 +151,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	}
 
 	/* Analog demodulation window */
-	pAnalogDemDlg = new AnalogDemDlg(pDRMRec, this, tr("Analog Demodulation"),
+	pAnalogDemDlg = new AnalogDemDlg(pDRMRec, NULL, tr("Analog Demodulation"),
 		FALSE, Qt::WStyle_MinMax);
 
 	if (pDRMRec->GeomAnalogDemDlg.bVisible == TRUE)
@@ -192,6 +192,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 		this, SLOT(OnSwitchToDRM()));
 	connect(pAnalogDemDlg, SIGNAL(ViewStationsDlg()),
 		this, SLOT(OnViewStationsDlg()));
+	connect(pAnalogDemDlg, SIGNAL(Closed()),
+		this, SLOT(close()));
 
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));

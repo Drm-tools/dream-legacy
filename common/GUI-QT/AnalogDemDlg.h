@@ -77,7 +77,7 @@ protected:
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
     virtual void	showEvent(QShowEvent* pEvent) {UpdateControls();}
-	virtual void	closeEvent(QCloseEvent* pEvent) {parentWidget()->close();}
+	virtual void	closeEvent(QCloseEvent* pEvent) {emit Closed();}
 
 	int iBwAM;
 	int iBwLSB;
@@ -102,4 +102,5 @@ public slots:
 signals:
 	void SwitchToDRM();
 	void ViewStationsDlg();
+	void Closed();
 };
