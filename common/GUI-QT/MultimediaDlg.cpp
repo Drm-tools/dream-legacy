@@ -32,6 +32,7 @@
 MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal,
 	WFlags f) : MultimediaDlgBase(parent, name, modal, f)
 {
+#ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
 	const QRect WinGeom(DRMReceiver.GeomMultimediaDlg.iXPos,
 		DRMReceiver.GeomMultimediaDlg.iYPos,
@@ -40,6 +41,7 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal,
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
+#endif
 
 	/* Picture controls should be invisable. These controls are only used for
 	   storing the resources */

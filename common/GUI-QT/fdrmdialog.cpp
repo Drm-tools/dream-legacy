@@ -109,6 +109,7 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
+#ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
 	const QRect WinGeom(DRMReceiver.GeomFdrmdialog.iXPos,
 		DRMReceiver.GeomFdrmdialog.iYPos,
@@ -117,6 +118,7 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
+#endif
 
 
 	/* Set Menu ***************************************************************/

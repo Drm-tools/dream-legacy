@@ -241,6 +241,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
+#ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
 	const QRect WinGeom(DRMReceiver.GeomStationsDlg.iXPos,
 		DRMReceiver.GeomStationsDlg.iYPos,
@@ -249,6 +250,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
+#endif
 
 	/* Define size of the bitmaps */
 	const int iXSize = 13;
