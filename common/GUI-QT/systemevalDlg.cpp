@@ -1010,10 +1010,14 @@ void systemevalDlg::AddWhatsThisHelp()
 		"number of correct decoded FAC and number of correct decoded MSC "
 		"blocks are logged including some additional information, e.g. the "
 		"station label and bit-rate. The log mechanism works only for audio "
-		"services using AAC source coding. During the logging no Dream windows "
+		"services using AAC source coding. "
+#ifdef _WIN32
+		"During the logging no Dream windows "
 		"should be moved or re-sized. This can lead to incorrect log files "
 		"(problem with QT timer implementation under Windows). This problem "
-		"does not exist in the Linux version of Dream.<br>The log file will be "
+		"does not exist in the Linux version of Dream."
+#endif
+		"<br>The log file will be "
 		"written in the directory were the Dream application was started and "
 		"the name of this file is always DreamLog.txt");
 
