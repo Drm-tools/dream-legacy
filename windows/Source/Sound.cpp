@@ -187,9 +187,8 @@ void CSound::OpenInDevice()
 
 void CSound::SetInDev(int iNewDev)
 {
-	/* Set device to wave mapper if iNewDev is greater that the number of
-	   sound devices in the system */
-	if (iNewDev >= iNumDevs)
+	/* Set device to wave mapper if iNewDev is invalid */
+	if ((iNewDev >= iNumDevs) || (iNewDev < 0))
 		iNewDev = WAVE_MAPPER;
 
 	/* Change only in case new device id is not already active */
@@ -382,9 +381,8 @@ void CSound::OpenOutDevice()
 
 void CSound::SetOutDev(int iNewDev)
 {
-	/* Set device to wave mapper if iNewDev is greater that the number of
-	   sound devices in the system */
-	if (iNewDev >= iNumDevs)
+	/* Set device to wave mapper if iNewDev is invalid */
+	if ((iNewDev >= iNumDevs) || (iNewDev < 0))
 		iNewDev = WAVE_MAPPER;
 
 	/* Change only in case new device id is not already active */
@@ -526,9 +524,9 @@ CSound::CSound()
 	bChangDevIn = TRUE;
 	bChangDevOut = TRUE;
 
-	/* Default device number (first device in system) */
-	iCurInDev = 0;
-	iCurOutDev = 0;
+	/* Default device number, "wave mapper" */
+	iCurInDev = WAVE_MAPPER;
+	iCurOutDev = WAVE_MAPPER;
 
 	/* Non-blocking wave out is default */
 	bBlockingPlay = FALSE;

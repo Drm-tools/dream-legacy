@@ -67,7 +67,9 @@ public:
 	int			GetNumDev() {return iNumDevs;}
 	string		GetDeviceName(int iDiD) {return pstrDevices[iDiD];}
 	void		SetOutDev(int iNewDev);
+	int			GetOutDev() {return iCurOutDev;}
 	void		SetInDev(int iNewDev);
+	int			GetInDev() {return iCurInDev;}
 
 	void		Close();
 
