@@ -247,8 +247,10 @@ void CMOTDABEnc::PartitionUnits(CVector<_BINARY>& vecbiSource,
 	for (i = 0; i < iNumSeg; i++)
 	{
 		/* All segments except the last one must have the size
-		   "iPartSizeHeader" */
-		if (i < iNumSeg - 1)
+		   "iPartSizeHeader". If "iSizeLastSeg" is =, the source data size is
+		   a multiple of the partitions size. In this case, all units have
+		   the same size (-> "|| (iSizeLastSeg == 0)") */
+		if ((i < iNumSeg - 1) || (iSizeLastSeg == 0))
 			iActSegSize = iPartiSize;
 		else
 			iActSegSize = iSizeLastSeg;
