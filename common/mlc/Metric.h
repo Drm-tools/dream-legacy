@@ -36,6 +36,12 @@
 
 
 /* Classes ********************************************************************/
+inline _REAL Metric(const _REAL rDist, const _REAL rChan)
+{
+//	return rDist * rDist * rChan;
+	return rDist * sqrt(rChan);
+}
+
 class CMLCMetric
 {
 public:
@@ -54,10 +60,50 @@ public:
 							int iLevel, _BOOLEAN bIteration);
 	void	Init(int iNewInputBlockSize, CParameter::ECodScheme eNewCodingScheme);
 
+
 protected:
-	inline _REAL Minimum1(_REAL rA, _REAL rB) const;
-	inline _REAL Minimum2(_REAL rA, _REAL rB1, _REAL rB2) const;
-	inline _REAL Minimum4(_REAL rA, _REAL rB1, _REAL rB2, _REAL rB3, _REAL rB4) const;
+	inline _REAL Minimum1(const _REAL rA, const _REAL rB,
+						  const _REAL rChan) const
+	{
+		/* The minium in case of only one parameter is trivial */
+		return Metric(fabs(rA - rB), rChan);
+	}
+
+	inline _REAL Minimum2(const _REAL rA, const _REAL rB1, const _REAL rB2,
+						  const _REAL rChan) const
+	{
+		/* First, calculate all distances */
+		const _REAL rResult1 = fabs(rA - rB1);
+		const _REAL rResult2 = fabs(rA - rB2);
+
+		/* Return smalles one */
+		if (rResult1 < rResult2)
+			return Metric(rResult1, rChan);
+		else
+			return Metric(rResult2, rChan);
+	}
+
+	inline _REAL Minimum4(const _REAL rA, const _REAL rB1, const _REAL rB2,
+						  const _REAL rB3, _REAL rB4, const _REAL rChan) const
+	{
+		/* First, calculate all distances */
+		const _REAL rResult1 = fabs(rA - rB1);
+		const _REAL rResult2 = fabs(rA - rB2);
+		const _REAL rResult3 = fabs(rA - rB3);
+		const _REAL rResult4 = fabs(rA - rB4);
+
+		/* Search for smallest one */
+		_REAL rReturn = rResult1;
+		if (rResult2 < rReturn)
+			rReturn = rResult2;
+		if (rResult3 < rReturn)
+			rReturn = rResult3;
+		if (rResult4 < rReturn)
+			rReturn = rResult4;
+
+		return Metric(rReturn, rChan);
+	}
+
 
 	int						iInputBlockSize;
 	CParameter::ECodScheme	eMapType;

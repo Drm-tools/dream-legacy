@@ -57,21 +57,21 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 			/* Real part ---------------------------------------------------- */
 			/* Distance to "0" */
 			vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-				rTableQAM4[0][0]) * (*pcInSymb)[i].rChan;
+				rTableQAM4[0][0], (*pcInSymb)[i].rChan);
 
 			/* Distance to "1" */
 			vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(), 
-				rTableQAM4[1][0]) * (*pcInSymb)[i].rChan;
+				rTableQAM4[1][0], (*pcInSymb)[i].rChan);
 
 
 			/* Imaginary part ----------------------------------------------- */
 			/* Distance to "0" */
 			vecMetric[k + 1].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(), 
-				rTableQAM4[0][1]) * (*pcInSymb)[i].rChan;
+				rTableQAM4[0][1], (*pcInSymb)[i].rChan);
 
 			/* Distance to "1" */
 			vecMetric[k + 1].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(), 
-				rTableQAM4[1][1]) * (*pcInSymb)[i].rChan;
+				rTableQAM4[1][1], (*pcInSymb)[i].rChan);
 		}
 
 		break;
@@ -95,13 +95,13 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					/* Distance to "0" */
 					vecMetric[k].rTow0 = 
 						Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM16[iTabInd0][0]) * (*pcInSymb)[i].rChan;
+						rTableQAM16[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 					/* Distance to "1" */
 					vecMetric[k].rTow1 = 
 						Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM16[iTabInd0 | (1 << 1)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM16[iTabInd0 | (1 << 1)][0],
+						(*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
@@ -111,13 +111,13 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					/* Distance to "0" */
 					vecMetric[k + 1].rTow0 = 
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM16[iTabInd0][1]) * (*pcInSymb)[i].rChan;
+						rTableQAM16[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 					/* Distance to "1" */
 					vecMetric[k + 1].rTow1 = 
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM16[iTabInd0 | (1 << 1)][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM16[iTabInd0 | (1 << 1)][1],
+						(*pcInSymb)[i].rChan);
 				}
 				else
 				{
@@ -130,23 +130,23 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					vecMetric[k].rTow0 = 
 						Minimum2((*pcInSymb)[i].cSig.real(), 
 						rTableQAM16[0 /* [0  0] */][0],
-						rTableQAM16[1 /* [0  1] */][0]) * (*pcInSymb)[i].rChan;
+						rTableQAM16[1 /* [0  1] */][0], (*pcInSymb)[i].rChan);
 
 					vecMetric[k].rTow1 = 
 						Minimum2((*pcInSymb)[i].cSig.real(),
 						rTableQAM16[2 /* [1  0] */][0],
-						rTableQAM16[3 /* [1  1] */][0]) * (*pcInSymb)[i].rChan;
+						rTableQAM16[3 /* [1  1] */][0], (*pcInSymb)[i].rChan);
 
 					/* Imaginary part */
 					vecMetric[k + 1].rTow0 = 
 						Minimum2((*pcInSymb)[i].cSig.imag(),
 						rTableQAM16[0 /* [0  0] */][1],
-						rTableQAM16[1 /* [0  1] */][1]) * (*pcInSymb)[i].rChan;
+						rTableQAM16[1 /* [0  1] */][1], (*pcInSymb)[i].rChan);
 
 					vecMetric[k + 1].rTow1 = 
 						Minimum2((*pcInSymb)[i].cSig.imag(), 
 						rTableQAM16[2 /* [1  0] */][1],
-						rTableQAM16[3 /* [1  1] */][1]) * (*pcInSymb)[i].rChan;
+						rTableQAM16[3 /* [1  1] */][1], (*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -161,11 +161,11 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 				/* Distance to "0" */
 				vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-					rTableQAM16[iTabInd0][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM16[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 				/* Distance to "1" */
 				vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-					rTableQAM16[iTabInd0 | 1][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM16[iTabInd0 | 1][0], (*pcInSymb)[i].rChan);
 
 
 				/* Imaginary part ------------------------------------------- */
@@ -174,11 +174,11 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 				/* Distance to "0" */
 				vecMetric[k + 1].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(), 
-					rTableQAM16[iTabInd0][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM16[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 				/* Distance to "1" */
 				vecMetric[k + 1].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM16[iTabInd0 | 1][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM16[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
 			}
 
 			break;
@@ -208,13 +208,12 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 					vecMetric[k].rTow0 = 
 						Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64SM[iTabInd0][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0][0],	(*pcInSymb)[i].rChan);
 
 					vecMetric[k].rTow1 = 
 						Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM64SM[iTabInd0 | (1 << 2)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0 | (1 << 2)][0],
+						(*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
@@ -227,13 +226,12 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					/* Calculate distances, imaginary part */
 					vecMetric[k + 1].rTow0 = 
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64SM[iTabInd0][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0][1],	(*pcInSymb)[i].rChan);
 
 					vecMetric[k + 1].rTow1 = 
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64SM[iTabInd0 | (1 << 2)][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0 | (1 << 2)][1],
+						(*pcInSymb)[i].rChan);
 
 				}
 				else
@@ -244,16 +242,16 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						rTableQAM64SM[0 /* [0 0 0] */][0],
 						rTableQAM64SM[1 /* [0 0 1] */][0],
 						rTableQAM64SM[2 /* [0 1 0] */][0],
-						rTableQAM64SM[3 /* [0 1 1] */][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[3 /* [0 1 1] */][0],
+						(*pcInSymb)[i].rChan);
 
 					vecMetric[k].rTow1 = 
 						Minimum4((*pcInSymb)[i].cSig.real(),
 						rTableQAM64SM[4 /* [1 0 0] */][0], 
 						rTableQAM64SM[5 /* [1 0 1] */][0], 
 						rTableQAM64SM[6 /* [1 1 0] */][0], 
-						rTableQAM64SM[7 /* [1 1 1] */][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[7 /* [1 1 1] */][0],
+						(*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
@@ -262,16 +260,16 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						rTableQAM64SM[0 /* [0 0 0] */][1],
 						rTableQAM64SM[1 /* [0 0 1] */][1],
 						rTableQAM64SM[2 /* [0 1 0] */][1],
-						rTableQAM64SM[3 /* [0 1 1] */][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[3 /* [0 1 1] */][1],
+						(*pcInSymb)[i].rChan);
 
 					vecMetric[k + 1].rTow1 = 
 						Minimum4((*pcInSymb)[i].cSig.imag(),
 						rTableQAM64SM[4 /* [1 0 0] */][1], 
 						rTableQAM64SM[5 /* [1 0 1] */][1], 
 						rTableQAM64SM[6 /* [1 1 0] */][1], 
-						rTableQAM64SM[7 /* [1 1 1] */][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[7 /* [1 1 1] */][1],
+						(*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -290,12 +288,11 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						(vecbiSubsetDef3[k] & 1);
 
 					vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64SM[iTabInd0][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0][0],	(*pcInSymb)[i].rChan);
 
 					vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM64SM[iTabInd0 | (1 << 1)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0 | (1 << 1)][0],
+						(*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
@@ -307,13 +304,13 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 					vecMetric[k + 1].rTow0 = 
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64SM[iTabInd0][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0][1],
+						(*pcInSymb)[i].rChan);
 
 					vecMetric[k + 1].rTow1 = 
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64SM[iTabInd0 | (1 << 1)][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0 | (1 << 1)][1],
+						(*pcInSymb)[i].rChan);
 				}
 				else
 				{
@@ -326,13 +323,13 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					vecMetric[k].rTow0 = 
 						Minimum2((*pcInSymb)[i].cSig.real(), 
 						rTableQAM64SM[iTabInd0][0],
-						rTableQAM64SM[iTabInd0 | 1][0]) * (*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0 | 1][0], (*pcInSymb)[i].rChan);
 
 					iTabInd0 = ((vecbiSubsetDef1[k] & 1) << 2) | (1 << 1);
 					vecMetric[k].rTow1 = 
 						Minimum2((*pcInSymb)[i].cSig.real(), 
 						rTableQAM64SM[iTabInd0][0],
-						rTableQAM64SM[iTabInd0 | 1][0]) * (*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0 | 1][0], (*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
@@ -340,13 +337,13 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					vecMetric[k + 1].rTow0 = 
 						Minimum2((*pcInSymb)[i].cSig.imag(), 
 						rTableQAM64SM[iTabInd0][1],
-						rTableQAM64SM[iTabInd0 | 1][1]) * (*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
 
 					iTabInd0 = ((vecbiSubsetDef1[k + 1] & 1) << 2) | (1 << 1);
 					vecMetric[k + 1].rTow1 = 
 						Minimum2((*pcInSymb)[i].cSig.imag(),
 						rTableQAM64SM[iTabInd0][1],
-						rTableQAM64SM[iTabInd0 | 1][1]) * (*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -363,10 +360,10 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					((vecbiSubsetDef2[k] & 1) << 1);
 
 				vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-					rTableQAM64SM[iTabInd0][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM64SM[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 				vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-					rTableQAM64SM[iTabInd0 | 1][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM64SM[iTabInd0 | 1][0], (*pcInSymb)[i].rChan);
 
 
 				/* Imaginary part ------------------------------------------- */
@@ -378,10 +375,10 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 				/* Calculate distances, imaginary part */
 				vecMetric[k + 1].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM64SM[iTabInd0][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM64SM[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 				vecMetric[k + 1].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM64SM[iTabInd0 | 1][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM64SM[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
 			}
 
 			break;
@@ -410,12 +407,11 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						((vecbiSubsetDef2[k] & 1) << 1);
 
 					vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64HMsym[iTabInd0][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 					vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM64HMsym[iTabInd0 | (1 << 2)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | (1 << 2)][0],
+						(*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
@@ -428,12 +424,12 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					/* Calculate distances, imaginary part */
 					vecMetric[k + 1].rTow0 = 
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMsym[iTabInd0][1]) * (*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 					vecMetric[k + 1].rTow1 = 
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMsym[iTabInd0 | (1 << 2)][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | (1 << 2)][1],
+						(*pcInSymb)[i].rChan);
 
 				}
 				else
@@ -444,16 +440,16 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						rTableQAM64HMsym[0 /* [0 0 0] */][0],
 						rTableQAM64HMsym[1 /* [0 0 1] */][0],
 						rTableQAM64HMsym[2 /* [0 1 0] */][0],
-						rTableQAM64HMsym[3 /* [0 1 1] */][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[3 /* [0 1 1] */][0],
+						(*pcInSymb)[i].rChan);
 
 					vecMetric[k].rTow1 = 
 						Minimum4((*pcInSymb)[i].cSig.real(),
 						rTableQAM64HMsym[4 /* [1 0 0] */][0], 
 						rTableQAM64HMsym[5 /* [1 0 1] */][0], 
 						rTableQAM64HMsym[6 /* [1 1 0] */][0], 
-						rTableQAM64HMsym[7 /* [1 1 1] */][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[7 /* [1 1 1] */][0],
+						(*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
@@ -462,16 +458,16 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						rTableQAM64HMsym[0 /* [0 0 0] */][1],
 						rTableQAM64HMsym[1 /* [0 0 1] */][1],
 						rTableQAM64HMsym[2 /* [0 1 0] */][1],
-						rTableQAM64HMsym[3 /* [0 1 1] */][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[3 /* [0 1 1] */][1],
+						(*pcInSymb)[i].rChan);
 
 					vecMetric[k + 1].rTow1 = 
 						Minimum4((*pcInSymb)[i].cSig.imag(),
 						rTableQAM64HMsym[4 /* [1 0 0] */][1], 
 						rTableQAM64HMsym[5 /* [1 0 1] */][1], 
 						rTableQAM64HMsym[6 /* [1 1 0] */][1], 
-						rTableQAM64HMsym[7 /* [1 1 1] */][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[7 /* [1 1 1] */][1],
+						(*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -490,12 +486,12 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						(vecbiSubsetDef3[k] & 1);
 
 					vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64HMsym[iTabInd0][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0][0],
+						(*pcInSymb)[i].rChan);
 
 					vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM64HMsym[iTabInd0 | (1 << 1)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | (1 << 1)][0],
+						(*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
@@ -507,13 +503,12 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 					vecMetric[k + 1].rTow0 = 
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMsym[iTabInd0][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 					vecMetric[k + 1].rTow1 = 
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMsym[iTabInd0 | (1 << 1)][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | (1 << 1)][1],
+						(*pcInSymb)[i].rChan);
 				}
 				else
 				{
@@ -526,15 +521,15 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					vecMetric[k].rTow0 = 
 						Minimum2((*pcInSymb)[i].cSig.real(), 
 						rTableQAM64HMsym[iTabInd0][0],
-						rTableQAM64HMsym[iTabInd0 | 1][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | 1][0],
+						(*pcInSymb)[i].rChan);
 
 					iTabInd0 = ((vecbiSubsetDef1[k] & 1) << 2) | (1 << 1);
 					vecMetric[k].rTow1 = 
 						Minimum2((*pcInSymb)[i].cSig.real(), 
 						rTableQAM64HMsym[iTabInd0][0],
-						rTableQAM64HMsym[iTabInd0 | 1][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | 1][0],
+						(*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
@@ -542,15 +537,15 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					vecMetric[k + 1].rTow0 = 
 						Minimum2((*pcInSymb)[i].cSig.imag(), 
 						rTableQAM64HMsym[iTabInd0][1],
-						rTableQAM64HMsym[iTabInd0 | 1][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | 1][1],
+						(*pcInSymb)[i].rChan);
 
 					iTabInd0 = ((vecbiSubsetDef1[k + 1] & 1) << 2) | (1 << 1);
 					vecMetric[k + 1].rTow1 = 
 						Minimum2((*pcInSymb)[i].cSig.imag(),
 						rTableQAM64HMsym[iTabInd0][1],
-						rTableQAM64HMsym[iTabInd0 | 1][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | 1][1],
+						(*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -567,10 +562,10 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					((vecbiSubsetDef2[k] & 1) << 1);
 
 				vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-					rTableQAM64HMsym[iTabInd0][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMsym[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 				vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-					rTableQAM64HMsym[iTabInd0 | 1][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMsym[iTabInd0 | 1][0], (*pcInSymb)[i].rChan);
 
 
 				/* Imaginary part ------------------------------------------- */
@@ -582,10 +577,10 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 				/* Calculate distances, imaginary part */
 				vecMetric[k + 1].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM64HMsym[iTabInd0][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMsym[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 				vecMetric[k + 1].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM64HMsym[iTabInd0 | 1][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMsym[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
 			}
 
 			break;
@@ -614,12 +609,11 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						((vecbiSubsetDef3[i] & 1) << 1);
 
 					vecMetric[i].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64HMmix[iTabInd0][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 					vecMetric[i].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM64HMmix[iTabInd0 | (1 << 2)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | (1 << 2)][0],
+						(*pcInSymb)[i].rChan);
 				}
 				else
 				{
@@ -628,15 +622,15 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						rTableQAM64HMmix[0 /* [0 0 0] */][0],
 						rTableQAM64HMmix[1 /* [0 0 1] */][0],
 						rTableQAM64HMmix[2 /* [0 1 0] */][0],
-						rTableQAM64HMmix[3 /* [0 1 1] */][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[3 /* [0 1 1] */][0],
+						(*pcInSymb)[i].rChan);
 
 					vecMetric[i].rTow1 = Minimum4((*pcInSymb)[i].cSig.real(),
 						rTableQAM64HMmix[4 /* [1 0 0] */][0], 
 						rTableQAM64HMmix[5 /* [1 0 1] */][0], 
 						rTableQAM64HMmix[6 /* [1 1 0] */][0], 
-						rTableQAM64HMmix[7 /* [1 1 1] */][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[7 /* [1 1 1] */][0],
+						(*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -656,12 +650,11 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 					/* Calculate distances, imaginary part */
 					vecMetric[i].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMmix[iTabInd0][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 					vecMetric[i].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMmix[iTabInd0 | (1 << 2)][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | (1 << 2)][1],
+						(*pcInSymb)[i].rChan);
 				}
 				else
 				{
@@ -670,15 +663,15 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						rTableQAM64HMmix[0 /* [0 0 0] */][1],
 						rTableQAM64HMmix[1 /* [0 0 1] */][1],
 						rTableQAM64HMmix[2 /* [0 1 0] */][1],
-						rTableQAM64HMmix[3 /* [0 1 1] */][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[3 /* [0 1 1] */][1],
+						(*pcInSymb)[i].rChan);
 
 					vecMetric[i].rTow1 = Minimum4((*pcInSymb)[i].cSig.imag(),
 						rTableQAM64HMmix[4 /* [1 0 0] */][1], 
 						rTableQAM64HMmix[5 /* [1 0 1] */][1], 
 						rTableQAM64HMmix[6 /* [1 1 0] */][1], 
-						rTableQAM64HMmix[7 /* [1 1 1] */][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[7 /* [1 1 1] */][1],
+						(*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -697,12 +690,11 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						(vecbiSubsetDef5[i] & 1);
 
 					vecMetric[i].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64HMmix[iTabInd0][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 					vecMetric[i].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM64HMmix[iTabInd0 | (1 << 1)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | (1 << 1)][0],
+						(*pcInSymb)[i].rChan);
 				}
 				else
 				{
@@ -714,14 +706,14 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					iTabInd0 = ((vecbiSubsetDef1[i] & 1) << 2);
 					vecMetric[i].rTow0 = Minimum2((*pcInSymb)[i].cSig.real(), 
 						rTableQAM64HMmix[iTabInd0][0],
-						rTableQAM64HMmix[iTabInd0 | 1][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | 1][0],
+						(*pcInSymb)[i].rChan);
 
 					iTabInd0 = ((vecbiSubsetDef1[i] & 1) << 2) | (1 << 1);
 					vecMetric[i].rTow1 = Minimum2((*pcInSymb)[i].cSig.real(), 
 						rTableQAM64HMmix[iTabInd0][0],
-						rTableQAM64HMmix[iTabInd0 | 1][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | 1][0],
+						(*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -740,12 +732,11 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						(vecbiSubsetDef6[i] & 1);
 
 					vecMetric[i].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMmix[iTabInd0][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 					vecMetric[i].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMmix[iTabInd0 | (1 << 1)][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | (1 << 1)][1],
+						(*pcInSymb)[i].rChan);
 				}
 				else
 				{
@@ -757,14 +748,12 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					iTabInd0 = ((vecbiSubsetDef2[i] & 1) << 2);
 					vecMetric[i].rTow0 = Minimum2((*pcInSymb)[i].cSig.imag(), 
 						rTableQAM64HMmix[iTabInd0][1],
-						rTableQAM64HMmix[iTabInd0 | 1][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
 
 					iTabInd0 = ((vecbiSubsetDef2[i] & 1) << 2) | (1 << 1);
 					vecMetric[i].rTow1 = Minimum2((*pcInSymb)[i].cSig.imag(),
 						rTableQAM64HMmix[iTabInd0][1],
-						rTableQAM64HMmix[iTabInd0 | 1][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -781,10 +770,10 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 					((vecbiSubsetDef3[i] & 1) << 1);
 
 				vecMetric[i].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-					rTableQAM64HMmix[iTabInd0][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMmix[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 				vecMetric[i].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-					rTableQAM64HMmix[iTabInd0 | 1][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMmix[iTabInd0 | 1][0], (*pcInSymb)[i].rChan);
 			}
 
 			break;
@@ -801,10 +790,10 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 				/* Calculate distances, imaginary part */
 				vecMetric[i].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM64HMmix[iTabInd0][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMmix[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 				vecMetric[i].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM64HMmix[iTabInd0 | 1][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMmix[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
 			}
 
 			break;
@@ -818,43 +807,4 @@ void CMLCMetric::Init(int iNewInputBlockSize, CParameter::ECodScheme eNewCodingS
 {
 	iInputBlockSize = iNewInputBlockSize;
 	eMapType = eNewCodingScheme;
-}
-
-_REAL CMLCMetric::Minimum1(_REAL rA, _REAL rB) const
-{
-	/* The minium in case of only one parameter is trivial */
-	return (rA - rB) * (rA - rB);
-}
-
-_REAL CMLCMetric::Minimum2(_REAL rA, _REAL rB1, _REAL rB2) const
-{
-	/* First, calculate all distances */
-	_REAL rResult1 = fabs(rA - rB1);
-	_REAL rResult2 = fabs(rA - rB2);
-
-	/* Return smalles one */
-	if (rResult1 < rResult2)
-		return rResult1 * rResult1;
-	else
-		return rResult2 * rResult2;
-}
-
-_REAL CMLCMetric::Minimum4(_REAL rA, _REAL rB1, _REAL rB2, _REAL rB3, _REAL rB4) const
-{
-	/* First, calculate all distances */
-	_REAL rResult1 = fabs(rA - rB1);
-	_REAL rResult2 = fabs(rA - rB2);
-	_REAL rResult3 = fabs(rA - rB3);
-	_REAL rResult4 = fabs(rA - rB4);
-
-	/* Search for smallest one */
-	_REAL rReturn = rResult1;
-	if (rResult2 < rReturn)
-		rReturn = rResult2;
-	if (rResult3 < rReturn)
-		rReturn = rResult3;
-	if (rResult4 < rReturn)
-		rReturn = rResult4;
-
-	return rReturn * rReturn;
 }
