@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>659</width>
-            <height>426</height>
+            <width>704</width>
+            <height>423</height>
         </rect>
     </property>
     <property stdset="1">
@@ -423,7 +423,7 @@
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout4</cstring>
+                <cstring>Layout5</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -496,6 +496,87 @@
                             <property>
                                 <name>buttonGroupId</name>
                                 <number>2</number>
+                            </property>
+                        </widget>
+                    </hbox>
+                </widget>
+                <widget>
+                    <class>QButtonGroup</class>
+                    <property stdset="1">
+                        <name>name</name>
+                        <cstring>ButtonGroupAGC</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>title</name>
+                        <string>AGC</string>
+                    </property>
+                    <hbox>
+                        <property stdset="1">
+                            <name>margin</name>
+                            <number>11</number>
+                        </property>
+                        <property stdset="1">
+                            <name>spacing</name>
+                            <number>6</number>
+                        </property>
+                        <widget>
+                            <class>QRadioButton</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>RadioButtonAGCOff</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Off</string>
+                            </property>
+                            <property>
+                                <name>buttonGroupId</name>
+                                <number>0</number>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QRadioButton</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>RadioButtonAGCSlow</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Slow</string>
+                            </property>
+                            <property>
+                                <name>buttonGroupId</name>
+                                <number>1</number>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QRadioButton</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>RadioButtonAGCMed</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Med</string>
+                            </property>
+                            <property>
+                                <name>buttonGroupId</name>
+                                <number>2</number>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QRadioButton</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>RadioButtonAGCFast</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Fast</string>
+                            </property>
+                            <property>
+                                <name>buttonGroupId</name>
+                                <number>3</number>
                             </property>
                         </widget>
                     </hbox>

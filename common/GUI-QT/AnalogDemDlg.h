@@ -71,6 +71,7 @@ public slots:
 	void OnTimerChart();
 	void OnRadioDemodulation(int iID);
 	void OnRadioBW(int iID);
+	void OnRadioAGC(int iID);
 	void OnCheckBoxMuteAudio();
 	void OnCheckSaveAudioWAV();
 };

@@ -36,6 +36,9 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	int		i, j;
 	int		iIndMaxPeak;
 	CReal	rMaxPeak;
+	CReal	rAttack;
+	CReal	rDecay;
+	CReal	rOutSignal;
 
 	/* Acquisition ---------------------------------------------------------- */
 	if (bAcquisition == TRUE)
@@ -105,7 +108,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		for (i = 0; i < iInputBlockSize; i++)
 			rvecInpTmp[i] = (*pvecInputData)[i];
 
-		/* Cut out a spectrum part of bandwidth "HILB_FILT_BNDWIDTH_5" */
+		/* Cut out a spectrum part of desired bandwidth */
 		cvecHilbert = CComplexVector(
 			Filter(rvecBReal, rvecA, rvecInpTmp, rvecZReal),
 			Filter(rvecBImag, rvecA, rvecInpTmp, rvecZImag));
@@ -122,24 +125,67 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 			cCurExp *= cExpStep;
 		}
 
+		/* Actual demodulation. Reuse temp buffer "rvecInpTmp" for output
+		   signal */
 		if (eDemodType == DT_AM)
 		{
-			/* Use envelope of signal and DC filter. Reuse temp buffer
-			   "rvecInpTmp" */
+			/* Use envelope of signal and DC filter */
 			rvecInpTmp = Filter(rvecBAM, rvecAAM, Abs(cvecHilbert), rvecZAM);
-
-			/* Write in both output channels */
-			for (i = 0, j = 0; i < 2 * iSymbolBlockSize; i += 2, j++)
-				(*pvecOutputData)[i] = (*pvecOutputData)[i + 1] =
-					Real2Sample(rvecInpTmp[j] * 2);
 		}
 		else
 		{
-			/* Make signal real and write mono signal in both channels (left and
-			   right) */
-			for (i = 0, j = 0; i < 2 * iSymbolBlockSize; i += 2, j++)
-				(*pvecOutputData)[i] = (*pvecOutputData)[i + 1] =
-					Real2Sample(Real(cvecHilbert[j]) * 4);
+			/* Make signal real and compensate for removed spectrum part */
+			rvecInpTmp = Real(cvecHilbert) * (CReal) 2.0;
+		}
+
+
+		/* AGC -------------------------------------------------------------- */
+		/*          Slow     Medium   Fast    */
+		/* Attack: 0.025 s, 0.015 s, 0.005 s  */
+		/* Decay : 4.000 s, 2.000 s, 0.200 s  */
+		switch (eAGCType)
+		{
+		case AT_SLOW:
+			rAttack = IIR1Lam(0.025, SOUNDCRD_SAMPLE_RATE);
+			rDecay = IIR1Lam(4.000, SOUNDCRD_SAMPLE_RATE);
+			break;
+
+		case AT_MEDIUM:
+			rAttack = IIR1Lam(0.015, SOUNDCRD_SAMPLE_RATE);
+			rDecay = IIR1Lam(2.000, SOUNDCRD_SAMPLE_RATE);
+			break;
+
+		case AT_FAST:
+			rAttack = IIR1Lam(0.005, SOUNDCRD_SAMPLE_RATE);
+			rDecay = IIR1Lam(0.200, SOUNDCRD_SAMPLE_RATE);
+			break;
+		}
+
+		for (i = 0, j = 0; i < 2 * iSymbolBlockSize; i += 2, j++)
+		{
+			if (eAGCType == AT_NO_AGC)
+			{
+				/* No modification of the signal */
+				rOutSignal = rvecInpTmp[j];
+			}
+			else
+			{
+				/* Two sided one-pole recursion for average amplitude
+				   estimation */
+				IIR1TwoSided(rAvAmplEst, Abs(rvecInpTmp[j]), rAttack, rDecay);
+
+				/* Lower bound for estimated average amplitude */
+				if (rAvAmplEst < LOWER_BOUND_AMP_LEVEL)
+					rAvAmplEst = LOWER_BOUND_AMP_LEVEL;
+
+				/* Normalize to average amplitude and then amplify to the
+				   desired level */
+				rOutSignal = rvecInpTmp[j] * DES_AV_AMPL_AM_SIGNAL / rAvAmplEst;
+			}
+
+			/* Write mono signal in both channels (left and right) */
+			(*pvecOutputData)[i] = (*pvecOutputData)[i + 1] =
+				Real2Sample(rOutSignal);
 		}
 	}
 }
@@ -155,6 +201,10 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 	/* Start with phase null (can be arbitrarily chosen) */
 	cCurExp = (CReal) 1.0;
+
+	/* Init average amplitude estimation (needed for AGC) with high value so
+	   that the signal starts with low level */
+	rAvAmplEst = DES_AV_AMPL_AM_SIGNAL;
 
 
 	/* Inits for acquisition ------------------------------------------------ */
@@ -271,13 +321,13 @@ void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 	{
 		rvecZAM.Init(2, (CReal) 0.0);
 
-		/* IIR filter: H(Z) = (1 - z^{-1}) / (1 - 0.99 * z^{-1}) */
+		/* IIR filter: H(Z) = (1 - z^{-1}) / (1 - 0.999 * z^{-1}) */
 		rvecBAM.Init(2);
 		rvecAAM.Init(2);
 		rvecBAM[0] = (CReal) 1.0;
 		rvecBAM[1] = (CReal) -1.0;
 		rvecAAM[0] = (CReal) 1.0;
-		rvecAAM[1] = (CReal) -0.99;
+		rvecAAM[1] = (CReal) -0.999;
 	}
 
 

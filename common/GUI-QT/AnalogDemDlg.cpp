@@ -48,6 +48,8 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 		this, SLOT(OnRadioDemodulation(int)));
 	connect(ButtonGroupBW, SIGNAL(clicked(int)),
 		this, SLOT(OnRadioBW(int)));
+	connect(ButtonGroupAGC, SIGNAL(clicked(int)),
+		this, SLOT(OnRadioAGC(int)));
 
 	/* Check boxes */
 	connect(CheckBoxMuteAudio, SIGNAL(clicked()),
@@ -70,7 +72,7 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 
 void AnalogDemDlg::UpdateControls()
 {
-	/* Set default demodulation type */
+	/* Set demodulation type */
 	switch (DRMReceiver.GetAMDemod()->GetDemodType())
 	{
 	case CAMDemodulation::DT_AM:
@@ -89,7 +91,31 @@ void AnalogDemDlg::UpdateControls()
 		break;
 	}
 
-	/* Set default filter bandwidth */
+	/* Set AGC type */
+	switch (DRMReceiver.GetAMDemod()->GetAGCType())
+	{
+	case CAMDemodulation::AT_NO_AGC:
+		if (!RadioButtonAGCOff->isChecked())
+			RadioButtonAGCOff->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::AT_SLOW:
+		if (!RadioButtonAGCSlow->isChecked())
+			RadioButtonAGCSlow->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::AT_MEDIUM:
+		if (!RadioButtonAGCMed->isChecked())
+			RadioButtonAGCMed->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::AT_FAST:
+		if (!RadioButtonAGCFast->isChecked())
+			RadioButtonAGCFast->setChecked(TRUE);
+		break;
+	}
+
+	/* Set filter bandwidth */
 	switch (DRMReceiver.GetAMDemod()->GetFilterBW())
 	{
 	case CAMDemodulation::BW_1KHZ:
@@ -241,6 +267,28 @@ void AnalogDemDlg::OnRadioDemodulation(int iID)
 		/* Set to default filter -> 5 kHz */
 		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_5KHZ);
 		RadioButtonBW5->setChecked(TRUE);
+		break;
+	}
+}
+
+void AnalogDemDlg::OnRadioAGC(int iID)
+{
+	switch (iID)
+	{
+	case 0:
+		DRMReceiver.GetAMDemod()->SetAGCType(CAMDemodulation::AT_NO_AGC);
+		break;
+
+	case 1:
+		DRMReceiver.GetAMDemod()->SetAGCType(CAMDemodulation::AT_SLOW);
+		break;
+
+	case 2:
+		DRMReceiver.GetAMDemod()->SetAGCType(CAMDemodulation::AT_MEDIUM);
+		break;
+
+	case 3:
+		DRMReceiver.GetAMDemod()->SetAGCType(CAMDemodulation::AT_FAST);
 		break;
 	}
 }
