@@ -86,7 +86,11 @@ public:
 		iGoodSignCnt(0), bWasFreqAcqu(TRUE), bDoInitRun(FALSE),
 		eReceiverMode(RM_DRM), 	eNewReceiverMode(RM_NONE),
 		ReceiveData(&SoundInterface), WriteData(&SoundInterface),
-		rInitResampleOffset((_REAL) 0.0) {}
+		rInitResampleOffset((_REAL) 0.0)
+#ifdef HAVE_LIBHAMLIB
+		, strHamlibConf(""), iHamlibModelID(0)
+#endif
+		{}
 	virtual ~CDRMReceiver() {}
 
 	/* For GUI */
@@ -141,6 +145,14 @@ public:
 	void					InitsForMSC();
 	void					InitsForMSCDemux();
 
+#ifdef HAVE_LIBHAMLIB
+	void					SetHamlibModel(const int iNewM)
+								{iHamlibModelID = iNewM;}
+	int						GetHamlibModel() const {return iHamlibModelID;}
+	void					SetHamlibConf(const string strNewC)
+								{strHamlibConf = strNewC;}
+	string					GetHamlibConf() const {return strHamlibConf;}
+#endif
 
 protected:
 	void					Run();
@@ -204,6 +216,11 @@ protected:
 	_BOOLEAN				bDoInitRun;
 
 	_REAL					rInitResampleOffset;
+
+#ifdef HAVE_LIBHAMLIB
+	int						iHamlibModelID;
+	string					strHamlibConf;
+#endif
 };
 
 
