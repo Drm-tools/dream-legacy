@@ -1,6 +1,6 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2004
  *
  * Author(s):
  *	Volker Fischer
@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -126,7 +126,7 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 	CCRC	CRCObject;
 
 	/* Get length of text message. 
-       TODO: take care of multiple byte characters (UTF-8 coding)! */
+	   TODO: take care of multiple byte characters (UTF-8 coding)! */
 	int iLenBytesOfText = strMessage.length();
 
 	/* Calculate required number of segments. The body shall contain 16 bytes
@@ -243,7 +243,7 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 		for (j = 0; j < iNumBodyBytes + 2 /* Header */; j++)
 			CRCObject.AddByte((_BYTE) vvbiSegment[i].Separate(SIZEOF__BYTE));
 
-		/* Now, pointer in "enqueue"-function is back at the same place, 
+		/* Now, pointer in "enqueue"-function is back at the same place,
 		   add CRC */
 		vvbiSegment[i].Enqueue(CRCObject.GetCRC(), 16);
 
@@ -278,7 +278,7 @@ void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 	if (bBeginningFound)
 	{
 		/* Analyse old stream buffer, which should be completed now --------- */
-		/* Get header information. This function separates 16 bits from 
+		/* Get header information. This function separates 16 bits from
 		   stream */
 		biStreamBuffer.ResetBitAccess();
 		ReadHeader();
@@ -312,8 +312,6 @@ void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 					/* A new message is sent, clear all old segments */
 					ResetSegments();
 
-					iNumSegments = 0;
-
 					biOldToggleBit = biToggleBit;
 				}
 
@@ -324,28 +322,24 @@ void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 				   message is being send, clear all other segments */
 				if (Segment[bySegmentID].bIsOK == TRUE)
 				{
-					/* Reset bit access and skip header bits to go directly to 
-					the body bytes */
+					/* Reset bit access and skip header bits to go directly to
+					   the body bytes */
 					biStreamBuffer.ResetBitAccess();
 					biStreamBuffer.Separate(16);
 
 					_BOOLEAN bIsSame = TRUE;
 					for (i = 0; i < byLengthBody; i++)
 					{
-						if (Segment[bySegmentID].byData[i] != 
+						if (Segment[bySegmentID].byData[i] !=
 							biStreamBuffer.Separate(SIZEOF__BYTE))
 						{
 							bIsSame = FALSE;
 						}
 					}
 
+					/* If a new message is sent, clear all old segments */
 					if (bIsSame == FALSE)
-					{
-						/* A new message is sent, clear all old segments */
 						ResetSegments();
-
-						iNumSegments = 0;
-					}
 				}
 
 				/* Reset bit access and skip header bits to go directly to the
@@ -355,8 +349,10 @@ void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 
 				/* Get all body bytes */
 				for (i = 0; i < byLengthBody; i++)
-					Segment[bySegmentID].byData[i] = 
+				{
+					Segment[bySegmentID].byData[i] =
 						biStreamBuffer.Separate(SIZEOF__BYTE);
+				}
 
 				/* Set length of this segment and OK flag */
 				Segment[bySegmentID].iNumBytes = byLengthBody;
@@ -371,7 +367,7 @@ void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 			}
 		}
 
-		/* Reset byte count */
+		/* Reset bit count */
 		iBitCount = 0;
 	}
 	else
@@ -383,7 +379,7 @@ void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 			{
 				for (j = 0; j < SIZEOF__BYTE; j++)
 					biStreamBuffer[iBitCount + j] = pData[i * SIZEOF__BYTE + j];
-				
+
 				iBitCount += SIZEOF__BYTE;
 			}
 		}
@@ -403,6 +399,7 @@ void CTextMessageDecoder::ReadHeader()
 
 	/* Command flag */
 	biCommandFlag = biStreamBuffer.Separate(1);
+
 	if (biCommandFlag == 1)
 	{
 		/* Command */
@@ -449,30 +446,27 @@ void CTextMessageDecoder::Init(string* pstrNewPText)
 	/* Init segments */
 	ResetSegments();
 
-	iNumSegments = 0;
-
 	/* Init and reset stream buffer */
 	biStreamBuffer.Init(TOT_NUM_BITS_PER_PIECE, 0);
 }
 
 void CTextMessageDecoder::SetText()
 {
-	int			i, j;
-	_BOOLEAN	bTextMessageReady;
+	int i;
 
 #ifndef _DEBUG_
 	if (iNumSegments != 0)
 #endif
 	{
+#ifndef _DEBUG_
 		/* Check, if all segments are ready */
-		bTextMessageReady = TRUE;
+		_BOOLEAN bTextMessageReady = TRUE;
 		for (i = 0; i < iNumSegments; i++)
 		{
 			if (Segment[i].bIsOK == FALSE)
 				bTextMessageReady = FALSE;
 		}
 
-#ifndef _DEBUG_
 		if (bTextMessageReady == TRUE)
 #endif
 		{
@@ -491,26 +485,19 @@ void CTextMessageDecoder::SetText()
 			{
 				if (Segment[i].bIsOK == TRUE)
 				{
-					for (j = 0; j < Segment[i].iNumBytes; j++)
+					for (int j = 0; j < Segment[i].iNumBytes; j++)
 					{
 						/* Get character */
-						char cNewChar = Segment[i].byData[j];
+						const char cNewChar = Segment[i].byData[j];
 
 						switch (cNewChar)
 						{
 						case 0x0A:
 							/* Code 0x0A may be inserted to indicate a preferred
 							   line break */
-#ifdef USE_QT_GUI
-							(*pstrText).append("<br>", 4);
-#else
-							(*pstrText).append("\r\n", 2);
-#endif
-							break;
-
 						case 0x1F:
 							/* Code 0x1F (hex) may be inserted to indicate a
-							   preferred word break. This code may be used to 
+							   preferred word break. This code may be used to
 							   display long words comprehensibly */
 #ifdef USE_QT_GUI
 							(*pstrText).append("<br>", 4);
@@ -569,4 +556,6 @@ void CTextMessageDecoder::ResetSegments()
 {
 	for (int i = 0; i < MAX_NUM_SEG_TEXT_MESSAGE; i++)
 		Segment[i].bIsOK = FALSE;
+
+	iNumSegments = 0;
 }
