@@ -399,7 +399,7 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 
 		/* Init scale (in "ms") */
 		rScaleIncr = (_REAL) iDFTSize /
-			(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil) * 1000 / 2;
+			(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil) * 1000 / iScatPilFreqInt;
 
 		/* Let the target timing position be the "0" time */
 		rScaleAbs = -(iHalfSpec + iTargetTimingPos) * rScaleIncr;
