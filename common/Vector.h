@@ -207,8 +207,13 @@ public:
 	CShiftRegister() {}
 	virtual ~CShiftRegister() {}
 
+	/* Add one value at the beginning, shift the others to the right */
 	void AddBegin(const TData tNewD);
+
+	/* Add one value at the end, shift the others to the left */
 	void AddEnd(const TData tNewD);
+
+	/* Add a vector at the end, shift others to the left */
 	void AddEnd(CVector<TData>& vectNewD, const int iLen);
 };
 
