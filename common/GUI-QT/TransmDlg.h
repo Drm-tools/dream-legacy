@@ -42,6 +42,9 @@
 #include <qfiledialog.h>
 #include <qfileinfo.h>
 #include <qstringlist.h>
+#include <qmenubar.h>
+#include <qpopupmenu.h>
+#include <qlayout.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/TransmDlgbase.h"
@@ -103,6 +106,12 @@ protected:
 	void DisableAllControls();
 	void EnableAllControls();
 
+	QMenuBar*			pMenu;
+	QPopupMenu*			pSoundInMenu;
+	QPopupMenu*			pSoundOutMenu;
+	QPopupMenu*			pSettingsMenu;
+	int					iNumSoundDev;
+
 	CTransmitterThread	TransThread; /* Working thread object */
 	_BOOLEAN			bIsStarted;
 	CVector<string>		vecstrTextMessage;
@@ -136,4 +145,6 @@ public slots:
 	void OnTextChangedServiceLabel(const QString& strLabel);
 	void OnTextChangedServiceID(const QString& strID);
 	void OnTextChangedSndCrdIF(const QString& strIF);
+	void OnSoundInDevice(int id);
+	void OnSoundOutDevice(int id);
 };
