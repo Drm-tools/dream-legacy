@@ -42,6 +42,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	/* Reset enqueue function */
 	(*pbiFACData).ResetBitAccess();
 
+
 	/* Put FAC parameters on stream */
 	/* Channel parameters --------------------------------------------------- */
 	/* Base/Enhancement flag */
@@ -161,6 +162,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	iRfuDummy = 0;
 	(*pbiFACData).Enqueue(iRfuDummy, 2);
 
+
 	/* Service parameters --------------------------------------------------- */
 	/* Transmit service-information of service signalled in the FAC-repition
 	   array */
@@ -209,6 +211,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	/* Rfa */
 	iRfuDummy = 0;
 	(*pbiFACData).Enqueue(iRfuDummy, 7);
+
 
 	/* CRC ------------------------------------------------------------------ */
 	/* Calculate the CRC and put at the end of the stream */
@@ -390,6 +393,7 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		/* Do not use rfu */
 		(*pbiFACData).Separate(2);
 
+
 		/* Service parameters ----------------------------------------------- */
 		/* Service identifier */
 		iTempServiceID = (*pbiFACData).Separate(24);
@@ -437,17 +441,11 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		/* Do not use Rfa */
 		(*pbiFACData).Separate(7);
 
+		/* CRC is ok, return TRUE */
 		return TRUE;
 	}
 	else
 	{
-		/* If FAC CRC check failed we should increase the frame-counter 
-		   manually. If only FAC data was corrupted, the others can still
-		   decoder if they have the right frame number */
-		Parameter.iFrameIDReceiv++;
-		if (Parameter.iFrameIDReceiv == NO_FRAMES_IN_SUPERFRAME)
-			Parameter.iFrameIDReceiv = 0;
-
 		/* Data is corrupted, do not use it. Return failure as FALSE */
 		return FALSE;
 	}

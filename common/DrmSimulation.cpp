@@ -231,6 +231,23 @@ void CDRMSimulation::Init()
 		/* Init channel */
 		DRMChannel.Init(Param, RecDataBuf);
 	}
+
+	/* We only want to simulate tracking performance ------------------------ */
+	RobModDet.StopAcquisition();
+	FreqSyncAcq.DisableIIFFilter();
+	TimeSync.StopAcquisition();
+	ChannelEstimation.GetTimeSyncTrack()->StartTracking();
+
+	/* Disable FAC evaluation to make sure that no mistakenly correct CRC
+	   sets false parameters which can cause run-time errors */
+	UtilizeFACData.SetSyncInput(TRUE);
+
+	/* We have to first start aquisition and then stop it right after it to set
+	   internal parameters */
+	SyncUsingPil.StartAcquisition();
+	SyncUsingPil.StopAcquisition();
+
+	SyncUsingPil.StartTrackPil();
 }
 
 CDRMSimulation::CDRMSimulation()

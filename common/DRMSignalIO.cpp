@@ -66,7 +66,7 @@ CTransmitData::~CTransmitData()
 
 
 /******************************************************************************\
-* Receive data from the soundcard                                              *
+* Receive data from the sound card                                             *
 \******************************************************************************/
 void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 {

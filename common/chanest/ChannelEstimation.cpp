@@ -56,10 +56,10 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Get symbol-counter for next symbol. Use the count from the frame 
 	   synchronization (in OFDM.cpp). Call estimation routine */
 	pTimeInt->Estimate(pvecInputData, veccChanEst, 
-						    ReceiverParam.matiMapTab[(*pvecInputData).
-							GetExData().iSymbolNo],
-							ReceiverParam.matcPilotCells[(*pvecInputData).
-							GetExData().iSymbolNo]);
+					   ReceiverParam.matiMapTab[(*pvecInputData).
+					   GetExData().iSymbolNo],
+					   ReceiverParam.matcPilotCells[(*pvecInputData).
+					   GetExData().iSymbolNo]);
 
 
 	/* Extract interpolated pilots for frequency interpolation -------------- */
@@ -348,7 +348,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	}
 
 	/* In frequency direction we can use pilots from both sides for 
-	   interpoation */
+	   interpolation */
 	int iPilOffset = iLengthWiener / 2;
 
 	/* Allocate memory */
@@ -388,7 +388,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 		   and the position of the observed carrier */
 		iDiff = j - veciPilOffTab[j] * iScatPilFreqInt;
 
-		/* Calculate actual wiener filter-taps */
+		/* Calculate wiener filter-taps */
 		veccTempFilt = FreqOptimalFilter(iScatPilFreqInt, iDiff, rSNR, 
 			(_REAL) ReceiverParam.RatioTgTu.iEnum / 
 			ReceiverParam.RatioTgTu.iDenom, iLengthWiener);
@@ -476,8 +476,7 @@ CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
 	CComplexVector	veccRpp(iLength);
 	CComplexVector	veccRhp(iLength);
 
-	/* Doppler-spectrum for short-wave channel is Gaussian
-	   (Calculation of Rhp!) */
+	/* Calculation of R_hp, this is the SHIFTED correlation function */
 	for (i = 0; i < iLength; i++)
 	{
 		iCurPos = i * iFreqInt - iDiff;
@@ -485,8 +484,7 @@ CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
 		veccRhp[i] = FreqCorrFct(iCurPos, rRatGuarLen);
 	}
 
-	/* Doppler-spectrum for short-wave channel is Gaussian
-	   (Calculation of Rpp!) */
+	/* Calculation of R_pp */
 	for (i = 0; i < iLength; i++)
 	{
 		iCurPos = i * iFreqInt;

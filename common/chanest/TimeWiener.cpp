@@ -316,7 +316,7 @@ CRealVector CTimeWiener::TimeOptimalFilter(int iTimeInt, int iDiff,
 		(_REAL) -2.0 * crPi * crPi * rTs * rTs * rNewSigma * rNewSigma;
 
 	/* Doppler-spectrum for short-wave channel is Gaussian
-	   (Calculation of Rhp!) */
+	   (Calculation of R_hp!) */
 	for (i = 0; i < iLength; i++)
 	{
 		iCurPos = i * iTimeInt + iDiff;
@@ -325,7 +325,7 @@ CRealVector CTimeWiener::TimeOptimalFilter(int iTimeInt, int iDiff,
 	}
 
 	/* Doppler-spectrum for short-wave channel is Gaussian
-	   (Calculation of Rpp!) */
+	   (Calculation of R_pp!) */
 	for (i = 0; i < iLength; i++)
 	{
 		iCurPos = i * iTimeInt;

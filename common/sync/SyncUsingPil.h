@@ -37,7 +37,7 @@
 /* Definitions ****************************************************************/
 #define HI_VALUE_FOR_MIN_SEARCH			3.4E38 /* Max value for float types */
 #define CONTR_FREQ_OFF_INTEGRATION		((_REAL) 0.1)
-#define CONTR_SAMP_OFF_INTEGRATION		((_REAL) 0.7)
+#define CONTR_SAMP_OFF_INTEGRATION		((_REAL) 0.4)
 
 
 /* Classes ********************************************************************/
@@ -45,8 +45,8 @@ class CSyncUsingPil : public CReceiverModul<_COMPLEX, _COMPLEX>,
 					  public CPilotModiClass
 {
 public:
-	CSyncUsingPil() : bSyncInput(FALSE), bAquisition(FALSE), bTrackPil(FALSE)
-		{}
+	CSyncUsingPil() : bSyncInput(FALSE), bAquisition(FALSE), bTrackPil(FALSE),
+		iSymbolCounterTiSy(0) {}
 	virtual ~CSyncUsingPil() {}
 
 	/* To set the module up for synchronized DRM input data stream */

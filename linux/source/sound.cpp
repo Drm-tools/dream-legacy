@@ -3,7 +3,7 @@
 * Copyright (c) 2001
 *
 * Author(s):
-*	Alexander Kurpiers, Volker Fischer
+*	Alexander Kurpiers
 *
 *
 ******************************************************************************
@@ -26,13 +26,27 @@
 
 #include "sound.h"
 
+#include "../../common/GlobalDefinitions.h"
+#include "../../common/Buffer.h"
+#include "../../common/Vector.h"
 
 #ifdef WITH_SOUND
-/******************************************************************************/
-/******************************************************************************/
-/************************** OSS Sound interface *******************************/
-/******************************************************************************/
-/******************************************************************************/
+#include <qthread.h>
+#include <string.h>
+
+
+#define RECORD 0
+#define PLAY   1
+
+
+#define SOUNDBUFLEN 102400
+
+#define FRAGSIZE 1024
+
+
+
+/*****************************************************************************/
+
 #ifdef USE_DEVDSP
 
 #include <linux/soundcard.h>
@@ -40,8 +54,7 @@
 
 static int fdSound = 0;
 
-
-void CSound::InitIF(int & fdSound)
+void CSound::Init_HW( int mode )
 {
 	int arg;      /* argument for ioctl calls */
 	int status;   /* return status of system calls */
@@ -55,29 +68,13 @@ void CSound::InitIF(int & fdSound)
 
 	/* Open sound device (Use O_RDWR only when writing a program which is
 	   going to both record and play back digital audio) */
-	fdSound = open("/dev/dsp", O_RDWR | O_NONBLOCK);
+	fdSound = open("/dev/dsp", O_RDWR );
 	if (fdSound < 0) 
     {   
 		perror("open of /dev/dsp failed");
 		exit(1);
     }
 	
-
-#if 0    
-	/* Number of buffers and buffer size 
-	   (If you need to set this parameter, you must set it directly after
-	   opening the device. Executing another operation on the opened device can
-	   cause the device driver to choose the settings itself after which it will
-	   not allow you to change them) */
-//	arg = (64<<16) | 13;	// 64 buffers of 8k each
-	arg = (8<<16) | 16;	// 8 buffers of 64k each
-	// hmm, the total size is 64k :-(
-#endif		
-	status = ioctl(fdSound, SNDCTL_DSP_SETFRAGMENT, &arg);
-	if (status == -1)
-		perror("SNDCTL_DSP_SETFRAGMENT ioctl failed");
-printf("fragment %x\n", arg);
-
 	/* Get ready for us.
 	   ioctl(audio_fd, SNDCTL_DSP_SYNC, 0) can be used when application wants 
 	   to wait until last byte written to the device has been played (it doesn't
@@ -116,131 +113,41 @@ printf("fragment %x\n", arg);
 		perror("unable to set sample size");
 
 
-	/* Print out capabilities of the sound card */
-	printf("\nCapabilities:\n");
+	/* Check capabilities of the sound card */
 	status = ioctl(fdSound, SNDCTL_DSP_GETCAPS, &arg);
 	if (status ==  -1)
 		perror("SNDCTL_DSP_GETCAPS ioctl failed");
-	printf(
-		"  revision: %d\n"
-		"  full duplex: %s\n"
-		"  real-time: %s\n"
-		"  batch: %s\n"
-		"  coprocessor: %s\n" 
-		"  trigger: %s\n"
-		"  mmap: %s\n",
-		arg & DSP_CAP_REVISION,
-		(arg & DSP_CAP_DUPLEX) ? "yes" : "no",
-		(arg & DSP_CAP_REALTIME) ? "yes" : "no",
-		(arg & DSP_CAP_BATCH) ? "yes" : "no",
-		(arg & DSP_CAP_COPROC) ? "yes" : "no",
-		(arg & DSP_CAP_TRIGGER) ? "yes" : "no",
-		(arg & DSP_CAP_MMAP) ? "yes" : "no");
-	if (ioctl(fdSound, SNDCTL_DSP_GETBLKSIZE, &arg) == -1)
-		 perror("SNDCTL_DSP_GETBLKSIZE");
-printf("fragsize %d\n", arg);
+	if ((arg & DSP_CAP_DUPLEX) == 0)
+		perror("Soundcard not full duplex capable!");
 }
 
 
-/* Wave in ********************************************************************/
-void CSound::InitRecording(int iNewBufferSize)
-{
-	printf("initrec %d\n", iNewBufferSize);
-
-	/* Save buffer size */
-	iInBufferSize = iNewBufferSize;
-
-	/* Allocate memory for temporary record buffer */
-	if (tmprecbuf != NULL)
-		delete[] tmprecbuf;
-	tmprecbuf = new short int[iNewBufferSize * NO_IN_OUT_CHANNELS];
+int read_HW( void * recbuf, int size) {
 	
-	InitIF(fdSound);
-}
+	int ret = read(fdSound, recbuf, size * NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE );
+//printf("%d ", ret); fflush(stdout);
 
-void CSound::StopRecording()
-{
-	printf("stoprec\n");
-
-	if (fdSound >0)
-		close(fdSound);
-
-	fdSound = 0;
-}
-void CSound::Read(CVector<short>& psData)
-{
-	int size;
-	int start;
-	int ret;
-	
-	/* Reset start position of reading and set read block size */
-	start = 0;
-	size = iInBufferSize * NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE;
-
-	while (size) 
-	{
-		ret = read(fdSound, &tmprecbuf[ start ], 
-			(size > SSIZE_MAX) ? SSIZE_MAX : size);
-		
-		if (ret < 0) 
+	if (ret < 0) {
+		if ( (errno != EINTR) && (errno != EAGAIN)) 
 		{
-			if (errno == EINTR || errno == EAGAIN) 
-			{
-//printf(".");
-				continue;
-			}
 			perror("CSound:Read");
 			exit(1);
-		}
-		size -= ret;
-		start += ret / BYTES_PER_SAMPLE;
-	}
-	
-	/* Copy data from temporary buffer in output buffer */
-	for (int i = 0; i < iInBufferSize; i++)
-		psData[i] = tmprecbuf[NO_IN_OUT_CHANNELS * i + RECORDING_CHANNEL];
-
-
-// TEST
-#if 0
-static FILE* pFile = fopen("test/recsamples.dat", "w");
-for (int i = 0; i < iInBufferSize; i++)
-	fprintf(pFile, "%d ", psData[i]);		
-fflush(pFile);
-#endif
+		} else
+			return 0;
+	} else
+		return ret / (NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE);
 }
 
+int write_HW( _SAMPLE *playbuf, int size ){
 
-/* Wave out *******************************************************************/
-void CSound::InitPlayback(int iNewBufferSize)
-{
-	printf("initplay %d\n", iNewBufferSize);
-	
-	/* Save buffer size */
-	iBufferSize = iNewBufferSize;
-	
-	InitIF( fdSound );
-}
-
-void CSound::Write(CVector<short>& psData)
-{
-	int size = iBufferSize * BYTES_PER_SAMPLE;
 	int start = 0;
 	int ret;
-	
-	/* FIXME in the moment this is implemented with blocking write
-	   this is not good! But the sound interface only accepts 64 kB.
-	   Solution is to use an intermediate buffer and select() or something */
-	   
-//	audio_buf_info info;
-//ioctl(fdSound, SNDCTL_DSP_GETOSPACE, &info);
-//printf("fr %d frt %d frs %d by %d\n", info.fragments, info.fragstotal, 
-//	info.fragsize, info.bytes);
 
+	size *= BYTES_PER_SAMPLE * NO_IN_OUT_CHANNELS;
 
 	while (size) {
 
-		ret = write(fdSound, &psData[start],(size > SSIZE_MAX) ? SSIZE_MAX : size);
+		ret = write(fdSound, &playbuf[start], size);
 		if (ret < 0) {
 			if (errno == EINTR || errno == EAGAIN) 
 			{
@@ -252,20 +159,12 @@ void CSound::Write(CVector<short>& psData)
 		size -= ret;
 		start += ret / BYTES_PER_SAMPLE;
 	}
+	return 0;
 }
 #endif
 
+/*****************************************************************************/
 
-
-
-
-
-
-/******************************************************************************/
-/******************************************************************************/
-/************************** ALSA Sound interface ******************************/
-/******************************************************************************/
-/******************************************************************************/
 #ifdef USE_ALSA
 
 #define ALSA_PCM_NEW_HW_PARAMS_API
@@ -276,386 +175,220 @@ void CSound::Write(CVector<short>& psData)
 static snd_pcm_t *rhandle = NULL;
 static snd_pcm_t *phandle = NULL;
 
-/* playback/record device directly to the kernel without sample rate conversion 
-   - we do it on our own	*/
-static const char *device = "hw:0,0";	
 
-
-/* Wave in ********************************************************************/
-void CSound::InitRecording(int iNewBufferSize){
+void CSound::Init_HW( int mode ){
  	
 	int err, dir;
         snd_pcm_hw_params_t *hwparams;
         snd_pcm_sw_params_t *swparams;
 	unsigned int rrate;
-	unsigned int buffer_time = 4*5000;	// 4*500ms
-	unsigned int period_time =   5000;	// 500ms
-	snd_pcm_uframes_t buffer_size;
-	snd_pcm_uframes_t period_size;
-
-	printf("initrec %d\n", iNewBufferSize);
-
-	/* Save buffer size */
-	iInBufferSize = iNewBufferSize;
-
-	/* Allocate memory for temporary record buffer */
-	if (tmprecbuf != NULL)
-		delete[] tmprecbuf;
-	tmprecbuf = new short int[iNewBufferSize * NO_IN_OUT_CHANNELS];
+	snd_pcm_uframes_t period_size = FRAGSIZE;
+	snd_pcm_t *  handle;
 	
-
-	if (rhandle != NULL)
-		snd_pcm_close( rhandle );
 	
-	if ( err = snd_pcm_open( &rhandle, device, SND_PCM_STREAM_CAPTURE, 0 )) 
-	{
-		printf("Playback open error: %s\n", snd_strerror(err));
-		return;	
+	/* playback/record device directly to the kernel without sample rate conversion 
+   	- we do it on our own	*/
+	static const char *device = "hw:0,0";	
+	
+	if (mode == RECORD) {
+
+		if (rhandle != NULL)
+			return;
+			
+		err = snd_pcm_open( &rhandle, device, SND_PCM_STREAM_CAPTURE, 0 );
+		if ( err != 0) 
+		{
+			printf("open error: %s\n", snd_strerror(err));
+			return;	
+		}
+		handle = rhandle;
+	} else {
+		if (phandle != NULL)
+			return;
+
+		err = snd_pcm_open( &phandle, device, SND_PCM_STREAM_PLAYBACK, 0 );
+		if ( err != 0) 
+		{
+			printf("open error: %s\n", snd_strerror(err));
+			return;	
+		}
+		handle = phandle;
 	}
+	
 	
 	snd_pcm_hw_params_alloca(&hwparams);
 	snd_pcm_sw_params_alloca(&swparams);
 	
 	
 	/* Choose all parameters */
-	err = snd_pcm_hw_params_any(rhandle, hwparams);
+	err = snd_pcm_hw_params_any(handle, hwparams);
 	if (err < 0) {
-		printf("Broken configuration for record: no configurations available: %s\n", snd_strerror(err));
+		printf("Broken configuration : no configurations available: %s\n", snd_strerror(err));
 		return;
 	}
 	/* Set the interleaved read/write format */
-//	err = snd_pcm_hw_params_set_access(rhandle, hwparams, SND_PCM_ACCESS_MMAP_INTERLEAVED);
-	err = snd_pcm_hw_params_set_access(rhandle, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED);	
+	err = snd_pcm_hw_params_set_access(handle, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED);	
 
 	if (err < 0) {
-		printf("Access type not available for record: %s\n", snd_strerror(err));
+		printf("Access type not available : %s\n", snd_strerror(err));
 		return;
 		
 	}
 	/* Set the sample format */
-	err = snd_pcm_hw_params_set_format(rhandle, hwparams, SND_PCM_FORMAT_S16);
+	err = snd_pcm_hw_params_set_format(handle, hwparams, SND_PCM_FORMAT_S16);
 	if (err < 0) {
-		printf("Sample format not available for record: %s\n", snd_strerror(err));
+		printf("Sample format not available : %s\n", snd_strerror(err));
 		return;
 	}
 	/* Set the count of channels */
-	err = snd_pcm_hw_params_set_channels(rhandle, hwparams, NO_IN_OUT_CHANNELS);
+	err = snd_pcm_hw_params_set_channels(handle, hwparams, NO_IN_OUT_CHANNELS);
 	if (err < 0) {
-		printf("Channels count (%i) not available for records: %s\n", NO_IN_OUT_CHANNELS, snd_strerror(err));
+		printf("Channels count (%i) not available s: %s\n", NO_IN_OUT_CHANNELS, snd_strerror(err));
 		return;
 	}
 	/* Set the stream rate */
 	rrate = SOUNDCRD_SAMPLE_RATE;
-	err = snd_pcm_hw_params_set_rate_near(rhandle, hwparams, &rrate, 0);
+	err = snd_pcm_hw_params_set_rate_near(handle, hwparams, &rrate, &dir);
 	if (err < 0) {
-		printf("Rate %iHz not available for record: %s\n", rrate, snd_strerror(err));
-		return;        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
+		printf("Rate %iHz not available : %s dir %d\n", rrate, snd_strerror(err), dir);
+		return;
 		
 	}
 	if (rrate != SOUNDCRD_SAMPLE_RATE) {
 		printf("Rate doesn't match (requested %iHz, get %iHz)\n", rrate, err);
 		return;
-	}        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
+	}
 	
-	/* Set the buffer time */
-	err = snd_pcm_hw_params_set_buffer_time_near(rhandle, hwparams, &buffer_time, &dir);
+	/* Set the period size */
+	err = snd_pcm_hw_params_set_period_size_min(handle, hwparams, &period_size, &dir);
 	if (err < 0) {
-		printf("Unable to set buffer time %i for record: %s\n", buffer_time, snd_strerror(err));
-		return;
-	}
-	err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
-	if (err < 0) {
-		printf("Unable to get buffer size for record: %s\n", snd_strerror(err));
-		return;
-	}
-	/* Set the period time */
-	err = snd_pcm_hw_params_set_period_time_near(rhandle, hwparams, &period_time, &dir);
-	if (err < 0) {
-		printf("Unable to set period time %i for record: %s\n", period_time, snd_strerror(err));
+		printf("Unable to set period time %i : %s dir: %d\n", period_size, snd_strerror(err), dir);
 		return;
 	}
 	err = snd_pcm_hw_params_get_period_size(hwparams, &period_size, &dir);
 	if (err > 0) {
-		printf("Unable to get period size for record: %s\n", snd_strerror(err));
+		printf("Unable to get period size : %s\n", snd_strerror(err));
 		return;
 	}
+
 	/* Write the parameters to device */
-	err = snd_pcm_hw_params(rhandle, hwparams);
+	err = snd_pcm_hw_params(handle, hwparams);
 	if (err < 0) {
-		printf("Unable to set hw params for record: %s\n", snd_strerror(err));
+		printf("Unable to set hw params : %s\n", snd_strerror(err));
 		return;
 	}
 	/* Get the current swparams */
-	err = snd_pcm_sw_params_current(rhandle, swparams);
+	err = snd_pcm_sw_params_current(handle, swparams);
 	if (err < 0) {
-		printf("Unable to determine current swparams for record: %s\n", snd_strerror(err));
+		printf("Unable to determine current swparams : %s\n", snd_strerror(err));
 		return;
 	}
-	/* Start the transfer when the buffer is full */
-	err = snd_pcm_sw_params_set_start_threshold(rhandle, swparams, buffer_size);
+	/* Start the transfer when the buffer immediately */
+	err = snd_pcm_sw_params_set_start_threshold(handle, swparams, 0);
 	if (err < 0) {
-		printf("Unable to set start threshold mode for record: %s\n", snd_strerror(err));
+		printf("Unable to set start threshold mode : %s\n", snd_strerror(err));
 		return;
 	}
 	/* Allow the transfer when at least period_size samples can be processed */
-	err = snd_pcm_sw_params_set_avail_min(rhandle, swparams, period_size);
+	err = snd_pcm_sw_params_set_avail_min(handle, swparams, period_size);
 	if (err < 0) {
-		printf("Unable to set avail min for record: %s\n", snd_strerror(err));
+		printf("Unable to set avail min : %s\n", snd_strerror(err));
 		return;
 	}
 	/* Align all transfers to 1 sample */
-	err = snd_pcm_sw_params_set_xfer_align(rhandle, swparams, 1);
+	err = snd_pcm_sw_params_set_xfer_align(handle, swparams, 1);
 	if (err < 0) {
-		printf("Unable to set transfer align for record: %s\n", snd_strerror(err));
+		printf("Unable to set transfer align : %s\n", snd_strerror(err));
 		return;
 	}
-	/* Write the parameters to the record device */
-	err = snd_pcm_sw_params(rhandle, swparams);
+	/* Write the parameters to the record/playback device */
+	err = snd_pcm_sw_params(handle, swparams);
 	if (err < 0) {
-		printf("Unable to set sw params for record: %s\n", snd_strerror(err));
+		printf("Unable to set sw params : %s\n", snd_strerror(err));
 		return;
 	}
-	printf("record init done\n");
+	snd_pcm_start(handle);
+	printf("alsa init done\n");
 
 }
 
-void CSound::StopRecording()
-{
-	printf("stoprec\n");
+int read_HW( void * recbuf, int size) {
 
-	if (rhandle != NULL)
-		snd_pcm_close( rhandle );
+//printf("r"); fflush(stdout);
+	int ret = snd_pcm_readi(rhandle, recbuf, size);
 
-	rhandle = NULL;
-}
+//printf("ret: %d", ret); fflush(stdout);
 
-void CSound::Read(CVector<short>& psData)
-{
-	int size;
-	int start;
-	int ret;
-	
-	/* Reset start position of reading and set read block size */
-	start = 0;
-	size = iInBufferSize;
-	
-	while (size) 
+	if (ret < 0) 
 	{
-		ret = snd_pcm_avail_update(rhandle);
-		printf("r %d %d available %d state %d\n", size, start, ret, snd_pcm_state(rhandle));
+		if (ret == -EPIPE) 
+		{    
+			printf("rpipe\n");
+			/* Under-run */
+			printf("rprepare\n");
+			ret = snd_pcm_prepare(rhandle);
 
-//		ret = snd_pcm_mmap_readi(rhandle, &tmprecbuf[start], size);
-		ret = snd_pcm_readi(rhandle, &tmprecbuf[start], size);
+			if (ret < 0)
+				printf("Can't recover from underrun, prepare failed: %s\n", snd_strerror(ret));
 
-printf("ret: %d\n", ret);
+			ret = snd_pcm_start(rhandle);
 
-		if (ret < 0) 
+			if (ret < 0)
+				printf("Can't recover from underrun, start failed: %s\n", snd_strerror(ret));
+			return 0;
+
+		} 
+		else if (ret == -ESTRPIPE) 
 		{
-			if (ret == -EAGAIN) 
+			printf("strpipe\n");
+
+			/* Wait until the suspend flag is released */
+			while ((ret = snd_pcm_resume(rhandle)) == -EAGAIN)
+				sleep(1);       
+
+			if (ret < 0) 
 			{
-				//printf(".");
-				continue;
-			} 
-			else if (ret == -EPIPE) 
-			{    
-				/* Under-run */
-				printf("prepare\n");
 				ret = snd_pcm_prepare(rhandle);
 
 				if (ret < 0)
-					printf("Can't recover from undretun, prepare failed: %s\n", snd_strerror(ret));
-
-				continue;
-			} 
-			else if (ret == -ESTRPIPE) 
-			{
-				printf("strpipe\n");
-
-				/* Wait until the suspend flag is released */
-				while ((ret = snd_pcm_resume(rhandle)) == -EAGAIN)
-					sleep(1);       
-
-				if (ret < 0) 
-				{
-					ret = snd_pcm_prepare(rhandle);
-
-					if (ret < 0)
-						printf("Can't recover from suspend, prepare failed: %s\n", snd_strerror(ret));
-				}
-				continue;
-			} 
-			else 
-			{
-				printf("CSound::Read: %s\n", snd_strerror(ret));
-				exit(1);
+					printf("Can't recover from suspend, prepare failed: %s\n", snd_strerror(ret));
 			}
+			return 0;
+		} 
+		else 
+		{
+			printf("CSound::Read: %s\n", snd_strerror(ret));
+						exit(1);
 		}
-		size -= ret;
-		start += ret;
-	}
-	
-	/* Copy data from temporary buffer in output buffer */
-	for (int i = 0; i < iInBufferSize; i++)
-		psData[i] = tmprecbuf[NO_IN_OUT_CHANNELS * i + RECORDING_CHANNEL];
+	} else 
+		return ret;
+			
 }
 
+int write_HW( _SAMPLE *playbuf, int size ){
 
-/* Wave out *******************************************************************/
-void CSound::InitPlayback(int iNewBufferSize)
-{
-	int err, dir;
-    snd_pcm_hw_params_t *hwparams;
-    snd_pcm_sw_params_t *swparams;
-	unsigned int rrate;
-	unsigned int buffer_time = 4*500000;	// 4*500ms
-	unsigned int period_time =   500000;	// 500ms
-	snd_pcm_uframes_t buffer_size;
-	snd_pcm_uframes_t period_size;
-
-	printf("initplay %d\n", iNewBufferSize);
-	
-	if (phandle != NULL) {
-printf("already open!\n");
-		snd_pcm_close( phandle );
-	}
-	
-	/* Save buffer size */
-	iBufferSize = iNewBufferSize;
-	
-	if ( err = snd_pcm_open( &phandle, device, SND_PCM_STREAM_PLAYBACK, 0 )) 
-	{
-		printf("Playback open error: %s\n", snd_strerror(err));
-		return;	
-	}
-	
-	snd_pcm_hw_params_alloca(&hwparams);
-	snd_pcm_sw_params_alloca(&swparams);
-	
-	
-	/* Choose all parameters */
-	err = snd_pcm_hw_params_any(phandle, hwparams);
-	if (err < 0) {
-		printf("Broken configuration for playback: no configurations available: %s\n", snd_strerror(err));
-		return;
-	}
-	/* Set the interleaved read/write format */
-	err = snd_pcm_hw_params_set_access(phandle, hwparams, SND_PCM_ACCESS_MMAP_INTERLEAVED);
-	if (err < 0) {
-		printf("Access type not available for playback: %s\n", snd_strerror(err));
-		return;
-		
-	}
-	/* Set the sample format */
-	err = snd_pcm_hw_params_set_format(phandle, hwparams, SND_PCM_FORMAT_S16);
-	if (err < 0) {
-		printf("Sample format not available for playback: %s\n", snd_strerror(err));
-		return;
-	}
-	/* Set the count of channels */
-	err = snd_pcm_hw_params_set_channels(phandle, hwparams, NO_IN_OUT_CHANNELS);
-	if (err < 0) {
-		printf("Channels count (%i) not available for playbacks: %s\n", NO_IN_OUT_CHANNELS, snd_strerror(err));
-		return;
-	}
-	/* Set the stream rate */
-	rrate = SOUNDCRD_SAMPLE_RATE;
-	err = snd_pcm_hw_params_set_rate_near(phandle, hwparams, &rrate, 0);
-	if (err < 0) {
-		printf("Rate %iHz not available for playback: %s\n", rrate, snd_strerror(err));
-		return;        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
-		
-	}
-	if (rrate != SOUNDCRD_SAMPLE_RATE) {
-		printf("Rate doesn't match (requested %iHz, get %iHz)\n", rrate, err);
-		return;
-	}        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
-	
-	/* Set the buffer time */
-	err = snd_pcm_hw_params_set_buffer_time_near(phandle, hwparams, &buffer_time, &dir);
-	if (err < 0) {
-		printf("Unable to set buffer time %i for playback: %s\n", buffer_time, snd_strerror(err));
-		return;
-	}
-	err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
-	if (err < 0) {
-		printf("Unable to get buffer size for playback: %s\n", snd_strerror(err));
-		return;
-	}
-	/* Set the period time */
-	err = snd_pcm_hw_params_set_period_time_near(phandle, hwparams, &period_time, &dir);
-	if (err < 0) {
-		printf("Unable to set period time %i for playback: %s\n", period_time, snd_strerror(err));
-		return;
-	}
-	err = snd_pcm_hw_params_get_period_size(hwparams, &period_size, &dir);
-	if (err > 0) {
-		printf("Unable to get period size for playback: %s\n", snd_strerror(err));
-		return;
-	}
-	/* Write the parameters to device */
-	err = snd_pcm_hw_params(phandle, hwparams);
-	if (err < 0) {
-		printf("Unable to set hw params for playback: %s\n", snd_strerror(err));
-		return;
-	}
-	/* Get the current swparams */
-	err = snd_pcm_sw_params_current(phandle, swparams);
-	if (err < 0) {
-		printf("Unable to determine current swparams for playback: %s\n", snd_strerror(err));
-		return;
-	}
-	/* Start the transfer when the buffer is full */
-	err = snd_pcm_sw_params_set_start_threshold(phandle, swparams, buffer_size);
-	if (err < 0) {
-		printf("Unable to set start threshold mode for playback: %s\n", snd_strerror(err));
-		return;
-	}
-	/* Allow the transfer when at least period_size samples can be processed */
-	err = snd_pcm_sw_params_set_avail_min(phandle, swparams, period_size);
-	if (err < 0) {
-		printf("Unable to set avail min for playback: %s\n", snd_strerror(err));
-		return;
-	}
-	/* Align all transfers to 1 sample */
-	err = snd_pcm_sw_params_set_xfer_align(phandle, swparams, 1);
-	if (err < 0) {
-		printf("Unable to set transfer align for playback: %s\n", snd_strerror(err));
-		return;
-	}
-	/* Write the parameters to the playback device */
-	err = snd_pcm_sw_params(phandle, swparams);
-	if (err < 0) {
-		printf("Unable to set sw params for playback: %s\n", snd_strerror(err));
-		return;
-	}
-printf("init done\n");
-}
-
-/*
- *   Underrun and suspend recovery
- */
- 
-void CSound::Write(CVector<short>& psData)
-{
-	int size = iBufferSize;
 	int start = 0;
 	int ret;
+//printf("w"); fflush(stdout);
 	while (size) {
-printf("w %d %d available %d\n", size, start, snd_pcm_avail_update(phandle));	
 
-		ret = snd_pcm_mmap_writei(phandle, &psData[start], size);
+		ret = snd_pcm_writei(phandle, &playbuf[start], size );
 		if (ret < 0) {
-printf("ret: %d\n", ret);
 			if (ret ==  -EAGAIN) {
+				if ((ret = snd_pcm_wait (phandle, 100)) < 0) {
+			        	printf ("poll failed (%s)\n", snd_strerror (ret));
+			        	break;
+				}	           
 				continue;
-			} else if (ret == -EPIPE) {    /* under-run */
-			printf("prepare\n");
+			} else 
+			if (ret == -EPIPE) {    /* under-run */
+printf("prepare\n");
         			ret = snd_pcm_prepare(phandle);
         			if (ret < 0)
-                			printf("Can't recover from undretun, prepare failed: %s\n", snd_strerror(ret));
+                			printf("Can't recover from underrun, prepare failed: %s\n", snd_strerror(ret));
         			continue;
 			} else if (ret == -ESTRPIPE) {
-			printf("strpipe\n");
+printf("strpipe\n");
         			while ((ret = snd_pcm_resume(phandle)) == -EAGAIN)
                 			sleep(1);       /* wait until the suspend flag is released */
         			if (ret < 0) {
@@ -666,54 +399,41 @@ printf("ret: %d\n", ret);
         			continue;
 			} else {
                                 printf("Write error: %s\n", snd_strerror(ret));
-                                exit(1);
+                               	exit(1);
                         }
                         break;  /* skip one period */
 		}
-printf("size %d ret %d\n", size, ret);	
 		size -= ret;
-		start += ret * NO_IN_OUT_CHANNELS;
+		start += ret;
 	}
+	return 0;
 }
 #endif
 
 
 
-
-
-
-/******************************************************************************/
-/******************************************************************************/
-/************************** ARTS Sound interface ******************************/
-/******************************************************************************/
-/******************************************************************************/
-/* this code seems to work, unfortunatly arts recording is broken :-( A sine 
+/* ARTS code seems to work, unfortunatly arts recording is broken :-( A sine 
    wave gets completely distorted */
-#ifdef HAVE_ARTS
+#ifdef USE_ARTS
 
 #include <artsc.h>
 
 static arts_stream_t pstream = NULL;
 static arts_stream_t rstream = NULL;
 
-
-/* Wave in ********************************************************************/
-void CSound::InitRecording(int iNewBufferSize)
+void CSound::Init_HW( int mode)
 {
 	int arg;      /* argument for ioctl calls */
 	int status;   /* return status of system calls */
+		
 	
-	printf("\ninitrec %d\n",iNewBufferSize);
-	
-	/* Save buffer size */
-	iInBufferSize = iNewBufferSize ;
-	/* allocate memory for temporary record buffer */
-	if ( tmprecbuf != NULL)
-		delete[] tmprecbuf;
-	tmprecbuf = new short int[ iNewBufferSize * NO_IN_OUT_CHANNELS ];
-	
-	if (rstream != NULL)
-		arts_close_stream( rstream );
+	if (mode == RECORD) {
+		if (rstream != NULL)
+			return;
+	} else {
+		if (pstream != NULL)
+			return;
+	}	
 
 	
 	/* Init arts */
@@ -726,123 +446,291 @@ void CSound::InitRecording(int iNewBufferSize)
 	}
 	
 	/* Set sampling parameters */
-	rstream = arts_record_stream(SOUNDCRD_SAMPLE_RATE, BITS_PER_SAMPLE, 
-		NO_IN_OUT_CHANNELS, "DRM");
-	
-	/* Set to blocking */
-	status = arts_stream_set( rstream, ARTS_P_BLOCKING, 1);
-	if (status != 1)
-		fprintf(stderr, "arts_stream_set (InitRecording): ARTS_P_BLOCKING error %s\n", 
-		arts_error_text(status));
-		
-	/* Set to buffer size */
-	status = arts_stream_set( rstream, ARTS_P_BUFFER_TIME, 400); // 400ms buffer
-	if (status != 1)
-		fprintf(stderr, "arts_stream_set (InitRecording): ARTS_P_BUFFER_TIME error %s\n", 
-		arts_error_text(status));
-	
-}
-
-void CSound::StopRecording()
-{
-	printf("stoprec\n");
-	if (rstream != NULL)
-		arts_close_stream( rstream );
-}
-
-
-void CSound::Read(CVector<short>& psData)
-{
-	int size = iInBufferSize * NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE;
-	int start = 0;
-	int ret;
-	
-	while (size) {
-		ret = arts_read(rstream, &tmprecbuf[start], (size>32768) ? 32768 : size);
-		if (ret < 0) {
-			fprintf(stderr, "CSound:Read error %s\n", arts_error_text(ret));
-			exit(1);
-		}
-if (size != ret) printf("ret: %d\n", ret);
-		size -= ret;
-		start += ret / BYTES_PER_SAMPLE;
+	if (mode == RECORD ) {
+		rstream = arts_record_stream(SOUNDCRD_SAMPLE_RATE, BITS_PER_SAMPLE, 
+			NO_IN_OUT_CHANNELS, "DRM");
+		/* Set to blocking */
+		status = arts_stream_set( rstream, ARTS_P_BLOCKING, 1);
+	} else {
+		pstream = arts_play_stream( SOUNDCRD_SAMPLE_RATE, BITS_PER_SAMPLE, 
+			NO_IN_OUT_CHANNELS, "DRM");
+		/* Set to blocking */
+		status = arts_stream_set( pstream, ARTS_P_BLOCKING, 1);
 	}
-
-	/* We read stereo samples, but actually we want only one channel */
-	for (int i = 0; i < iInBufferSize; i++)
-		psData[i] = tmprecbuf[NO_IN_OUT_CHANNELS * i + RECORDING_CHANNEL];
 	
-
-
-#ifdef _DEBUG_
-// TEST
-static FILE* pFile = fopen("test/recsamples.dat", "w");
-for (int i = 0; i < iInBufferSize; i++)
-	fprintf(pFile, "%d ", psData[i]);		
-fflush(pFile);
-#endif
+	if (status != 1)
+		fprintf(stderr, "arts_stream_set: ARTS_P_BLOCKING error %s\n", 
+		arts_error_text(status));
+			
 }
 
+int read_HW( void * recbuf, int size) {
 
-/* Wave out *******************************************************************/
-void CSound::InitPlayback(int iNewBufferSize)
-{
-	int arg;      /* argument for ioctl calls */
-	int status;   /* return status of system calls */
-	
-	printf("\ninitplay %d\n", iNewBufferSize);
-	
-	/* Save buffer size */
-	iBufferSize = iNewBufferSize;
-	
-	if (pstream != NULL)
-		arts_close_stream( pstream );
-	
-	/* Init arts */
-	status = arts_init();
-	
-	if (status < 0) 
-    {   
-		fprintf(stderr, "arts_init error: %s\n", arts_error_text(status));
-        return;
-    }
-    
-	/* Set sampling parameters */
-	pstream = arts_play_stream( SOUNDCRD_SAMPLE_RATE, BITS_PER_SAMPLE, 
-		NO_IN_OUT_CHANNELS, "DRM");
-	
-	/* Set to non-blocking */
-//	status = arts_stream_set( pstream, ARTS_P_BLOCKING, 0);
-	status = arts_stream_set( pstream, ARTS_P_BLOCKING, 1);
-	if (status != 0)
-		fprintf(stderr, "arts_stream_set: ARTS_P_BLOCKING error %s\n", arts_error_text(status));
-
-	/* set buffer size */
-	status = arts_stream_set( pstream, ARTS_P_BUFFER_SIZE, 
-		4*iBufferSize * NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE);
-	if (status != 0)
-		fprintf(stderr, "arts_stream_set: ARTS_BUFFER_SIZE error %s\n", arts_error_text(status));
-	
+	int ret = arts_read(rstream, recbuf, FRAGSIZE * NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE );
+	if (ret < 0) {
+		fprintf(stderr, "CSound:Read error %s\n", arts_error_text(ret));
+					exit(1);
+	} else
+		return ret / (NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE);
 }
 
-void CSound::Write(CVector<short>& psData)
-{
-	int size = iBufferSize * BYTES_PER_SAMPLE;
+int write_HW( _SAMPLE *playbuf, int size ){
+
 	int start = 0;
 	int ret;
-	
+
+	size *= BYTES_PER_SAMPLE * NO_IN_OUT_CHANNELS;
+
 	while (size) 
 	{
-		ret = arts_write(pstream, &psData[start], size);
+		ret = arts_write(pstream, &playbuf[start], size);
 		if (ret < 0) 
 		{
 			fprintf(stderr, "CSound:Write error %s\n", arts_error_text(ret));
 			exit(1);
 		}
-printf("w%d\n", ret);
+//printf("w%d\n", ret);
 		size -= ret;
 		start += ret / BYTES_PER_SAMPLE;
 	}
+	return 0;
 }
 #endif
+
+
+/* ************************************************************************* */
+
+class CSoundBuf : public CCyclicBuffer<_SAMPLE> {
+
+public:
+	void lock (void){ data_accessed.lock(); }
+	void unlock (void){ data_accessed.unlock(); }
+	
+protected:
+	QMutex	data_accessed;
+
+} SoundBufP, SoundBufR;
+
+
+class RecThread : public QThread {
+public:
+	virtual void run() {
+	
+	
+		while (1) {
+
+			int fill;
+
+			SoundBufR.lock();
+			fill = SoundBufR.GetFillLevel();
+			SoundBufR.unlock();
+				
+			if (  (SOUNDBUFLEN - fill) > FRAGSIZE ) {
+//printf("f %d ", fill); fflush(stdout);
+				// enough space in the buffer
+				
+				int size = read_HW( tmprecbuf, FRAGSIZE);
+
+				// common code
+				if (size > 0) {
+					CVectorEx<_SAMPLE>*	ptarget;
+					
+					/* Copy data from temporary buffer in output buffer */
+					SoundBufR.lock();
+		 			
+					ptarget = SoundBufR.QueryWriteBuffer();
+					
+					for (int i = 0; i < size; i++)
+						(*ptarget)[i] = tmprecbuf[NO_IN_OUT_CHANNELS * i + RECORDING_CHANNEL];
+		 			
+					SoundBufR.Put( size );
+					SoundBufR.unlock();
+				}
+			} else
+				usleep( 1000 );
+		}
+	}
+
+protected:
+	_SAMPLE	tmprecbuf[NO_IN_OUT_CHANNELS * FRAGSIZE];
+} RecThread1;
+
+
+
+/* Wave in ********************************************************************/
+
+void CSound::InitRecording(int iNewBufferSize)
+{
+	printf("initrec %d\n", iNewBufferSize);
+
+	printf("initrec %d\n", iNewBufferSize);
+
+	/* Save buffer size */
+	SoundBufR.lock();
+	iInBufferSize = iNewBufferSize;
+	SoundBufR.unlock();
+	
+	Init_HW( RECORD );
+
+	if ( RecThread1.running() == FALSE ) {
+		SoundBufR.Init( SOUNDBUFLEN );
+		SoundBufR.unlock();
+		RecThread1.start();
+	}
+
+}
+
+void CSound::StopRecording()
+{
+	printf("stoprec\n");
+#ifdef USE_DSP
+	if (fdSound >0)
+		close(fdSound);
+	fdSound = 0;
+#endif
+#ifdef USE_ALSA
+	if (rhandle != NULL)
+		snd_pcm_close( rhandle );
+
+	rhandle = NULL;
+#endif
+#ifdef HAVE_ARTS
+	if (rstream != NULL)
+		arts_close_stream( rstream );
+if (rstream != NULL) printf("ups\n");
+#endif
+}
+
+
+void CSound::Read(CVector< _SAMPLE >& psData)
+{
+	CVectorEx<_SAMPLE>*	p;
+
+	SoundBufR.lock();	// we need exclusive access
+	
+//printf("r"); fflush(stdout);
+	
+	while ( SoundBufR.GetFillLevel() < iInBufferSize ) {
+	
+		
+		// not enough data, sleep a little
+		SoundBufR.unlock();
+//printf("rw"); fflush(stdout);
+		usleep(1000); //1ms
+		SoundBufR.lock();
+	}
+	
+	// copy data
+	
+	p = SoundBufR.Get( iInBufferSize );
+	for (int i=0; i<iInBufferSize; i++)
+		psData[i] = (*p)[i];
+	
+	SoundBufR.unlock();
+}
+
+
+/* Wave out *******************************************************************/
+
+
+class PlayThread : public QThread {
+public:
+	virtual void run() {
+	
+	
+		while (1) {
+
+			int fill;
+
+			SoundBufP.lock();
+			fill = SoundBufP.GetFillLevel();
+			SoundBufP.unlock();
+				
+			if ( fill > (FRAGSIZE * NO_IN_OUT_CHANNELS) ) {
+
+//printf("f%d ", fill); fflush(stdout);		 
+				// enough data in the buffer
+
+				CVectorEx<_SAMPLE>*	p;
+				
+				SoundBufP.lock();
+				p = SoundBufP.Get( FRAGSIZE * NO_IN_OUT_CHANNELS );
+
+				for (int i=0; i < FRAGSIZE * NO_IN_OUT_CHANNELS; i++)
+					tmpplaybuf[i] = (*p)[i];
+
+				SoundBufP.unlock();
+				
+				write_HW( tmpplaybuf, FRAGSIZE );
+
+			} else {
+			
+				do {			
+//printf("h %d", fill); fflush(stdout);
+					usleep( 1000 );
+					
+					SoundBufP.lock();
+					fill = SoundBufP.GetFillLevel();
+					SoundBufP.unlock();
+
+				} while ( fill < SOUNDBUFLEN/2 );	// wait until buffer is at least half full
+			}
+		}
+	}
+
+protected:
+	_SAMPLE	tmpplaybuf[NO_IN_OUT_CHANNELS * FRAGSIZE];
+} PlayThread1;
+
+
+void CSound::InitPlayback(int iNewBufferSize)
+{
+	printf("initplay %d\n", iNewBufferSize);
+	
+	/* Save buffer size */
+	SoundBufP.lock();
+	iBufferSize = iNewBufferSize;
+	SoundBufP.unlock();
+
+	Init_HW( PLAY );
+
+	if ( PlayThread1.running() == FALSE ) {
+		SoundBufP.Init( SOUNDBUFLEN );
+		SoundBufP.unlock();
+		PlayThread1.start();
+	}
+}
+
+
+void CSound::Write(CVector< _SAMPLE >& psData)
+{
+
+#if 0
+// blocking write
+while(1){
+	SoundBufP.lock();
+	int fill = SOUNDBUFLEN - SoundBufP.GetFillLevel();
+	SoundBufP.unlock();
+	if ( fill > iBufferSize) break;
+}
+#endif	
+	SoundBufP.lock();	// we need exclusive access
+
+	if ( ( SOUNDBUFLEN - SoundBufP.GetFillLevel() ) > iBufferSize) {
+		 
+		CVectorEx<_SAMPLE>*	ptarget;
+		 
+		 // data fits, so copy
+//printf("n"); fflush(stdout);		 
+		 ptarget = SoundBufP.QueryWriteBuffer();
+
+		 for (int i=0; i < iBufferSize; i++)
+		 	(*ptarget)[i] = psData[i];
+
+		 SoundBufP.Put( iBufferSize );
+	}
+	
+	SoundBufP.unlock();
+}
+
 #endif

@@ -37,13 +37,14 @@ void CDRMSimulation::SimScript()
 	FILE*			pFile;
 	CVector<_REAL>	vecrMSE;
 
-	/* Choose which type of simulation */
-	eSimType = ST_BITERROR;
+	/* Choose which type of simulation, if you choose "ST_NONE", the regular
+	   application will be started */
 	eSimType = ST_CHANEST;
+	eSimType = ST_BITERROR;
 	eSimType = ST_NONE;
 
 
-/* Set the simulation priority to lowest possible value */
+	/* Set the simulation priority to lowest possible value */
 #ifdef _WIN32
 	if (eSimType != ST_NONE)
 		SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
@@ -63,7 +64,7 @@ void CDRMSimulation::SimScript()
 
 //Param.eMSCCodingScheme = CParameter::CS_3_HMMIX;//CS_3_HMSYM;
 
-		Param.iDRMChannelNo = 4;
+		Param.iDRMChannelNo = 8;
 
 		/* Init the modules to adapt to the new parameters. We need to do that
 		   because the following routines call modul internal functions which
@@ -74,20 +75,22 @@ void CDRMSimulation::SimScript()
 		/* Define which synchronization algorithms we want to use */
 		/* In case of bit error simulations, a synchronized DRM data stream is
 		   used. Set corresponding modules to synchronized mode */
-		InputResample.SetSyncInput(TRUE);
+	InputResample.SetSyncInput(TRUE);
 		FreqSyncAcq.SetSyncInput(TRUE);
-		SyncUsingPil.SetSyncInput(TRUE);
+	SyncUsingPil.SetSyncInput(TRUE);
 		TimeSync.SetSyncInput(TRUE);
+
+
 
 //ChannelEstimation.SetTimeInt(CChannelEstimation::TLINEAR);
 
 		/* No of blocks for simulation */
-		GenSimData.SetSimTime(1000);
+		GenSimData.SetSimTime(20);
 //		GenSimData.SetNoErrors(100);
 
-		MSCMLCDecoder.SetNoIterations(0);
+		MSCMLCDecoder.SetNoIterations(1);
 
-		for (rSNRCnt = 22; rSNRCnt <= 27; rSNRCnt += 1.0)
+		for (rSNRCnt = 30; rSNRCnt <= 30; rSNRCnt += 1.0)
 		{
 			Param.rSimSNRdB = rSNRCnt;
 
@@ -101,6 +104,7 @@ void CDRMSimulation::SimScript()
 			printf("%e %e\n", rSNRCnt, Param.rBitErrRate);
 		}
 		fclose(pFile);
+// clear all;close all;load BitErrors.dat;semilogy(BitErrors(:,1), BitErrors(:,2));grid on
 		break;
 
 

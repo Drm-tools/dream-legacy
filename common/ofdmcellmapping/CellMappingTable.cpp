@@ -581,7 +581,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 
 /* ########################################################################## */
-#ifdef _PRINT_TABLES_
+#ifdef _DEBUG_
 /* Save table in file */
 FILE* pFile = fopen("test/CarMapTable.dat", "w");
 for (int i = 0; i < iNoSymbolsPerSuperframe; i++)

@@ -73,11 +73,6 @@ int main(int argc, char** argv)
 //DRMTransmitter.StartTransmitter();
 
 
-	/* Call simulation script. If simulation is activated, application is 
-	   automatically exit in that routine. If in the script no simulation is
-	   activated, this function will imedeately return */
-	DRMSimulation.SimScript();
-
 	QApplication	app(argc, argv); // Application object
 	ReceiverThread	RecThread; // Working thread object
 	FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_Minimize); // Main dialog
@@ -85,6 +80,11 @@ int main(int argc, char** argv)
 	/* Set main window */
 	app.setMainWidget(&MainDlg);
 	pApp = &app;
+
+	/* Call simulation script. If simulation is activated, application is 
+	   automatically exit in that routine. If in the script no simulation is
+	   activated, this function will immediately return */
+	DRMSimulation.SimScript();
 	
 	/* First, initialize the working thread */
 	DRMReceiver.Init();
@@ -98,7 +98,8 @@ int main(int argc, char** argv)
 
 	/* Stop working thread and wait until it is ready for terminating. We set
 	   a time-out of 5 seconds. If thread was not ready in that time, the
-	   program will terminate anyway */
+	   program will terminate anyway, but this can lead to an error 
+	   message */
 	DRMReceiver.Stop();
 	return RecThread.wait(5000);
 }

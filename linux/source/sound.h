@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Alexander Kurpiers, Volker Fischer
+ *	Alexander Kurpiers
  * 
  * Decription:
  * Linux sound interface
@@ -64,8 +64,12 @@ public:
 	
 protected:
 	int 	iBufferSize, iInBufferSize;
-	void InitIF( int &fdSound );
+	void Init_HW( int mode );
+//	int read_HW( void * recbuf, int size );
+//	int write_HW( _SAMPLE * playbuf, int size ); 
 	short int *tmpplaybuf, *tmprecbuf;
+	
+	
 #else
 	/* Dummy definitions */
 	void InitRecording(int iNewBufferSize){}

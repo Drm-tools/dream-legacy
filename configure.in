@@ -62,7 +62,7 @@ if test "$enable_arts" = "yes"; then
 	    AC_SUBST(ARTSLIBS, $ARTSC_LIBS)
 	    AC_SUBST(ARTSINCL, $ARTSC_CFLAGS)
 
-	    AC_DEFINE(HAVE_ARTS, 1, [Define if you have ARTS sound server])
+	    AC_DEFINE(USE_ARTS, 1, [Define if you want to use the ARTS sound server])
 	else
 		AC_MSG_WARN( "*** Could not find libartsc. Switching to --disable-arts" )
 		enable_arts = no

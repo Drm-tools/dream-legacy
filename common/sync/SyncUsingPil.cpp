@@ -46,11 +46,6 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 	/**************************************************************************\
 	* Frame synchronization detection										   *
 	\**************************************************************************/
-	/* Increase symbol counter and take care of wrap around */
-	iSymbolCounterTiSy++;
-	if (iSymbolCounterTiSy == iNoSymPerFrame)
-		iSymbolCounterTiSy = 0;
-
 	if ((bSyncInput == FALSE) && (bAquisition == TRUE))
 	{
 		/* We use a differential demodulation of the time-pilots, because there
@@ -131,6 +126,11 @@ fflush(pFile);
 
 	/* Set current symbol number in extended data of output vector */
 	(*pvecOutputData).GetExData().iSymbolNo = iSymbolCounterTiSy;
+
+	/* Increase symbol counter and take care of wrap around */
+	iSymbolCounterTiSy++;
+	if (iSymbolCounterTiSy == iNoSymPerFrame)
+		iSymbolCounterTiSy = 0;
 
 
 	/**************************************************************************\
@@ -274,17 +274,9 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	rNormConstFOE = 
 		(_REAL) 1.0 / ((_REAL) 2.0 * crPi * ReceiverParam.iSymbolBlockSize);
 
-	/* Init global frequency (resampling) offset tracking value */
-	ReceiverParam.rResampleOffset = (_REAL) 0.0;
-	ReceiverParam.rFreqOffsetTrack = (_REAL) 0.0;
-
-	/* Allocate memory for historys. Init history with large values, because
+	/* Allocate memory for histories. Init history with large values, because
 	   we search for minimum! */
 	vecrCorrHistory.Init(iNoSymPerFrame, (_REAL) HI_VALUE_FOR_MIN_SEARCH);
-
-	/* For simulation set this value here in the init routine */
-	if (bSyncInput == TRUE)
-		iSymbolCounterTiSy = iNoSymPerFrame - 1;
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iTotalNoUsefCarr;

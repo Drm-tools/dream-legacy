@@ -114,7 +114,8 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 	/* Generate a pseudo-noise test-signal (PRBS) */
 	/* Init shift register with an arbitrary number (Must be known at the
 	   receiver AND transmitter!) */
-	iShiftRegister = 12345;
+	iShiftRegister = (_UINT32BIT) time(NULL);
+	TransmParam.RawSimDa.Add(iShiftRegister);
 
 	for (i = 0; i < iOutputBlockSize; i++)
 	{
@@ -176,6 +177,10 @@ void CGenSimData::InitInternal(CParameter& TransmParam)
 		iMinNoBlocks = (int) ((_REAL) 500.0 / (_REAL) 0.4);
 		break;
 	}
+
+	/* Prepare shift register used for storing the start values of the PRBS
+	   shift register */
+	TransmParam.RawSimDa.Reset();
 }
 
 void CGenSimData::SetSimTime(int iNewTi)
@@ -214,7 +219,7 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 	   received signal */
 	/* Init shift register with an arbitrary number (Must be known at the
 	   receiver AND transmitter!) */
-	iShiftRegister = 12345;
+	iShiftRegister = ReceiverParam.RawSimDa.Get();
 
 	iNoBitErrors = 0;
 
@@ -284,12 +289,27 @@ void CGenerateFACData::InitInternal(CParameter& TransmParam)
 /* Receiver */
 void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	bCRCOk = FACReceive.FACParam(pvecInputData, ReceiverParam);
+	/* Do not use received FAC data in case of simulation */
+	if (bSyncInput == FALSE)
+	{
+		bCRCOk = FACReceive.FACParam(pvecInputData, ReceiverParam);
 
-	if (bCRCOk)
-		PostWinMessage(MS_FAC_CRC, 0);
-	else
-		PostWinMessage(MS_FAC_CRC, 2);
+		if (bCRCOk == TRUE)
+			PostWinMessage(MS_FAC_CRC, 0);
+		else
+			PostWinMessage(MS_FAC_CRC, 2);
+	}
+
+	if ((bSyncInput == TRUE) || (bCRCOk == FALSE))
+	{
+		/* If FAC CRC check failed we should increase the frame-counter 
+		   manually. If only FAC data was corrupted, the others can still
+		   decoder if they have the right frame number. In case of simulation
+		   no FAC data is used, we have to increase the counter here */
+		ReceiverParam.iFrameIDReceiv++;
+		if (ReceiverParam.iFrameIDReceiv == NO_FRAMES_IN_SUPERFRAME)
+			ReceiverParam.iFrameIDReceiv = 0;
+	}
 }
 
 void CUtilizeFACData::InitInternal(CParameter& ReceiverParam)
@@ -297,8 +317,8 @@ void CUtilizeFACData::InitInternal(CParameter& ReceiverParam)
 
 // This should be in FAC class in an Init() routine which has to be defined, this
 // would be cleaner code! TODO
-/* Init frame ID */
-ReceiverParam.iFrameIDReceiv = 0;
+/* Init frame ID so that a "0" comes after increasing the init value once */
+ReceiverParam.iFrameIDReceiv = NO_FRAMES_IN_SUPERFRAME - 1;
 
 	/* Define block-size for input */
 	iInputBlockSize = NO_FAC_BITS_PER_BLOCK;

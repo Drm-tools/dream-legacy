@@ -6,7 +6,7 @@
  *	Volker Fischer
  *
  * Description:
- * Soundcard interface for Windows operation systems
+ * Sound card interface for Windows operating systems
  *
  ******************************************************************************
  *
@@ -78,7 +78,7 @@ void CSound::Read(CVector<short>& psData)
 {
 	int i;
 
-	/* Wait, until data is available */
+	/* Wait until data is available */
 	if (!(m_WaveInHeader[iWhichBufferIn].dwFlags & WHDR_DONE))
 		 WaitForSingleObject(m_WaveInEvent, INFINITE);
 
@@ -92,24 +92,6 @@ void CSound::Read(CVector<short>& psData)
 
 	/* In case more than one buffer was ready, reset event */
 	ResetEvent(m_WaveInEvent);
-
-
-// TEST
-#ifdef _DEBUG_
-// Store states of the buffers, because sometimes the sound interface makes the
-// application run into 100% CPU load. We monitor this to write a protection 
-// against this.
-static FILE* pFile = fopen("test/soundin.dat", "w");
-for (i = 0; i < NO_SOUND_BUFFERS_IN; i++)
-{
-	if (m_WaveInHeader[i].dwFlags & WHDR_DONE)
-		fprintf(pFile, "0");
-	if (m_WaveInHeader[i].dwFlags & WHDR_INQUEUE)
-		fprintf(pFile, "1");
-}
-fprintf(pFile, "\n");
-fflush(pFile);
-#endif
 }
 
 void CSound::AddInBuffer()
@@ -136,7 +118,7 @@ void CSound::InitRecording(int iNewBufferSize)
 	if (result == 0)
 		throw 0;
 	
-	/* Test for Mic available */
+	/* Test for mic available */
 	result = waveInGetDevCaps (WAVE_MAPPER, &m_WaveInDevCaps,
 		sizeof(WAVEINCAPS));
 	if (result!= MMSYSERR_NOERROR)
@@ -223,7 +205,7 @@ void CSound::StopRecording()
 	if (result != MMSYSERR_NOERROR)
 		throw 0;
 
-	/* Close the sound-device */
+	/* Close the sound device */
 	result = waveInClose(m_WaveIn);
 	if (result != MMSYSERR_NOERROR)
 		throw 0;
@@ -244,7 +226,7 @@ void CSound::InitPlayback(int iNewBufferSize)
 	/* Set internal parameter */
 	iBufferSizeOut = iNewBufferSize;
 
-	/* Numerate the sound-devices. At least one must exist in the system */
+	/* Numerate the sound devices. At least one must exist in the system */
 	result = waveInGetNumDevs();
 	if (result == 0)
 		throw 0;
@@ -282,7 +264,7 @@ void CSound::InitPlayback(int iNewBufferSize)
 		if (result != MMSYSERR_NOERROR)
 			throw 0;
 		
-		/* Initially send all buffers to the interface */
+		/* Initially, send all buffers to the interface */
 		waveOutWrite(m_WaveOut, &m_WaveOutHeader[j], sizeof(WAVEHDR));
 	}
 }

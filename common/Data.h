@@ -33,6 +33,7 @@
 #include "Modul.h"
 #include "FAC/FAC.h"
 #include "SDC/SDC.h"
+#include <time.h>
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
 #else
@@ -133,8 +134,11 @@ protected:
 class CUtilizeFACData : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-	CUtilizeFACData() {bCRCOk = FALSE;}
+	CUtilizeFACData() : bSyncInput(FALSE), bCRCOk(FALSE) {}
 	virtual ~CUtilizeFACData() {}
+
+	/* To set the module up for synchronized DRM input data stream */
+	void SetSyncInput(_BOOLEAN bNewS) {bSyncInput = bNewS;}
 
 	_BOOLEAN GetCRCOk() const {return bCRCOk;}
 
@@ -142,6 +146,7 @@ protected:
 	CFACReceive FACReceive;
 
 	_BOOLEAN	bCRCOk;
+	_BOOLEAN	bSyncInput;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

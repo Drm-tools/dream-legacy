@@ -106,14 +106,17 @@ public:
 		_BOOLEAN	bTextflag; /* Indicates whether a text message is present or not */
 		_BOOLEAN	bEnhanceFlag; /* Enhancement flag */
 
-// For AAC: Mono, LC Stereo, Stereo
+
+		/* For AAC: Mono, LC Stereo, Stereo --------------------------------- */
 		EAudMode	eAudioMode; /* Audio mode */
 
-// For CELP
+
+		/* For CELP --------------------------------------------------------- */
 		int			iCELPIndex; /* This field indicates the CELP bit rate index */
 		_BOOLEAN	bCELPCRC; /* This field indicates whether the CRC is used or not*/
 
-// For HVXC
+
+		/* For HVXC --------------------------------------------------------- */
 		EHVXCRate	eHVXCRate; /* This field indicates the rate of the HVXC */
 		_BOOLEAN	bHVXCCRC; /* This field indicates whether the CRC is used or not */
 
@@ -154,7 +157,8 @@ public:
 
 		EPackMod	ePacketModInd; /* Packet mode indicator */
 
-// In case of packet mode:
+
+		/* In case of packet mode ------------------------------------------- */
 		EDatUnit	eDataUnitInd; /* Data unit indicator */
 		int			iPacketID; /* Packet Id */
 		int			iPacketLen; /* Packet length */
@@ -273,7 +277,7 @@ public:
 	void			SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl);
 	void			SetServID(const int iServID, const _UINT32BIT iNewServID);
 
-	/* These two parameters are only for transmitter */
+	/* These two parameters are only intended for transmitter */
 	CVector<int>	FACRepitition; /* See 6.3.6 */
 	int				FACNoRep;
 
@@ -331,7 +335,7 @@ public:
 	int					iFrameIDReceiv;
 
 
-// Synchronization **********************
+	/* Synchronization ------------------------------------------------------ */
 	_REAL				rFreqOffsetAcqui;
 	_REAL				rFreqOffsetTrack;
 
@@ -340,12 +344,60 @@ public:
 	_REAL				rTimingOffsTrack;
 
 
-// Simulation **********************
+	/* Simulation ----------------------------------------------------------- */
 	int					iDRMChannelNo;
 	_REAL				rSimSNRdB;
 	_REAL				rBitErrRate;
 	int					iNoBitErrors;
 
+	/* Simulation raw-data management. We have to implement a shift register
+	   with varying size. We do that by adding a variable for storing the
+	   current write position. */
+	class CRawSimData
+	{
+	/* We have to implement a shift register with varying size. We do that
+	   by adding a variable for storing the current write position. We use
+	   always the first value of the array for reading and do a shift of the
+	   other data by adding a arbitrary value (0) at the end of the whole
+	   shift register */
+	public:
+		/* Here, the maximal size of the shift register is set */
+		CRawSimData() : ciMaxDelBlocks(50), iCurWritePos(0) 
+			{veciShRegSt.Init(ciMaxDelBlocks);}
+
+		void Add(_UINT32BIT iNewSRS) 
+		{
+			/* Attention, function does not take care of overruns, data will be
+			   lost if added to a filled shift register! */
+			if (iCurWritePos < ciMaxDelBlocks) 
+				veciShRegSt[iCurWritePos++] = iNewSRS;
+		}
+
+		_UINT32BIT Get() 
+		{
+			/* We always use the first value of the array for reading and do a
+			   shift of the other data by adding a arbitrary value (0) at the
+			   end of the whole shift register */
+			_UINT32BIT iRet = veciShRegSt[0];
+			veciShRegSt.AddEnd(0);
+			iCurWritePos--;
+
+			return iRet;
+		}
+
+		void Reset() {iCurWritePos = 0;}
+
+	protected:
+		/* Max number of delayed blocks */
+		int							ciMaxDelBlocks;
+		CShiftRegister<_UINT32BIT>	veciShRegSt;
+		int							iCurWritePos;
+	};
+
+	CRawSimData			RawSimDa;
+
+
+	/* General -------------------------------------------------------------- */
 	_BOOLEAN			bRunThread;
 
 protected:

@@ -101,6 +101,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	int		i;
 	_REAL	rSpecOcc;
 	_REAL	rBWFactor;
+	_REAL	rMyFading;
 
 	/* Set channel parameter according to selected channel number (table B.1) */
 	switch (ReceiverParam.iDRMChannelNo)
@@ -213,10 +214,26 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	case 7:
 		/* My own test channel, NOT DEFINED IN THE DRM STANDARD! This channel
 		   has only one fading path */
-		_REAL rMyFading = 0.5;
+		rMyFading = 0.5;
 
 		iNoTaps = 1;
 		tap[0].Init(/* Delay: */	(_REAL) 0.0, 
+					/* Gain: */		(_REAL) 1.0, 
+					/* Fshift: */	(_REAL) 0.0, 
+					/* Fd: */		rMyFading);
+		break;
+
+	case 8:
+		/* My own test channel, NOT DEFINED IN THE DRM STANDARD! */
+		rMyFading = 1;
+
+		iNoTaps = 2;
+		tap[0].Init(/* Delay: */	(_REAL) 0.0, 
+					/* Gain: */		(_REAL) 1.0, 
+					/* Fshift: */	(_REAL) 0.0, 
+					/* Fd: */		(_REAL) 0.0);
+
+		tap[1].Init(/* Delay: */	(_REAL) 0.1, 
 					/* Gain: */		(_REAL) 1.0, 
 					/* Fshift: */	(_REAL) 0.0, 
 					/* Fd: */		rMyFading);
@@ -314,7 +331,7 @@ void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift, _REAL rNe
 	_REAL	s;
 	int		k;
 
-	/* Set internal parameters (with conversions) */
+	/* Set internal parameters (convert units and normalize values) */
 	delay = DelMs2Sam(rNewDelay);
 	gain = rNewGain;
 	fshift = NormShift(rNewFshift);
@@ -322,7 +339,7 @@ void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift, _REAL rNe
 
 	s = (_REAL) 0.5 * fd / SOUNDCRD_SAMPLE_RATE;
 
-	/* If tap is not fading, return */
+	/* If tap is not fading, return function */
 	if (s == (_REAL) 0.0)
 		return;
 
@@ -420,6 +437,7 @@ _COMPLEX CTapgain::Update()
 
 		if (phase == -1)
 		{
+			/* FIR */
 			for (k = 0; k < FIRLENGTH; k++)
 			{
 				nextI += 
@@ -432,7 +450,7 @@ _COMPLEX CTapgain::Update()
 		}
 		else
 		{
-			/* Polyphase FIR with interpolation by 8 */
+			/* Polyphase FIR with interpolation */
 			for (k = 0; k < FIRLENGTH; k++)
 			{
 				nextI +=
