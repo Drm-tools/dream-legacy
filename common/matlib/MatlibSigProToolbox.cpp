@@ -103,9 +103,10 @@ CMatlibVector<CReal> Hamming(const int iLen)
 
 CMatlibVector<CReal> Sinc(const CMatlibVector<CReal>& fvI)
 {
-	CMatlibVector<CReal> fvRet(fvI.GetSize(), VTY_TEMP);
+	const int iSize = fvI.GetSize();
+	CMatlibVector<CReal> fvRet(iSize, VTY_TEMP);
 
-	for (int i = 0; i < fvI.GetSize(); i++)
+	for (int i = 0; i < iSize; i++)
 	{
 		if (fvI[i] == (CReal) 0.0)
 			fvRet[i] = (CReal) 1.0;
@@ -209,8 +210,9 @@ CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB,
 	int			m, n, iCurPos;
 	const int	iSizeX = rvX.GetSize();
 	const int	iSizeZ = rvZ.GetSize();
+	const int	iSizeB = cvB.GetSize();
 	const int	iSizeXNew = iSizeX + iSizeZ;
-	const int	iSizeFiltHist = cvB.GetSize() - 1;
+	const int	iSizeFiltHist = iSizeB - 1;
 
 	int iNewLenZ;
 	int iDecSizeY;
@@ -249,7 +251,7 @@ CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB,
 
 		cvY[m] = (CReal) 0.0;
 
-		for (n = 0; n < cvB.GetSize(); n++)
+		for (n = 0; n < iSizeB; n++)
 			cvY[m] += cvB[n] * rvXNew[iCurPos - n];
 	}
 
@@ -303,21 +305,23 @@ CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx,
 	// The order recurrence
 	for (j = 0; j < iLength - 1; j++)
 	{
+		const int iNextInd = j + 1;
+
 		// (a) Compute the new gamma
-		rGamma = vecrRx[j + 1];
-		for (i = 1; i < j + 1; i++) 
-			rGamma += vecrA[i] * vecrRx[j - i + 1];
+		rGamma = vecrRx[iNextInd];
+		for (i = 1; i < iNextInd; i++) 
+			rGamma += vecrA[i] * vecrRx[iNextInd - i];
 
 		// (b), (d) Compute and output the reflection coefficient
 		// (which is also equal to the last AR parameter)
 		vecrA[j + 1] = rGammaCap = - rGamma / rE;
 
 		// (c)
-		for (i = 1; i < j + 1; i++) 
-			vecraP[i] = vecrA[i] + rGammaCap * vecrA[j - i + 1];
+		for (i = 1; i < iNextInd; i++) 
+			vecraP[i] = vecrA[i] + rGammaCap * vecrA[iNextInd - i];
 
 		// Swap a and aP for next order recurrence
-		for (i = 1; i < j + 1; i++)
+		for (i = 1; i < iNextInd; i++)
 			vecrA[i] = vecraP[i];
 
 		// (e) Update the prediction error power
@@ -325,15 +329,15 @@ CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx,
 
 		// (f)
 		rDelta = (CReal) 0.0;
-		for (i = 0; i < j + 1; i++) 
-			rDelta += vecrX[i] * vecrRx[j - i + 1];
+		for (i = 0; i < iNextInd; i++) 
+			rDelta += vecrX[i] * vecrRx[iNextInd - i];
 
 		// (g), (i) 
-		vecrX[j + 1] = rQ = (vecrB[j + 1] - rDelta) / rE;
+		vecrX[iNextInd] = rQ = (vecrB[iNextInd] - rDelta) / rE;
 
 		// (h)
-		for (i = 0; i < j + 1; i++) 
-			vecrX[i] = vecrX[i] + rQ * vecrA[j - i + 1];
+		for (i = 0; i < iNextInd; i++) 
+			vecrX[i] = vecrX[i] + rQ * vecrA[iNextInd - i];
 	}
 
 	return vecrX;
@@ -383,21 +387,23 @@ CMatlibVector<CComplex> Levinson(const CMatlibVector<CComplex>& veccRx,
 	// The order recurrence
 	for (j = 0; j < iLength - 1; j++)
 	{
+		const int iNextInd = j + 1;
+
 		// (a) Compute the new gamma
-		cGamma = veccRx[j + 1];
-		for (i = 1; i < j + 1; i++) 
-			cGamma += veccA[i] * veccRx[j - i + 1];
+		cGamma = veccRx[iNextInd];
+		for (i = 1; i < iNextInd; i++) 
+			cGamma += veccA[i] * veccRx[iNextInd - i];
 
 		// (b), (d) Compute and output the reflection coefficient
 		// (which is also equal to the last AR parameter)
-		veccA[j + 1] = cGammaCap = - cGamma / rE;
+		veccA[iNextInd] = cGammaCap = - cGamma / rE;
 
 		// (c)
-		for (i = 1; i < j + 1; i++) 
-			veccaP[i] = veccA[i] + cGammaCap * Conj(veccA[j - i + 1]);
+		for (i = 1; i < iNextInd; i++) 
+			veccaP[i] = veccA[i] + cGammaCap * Conj(veccA[iNextInd - i]);
 
 		// Swap a and aP for next order recurrence
-		for (i = 1; i < j + 1; i++)
+		for (i = 1; i < iNextInd; i++)
 			veccA[i] = veccaP[i];
 
 		// (e) Update the prediction error power
@@ -405,15 +411,15 @@ CMatlibVector<CComplex> Levinson(const CMatlibVector<CComplex>& veccRx,
 
 		// (f)
 		cDelta = (CReal) 0.0;
-		for (i = 0; i < j + 1; i++) 
-			cDelta += veccX[i] * veccRx[j - i + 1];
+		for (i = 0; i < iNextInd; i++) 
+			cDelta += veccX[i] * veccRx[iNextInd - i];
 
 		// (g), (i) 
-		veccX[j + 1] = cQ = (veccB[j + 1] - cDelta) / rE;
+		veccX[iNextInd] = cQ = (veccB[iNextInd] - cDelta) / rE;
 
 		// (h)
-		for (i = 0; i < j + 1; i++) 
-			veccX[i] = veccX[i] + cQ * Conj(veccA[j - i + 1]);
+		for (i = 0; i < iNextInd; i++) 
+			veccX[i] = veccX[i] + cQ * Conj(veccA[iNextInd - i]);
 	}
 
 	return veccX;

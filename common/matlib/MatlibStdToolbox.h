@@ -107,7 +107,7 @@ inline CComplex					Conj(const CComplex& cI)
 inline CMatlibVector<CComplex>	Conj(const CMatlibVector<CComplex>& cvI)
 									{_VECOP(CComplex, cvI.GetSize(), Conj(cvI[i]));}
 inline CMatlibMatrix<CComplex>	Conj(const CMatlibMatrix<CComplex>& cmI)
-									{_MATOPC(CComplex, cmI.GetRowSize(), cmI.GetColSize(), Conj(cmI[i]));}
+									{_MATOP(CComplex, cmI.GetRowSize(), cmI.GetColSize(), Conj(cmI[i]));}
 
 
 /* Absolute and angle (argument) functions */
@@ -240,8 +240,9 @@ CMatlibVector<CReal>		rifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPl
 template<class T> inline
 T Min(const CMatlibVector<T>& vecI)
 {
+	const int iSize = vecI.GetSize();
 	T fMinRet = vecI[0];
-	for (int i = 0; i < vecI.GetSize(); i++)
+	for (int i = 0; i < iSize; i++)
 		if (vecI[i] < fMinRet)
 			fMinRet = vecI[i];
 
@@ -251,8 +252,9 @@ T Min(const CMatlibVector<T>& vecI)
 template<class T> inline
 T Max(const CMatlibVector<T>& vecI)
 {
+	const int iSize = vecI.GetSize();
 	T fMaxRet = vecI[0];
-	for (int i = 0; i < vecI.GetSize(); i++)
+	for (int i = 0; i < iSize; i++)
 		if (vecI[i] > fMaxRet)
 			fMaxRet = vecI[i];
 
@@ -262,8 +264,9 @@ T Max(const CMatlibVector<T>& vecI)
 template<class T> inline
 T Sum(const CMatlibVector<T>& vecI)
 {
+	const int iSize = vecI.GetSize();
 	T SumRet = 0;
-	for (int i = 0; i < vecI.GetSize(); i++)
+	for (int i = 0; i < iSize; i++)
 		SumRet += vecI[i];
 
 	return SumRet;
@@ -272,15 +275,17 @@ T Sum(const CMatlibVector<T>& vecI)
 template<class T> inline
 T Var(const CMatlibVector<T>& vecI)
 {
+	const int iSize = vecI.GetSize();
+
 	/* First calculate mean */
 	T tMean = Mean(vecI);
 
 	/* Now variance (sum formula) */
 	T tRet = 0;
-	for (int i = 0; i < vecI.GetSize(); i++)
+	for (int i = 0; i < iSize; i++)
 		tRet += (vecI[i] - tMean) * (vecI[i] - tMean);
 
-	return tRet / (vecI.GetSize() - 1); /* Normalizing */
+	return tRet / (iSize - 1); /* Normalizing */
 }
 
 

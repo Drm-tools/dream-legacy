@@ -83,7 +83,9 @@ inline void				IIR1(CMatlibVector<CReal>& rY,
 							 const CMatlibVector<CReal>& rX,
 							 const CReal rLambda)
 {
-	for (int i = 0; i < rY.GetSize(); i++)
+	const int iSize = rY.GetSize();
+
+	for (int i = 0; i < iSize; i++)
 		IIR1(rY[i], rX[i], rLambda);
 }
 

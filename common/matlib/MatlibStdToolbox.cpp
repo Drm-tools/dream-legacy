@@ -31,17 +31,19 @@
 /* Implementation *************************************************************/
 CMatlibVector<CReal> Sort(const CMatlibVector<CReal>& rvI)
 {
-	CMatlibVector<CReal>	fvRet(rvI.GetSize(), VTY_TEMP);
+	const int iSize = rvI.GetSize();
+	const int iEnd = iSize - 1;
+	CMatlibVector<CReal>	fvRet(iSize, VTY_TEMP);
 	CReal					rSwap;
 
 	/* Copy input vector in output vector */
 	fvRet = rvI;
 
 	/* Loop through the array one less than its total cell count */
-	for (int i = 0; i < rvI.GetSize() - 1; i++)
+	for (int i = 0; i < iEnd; i++)
 	{
 		/* Loop through every cell (value) in array */
-		for (int j = 0; j < rvI.GetSize() - 1; j++)
+		for (int j = 0; j < iEnd; j++)
 		{
 			/* Compare the values and switch if necessary */
 			if (fvRet[j] > fvRet[j + 1])
@@ -299,7 +301,8 @@ CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlan
 	fftw_real*			pFftwRealIn;
 	fftw_real*			pFftwRealOut;
 
-	const int			iLongLength(fvI.GetSize());
+	const int			iSizeI = fvI.GetSize();
+	const int			iLongLength(iSizeI);
 	const int			iShortLength(iLongLength / 2);
 	const int			iUpRoundShortLength((iLongLength + 1) / 2);
 	
@@ -328,7 +331,7 @@ CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlan
 	pFftwRealOut = pCurPlan->pFftwRealOut;
 
 	/* fftw (Homepage: http://www.fftw.org/) */
-	for (i = 0; i < fvI.GetSize(); i++)
+	for (i = 0; i < iSizeI; i++)
 		pFftwRealIn[i] = fvI[i];
 
 	/* Actual fftw call */
