@@ -40,7 +40,7 @@ void CParameter::ResetServicesStreams()
 	int i;
 
 	/* Reset everything to possible start values */
-	for (i = 0; i < MAX_NO_SERVICES; i++)
+	for (i = 0; i < MAX_NUM_SERVICES; i++)
 	{
 		Service[i].AudioParam.strTextMessage = "";
 		Service[i].AudioParam.iStreamID = STREAM_ID_NOT_USED;
@@ -70,7 +70,7 @@ void CParameter::ResetServicesStreams()
 		Service[i].strLabel = "";
 	}
 
-	for (i = 0; i < MAX_NO_STREAMS; i++)
+	for (i = 0; i < MAX_NUM_STREAMS; i++)
 	{
 		Stream[i].iLenPartA = 0;
 		Stream[i].iLenPartB = 0;
@@ -81,7 +81,7 @@ int CParameter::GetNumActiveServices()
 {
 	int iNumAcServ = 0;
 
-	for (int i = 0; i < MAX_NO_SERVICES; i++)
+	for (int i = 0; i < MAX_NUM_SERVICES; i++)
 		if (Service[i].IsActive())
 			iNumAcServ++;
 
@@ -91,11 +91,11 @@ int CParameter::GetNumActiveServices()
 void CParameter::GetActiveStreams(CVector<int>& veciActStr)
 {
 	int					i;
-	int					iNoStreams;
-	CVector<int>		vecbStreams(MAX_NO_STREAMS, 0);
+	int					iNumStreams;
+	CVector<int>		vecbStreams(MAX_NUM_STREAMS, 0);
 
 	/* Determine which streams are active */
-	for (i = 0; i < MAX_NO_SERVICES; i++)
+	for (i = 0; i < MAX_NUM_SERVICES; i++)
 	{
 		if (Service[i].IsActive())
 		{
@@ -110,24 +110,97 @@ void CParameter::GetActiveStreams(CVector<int>& veciActStr)
 	}
 
 	/* Now, count streams */
-	iNoStreams = 0;
-	for (i = 0; i < MAX_NO_STREAMS; i++)
+	iNumStreams = 0;
+	for (i = 0; i < MAX_NUM_STREAMS; i++)
 		if (vecbStreams[i] == 1)
-			iNoStreams++;
+			iNumStreams++;
 
 	/* Now that we know how many streams are active, dimension vector */
-	veciActStr.Init(iNoStreams);
+	veciActStr.Init(iNumStreams);
 
 	/* Store IDs of active streams */
-	iNoStreams = 0;
-	for (i = 0; i < MAX_NO_STREAMS; i++)
+	iNumStreams = 0;
+	for (i = 0; i < MAX_NUM_STREAMS; i++)
 	{
 		if (vecbStreams[i] == 1)
 		{
-			veciActStr[iNoStreams] = i;
-			iNoStreams++;
+			veciActStr[iNumStreams] = i;
+			iNumStreams++;
 		}
 	}
+}
+
+_REAL CParameter::GetBitRate(int iServiceID)
+{
+	int iNoBitsPerFrame;
+	int iLenPartA;
+	int iLenPartB;
+
+	/* First, check if audio or data service and get lengths */
+	if (Service[iServiceID].eAudDataFlag == SF_AUDIO)
+	{
+		if (Service[iServiceID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
+		{
+			iLenPartA =
+				Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartA;
+
+			iLenPartB =
+				Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartB;
+		}
+		else
+		{
+			/* Stream is not yet assigned, set lengths to zero */
+			iLenPartA = 0;
+			iLenPartB = 0;
+		}
+	}
+	else
+	{
+		if (Service[iServiceID].DataParam.iStreamID != STREAM_ID_NOT_USED)
+		{
+			iLenPartA =
+				Stream[Service[iServiceID].DataParam.iStreamID].iLenPartA;
+
+			iLenPartB =
+				Stream[Service[iServiceID].DataParam.iStreamID].iLenPartB;
+		}
+		else
+		{
+			/* Stream is not yet assigned, set lengths to zero */
+			iLenPartA = 0;
+			iLenPartB = 0;
+		}
+	}
+
+	/* Total length in bits */
+	iNoBitsPerFrame = (iLenPartA + iLenPartB) * SIZEOF__BYTE;
+
+	/* We have 3 frames with time duration of 1.2 seconds. Bit rate should be
+	   returned in kbps (/ 1000) */
+	return (_REAL) iNoBitsPerFrame * 3 / 1.2 / 1000;
+}
+
+_BOOLEAN CParameter::IsEEP(int iServiceID)
+{
+	/* Check the length of protection part A */
+	if (Service[iServiceID].eAudDataFlag == SF_AUDIO)
+	{
+		if (Service[iServiceID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
+		{
+			if (Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartA != 0)
+				return FALSE;
+		}
+	}
+	else
+	{
+		if (Service[iServiceID].DataParam.iStreamID != STREAM_ID_NOT_USED)
+		{
+			if (Stream[Service[iServiceID].DataParam.iStreamID].iLenPartA != 0)
+				return FALSE;
+		}
+	}
+
+	return TRUE;
 }
 
 void CParameter::InitCellMapTable(const ERobMode eNewWaveMode, const ESpecOcc eNewSpecOcc)
@@ -206,24 +279,16 @@ void CParameter::SetSpectrumOccup(ESpecOcc eNewSpecOcc)
 	}
 }
 
-void CParameter::SetStreamLenPartA(const int iStreamNo, const int iNewLenPartA)
+void CParameter::SetStreamLen(const int iStreamID, const int iNewLenPartA,
+							  const int iNewLenPartB)
 {
 	/* Apply changes only if parameters have changed */
-	if (Stream[iStreamNo].iLenPartA != iNewLenPartA)
+	if ((Stream[iStreamID].iLenPartA != iNewLenPartA) ||
+		(Stream[iStreamID].iLenPartB != iNewLenPartB))
 	{
-		Stream[iStreamNo].iLenPartA = iNewLenPartA;
-
-		/* Set init flags */
-		DRMReceiver.InitsForMSC();
-	}
-}
-
-void CParameter::SetStreamLenPartB(const int iStreamNo, const int iNewLenPartB)
-{
-	/* Apply changes only if parameters have changed */
-	if (Stream[iStreamNo].iLenPartB != iNewLenPartB)
-	{
-		Stream[iStreamNo].iLenPartB = iNewLenPartB;
+		/* Use new parameters */
+		Stream[iStreamID].iLenPartA = iNewLenPartA;
+		Stream[iStreamID].iLenPartB = iNewLenPartB;
 
 		/* Set init flags */
 		DRMReceiver.InitsForMSC();
@@ -444,7 +509,7 @@ _UINT32BIT CParameter::CRawSimData::Get()
 
 /* Reception log implementation --------------------------------------------- */
 CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), pFile(NULL),
-	iFrequency(0)
+	iFrequency(0), strAdditText("")
 {
 	ResetLog();
 }
@@ -537,7 +602,12 @@ void CParameter::CReceptLog::CloseFile()
 {
 	if (pFile != NULL)
 	{
-		fprintf(pFile, "\nCRC: \n<<<<\n\n");
+		fprintf(pFile, "\nCRC: \n");
+		
+		if (strAdditText != "")
+			fprintf(pFile, "%s\n", strAdditText);
+		
+		fprintf(pFile, "<<<<\n\n");
 
 		fclose(pFile);
 
