@@ -790,8 +790,13 @@ void CParameter::CReceptLog::SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong)
 		}
 		else
 		{
+#ifdef _DEBUG_
+			/* In case of debug mode, use more paramters */
+			fprintf(pFile, " FREQ,       DATE,       TIME,    SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY,  DC-FREQ, SAMRATEOFFS\n");
+#else
 			/* The long version of log file has different header */
 			fprintf(pFile, " FREQ,       DATE,       TIME,    SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY\n");
+#endif
 		}
 
 		fflush(pFile);
@@ -872,6 +877,18 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 						rDoppler = (_REAL) 0.0;
 				}
 
+#ifdef _DEBUG_
+				/* Some more parameters in debug mode */
+				fprintf(pFileLong,
+					"%5d, %d-%02d-%02d, %02d:%02d:%02d.0, %6.2f,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, %5.2f, %8.2f,       %5.2f\n",
+					iFrequency,	TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
+					TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
+					TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
+					iNumCRCMSCLong, iNumCRCOkMSCLong,
+					rDoppler, rDelay,
+					DRMReceiver.GetParameters()->GetDCFrequency(),
+					DRMReceiver.GetParameters()->GetSampFreqEst());
+#else
 				/* This data can be read by Microsoft Excel */
 				fprintf(pFileLong,
 					"%5d, %d-%02d-%02d, %02d:%02d:%02d.0, %6.2f,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, %5.2f\n",
@@ -880,6 +897,7 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 					TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
 					iNumCRCMSCLong, iNumCRCOkMSCLong,
 					rDoppler, rDelay);
+#endif
 			}
 			else
 			{
@@ -903,19 +921,6 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 					iTimeCntShort, iAverageSNR, iNumCRCOkFAC,
 					iNumCRCOkMSC, iTmpNumAAC);
 
-#ifdef _DEBUG_
-				_REAL rDoppler;
-
-				/* Save additional system parameter for debugging performance */
-				if (DRMReceiver.GetChanEst()->GetSigma(rDoppler) == FALSE)
-					rDoppler = (_REAL) 0.0;
-
-				fprintf(pFileShort,
-					"   Dopp: %5.2f Hz   FreOff  %8.2f Hz   SamOff %6.2f Hz",
-					rDoppler,
-					DRMReceiver.GetParameters()->GetDCFrequency(),
-					DRMReceiver.GetParameters()->GetSampFreqEst());
-#endif
 				fprintf(pFileShort, "\n"); /* New line */
 			}
 
