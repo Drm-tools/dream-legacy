@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -38,7 +38,7 @@ _BOOLEAN CSDCReceive::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 	int			iUsefulBitsSDC;
 	_BYTE		byFirstByte;
 
-	/* Calculate length of data field in bytes 
+	/* Calculate length of data field in bytes
 	   (consistant to table 61 in (6.4.1)) */
 	iLengthDataFieldBytes = 
 		(int) ((_REAL) (Parameter.iNoSDCBitsPerSFrame - 20) / 8);
@@ -52,8 +52,8 @@ _BOOLEAN CSDCReceive::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 
 	(*pbiData).ResetBitAccess();
 
-	/* Special treatment of SDC data stream: The CRC (Cyclic Redundancy 
-	Check) field shall contain a 16-bit CRC calculated over the AFS 
+	/* Special treatment of SDC data stream: The CRC (Cyclic Redundancy
+	Check) field shall contain a 16-bit CRC calculated over the AFS
 	index coded in an 8-bit field (4 msbs are 0) and the data field.
 	4 MSBs from AFS-index. Insert four "0" in the data-stream */
 	byFirstByte = (_BYTE) (*pbiData).Separate(4);
@@ -76,7 +76,7 @@ _BOOLEAN CSDCReceive::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 		/* Reconfiguration index */
 		Parameter.iAFSIndex = (*pbiData).Separate(4);
 
-		/* Length of the body, excluding the initial 4 bits ("- 4"), 
+		/* Length of the body, excluding the initial 4 bits ("- 4"),
 		   measured in bytes ("/ 8").
 		   With this condition also the error code of the "Separate" function
 		   is checked! (implicitly) */
@@ -134,24 +134,24 @@ _BOOLEAN CSDCReceive::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 /******************************************************************************\
 * Data entity Type 0 (Multiplex description data entity)					   *
 \******************************************************************************/
-void CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData, int iLengthOfBody, 
+void CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData, int iLengthOfBody,
 								  CParameter& Parameter)
 {
 	int						iNoStreams;
 	int						i;
-	CParameter::CMSCProtLev MSCPrLe;
+	CParameter::CMSCProtLev	MSCPrLe;
 	_BOOLEAN				bWithHierarch;
 	int						iLenPartA;
 	int						iLenPartB;
 
-	/* The receiver may determine the number of streams present in the multiplex 
+	/* The receiver may determine the number of streams present in the multiplex
 	   by dividing the length field of the header by three (6.4.3.1) */
 	iNoStreams = iLengthOfBody / 3;
 
-	/* Check number of streams for overflow 
+	/* Check number of streams for overflow
 	   TODO: Error handling at this point! */
-	if (iNoStreams > MAX_NO_STREAMS)
-		iNoStreams = MAX_NO_STREAMS;
+	if (iNoStreams > MAX_NUM_STREAMS)
+		iNoStreams = MAX_NUM_STREAMS;
 
 	/* Get protection levels */
 	/* Protection level for part A */
@@ -174,27 +174,27 @@ void CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData, int iLengthOfBody,
 			/* Protection level for hierarchical */
 			MSCPrLe.iHierarch = (*pbiData).Separate(2);
 			bWithHierarch = TRUE;
-		
+
 			/* rfu */
 			(*pbiData).Separate(10);
-	
+
 			/* Data length for hierarchical */
 			iLenPartB = (*pbiData).Separate(12);
 
-			/* Set new parameters in global struct */
-			Parameter.SetStreamLenPartB(i, iLenPartB);
+			/* Set new parameters in global struct. Lenght of part A is zero
+			   with hierarchical modulation */
+			Parameter.SetStreamLen(i, 0, iLenPartB);
 		}
 		else
 		{
 			/* Data length for part A */
 			iLenPartA = (*pbiData).Separate(12);
-		
+
 			/* Data length for part B */
 			iLenPartB = (*pbiData).Separate(12);
 
 			/* Set new parameters in global struct */
-			Parameter.SetStreamLenPartA(i, iLenPartA);
-			Parameter.SetStreamLenPartB(i, iLenPartB);
+			Parameter.SetStreamLen(i, iLenPartA, iLenPartB);
 		}
 	}
 
@@ -206,7 +206,7 @@ void CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData, int iLengthOfBody,
 /******************************************************************************\
 * Data entity Type 1 (Label data entity)									   *
 \******************************************************************************/
-void CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData, int iLengthOfBody, 
+void CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData, int iLengthOfBody,
 								  CParameter& Parameter)
 {
 	int		i;
@@ -247,7 +247,7 @@ void CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData, int iLengthOfBody,
 /******************************************************************************\
 * Data entity Type 5 (Application information data entity)					   *
 \******************************************************************************/
-void CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData, int iLengthOfBody, 
+void CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData, int iLengthOfBody,
 								  CParameter& Parameter)
 {
 	int						iTempShortID;
@@ -255,6 +255,9 @@ void CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData, int iLengthOfBody,
 
 	/* Short ID (the short ID is the index of the service-array) */
 	iTempShortID = (*pbiData).Separate(2);
+
+	/* Load data parameters class with current parameters */
+	DataParam = Parameter.GetDataParam(iTempShortID);
 
 	/* Stream Id */
 	DataParam.iStreamID = (*pbiData).Separate(2);
@@ -269,7 +272,7 @@ void CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData, int iLengthOfBody,
 		(*pbiData).Separate(7);
 		break;
 
-	case 1: /* 1 */		
+	case 1: /* 1 */
 		DataParam.ePacketModInd = CParameter::PM_PACKET_MODE;
 
 		/* Descriptor */
@@ -338,7 +341,7 @@ void CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData, int iLengthOfBody,
 /******************************************************************************\
 * Data entity Type 8 (Time and date information data entity)				   *
 \******************************************************************************/
-void CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData, int iLengthOfBody, 
+void CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData, int iLengthOfBody,
 								  CParameter& Parameter)
 {
 	_UINT32BIT	iModJulDate, iZ, iA, iAlpha, iB, iC, iD, iE;
@@ -352,7 +355,7 @@ void CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData, int iLengthOfBody,
 	/* Definition of the Modified Julian Date */
 	rJulDate = (_REAL) iModJulDate + 2400000.5;
 
-	/* Get "real" date out of Julian Date 
+	/* Get "real" date out of Julian Date
 	   (Taken from "http://mathforum.org/library/drmath/view/51907.html") */
 	// 1. Add .5 to the JD and let Z = integer part of (JD+.5) and F the
 	// fractional part F = (JD+.5)-Z
@@ -369,7 +372,7 @@ void CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData, int iLengthOfBody,
 		iAlpha = (int) (((_REAL) iZ - (_REAL) 1867216.25) / (_REAL) 36524.25);
 		iA = iZ + 1 + iAlpha - (int) ((_REAL) iAlpha / (_REAL) 4.0);
 	}
-	
+
 	// 3. Then calculate:
 	// B = A + 1524
 	// C = INT( (B-122.1)/365.25)
@@ -401,7 +404,7 @@ void CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData, int iLengthOfBody,
 		Parameter.iYear = iC - 4716;
 	else
 		Parameter.iYear = iC - 4715;
-	
+
 
 	/* UTC (hours and minutes) ---------------------------------------------- */
 	Parameter.iUTCHour = (*pbiData).Separate(5);
@@ -412,7 +415,7 @@ void CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData, int iLengthOfBody,
 /******************************************************************************\
 * Data entity Type 9 (Audio information data entity)						   *
 \******************************************************************************/
-void CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData, int iLengthOfBody, 
+void CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData, int iLengthOfBody,
 								  CParameter& Parameter)
 {
 	int						iTempShortID;
@@ -420,6 +423,9 @@ void CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData, int iLengthOfBody,
 
 	/* Short ID (the short ID is the index of the service-array) */
 	iTempShortID = (*pbiData).Separate(2);
+
+	/* Load audio parameters class with current parameters */
+	AudParam = Parameter.GetAudioParam(iTempShortID);
 
 	/* Stream Id */
 	AudParam.iStreamID = (*pbiData).Separate(2);
