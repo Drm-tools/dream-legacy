@@ -7,20 +7,20 @@
  *
  * Description:
  *	DRM-receiver
- * The hand over of data is done via an intermediate-buffer. The calling 
- * convention is always "input-buffer, output-buffer". Additional, the 
+ * The hand over of data is done via an intermediate-buffer. The calling
+ * convention is always "input-buffer, output-buffer". Additional, the
  * DRM-parameters are fed to the function.
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
@@ -293,14 +293,14 @@ void CDRMReceiver::SetInTrackingMode()
 void CDRMReceiver::StartParameters(CParameter& Param)
 {
 	int i;
-/* 
+/*
 	Reset all parameters to starting values. This is done at the startup of the
 	application and also when the S/N of the received signal is too low and
-	no receiption is left -> Reset all parameters 
+	no receiption is left -> Reset all parameters
 */
 
-	/* Define with which parameters the receiver should try to decode the signal. 
-	   If we are correct with our assumptions, the receiver does not need to 
+	/* Define with which parameters the receiver should try to decode the signal.
+	   If we are correct with our assumptions, the receiver does not need to
 	   reinitialize. We have to assume that the smallest frequency bandwidth
 	   was chosen because we also have an IIR filter with that bandwidth */
 	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_0);
@@ -311,7 +311,7 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 	Param.SetSDCCodingScheme(CParameter::CS_2_SM);
 
 	/* Select the service we want to decode. Always zero, because we do not
-	   know how many services are transmitted in the signal we want to 
+	   know how many services are transmitted in the signal we want to
 	   decode */
 	Param.SetCurSelectedService(0);
 
@@ -378,7 +378,7 @@ void CDRMReceiver::InitsForAllModules()
 }
 
 /* -----------------------------------------------------------------------------
-   Initialization routines for the modules. We have to look into the modules 
+   Initialization routines for the modules. We have to look into the modules
    and decide on which parameters the modules depend on */
 void CDRMReceiver::InitsForWaveMode()
 {

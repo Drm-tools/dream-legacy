@@ -256,7 +256,7 @@ void CTextMessage::SetText()
 // We can run into problems with the rich text (in QT) if the text message
 // contains html tags as well: FIXME
 
-#ifdef QT_DLL
+#ifdef QT_THREAD_SUPPORT
 			/* Center text */
 			(*pstrText).append("<center>", 8);
 #endif
@@ -275,7 +275,7 @@ void CTextMessage::SetText()
 						case 0x0A:
 							/* Code 0x0A may be inserted to indicate a preferred
 							   line break */
-#ifdef QT_DLL
+#ifdef QT_THREAD_SUPPORT
 							(*pstrText).append("<br>", 4);
 #else
 							(*pstrText).append("\r\n", 2);
@@ -286,7 +286,7 @@ void CTextMessage::SetText()
 							/* Code 0x1F (hex) may be inserted to indicate a
 							   preferred word break. This code may be used to 
 							   display long words comprehensibly */
-#ifdef QT_DLL
+#ifdef QT_THREAD_SUPPORT
 							(*pstrText).append("<br>", 4);
 #else
 							(*pstrText).append("\r\n", 2);
@@ -295,7 +295,7 @@ void CTextMessage::SetText()
 
 						case 0x0B:
 							/* End of a headline */
-#ifdef QT_DLL
+#ifdef QT_THREAD_SUPPORT
 							/* Use rich text possibility offered by QT */
 							(*pstrText).insert(0, "<b><u>", 6);
 							(*pstrText).append("</center></u></b><br><center>", 29);
@@ -315,7 +315,7 @@ void CTextMessage::SetText()
 				}
 			}
 
-#ifdef QT_DLL
+#ifdef QT_THREAD_SUPPORT
 			/* End of centering text */
 			(*pstrText).append("</center>", 9);
 #endif

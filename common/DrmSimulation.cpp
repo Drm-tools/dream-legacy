@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -33,9 +33,9 @@
 void CDRMSimulation::Run()
 {
 /*
- The hand over of data is done via an intermediate-buffer. The calling 
- convention is always "input-buffer, output-buffer". Additional, the 
- DRM-parameters are fed to the function 
+ The hand over of data is done via an intermediate-buffer. The calling
+ convention is always "input-buffer, output-buffer". Additional, the
+ DRM-parameters are fed to the function
 */
 
 	/* Initialization of the modules */
@@ -71,7 +71,7 @@ void CDRMSimulation::Run()
 
 
 		/* Mapping of the MSC, FAC, SDC and pilots on the carriers */
-		OFDMCellMapping.ProcessMultipleData(Param, IntlBuf, FACMapBuf, 
+		OFDMCellMapping.ProcessMultipleData(Param, IntlBuf, FACMapBuf,
 			SDCMapBuf, CarMapBuf);
 
 		/* OFDM-modulation */
@@ -85,7 +85,7 @@ if (eSimType == ST_CHANEST)
 		* Channel															   *
 		\**********************************************************************/
 		/* DRM channel simulation */
-		DRMChannel.TransferData(Param, OFDMModBuf, RecDataBuf, ChanInRefBuf, 
+		DRMChannel.TransferData(Param, OFDMModBuf, RecDataBuf, ChanInRefBuf,
 			ChanRefBuf);
 
 
@@ -95,20 +95,20 @@ if (eSimType == ST_CHANEST)
 		\**********************************************************************/
 		/* Special OFDM demodulation for channel estimation tests (with guard-
 		   interval removal) */
-		OFDMDemodSimulation.ProcessMultipleData(Param, 
-			RecDataBuf, ChanInRefBuf, ChanRefBuf, 
+		OFDMDemodSimulation.ProcessMultipleData(Param,
+			RecDataBuf, ChanInRefBuf, ChanRefBuf,
 			OFDMDemodBuf, OFDMDemodBuf2, DemChanInRefBuf, DemChanRefBuf);
 	
 		/* Channel estimation and equalisation */
 		ChannelEstimation.ProcessData(Param, OFDMDemodBuf, ChanEstBuf);
 
 		/* This module converts the "CEquSig" data type of "ChanEstBuf" to the
-		   "_COMPLEX" data type, because a module can only have ONE type of 
+		   "_COMPLEX" data type, because a module can only have ONE type of
 		   input buffers (even in ProcessMultipleData() case) */
 		DataConv.ProcessData(Param, ChanEstBuf, ChanEstBufForSim);
 
 		/* Evaluate channel estimation result */
-		EvalChanEst.WriteData(Param, ChanEstBufForSim, OFDMDemodBuf2, 
+		EvalChanEst.WriteData(Param, ChanEstBufForSim, OFDMDemodBuf2,
 			DemChanInRefBuf, DemChanRefBuf);
 }
 else
@@ -146,7 +146,7 @@ else
 		ChannelEstimation.ProcessData(Param, SyncUsingPilBuf, ChanEstBuf);
 
 		/* Demapping of the MSC, FAC, SDC and pilots from the carriers */
-		OFDMCellDemapping.ProcessMultipleData(Param, ChanEstBuf, 
+		OFDMCellDemapping.ProcessMultipleData(Param, ChanEstBuf,
 			MSCCarDemapBuf, FACCarDemapBuf, SDCCarDemapBuf);
 
 		/* FAC -------------------------------------------------------------- */
@@ -215,7 +215,7 @@ void CDRMSimulation::Init()
 	/* Mode dependent initializations */
 	if (eSimType == ST_CHANEST)
 	{
-		OFDMDemodSimulation.Init(Param, OFDMDemodBuf, OFDMDemodBuf2, 
+		OFDMDemodSimulation.Init(Param, OFDMDemodBuf, OFDMDemodBuf2,
 			DemChanInRefBuf, DemChanRefBuf);
 		EvalChanEst.Init(Param);
 

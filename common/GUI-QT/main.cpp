@@ -69,6 +69,9 @@ int main(int argc, char** argv)
 // Activate this to read DRM data from file
 //DRMReceiver.GetReceiver()->SetUseSoundcard(FALSE);
 
+// Activate this to start the transmitter and generate a DRM stream
+//DRMTransmitter.StartTransmitter();
+
 
 	/* Call simulation script. If simulation is activated, application is 
 	   automatically exit in that routine. If in the script no simulation is

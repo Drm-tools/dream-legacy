@@ -13,16 +13,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -42,7 +42,7 @@ public:
 	CBuffer() : iBufferSize(0), bRequestFlag(FALSE) {}
 	virtual	~CBuffer() {}
 
-	void			SetRequestFlag(const _BOOLEAN bNewRequestFlag) 
+	void			SetRequestFlag(const _BOOLEAN bNewRequestFlag)
 						{bRequestFlag = bNewRequestFlag;}
 	_BOOLEAN		GetRequestFlag() const {return bRequestFlag;}
 
@@ -76,7 +76,7 @@ public:
 	virtual int					GetFillLevel() const {return iFillLevel;}
 
 protected:
-	int	iFillLevel; 
+	int iFillLevel;
 };
 
 /* Cyclic buffer */
@@ -98,7 +98,7 @@ public:
 protected:
 	CVectorEx<TData>	vecInOutBuffer;
 
-	int					iPut; 
+	int					iPut;
 	int					iGet;
 	EBufferState		iBufferState;
 };
@@ -165,7 +165,7 @@ template<class TData> void CCyclicBuffer<TData>::Init(const int iNewBufferSize)
 {
 	CBuffer<TData>::Init(iNewBufferSize);
 
-	/* Make in- and output buffer the same size as the main buffer to 
+	/* Make in- and output buffer the same size as the main buffer to
 	   make sure that the worst-case is no problem */
 	vecInOutBuffer.Init(iNewBufferSize);
 
@@ -190,7 +190,7 @@ template<class TData> CVectorEx<TData>* CCyclicBuffer<TData>::Get(const int iReq
 	int	iAvailSpace;
 	int iElementCount;
 
-	/* Test if enough data is available for reading */ 
+	/* Test if enough data is available for reading */
 	iAvailSpace = iPut - iGet;
 	/* Test if wrap is needed */
 	if ((iAvailSpace < 0) || ((iAvailSpace == 0) && (iBufferState == BS_FULL)))
@@ -250,7 +250,7 @@ template<class TData> void CCyclicBuffer<TData>::Put(const int iOfferedSize)
 	int	i;
 	int iElementCount;
 
-	/* Test if enough data is available for writing */ 
+	/* Test if enough data is available for writing */
 	iAvailSpace = iGet - iPut;
 	/* Test if wrap is needed */
 	if ((iAvailSpace < 0) || ((iAvailSpace == 0) && (iBufferState == BS_EMPTY)))

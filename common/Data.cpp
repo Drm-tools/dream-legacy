@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -43,7 +43,7 @@ void CReadData::ProcessDataInternal(CParameter& TransmParam)
 	if (iCounter == iNoTransBlocks)
 		TransmParam.bRunThread = FALSE;
 
-	/* Write your data in (*pvecOutputData)[i], 
+	/* Write your data in (*pvecOutputData)[i],
 	   where i = 0..iOutputBlockSize - 1*/
 	for (int i = 0; i < iOutputBlockSize; i++)
 	{
@@ -68,9 +68,9 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 
 void CWriteData::InitInternal(CParameter& ReceiverParam)
 {
-	/* Define block-size for input, an audio frame always corresponds to 400ms. 
+	/* Define block-size for input, an audio frame always corresponds to 400ms.
 	   We use always stereo blocks */
-	iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE * 
+	iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
 		(_REAL) 0.4 /* 400ms */ * 2 /* stereo */);
 
 	/* Init sound interface */
@@ -112,7 +112,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 	}
 
 	/* Generate a pseudo-noise test-signal (PRBS) */
-	/* Init shift register with an arbitrary number (Must be known at the 
+	/* Init shift register with an arbitrary number (Must be known at the
 	   receiver AND transmitter!) */
 	iShiftRegister = 12345;
 
@@ -121,7 +121,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 		/* Calculate new PRBS bit */
 		iTempShiftRegister1 = iShiftRegister;
 
-		/* P(X) = X^9 + X^5 + 1, 
+		/* P(X) = X^9 + X^5 + 1,
 		   in this implementation we have to shift n-1! */
 		biPRBSbit = ((iTempShiftRegister1 >> 4) & 1) ^
 			((iTempShiftRegister1 >> 8) & 1);
@@ -178,7 +178,7 @@ void CGenSimData::InitInternal(CParameter& TransmParam)
 	}
 }
 
-void CGenSimData::SetSimTime(int iNewTi) 
+void CGenSimData::SetSimTime(int iNewTi)
 {
 	/* One MSC frame is 400 ms long */
 	iNoSimBlocks = (int) ((_REAL) iNewTi /* sec */ / (_REAL) 0.4);
@@ -210,9 +210,9 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 	int				i;
 
 	/* -------------------------------------------------------------------------
-	   Generate a pseudo-noise test-signal (PRBS) for comparison with 
+	   Generate a pseudo-noise test-signal (PRBS) for comparison with
 	   received signal */
-	/* Init shift register with an arbitrary number (Must be known at the 
+	/* Init shift register with an arbitrary number (Must be known at the
 	   receiver AND transmitter!) */
 	iShiftRegister = 12345;
 
@@ -223,7 +223,7 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Calculate new PRBS bit */
 		iTempShiftRegister1 = iShiftRegister;
 
-		/* P(X) = X^9 + X^5 + 1, 
+		/* P(X) = X^9 + X^5 + 1,
 		   in this implementation we have to shift n-1! */
 		biPRBSbit = ((iTempShiftRegister1 >> 4) & 1) ^
 			((iTempShiftRegister1 >> 8) & 1);
@@ -350,7 +350,7 @@ void CEvalChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Get delay of channel estimation (must not be longer than symbol number
 	   per frame, otherwise we get wraps which are not evaluated here!) */
-	iChanEstDelay = (*pvecInputData2).GetExData().iSymbolNo - 
+	iChanEstDelay = (*pvecInputData2).GetExData().iSymbolNo -
 		(*pvecInputData).GetExData().iSymbolNo + 1;
 	if (iChanEstDelay < 0)
 		iChanEstDelay += iNoSymPerFrame;
@@ -414,7 +414,7 @@ void CEvalChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 			vecrMSEAverage[i] += vecrMSE[i];
 		}
 
-		/* New values have been added, increase counter for final result 
+		/* New values have been added, increase counter for final result
 		   calculation */
 		lAvCnt++;
 	}

@@ -237,10 +237,14 @@ void FDRMDialog::OnTimer()
 				QString strLabel = QString().fromUtf8(QCString(DRMReceiver.
 					GetParameters()->Service[i].strLabel.c_str()));
 
+#ifdef QT_THREAD_SUPPORT
 				/* Print out label in bold letters (rich text). Problem, if 
 				   html tags are used in the label: FIXME */
 				m_StaticService[i] = "<b>" + strLabel + 
 					"</b>" + strSpace + SetServParamStr(i);
+#else
+				m_StaticService[i] = strLabel + strSpace + SetServParamStr(i);
+#endif
 
 				switch (i)
 				{

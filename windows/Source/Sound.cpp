@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -51,9 +51,9 @@ CSound::CSound()
 	sWaveFormatEx.nChannels = NO_IN_OUT_CHANNELS;
 	sWaveFormatEx.wBitsPerSample = BITS_PER_SAMPLE;
 	sWaveFormatEx.nSamplesPerSec = SOUNDCRD_SAMPLE_RATE;
-	sWaveFormatEx.nBlockAlign = sWaveFormatEx.nChannels * 
+	sWaveFormatEx.nBlockAlign = sWaveFormatEx.nChannels *
 		sWaveFormatEx.wBitsPerSample / 8;
-	sWaveFormatEx.nAvgBytesPerSec = sWaveFormatEx.nBlockAlign * 
+	sWaveFormatEx.nAvgBytesPerSec = sWaveFormatEx.nBlockAlign *
 		sWaveFormatEx.nSamplesPerSec;
 	sWaveFormatEx.cbSize = 0;
 }
@@ -114,12 +114,12 @@ void CSound::InitRecording(int iNewBufferSize)
 	iBufferSizeIn = iNewBufferSize;
 
 	/* Numerate the sound-devices. At least one must exist in the system */
-	result = waveInGetNumDevs(); 
+	result = waveInGetNumDevs();
 	if (result == 0)
 		throw 0;
 	
 	/* Test for Mic available */
-	result = waveInGetDevCaps (WAVE_MAPPER, &m_WaveInDevCaps, 
+	result = waveInGetDevCaps (WAVE_MAPPER, &m_WaveInDevCaps,
 		sizeof(WAVEINCAPS));
 	if (result!= MMSYSERR_NOERROR)
 		throw 0;
@@ -136,8 +136,8 @@ void CSound::InitRecording(int iNewBufferSize)
 		waveInReset(m_WaveIn);
 		waveInClose(m_WaveIn);
 	}
-	result = waveInOpen(&m_WaveIn, WAVE_MAPPER, &sWaveFormatEx, 
-		(DWORD) m_WaveInEvent, NULL, CALLBACK_EVENT); 
+	result = waveInOpen(&m_WaveIn, WAVE_MAPPER, &sWaveFormatEx,
+		(DWORD) m_WaveInEvent, NULL, CALLBACK_EVENT);
 	if (result != MMSYSERR_NOERROR)
 		throw 0;
 	
@@ -153,13 +153,13 @@ void CSound::InitRecording(int iNewBufferSize)
 	for (i = 0; i < NO_SOUND_BUFFERS_IN; i++)
 	{
 		m_WaveInHeader[i].lpData = (LPSTR) &psSoundcardBuffer[i][0];
-		m_WaveInHeader[i].dwBufferLength = 
+		m_WaveInHeader[i].dwBufferLength =
 			iBufferSizeIn * BYTES_PER_SAMPLE * NO_IN_OUT_CHANNELS;
 		m_WaveInHeader[i].dwFlags = 0;
 	
 		/* Call windows internal function to prepare wave-header */
 		result = waveInPrepareHeader(m_WaveIn, &m_WaveInHeader[i],
-			sizeof(WAVEHDR)); 
+			sizeof(WAVEHDR));
 		if (result != MMSYSERR_NOERROR)
 			throw 0;
 	}
@@ -195,13 +195,13 @@ void CSound::StopRecording()
 	Sleep(500);
 
 	/* Unprepare wave-headers */
-	result = 
+	result =
 		waveInUnprepareHeader(m_WaveIn, &m_WaveInHeader[0], sizeof(WAVEHDR));
 	if (result != MMSYSERR_NOERROR)
 		throw 0;
 
-	result = 
-		waveInUnprepareHeader(m_WaveIn, &m_WaveInHeader[1], sizeof(WAVEHDR)); 
+	result =
+		waveInUnprepareHeader(m_WaveIn, &m_WaveInHeader[1], sizeof(WAVEHDR));
 	if (result != MMSYSERR_NOERROR)
 		throw 0;
 
@@ -227,7 +227,7 @@ void CSound::InitPlayback(int iNewBufferSize)
 	iBufferSizeOut = iNewBufferSize;
 
 	/* Numerate the sound-devices. At least one must exist in the system */
-	result = waveInGetNumDevs(); 
+	result = waveInGetNumDevs();
 	if (result == 0)
 		throw 0;
 	
@@ -237,8 +237,8 @@ void CSound::InitPlayback(int iNewBufferSize)
 		waveOutReset(m_WaveOut);
 		waveOutClose(m_WaveOut);
 	}
-	result = waveOutOpen(&m_WaveOut, WAVE_MAPPER, &sWaveFormatEx, 0, 0, 
-		CALLBACK_NULL); 
+	result = waveOutOpen(&m_WaveOut, WAVE_MAPPER, &sWaveFormatEx, 0, 0,
+		CALLBACK_NULL);
 	if (result != MMSYSERR_NOERROR)
 		throw 0;
 	
@@ -259,7 +259,7 @@ void CSound::InitPlayback(int iNewBufferSize)
 		m_WaveOutHeader[j].dwFlags = 0;
 
 		/* Prepare wave-header */
-		result = waveOutPrepareHeader(m_WaveOut, &m_WaveOutHeader[j], 
+		result = waveOutPrepareHeader(m_WaveOut, &m_WaveOutHeader[j],
 			sizeof(WAVEHDR));
 		if (result != MMSYSERR_NOERROR)
 			throw 0;
@@ -319,6 +319,6 @@ void CSound::Write(CVector<short>& psData)
 		psPlaybackBuffer[iIndexDoneBuf][i] = psData[i];
 
 	/* Now, send the current block */
-	waveOutWrite(m_WaveOut, &m_WaveOutHeader[iIndexDoneBuf], 
+	waveOutWrite(m_WaveOut, &m_WaveOutHeader[iIndexDoneBuf],
 		sizeof(WAVEHDR));
 }

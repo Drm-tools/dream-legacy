@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -36,13 +36,13 @@
 void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 {
 	/* Write data to file */
-	/* Use only real-part. Since we use only the real part of the signal, we 
+	/* Use only real-part. Since we use only the real part of the signal, we
 	   have to double the amplitude */
 	for (int y = 0; y < iInputBlockSize; y++)
-		fprintf(pFileTransmitter, "%e\n", 
+		fprintf(pFileTransmitter, "%e\n",
 			(float) (*pvecInputData)[y].real() * 2 * (_REAL) 64.0);
 
-	/* Flush the buffer instantly because the receiver is called right 
+	/* Flush the buffer instantly because the receiver is called right
 	   after finishing the transmitter. If the buffer is not flushed it can
 	   happen that some data is not written in the file */
 	fflush(pFileTransmitter);
@@ -75,7 +75,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 	if (bUseSoundcard == TRUE)
 	{
 		/* Using sound card ------------------------------------------------- */
-		/* Get data from sound interface. The read function must be a 
+		/* Get data from sound interface. The read function must be a
 		   blocking function! */
 		Sound.Read(vecsSoundBuffer);
 
@@ -94,7 +94,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 			{
 				Parameter.bRunThread = FALSE;
 
-				/* Set output block size to zero to avoid writing invalid 
+				/* Set output block size to zero to avoid writing invalid
 				   data */
 				iOutputBlockSize = 0;
 
@@ -120,7 +120,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 		for (i = 0; i < iOutputBlockSize; i++)
 		{
 			/* We flip the spectrum by using the mirror spectrum at the negative
-			   frequencys. If we shift by half of the sample frequency, we can 
+			   frequencys. If we shift by half of the sample frequency, we can
 			   do the shift without need of Hilbert transformation */
 			if (bFlagInv == FALSE)
 			{
@@ -182,12 +182,12 @@ CReceiveData::~CReceiveData()
 void CReceiveData::LevelMeter()
 {
 	/* Search for maximum. Decrease this max with time */
-	for (int i = 0; i < iOutputBlockSize; i++) 
+	for (int i = 0; i < iOutputBlockSize; i++)
 	{
 		/* Decrease max with time */
 		if (iCurMicMeterLev >= METER_FLY_BACK)
 			iCurMicMeterLev -= METER_FLY_BACK;
-		else 
+		else
 		{
 			if ((iCurMicMeterLev <= METER_FLY_BACK) && (iCurMicMeterLev > 1))
 				iCurMicMeterLev -= 2;
@@ -206,7 +206,7 @@ _REAL CReceiveData::GetLevelMeter()
 }
 
 void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
-								CVector<_REAL>& vecrScale) 
+								CVector<_REAL>& vecrScale)
 {
 	int				i;
 	int				iLenSpecWithNyFreq;
@@ -235,7 +235,7 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 		/* Copy data from shift register in Matlib vector */
 		vecrFFTInput.Init(iLenInputVector);
 		for (i = 0; i < iLenInputVector; i++)
-			vecrFFTInput[i] = vecrInpData[i]; 
+			vecrFFTInput[i] = vecrInpData[i];
 
 		/* Get spectrum */
 		veccSpectrum = rfft(vecrFFTInput);

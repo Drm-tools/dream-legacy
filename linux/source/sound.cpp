@@ -10,16 +10,16 @@
 *
 * This program is free software; you can redistribute it and/or modify it under
 * the terms of the GNU General Public License as published by the Free Software
-* Foundation; either version 2 of the License, or (at your option) any later 
+* Foundation; either version 2 of the License, or (at your option) any later
 * version.
 *
-* This program is distributed in the hope that it will be useful, but WITHOUT 
+* This program is distributed in the hope that it will be useful, but WITHOUT
 * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-* FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+* FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
 * details.
 *
 * You should have received a copy of the GNU General Public License along with
-* this program; if not, write to the Free Software Foundation, Inc., 
+* this program; if not, write to the Free Software Foundation, Inc.,
 * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 *
 \******************************************************************************/
@@ -49,14 +49,14 @@ void CSound::Read(CVector<short>& psData)
 	start = 0;
 	size = iInBufferSize;
 
-	while (size) 
+	while (size)
 	{
-		ret = read(fdSound, &tmprecbuf[start], 
+		ret = read(fdSound, &tmprecbuf[start],
 			(size > SSIZE_MAX) ? SSIZE_MAX : size);
 		
-		if (ret < 0) 
+		if (ret < 0)
 		{
-			if (errno == EINTR || errno == EAGAIN) 
+			if (errno == EINTR || errno == EAGAIN)
 			{
 				printf(".");			
 				continue;
@@ -87,7 +87,7 @@ void CSound::InitIF(int & fdSound)
 	int status;   /* return status of system calls */
 	
 	printf("fdsound: %d\n", fdSound);
-	if (fdSound >0) 
+	if (fdSound >0)
 	{
 		printf("already open\n");
 		return;	// already open
@@ -96,24 +96,24 @@ void CSound::InitIF(int & fdSound)
 	/* Open sound device (Use O_RDWR only when writing a program which is
 	   going to both record and play back digital audio) */
 	fdSound = open("/dev/dsp", O_RDWR | O_NONBLOCK);
-	if (fdSound < 0) 
-    {   
+	if (fdSound < 0)
+    {
 		perror("open of /dev/dsp failed");
 		exit(1);
     }
 	
 	/* Get ready for us.
-	   ioctl(audio_fd, SNDCTL_DSP_SYNC, 0) can be used when application wants 
+	   ioctl(audio_fd, SNDCTL_DSP_SYNC, 0) can be used when application wants
 	   to wait until last byte written to the device has been played (it doesn't
 	   wait in recording mode). After that the call resets (stops) the device
 	   and returns back to the calling program. Note that this call may take
-	   several seconds to execute depending on the amount of data in the 
+	   several seconds to execute depending on the amount of data in the
 	   buffers. close() calls SNDCTL_DSP_SYNC automaticly */
 	ioctl(fdSound, SNDCTL_DSP_SYNC, 0);
-    
+
 
 	/* Set sampling parameters ---------------------------------------------- */
-	/* Number of buffers and buffer size 
+	/* Number of buffers and buffer size
 	   (If you need to set this parameter, you must set it directly after
 	   opening the device. Executing another operation on the opened device can
 	   cause the device driver to choose the settings itself after which it will
@@ -125,7 +125,7 @@ void CSound::InitIF(int & fdSound)
 		perror("SNDCTL_DSP_SETFRAGMENT ioctl failed");
 */
 
-	/* Set sampling parameters always so that number of channels (mono/stereo) 
+	/* Set sampling parameters always so that number of channels (mono/stereo)
 	   is set before selecting sampling rate! */
 	/* Set number of channels (0=mono, 1=stereo) */
 	arg = NO_IN_OUT_CHANNELS - 1;
@@ -146,7 +146,7 @@ void CSound::InitIF(int & fdSound)
 	
 
 	/* Sample size */
-	arg = (BITS_PER_SAMPLE == 16) ? AFMT_S16_LE : AFMT_U8;      
+	arg = (BITS_PER_SAMPLE == 16) ? AFMT_S16_LE : AFMT_U8;
 	status = ioctl(fdSound, SNDCTL_DSP_SAMPLESIZE, &arg);
 	if (status == -1)
 		perror("SNDCTL_DSP_SAMPLESIZE ioctl failed");
@@ -164,7 +164,7 @@ void CSound::InitIF(int & fdSound)
 		"  full duplex: %s\n"
 		"  real-time: %s\n"
 		"  batch: %s\n"
-		"  coprocessor: %s\n" 
+		"  coprocessor: %s\n"
 		"  trigger: %s\n"
 		"  mmap: %s\n",
 		arg & DSP_CAP_REVISION,
@@ -252,18 +252,18 @@ void CSound::InitPlayback(int iNewBufferSize)
 	
 	if (pstream != NULL)
 		return;
-	
-	
+
+
 	/* init arts */
 	
 	status = arts_init();
 	
-	if (status < 0) 
-    {   
+	if (status < 0)
+	{
 		fprintf(stderr, "arts_init error: %s\n", arts_error_text(status));
-        return;
-    }
-    
+		return;
+	}
+
 	/* set sampling parameters */
 	
 	pstream = arts_play_stream( SOUNDCRD_SAMPLE_RATE, BITS_PER_SAMPLE, NO_IN_OUT_CHANNELS, "DRM");
@@ -296,8 +296,8 @@ void CSound::InitRecording(int iNewBufferSize)
 	
 	status = arts_init();
 	
-	if (status < 0) 
-	{   
+	if (status < 0)
+	{
 		fprintf(stderr, "arts_init error: %s\n", arts_error_text(status));
 		return;
 	}
