@@ -140,7 +140,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		ButtonGroupChanEstTimeInt->setEnabled(FALSE);
 		ButtonGroupTimeSyncTrack->setEnabled(FALSE);
 		CheckBoxFlipSpec->setEnabled(FALSE);
-		CheckBoxWriteLog->setEnabled(FALSE);
+		EdtFrequency->setText("0");
 		EdtFrequency->setEnabled(FALSE);
 		GroupBoxInterfRej->setEnabled(FALSE);
 
