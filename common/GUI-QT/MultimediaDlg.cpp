@@ -38,12 +38,30 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal, WFla
 	/* Update time for color LED */
 	LEDStatus->SetUpdateTime(1000);
 
-	/* Connect timer signal */
-	connect(&Timer, SIGNAL(timeout()),
-		this, SLOT(OnTimer()));
+	/* Init vector which will store the received images with zero size */
+	vecImages.resize(0);
+
+	/* Init current image position */
+	iCurImagePos = -1;
+
+	/* Update GUI */
+	UpdateAccButtons();
 
 	/* Init text browser window */
 	TextBrowser->setText("<center><b>MOT Slide Show Viewer</center>");
+
+	/* Connect controls */
+	connect(PushButtonStepBack, SIGNAL(clicked()),
+		this, SLOT(OnButtonStepBack()));
+	connect(PushButtonStepForw, SIGNAL(clicked()),
+		this, SLOT(OnButtonStepForw()));
+	connect(PushButtonJumpBegin, SIGNAL(clicked()),
+		this, SLOT(OnButtonJumpBegin()));
+	connect(PushButtonJumpEnd, SIGNAL(clicked()),
+		this, SLOT(OnButtonJumpEnd()));
+
+	connect(&Timer, SIGNAL(timeout()),
+		this, SLOT(OnTimer()));
 }
 
 void MultimediaDlg::OnTimer()
@@ -53,6 +71,7 @@ void MultimediaDlg::OnTimer()
 	_BOOLEAN	bPicLoadSuccess;
 	FILE*		pFiBody;
 	int			iPicSize;
+	int			iCurNumPict;
 
 	/* Poll the data decoder module for new picture */
 	DRMReceiver.GetDataDecoder()->GetSlideShowPicture(NewPic);
@@ -71,12 +90,20 @@ void MultimediaDlg::OnTimer()
 
 		if (bPicLoadSuccess == TRUE)
 		{
-			/* Set new picture in source factory and set it in text control */
-			QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
-				NewImage.convertToImage());
+			/* Add successfully imported picture to vector */
+			iCurNumPict = vecImages.Size();
+			vecImages.Enlarge(1);
+			vecImages[iCurNumPict] = NewImage;
 
-			TextBrowser->setText("<center><img source=\"MOTSlideShowimage\">"
-				"</center>");
+			UpdateAccButtons();
+
+			/* If the last received picture was selected, automatically show
+			   new picture */
+			if (iCurImagePos == iCurNumPict - 1)
+			{
+				iCurImagePos = iCurNumPict;
+				SetPicture();
+			}
 		}
 		else
 		{
@@ -121,7 +148,7 @@ void MultimediaDlg::showEvent(QShowEvent* pEvent)
 
 void MultimediaDlg::hideEvent(QHideEvent* pEvent)
 {
-	/* Deactivate real-time timer */
+	/* Deactivate real-time timer so that it does not get new pictures */
 	Timer.stop();
 }
 
@@ -133,4 +160,72 @@ void MultimediaDlg::SetStatus(int MessID, int iMessPara)
 		LEDStatus->SetLight(iMessPara);
 		break;
 	}
+}
+
+void MultimediaDlg::SetPicture()
+{
+	/* Set new picture in source factory and set it in text control */
+	QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
+		vecImages[iCurImagePos].convertToImage());
+
+	TextBrowser->setText("<center><img source=\"MOTSlideShowimage\">"
+		"</center>");
+
+	UpdateAccButtons();
+}
+
+void MultimediaDlg::OnButtonStepBack()
+{
+	iCurImagePos--;
+	SetPicture();
+}
+
+void MultimediaDlg::OnButtonStepForw()
+{
+	iCurImagePos++;
+	SetPicture();
+}
+
+void MultimediaDlg::OnButtonJumpBegin()
+{
+	/* Reset current picture number to zero (begin) */
+	iCurImagePos = 0;
+	SetPicture();
+}
+
+void MultimediaDlg::OnButtonJumpEnd()
+{
+	/* Go to last received picture */
+	iCurImagePos = vecImages.Size() - 1;
+	SetPicture();
+}
+
+void MultimediaDlg::UpdateAccButtons()
+{
+	if (iCurImagePos <= 0)
+	{
+		/* We are already at the beginning */
+		PushButtonStepBack->setEnabled(FALSE);
+		PushButtonJumpBegin->setEnabled(FALSE);
+	}
+	else
+	{
+		PushButtonStepBack->setEnabled(TRUE);
+		PushButtonJumpBegin->setEnabled(TRUE);
+	}
+
+	if (iCurImagePos == vecImages.Size() - 1)
+	{
+		/* We are already at the end */
+		PushButtonStepForw->setEnabled(FALSE);
+		PushButtonJumpEnd->setEnabled(FALSE);
+	}
+	else
+	{
+		PushButtonStepForw->setEnabled(TRUE);
+		PushButtonJumpEnd->setEnabled(TRUE);
+	}
+
+	LabelCurPicNum->setText(QString().setNum(iCurImagePos + 1) + "/" +
+		QString().setNum(vecImages.Size()));
 }

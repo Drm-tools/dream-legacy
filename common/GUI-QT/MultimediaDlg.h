@@ -30,6 +30,8 @@
 #include <qmime.h>
 #include <qimage.h>
 #include <qtimer.h>
+#include <qpushbutton.h>
+#include <qlabel.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/MultimediaDlgbase.h"
@@ -57,12 +59,20 @@ public:
 	void SetStatus(int MessID, int iMessPara);
 
 protected:
-	QTimer			Timer;
-	int				iCurTransportID;
-    virtual void	showEvent(QShowEvent* pEvent);
-	virtual void	hideEvent(QHideEvent* pEvent);
+	QTimer				Timer;
+	int					iCurTransportID;
+    virtual void		showEvent(QShowEvent* pEvent);
+	virtual void		hideEvent(QHideEvent* pEvent);
+	CVector<QPixmap>	vecImages;
+	int					iCurImagePos;
+	void				SetPicture();
+	void				UpdateAccButtons();
 
 public slots:
 	void OnTimer();
+	void OnButtonStepBack();
+	void OnButtonStepForw();
+	void OnButtonJumpBegin();
+	void OnButtonJumpEnd();
 };
 
