@@ -33,13 +33,14 @@
 void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int			i;
-	_REAL		rTimePilotCorr;
 	int			iMinIndex;
+	_REAL		rTimePilotCorr;
 	_REAL		rMinValue;
 	_REAL		rSampFreqOffsetEst;
 	_COMPLEX	cOldFreqPilCorr;
 	_COMPLEX	cFreqOffEstVecSym;
 	_COMPLEX	cCurPilMult;
+	_COMPLEX	cErrVec;
 	_REAL		rFreqOffsetEst;
 	_REAL		rReTmp, rImTmp;
 
@@ -57,7 +58,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		rTimePilotCorr = (_REAL) 0.0;
 		for (i = 0; i < iNoDiffFact; i++)
 		{
-			_COMPLEX cErrVec = ((*pvecInputData)[vecDiffFact[i].iNoCarrier] *
+			cErrVec = ((*pvecInputData)[vecDiffFact[i].iNoCarrier] *
 				vecDiffFact[i].cDiff -
 				(*pvecInputData)[vecDiffFact[i].iNoCarrier + 1]);
 
@@ -119,6 +120,12 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 				}
 			}
 		}
+	}
+	else
+	{
+		/* Frame synchronization has successfully finished, show always green
+		   light */
+		PostWinMessage(MS_FRAME_SYNC, 0);
 	}
 
 	/* Set current symbol number in extended data of output vector */

@@ -386,6 +386,10 @@ fflush(pFile);
 		/* In case of tracking only, use final acquisition result "rStartIndex"
 		   (which is not updated any more) and add tracking correction */
 		iStartIndex = (int) rStartIndex + (int) ReceiverParam.rTimingOffsTrack;
+
+		/* Timing acquisition was successfully finished, show always green
+		   light */
+		PostWinMessage(MS_TIME_SYNC, 0);
 	}
 
 
