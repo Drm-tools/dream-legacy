@@ -100,7 +100,7 @@ public:
 		vecrSNRHist(LEN_HIST_PLOT_SYNC_PARMS),
 		veciCDAudHist(LEN_HIST_PLOT_SYNC_PARMS), iAvCntParamHist(0),
 		rAvLenIRHist((_REAL) 0.0), rAvDopplerHist((_REAL) 0.0),
-		rAvSNRHist((_REAL) 0.0)
+		rAvSNRHist((_REAL) 0.0), iCurrentCDAud(0)
 #ifdef USE_QT_GUI
 		, UtilizeFACData(&MDI), UtilizeSDCData(&MDI), MSCDemultiplexer(&MDI)
 #endif
@@ -235,7 +235,6 @@ protected:
 	void					DetectAcquiSymbol();
 	void					InitReceiverMode();
 	void					UpdateParamHistories();
-	void					UpdateCDAudHistory(const int iNumCDAud);
 
 	/* Modules */
 	CReceiveData			ReceiveData;
@@ -322,6 +321,7 @@ protected:
 	_REAL					rAvLenIRHist;
 	_REAL					rAvDopplerHist;
 	_REAL					rAvSNRHist;
+	int						iCurrentCDAud;
 
 	CMutex					MutexHist;
 };

@@ -205,7 +205,9 @@ void CDRMReceiver::Run()
 				{
 					bEnoughData = TRUE;
 
-					UpdateCDAudHistory(AudioSourceDecoder.GetNumCorDecAudio());
+					/* Store the number of correctly decoded audio blocks for
+					   the history */
+					iCurrentCDAud = AudioSourceDecoder.GetNumCorDecAudio();
 				}
 			}
 
@@ -577,6 +579,11 @@ void CDRMReceiver::InitsForMSCDemux()
 	MSCDemultiplexer.SetInitFlag();
 	AudioSourceDecoder.SetInitFlag();
 	DataDecoder.SetInitFlag();
+
+	/* Reset value used for the history because if an audio service was selected
+	   but then only a data service is selected, the value would remain with the
+	   last state */
+	iCurrentCDAud = 0;
 }
 
 void CDRMReceiver::InitsForAudParam()
@@ -595,25 +602,6 @@ void CDRMReceiver::InitsForDataParam()
 
 
 /* Parameter histories for plot --------------------------------------------- */
-void CDRMReceiver::UpdateCDAudHistory(const int iNumCDAud)
-{
-	/* TODO: do not use the shift register class, build a new
-	   one which just incremets a pointer in a buffer and put
-	   the new value at the position of the pointer instead of
-	   moving the total data all the time -> special care has
-	   to be taken when reading out the data */
-
-	/* Only update histories if the receiver is in tracking mode */
-	if (eReceiverState == RS_TRACKING)
-	{
-		MutexHist.Lock(); /* MUTEX vvvvvvvvvv */
-		
-		veciCDAudHist.AddEnd(iNumCDAud);
-
-		MutexHist.Unlock(); /* MUTEX ^^^^^^^^^^ */
-	}
-}
-
 void CDRMReceiver::UpdateParamHistories()
 {
 	/* TODO: do not use the shift register class, build a new
@@ -646,8 +634,7 @@ void CDRMReceiver::UpdateParamHistories()
 		rAvDopplerHist += rDoppler;
 		rAvSNRHist += rSNREstimate;
 
-		/* Only evalute Doppler and delay once in one DRM
-		   frame */
+		/* Only evaluate Doppler and delay once in one DRM frame */
 		iAvCntParamHist++;
 		if (iAvCntParamHist == ReceiverParam.iNumSymPerFrame)
 		{
@@ -658,6 +645,12 @@ void CDRMReceiver::UpdateParamHistories()
 				rAvDopplerHist / ReceiverParam.iNumSymPerFrame);
 			vecrSNRHist.AddEnd(
 				rAvSNRHist / ReceiverParam.iNumSymPerFrame);
+
+			/* At the same time, add number of correctly decoded audio blocks.
+			   This number is updated once a DRM frame. Since the other
+			   parameters like SNR is also updated once a DRM frame, the two
+			   values are synchronized by one DRM frame */
+			veciCDAudHist.AddEnd(iCurrentCDAud);
 
 			/* Reset parameters used for averaging */
 			iAvCntParamHist = 0;
