@@ -318,8 +318,10 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	   with pilot positions */
 	iSearchWinSize = iHalfBuffer - veciTableFreqPilots[2];
 
-	iStartDCSearch = Floor((rNormDesPos - rNormHalfWinSize) * iHalfBuffer);
-	iEndDCSearch = Ceil((rNormDesPos + rNormHalfWinSize) * iHalfBuffer);
+	/* Calculate actual indices of start and end of search window */
+	iStartDCSearch =
+		(int) Floor((rNormDesPos - rNormHalfWinSize) * iHalfBuffer);
+	iEndDCSearch = (int) Ceil((rNormDesPos + rNormHalfWinSize) * iHalfBuffer);
 
 	/* Check range. If out of range -> correct */
 	if (!((iStartDCSearch > 0) && (iStartDCSearch < iSearchWinSize)))
