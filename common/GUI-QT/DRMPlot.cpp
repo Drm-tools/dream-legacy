@@ -545,7 +545,7 @@ void CDRMPlot::SetupSNRAudHist()
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, "Time [min]");
 	setAxisTitle(QwtPlot::yLeft, "SNR [dB]");
-	setAxisTitle(QwtPlot::yRight, "Num. Corr. Dec. Aud. Blocks / DRM Fra.");
+	setAxisTitle(QwtPlot::yRight, "Corr. Dec. Audio / DRM-Frame");
 
 	/* Add main curves */
 	clear();
