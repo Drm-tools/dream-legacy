@@ -217,7 +217,7 @@ public:
 	void AddEnd(const TData tNewD);
 
 	/* Add a vector at the end, shift others to the left */
-	void AddEnd(CVector<TData>& vectNewD, const int iLen);
+	void AddEnd(const CVector<TData>& vectNewD, const int iLen);
 };
 
 
@@ -242,7 +242,7 @@ template<class TData> void CShiftRegister<TData>::AddEnd(const TData tNewD)
 	pData[iVectorSize - 1] = tNewD;
 }
 
-template<class TData> void CShiftRegister<TData>::AddEnd(CVector<TData>& vectNewD,
+template<class TData> void CShiftRegister<TData>::AddEnd(const CVector<TData>& vectNewD,
 														 const int iLen)
 {
 	int i, iBlockEnd, iMovLen;
