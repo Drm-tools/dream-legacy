@@ -280,8 +280,8 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	pViewMenu->setItemChecked(0, TRUE);
 	SetStationsView();
 
-	/* Sort list by start time (second column) */
-	ListViewStations->setSorting(1);
+	/* Sort list by transmit power (5th column), most powerful on top */
+	ListViewStations->setSorting(4, FALSE);
 	ListViewStations->sort();
 
 
