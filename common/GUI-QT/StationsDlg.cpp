@@ -820,9 +820,9 @@ _BOOLEAN StationsDlg::SetFrequencyElektor304(const ECOMNumber eCOMNumber,
 	{
 #else
 	if (eCOMNumber == CN_COM1)
-		FILE_HANDLE hCom = ::open("/dev/ttyS0", O_RDWR | O_NOCTTY | O_NDELAY);
+		hCom = ::open("/dev/ttyS0", O_RDWR | O_NOCTTY | O_NDELAY);
 	else
-		FILE_HANDLE hCom = ::open("/dev/ttyS1", O_RDWR | O_NOCTTY | O_NDELAY);
+		hCom = ::open("/dev/ttyS1", O_RDWR | O_NOCTTY | O_NDELAY);
 
 	if (hCom != -1)
 	{
@@ -964,7 +964,6 @@ void StationsDlg::SetOutStateElektor304(FILE_HANDLE hCom, EOutWire eOutWire,
 */
 #ifndef _WIN32
 #include <sys/termios.h>
-int sFile = -1;
 #endif
 
 _BOOLEAN StationsDlg::SetFrequencyNRD535(const int iFreqkHz)
@@ -972,64 +971,67 @@ _BOOLEAN StationsDlg::SetFrequencyNRD535(const int iFreqkHz)
 	_BOOLEAN bSucceeded = FALSE;
 
 #ifndef _WIN32
-	QString sFreqHz;
-	const int iFreqHz = (iFreqkHz + 3) * 1000;    // freq in Hz, add 3kHz offset
-	struct termios tty;
+	int hCom = ::open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NDELAY);
 
-	sFreqHz = QString("%1").arg(iFreqHz).rightJustify(8,'0',TRUE).
-		prepend('F').append('\x0d');
-
-	if (sFile < 0)
-		sFile = ::open("/dev/ttyUSB0", O_RDWR);     // open only once
-
-	if (sFile >= 0)
+	if (hCom >= 0)
 	{
-		tcgetattr(sFile, &tty);
-		cfsetospeed(&tty, (speed_t)B4800);        // set baud rate to 4800
-		cfsetispeed(&tty, (speed_t)B4800);
+		struct termios tty;
+		tcgetattr(hCom, &tty);                     // get current attributes
+
+		const int iFreqHz = (iFreqkHz + 3) * 1000; // freq in Hz, add 3kHz offset
+
+		QString sFreqHz = QString("%1").arg(iFreqHz).rightJustify(8,'0',TRUE).
+			prepend('F').append('\x0d');
+
+		cfsetospeed(&tty, (speed_t) B4800);         // set baud rate to 4800
+		cfsetispeed(&tty, (speed_t) B4800);
 		tty.c_lflag = 0;
-		tty.c_oflag = 0;                          // set OutX off;
-		tty.c_iflag = IGNBRK;                     // set no echo mode
-		tty.c_iflag &= ~(IXON|IXOFF|IXANY);       // set InX off
-		tty.c_cflag = (tty.c_cflag & ~CSIZE)|CS8; // set 8 bits
-		tty.c_cflag |= CLOCAL | CREAD;            // set no wait
-		tty.c_cflag &= ~(PARENB | PARODD);        // set no parity
-		tty.c_cflag &= ~CSTOPB;                   // set 1 stop bit
-		tty.c_cflag &= ~HUPCL;                    // set no hangup
-		tty.c_cflag |= CRTSCTS;                   // set DCD Flow
-		tty.c_cc[VMIN] = 1;                       // set timeout constants
+		tty.c_oflag = 0;                            // set OutX off;
+		tty.c_iflag = IGNBRK;                       // set no echo mode
+		tty.c_iflag &= ~(IXON|IXOFF|IXANY);         // set InX off
+		tty.c_cflag = (tty.c_cflag & ~CSIZE)|CS8;   // set 8 bits
+		tty.c_cflag |= CLOCAL | CREAD;              // set no wait
+		tty.c_cflag &= ~(PARENB | PARODD);          // set no parity
+		tty.c_cflag &= ~CSTOPB;                     // set 1 stop bit
+		tty.c_cflag &= ~HUPCL;                      // set no hangup
+		tty.c_cflag |= CRTSCTS;                     // set DCD Flow
+		tty.c_cc[VMIN] = 1;                         // set timeout constants
 		tty.c_cc[VTIME] = 5;
-		tcsetattr(sFile, TCSANOW, &tty);
+ 
+		int bSuccess = tcsetattr(hCom, TCSANOW, &tty); // set new parms
+ 
+		if (bSuccess == 0)
+		{
+			tcflush(hCom, TCIOFLUSH);                // flush buffers
 
-		ioctl(sFile, TCFLSH, 2);                  // flush buffers
+			write(hCom, "H1\x0d", 3);                // send control on
+			usleep(500);
 
-		write(sFile, "H1\x0d", 3);                // send control on
-		usleep(500);
+			write(hCom, "U2-5000\x0d", 8);           // set BFO to -5kHz
+			usleep(17);
 
-		write(sFile, "U2-5000\x0d", 8);           // set BFO to -5kHz
-		usleep(17);
+			write(hCom, "D1\x0d", 3);                // set mode to CW
+			usleep(10);
 
-		write(sFile, "D1\x0d", 3);                // set mode to CW
-		usleep(10);
+			write(hCom, "B3\x0d", 3);                // set BW to AUX
+			usleep(10);
 
-		write(sFile, "B3\x0d", 3);                // set BW to AUX
-		usleep(10);
+			write(hCom, "P-2000\x0d", 7);            // set PBS to -2kHz
+			usleep(15);
 
-		write(sFile, "P-2000\x0d", 7);            // set PBS to -2kHz
-		usleep(15);
+			write(hCom, "G0\x0d", 3);                // set AGC slow
+			usleep(10);
 
-		write(sFile, "G0\x0d", 3);                // set AGC slow
-		usleep(10);
+			write(hCom, sFreqHz.ascii(), 10);        // send frequency cmd
+			usleep(22);
 
-		write(sFile, sFreqHz.ascii(), 10);        // send frequency cmd
-		usleep(22);
+			write(hCom, "H0\x0d", 3);                // send control off
+			usleep(500);
+		}
 
-		write(sFile, "H0\x0d", 3);                // send control off
-		usleep(500);
-
-		// ::close(sFile);
+		::close(hCom);
 		bSucceeded = TRUE;
-	}
+     }
 #endif
 
 	return bSucceeded;
