@@ -171,8 +171,11 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 			/* Use data unit ------------------------------------------------ */
 			if (DataUnit[iPacketID].bReady == TRUE)
 			{
-				/* Use only data units with the correct packet ID */
-				if (iPacketID == iServPacketID)
+
+// TEST
+// Decode all IDs regardless whether activated or not
+//				/* Use only data units with the correct packet ID */
+//				if (iPacketID == iServPacketID)
 				{
 					/* Only DAB multimedia is supported */
 					if (eServAppDomain == CParameter::AD_DAB_SPEC_APP)
