@@ -977,7 +977,7 @@ void systemevalDlg::AddWhatsThisHelp()
 	/* MLC, Number of Iterations */
 	const QString strNumOfIterations =
 		"<b>MLC, Number of Iterations:</b> In DRM, a multilevel channel coder "
-		"is used. Which this code it is possible to iterate the decoding "
+		"is used. With this code it is possible to iterate the decoding "
 		"process in the decoder to improve the decoding result. The more "
 		"iterations are used the better the result will be. But switching to "
 		"more iterations will increase the CPU load. Simulations showed that "
