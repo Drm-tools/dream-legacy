@@ -165,38 +165,47 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		/**********************************************************************\
 		 * Wiener filter													   *
 		\**********************************************************************/
+		/* Wiener filter update --------------------------------------------- */
+		/* Do not update filter in case of simulation */
+		if (ReceiverParam.eSimType == CParameter::ST_NONE)
+		{
 #ifdef UPD_WIENER_FREQ_EACH_DRM_FRAME
-		/* Update filter coefficients once in one DRM frame */
-		if (iUpCntWienFilt > 0)
-		{
-			iUpCntWienFilt--;
+			/* Update filter coefficients once in one DRM frame */
+			if (iUpCntWienFilt > 0)
+			{
+				iUpCntWienFilt--;
 
-			/* Get maximum delay spread and offset in one DRM frame */
-			if (rLenPDSEst > rMaxLenPDSInFra)
-				rMaxLenPDSInFra = rLenPDSEst;
+				/* Get maximum delay spread and offset in one DRM frame */
+				if (rLenPDSEst > rMaxLenPDSInFra)
+					rMaxLenPDSInFra = rLenPDSEst;
 
-			if (rOffsPDSEst < rMinOffsPDSInFra)
-				rMinOffsPDSInFra = rOffsPDSEst;
-		}
-		else
-		{
+				if (rOffsPDSEst < rMinOffsPDSInFra)
+					rMinOffsPDSInFra = rOffsPDSEst;
+			}
+			else
+			{
 #else
-		/* Update Wiener filter each OFDM symbol. Use current estimates */
-		rMaxLenPDSInFra = rLenPDSEst;
-		rMinOffsPDSInFra = rOffsPDSEst;
+				/* Update Wiener filter each OFDM symbol. Use current
+				   estimates */
+				rMaxLenPDSInFra = rLenPDSEst;
+				rMinOffsPDSInFra = rOffsPDSEst;
 #endif
-			/* Update filter taps */
-			UpdateWienerFiltCoef(rSNRAftTiInt, rMaxLenPDSInFra / iNumCarrier,
-				rMinOffsPDSInFra / iNumCarrier);
+				/* Update filter taps */
+				UpdateWienerFiltCoef(rSNRAftTiInt,
+					rMaxLenPDSInFra / iNumCarrier,
+					rMinOffsPDSInFra / iNumCarrier);
 
 #ifdef UPD_WIENER_FREQ_EACH_DRM_FRAME
-			/* Reset counter and maximum storage variable */
-			iUpCntWienFilt = iNumSymPerFrame;
-			rMaxLenPDSInFra = (_REAL) 0.0;
-			rMinOffsPDSInFra = rGuardSizeFFT;
-		}
+				/* Reset counter and maximum storage variable */
+				iUpCntWienFilt = iNumSymPerFrame;
+				rMaxLenPDSInFra = (_REAL) 0.0;
+				rMinOffsPDSInFra = rGuardSizeFFT;
+			}
 #endif
+		}
 
+
+		/* Actual Wiener interpolation (FIR filtering) ---------------------- */
 		/* FIR filter of the pilots with filter taps. We need to filter the
 		   pilot positions as well to improve the SNR estimation (which 
 		   follows this procedure) */
@@ -206,7 +215,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			veccChanEst[j] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
 
 			for (i = 0; i < iLengthWiener; i++)
-				veccChanEst[j] += 
+				veccChanEst[j] +=
 					matcFiltFreq[j][i] * veccPilots[veciPilOffTab[j] + i];
 		}
 		break;
@@ -556,11 +565,23 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	iUpCntWienFilt = iNumSymPerFrame;
 #endif
 
-	/* Initial Wiener filter. Use initial SNR definition and assume that the
-	   PDS ranges from the beginning of the guard-intervall to the end */
-	UpdateWienerFiltCoef(pow(10, INIT_VALUE_SNR_WIEN_FREQ_DB / 10),
-		(_REAL) ReceiverParam.RatioTgTu.iEnum / 
-		ReceiverParam.RatioTgTu.iDenom, (CReal) 0.0);
+	/* Distinguish between simulation and regular receiver. When we run a
+	   simulation, the parameters are taken from simulation init */
+	if (ReceiverParam.eSimType == CParameter::ST_NONE)
+	{
+		/* Initial Wiener filter. Use initial SNR definition and assume that the
+		   PDS ranges from the beginning of the guard-intervall to the end */
+		UpdateWienerFiltCoef(pow(10, INIT_VALUE_SNR_WIEN_FREQ_DB / 10),
+			(_REAL) ReceiverParam.RatioTgTu.iEnum /
+			ReceiverParam.RatioTgTu.iDenom, (CReal) 0.0);
+	}
+	else
+	{
+		/* Get simulation SNR and set PDS to entire guard-interval length */
+		UpdateWienerFiltCoef(pow(10, ReceiverParam.rSimSNRdB / 10),
+			(_REAL) ReceiverParam.RatioTgTu.iEnum /
+			ReceiverParam.RatioTgTu.iDenom, (CReal) 0.0);
+	}
 
 
 	/* Define block-sizes for input and output */
@@ -576,7 +597,6 @@ CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
 {
 	int				i;
 	int				iCurPos;
-	CComplexVector	veccReturn(iLength);
 	CComplexVector	veccRpp(iLength);
 	CComplexVector	veccRhp(iLength);
 
@@ -600,9 +620,7 @@ CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
 	veccRpp[0] += (CReal) 1.0 / rSNR;
 
 	/* Call levinson algorithm to solve matrix system for optimal solution */
-	veccReturn = Levinson(veccRpp, veccRhp);
-
-	return veccReturn;
+	return Levinson(veccRpp, veccRhp);
 }
 
 CComplex CChannelEstimation::FreqCorrFct(int iCurPos, CReal rRatPDSLen,
