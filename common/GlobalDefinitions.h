@@ -93,6 +93,7 @@ typedef unsigned char/*bool*/			_BINARY;
 #if defined(_WIN32)
 typedef unsigned __int64 uint64_t;
 typedef unsigned __int32 uint32_t;
+typedef unsigned __int16 uint16_t;
 #else
 #if HAVE_INTTYPES_H
 # include <inttypes.h>
@@ -102,11 +103,13 @@ typedef unsigned __int32 uint32_t;
 # else
 typedef unsigned long long uint64_t;
 typedef unsigned long uint32_t;
+typedef unsigned int uint16_t;
 # endif
 #endif
 #endif
 typedef uint64_t						_UINT64BIT;
 typedef uint32_t						_UINT32BIT;
+typedef uint16_t						_UINT16BIT;
 
 /* Define type-specific information */
 #define SIZEOF__BYTE					8
