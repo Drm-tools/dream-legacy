@@ -328,7 +328,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 
 	/* Delay spread length estimation --------------------------------------- */
 	/* Total energy of estimated impulse response */
-	const CReal rTotalEnergy = Sum(vecrAvPoDeSpRot);
+	const CReal rEnergyBound = Sum(vecrAvPoDeSpRot) * rRelEnergyWinLenPDS;
 
 	/* From left to the right -> search for end of PDS */
 	rEstPDSEnd = (CReal) (iNumIntpFreqPil - 1);
@@ -338,7 +338,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	{
 		if (bPDSResultFound == FALSE)
 		{
-			if (rCurEnergy >= ENERGY_WIN_WIENER_FREQ * rTotalEnergy)
+			if (rCurEnergy >= rEnergyBound)
 			{
 				/* Delay index */
 				rEstPDSEnd = (CReal) i;
@@ -358,7 +358,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	{
 		if (bPDSResultFound == FALSE)
 		{
-			if (rCurEnergy > ENERGY_WIN_WIENER_FREQ * rTotalEnergy)
+			if (rCurEnergy > rEnergyBound)
 			{
 				/* Delay index */
 				rEstPDSBegin = (CReal) i;
@@ -453,6 +453,12 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	   interval respectively */
 	rEstPDSBegin = (CReal) 0.0;
 	rEstPDSEnd = rGuardSizeFFT;
+
+	/* Init relative energy in a window for PDS length estimation */
+	if (Parameter.GetWaveMode() == RM_ROBUSTNESS_MODE_A)
+		rRelEnergyWinLenPDS = ENERGY_WIN_WIENER_FREQ_RMA;
+	else
+		rRelEnergyWinLenPDS = ENERGY_WIN_WIENER_FREQ_RMBCD;
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iNumIntpFreqPil);
