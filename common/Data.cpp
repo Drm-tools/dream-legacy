@@ -76,8 +76,10 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 		switch (eOutChanSel)
 		{
 		case CS_BOTH_BOTH:
-			/* left -> left, right -> right */
-			vecsTmpAudData = *pvecInputData; /* Just copy data */
+			/* left -> left, right -> right (vector sizes might not be the
+			   same -> use for-loop for copying) */
+			for (i = 0; i < iInputBlockSize; i++)
+				vecsTmpAudData[i] = (*pvecInputData)[i]; /* Just copy data */
 			break;
 
 		case CS_LEFT_LEFT:
