@@ -513,7 +513,6 @@ void CDRMReceiver::InitsForSDCCodSche()
 {
 	/* Set init flags */
 	SDCMLCDecoder.SetInitFlag();
-	ChannelEstimation.SetInitFlag(); // For decision directed channel estimation needed
 }
 
 void CDRMReceiver::InitsForNoDecBitsSDC()
@@ -533,7 +532,6 @@ void CDRMReceiver::InitsForInterlDepth()
 void CDRMReceiver::InitsForMSCCodSche()
 {
 	/* Set init flags */
-	ChannelEstimation.SetInitFlag(); // For decision directed channel estimation needed
 	MSCMLCDecoder.SetInitFlag();
 	MSCDemultiplexer.SetInitFlag(); // Not sure if really needed, look at code! TODO
 }
