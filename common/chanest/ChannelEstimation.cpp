@@ -300,8 +300,8 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 					   decisions */
 					if (_IsFAC(iCurCellFlag)) /* FAC cell */
 					{
-						rNoiseEst += SqMag(Dec4QAM((*pvecOutputData)[i].cSig)) *
-							vecrSqMagChanEst[i];
+						rNoiseEst += vecrSqMagChanEst[i] *
+							SqMag(MinDist4QAM((*pvecOutputData)[i].cSig));
 
 						iSNREstIniNoiseAvCnt++;
 					}
@@ -330,7 +330,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 					   possible constellation points of a 4-QAM and use the
 					   squared result of the returned distance vector */
 					const CReal rCurErrPow =
-						SqMag(Dec4QAM((*pvecOutputData)[i].cSig));
+						SqMag(MinDist4QAM((*pvecOutputData)[i].cSig));
 
 					/* Use decision together with channel estimate to get
 					   estimates for signal and noise */
@@ -368,11 +368,11 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			case CParameter::CS_3_SM:
 			case CParameter::CS_3_HMSYM:
 			case CParameter::CS_3_HMMIX:
-				rCurErrPow = SqMag(Dec64QAM((*pvecOutputData)[i].cSig));
+				rCurErrPow = SqMag(MinDist64QAM((*pvecOutputData)[i].cSig));
 				break;
 
 			case CParameter::CS_2_SM:
-				rCurErrPow = SqMag(Dec16QAM((*pvecOutputData)[i].cSig));
+				rCurErrPow = SqMag(MinDist16QAM((*pvecOutputData)[i].cSig));
 				break;
 			}
 
