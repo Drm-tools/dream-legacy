@@ -64,6 +64,13 @@
 /* SNR estimation initial SNR value */
 #define INIT_VALUE_SNR_ESTIM_DB			((_REAL) 20.0) /* dB */
 
+/* If this flag is set, the Wiener filter coefficients are updated every DRM
+   frame. If not, the update is done every OFDM symbol. If the update is only
+   done every DRM frame, the processing power is lower but if the timing
+   changes quickly it can happen that the PDS moves out of the estimated
+   window (defined by beginning and end value) */
+#undef UPD_WIENER_FREQ_EACH_DRM_FRAME
+
 
 /* Classes ********************************************************************/
 class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>

@@ -142,6 +142,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		/**********************************************************************\
 		 * Wiener filter													   *
 		\**********************************************************************/
+#ifdef UPD_WIENER_FREQ_EACH_DRM_FRAME
 		/* Update filter coefficients once in one DRM frame */
 		if (iUpCntWienFilt > 0)
 		{
@@ -156,15 +157,22 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 		else
 		{
+#else
+		/* Update Wiener filter each OFDM symbol. Use current estimates */
+		rMaxLenPDSInFra = rLenPDSEst;
+		rMinOffsPDSInFra = rOffsPDSEst;
+#endif
 			/* Update filter taps */
 			UpdateWienerFiltCoef(rSNRAftTiInt, rMaxLenPDSInFra / iNumCarrier,
 				rMinOffsPDSInFra / iNumCarrier);
 
+#ifdef UPD_WIENER_FREQ_EACH_DRM_FRAME
 			/* Reset counter and maximum storage variable */
 			iUpCntWienFilt = iNumSymPerFrame;
 			rMaxLenPDSInFra = (_REAL) 0.0;
 			rMinOffsPDSInFra = rGuardSizeFFT;
 		}
+#endif
 
 		/* FIR filter of the pilots with filter taps. We need to filter the
 		   pilot positions as well to improve the SNR estimation (which 
@@ -461,9 +469,10 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	/* Allocate temporary matlib vector for filter coefficients */
 	matcWienerFilter.Init(iNoWienerFilt, iLengthWiener);
 
+#ifdef UPD_WIENER_FREQ_EACH_DRM_FRAME
 	/* Init Update counter for wiener filter update */
 	iUpCntWienFilt = iNumSymPerFrame;
-
+#endif
 
 	/* SNR definition */
 	_REAL rSNR = pow(10, INIT_VALUE_SNR_WIEN_FREQ_DB / 10);
