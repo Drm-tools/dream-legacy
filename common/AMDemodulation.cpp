@@ -319,13 +319,18 @@ void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 
 
 	/* Set filter coefficients ---------------------------------------------- */
+	/* Make sure that the phase in the middle of the filter is always the same
+	   to avaoid clicks when the filter coefficients are changed */
+	const CReal rStartPhase = Ceil((CReal) NUM_TAPS_AM_DEMOD_FILTER / 2) *
+		(CReal) 2.0 * crPi * rFiltCentOffsNorm;
+
 	for (int i = 0; i < NUM_TAPS_AM_DEMOD_FILTER; i++)
 	{
-		rvecBReal[i] =
-			vecrFilter[i] * Cos((CReal) 2.0 * crPi * rFiltCentOffsNorm * i);
+		rvecBReal[i] = vecrFilter[i] *
+			Cos((CReal) 2.0 * crPi * rFiltCentOffsNorm * i - rStartPhase);
 
-		rvecBImag[i] =
-			vecrFilter[i] * Sin((CReal) 2.0 * crPi * rFiltCentOffsNorm * i);
+		rvecBImag[i] = vecrFilter[i] *
+			Sin((CReal) 2.0 * crPi * rFiltCentOffsNorm * i - rStartPhase);
 	}
 
 
