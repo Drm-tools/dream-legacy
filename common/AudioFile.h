@@ -77,11 +77,11 @@ public:
 	{
 		if (pFile != NULL)
 		{
-			const _UINT32BIT iFileLength = iBytesWritten - 8;
+			const uint32_t iFileLength = iBytesWritten - 8;
 			fseek(pFile, 4 /* offset */, SEEK_SET /* origin */);
 			fwrite((const void*) &iFileLength, size_t(4), size_t(1), pFile);
 
-			const _UINT32BIT iDataLength = iBytesWritten - sizeof(CWaveHdr);
+			const uint32_t iDataLength = iBytesWritten - sizeof(CWaveHdr);
 			fseek(pFile, 40 /* offset */, SEEK_SET /* origin */);
 			fwrite((const void*) &iDataLength, size_t(4), size_t(1), pFile);
 
@@ -94,22 +94,22 @@ protected:
 	{
 		/* Wave header struct */
 		char cMainChunk[4]; /* "RIFF" */
-		_UINT32BIT length; /* Length of file */
+		uint32_t length; /* Length of file */
 		char cChunkType[4]; /* "WAVE" */
 		char cSubChunk[4]; /* "fmt " */
-		_UINT32BIT cLength; /* Length of cSubChunk (always 16 bytes) */
-		_UINT16BIT iFormatTag; /* waveform code: PCM */
-		_UINT16BIT iChannels; /* Number of channels */
-		_UINT32BIT iSamplesPerSec; /* Sample-rate */
-		_UINT32BIT iAvgBytesPerSec;
-		_UINT16BIT iBlockAlign; /* Bytes per sample */
-		_UINT16BIT iBitsPerSample;
+		uint32_t cLength; /* Length of cSubChunk (always 16 bytes) */
+		uint16_t iFormatTag; /* waveform code: PCM */
+		uint16_t iChannels; /* Number of channels */
+		uint32_t iSamplesPerSec; /* Sample-rate */
+		uint32_t iAvgBytesPerSec;
+		uint16_t iBlockAlign; /* Bytes per sample */
+		uint16_t iBitsPerSample;
 		char cDataChunk[4]; /* "data" */
-		_UINT32BIT iDataLength; /* Length of data */
+		uint32_t iDataLength; /* Length of data */
 	};
 
 	FILE*		pFile;
-	_UINT32BIT	iBytesWritten;
+	uint32_t	iBytesWritten;
 };
 
 

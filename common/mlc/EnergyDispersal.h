@@ -47,8 +47,8 @@ protected:
 	int			iNumInBits;
 	int			iStartIndVSPP;
 	int			iEndIndVSPP;
-	_UINT32BIT	iShiftRegisterSPP;
-	_UINT32BIT	iShiftRegisterVSPP;
+	uint32_t	iShiftRegisterSPP;
+	uint32_t	iShiftRegisterVSPP;
 };
 
 
