@@ -77,7 +77,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 		/* Using sound card ------------------------------------------------- */
 		/* Get data from sound interface. The read function must be a
 		   blocking function! */
-		Sound.Read(vecsSoundBuffer);
+		pSound->Read(vecsSoundBuffer);
 
 		/* Write data to output buffer */
 		for (i = 0; i < iOutputBlockSize; i++)
@@ -148,15 +148,7 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 		iSpecificOutBlockSize = Parameter.iSymbolBlockSize;
 
 		/* Init sound interface */
-		try
-		{
-			Sound.InitRecording(iSpecificOutBlockSize);
-		}
-
-		catch (...)
-		{
-			ErrorMessage("Sound card initialization failure.");
-		}
+		pSound->InitRecording(iSpecificOutBlockSize);
 
 		vecsSoundBuffer.Init(iSpecificOutBlockSize);
 	}

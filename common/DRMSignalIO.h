@@ -67,8 +67,8 @@ protected:
 class CReceiveData : public CReceiverModul<_REAL, _REAL>
 {
 public:
-	CReceiveData() : bFippedSpectrum(FALSE), pFileReceiver(NULL),
-		bUseSoundcard(TRUE) {}
+	CReceiveData(CSound* pNS) : bFippedSpectrum(FALSE), pFileReceiver(NULL),
+		bUseSoundcard(TRUE) {pSound = pNS;}
 	virtual ~CReceiveData();
 
 	_REAL GetLevelMeter();
@@ -85,7 +85,7 @@ protected:
 	
 	FILE*					pFileReceiver;
 
-	CSound					Sound;
+	CSound*					pSound;
 	CVector<_SAMPLE>		vecsSoundBuffer;
 
 	CShiftRegister<_REAL>	vecrInpData;

@@ -46,6 +46,11 @@
 #include "sync/FreqSyncAcq.h"
 #include "sync/TimeSync.h"
 #include "sync/SyncUsingPil.h"
+#ifdef _WIN32
+# include "../../Windows/source/sound.h"
+#else
+# include "source/sound.h"
+#endif
 
 
 /* Definitions ****************************************************************/
@@ -66,13 +71,14 @@ public:
 	enum ERecState {RS_TRACKING, RS_ACQUISITION};
 
 	CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquDetecCnt(0),
-		iGoodSignCnt(0), bWasFreqAcqu(TRUE) {}
+		iGoodSignCnt(0), bWasFreqAcqu(TRUE),
+		ReceiveData(&SoundInterface), WriteData(&SoundInterface) {}
 	virtual ~CDRMReceiver() {}
 
 	/* For GUI */
 	void					Init();
 	void					Start();
-	void					Stop() {ReceiverParam.bRunThread = FALSE;}
+	void					Stop();
 	EAcqStat				GetReceiverState() {return eAcquiState;}
 
 	/* Get pointer to internal modules */
@@ -87,6 +93,7 @@ public:
 	COFDMDemodulation*		GetOFDMDemod() {return &OFDMDemodulation;}
 	CSyncUsingPil*			GetSyncUsPil() {return &SyncUsingPil;}
 	CWriteData*				GetWriteData() {return &WriteData;}
+	CSound*					GetSoundInterface() {return &SoundInterface;}
 
 
 	CParameter*				GetParameters() {return &ReceiverParam;}
@@ -159,6 +166,8 @@ protected:
 	int						iAcquDetecCnt;
 	int						iGoodSignCnt;
 	ERecState				eReceiverState;
+
+	CSound					SoundInterface;
 
 	_BOOLEAN				bWasFreqAcqu;
 };
