@@ -63,7 +63,7 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 								DebugError("MatLibrWrite", "POS", POS, \
 								"iVectorLength", iVectorLength)
 #define _TESTSIZE(INP)		if (INP != iVectorLength) \
-								DebugError("MatLibOperator=()", "INP", INP, \
+								DebugError("SizeCheck", "INP", INP, \
 								"iVectorLength", iVectorLength)
 #define _TESTRNGRM(POS)		if ((POS >= iRowSize) || (POS < 0)) \
 								DebugError("MatLibrReadMatrix", "POS", POS, \
@@ -548,6 +548,9 @@ public:
 	inline CMatlibVector<T>& operator()(int const iPos) 
 		{_TESTRNGWM(iPos - 1); return ppData[iPos - 1];} // For use as l value
 
+	CMatlibMatrix<T> operator()(const int iRowFrom, const int iRowTo,
+		const int iColFrom, const int iColTo) const;
+
 	/* operator= */
 	inline CMatlibMatrix<T>& operator=(const CMatlibMatrix<CReal>& matI) 
 		{_TESTSIZEM(matI.GetRowSize()); _MATOPCL(= matI[i]);}
@@ -677,6 +680,19 @@ void CMatlibMatrix<T>::Init(const int iNRowLen, const int iNColLen, const T tIni
 	for (int i = 0; i < iNRowLen; i++)
 		for (int j = 0; j < ppData[i].GetSize(); j++)
 			ppData[i][j] = tIniVal;
+}
+
+template<class T> inline
+CMatlibMatrix<T> CMatlibMatrix<T>::operator()(const int iRowFrom, const int iRowTo,
+											  const int iColFrom, const int iColTo) const
+{
+	CMatlibMatrix<T> matRet(iRowTo - iRowFrom + 1, iColTo - iColFrom + 1, VTY_TEMP);
+
+	for (int j = iRowFrom - 1; j < iRowTo; j++)
+		for (int i = iColFrom - 1; i < iColTo; i++)
+			matRet[j - iRowFrom + 1][i - iColFrom + 1] = operator[](j)[i];
+
+	return matRet;
 }
 
 
