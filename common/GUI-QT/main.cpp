@@ -238,6 +238,8 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 	_BOOLEAN	bIsReceiver = TRUE;
 	_REAL		rArgument;
 	string		strArgument;
+	_REAL		rFreqAcSeWinSize = (_REAL) 0.0;
+	_REAL		rFreqAcSeWinCenter = (_REAL) 0.0;
 
 	/* QT docu: argv()[0] is the program name, argv()[1] is the first
 	   argument and argv()[argc()-1] is the last argument.
@@ -322,6 +324,23 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 		}
 
 
+		/* Frequency acquisition search window size ------------------------- */
+		if (GetNumericArgument(argc, argv, i, "-S", "--fracwinsize",
+			0, SOUNDCRD_SAMPLE_RATE / 2, rArgument) == TRUE)
+		{
+			rFreqAcSeWinSize = rArgument;
+			continue;
+		}
+
+		/* Sample rate offset start value ----------------------------------- */
+		if (GetNumericArgument(argc, argv, i, "-E", "--fracwincent",
+			0, SOUNDCRD_SAMPLE_RATE / 2, rArgument) == TRUE)
+		{
+			rFreqAcSeWinCenter = rArgument;
+			continue;
+		}
+
+
 #ifdef USE_QT_GUI /* QThread needed for log file timing */
 		/* Start log file flag ---------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-l", "--startlog", 0, 3600,
@@ -399,6 +418,21 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 		exit(1);
 	}
 
+	/* Set parameters for frequency acquisition search window if needed */
+	if (rFreqAcSeWinSize != (_REAL) 0.0)
+	{
+		if (rFreqAcSeWinCenter == (_REAL) 0.0)
+		{
+			/* If no center was specified, set default parameter (in the
+			   middle of the available spectrum) */
+			rFreqAcSeWinCenter = (_REAL) SOUNDCRD_SAMPLE_RATE / 4;
+		}
+
+		/* Set new parameters */
+		DRMReceiver.GetFreqSyncAcq()->SetSearchWindow(rFreqAcSeWinCenter,
+			rFreqAcSeWinSize);
+	}
+
 	return bIsReceiver;
 }
 
@@ -419,8 +453,13 @@ void UsageArguments(char** argv)
 		<< endl;
 	cerr << "  -m, --muteaudio            mute audio output" << endl;
 	cerr << "  -f <s>, --fileio <s>       disable sound card," << endl;
-	cerr << "                             use file instead" << endl;
+	cerr << "                             use file <s> instead" << endl;
 	cerr << "  -w <s>, --writewav <s>     write output to wave file" << endl;
+
+	cerr << "  -S <r>, --fracwinsize <r>  freq. acqu. search window size [Hz]"
+		<< endl;
+	cerr << "  -E <r>, --fracwincent <r>  freq. acqu. search window center [Hz]"
+		<< endl;
 
 #ifdef USE_QT_GUI
 	cerr << "  -r <n>, --frequency <n>    set frequency [kHz] for log file"
@@ -430,7 +469,7 @@ void UsageArguments(char** argv)
 	cerr << "  -o <s>, --longitude <s>    set longitude string for log file"
 		<< endl;
 	cerr << "  -l <n>, --startlog <n>     start log file (delayed by" << endl;
-	cerr << "                             n seconds)" << endl;
+	cerr << "                             <n> seconds)" << endl;
 	cerr << "                             allowed range: 0...3600" << endl;
 #endif
 
