@@ -165,6 +165,11 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	PushButtonService3->setEnabled(FALSE);
 	PushButtonService4->setEnabled(FALSE);
 
+	/* Update times for color LEDs */
+	CLED_FAC->SetUpdateTime(1500);
+	CLED_SDC->SetUpdateTime(1500);
+	CLED_MSC->SetUpdateTime(600);
+
 	/* Connect buttons */
 	connect(PushButtonService1, SIGNAL(clicked()), 
 		this, SLOT(OnButtonService1()));
@@ -175,14 +180,18 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	connect(PushButtonService4, SIGNAL(clicked()), 
 		this, SLOT(OnButtonService4()));
 
+	connect(&Timer, SIGNAL(timeout()), 
+		this, SLOT(OnTimer()));
+
 	/* Disable text message label */
 	TextTextMessage->setText("");
 	TextTextMessage->hide();
 
 	/* Set timer for real-time controls */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
-	connect(&Timer, SIGNAL(timeout()), 
-		this, SLOT(OnTimer()));
+
+	/* Update window */
+	OnTimer();
 
 #ifdef _DEBUG_
 OnViewEvalDlg();
@@ -738,6 +747,29 @@ void FDRMDialog::customEvent(QCustomEvent* Event)
 		if (iMessType == MS_MOT_OBJ_STAT)
 			pMultiMediaDlg->SetStatus(iMessType, iStatus);
 		else
+		{
 			pSysEvalDlg->SetStatus(iMessType, iStatus);
+
+			switch(iMessType)
+			{
+			case MS_FAC_CRC:
+				CLED_FAC->SetLight(iStatus);
+				break;
+
+			case MS_SDC_CRC:
+				CLED_SDC->SetLight(iStatus);
+				break;
+
+			case MS_MSC_CRC:
+				CLED_MSC->SetLight(iStatus);
+				break;
+
+			case MS_RESET_ALL:
+				CLED_FAC->Reset();
+				CLED_SDC->Reset();
+				CLED_MSC->Reset();
+				break;
+			}
+		}
 	}
 }

@@ -48,6 +48,7 @@
 #endif
 #include "systemevalDlg.h"
 #include "MultimediaDlg.h"
+#include "MultColorLED.h"
 #include "../DrmReceiver.h"
 #include "../Vector.h"
 

@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>597</width>
+            <width>589</width>
             <height>439</height>
         </rect>
     </property>
@@ -252,7 +252,10 @@ Institute for Communication Technology</string>
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout11</cstring>
+                <cstring>Layout15</cstring>
+            </property>
+            <property>
+                <name>layoutSpacing</name>
             </property>
             <hbox>
                 <property stdset="1">
@@ -261,21 +264,198 @@ Institute for Communication Technology</string>
                 </property>
                 <property stdset="1">
                     <name>spacing</name>
-                    <number>6</number>
+                    <number>4</number>
                 </property>
                 <widget>
-                    <class>QwtThermo</class>
+                    <class>QLayoutWidget</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>ProgrInputLevel</cstring>
+                        <cstring>Layout14</cstring>
                     </property>
-                    <property stdset="1">
-                        <name>sizePolicy</name>
-                        <sizepolicy>
-                            <hsizetype>1</hsizetype>
-                            <vsizetype>1</vsizetype>
-                        </sizepolicy>
+                    <property>
+                        <name>layoutMargin</name>
                     </property>
+                    <property>
+                        <name>layoutSpacing</name>
+                    </property>
+                    <vbox>
+                        <property stdset="1">
+                            <name>margin</name>
+                            <number>2</number>
+                        </property>
+                        <property stdset="1">
+                            <name>spacing</name>
+                            <number>2</number>
+                        </property>
+                        <widget>
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>TextLabel1_2</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Input
+Level [dB]</string>
+                            </property>
+                            <property stdset="1">
+                                <name>alignment</name>
+                                <set>AlignCenter</set>
+                            </property>
+                            <property>
+                                <name>hAlign</name>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QwtThermo</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>ProgrInputLevel</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>sizePolicy</name>
+                                <sizepolicy>
+                                    <hsizetype>1</hsizetype>
+                                    <vsizetype>1</vsizetype>
+                                </sizepolicy>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QLayoutWidget</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>Layout27</cstring>
+                            </property>
+                            <hbox>
+                                <property stdset="1">
+                                    <name>margin</name>
+                                    <number>0</number>
+                                </property>
+                                <property stdset="1">
+                                    <name>spacing</name>
+                                    <number>6</number>
+                                </property>
+                                <widget>
+                                    <class>QLabel</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>TextLabel3</cstring>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>text</name>
+                                        <string>Status</string>
+                                    </property>
+                                </widget>
+                                <widget>
+                                    <class>QLayoutWidget</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>Layout23</cstring>
+                                    </property>
+                                    <property>
+                                        <name>layoutMargin</name>
+                                    </property>
+                                    <property>
+                                        <name>layoutSpacing</name>
+                                    </property>
+                                    <vbox>
+                                        <property stdset="1">
+                                            <name>margin</name>
+                                            <number>0</number>
+                                        </property>
+                                        <property stdset="1">
+                                            <name>spacing</name>
+                                            <number>1</number>
+                                        </property>
+                                        <widget>
+                                            <class>CMultColorLED</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>CLED_MSC</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>0</hsizetype>
+                                                    <vsizetype>0</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>minimumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>7</height>
+                                                </size>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>maximumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>7</height>
+                                                </size>
+                                            </property>
+                                        </widget>
+                                        <widget>
+                                            <class>CMultColorLED</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>CLED_SDC</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>0</hsizetype>
+                                                    <vsizetype>0</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>minimumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>7</height>
+                                                </size>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>maximumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>7</height>
+                                                </size>
+                                            </property>
+                                        </widget>
+                                        <widget>
+                                            <class>CMultColorLED</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>CLED_FAC</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>0</hsizetype>
+                                                    <vsizetype>0</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>minimumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>7</height>
+                                                </size>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>maximumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>7</height>
+                                                </size>
+                                            </property>
+                                        </widget>
+                                    </vbox>
+                                </widget>
+                            </hbox>
+                        </widget>
+                    </vbox>
                 </widget>
                 <widget>
                     <class>QFrame</class>
@@ -1730,6 +1910,20 @@ Institute for Communication Technology</string>
 </widget>
 <customwidgets>
     <customwidget>
+        <class>CMultColorLED</class>
+        <header location="local">MultColorLED.h</header>
+        <sizehint>
+            <width>-1</width>
+            <height>-1</height>
+        </sizehint>
+        <container>0</container>
+        <sizepolicy>
+            <hordata>5</hordata>
+            <verdata>5</verdata>
+        </sizepolicy>
+        <pixmap>image2</pixmap>
+    </customwidget>
+    <customwidget>
         <class>QwtThermo</class>
         <header location="global">qwt_thermo.h</header>
         <sizehint>
@@ -1738,8 +1932,8 @@ Institute for Communication Technology</string>
         </sizehint>
         <container>0</container>
         <sizepolicy>
-            <hordata>5</hordata>
-            <verdata>7</verdata>
+            <hordata>1</hordata>
+            <verdata>1</verdata>
         </sizepolicy>
         <pixmap>image2</pixmap>
     </customwidget>
@@ -1747,7 +1941,7 @@ Institute for Communication Technology</string>
 <images>
     <image>
         <name>image0</name>
-        <data format="XPM.GZ" length="3128">789c5596c9521c490c86ef3c05816e8e8974d7925b4ccc01836dbc80c13663ccc41c5495993460f6669d98779fac5fa2832139d457a95229a55faa7efd6af560777bf5d5eb959b052f8ec7d571ced7abafd2edd9d9e35f7ffff1cfca5ae356a77feb57dbb5df56d6f86e755cddb938cf13ec2d5e8099bf84eb0a349bd93634e063e5ec23f8146c1bdff6e03f857b170298955374e0413947d91f954b1cc049d8cee208ceca4d94788a72cb33f089b20bf0cf73b073bd137f9f857d74122f0987d6cbf357cf1c64ff08ec63f61dfc3d82e36c6c60cf0fc24d6e25be0be1b6efecc4a4f6bd9778e862c91e5c9483e6a75b32de4f3f9559f24bdbca83477e695d79f4e2ff4a3979f13f5f32fc1329678de79d72917db3f3cc41e2bf13b68d93e77f29f78e717ec93737a5157e127e3e3fdf28bb0ef9a3ef4b96f33861db7ae48f8f95b39c8717c2ce79a9f7a5b297faf39172503d4a3ed8fb88fcf03d78f49dc4cfb7cac98bfd27e1380b12df47700aad93faae2b7b3dbf552e0eef27e8b5199df709dc4edcb6ae89c25fc1bdeb59def70d5cf3a9faf7e05a2ddd6f26eebc4dc26cc0d18d51da9494130ba39f3a7699e5bc837261c9ff28ec6b4ae0ff2d38f5adc46b36856d1744bfd04397fbce17f07b70e97bcdefd6c4fdacb7922f7300eefdc0e82f12b6deeb3ef2d5739745af06faed6b7e03fc13fcdb998dcaa8976daabde8ef0cdc7645f58c79606ddf78e8cd0470a86f947aa0bfed10b49f087ab463e0007b827e6c0a439078a11f9b430a522fe4db969025bf142776b3a0fd6a7ae53248bc33f0d87556f2b931b1ef631965deec811df749fc1d824337b3d27fa8b7e7ca723eb12fec47d13bf413c2d025d13bce1f1297047d12e645c8439324bf5fc0a52d56f207bdc566b049e6d90770ea9fe721fa31e63a5f505f42ffc7d2ba5efae1cdc4dcb4be977983f9cf5d65f18f7e9dda57197a64ef46d1138b7de081e53cc8178fc917e48ff1bde07a9e41de8ff886667083d4671fecc724f113f43b84d426f827f4cf10c76a00ff989703b75d27f544bf0f43b249fa01f37648a9cbf23cea39ce52cef23ec433badc64d13be6dd98ea92f8cfc12535524fd32af79a5fe42b35b92f521fe8b3ee3addc73c4c2efb227ac2fc4b7e48a3e8e90738669b11af11e63c487c6677e2dc44cb321ff13dacd651cec38837bb69c11efacfa114cd37faa95ad705c67926efe29ff17dca695a88077acad9cfbceca37f72991618df9b329b16ec314f4b5f6c117d23dee29c75521fccf3126bfb48fef1fba0a4e7f80cbe37a5b4b5c0e07be5dc4afe1f94ebc2f3ca5deea4ffcf95eb0267e13ab1e4fb1e959b5eea7b2beca3fe7ed9178ef5130ffea8dc44b17f54eea2f4c796b2d3797e28ccf50ffb1bc2631c45bf37c2b9cfd24f27ca5a6fda54d6fad1a05cffc092bf7a8022fd7ea6acf9db5bc83264d80c6634c96453cc91994f6b6f2136e6d89c9853f3cb9cbd58e7e6c25c9a2b33579b6b736316f5feadb933f7753d9847d83d99f5a5cd1bdcd9309be6ad7967de9b2df3c17c54ab4f88efb37adf363be68bd9357be6abf966be9b7ddcbd80cd9f6af3c31c989fe610d733d354abc997f459b78cb337d638bdf62698385dfddf860c11310db81e29517eb6a1b2b439a2391dd349bd3aa55f7446e74b9b8ba5cd255dd135ddd0826ee98eeee96169f3b8b479a2757a431bb4496fe91dbda7ad7aef83fc96a04f6af399b66987bed02eedd157fa867bdf11f39cf6a99e9f7ed001fda4439a51432de124d493551b479e0245364c5558038f9ccc19672e7c24b530739ef3319ff029ffe2333ee70bbee42bbee61b5ef0add8f0dda401bee7077e7cb19e785dd4b1f6efef2bff01d0c9c76f</data>
+        <data format="XPM.GZ" length="3102">789c5d96c96e1c470c86ef7a8a81793382726fb521c8c1926d79932cd9b22d39c881dd55a5c5da7739c8bba7fa27671044a5437f5d6c368bfcc99e17cf17fb3b5b8be72fd66e6ef9f6785a4c477cbd789eeecece9efefceb8fbfd79eb56e31ff5bbbe89efdb6f66cf776312db62fcef30ce6aa02358ded420b3e52ce3e824fc0b6f5dd00fe2a3cb810c0ac9ca2038fca39cafea45ce2084ec2b68913382bb751e229ca1d37e0636517e09f0fc1ce0d4efc7d10f6d149bc241c3a2fcf5f2e39c8be3cef63f63dfc3d806333b5b0e77be1367712dfb97037f476667a141ebcc443e72bf6e0ac1c343fdd8af17eda5766c92f7d541e3df24bbf94272ffe2f959317ff872b867f32ca59e379ad5c64df6c2d3948fc77c2b675f2fc4fe5c131ce2ff9e6b674c2725e5e9ebf4a4bd8f5c81f7d59b19cc70adbce237f7ca49ce53c7c23ec9c977a5f287ba93f17e5a07a947cb0f711f961897ff2bdc4cfb7cac98bfd7be1d80489ef1d3885ce497d9f94bd9e7f502e0eef27e8b79d9cf709dccedc75ae8dc2bbe0c10d2ceffb0caef954fd3b70ad96ee3733f7de26618ae0e8a6886664a39c5818faedd96596f3b27261c9ff28ec6b4ae0ff15380d9dc46b36846d1f44bfd0439f87de17f01b701906cdefe6cc433358c997f90e1efcc8e82f12b6deeb3ef235709f45af06fa1d6a7e03fc13fcdbc64665f4936dabbde8ef14dcf545f58cf960edd07ae8cd7870a86f947aa0bfed18b49f08f5b353e0007b827e6c0a639078a11f9b430a920fe4db969025bf1466764dd07e35bd721925de1fe0a9efad3cbf3eb31f629964deec801d0f49fc1d8043df58e93fd4db7365399fd817f693e81dfa0961ec93e81de70f894b823e09f322e4b14d92df6d70e98a95fc416fb11d6d9279f6169c86e53c443fc65ce78be80dfd1f4be706e987973373dbf941e60de63ff795c53ffa756e5f65e891bd9b444f2cf6814796f3205f3c255f903fc6f782eb7946793fe21bdbd18d529f3db09f92c44fd0ef185297e09fd03f639caa01fc635e8edcf5bdf41ffa7d1c934dd20f98b7634a7d96e751cfa94939cbfb10cfe4729b45ef987753aa4be23f0397d44a3d4dab3c687e91afd4e6a1487da0cfbaeb741ff330b9ec8be809f32ff9314da2a76fe0986d46bc4698f328f1994f33e7365a96f988ef63b58e721e46bcd9cd0bf6d07f0ea568bed14fd5ba2e30ce337b17ff8cef534ef3423cd053cebef1b28ffec9655e607c6f4a332fd8639e96a1d822fa46bcc539eba43e98e725d6f691fce3f74149cbf80ce675295d2d30f85e397792ff07e5baf0bc729f7be9ff33e5bac049b84e2cf9be07e57690fade0afba8bf5ff68463fdc483df29b751ec1f95fb28fdb1a9ec749e1f0873fdc3febaf01427d1efb5701eb2f4d3b1b2d69b3694b57ec4caf50f2cf9ab0728d2efa7ca9abfdd5b59860c9bd14c26996c8a395cde171b73648ecd89f9694effb3ceccb9b930972b9b2b736d6eeafd5b7367eeeb7a308fb07b32bf56362f7167dd6c9857e6b5796336cd5bf34eadde23be0feafda3d932dbe693d931bbe6b3f962f670f71c365fd5e69bf96ef6cd01ae7f98a65acdbe24efdd2acede0cc6eab533de84f9ea7f36910c11f17c4d234d94963694973654e8908ee8b85e9dd04f3aa5b395cdf9cae6822ee98aaee9866ee98eeee96165f3b8b279a25ff492d669835ed16b7a439bf5de5bf92d41efd5e6037da42ddaa64fb443bbf419f7be480e698feaf9e91b7da77d3aa01fd4504b3809f534a88d25479e0245364c555a234fe6b44ecdcc65590b3ee4233ee613fec9a77cc6e77cc1977cc5d77cc3abbacf8beff89e1ffeb31ef949b5f1cfef6bff021b56c2e2</data>
     </image>
     <image>
         <name>image1</name>
