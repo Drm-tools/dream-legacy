@@ -68,11 +68,12 @@ protected:
 class CTextMessageEncoder
 {
 public:
-	CTextMessageEncoder() : iNumMess(0) {}
+	CTextMessageEncoder() : iNumMess(0), vecstrText(0) {}
 	virtual ~CTextMessageEncoder() {}
 
 	void Encode(CVector<_BINARY>& pData);
 	void SetMessage(const string& strMessage);
+	void ClearAllText();
 
 protected:
 	CTextMessage	CurTextMessage;

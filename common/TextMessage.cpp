@@ -40,7 +40,7 @@ void CTextMessageEncoder::Encode(CVector<_BINARY>& pData)
 	/* Set data for this piece from segment data */
 	for (int i = 0; i < NUM_BYTES_TEXT_MESS_IN_AUD_STR; i++)
 	{
-		if (iByteCnt <	CurTextMessage.GetSegSize(iSegCnt))
+		if (iByteCnt < CurTextMessage.GetSegSize(iSegCnt))
 		{
 			for (j = 0; j < SIZEOF__BYTE; j++)
 				pData[i * SIZEOF__BYTE + j] =
@@ -76,8 +76,10 @@ void CTextMessageEncoder::Encode(CVector<_BINARY>& pData)
 			if (iMessCnt == iNumMess)
 				iMessCnt = 0;
 
-			/* Take care of toggle bit */
-			biToggleBit = !biToggleBit;
+			/* Take care of toggle bit. If only one message is sent, toggle bit
+			   must not be changed */
+			if (iNumMess != 1)
+				biToggleBit = !biToggleBit;
 
 			CurTextMessage.SetText(vecstrText[iMessCnt], biToggleBit);
 		}
@@ -107,6 +109,16 @@ void CTextMessageEncoder::SetMessage(const string& strMessage)
 	CurTextMessage.SetText(vecstrText[0], biToggleBit);
 }
 
+void CTextMessageEncoder::ClearAllText()
+{
+	vecstrText.Init(0);
+	iNumMess = 0;
+	iSegCnt = 0; /* Segment counter */
+	iByteCnt = 0; /* Byte counter */
+	iMessCnt = 0; /* Message counter */
+	biToggleBit = 0;
+}
+
 void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 {
 	int		i, j;
@@ -117,11 +129,19 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 
 	/* Get length of text message. 
        TODO: take care of multiple byte characters (UTF-8 coding)! */
-	const int iLenBytesOfText = strMessage.length();
+	int iLenBytesOfText = strMessage.length();
 
 	/* Calculate required number of segments. The body shall contain 16 bytes
 	   of character data */
 	iNumSeg = (int) ceil((_REAL) iLenBytesOfText / BYTES_PER_SEG_TEXT_MESS);
+
+	/* The text message may comprise up to 8 segments. Check the number of
+	   segments, if number is larger, cut message */
+	if (iNumSeg > 8)
+	{
+		iNumSeg = 8;
+		iLenBytesOfText = iNumSeg * BYTES_PER_SEG_TEXT_MESS;
+	}
 
 	/* Allocate memory for segment pointer */
 	vvbiSegment.Init(iNumSeg);
@@ -166,7 +186,7 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 		else
 			biFirstFlag = 0;
 
-		if (iLenBytesOfText - iPosInStr < BYTES_PER_SEG_TEXT_MESS)
+		if (iLenBytesOfText - iPosInStr <= BYTES_PER_SEG_TEXT_MESS)
 			biLastFlag = 1;
 		else
 			biLastFlag = 0;
@@ -184,12 +204,19 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 		   shall normally take the value 15 except in the last segment) */
 		vvbiSegment[i].Enqueue((_UINT32BIT) iNumBodyBytes - 1, 4);
 
-		/* Field 2, Rfa. The bit shall be set to zero until it is defined */
-		vvbiSegment[i].Enqueue((_UINT32BIT) 0, 1);
+		/* Field 2. If First flag = "1", this field shall contain the
+		   value "1111" */
+		if (biFirstFlag == 1)
+			vvbiSegment[i].Enqueue((_UINT32BIT) 15 /* 1111 */, 4);
+		else
+		{
+			/* Rfa. The bit shall be set to zero until it is defined */
+			vvbiSegment[i].Enqueue((_UINT32BIT) 0, 1);
 
-		/* SegNum: specify the sequence number of the current segment 
-		   minus 1. The value 0 is reserved for future use */
-		vvbiSegment[i].Enqueue((_UINT32BIT) i, 3);
+			/* SegNum: specify the sequence number of the current segment 
+			   minus 1. The value 0 is reserved for future use */
+			vvbiSegment[i].Enqueue((_UINT32BIT) i, 3);
+		}
 
 		/* Rfa. These bits shall be set to zero until they are defined */
 		vvbiSegment[i].Enqueue((_UINT32BIT) 0, 4);
