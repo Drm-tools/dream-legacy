@@ -50,6 +50,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/mlc/Metric.cpp \
 	../common/mlc/ViterbiDecoder.cpp \
 	../common/mlc/QAMMapping.cpp \
+	../common/mlc/ChannelCode.cpp \
 	../common/ofdmcellmapping/CellMappingTable.cpp \
 	../common/ofdmcellmapping/OFDMCellMapping.cpp \
 	../common/resample/Resample.cpp \
@@ -103,6 +104,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/mlc/Metric.h \
 	../common/mlc/QAMMapping.h \
 	../common/mlc/ViterbiDecoder.h \
+	../common/mlc/ChannelCode.h \
 	../common/ofdmcellmapping/CellMappingTable.h \
 	../common/ofdmcellmapping/OFDMCellMapping.h \
 	../common/resample/Resample.h \

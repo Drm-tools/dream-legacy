@@ -32,6 +32,7 @@
 #include "../GlobalDefinitions.h"
 #include "../tables/TableMLC.h"
 #include "ConvEncoder.h"
+#include "ChannelCode.h"
 
 
 /* Definitions ****************************************************************/
@@ -54,18 +55,6 @@
 
 
 /* Classes ********************************************************************/
-class CTrellis
-{
-public:
-	/* Index of previous state, Number stands for "0" or "1" transmitted */
-	int		iPrev0Index;
-	int		iPrev1Index;
-
-	/* Metric for previous states */
-	int		iMetricPrev0;
-	int		iMetricPrev1;
-};
-
 class CTrellisData
 {
 public:
@@ -75,7 +64,7 @@ public:
 	_UINT64BIT		lDecodedBits;
 };
 
-class CViterbiDecoder
+class CViterbiDecoder : public CChannelCode
 {
 public:
 	CViterbiDecoder();
@@ -95,18 +84,13 @@ protected:
 
 	_VITMETRTYPE			vecrMetricSet[MC_NO_OUTPUT_COMBINATIONS];
 
-	int						iNumOutBitsPartA;
+	CVector<int>			veciTablePuncPat;
+
 	int						iNumOutBits;
 	int						iNumOutBitsWithMemory;
-	int						iPartAPatLen;
-	CVector<int>			veciPuncPatPartA;
-	int						iPartBPatLen;
-	CVector<int>			veciPuncPatPartB;
-	CVector<int>			veciTailBitPat;
 
 	int						iTotalDecDepth;
 	_UINT64BIT				lOutBitMask;
-	CParameter::EChanType	eChannelType;
 };
 
 

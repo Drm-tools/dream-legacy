@@ -207,6 +207,10 @@ SOURCE=..\common\mlc\BitInterleaver.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\mlc\ChannelCode.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\mlc\ConvEncoder.cpp
 # End Source File
 # Begin Source File
@@ -454,6 +458,10 @@ SOURCE="..\common\GUI-QT\systemevalDlg.h"
 # Begin Source File
 
 SOURCE=..\common\mlc\BitInterleaver.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\mlc\ChannelCode.h
 # End Source File
 # Begin Source File
 

@@ -26,39 +26,45 @@
  *
 \******************************************************************************/
 
-#if !defined(CONNVOL_ENC_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
-#define CONNVOL_ENC_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
+#if !defined(CHANNEL_CODE_H__3B0BA660_CA63345347A0D31912__INCLUDED_)
+#define CHANNEL_CODE_H__3B0BA660_CA63345347A0D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
 #include "../tables/TableMLC.h"
 #include "../Vector.h"
 #include "../Parameter.h"
-#include "ChannelCode.h"
 
 
 /* Classes ********************************************************************/
-class CConvEncoder : public CChannelCode
+class CChannelCode
 {
 public:
-	CConvEncoder() {}
-	virtual ~CConvEncoder() {}
+	CChannelCode();
+	virtual ~CChannelCode() {}
 
-	int		Encode(CVector<_BINARY>& vecInputData, 
-				   CVector<_BINARY>& vecOutputData);
-	void	Init(CParameter::ECodScheme eNewCodingScheme,
-				 CParameter::EChanType eNewChannelType,
-				 int iN1, int iN2, int iNewNumInBitsPartA,
-				 int iNewNumInBitsPartB, int iPunctPatPartA, int iPunctPatPartB,
-				 int iLevel);
+	inline _BINARY Convolution(const _BYTE byNewStateShiftReg,
+							   const int iGenPolyn) const
+	{
+		/* Mask bits with generator polynomial and get convolution result from
+		   pre-calculated table (speed optimization). Since we have a AND
+		   operation on the "byGeneratorMatrix", the index of the convolution
+		   table cannot exceed the size of the table (although the value in
+		   "byNewStateShiftReg" can be larger) */
+		return vecbiParity[byNewStateShiftReg & byGeneratorMatrix[iGenPolyn]];
+	}
 
-protected:
-	int						iNumInBits;
-	int						iNumInBitsWithMemory;
+	CVector<int> GenPuncPatTable(CParameter::ECodScheme eNewCodingScheme,
+								 CParameter::EChanType eNewChannelType,
+								 int iN1, int iN2,
+								 int iNewNumOutBitsPartA,
+								 int iNewNumOutBitsPartB,
+								 int iPunctPatPartA, int iPunctPatPartB,
+								 int iLevel);
 
-	CVector<int>			veciTablePuncPat;
 
-	CParameter::EChanType	eChannelType;
+private:
+	_BINARY vecbiParity[1 << SIZEOF__BYTE];
 };
 
 
-#endif // !defined(CONNVOL_ENC_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
+#endif // !defined(CHANNEL_CODE_H__3B0BA660_CA63345347A0D31912__INCLUDED_)

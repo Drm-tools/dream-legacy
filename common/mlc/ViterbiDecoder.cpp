@@ -36,8 +36,6 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	int				i, j, k;
 	int				iDistCnt;
 	int				iMinMetricIndex;
-	int				iCurPunctPattern;
-	int				iPunctCounter;
 	_VITMETRTYPE	rAccMetricPrev0;
 	_VITMETRTYPE	rAccMetricPrev1;
 	_VITMETRTYPE	rMinMetric;
@@ -58,61 +56,10 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 
 	/* Reset counter for puncturing and distance (from metric) */
 	iDistCnt = 0;
-	iPunctCounter = 0;
 
 
 	for (i = 0; i < iNumOutBitsWithMemory; i++)
 	{
-		/* ------------------------------------------------------------------ */
-		/* Get all possible metrics for one transition in the trellis ------- */
-		/* ------------------------------------------------------------------ */
-		/* Prepare puncturing pattern --------------------------------------- */
-		if (i < iNumOutBitsPartA)
-		{
-			/* Puncturing patterns part A */
-			/* Get current pattern */
-			iCurPunctPattern = veciPuncPatPartA[iPunctCounter];
-
-			/* Increment index and take care of wrap around */
-			iPunctCounter++;
-			if (iPunctCounter == iPartAPatLen)
-				iPunctCounter = 0;
-		}
-		else
-		{
-			/* In case of FAC do not use special tailbit-pattern! */
-			if ((i < iNumOutBits) || (eChannelType == CParameter::CT_FAC))
-			{
-				/* Puncturing patterns part B */
-				/* Reset counter when beginning of part B is reached */
-				if (i == iNumOutBitsPartA)
-					iPunctCounter = 0;
-
-				/* Get current pattern */
-				iCurPunctPattern = veciPuncPatPartB[iPunctCounter];
-
-				/* Increment index and take care of wrap around */
-				iPunctCounter++;
-				if (iPunctCounter == iPartBPatLen)
-					iPunctCounter = 0;
-			}
-			else
-			{
-				/* Tailbits */
-				/* Check when tailbit pattern starts */
-				if (i == iNumOutBits)
-					iPunctCounter = 0;
-
-				/* Set tailbit pattern */
-				iCurPunctPattern = veciTailBitPat[iPunctCounter];
-
-				/* No test for wrap around needed, since there ist only one
-				   cycle of this pattern */
-				iPunctCounter++;
-			}
-		}
-
-
 		/* Calculate all possible metrics ----------------------------------- */
 		/* There are only a small set of possible puncturing patterns used for
 		   DRM: 0001, 0101, 0011, 0111, 1111. These need different numbers of
@@ -128,7 +75,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 		const int iPos0 = iDistCnt;
 		iDistCnt++;
 
-		if (iCurPunctPattern == PP_TYPE_0001)
+		if (veciTablePuncPat[i] == PP_TYPE_0001)
 		{
 			/* Pattern 0001 */
 			vecrMetricSet[ 0] = vecNewDistance[iPos0].rTow0;
@@ -158,7 +105,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			_VITMETRTYPE rIRxx11 =
 				vecNewDistance[iPos1].rTow1 + vecNewDistance[iPos0].rTow1;
 
-			if (iCurPunctPattern == PP_TYPE_0101)
+			if (veciTablePuncPat[i] == PP_TYPE_0101)
 			{
 				/* Pattern 0101 */
 				vecrMetricSet[ 0] = rIRxx00;
@@ -170,7 +117,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 				vecrMetricSet[13] = rIRxx11;
 				vecrMetricSet[15] = rIRxx11;
 			}
-			else if (iCurPunctPattern == PP_TYPE_0011)
+			else if (veciTablePuncPat[i] == PP_TYPE_0011)
 			{
 				/* Pattern 0011 */
 				vecrMetricSet[ 0] = rIRxx00;
@@ -188,7 +135,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 				const int iPos2 = iDistCnt;
 				iDistCnt++;
 
-				if (iCurPunctPattern == PP_TYPE_0111)
+				if (veciTablePuncPat[i] == PP_TYPE_0111)
 				{
 					/* Pattern 0111 */
 					vecrMetricSet[ 0] = vecNewDistance[iPos2].rTow0 + rIRxx00;
@@ -396,17 +343,8 @@ void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme,
 						   int iNewNumOutBitsPartB, int iPunctPatPartA,
 						   int iPunctPatPartB, int iLevel)
 {
-	int i;
-	int	iTailbitPattern;
-	int	iTailbitParamL0;
-	int	iTailbitParamL1;
-
-	/* Set number of out bits and save channel type */
-	iNumOutBitsPartA = iNewNumOutBitsPartA;
-	eChannelType = eNewChannelType;
-
 	/* Number of bits out is the sum of all protection levels */
-	iNumOutBits = iNumOutBitsPartA + iNewNumOutBitsPartB;
+	iNumOutBits = iNewNumOutBitsPartA + iNewNumOutBitsPartB;
 
 	/* Number of out bits including the state memory */
 	iNumOutBitsWithMemory = iNumOutBits + MC_CONSTRAINT_LENGTH - 1;
@@ -415,60 +353,12 @@ void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme,
 	   otherwise we would get "0") */
 	lOutBitMask = _UINT64BIT(1) << MC_DECODING_DEPTH;
 
+	/* Init vector, storing table for puncturing pattern and generate pattern */
+	veciTablePuncPat.Init(iNumOutBitsWithMemory);
 
-	/* Set tail-bit pattern ------------------------------------------------- */
-	/* We have to consider two cases because in HSYM "N1 + N2" is used
-	   instead of only "N2" to calculate the tailbit pattern */
-	switch (eNewCodingScheme)
-	{
-	case CParameter::CS_3_HMMIX:
-		iTailbitParamL0 = iN1 + iN2;
-		iTailbitParamL1 = iN2;
-		break;
-
-	case CParameter::CS_3_HMSYM:
-		iTailbitParamL0 = 2 * (iN1 + iN2);
-		iTailbitParamL1 = 2 * iN2;
-		break;
-
-	default:
-		iTailbitParamL0 = 2 * iN2;
-		iTailbitParamL1 = 2 * iN2;
-	}
-
-	/* Tailbit pattern calculated according DRM-standard. We have to consider
-	   two cases because in HSYM "N1 + N2" is used instead of only "N2" */
-	if (iLevel == 0)
-		iTailbitPattern =
-			iTailbitParamL0 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
-			(int) ((iTailbitParamL0 - 12) /
-			iPuncturingPatterns[iPunctPatPartB][1]);
-	else
-		iTailbitPattern =
-			iTailbitParamL1 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
-			(int) ((iTailbitParamL1 - 12) /
-			iPuncturingPatterns[iPunctPatPartB][1]);
-
-
-	/* Set puncturing bit patterns and lengths ------------------------------ */
-	/* Lengths */
-	iPartAPatLen = iPuncturingPatterns[iPunctPatPartA][0];
-	iPartBPatLen = iPuncturingPatterns[iPunctPatPartB][0];
-
-	/* Vector, storing patterns for part A. Patterns begin at [][2 + x] */
-	veciPuncPatPartA.Init(iPartAPatLen);
-	for (i = 0; i < iPartAPatLen; i++)
-		veciPuncPatPartA[i] = iPuncturingPatterns[iPunctPatPartA][2 + i];
-
-	/* Vector, storing patterns for part B. Patterns begin at [][2 + x] */
-	veciPuncPatPartB.Init(iPartBPatLen);
-	for (i = 0; i < iPartBPatLen; i++)
-		veciPuncPatPartB[i] = iPuncturingPatterns[iPunctPatPartB][2 + i];
-
-	/* Vector, storing patterns for tailbit pattern */
-	veciTailBitPat.Init(LENGTH_TAIL_BIT_PAT);
-	for (i = 0; i < LENGTH_TAIL_BIT_PAT; i++)
-		veciTailBitPat[i] = iPunctPatTailbits[iTailbitPattern][i];
+	veciTablePuncPat = GenPuncPatTable(eNewCodingScheme, eNewChannelType, iN1,
+		iN2, iNewNumOutBitsPartA, iNewNumOutBitsPartB, iPunctPatPartA,
+		iPunctPatPartB, iLevel);
 }
 
 CViterbiDecoder::CViterbiDecoder()
@@ -482,9 +372,11 @@ CViterbiDecoder::CViterbiDecoder()
 	   in the processing routine */
 
 	/* We need to analyze 2^(MC_CONSTRAINT_LENGTH - 1) states in the trellis */
-	CTrellis		vecTrellis[MC_NO_STATES];
-	CConvEncoder	ConvEncoder; /* Needed for convolution function */
 	int				i;
+	int				iPrev0Index[MC_NO_STATES];
+	int				iPrev1Index[MC_NO_STATES];
+	int				iMetricPrev0[MC_NO_STATES];
+	int				iMetricPrev1[MC_NO_STATES];
 
 	for (i = 0; i < MC_NO_STATES; i++)
 	{
@@ -492,25 +384,24 @@ CViterbiDecoder::CViterbiDecoder()
 		/* We define in this trellis that we shift the bits from right to
 		   the left. We use the transition-bits which "fall" out of the
 		   shift-register */
-		vecTrellis[i].iPrev0Index = (i >> 1); /* Old state, Leading "0"
-												 (automatically inserted by
-												 shifting */
-		vecTrellis[i].iPrev1Index = (i >> 1)	 /* Old state */
+		iPrev0Index[i] = (i >> 1);				/* Old state, Leading "0"
+												   (automatically inserted by
+												   shifting */
+		iPrev1Index[i] = (i >> 1)				 /* Old state */
 			| (1 << (MC_CONSTRAINT_LENGTH - 2)); /* New "1", must be on position
 													MC_CONSTRAINT_LENGTH - 1 */
 
 
 		/* Assign metrics to the transitions from both paths ---------------- */
 		/* We define with the metrics the order: [b_3, b_2, b_1, b_0] */
-		vecTrellis[i].iMetricPrev0 = 0;
-		vecTrellis[i].iMetricPrev1 = 0;
+		iMetricPrev0[i] = 0;
+		iMetricPrev1[i] = 0;
 		for (int j = 0; j < MC_NO_OUTPUT_BITS_PER_STEP; j++)
 		{
 			/* Calculate respective metrics from convolution of state and
 			   transition bit */
 			/* "0" */
-			vecTrellis[i].iMetricPrev0 |=
-				ConvEncoder.Convolution(
+			iMetricPrev0[i] |= Convolution(
 				/* Set all states in the shift-register for encoder. Use
 				   current state with a leading "0" (which is automatically
 				   there */
@@ -521,8 +412,7 @@ CViterbiDecoder::CViterbiDecoder()
 				<< j;
 
 			/* "1" */
-			vecTrellis[i].iMetricPrev1 |=
-				ConvEncoder.Convolution(
+			iMetricPrev1[i] |= Convolution(
 				/* Set all states in the shift-register for encoder. Use
 				   current state with a leading "1". The position of this
 				   bit is "MC_CONSTRAINT_LENGTH" (shifting from position 1:
@@ -539,8 +429,8 @@ CViterbiDecoder::CViterbiDecoder()
 	static FILE* pFile = fopen("test/trellis.dat", "w");
 	for (i = 0; i < MC_NO_STATES; i++)
 		fprintf(pFile, "BUTTERFLY( %d, %d, %d, %d, %d )\n", i,
-			vecTrellis[i].iPrev0Index, vecTrellis[i].iPrev1Index,
-			vecTrellis[i].iMetricPrev0,	vecTrellis[i].iMetricPrev1);
+			iPrev0Index[i], iPrev1Index[i],
+			iMetricPrev0[i], iMetricPrev1[i]);
 	fflush(pFile);
 	exit(1);
 #endif

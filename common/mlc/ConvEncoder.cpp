@@ -35,7 +35,6 @@ int CConvEncoder::Encode(CVector<_BINARY>& vecInputData,
 						 CVector<_BINARY>& vecOutputData)
 {
 	int		iOutputCounter;
-	int		iPunctCounter;
 	int		iCurPunctPattern;
 	_BYTE	byStateShiftReg;
 
@@ -43,59 +42,10 @@ int CConvEncoder::Encode(CVector<_BINARY>& vecInputData,
 	iOutputCounter = 0;
 
 	/* Reset counter for puncturing and state-register */
-	iPunctCounter = 0;
 	byStateShiftReg = 0;
-
 
 	for (int i = 0; i < iNumInBitsWithMemory; i++)
 	{
-		/* Prepare puncturing pattern --------------------------------------- */
-		if (i < iNumInBitsPartA)
-		{
-			/* Puncturing patterns part A */
-			/* Get current pattern */
-			iCurPunctPattern = veciPuncPatPartA[iPunctCounter];
-
-			/* Increment index and take care of wrap around */
-			iPunctCounter++;
-			if (iPunctCounter == iPartAPatLen)
-				iPunctCounter = 0;
-		}
-		else
-		{
-			/* In case of FAC do not use special tailbit-pattern! */
-			if ((i < iNumInBits) || (eChannelType == CParameter::CT_FAC))
-			{
-				/* Puncturing patterns part B */
-				/* Reset counter when beginning of part B is reached */
-				if (i == iNumInBitsPartA)
-					iPunctCounter = 0;
-
-				/* Get current pattern */
-				iCurPunctPattern = veciPuncPatPartB[iPunctCounter];
-
-				/* Increment index and take care of wrap around */
-				iPunctCounter++;
-				if (iPunctCounter == iPartBPatLen)
-					iPunctCounter = 0;
-			}
-			else
-			{
-				/* Tailbits */
-				/* Check when tailbit pattern starts */
-				if (i == iNumInBits)
-					iPunctCounter = 0;
-
-				/* Set tailbit pattern */
-				iCurPunctPattern = veciTailBitPat[iPunctCounter];
-
-				/* No test for wrap around needed, since there ist only one
-				   cycle of this pattern */
-				iPunctCounter++;
-			}
-		}
-
-
 		/* Update shift-register (state information) ------------------------ */
 		/* Shift bits in state-shift-register */
 		byStateShiftReg <<= 1;
@@ -115,7 +65,7 @@ int CConvEncoder::Encode(CVector<_BINARY>& vecInputData,
 		   output bits are generated. The state shift register "byStateShiftReg"
 		   is convoluted with the respective patterns for this bit (is done
 		   inside the convolution function) */
-		switch (iCurPunctPattern)
+		switch (veciTablePuncPat[i])
 		{
 		case PP_TYPE_0001:
 			/* Pattern 0001 */
@@ -180,125 +130,16 @@ void CConvEncoder::Init(CParameter::ECodScheme eNewCodingScheme,
 						int iNewNumInBitsPartB, int iPunctPatPartA,
 						int iPunctPatPartB, int iLevel)
 {
-	int i;
-	int	iTailbitPattern;
-	int	iTailbitParamL0;
-	int	iTailbitParamL1;
-
-	/* Set number of out bits and save channel type */
-	iNumInBitsPartA = iNewNumInBitsPartA;
-	eChannelType = eNewChannelType;
-
 	/* Number of bits out is the sum of all protection levels */
-	iNumInBits = iNumInBitsPartA + iNewNumInBitsPartB;
+	iNumInBits = iNewNumInBitsPartA + iNewNumInBitsPartB;
 
 	/* Number of out bits including the state memory */
 	iNumInBitsWithMemory = iNumInBits + MC_CONSTRAINT_LENGTH - 1;
 
+	/* Init vector, storing table for puncturing pattern and generate pattern */
+	veciTablePuncPat.Init(iNumInBitsWithMemory);
 
-	/* Set tail-bit pattern ------------------------------------------------- */
-	/* We have to consider two cases because in HSYM "N1 + N2" is used
-	   instead of only "N2" to calculate the tailbit pattern */
-	switch (eNewCodingScheme)
-	{
-	case CParameter::CS_3_HMMIX:
-		iTailbitParamL0 = iN1 + iN2;
-		iTailbitParamL1 = iN2;
-		break;
-
-	case CParameter::CS_3_HMSYM:
-		iTailbitParamL0 = 2 * (iN1 + iN2);
-		iTailbitParamL1 = 2 * iN2;
-		break;
-
-	default:
-		iTailbitParamL0 = 2 * iN2;
-		iTailbitParamL1 = 2 * iN2;
-	}
-
-	/* Tailbit pattern calculated according DRM-standard. We have to consider
-	   two cases because in HSYM "N1 + N2" is used instead of only "N2" */
-	if (iLevel == 0)
-		iTailbitPattern =
-			iTailbitParamL0 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
-			(int) ((iTailbitParamL0 - 12) /
-			iPuncturingPatterns[iPunctPatPartB][1]);
-	else
-		iTailbitPattern =
-			iTailbitParamL1 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
-			(int) ((iTailbitParamL1 - 12) /
-			iPuncturingPatterns[iPunctPatPartB][1]);
-
-
-	/* Set puncturing bit patterns and lengths ------------------------------ */
-	/* Lengths */
-	iPartAPatLen = iPuncturingPatterns[iPunctPatPartA][0];
-	iPartBPatLen = iPuncturingPatterns[iPunctPatPartB][0];
-
-	/* Vector, storing patterns for part A. Patterns begin at [][2 + x] */
-	veciPuncPatPartA.Init(iPartAPatLen);
-	for (i = 0; i < iPartAPatLen; i++)
-		veciPuncPatPartA[i] = iPuncturingPatterns[iPunctPatPartA][2 + i];
-
-	/* Vector, storing patterns for part B. Patterns begin at [][2 + x] */
-	veciPuncPatPartB.Init(iPartBPatLen);
-	for (i = 0; i < iPartBPatLen; i++)
-		veciPuncPatPartB[i] = iPuncturingPatterns[iPunctPatPartB][2 + i];
-
-	/* Vector, storing patterns for tailbit pattern */
-	veciTailBitPat.Init(LENGTH_TAIL_BIT_PAT);
-	for (i = 0; i < LENGTH_TAIL_BIT_PAT; i++)
-		veciTailBitPat[i] = iPunctPatTailbits[iTailbitPattern][i];
+	veciTablePuncPat = GenPuncPatTable(eNewCodingScheme, eNewChannelType, iN1,
+		iN2, iNewNumInBitsPartA, iNewNumInBitsPartB, iPunctPatPartA,
+		iPunctPatPartB, iLevel);
 }
-
-CConvEncoder::CConvEncoder()
-{
-#if 0
-	/* Create convolution table ***********************************************/
-	/* Activate this code to generate the table for convolution */
-	int			i, j;
-	const int	iTableSize = 1 << SIZEOF__BYTE;
-	const int	iRowLen = 1 << 4;
-	_BINARY		vecbiConvTable[iTableSize];
-
-	/* Actual convolution operation */
-	for (j = 0; j < iTableSize; j++)
-	{
-		/* XOR all bits in byResult.
-		   We observe always the LSB by masking using operator "& 1". To get
-		   access to all bits in "byResult" we shift the current bit so long
-		   until it reaches the mask (at zero) by using operator ">> i". The
-		   actual XOR operation is done by "^=" */
-		vecbiConvTable[j] = FALSE;
-		for (i = 0; i < MC_CONSTRAINT_LENGTH; i++)
-			vecbiConvTable[j] ^= (j >> i) & 1;
-	}
-
-	/* Save table in file */
-	static FILE* pFile = fopen("test/convtable.dat", "w");
-	fprintf(pFile, "_BINARY vecbiConvTable[%d] = {\n", iTableSize);
-	
-	for (j = 0; j < iTableSize / iRowLen; j++)
-	{
-		fprintf(pFile, "	");
-
-		for (i = 0; i < iRowLen; i++)
-		{
-			const int iCurTabIndex = j * iRowLen + i;
-
-			fprintf(pFile, "%d", vecbiConvTable[iCurTabIndex]);
-
-			/* No comma after last value */
-			if (iCurTabIndex < iTableSize - 1)
-				fprintf(pFile, ", ");
-		}
-
-		fprintf(pFile, "\n");
-	}
-
-	fprintf(pFile, "};");
-	fflush(pFile);
-	exit(1);
-#endif
-}
-
