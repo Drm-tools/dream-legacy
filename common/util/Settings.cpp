@@ -561,7 +561,15 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			(!strcmp(argv[i], "-h")) ||
 			(!strcmp(argv[i], "-?")))
 		{
-			UsageArguments(argv);
+			const string strHelp = UsageArguments(argv);
+
+#if defined(_WIN32)
+			MessageBox(NULL, strHelp.c_str(), "Dream",
+				MB_SYSTEMMODAL | MB_OK | MB_ICONINFORMATION);
+#else
+			cerr << strHelp;
+#endif
+
 			exit(1);
 		}
 
@@ -592,69 +600,56 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 	return bIsReceiver;
 }
 
-void CSettings::UsageArguments(char** argv)
+string CSettings::UsageArguments(char** argv)
 {
 // TODO: Use macro definitions for help text, too (instead of hard-coded numbers)!
 
-	cerr << "Usage: " << argv[0] << " [option] [argument]" << endl;
-	cerr << endl;
-	cerr << "Recognized options:" << endl;
-	cerr << endl;
-	cerr << "  -t, --transmitter          DRM transmitter mode" << endl;
-	cerr << "  -p, --flipspectrum         flip input spectrum" << endl;
-	cerr << "  -i <n>, --mlciter <n>      number of MLC iterations" << endl;
-	cerr << "                             allowed range: 0...4" << endl;
-	cerr << "                             default: 1" << endl;
-	cerr << "  -s <r>, --sampleoff <r>    sample rate offset initial value [Hz]"
-		<< endl;
-	cerr << "                             allowed range: -200.0...200.0"
-		<< endl;
-	cerr << "  -m, --muteaudio            mute audio output" << endl;
-	cerr << "  -f <s>, --fileio <s>       disable sound card," << endl;
-	cerr << "                             use file <s> instead" << endl;
-	cerr << "  -w <s>, --writewav <s>     write output to wave file" << endl;
-
-	cerr << "  -S <r>, --fracwinsize <r>  freq. acqu. search window size [Hz]"
-		<< endl;
-	cerr << "  -E <r>, --fracwincent <r>  freq. acqu. search window center [Hz]"
-		<< endl;
-	cerr << "  -F, --filter               apply bandpass filter" << endl;
+	return
+		"Usage: " + string(argv[0]) + " [option] [argument]\n\n"
+		"Recognized options:\n\n"
+		"  -t, --transmitter          DRM transmitter mode\n"
+		"  -p, --flipspectrum         flip input spectrum\n"
+		"  -i <n>, --mlciter <n>      number of MLC iterations\n"
+		"                             allowed range: 0...4\n"
+		"                             default: 1\n"
+		"  -s <r>, --sampleoff <r>    sample rate offset initial value [Hz]\n"
+		"                             allowed range: -200.0...200.0\n"
+		"  -m, --muteaudio            mute audio output\n"
+		"  -f <s>, --fileio <s>       disable sound card,\n"
+		"                             use file <s> instead\n"
+		"  -w <s>, --writewav <s>     write output to wave file\n"
+		"  -S <r>, --fracwinsize <r>  freq. acqu. search window size [Hz]\n"
+		"  -E <r>, --fracwincent <r>  freq. acqu. search window center [Hz]\n"
+		"  -F, --filter               apply bandpass filter\n"
 
 #ifdef USE_QT_GUI
-	cerr << "  -r <n>, --frequency <n>    set frequency [kHz] for log file"
-		<< endl;
-	cerr << "  -a <s>, --latitude <s>     set latitude string for log file"
-		<< endl;
-	cerr << "  -o <s>, --longitude <s>    set longitude string for log file"
-		<< endl;
-	cerr << "  -l <n>, --startlog <n>     start log file (delayed by" << endl;
-	cerr << "                             <n> seconds)" << endl;
-	cerr << "                             allowed range: 1...3600" << endl;
-	cerr << "  -y <n>, --colorscheme <n>  set color scheme for main plot"
-		<< endl;
-	cerr << "                             0: blue-white (default)" << endl;
-	cerr << "                             1: green-black" << endl;
-	cerr << "                             2: black-grey" << endl;
+		"  -r <n>, --frequency <n>    set frequency [kHz] for log file\n"
+		"  -a <s>, --latitude <s>     set latitude string for log file\n"
+		"  -o <s>, --longitude <s>    set longitude string for log file\n"
+		"  -l <n>, --startlog <n>     start log file (delayed by\n"
+		"                             <n> seconds)\n"
+		"                             allowed range: 1...3600\n"
+		"  -y <n>, --colorscheme <n>  set color scheme for main plot\n"
+		"                             0: blue-white (default)\n"
+		"                             1: green-black\n"
+		"                             2: black-grey\n"
 #endif
 
-	cerr << "  -I <n>, --snddevin <n>     set sound in device" << endl;
-	cerr << "  -O <n>, --snddevout <n>    set sound out device"	<< endl;
+		"  -I <n>, --snddevin <n>     set sound in device\n"
+		"  -O <n>, --snddevout <n>    set sound out device\n"
 
 #ifdef HAVE_LIBHAMLIB
-	cerr << "  -M <n>, --hamlib-model <n> set Hamlib radio model ID" << endl;
-	cerr << "  -C, --hamlib-config <s>    set Hamlib config parameter" << endl;
+		"  -M <n>, --hamlib-model <n> set Hamlib radio model ID\n"
+		"  -C, --hamlib-config <s>    set Hamlib config parameter\n"
 #endif
 
-	cerr << endl;
-	cerr << "  -h, -?, --help             this help text" << endl;
-	cerr << endl;
-	cerr << "Example: " << argv[0] <<
+		"\n  -h, -?, --help             this help text\n\n"
+		"Example: " + string(argv[0]) +
 		" -p --sampleoff -0.23 -i 2 "
 #ifdef USE_QT_GUI
 		"-r 6140 -a 50°13\\'N -o 8°34\\'E"
 #endif
-		<< endl;
-	cerr << endl;
+		"\n\n";
 }
 
 _BOOLEAN CSettings::GetFlagArgument(int argc, char** argv, int& i,

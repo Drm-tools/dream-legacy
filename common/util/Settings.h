@@ -95,7 +95,7 @@ protected:
 	void WriteIniFile();
 
 	_BOOLEAN ParseArguments(int argc, char** argv);
-	void UsageArguments(char** argv);
+	string UsageArguments(char** argv);
 	_BOOLEAN GetFlagArgument(int argc, char** argv, int& i, string strShortOpt,
 							 string strLongOpt);
 	_BOOLEAN GetNumericArgument(int argc, char** argv, int& i,
