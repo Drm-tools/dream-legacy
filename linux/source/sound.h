@@ -61,6 +61,11 @@ public:
 	void	SetOutDev(int iNewDev) {}
 	void	SetInDev(int iNewDev) {}
 
+	/* Return invalid device ID which is the same as using "wave mapper" which
+	   we assume here to be used */
+	int		GetOutDev() {return 1;}
+	int		GetInDev() {return 1;}
+
 #if WITH_SOUND
 	void InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
 	void InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
