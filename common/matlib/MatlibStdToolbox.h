@@ -243,6 +243,11 @@ CMatlibVector<CComplex>		Ifft(const CMatlibVector<CComplex>& cvI, const CFftPlan
 CMatlibVector<CComplex>		rfft(const CMatlibVector<CReal>& fvI, const CFftPlans& FftPlans = CFftPlans());
 CMatlibVector<CReal>		rifft(const CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans = CFftPlans());
 
+CMatlibVector<CReal>		FftFilt(const CMatlibVector<CComplex>& rvH,
+									const CMatlibVector<CReal>& rvI,
+									CMatlibVector<CReal>& rvZ,
+									const CFftPlans& FftPlans = CFftPlans());
+
 
 /* Numerical integration */
 typedef CReal(MATLIB_CALLBACK_QAUD)(CReal rX); /* Callback function definition */

@@ -675,6 +675,47 @@ CMatlibVector<CReal> rifft(const CMatlibVector<CComplex>& cvI, const CFftPlans& 
 	return fvReturn;
 }
 
+CMatlibVector<CReal> FftFilt(const CMatlibVector<CComplex>& rvH,
+							 const CMatlibVector<CReal>& rvI,
+							 CMatlibVector<CReal>& rvZ,
+							 const CFftPlans& FftPlans)
+{
+/*
+	This function only works with EVEN N!
+*/
+	CFftPlans*				pCurPlan;
+	const int				iL(rvH.GetSize() - 1); /* Nyquist frequency! */
+	const int				iL2(2 * iL);
+	CMatlibVector<CReal>	rvINew(iL2);
+	CMatlibVector<CReal>	rvOutTMP(iL2);
+
+	/* Check, if plans are already created, else: create it */
+	if (!FftPlans.IsInitialized())
+	{
+		pCurPlan = new CFftPlans;
+		pCurPlan->Init(iL2);
+	}
+	else
+	{
+		/* Ugly, but ok: We transform "const" object in "non constant" object
+		   since we KNOW that the original object is not constant since it
+		   was already initialized! */
+		pCurPlan = (CFftPlans*) &FftPlans;
+	}
+
+	/* Update history of input signal */
+	rvINew.Merge(rvZ, rvI);
+
+	rvOutTMP = rifft(rfft(rvINew, FftPlans) * rvH, FftPlans);
+
+	/* Save old input signal vector for next block */
+	rvZ = rvI;
+
+	/* Cut out correct samples (to get from cyclic convolution to linear
+	   convolution) */
+	return rvOutTMP(iL + 1, iL2);
+}
+
 
 /* FftPlans implementation -------------------------------------------------- */
 CFftPlans::~CFftPlans()

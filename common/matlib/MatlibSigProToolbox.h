@@ -32,7 +32,7 @@
 #include "MatlibStdToolbox.h"
 
 
-/* Classes ********************************************************************/
+/* Helpfunctions **************************************************************/
 CMatlibVector<CReal>	Randn(const int iLength);
 CMatlibVector<CReal>	Hann(const int iLen);
 CMatlibVector<CReal>	Hamming(const int iLen);
@@ -62,12 +62,15 @@ CMatlibVector<CReal>	Sinc(const CMatlibVector<CReal>& fvI)
 
 
 /* My own functions --------------------------------------------------------- */
+/* Lowpass filter design using windowing method */
+CMatlibVector<CReal>	FirLP(const CReal rNormBW,
+							  const CMatlibVector<CReal>& rvWin);
+
 /* Complex FIR filter with decimation */
-CMatlibVector<CComplex>	FirFiltDec(const CMatlibVector<CComplex>& cvB, 
-								   const CMatlibVector<CReal>& rvX, 
+CMatlibVector<CComplex>	FirFiltDec(const CMatlibVector<CComplex>& cvB,
+								   const CMatlibVector<CReal>& rvX,
 								   CMatlibVector<CReal>& rvZ,
 								   const int iDecFact);
-
 
 /* Squared magnitude */
 inline CReal			SqMag(const CComplex& cI)

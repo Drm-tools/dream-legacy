@@ -215,6 +215,26 @@ CMatlibVector<CReal> Filter(const CMatlibVector<CReal>& fvB,
 	return fvY;
 }
 
+CMatlibVector<CReal> FirLP(const CReal rNormBW,
+						   const CMatlibVector<CReal>& rvWin)
+{
+/*
+	Lowpass filter design using windowing method
+*/
+	const int				iLen = rvWin.GetSize();
+	const int				iHalfLen = (int) Floor((CReal) iLen / 2);
+	CMatlibVector<CReal>	fvRet(iLen, VTY_TEMP);
+
+	/* Generate truncuated ideal response */
+	for (int i = 0; i < iLen; i++)
+		fvRet[i] = rNormBW * Sinc(rNormBW * (i - iHalfLen));
+
+	/* Apply window */
+	fvRet *= rvWin;
+
+	return fvRet;
+}
+
 CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB, 
 								   const CMatlibVector<CReal>& rvX, 
 								   CMatlibVector<CReal>& rvZ,
