@@ -138,10 +138,24 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 					(int) (*pvecInputData).Separate(SIZEOF__BYTE) *
 					SIZEOF__BYTE;
 
-				/* Number of unused bytes ("- 2" because we also have the one
-				   byte which stored the size, the other byte is the header) */
-				iNumSkipBytes =
-					iTotalPacketSize - 2 - iNewPacketDataSize / SIZEOF__BYTE;
+				if (iNewPacketDataSize > iMaxPacketDataSize)
+				{
+					/* Error, reset flags */
+					DataUnit[iPacketID].bOK = FALSE;
+					DataUnit[iPacketID].bReady = FALSE;
+
+					/* Set values to read complete packet size */
+					iNewPacketDataSize = iNewPacketDataSize;
+					iNumSkipBytes = 2; /* Only CRC has to be skipped */
+				}
+				else
+				{
+					/* Number of unused bytes ("- 2" because we also have the
+					   one byte which stored the size, the other byte is the
+					   header) */
+					iNumSkipBytes = iTotalPacketSize - 2 -
+						iNewPacketDataSize / SIZEOF__BYTE;
+				}
 
 				/* Packets with no useful data are permitted if no packet
 				   data is available to fill the logical frame. The PPI
@@ -159,7 +173,7 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 			}
 			else
 			{
-				iNewPacketDataSize = (iTotalPacketSize - 3) * SIZEOF__BYTE;
+				iNewPacketDataSize = iMaxPacketDataSize;
 
 				/* All bytes are useful bytes, only CRC has to be skipped */
 				iNumSkipBytes = 2;
@@ -263,6 +277,10 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 		}
 		else
 		{
+			/* Maximum number of bits for the data part in a packet
+			   ("- 3" because two bits for CRC and one for the header) */
+ 			iMaxPacketDataSize = (iTotalPacketSize - 3) * SIZEOF__BYTE;
+	
 			/* Number of data packets in one data block */
 			iNumDataPackets = iTotalNumInputBytes / iTotalPacketSize;
 

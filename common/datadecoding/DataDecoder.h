@@ -69,6 +69,7 @@ protected:
 
 	int						iTotalPacketSize;
 	int						iNumDataPackets;
+	int						iMaxPacketDataSize;
 	int						iServPacketID;
 	CParameter::EApplDomain	eServAppDomain;
 	int						iDABUserAppIdent;
