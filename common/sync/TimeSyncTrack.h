@@ -69,7 +69,7 @@
 #define HIST_LEN_SAM_OFF_EST_TI_CORR		((CReal) 30.0) /* sec */
 
 /* Length of history used for sample rate offset acquisition estimate */
-#define SAM_OFF_EST_TI_CORR_ACQ_LEN			((CReal) 2.0) /* sec */
+#define SAM_OFF_EST_TI_CORR_ACQ_LEN			((CReal) 3.0) /* sec */
 
 
 /* Classes ********************************************************************/
