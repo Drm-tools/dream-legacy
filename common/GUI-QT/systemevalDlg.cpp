@@ -986,7 +986,7 @@ void systemevalDlg::AddWhatsThisHelp()
 		"software cannot read the provided blocks fast enough. In this case, "
 		"the Dream software will instantly loose the synchronization and has "
 		"to re-synchronize. Another reason for red light is that the processor "
-		"is to slow for running the Dream software.";
+		"is too slow for running the Dream software.";
 
 	QWhatsThis::add(TextLabelLEDIOInterface, strLEDIOInterface);
 	QWhatsThis::add(LEDIOInterface, strLEDIOInterface);
