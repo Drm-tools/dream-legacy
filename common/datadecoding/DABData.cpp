@@ -210,18 +210,29 @@ fflush(pFile);
 				}
 				else
 				{
-					/* Check segment number and transport ID */
-					if ((MOTObject.Header.iDataSegNum + 1 != iSegmentNum) ||
-						(MOTObject.iTransportID != iTransportID))
-					{
-						/* A packet is missing or wrong ID, reset Header */
+					/* Check transport ID */
+					if (MOTObject.iTransportID != iTransportID)
 						MOTObject.Header.Reset();
-					}
 					else
 					{
-						/* Add data */
-						MOTObject.Header.Add(vecbiNewData, iSegmentSize,
-							iSegmentNum);
+						/* Sometimes a packet is transmitted more than once,
+						   only use packets which are not already received
+						   correctly */
+						if (MOTObject.Header.iDataSegNum != iSegmentNum)
+						{
+							/* Check segment number */
+							if (MOTObject.Header.iDataSegNum + 1 != iSegmentNum)
+							{
+								/* A packet is missing, reset Header */
+								MOTObject.Header.Reset();
+							}
+							else
+							{
+								/* Add data */
+								MOTObject.Header.Add(vecbiNewData, iSegmentSize,
+									iSegmentNum);
+							}
+						}
 					}
 				}
 
@@ -255,18 +266,29 @@ fflush(pFile);
 				}
 				else
 				{
-					/* Check segment number and transport ID */
-					if ((MOTObject.Body.iDataSegNum + 1 != iSegmentNum) ||
-						(MOTObject.iTransportID != iTransportID))
-					{
-						/* A packet is missing or wrong ID, reset body */
+					/* Check transport ID */
+					if (MOTObject.iTransportID != iTransportID)
 						MOTObject.Body.Reset();
-					}
 					else
 					{
-						/* Add data */
-						MOTObject.Body.Add(vecbiNewData, iSegmentSize,
-							iSegmentNum);
+						/* Sometimes a packet is transmitted more than once,
+						   only use packets which are not already received
+						   correctly */
+						if (MOTObject.Body.iDataSegNum != iSegmentNum)
+						{
+							/* Check segment number */
+							if (MOTObject.Body.iDataSegNum + 1 != iSegmentNum)
+							{
+								/* A packet is missing, reset Header */
+								MOTObject.Body.Reset();
+							}
+							else
+							{
+								/* Add data */
+								MOTObject.Body.Add(vecbiNewData, iSegmentSize,
+									iSegmentNum);
+							}
+						}
 					}
 				}
 
