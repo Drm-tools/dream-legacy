@@ -149,6 +149,11 @@ CMatlibVector<CComplex> Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPl
 	int						i;
 	const int				n = cvI.GetSize();
 	CMatlibVector<CComplex>	cvReturn(n, VTY_TEMP);
+
+	/* If input vector has zero length, return */
+	if (n == 0)
+		return cvReturn;
+
 	fftw_complex*			pFftwComplexIn = new fftw_complex[n];
 	fftw_complex*			pFftwComplexOut = new fftw_complex[n];
 
@@ -187,6 +192,11 @@ CMatlibVector<CComplex> Ifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftP
 
 	const int				n = cvI.GetSize();
 	CMatlibVector<CComplex>	cvReturn(n, VTY_TEMP);
+
+	/* If input vector has zero length, return */
+	if (n == 0)
+		return cvReturn;
+
 	fftw_complex*			pFftwComplexIn = new fftw_complex[n];
 	fftw_complex*			pFftwComplexOut = new fftw_complex[n];
 
@@ -227,6 +237,10 @@ CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlan
 	
 	CMatlibVector<CComplex>	cvReturn(iShortLength 
 		/* Include nyquist frequency (+ 1) */ + 1, VTY_TEMP);
+
+	/* If input vector has zero length, return */
+	if (iLongLength == 0)
+		return cvReturn;
 
 	fftw_real*				pFftwRealIn = new fftw_real[iLongLength];
 	fftw_real*				pFftwRealOut = new fftw_real[iLongLength];
@@ -270,6 +284,11 @@ CMatlibVector<CReal> rifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPla
 	const int	iLongLength = iShortLength * 2;
 
 	CMatlibVector<CReal>	fvReturn(iLongLength, VTY_TEMP);
+
+	/* If input vector is too short, return */
+	if (iShortLength <= 0)
+		return fvReturn;
+
 	fftw_real*				pFftwRealIn = new fftw_real[iLongLength];
 	fftw_real*				pFftwRealOut = new fftw_real[iLongLength];
 
