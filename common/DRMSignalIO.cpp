@@ -312,6 +312,44 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 					(_REAL) vecsSoundBuffer[2 * i]);
 			}
 			break;
+
+		case CS_IQ_POS_ZERO:
+			for (i = 0; i < iOutputBlockSize; i++)
+			{
+				/* Shift signal to vitual intermediate frequency before applying
+				   the Hilbert filtering */
+				_COMPLEX cCurSig = _COMPLEX((_REAL) vecsSoundBuffer[2 * i],
+					(_REAL) vecsSoundBuffer[2 * i + 1]);
+
+				cCurSig *= cCurExp;
+
+				/* Rotate exp-pointer on step further by complex multiplication
+				   with precalculated rotation vector cExpStep */
+				cCurExp *= cExpStep;
+
+				(*pvecOutputData)[i] =
+					HilbertFilt(cCurSig.real(), cCurSig.imag());
+			}
+			break;
+
+		case CS_IQ_NEG_ZERO:
+			for (i = 0; i < iOutputBlockSize; i++)
+			{
+				/* Shift signal to vitual intermediate frequency before applying
+				   the Hilbert filtering */
+				_COMPLEX cCurSig = _COMPLEX((_REAL) vecsSoundBuffer[2 * i + 1],
+					(_REAL) vecsSoundBuffer[2 * i]);
+
+				cCurSig *= cCurExp;
+
+				/* Rotate exp-pointer on step further by complex multiplication
+				   with precalculated rotation vector cExpStep */
+				cCurExp *= cExpStep;
+
+				(*pvecOutputData)[i] =
+					HilbertFilt(cCurSig.real(), cCurSig.imag());
+			}
+			break;
 		}
 	}
 	else
@@ -416,6 +454,17 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 	/* Inits for I / Q input */
 	vecrReHist.Init(NUM_TAPS_IQ_INPUT_FILT, (_REAL) 0.0);
 	vecrImHist.Init(NUM_TAPS_IQ_INPUT_FILT, (_REAL) 0.0);
+
+	/* Start with phase null (can be arbitrarily chosen) */
+	cCurExp = (_REAL) 1.0;
+
+	/* Set rotation vector to mix signal from zero frequency to virtual
+	   intermediate frequency */
+	const _REAL rNormCurFreqOffsetIQ =
+		(_REAL) 2.0 * crPi * ((_REAL) VIRTUAL_INTERMED_FREQ / SOUNDCRD_SAMPLE_RATE);
+
+	cExpStep = _COMPLEX(cos(rNormCurFreqOffsetIQ), sin(rNormCurFreqOffsetIQ));
+
 
 	/* Define output block-size */
 	iOutputBlockSize = Parameter.iSymbolBlockSize;

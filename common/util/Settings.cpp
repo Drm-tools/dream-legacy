@@ -533,6 +533,16 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 				pDRMRec->GetReceiver()->
 					SetInChanSel(CReceiveData::CS_IQ_NEG);
 				break;
+
+			case 5:
+				pDRMRec->GetReceiver()->
+					SetInChanSel(CReceiveData::CS_IQ_POS_ZERO);
+				break;
+
+			case 6:
+				pDRMRec->GetReceiver()->
+					SetInChanSel(CReceiveData::CS_IQ_NEG_ZERO);
+				break;
 			}
 			continue;
 		}
@@ -738,6 +748,8 @@ string CSettings::UsageArguments(char** argv)
 		"                              2: mix both channels (default)\n"
 		"                              3: I / Q input positive\n"
 		"                              4: I / Q input negative\n"
+		"                              5: I / Q input positive (0 Hz IF)\n"
+		"                              6: I / Q input negative (0 Hz IF)\n"
 		"  -u <n>, --outchansel <n>    output channel selection\n"
 		"                              0: L -> L, R -> R (default)\n"
 		"                              1: L -> L, R muted\n"

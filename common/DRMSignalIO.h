@@ -117,7 +117,7 @@ class CReceiveData : public CReceiverModul<_REAL, _REAL>
 {
 public:
 	enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
-		CS_IQ_NEG};
+		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO};
 
 	CReceiveData(CSound* pNS) : strInFileName("test/TransmittedData.txt"),
 		bUseSoundcard(TRUE), bNewUseSoundcard(TRUE), pSound(pNS),
@@ -159,6 +159,8 @@ protected:
 
 	CVector<_REAL>			vecrReHist;
 	CVector<_REAL>			vecrImHist;
+	_COMPLEX				cCurExp;
+	_COMPLEX				cExpStep;
 	_REAL HilbertFilt(const _REAL rRe, const _REAL rIm);
 
 	virtual void InitInternal(CParameter& ReceiverParam);
