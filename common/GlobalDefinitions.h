@@ -49,7 +49,7 @@ using namespace std; /* Because of the library: "complex" */
 #undef _DEBUG_
 
 #ifndef VERSION
-# define VERSION						"1.1.4cvs"
+# define VERSION						"1.1.5cvs"
 #endif
 
 
