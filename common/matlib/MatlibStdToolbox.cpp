@@ -11,16 +11,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -41,15 +41,15 @@ CMatlibVector<CReal> Sort(const CMatlibVector<CReal>& rvI)
 	for (int i = 0; i < rvI.GetSize() - 1; i++)
 	{
 		/* Loop through every cell (value) in array */
-		for (int j = 0; j < rvI.GetSize() - 1; j++) 
+		for (int j = 0; j < rvI.GetSize() - 1; j++)
 		{
 			/* Compare the values and switch if necessary */
-			if (fvRet[j] > fvRet[j + 1]) 
-			{ 
-				rSwap = fvRet[j]; 
-				fvRet[j] = fvRet[j + 1]; 
-				fvRet[j + 1] = rSwap; 
-			} 
+			if (fvRet[j] > fvRet[j + 1])
+			{
+				rSwap = fvRet[j];
+				fvRet[j] = fvRet[j + 1];
+				fvRet[j + 1] = rSwap;
+			}
 		}
 	}
 
@@ -71,9 +71,30 @@ CMatlibMatrix<CReal> Eye(const int iLen)
 				matrRet[i][j] = (CReal) 0.0;
 		}
 	}
-	
+
 	return matrRet;
 }
+
+CMatlibMatrix<CComplex> Diag(const CMatlibVector<CComplex>& cvI)
+{
+	const int iSize = cvI.GetSize();
+	CMatlibMatrix<CComplex> matcRet(iSize, iSize, VTY_TEMP);
+
+	/* Set the diagonal to the values of the input vector */
+	for (int i = 0; i < iSize; i++)
+	{
+		for (int j = 0; j < iSize; j++)
+		{
+			if (i == j)
+				matcRet[i][j] = cvI[i];
+			else
+				matcRet[i][j] = (CReal) 0.0;
+		}
+	}
+
+	return matcRet;
+}
+
 
 CMatlibMatrix<CComplex> Inv(const CMatlibMatrix<CComplex>& matrI)
 {
@@ -98,7 +119,7 @@ CMatlibMatrix<CComplex> Inv(const CMatlibMatrix<CComplex>& matrI)
 	for (i = 0; i < iSize; i++) 
 	{
 		/* Check that the element in (i,i) is not zero */
-		if ((Real(work[i][i]) == 0) && (Imag(work[i][i]) == 0)) 
+		if ((Real(work[i][i]) == 0) && (Imag(work[i][i]) == 0))
 		{
 			/* Swap with a row below this one that has a non-zero element
 			   in the same column */
@@ -107,7 +128,7 @@ CMatlibMatrix<CComplex> Inv(const CMatlibMatrix<CComplex>& matrI)
 					break;
 
 			/* Swap rows */
-			for (col = 0; col < iSize; col++) 
+			for (col = 0; col < iSize; col++)
 			{
 				temp = work[i][col];
 				work[i][col] = work[row][col];
@@ -120,14 +141,14 @@ CMatlibMatrix<CComplex> Inv(const CMatlibMatrix<CComplex>& matrI)
 
 		/* Divide every element in the row by element (i,i) */
 		temp = work[i][i];
-		for (col = 0; col < iSize; col++) 
+		for (col = 0; col < iSize; col++)
 		{
 			work[i][col] /= temp;
 			matrRet[i][col] /= temp;
 		}
 
 		/* Zero out the rest of column i */
-		for (row = 0; row < iSize; row++) 
+		for (row = 0; row < iSize; row++)
 		{
 			if (row != i)
 			{
@@ -168,7 +189,7 @@ CMatlibVector<CComplex> Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPl
 	if (!FftPlans.bInitialized)
 	{
 		CFftPlans NewFftPlan;
-		NewFftPlan.FFTPlForw = 
+		NewFftPlan.FFTPlForw =
 			fftw_create_plan(cvI.GetSize(), FFTW_FORWARD, FFTW_ESTIMATE);
 	
 		fftw_one(NewFftPlan.FFTPlForw, pFftwComplexIn, pFftwComplexOut);
@@ -220,7 +241,7 @@ CMatlibVector<CComplex> Ifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftP
 	
 	scale = (CReal) 1.0 / n;
 	for (i = 0; i < n; i++)
-		cvReturn[i] = CComplex(pFftwComplexOut[i].re * scale, 
+		cvReturn[i] = CComplex(pFftwComplexOut[i].re * scale,
 			pFftwComplexOut[i].im * scale);
 
 	delete[] pFftwComplexIn;
@@ -235,7 +256,7 @@ CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlan
 	const int				iLongLength = fvI.GetSize();
 	const int				iShortLength = iLongLength / 2;
 	
-	CMatlibVector<CComplex>	cvReturn(iShortLength 
+	CMatlibVector<CComplex>	cvReturn(iShortLength
 		/* Include nyquist frequency (+ 1) */ + 1, VTY_TEMP);
 
 	/* If input vector has zero length, return */
@@ -253,7 +274,7 @@ CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlan
 	if (!FftPlans.bInitialized)
 	{
 		CFftPlans NewFftPlan;
-		NewFftPlan.RFFTPlForw = 
+		NewFftPlan.RFFTPlForw =
 			rfftw_create_plan(iLongLength, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);
 	
 		rfftw_one(NewFftPlan.RFFTPlForw, pFftwRealIn, pFftwRealOut);
@@ -306,9 +327,9 @@ CMatlibVector<CReal> rifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPla
 	if (!FftPlans.bInitialized)
 	{
 		CFftPlans NewFftPlan;
-		NewFftPlan.RFFTPlBackw = 
+		NewFftPlan.RFFTPlBackw =
 			rfftw_create_plan(iLongLength, FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE);
-	
+
 		rfftw_one(NewFftPlan.RFFTPlBackw, pFftwRealIn, pFftwRealOut);
 	}
 	else
