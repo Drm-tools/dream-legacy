@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>741</width>
+            <width>737</width>
             <height>568</height>
         </rect>
     </property>
@@ -1159,37 +1159,123 @@
                     <number>6</number>
                 </property>
                 <widget>
-                    <class>QLabel</class>
+                    <class>QFrame</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>TextFACInfo</cstring>
+                        <cstring>Frame3</cstring>
                     </property>
                     <property stdset="1">
                         <name>sizePolicy</name>
                         <sizepolicy>
-                            <hsizetype>7</hsizetype>
+                            <hsizetype>1</hsizetype>
                             <vsizetype>1</vsizetype>
                         </sizepolicy>
                     </property>
                     <property stdset="1">
-                        <name>minimumSize</name>
-                        <size>
-                            <width>0</width>
-                            <height>130</height>
-                        </size>
-                    </property>
-                    <property stdset="1">
                         <name>frameShape</name>
-                        <enum>Panel</enum>
+                        <enum>StyledPanel</enum>
                     </property>
                     <property stdset="1">
                         <name>frameShadow</name>
                         <enum>Sunken</enum>
                     </property>
-                    <property stdset="1">
-                        <name>text</name>
-                        <string>TextFACInfo</string>
+                    <property>
+                        <name>layoutMargin</name>
                     </property>
+                    <property>
+                        <name>layoutSpacing</name>
+                    </property>
+                    <vbox>
+                        <property stdset="1">
+                            <name>margin</name>
+                            <number>7</number>
+                        </property>
+                        <property stdset="1">
+                            <name>spacing</name>
+                            <number>0</number>
+                        </property>
+                        <widget>
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>FACRobustnessMode</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>TextLabel1</string>
+                            </property>
+                            <property stdset="1">
+                                <name>indent</name>
+                                <number>-1</number>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>FACSpectrumOccupancy</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>TextLabel1</string>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>FACInterleaverDepth</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>TextLabel1</string>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>FACMSCMode</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>TextLabel1</string>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>FACSDCMode</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>TextLabel1</string>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>FACNumServices</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>TextLabel1</string>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>FACTimeDate</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Received time - date		Mon Jul 14 14:02:00 2003</string>
+                            </property>
+                        </widget>
+                    </vbox>
                 </widget>
                 <widget>
                     <class>QLayoutWidget</class>

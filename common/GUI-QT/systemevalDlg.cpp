@@ -345,127 +345,125 @@ void systemevalDlg::OnTimer()
 
 
 	/* FAC info static ------------------------------------------------------ */
-	QString strTemp;
-	QString m_StaticFACInfo = " ";
+	QString strFACInfo;
 
-	/* Robustness mode */
-	m_StaticFACInfo += "Robustness Mode: \t\t";
+	/* Robustness mode #################### */
+	strFACInfo = "Robustness Mode: \t\t";
 	switch (DRMReceiver.GetParameters()->GetWaveMode())
 	{
 	case RM_ROBUSTNESS_MODE_A:
-		m_StaticFACInfo += "A";
+		strFACInfo += "A";
 		break;
 
 	case RM_ROBUSTNESS_MODE_B:
-		m_StaticFACInfo += "B";
+		strFACInfo += "B";
 		break;
 
 	case RM_ROBUSTNESS_MODE_C:
-		m_StaticFACInfo += "C";
+		strFACInfo += "C";
 		break;
 
 	case RM_ROBUSTNESS_MODE_D:
-		m_StaticFACInfo += "D";
+		strFACInfo += "D";
 		break;
 	}
 
-	m_StaticFACInfo += "\r\n "; // ####################
+	FACRobustnessMode->setText(strFACInfo);
 
-	/* Spectrum occupancy */
-	m_StaticFACInfo += "Spectrum Occupancy: \t\t";
+	/* Spectrum occupancy #################### */
+	strFACInfo = "Spectrum Occupancy: \t\t";
 	switch (DRMReceiver.GetParameters()->GetSpectrumOccup())
 	{
 	case SO_0:
-		m_StaticFACInfo += "4,5 kHz";
+		strFACInfo += "4,5 kHz";
 		break;
 
 	case SO_1:
-		m_StaticFACInfo += "5 kHz";
+		strFACInfo += "5 kHz";
 		break;
 
 	case SO_2:
-		m_StaticFACInfo += "9 kHz";
+		strFACInfo += "9 kHz";
 		break;
 
 	case SO_3:
-		m_StaticFACInfo += "10 kHz";
+		strFACInfo += "10 kHz";
 		break;
 
 	case SO_4:
-		m_StaticFACInfo += "18 kHz";
+		strFACInfo += "18 kHz";
 		break;
 
 	case SO_5:
-		m_StaticFACInfo += "20 kHz";
+		strFACInfo += "20 kHz";
 		break;
 	}
 
-	m_StaticFACInfo += "\r\n "; // ####################
+	FACSpectrumOccupancy->setText(strFACInfo);
 
-	/* Interleaver Depth */
-	m_StaticFACInfo += "Interleaver Depth: \t\t";
+	/* Interleaver Depth #################### */
+	strFACInfo = "Interleaver Depth: \t\t";
 	switch (DRMReceiver.GetParameters()->eSymbolInterlMode)
 	{
 	case CParameter::SI_LONG:
-		m_StaticFACInfo += "2 s (Long Interleaving)";
+		strFACInfo += "2 s (Long Interleaving)";
 		break;
 
 	case CParameter::SI_SHORT:
-		m_StaticFACInfo += "400 ms (Short Interleaving)";
+		strFACInfo += "400 ms (Short Interleaving)";
 		break;
 	}
 
-	m_StaticFACInfo += "\r\n "; // ####################
+	FACInterleaverDepth->setText(strFACInfo);
 
-	/* MSC mode */
-	m_StaticFACInfo += "MSC Mode: \t\t\t";
+	/* MSC mode #################### */
+	strFACInfo = "MSC Mode: \t\t\t";
 	switch (DRMReceiver.GetParameters()->eMSCCodingScheme)
 	{
 	case CParameter::CS_2_SM:
-		m_StaticFACInfo += "16-QAM, No Hierarchical";
+		strFACInfo += "16-QAM, No Hierarchical";
 		break;
 
 	case CParameter::CS_3_SM:
-		m_StaticFACInfo += "64-QAM, No Hierarchical";
+		strFACInfo += "64-QAM, No Hierarchical";
 		break;
 
 	case CParameter::CS_3_HMSYM:
-		m_StaticFACInfo += "64-QAM, Hierarchical on I&Q";
+		strFACInfo += "64-QAM, Hierarchical on I&Q";
 		break;
 
 	case CParameter::CS_3_HMMIX:
-		m_StaticFACInfo += "64-QAM, Hierarchical on I";
+		strFACInfo += "64-QAM, Hierarchical on I";
 		break;
 	}
 
-	m_StaticFACInfo += "\r\n "; // ####################
+	FACMSCMode->setText(strFACInfo);
 
-	/* SDC mode */
-	m_StaticFACInfo += "SDC Mode: \t\t\t";
+	/* SDC mode #################### */
+	strFACInfo = "SDC Mode: \t\t\t";
 	switch (DRMReceiver.GetParameters()->eSDCCodingScheme)
 	{
 	case CParameter::CS_1_SM:
-		m_StaticFACInfo += "4-QAM";
+		strFACInfo += "4-QAM";
 		break;
 
 	case CParameter::CS_2_SM:
-		m_StaticFACInfo += "16-QAM";
+		strFACInfo += "16-QAM";
 		break;
 	}
 
-	m_StaticFACInfo += "\r\n "; // ####################
+	FACSDCMode->setText(strFACInfo);
 
-	/* Number of services */
-	strTemp = "Number of Services: \t\tAudio: ";
-	strTemp += QString().setNum(DRMReceiver.GetParameters()->iNoAudioService);
-	strTemp += " / Data: ";
-	strTemp +=QString().setNum(DRMReceiver.GetParameters()->iNoDataService);
-	m_StaticFACInfo += strTemp;
+	/* Number of services #################### */
+	strFACInfo = "Number of Services: \t\tAudio: ";
+	strFACInfo += QString().setNum(DRMReceiver.GetParameters()->iNoAudioService);
+	strFACInfo += " / Data: ";
+	strFACInfo +=QString().setNum(DRMReceiver.GetParameters()->iNoDataService);
 
-	m_StaticFACInfo += "\r\n "; // ####################
+	FACNumServices->setText(strFACInfo);
 
-	/* Time, date */
-	strTemp = "Received time - date: \t\t";
+	/* Time, date #################### */
+	strFACInfo = "Received time - date: \t\t";
 
 	if ((DRMReceiver.GetParameters()->iUTCHour == 0) &&
 		(DRMReceiver.GetParameters()->iUTCMin == 0) &&
@@ -474,7 +472,7 @@ void systemevalDlg::OnTimer()
 		(DRMReceiver.GetParameters()->iYear == 0))
 	{
 		/* No time service available */
-		strTemp += "Service not available";
+		strFACInfo += "Service not available";
 	}
 	else
 	{
@@ -487,7 +485,7 @@ void systemevalDlg::OnTimer()
 		DateTime.setTime(QTime(DRMReceiver.GetParameters()->iUTCHour,
 			DRMReceiver.GetParameters()->iUTCMin));
 
-		strTemp += DateTime.toString();
+		strFACInfo += DateTime.toString();
 #else
 		/* Set time and date */
 		QString strMin;
@@ -501,7 +499,7 @@ void systemevalDlg::OnTimer()
 	
 		strMin += QString().setNum(iMin);
 
-		strTemp +=
+		strFACInfo +=
 			/* Time */
 			QString().setNum(DRMReceiver.GetParameters()->iUTCHour) + ":" +
 			strMin + "  -  " +
@@ -512,11 +510,7 @@ void systemevalDlg::OnTimer()
 #endif
 	}
 
-	m_StaticFACInfo += strTemp;
-
-
-	/* Finally, set the string to the label */
-	TextFACInfo->setText(m_StaticFACInfo);
+	FACTimeDate->setText(strFACInfo);
 }
 
 void systemevalDlg::OnRadioTimeLinear() 
