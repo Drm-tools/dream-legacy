@@ -39,7 +39,8 @@ class CParameter : public CCellMappingTable
 {
 public:
 	CParameter() : bRunThread(FALSE), Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
-		bUsingMultimedia(TRUE) {}
+		bUsingMultimedia(TRUE),	iCurSelAudioService(0), iCurSelDataService(0)
+		{}
 	virtual ~CParameter() {}
 
 	/* Enumerations --------------------------------------------------------- */

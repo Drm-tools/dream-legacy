@@ -481,7 +481,13 @@ void CParameter::SetCurSelAudioService(const int iNewService)
 
 void CParameter::SetCurSelDataService(const int iNewService)
 {
-	if (iCurSelDataService != iNewService)
+	/* Change the current selected data service ID only if the new ID does
+	   contain a data service. If not, keep the old ID. In that case it is
+	   possible to select a "data-only" service and click back to an audio
+	   service to be able to decode data service and listen to audio at the
+	   same time */
+	if ((iCurSelDataService != iNewService) &&
+		(Service[iNewService].DataParam.iStreamID != STREAM_ID_NOT_USED))
 	{
 		iCurSelDataService = iNewService;
 
