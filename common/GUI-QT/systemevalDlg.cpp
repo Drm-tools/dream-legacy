@@ -581,13 +581,13 @@ void systemevalDlg::OnTimer()
 			ValueWiener->setText(
 				QString().setNum(rSigmaEst, 'f', 2) + " Hz / " +
 				QString().setNum(
-				DRMReceiver.GetChanEst()->GetDelay(), 'f', 2) + " ms");
+				DRMReceiver.GetChanEst()->GetMinDelay(), 'f', 2) + " ms");
 		}
 		else
 		{
 			/* Plot only delay, Doppler not available */
 			ValueWiener->setText("--- / " + QString().setNum(
-				DRMReceiver.GetChanEst()->GetDelay(), 'f', 2) + " ms");
+				DRMReceiver.GetChanEst()->GetMinDelay(), 'f', 2) + " ms");
 		}
 
 		/* Sample frequency offset estimation */

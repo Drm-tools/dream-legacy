@@ -944,7 +944,7 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 				if (DRMReceiver.GetReceiverState() ==
 					CDRMReceiver::AS_WITH_SIGNAL)
 				{
-					rDelay = DRMReceiver.GetChanEst()->GetDelay();
+					rDelay = DRMReceiver.GetChanEst()->GetMinDelay();
 					if (DRMReceiver.GetChanEst()->GetSigma(rDoppler) == FALSE)
 						rDoppler = (_REAL) 0.0;
 				}

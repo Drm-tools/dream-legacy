@@ -97,6 +97,9 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		(*pvecInputData).GetExData().iCurTimeCorr, rLenPDSEst /* out */,
 		rOffsPDSEst /* out */);
 
+	/* Store current delay in history */
+	vecrDelayHist.AddEnd(rLenPDSEst);
+
 
 	/* Frequency-interploation ************************************************/
 	switch (TypeIntFreq)
@@ -511,6 +514,14 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	/* Init delay spread length estimation (index) */
 	rLenPDSEst = (_REAL) 0.0;
 
+	/* Init history for delay values */
+	/* Duration of OFDM symbol */
+	const _REAL rTs = (CReal) (ReceiverParam.iFFTSizeN +
+		ReceiverParam.iGuardSize) / SOUNDCRD_SAMPLE_RATE;
+
+	iLenDelayHist = LEN_HIST_DELAY_LOG_FILE_S / rTs;
+	vecrDelayHist.Init(iLenDelayHist, (CReal) 0.0);
+
 
 	/* Inits for Wiener interpolation in frequency direction ---------------- */
 	/* Length of wiener filter */
@@ -750,6 +761,26 @@ _REAL CChannelEstimation::GetDelay() const
 {
 	/* Delay in ms */
 	return rLenPDSEst * iFFTSizeN / 
+		(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil * iScatPilFreqInt) * 1000;
+}
+
+_REAL CChannelEstimation::GetMinDelay()
+{
+	/* Lock because of vector "vecrDelayHist" access */
+	Lock();
+
+	/* Return minimum delay in history */
+	_REAL rMinDelay = vecrDelayHist[0];
+	for (int i = 0; i < iLenDelayHist; i++)
+	{
+		if (rMinDelay > vecrDelayHist[i])
+			rMinDelay = vecrDelayHist[i];
+	}
+
+	Unlock();
+
+	/* Return delay in ms */
+	return rMinDelay * iFFTSizeN / 
 		(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil * iScatPilFreqInt) * 1000;
 }
 

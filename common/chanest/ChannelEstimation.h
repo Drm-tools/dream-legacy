@@ -68,6 +68,13 @@
    periodicity of the angle() function */
 #define WRAP_AROUND_BOUND_GRP_DLY		((_REAL) 4.0)
 
+/* Set length of history for delay values for minimum search. Since the
+   delay estimation is optimized for channel estimation performance and
+   therefore the delay is usually estimated as too long, it is better for the
+   log file to use the minimum value in a certain time period for a good
+   estimate of the true delay */
+#define LEN_HIST_DELAY_LOG_FILE_S			((CReal) 1.0) /* sec */
+
 
 /* Classes ********************************************************************/
 class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>
@@ -108,6 +115,7 @@ public:
 	_BOOLEAN GetSNREstdB(_REAL& rSNREstRes) const;
 	_BOOLEAN GetSigma(_REAL& rSigma);
 	_REAL GetDelay() const;
+	_REAL GetMinDelay();
 
 	void StartSaRaOffAcq() {TimeSyncTrack.StartSaRaOffAcq(); SetInitFlag();}
 
@@ -166,7 +174,10 @@ protected:
 	_REAL					rSNRTotToPilCorrFact;
 	_REAL					rSNRSysToNomBWCorrFact;
 
-	_REAL					rLenPDSEst; /* Needed for GetDelay() */
+	/* Needed for GetDelay() */
+	_REAL					rLenPDSEst;
+	CShiftRegister<CReal>	vecrDelayHist;
+	int						iLenDelayHist;
 
 	int						iStartZeroPadding;
 
