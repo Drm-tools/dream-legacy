@@ -117,7 +117,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		for (i = 0; i < iInputBlockSize; i++)
 		{
 			cvecHilbert[i] *= cCurExp;
-			
+
 			/* Rotate exp-pointer on step further by complex multiplication with
 			   precalculated rotation vector cExpStep. This saves us from
 			   calling sin() and cos() functions all the time (iterative
@@ -127,15 +127,35 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Actual demodulation. Reuse temp buffer "rvecInpTmp" for output
 		   signal */
-		if (eDemodType == DT_AM)
+		switch (eDemodType)
 		{
+		case DT_AM:
 			/* Use envelope of signal and DC filter */
-			rvecInpTmp = Filter(rvecBAM, rvecAAM, Abs(cvecHilbert), rvecZAM);
-		}
-		else
-		{
+			rvecInpTmp = Filter(rvecBDC, rvecADC, Abs(cvecHilbert), rvecZAM);
+			break;
+
+		case DT_LSB:
+		case DT_USB:
 			/* Make signal real and compensate for removed spectrum part */
 			rvecInpTmp = Real(cvecHilbert) * (CReal) 2.0;
+			break;
+
+		case DT_FM:
+			/* Get phase of complex signal and apply differentiation */
+			for (i = 0; i < iInputBlockSize; i++)
+			{
+				/* Back-rotate new input sample by old value to get
+				   differentiation operation, get angle of complex signal and
+				   amplify result */
+				rvecInpTmp[i] = Angle(cvecHilbert[i] * Conj(cOldVal)) *
+					_MAXSHORT / ((CReal) 4.0 * crPi);
+
+				/* Store old value */
+				cOldVal = cvecHilbert[i];
+			}
+
+			/* Low-pass filter */
+			rvecInpTmp = Filter(rvecBFM, rvecAFM, rvecInpTmp, rvecZFM);
 		}
 
 
@@ -207,6 +227,9 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	   amplitude */
 	rAvAmplEst = DES_AV_AMPL_AM_SIGNAL / AM_AMPL_CORR_FACTOR;
 
+	/* Init old value needed for differentiation */
+	cOldVal = (CReal) 0.0;
+
 
 	/* Inits for Hilbert and DC filter -------------------------------------- */
 	/* Init state vector for filtering with zeros */
@@ -219,15 +242,32 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Only FIR filter */
 	rvecA.Init(1, (CReal) 1.0);
 
-	/* Init DC filter for AM demodulation */
+	/* Init DC filter */
 	/* IIR filter: H(Z) = (1 - z^{-1}) / (1 - 0.999 * z^{-1}) */
 	rvecZAM.Init(2, (CReal) 0.0); /* Memory */
-	rvecBAM.Init(2);
-	rvecAAM.Init(2);
-	rvecBAM[0] = (CReal) 1.0;
-	rvecBAM[1] = (CReal) -1.0;
-	rvecAAM[0] = (CReal) 1.0;
-	rvecAAM[1] = (CReal) -0.999;
+	rvecBDC.Init(2);
+	rvecADC.Init(2);
+	rvecBDC[0] = (CReal) 1.0;
+	rvecBDC[1] = (CReal) -1.0;
+	rvecADC[0] = (CReal) 1.0;
+	rvecADC[1] = (CReal) -0.999;
+
+	/* Init FM audio filter. This is a butterworth IIR filter with cut-off
+	   of 3 kHz. It was generated in Matlab with
+	   [b, a] = butter(4, 3000 / 24000); */
+	rvecZFM.Init(5, (CReal) 0.0); /* Memory */
+	rvecBFM.Init(5);
+	rvecAFM.Init(5);
+	rvecBFM[0] = (CReal) 0.00093349861295;
+	rvecBFM[1] = (CReal) 0.00373399445182;
+	rvecBFM[2] = (CReal) 0.00560099167773;
+	rvecBFM[3] = (CReal) 0.00373399445182;
+	rvecBFM[4] = (CReal) 0.00093349861295;
+	rvecAFM[0] = (CReal) 1.0;
+	rvecAFM[1] = (CReal) -2.97684433369673;
+	rvecAFM[2] = (CReal) 3.42230952937764;
+	rvecAFM[3] = (CReal) -1.78610660021804;
+	rvecAFM[4] = (CReal) 0.35557738234441;
 
 
 	/* Inits for acquisition ------------------------------------------------ */
@@ -302,7 +342,8 @@ void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 	switch (eDemodType)
 	{
 	case DT_AM:
-		/* No offset in normal AM mode */
+	case DT_FM:
+		/* No offset */
 		rFiltCentOffsNorm = rNormCurFreqOffset;
 		break;
 

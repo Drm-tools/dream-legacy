@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>704</width>
-            <height>423</height>
+            <width>745</width>
+            <height>414</height>
         </rect>
     </property>
     <property stdset="1">
@@ -300,6 +300,21 @@
                             <property>
                                 <name>buttonGroupId</name>
                                 <number>2</number>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QRadioButton</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>RadioButtonDemFM</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>FM</string>
+                            </property>
+                            <property>
+                                <name>buttonGroupId</name>
+                                <number>3</number>
                             </property>
                         </widget>
                     </hbox>

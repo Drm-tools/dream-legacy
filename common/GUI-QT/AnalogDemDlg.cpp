@@ -53,6 +53,7 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 	/* Set default settings -> AM: 10 kHz; SSB: 5 kHz; medium AGC */
 	iBwLSB = 5000; /* Hz */
 	iBwUSB = 5000; /* Hz */
+	iBwFM = 6000; /* Hz */
 	iBwAM = 10000; /* Hz */
 	DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
 	DRMReceiver.GetAMDemod()->SetFilterBW(iBwAM);
@@ -132,6 +133,11 @@ void AnalogDemDlg::UpdateControls()
 	case CAMDemodulation::DT_USB:
 		if (!RadioButtonDemUSB->isChecked())
 			RadioButtonDemUSB->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::DT_FM:
+		if (!RadioButtonDemFM->isChecked())
+			RadioButtonDemFM->setChecked(TRUE);
 		break;
 	}
 
@@ -230,6 +236,11 @@ void AnalogDemDlg::OnRadioDemodulation(int iID)
 		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_USB);
 		DRMReceiver.GetAMDemod()->SetFilterBW(iBwUSB);
 		break;
+
+	case 3:
+		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_FM);
+		DRMReceiver.GetAMDemod()->SetFilterBW(iBwFM);
+		break;
 	}
 
 	/* Update controls */
@@ -278,6 +289,10 @@ void AnalogDemDlg::OnSliderBWChange(int value)
 
 	case CAMDemodulation::DT_USB:
 		iBwUSB = value;
+		break;
+
+	case CAMDemodulation::DT_FM:
+		iBwFM = value;
 		break;
 	}
 

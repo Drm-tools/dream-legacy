@@ -73,6 +73,7 @@ protected:
 	int iBwAM;
 	int iBwLSB;
 	int iBwUSB;
+	int iBwFM;
 
 public slots:
 	void OnTimer();

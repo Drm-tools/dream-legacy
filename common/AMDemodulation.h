@@ -73,7 +73,7 @@ public:
 		eAGCType(AT_MEDIUM) {}
 	virtual ~CAMDemodulation() {}
 
-	enum EDemodType {DT_AM, DT_LSB, DT_USB};
+	enum EDemodType {DT_AM, DT_LSB, DT_USB, DT_FM};
 	enum EAGCType {AT_NO_AGC, AT_SLOW, AT_MEDIUM, AT_FAST};
 
 	void SetAcqFreq(const CReal rNewNormCenter);
@@ -108,8 +108,11 @@ protected:
 	CComplexVector				cvecHilbert;
 
 	CRealVector					rvecZAM;
-	CRealVector					rvecAAM;
-	CRealVector					rvecBAM;
+	CRealVector					rvecADC;
+	CRealVector					rvecBDC;
+	CRealVector					rvecZFM;
+	CRealVector					rvecAFM;
+	CRealVector					rvecBFM;
 
 	CComplex					cCurExp;
 	CComplex					cExpStep;
@@ -144,6 +147,8 @@ protected:
 
 	CReal						rAvAmplEst;
 	EAGCType					eAGCType;
+
+	CComplex					cOldVal;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
