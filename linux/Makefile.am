@@ -1,21 +1,5 @@
 bin_PROGRAMS = drm
 
-# these need to be generated before the rest can be compiled
-
-BUILT_SOURCES=moc/moc_MultColorLED.cpp \
-	moc/moc_DRMPlot.cpp \
-	moc/moc_fdrmdialog.cpp moc/moc_fdrmdialogbase.cpp moc/fdrmdialogbase.h moc/fdrmdialogbase.cpp \
-	moc/moc_TransmDlg.cpp moc/moc_TransmDlgbase.cpp moc/TransmDlgbase.h moc/TransmDlgbase.cpp \
-	moc/moc_systemevalDlg.cpp  moc/moc_systemevalDlgbase.cpp moc/systemevalDlgbase.h \
-	moc/systemevalDlgbase.cpp \
-	moc/moc_MultimediaDlg.cpp moc/moc_MultimediaDlgbase.cpp moc/MultimediaDlgbase.h moc/MultimediaDlgbase.cpp \
-	moc/moc_StationsDlg.cpp moc/moc_StationsDlgbase.cpp moc/StationsDlgbase.h moc/StationsDlgbase.cpp \
-	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
-	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp
-
-# and should be cleaned by make clean
-
-CLEANFILES=$(BUILT_SOURCES)
 
 drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/CRC.cpp \
@@ -65,15 +49,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/sync/TimeSync.cpp \
 	../common/sync/SyncUsingPil.cpp \
 	../common/sync/TimeSyncTrack.cpp \
-	../common/GUI-QT/DRMPlot.cpp \
-	../common/GUI-QT/fdrmdialog.cpp \
-	../common/GUI-QT/TransmDlg.cpp \
 	../common/GUI-QT/main.cpp \
-	../common/GUI-QT/MultColorLED.cpp \
-	../common/GUI-QT/systemevalDlg.cpp \
-	../common/GUI-QT/MultimediaDlg.cpp \
-	../common/GUI-QT/StationsDlg.cpp \
-	../common/GUI-QT/AnalogDemDlg.cpp \
 	source/sound.cpp \
 	../common/Buffer.h \
 	../common/CRC.h \
@@ -134,7 +110,19 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/tables/TableFAC.h \
 	../common/tables/TableMLC.h \
 	../common/tables/TableQAMMapping.h \
-	../common/GUI-QT/main.h \
+	source/sound.h \
+	../common/GUI-QT/main.h
+
+if USE_QT
+
+drm_SOURCES+=	../common/GUI-QT/DRMPlot.cpp \
+	../common/GUI-QT/fdrmdialog.cpp \
+	../common/GUI-QT/TransmDlg.cpp \
+	../common/GUI-QT/MultColorLED.cpp \
+	../common/GUI-QT/systemevalDlg.cpp \
+	../common/GUI-QT/MultimediaDlg.cpp \
+	../common/GUI-QT/StationsDlg.cpp \
+	../common/GUI-QT/AnalogDemDlg.cpp \
 	../common/GUI-QT/MultimediaDlg.h \
 	../common/GUI-QT/fdrmdialogbase.ui \
 	../common/GUI-QT/TransmDlgbase.ui \
@@ -149,16 +137,28 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/GUI-QT/systemevalDlg.h \
 	../common/GUI-QT/DRMPlot.h \
 	../common/GUI-QT/StationsDlg.h \
-	../common/GUI-QT/AnalogDemDlg.h \
-	source/sound.h
-	
+	../common/GUI-QT/AnalogDemDlg.h
+
+# these need to be generated before the rest can be compiled
+
+BUILT_SOURCES=moc/moc_MultColorLED.cpp \
+	moc/moc_DRMPlot.cpp \
+	moc/moc_fdrmdialog.cpp moc/moc_fdrmdialogbase.cpp moc/fdrmdialogbase.h moc/fdrmdialogbase.cpp \
+	moc/moc_TransmDlg.cpp moc/moc_TransmDlgbase.cpp moc/TransmDlgbase.h moc/TransmDlgbase.cpp \
+	moc/moc_systemevalDlg.cpp  moc/moc_systemevalDlgbase.cpp moc/systemevalDlgbase.h \
+	moc/systemevalDlgbase.cpp \
+	moc/moc_MultimediaDlg.cpp moc/moc_MultimediaDlgbase.cpp moc/MultimediaDlgbase.h moc/MultimediaDlgbase.cpp \
+	moc/moc_StationsDlg.cpp moc/moc_StationsDlgbase.cpp moc/StationsDlgbase.h moc/StationsDlgbase.cpp \
+	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
+	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp
+
+# and should be cleaned by make clean
+
+CLEANFILES=$(BUILT_SOURCES)
 nodist_drm_SOURCES=$(BUILT_SOURCES)
 
 dist-hook:
 	mkdir $(distdir)/moc
-
-drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -I$(QTDIR)/include -DQT_THREAD_SUPPORT -D_REENTRANT -g
-
 
 moc/moc_MultColorLED.cpp: ../common/GUI-QT/MultColorLED.h
 	$(MOC) ../common/GUI-QT/MultColorLED.h -o moc/moc_MultColorLED.cpp
@@ -253,3 +253,10 @@ moc/AnalogDemDlgbase.h: ../common/GUI-QT/AnalogDemDlgbase.ui
 
 moc/AnalogDemDlgbase.cpp: ../common/GUI-QT/AnalogDemDlgbase.ui moc/AnalogDemDlgbase.h
 	$(UIC) ../common/GUI-QT/AnalogDemDlgbase.ui -i moc/AnalogDemDlgbase.h -o moc/AnalogDemDlgbase.cpp	
+
+endif
+
+
+drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -I$(QTDIR)/include -DQT_THREAD_SUPPORT -D_REENTRANT -g
+
+
