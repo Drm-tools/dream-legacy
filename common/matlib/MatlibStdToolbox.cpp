@@ -127,6 +127,14 @@ CMatlibMatrix<CComplex> Inv(const CMatlibMatrix<CComplex>& matrI)
 				if ((Real(work[i][i]) != 0) || (Imag(work[i][i]) != 0))
 					break;
 
+// TEST
+if (row == iSize)
+{
+//				Error::abortRun("couldn't invert matrix, possibly singular.\n");
+	matrRet = Eye(iSize);
+	return matrRet;
+}
+
 			/* Swap rows */
 			for (col = 0; col < iSize; col++)
 			{
