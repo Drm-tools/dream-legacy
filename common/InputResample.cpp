@@ -32,8 +32,6 @@
 /* Implementation *************************************************************/
 void CInputResample::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	_REAL rSamRateOffset;
-
 	if (bSyncInput == TRUE)
 	{
 		/* Only copy input data to output buffer, do not resample data */
@@ -44,7 +42,7 @@ void CInputResample::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 	else
 	{
-		rSamRateOffset = ReceiverParam.rResampleOffset;
+		_REAL rSamRateOffset = ReceiverParam.rResampleOffset;
 
 		/* Constrain the sample rate offset estimation to prevent from an
 		   output buffer overrun */
@@ -55,7 +53,8 @@ void CInputResample::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Do actual resampling */
 		iOutputBlockSize = ResampleObj.Resample(pvecInputData, pvecOutputData,
-			(_REAL) 48000 / (48000 - rSamRateOffset));
+			(_REAL) SOUNDCRD_SAMPLE_RATE /
+			(SOUNDCRD_SAMPLE_RATE - rSamRateOffset));
 	}
 }
 
