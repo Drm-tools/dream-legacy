@@ -49,26 +49,25 @@ void CDRMSimulation::SimScript()
 	\**************************************************************************/
 	/* Choose which type of simulation, if you choose "ST_NONE", the regular
 	   application will be started */
-	Param.eSimType = CParameter::ST_MSECHANEST;
-	Param.eSimType = CParameter::ST_BER_IDEALCHAN;
 	Param.eSimType = CParameter::ST_BITERROR;
+	Param.eSimType = CParameter::ST_BER_IDEALCHAN;
+	Param.eSimType = CParameter::ST_MSECHANEST;
 	Param.eSimType = CParameter::ST_NONE;
 	
 	if (Param.eSimType != CParameter::ST_NONE)
 	{
-		Param.iDRMChannelNo = 2;
+		Param.iDRMChannelNo = 5;
 
-		rStartSNR = (_REAL) 12.0;
-		rEndSNR = (_REAL) 16.5;
-		rStepSNR = (_REAL) 0.3;
-		strSpecialRemark = "blunaNM";
+		rStartSNR = (_REAL) 20.0;
+		rEndSNR = (_REAL) 20.0;
+		rStepSNR = (_REAL) 0.5;
+		strSpecialRemark = "wienertest";
 
 		/* Length of simulation */
-//		iSimTime = 10;
-		iSimNumErrors = 200000;
+		iSimTime = 200;
+//		iSimNumErrors = 1000000;
 
-		
-		
+
 		if (Param.iDRMChannelNo < 3)
 		{
 			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_A, SO_2);
@@ -98,7 +97,7 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		   need correctly initialized modules */
 		Init();
 
-		MSCMLCDecoder.SetNoIterations(1);
+		MSCMLCDecoder.SetNumIterations(1);
 
 		/* Define which synchronization algorithms we want to use */
 		/* In case of bit error simulations, a synchronized DRM data stream is
@@ -128,7 +127,7 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 			GenSimData.SetSimTime(iSimTime, 
 				SimFileName(Param, strSpecialRemark));
 		else
-			GenSimData.SetNoErrors(iSimNumErrors, 
+			GenSimData.SetNumErrors(iSimNumErrors, 
 				SimFileName(Param, strSpecialRemark));
 
 		if (Param.eSimType == CParameter::ST_MSECHANEST)
@@ -191,7 +190,7 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf)
 	   B3: Robustness mode and spectrum occupancy
 	   Ch5: Which channel was used
 
-	   10k: Value set by "SetNoErrors()"
+	   10k: Value set by "SetNumErrors()"
 
 	   example: BER_B3_Ch5_10k_NoSync */
 	string strFileName = "";
@@ -257,7 +256,7 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf)
 
 	/* Number of error events */
 	char chNumTmpLong[10];
-	sprintf(chNumTmpLong, "%d", GenSimData.GetNoErrors() / 1000);
+	sprintf(chNumTmpLong, "%d", GenSimData.GetNumErrors() / 1000);
 	strFileName += chNumTmpLong;
 	strFileName += "k";
 

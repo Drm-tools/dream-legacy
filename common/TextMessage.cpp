@@ -42,7 +42,7 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 	   store total new buffer in internal intermediate buffer. This buffer is
 	   read, when a beginning was found */
 	bBeginningFound = TRUE;
-	for (i = 0; i < NO_BY_PER_PIECE; i++)
+	for (i = 0; i < NUM_BY_PER_PIECE; i++)
 	{
 		if (pData.Separate(SIZEOF__BYTE) != 0xFF)
 			bBeginningFound = FALSE;
@@ -95,7 +95,7 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 				/* First, check if segment was already OK and if new data has
 				   the same content or not. If the content is different, a new
 				   message is being send, clear all other segments */
-				if (Segment[bySegmentNo].bIsOK == TRUE)
+				if (Segment[bySegmentID].bIsOK == TRUE)
 				{
 					/* Reset bit access and skip header bits to go directly to 
 					the body bytes */
@@ -105,7 +105,7 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 					_BOOLEAN bIsSame = TRUE;
 					for (i = 0; i < byLengthBody; i++)
 					{
-						if (Segment[bySegmentNo].byData[i] != 
+						if (Segment[bySegmentID].byData[i] != 
 							biStreamBuffer.Separate(SIZEOF__BYTE))
 						{
 							bIsSame = FALSE;
@@ -128,16 +128,16 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 
 				/* Get all body bytes */
 				for (i = 0; i < byLengthBody; i++)
-					Segment[bySegmentNo].byData[i] = 
+					Segment[bySegmentID].byData[i] = 
 						biStreamBuffer.Separate(SIZEOF__BYTE);
 
 				/* Set length of this segment and OK flag */
-				Segment[bySegmentNo].iNoBytes = byLengthBody;
-				Segment[bySegmentNo].bIsOK = TRUE;
+				Segment[bySegmentID].iNoBytes = byLengthBody;
+				Segment[bySegmentID].bIsOK = TRUE;
 
 				/* Check length of text message */
 				if (biLastFlag == 1)
-					iNoSegments = bySegmentNo;
+					iNoSegments = bySegmentID;
 
 				/* Set text to display */
 				SetText();
@@ -149,10 +149,10 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 	}
 	else
 	{
-		for (i = 0; i < NO_BY_PER_PIECE; i++)
+		for (i = 0; i < NUM_BY_PER_PIECE; i++)
 		{
 			/* Check, if number of bytes is not too big */
-			if (iBitCount < TOT_NO_BITS_PER_PIECE)
+			if (iBitCount < TOT_NUM_BITS_PER_PIECE)
 			{
 				for (j = 0; j < SIZEOF__BYTE; j++)
 					biStreamBuffer[iBitCount + j] = pData[i * SIZEOF__BYTE + j];
@@ -202,10 +202,10 @@ void CTextMessage::ReadHeader()
 
 		/* SegNum: specify the sequence number of the current segment 
 		   minus 1. The value 0 is reserved for future use */
-		bySegmentNo = (_BYTE) biStreamBuffer.Separate(3);
+		bySegmentID = (_BYTE) biStreamBuffer.Separate(3);
 
 		if (biFirstFlag == 1)
-			bySegmentNo = 0;
+			bySegmentID = 0;
 	}
 
 	/* Rfa */
@@ -226,7 +226,7 @@ void CTextMessage::Init(string* pstrNewPText)
 	iNoSegments = 0;
 
 	/* Init and reset stream buffer */
-	biStreamBuffer.Init(TOT_NO_BITS_PER_PIECE, 0);
+	biStreamBuffer.Init(TOT_NUM_BITS_PER_PIECE, 0);
 }
 
 void CTextMessage::SetText()
@@ -261,7 +261,7 @@ void CTextMessage::SetText()
 			(*pstrText).append("<center>", 8);
 #endif
 
-			for (i = 0; i < MAX_NO_SEG_TEXT_MESSAGE; i++)
+			for (i = 0; i < MAX_NUM_SEG_TEXT_MESSAGE; i++)
 			{
 				if (Segment[i].bIsOK == TRUE)
 				{
@@ -334,6 +334,6 @@ void CTextMessage::ClearText()
 
 void CTextMessage::ResetSegments()
 {
-	for (int i = 0; i < MAX_NO_SEG_TEXT_MESSAGE; i++)
+	for (int i = 0; i < MAX_NUM_SEG_TEXT_MESSAGE; i++)
 		Segment[i].bIsOK = FALSE;
 }

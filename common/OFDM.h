@@ -93,7 +93,7 @@ protected:
 	int						iShiftedKmax;
 	int						iDFTSize;
 	int						iGuardSize;
-	int						iNoCarrier;
+	int						iNumCarrier;
 
 	_COMPLEX				cCurExp;
 
@@ -129,10 +129,10 @@ protected:
 	int						iShiftedKmax;
 	int						iDFTSize;
 	int						iGuardSize;
-	int						iNoCarrier;
+	int						iNumCarrier;
 	int						iSymbolBlockSize;
 	int						iSymbolCounterTiSy;
-	int						iNoSymPerFrame;
+	int						iNumSymPerFrame;
 
 	int						iNumTapsChan;
 

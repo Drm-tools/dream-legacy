@@ -34,7 +34,7 @@
 
 /* Definitions ****************************************************************/
 /* Default number of iterations at application startup */
-#define MC_NO_ITERATIONS			1
+#define MC_NUM_ITERATIONS			1
 
 /* Generator polynomials used for channel coding (octal form, defined by 
    a leading "0"!). We must bit-reverse the octal-forms given in the standard 
@@ -59,7 +59,7 @@ const _BYTE byGeneratorMatrix[MC_NO_OUTPUT_BITS_PER_STEP] = {
 #define MC_NO_OUTPUT_COMBINATIONS	(1 << MC_NO_OUTPUT_BITS_PER_STEP)
 
 /* Maximum number of levels (Its in case of HMmix) */
-#define MC_MAX_NO_LEVELS			6
+#define MC_MAX_NUM_LEVELS			6
 
 /* Puncturing --------------------------------------------------------------- */
 /* {a, b, c}: a = No of groups, b = No of "1"s, c = Patterns */
@@ -429,11 +429,11 @@ const int iCodRateCombFDC4SM = {
    [0]: t_0 = 13;
    [1]: t_0 = 21;
    "-1": no interleaver in this level */
-const int iInterlSequ4SM[MC_MAX_NO_LEVELS] =     { 1, -1, -1, -1, -1, -1};
-const int iInterlSequ16SM[MC_MAX_NO_LEVELS] =    { 0,  1, -1, -1, -1, -1};
-const int iInterlSequ64SM[MC_MAX_NO_LEVELS] =    {-1,  0,  1, -1, -1, -1};
-const int iInterlSequ64HMsym[MC_MAX_NO_LEVELS] = {-1,  0,  1, -1, -1, -1};
-const int iInterlSequ64HMmix[MC_MAX_NO_LEVELS] = {-1, -1,  0,  0,  1,  1};
+const int iInterlSequ4SM[MC_MAX_NUM_LEVELS] =     { 1, -1, -1, -1, -1, -1};
+const int iInterlSequ16SM[MC_MAX_NUM_LEVELS] =    { 0,  1, -1, -1, -1, -1};
+const int iInterlSequ64SM[MC_MAX_NUM_LEVELS] =    {-1,  0,  1, -1, -1, -1};
+const int iInterlSequ64HMsym[MC_MAX_NUM_LEVELS] = {-1,  0,  1, -1, -1, -1};
+const int iInterlSequ64HMmix[MC_MAX_NUM_LEVELS] = {-1, -1,  0,  0,  1,  1};
 
 
 #endif // !defined(_TABLE_MLC_H__3B0_CA63_4344_BB2B_23E7912__INCLUDED_)

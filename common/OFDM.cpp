@@ -73,7 +73,7 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 	veccFFTOutput.Init(iDFTSize);
 
 	/* Define block-sizes for input and output */
-	iInputBlockSize = TransmParam.iNoCarrier;
+	iInputBlockSize = TransmParam.iNumCarrier;
 	iOutputBlockSize = TransmParam.iSymbolBlockSize;
 }
 
@@ -84,7 +84,7 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int			i;
-	int			iNoAve;
+	int			iNumAve;
 	_REAL		rNormCurFreqOffset;
 	_REAL		rSkipGuardIntPhase;
 	_REAL		rCurPower;
@@ -131,20 +131,20 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* SNR estimation. Use virtual carriers at the edges of the spectrum ---- */
 	/* Power of useful part plus noise */
 	rUsNoPower = (_REAL) 0.0;
-	iNoAve = 0;
-	for (i = 0; i < iNoCarrier; i++)
+	iNumAve = 0;
+	for (i = 0; i < iNumCarrier; i++)
 	{
 		/* Use all carriers except of DC carriers */
 		if (!_IsDC(ReceiverParam.matiMapTab[0][i]))
 		{
 			rUsNoPower += SqMag((*pvecOutputData)[i]);
 
-			iNoAve++;
+			iNumAve++;
 		}
 	}
 
 	/* Normalize and average result */
-	IIR1(rUsefPowAv, rUsNoPower / iNoAve, rLamSNREst);
+	IIR1(rUsefPowAv, rUsNoPower / iNumAve, rLamSNREst);
 
 	/* Estimate power of noise */
 	/* First, check if virtual carriers are in range */
@@ -184,7 +184,7 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 {
 	iDFTSize = ReceiverParam.iFFTSizeN;
 	iGuardSize = ReceiverParam.iGuardSize;
-	iNoCarrier = ReceiverParam.iNoCarrier;
+	iNumCarrier = ReceiverParam.iNumCarrier;
 	iShiftedKmin = ReceiverParam.iShiftedKmin;
 	iShiftedKmax = ReceiverParam.iShiftedKmax;
 
@@ -219,7 +219,7 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iDFTSize;
-	iOutputBlockSize = iNoCarrier;
+	iOutputBlockSize = iNumCarrier;
 }
 
 void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
@@ -290,7 +290,7 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
 			veccFFTOutput[i] / (CReal) iDFTSize;
 
 	/* We need the same information for channel estimation evaluation, too */
-	for (i = 0; i < iNoCarrier; i++)
+	for (i = 0; i < iNumCarrier; i++)
 		(*pvecOutputData)[i] = (*pvecOutputData2)[i].tOut;
 
 
@@ -344,12 +344,12 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
 		veccFFTOutput = Fft(veccFFTInput, FftPlan);
 
 		/* Use only useful carriers and normalize with the block-size ("N") */
-		for (i = 0; i < iNoCarrier; i++)
+		for (i = 0; i < iNumCarrier; i++)
 			(*pvecOutputData2)[i].veccTap[j] =
 				veccFFTOutput[i] / (CReal) iDFTSize;
 
 		/* Store the end of the vector, too */
-		for (i = 0; i < iNoCarrier; i++)
+		for (i = 0; i < iNumCarrier; i++)
 			(*pvecOutputData2)[i].veccTapBackw[j] =
 				veccFFTOutput[iDFTSize - i - 1] / (CReal) iDFTSize;
 	}
@@ -357,12 +357,12 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Take care of symbol IDs ---------------------------------------------- */
 	iSymbolCounterTiSy++;
-	if (iSymbolCounterTiSy == iNoSymPerFrame)
+	if (iSymbolCounterTiSy == iNumSymPerFrame)
 		iSymbolCounterTiSy = 0;
 
-	/* Set current symbol number in extended data of output vector */
-	(*pvecOutputData).GetExData().iSymbolNo = iSymbolCounterTiSy;
-	(*pvecOutputData2).GetExData().iSymbolNo = iSymbolCounterTiSy;
+	/* Set current symbol ID in extended data of output vector */
+	(*pvecOutputData).GetExData().iSymbolID = iSymbolCounterTiSy;
+	(*pvecOutputData2).GetExData().iSymbolID = iSymbolCounterTiSy;
 
 	/* No timing corrections, timing is constant in this case */
 	(*pvecOutputData).GetExData().iCurTimeCorr = 0;
@@ -374,11 +374,11 @@ void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 	/* Set internal parameters */
 	iDFTSize = ReceiverParam.iFFTSizeN;
 	iGuardSize = ReceiverParam.iGuardSize;
-	iNoCarrier = ReceiverParam.iNoCarrier;
+	iNumCarrier = ReceiverParam.iNumCarrier;
 	iShiftedKmin = ReceiverParam.iShiftedKmin;
 	iShiftedKmax = ReceiverParam.iShiftedKmax;
 	iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
-	iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
+	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
 
 	iNumTapsChan = ReceiverParam.iNumTaps;
 
@@ -392,7 +392,7 @@ void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 
 	/* Init internal counter for symbol number. Set it to this value to get
 	   a "0" for the first time */
-	iSymbolCounterTiSy = iNoSymPerFrame - 1;
+	iSymbolCounterTiSy = iNumSymPerFrame - 1;
 
 	/* Set guard-interval removal start index. Adapt this parameter to the
 	   channel which was chosen. Place the delay spread centered in the
@@ -409,10 +409,10 @@ void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iSymbolBlockSize;
-	iOutputBlockSize = iNoCarrier;
-	iOutputBlockSize2 = iNoCarrier;
+	iOutputBlockSize = iNumCarrier;
+	iOutputBlockSize2 = iNumCarrier;
 
 	/* We need to store as many symbols in output buffer as long the channel
 	   estimation delay is */
-	iMaxOutputBlockSize2 = iNoCarrier * ReceiverParam.iChanEstDelay;
+	iMaxOutputBlockSize2 = iNumCarrier * ReceiverParam.iChanEstDelay;
 }

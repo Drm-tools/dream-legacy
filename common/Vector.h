@@ -99,8 +99,8 @@ public:
 
 
 	/* Bit operation functions */
-	void Enqueue(_UINT32BIT iInformation, const int iNoOfBits);
-	_UINT32BIT Separate(const int iNoOfBits);
+	void Enqueue(_UINT32BIT iInformation, const int iNumOfBits);
+	_UINT32BIT Separate(const int iNumOfBits);
 	void ResetBitAccess() {iBitArrayCounter = 0;}
 
 protected:
@@ -150,33 +150,33 @@ template<class TData> void CVector<TData>::Reset(const TData tResetVal)
 }
 
 template<class TData> void CVector<TData>::Enqueue(_UINT32BIT iInformation,
-												   const int iNoOfBits)
+												   const int iNumOfBits)
 {
 	/* Enqueue bits in bit array */
-	for (int i = 0; i < iNoOfBits; i++)
+	for (int i = 0; i < iNumOfBits; i++)
 	{
 		/* We want to put the bits on the array with the MSB first */
-		pData[iBitArrayCounter + iNoOfBits - i - 1] = iInformation & 1;
+		pData[iBitArrayCounter + iNumOfBits - i - 1] = iInformation & 1;
 
 		/* Shift one bit to mask next bit at LSB-position */
 		iInformation >>= 1;
 	}
 
-	iBitArrayCounter += iNoOfBits;
+	iBitArrayCounter += iNumOfBits;
 }
 
-template<class TData> _UINT32BIT CVector<TData>::Separate(const int iNoOfBits)
+template<class TData> _UINT32BIT CVector<TData>::Separate(const int iNumOfBits)
 {
 	_UINT32BIT	iInformation;
 
 	/* Check, if current position plus new bit-size is smaller than the maximum
 	   length of the bit vector. Error code: return a "0" */
-	if (iBitArrayCounter + iNoOfBits > iVectorSize)
+	if (iBitArrayCounter + iNumOfBits > iVectorSize)
 		return 0;
 
 	/* Separate out bits from bit-array */
 	iInformation = 0;
-	for (int i = 0; i < iNoOfBits; i++)
+	for (int i = 0; i < iNumOfBits; i++)
 	{
 		/* MSB comes first, therefore shift left */
 		iInformation <<= 1;
@@ -184,7 +184,7 @@ template<class TData> _UINT32BIT CVector<TData>::Separate(const int iNoOfBits)
 		iInformation |= pData[iBitArrayCounter + i] & 1;
 	}
 
-	iBitArrayCounter += iNoOfBits;
+	iBitArrayCounter += iNumOfBits;
 
 	return iInformation;
 }
@@ -250,9 +250,9 @@ template<class TData> void CShiftRegister<TData>::AddEnd(CVector<TData>& vectNew
 class CExtendedVecData
 {
 public:
-	/* Symbol number of the current block. This number only identyfies the
+	/* Symbol ID of the current block. This number only identyfies the
 	   position in a frame, NOT in a super-frame */
-	int iSymbolNo;
+	int iSymbolID;
 
 	/* The channel estimation needs information about timing corrections, 
 	   because it is using information from the symbol memory */

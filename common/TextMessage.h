@@ -38,13 +38,13 @@
 /* The text message may comprise up to 8 segments ... The body shall contain
    16 bytes of character data ... 
    We add "+ 1" since the entry "0" is not used */
-#define MAX_NO_SEG_TEXT_MESSAGE			(8 + 1)
+#define MAX_NUM_SEG_TEXT_MESSAGE		(8 + 1)
 #define BYTES_PER_SEG_TEXT_MESS			16
 
 /* Four pieces of data per MSC frame */
-#define NO_BY_PER_PIECE					4
+#define NUM_BY_PER_PIECE				4
 
-#define TOT_NO_BITS_PER_PIECE			((BYTES_PER_SEG_TEXT_MESS /* Max body */ + 2 /* Header */ + 2 /* CRC */) * SIZEOF__BYTE)
+#define TOT_NUM_BITS_PER_PIECE			((BYTES_PER_SEG_TEXT_MESS /* Max body */ + 2 /* Header */ + 2 /* CRC */) * SIZEOF__BYTE)
 
 
 /* Classes ********************************************************************/
@@ -82,7 +82,7 @@ protected:
 	_BINARY				biFirstFlag;
 	_BINARY				biLastFlag;
 	_BYTE				byCommand;
-	_BYTE				bySegmentNo;
+	_BYTE				bySegmentID;
 	_BINARY				biToggleBit;
 	_BYTE				byLengthBody;
 	int					iBitCount;
@@ -90,7 +90,7 @@ protected:
 
 	_BINARY				biOldToggleBit;
 
-	CTextMessSegment	Segment[MAX_NO_SEG_TEXT_MESSAGE];
+	CTextMessSegment	Segment[MAX_NUM_SEG_TEXT_MESSAGE];
 
 	CCRC				CRCObject;
 };
