@@ -48,20 +48,14 @@
    in that case we would force an overrun! */
 #define MC_METRIC_INIT_VALUE		((_VITMETRTYPE) 1e10)
 
-/* Decoding depth is MC_CONSTRAINT_LENGTH - 1 because we use the bits which
-   are falling out of the shift register in the viterby algorithm. Be
-   aware that the decoding depth must be shorter than "_UINT64BIT" has bits! */
-#define MC_DECODING_DEPTH			(9 * MC_CONSTRAINT_LENGTH)
-
 
 /* Classes ********************************************************************/
 class CTrellisData
 {
 public:
-	CTrellisData() : rMetric((_VITMETRTYPE) 0.0), lDecodedBits(0) {}
+	CTrellisData() : rMetric((_VITMETRTYPE) 0.0) {}
 
 	_VITMETRTYPE	rMetric;
-	_UINT64BIT		lDecodedBits;
 };
 
 class CViterbiDecoder : public CChannelCode
@@ -89,8 +83,7 @@ protected:
 	int						iNumOutBits;
 	int						iNumOutBitsWithMemory;
 
-	int						iTotalDecDepth;
-	_UINT64BIT				lOutBitMask;
+	CMatrix<_BINARY>		matbiDecisions;
 };
 
 

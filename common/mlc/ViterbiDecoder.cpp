@@ -36,6 +36,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	int				i, j, k;
 	int				iDistCnt;
 	int				iMinMetricIndex;
+	int				iCurDecState;
 	_VITMETRTYPE	rAccMetricPrev0;
 	_VITMETRTYPE	rAccMetricPrev1;
 	_VITMETRTYPE	rMinMetric;
@@ -179,139 +180,112 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 		}
 
 
-		/* ------------------------------------------------------------------ */
 		/* Update trellis --------------------------------------------------- */
-		/* ------------------------------------------------------------------ */
 		/* Init minium metric with large value */
 		rMinMetric = MC_METRIC_INIT_VALUE;
 		iMinMetricIndex = 0;
 
-#define BUTTERFLY( cur, prev0, prev1, met0, met1 ) \
+#define BUTTERFLY(cur, prev0, prev1, met0, met1) \
 		{ \
 			/* Calculate metrics from the two previous states, use the old
 			   metric from the previous states plus the "transition-metric" */ \
 			/* "0" */ \
 			rAccMetricPrev0 = \
-				pOldTrelData[ prev0 ].rMetric + \
-				vecrMetricSet[ met0 ]; \
+				pOldTrelData[prev0].rMetric + \
+				vecrMetricSet[met0]; \
 			\
 			/* "1" */ \
 			rAccMetricPrev1 = \
-				pOldTrelData[ prev1 ].rMetric + \
-				vecrMetricSet[ met1 ]; \
+				pOldTrelData[prev1].rMetric + \
+				vecrMetricSet[met1]; \
 			\
-			/* Take path with smallest metric ----------------------------- */ \
+			/* Take path with smallest metric */ \
 			if (rAccMetricPrev0 < rAccMetricPrev1) \
 			{ \
 				/* Save minimum metric for this state */ \
-				pCurTrelData[ cur ].rMetric = rAccMetricPrev0; \
+				pCurTrelData[cur].rMetric = rAccMetricPrev0; \
 				\
-				/* Save decoded bits from surviving path and shift lDecodedBits
-				   vector (<< 1) since we want to add a new bit, in this case a
-				   "0", but we dont need to add this, it is already there */ \
-				pCurTrelData[ cur ].lDecodedBits = \
-					pOldTrelData[ prev0 ].lDecodedBits << 1; \
+				/* Store decision */ \
+				matbiDecisions[i][cur] = 0; \
+				\
 			} \
 			else \
 			{ \
 				/* Save minimum metric for this state */ \
-				pCurTrelData[ cur ].rMetric = rAccMetricPrev1; \
+				pCurTrelData[cur].rMetric = rAccMetricPrev1; \
 				\
-				/* Save decoded bits from surviving path and shift lDecodedBits
-				   vector (<< 1) since we want to add a new bit. Then write
-				   resulting "1" in lDecodedBits-vector (with | 1) */ \
-				pCurTrelData[ cur ].lDecodedBits = \
-					( pOldTrelData[ prev1 ].lDecodedBits << 1) | 1; \
-			} \
-			\
-			/* Get minimum metric and index ------------------------------- */ \
-			if (pCurTrelData[ cur ].rMetric < rMinMetric) \
-			{ \
-				rMinMetric = pCurTrelData[ cur ].rMetric; \
-				iMinMetricIndex = cur; \
+				/* Store decision */ \
+				matbiDecisions[i][cur] = 1; \
+				\
 			} \
 		}
 
-		BUTTERFLY( 0, 0, 32, 0, 15 )
-		BUTTERFLY( 1, 0, 32, 15, 0 )
-		BUTTERFLY( 2, 1, 33, 6, 9 )
-		BUTTERFLY( 3, 1, 33, 9, 6 )
-		BUTTERFLY( 4, 2, 34, 11, 4 )
-		BUTTERFLY( 5, 2, 34, 4, 11 )
-		BUTTERFLY( 6, 3, 35, 13, 2 )
-		BUTTERFLY( 7, 3, 35, 2, 13 )
-		BUTTERFLY( 8, 4, 36, 11, 4 )
-		BUTTERFLY( 9, 4, 36, 4, 11 )
-		BUTTERFLY( 10, 5, 37, 13, 2 )
-		BUTTERFLY( 11, 5, 37, 2, 13 )
-		BUTTERFLY( 12, 6, 38, 0, 15 )
-		BUTTERFLY( 13, 6, 38, 15, 0 )
-		BUTTERFLY( 14, 7, 39, 6, 9 )
-		BUTTERFLY( 15, 7, 39, 9, 6 )
-		BUTTERFLY( 16, 8, 40, 4, 11 )
-		BUTTERFLY( 17, 8, 40, 11, 4 )
-		BUTTERFLY( 18, 9, 41, 2, 13 )
-		BUTTERFLY( 19, 9, 41, 13, 2 )
-		BUTTERFLY( 20, 10, 42, 15, 0 )
-		BUTTERFLY( 21, 10, 42, 0, 15 )
-		BUTTERFLY( 22, 11, 43, 9, 6 )
-		BUTTERFLY( 23, 11, 43, 6, 9 )
-		BUTTERFLY( 24, 12, 44, 15, 0 )
-		BUTTERFLY( 25, 12, 44, 0, 15 )
-		BUTTERFLY( 26, 13, 45, 9, 6 )
-		BUTTERFLY( 27, 13, 45, 6, 9 )
-		BUTTERFLY( 28, 14, 46, 4, 11 )
-		BUTTERFLY( 29, 14, 46, 11, 4 )
-		BUTTERFLY( 30, 15, 47, 2, 13 )
-		BUTTERFLY( 31, 15, 47, 13, 2 )
-		BUTTERFLY( 32, 16, 48, 9, 6 )
-		BUTTERFLY( 33, 16, 48, 6, 9 )
-		BUTTERFLY( 34, 17, 49, 15, 0 )
-		BUTTERFLY( 35, 17, 49, 0, 15 )
-		BUTTERFLY( 36, 18, 50, 2, 13 )
-		BUTTERFLY( 37, 18, 50, 13, 2 )
-		BUTTERFLY( 38, 19, 51, 4, 11 )
-		BUTTERFLY( 39, 19, 51, 11, 4 )
-		BUTTERFLY( 40, 20, 52, 2, 13 )
-		BUTTERFLY( 41, 20, 52, 13, 2 )
-		BUTTERFLY( 42, 21, 53, 4, 11 )
-		BUTTERFLY( 43, 21, 53, 11, 4 )
-		BUTTERFLY( 44, 22, 54, 9, 6 )
-		BUTTERFLY( 45, 22, 54, 6, 9 )
-		BUTTERFLY( 46, 23, 55, 15, 0 )
-		BUTTERFLY( 47, 23, 55, 0, 15 )
-		BUTTERFLY( 48, 24, 56, 13, 2 )
-		BUTTERFLY( 49, 24, 56, 2, 13 )
-		BUTTERFLY( 50, 25, 57, 11, 4 )
-		BUTTERFLY( 51, 25, 57, 4, 11 )
-		BUTTERFLY( 52, 26, 58, 6, 9 )
-		BUTTERFLY( 53, 26, 58, 9, 6 )
-		BUTTERFLY( 54, 27, 59, 0, 15 )
-		BUTTERFLY( 55, 27, 59, 15, 0 )
-		BUTTERFLY( 56, 28, 60, 6, 9 )
-		BUTTERFLY( 57, 28, 60, 9, 6 )
-		BUTTERFLY( 58, 29, 61, 0, 15 )
-		BUTTERFLY( 59, 29, 61, 15, 0 )
-		BUTTERFLY( 60, 30, 62, 13, 2 )
-		BUTTERFLY( 61, 30, 62, 2, 13 )
-		BUTTERFLY( 62, 31, 63, 11, 4 )
-		BUTTERFLY( 63, 31, 63, 4, 11 )
+		BUTTERFLY(0, 0, 32, 0, 15)
+		BUTTERFLY(1, 0, 32, 15, 0)
+		BUTTERFLY(2, 1, 33, 6, 9)
+		BUTTERFLY(3, 1, 33, 9, 6)
+		BUTTERFLY(4, 2, 34, 11, 4)
+		BUTTERFLY(5, 2, 34, 4, 11)
+		BUTTERFLY(6, 3, 35, 13, 2)
+		BUTTERFLY(7, 3, 35, 2, 13)
+		BUTTERFLY(8, 4, 36, 11, 4)
+		BUTTERFLY(9, 4, 36, 4, 11)
+		BUTTERFLY(10, 5, 37, 13, 2)
+		BUTTERFLY(11, 5, 37, 2, 13)
+		BUTTERFLY(12, 6, 38, 0, 15)
+		BUTTERFLY(13, 6, 38, 15, 0)
+		BUTTERFLY(14, 7, 39, 6, 9)
+		BUTTERFLY(15, 7, 39, 9, 6)
+		BUTTERFLY(16, 8, 40, 4, 11)
+		BUTTERFLY(17, 8, 40, 11, 4)
+		BUTTERFLY(18, 9, 41, 2, 13)
+		BUTTERFLY(19, 9, 41, 13, 2)
+		BUTTERFLY(20, 10, 42, 15, 0)
+		BUTTERFLY(21, 10, 42, 0, 15)
+		BUTTERFLY(22, 11, 43, 9, 6)
+		BUTTERFLY(23, 11, 43, 6, 9)
+		BUTTERFLY(24, 12, 44, 15, 0)
+		BUTTERFLY(25, 12, 44, 0, 15)
+		BUTTERFLY(26, 13, 45, 9, 6)
+		BUTTERFLY(27, 13, 45, 6, 9)
+		BUTTERFLY(28, 14, 46, 4, 11)
+		BUTTERFLY(29, 14, 46, 11, 4)
+		BUTTERFLY(30, 15, 47, 2, 13)
+		BUTTERFLY(31, 15, 47, 13, 2)
+		BUTTERFLY(32, 16, 48, 9, 6)
+		BUTTERFLY(33, 16, 48, 6, 9)
+		BUTTERFLY(34, 17, 49, 15, 0)
+		BUTTERFLY(35, 17, 49, 0, 15)
+		BUTTERFLY(36, 18, 50, 2, 13)
+		BUTTERFLY(37, 18, 50, 13, 2)
+		BUTTERFLY(38, 19, 51, 4, 11)
+		BUTTERFLY(39, 19, 51, 11, 4)
+		BUTTERFLY(40, 20, 52, 2, 13)
+		BUTTERFLY(41, 20, 52, 13, 2)
+		BUTTERFLY(42, 21, 53, 4, 11)
+		BUTTERFLY(43, 21, 53, 11, 4)
+		BUTTERFLY(44, 22, 54, 9, 6)
+		BUTTERFLY(45, 22, 54, 6, 9)
+		BUTTERFLY(46, 23, 55, 15, 0)
+		BUTTERFLY(47, 23, 55, 0, 15)
+		BUTTERFLY(48, 24, 56, 13, 2)
+		BUTTERFLY(49, 24, 56, 2, 13)
+		BUTTERFLY(50, 25, 57, 11, 4)
+		BUTTERFLY(51, 25, 57, 4, 11)
+		BUTTERFLY(52, 26, 58, 6, 9)
+		BUTTERFLY(53, 26, 58, 9, 6)
+		BUTTERFLY(54, 27, 59, 0, 15)
+		BUTTERFLY(55, 27, 59, 15, 0)
+		BUTTERFLY(56, 28, 60, 6, 9)
+		BUTTERFLY(57, 28, 60, 9, 6)
+		BUTTERFLY(58, 29, 61, 0, 15)
+		BUTTERFLY(59, 29, 61, 15, 0)
+		BUTTERFLY(60, 30, 62, 13, 2)
+		BUTTERFLY(61, 30, 62, 2, 13)
+		BUTTERFLY(62, 31, 63, 11, 4)
+		BUTTERFLY(63, 31, 63, 4, 11)
 
 #undef BUTTERFLY
-
-		/* Save decoded bit, but not before tailbits are used. Mask bit at
-		   the defined position in "lDecodedBits" by "MC_DECODING_DEPTH" */
-		if (i >= iTotalDecDepth)
-		{
-			/* Mask bit */
-			if ((pCurTrelData[iMinMetricIndex].lDecodedBits &
-				lOutBitMask) > 0)
-			{
-				vecbiOutputBits[i - iTotalDecDepth] = TRUE;
-			}
-			else
-				vecbiOutputBits[i - iTotalDecDepth] = FALSE;
-		}
 
 		/* Swap trellis data pointers (old -> new, new -> old) */
 		CTrellisData* pTMPTrelData = pCurTrelData;
@@ -319,18 +293,24 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 		pOldTrelData = pTMPTrelData;
 	}
 
-	/* Save last "MC_DECODING_DEPTH" bits. We use trellis state "0", because we
-	   KNOW that this is our last state (shift registers in the coder are filled
-	   with zeros at the end) */
-	for (i = 0; i < MC_DECODING_DEPTH; i++)
+
+	/* Chainback the decoded bits from trellis ------------------------------ */
+	/* The end-state is defined by the DRM standard as all-zeros (shift register
+	   in the encoder is padded with zeros at the end */
+	iCurDecState = 0;
+
+	for (i = 0; i < iNumOutBits; i++)
 	{
-		if ((pOldTrelData[0].lDecodedBits &
-			(_UINT64BIT(1) << MC_DECODING_DEPTH - i - 1)) /* Mask bit */ > 0)
-		{
-			vecbiOutputBits[iNumOutBits - MC_DECODING_DEPTH + i] = TRUE;
-		}
-		else
-			vecbiOutputBits[iNumOutBits - MC_DECODING_DEPTH + i] = FALSE;
+		/* Read out decisions "backwards" */
+		_BINARY biCurBit =
+			matbiDecisions[iNumOutBitsWithMemory - i - 1][iCurDecState];
+
+		/* Calculate next state from previous decoded bit -> shift old data
+		   and add new bit */
+		iCurDecState = (iCurDecState >> 1) | (biCurBit << 5);
+
+		/* Set decisions "backwards" in actual result vector */
+		vecbiOutputBits[iNumOutBits - i - 1] = biCurBit;
 	}
 
 	/* Return normalized accumulated minimum metric */
@@ -349,23 +329,19 @@ void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme,
 	/* Number of out bits including the state memory */
 	iNumOutBitsWithMemory = iNumOutBits + MC_CONSTRAINT_LENGTH - 1;
 
-	/* Set output mask for bits (constant "1" must be casted to 64 bit interger,
-	   otherwise we would get "0") */
-	lOutBitMask = _UINT64BIT(1) << MC_DECODING_DEPTH;
-
 	/* Init vector, storing table for puncturing pattern and generate pattern */
 	veciTablePuncPat.Init(iNumOutBitsWithMemory);
 
 	veciTablePuncPat = GenPuncPatTable(eNewCodingScheme, eNewChannelType, iN1,
 		iN2, iNewNumOutBitsPartA, iNewNumOutBitsPartB, iPunctPatPartA,
 		iPunctPatPartB, iLevel);
+
+	/* Init vector for storing the decided bits */
+	matbiDecisions.Init(iNumOutBitsWithMemory, MC_NO_STATES);
 }
 
 CViterbiDecoder::CViterbiDecoder()
 {
-	/* Total decoder depth */
-	iTotalDecDepth = MC_CONSTRAINT_LENGTH - 1 + MC_DECODING_DEPTH;
-
 #if 0
 	/* Create trellis *********************************************************/
 	/* Activate this code to generate the table needed for the butterfly calls
@@ -428,7 +404,7 @@ CViterbiDecoder::CViterbiDecoder()
 	/* Save trellis in file (for substituting number directly in the code) */
 	static FILE* pFile = fopen("test/trellis.dat", "w");
 	for (i = 0; i < MC_NO_STATES; i++)
-		fprintf(pFile, "BUTTERFLY( %d, %d, %d, %d, %d )\n", i,
+		fprintf(pFile, "BUTTERFLY(%d, %d, %d, %d, %d)\n", i,
 			iPrev0Index[i], iPrev1Index[i],
 			iMetricPrev0[i], iMetricPrev1[i]);
 	fflush(pFile);
