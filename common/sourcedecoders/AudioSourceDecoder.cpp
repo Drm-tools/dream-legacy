@@ -267,7 +267,7 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 try
 {
 	/* Get current selected service */
-	iCurSelServ = ReceiverParam.GetCurSelectedService();
+	iCurSelServ = ReceiverParam.GetCurSelAudioService();
 
 	/* Current audio stream ID */
 	iCurAudioStreamID = ReceiverParam.Service[iCurSelServ].AudioParam.iStreamID;
