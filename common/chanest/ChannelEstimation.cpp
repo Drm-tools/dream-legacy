@@ -588,26 +588,31 @@ void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 	vecrData.Init(iNumCarrier, (_REAL) 0.0);
 	vecrScale.Init(iNumCarrier, (_REAL) 0.0);
 
-	/* Lock resources */
-	Lock();
-
-	/* Copy data in output vector and set scale 
-	   (carrier index as x-scale) */
-	for (int i = 0; i < iNumCarrier; i++)
+	/* Do copying of data only if vector is of non-zero length which means that
+	   the module was already initialized */
+	if (iNumCarrier != 0)
 	{
-		_REAL rNormChanEst = abs(veccChanEst[i]) / (_REAL) iNumCarrier;
-			
-		if (rNormChanEst > 0)
-			vecrData[i] = (_REAL) 20.0 * log10(rNormChanEst);
-		else
-			vecrData[i] = RET_VAL_LOG_0;
+		/* Lock resources */
+		Lock();
 
-		/* Scale */
-		vecrScale[i] = i;
+		/* Copy data in output vector and set scale 
+		   (carrier index as x-scale) */
+		for (int i = 0; i < iNumCarrier; i++)
+		{
+			_REAL rNormChanEst = abs(veccChanEst[i]) / (_REAL) iNumCarrier;
+				
+			if (rNormChanEst > 0)
+				vecrData[i] = (_REAL) 20.0 * log10(rNormChanEst);
+			else
+				vecrData[i] = RET_VAL_LOG_0;
+
+			/* Scale */
+			vecrScale[i] = i;
+		}
+
+		/* Release resources */
+		Unlock();
 	}
-
-	/* Release resources */
-	Unlock();
 }
 
 void CChannelEstimation::GetAvPoDeSp(CVector<_REAL>& vecrData,

@@ -435,15 +435,20 @@ void CMLCDecoder::GetVectorSpace(CVector<_COMPLEX>& veccData)
 	/* Init output vectors */
 	veccData.Init(iN_mux);
 
-	/* Lock resources */
-	Lock();
+	/* Do copying of data only if vector is of non-zero length which means that
+	   the module was already initialized */
+	if (iN_mux != 0)
+	{
+		/* Lock resources */
+		Lock();
 
-	/* Copy vectors */
-	for (int i = 0; i < iN_mux; i++)
-		veccData[i] = vecSigSpacBuf[i];
+		/* Copy vectors */
+		for (int i = 0; i < iN_mux; i++)
+			veccData[i] = vecSigSpacBuf[i];
 
-	/* Release resources */
-	Unlock();
+		/* Release resources */
+		Unlock();
+	}
 }
 
 

@@ -229,28 +229,33 @@ void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
 	vecrData.Init(iLenPowSpec, (_REAL) 0.0);
 	vecrScale.Init(iLenPowSpec, (_REAL) 0.0);
 
-	/* Lock resources */
-	Lock();
-
-	_REAL rNormData = (_REAL) iDFTSize * iDFTSize * _MAXSHORT;
-	_REAL rFactorScale = 
-		(_REAL) SOUNDCRD_SAMPLE_RATE / iLenPowSpec / 2000;
-
-	/* Apply the normalization (due to the FFT) */
-	for (int i = 0; i < iLenPowSpec; i++)
+	/* Do copying of data only if vector is of non-zero length which means that
+	   the module was already initialized */
+	if (iLenPowSpec != 0)
 	{
-		_REAL rNormPowSpec = vecrPowSpec[i] / rNormData;
+		/* Lock resources */
+		Lock();
 
-		if (rNormPowSpec > 0)
-			vecrData[i] = (_REAL) 10.0 * log10(vecrPowSpec[i] / rNormData);
-		else
-			vecrData[i] = RET_VAL_LOG_0;
+		_REAL rNormData = (_REAL) iDFTSize * iDFTSize * _MAXSHORT;
+		_REAL rFactorScale = 
+			(_REAL) SOUNDCRD_SAMPLE_RATE / iLenPowSpec / 2000;
 
-		vecrScale[i] = (_REAL) i * rFactorScale;
+		/* Apply the normalization (due to the FFT) */
+		for (int i = 0; i < iLenPowSpec; i++)
+		{
+			_REAL rNormPowSpec = vecrPowSpec[i] / rNormData;
+
+			if (rNormPowSpec > 0)
+				vecrData[i] = (_REAL) 10.0 * log10(vecrPowSpec[i] / rNormData);
+			else
+				vecrData[i] = RET_VAL_LOG_0;
+
+			vecrScale[i] = (_REAL) i * rFactorScale;
+		}
+
+		/* Release resources */
+		Unlock();
 	}
-
-	/* Release resources */
-	Unlock();
 }
 
 _REAL COFDMDemodulation::GetSNREstdB() const

@@ -381,80 +381,86 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 	_REAL	rScaleAbs;
 
 	/* Init output vectors */
-	vecrData.Init(iNumIntpFreqPil);
-	vecrScale.Init(iNumIntpFreqPil);
+	vecrData.Init(iNumIntpFreqPil, (_REAL) 0.0);
+	vecrScale.Init(iNumIntpFreqPil, (_REAL) 0.0);
 	rHigherBound = (_REAL) 0.0;
 	rLowerBound = (_REAL) 0.0;
-	rStartGuard = 0;
-	rEndGuard = 0;
+	rStartGuard = (_REAL) 0.0;
+	rEndGuard = (_REAL) 0.0;
+	rLenIR = (_REAL) 0.0;
 
-	/* With this setting we only define the position of the guard-interval
-	   in the plot. With this setting we position it centered */
-	iHalfSpec = (int) ((iNumIntpFreqPil - rGuardSizeFFT) / 2);
-
-	/* Init scale (in "ms") */
-	rScaleIncr = (_REAL) iDFTSize /
-		(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil) * 1000 / 2;
-
-	/* Let the target timing position be the "0" time */
-	rScaleAbs = -(iHalfSpec + iTargetTimingPos) * rScaleIncr;
-
-	/* Copy first part of data in output vector */
-	for (i = 0; i < iHalfSpec; i++)
+	/* Do copying of data only if vector is of non-zero length which means that
+	   the module was already initialized */
+	if (iNumIntpFreqPil != 0)
 	{
-		if (vecrAvPoDeSp[iNumIntpFreqPil - iHalfSpec + i] > 0)
-			vecrData[i] = (_REAL) 10.0 *
-				log10(vecrAvPoDeSp[iNumIntpFreqPil - iHalfSpec + i]);
-		else
-			vecrData[i] = RET_VAL_LOG_0;
+		/* With this setting we only define the position of the guard-interval
+		   in the plot. With this setting we position it centered */
+		iHalfSpec = (int) ((iNumIntpFreqPil - rGuardSizeFFT) / 2);
 
-		/* Scale */
-		vecrScale[i] = rScaleAbs;
-		rScaleAbs += rScaleIncr;
-	}
+		/* Init scale (in "ms") */
+		rScaleIncr = (_REAL) iDFTSize /
+			(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil) * 1000 / 2;
 
-	/* Save scale point because this is the start point of guard-interval */
-	rStartGuard = rScaleAbs;
+		/* Let the target timing position be the "0" time */
+		rScaleAbs = -(iHalfSpec + iTargetTimingPos) * rScaleIncr;
 
-	/* Copy second part of data in output vector */
-	for (i = iHalfSpec; i < iNumIntpFreqPil; i++)
-	{
-		if (vecrAvPoDeSp[i - iHalfSpec] > 0)
-			vecrData[i] = (_REAL) 10.0 * log10(vecrAvPoDeSp[i - iHalfSpec]);
-		else
-			vecrData[i] = RET_VAL_LOG_0;
+		/* Copy first part of data in output vector */
+		for (i = 0; i < iHalfSpec; i++)
+		{
+			if (vecrAvPoDeSp[iNumIntpFreqPil - iHalfSpec + i] > 0)
+				vecrData[i] = (_REAL) 10.0 *
+					log10(vecrAvPoDeSp[iNumIntpFreqPil - iHalfSpec + i]);
+			else
+				vecrData[i] = RET_VAL_LOG_0;
 
-		/* Scale */
-		vecrScale[i] = rScaleAbs;
-		rScaleAbs += rScaleIncr;
-	}
+			/* Scale */
+			vecrScale[i] = rScaleAbs;
+			rScaleAbs += rScaleIncr;
+		}
 
-	/* Return bounds */
-	switch (TypeTiSyncTrac)
-	{
-	case TSFIRSTPEAK:
-		if (rBoundHigher > 0)
-			rHigherBound = (_REAL) 10.0 * log10(rBoundHigher);
-		else
+		/* Save scale point because this is the start point of guard-interval */
+		rStartGuard = rScaleAbs;
+
+		/* Copy second part of data in output vector */
+		for (i = iHalfSpec; i < iNumIntpFreqPil; i++)
+		{
+			if (vecrAvPoDeSp[i - iHalfSpec] > 0)
+				vecrData[i] = (_REAL) 10.0 * log10(vecrAvPoDeSp[i - iHalfSpec]);
+			else
+				vecrData[i] = RET_VAL_LOG_0;
+
+			/* Scale */
+			vecrScale[i] = rScaleAbs;
+			rScaleAbs += rScaleIncr;
+		}
+
+		/* Return bounds */
+		switch (TypeTiSyncTrac)
+		{
+		case TSFIRSTPEAK:
+			if (rBoundHigher > 0)
+				rHigherBound = (_REAL) 10.0 * log10(rBoundHigher);
+			else
+				rHigherBound = RET_VAL_LOG_0;
+
+			if (rBoundLower > 0)
+				rLowerBound = (_REAL) 10.0 * log10(rBoundLower);
+			else
+				rLowerBound = RET_VAL_LOG_0;
+			break;
+
+		case TSENERGY:
+			/* No bounds needed for energy type, set both values to "defined
+			   infinity value", so it does not show up in the plot */
 			rHigherBound = RET_VAL_LOG_0;
-
-		if (rBoundLower > 0)
-			rLowerBound = (_REAL) 10.0 * log10(rBoundLower);
-		else
 			rLowerBound = RET_VAL_LOG_0;
-		break;
+			break;
+		}
 
-	case TSENERGY:
-		/* No bounds needed for energy type, set both values to "defined
-		   infinity value", so it does not show up in the plot */
-		rHigherBound = RET_VAL_LOG_0;
-		rLowerBound = RET_VAL_LOG_0;
-		break;
+		/* End point of guard interval */
+		rEndGuard = rScaleIncr * (rGuardSizeFFT - iTargetTimingPos);
+
+		/* Estmiated impulse response length */
+		rLenIR = rScaleIncr * (rEstDelay - iTargetTimingPos);
 	}
-
-	/* End point of guard interval */
-	rEndGuard = rScaleIncr * (rGuardSizeFFT - iTargetTimingPos);
-
-	/* Estmiated impulse response length */
-	rLenIR = rScaleIncr * (rEstDelay - iTargetTimingPos);
 }

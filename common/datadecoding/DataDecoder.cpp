@@ -319,17 +319,27 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 
 void CDataDecoder::GetSlideShowPicture(CMOTPicture& NewPic)
 {
-	/* Lock resources */
-	Lock();
+	int iRawDataSize = MOTPicture.vecbRawData.Size();
 
-	/* Copy picture content */
-	NewPic.iTransportID = MOTPicture.iTransportID;
-	NewPic.strFormat = MOTPicture.strFormat;
+	/* Init output object */
+	NewPic.vecbRawData.Init(iRawDataSize);
+	NewPic.iTransportID = 0;
+	NewPic.strFormat = "";
 
-	NewPic.vecbRawData.Init(MOTPicture.vecbRawData.Size());
-	for (int i = 0; i < MOTPicture.vecbRawData.Size();	i++)
-		NewPic.vecbRawData[i] = MOTPicture.vecbRawData[i];
+	/* Only copy data if picture is available */
+	if (iRawDataSize != 0)
+	{
+		/* Lock resources */
+		Lock();
 
-	/* Release resources */
-	Unlock();
+		/* Copy picture content */
+		NewPic.iTransportID = MOTPicture.iTransportID;
+		NewPic.strFormat = MOTPicture.strFormat;
+
+		for (int i = 0; i < iRawDataSize;	i++)
+			NewPic.vecbRawData[i] = MOTPicture.vecbRawData[i];
+
+		/* Release resources */
+		Unlock();
+	}
 }

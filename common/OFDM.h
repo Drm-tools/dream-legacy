@@ -72,7 +72,7 @@ protected:
 class COFDMDemodulation : public CReceiverModul<_REAL, _COMPLEX>
 {
 public:
-	COFDMDemodulation() {}
+	COFDMDemodulation() : iLenPowSpec(0) {}
 	virtual ~COFDMDemodulation() {}
 
 	void GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
