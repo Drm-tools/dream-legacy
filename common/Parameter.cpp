@@ -491,7 +491,6 @@ void CParameter::CReceptLog::SetLog(_BOOLEAN bLog)
 	if (bLogActivated == TRUE)
 	{
 		/* Get time and date */
-		_strtime(tmpbuf);
 		time(&ltime);
 		today = gmtime(&ltime); /* Should be UTC time */
 
@@ -501,8 +500,9 @@ void CParameter::CReceptLog::SetLog(_BOOLEAN bLog)
 		fprintf(pFile, "\n>>>>\nDream\nSoftware Version %s\n",
 			DREAM_VERSION_NUMBER);
 
-		fprintf(pFile, "Starttime (UTC)  %d-%02d-%02d %s\n",
-			today->tm_year + 1900, today->tm_mon, today->tm_mday, tmpbuf);
+		fprintf(pFile, "Starttime (UTC)  %d-%02d-%02d %02d:%02d:%02d\n",
+			today->tm_year + 1900, today->tm_mon, today->tm_mday,
+			today->tm_hour, today->tm_min, today->tm_sec);
 
 		fprintf(pFile, "Frequency        \nLatitude         \nLongitude        \n\n");
 
