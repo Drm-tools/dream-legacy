@@ -48,7 +48,7 @@ using namespace std; /* Because of the library: "complex" */
 #define _DEBUG_
 #undef _DEBUG_
 
-#define DREAM_VERSION_NUMBER			"1.0"
+#define DREAM_VERSION_NUMBER			"1.0.1"
 
 /* Define whether using GUI or non-GUI receiver */
 #define USE_QT_GUI
@@ -57,6 +57,22 @@ using namespace std; /* Because of the library: "complex" */
 /* Activate or disable faad2 library (AAC decoding) */
 #define USE_FAAD2_LIBRARY
 //#undef USE_FAAD2_LIBRARY
+
+
+/* Choose algorithms -------------------------------------------------------- */
+/* There are two algorithms available for frequency offset estimation for
+   tracking mode: Using frequency pilots or the guard-interval correlation. In
+   case of guard-interval correlation (which will be chosen if this macro is
+   defined), the Hilbert filter in TimeSync must be used all the time -> more
+   CPU usage. Also, the frequency tracking range is smaller */
+#undef USE_FRQOFFS_TRACK_GUARDCORR
+
+
+/* The frequency offset estimation can be done using the frequency pilots or the
+   movement of the estimated impulse response. Defining this macro will enable
+   the frequency pilot based estimation. Simulations showed that this method is
+   more vulnerable to bad channel situations */
+#undef USE_SAMOFFS_TRACK_FRE_PIL
 
 
 /* Define the application specific data-types ------------------------------- */
@@ -144,7 +160,7 @@ public:
 	_REAL		rChan; /* Channel power at this cell */
 };
 
-/* Mutex object to access data savely from different threads */
+/* Mutex object to access data safely from different threads */
 /* QT mutex */
 #ifdef USE_QT_GUI
 #include <qthread.h>
