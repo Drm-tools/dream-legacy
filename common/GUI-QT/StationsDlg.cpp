@@ -603,7 +603,7 @@ void StationsDlg::SetUTCTimeLabel()
 	struct tm* gmtCur = gmtime(&ltime);
 
 	/* Generate time in format "UTC 12:00" */
-	QString strUTCTime = QString().sprintf("UTC %2d:%02d",
+	QString strUTCTime = QString().sprintf("%02d:%02d UTC",
 		gmtCur->tm_hour, gmtCur->tm_min);
 
 	/* Only apply if time label does not show the correct time */
@@ -1084,6 +1084,9 @@ try
 		pRig = NULL;
 	}
 
+	if (newModID == 0)
+		throw CGenErr("No rig model ID selected.");
+
 	/* Init rig */
 	pRig = rig_init(newModID);
 	if (pRig == NULL)
@@ -1226,17 +1229,11 @@ try
 	/* Check if s-meter capabilities are available */
 	if (pRig != NULL)
 	{
-		value_t tValue;
-		if (!rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &tValue))
-		{
-			/* s-meter can be used, enable controls */
+		/* Check if s-meter can be used. Disable GUI control if not */
+		if (rig_has_get_level(pRig, RIG_LEVEL_STRENGTH))
 			EnableSMeter(TRUE);
-		}
 		else
-		{
-			/* disable s-meter controls */
 			EnableSMeter(FALSE);
-		}
 	}
 }
 
@@ -1245,7 +1242,7 @@ catch (CGenErr GenErr)
 	/* Print error message */
 	cerr << GenErr.strError << endl;
 
-	/* disable s-meter controls */
+	/* Disable s-meter controls */
 	EnableSMeter(FALSE);
 }
 }

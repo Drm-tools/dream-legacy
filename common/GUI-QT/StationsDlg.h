@@ -231,7 +231,7 @@ protected:
 		CSpecDRMRig() : iModelID(0), strDRMSet(""), iFreqOffs(0) {}
 		CSpecDRMRig(const CSpecDRMRig& nSpec) : iModelID(nSpec.iModelID),
 			strDRMSet(nSpec.strDRMSet),  iFreqOffs(nSpec.iFreqOffs) {}
-		CSpecDRMRig(rig_model_t newID, QString sSet, int iNFrOff) :
+		CSpecDRMRig(rig_model_t newID, string sSet, int iNFrOff) :
 		  iModelID(newID), strDRMSet(sSet), iFreqOffs(iNFrOff) {}
 
 		rig_model_t		iModelID; /* Model ID for hamlib */
