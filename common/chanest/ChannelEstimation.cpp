@@ -40,9 +40,13 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	_REAL		rOffsPDSEst;
 
 	/* Check if symbol ID index has changed by the synchronization unit. If it
-	   has changed, use the init-counter debar initialization phase */
+	   has changed, reinit this module */
 	if ((*pvecInputData).GetExData().bSymbolIDHasChanged == TRUE)
-		iInitCnt = iLenHistBuff;
+	{
+// FIXME: we loose one OFDM symbol by this call -> slower DRM signal acquisition
+		SetInitFlag();
+		return;
+	}
 
 	/* Move data in history-buffer (from iLenHistBuff - 1 towards 0) */
 	for (j = 0; j < iLenHistBuff - 1; j++)
