@@ -347,7 +347,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iNumPilInFirstSym);
 
-	
+
 	/* DRM frame synchronization based on time pilots, inits ---------------- */
 	/* Allocate memory for storing differential complex factors. Since we do
 	   not know the resulting "iNumDiffFact" we allocate memory for the
