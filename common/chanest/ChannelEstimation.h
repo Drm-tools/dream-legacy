@@ -86,7 +86,7 @@ public:
 	virtual ~CChannelEstimation() {}
 
 	enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};
-	enum ETypeIntTime {TLINEAR, TWIENER, TDECIDIR};
+	enum ETypeIntTime {TLINEAR, TWIENER};
 	enum ETypeSNREst {SNR_FAC, SNR_PIL};
 
 	void GetTransferFunction(CVector<_REAL>& vecrData,
