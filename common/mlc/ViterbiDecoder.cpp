@@ -225,7 +225,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			}
 		}
 #else
-#define BUTTERFLY( cur, prev0, prev1, met0, met1) \
+#define BUTTERFLY( cur, prev0, prev1, met0, met1 ) \
 		rAccMetricPrev0 = \
 			pOldTrelData[ prev0 ].rMetric + \
 			vecrMetricSet[ met0 ]; \

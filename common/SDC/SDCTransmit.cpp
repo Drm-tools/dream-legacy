@@ -52,9 +52,11 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 	/* Reset enqueue function */
 	(*pbiData).ResetBitAccess();
 
+
 	/* SDC Header ----------------------------------------------------------- */
 	/* AFS index */
 	(*pbiData).Enqueue((_UINT32BIT) Parameter.iAFSIndex, 4);
+
 
 	/* Data Entities -------------------------------------------------------- */
 	/* Init bit-count */
@@ -73,6 +75,7 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 	   ("- 20" for the AFS-index and CRC!) */
 	for (i = 0; i < iUsefulBitsSDC - iNoUsedBits - 20; i++)
 		(*pbiData).Enqueue((_UINT32BIT) 0, 1);
+
 
 	/* CRC ------------------------------------------------------------------ */
 	/* Calculate the CRC and put at the end of the stream */
