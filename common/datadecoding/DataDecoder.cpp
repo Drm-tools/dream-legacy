@@ -75,8 +75,12 @@ void CDataEncoder::GeneratePacket(CVector<_BINARY>& vecbiPacket)
 		vecbiPacket.Enqueue((_UINT32BIT) 0, 1);
 
 	/* Continuity index (CI) */
-	vecbiPacket.Enqueue((_UINT32BIT) (iContinInd % 8), 3);
+	vecbiPacket.Enqueue((_UINT32BIT) iContinInd, 3);
+
+	/* Increment index modulo 8 (1 << 3) */
 	iContinInd++;
+	if (iContinInd == 8)
+		iContinInd = 0;
 
 
 	/* Body ----------------------------------------------------------------- */
@@ -118,7 +122,7 @@ void CDataEncoder::GeneratePacket(CVector<_BINARY>& vecbiPacket)
 	if (bLastFlag == TRUE)
 	{
 		/* Generate new data unit */
-		DABDataEncoder.GetDataUnit(vecbiCurDataUnit);
+		MOTSlideShowEncoder.GetDataUnit(vecbiCurDataUnit);
 		vecbiCurDataUnit.ResetBitAccess();
 
 		/* Reset data pointer and continuity index */
@@ -158,10 +162,10 @@ const int iCurSelDataServ = 0;
 	iPacketID = Param.Service[iCurSelDataServ].DataParam.iPacketID;
 
 	/* Init DAB MOT encoder object */
-	DABDataEncoder.Init();
+	MOTSlideShowEncoder.Init();
 
 	/* Generate first data unit */
-	DABDataEncoder.GetDataUnit(vecbiCurDataUnit);
+	MOTSlideShowEncoder.GetDataUnit(vecbiCurDataUnit);
 	vecbiCurDataUnit.ResetBitAccess();
 
 	/* Reset pointer to current position in data unit and continuity index */
@@ -349,9 +353,8 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 					{
 					case 2: /* MOTSlideshow */
 						/* Packet unit decoding */
-						DABData[iPacketID].
-							AddDataUnit(DataUnit[iPacketID].vecbiData,
-							MOTPicture);
+						MOTSlideShow[iPacketID].
+							AddDataUnit(DataUnit[iPacketID].vecbiData);
 						break;
 					}
 				}
@@ -455,29 +458,22 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 	iInputBlockSize = iTotalNumInputBits;
 }
 
-void CDataDecoder::GetSlideShowPicture(CMOTPicture& NewPic)
+_BOOLEAN CDataDecoder::GetSlideShowPicture(CMOTObject& NewPic)
 {
-	int iRawDataSize = MOTPicture.vecbRawData.Size();
+	_BOOLEAN bReturn = FALSE;
 
-	/* Init output object */
-	NewPic.vecbRawData.Init(iRawDataSize);
-	NewPic.iTransportID = 0;
-	NewPic.strFormat = "";
+	/* Lock resources */
+	Lock();
 
-	/* Only copy data if picture is available */
-	if (iRawDataSize != 0)
+	/* Check if data service is SlideShow application */
+	if ((DoNotProcessData == FALSE) &&
+		(eServAppDomain == CParameter::AD_DAB_SPEC_APP))
 	{
-		/* Lock resources */
-		Lock();
-
-		/* Copy picture content */
-		NewPic.iTransportID = MOTPicture.iTransportID;
-		NewPic.strFormat = MOTPicture.strFormat;
-
-		for (int i = 0; i < iRawDataSize;	i++)
-			NewPic.vecbRawData[i] = MOTPicture.vecbRawData[i];
-
-		/* Release resources */
-		Unlock();
+		bReturn = MOTSlideShow[iServPacketID].GetPicture(NewPic);
 	}
+
+	/* Release resources */
+	Unlock();
+
+	return bReturn;
 }

@@ -47,8 +47,9 @@
 
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
-#include "../datadecoding/DABData.h"
 #include "MultColorLED.h"
+#include "../datadecoding/DABMOT.h"
+
 
 extern CDRMReceiver	DRMReceiver;
 
@@ -68,16 +69,16 @@ protected:
 	QTimer					Timer;
 	QMenuBar*				pMenu;
 	QPopupMenu*				pFileMenu;
-	int						iCurTransportID;
     virtual void			showEvent(QShowEvent* pEvent);
 	virtual void			hideEvent(QHideEvent* pEvent);
-	CVector<CMOTPicture*>	vecpRawImages;
+	CVector<CMOTObject>		vecRawImages;
 	int						iCurImagePos;
 
 	void SetPicture();
 	void UpdateAccButtons();
-	int GetIDLastPicture() {return vecpRawImages.Size() - 1;}
+	int GetIDLastPicture() {return vecRawImages.Size() - 1;}
 	void SavePicture(const int iPicID, const QString& strFileName);
+	void ClearAll();
 
 public slots:
 	void OnTimer();
@@ -87,5 +88,6 @@ public slots:
 	void OnButtonJumpEnd();
 	void OnSave();
 	void OnSaveAll();
+	void OnClearAll() {ClearAll();}
 };
 

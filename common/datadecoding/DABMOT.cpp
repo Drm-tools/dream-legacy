@@ -6,7 +6,10 @@
  *	Volker Fischer, Doyle Richard
  *
  * Description:
- *	DAB data decoding (MOT)
+ *	DAB MOT interface implementation
+ *
+ * 12/22/2003 Doyle Richard
+ *  - Header extension decoding
  *
  ******************************************************************************
  *
@@ -26,102 +29,105 @@
  *
 \******************************************************************************/
 
-#include "DABData.h"
+#include "DABMOT.h"
 
 
 /* Implementation *************************************************************/
 /******************************************************************************\
 * Encoder                                                                      *
 \******************************************************************************/
-void CDABDataEnc::GenMOTSegments(CMOTObjSegm& MOTObjSegm)
+void CMOTDABEnc::SetMOTObject(CMOTObject& NewMOTObject)
 {
-	CMOTObject MOTObject;
+	int				i;
+	CMOTObjectRaw	MOTObjectRaw;
 
-	/* Body ----------------------------------------------------------------- */
-	/* Open file */
+	/* Get some necessary parameters of object */
+	const int iPicSizeBits = NewMOTObject.vecbRawData.Size();
+	const int iPicSizeBytes = iPicSizeBits / SIZEOF__BYTE;
+	const string strFileName = NewMOTObject.strName;
+
+	/* File name size is restricted (in this implementation) to 128 (2^7) bytes.
+	   If file name is longer, cut it. TODO: better solution: set Ext flag in
+	   "ContentName" header extension to allow larger file names */
+	int iFileNameSize = strFileName.size();
+	if (iFileNameSize > 128)
+		iFileNameSize = 128;
+
+	/* Copy actual raw data of object */
+	MOTObjectRaw.Body.vecbiData.Init(iPicSizeBits);
+	MOTObjectRaw.Body.vecbiData = NewMOTObject.vecbRawData;
+
+	/* Get content type and content sub type of object. We use the format string
+	   to get these informations about the object */
+	int iContentType = 0; /* Set default value (general data) */
+	int iContentSubType = 0; /* Set default value (gif) */
+
+	/* Get ending string which declares the type of the file. Make lowercase */
+
+// The following line is not working for Linux!!!! TODO!
+//const string strFormat = _strlwr(_strdup(NewMOTObject.strFormat.c_str()));
 // TEST
-string strFileName = "test/Pic.jpg";
-
-/*
-static _BOOLEAN bWhichFile = FALSE;
-if (bWhichFile == TRUE)
-{
-	strFileName = "test/Pic1.png";
-	bWhichFile = FALSE;
-}
-else
-{
-	strFileName = "test/Pic2.png";
-	bWhichFile = TRUE;
-}
-*/
-
-FILE* pFiBody = fopen(strFileName.c_str(), "rb"); // TEST
+const string strFormat = NewMOTObject.strFormat;
 
 
 
-	int iPicSize = 0;
-
-	if (pFiBody != NULL)
+	/* gif: 0, image: 2 */
+	if (strFormat.compare("gif") == 0)
 	{
-		MOTObject.Body.vecbiData.Init(0);
+		iContentType = 2;
+		iContentSubType = 0;
+	}
 
-		_BYTE byIn;
+	/* jfif: 1, image: 2. Possible endings: jpg, jpeg, jfif */
+	if ((strFormat.compare("jpg") == 0) ||
+		(strFormat.compare("jpeg") == 0) ||
+		(strFormat.compare("jfif") == 0))
+	{
+		iContentType = 2;
+		iContentSubType = 1;
+	}
 
-		while (fread((void*) &byIn, size_t(1), size_t(1), pFiBody) !=
-			size_t(0))
-		{
-			/* Add one byte = SIZEOF__BYTE bits */
-			MOTObject.Body.vecbiData.Enlarge(SIZEOF__BYTE);
-			MOTObject.Body.vecbiData.Enqueue((_UINT32BIT) byIn, SIZEOF__BYTE);
+	/* bmp: 2, image: 2 */
+	if (strFormat.compare("bmp") == 0)
+	{
+		iContentType = 2;
+		iContentSubType = 2;
+	}
 
-			iPicSize++;
-		}
-
-		/* Close the file afterwards */
-		fclose(pFiBody);
+	/* png: 3, image: 2 */
+	if (strFormat.compare("png") == 0)
+	{
+		iContentType = 2;
+		iContentSubType = 3;
 	}
 
 
 	/* Header --------------------------------------------------------------- */
-	/* Encode header in one piece. TODO: Maybe introduce splitting of header,
-	   too */
-/* Only use header core. TODO: header extension */
-
-/* Header core is 7 bytes long */
-const int iHeaderSize = 7 + 5 /* TriggerTime */ + 8 /* ContentName */ + 2 /* VersionNumber */;
+	/* Header size (including header extension) */
+	const int iHeaderSize = 7 /* Header core  */ +
+		5 /* TriggerTime */ +
+		3 + iFileNameSize /* ContentName (header + actual name) */ +
+		2 /* VersionNumber */;
 
 	/* Allocate memory and reset bit access */
-	MOTObject.Header.vecbiData.Init(iHeaderSize * SIZEOF__BYTE);
-	MOTObject.Header.vecbiData.ResetBitAccess();
+	MOTObjectRaw.Header.vecbiData.Init(iHeaderSize * SIZEOF__BYTE);
+	MOTObjectRaw.Header.vecbiData.ResetBitAccess();
 
 	/* BodySize: This 28-bit field, coded as an unsigned binary number,
 	   indicates the total size of the body in bytes */
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) iPicSize, 28);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) iPicSizeBytes, 28);
 
 	/* HeaderSize: This 13-bit field, coded as an unsigned binary number,
 	   indicates the total size of the header in bytes */
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) iHeaderSize, 13);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) iHeaderSize, 13);
 
 	/* ContentType: This 6-bit field indicates the main category of the body's
 	   content */
-
-	const int iContentType = 2; /* image TEST */
-
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) iContentType, 6);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) iContentType, 6);
 
 	/* ContentSubType: This 9-bit field indicates the exact type of the body's
 	   content depending on the value of the field ContentType */
-/* Only ContentSubType "JFIF" (JPEG) and ContentSubType "PNG" are allowed for SlideShow application */
-int iContentSubType;
-
-if (strFileName.compare(strFileName.size() - 3, 3, "png") == 0)
-	iContentSubType = 3; /* png */
-else
-	iContentSubType = 1; /* jfif */
-
-
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) iContentSubType, 9);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) iContentSubType, 9);
 
 
 	/* Header extension ----------------------------------------------------- */
@@ -137,15 +143,15 @@ else
 	/* PLI (Parameter Length Indicator): This 2-bit field describes the total
 	   length of the associated parameter. In this case:
 	   1 0 total parameter length = 5 bytes; length of DataField is 4 bytes */
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) 2, 2);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 2, 2);
 
 	/* ParamId (Parameter Identifier): This 6-bit field identifies the
 	   parameter. 1 0 1 (dec: 5) -> TriggerTime */
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) 5, 6);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 5, 6);
 
 	/* Validity flag = 0: "Now", MJD and UTC shall be ignored and be set to 0.
 	   Set MJD and UTC to zero. UTC flag is also zero -> short form */
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) 0, 32);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 0, 32);
 
 
 
@@ -156,14 +162,14 @@ else
 	   content of the body was modified */
 	/* PLI
 	   0 1 total parameter length = 2 bytes, length of DataField is 1 byte */
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) 1, 2);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 1, 2);
 
 	/* ParamId (Parameter Identifier): This 6-bit field identifies the
 	   parameter. 1 1 0 (dec: 6) -> VersionNumber */
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) 6, 6);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 6, 6);
 
 	/* Version number data field */
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) 0, 8);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 0, 8);
 
 
 
@@ -175,74 +181,62 @@ else
 
 	/* PLI
 	   1 1 total parameter length depends on the DataFieldLength indicator */
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) 3, 2);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 3, 2);
 
 	/* ParamId (Parameter Identifier): This 6-bit field identifies the
 	   parameter. 1 1 0 0 (dec: 12) -> ContentName */
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) 12, 6);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 12, 6);
 
 	/* Ext (ExtensionFlag): This 1-bit field specifies the length of the
 	   DataFieldLength Indicator.
 	   0: the total parameter length is derived from the next 7 bits */
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) 0, 1);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 0, 1);
 
 	/* DataFieldLength Indicator: This field specifies as an unsigned binary
 	   number the length of the parameter's DataField in bytes. The length of
 	   this field is either 7 or 15 bits, depending on the setting of the
 	   ExtensionFlag */
-MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) (1 /* header */ + 5 /* actual data */), 7);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) (1 /* header */ +
+		iFileNameSize /* actual data */), 7);
 
 	/* Character set indicator (0 0 0 0 complete EBU Latin based repertoire) */
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) 0, 4);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 0, 4);
 
 	/* Rfa 4 bits */
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) 0, 4);
+	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 0, 4);
 
 	/* Character field */
-// TEST
-MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('d'), 8);
-MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('.'), 8);
-
-if (strFileName.compare(strFileName.size() - 3, 3, "png") == 0)
-{
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('p'), 8);
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('n'), 8);
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('g'), 8);
-}
-else
-{
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('j'), 8);
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('p'), 8);
-	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('g'), 8);
-}
+	for (i = 0; i < iFileNameSize; i++)
+		MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) strFileName[i], 8);
 
 
 	/* Generate segments ---------------------------------------------------- */
 	/* Header (header should not be partitioned! TODO) */
 const int iPartiSizeHeader = 100; /* Bytes */ // TEST
 
-	PartitionUnits(MOTObject.Header.vecbiData, MOTObjSegm.vvbiHeader,
+	PartitionUnits(MOTObjectRaw.Header.vecbiData, MOTObjSegments.vvbiHeader,
 		iPartiSizeHeader);
 
 	/* Body */
 const int iPartiSizeBody = 100; /* Bytes */ // TEST
 
-	PartitionUnits(MOTObject.Body.vecbiData, MOTObjSegm.vvbiBody,
+	PartitionUnits(MOTObjectRaw.Body.vecbiData, MOTObjSegments.vvbiBody,
 		iPartiSizeBody);
 }
 
-void CDABDataEnc::PartitionUnits(CVector<_BINARY>& vecbiSource,
-								 CVector<CVector<_BINARY> >& vecbiDest,
-								 const int iPartiSize)
+void CMOTDABEnc::PartitionUnits(CVector<_BINARY>& vecbiSource,
+								CVector<CVector<_BINARY> >& vecbiDest,
+								const int iPartiSize)
 {
 	int	i, j;
 	int	iActSegSize;
 
 	/* Divide the generated units in partitions */
 	const int iSourceSize = vecbiSource.Size() / SIZEOF__BYTE;
-	const int iNumSeg = (int) ceil((_REAL) iSourceSize / iPartiSize); /* Bytes */
-	const int iSizeLastSeg =
-		iSourceSize - (int) floor((_REAL) iSourceSize / iPartiSize) * iPartiSize;
+	const int iNumSeg =
+		(int) ceil((_REAL) iSourceSize / iPartiSize); /* Bytes */
+	const int iSizeLastSeg = iSourceSize -
+		(int) floor((_REAL) iSourceSize / iPartiSize) * iPartiSize;
 
 	/* Init memory for destination vector, reset bit access of source */
 	vecbiDest.Init(iNumSeg);
@@ -268,7 +262,7 @@ void CDABDataEnc::PartitionUnits(CVector<_BINARY>& vecbiSource,
 		/* RepetitionCount: This 3-bit field indicates, as an unsigned
 		   binary number, the remaining transmission repetitions for the
 		   current object.
-		   In our current implementation, no repitions used. TODO */
+		   In our current implementation, no repetitions used. TODO */
 		vecbiDest[i].Enqueue((_UINT32BIT) 0, 3);
 
 		/* SegmentSize: This 13-bit field, coded as an unsigned binary
@@ -282,10 +276,10 @@ void CDABDataEnc::PartitionUnits(CVector<_BINARY>& vecbiSource,
 	}
 }
 
-void CDABDataEnc::GenMOTObj(CVector<_BINARY>& vecbiData,
-							CVector<_BINARY>& vecbiSeg, const _BOOLEAN bHeader,
-							const int iSegNum, const int iTranspID,
-							const _BOOLEAN bLastSeg)
+void CMOTDABEnc::GenMOTObj(CVector<_BINARY>& vecbiData,
+						   CVector<_BINARY>& vecbiSeg, const _BOOLEAN bHeader,
+						   const int iSegNum, const int iTranspID,
+						   const _BOOLEAN bLastSeg)
 {
 	int		i;
 	CCRC	CRCObject;
@@ -361,16 +355,18 @@ if (bCRCUsed == TRUE)
 	{
 		vecbiData.Enqueue((_UINT32BIT) iContIndexHeader, 4);
 
+		/* Increment modulo 16 */
 		iContIndexHeader++;
-		if (iContIndexHeader == (1 << 4))
+		if (iContIndexHeader == 16)
 			iContIndexHeader = 0;
 	}
 	else
 	{
 		vecbiData.Enqueue((_UINT32BIT) iContIndexBody, 4);
 
+		/* Increment modulo 16 */
 		iContIndexBody++;
-		if (iContIndexBody == (1 << 4))
+		if (iContIndexBody == 16)
 			iContIndexBody = 0;
 	}
 
@@ -471,9 +467,12 @@ if (bCRCUsed == TRUE)
 	}
 }
 
-void CDABDataEnc::GetDataUnit(CVector<_BINARY>& vecbiNewData)
+_BOOLEAN CMOTDABEnc::GetDataGroup(CVector<_BINARY>& vecbiNewData)
 {
 	_BOOLEAN bLastSegment;
+
+	/* Init return value. Is overwritten in case the object is ready */
+	_BOOLEAN bObjectDone = FALSE;
 
 	if (bCurSegHeader == TRUE)
 	{
@@ -520,23 +519,21 @@ void CDABDataEnc::GetDataUnit(CVector<_BINARY>& vecbiNewData)
 			/* Reset counter */
 			iSegmCnt = 0;
 
-			/* Body is ready, transmit header from next object (right now
-			   there is only one object to transmit -> transmit the same
-			   object again. TODO: more objects) */
+			/* Body is ready, transmit header from next object */
 			bCurSegHeader = TRUE;
 			iTransportID++;
 
-			/* Generate new segments */
-			GenMOTSegments(MOTObjSegments);
+			/* Signal that old object is done */
+			bObjectDone = TRUE;
 		}
 	}
+
+	/* Return status of object transmission */
+	return bObjectDone;
 }
 
-void CDABDataEnc::Init()
+void CMOTDABEnc::Reset()
 {
-	/* Generate segments for test file */
-	GenMOTSegments(MOTObjSegments);
-
 	/* Reset continuity indices */
 	iContIndexHeader = 0;
 	iContIndexBody = 0;
@@ -547,28 +544,33 @@ void CDABDataEnc::Init()
 
 	/* Init flag which shows what is currently generated, header or body */
 	bCurSegHeader = TRUE; /* Start with header */
+
+	/* Add a "null object" so that at least one valid object can be processed */
+	CMOTObject NullObject;
+	SetMOTObject(NullObject);
 }
 
 
 /******************************************************************************\
 * Decoder                                                                      *
 \******************************************************************************/
-void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
+_BOOLEAN CMOTDABDec::AddDataGroup(CVector<_BINARY>& vecbiNewData)
 {
-	int				i;
-	int				iSegmentNum;
-	int				iLenIndicat;
-	int				iLenGroupDataField;
-	int				iSegmentSize;
-	int				iTransportID;
-	int				iDaSiBytes;
-	_BOOLEAN		bCRCOk;
-	_BINARY			biLastFlag;
-	_BINARY			biTransportIDFlag;
-	unsigned char	ucParamId;
-	unsigned char	ucDatafield;
-	CCRC			CRCObject;
-	FILE*			pFiBody;
+	int			i;
+	int			iSegmentNum;
+	int			iLenIndicat;
+	int			iLenGroupDataField;
+	int			iSegmentSize;
+	int			iTransportID;
+	_BINARY		biLastFlag;
+	_BINARY		biTransportIDFlag;
+	CCRC		CRCObject;
+	FILE*		pFiBody;
+	_BOOLEAN	bCRCOk;
+
+	/* Init return value with "not ready". If not MOT object is ready after
+	   adding this new data group, this flag is overwritten with "TRUE" */
+	_BOOLEAN bMOTObjectReady = FALSE;
 
 	/* Get length of data unit */
 	iLenGroupDataField = vecbiNewData.Size();
@@ -587,10 +589,7 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 	for (i = 0; i < iLenGroupDataField / SIZEOF__BYTE - 2; i++)
 		CRCObject.AddByte((_BYTE) vecbiNewData.Separate(SIZEOF__BYTE));
 
-	if (CRCObject.CheckCRC(vecbiNewData.Separate(16)) == TRUE)
-		bCRCOk = TRUE;
-	else
-		bCRCOk = FALSE;
+	bCRCOk = CRCObject.CheckCRC(vecbiNewData.Separate(16));
 
 
 	/* MSC data group header ------------------------------------------------ */
@@ -690,43 +689,44 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 				{
 					/* Header */
 					/* The first segment was received, reset header */
-					MOTObject.Header.Reset();
+					MOTObjectRaw.Header.Reset();
 
 					/* The first occurrence of a Data Group type 3 containing
 					   header information is referred as the beginning of the
 					   object transmission. Set new transport ID */
-					MOTObject.iTransportID = iTransportID;
+					MOTObjectRaw.iTransportID = iTransportID;
 
 					/* Init flag for header ok */
-					MOTObject.Header.bOK = TRUE;
+					MOTObjectRaw.Header.bOK = TRUE;
 
 					/* Add new segment data */
-					MOTObject.Header.Add(vecbiNewData, iSegmentSize,
+					MOTObjectRaw.Header.Add(vecbiNewData, iSegmentSize,
 						iSegmentNum);
 				}
 				else
 				{
 					/* Check transport ID */
-					if (MOTObject.iTransportID != iTransportID)
-						MOTObject.Header.Reset();
+					if (MOTObjectRaw.iTransportID != iTransportID)
+						MOTObjectRaw.Header.Reset();
 					else
 					{
 						/* Sometimes a packet is transmitted more than once,
 						   only use packets which are not already received
 						   correctly */
-						if (MOTObject.Header.iDataSegNum != iSegmentNum)
+						if (MOTObjectRaw.Header.iDataSegNum != iSegmentNum)
 						{
 							/* Check segment number */
-							if (MOTObject.Header.iDataSegNum + 1 != iSegmentNum)
+							if (MOTObjectRaw.Header.iDataSegNum + 1 !=
+								iSegmentNum)
 							{
 								/* A packet is missing, reset Header */
-								MOTObject.Header.Reset();
+								MOTObjectRaw.Header.Reset();
 							}
 							else
 							{
 								/* Add data */
-								MOTObject.Header.Add(vecbiNewData, iSegmentSize,
-									iSegmentNum);
+								MOTObjectRaw.Header.Add(vecbiNewData,
+									iSegmentSize, iSegmentNum);
 							}
 						}
 					}
@@ -735,9 +735,12 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 				/* Test if last flag is active */
 				if (biLastFlag == TRUE)
 				{
-					/* Header */
-					if (MOTObject.Header.bOK == TRUE)
-						MOTObject.Header.bReady = TRUE;
+					if (MOTObjectRaw.Header.bOK == TRUE)
+					{
+						/* This was the last segment and all segments were ok.
+						   Mark header as ready */
+						MOTObjectRaw.Header.bReady = TRUE;
+					}
 				}
 			}
 			else if (iDataGroupType == 4)
@@ -747,42 +750,43 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 				if (iSegmentNum == 0)
 				{
 					/* The first segment was received, reset body */
-					MOTObject.Body.Reset();
+					MOTObjectRaw.Body.Reset();
 
 					/* Check transport ID */
-					if (MOTObject.iTransportID == iTransportID)
+					if (MOTObjectRaw.iTransportID == iTransportID)
 					{
 						/* Init flag for body ok */
-						MOTObject.Body.bOK = TRUE;
+						MOTObjectRaw.Body.bOK = TRUE;
 
 						/* Add data */
-						MOTObject.Body.Add(vecbiNewData, iSegmentSize,
+						MOTObjectRaw.Body.Add(vecbiNewData, iSegmentSize,
 							iSegmentNum);
 					}
 				}
 				else
 				{
 					/* Check transport ID */
-					if (MOTObject.iTransportID != iTransportID)
-						MOTObject.Body.Reset();
+					if (MOTObjectRaw.iTransportID != iTransportID)
+						MOTObjectRaw.Body.Reset();
 					else
 					{
 						/* Sometimes a packet is transmitted more than once,
 						   only use packets which are not already received
 						   correctly */
-						if (MOTObject.Body.iDataSegNum != iSegmentNum)
+						if (MOTObjectRaw.Body.iDataSegNum != iSegmentNum)
 						{
 							/* Check segment number */
-							if (MOTObject.Body.iDataSegNum + 1 != iSegmentNum)
+							if (MOTObjectRaw.Body.iDataSegNum + 1 !=
+								iSegmentNum)
 							{
 								/* A packet is missing, reset Header */
-								MOTObject.Body.Reset();
+								MOTObjectRaw.Body.Reset();
 							}
 							else
 							{
 								/* Add data */
-								MOTObject.Body.Add(vecbiNewData, iSegmentSize,
-									iSegmentNum);
+								MOTObjectRaw.Body.Add(vecbiNewData,
+									iSegmentSize, iSegmentNum);
 							}
 						}
 					}
@@ -790,188 +794,210 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 
 				/* Test if last flag is active */
 				if (biLastFlag == TRUE)
-					if (MOTObject.Body.bOK == TRUE)
-						MOTObject.Body.bReady = TRUE;
+				{
+					if (MOTObjectRaw.Body.bOK == TRUE)
+					{
+						/* This was the last segment and all segments were ok.
+						   Mark body as ready */
+						MOTObjectRaw.Body.bReady = TRUE;
+					}
+				}
 			}
 
 
 			/* Use MOT object ----------------------------------------------- */
 			/* Test if MOT object is ready */
-			if ((MOTObject.Header.bReady == TRUE) &&
-				(MOTObject.Body.bReady == TRUE))
+			if ((MOTObjectRaw.Header.bReady == TRUE) &&
+				(MOTObjectRaw.Body.bReady == TRUE))
 			{
-				MOTObject.Header.vecbiData.ResetBitAccess();
+				DecodeObject(MOTObjectRaw);
 
-				/* HeaderSize and BodySize */
-				int iBodySize = (int) MOTObject.Header.vecbiData.Separate(28);
-				int iHeaderSize = (int) MOTObject.Header.vecbiData.Separate(13);
+				/* Set flag that new object was successfully decoded */
+				bMOTObjectReady = TRUE;
 
-				/* 7 bytes for header core */
-				int iSizeRec = iHeaderSize - 7;
+				/* Reset raw MOT object */
+				MOTObjectRaw.Header.Reset();
+				MOTObjectRaw.Body.Reset();
+			}
+		}
+	}
 
-				/* Content type and content sup-type */
-				int iContentType = (int) MOTObject.Header.vecbiData.Separate(6);
-				int iContentSubType =
-					(int) MOTObject.Header.vecbiData.Separate(9);
+	/* Return status of MOT object decoding */
+	return bMOTObjectReady;
+}
 
-				/* Use all header extension data blocks,
-				   added by Doyle Richard 2003/12/22 */
-				while (iSizeRec > 0)
-				{
-					/* PLI (Parameter Length Indicator) */
-					int iPLI = (int) MOTObject.Header.vecbiData.Separate(2);
+void CMOTDABDec::DecodeObject(CMOTObjectRaw& MOTObjectRaw)
+{
+	int				i;
+	int				iDaSiBytes;
+	unsigned char	ucParamId;
+	unsigned char	ucDatafield;
 
-					switch(iPLI)
-					{
-					case 0:
-						/* Total parameter length = 1 byte; no DataField
-						   available */
-						ucParamId = (unsigned char)
-							MOTObject.Header.vecbiData.Separate(6);
+	/* Header --------------------------------------------------------------- */
+	MOTObjectRaw.Header.vecbiData.ResetBitAccess();
 
-						/* TODO: Use "ucParamId" */
+	/* HeaderSize and BodySize */
+	const int iBodySize = (int) MOTObjectRaw.Header.vecbiData.Separate(28);
+	const int iHeaderSize = (int) MOTObjectRaw.Header.vecbiData.Separate(13);
 
-						iSizeRec -= 1; /* 6 + 2 (PLI) bits */
-						break;
+	/* 7 bytes for header core */
+	int iSizeRec = iHeaderSize - 7;
 
-					case 1:
-						/* Total parameter length = 2 bytes, length of DataField
-						   is 1 byte */
-						ucParamId = (unsigned char)
-							MOTObject.Header.vecbiData.Separate(6);
+	/* Content type and content sup-type */
+	const int iContentType = (int) MOTObjectRaw.Header.vecbiData.Separate(6);
+	const int iContentSubType =
+		(int) MOTObjectRaw.Header.vecbiData.Separate(9);
 
-						ucDatafield = (unsigned char)
-							MOTObject.Header.vecbiData.Separate(8);
+	/* Use all header extension data blocks */
+	while (iSizeRec > 0)
+	{
+		/* PLI (Parameter Length Indicator) */
+		int iPLI = (int) MOTObjectRaw.Header.vecbiData.Separate(2);
 
-						/* TODO: Use information in data field */
+		switch(iPLI)
+		{
+		case 0:
+			/* Total parameter length = 1 byte; no DataField
+			   available */
+			ucParamId = (unsigned char)
+				MOTObjectRaw.Header.vecbiData.Separate(6);
 
-						iSizeRec -= 2; /* 6 + 8 + 2 (PLI) bits */
-						break;
+			/* TODO: Use "ucParamId" */
 
-					case 2:
-						/* Total parameter length = 5 bytes; length of DataField
-						   is 4 bytes */
-						ucParamId = (unsigned char)
-							MOTObject.Header.vecbiData.Separate(6);
+			iSizeRec -= 1; /* 6 + 2 (PLI) bits */
+			break;
 
-						for (i = 0; i < 4; i++)
-						{
-							ucDatafield = (unsigned char)
-								MOTObject.Header.vecbiData.Separate(8);
+		case 1:
+			/* Total parameter length = 2 bytes, length of DataField
+			   is 1 byte */
+			ucParamId = (unsigned char)
+				MOTObjectRaw.Header.vecbiData.Separate(6);
 
-							/* TODO: Use information in data field */
-						}
-						iSizeRec -= 5; /* 6 + 4 * 8 + 2 (PLI) bits */
-						break;
+			ucDatafield = (unsigned char)
+				MOTObjectRaw.Header.vecbiData.Separate(8);
 
-					case 3:
-						/* Total parameter length depends on the DataFieldLength
-						   indicator (the maximum parameter length is
-						   32770 bytes) */
-						ucParamId = (unsigned char)
-							MOTObject.Header.vecbiData.Separate(6);
+			/* TODO: Use information in data field */
 
-						iSizeRec -= 1; /* 2 (PLI) + 6 bits */
+			iSizeRec -= 2; /* 6 + 8 + 2 (PLI) bits */
+			break;
 
-						/* Ext (ExtensionFlag): This 1-bit field specifies the
-						   length of the DataFieldLength Indicator and is coded
-						   as follows:
-						   - 0: the total parameter length is derived from the
-								next 7 bits;
-						   - 1: the total parameter length is derived from the
-								next 15 bits */
-						unsigned char ucExt = (unsigned char)
-							MOTObject.Header.vecbiData.Separate(1);
+		case 2:
+			/* Total parameter length = 5 bytes; length of DataField
+			   is 4 bytes */
+			ucParamId = (unsigned char)
+				MOTObjectRaw.Header.vecbiData.Separate(6);
 
-						int iDataFieldLen = 0;
+			for (i = 0; i < 4; i++)
+			{
+				ucDatafield = (unsigned char)
+					MOTObjectRaw.Header.vecbiData.Separate(8);
 
-						/* Get data field length */
-						if (ucExt == 0)
-						{
-							iDataFieldLen = (int)
-								MOTObject.Header.vecbiData.Separate(7);
+				/* TODO: Use information in data field */
+			}
+			iSizeRec -= 5; /* 6 + 4 * 8 + 2 (PLI) bits */
+			break;
 
-							iSizeRec -= 1;
-						}
-						else
-						{
-							iDataFieldLen = (int)
-								MOTObject.Header.vecbiData.Separate(15);
-							
-							iSizeRec -= 2;
-						}
+		case 3:
+			/* Total parameter length depends on the DataFieldLength
+			   indicator (the maximum parameter length is
+			   32770 bytes) */
+			ucParamId = (unsigned char)
+				MOTObjectRaw.Header.vecbiData.Separate(6);
 
-						/* Get data */
-						for (i = 0; i < iDataFieldLen; i++)
-						{
-							ucDatafield = (unsigned char)
-								MOTObject.Header.vecbiData.Separate(8);
+			iSizeRec -= 1; /* 2 (PLI) + 6 bits */
 
-							/* TODO: Use information in data field */
-						}
-						break;
-					}
-				}
+			/* Ext (ExtensionFlag): This 1-bit field specifies the
+			   length of the DataFieldLength Indicator and is coded
+			   as follows:
+			   - 0: the total parameter length is derived from the
+					next 7 bits;
+			   - 1: the total parameter length is derived from the
+					next 15 bits */
+			unsigned char ucExt = (unsigned char)
+				MOTObjectRaw.Header.vecbiData.Separate(1);
 
-				/* We only use images */
-				if (iContentType == 2 /* image */)
-				{
-					/* Check range of content sub type */
-					if (iContentSubType < 4)
-					{
-						/* Set up MOT picture ------------------------------- */
-						/* Reset bit access to extract data from body */
-						MOTObject.Body.vecbiData.ResetBitAccess();
+			int iDataFieldLen = 0;
 
-						/* Data size in bytes */
-						iDaSiBytes =
-							MOTObject.Body.vecbiData.Size() / SIZEOF__BYTE;
+			/* Get data field length */
+			if (ucExt == 0)
+			{
+				iDataFieldLen = (int)
+					MOTObjectRaw.Header.vecbiData.Separate(7);
 
-						/* Copy data */
-						NewPic.vecbRawData.Init(iDaSiBytes);
-						for (int i = 0; i < iDaSiBytes;	i++)
-							NewPic.vecbRawData[i] = (_BYTE) MOTObject.Body.
-								vecbiData.Separate(SIZEOF__BYTE);
+				iSizeRec -= 1;
+			}
+			else
+			{
+				iDataFieldLen = (int)
+					MOTObjectRaw.Header.vecbiData.Separate(15);
+				
+				iSizeRec -= 2;
+			}
 
-						/* Set format */
-						switch (iContentSubType)
-						{
-						case 0: /* gif */
-							NewPic.strFormat = "gif";
-							break;
+			/* Get data */
+			for (i = 0; i < iDataFieldLen; i++)
+			{
+				ucDatafield = (unsigned char)
+					MOTObjectRaw.Header.vecbiData.Separate(8);
 
-						case 1: /* jfif */
-							NewPic.strFormat = "jpeg";
-							break;
+				/* TODO: Use information in data field */
+			}
+			break;
+		}
+	}
 
-						case 2: /* bmp */
-							NewPic.strFormat = "bmp";
-							break;
 
-						case 3: /* png */
-							NewPic.strFormat = "png";
-							break;
+	/* Body ----------------------------------------------------------------- */
+	/* We only use images */
+	if (iContentType == 2 /* image */)
+	{
+		/* Check range of content sub type */
+		if (iContentSubType < 4)
+		{
+			/* Set up MOT picture ------------------------------------------- */
+			/* Reset bit access to extract data from body */
+			MOTObjectRaw.Body.vecbiData.ResetBitAccess();
 
-						default:
-							NewPic.strFormat = "";
-							break;
-						}
+			/* Data size in bytes */
+			iDaSiBytes =
+				MOTObjectRaw.Body.vecbiData.Size() / SIZEOF__BYTE;
 
-						/* Set ID */
-						NewPic.iTransportID = MOTObject.iTransportID;
-					}
-				}
+			/* Copy data */
+			MOTObject.vecbRawData.Init(iDaSiBytes);
+			for (int i = 0; i < iDaSiBytes;	i++)
+				MOTObject.vecbRawData[i] = (_BYTE) MOTObjectRaw.Body.
+					vecbiData.Separate(SIZEOF__BYTE);
 
-				/* Reset MOT object */
-				MOTObject.Header.Reset();
-				MOTObject.Body.Reset();
+			/* Set format */
+			switch (iContentSubType)
+			{
+			case 0: /* gif */
+				MOTObject.strFormat = "gif";
+				break;
+
+			case 1: /* jfif */
+				MOTObject.strFormat = "jpeg";
+				break;
+
+			case 2: /* bmp */
+				MOTObject.strFormat = "bmp";
+				break;
+
+			case 3: /* png */
+				MOTObject.strFormat = "png";
+				break;
+
+			default:
+				MOTObject.strFormat = "";
+				break;
 			}
 		}
 	}
 }
 
-void CDataUnit::Add(CVector<_BINARY>& vecbiNewData, int iSegmentSize,
-							  int iSegNum)
+void CMOTObjectRaw::CDataUnit::Add(CVector<_BINARY>& vecbiNewData,
+								   const int iSegmentSize,
+								   const int iSegNum)
 {
 	/* Add new data (bit-wise copying) */
 	const int iOldDataSize = vecbiData.Size();
@@ -979,7 +1005,8 @@ void CDataUnit::Add(CVector<_BINARY>& vecbiNewData, int iSegmentSize,
 
 	vecbiData.Enlarge(iNewEnlSize);
 
-	/* Read useful bits */
+	/* Read useful bits. We have to use the "Separate()" function since we have
+	   to start adding at the current bit position of "vecbiNewData" */
 	for (int i = 0; i < iNewEnlSize; i++)
 		vecbiData[iOldDataSize + i] =
 			(_BINARY) vecbiNewData.Separate(1);
@@ -988,7 +1015,7 @@ void CDataUnit::Add(CVector<_BINARY>& vecbiNewData, int iSegmentSize,
 	iDataSegNum = iSegNum;
 }
 
-void CDataUnit::Reset()
+void CMOTObjectRaw::CDataUnit::Reset()
 {
 	vecbiData.Init(0);
 	bOK = FALSE;

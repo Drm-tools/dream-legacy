@@ -6,7 +6,7 @@
  *	Volker Fischer
  *
  * Description:
- *	See DABData.cpp
+ *	See DABMOT.cpp
  *
  ******************************************************************************
  *
@@ -26,101 +26,55 @@
  *
 \******************************************************************************/
 
-#if !defined(DABDATA_H__3B0BAOHWEF78WF_987FW363E7A0D31912__INCLUDED_)
-#define DABDATA_H__3B0BAOHWEF78WF_987FW363E7A0D31912__INCLUDED_
+#if !defined(MOTSLIDESHOW_H__3B0UBVE98732KJVEW363LIHGEW982__INCLUDED_)
+#define MOTSLIDESHOW_H__3B0UBVE98732KJVEW363LIHGEW982__INCLUDED_
 
 #include "../GlobalDefinitions.h"
 #include "../Vector.h"
 #include "../CRC.h"
+#include "DABMOT.h"
 
 
 /* Classes ********************************************************************/
-class CMOTObjSegm
-{
-public:
-	CVector<CVector<_BINARY> > vvbiHeader;
-	CVector<CVector<_BINARY> > vvbiBody;
-};
-
-class CDataUnit
-{
-public:
-	CDataUnit() {Reset();}
-
-	void Reset();
-	void Add(CVector<_BINARY>& vecbiNewData, int iSegmentSize, int iSegNum);
-
-	CVector<_BINARY>	vecbiData;
-	_BOOLEAN			bOK;
-	_BOOLEAN			bReady;
-	int					iDataSegNum;
-};
-
-class CMOTObject
-{
-public:
-	int					iTransportID;
-	CDataUnit			Header;
-	CDataUnit			Body;
-};
-
-
 /* Encoder ------------------------------------------------------------------ */
-class CDABDataEnc
+class CMOTSlideShowEncoder
 {
 public:
-	CDABDataEnc() {}
-	virtual ~CDABDataEnc() {}
+	CMOTSlideShowEncoder() : vecMOTPicture(0) {}
+	virtual ~CMOTSlideShowEncoder() {}
 
 	void Init();
+
 	void GetDataUnit(CVector<_BINARY>& vecbiNewData);
 
+	void AddFileName(const string& strFileName, const string& strFormat);
+	void ClearAllFileNames() {vecMOTPicture.Init(0);}
 
 protected:
-	void GenMOTSegments(CMOTObjSegm& MOTObjSegm);
-	void PartitionUnits(CVector<_BINARY>& vecbiSource,
-						CVector<CVector<_BINARY> >& vecbiDest,
-						const int iPartiSize);
+	void AddNextPicture();
 
-	void GenMOTObj(CVector<_BINARY>& vecbiData, CVector<_BINARY>& vecbiSeg,
-				   const _BOOLEAN bHeader, const int iSegNum,
-				   const int iTranspID, const _BOOLEAN bLastSeg);
+	CMOTDABEnc			MOTDAB;
 
-	CMOTObjSegm MOTObjSegments;
-
-	int			iSegmCnt;
-	_BOOLEAN	bCurSegHeader;
-
-	int			iContIndexHeader;
-	int			iContIndexBody;
-
-	int			iTransportID;
+	CVector<CMOTObject>	vecMOTPicture;
+	int					iPictureCnt;
 };
 
 
 /* Decoder ------------------------------------------------------------------ */
-class CMOTPicture
+class CMOTSlideShowDecoder
 {
 public:
-	CMOTPicture() : vecbRawData(0), strFormat(""), iTransportID(-1) {}
+	CMOTSlideShowDecoder() : bNewPicture(FALSE) {}
+	virtual ~CMOTSlideShowDecoder() {}
 
-	CVector<_BYTE>	vecbRawData;
-	string			strFormat;
-	int				iTransportID;
-};
-
-class CDABData
-{
-public:
-	CDABData() {}
-	virtual ~CDABData() {}
-
-	void AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic);
-
+	void AddDataUnit(CVector<_BINARY>& vecbiNewData);
+	_BOOLEAN GetPicture(CMOTObject& NewPic);
 
 protected:
-	CMOTObject MOTObject;
+	_BOOLEAN	bNewPicture;
+	CMOTObject	MOTPicture;
+	CMOTDABDec	MOTDAB;
 };
 
 
-#endif // !defined(DABDATA_H__3B0BAOHWEF78WF_987FW363E7A0D31912__INCLUDED_)
+#endif // !defined(MOTSLIDESHOW_H__3B0UBVE98732KJVEW363LIHGEW982__INCLUDED_)

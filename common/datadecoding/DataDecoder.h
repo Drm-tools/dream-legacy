@@ -34,7 +34,7 @@
 #include "../Modul.h"
 #include "../CRC.h"
 #include "../Vector.h"
-#include "DABData.h"
+#include "MOTSlideShow.h"
 
 
 /* Definitions ****************************************************************/
@@ -53,16 +53,17 @@ public:
 	int Init(CParameter& Param);
 	void GeneratePacket(CVector<_BINARY>& vecbiPacket);
 
+	CMOTSlideShowEncoder* GetSliShowEnc() {return &MOTSlideShowEncoder;}
 
 protected:
-	CDABDataEnc			DABDataEncoder;
-	CVector<_BINARY>	vecbiCurDataUnit;
+	CMOTSlideShowEncoder	MOTSlideShowEncoder;
+	CVector<_BINARY>		vecbiCurDataUnit;
 
-	int					iPacketLen;
-	int					iTotalPacketSize;
-	int					iCurDataPointer;
-	int					iPacketID;
-	int					iContinInd;
+	int						iPacketLen;
+	int						iTotalPacketSize;
+	int						iCurDataPointer;
+	int						iPacketID;
+	int						iContinInd;
 };
 
 
@@ -70,11 +71,10 @@ protected:
 class CDataDecoder : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-	CDataDecoder() {}
+	CDataDecoder() : iServPacketID(0), DoNotProcessData(TRUE) {}
 	virtual ~CDataDecoder() {}
 
-	void GetSlideShowPicture(CMOTPicture& NewPic);
-
+	_BOOLEAN GetSlideShowPicture(CMOTObject& NewPic);
 
 protected:
 	class CDataUnit
@@ -100,13 +100,11 @@ protected:
 	int						iDABUserAppIdent;
 	CVector<int>			veciCRCOk;
 
-	CMOTPicture				MOTPicture;
-
 	_BOOLEAN				DoNotProcessData;
 
 	int						iContInd[MAX_NUM_PACK_PER_STREAM];
 	CDataUnit				DataUnit[MAX_NUM_PACK_PER_STREAM];
-	CDABData				DABData[MAX_NUM_PACK_PER_STREAM];
+	CMOTSlideShowDecoder	MOTSlideShow[MAX_NUM_PACK_PER_STREAM];
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
