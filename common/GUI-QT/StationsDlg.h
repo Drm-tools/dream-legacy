@@ -179,8 +179,6 @@ public:
 	virtual ~StationsDlg();
 
 protected:
-	enum ECOMNumber {CN_COM1, CN_COM2, CN_COM3};
-
 	void			SetFrequency(const int iFreqkHz);
 	void			SetStationsView();
     virtual void	showEvent(QShowEvent* pEvent);
@@ -207,7 +205,6 @@ protected:
 	QAction*					pacMenuCOM2;
 	QAction*					pacMenuCOM3;
 	QActionGroup*				agCOMPortSel;
-	ECOMNumber					eComNumber;
 
 #ifdef HAVE_LIBHAMLIB
 	class CSpecDRMRig

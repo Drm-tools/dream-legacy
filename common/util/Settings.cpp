@@ -187,6 +187,9 @@ void CSettings::ReadIniFile()
 	/* Hamlib Model ID */
 	if (GetNumericIniSet(ini, "Hamlib",	"hamlib-model", 0, MAX_ID_HAMLIB, iValue) == TRUE)
 		DRMReceiver.SetHamlibModel(iValue);
+
+	/* Hamlib configuration string */
+	DRMReceiver.SetHamlibConf(GetIniSetting(ini, "Hamlib", "hamlib-config"));
 #endif
 }
 
@@ -294,6 +297,9 @@ void CSettings::WriteIniFile()
 	/* Hamlib Model ID */
 	SetNumericIniSet(ini, "Hamlib", "hamlib-model",
 		DRMReceiver.GetHamlibModel());
+
+	/* Hamlib configuration string */
+	PutIniSetting(ini, "Hamlib", "hamlib-config", DRMReceiver.GetHamlibConf().c_str());
 #endif
 
 

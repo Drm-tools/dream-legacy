@@ -326,6 +326,11 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 
 
 #ifdef HAVE_LIBHAMLIB
+	/* If config string is empty, set default COM port 1 */
+	if (DRMReceiver.GetHamlibConf().empty())
+		DRMReceiver.SetHamlibConf(HAMLIB_CONF_COM1);
+
+
 	/* Remote menu  --------------------------------------------------------- */
 	pRemoteMenu = new QPopupMenu(this);
 	CHECK_PTR(pRemoteMenu);
@@ -463,14 +468,15 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	/* Add COM port selection menu group to remote menu */
 	agCOMPortSel->addTo(pRemoteMenu);
 
-	/* Default com number */
-	eComNumber = CN_COM1;
-
-	/* If a config string was set via the command line, we would have to parse
-	   the string to identify the port number which was set (if any) which we
-	   do not want to do. We simply do not set any check in this case */
-	if (DRMReceiver.GetHamlibConf().empty())
+	/* Try to get the COM port number from the hamlib configure string */
+	if (DRMReceiver.GetHamlibConf() == HAMLIB_CONF_COM1)
 		pacMenuCOM1->setOn(TRUE);
+
+	if (DRMReceiver.GetHamlibConf() == HAMLIB_CONF_COM2)
+		pacMenuCOM2->setOn(TRUE);
+
+	if (DRMReceiver.GetHamlibConf() == HAMLIB_CONF_COM3)
+		pacMenuCOM3->setOn(TRUE);
 #endif
 
 
@@ -840,10 +846,6 @@ void StationsDlg::OnRemoteMenu(int iID)
 	/* Set ID if valid */
 	const int iNewModelID = veciModelID[iID];
 
-	/* A rig was selected via the menu, delete all previous settings from
-	   the command line (if any) */
-	DRMReceiver.SetHamlibConf("");
-
 	InitHamlib(iNewModelID);
 
 	/* Take care of check */
@@ -859,20 +861,16 @@ void StationsDlg::OnRemoteMenu(int iID)
 
 void StationsDlg::OnComPortMenu(QAction* action)
 {
+#ifdef HAVE_LIBHAMLIB
 	/* We cannot use the switch command for the non constant expressions here */
 	if (action == pacMenuCOM1)
-		eComNumber = CN_COM1;
+		DRMReceiver.SetHamlibConf(HAMLIB_CONF_COM1);
 
 	if (action == pacMenuCOM2)
-		eComNumber = CN_COM2;
+		DRMReceiver.SetHamlibConf(HAMLIB_CONF_COM2);
 
 	if (action == pacMenuCOM3)
-		eComNumber = CN_COM3;
-
-#ifdef HAVE_LIBHAMLIB
-	/* A com port was selected via the menu, delete all previous settings from
-	   the command line (if any) */
-	DRMReceiver.SetHamlibConf("");
+		DRMReceiver.SetHamlibConf(HAMLIB_CONF_COM3);
 
 	/* Init hamlib, use current selected model ID */
 	InitHamlib(iCurSelModelID);
@@ -998,28 +996,8 @@ try
 	if (pRig == NULL)
 		throw CGenErr("Initialization of hamlib failed.");
 
-	/* Set config for hamlib. Check if config string was added with command line
-	   argument */
+	/* Set config for hamlib */
 	string strHamlibConfig = DRMReceiver.GetHamlibConf();
-
-	if (strHamlibConfig.empty())
-	{
-		/* Generate string for port selection */
-		switch (eComNumber)
-		{
-		case CN_COM1:
-			strHamlibConfig = HAMLIB_CONF_COM1;
-			break;
-
-		case CN_COM2:
-			strHamlibConfig = HAMLIB_CONF_COM2;
-			break;
-
-		case CN_COM3:
-			strHamlibConfig = HAMLIB_CONF_COM3;
-			break;
-		}
-	}
 
 	/* Config setup */
 	char *p_dup, *p, *q, *n;
