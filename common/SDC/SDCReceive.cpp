@@ -165,7 +165,7 @@ void CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData, int iLengthOfBody,
 	for (i = 0; i < iNumStreams; i++)
 	{
 		/* In case of hirachical modulation stream 0 describes the protection
-		   level and length of hirarchical data */
+		   level and length of hierarchical data */
 		if ((i == 0) && ((Parameter.eMSCCodingScheme == CParameter::CS_3_HMSYM) ||
 			(Parameter.eMSCCodingScheme == CParameter::CS_3_HMMIX)))
 		{

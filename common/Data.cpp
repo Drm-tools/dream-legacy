@@ -539,14 +539,14 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 		{
 			PostWinMessage(MS_FAC_CRC, 0);
 
-			/* Set AAC in log file */
+			/* Set FAC status in log file */
 			ReceiverParam.ReceptLog.SetFAC(TRUE);
 		}
 		else
 		{
 			PostWinMessage(MS_FAC_CRC, 2);
 
-			/* Set AAC in log file */
+			/* Set FAC status in log file */
 			ReceiverParam.ReceptLog.SetFAC(FALSE);
 		}
 	}
