@@ -1759,6 +1759,38 @@ Bandwidth        </source>
         <source>The history of the values for the SNR and correctly decoded audio blocks is shown. The maximum achievable number of correctly decoded audio blocks per DRM frame is 10 or 5 depending on the audio sample rate (24 kHz or 12 kHz AAC core bandwidth).</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Interferer Rejection:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>There are two algorithms available to reject interferers:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bandpass filter (BP-Filter):</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The bandpass filter is designed to have the same bandwidth as the DRM signal. If, e.g., a strong signal is close to the border of the actual DRM signal, under some conditions this signal will produce interference in the useful bandwidth of the DRM signal although it is not on the same frequency as the DRM signal. The reason for that behaviour lies in the way the OFDM demodulation is done. Since OFDM demodulation is a block-wise operation, a windowing has to be applied (which is rectangular in case of OFDM). As a result, the spectrum of a signal is convoluted with a Sinc function in the frequency domain. If a sinusoidal signal close to the border of the DRM signal is considered, its spectrum will not be a distinct peak but a shifted Sinc function. So its spectrum is broadened caused by the windowing. Thus, it will spread in the DRM spectrum and act as an in-band interferer.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>There is a special case if the sinusoidal signal is in a distance of a multiple of the carrier spacing of the DRM signal. Since the Sinc function has zeros at certain positions it happens that in this case the zeros are exactly at the sub-carrier frequencies of the DRM signal. In this case, no interference takes place. If the sinusoidal signal is in a distance of a multiple of the carrier spacing plus half of the carrier spacing away from the DRM signal, the interference reaches its maximum.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>As a result, if only one DRM signal is present in the 20 kHz bandwidth, bandpass filtering has no effect. Also,  if the interferer is far away from the DRM signal, filtering will not give much improvement since the squared magnitude of the spectrum of the Sinc function is approx -15 dB down at 1 1/2 carrier spacing (approx 70 Hz with DRM mode B) and goes down to approx -30 dB at 10 times the carrier spacing plus 1 / 2 of the carrier spacing (approx 525 Hz with DRM mode B). The bandpass filter must have very sharp edges otherwise the gain in performance will be very small so that it consumes high CPU power.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modificated Metric:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Based on the information from the SNR versus sub-carrier estimation, the metric for the Viterbi decoder can be modified so that sub-carriers with high noise are attenuated and do not contribute too much to the decoding result. That can improve reception under bad conditions but may worsen the reception in situations where a lot of fading happens and no interferer are present since the SNR estimation may be not correct.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>systemevalDlgBase</name>
