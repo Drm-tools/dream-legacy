@@ -205,17 +205,17 @@ void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
 		/* Lock resources */
 		Lock();
 
-		_REAL rNormData = (_REAL) iDFTSize * iDFTSize * _MAXSHORT;
-		_REAL rFactorScale = 
+		const _REAL rNormData = (_REAL) iDFTSize * iDFTSize * _MAXSHORT;
+		const _REAL rFactorScale =
 			(_REAL) SOUNDCRD_SAMPLE_RATE / iLenPowSpec / 2000;
 
 		/* Apply the normalization (due to the FFT) */
 		for (int i = 0; i < iLenPowSpec; i++)
 		{
-			_REAL rNormPowSpec = vecrPowSpec[i] / rNormData;
+			const _REAL rNormPowSpec = vecrPowSpec[i] / rNormData;
 
 			if (rNormPowSpec > 0)
-				vecrData[i] = (_REAL) 10.0 * log10(vecrPowSpec[i] / rNormData);
+				vecrData[i] = (_REAL) 10.0 * log10(rNormPowSpec);
 			else
 				vecrData[i] = RET_VAL_LOG_0;
 
