@@ -1,0 +1,187 @@
+<!DOCTYPE UI><UI>
+<class>TransmDlgBase</class>
+<widget>
+    <class>QDialog</class>
+    <property stdset="1">
+        <name>name</name>
+        <cstring>TransmDlgBase</cstring>
+    </property>
+    <property stdset="1">
+        <name>geometry</name>
+        <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>350</width>
+            <height>106</height>
+        </rect>
+    </property>
+    <property stdset="1">
+        <name>caption</name>
+        <string>Dream DRM Transmitter</string>
+    </property>
+    <property stdset="1">
+        <name>sizeGripEnabled</name>
+        <bool>false</bool>
+    </property>
+    <vbox>
+        <property stdset="1">
+            <name>margin</name>
+            <number>11</number>
+        </property>
+        <property stdset="1">
+            <name>spacing</name>
+            <number>6</number>
+        </property>
+        <widget>
+            <class>QLayoutWidget</class>
+            <property stdset="1">
+                <name>name</name>
+                <cstring>Layout12</cstring>
+            </property>
+            <hbox>
+                <property stdset="1">
+                    <name>margin</name>
+                    <number>0</number>
+                </property>
+                <property stdset="1">
+                    <name>spacing</name>
+                    <number>6</number>
+                </property>
+                <widget>
+                    <class>QLabel</class>
+                    <property stdset="1">
+                        <name>name</name>
+                        <cstring>PixmapLabel1_2</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>sizePolicy</name>
+                        <sizepolicy>
+                            <hsizetype>0</hsizetype>
+                            <vsizetype>0</vsizetype>
+                        </sizepolicy>
+                    </property>
+                    <property stdset="1">
+                        <name>pixmap</name>
+                        <pixmap>image0</pixmap>
+                    </property>
+                    <property stdset="1">
+                        <name>scaledContents</name>
+                        <bool>true</bool>
+                    </property>
+                </widget>
+                <widget>
+                    <class>QLayoutWidget</class>
+                    <property stdset="1">
+                        <name>name</name>
+                        <cstring>Layout9</cstring>
+                    </property>
+                    <vbox>
+                        <property stdset="1">
+                            <name>margin</name>
+                            <number>0</number>
+                        </property>
+                        <property stdset="1">
+                            <name>spacing</name>
+                            <number>6</number>
+                        </property>
+                        <widget>
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>TextLabel1</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Volker Fischer, Alexander Kurpiers</string>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>TextLabel2</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Darmstadt University of Technology
+Institute for Communication Technology</string>
+                            </property>
+                        </widget>
+                    </vbox>
+                </widget>
+            </hbox>
+        </widget>
+        <widget>
+            <class>QLayoutWidget</class>
+            <property stdset="1">
+                <name>name</name>
+                <cstring>Layout1</cstring>
+            </property>
+            <hbox>
+                <property stdset="1">
+                    <name>margin</name>
+                    <number>0</number>
+                </property>
+                <property stdset="1">
+                    <name>spacing</name>
+                    <number>6</number>
+                </property>
+                <spacer>
+                    <property>
+                        <name>name</name>
+                        <cstring>Horizontal Spacing2</cstring>
+                    </property>
+                    <property>
+                        <name>orientation</name>
+                        <enum>Horizontal</enum>
+                    </property>
+                    <property>
+                        <name>sizeType</name>
+                        <enum>Expanding</enum>
+                    </property>
+                    <property>
+                        <name>sizeHint</name>
+                        <size>
+                            <width>20</width>
+                            <height>20</height>
+                        </size>
+                    </property>
+                </spacer>
+                <widget>
+                    <class>QPushButton</class>
+                    <property stdset="1">
+                        <name>name</name>
+                        <cstring>buttonOk</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>text</name>
+                        <string>&amp;Close</string>
+                    </property>
+                    <property stdset="1">
+                        <name>autoDefault</name>
+                        <bool>true</bool>
+                    </property>
+                    <property stdset="1">
+                        <name>default</name>
+                        <bool>true</bool>
+                    </property>
+                </widget>
+            </hbox>
+        </widget>
+    </vbox>
+</widget>
+<images>
+    <image>
+        <name>image0</name>
+        <data format="XPM.GZ" length="15063">789cd59a5b73e23a12c7dfe753a44ebf9ddad201e318525bfb00219940ee9390dbd63e08634208263772dddaefbe6df55fb20c84c95c9239532a93fc6cc996feea6e5decbffe5c3ad9db5efaf3af4f77133db98897e281be5dfab3779fa6cffffecfbffefbe98f7225580aa3a572545b0afef8c7a73ff6274bf1d2ced538c980f3c64b540a4b5129cc58f51dc7195317ac855562382ee9b2c9afdbe044589163c9bf225c0e84f566c6e5d0b27ab61c98f21483236175ed58f22f83b53069c3b165f564b922e57be0047cee58f2a37c10804d7b8390ab23f9637004de06eb50f23f1a8e1ddf809365698f12ae04c26ae058f25f645c092b11f8c17224fa6e81b5b03a722cf96fc109f8c5705c49aa927f47380cc0578e25ff1d3802df671c868e2f2dd7a4fc10acc10dc7923f0527e0b1e1d8f1447839008f2caf885e87e048589bfa2e8796551dacc1657082fcab8ec5ded60dc7966957380a8455048e703dc8380a2dab0e58e3fab6652dcf33fd1dc55122acb684ab01b8997135ac46c2d4712cf7eb83b5b05a0527b86efcad1a5b5687c2b500d79f2d77a53e2d70244cc61e6aa16555026bb0d1a316d712947f145e09baa29ff1a795d03235c191b0da046bf081e1d832ad829358ead31366771536fea843c7048e84d51a58e3fa8563a9df86e1d8328dc089b0aa087703e437f6d80d2dab3d7084f207967ba2c72558838dfd7563cb340027c2ea58380e90dfd87b1c5aa64bc7f2bc2138125635b016d6c63fe3d8b26a8313947fb29cc8f3d7857bf6fea67dbdb017c8756a8023e4ff0cd6c2daf46f2fb6d7f51a18d7d53e18cfd39f1dcbf34cfe244c026175068ec001580b6b131f93d832ed58eecbf34ec0893099feee73fc95784e2d30e23bb51dcbfd8e852b88ef74068ec0916589efb409d6e0537002fe2c1c0612efa90c8e84b5b62cf15e5f80353805637cd00fc2cb180f68058cf14027e044e23f5d0b4781c47baa8023f00918e30395c0180fe846b88af1400f1c4bfe7bb0062f831389f7b4255c0bc0578ea5be0d61db5f0afaf50330faab1f09eb6bc752dec4b37eecee5f03637cd13de1158c177ae458eafb058cf8ad5fc0367e3f8011af6922ac11aff53dd8c6e75b30e2b31e826dbc3c17eedaf8db05dbf83b762cf7db07233eeabe708c7847eb8e25ff11d8c6b7108cf8a663e19e8d570446bca047b08d1777c209e281c2fd12f83b55c1f04765d9fab7d86fecfa137adbfea4ba6329bf01d6c2fb938f4b8aa692565d77c4aa377535f9c8babd9716aaaf126ecb39a701a70b35e474c969a4524e233536ffd9bff657cea4b8969d917257e62e03be5beffd14fa995a70fbafb9ae37ea56dd710b46ae45d2aabc8dd3ed9fb863e4e549bd5cf2ffc42978cfea3ca847f5a49e55ffefa305f753d6fe17d3fad4b5cf6fe5c4d1c4b4273fb254f78ee9eb6353728264ef3a2ea896b22eb7accbf58fdacbf76a616c20b38086d78f295a6fdb2f2d58554d3ed690d6d5e7c2b15148ada9eb6d94da34f7d8726ae5cf490baa5c728d62f5fc515ab006db6ac7d9edc8eb7d495b6a97ebbec7edd8575fb87d5f4c2b7fce6f8b0f51e8401daa0e3f6de86c66ecc5a0541db126f45e5ab0253cf113324f984009a9c590adbbc3ad5f53c7eac4d4f6a3d21775aacef8a907aa6474499d37da683364db7d7344798b16468507f686fc3963f3d4325bc01edbf269a17e1fa7453105c65e0e4ddc1917fcc728f2e35af0c8f8e06cc1c6bb32f743458573ecb8a8c8f7fdb67ef00e59cc59e3e8321d51eed9b7175ac8222dd432fb841d0fc51a22f685f50536fbab6c625eaaaa1adb6ddd44943c960c5e8f22af69c1117207a5c5223215f6dfd4debf97221bec3925b6e4d445b9942d7deee83b4f0bb5c2f6e0cf847639267c644cfcf9a9c511b6e9e67363d52035abc7ac16ec550d8c4b1c19883832ce8b08bf63dae75ecdade392f4222da80bcfc84ad43902fdded6e027db9f2df618990b64ed1cbca605c5f95c997a1c7b7e75fddf2bedf3c86ba3e9553eb6e45af09c64089bd832513257b3e81f354aa8af56b3837f133eced91b0b4fa3815aa30b3e86fcff65968b46ded594c67445d79c6ee896eee6d4b64a13ba3739aef9ef033d16aeeee1ee4f59cd6840cffc8417fe5bc7fd1b646a464dd78ed974ccf154d6353b560dab05db04a2044788f991e18bab495a98ed9affa84f6b5e6bfb597ce22bd95cccae36719dd6e9336d706a99df0d6ad343f189acc3a639df72f9dab495e7a16d3cf5809edcff7c701d76d4292b90d76cccad99aebffd1bb07548cda08668c133cb2bcc26d75e2d9bf78abf0731c1ec634cbb3c1fb6799aa8ddb65ba14f68cfb4639fdbe5eb20ff5f792d9d98b336b55cbebc1e1ddc758b635aea7c3f3b53e25e28ee0a8ce9e055db68410dc40d687161cafb4abc9ef6dcd39a7caf923aa443f44dc9b5a7e3f78d49f52c0ed3111da375c774c21e72eada3b41c9476313593aa312e7283bbd723fecb8dec856fa25ae87bf3334a6acc72377ae3cc7b6dd1c977d5cf22d8b163ccf963b97a64accb78c3dabbaf157d17757f6169c9f34dddc371b9713aecfa1696905edfc4ca1c957a5659c89c8c46aaa419d15fb54da7216728771ade3fafd106ba1356fd767d3e46a390f4869510fb7b86e99862fd0621b56f17aa4f1f5a8c86c857fdd6c5c2bee9feca9a329bbc86a2b35fbccb9083ddca2fc4955adc55274d7dc29a689eee944f771a73addc14736dcb96dc4824337e607ce1377ed398edfd632db33edf07a97e04d247bc147c6e30e17d852d12eecbe85f70c636b29db87b50b1bd1f218b2a1cfad7fa0bee697c709d3eb7a30b70faa5cca2a68b5ef204234bd7c13a8bfebce9c393f6dcfbd736e1975634fa2c5d08ff35f4d761c19fbab349e8f64b5eb382d4658cb7925ad3fe80bbad5439b382a48af2785bc7734ceec837dc7c6596717889d63f686bc846df79ea7c5788e5dcc491c6fb3b203a38529a32fa7f2cc5b855bbb684c3f83c7ae2c5e6c3b2dc42e560bcfbcc7f8b83195a4b5b665553dd2e9548ef69416d2465f0bd9b318e9f102bb786d2d51320a1cc14752331798d56c5ee93d170b7cbb3837678b7631754fe30d2d4f8196c72d6851a515e713d9d1662b42aee97851d0c2faadb30b8e98e3595f9e9b4cac535da3c5c0d8c5953af94a99dc2e64f6f0e49d959164da478a5a6ca14d298fad47ba9f1fe6d78c2c6ea469f3983be1d6577994b56af9f162d62ec4732b05bb788b8fd45072d968f18cb9232d28e1fb889d37b867e86b8edf3cda938d664de4d9f5cb22766616e0c7f13b6fe5133a7bb875d71f5f194726ca9f45d9f9956f17a3e97ace4bfac6e4bbd4b7986bdd8a65147a7a915d886fba9504ab68bc464f9c16629d45bf0be1171bfa3ed798dbb949a7fa211b53d93ae0333a7675b59ed52ac48b91994914eda2a005ec228b6d0bb4e09acbbd623bef74ab91fa821dbc5c0b3b5e1eea474eb226c8d429bbf1be897956ae85b1041e171029f4797686576915bbeac85a4ab95ddc509a5de771c6ce438be3483a651733e308ec62eccf83e628212dd9f1d7664ac3aa47b4f75a49cf2ef23780fe1bbe7c546e620630158fd9decf5c5c2c73dc3875ebaf1be43875b1f5cc5d479475d664e71745bb9056f9763141ed5eb38b3578d650f640bd357b6cfd8b57bc8bf6b0f65cebf3df49c1066cbc98cc8e4dbcf2f24712fce5b9859d71df7aab53f95b863571ec755aa4337661df8cf87661579073b4e099f22a2c6968df17f87b392a76d6df591039f6bc77643675b08361356ce25d961f3bf14ba16b9bf4f819d6e3b8ae7b9eb56cd0890a7517d651469e0eeebee9ddd7be5d2cda85bcc799d28223fd81be725ef53c6f5f8bd5e829fb46614c7d6accd5e28c23e4b13af67e83193b5ac795e9f7a51b686fb6ea78e631768bdbf938733d64ebc9aebd7004352ae9ae248c386d797661fd748c14b8332d77ce7f97b5a1ebbc8eb533a43bff0dc1f4de2faf595f54be57537a458fdf33b55887be9b114ced76bef24e40f63d65cd915287577cbffd1eb06e1099399055e24e5dbfed5d91eaabedc25851e7b173debee46f9058856c47d4ff0ae652f5defaae087af0e0ab0a3b9b7a95e795b55fddb66f54e145af167667efd8ea5f79abbaf8dd32db87362bfab1d394e763f442070bf78a7e756ae9268d54d3ed3dda2f035ee6dbc3dbb48022d7bc7a1bba186277be77d52ec7a29dbf512c39d56b34627f28173c42a2c3f6d7bf4cf9866f51965991746ac6c9875ee7d177554f74f13b8c0f54809eb84f9afa86e70c853d6053cbbbec4baeb7b5f05bbf51e235ed8ddaf1ecc33e55788b75e971cd9e78a6f38eef5f7553b5d90b36798c0bfc7ef13c22355f6e7dd3574adff7ed1ac79165a3493e13cf35b135632fa284d76f3cefd7d9bbac866eea795166d19beb53536e4dd5f80e17d4a384d3e1d47a48d642f9b917f687effa7aed47bf69e45812ab0b75a5c62a2df44dae8bfdd2cfac84d98eebfa2affe538cc49b7e42ff5e50aaf97ebc821f3c386ebf1dc0aedffd9d1e07eb951e76ae547daf2b3be75654b7936df790ed43d7643d3823ee3194b9ea5fcb7e1aee7df4c8e94dd67957b5d72fb076c034fbafd73be777d8f6fa0555fb729e65eda560fe66bafa1f71d6ce12dac1abbf13a1fb547337946663539e43878c1f7d359ffbfc777d01ff56dbc22b5a237d976e2a974a48ef496fbbd98baaab9cccafbb47c8e16fffbe7a7ff03dafec156</data>
+    </image>
+</images>
+<connections>
+    <connection>
+        <sender>buttonOk</sender>
+        <signal>clicked()</signal>
+        <receiver>TransmDlgBase</receiver>
+        <slot>accept()</slot>
+    </connection>
+</connections>
+</UI>
