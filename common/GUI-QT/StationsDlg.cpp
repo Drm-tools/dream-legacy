@@ -595,19 +595,16 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 	if (item == 0)
 		return;
 
-	/* Third text of list view item is frequency -> text(2) */
-	const int iCurFreqkHz = QString(item->text(2)).toInt();
-
-	SetFrequency(iCurFreqkHz);
+	/* Third text of list view item is frequency -> text(2)
+	   Set value in frequency counter control QWT. Setting this parameter will
+	   emit a "value changed" signal which sets the new frequency. Therefore,
+	   here is no call to "SetFrequency()" needed. Also, the frequency is set
+	   in the log file, therefore here is no "ReceptLog.SetFrequency()" needed,
+	   too */
+	QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
 
 	/* Now tell the receiver that the frequency has changed */
 	DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
-
-	/* Set selected frequency in log file class */
-	DRMReceiver.GetParameters()->ReceptLog.SetFrequency(iCurFreqkHz);
-
-	/* Set value in frequency counter control QWT */
-	QwtCounterFrequency->setValue(iCurFreqkHz);
 }
 
 void StationsDlg::OnRemoteMenu(int iID)
