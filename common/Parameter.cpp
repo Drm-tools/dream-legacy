@@ -82,23 +82,24 @@ int CParameter::GetNumActiveServices()
 	int iNumAcServ = 0;
 
 	for (int i = 0; i < MAX_NUM_SERVICES; i++)
+	{
 		if (Service[i].IsActive())
 			iNumAcServ++;
+	}
 
 	return iNumAcServ;
 }
 
 void CParameter::GetActiveServices(CVector<int>& veciActServ)
 {
-	int				i;
-	CVector<int>	vecbServices(MAX_NUM_SERVICES, 0);
+	CVector<int> vecbServices(MAX_NUM_SERVICES, 0);
 
 	/* Init return vector */
 	veciActServ.Init(0);
 
 	/* Get active services */
 	int iNumServices = 0;
-	for (i = 0; i < MAX_NUM_SERVICES; i++)
+	for (int i = 0; i < MAX_NUM_SERVICES; i++)
 	{
 		if (Service[i].IsActive())
 		{

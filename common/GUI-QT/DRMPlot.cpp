@@ -664,6 +664,8 @@ void CDRMPlot::OnClicked(const QMouseEvent& e)
 	/* Send normalized frequency to receiver */
 	const double dMaxxBottom = axisScale(QwtPlot::xBottom)->hBound();
 
+// TODO: do not set the value directly in the DRMReceiver object ->
+// use event mechanism instead! -> emit signal(value)...
 	if (dMaxxBottom != (double) 0.0)
 		DRMReceiver.SetAMDemodAcq(dFreq / dMaxxBottom);
 }
