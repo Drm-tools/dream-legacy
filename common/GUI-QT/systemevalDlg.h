@@ -80,6 +80,9 @@ protected:
     virtual void	showEvent(QShowEvent* pEvent);
 	virtual void	hideEvent(QHideEvent* pEvent);
 
+	QString			GetRobModeStr();
+	QString			GetSpecOccStr();
+
 public slots:
 	void OnTimer();
 	void OnTimerChart();

@@ -351,56 +351,12 @@ void systemevalDlg::OnTimer()
 	QString strFACInfo;
 
 	/* Robustness mode #################### */
-	strFACInfo = "Robustness Mode: \t\t";
-	switch (DRMReceiver.GetParameters()->GetWaveMode())
-	{
-	case RM_ROBUSTNESS_MODE_A:
-		strFACInfo += "A";
-		break;
-
-	case RM_ROBUSTNESS_MODE_B:
-		strFACInfo += "B";
-		break;
-
-	case RM_ROBUSTNESS_MODE_C:
-		strFACInfo += "C";
-		break;
-
-	case RM_ROBUSTNESS_MODE_D:
-		strFACInfo += "D";
-		break;
-	}
+	strFACInfo = "Robustness Mode: \t\t" + GetRobModeStr();
 
 	FACRobustnessMode->setText(strFACInfo);
 
 	/* Spectrum occupancy #################### */
-	strFACInfo = "Spectrum Occupancy: \t\t";
-	switch (DRMReceiver.GetParameters()->GetSpectrumOccup())
-	{
-	case SO_0:
-		strFACInfo += "4,5 kHz";
-		break;
-
-	case SO_1:
-		strFACInfo += "5 kHz";
-		break;
-
-	case SO_2:
-		strFACInfo += "9 kHz";
-		break;
-
-	case SO_3:
-		strFACInfo += "10 kHz";
-		break;
-
-	case SO_4:
-		strFACInfo += "18 kHz";
-		break;
-
-	case SO_5:
-		strFACInfo += "20 kHz";
-		break;
-	}
+	strFACInfo = "Spectrum Occupancy: \t\t" + GetSpecOccStr();
 
 	FACSpectrumOccupancy->setText(strFACInfo);
 
@@ -663,6 +619,8 @@ void systemevalDlg::OnCheckBoxMuteAudio()
 
 void systemevalDlg::OnCheckWriteLog()
 {
+	int iCurSelServ;
+
 	if (CheckBoxWriteLog->isChecked())
 	{
 		/* Activte log file timer, update time: 1 min (i.e. 60000 ms) */
@@ -671,6 +629,38 @@ void systemevalDlg::OnCheckWriteLog()
 		/* Set frequency of front-end */
 		QString strFreq = EdtFrequency->text();
 		DRMReceiver.GetParameters()->ReceptLog.SetFrequency(strFreq.toUInt());
+
+		/* Set some other information obout this receiption */
+		string strAddText = "";
+
+		/* Check if receiver does receive a DRM signal */
+		if ((DRMReceiver.GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL) &&
+			(DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_DRM))
+		{
+			/* First get current selected audio service */
+			iCurSelServ = DRMReceiver.GetParameters()->GetCurSelAudioService();
+
+			/* Check whether service parameters were not transmitted yet */
+			if (DRMReceiver.GetParameters()->Service[iCurSelServ].IsActive())
+			{
+				strAddText = "Label            ";
+
+				/* Service label (UTF-8 encoded string -> convert) */
+				strAddText += QString().fromUtf8(QCString(
+					DRMReceiver.GetParameters()->Service[iCurSelServ].
+					strLabel.c_str()));
+
+				strAddText += "\nBitrate          ";
+
+				strAddText += QString().setNum(DRMReceiver.GetParameters()->
+					GetBitRate(iCurSelServ), 'f', 2) + " kbps";
+
+				strAddText += "\nMode / Bandwidth " + GetRobModeStr() + " / ";
+
+				strAddText += GetSpecOccStr();
+			}
+		}
+		DRMReceiver.GetParameters()->ReceptLog.SetAdditText(strAddText);
 
 		DRMReceiver.GetParameters()->ReceptLog.SetLog(TRUE);
 	}
@@ -687,4 +677,62 @@ void systemevalDlg::OnTimerLogFile()
 {
 	/* Write new parameters in log file */
 	DRMReceiver.GetParameters()->ReceptLog.WriteParameters();
+}
+
+QString	systemevalDlg::GetRobModeStr()
+{
+	switch (DRMReceiver.GetParameters()->GetWaveMode())
+	{
+	case RM_ROBUSTNESS_MODE_A:
+		return "A";
+		break;
+
+	case RM_ROBUSTNESS_MODE_B:
+		return "B";
+		break;
+
+	case RM_ROBUSTNESS_MODE_C:
+		return "C";
+		break;
+
+	case RM_ROBUSTNESS_MODE_D:
+		return "D";
+		break;
+
+	default:
+		return "A";
+	}
+}
+
+QString	systemevalDlg::GetSpecOccStr()
+{
+	switch (DRMReceiver.GetParameters()->GetSpectrumOccup())
+	{
+	case SO_0:
+		return "4,5 kHz";
+		break;
+
+	case SO_1:
+		return "5 kHz";
+		break;
+
+	case SO_2:
+		return "9 kHz";
+		break;
+
+	case SO_3:
+		return "10 kHz";
+		break;
+
+	case SO_4:
+		return "18 kHz";
+		break;
+
+	case SO_5:
+		return "20 kHz";
+		break;
+
+	default:
+		return "10 kHz";
+	}
 }

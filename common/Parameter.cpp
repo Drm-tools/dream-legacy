@@ -572,22 +572,31 @@ void CParameter::CReceptLog::SetLog(_BOOLEAN bLog)
 
 		pFile = fopen("DreamLog.txt", "a");
 
-		/* Beginning of new table (similar to standard DRM log file) */
-		fprintf(pFile, "\n>>>>\nDream\nSoftware Version %s\n",
-			DREAM_VERSION_NUMBER);
+		if (pFile != NULL)
+		{
+			/* Beginning of new table (similar to standard DRM log file) */
+			fprintf(pFile, "\n>>>>\nDream\nSoftware Version %s\n",
+				DREAM_VERSION_NUMBER);
 
-		fprintf(pFile, "Starttime (UTC)  %d-%02d-%02d %02d:%02d:%02d\n",
-			today->tm_year + 1900, today->tm_mon + 1, today->tm_mday,
-			today->tm_hour, today->tm_min, today->tm_sec);
+			fprintf(pFile, "Starttime (UTC)  %d-%02d-%02d %02d:%02d:%02d\n",
+				today->tm_year + 1900, today->tm_mon + 1, today->tm_mday,
+				today->tm_hour, today->tm_min, today->tm_sec);
 
-		fprintf(pFile, "Frequency        ");
-		if (iFrequency != 0)
-			fprintf(pFile, "%d kHz", iFrequency);
-		
-		fprintf(pFile, "\nLatitude         \nLongitude        \n\n");
+			fprintf(pFile, "Frequency        ");
+			if (iFrequency != 0)
+				fprintf(pFile, "%d kHz", iFrequency);
+			
+			fprintf(pFile, "\nLatitude         \nLongitude        ");
 
-		fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE\n");
-		fflush(pFile);
+			/* Write additional text */
+			if (strAdditText != "")
+				fprintf(pFile, "\n%s\n\n", strAdditText.c_str());
+			else
+				fprintf(pFile, "\n\n");
+
+			fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE\n");
+			fflush(pFile);
+		}
 
 		ResetLog();
 
@@ -603,9 +612,6 @@ void CParameter::CReceptLog::CloseFile()
 	if (pFile != NULL)
 	{
 		fprintf(pFile, "\nCRC: \n");
-		
-		if (strAdditText != "")
-			fprintf(pFile, "%s\n", strAdditText);
 		
 		fprintf(pFile, "<<<<\n\n");
 
