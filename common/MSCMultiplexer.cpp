@@ -104,6 +104,9 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 	/* Set audio output block size */
 	iOutputBlockSize = AudStreamPos.iLenHigh + AudStreamPos.iLenLow;
 
+	/* Set number of output bits for audio decoder in global struct */
+	ReceiverParam.SetNumAudioDecoderBits(iOutputBlockSize);
+
 
 	/* Data ----------------------------------------------------------------- */
 	/* If multimedia is not used, set stream ID to "not used" which leads to
@@ -120,9 +123,12 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 	/* Set data output block size */
 	iOutputBlockSize2 = DataStreamPos.iLenHigh + DataStreamPos.iLenLow;
 
+	/* Set number of output bits for data decoder in global struct */
+	ReceiverParam.SetNumDataDecoderBits(iOutputBlockSize2);
+
 
 	/* Set input block size */
-	iInputBlockSize = ReceiverParam.iNoDecodedBitsMSC;
+	iInputBlockSize = ReceiverParam.iNumDecodedBitsMSC;
 }
 
 void CMSCDemultiplexer::GetStreamPos(CParameter& Param, const int iStreamID,
@@ -179,8 +185,8 @@ void CMSCDemultiplexer::GetStreamPos(CParameter& Param, const int iStreamID,
 				   cannot use the information about the length in
 				   "Stream[0].iLenPartB", because the real length of the frame
 				   is longer or equal to the length in "Stream[0].iLenPartB" */
-				StPos.iOffsetHigh += Param.iNoBitsHierarchFrameTotal;
-				StPos.iOffsetLow += Param.iNoBitsHierarchFrameTotal -
+				StPos.iOffsetHigh += Param.iNumBitsHierarchFrameTotal;
+				StPos.iOffsetLow += Param.iNumBitsHierarchFrameTotal -
 					/* We have to subtract this because we added it in the
 					   for loop above which we do not need here */
 					Param.Stream[0].iLenPartB * SIZEOF__BYTE;
@@ -190,8 +196,8 @@ void CMSCDemultiplexer::GetStreamPos(CParameter& Param, const int iStreamID,
 
 		/* Possibility check ------------------------------------------------ */
 		/* Test, if parameters have possible values */
-		if ((StPos.iOffsetHigh + StPos.iLenHigh > Param.iNoDecodedBitsMSC) ||
-			(StPos.iOffsetLow + StPos.iLenLow > Param.iNoDecodedBitsMSC))
+		if ((StPos.iOffsetHigh + StPos.iLenHigh > Param.iNumDecodedBitsMSC) ||
+			(StPos.iOffsetLow + StPos.iLenLow > Param.iNumDecodedBitsMSC))
 		{
 			/* Something is wrong, set everything to zero */
 			StPos.iOffsetLow = 0;

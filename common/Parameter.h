@@ -252,8 +252,10 @@ public:
 	int				GetNumActiveServices();
 	void			InitCellMapTable(const ERobMode eNewWaveMode, const ESpecOcc eNewSpecOcc);
 
-	void			SetNoDecodedBitsMSC(const int iNewNoDecodedBitsMSC);
-	void			SetNoDecodedBitsSDC(const int iNewNoDecodedBitsSDC);
+	void			SetNumDecodedBitsMSC(const int iNewNumDecodedBitsMSC);
+	void			SetNumDecodedBitsSDC(const int iNewNumDecodedBitsSDC);
+	void			SetNumAudioDecoderBits(const int iNewNumAudioDecoderBits);
+	void			SetNumDataDecoderBits(const int iNewNumDataDecoderBits);
 
 	_BOOLEAN		SetWaveMode(const ERobMode eNewWaveMode);
 	ERobMode		GetWaveMode() const {return eRobustnessMode;}
@@ -283,16 +285,16 @@ public:
 	void			SetSpectrumOccup(ESpecOcc eNewSpecOcc);
 	ESpecOcc		GetSpectrumOccup() const {return eSpectOccup;}
 
-	void			SetNumOfServices(const int iNNoAuSe, const int iNNoDaSe);
+	void			SetNumOfServices(const int iNNumAuSe, const int iNNumDaSe);
 	int				GetTotNumServices()
-						{return iNoAudioService + iNoDataService;}
+						{return iNumAudioService + iNumDataService;}
 
 	void			SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl);
 	void			SetServID(const int iServID, const _UINT32BIT iNewServID);
 
 	/* These two parameters are only intended for transmitter */
 	CVector<int>	FACRepitition; /* See 6.3.6 */
-	int				FACNoRep;
+	int				FACNumRep;
 
 	ETransLay		eBaseEnhFlag;
 
@@ -303,8 +305,8 @@ public:
 	ECodScheme		eSDCCodingScheme; /* SDC coding scheme */
 
 
-	int				iNoAudioService;
-	int				iNoDataService;
+	int				iNumAudioService;
+	int				iNumDataService;
 	int				iReConfigIndex;
 
 	EAFSVali		eAFSFlag;
@@ -327,10 +329,13 @@ public:
 	CVector<CStream>	Stream;
 	CService			Service[MAX_NUM_SERVICES];
 
-	int					iNoBitsHierarchFrameTotal;
-
-	int					iNoDecodedBitsMSC;
-	int					iNoSDCBitsPerSFrame; /* Number of SDC bits per super-frame */
+	/* These values are used to set input and output block sizes of some
+	   modules */
+	int					iNumBitsHierarchFrameTotal;
+	int					iNumDecodedBitsMSC;
+	int					iNumSDCBitsPerSFrame; /* Number of SDC bits per super-frame */
+	int					iNumAudioDecoderBits; /* Number of input bits for audio module */
+	int					iNumDataDecoderBits; /* Number of input bits for data decoder module */
 
 	int					iAFSIndex;
 
@@ -395,7 +400,7 @@ public:
 	int					iDRMChannelNo;
 	_REAL				rSimSNRdB;
 	_REAL				rBitErrRate;
-	int					iNoBitErrors;
+	int					iNumBitErrors;
 	int					iChanEstDelay;
 
 	int					iNumTaps;

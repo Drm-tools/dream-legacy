@@ -295,27 +295,51 @@ void CParameter::SetStreamLen(const int iStreamID, const int iNewLenPartA,
 	}
 }
 
-void CParameter::SetNoDecodedBitsMSC(const int iNewNoDecodedBitsMSC)
+void CParameter::SetNumDecodedBitsMSC(const int iNewNumDecodedBitsMSC)
 {
 	/* Apply changes only if parameters have changed */
-	if (iNewNoDecodedBitsMSC != iNoDecodedBitsMSC)
+	if (iNewNumDecodedBitsMSC != iNumDecodedBitsMSC)
 	{
-		iNoDecodedBitsMSC = iNewNoDecodedBitsMSC;
+		iNumDecodedBitsMSC = iNewNumDecodedBitsMSC;
 
 		/* Set init flags */
 		DRMReceiver.InitsForMSCDemux();
 	}
 }
 
-void CParameter::SetNoDecodedBitsSDC(const int iNewNoDecodedBitsSDC)
+void CParameter::SetNumDecodedBitsSDC(const int iNewNumDecodedBitsSDC)
 {
 	/* Apply changes only if parameters have changed */
-	if (iNewNoDecodedBitsSDC != iNoSDCBitsPerSFrame)
+	if (iNewNumDecodedBitsSDC != iNumSDCBitsPerSFrame)
 	{
-		iNoSDCBitsPerSFrame = iNewNoDecodedBitsSDC;
+		iNumSDCBitsPerSFrame = iNewNumDecodedBitsSDC;
 
 		/* Set init flags */
 		DRMReceiver.InitsForNoDecBitsSDC();
+	}
+}
+
+void CParameter::SetNumAudioDecoderBits(const int iNewNumAudioDecoderBits)
+{
+	/* Apply changes only if parameters have changed */
+	if (iNewNumAudioDecoderBits != iNumAudioDecoderBits)
+	{
+		iNumAudioDecoderBits = iNewNumAudioDecoderBits;
+
+		/* Set init flags */
+		DRMReceiver.InitsForAudParam();
+	}
+}
+
+void CParameter::SetNumDataDecoderBits(const int iNewNumDataDecoderBits)
+{
+	/* Apply changes only if parameters have changed */
+	if (iNewNumDataDecoderBits != iNumDataDecoderBits)
+	{
+		iNumDataDecoderBits = iNewNumDataDecoderBits;
+
+		/* Set init flags */
+		DRMReceiver.InitsForDataParam();
 	}
 }
 
@@ -439,23 +463,23 @@ void CParameter::EnableMultimedia(const _BOOLEAN bFlag)
 	}
 }
 
-void CParameter::SetNumOfServices(const int iNNoAuSe, const int iNNoDaSe)
+void CParameter::SetNumOfServices(const int iNNumAuSe, const int iNNumDaSe)
 {
 	/* Check whether number of activated services is not greater than the
 	   number of services signalled by the FAC because it can happen that
 	   a false CRC check (it is only a 8 bit CRC) of the FAC block
 	   initializes a wrong service */
-	if (GetNumActiveServices() > iNNoAuSe + iNNoDaSe)
+	if (GetNumActiveServices() > iNNumAuSe + iNNumDaSe)
 	{
 		/* Reset services and streams and set flag for init modules */
 		ResetServicesStreams();
 		DRMReceiver.InitsForMSCDemux();
 	}
 
-	if ((iNoAudioService != iNNoAuSe) || (iNoDataService != iNNoDaSe))
+	if ((iNumAudioService != iNNumAuSe) || (iNumDataService != iNNumDaSe))
 	{
-		iNoAudioService = iNNoAuSe;
-		iNoDataService = iNNoDaSe;
+		iNumAudioService = iNNumAuSe;
+		iNumDataService = iNNumDaSe;
 
 		/* Set init flags */
 		DRMReceiver.InitsForMSCDemux();
