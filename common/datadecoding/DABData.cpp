@@ -185,6 +185,8 @@ fflush(pFile);
 */
 
 			/* Distinguish between header and body */
+			/* Header information, i.e. the header core and the header
+			   extension, are transferred in Data Group type 3 */
 			if (iDataGroupType == 3)
 			{
 				/* Header --------------------------------------------------- */
@@ -233,6 +235,7 @@ fflush(pFile);
 			}
 			else if (iDataGroupType == 4)
 			{
+				/* Body data segments are transferred in Data Group type 4 */
 				/* Body ----------------------------------------------------- */
 				if (iSegmentNum == 0)
 				{
