@@ -544,7 +544,7 @@ _REAL CMOTDABEnc::GetProgPerc() const
 	const int iTotNumSeg =
 		MOTObjSegments.vvbiHeader.Size() + MOTObjSegments.vvbiBody.Size();
 
-	return ((_REAL) iSegmCntBody + (_REAL) bCurSegHeader) / iTotNumSeg;
+	return ((_REAL) iSegmCntBody + (_REAL) iSegmCntHeader) / iTotNumSeg;
 }
 
 void CMOTDABEnc::Reset()
