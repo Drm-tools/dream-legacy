@@ -167,7 +167,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 					cNewPilot * matrFiltTime[iCurrFiltPhase][j];
 			}
 
-			
+
 			/* Copy channel estimation from current symbol in output buffer - */
 			veccOutputData[iPiHiIndex] = cCurChanEst;
 		}
