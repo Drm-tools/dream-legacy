@@ -63,9 +63,12 @@ void CDRMTransmitter::Run()
 		/* MSC ****************************************************************/
 		/* Read the source signal */
 		ReadData.ReadData(TransmParam, DataBuf);
+
+		/* Audio source encoder */
+		AudioSourceEncoder.ProcessData(TransmParam, DataBuf, AudSrcBuf);
 	
 		/* MLC-encoder */
-		MSCMLCEncoder.ProcessData(TransmParam, DataBuf, MLCEncBuf);
+		MSCMLCEncoder.ProcessData(TransmParam, AudSrcBuf, MLCEncBuf);
 	
 		/* Convolutional interleaver */
 		SymbInterleaver.ProcessData(TransmParam, MLCEncBuf, IntlBuf);
@@ -109,19 +112,15 @@ void CDRMTransmitter::Init()
 	FACMLCEncoder.Init(TransmParam, FACMapBuf);
 	GenerateSDCData.Init(TransmParam, GenSDCDataBuf);
 	OFDMModulation.Init(TransmParam, OFDMModBuf);
-	TransmitData.Init(TransmParam);
+	AudioSourceEncoder.Init(TransmParam, AudSrcBuf);
 	ReadData.Init(TransmParam, DataBuf);
+	TransmitData.Init(TransmParam);
 }
 
 void CDRMTransmitter::StartParameters(CParameter& Param)
 {
 	/* Init streams */
 	Param.ResetServicesStreams();
-
-	/* Use 6.3.6 to set these two parameters! If only one service with ID = 0
-	   is present, the following parameters are correct */
-	Param.FACRepetition[0] = 0;
-	Param.FACNumRep = 1; /* Length of the repetition pattern table */
 
 	/* Init frame ID counter (index) */
 	Param.iFrameIDTransm = 0;
@@ -170,15 +169,7 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 		Param.Service[0].AudioParam.iStreamID = 0;
 
 		/* Text message */
-		Param.Service[0].AudioParam.bTextflag = TRUE;//FALSE;
-
-		/* Specify as many text messages as you like */
-		ReadData.SetTextMessage("Dream DRM Transmitter\x0B\x0AThis is a test"
-			" transmission."); /* 1 */
-		ReadData.SetTextMessage("This is the second message"); /* 2 */
-		ReadData.SetTextMessage("This is the third message"); /* 3 */
-		ReadData.SetTextMessage("This is the fourth message"); /* 4 */
-		ReadData.SetTextMessage("This is the fifth message"); /* 5 */
+		Param.Service[0].AudioParam.bTextflag = TRUE;
 	}
 	else
 	{
@@ -198,7 +189,7 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	/* Length of part B is set automatically (equal error protection (EEP),
 	   if "= 0"). Sets the number of bytes, should not exceed total number of
 	   bytes available in MSC block */
-	Param.Stream[0].iLenPartA = 80; /* TEST */
+	Param.Stream[0].iLenPartA = 0;
 
 	/* Init service parameters, 24 bit unsigned integer number */
 	Param.Service[0].iServiceID = 163569;
@@ -215,7 +206,7 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 
 	/* Interleaver mode of MSC service. Long interleaving (2 s): SI_LONG,
 	   short interleaving (400 ms): SI_SHORT */
-	Param.eSymbolInterlMode = CParameter::SI_SHORT;
+	Param.eSymbolInterlMode = CParameter::SI_LONG;
 
 	/* MSC modulation scheme. Available modes:
 	   16-QAM standard mapping (SM): CS_2_SM,

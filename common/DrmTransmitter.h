@@ -38,6 +38,7 @@
 #include "ofdmcellmapping/OFDMCellMapping.h"
 #include "OFDM.h"
 #include "DRMSignalIO.h"
+#include "sourcedecoders/AudioSourceDecoder.h"
 
 #ifndef WRITE_TRNSM_TO_FILE
 # ifdef _WIN32
@@ -52,11 +53,11 @@
 class CDRMTransmitter
 {
 public:
-	CDRMTransmitter() 
+	CDRMTransmitter() :
 #ifndef WRITE_TRNSM_TO_FILE
-		: TransmitData(&SoundInterface)
+		TransmitData(&SoundInterface),
 #endif
-		{StartParameters(TransmParam);}
+		ReadData(&SoundInterface) {StartParameters(TransmParam);}
 	virtual ~CDRMTransmitter() {}
 
 	void Init();
@@ -64,9 +65,10 @@ public:
 	void Stop();
 
 	/* Get pointer to internal modules */
-	COFDMModulation*	GetOFDMMod() {return &OFDMModulation;}
+	COFDMModulation*		GetOFDMMod() {return &OFDMModulation;}
+	CAudioSourceEncoder*	GetAudSrcEnc() {return &AudioSourceEncoder;}
 
-	CParameter*			GetParameters() {return &TransmParam;}
+	CParameter*				GetParameters() {return &TransmParam;}
 
 
 protected:
@@ -77,7 +79,9 @@ protected:
 	CParameter				TransmParam;
 	
 	/* Buffers */
-	CSingleBuffer<_BINARY>	DataBuf;
+	CSingleBuffer<_SAMPLE>	DataBuf;
+	CSingleBuffer<_BINARY>	AudSrcBuf;
+
 	CSingleBuffer<_COMPLEX>	MLCEncBuf;
 	CCyclicBuffer<_COMPLEX>	IntlBuf;
 
@@ -92,6 +96,7 @@ protected:
 
 	/* Modules */
 	CReadData				ReadData;
+	CAudioSourceEncoder		AudioSourceEncoder;
 	CMSCMLCEncoder			MSCMLCEncoder;
 	CSymbInterleaver		SymbInterleaver;
 	CGenerateFACData		GenerateFACData;
