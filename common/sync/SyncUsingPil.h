@@ -37,11 +37,13 @@
 
 /* Definitions ****************************************************************/
 /* Time constant for IIR averaging of frequency offset estimation */
-#define TICONST_FREQ_OFF_EST			((CReal) 60.0) /* sec */
+#define TICONST_FREQ_OFF_EST			((CReal) 1.0) /* sec */
 
+#ifdef USE_SAMOFFS_TRACK_FRE_PIL
 /* Time constant for IIR averaging of sample rate offset estimation */
-#define TICONST_SAMRATE_OFF_EST			((CReal) 20.0) /* sec */
-#define CONTR_SAMP_OFF_INTEGRATION		((_REAL) 3.0)
+# define TICONST_SAMRATE_OFF_EST		((CReal) 20.0) /* sec */
+# define CONTR_SAMP_OFF_INTEGRATION		((_REAL) 3.0)
+#endif
 
 
 /* Classes ********************************************************************/
