@@ -407,18 +407,34 @@ void FDRMDialog::OnTimer()
 	}
 
 	/* Check the receiver mode for showing the correct evaluation window */
-	if ((DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_DRM) &&
-		(pAnalogDemDlg->isVisible()))
+	if (DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_DRM)
 	{
-		pAnalogDemDlg->hide();
-		pSysEvalDlg->show();
+		if (pReceiverModeMenu->isItemChecked(1) == TRUE)
+		{
+			pReceiverModeMenu->setItemChecked(1, FALSE);
+			pReceiverModeMenu->setItemChecked(0, TRUE);
+		}
+
+		if (pAnalogDemDlg->isVisible())
+		{
+			pAnalogDemDlg->hide();
+			pSysEvalDlg->show();
+		}
 	}
 
-	if ((DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_AM) &&
-		(pSysEvalDlg->isVisible()))
+	if (DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_AM)
 	{
-		pSysEvalDlg->hide();
-		pAnalogDemDlg->show();
+		if (pReceiverModeMenu->isItemChecked(0) == TRUE)
+		{
+			pReceiverModeMenu->setItemChecked(0, FALSE);
+			pReceiverModeMenu->setItemChecked(1, TRUE);
+		}
+
+		if (pSysEvalDlg->isVisible())
+		{
+			pSysEvalDlg->hide();
+			pAnalogDemDlg->show();
+		}
 	}
 }
 
