@@ -1,5 +1,4 @@
 bin_PROGRAMS = drm
-drm_LDFLAGS = -pg
 
 # these need to be generated before the rest can be compiled
 
