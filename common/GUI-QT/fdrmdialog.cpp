@@ -29,8 +29,70 @@
 #include "fdrmdialog.h"
 
 
+/* Implementation *************************************************************/
+/* About dialog */
+CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
+	: CAboutDlgBase(parent, name, modal, f)
+{
+	/* Set the text for the about dialog html text control */
+	TextViewCredits->setText(
+		"<p>"
+		"<big><b>Dream</b> is a software implementation of a Digital Radio "
+		"Mondiale (DRM) receiver. All what is needed to receive DRM "
+		"transmissions is a PC with a sound card and a modified analog "
+		"short-wave (MW, LW) receiver.</big>"
+		"</p><br>"
+		"<p>"
+		"This program is free software; you can redistribute it and/or modify "
+		"it under the terms of the GNU General Public License as published by "
+		"the Free Software Foundation; either version 2 of the License, or "
+		"(at your option) any later version.<br>This program is distributed in "
+		"the hope that it will be useful, but WITHOUT ANY WARRANTY; without "
+		"even the implied warranty of MERCHANTABILITY or FITNESS FOR A "
+		"PARTICULAR PURPOSE. See the GNU General Public License for more "
+		"details.<br>You should have received a copy of the GNU General Public "
+		"License along with his program; if not, write to the Free Software "
+		"Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 "
+		"USA"
+		"</p><br>"
+		"<p>"
+		"<font color=\"#ff0000\">Although this software is going to be "
+		"distributed as free software under the terms of the GPL this does not "
+		"mean that its use is free of rights of others. The use may infringe "
+		"third party IP and thus may not be legal in some countries.</font>"
+		"</p><br>"
+		"<p>"
+		"<b>Dream uses the following libraries:</b>"
+		"</p>"
+		"<ul>"
+		"<li><b>FFTW</b> <i>http://www.fftw.org</i></li>"
+#ifdef USE_FAAD2_LIBRARY
+		"<li><b>FAAD2</b> <i>http://faac.sourceforge.net</i></li>"
+#endif
+#ifdef USE_QT_GUI /* QWT */
+		"<li><b>QWT</b> <i>Dream is based in part on the work of the Qwt "
+		"project (http://qwt.sf.net).</i></li>"
+#endif
+#ifdef HAVE_LIBHAMLIB
+		"<li><b>Hamlib</b> <i>http://hamlib.sourceforge.net</i></li>"
+#endif
+#ifdef HAVE_JOURNALINE
+		"<li><b>FhG IIS Journaline Decoder</b> <i>Features NewsService "
+		"Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
+		"Germany. For more information visit http://www.iis.fhg.de/dab</i></li>"
+#endif
+#ifdef HAVE_LIBFREEIMAGE
+		"<li><b>FreeImage</b> <i>This software uses the FreeImage open source "
+		"image library. See http://freeimage.sourceforge.net for details. "
+		"FreeImage is used under the GNU GPL.</i></li>"
+#endif
+		"</ul>");
+}
+
+
+/* Main dialog */
 FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
-	: FDRMDialogBase(parent, name, modal, f), AboutDlg(parent, 0, TRUE)
+	: FDRMDialogBase(parent, name, modal, f)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();

@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>472</width>
+            <width>464</width>
             <height>389</height>
         </rect>
     </property>
@@ -381,33 +381,7 @@ Institute for Communication Technology</string>
             </property>
             <property stdset="1">
                 <name>text</name>
-                <string>&lt;p&gt;
-&lt;big&gt;&lt;b&gt;Dream&lt;/b&gt; is a software implementation of a Digital Radio Mondiale
-(DRM) receiver. All what is needed to receive DRM transmissions is
-a PC with a sound card and a modified analog short-wave (MW, LW)
-receiver.&lt;/big&gt;
-&lt;/p&gt;&lt;br&gt;
-
-&lt;p&gt;
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the
-License, or (at your option) any later version.&lt;br&gt;This program is
-distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public
-License for more details.&lt;br&gt;You should have received a copy of the
-GNU General Public License along with his program; if not, write
-to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
-Boston, MA 02111-1307 USA
-&lt;/p&gt;&lt;br&gt;
-
-&lt;p&gt;
-&lt;font color="#ff0000"&gt;Although this software is going to be distributed
-as free software under the terms of the GPL this does not mean that its
-use is free of rights of others. The use may infringe third party IP and
-thus may not be legal in some countries. &lt;/font&gt;
-&lt;/p&gt;</string>
+                <string>TextViewCredits</string>
             </property>
         </widget>
         <widget>

@@ -37,6 +37,8 @@
 #include <qcstring.h>
 #include <qlayout.h>
 #include <qwhatsthis.h>
+#include <qtextview.h>
+
 
 #ifdef _WIN32
 # include "../../Windows/moc/fdrmdialogbase.h"
@@ -69,6 +71,18 @@ public:
 };
 
 
+/* About dialog */
+class CAboutDlg : public CAboutDlgBase
+{
+	Q_OBJECT
+
+public:
+	CAboutDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
+		WFlags f = 0);
+};
+
+
+/* Main dialog */
 class FDRMDialog : public FDRMDialogBase
 {
 	Q_OBJECT
@@ -91,7 +105,7 @@ protected:
 	int				iOldNoServicesGUI;
 	int				iNumSoundDev;
 	QTimer			Timer;
-	CAboutDlgBase	AboutDlg;
+	CAboutDlg		AboutDlg;
 
 	QString			SetServParamStr(int iServiceID);
 	QString			SetBitrIDStr(int iServiceID);
