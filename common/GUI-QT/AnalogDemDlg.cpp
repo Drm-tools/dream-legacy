@@ -80,6 +80,8 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		this, SLOT(OnRadioDemodulation(int)));
 	connect(ButtonGroupAGC, SIGNAL(clicked(int)),
 		this, SLOT(OnRadioAGC(int)));
+	connect(ButtonGroupNoiseReduction, SIGNAL(clicked(int)),
+		this, SLOT(OnRadioNoiRed(int)));
 
 	/* Slider */
 	connect(SliderBandwidth, SIGNAL(valueChanged(int)),
@@ -165,13 +167,36 @@ void AnalogDemDlg::UpdateControls()
 		break;
 	}
 
+	/* Set noise reduction type */
+	switch (pDRMRec->GetAMDemod()->GetNoiRedType())
+	{
+	case CAMDemodulation::NR_OFF:
+		if (!RadioButtonNoiRedOff->isChecked())
+			RadioButtonNoiRedOff->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::NR_LOW:
+		if (!RadioButtonNoiRedLow->isChecked())
+			RadioButtonNoiRedLow->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::NR_MEDIUM:
+		if (!RadioButtonNoiRedMed->isChecked())
+			RadioButtonNoiRedMed->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::NR_HIGH:
+		if (!RadioButtonNoiRedHigh->isChecked())
+			RadioButtonNoiRedHigh->setChecked(TRUE);
+		break;
+	}
+
 	/* Set filter bandwidth */
 	SliderBandwidth->setValue(pDRMRec->GetAMDemod()->GetFilterBW());
-	TextLabelBandWidth->setText(tr("Bandwidth: ") +
-		QString().setNum(pDRMRec->GetAMDemod()->GetFilterBW()) +
-		tr(" Hz"));
+	TextLabelBandWidth->setText(QString().setNum(
+		pDRMRec->GetAMDemod()->GetFilterBW()) +	tr(" Hz"));
 
-	/* Update mute audio switch and write wave file */
+	/* Update check boxes */
 	CheckBoxMuteAudio->setChecked(pDRMRec->GetWriteData()->GetMuteAudio());
 	CheckBoxSaveAudioWave->
 		setChecked(pDRMRec->GetWriteData()->GetIsWriteWaveFile());
@@ -269,12 +294,33 @@ void AnalogDemDlg::OnRadioAGC(int iID)
 	}
 }
 
+void AnalogDemDlg::OnRadioNoiRed(int iID)
+{
+	switch (iID)
+	{
+	case 0:
+		pDRMRec->GetAMDemod()->SetNoiRedType(CAMDemodulation::NR_OFF);
+		break;
+
+	case 1:
+		pDRMRec->GetAMDemod()->SetNoiRedType(CAMDemodulation::NR_LOW);
+		break;
+
+	case 2:
+		pDRMRec->GetAMDemod()->SetNoiRedType(CAMDemodulation::NR_MEDIUM);
+		break;
+
+	case 3:
+		pDRMRec->GetAMDemod()->SetNoiRedType(CAMDemodulation::NR_HIGH);
+		break;
+	}
+}
+
 void AnalogDemDlg::OnSliderBWChange(int value)
 {
 	/* Set new filter in processing module */
 	pDRMRec->GetAMDemod()->SetFilterBW(value);
-	TextLabelBandWidth->setText(tr("Bandwidth: ") +
-		QString().setNum(value) + tr(" Hz"));
+	TextLabelBandWidth->setText(QString().setNum(value) + tr(" Hz"));
 
 	/* Store filter bandwidth for this demodulation type */
 	switch (pDRMRec->GetAMDemod()->GetDemodType())

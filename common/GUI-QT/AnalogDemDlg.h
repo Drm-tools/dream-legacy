@@ -83,4 +83,5 @@ public slots:
 	void OnCheckSaveAudioWAV();
 	void OnChartxAxisValSet(double dVal);
 	void OnSliderBWChange(int value);
+	void OnRadioNoiRed(int iID);
 };

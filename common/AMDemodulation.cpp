@@ -159,6 +159,11 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 
 
+		/* Noise reduction -------------------------------------------------- */
+		if (NoiRedType != NR_OFF)
+			NoiseReduction.Process(rvecInpTmp);
+
+
 		/* AGC -------------------------------------------------------------- */
 		/*          Slow     Medium   Fast    */
 		/* Attack: 0.025 s, 0.015 s, 0.005 s  */
@@ -229,6 +234,9 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 	/* Init old value needed for differentiation */
 	cOldVal = (CReal) 0.0;
+
+	/* Init noise reducation object */
+	NoiseReduction.Init(iSymbolBlockSize);
 
 
 	/* Inits for Hilbert and DC filter -------------------------------------- */
@@ -417,4 +425,198 @@ void CAMDemodulation::SetAcqFreq(const CReal rNewNormCenter)
 	/* Set the flag so that the parameters are not overwritten in the init
 	   function */
 	bSearWinWasSet = TRUE;
+}
+
+
+/* Noise reduction implementation *********************************************/
+/*
+	The noise reduction algorithms is based on optimal filters, whereas the
+	PDS of the noise is estimated with a minimum statistic.
+	We use an overlap and add method to avoid clicks caused by fast changing
+	optimal filters between successive blocks.
+
+	[Ref] A. Engel: "Transformationsbasierte Systeme zur einkanaligen
+		Stoerunterdrueckung bei Sprachsignalen", PhD Thesis, Christian-
+		Albrechts-Universitaet zu Kiel, 1998
+*/
+void CNoiseReduction::Process(CRealVector& vecrIn)
+{
+	/* Regular block (updates the noise estimate) --------------------------- */
+	/* Update history of input signal */
+	vecrLongSignal.Merge(vecrOldSignal, vecrIn);
+
+	/* Update signal PSD estimation (first order IIR filter) */
+	veccSigFreq = rfft(vecrLongSignal, FftPlan);
+	vecrSqMagSigFreq = SqMag(veccSigFreq);
+
+	/* Update minimum statistic for noise PSD estimation. This update is made
+	   only once a regular (non-shited) block */
+	UpdateNoiseEst(vecrNoisePSD, vecrSqMagSigFreq, NoiRedDegree);
+
+	/* Actual noise reducation filtering based on the noise PSD estimation and
+	   the current squared magnitude of the input signal */
+	vecrFiltResult = OptimalFilter(veccSigFreq, vecrSqMagSigFreq, vecrNoisePSD);
+
+	/* Apply windowing */
+	vecrFiltResult *= vecrTriangWin;
+
+	/* Build output signal vector with old half and new half */
+	vecrOutSig1.Merge(vecrOldOutSignal, vecrFiltResult(1, iHalfBlockLen));
+
+	/* Save second half of output signal for next block (for overlap and add) */
+	vecrOldOutSignal = vecrFiltResult(iHalfBlockLen + 1, iBlockLen);
+
+
+	/* "Half-shifted" block for overlap and add ----------------------------- */
+	/* Build input vector for filtering the "half-shifted" blocks. It is the
+	   second half of the very old signal plus the complete old signal and the
+	   first half of the current signal */
+	vecrLongSignal.Merge(vecrVeryOldSignal(iHalfBlockLen + 1, iBlockLen),
+		vecrOldSignal, vecrIn(1, iHalfBlockLen));
+
+	/* Store old input signal blocks */
+	vecrVeryOldSignal = vecrOldSignal;
+	vecrOldSignal = vecrIn;
+
+	/* Update signal PSD estimation for "half-shifted" block and calculate
+	   optimal filter */
+	veccSigFreq = rfft(vecrLongSignal, FftPlan);
+	vecrSqMagSigFreq = SqMag(veccSigFreq);
+
+	vecrFiltResult = OptimalFilter(veccSigFreq, vecrSqMagSigFreq, vecrNoisePSD);
+
+	/* Apply windowing */
+	vecrFiltResult *= vecrTriangWin;
+
+	/* Overlap and add operation */
+	vecrIn = vecrFiltResult + vecrOutSig1;
+}
+
+CRealVector CNoiseReduction::OptimalFilter(const CComplexVector& veccSigFreq,
+										   const CRealVector& vecrSqMagSigFreq,
+										   const CRealVector& vecrNoisePSD)
+{
+	CRealVector vecrReturn(iBlockLenLong);
+
+	/* Calculate optimal filter coefficients in the frequency domain:
+	   G_opt = max(1 - S_nn(n) / S_xx(n), 0) */
+	veccOptFilt = Max(Zeros(iFreqBlLen), Ones(iFreqBlLen) -
+		vecrNoisePSD / vecrSqMagSigFreq);
+
+	/* Constrain the optimal filter in time domain to avoid aliasing */
+	vecrOptFiltTime = rifft(veccOptFilt, FftPlan);
+	vecrOptFiltTime.Merge(vecrOptFiltTime(1, iBlockLen), Zeros(iBlockLen));
+	veccOptFilt = rfft(vecrOptFiltTime, FftPlan);
+
+	/* Actual filtering in frequency domain */
+	vecrReturn = rifft(veccSigFreq * veccOptFilt, FftPlan);
+
+	/* Cut out correct samples (to get from cyclic convolution to linear
+	   convolution) */
+	return vecrReturn(iBlockLen + 1, iBlockLenLong);
+}
+
+void CNoiseReduction::UpdateNoiseEst(CRealVector& vecrNoisePSD,
+									 const CRealVector& vecrSqMagSigFreq,
+									 const ENoiRedDegree NoiRedDegree)
+{
+/*
+	Implements a mimium statistic proposed by R. Martin
+*/
+	/* Set weightning factor for minimum statistic */
+	CReal rWeiFact;
+	switch (NoiRedDegree)
+	{
+	case NR_LOW:
+		rWeiFact = MIN_STAT_WEIGTH_FACTOR_LOW;
+		break;
+
+	case NR_MEDIUM:
+		rWeiFact = MIN_STAT_WEIGTH_FACTOR_MED;
+		break;
+
+	case NR_HIGH:
+		rWeiFact = MIN_STAT_WEIGTH_FACTOR_HIGH;
+		break;
+	}
+
+	IIR1(vecrSigPSD, vecrSqMagSigFreq, rLamPSD);
+
+	for (int i = 0; i < iFreqBlLen; i++)
+	{
+// TODO: Update of minimum statistic can be done much more efficient
+		/* Update history */
+		matrMinimumStatHist[i].Merge(
+			matrMinimumStatHist[i](2, iMinStatHistLen), vecrSigPSD[i]);
+
+		/* Minimum values in history are taken for noise estimation */
+		vecrNoisePSD[i] = Min(matrMinimumStatHist[i]) * rWeiFact;
+	}
+}
+
+void CNoiseReduction::Init(const int iNewBlockLen)
+{
+	iBlockLen = iNewBlockLen;
+	iHalfBlockLen = iBlockLen / 2;
+	iBlockLenLong = 2 * iBlockLen;
+
+	/* Block length of signal in frequency domain. "+ 1" because of the Nyquist
+	   frequency */
+	iFreqBlLen = iBlockLen + 1;
+
+	/* Length of the minimum statistic history */
+	iMinStatHistLen = MIN_STAT_HIST_LENGTH_SEC * (CReal) SOUNDCRD_SAMPLE_RATE /
+		iBlockLen;
+
+	/* Lambda for IIR filter */
+	rLamPSD = IIR1Lam(TICONST_PSD_EST_SIG_NOISE_RED,
+		(CReal) SOUNDCRD_SAMPLE_RATE / iBlockLen);
+
+	/* Init vectors storing time series signals */
+	vecrOldSignal.Init(iBlockLen, (CReal) 0.0);
+	vecrVeryOldSignal.Init(iBlockLen, (CReal) 0.0);
+	vecrFiltResult.Init(iBlockLen);
+	vecrOutSig1.Init(iBlockLen);
+	vecrLongSignal.Init(iBlockLenLong);
+	vecrOptFiltTime.Init(iBlockLenLong);
+	vecrOldOutSignal.Init(iHalfBlockLen, (CReal) 0.0);
+
+	/* Init plans for FFT (faster processing of Fft and Ifft commands). FFT
+	   plans are initialized with the long length */
+	FftPlan.Init(iBlockLenLong);
+
+	/* Init vectors storing data in frequency domain */
+	veccOptFilt.Init(iFreqBlLen);
+
+	/* Init signal and noise PDS estimation vectors */
+	veccSigFreq.Init(iFreqBlLen);
+	vecrSqMagSigFreq.Init(iFreqBlLen);
+	vecrSigPSD.Init(iFreqBlLen, (CReal) 0.0);
+	vecrNoisePSD.Init(iFreqBlLen, (CReal) 0.0);
+
+	matrMinimumStatHist.Init(iFreqBlLen, iMinStatHistLen, (CReal) 0.0);
+
+	/* Init window for overlap and add */
+	vecrTriangWin.Init(iBlockLen);
+	vecrTriangWin = Triang(iBlockLen);
+}
+
+void CAMDemodulation::SetNoiRedType(const ENoiRedType eNewType)
+{
+	NoiRedType = eNewType;
+
+	switch (NoiRedType)
+	{
+		case NR_LOW:
+			NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_LOW);
+			break;
+
+		case NR_MEDIUM:
+			NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_MEDIUM);
+			break;
+
+		case NR_HIGH:
+			NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_HIGH);
+			break;
+	}
 }

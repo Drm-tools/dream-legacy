@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>745</width>
-            <height>414</height>
+            <width>721</width>
+            <height>411</height>
         </rect>
     </property>
     <property stdset="1">
@@ -174,52 +174,112 @@
             </hbox>
         </widget>
         <widget>
-            <class>QButtonGroup</class>
+            <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>ButtonGroupBW</cstring>
-            </property>
-            <property stdset="1">
-                <name>title</name>
-                <string>Bandwidth</string>
+                <cstring>Layout7</cstring>
             </property>
             <hbox>
                 <property stdset="1">
                     <name>margin</name>
-                    <number>11</number>
+                    <number>0</number>
                 </property>
                 <property stdset="1">
                     <name>spacing</name>
                     <number>6</number>
                 </property>
                 <widget>
-                    <class>QLabel</class>
+                    <class>QButtonGroup</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>TextLabelBandWidth</cstring>
+                        <cstring>ButtonGroupBW</cstring>
                     </property>
                     <property stdset="1">
-                        <name>minimumSize</name>
-                        <size>
-                            <width>144</width>
-                            <height>0</height>
-                        </size>
+                        <name>title</name>
+                        <string>Filter Bandwidth</string>
                     </property>
-                    <property stdset="1">
-                        <name>text</name>
-                        <string>TextLabelBandWidth</string>
-                    </property>
+                    <hbox>
+                        <property stdset="1">
+                            <name>margin</name>
+                            <number>11</number>
+                        </property>
+                        <property stdset="1">
+                            <name>spacing</name>
+                            <number>6</number>
+                        </property>
+                        <widget>
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>TextLabelBandWidth</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>minimumSize</name>
+                                <size>
+                                    <width>70</width>
+                                    <height>0</height>
+                                </size>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>TextLabelBandWidth</string>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QSlider</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>SliderBandwidth</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>orientation</name>
+                                <enum>Horizontal</enum>
+                            </property>
+                        </widget>
+                    </hbox>
                 </widget>
                 <widget>
-                    <class>QSlider</class>
+                    <class>QGroupBox</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>SliderBandwidth</cstring>
+                        <cstring>GroupBoxAudio</cstring>
                     </property>
                     <property stdset="1">
-                        <name>orientation</name>
-                        <enum>Horizontal</enum>
+                        <name>title</name>
+                        <string>Audio</string>
                     </property>
+                    <hbox>
+                        <property stdset="1">
+                            <name>margin</name>
+                            <number>11</number>
+                        </property>
+                        <property stdset="1">
+                            <name>spacing</name>
+                            <number>6</number>
+                        </property>
+                        <widget>
+                            <class>QCheckBox</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>CheckBoxMuteAudio</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Mute Audio</string>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QCheckBox</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>CheckBoxSaveAudioWave</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Save Audio</string>
+                            </property>
+                        </widget>
+                    </hbox>
                 </widget>
             </hbox>
         </widget>
@@ -227,7 +287,7 @@
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout5</cstring>
+                <cstring>Layout6</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -401,14 +461,14 @@
                     </hbox>
                 </widget>
                 <widget>
-                    <class>QGroupBox</class>
+                    <class>QButtonGroup</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>GroupBoxAudio</cstring>
+                        <cstring>ButtonGroupNoiseReduction</cstring>
                     </property>
                     <property stdset="1">
                         <name>title</name>
-                        <string>Audio</string>
+                        <string>Noise Reduction</string>
                     </property>
                     <hbox>
                         <property stdset="1">
@@ -420,25 +480,63 @@
                             <number>6</number>
                         </property>
                         <widget>
-                            <class>QCheckBox</class>
+                            <class>QRadioButton</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>CheckBoxMuteAudio</cstring>
+                                <cstring>RadioButtonNoiRedOff</cstring>
                             </property>
                             <property stdset="1">
                                 <name>text</name>
-                                <string>Mute Audio</string>
+                                <string>Off</string>
+                            </property>
+                            <property>
+                                <name>buttonGroupId</name>
+                                <number>0</number>
                             </property>
                         </widget>
                         <widget>
-                            <class>QCheckBox</class>
+                            <class>QRadioButton</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>CheckBoxSaveAudioWave</cstring>
+                                <cstring>RadioButtonNoiRedLow</cstring>
                             </property>
                             <property stdset="1">
                                 <name>text</name>
-                                <string>Save Audio as WAV</string>
+                                <string>Low</string>
+                            </property>
+                            <property>
+                                <name>buttonGroupId</name>
+                                <number>1</number>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QRadioButton</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>RadioButtonNoiRedMed</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Med</string>
+                            </property>
+                            <property>
+                                <name>buttonGroupId</name>
+                                <number>2</number>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QRadioButton</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>RadioButtonNoiRedHigh</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>High</string>
+                            </property>
+                            <property>
+                                <name>buttonGroupId</name>
+                                <number>3</number>
                             </property>
                         </widget>
                     </hbox>

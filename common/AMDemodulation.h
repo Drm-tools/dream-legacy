@@ -62,18 +62,78 @@
 #define AM_AMPL_CORR_FACTOR					((CReal) 5.0)
 
 
+/* Parameters for noise reduction algorithm --------------------------------- */
+/* Length of minimum statistic estimation history */
+#define MIN_STAT_HIST_LENGTH_SEC			((CReal) 1.5) /* sec */
+
+/* Minimum statistic weightning factors. With this value the degree of noise
+   reduction can be adjusted. We use three settings here */
+#define MIN_STAT_WEIGTH_FACTOR_LOW			((CReal) 0.4)
+#define MIN_STAT_WEIGTH_FACTOR_MED			((CReal) 1.0)
+#define MIN_STAT_WEIGTH_FACTOR_HIGH			((CReal) 2.0)
+
+/* Time constant for IIR averaging of PSD estimation */
+#define TICONST_PSD_EST_SIG_NOISE_RED		((CReal) 1.0) /* sec */
+
+
 /* Classes ********************************************************************/
+class CNoiseReduction
+{
+public:
+	CNoiseReduction() : NoiRedDegree(NR_MEDIUM) {}
+	virtual ~CNoiseReduction() {}
+
+	enum ENoiRedDegree {NR_LOW, NR_MEDIUM, NR_HIGH};
+
+	void Init(const int iNewBlockLen);
+	void Process(CRealVector& vecrIn);
+
+	void SetNoiRedDegree(const ENoiRedDegree eNND) {NoiRedDegree = eNND;}
+	ENoiRedDegree GetNoiRedDegree() {return NoiRedDegree;}
+
+protected:
+	void UpdateNoiseEst(CRealVector& vecrNoisePSD,
+		const CRealVector& vecrSqMagSigFreq, const ENoiRedDegree NoiRedDegree);
+	CRealVector OptimalFilter(const CComplexVector& vecrSigFreq,
+		const CRealVector& vecrSqMagSigFreq, const CRealVector& vecrNoisePSD);
+
+	int				iBlockLen;
+	int				iHalfBlockLen;
+	int				iBlockLenLong;
+	int				iFreqBlLen;
+	int				iMinStatHistLen;
+	CReal			rLamPSD;
+	CRealMatrix		matrMinimumStatHist;
+	CComplexVector	veccSigFreq;
+	CRealVector		vecrSqMagSigFreq;
+	CRealVector		vecrSigPSD;
+	CRealVector		vecrNoisePSD;
+	CFftPlans		FftPlan;
+	CComplexVector	veccOptFilt;
+	CRealVector		vecrOldSignal;
+	CRealVector		vecrVeryOldSignal;
+	CRealVector		vecrLongSignal;
+	CRealVector		vecrOldOutSignal;
+	CRealVector		vecrOutSig1;
+	CRealVector		vecrTriangWin;
+	CRealVector		vecrOptFiltTime;
+	CRealVector		vecrFiltResult;
+
+	ENoiRedDegree	NoiRedDegree;
+};
+
 class CAMDemodulation : public CReceiverModul<_REAL, _SAMPLE>
 {
 public:
 	CAMDemodulation() : bAcquisition(TRUE), bSearWinWasSet(FALSE),
 		bNewDemodType(FALSE), eDemodType(DT_AM), iFilterBW(10000),
 		rFiltCentOffsNorm((CReal) 0.0), rBandWidthNorm((CReal) 0.0),
-		eAGCType(AT_MEDIUM) {}
+		eAGCType(AT_MEDIUM), NoiRedType(NR_OFF) {}
 	virtual ~CAMDemodulation() {}
 
 	enum EDemodType {DT_AM, DT_LSB, DT_USB, DT_FM};
 	enum EAGCType {AT_NO_AGC, AT_SLOW, AT_MEDIUM, AT_FAST};
+	enum ENoiRedType {NR_OFF, NR_LOW, NR_MEDIUM, NR_HIGH};
 
 	void SetAcqFreq(const CReal rNewNormCenter);
 
@@ -88,6 +148,9 @@ public:
 	EAGCType GetAGCType() {return eAGCType;}
 	void SetAGCType(const EAGCType eNewType)
 		{eAGCType = eNewType;}
+
+	ENoiRedType GetNoiRedType() {return NoiRedType;}
+	void SetNoiRedType(const ENoiRedType eNewType);
 
 	void GetBWParameters(CReal& rCenterFreq, CReal& rBW)
 		{rCenterFreq = rFiltCentOffsNorm; rBW = rBandWidthNorm;}
@@ -146,6 +209,9 @@ protected:
 	EAGCType					eAGCType;
 
 	CComplex					cOldVal;
+
+	ENoiRedType					NoiRedType;
+	CNoiseReduction				NoiseReduction;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
