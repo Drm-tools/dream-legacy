@@ -80,7 +80,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* -------------------------------------------------------------------------
 	   Use time-interpolated channel estimate for timing synchronization 
 	   tracking */
-	iDelaySprEstInd = TimeSyncTrack.Process(ReceiverParam, veccPilots, 
+	rDelaySprEstInd = TimeSyncTrack.Process(ReceiverParam, veccPilots, 
 		(*pvecInputData).GetExData().iCurTimeCorr);
 
 
@@ -154,12 +154,12 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 //				ReceiverParam.RatioTgTu.iDenom);
 
 
-// TODO iDelaySprEstInd should be averaged, smoothed! Maybe after smoothing
+// TODO rDelaySprEstInd should be averaged, smoothed! Maybe after smoothing
 // reactivate the "iUpCntWienFilt" condition...
 
 // TEST
 /* Update filter taps */
-UpdateWienerFiltCoef(rSNRAftTiInt, (_REAL) iDelaySprEstInd / iNoCarrier);
+UpdateWienerFiltCoef(rSNRAftTiInt, rDelaySprEstInd / iNoCarrier);
 
 //			/* Reset counter */
 //			iUpCntWienFilt = iNoSymPerFrame;
@@ -373,7 +373,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 		ReceiverParam.rAvPilPowPerSym /	ReceiverParam.rAvPowPerSymbol;
 
 	/* Init delay spread length estimation (index) */
-	iDelaySprEstInd = 0;
+	rDelaySprEstInd = (_REAL) 0.0;
 	
 
 	/* Inits for Wiener interpolation in frequency direction ---------------- */
@@ -579,6 +579,6 @@ _REAL CChannelEstimation::GetSNREstdB() const
 _REAL CChannelEstimation::GetDelay() const
 {
 	/* Delay in ms */
-	return (_REAL) iDelaySprEstInd * iFFTSizeN / 
+	return rDelaySprEstInd * iFFTSizeN / 
 		(SOUNDCRD_SAMPLE_RATE * iNoIntpFreqPil * 2) * 1000;
 }

@@ -33,8 +33,8 @@
 
 
 /* Implementation *************************************************************/
-int CTimeSyncTrack::Process(CParameter& Parameter,
-							CComplexVector& veccChanEst, int iNewTiCorr)
+_REAL CTimeSyncTrack::Process(CParameter& Parameter,
+							  CComplexVector& veccChanEst, int iNewTiCorr)
 {
 	int			i;
 	_REAL		rTiOffset;
@@ -185,7 +185,7 @@ int CTimeSyncTrack::Process(CParameter& Parameter,
 	const CReal rEnergBound = (CReal) 0.9999999;
 	rCurEnergy = (CReal) 0.0;
 	bDelSprLenFound = FALSE;
-	iEstDelay = iGuardSizeFFT;
+	rEstDelay = rGuardSizeFFT;
 	
 	for (i = 0; i < iNoIntpFreqPil; i++)
 	{
@@ -196,7 +196,7 @@ int CTimeSyncTrack::Process(CParameter& Parameter,
 			if (rCurEnergy > rEnergBound * rTotalEnergy)
 			{
 				/* Delay index */
-				iEstDelay = i;
+				rEstDelay = (_REAL) i;
 
 				bDelSprLenFound = TRUE;
 			}
@@ -204,10 +204,10 @@ int CTimeSyncTrack::Process(CParameter& Parameter,
 	}
 
 	/* Bound the delay to the guard-interval length */
-	if (iEstDelay > iGuardSizeFFT)
-		return iGuardSizeFFT;
+	if (rEstDelay > rGuardSizeFFT)
+		return rGuardSizeFFT;
 	else
-		return iEstDelay;
+		return rEstDelay;
 }
 
 void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
@@ -242,7 +242,7 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	vecrAvPoDeSpRot.Init(iNoIntpFreqPil);
 
 	/* Length of guard-interval with respect to FFT-size! */
-	iGuardSizeFFT = iNoCarrier * 
+	rGuardSizeFFT = (_REAL) iNoCarrier * 
 		Parameter.RatioTgTu.iEnum / Parameter.RatioTgTu.iDenom;
 
 	/* Get the hamming window taps. The window is to reduce the leakage effect
@@ -257,21 +257,21 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	/* Define start point for rotation of detection vector for acausal taps.
 	   Per definition is this point somewhere in the region after the
 	   actual guard-interval window */
-	if (iGuardSizeFFT > iNoIntpFreqPil)
+	if ((int) rGuardSizeFFT > iNoIntpFreqPil)
 		iStPoRot = iNoIntpFreqPil;
 	else
-		iStPoRot = iGuardSizeFFT + (iNoIntpFreqPil - iGuardSizeFFT) / 2;
+		iStPoRot = (int) (rGuardSizeFFT + (iNoIntpFreqPil - rGuardSizeFFT) / 2);
 
 	/* Init fractional part of timing correction to zero */
 	rFracPartTiCor = (CReal) 0.0;
 
 	/* Define target position for first path. Should be close to zero but not
 	   exactely zero because even small estimation errors would lead to ISI */
-	iTargetTimingPos = iGuardSizeFFT / TARGET_TI_POS_FRAC_GUARD_INT;
+	iTargetTimingPos = (int) (rGuardSizeFFT / TARGET_TI_POS_FRAC_GUARD_INT);
 
 	/* Init estimation of length of impulse response with length of guard-
 	   interval */
-	iEstDelay = iGuardSizeFFT;
+	rEstDelay = rGuardSizeFFT;
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iNoIntpFreqPil);
@@ -353,9 +353,9 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 			rLowerBound = RET_VAL_LOG_0;
 
 		/* End point of guard interval */
-		rEndGuard = rScaleIncr * (iGuardSizeFFT - iTargetTimingPos);
+		rEndGuard = rScaleIncr * (rGuardSizeFFT - iTargetTimingPos);
 
 		/* Estmiated impulse response length */
-		rLenIR = rScaleIncr * (iEstDelay - iTargetTimingPos);
+		rLenIR = rScaleIncr * (rEstDelay - iTargetTimingPos);
 	}
 }

@@ -47,28 +47,28 @@ void CDRMSimulation::SimScript()
 	\**************************************************************************/
 	/* Choose which type of simulation, if you choose "ST_NONE", the regular
 	   application will be started */
+	eSimType = ST_BER_IDEALCHAN;
 	eSimType = ST_MSECHANEST;
 	eSimType = ST_BITERROR;
-	eSimType = ST_BER_IDEALCHAN;
 	eSimType = ST_NONE;
 	
 	if (eSimType != ST_NONE)
 	{
 		/* The associated code rate is R = 0,6 and the modulation is 64-QAM */
-		Param.InitCellMapTable(RM_ROBUSTNESS_MODE_A, SO_3);
+		Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 		Param.MSCPrLe.iPartB = 1;
-		Param.eSymbolInterlMode = CParameter::SI_LONG;//SI_SHORT;//
+Param.eSymbolInterlMode = CParameter::SI_SHORT;//SI_LONG;//
 		Param.eMSCCodingScheme = CParameter::CS_3_SM;//CS_3_HMMIX;//CS_3_HMSYM;//
 
-		Param.iDRMChannelNo = 1;
+		Param.iDRMChannelNo = 5;
 
-		rStartSNR = (_REAL) 12.0;
-		rEndSNR = (_REAL) 16.0;
+		rStartSNR = (_REAL) 20.0;
+		rEndSNR = (_REAL) 20.0;
 		rStepSNR = (_REAL) 0.3;
 		strSpecialRemark = "";
 
 		/* Length of simulation */
-		GenSimData.SetSimTime(500);
+		GenSimData.SetSimTime(100);
 //		GenSimData.SetNoErrors(100);
 
 

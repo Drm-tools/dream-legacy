@@ -305,51 +305,6 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 	}
 
-
-
-#if 0
-// TEST
-// stress the system
-static int z = 100;
-if (z > 0)
-	z--;
-else
-{
-	z = 100;
-
-int itest = (int) ((_REAL) rand() / RAND_MAX * 4);
-ReceiverParam.SetWaveMode(GetRModeFromInd(itest));
-
-itest = (int) ((_REAL) rand() / RAND_MAX * 6);
-switch (itest)
-{
-case 0:
-	ReceiverParam.SetSpectrumOccup(SO_0);
-	break;
-case 1:
-	ReceiverParam.SetSpectrumOccup(SO_1);
-	break;
-case 2:
-	ReceiverParam.SetSpectrumOccup(SO_2);
-	break;
-case 3:
-	ReceiverParam.SetSpectrumOccup(SO_3);
-	break;
-case 4:
-	ReceiverParam.SetSpectrumOccup(SO_4);
-	break;
-case 5:
-	ReceiverParam.SetSpectrumOccup(SO_5);
-	break;
-default:
-	ReceiverParam.SetSpectrumOccup(SO_0);
-}
-}
-#endif
-
-
-
-
 	if (bTimingAcqu == TRUE)
 	{
 		/* Use all measured FFT-window start points for determining the "real" 

@@ -59,8 +59,8 @@ public:
 
 	void Init(CParameter& Parameter, int iNewSymbDelay);
 
-	int Process(CParameter& Parameter, CComplexVector& veccChanEst,
-			    int iNewTiCorr);
+	_REAL Process(CParameter& Parameter, CComplexVector& veccChanEst,
+				  int iNewTiCorr);
 
 	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
 					 _REAL& rLowerBound, _REAL& rHigherBound,
@@ -70,40 +70,40 @@ public:
 	void StopTracking() {bTracking = FALSE;}
 
 protected:
-	CComplexVector		veccPilots;
-	int					iNoIntpFreqPil;
-	CFftPlans			FftPlan;
-	int					iScatPilFreqInt;
-	int					iNoCarrier;
-	CRealVector			vecrAvPoDeSp;
-	CRealVector			vecrHammingWindow;
-	CReal				rConst1;
-	CReal				rConst2;
-	int					iStPoRot;
-	CRealVector			vecrAvPoDeSpRot;
-	int					iSymDelay;
-	CShiftRegister<int>	vecTiCorrHist;
+	CComplexVector			veccPilots;
+	int						iNoIntpFreqPil;
+	CFftPlans				FftPlan;
+	int						iScatPilFreqInt;
+	int						iNoCarrier;
+	CRealVector				vecrAvPoDeSp;
+	CRealVector				vecrHammingWindow;
+	CReal					rConst1;
+	CReal					rConst2;
+	int						iStPoRot;
+	CRealVector				vecrAvPoDeSpRot;
+	int						iSymDelay;
+	CShiftRegister<int>		vecTiCorrHist;
 	CShiftRegister<_REAL>	vecrNewMeasHist;
 	
-	CReal				rFracPartTiCor;
-	int					iTargetTimingPos;
+	CReal					rFracPartTiCor;
+	int						iTargetTimingPos;
 
-	_BOOLEAN			bTracking;
+	_BOOLEAN				bTracking;
 
-	int					iDFTSize;
+	int						iDFTSize;
 
-	_REAL				rBoundLower;
-	_REAL				rBoundHigher;
-	int					iGuardSizeFFT;
+	_REAL					rBoundLower;
+	_REAL					rBoundHigher;
+	_REAL					rGuardSizeFFT;
 
-	int					iInitCnt;
+	int						iInitCnt;
 
-	int					iEstDelay;
+	_REAL					rEstDelay;
 
-	_BOOLEAN			IsInInit() const {return bIsInInit;}
+	_BOOLEAN IsInInit() const {return bIsInInit;}
 
 private:
-	_BOOLEAN			bIsInInit;
+	_BOOLEAN				bIsInInit;
 };
 
 

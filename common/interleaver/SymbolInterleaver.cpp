@@ -88,7 +88,7 @@ void CSymbInterleaver::InitInternal(CParameter& TransmParam)
 		break;
 	}
 
-	/* Always allocate memory for long interleaver case (Interleaver memory) */
+	/* Always allocate memory for long interleaver case (interleaver memory) */
 	matcInterlMemory.Init(D_LENGTH_LONG_INTERL, iN_MUX);
 
 	/* Index for addressing the buffers */
@@ -171,7 +171,7 @@ void CSymbDeinterleaver::InitInternal(CParameter& ReceiverParam)
 		break;
 	}
 
-	/* Always allocate memory for long interleaver case (Interleaver memory) */
+	/* Always allocate memory for long interleaver case (interleaver memory) */
 	matcDeinterlMemory.Init(D_LENGTH_LONG_INTERL, iN_MUX);
 
 	/* Index for addressing the buffers */

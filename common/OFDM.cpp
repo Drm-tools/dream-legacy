@@ -445,6 +445,11 @@ void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 		/* Channel no 6 */
 		iChanDelSpLen = (int) ((_REAL) 6.0 * SOUNDCRD_SAMPLE_RATE / 1000);
 		break;
+
+	default:
+		/* My own channels */
+		iChanDelSpLen = iGuardSize;
+		break;
 	}
 
 	iStartGR = (iGuardSize - iChanDelSpLen) / 2;

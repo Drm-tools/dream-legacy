@@ -175,6 +175,11 @@ void CGenSimData::InitInternal(CParameter& TransmParam)
 		/* Channel no 6: same as case "2" */
 		iMinNoBlocks = (int) ((_REAL) 1000.0 / (_REAL) 0.4);
 		break;
+
+	default:
+		/* My own channels */
+		iMinNoBlocks = (int) ((_REAL) 1000.0 / (_REAL) 0.4);
+		break;
 	}
 
 	/* Prepare shift register used for storing the start values of the PRBS
