@@ -49,7 +49,7 @@ using namespace std; /* Because of the library: "complex" */
 #undef _DEBUG_
 
 #ifndef VERSION
-# define VERSION						"1.0.8cvs"
+# define VERSION						"1.1"
 #endif
 
 
@@ -63,7 +63,7 @@ using namespace std; /* Because of the library: "complex" */
 //# undef USE_FAAD2_LIBRARY
 
 # define USE_FAAC_LIBRARY
-# undef USE_FAAC_LIBRARY
+//# undef USE_FAAC_LIBRARY
 
 # define HAVE_JOURNALINE
 //# undef HAVE_JOURNALINE
@@ -72,7 +72,7 @@ using namespace std; /* Because of the library: "complex" */
 //# undef HAVE_LIBFREEIMAGE
 
 # define HAVE_LIBHAMLIB
-# undef HAVE_LIBHAMLIB
+//# undef HAVE_LIBHAMLIB
 
 /* Define if you have Hamlib >= 1.2.1 */
 # define HAVE_RIG_PARSE_MODE			1
