@@ -34,7 +34,6 @@
 #include "FAC/FAC.h"
 #include "SDC/SDC.h"
 #include "TextMessage.h"
-#include "datadecoding/DataDecoder.h"
 #include <time.h>
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
@@ -50,32 +49,29 @@
 
 /* Classes ********************************************************************/
 /* MSC ---------------------------------------------------------------------- */
-class CReadData : public CTransmitterModul<_BINARY, _BINARY>
+class CReadData : public CTransmitterModul<_SAMPLE, _SAMPLE>
 {
 public:
-	CReadData() :
+	CReadData(CSound* pNS) :
 #ifdef WRITE_TRNSM_TO_FILE
-		iNumTransBlocks(DEFAULT_NUM_SIM_BLOCKS),
+		iNumTransBlocks(DEFAULT_NUM_SIM_BLOCKS), iCounter(0),
 #endif
-		bUsingTextMessage(FALSE), iCounter(0) {}
+		pSound(pNS) {}
 	virtual ~CReadData() {}
 
 #ifdef WRITE_TRNSM_TO_FILE
 	void SetNumTransBlocks(const int iNewNum) {iNumTransBlocks = iNewNum;}
 #endif
 
-	void SetTextMessage(const string& strText);
 
 protected:
-	int					iCounter;
-	CTextMessageEncoder TextMessage;
-	_BOOLEAN			bUsingTextMessage;
-	CDataEncoder		DataEncoder;
-	int					iTotPacketSize;
-	_BOOLEAN			bIsDataService;
+	CSound*				pSound;
+	CVector<_SAMPLE>	vecsSoundBuffer;
+
 
 #ifdef WRITE_TRNSM_TO_FILE
-	int					iNumTransBlocks;
+	int				iCounter;
+	int				iNumTransBlocks;
 #endif
 
 	virtual void InitInternal(CParameter& TransmParam);

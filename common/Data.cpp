@@ -33,11 +33,9 @@
 /******************************************************************************\
 * MSC data																	   *
 \******************************************************************************/
-/* Transmitter */
+/* Transmitter -------------------------------------------------------------- */
 void CReadData::ProcessDataInternal(CParameter& TransmParam)
 {
-	int i;
-
 #ifdef WRITE_TRNSM_TO_FILE
 	/* Stop writing file when defined number of blocks were generated */
 	iCounter++;
@@ -45,89 +43,28 @@ void CReadData::ProcessDataInternal(CParameter& TransmParam)
 		TransmParam.bRunThread = FALSE;
 #endif
 
-	/* Write your data in (*pvecOutputData)[i],
-	   where i = 0..iOutputBlockSize - 1*/
-	for (i = 0; i < iOutputBlockSize; i++)
-	{
-		/* TEST: "TRUE" -> To be filled with meaningful values */
-		(*pvecOutputData)[i] = 0;
-	}
+	/* Get data from sound interface */
+	pSound->Read(vecsSoundBuffer);
 
-
-	if (bIsDataService == TRUE)
-	{
-		/* Write data packets in stream */
-		CVector<_BINARY> vecbiData;
-		const int iNumPack = iOutputBlockSize / iTotPacketSize;
-		int iPos = 0;
-
-		for (int j = 0; j < iNumPack; j++)
-		{
-			/* Get new packet */
-			DataEncoder.GeneratePacket(vecbiData);
-
-			/* Put it on stream */
-			for (i = 0; i < iTotPacketSize; i++)
-			{
-				(*pvecOutputData)[iPos] = vecbiData[i];
-				iPos++;
-			}
-		}
-	}
-	else
-	{
-		/* Text message application. Last four bytes in stream are written */
-		if (bUsingTextMessage == TRUE)
-		{
-			/* Always four bytes for text message "piece" */
-			CVector<_BINARY> vecbiTextMessBuf(
-				SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
-			
-			/* Get "piece" */
-			TextMessage.Encode(vecbiTextMessBuf);
-
-			/* Total number of bytes which are actually used. The number is
-			   specified by iLenPartA + iLenPartB which is set in
-			   "SDCTransmit.cpp". There is currently no "nice" solution for
-			   setting these values. TODO: better solution */
-			/* Padding to byte as done in SDCTransmit.cpp line 138ff */
-			int iTotByt = (iOutputBlockSize / SIZEOF__BYTE) * SIZEOF__BYTE;
-
-			for (i = iTotByt - SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
-				 i < iTotByt; i++)
-			{
-				(*pvecOutputData)[i] = vecbiTextMessBuf[i -
-					(iTotByt - SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR)];
-			}
-		}
-	}
+	/* Write data to output buffer */
+	for (int i = 0; i < iOutputBlockSize; i++)
+		(*pvecOutputData)[i] = vecsSoundBuffer[i];
 }
 
 void CReadData::InitInternal(CParameter& TransmParam)
 {
-	/* Define output block size */
-	iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
+	/* Define block-size for output, an audio frame always corresponds
+	   to 400 ms. We use always stereo blocks */
+	iOutputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
+		(_REAL) 0.4 /* 400 ms */);
 
-	if (TransmParam.iNumDataService == 1)
-	{
-		bIsDataService = TRUE;
-		iTotPacketSize = DataEncoder.Init(TransmParam);
-	}
-	else
-		bIsDataService = FALSE;
-}
-
-void CReadData::SetTextMessage(const string& strText)
-{
-	/* Set text message in text message object */
-	TextMessage.SetMessage(strText);
-
-	/* Set text message flag */
-	bUsingTextMessage = TRUE;
+	/* Init sound interface and intermediate buffer */
+	pSound->InitRecording(iOutputBlockSize, FALSE);
+	vecsSoundBuffer.Init(iOutputBlockSize);
 }
 
 
-/* Receiver */
+/* Receiver ----------------------------------------------------------------- */
 void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	/* Send data to sound interface if audio is not muted */
@@ -151,7 +88,8 @@ void CWriteData::InitInternal(CParameter& ReceiverParam)
 	pSound->InitPlayback(iInputBlockSize);
 }
 
-/* Simulation */
+
+/* Simulation --------------------------------------------------------------- */
 void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 {
 	int			i;
@@ -457,6 +395,8 @@ void CGenerateFACData::ProcessDataInternal(CParameter& TransmParam)
 
 void CGenerateFACData::InitInternal(CParameter& TransmParam)
 {
+	FACTransmit.Init(TransmParam);
+
 	/* Define block-size for output */
 	iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 }
