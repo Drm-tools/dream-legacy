@@ -71,13 +71,13 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	else
 		iIntShiftVal = (int) rActShiftTiCor;
 
-	/* If new correction is out of range, do not use it */
-	if ((iIntShiftVal >= iNumIntpFreqPil) || (iIntShiftVal < 0))
-		iIntShiftVal = 0;
-
-	/* Actual rotation of vector */
-	vecrAvPoDeSp.Merge(vecrAvPoDeSp(iIntShiftVal + 1, iNumIntpFreqPil),
-		vecrAvPoDeSp(1, iIntShiftVal));
+	/* If new correction is out of range, do not apply rotation */
+	if ((iIntShiftVal > 0) && (iIntShiftVal < iNumIntpFreqPil))
+	{
+		/* Actual rotation of vector */
+		vecrAvPoDeSp.Merge(vecrAvPoDeSp(iIntShiftVal + 1, iNumIntpFreqPil),
+			vecrAvPoDeSp(1, iIntShiftVal));
+	}
 
 
 	/* New estimate for impulse response ------------------------------------ */
@@ -183,7 +183,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 		   be equal to the delay of the channel estimation.
 		   The corrections must be quantized to the upsampled output sample
 		   rate ("* iDFTSize / iNumCarrier") */
-		const CReal rTiOffset = (_REAL) -iFirstPathDelay *
+		const CReal rTiOffset = (CReal) -iFirstPathDelay *
 			iDFTSize / iNumCarrier - veciNewMeasHist[0];
 
 		/* Different controlling parameters for different types of tracking */
