@@ -117,19 +117,19 @@ void CMOTDABEnc::SetMOTObject(CMOTObject& NewMOTObject)
 
 	/* BodySize: This 28-bit field, coded as an unsigned binary number,
 	   indicates the total size of the body in bytes */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) iPicSizeBytes, 28);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) iPicSizeBytes, 28);
 
 	/* HeaderSize: This 13-bit field, coded as an unsigned binary number,
 	   indicates the total size of the header in bytes */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) iHeaderSize, 13);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) iHeaderSize, 13);
 
 	/* ContentType: This 6-bit field indicates the main category of the body's
 	   content */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) iContentType, 6);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) iContentType, 6);
 
 	/* ContentSubType: This 9-bit field indicates the exact type of the body's
 	   content depending on the value of the field ContentType */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) iContentSubType, 9);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) iContentSubType, 9);
 
 
 	/* Header extension ----------------------------------------------------- */
@@ -145,15 +145,15 @@ void CMOTDABEnc::SetMOTObject(CMOTObject& NewMOTObject)
 	/* PLI (Parameter Length Indicator): This 2-bit field describes the total
 	   length of the associated parameter. In this case:
 	   1 0 total parameter length = 5 bytes; length of DataField is 4 bytes */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 2, 2);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) 2, 2);
 
 	/* ParamId (Parameter Identifier): This 6-bit field identifies the
 	   parameter. 1 0 1 (dec: 5) -> TriggerTime */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 5, 6);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) 5, 6);
 
 	/* Validity flag = 0: "Now", MJD and UTC shall be ignored and be set to 0.
 	   Set MJD and UTC to zero. UTC flag is also zero -> short form */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 0, 32);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) 0, 32);
 
 
 
@@ -164,14 +164,14 @@ void CMOTDABEnc::SetMOTObject(CMOTObject& NewMOTObject)
 	   content of the body was modified */
 	/* PLI
 	   0 1 total parameter length = 2 bytes, length of DataField is 1 byte */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 1, 2);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) 1, 2);
 
 	/* ParamId (Parameter Identifier): This 6-bit field identifies the
 	   parameter. 1 1 0 (dec: 6) -> VersionNumber */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 6, 6);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) 6, 6);
 
 	/* Version number data field */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 0, 8);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) 0, 8);
 
 
 
@@ -183,33 +183,33 @@ void CMOTDABEnc::SetMOTObject(CMOTObject& NewMOTObject)
 
 	/* PLI
 	   1 1 total parameter length depends on the DataFieldLength indicator */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 3, 2);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) 3, 2);
 
 	/* ParamId (Parameter Identifier): This 6-bit field identifies the
 	   parameter. 1 1 0 0 (dec: 12) -> ContentName */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 12, 6);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) 12, 6);
 
 	/* Ext (ExtensionFlag): This 1-bit field specifies the length of the
 	   DataFieldLength Indicator.
 	   0: the total parameter length is derived from the next 7 bits */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 0, 1);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) 0, 1);
 
 	/* DataFieldLength Indicator: This field specifies as an unsigned binary
 	   number the length of the parameter's DataField in bytes. The length of
 	   this field is either 7 or 15 bits, depending on the setting of the
 	   ExtensionFlag */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) (1 /* header */ +
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) (1 /* header */ +
 		iFileNameSize /* actual data */), 7);
 
 	/* Character set indicator (0 0 0 0 complete EBU Latin based repertoire) */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 0, 4);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) 0, 4);
 
 	/* Rfa 4 bits */
-	MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) 0, 4);
+	MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) 0, 4);
 
 	/* Character field */
 	for (i = 0; i < iFileNameSize; i++)
-		MOTObjectRaw.Header.vecbiData.Enqueue((_UINT32BIT) strFileName[i], 8);
+		MOTObjectRaw.Header.vecbiData.Enqueue((uint32_t) strFileName[i], 8);
 
 
 	/* Generate segments ---------------------------------------------------- */
@@ -265,11 +265,11 @@ void CMOTDABEnc::PartitionUnits(CVector<_BINARY>& vecbiSource,
 		   binary number, the remaining transmission repetitions for the
 		   current object.
 		   In our current implementation, no repetitions used. TODO */
-		vecbiDest[i].Enqueue((_UINT32BIT) 0, 3);
+		vecbiDest[i].Enqueue((uint32_t) 0, 3);
 
 		/* SegmentSize: This 13-bit field, coded as an unsigned binary
 		   number, indicates the size of the segment data field in bytes */
-		vecbiDest[i].Enqueue((_UINT32BIT) iActSegSize, 13);
+		vecbiDest[i].Enqueue((uint32_t) iActSegSize, 13);
 
 
 		/* Body */
@@ -317,37 +317,37 @@ if (bCRCUsed == TRUE)
 	/* MSC data group header ------------------------------------------------ */
 	/* Extension flag: this 1-bit flag shall indicate whether the extension
 	   field is present, or not. Not used right now -> 0 */
-	vecbiData.Enqueue((_UINT32BIT) 0, 1);
+	vecbiData.Enqueue((uint32_t) 0, 1);
 
 	/* CRC flag: this 1-bit flag shall indicate whether there is a CRC at the
 	   end of the MSC data group */
 	if (bCRCUsed == TRUE)
-		vecbiData.Enqueue((_UINT32BIT) 1, 1);
+		vecbiData.Enqueue((uint32_t) 1, 1);
 	else
-		vecbiData.Enqueue((_UINT32BIT) 0, 1);
+		vecbiData.Enqueue((uint32_t) 0, 1);
 
 	/* Segment flag: this 1-bit flag shall indicate whether the segment field is
 	   present, or not */
 	if (bSegFieldUsed == TRUE)
-		vecbiData.Enqueue((_UINT32BIT) 1, 1);
+		vecbiData.Enqueue((uint32_t) 1, 1);
 	else
-		vecbiData.Enqueue((_UINT32BIT) 0, 1);
+		vecbiData.Enqueue((uint32_t) 0, 1);
 
 	/* User access flag: this 1-bit flag shall indicate whether the user access
 	   field is present, or not. We always use this field -> 1 */
 	if (bUsAccFieldUsed == TRUE)
-		vecbiData.Enqueue((_UINT32BIT) 1, 1);
+		vecbiData.Enqueue((uint32_t) 1, 1);
 	else
-		vecbiData.Enqueue((_UINT32BIT) 0, 1);
+		vecbiData.Enqueue((uint32_t) 0, 1);
 
 	/* Data group type: this 4-bit field shall define the type of data carried
 	   in the data group data field. Data group types:
 	   3: MOT header information
 	   4: MOT data */
 	if (bHeader == TRUE)
-		vecbiData.Enqueue((_UINT32BIT) 3, 4);
+		vecbiData.Enqueue((uint32_t) 3, 4);
 	else
-		vecbiData.Enqueue((_UINT32BIT) 4, 4);
+		vecbiData.Enqueue((uint32_t) 4, 4);
 
 	/* Continuity index: the binary value of this 4-bit field shall be
 	   incremented each time a MSC data group of a particular type, with a
@@ -355,7 +355,7 @@ if (bCRCUsed == TRUE)
 	   the same type, is transmitted */
 	if (bHeader == TRUE)
 	{
-		vecbiData.Enqueue((_UINT32BIT) iContIndexHeader, 4);
+		vecbiData.Enqueue((uint32_t) iContIndexHeader, 4);
 
 		/* Increment modulo 16 */
 		iContIndexHeader++;
@@ -364,7 +364,7 @@ if (bCRCUsed == TRUE)
 	}
 	else
 	{
-		vecbiData.Enqueue((_UINT32BIT) iContIndexBody, 4);
+		vecbiData.Enqueue((uint32_t) iContIndexBody, 4);
 
 		/* Increment modulo 16 */
 		iContIndexBody++;
@@ -376,7 +376,7 @@ if (bCRCUsed == TRUE)
 	   remaining number of repetitions of a MSC data group with the same data
 	   content, occurring in successive MSC data groups of the same type.
 	   No repetition used in this implementation right now -> 0, TODO */
-	vecbiData.Enqueue((_UINT32BIT) 0, 4);
+	vecbiData.Enqueue((uint32_t) 0, 4);
 
 	/* Extension field: this 16-bit field shall be used to carry the Data Group
 	  Conditional Access (DGCA) when general data or MOT data uses conditional
@@ -394,15 +394,15 @@ if (bCRCUsed == TRUE)
 		/* Last: this 1-bit flag shall indicate whether the segment number field
 		   is the last or whether there are more to be transmitted */
 		if (bLastSeg == TRUE)
-			vecbiData.Enqueue((_UINT32BIT) 1, 1);
+			vecbiData.Enqueue((uint32_t) 1, 1);
 		else
-			vecbiData.Enqueue((_UINT32BIT) 0, 1);
+			vecbiData.Enqueue((uint32_t) 0, 1);
 
 		/* Segment number: this 15-bit field, coded as an unsigned binary number
 		   (in the range 0 to 32767), shall indicate the segment number.
 		   NOTE: The first segment is numbered 0 and the segment number is
 		   incremented by one at each new segment */
-		vecbiData.Enqueue((_UINT32BIT) iSegNum, 15);
+		vecbiData.Enqueue((uint32_t) iSegNum, 15);
 	}
 
 	/* User access field */
@@ -410,30 +410,30 @@ if (bCRCUsed == TRUE)
 	{
 		/* Rfa (Reserved for future addition): this 3-bit field shall be
 		   reserved for future additions */
-		vecbiData.Enqueue((_UINT32BIT) 0, 3);
+		vecbiData.Enqueue((uint32_t) 0, 3);
 
 		/* Transport Id flag: this 1-bit flag shall indicate whether the
 		   Transport Id field is present, or not */
 		if (bTransIDFieldUsed == TRUE)
-			vecbiData.Enqueue((_UINT32BIT) 1, 1);
+			vecbiData.Enqueue((uint32_t) 1, 1);
 		else
-			vecbiData.Enqueue((_UINT32BIT) 0, 1);
+			vecbiData.Enqueue((uint32_t) 0, 1);
 
 		/* Length indicator: this 4-bit field, coded as an unsigned binary
 		   number (in the range 0 to 15), shall indicate the length n in bytes
 		   of the Transport Id and End user address fields.
 		   We do not use end user address field, only transport ID -> 2 */
 		if (bTransIDFieldUsed == TRUE)
-			vecbiData.Enqueue((_UINT32BIT) 2, 4);
+			vecbiData.Enqueue((uint32_t) 2, 4);
 		else
-			vecbiData.Enqueue((_UINT32BIT) 0, 4);
+			vecbiData.Enqueue((uint32_t) 0, 4);
 
 		/* Transport Id (Identifier): this 16-bit field shall uniquely identify
 		   one data object (file and header information) from a stream of such
 		   objects, It may be used to indicate the object to which the
 		   information carried in the data group belongs or relates */
 		if (bTransIDFieldUsed == TRUE)
-			vecbiData.Enqueue((_UINT32BIT) iTranspID, 16);
+			vecbiData.Enqueue((uint32_t) iTranspID, 16);
 	}
 
 

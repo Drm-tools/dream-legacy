@@ -342,7 +342,7 @@ void CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData, int iLengthOfBody,
 void CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData, int iLengthOfBody,
 								  CParameter& Parameter)
 {
-	_UINT32BIT	iModJulDate, iZ, iA, iAlpha, iB, iC, iD, iE;
+	uint32_t	iModJulDate, iZ, iA, iAlpha, iB, iC, iD, iE;
 	_REAL		rJulDate, rF;
 
 	/* Get bits from stream */
@@ -357,7 +357,7 @@ void CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData, int iLengthOfBody,
 	   (Taken from "http://mathforum.org/library/drmath/view/51907.html") */
 	// 1. Add .5 to the JD and let Z = integer part of (JD+.5) and F the
 	// fractional part F = (JD+.5)-Z
-	iZ = (_UINT32BIT) (rJulDate + (_REAL) 0.5);
+	iZ = (uint32_t) (rJulDate + (_REAL) 0.5);
 	rF = (rJulDate + (_REAL) 0.5) - iZ;
 
 	// 2. If Z < 2299161, take A = Z

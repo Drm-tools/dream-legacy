@@ -72,7 +72,7 @@ const _BYTE byGeneratorMatrix[MC_NUM_OUTPUT_BITS_PER_STEP] = {
 #define PP_TYPE_0101					5
 
 /* {a, b, c ...}: a = Number of groups, b = Number of "1"s, c = Patterns */
-const _UINT32BIT iPuncturingPatterns[13][10] = {
+const uint32_t iPuncturingPatterns[13][10] = {
 /*
 B0: 1
 B1: 1
@@ -284,7 +284,7 @@ B3: 0 0 0 0 0 0 0 0
 
 /* Puncturing patterns for tailbits */
 #define LENGTH_TAIL_BIT_PAT				6
-const _UINT32BIT iPunctPatTailbits[12][LENGTH_TAIL_BIT_PAT] = {
+const uint32_t iPunctPatTailbits[12][LENGTH_TAIL_BIT_PAT] = {
 /*
 B0: 1 1 1 1 1 1
 B1: 1 1 1 1 1 1

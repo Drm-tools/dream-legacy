@@ -35,7 +35,7 @@
 \******************************************************************************/
 void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 {
-	_UINT32BIT	iRfuDummy;
+	uint32_t	iRfuDummy;
 	int			iCurShortID;
 	static int	FACRepetitionCounter = 0;
 
@@ -147,7 +147,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 		4);
 
 	/* Reconfiguration index (not used) */
-	(*pbiFACData).Enqueue((_UINT32BIT) 0, 3);
+	(*pbiFACData).Enqueue((uint32_t) 0, 3);
 
 	/* rfu */
 	iRfuDummy = 0;
@@ -166,7 +166,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	(*pbiFACData).Enqueue(Parameter.Service[iCurShortID].iServiceID, 24);
 
 	/* Short ID */
-	(*pbiFACData).Enqueue((_UINT32BIT) iCurShortID, 2);
+	(*pbiFACData).Enqueue((uint32_t) iCurShortID, 2);
 
 	/* CA indication */
 	switch (Parameter.Service[iCurShortID].eCAIndication)
@@ -182,7 +182,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	/* Language */
 	(*pbiFACData).Enqueue( 
-		(_UINT32BIT) Parameter.Service[iCurShortID].iLanguage, 4);
+		(uint32_t) Parameter.Service[iCurShortID].iLanguage, 4);
 
 	/* Audio/Data flag */
 	switch (Parameter.Service[iCurShortID].eAudDataFlag)
@@ -197,7 +197,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	
 	/* Service descriptor */
 	(*pbiFACData).Enqueue( 
-		(_UINT32BIT) Parameter.Service[iCurShortID].iServiceDescr, 5);
+		(uint32_t) Parameter.Service[iCurShortID].iServiceDescr, 5);
 
 	/* Rfa */
 	iRfuDummy = 0;
@@ -387,7 +387,7 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 	parameter differs from the old data stored in the receiver. If yes, init
 	the modules to the new parameter 
 */
-	_UINT32BIT	iTempServiceID;
+	uint32_t	iTempServiceID;
 	int			iTempShortID;
 
 	/* CRC ------------------------------------------------------------------ */

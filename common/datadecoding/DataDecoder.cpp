@@ -49,33 +49,33 @@ void CDataEncoder::GeneratePacket(CVector<_BINARY>& vecbiPacket)
 	/* Header --------------------------------------------------------------- */
 	/* First flag */
 	if (iCurDataPointer == 0)
-		vecbiPacket.Enqueue((_UINT32BIT) 1, 1);
+		vecbiPacket.Enqueue((uint32_t) 1, 1);
 	else
-		vecbiPacket.Enqueue((_UINT32BIT) 0, 1);
+		vecbiPacket.Enqueue((uint32_t) 0, 1);
 
 	/* Last flag */
 	if (iRemainSize > iPacketLen)
 	{
-		vecbiPacket.Enqueue((_UINT32BIT) 0, 1);
+		vecbiPacket.Enqueue((uint32_t) 0, 1);
 		bLastFlag = FALSE;
 	}
 	else
 	{
-		vecbiPacket.Enqueue((_UINT32BIT) 1, 1);
+		vecbiPacket.Enqueue((uint32_t) 1, 1);
 		bLastFlag = TRUE;
 	}
 
 	/* Packet Id */
-	vecbiPacket.Enqueue((_UINT32BIT) iPacketID, 2);
+	vecbiPacket.Enqueue((uint32_t) iPacketID, 2);
 
 	/* Padded packet indicator (PPI) */
 	if (iRemainSize < iPacketLen)
-		vecbiPacket.Enqueue((_UINT32BIT) 1, 1);
+		vecbiPacket.Enqueue((uint32_t) 1, 1);
 	else
-		vecbiPacket.Enqueue((_UINT32BIT) 0, 1);
+		vecbiPacket.Enqueue((uint32_t) 0, 1);
 
 	/* Continuity index (CI) */
-	vecbiPacket.Enqueue((_UINT32BIT) iContinInd, 3);
+	vecbiPacket.Enqueue((uint32_t) iContinInd, 3);
 
 	/* Increment index modulo 8 (1 << 3) */
 	iContinInd++;
@@ -106,7 +106,7 @@ void CDataEncoder::GeneratePacket(CVector<_BINARY>& vecbiPacket)
 		/* Padded packet. If the PPI is 1 then the first byte shall indicate
 		   the number of useful bytes that follow, and the data field is
 		   completed with padding bytes of value 0x00 */
-		vecbiPacket.Enqueue((_UINT32BIT) (iRemainSize / SIZEOF__BYTE),
+		vecbiPacket.Enqueue((uint32_t) (iRemainSize / SIZEOF__BYTE),
 			SIZEOF__BYTE);
 
 		/* Data */
@@ -462,7 +462,7 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 					   use old buffer. That ensures that the decoder keeps
 					   old data in buffer when synchronization was lost for
 					   a short time */
-					const _UINT32BIT iNewServID =
+					const uint32_t iNewServID =
 						ReceiverParam.Service[iCurSelDataServ].iServiceID;
 
 					if (iOldJournalineServiceID != iNewServID)
