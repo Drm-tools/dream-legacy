@@ -97,7 +97,7 @@ int CResample::Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
 	return im;
 }
 
-void CResample::Init(const int iNewInputBlockSize, const _REAL rtOutIniOffs)
+void CResample::Init(const int iNewInputBlockSize)
 {
 	iInputBlockSize = iNewInputBlockSize;
 
@@ -112,10 +112,8 @@ void CResample::Init(const int iNewInputBlockSize, const _REAL rtOutIniOffs)
 	/* Allocate memory for internal buffer, clear sample history */
 	vecrIntBuff.Init(iInputBlockSize + iHistorySize, (_REAL) 0.0);
 
-	/* Init absolute time for output stream (at the end of the history part)
-	   plus an additional initialization offset */
-	rtOut =
-		(_REAL) RES_FILT_NUM_TAPS_PER_PHASE * INTERP_DECIM_I_D + rtOutIniOffs;
+	/* Init absolute time for output stream (at the end of the history part) */
+	rtOut = (_REAL) RES_FILT_NUM_TAPS_PER_PHASE * INTERP_DECIM_I_D;
 }
 
 void CAudioResample::Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput)

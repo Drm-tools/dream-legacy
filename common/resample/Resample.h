@@ -41,8 +41,7 @@ public:
 	CResample() {}
 	virtual ~CResample() {}
 
-	void Init(const int iNewInputBlockSize,
-		const _REAL rtOutIniOffs = (_REAL) 0.0);
+	void Init(const int iNewInputBlockSize);
 	int Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
 				 _REAL rRation);
 

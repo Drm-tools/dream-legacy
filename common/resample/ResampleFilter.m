@@ -37,10 +37,7 @@ NumTapsP = 12;
 fc = 0.97 / I;
 
 % MMSE filter-design and windowing
-h = I * firls(I * NumTapsP, [0 fc fc 1], [1 1 0 0]) .* kaiser(I * NumTapsP + 1, 5)';
-
-% Make sure that all phases have same length
-h = h(1:end - 1);
+h = I * firls(I * NumTapsP - 1, [0 fc fc 1], [1 1 0 0]) .* kaiser(I * NumTapsP, 5)';
 
 
 % Export coefficiants to file ****************************************
