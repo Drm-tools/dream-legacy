@@ -33,14 +33,11 @@
 _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 							  CVector<_BINARY>& vecbiOutputBits)
 {
-	int				i, j, k;
+	int				i;
 	int				iDistCnt;
-	int				iMinMetricIndex;
 	int				iCurDecState;
 	_VITMETRTYPE	rAccMetricPrev0;
 	_VITMETRTYPE	rAccMetricPrev1;
-	_VITMETRTYPE	rMinMetric;
-	_VITMETRTYPE	rCurMetric;
 	CTrellisData*	pCurTrelData;
 	CTrellisData*	pOldTrelData;
 
@@ -181,10 +178,6 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 
 
 		/* Update trellis --------------------------------------------------- */
-		/* Init minium metric with large value */
-		rMinMetric = MC_METRIC_INIT_VALUE;
-		iMinMetricIndex = 0;
-
 #define BUTTERFLY(cur, prev0, prev1, met0, met1) \
 		{ \
 			/* Calculate metrics from the two previous states, use the old
@@ -314,7 +307,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	}
 
 	/* Return normalized accumulated minimum metric */
-	return rMinMetric / iDistCnt;
+	return pOldTrelData[0].rMetric / iDistCnt;
 }
 
 void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme,
