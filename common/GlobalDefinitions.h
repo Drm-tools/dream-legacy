@@ -151,6 +151,13 @@ protected:
 	_MUTEXTYPE	Mutex;
 };
 
+class CGenErr
+{
+public:
+	CGenErr(string strNE) : strError(strNE) {}
+	string strError;
+};
+
 
 // FIXME something nicer than using "MAX_NUM_TAPS_DRM_CHAN"
 /* For simulation, data from channel simulation */
