@@ -580,7 +580,7 @@ void CSound::InitRecording(int iNewBufferSize)
 
 }
 
-void CSound::StopRecording()
+void CSound::Close()
 {
 	printf("stoprec\n");
 #ifdef USE_DSP
