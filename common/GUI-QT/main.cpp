@@ -258,7 +258,7 @@ void ParseArguments(QApplication& app)
 
 		/* Sample rate offset start value ----------------------------------- */
 		if ((!strcmp(app.argv()[i], "--sampleoff")) ||
-			(!strcmp(app.argv()[i], "-l")))
+			(!strcmp(app.argv()[i], "-s")))
 		{
 			if (++i >= app.argc())
 			{
