@@ -34,6 +34,7 @@
 #include "FAC/FAC.h"
 #include "SDC/SDC.h"
 #include "TextMessage.h"
+#include "AudioFile.h"
 #include <time.h>
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
@@ -81,15 +82,20 @@ protected:
 class CWriteData : public CReceiverModul<_SAMPLE, _SAMPLE>
 {
 public:
-	CWriteData(CSound* pNS) : bMuteAudio(FALSE) {pSound = pNS;}
+	CWriteData(CSound* pNS) : bMuteAudio(FALSE), bDoWriteWaveFile(FALSE),
+		pSound(pNS) {}
 	virtual ~CWriteData() {}
 
+	void StartWriteWaveFile(const string strFileName);
+	void StopWriteWaveFile();
 	void MuteAudio(_BOOLEAN bNewMA) {bMuteAudio = bNewMA;}
 	_BOOLEAN GetMuteAudio() {return bMuteAudio;}
 
 protected:
 	CSound*		pSound;
 	_BOOLEAN	bMuteAudio;
+	CWaveFile	WaveFileAudio;
+	_BOOLEAN	bDoWriteWaveFile;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

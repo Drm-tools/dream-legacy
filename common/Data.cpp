@@ -75,6 +75,18 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 		else
 			PostWinMessage(MS_IOINTERFACE, 1); /* yellow light */
 	}
+
+	/* Write data as wave in file */
+	Lock();
+
+	if (bDoWriteWaveFile == TRUE)
+	{
+		for (int i = 0; i < iInputBlockSize; i += 2)
+			WaveFileAudio.AddStereoSample((*pvecInputData)[i] /* left */,
+				(*pvecInputData)[i + 1] /* right */);
+	}
+
+	Unlock();
 }
 
 void CWriteData::InitInternal(CParameter& ReceiverParam)
@@ -86,6 +98,26 @@ void CWriteData::InitInternal(CParameter& ReceiverParam)
 
 	/* Init sound interface */
 	pSound->InitPlayback(iInputBlockSize);
+}
+
+void CWriteData::StartWriteWaveFile(const string strFileName)
+{
+	/* No Lock(), Unlock() needed here */
+	if (bDoWriteWaveFile == FALSE)
+	{
+		WaveFileAudio.Open(strFileName);
+		bDoWriteWaveFile = TRUE;
+	}
+}
+
+void CWriteData::StopWriteWaveFile()
+{
+	Lock();
+
+	WaveFileAudio.Close();
+	bDoWriteWaveFile = FALSE;
+
+	Unlock();
 }
 
 

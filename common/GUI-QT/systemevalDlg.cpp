@@ -111,10 +111,11 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 		EdtFrequency->setText(QString().number(iCurFrequency));
 
 
-	/* Connect controls */
+	/* Connect controls ----------------------------------------------------- */
 	connect(SliderNoOfIterations, SIGNAL(valueChanged(int)),
 		this, SLOT(OnSliderIterChange(int)));
 
+	/* Radio buttons */
 	connect(RadioButtonTiLinear, SIGNAL(clicked()),
 		this, SLOT(OnRadioTimeLinear()));
 	connect(RadioButtonTiWiener, SIGNAL(clicked()),
@@ -130,6 +131,7 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	connect(RadioButtonTiSyncFirstPeak, SIGNAL(clicked()),
 		this, SLOT(OnRadioTiSyncFirstPeak()));
 
+	/* Buttons */
 	connect(ButtonAvIR, SIGNAL(clicked()),
 		this, SLOT(OnButtonAvIR()));
 	connect(ButtonTransFct, SIGNAL(clicked()),
@@ -148,13 +150,17 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	connect(buttonOk, SIGNAL(clicked()),
 		this, SLOT(accept()));
 
+	/* Check boxes */
 	connect(CheckBoxFlipSpec, SIGNAL(clicked()),
 		this, SLOT(OnCheckFlipSpectrum()));
 	connect(CheckBoxMuteAudio, SIGNAL(clicked()),
 		this, SLOT(OnCheckBoxMuteAudio()));
 	connect(CheckBoxWriteLog, SIGNAL(clicked()),
 		this, SLOT(OnCheckWriteLog()));
+	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()),
+		this, SLOT(OnCheckSaveAudioWAV()));
 
+	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
 	connect(&TimerChart, SIGNAL(timeout()),
@@ -176,16 +182,6 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 
 	/* Update window */
 	OnTimerChart();
-}
-
-void systemevalDlg::OnTimerLogFileStart()
-{
-	/* Start logging (if not already done) */
-	if (!CheckBoxWriteLog->isChecked())
-	{
-		CheckBoxWriteLog->setChecked(TRUE);
-		OnCheckWriteLog();
-	}
 }
 
 void systemevalDlg::showEvent(QShowEvent* pEvent)
@@ -686,6 +682,16 @@ void systemevalDlg::OnlyThisButDown(QPushButton* pButton)
 		pButton->setOn(TRUE);
 }
 
+void systemevalDlg::OnTimerLogFileStart()
+{
+	/* Start logging (if not already done) */
+	if (!CheckBoxWriteLog->isChecked())
+	{
+		CheckBoxWriteLog->setChecked(TRUE);
+		OnCheckWriteLog();
+	}
+}
+
 void systemevalDlg::OnCheckFlipSpectrum()
 {
 	/* Set parameter in working thread module */
@@ -701,6 +707,23 @@ void systemevalDlg::OnCheckBoxMuteAudio()
 {
 	/* Set parameter in working thread module */
 	DRMReceiver.GetWriteData()->MuteAudio(CheckBoxMuteAudio->isChecked());
+}
+
+void systemevalDlg::OnCheckSaveAudioWAV()
+{
+	if (CheckBoxSaveAudioWave->isChecked() == TRUE)
+	{
+		/* Show "save file" dialog */
+		QString strFileName =
+			QFileDialog::getSaveFileName("DreamOut.wav", "*.wav", this);
+
+		/* Check if user not hit the cancel button */
+		if (!strFileName.isNull())
+			DRMReceiver.GetWriteData()->
+				StartWriteWaveFile(strFileName.latin1());
+	}
+	else
+		DRMReceiver.GetWriteData()->StopWriteWaveFile();
 }
 
 void systemevalDlg::OnCheckWriteLog()

@@ -37,6 +37,7 @@
 #include <qdatetime.h>
 #include <qlineedit.h>
 #include <qtooltip.h>
+#include <qfiledialog.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/systemevalDlgbase.h"
@@ -114,4 +115,5 @@ public slots:
 	void OnCheckFlipSpectrum();
 	void OnCheckBoxMuteAudio();
 	void OnCheckWriteLog();
+	void OnCheckSaveAudioWAV();
 };

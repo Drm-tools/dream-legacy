@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>722</width>
-            <height>542</height>
+            <width>718</width>
+            <height>557</height>
         </rect>
     </property>
     <property stdset="1">
@@ -1085,7 +1085,7 @@
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout68</cstring>
+                <cstring>Layout23</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -1342,10 +1342,7 @@
                     <class>QLayoutWidget</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>Layout63</cstring>
-                    </property>
-                    <property>
-                        <name>layoutSpacing</name>
+                        <cstring>Layout21</cstring>
                     </property>
                     <vbox>
                         <property stdset="1">
@@ -1354,7 +1351,7 @@
                         </property>
                         <property stdset="1">
                             <name>spacing</name>
-                            <number>4</number>
+                            <number>6</number>
                         </property>
                         <widget>
                             <class>QGroupBox</class>
@@ -1522,7 +1519,7 @@
                             </property>
                             <property stdset="1">
                                 <name>title</name>
-                                <string>Log File</string>
+                                <string>Log File, Save Data</string>
                             </property>
                             <property stdset="1">
                                 <name>alignment</name>
@@ -1534,10 +1531,10 @@
                             <property>
                                 <name>vAlign</name>
                             </property>
-                            <hbox>
+                            <vbox>
                                 <property stdset="1">
                                     <name>margin</name>
-                                    <number>9</number>
+                                    <number>11</number>
                                 </property>
                                 <property stdset="1">
                                     <name>spacing</name>
@@ -1599,7 +1596,18 @@
                                         </widget>
                                     </hbox>
                                 </widget>
-                            </hbox>
+                                <widget>
+                                    <class>QCheckBox</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>CheckBoxSaveAudioWave</cstring>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>text</name>
+                                        <string>Save Audio as WAV</string>
+                                    </property>
+                                </widget>
+                            </vbox>
                         </widget>
                     </vbox>
                 </widget>
@@ -1607,7 +1615,7 @@
                     <class>QLayoutWidget</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>Layout66</cstring>
+                        <cstring>Layout22</cstring>
                     </property>
                     <vbox>
                         <property stdset="1">
@@ -1635,7 +1643,7 @@
                                 <name>sizeHint</name>
                                 <size>
                                     <width>20</width>
-                                    <height>106</height>
+                                    <height>120</height>
                                 </size>
                             </property>
                         </spacer>
