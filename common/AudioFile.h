@@ -86,6 +86,7 @@ public:
 			fwrite((const void*) &iDataLength, size_t(4), size_t(1), pFile);
 
 			fclose(pFile);
+			pFile = NULL;
 		}
 	}
 
