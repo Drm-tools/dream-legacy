@@ -102,8 +102,6 @@ void CDRMChannel::ProcessDataInternal(CParameter& ReceiverParam)
 
 void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 {
-	_REAL rMyFading;
-
 	/* Set channel parameter according to selected channel number (table B.1) */
 	switch (ReceiverParam.iDRMChannelNum)
 	{
@@ -241,14 +239,12 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 
 	case 8:
 		/* Only one fading path */
-		rMyFading = (_REAL) 4.0;
-
 		iNumTaps = 1;
 
 		tap[0].Init(/* Delay: */	(_REAL) 0.0,
 					/* Gain: */		(_REAL) 1.0,
 					/* Fshift: */	(_REAL) 0.0,
-					/* Fd: */		rMyFading);
+					/* Fd: */		(_REAL) ReceiverParam.iChan8Doppler);
 		break;
 
 	case 9:
