@@ -86,6 +86,7 @@ public:
 	CMatlibVector(const int iNLen, const EVecTy eNTy = VTY_CONST) : 
 		iVectorLength(0), pData(NULL), eVType(eNTy) {Init(iNLen);}
 	CMatlibVector(CMatlibVector<T>& vecI); // Copy constructor, VERY IMPORTANT!!!
+	CMatlibVector(const CMatlibVector<T>& vecI);
 	virtual ~CMatlibVector() {if (pData != NULL) delete[] pData;}
 
 	CMatlibVector(const CMatlibVector<CReal>& fvReal, const CMatlibVector<CReal>& fvImag) : 
@@ -274,10 +275,10 @@ CMatlibVector<T>::CMatlibVector(CMatlibVector<T>& vecI) : iVectorLength(vecI.Get
 	{
 		if (vecI.eVType == VTY_CONST)
 		{
-			// Allocate data block for vector
+			/* Allocate data block for vector */
 			pData = new T[iVectorLength];
 
-			// Copy vector
+			/* Copy vector */
 			for (int i = 0; i < iVectorLength; i++)
 				pData[i] = vecI[i];
 		}
@@ -286,12 +287,28 @@ CMatlibVector<T>::CMatlibVector(CMatlibVector<T>& vecI) : iVectorLength(vecI.Get
 			/* We can define the copy constructor as a destroying operator of
 			   the input vector for performance reasons. This
 			   saves us from always copy the whole vector */
-			// Take data pointer from input vector (steal it)
+			/* Take data pointer from input vector (steal it) */
 			pData = vecI.pData;
 
-			// Destroy other vector (temporary vectors only)
+			/* Destroy other vector (temporary vectors only) */
 			vecI.pData = NULL;
 		}
+	}
+}
+
+/* Copy constructor for constant Matlib vectors */
+template<class T>
+CMatlibVector<T>::CMatlibVector(const CMatlibVector<T>& vecI) : 
+	iVectorLength(vecI.GetSize()), pData(NULL), eVType(VTY_CONST)
+{
+	if (iVectorLength > 0)
+	{
+		/* Allocate data block for vector */
+		pData = new T[iVectorLength];
+
+		/* Copy vector */
+		for (int i = 0; i < iVectorLength; i++)
+			pData[i] = vecI[i];
 	}
 }
 
