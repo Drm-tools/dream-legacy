@@ -104,6 +104,8 @@ protected:
 	CReal					rLamPSD;
 	CReal					rLamSNREst;
 
+	_REAL					rInternIFNorm;
+
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };

@@ -117,7 +117,7 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Total frequency offset from acquisition and tracking (we calculate the
 	   normalized frequency offset) */
 	rNormCurFreqOffset = (_REAL) 2.0 * crPi * (ReceiverParam.rFreqOffsetAcqui +
-		ReceiverParam.rFreqOffsetTrack);
+		ReceiverParam.rFreqOffsetTrack - rInternIFNorm);
 
 	/* New rotation vector for exp() calculation */
 	cExpStep = _COMPLEX(cos(rNormCurFreqOffset), sin(rNormCurFreqOffset));
@@ -218,7 +218,10 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	iGuardSize = ReceiverParam.iGuardSize;
 	iNoCarrier = ReceiverParam.iNoCarrier;
 	iShiftedKmin = ReceiverParam.iShiftedKmin;
-	iShiftedKmax = ReceiverParam.iShiftedKmax; 
+	iShiftedKmax = ReceiverParam.iShiftedKmax;
+
+	/* Calculate the desired frequency position (normalized) */
+	rInternIFNorm = (_REAL) ReceiverParam.iIndexDCFreq / iDFTSize;
 
 	/* Start with phase null (can be arbitrarily chosen) */
 	cCurExp = (_REAL) 1.0;

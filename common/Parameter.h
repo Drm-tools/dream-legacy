@@ -260,8 +260,7 @@ public:
 	int				GetCurSelectedService() const {return iCurSelService;}
 
 	_REAL			GetDCFrequency() const {return SOUNDCRD_SAMPLE_RATE *
-						(rFreqOffsetAcqui + rFreqOffsetTrack + 
-						(_REAL) iIndexDCFreq / iFFTSizeN);}
+						(rFreqOffsetAcqui + rFreqOffsetTrack);}
 	_REAL			GetSampFreqEst() const {return rResampleOffset;}
 
 
