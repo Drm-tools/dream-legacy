@@ -68,7 +68,7 @@ protected:
 
 	/* Text message */
 	_BOOLEAN			bTextMessageUsed;
-	CTextMessage		TextMessage;
+	CTextMessageDecoder	TextMessage;
 	CVector<_BINARY>	vecbiTextMessBuf;
 
 	int					iTotalFrameSize;

@@ -36,7 +36,7 @@
 /* Transmitter */
 void CReadData::ProcessDataInternal(CParameter& TransmParam)
 {
-	static int	iCounter = 0;
+	int i;
 
 	/* Stop simulation if defined number of blocks are generated */
 	iCounter++;
@@ -45,10 +45,36 @@ void CReadData::ProcessDataInternal(CParameter& TransmParam)
 
 	/* Write your data in (*pvecOutputData)[i],
 	   where i = 0..iOutputBlockSize - 1*/
-	for (int i = 0; i < iOutputBlockSize; i++)
+	for (i = 0; i < iOutputBlockSize; i++)
 	{
 		/* TEST: "TRUE" -> To be filled with meaningful values */
 		(*pvecOutputData)[i] = TRUE;
+	}
+
+
+	/* Text message application. Last four bytes in stream are written */
+	if (bUsingTextMessage == TRUE)
+	{
+		/* Always four bytes for text message "piece" */
+		CVector<_BINARY> vecbiTextMessBuf(
+			SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
+		
+		/* Get "piece" */
+		TextMessage.Encode(vecbiTextMessBuf);
+
+		/* Total number of bytes which are actually used. The number is
+		   specified by iLenPartA + iLenPartB which is set in
+		   "SDCTransmit.cpp". There is currently no "nice" solution for
+		   setting these values. TODO: better solution */
+		/* Padding to byte as done in SDCTransmit.cpp line 138ff */
+		int iTotByt = (iOutputBlockSize / SIZEOF__BYTE) * SIZEOF__BYTE;
+
+		for (i = iTotByt - SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
+			 i < iTotByt; i++)
+		{
+			(*pvecOutputData)[i] = vecbiTextMessBuf[i -
+				(iTotByt - SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR)];
+		}
 	}
 }
 
@@ -57,6 +83,16 @@ void CReadData::InitInternal(CParameter& TransmParam)
 	/* Define output block size */
 	iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
 }
+
+void CReadData::SetTextMessage(const string& strText)
+{
+	/* Set text message in text message object */
+	TextMessage.SetMessage(strText);
+
+	/* Set text message flag */
+	bUsingTextMessage = TRUE;
+}
+
 
 /* Receiver */
 void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)

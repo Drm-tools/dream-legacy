@@ -30,7 +30,177 @@
 
 
 /* Implementation *************************************************************/
-void CTextMessage::Decode(CVector<_BINARY>& pData)
+/******************************************************************************\
+* Text message encoder (for transmitter)                                       *
+\******************************************************************************/
+void CTextMessageEncoder::Encode(CVector<_BINARY>& pData)
+{
+	int j;
+
+	/* Set data for this piece from segment data */
+	for (int i = 0; i < NUM_BYTES_TEXT_MESS_IN_AUD_STR; i++)
+	{
+		if (iPieceCnt * NUM_BYTES_TEXT_MESS_IN_AUD_STR + i <
+			vecbSegment[iSegCnt].Size() / SIZEOF__BYTE)
+		{
+			for (j = 0; j < SIZEOF__BYTE; j++)
+				pData[i * SIZEOF__BYTE + j] =
+					(_BINARY) vecbSegment[iSegCnt].Separate(1);
+		}
+		else
+		{
+			/* If the length of the last segment is not a multiple of four then
+			   the incomplete frame shall be padded with 0x00 bytes */
+			for (j = 0; j < SIZEOF__BYTE; j++)
+				pData[i * SIZEOF__BYTE + j] = 0;
+		}
+	}
+
+	/* Take care of piece count and segment count */
+	iPieceCnt++;
+
+	if (iPieceCnt * NUM_BYTES_TEXT_MESS_IN_AUD_STR >=
+		vecbSegment[iSegCnt].Size() / SIZEOF__BYTE)
+	{
+		iPieceCnt = 0;
+
+		/* Next segment (test for wrap around) */
+		iSegCnt++;
+		if (iSegCnt == iNumSeg)
+			iSegCnt = 0;
+
+		vecbSegment[iSegCnt].ResetBitAccess();
+	}
+}
+
+void CTextMessageEncoder::SetMessage(const string& strMessage)
+{
+	int		i, j;
+	int		iPosInStr;
+	int		iLenBytesOfText;
+	int		iNumBodyBytes;
+	_BINARY	biFirstFlag;
+	_BINARY	biLastFlag;
+	CCRC	CRCObject;
+
+	/* Reset counter for encoder function */
+	iSegCnt = 0;
+	iPieceCnt = 0;
+
+	/* Get length of text message. 
+       TODO: take care of multiple byte characters (UTF-8 coding)! */
+	iLenBytesOfText = strMessage.length();
+
+	/* Calculate required number of segments. The body shall contain 16 bytes
+	   of character data */
+	iNumSeg = ceil((_REAL) iLenBytesOfText / 16);
+
+
+	/* Generate segments ---------------------------------------------------- */
+	/* Reset position in string */
+	iPosInStr = 0;
+
+	for (i = 0; i < iNumSeg; i++)
+	{
+		/* Calculate number of bytes for body */
+		const int iRemainingBytes = iLenBytesOfText - iPosInStr;
+		
+		if (iRemainingBytes > BYTES_PER_SEG_TEXT_MESS)
+			iNumBodyBytes = BYTES_PER_SEG_TEXT_MESS;
+		else
+			iNumBodyBytes = iRemainingBytes;
+
+		/* Init segment vector: "Beginning of segment" 4 * 8 bits,
+		   Header 16 bits, body n * 8 bits, CRC 16 bits */
+		vecbSegment[i].Init(4 * 8 + 16 + iNumBodyBytes * 8 + 16);
+
+		/* Reset enqueue function */
+		vecbSegment[i].ResetBitAccess();
+
+
+		/* Generate "beginning of segment" identification by "all 0xFF" ----- */
+		for (j = 0; j < NUM_BYTES_TEXT_MESS_IN_AUD_STR; j++)
+			vecbSegment[i].Enqueue((_UINT32BIT) 0xFF, SIZEOF__BYTE);
+
+
+		/* Header ----------------------------------------------------------- */
+		/* Toggle bit (not use right now since we only offer one message
+		   at the moment. TODO: more than only one message) */
+		vecbSegment[i].Enqueue((_UINT32BIT) 0, 1);
+
+		/* Determine position of segment */
+		if (i == 0)
+			biFirstFlag = 1;
+		else
+			biFirstFlag = 0;
+
+		if (iLenBytesOfText - iPosInStr < BYTES_PER_SEG_TEXT_MESS)
+			biLastFlag = 1;
+		else
+			biLastFlag = 0;
+
+		/* Enqueue first flag */
+		vecbSegment[i].Enqueue((_UINT32BIT) biFirstFlag, 1);
+
+		/* Enqueue last flag */
+		vecbSegment[i].Enqueue((_UINT32BIT) biLastFlag, 1);
+
+		/* Command flag (no commands used right now, TODO) */
+		vecbSegment[i].Enqueue((_UINT32BIT) 0, 1);
+
+		/* Field 1: specify the number of bytes in the body minus 1 (It
+		   shall normally take the value 15 except in the last segment) */
+		vecbSegment[i].Enqueue((_UINT32BIT) iNumBodyBytes - 1, 4);
+
+		/* Field 2, Rfa. The bit shall be set to zero until it is defined */
+		vecbSegment[i].Enqueue((_UINT32BIT) 0, 1);
+
+		/* SegNum: specify the sequence number of the current segment 
+		   minus 1. The value 0 is reserved for future use */
+		vecbSegment[i].Enqueue((_UINT32BIT) i, 3);
+
+		/* Rfa. These bits shall be set to zero until they are defined */
+		vecbSegment[i].Enqueue((_UINT32BIT) 0, 4);
+
+
+		/* Body ------------------------------------------------------------- */
+		/* Set body bytes */
+		for (j = 0; j < iNumBodyBytes; j++)
+		{
+			vecbSegment[i].Enqueue((_UINT32BIT) strMessage.at(iPosInStr),
+				SIZEOF__BYTE);
+
+			iPosInStr++;
+		}
+
+
+		/* CRC -------------------------------------------------------------- */
+		/* Reset bit access and skip segment beginning piece (all 0xFFs) */
+		vecbSegment[i].ResetBitAccess();
+		vecbSegment[i].Separate(SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
+
+		/* Calculate the CRC and put it at the end of the segment */
+		CRCObject.Reset(16);
+
+		/* "byLengthBody" was defined in the header */
+		for (j = 0; j < iNumBodyBytes + 2 /* Header */; j++)
+			CRCObject.AddByte(vecbSegment[i].Separate(SIZEOF__BYTE));
+
+		/* Now, pointer in "enqueue"-function is back at the same place, 
+		   add CRC */
+		vecbSegment[i].Enqueue(CRCObject.GetCRC(), 16);
+
+
+		/* Reset bit access for using segment in encoder function */
+		vecbSegment[i].ResetBitAccess();
+	}
+}
+
+
+/******************************************************************************\
+* Text message decoder (for receiver)                                          *
+\******************************************************************************/
+void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 {
 	int			i, j;
 	_BOOLEAN	bBeginningFound;
@@ -42,7 +212,7 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 	   store total new buffer in internal intermediate buffer. This buffer is
 	   read, when a beginning was found */
 	bBeginningFound = TRUE;
-	for (i = 0; i < NUM_BY_PER_PIECE; i++)
+	for (i = 0; i < NUM_BYTES_TEXT_MESS_IN_AUD_STR; i++)
 	{
 		if (pData.Separate(SIZEOF__BYTE) != 0xFF)
 			bBeginningFound = FALSE;
@@ -85,7 +255,7 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 					/* A new message is sent, clear all old segments */
 					ResetSegments();
 
-					iNoSegments = 0;
+					iNumSegments = 0;
 
 					biOldToggleBit = biToggleBit;
 				}
@@ -117,7 +287,7 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 						/* A new message is sent, clear all old segments */
 						ResetSegments();
 
-						iNoSegments = 0;
+						iNumSegments = 0;
 					}
 				}
 
@@ -132,12 +302,12 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 						biStreamBuffer.Separate(SIZEOF__BYTE);
 
 				/* Set length of this segment and OK flag */
-				Segment[bySegmentID].iNoBytes = byLengthBody;
+				Segment[bySegmentID].iNumBytes = byLengthBody;
 				Segment[bySegmentID].bIsOK = TRUE;
 
 				/* Check length of text message */
 				if (biLastFlag == 1)
-					iNoSegments = bySegmentID;
+					iNumSegments = bySegmentID + 1;
 
 				/* Set text to display */
 				SetText();
@@ -149,7 +319,7 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 	}
 	else
 	{
-		for (i = 0; i < NUM_BY_PER_PIECE; i++)
+		for (i = 0; i < NUM_BYTES_TEXT_MESS_IN_AUD_STR; i++)
 		{
 			/* Check, if number of bytes is not too big */
 			if (iBitCount < TOT_NUM_BITS_PER_PIECE)
@@ -163,7 +333,7 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 	}
 }
 
-void CTextMessage::ReadHeader()
+void CTextMessageDecoder::ReadHeader()
 {
 	/* Toggle bit */
 	biToggleBit = (_BINARY) biStreamBuffer.Separate(1);
@@ -211,7 +381,7 @@ void CTextMessage::ReadHeader()
 	biStreamBuffer.Separate(4);
 }
 
-void CTextMessage::Init(string* pstrNewPText)
+void CTextMessageDecoder::Init(string* pstrNewPText)
 {
 	int i;
 
@@ -222,24 +392,24 @@ void CTextMessage::Init(string* pstrNewPText)
 	/* Init segments */
 	ResetSegments();
 
-	iNoSegments = 0;
+	iNumSegments = 0;
 
 	/* Init and reset stream buffer */
 	biStreamBuffer.Init(TOT_NUM_BITS_PER_PIECE, 0);
 }
 
-void CTextMessage::SetText()
+void CTextMessageDecoder::SetText()
 {
 	int			i, j;
 	_BOOLEAN	bTextMessageReady;
 
 #ifndef _DEBUG_
-	if (iNoSegments != 0)
+	if (iNumSegments != 0)
 #endif
 	{
 		/* Check, if all segments are ready */
 		bTextMessageReady = TRUE;
-		for (i = 0; i < iNoSegments + 1; i++)
+		for (i = 0; i < iNumSegments; i++)
 		{
 			if (Segment[i].bIsOK == FALSE)
 				bTextMessageReady = FALSE;
@@ -264,7 +434,7 @@ void CTextMessage::SetText()
 			{
 				if (Segment[i].bIsOK == TRUE)
 				{
-					for (j = 0; j < Segment[i].iNoBytes; j++)
+					for (j = 0; j < Segment[i].iNumBytes; j++)
 					{
 						/* Get character */
 						char cNewChar = Segment[i].byData[j];
@@ -322,7 +492,7 @@ void CTextMessage::SetText()
 	}
 }
 
-void CTextMessage::ClearText()
+void CTextMessageDecoder::ClearText()
 {
 	/* Reset segments */
 	ResetSegments();
@@ -331,7 +501,7 @@ void CTextMessage::ClearText()
 	*pstrText = "";
 }
 
-void CTextMessage::ResetSegments()
+void CTextMessageDecoder::ResetSegments()
 {
 	for (int i = 0; i < MAX_NUM_SEG_TEXT_MESSAGE; i++)
 		Segment[i].bIsOK = FALSE;

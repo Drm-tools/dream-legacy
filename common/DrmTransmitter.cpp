@@ -127,6 +127,11 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	Param.iUTCHour = 0;
 	Param.iUTCMin = 0;
 
+	/* Text message string. If "strTextMessage" == "", text message is
+	   disabled */
+	string strTextMessage =
+		"Dream DRM Transmitter\x0B\x0AThis is a test transmission.";
+
 
 	/**************************************************************************/
 	/* Robustness mode and spectrum occupancy. Available transmission modes:
@@ -150,7 +155,7 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	Param.MSCPrLe.iHierarch = 0;
 
 	/* Either one audio or one data service can be chosen */
-	_BOOLEAN bIsAudio = FALSE;
+	_BOOLEAN bIsAudio = TRUE;
 
 	/* In the current version only one service and one stream is supported. The
 	   stream IDs must be 0 in both cases */
@@ -162,6 +167,14 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 
 		Param.Service[0].eAudDataFlag = CParameter::SF_AUDIO;
 		Param.Service[0].AudioParam.iStreamID = 0;
+
+		/* Text message */
+		if (!strTextMessage.empty())
+		{
+			Param.Service[0].AudioParam.bTextflag = TRUE;
+
+			ReadData.SetTextMessage(strTextMessage);
+		}
 	}
 	else
 	{

@@ -33,6 +33,7 @@
 #include "Modul.h"
 #include "FAC/FAC.h"
 #include "SDC/SDC.h"
+#include "TextMessage.h"
 #include <time.h>
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
@@ -51,13 +52,18 @@
 class CReadData : public CTransmitterModul<_BINARY, _BINARY>
 {
 public:
-	CReadData() : iNumTransBlocks(DEFAULT_NUM_SIM_BLOCKS) {}
+	CReadData() : iNumTransBlocks(DEFAULT_NUM_SIM_BLOCKS),
+		bUsingTextMessage(FALSE), iCounter(0) {}
 	virtual ~CReadData() {}
 
 	void SetNumTransBlocks(int iNewNum) {iNumTransBlocks = iNewNum;}
+	void SetTextMessage(const string& strText);
 
 protected:
-	int iNumTransBlocks;
+	int					iCounter;
+	int					iNumTransBlocks;
+	CTextMessageEncoder TextMessage;
+	_BOOLEAN			bUsingTextMessage;
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);

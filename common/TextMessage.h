@@ -41,28 +41,42 @@
 #define MAX_NUM_SEG_TEXT_MESSAGE		(8 + 1)
 #define BYTES_PER_SEG_TEXT_MESS			16
 
-/* Four pieces of data per MSC frame */
-#define NUM_BY_PER_PIECE				4
-
-#define TOT_NUM_BITS_PER_PIECE			((BYTES_PER_SEG_TEXT_MESS /* Max body */ + 2 /* Header */ + 2 /* CRC */) * SIZEOF__BYTE)
+#define TOT_NUM_BITS_PER_PIECE			((BYTES_PER_SEG_TEXT_MESS /* Max body */ \
+										+ 2 /* Header */ + 2 /* CRC */) * SIZEOF__BYTE)
 
 
 /* Classes ********************************************************************/
 class CTextMessSegment
 {
 public:
-	CTextMessSegment() {bIsOK = FALSE; iNoBytes = 0;}
+	CTextMessSegment() {bIsOK = FALSE; iNumBytes = 0;}
 
 	_BYTE		byData[BYTES_PER_SEG_TEXT_MESS];
 	_BOOLEAN	bIsOK;
-	int			iNoBytes;
+	int			iNumBytes;
 };
 
-class CTextMessage
+class CTextMessageEncoder
 {
 public:
-	CTextMessage() {}
-	virtual ~CTextMessage() {}
+	CTextMessageEncoder() {}
+	virtual ~CTextMessageEncoder() {}
+
+	void Encode(CVector<_BINARY>& pData);
+	void SetMessage(const string& strMessage);
+
+protected:
+	CVector<_BINARY>	vecbSegment[MAX_NUM_SEG_TEXT_MESSAGE];
+	int					iSegCnt;
+	int					iPieceCnt;
+	int					iNumSeg;
+};
+
+class CTextMessageDecoder
+{
+public:
+	CTextMessageDecoder() {}
+	virtual ~CTextMessageDecoder() {}
 
 	void Decode(CVector<_BINARY>& pData);
 	void Init(string* pstrNewPText);
@@ -86,7 +100,7 @@ protected:
 	_BINARY				biToggleBit;
 	_BYTE				byLengthBody;
 	int					iBitCount;
-	int					iNoSegments;
+	int					iNumSegments;
 
 	_BINARY				biOldToggleBit;
 
