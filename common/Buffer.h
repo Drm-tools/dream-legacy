@@ -66,6 +66,7 @@ template<class TData> class CSingleBuffer : public CBuffer<TData>
 {
 public:
 	CSingleBuffer() : iFillLevel(0) {}
+	CSingleBuffer(const int iNBufSize) {Init(iNBufSize);}
 	virtual	~CSingleBuffer() {}
 
 	virtual void				Init(const int iNewBufferSize);
@@ -86,6 +87,7 @@ public:
 	enum EBufferState {BS_FULL, BS_EMPTY}; // BS: Buffer Status
 
 	CCyclicBuffer() {Clear();}
+	CCyclicBuffer(const int iNBufSize) {Init(iNBufSize);}
 	virtual	~CCyclicBuffer() {}
 
 	virtual void				Init(const int iNewBufferSize);

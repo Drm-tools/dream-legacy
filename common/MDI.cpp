@@ -36,8 +36,7 @@
 /* Implementation *************************************************************/
 CMDI::CMDI() : SocketDevice(QSocketDevice::Datagram /* UDP */), iLogFraCnt(0),
 	iSeqNumber(0), bMDIInEnabled(FALSE), bMDIOutEnabled(FALSE),
-	vecbiTagStr(MAX_NUM_STREAMS), eMDIInRobMode(RM_ROBUSTNESS_MODE_B),
-	vecbiIncStr(MAX_NUM_STREAMS)
+	vecbiTagStr(MAX_NUM_STREAMS)
 {
 	/* Reset all tags for initialization and reset flag for SDC tag */
 	ResetTags(TRUE);
@@ -566,22 +565,26 @@ ERobMode CMDI::GetFACData(CVectorEx<_BINARY>& vecbiFACData)
 {
 	Mutex.Lock();
 
-	if (vecbiIncFACData.Size() > 0)
+	/* Get new MDI data from buffer if it was not get by the SDC routine. Reset
+	   the flag if it was set */
+	if (bSDCWasSet == FALSE)
+		MDIInBuffer.Get(CurMDIPkt);
+	else
+		bSDCWasSet = FALSE;
+
+	if (CurMDIPkt.vecbiFACData.Size() > 0)
 	{
 		/* Copy incoming MDI FAC data */
 		vecbiFACData.ResetBitAccess();
-		vecbiIncFACData.ResetBitAccess();
+		CurMDIPkt.vecbiFACData.ResetBitAccess();
 
 		/* FAC data is always 72 bits long which is 9 bytes, copy data
 		   byte-wise */
 		for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE; i++)
 		{
-			vecbiFACData.
-				Enqueue(vecbiIncFACData.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+			vecbiFACData.Enqueue(CurMDIPkt.vecbiFACData.
+				Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 		}
-
-		/* Reset vector data from tag afterwards so that it is not read again */
-		vecbiIncFACData.Init(0);
 	}
 	else
 	{
@@ -590,7 +593,7 @@ ERobMode CMDI::GetFACData(CVectorEx<_BINARY>& vecbiFACData)
 	}
 
 	/* Set current robustness mode (should be done inside the mutex region) */
-	const ERobMode eCurRobMode = eMDIInRobMode;
+	const ERobMode eCurRobMode = CurMDIPkt.eRobMode;
 
 	Mutex.Unlock();
 
@@ -601,7 +604,12 @@ void CMDI::GetSDCData(CVectorEx<_BINARY>& vecbiSDCData)
 {
 	Mutex.Lock();
 
-	if (vecbiIncSDCData.Size() > 0)
+	/* If this is a DRM frame with SDC, get new MDI data from buffer and set
+	   flag so that new data is not queried in FAC data routine */
+	bSDCWasSet = TRUE;
+	MDIInBuffer.Get(CurMDIPkt);
+
+	if (CurMDIPkt.vecbiSDCData.Size() > 0)
 	{
 		/* If receiver is correctly initialized, the input vector should be
 		   large enough for the SDC data */
@@ -611,16 +619,13 @@ void CMDI::GetSDCData(CVectorEx<_BINARY>& vecbiSDCData)
 		{
 			/* Copy incoming MDI SDC data */
 			vecbiSDCData.ResetBitAccess();
-			vecbiIncSDCData.ResetBitAccess();
+			CurMDIPkt.vecbiSDCData.ResetBitAccess();
 
 			/* We have to copy bits instead of bytes since the length of SDC
 			   data is usually not a multiple of 8 */
 			for (int i = 0; i < iLenSDCDataBits; i++)
-				vecbiSDCData.Enqueue(vecbiIncSDCData.Separate(1), 1);
+				vecbiSDCData.Enqueue(CurMDIPkt.vecbiSDCData.Separate(1), 1);
 		}
-
-		/* Reset vector data from tag afterwards so that it is not read again */
-		vecbiIncSDCData.Init(0);
 	}
 	else
 	{
@@ -640,24 +645,21 @@ void CMDI::GetStreamData(CVectorEx<_BINARY>& vecbiStrData, const int iLen,
 	if (iStrNum != STREAM_ID_NOT_USED)
 	{
 		/* Now check length of data vector */
-		const int iStreamLen = vecbiIncStr[iStrNum].Size();
+		const int iStreamLen = CurMDIPkt.vecbiStr[iStrNum].Size();
 
 		if (iLen >= iStreamLen)
 		{
 			/* Copy data */
-			vecbiIncStr[iStrNum].ResetBitAccess();
+			CurMDIPkt.vecbiStr[iStrNum].ResetBitAccess();
 			vecbiStrData.ResetBitAccess();
 
 			/* Data is always a multiple of 8 -> copy bytes */
 			for (int i = 0; i < iStreamLen / SIZEOF__BYTE; i++)
 			{
-				vecbiStrData.Enqueue(vecbiIncStr[iStrNum].
+				vecbiStrData.Enqueue(CurMDIPkt.vecbiStr[iStrNum].
 					Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 			}
 		}
-
-		/* Reset vector data from tag afterwards so that it is not read again */
-		vecbiIncStr[iStrNum].Init(0);
 	}
 
 	Mutex.Unlock();
@@ -785,15 +787,20 @@ if (iSeqNumber > 0xFFFF)
 
 
 	/* Payload -------------------------------------------------------------- */
+	CMDIInPkt MIDInPkt;
+
 	/* Decode all tags */
 	int iCurConsBytes = 0;
 
 	/* Each tag must have at least a header with 8 bytes -> "- 8" */
 	while (iCurConsBytes < iPayLLen - 8)
-		iCurConsBytes += DecodeTag(vecbiAFPkt);
+		iCurConsBytes += DecodeTag(MIDInPkt, vecbiAFPkt);
+
+	/* Add new MDI data to buffer */
+	MDIInBuffer.Put(MIDInPkt);
 }
 
-int CMDI::DecodeTag(CVector<_BINARY>& vecbiTag)
+int CMDI::DecodeTag(CMDIInPkt& MDIInPkt, CVector<_BINARY>& vecbiTag)
 {
 	int i;
 
@@ -823,13 +830,13 @@ int CMDI::DecodeTag(CVector<_BINARY>& vecbiTag)
 
 	if (strTagName.compare("fac_") == 0) /* "fac_" tag */
 	{
-		DecTagFAC(vecbiTag, iLenDataBits);
+		DecTagFAC(MDIInPkt, vecbiTag, iLenDataBits);
 		bTagWasDec = TRUE;
 	}
 
 	if (strTagName.compare("sdc_") == 0) /* "sdc_" tag */
 	{
-		DecTagSDC(vecbiTag, iLenDataBits);
+		DecTagSDC(MDIInPkt, vecbiTag, iLenDataBits);
 		bTagWasDec = TRUE;
 	}
 
@@ -841,31 +848,31 @@ int CMDI::DecodeTag(CVector<_BINARY>& vecbiTag)
 
 	if (strTagName.compare("robm") == 0) /* "robm" tag */
 	{
-		DecTagRobMod(vecbiTag, iLenDataBits);
+		DecTagRobMod(MDIInPkt, vecbiTag, iLenDataBits);
 		bTagWasDec = TRUE;
 	}
 
 	if (strTagName.compare("str0") == 0) /* "str0" tag */
 	{
-		DecTagStr(vecbiTag, iLenDataBits, 0);
+		DecTagStr(MDIInPkt, vecbiTag, iLenDataBits, 0);
 		bTagWasDec = TRUE;
 	}
 
 	if (strTagName.compare("str1") == 0) /* "str1" tag */
 	{
-		DecTagStr(vecbiTag, iLenDataBits, 1);
+		DecTagStr(MDIInPkt, vecbiTag, iLenDataBits, 1);
 		bTagWasDec = TRUE;
 	}
 
 	if (strTagName.compare("str2") == 0) /* "str2" tag */
 	{
-		DecTagStr(vecbiTag, iLenDataBits, 2);
+		DecTagStr(MDIInPkt, vecbiTag, iLenDataBits, 2);
 		bTagWasDec = TRUE;
 	}
 
 	if (strTagName.compare("str3") == 0) /* "str3" tag */
 	{
-		DecTagStr(vecbiTag, iLenDataBits, 3);
+		DecTagStr(MDIInPkt, vecbiTag, iLenDataBits, 3);
 		bTagWasDec = TRUE;
 	}
 
@@ -933,21 +940,26 @@ void CMDI::DecTagLoFrCnt(CVector<_BINARY>& vecbiTag, const int iLen)
 /* Do something with the count */
 }
 
-void CMDI::DecTagFAC(CVector<_BINARY>& vecbiTag, const int iLen)
+void CMDI::DecTagFAC(CMDIInPkt& MDIInPkt, CVector<_BINARY>& vecbiTag,
+					 const int iLen)
 {
 	/* Fast access channel (fac_) always 9 bytes long */
 	if (iLen != NUM_FAC_BITS_PER_BLOCK)
 		return; // TODO: error handling!!!!!!!!!!!!!!!!!!!!!!
 
 	/* Copy incoming FAC data */
-	vecbiIncFACData.Init(NUM_FAC_BITS_PER_BLOCK);
-	vecbiIncFACData.ResetBitAccess();
+	MDIInPkt.vecbiFACData.Init(NUM_FAC_BITS_PER_BLOCK);
+	MDIInPkt.vecbiFACData.ResetBitAccess();
 
 	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE; i++)
-		vecbiIncFACData.Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+	{
+		MDIInPkt.vecbiFACData.
+			Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+	}
 }
 
-void CMDI::DecTagSDC(CVector<_BINARY>& vecbiTag, const int iLen)
+void CMDI::DecTagSDC(CMDIInPkt& MDIInPkt, CVector<_BINARY>& vecbiTag,
+					 const int iLen)
 {
 	/* Rfu */
 	vecbiTag.Separate(4);
@@ -955,13 +967,13 @@ void CMDI::DecTagSDC(CVector<_BINARY>& vecbiTag, const int iLen)
 	/* Copy incoming SDC data */
 	const int iSDCDataSize = iLen - 4;
 
-	vecbiIncSDCData.Init(iSDCDataSize);
-	vecbiIncSDCData.ResetBitAccess();
+	MDIInPkt.vecbiSDCData.Init(iSDCDataSize);
+	MDIInPkt.vecbiSDCData.ResetBitAccess();
 
 	/* We have to copy bits instead of bytes since the length of SDC data is
 	   usually not a multiple of 8 */
 	for (int i = 0; i < iSDCDataSize; i++)
-		vecbiIncSDCData.Enqueue(vecbiTag.Separate(1), 1);
+		MDIInPkt.vecbiSDCData.Enqueue(vecbiTag.Separate(1), 1);
 }
 
 void CMDI::DecTagSDCChanInf(CVector<_BINARY>& vecbiTag, const int iLen)
@@ -1010,7 +1022,8 @@ _BOOLEAN bHierarchical = FALSE;
 	}
 }
 
-void CMDI::DecTagRobMod(CVector<_BINARY>& vecbiTag, const int iLen)
+void CMDI::DecTagRobMod(CMDIInPkt& MDIInPkt, CVector<_BINARY>& vecbiTag,
+						const int iLen)
 {
 	/* Robustness mode (robm) always one byte long */
 	if (iLen != 8)
@@ -1020,36 +1033,36 @@ void CMDI::DecTagRobMod(CVector<_BINARY>& vecbiTag, const int iLen)
 	{
 	case 0:
 		/* Robustness mode A */
-		eMDIInRobMode = RM_ROBUSTNESS_MODE_A;
+		MDIInPkt.eRobMode = RM_ROBUSTNESS_MODE_A;
 		break;
 
 	case 1:
 		/* Robustness mode B */
-		eMDIInRobMode = RM_ROBUSTNESS_MODE_B;
+		MDIInPkt.eRobMode = RM_ROBUSTNESS_MODE_B;
 		break;
 
 	case 2:
 		/* Robustness mode C */
-		eMDIInRobMode = RM_ROBUSTNESS_MODE_C;
+		MDIInPkt.eRobMode = RM_ROBUSTNESS_MODE_C;
 		break;
 
 	case 3:
 		/* Robustness mode D */
-		eMDIInRobMode = RM_ROBUSTNESS_MODE_D;
+		MDIInPkt.eRobMode = RM_ROBUSTNESS_MODE_D;
 		break;
 	}
 }
 
-void CMDI::DecTagStr(CVector<_BINARY>& vecbiTag, const int iLen,
-					 const int iStrNum)
+void CMDI::DecTagStr(CMDIInPkt& MDIInPkt, CVector<_BINARY>& vecbiTag,
+					 const int iLen, const int iStrNum)
 {
 	/* Copy stream data */
-	vecbiIncStr[iStrNum].Init(iLen);
-	vecbiIncStr[iStrNum].ResetBitAccess();
+	MDIInPkt.vecbiStr[iStrNum].Init(iLen);
+	MDIInPkt.vecbiStr[iStrNum].ResetBitAccess();
 
 	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 	{
-		vecbiIncStr[iStrNum].
+		MDIInPkt.vecbiStr[iStrNum].
 			Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 }
@@ -1061,4 +1074,86 @@ void CMDI::DecTagInfo(CVector<_BINARY>& vecbiTag, const int iLen)
 	string strInfo = "";
 	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 		strInfo += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
+}
+
+
+/* MDI in buffer implementation ***********************************************/
+CMDI::CMDIInPkt& CMDI::CMDIInPkt::operator=(const CMDIInPkt& nMDI)
+{
+	/* First initialize the vectors with the correct size, then copy the data */
+	vecbiFACData.Init(nMDI.vecbiFACData.Size());
+	vecbiFACData = nMDI.vecbiFACData;
+
+	vecbiSDCData.Init(nMDI.vecbiSDCData.Size());
+	vecbiSDCData = nMDI.vecbiSDCData;
+
+	vecbiStr.Init(MAX_NUM_STREAMS);
+	for (int i = 0; i < MAX_NUM_STREAMS; i++)
+	{
+		vecbiStr[i].Init(nMDI.vecbiStr[i].Size());
+		vecbiStr[i] = nMDI.vecbiStr[i];
+	}
+
+	eRobMode = nMDI.eRobMode;
+
+	return *this;
+}
+
+void CMDI::CMDIInPkt::Reset()
+{
+	vecbiFACData.Init(0);
+	vecbiSDCData.Init(0);
+	eRobMode = RM_ROBUSTNESS_MODE_B;
+
+	for (int i = 0; i < MAX_NUM_STREAMS; i++)
+		vecbiStr[i].Init(0);
+}
+
+_BOOLEAN CMDI::CMDIInBuffer::Put(const CMDIInPkt& nMDIData)
+{
+	/* Buffer is full, return error */
+	if (vecMDIDataBuf.GetFillLevel() == MDI_IN_BUF_LEN)
+	{
+		Reset();
+		return FALSE;
+	}
+
+	/* Put data in three steps (as required by cyclic buffer) */
+	CVectorEx<CMDIInPkt>* pInData = vecMDIDataBuf.QueryWriteBuffer();
+	(*pInData)[0] = nMDIData;
+	vecMDIDataBuf.Put(1);
+
+	return TRUE;
+}
+
+_BOOLEAN CMDI::CMDIInBuffer::Get(CMDIInPkt& nMDIData)
+{
+	/* Buffer is empty, return error */
+	if (vecMDIDataBuf.GetFillLevel() == 0)
+	{
+		/* Reset return data and buffer */
+		nMDIData.Reset();
+		Reset();
+
+		return FALSE;
+	}
+
+	/* Cyclic buffer always returns data in a vector */
+	CVectorEx<CMDIInPkt>* pInData = vecMDIDataBuf.Get(1);
+	nMDIData = (*pInData)[0];
+
+	return TRUE;
+}
+
+void CMDI::CMDIInBuffer::Reset()
+{
+	vecMDIDataBuf.Clear();
+	
+	/* Set the buffer pointers maximum far apart */
+	for (int i = 0; i < MDI_IN_BUF_LEN / 2; i++)
+	{
+		CVectorEx<CMDIInPkt>* pInData = vecMDIDataBuf.QueryWriteBuffer();
+		(*pInData)[0].Reset(); /* Empty object */
+		vecMDIDataBuf.Put(1);
+	}
 }

@@ -32,6 +32,7 @@
 #include "GlobalDefinitions.h"
 #include "Parameter.h"
 #include "Vector.h"
+#include "Buffer.h"
 #include "CRC.h"
 #include <qsocketdevice.h>
 #include <qsocketnotifier.h>
@@ -55,6 +56,9 @@
    which is every 400 ms -> 0.4 * 80000 / 8 = 4000 bytes. Allocating more than
    double of this size should be ok for all possible cases */
 #define MAX_SIZE_BYTES_NETW_BUF		10000
+
+/* Length of the MDI in buffer */
+#define MDI_IN_BUF_LEN				4
 
 
 /* Classes ********************************************************************/
@@ -85,6 +89,9 @@ public:
 	_BOOLEAN GetMDIInEnabled() {return bMDIInEnabled;}
 
 protected:
+	_BOOLEAN					bSDCWasSet;
+
+	
 	/* MDI transmit --------------------------------------------------------- */
 	void SetEnableMDIOut(const _BOOLEAN bNEnMOut) {bMDIOutEnabled = bNEnMOut;}
 
@@ -104,7 +111,6 @@ protected:
 
 	CVector<_BINARY> GenAFPacket(const _BOOLEAN bWithSDC);
 	void ResetTags(const _BOOLEAN bResetSDC);
-	_BOOLEAN					bSDCWasSet;
 
 	uint32_t					iLogFraCnt;
 
@@ -126,30 +132,61 @@ protected:
 	CVector<CVector<_BINARY> >	vecbiTagStr; /* strx tag */
 
 	/* Special settings */
-	_BOOLEAN			bUseAFCRC;
+	_BOOLEAN					bUseAFCRC;
 
 
 	/* MDI receive ---------------------------------------------------------- */
+	class CMDIInPkt
+	{
+	public:
+		/* Implement copy constructor, copy operator and initializations */
+		CMDIInPkt() : vecbiStr(MAX_NUM_STREAMS) {Reset();}
+		CMDIInPkt(const CMDIInPkt& nMDI) {*this = nMDI;}
+		CMDIInPkt& operator=(const CMDIInPkt& nMDI);
+		void Reset();
+
+		/* Actual data (made public for easier access, TODO: nicer solution) */
+		CVector<_BINARY>			vecbiFACData;
+		CVector<_BINARY>			vecbiSDCData;
+		CVector<CVector<_BINARY> >	vecbiStr;
+		ERobMode					eRobMode;
+	};
+
+	class CMDIInBuffer
+	{
+	public:
+		CMDIInBuffer() : vecMDIDataBuf(MDI_IN_BUF_LEN) {}
+
+		_BOOLEAN Put(const CMDIInPkt& nMDIData);
+		_BOOLEAN Get(CMDIInPkt& nMDIData);
+
+	protected:
+		void Reset();
+		CCyclicBuffer<CMDIInPkt> vecMDIDataBuf;
+	};
+
 	void SetEnableMDIIn(const _BOOLEAN bNEnMIn) {bMDIInEnabled = bNEnMIn;}
 
-	int DecodeTag(CVector<_BINARY>& vecbiTag);
+	int DecodeTag(CMDIInPkt& MDIInPkt, CVector<_BINARY>& vecbiTag);
 
 	void DecTagProTy(CVector<_BINARY>& vecbiTag, const int iLen);
 	void DecTagLoFrCnt(CVector<_BINARY>& vecbiTag, const int iLen);
-	void DecTagFAC(CVector<_BINARY>& vecbiTag, const int iLen);
-	void DecTagSDC(CVector<_BINARY>& vecbiTag, const int iLen);
+	void DecTagFAC(CMDIInPkt& MDIInPkt, CVector<_BINARY>& vecbiTag,
+		const int iLen);
+	void DecTagSDC(CMDIInPkt& MDIInPkt, CVector<_BINARY>& vecbiTag,
+		const int iLen);
+	void DecTagRobMod(CMDIInPkt& MDIInPkt, CVector<_BINARY>& vecbiTag,
+		const int iLen);
+	void DecTagStr(CMDIInPkt& MDIInPkt, CVector<_BINARY>& vecbiTag,
+		const int iLen,	const int iStrNum);
 	void DecTagSDCChanInf(CVector<_BINARY>& vecbiTag, const int iLen);
-	void DecTagRobMod(CVector<_BINARY>& vecbiTag, const int iLen);
-	void DecTagStr(CVector<_BINARY>& vecbiTag, const int iLen,
-		const int iStrNum);
 	void DecTagInfo(CVector<_BINARY>& vecbiTag, const int iLen);
 
 	void DecAFPacket(CVector<_BINARY>& vecbiAFPkt);
 
-	CVector<_BINARY>			vecbiIncFACData;
-	CVector<_BINARY>			vecbiIncSDCData;
-	CVector<CVector<_BINARY> >	vecbiIncStr;
-	ERobMode					eMDIInRobMode;
+	CMDIInPkt					CurMDIPkt;
+	CMDIInBuffer				MDIInBuffer;
+
 	QSocketDevice				SocketDevice;
 	QSocketNotifier*			pSocketNotivRead;
 
