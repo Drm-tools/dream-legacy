@@ -264,6 +264,9 @@ public:
 	int				GetCurSelAudioService() const {return iCurSelAudioService;}
 	void			SetCurSelDataService(const int iNewService);
 	int				GetCurSelDataService() const {return iCurSelDataService;}
+
+	void			ResetCurSelAudDatServ() {iCurSelAudioService = 0; iCurSelDataService = 0;}
+
 	void			EnableMultimedia(const _BOOLEAN bFlag);
 	_BOOLEAN		GetEnableMultimedia() const {return bUsingMultimedia;}
 
