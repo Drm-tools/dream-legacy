@@ -47,7 +47,7 @@ CDRMSimulation	DRMSimulation;
 QApplication*	pApp = NULL;	
 
 /* Thread class for the receiver */
-class ReceiverThread : public QThread 
+class CReceiverThread : public QThread 
 {
 public:
 	virtual void run() 
@@ -71,51 +71,97 @@ public:
 	}
 };
 
+/* Thread class for the transmitter */
+class CTransmitterThread : public QThread 
+{
+public:
+	virtual void run() 
+	{
+		/* Set thread priority (The working thread should have a higher priority
+		   than the GUI) */
+#ifdef _WIN32
+		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+#endif
+
+		try
+		{
+			/* Call receiver main routine */
+			DRMTransmitter.Start();
+		}
+
+		catch (CGenErr GenErr)
+		{
+			ErrorMessage(GenErr.strError);
+		}
+	}
+};
+
 int main(int argc, char** argv)
 {
 try
 {
 	/* Parse arguments */
-	ParseArguments(argc, argv);
+	_BOOLEAN bIsReceiver = ParseArguments(argc, argv);
 
 	/* Call simulation script. If simulation is activated, application is 
 	   automatically exit in that routine. If in the script no simulation is
 	   activated, this function will immediately return */
 	DRMSimulation.SimScript();
 
-	QApplication	app(argc, argv); // Application object
-	ReceiverThread	RecThread; // Working thread object
-	FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_MinMax); // Main dialog
+	QApplication app(argc, argv); /* Application object */
 
-// Activate this to start the transmitter and generate a DRM stream
-//DRMTransmitter.StartTransmitter();
+	if (bIsReceiver == FALSE)
+	{
+		CTransmitterThread	TransThread; /* Working thread object */
+		TransmDialog		MainDlg(0, 0, TRUE, Qt::WStyle_MinMax);
 
-// Activate this to read DRM data from file
-//DRMReceiver.GetReceiver()->SetUseSoundcard(FALSE);
+		/* Start thread */
+		TransThread.start();
 
-	/* First, initialize the working thread. This should be done in an extra
-	   routine since we cannot 100% assume that the working thread is ealier
-	   ready than the GUI thread */
-	DRMReceiver.Init();
+		/* Set main window */
+		app.setMainWidget(&MainDlg);
+		pApp = &app; /* Needed for post-event routine */
 
-	/* Start thread */
-	RecThread.start();
+		/* Show dialog */
+		MainDlg.exec();
 
-	/* Set main window */
-	app.setMainWidget(&MainDlg);
-	pApp = &app;
+		/* Stop working thread and wait until it is ready for terminating. We
+		   set a time-out of 5 seconds. If thread was not ready in that time,
+		   the program will terminate anyway, but this can lead to an error
+		   message */
+		DRMTransmitter.Stop();
 
-	/* Show dialog, working thread must be initialized before starting the 
-	   GUI! */
-	MainDlg.exec();
+		TransThread.wait(5000);
+	}
+	else
+	{
+		CReceiverThread	RecThread; /* Working thread object */
+		FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_MinMax);
 
-	/* Stop working thread and wait until it is ready for terminating. We set
-	   a time-out of 5 seconds. If thread was not ready in that time, the
-	   program will terminate anyway, but this can lead to an error 
-	   message */
-	DRMReceiver.Stop();
+		/* First, initialize the working thread. This should be done in an extra
+		   routine since we cannot 100% assume that the working thread is ealier
+		   ready than the GUI thread */
+		DRMReceiver.Init();
 
-	RecThread.wait(5000);
+		/* Start thread */
+		RecThread.start();
+
+		/* Set main window */
+		app.setMainWidget(&MainDlg);
+		pApp = &app; /* Needed for post-event routine */
+
+		/* Show dialog, working thread must be initialized before starting the 
+		   GUI! */
+		MainDlg.exec();
+
+		/* Stop working thread and wait until it is ready for terminating. We
+		   set a time-out of 5 seconds. If thread was not ready in that time,
+		   the program will terminate anyway, but this can lead to an error
+		   message */
+		DRMReceiver.Stop();
+
+		RecThread.wait(5000);
+	}
 }
 
 catch (CGenErr GenErr)
@@ -170,9 +216,14 @@ void ErrorMessage(string strErrorString)
 \******************************************************************************/
 int main(int argc, char** argv)
 {
-	ParseArguments(argc, argv);
+	_BOOLEAN bIsReceiver = ParseArguments(argc, argv);
 	DRMSimulation.SimScript();
-	DRMReceiver.Start();
+
+	if (bIsReceiver == TRUE)
+		DRMReceiver.Start();
+	else
+		DRMTransmitter.Start();
+
 	return 0;
 }
 
@@ -197,13 +248,24 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 
 
 /* Command line argument parser ***********************************************/
-void ParseArguments(int argc, char** argv)
+_BOOLEAN ParseArguments(int argc, char** argv)
 {
+	_BOOLEAN bIsReceiver = TRUE;
+
 	/* QT docu: argv()[0] is the program name, argv()[1] is the first
 	   argument and argv()[argc()-1] is the last argument.
 	   Start with first argument, therefore "i = 1" */
 	for (int i = 1; i < argc; i++)
 	{
+		/* DRM transmitter mode flag ---------------------------------------- */
+		if ((!strcmp(argv[i], "--transmitter")) ||
+			(!strcmp(argv[i], "-t")))
+		{
+			bIsReceiver = FALSE;
+			continue;
+		}
+
+		
 		/* Flip spectrum flag ----------------------------------------------- */
 		if ((!strcmp(argv[i], "--flipspectrum")) ||
 			(!strcmp(argv[i], "-p")))
@@ -372,6 +434,8 @@ void ParseArguments(int argc, char** argv)
 
 		exit(1);
 	}
+
+	return bIsReceiver;
 }
 
 void UsageArguments(char** argv)
@@ -380,6 +444,7 @@ void UsageArguments(char** argv)
 	cerr << endl;
 	cerr << "Recognized options:" << endl;
 	cerr << endl;
+	cerr << "  -t, --transmitter          DRM transmitter mode" << endl;
 	cerr << "  -p, --flipspectrum         flip input spectrum" << endl;
 	cerr << "  -i <n>, --mlciter <n>      number of MLC iterations" << endl;
 	cerr << "                             allowed range: 0...4" << endl;

@@ -39,10 +39,11 @@
 # include <qthread.h>
 # include <qmessagebox.h>
 # include "fdrmdialog.h"
+# include "TransmDlg.h"
 #endif
 
 
-void ParseArguments(int argc, char** argv);
-void UsageArguments(char** argv);
+_BOOLEAN	ParseArguments(int argc, char** argv);
+void		UsageArguments(char** argv);
 
 #endif // !defined(MAIN_H__3B0BA660_CA63_4344_BB2B_23DSG9876D31912__INCLUDED_)
