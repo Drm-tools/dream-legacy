@@ -39,8 +39,18 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 	/* Use only real-part. Since we use only the real part of the signal, we
 	   have to double the amplitude */
 	for (int y = 0; y < iInputBlockSize; y++)
+	{
+#ifdef FILE_DRM_USING_RAW_DATA
+		const short sOut =
+			(short) ((*pvecInputData)[y].real() * 2 * (_REAL) 64.0);
+
+		/* Write 2 bytes, 1 piece */
+		fwrite((const void*) &sOut, size_t(2), size_t(1), pFileTransmitter);
+#else
 		fprintf(pFileTransmitter, "%e\n",
 			(float) (*pvecInputData)[y].real() * 2 * (_REAL) 64.0);
+#endif
+	}
 
 	/* Flush the buffer instantly because the receiver is called right
 	   after finishing the transmitter. If the buffer is not flushed it can
@@ -54,7 +64,11 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	iInputBlockSize = TransmParam.iSymbolBlockSize;
 
 	/* Open file for writing data for transmitting */
+#ifdef FILE_DRM_USING_RAW_DATA
+	pFileTransmitter = fopen("test/TransmittedData.txt", "wb");
+#else
 	pFileTransmitter = fopen("test/TransmittedData.txt", "w");
+#endif
 
 	/* Check for error */
 	if (pFileTransmitter == NULL)
@@ -93,11 +107,19 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 	else
 	{
 		/* Read data from file ---------------------------------------------- */
-		float rTemp;
 		for (i = 0; i < iOutputBlockSize; i++)
 		{
 			/* If enf-of-file is reached, stop simulation */
-			if (fscanf(pFileReceiver, "%e\n", &rTemp) == EOF)
+#ifdef FILE_DRM_USING_RAW_DATA
+			short tIn;
+
+			/* Read 2 bytes, 1 piece */
+			if (fread(&tIn, size_t(2), size_t(1), pFileReceiver) == size_t(0))
+#else
+			float tIn;
+
+			if (fscanf(pFileReceiver, "%e\n", &tIn) == EOF)
+#endif
 			{
 				Parameter.bRunThread = FALSE;
 
@@ -110,7 +132,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 			else
 			{
 				/* Write internal output buffer */
-				(*pvecOutputData)[i] = rTemp;
+				(*pvecOutputData)[i] = (_REAL) tIn;
 			}
 		}
 	}
@@ -159,7 +181,13 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 	{
 		/* Open file for reading data from transmitter. Open file only once */
 		if (pFileReceiver == NULL)
+		{
+#ifdef FILE_DRM_USING_RAW_DATA
+			pFileReceiver = fopen("test/TransmittedData.txt", "rb");
+#else
 			pFileReceiver = fopen("test/TransmittedData.txt", "r");
+#endif
+		}
 
 		/* Check for error */
 		if (pFileReceiver == NULL)

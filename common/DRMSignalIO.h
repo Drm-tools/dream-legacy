@@ -49,6 +49,10 @@
    make the FFT work more efficient */
 #define NUM_SMPLS_4_INPUT_SPECTRUM	8192
 
+/* Use raw 16 bit data or in text form for file format for DRM data. Defining
+   the following macro will enable the raw data option */
+#define FILE_DRM_USING_RAW_DATA
+
 
 /* Classes ********************************************************************/
 class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
