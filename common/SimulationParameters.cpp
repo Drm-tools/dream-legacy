@@ -119,6 +119,11 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		/* Set the simulation priority to lowest possible value */
 #ifdef _WIN32
 		SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
+#else
+# ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+		nice(19);
+# endif
 #endif
 
 
