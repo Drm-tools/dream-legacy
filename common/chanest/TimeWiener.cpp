@@ -35,11 +35,11 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 						    CVector<int>& veciMapTab,
 						    CVector<_COMPLEX>& veccPilotCells, _REAL rSNR)
 {
-	int				j, i;
-	int				iPiHiIndex;
-	int				iCurrFiltPhase;
-	int				iTimeDiffNew;
-	_COMPLEX		cNewPilot;
+	int			j, i;
+	int			iPiHiIndex;
+	int			iCurrFiltPhase;
+	int			iTimeDiffNew;
+	_COMPLEX	cNewPilot;
 
 	/* Timing correction history -------------------------------------------- */
 	/* Shift old vaules and add a "0" at the beginning of the vector */
@@ -247,9 +247,10 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	Ts = (_REAL) (ReceiverParam.iFFTSizeN + ReceiverParam.iGuardSize) /
 		SOUNDCRD_SAMPLE_RATE;
 
-	/* Allocate memory for Channel at pilot positions (matrix) and zero out */
+	/* Allocate memory for Channel at pilot positions (matrix) and init with
+	   ones */
 	matcChanAtPilPos.Init(iLengthWiener, iNoPiFreqDirAll,
-		_COMPLEX((_REAL) 0.0, (_REAL) 0.0));
+		_COMPLEX((_REAL) 1.0, (_REAL) 0.0));
 
 	/* Set number of taps for sigma estimation */
 	if (iLengthWiener < NO_TAPS_USED4SIGMA_EST)

@@ -133,9 +133,9 @@ int CTimeLinear::Init(CParameter& Parameter)
 	iLenTiCorrHist = iLenHistBuff - 1;
 	vecTiCorrHist.Init(iLenTiCorrHist, 0);
 
-	/* Allocate memory for channel estimation history and init with zeros */
+	/* Allocate memory for channel estimation history and init with ones */
 	matcChanEstHist.Init(iLenHistBuff, iNumIntpFreqPil, 
-		_COMPLEX((_REAL) 0.0, (_REAL) 0.0));
+		_COMPLEX((_REAL) 1.0, (_REAL) 0.0));
 
 	/* Return delay of channel estimation in time direction */
 	return iLenHistBuff;
