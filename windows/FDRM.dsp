@@ -433,6 +433,10 @@ SOURCE="..\common\GUI-QT\fdrmdialog.h"
 # End Source File
 # Begin Source File
 
+SOURCE="..\common\GUI-QT\main.h"
+# End Source File
+# Begin Source File
+
 SOURCE="..\common\GUI-QT\MultColorLED.h"
 # End Source File
 # Begin Source File
