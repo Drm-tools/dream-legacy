@@ -680,10 +680,6 @@ void CDRMPlot::SetupSNRSpectrum()
 	setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
 	setAxisTitle(QwtPlot::yLeft, tr("WMER [dB]"));
 
-	/* Fixed scale */
-	setAxisScale(QwtPlot::yLeft, MIN_VAL_SNR_SPEC_Y_AXIS_DB,
-		MAX_VAL_SNR_SPEC_Y_AXIS_DB);
-
 	/* Add main curve */
 	clear();
 	main1curve = insertCurve(tr("SNR Spectrum"));
@@ -703,8 +699,31 @@ void CDRMPlot::SetSNRSpectrum(CVector<_REAL>& vecrData,
 		SetupSNRSpectrum();
 	}
 
-	/* Fixed scale */
-	setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) vecrScale.Size());
+	const int iSize = vecrScale.Size();
+
+	/* Fixed scale for x-axis */
+	setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) iSize);
+
+	/* Fixed / variable scale (if SNR is in range, use fixed scale otherwise
+	   enlarge scale) */
+	/* Get maximum value */
+	_REAL rMaxSNR = -_MAXREAL;
+	for (int i = 0; i < iSize; i++)
+	{
+		if (vecrData[i] > rMaxSNR)
+			rMaxSNR = vecrData[i];
+	}
+
+	double dMaxScaleYAxis = MAX_VAL_SNR_SPEC_Y_AXIS_DB;
+
+	if (rMaxSNR > dMaxScaleYAxis)
+	{
+		const double rEnlareStep = (double) 10.0; /* dB */
+		dMaxScaleYAxis = ceil(rMaxSNR / rEnlareStep) * rEnlareStep;
+	}
+
+	/* Set scale */
+	setAxisScale(QwtPlot::yLeft, MIN_VAL_SNR_SPEC_Y_AXIS_DB, dMaxScaleYAxis);
 
 	/* Set actual data */
 	SetData(vecrData, vecrScale);
