@@ -35,7 +35,6 @@
 #include "../matlib/Matlib.h"
 #include "TimeLinear.h"
 #include "TimeWiener.h"
-#include "TimeDecDir.h"
 
 #ifdef HAVE_DFFTW_H
 # include <dfftw.h>
@@ -108,7 +107,6 @@ protected:
 
 	CTimeLinear			TimeLinear;
 	CTimeWiener			TimeWiener;
-	CTimeDecDir			TimeDecDir;
 
 	CTimeSyncTrack		TimeSyncTrack;
 

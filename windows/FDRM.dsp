@@ -296,10 +296,6 @@ SOURCE=..\common\chanest\IdealChannelEstimation.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\chanest\TimeDecDir.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\chanest\TimeLinear.cpp
 # End Source File
 # Begin Source File
@@ -570,10 +566,6 @@ SOURCE=..\common\chanest\ChannelEstimation.h
 # Begin Source File
 
 SOURCE=..\common\chanest\IdealChannelEstimation.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\chanest\TimeDecDir.h
 # End Source File
 # Begin Source File
 

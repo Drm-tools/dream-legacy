@@ -306,10 +306,6 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	case TWIENER:
 		pTimeInt = &TimeWiener;
 		break;
-
-	case TDECIDIR:
-		pTimeInt = &TimeDecDir;
-		break;
 	}
 
 	/* Init time interpolation interface and set delay for interpolation */
