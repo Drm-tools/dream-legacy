@@ -54,8 +54,8 @@
 class CAudioSourceEncoder : public CTransmitterModul<_SAMPLE, _BINARY>
 {
 public:
-	CAudioSourceEncoder() : bUsingTextMessage(FALSE) {}
-	virtual ~CAudioSourceEncoder() {}
+	CAudioSourceEncoder() : bUsingTextMessage(FALSE), hEncoder(NULL) {}
+	virtual ~CAudioSourceEncoder();
 
 	void SetTextMessage(const string& strText);
 	void ClearTextMessage();
@@ -75,6 +75,7 @@ protected:
 #ifdef USE_FAAC_LIBRARY
 	faacEncHandle			hEncoder;
 	faacEncConfigurationPtr CurEncFormat;
+
 	unsigned long			lNumSampEncIn;
 	unsigned long			lMaxBytesEncOut;
 	unsigned long			lEncSamprate;

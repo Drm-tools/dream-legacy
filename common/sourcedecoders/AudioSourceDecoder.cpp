@@ -255,10 +255,19 @@ else
 		CParameter::AM_MONO;
 
 	/* Open encoder instance */
+	if (hEncoder != NULL)
+		faacEncClose(hEncoder);
+
 	hEncoder = faacEncOpen(lEncSamprate, 1 /* mono */,
 		&lNumSampEncIn, &lMaxBytesEncOut);
 
-	const int iBitRate = (int) (((_REAL) iActEncOutBytes * SIZEOF__BYTE) /
+// TEST needed since 960 transform length is not yet implemented in faac!
+int iBitRate;
+if (lNumSampEncIn == 1024)
+	iBitRate = (int) (((_REAL) iActEncOutBytes * SIZEOF__BYTE * 960.0 / 1024.0) /
+		iTimeEachAudBloMS * 1000);
+else
+	iBitRate = (int) (((_REAL) iActEncOutBytes * SIZEOF__BYTE) /
 		iTimeEachAudBloMS * 1000);
 
 	/* Set encoder configuration */
@@ -268,10 +277,7 @@ else
 	CurEncFormat->aacObjectType = LOW;
 	CurEncFormat->mpegVersion = MPEG4;
 	CurEncFormat->outputFormat = 0; /* (0 = Raw; 1 = ADTS -> Raw) */
-
-// FIXME: backoff solution is not good -> optimize bit rate in encoder
-CurEncFormat->bitRate = iBitRate - iBitRate / 4; /* backoff, because of AvBR */
-
+	CurEncFormat->bitRate = iBitRate;
 	CurEncFormat->bandWidth = 0; /* Let the encoder choose the bandwidth */
 	faacEncSetConfiguration(hEncoder, CurEncFormat);
 
@@ -321,6 +327,15 @@ void CAudioSourceEncoder::ClearTextMessage()
 
 	/* Clear text message flag */
 	bUsingTextMessage = FALSE;
+}
+
+CAudioSourceEncoder::~CAudioSourceEncoder()
+{
+#ifdef USE_FAAC_LIBRARY
+	/* Close encoder instance afterwards */
+	if (hEncoder != NULL)
+		faacEncClose(hEncoder);
+#endif
 }
 
 
