@@ -271,6 +271,9 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 
 	/* If change is larger than 2, it is most likely that a new peak was chosen
 	   by the maximum function */
+
+// TODO: Check for jitter (caused by two peaks with almost same amplitude and delay)!
+
 	if (abs(iNewDiff) > 2)
 	{
 		/* Correct the complete history to the new reference peak. Reference
