@@ -480,12 +480,12 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 		{
 			/* First calculate frame length, derived from higher protected part
 			   frame length and total size */
-			const int iNumLowerProtectedBytes = 
+			const int iNumLowerProtectedBytes =
 				veciFrameLength[i] - iNumHigherProtectedBytes;
 
 			/* Extract lower protected part bytes (8 bits per byte) */
 			for (j = 0; j < iNumLowerProtectedBytes; j++)
-				audio_frame[i][iNumHigherProtectedBytes + j] = 
+				audio_frame[i][iNumHigherProtectedBytes + j] =
 					(*pvecInputData).Separate(8);
 		}
 	}
@@ -571,10 +571,23 @@ fflush(pFile2);
 
 			if (bAudioWasOK == TRUE)
 			{
-				bAudioWasOK = FALSE;
-
 				/* Post message to show that CRC was wrong (yellow light) */
 				PostWinMessage(MS_MSC_CRC, 1);
+
+				/* Fade-out old block to avoid "clicks" in audio. We use linear
+				   fading which gives a log-fading impression */
+				for (i = 0; i < iResOutBlockSize; i++)
+				{
+					/* Linear attenuation with time */
+					const _REAL rAtt =
+						(_REAL) 1.0 - (_REAL) i / iResOutBlockSize;
+
+					vecTempResBufOutOldLeft[i] *= rAtt;
+					vecTempResBufOutOldRight[i] *= rAtt;
+				}
+
+				/* Set flag to show that audio block was bad */
+				bAudioWasOK = FALSE;
 			}
 			else
 			{
@@ -582,31 +595,11 @@ fflush(pFile2);
 				PostWinMessage(MS_MSC_CRC, 2);
 			}
 
-			/* Average block with flipped block for smoother transition */
-			for (i = 0; i < iResOutBlockSize / 2; i++)
-			{
-				vecTempResBufOutLeft[i] = (vecTempResBufOutLeft[i] +
-					vecTempResBufOutLeft[iResOutBlockSize - i - 1]) / 2;
-
-				vecTempResBufOutRight[i] = (vecTempResBufOutRight[i] +
-					vecTempResBufOutRight[iResOutBlockSize - i - 1]) / 2;
-			}
-
-			/* Attenuate the gain exponentially */
+			/* Write zeros in output buffer */
 			for (i = 0; i < iResOutBlockSize; i++)
 			{
-				/* Make a lower bound of signal because the floating point
-				   variable can get as small as it reaches the lower precision
-				   and this can cause instability! */
-				if (fabs(vecTempResBufOutLeft[i]) > (_REAL) 1.0)
-					vecTempResBufOutLeft[i] *= FORFACT_AUD_BL_BAD_CRC;
-				else
-					vecTempResBufOutLeft[i] = (_REAL) 0.0;
-
-				if (fabs(vecTempResBufOutRight[i]) > (_REAL) 1.0)
-					vecTempResBufOutRight[i] *= FORFACT_AUD_BL_BAD_CRC;
-				else
-					vecTempResBufOutRight[i] = (_REAL) 0.0;
+				vecTempResBufOutCurLeft[i] = (_REAL) 0.0;
+				vecTempResBufOutCurRight[i] = (_REAL) 0.0;
 			}
 		}
 		else
@@ -614,9 +607,8 @@ fflush(pFile2);
 			/* Set AAC CRC result in log file */
 			ReceiverParam.ReceptLog.SetMSC(TRUE);
 
-			/* Post message to show that CRC was OK and reset flag */
+			/* Post message to show that CRC was OK */
 			PostWinMessage(MS_MSC_CRC, 0);
-			bAudioWasOK = TRUE;
 
 			/* Conversion from _SAMPLE vector to _REAL vector for resampling.
 			   ATTENTION: We use a vector which was allocated inside
@@ -629,11 +621,11 @@ fflush(pFile2);
 
 				/* Resample data */
 				ResampleObjL.Resample(vecTempResBufInLeft,
-					vecTempResBufOutLeft);
+					vecTempResBufOutCurLeft);
 
 				/* Mono (write the same audio material in both channels) */
 				for (i = 0; i < iResOutBlockSize; i++)
-					vecTempResBufOutRight[i] = vecTempResBufOutLeft[i];
+					vecTempResBufOutCurRight[i] = vecTempResBufOutCurLeft[i];
 			}
 			else
 			{
@@ -646,9 +638,26 @@ fflush(pFile2);
 
 				/* Resample data */
 				ResampleObjL.Resample(vecTempResBufInLeft,
-					vecTempResBufOutLeft);
+					vecTempResBufOutCurLeft);
 				ResampleObjR.Resample(vecTempResBufInRight,
-					vecTempResBufOutRight);
+					vecTempResBufOutCurRight);
+			}
+
+			if (bAudioWasOK == FALSE)
+			{
+				/* Fade-in new block to avoid "clicks" in audio. We use linear
+				   fading which gives a log-fading impression */
+				for (i = 0; i < iResOutBlockSize; i++)
+				{
+					/* Linear attenuation with time */
+					const _REAL rAtt = (_REAL) i / iResOutBlockSize;
+
+					vecTempResBufOutCurLeft[i] *= rAtt;
+					vecTempResBufOutCurRight[i] *= rAtt;
+				}
+
+				/* Reset flag */
+				bAudioWasOK = TRUE;
 			}
 		}
 
@@ -656,13 +665,20 @@ fflush(pFile2);
 		for (i = 0; i < iResOutBlockSize; i++)
 		{
 			(*pvecOutputData)[iOutputBlockSize + i * 2] = 
-				Real2Sample(vecTempResBufOutLeft[i]); /* Left channel */
+				Real2Sample(vecTempResBufOutOldLeft[i]); /* Left channel */
 			(*pvecOutputData)[iOutputBlockSize + i * 2 + 1] =
-				Real2Sample(vecTempResBufOutRight[i]); /* Right channel */
+				Real2Sample(vecTempResBufOutOldRight[i]); /* Right channel */
 		}
 
 		/* Add new block to output block size ("* 2" for stereo output block) */
 		iOutputBlockSize += iResOutBlockSize * 2;
+
+		/* Store current audio block */
+		for (i = 0; i < iResOutBlockSize; i++)
+		{
+			vecTempResBufOutOldLeft[i] = vecTempResBufOutCurLeft[i];
+			vecTempResBufOutOldRight[i] = vecTempResBufOutCurRight[i];
+		}
 	}
 #endif
 }
@@ -864,8 +880,10 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		   start of audio blocks */
 		vecTempResBufInLeft.Init(iLenDecOutPerChan);
 		vecTempResBufInRight.Init(iLenDecOutPerChan);
-		vecTempResBufOutLeft.Init(iResOutBlockSize, (_REAL) 0.0);
-		vecTempResBufOutRight.Init(iResOutBlockSize, (_REAL) 0.0);
+		vecTempResBufOutCurLeft.Init(iResOutBlockSize, (_REAL) 0.0);
+		vecTempResBufOutCurRight.Init(iResOutBlockSize, (_REAL) 0.0);
+		vecTempResBufOutOldLeft.Init(iResOutBlockSize, (_REAL) 0.0);
+		vecTempResBufOutOldRight.Init(iResOutBlockSize, (_REAL) 0.0);
 
 		/* Init resample objects */
 		ResampleObjL.Init(iLenDecOutPerChan,

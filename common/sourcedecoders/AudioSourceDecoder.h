@@ -136,8 +136,10 @@ protected:
 
 	CVector<_REAL>		vecTempResBufInLeft;
 	CVector<_REAL>		vecTempResBufInRight;
-	CVector<_REAL>		vecTempResBufOutLeft;
-	CVector<_REAL>		vecTempResBufOutRight;
+	CVector<_REAL>		vecTempResBufOutCurLeft;
+	CVector<_REAL>		vecTempResBufOutCurRight;
+	CVector<_REAL>		vecTempResBufOutOldLeft;
+	CVector<_REAL>		vecTempResBufOutOldRight;
 
 	CVector<_BYTE>		vecbyPrepAudioFrame;
 	CVector<_BYTE>		aac_crc_bits;
