@@ -107,6 +107,10 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 			fprintf(pFileCurPos,
 				"%d / %d (%d min elapsed, estimated time remaining: %d min)",
 				iCounter, iNoSimBlocks, tiElTi / 60, lReTi / 60);
+
+			/* Add current value of BER */
+			fprintf(pFileCurPos, "\n%e %e", TransmParam.rSimSNRdB,
+				TransmParam.rBitErrRate);
 			fclose(pFileCurPos);
 		}
 
@@ -137,6 +141,10 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 				fprintf(pFileCurPos,
 					"%d / %d (%d min elapsed, estimated time remaining: %d min)",
 					TransmParam.iNoBitErrors, iNoErrors, tiElTi / 60, lReTi / 60);
+
+				/* Add current value of BER */
+				fprintf(pFileCurPos, "\n%e %e", TransmParam.rSimSNRdB,
+					TransmParam.rBitErrRate);
 				fclose(pFileCurPos);
 			}
 			else
@@ -156,6 +164,10 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 				fprintf(pFileCurPos,
 					"%d / %d (%d min elapsed, estimated time remaining: %d min)", 
 					TransmParam.iNoBitErrors, iNoErrors, tiElTi / 60, lReTi / 60);
+
+				/* Add current value of BER */
+				fprintf(pFileCurPos, "\n%e %e", TransmParam.rSimSNRdB,
+					TransmParam.rBitErrRate);
 				fclose(pFileCurPos);
 			}
 		}
