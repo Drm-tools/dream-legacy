@@ -68,76 +68,80 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int i;
 
-	/* Send data to sound interface if audio is not muted */
-	if (bMuteAudio == FALSE)
+	/* Calculate size of each individual audio channel */
+	const int iHalfBlSi = iInputBlockSize / 2;
+
+	switch (eOutChanSel)
 	{
-		const int iHalfBlSi = iInputBlockSize / 2;
+	case CS_BOTH_BOTH:
+		/* left -> left, right -> right (vector sizes might not be the
+		   same -> use for-loop for copying) */
+		for (i = 0; i < iInputBlockSize; i++)
+			vecsTmpAudData[i] = (*pvecInputData)[i]; /* Just copy data */
+		break;
 
-		switch (eOutChanSel)
+	case CS_LEFT_LEFT:
+		/* left -> left, right muted */
+		for (i = 0; i < iHalfBlSi; i++)
 		{
-		case CS_BOTH_BOTH:
-			/* left -> left, right -> right (vector sizes might not be the
-			   same -> use for-loop for copying) */
-			for (i = 0; i < iInputBlockSize; i++)
-				vecsTmpAudData[i] = (*pvecInputData)[i]; /* Just copy data */
-			break;
+			vecsTmpAudData[2 * i] = (*pvecInputData)[2 * i];
+			vecsTmpAudData[2 * i + 1] = 0; /* mute */
+		}
+		break;
 
-		case CS_LEFT_LEFT:
-			/* left -> left, right muted */
-			for (i = 0; i < iHalfBlSi; i++)
-			{
-				vecsTmpAudData[2 * i] = (*pvecInputData)[2 * i];
-				vecsTmpAudData[2 * i + 1] = 0; /* mute */
-			}
-			break;
+	case CS_RIGHT_RIGHT:
+		/* left muted, right -> right */
+		for (i = 0; i < iHalfBlSi; i++)
+		{
+			vecsTmpAudData[2 * i] = 0; /* mute */
+			vecsTmpAudData[2 * i + 1] = (*pvecInputData)[2 * i + 1];
+		}
+		break;
 
-		case CS_RIGHT_RIGHT:
-			/* left muted, right -> right */
-			for (i = 0; i < iHalfBlSi; i++)
-			{
-				vecsTmpAudData[2 * i] = 0; /* mute */
-				vecsTmpAudData[2 * i + 1] = (*pvecInputData)[2 * i + 1];
-			}
-			break;
+	case CS_LEFT_MIX:
+		/* left -> mix, right muted */
+		for (i = 0; i < iHalfBlSi; i++)
+		{
+			/* Mix left and right channel together. Prevent overflow! First,
+			   copy recorded data from "short" in "_REAL" type variables */
+			const _REAL rLeftChan = (*pvecInputData)[2 * i];
+			const _REAL rRightChan = (*pvecInputData)[2 * i + 1];
 
-		case CS_LEFT_MIX:
-			/* left -> mix, right muted */
-			for (i = 0; i < iHalfBlSi; i++)
-			{
-				/* Mix left and right channel together. Prevent overflow! First,
-				   copy recorded data from "short" in "_REAL" type variables */
-				const _REAL rLeftChan = (*pvecInputData)[2 * i];
-				const _REAL rRightChan = (*pvecInputData)[2 * i + 1];
+			vecsTmpAudData[2 * i] =
+				Real2Sample((rLeftChan + rRightChan) * rMixNormConst);
 
-				vecsTmpAudData[2 * i] =
-					Real2Sample((rLeftChan + rRightChan) * rMixNormConst);
+			vecsTmpAudData[2 * i + 1] = 0; /* mute */
+		}
+		break;
 
-				vecsTmpAudData[2 * i + 1] = 0; /* mute */
-			}
-			break;
+	case CS_RIGHT_MIX:
+		/* left muted, right -> mix */
+		for (i = 0; i < iHalfBlSi; i++)
+		{
+			/* Mix left and right channel together. Prevent overflow! First,
+			   copy recorded data from "short" in "_REAL" type variables */
+			const _REAL rLeftChan = (*pvecInputData)[2 * i];
+			const _REAL rRightChan = (*pvecInputData)[2 * i + 1];
 
-		case CS_RIGHT_MIX:
-			/* left muted, right -> mix */
-			for (i = 0; i < iHalfBlSi; i++)
-			{
-				/* Mix left and right channel together. Prevent overflow! First,
-				   copy recorded data from "short" in "_REAL" type variables */
-				const _REAL rLeftChan = (*pvecInputData)[2 * i];
-				const _REAL rRightChan = (*pvecInputData)[2 * i + 1];
-
-				vecsTmpAudData[2 * i] = 0; /* mute */
-				vecsTmpAudData[2 * i + 1] =
-					Real2Sample((rLeftChan + rRightChan) * rMixNormConst);
-			}
-			break;
-		}			
-
-		/* Put data to sound card interface. Show sound card state on GUI */
-		if (pSound->Write(vecsTmpAudData) == FALSE)
-			PostWinMessage(MS_IOINTERFACE, 0); /* green light */
-		else
-			PostWinMessage(MS_IOINTERFACE, 1); /* yellow light */
+			vecsTmpAudData[2 * i] = 0; /* mute */
+			vecsTmpAudData[2 * i + 1] =
+				Real2Sample((rLeftChan + rRightChan) * rMixNormConst);
+		}
+		break;
 	}
+
+	if (bMuteAudio == TRUE)
+	{
+		/* Clear both channels if muted */
+		for (i = 0; i < iInputBlockSize; i++)
+			vecsTmpAudData[i] = 0;
+	}
+
+	/* Put data to sound card interface. Show sound card state on GUI */
+	if (pSound->Write(vecsTmpAudData) == FALSE)
+		PostWinMessage(MS_IOINTERFACE, 0); /* green light */
+	else
+		PostWinMessage(MS_IOINTERFACE, 1); /* yellow light */
 
 	/* Write data as wave in file */
 	if (bDoWriteWaveFile == TRUE)
@@ -618,12 +622,19 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 {
 #ifdef USE_QT_GUI
 	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
-	   in case of simulation because in this case there is not MDI) */
+	   in case of simulation because in this case there is no MDI) */
 	if (pMDI != NULL)
 	{
 		/* Only put data in MDI object if MDI is enabled */
-		if (pMDI->GetMDIEnabled() == TRUE)
+		if (pMDI->GetMDIOutEnabled() == TRUE)
 			pMDI->SetFACData(*pvecInputData, ReceiverParam);
+
+		/* Check if MDI in is enabled and query data if enabled */
+		if (pMDI->GetMDIInEnabled() == TRUE)
+		{
+			/* Data in "pvecInputData" will be overwritten! */
+			ReceiverParam.SetWaveMode(pMDI->GetFACData(*pvecInputData));
+		}
 	}
 #endif
 
@@ -697,12 +708,19 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 {
 #ifdef USE_QT_GUI
 	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
-	   in case of simulation because in this case there is not MDI) */
+	   in case of simulation because in this case there is no MDI) */
 	if (pMDI != NULL)
 	{
 		/* Only put data in MDI object if MDI is enabled */
-		if (pMDI->GetMDIEnabled() == TRUE)
+		if (pMDI->GetMDIOutEnabled() == TRUE)
 			pMDI->SetSDCData(*pvecInputData);
+
+		/* Check if MDI in is enabled and query data if enabled */
+		if (pMDI->GetMDIInEnabled() == TRUE)
+		{
+			/* Data in "pvecInputData" will be overwritten! */
+			pMDI->GetSDCData(*pvecInputData);
+		}
 	}
 #endif
 
