@@ -29,6 +29,58 @@
 
 
 /* Implementation *************************************************************/
+CReal Min(const CMatlibVector<CReal>& rvI)
+{
+	const int iSize = rvI.GetSize();
+	CReal rMinRet = rvI[0];
+	for (int i = 1; i < iSize; i++)
+	{
+		if (rvI[i] < rMinRet)
+			rMinRet = rvI[i];
+	}
+
+	return rMinRet;
+}
+
+void Min(CReal& rMinVal, int& iMinInd, const CMatlibVector<CReal>& rvI)
+{
+	const int iSize = rvI.GetSize();
+	rMinVal = rvI[0]; /* Init actual minimum value */
+	iMinInd = 0; /* Init index of minimum */
+	for (int i = 1; i < iSize; i++)
+	{
+		if (rvI[i] < rMinVal)
+		{
+			rMinVal = rvI[i];
+			iMinInd = i;
+		}
+	}
+}
+
+CReal Max(const CMatlibVector<CReal>& rvI)
+{
+	CReal rMaxRet;
+	int iMaxInd; /* Not used by this function */
+	Max(rMaxRet, iMaxInd, rvI);
+
+	return rMaxRet;
+}
+
+void Max(CReal& rMaxVal, int& iMaxInd, const CMatlibVector<CReal>& rvI)
+{
+	const int iSize = rvI.GetSize();
+	rMaxVal = rvI[0]; /* Init actual maximum value */
+	iMaxInd = 0; /* Init index of maximum */
+	for (int i = 1; i < iSize; i++)
+	{
+		if (rvI[i] > rMaxVal)
+		{
+			rMaxVal = rvI[i];
+			iMaxInd = i;
+		}
+	}
+}
+
 CMatlibVector<CReal> Sort(const CMatlibVector<CReal>& rvI)
 {
 	const int iSize = rvI.GetSize();

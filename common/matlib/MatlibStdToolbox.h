@@ -74,20 +74,20 @@ protected:
 /* Helpfunctions **************************************************************/
 inline CReal				Min(const CReal& rA, const CReal& rB)
 								{return rA < rB ? rA : rB;}
-inline CMatlibVector<CReal>	Min(const CMatlibVector<CReal>& fvA, const CMatlibVector<CReal>& fvB)
-								{_VECOP(CReal, fvA.GetSize(), Min(fvA[i], fvB[i]));}
-template<class T> T			Min(const CMatlibVector<T>& vecI);
-template<class T> void		Min(T& tMinVal /* out */, int& iMinInd /* out */,
-								const CMatlibVector<T>& vecI /* in */);
+inline CMatlibVector<CReal>	Min(const CMatlibVector<CReal>& rvA, const CMatlibVector<CReal>& rvB)
+								{_VECOP(CReal, rvA.GetSize(), Min(rvA[i], rvB[i]));}
+CReal						Min(const CMatlibVector<CReal>& rvI);
+void						Min(CReal& rMinVal /* out */, int& iMinInd /* out */,
+								const CMatlibVector<CReal>& rvI /* in */);
 
 
 inline CReal				Max(const CReal& rA, const CReal& rB)
 								{return rA > rB ? rA : rB;}
-inline CMatlibVector<CReal>	Max(const CMatlibVector<CReal>& fvA, const CMatlibVector<CReal>& fvB)
-								{_VECOP(CReal, fvA.GetSize(), Max(fvA[i], fvB[i]));}
-template<class T> T			Max(const CMatlibVector<T>& vecI);
-template<class T> void		Max(T& tMaxVal /* out */, int& iMaxInd /* out */,
-								const CMatlibVector<T>& vecI /* in */);
+inline CMatlibVector<CReal>	Max(const CMatlibVector<CReal>& rvA, const CMatlibVector<CReal>& rvB)
+								{_VECOP(CReal, rvA.GetSize(), Max(rvA[i], rvB[i]));}
+CReal						Max(const CMatlibVector<CReal>& rvI);
+void						Max(CReal& rMaxVal /* out */, int& iMaxInd /* out */,
+								const CMatlibVector<CReal>& rvI /* in */);
 
 
 inline CMatlibVector<CReal>	Ones(const int iLen)
@@ -257,60 +257,6 @@ CReal						Quad(MATLIB_CALLBACK_QAUD f, const CReal a,
 
 /* Implementation **************************************************************
    (the implementation of template classes must be in the header file!) */
-template<class T> inline
-T Min(const CMatlibVector<T>& vecI)
-{
-	const int iSize = vecI.GetSize();
-	T fMinRet = vecI[0];
-	for (int i = 1; i < iSize; i++)
-		if (vecI[i] < fMinRet)
-			fMinRet = vecI[i];
-
-	return fMinRet;
-}
-
-template<class T> inline
-void Min(T& tMinVal, int& iMinInd, const CMatlibVector<T>& vecI)
-{
-	const int iSize = vecI.GetSize();
-	tMinVal = vecI[0]; /* Init actual minimum value */
-	iMinInd = 0; /* Init index of minimum */
-	for (int i = 1; i < iSize; i++)
-	{
-		if (vecI[i] < tMinVal)
-		{
-			tMinVal = vecI[i];
-			iMinInd = i;
-		}
-	}
-}
-
-template<class T> inline
-T Max(const CMatlibVector<T>& vecI)
-{
-	T fMaxRet;
-	int iMaxInd; /* Not used by this function */
-	Max(fMaxRet, iMaxInd, vecI);
-
-	return fMaxRet;
-}
-
-template<class T> inline
-void Max(T& tMaxVal, int& iMaxInd, const CMatlibVector<T>& vecI)
-{
-	const int iSize = vecI.GetSize();
-	tMaxVal = vecI[0]; /* Init actual maximum value */
-	iMaxInd = 0; /* Init index of maximum */
-	for (int i = 1; i < iSize; i++)
-	{
-		if (vecI[i] > tMaxVal)
-		{
-			tMaxVal = vecI[i];
-			iMaxInd = i;
-		}
-	}
-}
-
 template<class T> inline
 T Sum(const CMatlibVector<T>& vecI)
 {
