@@ -1032,7 +1032,7 @@ void CDRMPlot::SetupAllConst()
 	MarkerSym1.setBrush(QBrush(MainPenColorConst));
 
 	/* SDC */
-	MarkerSym2.setStyle(QwtSymbol::Triangle);
+	MarkerSym2.setStyle(QwtSymbol::XCross);
 	MarkerSym2.setSize(4);
 	MarkerSym2.setPen(QPen(SpecLine1ColorPlot));
 	MarkerSym2.setBrush(QBrush(SpecLine1ColorPlot));
