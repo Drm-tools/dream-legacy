@@ -12,10 +12,6 @@ dnl AC_CHECK_COMPILERS
 
 dnl Configuration Arguments
 
-AC_ARG_ENABLE( faad, [    --enable-faad         compile faad AAC support], enable_faad=$enableval, enable_faad=yes)
-
-AC_ARG_ENABLE( arts, [    --enable-arts         use arts audio server], enable_arts=$enableval, enable_arts=no)
-
 AC_ARG_ENABLE( alsa, [    --enable-alsa         use alsa sound lib], enable_alsa=$enableval, enable_alsa=no)
 
 AC_ARG_ENABLE( sound,[    --enable-sound        generic sound support], enable_sound=$enableval, enable_sound=yes)
@@ -27,45 +23,13 @@ AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_MAKE_SET
 
-if test "$enable_faad" = "yes"; then
-	AC_CHECK_HEADER(faad.h, , enable_faad=no)
-	AC_CHECK_LIB(faad,faacDecOpen, , enable_faad=no, "-lm")
-	if test "$enable_faad" = "no"; then
-		AC_MSG_WARN( "*** Could not find libfaad. Switching to --disable-faad" )
-	else
-		AC_DEFINE(USE_FAAD, 1, [Define if you want to include AAC audio support])
-	fi
+AC_CHECK_HEADER(faad.h, , have_faad=no)
+AC_CHECK_LIB(faad,faacDecOpen, , exit 1, -lm )
+AC_CHECK_LIB(faad,faacDecInitDRM, , have_faad=no, -lm )
+if test "$have_faad" = "no"; then
+	AC_MSG_ERROR( "*** libfaad build without DRM support ***" )
 fi
 
-
-if test "$enable_arts" = "yes"; then
-	dnl check for artsc-config
-	AC_PATH_PROG(ARTSC_CONFIG, artsc-config)
-          ARTSC_CFLAGS=`$ARTSC_CONFIG --cflags`
-            ARTSC_LIBS=`$ARTSC_CONFIG --libs`
-            ac_cv_c_artsserver=no
-            save_CFLAGS="$CFLAGS"
-            CFLAGS="$CFLAGS $ARTSC_CFLAGS"
-            AC_TRY_COMPILE([
-             #include <artsc.h>
-            ],[
-             arts_stream_t stream;
-            ],[
-            ac_cv_c_artsserver=yes
-            ])
-            CFLAGS="$save_CFLAGS"
-	if test "$ac_cv_c_artsserver" = "yes"
-	then
-	    AC_SUBST(ARTSLIBS, $ARTSC_LIBS)
-	    AC_SUBST(ARTSINCL, $ARTSC_CFLAGS)
-
-	    AC_DEFINE(USE_ARTS, 1, [Define if you want to use the ARTS sound server])
-	else
-		AC_MSG_WARN( "*** Could not find libartsc. Switching to --disable-arts" )
-		enable_arts = no
-	fi
-	enable_sound="yes"
-fi
 
 if test "$enable_alsa" = "yes"; then
 	AC_CHECK_HEADER(sys/asoundlib.h, , enable_alsa=no)
@@ -81,7 +45,7 @@ fi
 if test "$enable_sound" = "yes"; then
 
 	AC_DEFINE(WITH_SOUND, 1, [Define if you want to use sound])
-	if (test "$enable_arts" = "no") && (test "$enable_alsa" = "no")
+	if (test "$enable_alsa" = "no")
 	then
 		
 		dnl fall back is to use /dev/dsp
@@ -108,7 +72,9 @@ AC_CHECK_HEADERS(drfftw.h rfftw.h)
 
 dnl QT
 
-dnl $QTDIR should be set prior to running "configure"
+if test "no$QTDIR" = "no"; then
+	AC_MSG_ERROR( "*** Please set QTDIR ***" )
+fi
 
 saved_ldflags="$LDFLAGS"
 LDFLAGS="$LDFLAGS -L$QTDIR/lib"
@@ -130,4 +96,5 @@ dnl qwt
 AC_HAVE_LIBRARY(qwt, ,exit 1)
 AC_SUBST(QWTINCL, "-I/usr/include/qwt")
 
-AC_OUTPUT(Makefile linux/Makefile )
+AC_CONFIG_FILES(Makefile linux/Makefile )
+AC_OUTPUT
