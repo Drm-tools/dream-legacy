@@ -266,7 +266,7 @@ CMatlibVector<CComplex> Ifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftP
 	/* Actual fftw call */
 	fftw_one(pCurPlan->FFTPlBackw, pFftwComplexIn, pFftwComplexOut);
 	
-	CReal scale = (CReal) 1.0 / n;
+	const CReal scale = (CReal) 1.0 / n;
 	for (i = 0; i < n; i++)
 		cvReturn[i] = CComplex(pFftwComplexOut[i].re * scale,
 			pFftwComplexOut[i].im * scale);
@@ -286,9 +286,10 @@ CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlan
 
 	const int			iLongLength(fvI.GetSize());
 	const int			iShortLength(iLongLength / 2);
+	const int			iUpRoundShortLength((iLongLength + 1) / 2);
 	
 	CMatlibVector<CComplex>	cvReturn(iShortLength
-		/* Include Nyquist frequency (+ 1) */ + 1, VTY_TEMP);
+		/* Include Nyquist frequency in case of even N */ + 1, VTY_TEMP);
 
 	/* If input vector has zero length, return */
 	if (iLongLength == 0)
@@ -321,10 +322,12 @@ CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlan
 	/* Now build complex output vector */
 	/* Zero frequency */
 	cvReturn[0] = pFftwRealOut[0];
-	for (i = 1; i < iShortLength; i++)
+	for (i = 1; i < iUpRoundShortLength; i++)
 		cvReturn[i] = CComplex(pFftwRealOut[i], pFftwRealOut[iLongLength - i]);
-	/* Nyquist frequency */
-	cvReturn[iShortLength] = pFftwRealOut[iShortLength];
+
+	/* If N is even, include Nyquist frequency */
+	if (iLongLength % 2 == 0)
+		cvReturn[iShortLength] = pFftwRealOut[iShortLength];
 
 	if (!FftPlans.IsInitialized())
 		delete pCurPlan;
@@ -334,6 +337,9 @@ CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlan
 
 CMatlibVector<CReal> rifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
 {
+/*
+	This function only works with EVEN N!
+*/
 	int					i;
 	CFftPlans*			pCurPlan;
 	fftw_real*			pFftwRealIn;
@@ -378,7 +384,8 @@ CMatlibVector<CReal> rifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPla
 	/* Actual fftw call */
 	rfftw_one(pCurPlan->RFFTPlBackw, pFftwRealIn, pFftwRealOut);
 
-	CReal scale = (CReal) 1.0 / iLongLength;
+	/* Scale output vector */
+	const CReal scale = (CReal) 1.0 / iLongLength;
 	for (i = 0; i < iLongLength; i++) 
 		fvReturn[i] = pFftwRealOut[i] * scale;
 
