@@ -50,7 +50,8 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	/* View menu */
 	QPopupMenu *EvalWinMenu = new QPopupMenu(this);
 	CHECK_PTR(EvalWinMenu);
-	EvalWinMenu->insertItem("&Evaluation Dialog", this, SLOT(OnViewEvalDlg()));
+	EvalWinMenu->insertItem("&Evaluation Dialog", this, SLOT(OnViewEvalDlg()),
+		CTRL+Key_E);
 	EvalWinMenu->insertSeparator();
 	EvalWinMenu->insertItem("E&xit", this, SLOT(close()), CTRL+Key_Q);
 
@@ -60,6 +61,8 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	CHECK_PTR(pSoundInMenu);
 	pSoundOutMenu = new QPopupMenu(this);
 	CHECK_PTR(pSoundOutMenu);
+	pReceiverModeMenu = new QPopupMenu(this);
+	CHECK_PTR(pReceiverModeMenu);
 
 	/* Get sound device names */
 	iNumSoundDev = DRMReceiver.GetSoundInterface()->GetNumDev();
@@ -72,33 +75,36 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 			SLOT(OnSoundOutDevice(int)), 0, i);
 	}
 
-	/* Set default device */
-#ifdef _WIN32
-	/* Add wave mapper entry and set this one as default. "iNumSoundDev" is no
+	/* Set wave mapper as default device. "iNumSoundDev" is no
 	   valid ID for a device, use this for wave-mapper */
 	pSoundInMenu->insertSeparator();
-	pSoundInMenu->insertItem("Windows Wave Mapper Record", this,
+	pSoundInMenu->insertItem("Wave &Mapper Recording", this,
 		SLOT(OnSoundInDevice(int)), 0, iNumSoundDev);
 	pSoundOutMenu->insertSeparator();
-	pSoundOutMenu->insertItem("Windows Wave Mapper Play", this,
+	pSoundOutMenu->insertItem("Wave &Mapper Playback", this,
 		SLOT(OnSoundOutDevice(int)), 0, iNumSoundDev);
 
 	pSoundInMenu->setItemChecked(iNumSoundDev, TRUE);
 	pSoundOutMenu->setItemChecked(iNumSoundDev, TRUE);
 	DRMReceiver.GetSoundInterface()->SetInDev(iNumSoundDev);
 	DRMReceiver.GetSoundInterface()->SetOutDev(iNumSoundDev);
-#else
-	/* Set first device as default */
-	pSoundInMenu->setItemChecked(0, TRUE);
-	pSoundOutMenu->setItemChecked(0, TRUE);
-	DRMReceiver.GetSoundInterface()->SetInDev(0);
-	DRMReceiver.GetSoundInterface()->SetOutDev(0);
-#endif
+
+	pReceiverModeMenu->insertItem("DRM (digital)", this,
+		SLOT(OnReceiverMode(int)), CTRL+Key_D, 0);
+	pReceiverModeMenu->insertItem("AM (analog)", this,
+		SLOT(OnReceiverMode(int)), CTRL+Key_A, 1);
+
+	/* Default is DRM mode */
+	pReceiverModeMenu->setItemChecked(0, 1);
+	DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
+
 
 	QPopupMenu *SettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(SettingsMenu);
-	SettingsMenu->insertItem("Sound In", pSoundInMenu);
-	SettingsMenu->insertItem("Sound Out", pSoundOutMenu);
+	SettingsMenu->insertItem("Sound &In", pSoundInMenu);
+	SettingsMenu->insertItem("Sound &Out", pSoundOutMenu);
+	SettingsMenu->insertSeparator();
+	SettingsMenu->insertItem("Receiver &Mode", pReceiverModeMenu);
 
 	pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
@@ -163,7 +169,6 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	connect(&Timer, SIGNAL(timeout()), 
 		this, SLOT(OnTimer()));
 
-
 #ifdef _DEBUG_
 OnViewEvalDlg();
 #endif
@@ -177,7 +182,8 @@ void FDRMDialog::OnTimer()
 	ProgrInputLevel->setValue(DRMReceiver.GetReceiver()->GetLevelMeter());
 
 	/* Check if receiver does receive a DRM signal */
-	if (DRMReceiver.GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL)
+	if ((DRMReceiver.GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL) &&
+		(DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_DRM))
 	{
 		/* Receiver does receive a DRM signal ------------------------------- */
 		/* First get current selected service */
@@ -348,38 +354,50 @@ void FDRMDialog::OnTimer()
 		TextTextMessage->hide();
 		TextTextMessage->setText("");
 
-		TextServiceLabel->setText(QString("Scanning..."));
+		if (DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_DRM)
+			TextServiceLabel->setText(QString("Scanning..."));
+		else
+		{
+			TextServiceLabel->setText(QString("Analog AM Mode"));
+			TextServiceIDRate->setText("Press Ctrl+A for new Acquisition, Ctrl+D for DRM");
+		}
 	}
+}
+
+void FDRMDialog::OnReceiverMode(int id)
+{
+	switch (id)
+	{
+	case 0:
+		DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
+		break;
+
+	case 1:
+		DRMReceiver.SetReceiverMode(CDRMReceiver::RM_AM);
+		break;
+	}
+
+	/* Taking care of checks in the menu */
+	pReceiverModeMenu->setItemChecked(0, 0 == id);
+	pReceiverModeMenu->setItemChecked(1, 1 == id);
 }
 
 void FDRMDialog::OnSoundInDevice(int id)
 {
 	DRMReceiver.GetSoundInterface()->SetInDev(id);
 
-	/* Taking care of checks in the menu */
-#ifdef _WIN32
+	/* Taking care of checks in the menu. "+ 1" because of wave mapper entry */
 	for (int i = 0; i < iNumSoundDev + 1; i++)
-#else
-	for (int i = 0; i < iNumSoundDev; i++)
-#endif
-	{
 		pSoundInMenu->setItemChecked(i, i == id);
-	}
 }
 
 void FDRMDialog::OnSoundOutDevice(int id)
 {
 	DRMReceiver.GetSoundInterface()->SetOutDev(id);
 
-	/* Taking care of checks in the menu */
-#ifdef _WIN32
+	/* Taking care of checks in the menu. "+ 1" because of wave mapper entry */
 	for (int i = 0; i < iNumSoundDev + 1; i++)
-#else
-	for (int i = 0; i < iNumSoundDev; i++)
-#endif
-	{
 		pSoundOutMenu->setItemChecked(i, i == id);
-	}
 }
 
 void FDRMDialog::OnButtonService1()

@@ -141,6 +141,10 @@ SOURCE=.\moc\systemevalDlgbase.cpp
 # End Group
 # Begin Source File
 
+SOURCE=..\common\AMDemodulation.cpp
+# End Source File
+# Begin Source File
+
 SOURCE="..\common\GUI-QT\DRMPlot.cpp"
 # End Source File
 # Begin Source File
@@ -580,6 +584,10 @@ SOURCE=..\common\ofdmcellmapping\CellMappingTable.h
 SOURCE=..\common\ofdmcellmapping\OFDMCellMapping.h
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE=..\common\AMDemodulation.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\common\sourcedecoders\AudioSourceDecoder.h

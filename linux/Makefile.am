@@ -27,6 +27,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/OFDM.cpp \
 	../common/Parameter.cpp \
 	../common/TextMessage.cpp \
+	../common/AMDemodulation.cpp \
 	../common/FAC/FAC.cpp \
 	../common/matlib/MatlibSigProToolbox.cpp \
 	../common/matlib/MatlibStdToolbox.cpp \
@@ -72,6 +73,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/OFDM.h \
 	../common/Parameter.h \
 	../common/TextMessage.h \
+	../common/AMDemodulation.h \
 	../common/Vector.h \
 	../common/FAC/FAC.h \
 	../common/matlib/Matlib.h \
