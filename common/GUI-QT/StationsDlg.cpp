@@ -341,37 +341,47 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	/* Special DRM front-end list */
 	vecSpecDRMRigs.Init(0);
 
+#ifdef RIG_MODEL_G303
 	/* Winradio G3 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G303,
 		"l_ATT=0,l_AGC=3", 0,
 		"l_ATT=0,l_AGC=3"));
+#endif
 
+#ifdef RIG_MODEL_AR7030
 	/* AOR 7030 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_AR7030,
 		"m_CW=9500,l_IF=-4200,l_AGC=3", 5 /* kHz frequency offset */,
 		"l_AGC=3"));
+#endif
 
 #ifdef RIG_MODEL_ELEKTOR304
 	/* Elektor 3/04 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_ELEKTOR304, "", 0, ""));
 #endif
 
+#ifdef RIG_MODEL_NRD535
 	/* JRC NRD 535 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_NRD535,
 		"l_CWPITCH=-5000,m_CW=12000,l_IF=-2000,l_AGC=3" /* AGC=slow */,
 		3 /* kHz frequency offset */,
 		"l_AGC=3"));
+#endif
 
+#ifdef RIG_MODEL_RX320
 	/* TenTec RX320D */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX320,
 		"l_AF=1,l_AGC=3,m_AM=6000", 0,
 		"l_AGC=3"));
+#endif
 
+#ifdef RIG_MODEL_RX340
 	/* TenTec RX340D */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX340,
 		"l_AF=1,m_USB=16000,l_AGC=3,l_IF=2000",
 		-12 /* kHz frequency offset */,
 		"l_AGC=3"));
+#endif
 
 
 	/* Load all possible front-end remotes in hamlib library */
