@@ -323,14 +323,17 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 
 			/* Store current counter position in file */
 			pFileCurPos = fopen(strFileName.c_str(), "w");
-			fprintf(pFileCurPos,
-				"%d / %d (%d min elapsed, estimated time remaining: %d min)",
-				iCounter, iNumSimBlocks, tiElTi / 60, lReTi / 60);
+			if (pFileCurPos != NULL)
+			{
+				fprintf(pFileCurPos, "%d / %d (%d min elapsed, estimated "
+					"time remaining: %d min)", iCounter, iNumSimBlocks,
+					tiElTi / 60, lReTi / 60);
 
-			/* Add current value of BER */
-			fprintf(pFileCurPos, "\n%e %e", TransmParam.GetNominalSNRdB(),
-				TransmParam.rBitErrRate);
-			fclose(pFileCurPos);
+				/* Add current value of BER */
+				fprintf(pFileCurPos, "\n%e %e", TransmParam.GetNominalSNRdB(),
+					TransmParam.rBitErrRate);
+				fclose(pFileCurPos);
+			}
 		}
 
 		catch (...)
@@ -357,42 +360,47 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 
 				/* Store current counter position in file */
 				pFileCurPos = fopen(strFileName.c_str(), "w");
-				fprintf(pFileCurPos,
-					"%d / %d (%d min elapsed, estimated time remaining: %d min)",
-					TransmParam.iNumBitErrors, iNumErrors,
-					tiElTi / 60, lReTi / 60);
+				if (pFileCurPos != NULL)
+				{
+					fprintf(pFileCurPos, "%d / %d (%d min elapsed, estimated "
+						"time remaining: %d min)", TransmParam.iNumBitErrors,
+						iNumErrors,	tiElTi / 60, lReTi / 60);
 
-				/* Add current value of BER */
-				fprintf(pFileCurPos, "\n%e %e", TransmParam.GetNominalSNRdB(),
-					TransmParam.rBitErrRate);
-				fclose(pFileCurPos);
+					/* Add current value of BER */
+					fprintf(pFileCurPos, "\n%e %e", TransmParam.
+						GetNominalSNRdB(), TransmParam.rBitErrRate);
+					fclose(pFileCurPos);
+				}
 			}
 			else
 			{
 				/* Estimate remaining time */
-				lReTi = (long int) 
+				lReTi = (long int)
 					(((_REAL) iMinNumBlocks - iCounter) / iCounter * tiElTi);
 
 				/* Store current counter position in file */
 				pFileCurPos = fopen(strFileName.c_str(), "w");
-				fprintf(pFileCurPos,
-					"%d / %d (%d min elapsed, estimated minimum"
-					" time remaining: %d min)\n",
-					iCounter, iMinNumBlocks, tiElTi / 60, lReTi / 60);
+				if (pFileCurPos != NULL)
+				{
+					fprintf(pFileCurPos,
+						"%d / %d (%d min elapsed, estimated minimum"
+						" time remaining: %d min)\n",
+						iCounter, iMinNumBlocks, tiElTi / 60, lReTi / 60);
 
-				lReTi = (long int)
-					(((_REAL) iNumErrors - TransmParam.iNumBitErrors) /
-					TransmParam.iNumBitErrors * tiElTi);
-				fprintf(pFileCurPos,
-					"%d / %d (%d min elapsed, estimated"
-					" time remaining: %d min)",
-					TransmParam.iNumBitErrors, iNumErrors, tiElTi / 60,
-					lReTi / 60);
+					lReTi = (long int)
+						(((_REAL) iNumErrors - TransmParam.iNumBitErrors) /
+						TransmParam.iNumBitErrors * tiElTi);
+					fprintf(pFileCurPos,
+						"%d / %d (%d min elapsed, estimated"
+						" time remaining: %d min)",
+						TransmParam.iNumBitErrors, iNumErrors, tiElTi / 60,
+						lReTi / 60);
 
-				/* Add current value of BER */
-				fprintf(pFileCurPos, "\n%e %e", TransmParam.GetNominalSNRdB(),
-					TransmParam.rBitErrRate);
-				fclose(pFileCurPos);
+					/* Add current value of BER */
+					fprintf(pFileCurPos, "\n%e %e", TransmParam.
+						GetNominalSNRdB(), TransmParam.rBitErrRate);
+					fclose(pFileCurPos);
+				}
 			}
 		}
 
