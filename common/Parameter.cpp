@@ -693,6 +693,12 @@ void CParameter::CReceptLog::SetSNR(const _REAL rNewCurSNR)
 		/* Average SNR values */
 		rAvSNR += rNewCurSNR;
 
+		/* Set minimum and maximum of SNR */
+		if (rNewCurSNR > rMaxSNR)
+			rMaxSNR = rNewCurSNR;
+		if (rNewCurSNR < rMinSNR)
+			rMinSNR = rNewCurSNR;
+
 		Mutex.Unlock();
 	}
 }
@@ -732,6 +738,10 @@ void CParameter::CReceptLog::SetLog(const _BOOLEAN bLog)
 		   seconds elapsed since midnight (00:00:00), January 1, 1970,
 		   coordinated universal time, according to the system clock */
 		time(&TimeCntLong);
+
+		/* Init maximum and mininum value of SNR */
+		rMaxSNR = 0;
+		rMinSNR = 1000; /* Init with high value */
 
 		Mutex.Unlock();
 	}
@@ -799,6 +809,16 @@ void CParameter::CReceptLog::CloseFile(FILE* pFile, const _BOOLEAN bIsLong)
 		}
 		else
 		{
+			/* Set min and max values of SNR. Check values first */
+			if (rMaxSNR < rMinSNR)
+			{
+				/* It seems that no SNR value was set, set both max and min
+				   to 0 */
+				rMaxSNR = 0;
+				rMinSNR = 0;
+			}
+			fprintf(pFile, "\nSNR min: %4.1f, max: %4.1f\n", rMinSNR, rMaxSNR);
+
 			/* Short log file ending */
 			fprintf(pFile, "\nCRC: \n");
 			fprintf(pFile, "<<<<\n\n");

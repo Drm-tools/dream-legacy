@@ -396,6 +396,7 @@ public:
 		_BOOLEAN		bSyncOKValid, bFACOkValid, bMSCOkValid;
 		int				iFrequency;
 		_REAL			rAvSNR, rCurSNR;
+		_REAL			rMaxSNR, rMinSNR;
 		_BOOLEAN		bLogActivated;
 		FILE*			pFileLong;
 		FILE*			pFileShort;
