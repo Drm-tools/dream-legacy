@@ -39,12 +39,24 @@
 #include "OFDM.h"
 #include "DRMSignalIO.h"
 
+#ifndef WRITE_TRNSM_TO_FILE
+# ifdef _WIN32
+#  include "../../Windows/source/sound.h"
+# else
+#  include "source/sound.h"
+# endif
+#endif
+
 
 /* Classes ********************************************************************/
 class CDRMTransmitter
 {
 public:
-	CDRMTransmitter() {}
+	CDRMTransmitter() 
+#ifndef WRITE_TRNSM_TO_FILE
+		: TransmitData(&SoundInterface)
+#endif
+		{}
 	virtual ~CDRMTransmitter() {}
 
 	void InitTransmitter();
@@ -82,6 +94,10 @@ protected:
 	COFDMCellMapping		OFDMCellMapping;
 	COFDMModulation			OFDMModulation;
 	CTransmitData			TransmitData;
+
+#ifndef WRITE_TRNSM_TO_FILE
+	CSound					SoundInterface;
+#endif
 };
 
 
