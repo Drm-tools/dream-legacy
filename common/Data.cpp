@@ -427,6 +427,9 @@ void CUtilizeFACData::InitInternal(CParameter& ReceiverParam)
 /* Init frame ID so that a "0" comes after increasing the init value once */
 ReceiverParam.iFrameIDReceiv = NO_FRAMES_IN_SUPERFRAME - 1;
 
+	/* Reset flag */
+	bCRCOk = FALSE;
+
 	/* Define block-size for input */
 	iInputBlockSize = NO_FAC_BITS_PER_BLOCK;
 }
