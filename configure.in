@@ -116,7 +116,10 @@ if test "x$WITHHAMLIB" = xyes; then
 	
 	if test "x$have_hamlib" = "xno"; then
 		AC_MSG_ERROR( "Hamlib library not found" )
-	fi	
+	else
+		AC_CHECK_LIB(hamlib, rig_parse_mode, 
+		AC_DEFINE(HAVE_RIG_PARSE_MODE, 1, [Define if you have Hamlib >= 1.2.1]), )
+	fi
 fi
 
 dnl faad2 -----------------------------------------------------------------------
