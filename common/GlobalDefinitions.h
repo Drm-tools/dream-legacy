@@ -46,7 +46,7 @@ using namespace std;	// Because of the library: "complex"
    "test" MUST EXIST in the windows directory (or linux directory if you use
    Linux)! */
 #define _DEBUG_
-//#undef _DEBUG_
+#undef _DEBUG_
 
 
 #define DREAM_VERSION_NUMBER			"0.9.2"
