@@ -90,7 +90,7 @@ else
 
 
 	/* CRC ------------------------------------------------------------------ */
-	/* Calculate the CRC and put at the end of the stream */
+	/* Calculate the CRC and put it at the end of the stream */
 	CRCObject.Reset(16);
 
 	(*pbiData).ResetBitAccess();
