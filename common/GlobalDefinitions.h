@@ -168,15 +168,6 @@ void ErrorMessage(string strErrorString);
 
 
 /* Global functions ***********************************************************/
-/* min() max() functions */
-/* Non-const version */
-template<class T> inline T& _max(T& a, T& b) {return a > b ? a : b;}
-template<class T> inline T& _min(T& a, T& b) {return a < b ? a : b;}
-
-/* Const version */
-template<class T> inline const T& _max(const T& a, const T& b) {return a > b ? a : b;}
-template<class T> inline const T& _min(const T& a, const T& b) {return a < b ? a : b;}
-
 /* Converting _REAL to _SAMPLE */
 inline _SAMPLE Real2Sample(const _REAL rInput)
 {
