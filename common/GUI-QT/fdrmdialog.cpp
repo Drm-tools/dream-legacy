@@ -84,8 +84,8 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 			SLOT(OnSoundOutDevice(int)), 0, i);
 	}
 
-	/* Set wave mapper as default device. "iNumSoundDev" is no
-	   valid ID for a device, use this for wave-mapper */
+	/* Insert "Wave mapper". "iNumSoundDev" is no valid ID for a device, use
+	   this for wave-mapper */
 	pSoundInMenu->insertSeparator();
 	pSoundInMenu->insertItem("Wave &Mapper Recording", this,
 		SLOT(OnSoundInDevice(int)), 0, iNumSoundDev);
@@ -93,10 +93,26 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	pSoundOutMenu->insertItem("Wave &Mapper Playback", this,
 		SLOT(OnSoundOutDevice(int)), 0, iNumSoundDev);
 
-	pSoundInMenu->setItemChecked(iNumSoundDev, TRUE);
-	pSoundOutMenu->setItemChecked(iNumSoundDev, TRUE);
-	DRMReceiver.GetSoundInterface()->SetInDev(iNumSoundDev);
-	DRMReceiver.GetSoundInterface()->SetOutDev(iNumSoundDev);
+	/* Set default device. If no device was selected, select "Wave mapper" */
+	int iDefaultInDev = DRMReceiver.GetSoundCrdDevIn();
+	int iDefaultOutDev = DRMReceiver.GetSoundCrdDevOut();
+
+	if ((iDefaultInDev == NO_SOUND_CRD_DEVICE_SEL) ||
+		(iDefaultInDev > iNumSoundDev) || (iDefaultInDev < 0))
+	{
+		iDefaultInDev = iNumSoundDev;
+	}
+
+	if ((iDefaultOutDev == NO_SOUND_CRD_DEVICE_SEL) ||
+		(iDefaultOutDev > iNumSoundDev) || (iDefaultInDev < 0))
+	{
+		iDefaultOutDev = iNumSoundDev;
+	}
+
+	pSoundInMenu->setItemChecked(iDefaultInDev, TRUE);
+	pSoundOutMenu->setItemChecked(iDefaultOutDev, TRUE);
+	DRMReceiver.GetSoundInterface()->SetInDev(iDefaultInDev);
+	DRMReceiver.GetSoundInterface()->SetOutDev(iDefaultOutDev);
 
 	/* Reiceiver mode menu */
 	pReceiverModeMenu->insertItem("DRM (digital)", this,

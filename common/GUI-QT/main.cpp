@@ -348,6 +348,60 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 		}
 
 
+		/* Sound In device -------------------------------------------------- */
+		if ((!strcmp(argv[i], "--snddevin")) ||
+			(!strcmp(argv[i], "-I")))
+		{
+			if (++i >= argc)
+			{
+				cerr << argv[0] << ": ";
+				cerr << "'--snddevin' needs a numeric argument."
+					<< endl;
+				exit(1);
+			}
+
+			char *p;
+			int n = strtol(argv[i], &p, 10);
+			if (*p || n < 0)
+			{
+				cerr << argv[0] << ": ";
+				cerr << "'--snddevin' needs a numeric argument."
+					<< endl;
+				exit(1);
+			}
+
+			DRMReceiver.SetSoundCrdDevIn(n);
+			continue;
+		}
+
+
+		/* Sound Out device ------------------------------------------------- */
+		if ((!strcmp(argv[i], "--snddevout")) ||
+			(!strcmp(argv[i], "-O")))
+		{
+			if (++i >= argc)
+			{
+				cerr << argv[0] << ": ";
+				cerr << "'--snddevout' needs a numeric argument."
+					<< endl;
+				exit(1);
+			}
+
+			char *p;
+			int n = strtol(argv[i], &p, 10);
+			if (*p || n < 0)
+			{
+				cerr << argv[0] << ": ";
+				cerr << "'--snddevout' needs a numeric argument."
+					<< endl;
+				exit(1);
+			}
+
+			DRMReceiver.SetSoundCrdDevOut(n);
+			continue;
+		}
+
+
 		/* Latitude string for log file ------------------------------------- */
 		if ((!strcmp(argv[i], "--latitude")) ||
 			(!strcmp(argv[i], "-a")))
@@ -498,6 +552,8 @@ void UsageArguments(char** argv)
 	cerr << "  -o <s>, --longitude <s>    set longitude string for log file"
 		<< endl;
 	cerr << "  -l, --startlog             start log file (delayed)" << endl;
+	cerr << "  -I <n>, --snddevin <n>     set sound in device" << endl;
+	cerr << "  -O <n>, --snddevout <n>    set sound out device"	<< endl;
 
 #ifdef HAVE_LIBHAMLIB
 	cerr << "  -M <n>, --hamlib-model <n> set Hamlib radio model ID" << endl;
