@@ -410,7 +410,7 @@ void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift, _REAL rNe
 _COMPLEX CTapgain::Update()
 {
 	int			k;
-	_COMPLEX	in, out;
+	_COMPLEX	out;
 
 	/* If tap is not fading, just return gain */
 	if (fd == (_REAL) 0.0) 
@@ -468,20 +468,10 @@ _COMPLEX CTapgain::Update()
 	if (interpol)
 	{
 		/* Linear interpolation */
-		in  = _COMPLEX((nextI - lastI) * (_REAL) over_cnt / 
+		out  = _COMPLEX((nextI - lastI) * (_REAL) over_cnt / 
 			interpol + lastI,
 			(nextQ - lastQ) * (_REAL) over_cnt / 
 			interpol + lastQ);
-
-		/* Butterworth IIR filter to smooth interpolation */
-		out = B1 * in + B2 * in_1 + B3 * in_2 - 
-			A2 * out_1 - A3 * out_2;
-
-		out_2 = out_1;
-		out_1 = out;
-
-		in_2 = in_1;
-		in_1 = in;
 
 		if (++over_cnt == interpol)
 			over_cnt = 0;

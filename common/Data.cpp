@@ -158,13 +158,13 @@ void CGenSimData::InitInternal(CParameter& TransmParam)
 		break;
 
 	case 3:
-		/* US Consortium: same as case "2" */
-		iMinNoBlocks = (int) ((_REAL) 500.0 / (_REAL) 0.4);
+		/* US Consortium: slowest 0.1 Hz */
+		iMinNoBlocks = (int) ((_REAL) 1000.0 / (_REAL) 0.4);
 		break;
 
 	case 4:
-		/* CCIR Poor: 1 Hz -> 60 seconds should be ok */
-		iMinNoBlocks = (int) ((_REAL) 60.0 / (_REAL) 0.4);
+		/* CCIR Poor: 1 Hz -> 200 seconds should be ok */
+		iMinNoBlocks = (int) ((_REAL) 200.0 / (_REAL) 0.4);
 		break;
 
 	case 5:

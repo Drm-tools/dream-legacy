@@ -44,13 +44,6 @@
         
 #define fsqr(a)						((a) * (a))
 
-/* 2nd Order Butterworth filter to smooth interpolation */
-#define A2							-1.56101807580072
-#define A3							0.64135153805756
-#define B1							0.02008336556421
-#define B2							0.04016673112842
-#define B3							0.02008336556421
-
 
 /* Classes ********************************************************************/
 class CChannelSim
@@ -79,8 +72,6 @@ protected:
 	_REAL		fir_buff[FIRLENGTH][2]; /* FIR buffer */
 	_REAL		lastI, lastQ;	/* last FIR output, needed for interpolation */
 	_REAL		nextI, nextQ;	/* next FIR output */
-	_COMPLEX	out_1, out_2;	/* delayed output for IIR */
-	_COMPLEX	in_0, in_1, in_2;
 
 	_REAL fd;					/* Fading rate */
 	_REAL fshift;				/* Doppler shift */

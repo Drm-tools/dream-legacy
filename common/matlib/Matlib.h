@@ -88,7 +88,7 @@ public:
 	CMatlibVector(CMatlibVector<T>& vecI); // Copy constructor, VERY IMPORTANT!!!
 	virtual ~CMatlibVector() {if (pData != NULL) delete[] pData;}
 
-	CMatlibVector(const CMatlibVector<CReal> fvReal, const CMatlibVector<CReal> fvImag) : 
+	CMatlibVector(const CMatlibVector<CReal>& fvReal, const CMatlibVector<CReal>& fvImag) : 
 		iVectorLength(fvReal.GetSize()), pData(NULL), eVType(VTY_CONST/*VTY_TEMP*/)
 	{
 		/* Allocate data block for vector */
