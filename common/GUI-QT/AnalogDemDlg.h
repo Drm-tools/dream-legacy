@@ -33,6 +33,7 @@
 #include <qcheckbox.h>
 #include <qtooltip.h>
 #include <qbuttongroup.h>
+#include <qpushbutton.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/AnalogDemDlgbase.h"

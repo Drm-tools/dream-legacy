@@ -59,6 +59,8 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 
 
 	/* Connect controls ----------------------------------------------------- */
+	connect(buttonOk, SIGNAL(clicked()), this, SLOT(accept()));
+	
 	/* Button groups */
 	connect(ButtonGroupDemodulation, SIGNAL(clicked(int)),
 		this, SLOT(OnRadioDemodulation(int)));
