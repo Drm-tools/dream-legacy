@@ -289,9 +289,9 @@ void CDRMPlot::SetFACConst(CVector<_COMPLEX>& veccData)
 	setAxisTitle(QwtPlot::xBottom, "Real");
 	setAxisTitle(QwtPlot::yLeft, "Imaginary");
 
-	/* Fixed scale */
-	setAxisScale(QwtPlot::xBottom, (double) -2.0, (double) 2.0);
-	setAxisScale(QwtPlot::yLeft, (double) -2.0, (double) 2.0);
+	/* Fixed scale (2 / sqrt(2)) */
+	setAxisScale(QwtPlot::xBottom, (double) -1.4142, (double) 1.4142);
+	setAxisScale(QwtPlot::yLeft, (double) -1.4142, (double) 1.4142);
 
 	clear();
 	SetQAM4Grid();
@@ -309,9 +309,9 @@ void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData,
 	setAxisTitle(QwtPlot::xBottom, "Real");
 	setAxisTitle(QwtPlot::yLeft, "Imaginary");
 
-	/* Fixed scale */
-	setAxisScale(QwtPlot::xBottom, (double) -2.0, (double) 2.0);
-	setAxisScale(QwtPlot::yLeft, (double) -2.0, (double) 2.0);
+	/* Fixed scale (4 / sqrt(10)) */
+	setAxisScale(QwtPlot::xBottom, (double) -1.2649, (double) 1.2649);
+	setAxisScale(QwtPlot::yLeft, (double) -1.2649, (double) 1.2649);
 
 	clear();
 
@@ -334,9 +334,9 @@ void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData,
 	setAxisTitle(QwtPlot::xBottom, "Real");
 	setAxisTitle(QwtPlot::yLeft, "Imaginary");
 
-	/* Fixed scale */
-	setAxisScale(QwtPlot::xBottom, (double) -1.35, (double) 1.35);
-	setAxisScale(QwtPlot::yLeft, (double) -1.35, (double) 1.35);
+	/* Fixed scale (8 / sqrt(42)) */
+	setAxisScale(QwtPlot::xBottom, (double) -1.2344, (double) 1.2344);
+	setAxisScale(QwtPlot::yLeft, (double) -1.2344, (double) 1.2344);
 
 	clear();
 
