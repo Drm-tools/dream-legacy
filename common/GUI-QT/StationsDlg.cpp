@@ -515,9 +515,8 @@ void StationsDlg::SetUTCTimeLabel()
 	struct tm* gmtCur = gmtime(&ltime);
 
 	/* Generate time in format "UTC 12:00" */
-	QString strUTCTime = QString("UTC %1:%2"). /* String format */
-		arg(QString().setNum(gmtCur->tm_hour)). /* Hour */
-		arg(QString().setNum(gmtCur->tm_min));
+	QString strUTCTime = QString().sprintf("UTC %2d:%02d",
+		gmtCur->tm_hour, gmtCur->tm_min);
 
 	/* Only apply if time label does not show the correct time */
 	if (TextLabelUTCTime->text().compare(strUTCTime))
