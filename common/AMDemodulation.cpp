@@ -124,10 +124,14 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 		if ((eDemodType == DT_AM_10) || (eDemodType == DT_AM_5))
 		{
-			/* Use envelope of signal and write in both output channels */
+			/* Use envelope of signal and DC filter. Reuse temp buffer
+			   "rvecInpTmp" */
+			rvecInpTmp = Filter(rvecBAM, rvecAAM, Abs(cvecHilbert), rvecZAM);
+
+			/* Write in both output channels */
 			for (i = 0, j = 0; i < 2 * iSymbolBlockSize; i += 2, j++)
 				(*pvecOutputData)[i] = (*pvecOutputData)[i + 1] =
-					Real2Sample(Abs(cvecHilbert[j]) * 2);
+					Real2Sample(rvecInpTmp[j] * 2);
 		}
 		else
 		{
@@ -283,8 +287,21 @@ void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 	}
 
 	/* Only FIR filter */
-	rvecA.Init(1);
-	rvecA[0] = (CReal) 1.0;
+	rvecA.Init(1, (CReal) 1.0);
+
+	/* DC filter for AM demodulation */
+	if ((eDemodType == DT_AM_10) || (eDemodType == DT_AM_5))
+	{
+		rvecZAM.Init(2, (CReal) 0.0);
+
+		/* IIR filter: H(Z) = (1 - z^{-1}) / (1 - 0.99 * z^{-1}) */
+		rvecBAM.Init(2);
+		rvecAAM.Init(2);
+		rvecBAM[0] = (CReal) 1.0;
+		rvecBAM[1] = (CReal) -1.0;
+		rvecAAM[0] = (CReal) 1.0;
+		rvecAAM[1] = (CReal) -0.99;
+	}
 
 
 	/* Set mixing constant -------------------------------------------------- */

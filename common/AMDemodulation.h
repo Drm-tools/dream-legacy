@@ -77,6 +77,10 @@ protected:
 	CRealVector					rvecInpTmp;
 	CComplexVector				cvecHilbert;
 
+	CRealVector					rvecZAM;
+	CRealVector					rvecAAM;
+	CRealVector					rvecBAM;
+
 	CComplex					cCurExp;
 	CComplex					cExpStep;
 
