@@ -125,9 +125,17 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 #else
 # ifdef HAVE_UNISTD_H
 		nice(19);
+
+		/* Try to get hostname */
+		char chHostName[255];
+		if (gethostname(chHostName, size_t(255)) == 0)
+		{
+			/* Append it to the file name of simulation output */
+			strSpecialRemark += "_";
+			strSpecialRemark += chHostName;
+		}
 # endif
 #endif
-
 
 		/* Set simulation time or number of errors. Slighty different convetion
 		   for __SIMTIME file name */
