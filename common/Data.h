@@ -53,21 +53,30 @@
 class CReadData : public CTransmitterModul<_BINARY, _BINARY>
 {
 public:
-	CReadData() : iNumTransBlocks(DEFAULT_NUM_SIM_BLOCKS),
+	CReadData() :
+#ifdef WRITE_TRNSM_TO_FILE
+		iNumTransBlocks(DEFAULT_NUM_SIM_BLOCKS),
+#endif
 		bUsingTextMessage(FALSE), iCounter(0) {}
 	virtual ~CReadData() {}
 
+#ifdef WRITE_TRNSM_TO_FILE
 	void SetNumTransBlocks(const int iNewNum) {iNumTransBlocks = iNewNum;}
+#endif
+
 	void SetTextMessage(const string& strText);
 
 protected:
 	int					iCounter;
-	int					iNumTransBlocks;
 	CTextMessageEncoder TextMessage;
 	_BOOLEAN			bUsingTextMessage;
 	CDataEncoder		DataEncoder;
 	int					iTotPacketSize;
 	_BOOLEAN			bIsDataService;
+
+#ifdef WRITE_TRNSM_TO_FILE
+	int					iNumTransBlocks;
+#endif
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);

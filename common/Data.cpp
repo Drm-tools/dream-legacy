@@ -38,10 +38,12 @@ void CReadData::ProcessDataInternal(CParameter& TransmParam)
 {
 	int i;
 
+#ifdef WRITE_TRNSM_TO_FILE
 	/* Stop simulation if defined number of blocks are generated */
 	iCounter++;
 	if (iCounter == iNumTransBlocks)
 		TransmParam.bRunThread = FALSE;
+#endif
 
 	/* Write your data in (*pvecOutputData)[i],
 	   where i = 0..iOutputBlockSize - 1*/
