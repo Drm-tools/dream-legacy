@@ -32,19 +32,7 @@
 /* Implementation *************************************************************/
 void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	int			i;
-	int			iMinIndex;
-	int			iCurIndex;
-	CReal		rResultIREst;
-	CReal		rResultPilPairEst;
-	CReal		rMinValue;
-	CReal		rFreqOffsetEst;
-	CReal		rReTmp, rImTmp;
-	CComplex	cOldFreqPilCorr;
-	CComplex	cFreqOffEstVecSym;
-	CComplex	cCurPilMult;
-	CComplex	cErrVec;
-
+	int i;
 
 	/**************************************************************************\
 	* Frame synchronization detection										   *
@@ -60,7 +48,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		   of the given transformed signal */
 
 		/* Pick pilot positions and calculate "test" channel estimation */
-		iCurIndex = 0;
+		int iCurIndex = 0;
 		for (i = 0; i < iNumCarrier; i++)
 		{
 			if (_IsScatPil(ReceiverParam.matiMapTab[0][i]))
@@ -80,7 +68,8 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Calculate peak to average, we need to add a minus since the following
 		   algorithm searches for a minimum */
-		rResultIREst = - Max(vecrTestImpResp) / Sum(vecrTestImpResp);
+		const CReal rResultIREst =
+			- Max(vecrTestImpResp) / Sum(vecrTestImpResp);
 
 
 		/* DRM frame synchronization based on time pilots ------------------- */
@@ -89,10 +78,11 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		   calculated in the Init-routine. Additionally, the index of the first
 		   pilot in the pair is stored in ".iNumCarrier". We calculate and
 		   averaging the Euclidean-norm of the resulting complex values */
-		rResultPilPairEst = (CReal) 0.0;
+		CReal rResultPilPairEst = (CReal) 0.0;
 		for (i = 0; i < iNumDiffFact; i++)
 		{
-			cErrVec = ((*pvecInputData)[vecDiffFact[i].iNumCarrier] *
+			const CComplex cErrVec =
+				((*pvecInputData)[vecDiffFact[i].iNumCarrier] *
 				vecDiffFact[i].cDiff -
 				(*pvecInputData)[vecDiffFact[i].iNumCarrier + 1]);
 
@@ -111,8 +101,8 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 			vecrCorrHistory.AddEnd(rResultIREst);
 
 		/* Search for minimum distance. Init value with a high number */
-		iMinIndex = 0;
-		rMinValue = _MAXREAL;
+		int iMinIndex = 0;
+		CReal rMinValue = _MAXREAL;
 		for (i = 0; i < iNumSymPerFrame; i++)
 		{
 			if (vecrCorrHistory[i] < rMinValue)
@@ -183,16 +173,17 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 	\**************************************************************************/
 	if ((bSyncInput == FALSE) && (bTrackPil == TRUE))
 	{
-		cFreqOffEstVecSym = CComplex((CReal) 0.0, (CReal) 0.0);
+		CComplex cFreqOffEstVecSym = CComplex((CReal) 0.0, (CReal) 0.0);
 
 		for (i = 0; i < NUM_FREQ_PILOTS; i++)
 		{
 			/* The old pilots must be rotated due to timing corrections */
-			cOldFreqPilCorr = Rotate(cOldFreqPil[i], iPosFreqPil[i],
+			const CComplex cOldFreqPilCorr =
+				Rotate(cOldFreqPil[i], iPosFreqPil[i],
 				(*pvecInputData).GetExData().iCurTimeCorr);
 
 			/* Calculate the inner product of the sum */
-			cCurPilMult =
+			const CComplex cCurPilMult =
 				(*pvecInputData)[iPosFreqPil[i]] * Conj(cOldFreqPilCorr);
 
 			/* Save "old" frequency pilots for next symbol. Special treatment
@@ -247,7 +238,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		IIR1(cFreqOffVec, cFreqOffEstVecSym, rLamFreqOff);
 
 		/* Calculate argument */
-		rFreqOffsetEst = Angle(cFreqOffVec);
+		const CReal rFreqOffsetEst = Angle(cFreqOffVec);
 
 		/* Correct measurement average for actually applied frequency
 		   correction */
