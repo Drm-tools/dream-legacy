@@ -42,12 +42,17 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 	if ((bSyncInput == FALSE) && (bAquisition == TRUE))
 	{
 		/* DRM frame synchronization using impulse response ----------------- */
-		/* This algorithm uses all scattered pilots in a symbol. We extract the
-		   signal at the pilot positions (the positions of pilots in the first
-		   OFDM symbol in a DRM frame) and calculate a channel estimate.
-		   Afterwards we go into the time domain and check, if this is really
-		   a possible impulse response by calculating the peak-to-average ratio
-		   of the given transformed signal */
+		/* We assume that the current received OFDM symbol is the first symbol
+		   in a DRM frame and estimate the channel transfer function at the
+		   pilot positions (the positions of pilots in the first OFDM symbol in
+		   a DRM frame). Then we calculate an FFT to get the impulse response of
+		   the channel. If the assumption was correct and this really was the
+		   correct OFDM symbol, we will get something which looks like an
+		   impulse response (contains peaks -> peak-to-average ratio is high).
+		   If not, we will certainly get only noise -> no peaks -> peak to
+		   average ratio is small. This is because the transmitted values at
+		   the pilot positions are different from the values at the pilot cells
+		   when transmitting the correct OFDM symbol (which we assumed) */
 
 		/* Pick pilot positions and calculate "test" channel estimation */
 		int iCurIndex = 0;
