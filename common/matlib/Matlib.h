@@ -49,6 +49,12 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 										operator[](i) FCT; \
 									return *this
 
+#define _MATOPC(TYPE, LENGTHROW, LENGTHCOL, FCT) \
+									CMatlibMatrix<TYPE> matRet(LENGTHROW, LENGTHCOL, VTY_TEMP); \
+									for (int i = 0; i < LENGTHROW; i++) \
+										matRet[i] = FCT; \
+									return matRet
+
 #define _MATOPCL(FCT)				for (int i = 0; i < iRowSize; i++) \
 										operator[](i) FCT; \
 									return *this

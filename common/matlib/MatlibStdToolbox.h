@@ -106,6 +106,8 @@ inline CComplex					Conj(const CComplex& cI)
 									{return conj(cI);}
 inline CMatlibVector<CComplex>	Conj(const CMatlibVector<CComplex>& cvI)
 									{_VECOP(CComplex, cvI.GetSize(), Conj(cvI[i]));}
+inline CMatlibMatrix<CComplex>	Conj(const CMatlibMatrix<CComplex>& cmI)
+									{_MATOPC(CComplex, cmI.GetRowSize(), cmI.GetColSize(), Conj(cmI[i]));}
 
 
 /* Absolute and angle (argument) functions */
@@ -214,6 +216,12 @@ CMatlibMatrix<CComplex>		Inv(const CMatlibMatrix<CComplex>& matrI);
 CMatlibMatrix<CReal>		Eye(const int iLen);
 
 CMatlibMatrix<CComplex>		Diag(const CMatlibVector<CComplex>& cvI);
+
+/* Matrix transpose */
+CMatlibMatrix<CComplex>		Transp(const CMatlibMatrix<CComplex>& cmI);
+inline
+CMatlibMatrix<CComplex>		TranspH(const CMatlibMatrix<CComplex>& cmI)
+								{return Conj(Transp(cmI));} /* With conjugate complex */
 
 /* Fourier transformations (also included: real FFT) */
 CMatlibVector<CComplex>		Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans = CFftPlans());

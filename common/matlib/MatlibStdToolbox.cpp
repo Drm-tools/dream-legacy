@@ -95,6 +95,21 @@ CMatlibMatrix<CComplex> Diag(const CMatlibVector<CComplex>& cvI)
 	return matcRet;
 }
 
+CMatlibMatrix<CComplex> Transp(const CMatlibMatrix<CComplex>& cmI)
+{
+	const int iRowSize = cmI.GetRowSize();
+	const int iColSize = cmI.GetColSize();
+
+	/* Swaped row and column size due to transpose operation */
+	CMatlibMatrix<CComplex> matcRet(iColSize, iRowSize, VTY_TEMP);
+
+	/* Transpose matrix */
+	for (int i = 0; i < iRowSize; i++)
+		for (int j = 0; j < iColSize; j++)
+				matcRet[j][i] = cmI[i][j];
+
+	return matcRet;
+}
 
 CMatlibMatrix<CComplex> Inv(const CMatlibMatrix<CComplex>& matrI)
 {
