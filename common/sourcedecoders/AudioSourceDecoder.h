@@ -126,7 +126,6 @@ protected:
 	int					iResOutBlockSize;
 	int					iNumHigherProtectedBytes;
 	int					iMaxLenOneAudFrame;
-	int					iNumChannelsAAC;
 	int					iLenDecOutPerChan;
 	int					iBadBlockCount;
 	int					iAudioPayloadLen;

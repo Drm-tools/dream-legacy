@@ -335,7 +335,7 @@ fflush(pFile2);
 			/* Conversion from _SAMPLE vector to _REAL vector for resampling.
 			   ATTENTION: We use a vector which was allocated inside
 			   the AAC decoder! */
-			if (iNumChannelsAAC == 1)
+			if (DecFrameInfo.channels == 1)
 			{
 				/* Change type of data (short -> real) */
 				for (i = 0; i < iLenDecOutPerChan; i++)
@@ -504,8 +504,6 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioMode)
 		{
 		case CParameter::AM_MONO:
-			iNumChannelsAAC = 1;
-
 			if (ReceiverParam.Service[iCurSelServ].AudioParam.
 				eSBRFlag == CParameter::SB_USED)
 			{
@@ -517,13 +515,10 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 
 		case CParameter::AM_P_STEREO:
 			/* Low-complexity only defined in SBR mode */
-			iNumChannelsAAC = 1;
 			iDRMchanMode = DRMCH_SBR_LC_STEREO;
 			break;
 
 		case CParameter::AM_STEREO:
-			iNumChannelsAAC = 2;
-
 			if (ReceiverParam.Service[iCurSelServ].AudioParam.
 				eSBRFlag == CParameter::SB_USED)
 			{
