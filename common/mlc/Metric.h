@@ -39,6 +39,8 @@
 inline _REAL Metric(const _REAL rDist, const _REAL rChan)
 {
 //	return rDist * rDist * rChan;
+
+// TEST
 	return rDist * sqrt(rChan);
 }
 

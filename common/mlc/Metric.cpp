@@ -232,7 +232,6 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						Minimum1((*pcInSymb)[i].cSig.imag(),
 						rTableQAM64SM[iTabInd0 | (1 << 2)][1],
 						(*pcInSymb)[i].rChan);
-
 				}
 				else
 				{
@@ -430,7 +429,6 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						Minimum1((*pcInSymb)[i].cSig.imag(),
 						rTableQAM64HMsym[iTabInd0 | (1 << 2)][1],
 						(*pcInSymb)[i].rChan);
-
 				}
 				else
 				{				
