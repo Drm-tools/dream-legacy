@@ -321,13 +321,20 @@ void MultimediaDlg::SetSlideShowPicture()
 	QPixmap		NewImage;
 	int			iPicSize;
 
+	/* Copy current image from image storage vector */
+	CMOTObject vecbyCurPict(vecRawImages[iCurImagePos]);
+
+	/* The standard version of QT does not have jpeg support, if FreeImage
+	   library is installed, the following routine converts the picture to
+	   png which can be displayed */
+	JpgToPng(vecbyCurPict);
+
 	/* Get picture size */
-	iPicSize = vecRawImages[iCurImagePos].vecbRawData.Size();
+	iPicSize = vecbyCurPict.vecbRawData.Size();
 
 	/* Load picture in QT format */
-	bPicLoadSuccess =
-		NewImage.loadFromData(&vecRawImages[iCurImagePos].vecbRawData[0],
-		iPicSize, QString(vecRawImages[iCurImagePos].strFormat.c_str()));
+	bPicLoadSuccess = NewImage.loadFromData(&vecbyCurPict.vecbRawData[0],
+		iPicSize, QString(vecbyCurPict.strFormat.c_str()));
 
 	if (bPicLoadSuccess == TRUE)
 	{
@@ -527,4 +534,100 @@ void MultimediaDlg::InitJournaline()
 	SetJournalineText();
 
 	NewIDHistory.Reset();
+}
+
+void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
+{
+#ifdef HAVE_LIBFREEIMAGE
+	/* This class is needed for FreeImage load and save from memory. This code
+	   is based on an example code shipped with FreeImage library */
+	class MemIO : public FreeImageIO
+	{
+	public :
+		/* Assign function pointers in constructor */
+		MemIO(CVector<_BYTE> vecNewData) : vecbyData(vecNewData), iPos(0)
+			{read_proc  = _ReadProc; write_proc = _WriteProc;
+			tell_proc = _TellProc; seek_proc = _SeekProc;}
+		CVector<_BYTE>& GetData() {return vecbyData;}
+		void Reset() {iPos = 0;}
+
+		static long DLL_CALLCONV _TellProc(fi_handle handle)
+			{return ((MemIO*) handle)->iPos;} /* Return current position */
+
+		static unsigned DLL_CALLCONV _ReadProc(void* buffer, unsigned size,
+			unsigned count, fi_handle handle)
+		{
+			MemIO* memIO = (MemIO*) handle;
+			_BYTE* tmpBuf = (_BYTE*) buffer;
+
+			/* Copy new data in internal storage vector. Write at current iPos
+			   and increment position. Check for out-of-range, too */
+			for (unsigned int c = 0; c < count; c++)
+				for (unsigned int i = 0; i < size; i++)
+					if (memIO->iPos < memIO->vecbyData.Size())
+						*tmpBuf++ = memIO->vecbyData[memIO->iPos++];
+
+			return count;
+		}
+
+		static unsigned DLL_CALLCONV _WriteProc(void* buffer, unsigned size,
+			unsigned count, fi_handle handle)
+		{
+			MemIO* memIO = (MemIO*) handle;
+			_BYTE* tmpBuf = (_BYTE*) buffer;
+
+			/* Make sure, enough space is available */
+			const long int iSpaceLeft =
+				memIO->vecbyData.Size() - (memIO->iPos + size * count);
+
+			if (iSpaceLeft < 0)
+				memIO->vecbyData.Enlarge(-iSpaceLeft);
+
+			/* Copy data */
+			for (unsigned int c = 0; c < count; c++)
+				for (unsigned int i = 0; i < size; i++)
+					memIO->vecbyData[memIO->iPos++] = *tmpBuf++;
+
+			return count;
+		}
+
+		static int DLL_CALLCONV _SeekProc(fi_handle handle, long offset,
+			int origin)
+		{
+			if (origin == SEEK_SET)
+				((MemIO*) handle)->iPos = offset; /* From beginning */
+			else
+				((MemIO*) handle)->iPos += offset; /* From current position */
+
+			return 0;
+		}
+
+	private:
+		CVector<_BYTE>	vecbyData;
+		long int		iPos;
+	};
+
+	/* Only jpeg images are converted here */
+	if (NewPic.strFormat.compare("jpeg") != 0)
+		return;
+
+	/* Put input data in a new IO object */
+	MemIO memIO(NewPic.vecbRawData);
+
+	/* Load data from memory */
+	FIBITMAP* fbmp =
+		FreeImage_LoadFromHandle(FIF_JPEG, &memIO, (fi_handle) &memIO);
+
+	/* After the reading functions, the IO must be resetted for the writing */
+	memIO.Reset();
+
+	/* Actual conversion */
+	FreeImage_SaveToHandle(FIF_PNG, fbmp, &memIO, (fi_handle) &memIO);
+
+	/* Get converted data and set new format string */
+	NewPic.vecbRawData.Init(memIO.GetData().Size()); /* Size has certainly
+														changed */
+	NewPic.vecbRawData = memIO.GetData(); /* Actual copying */
+	NewPic.strFormat = "png"; /* New format string */
+#endif
 }

@@ -50,6 +50,9 @@
 #include "MultColorLED.h"
 #include "../datadecoding/DABMOT.h"
 
+#ifdef HAVE_LIBFREEIMAGE
+# include <FreeImage.h>
+#endif
 
 extern CDRMReceiver	DRMReceiver;
 
@@ -127,6 +130,8 @@ protected:
 	void InitNotSupported();
 	void InitMOTSlideShow();
 	void InitJournaline();
+
+	void JpgToPng(CMOTObject& NewPic);
 
 public slots:
 	void OnTimer();
