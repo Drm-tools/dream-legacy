@@ -465,8 +465,8 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		iMaxLenResamplerOutput = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
 			(_REAL) 0.4 /* 400ms */ * 2 /* for stereo */);
 
-		iResOutBlockSize =
-			iLenDecOutPerChan * SOUNDCRD_SAMPLE_RATE / iAudioSampleRate;
+		iResOutBlockSize = (int) ((_REAL) iLenDecOutPerChan *
+			SOUNDCRD_SAMPLE_RATE / iAudioSampleRate);
 
 		/* Additional buffers needed for resampling since we need conversation
 		   between _REAL and _SAMPLE. We have to init the buffers with
@@ -479,9 +479,9 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 
 		/* Init resample objects */
 		ResampleObjL.Init(iLenDecOutPerChan,
-			SOUNDCRD_SAMPLE_RATE / iAudioSampleRate);
+			(_REAL) SOUNDCRD_SAMPLE_RATE / iAudioSampleRate);
 		ResampleObjR.Init(iLenDecOutPerChan,
-			SOUNDCRD_SAMPLE_RATE / iAudioSampleRate);
+			(_REAL) SOUNDCRD_SAMPLE_RATE / iAudioSampleRate);
 
 
 		/* AAC decoder ------------------------------------------------------ */

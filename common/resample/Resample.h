@@ -62,11 +62,11 @@ public:
 	CAudioResample() {}
 	virtual ~CAudioResample() {}
 
-	void Init(int iNewInputBlockSize, int iNewRation);
+	void Init(int iNewInputBlockSize, _REAL rNewRation);
 	void Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput);
 
 protected:
-	int						iRation;
+	_REAL					rRation;
 
 	CShiftRegister<_REAL>	vecrIntBuff;
 	int						iHistorySize;

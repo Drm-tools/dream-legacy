@@ -119,7 +119,7 @@ void CAudioResample::Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput)
 {
 	int j;
 
-	if (iRation == 1)
+	if (rRation == (_REAL) 1.0)
 	{
 		/* If ratio is 1, no resampling is needed, just copy vector */
 		for (j = 0; j < iOutputBlockSize; j++)
@@ -135,10 +135,11 @@ void CAudioResample::Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput)
 		for (j = 0; j < iOutputBlockSize; j++)
 		{
 			/* Phase for the linear interpolation-taps */
-			const int ip = (j * INTERP_DECIM_I_D / iRation) % INTERP_DECIM_I_D;
+			const int ip =
+				(int) (j * INTERP_DECIM_I_D / rRation) % INTERP_DECIM_I_D;
 
 			/* Sample position in input vector */
-			const int in = (int) (j / iRation) + NUM_TAPS_PER_PHASE;
+			const int in = (int) (j / rRation) + NUM_TAPS_PER_PHASE;
 
 			/* Convolution */
 			_REAL ry = (_REAL) 0.0;
@@ -150,11 +151,11 @@ void CAudioResample::Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput)
 	}
 }
 
-void CAudioResample::Init(int iNewInputBlockSize, int iNewRation)
+void CAudioResample::Init(int iNewInputBlockSize, _REAL rNewRation)
 {
-	iRation = iNewRation;
+	rRation = rNewRation;
 	iInputBlockSize = iNewInputBlockSize;
-	iOutputBlockSize = iInputBlockSize * iRation;
+	iOutputBlockSize = (int) (iInputBlockSize * rNewRation);
 
 	/* Allocate memory for internal buffer, clear sample history */
 	vecrIntBuff.Init(iInputBlockSize + NUM_TAPS_PER_PHASE, (_REAL) 0.0);
