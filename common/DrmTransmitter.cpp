@@ -82,14 +82,14 @@ void CDRMTransmitter::Run()
 
 	
 		/* Mapping of the MSC, FAC, SDC and pilots on the carriers ************/
-		OFDMCellMapping.ProcessData(TransmParam, IntlBuf,
-												 FACMapBuf,
-												 SDCMapBuf,
-												 CarMapBuf);
+		OFDMCellMapping.ProcessData(TransmParam, IntlBuf, FACMapBuf, SDCMapBuf,
+			CarMapBuf);
 	
+
 		/* OFDM-modulation ****************************************************/
 		OFDMModulation.ProcessData(TransmParam, CarMapBuf, OFDMModBuf);
 	
+
 		/* Transmit the signal ************************************************/
 		TransmitData.WriteData(TransmParam, OFDMModBuf);
 	}
