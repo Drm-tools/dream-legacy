@@ -67,11 +67,11 @@ void CMSCDemultiplexer::ProcessDataInternal(CParameter& ReceiverParam)
 #ifdef USE_QT_GUI
 	/* MDI ------------------------------------------------------------------ */
 	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
-	   in case of simulation because in this case there is not MDI) */
+	   in case of simulation because in this case there is no MDI) */
 	if (pMDI != NULL)
 	{
 		/* Only put data in MDI object if MDI is enabled */
-		if (pMDI->GetMDIEnabled() == TRUE)
+		if (pMDI->GetMDIOutEnabled() == TRUE)
 		{
 			/* Put all streams to MDI object */
 			for (int j = 0; j < veciMDIActStre.Size(); j++)
@@ -88,23 +88,36 @@ void CMSCDemultiplexer::ProcessDataInternal(CParameter& ReceiverParam)
 				pMDI->SetStreamData(veciMDIActStre[j], vecbiStrData);
 			}
 		}
+
+		if (pMDI->GetMDIInEnabled() == TRUE)
+		{
+			/* Get stream data from received MDI packets */
+			/* OutputData1 is audio */
+			pMDI->GetStreamData(*pvecOutputData, iOutputBlockSize,
+				iAudioStreamID);
+
+			/* OutputData2 is data */
+			pMDI->GetStreamData(*pvecOutputData2, iOutputBlockSize2,
+				iDataStreamID);
+		}
 	}
 #endif
 }
 
 void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 {
-	int	iCurDataStreamID;
-
 	/* Audio ---------------------------------------------------------------- */
+	/* Get audio stream ID of current selected audio service (might be an
+	   invalid stream) */
+	iAudioStreamID = ReceiverParam.
+		Service[ReceiverParam.GetCurSelAudioService()].AudioParam.iStreamID;
+
 	/* Check if current selected service is an audio service and get stream
 	   position */
 	if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
 		eAudDataFlag == CParameter::SF_AUDIO)
 	{
-		AudStreamPos = GetStreamPos(ReceiverParam,
-			ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
-			AudioParam.iStreamID);
+		AudStreamPos = GetStreamPos(ReceiverParam, iAudioStreamID);
 	}
 	else
 	{
@@ -124,13 +137,15 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 	/* If multimedia is not used, set stream ID to "not used" which leads to
 	   an output size of "0" -> no output data generated */
 	if (ReceiverParam.bUsingMultimedia)
-		iCurDataStreamID = ReceiverParam.
+	{
+		iDataStreamID = ReceiverParam.
 			Service[ReceiverParam.GetCurSelDataService()].DataParam.iStreamID;
+	}
 	else
-		iCurDataStreamID = STREAM_ID_NOT_USED;
+		iDataStreamID = STREAM_ID_NOT_USED;
 
 	/* Get stream position of current selected data service */
-	DataStreamPos = GetStreamPos(ReceiverParam, iCurDataStreamID);
+	DataStreamPos = GetStreamPos(ReceiverParam, iDataStreamID);
 
 	/* Set data output block size */
 	iOutputBlockSize2 = DataStreamPos.iLenHigh + DataStreamPos.iLenLow;

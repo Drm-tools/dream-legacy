@@ -99,7 +99,8 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 	/* Inser actual items. The list is not sorted -> items which are inserted
 	   first show up at the end of the list */
 	/* Spectrum */
-	new CCharSelItem(pSpectrumLiViIt, "Audio Spectrum", AUDIO_SPECTRUM);
+	CCharSelItem* pListItAudSpec = new CCharSelItem(pSpectrumLiViIt,
+		"Audio Spectrum", AUDIO_SPECTRUM);
 	new CCharSelItem(pSpectrumLiViIt, "Shifted PSD", POWER_SPEC_DENSITY);
 	new CCharSelItem(pSpectrumLiViIt, "Input PSD", INPUT_SIG_PSD);
 	CCharSelItem* pListItInpSpec = new CCharSelItem(pSpectrumLiViIt,
@@ -122,13 +123,39 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 	new CCharSelItem(pChannelLiViIt, "Transfer Function", TRANSFERFUNCTION);
 	new CCharSelItem(pChannelLiViIt, "Impulse Response", AVERAGED_IR);
 
+/* _WIN32 fix because in Visual c++ the GUI files are always compiled even
+   if USE_QT_GUI is set or not (problem with MDI in DRMReceiver) */
+#ifdef USE_QT_GUI
+	/* If MDI in is enabled, disable some of the controls and use different
+	   initialization for the chart and chart selector */
+	if (DRMReceiver.GetMDI()->GetMDIInEnabled() == TRUE)
+	{
+		ListViewCharSel->setEnabled(FALSE);
+		SliderNoOfIterations->setEnabled(FALSE);
 
-	/* Default chart (at startup) */
-    ListViewCharSel->setSelected(pListItInpSpec, TRUE);
-	ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-	SetupChart(INPUTSPECTRUM_NO_AV);
-	
-	
+		ButtonGroupChanEstFreqInt->setEnabled(FALSE);
+		ButtonGroupChanEstTimeInt->setEnabled(FALSE);
+		ButtonGroupTimeSyncTrack->setEnabled(FALSE);
+		CheckBoxFlipSpec->setEnabled(FALSE);
+		CheckBoxWriteLog->setEnabled(FALSE);
+		EdtFrequency->setEnabled(FALSE);
+		GroupBoxIFFilter->setEnabled(FALSE);
+
+		/* Only audio spectrum makes sence for MDI in */
+		ListViewCharSel->setSelected(pListItAudSpec, TRUE);
+		ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
+		SetupChart(AUDIO_SPECTRUM);
+	}
+	else
+	{
+		/* Default chart (at startup) */
+		ListViewCharSel->setSelected(pListItInpSpec, TRUE);
+		ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
+		SetupChart(INPUTSPECTRUM_NO_AV);
+	}
+#endif
+
+
 	/* Connect controls ----------------------------------------------------- */
 	connect(SliderNoOfIterations, SIGNAL(valueChanged(int)),
 		this, SLOT(OnSliderIterChange(int)));
@@ -192,9 +219,6 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 		TimerLogFileStart.start(DRMReceiver.GetParameters()->
 			ReceptLog.GetDelLogStart() * 1000 /* ms */, TRUE);
 	}
-
-	/* Update window */
-	OnTimerChart();
 }
 
 systemevalDlg::~systemevalDlg()
@@ -579,7 +603,8 @@ void systemevalDlg::OnTimer()
 
 #ifdef _DEBUG_
 	TextFreqOffset->setText("DC: " +
-		QString().setNum(DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 3) + " Hz ");
+		QString().setNum(DRMReceiver.GetParameters()->
+		GetDCFrequency(), 'f', 3) + " Hz ");
 
 	/* Metric values */
 	ValueFreqOffset->setText("Metrics [dB]: MSC: " +
@@ -593,6 +618,19 @@ void systemevalDlg::OnTimer()
 	/* DC frequency */
 	ValueFreqOffset->setText(QString().setNum(
 		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
+#endif
+
+/* _WIN32 fix because in Visual c++ the GUI files are always compiled even
+   if USE_QT_GUI is set or not (problem with MDI in DRMReceiver) */
+#ifdef USE_QT_GUI
+	/* If MDI in is enabled, do not show any synchronization parameter */
+	if (DRMReceiver.GetMDI()->GetMDIInEnabled() == TRUE)
+	{
+		ValueSNR->setText("<b>---</b>");
+		ValueWiener->setText("--- / ---");
+		ValueSampFreqOffset->setText("---");
+		ValueFreqOffset->setText("---");
+	}
 #endif
 
 
@@ -710,7 +748,7 @@ void systemevalDlg::OnTimer()
 			strMin = "0";
 		else
 			strMin = "";
-	
+
 		strMin += QString().setNum(iMin);
 
 		strFACInfo =

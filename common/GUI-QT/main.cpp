@@ -45,16 +45,20 @@
 /******************************************************************************\
 * Using GUI with QT                                                            *
 \******************************************************************************/
-/* The receiver, transmitter and simulation are global objects */
-CDRMReceiver	DRMReceiver; 
-CDRMSimulation	DRMSimulation;
+/* Application object must be initialized before the DRMReceiver object because
+   of the QT functions used in the MDI module. TODO: better solution */
+int argc = 0;
+QApplication app(argc, NULL);
+
+/* The receiver is a global object */
+CDRMReceiver	DRMReceiver;
 
 /* This pointer is only used for the post-event routine */
 QApplication*	pApp = NULL;
 
 
 /* Thread class for the receiver */
-class CReceiverThread : public QThread 
+class CReceiverThread : public QThread
 {
 public:
 	void Stop()
@@ -88,21 +92,20 @@ public:
 	}
 };
 
-
 int main(int argc, char** argv)
 {
 try
 {
+	CDRMSimulation DRMSimulation;
+
 	/* Parse arguments and load settings from init-file */
-	CSettings Settings;
+	CSettings Settings(&DRMReceiver);
 	const _BOOLEAN bIsReceiver = Settings.Load(argc, argv);
 
 	/* Call simulation script. If simulation is activated, application is 
 	   automatically exit in that routine. If in the script no simulation is
 	   activated, this function will immediately return */
 	DRMSimulation.SimScript();
-
-	QApplication app(argc, argv); /* Application object */
 
 	if (bIsReceiver == FALSE)
 	{
@@ -204,7 +207,7 @@ int main(int argc, char** argv)
 
 try
 {
-	CSettings Settings;
+	CSettings Settings(&DRMReceiver);
 	const _BOOLEAN bIsReceiver = Settings.Load(argc, argv);
 	DRMSimulation.SimScript();
 
@@ -238,6 +241,6 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 	fprintf(pFile, pchPar2Descr); fprintf(pFile, ": ");
 	fprintf(pFile, "%e\n", dPar2);
 	fclose(pFile);
-	printf("\nDebug error, exit! For more information see DebugError.dat\n");
+	printf("\nDebug error! For more information see test/DebugError.dat\n");
 	exit(1);
 }

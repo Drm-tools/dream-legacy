@@ -40,6 +40,7 @@
 #include <qfiledialog.h>
 #include <qwhatsthis.h>
 #include <qlistview.h>
+#include <qbuttongroup.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/systemevalDlgbase.h"

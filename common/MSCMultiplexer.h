@@ -69,6 +69,9 @@ protected:
 	CVector<int>		veciMDIActStre;
 #endif
 
+	int					iDataStreamID;
+	int					iAudioStreamID;
+
 	SStreamPos GetStreamPos(CParameter& Param, const int iStreamID);
 	void ExtractData(CVectorEx<_BINARY>& vecIn, CVectorEx<_BINARY>& vecOut,
 					 SStreamPos& StrPos);
