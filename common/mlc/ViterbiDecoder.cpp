@@ -164,6 +164,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 		iPuncPatShiftReg = iPuncPatShiftRegShifted;
 		iDistCntGlob = iDistCnt;
 
+
 		/* ------------------------------------------------------------------ */
 		/* Update trellis --------------------------------------------------- */
 		/* ------------------------------------------------------------------ */
