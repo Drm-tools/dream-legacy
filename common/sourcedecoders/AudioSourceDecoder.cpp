@@ -296,6 +296,9 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		eAudDataFlag == CParameter::SF_AUDIO) &&
 		(iCurAudioStreamID != STREAM_ID_NOT_USED))
 	{
+		/* Init "audio was ok" flag */
+		bAudioWasOK = TRUE;
+
 		/* Lengths of higher and lower protected part of audio stream */
 		iLenAudHigh = ReceiverParam.Stream[iCurAudioStreamID].iLenPartA;
 		iLenAudLow = ReceiverParam.Stream[iCurAudioStreamID].iLenPartB;
@@ -314,13 +317,19 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 			iNumHeaderBytes = 14;
 			iAACSampleRate = 24000;
 			break;
+
+		default:
+			/* Some error ocurred, set parameters to valid values and set error
+			   flag. TODO better solution, better error handling! */
+			iNumAACFrames = 10;
+			iNumHeaderBytes = 14;
+			iAACSampleRate = 24000;
+			DoNotProcessData = TRUE;
+			break;
 		}
 
 		/* Set number of AAC frames for log file */
 		ReceiverParam.ReceptLog.SetNumAAC(iNumAACFrames);
-
-		/* Init "audio was ok" flag */
-		bAudioWasOK = TRUE;
 
 		/* If text message application is used or not */
 		switch (ReceiverParam.Service[iCurSelServ].AudioParam.bTextflag)
