@@ -1,7 +1,7 @@
 
 About Translation:
 
-Translation, also called localization (or l10n for short), is a task that can be contributed by anyone. No programming skills are required. Any language that is not english (original messages) can be contributed.
+Translation, also called localization (or l10n for short), is a task that can be contributed by anyone. No programming skills are required. Any language that is not English (original messages) can be contributed.
 
 Localization software helps translate the strings that appear inside the application, including menus, buttons, and dialog boxes. All of the user visible strings are extracted from the Dream source code and placed into a "source message file" file called dreamtr.ts. The localization software allows you to translate the strings in this file.
 
@@ -12,14 +12,14 @@ Before starting a new translation, ask first on the Sourceforge Dream forum if s
 
 First, you will need to download latest Dream CVS or upcoming version 1.2.
 
-In the following sections, the XX code refers to the code for your language (da=danish, de=german, en=english, es=spanish, fi=finnish, fr=french, it=italian, nl=dutch, no=norwegian, ru=russian, sv=swedish, ..). 
+In the following sections, the XX code refers to the code for your language (da=Danish, de=German, en=English, es=Spanish, fi=Finnish, fr=French, it=Italian, nl=Dutch, no=Norwegian, ru=Russian, sv=Swedish, ..). 
 
 Under Linux/Uni*x:
-All the TS files are under common/GUI-QT/languages/drm.XX.ts (in CVS repository). In linux/ subdir, run "make languages/drm.XX.ts" to either create or update/merge the TS file. Edit the linux/languages/drm.XX.ts file and to test it, run "make languages/drm.XX.qm" to create the QM release file. Copy that QM file as dreamtr.qm and restart Dream program to use it. When your are satisfied with the translation, then the TS file has to be copied back into common/GUI-QT/languages and use "cvs diff -u" or alike for patch submitting.
+All the TS files are under common/GUI-QT/languages/dreamtr.XX.ts (in CVS repository). In linux/ subdir, run "make languages/dreamtr.XX.ts" to either create or update/merge the TS file. Edit the linux/languages/dreamtr.XX.ts file and to test it, run "make languages/dreamtr.XX.qm" to create the QM release file. Copy that QM file as dreamtr.qm and restart Dream program to use it. When your are satisfied with the translation, then the TS file has to be copied back into common/GUI-QT/languages and use "cvs diff -u" or alike for patch submitting.
 
 
 Under Windows:
-To start a new translation, download the latest file of the language drm/common/GUI-QT/languages/drm.XX.ts. If this is a translation for a new language, download the file drm/linux/dreamtr.ts instead. Rename it dreamtr.XX.ts when you begin translating, where XX is the code explained above. 
+To start a new translation, download the latest file of the language drm/common/GUI-QT/languages/dreamtr.XX.ts. If this is a translation for a new language, download the file drm/linux/dreamtr.ts instead. Rename it dreamtr.XX.ts when you begin translating, where XX is the code explained above. 
 
 When you have begun translating the source message file (a TS file), use your translation program to compile a light-weight binary message file (a QM file) from the TS file, suitable only for end use. This will produce a file called dreamtr.XX.qm. 
 
@@ -27,7 +27,7 @@ When you have begun translating the source message file (a TS file), use your tr
 Providing translations (Linux/Windows):
 Provide translations for the source texts in the TS file. 
 
-The source message file (TS file) is a XML format file. Even though it can be edited by regular text editor, it is recommanded to use a specialized tool for ease of use and better support of Unicode charset.
+The source message file (TS file) is a XML format file. Even though it can be edited by regular text editor, it is recommended to use a specialized tool for ease of use and better support of Unicode charset.
 
 There's a nice Qt GUI named 'linguist'[1] to edit translations. Debian users may simply "apt-get install qt3-linguist". Linguist comes with Qt Phrase Books (QTH files) with translations from common words of many languages. According to Trolltech site[2], it works for Qt2/Windows. I'm curious also if it would handle japanese translation or any non-latin based languages. Anyone from the country of the rising sun?
 KBabel[3], has support for Qt files too.
@@ -51,7 +51,7 @@ Notes:
 User Point of view:
 
 Download the QM file for the language of your choice. You may also re-generate it from a TS file.
-In the same folder as the Dream executable, rename your dreamtr.XX.qm file to dreamtr.qm. Restart the Dream program. If dreamtr.qm exists it is loaded, otherwise the internal text (english) is used.
+In the same folder as the Dream executable, rename your dreamtr.XX.qm file to dreamtr.qm. Restart the Dream program. If dreamtr.qm exists it is loaded, otherwise the internal text (English) is used.
 
 
 
@@ -63,7 +63,7 @@ The translated text is "plugged" (at runtime) into the code by the tr() function
 
 Run "make -C linux/ dreamtr.ts" to extract translatable text from the C++ source code of the Qt application, resulting in a source message file (a TS file).
 
-A Qt tool "lupdate" automatically scans the .cpp/.h/.ui files and extract the string litterals within the tr() argument.
+A Qt tool "lupdate" automatically scans the .cpp/.h/.ui files and extract the string literals within the tr() argument.
 
 
 ---
