@@ -38,56 +38,9 @@ CDRMSchedule::CDRMSchedule()
 	ReadStatTabFromFile("DRMSchedule.ini");
 }
 
-void CDRMSchedule::WriteStatTabToFile(const string strFileName)
-{
-	/* Load table from file */
-	FILE* pFile = fopen(strFileName.c_str(), "w");
-
-	/* Check if opening of file was successful */
-	if (pFile == 0)
-		return;
-
-	fprintf(pFile, "[DRMSchedule]\n");
-	for (int i = 0; i < StationsTable.Size(); i++)
-	{
-		/* Start stop time */
-		fprintf(pFile, "StartStopTimeUTC=%04d-%04d\n",
-			StationsTable[i].GetStartTimeNum(),
-			StationsTable[i].GetStopTimeNum());
-
-		/* Days */
-		fprintf(pFile, "Days[SMTWTFS]=%d\n", StationsTable[i].iDays);
-
-		/* Frequency */
-		fprintf(pFile, "Frequency=%d\n", StationsTable[i].iFreq);
-
-		/* Target */
-		fprintf(pFile, "Target=%s\n", StationsTable[i].strTarget.c_str());
-
-		/* Power */
-		if (StationsTable[i].rPower == 0)
-			fprintf(pFile, "Power=?\n");
-		else
-			fprintf(pFile, "Power=%.3f\n", StationsTable[i].rPower);
-
-		/* Name of the station */
-		fprintf(pFile, "Programme=%s\n", StationsTable[i].strName.c_str());
-
-		/* Language */
-		fprintf(pFile, "Language=%s\n", StationsTable[i].strLanguage.c_str());
-
-		/* Site */
-		fprintf(pFile, "Site=%s\n", StationsTable[i].strSite.c_str());
-
-		/* Country */
-		fprintf(pFile, "Country=%s\n\n", StationsTable[i].strCountry.c_str());
-	}
-	fclose(pFile);
-}
-
 void CDRMSchedule::ReadStatTabFromFile(const string strFileName)
 {
-	const int	iMaxLenName = 255;
+	const int	iMaxLenName = 256;
 	char		cName[iMaxLenName];
 	int			iFileStat;
 	_BOOLEAN	bReadOK = TRUE;
@@ -359,6 +312,12 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	CStationsDlgBaseLayout->setMenuBar(pMenu);
 
 
+	/* Register the network protokol (ftp). This is needed for the DRMSchedule
+	   download */
+	QNetworkProtocol::registerNetworkProtocol("ftp", new
+		QNetworkProtocolFactory<QFtp>);
+
+
 	/* Connections ---------------------------------------------------------- */
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
@@ -410,10 +369,6 @@ void StationsDlg::OnGetUpdate()
 		"continue?",
 		QMessageBox::Yes, QMessageBox::No) == 3 /* Yes */)
 	{
-		/* First, the network protokol (ftp) must be registered */
-		QNetworkProtocol::registerNetworkProtocol("ftp", new
-			QNetworkProtocolFactory<QFtp>);
-
 		/* Try to download the current schedule. Copy the file to the
 		   current working directory (which is "QDir().absFilePath(NULL)") */
 		UrlUpdateSchedule.copy(QString(DRM_SCHEDULE_UPDATE_FILE),
@@ -423,34 +378,38 @@ void StationsDlg::OnGetUpdate()
 
 void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 {
-	if (pNetwOp->state() == QNetworkProtocol::StFailed)
+	/* Check that pointer points to valid object */
+	if (pNetwOp)
 	{
-		/* Something went wrong -> stop all network operations */
-		UrlUpdateSchedule.stop();
-
-		/* Notify the user of the failure */
-		QMessageBox::information(this, "Dream",
-			"Update failed. The following things may caused the failure:\n"
-			"\t- the internet connection was not set up properly\n"
-			"\t- the server www.drm-dx.de is currently not available\n"
-			"\t- the file 'DRMSchedule.ini' could not be written",
-			QMessageBox::Ok);
-	}
-
-	/* We are interested in the state of the final put function */
-	if (pNetwOp->operation() == QNetworkProtocol::OpPut)
-	{
-		if (pNetwOp->state() == QNetworkProtocol::StDone)
+		if (pNetwOp->state() == QNetworkProtocol::StFailed)
 		{
-			/* Notify the user that update was successful */
-			QMessageBox::information(this, "Dream", "Update successful.",
+			/* Something went wrong -> stop all network operations */
+			UrlUpdateSchedule.stop();
+
+			/* Notify the user of the failure */
+			QMessageBox::information(this, "Dream",
+				"Update failed. The following things may caused the failure:\n"
+				"\t- the internet connection was not set up properly\n"
+				"\t- the server www.drm-dx.de is currently not available\n"
+				"\t- the file 'DRMSchedule.ini' could not be written",
 				QMessageBox::Ok);
+		}
 
-			/* Read updated ini-file */
-			DRMSchedule.ReadStatTabFromFile("DRMSchedule.ini");
+		/* We are interested in the state of the final put function */
+		if (pNetwOp->operation() == QNetworkProtocol::OpPut)
+		{
+			if (pNetwOp->state() == QNetworkProtocol::StDone)
+			{
+				/* Notify the user that update was successful */
+				QMessageBox::information(this, "Dream", "Update successful.",
+					QMessageBox::Ok);
 
-			/* Update list view */
-			SetStationsView();
+				/* Read updated ini-file */
+				DRMSchedule.ReadStatTabFromFile("DRMSchedule.ini");
+
+				/* Update list view */
+				SetStationsView();
+			}
 		}
 	}
 }
@@ -497,7 +456,7 @@ void StationsDlg::SetStationsView()
 
 	/* Make sure that the selected item is still selected. Identify selected
 	   item by frequency, time and name */
-	if (ListViewStations->selectedItem() != 0)
+	if (ListViewStations->selectedItem())
 	{
 		strSelTabItemName = ListViewStations->selectedItem()->text(0);
 		strSelTabItemTime = ListViewStations->selectedItem()->text(1);
@@ -563,7 +522,7 @@ void StationsDlg::SetStationsView()
 	QListViewItem* pCurItem = ListViewStations->firstChild();
 
 	/* Check all items */
-	while (pCurItem != 0)
+	while (pCurItem)
 	{
 		if ((pCurItem->text(0) == strSelTabItemName) &&
 			(pCurItem->text(1) == strSelTabItemTime) &&
@@ -591,20 +550,20 @@ void StationsDlg::OnFreqCntNewValue(double dVal)
 
 void StationsDlg::OnListItemClicked(QListViewItem* item)
 {
-	/* If no item is selected, return */
-	if (item == 0)
-		return;
+	/* Check that it is a valid item (!= 0) */
+	if (item)
+	{
+		/* Third text of list view item is frequency -> text(2)
+		   Set value in frequency counter control QWT. Setting this parameter
+		   will emit a "value changed" signal which sets the new frequency.
+		   Therefore, here is no call to "SetFrequency()" needed. Also, the
+		   frequency is set in the log file, therefore here is no
+		   "ReceptLog.SetFrequency()" needed, too */
+		QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
 
-	/* Third text of list view item is frequency -> text(2)
-	   Set value in frequency counter control QWT. Setting this parameter will
-	   emit a "value changed" signal which sets the new frequency. Therefore,
-	   here is no call to "SetFrequency()" needed. Also, the frequency is set
-	   in the log file, therefore here is no "ReceptLog.SetFrequency()" needed,
-	   too */
-	QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
-
-	/* Now tell the receiver that the frequency has changed */
-	DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
+		/* Now tell the receiver that the frequency has changed */
+		DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
+	}
 }
 
 void StationsDlg::OnRemoteMenu(int iID)

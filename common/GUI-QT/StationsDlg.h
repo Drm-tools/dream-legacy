@@ -112,7 +112,6 @@ public:
 	virtual ~CDRMSchedule() {}
 
 	void ReadStatTabFromFile(const string strFileName);
-	void WriteStatTabToFile(const string strFileName);
 
 	int GetStationNumber() {return StationsTable.Size();}
 	CStationsItem& GetItem(int const iPos) {return StationsTable[iPos];}
