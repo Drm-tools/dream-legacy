@@ -108,9 +108,6 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 		}
 	}
 
-	/* Copy data in buffer for spectrum calculation */
-	vecrInpData.AddEnd((*pvecOutputData), iOutputBlockSize);
-
 
 	/* Flip spectrum if necessary ------------------------------------------- */
 	if (bFippedSpectrum == TRUE)
@@ -131,6 +128,10 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 				bFlagInv = FALSE;
 		}
 	}
+
+
+	/* Copy data in buffer for spectrum calculation ------------------------- */
+	vecrInpData.AddEnd((*pvecOutputData), iOutputBlockSize);
 
 
 	/* Update level meter --------------------------------------------------- */
