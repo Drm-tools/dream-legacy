@@ -64,6 +64,9 @@ using namespace std; /* Because of the library: "complex" */
 
 # define HAVE_JOURNALINE
 //# undef HAVE_JOURNALINE
+
+# define HAVE_LIBFREEIMAGE
+//# undef HAVE_LIBFREEIMAGE
 #endif
 
 
