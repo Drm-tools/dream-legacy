@@ -40,18 +40,25 @@ void CDABDataEnc::GenMOTSegments(CMOTObjSegm& MOTObjSegm)
 	/* Body ----------------------------------------------------------------- */
 	/* Open file */
 // TEST
+string strFileName = "test/Pic.jpg";
+
+/*
 static _BOOLEAN bWhichFile = FALSE;
-FILE* pFiBody;
 if (bWhichFile == TRUE)
 {
-	pFiBody = fopen("test/Pic1.png", "rb"); // TEST
+	strFileName = "test/Pic1.png";
 	bWhichFile = FALSE;
 }
 else
 {
-	pFiBody = fopen("test/Pic2.png", "rb"); // TEST
+	strFileName = "test/Pic2.png";
 	bWhichFile = TRUE;
 }
+*/
+
+FILE* pFiBody = fopen(strFileName.c_str(), "rb"); // TEST
+
+
 
 	int iPicSize = 0;
 
@@ -106,7 +113,13 @@ const int iHeaderSize = 7 + 5 /* TriggerTime */ + 8 /* ContentName */ + 2 /* Ver
 	/* ContentSubType: This 9-bit field indicates the exact type of the body's
 	   content depending on the value of the field ContentType */
 /* Only ContentSubType "JFIF" (JPEG) and ContentSubType "PNG" are allowed for SlideShow application */
-const int iContentSubType = 3; /* png TEST */
+int iContentSubType;
+
+if (strFileName.compare(strFileName.size() - 3, 3, "png") == 0)
+	iContentSubType = 3; /* png */
+else
+	iContentSubType = 1; /* jfif */
+
 
 	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) iContentSubType, 9);
 
@@ -189,9 +202,19 @@ MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) (1 /* header */ + 5 /* actual da
 // TEST
 MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('d'), 8);
 MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('.'), 8);
-MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('p'), 8);
-MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('n'), 8);
-MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('g'), 8);
+
+if (strFileName.compare(strFileName.size() - 3, 3, "png") == 0)
+{
+	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('p'), 8);
+	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('n'), 8);
+	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('g'), 8);
+}
+else
+{
+	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('j'), 8);
+	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('p'), 8);
+	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('g'), 8);
+}
 
 
 	/* Generate segments ---------------------------------------------------- */
@@ -476,17 +499,22 @@ void CDABDataEnc::GetDataUnit(CVector<_BINARY>& vecbiNewData)
 	}
 	else
 	{
-		/* Check if this is last segment */
-		if (iSegmCnt == MOTObjSegments.vvbiBody.Size() - 1)
-			bLastSegment = TRUE;
-		else
-			bLastSegment = FALSE;
+		/* Check that body size is not zero */
+		if (iSegmCnt < MOTObjSegments.vvbiBody.Size())
+		{
+			/* Check if this is last segment */
+			if (iSegmCnt == MOTObjSegments.vvbiBody.Size() - 1)
+				bLastSegment = TRUE;
+			else
+				bLastSegment = FALSE;
 
-		/* Generate MOT object for Body */
-		GenMOTObj(vecbiNewData, MOTObjSegments.vvbiBody[iSegmCnt], FALSE,
-			iSegmCnt, iTransportID, bLastSegment);
+			/* Generate MOT object for Body */
+			GenMOTObj(vecbiNewData, MOTObjSegments.vvbiBody[iSegmCnt], FALSE,
+				iSegmCnt, iTransportID, bLastSegment);
 
-		iSegmCnt++;
+			iSegmCnt++;
+		}
+
 		if (iSegmCnt == MOTObjSegments.vvbiBody.Size())
 		{
 			/* Reset counter */
