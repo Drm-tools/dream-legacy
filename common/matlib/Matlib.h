@@ -40,8 +40,9 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 
 
 /* These definitions save a lot of redundant code */
-#define _VECOP(TYPE, LENGTH, FCT)	CMatlibVector<TYPE> vecRet(LENGTH, VTY_TEMP); \
-									for (int i = 0; i < LENGTH; i++) \
+#define _VECOP(TYPE, LENGTH, FCT)	const int iL = LENGTH; \
+									CMatlibVector<TYPE> vecRet(iL, VTY_TEMP); \
+									for (int i = 0; i < iL; i++) \
 										vecRet[i] = FCT; \
 									return vecRet
 
@@ -49,9 +50,10 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 										operator[](i) FCT; \
 									return *this
 
-#define _MATOPC(TYPE, LENGTHROW, LENGTHCOL, FCT) \
-									CMatlibMatrix<TYPE> matRet(LENGTHROW, LENGTHCOL, VTY_TEMP); \
-									for (int i = 0; i < LENGTHROW; i++) \
+#define _MATOP(TYPE, LENGTHROW, LENGTHCOL, FCT) \
+									const int iRL = LENGTHROW; \
+									CMatlibMatrix<TYPE> matRet(iRL, LENGTHCOL, VTY_TEMP); \
+									for (int i = 0; i < iRL; i++) \
 										matRet[i] = FCT; \
 									return matRet
 
@@ -411,10 +413,11 @@ template<class T> inline
 CMatlibVector<T> CMatlibVector<T>::operator()(const int iFrom,
 											  const int iTo) const
 {
+	const int iStartVal = iFrom - 1;
 	CMatlibVector<T> vecRet(iTo - iFrom + 1, VTY_TEMP);
 
-	for (int i = iFrom - 1; i < iTo; i++)
-		vecRet[i - iFrom + 1] = operator[](i);
+	for (int i = iStartVal; i < iTo; i++)
+		vecRet[i - iStartVal] = operator[](i);
 
 	return vecRet;
 }
@@ -424,13 +427,14 @@ CMatlibVector<T> CMatlibVector<T>::operator()(const int iFrom,
 											  const int iStep,
 											  const int iTo) const
 {
-	int iOutPos = 0;
-
 	CMatlibVector<T> vecRet(abs(iTo - iFrom) / abs(iStep) + 1, VTY_TEMP);
+	int iOutPos = 0;
+	int i;
 
 	if (iFrom > iTo)
 	{
-		for (int i = iFrom - 1; i > iTo - 2; i += iStep)
+		const int iEnd = iTo - 2;
+		for (i = iFrom - 1; i > iEnd; i += iStep)
 		{
 			vecRet[iOutPos] = operator[](i);
 			iOutPos++;
@@ -438,7 +442,7 @@ CMatlibVector<T> CMatlibVector<T>::operator()(const int iFrom,
 	}
 	else
 	{
-		for (int i = iFrom - 1; i < iTo; i += iStep)
+		for (i = iFrom - 1; i < iTo; i += iStep)
 		{
 			vecRet[iOutPos] = operator[](i);
 			iOutPos++;
@@ -453,8 +457,11 @@ CMatlibVector<T>& CMatlibVector<T>::PutIn(const int iFrom,
 										  const int iTo,
 										  CMatlibVector<T>& vecI)
 {
-	for (int i = 0; i < (iTo - iFrom + 1); i++)
-		operator[](i + iFrom - 1) = vecI[i];
+	const int iStart = iFrom - 1;
+	const int iEnd = iTo - iStart;
+
+	for (int i = 0; i < iEnd; i++)
+		operator[](i + iStart) = vecI[i];
 
 	return *this;
 }
@@ -462,10 +469,12 @@ CMatlibVector<T>& CMatlibVector<T>::PutIn(const int iFrom,
 template<class T> inline
 CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA, T& tB)
 {
-	for (int i = 0; i < vecA.GetSize(); i++)
+	const int iSizeA = vecA.GetSize();
+
+	for (int i = 0; i < iSizeA; i++)
 		operator[](i) = vecA[i];
 	
-	operator[](vecA.GetSize()) = tB;
+	operator[](iSizeA) = tB;
 
 	return *this;
 }
@@ -476,6 +485,7 @@ CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA,
 {
 	int i;
 	const int iSizeA = vecA.GetSize();
+	const int iSizeB = vecB.GetSize();
 
 	/* Put first vector */
 	for (i = 0; i < iSizeA; i++)
@@ -483,7 +493,7 @@ CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA,
 	
 	/* Put second vector behind the first one, both
 	   together must have length of *this */
-	for (i = 0; i < vecB.GetSize(); i++)
+	for (i = 0; i < iSizeB; i++)
 		operator[](i + iSizeA) = vecB[i];
 
 	return *this;
@@ -497,6 +507,8 @@ CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA,
 	int i;
 	const int iSizeA = vecA.GetSize();
 	const int iSizeB = vecB.GetSize();
+	const int iSizeC = vecC.GetSize();
+	const int iSizeAB = iSizeA + iSizeB;
 
 	/* Put first vector */
 	for (i = 0; i < iSizeA; i++)
@@ -507,8 +519,8 @@ CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA,
 		operator[](i + iSizeA) = vecB[i];
 
 	/* Put third vector behind previous put vectors */
-	for (i = 0; i < vecC.GetSize(); i++)
-		operator[](i + iSizeA + iSizeB) = vecC[i];
+	for (i = 0; i < iSizeC; i++)
+		operator[](i + iSizeAB) = vecC[i];
 
 	return *this;
 }
@@ -588,10 +600,12 @@ protected:
 inline CMatlibMatrix<CComplex> // cm, cm
 operator+(const CMatlibMatrix<CComplex>& cmA, const CMatlibMatrix<CComplex>& cmB)
 {
-	CMatlibMatrix<CComplex> matRet(cmA.GetRowSize(), cmA.GetColSize(), VTY_TEMP);
+	const int iRowSizeA = cmA.GetRowSize();
+	const int iColSizeA = cmA.GetColSize();
+	CMatlibMatrix<CComplex> matRet(iRowSizeA, iColSizeA, VTY_TEMP);
 
-	for (int j = 0; j < cmA.GetRowSize(); j++)
-		for (int i = 0; i < cmA.GetColSize(); i++)
+	for (int j = 0; j < iRowSizeA; j++)
+		for (int i = 0; i < iColSizeA; i++)
 			matRet[j][i] = cmA[j][i] + cmB[j][i];
 
 	return matRet;
@@ -601,13 +615,15 @@ operator+(const CMatlibMatrix<CComplex>& cmA, const CMatlibMatrix<CComplex>& cmB
 inline CMatlibVector<CComplex> // cm, cv
 operator*(const CMatlibMatrix<CComplex>& cmA, const CMatlibVector<CComplex>& cvB)
 {
-	CMatlibVector<CComplex> vecRet(cvB.GetSize(), VTY_TEMP);
+	const int iRowSizeA = cmA.GetRowSize();
+	const int iSizeB = cvB.GetSize();
+	CMatlibVector<CComplex> vecRet(iSizeB, VTY_TEMP);
 
-	for (int j = 0; j < cmA.GetRowSize(); j++)
+	for (int j = 0; j < iRowSizeA; j++)
 	{
 		vecRet[j] = (CReal) 0.0;
 
-		for (int i = 0; i < cvB.GetSize(); i++)
+		for (int i = 0; i < iSizeB; i++)
 			vecRet[j] += cmA[j][i] * cvB[i];
 	}
 
@@ -618,15 +634,18 @@ operator*(const CMatlibMatrix<CComplex>& cmA, const CMatlibVector<CComplex>& cvB
 inline CMatlibMatrix<CComplex> // cm, cm
 operator*(const CMatlibMatrix<CComplex>& cmA, const CMatlibMatrix<CComplex>& cmB)
 {
-	CMatlibMatrix<CComplex> matRet(cmA.GetRowSize(), cmB.GetColSize(), VTY_TEMP);
+	const int iRowSizeA = cmA.GetRowSize();
+	const int iRowSizeB = cmB.GetRowSize();
+	const int iColSizeB = cmB.GetColSize();
+	CMatlibMatrix<CComplex> matRet(iRowSizeA, iColSizeB, VTY_TEMP);
 
-	for (int k = 0; k < cmB.GetColSize(); k++)
+	for (int k = 0; k < iColSizeB; k++)
 	{
-		for (int j = 0; j < cmA.GetRowSize(); j++)
+		for (int j = 0; j < iRowSizeA; j++)
 		{
 			matRet[j][k] = (CReal) 0.0;
 
-			for (int i = 0; i < cmB.GetRowSize(); i++)
+			for (int i = 0; i < iRowSizeB; i++)
 				matRet[j][k] += cmA[j][i] * cmB[i][k];
 		}
 	}
@@ -684,19 +703,24 @@ void CMatlibMatrix<T>::Init(const int iNRowLen, const int iNColLen, const T tIni
 
 	/* Set all values to the init value */
 	for (int i = 0; i < iNRowLen; i++)
-		for (int j = 0; j < ppData[i].GetSize(); j++)
+	{
+		const int iSize = ppData[i].GetSize();
+		for (int j = 0; j < iSize; j++)
 			ppData[i][j] = tIniVal;
+	}
 }
 
 template<class T> inline
 CMatlibMatrix<T> CMatlibMatrix<T>::operator()(const int iRowFrom, const int iRowTo,
 											  const int iColFrom, const int iColTo) const
 {
-	CMatlibMatrix<T> matRet(iRowTo - iRowFrom + 1, iColTo - iColFrom + 1, VTY_TEMP);
+	const int iStartRow = iRowFrom - 1;
+	const int iStartCol = iColFrom - 1;
+	CMatlibMatrix<T> matRet(iRowTo - iStartRow, iColTo - iStartCol, VTY_TEMP);
 
-	for (int j = iRowFrom - 1; j < iRowTo; j++)
-		for (int i = iColFrom - 1; i < iColTo; i++)
-			matRet[j - iRowFrom + 1][i - iColFrom + 1] = operator[](j)[i];
+	for (int j = iStartRow; j < iRowTo; j++)
+		for (int i = iStartCol; i < iColTo; i++)
+			matRet[j - iStartRow][i - iStartCol] = operator[](j)[i];
 
 	return matRet;
 }
