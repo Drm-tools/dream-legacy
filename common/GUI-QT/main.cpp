@@ -58,8 +58,21 @@ public:
 		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
 #endif
 
+try
+{
 		/* Call receiver main routine */
 		DRMReceiver.Start();
+}
+
+catch (CGenErr GenErr)
+{
+	ErrorMessage(GenErr.strError);
+}
+
+catch (...)
+{
+	ErrorMessage("Unknown error.");
+}
 	}
 };
 
