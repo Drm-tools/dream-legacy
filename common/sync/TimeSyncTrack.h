@@ -55,12 +55,13 @@
 /* Time constant for IIR averaging of PDS estimation */
 #define TICONST_PDS_EST_TISYNC				((CReal) 0.25) /* sec */
 
-/* Relative energy of estimated PDS we want to have in our window design for
-   Wiener filter in frequency direction. The norm is the total energy of
-   estimated PDS. We define different values for the different robustness
-   modes */
-#define ENERGY_WIN_WIENER_FREQ_RMBCD		((CReal) 0.997)
-#define ENERGY_WIN_WIENER_FREQ_RMA			((CReal) 0.99)
+/* Minimum statistic used for estimation of the noise variance where the samples
+   with the lowest energy are taken as an estimate for the noise. Since the
+   actual energy is most certainly higher than the minimum, we need to
+   overestimate the result. Specify the number of samples for minimum search
+   and the overestimation factor */
+#define NUM_SAM_IR_FOR_MIN_STAT				10
+#define OVER_EST_FACT_MIN_STAT				((CReal) 4.0)
 
 /* Parameter of controlling the closed loop for sample rate offset */
 #define CONTR_SAMP_OFF_INT_FTI				((_REAL) 0.001)
@@ -135,7 +136,6 @@ protected:
 
 	CReal					rEstPDSEnd; /* Estimated end of PSD */
 	CReal					rEstPDSBegin; /* Estimated beginning of PSD */
-	CReal					rRelEnergyWinLenPDS;
 
 	CReal					rFracPartContr;
 

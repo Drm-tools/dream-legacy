@@ -327,8 +327,24 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 
 
 	/* Delay spread length estimation --------------------------------------- */
-	/* Total energy of estimated impulse response */
-	const CReal rEnergyBound = Sum(vecrAvPoDeSpRot) * rRelEnergyWinLenPDS;
+	/* Estimate the noise energy using the minimum statistic. We assume that
+	   the noise variance is equal on all samples of the impulse response.
+	   Therefore we subtract the variance on each sample. The total estimated
+	   signal energy is the total energy minus the noise energy */
+	/* Calculate total energy */
+	const CReal rTotEgy = Sum(vecrAvPoDeSpRot);
+
+	/* Sort the values of the PDS to get the smallest values */
+	CRealVector rSortAvPoDeSpRot(Sort(vecrAvPoDeSpRot));
+
+	/* Average the result of smallest values and overestimate result */
+	const CReal rSigmaNoise =
+		Sum(rSortAvPoDeSpRot(1, NUM_SAM_IR_FOR_MIN_STAT - 1)) /
+		NUM_SAM_IR_FOR_MIN_STAT * OVER_EST_FACT_MIN_STAT;
+
+	/* Calculate signal energy by subtracting the noise energy from total
+	   energy */
+	const CReal rSigEnergyBound = rTotEgy - rSigmaNoise * iNumIntpFreqPil;
 
 	/* From left to the right -> search for end of PDS */
 	rEstPDSEnd = (CReal) (iNumIntpFreqPil - 1);
@@ -338,7 +354,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	{
 		if (bPDSResultFound == FALSE)
 		{
-			if (rCurEnergy >= rEnergyBound)
+			if (rCurEnergy > rSigEnergyBound)
 			{
 				/* Delay index */
 				rEstPDSEnd = (CReal) i;
@@ -346,7 +362,8 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 				bPDSResultFound = TRUE;
 			}
 
-			rCurEnergy += vecrAvPoDeSpRot[i];
+			/* Accumulate signal energy, subtract noise on each sample */
+			rCurEnergy += vecrAvPoDeSpRot[i] - rSigmaNoise;
 		}
 	}
 
@@ -358,7 +375,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	{
 		if (bPDSResultFound == FALSE)
 		{
-			if (rCurEnergy > rEnergyBound)
+			if (rCurEnergy > rSigEnergyBound)
 			{
 				/* Delay index */
 				rEstPDSBegin = (CReal) i;
@@ -366,7 +383,8 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 				bPDSResultFound = TRUE;
 			}
 
-			rCurEnergy += vecrAvPoDeSpRot[i];
+			/* Accumulate signal energy, subtract noise on each sample */
+			rCurEnergy += vecrAvPoDeSpRot[i] - rSigmaNoise;
 		}
 	}
 
@@ -453,12 +471,6 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	   interval respectively */
 	rEstPDSBegin = (CReal) 0.0;
 	rEstPDSEnd = rGuardSizeFFT;
-
-	/* Init relative energy in a window for PDS length estimation */
-	if (Parameter.GetWaveMode() == RM_ROBUSTNESS_MODE_A)
-		rRelEnergyWinLenPDS = ENERGY_WIN_WIENER_FREQ_RMA;
-	else
-		rRelEnergyWinLenPDS = ENERGY_WIN_WIENER_FREQ_RMBCD;
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iNumIntpFreqPil);
