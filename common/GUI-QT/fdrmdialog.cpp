@@ -67,7 +67,8 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"<ul>"
 		"<li><b>FFTW</b> <i>http://www.fftw.org</i></li>"
 #ifdef USE_FAAD2_LIBRARY
-		"<li><b>FAAD2</b> <i>http://faac.sourceforge.net</i></li>"
+		"<li><b>FAAD2</b> <i>FAAD2 DRM decoder (c) Ahead Software, www.nero.com "
+		"(http://faac.sf.net)</i></li>"
 #endif
 #ifdef USE_FAAC_LIBRARY
 		"<li><b>FAAC</b> <i>http://faac.sourceforge.net</i></li>"
