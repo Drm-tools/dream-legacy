@@ -190,6 +190,10 @@ void CSettings::ReadIniFile()
 
 	/* Hamlib configuration string */
 	DRMReceiver.SetHamlibConf(GetIniSetting(ini, "Hamlib", "hamlib-config"));
+
+	/* Enable s-meter flag */
+	if (GetFlagIniSet(ini, "Hamlib", "ensmeter", bValue) == TRUE)
+		DRMReceiver.SetEnableSMeter(bValue);
 #endif
 }
 
@@ -300,6 +304,9 @@ void CSettings::WriteIniFile()
 
 	/* Hamlib configuration string */
 	PutIniSetting(ini, "Hamlib", "hamlib-config", DRMReceiver.GetHamlibConf().c_str());
+
+	/* Enable s-meter flag */
+	SetFlagIniSet(ini, "Hamlib", "ensmeter", DRMReceiver.GetEnableSMeter());
 #endif
 
 
@@ -553,6 +560,14 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			DRMReceiver.SetHamlibModel((int) rArgument);
 			continue;
 		}
+
+
+		/* Enable s-meter flag ---------------------------------------------- */
+		if (GetFlagArgument(argc, argv, i, "-T", "--ensmeter") == TRUE)
+		{
+			DRMReceiver.SetEnableSMeter(TRUE);
+			continue;
+		}
 #endif
 
 
@@ -641,6 +656,7 @@ string CSettings::UsageArguments(char** argv)
 #ifdef HAVE_LIBHAMLIB
 		"  -M <n>, --hamlib-model <n> set Hamlib radio model ID\n"
 		"  -C, --hamlib-config <s>    set Hamlib config parameter\n"
+		"  -T, --ensmeter             enable S-Meter\n"
 #endif
 
 		"\n  -h, -?, --help             this help text\n\n"

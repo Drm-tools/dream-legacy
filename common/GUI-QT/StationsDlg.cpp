@@ -477,6 +477,18 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 
 	if (DRMReceiver.GetHamlibConf() == HAMLIB_CONF_COM3)
 		pacMenuCOM3->setOn(TRUE);
+
+
+	/* Other settings ------------------------------------------------------- */
+	/* Separator */
+	pRemoteMenu->insertSeparator();
+
+	const int iSMeterMenuID = pRemoteMenu->insertItem("Enable S-Meter", this,
+		SLOT(OnSMeterMenu(int)), 0);
+
+	/* Set check */
+	if (DRMReceiver.GetEnableSMeter() == TRUE)
+		pRemoteMenu->setItemChecked(iSMeterMenuID, 1);
 #endif
 
 
@@ -806,6 +818,25 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 	}
 }
 
+void StationsDlg::OnSMeterMenu(int iID)
+{
+#ifdef HAVE_LIBHAMLIB
+	if (pRemoteMenu->isItemChecked(iID))
+	{
+		pRemoteMenu->setItemChecked(iID, FALSE);
+		DRMReceiver.SetEnableSMeter(FALSE);
+	}
+	else
+	{
+		pRemoteMenu->setItemChecked(iID, TRUE);
+		DRMReceiver.SetEnableSMeter(TRUE);
+	}
+
+	/* Init hamlib, use current selected model ID */
+	InitHamlib(iCurSelModelID);
+#endif
+}
+
 void StationsDlg::OnRemoteMenu(int iID)
 {
 #ifdef HAVE_LIBHAMLIB
@@ -874,7 +905,9 @@ void StationsDlg::OnTimerSMeter()
 */
 void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
 {
-	if (bStatus == TRUE)
+	/* Both, GUI "enabled" and hamlib "enabled" must be fullfilled befor s-meter
+	   is used */
+	if ((bStatus == TRUE) && (DRMReceiver.GetEnableSMeter() == TRUE))
 	{
 		/* Init progress bar for input s-meter */
 		ProgrSigStrength->setAlarmEnabled(TRUE);

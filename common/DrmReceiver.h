@@ -88,7 +88,7 @@ public:
 		ReceiveData(&SoundInterface), WriteData(&SoundInterface),
 		rInitResampleOffset((_REAL) 0.0), iAcquDetecCnt(0)
 #ifdef HAVE_LIBHAMLIB
-		, strHamlibConf(""), iHamlibModelID(0)
+		, strHamlibConf(""), iHamlibModelID(0), bEnableSMeter(TRUE)
 #endif
 #ifdef USE_QT_GUI
 		, iMainPlotColorStyle(0) /* default color scheme: blue-white */
@@ -156,6 +156,9 @@ public:
 	void					SetHamlibConf(const string strNewC)
 								{strHamlibConf = strNewC;}
 	string					GetHamlibConf() const {return strHamlibConf;}
+	void					SetEnableSMeter(const _BOOLEAN bNSM)
+								{bEnableSMeter = bNSM;}
+	_BOOLEAN				GetEnableSMeter() const {return bEnableSMeter;}
 #endif
 
 #ifdef USE_QT_GUI
@@ -259,6 +262,7 @@ protected:
 #ifdef HAVE_LIBHAMLIB
 	int						iHamlibModelID;
 	string					strHamlibConf;
+	_BOOLEAN				bEnableSMeter;
 #endif
 
 	int						iSoundCrdDevIn;

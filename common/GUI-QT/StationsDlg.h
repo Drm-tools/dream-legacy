@@ -260,6 +260,7 @@ protected:
 public slots:
 	void OnRemoteMenu(int iID);
 	void OnComPortMenu(QAction* action);
+	void OnSMeterMenu(int iID);
 	void OnTimerList();
 	void OnTimerUTCLabel() {SetUTCTimeLabel();}
 	void OnTimerSMeter();
