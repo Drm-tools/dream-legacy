@@ -61,7 +61,7 @@
 
 /* Number of FAC frames until the acquisition is activated in case no signal
    could be decoded after previous acquisition try */
-#define	NUM_FAC_FRA_U_ACQ_WITHOUT		7
+#define	NUM_FAC_FRA_U_ACQ_WITHOUT		9
 
 /* Number of FAC blocks for delayed tracking mode switch (caused by time needed
    for initalizing the channel estimation */
