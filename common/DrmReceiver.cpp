@@ -235,7 +235,15 @@ void CDRMReceiver::DetectAcqui()
 		   for many bit errors. But it is very unlikely that we have two
 		   successive FAC blocks "ok" if no good signal is received */
 		if (iGoodSignCnt > 0)
+		{
 			eAcquiState = AS_WITH_SIGNAL;
+
+			/* Take care of delayed tracking mode switch */
+			if (iDelayedTrackModeCnt > 0)
+				iDelayedTrackModeCnt--;
+			else
+				SetInTrackingModeDelayed();
+		}
 		else
 		{
 			/* If one CRC was correct, reset acquisition since
@@ -318,9 +326,11 @@ void CDRMReceiver::SetInStartMode()
 	   after frequency acquisition values was done */
 	bWasFreqAcqu = TRUE;
 
-	/* Reset counters for acquisition decision and "good signal" */
+	/* Reset counters for acquisition decision, "good signal" and delayed
+	   tracking mode counter */
 	iAcquDetecCnt = 0;
 	iGoodSignCnt = 0;
+	iDelayedTrackModeCnt = NUM_FAC_DEL_TRACK_SWITCH;
 
 	/* Reset GUI lights */
 	PostWinMessage(MS_RESET_ALL);
@@ -332,11 +342,11 @@ void CDRMReceiver::SetInTrackingMode()
 	   routines are only called once when the tracking is actually started */
 	if (eReceiverState == RS_ACQUISITION)
 	{
+		/* In case the acquisition estimation is still in progress, stop it now
+		   to avoid a false estimation which could destroy synchronization */
 		TimeSync.StopRMDetAcqu();
 
 		/* Acquisition is done, deactivate it now and start tracking */
-		TimeSync.StopTimingAcqu();
-		ChannelEstimation.GetTimeSyncTrack()->StartTracking();
 		ChannelEstimation.GetTimeWiener()->StartTracking();
 
 		/* Reset acquisition for frame synchronization */
@@ -346,6 +356,14 @@ void CDRMReceiver::SetInTrackingMode()
 		/* Set receiver flag to tracking */
 		eReceiverState = RS_TRACKING;
 	}
+}
+
+void CDRMReceiver::SetInTrackingModeDelayed()
+{
+	/* The timing tracking must be enabled delayed because it must wait until
+	   the channel estimation has initialized its estimation */
+	TimeSync.StopTimingAcqu();
+	ChannelEstimation.GetTimeSyncTrack()->StartTracking();
 }
 
 void CDRMReceiver::StartParameters(CParameter& Param)

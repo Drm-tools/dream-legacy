@@ -63,6 +63,10 @@
    could be decoded after previous acquisition try */
 #define	NO_FAC_FRA_U_ACQ_WITHOUT		7
 
+/* Number of FAC blocks for delayed tracking mode switch (caused by time needed
+   for initalizing the channel estimation */
+#define NUM_FAC_DEL_TRACK_SWITCH		2
+
 
 /* Classes ********************************************************************/
 class CDRMReceiver
@@ -113,7 +117,7 @@ public:
 	void					StartParameters(CParameter& Param);
 	void					SetInStartMode();
 	void					SetInTrackingMode();
-
+	void					SetInTrackingModeDelayed();
 
 	void					InitsForAllModules();
 
@@ -180,6 +184,7 @@ protected:
 	EAcqStat				eAcquiState;
 	int						iAcquDetecCnt;
 	int						iGoodSignCnt;
+	int						iDelayedTrackModeCnt;
 	ERecState				eReceiverState;
 	ERecMode				eReceiverMode;
 	ERecMode				eNewReceiverMode;
