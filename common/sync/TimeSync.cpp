@@ -361,7 +361,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 			}
 
 #ifdef _DEBUG_
-/* Save estimated positions of timing */
+/* Save estimated positions of timing (acquisition) */
 static FILE* pFile = fopen("test/testtime.dat", "w");
 fprintf(pFile, "%d %d\n", iNewStartIndexField[i], iInputBlockSize);
 fflush(pFile);
@@ -390,6 +390,15 @@ fflush(pFile);
 		/* Timing acquisition was successfully finished, show always green
 		   light */
 		PostWinMessage(MS_TIME_SYNC, 0);
+
+#ifdef _DEBUG_
+/* Save estimated positions of timing (tracking) */
+static FILE* pFile = fopen("test/testtimetrack.dat", "w");
+static int iTimeTrackAbs = 0;
+iTimeTrackAbs += ReceiverParam.iTimingOffsTrack; /* Integration */
+fprintf(pFile, "%d\n", iTimeTrackAbs);
+fflush(pFile);
+#endif
 	}
 
 
