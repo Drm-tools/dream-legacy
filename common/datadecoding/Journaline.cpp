@@ -120,6 +120,9 @@ void CJournaline::GetNews(const int iObjID, CNews& News)
 		const int iNumItems = nml->GetNrOfItems();
 		News.vecItem.Init(iNumItems);
 
+		/* For "keep in cache" function, init with zero length */
+		CVector<NML::NewsObjectId_t> iAvailIDs(0);
+
 		for (int i = 0; i < iNumItems; i++)
 		{
 			/* Text */
@@ -134,13 +137,28 @@ void CJournaline::GetNews(const int iObjID, CNews& News)
 				if (NEWS_SVC_DEC_get_news_object(newsdec, nml->GetLinkId(i),
 					&elen, &len, rno.nml))
 				{
+					/* Assign link */
 					News.vecItem[i].iLink = nml->GetLinkId(i);
+
+					/* Store link in vector for "keep in cache" function */
+					iAvailIDs.Enlarge(1);
+					iAvailIDs[iAvailIDs.Size() - 1] = nml->GetLinkId(i);
 				}
 				else
-					News.vecItem[i].iLink = -1; /* Not yet received */
+				{
+					/* Not yet received */
+					News.vecItem[i].iLink = JOURNALINE_LINK_NOT_ACTIVE;
+				}
 			}
 			else
-				News.vecItem[i].iLink = -2; /* Not valid */
+				News.vecItem[i].iLink = JOURNALINE_IS_NO_LINK; /* No link */
+		}
+
+		if (iAvailIDs.Size() > 0)
+		{
+			/* Tell the decoder to keep the linked objects in cache */
+			NEWS_SVC_DEC_keep_in_cache(newsdec, iAvailIDs.Size(),
+				&iAvailIDs[0]);
 		}
 
 		delete nml;

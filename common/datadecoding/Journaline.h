@@ -38,6 +38,13 @@
 #endif
 
 
+/* Definitions ****************************************************************/
+/* Definitions for links which objects are not yet received or items which
+   do not have links (no menu) */
+#define JOURNALINE_IS_NO_LINK			-2
+#define JOURNALINE_LINK_NOT_ACTIVE		-1
+
+
 /* Classes ********************************************************************/
 struct CNewsItem
 {
