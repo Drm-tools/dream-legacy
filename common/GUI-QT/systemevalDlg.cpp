@@ -357,14 +357,10 @@ void systemevalDlg::OnTimer()
 	QString strFACInfo;
 
 	/* Robustness mode #################### */
-	strFACInfo = "Robustness Mode: \t\t" + GetRobModeStr();
+	strFACInfo = "DRM Mode / Bandwidth: \t" + GetRobModeStr() + " / " +
+		GetSpecOccStr();
 
-	FACRobustnessMode->setText(strFACInfo);
-
-	/* Spectrum occupancy #################### */
-	strFACInfo = "Spectrum Occupancy: \t\t" + GetSpecOccStr();
-
-	FACSpectrumOccupancy->setText(strFACInfo);
+	FACDRMModeBW->setText(strFACInfo);
 
 	/* Interleaver Depth #################### */
 	strFACInfo = "Interleaver Depth: \t\t";
@@ -381,43 +377,50 @@ void systemevalDlg::OnTimer()
 
 	FACInterleaverDepth->setText(strFACInfo);
 
-	/* MSC mode #################### */
-	strFACInfo = "MSC Mode: \t\t\t";
-	switch (DRMReceiver.GetParameters()->eMSCCodingScheme)
-	{
-	case CParameter::CS_2_SM:
-		strFACInfo += "16-QAM, No Hierarchical";
-		break;
+	/* SDC, MSC mode #################### */
+	strFACInfo = "SDC / MSC Mode: \t\t";
 
-	case CParameter::CS_3_SM:
-		strFACInfo += "64-QAM, No Hierarchical";
-		break;
-
-	case CParameter::CS_3_HMSYM:
-		strFACInfo += "64-QAM, Hierarchical on I&Q";
-		break;
-
-	case CParameter::CS_3_HMMIX:
-		strFACInfo += "64-QAM, Hierarchical on I";
-		break;
-	}
-
-	FACMSCMode->setText(strFACInfo);
-
-	/* SDC mode #################### */
-	strFACInfo = "SDC Mode: \t\t\t";
+	/* SDC */
 	switch (DRMReceiver.GetParameters()->eSDCCodingScheme)
 	{
 	case CParameter::CS_1_SM:
-		strFACInfo += "4-QAM";
+		strFACInfo += "4-QAM / ";
 		break;
 
 	case CParameter::CS_2_SM:
-		strFACInfo += "16-QAM";
+		strFACInfo += "16-QAM / ";
 		break;
 	}
 
-	FACSDCMode->setText(strFACInfo);
+	/* MSC */
+	switch (DRMReceiver.GetParameters()->eMSCCodingScheme)
+	{
+	case CParameter::CS_2_SM:
+		strFACInfo += "SM 16-QAM";
+		break;
+
+	case CParameter::CS_3_SM:
+		strFACInfo += "SM 64-QAM";
+		break;
+
+	case CParameter::CS_3_HMSYM:
+		strFACInfo += "HMsym 64-QAM";
+		break;
+
+	case CParameter::CS_3_HMMIX:
+		strFACInfo += "HMmix 64-QAM";
+		break;
+	}
+
+	FACSDCMSCMode->setText(strFACInfo);
+
+	/* Code rates #################### */
+	strFACInfo = "Prot. Level (B / A): \t\t";
+	strFACInfo += QString().setNum(DRMReceiver.GetParameters()->MSCPrLe.iPartB);
+	strFACInfo += " / ";
+	strFACInfo += QString().setNum(DRMReceiver.GetParameters()->MSCPrLe.iPartA);
+
+	FACCodeRate->setText(strFACInfo);
 
 	/* Number of services #################### */
 	strFACInfo = "Number of Services: \t\tAudio: ";

@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>729</width>
-            <height>559</height>
+            <width>721</width>
+            <height>534</height>
         </rect>
     </property>
     <property stdset="1">
@@ -1192,7 +1192,7 @@
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout24</cstring>
+                <cstring>Layout23</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -1243,7 +1243,7 @@
                             <class>QLabel</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>FACRobustnessMode</cstring>
+                                <cstring>FACDRMModeBW</cstring>
                             </property>
                             <property stdset="1">
                                 <name>text</name>
@@ -1252,17 +1252,6 @@
                             <property stdset="1">
                                 <name>indent</name>
                                 <number>-1</number>
-                            </property>
-                        </widget>
-                        <widget>
-                            <class>QLabel</class>
-                            <property stdset="1">
-                                <name>name</name>
-                                <cstring>FACSpectrumOccupancy</cstring>
-                            </property>
-                            <property stdset="1">
-                                <name>text</name>
-                                <string>TextLabel1</string>
                             </property>
                         </widget>
                         <widget>
@@ -1280,7 +1269,7 @@
                             <class>QLabel</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>FACMSCMode</cstring>
+                                <cstring>FACSDCMSCMode</cstring>
                             </property>
                             <property stdset="1">
                                 <name>text</name>
@@ -1291,7 +1280,7 @@
                             <class>QLabel</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>FACSDCMode</cstring>
+                                <cstring>FACCodeRate</cstring>
                             </property>
                             <property stdset="1">
                                 <name>text</name>
@@ -1326,7 +1315,7 @@
                     <class>QLayoutWidget</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>Layout23</cstring>
+                        <cstring>Layout22</cstring>
                     </property>
                     <vbox>
                         <property stdset="1">
@@ -1354,7 +1343,7 @@
                                 <name>sizeHint</name>
                                 <size>
                                     <width>20</width>
-                                    <height>81</height>
+                                    <height>50</height>
                                 </size>
                             </property>
                         </spacer>
