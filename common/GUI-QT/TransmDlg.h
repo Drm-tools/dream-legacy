@@ -45,6 +45,7 @@
 #include <qmenubar.h>
 #include <qpopupmenu.h>
 #include <qlayout.h>
+#include <qthread.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/TransmDlgbase.h"
