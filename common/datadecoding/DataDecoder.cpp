@@ -123,7 +123,6 @@ void CDataEncoder::GeneratePacket(CVector<_BINARY>& vecbiPacket)
 
 		/* Reset data pointer and continuity index */
 		iCurDataPointer = 0;
-		iContinInd = 0;
 	}
 
 
