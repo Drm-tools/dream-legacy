@@ -330,11 +330,22 @@ void CParameter::SetSDCCodingScheme(const ECodScheme eNewScheme)
 	}
 }
 
-void CParameter::SetCurSelectedService(const int iNewService)
+void CParameter::SetCurSelAudioService(const int iNewService)
 {
-	if (iCurSelService != iNewService)
+	if (iCurSelAudioService != iNewService)
 	{
-		iCurSelService = iNewService;
+		iCurSelAudioService = iNewService;
+
+		/* Set init flags */
+		DRMReceiver.InitsForMSCDemux();
+	}
+}
+
+void CParameter::SetCurSelDataService(const int iNewService)
+{
+	if (iCurSelDataService != iNewService)
+	{
+		iCurSelDataService = iNewService;
 
 		/* Set init flags */
 		DRMReceiver.InitsForMSCDemux();

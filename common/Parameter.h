@@ -256,8 +256,10 @@ public:
 	_BOOLEAN		SetWaveMode(const ERobMode eNewWaveMode);
 	ERobMode		GetWaveMode() const {return eRobustnessMode;}
 
-	void			SetCurSelectedService(const int iNewService);
-	int				GetCurSelectedService() const {return iCurSelService;}
+	void			SetCurSelAudioService(const int iNewService);
+	int				GetCurSelAudioService() const {return iCurSelAudioService;}
+	void			SetCurSelDataService(const int iNewService);
+	int				GetCurSelDataService() const {return iCurSelDataService;}
 
 	_REAL			GetDCFrequency() const {return SOUNDCRD_SAMPLE_RATE *
 						(rFreqOffsetAcqui + rFreqOffsetTrack);}
@@ -422,7 +424,8 @@ public:
 
 protected:
 	/* Current selected audio service for processing */
-	int					iCurSelService;
+	int					iCurSelAudioService;
+	int					iCurSelDataService;
 
 	ERobMode			eRobustnessMode; /* E.g.: Mode A, B, C or D */
 	ESpecOcc			eSpectOccup;
