@@ -290,6 +290,15 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 	/* Get number of total input bits for this module */
 	iTotalNumInputBits = ReceiverParam.iNumAudioDecoderBits;
 
+	/* Define input block size of this module */
+	iInputBlockSize = iTotalNumInputBits;
+
+	/* Init output block size for the first time. This parameter is set in the
+	   processing routine, too */
+	iOutputBlockSize = 0;
+
+try
+{
 	/* Check if current selected service is an audio service and check if a
 	   stream is attached. Additionally, check if AAC (this is the only audio
 	   decoding we offer right now) */
@@ -322,12 +331,8 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 			break;
 
 		default:
-			/* Some error ocurred, set parameters to valid values and set error
-			   flag. TODO better solution, better error handling! */
-			iNumAACFrames = 10;
-			iNumHeaderBytes = 14;
-			iAACSampleRate = 24000;
-			DoNotProcessData = TRUE;
+			/* Some error occurred, throw error */
+			throw CInitErr();
 			break;
 		}
 
@@ -420,10 +425,7 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 
 		/* Check iAudioPayloadLen value, only positive values make sense */
 		if (iAudioPayloadLen < 0)
-		{
-			iAudioPayloadLen = 0;
-			DoNotProcessData = TRUE;
-		}
+			throw CInitErr();
 
 		/* Calculate number of bytes for higher protected blocks */
 		iNumHigherProtectedBytes =
@@ -486,14 +488,14 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		iMaxOutputBlockSize = iMaxLenResamplerOutput;
 	}
 	else
-		DoNotProcessData = TRUE;
+		throw CInitErr();
+}
 
-	/* Define input block size of this module */
-	iInputBlockSize = iTotalNumInputBits;
-
-	/* Init output block size for the first time. This parameter is set in the
-	   processing routine, too */
-	iOutputBlockSize = 0;
+catch (CInitErr)
+{
+	/* An init error occurred, do not process data in this module */
+	DoNotProcessData = TRUE;
+}
 }
 
 CAudioSourceDecoder::CAudioSourceDecoder()
