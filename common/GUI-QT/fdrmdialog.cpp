@@ -247,8 +247,6 @@ FDRMDialog::~FDRMDialog()
 
 void FDRMDialog::OnTimer()
 {
-	int iCurSelServ;
-
 	/* Input level meter */
 	ProgrInputLevel->setValue(pDRMRec->GetReceiver()->GetLevelMeter());
 
@@ -257,22 +255,25 @@ void FDRMDialog::OnTimer()
 		(pDRMRec->GetReceiverMode() == CDRMReceiver::RM_DRM))
 	{
 		/* Receiver does receive a DRM signal ------------------------------- */
-		/* First get current selected service */
-		iCurSelServ = pDRMRec->GetParameters()->GetCurSelAudioService();
+		/* First get current selected services */
+		const int iCurSelAudioServ =
+			pDRMRec->GetParameters()->GetCurSelAudioService();
+		const int iCurSelDataServ =
+			pDRMRec->GetParameters()->GetCurSelDataService();
 
 		/* If selected service is audio and text message is true */
-		if ((pDRMRec->GetParameters()->Service[iCurSelServ].
+		if ((pDRMRec->GetParameters()->Service[iCurSelAudioServ].
 			eAudDataFlag == CParameter::SF_AUDIO) &&
-			(pDRMRec->GetParameters()->Service[iCurSelServ].
+			(pDRMRec->GetParameters()->Service[iCurSelAudioServ].
 			AudioParam.bTextflag == TRUE))
 		{
 			/* Activate text window */
 			TextTextMessage->show();
-			
+
 			/* Text message of current selected audio service 
 			   (UTF-8 decoding) */
 			TextTextMessage->setText(QString().fromUtf8(QCString(
-				pDRMRec->GetParameters()->Service[iCurSelServ].AudioParam.
+				pDRMRec->GetParameters()->Service[iCurSelAudioServ].AudioParam.
 				strTextMessage.c_str())));
 		}
 		else
@@ -285,17 +286,17 @@ void FDRMDialog::OnTimer()
 		}
 
 		/* Check whether service parameters were not transmitted yet */
-		if (pDRMRec->GetParameters()->Service[iCurSelServ].IsActive())
+		if (pDRMRec->GetParameters()->Service[iCurSelAudioServ].IsActive())
 		{
 			/* Service label (UTF-8 encoded string -> convert) */
 			TextServiceLabel->setText(QString().fromUtf8(QCString(
-				pDRMRec->GetParameters()->Service[iCurSelServ].
+				pDRMRec->GetParameters()->Service[iCurSelAudioServ].
 				strLabel.c_str())));
 
-			TextServiceIDRate->setText(SetBitrIDStr(iCurSelServ));
+			TextServiceIDRate->setText(SetBitrIDStr(iCurSelAudioServ));
 
 			/* Audio informations digi-string */
-			TextServiceAudio->setText(SetServParamStr(iCurSelServ));
+			TextServiceAudio->setText(SetServParamStr(iCurSelAudioServ));
 		}
 		else
 		{
@@ -307,7 +308,10 @@ void FDRMDialog::OnTimer()
 
 
 		/* Update service selector ------------------------------------------ */
-		if (iCurSelServiceGUI != iCurSelServ)
+		/* Make sure a possible service was selected. If not, correct */
+		if ((!pDRMRec->GetParameters()->Service[iCurSelServiceGUI].IsActive()) ||
+			(!((iCurSelServiceGUI == iCurSelAudioServ) ||
+			(iCurSelServiceGUI == iCurSelDataServ))))
 		{
 			/* Reset checks */
 			PushButtonService1->setOn(FALSE);
@@ -316,7 +320,7 @@ void FDRMDialog::OnTimer()
 			PushButtonService4->setOn(FALSE);
 
 			/* Set right flag */
-			switch (iCurSelServ)
+			switch (iCurSelAudioServ)
 			{
 			case 0:
 				PushButtonService1->setOn(TRUE);
@@ -492,14 +496,8 @@ void FDRMDialog::SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo)
 
 void FDRMDialog::OnButtonService1()
 {
-	/* If button was already down */
-	if (pDRMRec->GetParameters()->GetCurSelAudioService() == 0)
-		PushButtonService1->setOn(TRUE);
-	else
+	if (PushButtonService1->isOn())
 	{
-
-// TODO: use QActionGroup instead
-
 		/* Set all other buttons up */
 		if (PushButtonService2->isOn()) PushButtonService2->setOn(FALSE);
 		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
@@ -507,14 +505,13 @@ void FDRMDialog::OnButtonService1()
 
 		SetService(0);
 	}
+	else
+		PushButtonService1->setOn(TRUE);
 }
 
 void FDRMDialog::OnButtonService2()
 {
-	/* If button was already down */
-	if (pDRMRec->GetParameters()->GetCurSelAudioService() == 1)
-		PushButtonService2->setOn(TRUE);
-	else
+	if (PushButtonService2->isOn())
 	{
 		/* Set all other buttons up */
 		if (PushButtonService1->isOn()) PushButtonService1->setOn(FALSE);
@@ -523,14 +520,14 @@ void FDRMDialog::OnButtonService2()
 
 		SetService(1);
 	}
+	else
+		PushButtonService2->setOn(TRUE);
+
 }
 
 void FDRMDialog::OnButtonService3()
 {
-	/* If button was already down */
-	if (pDRMRec->GetParameters()->GetCurSelAudioService() == 2)
-		PushButtonService3->setOn(TRUE);
-	else
+	if (PushButtonService3->isOn())
 	{
 		/* Set all other buttons up */
 		if (PushButtonService1->isOn()) PushButtonService1->setOn(FALSE);
@@ -539,14 +536,13 @@ void FDRMDialog::OnButtonService3()
 
 		SetService(2);
 	}
+	else
+		PushButtonService3->setOn(TRUE);
 }
 
 void FDRMDialog::OnButtonService4()
 {
-	/* If button was already down */
-	if (pDRMRec->GetParameters()->GetCurSelAudioService() == 3)
-		PushButtonService4->setOn(TRUE);
-	else
+	if (PushButtonService4->isOn())
 	{
 		/* Set all other buttons up */
 		if (PushButtonService1->isOn()) PushButtonService1->setOn(FALSE);
@@ -555,6 +551,8 @@ void FDRMDialog::OnButtonService4()
 
 		SetService(3);
 	}
+	else
+		PushButtonService4->setOn(TRUE);
 }
 
 void FDRMDialog::SetService(int iNewServiceID)

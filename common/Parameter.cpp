@@ -480,7 +480,12 @@ void CParameter::SetSDCCodingScheme(const ECodScheme eNewScheme)
 
 void CParameter::SetCurSelAudioService(const int iNewService)
 {
-	if (iCurSelAudioService != iNewService)
+	/* Change the current selected audio service ID only if the new ID does
+	   contain an audio service. If not, keep the old ID. In that case it is
+	   possible to select a "data-only" service and still listen to the audio of
+	   the last selected service */
+	if ((iCurSelAudioService != iNewService) &&
+		(Service[iNewService].AudioParam.iStreamID != STREAM_ID_NOT_USED))
 	{
 		iCurSelAudioService = iNewService;
 
