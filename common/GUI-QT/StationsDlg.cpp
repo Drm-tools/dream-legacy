@@ -333,7 +333,8 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	vecSpecDRMRigs.Init(0);
 
 	/* Winradio G3 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G303, "" /* TODO */, 0));
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G303,
+		"l_ATT=0,l_AGC=3", 0));
 
 	/* AOR 7030 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_AR7030,
