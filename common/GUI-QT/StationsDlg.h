@@ -179,22 +179,9 @@ public:
 	virtual ~StationsDlg();
 
 protected:
-	enum ERemotecntr {RC_NOREMCNTR, RC_WINRADIO, RC_AOR7030, RC_ELEKTOR304,
-		RC_JRC_NRD535, RC_TT_RX320D};
 	enum ECOMNumber {CN_COM1, CN_COM2, CN_COM3};
 
 	void			SetFrequency(const int iFreqkHz);
-
-	_BOOLEAN		SetFrequencyWinradio(const int iFreqkHz);
-	_BOOLEAN		SetFrequencyAOR7030(const ECOMNumber eCOMNumber, const int iFreqkHz);
-	_BOOLEAN		SetFrequencyNRD535(const ECOMNumber eCOMNumber, const int iFreqkHz);
-	_BOOLEAN		SetFrequencyRX320D(const ECOMNumber eCOMNumber, const int iFreqkHz);
-
-	enum EOutWire {OW_TXD, OW_DTR, OW_RTS};
-	_BOOLEAN		SetFrequencyElektor304(const ECOMNumber eCOMNumber, const int iFreqkHz);
-	void			OutputElektor304(FILE_HANDLE hCom, const uint32_t iData);
-	void			SetOutStateElektor304(FILE_HANDLE hCom, EOutWire eOutWire, _BINARY biState);
-
 	void			SetStationsView();
     virtual void	showEvent(QShowEvent* pEvent);
 	void			AddWhatsThisHelp();
@@ -213,16 +200,14 @@ protected:
 	QPopupMenu*					pViewMenu;
 	CVector<MyListViewItem*>	vecpListItems;
 
-	/* Remote selection */
-	QPopupMenu*			pRemoteMenu;
-	ERemotecntr			eWhichRemoteControl;
+	QPopupMenu*					pRemoteMenu;
 
 	/* Com port selection */
-	QAction*			pacMenuCOM1;
-	QAction*			pacMenuCOM2;
-	QAction*			pacMenuCOM3;
-	QActionGroup*		agCOMPortSel;
-	ECOMNumber			eComNumber;
+	QAction*					pacMenuCOM1;
+	QAction*					pacMenuCOM2;
+	QAction*					pacMenuCOM3;
+	QActionGroup*				agCOMPortSel;
+	ECOMNumber					eComNumber;
 
 #ifdef HAVE_LIBHAMLIB
 	class CSpecDRMRig
@@ -277,13 +262,13 @@ protected:
 
 public slots:
 	void OnRemoteMenu(int iID);
+	void OnComPortMenu(QAction* action);
 	void OnTimerList();
 	void OnTimerUTCLabel() {SetUTCTimeLabel();}
 	void OnTimerSMeter();
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
 	void OnShowStationsMenu(int iID);
-	void OnComPortMenu(QAction* action);
 	void OnGetUpdate();
 	void OnFreqCntNewValue(double dVal);
 };
