@@ -114,17 +114,7 @@ if test "x$WITHHAMLIB" = xyes; then
 	fi	
 fi
 
-dnl Journaline (optional) -----------------------------------------------------------
-
-if test "x$WITHJOURNALINE" = xyes; then
-dnl can't check the library, as it has unresolved symbols
-	AC_CHECK_HEADERS(journaline/NML.h, ,exit 1)
-	AC_DEFINE(HAVE_JOURNALINE, 1, [Define if you have libfhgjournaline])
-	LIBS="-lfhgjournaline $LIBS"
-fi
-
 dnl faad2 (optional) -----------------------------------------------------------
-
 if test "x$WITHFAAD2" = xyes; then
 	AC_CHECK_HEADER(faad.h, , have_faad=no)
 	AC_CHECK_LIB(faad,faacDecOpen, , exit 1, -lm )
@@ -134,6 +124,15 @@ if test "x$WITHFAAD2" = xyes; then
 	fi
 	AC_DEFINE(USE_FAAD2_LIBRARY, 1, [Define if you want to use the faad2 library])
 fi
+
+dnl Journaline (optional) -----------------------------------------------------------
+if test "x$WITHJOURNALINE" = xyes; then
+	dnl can't check the library, as it has unresolved symbols
+	AC_CHECK_HEADERS(journaline/NML.h, ,exit 1)
+	AC_DEFINE(HAVE_JOURNALINE, 1, [Define if you have libfhgjournaline])
+	LIBS="-lfhgjournaline $LIBS"
+fi
+
 
 AC_CONFIG_FILES(Makefile linux/Makefile drm.spec)
 AC_OUTPUT
