@@ -499,7 +499,7 @@ void CDRMPlot::SetupDopplerDelayHist()
 	setAxisTitle(QwtPlot::yRight, "Doppler [Hz]");
 
 	/* Fixed scale */
-	setAxisScale(QwtPlot::yLeft, (double) 0.0, (double) 7.5);
+	setAxisScale(QwtPlot::yLeft, (double) 0.0, (double) 10.0);
 	setAxisScale(QwtPlot::yRight, (double) 0.0, (double) 4.0);
 
 	/* Add main curves */

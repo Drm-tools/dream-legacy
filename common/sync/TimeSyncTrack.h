@@ -58,7 +58,7 @@
 /* Relative energy of estimated PDS we want to have in our window design for
    Wiener filter in frequency direction. The norm is the total energy of
    estimated PDS which is in the range of the guard-interval */
-#define ENERGY_WIN_WIENER_FREQ				((CReal) 0.999)
+#define ENERGY_WIN_WIENER_FREQ				((CReal) 0.997)
 
 /* Parameter of controlling the closed loop for sample rate offset */
 #define CONTR_SAMP_OFF_INT_FTI				((_REAL) 0.001)

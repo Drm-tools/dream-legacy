@@ -40,14 +40,9 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	int			i, j;
 	int			iIntShiftVal;
 	int			iFirstPathDelay;
-	int			iContrTiOffs;
-	CReal		rTiOffset;
 	CReal		rPeakBound;
-	CReal		rActShiftTiCor;
 	CReal		rPropGain;
-	CReal		rTotalEnergy;
 	CReal		rCurEnergy;
-	CReal		rCurCorrValue;
 	CReal		rWinEnergy;
 	CReal		rMaxWinEnergy;
 	_BOOLEAN	bDelayFound;
@@ -62,7 +57,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	   estimated impulse response has a different sample rate (since the
 	   spectrum is only one little part of the sound card frequency range)
 	   we have to correct the timing correction by a certain bandwidth factor */
-	rActShiftTiCor = rFracPartTiCor -
+	const CReal rActShiftTiCor = rFracPartTiCor -
 		(_REAL) vecTiCorrHist[0] * iNumCarrier / iDFTSize;
 
 	/* Extract the fractional part since we can only correct integer timing
@@ -188,8 +183,8 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 		   be equal to the delay of the channel estimation.
 		   The corrections must be quantized to the upsampled output sample
 		   rate ("* iDFTSize / iNumCarrier") */
-		rTiOffset = (_REAL) -iFirstPathDelay * iDFTSize / iNumCarrier -
-			veciNewMeasHist[0];
+		const CReal rTiOffset = (_REAL) -iFirstPathDelay *
+			iDFTSize / iNumCarrier - veciNewMeasHist[0];
 
 		/* Different controlling parameters for different types of tracking */
 		switch (TypeTiSyncTrac)
@@ -218,8 +213,8 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 			rPropGain *= 2;
 
 		/* Apply proportional control and fix result to sample grid */
-		rCurCorrValue = rTiOffset * rPropGain + rFracPartContr;
-		iContrTiOffs = (int) Fix(rCurCorrValue);
+		const CReal rCurCorrValue = rTiOffset * rPropGain + rFracPartContr;
+		const int iContrTiOffs = (int) Fix(rCurCorrValue);
 
 		/* Calculate new fractional part of controlling */
 		rFracPartContr = rCurCorrValue - iContrTiOffs;
@@ -333,13 +328,13 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 
 	/* Delay spread length estimation --------------------------------------- */
 	/* Total energy of estimated impulse response */
-	rTotalEnergy = Sum(vecrAvPoDeSp(1, (int) Ceil(rGuardSizeFFT)));
+	const CReal rTotalEnergy = Sum(vecrAvPoDeSpRot);
 
 	/* From left to the right -> search for end of PDS */
-	rEstPDSEnd = rGuardSizeFFT;
+	rEstPDSEnd = (CReal) (iNumIntpFreqPil - 1);
 	rCurEnergy = (CReal) 0.0;
 	bPDSResultFound = FALSE;
-	for (i = 0; i < Ceil(rGuardSizeFFT); i++)
+	for (i = 0; i < iNumIntpFreqPil; i++)
 	{
 		if (bPDSResultFound == FALSE)
 		{
@@ -351,19 +346,15 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 				bPDSResultFound = TRUE;
 			}
 
-			rCurEnergy += vecrAvPoDeSp[i];
+			rCurEnergy += vecrAvPoDeSpRot[i];
 		}
 	}
-
-	/* Bound PDS end on guard-interval bound */
-	if (rEstPDSEnd > rGuardSizeFFT)
-		rEstPDSEnd = rGuardSizeFFT;
 
 	/* From right to the left -> search for beginning of PDS */
 	rEstPDSBegin = (CReal) 0.0;
 	rCurEnergy = (CReal) 0.0;
 	bPDSResultFound = FALSE;
-	for (i = (int) Floor(rGuardSizeFFT); i >= 0; i--)
+	for (i = iNumIntpFreqPil - 1; i >= 0; i--)
 	{
 		if (bPDSResultFound == FALSE)
 		{
@@ -375,9 +366,14 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 				bPDSResultFound = TRUE;
 			}
 
-			rCurEnergy += vecrAvPoDeSp[i];
+			rCurEnergy += vecrAvPoDeSpRot[i];
 		}
 	}
+
+	/* Correct estimates of begin and end of PDS by the rotation */
+	const CReal rPDSLenCorrection = iNumIntpFreqPil - iStPoRot + 1;
+	rEstPDSBegin -= rPDSLenCorrection;
+	rEstPDSEnd -= rPDSLenCorrection;
 
 	/* Set return parameters */
 	rLenPDS = rEstPDSEnd - rEstPDSBegin;
@@ -439,7 +435,11 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	if ((int) rGuardSizeFFT > iNumIntpFreqPil)
 		iStPoRot = iNumIntpFreqPil;
 	else
-		iStPoRot = (int) (rGuardSizeFFT + (iNumIntpFreqPil - rGuardSizeFFT) / 2);
+	{
+		/* "+ 1" because of "Matlab indices" used in ".Merge()" function */
+		iStPoRot = (int) (rGuardSizeFFT +
+			Ceil((iNumIntpFreqPil - rGuardSizeFFT) / 2) + 1);
+	}
 
 	/* Init fractional part of timing correction to zero and fractional part
 	   of controlling */
@@ -553,9 +553,11 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 		/* Copy first part of data in output vector */
 		for (i = 0; i < iHalfSpec; i++)
 		{
-			if (vecrAvPoDeSp[iNumIntpFreqPil - iHalfSpec + i] > 0)
-				vecrData[i] = (_REAL) 10.0 *
-					log10(vecrAvPoDeSp[iNumIntpFreqPil - iHalfSpec + i]);
+			const _REAL rCurPDSVal =
+				vecrAvPoDeSp[iNumIntpFreqPil - iHalfSpec + i];
+
+			if (rCurPDSVal > 0)
+				vecrData[i] = (_REAL) 10.0 * log10(rCurPDSVal);
 			else
 				vecrData[i] = RET_VAL_LOG_0;
 
@@ -570,8 +572,10 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 		/* Copy second part of data in output vector */
 		for (i = iHalfSpec; i < iNumIntpFreqPil; i++)
 		{
-			if (vecrAvPoDeSp[i - iHalfSpec] > 0)
-				vecrData[i] = (_REAL) 10.0 * log10(vecrAvPoDeSp[i - iHalfSpec]);
+			const _REAL rCurPDSVal = vecrAvPoDeSp[i - iHalfSpec];
+
+			if (rCurPDSVal > 0)
+				vecrData[i] = (_REAL) 10.0 * log10(rCurPDSVal);
 			else
 				vecrData[i] = RET_VAL_LOG_0;
 
