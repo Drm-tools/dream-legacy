@@ -162,9 +162,12 @@ public:
 	class CWinGeom
 	{
 	public:
-		CWinGeom() : iXPos(0), iYPos(0), iHSize(0), iWSize(0) {}
+		CWinGeom() : iXPos(0), iYPos(0), iHSize(0), iWSize(0),
+			bVisible(FALSE) {}
+
 		int iXPos, iYPos;
 		int iHSize, iWSize;
+		_BOOLEAN bVisible;
 	};
 
 	/* Main window */
