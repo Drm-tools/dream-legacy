@@ -249,11 +249,23 @@ void CModul<TInput, TOutput>::InitThreadSave(CParameter& Parameter)
 	/* Get a lock for the resources */
 	Lock();
 
-	/* Call init of derived modul */
-	InitInternal(Parameter);
+	try
+	{
+		/* Call init of derived modul */
+		InitInternal(Parameter);
 
-	/* Unlock resources */
-	Unlock();
+		/* Unlock resources */
+		Unlock();
+	}
+
+	catch (CGenErr)
+	{
+		/* Unlock resources */
+		Unlock();
+
+		/* Throws the same error again which was send by the function */
+		throw;
+	}
 }
 
 template<class TInput, class TOutput> 

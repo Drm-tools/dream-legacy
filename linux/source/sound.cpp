@@ -70,10 +70,7 @@ void CSound::Init_HW( int mode )
 	   going to both record and play back digital audio) */
 	fdSound = open("/dev/dsp", O_RDWR );
 	if (fdSound < 0) 
-    {   
-		perror("open of /dev/dsp failed");
-		exit(1);
-    }
+		throw CGenErr("open of /dev/dsp failed");
 	
 	/* Get ready for us.
 	   ioctl(audio_fd, SNDCTL_DSP_SYNC, 0) can be used when application wants 
@@ -128,11 +125,9 @@ int read_HW( void * recbuf, int size) {
 //printf("%d ", ret); fflush(stdout);
 
 	if (ret < 0) {
-		if ( (errno != EINTR) && (errno != EAGAIN)) 
-		{
-			perror("CSound:Read");
-			exit(1);
-		} else
+		if ( (errno != EINTR) && (errno != EAGAIN))
+			throw CGenErr("CSound:Read");
+		else
 			return 0;
 	} else
 		return ret / (NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE);
@@ -153,8 +148,7 @@ int write_HW( _SAMPLE *playbuf, int size ){
 			{
 				continue;
 			}
-			perror("CSound:Write");
-			exit(1);
+			throw CGenErr("CSound:Write");
 		}
 		size -= ret;
 		start += ret / BYTES_PER_SAMPLE;
@@ -358,7 +352,7 @@ int read_HW( void * recbuf, int size) {
 		else 
 		{
 			printf("CSound::Read: %s\n", snd_strerror(ret));
-						exit(1);
+			throw CGenErr("CSound:Read");
 		}
 	} else 
 		return ret;
@@ -399,7 +393,7 @@ printf("strpipe\n");
         			continue;
 			} else {
                                 printf("Write error: %s\n", snd_strerror(ret));
-                               	exit(1);
+								throw CGenErr("Write error");
                         }
                         break;  /* skip one period */
 		}
@@ -469,7 +463,7 @@ int read_HW( void * recbuf, int size) {
 	int ret = arts_read(rstream, recbuf, FRAGSIZE * NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE );
 	if (ret < 0) {
 		fprintf(stderr, "CSound:Read error %s\n", arts_error_text(ret));
-					exit(1);
+		throw CGenErr("CSound:Read error");
 	} else
 		return ret / (NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE);
 }
@@ -487,7 +481,7 @@ int write_HW( _SAMPLE *playbuf, int size ){
 		if (ret < 0) 
 		{
 			fprintf(stderr, "CSound:Write error %s\n", arts_error_text(ret));
-			exit(1);
+			throw CGenErr("CSound:Write error");
 		}
 //printf("w%d\n", ret);
 		size -= ret;
