@@ -130,8 +130,12 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		switch (eDemodType)
 		{
 		case DT_AM:
-			/* Use envelope of signal and apply DC filter */
-			rvecInpTmp = Filter(rvecBDC, rvecADC, Abs(cvecHilbert), rvecZAM);
+			/* Use envelope of signal and apply low-pass filter */
+			rvecInpTmp = FftFilt(cvecBAMAfterDem, Abs(cvecHilbert),
+				rvecZAMAfterDem, FftPlansHilFilt);
+
+			/* Apply DC filter (high-pass filter) */
+			rvecInpTmp = Filter(rvecBDC, rvecADC, rvecInpTmp, rvecZAM);
 			break;
 
 		case DT_LSB:
@@ -246,10 +250,12 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Init state vector for filtering with zeros */
 	rvecZReal.Init(iHilFiltBlLen, (CReal) 0.0);
 	rvecZImag.Init(iHilFiltBlLen, (CReal) 0.0);
+	rvecZAMAfterDem.Init(iHilFiltBlLen, (CReal) 0.0);
 
 	/* "+ 1" because of the Nyquist frequency (filter in frequency domain) */
 	cvecBReal.Init(iHilFiltBlLen + 1);
 	cvecBImag.Init(iHilFiltBlLen + 1);
+	cvecBAMAfterDem.Init(iHilFiltBlLen + 1);
 
 	/* FFT plans are initialized with the long length */
 	FftPlansHilFilt.Init(iHilFiltBlLen * 2);
@@ -345,6 +351,8 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 {
+	int i;
+
 	/* Calculate filter taps for complex Hilbert filter --------------------- */
 	const CReal rBWNormCutOff = (CReal) iFilterBW / SOUNDCRD_SAMPLE_RATE;
 
@@ -397,7 +405,7 @@ fflush(pFile);
 	   vectors with zeros because we also do a zero-padding */
 	CRealVector rvecBReal(2 * iHilFiltBlLen, (CReal) 0.0);
 	CRealVector rvecBImag(2 * iHilFiltBlLen, (CReal) 0.0);
-	for (int i = 0; i < iHilFiltBlLen; i++)
+	for (i = 0; i < iHilFiltBlLen; i++)
 	{
 		rvecBReal[i] = vecrFilter[i] *
 			Cos((CReal) 2.0 * crPi * rFiltCentOffsNorm * i - rStartPhase);
@@ -409,6 +417,14 @@ fflush(pFile);
 	/* Transformation in frequency domain for fft filter */
 	cvecBReal = rfft(rvecBReal, FftPlansHilFilt);
 	cvecBImag = rfft(rvecBImag, FftPlansHilFilt);
+
+	/* Set filter coefficients for AM filter after demodulation (use same low-
+	   pass design as for the bandpass filter) */
+	CRealVector rvecBAMAfterDem(2 * iHilFiltBlLen, (CReal) 0.0);
+	for (i = 0; i < iHilFiltBlLen; i++)
+		rvecBAMAfterDem[i] = vecrFilter[i];
+
+	cvecBAMAfterDem = rfft(rvecBAMAfterDem, FftPlansHilFilt); 
 
 
 	/* Set mixing constant -------------------------------------------------- */

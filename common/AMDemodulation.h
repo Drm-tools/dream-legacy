@@ -162,6 +162,9 @@ protected:
 	CComplexVector				cvecBImag;
 	CRealVector					rvecZReal;
 	CRealVector					rvecZImag;
+	CComplexVector				cvecBAMAfterDem;
+	CRealVector					rvecZAMAfterDem;
+	
 	CRealVector					rvecInpTmp;
 	CComplexVector				cvecHilbert;
 	int							iHilFiltBlLen;
@@ -173,6 +176,8 @@ protected:
 	CRealVector					rvecZFM;
 	CRealVector					rvecAFM;
 	CRealVector					rvecBFM;
+
+
 
 	CComplex					cCurExp;
 	CComplex					cExpStep;
