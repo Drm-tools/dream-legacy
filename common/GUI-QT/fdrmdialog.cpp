@@ -492,6 +492,9 @@ void FDRMDialog::OnButtonService1()
 		PushButtonService1->setOn(TRUE);
 	else
 	{
+
+// TODO: use QActionGroup instead
+
 		/* Set all other buttons up */
 		if (PushButtonService2->isOn()) PushButtonService2->setOn(FALSE);
 		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
