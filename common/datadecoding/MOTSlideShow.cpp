@@ -51,7 +51,7 @@ _BOOLEAN CMOTSlideShowEncoder::GetTransStat(string& strCurPict,
 	strCurPict = strCurObjName;
 	rCurPerc = MOTDAB.GetProgPerc();
 
-	if (iPictureCnt != 0)
+	if (vecPicFileNames.Size() != 0)
 		return TRUE;
 	else
 		return FALSE;
@@ -72,16 +72,43 @@ void CMOTSlideShowEncoder::Init()
 void CMOTSlideShowEncoder::AddNextPicture()
 {
 	/* Make sure at least one picture is in container */
-	if (vecMOTPicture.Size() > 0)
+	if (vecPicFileNames.Size() > 0)
 	{
 		/* Get current file name */
-		strCurObjName = vecMOTPicture[iPictureCnt].strName;
+		strCurObjName = vecPicFileNames[iPictureCnt].strName;
 
-		MOTDAB.SetMOTObject(vecMOTPicture[iPictureCnt]);
+		/* Try to open file binary */
+		FILE* pFiBody = fopen(strCurObjName.c_str(), "rb");
+
+		if (pFiBody != NULL)
+		{
+			CMOTObject	MOTPicture;
+			_BYTE		byIn;
+
+			/* Set file name and format string */
+			MOTPicture.strName = vecPicFileNames[iPictureCnt].strName;
+			MOTPicture.strFormat = vecPicFileNames[iPictureCnt].strFormat;
+
+			/* Fill body data with content of selected file */
+			MOTPicture.vecbRawData.Init(0);
+
+			while (fread((void*) &byIn, size_t(1), size_t(1), pFiBody) !=
+				size_t(0))
+			{
+				/* Add one byte = SIZEOF__BYTE bits */
+				MOTPicture.vecbRawData.Enlarge(SIZEOF__BYTE);
+				MOTPicture.vecbRawData.Enqueue((uint32_t) byIn, SIZEOF__BYTE);
+			}
+
+			/* Close the file afterwards */
+			fclose(pFiBody);
+
+			MOTDAB.SetMOTObject(MOTPicture);
+		}
 
 		/* Set file counter to next picture, test for wrap around */
 		iPictureCnt++;
-		if (iPictureCnt == vecMOTPicture.Size())
+		if (iPictureCnt == vecPicFileNames.Size())
 			iPictureCnt = 0;
 	}
 }
@@ -91,36 +118,11 @@ void CMOTSlideShowEncoder::AddFileName(const string& strFileName,
 {
 	/* Only ContentSubType "JFIF" (JPEG) and ContentSubType "PNG" are allowed
 	   for SlideShow application (not tested here!) */
-	/* Try to open file binary */
-	FILE* pFiBody = fopen(strFileName.c_str(), "rb");
-
-	if (pFiBody != NULL)
-	{
-		_BYTE byIn;
-
-		/* Enlarge vector storing the picture objects */
-		const int iOldNumObj = vecMOTPicture.Size();
-		vecMOTPicture.Enlarge(1);
-
-		/* Store file name and format string */
-		vecMOTPicture[iOldNumObj].strName = strFileName;
-		vecMOTPicture[iOldNumObj].strFormat = strFormat;
-
-		/* Fill body data with content of selected file */
-		vecMOTPicture[iOldNumObj].vecbRawData.Init(0);
-
-		while (fread((void*) &byIn, size_t(1), size_t(1), pFiBody) !=
-			size_t(0))
-		{
-			/* Add one byte = SIZEOF__BYTE bits */
-			vecMOTPicture[iOldNumObj].vecbRawData.Enlarge(SIZEOF__BYTE);
-			vecMOTPicture[iOldNumObj].vecbRawData.
-				Enqueue((uint32_t) byIn, SIZEOF__BYTE);
-		}
-
-		/* Close the file afterwards */
-		fclose(pFiBody);
-	}
+	/* Add file name to the list */
+	const int iOldNumObj = vecPicFileNames.Size();
+	vecPicFileNames.Enlarge(1);
+	vecPicFileNames[iOldNumObj].strName = strFileName;
+	vecPicFileNames[iOldNumObj].strFormat = strFormat;
 }
 
 

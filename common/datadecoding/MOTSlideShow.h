@@ -38,7 +38,7 @@
 class CMOTSlideShowEncoder
 {
 public:
-	CMOTSlideShowEncoder() : vecMOTPicture(0) {}
+	CMOTSlideShowEncoder() : vecPicFileNames(0) {}
 	virtual ~CMOTSlideShowEncoder() {}
 
 	void Init();
@@ -46,15 +46,16 @@ public:
 	void GetDataUnit(CVector<_BINARY>& vecbiNewData);
 
 	void AddFileName(const string& strFileName, const string& strFormat);
-	void ClearAllFileNames() {vecMOTPicture.Init(0);}
+	void ClearAllFileNames() {vecPicFileNames.Init(0);}
 	_BOOLEAN GetTransStat(string& strCurPict, _REAL& rCurPerc) const;
 
 protected:
+	struct SPicDescr {string strName, strFormat;};
 	void AddNextPicture();
 
 	CMOTDABEnc			MOTDAB;
 
-	CVector<CMOTObject>	vecMOTPicture;
+	CVector<SPicDescr>	vecPicFileNames;
 	int					iPictureCnt;
 
 	string				strCurObjName;
