@@ -215,6 +215,8 @@ inline CMatlibVector<CReal>	Round(const CMatlibVector<CReal>& fvI)
 inline CReal				Sign(const CReal& rI)
 								{return rI == 0 ? 0 : rI > 0 ? 1 : -1;}
 
+inline int					Mod(const int ix, const int iy)
+								{return ix < 0 ? ix % iy + iy : ix % iy;}
 
 template<class T> T			Sum(const CMatlibVector<T>& vecI);
 
