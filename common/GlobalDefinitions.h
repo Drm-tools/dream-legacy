@@ -66,8 +66,8 @@ typedef short							_SAMPLE;
 typedef unsigned char					_BYTE;
 typedef bool							_BOOLEAN;
 
-// bool seems not to work with linux, therefore "int" TODO: Fix Me!
-typedef int/*bool*/						_BINARY;
+// bool seems not to work with linux TODO: Fix Me!
+typedef unsigned char/*bool*/			_BINARY;
 
 #if defined(_WIN32)
 typedef unsigned __int64 uint64_t;
