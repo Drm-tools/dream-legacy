@@ -975,14 +975,14 @@ void FDRMDialog::AddWhatsThisHelp()
 */
 	/* Text Message */
 	QWhatsThis::add(TextTextMessage,
-		"<b>" + tr("Text Message:") + "</b> " + tr("On the top right the text "
+		tr("<b>Text Message:</b> On the top right the text "
 		"message label is shown. This label only appears when an actual text "
 		"message is transmitted. If the current service does not transmit a "
 		"text message, the label will be invisible."));
 
 	/* Input Level */
 	const QString strInputLevel =
-		"<b>" + tr("Input Level:") + "</b> " + tr("The input level meter shows "
+		tr("<b>Input Level:</b> The input level meter shows "
 		"the relative input signal peak level in dB. If the level is too high, "
 		"the meter turns from green to red. The red region should be avoided "
 		"since overload causes distortions which degrade the reception "
@@ -994,7 +994,7 @@ void FDRMDialog::AddWhatsThisHelp()
 
 	/* Status LEDs */
 	const QString strStatusLEDS =
-		"<b>" + tr("Status LEDs:") + "</b> " + tr("The three status LEDs show "
+		tr("<b>Status LEDs:</b> The three status LEDs show "
 		"the current CRC status of the three logical channels of a DRM stream. "
 		"These LEDs are the same as the top LEDs on the Evaluation Dialog.");
 
@@ -1005,7 +1005,7 @@ void FDRMDialog::AddWhatsThisHelp()
 
 	/* Station Label and Info Display */
 	const QString strStationLabelOther =
-		"<b>" + tr("Station Label and Info Display:") + "</b> " + tr("In the "
+		tr("<b>Station Label and Info Display:</b> In the "
 		"big label with the black background the station label and some other "
 		"information about the current selected service is displayed. The red "
 		"text on the top shows the audio compression format (e.g. AAC), the "
@@ -1014,10 +1014,10 @@ void FDRMDialog::AddWhatsThisHelp()
 		"low-complexity or parametric stereo). In case SBR is used, the actual "
 		"sample rate is twice the sample rate of the core AAC decoder. The "
 		"next two types of information are the language and the program type "
-		"of the service (e.g. German / News).") + "<br>" + tr("The big "
+		"of the service (e.g. German / News).<br>The big "
 		"turquoise text in the middle is the station label. This label may "
 		"appear later than the red text since this information is transmitted "
-		"in a different logical channel of a DRM stream.") + "<br>" + tr("The "
+		"in a different logical channel of a DRM stream.<br>The "
 		"turquoise text on the bottom shows the gross bit-rate in kbits per "
 		"second of the current selected service. The abbreviations EEP and "
 		"UEP stand for Equal Error Protection and Unequal Error Protection. "
@@ -1033,7 +1033,7 @@ void FDRMDialog::AddWhatsThisHelp()
 
 	/* Service Selectors */
 	const QString strServiceSel =
-		"<b>" + tr("Service Selectors:") + "</b> " + tr("In a DRM stream up to "
+		tr("<b>Service Selectors:</b> In a DRM stream up to "
 		"four services can be carried. The service type can either be audio, "
 		"data or audio and data. If a data service is selected, the Multimedia "
 		"Dialog will automatically show up. On the right of each service "
@@ -1054,6 +1054,6 @@ void FDRMDialog::AddWhatsThisHelp()
 
 	/* Dream Logo */
 	QWhatsThis::add(PixmapLabelDreamLogo,
-		"<b>" + tr("Dream Logo:") + "</b> " + tr("This is the official logo "
+		tr("<b>Dream Logo:</b> This is the official logo "
 		"of the Dream software."));
 }

@@ -919,7 +919,7 @@ void systemevalDlg::AddWhatsThisHelp()
 */
 	/* DC Frequency Offset */
 	QWhatsThis::add(TextFreqOffset,
-		"<b>" + tr("DC Frequency Offset:") + "</b> " + tr("This is the "
+		tr("<b>DC Frequency Offset:</b> This is the "
 		"estimation of the DC frequency offset. This offset corresponds "
 		"to the resulting sound card intermedia frequency of the front-end. "
 		"This frequency is not restricted to a certain value. The only "
@@ -928,7 +928,7 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* Sample Frequency Offset */
 	QWhatsThis::add(TextSampFreqOffset,
-		"<b>" + tr("Sample Frequency Offset:") + "</b> " + tr("This is the "
+		tr("<b>Sample Frequency Offset:</b> This is the "
 		"estimation of the sample rate offset between the sound card sample "
 		"rate of the local computer and the sample rate of the D / A (digital "
 		"to analog) converter in the transmitter. Usually the sample rate "
@@ -938,13 +938,13 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* Doppler / Delay */
 	QWhatsThis::add(TextWiener,
-		"<b>" + tr("Doppler / Delay:") + "</b> " + tr("The Doppler frequency "
+		tr("<b>Doppler / Delay:</b> The Doppler frequency "
 		"of the channel is estimated for the Wiener filter design of channel "
 		"estimation in time direction. If linear interpolation is set for "
 		"channel estimation in time direction, this estimation is not updated. "
 		"The Doppler frequency is an indication of how fast the channel varies "
 		"with time. The higher the frequency, the faster the channel changes "
-		"are.") + "<br>" + tr("The total delay of the Power Delay Spectrum "
+		"are.<br>The total delay of the Power Delay Spectrum "
 		"(PDS) is estimated from the impulse response estimation derived from "
 		"the channel estimation. This delay corresponds to the range between "
 		"the two vertical dashed black lines in the Impulse Response (IR) "
@@ -952,7 +952,7 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* I / O Interface LED */
 	const QString strLEDIOInterface =
-		"<b>" + tr("I / O Interface LED:") + "</b> " + tr("This LED shows the "
+		tr("<b>I / O Interface LED:</b> This LED shows the "
 		"current status of the sound card interface. The yellow light shows "
 		"that the audio output was corrected. Since the sample rate of the "
 		"transmitter and local computer are different, from time to time the "
@@ -971,7 +971,7 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* Time Sync Acq LED */
 	const QString strLEDTimeSyncAcq =
-		"<b>" + tr("Time Sync Acq LED:") + "</b> " + tr("This LED shows the "
+		tr("<b>Time Sync Acq LED:</b> This LED shows the "
 		"state of the timing acquisition (search for the beginning of an OFDM "
 		"symbol). If the acquisition is done, this LED will stay green.");
 
@@ -980,7 +980,7 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* Frame Sync LED */
 	const QString strLEDFrameSync =
-		"<b>" + tr("Frame Sync LED:") + "</b> " + tr("The DRM frame "
+		tr("<b>Frame Sync LED:</b> The DRM frame "
 		"synchronization status is shown with this LED. This LED is also only "
 		"active during acquisition state of the Dream receiver. In tracking "
 		"mode, this LED is always green.");
@@ -990,7 +990,7 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* FAC CRC LED */
 	const QString strLEDFACCRC =
-		"<b>" + tr("FAC CRC LED:") + "</b> " + tr("This LED shows the Cyclic "
+		tr("<b>FAC CRC LED:</b> This LED shows the Cyclic "
 		"Redundancy Check (CRC) of the Fast Access Channel (FAC) of DRM. FAC "
 		"is one of the three logical channels and is always modulated with a "
 		"4-QAM. If the FAC CRC check was successful, the receiver changes to "
@@ -1002,7 +1002,7 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* SDC CRC LED */
 	const QString strLEDSDCCRC =
-		"<b>" + tr("SDC CRC LED:") + "</b> " + tr("This LED shows the CRC "
+		tr("<b>SDC CRC LED:</b> This LED shows the CRC "
 		"check result of the Service Description Channel (SDC) which is one "
 		"logical channel of the DRM stream. This data is transmitted in "
 		"approx. 1 second intervals and contains information about station "
@@ -1015,7 +1015,7 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* MSC CRC LED */
 	const QString strLEDMSCCRC =
-		"<b>" + tr("MSC CRC LED:") + "</b> " + tr("This LED shows the status "
+		tr("<b>MSC CRC LED:</b> This LED shows the status "
 		"of the Main Service Channel (MSC). This channel contains the actual "
 		"audio and data bits. The LED shows the CRC check of the AAC core "
 		"decoder. The SBR has a separate CRC, but this status is not shown "
@@ -1030,7 +1030,7 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* MLC, Number of Iterations */
 	const QString strNumOfIterations =
-		"<b>" + tr("MLC, Number of Iterations:") + "</b> " + tr("In DRM, a "
+		tr("<b>MLC, Number of Iterations:</b> In DRM, a "
 		"multilevel channel coder is used. With this code it is possible to "
 		"iterate the decoding process in the decoder to improve the decoding "
 		"result. The more iterations are used the better the result will be. "
@@ -1038,8 +1038,8 @@ void systemevalDlg::AddWhatsThisHelp()
 		"Simulations showed that the first iteration (number of "
 		"iterations = 1) gives the most improvement (approx. 1.5 dB at a "
 		"BER of 10-4 on a Gaussian channel, Mode A, 10 kHz bandwidth). The "
-		"improvement of the second iteration will be as small as 0.3 dB.") +
-		"<br>" + tr("The recommended number of iterations given in the DRM "
+		"improvement of the second iteration will be as small as 0.3 dB."
+		"<br>The recommended number of iterations given in the DRM "
 		"standard is one iteration (number of iterations = 1).");
 
 	QWhatsThis::add(TextNumOfIterations, strNumOfIterations);
@@ -1047,19 +1047,19 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* Flip Input Spectrum */
 	QWhatsThis::add(CheckBoxFlipSpec,
-		"<b>" + tr("Flip Input Spectrum:") + "</b> " + tr("Checking this box "
+		tr("<b>Flip Input Spectrum:</b> Checking this box "
 		"will flip or invert the input spectrum. This is necessary if the "
 		"mixer in the front-end uses the lower side band."));
 
 	/* Mute Audio */
 	QWhatsThis::add(CheckBoxMuteAudio,
-		"<b>" + tr("Mute Audio:") + "</b> " + tr("The audio can be muted by "
+		tr("<b>Mute Audio:</b> The audio can be muted by "
 		"checking this box. The reaction of checking or unchecking this box "
 		"is delayed by approx. 1 second due to the audio buffers."));
 
 	/* Log File */
 	QWhatsThis::add(CheckBoxWriteLog,
-		"<b>" + tr("Log File:") + "</b> " + tr("Checking this box brings the "
+		tr("<b>Log File:</b> Checking this box brings the "
 		"Dream software to write a log file about the current reception. "
 		"Every minute the average SNR, number of correct decoded FAC and "
 		"number of correct decoded MSC blocks are logged including some "
@@ -1071,24 +1071,24 @@ void systemevalDlg::AddWhatsThisHelp()
 		"(problem with QT timer implementation under Windows). This problem "
 		"does not exist in the Linux version of Dream."
 #endif
-		) + "<br>" + tr("The log file will be "
+		"<br>The log file will be "
 		"written in the directory were the Dream application was started and "
 		"the name of this file is always DreamLog.txt"));
 
 	/* Freq */
 	QWhatsThis::add(EdtFrequency,
-		"<b>" + tr("Freq:") + "</b> " + tr("In this edit control, the current "
+		tr("<b>Freq:</b> In this edit control, the current "
 		"selected frequency on the front-end can be specified. This frequency "
 		"will be written into the log file."));
 
 	/* Wiener */
 	const QString strWienerChanEst =
-		"<b>" + tr("Channel Estimation Settings:") + "</b> " + tr("With these "
+		tr("<b>Channel Estimation Settings:</b> With these "
 		"settings, the channel estimation method in time and frequency "
 		"direction can be selected. The default values use the most powerful "
 		"algorithms. For more detailed information about the estimation "
-		"algorithms there are a lot of papers and books available.") + "<br>"
-		"<b>" + tr("Wiener:") + "</b> " + tr("Wiener interpolation method "
+		"algorithms there are a lot of papers and books available.<br>"
+		"<b>Wiener:</b> Wiener interpolation method "
 		"uses estimation of the statistics of the channel to design an optimal "
 		"filter for noise reduction.");
 
@@ -1097,12 +1097,12 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* Linear */
 	const QString strLinearChanEst =
-		"<b>" + tr("Channel Estimation Settings:") + "</b> " + tr("With these "
+		tr("<b>Channel Estimation Settings:</b> With these "
 		"settings, the channel estimation method in time and frequency "
 		"direction can be selected. The default values use the most powerful "
 		"algorithms. For more detailed information about the estimation "
-		"algorithms there are a lot of papers and books available.") + "<br>"
-		"<b>" + tr("Linear:") + "</b> " + tr("Simple linear interpolation "
+		"algorithms there are a lot of papers and books available.<br>"
+		"<b>Linear:</b> Simple linear interpolation "
 		"method to get the channel estimate. The real and imaginary parts "
 		"of the estimated channel at the pilot positions are linearly "
 		"interpolated. This algorithm causes the lowest CPU load but "
@@ -1113,12 +1113,12 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* DFT Zero Pad */
 	QWhatsThis::add(RadioButtonFreqDFT,
-		"<b>" + tr("Channel Estimation Settings:") + "</b> " + tr("With these "
+		tr("<b>Channel Estimation Settings:</b> With these "
 		"settings, the channel estimation method in time and frequency "
 		"direction can be selected. The default values use the most powerful "
 		"algorithms. For more detailed information about the estimation "
-		"algorithms there are a lot of papers and books available.") + "<br>"
-		"<b>" + tr("DFT Zero Pad:") + "</b> " + tr("Channel estimation method "
+		"algorithms there are a lot of papers and books available.<br>"
+		"<b>DFT Zero Pad:</b> Channel estimation method "
 		"for the frequency direction using Discrete Fourier Transformation "
 		"(DFT) to transform the channel estimation at the pilot positions to "
 		"the time domain. There, a zero padding is applied to get a higher "
@@ -1128,20 +1128,20 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* Guard Energy */
 	QWhatsThis::add(RadioButtonTiSyncEnergy,
-		"<b>" + tr("Guard Energy:") + "</b> " + tr("Time synchronization "
+		tr("<b>Guard Energy:</b> Time synchronization "
 		"tracking algorithm utilizes the estimation of the impulse response. "
 		"This method tries to maximize the energy in the guard-interval to set "
 		"the correct timing."));
 
 	/* First Peak */
 	QWhatsThis::add(RadioButtonTiSyncFirstPeak,
-		"<b>" + tr("First Peak:") + "</b> " + tr("This algorithms searches for "
+		tr("<b>First Peak:</b> This algorithms searches for "
 		"the first peak in the estimated impulse response and moves this peak "
 		"to the beginning of the guard-interval (timing tracking algorithm)."));
 
 	/* SNR */
 	const QString strSNREst =
-		"<b>" + tr("SNR:") + "</b> " + tr("Signal to Noise Ratio (SNR) "
+		tr("<b>SNR:</b> Signal to Noise Ratio (SNR) "
 		"estimation based on FAC cells. Since the FAC cells are only "
 		"located approximately in the region 0-5 kHz relative to the DRM DC "
 		"frequency, it may happen that the SNR value is very high "
@@ -1157,16 +1157,16 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* DRM Mode / Bandwidth */
 	const QString strRobustnessMode =
-		"<b>" + tr("DRM Mode / Bandwidth:") + "</b> " + tr("In a DRM system, "
+		tr("<b>DRM Mode / Bandwidth:</b> In a DRM system, "
 		"four possible robustness modes are defined to adapt the system to "
-		"different channel conditions. According to the DRM standard:") + "<ul>"
-		"<li><i>" + tr("Mode A:") + "</i> " + tr("Gaussian channels, with "
-		"minor fading") + "</li><li><i>" + tr("Mode B:") + "</i> " + tr("Time "
-		"and frequency selective channels, with longer delay spread") + "</li>"
-		"<li><i>" + tr("Mode C:") + "</i> " + tr("As robustness mode B, but "
-		"with higher Doppler spread") + "</li>"
-		"<li><i>" + tr("Mode D:") + "</i> " + tr("As robustness mode B, but "
-		"with severe delay and Doppler spread") + "</li></ul>" + tr("The "
+		"different channel conditions. According to the DRM standard:<ul>"
+		"<li><i>Mode A:</i> Gaussian channels, with "
+		"minor fading</li><li><i>Mode B:</i> Time "
+		"and frequency selective channels, with longer delay spread</li>"
+		"<li><i>Mode C:</i> As robustness mode B, but "
+		"with higher Doppler spread</li>"
+		"<li><i>Mode D:</i> As robustness mode B, but "
+		"with severe delay and Doppler spread</li></ul>The "
 		"bandwith is the gross bandwidth of the current DRM signal");
 
 	QWhatsThis::add(FACDRMModeBWL, strRobustnessMode);
@@ -1174,7 +1174,7 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* Interleaver Depth */
 	const QString strInterleaver =
-		"<b>" + tr("Interleaver Depth:") + "</b> " + tr("The symbol "
+		tr("<b>Interleaver Depth:</b> The symbol "
 		"interleaver depth can be either short (approx. 400 ms) or long "
 		"(approx. 2 s). The longer the interleaver the better the channel "
 		"decoder can correct errors from slow fading signals. But the "
@@ -1186,7 +1186,7 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* SDC / MSC Mode */
 	const QString strSDCMSCMode =
-		"<b>" + tr("SDC / MSC Mode:") + "</b> " + tr("Shows the modulation "
+		tr("<b>SDC / MSC Mode:</b> Shows the modulation "
 		"type of the SDC and MSC channel. For the MSC channel, some "
 		"hierarchical modes are defined which can provide a very strong "
 		"protected service channel.");
@@ -1196,7 +1196,7 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* Prot. Level (B/A) */
 	const QString strProtLevel =
-		"<b>" + tr("Prot. Level (B/A):") + "</b> " + tr("The error protection "
+		tr("<b>Prot. Level (B/A):</b> The error protection "
 		"level of the channel coder. For 64-QAM, there are four protection "
 		"levels defined in the DRM standard. Protection level 0 has the "
 		"highest protection whereas level 3 has the lowest protection. The "
@@ -1210,7 +1210,7 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* Number of Services */
 	const QString strNumServices =
-		"<b>" + tr("Number of Services:") + "</b> " + tr("This shows the "
+		tr("<b>Number of Services:</b> This shows the "
 		"number of audio and data services transmitted in the DRM stream. "
 		"The maximum number of streams is four.");
 
@@ -1219,7 +1219,7 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* Received time - date */
 	const QString strTimeDate =
-		"<b>" + tr("Received time - date:") + "</b> " + tr("This label shows "
+		tr("<b>Received time - date:</b> This label shows "
 		"the received time and date in UTC. This information is carried in "
 		"the SDC channel.");
 
@@ -1228,27 +1228,29 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* Save audio as wave */
 	QWhatsThis::add(CheckBoxSaveAudioWave,
-		"<b>" + tr("Save Audio as WAV:") + "</b> " + tr("Save the audio signal "
+		tr("<b>Save Audio as WAV:</b> Save the audio signal "
 		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
 		"box will let the user choose a file name for the recording."));
 
 	/* Chart Selector */
 	QWhatsThis::add(ListViewCharSel,
-		"<b>" + tr("Chart Selector:") + "</b> " + tr("With the chart selector "
+		tr("<b>Chart Selector:</b> With the chart selector "
 		"different types of graphical display of parameters and receiver "
 		"states can be chosen. The different plot types are sorted in "
 		"different groups. To open a group just double-click on the group or "
 		"click on the plus left of the group name. After clicking on an item "
 		"it is possible to choose other items by using the up / down arrow "
 		"keys. With these keys it is also possible to open and close the "
-		"groups by using the left / right arrow keys."));
+		"groups by using the left / right arrow keys.<br>A separate chart "
+		"window for a selected item can be opened by right click on the item "
+		"and click on the context menu item."));
 
 	/* Interferer Rejection */
 	const QString strInterfRej =
-		"<b>" + tr("Interferer Rejection:") + "</b> " + tr("There are two "
-		"algorithms available to reject interferers:") + "<ul>" +
-		"<li><b>" + tr("Bandpass filter (BP-Filter):") + "</b>" +
-		tr("The bandpass filter is designed to have the same bandwidth as "
+		tr("<b>Interferer Rejection:</b> There are two "
+		"algorithms available to reject interferers:<ul>"
+		"<li><b>Bandpass filter (BP-Filter):</b>"
+		" The bandpass filter is designed to have the same bandwidth as "
 		"the DRM signal. If, e.g., a strong signal is close to the border "
 		"of the actual DRM signal, under some conditions this signal will "
 		"produce interference in the useful bandwidth of the DRM signal "
@@ -1262,16 +1264,16 @@ void systemevalDlg::AddWhatsThisHelp()
 		"considered, its spectrum will not be a distinct peak but a "
 		"shifted Sinc function. So its spectrum is broadened caused by "
 		"the windowing. Thus, it will spread in the DRM spectrum and "
-		"act as an in-band interferer.") + "<br>" +
-		tr("There is a special case if the sinusoidal signal is in a "
+		"act as an in-band interferer.<br>"
+		"There is a special case if the sinusoidal signal is in a "
 		"distance of a multiple of the carrier spacing of the DRM signal. "
 		"Since the Sinc function has zeros at certain positions it happens "
 		"that in this case the zeros are exactly at the sub-carrier "
 		"frequencies of the DRM signal. In this case, no interference takes "
 		"place. If the sinusoidal signal is in a distance of a multiple of "
 		"the carrier spacing plus half of the carrier spacing away from the "
-		"DRM signal, the interference reaches its maximum.") + "<br>" +
-		tr("As a result, if only one DRM signal is present in the 20 kHz "
+		"DRM signal, the interference reaches its maximum.<br>"
+		"As a result, if only one DRM signal is present in the 20 kHz "
 		"bandwidth, bandpass filtering has no effect. Also,  if the "
 		"interferer is far away from the DRM signal, filtering will not "
 		"give much improvement since the squared magnitude of the spectrum "
@@ -1280,15 +1282,15 @@ void systemevalDlg::AddWhatsThisHelp()
 		"-30 dB at 10 times the carrier spacing plus 1 / 2 of the carrier "
 		"spacing (approx 525 Hz with DRM mode B). The bandpass filter must "
 		"have very sharp edges otherwise the gain in performance will be "
-		"very small so that it consumes high CPU power.") + "</li>" +
-		"<li><b>" + tr("Modificated Metric:") + "</b>" + tr("Based on the "
+		"very small so that it consumes high CPU power.</li>"
+		"<li><b>Modificated Metric:</b> Based on the "
 		"information from the SNR versus sub-carrier estimation, the metric "
 		"for the Viterbi decoder can be modified so that sub-carriers with "
 		"high noise are attenuated and do not contribute too much to the "
 		"decoding result. That can improve reception under bad conditions but "
 		"may worsen the reception in situations where a lot of fading happens "
 		"and no interferer are present since the SNR estimation may be "
-		"not correct.") + "</li></ul>";
+		"not correct.</li></ul>");
 
 	QWhatsThis::add(GroupBoxInterfRej, strInterfRej);
 	QWhatsThis::add(CheckBoxRecFilter, strInterfRej);

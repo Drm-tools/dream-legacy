@@ -1496,7 +1496,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 	case AVERAGED_IR:
 		/* Impulse Response */
 		strCurPlotHelp =
-			"<b>" + tr("Impulse Response:") + "</b> " + tr("This plot shows "
+			tr("<b>Impulse Response:</b> This plot shows "
 			"the estimated Impulse Response (IR) of the channel based on the "
 			"channel estimation. It is the averaged, Hamming Window weighted "
 			"Fourier back transformation of the transfer function. The length "
@@ -1514,8 +1514,8 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 	case TRANSFERFUNCTION:
 		/* Transfer Function */
 		strCurPlotHelp =
-			"<b>" + tr("Transfer Function / Group Delay:") + "</b> " +
-			tr("This plot shows the squared magnitude and the group delay of "
+			tr("<b>Transfer Function / Group Delay:</b> "
+			"This plot shows the squared magnitude and the group delay of "
 			"the estimated channel at each sub-carrier.");
 		break;
 
@@ -1525,7 +1525,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 	case ALL_CONSTELLATION:
 		/* Constellations */
 		strCurPlotHelp =
-			"<b>" + tr("FAC, SDC, MSC:") + "</b> " + tr("The plots show the "
+			tr("<b>FAC, SDC, MSC:</b> The plots show the "
 			"constellations of the FAC, SDC and MSC logical channel of the DRM "
 			"stream. Depending on the current transmitter settings, the SDC "
 			"and MSC can have 4-QAM, 16-QAM or 64-QAM modulation.");
@@ -1534,7 +1534,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 	case POWER_SPEC_DENSITY:
 		/* Shifted PSD */
 		strCurPlotHelp =
-			"<b>" + tr("Shifted PSD:") + "</b> " + tr("This plot shows the "
+			tr("<b>Shifted PSD:</b> This plot shows the "
 			"estimated Power Spectrum Density (PSD) of the input signal. The "
 			"DC frequency (red dashed vertical line) is fixed at 6 kHz. If "
 			"the frequency offset acquisition was successful, the rectangular "
@@ -1552,15 +1552,15 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 	case SNR_SPECTRUM:
 		/* SNR Spectrum (Weighted MER on MSC Cells) */
 		strCurPlotHelp =
-			"<b>" + tr("SNR Spectrum (Weighted MER on MSC Cells):") + "</b> " +
-			tr("This plot shows the Weighted MER on MSC cells for each carrier "
+			tr("<b>SNR Spectrum (Weighted MER on MSC Cells):</b> "
+			"This plot shows the Weighted MER on MSC cells for each carrier "
 			"separately.");
 		break;
 
 	case INPUTSPECTRUM_NO_AV:
 		/* Input Spectrum */
 		strCurPlotHelp =
-			"<b>" + tr("Input Spectrum:") + "</b> " + tr("This plot shows the "
+			tr("<b>Input Spectrum:</b> This plot shows the "
 			"Fast Fourier Transformation (FFT) of the input signal. This plot "
 			"is active in both modes, analog and digital. There is no "
 			"averaging applied. The screen shot of the Evaluation Dialog shows "
@@ -1575,7 +1575,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 	case INPUT_SIG_PSD:
 		/* Input PSD */
 		strCurPlotHelp =
-			"<b>" + tr("Input PSD:") + "</b> " + tr("This plot shows the "
+			tr("<b>Input PSD:</b> This plot shows the "
 			"estimated power spectral density (PSD) of the input signal. The "
 			"PSD is estimated by averaging some Hamming Window weighted "
 			"Fourier transformed blocks of the input signal samples. The "
@@ -1585,7 +1585,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 	case AUDIO_SPECTRUM:
 		/* Audio Spectrum */
 		strCurPlotHelp =
-			"<b>" + tr("Audio Spectrum:") + "</b> " + tr("This plot shows the "
+			tr("<b>Audio Spectrum:</b> This plot shows the "
 			"averaged audio spectrum of the currently played audio. With this "
 			"plot the actual audio bandwidth can easily determined. Since a "
 			"linear scale is used for the frequency axis, most of the energy "
@@ -1596,8 +1596,8 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 	case FREQ_SAM_OFFS_HIST:
 		/* Frequency Offset / Sample Rate Offset History */
 		strCurPlotHelp =
-			"<b>" + tr("Frequency Offset / Sample Rate Offset History:") +
-			"</b> " + tr("The history "
+			tr("<b>Frequency Offset / Sample Rate Offset History:"
+			"</b> The history "
 			"of the values for frequency offset and sample rate offset "
 			"estimation is shown. If the frequency offset drift is very small, "
 			"this is an indication that the analog front end is of high "
@@ -1607,8 +1607,8 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 	case DOPPLER_DELAY_HIST:
 		/* Doppler / Delay History */
 		strCurPlotHelp =
-			"<b>" + tr("Doppler / Delay History:") + "</b> " +
-			tr("The history of the values for the "
+			tr("<b>Doppler / Delay History:</b> "
+			"The history of the values for the "
 			"Doppler and Impulse response length is shown. Large Doppler "
 			"values might be responsable for audio drop-outs.");
 		break;
@@ -1616,8 +1616,8 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 	case SNR_AUDIO_HIST:
 		/* SNR History */
 		strCurPlotHelp =
-			"<b>" + tr("SNR History:") + "</b> " +
-			tr("The history of the values for the "
+			tr("<b>SNR History:</b> "
+			"The history of the values for the "
 			"SNR and correctly decoded audio blocks is shown. The maximum "
 			"achievable number of correctly decoded audio blocks per DRM "
 			"frame is 10 or 5 depending on the audio sample rate (24 kHz "

@@ -1304,7 +1304,7 @@ void StationsDlg::AddWhatsThisHelp()
 {
 	/* Stations List */
 	QWhatsThis::add(ListViewStations,
-		"<b>" + tr("Stations List:") + "</b> " + tr("In the stations list "
+		tr("<b>Stations List:</b> In the stations list "
 		"view all DRM stations which are stored in the DRMSchedule.ini file "
 		"are shown. It is possible to show only active stations by changing a "
 		"setting in the 'view' menu. The color of the cube on the left of a "
@@ -1321,7 +1321,7 @@ void StationsDlg::AddWhatsThisHelp()
 
 	/* Frequency Counter */
 	QWhatsThis::add(QwtCounterFrequency,
-		"<b>" + tr("Frequency Counter:") + "</b> " + tr("The current frequency "
+		tr("<b>Frequency Counter:</b> The current frequency "
 		"value can be changed by using this counter. The tuning steps are "
 		"100 kHz for the  buttons with three arrows, 10 kHz for the "
 		"buttons with two arrows and 1 kHz for the buttons having only "
@@ -1330,15 +1330,15 @@ void StationsDlg::AddWhatsThisHelp()
 
 	/* UTC time label */
 	QWhatsThis::add(TextLabelUTCTime,
-		"<b>" + tr("UTC Time:") + "</b> " + tr("Shows the current Coordinated "
+		tr("<b>UTC Time:</b> Shows the current Coordinated "
 		"Universal Time (UTC) which is also known as Greenwich Mean Time "
 		"(GMT)."));
 
 #ifdef HAVE_LIBHAMLIB
 	/* S-meter */
 	const QString strSMeter =
-		"<b>" + tr("Signal-Meter:") + "</b> " + tr("Shows the signal strength "
-		"level in dB relative to S9.") + "<br>" + tr("Note that not all "
+		tr("<b>Signal-Meter:</b> Shows the signal strength "
+		"level in dB relative to S9.<br>Note that not all "
 		"front-ends controlled by hamlib support this feature. If the s-meter "
 		"is not available, the controls are disabled.");
 
