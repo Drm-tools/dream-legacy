@@ -109,6 +109,8 @@ public:
 	CAudioSourceDecoder();
 	virtual ~CAudioSourceDecoder();
 
+	int GetNumCorDecAudio();
+
 protected:
 	enum EInitErr {ET_ALL, ET_AAC}; /* ET: Error type */
 	class CInitErr 
@@ -128,6 +130,7 @@ protected:
 	CVector<_BINARY>	vecbiTextMessBuf;
 
 	int					iTotalFrameSize;
+	int					iNumCorDecAudio;
 
 #ifdef USE_FAAD2_LIBRARY
 	/* AAC decoding */

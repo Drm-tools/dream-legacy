@@ -607,6 +607,9 @@ fflush(pFile2);
 			/* Set AAC CRC result in log file */
 			ReceiverParam.ReceptLog.SetMSC(TRUE);
 
+			/* Increment correctly decoded audio blocks counter */
+			iNumCorDecAudio++;
+
 			/* Post message to show that CRC was OK */
 			PostWinMessage(MS_MSC_CRC, 0);
 
@@ -710,6 +713,9 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		DoNotProcessAAC = FALSE;
 		DoNotProcessData = FALSE;
 		iOutputBlockSize = 0;
+
+		/* Init counter for correctly decoded audio blocks */
+		iNumCorDecAudio = 0;
 
 		/* Get number of total input bits for this module */
 		iInputBlockSize = ReceiverParam.iNumAudioDecoderBits;
@@ -944,6 +950,17 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		/* In all cases set output size to zero */
 		iOutputBlockSize = 0;
 	}
+}
+
+int CAudioSourceDecoder::GetNumCorDecAudio()
+{
+	/* Return number of correctly decoded audio blocks. Reset counter
+	   afterwards */
+	const int iRet = iNumCorDecAudio;
+
+	iNumCorDecAudio = 0;
+
+	return iRet;
 }
 
 CAudioSourceDecoder::CAudioSourceDecoder()
