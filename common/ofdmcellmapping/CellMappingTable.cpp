@@ -19,16 +19,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -213,7 +213,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	iSymbolBlockSize = iFFTSizeN + iGuardSize;
 
 	/* Calculate the index of the DC carrier in the shifted spectrum */
-	iIndexDCFreq = (int) ((_REAL) VIRTUAL_INTERMED_FREQ * 
+	iIndexDCFreq = (int) ((_REAL) VIRTUAL_INTERMED_FREQ *
 		iFFTSizeN / SOUNDCRD_SAMPLE_RATE);
 
 	/* Index of minimum useful carrier (shifted) */
@@ -261,8 +261,8 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 		/* Calculate the start value of "p" in equation for gain reference 
 		   cells in Table 90 (8.4.4.1) */
-		iScatPilotsCounter = (int) ((_REAL) (iCarrierKmin - 
-			(int) ((_REAL) iScatPilFreqInt / 2 + .5) - 
+		iScatPilotsCounter = (int) ((_REAL) (iCarrierKmin -
+			(int) ((_REAL) iScatPilFreqInt / 2 + .5) -
 			iScatPilFreqInt * mod(iFrameSym, iScatPilTimeInt)
 			) / (iScatPilFreqInt * iScatPilTimeInt));
 
@@ -302,7 +302,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 			/* FAC positions are defined in a table */
 			if (iFACCounter < NUM_FAC_CELLS)
 			{
-				/* piTableFAC[x * 2]: first column; piTableFAC[x * 2 + 1]: 
+				/* piTableFAC[x * 2]: first column; piTableFAC[x * 2 + 1]:
 				   second column */
 				if (piTableFAC[iFACCounter * 2] * iNumCarrier +
 					piTableFAC[iFACCounter * 2 + 1] == iFrameSym * 
@@ -316,21 +316,21 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 			/* Scattered pilots --------------------------------------------- */
 			/* Standard: 8.4.4.3:
-			   "In some cases gain references fall in locations which coincide 
-			   with those already defined for either frequency or time 
-			   references. In these cases, the phase definitions given in 
+			   "In some cases gain references fall in locations which coincide
+			   with those already defined for either frequency or time
+			   references. In these cases, the phase definitions given in
 			   clauses 8.4.2 and 8.4.3 take precedence."
 			   Therefore, Scattered pilots must be definded FIRST here! */
 
 			/* The rule for calculating the scattered pilots is defined in the
-			   specification in the following form: 
-			   e.g.: k = 2 + 4 * (s mod 5) + 20 * p 
-			   We define a "frequency-" (FreqInt) and "time-interpolation" 
-			   (TimeInt). In this example, "4" is the FreqInt and "5" is the 
+			   specification in the following form:
+			   e.g.: k = 2 + 4 * (s mod 5) + 20 * p
+			   We define a "frequency-" (FreqInt) and "time-interpolation"
+			   (TimeInt). In this example, "4" is the FreqInt and "5" is the
 			   TimeInt. The first term "2" is the half of the FreqInt, rounded
 			   towards infinity. The parameter "20" is FreqInt * TimeInt */
-			if (iCar == (int) ((_REAL) iScatPilFreqInt / 2 + .5) + 
-				iScatPilFreqInt * mod(iFrameSym, iScatPilTimeInt) + 
+			if (iCar == (int) ((_REAL) iScatPilFreqInt / 2 + .5) +
+				iScatPilFreqInt * mod(iFrameSym, iScatPilTimeInt) +
 				iScatPilFreqInt * iScatPilTimeInt * iScatPilotsCounter)
 			{
 				iScatPilotsCounter++;
@@ -343,21 +343,21 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				int in, im, ip, i;
 
 				/* Calculations as in drm-standard (8.4.4.3.1) */
-				/* "in" is ROW No and "im" is COLUMN No! */
+				/* "in" is ROW index and "im" is COLUMN index! */
 				in = mod(iFrameSym, ScatPilots.piConst[1] /* "y" */);
-				im = (int) 
+				im = (int)
 					((_REAL) iFrameSym / ScatPilots.piConst[1] /* "y" */);
 				ip = (int) ((_REAL) (iCar - ScatPilots.piConst[2] /* "k_0" */ -
 					in * ScatPilots.piConst[0] /* "x" */) / (
-					ScatPilots.piConst[0] /* "x" */ * 
+					ScatPilots.piConst[0] /* "x" */ *
 					ScatPilots.piConst[1] /* "y" */));
 
-				/* Phase_1024[s,k] = 
+				/* Phase_1024[s,k] =
 				       (4Z_256[n,m]pW_1024[n,m] + p^2(1 + s)Q_1024) mod 1024 */
-				iScatPilPhase = mod(4 * ScatPilots.piZ[in * 
+				iScatPilPhase = mod(4 * ScatPilots.piZ[in *
 					ScatPilots.iColSizeWZ + im] + ip *
-					ScatPilots.piW[in * 
-					ScatPilots.iColSizeWZ + im] + 
+					ScatPilots.piW[in *
+					ScatPilots.iColSizeWZ + im] +
 					ip * ip * (1 + iFrameSym) * ScatPilots.iQ, 1024);
 
 
@@ -375,7 +375,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				/* Boosted pilot: Gain = 2, Regular pilot: Gain = sqrt(2) */
 				if (bIsBoostedPilot)
 				{
-					matcPilotCells[iSym][iCarArrInd] = 
+					matcPilotCells[iSym][iCarArrInd] =
 						Polar2Cart(2, iScatPilPhase);
 
 					/* Add flag for boosted pilot */
@@ -383,11 +383,11 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				}
 				else
 				{
-					matcPilotCells[iSym][iCarArrInd] = 
+					matcPilotCells[iSym][iCarArrInd] =
 						Polar2Cart(sqrt((_REAL) 2.0), iScatPilPhase);
 				}
 			}
-			
+
 
 			/* Time-reference pilots ---------------------------------------- */
 			/* Time refs at the beginning of each frame, we use a table */
@@ -396,7 +396,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				/* Use only the first column in piTableTimePilots */
 				if (piTableTimePilots[iTimePilotsCounter * 2] == iCar)
 				{
-					/* Set flag in mapping table, consider case of both, 
+					/* Set flag in mapping table, consider case of both,
 					   scattered pilot and time pilot at same position */
 					if (_IsScatPil(matiMapTab[iSym][iCarArrInd]))
 						matiMapTab[iSym][iCarArrInd] |= CM_TI_PI;
@@ -404,7 +404,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 						matiMapTab[iSym][iCarArrInd] = CM_TI_PI;
 
 					/* Set complex value for this pilot */
-					matcPilotCells[iSym][iCarArrInd] = 
+					matcPilotCells[iSym][iCarArrInd] =
 						Polar2Cart(sqrt((_REAL) 2.0),
 						piTableTimePilots[iTimePilotsCounter * 2 + 1]);
 
@@ -415,11 +415,11 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				}
 			}
 
-			
+
 			/* Frequency-reference pilots ----------------------------------- */
-			/* These pilots are in all symbols, the positions are stored in 
+			/* These pilots are in all symbols, the positions are stored in
 			   a table */
-			/* piTableFreqPilots[x * 2]: first column; 
+			/* piTableFreqPilots[x * 2]: first column;
 			   piTableFreqPilots[x * 2 + 1]: second column */
 			if (piTableFreqPilots[iFreqPilotsCounter * 2] == iCar)
 			{
@@ -450,12 +450,12 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 				/* Apply complex value */
 				if (bIsFreqPilSpeciCase)
-					matcPilotCells[iSym][iCarArrInd] = 
+					matcPilotCells[iSym][iCarArrInd] =
 						Polar2Cart(sqrt((_REAL) 2.0), mod(
-						piTableFreqPilots[iFreqPilotsCounter * 2 + 1] + 
+						piTableFreqPilots[iFreqPilotsCounter * 2 + 1] +
 						512, 1024));
 				else
-					matcPilotCells[iSym][iCarArrInd] = 
+					matcPilotCells[iSym][iCarArrInd] =
 						Polar2Cart(sqrt((_REAL) 2.0),
 						piTableFreqPilots[iFreqPilotsCounter * 2 + 1]);
 
@@ -526,7 +526,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				iNumSDCCellsPerSFrame++;
 			}
 
-			/* Calculations for average power per symbol (needed for SNR 
+			/* Calculations for average power per symbol (needed for SNR
 			   estimation and simulation). DC carrier is zero (contributes not
 			   to the average power) */
 			if (!_IsDC(matiMapTab[iSym][iCar]))
@@ -562,11 +562,11 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	}
 
 	/* Set number of useful MSC cells */
-	iNumUsefMSCCellsPerFrame = 
+	iNumUsefMSCCellsPerFrame =
 		(int) (iMSCCounter / NUM_FRAMES_IN_SUPERFRAME);
 
 	/* Calculate dummy cells for MSC */
-	iNoMSCDummyCells = iMSCCounter - iNumUsefMSCCellsPerFrame  * 
+	iNoMSCDummyCells = iMSCCounter - iNumUsefMSCCellsPerFrame  *
 		NUM_FRAMES_IN_SUPERFRAME;
 
 	/* Correct last MSC count (because of dummy cells) */
@@ -668,7 +668,7 @@ pFile = fopen("test/PilotCells.dat", "w");
 for (int z = 0; z < iNumSymbolsPerSuperframe; z++)
 {
 	for (int v = 0; v < iNumCarrier; v++)
-		fprintf(pFile, "%e %e ", matcPilotCells[z][v].real(), 
+		fprintf(pFile, "%e %e ", matcPilotCells[z][v].real(),
 			matcPilotCells[z][v].imag());
 
 	fprintf(pFile, "\n");
@@ -678,14 +678,14 @@ fclose(pFile);
 /* ########################################################################## */
 }
 
-_COMPLEX CCellMappingTable::Polar2Cart(const _REAL rAbsolute, 
+_COMPLEX CCellMappingTable::Polar2Cart(const _REAL rAbsolute,
 									   const int iPhase) const
 {
-/* 
+/*
 	This function takes phases normalized to 1024 as defined in the drm-
 	standard.
 */
-	return _COMPLEX(rAbsolute * cos((_REAL) 2 * crPi * iPhase / 1024), 
+	return _COMPLEX(rAbsolute * cos((_REAL) 2 * crPi * iPhase / 1024),
 		rAbsolute * sin((_REAL) 2 * crPi * iPhase / 1024));
 }
 
