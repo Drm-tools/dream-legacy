@@ -3,9 +3,12 @@
  * Copyright (c) 2004
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Stephane Fillod
  *
  * Description:
+ *
+ * 11/10/2004 Stephane Fillod
+ *  - QT translation
  *
  ******************************************************************************
  *
@@ -106,6 +109,11 @@ try
 	   automatically exit in that routine. If in the script no simulation is
 	   activated, this function will immediately return */
 	DRMSimulation.SimScript();
+
+	/* Load and install multi-language support (if available) */
+	QTranslator translator(0);
+	if (translator.load("dreamtr"))
+		app.installTranslator(&translator);
 
 	if (bIsReceiver == FALSE)
 	{

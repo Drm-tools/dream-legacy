@@ -136,7 +136,7 @@
             <class>QButtonGroup</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>ButtonGroup1</cstring>
+                <cstring>ButtonGroupChart</cstring>
             </property>
             <property stdset="1">
                 <name>title</name>
@@ -585,7 +585,7 @@
                     <class>QGroupBox</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>GroupBox1</cstring>
+                        <cstring>GroupBoxAudio</cstring>
                     </property>
                     <property stdset="1">
                         <name>title</name>

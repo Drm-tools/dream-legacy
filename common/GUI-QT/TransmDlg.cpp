@@ -42,11 +42,11 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	/* Set controls to custom behavior */
 	MultiLineEditTextMessage->setWordWrap(QMultiLineEdit::WidgetWidth);
 	MultiLineEditTextMessage->setEdited(FALSE);
-	ComboBoxTextMessage->insertItem("new", 0);
+	ComboBoxTextMessage->insertItem(tr("new"), 0);
 	UpdateMSCProtLevCombo();
 
 	/* Init controls with default settings */
-	ButtonStartStop->setText("&Start");
+	ButtonStartStop->setText(tr("&Start"));
 
 	/* Init progress bar for input signal level */
 	ProgrInputLevel->setRange(-50.0, 0.0);
@@ -133,8 +133,8 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	ButtonGroupBandwidth->insert(RadioButtonBandwidth20, 5);
 
 	/* MSC interleaver mode */
-	ComboBoxMSCInterleaver->insertItem("2 s (Long Interleaving)", 0);
-	ComboBoxMSCInterleaver->insertItem("400 ms (Short Interleaving)", 1);
+	ComboBoxMSCInterleaver->insertItem(tr("2 s (Long Interleaving)"), 0);
+	ComboBoxMSCInterleaver->insertItem(tr("400 ms (Short Interleaving)"), 1);
 
 	switch (TransThread.DRMTransmitter.GetParameters()->eSymbolInterlMode)
 	{
@@ -148,12 +148,12 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	}
 
 	/* MSC Constellation Scheme */
-	ComboBoxMSCConstellation->insertItem("SM 16-QAM", 0);
-	ComboBoxMSCConstellation->insertItem("SM 64-QAM", 1);
+	ComboBoxMSCConstellation->insertItem(tr("SM 16-QAM"), 0);
+	ComboBoxMSCConstellation->insertItem(tr("SM 64-QAM"), 1);
 
 // These modes should not be used right now, TODO
-//	ComboBoxMSCConstellation->insertItem("HMsym 64-QAM", 2);
-//	ComboBoxMSCConstellation->insertItem("HMmix 64-QAM", 3);
+//	ComboBoxMSCConstellation->insertItem(tr("HMsym 64-QAM"), 2);
+//	ComboBoxMSCConstellation->insertItem(tr("HMmix 64-QAM"), 3);
 
 	switch (TransThread.DRMTransmitter.GetParameters()->eMSCCodingScheme)
 	{
@@ -175,8 +175,8 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	}
 
 	/* SDC Constellation Scheme */
-	ComboBoxSDCConstellation->insertItem("4-QAM", 0);
-	ComboBoxSDCConstellation->insertItem("16-QAM", 1);
+	ComboBoxSDCConstellation->insertItem(tr("4-QAM"), 0);
+	ComboBoxSDCConstellation->insertItem(tr("16-QAM"), 1);
 
 	switch (TransThread.DRMTransmitter.GetParameters()->eSDCCodingScheme)
 	{
@@ -246,8 +246,8 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	CheckBoxEnableTextMessage->setChecked(TRUE);
 
 	/* Add example text in internal container */
-	vecstrTextMessage.Add("Dream DRM Transmitter\x0B\x0AThis is a test "
-		"transmission");
+	vecstrTextMessage.Add(tr("Dream DRM Transmitter\x0B\x0AThis is a test "
+		"transmission").latin1());
 
 	/* Insert item in combo box, display text and set item to our text */
 	ComboBoxTextMessage->insertItem(QString().setNum(1), 1);
@@ -294,10 +294,10 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	/* Set wave mapper as default device. "iNumSoundDev" is no
 	   valid ID for a device, use this for wave-mapper */
 	pSoundInMenu->insertSeparator();
-	pSoundInMenu->insertItem("Wave &Mapper Recording", this,
+	pSoundInMenu->insertItem(tr("Wave &Mapper Recording"), this,
 		SLOT(OnSoundInDevice(int)), 0, iNumSoundDev);
 	pSoundOutMenu->insertSeparator();
-	pSoundOutMenu->insertItem("Wave &Mapper Playback", this,
+	pSoundOutMenu->insertItem(tr("Wave &Mapper Playback"), this,
 		SLOT(OnSoundOutDevice(int)), 0, iNumSoundDev);
 
 	pSoundInMenu->setItemChecked(iNumSoundDev, TRUE);
@@ -307,14 +307,14 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 
 	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
-	pSettingsMenu->insertItem("Sound &In", pSoundInMenu);
-	pSettingsMenu->insertItem("Sound &Out", pSoundOutMenu);
+	pSettingsMenu->insertItem(tr("Sound &In"), pSoundInMenu);
+	pSettingsMenu->insertItem(tr("Sound &Out"), pSoundOutMenu);
 
 	/* Main menu bar */
 	pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
-	pMenu->insertItem("&Settings", pSettingsMenu);
-	pMenu->insertItem("&?", HelpMenu);
+	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
+	pMenu->insertItem(tr("&?"), HelpMenu);
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
@@ -435,7 +435,7 @@ void TransmDialog::OnButtonStartStop()
 		/* Stop transmitter */
 		TransThread.Stop();
 
-		ButtonStartStop->setText("&Start");
+		ButtonStartStop->setText(tr("&Start"));
 
 		EnableAllControlsForSet();
 
@@ -473,7 +473,7 @@ void TransmDialog::OnButtonStartStop()
 
 		TransThread.start();
 
-		ButtonStartStop->setText("&Stop");
+		ButtonStartStop->setText(tr("&Stop"));
 
 		DisableAllControlsForSet();
 
@@ -712,7 +712,7 @@ void TransmDialog::OnButtonClearAllText()
 
 	/* Clear combo box */
 	ComboBoxTextMessage->clear();
-	ComboBoxTextMessage->insertItem("new", 0);
+	ComboBoxTextMessage->insertItem(tr("new"), 0);
 
 	/* Clear multi line edit */
 	MultiLineEditTextMessage->clear();
@@ -723,7 +723,7 @@ void TransmDialog::OnPushButtonAddFileName()
 {
 	/* Show "open file" dialog. Let the user select more than one file */
 	QStringList list = QFileDialog::getOpenFileNames(
-		"Image Files (*.png *.jpg *.jpeg *.jfif)", NULL, this);
+		tr("Image Files (*.png *.jpg *.jpeg *.jfif)"), NULL, this);
 
 	/* Check if user not hit the cancel button */
 	if (!list.isEmpty())
@@ -1057,26 +1057,27 @@ void TransmDialog::AddWhatsThisHelp()
 {
 	/* Dream Logo */
 	QWhatsThis::add(PixmapLabelDreamLogo,
-		"<b>Dream Logo:</b> This is the official logo of the Dream software.");
+		"<b>" + tr("Dream Logo:") + "</b> " + tr("This is the official logo of "
+		"the Dream software."));
 
 	/* Input Level */
 	QWhatsThis::add(ProgrInputLevel,
-		"<b>Input Level:</b> The input level meter shows the relative input "
-		"signal peak level in dB. If the level is too high, the meter turns "
-		"from green to red.");
+		"<b>" + tr("Input Level:") + "</b> " + tr("The input level meter shows "
+		"the relative input signal peak level in dB. If the level is too high, "
+		"the meter turns from green to red."));
 
 	/* DRM Robustness Mode */
 	const QString strRobustnessMode =
-		"<b>DRM Robustness Mode:</b> In a DRM system, four possible "
-		"robustness modes are defined to adapt the system to different "
-		"channel conditions. According to the DRM standard:<ul>"
-		"<li><i>Mode A:</i> Gaussian channels, with minor fading</li>"
-		"<li><i>Mode B:</i> Time and frequency selective channels, with longer "
-		"delay spread</li>"
-		"<li><i>Mode C:</i> As robustness mode B, but with higher Doppler "
-		"spread</li>"
-		"<li><i>Mode D:</i> As robustness mode B, but with severe delay and "
-		"Doppler spread</li></ul>";
+		"<b>" + tr("DRM Robustness Mode:") + "</b> " + tr("In a DRM system, "
+		"four possible robustness modes are defined to adapt the system to "
+		"different channel conditions. According to the DRM standard:") +
+		"<ul><li><i>" + tr("Mode A:") + "</i> " + tr("Gaussian channels, with "
+		"minor fading") + "</li><li><i>" + tr("Mode B:") + "</i> " + tr("Time "
+		"and frequency selective channels, with longer delay spread") +
+		"</li><li><i>" + tr("Mode C:") + "</i> " + tr("As robustness mode B, "
+		"but with higher Doppler spread") + "</li><li><i>" + tr("Mode D:") +
+		"</i> " + tr("As robustness mode B, but with severe delay and "
+		"Doppler spread") + "</li></ul>";
 
 	QWhatsThis::add(RadioButtonRMA, strRobustnessMode);
 	QWhatsThis::add(RadioButtonRMB, strRobustnessMode);
@@ -1085,10 +1086,10 @@ void TransmDialog::AddWhatsThisHelp()
 
 	/* Bandwidth */
 	const QString strBandwidth =
-		"<b>DRM Bandwidth:</b> The bandwith is the gross bandwidth of the "
-		"generated DRM signal. Not all DRM robustness mode / bandwidth "
-		"constellations are possible, e.g., DRM robustness mode D and C are "
-		"only defined for the bandwidths 10 kHz and 20 kHz.";
+		"<b>" + tr("DRM Bandwidth:") + "</b> " + tr("The bandwith is the gross "
+		"bandwidth of the generated DRM signal. Not all DRM robustness mode / "
+		"bandwidth constellations are possible, e.g., DRM robustness mode D "
+		"and C are only defined for the bandwidths 10 kHz and 20 kHz.");
 
 	QWhatsThis::add(RadioButtonBandwidth45, strBandwidth);
 	QWhatsThis::add(RadioButtonBandwidth5, strBandwidth);
@@ -1099,12 +1100,12 @@ void TransmDialog::AddWhatsThisHelp()
 
 	/* Output intermediate frequency of DRM signal */
 	const QString strOutputIF =
-		"<b>Output intermediate frequency of DRM signal:</b> Set the output "
-		"intermediate frequency (IF) of generated DRM signal in the "
-		"'sound-card pass-band'. In some DRM modes, the IF is located at "
-		"the edge of the DRM signal, in other modes it is centered. The IF "
+		"<b>" + tr("Output intermediate frequency of DRM signal:") + "</b> " +
+		tr("Set the output intermediate frequency (IF) of generated DRM signal "
+		"in the 'sound-card pass-band'. In some DRM modes, the IF is located "
+		"at the edge of the DRM signal, in other modes it is centered. The IF "
 		"should be chosen that the DRM signal lies entirely inside the "
-		"sound-card bandwidth.";
+		"sound-card bandwidth.");
 
 	QWhatsThis::add(TextLabelIF, strOutputIF);
 	QWhatsThis::add(LineEditSndCrdIF, strOutputIF);
@@ -1112,22 +1113,21 @@ void TransmDialog::AddWhatsThisHelp()
 
 	/* Output format */
 	const QString strOutputFormat =
-		"<b>Output format:</b> Since the sound-card outputs signals in "
-		"stereo format, it is possible to output the DRM signal in three "
-		"formats:<ul>"
-		"<li><b>real valued</b> output on both, left and right, sound-card "
-		"channels</li>"
-		"<li><b>I / Q</b> output which is the in-phase and quadrature "
-		"component of the complex base-band signal at the desired IF. "
-		"In-phase is output on the left channel and quadrature on the "
-		"right channel.</li>"
-		"<li><b>E / P</b> output which is the envelope and phase on "
-		"separate channels. This output type cannot be used if the Dream "
-		"transmitter is regularly compiled with a sound-card sample rate "
-		"of 48 kHz since the spectrum of these components exceed the "
-		"bandwidth of 20 kHz.<br>The envelope signal is output on "
-		"the left channel and the phase is output on the right "
-		"channel.</li></ul>";
+		"<b>" + tr("Output format:") + "</b> " + tr("Since the sound-card "
+		"outputs signals in stereo format, it is possible to output the DRM "
+		"signal in three formats:") + "<ul><li><b>" + tr("real valued") +
+		"</b> " + tr("output on both, left and right, sound-card "
+		"channels") + "</li><li><b>" + tr("I / Q") + "</b> " + tr("output "
+		"which is the in-phase and quadrature component of the complex "
+		"base-band signal at the desired IF. In-phase is output on the "
+		"left channel and quadrature on the right channel.") +
+		"</li><li><b>" + tr("E / P") + "</b> " + tr("output which is the "
+		"envelope and phase on separate channels. This output type cannot "
+		"be used if the Dream transmitter is regularly compiled with a "
+		"sound-card sample rate of 48 kHz since the spectrum of these "
+		"components exceed the bandwidth of 20 kHz.<br>The envelope signal "
+		"is output on the left channel and the phase is output on the right "
+		"channel.") + "</li></ul>";
 
 	QWhatsThis::add(RadioButtonOutReal, strOutputFormat);
 	QWhatsThis::add(RadioButtonOutIQ, strOutputFormat);
@@ -1135,12 +1135,12 @@ void TransmDialog::AddWhatsThisHelp()
 
 	/* MSC interleaver mode */
 	const QString strInterleaver =
-		"<b>MSC interleaver mode:</b> The symbol interleaver depth can be "
-		"either short (approx. 400 ms) or long (approx. 2 s). The longer "
-		"the interleaver the better the channel decoder can correct errors "
-		"from slow fading signals. But the longer the interleaver length "
-		"the longer the delay until (after a re-synchronization) audio can "
-		"be heard.";
+		"<b>" + tr("MSC interleaver mode:") + "</b> " + tr("The symbol "
+		"interleaver depth can be either short (approx. 400 ms) or long "
+		"(approx. 2 s). The longer the interleaver the better the channel "
+		"decoder can correct errors from slow fading signals. But the longer "
+		"the interleaver length the longer the delay until (after a "
+		"re-synchronization) audio can be heard.");
 
 	QWhatsThis::add(TextLabelInterleaver, strInterleaver);
 	QWhatsThis::add(ComboBoxMSCInterleaver, strInterleaver);

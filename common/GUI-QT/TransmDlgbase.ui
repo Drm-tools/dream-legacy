@@ -204,7 +204,7 @@ Institute for Communication Technology</string>
                                             <class>QLabel</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>TextLabel1</cstring>
+                                                <cstring>TextLabelAudioLevel</cstring>
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
@@ -1137,7 +1137,7 @@ Institute for Communication Technology</string>
                                         <class>QLabel</class>
                                         <property stdset="1">
                                             <name>name</name>
-                                            <cstring>TextLabel2_2_2</cstring>
+                                            <cstring>TextLabelProgramType</cstring>
                                         </property>
                                         <property stdset="1">
                                             <name>text</name>
