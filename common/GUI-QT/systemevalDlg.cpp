@@ -628,8 +628,6 @@ void systemevalDlg::OnCheckBoxMuteAudio()
 
 void systemevalDlg::OnCheckWriteLog()
 {
-	int iCurSelServ;
-
 	if (CheckBoxWriteLog->isChecked())
 	{
 		/* Activte log file timer, update time: 1 min (i.e. 60000 ms) */
@@ -647,7 +645,8 @@ void systemevalDlg::OnCheckWriteLog()
 			(DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_DRM))
 		{
 			/* First get current selected audio service */
-			iCurSelServ = DRMReceiver.GetParameters()->GetCurSelAudioService();
+			int iCurSelServ =
+				DRMReceiver.GetParameters()->GetCurSelAudioService();
 
 			/* Check whether service parameters were not transmitted yet */
 			if (DRMReceiver.GetParameters()->Service[iCurSelServ].IsActive())
@@ -669,8 +668,9 @@ void systemevalDlg::OnCheckWriteLog()
 			}
 		}
 
-		/* Set additional text for log file */
-		string strTemp = strAddText;
+		/* Set additional text for log file. Conversion from QString to STL
+		   string is needed (done with .latin1() function of QT string) */
+		string strTemp = strAddText.latin1();
 		DRMReceiver.GetParameters()->ReceptLog.SetAdditText(strTemp);
 
 		/* Activate log file */
