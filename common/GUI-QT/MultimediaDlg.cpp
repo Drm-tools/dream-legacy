@@ -137,6 +137,9 @@ void MultimediaDlg::OnTextChanged()
 		/* Set text to news ID text which was selected by the user */
 		iCurJourObjID = TextBrowser->text().toInt();
 		SetJournalineText();
+
+		/* Enable back button */
+		PushButtonStepBack->setEnabled(TRUE);
 	}
 }
 
@@ -282,6 +285,11 @@ void MultimediaDlg::OnButtonStepBack()
 	case CDataDecoder::AT_JOURNALINE:
 		/* Step one level back, get ID from history */
 		iCurJourObjID = NewIDHistory.Back();
+
+		/* If root ID is reached, disable back button */
+		if (iCurJourObjID == 0)
+			PushButtonStepBack->setEnabled(FALSE);
+
 		SetJournalineText();
 		break;
 	}
@@ -508,8 +516,11 @@ void MultimediaDlg::InitJournaline()
 	PushButtonJumpBegin->hide();
 	PushButtonJumpEnd->hide();
 	LabelCurPicNum->hide();
+
+	/* Show back button and disable it because we always start at the root
+	   object */
 	PushButtonStepBack->show();
-	PushButtonStepBack->setEnabled(TRUE);
+	PushButtonStepBack->setEnabled(FALSE);
 
 	/* Init text browser window */
 	iCurJourObjID = 0;
