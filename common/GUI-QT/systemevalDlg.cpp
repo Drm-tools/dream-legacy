@@ -46,6 +46,34 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 		setGeometry(WinGeom);
 #endif
 
+
+	/* Init controls -------------------------------------------------------- */
+	/* Init main plot */
+	MainPlot->SetPlotStyle(DRMReceiver.iMainPlotColorStyle);
+	MainPlot->setMargin(1);
+
+	/* Init slider control */
+	SliderNoOfIterations->setRange(0, 4);
+	SliderNoOfIterations->
+		setValue(DRMReceiver.GetMSCMLC()->GetInitNumIterations());
+	TextNumOfIterations->setText("MLC: Number of Iterations: " +
+		QString().setNum(DRMReceiver.GetMSCMLC()->GetInitNumIterations()));
+
+	/* Update times for color LEDs */
+	LEDFAC->SetUpdateTime(1500);
+	LEDSDC->SetUpdateTime(1500);
+	LEDMSC->SetUpdateTime(600);
+	LEDFrameSync->SetUpdateTime(600);
+	LEDTimeSync->SetUpdateTime(600);
+	LEDIOInterface->SetUpdateTime(2000); /* extra long -> red light stays long */
+
+	/* Init parameter for frequency edit for log file */
+	iCurFrequency = 0;
+
+	/* Update controls */
+	UpdateControls();
+
+
 	/* Init chart selector list view ---------------------------------------- */
 	ListViewCharSel->clear();
 
@@ -96,35 +124,8 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
     ListViewCharSel->setSelected(pListItInpSpec, TRUE);
 	ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
 	SetupChart(INPUTSPECTRUM_NO_AV);
-
-
-	/* Init other controls -------------------------------------------------- */
-	/* Init main plot */
-	MainPlot->SetPlotStyle(DRMReceiver.iMainPlotColorStyle);
-	MainPlot->setMargin(1);
-
-	/* Init slider control */
-	SliderNoOfIterations->setRange(0, 4);
-	SliderNoOfIterations->
-		setValue(DRMReceiver.GetMSCMLC()->GetInitNumIterations());
-	TextNumOfIterations->setText("MLC: Number of Iterations: " +
-		QString().setNum(DRMReceiver.GetMSCMLC()->GetInitNumIterations()));
-
-	/* Update times for color LEDs */
-	LEDFAC->SetUpdateTime(1500);
-	LEDSDC->SetUpdateTime(1500);
-	LEDMSC->SetUpdateTime(600);
-	LEDFrameSync->SetUpdateTime(600);
-	LEDTimeSync->SetUpdateTime(600);
-	LEDIOInterface->SetUpdateTime(2000); /* extra long -> red light stays long */
-
-	/* Init parameter for frequency edit for log file */
-	iCurFrequency = 0;
-
-	/* Update controls */
-	UpdateControls();
-
-
+	
+	
 	/* Connect controls ----------------------------------------------------- */
 	connect(SliderNoOfIterations, SIGNAL(valueChanged(int)),
 		this, SLOT(OnSliderIterChange(int)));
