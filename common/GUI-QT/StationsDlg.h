@@ -171,14 +171,15 @@ protected:
 	void			SetStationsView();
     virtual void	showEvent(QShowEvent* pEvent);
 
-	CDRMSchedule		DRMSchedule;
-	QPixmap				BitmCubeGreen;
-	QPixmap				BitmCubeYellow;
-	QPixmap				BitmCubeRed;
-	QTimer				Timer;
-	_BOOLEAN			bShowAll;
-	QUrlOperator		UrlUpdateSchedule;
-	QPopupMenu*			pViewMenu;
+	CDRMSchedule				DRMSchedule;
+	QPixmap						BitmCubeGreen;
+	QPixmap						BitmCubeYellow;
+	QPixmap						BitmCubeRed;
+	QTimer						Timer;
+	_BOOLEAN					bShowAll;
+	QUrlOperator				UrlUpdateSchedule;
+	QPopupMenu*					pViewMenu;
+	CVector<MyListViewItem*>	vecpListItems;
 
 	/* Remote selection */
 	QPopupMenu*			pRemoteMenu;

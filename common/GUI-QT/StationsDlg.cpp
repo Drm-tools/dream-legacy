@@ -232,7 +232,6 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	BitmCubeRed.resize(iXSize, iYSize);
 	BitmCubeRed.fill(QColor(255, 0, 0));
 
-
 	/* Clear list box for file names and set up columns */
 	ListViewStations->clear();
 
@@ -245,6 +244,9 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	ListViewStations->addColumn("Country");
 	ListViewStations->addColumn("Site");
 	ListViewStations->addColumn("Language");
+
+	/* Init vector for storing the pointer to the list view items */
+	vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
 
 	/* Set up frequency selector control (QWTCounter control) */
 	QwtCounterFrequency->setRange(0.0, 30000.0, 1.0);
@@ -471,7 +473,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
 
-	connect(ListViewStations, SIGNAL(clicked(QListViewItem*)),
+	connect(ListViewStations, SIGNAL(selectionChanged(QListViewItem*)),
 		this, SLOT(OnListItemClicked(QListViewItem*)));
 	connect(&UrlUpdateSchedule, SIGNAL(finished(QNetworkOperation*)),
 		this, SLOT(OnUrlFinished(QNetworkOperation*)));
@@ -506,10 +508,6 @@ void StationsDlg::OnShowStationsMenu(int iID)
 
 	/* Update list view */
 	SetStationsView();
-
-	/* Sort list by start time (second column) */
-	ListViewStations->setSorting(1);
-	ListViewStations->sort();
 
 	/* Taking care of checks in the menu */
 	pViewMenu->setItemChecked(0, 0 == iID);
@@ -569,8 +567,19 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 					QMessageBox::Ok);
 #endif
 
+				// FIXME: The following lines change the DRMSchedule object.
+				// This operation is not thread safe! A mutex should be used!
 				/* Read updated ini-file */
 				DRMSchedule.ReadStatTabFromFile("DRMSchedule.ini");
+
+				/* Delete all old list view items */
+				for (int i = 0; i < vecpListItems.Size(); i++)
+					if (vecpListItems[i] != NULL)
+						delete vecpListItems[i];
+
+				/* Init vector for storing the pointer to the new list view
+				   items */
+				vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
 
 				/* Update list view */
 				SetStationsView();
@@ -615,93 +624,84 @@ QString MyListViewItem::key(int column, bool ascending) const
 
 void StationsDlg::SetStationsView()
 {
-	QString strSelTabItemName = "";
-	QString strSelTabItemTime = "";
-	QString strSelTabItemFreq = "";
-
-	/* Make sure that the selected item is still selected. Identify selected
-	   item by frequency, time and name */
-	if (ListViewStations->selectedItem())
-	{
-		strSelTabItemName = ListViewStations->selectedItem()->text(0);
-		strSelTabItemTime = ListViewStations->selectedItem()->text(1);
-		strSelTabItemFreq = ListViewStations->selectedItem()->text(2);
-	}
-
-	/* First, clear list view */
-	ListViewStations->clear();
-
-	/* Get active stations from schedule */
 	const int iNumStations = DRMSchedule.GetStationNumber();
+	_BOOLEAN bListHastChanged = FALSE;
 
 	/* Add new item for each station in list view */
 	for (int i = 0; i < iNumStations; i++)
 	{
 		if (!((bShowAll == FALSE) && (DRMSchedule.IsActive(i) == FALSE)))
 		{
-			/* Get power of the station. We have to do a special treatment
-			   here, because we want to avoid having a "0" in the list when
-			   a "?" was in the schedule-ini-file */
-			const _REAL rPower = DRMSchedule.GetItem(i).rPower;
-
-			QString strPower;
-			if (rPower == (_REAL) 0.0)
-				strPower = "?";
-			else
-				strPower.setNum(rPower);
-
-			/* Generate new list item with all necessary column entries */
-			QListViewItem* NewListItem = new MyListViewItem(ListViewStations,
-				DRMSchedule.GetItem(i).strName.c_str()			/* name */,
-				QString().sprintf("%04d-%04d",
-				DRMSchedule.GetItem(i).GetStartTimeNum(),
-				DRMSchedule.GetItem(i).GetStopTimeNum())		/* time */,
-				QString().setNum(DRMSchedule.GetItem(i).iFreq)	/* frequency */,
-				DRMSchedule.GetItem(i).strTarget.c_str()		/* target */,
-				strPower										/* power */,
-				DRMSchedule.GetItem(i).strCountry.c_str()		/* country */,
-				DRMSchedule.GetItem(i).strSite.c_str()			/* site */,
-				DRMSchedule.GetItem(i).strLanguage.c_str()		/* language */);
-
-			/* Check, if station is currently transmitting. If yes, set special
-			   pixmap */
-			if (DRMSchedule.IsActive(i) == TRUE)
+			/* Only insert item if it is not already in the list */
+			if (vecpListItems[i] == NULL)
 			{
-				/* Check for "special case" transmissions */
-				if (DRMSchedule.GetItem(i).iDays == 0)
-					NewListItem->setPixmap(0, BitmCubeYellow);
+				/* Get power of the station. We have to do a special treatment
+				   here, because we want to avoid having a "0" in the list when
+				   a "?" was in the schedule-ini-file */
+				const _REAL rPower = DRMSchedule.GetItem(i).rPower;
+
+				QString strPower;
+				if (rPower == (_REAL) 0.0)
+					strPower = "?";
 				else
-					NewListItem->setPixmap(0, BitmCubeGreen);
+					strPower.setNum(rPower);
+
+				/* Generate new list item with all necessary column entries */
+				vecpListItems[i] = new MyListViewItem(ListViewStations,
+					DRMSchedule.GetItem(i).strName.c_str()     /* name */,
+					QString().sprintf("%04d-%04d",
+					DRMSchedule.GetItem(i).GetStartTimeNum(),
+					DRMSchedule.GetItem(i).GetStopTimeNum())   /* time */,
+					QString().setNum(DRMSchedule.GetItem(i).iFreq) /* freq. */,
+					DRMSchedule.GetItem(i).strTarget.c_str()   /* target */,
+					strPower                                   /* power */,
+					DRMSchedule.GetItem(i).strCountry.c_str()  /* country */,
+					DRMSchedule.GetItem(i).strSite.c_str()     /* site */,
+					DRMSchedule.GetItem(i).strLanguage.c_str() /* language */);
+
+				/* Check, if station is currently transmitting. If yes, set
+				   special pixmap */
+				if (DRMSchedule.IsActive(i) == TRUE)
+				{
+					/* Check for "special case" transmissions */
+					if (DRMSchedule.GetItem(i).iDays == 0)
+						vecpListItems[i]->setPixmap(0, BitmCubeYellow);
+					else
+						vecpListItems[i]->setPixmap(0, BitmCubeGreen);
+				}
+				else
+					vecpListItems[i]->setPixmap(0, BitmCubeRed);
+
+				/* Insert this new item in list. The item object is destroyed by
+				   the list view control when this is destroyed */
+				ListViewStations->insertItem(vecpListItems[i]);
+
+				/* Set flag for sorting the list */
+				bListHastChanged = TRUE;
 			}
-			else
-				NewListItem->setPixmap(0, BitmCubeRed);
-
-			/* Insert this new item in list. The item object is destroyed by the
-			   list view control when this is destroyed */
-			ListViewStations->insertItem(NewListItem);
 		}
-	}
-
-
-	/* Recover selection ---------------------------------------------------- */
-	QListViewItem* pCurItem = ListViewStations->firstChild();
-
-	/* Check all items */
-	while (pCurItem)
-	{
-		if ((pCurItem->text(0) == strSelTabItemName) &&
-			(pCurItem->text(1) == strSelTabItemTime) &&
-			(pCurItem->text(2) == strSelTabItemFreq))
+		else
 		{
-			/* Selecte item. selectionChanged() is emitted which would case the
-			   front-end to be switched to the frequncy all the time but since
-			   we use the clicked() signal, that is no problem in our case */
-			ListViewStations->setSelected(pCurItem, TRUE);
-		}
+			/* Delete this item since it is not used anymore */
+			if (vecpListItems[i] != NULL)
+			{
+				/* If one deletes a menu item in QT list view, it is
+				   automaticall removed from the list and the list gets
+				   repainted */
+				delete vecpListItems[i];
 
-		/* Get next item in list view */
-		pCurItem = pCurItem->nextSibling();
+				/* Reset pointer so we can distinguish if it is used or not */
+				vecpListItems[i] = NULL;
+
+				/* Set flag for sorting the list */
+				bListHastChanged = TRUE;
+			}
+		}
 	}
+
+	/* Sort the list if items have changed */
+	if (bListHastChanged == TRUE)
+		ListViewStations->sort();
 }
 
 void StationsDlg::OnFreqCntNewValue(double dVal)
@@ -737,14 +737,11 @@ void StationsDlg::OnRemoteMenu(int iID)
 	/* Set ID if valid */
 	const int iNewModelID = veciModelID[iID];
 
-	if (iNewModelID != 0)
-	{
-		/* A rig was selected via the menu, delete all previous settings from
-		   the command line (if any) */
-		DRMReceiver.SetHamlibConf("");
+	/* A rig was selected via the menu, delete all previous settings from
+	   the command line (if any) */
+	DRMReceiver.SetHamlibConf("");
 
-		InitHamlib(iNewModelID);
-	}
+	InitHamlib(iNewModelID);
 
 	/* Take care of check */
 	for (int i = 0; i < veciModelID.Size(); i++)
