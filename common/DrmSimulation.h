@@ -42,6 +42,7 @@
 #include "interleaver/SymbolInterleaver.h"
 #include "ofdmcellmapping/OFDMCellMapping.h"
 #include "chanest/ChannelEstimation.h"
+#include "chanest/IdealChannelEstimation.h"
 #include "sync/FreqSyncAcq.h"
 #include "sync/TimeSync.h"
 #include "sync/SyncUsingPil.h"
