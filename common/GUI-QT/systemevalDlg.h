@@ -137,4 +137,5 @@ public slots:
 	void OnCheckWriteLog();
 	void OnCheckSaveAudioWAV();
 	void OnCheckRecFilter();
+	void OnCheckModiMetric();
 };

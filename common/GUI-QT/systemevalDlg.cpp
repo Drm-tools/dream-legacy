@@ -141,7 +141,7 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 		CheckBoxFlipSpec->setEnabled(FALSE);
 		CheckBoxWriteLog->setEnabled(FALSE);
 		EdtFrequency->setEnabled(FALSE);
-		GroupBoxIFFilter->setEnabled(FALSE);
+		GroupBoxInterfRej->setEnabled(FALSE);
 
 		/* Only audio spectrum makes sence for MDI in */
 		ListViewCharSel->setSelected(pListItAudSpec, TRUE);
@@ -197,6 +197,8 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnCheckSaveAudioWAV()));
 	connect(CheckBoxRecFilter, SIGNAL(clicked()),
 		this, SLOT(OnCheckRecFilter()));
+	connect(CheckBoxModiMetric, SIGNAL(clicked()),
+		this, SLOT(OnCheckModiMetric()));
 
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
@@ -299,6 +301,7 @@ void systemevalDlg::UpdateControls()
 		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
 
 	CheckBoxRecFilter->setChecked(DRMReceiver.GetOFDMDemod()->GetRecFilter());
+	CheckBoxModiMetric->setChecked(DRMReceiver.GetChanEst()->GetIntCons());
 
 	/* Update frequency edit control (frequency could be changed by
 	   schedule dialog */
@@ -861,6 +864,12 @@ void systemevalDlg::OnCheckRecFilter()
 		SetRecFilter(CheckBoxRecFilter->isChecked());
 }
 
+void systemevalDlg::OnCheckModiMetric()
+{
+	/* Set parameter in working thread module */
+	DRMReceiver.GetChanEst()->SetIntCons(CheckBoxModiMetric->isChecked());
+}
+
 void systemevalDlg::OnCheckBoxMuteAudio()
 {
 	/* Set parameter in working thread module */
@@ -1359,6 +1368,57 @@ void systemevalDlg::AddWhatsThisHelp()
 		"it is possible to choose other items by using the up / down arrow "
 		"keys. With these keys it is also possible to open and close the "
 		"groups by using the left / right arrow keys."));
+
+	/* Interferer Rejection */
+	const QString strInterfRej =
+		"<b>" + tr("Interferer Rejection:") + "</b> " + tr("There are two "
+		"algorithms available to reject interferers:") + "<ul>" +
+		"<li><b>" + tr("Bandpass filter (BP-Filter):") + "</b>" +
+		tr("The bandpass filter is designed to have the same bandwidth as "
+		"the DRM signal. If, e.g., a strong signal is close to the border "
+		"of the actual DRM signal, under some conditions this signal will "
+		"produce interference in the useful bandwidth of the DRM signal "
+		"although it is not on the same frequency as the DRM signal. "
+		"The reason for that behaviour lies in the way the OFDM "
+		"demodulation is done. Since OFDM demodulation is a block-wise "
+		"operation, a windowing has to be applied (which is rectangular "
+		"in case of OFDM). As a result, the spectrum of a signal is "
+		"convoluted with a Sinc function in the frequency domain. If a "
+		"sinusoidal signal close to the border of the DRM signal is "
+		"considered, its spectrum will not be a distinct peak but a "
+		"shifted Sinc function. So its spectrum is broadened caused by "
+		"the windowing. Thus, it will spread in the DRM spectrum and "
+		"act as an in-band interferer.") + "<br>" +
+		tr("There is a special case if the sinusoidal signal is in a "
+		"distance of a multiple of the carrier spacing of the DRM signal. "
+		"Since the Sinc function has zeros at certain positions it happens "
+		"that in this case the zeros are exactly at the sub-carrier "
+		"frequencies of the DRM signal. In this case, no interference takes "
+		"place. If the sinusoidal signal is in a distance of a multiple of "
+		"the carrier spacing plus half of the carrier spacing away from the "
+		"DRM signal, the interference reaches its maximum.") + "<br>" +
+		tr("As a result, if only one DRM signal is present in the 20 kHz "
+		"bandwidth, bandpass filtering has no effect. Also,  if the "
+		"interferer is far away from the DRM signal, filtering will not "
+		"give much improvement since the squared magnitude of the spectrum "
+		"of the Sinc function is approx -15 dB down at 1 1/2 carrier "
+		"spacing (approx 70 Hz with DRM mode B) and goes down to approx "
+		"-30 dB at 10 times the carrier spacing plus 1 / 2 of the carrier "
+		"spacing (approx 525 Hz with DRM mode B). The bandpass filter must "
+		"have very sharp edges otherwise the gain in performance will be "
+		"very small so that it consumes high CPU power.") + "</li>" +
+		"<li><b>" + tr("Modificated Metric:") + "</b>" + tr("Based on the "
+		"information from the SNR versus sub-carrier estimation, the metric "
+		"for the Viterbi decoder can be modified so that sub-carriers with "
+		"high noise are attenuated and do not contribute too much to the "
+		"decoding result. That can improve reception under bad conditions but "
+		"may worsen the reception in situations where a lot of fading happens "
+		"and no interferer are present since the SNR estimation may be "
+		"not correct.") + "</li></ul>";
+
+	QWhatsThis::add(GroupBoxInterfRej, strInterfRej);
+	QWhatsThis::add(CheckBoxRecFilter, strInterfRej);
+	QWhatsThis::add(CheckBoxModiMetric, strInterfRej);
 }
 
 void systemevalDlg::AddWhatsThisHelpChar(const ECharType NCharType)

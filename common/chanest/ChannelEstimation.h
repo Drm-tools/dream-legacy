@@ -85,7 +85,7 @@ class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>
 public:
 	CChannelEstimation() : iLenHistBuff(0), TypeIntFreq(FWIENER), 
 		TypeIntTime(TWIENER), eDFTWindowingMethod(DFT_WIN_HAMM),
-		TypeSNREst(SNR_FAC) {}
+		TypeSNREst(SNR_FAC), bInterfConsid(FALSE) {}
 	virtual ~CChannelEstimation() {}
 
 	enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};
@@ -110,6 +110,10 @@ public:
 	void SetTimeInt(ETypeIntTime eNewTy) {TypeIntTime = eNewTy;
 		SetInitFlag();}
 	ETypeIntTime GetTimeInt() const {return TypeIntTime;}
+
+	void SetIntCons(const _BOOLEAN bNewIntCons) {bInterfConsid = bNewIntCons;}
+	_BOOLEAN GetIntCons() {return bInterfConsid;}
+
 
 	/* Which SNR estimation algorithm */
 	void SetSNREst(ETypeSNREst eNewTy) {TypeSNREst = eNewTy; SetInitFlag();}
@@ -180,6 +184,8 @@ protected:
 	_REAL					rSNRTotToPilCorrFact;
 	_REAL					rSNRSysToNomBWCorrFact;
 	CParameter::ECodScheme	eMSCCodSch;
+
+	_BOOLEAN				bInterfConsid;
 
 
 	/* Needed for GetDelay() */

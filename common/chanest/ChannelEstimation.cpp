@@ -385,6 +385,20 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 				rLamMSCSNREst);
 		}
 	}
+
+
+	/* Interferer consideration --------------------------------------------- */
+	if (bInterfConsid == TRUE)
+	{
+		for (i = 0; i < iNumCarrier; i++)
+		{
+			/* Weight the channel estimates with the SNR estimate of the current
+			   carrier to consider the higher noise variance caused by
+			   interferers */
+			(*pvecOutputData)[i].rChan *=
+				CalAndBoundSNR(vecrSigEstMSC[i], vecrNoiseEstMSC[i]);
+		}
+	}
 }
 
 void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
@@ -541,7 +555,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	const _REAL rTs = (CReal) (ReceiverParam.iFFTSizeN +
 		ReceiverParam.iGuardSize) / SOUNDCRD_SAMPLE_RATE;
 
-	iLenDelayHist = LEN_HIST_DELAY_LOG_FILE_S / rTs;
+	iLenDelayHist = (int) (LEN_HIST_DELAY_LOG_FILE_S / rTs);
 	vecrDelayHist.Init(iLenDelayHist, (CReal) 0.0);
 
 

@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>740</width>
+            <width>738</width>
             <height>587</height>
         </rect>
     </property>
@@ -1049,7 +1049,7 @@
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout26</cstring>
+                <cstring>Layout21</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -1579,7 +1579,7 @@
                     <class>QLayoutWidget</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>Layout25</cstring>
+                        <cstring>Layout20</cstring>
                     </property>
                     <vbox>
                         <property stdset="1">
@@ -1594,11 +1594,11 @@
                             <class>QGroupBox</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>GroupBoxIFFilter</cstring>
+                                <cstring>GroupBoxInterfRej</cstring>
                             </property>
                             <property stdset="1">
                                 <name>title</name>
-                                <string>Filter</string>
+                                <string>Interferer Rej.</string>
                             </property>
                             <property stdset="1">
                                 <name>alignment</name>
@@ -1630,7 +1630,18 @@
                                     </property>
                                     <property stdset="1">
                                         <name>text</name>
-                                        <string>BP</string>
+                                        <string>BP-Filter</string>
+                                    </property>
+                                </widget>
+                                <widget>
+                                    <class>QCheckBox</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>CheckBoxModiMetric</cstring>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>text</name>
+                                        <string>Mod. Metric</string>
                                     </property>
                                 </widget>
                             </vbox>
@@ -1652,7 +1663,7 @@
                                 <name>sizeHint</name>
                                 <size>
                                     <width>20</width>
-                                    <height>70</height>
+                                    <height>40</height>
                                 </size>
                             </property>
                         </spacer>
