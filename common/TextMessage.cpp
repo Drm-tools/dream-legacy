@@ -83,18 +83,47 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 				if (biToggleBit != biOldToggleBit)
 				{
 					/* A new message is sent, clear all old segments */
-					for (i = 0; i < MAX_NO_SEG_TEXT_MESSAGE; i++)
-						Segment[i].bIsOK = FALSE;
+					ResetSegments();
 
 					iNoSegments = 0;
 
 					biOldToggleBit = biToggleBit;
 				}
 
-				/* Read all bytes in stream buffer */
-				biStreamBuffer.ResetBitAccess();
 
-				/* Header bits */
+				/* Read all bytes in stream buffer -------------------------- */
+				/* First, check if segment was already OK and if new data has
+				   the same content or not. If the content is different, a new
+				   message is being send, clear all other segments */
+				if (Segment[bySegmentNo].bIsOK == TRUE)
+				{
+					/* Reset bit access and skip header bits to go directly to 
+					the body bytes */
+					biStreamBuffer.ResetBitAccess();
+					biStreamBuffer.Separate(16);
+
+					_BOOLEAN bIsSame = TRUE;
+					for (i = 0; i < byLengthBody; i++)
+					{
+						if (Segment[bySegmentNo].byData[i] != 
+							biStreamBuffer.Separate(SIZEOF__BYTE))
+						{
+							bIsSame = FALSE;
+						}
+					}
+
+					if (bIsSame == FALSE)
+					{
+						/* A new message is sent, clear all old segments */
+						ResetSegments();
+
+						iNoSegments = 0;
+					}
+				}
+
+				/* Reset bit access and skip header bits to go directly to the
+				   body bytes */
+				biStreamBuffer.ResetBitAccess();
 				biStreamBuffer.Separate(16);
 
 				/* Get all body bytes */
@@ -192,8 +221,7 @@ void CTextMessage::Init(string* pstrNewPText)
 	iBitCount = 0;
 
 	/* Init segments */
-	for (i = 0; i < MAX_NO_SEG_TEXT_MESSAGE; i++)
-		Segment[i].bIsOK = FALSE;
+	ResetSegments();
 
 	iNoSegments = 0;
 
@@ -219,7 +247,7 @@ void CTextMessage::SetText()
 		}
 
 #ifndef _DEBUG_
-		if (bTextMessageReady)
+		if (bTextMessageReady == TRUE)
 #endif
 		{
 			/* Clear text */
@@ -235,7 +263,7 @@ void CTextMessage::SetText()
 
 			for (i = 0; i < MAX_NO_SEG_TEXT_MESSAGE; i++)
 			{
-				if (Segment[i].bIsOK)
+				if (Segment[i].bIsOK == TRUE)
 				{
 					for (j = 0; j < Segment[i].iNoBytes; j++)
 					{
@@ -297,10 +325,15 @@ void CTextMessage::SetText()
 
 void CTextMessage::ClearText()
 {
-	/* Init segments */
-	for (int i = 0; i < MAX_NO_SEG_TEXT_MESSAGE; i++)
-		Segment[i].bIsOK = FALSE;
+	/* Reset segments */
+	ResetSegments();
 
 	/* Clear text */	
 	*pstrText = "";
+}
+
+void CTextMessage::ResetSegments()
+{
+	for (int i = 0; i < MAX_NO_SEG_TEXT_MESSAGE; i++)
+		Segment[i].bIsOK = FALSE;
 }

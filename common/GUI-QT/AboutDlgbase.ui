@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>593</width>
-            <height>159</height>
+            <width>587</width>
+            <height>166</height>
         </rect>
     </property>
     <property stdset="1">
@@ -122,9 +122,16 @@
                                 <cstring>TextLabel1_2_2</cstring>
                             </property>
                             <property stdset="1">
+                                <name>sizePolicy</name>
+                                <sizepolicy>
+                                    <hsizetype>7</hsizetype>
+                                    <vsizetype>5</vsizetype>
+                                </sizepolicy>
+                            </property>
+                            <property stdset="1">
                                 <name>text</name>
-                                <string>Dream: Open-Source Software Implementation of a DRM-Receiver
-Under the GNU General Public License (GPL)</string>
+                                <string>&lt;center&gt;&lt;b&gt;Dream, Version 0.9.1&lt;/b&gt;&lt;br&gt; Open-Source Software Implementation of a DRM-Receiver&lt;br&gt;
+Under the GNU General Public License (GPL)&lt;/center&gt;</string>
                             </property>
                             <property stdset="1">
                                 <name>alignment</name>

@@ -71,6 +71,7 @@ protected:
 	void ReadHeader();
 	void ClearText();
 	void SetText();
+	void ResetSegments();
 
 	CVector<_BINARY>	biStreamBuffer;
 

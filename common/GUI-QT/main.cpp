@@ -124,10 +124,3 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 	printf("\nDebug error, exit! For more information see DebugError.dat\n");
 	exit(1);
 }
-
-void Data2File(const _REAL rInput)
-{
-	static FILE* pFile = fopen("test/test.dat", "w");
-	fprintf(pFile, "%e\n", rInput);
-	fflush(pFile);
-}
