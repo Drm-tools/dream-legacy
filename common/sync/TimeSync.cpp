@@ -624,7 +624,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	iOutputBlockSize = iDFTSize;
 }
 
-void CTimeSync::StartAcquisition() 
+void CTimeSync::StartAcquisition()
 {
 	/* The regular acquisition flags */
 	bTimingAcqu = TRUE;

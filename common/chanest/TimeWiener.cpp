@@ -244,8 +244,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	iLenHistBuff = iSymDelyChanEst + 1;
 
 	/* Duration of useful part plus-guard interval */
-	Ts = (_REAL) (ReceiverParam.iFFTSizeN + ReceiverParam.iGuardSize) /
-		SOUNDCRD_SAMPLE_RATE;
+	Ts = (_REAL) ReceiverParam.iSymbolBlockSize / SOUNDCRD_SAMPLE_RATE;
 
 	/* Allocate memory for Channel at pilot positions (matrix) and init with
 	   ones */

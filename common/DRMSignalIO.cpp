@@ -51,7 +51,7 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 void CTransmitData::InitInternal(CParameter& TransmParam)
 {
 	/* Define block-size for input */
-	iInputBlockSize = TransmParam.iFFTSizeN + TransmParam.iGuardSize;
+	iInputBlockSize = TransmParam.iSymbolBlockSize;
 
 	/* Open file for writing data for transmitting */
 	pFileTransmitter = fopen("test/TransmittedData.txt", "w");
