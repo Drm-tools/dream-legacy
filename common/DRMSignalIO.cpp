@@ -59,10 +59,28 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 	fflush(pFileTransmitter);
 #else
 	/* Convert vector type. Fill vector with symbols (collect them) */
-	for (i = 0; i < iInputBlockSize * 2; i += 2)
-		vecsDataOut[iBlockCnt * iInputBlockSize * 2 + i] =
-			vecsDataOut[iBlockCnt * iInputBlockSize * 2 + i + 1] =
+	const int iNs2 = iInputBlockSize * 2;
+	for (i = 0; i < iNs2; i += 2)
+	{
+		const int iCurIndex = iBlockCnt * iNs2 + i;
+		const short sCurOutReal =
 			(short) ((*pvecInputData)[i / 2].real() * 2 * (_REAL) 64.0);
+		const short sCurOutImag =
+			(short) ((*pvecInputData)[i / 2].imag() * 2 * (_REAL) 64.0);
+
+		if (bIQOutput == TRUE)
+		{
+			/* Send inphase and quadrature (I / Q) signal to stereo sound card
+			   output. I: left channel, Q: right channel */
+			vecsDataOut[iCurIndex] = sCurOutReal;
+			vecsDataOut[iCurIndex + 1] = sCurOutImag;
+		}
+		else
+		{
+			/* Use real valued signal as output for both sound card channels */
+			vecsDataOut[iCurIndex] = vecsDataOut[iCurIndex + 1] = sCurOutReal;
+		}
+	}
 
 	iBlockCnt++;
 	if (iBlockCnt == iNumBlocks)

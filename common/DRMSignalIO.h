@@ -60,8 +60,12 @@ class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
 public:
 #ifdef WRITE_TRNSM_TO_FILE
 	CTransmitData() : pFileTransmitter(NULL) {}
+	void SetIQOutput(const _BOOLEAN bIQ) {} /* Not used in file mode */
+	_BOOLEAN GetIQOutput() {return FALSE;}
 #else
-	CTransmitData(CSound* pNS) : pSound(pNS) {}
+	CTransmitData(CSound* pNS) : pSound(pNS), bIQOutput(FALSE) {}
+	void SetIQOutput(const _BOOLEAN bIQ) {bIQOutput = bIQ;}
+	_BOOLEAN GetIQOutput() {return bIQOutput;}
 #endif
 	virtual ~CTransmitData();
 
@@ -73,6 +77,7 @@ protected:
 	CVector<short>	vecsDataOut;
 	int				iBlockCnt;
 	int				iNumBlocks;
+	_BOOLEAN		bIQOutput;
 #endif
 
 	virtual void InitInternal(CParameter& TransmParam);
@@ -89,11 +94,14 @@ public:
 	_REAL GetLevelMeter();
 	void GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
-	void SetFlippedSpectrum(_BOOLEAN bNewF) {bFippedSpectrum = bNewF;}
+	void SetFlippedSpectrum(const _BOOLEAN bNewF) {bFippedSpectrum = bNewF;}
 	_BOOLEAN GetFlippedSpectrum() {return bFippedSpectrum;}
 
-	void SetUseSoundcard(_BOOLEAN bNewUS) {bUseSoundcard = bNewUS;
-		SetInitFlag();}
+	void SetUseSoundcard(const _BOOLEAN bNewUS)
+	{
+		bUseSoundcard = bNewUS;
+		SetInitFlag();
+	}
 
 protected:
 	void LevelMeter();
