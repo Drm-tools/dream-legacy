@@ -677,9 +677,13 @@ void systemevalDlg::OnListSelChanged(QListViewItem* NewSelIt)
 void systemevalDlg::OnListRightButClicked(QListViewItem* NewSelIt,
 										  const QPoint& iPnt, int iCol)
 {
-	/* Show menu at mouse position only if selectable item was chosen */
-	if (NewSelIt->isSelectable())
-		pListViewContextMenu->exec(QCursor::pos());
+	/* Make sure that list item is valid */
+	if (NewSelIt != NULL)
+	{
+		/* Show menu at mouse position only if selectable item was chosen */
+		if (NewSelIt->isSelectable())
+			pListViewContextMenu->exec(QCursor::pos());
+	}
 }
 
 void systemevalDlg::OnListViContMenu()
