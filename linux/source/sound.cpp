@@ -613,7 +613,7 @@ protected:
 } PlayThread1;
 
 
-void CSound::InitPlayback(int iNewBufferSize)
+void CSound::InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
 	qDebug("initplay %d", iNewBufferSize);
 	
