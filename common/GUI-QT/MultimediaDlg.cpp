@@ -29,16 +29,19 @@
 #include "MultimediaDlg.h"
 
 
-MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal, WFlags f )
-	: MultimediaDlgBase( parent, name, modal, f)
+MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal,
+	WFlags f) : MultimediaDlgBase(parent, name, modal, f)
 {
 	/* Set Menu ***************************************************************/
 	/* File menu ------------------------------------------------------------ */
 	pFileMenu = new QPopupMenu(this);
 	CHECK_PTR(pFileMenu);
-	pFileMenu->insertItem("&Save...", this, SLOT(OnSave()), CTRL+Key_S, 0);
-	pFileMenu->insertItem("Save &all...", this, SLOT(OnSaveAll()),
-		CTRL+Key_A, 1);
+	pFileMenu->insertItem("C&lear all", this, SLOT(OnClearAll()), CTRL+Key_X);
+	pFileMenu->insertSeparator();
+	pFileMenu->insertItem("&Save...", this, SLOT(OnSave()), CTRL+Key_S);
+	pFileMenu->insertItem("Save &all...", this, SLOT(OnSaveAll()), CTRL+Key_A);
+	pFileMenu->insertSeparator();
+	pFileMenu->insertItem("&Close", this, SLOT(close()), CTRL+Key_C);
 
 
 	/* Main menu bar -------------------------------------------------------- */
@@ -50,25 +53,11 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal, WFla
 	MultimediaDlgBaseLayout->setMenuBar(pMenu);
 
 	
-	/* Init transport ID for current picture */
-	iCurTransportID = 0;
-
 	/* Update time for color LED */
 	LEDStatus->SetUpdateTime(1000);
 
-	/* Init vector which will store the received images with zero size */
-	vecpRawImages.Init(0);
-
-	/* Init current image position */
-	iCurImagePos = -1;
-
-	/* Update GUI */
-	UpdateAccButtons();
-
-	/* Init text browser window */
-	TextBrowser->setText("<center><b><font size=7>"
-		"MOT Slide Show Viewer</font></b></center>");
-
+	/* Init container and GUI */
+	ClearAll();
 
 	/* Connect controls */
 	connect(PushButtonStepBack, SIGNAL(clicked()),
@@ -86,36 +75,21 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal, WFla
 
 void MultimediaDlg::OnTimer()
 {
-	CMOTPicture NewPic;
+	CMOTObject	NewPic;
 	QPixmap		NewImage;
 	_BOOLEAN	bPicLoadSuccess;
 	FILE*		pFiBody;
-	int			iPicSize;
 	int			iCurNumPict;
 
 	/* Poll the data decoder module for new picture */
-	DRMReceiver.GetDataDecoder()->GetSlideShowPicture(NewPic);
-
-	if ((iCurTransportID != NewPic.iTransportID) && (NewPic.iTransportID != -1))
+	if (DRMReceiver.GetDataDecoder()->GetSlideShowPicture(NewPic) == TRUE)
 	{
-		iCurTransportID = NewPic.iTransportID;
-
-		/* Get picture size */
-		iPicSize = NewPic.vecbRawData.Size();
-
 		/* Store received picture */
-		iCurNumPict = vecpRawImages.Size();
-		vecpRawImages.Enlarge(1);
+		iCurNumPict = vecRawImages.Size();
+		vecRawImages.Enlarge(1);
 
-		vecpRawImages[iCurNumPict] = new CMOTPicture;
-		vecpRawImages[iCurNumPict]->vecbRawData.Init(iPicSize);
-
-		/* Actual data */
-		for (int i = 0; i < iPicSize; i++)
-			vecpRawImages[iCurNumPict]->vecbRawData[i] = NewPic.vecbRawData[i];
-
-		/* Format string */
-		vecpRawImages[iCurNumPict]->strFormat = NewPic.strFormat;
+		/* Copy new picture in storage container */
+		vecRawImages[iCurNumPict] = NewPic;
 
 		/* If the last received picture was selected, automatically show
 		   new picture */
@@ -161,12 +135,12 @@ void MultimediaDlg::SetPicture()
 	int			iPicSize;
 
 	/* Get picture size */
-	iPicSize = vecpRawImages[iCurImagePos]->vecbRawData.Size();
+	iPicSize = vecRawImages[iCurImagePos].vecbRawData.Size();
 
 	/* Load picture in QT format */
 	bPicLoadSuccess =
-		NewImage.loadFromData(&vecpRawImages[iCurImagePos]->vecbRawData[0],
-		iPicSize, QString(vecpRawImages[iCurImagePos]->strFormat.c_str()));
+		NewImage.loadFromData(&vecRawImages[iCurImagePos].vecbRawData[0],
+		iPicSize, QString(vecRawImages[iCurImagePos].strFormat.c_str()));
 
 	if (bPicLoadSuccess == TRUE)
 	{
@@ -176,14 +150,17 @@ void MultimediaDlg::SetPicture()
 
 		TextBrowser->setText("<center><img source=\"MOTSlideShowimage\">"
 			"</center>");
-		}
+	}
 	else
+	{
+		/* Show text that tells the user of load failure */
 		TextBrowser->setText("<br><br><center><b>Image could not be "
 			"loaded, " +
-			 QString(vecpRawImages[iCurImagePos]->strFormat.c_str()) +
+			 QString(vecRawImages[iCurImagePos].strFormat.c_str()) +
 			 "-format not supported by this version of QT!"
 			"</b><br><br><br>If you want to view the image, "
 			"save it to file and use an external viewer</center>");
+	}
 
 	UpdateAccButtons();
 }
@@ -261,8 +238,8 @@ void MultimediaDlg::OnSave()
 	/* Show "save file" dialog */
 	QString strFileName =
 		QFileDialog::getSaveFileName("RecPic." +
-		QString(vecpRawImages[iCurImagePos]->strFormat.c_str()),
-		"*." + QString(vecpRawImages[iCurImagePos]->strFormat.c_str()), this);
+		QString(vecRawImages[iCurImagePos].strFormat.c_str()),
+		"*." + QString(vecRawImages[iCurImagePos].strFormat.c_str()), this);
 
 	/* Check if user not hit the cancel button */
     if (!strFileName.isNull())
@@ -284,7 +261,7 @@ void MultimediaDlg::OnSaveAll()
 			QString strFileName = strDirName + "Dream_" + 
 				QDate().currentDate().toString() + "_#" +
 				QString().setNum(j) + "." +
-				QString(vecpRawImages[j]->strFormat.c_str());
+				QString(vecRawImages[j].strFormat.c_str());
 
 			SavePicture(j, strFileName);
 		}
@@ -294,22 +271,34 @@ void MultimediaDlg::OnSaveAll()
 void MultimediaDlg::SavePicture(const int iPicID, const QString& strFileName)
 {
 	/* Get picture size */
-	int iPicSize = vecpRawImages[iPicID]->vecbRawData.Size();
-
-	/* Copy file name in c-string */
-	char cFileName[100];
-	strcpy(cFileName, strFileName);
+	const int iPicSize = vecRawImages[iPicID].vecbRawData.Size();
 
 	/* Open file */
-	FILE* pFiBody = fopen(cFileName, "wb");
+	FILE* pFiBody = fopen(strFileName.latin1(), "wb");
 
 	if (pFiBody != NULL)
 	{
 		for (int i = 0; i < iPicSize; i++)
-			fwrite((void*) &vecpRawImages[iPicID]->vecbRawData[i],
+			fwrite((void*) &vecRawImages[iPicID].vecbRawData[i],
 				size_t(1), size_t(1), pFiBody);
 
 		/* Close the file afterwards */
 		fclose(pFiBody);
 	}
+}
+
+void MultimediaDlg::ClearAll()
+{
+	/* Init vector which will store the received images with zero size */
+	vecRawImages.Init(0);
+
+	/* Init current image position */
+	iCurImagePos = -1;
+
+	/* Update GUI */
+	UpdateAccButtons();
+
+	/* Init text browser window */
+	TextBrowser->setText("<center><b><font size=7>"
+		"MOT Slide Show Viewer</font></b></center>");
 }
