@@ -406,6 +406,7 @@ void CEvaSimData::InitInternal(CParameter& ReceiverParam)
 	/* Init global parameters */
 	ReceiverParam.rBitErrRate = (_REAL) 0.0;
 	ReceiverParam.iNumBitErrors = 0;
+	ReceiverParam.rSyncTestParam = (_REAL) 0.0;
 
 	/* Define block-size for input */
 	iInputBlockSize = ReceiverParam.iNumDecodedBitsMSC;

@@ -66,6 +66,9 @@ protected:
 	void Init();
 	string SimFileName(CParameter& Param, string strAddInf);
 
+	int iSimTime;
+	int iSimNumErrors;
+
 	/* Parameters */
 	CParameter				Param;
 	

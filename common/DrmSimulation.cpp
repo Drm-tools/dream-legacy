@@ -108,7 +108,7 @@ case CParameter::ST_BER_IDEALCHAN:
 	break;
 
 
-case CParameter::ST_BITERROR:
+default: /* Other types like ST_BITERROR or ST_SYNC_PARAM */
 		/* Bit error rate (we can use all synchronization units here!) ------ */
 		/* This module converts the "CChanSimDataMod" data type of "DRMChannel"
 		   to the "_REAL" data type, because a regular module can only have ONE
@@ -222,7 +222,7 @@ void CDRMSimulation::Init()
 		IdealChanEst.Init(Param, ChanEstBuf);
 		break;
 
-	case CParameter::ST_BITERROR:
+	default: /* Other types like ST_BITERROR or ST_SYNC_PARAM */
 		DataConvChanResam.Init(Param, ChanResInBuf);
 
 		OFDMDemodulation.Init(Param, OFDMDemodBuf);
@@ -254,7 +254,7 @@ void CDRMSimulation::Init()
 	SyncUsingPil.StartTrackPil();
 }
 
-CDRMSimulation::CDRMSimulation()
+CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0)
 {
 	/* Set all parameters to meaningful value for startup state. If we want to
 	   make a simulation we just have to specify the important values */

@@ -106,7 +106,6 @@ public:
 
 	void SetSimTime(int iNewTi, string strNewFileName);
 	void SetNumErrors(int iNewNE, string strNewFileName);
-	int GetNumErrors() {return iNumErrors;}
 
 protected:
 	enum ECntType {CT_TIME, CT_ERRORS};
