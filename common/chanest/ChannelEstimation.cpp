@@ -782,19 +782,19 @@ void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 		/* Lock resources */
 		Lock();
 
-		/* Init constant for normalization */
+		/* Init constants for normalization */
 		const _REAL rTu = (CReal) iFFTSizeN / SOUNDCRD_SAMPLE_RATE;
+		const _REAL rNormData = (_REAL) _MAXSHORT * _MAXSHORT;
 
 		/* Copy data in output vector and set scale 
 		   (carrier index as x-scale) */
 		for (int i = 0; i < iNumCarrier; i++)
 		{
 			/* Transfer function */
-			const _REAL rNormChanEst =
-				Abs(veccChanEst[i]) / (_REAL) iNumCarrier;
+			const _REAL rNormSqMagChanEst = SqMag(veccChanEst[i]) / rNormData;
 
-			if (rNormChanEst > 0)
-				vecrData[i] = (_REAL) 20.0 * Log10(rNormChanEst);
+			if (rNormSqMagChanEst > 0)
+				vecrData[i] = (_REAL) 10.0 * Log10(rNormSqMagChanEst);
 			else
 				vecrData[i] = RET_VAL_LOG_0;
 
@@ -820,7 +820,7 @@ void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 			/* Store old phase */
 			rOldPhase = Angle(veccChanEst[i]);
 
-			/* Scale */
+			/* Scale (carrier index) */
 			vecrScale[i] = i;
 		}
 

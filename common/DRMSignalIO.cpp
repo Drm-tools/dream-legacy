@@ -408,9 +408,7 @@ CReceiveData::~CReceiveData()
 void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 								CVector<_REAL>& vecrScale)
 {
-	int				i;
-	CComplexVector	veccSpectrum;
-	CRealVector		vecrFFTInput;
+	int i;
 
 	/* Length of spectrum vector including Nyquist frequency */
 	const int iLenSpecWithNyFreq = NUM_SMPLS_4_INPUT_SPECTRUM / 2 + 1;
@@ -429,21 +427,19 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 	const _REAL rNormData = (_REAL) _MAXSHORT * _MAXSHORT *
 		NUM_SMPLS_4_INPUT_SPECTRUM * NUM_SMPLS_4_INPUT_SPECTRUM;
 
-	/* Init vectors */
-	vecrFFTInput.Init(NUM_SMPLS_4_INPUT_SPECTRUM);
-	veccSpectrum.Init(iLenSpecWithNyFreq);
-
 	/* Copy data from shift register in Matlib vector */
+	CRealVector vecrFFTInput(NUM_SMPLS_4_INPUT_SPECTRUM);
 	for (i = 0; i < NUM_SMPLS_4_INPUT_SPECTRUM; i++)
 		vecrFFTInput[i] = vecrInpData[i];
 
-	/* Get spectrum */
-	veccSpectrum = rfft(vecrFFTInput);
+	/* Get squared magnitude of spectrum */
+	CRealVector vecrSqMagSpect(iLenSpecWithNyFreq);
+	vecrSqMagSpect = SqMag(rfft(vecrFFTInput));
 
 	/* Log power spectrum data */
 	for (i = 0; i < iLenSpecWithNyFreq; i++)
 	{
-		const _REAL rNormSqMag = SqMag(veccSpectrum[i]) / rNormData;
+		const _REAL rNormSqMag = vecrSqMagSpect[i] / rNormData;
 
 		if (rNormSqMag > 0)
 			vecrData[i] = (_REAL) 10.0 * log10(rNormSqMag);
@@ -460,10 +456,7 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
 							   CVector<_REAL>& vecrScale)
 {
-	int			i;
-	CRealVector	vecrSpectrum;
-	CRealVector	vecrFFTInput;
-	CRealVector	vecrHammWin;
+	int i;
 
 	/* Length of spectrum vector including Nyquist frequency */
 	const int iLenSpecWithNyFreq = LEN_PSD_AV_EACH_BLOCK / 2 + 1;
@@ -483,11 +476,12 @@ void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
 		LEN_PSD_AV_EACH_BLOCK * LEN_PSD_AV_EACH_BLOCK *
 		NUM_AV_BLOCKS_PSD * NUM_AV_BLOCKS_PSD;
 
-	/* Init vectors and Hamming window */
-	vecrSpectrum.Init(iLenSpecWithNyFreq, (CReal) 0.0);
-	vecrFFTInput.Init(LEN_PSD_AV_EACH_BLOCK);
-	vecrHammWin.Init(LEN_PSD_AV_EACH_BLOCK);
-	vecrHammWin = Hamming(LEN_PSD_AV_EACH_BLOCK);
+	/* Init intermediate vectors */
+	CRealVector vecrAvSqMagSpect(iLenSpecWithNyFreq, (CReal) 0.0);
+	CRealVector vecrFFTInput(LEN_PSD_AV_EACH_BLOCK);
+
+	/* Init Hamming window */
+	CRealVector vecrHammWin(Hamming(LEN_PSD_AV_EACH_BLOCK));
 
 	/* Calculate FFT of each small block and average results (estimation
 	   of PSD of input signal) */
@@ -498,13 +492,13 @@ void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
 			vecrFFTInput[i] = vecrInpData[i + j * LEN_PSD_AV_EACH_BLOCK];
 
 		/* Calculate squared magnitude of spectrum and average results */
-		vecrSpectrum += SqMag(rfft(vecrFFTInput * vecrHammWin));
+		vecrAvSqMagSpect += SqMag(rfft(vecrFFTInput * vecrHammWin));
 	}
 
 	/* Log power spectrum data */
 	for (i = 0; i < iLenSpecWithNyFreq; i++)
 	{
-		const _REAL rNormSqMag = vecrSpectrum[i] / rNormData;
+		const _REAL rNormSqMag = vecrAvSqMagSpect[i] / rNormData;
 
 		if (rNormSqMag > 0)
 			vecrData[i] = (_REAL) 10.0 * log10(rNormSqMag);

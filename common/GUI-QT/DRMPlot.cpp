@@ -332,7 +332,7 @@ void CDRMPlot::SetupTranFct()
 	setAxisScale(QwtPlot::yRight, (double) -50.0, (double) 50.0);
 
 	/* Fixed scale */
-	setAxisScale(QwtPlot::yLeft, (double) -50.0, (double) 0.0);
+	setAxisScale(QwtPlot::yLeft, (double) -85.0, (double) -35.0);
 
 	/* Add main curves */
 	clear();
@@ -651,8 +651,8 @@ void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 	}
 
 	/* Fixed scale */
-	const double cdAxMinLeft = -50.0;
-	const double cdAxMaxLeft = 0.0;
+	const double cdAxMinLeft = (double) -85.0;
+	const double cdAxMaxLeft = (double) -35.0;
 	setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
 
 	double dX[2], dY[2];

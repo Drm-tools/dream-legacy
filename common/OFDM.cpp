@@ -212,8 +212,10 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Use only useful carriers and normalize with the block-size ("N") */
 	for (i = iShiftedKmin; i < iShiftedKmax + 1; i++)
+	{
 		(*pvecOutputData)[i - iShiftedKmin] =
 			veccFFTOutput[i] / (CReal) iDFTSize;
+	}
 
 
 	/* Save averaged spectrum for plotting ---------------------------------- */
@@ -353,7 +355,10 @@ void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
 		/* Lock resources */
 		Lock();
 
-		const _REAL rNormData = (_REAL) iDFTSize * iDFTSize * _MAXSHORT;
+		/* Init the constants for scale and normalization */
+		const _REAL rNormData =
+			(_REAL) iDFTSize * iDFTSize * _MAXSHORT * _MAXSHORT;
+
 		const _REAL rFactorScale =
 			(_REAL) SOUNDCRD_SAMPLE_RATE / iLenPowSpec / 2000;
 
