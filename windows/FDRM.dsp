@@ -407,6 +407,18 @@ SOURCE=..\common\datadecoding\Journaline.cpp
 SOURCE=..\common\datadecoding\MOTSlideShow.cpp
 # End Source File
 # End Group
+# Begin Group "Source Utilities"
+
+# PROP Default_Filter ".c .cpp"
+# Begin Source File
+
+SOURCE=..\common\util\Settings.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\util\Utilities.cpp
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\common\AMDemodulation.cpp
@@ -502,10 +514,6 @@ SOURCE="..\common\GUI-QT\DRMPlot.h"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\fdrmdialog.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\common\GUI-QT\main.h"
 # End Source File
 # Begin Source File
 
@@ -700,6 +708,22 @@ SOURCE=..\common\datadecoding\Journaline.h
 SOURCE=..\common\datadecoding\MOTSlideShow.h
 # End Source File
 # End Group
+# Begin Group "Header Utilities"
+
+# PROP Default_Filter ".h"
+# Begin Source File
+
+SOURCE=..\common\AudioFile.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\util\Settings.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\util\Utilities.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\common\AMDemodulation.h
@@ -707,10 +731,6 @@ SOURCE=..\common\AMDemodulation.h
 # Begin Source File
 
 SOURCE=..\common\AMDemodulationFilter.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\AudioFile.h
 # End Source File
 # Begin Source File
 
@@ -775,6 +795,10 @@ SOURCE=..\common\OFDM.h
 # Begin Source File
 
 SOURCE=..\common\Parameter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\ReceiverFilter.h
 # End Source File
 # Begin Source File
 

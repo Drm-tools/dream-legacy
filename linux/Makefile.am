@@ -21,6 +21,8 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/FAC/FAC.cpp \
 	../common/matlib/MatlibSigProToolbox.cpp \
 	../common/matlib/MatlibStdToolbox.cpp \
+	../common/util/Settings.cpp \
+	../common/util/Utilities.cpp \
 	../common/SDC/SDCReceive.cpp \
 	../common/SDC/SDCTransmit.cpp \
 	../common/chanest/ChannelEstimation.cpp \
@@ -68,7 +70,6 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/AMDemodulation.h \
 	../common/AMDemodulationFilter.h \
 	../common/Vector.h \
-	../common/AudioFile.h \
 	../common/datadecoding/DataDecoder.h \
 	../common/datadecoding/DABMOT.h \
 	../common/datadecoding/MOTSlideShow.h \
@@ -77,6 +78,9 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/matlib/Matlib.h \
 	../common/matlib/MatlibSigProToolbox.h \
 	../common/matlib/MatlibStdToolbox.h \
+	../common/util/AudioFile.h \
+	../common/util/Settings.h \
+	../common/util/Utilities.h \
 	../common/SDC/SDC.h \
 	../common/TransmitterFilter.h \
 	../common/ReceiverFilter.h \
@@ -111,8 +115,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/tables/TableFAC.h \
 	../common/tables/TableMLC.h \
 	../common/tables/TableQAMMapping.h \
-	source/sound.h \
-	../common/GUI-QT/main.h
+	source/sound.h
 
 if USE_QT
 
