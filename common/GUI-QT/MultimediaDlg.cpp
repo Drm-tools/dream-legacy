@@ -32,6 +32,22 @@
 MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal, WFlags f )
 	: MultimediaDlgBase( parent, name, modal, f)
 {
+	/* Set Menu ***************************************************************/
+	/* File menu ------------------------------------------------------------ */
+	pFileMenu = new QPopupMenu(this);
+	CHECK_PTR(pFileMenu);
+	pFileMenu->insertItem("&Save...", this, SLOT(OnSave()), CTRL+Key_S, 0);
+
+
+	/* Main menu bar -------------------------------------------------------- */
+	pMenu = new QMenuBar(this);
+	CHECK_PTR(pMenu);
+	pMenu->insertItem("&File", pFileMenu);
+
+	/* Now tell the layout about the menu */
+	MultimediaDlgBaseLayout->setMenuBar(pMenu);
+
+	
 	/* Init transport ID for current picture */
 	iCurTransportID = 0;
 
@@ -39,7 +55,7 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal, WFla
 	LEDStatus->SetUpdateTime(1000);
 
 	/* Init vector which will store the received images with zero size */
-	vecImages.resize(0);
+	vecpRawImages.Init(0);
 
 	/* Init current image position */
 	iCurImagePos = -1;
@@ -48,7 +64,9 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal, WFla
 	UpdateAccButtons();
 
 	/* Init text browser window */
-	TextBrowser->setText("<center><b>MOT Slide Show Viewer</center>");
+	TextBrowser->setText("<center><b><font size=7>"
+		"MOT Slide Show Viewer</font></b></center>");
+
 
 	/* Connect controls */
 	connect(PushButtonStepBack, SIGNAL(clicked()),
@@ -83,57 +101,29 @@ void MultimediaDlg::OnTimer()
 		/* Get picture size */
 		iPicSize = NewPic.vecbRawData.Size();
 
-		/* Load picture in QT format */
-		bPicLoadSuccess =
-			NewImage.loadFromData(&NewPic.vecbRawData[0],
-			iPicSize, QString(NewPic.strFormat.c_str()));
+		/* Store received picture */
+		iCurNumPict = vecpRawImages.Size();
+		vecpRawImages.Enlarge(1);
 
-		if (bPicLoadSuccess == TRUE)
+		vecpRawImages[iCurNumPict] = new CMOTPicture;
+		vecpRawImages[iCurNumPict]->vecbRawData.Init(iPicSize);
+
+		/* Actual data */
+		for (int i = 0; i < iPicSize; i++)
+			vecpRawImages[iCurNumPict]->vecbRawData[i] = NewPic.vecbRawData[i];
+
+		/* Format string */
+		vecpRawImages[iCurNumPict]->strFormat = NewPic.strFormat;
+
+		/* If the last received picture was selected, automatically show
+		   new picture */
+		if (iCurImagePos == iCurNumPict - 1)
 		{
-			/* Add successfully imported picture to vector */
-			iCurNumPict = vecImages.Size();
-			vecImages.Enlarge(1);
-			vecImages[iCurNumPict] = NewImage;
-
-			UpdateAccButtons();
-
-			/* If the last received picture was selected, automatically show
-			   new picture */
-			if (iCurImagePos == iCurNumPict - 1)
-			{
-				iCurImagePos = iCurNumPict;
-				SetPicture();
-			}
+			iCurImagePos = iCurNumPict;
+			SetPicture();
 		}
 		else
-		{
-			TextBrowser->setText("<center><b>Image could not be loaded, format "
-				"not supported!"
-#ifdef _WIN32
-				"<br><br>Try to load image in external viewer."
-#endif
-				"</b></center>");
-
-			/* Store image in file instead */
-			char cFileName[100];
-			strcpy(cFileName, "DreamReceivedDataFileTMP.");
-			strcat(cFileName, NewPic.strFormat.c_str());
-
-			pFiBody = fopen(cFileName, "wb");
-
-			for (int i = 0; i < iPicSize; i++)
-				fwrite((void*) &NewPic.vecbRawData[i], size_t(1), size_t(1),
-					pFiBody);
-
-			/* Close the file afterwards */
-			fclose(pFiBody);
-
-			/* Call application to show the image */
-#ifdef _WIN32
-			ShellExecute(NULL, "open", cFileName, NULL,NULL,
-				SW_SHOWNORMAL);
-#endif
-		}
+			UpdateAccButtons();
 	}
 }
 
@@ -164,12 +154,32 @@ void MultimediaDlg::SetStatus(int MessID, int iMessPara)
 
 void MultimediaDlg::SetPicture()
 {
-	/* Set new picture in source factory and set it in text control */
-	QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
-		vecImages[iCurImagePos].convertToImage());
+	_BOOLEAN	bPicLoadSuccess;
+	QPixmap		NewImage;
+	int			iPicSize;
 
-	TextBrowser->setText("<center><img source=\"MOTSlideShowimage\">"
-		"</center>");
+	/* Get picture size */
+	iPicSize = vecpRawImages[iCurImagePos]->vecbRawData.Size();
+
+	/* Load picture in QT format */
+	bPicLoadSuccess =
+		NewImage.loadFromData(&vecpRawImages[iCurImagePos]->vecbRawData[0],
+		iPicSize, QString(vecpRawImages[iCurImagePos]->strFormat.c_str()));
+
+	if (bPicLoadSuccess == TRUE)
+	{
+		/* Set new picture in source factory and set it in text control */
+		QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
+			NewImage.convertToImage());
+
+		TextBrowser->setText("<center><img source=\"MOTSlideShowimage\">"
+			"</center>");
+		}
+	else
+		TextBrowser->setText("<br><br><center><b>Image could not be "
+			"loaded, format not supported by this version of QT!"
+			"</b><br><br><br>If you want to view the image, "
+			"save it to file and use an external viewer</center>");
 
 	UpdateAccButtons();
 }
@@ -196,12 +206,18 @@ void MultimediaDlg::OnButtonJumpBegin()
 void MultimediaDlg::OnButtonJumpEnd()
 {
 	/* Go to last received picture */
-	iCurImagePos = vecImages.Size() - 1;
+	iCurImagePos = GetIDLastPicture();
 	SetPicture();
 }
 
 void MultimediaDlg::UpdateAccButtons()
 {
+	/* Set enable menu entry for saving a picture */
+	if (iCurImagePos < 0)
+		pFileMenu->setItemEnabled(0, FALSE);
+	else
+		pFileMenu->setItemEnabled(0, TRUE);
+
 	if (iCurImagePos <= 0)
 	{
 		/* We are already at the beginning */
@@ -214,7 +230,7 @@ void MultimediaDlg::UpdateAccButtons()
 		PushButtonJumpBegin->setEnabled(TRUE);
 	}
 
-	if (iCurImagePos == vecImages.Size() - 1)
+	if (iCurImagePos == GetIDLastPicture())
 	{
 		/* We are already at the end */
 		PushButtonStepForw->setEnabled(FALSE);
@@ -227,5 +243,33 @@ void MultimediaDlg::UpdateAccButtons()
 	}
 
 	LabelCurPicNum->setText(QString().setNum(iCurImagePos + 1) + "/" +
-		QString().setNum(vecImages.Size()));
+		QString().setNum(GetIDLastPicture() + 1));
+}
+
+void MultimediaDlg::OnSave()
+{
+	/* Show "save file" dialog */
+	QString strFileName =
+		QFileDialog::getSaveFileName("RecPic." +
+		QString(vecpRawImages[iCurImagePos]->strFormat.c_str()),
+		"*." + QString(vecpRawImages[iCurImagePos]->strFormat.c_str()), this);
+
+    if (!strFileName.isNull())
+	{
+		/* Get picture size */
+		int iPicSize = vecpRawImages[iCurImagePos]->vecbRawData.Size();
+
+		/* Got a file name */
+		char cFileName[100];
+		strcpy(cFileName, strFileName);
+
+		FILE* pFiBody = fopen(cFileName, "wb");
+
+		for (int i = 0; i < iPicSize; i++)
+			fwrite((void*) &vecpRawImages[iCurImagePos]->vecbRawData[i],
+				size_t(1), size_t(1), pFiBody);
+
+		/* Close the file afterwards */
+		fclose(pFiBody);
+	}
 }

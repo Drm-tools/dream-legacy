@@ -32,6 +32,11 @@
 #include <qtimer.h>
 #include <qpushbutton.h>
 #include <qlabel.h>
+#include <qmenubar.h>
+#include <qpopupmenu.h>
+#include <qlayout.h>
+#include <qfiledialog.h>
+
 
 #ifdef _WIN32
 # include "../../Windows/moc/MultimediaDlgbase.h"
@@ -59,14 +64,18 @@ public:
 	void SetStatus(int MessID, int iMessPara);
 
 protected:
-	QTimer				Timer;
-	int					iCurTransportID;
-    virtual void		showEvent(QShowEvent* pEvent);
-	virtual void		hideEvent(QHideEvent* pEvent);
-	CVector<QPixmap>	vecImages;
-	int					iCurImagePos;
-	void				SetPicture();
-	void				UpdateAccButtons();
+	QTimer					Timer;
+	QMenuBar*				pMenu;
+	QPopupMenu*				pFileMenu;
+	int						iCurTransportID;
+    virtual void			showEvent(QShowEvent* pEvent);
+	virtual void			hideEvent(QHideEvent* pEvent);
+	CVector<CMOTPicture*>	vecpRawImages;
+	int						iCurImagePos;
+
+	void SetPicture();
+	void UpdateAccButtons();
+	int GetIDLastPicture() {return vecpRawImages.Size() - 1;}
 
 public slots:
 	void OnTimer();
@@ -74,5 +83,6 @@ public slots:
 	void OnButtonStepForw();
 	void OnButtonJumpBegin();
 	void OnButtonJumpEnd();
+	void OnSave();
 };
 
