@@ -33,14 +33,8 @@
 
 
 /* Definitions ****************************************************************/
-/* Default no of iterations at application startup */
+/* Default number of iterations at application startup */
 #define MC_NO_ITERATIONS			1
-
-/* We initialize each new block of data all branches-metrics with the following
-   value exept of the zero-state. This can be done since we actually KNOW that
-   the zero state MUST be the transmitted one. The initialization vaule should
-   be fairly high */
-#define MC_METRIC_INIT_VALUE		(1e30)
 
 /* Generator polynomials used for channel coding (octal form, defined by 
    a leading "0"!). We must bit-reverse the octal-forms given in the standard 
@@ -56,10 +50,6 @@ const _BYTE byGeneratorMatrix[MC_NO_OUTPUT_BITS_PER_STEP] = {
 };
 
 #define MC_CONSTRAINT_LENGTH		7
-/* Decoding depth is MC_CONSTRAINT_LENGTH - 1 because we use the bits which
-   are falling out of the shift register in the viterby algorithm. Be
-   aware that the decoding depth must be shorter than "_UINT64BIT" has bits! */
-#define MC_DECODING_DEPTH			(9 * MC_CONSTRAINT_LENGTH)
 
 /* Since we have a periodical structure in the trellis it
    is enough to build one step. 2^(MC_CONSTRAINT_LENGTH - 1) states have
