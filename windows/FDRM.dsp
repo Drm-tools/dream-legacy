@@ -678,6 +678,10 @@ SOURCE=..\common\AMDemodulation.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\AudioFile.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\sourcedecoders\AudioSourceDecoder.h
 # End Source File
 # Begin Source File

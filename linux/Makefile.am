@@ -89,6 +89,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/TextMessage.h \
 	../common/AMDemodulation.h \
 	../common/Vector.h \
+	../common/AudioFile.h \
 	../common/datadecoding/DataDecoder.h \
 	../common/datadecoding/DABMOT.h \
 	../common/datadecoding/MOTSlideShow.h \
