@@ -37,6 +37,8 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 	/**************************************************************************\
 	* Frame synchronization detection										   *
 	\**************************************************************************/
+	_BOOLEAN bSymbolIDHasChanged = FALSE;
+
 	if ((bSyncInput == FALSE) && (bAquisition == TRUE))
 	{
 		/* DRM frame synchronization using impulse response ----------------- */
@@ -127,8 +129,11 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 			{
 				if (bBadFrameSync == TRUE)
 				{
-					/* Reset symbol counter according to received data */
+					/* Reset symbol ID index according to received data */
 					iSymbCntFraSy = iNumSymPerFrame - iMiddleOfInterval - 1;
+
+					/* Inform that symbol ID has changed */
+					bSymbolIDHasChanged = TRUE;
 
 					/* Reset flag */
 					bBadFrameSync = FALSE;
@@ -159,8 +164,9 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		PostWinMessage(MS_FRAME_SYNC, 0);
 	}
 
-	/* Set current symbol ID in extended data of output vector */
+	/* Set current symbol ID and flag in extended data of output vector */
 	(*pvecOutputData).GetExData().iSymbolID = iSymbCntFraSy;
+	(*pvecOutputData).GetExData().bSymbolIDHasChanged = bSymbolIDHasChanged;
 
 	/* Increase symbol counter and take care of wrap around */
 	iSymbCntFraSy++;
