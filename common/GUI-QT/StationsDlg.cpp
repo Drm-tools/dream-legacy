@@ -571,26 +571,6 @@ void StationsDlg::SetUTCTimeLabel()
 		TextLabelUTCTime->setText(strUTCTime);
 }
 
-void StationsDlg::OnTimerSMeter()
-{
-#ifdef HAVE_LIBHAMLIB
-	if ((bSMeterEnabled == TRUE) && (pRig != 0))
-	{
-		value_t tValue;
-
-		const int iRetVal =
-			rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &tValue);
-
-		if (!iRetVal)
-			ProgrSigStrength->setValue((_REAL) tValue.i);
-
-		/* If a time-out happened, do not update s-meter anymore (disable it) */
-		if (iRetVal == -RIG_ETIMEOUT)
-			EnableSMeter(FALSE);
-	}
-#endif
-}
-
 void StationsDlg::OnShowStationsMenu(int iID)
 {
 	/* Show only active stations if ID is 0, else show all */
@@ -799,8 +779,10 @@ void StationsDlg::SetStationsView()
 
 void StationsDlg::OnFreqCntNewValue(double dVal)
 {
+#ifdef HAVE_LIBHAMLIB
 	/* Set frequency to front-end */
 	SetFrequency((int) dVal);
+#endif
 
 	/* Set selected frequency in log file class */
 	DRMReceiver.GetParameters()->ReceptLog.SetFrequency((int) dVal);
@@ -861,10 +843,23 @@ void StationsDlg::OnComPortMenu(QAction* action)
 #endif
 }
 
-void StationsDlg::SetFrequency(const int iFreqkHz)
+void StationsDlg::OnTimerSMeter()
 {
 #ifdef HAVE_LIBHAMLIB
-	SetFrequencyHamlib(iFreqkHz);
+	if ((bSMeterEnabled == TRUE) && (pRig != 0))
+	{
+		value_t tValue;
+
+		const int iRetVal =
+			rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &tValue);
+
+		if (!iRetVal)
+			ProgrSigStrength->setValue((_REAL) tValue.i);
+
+		/* If a time-out happened, do not update s-meter anymore (disable it) */
+		if (iRetVal == -RIG_ETIMEOUT)
+			EnableSMeter(FALSE);
+	}
 #endif
 }
 
@@ -954,7 +949,7 @@ _BOOLEAN StationsDlg::CheckForSpecDRMFE(const rig_model_t iID, int& iIndex)
 	return bIsSpecialDRMrig;
 }
 
-_BOOLEAN StationsDlg::SetFrequencyHamlib(const int iFreqkHz)
+_BOOLEAN StationsDlg::SetFrequency(const int iFreqkHz)
 {
 	_BOOLEAN bSucceeded = FALSE;
 

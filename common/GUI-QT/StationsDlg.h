@@ -179,7 +179,6 @@ public:
 	virtual ~StationsDlg();
 
 protected:
-	void			SetFrequency(const int iFreqkHz);
 	void			SetStationsView();
     virtual void	showEvent(QShowEvent* pEvent);
 	void			AddWhatsThisHelp();
@@ -251,7 +250,7 @@ protected:
 
 	static int			PrintHamlibModelList(const struct rig_caps* caps, void* data);
 	_BOOLEAN			CheckForSpecDRMFE(const rig_model_t iID, int& iIndex);
-	_BOOLEAN			SetFrequencyHamlib(const int iFreqkHz);
+	_BOOLEAN			SetFrequency(const int iFreqkHz);
 	void				InitHamlib(const rig_model_t newModID);
 
 	RIG*				pRig;
