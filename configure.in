@@ -28,7 +28,7 @@ AC_ARG_WITH( faad2,[  --with-faad2            use faad2 library for decoding AAC
 
 AC_ARG_WITH( journaline,[  --with-journaline       support Journaline],WITHJOURNALINE=$withval, WITHJOURNALINE=yes)
 
-AC_ARG_WITH( hamlib,[  --with-hamlib           use hamlib library],WITHHAMLIB=$withval, WITHHAMLIB=yes)
+AC_ARG_WITH( hamlib,[  --with-hamlib           use hamlib library],WITHHAMLIB=$withval, WITHHAMLIB=no)
 
 dnl Checks for programs.
 AC_PROG_CC
