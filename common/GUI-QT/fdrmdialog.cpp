@@ -974,14 +974,14 @@ void FDRMDialog::AddWhatsThisHelp()
 		"(e.g. German / News).<br>The big turquoise text in the middle is "
 		"the station label. This label may appear later than the red text "
 		"since this information is transmitted in a different logical channel "
-		"of DRM.<br>The turquoise text on the bottom shows the gross bit-rate "
-		"in kbits per second of the current selected service. The abbreviation "
-		"EEP and UEP stands for Equal Error Protection and Unequal Error "
-		"Protection. UEP is a feature of DRM for a graceful degradation of "
-		"the decoded audio signal in case of a bad reception situation. UEP "
-		"means that some parts of the audio is higher protected and some parts "
-		"are lower protected. On the right the ID number connected with this "
-		"service is shown.";
+		"of a DRM stream.<br>The turquoise text on the bottom shows the gross "
+		"bit-rate in kbits per second of the current selected service. The "
+		"abbreviations EEP and UEP stand for Equal Error Protection and "
+		"Unequal Error Protection. UEP is a feature of DRM for a graceful "
+		"degradation of the decoded audio signal in case of a bad reception "
+		"situation. UEP means that some parts of the audio is higher protected "
+		"and some parts are lower protected. On the right, the ID number "
+		"connected with this service is shown.";
 
 	QWhatsThis::add(TextServiceAudio, strStationLabelOther);
 	QWhatsThis::add(TextServiceLabel, strStationLabelOther);
