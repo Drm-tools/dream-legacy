@@ -176,6 +176,7 @@ void systemevalDlg::OnTimer()
 	_REAL				rLowerBound, rHigherBound;
 	_REAL				rStartGuard, rEndGuard;
 	_REAL				rSNREstimate;
+	_REAL				rEstEndIR;
 
 	/* SNR estimate */
 	rSNREstimate = Min(DRMReceiver.GetChanEst()->GetSNREstdB(), 
@@ -204,9 +205,11 @@ void systemevalDlg::OnTimer()
 
 
 	/* Doppler estimation (assuming Gaussian doppler spectrum) */
-	TextWiener->setText("Doppler: \t\n" + 
+	TextWiener->setText("Doppler / Delay: \t\n" + 
 		QString().setNum(
-		DRMReceiver.GetChanEst()->GetSigma(), 'f', 2) + " Hz");
+		DRMReceiver.GetChanEst()->GetSigma(), 'f', 2) + " Hz / " + 
+		QString().setNum(
+		DRMReceiver.GetChanEst()->GetDelay(), 'f', 2) + " ms");
 
 
 	/* Sample frequency offset estimation */
@@ -245,11 +248,11 @@ void systemevalDlg::OnTimer()
 		/* Get data from module */
 		DRMReceiver.GetChanEst()->GetTimeSyncTrack()->
 			GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
-			rStartGuard, rEndGuard);
+			rStartGuard, rEndGuard, rEstEndIR);
 
 		/* Prepare graph and set data */
 		MainPlot->SetAvIR(vecrData, vecrScale, rLowerBound, rHigherBound, 
-			rStartGuard, rEndGuard);
+			rStartGuard, rEndGuard, rEstEndIR);
 		break;
 
 	case TRANSFERFUNCTION:

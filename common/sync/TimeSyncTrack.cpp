@@ -33,8 +33,8 @@
 
 
 /* Implementation *************************************************************/
-void CTimeSyncTrack::Process(CParameter& Parameter, CComplexVector& veccChanEst,
-							 int iNewTiCorr)
+int CTimeSyncTrack::Process(CParameter& Parameter,
+							CComplexVector& veccChanEst, int iNewTiCorr)
 {
 	int			i;
 	_REAL		rTiOffset;
@@ -44,6 +44,9 @@ void CTimeSyncTrack::Process(CParameter& Parameter, CComplexVector& veccChanEst,
 	CReal		rActShiftTiCor;
 	CReal		rPropGain;
 	_BOOLEAN	bDelayFound;
+	CReal		rTotalEnergy;
+	CReal		rCurEnergy;
+	_BOOLEAN	bDelSprLenFound;
 
 	/* Rotate the averaged PDP to follow the time shifts -------------------- */
 	/* Update timing correction history (shift register) */
@@ -172,6 +175,39 @@ void CTimeSyncTrack::Process(CParameter& Parameter, CComplexVector& veccChanEst,
 		   factor */
 		Parameter.rTimingOffsTrack = -rTiOffset * iDFTSize / iNoCarrier;
 	}
+
+
+	/* Delay spread length estimation --------------------------------------- */
+	/* Total energy of estimated impulse response */
+	rTotalEnergy = Sum(vecrAvPoDeSp * vecrAvPoDeSp);
+
+	/* Calculate the point where "rEnergBound" part of the energy is included */
+	const CReal rEnergBound = (CReal) 0.9999999;
+	rCurEnergy = (CReal) 0.0;
+	bDelSprLenFound = FALSE;
+	iEstDelay = iGuardSizeFFT;
+	
+	for (i = 0; i < iNoIntpFreqPil; i++)
+	{
+		if (bDelSprLenFound == FALSE)
+		{
+			rCurEnergy += vecrAvPoDeSp[i] * vecrAvPoDeSp[i];
+
+			if (rCurEnergy > rEnergBound * rTotalEnergy)
+			{
+				/* Delay index */
+				iEstDelay = i;
+
+				bDelSprLenFound = TRUE;
+			}
+		}
+	}
+
+	/* Bound the delay to the guard-interval length */
+	if (iEstDelay > iGuardSizeFFT)
+		return iGuardSizeFFT;
+	else
+		return iEstDelay;
 }
 
 void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
@@ -233,6 +269,10 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	   exactely zero because even small estimation errors would lead to ISI */
 	iTargetTimingPos = iGuardSizeFFT / TARGET_TI_POS_FRAC_GUARD_INT;
 
+	/* Init estimation of length of impulse response with length of guard-
+	   interval */
+	iEstDelay = iGuardSizeFFT;
+
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iNoIntpFreqPil);
 
@@ -242,7 +282,8 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData, 
 								 CVector<_REAL>& vecrScale, 
 								_REAL& rLowerBound, _REAL& rHigherBound,
-								_REAL& rStartGuard, _REAL& rEndGuard)
+								_REAL& rStartGuard, _REAL& rEndGuard,
+								_REAL& rLenIR)
 {
 	int		i;
 	int		iHalfSpec;
@@ -313,5 +354,8 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 
 		/* End point of guard interval */
 		rEndGuard = rScaleIncr * (iGuardSizeFFT - iTargetTimingPos);
+
+		/* Estmiated impulse response length */
+		rLenIR = rScaleIncr * (iEstDelay - iTargetTimingPos);
 	}
 }

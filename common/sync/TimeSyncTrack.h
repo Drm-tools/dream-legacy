@@ -59,12 +59,12 @@ public:
 
 	void Init(CParameter& Parameter, int iNewSymbDelay);
 
-	void Process(CParameter& Parameter, CComplexVector& veccChanEst, int
-		iNewTiCorr);
+	int Process(CParameter& Parameter, CComplexVector& veccChanEst,
+			    int iNewTiCorr);
 
 	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
 					 _REAL& rLowerBound, _REAL& rHigherBound,
-					 _REAL& rStartGuard, _REAL& rEndGuard);
+					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rLenIR);
 
 	void StartTracking() {bTracking = TRUE;}
 	void StopTracking() {bTracking = FALSE;}
@@ -97,6 +97,8 @@ protected:
 	int					iGuardSizeFFT;
 
 	int					iInitCnt;
+
+	int					iEstDelay;
 
 	_BOOLEAN			IsInInit() const {return bIsInInit;}
 

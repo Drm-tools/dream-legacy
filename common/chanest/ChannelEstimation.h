@@ -80,6 +80,7 @@ public:
 
 	_REAL GetSNREstdB() const;
 	_REAL GetSigma() {return TimeWiener.GetSigma();}
+	_REAL GetDelay() const;
 
 protected:
 	enum EDFTWinType {DFT_WIN_RECT, DFT_WIN_HAMM};
@@ -128,6 +129,7 @@ protected:
 	_REAL				rSNREstimate;
 	_REAL				rSNRCorrectFact;
 	int					iUpCntWienFilt;
+	int					iDelaySprEstInd;
 
 	int					iStartZeroPadding;
 

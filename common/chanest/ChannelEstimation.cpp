@@ -80,7 +80,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* -------------------------------------------------------------------------
 	   Use time-interpolated channel estimate for timing synchronization 
 	   tracking */
-	TimeSyncTrack.Process(ReceiverParam, veccPilots, 
+	iDelaySprEstInd = TimeSyncTrack.Process(ReceiverParam, veccPilots, 
 		(*pvecInputData).GetExData().iCurTimeCorr);
 
 
@@ -146,19 +146,24 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		 * Wiener filter													   *
 		\**********************************************************************/
 		/* Update filter coefficients once in one DRM frame */
-		if (iUpCntWienFilt > 0)
-			iUpCntWienFilt--;
-		else
-		{
+//		if (iUpCntWienFilt > 0)
+//			iUpCntWienFilt--;
+//		else
+//		{
+//			UpdateWienerFiltCoef(rSNRAftTiInt, (_REAL) ReceiverParam.RatioTgTu.iEnum / 
+//				ReceiverParam.RatioTgTu.iDenom);
+
+
+// TODO iDelaySprEstInd should be averaged, smoothed! Maybe after smoothing
+// reactivate the "iUpCntWienFilt" condition...
 
 // TEST
 /* Update filter taps */
-UpdateWienerFiltCoef(rSNRAftTiInt, (_REAL) ReceiverParam.RatioTgTu.iEnum / 
-	ReceiverParam.RatioTgTu.iDenom);
+UpdateWienerFiltCoef(rSNRAftTiInt, (_REAL) iDelaySprEstInd / iNoCarrier);
 
-			/* Reset counter */
-			iUpCntWienFilt = iNoSymPerFrame;
-		}
+//			/* Reset counter */
+//			iUpCntWienFilt = iNoSymPerFrame;
+//		}
 
 		/* FIR filter of the pilots with filter taps. We need to filter the
 		   pilot positions as well to improve the SNR estimation (which 
@@ -367,6 +372,9 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	rSNRCorrectFact = 
 		ReceiverParam.rAvPilPowPerSym /	ReceiverParam.rAvPowPerSymbol;
 
+	/* Init delay spread length estimation (index) */
+	iDelaySprEstInd = 0;
+	
 
 	/* Inits for Wiener interpolation in frequency direction ---------------- */
 	/* Length of wiener filter */
@@ -566,4 +574,11 @@ _REAL CChannelEstimation::GetSNREstdB() const
 		return 10 * log10(rSNREstimate * rSNRCorrectFact);
 	else
 		return (_REAL) 0.0;
+}
+
+_REAL CChannelEstimation::GetDelay() const
+{
+	/* Delay in ms */
+	return (_REAL) iDelaySprEstInd * iFFTSizeN / 
+		(SOUNDCRD_SAMPLE_RATE * iNoIntpFreqPil * 2) * 1000;
 }
