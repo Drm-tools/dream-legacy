@@ -107,9 +107,7 @@ protected:
 	COFDMModulation			OFDMModulation;
 	CTransmitData			TransmitData;
 
-#ifndef WRITE_TRNSM_TO_FILE
 	CSound					SoundInterface;
-#endif
 };
 
 
