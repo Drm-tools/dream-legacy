@@ -143,10 +143,10 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	Param.MSCPrLe.iPartB = 1;
 	Param.MSCPrLe.iHierarch = 0;
 
-	Param.Stream[0].iLenPartA = 84; // More important than partB
+	Param.Stream[0].iLenPartA = 84; /* More important than partB */
 	Param.Stream[0].iLenPartB = 1040;
 	Param.Service[0].iServiceID = 163569;
-	Param.Service[0].strLabel = "Test TUD"; /* Not transmitted yet */
+	Param.Service[0].strLabel = "Dream Test"; /* Not transmitted yet */
 	Param.eSymbolInterlMode = CParameter::SI_SHORT;
 	Param.eMSCCodingScheme = CParameter::CS_3_SM;
 	Param.eSDCCodingScheme = CParameter::CS_2_SM;
