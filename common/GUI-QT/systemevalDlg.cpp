@@ -31,9 +31,8 @@
 
 /* Implementation *************************************************************/
 systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
-	const char* name, bool modal, WFlags f) :
-	systemevalDlgBase(parent, name, modal, f), pDRMRec(pNDRMR),
-	bOnTimerCharMutexFlag(FALSE)
+	const char* name, bool modal, WFlags f) : vecpDRMPlots(0),
+	systemevalDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -52,6 +51,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	/* Init controls -------------------------------------------------------- */
 	/* Init main plot */
+	MainPlot->SetRecObj(pDRMRec);
 	MainPlot->SetPlotStyle(pDRMRec->iMainPlotColorStyle);
 	MainPlot->setMargin(1);
 
@@ -86,45 +86,58 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Insert parent list view items. Parent list view items should not be
 	   selectable */
 	CCharSelItem* pHistoryLiViIt =
-		new CCharSelItem(ListViewCharSel, tr("History"), NONE_OLD, FALSE);
+		new CCharSelItem(ListViewCharSel, tr("History"),
+		CDRMPlot::NONE_OLD, FALSE);
 
 	CCharSelItem* pConstellationLiViIt =
-		new CCharSelItem(ListViewCharSel, tr("Constellation"), NONE_OLD, FALSE);
+		new CCharSelItem(ListViewCharSel, tr("Constellation"),
+		CDRMPlot::NONE_OLD, FALSE);
 
 	CCharSelItem* pChannelLiViIt =
-		new CCharSelItem(ListViewCharSel, tr("Channel"), NONE_OLD, FALSE);
+		new CCharSelItem(ListViewCharSel, tr("Channel"),
+		CDRMPlot::NONE_OLD, FALSE);
 
 	CCharSelItem* pSpectrumLiViIt =
-		new CCharSelItem(ListViewCharSel, tr("Spectrum"), NONE_OLD, FALSE);
+		new CCharSelItem(ListViewCharSel, tr("Spectrum"),
+		CDRMPlot::NONE_OLD, FALSE);
  
 	/* Inser actual items. The list is not sorted -> items which are inserted
 	   first show up at the end of the list */
 	/* Spectrum */
-	new CCharSelItem(pSpectrumLiViIt, tr("SNR Spectrum"), SNR_SPECTRUM);
+	new CCharSelItem(pSpectrumLiViIt, tr("SNR Spectrum"),
+		CDRMPlot::SNR_SPECTRUM);
 	CCharSelItem* pListItAudSpec = new CCharSelItem(pSpectrumLiViIt,
-		tr("Audio Spectrum"), AUDIO_SPECTRUM);
-	new CCharSelItem(pSpectrumLiViIt, tr("Shifted PSD"), POWER_SPEC_DENSITY);
+		tr("Audio Spectrum"), CDRMPlot::AUDIO_SPECTRUM);
+	new CCharSelItem(pSpectrumLiViIt, tr("Shifted PSD"),
+		CDRMPlot::POWER_SPEC_DENSITY);
 	new CCharSelItem(pSpectrumLiViIt, tr("Input Spectrum"),
-		INPUTSPECTRUM_NO_AV);
+		CDRMPlot::INPUTSPECTRUM_NO_AV);
 	CCharSelItem* pListItInpPSD = new CCharSelItem(pSpectrumLiViIt,
-		tr("Input PSD"), INPUT_SIG_PSD);
+		tr("Input PSD"), CDRMPlot::INPUT_SIG_PSD);
 
 	/* Constellation */
-	new CCharSelItem(pConstellationLiViIt, tr("MSC"), MSC_CONSTELLATION);
-	new CCharSelItem(pConstellationLiViIt, tr("SDC"), SDC_CONSTELLATION);
-	new CCharSelItem(pConstellationLiViIt, tr("FAC"), FAC_CONSTELLATION);
-	new CCharSelItem(pConstellationLiViIt,
-		tr("FAC / SDC / MSC"), ALL_CONSTELLATION);
+	new CCharSelItem(pConstellationLiViIt, tr("MSC"),
+		CDRMPlot::MSC_CONSTELLATION);
+	new CCharSelItem(pConstellationLiViIt, tr("SDC"),
+		CDRMPlot::SDC_CONSTELLATION);
+	new CCharSelItem(pConstellationLiViIt, tr("FAC"),
+		CDRMPlot::FAC_CONSTELLATION);
+	new CCharSelItem(pConstellationLiViIt, tr("FAC / SDC / MSC"),
+		CDRMPlot::ALL_CONSTELLATION);
 
 	/* History */
-	new CCharSelItem(pHistoryLiViIt,
-		"Frequency / Sample Rate", FREQ_SAM_OFFS_HIST);
-	new CCharSelItem(pHistoryLiViIt, tr("Delay / Doppler"), DOPPLER_DELAY_HIST);
-	new CCharSelItem(pHistoryLiViIt, tr("SNR / Audio"), SNR_AUDIO_HIST);
+	new CCharSelItem(pHistoryLiViIt, "Frequency / Sample Rate",
+		CDRMPlot::FREQ_SAM_OFFS_HIST);
+	new CCharSelItem(pHistoryLiViIt, tr("Delay / Doppler"),
+		CDRMPlot::DOPPLER_DELAY_HIST);
+	new CCharSelItem(pHistoryLiViIt, tr("SNR / Audio"),
+		CDRMPlot::SNR_AUDIO_HIST);
 
 	/* Channel */
-	new CCharSelItem(pChannelLiViIt, tr("Transfer Function"), TRANSFERFUNCTION);
-	new CCharSelItem(pChannelLiViIt, tr("Impulse Response"), AVERAGED_IR);
+	new CCharSelItem(pChannelLiViIt, tr("Transfer Function"),
+		CDRMPlot::TRANSFERFUNCTION);
+	new CCharSelItem(pChannelLiViIt, tr("Impulse Response"),
+		CDRMPlot::AVERAGED_IR);
 
 /* _WIN32 fix because in Visual c++ the GUI files are always compiled even
    if USE_QT_GUI is set or not (problem with MDI in DRMReceiver) */
@@ -147,16 +160,21 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		/* Only audio spectrum makes sence for MDI in */
 		ListViewCharSel->setSelected(pListItAudSpec, TRUE);
 		ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-		SetupChart(AUDIO_SPECTRUM);
+		MainPlot->SetupChart(CDRMPlot::AUDIO_SPECTRUM);
 	}
 	else
 	{
 		/* Default chart (at startup) */
 		ListViewCharSel->setSelected(pListItInpPSD, TRUE);
 		ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-		SetupChart(INPUT_SIG_PSD);
+		MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD);
 	}
 #endif
+
+	/* Init context menu for list view */
+	pListViewContextMenu = new QPopupMenu(this, tr("ListView context menu"));
+	pListViewContextMenu->insertItem(tr("&Open in separate window"), this,
+		SLOT(OnListViContMenu()));
 
 
 	/* Connect controls ----------------------------------------------------- */
@@ -182,6 +200,9 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Char selector list view */
 	connect(ListViewCharSel, SIGNAL(selectionChanged(QListViewItem*)),
 		this, SLOT(OnListSelChanged(QListViewItem*)));
+	connect(ListViewCharSel,
+		SIGNAL(rightButtonClicked(QListViewItem*, const QPoint&, int)),
+		this, SLOT(OnListRightButClicked(QListViewItem*, const QPoint&, int)));
 
 	/* Buttons */
 	connect(buttonOk, SIGNAL(clicked()),
@@ -204,8 +225,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
-	connect(&TimerChart, SIGNAL(timeout()),
-		this, SLOT(OnTimerChart()));
 	connect(&TimerLogFileLong, SIGNAL(timeout()),
 		this, SLOT(OnTimerLogFileLong()));
 	connect(&TimerLogFileShort, SIGNAL(timeout()),
@@ -319,20 +338,15 @@ void systemevalDlg::UpdateControls()
 
 void systemevalDlg::showEvent(QShowEvent* pEvent)
 {
-	/* Activte real-time timers when window is shown */
-	SetupChart(CharType);
-
-	/* Update window */
-	OnTimerChart();
-
 	/* Update controls */
 	UpdateControls();
 }
 
 void systemevalDlg::hideEvent(QHideEvent* pEvent)
 {
-	/* Deactivate real-time timers when window is hide to save CPU power */
-	TimerChart.stop();
+	/* Close all additional chart windows if this dialog is not shown */
+	for (int i = 0; i < vecpDRMPlots.Size(); i++)
+		vecpDRMPlots[i]->close();
 }
 
 void systemevalDlg::SetStatus(int MessID, int iMessPara)
@@ -371,200 +385,6 @@ void systemevalDlg::SetStatus(int MessID, int iMessPara)
 		LEDTimeSync->Reset();
 		LEDIOInterface->Reset();
 		break;
-	}
-}
-
-void systemevalDlg::OnTimerChart()
-{
-	/* In some cases, if the user moves the mouse very fast over the chart
-	   selection list view, this function is called by two different threads.
-	   Somehow, using QMtuex does not help. Therefore we introduce a flag for
-	   doing this job. This solution is a work-around. TODO: better solution */
-	if (bOnTimerCharMutexFlag == TRUE)
-		return;
-
-	bOnTimerCharMutexFlag = TRUE;
-
-
-	/* CHART ******************************************************************/
-	CVector<_REAL>		vecrData;
-	CVector<_REAL>		vecrData2;
-	CVector<_COMPLEX>	veccData1, veccData2, veccData3;
-	CVector<_REAL>		vecrScale;
-	_REAL				rLowerBound, rHigherBound;
-	_REAL				rStartGuard, rEndGuard;
-	_REAL				rPDSBegin, rPDSEnd;
-	_REAL				rFreqAcquVal;
-
-	switch (CharType)
-	{
-	case AVERAGED_IR:
-		/* Get data from module */
-		pDRMRec->GetChanEst()->
-			GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
-			rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
-
-		/* Prepare graph and set data */
-		MainPlot->SetAvIR(vecrData, vecrScale, rLowerBound, rHigherBound, 
-			rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
-		break;
-
-	case TRANSFERFUNCTION:
-		/* Get data from module */
-		pDRMRec->GetChanEst()->
-			GetTransferFunction(vecrData, vecrData2, vecrScale);
-
-		/* Prepare graph and set data */
-		MainPlot->SetTranFct(vecrData, vecrData2, vecrScale);
-		break;
-
-	case POWER_SPEC_DENSITY:
-		/* Get data from module */
-		pDRMRec->GetOFDMDemod()->GetPowDenSpec(vecrData, vecrScale);
-
-		/* Prepare graph and set data */
-		MainPlot->SetPSD(vecrData, vecrScale);
-		break;
-
-	case SNR_SPECTRUM:
-		/* Get data from module */
-		pDRMRec->GetChanEst()->GetSNRProfile(vecrData, vecrScale);
-
-		/* Prepare graph and set data */
-		MainPlot->SetSNRSpectrum(vecrData, vecrScale);
-		break;
-
-	case INPUTSPECTRUM_NO_AV:
-		/* Get data from module */
-		pDRMRec->GetReceiver()->GetInputSpec(vecrData, vecrScale);
-
-		/* Prepare graph and set data */
-		MainPlot->SetInpSpec(vecrData, vecrScale,
-			pDRMRec->GetParameters()->GetDCFrequency());
-		break;
-
-	case INPUT_SIG_PSD:
-		/* Get data from module */
-		pDRMRec->GetReceiver()->GetInputPSD(vecrData, vecrScale);
-
-		/* Prepare graph and set data */
-		MainPlot->SetInpPSD(vecrData, vecrScale,
-			pDRMRec->GetParameters()->GetDCFrequency());
-		break;
-
-	case AUDIO_SPECTRUM:
-		/* Get data from module */
-		pDRMRec->GetWriteData()->GetAudioSpec(vecrData, vecrScale);
-
-		/* Prepare graph and set data */
-		MainPlot->SetAudioSpec(vecrData, vecrScale);
-		break;
-
-	case FREQ_SAM_OFFS_HIST:
-		/* Get data from module */
-		pDRMRec->GetFreqSamOffsHist(vecrData, vecrData2, vecrScale,
-			rFreqAcquVal);
-
-		/* Prepare graph and set data */
-		MainPlot->SetFreqSamOffsHist(vecrData, vecrData2, vecrScale,
-			rFreqAcquVal);
-		break;
-
-	case DOPPLER_DELAY_HIST:
-		/* Get data from module */
-		pDRMRec->GetDopplerDelHist(vecrData, vecrData2, vecrScale);
-
-		/* Prepare graph and set data */
-		MainPlot->SetDopplerDelayHist(vecrData, vecrData2, vecrScale);
-		break;
-
-	case SNR_AUDIO_HIST:
-		/* Get data from module */
-		pDRMRec->GetSNRHist(vecrData, vecrData2, vecrScale);
-
-		/* Prepare graph and set data */
-		MainPlot->SetSNRAudHist(vecrData, vecrData2, vecrScale);
-		break;
-
-	case FAC_CONSTELLATION:
-		/* Get data vector */
-		pDRMRec->GetFACMLC()->GetVectorSpace(veccData1);
-
-		/* Prepare graph and set data */
-		MainPlot->SetFACConst(veccData1);
-		break;
-
-	case SDC_CONSTELLATION:
-		/* Get data vector */
-		pDRMRec->GetSDCMLC()->GetVectorSpace(veccData1);
-
-		/* Prepare graph and set data */
-		MainPlot->SetSDCConst(veccData1, 
-			pDRMRec->GetParameters()->eSDCCodingScheme);
-		break;
-
-	case MSC_CONSTELLATION:
-		/* Get data vector */
-		pDRMRec->GetMSCMLC()->GetVectorSpace(veccData1);
-
-		/* Prepare graph and set data */
-		MainPlot->SetMSCConst(veccData1, 
-			pDRMRec->GetParameters()->eMSCCodingScheme);
-		break;
-
-	case ALL_CONSTELLATION:
-		/* Get data vectors */
-		pDRMRec->GetMSCMLC()->GetVectorSpace(veccData1);
-		pDRMRec->GetSDCMLC()->GetVectorSpace(veccData2);
-		pDRMRec->GetFACMLC()->GetVectorSpace(veccData3);
-
-		/* Prepare graph and set data */
-		MainPlot->SetAllConst(veccData1, veccData2, veccData3);
-		break;
-	}
-
-	/* "Unlock" mutex flag */
-	bOnTimerCharMutexFlag = FALSE;
-}
-
-void systemevalDlg::SetupChart(const ECharType eNewType)
-{
-	if (eNewType != NONE_OLD)
-	{
-		/* Set internal variable */
-		CharType = eNewType;
-
-		/* Update help text connected with the plot widget */
-		AddWhatsThisHelpChar(eNewType);
-
-		/* Update chart */
-		OnTimerChart();
-
-		/* Set up timer */
-		switch (eNewType)
-		{
-		case AVERAGED_IR:
-		case TRANSFERFUNCTION:
-		case POWER_SPEC_DENSITY:
-		case INPUT_SIG_PSD:
-		case SNR_SPECTRUM:
-			/* Fast update */
-			TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME_FAST);
-			break;
-
-		case FAC_CONSTELLATION:
-		case SDC_CONSTELLATION:
-		case MSC_CONSTELLATION:
-		case ALL_CONSTELLATION:
-		case INPUTSPECTRUM_NO_AV:
-		case AUDIO_SPECTRUM:
-		case FREQ_SAM_OFFS_HIST:
-		case DOPPLER_DELAY_HIST:
-		case SNR_AUDIO_HIST:
-			/* Slow update of plot */
-			TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME);
-			break;
-		}
 	}
 }
 
@@ -848,7 +668,41 @@ void systemevalDlg::OnSliderIterChange(int value)
 void systemevalDlg::OnListSelChanged(QListViewItem* NewSelIt)
 {
 	/* Get char type from selected item and setup chart */
-	SetupChart(((CCharSelItem*) NewSelIt)->GetCharType());
+	MainPlot->SetupChart(((CCharSelItem*) NewSelIt)->GetCharType());
+}
+
+void systemevalDlg::OnListRightButClicked(QListViewItem* NewSelIt,
+										  const QPoint& iPnt, int iCol)
+{
+	/* Show menu at mouse position */
+	pListViewContextMenu->exec(QCursor::pos());
+}
+
+void systemevalDlg::OnListViContMenu()
+{
+	/* Get chart type from current selected list view item */
+	QListViewItem* pCurSelLVItem = ListViewCharSel->selectedItem();
+
+	if (pCurSelLVItem != NULL)
+	{
+		/* Open new chart window */
+		CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
+		pNewChartWin->setCaption(tr("Chart Window"));
+
+		/* Set correct icon (use the same as this dialog) */
+		pNewChartWin->setIcon(*this->icon());
+
+		/* Set receiver object and correct chart type */
+		pNewChartWin->SetRecObj(pDRMRec);
+		pNewChartWin->
+			SetupChart(((CCharSelItem*) pCurSelLVItem)->GetCharType());
+
+		/* Show new window */
+		pNewChartWin->show();
+
+		/* Add window pointer in vector (needed for closing the windows) */
+		vecpDRMPlots.Add(pNewChartWin);
+	}
 }
 
 void systemevalDlg::OnCheckFlipSpectrum()
@@ -1428,146 +1282,4 @@ void systemevalDlg::AddWhatsThisHelp()
 	QWhatsThis::add(GroupBoxInterfRej, strInterfRej);
 	QWhatsThis::add(CheckBoxRecFilter, strInterfRej);
 	QWhatsThis::add(CheckBoxModiMetric, strInterfRej);
-}
-
-void systemevalDlg::AddWhatsThisHelpChar(const ECharType NCharType)
-{
-	QString strCurPlotHelp;
-
-	switch (NCharType)
-	{
-	case AVERAGED_IR:
-		/* Impulse Response */
-		strCurPlotHelp =
-			"<b>" + tr("Impulse Response:") + "</b> " + tr("This plot shows "
-			"the estimated Impulse Response (IR) of the channel based on the "
-			"channel estimation. It is the averaged, Hamming Window weighted "
-			"Fourier back transformation of the transfer function. The length "
-			"of PDS estimation and time synchronization tracking is based on "
-			"this function. The two red dashed vertical lines show the "
-			"beginning and the end of the guard-interval. The two black dashed "
-			"vertical lines show the estimated beginning and end of the PDS of "
-			"the channel (derived from the averaged impulse response "
-			"estimation). If the \"First Peak\" timing tracking method is "
-			"chosen, a bound for peak estimation (horizontal dashed red line) "
-			"is shown. Only peaks above this bound are used for timing "
-			"estimation.");
-		break;
-
-	case TRANSFERFUNCTION:
-		/* Transfer Function */
-		strCurPlotHelp =
-			"<b>" + tr("Transfer Function / Group Delay:") + "</b> " +
-			tr("This plot shows the squared magnitude and the group delay of "
-			"the estimated channel at each sub-carrier.");
-		break;
-
-	case FAC_CONSTELLATION:
-	case SDC_CONSTELLATION:
-	case MSC_CONSTELLATION:
-	case ALL_CONSTELLATION:
-		/* Constellations */
-		strCurPlotHelp =
-			"<b>" + tr("FAC, SDC, MSC:") + "</b> " + tr("The plots show the "
-			"constellations of the FAC, SDC and MSC logical channel of the DRM "
-			"stream. Depending on the current transmitter settings, the SDC "
-			"and MSC can have 4-QAM, 16-QAM or 64-QAM modulation.");
-		break;
-
-	case POWER_SPEC_DENSITY:
-		/* Shifted PSD */
-		strCurPlotHelp =
-			"<b>" + tr("Shifted PSD:") + "</b> " + tr("This plot shows the "
-			"estimated Power Spectrum Density (PSD) of the input signal. The "
-			"DC frequency (red dashed vertical line) is fixed at 6 kHz. If "
-			"the frequency offset acquisition was successful, the rectangular "
-			"DRM spectrum should show up with a center frequency of 6 kHz. "
-			"This plot represents the frequency synchronized OFDM spectrum. "
-			"If the frequency synchronization was successful, the useful "
-			"signal really shows up only inside the actual DRM bandwidth "
-			"since the side loops have in this case only energy between the "
-			"samples in the frequency domain. On the sample positions outside "
-			"the actual DRM spectrum, the DRM signal has zero crossings "
-			"because of the orthogonality. Therefore this spectrum represents "
-			"NOT the actual spectrum but the \"idealized\" OFDM spectrum.");
-		break;
-
-	case SNR_SPECTRUM:
-		/* SNR Spectrum (Weighted MER on MSC Cells) */
-		strCurPlotHelp =
-			"<b>" + tr("SNR Spectrum (Weighted MER on MSC Cells):") + "</b> " +
-			tr("This plot shows the Weighted MER on MSC cells for each carrier "
-			"separately.");
-		break;
-
-	case INPUTSPECTRUM_NO_AV:
-		/* Input Spectrum */
-		strCurPlotHelp =
-			"<b>" + tr("Input Spectrum:") + "</b> " + tr("This plot shows the "
-			"Fast Fourier Transformation (FFT) of the input signal. This plot "
-			"is active in both modes, analog and digital. There is no "
-			"averaging applied. The screen shot of the Evaluation Dialog shows "
-			"the significant shape of a DRM signal (almost rectangular). The "
-			"dashed vertical line shows the estimated DC frequency. This line "
-			"is very important for the analog AM demodulation. Each time a "
-			"new carrier frequency is acquired, the red line shows the "
-			"selected AM spectrum. If more than one AM spectrums are within "
-			"the sound card frequency range, the strongest signal is chosen.");
-		break;
-
-	case INPUT_SIG_PSD:
-		/* Input PSD */
-		strCurPlotHelp =
-			"<b>" + tr("Input PSD:") + "</b> " + tr("This plot shows the "
-			"estimated power spectral density (PSD) of the input signal. The "
-			"PSD is estimated by averaging some Hamming Window weighted "
-			"Fourier transformed blocks of the input signal samples. The "
-			"dashed vertical line shows the estimated DC frequency.");
-		break;
-
-	case AUDIO_SPECTRUM:
-		/* Audio Spectrum */
-		strCurPlotHelp =
-			"<b>" + tr("Audio Spectrum:") + "</b> " + tr("This plot shows the "
-			"averaged audio spectrum of the currently played audio. With this "
-			"plot the actual audio bandwidth can easily determined. Since a "
-			"linear scale is used for the frequency axis, most of the energy "
-			"of the signal is usually concentrated on the far left side of the "
-			"spectrum.");
-		break;
-
-	case FREQ_SAM_OFFS_HIST:
-		/* Frequency Offset / Sample Rate Offset History */
-		strCurPlotHelp =
-			"<b>" + tr("Frequency Offset / Sample Rate Offset History:") +
-			"</b> " + tr("The history "
-			"of the values for frequency offset and sample rate offset "
-			"estimation is shown. If the frequency offset drift is very small, "
-			"this is an indication that the analog front end is of high "
-			"quality.");
-		break;
-
-	case DOPPLER_DELAY_HIST:
-		/* Doppler / Delay History */
-		strCurPlotHelp =
-			"<b>" + tr("Doppler / Delay History:") + "</b> " +
-			tr("The history of the values for the "
-			"Doppler and Impulse response length is shown. Large Doppler "
-			"values might be responsable for audio drop-outs.");
-		break;
-
-	case SNR_AUDIO_HIST:
-		/* SNR History */
-		strCurPlotHelp =
-			"<b>" + tr("SNR History:") + "</b> " +
-			tr("The history of the values for the "
-			"SNR and correctly decoded audio blocks is shown. The maximum "
-			"achievable number of correctly decoded audio blocks per DRM "
-			"frame is 10 or 5 depending on the audio sample rate (24 kHz "
-			"or 12 kHz AAC core bandwidth).");
-		break;
-	}
-
-	/* Main plot */
-	QWhatsThis::add(MainPlot, strCurPlotHelp);
 }

@@ -64,9 +64,7 @@ protected:
 	CDRMReceiver*	pDRMRec;
 
 	QTimer			Timer;
-	QTimer			TimerChart;
     virtual void	showEvent(QShowEvent* pEvent);
-	virtual void	hideEvent(QHideEvent* pEvent);
 	void			UpdateControls();
 
 	int iBwAM;
@@ -76,7 +74,6 @@ protected:
 
 public slots:
 	void OnTimer();
-	void OnTimerChart();
 	void OnRadioDemodulation(int iID);
 	void OnRadioAGC(int iID);
 	void OnCheckBoxMuteAudio();

@@ -45,11 +45,14 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 #endif
 
 	/* Init main plot */
+	MainPlot->SetRecObj(pDRMRec);
+	MainPlot->SetPlotStyle(pDRMRec->iMainPlotColorStyle);
+	MainPlot->setMargin(1);
+	MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
+
 	/* Add tool tip to show the user the possibility of choosing the AM IF */
 	QToolTip::add(MainPlot,
 		tr("Click on the plot to set the demod. frequency"));
-	MainPlot->SetPlotStyle(pDRMRec->iMainPlotColorStyle);
-	MainPlot->setMargin(1);
 
 	/* Set default settings -> AM: 10 kHz; SSB: 5 kHz; medium AGC */
 	iBwLSB = 5000; /* Hz */
@@ -96,14 +99,9 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
-	connect(&TimerChart, SIGNAL(timeout()),
-		this, SLOT(OnTimerChart()));
 
 	/* Activte real-time timer */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
-
-	/* Update window */
-	OnTimerChart();
 }
 
 AnalogDemDlg::~AnalogDemDlg()
@@ -204,36 +202,8 @@ void AnalogDemDlg::UpdateControls()
 
 void AnalogDemDlg::showEvent(QShowEvent* pEvent)
 {
-	/* Activte real-time timers when window is shown */
-	TimerChart.start(GUI_CONTROL_UPDATE_TIME_FAST);
-
-	/* Update window */
-	OnTimerChart();
-
 	/* Update controls */
 	UpdateControls();
-}
-
-void AnalogDemDlg::hideEvent(QHideEvent* pEvent)
-{
-	/* Deactivate real-time timers when window is hide to save CPU power */
-	TimerChart.stop();
-}
-
-void AnalogDemDlg::OnTimerChart()
-{
-	CVector<_REAL>	vecrData;
-	CVector<_REAL>	vecrScale;
-
-	/* Get data from module */
-	pDRMRec->GetReceiver()->GetInputPSD(vecrData, vecrScale);
-
-	/* Prepare graph and set data */
-	CReal rCenterFreq, rBW;
-	pDRMRec->GetAMDemod()->GetBWParameters(rCenterFreq, rBW);
-
-	MainPlot->SetInpPSD(vecrData, vecrScale,
-		pDRMRec->GetParameters()->GetDCFrequency(), rCenterFreq, rBW);
 }
 
 void AnalogDemDlg::OnTimer()
@@ -343,7 +313,7 @@ void AnalogDemDlg::OnSliderBWChange(int value)
 	}
 
 	/* Update chart */
-	OnTimerChart();
+	MainPlot->Update();
 }
 
 void AnalogDemDlg::OnCheckBoxMuteAudio()
@@ -384,4 +354,7 @@ void AnalogDemDlg::OnChartxAxisValSet(double dVal)
 {
 	/* Set new frequency in receiver module */
 	pDRMRec->SetAMDemodAcq(dVal);
+
+	/* Update chart */
+	MainPlot->Update();
 }

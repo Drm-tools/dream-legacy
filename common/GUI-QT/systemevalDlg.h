@@ -41,6 +41,7 @@
 #include <qwhatsthis.h>
 #include <qlistview.h>
 #include <qbuttongroup.h>
+#include <qpopupmenu.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/systemevalDlgbase.h"
@@ -65,12 +66,6 @@ class systemevalDlg : public systemevalDlgBase
 	Q_OBJECT
 
 public:
-	enum ECharType {NONE_OLD, AVERAGED_IR, TRANSFERFUNCTION, FAC_CONSTELLATION,
-		SDC_CONSTELLATION, MSC_CONSTELLATION, POWER_SPEC_DENSITY,
-		INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM, FREQ_SAM_OFFS_HIST,
-		DOPPLER_DELAY_HIST, ALL_CONSTELLATION, SNR_AUDIO_HIST, INPUT_SIG_PSD,
-		SNR_SPECTRUM};
-
 	systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
@@ -82,44 +77,41 @@ protected:
 	class CCharSelItem : public QListViewItem
 	{
 	public:
-		CCharSelItem(QListView* parent, QString str1, ECharType eNewCharTy,
-			_BOOLEAN bSelble = TRUE) : QListViewItem(parent, str1),
-			eCharTy(eNewCharTy)	{setSelectable(bSelble);}
-		CCharSelItem(QListViewItem* parent, QString str1, ECharType eNewCharTy,
-			_BOOLEAN bSelble = TRUE) : QListViewItem(parent, str1),
-			eCharTy(eNewCharTy) {setSelectable(bSelble);}
+		CCharSelItem(QListView* parent, QString str1,
+			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
+			QListViewItem(parent, str1), eCharTy(eNewCharTy)
+			{setSelectable(bSelble);}
+		CCharSelItem(QListViewItem* parent, QString str1,
+			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
+			QListViewItem(parent, str1), eCharTy(eNewCharTy)
+			{setSelectable(bSelble);}
 
-		ECharType GetCharType() {return eCharTy;}
+		CDRMPlot::ECharType GetCharType() {return eCharTy;}
 
 	protected:
-		ECharType eCharTy;
+		CDRMPlot::ECharType eCharTy;
 	};
 
-	CDRMReceiver*	pDRMRec;
+	CDRMReceiver*		pDRMRec;
 
-	QTimer			Timer;
-	QTimer			TimerChart;
-	QTimer			TimerLogFileLong;
-	QTimer			TimerLogFileShort;
-	QTimer			TimerLogFileStart;
-	ECharType		CharType;
-	int				iCurFrequency;
-    virtual void	showEvent(QShowEvent* pEvent);
-	virtual void	hideEvent(QHideEvent* pEvent);
-	void			UpdateControls();
-	void			AddWhatsThisHelp();
-	void			AddWhatsThisHelpChar(const ECharType NCharType);
+	QTimer				Timer;
+	QTimer				TimerLogFileLong;
+	QTimer				TimerLogFileShort;
+	QTimer				TimerLogFileStart;
+	int					iCurFrequency;
+    virtual void		showEvent(QShowEvent* pEvent);
+	virtual void		hideEvent(QHideEvent* pEvent);
+	void				UpdateControls();
+	void				AddWhatsThisHelp();
 
-	QString			GetRobModeStr();
-	QString			GetSpecOccStr();
+	QString				GetRobModeStr();
+	QString				GetSpecOccStr();
 
-	void			SetupChart(const ECharType eNewType);
-
-	_BOOLEAN		bOnTimerCharMutexFlag;
+	QPopupMenu*			pListViewContextMenu;
+	CVector<CDRMPlot*>	vecpDRMPlots;
 
 public slots:
 	void OnTimer();
-	void OnTimerChart();
 	void OnTimerLogFileLong();
 	void OnTimerLogFileShort();
 	void OnTimerLogFileStart();
@@ -131,11 +123,14 @@ public slots:
 	void OnRadioTiSyncFirstPeak();
 	void OnRadioTiSyncEnergy();
 	void OnSliderIterChange(int value);
-	void OnListSelChanged(QListViewItem* NewSelIt);
 	void OnCheckFlipSpectrum();
 	void OnCheckBoxMuteAudio();
 	void OnCheckWriteLog();
 	void OnCheckSaveAudioWAV();
 	void OnCheckRecFilter();
 	void OnCheckModiMetric();
+	void OnListSelChanged(QListViewItem* NewSelIt);
+	void OnListViContMenu();
+	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt,
+		int iCol);
 };

@@ -31,7 +31,8 @@
 
 /* Implementation *************************************************************/
 CDRMPlot::CDRMPlot(QWidget *p, const char *name) :  
-	QwtPlot (p, name), CurCharType(DISABLE_PLOT)
+	QwtPlot (p, name), CurCharType(NONE_OLD), InitCharType(NONE_OLD),
+	bOnTimerCharMutexFlag(FALSE), pDRMRec(NULL)
 {
 	/* Grid defaults */
 	enableGridX(TRUE);
@@ -66,6 +67,230 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 	/* Connections */
 	connect(this, SIGNAL(plotMouseReleased(const QMouseEvent&)),
 		this, SLOT(OnClicked(const QMouseEvent&)));
+	connect(&TimerChart, SIGNAL(timeout()),
+		this, SLOT(OnTimerChart()));
+}
+
+void CDRMPlot::OnTimerChart()
+{
+	/* In some cases, if the user moves the mouse very fast over the chart
+	   selection list view, this function is called by two different threads.
+	   Somehow, using QMtuex does not help. Therefore we introduce a flag for
+	   doing this job. This solution is a work-around. TODO: better solution */
+	if (bOnTimerCharMutexFlag == TRUE)
+		return;
+
+	bOnTimerCharMutexFlag = TRUE;
+
+
+	/* CHART ******************************************************************/
+	CVector<_REAL>		vecrData;
+	CVector<_REAL>		vecrData2;
+	CVector<_COMPLEX>	veccData1, veccData2, veccData3;
+	CVector<_REAL>		vecrScale;
+	_REAL				rLowerBound, rHigherBound;
+	_REAL				rStartGuard, rEndGuard;
+	_REAL				rPDSBegin, rPDSEnd;
+	_REAL				rFreqAcquVal;
+	_REAL				rCenterFreq, rBandwidth;
+
+	switch (CurCharType)
+	{
+	case AVERAGED_IR:
+		/* Get data from module */
+		pDRMRec->GetChanEst()->
+			GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
+			rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
+
+		/* Prepare graph and set data */
+		SetAvIR(vecrData, vecrScale, rLowerBound, rHigherBound, 
+			rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
+		break;
+
+	case TRANSFERFUNCTION:
+		/* Get data from module */
+		pDRMRec->GetChanEst()->
+			GetTransferFunction(vecrData, vecrData2, vecrScale);
+
+		/* Prepare graph and set data */
+		SetTranFct(vecrData, vecrData2, vecrScale);
+		break;
+
+	case POWER_SPEC_DENSITY:
+		/* Get data from module */
+		pDRMRec->GetOFDMDemod()->GetPowDenSpec(vecrData, vecrScale);
+
+		/* Prepare graph and set data */
+		SetPSD(vecrData, vecrScale);
+		break;
+
+	case SNR_SPECTRUM:
+		/* Get data from module */
+		pDRMRec->GetChanEst()->GetSNRProfile(vecrData, vecrScale);
+
+		/* Prepare graph and set data */
+		SetSNRSpectrum(vecrData, vecrScale);
+		break;
+
+	case INPUTSPECTRUM_NO_AV:
+		/* Get data from module */
+		pDRMRec->GetReceiver()->GetInputSpec(vecrData, vecrScale);
+
+		/* Prepare graph and set data */
+		SetInpSpec(vecrData, vecrScale,
+			pDRMRec->GetParameters()->GetDCFrequency());
+		break;
+
+	case INPUT_SIG_PSD:
+		/* Get data from module */
+		pDRMRec->GetReceiver()->GetInputPSD(vecrData, vecrScale);
+
+		/* Prepare graph and set data */
+		SetInpPSD(vecrData, vecrScale,
+			pDRMRec->GetParameters()->GetDCFrequency());
+		break;
+
+	case INPUT_SIG_PSD_ANALOG:
+		/* Get data and parameters from modules */
+		pDRMRec->GetReceiver()->GetInputPSD(vecrData, vecrScale);
+		pDRMRec->GetAMDemod()->GetBWParameters(rCenterFreq, rBandwidth);
+
+		/* Prepare graph and set data */
+		SetInpPSD(vecrData, vecrScale,
+			pDRMRec->GetParameters()->GetDCFrequency(), rCenterFreq,
+			rBandwidth);
+		break;
+
+	case AUDIO_SPECTRUM:
+		/* Get data from module */
+		pDRMRec->GetWriteData()->GetAudioSpec(vecrData, vecrScale);
+
+		/* Prepare graph and set data */
+		SetAudioSpec(vecrData, vecrScale);
+		break;
+
+	case FREQ_SAM_OFFS_HIST:
+		/* Get data from module */
+		pDRMRec->GetFreqSamOffsHist(vecrData, vecrData2, vecrScale,
+			rFreqAcquVal);
+
+		/* Prepare graph and set data */
+		SetFreqSamOffsHist(vecrData, vecrData2, vecrScale,
+			rFreqAcquVal);
+		break;
+
+	case DOPPLER_DELAY_HIST:
+		/* Get data from module */
+		pDRMRec->GetDopplerDelHist(vecrData, vecrData2, vecrScale);
+
+		/* Prepare graph and set data */
+		SetDopplerDelayHist(vecrData, vecrData2, vecrScale);
+		break;
+
+	case SNR_AUDIO_HIST:
+		/* Get data from module */
+		pDRMRec->GetSNRHist(vecrData, vecrData2, vecrScale);
+
+		/* Prepare graph and set data */
+		SetSNRAudHist(vecrData, vecrData2, vecrScale);
+		break;
+
+	case FAC_CONSTELLATION:
+		/* Get data vector */
+		pDRMRec->GetFACMLC()->GetVectorSpace(veccData1);
+
+		/* Prepare graph and set data */
+		SetFACConst(veccData1);
+		break;
+
+	case SDC_CONSTELLATION:
+		/* Get data vector */
+		pDRMRec->GetSDCMLC()->GetVectorSpace(veccData1);
+
+		/* Prepare graph and set data */
+		SetSDCConst(veccData1, 
+			pDRMRec->GetParameters()->eSDCCodingScheme);
+		break;
+
+	case MSC_CONSTELLATION:
+		/* Get data vector */
+		pDRMRec->GetMSCMLC()->GetVectorSpace(veccData1);
+
+		/* Prepare graph and set data */
+		SetMSCConst(veccData1, 
+			pDRMRec->GetParameters()->eMSCCodingScheme);
+		break;
+
+	case ALL_CONSTELLATION:
+		/* Get data vectors */
+		pDRMRec->GetMSCMLC()->GetVectorSpace(veccData1);
+		pDRMRec->GetSDCMLC()->GetVectorSpace(veccData2);
+		pDRMRec->GetFACMLC()->GetVectorSpace(veccData3);
+
+		/* Prepare graph and set data */
+		SetAllConst(veccData1, veccData2, veccData3);
+		break;
+	}
+
+	/* "Unlock" mutex flag */
+	bOnTimerCharMutexFlag = FALSE;
+}
+
+void CDRMPlot::SetupChart(const ECharType eNewType)
+{
+	if (eNewType != NONE_OLD)
+	{
+		/* Set internal variable */
+		CurCharType = eNewType;
+
+		/* Update help text connected with the plot widget */
+		AddWhatsThisHelpChar(eNewType);
+
+		/* Update chart */
+		OnTimerChart();
+
+		/* Set up timer */
+		switch (eNewType)
+		{
+		case AVERAGED_IR:
+		case TRANSFERFUNCTION:
+		case POWER_SPEC_DENSITY:
+		case INPUT_SIG_PSD:
+		case INPUT_SIG_PSD_ANALOG:
+		case SNR_SPECTRUM:
+			/* Fast update */
+			TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME_FAST);
+			break;
+
+		case FAC_CONSTELLATION:
+		case SDC_CONSTELLATION:
+		case MSC_CONSTELLATION:
+		case ALL_CONSTELLATION:
+		case INPUTSPECTRUM_NO_AV:
+		case AUDIO_SPECTRUM:
+		case FREQ_SAM_OFFS_HIST:
+		case DOPPLER_DELAY_HIST:
+		case SNR_AUDIO_HIST:
+			/* Slow update of plot */
+			TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME);
+			break;
+		}
+	}
+}
+
+void CDRMPlot::showEvent(QShowEvent* pEvent)
+{
+	/* Activte real-time timers when window is shown */
+	SetupChart(CurCharType);
+
+	/* Update window */
+	OnTimerChart();
+}
+
+void CDRMPlot::hideEvent(QHideEvent* pEvent)
+{
+	/* Deactivate real-time timers when window is hide to save CPU power */
+	TimerChart.stop();
 }
 
 void CDRMPlot::SetPlotStyle(const int iNewStyleID)
@@ -249,9 +474,9 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 					   const _REAL rBeginIR, const _REAL rEndIR)
 {
 	/* First check if plot must be set up */
-	if (CurCharType != AVERAGED_IR)
+	if (InitCharType != AVERAGED_IR)
 	{
-		CurCharType = AVERAGED_IR;
+		InitCharType = AVERAGED_IR;
 		SetupAvIR();
 	}
 
@@ -358,9 +583,9 @@ void CDRMPlot::SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
 						  CVector<_REAL>& vecrScale)
 {
 	/* First check if plot must be set up */
-	if (CurCharType != TRANSFERFUNCTION)
+	if (InitCharType != TRANSFERFUNCTION)
 	{
-		CurCharType = TRANSFERFUNCTION;
+		InitCharType = TRANSFERFUNCTION;
 		SetupTranFct();
 	}
 
@@ -401,9 +626,9 @@ void CDRMPlot::SetupAudioSpec()
 void CDRMPlot::SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
 	/* First check if plot must be set up */
-	if (CurCharType != AUDIO_SPECTRUM)
+	if (InitCharType != AUDIO_SPECTRUM)
 	{
-		CurCharType = AUDIO_SPECTRUM;
+		InitCharType = AUDIO_SPECTRUM;
 		SetupAudioSpec();
 	}
 
@@ -443,9 +668,9 @@ void CDRMPlot::SetFreqSamOffsHist(CVector<_REAL>& vecrData,
 								  const _REAL rFreqOffAcquVal)
 {
 	/* First check if plot must be set up */
-	if (CurCharType != FREQ_SAM_OFFS_HIST)
+	if (InitCharType != FREQ_SAM_OFFS_HIST)
 	{
-		CurCharType = FREQ_SAM_OFFS_HIST;
+		InitCharType = FREQ_SAM_OFFS_HIST;
 		SetupFreqSamOffsHist();
 	}
 
@@ -526,9 +751,9 @@ void CDRMPlot::SetDopplerDelayHist(CVector<_REAL>& vecrData,
 								   CVector<_REAL>& vecrScale)
 {
 	/* First check if plot must be set up */
-	if (CurCharType != DOPPLER_DELAY_HIST)
+	if (InitCharType != DOPPLER_DELAY_HIST)
 	{
-		CurCharType = DOPPLER_DELAY_HIST;
+		InitCharType = DOPPLER_DELAY_HIST;
 		SetupDopplerDelayHist();
 	}
 
@@ -571,9 +796,9 @@ void CDRMPlot::SetSNRAudHist(CVector<_REAL>& vecrData,
 							 CVector<_REAL>& vecrScale)
 {
 	/* First check if plot must be set up */
-	if (CurCharType != SNR_AUDIO_HIST)
+	if (InitCharType != SNR_AUDIO_HIST)
 	{
-		CurCharType = SNR_AUDIO_HIST;
+		InitCharType = SNR_AUDIO_HIST;
 		SetupSNRAudHist();
 	}
 
@@ -659,9 +884,9 @@ void CDRMPlot::SetupPSD()
 void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
 	/* First check if plot must be set up */
-	if (CurCharType != POWER_SPEC_DENSITY)
+	if (InitCharType != POWER_SPEC_DENSITY)
 	{
-		CurCharType = POWER_SPEC_DENSITY;
+		InitCharType = POWER_SPEC_DENSITY;
 		SetupPSD();
 	}
 
@@ -693,9 +918,9 @@ void CDRMPlot::SetSNRSpectrum(CVector<_REAL>& vecrData,
 							  CVector<_REAL>& vecrScale)
 {
 	/* First check if plot must be set up */
-	if (CurCharType != SNR_SPECTRUM)
+	if (InitCharType != SNR_SPECTRUM)
 	{
-		CurCharType = SNR_SPECTRUM;
+		InitCharType = SNR_SPECTRUM;
 		SetupSNRSpectrum();
 	}
 
@@ -764,9 +989,9 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 						  const _REAL rDCFreq)
 {
 	/* First check if plot must be set up */
-	if (CurCharType != INPUTSPECTRUM_NO_AV)
+	if (InitCharType != INPUTSPECTRUM_NO_AV)
 	{
-		CurCharType = INPUTSPECTRUM_NO_AV;
+		InitCharType = INPUTSPECTRUM_NO_AV;
 		SetupInpSpec();
 	}
 
@@ -871,10 +1096,11 @@ void CDRMPlot::SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 						  const _REAL rDCFreq, const _REAL rBWCenter,
 						  const _REAL rBWWidth)
 {
-	/* First check if plot must be set up */
-	if (CurCharType != INPUT_SIG_PSD)
+	/* First check if plot must be set up. The char type "INPUT_SIG_PSD_ANALOG"
+	   has the same initialization as "INPUT_SIG_PSD" */
+	if (InitCharType != INPUT_SIG_PSD)
 	{
-		CurCharType = INPUT_SIG_PSD;
+		InitCharType = INPUT_SIG_PSD;
 		SetupInpPSD();
 	}
 
@@ -936,9 +1162,9 @@ void CDRMPlot::SetupFACConst()
 void CDRMPlot::SetFACConst(CVector<_COMPLEX>& veccData)
 {
 	/* First check if plot must be set up */
-	if (CurCharType != FAC_CONSTELLATION)
+	if (InitCharType != FAC_CONSTELLATION)
 	{
-		CurCharType = FAC_CONSTELLATION;
+		InitCharType = FAC_CONSTELLATION;
 		SetupFACConst();
 	}
 
@@ -980,7 +1206,7 @@ void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData,
 {
 	/* Always set up plot. TODO: only set up plot if constellation
 	   scheme has changed */
-	CurCharType = SDC_CONSTELLATION;
+	InitCharType = SDC_CONSTELLATION;
 	SetupSDCConst(eNewCoSc);
 
 	removeMarkers();
@@ -1021,7 +1247,7 @@ void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData,
 {
 	/* Always set up plot. TODO: only set up plot if constellation
 	   scheme has changed */
-	CurCharType = MSC_CONSTELLATION;
+	InitCharType = MSC_CONSTELLATION;
 	SetupMSCConst(eNewCoSc);
 
 	removeMarkers();
@@ -1085,9 +1311,9 @@ void CDRMPlot::SetAllConst(CVector<_COMPLEX>& veccMSC,
 						   CVector<_COMPLEX>& veccFAC)
 {
 	/* First check if plot must be set up */
-	if (CurCharType != ALL_CONSTELLATION)
+	if (InitCharType != ALL_CONSTELLATION)
 	{
-		CurCharType = ALL_CONSTELLATION;
+		InitCharType = ALL_CONSTELLATION;
 		SetupAllConst();
 	}
 
@@ -1259,4 +1485,146 @@ void CDRMPlot::OnClicked(const QMouseEvent& e)
 		/* Emit signal containing normalized selected frequency */
 		emit xAxisValSet(dFreq / dMaxxBottom);
 	}
+}
+
+void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
+{
+	QString strCurPlotHelp;
+
+	switch (NCharType)
+	{
+	case AVERAGED_IR:
+		/* Impulse Response */
+		strCurPlotHelp =
+			"<b>" + tr("Impulse Response:") + "</b> " + tr("This plot shows "
+			"the estimated Impulse Response (IR) of the channel based on the "
+			"channel estimation. It is the averaged, Hamming Window weighted "
+			"Fourier back transformation of the transfer function. The length "
+			"of PDS estimation and time synchronization tracking is based on "
+			"this function. The two red dashed vertical lines show the "
+			"beginning and the end of the guard-interval. The two black dashed "
+			"vertical lines show the estimated beginning and end of the PDS of "
+			"the channel (derived from the averaged impulse response "
+			"estimation). If the \"First Peak\" timing tracking method is "
+			"chosen, a bound for peak estimation (horizontal dashed red line) "
+			"is shown. Only peaks above this bound are used for timing "
+			"estimation.");
+		break;
+
+	case TRANSFERFUNCTION:
+		/* Transfer Function */
+		strCurPlotHelp =
+			"<b>" + tr("Transfer Function / Group Delay:") + "</b> " +
+			tr("This plot shows the squared magnitude and the group delay of "
+			"the estimated channel at each sub-carrier.");
+		break;
+
+	case FAC_CONSTELLATION:
+	case SDC_CONSTELLATION:
+	case MSC_CONSTELLATION:
+	case ALL_CONSTELLATION:
+		/* Constellations */
+		strCurPlotHelp =
+			"<b>" + tr("FAC, SDC, MSC:") + "</b> " + tr("The plots show the "
+			"constellations of the FAC, SDC and MSC logical channel of the DRM "
+			"stream. Depending on the current transmitter settings, the SDC "
+			"and MSC can have 4-QAM, 16-QAM or 64-QAM modulation.");
+		break;
+
+	case POWER_SPEC_DENSITY:
+		/* Shifted PSD */
+		strCurPlotHelp =
+			"<b>" + tr("Shifted PSD:") + "</b> " + tr("This plot shows the "
+			"estimated Power Spectrum Density (PSD) of the input signal. The "
+			"DC frequency (red dashed vertical line) is fixed at 6 kHz. If "
+			"the frequency offset acquisition was successful, the rectangular "
+			"DRM spectrum should show up with a center frequency of 6 kHz. "
+			"This plot represents the frequency synchronized OFDM spectrum. "
+			"If the frequency synchronization was successful, the useful "
+			"signal really shows up only inside the actual DRM bandwidth "
+			"since the side loops have in this case only energy between the "
+			"samples in the frequency domain. On the sample positions outside "
+			"the actual DRM spectrum, the DRM signal has zero crossings "
+			"because of the orthogonality. Therefore this spectrum represents "
+			"NOT the actual spectrum but the \"idealized\" OFDM spectrum.");
+		break;
+
+	case SNR_SPECTRUM:
+		/* SNR Spectrum (Weighted MER on MSC Cells) */
+		strCurPlotHelp =
+			"<b>" + tr("SNR Spectrum (Weighted MER on MSC Cells):") + "</b> " +
+			tr("This plot shows the Weighted MER on MSC cells for each carrier "
+			"separately.");
+		break;
+
+	case INPUTSPECTRUM_NO_AV:
+		/* Input Spectrum */
+		strCurPlotHelp =
+			"<b>" + tr("Input Spectrum:") + "</b> " + tr("This plot shows the "
+			"Fast Fourier Transformation (FFT) of the input signal. This plot "
+			"is active in both modes, analog and digital. There is no "
+			"averaging applied. The screen shot of the Evaluation Dialog shows "
+			"the significant shape of a DRM signal (almost rectangular). The "
+			"dashed vertical line shows the estimated DC frequency. This line "
+			"is very important for the analog AM demodulation. Each time a "
+			"new carrier frequency is acquired, the red line shows the "
+			"selected AM spectrum. If more than one AM spectrums are within "
+			"the sound card frequency range, the strongest signal is chosen.");
+		break;
+
+	case INPUT_SIG_PSD:
+		/* Input PSD */
+		strCurPlotHelp =
+			"<b>" + tr("Input PSD:") + "</b> " + tr("This plot shows the "
+			"estimated power spectral density (PSD) of the input signal. The "
+			"PSD is estimated by averaging some Hamming Window weighted "
+			"Fourier transformed blocks of the input signal samples. The "
+			"dashed vertical line shows the estimated DC frequency.");
+		break;
+
+	case AUDIO_SPECTRUM:
+		/* Audio Spectrum */
+		strCurPlotHelp =
+			"<b>" + tr("Audio Spectrum:") + "</b> " + tr("This plot shows the "
+			"averaged audio spectrum of the currently played audio. With this "
+			"plot the actual audio bandwidth can easily determined. Since a "
+			"linear scale is used for the frequency axis, most of the energy "
+			"of the signal is usually concentrated on the far left side of the "
+			"spectrum.");
+		break;
+
+	case FREQ_SAM_OFFS_HIST:
+		/* Frequency Offset / Sample Rate Offset History */
+		strCurPlotHelp =
+			"<b>" + tr("Frequency Offset / Sample Rate Offset History:") +
+			"</b> " + tr("The history "
+			"of the values for frequency offset and sample rate offset "
+			"estimation is shown. If the frequency offset drift is very small, "
+			"this is an indication that the analog front end is of high "
+			"quality.");
+		break;
+
+	case DOPPLER_DELAY_HIST:
+		/* Doppler / Delay History */
+		strCurPlotHelp =
+			"<b>" + tr("Doppler / Delay History:") + "</b> " +
+			tr("The history of the values for the "
+			"Doppler and Impulse response length is shown. Large Doppler "
+			"values might be responsable for audio drop-outs.");
+		break;
+
+	case SNR_AUDIO_HIST:
+		/* SNR History */
+		strCurPlotHelp =
+			"<b>" + tr("SNR History:") + "</b> " +
+			tr("The history of the values for the "
+			"SNR and correctly decoded audio blocks is shown. The maximum "
+			"achievable number of correctly decoded audio blocks per DRM "
+			"frame is 10 or 5 depending on the audio sample rate (24 kHz "
+			"or 12 kHz AAC core bandwidth).");
+		break;
+	}
+
+	/* Main plot */
+	QWhatsThis::add(this, strCurPlotHelp);
 }

@@ -30,8 +30,11 @@
 #define DRMPLOT_H__FD6B2345234523453_804E1606C2AC__INCLUDED_
 
 #include <qwt_plot.h>
+#include <qtimer.h>
+#include <qwhatsthis.h>
 #include "../Vector.h"
 #include "../Parameter.h"
+#include "../DRMReceiver.h"
 
 
 /* Definitions ****************************************************************/
@@ -86,8 +89,20 @@ class CDRMPlot : public QwtPlot
     Q_OBJECT
 
 public:
+	enum ECharType {NONE_OLD, AVERAGED_IR, TRANSFERFUNCTION,
+		FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION,
+		POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM,
+		FREQ_SAM_OFFS_HIST, DOPPLER_DELAY_HIST, ALL_CONSTELLATION,
+		SNR_AUDIO_HIST, INPUT_SIG_PSD, SNR_SPECTRUM, INPUT_SIG_PSD_ANALOG};
+
 	CDRMPlot(QWidget *p = 0, const char *name = 0);
 	virtual ~CDRMPlot() {}
+
+	/* This function has to be called before chart can be used! */
+	void SetRecObj(CDRMReceiver* pNDRMRec) {pDRMRec = pNDRMRec;}
+
+	void SetupChart(const ECharType eNewType);
+	void Update() {OnTimerChart();}
 
 	void SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
 				 _REAL rLowerB, _REAL rHigherB,
@@ -123,12 +138,6 @@ public:
 	void SetPlotStyle(const int iNewStyleID);
 
 protected:
-	enum ECharType {DISABLE_PLOT, AVERAGED_IR, TRANSFERFUNCTION,
-		FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION,
-		POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM,
-		FREQ_SAM_OFFS_HIST, DOPPLER_DELAY_HIST, ALL_CONSTELLATION,
-		SNR_AUDIO_HIST, INPUT_SIG_PSD, SNR_SPECTRUM};
-
 	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
 				 CVector<_REAL>& vecrScale);
@@ -155,21 +164,32 @@ protected:
 	void SetupAllConst();
 	void SetupInpPSD();
 
-	/* Colors */
-	QColor		MainPenColorPlot;
-	QColor		MainPenColorConst;
-	QColor		MainGridColorPlot;
-	QColor		SpecLine1ColorPlot;
-	QColor		SpecLine2ColorPlot;
-	QColor		PassBandColorPlot;
+	void AddWhatsThisHelpChar(const ECharType NCharType);
+    virtual void showEvent(QShowEvent* pEvent);
+	virtual void hideEvent(QHideEvent* pEvent);
 
-	ECharType	CurCharType;
-	long		main1curve, main2curve;
-	long		curve1, curve2, curve3, curve4, curve5, curve6;
-	QwtSymbol	MarkerSym1, MarkerSym2, MarkerSym3;
+	/* Colors */
+	QColor			MainPenColorPlot;
+	QColor			MainPenColorConst;
+	QColor			MainGridColorPlot;
+	QColor			SpecLine1ColorPlot;
+	QColor			SpecLine2ColorPlot;
+	QColor			PassBandColorPlot;
+
+	ECharType		CurCharType;
+	ECharType		InitCharType;
+	long			main1curve, main2curve;
+	long			curve1, curve2, curve3, curve4, curve5, curve6;
+	QwtSymbol		MarkerSym1, MarkerSym2, MarkerSym3;
+
+	_BOOLEAN		bOnTimerCharMutexFlag;
+	QTimer			TimerChart;
+
+	CDRMReceiver*	pDRMRec;
 
 public slots:
 	void OnClicked(const QMouseEvent& e);
+	void OnTimerChart();
 
 signals:
 	void xAxisValSet(double);
