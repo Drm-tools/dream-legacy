@@ -433,8 +433,17 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 			if (pNetwOp->state() == QNetworkProtocol::StDone)
 			{
 				/* Notify the user that update was successful */
+#ifdef _WIN32
+				QMessageBox::warning(this, "Dream", "Update successful.\n"
+					"Due to network problems with the Windows version of QT, "
+					"the Dream software must be restarted after a DRMSchedule "
+					"update.\nDream will exit now.",
+					"Ok");
+				exit(1);
+#else
 				QMessageBox::information(this, "Dream", "Update successful.",
 					QMessageBox::Ok);
+#endif
 
 				/* Read updated ini-file */
 				DRMSchedule.ReadStatTabFromFile("DRMSchedule.ini");
@@ -452,7 +461,7 @@ void StationsDlg::showEvent(QShowEvent* pEvent)
 	if (DRMSchedule.GetStationNumber() == 0)
 	{
 		QMessageBox::information(this, "Dream", "The file DRMSchedule.ini could "
-			"not be found.\nNo stations can be displayed.\n"
+			"not be found or contains no data.\nNo stations can be displayed.\n"
 			"Try to download this file by using the 'Update' menu.",
 			QMessageBox::Ok);
 	}
