@@ -298,8 +298,8 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 		{
 			/* Tracking phase */
 			/* Get actual sample rate offset in Hertz */
-			CReal rSamOffset =
-				GetSamOffHz(iCurRes - veciSRTiCorrHist[0], iLenCorrectionHist);
+			CReal rSamOffset = GetSamOffHz(iCurRes - veciSRTiCorrHist[0],
+				iLenCorrectionHist - 1);
 
 			/* Apply result from sample rate offset estimation */
 			Parameter.rResampleOffset -= CONTR_SAMP_OFF_INT_FTI * rSamOffset;
