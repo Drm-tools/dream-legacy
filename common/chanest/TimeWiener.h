@@ -74,7 +74,7 @@
    all paths, it can happen that a path with a small gain but a high doppler
    does not contribute enough on the global sigma estimation. Therefore the
    overestimation */
-#define SIGMA_OVERESTIMATION_FACT		((_REAL) 2.0)
+#define SIGMA_OVERESTIMATION_FACT		((_REAL) 3.0)
 
 
 /* Classes ********************************************************************/
