@@ -44,6 +44,14 @@ public:
 	CVector(const int iNeSi, const TData tInVa) {Init(iNeSi, tInVa);}
 	virtual	~CVector() {}
 
+	/* Copy constructor: The order of the initialization list must not be
+	   changed. First, the base class must be initialized, then the pData
+	   pointer must be set to the new data source. The bit access is, by
+	   default, reset */
+	CVector(const CVector<TData>& vecI) :
+		vector<TData>(static_cast<const vector<TData>&>(vecI)), 
+		iVectorSize(vecI.Size()), pData(begin()), iBitArrayCounter(0) {}
+
 	void Init(const int iNewSize);
 
 	/* Use this init to give all elements a defined value */
@@ -100,9 +108,9 @@ public:
 
 
 	/* Bit operation functions */
-	void Enqueue(_UINT32BIT iInformation, const int iNumOfBits);
-	_UINT32BIT Separate(const int iNumOfBits);
-	void ResetBitAccess() {iBitArrayCounter = 0;}
+	void		Enqueue(_UINT32BIT iInformation, const int iNumOfBits);
+	_UINT32BIT	Separate(const int iNumOfBits);
+	void		ResetBitAccess() {iBitArrayCounter = 0;}
 
 protected:
 	typename vector<TData>::iterator	pData;
@@ -157,7 +165,7 @@ template<class TData> void CVector<TData>::Enqueue(_UINT32BIT iInformation,
 	for (int i = 0; i < iNumOfBits; i++)
 	{
 		/* We want to put the bits on the array with the MSB first */
-		pData[iBitArrayCounter + iNumOfBits - i - 1] = iInformation & 1;
+		operator[](iBitArrayCounter + iNumOfBits - i - 1) = iInformation & 1;
 
 		/* Shift one bit to mask next bit at LSB-position */
 		iInformation >>= 1;
