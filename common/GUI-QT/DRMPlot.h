@@ -34,7 +34,7 @@
 #include <qwhatsthis.h>
 #include "../Vector.h"
 #include "../Parameter.h"
-#include "../DRMReceiver.h"
+#include "../DrmReceiver.h"
 
 
 /* Definitions ****************************************************************/

@@ -132,7 +132,7 @@ CMatlibVector<CReal> Nuttallwin(const int iLen)
 
 CMatlibVector<CReal> Bartlett(const int iLen)
 {
-	const int iHalf = Ceil((CReal) iLen / 2);
+	const int iHalf = (int) Ceil((CReal) iLen / 2);
 	CMatlibVector<CReal> fvHalfWin(iHalf);
 	CMatlibVector<CReal> fvRet(iLen, VTY_TEMP);
 
@@ -150,7 +150,7 @@ CMatlibVector<CReal> Bartlett(const int iLen)
 
 CMatlibVector<CReal> Triang(const int iLen)
 {
-	const int iHalf = Ceil((CReal) iLen / 2);
+	const int iHalf = (int) Ceil((CReal) iLen / 2);
 	CMatlibVector<CReal> fvHalfWin(iHalf);
 	CMatlibVector<CReal> fvRet(iLen, VTY_TEMP);
 
