@@ -171,24 +171,6 @@ void CSDCTransmit::DataEntityType0(CVector<_BINARY>& vecbiData,
 
 
 	/* Actual body ---------------------------------------------------------- */
-
-
-// FIXME: this is just a temporarily solution, which is ok for only one service
-// The audio encoder must know this value. Should be set inside the audio coder
-// module in the future! This is just a test
-// Adjust part B
-if (Parameter.iNumDecodedBitsMSC < Parameter.Stream[0].iLenPartA)
-{
-	/* Protection part A was chosen too high, set to equal error protection! */
-	Parameter.Stream[0].iLenPartA = 0;
-	Parameter.Stream[0].iLenPartB = Parameter.iNumDecodedBitsMSC / SIZEOF__BYTE;
-}
-else
-	Parameter.Stream[0].iLenPartB = Parameter.iNumDecodedBitsMSC / SIZEOF__BYTE -
-		Parameter.Stream[0].iLenPartA;
-
-
-
 	/* Protection level for part A */
 	vecbiData.Enqueue((uint32_t) Parameter.MSCPrLe.iPartA, 2);
 
