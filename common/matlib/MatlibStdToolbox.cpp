@@ -157,7 +157,7 @@ CMatlibMatrix<CComplex> Inv(const CMatlibMatrix<CComplex>& matrI)
 // TEST
 if (row == iSize)
 {
-//				Error::abortRun("couldn't invert matrix, possibly singular.\n");
+printf("couldn't invert matrix, possibly singular.\n");
 	matrRet = Eye(iSize);
 	return matrRet;
 }
