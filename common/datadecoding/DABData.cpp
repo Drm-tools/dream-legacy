@@ -39,7 +39,19 @@ void CDABDataEnc::GenMOTSegments(CMOTObjSegm& MOTObjSegm)
 
 	/* Body ----------------------------------------------------------------- */
 	/* Open file */
-FILE* pFiBody = fopen("test/Pic.png", "rb"); // TEST
+// TEST
+static _BOOLEAN bWhichFile = FALSE;
+FILE* pFiBody;
+if (bWhichFile == TRUE)
+{
+	pFiBody = fopen("test/Pic1.png", "rb"); // TEST
+	bWhichFile = FALSE;
+}
+else
+{
+	pFiBody = fopen("test/Pic2.png", "rb"); // TEST
+	bWhichFile = TRUE;
+}
 
 	int iPicSize = 0;
 
@@ -93,8 +105,8 @@ const int iHeaderSize = 7 + 5 /* TriggerTime */ + 8 /* ContentName */ + 2 /* Ver
 
 	/* ContentSubType: This 9-bit field indicates the exact type of the body's
 	   content depending on the value of the field ContentType */
-
-	const int iContentSubType = 3; /* png TEST */
+/* Only ContentSubType "JFIF" (JPEG) and ContentSubType "PNG" are allowed for SlideShow application */
+const int iContentSubType = 3; /* png TEST */
 
 	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) iContentSubType, 9);
 
@@ -484,6 +496,9 @@ void CDABDataEnc::GetDataUnit(CVector<_BINARY>& vecbiNewData)
 			   object again. TODO: more objects) */
 			bCurSegHeader = TRUE;
 			iTransportID++;
+
+			/* Generate new segments */
+			GenMOTSegments(MOTObjSegments);
 		}
 	}
 }
