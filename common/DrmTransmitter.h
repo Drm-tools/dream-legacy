@@ -56,16 +56,18 @@ public:
 #ifndef WRITE_TRNSM_TO_FILE
 		: TransmitData(&SoundInterface)
 #endif
-		{}
+		{StartParameters(TransmParam);}
 	virtual ~CDRMTransmitter() {}
 
-	void InitTransmitter();
-	void StartTransmitter();
-	void TransmitterMainRoutine();
+	void Init();
+	void Start();
+	void Stop();
 
-	void StartParameters(CParameter& Param);
 
 protected:
+	void StartParameters(CParameter& Param);
+	void Run();
+
 	/* Parameters */
 	CParameter				TransmParam;
 	

@@ -30,19 +30,28 @@
 
 
 /* Implementation *************************************************************/
-void CDRMTransmitter::StartTransmitter()
+void CDRMTransmitter::Start()
 {
 	/* Set run flag */
 	TransmParam.bRunThread = TRUE;
 
 	/* Initialization of the modules */
-	InitTransmitter();
+	Init();
 
-	/* Start of the simulation */
-	TransmitterMainRoutine();
+	/* Start the transmitter run routine */
+	Run();
 }
 
-void CDRMTransmitter::TransmitterMainRoutine()
+void CDRMTransmitter::Stop()
+{
+	TransmParam.bRunThread = FALSE;
+
+#ifndef WRITE_TRNSM_TO_FILE
+	SoundInterface.Close();
+#endif
+}
+
+void CDRMTransmitter::Run()
 {
 /*
  The hand over of data is done via an intermediate-buffer. The calling
@@ -86,11 +95,8 @@ void CDRMTransmitter::TransmitterMainRoutine()
 	}
 }
 
-void CDRMTransmitter::InitTransmitter()
+void CDRMTransmitter::Init()
 {
-	/* Read parameters */
-	StartParameters(TransmParam);
-
 	/* Defines number of cells, important! */
 	OFDMCellMapping.Init(TransmParam, CarMapBuf);
 
@@ -226,6 +232,8 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	/* Set desired intermedia frequency (IF) in Hertz */
 	OFDMModulation.SetCarOffset(12000.0); /* Default: "VIRTUAL_INTERMED_FREQ" */
 
+#ifdef WRITE_TRNSM_TO_FILE
 	/* Set the number of MSC frames we want to generate */
 	ReadData.SetNumTransBlocks(200);
+#endif
 }
