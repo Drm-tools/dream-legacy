@@ -712,8 +712,8 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	}
 
 	/* Fixed scale */
-	const double cdAxMinLeft = -100.0;
-	const double cdAxMaxLeft = 0.0;
+	const double cdAxMinLeft = -125.0;
+	const double cdAxMaxLeft = -25.0;
 	setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
 
 	/* Insert line for DC carrier */
@@ -740,6 +740,63 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	}
 	else
 		setCurveData(curve2, NULL, NULL, 0);
+
+	/* Insert actual spectrum data */
+	SetData(vecrData, vecrScale);
+	replot();
+}
+
+void CDRMPlot::SetupInpPSD()
+{
+	/* Init chart for power spectram density estimation */
+	setTitle("Input PSD");
+	enableAxis(QwtPlot::yRight, FALSE);
+	enableGridX(TRUE);
+	enableGridY(TRUE);
+	setAxisTitle(QwtPlot::xBottom, "Frequency [kHz]");
+	setAxisTitle(QwtPlot::yLeft, "Input PSD [dB]");
+
+	/* Fixed scale */
+	setAxisScale(QwtPlot::xBottom,
+		(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
+
+	/* Insert line for DC carrier */
+	clear();
+	curve1 = insertCurve("DC carrier");
+	setCurvePen(curve1, QPen(SpecLine1ColorPlot, 1, DotLine));
+
+	/* Add main curve */
+	main1curve = insertCurve("Input PSD");
+	
+	/* Curve color */
+	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
+		RoundJoin));
+}
+
+void CDRMPlot::SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
+						  const _REAL rDCFreq)
+{
+	/* First check if plot must be set up */
+	if (CurCharType != INPUT_SIG_PSD)
+	{
+		CurCharType = INPUT_SIG_PSD;
+		SetupInpPSD();
+	}
+
+	/* Fixed scale */
+	const double cdAxMinLeft = -125.0;
+	const double cdAxMaxLeft = -25.0;
+	setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
+
+	/* Insert line for DC carrier */
+	double dX[2], dY[2];
+	dX[0] = dX[1] = rDCFreq / 1000;
+
+	/* Take the min-max values from scale to get vertical line */
+	dY[0] = cdAxMinLeft;
+	dY[1] = cdAxMaxLeft;
+
+	setCurveData(curve1, dX, dY, 2);
 
 	/* Insert actual spectrum data */
 	SetData(vecrData, vecrScale);

@@ -101,6 +101,7 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 	/* Spectrum */
 	new CCharSelItem(pSpectrumLiViIt, "Audio Spectrum", AUDIO_SPECTRUM);
 	new CCharSelItem(pSpectrumLiViIt, "Shifted PSD", POWER_SPEC_DENSITY);
+	new CCharSelItem(pSpectrumLiViIt, "Input PSD", INPUT_SIG_PSD);
 	CCharSelItem* pListItInpSpec = new CCharSelItem(pSpectrumLiViIt,
 		"Input Spectrum", INPUTSPECTRUM_NO_AV);
 
@@ -404,6 +405,15 @@ void systemevalDlg::OnTimerChart()
 			DRMReceiver.GetParameters()->GetDCFrequency());
 		break;
 
+	case INPUT_SIG_PSD:
+		/* Get data from module */
+		DRMReceiver.GetReceiver()->GetInputPSD(vecrData, vecrScale);
+
+		/* Prepare graph and set data */
+		MainPlot->SetInpPSD(vecrData, vecrScale,
+			DRMReceiver.GetParameters()->GetDCFrequency());
+		break;
+
 	case AUDIO_SPECTRUM:
 		/* Get data from module */
 		DRMReceiver.GetWriteData()->GetAudioSpec(vecrData, vecrScale);
@@ -498,6 +508,7 @@ void systemevalDlg::SetupChart(const ECharType eNewType)
 		case AVERAGED_IR:
 		case TRANSFERFUNCTION:
 		case POWER_SPEC_DENSITY:
+		case INPUT_SIG_PSD:
 			/* Fast update */
 			TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME_FAST);
 			break;
@@ -1367,6 +1378,15 @@ void systemevalDlg::AddWhatsThisHelpChar(const ECharType NCharType)
 			"frequency is acquired, the red line shows the selected AM "
 			"spectrum. If more than one AM spectrums are within the sound "
 			"card frequency range, the strongest signal is chosen.";
+		break;
+
+	case INPUT_SIG_PSD:
+		/* Input PSD */
+		strCurPlotHelp =
+			"<b>Input PSD:</b> This plot shows the estimated power spectral "
+			"density (PSD) of the input signal. The PSD is estimated by "
+			"averaging some Hamming Window weighted Fourier transformed "
+			"blocks of the input signal samples.";
 		break;
 
 	case AUDIO_SPECTRUM:

@@ -87,6 +87,8 @@ public:
 	void SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 					const _REAL rDCFreq, const _REAL rBWCenter = (_REAL) 0.0,
 					const _REAL rBWWidth = (_REAL) 0.0);
+	void SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
+				   const _REAL rDCFreq);
 	void SetFreqSamOffsHist(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
 							CVector<_REAL>& vecrScale,
 							const _REAL rFreqOffAcquVal);
@@ -111,7 +113,7 @@ protected:
 		FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION,
 		POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM,
 		FREQ_SAM_OFFS_HIST, DOPPLER_DELAY_HIST, ALL_CONSTELLATION,
-		SNR_AUDIO_HIST};
+		SNR_AUDIO_HIST, INPUT_SIG_PSD};
 
 	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
@@ -136,6 +138,7 @@ protected:
 	void SetupSDCConst(const CParameter::ECodScheme eNewCoSc);
 	void SetupMSCConst(const CParameter::ECodScheme eNewCoSc);
 	void SetupAllConst();
+	void SetupInpPSD();
 
 	/* Colors */
 	QColor		MainPenColorPlot;

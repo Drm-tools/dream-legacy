@@ -44,12 +44,17 @@
 
 
 /* Definitions ****************************************************************/
+/* Number of FFT blocks used for averaging. See next definition
+   ("NUM_SMPLS_4_INPUT_SPECTRUM") for how to set the parameters */
+#define NUM_AV_BLOCKS_PSD			16
+#define LEN_PSD_AV_EACH_BLOCK		512
+
 /* Length of vector for input spectrum. We use approx. 0.2 sec
    of sampled data for spectrum calculation, this is 2^13 = 8192 to 
    make the FFT work more efficient. Make sure that this number is not smaller
    than the symbol lenght in 48 khz domain of longest mode (which is mode A/B:
    1280) */
-#define NUM_SMPLS_4_INPUT_SPECTRUM	8192
+#define NUM_SMPLS_4_INPUT_SPECTRUM	(NUM_AV_BLOCKS_PSD * LEN_PSD_AV_EACH_BLOCK)
 
 /* Use raw 16 bit data or in text form for file format for DRM data. Defining
    the following macro will enable the raw data option */
@@ -121,6 +126,7 @@ public:
 
 	_REAL GetLevelMeter() {return SignalLevelMeter.Level();}
 	void GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
 	void SetFlippedSpectrum(const _BOOLEAN bNewF) {bFippedSpectrum = bNewF;}
 	_BOOLEAN GetFlippedSpectrum() {return bFippedSpectrum;}
