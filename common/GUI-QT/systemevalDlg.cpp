@@ -172,7 +172,9 @@ void systemevalDlg::OnTimer()
 		DRMReceiver.GetOFDMDemod()->GetSNREstdB());
 
 	ThermoSNR->setValue(rSNREstimate);
-	TextSNR->setText("SNR\n" + QString().setNum(rSNREstimate, 'f', 1) + " dB");
+	TextSNR->setText("<center>SNR<br><b>" + 
+		QString().setNum(rSNREstimate, 'f', 1) + " dB</b></center>");
+
 
 #ifdef _DEBUG_
 	/* Metric values */
@@ -189,6 +191,7 @@ void systemevalDlg::OnTimer()
 		QString().setNum(
 		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
 #endif
+
 
 	/* Doppler estimation (assuming Gaussian doppler spectrum) */
 	TextWiener->setText("Doppler: \t\n" + 

@@ -36,8 +36,8 @@
 
 /* Definitions ****************************************************************/
 /* Define the plot color profile */
-#define FHG_DRM_SOFTWARE_RADIO_CP
-//#define MATLAB_LIKE_CP
+//#define FHG_DRM_SOFTWARE_RADIO_CP
+#define MATLAB_LIKE_CP
 
 #ifdef FHG_DRM_SOFTWARE_RADIO_CP
 # define MAIN_PEN_COLOR_PLOT			green
