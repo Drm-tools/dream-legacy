@@ -57,7 +57,7 @@
 class CTimeSyncTrack
 {
 public:
-	CTimeSyncTrack() : bTracking(FALSE), bIsInInit(FALSE) {}
+	CTimeSyncTrack() : bTracking(FALSE) {}
 	virtual ~CTimeSyncTrack() {}
 
 	void Init(CParameter& Parameter, int iNewSymbDelay);
@@ -104,11 +104,6 @@ protected:
 	int						iInitCnt;
 
 	_REAL					rEstDelay;
-
-	_BOOLEAN IsInInit() const {return bIsInInit;}
-
-private:
-	_BOOLEAN				bIsInInit;
 };
 
 

@@ -212,8 +212,6 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 
 void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 {
-	bIsInInit = TRUE;
-
 	/* This count prevents from using channel estimation information from time
 	   interpolation before the init process hasn't yet finished. We use 2 * 
 	   the symbol delay because we assume a symmetric filter for channel
@@ -279,8 +277,6 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iNoIntpFreqPil);
-
-	bIsInInit = FALSE;
 }
 
 void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData, 
@@ -302,63 +298,60 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 	rStartGuard = 0;
 	rEndGuard = 0;
 
-	if (IsInInit() == FALSE)
+	/* "- iTargetTimingPos - 1" to get the "0" in the center of the graph */
+	iHalfSpec = iNoIntpFreqPil / 2 - iTargetTimingPos - 1;
+
+	/* Init scale (in "ms") */
+	rScaleIncr = (_REAL) iDFTSize / 
+		(SOUNDCRD_SAMPLE_RATE * iNoIntpFreqPil) * 1000 / 2;
+
+	/* Let the target timing position be the "0" time */
+	rScaleAbs = -(iHalfSpec + iTargetTimingPos) * rScaleIncr;
+
+	/* Copy first part of data in output vector */
+	for (i = 0; i < iHalfSpec; i++)
 	{
-		/* "- iTargetTimingPos - 1" to get the "0" in the center of the graph */
-		iHalfSpec = iNoIntpFreqPil / 2 - iTargetTimingPos - 1;
-
-		/* Init scale (in "ms") */
-		rScaleIncr = (_REAL) iDFTSize / 
-			(SOUNDCRD_SAMPLE_RATE * iNoIntpFreqPil) * 1000 / 2;
-
-		/* Let the target timing position be the "0" time */
-		rScaleAbs = -(iHalfSpec + iTargetTimingPos) * rScaleIncr;
-
-		/* Copy first part of data in output vector */
-		for (i = 0; i < iHalfSpec; i++)
-		{
-			if (vecrAvPoDeSp[iNoIntpFreqPil - iHalfSpec + i] > 0)
-				vecrData[i] = (_REAL) 10.0 * 
-					log10(vecrAvPoDeSp[iNoIntpFreqPil - iHalfSpec + i]);
-			else
-				vecrData[i] = RET_VAL_LOG_0;
-
-			/* Scale */
-			vecrScale[i] = rScaleAbs;
-			rScaleAbs += rScaleIncr;
-		}
-
-		/* Save scale point because this is the start point of guard-interval */
-		rStartGuard = rScaleAbs;
-
-		/* Copy second part of data in output vector */
-		for (i = iHalfSpec; i < iNoIntpFreqPil; i++)
-		{
-			if (vecrAvPoDeSp[i - iHalfSpec] > 0)
-				vecrData[i] = (_REAL) 10.0 * log10(vecrAvPoDeSp[i - iHalfSpec]);
-			else
-				vecrData[i] = RET_VAL_LOG_0;
-
-			/* Scale */
-			vecrScale[i] = rScaleAbs;
-			rScaleAbs += rScaleIncr;
-		}
-
-		/* Return bounds */
-		if (rBoundHigher > 0)
-			rHigherBound = (_REAL) 10.0 * log10(rBoundHigher);
+		if (vecrAvPoDeSp[iNoIntpFreqPil - iHalfSpec + i] > 0)
+			vecrData[i] = (_REAL) 10.0 * 
+				log10(vecrAvPoDeSp[iNoIntpFreqPil - iHalfSpec + i]);
 		else
-			rHigherBound = RET_VAL_LOG_0;
+			vecrData[i] = RET_VAL_LOG_0;
 
-		if (rBoundLower > 0)
-			rLowerBound = (_REAL) 10.0 * log10(rBoundLower);
-		else
-			rLowerBound = RET_VAL_LOG_0;
-
-		/* End point of guard interval */
-		rEndGuard = rScaleIncr * (rGuardSizeFFT - iTargetTimingPos);
-
-		/* Estmiated impulse response length */
-		rLenIR = rScaleIncr * (rEstDelay - iTargetTimingPos);
+		/* Scale */
+		vecrScale[i] = rScaleAbs;
+		rScaleAbs += rScaleIncr;
 	}
+
+	/* Save scale point because this is the start point of guard-interval */
+	rStartGuard = rScaleAbs;
+
+	/* Copy second part of data in output vector */
+	for (i = iHalfSpec; i < iNoIntpFreqPil; i++)
+	{
+		if (vecrAvPoDeSp[i - iHalfSpec] > 0)
+			vecrData[i] = (_REAL) 10.0 * log10(vecrAvPoDeSp[i - iHalfSpec]);
+		else
+			vecrData[i] = RET_VAL_LOG_0;
+
+		/* Scale */
+		vecrScale[i] = rScaleAbs;
+		rScaleAbs += rScaleIncr;
+	}
+
+	/* Return bounds */
+	if (rBoundHigher > 0)
+		rHigherBound = (_REAL) 10.0 * log10(rBoundHigher);
+	else
+		rHigherBound = RET_VAL_LOG_0;
+
+	if (rBoundLower > 0)
+		rLowerBound = (_REAL) 10.0 * log10(rBoundLower);
+	else
+		rLowerBound = RET_VAL_LOG_0;
+
+	/* End point of guard interval */
+	rEndGuard = rScaleIncr * (rGuardSizeFFT - iTargetTimingPos);
+
+	/* Estmiated impulse response length */
+	rLenIR = rScaleIncr * (rEstDelay - iTargetTimingPos);
 }

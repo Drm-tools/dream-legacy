@@ -72,6 +72,10 @@ public:
 
 	void GetTransferFunction(CVector<_REAL>& vecrData, 
 		CVector<_REAL>& vecrScale);
+	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
+					 _REAL& rLowerBound, _REAL& rHigherBound,
+					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rLenIR);
+
 
 	CTimeLinear* GetTimeLinear() {return &TimeLinear;}
 	CTimeWiener* GetTimeWiener() {return &TimeWiener;}

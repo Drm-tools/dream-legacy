@@ -435,6 +435,22 @@ void CMLCDecoder::SetNoIterations(int iNewNoIterations)
 		iNoIterations = iNewNoIterations;
 }
 
+void CMLCDecoder::GetVectorSpace(CVector<_COMPLEX>& veccData)
+{
+	/* Init output vectors */
+	veccData.Init(iN_mux);
+
+	/* Lock resources */
+	Lock();
+
+	/* Copy vectors */
+	for (int i = 0; i < iN_mux; i++)
+		veccData[i] = vecSigSpacBuf[i];
+
+	/* Release resources */
+	Unlock();
+}
+
 
 /******************************************************************************\
 * MLC base class                                                               *

@@ -448,32 +448,6 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	iMaxOutputBlockSize = iNoCarrier; 
 }
 
-void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
-											 CVector<_REAL>& vecrScale)
-{
-	/* Init output vectors */
-	vecrData.Init(iNoCarrier, (_REAL) 0.0);
-	vecrScale.Init(iNoCarrier, (_REAL) 0.0);
-
-	if (IsInInit() == FALSE)
-	{
-		/* Copy data in output vector and set scale 
-		   (carrier index as x-scale) */
-		for (int i = 0; i < iNoCarrier; i++)
-		{
-			_REAL rNormChanEst = abs(veccChanEst[i]) / (_REAL) iNoCarrier;
-				
-			if (rNormChanEst > 0)
-				vecrData[i] = (_REAL) 20.0 * log10(rNormChanEst);
-			else
-				vecrData[i] = RET_VAL_LOG_0;
-
-			/* Scale */
-			vecrScale[i] = i;
-		}
-	}
-}
-
 CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
 													 _REAL rSNR,
 													 _REAL rRatGuarLen,
@@ -601,3 +575,50 @@ _REAL CChannelEstimation::GetDelay() const
 	return rDelaySprEstInd * iFFTSizeN / 
 		(SOUNDCRD_SAMPLE_RATE * iNoIntpFreqPil * 2) * 1000;
 }
+
+void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
+											 CVector<_REAL>& vecrScale)
+{
+	/* Init output vectors */
+	vecrData.Init(iNoCarrier, (_REAL) 0.0);
+	vecrScale.Init(iNoCarrier, (_REAL) 0.0);
+
+	/* Lock resources */
+	Lock();
+
+	/* Copy data in output vector and set scale 
+	   (carrier index as x-scale) */
+	for (int i = 0; i < iNoCarrier; i++)
+	{
+		_REAL rNormChanEst = abs(veccChanEst[i]) / (_REAL) iNoCarrier;
+			
+		if (rNormChanEst > 0)
+			vecrData[i] = (_REAL) 20.0 * log10(rNormChanEst);
+		else
+			vecrData[i] = RET_VAL_LOG_0;
+
+		/* Scale */
+		vecrScale[i] = i;
+	}
+
+	/* Release resources */
+	Unlock();
+}
+
+void CChannelEstimation::GetAvPoDeSp(CVector<_REAL>& vecrData,
+									 CVector<_REAL>& vecrScale,
+									 _REAL& rLowerBound, _REAL& rHigherBound,
+									 _REAL& rStartGuard, _REAL& rEndGuard,
+									 _REAL& rLenIR)
+{
+	/* Lock resources */
+	Lock();
+
+	TimeSyncTrack.GetAvPoDeSp(vecrData, vecrScale, rLowerBound,
+		rHigherBound, rStartGuard, rEndGuard, rLenIR);
+
+	/* Release resources */
+	Unlock();
+}
+
+

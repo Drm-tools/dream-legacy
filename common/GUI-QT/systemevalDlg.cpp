@@ -190,8 +190,8 @@ void systemevalDlg::SetStatus(int MessID, int iMessPara)
 void systemevalDlg::OnTimerChart()
 {
 	CVector<_REAL>		vecrData;
+	CVector<_COMPLEX>	veccData;
 	CVector<_REAL>		vecrScale;
-	CVector<_COMPLEX>*	pveccData;
 	_REAL				rLowerBound, rHigherBound;
 	_REAL				rStartGuard, rEndGuard;
 	_REAL				rEstEndIR;
@@ -201,7 +201,7 @@ void systemevalDlg::OnTimerChart()
 	{
 	case AVERAGED_IR:
 		/* Get data from module */
-		DRMReceiver.GetChanEst()->GetTimeSyncTrack()->
+		DRMReceiver.GetChanEst()->
 			GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
 			rStartGuard, rEndGuard, rEstEndIR);
 
@@ -236,27 +236,27 @@ void systemevalDlg::OnTimerChart()
 
 	case FAC_CONSTELLATION:
 		/* Get data vector */
-		pveccData = DRMReceiver.GetFACMLC()->GetVectorSpace();
+		DRMReceiver.GetFACMLC()->GetVectorSpace(veccData);
 
 		/* Prepare graph and set data */
-		MainPlot->SetFACConst(*pveccData);
+		MainPlot->SetFACConst(veccData);
 		break;
 
 	case SDC_CONSTELLATION:
 		/* Get data vector */
-		pveccData = DRMReceiver.GetSDCMLC()->GetVectorSpace();
+		DRMReceiver.GetSDCMLC()->GetVectorSpace(veccData);
 
 		/* Prepare graph and set data */
-		MainPlot->SetSDCConst(*pveccData, 
+		MainPlot->SetSDCConst(veccData, 
 			DRMReceiver.GetParameters()->eSDCCodingScheme);
 		break;
 
 	case MSC_CONSTELLATION:
 		/* Get data vector */
-		pveccData = DRMReceiver.GetMSCMLC()->GetVectorSpace();
+		DRMReceiver.GetMSCMLC()->GetVectorSpace(veccData);
 
 		/* Prepare graph and set data */
-		MainPlot->SetMSCConst(*pveccData, 
+		MainPlot->SetMSCConst(veccData, 
 			DRMReceiver.GetParameters()->eMSCCodingScheme);
 		break;
 	}

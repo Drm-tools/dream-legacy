@@ -135,7 +135,23 @@ void ErrorMessage(string strErrorString)
 	QMessageBox::critical(0, "Dream",
 		QString("The following error occured: ") + 
 		QString(strErrorString.c_str()) +
-		"The application will now exit.");
+		"The application will exit now.");
 
 	exit(1);
+}
+
+/* QT mutex wrapper */
+void CMutex::Lock()
+{
+	Mutex.lock();
+}
+
+void CMutex::Unlock()
+{
+	Mutex.unlock();
+}
+
+_BOOLEAN CMutex::Locked()
+{
+	return Mutex.locked();
 }

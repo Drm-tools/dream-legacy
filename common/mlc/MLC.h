@@ -103,7 +103,7 @@ public:
 	virtual ~CMLCDecoder() {}
 
 	_REAL GetAccMetric() const {return 10 * log10(rAccMetric);}
-	CVector<_COMPLEX>* GetVectorSpace() {return &vecSigSpacBuf;}
+	void GetVectorSpace(CVector<_COMPLEX>& veccData);
 	void SetNoIterations(int iNewNoIterations);
 	int GetNoIterations() const {return iNoIterations;}
 
