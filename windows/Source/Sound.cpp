@@ -65,20 +65,12 @@ void CSound::Read(CVector<short>& psData)
 
 void CSound::AddInBuffer()
 {
-	/* Unprepare wave-header */
+	/* Unprepare old wave-header */
 	waveInUnprepareHeader(
 		m_WaveIn, &m_WaveInHeader[iWhichBufferIn], sizeof(WAVEHDR));
 
-	/* Reset struct entries */
-	m_WaveInHeader[iWhichBufferIn].lpData = 
-		(LPSTR) &psSoundcardBuffer[iWhichBufferIn][0];
-	m_WaveInHeader[iWhichBufferIn].dwBufferLength =
-		iBufferSizeIn * BYTES_PER_SAMPLE * NO_IN_OUT_CHANNELS;
-	m_WaveInHeader[iWhichBufferIn].dwFlags = 0;
-		
-	/* Prepare wave-header */
-	waveInPrepareHeader(
-		m_WaveIn, &m_WaveInHeader[iWhichBufferIn], sizeof(WAVEHDR));
+	/* Prepare buffers for sending to sound interface */
+	PrepareInBuffer(iWhichBufferIn);
 
 	/* Send buffer to driver for filling with new data */
 	waveInAddBuffer(m_WaveIn, &m_WaveInHeader[iWhichBufferIn], sizeof(WAVEHDR));
@@ -87,6 +79,19 @@ void CSound::AddInBuffer()
 	iWhichBufferIn++;
 	if (iWhichBufferIn == NO_SOUND_BUFFERS_IN)
 		iWhichBufferIn = 0;
+}
+
+void CSound::PrepareInBuffer(int iBufNum)
+{
+	/* Set struct entries */
+	m_WaveInHeader[iBufNum].lpData = 
+		(LPSTR) &psSoundcardBuffer[iBufNum][0];
+	m_WaveInHeader[iBufNum].dwBufferLength =
+		iBufferSizeIn * BYTES_PER_SAMPLE * NO_IN_OUT_CHANNELS;
+	m_WaveInHeader[iBufNum].dwFlags = 0;
+		
+	/* Prepare wave-header */
+	waveInPrepareHeader(m_WaveIn, &m_WaveInHeader[iBufNum], sizeof(WAVEHDR));
 }
 
 void CSound::InitRecording(int iNewBufferSize)
@@ -110,6 +115,10 @@ void CSound::InitRecording(int iNewBufferSize)
 	waveInReset(m_WaveIn);
 	waveInStop(m_WaveIn);
 	
+	/* Reset current buffer ID (it is important to do this BEFORE calling
+	   "AddInBuffer()" */
+	iWhichBufferIn = 0;
+
 	/* Create memory for sound card buffer */
 	for (i = 0; i < NO_SOUND_BUFFERS_IN; i++)
 	{
@@ -117,14 +126,14 @@ void CSound::InitRecording(int iNewBufferSize)
 			delete[] psSoundcardBuffer[i];
 
 		psSoundcardBuffer[i] = new short[iBufferSizeIn * NO_IN_OUT_CHANNELS];
-	}
 
-	/* Reset current buffer ID */
-	iWhichBufferIn = 0;
-	
-	/* Send all buffers to driver for filling the queue */
-	for (i = 0; i < NO_SOUND_BUFFERS_IN; i++)
+
+		/* Send all buffers to driver for filling the queue ----------------- */
+		/* Prepare buffers before sending them to the sound interface */
+		PrepareInBuffer(i);
+
 		AddInBuffer();
+	}
 		
 	/* Notify that sound capturing can start now */
 	waveInStart(m_WaveIn);
@@ -146,8 +155,7 @@ void CSound::OpenInDevice()
 	MMRESULT result = waveInOpen(&m_WaveIn, iCurInDev, &sWaveFormatEx,
 		(DWORD) m_WaveInEvent, NULL, CALLBACK_EVENT);
 	if (result != MMSYSERR_NOERROR)
-		throw CGenErr("Sound Interface Start, waveInOpen() failed. This error \
-			usually occurs if another application blocks the sound in.");
+		throw CGenErr("Sound Interface Start, waveInOpen() failed. This error usually occurs if another application blocks the sound in.");
 }
 
 void CSound::SetInDev(int iNewDev)
@@ -219,7 +227,7 @@ void CSound::Write(CVector<short>& psData)
 				psPlaybackBuffer[j][i] = 0;
 
 			/* Then send them to the interface */
-			waveOutWrite(m_WaveOut, &m_WaveOutHeader[j], sizeof(WAVEHDR));
+			AddOutBuffer(j);
 		}
 
 		/* Set index for done buffer */
@@ -231,8 +239,31 @@ void CSound::Write(CVector<short>& psData)
 		psPlaybackBuffer[iIndexDoneBuf][i] = psData[i];
 
 	/* Now, send the current block */
-	waveOutWrite(m_WaveOut, &m_WaveOutHeader[iIndexDoneBuf],
-		sizeof(WAVEHDR));
+	AddOutBuffer(iIndexDoneBuf);
+}
+
+void CSound::AddOutBuffer(int iBufNum)
+{
+	/* Unprepare old wave-header */
+	waveOutUnprepareHeader(
+		m_WaveOut, &m_WaveOutHeader[iBufNum], sizeof(WAVEHDR));
+
+	/* Prepare buffers for sending to sound interface */
+	PrepareOutBuffer(iBufNum);
+
+	/* Send buffer to driver for filling with new data */
+	waveOutWrite(m_WaveOut, &m_WaveOutHeader[iBufNum], sizeof(WAVEHDR));
+}
+
+void CSound::PrepareOutBuffer(int iBufNum)
+{
+	/* Set Header data */
+	m_WaveOutHeader[iBufNum].lpData = (LPSTR) &psPlaybackBuffer[iBufNum][0];
+	m_WaveOutHeader[iBufNum].dwBufferLength = iBufferSizeOut * BYTES_PER_SAMPLE;
+	m_WaveOutHeader[iBufNum].dwFlags = 0;
+
+	/* Prepare wave-header */
+	waveOutPrepareHeader(m_WaveOut, &m_WaveOutHeader[iBufNum], sizeof(WAVEHDR));
 }
 
 void CSound::InitPlayback(int iNewBufferSize)
@@ -267,20 +298,11 @@ void CSound::InitPlayback(int iNewBufferSize)
 		for (i = 0; i < iBufferSizeOut; i++)
 			psPlaybackBuffer[j][i] = 0;
 
-		/* Set Header data */
-		m_WaveOutHeader[j].lpData = (LPSTR) &psPlaybackBuffer[j][0];
-		m_WaveOutHeader[j].dwBufferLength = iBufferSizeOut * BYTES_PER_SAMPLE;
-		m_WaveOutHeader[j].dwFlags = 0;
+		/* Prepare buffer for sending to the sound interface */
+		PrepareOutBuffer(j);
 
-		/* Prepare wave-header */
-		result = waveOutPrepareHeader(m_WaveOut, &m_WaveOutHeader[j],
-			sizeof(WAVEHDR));
-		if (result != MMSYSERR_NOERROR)
-			throw CGenErr("Sound Interface Init Playback, \
-				waveOutPrepareHeader() failed.");
-		
 		/* Initially, send all buffers to the interface */
-		waveOutWrite(m_WaveOut, &m_WaveOutHeader[j], sizeof(WAVEHDR));
+		AddOutBuffer(j);
 	}
 }
 

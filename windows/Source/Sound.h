@@ -76,6 +76,10 @@ public:
 protected:
 	void	OpenInDevice();
 	void	OpenOutDevice();
+	void	PrepareInBuffer(int iBufNum);
+	void	PrepareOutBuffer(int iBufNum);
+	void	AddInBuffer();
+	void	AddOutBuffer(int iBufNum);
 
 	WAVEFORMATEX	sWaveFormatEx;
 	UINT			iNumDevs;
@@ -86,7 +90,6 @@ protected:
 	BOOLEAN			bChangDevOut;
 
 	/* Wave in */
-	void			AddInBuffer();
 	WAVEINCAPS		m_WaveInDevCaps;
 	HWAVEIN			m_WaveIn;
 	HANDLE			m_WaveInEvent;
