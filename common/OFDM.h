@@ -33,11 +33,11 @@
 #include "Modul.h"
 
 #ifdef HAVE_DFFTW_H
- #include <dfftw.h>
+# include <dfftw.h>
+#else
+# include <fftw.h>
 #endif
-#ifdef HAVE_FFTW_H
- #include <fftw.h>
-#endif
+
 
 /* Classes ********************************************************************/
 class COFDMModulation : public CTransmitterModul<_COMPLEX, _COMPLEX>

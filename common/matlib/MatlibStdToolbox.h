@@ -32,17 +32,15 @@
 
 /* fftw (Homepage: http://www.fftw.org) */
 #ifdef HAVE_DFFTW_H
- #include <dfftw.h>
-#endif
-#ifdef HAVE_FFTW_H
- #include <fftw.h>
+# include <dfftw.h>
+#else
+# include <fftw.h>
 #endif
 
 #ifdef HAVE_DRFFTW_H
- #include <drfftw.h>
-#endif
-#ifdef HAVE_RFFTW_H
- #include <rfftw.h>
+# include <drfftw.h>
+#else
+# include <rfftw.h>
 #endif
 
 

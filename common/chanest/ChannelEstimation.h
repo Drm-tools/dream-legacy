@@ -38,10 +38,9 @@
 #include "TimeDecDir.h"
 
 #ifdef HAVE_DFFTW_H
- #include <dfftw.h>
-#endif
-#ifdef HAVE_FFTW_H
- #include <fftw.h>
+# include <dfftw.h>
+#else
+# include <fftw.h>
 #endif
 
 #include "../sync/TimeSyncTrack.h"

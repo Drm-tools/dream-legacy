@@ -34,11 +34,11 @@
 #include "../matlib/Matlib.h"
 
 #ifdef HAVE_DRFFTW_H
- #include <drfftw.h>
+# include <drfftw.h>
+#else
+# include <rfftw.h>
 #endif
-#ifdef HAVE_RFFTW_H
- #include <rfftw.h>
-#endif
+
 
 /* Definitions ****************************************************************/
 /* Bound for peak detection between filtered signal (in frequency direction) 
