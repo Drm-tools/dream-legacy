@@ -49,6 +49,9 @@
 #define NO_SOUND_BUFFERS_OUT	4		/* Number of sound card buffers */
 
 #define RECORDING_CHANNEL		0		/* 0: Left, 1: Right
+  
+/* Maximum number of recognized sound cards installed in the system */
+#define MAX_NUMBER_SOUND_CARDS	10
 
 
 /* Classes ********************************************************************/
@@ -58,15 +61,29 @@ public:
 	CSound();
 	virtual ~CSound();
 
-	void InitRecording(int iNewBufferSize);
-	void InitPlayback(int iNewBufferSize);
-	void Read(CVector<short>& psData);
-	void Write(CVector<short>& psData);
+	void	InitRecording(int iNewBufferSize);
+	void	InitPlayback(int iNewBufferSize);
+	void	Read(CVector<short>& psData);
+	void	Write(CVector<short>& psData);
 
-	void StopRecording();
+	int		GetNumDev() {return iNumDevs;}
+	string	GetDeviceName(int iDiD) {return pstrDevices[iDiD];}
+	void	SetOutDev(int iNewDev);
+	void	SetInDev(int iNewDev);
+
+	void	Close();
 
 protected:
+	void	OpenInDevice();
+	void	OpenOutDevice();
+
 	WAVEFORMATEX	sWaveFormatEx;
+	UINT			iNumDevs;
+	string			pstrDevices[MAX_NUMBER_SOUND_CARDS];
+	UINT			iCurInDev;
+	UINT			iCurOutDev;
+	BOOLEAN			bChangDevIn;
+	BOOLEAN			bChangDevOut;
 
 	/* Wave in */
 	void			AddInBuffer();

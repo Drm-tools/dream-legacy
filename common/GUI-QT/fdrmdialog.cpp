@@ -40,20 +40,70 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	strVersionText += "Under the GNU General Public License (GPL)</center>";
 	AboutDlg.TextLabelVersion->setText(strVersionText);
 
-	/* Set Menu */
+
+	/* Set Menu ------------------------------------------------------------- */
+	/* Help menu */
 	QPopupMenu *HelpMenu = new QPopupMenu(this);
 	CHECK_PTR(HelpMenu);
 	HelpMenu->insertItem("&About...", this, SLOT(OnHelpAbout()));
 
+	/* View menu */
 	QPopupMenu *EvalWinMenu = new QPopupMenu(this);
 	CHECK_PTR(EvalWinMenu);
 	EvalWinMenu->insertItem("&Evaluation Dialog", this, SLOT(OnViewEvalDlg()));
 	EvalWinMenu->insertSeparator();
 	EvalWinMenu->insertItem("E&xit", this, SLOT(close()), CTRL+Key_Q);
 
+
+	/* Settings menu */
+	pSoundInMenu = new QPopupMenu(this);
+	CHECK_PTR(pSoundInMenu);
+	pSoundOutMenu = new QPopupMenu(this);
+	CHECK_PTR(pSoundOutMenu);
+
+	/* Get sound device names */
+	iNumSoundDev = DRMReceiver.GetSoundInterface()->GetNumDev();
+	for (int i = 0; i < iNumSoundDev; i++)
+	{
+		string strName = DRMReceiver.GetSoundInterface()->GetDeviceName(i);
+		pSoundInMenu->insertItem(QString(strName.c_str()), this,
+			SLOT(OnSoundInDevice(int)), 0, i);
+		pSoundOutMenu->insertItem(QString(strName.c_str()), this,
+			SLOT(OnSoundOutDevice(int)), 0, i);
+	}
+
+	/* Set default device */
+#ifdef _WIN32
+	/* Add wave mapper entry and set this one as default. "iNumSoundDev" is no
+	   valid ID for a device, use this for wave-mapper */
+	pSoundInMenu->insertSeparator();
+	pSoundInMenu->insertItem("Windows Wave Mapper Record", this,
+		SLOT(OnSoundInDevice(int)), 0, iNumSoundDev);
+	pSoundOutMenu->insertSeparator();
+	pSoundOutMenu->insertItem("Windows Wave Mapper Play", this,
+		SLOT(OnSoundOutDevice(int)), 0, iNumSoundDev);
+
+	pSoundInMenu->setItemChecked(iNumSoundDev, TRUE);
+	pSoundOutMenu->setItemChecked(iNumSoundDev, TRUE);
+	DRMReceiver.GetSoundInterface()->SetInDev(iNumSoundDev);
+	DRMReceiver.GetSoundInterface()->SetOutDev(iNumSoundDev);
+#else
+	/* Set first device as default */
+	pSoundInMenu->setItemChecked(0, TRUE);
+	pSoundOutMenu->setItemChecked(0, TRUE);
+	DRMReceiver.GetSoundInterface()->SetInDev(0);
+	DRMReceiver.GetSoundInterface()->SetOutDev(0);
+#endif
+
+	QPopupMenu *SettingsMenu = new QPopupMenu(this);
+	CHECK_PTR(SettingsMenu);
+	SettingsMenu->insertItem("Sound In", pSoundInMenu);
+	SettingsMenu->insertItem("Sound Out", pSoundOutMenu);
+
 	pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
 	pMenu->insertItem("&View", EvalWinMenu);
+	pMenu->insertItem("&Settings", SettingsMenu);
 	pMenu->insertItem("&?", HelpMenu);
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
@@ -299,6 +349,36 @@ void FDRMDialog::OnTimer()
 		TextTextMessage->setText("");
 
 		TextServiceLabel->setText(QString("Scanning..."));
+	}
+}
+
+void FDRMDialog::OnSoundInDevice(int id)
+{
+	DRMReceiver.GetSoundInterface()->SetInDev(id);
+
+	/* Taking care of checks in the menu */
+#ifdef _WIN32
+	for (int i = 0; i < iNumSoundDev + 1; i++)
+#else
+	for (int i = 0; i < iNumSoundDev; i++)
+#endif
+	{
+		pSoundInMenu->setItemChecked(i, i == id);
+	}
+}
+
+void FDRMDialog::OnSoundOutDevice(int id)
+{
+	DRMReceiver.GetSoundInterface()->SetOutDev(id);
+
+	/* Taking care of checks in the menu */
+#ifdef _WIN32
+	for (int i = 0; i < iNumSoundDev + 1; i++)
+#else
+	for (int i = 0; i < iNumSoundDev; i++)
+#endif
+	{
+		pSoundOutMenu->setItemChecked(i, i == id);
 	}
 }
 

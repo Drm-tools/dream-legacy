@@ -46,6 +46,7 @@
 #endif
 #include "systemevalDlg.h"
 #include "../DrmReceiver.h"
+#include "../Vector.h"
 
 
 extern CDRMReceiver	DRMReceiver;
@@ -74,8 +75,11 @@ public:
 protected:
 	systemevalDlg*	pSysEvalDlg;
     QMenuBar*		pMenu;
+	QPopupMenu*		pSoundInMenu;
+	QPopupMenu*		pSoundOutMenu;
 	int				iCurSelServiceGUI;
 	int				iOldNoServicesGUI;
+	int				iNumSoundDev;
 	QTimer			Timer;
 	CAboutDlgBase	AboutDlg;
 
@@ -91,5 +95,7 @@ public slots:
 	void OnButtonService4();
 	void OnViewEvalDlg();
 	void OnHelpAbout();
+	void OnSoundInDevice(int id);
+	void OnSoundOutDevice(int id);
 };
 
