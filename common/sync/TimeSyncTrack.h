@@ -144,6 +144,7 @@ protected:
 	CReal					rSymBloSiIRDomain;
 	int						iResOffsetAcquCnt;
 	int						iResOffAcqCntMax;
+	int						iOldNonZeroDiff;
 
 	CReal GetSamOffHz(int iDiff, int iLen);
 };

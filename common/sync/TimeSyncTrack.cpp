@@ -257,7 +257,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	/* We need to consider the timing corrections done by the timing unit. What
 	   we want to estimate is only the real movement of the detected maximum
 	   peak */
-	int iCurRes = iIntegTiCorrections + iMaxInd;
+	const int iCurRes = iIntegTiCorrections + iMaxInd;
 	veciSRTiCorrHist.AddEnd(iCurRes);
 
 	/* We assumed that the detected peak is always the same peak in the actual
@@ -267,20 +267,24 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	   rate offset is very likely to be very constant since usually crystal
 	   oscialltors are used. Thus, if a larger change of sample rate offset
 	   happens, we assume that the maximum peak has changed */
-	int iNewDiff = veciSRTiCorrHist[iLenCorrectionHist - 2] - iCurRes;
+	const int iNewDiff = veciSRTiCorrHist[iLenCorrectionHist - 2] - iCurRes;
 
 	/* If change is larger than 2, it is most likely that a new peak was chosen
-	   by the maximum function */
-
-// TODO: Check for jitter (caused by two peaks with almost same amplitude and delay)!
-
-	if (abs(iNewDiff) > 2)
+	   by the maximum function. Also, if the sign has changed of the difference
+	   (and it is not zero), we also say that a new peak was selected */
+	if ((abs(iNewDiff) > 2) ||
+		((Sign(iOldNonZeroDiff) != Sign(iNewDiff)) && (iNewDiff != 0)))
 	{
 		/* Correct the complete history to the new reference peak. Reference
 		   peak was already added, therefore do not use last element */
 		for (i = 0; i < iLenCorrectionHist - 1; i++)
 			veciSRTiCorrHist[i] -= iNewDiff;
 	}
+
+	/* Store old difference if it is not zero */
+	if (iNewDiff != 0)
+		iOldNonZeroDiff = iNewDiff;
+
 
 	/* Check, if we are in acquisition phase */
 	if (iResOffsetAcquCnt > 0)
@@ -316,7 +320,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 		{
 			/* Tracking phase */
 			/* Get actual sample rate offset in Hertz */
-			CReal rSamOffset = GetSamOffHz(iCurRes - veciSRTiCorrHist[0],
+			const CReal rSamOffset = GetSamOffHz(iCurRes - veciSRTiCorrHist[0],
 				iLenCorrectionHist - 1);
 
 #ifndef USE_SAMOFFS_TRACK_FRE_PIL
@@ -473,6 +477,9 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	/* Symbol block size converted in domain of estimated PDS */
 	rSymBloSiIRDomain =
 		(CReal) Parameter.iSymbolBlockSize * iNumCarrier / iDFTSize;
+
+	/* Init variable for storing the old difference of maximum position */
+	iOldNonZeroDiff = 0;
 }
 
 CReal CTimeSyncTrack::GetSamOffHz(int iDiff, int iLen)
