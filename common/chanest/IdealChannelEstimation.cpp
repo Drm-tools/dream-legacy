@@ -42,8 +42,20 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 									reference signal) */
 	for (i = 0; i < iNumCarrier; i++)
 	{
+		/* Extract channel estimate from equalized signal */
 		veccEstChan[i] = (*pvecInputData2)[i].tOut / (*pvecInputData)[i].cSig;
-		veccRefChan[i] = (*pvecInputData2)[i].tRef / (*pvecInputData2)[i].tIn;
+
+		/* Calculate reference signal for channel from fading taps. We have
+		   to do it this way to avoid errors from ICI
+		   (inter-carrier-interfearence). Consider offset from guard-interval
+		   removal (additional phase rotation) */
+		veccRefChan[i] = (_REAL) 0.0;
+		for (j = 0; j < ReceiverParam.iNumTaps; j++)
+			veccRefChan[i] += Rotate((*pvecInputData2)[0].veccTap[j], i,
+				ReceiverParam.iPathDelay[j] + ReceiverParam.iOffUsfExtr);
+
+		/* Normalize result */
+		veccRefChan[i] *= ReceiverParam.rGainCorr;
 	}
 
 	/* Debar DC carriers, set them to zero */
@@ -72,8 +84,12 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Write to output vector. Also, ship the channel state at a certain cell */
 	for (i = 0; i < iNumCarrier; i++)
 	{
-		(*pvecOutputData)[i].cSig = (*pvecInputData2)[i].tOut / veccRefChan[i];
 		(*pvecOutputData)[i].rChan = SqMag(veccRefChan[i]);
+
+		/* If we do not want to get the actual channel estimate but the
+		   ideal equalized signal, we should do it this way to be ICI free */
+		(*pvecOutputData)[i].cSig = (*pvecInputData2)[i].tOut *
+			(*pvecInputData2)[i].tIn / (*pvecInputData2)[i].tRef;
 	}
 
 	/* Set symbol number for output vector */
