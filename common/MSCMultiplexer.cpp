@@ -56,134 +56,148 @@ void CMSCDemultiplexer::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int i;
 
+	/* Audio ---------------------------------------------------------------- */
 	/* Extract audio data from input-stream */
 	/* Higher protected part */
-	for (i = 0; i < iLenAudHigh; i++)
-		(*pvecOutputData)[i] = (*pvecInputData)[i + iOffsetAudHigh];
+	for (i = 0; i < AudStreamPos.iLenHigh; i++)
+		(*pvecOutputData)[i] = (*pvecInputData)[i + AudStreamPos.iOffsetHigh];
 
 	/* Lower protected part */
-	for (i = 0; i < iLenAudLow; i++)
-		(*pvecOutputData)[i + iLenAudHigh] =
-			(*pvecInputData)[i + iOffsetAudLow];
+	for (i = 0; i < AudStreamPos.iLenLow; i++)
+		(*pvecOutputData)[i + AudStreamPos.iLenHigh] =
+			(*pvecInputData)[i + AudStreamPos.iOffsetLow];
 
 
+	/* Data ----------------------------------------------------------------- */
+	/* Extract audio data from input-stream */
+	/* Higher protected part */
+	for (i = 0; i < DataStreamPos.iLenHigh; i++)
+		(*pvecOutputData2)[i] = (*pvecInputData)[i + DataStreamPos.iOffsetHigh];
 
-// TODO extract data streams for DataDecoder
-
+	/* Lower protected part */
+	for (i = 0; i < DataStreamPos.iLenLow; i++)
+		(*pvecOutputData2)[i + DataStreamPos.iLenHigh] =
+			(*pvecInputData)[i + DataStreamPos.iOffsetLow];
 }
 
 void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 {
+	/* Audio ---------------------------------------------------------------- */
+	/* Check if current selected service is an audio service and get stream
+	   position */
+	if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
+		eAudDataFlag == CParameter::SF_AUDIO)
+	{
+		GetStreamPos(ReceiverParam, ReceiverParam.
+			Service[ReceiverParam.GetCurSelAudioService()].AudioParam.iStreamID,
+			AudStreamPos);
+	}
+	else
+	{
+		/* This is not an audio stream, zero the lengths */
+		AudStreamPos.iLenHigh = 0;
+		AudStreamPos.iLenLow = 0;
+	}
+
+	/* Set audio output block size */
+	iOutputBlockSize = AudStreamPos.iLenHigh + AudStreamPos.iLenLow;
+
+
+	/* Data ----------------------------------------------------------------- */
+	/* Get stream position of current selected data service */
+	GetStreamPos(ReceiverParam, ReceiverParam.
+		Service[ReceiverParam.GetCurSelDataService()].DataParam.iStreamID,
+		DataStreamPos);
+
+	/* Set data output block size */
+	iOutputBlockSize2 = DataStreamPos.iLenHigh + DataStreamPos.iLenLow;
+
+
+	/* Set input block size */
+	iInputBlockSize = ReceiverParam.iNoDecodedBitsMSC;
+}
+
+void CMSCDemultiplexer::GetStreamPos(CParameter& Param, const int iStreamID,
+									 CStreamPos& StPos)
+{
 	int				i;
-	int				iNoServices;
-	int				iCurAudioStreamID;
-	int				iCurSelServ;
 	CVector<int>	veciActStreams;
 
-	/* First, init values so that nothing is done in this module (in case we do
-	   not have an audio stream or the parameters are wrong */
-	iLenAudHigh = 0;
-	iLenAudLow = 0;
-	iOutputBlockSize = 0;
-
-	/* Get current selected service */
-	iCurSelServ = ReceiverParam.GetCurSelectedService();
-
-	/* Current audio stream ID */
-	iCurAudioStreamID = ReceiverParam.Service[iCurSelServ].AudioParam.iStreamID;
-
-	/* Check if current selected service is an audio service and check if
-	   a stream is attached */
-	if ((ReceiverParam.Service[iCurSelServ].
-		eAudDataFlag == CParameter::SF_AUDIO) &&
-		(iCurAudioStreamID != STREAM_ID_NOT_USED))
+	if (iStreamID != STREAM_ID_NOT_USED)
 	{
-		/* Init number of services */
-		iNoServices =
-			ReceiverParam.iNoAudioService + ReceiverParam.iNoDataService;
+		/* Length of higher and lower protected part of audio stream (number
+		   of bits) */
+		StPos.iLenHigh = Param.Stream[iStreamID].iLenPartA * SIZEOF__BYTE;
+		StPos.iLenLow = Param.Stream[iStreamID].iLenPartB *	SIZEOF__BYTE;
+
 
 		/* Byte-offset of higher and lower protected part of audio stream --- */
 		/* Get active streams */
-		ReceiverParam.GetActiveStreams(veciActStreams);
-
-		/* Init offsets */
-		iOffsetAudHigh = 0;
-		iOffsetAudLow = 0;
+		Param.GetActiveStreams(veciActStreams);
 
 		/* Get start offset for lower protected parts in stream. Since lower
 		   protected part comes after the higher protected part, the offset
 		   must be shifted initially by all higher protected part lengths
 		   (iLenPartA of all streams are added) 6.2.3.1 */
+		StPos.iOffsetLow = 0;
 		for (i = 0; i < veciActStreams.Size(); i++)
-			iOffsetAudLow += ReceiverParam.Stream[veciActStreams[i]].
-				iLenPartA * SIZEOF__BYTE;
+			StPos.iOffsetLow +=
+				Param.Stream[veciActStreams[i]].iLenPartA * SIZEOF__BYTE;
 
 		/* Real start position of the streams */
+		StPos.iOffsetHigh = 0;
 		for (i = 0; i < veciActStreams.Size(); i++)
 		{
-			if (veciActStreams[i] < iCurAudioStreamID)
+			if (veciActStreams[i] < iStreamID)
 			{
-				iOffsetAudHigh += ReceiverParam.Stream[i].iLenPartA *
-					SIZEOF__BYTE;
-				iOffsetAudLow += ReceiverParam.Stream[i].iLenPartB *
-					SIZEOF__BYTE;
+				StPos.iOffsetHigh += Param.Stream[i].iLenPartA * SIZEOF__BYTE;
+				StPos.iOffsetLow += Param.Stream[i].iLenPartB * SIZEOF__BYTE;
 			}
 		}
 
-		/* Length of higher and lower protected part of audio stream (number
-		   of bits) */
-		iLenAudHigh = ReceiverParam.Stream[iCurAudioStreamID].iLenPartA *
-			SIZEOF__BYTE;
-		iLenAudLow = ReceiverParam.Stream[iCurAudioStreamID].iLenPartB *
-			SIZEOF__BYTE;
-
 		/* Special case if hierarchical modulation is used */
-		if (((ReceiverParam.eMSCCodingScheme == CParameter::CS_3_HMSYM) ||
-			(ReceiverParam.eMSCCodingScheme == CParameter::CS_3_HMMIX)))
+		if (((Param.eMSCCodingScheme == CParameter::CS_3_HMSYM) ||
+			(Param.eMSCCodingScheme == CParameter::CS_3_HMMIX)))
 		{
-			if (iCurAudioStreamID == 0)
+			if (iStreamID == 0)
 			{
 				/* Hierarchical channel is selected. Data is at the beginning
 				   of incoming data block */
-				iOffsetAudLow = 0;
+				StPos.iOffsetLow = 0;
 			}
 			else
 			{
 				/* Shift all offsets by the length of the hierarchical frame. We
 				   cannot use the information about the length in
 				   "Stream[0].iLenPartB", because the real length of the frame
-				   is longer or equal the length in "Stream[0].iLenPartB" */
-				iOffsetAudHigh += ReceiverParam.iNoBitsHierarchFrameTotal;
-				iOffsetAudLow += ReceiverParam.iNoBitsHierarchFrameTotal -
+				   is longer or equal to the length in "Stream[0].iLenPartB" */
+				StPos.iOffsetHigh += Param.iNoBitsHierarchFrameTotal;
+				StPos.iOffsetLow += Param.iNoBitsHierarchFrameTotal -
 					/* We have to subtract this because we added it in the
 					   for loop above which we do not need here */
-					ReceiverParam.Stream[0].iLenPartB * SIZEOF__BYTE;
+					Param.Stream[0].iLenPartB * SIZEOF__BYTE;
 			}
 		}
 
 
 		/* Possibility check ------------------------------------------------ */
 		/* Test, if parameters have possible values */
-		if ((iOffsetAudHigh + iLenAudHigh > ReceiverParam.iNoDecodedBitsMSC) ||
-			(iLenAudLow + iOffsetAudLow > ReceiverParam.iNoDecodedBitsMSC))
+		if ((StPos.iOffsetHigh + StPos.iLenHigh > Param.iNoDecodedBitsMSC) ||
+			(StPos.iOffsetLow + StPos.iLenLow > Param.iNoDecodedBitsMSC))
 		{
-			/* Something is wrong, do not use the parameters and do nothing in
-			   this module */
-			iLenAudHigh = 0;
-			iLenAudLow = 0;
-			iOutputBlockSize = 0;
-		}
-		else
-		{
-			/* Parameters are ok, set output block sizes for this module */
-			iOutputBlockSize = iLenAudHigh + iLenAudLow; /* No of bits */
+			/* Something is wrong, set everything to zero */
+			StPos.iOffsetLow = 0;
+			StPos.iOffsetHigh = 0;
+			StPos.iLenLow = 0;
+			StPos.iLenHigh = 0;
 		}
 	}
-
-	/* Set input block size */
-	iInputBlockSize = ReceiverParam.iNoDecodedBitsMSC;
-
-
-// For data stream, currently no data stream is used -> TODO
-iOutputBlockSize2 = 0;
+	else
+	{
+		/* Error, set everything to zero */
+		StPos.iOffsetLow = 0;
+		StPos.iOffsetHigh = 0;
+		StPos.iLenLow = 0;
+		StPos.iLenHigh = 0;
+	}
 }

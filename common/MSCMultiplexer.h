@@ -44,10 +44,20 @@ public:
 	virtual ~CMSCDemultiplexer() {}
 
 protected:
-	int	iOffsetAudLow;
-	int	iOffsetAudHigh;
-	int	iLenAudLow;
-	int	iLenAudHigh;
+	class CStreamPos
+	{
+	public:
+		int	iOffsetLow;
+		int	iOffsetHigh;
+		int	iLenLow;
+		int	iLenHigh;
+	};
+
+	CStreamPos AudStreamPos;
+	CStreamPos DataStreamPos;
+
+	void GetStreamPos(CParameter& Param, const int iStreamID,
+					  CStreamPos& StPos);
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
