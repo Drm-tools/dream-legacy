@@ -57,13 +57,16 @@ protected:
 	int					iInputBlockSize;
 	int					iOutputBlockSize;
 
-	_BOOLEAN			IsInInit() const {return bIsInInit;}
+	void				Lock() {Mutex.Lock();}
+	void				Unlock() {Mutex.Unlock();}
 
+	void				InitThreadSave(CParameter& Parameter);
 	virtual void		InitInternal(CParameter& Parameter) = 0;
+	void				ProcessDataThreadSave(CParameter& Parameter);
 	virtual void		ProcessDataInternal(CParameter& Parameter) = 0;
 
 private:
-	_BOOLEAN			bIsInInit;
+	CMutex				Mutex;
 };
 
 
@@ -225,7 +228,32 @@ CModul<TInput, TOutput>::CModul()
 	iOutputBlockSize = 0;
 	pvecInputData = NULL;
 	pvecOutputData = NULL;
-	bIsInInit = FALSE;
+}
+
+template<class TInput, class TOutput> 
+void CModul<TInput, TOutput>::ProcessDataThreadSave(CParameter& Parameter)
+{
+	/* Get a lock for the resources */
+	Lock();
+
+	/* Call processing routine of derived modul */
+	ProcessDataInternal(Parameter);
+
+	/* Unlock resources */
+	Unlock();
+}
+
+template<class TInput, class TOutput> 
+void CModul<TInput, TOutput>::InitThreadSave(CParameter& Parameter)
+{
+	/* Get a lock for the resources */
+	Lock();
+
+	/* Call init of derived modul */
+	InitInternal(Parameter);
+
+	/* Unlock resources */
+	Unlock();
 }
 
 template<class TInput, class TOutput> 
@@ -235,7 +263,7 @@ void CModul<TInput, TOutput>::Init(CParameter& Parameter)
 	iInputBlockSize = 0;
 
 	/* Call init of derived modul */
-	InitInternal(Parameter);
+	InitThreadSave(Parameter);
 }
 
 template<class TInput, class TOutput> 
@@ -247,10 +275,8 @@ void CModul<TInput, TOutput>::Init(CParameter& Parameter,
 	iInputBlockSize = 0;
 	iOutputBlockSize = 0;
 
-	/* Call init of derived modul and set flags for multi-threads */
-	bIsInInit = TRUE;
-	InitInternal(Parameter);
-	bIsInInit = FALSE;
+	/* Call init of derived modul */
+	InitThreadSave(Parameter);
 
 	/* Init output transfer buffer */
 	if (iMaxOutputBlockSize != 0)
@@ -575,7 +601,7 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 		(*pvecOutputData).SetExData((*pvecInputData).GetExData());
 
 		/* Call the underlying processing-routine */
-		ProcessDataInternal(Parameter);
+		ProcessDataThreadSave(Parameter);
 	
 		/* Write processed data from internal memory in transfer-buffer */
 		OutputBuffer.Put(iOutputBlockSize);
@@ -630,7 +656,7 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 		pvecOutputData2 = OutputBuffer2.QueryWriteBuffer();
 		
 		/* Call the underlying processing-routine */
-		ProcessDataInternal(Parameter);
+		ProcessDataThreadSave(Parameter);
 	
 		/* Write processed data from internal memory in transfer-buffers */
 		OutputBuffer.Put(iOutputBlockSize);
@@ -694,7 +720,7 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 		pvecOutputData3 = OutputBuffer3.QueryWriteBuffer();
 		
 		/* Call the underlying processing-routine */
-		ProcessDataInternal(Parameter);
+		ProcessDataThreadSave(Parameter);
 	
 		/* Write processed data from internal memory in transfer-buffers */
 		OutputBuffer.Put(iOutputBlockSize);
@@ -747,7 +773,7 @@ void CReceiverModul<TInput, TOutput>::
 	pvecOutputData = OutputBuffer.QueryWriteBuffer();
 
 	/* Call the underlying processing-routine */
-	ProcessDataInternal(Parameter);
+	ProcessDataThreadSave(Parameter);
 
 	/* Write processed data from internal memory in transfer-buffer */
 	OutputBuffer.Put(iOutputBlockSize);
@@ -800,7 +826,7 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 		pvecInputData = InputBuffer.Get(iInputBlockSize);
 	
 		/* Call the underlying processing-routine */
-		ProcessDataInternal(Parameter);
+		ProcessDataThreadSave(Parameter);
 	}
 
 	return bEnoughData;

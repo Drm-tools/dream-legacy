@@ -46,7 +46,7 @@ using namespace std;	// Because of the library: "complex"
    "test" MUST EXIST in the windows directory (or linux directory if you use
    Linux)! */
 #define _DEBUG_
-#undef _DEBUG_
+//#undef _DEBUG_
 
 
 #define DREAM_VERSION_NUMBER			"0.9.2"
@@ -89,20 +89,20 @@ typedef uint32_t						_UINT32BIT;
 
 /* Definitions for window message system ------------------------------------ */
 #define _MESSAGE_IDENT					unsigned int
-#define MS_FAC_CRC						1	// MS: Message
+#define MS_FAC_CRC						1	/* MS: Message */
 #define MS_SDC_CRC						2
 #define MS_MSC_CRC						3
 #define MS_FRAME_SYNC					4
 #define MS_TIME_SYNC					5
 #define MS_RESET_ALL					6
 
-#define GUI_CONTROL_UPDATE_TIME			500	// Milliseconds
+#define GUI_CONTROL_UPDATE_TIME			500	/* Milliseconds */
 
 
 /* Global enumerations ------------------------------------------------------ */
-enum ESpecOcc {SO_0, SO_1, SO_2, SO_3, SO_4, SO_5}; // SO: Spectrum Occupancy
+enum ESpecOcc {SO_0, SO_1, SO_2, SO_3, SO_4, SO_5}; /* SO: Spectrum Occupancy */
 enum ERobMode {RM_ROBUSTNESS_MODE_A, RM_ROBUSTNESS_MODE_B,
-		RM_ROBUSTNESS_MODE_C, RM_ROBUSTNESS_MODE_D}; // RM: Robustness Mode
+		RM_ROBUSTNESS_MODE_C, RM_ROBUSTNESS_MODE_D}; /* RM: Robustness Mode */
 
 
 /* Constants ---------------------------------------------------------------- */
@@ -134,6 +134,21 @@ class CEquSig
 public:
 	_COMPLEX	cSig; /* Actual signal */
 	_REAL		rChan; /* Channel power at this cell */
+};
+
+/* Mutex object to access data savely from different threads */
+/* QT mutex */
+#include <qthread.h>
+#define _MUTEXTYPE						QMutex
+class CMutex
+{
+public:
+	void		Lock();
+	void		Unlock();
+	_BOOLEAN	Locked();
+
+protected:
+	_MUTEXTYPE	Mutex;
 };
 
 
