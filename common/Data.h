@@ -200,9 +200,6 @@ protected:
 	int iNoDCCarriers;
 	int iChanEstDelay;
 
-	CMatrix<_COMPLEX>	matcHistOFDMDem;
-	CMatrix<_COMPLEX>	matcHistRefChan;
-
 	CVector<_COMPLEX>	veccEstChan;
 	CVector<_COMPLEX>	veccRefChan;
 	CVector<_REAL>		vecrMSE;

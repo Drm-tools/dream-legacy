@@ -89,11 +89,13 @@ protected:
 	/* Simulation */
 	CSingleBuffer<_REAL>	ChanRefBuf;
 	CSingleBuffer<_REAL>	ChanInRefBuf;
-	CSingleBuffer<_COMPLEX>	DemChanRefBuf;
-	CSingleBuffer<_COMPLEX>	DemChanInRefBuf;
-	CSingleBuffer<_COMPLEX>	OFDMDemodBuf2;
 	CSingleBuffer<_COMPLEX>	ChanEstBufForSim;
+	CCyclicBuffer<_COMPLEX>	DemChanRefBuf;
+	CCyclicBuffer<_COMPLEX>	DemChanInRefBuf;
+	CCyclicBuffer<_COMPLEX>	OFDMDemodBuf2;
 	
+
+
 	/* Receiver buffers */
 	CSingleBuffer<_REAL>	RecDataBuf;
 

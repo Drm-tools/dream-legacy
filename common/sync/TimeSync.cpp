@@ -653,8 +653,7 @@ void CTimeSync::SetFilterTaps(_REAL rNewOffsetNorm)
 			fHilLPProt[i] * Sin((_REAL) 2.0 * crPi * rNewOffsetNorm * i));
 
 	/* Init state vector for filtering with zeros */
-	rvecZ.Init(NO_TAPS_HILB_FILT - 1);
-	rvecZ = Zeros(NO_TAPS_HILB_FILT - 1);
+	rvecZ.Init(NO_TAPS_HILB_FILT - 1, (CReal) 0.0);
 }
 
 int CTimeSync::GetIndFromRMode(ERobMode eNewMode)

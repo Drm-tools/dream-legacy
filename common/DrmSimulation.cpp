@@ -146,7 +146,6 @@ case ST_BITERROR:
 	break;
 }
 
-
 		/* Demapping of the MSC, FAC, SDC and pilots from the carriers */
 		OFDMCellDemapping.ProcessMultipleData(Param, ChanEstBuf,
 			MSCCarDemapBuf, FACCarDemapBuf, SDCCarDemapBuf);
@@ -197,12 +196,12 @@ void CDRMSimulation::Init()
 	TimeSync.Init(Param, TimeSyncBuf);
 	SyncUsingPil.Init(Param, SyncUsingPilBuf);
 
-	/* Channel estimation init must be called before EvaSimData, UtilizeFACData
-	   and IdealChanEst modules, because the delay is set here which the other
-	   modules use! */
+	/* Channel estimation init must be called before OFDMDemodSimulation
+	   module, because the delay is set here which the other modules use! */
 	ChannelEstimation.Init(Param, ChanEstBuf);
 	
-	OFDMCellDemapping.Init(Param, MSCCarDemapBuf, FACCarDemapBuf, SDCCarDemapBuf);
+	OFDMCellDemapping.Init(Param, MSCCarDemapBuf, FACCarDemapBuf, 
+		SDCCarDemapBuf);
 	FACMLCDecoder.Init(Param, FACDecBuf);
 	UtilizeFACData.Init(Param);
 	SDCMLCDecoder.Init(Param, SDCDecBuf);

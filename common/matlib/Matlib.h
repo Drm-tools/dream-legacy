@@ -112,7 +112,8 @@ public:
 	CMatlibVector<T> operator()(const int iFrom, const int iStep, const int iTo) const;
 
 	int GetSize() const {return iVectorLength;}
-	CMatlibVector<T>& Init(const int iIniLen);
+	void Init(const int iIniLen);
+	void Init(const int iIniLen, const T tIniVal);
 	CMatlibVector<T>& PutIn(const int iFrom, const int iTo, CMatlibVector<T>& fvA);
 	CMatlibVector<T>& Merge(const CMatlibVector<T>& vecA, T& tB);
 	CMatlibVector<T>& Merge(const CMatlibVector<T>& vecA, const CMatlibVector<T>& vecB);
@@ -313,7 +314,7 @@ CMatlibVector<T>::CMatlibVector(const CMatlibVector<T>& vecI) :
 }
 
 template<class T>
-CMatlibVector<T>& CMatlibVector<T>::Init(const int iIniLen)
+void CMatlibVector<T>::Init(const int iIniLen)
 {
 	iVectorLength = iIniLen;
 
@@ -325,12 +326,20 @@ CMatlibVector<T>& CMatlibVector<T>::Init(const int iIniLen)
 	{
 		pData = new T[iVectorLength];
 
-		// Init with zeros
+		/* Init with zeros */
 		for (int i = 0; i < iVectorLength; i++)
 			pData[i] = 0;
 	}
+}
 
-	return *this;
+template<class T>
+void CMatlibVector<T>::Init(const int iIniLen, const T tIniVal)
+{
+	/* Init vector and set all values to init value parameter */
+	Init(iIniLen);
+
+	for (int i = 0; i < iIniLen; i++)
+		operator[](i) = tIniVal;
 }
 
 template<class T>
@@ -384,7 +393,7 @@ template<class T>
 CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA, T& tB)
 {
 	for (int i = 0; i < vecA.GetSize(); i++)
-		pData[i] = vecA[i];
+		operator[](i) = vecA[i];
 	
 	operator[](vecA.GetSize()) = tB;
 

@@ -443,4 +443,3 @@ void CFreqSyncAcq::StartAcquisition()
 	/* Reset FFT-history */
 	vecrFFTHistory.Reset((_REAL) 0.0);
 }
-

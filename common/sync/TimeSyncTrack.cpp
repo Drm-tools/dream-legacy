@@ -202,8 +202,7 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	veccPilots.Init(iNoIntpFreqPil);
 
 	/* Vector for averaged power delay spread estimation */
-	vecrAvPoDeSp.Init(iNoIntpFreqPil);
-	vecrAvPoDeSp = Zeros(iNoIntpFreqPil);
+	vecrAvPoDeSp.Init(iNoIntpFreqPil, (CReal) 0.0);
 
 	/* Vector for rotated result */
 	vecrAvPoDeSpRot.Init(iNoIntpFreqPil);

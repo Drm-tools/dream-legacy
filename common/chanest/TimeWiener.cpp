@@ -41,7 +41,6 @@ void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	int				iTimeDiffNew;
 	_COMPLEX		cNewPilot;
 	CVector<_REAL>	vecrTiCorrEstSym;
-	int				iAvCntSigmaEstSym;
 
 	/* Timing correction history -------------------------------------------- */
 	/* Shift old vaules and add a "0" at the beginning of the vector */
@@ -54,8 +53,7 @@ void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 	/* Update histories for channel estimates at the pilot positions -------- */
 	/* Init vector for storing time correlation estimation for one symbol */
-	vecrTiCorrEstSym.Init(iLengthWiener, (_REAL) 0.0);
-	iAvCntSigmaEstSym = 0;
+	vecrTiCorrEstSym.Init(iNumTapsSigEst, (_REAL) 0.0);
 
 	for (i = 0; i < iNoCarrier; i++)
 	{
@@ -83,7 +81,7 @@ void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			/* Estimation of the channel correlation function --------------- */
 			/* We calcuate the estimation for one symbol first and average this
 			   result */
-			for (j = 0; j < iLengthWiener; j++)
+			for (j = 0; j < iNumTapsSigEst; j++)
 			{
 				/* Correct pilot information for phase rotation */
 				iTimeDiffNew = -vecTiCorrHist[iScatPilTimeInt * j];
@@ -93,8 +91,6 @@ void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 				/* Simply add all results together and increment count */
 				vecrTiCorrEstSym[j] += 
 					real(conj(matcChanAtPilPos[0][iPiHiIndex]) * cNewPilot);
-
-				iAvCntSigmaEstSym++;
 			}
 		}
 	}
@@ -102,7 +98,7 @@ void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 	/* Update sigma estimation ---------------------------------------------- */
 	/* Update moving average for overall averaging for correlation estimation */
-	for (i = 0; i < iLengthWiener; i++)
+	for (i = 0; i < iNumTapsSigEst; i++)
 	{
 		/* Subtract oldest value in history from current estimation */
 		vecrTiCorrEst[i] -= matrTiCorrEstHist[iCurIndTiCor][i];
@@ -117,45 +113,36 @@ void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	if (iCurIndTiCor == NO_SYM_AVER_TI_CORR)
 		iCurIndTiCor = 0;
 
-	/* Use a threshold to exclude noisy estimates */
-	CVector<_REAL> vecrTiCorrEstTmp(iLengthWiener);
-	for (i = 1; i < iLengthWiener; i++)
-	{
-//		if (vecrTiCorrEst[i] < vecrTiCorrEst[0] / 10)
-//			vecrTiCorrEstTmp[i] = (_REAL) 0.0;
-//		else
-			vecrTiCorrEstTmp[i] = vecrTiCorrEst[i];
-	}
-
 	/* Actual estimation of sigma */
-	rSigma = ModLinRegr(vecrTiCorrEstTmp);
+	rSigma = ModLinRegr(vecrTiCorrEst);
 
 
-/*
+#if 0
 // TEST
-FILE* pFile = fopen("test/v.dat", "w");
-for (i = 0; i < iLengthWiener; i++)
+FILE* pFile = fopen("test/sigma.dat", "w");
+for (i = 0; i < iNumTapsSigEst; i++)
 {
-	_REAL test1 = 
-		(CReal) -2.0 * crPi * crPi * Ts * Ts * rSigma * rSigma;
+	_REAL testsigma = 2 * rSigma;
+	_REAL test1 =
+		(CReal) -2.0 * crPi * crPi * Ts * Ts * testsigma * testsigma;
 
-	fprintf(pFile, "%e %e\n", vecrTiCorrEst[i], 
+	fprintf(pFile, "%e %e\n", vecrTiCorrEst[i],
 		exp(test1 * i * i) * vecrTiCorrEst[0]);
 }
 fclose(pFile);
-*/
+#endif
 
-
-
-
-#ifdef DO_WIENER_TIME_FILT_UPDATE
-	/* Update filter coefficients if estimation is ready -------------------- */
-	if (iAvCntSigmaEst >= NO_SYM_AVER_TI_CORR)
+	/* Update filter coefficients once in one DRM frame */
+	if (iUpCntWienFilt > 0)
+		iUpCntWienFilt--;
+	else
 	{
 		/* Update the wiener filter */
 		UpdateFilterCoef(rSNR, rSigma);
+
+		/* Reset counter */
+		iUpCntWienFilt = iNoSymPerFrame;
 	}
-#endif
 
 
 	/* Wiener interpolation, filtering and prediction ----------------------- */
@@ -212,7 +199,6 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	int i, j;
 	int iNoPiFreqDirAll;
 	int iSymDelyChanEst;
-	int iNoTapsFilterPhase;
 
 	/* Init base class, must be at the beginning of this init! */
 	CPilotModiClass::InitRot(ReceiverParam);
@@ -234,26 +220,22 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	switch (ReceiverParam.GetWaveMode())
 	{
 	case RM_ROBUSTNESS_MODE_A:
-		iNoTapsFilterPhase = 11;
+		iLengthWiener = 11;
 		rSigma = (_REAL) 2.0 / 2;
 		break;
 
 	case RM_ROBUSTNESS_MODE_B:
-
-// TEST
-// Simulation does not work with iNoTapsFilterPhase = 20!!!!! FIXME
-
-		iNoTapsFilterPhase = 11;
+		iLengthWiener = 15;
 		rSigma = (_REAL) 3.36 / 2;
 		break;
 	
 	case RM_ROBUSTNESS_MODE_C:
-		iNoTapsFilterPhase = 9;
+		iLengthWiener = 9;
 		rSigma = (_REAL) 6.73 / 2;
 		break;
 	
 	case RM_ROBUSTNESS_MODE_D:
-		iNoTapsFilterPhase = 9;
+		iLengthWiener = 9;
 		rSigma = (_REAL) 5.38 / 2;
 		break;
 	}
@@ -261,10 +243,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	/* Set delay of this channel estimation type. The longer the delay is, the
 	   more "acausal" pilots can be used for interpolation. We use the same
 	   amount of causal and acausal filter taps here */
-	iSymDelyChanEst = (iNoTapsFilterPhase / 2) * iScatPilTimeInt - 1;
-
-	/* Length of wiener filter */
-	iLengthWiener = iNoTapsFilterPhase;
+	iSymDelyChanEst = (iLengthWiener / 2) * iScatPilTimeInt - 1;
 
 	/* Set number of phases for wiener filter */
 	iNoFiltPhasTi = iScatPilTimeInt;
@@ -280,15 +259,21 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	matcChanAtPilPos.Init(iLengthWiener, iNoPiFreqDirAll, 
 		_COMPLEX((_REAL) 0.0, (_REAL) 0.0));
 
+	/* Set number of taps for sigma estimation */
+	if (iLengthWiener < NO_TAPS_USED4SIGMA_EST)
+		iNumTapsSigEst = iLengthWiener;
+	else
+		iNumTapsSigEst = NO_TAPS_USED4SIGMA_EST;
+
 	/* Init matrix for estimation the correlation function in time direction
 	   (moving average) */
-	matrTiCorrEstHist.Init(NO_SYM_AVER_TI_CORR, iLengthWiener, (_REAL) 0.0);
-	vecrTiCorrEst.Init(iLengthWiener, (_REAL) 0.0);
+	matrTiCorrEstHist.Init(NO_SYM_AVER_TI_CORR, iNumTapsSigEst, (_REAL) 0.0);
+	vecrTiCorrEst.Init(iNumTapsSigEst, (_REAL) 0.0);
 	iCurIndTiCor = 0;
 
 
-	/* Init average counter for sigma estimation */
-	iAvCntSigmaEst = 0;
+	/* Init Update counter for wiener filter update */
+	iUpCntWienFilt = iNoSymPerFrame;
 
 	/* Allocate memory for filter phases (Matrix) */
 	matrFiltTime.Init(iNoFiltPhasTi, iLengthWiener);
@@ -419,50 +404,42 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 	return rMMSE;
 }
 
-_REAL CTimeWiener::ModLinRegr(CVector<_REAL>& vecrCorrEst)
+CReal CTimeWiener::ModLinRegr(CRealVector& vecrCorrEst)
 {
 	/* Modified linear regresseion to estimate the "sigma" of the Gaussian 
 	   correlation function */
-	int		i, iVecLen;
-	_REAL	rXAv, rYAv;
-	_REAL	rSumEnum, rSumDenom;
-
 	/* Get vector length */
-	iVecLen = vecrCorrEst.Size();
+	int iVecLen = Size(vecrCorrEst);
 
-	/* Average of x */
-	rXAv = (_REAL) 0.0;
-	for (i = 0; i < iVecLen * iScatPilTimeInt; i += iScatPilTimeInt)
-		rXAv += i * i;
-	rXAv /= iVecLen;
+	/* Init vectors and variables */
+	CRealVector Tau(iVecLen);
+	CRealVector Z(iVecLen);
+	CRealVector W(iVecLen);
+	CRealVector Wmrem(iVecLen);
+	CReal		Wm, Zm;
+	CReal		A1;
 
-	/* Average of y */
-	rYAv = (_REAL) 0.0;
-	for (i = 0; i < iVecLen; i++)
-		if (vecrCorrEst[i] > (_REAL) 0.0)
-			rYAv += log(fabs(vecrCorrEst[i]));
-	rYAv /= iVecLen;
+	/* Generate the tau vector */
+	for (int i = 0; i < iVecLen; i++)
+		Tau[i] = (CReal) (i * iScatPilTimeInt);
 
-	/* Modified linear regression */
-	rSumEnum = (_REAL) 0.0;
-	rSumDenom = (_REAL) 0.0;
-	for (i = 0; i < iVecLen; i++)
-	{
-		if (vecrCorrEst[i] > (_REAL) 0.0)
-		{
-			int iSquaredTiIn = i * i * iScatPilTimeInt * iScatPilTimeInt;
+	/*
+		% linearize acf equation:  y = a exp (-b x^2)
+		%
+		% z = ln y;   w = x^2
+		%
+		% -> z = a0 + a1 * w
+	*/
+	Z = Log(Abs(vecrCorrEst)); /* acfm can be negative due to noise */
+	W = Tau * Tau;
 
-			rSumEnum += 
-				(iSquaredTiIn - rXAv) * (log(fabs(vecrCorrEst[i])) - rYAv);
-			rSumDenom += 
-				(iSquaredTiIn - rXAv) * (iSquaredTiIn - rXAv);
-		}
-	}
+	Wm = Mean(W);
+	Zm = Mean(Z);
 
-	/* Normalize result */
-	if (rSumEnum / rSumDenom > 0)
-		return (_REAL) 0.0;
-	else
-		return (_REAL) 0.5 / crPi * 
-			sqrt((_REAL) -2.0 * rSumEnum / rSumDenom) / Ts;
+	Wmrem = W - Wm; /* Remove mean of W */
+
+	/* a1 = sum ( (w - wm).*(z - zm)) / sum( (w - wm).^2 ); */
+	A1 = Sum(Wmrem * (Z - Zm)) / Sum(Wmrem * Wmrem);
+
+	return (CReal) 0.5 / crPi * sqrt((CReal) -2.0 * A1) / Ts;
 }

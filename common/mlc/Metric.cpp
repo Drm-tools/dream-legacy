@@ -6,7 +6,7 @@
  *	Volker Fischer
  *
  * Description:
- * The metric is cacluated as follows:
+ * The metric is calculated as follows:
  * M = ||r - s * h||^2 = ||h||^2 * ||r / h - s||^2
  *	
  *

@@ -107,7 +107,6 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 				iCounter = 0;
 			}
 		}
-
 		break;
 	}
 
@@ -275,10 +274,6 @@ void CEvaSimData::InitInternal(CParameter& ReceiverParam)
 	else
 		iIntDelCnt = 0;
 
-	/* Additional delay due to channel estimation has to be considered */
-	iIntDelCnt += (int) ((_REAL) ReceiverParam.iChanEstDelay / 
-		ReceiverParam.iNoSymPerFrame);
-
 	/* Reset bit error rate parameters */
 	rAccBitErrRate = (_REAL) 0.0;
 	iNoAccBitErrRate = 0;
@@ -329,22 +324,9 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 		   decoder if they have the right frame number. In case of simulation
 		   no FAC data is used, we have to increase the counter here */
 		ReceiverParam.iFrameIDReceiv++;
+
 		if (ReceiverParam.iFrameIDReceiv == NO_FRAMES_IN_SUPERFRAME)
 			ReceiverParam.iFrameIDReceiv = 0;
-
-		if (bSyncInput == TRUE)
-		{
-			/* Correction for simulation */
-			ReceiverParam.iFrameIDReceiv -= 
-				(int) ((_REAL) ReceiverParam.iChanEstDelay / 
-				ReceiverParam.iNoSymPerFrame);
-
-			/* Check range {0, ... , NO_FRAMES_IN_SUPERFRAME} */
-			while (ReceiverParam.iFrameIDReceiv >= NO_FRAMES_IN_SUPERFRAME)
-				ReceiverParam.iFrameIDReceiv -= NO_FRAMES_IN_SUPERFRAME;
-			while (ReceiverParam.iFrameIDReceiv < 0)
-				ReceiverParam.iFrameIDReceiv += NO_FRAMES_IN_SUPERFRAME;
-		}
 	}
 }
 
@@ -403,19 +385,6 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int i, j;
 
-	/* History for OFDM demodulation output --------------------------------- */
-	/* Move data in history-buffer (from iLenHistBuff - 1 towards 0) */
-	for (j = 0; j < iChanEstDelay - 1; j++)
-	{
-		for (i = 0; i < iNoCarrier; i++)
-			matcHistOFDMDem[j][i] = matcHistOFDMDem[j + 1][i];
-	}
-
-	/* Write new symbol in memory */
-	for (i = 0; i < iNoCarrier; i++)
-		matcHistOFDMDem[iChanEstDelay - 1][i] = (*pvecInputData2)[i];
-
-
 	/* Calculation of channel tranfer function ------------------------------ */
 	/*	pvecInputData: ChanEstBuf			equalized signal \hat{s}(t)
 		pvecInputData2: OFDMDemodBuf2		received signal r(t)
@@ -424,7 +393,7 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 											channel reference signal) */
 	for (i = 0; i < iNoCarrier; i++)
 	{
-		veccEstChan[i] = matcHistOFDMDem[0][i] / (*pvecInputData)[i];
+		veccEstChan[i] = (*pvecInputData2)[i] / (*pvecInputData)[i];
 		veccRefChan[i] = (*pvecInputData4)[i] / (*pvecInputData3)[i];
 	}
 
@@ -435,20 +404,6 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 		veccRefChan[i + iStartDCCar] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
 	}
 
-
-	/* History for channel reference ---------------------------------------- */
-	/* Move data in history-buffer (from iLenHistBuff - 1 towards 0) */
-	for (j = 0; j < iChanEstDelay - 1; j++)
-	{
-		for (i = 0; i < iNoCarrier; i++)
-			matcHistRefChan[j][i] = matcHistRefChan[j + 1][i];
-	}
-
-	/* Write new symbol in memory */
-	for (i = 0; i < iNoCarrier; i++)
-		matcHistRefChan[iChanEstDelay - 1][i] = veccRefChan[i];
-
-
 	/* Start evaluation results after exceeding the start count */
 	if (iStartCnt > 0)
 		iStartCnt--;
@@ -457,9 +412,9 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 		/* MSE for all carriers --------------------------------------------- */
 		for (i = 0; i < iNoCarrier; i++)
 		{
-			vecrMSE[i] = abs(veccEstChan[i] - matcHistRefChan[0][i]) *
-				abs(veccEstChan[i] - matcHistRefChan[0][i]);
-		
+			vecrMSE[i] = abs(veccEstChan[i] - veccRefChan[i]) *
+				abs(veccEstChan[i] - veccRefChan[i]);
+
 			/* Average results */
 			vecrMSEAverage[i] += vecrMSE[i];
 		}
@@ -475,13 +430,12 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 	for (i = 0; i < iNoCarrier; i++)
 	{
 		(*pvecOutputData)[i].cSig = (*pvecInputData2)[i] / veccRefChan[i];
-		(*pvecOutputData)[i].rChan = 
-			real(veccRefChan[i] * conj(veccRefChan[i]));
+		(*pvecOutputData)[i].rChan = SqMag(veccRefChan[i]);
 	}
 
 	/* Set symbol number for output vector */
 	(*pvecOutputData).GetExData().iSymbolNo = 
-		(*pvecInputData2).GetExData().iSymbolNo;
+		(*pvecInputData).GetExData().iSymbolNo;
 }
 
 void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
@@ -502,25 +456,16 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 		iStartDCCar = abs(ReceiverParam.iCarrierKmin);
 	}
 
-	/* Init channel estimation delay */
-	iChanEstDelay = ReceiverParam.iChanEstDelay;
-
 	/* Init average counter */
 	lAvCnt = 0;
 
-
-	/* Init start count (debar initialization of channel estimation).
-	   Additional delay from the channel estimation has to be considered */
-	iStartCnt = iChanEstDelay + 20;
+	/* Init start count (debar initialization of channel estimation) */
+	iStartCnt = 20;
 
 	/* Additional delay from long interleaving has to be considered */
 	if (ReceiverParam.GetInterleaverDepth() == CParameter::SI_LONG)
 		iStartCnt += ReceiverParam.iNoSymPerFrame * D_LENGTH_LONG_INTERL;
 
-
-	/* Allocate memory for histories */
-	matcHistOFDMDem.Init(iChanEstDelay, iNoCarrier);
-	matcHistRefChan.Init(iChanEstDelay, iNoCarrier);
 
 	/* Allocate memory for intermedia results */
 	veccEstChan.Init(iNoCarrier);

@@ -163,8 +163,7 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Use all carriers except of DC carriers */
 		if (!_IsDC(ReceiverParam.matiMapTab[0][i]))
 		{
-			rUsNoPower += 
-				real((*pvecOutputData)[i] * conj((*pvecOutputData)[i]));
+			rUsNoPower += SqMag((*pvecOutputData)[i]);
 
 			iNoAve++;
 		}
@@ -454,6 +453,12 @@ void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 	iOutputBlockSize2 = iNoCarrier;
 	iOutputBlockSize3 = iNoCarrier;
 	iOutputBlockSize4 = iNoCarrier;
+
+	/* We need to store as many symbols in output buffer as long the channel
+	   estimation delay is */
+	iMaxOutputBlockSize2 = iNoCarrier * ReceiverParam.iChanEstDelay;
+	iMaxOutputBlockSize3 = iNoCarrier * ReceiverParam.iChanEstDelay;
+	iMaxOutputBlockSize4 = iNoCarrier * ReceiverParam.iChanEstDelay;
 }
 
 COFDMDemodSimulation::~COFDMDemodSimulation()

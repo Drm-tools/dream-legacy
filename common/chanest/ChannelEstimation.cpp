@@ -165,8 +165,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	for (i = 0; i < iNoCarrier; i++)
 	{
 		(*pvecOutputData)[i].cSig = matcHistory[0][i] / veccChanEst[i];
-		(*pvecOutputData)[i].rChan = 
-			real(veccChanEst[i] * conj(veccChanEst[i]));
+		(*pvecOutputData)[i].rChan = SqMag(veccChanEst[i]);
 	}
 
 
@@ -208,6 +207,18 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			rSNREstimate = rSignalEst / rNoiseEst * rSNRCorrectFact;
 		}
 	}
+
+
+	/* Debar initialization ------------------------------------------------- */
+	if (iInitCnt > 0)
+	{
+		iInitCnt--;
+
+		/* Do not put out data in initialization phase */
+		iOutputBlockSize = 0;
+	}
+	else
+		iOutputBlockSize = iNoCarrier; 
 }
 
 void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
@@ -314,6 +325,10 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	matcHistory.Init(iLenHistBuff, iNoCarrier,
 		_COMPLEX((_REAL) 0.0, (_REAL) 0.0));
 
+	/* After an initialization we do not put out data befor the number symbols
+	   of the channel estimation delay have been processed */
+	iInitCnt = iLenHistBuff - 1;
+
 	/* Inits for SNR estimation (noise and signal averages) */
 	rSNREstimate = (_REAL) 0.0;
 	rNoiseEst = (_REAL) 0.0;
@@ -381,7 +396,7 @@ rSNR = pow(10, - 10.0 * log10(ReceiverParam.rSNR4WienerFreq) / 10);
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iNoCarrier;
-	iOutputBlockSize = iNoCarrier; 
+	iMaxOutputBlockSize = iNoCarrier; 
 }
 
 void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,

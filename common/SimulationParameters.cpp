@@ -47,9 +47,9 @@ void CDRMSimulation::SimScript()
 	\**************************************************************************/
 	/* Choose which type of simulation, if you choose "ST_NONE", the regular
 	   application will be started */
+	eSimType = ST_BITERROR;
 	eSimType = ST_BER_IDEALCHAN;
 	eSimType = ST_MSECHANEST;
-	eSimType = ST_BITERROR;
 	eSimType = ST_NONE;
 	
 	if (eSimType != ST_NONE)
@@ -60,7 +60,7 @@ void CDRMSimulation::SimScript()
 		Param.eSymbolInterlMode = CParameter::SI_LONG;//SI_SHORT;//
 		Param.eMSCCodingScheme = CParameter::CS_3_SM;//CS_3_HMMIX;//CS_3_HMSYM;//
 
-		Param.iDRMChannelNo = 5;
+		Param.iDRMChannelNo = 1;
 
 		rStartSNR = (_REAL) 100.0;
 		rEndSNR = (_REAL) 100.0;

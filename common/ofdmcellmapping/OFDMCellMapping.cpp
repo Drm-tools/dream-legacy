@@ -222,7 +222,7 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 	while (iSymbolCounter < 0)
 		iSymbolCounter += iNoSymPerFrame;
 
-	/* If frame bound is reached, get frame ID from FAC information */
+	/* If frame bound is reached, update frame ID from FAC stream */
 	if (iSymbolCounter == 0)
 	{
 		/* Check, if number of FAC cells is correct. If not, reset 

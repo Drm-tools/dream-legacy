@@ -43,9 +43,8 @@
    bandwidth -> after approx. 1000 symbols a good estimate was done */
 #define NO_SYM_AVER_TI_CORR				1000
 
-/* Define the following macro if you want to activate the continuous estimation 
-   of the optimal filter coefficients continuous */
-#undef DO_WIENER_TIME_FILT_UPDATE
+/* Number of taps we want to use for sigma estimation */
+#define NO_TAPS_USED4SIGMA_EST			3
 
 
 /* Classes ********************************************************************/
@@ -71,7 +70,7 @@ protected:
 							const int iLength);
 	inline int DisToNextPil(int iPiHiIndex, int iSymNo);
 	_REAL UpdateFilterCoef(_REAL rNewSNR, _REAL rNewSigma);
-	_REAL ModLinRegr(CVector<_REAL>& vecrCorrEst);
+	CReal ModLinRegr(CRealVector& vecrCorrEst);
 
 	int					iNoCarrier;
 	CVector<_COMPLEX>	veccChanEst;
@@ -83,7 +82,7 @@ protected:
 	CMatrix<_COMPLEX>	matcChanAtPilPos;
 
 	CMatrix<_REAL>		matrTiCorrEstHist;
-	CVector<_REAL>		vecrTiCorrEst;
+	CRealVector			vecrTiCorrEst;
 	int					iCurIndTiCor;
 
 	int					iScatPilFreqInt; /* Frequency interpolation */
@@ -97,7 +96,8 @@ protected:
 
 	CShiftRegister<int>	vecTiCorrHist;
 	int					iLenTiCorrHist;
-	int					iAvCntSigmaEst;
+	int					iNumTapsSigEst;
+	int					iUpCntWienFilt;
 
 	_REAL				Ts;
 	_REAL				rSNR;
