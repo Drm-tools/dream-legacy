@@ -84,7 +84,15 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Write to output vector. Also, ship the channel state at a certain cell */
 	for (i = 0; i < iNumCarrier; i++)
 	{
+#ifdef USE_MAX_LOG_MAP
+		/* In case of MAP we need the squared magnitude for the calculation of
+		   the metric */
 		(*pvecOutputData)[i].rChan = SqMag(veccRefChan[i]);
+#else
+		/* In case of hard-desicions, we need the magnitude of the channel for
+		   the calculation of the metric */
+		(*pvecOutputData)[i].rChan = abs(veccRefChan[i]);
+#endif
 
 		/* If we do not want to get the actual channel estimate but the
 		   ideal equalized signal, we should do it this way to be ICI free */
