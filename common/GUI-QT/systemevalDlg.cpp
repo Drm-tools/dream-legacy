@@ -29,8 +29,10 @@
 #include "systemevalDlg.h"
 
 
+/* Implementation *************************************************************/
 systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
-	WFlags f) : systemevalDlgBase(parent, name, modal, f)
+	WFlags f) : systemevalDlgBase(parent, name, modal, f),
+	bOnTimerCharMutexFlag(FALSE)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -343,6 +345,17 @@ void systemevalDlg::SetStatus(int MessID, int iMessPara)
 
 void systemevalDlg::OnTimerChart()
 {
+	/* In some cases, if the user moves the mouse very fast over the chart
+	   selection list view, this function is called by two different threads.
+	   Somehow, using QMtuex does not help. Therefore we introduce a flag for
+	   doing this job. This solution is a work-around. TODO: better solution */
+	if (bOnTimerCharMutexFlag == TRUE)
+		return;
+
+	bOnTimerCharMutexFlag = TRUE;
+
+
+	/* CHART ******************************************************************/
 	CVector<_REAL>		vecrData;
 	CVector<_REAL>		vecrData2;
 	CVector<_COMPLEX>	veccData1, veccData2, veccData3;
@@ -352,7 +365,6 @@ void systemevalDlg::OnTimerChart()
 	_REAL				rPDSBegin, rPDSEnd;
 	_REAL				rFreqAcquVal;
 
-	/* CHART ******************************************************************/
 	switch (CharType)
 	{
 	case AVERAGED_IR:
@@ -462,6 +474,9 @@ void systemevalDlg::OnTimerChart()
 		MainPlot->SetAllConst(veccData1, veccData2, veccData3);
 		break;
 	}
+
+	/* "Unlock" mutex flag */
+	bOnTimerCharMutexFlag = FALSE;
 }
 
 void systemevalDlg::OnTimer()
@@ -727,12 +742,27 @@ void systemevalDlg::OnSliderIterChange(int value)
 		QString().setNum(value));
 }
 
+void systemevalDlg::OnListSelChanged(QListViewItem* NewSelIt)
+{
+	/* Get char type from selected item and setup chart */
+	SetupChart(((CCharSelItem*) NewSelIt)->GetCharType());
+}
+
 void systemevalDlg::SetupChart(const ECharType eNewType)
 {
 	if (eNewType != NONE_OLD)
 	{
+		/* First, stop timer */
+		TimerChart.stop();
+
 		/* Set internal variable */
 		CharType = eNewType;
+
+		/* Update help text connected with the plot widget */
+		AddWhatsThisHelpChar(eNewType);
+
+		/* Update chart */
+		OnTimerChart();
 
 		/* Set up timer */
 		switch (eNewType)
@@ -757,12 +787,6 @@ void systemevalDlg::SetupChart(const ECharType eNewType)
 			TimerChart.start(GUI_CONTROL_UPDATE_TIME);
 			break;
 		}
-
-		/* Update help text connected with the plot widget */
-		AddWhatsThisHelpChar(eNewType);
-
-		/* Update chart */
-		OnTimerChart();
 	}
 }
 

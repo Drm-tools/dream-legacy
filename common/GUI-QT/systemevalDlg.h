@@ -113,6 +113,8 @@ protected:
 
 	void			SetupChart(const ECharType eNewType);
 
+	_BOOLEAN		bOnTimerCharMutexFlag;
+
 public slots:
 	void OnTimer();
 	void OnTimerChart();
@@ -127,10 +129,7 @@ public slots:
 	void OnRadioTiSyncFirstPeak();
 	void OnRadioTiSyncEnergy();
 	void OnSliderIterChange(int value);
-
-	void OnListSelChanged(QListViewItem* NewSelIt)
-		{SetupChart(((CCharSelItem*) NewSelIt)->GetCharType());}
-
+	void OnListSelChanged(QListViewItem* NewSelIt);
 	void OnCheckFlipSpectrum();
 	void OnCheckBoxMuteAudio();
 	void OnCheckWriteLog();
