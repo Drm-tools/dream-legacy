@@ -196,11 +196,9 @@ CMatlibVector<T>			Log10(const CMatlibVector<T>& vecI)
 
 
 /* Mean, variance and standard deviation */
-template<class T> inline
-T							Mean(const CMatlibVector<T>& vecI)
+template<class T> inline T	Mean(const CMatlibVector<T>& vecI)
 								{return Sum(vecI) / vecI.GetSize();}
-template<class T> inline
-T							Std(CMatlibVector<T>& vecI) 
+template<class T> inline T	Std(CMatlibVector<T>& vecI) 
 								{return Sqrt(Var(vecI));}
 template<class T> T			Var(const CMatlibVector<T>& vecI);
 
