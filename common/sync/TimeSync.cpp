@@ -228,7 +228,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 					/* Search for maximum */
 					iMaxIndex = 0;
-					rMaxValue = (_REAL) -3.4e38; /* Init value */
+					rMaxValue = (_REAL) -_MAXREAL; /* Init value */
 					for (k = 0; k < iMaxDetBufSize; k++)
 					{
 						if (pMaxDetBuffer[k] > rMaxValue)
