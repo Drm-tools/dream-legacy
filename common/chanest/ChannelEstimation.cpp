@@ -61,19 +61,6 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 						   ReceiverParam.matcPilotCells[(*pvecInputData).
 						   GetExData().iSymbolID], rSNREstimate);
 
-	/* Define DC carrier for robustness mode D because there is not pilot */
-	if (iDCPos != 0)
-		veccPilots[iDCPos] = (CReal) 0.0;
-
-
-	/* -------------------------------------------------------------------------
-	   Use time-interpolated channel estimate for timing synchronization 
-	   tracking */
-	TimeSyncTrack.Process(ReceiverParam, veccPilots, 
-		(*pvecInputData).GetExData().iCurTimeCorr, rLenPDSEst /* out */,
-		rOffsPDSEst /* out */);
-
-
 	/* Debar initialization of channel estimation in time direction */
 	if (iInitCnt > 0)
 	{
@@ -87,6 +74,18 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 	else
 		iOutputBlockSize = iNumCarrier; 
+
+	/* Define DC carrier for robustness mode D because there is not pilot */
+	if (iDCPos != 0)
+		veccPilots[iDCPos] = (CReal) 0.0;
+
+
+	/* -------------------------------------------------------------------------
+	   Use time-interpolated channel estimate for timing synchronization 
+	   tracking */
+	TimeSyncTrack.Process(ReceiverParam, veccPilots, 
+		(*pvecInputData).GetExData().iCurTimeCorr, rLenPDSEst /* out */,
+		rOffsPDSEst /* out */);
 
 
 	/* Frequency-interploation ************************************************/
