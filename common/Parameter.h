@@ -393,6 +393,7 @@ public:
 		int				iNumAACFrames, iTimeCntShort;
 		time_t			TimeCntLong;
 		_BOOLEAN		bSyncOK, bFACOk, bMSCOk;
+		_BOOLEAN		bSyncOKValid, bFACOkValid, bMSCOkValid;
 		int				iFrequency;
 		_REAL			rAvSNR, rCurSNR;
 		_BOOLEAN		bLogActivated;

@@ -600,6 +600,11 @@ void CParameter::CReceptLog::ResetLog(const _BOOLEAN bIsLong)
 		bFACOk = TRUE;
 		bMSCOk = TRUE;
 
+		/* Invalidate flags for initialization */
+		bSyncOKValid = FALSE;
+		bFACOkValid = FALSE;
+		bMSCOkValid = FALSE;
+
 		/* Reset total number of checked CRCs and number of CRC ok */
 		iNumCRCMSCLong = 0;
 		iNumCRCOkMSCLong = 0;
@@ -625,6 +630,9 @@ void CParameter::CReceptLog::SetSync(const _BOOLEAN bCRCOk)
 		if (bCRCOk == FALSE)
 			bSyncOK = FALSE;
 
+		/* Validate sync flag */
+		bSyncOKValid = TRUE;
+
 		Mutex.Unlock();
 	}
 }
@@ -639,6 +647,9 @@ void CParameter::CReceptLog::SetFAC(const _BOOLEAN bCRCOk)
 			iNumCRCOkFAC++;
 		else
 			bFACOk = FALSE;
+
+		/* Validate FAC flag */
+		bFACOkValid = TRUE;
 
 		Mutex.Unlock();
 	}
@@ -660,6 +671,9 @@ void CParameter::CReceptLog::SetMSC(const _BOOLEAN bCRCOk)
 		}
 		else
 			bMSCOk = FALSE;
+
+		/* Validate MSC flag */
+		bMSCOkValid = TRUE;
 
 		Mutex.Unlock();
 	}
@@ -809,17 +823,17 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 				int			iSyncInd, iFACInd, iMSCInd;
 				struct tm*	TimeNow;
 
-				if (bSyncOK == TRUE)
+				if ((bSyncOK == TRUE) && (bSyncOKValid == TRUE))
 					iSyncInd = 1;
 				else
 					iSyncInd = 0;
 
-				if (bFACOk == TRUE)
+				if ((bFACOk == TRUE) && (bFACOkValid == TRUE))
 					iFACInd = 1;
 				else
 					iFACInd = 0;
 
-				if (bMSCOk == TRUE)
+				if ((bMSCOk == TRUE) && (bMSCOkValid == TRUE))
 					iMSCInd = 1;
 				else
 					iMSCInd = 0;
