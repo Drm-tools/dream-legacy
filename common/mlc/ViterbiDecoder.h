@@ -41,7 +41,10 @@
 /* We initialize each new block of data all branches-metrics with the following
    value exept of the zero-state. This can be done since we actually KNOW that
    the zero state MUST be the transmitted one. The initialization vaule should
-   be fairly high */
+   be fairly high. But we have to be careful choosing this parameter. We
+   should not take the largest value possible of the data type of the metric
+   variable since in the Viterbi-routine we add something to this value and
+   in that case we would force an overrun! */
 #define MC_METRIC_INIT_VALUE		((_VITMETRTYPE) 1e10)
 
 /* Decoding depth is MC_CONSTRAINT_LENGTH - 1 because we use the bits which
@@ -51,24 +54,25 @@
 
 
 /* Classes ********************************************************************/
-class CTrellisState
+class CTrellis
 {
 public:
-	CTrellisState() {rMetric[0] = 0; rMetric[1] = 0;
-					 lDecodedBits[0] = 0; lDecodedBits[1] = 0;}
-	virtual ~CTrellisState() {}
-
 	/* Index of previous state, Number stands for "0" or "1" transmitted */
 	int		iPrev0Index;
 	int		iPrev1Index;
+
 	/* Metric for previous states */
 	int		iMetricPrev0;
 	int		iMetricPrev1;
+};
 
-	/* We need to split old and current metric since it is possible to come from
-	   the same state (Same with the decoded bits) */
-	_VITMETRTYPE	rMetric[2];
-	_UINT64BIT		lDecodedBits[2];
+class CTrellisData
+{
+public:
+	CTrellisData() : rMetric((_VITMETRTYPE) 0.0), lDecodedBits(0) {}
+
+	_VITMETRTYPE	rMetric;
+	_UINT64BIT		lDecodedBits;
 };
 
 class CViterbiDecoder
@@ -86,7 +90,12 @@ public:
 
 protected:
 	/* We need to analyze 2^(MC_CONSTRAINT_LENGTH - 1) states in the trellis */
-	CTrellisState			vecTrelState[MC_NO_STATES];
+	CTrellis				vecTrellis[MC_NO_STATES];
+
+	/* Two trellis data vectors are needed for current and old state */
+	CTrellisData			vecTrelData1[MC_NO_STATES];
+	CTrellisData			vecTrelData2[MC_NO_STATES];
+
 	_VITMETRTYPE			vecrMetricSet[MC_NO_OUTPUT_COMBINATIONS];
 
 	int						iNumOutBitsPartA;

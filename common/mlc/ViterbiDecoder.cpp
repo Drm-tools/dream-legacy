@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Alexander Kurpiers
  *
  * Description:
  *
@@ -44,22 +44,23 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	_UINT32BIT		iPuncPatShiftRegShifted;
 	_UINT32BIT		iPuncPatShiftReg;
 	_UINT32BIT		iPunctCounter;
-	int				iCur;
-	int				iOld;
 	int				iBitMask;
-	CTrellisState*	pCurTrelState;
+	CTrellisData*	pCurTrelData;
+	CTrellisData*	pOldTrelData;
+	CTrellisData*	pTMPTrelData;
+	CTrellisData*	pCurTrelDataState;
+	CTrellis*		pCurTrelState;
 
-	/* Init indices for "old" and "current" buffers for metric and decoded
-	   bits */
-	iCur = 0;
-	iOld = 1;
+	/* Init pointers for old and new trellis state */
+	pCurTrelData = vecTrelData1;
+	pOldTrelData = vecTrelData2;
 
 	/* Reset all metrics in the trellis. We initialize all states exept of
 	   the zero state with a high metric, because we KNOW that the state "0"
 	   is the transmitted state */
-	vecTrelState[0].rMetric[iOld] = (_REAL) 0.0;
+	pOldTrelData[0].rMetric = (_VITMETRTYPE) 0.0;
 	for (i = 1; i < MC_NO_STATES; i++)
-		vecTrelState[i].rMetric[iOld] = MC_METRIC_INIT_VALUE;
+		pOldTrelData[i].rMetric = MC_METRIC_INIT_VALUE;
 
 	/* Reset counter for puncturing and distance (metric) */
 	iDistCntGlob = 0;
@@ -123,7 +124,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			iDistCnt = iDistCntGlob;
 			iPuncPatShiftRegShifted = iPuncPatShiftReg;
 
-			rCurMetric = (_REAL) 0.0;
+			rCurMetric = (_VITMETRTYPE) 0.0;
 			iBitMask = 1;
 
 			for (j = 0; j < MC_NO_OUTPUT_BITS_PER_STEP; j++)
@@ -159,28 +160,28 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 		/* ------------------------------------------------------------------ */
 		/* Update trellis --------------------------------------------------- */
 		/* ------------------------------------------------------------------ */
-		/* We need minimum metric for normalizing the metric after adding to
-		   avoid overrun. Next two lines: Initialization */
+		/* Init minium metric with large value */
+		rMinMetric = MC_METRIC_INIT_VALUE;
 		iMinMetricIndex = 0;
-		rMinMetric =
-			vecTrelState[vecTrelState[iMinMetricIndex].iPrev0Index].rMetric[iOld] +
-			vecrMetricSet[vecTrelState[iMinMetricIndex].iMetricPrev0];
 
+
+#if 0
 		for (j = 0; j < MC_NO_STATES; j++)
 		{
-			/* Get pointer to current trellis state */
-			pCurTrelState = &vecTrelState[j];
+			/* Get pointer to current state in the trellis */
+			pCurTrelState = &vecTrellis[j];
+			pCurTrelDataState = &pCurTrelData[j];
 
 			/* Calculate metrics from the two previous states, use the old
 			   metric from the previous states plus the "transition-metric" - */
 			/* "0" */
 			rAccMetricPrev0 =
-				vecTrelState[pCurTrelState->iPrev0Index].rMetric[iOld] +
+				pOldTrelData[pCurTrelState->iPrev0Index].rMetric +
 				vecrMetricSet[pCurTrelState->iMetricPrev0];
 
 			/* "1" */
 			rAccMetricPrev1 =
-				vecTrelState[pCurTrelState->iPrev1Index].rMetric[iOld] +
+				pOldTrelData[pCurTrelState->iPrev1Index].rMetric +
 				vecrMetricSet[pCurTrelState->iMetricPrev1];
 
 
@@ -188,48 +189,141 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			if (rAccMetricPrev0 < rAccMetricPrev1)
 			{
 				/* Save minimum metric for this state */
-				pCurTrelState->rMetric[iCur] = rAccMetricPrev0;
+				pCurTrelDataState->rMetric = rAccMetricPrev0;
 
 				/* Save decoded bits from surviving path */
-				pCurTrelState->lDecodedBits[iCur] =
-					vecTrelState[pCurTrelState->iPrev0Index].lDecodedBits[iOld];
+				pCurTrelDataState->lDecodedBits =
+					pOldTrelData[pCurTrelState->iPrev0Index].lDecodedBits;
 
 				/* Shift lDecodedBits vector since we want to add a new bit,
 				   in this case a "0", but we dont need to add this, it is
 				   already there */
-				pCurTrelState->lDecodedBits[iCur] <<= 1;
+				pCurTrelDataState->lDecodedBits <<= 1;
 			}
 			else
 			{
 				/* Save minimum metric for this state */
-				pCurTrelState->rMetric[iCur] = rAccMetricPrev1;
+				pCurTrelDataState->rMetric = rAccMetricPrev1;
 
 				/* Save decoded bits from surviving path */
-				pCurTrelState->lDecodedBits[iCur] =
-					vecTrelState[pCurTrelState->iPrev1Index].lDecodedBits[iOld];
+				pCurTrelDataState->lDecodedBits =
+					pOldTrelData[pCurTrelState->iPrev1Index].lDecodedBits;
 
 				/* Shift lDecodedBits vector since we want to add a new bit */
-				pCurTrelState->lDecodedBits[iCur] <<= 1;
+				pCurTrelDataState->lDecodedBits <<= 1;
 
 				/* Write resulting "1" in lDecodedBits-vector */
-				pCurTrelState->lDecodedBits[iCur] |= 1;
+				pCurTrelDataState->lDecodedBits |= 1;
 			}
 
 
 			/* Get minimum metric and index --------------------------------- */
-			if (pCurTrelState->rMetric[iCur] < rMinMetric)
+			if (pCurTrelDataState->rMetric < rMinMetric)
 			{
-				rMinMetric = pCurTrelState->rMetric[iCur];
+				rMinMetric = pCurTrelDataState->rMetric;
 				iMinMetricIndex = j;
 			}
 		}
+#else
+#define BUTTERFLY( cur, prev0, prev1, met0, met1) \
+		rAccMetricPrev0 = \
+			pOldTrelData[ prev0 ].rMetric + \
+			vecrMetricSet[ met0 ]; \
+		rAccMetricPrev1 = \
+			pOldTrelData[ prev1 ].rMetric + \
+			vecrMetricSet[ met1 ]; \
+		if (rAccMetricPrev0 < rAccMetricPrev1) \
+		{ \
+			pCurTrelData[ cur ].rMetric = rAccMetricPrev0; \
+			pCurTrelData[ cur ].lDecodedBits = \
+				pOldTrelData[ prev0 ].lDecodedBits << 1; \
+		} \
+		else \
+		{ \
+			pCurTrelData[ cur ].rMetric = rAccMetricPrev1; \
+			pCurTrelData[ cur ].lDecodedBits = \
+				( pOldTrelData[ prev1 ].lDecodedBits << 1) | 1; \
+		} \
+		if (pCurTrelData[ cur ].rMetric < rMinMetric) \
+		{ \
+			rMinMetric = pCurTrelData[ cur ].rMetric; \
+			iMinMetricIndex = cur; \
+		}
+
+		BUTTERFLY( 0, 0, 32, 0, 15 )
+		BUTTERFLY( 1, 0, 32, 15, 0 )
+		BUTTERFLY( 2, 1, 33, 6, 9 )
+		BUTTERFLY( 3, 1, 33, 9, 6 )
+		BUTTERFLY( 4, 2, 34, 11, 4 )
+		BUTTERFLY( 5, 2, 34, 4, 11 )
+		BUTTERFLY( 6, 3, 35, 13, 2 )
+		BUTTERFLY( 7, 3, 35, 2, 13 )
+		BUTTERFLY( 8, 4, 36, 11, 4 )
+		BUTTERFLY( 9, 4, 36, 4, 11 )
+		BUTTERFLY( 10, 5, 37, 13, 2 )
+		BUTTERFLY( 11, 5, 37, 2, 13 )
+		BUTTERFLY( 12, 6, 38, 0, 15 )
+		BUTTERFLY( 13, 6, 38, 15, 0 )
+		BUTTERFLY( 14, 7, 39, 6, 9 )
+		BUTTERFLY( 15, 7, 39, 9, 6 )
+		BUTTERFLY( 16, 8, 40, 4, 11 )
+		BUTTERFLY( 17, 8, 40, 11, 4 )
+		BUTTERFLY( 18, 9, 41, 2, 13 )
+		BUTTERFLY( 19, 9, 41, 13, 2 )
+		BUTTERFLY( 20, 10, 42, 15, 0 )
+		BUTTERFLY( 21, 10, 42, 0, 15 )
+		BUTTERFLY( 22, 11, 43, 9, 6 )
+		BUTTERFLY( 23, 11, 43, 6, 9 )
+		BUTTERFLY( 24, 12, 44, 15, 0 )
+		BUTTERFLY( 25, 12, 44, 0, 15 )
+		BUTTERFLY( 26, 13, 45, 9, 6 )
+		BUTTERFLY( 27, 13, 45, 6, 9 )
+		BUTTERFLY( 28, 14, 46, 4, 11 )
+		BUTTERFLY( 29, 14, 46, 11, 4 )
+		BUTTERFLY( 30, 15, 47, 2, 13 )
+		BUTTERFLY( 31, 15, 47, 13, 2 )
+		BUTTERFLY( 32, 16, 48, 9, 6 )
+		BUTTERFLY( 33, 16, 48, 6, 9 )
+		BUTTERFLY( 34, 17, 49, 15, 0 )
+		BUTTERFLY( 35, 17, 49, 0, 15 )
+		BUTTERFLY( 36, 18, 50, 2, 13 )
+		BUTTERFLY( 37, 18, 50, 13, 2 )
+		BUTTERFLY( 38, 19, 51, 4, 11 )
+		BUTTERFLY( 39, 19, 51, 11, 4 )
+		BUTTERFLY( 40, 20, 52, 2, 13 )
+		BUTTERFLY( 41, 20, 52, 13, 2 )
+		BUTTERFLY( 42, 21, 53, 4, 11 )
+		BUTTERFLY( 43, 21, 53, 11, 4 )
+		BUTTERFLY( 44, 22, 54, 9, 6 )
+		BUTTERFLY( 45, 22, 54, 6, 9 )
+		BUTTERFLY( 46, 23, 55, 15, 0 )
+		BUTTERFLY( 47, 23, 55, 0, 15 )
+		BUTTERFLY( 48, 24, 56, 13, 2 )
+		BUTTERFLY( 49, 24, 56, 2, 13 )
+		BUTTERFLY( 50, 25, 57, 11, 4 )
+		BUTTERFLY( 51, 25, 57, 4, 11 )
+		BUTTERFLY( 52, 26, 58, 6, 9 )
+		BUTTERFLY( 53, 26, 58, 9, 6 )
+		BUTTERFLY( 54, 27, 59, 0, 15 )
+		BUTTERFLY( 55, 27, 59, 15, 0 )
+		BUTTERFLY( 56, 28, 60, 6, 9 )
+		BUTTERFLY( 57, 28, 60, 9, 6 )
+		BUTTERFLY( 58, 29, 61, 0, 15 )
+		BUTTERFLY( 59, 29, 61, 15, 0 )
+		BUTTERFLY( 60, 30, 62, 13, 2 )
+		BUTTERFLY( 61, 30, 62, 2, 13 )
+		BUTTERFLY( 62, 31, 63, 11, 4 )
+		BUTTERFLY( 63, 31, 63, 4, 11 )
+
+#undef BUTTERFLY
+#endif
 
 		/* Save decoded bit, but not before tailbits are used. Mask bit at
 		   the defined position in "lDecodedBits" by "MC_DECODING_DEPTH" */
 		if (i >= iTotalDecDepth)
 		{
 			/* Mask bit */
-			if ((vecTrelState[iMinMetricIndex].lDecodedBits[iCur] &
+			if ((pCurTrelData[iMinMetricIndex].lDecodedBits &
 				lOutBitMask) > 0)
 			{
 				vecbiOutputBits[i - iTotalDecDepth] = TRUE;
@@ -238,10 +332,10 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 				vecbiOutputBits[i - iTotalDecDepth] = FALSE;
 		}
 
-		/* Exchange indices for old and current buffers for metric and decoded
-		   bits */
-		iCur = 1 - iCur;
-		iOld = 1 - iOld;
+		/* Swap trellis data pointers (old -> new, new -> old) */
+		pTMPTrelData = pCurTrelData;
+		pCurTrelData = pOldTrelData;
+		pOldTrelData = pTMPTrelData;
 	}
 
 	/* Save last "MC_DECODING_DEPTH" bits. We use trellis state "0", because we
@@ -249,7 +343,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	   with zeros at the end) */
 	for (i = 0; i < MC_DECODING_DEPTH; i++)
 	{
-		if ((vecTrelState[0].lDecodedBits[iOld] &
+		if ((pOldTrelData[0].lDecodedBits &
 			(_UINT64BIT(1) << MC_DECODING_DEPTH - i - 1)) /* Mask bit */ > 0)
 		{
 			vecbiOutputBits[iNumOutBits - MC_DECODING_DEPTH + i] = TRUE;
@@ -332,6 +426,8 @@ void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme,
 
 CViterbiDecoder::CViterbiDecoder()
 {
+	CConvEncoder ConvEncoder; /* Needed for convolution method */
+
 	/* Total decoder depth */
 	iTotalDecDepth = MC_CONSTRAINT_LENGTH - 1 + MC_DECODING_DEPTH;
 
@@ -343,25 +439,24 @@ CViterbiDecoder::CViterbiDecoder()
 		/* We define in this trellis that we shift the bits from right to
 		   the left. We use the transition-bits which "fall" out of the
 		   shift-register */
-		vecTrelState[i].iPrev0Index = (i >> 1); /* Old state, Leading "0"
-												   (automatically inserted by
-												   shifting */
-		vecTrelState[i].iPrev1Index = (i >> 1) /* Old state */
+		vecTrellis[i].iPrev0Index = (i >> 1); /* Old state, Leading "0"
+												 (automatically inserted by
+												 shifting */
+		vecTrellis[i].iPrev1Index = (i >> 1)	 /* Old state */
 			| (1 << (MC_CONSTRAINT_LENGTH - 2)); /* New "1", must be on position
 													MC_CONSTRAINT_LENGTH - 1 */
 
 
 		/* Assign metrics to the transitions from both paths ---------------- */
 		/* We define with the metrics the order: [b_3, b_2, b_1, b_0] */
-		CConvEncoder ConvEncoder;
-		vecTrelState[i].iMetricPrev0 = 0;
-		vecTrelState[i].iMetricPrev1 = 0;
+		vecTrellis[i].iMetricPrev0 = 0;
+		vecTrellis[i].iMetricPrev1 = 0;
 		for (int j = 0; j < MC_NO_OUTPUT_BITS_PER_STEP; j++)
 		{
 			/* Calculate respective metrics from convolution of state and
 			   transition bit */
 			/* "0" */
-			vecTrelState[i].iMetricPrev0 |=
+			vecTrellis[i].iMetricPrev0 |=
 				ConvEncoder.Convolution(
 				/* Set all states in the shift-register for encoder. Use
 				   current state with a leading "0" (which is automatically
@@ -373,7 +468,7 @@ CViterbiDecoder::CViterbiDecoder()
 				<< j;
 
 			/* "1" */
-			vecTrelState[i].iMetricPrev1 |=
+			vecTrellis[i].iMetricPrev1 |=
 				ConvEncoder.Convolution(
 				/* Set all states in the shift-register for encoder. Use
 				   current state with a leading "1". The position of this
