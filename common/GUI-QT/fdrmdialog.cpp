@@ -230,26 +230,49 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	ProgrInputLevel->setAlarmLevel(-12.5);
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
 
+	/* Check "visible" settings flag if values are possible */
+	if ((DRMReceiver.GeomAnalogDemDlg.bVisible == TRUE) &&
+		(DRMReceiver.GeomSystemEvalDlg.bVisible == TRUE))
+	{
+		/* It makes no sense that both windows are shown at the same time ->
+		   disable both windows */
+		DRMReceiver.GeomAnalogDemDlg.bVisible = FALSE;
+		DRMReceiver.GeomSystemEvalDlg.bVisible = FALSE;
+	}
 
 	/* Analog demodulation window */
 	pAnalogDemDlg = new AnalogDemDlg(this, "Analog Demodulation", FALSE,
 		Qt::WStyle_MinMax);
-	pAnalogDemDlg->hide();
+
+	if (DRMReceiver.GeomAnalogDemDlg.bVisible == TRUE)
+		pAnalogDemDlg->show();
+	else
+		pAnalogDemDlg->hide();
 
 	/* Stations window */
 	pStationsDlg = new StationsDlg(this, "Stations", FALSE, Qt::WStyle_MinMax);
-	pStationsDlg->hide();
+	if (DRMReceiver.GeomStationsDlg.bVisible == TRUE)
+		pStationsDlg->show();
+	else
+		pStationsDlg->hide();
 
-	/* Evaluation window ("WGroupLeader" flag enabels that in both windows 
-	   controls can be clicked) */
+	/* Evaluation window */
 	pSysEvalDlg = new systemevalDlg(this, "System Evaluation", FALSE,
 		Qt::WStyle_MinMax);
-	pSysEvalDlg->hide();
+
+	if (DRMReceiver.GeomSystemEvalDlg.bVisible == TRUE)
+		pSysEvalDlg->show();
+	else
+		pSysEvalDlg->hide();
 
 	/* Multimedia window */
 	pMultiMediaDlg = new MultimediaDlg(this, "Multimedia", FALSE,
 		Qt::WStyle_MinMax);
-	pMultiMediaDlg->hide();
+
+	if (DRMReceiver.GeomMultimediaDlg.bVisible == TRUE)
+		pMultiMediaDlg->show();
+	else
+		pMultiMediaDlg->hide();
 
 	/* Enable multimedia */
 	DRMReceiver.GetParameters()->EnableMultimedia(TRUE);
@@ -307,6 +330,27 @@ FDRMDialog::~FDRMDialog()
 	DRMReceiver.GeomFdrmdialog.iYPos = WinGeom.y();
 	DRMReceiver.GeomFdrmdialog.iHSize = WinGeom.height();
 	DRMReceiver.GeomFdrmdialog.iWSize = WinGeom.width();
+
+	/* Set "visible" flags for settings */
+	if (pAnalogDemDlg->isVisible())
+		DRMReceiver.GeomAnalogDemDlg.bVisible = TRUE;
+	else
+		DRMReceiver.GeomAnalogDemDlg.bVisible = FALSE;
+
+	if (pStationsDlg->isVisible())
+		DRMReceiver.GeomStationsDlg.bVisible = TRUE;
+	else
+		DRMReceiver.GeomStationsDlg.bVisible = FALSE;
+
+	if (pSysEvalDlg->isVisible())
+		DRMReceiver.GeomSystemEvalDlg.bVisible = TRUE;
+	else
+		DRMReceiver.GeomSystemEvalDlg.bVisible = FALSE;
+
+	if (pMultiMediaDlg->isVisible())
+		DRMReceiver.GeomMultimediaDlg.bVisible = TRUE;
+	else
+		DRMReceiver.GeomMultimediaDlg.bVisible = FALSE;
 }
 
 void FDRMDialog::OnTimer()
