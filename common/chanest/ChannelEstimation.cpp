@@ -465,7 +465,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 	/* After an initialization we do not put out data before the number symbols
 	   of the channel estimation delay have been processed */
-	iInitCnt = iLenHistBuff;
+	iInitCnt = iLenHistBuff - 1;
 
 	/* SNR correction factor. We need this factor since we evalute the 
 	   signal-to-noise ratio only on the pilots and these have a higher power as
