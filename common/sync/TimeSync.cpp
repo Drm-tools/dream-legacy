@@ -191,12 +191,6 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 						vecCorrAvBuf[iCorrAvInd] + rLambdaCoAv * 
 						vecrRMCorrBuffer[iSelectedMode][iRMCorrBufSize - 1];
 
-					/* We use a "cyclic buffer" structure. This index defines
-					   the position in the buffer */
-					iCorrAvInd++;
-					if (iCorrAvInd == iMaxDetBufSize)
-						iCorrAvInd = 0;
-
 
 					/* Energy of guard-interval correlation ----------------- */
 					/* Optimized calculation of the guard-interval energy. We
@@ -213,6 +207,25 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 					iPosInMovAvBuffer++;
 					if (iPosInMovAvBuffer == iMovAvBufSize)
 						iPosInMovAvBuffer = 0;
+
+
+					/* Taking care of correlation average buffer ------------ */
+					/* We use a "cyclic buffer" structure. This index defines
+					   the position in the buffer */
+					iCorrAvInd++;
+					if (iCorrAvInd == iMaxDetBufSize)
+					{
+						/* Adaptation of the lambda parameter for guard-interval
+						   correlation averaging IIR filter. With this 
+						   adaptation we achieve better averaging results. A
+						   lower bound is defined for this parameter */
+						if (rLambdaCoAv <= 0.1)
+							rLambdaCoAv = 0.1;
+						else
+							rLambdaCoAv /= 2;
+
+						iCorrAvInd = 0;
+					}
 
 
 					/* Detection buffer ------------------------------------- */
@@ -238,8 +251,8 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 						/* The optimal start position for the FFT-window is the
 						   middle of the "MaxDetBuffer" */
 						iNewStartIndexField[iNewStIndCount] = 
-							(iTimeSyncPos + 1) * GRDCRR_DEC_FACT - 
-							iSymbolBlockSize / 2 +
+							iTimeSyncPos * GRDCRR_DEC_FACT -
+							iSymbolBlockSize / 2 -
 							/* Compensate for Hilbert-filter delay. The delay is
 							   introduced in the downsampled domain, therefore
 							   devide it by "GRDCRR_DEC_FACT" */
@@ -253,14 +266,6 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				iTimeSyncPos += iStepSizeGuardCorr;
 			}
 		}
-
-		/* Adaptation of the lambda parameter for guard-interval correlation
-		   averaging IIR filter. With this adaptation we achieve better
-		   averaging results. A lower bound is defined for this parameter */
-		if (rLambdaCoAv <= 0.1)
-			rLambdaCoAv = 0.1;
-		else
-			rLambdaCoAv /= 2;
 
 
 		/* Robustness mode detection ---------------------------------------- */
