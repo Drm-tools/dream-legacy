@@ -455,7 +455,7 @@ void MultimediaDlg::ClearAllSlideShow()
 
 	/* Init text browser window */
 	TextBrowser->setText("<center><h2>"
-		"MOT Slide Show Viewer</h2></center>");
+		"MOT Slideshow Viewer</h2></center>");
 }
 
 void MultimediaDlg::InitNotSupported()
