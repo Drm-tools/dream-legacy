@@ -40,12 +40,11 @@ void CTextMessageEncoder::Encode(CVector<_BINARY>& pData)
 	/* Set data for this piece from segment data */
 	for (int i = 0; i < NUM_BYTES_TEXT_MESS_IN_AUD_STR; i++)
 	{
-		if (iPieceCnt * NUM_BYTES_TEXT_MESS_IN_AUD_STR + i <
-			vecbSegment[iSegCnt].Size() / SIZEOF__BYTE)
+		if (iByteCnt <	CurTextMessage.GetSegSize(iSegCnt))
 		{
 			for (j = 0; j < SIZEOF__BYTE; j++)
 				pData[i * SIZEOF__BYTE + j] =
-					(_BINARY) vecbSegment[iSegCnt].Separate(1);
+					(_BINARY) CurTextMessage[iSegCnt].Separate(1);
 		}
 		else
 		{
@@ -54,57 +53,91 @@ void CTextMessageEncoder::Encode(CVector<_BINARY>& pData)
 			for (j = 0; j < SIZEOF__BYTE; j++)
 				pData[i * SIZEOF__BYTE + j] = 0;
 		}
+
+		iByteCnt++;
 	}
 
-	/* Take care of piece count and segment count */
-	iPieceCnt++;
 
-	if (iPieceCnt * NUM_BYTES_TEXT_MESS_IN_AUD_STR >=
-		vecbSegment[iSegCnt].Size() / SIZEOF__BYTE)
+	/* Take care of byte count, segment count and message count ------------- */
+	/* Check if current segment is completely done */
+	if (iByteCnt >=	CurTextMessage.GetSegSize(iSegCnt))
 	{
-		iPieceCnt = 0;
+		iByteCnt = 0;
 
 		/* Next segment (test for wrap around) */
 		iSegCnt++;
-		if (iSegCnt == iNumSeg)
+		if (iSegCnt == CurTextMessage.GetNumSeg())
+		{
 			iSegCnt = 0;
 
-		vecbSegment[iSegCnt].ResetBitAccess();
+
+			/* Use next message --------------------------------------------- */
+			iMessCnt++;
+			if (iMessCnt == iNumMess)
+				iMessCnt = 0;
+
+			/* Take care of toggle bit */
+			biToggleBit = !biToggleBit;
+
+			CurTextMessage.SetText(vecstrText[iMessCnt], biToggleBit);
+		}
+
+		/* Reset bit access of segment which is used next */
+		CurTextMessage[iSegCnt].ResetBitAccess();
 	}
 }
 
 void CTextMessageEncoder::SetMessage(const string& strMessage)
 {
+	/* Allocate memory for new text message, store text and increment counter */
+	vecstrText.Enlarge(1);
+	vecstrText[iNumMess] = strMessage;
+	iNumMess++;
+
+
+	/* Init first message. TODO: this is always done when an additional text
+	   is set but can only be done once. But for that we need an initialization
+	   routine */
+	/* Reset counter for encoder function */
+	iSegCnt = 0; /* Segment counter */
+	iByteCnt = 0; /* Byte counter */
+	iMessCnt = 0; /* Message counter */
+
+	biToggleBit = 0;
+	CurTextMessage.SetText(vecstrText[0], biToggleBit);
+}
+
+void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
+{
 	int		i, j;
-	int		iPosInStr;
-	int		iLenBytesOfText;
 	int		iNumBodyBytes;
 	_BINARY	biFirstFlag;
 	_BINARY	biLastFlag;
 	CCRC	CRCObject;
 
-	/* Reset counter for encoder function */
-	iSegCnt = 0;
-	iPieceCnt = 0;
-
 	/* Get length of text message. 
        TODO: take care of multiple byte characters (UTF-8 coding)! */
-	iLenBytesOfText = strMessage.length();
+	const int iLenBytesOfText = strMessage.length();
 
 	/* Calculate required number of segments. The body shall contain 16 bytes
 	   of character data */
-	iNumSeg = ceil((_REAL) iLenBytesOfText / 16);
+	iNumSeg = (int) ceil((_REAL) iLenBytesOfText / BYTES_PER_SEG_TEXT_MESS);
+
+	/* Allocate memory for segment pointer */
+	vvbiSegment.Init(iNumSeg);
 
 
 	/* Generate segments ---------------------------------------------------- */
 	/* Reset position in string */
-	iPosInStr = 0;
+	int iPosInStr = 0;
 
 	for (i = 0; i < iNumSeg; i++)
 	{
 		/* Calculate number of bytes for body */
 		const int iRemainingBytes = iLenBytesOfText - iPosInStr;
-		
+
+		/* All segments should have the maximum number of bytes per segment
+		   except the last one which takes the remaining bytes */
 		if (iRemainingBytes > BYTES_PER_SEG_TEXT_MESS)
 			iNumBodyBytes = BYTES_PER_SEG_TEXT_MESS;
 		else
@@ -112,21 +145,20 @@ void CTextMessageEncoder::SetMessage(const string& strMessage)
 
 		/* Init segment vector: "Beginning of segment" 4 * 8 bits,
 		   Header 16 bits, body n * 8 bits, CRC 16 bits */
-		vecbSegment[i].Init(4 * 8 + 16 + iNumBodyBytes * 8 + 16);
+		vvbiSegment[i].Init(4 * 8 + 16 + iNumBodyBytes * 8 + 16);
 
 		/* Reset enqueue function */
-		vecbSegment[i].ResetBitAccess();
+		vvbiSegment[i].ResetBitAccess();
 
 
 		/* Generate "beginning of segment" identification by "all 0xFF" ----- */
 		for (j = 0; j < NUM_BYTES_TEXT_MESS_IN_AUD_STR; j++)
-			vecbSegment[i].Enqueue((_UINT32BIT) 0xFF, SIZEOF__BYTE);
+			vvbiSegment[i].Enqueue((_UINT32BIT) 0xFF, SIZEOF__BYTE);
 
 
 		/* Header ----------------------------------------------------------- */
-		/* Toggle bit (not use right now since we only offer one message
-		   at the moment. TODO: more than only one message) */
-		vecbSegment[i].Enqueue((_UINT32BIT) 0, 1);
+		/* Toggle bit */
+		vvbiSegment[i].Enqueue((_UINT32BIT) biToggleBit, 1);
 
 		/* Determine position of segment */
 		if (i == 0)
@@ -140,34 +172,34 @@ void CTextMessageEncoder::SetMessage(const string& strMessage)
 			biLastFlag = 0;
 
 		/* Enqueue first flag */
-		vecbSegment[i].Enqueue((_UINT32BIT) biFirstFlag, 1);
+		vvbiSegment[i].Enqueue((_UINT32BIT) biFirstFlag, 1);
 
 		/* Enqueue last flag */
-		vecbSegment[i].Enqueue((_UINT32BIT) biLastFlag, 1);
+		vvbiSegment[i].Enqueue((_UINT32BIT) biLastFlag, 1);
 
-		/* Command flag (no commands used right now, TODO) */
-		vecbSegment[i].Enqueue((_UINT32BIT) 0, 1);
+		/* Command flag. This is a data block -> command flag = 0 */
+		vvbiSegment[i].Enqueue((_UINT32BIT) 0, 1);
 
 		/* Field 1: specify the number of bytes in the body minus 1 (It
 		   shall normally take the value 15 except in the last segment) */
-		vecbSegment[i].Enqueue((_UINT32BIT) iNumBodyBytes - 1, 4);
+		vvbiSegment[i].Enqueue((_UINT32BIT) iNumBodyBytes - 1, 4);
 
 		/* Field 2, Rfa. The bit shall be set to zero until it is defined */
-		vecbSegment[i].Enqueue((_UINT32BIT) 0, 1);
+		vvbiSegment[i].Enqueue((_UINT32BIT) 0, 1);
 
 		/* SegNum: specify the sequence number of the current segment 
 		   minus 1. The value 0 is reserved for future use */
-		vecbSegment[i].Enqueue((_UINT32BIT) i, 3);
+		vvbiSegment[i].Enqueue((_UINT32BIT) i, 3);
 
 		/* Rfa. These bits shall be set to zero until they are defined */
-		vecbSegment[i].Enqueue((_UINT32BIT) 0, 4);
+		vvbiSegment[i].Enqueue((_UINT32BIT) 0, 4);
 
 
 		/* Body ------------------------------------------------------------- */
 		/* Set body bytes */
 		for (j = 0; j < iNumBodyBytes; j++)
 		{
-			vecbSegment[i].Enqueue((_UINT32BIT) strMessage.at(iPosInStr),
+			vvbiSegment[i].Enqueue((_UINT32BIT) strMessage.at(iPosInStr),
 				SIZEOF__BYTE);
 
 			iPosInStr++;
@@ -176,23 +208,23 @@ void CTextMessageEncoder::SetMessage(const string& strMessage)
 
 		/* CRC -------------------------------------------------------------- */
 		/* Reset bit access and skip segment beginning piece (all 0xFFs) */
-		vecbSegment[i].ResetBitAccess();
-		vecbSegment[i].Separate(SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
+		vvbiSegment[i].ResetBitAccess();
+		vvbiSegment[i].Separate(SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
 
 		/* Calculate the CRC and put it at the end of the segment */
 		CRCObject.Reset(16);
 
 		/* "byLengthBody" was defined in the header */
 		for (j = 0; j < iNumBodyBytes + 2 /* Header */; j++)
-			CRCObject.AddByte(vecbSegment[i].Separate(SIZEOF__BYTE));
+			CRCObject.AddByte((_BYTE) vvbiSegment[i].Separate(SIZEOF__BYTE));
 
 		/* Now, pointer in "enqueue"-function is back at the same place, 
 		   add CRC */
-		vecbSegment[i].Enqueue(CRCObject.GetCRC(), 16);
+		vvbiSegment[i].Enqueue(CRCObject.GetCRC(), 16);
 
 
 		/* Reset bit access for using segment in encoder function */
-		vecbSegment[i].ResetBitAccess();
+		vvbiSegment[i].ResetBitAccess();
 	}
 }
 
