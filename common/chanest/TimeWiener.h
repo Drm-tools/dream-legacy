@@ -74,7 +74,7 @@
    if we use a sigma which is small than the real one compared to a value
    which is bigger than the real one. Since we can only estimate on sigma for
    all paths, it can happen that a path with a small gain but a high doppler
-   does not contribute enough on the global sigma estimation. Therefor the
+   does not contribute enough on the global sigma estimation. Therefore the
    overestimation */
 #define SIGMA_OVERESTIMATION_FACT		((_REAL) 2.0)
 
