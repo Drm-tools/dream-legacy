@@ -611,6 +611,21 @@ operator+(const CMatlibMatrix<CComplex>& cmA, const CMatlibMatrix<CComplex>& cmB
 	return matRet;
 }
 
+/* operator- */
+inline CMatlibMatrix<CComplex> // cm, cm
+operator-(const CMatlibMatrix<CComplex>& cmA, const CMatlibMatrix<CComplex>& cmB)
+{
+	const int iRowSizeA = cmA.GetRowSize();
+	const int iColSizeA = cmA.GetColSize();
+	CMatlibMatrix<CComplex> matRet(iRowSizeA, iColSizeA, VTY_TEMP);
+
+	for (int j = 0; j < iRowSizeA; j++)
+		for (int i = 0; i < iColSizeA; i++)
+			matRet[j][i] = cmA[j][i] - cmB[j][i];
+
+	return matRet;
+}
+
 /* operator* */
 inline CMatlibVector<CComplex> // cm, cv
 operator*(const CMatlibMatrix<CComplex>& cmA, const CMatlibVector<CComplex>& cvB)
