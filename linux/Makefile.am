@@ -6,7 +6,8 @@ drm_LDADD   = $(ARTSLIBS)
 BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_DRMPlot.cpp \
 	moc/moc_fdrmdialog.cpp moc/moc_fdrmdialogbase.cpp moc/fdrmdialogbase.h moc/fdrmdialogbase.cpp \
-	moc/moc_systemevalDlg.cpp  moc/moc_systemevalDlgbase.cpp moc/systemevalDlgbase.h moc/systemevalDlgbase.cpp \
+	moc/moc_systemevalDlg.cpp  moc/moc_systemevalDlgbase.cpp moc/systemevalDlgbase.h \
+	moc/systemevalDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp
 
 # and should be cleaned by make clean
@@ -100,6 +101,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/sync/SyncUsingPil.h \
 	../common/sync/TimeSync.h \
 	../common/sync/TimeSyncFilter.h \
+	../common/sync/TimeSyncTrack.h \
 	../common/tables/TableCarMap.h \
 	../common/tables/TableDRMGlobal.h \
 	../common/tables/TableFAC.h \
@@ -116,9 +118,13 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/GUI-QT/fdrmdialog.h \
 	../common/GUI-QT/MultColorLED.h \
 	../common/GUI-QT/systemevalDlg.h \
+	../common/GUI-QT/DRMPlot.h \
 	source/sound.h
 	
 nodist_drm_SOURCES=$(BUILT_SOURCES)
+
+dist-hook:
+	mkdir $(distdir)/moc
 
 drm_CXXFLAGS=$(ARTSINCL) $(QWTINCL) -I../common/GUI-QT -I$(QTDIR)/include -DQT_THREAD_SUPPORT -D_REENTRANT -g
 
