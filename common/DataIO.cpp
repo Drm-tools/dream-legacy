@@ -145,14 +145,18 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Write audio data to file only if it is not zero */
 		_BOOLEAN bDoNotWrite = TRUE;
 		for (i = 0; i < iInputBlockSize; i++)
+		{
 			if ((*pvecInputData)[i] != 0)
 				bDoNotWrite = FALSE;
+		}
 
 		if (bDoNotWrite == FALSE)
 		{
 			for (i = 0; i < iInputBlockSize; i += 2)
+			{
 				WaveFileAudio.AddStereoSample((*pvecInputData)[i] /* left */,
 					(*pvecInputData)[i + 1] /* right */);
+			}
 		}
 	}
 
@@ -604,6 +608,17 @@ void CGenerateFACData::InitInternal(CParameter& TransmParam)
 /* Receiver */
 void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 {
+#ifdef USE_QT_GUI
+	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
+	   in case of simulation because in this case there is not MDI) */
+	if (pMDI != NULL)
+	{
+		/* Only put data in MDI object if MDI is enabled */
+		if (pMDI->GetMDIEnabled() == TRUE)
+			pMDI->SetFACData(*pvecInputData, ReceiverParam);
+	}
+#endif
+
 	/* Do not use received FAC data in case of simulation */
 	if (bSyncInput == FALSE)
 	{
@@ -672,6 +687,17 @@ void CGenerateSDCData::InitInternal(CParameter& TransmParam)
 /* Receiver */
 void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 {
+#ifdef USE_QT_GUI
+	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
+	   in case of simulation because in this case there is not MDI) */
+	if (pMDI != NULL)
+	{
+		/* Only put data in MDI object if MDI is enabled */
+		if (pMDI->GetMDIEnabled() == TRUE)
+			pMDI->SetSDCData(*pvecInputData);
+	}
+#endif
+
 	/* Decode SDC block and return CRC status */
 	const _BOOLEAN bCRCOk = SDCReceive.SDCParam(pvecInputData, ReceiverParam);
 

@@ -609,6 +609,14 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			DRMReceiver.iMainPlotColorStyle = (int) rArgument;
 			continue;
 		}
+
+		/* MDI out address -------------------------------------------------- */
+		if (GetStringArgument(argc, argv, i, "--mdioutadr", "--mdioutadr",
+			strArgument) == TRUE)
+		{
+			DRMReceiver.GetMDI()->SetNetwOutAddr(strArgument);
+			continue;
+		}
 #endif
 
 #ifdef HAVE_LIBHAMLIB
@@ -726,6 +734,8 @@ string CSettings::UsageArguments(char** argv)
 		"                              0: blue-white (default)\n"
 		"                              1: green-black\n"
 		"                              2: black-grey\n"
+		"  --mdioutadr <s>             MDI out network address\n"
+		"                              format [IP]:[port]\n"
 #endif
 
 		"  -I <n>, --snddevin <n>      set sound in device\n"
@@ -741,7 +751,7 @@ string CSettings::UsageArguments(char** argv)
 		"Example: " + string(argv[0]) +
 		" -p --sampleoff -0.23 -i 2 "
 #ifdef USE_QT_GUI
-		"-r 6140 -a 50°13\\'N -o 8°34\\'E"
+		"-r 6140 -a 50°13\\'N -o 8°34\\'E --mdioutadr 127.0.0.1:3002"
 #endif
 		"\n\n";
 }

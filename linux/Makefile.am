@@ -128,7 +128,7 @@ drm_SOURCES = $(drmwithoutqt_SOURCES) \
 	../common/GUI-QT/MultimediaDlg.cpp \
 	../common/GUI-QT/StationsDlg.cpp \
 	../common/GUI-QT/AnalogDemDlg.cpp \
-	../common/GUI-QT/MultimediaDlg.h \
+	../common/MDI.cpp \
 	../common/GUI-QT/fdrmdialogbase.ui \
 	../common/GUI-QT/TransmDlgbase.ui \
 	../common/GUI-QT/AboutDlgbase.ui \
@@ -136,13 +136,15 @@ drm_SOURCES = $(drmwithoutqt_SOURCES) \
 	../common/GUI-QT/MultimediaDlgbase.ui \
 	../common/GUI-QT/StationsDlgbase.ui \
 	../common/GUI-QT/AnalogDemDlgbase.ui \
+	../common/GUI-QT/MultimediaDlg.h \
 	../common/GUI-QT/fdrmdialog.h \
 	../common/GUI-QT/TransmDlg.h \
 	../common/GUI-QT/MultColorLED.h \
 	../common/GUI-QT/systemevalDlg.h \
 	../common/GUI-QT/DRMPlot.h \
 	../common/GUI-QT/StationsDlg.h \
-	../common/GUI-QT/AnalogDemDlg.h
+	../common/GUI-QT/AnalogDemDlg.h \
+	../common/MDI.h
 
 # these need to be generated before the rest can be compiled
 
@@ -155,7 +157,8 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_MultimediaDlg.cpp moc/moc_MultimediaDlgbase.cpp moc/MultimediaDlgbase.h moc/MultimediaDlgbase.cpp \
 	moc/moc_StationsDlg.cpp moc/moc_StationsDlgbase.cpp moc/StationsDlgbase.h moc/StationsDlgbase.cpp \
 	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
-	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp
+	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp \
+	moc/moc_MDI.cpp
 
 # and should be cleaned by make clean
 
@@ -171,6 +174,8 @@ moc/moc_MultColorLED.cpp: ../common/GUI-QT/MultColorLED.h
 moc/moc_DRMPlot.cpp: ../common/GUI-QT/DRMPlot.h
 	$(MOC) ../common/GUI-QT/DRMPlot.h -o moc/moc_DRMPlot.cpp
 
+moc/moc_MDI.cpp: ../common/MDI.h
+	$(MOC) ../common/MDI.h -o moc/moc_MDI.cpp
 
 moc/moc_AboutDlgbase.cpp: moc/AboutDlgbase.h
 	$(MOC) moc/AboutDlgbase.h -o moc/moc_AboutDlgbase.cpp

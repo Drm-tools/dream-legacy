@@ -256,6 +256,9 @@ void CDRMSimulation::Init()
 
 CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	rStartSNR((_REAL) 0.0), rEndSNR((_REAL) 0.0), rStepSNR((_REAL) 0.0)
+#ifdef USE_QT_GUI
+	, UtilizeFACData(NULL), UtilizeSDCData(NULL)
+#endif
 {
 	/* Set all parameters to meaningful value for startup state. If we want to
 	   make a simulation we just have to specify the important values */

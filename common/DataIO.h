@@ -36,7 +36,9 @@
 #include "TextMessage.h"
 #include "util/AudioFile.h"
 #include "util/Utilities.h"
-#include <time.h>
+#ifdef USE_QT_GUI
+# include "MDI.h"
+#endif
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
 #else
@@ -47,6 +49,7 @@
 #else
 # include <fftw.h>
 #endif
+#include <time.h>
 
 
 /* Definitions ****************************************************************/
@@ -192,7 +195,12 @@ protected:
 class CUtilizeFACData : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-	CUtilizeFACData() : bSyncInput(FALSE), bCRCOk(FALSE) {}
+#ifdef USE_QT_GUI
+	CUtilizeFACData(CMDI* pNM) : pMDI(pNM),
+#else
+	CUtilizeFACData() :
+#endif
+		bSyncInput(FALSE), bCRCOk(FALSE) {}
 	virtual ~CUtilizeFACData() {}
 
 	/* To set the module up for synchronized DRM input data stream */
@@ -202,6 +210,10 @@ public:
 
 protected:
 	CFACReceive FACReceive;
+
+#ifdef USE_QT_GUI
+	CMDI*		pMDI;
+#endif
 
 	_BOOLEAN	bCRCOk;
 	_BOOLEAN	bSyncInput;
@@ -228,11 +240,20 @@ protected:
 class CUtilizeSDCData : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
+#ifdef USE_QT_GUI
+	CUtilizeSDCData(CMDI* pNM) : pMDI(pNM) {}
+#else
 	CUtilizeSDCData() {}
+#endif
 	virtual ~CUtilizeSDCData() {}
 
 protected:
 	CSDCReceive SDCReceive;
+
+#ifdef USE_QT_GUI
+	CMDI*		pMDI;
+#endif
+
 	_BOOLEAN	bFirstBlock;
 
 	virtual void InitInternal(CParameter& ReceiverParam);

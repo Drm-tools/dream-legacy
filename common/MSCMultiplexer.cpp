@@ -54,30 +54,42 @@
 /* Implementation *************************************************************/
 void CMSCDemultiplexer::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	int i;
-
 	/* Audio ---------------------------------------------------------------- */
 	/* Extract audio data from input-stream */
-	/* Higher protected part */
-	for (i = 0; i < AudStreamPos.iLenHigh; i++)
-		(*pvecOutputData)[i] = (*pvecInputData)[i + AudStreamPos.iOffsetHigh];
-
-	/* Lower protected part */
-	for (i = 0; i < AudStreamPos.iLenLow; i++)
-		(*pvecOutputData)[i + AudStreamPos.iLenHigh] =
-			(*pvecInputData)[i + AudStreamPos.iOffsetLow];
+	ExtractData(*pvecInputData, *pvecOutputData, AudStreamPos);
 
 
 	/* Data ----------------------------------------------------------------- */
 	/* Extract audio data from input-stream */
-	/* Higher protected part */
-	for (i = 0; i < DataStreamPos.iLenHigh; i++)
-		(*pvecOutputData2)[i] = (*pvecInputData)[i + DataStreamPos.iOffsetHigh];
+	ExtractData(*pvecInputData, *pvecOutputData2, DataStreamPos);
 
-	/* Lower protected part */
-	for (i = 0; i < DataStreamPos.iLenLow; i++)
-		(*pvecOutputData2)[i + DataStreamPos.iLenHigh] =
-			(*pvecInputData)[i + DataStreamPos.iOffsetLow];
+
+#ifdef USE_QT_GUI
+	/* MDI ------------------------------------------------------------------ */
+	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
+	   in case of simulation because in this case there is not MDI) */
+	if (pMDI != NULL)
+	{
+		/* Only put data in MDI object if MDI is enabled */
+		if (pMDI->GetMDIEnabled() == TRUE)
+		{
+			/* Put all streams to MDI object */
+			for (int j = 0; j < veciMDIActStre.Size(); j++)
+			{
+				/* Prepare temporary vector */
+				CVectorEx<_BINARY> vecbiStrData;
+				vecbiStrData.Init(vecMDIStrPos[j].iLenLow +
+					vecMDIStrPos[j].iLenHigh);
+
+				/* Extract data */
+				ExtractData(*pvecInputData, vecbiStrData, vecMDIStrPos[j]);
+
+				/* Now put the data to the MDI object */
+				pMDI->SetStreamData(veciMDIActStre[j], vecbiStrData);
+			}
+		}
+	}
+#endif
 }
 
 void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
@@ -90,9 +102,9 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 	if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
 		eAudDataFlag == CParameter::SF_AUDIO)
 	{
-		GetStreamPos(ReceiverParam, ReceiverParam.
-			Service[ReceiverParam.GetCurSelAudioService()].AudioParam.iStreamID,
-			AudStreamPos);
+		AudStreamPos = GetStreamPos(ReceiverParam,
+			ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
+			AudioParam.iStreamID);
 	}
 	else
 	{
@@ -118,7 +130,7 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 		iCurDataStreamID = STREAM_ID_NOT_USED;
 
 	/* Get stream position of current selected data service */
-	GetStreamPos(ReceiverParam, iCurDataStreamID, DataStreamPos);
+	DataStreamPos = GetStreamPos(ReceiverParam, iCurDataStreamID);
 
 	/* Set data output block size */
 	iOutputBlockSize2 = DataStreamPos.iLenHigh + DataStreamPos.iLenLow;
@@ -127,15 +139,47 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 	ReceiverParam.SetNumDataDecoderBits(iOutputBlockSize2);
 
 
+#ifdef USE_QT_GUI
+	/* MDI ------------------------------------------------------------------ */
+	/* Get all active streams and stream positions */
+	ReceiverParam.GetActiveStreams(veciMDIActStre);
+
+	for (int i = 0; i < veciMDIActStre.Size(); i++)
+		vecMDIStrPos[i] = GetStreamPos(ReceiverParam, veciMDIActStre[i]);
+#endif
+
+
 	/* Set input block size */
 	iInputBlockSize = ReceiverParam.iNumDecodedBitsMSC;
 }
 
-void CMSCDemultiplexer::GetStreamPos(CParameter& Param, const int iStreamID,
-									 CStreamPos& StPos)
+void CMSCDemultiplexer::ExtractData(CVectorEx<_BINARY>& vecIn,
+									CVectorEx<_BINARY>& vecOut,
+									SStreamPos& StrPos)
 {
-	int				i;
-	CVector<int>	veciActStreams;
+	int i;
+
+	/* Higher protected part */
+	for (i = 0; i < StrPos.iLenHigh; i++)
+		vecOut[i] = vecIn[i + StrPos.iOffsetHigh];
+
+	/* Lower protected part */
+	for (i = 0; i < StrPos.iLenLow; i++)
+		vecOut[i + StrPos.iLenHigh] = vecIn[i + StrPos.iOffsetLow];
+}
+
+CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
+															  const int iStreamID)
+{
+	int								i;
+	CVector<int>					veciActStreams;
+	CMSCDemultiplexer::SStreamPos	StPos;
+
+	/* Init positions with zeros (needed if an error occurs) */
+	StPos.iOffsetLow = 0;
+	StPos.iOffsetHigh = 0;
+	StPos.iLenLow = 0;
+	StPos.iLenHigh = 0;
 
 	if (iStreamID != STREAM_ID_NOT_USED)
 	{
@@ -208,12 +252,6 @@ void CMSCDemultiplexer::GetStreamPos(CParameter& Param, const int iStreamID,
 			StPos.iLenHigh = 0;
 		}
 	}
-	else
-	{
-		/* Error, set everything to zero */
-		StPos.iOffsetLow = 0;
-		StPos.iOffsetHigh = 0;
-		StPos.iLenLow = 0;
-		StPos.iLenHigh = 0;
-	}
+
+	return StPos;
 }

@@ -36,6 +36,7 @@ rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GUI-QT\MultimediaDlg.h -o moc\moc_MultimediaDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\StationsDlg.h -o moc\moc_StationsDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\AnalogDemDlg.h -o moc\moc_AnalogDemDlg.cpp
+%qtdir%\bin\moc.exe ..\common\MDI.h -o moc\moc_MDI.cpp
 
 
 rem .ui -------------

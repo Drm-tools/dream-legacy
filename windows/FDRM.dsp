@@ -136,6 +136,10 @@ SOURCE=.\moc\moc_fdrmdialogbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\moc_MDI.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\moc_MultColorLED.cpp
 # End Source File
 # Begin Source File
@@ -465,6 +469,10 @@ SOURCE=..\common\InputResample.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\MDI.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\MSCMultiplexer.cpp
 # End Source File
 # Begin Source File
@@ -779,6 +787,10 @@ SOURCE=..\common\GlobalDefinitions.h
 # Begin Source File
 
 SOURCE=..\common\InputResample.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI.h
 # End Source File
 # Begin Source File
 

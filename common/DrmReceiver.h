@@ -47,6 +47,9 @@
 #include "sync/TimeSync.h"
 #include "sync/SyncUsingPil.h"
 #include "AMDemodulation.h"
+#ifdef USE_QT_GUI
+# include "MDI.h"
+#endif
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
 #else
@@ -87,6 +90,9 @@ public:
 		eReceiverMode(RM_DRM), 	eNewReceiverMode(RM_NONE),
 		ReceiveData(&SoundInterface), WriteData(&SoundInterface),
 		rInitResampleOffset((_REAL) 0.0), iAcquDetecCnt(0)
+#ifdef USE_QT_GUI
+		, UtilizeFACData(&MDI), UtilizeSDCData(&MDI), MSCDemultiplexer(&MDI)
+#endif
 #ifdef HAVE_LIBHAMLIB
 		, strHamlibConf(""), iHamlibModelID(0), bEnableSMeter(TRUE),
 		bModRigSettings(FALSE)
@@ -127,7 +133,9 @@ public:
 	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
 	CAMDemodulation*		GetAMDemod() {return &AMDemodulation;}
 	CFreqSyncAcq*			GetFreqSyncAcq() {return &FreqSyncAcq;}
-
+#ifdef USE_QT_GUI
+	CMDI*					GetMDI() {return &MDI;}
+#endif
 
 	CParameter*				GetParameters() {return &ReceiverParam;}
 	void					StartParameters(CParameter& Param);
@@ -260,6 +268,10 @@ protected:
 	ERecMode				eNewReceiverMode;
 
 	CSound					SoundInterface;
+
+#ifdef USE_QT_GUI
+	CMDI					MDI;
+#endif
 
 	_BOOLEAN				bWasFreqAcqu;
 	_BOOLEAN				bDoInitRun;
