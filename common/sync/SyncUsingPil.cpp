@@ -71,7 +71,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Search for minimum distance. Init value with a high number */
 		iMinIndex = 0;
-		rMinValue = HI_VALUE_FOR_MIN_SEARCH;
+		rMinValue = _MAXREAL;
 		for (i = 0; i < iNoSymPerFrame; i++)
 		{
 			if (vecrCorrHistory[i] < rMinValue)
@@ -332,7 +332,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 
 	/* Allocate memory for histories. Init history with large values, because
 	   we search for minimum! */
-	vecrCorrHistory.Init(iNoSymPerFrame, HI_VALUE_FOR_MIN_SEARCH);
+	vecrCorrHistory.Init(iNoSymPerFrame, _MAXREAL);
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iTotalNoUsefCarr;

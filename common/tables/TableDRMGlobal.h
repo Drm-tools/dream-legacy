@@ -93,5 +93,8 @@
    super frame of 400 ms duration */
 #define AUD_DEC_TRANSFROM_LENGTH		960
 
+/* Number of DRM frames per minute */
+#define NUM_DRM_FRAMES_PER_MIN			150
+
 
 #endif // !defined(TABLE_DRM_GLOB_H__3B0_CA63_4344_BB2B_23E7912__INCLUDED_)
