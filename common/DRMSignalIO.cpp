@@ -491,8 +491,11 @@ void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
 		for (i = 0; i < LEN_PSD_AV_EACH_BLOCK; i++)
 			vecrFFTInput[i] = vecrInpData[i + j * LEN_PSD_AV_EACH_BLOCK];
 
+		/* Apply Hamming window */
+		vecrFFTInput *= vecrHammWin;
+
 		/* Calculate squared magnitude of spectrum and average results */
-		vecrAvSqMagSpect += SqMag(rfft(vecrFFTInput * vecrHammWin));
+		vecrAvSqMagSpect += SqMag(rfft(vecrFFTInput));
 	}
 
 	/* Log power spectrum data */
