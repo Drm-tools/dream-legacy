@@ -1573,6 +1573,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 		break;
 
 	case INPUT_SIG_PSD:
+	case INPUT_SIG_PSD_ANALOG:
 		/* Input PSD */
 		strCurPlotHelp =
 			tr("<b>Input PSD:</b> This plot shows the "
