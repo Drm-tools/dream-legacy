@@ -590,6 +590,10 @@ void CParameter::CReceptLog::ResetLog(const _BOOLEAN bIsLong)
 		bFACOk = TRUE;
 		bMSCOk = TRUE;
 
+		/* Reset total number of checked CRCs and number of CRC ok */
+		iNumCRCMSCLong = 0;
+		iNumCRCOkMSCLong = 0;
+
 		rCurSNR = (_REAL) 0.0;
 	}
 	else
@@ -636,8 +640,14 @@ void CParameter::CReceptLog::SetMSC(const _BOOLEAN bCRCOk)
 	{
 		Mutex.Lock();
 
+		/* Count for total number of MSC cells in a certain period of time */
+		iNumCRCMSCLong++;
+
 		if (bCRCOk == TRUE)
+		{
 			iNumCRCOkMSC++;
+			iNumCRCOkMSCLong++; /* Increase number of CRCs which are ok */
+		}
 		else
 			bMSCOk = FALSE;
 
@@ -720,31 +730,35 @@ void CParameter::CReceptLog::SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong)
 
 	if (pFile != NULL)
 	{
-		/* Beginning of new table (similar to standard DRM log file) */
-		fprintf(pFile, "\n>>>>\nDream\nSoftware Version %s\n", VERSION);
+		if (bIsLong != TRUE)
+		{
+			/* Beginning of new table (similar to standard DRM log file) */
+			fprintf(pFile, "\n>>>>\nDream\nSoftware Version %s\n", VERSION);
 
-		fprintf(pFile, "Starttime (UTC)  %d-%02d-%02d %02d:%02d:%02d\n",
-			today->tm_year + 1900, today->tm_mon + 1, today->tm_mday,
-			today->tm_hour, today->tm_min, today->tm_sec);
+			fprintf(pFile, "Starttime (UTC)  %d-%02d-%02d %02d:%02d:%02d\n",
+				today->tm_year + 1900, today->tm_mon + 1, today->tm_mday,
+				today->tm_hour, today->tm_min, today->tm_sec);
 
-		fprintf(pFile, "Frequency        ");
-		if (iFrequency != 0)
-			fprintf(pFile, "%d kHz", iFrequency);
-		
-		fprintf(pFile, "\nLatitude         %7s", strLatitude.c_str());
-		fprintf(pFile, "\nLongitude        %7s", strLongitude.c_str());
+			fprintf(pFile, "Frequency        ");
+			if (iFrequency != 0)
+				fprintf(pFile, "%d kHz", iFrequency);
+			
+			fprintf(pFile, "\nLatitude         %7s", strLatitude.c_str());
+			fprintf(pFile, "\nLongitude        %7s", strLongitude.c_str());
 
-		/* Write additional text */
-		if (strAdditText != "")
-			fprintf(pFile, "\n%s\n\n", strAdditText.c_str());
-		else
-			fprintf(pFile, "\n\n");
+			/* Write additional text */
+			if (strAdditText != "")
+				fprintf(pFile, "\n%s\n\n", strAdditText.c_str());
+			else
+				fprintf(pFile, "\n\n");
 
-		/* The long version of log file has different header */
-		if (bIsLong == TRUE)
-			fprintf(pFile, "TIME,     SNR, SYNC, FAC, MSC\n");
-		else
 			fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE\n");
+		}
+		else
+		{
+			/* The long version of log file has different header */
+			fprintf(pFile, " FREQ,       DATE,       TIME, SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY\n");
+		}
 
 		fflush(pFile);
 	}
@@ -754,10 +768,18 @@ void CParameter::CReceptLog::CloseFile(FILE* pFile, const _BOOLEAN bIsLong)
 {
 	if (pFile != NULL)
 	{
-		if (bIsLong == FALSE)
+		if (bIsLong == TRUE)
+		{
+			/* Long log file ending */
+			fprintf(pFile, "\n\n");
+		}
+		else
+		{
+			/* Short log file ending */
 			fprintf(pFile, "\nCRC: \n");
+			fprintf(pFile, "<<<<\n\n");
+		}
 
-		fprintf(pFile, "<<<<\n\n");
 		fclose(pFile);
 
 		pFile = NULL;
@@ -794,11 +816,25 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 
 				TimeNow = gmtime(&TimeCntLong); /* Should be UTC time */
 
+				/* Get parameters for delay and Doppler. In case the receiver is
+				   not synchronized, set parameters to zero */
+				_REAL rDoppler = (_REAL) 0.0;
+				_REAL rDelay = (_REAL) 0.0;
+				if (DRMReceiver.GetReceiverState() ==
+					CDRMReceiver::AS_WITH_SIGNAL)
+				{
+					rDoppler = DRMReceiver.GetChanEst()->GetSigma();
+					rDelay = DRMReceiver.GetChanEst()->GetDelay();
+				}
+
 				/* This data can be read by Microsoft Excel */
 				fprintf(pFileLong,
-					"%02d:%02d:%02d, %3d,    %1d,   %1d,   %1d\n",
-					TimeNow->tm_hour, TimeNow->tm_min,
-					TimeNow->tm_sec, (int) rCurSNR, iSyncInd, iFACInd, iMSCInd);
+					"%5d, %d-%02d-%02d, %02d:%02d:%02d.0, %3d,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, %5.2f\n",
+					iFrequency,	TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
+					TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
+					TimeNow->tm_sec, (int) rCurSNR, iSyncInd, iFACInd, iMSCInd,
+					iNumCRCMSCLong, iNumCRCOkMSCLong,
+					rDoppler, rDelay);
 			}
 			else
 			{
@@ -825,7 +861,7 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 #ifdef _DEBUG_
 				/* Save additional system parameter for debugging performance */
 				fprintf(pFileShort,
-					"   Dopp: %.2f Hz   FreOff  %.2f Hz   SamOff %.2f Hz",
+					"   Dopp: %5.2f Hz   FreOff  %8.2f Hz   SamOff %6.2f Hz",
 					DRMReceiver.GetChanEst()->GetSigma(),
 					DRMReceiver.GetParameters()->GetDCFrequency(),
 					DRMReceiver.GetParameters()->GetSampFreqEst());

@@ -373,7 +373,7 @@ public:
 		void SetLog(const _BOOLEAN bLog);
 		void SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong);
 		void SetFrequency(const int iNewFreq) {iFrequency = iNewFreq;}
-		int	 GetFrequency() {return iFrequency;}
+		int GetFrequency() {return iFrequency;}
 		void SetLatitude(const string strLat) {strLatitude = strLat;}
 		void SetLongitude(const string strLon) {strLongitude = strLon;}
 		void SetAdditText(const string strNewTxt) {strAdditText = strNewTxt;}
@@ -387,6 +387,7 @@ public:
 		void CloseFile(FILE* pFile, const _BOOLEAN bIsLong);
 		int				iNumSNR;
 		int				iNumCRCOkFAC, iNumCRCOkMSC;
+		int				iNumCRCOkMSCLong, iNumCRCMSCLong;
 		int				iNumAACFrames, iTimeCntShort;
 		time_t			TimeCntLong;
 		_BOOLEAN		bSyncOK, bFACOk, bMSCOk;
