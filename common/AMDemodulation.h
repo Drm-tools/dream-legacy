@@ -43,13 +43,6 @@
 
 
 /* Definitions ****************************************************************/
-/* Set the number of blocks used for carrier frequency acquisition */
-#define NUM_BLOCKS_CARR_ACQUISITION			10
-
-/* Percentage of aquisition search window half size relative to the useful
-   spectrum bandwidth */
-#define PERC_SEARCH_WIN_HALF_SIZE			((CReal) 5.0 /* % */ / 100)
-
 /* Set value for desired amplitude for AM signal, controlled by the AGC. Maximum
    value is the range for short variables (16 bit) -> 32768 */
 #define DES_AV_AMPL_AM_SIGNAL				((CReal) 8000.0)
@@ -60,6 +53,24 @@
 
 /* Amplitude correction factor for demodulation */
 #define AM_AMPL_CORR_FACTOR					((CReal) 5.0)
+
+/* Lambda for IIR filter for DC-filter */
+#define DC_IIR_FILTER_LAMBDA				((CReal) 0.999)
+
+/* Margin at the DC frequency in case of SSB demodulation */
+#define SSB_DC_MARGIN_HZ					((CReal) 100.0) /* Hz */
+
+/* Frequency offset for CW demodulation */
+#define FREQ_OFFS_CW_DEMOD					((CReal) 1000.0) /* Hz */
+
+
+/* Parameters for frequency offset estimation algorithm --------------------- */
+/* Set the number of blocks used for carrier frequency acquisition */
+#define NUM_BLOCKS_CARR_ACQUISITION			20
+
+/* Percentage of aquisition search window half size relative to the useful
+   spectrum bandwidth */
+#define PERC_SEARCH_WIN_HALF_SIZE			((CReal) 5.0 /* % */ / 100)
 
 
 /* Parameters for noise reduction algorithm --------------------------------- */
@@ -76,7 +87,15 @@
 #define TICONST_PSD_EST_SIG_NOISE_RED		((CReal) 1.0) /* sec */
 
 
+/* Parameters for PLL ------------------------------------------------------- */
+#define PLL_LOOP_GAIN						((CReal) 0.0000001)
+
+/* Lambda for IIR filter for loop filter */
+#define PLL_LOOP_FILTER_LAMBDA				((CReal) 0.99)
+
+
 /* Classes ********************************************************************/
+/* Noise reduction ---------------------------------------------------------- */
 class CNoiseReduction
 {
 public:
@@ -86,7 +105,7 @@ public:
 	enum ENoiRedDegree {NR_LOW, NR_MEDIUM, NR_HIGH};
 
 	void Init(const int iNewBlockLen);
-	void Process(CRealVector& vecrIn);
+	void Process(CRealVector& vecrIn /* in/out */);
 
 	void SetNoiRedDegree(const ENoiRedDegree eNND) {eNoiRedDegree = eNND;}
 	ENoiRedDegree GetNoiRedDegree() {return eNoiRedDegree;}
@@ -122,41 +141,148 @@ protected:
 	ENoiRedDegree	eNoiRedDegree;
 };
 
+
+/* Frequency offset acquisition --------------------------------------------- */
+class CFreqOffsAcq
+{
+public:
+	CFreqOffsAcq() : bAcquisition(FALSE), rCurNormFreqOffset((CReal) 0.0) {}
+	void Init(const int iNewBlockSize);
+	_BOOLEAN Run(const CVector<_REAL>& vecrInpData);
+
+	void Start(const CReal rNewNormCenter);
+	CReal GetCurResult() {return rCurNormFreqOffset;}
+
+protected:
+	int						iBlockSize;
+	CFftPlans				FftPlanAcq;
+	CRealVector				vecrFFTInput;
+	int						iTotalBufferSize;
+	int						iHalfBuffer;
+	int						iAquisitionCounter;
+	CShiftRegister<_REAL>	vecrFFTHistory;
+	CRealVector				vecrPSD;
+	int						iSearchWinStart;
+	int						iSearchWinEnd;
+	_BOOLEAN				bAcquisition;
+
+	CReal					rNormCenter;
+	CReal					rCurNormFreqOffset;
+};
+
+
+/* Automatic gain control --------------------------------------------------- */
+class CAGC
+{
+public:
+	enum EType {AT_NO_AGC, AT_SLOW, AT_MEDIUM, AT_FAST};
+
+	CAGC() : eType(AT_MEDIUM) {}
+	void Init(const int iNewBlockSize);
+	void Process(CRealVector& vecrIn /* in/out */);
+
+	void SetType(const EType eNewType);
+	EType GetType() {return eType;}
+
+protected:
+	int		iBlockSize;
+	EType	eType;
+	CReal	rAttack, rDecay;
+	CReal	rAvAmplEst;
+};
+
+
+/* Mixer -------------------------------------------------------------------- */
+class CMixer
+{
+public:
+	CMixer() : cCurExp((CReal) 1.0), cExpStep((CReal) 1.0) {}
+	void Init(const int iNewBlockSize);
+	void Process(CComplexVector& veccIn /* in/out */);
+
+	void SetMixFreq(const CReal rNewNormMixFreq);
+
+protected:
+	int			iBlockSize;
+	CComplex	cCurExp, cExpStep;
+};
+
+
+/* Phase lock loop ---------------------------------------------------------- */
+class CPLL
+{
+public:
+	CPLL() : rCurPhase((CReal) 0.0) {}
+	void Init(const int iNewBlockSize);
+	void Process(CRealVector& vecrIn /* in/out */);
+
+	void SetRefNormFreq(const CReal rNewNormFreq);
+	CReal GetCurPhase() {return rCurPhase;}
+	CReal GetCurNormFreqOffs()
+		{return rNormCurFreqOffset + rNormCurFreqOffsetAdd;}
+
+protected:
+	CMixer			Mixer;
+	int				iBlockSize;
+	CRealVector		rvecRealTmp;
+	CRealVector		rvecImagTmp;
+	CComplexVector	cvecLow;
+	CReal			rNormCurFreqOffset;
+	CReal			rNormCurFreqOffsetAdd;
+	CReal			rCurPhase;
+
+	CRealVector		rvecZReal;
+	CRealVector		rvecZImag;
+	CRealVector		rvecA;
+	CRealVector		rvecB;
+};
+
+
+/* AM demodulation module --------------------------------------------------- */
 class CAMDemodulation : public CReceiverModul<_REAL, _SAMPLE>
 {
 public:
-	CAMDemodulation() : bAcquisition(TRUE), bSearWinWasSet(FALSE),
-		bNewDemodType(FALSE), eDemodType(DT_AM), iFilterBW(10000),
-		rFiltCentOffsNorm((CReal) 0.0), rBandWidthNorm((CReal) 0.0),
-		eAGCType(AT_MEDIUM), NoiRedType(NR_OFF) {}
+	CAMDemodulation() : eDemodType(DT_AM), NoiRedType(NR_OFF),
+		rBPNormBW((CReal) 10000.0 / SOUNDCRD_SAMPLE_RATE),
+		rNormCurMixFreqOffs((CReal) 0.0), bPLLIsEnabled(FALSE),
+		bAutoFreqAcquIsEnabled(TRUE) {}
 	virtual ~CAMDemodulation() {}
 
-	enum EDemodType {DT_AM, DT_LSB, DT_USB, DT_FM};
-	enum EAGCType {AT_NO_AGC, AT_SLOW, AT_MEDIUM, AT_FAST};
+	enum EDemodType {DT_AM, DT_LSB, DT_USB, DT_CW, DT_FM};
 	enum ENoiRedType {NR_OFF, NR_LOW, NR_MEDIUM, NR_HIGH};
 
 	void SetAcqFreq(const CReal rNewNormCenter);
 
+	void EnableAutoFreqAcq(const _BOOLEAN bNewEn)
+		{bAutoFreqAcquIsEnabled = bNewEn;}
+	_BOOLEAN AutoFreqAcqEnabled() {return bAutoFreqAcquIsEnabled;}
+
+	void EnablePLL(const _BOOLEAN bNewEn) {bPLLIsEnabled = bNewEn;}
+	_BOOLEAN PLLEnabled() {return bPLLIsEnabled;}
+
+	void SetDemodType(const EDemodType eNewType);
 	EDemodType GetDemodType() {return eDemodType;}
-	void SetDemodType(const EDemodType eNewType)
-		{eDemodType = eNewType; bNewDemodType = TRUE;}
 
-	int GetFilterBW() {return iFilterBW;}
-	void SetFilterBW(const int iNewBW)
-		{iFilterBW = iNewBW; bNewDemodType = TRUE;}
+	void SetFilterBW(const int iNewBW);
+	int GetFilterBW() {return (int) (rBPNormBW * SOUNDCRD_SAMPLE_RATE);}
 
-	EAGCType GetAGCType() {return eAGCType;}
-	void SetAGCType(const EAGCType eNewType)
-		{eAGCType = eNewType;}
+	void SetAGCType(const CAGC::EType eNewType);
+	CAGC::EType GetAGCType() {return AGC.GetType();}
 
-	ENoiRedType GetNoiRedType() {return NoiRedType;}
 	void SetNoiRedType(const ENoiRedType eNewType);
+	ENoiRedType GetNoiRedType() {return NoiRedType;}
 
 	void GetBWParameters(CReal& rCenterFreq, CReal& rBW)
-		{rCenterFreq = rFiltCentOffsNorm; rBW = rBandWidthNorm;}
+		{rCenterFreq = rBPNormCentOffsTot; rBW = rBPNormBW;}
+
+	_BOOLEAN GetPLLPhase(CReal& rPhaseOut);
+	CReal GetCurMixFreqOffs() const
+		{return rNormCurMixFreqOffs * SOUNDCRD_SAMPLE_RATE;}
 
 protected:
-	void SetCarrierFrequency(const CReal rNormCurFreqOffset);
+	void SetBPFilter(const CReal rNewBPNormBW, const CReal rNewNormFreqOffset,
+		const EDemodType eDemodType);
+	void SetNormCurMixFreqOffs(const CReal rNewNormCurMixFreqOffs);
 
 	CComplexVector				cvecBReal;
 	CComplexVector				cvecBImag;
@@ -170,6 +296,10 @@ protected:
 	int							iHilFiltBlLen;
 	CFftPlans					FftPlansHilFilt;
 
+	CReal						rBPNormBW;
+	CReal						rNormCurMixFreqOffs;
+	CReal						rBPNormCentOffsTot;
+
 	CRealVector					rvecZAM;
 	CRealVector					rvecADC;
 	CRealVector					rvecBDC;
@@ -177,46 +307,24 @@ protected:
 	CRealVector					rvecAFM;
 	CRealVector					rvecBFM;
 
-
-
-	CComplex					cCurExp;
-	CComplex					cExpStep;
-
 	int							iSymbolBlockSize;
 
-	_BOOLEAN					bAcquisition;
-	CShiftRegister<fftw_real>	vecrFFTHistory;
+	_BOOLEAN					bPLLIsEnabled;
+	_BOOLEAN					bAutoFreqAcquIsEnabled;
 
-	CFftPlans					FftPlanAcq;
-	CRealVector					vecrFFTInput;
-	CComplexVector				veccFFTOutput;
-
-	int							iTotalBufferSize;
-	int							iAquisitionCounter;
-	CRealVector					vecrPSD;
-	int							iHalfBuffer;
-
-	int							iSearchWinStart;
-	int							iSearchWinEnd;
-	_BOOLEAN					bSearWinWasSet;
-	CReal						rNormCenter;
-
-	CReal						rNormCurFreqOffset;
-
-	_BOOLEAN					bNewDemodType;
 	EDemodType					eDemodType;
-	int							iFilterBW;
-
-	CReal						rFiltCentOffsNorm;
-	CReal						rBandWidthNorm;
-
-	CReal						rAvAmplEst;
-	EAGCType					eAGCType;
 
 	CComplex					cOldVal;
 
-	ENoiRedType					NoiRedType;
+
+	/* Objects */
+	CPLL						PLL;
+	CMixer						Mixer;
+	CFreqOffsAcq				FreqOffsAcq;
+	CAGC						AGC;
 	CNoiseReduction				NoiseReduction;
+	ENoiRedType					NoiRedType;
+
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

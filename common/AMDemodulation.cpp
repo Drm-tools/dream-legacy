@@ -1,6 +1,6 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2005
  *
  * Author(s):
  *	Volker Fischer
@@ -33,190 +33,95 @@
 /* Implementation *************************************************************/
 void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	int		i, j;
-	int		iIndMaxPeak;
-	CReal	rMaxPeak;
-	CReal	rAttack;
-	CReal	rDecay;
-	CReal	rOutSignal;
+	int i;
 
-	/* Acquisition ---------------------------------------------------------- */
-	if (bAcquisition == TRUE)
+	/* Frequency offset estimation if requested */
+	if (FreqOffsAcq.Run(*pvecInputData))
+		SetNormCurMixFreqOffs(FreqOffsAcq.GetCurResult());
+
+
+	/* Band-pass filter and mixer ------------------------------------------- */
+	/* Copy CVector data in CMatlibVector */
+	for (i = 0; i < iInputBlockSize; i++)
+		rvecInpTmp[i] = (*pvecInputData)[i];
+
+	/* Cut out a spectrum part of desired bandwidth */
+	cvecHilbert = CComplexVector(
+		FftFilt(cvecBReal, rvecInpTmp, rvecZReal, FftPlansHilFilt),
+		FftFilt(cvecBImag, rvecInpTmp, rvecZImag, FftPlansHilFilt));
+
+	/* Mix it down to zero frequency */
+	Mixer.Process(cvecHilbert);
+
+
+	/* Phase lock loop (PLL) ------------------------------------------------ */
+	if (bPLLIsEnabled == TRUE)
 	{
-		/* Add new symbol in history (shift register) */
-		vecrFFTHistory.AddEnd((*pvecInputData), iSymbolBlockSize);
+		PLL.Process(rvecInpTmp);
 
-		if (iAquisitionCounter > 0)
-		{
-			/* Decrease counter */
-			iAquisitionCounter--;
-		}
-		else
-		{
-			/* Copy vector to matlib vector and calculate real-valued FFTW */
-			for (i = 0; i < iTotalBufferSize; i++)
-				vecrFFTInput[i] = vecrFFTHistory[i];
-
-			veccFFTOutput = rfft(vecrFFTInput, FftPlanAcq);
-
-			/* Calculate power spectrum (X = real(F)^2 + imag(F)^2) and average
-			   results */
-			for (i = 1; i < iHalfBuffer; i++)
-				vecrPSD[i] += SqMag(veccFFTOutput[i]);
-
-			/* Calculate frequency from maximum peak in spectrum */
-			rMaxPeak = (CReal) 0.0;
-			iIndMaxPeak = iSearchWinStart;
-			for (i = iSearchWinStart; i < iSearchWinEnd; i++)
-			{
-				if (vecrPSD[i] > rMaxPeak)
-				{
-					/* Remember maximum value and index of it */
-					rMaxPeak = vecrPSD[i];
-					iIndMaxPeak = i;
-				}
-			}
-
-			/* Calculate relative frequency offset */
-			rNormCurFreqOffset = (CReal) iIndMaxPeak / iHalfBuffer / 2;
-
-			/* Generate filter taps and set mixing constant */
-			SetCarrierFrequency(rNormCurFreqOffset);
-
-			/* Set global parameter for GUI */
-			ReceiverParam.rFreqOffsetAcqui = rNormCurFreqOffset;
-
-			/* Reset acquisition flag */
-			bAcquisition = FALSE;
-		}
+		/* Update mixer frequency with tracking result from PLL. Special case
+		   here since we change the mixer frequency but do not update the
+		   band-pass filter. We can do this because the frequency changes by the
+		   PLL are usually small */
+		Mixer.SetMixFreq(PLL.GetCurNormFreqOffs());
+		rNormCurMixFreqOffs = PLL.GetCurNormFreqOffs(); /* For GUI */
 	}
-	else
+
+
+	/* Analog demodulation -------------------------------------------------- */
+	/* Actual demodulation. Reuse temp buffer "rvecInpTmp" for output
+	   signal */
+	switch (eDemodType)
 	{
-		/* Check, if new demodulation type was chosen */
-		if (bNewDemodType == TRUE)
-		{
-			/* Generate filter taps and set mixing constant */
-			SetCarrierFrequency(rNormCurFreqOffset);
+	case DT_AM:
+		/* Use envelope of signal and apply low-pass filter */
+		rvecInpTmp = FftFilt(cvecBAMAfterDem, Abs(cvecHilbert),
+			rvecZAMAfterDem, FftPlansHilFilt);
 
-			/* Reset flag */
-			bNewDemodType = FALSE;
-		}
+		/* Apply DC filter (high-pass filter) */
+		rvecInpTmp = Filter(rvecBDC, rvecADC, rvecInpTmp, rvecZAM);
+		break;
 
+	case DT_LSB:
+	case DT_USB:
+	case DT_CW:
+		/* Make signal real and compensate for removed spectrum part */
+		rvecInpTmp = Real(cvecHilbert) * (CReal) 2.0;
+		break;
 
-		/* AM demodulation -------------------------------------------------- */
-		/* Copy CVector data in CMatlibVector */
-		for (i = 0; i < iInputBlockSize; i++)
-			rvecInpTmp[i] = (*pvecInputData)[i];
-
-		/* Cut out a spectrum part of desired bandwidth */
-		cvecHilbert = CComplexVector(
-			FftFilt(cvecBReal, rvecInpTmp, rvecZReal, FftPlansHilFilt),
-			FftFilt(cvecBImag, rvecInpTmp, rvecZImag, FftPlansHilFilt));
-
-		/* Mix it down to zero frequency */
+	case DT_FM:
+		/* Get phase of complex signal and apply differentiation */
 		for (i = 0; i < iInputBlockSize; i++)
 		{
-			cvecHilbert[i] *= cCurExp;
+			/* Back-rotate new input sample by old value to get
+			   differentiation operation, get angle of complex signal and
+			   amplify result */
+			rvecInpTmp[i] = Angle(cvecHilbert[i] * Conj(cOldVal)) *
+				_MAXSHORT / ((CReal) 4.0 * crPi);
 
-			/* Rotate exp-pointer on step further by complex multiplication with
-			   precalculated rotation vector cExpStep. This saves us from
-			   calling sin() and cos() functions all the time (iterative
-			   calculation of these functions) */
-			cCurExp *= cExpStep;
+			/* Store old value */
+			cOldVal = cvecHilbert[i];
 		}
 
-		/* Actual demodulation. Reuse temp buffer "rvecInpTmp" for output
-		   signal */
-		switch (eDemodType)
-		{
-		case DT_AM:
-			/* Use envelope of signal and apply low-pass filter */
-			rvecInpTmp = FftFilt(cvecBAMAfterDem, Abs(cvecHilbert),
-				rvecZAMAfterDem, FftPlansHilFilt);
-
-			/* Apply DC filter (high-pass filter) */
-			rvecInpTmp = Filter(rvecBDC, rvecADC, rvecInpTmp, rvecZAM);
-			break;
-
-		case DT_LSB:
-		case DT_USB:
-			/* Make signal real and compensate for removed spectrum part */
-			rvecInpTmp = Real(cvecHilbert) * (CReal) 2.0;
-			break;
-
-		case DT_FM:
-			/* Get phase of complex signal and apply differentiation */
-			for (i = 0; i < iInputBlockSize; i++)
-			{
-				/* Back-rotate new input sample by old value to get
-				   differentiation operation, get angle of complex signal and
-				   amplify result */
-				rvecInpTmp[i] = Angle(cvecHilbert[i] * Conj(cOldVal)) *
-					_MAXSHORT / ((CReal) 4.0 * crPi);
-
-				/* Store old value */
-				cOldVal = cvecHilbert[i];
-			}
-
-			/* Low-pass filter */
-			rvecInpTmp = Filter(rvecBFM, rvecAFM, rvecInpTmp, rvecZFM);
-		}
+		/* Low-pass filter */
+		rvecInpTmp = Filter(rvecBFM, rvecAFM, rvecInpTmp, rvecZFM);
+	}
 
 
-		/* Noise reduction -------------------------------------------------- */
-		if (NoiRedType != NR_OFF)
-			NoiseReduction.Process(rvecInpTmp);
+	/* Noise reduction -------------------------------------------------- */
+	if (NoiRedType != NR_OFF)
+		NoiseReduction.Process(rvecInpTmp);
 
 
-		/* AGC -------------------------------------------------------------- */
-		/*          Slow     Medium   Fast    */
-		/* Attack: 0.025 s, 0.015 s, 0.005 s  */
-		/* Decay : 4.000 s, 2.000 s, 0.200 s  */
-		switch (eAGCType)
-		{
-		case AT_SLOW:
-			rAttack = IIR1Lam(0.025, SOUNDCRD_SAMPLE_RATE);
-			rDecay = IIR1Lam(4.000, SOUNDCRD_SAMPLE_RATE);
-			break;
+	/* AGC -------------------------------------------------------------- */
+	AGC.Process(rvecInpTmp);
 
-		case AT_MEDIUM:
-			rAttack = IIR1Lam(0.015, SOUNDCRD_SAMPLE_RATE);
-			rDecay = IIR1Lam(2.000, SOUNDCRD_SAMPLE_RATE);
-			break;
 
-		case AT_FAST:
-			rAttack = IIR1Lam(0.005, SOUNDCRD_SAMPLE_RATE);
-			rDecay = IIR1Lam(0.200, SOUNDCRD_SAMPLE_RATE);
-			break;
-		}
-
-		for (i = 0, j = 0; i < 2 * iSymbolBlockSize; i += 2, j++)
-		{
-			if (eAGCType == AT_NO_AGC)
-			{
-				/* No modification of the signal (except of an amplitude
-				   correction factor) */
-				rOutSignal = rvecInpTmp[j] * AM_AMPL_CORR_FACTOR;
-			}
-			else
-			{
-				/* Two sided one-pole recursion for average amplitude
-				   estimation */
-				IIR1TwoSided(rAvAmplEst, Abs(rvecInpTmp[j]), rAttack, rDecay);
-
-				/* Lower bound for estimated average amplitude */
-				if (rAvAmplEst < LOWER_BOUND_AMP_LEVEL)
-					rAvAmplEst = LOWER_BOUND_AMP_LEVEL;
-
-				/* Normalize to average amplitude and then amplify to the
-				   desired level */
-				rOutSignal = rvecInpTmp[j] * DES_AV_AMPL_AM_SIGNAL / rAvAmplEst;
-			}
-
-			/* Write mono signal in both channels (left and right) */
-			(*pvecOutputData)[i] = (*pvecOutputData)[i + 1] =
-				Real2Sample(rOutSignal);
-		}
+	/* Write mono signal in both channels (left and right) */
+	for (i = 0; i < iSymbolBlockSize; i++)
+	{
+		(*pvecOutputData)[2 * i] = (*pvecOutputData)[2 * i + 1] =
+			Real2Sample(rvecInpTmp[i]);
 	}
 }
 
@@ -229,18 +134,24 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	rvecInpTmp.Init(iSymbolBlockSize);
 	cvecHilbert.Init(iSymbolBlockSize);
 
-	/* Start with phase null (can be arbitrarily chosen) */
-	cCurExp = (CReal) 1.0;
-
-	/* Init average amplitude estimation (needed for AGC) with desired
-	   amplitude */
-	rAvAmplEst = DES_AV_AMPL_AM_SIGNAL / AM_AMPL_CORR_FACTOR;
-
 	/* Init old value needed for differentiation */
 	cOldVal = (CReal) 0.0;
 
-	/* Init noise reducation object */
+	/* Init noise reduction object */
 	NoiseReduction.Init(iSymbolBlockSize);
+
+	/* Init frequency offset acquisition (start new acquisition) */
+	FreqOffsAcq.Init(iSymbolBlockSize);
+	FreqOffsAcq.Start((CReal) 0.0); /* Search entire bandwidth */
+
+	/* Init AGC */
+	AGC.Init(iSymbolBlockSize);
+
+	/* Init mixer */
+	Mixer.Init(iSymbolBlockSize);
+
+	/* Init PLL */
+	PLL.Init(iSymbolBlockSize);
 
 
 	/* Inits for Hilbert and DC filter -------------------------------------- */
@@ -261,14 +172,14 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	FftPlansHilFilt.Init(iHilFiltBlLen * 2);
 
 	/* Init DC filter */
-	/* IIR filter: H(Z) = (1 - z^{-1}) / (1 - 0.999 * z^{-1}) */
+	/* IIR filter: H(Z) = (1 - z^{-1}) / (1 - lamDC * z^{-1}) */
 	rvecZAM.Init(2, (CReal) 0.0); /* Memory */
 	rvecBDC.Init(2);
 	rvecADC.Init(2);
 	rvecBDC[0] = (CReal) 1.0;
 	rvecBDC[1] = (CReal) -1.0;
 	rvecADC[0] = (CReal) 1.0;
-	rvecADC[1] = (CReal) -0.999;
+	rvecADC[1] = -DC_IIR_FILTER_LAMBDA;
 
 	/* Init FM audio filter. This is a butterworth IIR filter with cut-off
 	   of 3 kHz. It was generated in Matlab with
@@ -288,130 +199,103 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	rvecAFM[4] = (CReal) 0.35557738234441;
 
 
-	/* Inits for acquisition ------------------------------------------------ */
-	/* Total buffer size */
-	iTotalBufferSize = NUM_BLOCKS_CARR_ACQUISITION * iSymbolBlockSize;
-
-	/* Length of the half of the spectrum of real input signal (the other half
-	   is the same because of the real input signal). We have to consider the
-	   Nyquist frequency ("iTotalBufferSize" is always even!) */
-	iHalfBuffer = iTotalBufferSize / 2 + 1;
-
-	/* Allocate memory for FFT-histories and init with zeros */
-	vecrFFTHistory.Init(iTotalBufferSize, (CReal) 0.0);
-	vecrFFTInput.Init(iTotalBufferSize);
-	veccFFTOutput.Init(iHalfBuffer);
-
-	vecrPSD.Init(iHalfBuffer);
-
-	/* Set flag for aquisition */
-	bAcquisition = TRUE;
-	iAquisitionCounter = NUM_BLOCKS_CARR_ACQUISITION;
-	/* Reset FFT-history */
-	vecrFFTHistory.Reset((CReal) 0.0);
-
-	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
-	FftPlanAcq.Init(iTotalBufferSize);
-
-	/* Search window indices for aquisition */
-	if (bSearWinWasSet == TRUE)
-	{
-		const int iWinCenter = (int) (rNormCenter * iHalfBuffer);
-		const int iHalfWidth = (int) (PERC_SEARCH_WIN_HALF_SIZE * iHalfBuffer);
-
-		iSearchWinStart = iWinCenter - iHalfWidth;
-		iSearchWinEnd = iWinCenter + iHalfWidth;
-
-		/* Check the values that they are within the valid range */
-		if (iSearchWinStart < 1)
-			iSearchWinStart = 1;
-
-		if (iSearchWinEnd > iHalfBuffer)
-			iSearchWinEnd = iHalfBuffer;
-
-		/* Reset flag */
-		bSearWinWasSet = FALSE;
-	}
-	else
-	{
-		/* If there is no search window defined, use entire bandwidth */
-		iSearchWinStart = 1;
-		iSearchWinEnd = iHalfBuffer;
-	}
+	/* Init band-pass filter */
+	SetNormCurMixFreqOffs(rNormCurMixFreqOffs);
 
 
 	/* Define block-sizes for input and output */
-	iMaxOutputBlockSize = (int) ((CReal) SOUNDCRD_SAMPLE_RATE *
-		(CReal) 0.4 /* 400 ms */ * 2 /* stereo */) +
-		2 /* stereo */ * iSymbolBlockSize;
+	/* The output buffer is a cyclic buffer, we have to specify the total
+	   buffer size */
+	iMaxOutputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
+		(_REAL) 0.4 /* 400ms */ * 2 /* for stereo */);
 
 	iInputBlockSize = iSymbolBlockSize;
-	iOutputBlockSize = 2 * iSymbolBlockSize;
+	iOutputBlockSize = 2 * iSymbolBlockSize; /* Stereo */
 }
 
-void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
+void CAMDemodulation::SetNormCurMixFreqOffs(const CReal rNewNormCurMixFreqOffs)
 {
-	int i;
+	/* In case CW demodulation is used, set mixer frequency so that the center
+	   of the band-pass filter is at the selected frequency */
+	if (eDemodType == DT_CW)
+	{
+		rNormCurMixFreqOffs =
+			rNewNormCurMixFreqOffs - FREQ_OFFS_CW_DEMOD / SOUNDCRD_SAMPLE_RATE;
+	}
+	else
+		rNormCurMixFreqOffs = rNewNormCurMixFreqOffs;
 
-	/* Calculate filter taps for complex Hilbert filter --------------------- */
-	const CReal rBWNormCutOff = (CReal) iFilterBW / SOUNDCRD_SAMPLE_RATE;
+	/* Generate filter taps and set mixing frequency */
+	SetBPFilter(rBPNormBW, rNormCurMixFreqOffs, eDemodType);
+	Mixer.SetMixFreq(rNormCurMixFreqOffs);
 
-	/* Actual filter design */
+	/* Tell the PLL object the new frequency (we do not care here if it is
+	   enabled or not) */
+	PLL.SetRefNormFreq(rNormCurMixFreqOffs);
+}
+
+void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW,
+								  const CReal rNewNormFreqOffset,
+								  const EDemodType eDemodType)
+{
+	/* Set internal parameter */
+	rBPNormBW = rNewBPNormBW;
+
+	/* Actual prototype filter design */
 	CRealVector vecrFilter(iHilFiltBlLen);
-	vecrFilter = FirLP(rBWNormCutOff, Nuttallwin(iHilFiltBlLen));
-
-	/* Actual bandwidth up to the point of approx. -60 dB */
-	rBandWidthNorm = (CReal) (iFilterBW + 200 /* Hz */) / SOUNDCRD_SAMPLE_RATE;
-
-
-#if 0
-/* Save filter coefficients */
-static FILE* pFile = fopen("test/AMDemFilt.dat", "w");
-for (int j = 0; j < iHilFiltBlLen; j++)
-	fprintf(pFile, "%e ", vecrFilter[j]);
-fprintf(pFile, "\n");
-fflush(pFile);
-// close all;load AMDemFilt.dat;[m,n]=size(AMDemFilt);for i=1:m;figure;freqz(AMDemFilt(i,:));end
-#endif
-
+	vecrFilter = FirLP(rBPNormBW, Nuttallwin(iHilFiltBlLen));
 
 	/* Adjust center of filter for respective demodulation types */
+	CReal rBPNormFreqOffset;
+	const CReal rSSBMargin = SSB_DC_MARGIN_HZ / SOUNDCRD_SAMPLE_RATE;
 	switch (eDemodType)
 	{
 	case DT_AM:
 	case DT_FM:
 		/* No offset */
-		rFiltCentOffsNorm = rNormCurFreqOffset;
+		rBPNormFreqOffset = (CReal) 0.0;
 		break;
 
 	case DT_LSB:
-		/* Shift filter to the left side of the carrier */
-		rFiltCentOffsNorm = rNormCurFreqOffset - rBandWidthNorm / 2;
+		/* Shift filter to the left side of the carrier. Add a small offset
+		  to the filter bandwidht because of the filter slope */
+		rBPNormFreqOffset = - rBPNormBW / 2 - rSSBMargin;
 		break;
 
 	case DT_USB:
-		/* Shift filter to the right side of the carrier */
-		rFiltCentOffsNorm = rNormCurFreqOffset + rBandWidthNorm / 2;
+		/* Shift filter to the right side of the carrier. Add a small offset
+		  to the filter bandwidht because of the filter slope */
+		rBPNormFreqOffset = rBPNormBW / 2 + rSSBMargin;
+		break;
+
+	case DT_CW:
+		/* Shift filter to the right side of the carrier according to the
+		   special CW demodulation shift */
+		rBPNormFreqOffset = FREQ_OFFS_CW_DEMOD / SOUNDCRD_SAMPLE_RATE;
 		break;
 	}
+
+	/* Actual band-pass filter offset is the demodulation frequency plus the
+	   additional offset for the demodulation type */
+	rBPNormCentOffsTot = rNewNormFreqOffset + rBPNormFreqOffset;
 
 
 	/* Set filter coefficients ---------------------------------------------- */
 	/* Make sure that the phase in the middle of the filter is always the same
 	   to avaoid clicks when the filter coefficients are changed */
-	const CReal rStartPhase = (CReal) iHilFiltBlLen * crPi * rFiltCentOffsNorm;
+	const CReal rStartPhase = (CReal) iHilFiltBlLen * crPi * rBPNormCentOffsTot;
 
 	/* Copy actual filter coefficients. It is important to initialize the
 	   vectors with zeros because we also do a zero-padding */
 	CRealVector rvecBReal(2 * iHilFiltBlLen, (CReal) 0.0);
 	CRealVector rvecBImag(2 * iHilFiltBlLen, (CReal) 0.0);
-	for (i = 0; i < iHilFiltBlLen; i++)
+	for (int i = 0; i < iHilFiltBlLen; i++)
 	{
 		rvecBReal[i] = vecrFilter[i] *
-			Cos((CReal) 2.0 * crPi * rFiltCentOffsNorm * i - rStartPhase);
+			Cos((CReal) 2.0 * crPi * rBPNormCentOffsTot * i - rStartPhase);
 
 		rvecBImag[i] = vecrFilter[i] *
-			Sin((CReal) 2.0 * crPi * rFiltCentOffsNorm * i - rStartPhase);
+			Sin((CReal) 2.0 * crPi * rBPNormCentOffsTot * i - rStartPhase);
 	}
 
 	/* Transformation in frequency domain for fft filter */
@@ -421,30 +305,369 @@ fflush(pFile);
 	/* Set filter coefficients for AM filter after demodulation (use same low-
 	   pass design as for the bandpass filter) */
 	CRealVector rvecBAMAfterDem(2 * iHilFiltBlLen, (CReal) 0.0);
-	for (i = 0; i < iHilFiltBlLen; i++)
-		rvecBAMAfterDem[i] = vecrFilter[i];
-
+	rvecBAMAfterDem.PutIn(1, iHilFiltBlLen, vecrFilter);
 	cvecBAMAfterDem = rfft(rvecBAMAfterDem, FftPlansHilFilt); 
-
-
-	/* Set mixing constant -------------------------------------------------- */
-	cExpStep = CComplex(cos((CReal) 2.0 * crPi * rNormCurFreqOffset),
-		-sin((CReal) 2.0 * crPi * rNormCurFreqOffset));
 }
 
+
+/* Interface functions ------------------------------------------------------ */
 void CAMDemodulation::SetAcqFreq(const CReal rNewNormCenter)
 {
-	/* Define search window for center frequency (used when aquisistion is
-	   active) */
-	rNormCenter = rNewNormCenter;
+	/* Lock resources */
+	Lock();
+	{ /* Lock start */
+		if (bAutoFreqAcquIsEnabled == TRUE)
+			FreqOffsAcq.Start(rNewNormCenter);
+		else
+			SetNormCurMixFreqOffs(rNewNormCenter / 2);
+	} /* Lock end */
+	Unlock();
+}
 
-	/* Set the flag so that the parameters are not overwritten in the init
-	   function */
-	bSearWinWasSet = TRUE;
+void CAMDemodulation::SetDemodType(const EDemodType eNewType)
+{
+	/* Lock resources */
+	Lock();
+	{ /* Lock start */
+		/* Set internal demodulation type flag */
+		eDemodType = eNewType;
+
+		/* Init band-pass filter according to new demodulation method */
+		SetBPFilter(rBPNormBW, rNormCurMixFreqOffs, eDemodType);
+	} /* Lock end */
+	Unlock();
+}
+
+void CAMDemodulation::SetFilterBW(const int iNewBW)
+{
+	/* Lock resources */
+	Lock();
+	{ /* Lock start */
+		SetBPFilter((CReal) iNewBW / SOUNDCRD_SAMPLE_RATE, rNormCurMixFreqOffs,
+			eDemodType);
+	} /* Lock end */
+	Unlock();
+}
+
+void CAMDemodulation::SetAGCType(const CAGC::EType eNewType)
+{
+	/* Lock resources */
+	Lock();
+	{ /* Lock start */
+		AGC.SetType(eNewType);
+	} /* Lock end */
+	Unlock();
+}
+
+void CAMDemodulation::SetNoiRedType(const ENoiRedType eNewType)
+{
+	/* Lock resources */
+	Lock();
+	{ /* Lock start */
+		NoiRedType = eNewType;
+
+		switch (NoiRedType)
+		{
+			case NR_LOW:
+				NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_LOW);
+				break;
+
+			case NR_MEDIUM:
+				NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_MEDIUM);
+				break;
+
+			case NR_HIGH:
+				NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_HIGH);
+				break;
+		}
+	} /* Lock end */
+	Unlock();
+}
+
+_BOOLEAN CAMDemodulation::GetPLLPhase(CReal& rPhaseOut)
+{
+	_BOOLEAN bReturn;
+
+	/* Lock resources */
+	Lock();
+	{ /* Lock start */
+		/* Phase is only valid if PLL is enabled. Return status */
+		rPhaseOut = PLL.GetCurPhase();
+		bReturn = bPLLIsEnabled;
+	} /* Lock end */
+	Unlock();
+
+	return bReturn;
 }
 
 
-/* Noise reduction implementation *********************************************/
+/******************************************************************************\
+* Mixer                                                                        *
+\******************************************************************************/
+void CMixer::Process(CComplexVector& veccIn /* in/out */)
+{
+	for (int i = 0; i < iBlockSize; i++)
+	{
+		veccIn[i] *= cCurExp;
+
+		/* Rotate exp-pointer one step further by complex multiplication
+		   with precalculated rotation vector cExpStep. This saves us from
+		   calling sin() and cos() functions all the time (iterative
+		   calculation of these functions) */
+		cCurExp *= cExpStep;
+	}
+}
+
+void CMixer::Init(const int iNewBlockSize)
+{
+	/* Set internal parameter */
+	iBlockSize = iNewBlockSize;
+}
+
+void CMixer::SetMixFreq(const CReal rNewNormMixFreq)
+{
+	/* Set mixing constant */
+	cExpStep = CComplex(Cos((CReal) 2.0 * crPi * rNewNormMixFreq),
+		-Sin((CReal) 2.0 * crPi * rNewNormMixFreq));
+}
+
+
+/******************************************************************************\
+* Phase lock loop (PLL)                                                        *
+\******************************************************************************/
+void CPLL::Process(CRealVector& vecrIn /* in/out */)
+{
+	/* Mix it down to zero frequency */
+	cvecLow = vecrIn;
+	Mixer.Process(cvecLow);
+
+	/* Complex loop filter */
+	rvecRealTmp = Filter(rvecB, rvecA, Real(cvecLow), rvecZReal);
+	rvecImagTmp = Filter(rvecB, rvecA, Imag(cvecLow), rvecZImag);
+
+	/* Calculate current phase for GUI */
+	rCurPhase = Angle(CComplex(Mean(rvecRealTmp), Mean(rvecImagTmp)));
+
+	/* Average over entire block (only real part) */
+	const CReal rOffsEst = Mean(rvecRealTmp);
+
+	/* Close loop */
+	rNormCurFreqOffsetAdd = PLL_LOOP_GAIN * rOffsEst;
+
+	/* Update mixer */
+	Mixer.SetMixFreq(rNormCurFreqOffset + rNormCurFreqOffsetAdd);
+}
+
+void CPLL::Init(const int iNewBlockSize)
+{
+	/* Set internal parameter */
+	iBlockSize = iNewBlockSize;
+
+	/* Init mixer object */
+	Mixer.Init(iBlockSize);
+
+	/* Init buffers */
+	cvecLow.Init(iBlockSize);
+	rvecRealTmp.Init(iBlockSize);
+	rvecImagTmp.Init(iBlockSize);
+
+	/* Init loop filter (low-pass filter design) */
+	/* IIR filter: H(Z) = (-(1 - lam) * z^{-1}) / (1 - lam * z^{-1}) */
+	rvecZReal.Init(2, (CReal) 0.0); /* Memory */
+	rvecZImag.Init(2, (CReal) 0.0);
+	rvecB.Init(2);
+	rvecA.Init(2);
+	rvecB[0] = (CReal) 0.0;
+	rvecB[1] = -((CReal) 1.0 - PLL_LOOP_FILTER_LAMBDA);
+	rvecA[0] = (CReal) 1.0;
+	rvecA[1] = -PLL_LOOP_FILTER_LAMBDA;
+}
+
+void CPLL::SetRefNormFreq(const CReal rNewNormFreq)
+{
+	/* Store new reference frequency */
+	rNormCurFreqOffset = rNewNormFreq;
+
+	/* Reset offset and phase */
+	rNormCurFreqOffsetAdd = (CReal) 0.0;
+	rCurPhase = (CReal) 0.0;
+}
+
+
+/******************************************************************************\
+* Automatic gain control (AGC)                                                 *
+\******************************************************************************/
+void CAGC::Process(CRealVector& vecrIn)
+{
+	if (eType == AT_NO_AGC)
+	{
+		/* No modification of the signal (except of an amplitude
+		   correction factor) */
+		vecrIn *= AM_AMPL_CORR_FACTOR;
+	}
+	else
+	{
+		for (int i = 0; i < iBlockSize; i++)
+		{
+			/* Two sided one-pole recursion for average amplitude
+			   estimation */
+			IIR1TwoSided(rAvAmplEst, Abs(vecrIn[i]), rAttack, rDecay);
+
+			/* Lower bound for estimated average amplitude */
+			if (rAvAmplEst < LOWER_BOUND_AMP_LEVEL)
+				rAvAmplEst = LOWER_BOUND_AMP_LEVEL;
+
+			/* Normalize to average amplitude and then amplify to the
+			   desired level */
+			vecrIn[i] *= DES_AV_AMPL_AM_SIGNAL / rAvAmplEst;
+		}
+	}
+}
+
+void CAGC::Init(const int iNewBlockSize)
+{
+	/* Set internal parameter */
+	iBlockSize = iNewBlockSize;
+
+	/* Init filters */
+	SetType(eType);
+
+	/* Init average amplitude estimation with desired amplitude */
+	rAvAmplEst = DES_AV_AMPL_AM_SIGNAL / AM_AMPL_CORR_FACTOR;
+}
+
+void CAGC::SetType(const EType eNewType)
+{
+	/* Set internal parameter */
+	eType = eNewType;
+
+	/*          Slow     Medium   Fast    */
+	/* Attack: 0.025 s, 0.015 s, 0.005 s  */
+	/* Decay : 4.000 s, 2.000 s, 0.200 s  */
+	switch (eType)
+	{
+	case AT_SLOW:
+		rAttack = IIR1Lam(0.025, SOUNDCRD_SAMPLE_RATE);
+		rDecay = IIR1Lam(4.000, SOUNDCRD_SAMPLE_RATE);
+		break;
+
+	case AT_MEDIUM:
+		rAttack = IIR1Lam(0.015, SOUNDCRD_SAMPLE_RATE);
+		rDecay = IIR1Lam(2.000, SOUNDCRD_SAMPLE_RATE);
+		break;
+
+	case AT_FAST:
+		rAttack = IIR1Lam(0.005, SOUNDCRD_SAMPLE_RATE);
+		rDecay = IIR1Lam(0.200, SOUNDCRD_SAMPLE_RATE);
+		break;
+	}
+}
+
+
+/******************************************************************************\
+* Frequency offset acquisition                                                 *
+\******************************************************************************/
+_BOOLEAN CFreqOffsAcq::Run(const CVector<_REAL>& vecrInpData)
+{
+	/* Init return flag */
+	_BOOLEAN bNewAcqResAvailable = FALSE;
+
+	/* Only do new acquisition if requested */
+	if (bAcquisition == TRUE)
+	{
+		/* Add new symbol in history (shift register) */
+		vecrFFTHistory.AddEnd(vecrInpData, iBlockSize);
+
+		if (iAquisitionCounter > 0)
+		{
+			/* Decrease counter */
+			iAquisitionCounter--;
+		}
+		else
+		{
+			/* Copy vector to matlib vector and calculate real-valued FFTW */
+			for (int i = 0; i < iTotalBufferSize; i++)
+				vecrFFTInput[i] = vecrFFTHistory[i];
+
+			/* Calculate power spectrum (X = real(F) ^ 2 + imag(F) ^ 2) */
+			vecrPSD = SqMag(rfft(vecrFFTInput, FftPlanAcq));
+
+			/* Calculate frequency from maximum peak in spectrum */
+			CReal rMaxPeak; /* Not needed, dummy */
+			int iIndMaxPeak;
+			Max(rMaxPeak, iIndMaxPeak /* out */,
+				vecrPSD(iSearchWinStart + 1, iSearchWinEnd));
+
+			/* Calculate estimated relative frequency offset */
+			rCurNormFreqOffset =
+				(CReal) (iIndMaxPeak + iSearchWinStart) / iHalfBuffer / 2;
+
+			/* Reset acquisition flag and Set return flag to show that new
+			   result is available*/
+			bAcquisition = FALSE;
+			bNewAcqResAvailable = TRUE;
+		}
+	}
+
+	return bNewAcqResAvailable;
+}
+
+void CFreqOffsAcq::Init(const int iNewBlockSize)
+{
+	/* Set internal parameter */
+	iBlockSize = iNewBlockSize;
+
+	/* Total buffer size */
+	iTotalBufferSize = NUM_BLOCKS_CARR_ACQUISITION * iBlockSize;
+
+	/* Length of the half of the spectrum of real input signal (the other half
+	   is the same because of the real input signal). We have to consider the
+	   Nyquist frequency ("iTotalBufferSize" is always even!) */
+	iHalfBuffer = iTotalBufferSize / 2 + 1;
+
+	/* Allocate memory for FFT-histories and init with zeros */
+	vecrFFTHistory.Init(iTotalBufferSize, (CReal) 0.0);
+	vecrFFTInput.Init(iTotalBufferSize);
+	vecrPSD.Init(iHalfBuffer);
+
+	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
+	FftPlanAcq.Init(iTotalBufferSize);
+}
+
+void CFreqOffsAcq::Start(const CReal rNewNormCenter)
+{
+	/* Search window indices for aquisition. If input parameter is
+	   zero, we use the entire bandwidth for acquisition (per definition) */
+	if (rNewNormCenter == (CReal) 0.0)
+	{
+		iSearchWinStart = 1; /* Do not use DC */
+		iSearchWinEnd = iHalfBuffer;
+	}
+	else
+	{
+		const int iWinCenter = (int) (rNewNormCenter * iHalfBuffer);
+		const int iHalfWidth = (int) (PERC_SEARCH_WIN_HALF_SIZE * iHalfBuffer);
+
+		iSearchWinStart = iWinCenter - iHalfWidth;
+		iSearchWinEnd = iWinCenter + iHalfWidth;
+
+		/* Check the values that they are within the valid range */
+		if (iSearchWinStart < 1) /* Do not use DC */
+			iSearchWinStart = 1;
+
+		if (iSearchWinEnd > iHalfBuffer)
+			iSearchWinEnd = iHalfBuffer;
+	}
+
+	/* Set flag for aquisition */
+	bAcquisition = TRUE;
+	iAquisitionCounter = NUM_BLOCKS_CARR_ACQUISITION;
+}
+
+
+/******************************************************************************\
+* Noise reduction                                                              *
+\******************************************************************************/
 /*
 	The noise reduction algorithms is based on optimal filters, whereas the
 	PDS of the noise is estimated with a minimum statistic.
@@ -616,24 +839,4 @@ void CNoiseReduction::Init(const int iNewBlockLen)
 	/* Init window for overlap and add */
 	vecrTriangWin.Init(iBlockLen);
 	vecrTriangWin = Triang(iBlockLen);
-}
-
-void CAMDemodulation::SetNoiRedType(const ENoiRedType eNewType)
-{
-	NoiRedType = eNewType;
-
-	switch (NoiRedType)
-	{
-		case NR_LOW:
-			NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_LOW);
-			break;
-
-		case NR_MEDIUM:
-			NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_MEDIUM);
-			break;
-
-		case NR_HIGH:
-			NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_HIGH);
-			break;
-	}
 }
