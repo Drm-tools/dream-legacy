@@ -53,12 +53,21 @@ public:
 	virtual ~CFftPlans();
 
 	void Init(const int iFSi);
+	inline bool IsInitialized() const {return bInitialized;}
 
-	rfftw_plan	RFFTPlForw;
-	rfftw_plan	RFFTPlBackw;
-	fftw_plan	FFTPlForw;
-	fftw_plan	FFTPlBackw;
-	bool		bInitialized;
+	rfftw_plan		RFFTPlForw;
+	rfftw_plan		RFFTPlBackw;
+	fftw_plan		FFTPlForw;
+	fftw_plan		FFTPlBackw;
+
+	fftw_real*		pFftwRealIn;
+	fftw_real*		pFftwRealOut;
+	fftw_complex*	pFftwComplexIn;
+	fftw_complex*	pFftwComplexOut;
+
+protected:
+	void Clean();
+	bool bInitialized;
 };
 
 

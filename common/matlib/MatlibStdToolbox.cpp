@@ -168,15 +168,34 @@ CMatlibMatrix<CComplex> Inv(const CMatlibMatrix<CComplex>& matrI)
 CMatlibVector<CComplex> Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
 {
 	int						i;
-	const int				n = cvI.GetSize();
+	CFftPlans*				pCurPlan;
+	fftw_complex*			pFftwComplexIn;
+	fftw_complex*			pFftwComplexOut;
+
+	const int				n(cvI.GetSize());
+
 	CMatlibVector<CComplex>	cvReturn(n, VTY_TEMP);
 
 	/* If input vector has zero length, return */
 	if (n == 0)
 		return cvReturn;
 
-	fftw_complex*			pFftwComplexIn = new fftw_complex[n];
-	fftw_complex*			pFftwComplexOut = new fftw_complex[n];
+	/* Check, if plans are already created, else: create it */
+	if (!FftPlans.IsInitialized())
+	{
+		pCurPlan = new CFftPlans;
+		pCurPlan->Init(n);
+	}
+	else
+	{
+		/* Ugly, but ok: We transform "const" object in "non constant" object
+		   since we KNOW that the original object is not constant since it
+		   was already initialized! */
+		pCurPlan = (CFftPlans*) &FftPlans;
+	}
+
+	pFftwComplexIn = pCurPlan->pFftwComplexIn;
+	pFftwComplexOut = pCurPlan->pFftwComplexOut;
 
 	/* fftw (Homepage: http://www.fftw.org/) */
 	for (i = 0; i < n; i++)
@@ -185,23 +204,14 @@ CMatlibVector<CComplex> Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPl
 		pFftwComplexIn[i].im = cvI[i].imag();
 	}
 
-	/* Check, if plans are already created, else: create it */
-	if (!FftPlans.bInitialized)
-	{
-		CFftPlans NewFftPlan;
-		NewFftPlan.FFTPlForw =
-			fftw_create_plan(cvI.GetSize(), FFTW_FORWARD, FFTW_ESTIMATE);
-	
-		fftw_one(NewFftPlan.FFTPlForw, pFftwComplexIn, pFftwComplexOut);
-	}
-	else
-		fftw_one(FftPlans.FFTPlForw, pFftwComplexIn, pFftwComplexOut);
+	/* Actual fftw call */
+	fftw_one(pCurPlan->FFTPlForw, pFftwComplexIn, pFftwComplexOut);
 
 	for (i = 0; i < n; i++)
 		cvReturn[i] = CComplex(pFftwComplexOut[i].re, pFftwComplexOut[i].im);
 
-	delete[] pFftwComplexIn;
-	delete[] pFftwComplexOut;
+	if (!FftPlans.IsInitialized())
+		delete[] pCurPlan;
 
 	return cvReturn;
 }
@@ -209,17 +219,34 @@ CMatlibVector<CComplex> Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPl
 CMatlibVector<CComplex> Ifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
 {
 	int						i;
-	CReal					scale;
+	CFftPlans*				pCurPlan;
+	fftw_complex*			pFftwComplexIn;
+	fftw_complex*			pFftwComplexOut;
 
-	const int				n = cvI.GetSize();
+	const int				n(cvI.GetSize());
+
 	CMatlibVector<CComplex>	cvReturn(n, VTY_TEMP);
 
 	/* If input vector has zero length, return */
 	if (n == 0)
 		return cvReturn;
 
-	fftw_complex*			pFftwComplexIn = new fftw_complex[n];
-	fftw_complex*			pFftwComplexOut = new fftw_complex[n];
+	/* Check, if plans are already created, else: create it */
+	if (!FftPlans.IsInitialized())
+	{
+		pCurPlan = new CFftPlans;
+		pCurPlan->Init(n);
+	}
+	else
+	{
+		/* Ugly, but ok: We transform "const" object in "non constant" object
+		   since we KNOW that the original object is not constant since it
+		   was already initialized! */
+		pCurPlan = (CFftPlans*) &FftPlans;
+	}
+
+	pFftwComplexIn = pCurPlan->pFftwComplexIn;
+	pFftwComplexOut = pCurPlan->pFftwComplexOut;
 
 	/* fftw (Homepage: http://www.fftw.org/) */
 	for (i = 0; i < n; i++)
@@ -228,61 +255,62 @@ CMatlibVector<CComplex> Ifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftP
 		pFftwComplexIn[i].im = cvI[i].imag();
 	}
 
-	/* Check, if plans are already created, else: create it */
-	if (!FftPlans.bInitialized)
-	{
-		CFftPlans NewFftPlan;
-		NewFftPlan.FFTPlBackw = fftw_create_plan(n, FFTW_BACKWARD, FFTW_ESTIMATE);
+	/* Actual fftw call */
+	fftw_one(pCurPlan->FFTPlBackw, pFftwComplexIn, pFftwComplexOut);
 	
-		fftw_one(NewFftPlan.FFTPlBackw, pFftwComplexIn, pFftwComplexOut);
-	}
-	else
-		fftw_one(FftPlans.FFTPlBackw, pFftwComplexIn, pFftwComplexOut);
-	
-	scale = (CReal) 1.0 / n;
+	CReal scale = (CReal) 1.0 / n;
 	for (i = 0; i < n; i++)
 		cvReturn[i] = CComplex(pFftwComplexOut[i].re * scale,
 			pFftwComplexOut[i].im * scale);
 
-	delete[] pFftwComplexIn;
-	delete[] pFftwComplexOut;
+	if (!FftPlans.IsInitialized())
+		delete[] pCurPlan;
 
 	return cvReturn;
 }
 
 CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlans)
 {
-	int						i;
-	const int				iLongLength = fvI.GetSize();
-	const int				iShortLength = iLongLength / 2;
+	int					i;
+	CFftPlans*			pCurPlan;
+	fftw_real*			pFftwRealIn;
+	fftw_real*			pFftwRealOut;
+
+	const int			iLongLength(fvI.GetSize());
+	const int			iShortLength(iLongLength / 2);
 	
 	CMatlibVector<CComplex>	cvReturn(iShortLength
-		/* Include nyquist frequency (+ 1) */ + 1, VTY_TEMP);
+		/* Include Nyquist frequency (+ 1) */ + 1, VTY_TEMP);
 
 	/* If input vector has zero length, return */
 	if (iLongLength == 0)
 		return cvReturn;
 
-	fftw_real*				pFftwRealIn = new fftw_real[iLongLength];
-	fftw_real*				pFftwRealOut = new fftw_real[iLongLength];
+	/* Check, if plans are already created, else: create it */
+	if (!FftPlans.IsInitialized())
+	{
+		pCurPlan = new CFftPlans;
+		pCurPlan->Init(iLongLength);
+	}
+	else
+	{
+		/* Ugly, but ok: We transform "const" object in "non constant" object
+		   since we KNOW that the original object is not constant since it
+		   was already initialized! */
+		pCurPlan = (CFftPlans*) &FftPlans;
+	}
+
+	pFftwRealIn = pCurPlan->pFftwRealIn;
+	pFftwRealOut = pCurPlan->pFftwRealOut;
 
 	/* fftw (Homepage: http://www.fftw.org/) */
 	for (i = 0; i < fvI.GetSize(); i++)
 		pFftwRealIn[i] = fvI[i];
 
-	/* Check, if plans are already created, else: create it */
-	if (!FftPlans.bInitialized)
-	{
-		CFftPlans NewFftPlan;
-		NewFftPlan.RFFTPlForw =
-			rfftw_create_plan(iLongLength, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);
-	
-		rfftw_one(NewFftPlan.RFFTPlForw, pFftwRealIn, pFftwRealOut);
-	}
-	else
-		rfftw_one(FftPlans.RFFTPlForw, pFftwRealIn, pFftwRealOut);
+	/* Actual fftw call */
+	rfftw_one(pCurPlan->RFFTPlForw, pFftwRealIn, pFftwRealOut);
 
-	/* Now build complex output-vector */
+	/* Now build complex output vector */
 	/* Zero frequency */
 	cvReturn[0] = pFftwRealOut[0];
 	for (i = 1; i < iShortLength; i++)
@@ -290,28 +318,44 @@ CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlan
 	/* Nyquist frequency */
 	cvReturn[iShortLength] = pFftwRealOut[iShortLength];
 
-	delete[] pFftwRealIn;
-	delete[] pFftwRealOut;
+	if (!FftPlans.IsInitialized())
+		delete pCurPlan;
 
 	return cvReturn;
 }
 
 CMatlibVector<CReal> rifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
 {
-	int			i;
-	CReal		scale;
+	int					i;
+	CFftPlans*			pCurPlan;
+	fftw_real*			pFftwRealIn;
+	fftw_real*			pFftwRealOut;
 
-	const int	iShortLength = cvI.GetSize() - 1; /* Nyquist frequency! */
-	const int	iLongLength = iShortLength * 2;
+	const int			iShortLength(cvI.GetSize() - 1); /* Nyquist frequency! */
+	const int			iLongLength(iShortLength * 2);
 
-	CMatlibVector<CReal>	fvReturn(iLongLength, VTY_TEMP);
+	CMatlibVector<CReal> fvReturn(iLongLength, VTY_TEMP);
 
 	/* If input vector is too short, return */
 	if (iShortLength <= 0)
 		return fvReturn;
 
-	fftw_real*				pFftwRealIn = new fftw_real[iLongLength];
-	fftw_real*				pFftwRealOut = new fftw_real[iLongLength];
+	/* Check, if plans are already created, else: create it */
+	if (!FftPlans.IsInitialized())
+	{
+		pCurPlan = new CFftPlans;
+		pCurPlan->Init(iLongLength);
+	}
+	else
+	{
+		/* Ugly, but ok: We transform "const" object in "non constant" object
+		   since we KNOW that the original object is not constant since it
+		   was already initialized! */
+		pCurPlan = (CFftPlans*) &FftPlans;
+	}
+
+	pFftwRealIn = pCurPlan->pFftwRealIn;
+	pFftwRealOut = pCurPlan->pFftwRealOut;
 
 	/* Now build half-complex-vector */
 	pFftwRealIn[0] = cvI[0].real();
@@ -320,27 +364,18 @@ CMatlibVector<CReal> rifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPla
 		pFftwRealIn[i] = cvI[i].real();
 		pFftwRealIn[iLongLength - i] = cvI[i].imag();
 	}
-	/* Nyquist-frequency */
+	/* Nyquist frequency */
 	pFftwRealIn[iShortLength] = cvI[iShortLength].real(); 
 
-	/* Check, if plans are already created, else: create it */
-	if (!FftPlans.bInitialized)
-	{
-		CFftPlans NewFftPlan;
-		NewFftPlan.RFFTPlBackw =
-			rfftw_create_plan(iLongLength, FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE);
+	/* Actual fftw call */
+	rfftw_one(pCurPlan->RFFTPlBackw, pFftwRealIn, pFftwRealOut);
 
-		rfftw_one(NewFftPlan.RFFTPlBackw, pFftwRealIn, pFftwRealOut);
-	}
-	else
-		rfftw_one(FftPlans.RFFTPlBackw, pFftwRealIn, pFftwRealOut);
-
-	scale = (CReal) 1.0 / iLongLength;
+	CReal scale = (CReal) 1.0 / iLongLength;
 	for (i = 0; i < iLongLength; i++) 
 		fvReturn[i] = pFftwRealOut[i] * scale;
 
-	delete[] pFftwRealIn;
-	delete[] pFftwRealOut;
+	if (!FftPlans.IsInitialized())
+		delete pCurPlan;
 
 	return fvReturn;
 }
@@ -351,23 +386,40 @@ CFftPlans::~CFftPlans()
 {
 	if (bInitialized)
 	{
+		/* Delete old plans and intermediate buffers */
 		rfftw_destroy_plan(RFFTPlForw);
 		rfftw_destroy_plan(RFFTPlBackw);
 		fftw_destroy_plan(FFTPlForw);
 		fftw_destroy_plan(FFTPlBackw);
+
+		delete[] pFftwRealIn;
+		delete[] pFftwRealOut;
+		delete[] pFftwComplexIn;
+		delete[] pFftwComplexOut;
 	}
 }
 
 void CFftPlans::Init(const int iFSi)
 {
-	/* Delete old plans */
 	if (bInitialized)
 	{
+		/* Delete old plans and intermediate buffers */
 		rfftw_destroy_plan(RFFTPlForw);
 		rfftw_destroy_plan(RFFTPlBackw);
 		fftw_destroy_plan(FFTPlForw);
 		fftw_destroy_plan(FFTPlBackw);
+
+		delete[] pFftwRealIn;
+		delete[] pFftwRealOut;
+		delete[] pFftwComplexIn;
+		delete[] pFftwComplexOut;
 	}
+
+	/* Create new plans and intermediate buffers */
+	pFftwRealIn = new fftw_real[iFSi];
+	pFftwRealOut = new fftw_real[iFSi];
+	pFftwComplexIn = new fftw_complex[iFSi];
+	pFftwComplexOut = new fftw_complex[iFSi];
 
 	RFFTPlForw = rfftw_create_plan(iFSi, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);
 	RFFTPlBackw = rfftw_create_plan(iFSi, FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE);
