@@ -241,7 +241,8 @@ void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 	const double cdAxMinLeft = -50.0;
 	const double cdAxMaxLeft = 0.0;
 	setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
-	setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) 24.0);
+	setAxisScale(QwtPlot::xBottom,
+		(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
 
 	clear();
 
@@ -279,7 +280,8 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	const double cdAxMinLeft = -100.0;
 	const double cdAxMaxLeft = 0.0;
 	setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
-	setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) 24.0);
+	setAxisScale(QwtPlot::xBottom,
+		(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
 
 	clear();
 
