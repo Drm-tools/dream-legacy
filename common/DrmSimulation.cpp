@@ -258,12 +258,6 @@ CDRMSimulation::CDRMSimulation()
 	/* Init streams */
 	Param.ResetServicesStreams();
 
-	/* These parameters are not yet used by this application */
-	Param.iAFSIndex = 1;
-	Param.iReConfigIndex = 0;
-	Param.eAFSFlag = CParameter::AS_VALID;
-	Param.eBaseEnhFlag = CParameter::BE_BASE_LAYER;
-
 	/* Use 6.3.6 to set this two parameters! */
 	Param.FACRepitition[0] = 0;
 	Param.FACNumRep = 1;

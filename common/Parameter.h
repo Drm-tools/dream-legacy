@@ -43,9 +43,6 @@ public:
 	virtual ~CParameter() {}
 
 	/* Enumerations --------------------------------------------------------- */
-	/* BE: Basement, enhancement */
-	enum ETransLay {BE_BASE_LAYER, BE_ENHM_LAYER};
-	
 	/* CA: CA system */
 	enum ECACond {CA_USED, CA_NOT_USED};
 
@@ -297,8 +294,6 @@ public:
 	CVector<int>	FACRepitition; /* See 6.3.6 */
 	int				FACNumRep;
 
-	ETransLay		eBaseEnhFlag;
-
 	/* Symbol interleaver mode (long or short interleaving) */
 	ESymIntMod		eSymbolInterlMode; 
 
@@ -308,9 +303,6 @@ public:
 
 	int				iNumAudioService;
 	int				iNumDataService;
-	int				iReConfigIndex;
-
-	EAFSVali		eAFSFlag;
 
 
 	/* Parameters controlled by SDC ----------------------------------------- */
@@ -337,8 +329,6 @@ public:
 	int					iNumSDCBitsPerSFrame; /* Number of SDC bits per super-frame */
 	int					iNumAudioDecoderBits; /* Number of input bits for audio module */
 	int					iNumDataDecoderBits; /* Number of input bits for data decoder module */
-
-	int					iAFSIndex;
 
 	/* Date */
 	int					iYear;

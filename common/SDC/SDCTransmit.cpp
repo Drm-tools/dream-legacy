@@ -54,8 +54,8 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 
 
 	/* SDC Header ----------------------------------------------------------- */
-	/* AFS index */
-	(*pbiData).Enqueue((_UINT32BIT) Parameter.iAFSIndex, 4);
+	/* AFS index (not used by this application, insert a "1" */
+	(*pbiData).Enqueue((_UINT32BIT) 1, 4);
 
 
 	/* Data Entities -------------------------------------------------------- */
@@ -202,7 +202,8 @@ int CSDCTransmit::DataEntityType5(CVector<_BINARY>* pbiData, int ServiceID,
 	(*pbiData).Enqueue((_UINT32BIT) ServiceID, 2);
 
 	/* Stream Id */
-	(*pbiData).Enqueue((_UINT32BIT) Parameter.Service[ServiceID].DataParam.iStreamID, 2);
+	(*pbiData).Enqueue((_UINT32BIT) Parameter.Service[ServiceID].DataParam.
+		iStreamID, 2);
 
 	/* Packet mode indicator */
 	switch (Parameter.Service[ServiceID].DataParam.ePacketModInd)
@@ -289,7 +290,8 @@ int CSDCTransmit::DataEntityType9(CVector<_BINARY>* pbiData, int ServiceID,
 	(*pbiData).Enqueue((_UINT32BIT) ServiceID, 2);
 
 	/* Stream Id */
-	(*pbiData).Enqueue((_UINT32BIT) Parameter.Service[ServiceID].AudioParam.iStreamID, 2);
+	(*pbiData).Enqueue((_UINT32BIT) Parameter.Service[ServiceID].AudioParam.
+		iStreamID, 2);
 
 	/* Audio coding */
 	switch (Parameter.Service[ServiceID].AudioParam.eAudioCoding)
@@ -429,7 +431,8 @@ int CSDCTransmit::DataEntityType9(CVector<_BINARY>* pbiData, int ServiceID,
 	}
 
 	/* Coder field */
-	if (Parameter.Service[ServiceID].AudioParam.eAudioCoding == CParameter::AC_CELP)
+	if (Parameter.Service[ServiceID].AudioParam.
+		eAudioCoding == CParameter::AC_CELP)
 	{
 		/* CELP index */
 		(*pbiData).Enqueue( 

@@ -45,27 +45,18 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	/* Put FAC parameters on stream */
 	/* Channel parameters --------------------------------------------------- */
-	/* Base/Enhancement flag */
-	switch (Parameter.eBaseEnhFlag)
-	{
-	case CParameter::BE_BASE_LAYER:
-		(*pbiFACData).Enqueue(0 /* 0 */, 1);
-		break;
-
-	case CParameter::BE_ENHM_LAYER:
-		(*pbiFACData).Enqueue(1 /* 1 */, 1);
-		break;
-	}
+	/* Base/Enhancement flag, set it to base which is decodable by all DRM
+	   receivers */
+	(*pbiFACData).Enqueue(0 /* 0 */, 1);
 
 	/* Identity */
 	/* Manage index of FAC block in super-frame */
 	switch (Parameter.iFrameIDTransm)
 	{
 	case 0:
-		if (Parameter.eAFSFlag == CParameter::AS_VALID)
-			(*pbiFACData).Enqueue(0 /* 00 */, 2);
-		else
-			(*pbiFACData).Enqueue(3 /* 11 */, 2);
+		/* Assuming AFS is valid (AFS not used here), if AFS is not valid, the
+		   parameter must be 3 (11) */
+		(*pbiFACData).Enqueue(0 /* 00 */, 2);
 		break;
 
 	case 1:
@@ -155,8 +146,8 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 		iTableNoOfServices[Parameter.iNumAudioService][Parameter.iNumDataService],
 		4);
 
-	/* Reconfiguration index */
-	(*pbiFACData).Enqueue((_UINT32BIT) Parameter.iReConfigIndex, 3);
+	/* Reconfiguration index (not used) */
+	(*pbiFACData).Enqueue((_UINT32BIT) 0, 3);
 
 	/* rfu */
 	iRfuDummy = 0;
@@ -239,10 +230,9 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 	parameter differs from the old data stored in the receiver. If yes, init
 	the modules to the new parameter 
 */
-	CParameter::ETransLay	eNewTransBaEnData;
-	_UINT32BIT				CRC;
-	_UINT32BIT				iTempServiceID;
-	int						iTempShortID;
+	_UINT32BIT	CRC;
+	_UINT32BIT	iTempServiceID;
+	int			iTempShortID;
 
 	/* CRC ------------------------------------------------------------------ */
 	/* Check the CRC of this data block */
@@ -263,26 +253,14 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 
 
 		/* Channel parameters ----------------------------------------------- */
-		/* Base/Enhancement flag */
-		switch ((*pbiFACData).Separate(1))
-		{
-		case 0: /* 0 */
-			eNewTransBaEnData = CParameter::BE_BASE_LAYER;		
-			break;
-	
-		case 1: /* 1 */
-			eNewTransBaEnData = CParameter::BE_ENHM_LAYER;		
-			break;
-		}
-		if (eNewTransBaEnData != Parameter.eBaseEnhFlag)
-			Parameter.eBaseEnhFlag = eNewTransBaEnData;
+		/* Base/Enhancement flag (not used) */
+		(*pbiFACData).Separate(1);
 		
 		/* Identity */
 		switch ((*pbiFACData).Separate(2))
 		{
 		case 0: /* 00 */
 			Parameter.iFrameIDReceiv = 0;
-			Parameter.eAFSFlag = CParameter::AS_VALID;
 			break;
 
 		case 1: /* 01 */
@@ -295,7 +273,6 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 
 		case 3: /* 11 */
 			Parameter.iFrameIDReceiv = 0;
-			Parameter.eAFSFlag = CParameter::AS_NOT_VALID;
 			break;
 		}
 
@@ -379,8 +356,8 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 				if (iNoServTabEntry == iTableNoOfServices[i][j])
 					Parameter.SetNumOfServices(i, j);
 
-		/* Reconfiguration index */
-		Parameter.iReConfigIndex = (*pbiFACData).Separate(3);
+		/* Reconfiguration index (not used, yet) */
+		(*pbiFACData).Separate(3);
 
 		/* rfu */
 		/* Do not use rfu */

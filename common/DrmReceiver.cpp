@@ -375,10 +375,11 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 	no receiption is left -> Reset all parameters
 */
 
-	/* Define with which parameters the receiver should try to decode the signal.
-	   If we are correct with our assumptions, the receiver does not need to
-	   reinitialize. We have to assume that the smallest frequency bandwidth
-	   was chosen because we also have an IIR filter with that bandwidth */
+	/* Define with which parameters the receiver should try to decode the
+	   signal. If we are correct with our assumptions, the receiver does not
+	   need to reinitialize. We have to assume that the smallest frequency
+	   bandwidth was chosen because we also have an IIR filter with that
+	   bandwidth */
 	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_0);
 
 	/* Set initial MLC parameters */
@@ -419,12 +420,6 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 	Param.rFreqOffsetAcqui = (_REAL) 0.0;
 	Param.rFreqOffsetTrack = (_REAL) 0.0;
 	Param.iTimingOffsTrack = 0;
-
-	/* The following parameters are not yet used by the receiver implementation */
-	Param.iAFSIndex = 1;
-	Param.eBaseEnhFlag = CParameter::BE_BASE_LAYER;
-	Param.iReConfigIndex = 0;
-	Param.eAFSFlag = CParameter::AS_VALID;
 
 	/* Initialization of the modules */
 	InitsForAllModules();

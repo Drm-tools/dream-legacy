@@ -73,8 +73,8 @@ _BOOLEAN CSDCReceive::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 
 		/* SDC Header ------------------------------------------------------- */
 		/* AFS index */
-		/* Reconfiguration index */
-		Parameter.iAFSIndex = (*pbiData).Separate(4);
+		/* Reconfiguration index (not used by this application) */
+		(*pbiData).Separate(4);
 
 		/* Length of the body, excluding the initial 4 bits ("- 4"),
 		   measured in bytes ("/ 8").
