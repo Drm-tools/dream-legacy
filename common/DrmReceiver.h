@@ -88,7 +88,8 @@ public:
 		ReceiveData(&SoundInterface), WriteData(&SoundInterface),
 		rInitResampleOffset((_REAL) 0.0), iAcquDetecCnt(0)
 #ifdef HAVE_LIBHAMLIB
-		, strHamlibConf(""), iHamlibModelID(0), bEnableSMeter(TRUE)
+		, strHamlibConf(""), iHamlibModelID(0), bEnableSMeter(TRUE),
+		bModRigSettings(FALSE)
 #endif
 #if defined(USE_QT_GUI) || defined(_WIN32)
 		, iMainPlotColorStyle(0) /* default color scheme: blue-white */
@@ -159,6 +160,10 @@ public:
 	void					SetEnableSMeter(const _BOOLEAN bNSM)
 								{bEnableSMeter = bNSM;}
 	_BOOLEAN				GetEnableSMeter() const {return bEnableSMeter;}
+	void					SetEnableModRigSettings(const _BOOLEAN bNSM)
+								{bModRigSettings = bNSM;}
+	_BOOLEAN				GetEnableModRigSettings() const
+								{return bModRigSettings;}
 #endif
 
 /* _WIN32 check because in Visual c++ the GUI files are always compiled even
@@ -265,6 +270,7 @@ protected:
 	int						iHamlibModelID;
 	string					strHamlibConf;
 	_BOOLEAN				bEnableSMeter;
+	_BOOLEAN				bModRigSettings;
 #endif
 
 	int						iSoundCrdDevIn;

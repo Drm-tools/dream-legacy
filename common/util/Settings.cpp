@@ -194,6 +194,10 @@ void CSettings::ReadIniFile()
 	/* Enable s-meter flag */
 	if (GetFlagIniSet(ini, "Hamlib", "ensmeter", bValue) == TRUE)
 		DRMReceiver.SetEnableSMeter(bValue);
+
+	/* Enable DRM modified receiver flag */
+	if (GetFlagIniSet(ini, "Hamlib", "enmodrig", bValue) == TRUE)
+		DRMReceiver.SetEnableModRigSettings(bValue);
 #endif
 }
 
@@ -307,6 +311,9 @@ void CSettings::WriteIniFile()
 
 	/* Enable s-meter flag */
 	SetFlagIniSet(ini, "Hamlib", "ensmeter", DRMReceiver.GetEnableSMeter());
+
+	/* Enable DRM modified receiver flag */
+	SetFlagIniSet(ini, "Hamlib", "enmodrig", DRMReceiver.GetEnableModRigSettings());
 #endif
 
 

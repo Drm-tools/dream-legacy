@@ -208,14 +208,18 @@ protected:
 	class CSpecDRMRig
 	{
 	public:
-		CSpecDRMRig() : iModelID(0), strDRMSet(""), iFreqOffs(0) {}
-		CSpecDRMRig(const CSpecDRMRig& nSpec) : iModelID(nSpec.iModelID),
-			strDRMSet(nSpec.strDRMSet),  iFreqOffs(nSpec.iFreqOffs) {}
-		CSpecDRMRig(rig_model_t newID, string sSet, int iNFrOff) :
-		  iModelID(newID), strDRMSet(sSet), iFreqOffs(iNFrOff) {}
+		CSpecDRMRig() : iModelID(0), strDRMSetMod(""), strDRMSetNoMod(""),
+			iFreqOffs(0) {}
+		CSpecDRMRig(const CSpecDRMRig& nSpec) :
+			iModelID(nSpec.iModelID), strDRMSetMod(nSpec.strDRMSetMod),
+			strDRMSetNoMod(nSpec.strDRMSetNoMod), iFreqOffs(nSpec.iFreqOffs) {}
+		CSpecDRMRig(rig_model_t newID, string sSet, int iNFrOff,
+			string sModSet) : iModelID(newID), strDRMSetNoMod(sSet),
+			iFreqOffs(iNFrOff), strDRMSetMod(sModSet) {}
 
 		rig_model_t		iModelID; /* Model ID for hamlib */
-		string			strDRMSet; /* Special DRM settings string */
+		string			strDRMSetMod; /* Special DRM settings (modified) */
+		string			strDRMSetNoMod; /* Special DRM settings (not mod.) */
 		int				iFreqOffs; /* Frequency offset */
 	};
 	CVector<CSpecDRMRig>	vecSpecDRMRigs;
@@ -261,6 +265,7 @@ public slots:
 	void OnRemoteMenu(int iID);
 	void OnComPortMenu(QAction* action);
 	void OnSMeterMenu(int iID);
+	void OnModRigMenu(int iID);
 	void OnTimerList();
 	void OnTimerUTCLabel() {SetUTCTimeLabel();}
 	void OnTimerSMeter();

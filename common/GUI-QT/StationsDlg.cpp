@@ -343,30 +343,35 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 
 	/* Winradio G3 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G303,
-		"l_ATT=0,l_AGC=3", 0));
+		"l_ATT=0,l_AGC=3", 0,
+		"l_ATT=0,l_AGC=3"));
 
 	/* AOR 7030 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_AR7030,
-		"m_CW=9500,l_IF=-4200,l_AGC=3", 5 /* kHz frequency offset */));
+		"m_CW=9500,l_IF=-4200,l_AGC=3", 5 /* kHz frequency offset */,
+		"l_AGC=3"));
 
 #ifdef RIG_MODEL_ELEKTOR304
 	/* Elektor 3/04 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_ELEKTOR304, "", 0));
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_ELEKTOR304, "", 0, ""));
 #endif
 
 	/* JRC NRD 535 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_NRD535,
 		"l_CWPITCH=-5000,m_CW=12000,l_IF=-2000,l_AGC=3" /* AGC=slow */,
-		3 /* kHz frequency offset */));
+		3 /* kHz frequency offset */,
+		"l_AGC=3"));
 
 	/* TenTec RX320D */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX320,
-		"l_AF=1,l_AGC=3,m_USB=6000", 0));
+		"l_AF=1,l_AGC=3,m_USB=6000", 0,
+		"l_AGC=3"));
 
 	/* TenTec RX340D */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX340,
 		"l_AF=1,m_USB=16000,l_AGC=3,l_IF=2000",
-		-12 /* kHz frequency offset */));
+		-12 /* kHz frequency offset */,
+		"l_AGC=3"));
 
 
 	/* Load all possible front-end remotes in hamlib library */
@@ -480,6 +485,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 
 
 	/* Other settings ------------------------------------------------------- */
+	/* Enable s-meter */
 	/* Separator */
 	pRemoteMenu->insertSeparator();
 
@@ -489,6 +495,17 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	/* Set check */
 	if (DRMReceiver.GetEnableSMeter() == TRUE)
 		pRemoteMenu->setItemChecked(iSMeterMenuID, 1);
+
+	/* Enable special settings for rigs */
+	/* Separator */
+	pRemoteMenu->insertSeparator();
+
+	const int iModRigMenuID = pRemoteMenu->insertItem("With DRM Modification",
+		this, SLOT(OnModRigMenu(int)), 0);
+
+	/* Set check */
+	if (DRMReceiver.GetEnableModRigSettings() == TRUE)
+		pRemoteMenu->setItemChecked(iModRigMenuID, 1);
 #endif
 
 
@@ -652,8 +669,8 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 					QMessageBox::Ok);
 #endif
 
-				// FIXME: The following lines change the DRMSchedule object.
-				// This operation is not thread safe! A mutex should be used!
+// FIXME: The following lines change the DRMSchedule object.
+// This operation is not thread safe! A mutex should be used!
 				/* Read updated ini-file */
 				DRMSchedule.ReadStatTabFromFile("DRMSchedule.ini");
 
@@ -837,6 +854,25 @@ void StationsDlg::OnSMeterMenu(int iID)
 #endif
 }
 
+void StationsDlg::OnModRigMenu(int iID)
+{
+#ifdef HAVE_LIBHAMLIB
+	if (pRemoteMenu->isItemChecked(iID))
+	{
+		pRemoteMenu->setItemChecked(iID, FALSE);
+		DRMReceiver.SetEnableModRigSettings(FALSE);
+	}
+	else
+	{
+		pRemoteMenu->setItemChecked(iID, TRUE);
+		DRMReceiver.SetEnableModRigSettings(TRUE);
+	}
+
+	/* Init hamlib, use current selected model ID */
+	InitHamlib(iCurSelModelID);
+#endif
+}
+
 void StationsDlg::OnRemoteMenu(int iID)
 {
 #ifdef HAVE_LIBHAMLIB
@@ -905,8 +941,8 @@ void StationsDlg::OnTimerSMeter()
 */
 void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
 {
-	/* Both, GUI "enabled" and hamlib "enabled" must be fullfilled befor s-meter
-	   is used */
+	/* Both, GUI "enabled" and hamlib "enabled" must be fullfilled before
+	   s-meter is used */
 	if ((bStatus == TRUE) && (DRMReceiver.GetEnableSMeter() == TRUE))
 	{
 		/* Init progress bar for input s-meter */
@@ -989,10 +1025,14 @@ _BOOLEAN StationsDlg::SetFrequency(const int iFreqkHz)
 	/* Prepare actual frequency value for hamlib */
 	int iActHamFreq = iFreqkHz;
 
-	/* Check for special rig if there is a frequency offset */
-	int iIndex;
-	if (CheckForSpecDRMFE(iCurSelModelID, iIndex) == TRUE)
-		iActHamFreq += vecSpecDRMRigs[iIndex].iFreqOffs;
+	/* Check if we have a modified or not modified receiver */
+	if (DRMReceiver.GetEnableModRigSettings() == FALSE)
+	{
+		/* Check for special rig if there is a frequency offset */
+		int iIndex;
+		if (CheckForSpecDRMFE(iCurSelModelID, iIndex) == TRUE)
+			iActHamFreq += vecSpecDRMRigs[iIndex].iFreqOffs;
+	}
 
 	iActHamFreq *= 1000; /* Conversion from kHz to Hz */
 
@@ -1084,10 +1124,16 @@ try
 	int iIndex;
 	if (CheckForSpecDRMFE(newModID, iIndex) == TRUE)
 	{
+		/* Get correct parameter string */
+		string strSet;
+		if (DRMReceiver.GetEnableModRigSettings() == TRUE)
+			strSet = vecSpecDRMRigs[iIndex].strDRMSetMod;
+		else
+			strSet = vecSpecDRMRigs[iIndex].strDRMSetNoMod;
+
 		/* Parse special settings */
 		char *p_dup, *p, *q, *n;
-		for (p = p_dup = strdup(vecSpecDRMRigs[iIndex].strDRMSet.c_str());+
-			p && *p != '\0'; p = n)
+		for (p = p_dup = strdup(strSet.c_str()); p && *p != '\0'; p = n)
 		{
 			if ((q = strchr(p, '=')) == NULL)
 			{
