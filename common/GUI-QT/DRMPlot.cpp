@@ -81,6 +81,7 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 		MainGridColorPlot = GREENBLACK_MAIN_GRID_COLOR_PLOT;
 		SpecLine1ColorPlot = GREENBLACK_SPEC_LINE1_COLOR_PLOT;
 		SpecLine2ColorPlot = GREENBLACK_SPEC_LINE2_COLOR_PLOT;
+		PassBandColorPlot = GREENBLACK_PASS_BAND_COLOR_PLOT;
 		break;
 
 	case 2:
@@ -90,6 +91,7 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 		MainGridColorPlot = BLACKGREY_MAIN_GRID_COLOR_PLOT;
 		SpecLine1ColorPlot = BLACKGREY_SPEC_LINE1_COLOR_PLOT;
 		SpecLine2ColorPlot = BLACKGREY_SPEC_LINE2_COLOR_PLOT;
+		PassBandColorPlot = BLACKGREY_PASS_BAND_COLOR_PLOT;
 		break;
 
 	case 0: /* 0 is default */
@@ -100,6 +102,7 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 		MainGridColorPlot = BLUEWHITE_MAIN_GRID_COLOR_PLOT;
 		SpecLine1ColorPlot = BLUEWHITE_SPEC_LINE1_COLOR_PLOT;
 		SpecLine2ColorPlot = BLUEWHITE_SPEC_LINE2_COLOR_PLOT;
+		PassBandColorPlot = BLUEWHITE_PASS_BAND_COLOR_PLOT;
 		break;
 	}
 
@@ -683,6 +686,9 @@ void CDRMPlot::SetupInpSpec()
 	setAxisScale(QwtPlot::xBottom,
 		(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
 
+	setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
+		MAX_VAL_INP_SPEC_Y_AXIS_DB);
+
 	/* Insert line for DC carrier */
 	clear();
 	curve1 = insertCurve(tr("DC carrier"));
@@ -690,7 +696,7 @@ void CDRMPlot::SetupInpSpec()
 
 	/* Add main curve */
 	main1curve = insertCurve(tr("Input spectrum"));
-	
+
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 1, SolidLine, RoundCap,
 		RoundJoin));
@@ -706,18 +712,13 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 		SetupInpSpec();
 	}
 
-	/* Fixed scale */
-	const double cdAxMinLeft = -125.0;
-	const double cdAxMaxLeft = -25.0;
-	setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
-
 	/* Insert line for DC carrier */
 	double dX[2], dY[2];
 	dX[0] = dX[1] = rDCFreq / 1000;
 
 	/* Take the min-max values from scale to get vertical line */
-	dY[0] = cdAxMinLeft;
-	dY[1] = cdAxMaxLeft;
+	dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
+	dY[1] = MAX_VAL_INP_SPEC_Y_AXIS_DB;
 
 	setCurveData(curve1, dX, dY, 2);
 
@@ -728,25 +729,73 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 
 void CDRMPlot::SetupInpPSD()
 {
+	int		i;
+	double	dX[2], dY[2];
+
 	/* Init chart for power spectram density estimation */
 	setTitle(tr("Input PSD"));
 	enableAxis(QwtPlot::yRight, FALSE);
-	enableGridX(TRUE);
-	enableGridY(TRUE);
+	enableGridX(FALSE);
+	enableGridY(FALSE);
 	setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
 	setAxisTitle(QwtPlot::yLeft, tr("Input PSD [dB]"));
 
 	/* Fixed scale */
-	setAxisScale(QwtPlot::xBottom,
-		(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
+	const double dXScaleMax = (double) SOUNDCRD_SAMPLE_RATE / 2000;
+	setAxisScale(QwtPlot::xBottom, (double) 0.0, dXScaleMax);
+
+	setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
+		MAX_VAL_INP_SPEC_Y_AXIS_DB);
 
 	/* Insert line for bandwidth marker */
 	clear();
 	curve1 = insertCurve(tr("Filter bandwidth"));
 
 	/* Make sure that line is bigger than the current plots height. Do this by
-	   setting the width to a very large value */
-	setCurvePen(curve1, QPen(MainGridColorPlot, 10000));
+	   setting the width to a very large value. TODO: better solution */
+	setCurvePen(curve1, QPen(PassBandColorPlot, 10000));
+
+	/* Since we want to have the "filter bandwidth" bar behind the grid, we have
+	   to draw our own grid after the previous curve was inserted. TODO: better
+	   solution */
+	/* y-axis: get major ticks */
+	const int iNumMajTicksYAx = axisScale(QwtPlot::yLeft)->majCnt();
+
+	/* Make sure the grid does not end close to the border of the canvas.
+	   Introduce some "margin" */
+	dX[0] = -dXScaleMax;
+	dX[1] = dXScaleMax + dXScaleMax;
+
+	/* Draw the grid for y-axis */
+	for (i = 0; i < iNumMajTicksYAx; i++)
+	{
+		const long curvegrid = insertCurve(tr("My Grid"));
+		setCurvePen(curvegrid, QPen(MainGridColorPlot, 0, DotLine));
+
+		dY[0] = dY[1] = axisScale(QwtPlot::yLeft)->majMark(i);
+		setCurveData(curvegrid, dX, dY, 2);
+	}
+
+	/* x-axis: get major ticks */
+	const int iNumMajTicksXAx = axisScale(QwtPlot::xBottom)->majCnt();
+
+	/* Make sure the grid does not end close to the border of the canvas.
+	   Introduce some "margin" */
+	const double dDiffY =
+		MAX_VAL_INP_SPEC_Y_AXIS_DB - MIN_VAL_INP_SPEC_Y_AXIS_DB;
+
+	dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB - dDiffY;
+	dY[1] = MAX_VAL_INP_SPEC_Y_AXIS_DB + dDiffY;
+
+	/* Draw the grid for x-axis */
+	for (i = 0; i < iNumMajTicksXAx; i++)
+	{
+		const long curvegrid = insertCurve(tr("My Grid"));
+		setCurvePen(curvegrid, QPen(MainGridColorPlot, 0, DotLine));
+
+		dX[0] = dX[1] = axisScale(QwtPlot::xBottom)->majMark(i);
+		setCurveData(curvegrid, dX, dY, 2);
+	}
 
 	/* Insert line for DC carrier */
 	curve2 = insertCurve(tr("DC carrier"));
@@ -771,18 +820,13 @@ void CDRMPlot::SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 		SetupInpPSD();
 	}
 
-	/* Fixed scale */
-	const double cdAxMinLeft = -125.0;
-	const double cdAxMaxLeft = -25.0;
-	setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
-
 	/* Insert line for DC carrier */
 	double dX[2], dY[2];
 	dX[0] = dX[1] = rDCFreq / 1000;
 
 	/* Take the min-max values from scale to get vertical line */
-	dY[0] = cdAxMinLeft;
-	dY[1] = cdAxMaxLeft;
+	dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
+	dY[1] = MAX_VAL_INP_SPEC_Y_AXIS_DB;
 
 	setCurveData(curve2, dX, dY, 2);
 
@@ -793,8 +837,8 @@ void CDRMPlot::SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 		dX[1] = (rBWCenter + rBWWidth / 2) * SOUNDCRD_SAMPLE_RATE / 1000;
 
 		/* Take the min-max values from scale to get vertical line */
-		dY[0] = cdAxMinLeft;
-		dY[1] = cdAxMinLeft;
+		dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
+		dY[1] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
 
 		setCurveData(curve1, dX, dY, 2);
 	}

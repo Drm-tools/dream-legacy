@@ -63,6 +63,7 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 	SliderBandwidth->setRange(0, SOUNDCRD_SAMPLE_RATE / 2);
 	SliderBandwidth->setTickmarks(QSlider::Both);
 	SliderBandwidth->setTickInterval(1000); /* Each kHz a tick */
+	SliderBandwidth->setPageStep(1000); /* Hz */
 
 	/* Update controls */
 	UpdateControls();

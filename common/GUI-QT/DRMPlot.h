@@ -46,6 +46,7 @@
 #define BLUEWHITE_MAIN_GRID_COLOR_PLOT			gray
 #define BLUEWHITE_SPEC_LINE1_COLOR_PLOT			red
 #define BLUEWHITE_SPEC_LINE2_COLOR_PLOT			black
+#define BLUEWHITE_PASS_BAND_COLOR_PLOT			QColor(192, 192, 255)
 
 /* GREENBLACK */
 #define GREENBLACK_MAIN_PEN_COLOR_PLOT			green
@@ -54,6 +55,7 @@
 #define GREENBLACK_MAIN_GRID_COLOR_PLOT			QColor(128, 0, 0)
 #define GREENBLACK_SPEC_LINE1_COLOR_PLOT		yellow
 #define GREENBLACK_SPEC_LINE2_COLOR_PLOT		blue
+#define GREENBLACK_PASS_BAND_COLOR_PLOT			QColor(0, 96, 0)
 
 /* BALCKGREY */
 #define BLACKGREY_MAIN_PEN_COLOR_PLOT			black
@@ -62,6 +64,12 @@
 #define BLACKGREY_MAIN_GRID_COLOR_PLOT			white
 #define BLACKGREY_SPEC_LINE1_COLOR_PLOT			blue
 #define BLACKGREY_SPEC_LINE2_COLOR_PLOT			yellow
+#define BLACKGREY_PASS_BAND_COLOR_PLOT			QColor(128, 128, 128)
+
+
+/* Maximum and minimum values of x-axis of input spectrum plots */
+#define MIN_VAL_INP_SPEC_Y_AXIS_DB				((double) -125.0)
+#define MAX_VAL_INP_SPEC_Y_AXIS_DB				((double) -25.0)
 
 
 /* Classes ********************************************************************/
@@ -143,6 +151,7 @@ protected:
 	QColor		MainGridColorPlot;
 	QColor		SpecLine1ColorPlot;
 	QColor		SpecLine2ColorPlot;
+	QColor		PassBandColorPlot;
 
 	ECharType	CurCharType;
 	long		main1curve, main2curve;
