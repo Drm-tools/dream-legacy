@@ -291,10 +291,13 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 	iTotalNumInputBits = ReceiverParam.iNumAudioDecoderBits;
 
 	/* Check if current selected service is an audio service and check if a
-	   stream is attached */
+	   stream is attached. Additionally, check if AAC (this is the only audio
+	   decoding we offer right now) */
 	if ((ReceiverParam.Service[iCurSelServ].
 		eAudDataFlag == CParameter::SF_AUDIO) &&
-		(iCurAudioStreamID != STREAM_ID_NOT_USED))
+		(iCurAudioStreamID != STREAM_ID_NOT_USED) &&
+		(ReceiverParam.Service[iCurSelServ].AudioParam.
+		eAudioCoding == CParameter::AC_AAC))
 	{
 		/* Init "audio was ok" flag */
 		bAudioWasOK = TRUE;
