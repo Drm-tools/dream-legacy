@@ -95,6 +95,8 @@ CReal						Max(const CMatlibVector<CReal>& rvI);
 void						Max(CReal& rMaxVal /* out */, int& iMaxInd /* out */,
 								const CMatlibVector<CReal>& rvI /* in */);
 
+inline CReal				Max(const CReal& r1, const CReal& r2, const CReal& r3)
+								{return Max(Max(r1, r2), r3);}
 
 inline CMatlibVector<CReal>	Ones(const int iLen)
 								{_VECOP(CReal, iLen, (CReal) 1.0);}
