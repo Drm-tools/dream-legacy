@@ -13,7 +13,7 @@ else
 	autoheader
 fi
 
-libtoolize --automake
+libtoolize --automake --copy
 
 if [ -x /usr/bin/automake-1.5 ]; then
 	automake-1.5 --add-missing --copy

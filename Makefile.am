@@ -1,7 +1,6 @@
 AUTOMAKE_OPTIONS = foreign
 
 EXTRA_DIST =		\
-	bootstrap	\
 	drm.spec	\
 	drm.spec.in
 
