@@ -41,11 +41,6 @@ inline _REAL Metric(const _REAL rDist, const _REAL rChan)
 	return rDist * sqrt(rChan);
 }
 
-inline _REAL MetricML(const _REAL rDist, const _REAL rChan)
-{
-	return rDist * rDist * rChan;
-}
-
 class CMLCMetric
 {
 public:
@@ -66,13 +61,6 @@ public:
 
 
 protected:
-	inline _REAL Minimum1ML(const _REAL rA, const _REAL rB,
-							const _REAL rChan) const
-	{
-		/* For 4-QAM use ML metric */
-		return MetricML(fabs(rA - rB), rChan);
-	}
-
 	inline _REAL Minimum1(const _REAL rA, const _REAL rB,
 						  const _REAL rChan) const
 	{

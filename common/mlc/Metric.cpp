@@ -56,21 +56,21 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 		{
 			/* Real part ---------------------------------------------------- */
 			/* Distance to "0" */
-			vecMetric[k].rTow0 = Minimum1ML((*pcInSymb)[i].cSig.real(), 
+			vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
 				rTableQAM4[0][0], (*pcInSymb)[i].rChan);
 
 			/* Distance to "1" */
-			vecMetric[k].rTow1 = Minimum1ML((*pcInSymb)[i].cSig.real(), 
+			vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(), 
 				rTableQAM4[1][0], (*pcInSymb)[i].rChan);
 
 
 			/* Imaginary part ----------------------------------------------- */
 			/* Distance to "0" */
-			vecMetric[k + 1].rTow0 = Minimum1ML((*pcInSymb)[i].cSig.imag(), 
+			vecMetric[k + 1].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(), 
 				rTableQAM4[0][1], (*pcInSymb)[i].rChan);
 
 			/* Distance to "1" */
-			vecMetric[k + 1].rTow1 = Minimum1ML((*pcInSymb)[i].cSig.imag(), 
+			vecMetric[k + 1].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(), 
 				rTableQAM4[1][1], (*pcInSymb)[i].rChan);
 		}
 
