@@ -37,7 +37,6 @@
 #include <qcheckbox.h>
 #include <qfiledialog.h>
 #include <qslider.h>
-#include "../AMDemodulationFilter.h"
 
 #ifdef _WIN32
 # include "../../Windows/moc/AnalogDemDlgbase.h"

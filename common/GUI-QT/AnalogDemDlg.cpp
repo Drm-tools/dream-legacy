@@ -60,7 +60,7 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 	DRMReceiver.GetAMDemod()->SetAGCType(CAMDemodulation::AT_MEDIUM);
 
 	/* Init slider control for bandwidth setting */
-	SliderBandwidth->setRange(iHilLPProtAMDemodBW[0], SOUNDCRD_SAMPLE_RATE / 2);
+	SliderBandwidth->setRange(0, SOUNDCRD_SAMPLE_RATE / 2);
 	SliderBandwidth->setTickmarks(QSlider::Both);
 	SliderBandwidth->setTickInterval(1000); /* Each kHz a tick */
 
