@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>635</width>
-            <height>399</height>
+            <width>645</width>
+            <height>385</height>
         </rect>
     </property>
     <property stdset="1">
@@ -177,7 +177,7 @@
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout5</cstring>
+                <cstring>Layout6</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -270,65 +270,91 @@
                     </hbox>
                 </widget>
                 <widget>
-                    <class>QLayoutWidget</class>
+                    <class>QGroupBox</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>Layout21</cstring>
+                        <cstring>GroupBox1</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>title</name>
+                        <string>Audio</string>
                     </property>
                     <hbox>
                         <property stdset="1">
                             <name>margin</name>
-                            <number>0</number>
+                            <number>11</number>
                         </property>
                         <property stdset="1">
                             <name>spacing</name>
                             <number>6</number>
                         </property>
-                        <spacer>
-                            <property>
-                                <name>name</name>
-                                <cstring>Spacer6</cstring>
-                            </property>
-                            <property>
-                                <name>orientation</name>
-                                <enum>Horizontal</enum>
-                            </property>
-                            <property>
-                                <name>sizeType</name>
-                                <enum>Expanding</enum>
-                            </property>
-                            <property>
-                                <name>sizeHint</name>
-                                <size>
-                                    <width>20</width>
-                                    <height>20</height>
-                                </size>
-                            </property>
-                        </spacer>
                         <widget>
-                            <class>QPushButton</class>
+                            <class>QCheckBox</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>buttonOk</cstring>
-                            </property>
-                            <property stdset="1">
-                                <name>caption</name>
-                                <string></string>
+                                <cstring>CheckBoxMuteAudio</cstring>
                             </property>
                             <property stdset="1">
                                 <name>text</name>
-                                <string>&amp;Close</string>
+                                <string>Mute Audio</string>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QCheckBox</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>CheckBoxSaveAudioWave</cstring>
                             </property>
                             <property stdset="1">
-                                <name>autoDefault</name>
-                                <bool>true</bool>
-                            </property>
-                            <property stdset="1">
-                                <name>default</name>
-                                <bool>true</bool>
+                                <name>text</name>
+                                <string>Save Audio as WAV</string>
                             </property>
                         </widget>
                     </hbox>
+                </widget>
+                <spacer>
+                    <property>
+                        <name>name</name>
+                        <cstring>Spacer6</cstring>
+                    </property>
+                    <property>
+                        <name>orientation</name>
+                        <enum>Horizontal</enum>
+                    </property>
+                    <property>
+                        <name>sizeType</name>
+                        <enum>Expanding</enum>
+                    </property>
+                    <property>
+                        <name>sizeHint</name>
+                        <size>
+                            <width>20</width>
+                            <height>20</height>
+                        </size>
+                    </property>
+                </spacer>
+                <widget>
+                    <class>QPushButton</class>
+                    <property stdset="1">
+                        <name>name</name>
+                        <cstring>buttonOk</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>caption</name>
+                        <string></string>
+                    </property>
+                    <property stdset="1">
+                        <name>text</name>
+                        <string>&amp;Close</string>
+                    </property>
+                    <property stdset="1">
+                        <name>autoDefault</name>
+                        <bool>true</bool>
+                    </property>
+                    <property stdset="1">
+                        <name>default</name>
+                        <bool>true</bool>
+                    </property>
                 </widget>
             </hbox>
         </widget>

@@ -34,6 +34,8 @@
 #include <qtooltip.h>
 #include <qbuttongroup.h>
 #include <qpushbutton.h>
+#include <qcheckbox.h>
+#include <qfiledialog.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/AnalogDemDlgbase.h"
@@ -67,4 +69,6 @@ public slots:
 	void OnTimer();
 	void OnTimerChart();
 	void OnRadioDemodulation(int iID);
+	void OnCheckBoxMuteAudio();
+	void OnCheckSaveAudioWAV();
 };

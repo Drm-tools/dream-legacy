@@ -58,12 +58,24 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 	}
 
 
+	/* Init settings checkbuttons */
+	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
+	CheckBoxSaveAudioWave->
+		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
+
+
 	/* Connect controls ----------------------------------------------------- */
 	connect(buttonOk, SIGNAL(clicked()), this, SLOT(accept()));
 	
 	/* Button groups */
 	connect(ButtonGroupDemodulation, SIGNAL(clicked(int)),
 		this, SLOT(OnRadioDemodulation(int)));
+
+	/* Check boxes */
+	connect(CheckBoxMuteAudio, SIGNAL(clicked()),
+		this, SLOT(OnCheckBoxMuteAudio()));
+	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()),
+		this, SLOT(OnCheckSaveAudioWAV()));
 
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
@@ -85,6 +97,12 @@ void AnalogDemDlg::showEvent(QShowEvent* pEvent)
 
 	/* Update window */
 	OnTimerChart();
+
+	/* Update mute audio switch and write wave file, these can be changed
+	   by other windows */
+	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
+	CheckBoxSaveAudioWave->
+		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
 }
 
 void AnalogDemDlg::hideEvent(QHideEvent* pEvent)
@@ -133,4 +151,34 @@ void AnalogDemDlg::OnRadioDemodulation(int iID)
 		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_USB);
 		break;
 	}
+}
+
+void AnalogDemDlg::OnCheckBoxMuteAudio()
+{
+	/* Set parameter in working thread module */
+	DRMReceiver.GetWriteData()->MuteAudio(CheckBoxMuteAudio->isChecked());
+}
+
+void AnalogDemDlg::OnCheckSaveAudioWAV()
+{
+	if (CheckBoxSaveAudioWave->isChecked() == TRUE)
+	{
+		/* Show "save file" dialog */
+		QString strFileName =
+			QFileDialog::getSaveFileName("DreamOut.wav", "*.wav", this);
+
+		/* Check if user not hit the cancel button */
+		if (!strFileName.isNull())
+		{
+			DRMReceiver.GetWriteData()->
+				StartWriteWaveFile(strFileName.latin1());
+		}
+		else
+		{
+			/* User hit the cancel button, uncheck the button */
+			CheckBoxSaveAudioWave->setChecked(FALSE);
+		}
+	}
+	else
+		DRMReceiver.GetWriteData()->StopWriteWaveFile();
 }
