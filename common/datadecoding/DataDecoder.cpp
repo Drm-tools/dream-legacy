@@ -194,24 +194,19 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 			/* Use data unit ------------------------------------------------ */
 			if (DataUnit[iPacketID].bReady == TRUE)
 			{
-
-// TEST
-// Decode all IDs regardless whether activated or not
-//				/* Use only data units with the correct packet ID */
-//				if (iPacketID == iServPacketID)
+				/* Decode all IDs regardless whether activated or not
+				   (iPacketID == or != iServPacketID) */
+				/* Only DAB multimedia is supported */
+				if (eServAppDomain == CParameter::AD_DAB_SPEC_APP)
 				{
-					/* Only DAB multimedia is supported */
-					if (eServAppDomain == CParameter::AD_DAB_SPEC_APP)
+					switch (iDABUserAppIdent)
 					{
-						switch (iDABUserAppIdent)
-						{
-						case 2: /* MOTSlideshow */
-							/* Packet unit decoding */
-							DABData[iPacketID].
-								AddDataUnit(DataUnit[iPacketID].vecbiData,
-								MOTPicture);
-							break;
-						}
+					case 2: /* MOTSlideshow */
+						/* Packet unit decoding */
+						DABData[iPacketID].
+							AddDataUnit(DataUnit[iPacketID].vecbiData,
+							MOTPicture);
+						break;
 					}
 				}
 
