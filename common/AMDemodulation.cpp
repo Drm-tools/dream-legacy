@@ -118,7 +118,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		   right) */
 		for (i = 0, j = 0; i < 2 * iSymbolBlockSize; i += 2, j++)
 			(*pvecOutputData)[i] = (*pvecOutputData)[i + 1] =
-				Real2Sample(Real(cvecHilbert[j]) * 2);
+				Real2Sample(Real(cvecHilbert[j]) * 4);
 	}
 }
 
