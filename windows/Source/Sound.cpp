@@ -136,6 +136,12 @@ void CSound::InitRecording(int iNewBufferSize)
 	/* Create memory for sound card buffer */
 	for (i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
 	{
+		/* Unprepare old wave-header in case that we "re-initialized" this
+		   module. Calling "waveInUnprepareHeader()" with an unprepared
+		   buffer (when the module is initialized for the first time) has
+		   simply no effect */
+		waveInUnprepareHeader(m_WaveIn, &m_WaveInHeader[i], sizeof(WAVEHDR));
+
 		if (psSoundcardBuffer[i] != NULL)
 			delete[] psSoundcardBuffer[i];
 
@@ -169,7 +175,8 @@ void CSound::OpenInDevice()
 	MMRESULT result = waveInOpen(&m_WaveIn, iCurInDev, &sWaveFormatEx,
 		(DWORD) m_WaveInEvent, NULL, CALLBACK_EVENT);
 	if (result != MMSYSERR_NOERROR)
-		throw CGenErr("Sound Interface Start, waveInOpen() failed. This error usually occurs if another application blocks the sound in.");
+		throw CGenErr("Sound Interface Start, waveInOpen() failed. This error "
+			"usually occurs if another application blocks the sound in.");
 }
 
 void CSound::SetInDev(int iNewDev)
@@ -302,6 +309,10 @@ void CSound::InitPlayback(int iNewBufferSize)
 
 	for (j = 0; j < NUM_SOUND_BUFFERS_OUT; j++)
 	{
+		/* Unprepare old wave-header (in case header was not prepared before,
+		   simply nothing happens with this function call */
+		waveOutUnprepareHeader(m_WaveOut, &m_WaveOutHeader[j], sizeof(WAVEHDR));
+
 		/* Create memory for playback buffer */
 		if (psPlaybackBuffer[j] != NULL)
 			delete[] psPlaybackBuffer[j];
