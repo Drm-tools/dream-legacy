@@ -98,9 +98,9 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			for (i = 1; i < iScatPilFreqInt; i++)
 			{
 				/* E.g.: c(x) = (c_4 - c_0) / 4 * x + c_0 */
-				veccChanEst[j + i] = 
+				veccChanEst[j + i] =
 					(veccChanEst[j + iScatPilFreqInt] - veccChanEst[j]) /
-					(_REAL) (iScatPilFreqInt * i) + veccChanEst[j];
+					(_REAL) (iScatPilFreqInt) * (_REAL) i + veccChanEst[j];
 			}
 		}
 		break;
