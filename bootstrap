@@ -1,28 +1,8 @@
 #! /bin/bash
 
-# work around a strange setup in RedHat 7.x
-
-if [ -x /usr/bin/aclocal-1.5 ]; then
-	aclocal-1.5 -I .
-else
-	aclocal -I .
-fi
-if [ -x /usr/bin/autoheader-2.53 ]; then
-	autoheader-2.53
-else
-	autoheader
-fi
-
-libtoolize --automake --copy
-
-if [ -x /usr/bin/automake-1.5 ]; then
-	automake-1.5 --add-missing --copy
-else
-	automake --add-missing --copy
-fi
-if [ -x /usr/bin/autoconf-2.53 ]; then
-	autoconf-2.53
-else
-	autoconf
-fi
+aclocal -I . && \
+autoheader && \
+libtoolize --automake --copy && \
+automake --add-missing --copy && \
+autoconf 
 echo "Ready to run ./configure"
