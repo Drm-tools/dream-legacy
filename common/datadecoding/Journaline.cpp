@@ -28,7 +28,7 @@
 #include "Journaline.h"
 
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(HAVE_JOURNALINE)
 /* Implementation *************************************************************/
 /* Set these to 1 for more debug information. Needed by Journaline library */
 #ifdef WIN32

@@ -22,6 +22,8 @@ AC_ARG_ENABLE( sound,[    --enable-sound        generic sound support], enable_s
 
 AC_ARG_WITH( qtdir,[    --with-qtdir=path to QT],QTDIR=$withval)
 
+AC_ARG_WITH( journaline,[    --with-journaline     support Journaline],WITHJOURNALINE=$withval, WITHJOURNALINE=no)
+
 dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
@@ -100,6 +102,15 @@ dnl qwt
 
 AC_HAVE_LIBRARY(qwt, ,exit 1)
 AC_SUBST(QWTINCL, "-I/usr/include/qwt")
+
+dnl Journaline
+
+if test "x$WITHJOURNALINE" = xyes; then
+dnl can't check the library, as it has unresolved symbols
+	AC_CHECK_HEADERS(journaline/NML.h, ,exit 1)
+	AC_DEFINE(HAVE_JOURNALINE, 1, [Define if you have libfhgjournaline])
+	LIBS="-lfhgjournaline $LIBS"
+fi
 
 AC_CONFIG_FILES(Makefile linux/Makefile drm.spec)
 AC_OUTPUT

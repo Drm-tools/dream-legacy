@@ -35,6 +35,12 @@
 # include "NML.h"
 # include "newssvcdec.h"
 # include "dabdatagroupdecoder.h"
+#else
+# ifdef HAVE_JOURNALINE
+# include <journaline/NML.h>
+# include <journaline/newssvcdec.h>
+# include <journaline/dabdatagroupdecoder.h>
+# endif 
 #endif
 
 
@@ -59,7 +65,7 @@ struct CNews
 };
 
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(HAVE_JOURNALINE)
 class CJournaline
 {
 public:
@@ -84,7 +90,7 @@ protected:
 		{NEWS_SVC_DEC_putData(((CJournaline*) data)->newsdec, len, buf);}
 };
 #else
-/* No implementation for Linux yet */
+/* No Journaline implementation if library is not installed */
 class CJournaline
 {
 public:
