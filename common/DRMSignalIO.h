@@ -105,6 +105,8 @@ protected:
 	CRealVector		rvecDataReal;
 	CRealVector		rvecDataImag;
 
+	CReal			rNormFactor;
+
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& Parameter);
 };

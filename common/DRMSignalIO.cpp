@@ -44,14 +44,13 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 	for (i = 0; i < iInputBlockSize; i++)
 	{
 #ifdef FILE_DRM_USING_RAW_DATA
-		const short sOut =
-			(short) ((*pvecInputData)[i].real() * (_REAL) 128.0);
+		const short sOut = (short) ((*pvecInputData)[i].real() * rNormFactor);
 
 		/* Write 2 bytes, 1 piece */
 		fwrite((const void*) &sOut, size_t(2), size_t(1), pFileTransmitter);
 #else
 		fprintf(pFileTransmitter, "%e\n",
-			(float) (*pvecInputData)[i].real() * (_REAL) 128.0);
+			(float) (*pvecInputData)[i].real() * rNormFactor);
 #endif
 	}
 
@@ -82,10 +81,8 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 		const int iCurIndex = iBlockCnt * iNs2 + i;
 
 		/* Imaginary, real */
-		const short sCurOutReal =
-			(short) (rvecDataReal[i / 2] * (_REAL) 128.0);
-		const short sCurOutImag =
-			(short) (rvecDataImag[i / 2] * (_REAL) 128.0);
+		const short sCurOutReal = (short) (rvecDataReal[i / 2] * rNormFactor);
+		const short sCurOutImag = (short) (rvecDataImag[i / 2] * rNormFactor);
 
 		/* Envelope, phase */
 		const short sCurOutEnv =
@@ -224,6 +221,11 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	rvecZImag.Init(NUM_TAPS_TRANSMFILTER - 1, (CReal) 0.0);
 	rvecDataReal.Init(TransmParam.iSymbolBlockSize);
 	rvecDataImag.Init(TransmParam.iSymbolBlockSize);
+
+	/* All robustness modes and spectrum occupancies should have the same output
+	   power. Calculate the normaization factor based on the average power of
+	   symbol (the number 3000 was obtained through output tests) */
+	rNormFactor = (CReal) 3000.0 / Sqrt(TransmParam.rAvPowPerSymbol);
 
 	/* Define block-size for input */
 	iInputBlockSize = TransmParam.iSymbolBlockSize;
