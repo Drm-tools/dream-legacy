@@ -264,6 +264,20 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	BitmCubeRed.resize(iXSize, iYSize);
 	BitmCubeRed.fill(QColor(255, 0, 0));
 
+#ifdef HAVE_LIBHAMLIB
+	/* Init progress bar for input s-meter */
+	ProgrSigStrength->setRange(S_METER_THERMO_MIN, S_METER_THERMO_MAX);
+	ProgrSigStrength->setOrientation(QwtThermo::Horizontal, QwtThermo::Top);
+	ProgrSigStrength->setAlarmLevel(S_METER_THERMO_ALARM);
+	ProgrSigStrength->setAlarmColor(QColor(255, 0, 0));
+	ProgrSigStrength->setScale(S_METER_THERMO_MIN, S_METER_THERMO_MAX, 10.0);
+	EnableSMeter(FALSE); /* disable for initialization */
+#else
+	/* s-meter only implemented for hamlib */
+	ProgrSigStrength->hide();
+	TextLabelSMeter->hide();
+#endif
+
 	/* Clear list box for file names and set up columns */
 	ListViewStations->clear();
 
@@ -519,6 +533,8 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnTimerList()));
 	connect(&TimerUTCLabel, SIGNAL(timeout()),
 		this, SLOT(OnTimerUTCLabel()));
+	connect(&TimerSMeter, SIGNAL(timeout()),
+		this, SLOT(OnTimerSMeter()));
 
 	connect(ListViewStations, SIGNAL(selectionChanged(QListViewItem*)),
 		this, SLOT(OnListItemClicked(QListViewItem*)));
@@ -529,9 +545,10 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnFreqCntNewValue(double)));
 
 
-	/* Set up timer */
+	/* Set up timers */
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
-	TimerUTCLabel.start(1000); /* UTC label, every second */
+	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
+	TimerSMeter.start(GUI_TIMER_S_METER);
 }
 
 StationsDlg::~StationsDlg()
@@ -554,6 +571,30 @@ StationsDlg::~StationsDlg()
 #endif
 }
 
+void StationsDlg::EnableSMeter(_BOOLEAN bStatus)
+{
+	if (bStatus == TRUE)
+	{
+		/* Init progress bar for input s-meter */
+		ProgrSigStrength->setAlarmEnabled(TRUE);
+		ProgrSigStrength->setValue(S_METER_THERMO_MIN);
+		ProgrSigStrength->setFillColor(QColor(0, 190, 0));
+
+		ProgrSigStrength->setEnabled(TRUE);
+		TextLabelSMeter->setEnabled(TRUE);
+	}
+	else
+	{
+		/* Set s-meter control in "disabled" status */
+		ProgrSigStrength->setAlarmEnabled(FALSE);
+		ProgrSigStrength->setValue(S_METER_THERMO_MAX);
+		ProgrSigStrength->setFillColor(palette().disabled().light());
+
+		ProgrSigStrength->setEnabled(FALSE);
+		TextLabelSMeter->setEnabled(FALSE);
+	}
+}
+
 void StationsDlg::SetUTCTimeLabel()
 {
 	/* Get current UTC time */
@@ -568,6 +609,18 @@ void StationsDlg::SetUTCTimeLabel()
 	/* Only apply if time label does not show the correct time */
 	if (TextLabelUTCTime->text().compare(strUTCTime))
 		TextLabelUTCTime->setText(strUTCTime);
+}
+
+void StationsDlg::OnTimerSMeter()
+{
+#ifdef HAVE_LIBHAMLIB
+	if (pRig != 0)
+	{
+		value_t tValue;
+		if (!rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &tValue))
+			ProgrSigStrength->setValue((_REAL) tValue.i / 10);
+	}
+#endif
 }
 
 void StationsDlg::OnShowStationsMenu(int iID)
@@ -1014,6 +1067,8 @@ void StationsDlg::InitHamlib(const rig_model_t newModID)
 {
 	int ret;
 
+try
+{
 	/* Set value for current selected model ID */
 	iCurSelModelID = newModID;
 
@@ -1029,7 +1084,7 @@ void StationsDlg::InitHamlib(const rig_model_t newModID)
 	/* Init rig */
 	pRig = rig_init(newModID);
 	if (pRig == NULL)
-		return;
+		throw CGenErr("Initialization of hamlib failed.");
 
 	/* Set config for hamlib. Check if config string was added with command line
 	   argument */
@@ -1060,11 +1115,10 @@ void StationsDlg::InitHamlib(const rig_model_t newModID)
 	{
 		if ((q = strchr(p, '=')) == NULL)
 		{
-			/* Malformatted config string */
-			cerr << "Malformatted config string" << endl;
 			rig_cleanup(pRig);
 			pRig = NULL;
-			return;
+
+			throw CGenErr("Malformatted config string.");
 		}
 		*q++ = '\0';
 
@@ -1074,11 +1128,10 @@ void StationsDlg::InitHamlib(const rig_model_t newModID)
 		ret = rig_set_conf(pRig, rig_token_lookup(pRig, p), q);
 		if (ret != RIG_OK)
 		{
-			/* Rig set conf failed */
-			cerr << "Rig set conf failed: " << rigerror(ret) << endl;
 			rig_cleanup(pRig);
 			pRig = NULL;
-			return;
+
+			throw CGenErr("Rig set conf failed.");
 		}
 	}
 	if (p_dup)
@@ -1088,9 +1141,10 @@ void StationsDlg::InitHamlib(const rig_model_t newModID)
 	if (ret = rig_open(pRig) != RIG_OK)
 	{
 		/* Fail! */
-		cerr << "Rig open failed: " << rigerror(ret) << endl;
 		rig_cleanup(pRig);
 		pRig = NULL;
+
+		throw CGenErr("Rig open failed.");
 	}
 
 	/* Ignore result, some rigs don't have support for this */
@@ -1108,10 +1162,10 @@ void StationsDlg::InitHamlib(const rig_model_t newModID)
 			if ((q = strchr(p, '=')) == NULL)
 			{
 				/* Malformatted config string */
-				cerr << "Malformatted config string" << endl;
 				rig_cleanup(pRig);
 				pRig = NULL;
-				return;
+
+				throw CGenErr("Malformatted config string.");
 			}
 			*q++ = '\0';
 
@@ -1166,8 +1220,34 @@ void StationsDlg::InitHamlib(const rig_model_t newModID)
 			free(p_dup);
 	}
 
+	/* Check if s-meter capabilities are available */
+	if (pRig != NULL)
+	{
+		value_t tValue;
+		if (!rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &tValue))
+		{
+			/* s-meter can be used, enable controls */
+			EnableSMeter(TRUE);
+		}
+		else
+		{
+			/* disable s-meter controls */
+			EnableSMeter(FALSE);
+		}
+	}
+
 	/* Set new model ID in receiver object which is needed for init-file */
 	DRMReceiver.SetHamlibModel(newModID);
+}
+
+catch (CGenErr GenErr)
+{
+	/* Print error message */
+	cerr << GenErr.strError << endl;
+
+	/* disable s-meter controls */
+	EnableSMeter(FALSE);
+}
 }
 #endif
 
@@ -1914,4 +1994,16 @@ void StationsDlg::AddWhatsThisHelp()
 	QWhatsThis::add(TextLabelUTCTime,
 		"<b>UTC Time:</b> Shows the current Coordinated Universal Time (UTC) "
 		"which is also known as Greenwich Mean Time (GMT).");
+
+#ifdef HAVE_LIBHAMLIB
+	/* S-meter */
+	const QString strSMeter =
+		"<b>Signal-Meter:</b> Shows the signal strength level in dB relative "
+		"to S9.<br>Note that not all front-ends controlled by hamlib support "
+		"this feature. If the s-meter is not available, the controls are "
+		"disabled.";
+
+	QWhatsThis::add(TextLabelSMeter, strSMeter);
+	QWhatsThis::add(ProgrSigStrength, strSMeter);
+#endif
 }
