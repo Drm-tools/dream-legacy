@@ -206,24 +206,6 @@ fflush(pFile2);
 		}
 		else
 		{
-
-
-#if 0
-// Store AAC-data in file
-static FILE* pFile2 = fopen("test/aac.dat", "w");
-
-int iNewFrL = veciFrameLength[j] + 1;
-
-// Frame length
-fprintf(pFile2, "%d\n", iNewFrL);
-
-for (int v = 0; v < veciFrameLength[j] + 1; v++)
-	fprintf(pFile2, "%d\n", vecbyPrepAudioFrame[v]);
-
-fflush(pFile2);
-#endif
-
-
 			/* Set AAC CRC result in log file */
 			ReceiverParam.ReceptLog.SetMSC(TRUE);
 
