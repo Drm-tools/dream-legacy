@@ -565,8 +565,8 @@ void CNoiseReduction::Init(const int iNewBlockLen)
 	iFreqBlLen = iBlockLen + 1;
 
 	/* Length of the minimum statistic history */
-	iMinStatHistLen = MIN_STAT_HIST_LENGTH_SEC * (CReal) SOUNDCRD_SAMPLE_RATE /
-		iBlockLen;
+	iMinStatHistLen = (int) (MIN_STAT_HIST_LENGTH_SEC *
+		(CReal) SOUNDCRD_SAMPLE_RATE / iBlockLen);
 
 	/* Lambda for IIR filter */
 	rLamPSD = IIR1Lam(TICONST_PSD_EST_SIG_NOISE_RED,
