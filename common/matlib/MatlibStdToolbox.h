@@ -203,6 +203,11 @@ inline CReal				Ceil(const CReal& fI)
 inline CMatlibVector<CReal>	Ceil(const CMatlibVector<CReal>& fvI)
 								{_VECOP(CReal, fvI.GetSize(), Ceil(fvI[i]));}
 
+inline CReal				Round(const CReal& fI)
+								{return Floor(fI + (CReal) 0.5);}
+inline CMatlibVector<CReal>	Round(const CMatlibVector<CReal>& fvI)
+								{_VECOP(CReal, fvI.GetSize(), Round(fvI[i]));}
+
 
 template<class T> T			Sum(const CMatlibVector<T>& vecI);
 
