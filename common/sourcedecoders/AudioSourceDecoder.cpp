@@ -523,7 +523,7 @@ fflush(pFile2);
 #endif
 
 			/* Call decoder routine */
-			psDecOutSampleBuf = (short*) faacDecDecode(HandleAACDecoder,
+			psDecOutSampleBuf = (short*) NeAACDecDecode(HandleAACDecoder,
 				&DecFrameInfo, &vecbyPrepAudioFrame[0], veciFrameLength[j] + 1);
 		}
 		else
@@ -768,7 +768,7 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 
 		case CParameter::AM_P_STEREO:
 			/* Low-complexity only defined in SBR mode */
-			iDRMchanMode = DRMCH_SBR_LC_STEREO;
+			iDRMchanMode = DRMCH_SBR_PS_STEREO;
 			break;
 
 		case CParameter::AM_STEREO:
@@ -859,7 +859,7 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		veciFrameLength.Init(iNumAACFrames);
 
 		/* Init AAC-decoder */
-		faacDecInitDRM(HandleAACDecoder, iAACSampleRate, iDRMchanMode);
+		NeAACDecInitDRM(&HandleAACDecoder, iAACSampleRate, iDRMchanMode);
 
 		/* With this parameter we define the maximum lenght of the output
 		   buffer. The cyclic buffer is only needed if we do a sample rate
@@ -900,11 +900,11 @@ CAudioSourceDecoder::CAudioSourceDecoder()
 {
 #ifdef USE_FAAD2_LIBRARY
 	/* Open AACEncoder instance */
-	HandleAACDecoder = faacDecOpen();
+	HandleAACDecoder = NeAACDecOpen();
 
 	/* Decoder MUST be initialized at least once, therefore do it here in the
 	   constructor with arbitrary values to be sure that this is satisfied */
-	faacDecInitDRM(HandleAACDecoder, 24000, DRMCH_MONO);
+	NeAACDecInitDRM(&HandleAACDecoder, 24000, DRMCH_MONO);
 #endif
 }
 
@@ -912,6 +912,6 @@ CAudioSourceDecoder::~CAudioSourceDecoder()
 {
 #ifdef USE_FAAD2_LIBRARY
 	/* Close decoder handle */
-	faacDecClose(HandleAACDecoder);
+	NeAACDecClose(HandleAACDecoder);
 #endif
 }

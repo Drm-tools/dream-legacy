@@ -38,7 +38,7 @@
 #include "../datadecoding/DataDecoder.h"
 
 #ifdef USE_FAAD2_LIBRARY
-# include "faad.h"
+# include "neaacdec.h"
 #endif
 #ifdef USE_FAAC_LIBRARY
 # include "faac.h"
@@ -129,7 +129,7 @@ protected:
 
 #ifdef USE_FAAD2_LIBRARY
 	/* AAC decoding */
-	faacDecHandle		HandleAACDecoder;
+	NeAACDecHandle		HandleAACDecoder;
 
 	CAudioResample		ResampleObjL;
 	CAudioResample		ResampleObjR;
