@@ -318,7 +318,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			  pcmpeqb mm5, mm3 // mm3 = 0
 			  We subtract unsigned with saturation and afterwards compare for
 			  equal to zero. If value in mm1 is larger than the value in mm5, we
-			  alway get 0 as the result
+			  always get 0 as the result
 			- Defining __asm Blocks as C Macros: Put the __asm keyword in front
 			  of each assembly instruction
 			- If we want to use c-pointers to arrays (like "pOldTrelMetric"), we
@@ -326,58 +326,60 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			  errors
 		*/
 			/* Each invocation of BFLY() will do 8 butterflies in parallel */
-#		define BFLY(GROUP) \
-			/* Compute branch metrics */ \
-			__asm mov edx, pOldTrelMetric /* Incoming path metric */ \
-			__asm movq mm4, [edx + (8 * GROUP)] /* high bit = 0 */ \
-			__asm movq mm5, [edx + ((8 * GROUP) + 32)] /* high bit = 1 */ \
-			__asm movq mm0, [chMet1 + (8 * GROUP)] \
-			__asm movq mm3, [chMet2 + (8 * GROUP)] \
-			\
-			__asm movq mm1, mm4 /* first set (mm1, mm2) */ \
-			__asm paddusb mm1, mm0 /* first set: decision for bit = 0 (mm1) */ \
-			__asm movq mm2, mm5 \
-			__asm paddusb mm2, mm3 /* first set: decision for bit = 1 (mm2) */ \
-			__asm movq mm6, mm4 /* second set (mm6, mm7) */ \
-			__asm paddusb mm6, mm3 /* second set: decision for bit = 0 (mm6) */ \
-			__asm movq mm7, mm5 \
-			__asm paddusb mm7, mm0 /* second set: decision for bit = 1 (mm7) */ \
-			\
-			/* live registers 1 2 6 7. Compare mm1 and mm2; mm6 and mm7 */ \
-			__asm movq mm5, mm2 \
-			__asm movq mm4, mm7 \
-			__asm psubusb mm5, mm1 /* mm5 = mm2 - mm1 */ \
-			__asm psubusb mm4, mm6 /* mm4 = mm7 - mm6 */ \
-			__asm pxor mm3, mm3 /* zero mm3 register, needed for comparison */ \
-			__asm pcmpeqb mm5, mm3 /* mm5 = first set of decisions */ \
-			__asm pcmpeqb mm4, mm3 /* mm4 = second set of decisions */ \
-			\
-			/* live registers 1 2 4 5 6 7. Select survivors. Avoid jumps
-			   -> mask results with AND and ANDN. then OR */ \
-			__asm movq mm3, mm5 \
-			__asm movq mm0, mm4 \
-			__asm pand mm2, mm5 \
-			__asm pand mm7, mm4 \
-			__asm pandn mm3, mm1 \
-			__asm pandn mm0, mm6 \
-			__asm por mm2, mm3 /* mm2: first set survivors (decisions in mm5) */ \
-			__asm por mm7, mm0 /* mm7: second set survivors (decisions in mm4) */ \
-			\
-			/* live registers 2 4 5 7 */ \
-			/* interleave & store decisions in mm4, mm5 */ \
-			/* interleave & store new branch metrics in mm2, mm7 */ \
-			__asm movq mm3, mm5 \
-			__asm movq mm0, mm2 \
-			__asm punpcklbw mm3, mm4 /* interleave first 8 decisions */ \
-			__asm punpckhbw mm5, mm4 /* interleave second 8 decisions */ \
-			__asm punpcklbw mm0, mm7 /* interleave first 8 new metrics */ \
-			__asm punpckhbw mm2, mm7 /* interleave second 8 new metrics */ \
-			__asm mov edx, pCurDec \
-			__asm movq [edx + (16 * GROUP)], mm3 \
-			__asm movq [edx + (16 * GROUP + 8)], mm5 \
-			__asm mov edx, pCurTrelMetric \
-			__asm movq [edx + (16 * GROUP)], mm0 /* new metrics */ \
-			__asm movq [edx + (16 * GROUP + 8)], mm2 \
+#			define BFLY(GROUP) \
+			{ \
+				/* Compute branch metrics */ \
+				__asm mov edx, pOldTrelMetric /* Incoming path metric */ \
+				__asm movq mm4, [edx + (8 * GROUP)] /* high bit = 0 */ \
+				__asm movq mm5, [edx + ((8 * GROUP) + 32)] /* high bit = 1 */ \
+				__asm movq mm0, [chMet1 + (8 * GROUP)] \
+				__asm movq mm3, [chMet2 + (8 * GROUP)] \
+				\
+				__asm movq mm1, mm4 /* first set (mm1, mm2) */ \
+				__asm paddusb mm1, mm0 /* first set: decision for bit = 0 (mm1) */ \
+				__asm movq mm2, mm5 \
+				__asm paddusb mm2, mm3 /* first set: decision for bit = 1 (mm2) */ \
+				__asm movq mm6, mm4 /* second set (mm6, mm7) */ \
+				__asm paddusb mm6, mm3 /* second set: decision for bit = 0 (mm6) */ \
+				__asm movq mm7, mm5 \
+				__asm paddusb mm7, mm0 /* second set: decision for bit = 1 (mm7) */ \
+				\
+				/* live registers 1 2 6 7. Compare mm1 and mm2; mm6 and mm7 */ \
+				__asm movq mm5, mm2 \
+				__asm movq mm4, mm7 \
+				__asm psubusb mm5, mm1 /* mm5 = mm2 - mm1 */ \
+				__asm psubusb mm4, mm6 /* mm4 = mm7 - mm6 */ \
+				__asm pxor mm3, mm3 /* zero mm3 register, needed for comparison */ \
+				__asm pcmpeqb mm5, mm3 /* mm5 = first set of decisions */ \
+				__asm pcmpeqb mm4, mm3 /* mm4 = second set of decisions */ \
+				\
+				/* live registers 1 2 4 5 6 7. Select survivors. Avoid jumps
+				   -> mask results with AND and ANDN. then OR */ \
+				__asm movq mm3, mm5 \
+				__asm movq mm0, mm4 \
+				__asm pand mm2, mm5 \
+				__asm pand mm7, mm4 \
+				__asm pandn mm3, mm1 \
+				__asm pandn mm0, mm6 \
+				__asm por mm2, mm3 /* mm2: first set survivors (decisions in mm5) */ \
+				__asm por mm7, mm0 /* mm7: second set survivors (decisions in mm4) */ \
+				\
+				/* live registers 2 4 5 7 */ \
+				/* interleave & store decisions in mm4, mm5 */ \
+				/* interleave & store new branch metrics in mm2, mm7 */ \
+				__asm movq mm3, mm5 \
+				__asm movq mm0, mm2 \
+				__asm punpcklbw mm3, mm4 /* interleave first 8 decisions */ \
+				__asm punpckhbw mm5, mm4 /* interleave second 8 decisions */ \
+				__asm punpcklbw mm0, mm7 /* interleave first 8 new metrics */ \
+				__asm punpckhbw mm2, mm7 /* interleave second 8 new metrics */ \
+				__asm mov edx, pCurDec \
+				__asm movq [edx + (16 * GROUP)], mm3 \
+				__asm movq [edx + (16 * GROUP + 8)], mm5 \
+				__asm mov edx, pCurTrelMetric \
+				__asm movq [edx + (16 * GROUP)], mm0 /* new metrics */ \
+				__asm movq [edx + (16 * GROUP + 8)], mm2 \
+			}
 
 			/* Invoke macro 4 times for a total of 32 butterflies */
 			BFLY(0)
@@ -400,15 +402,17 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 #endif
 
 			/* Search for the minimum metric. Result ist stored in mm0 */
-#		define PMINUB_MM0_MM1 \
-			__asm movq mm2, mm0 \
-			__asm psubusb mm2, mm1 /* mm2 = mm0 - mm1 */ \
-			__asm pxor mm3, mm3 /* zero mm3 register, needed for comparison */ \
-			__asm pcmpeqb mm2, mm3 /* decisions */ \
-			\
-			__asm pand mm0, mm2 \
-			__asm pandn mm2, mm1 \
-			__asm por mm0, mm2
+#			define PMINUB_MM0_MM1 \
+			{ \
+				__asm movq mm2, mm0 \
+				__asm psubusb mm2, mm1 /* mm2 = mm0 - mm1 */ \
+				__asm pxor mm3, mm3 /* zero mm3 register, needed for comparison */ \
+				__asm pcmpeqb mm2, mm3 /* decisions */ \
+				\
+				__asm pand mm0, mm2 \
+				__asm pandn mm2, mm1 \
+				__asm por mm0, mm2 \
+			}
 
 			/* Search for minimum, byte-wise for whole register */
 			mov edx, pCurTrelMetric
@@ -448,10 +452,12 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 
 			/* mm0 now contains lowest metric in all 8 bytes
 			   subtract it from every output metric. Trashes mm7 */
-#		define PSUBUSBM(MEM, REG) \
-			__asm movq mm7, MEM \
-			__asm psubusb mm7, REG \
-			__asm movq MEM, mm7
+#			define PSUBUSBM(MEM, REG) \
+			{ \
+				__asm movq mm7, MEM \
+				__asm psubusb mm7, REG \
+				__asm movq MEM, mm7 \
+			}
 
 			PSUBUSBM([edx], mm0)
 			PSUBUSBM([edx + 8], mm0)
