@@ -51,13 +51,14 @@
 class COFDMModulation : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
-	COFDMModulation() {FFTWPlan = NULL;}
-	virtual ~COFDMModulation();
+	COFDMModulation() {}
+	virtual ~COFDMModulation() {}
 
 protected:
-	fftw_plan				FFTWPlan;
-	CVector<fftw_complex>	veccFFTWInput;
-	CVector<fftw_complex>	veccFFTWOutput;
+	CFftPlans				FftPlan;
+
+	CComplexVector			veccFFTInput;
+	CComplexVector			veccFFTOutput;
 
 	int						iShiftedKmin;
 	int						iShiftedKmax;
@@ -71,8 +72,8 @@ protected:
 class COFDMDemodulation : public CReceiverModul<_REAL, _COMPLEX>
 {
 public:
-	COFDMDemodulation() {FFTWPlan = NULL;}
-	virtual ~COFDMDemodulation();
+	COFDMDemodulation() {}
+	virtual ~COFDMDemodulation() {}
 
 	void GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
@@ -81,9 +82,9 @@ public:
 protected:
 	CVector<_REAL>			vecrPDSResult;
 
-	fftw_plan				FFTWPlan;
-	CVector<fftw_complex>	veccFFTWInput;
-	CVector<fftw_complex>	veccFFTWOutput;
+	CFftPlans				FftPlan;
+	CComplexVector			veccFFTInput;
+	CComplexVector			veccFFTOutput;
 
 	CVector<_REAL>			vecrPowSpec;
 	int						iLenPowSpec;
@@ -114,13 +115,14 @@ class COFDMDemodSimulation :
 	public CSimulationModul<CChanSimDataMod, _COMPLEX, CChanSimDataDemod>
 {
 public:
-	COFDMDemodSimulation() {FFTWPlan = NULL;}
-	virtual ~COFDMDemodSimulation();
+	COFDMDemodSimulation() {}
+	virtual ~COFDMDemodSimulation() {}
 
 protected:
-	fftw_plan				FFTWPlan;
-	CVector<fftw_complex>	veccFFTWInput;
-	CVector<fftw_complex>	veccFFTWOutput;
+	CFftPlans				FftPlan;
+	CComplexVector			veccFFTInput;
+	CComplexVector			veccFFTOutput;
+
 	int						iStartPointGuardRemov;
 
 	int						iShiftedKmin;

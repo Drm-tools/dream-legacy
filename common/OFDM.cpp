@@ -36,27 +36,20 @@
 \******************************************************************************/
 void COFDMModulation::ProcessDataInternal(CParameter& TransmParam)
 {
-	int i, iCurInd;
-	const int iEndInd = iShiftedKmax + 1;
+	int			i;
+	const int	iEndInd = iShiftedKmax + 1;
 
-	/* Convert our _COMPLEX format in fftw-complex format and place bins
-	   at the right position */
+	/* Copy input vector in matlib vector and place bins at the correct
+	   position */
 	for (i = iShiftedKmin; i < iEndInd; i++)
-	{
-		/* Current index */
-		iCurInd = i - iShiftedKmin;
+		veccFFTInput[i] = (*pvecInputData)[i - iShiftedKmin];
 
-		veccFFTWInput[i].re = (*pvecInputData)[iCurInd].real();
-		veccFFTWInput[i].im = (*pvecInputData)[iCurInd].imag();
-	}
+	/* Calculate inverse fast Fourier transformation */
+	veccFFTOutput = Ifft(veccFFTInput, FftPlan);
 
-	/* Calculate Fourier transformation */
-	fftw_one(FFTWPlan, &veccFFTWInput[0], &veccFFTWOutput[0]);
-
-	/* Copy complex FFT output in output buffer */
+	/* Copy complex FFT output in output buffer and scale */
 	for (i = 0; i < iDFTSize; i++)
-		(*pvecOutputData)[i + iGuardSize] =
-			_COMPLEX(veccFFTWOutput[i].re, veccFFTWOutput[i].im);
+		(*pvecOutputData)[i + iGuardSize] = veccFFTOutput[i] * (CReal) iDFTSize;
 
 	/* Copy data from the end to the guard-interval (Add guard-interval) */
 	for (i = 0; i < iGuardSize; i++)
@@ -70,34 +63,18 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 	iGuardSize = TransmParam.iGuardSize;
 	iShiftedKmin = TransmParam.iShiftedKmin;
 	iShiftedKmax = TransmParam.iShiftedKmax;
-	
-	/* Create plan for fftw */
-	if (FFTWPlan != NULL)
-		fftw_destroy_plan(FFTWPlan);
-	FFTWPlan = fftw_create_plan(iDFTSize, FFTW_BACKWARD, FFTW_ESTIMATE);
 
-	/* Allocate memory for intermediate result of fftw */
-	veccFFTWInput.Init(iDFTSize);
-	veccFFTWOutput.Init(iDFTSize);
+	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
+	FftPlan.Init(iDFTSize);
 
-	/* Zero out input vector (because only a few bins are used, the rest has to
-	   be zero */
-	for (int i = 0; i < iDFTSize; i++)
-	{
-		veccFFTWInput[i].re = (_REAL) 0.0;
-		veccFFTWInput[i].im = (_REAL) 0.0;
-	}
+	/* Allocate memory for intermediate result of fft. Zero out input vector
+	   (because only a few bins are used, the rest has to be zero) */
+	veccFFTInput.Init(iDFTSize, (CReal) 0.0);
+	veccFFTOutput.Init(iDFTSize);
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = TransmParam.iNoCarrier;
 	iOutputBlockSize = TransmParam.iSymbolBlockSize;
-}
-
-COFDMModulation::~COFDMModulation()
-{
-	/* Destroy FFTW plan */
-	if (FFTWPlan != NULL)
-		fftw_destroy_plan(FFTWPlan);
 }
 
 
@@ -133,8 +110,7 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Input data is real, make complex and compensate for frequency offset */
 	for (i = 0; i < iInputBlockSize; i++)
 	{
-		veccFFTWInput[i].re = (*pvecInputData)[i] * real(cCurExp);
-		veccFFTWInput[i].im = -(*pvecInputData)[i] * imag(cCurExp);
+		veccFFTInput[i] = (*pvecInputData)[i] * Conj(cCurExp);
 		
 		/* Rotate exp-pointer on step further by complex multiplication with
 		   precalculated rotation vector cExpStep. This saves us from
@@ -144,12 +120,12 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 	/* Calculate Fourier transformation (actual OFDM demodulation) */
-	fftw_one(FFTWPlan, &veccFFTWInput[0], &veccFFTWOutput[0]);
+	veccFFTOutput = Fft(veccFFTInput, FftPlan);
 
 	/* Use only useful carriers and normalize with the block-size ("N") */
 	for (i = iShiftedKmin; i < iShiftedKmax + 1; i++)
-		(*pvecOutputData)[i - iShiftedKmin] = _COMPLEX(veccFFTWOutput[i].re /
-			iDFTSize, veccFFTWOutput[i].im / iDFTSize);
+		(*pvecOutputData)[i - iShiftedKmin] =
+			veccFFTOutput[i] / (CReal) iDFTSize;
 
 
 	/* SNR estimation. Use virtual carriers at the edges of the spectrum ---- */
@@ -175,15 +151,8 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	if ((iShiftedKmin > 1) && (iShiftedKmax + 1 < iDFTSize))
 	{
 		/* Get current powers */
-		rPowLeftVCar = veccFFTWOutput[iShiftedKmin - 1].re *
-			veccFFTWOutput[iShiftedKmin - 1].re +
-			veccFFTWOutput[iShiftedKmin - 1].im *
-			veccFFTWOutput[iShiftedKmin - 1].im;
-
-		rPowRightVCar = veccFFTWOutput[iShiftedKmax + 1].re *
-			veccFFTWOutput[iShiftedKmax + 1].re +
-			veccFFTWOutput[iShiftedKmax + 1].im *
-			veccFFTWOutput[iShiftedKmax + 1].im;
+		rPowLeftVCar = SqMag(veccFFTOutput[iShiftedKmin - 1]);
+		rPowRightVCar = SqMag(veccFFTOutput[iShiftedKmin + 1]);
 
 		/* Average results */
 		IIR1(rNoisePowAvLeft, rPowLeftVCar, rLamSNREst);
@@ -204,8 +173,7 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	for (i = 0; i < iLenPowSpec; i++)
 	{
 		/* Power of this tap */
-		rCurPower = veccFFTWOutput[i].re * veccFFTWOutput[i].re +
-			veccFFTWOutput[i].im * veccFFTWOutput[i].im;
+		rCurPower = SqMag(veccFFTOutput[i]);
 
 		/* Averaging (first order IIR filter) */
 		IIR1(vecrPowSpec[i], rCurPower, rLamPSD);
@@ -236,14 +204,12 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Init SNR estimate */
 	rSNREstimate = (_REAL) 0.0;
 
-	/* Create plan for fftw */
-	if (FFTWPlan != NULL)
-		fftw_destroy_plan(FFTWPlan);
-	FFTWPlan = fftw_create_plan(iDFTSize, FFTW_FORWARD, FFTW_ESTIMATE);
+	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
+	FftPlan.Init(iDFTSize);
 
 	/* Allocate memory for intermediate result of fftw */
-	veccFFTWInput.Init(iDFTSize);
-	veccFFTWOutput.Init(iDFTSize);
+	veccFFTInput.Init(iDFTSize);
+	veccFFTOutput.Init(iDFTSize);
 
 	/* Vector for power density spectrum of input signal */
 	iLenPowSpec = iDFTSize / 2;
@@ -254,13 +220,6 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iDFTSize;
 	iOutputBlockSize = iNoCarrier;
-}
-
-COFDMDemodulation::~COFDMDemodulation()
-{
-	/* Destroy FFTW plan */
-	if (FFTWPlan != NULL)
-		fftw_destroy_plan(FFTWPlan);
 }
 
 void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
@@ -319,17 +278,16 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Regular signal *********************************************************/
 	/* Convert input vector in fft-vector type and cut out the guard-interval */
 	for (i = iStartPointGuardRemov; i < iEndPointGuardRemov; i++)
-		veccFFTWInput[i - iStartPointGuardRemov].re = (*pvecInputData)[i].tOut;
+		veccFFTInput[i - iStartPointGuardRemov] = (*pvecInputData)[i].tOut;
 
 	/* Actual OFDM demodulation */
 	/* Calculate Fourier transformation (actual OFDM demodulation) */
-	fftw_one(FFTWPlan, &veccFFTWInput[0], &veccFFTWOutput[0]);
+	veccFFTOutput = Fft(veccFFTInput, FftPlan);
 
 	/* Use only useful carriers and normalize with the block-size ("N") */
 	for (i = iShiftedKmin; i < iShiftedKmax + 1; i++)
 		(*pvecOutputData2)[i - iShiftedKmin].tOut =
-			_COMPLEX(veccFFTWOutput[i].re /	iDFTSize,
-			veccFFTWOutput[i].im / iDFTSize);
+			veccFFTOutput[i] / (CReal) iDFTSize;
 
 	/* We need the same information for channel estimation evaluation, too */
 	for (i = 0; i < iNoCarrier; i++)
@@ -344,33 +302,31 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
 	   compare reference signal and channel estimation output we have to use
 	   the synchronous reference signal for input */
 	for (i = iGuardSize; i < iSymbolBlockSize; i++)
-		veccFFTWInput[i - iGuardSize].re = (*pvecInputData)[i].tIn;
+		veccFFTInput[i - iGuardSize] = (*pvecInputData)[i].tIn;
 
 	/* Actual OFDM demodulation */
 	/* Calculate Fourier transformation (actual OFDM demodulation) */
-	fftw_one(FFTWPlan, &veccFFTWInput[0], &veccFFTWOutput[0]);
+	veccFFTOutput = Fft(veccFFTInput, FftPlan);
 
 	/* Use only useful carriers and normalize with the block-size ("N") */
 	for (i = iShiftedKmin; i < iShiftedKmax + 1; i++)
 		(*pvecOutputData2)[i - iShiftedKmin].tIn =
-			_COMPLEX(veccFFTWOutput[i].re / iDFTSize,
-			veccFFTWOutput[i].im / iDFTSize);
+			veccFFTOutput[i] / (CReal) iDFTSize;
 
 
 	/* Reference signal *******************************************************/
 	/* Convert input vector in fft-vector type and cut out the guard-interval */
 	for (i = iStartPointGuardRemov; i < iEndPointGuardRemov; i++)
-		veccFFTWInput[i - iStartPointGuardRemov].re = (*pvecInputData)[i].tRef;
+		veccFFTInput[i - iStartPointGuardRemov] = (*pvecInputData)[i].tRef;
 
 	/* Actual OFDM demodulation */
 	/* Calculate Fourier transformation (actual OFDM demodulation) */
-	fftw_one(FFTWPlan, &veccFFTWInput[0], &veccFFTWOutput[0]);
+	veccFFTOutput = Fft(veccFFTInput, FftPlan);
 
 	/* Use only useful carriers and normalize with the block-size ("N") */
 	for (i = iShiftedKmin; i < iShiftedKmax + 1; i++)
 		(*pvecOutputData2)[i - iShiftedKmin].tRef =
-			_COMPLEX(veccFFTWOutput[i].re /	iDFTSize,
-			veccFFTWOutput[i].im / iDFTSize);
+			veccFFTOutput[i] / (CReal) iDFTSize;
 
 
 	/* Channel tap gains ******************************************************/
@@ -380,29 +336,22 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Convert input vector in fft-vector type and cut out the
 		   guard-interval */
 		for (i = iStartPointGuardRemov; i < iEndPointGuardRemov; i++)
-		{
-			veccFFTWInput[i - iStartPointGuardRemov].re =
-				(*pvecInputData)[i].veccTap[j].real();
-
-			veccFFTWInput[i - iStartPointGuardRemov].im =
-				(*pvecInputData)[i].veccTap[j].imag();
-		}
+			veccFFTInput[i - iStartPointGuardRemov] =
+				(*pvecInputData)[i].veccTap[j];
 
 		/* Actual OFDM demodulation */
 		/* Calculate Fourier transformation (actual OFDM demodulation) */
-		fftw_one(FFTWPlan, &veccFFTWInput[0], &veccFFTWOutput[0]);
+		veccFFTOutput = Fft(veccFFTInput, FftPlan);
 
 		/* Use only useful carriers and normalize with the block-size ("N") */
 		for (i = 0; i < iNoCarrier; i++)
 			(*pvecOutputData2)[i].veccTap[j] =
-				_COMPLEX(veccFFTWOutput[i].re /	iDFTSize,
-				veccFFTWOutput[i].im / iDFTSize);
-	
+				veccFFTOutput[i] / (CReal) iDFTSize;
+
 		/* Store the end of the vector, too */
 		for (i = 0; i < iNoCarrier; i++)
 			(*pvecOutputData2)[i].veccTapBackw[j] =
-				_COMPLEX(veccFFTWOutput[iDFTSize - i - 1].re /	iDFTSize,
-				veccFFTWOutput[iDFTSize - i - 1].im / iDFTSize);
+				veccFFTOutput[iDFTSize - i - 1] / (CReal) iDFTSize;
 	}
 
 
@@ -433,24 +382,17 @@ void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 
 	iNumTapsChan = ReceiverParam.iNumTaps;
 
-	/* Create plan for fftw */
-	if (FFTWPlan != NULL)
-		fftw_destroy_plan(FFTWPlan);
-	FFTWPlan = fftw_create_plan(iDFTSize, FFTW_FORWARD, FFTW_ESTIMATE);
+	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
+	FftPlan.Init(iDFTSize);
 
-	/* Allocate memory for intermediate result of fftw */
-	veccFFTWInput.Init(iDFTSize);
-	veccFFTWOutput.Init(iDFTSize);
-
-	/* Set imaginary part to zero, this is not written by the input signal */
-	for (int i = 0; i < iDFTSize; i++)
-		veccFFTWInput[i].im = (_REAL) 0.0;
-
+	/* Allocate memory for intermediate result of fftw, init input signal with
+	   zeros because imaginary part is not written */
+	veccFFTInput.Init(iDFTSize, (CReal) 0.0);
+	veccFFTOutput.Init(iDFTSize);
 
 	/* Init internal counter for symbol number. Set it to this value to get
 	   a "0" for the first time */
 	iSymbolCounterTiSy = iNoSymPerFrame - 1;
-
 
 	/* Set guard-interval removal start index. Adapt this parameter to the
 	   channel which was chosen. Place the delay spread centered in the
@@ -473,11 +415,4 @@ void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 	/* We need to store as many symbols in output buffer as long the channel
 	   estimation delay is */
 	iMaxOutputBlockSize2 = iNoCarrier * ReceiverParam.iChanEstDelay;
-}
-
-COFDMDemodSimulation::~COFDMDemodSimulation()
-{
-	/* Destroy FFTW plan */
-	if (FFTWPlan != NULL)
-		fftw_destroy_plan(FFTWPlan);
 }
