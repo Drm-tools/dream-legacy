@@ -68,6 +68,10 @@ protected:
 	virtual void	hideEvent(QHideEvent* pEvent);
 	void			UpdateControls();
 
+	CAMDemodulation::EFilterBW fbwAM;
+	CAMDemodulation::EFilterBW fbwLSB;
+	CAMDemodulation::EFilterBW fbwUSB;
+
 public slots:
 	void OnTimer();
 	void OnTimerChart();

@@ -50,6 +50,14 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 	MainPlot->SetPlotStyle(DRMReceiver.iMainPlotColorStyle);
 	MainPlot->setMargin(1);
 
+	/* Set default settings -> AM: 10 kHz; SSB: 5 kHz; medium AGC */
+	fbwLSB = CAMDemodulation::BW_5KHZ;
+	fbwUSB = CAMDemodulation::BW_5KHZ;
+	fbwAM = CAMDemodulation::BW_10KHZ;
+	DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
+	DRMReceiver.GetAMDemod()->SetFilterBW(fbwAM);
+	DRMReceiver.GetAMDemod()->SetAGCType(CAMDemodulation::AT_MEDIUM);
+
 	/* Update controls */
 	UpdateControls();
 
@@ -274,28 +282,22 @@ void AnalogDemDlg::OnRadioDemodulation(int iID)
 	{
 	case 0:
 		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
-
-		/* Set to default filter -> 10 kHz */
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_10KHZ);
-		RadioButtonBW10->setChecked(TRUE);
+		DRMReceiver.GetAMDemod()->SetFilterBW(fbwAM);
 		break;
 
 	case 1:
 		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_LSB);
-
-		/* Set to default filter -> 5 kHz */
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_5KHZ);
-		RadioButtonBW5->setChecked(TRUE);
+		DRMReceiver.GetAMDemod()->SetFilterBW(fbwLSB);
 		break;
 
 	case 2:
 		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_USB);
-
-		/* Set to default filter -> 5 kHz */
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_5KHZ);
-		RadioButtonBW5->setChecked(TRUE);
+		DRMReceiver.GetAMDemod()->SetFilterBW(fbwUSB);
 		break;
 	}
+
+	/* Update controls */
+	UpdateControls();
 }
 
 void AnalogDemDlg::OnRadioAGC(int iID)
@@ -322,66 +324,86 @@ void AnalogDemDlg::OnRadioAGC(int iID)
 
 void AnalogDemDlg::OnRadioBW(int iID)
 {
+	CAMDemodulation::EFilterBW eCurFBW;
+
 	switch (iID)
 	{
 	case 0:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_1KHZ);
+		eCurFBW = CAMDemodulation::BW_1KHZ;
 		break;
 
 	case 1:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_2KHZ);
+		eCurFBW = CAMDemodulation::BW_2KHZ;
 		break;
 
 	case 2:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_3KHZ);
+		eCurFBW = CAMDemodulation::BW_3KHZ;
 		break;
 
 	case 3:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_4KHZ);
+		eCurFBW = CAMDemodulation::BW_4KHZ;
 		break;
 
 	case 4:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_5KHZ);
+		eCurFBW = CAMDemodulation::BW_5KHZ;
 		break;
 
 	case 5:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_6KHZ);
+		eCurFBW = CAMDemodulation::BW_6KHZ;
 		break;
 
 	case 6:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_7KHZ);
+		eCurFBW = CAMDemodulation::BW_7KHZ;
 		break;
 
 	case 7:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_8KHZ);
+		eCurFBW = CAMDemodulation::BW_8KHZ;
 		break;
 
 	case 8:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_9KHZ);
+		eCurFBW = CAMDemodulation::BW_9KHZ;
 		break;
 
 	case 9:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_10KHZ);
+		eCurFBW = CAMDemodulation::BW_10KHZ;
 		break;
 
 	case 10:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_11KHZ);
+		eCurFBW = CAMDemodulation::BW_11KHZ;
 		break;
 
 	case 11:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_12KHZ);
+		eCurFBW = CAMDemodulation::BW_12KHZ;
 		break;
 
 	case 12:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_13KHZ);
+		eCurFBW = CAMDemodulation::BW_13KHZ;
 		break;
 
 	case 13:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_14KHZ);
+		eCurFBW = CAMDemodulation::BW_14KHZ;
 		break;
 
 	case 14:
-		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_15KHZ);
+		eCurFBW = CAMDemodulation::BW_15KHZ;
+		break;
+	}
+
+	DRMReceiver.GetAMDemod()->SetFilterBW(eCurFBW);
+
+	/* Store filter bandwidth for this demodulation type */
+	switch (DRMReceiver.GetAMDemod()->GetDemodType())
+	{
+	case CAMDemodulation::DT_AM:
+		fbwAM = eCurFBW;
+		break;
+
+	case CAMDemodulation::DT_LSB:
+		fbwLSB = eCurFBW;
+		break;
+
+	case CAMDemodulation::DT_USB:
+		fbwUSB = eCurFBW;
 		break;
 	}
 }
