@@ -85,7 +85,7 @@ public:
 #endif
 		return pData[iPos];}
 
-	CVector<TData>&	operator=(const CVector<TData>& vecI) {
+	inline CVector<TData>& operator=(const CVector<TData>& vecI) {
 #ifdef _DEBUG_
 		/* Vectors which shall be copied MUST have same size! (If this is 
 		   satisfied, the parameter "iVectorSize" must not be adjusted as
