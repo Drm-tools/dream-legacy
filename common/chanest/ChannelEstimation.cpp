@@ -1,0 +1,525 @@
+/******************************************************************************\
+ * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
+ * Copyright (c) 2001
+ *
+ * Author(s):
+ *	Volker Fischer
+ *
+ * Description:
+ *	Channel estimation and equalization
+ *
+ ******************************************************************************
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later 
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+\******************************************************************************/
+
+#include "ChannelEstimation.h"
+
+
+/* Implementation *************************************************************/
+void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
+{
+	int			i, j;
+	_COMPLEX	cModChanEst;
+
+	/* Move data in history-buffer (from iLenHistBuff - 1 towards 0) */
+	for (j = 0; j < iLenHistBuff - 1; j++)
+	{
+		for (i = 0; i < iNoCarrier; i++)
+			matcHistory[j][i] = matcHistory[j + 1][i];
+	}
+
+	/* Write new symbol in memory */
+	for (i = 0; i < iNoCarrier; i++)
+		matcHistory[iLenHistBuff - 1][i] = (*pvecInputData)[i];
+
+
+// TEST
+//TimeWiener.SetSNR(exp(rSNREstimate / 10 * log(10)));
+//
+//ThermoSNR->setValue(Min(DRMReceiver.GetChanEst()->GetSNREstdB(),
+//	DRMReceiver.GetOFDMDemod()->GetSNREstdB()));
+
+
+
+	/* Time interpolation *****************************************************/
+	/* Get symbol-counter for next symbol. Use the count from the frame 
+	   synchronization (in OFDM.cpp). Call estimation routine */
+	pTimeInt->Estimate(pvecInputData, veccChanEst, 
+						    ReceiverParam.matiMapTab[(*pvecInputData).
+							GetExData().iSymbolNo],
+							ReceiverParam.matcPilotCells[(*pvecInputData).
+							GetExData().iSymbolNo]);
+
+
+	/* Extract interpolated pilots for frequency interpolation -------------- */
+	/* Put all pilots in one vector vector */
+	/* Use pilot positions */
+	veccPilots = veccChanEst(1, iScatPilFreqInt, Size(veccChanEst) 
+		/* MATLAB: (1:iScatPilFreqInt:end) */);
+
+	/* Special case with robustness mode D: since "iScatPilFreqInt" is "1", we
+	   get the DC carrier as a pilot position. We have to interpolate this
+	   position since there are no pilots (we do a linear interpolation) */
+	if (iDCPos != 0)
+	{
+		/* Actual linear interpolation with carrieres left and right from DC */
+		veccPilots[iDCPos] = veccPilots[iDCPos - 1] + 
+			(veccPilots[iDCPos + 1] - veccPilots[iDCPos - 1]) / (_REAL) 2;
+	}
+
+
+	/* -------------------------------------------------------------------------
+	   Use time-interpolated channel estimate for timing synchronization 
+	   tracking */
+	TimeSyncTrack.Process(ReceiverParam, veccPilots, 
+		(*pvecInputData).GetExData().iCurTimeCorr);
+
+
+	/* Frequency-interploation ************************************************/
+	switch (TypeIntFreq)
+	{
+	case FLINEAR:
+		/**********************************************************************\
+		 * Linear interpolation												  *
+		\**********************************************************************/
+		for (j = 0; j < iNoCarrier - iScatPilFreqInt; j += iScatPilFreqInt)
+		{
+			/* Interpolation cluster */
+			for (i = 1; i < iScatPilFreqInt; i++)
+			{
+				/* E.g.: c(x) = (c_4 - c_0) / 4 * x + c_0 */
+				veccChanEst[j + i] = 
+					(veccChanEst[j + iScatPilFreqInt] - veccChanEst[j]) /
+					(_REAL) (iScatPilFreqInt * i) + veccChanEst[j];
+			}
+		}
+		break;
+
+	case FDFTFILTER:
+		/**********************************************************************\
+		 * DFT based algorithm												  *
+		\**********************************************************************/
+		/* ---------------------------------------------------------------------
+		   Put all pilots at the beginning of the vector. The "real" length of
+		   the vector "pcFFTWInput" is longer than the No of pilots, but we 
+		   calculate the FFT only over "iNoCarrier / iScatPilFreqInt + 1" values
+		   (this is the number of pilot positions) */
+		/* Weighting pilots with window */
+		veccPilots *= vecrDFTWindow;
+
+		/* Transform in time-domain */
+		veccPilots = Ifft(veccPilots, FftPlanShort);
+
+		/* Set values outside a defined bound to zero, zero padding (noise
+		   filtering). Copy second half of spectrum at the end of the new vector 
+		   length and zero out samples between the two parts of the spectrum */
+		veccIntPil.Merge(
+			/* First part of spectrum */
+			veccPilots(1, iStartZeroPadding), 
+			/* Zero padding in the middle, length: Total length minus length of
+			   the two parts at the beginning and end */
+			CComplexVector(Zeros(iLongLenFreq - 2 * iStartZeroPadding), 
+			Zeros(iLongLenFreq - 2 * iStartZeroPadding)), 
+			/* Set the second part of the actual spectrum at the end of the new
+			   vector */
+			veccPilots(Size(veccPilots) - iStartZeroPadding + 1, 
+			Size(veccPilots)));
+
+		/* Transform back in frequency-domain */
+		veccIntPil = Fft(veccIntPil, FftPlanLong);
+
+		/* Remove weighting with DFT window by inverse multiplication */
+		veccChanEst = veccIntPil(1, iNoCarrier) * vecrDFTwindowInv;
+		break;
+
+	case FWIENER:
+		/**********************************************************************\
+		 * Wiener filter													   *
+		\**********************************************************************/
+		/* FIR filter of the pilots with filter taps. We need to filter the
+		   pilot positions as well to improve the SNR estimation (which 
+		   follows this procedure) */
+		for (j = 0; j < iNoCarrier; j++)
+		{
+			/* Convolution */
+			veccChanEst[j] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
+
+			for (i = 0; i < iLengthWiener; i++)
+				veccChanEst[j] += 
+					matcFiltFreq[j][i] * veccPilots[veciPilOffTab[j] + i];
+		}
+		break;
+	}
+
+
+	/* Equalize the output vector ------------------------------------------- */
+	/* Write to output vector. Take oldest symbol of history for output. Also,
+	   ship the channel state at a certain cell */
+	for (i = 0; i < iNoCarrier; i++)
+	{
+		(*pvecOutputData)[i].cSig = matcHistory[0][i] / veccChanEst[i];
+		(*pvecOutputData)[i].rChan = 
+			real(veccChanEst[i] * conj(veccChanEst[i]));
+	}
+
+
+	/* -------------------------------------------------------------------------
+	   Calculate symbol no of the current output block and set parameter */
+	(*pvecOutputData).GetExData().iSymbolNo = 
+		(*pvecInputData).GetExData().iSymbolNo - iLenHistBuff + 1;
+
+	while ((*pvecOutputData).GetExData().iSymbolNo < 0)
+		(*pvecOutputData).GetExData().iSymbolNo += ReceiverParam.iNoSymPerFrame;
+
+
+	/* SNR estimation ------------------------------------------------------- */
+	/* Use estimated channel and compare it to the received pilots. This 
+	   estimation works only if the channel estimation was successful */
+	for (i = 0; i < iNoCarrier; i++)
+	{
+		/* Identify pilot positions. Use MODIFIED "iSymbolNo" (See lines
+		   above) */
+		if (ReceiverParam.matiMapTab[
+			(*pvecOutputData).GetExData().iSymbolNo][i] & CM_SCAT_PI)
+		{
+			/* Normalize the channel estimation to values of pilots 
+			   (h = received / pilot -> received = h * pilot) */
+			cModChanEst = veccChanEst[i] * ReceiverParam.matcPilotCells[
+				(*pvecOutputData).GetExData().iSymbolNo][i];
+
+			/* Average noise and signal estimates */
+			const _REAL rLam = 0.99;
+			rNoiseEst = rLam * rNoiseEst + 
+				(1 - rLam) * abs(matcHistory[0][i] - cModChanEst);
+
+			rSignalEst = rLam * rSignalEst + 
+				(1 - rLam) * abs(veccChanEst[i]);
+
+			/* Calculate final result (signal to noise ratio) */
+			rSNREstimate = rSignalEst / rNoiseEst;
+		}
+	}
+}
+
+void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
+{
+	int				i, j;
+	int				iDiff;
+	int				iCurPil;
+	CComplexVector	veccTempFilt;
+
+	/* Get parameters from global struct */
+	iScatPilTimeInt = ReceiverParam.iScatPilTimeInt;
+	iScatPilFreqInt = ReceiverParam.iScatPilFreqInt;
+	iNoIntpFreqPil = ReceiverParam.iNoIntpFreqPil;
+	iNoCarrier = ReceiverParam.iNoCarrier;
+	iFFTSizeN = ReceiverParam.iFFTSizeN;
+
+	/* Length of guard-interval with respect to FFT-size! */
+	iGuardSizeFFT = iNoCarrier * 
+		ReceiverParam.RatioTgTu.iEnum / ReceiverParam.RatioTgTu.iDenom;
+
+	/* If robustness mode D is active, get DC position. This position cannot
+	   be "0" since in mode D no 5 kHz mode is defined (see DRM-standard). 
+	   Therefor we can also use this variable to get information whether
+	   mode D is active or not (by simply do: "if (iDCPos != 0)" */
+	if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_D)
+	{
+		/* Identify CD carrier position */
+		for (i = 0; i < iNoCarrier; i++)
+		{
+			if (ReceiverParam.matiMapTab[0][i] & CM_DC)
+				iDCPos = i;
+		}
+	}
+	else
+		iDCPos = 0;
+
+	/* FFT must be longer than "iNoCarrier" because of zero padding effect (
+	   not in robustness mode D! -> "iLongLenFreq = iNoCarrier") */
+	iLongLenFreq = iNoCarrier + iScatPilFreqInt - 1;
+
+	/* Init vector for received data at pilot positions */
+	veccPilots.Init(iNoIntpFreqPil);
+
+	/* Init vector for interpolated pilots */
+	veccIntPil.Init(iLongLenFreq);
+
+	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
+	FftPlanShort.Init(iNoIntpFreqPil);
+	FftPlanLong.Init(iLongLenFreq);
+
+	/* Choose time interpolation method and set pointer to correcponding 
+	   object */
+	switch (TypeIntTime)
+	{
+	case TLINEAR:
+		pTimeInt = &TimeLinear;
+		break;
+
+	case TWIENER:
+		pTimeInt = &TimeWiener;
+		break;
+
+	case TDECIDIR:
+		pTimeInt = &TimeDecDir;
+		break;
+	}
+
+	/* Init time interpolation interface and set delay for interpolation */
+	iLenHistBuff = pTimeInt->Init(ReceiverParam);
+
+	/* Init time synchronization tracking unit */
+	TimeSyncTrack.Init(ReceiverParam, iLenHistBuff);
+
+
+	/* Init window for DFT operation for frequency interpolation ------------ */
+	/* Init memory */
+	vecrDFTWindow.Init(iNoIntpFreqPil);
+	vecrDFTwindowInv.Init(iNoCarrier);
+
+	/* Set window coefficiants */
+	switch (eDFTWindowingMethod)
+	{
+	case DFT_WIN_RECT:
+		vecrDFTWindow = Ones(iNoIntpFreqPil);
+		vecrDFTwindowInv = Ones(iNoCarrier);
+		break;
+
+	case DFT_WIN_HAMM:
+		vecrDFTWindow = Hamming(iNoIntpFreqPil);
+		vecrDFTwindowInv = (CReal) 1.0 / Hamming(iNoCarrier);
+		break;
+	}
+
+
+	/* Set start index for zero padding in time domain for DFT method */
+	iStartZeroPadding = iGuardSizeFFT;
+	if (iStartZeroPadding > iNoIntpFreqPil)
+		iStartZeroPadding = iNoIntpFreqPil;
+
+	/* Allocate memory for channel estimation */
+	veccChanEst.Init(iNoCarrier);
+
+	/* Allocate memory for history buffer (Matrix) and zero out */
+	matcHistory.Init(iLenHistBuff, iNoCarrier,
+		_COMPLEX((_REAL) 0.0, (_REAL) 0.0));
+
+	/* Inits for SNR estimation (noise and signal averages) */
+	rSNREstimate = (_REAL) 0.0;
+	rNoiseEst = (_REAL) 0.0;
+	rSignalEst = (_REAL) 0.0;
+
+
+	/* Inits for Wiener interpolation in frequency direction ---------------- */
+	/* SNR definition */
+	const _REAL rSNRdB = (_REAL) 30.0;
+	_REAL rSNR = exp(rSNRdB / 10 * log(10));       
+
+	/* Length of wiener filter */
+	switch (ReceiverParam.GetWaveMode())
+	{
+	case RM_ROBUSTNESS_MODE_A:
+		iLengthWiener = LEN_WIENER_FILT_FREQ_RMA;
+		break;
+
+	case RM_ROBUSTNESS_MODE_B:
+		iLengthWiener = LEN_WIENER_FILT_FREQ_RMB;
+		break;
+
+	case RM_ROBUSTNESS_MODE_C:
+		iLengthWiener = LEN_WIENER_FILT_FREQ_RMC;
+		break;
+
+	case RM_ROBUSTNESS_MODE_D:
+		iLengthWiener = LEN_WIENER_FILT_FREQ_RMD;
+		break;
+	}
+
+	/* In frequency direction we can use pilots from both sides for 
+	   interpoation */
+	int iPilOffset = iLengthWiener / 2;
+
+	/* Allocate memory */
+	matcFiltFreq.Init(iNoCarrier, iLengthWiener);
+
+	/* Pilot offset table */
+	veciPilOffTab.Init(iNoCarrier);
+
+	/* Allocate temporary matlib vector for filter coefficiants */
+	veccTempFilt.Init(iLengthWiener);
+
+	/* One filter for all carriers */
+	for (j = 0; j < iNoCarrier; j++)
+	{
+		/* We define the current pilot position as the last pilot which the
+		   index "j" has passed */
+		iCurPil = (int) (j / iScatPilFreqInt);
+
+		/* Consider special cases at the edges of the DRM spectrum */
+		if (iCurPil < iPilOffset)
+		{
+			/* Special case: left edge */
+			veciPilOffTab[j] = 0;
+		}
+		else if (iCurPil - iPilOffset > iNoIntpFreqPil - iLengthWiener)
+		{
+			/* Special case: right edge */
+			veciPilOffTab[j] = iNoIntpFreqPil - iLengthWiener;
+		}
+		else
+		{
+			/* In the middle */
+			veciPilOffTab[j] = iCurPil - iPilOffset;
+		}
+
+		/* Difference between the position of the first pilot (for filtering)
+		   and the position of the observed carrier */
+		iDiff = j - veciPilOffTab[j] * iScatPilFreqInt;
+
+		/* Calculate actual wiener filter-taps */
+		veccTempFilt = FreqOptimalFilter(iScatPilFreqInt, iDiff, rSNR, 
+			(_REAL) ReceiverParam.RatioTgTu.iEnum / 
+			ReceiverParam.RatioTgTu.iDenom, iLengthWiener);
+
+		/* Copy result in matrix */
+		for (i = 0; i < iLengthWiener; i++)
+			matcFiltFreq[j][i] = veccTempFilt[i];
+	}
+
+	/* Define block-sizes for input and output */
+	iInputBlockSize = iNoCarrier;
+	iOutputBlockSize = iNoCarrier;
+}
+
+void CChannelEstimation::GetImpulseResponse(CVector<_REAL>& vecrData, 
+											CVector<_REAL>& vecrScale)
+{
+	int				i;
+	CComplexVector	veccImpResp;
+	_REAL			rScaleIncr;
+	_REAL			rScaleAbs;
+
+	/* Init output vectors */
+	vecrData.Init(iGuardSizeFFT, (_REAL) 0.0);
+	vecrScale.Init(iGuardSizeFFT, (_REAL) 0.0);
+
+	if (IsInInit() == FALSE)
+	{
+		/* Init vector */
+		veccImpResp.Init(iNoCarrier);
+
+		/* Init scale (in "ms") */
+		rScaleIncr = 
+			(_REAL) iFFTSizeN / (SOUNDCRD_SAMPLE_RATE * iNoCarrier) * 1000;
+		rScaleAbs = (_REAL) 0.0;
+
+		/* Get impulse response by transforming transfer function in time 
+		   domain */
+		veccImpResp = Ifft(veccChanEst);
+
+		/* Copy data in output vector */
+		for (i = 0; i < iGuardSizeFFT; i++)
+		{
+			/* Data */
+			vecrData[i] = 
+				(_REAL) 20.0 * log10(abs(veccImpResp[i]) / (_REAL) iNoCarrier);
+
+			/* Scale */
+			vecrScale[i] = rScaleAbs;
+			rScaleAbs += rScaleIncr;
+		}
+	}
+}
+
+void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
+											 CVector<_REAL>& vecrScale)
+{
+	/* Init output vectors */
+	vecrData.Init(iNoCarrier, (_REAL) 0.0);
+	vecrScale.Init(iNoCarrier, (_REAL) 0.0);
+
+	if (IsInInit() == FALSE)
+	{
+		/* Copy data in output vector and set scale 
+		   (carrier index as x-scale) */
+		for (int i = 0; i < iNoCarrier; i++)
+		{
+			vecrData[i] = 
+				(_REAL) 20.0 * log10(abs(veccChanEst[i]) / (_REAL) iNoCarrier);
+
+			/* Scale */
+			vecrScale[i] = i;
+		}
+	}
+}
+
+CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
+													 _REAL rSNR,
+													 _REAL rRatGuarLen,
+													 int iLength)
+{
+	int				i;
+	int				iCurPos;
+	CComplexVector	veccReturn(iLength);
+	CComplexVector	veccRpp(iLength);
+	CComplexVector	veccRhp(iLength);
+
+	/* Doppler-spectrum for short-wave channel is Gaussian
+	   (Calculation of Rhp!) */
+	for (i = 0; i < iLength; i++)
+	{
+		iCurPos = i * iFreqInt - iDiff;
+
+		veccRhp[i] = FreqCorrFct(iCurPos, rRatGuarLen);
+	}
+
+	/* Doppler-spectrum for short-wave channel is Gaussian
+	   (Calculation of Rpp!) */
+	for (i = 0; i < iLength; i++)
+	{
+		iCurPos = i * iFreqInt;
+
+		veccRpp[i] = FreqCorrFct(iCurPos, rRatGuarLen);
+	}
+
+	/* Add SNR at first tap */
+	veccRpp[0] += (_REAL) 1.0 / rSNR;
+
+	/* Call levinson algorithm to solve matrix system for optimal solution */
+	veccReturn = Levinson(veccRpp, veccRhp);
+
+	return veccReturn;
+}
+
+_COMPLEX CChannelEstimation::FreqCorrFct(int iCurPos, _REAL rRatGuarLen)
+{
+	/* We assume that the power delay spread is a rectangle function in the time
+	   domain with the lenght of the guard interval (sinc-function in the
+	   frequency domain) */
+	if (iCurPos == 0)
+		return (_REAL) 1.0;
+	else
+	{
+		/* First calculate the argument of the sinc- and exp-function */
+		_REAL rArg = (_REAL) crPi * iCurPos * rRatGuarLen;
+
+		/* si(pi * n * rat) * exp(pi * n * rat) */
+		return sin(rArg) / rArg * _COMPLEX(cos(rArg), sin(rArg));
+	}
+}
+

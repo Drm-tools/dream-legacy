@@ -1,0 +1,56 @@
+/******************************************************************************\
+ * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
+ * Fachbereich Uebertragungstechnik
+ * (c) 2001-2002
+ *
+ * Author(s):
+ *  Volker Fischer, Alexander Kurpiers
+ *
+ ******************************************************************************
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+\******************************************************************************/
+
+
+Project objectives:
+    - Build a real-time DRM-receiver on a conventional PC with the sound card 
+	using as input and output device
+
+
+With this software project, we intend to implement a working software receiver 
+with, at least, the basic features. Since this project is created at a 
+university and the fundamental idea of such an institution is to teach and 
+stimulate the creativity, this source-code is free under the GNU-General 
+Public License (GPL). 
+ 
+The main aim of this project is to implement and test new research results on 
+an existing system and evaluate the results, whereby the synchronization and 
+channel estimation is of special interest. 
+ 
+The programming-language is C++. The final release is intended to run under 
+Microsoft Windows and Linux. Start of the project was June 2001. 
+ 
+Although this software is going to be distributed as free software under the 
+terms of the GPL this does not mean that its use is free of rights of others. 
+The use may infringe third party IP and thus may not be legal in some countries.
+
+
+
+Homepage:
+http://www.tu-darmstadt.de/fb/et/uet/drm.html
+
+E-mail:
+drm@nt.tu-darmstadt.de·

@@ -1,0 +1,139 @@
+/******************************************************************************\
+ * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
+ * Copyright (c) 2001
+ *
+ * Author(s):
+ *	Volker Fischer
+ *
+ * Description:
+ *	See ChannelEstimation.cpp
+ *
+ ******************************************************************************
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later 
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+\******************************************************************************/
+
+#if !defined(CHANEST_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
+#define CHANEST_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
+
+#include "../Parameter.h"
+#include "../Modul.h"
+#include "../ofdmcellmapping/OFDMCellMapping.h"
+#include "../matlib/Matlib.h"
+#include "TimeLinear.h"
+#include "TimeWiener.h"
+#include "TimeDecDir.h"
+#include <dfftw.h>
+#include "../sync/TimeSyncTrack.h"
+
+
+/* Definitions ****************************************************************/
+#define LEN_WIENER_FILT_FREQ_RMA		6
+#define LEN_WIENER_FILT_FREQ_RMB		11
+#define LEN_WIENER_FILT_FREQ_RMC		11
+#define LEN_WIENER_FILT_FREQ_RMD		13
+
+
+/* Classes ********************************************************************/
+class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>
+{
+public:
+	CChannelEstimation() : iLenHistBuff(0), TypeIntFreq(FWIENER), 
+		TypeIntTime(TWIENER), eDFTWindowingMethod(DFT_WIN_HAMM) {}
+	virtual ~CChannelEstimation() {}
+
+	enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};
+	enum ETypeIntTime {TLINEAR, TWIENER, TDECIDIR};
+
+	void GetImpulseResponse(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void GetTransferFunction(CVector<_REAL>& vecrData, 
+		CVector<_REAL>& vecrScale);
+
+	CTimeLinear* GetTimeLinear() {return &TimeLinear;}
+	CTimeWiener* GetTimeWiener() {return &TimeWiener;}
+	CTimeSyncTrack* GetTimeSyncTrack() {return &TimeSyncTrack;}
+
+	_REAL GetSNREstdB() const {return 20 * log10(rSNREstimate);}
+
+	/* Set (get) frequency and time interpolation algorithm */
+	void SetFreqInt(ETypeIntFreq eNewTy) {TypeIntFreq = eNewTy;}
+	ETypeIntFreq GetFreqInt() {return TypeIntFreq;}
+	void SetTimeInt(ETypeIntTime eNewTy) {TypeIntTime = eNewTy;
+		SetInitFlag();}
+	ETypeIntTime GetTimeInt() {return TypeIntTime;}
+
+protected:
+	enum EDFTWinType {DFT_WIN_RECT, DFT_WIN_HAMM};
+	EDFTWinType			eDFTWindowingMethod;
+
+	CChanEstTime*		pTimeInt;
+
+	CTimeLinear			TimeLinear;
+	CTimeWiener			TimeWiener;
+	CTimeDecDir			TimeDecDir;
+
+	CTimeSyncTrack		TimeSyncTrack;
+
+	ETypeIntFreq		TypeIntFreq;
+	ETypeIntTime		TypeIntTime;
+
+	int					iNoCarrier;
+
+	CMatrix<_COMPLEX>	matcHistory;
+
+	int					iLenHistBuff;
+
+	int					iScatPilFreqInt; /* Frequency interpolation */
+	int					iScatPilTimeInt; /* Time interpolation */
+
+	CComplexVector		veccChanEst;
+
+	int					iGuardSizeFFT;
+	int					iFFTSizeN;
+
+	CRealVector			vecrDFTWindow;
+	CRealVector			vecrDFTwindowInv;
+
+	int					iLongLenFreq;
+	CComplexVector		veccPilots;
+	CComplexVector		veccIntPil;
+	CFftPlans			FftPlanShort;
+	CFftPlans			FftPlanLong;
+
+	int					iNoIntpFreqPil;
+
+	_REAL				rNoiseEst;
+	_REAL				rSignalEst;
+	_REAL				rSNREstimate;
+
+	int					iStartZeroPadding;
+
+	/* Wiener interpolation in frequency direction */
+	CComplexVector FreqOptimalFilter(int iFreqInt, int iDiff, _REAL rSNR, 
+									 _REAL rRatGuarLen, int iLength);
+	_COMPLEX FreqCorrFct(int iCurPos, _REAL rRatGuarLen);
+	CMatrix<_COMPLEX>	matcFiltFreq;
+	int					iLengthWiener;
+	CVector<int>		veciPilOffTab;
+
+	int					iDCPos;
+	
+	virtual void InitInternal(CParameter& ReceiverParam);
+	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+};
+
+
+#endif // !defined(CHANEST_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

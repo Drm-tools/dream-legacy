@@ -1,0 +1,478 @@
+/******************************************************************************\
+ * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
+ * Copyright (c) 2001
+ *
+ * Author(s):
+ *	Volker Fischer
+ *
+ * Description:
+ *	DRM-receiver
+ * The hand over of data is done via an intermediate-buffer. The calling 
+ * convention is always "input-buffer, output-buffer". Additional, the 
+ * DRM-parameters are fed to the function.
+ *
+ ******************************************************************************
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later 
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+\******************************************************************************/
+
+#include "DrmReceiver.h"
+
+
+/* Implementation *************************************************************/
+void CDRMReceiver::Run()
+{
+	_BOOLEAN bEnoughData;
+
+	/* Reset all parameters to start parameter settings */
+	SetInStartMode();
+
+	do
+	{
+		/* Receive data ----------------------------------------------------- */
+		ReceiveData.ReadData(ReceiverParam, RecDataBuf);
+
+		bEnoughData = TRUE;
+
+		while (bEnoughData)
+		{
+			/* Init flag */
+			bEnoughData = FALSE;
+
+			/* Frequency synchronization acquisition ------------------------ */
+			if (FreqSyncAcq.ProcessData(ReceiverParam, RecDataBuf,
+				FreqSyncAcqBuf))
+			{
+				bEnoughData = TRUE;
+
+				/* Start using pilots in frequency domain, when acquisition is
+				   done (we assume that timing is also ready at this time!) */
+				if (FreqSyncAcq.GetAcquisition() == FALSE)
+					SyncUsingPil.StartTrackPil();
+			}
+
+			/* Robustness mode detection ------------------------------------ */
+			if (RobModDet.ProcessData(ReceiverParam, FreqSyncAcqBuf,
+				RobModBuf))
+			{
+				bEnoughData = TRUE;
+			}
+
+			/* Resample input DRM-stream ------------------------------------ */
+			if (InputResample.ProcessData(ReceiverParam, RobModBuf,
+				InpResBuf))
+			{
+				bEnoughData = TRUE;
+			}
+
+			/* Time synchronization ----------------------------------------- */
+			if (TimeSync.ProcessData(ReceiverParam, InpResBuf,
+				TimeSyncBuf))
+			{
+				bEnoughData = TRUE;
+			}
+
+			/* OFDM-demodulation -------------------------------------------- */
+			if (OFDMDemodulation.ProcessData(ReceiverParam, TimeSyncBuf,
+				OFDMDemodBuf))
+			{
+				bEnoughData = TRUE;
+			}
+
+			/* Synchronisation in the frequency domain (using pilots) ------- */
+			if (SyncUsingPil.ProcessData(ReceiverParam, OFDMDemodBuf,
+				SyncUsingPilBuf))
+			{
+				bEnoughData = TRUE;
+			}
+
+			/* Channel estimation and equalisation -------------------------- */
+			if (ChannelEstimation.ProcessData(ReceiverParam, SyncUsingPilBuf,
+				ChanEstBuf))
+			{
+				bEnoughData = TRUE;
+			}
+
+			/* Demapping of the MSC, FAC, SDC and pilots off the carriers --- */
+			if (OFDMCellDemapping.ProcessMultipleData(ReceiverParam, ChanEstBuf,
+				MSCCarDemapBuf, FACCarDemapBuf, SDCCarDemapBuf))
+			{
+				bEnoughData = TRUE;
+			}
+
+			/* FAC ---------------------------------------------------------- */
+			if (FACMLCDecoder.ProcessData(ReceiverParam, FACCarDemapBuf,
+				FACDecBuf))
+			{
+				bEnoughData = TRUE;
+			}
+			if (UtilizeFACData.WriteData(ReceiverParam, FACDecBuf))
+			{
+				bEnoughData = TRUE;
+
+				/* Use information of FAC CRC for detecting the acquisition
+				   requirement */
+				DetectAcqui();
+			}
+
+
+			/* SDC ---------------------------------------------------------- */
+			if (SDCMLCDecoder.ProcessData(ReceiverParam, SDCCarDemapBuf,
+				SDCDecBuf))
+			{
+				bEnoughData = TRUE;
+			}
+			if (UtilizeSDCData.WriteData(ReceiverParam, SDCDecBuf))
+				bEnoughData = TRUE;
+
+
+			/* MSC ---------------------------------------------------------- */
+			/* Convolutional deinterleaver */
+			if (SymbDeinterleaver.ProcessData(ReceiverParam, MSCCarDemapBuf,
+				DeintlBuf))
+			{
+				bEnoughData = TRUE;
+			}
+
+			/* MLC-decoder */
+			if (MSCMLCDecoder.ProcessData(ReceiverParam, DeintlBuf,
+				MSCMLCDecBuf))
+			{
+				bEnoughData = TRUE;
+			}
+
+			/* MSC data/audio demultiplexer */
+			if (MSCDemultiplexer.ProcessMultipleData(ReceiverParam,
+				MSCMLCDecBuf, MSCDeMUXBufAud, MSCDeMUXBufData))
+			{
+				bEnoughData = TRUE;
+			}
+
+			/* Source decoding (audio) */
+			if (AudioSourceDecoder.ProcessData(ReceiverParam, MSCDeMUXBufAud,
+				AudSoDecBuf))
+			{
+				bEnoughData = TRUE;
+			}
+
+			/* Data decoding */
+			if (DataDecoder.WriteData(ReceiverParam, MSCDeMUXBufData))
+				bEnoughData = TRUE;
+
+			/* Save or dump the data */
+			if (WriteData.WriteData(ReceiverParam, AudSoDecBuf))
+				bEnoughData = TRUE;
+		}
+	} while (ReceiverParam.bRunThread);
+}
+
+void CDRMReceiver::DetectAcqui()
+{
+	/* Acquisition switch */
+	if (!UtilizeFACData.GetCRCOk())
+	{
+		/* Reset "good signal" count */
+		iGoodSignCnt = 0;
+
+		iAcquDetecCnt++;
+
+		/* Different behavior for a situation WITH a signal which was already
+		   detected or WITHOUT successfully received any signal */
+		if (eAcquiState == AS_WITH_SIGNAL)
+		{
+			if (iAcquDetecCnt > NO_FAC_FRA_U_ACQ_WITH)
+				SetInStartMode();
+		}
+		else
+		{
+			if (iAcquDetecCnt > NO_FAC_FRA_U_ACQ_WITHOUT)
+				SetInStartMode();			
+		}
+	}
+	else
+	{
+		/* Set the receiver state to "with signal" not until two successive FAC
+		   frames are "ok", because there is only a 8-bit CRC which is not good
+		   for many bit errors. But it is very unlikely that we have two
+		   successive FAC blocks "ok" if no good signal is received */
+		if (iGoodSignCnt > 0)
+			eAcquiState = AS_WITH_SIGNAL;
+		else
+		{
+			/* If one CRC was correct, reset acquisition since
+			   we assume, that this was a correct detected signal */
+			iAcquDetecCnt = 0;
+
+			/* Set in tracking mode */
+			SetInTrackingMode();
+
+			iGoodSignCnt++;
+		}
+	}
+}
+
+void CDRMReceiver::Init()
+{
+	/* Set flag to FALSE to have only one loop in the Run() routine which is
+	   enough for initializing all modues */
+	ReceiverParam.bRunThread = FALSE;
+
+	Run();
+}
+
+void CDRMReceiver::Start()
+{
+	/* Set run flag so that the thread can work */
+	ReceiverParam.bRunThread = TRUE;
+
+	Run();
+}
+
+void CDRMReceiver::SetInStartMode()
+{
+	/* Load start parameters for all modules */
+	StartParameters(ReceiverParam);
+
+	/* Activate acquisition */
+	RobModDet.StartAcquisition();
+	FreqSyncAcq.StartAcquisition();
+
+	TimeSync.StartAcquisition();
+	ChannelEstimation.GetTimeSyncTrack()->StopTracking();
+
+	SyncUsingPil.StartAcquisition();
+	SyncUsingPil.StopTrackPil();
+
+	/* Set flag that no signal is currently received */
+	eAcquiState = AS_NO_SIGNAL;
+
+	/* Set flag for receiver state */
+	eReceiverState = RS_ACQUISITION;
+
+	/* Reset counters for acquisition decision and "good signal" */
+	iAcquDetecCnt = 0;
+	iGoodSignCnt = 0;
+}
+
+void CDRMReceiver::SetInTrackingMode()
+{
+	/* We do this with the flag "eReceiverState" to ensure that the following
+	   routines are only called once when the tracking is actually started */
+	if (eReceiverState == RS_ACQUISITION)
+	{
+		RobModDet.StopAcquisition();
+
+		/* 4.5 kHz IIR filter is no longer needed, disable it */
+		FreqSyncAcq.DisableIIFFilter();
+
+		/* Acquisition is done, deactivate it now and start tracking */
+		TimeSync.StopAcquisition();
+		ChannelEstimation.GetTimeSyncTrack()->StartTracking();
+
+		/* Reset acquisition for frame synchronization */
+		SyncUsingPil.StopAcquisition();
+
+		/* Set receiver flag to tracking */
+		eReceiverState = RS_TRACKING;
+	}
+}
+
+void CDRMReceiver::StartParameters(CParameter& Param)
+{
+	int i;
+/* 
+	Reset all parameters to starting values. This is done at the startup of the
+	application and also when the S/N of the received signal is too low and
+	no receiption is left -> Reset all parameters 
+*/
+
+	/* Define with which parameters the receiver should try to decode the signal. 
+	   If we are correct with our assumptions, the receiver does not need to 
+	   reinitialize. We have to assume that the smallest frequency bandwidth
+	   was chosen because we also have an IIR filter with that bandwidth */
+	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_0);
+
+	/* Set initial MLC parameters */
+	Param.SetInterleaverDepth(CParameter::SI_LONG);
+	Param.SetMSCCodingScheme(CParameter::CS_3_SM);
+	Param.SetSDCCodingScheme(CParameter::CS_2_SM);
+
+	/* Select the service we want to decode. Always zero, because we do not
+	   know how many services are transmitted in the signal we want to 
+	   decode */
+	Param.SetCurSelectedService(0);
+
+	/* Set the following parameters to zero states (initial states) --------- */
+	Param.ResetServicesStreams();
+
+	/* Protection levels */
+	Param.MSCPrLe.iPartA = 0;
+	Param.MSCPrLe.iPartB = 0;
+	Param.MSCPrLe.iHierarch = 0;
+
+	/* Number of audio and data services */
+	Param.iNoAudioService = 0;
+	Param.iNoDataService = 0;
+
+	/* Date, time */
+	Param.iDay = 0;
+	Param.iMonth = 0;
+	Param.iYear = 0;
+	Param.iUTCHour = 0;
+	Param.iUTCMin = 0;
+
+	/* We start with FAC ID = 0 (arbitrary) */
+	Param.iFrameIDReceiv = 0;
+
+	/* Set synchronization parameters */
+	Param.rResampleOffset = (_REAL) 0.0;
+	Param.rFreqOffsetAcqui = (_REAL) 0.0;
+	Param.rFreqOffsetTrack = (_REAL) 0.0;
+	Param.rTimingOffsTrack = (_REAL) 0.0;
+
+	/* The following parameters are not yet used by the receiver implementation */
+	Param.iAFSIndex = 1;
+	Param.eBaseEnhFlag = CParameter::BE_BASE_LAYER;
+	Param.iReConfigIndex = 0;
+	Param.eAFSFlag = CParameter::AS_VALID;
+
+	/* Initialization of the modules */
+	InitsForAllModules();
+}
+
+void CDRMReceiver::InitsForAllModules()
+{
+	/* Set init flags */
+	ReceiveData.SetInitFlag();
+	RobModDet.SetInitFlag();
+	InputResample.SetInitFlag();
+	FreqSyncAcq.SetInitFlag();
+	TimeSync.SetInitFlag();
+	OFDMDemodulation.SetInitFlag();
+	SyncUsingPil.SetInitFlag();
+	ChannelEstimation.SetInitFlag();
+	OFDMCellDemapping.SetInitFlag();
+	FACMLCDecoder.SetInitFlag();
+	UtilizeFACData.SetInitFlag();
+	SDCMLCDecoder.SetInitFlag();
+	UtilizeSDCData.SetInitFlag();
+	SymbDeinterleaver.SetInitFlag();
+	MSCMLCDecoder.SetInitFlag();
+	MSCDemultiplexer.SetInitFlag();
+	AudioSourceDecoder.SetInitFlag();
+	DataDecoder.SetInitFlag();
+	WriteData.SetInitFlag();
+}
+
+/* -----------------------------------------------------------------------------
+   Initialization routines for the modules. We have to look into the modules 
+   and decide on which parameters the modules depend on */
+void CDRMReceiver::InitsForWaveMode()
+{
+	/* After a new robustness mode was detected, give the time synchronization
+	   a bit more time for its job */
+	iAcquDetecCnt = 0;
+
+	/* Set init flags */
+	ReceiveData.SetInitFlag();
+	RobModDet.SetInitFlag();
+	InputResample.SetInitFlag();
+	FreqSyncAcq.SetInitFlag();
+	TimeSync.SetInitFlag();
+	OFDMDemodulation.SetInitFlag();
+	SyncUsingPil.SetInitFlag();
+	ChannelEstimation.SetInitFlag();
+	OFDMCellDemapping.SetInitFlag();
+	SymbDeinterleaver.SetInitFlag(); // Because of "iNoUsefMSCCellsPerFrame"
+	MSCMLCDecoder.SetInitFlag(); // Because of "iNoUsefMSCCellsPerFrame"
+	SDCMLCDecoder.SetInitFlag(); // Because of "iNoSDCCellsPerSFrame"
+}
+
+void CDRMReceiver::InitsForSpectrumOccup()
+{
+	/* Set init flags */
+	OFDMDemodulation.SetInitFlag();
+	SyncUsingPil.SetInitFlag();
+	ChannelEstimation.SetInitFlag();
+	OFDMCellDemapping.SetInitFlag();
+	SymbDeinterleaver.SetInitFlag(); // Because of "iNoUsefMSCCellsPerFrame"
+	MSCMLCDecoder.SetInitFlag(); // Because of "iNoUsefMSCCellsPerFrame"
+	SDCMLCDecoder.SetInitFlag(); // Because of "iNoSDCCellsPerSFrame"
+}
+
+
+/* SDC ---------------------------------------------------------------------- */
+void CDRMReceiver::InitsForSDCCodSche()
+{
+	/* Set init flags */
+	SDCMLCDecoder.SetInitFlag();
+	ChannelEstimation.SetInitFlag(); // For decision directed channel estimation needed
+}
+
+void CDRMReceiver::InitsForNoDecBitsSDC()
+{
+	/* Set init flag */
+	UtilizeSDCData.SetInitFlag();
+}
+
+
+/* MSC ---------------------------------------------------------------------- */
+void CDRMReceiver::InitsForInterlDepth()
+{
+	/* Can be absolutely handled seperately */
+	SymbDeinterleaver.SetInitFlag();
+}
+
+void CDRMReceiver::InitsForMSCCodSche()
+{
+	/* Set init flags */
+	ChannelEstimation.SetInitFlag(); // For decision directed channel estimation needed
+	MSCMLCDecoder.SetInitFlag();
+	MSCDemultiplexer.SetInitFlag(); // Not sure if really needed, look at code! TODO
+}
+
+void CDRMReceiver::InitsForMSC()
+{
+	/* Set init flags */
+	MSCMLCDecoder.SetInitFlag();
+
+	InitsForMSCDemux();
+}
+
+void CDRMReceiver::InitsForMSCDemux()
+{
+	/* Set init flags */
+	MSCDemultiplexer.SetInitFlag();
+	AudioSourceDecoder.SetInitFlag();
+	DataDecoder.SetInitFlag();
+}
+
+void CDRMReceiver::InitsForAudParam()
+{
+	/* Set init flags */
+	MSCDemultiplexer.SetInitFlag();
+	AudioSourceDecoder.SetInitFlag();
+}
+
+void CDRMReceiver::InitsForDataParam()
+{
+	/* Set init flags */
+	MSCDemultiplexer.SetInitFlag();
+	DataDecoder.SetInitFlag();
+}
+
+
+

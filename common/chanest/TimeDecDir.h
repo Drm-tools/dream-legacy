@@ -1,0 +1,62 @@
+/******************************************************************************\
+ * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
+ * Copyright (c) 2001
+ *
+ * Author(s):
+ *	Volker Fischer
+ *
+ * Description:
+ *	See TimeDecDir.cpp
+ *
+ ******************************************************************************
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later 
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+\******************************************************************************/
+
+#if !defined(TIMEDECDIR_H__3B0BA6342345660_CA63_4344_BBE7A0D31912__INCLUDED_)
+#define TIMEDECDIR_H__3B0BA6342345660_CA63_4344_BBE7A0D31912__INCLUDED_
+
+#include "../GlobalDefinitions.h"
+#include "../Parameter.h"
+#include "../Vector.h"
+#include "../ofdmcellmapping/OFDMCellMapping.h"
+#include "../matlib/Matlib.h"
+#include "ChanEstTime.h"
+
+
+/* Classes ********************************************************************/
+class CTimeDecDir : public CChanEstTime
+{
+public:
+	CTimeDecDir() {}
+	virtual ~CTimeDecDir() {}
+
+	virtual int Init(CParameter& Parameter);
+	virtual void Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
+						  CComplexVector& veccOutputData, 
+						  CVector<int>& veciMapTab, 
+						  CVector<_COMPLEX>& veccPilotCells);
+
+protected:
+	int					iNoCarrier;
+	CVector<_COMPLEX>	veccChanEst;
+
+	int					iMSCQAM;
+	int					iSDCQAM;
+};
+
+
+#endif // !defined(TIMEDECDIR_H__3B0BA6342345660_CA63_4344_BBE7A0D31912__INCLUDED_)

@@ -1,0 +1,1 @@
+In this directory all QT intermedia files should be placed
