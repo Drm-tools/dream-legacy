@@ -28,6 +28,12 @@
 
 #include "DrmSimulation.h"
 
+#ifndef _WIN32
+# ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+# endif
+#endif
+
 
 /* Implementation *************************************************************/
 void CDRMSimulation::SimScript()
@@ -118,7 +124,6 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
 #else
 # ifdef HAVE_UNISTD_H
-#  include <unistd.h>
 		nice(19);
 # endif
 #endif
