@@ -63,8 +63,12 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 	iNoUsedBits = 0;
 
 // Choose types, TEST. Send only important types for this test!
+// TODO: test, if SDC block is long enough for all types!
 	/* Type 0 */
 	iNoUsedBits += DataEntityType0(pbiData, Parameter);
+
+	/* Type 1 */
+	iNoUsedBits += DataEntityType1(pbiData, 0, Parameter);
 
 	/* Type 9 */
 	iNoUsedBits += DataEntityType9(pbiData, 0, Parameter);
@@ -100,22 +104,17 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 
 
 /******************************************************************************\
-* Data entity Type 0														   *
+* Data entity Type 0 (Multiplex description data entity)					   *
 \******************************************************************************/
 int CSDCTransmit::DataEntityType0(CVector<_BINARY>* pbiData, 
 								  CParameter& Parameter)
 {
-	_UINT32BIT iRfuDummy;
-	int iNoBitsTotal;
-	const int iNoBitsHeader = 12; /* Data entity header */
-
 	/* 24 bits for each stream description + 4 bits for protection levels */
-	iNoBitsTotal = 4 + Parameter.GetTotNumServices() * 24;
+	int iNumBitsTotal = 4 + Parameter.GetTotNumServices() * 24;
 
-	/**** Multiplex description data entity - type 0 ****/
 	/* Length of the body, excluding the initial 4 bits ("- 4"), 
 	   measured in bytes ("/ 8") */
-	_UINT32BIT iLengthInBytes = (iNoBitsTotal - 4) / 8;
+	_UINT32BIT iLengthInBytes = (iNumBitsTotal - 4) / 8;
 	(*pbiData).Enqueue(iLengthInBytes, 7);
 
 	/* Version flag (not used in this implementation) */
@@ -124,8 +123,8 @@ int CSDCTransmit::DataEntityType0(CVector<_BINARY>* pbiData,
 	/* Data entity type */
 	(*pbiData).Enqueue((_UINT32BIT) 00, 4); /* Type 00 */
 
-	/* ********** */
 
+	/* Actual body ---------------------------------------------------------- */
 	/* Protection level for part A */
 	(*pbiData).Enqueue((_UINT32BIT) Parameter.MSCPrLe.iPartA, 2);
 
@@ -144,7 +143,7 @@ int CSDCTransmit::DataEntityType0(CVector<_BINARY>* pbiData,
 			(*pbiData).Enqueue((_UINT32BIT) Parameter.MSCPrLe.iHierarch, 2);
 		
 			/* rfu */
-			iRfuDummy = 0;
+			_UINT32BIT iRfuDummy = 0;
 			(*pbiData).Enqueue((_UINT32BIT) iRfuDummy, 10);
 	
 			/* Data length for hierarchical */
@@ -160,36 +159,88 @@ int CSDCTransmit::DataEntityType0(CVector<_BINARY>* pbiData,
 		}
 	}
 
-	return iNoBitsTotal + iNoBitsHeader;
+	return iNumBitsTotal + NUM_BITS_HEADER_SDC;
 }
 
 
 /******************************************************************************\
-* Data entity Type 5														   *
+* Data entity Type 1 (Label data entity)									   *
+\******************************************************************************/
+int CSDCTransmit::DataEntityType1(CVector<_BINARY>* pbiData, int ServiceID,
+								  CParameter& Parameter)
+{
+	_UINT32BIT	iRfuDummy;
+	int			iLenLabel;
+	int			i;
+	char		cNewChar;
+
+	/* Length of label. Label is a variable length field of up to 16 bytes
+	   defining the label using UTF-8 coding */
+	int iLenLabelTmp = Parameter.Service[ServiceID].strLabel.length();
+	if (iLenLabelTmp > 16)
+		iLenLabel = 16;
+	else
+		iLenLabel = iLenLabelTmp;
+
+
+	/**** Multiplex description data entity - type 1 ****/
+	/* Length of the body, excluding the initial 4 bits, 
+	   measured in bytes -> only number bytes of label */
+	(*pbiData).Enqueue((_UINT32BIT) iLenLabel, 7);
+
+	/* Version flag (not used in this implementation) */
+	(*pbiData).Enqueue((_UINT32BIT) 0, 1);
+
+	/* Data entity type */
+	(*pbiData).Enqueue((_UINT32BIT) 01, 4); /* Type 01 */
+
+
+	/* Actual body ---------------------------------------------------------- */
+	/* Short Id */
+	(*pbiData).Enqueue((_UINT32BIT) ServiceID, 2);
+
+	/* rfu */
+	iRfuDummy = 0;
+	(*pbiData).Enqueue((_UINT32BIT) iRfuDummy, 2);
+
+	/* Set all characters of label string */
+	for (i = 0; i < iLenLabel; i++)
+	{
+		cNewChar = Parameter.Service[ServiceID].strLabel[i];
+
+		/* Set character */
+		(*pbiData).Enqueue((_UINT32BIT) cNewChar, 8);
+	}
+
+	/* Return value in bits (* 8) initial 4 bits (+ 4) */
+	return iLenLabel * 8 + 4 + NUM_BITS_HEADER_SDC;
+}
+
+
+/******************************************************************************\
+* Data entity Type 5 (Application information data entity)					   *
 \******************************************************************************/
 int CSDCTransmit::DataEntityType5(CVector<_BINARY>* pbiData, int ServiceID, 
 								  CParameter& Parameter)
 {
-	_UINT32BIT iRfuDummy = 0;
-	int iNoBitsTotal;
-	const int iNoBitsHeader = 12; /* Data entity header */
+	_UINT32BIT	iRfuDummy = 0;
+	int			iNumBitsTotal;
 
 	/* Set total number of bits */
 	switch (Parameter.Service[ServiceID].DataParam.ePacketModInd)
 	{
 	case CParameter::PM_SYNCHRON_STR_MODE:
-		iNoBitsTotal = 12 /* + application data TODO! */;
+		iNumBitsTotal = 12 /* + application data TODO! */;
 		break;
 
 	case CParameter::PM_PACKET_MODE:
-		iNoBitsTotal = 20 /* + application data TODO! */;
+		iNumBitsTotal = 20 /* + application data TODO! */;
 		break;
 	}
 
-	/**** Multiplex description data entity - type 5 ****/
 	/* Length of the body, excluding the initial 4 bits ("- 4"), 
 	   measured in bytes ("/ 8") */
-	(*pbiData).Enqueue((_UINT32BIT) (iNoBitsTotal - 4) / 8, 7);
+	(*pbiData).Enqueue((_UINT32BIT) (iNumBitsTotal - 4) / 8, 7);
 
 	/* Version flag (not used in this implementation) */
 	(*pbiData).Enqueue((_UINT32BIT) 0, 1);
@@ -197,7 +248,8 @@ int CSDCTransmit::DataEntityType5(CVector<_BINARY>* pbiData, int ServiceID,
 	/* Data entity type */
 	(*pbiData).Enqueue((_UINT32BIT) 05, 4); /* Type 05 */
 
-	/* ********** */
+
+	/* Actual body ---------------------------------------------------------- */
 	/* Short Id */
 	(*pbiData).Enqueue((_UINT32BIT) ServiceID, 2);
 
@@ -257,27 +309,24 @@ int CSDCTransmit::DataEntityType5(CVector<_BINARY>* pbiData, int ServiceID,
 	/* Application data */
 // Not used, yet!!!
 
-	return iNoBitsTotal + iNoBitsHeader;
+	return iNumBitsTotal + NUM_BITS_HEADER_SDC;
 }
 
 
 /******************************************************************************\
-* Data entity Type 9														   *
+* Data entity Type 9 (Audio information data entity)						   *
 \******************************************************************************/
 int CSDCTransmit::DataEntityType9(CVector<_BINARY>* pbiData, int ServiceID, 
 								  CParameter& Parameter)
 {
 	_UINT32BIT iRfuDummy = 0;
-	int iNoBitsTotal;
-	const int iNoBitsHeader = 12; /* Data entity header */
 
 	/* Set total number of bits */
-	iNoBitsTotal = 20;
+	const int iNumBitsTotal = 20;
 
-	/**** Multiplex description data entity - type 9 ****/
 	/* Length of the body, excluding the initial 4 bits ("- 4"), 
 	   measured in bytes ("/ 8") */
-	(*pbiData).Enqueue((_UINT32BIT) (iNoBitsTotal - 4) / 8, 7);
+	(*pbiData).Enqueue((_UINT32BIT) (iNumBitsTotal - 4) / 8, 7);
 
 	/* Version flag (not used in this implementation) */
 	(*pbiData).Enqueue((_UINT32BIT) 0, 1);
@@ -285,7 +334,8 @@ int CSDCTransmit::DataEntityType9(CVector<_BINARY>* pbiData, int ServiceID,
 	/* Data entity type */
 	(*pbiData).Enqueue((_UINT32BIT) 9, 4); /* Type 09 */
 
-	/* ********** */
+
+	/* Actual body ---------------------------------------------------------- */
 	/* Short Id */
 	(*pbiData).Enqueue((_UINT32BIT) ServiceID, 2);
 
@@ -447,6 +497,6 @@ int CSDCTransmit::DataEntityType9(CVector<_BINARY>* pbiData, int ServiceID,
 	/* rfa 1 bit */
 	(*pbiData).Enqueue((_UINT32BIT) iRfuDummy, 1);
 
-	return iNoBitsTotal + iNoBitsHeader;
+	return iNumBitsTotal + NUM_BITS_HEADER_SDC;
 }
 

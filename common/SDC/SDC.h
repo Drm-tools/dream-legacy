@@ -35,6 +35,11 @@
 #include "../Vector.h"
 
 
+/* Definitions ****************************************************************/
+/* Number of bits of header of SDC block */
+#define NUM_BITS_HEADER_SDC			12
+
+
 /* Classes ********************************************************************/
 class CSDCTransmit
 {
@@ -46,6 +51,7 @@ public:
 
 protected:
 	int DataEntityType0(CVector<_BINARY>* pbiData, CParameter& Parameter);
+	int DataEntityType1(CVector<_BINARY>* pbiData, int ServiceID, CParameter& Parameter);
 // ...
 	int DataEntityType5(CVector<_BINARY>* pbiData, int ServiceID, CParameter& Parameter);
 // ...
