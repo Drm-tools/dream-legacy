@@ -488,18 +488,6 @@ SOURCE=..\common\mlc\QAMMapping.h
 SOURCE=..\common\mlc\ViterbiDecoder.h
 # End Source File
 # End Group
-# Begin Group "Header FFT"
-
-# PROP Default_Filter ""
-# Begin Source File
-
-SOURCE=..\common\fftw\dfftw.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\fftw\drfftw.h
-# End Source File
-# End Group
 # Begin Group "Header Tables"
 
 # PROP Default_Filter ""
