@@ -33,10 +33,8 @@
 #include "Parameter.h"
 #include "Vector.h"
 #include "CRC.h"
-#include <qsocket.h>
 #include <qsocketdevice.h>
 #include <qsocketnotifier.h>
-#include <qtimer.h>
 
 
 /* Definitions ****************************************************************/
@@ -52,8 +50,11 @@
 /* Minor revision of the AF protocol in use: Currently 00_[16] */
 #define AF_MINOR_REVISION			0
 
-/* Maximum number of bytes received from the network interface */
-#define MAX_SIZE_BYTES_NETW_BUF		10000 // TEST
+/* Maximum number of bytes received from the network interface. Maximum data
+   rate of DRM is approx. 80 kbps. One MDI packet must be sent each DRM frame
+   which is every 400 ms -> 0.4 * 80000 / 8 = 4000 bytes. Allocating more than
+   double of this size should be ok for all possible cases */
+#define MAX_SIZE_BYTES_NETW_BUF		10000
 
 
 /* Classes ********************************************************************/
@@ -65,29 +66,28 @@ public:
 	CMDI();
 	virtual ~CMDI() {}
 
+	/* MDI out */
 	void SetFACData(CVectorEx<_BINARY>& vecbiFACData, CParameter& Parameter);
 	void SetSDCData(CVectorEx<_BINARY>& vecbiSDCData);
 	void SetStreamData(const int iStrNum, CVectorEx<_BINARY>& vecbiStrData);
-
 	_BOOLEAN SetNetwOutAddr(const string strNewIPPort);
-	_BOOLEAN SetNetwInPort(const int iPort);
-
-	_BOOLEAN GetMDIEnabled() {return bMDIEnabled;}
+	_BOOLEAN GetMDIOutEnabled() {return bMDIOutEnabled;}
 
 	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC = bNAFPktCRC;}
 	_BOOLEAN GetAFPktCRC() {return bUseAFCRC;}
 
+	/* MDI in */
+	ERobMode GetFACData(CVectorEx<_BINARY>& vecbiFACData);
+	void GetSDCData(CVectorEx<_BINARY>& vecbiSDCData);
+	void GetStreamData(CVectorEx<_BINARY>& vecbiStrData, const int iLen,
+		const int iStrNum);
+	_BOOLEAN SetNetwInPort(const int iPort);
+	_BOOLEAN GetMDIInEnabled() {return bMDIInEnabled;}
+
 protected:
-	QSocketDevice		SocketDevice;
-	QSocketNotifier*	pSocketNotivRead;
-
-	QHostAddress		HostAddrOut;
-	int					iHostPortOut;
-
-	void SetEnableMDI(const _BOOLEAN bNewEnMDI) {bMDIEnabled = bNewEnMDI;}
-
-
 	/* MDI transmit --------------------------------------------------------- */
+	void SetEnableMDIOut(const _BOOLEAN bNEnMOut) {bMDIOutEnabled = bNEnMOut;}
+
 	void SendPacket(CVector<_BINARY> vecbiPacket);
 
 	void PrepareTag(CVector<_BINARY>& vecbiTag, const string strTagName,
@@ -104,13 +104,17 @@ protected:
 
 	CVector<_BINARY> GenAFPacket(const _BOOLEAN bWithSDC);
 	void ResetTags(const _BOOLEAN bResetSDC);
-	_BOOLEAN			bSDCWasSet;
+	_BOOLEAN					bSDCWasSet;
 
-	uint32_t			iLogFraCnt;
+	uint32_t					iLogFraCnt;
 
-	int					iSeqNumber;
+	int							iSeqNumber;
 
-	_BOOLEAN			bMDIEnabled;
+	_BOOLEAN					bMDIOutEnabled;
+	_BOOLEAN					bMDIInEnabled;
+
+	QHostAddress				HostAddrOut;
+	int							iHostPortOut;
 
 	CVector<_BINARY>			vecbiTagProTy; /* *ptr tag */
 	CVector<_BINARY>			vecbiTagLoFrCnt; /* dlfc tag */
@@ -126,6 +130,8 @@ protected:
 
 
 	/* MDI receive ---------------------------------------------------------- */
+	void SetEnableMDIIn(const _BOOLEAN bNEnMIn) {bMDIInEnabled = bNEnMIn;}
+
 	int DecodeTag(CVector<_BINARY>& vecbiTag);
 
 	void DecTagProTy(CVector<_BINARY>& vecbiTag, const int iLen);
@@ -134,17 +140,20 @@ protected:
 	void DecTagSDC(CVector<_BINARY>& vecbiTag, const int iLen);
 	void DecTagSDCChanInf(CVector<_BINARY>& vecbiTag, const int iLen);
 	void DecTagRobMod(CVector<_BINARY>& vecbiTag, const int iLen);
-	void DecTagStr(CVector<_BINARY>& vecbiTag, const int iLen, const int iStrNum);
+	void DecTagStr(CVector<_BINARY>& vecbiTag, const int iLen,
+		const int iStrNum);
 	void DecTagInfo(CVector<_BINARY>& vecbiTag, const int iLen);
 
 	void DecAFPacket(CVector<_BINARY>& vecbiAFPkt);
 
-	CVector<_BINARY> vecbiIncFACData;
-	CVector<_BINARY> vecbiIncSDCData;
-	CVector<_BINARY> vecbiIncStr0;
-	CVector<_BINARY> vecbiIncStr1;
-	CVector<_BINARY> vecbiIncStr2;
-	CVector<_BINARY> vecbiIncStr3;
+	CVector<_BINARY>			vecbiIncFACData;
+	CVector<_BINARY>			vecbiIncSDCData;
+	CVector<CVector<_BINARY> >	vecbiIncStr;
+	ERobMode					eMDIInRobMode;
+	QSocketDevice				SocketDevice;
+	QSocketNotifier*			pSocketNotivRead;
+
+	CMutex						Mutex;
 
 public slots:
 	void OnDataReceived();

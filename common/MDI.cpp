@@ -35,7 +35,9 @@
 
 /* Implementation *************************************************************/
 CMDI::CMDI() : SocketDevice(QSocketDevice::Datagram /* UDP */), iLogFraCnt(0),
-	iSeqNumber(0), bMDIEnabled(FALSE), vecbiTagStr(MAX_NUM_STREAMS)
+	iSeqNumber(0), bMDIInEnabled(FALSE), bMDIOutEnabled(FALSE),
+	vecbiTagStr(MAX_NUM_STREAMS), eMDIInRobMode(RM_ROBUSTNESS_MODE_B),
+	vecbiIncStr(MAX_NUM_STREAMS)
 {
 	/* Reset all tags for initialization and reset flag for SDC tag */
 	ResetTags(TRUE);
@@ -49,13 +51,6 @@ CMDI::CMDI() : SocketDevice(QSocketDevice::Datagram /* UDP */), iLogFraCnt(0),
 	/* Use CRC for AF packets */
 	bUseAFCRC = TRUE;
 
-
-
-
-#if 0
-// FIXME: Does not work right now!!!!!!!!!!!!!!!!!!!!!!
-// needed for MDI receive which is not implemented right now anyway...
-
 	/* Generate the socket notifier and connect the signal */
 	pSocketNotivRead = new QSocketNotifier(SocketDevice.socket(),
 		QSocketNotifier::Read);
@@ -63,7 +58,6 @@ CMDI::CMDI() : SocketDevice(QSocketDevice::Datagram /* UDP */), iLogFraCnt(0),
 	/* Connect the "activated" signal */
     QObject::connect(pSocketNotivRead, SIGNAL(activated(int)),
 		this, SLOT(OnDataReceived()));
-#endif
 }
 
 
@@ -157,7 +151,7 @@ _BOOLEAN CMDI::SetNetwOutAddr(const string strNewIPPort)
 				HostAddrOut = HostAddrOutTMP;
 
 				/* Enable MDI and set "OK" flag */
-				SetEnableMDI(TRUE);
+				SetEnableMDIOut(TRUE);
 				bAddressOK = TRUE;
 			}
 		}
@@ -193,6 +187,9 @@ CVector<_BINARY> CMDI::GenAFPacket(const _BOOLEAN bWithSDC)
 */
 	int					i;
 	CVector<_BINARY>	vecbiAFPkt;
+
+	/* Increment MDI packet counter and generate counter tag */
+	GenTagLoFrCnt();
 
 	/* Payload length in bytes */
 // TODO: check if padding bits are needed to get byte alignment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -320,10 +317,6 @@ CVector<_BINARY> CMDI::GenAFPacket(const _BOOLEAN bWithSDC)
 	else
 		vecbiAFPkt.Enqueue((uint32_t) 0, 16);
 
-
-	/* Increment MDI packet counter */
-	GenTagLoFrCnt();
-
 	return vecbiAFPkt;
 }
 
@@ -362,13 +355,13 @@ void CMDI::GenTagLoFrCnt()
 void CMDI::GenTagFAC(CVectorEx<_BINARY>& vecbiFACData)
 {
 	/* Length: 9 bytes = 72 bits */
-	PrepareTag(vecbiTagFAC, "fac_", 72);
+	PrepareTag(vecbiTagFAC, "fac_", NUM_FAC_BITS_PER_BLOCK);
 
 	/* Channel parameters, service parameters, CRC */
 	vecbiFACData.ResetBitAccess();
 
 	/* FAC data is always 72 bits long which is 9 bytes, copy data byte-wise */
-	for (int i = 0; i < 9; i++)
+	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE; i++)
 		vecbiTagFAC.Enqueue(vecbiFACData.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 }
 
@@ -569,34 +562,141 @@ void CMDI::ResetTags(const _BOOLEAN bResetSDC)
 * MDI receive                                                                  *
 \******************************************************************************/
 /* Access functions ***********************************************************/
+ERobMode CMDI::GetFACData(CVectorEx<_BINARY>& vecbiFACData)
+{
+	Mutex.Lock();
+
+	if (vecbiIncFACData.Size() > 0)
+	{
+		/* Copy incoming MDI FAC data */
+		vecbiFACData.ResetBitAccess();
+		vecbiIncFACData.ResetBitAccess();
+
+		/* FAC data is always 72 bits long which is 9 bytes, copy data
+		   byte-wise */
+		for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE; i++)
+		{
+			vecbiFACData.
+				Enqueue(vecbiIncFACData.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+		}
+
+		/* Reset vector data from tag afterwards so that it is not read again */
+		vecbiIncFACData.Init(0);
+	}
+	else
+	{
+		/* If no data is available, return cleared vector */
+		vecbiFACData.Reset(0);
+	}
+
+	/* Set current robustness mode (should be done inside the mutex region) */
+	const ERobMode eCurRobMode = eMDIInRobMode;
+
+	Mutex.Unlock();
+
+	return eCurRobMode;
+}
+
+void CMDI::GetSDCData(CVectorEx<_BINARY>& vecbiSDCData)
+{
+	Mutex.Lock();
+
+	if (vecbiIncSDCData.Size() > 0)
+	{
+		/* If receiver is correctly initialized, the input vector should be
+		   large enough for the SDC data */
+		const int iLenSDCDataBits = vecbiSDCData.Size();
+
+		if (vecbiSDCData.Size() >= iLenSDCDataBits)
+		{
+			/* Copy incoming MDI SDC data */
+			vecbiSDCData.ResetBitAccess();
+			vecbiIncSDCData.ResetBitAccess();
+
+			/* We have to copy bits instead of bytes since the length of SDC
+			   data is usually not a multiple of 8 */
+			for (int i = 0; i < iLenSDCDataBits; i++)
+				vecbiSDCData.Enqueue(vecbiIncSDCData.Separate(1), 1);
+		}
+
+		/* Reset vector data from tag afterwards so that it is not read again */
+		vecbiIncSDCData.Init(0);
+	}
+	else
+	{
+		/* If no data is available, return cleared vector */
+		vecbiSDCData.Reset(0);
+	}
+
+	Mutex.Unlock();
+}
+
+void CMDI::GetStreamData(CVectorEx<_BINARY>& vecbiStrData, const int iLen,
+						 const int iStrNum)
+{
+	Mutex.Lock();
+
+	/* First check if stream ID is valid */
+	if (iStrNum != STREAM_ID_NOT_USED)
+	{
+		/* Now check length of data vector */
+		const int iStreamLen = vecbiIncStr[iStrNum].Size();
+
+		if (iLen >= iStreamLen)
+		{
+			/* Copy data */
+			vecbiIncStr[iStrNum].ResetBitAccess();
+			vecbiStrData.ResetBitAccess();
+
+			/* Data is always a multiple of 8 -> copy bytes */
+			for (int i = 0; i < iStreamLen / SIZEOF__BYTE; i++)
+			{
+				vecbiStrData.Enqueue(vecbiIncStr[iStrNum].
+					Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+			}
+		}
+
+		/* Reset vector data from tag afterwards so that it is not read again */
+		vecbiIncStr[iStrNum].Init(0);
+	}
+
+	Mutex.Unlock();
+}
 
 
 /* Network interface implementation *******************************************/
 _BOOLEAN CMDI::SetNetwInPort(const int iPort)
 {
+	/* If port number is set, MDI input will be enabled */
+	SetEnableMDIIn(TRUE);
+
 	/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
 	return SocketDevice.bind(QHostAddress((Q_UINT32) 0), iPort);
 }
 
 void CMDI::OnDataReceived()
 {
-
-CVector<_BYTE> vecsRecBuf(MAX_SIZE_BYTES_NETW_BUF);
+	CVector<_BYTE> vecsRecBuf(MAX_SIZE_BYTES_NETW_BUF);
 
 	/* Read block from network interface */
 	const int iNumBytesRead = SocketDevice.readBlock(
 		(char*) &vecsRecBuf[0], MAX_SIZE_BYTES_NETW_BUF);
 
-	/* get host address of client */
-SocketDevice.peerAddress();
-SocketDevice.peerPort();
+	if (iNumBytesRead > 0)
+	{
+		/* Copy data from network buffer and decode received packet */
+		CVector<_BINARY> vecbiAFPkt(iNumBytesRead * SIZEOF__BYTE);
+		vecbiAFPkt.ResetBitAccess();
+		for (int i = 0; i < iNumBytesRead; i++)
+			vecbiAFPkt.Enqueue(vecsRecBuf[i], SIZEOF__BYTE);
 
-// TEST
-CVector<_BINARY> vecbiAFPkt(iNumBytesRead * SIZEOF__BYTE);
-for (int i = 0; i < iNumBytesRead; i++)
-	vecbiAFPkt.Enqueue(vecsRecBuf[i], SIZEOF__BYTE);
+		/* Decode the incoming packet thread-safe */
+		Mutex.Lock();
 
-DecAFPacket(vecbiAFPkt);
+		DecAFPacket(vecbiAFPkt);
+
+		Mutex.Unlock();
+	}
 }
 
 
@@ -695,9 +795,11 @@ if (iSeqNumber > 0xFFFF)
 
 int CMDI::DecodeTag(CVector<_BINARY>& vecbiTag)
 {
+	int i;
+
 	/* Decode tag name (always four bytes long) */
 	string strTagName = "";
-	for (int i = 0; i < 4; i++)
+	for (i = 0; i < 4; i++)
 		strTagName += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
 
 	/* Get tag data length (4 bytes = 32 bits) */
@@ -705,42 +807,81 @@ int CMDI::DecodeTag(CVector<_BINARY>& vecbiTag)
 
 	/* We cannot use the "switch" command here. Check each case separately with
 	   a "if" condition */
+	_BOOLEAN bTagWasDec = FALSE;
+
 	if (strTagName.compare("*ptr") == 0) /* "*ptr" tag */
+	{
 		DecTagProTy(vecbiTag, iLenDataBits);
+		bTagWasDec = TRUE;
+	}
 
 	if (strTagName.compare("dlfc") == 0) /* "dlfc" tag */
+	{
 		DecTagLoFrCnt(vecbiTag, iLenDataBits);
+		bTagWasDec = TRUE;
+	}
 
 	if (strTagName.compare("fac_") == 0) /* "fac_" tag */
+	{
 		DecTagFAC(vecbiTag, iLenDataBits);
+		bTagWasDec = TRUE;
+	}
 
 	if (strTagName.compare("sdc_") == 0) /* "sdc_" tag */
+	{
 		DecTagSDC(vecbiTag, iLenDataBits);
+		bTagWasDec = TRUE;
+	}
 
 	if (strTagName.compare("sdci") == 0) /* "sdci" tag */
+	{
 		DecTagSDCChanInf(vecbiTag, iLenDataBits);
+		bTagWasDec = TRUE;
+	}
 
 	if (strTagName.compare("robm") == 0) /* "robm" tag */
+	{
 		DecTagRobMod(vecbiTag, iLenDataBits);
+		bTagWasDec = TRUE;
+	}
 
 	if (strTagName.compare("str0") == 0) /* "str0" tag */
+	{
 		DecTagStr(vecbiTag, iLenDataBits, 0);
+		bTagWasDec = TRUE;
+	}
 
 	if (strTagName.compare("str1") == 0) /* "str1" tag */
+	{
 		DecTagStr(vecbiTag, iLenDataBits, 1);
+		bTagWasDec = TRUE;
+	}
 
 	if (strTagName.compare("str2") == 0) /* "str2" tag */
+	{
 		DecTagStr(vecbiTag, iLenDataBits, 2);
+		bTagWasDec = TRUE;
+	}
 
 	if (strTagName.compare("str3") == 0) /* "str3" tag */
+	{
 		DecTagStr(vecbiTag, iLenDataBits, 3);
+		bTagWasDec = TRUE;
+	}
 
 	if (strTagName.compare("info") == 0) /* "info" tag */
+	{
 		DecTagInfo(vecbiTag, iLenDataBits);
+		bTagWasDec = TRUE;
+	}
 
-
-// TODO take care of tags that are not supported!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+	/* Take care of tags which are not supported */
+	if (bTagWasDec == FALSE)
+	{
+		/* Take bits from tag vector */
+		for (i = 0; i < iLenDataBits; i++)
+			vecbiTag.Separate(1);
+	}
 
 	/* Return number of consumed bytes. This number is the actual body plus two
 	   times for bytes for the header = 8 bytes */
@@ -795,14 +936,14 @@ void CMDI::DecTagLoFrCnt(CVector<_BINARY>& vecbiTag, const int iLen)
 void CMDI::DecTagFAC(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	/* Fast access channel (fac_) always 9 bytes long */
-	if (iLen != 72)
+	if (iLen != NUM_FAC_BITS_PER_BLOCK)
 		return; // TODO: error handling!!!!!!!!!!!!!!!!!!!!!!
 
 	/* Copy incoming FAC data */
-	vecbiIncFACData.Init(72);
+	vecbiIncFACData.Init(NUM_FAC_BITS_PER_BLOCK);
 	vecbiIncFACData.ResetBitAccess();
 
-	for (int i = 0; i < 9; i++)
+	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE; i++)
 		vecbiIncFACData.Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 }
 
@@ -875,22 +1016,26 @@ void CMDI::DecTagRobMod(CVector<_BINARY>& vecbiTag, const int iLen)
 	if (iLen != 8)
 		return; // TODO: error handling!!!!!!!!!!!!!!!!!!!!!!
 
-	switch (vecbiTag.Separate(8)) // TODO
+	switch (vecbiTag.Separate(8))
 	{
 	case 0:
 		/* Robustness mode A */
+		eMDIInRobMode = RM_ROBUSTNESS_MODE_A;
 		break;
 
 	case 1:
 		/* Robustness mode B */
+		eMDIInRobMode = RM_ROBUSTNESS_MODE_B;
 		break;
 
 	case 2:
 		/* Robustness mode C */
+		eMDIInRobMode = RM_ROBUSTNESS_MODE_C;
 		break;
 
 	case 3:
 		/* Robustness mode D */
+		eMDIInRobMode = RM_ROBUSTNESS_MODE_D;
 		break;
 	}
 }
@@ -898,41 +1043,14 @@ void CMDI::DecTagRobMod(CVector<_BINARY>& vecbiTag, const int iLen)
 void CMDI::DecTagStr(CVector<_BINARY>& vecbiTag, const int iLen,
 					 const int iStrNum)
 {
-	int i;
+	/* Copy stream data */
+	vecbiIncStr[iStrNum].Init(iLen);
+	vecbiIncStr[iStrNum].ResetBitAccess();
 
-	switch (iStrNum)
+	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 	{
-	case 0:
-		vecbiIncStr0.Init(iLen);
-		vecbiIncStr0.ResetBitAccess();
-
-		for (i = 0; i < iLen / SIZEOF__BYTE; i++)
-			vecbiIncStr0.Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
-		break;
-
-	case 1:
-		vecbiIncStr1.Init(iLen);
-		vecbiIncStr1.ResetBitAccess();
-
-		for (i = 0; i < iLen / SIZEOF__BYTE; i++)
-			vecbiIncStr1.Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
-		break;
-
-	case 2:
-		vecbiIncStr2.Init(iLen);
-		vecbiIncStr2.ResetBitAccess();
-
-		for (i = 0; i < iLen / SIZEOF__BYTE; i++)
-			vecbiIncStr2.Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
-		break;
-
-	case 3:
-		vecbiIncStr3.Init(iLen);
-		vecbiIncStr3.ResetBitAccess();
-
-		for (i = 0; i < iLen / SIZEOF__BYTE; i++)
-			vecbiIncStr3.Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
-		break;
+		vecbiIncStr[iStrNum].
+			Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 }
 

@@ -233,6 +233,13 @@ void CDRMReceiver::DetectAcquiSymbol()
 
 void CDRMReceiver::DetectAcquiFAC()
 {
+#ifdef USE_QT_GUI
+	/* If MDI in is enabled, do not check for acquisition state because we want
+	   to stay in tracking mode all the time */
+	if (MDI.GetMDIInEnabled() == TRUE)
+		return;
+#endif
+
 	/* Acquisition switch */
 	if (!UtilizeFACData.GetCRCOk())
 	{
@@ -371,6 +378,31 @@ void CDRMReceiver::SetInStartMode()
 
 	/* Reset GUI lights */
 	PostWinMessage(MS_RESET_ALL);
+
+#ifdef USE_QT_GUI
+	/* In case MDI is enabled, go directly to tracking mode, do not activate the
+	   synchronization units */
+	if (MDI.GetMDIInEnabled() == TRUE)
+	{
+		/* We want to have as low CPU usage as possible, therefore set the
+		   synchronization units in a state where they do only a minimum
+		   work */
+		FreqSyncAcq.StopAcquisition();
+		TimeSync.StopTimingAcqu();
+		InputResample.SetSyncInput(TRUE);
+		SyncUsingPil.SetSyncInput(TRUE);
+
+		/* This is important so that always the same amount of module input
+		   data is queried, otherwise it could be that amount of input data is
+		   set to zero and the receiver gets into an infinite loop */
+		TimeSync.SetSyncInput(TRUE);
+
+		/* Always tracking mode for MDI */
+		eAcquiState = AS_WITH_SIGNAL;
+
+		SetInTrackingMode();
+	}
+#endif
 }
 
 void CDRMReceiver::SetInTrackingMode()
