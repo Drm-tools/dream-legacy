@@ -65,8 +65,8 @@
 #define RMD_ENUM_TG_TU					11
 #define RMD_DENOM_TG_TU					14
 
-#define MAX_NO_STREAMS					4
-#define MAX_NO_SERVICES					4
+#define MAX_NUM_STREAMS					4
+#define MAX_NUM_SERVICES				4
 
 #define NUM_ROBUSTNESS_MODES			4
 
@@ -77,7 +77,7 @@
 
 /* Define a stream ID which is not valid to show that this service is not
    attached to a stream */
-#define STREAM_ID_NOT_USED				(MAX_NO_STREAMS + 1)
+#define STREAM_ID_NOT_USED				(MAX_NUM_STREAMS + 1)
 
 
 /* Audio stream definitions ------------------------------------------------- */
