@@ -153,6 +153,9 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 
 	/* Activte real-time timer */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
+
+	/* Update window */
+	OnTimerChart();
 }
 
 void systemevalDlg::showEvent(QShowEvent* pEvent)
