@@ -36,18 +36,14 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 	Put SDC parameters on a stream 
 */
 	int i;
-	int iNumUsedBits;
-	int iLengthDataFieldBytes;
-	int	iUsefulBitsSDC;
-	_BYTE byFirstByte;
 
 	/* Calculate length of data field in bytes 
 	   (consistant to table 61 in (6.4.1)) */
-	iLengthDataFieldBytes = 
+	const int iLengthDataFieldBytes = 
 		(int) ((_REAL) (Parameter.iNumSDCBitsPerSFrame - 20) / 8);
 
 	/* 20 bits from AFS index and CRC */
-	iUsefulBitsSDC = 20 + iLengthDataFieldBytes * 8;
+	const int iUsefulBitsSDC = 20 + iLengthDataFieldBytes * 8;
 
 	/* Reset enqueue function */
 	(*pbiData).ResetBitAccess();
@@ -60,7 +56,7 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 
 	/* Data Entities -------------------------------------------------------- */
 	/* Init bit-count */
-	iNumUsedBits = 0;
+	int iNumUsedBits = 0;
 
 // Choose types, TEST. Send only important types for this test!
 // TODO: test, if SDC block is long enough for all types!
@@ -83,7 +79,7 @@ else
 	iNumUsedBits += DataEntityType1(pbiData, 0, Parameter);
 
 
-	/* Zero-pad the unused bits in this SDC-block 
+	/* Zero-pad the unused bits in this SDC-block
 	   ("- 20" for the AFS-index and CRC!) */
 	for (i = 0; i < iUsefulBitsSDC - iNumUsedBits - 20; i++)
 		(*pbiData).Enqueue((_UINT32BIT) 0, 1);
@@ -99,7 +95,7 @@ else
 	Check) field shall contain a 16-bit CRC calculated over the AFS 
 	index coded in an 8-bit field (4 msbs are 0) and the data field.
 	4 MSBs from AFS-index. Insert four "0" in the data-stream */
-	byFirstByte = (_BYTE) (*pbiData).Separate(4);
+	const _BYTE byFirstByte = (_BYTE) (*pbiData).Separate(4);
 	CRCObject.AddByte(byFirstByte);
 
 	for (i = 0; i < (iUsefulBitsSDC - 4) / SIZEOF__BYTE - 2; i++)
@@ -118,7 +114,7 @@ int CSDCTransmit::DataEntityType0(CVector<_BINARY>* pbiData,
 								  CParameter& Parameter)
 {
 	/* 24 bits for each stream description + 4 bits for protection levels */
-	int iNumBitsTotal = 4 + Parameter.GetTotNumServices() * 24;
+	const int iNumBitsTotal = 4 + Parameter.GetTotNumServices() * 24;
 
 	/* Length of the body, excluding the initial 4 bits ("- 4"), 
 	   measured in bytes ("/ 8") */
@@ -138,7 +134,7 @@ int CSDCTransmit::DataEntityType0(CVector<_BINARY>* pbiData,
 // FIXME: this is just a temporarily solution, which is ok for only one service
 // The audio encoder must know this value. Should be set inside the audio coder
 // module in the future! This is just a test
-// Adjust part b
+// Adjust part B
 if (Parameter.iNumDecodedBitsMSC < Parameter.Stream[0].iLenPartA)
 {
 	/* Protection part A was chosen too high, set to equal error protection! */
@@ -169,8 +165,7 @@ else
 			(*pbiData).Enqueue((_UINT32BIT) Parameter.MSCPrLe.iHierarch, 2);
 		
 			/* rfu */
-			_UINT32BIT iRfuDummy = 0;
-			(*pbiData).Enqueue((_UINT32BIT) iRfuDummy, 10);
+			(*pbiData).Enqueue((_UINT32BIT) 0, 10);
 	
 			/* Data length for hierarchical */
 			(*pbiData).Enqueue((_UINT32BIT) Parameter.Stream[i].iLenPartB, 12);
@@ -195,14 +190,11 @@ else
 int CSDCTransmit::DataEntityType1(CVector<_BINARY>* pbiData, int ServiceID,
 								  CParameter& Parameter)
 {
-	_UINT32BIT	iRfuDummy;
-	int			iLenLabel;
-	int			i;
-	char		cNewChar;
+	int	iLenLabel;
 
 	/* Length of label. Label is a variable length field of up to 16 bytes
 	   defining the label using UTF-8 coding */
-	int iLenLabelTmp = Parameter.Service[ServiceID].strLabel.length();
+	const int iLenLabelTmp = Parameter.Service[ServiceID].strLabel.length();
 	if (iLenLabelTmp > 16)
 		iLenLabel = 16;
 	else
@@ -226,13 +218,12 @@ int CSDCTransmit::DataEntityType1(CVector<_BINARY>* pbiData, int ServiceID,
 	(*pbiData).Enqueue((_UINT32BIT) ServiceID, 2);
 
 	/* rfu */
-	iRfuDummy = 0;
-	(*pbiData).Enqueue((_UINT32BIT) iRfuDummy, 2);
+	(*pbiData).Enqueue((_UINT32BIT) 0, 2);
 
 	/* Set all characters of label string */
-	for (i = 0; i < iLenLabel; i++)
+	for (int i = 0; i < iLenLabel; i++)
 	{
-		cNewChar = Parameter.Service[ServiceID].strLabel[i];
+		const char cNewChar = Parameter.Service[ServiceID].strLabel[i];
 
 		/* Set character */
 		(*pbiData).Enqueue((_UINT32BIT) cNewChar, 8);
@@ -249,8 +240,7 @@ int CSDCTransmit::DataEntityType1(CVector<_BINARY>* pbiData, int ServiceID,
 int CSDCTransmit::DataEntityType5(CVector<_BINARY>* pbiData, int ServiceID, 
 								  CParameter& Parameter)
 {
-	_UINT32BIT	iRfuDummy = 0;
-	int			iNumBitsTotal;
+	int	iNumBitsTotal;
 
 	/* Set total number of bits */
 	switch (Parameter.Service[ServiceID].DataParam.ePacketModInd)
@@ -290,7 +280,7 @@ int CSDCTransmit::DataEntityType5(CVector<_BINARY>* pbiData, int ServiceID,
 		(*pbiData).Enqueue(0 /* 0 */, 1);
 
 		/* Descriptor */
-		(*pbiData).Enqueue((_UINT32BIT) iRfuDummy, 7);
+		(*pbiData).Enqueue((_UINT32BIT) 0, 7);
 		break;
 
 	case CParameter::PM_PACKET_MODE:
@@ -355,8 +345,6 @@ int CSDCTransmit::DataEntityType5(CVector<_BINARY>* pbiData, int ServiceID,
 int CSDCTransmit::DataEntityType9(CVector<_BINARY>* pbiData, int ServiceID, 
 								  CParameter& Parameter)
 {
-	_UINT32BIT iRfuDummy = 0;
-
 	/* Set total number of bits */
 	const int iNumBitsTotal = 20;
 
@@ -430,7 +418,7 @@ int CSDCTransmit::DataEntityType9(CVector<_BINARY>* pbiData, int ServiceID,
 
 	case CParameter::AC_CELP:
 		/* rfa */
-		(*pbiData).Enqueue((_UINT32BIT) iRfuDummy, 1);
+		(*pbiData).Enqueue((_UINT32BIT) 0, 1);
 
 		/* CELP_CRC */
 		switch (Parameter.Service[ServiceID].AudioParam.bCELPCRC)
@@ -527,12 +515,11 @@ int CSDCTransmit::DataEntityType9(CVector<_BINARY>* pbiData, int ServiceID,
 	else
 	{
 		/* rfa 5 bit */
-		(*pbiData).Enqueue((_UINT32BIT) iRfuDummy, 5);
+		(*pbiData).Enqueue((_UINT32BIT) 0, 5);
 	}
 	
 	/* rfa 1 bit */
-	(*pbiData).Enqueue((_UINT32BIT) iRfuDummy, 1);
+	(*pbiData).Enqueue((_UINT32BIT) 0, 1);
 
 	return iNumBitsTotal + NUM_BITS_HEADER_SDC;
 }
-
