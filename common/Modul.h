@@ -766,6 +766,8 @@ void CReceiverModul<TInput, TOutput>::
 
 		/* Reset init flag */
 		bDoInit = FALSE;
+
+		return;
 	}
 
 	/* INPUT-DRIVEN modul implementation in the receiver -------------------- */
