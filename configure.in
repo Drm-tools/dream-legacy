@@ -88,6 +88,10 @@ if test "x$WITHQTGUI" = xyes; then
 
 	AC_HAVE_LIBRARY(qt-mt,,exit 1)
 
+	AC_CHECK_FILE($QTDIR/include/qthread.h,  , exit 1)
+	CXXFLAGS="$CXXFLAGS -I$QTDIR/include"
+	AC_SUBST(CXXFLAGS)
+
 	AC_PATH_PROG(MOC, moc,, "$QTDIR/bin")
 	if test -z "$MOC"; then
 		AC_MSG_ERROR("No moc found in $QTDIR/bin");
@@ -102,6 +106,7 @@ if test "x$WITHQTGUI" = xyes; then
 
 	AC_HAVE_LIBRARY(qwt, ,exit 1)
 	AC_SUBST(QWTINCL, "-I/usr/include/qwt")
+	
 
 	AC_DEFINE(USE_QT_GUI, 1, [Define if you want to use the QT GUI])
 	AM_CONDITIONAL(USE_QT, true)
