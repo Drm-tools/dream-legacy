@@ -54,7 +54,7 @@ void CReadData::ProcessDataInternal(CParameter& TransmParam)
 void CReadData::InitInternal(CParameter& TransmParam)
 {
 	/* Define block-size for output, an audio frame always corresponds
-	   to 400 ms. We use always stereo blocks */
+	   to 400 ms */
 	iOutputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
 		(_REAL) 0.4 /* 400 ms */);
 
