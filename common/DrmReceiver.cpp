@@ -400,7 +400,7 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 	Param.rResampleOffset = (_REAL) 0.0;
 	Param.rFreqOffsetAcqui = (_REAL) 0.0;
 	Param.rFreqOffsetTrack = (_REAL) 0.0;
-	Param.rTimingOffsTrack = (_REAL) 0.0;
+	Param.iTimingOffsTrack = 0;
 
 	/* The following parameters are not yet used by the receiver implementation */
 	Param.iAFSIndex = 1;
