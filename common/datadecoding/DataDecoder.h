@@ -69,7 +69,6 @@ protected:
 
 	int						iLenDataHigh;
 	int						iLenDataLow;
-	int						iTotalNoInputBits;
 	int						iTotalPacketSize;
 	int						iNumDataPackets;
 	int						iServPacketID;
