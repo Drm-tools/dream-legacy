@@ -252,9 +252,18 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	vecrHammingWindow.Init(iNoIntpFreqPil);
 	vecrHammingWindow = Hamming(iNoIntpFreqPil);
 
-	/* Weights for peak bound calculation, in Eq. (19) */
-	rConst1 = pow(10, (_REAL) -TETA1_DIST_FROM_MAX_DB / 10);
-	rConst2 = pow(10, (_REAL) TETA2_DIST_FROM_MIN_DB / 10);
+	/* Weights for peak bound calculation, in Eq. (19), special values for
+	   robustness mode D! */
+	if (Parameter.GetWaveMode() == RM_ROBUSTNESS_MODE_D)
+	{
+		rConst1 = pow(10, (_REAL) -TETA1_DIST_FROM_MAX_DB_RMD / 10);
+		rConst2 = pow(10, (_REAL) TETA2_DIST_FROM_MIN_DB_RMD / 10);
+	}
+	else
+	{
+		rConst1 = pow(10, (_REAL) -TETA1_DIST_FROM_MAX_DB / 10);
+		rConst2 = pow(10, (_REAL) TETA2_DIST_FROM_MIN_DB / 10);
+	}
 
 	/* Define start point for rotation of detection vector for acausal taps.
 	   Per definition is this point somewhere in the region after the
