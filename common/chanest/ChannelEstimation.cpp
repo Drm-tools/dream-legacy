@@ -546,10 +546,10 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	veciPilOffTab.Init(iNumCarrier);
 
 	/* Number of different wiener filters */
-	iNoWienerFilt = (iLengthWiener - 1) * iScatPilFreqInt + 1;
+	iNumWienerFilt = (iLengthWiener - 1) * iScatPilFreqInt + 1;
 
 	/* Allocate temporary matlib vector for filter coefficients */
-	matcWienerFilter.Init(iNoWienerFilt, iLengthWiener);
+	matcWienerFilter.Init(iNumWienerFilt, iLengthWiener);
 
 #ifdef UPD_WIENER_FREQ_EACH_DRM_FRAME
 	/* Init Update counter for wiener filter update */
@@ -630,7 +630,7 @@ void CChannelEstimation::UpdateWienerFiltCoef(CReal rNewSNR, CReal rRatPDSLen,
 	int	iCurPil;
 
 	/* Calculate all possible wiener filters */
-	for (j = 0; j < iNoWienerFilt; j++)
+	for (j = 0; j < iNumWienerFilt; j++)
 		matcWienerFilter[j] = FreqOptimalFilter(iScatPilFreqInt, j, rNewSNR,
 			rRatPDSLen, rRatPDSOffs, iLengthWiener);
 
@@ -639,7 +639,7 @@ void CChannelEstimation::UpdateWienerFiltCoef(CReal rNewSNR, CReal rRatPDSLen,
 #ifdef _DEBUG_
 /* Save filter coefficients */
 static FILE* pFile = fopen("test/wienerfreq.dat", "w");
-for (j = 0; j < iNoWienerFilt; j++)
+for (j = 0; j < iNumWienerFilt; j++)
 	for (i = 0; i < iLengthWiener; i++)
 		fprintf(pFile, "%e\n", matcWienerFilter[j][i]);
 fflush(pFile);

@@ -194,7 +194,7 @@ protected:
 
 	int						iDCPos;
 	int						iPilOffset;
-	int						iNoWienerFilt;
+	int						iNumWienerFilt;
 	CComplexMatrix			matcWienerFilter;
 
 
