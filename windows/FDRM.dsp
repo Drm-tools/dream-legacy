@@ -713,7 +713,7 @@ SOURCE=..\common\datadecoding\MOTSlideShow.h
 # PROP Default_Filter ".h"
 # Begin Source File
 
-SOURCE=..\common\AudioFile.h
+SOURCE=..\common\util\AudioFile.h
 # End Source File
 # Begin Source File
 
