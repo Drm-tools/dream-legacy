@@ -40,14 +40,14 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 		pvecInputData2.tIn		transmitted signal s(t)
 		pvecInputData2.tRef		received signal without noise (channel
 									reference signal) */
-	for (i = 0; i < iNoCarrier; i++)
+	for (i = 0; i < iNumCarrier; i++)
 	{
 		veccEstChan[i] = (*pvecInputData2)[i].tOut / (*pvecInputData)[i].cSig;
 		veccRefChan[i] = (*pvecInputData2)[i].tRef / (*pvecInputData2)[i].tIn;
 	}
 
 	/* Debar DC carriers, set them to zero */
-	for (i = 0; i < iNoDCCarriers; i++)
+	for (i = 0; i < iNumDCCarriers; i++)
 	{
 		veccEstChan[i + iStartDCCar] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
 		veccRefChan[i + iStartDCCar] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
@@ -59,7 +59,7 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 	else
 	{
 		/* MSE for all carriers */
-		for (i = 0; i < iNoCarrier; i++)
+		for (i = 0; i < iNumCarrier; i++)
 			vecrMSEAverage[i] += SqMag(veccEstChan[i] - veccRefChan[i]);
 
 		/* New values have been added, increase counter for final result
@@ -70,15 +70,15 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Equalize the output vector ------------------------------------------- */
 	/* Write to output vector. Also, ship the channel state at a certain cell */
-	for (i = 0; i < iNoCarrier; i++)
+	for (i = 0; i < iNumCarrier; i++)
 	{
 		(*pvecOutputData)[i].cSig = (*pvecInputData2)[i].tOut / veccRefChan[i];
 		(*pvecOutputData)[i].rChan = SqMag(veccRefChan[i]);
 	}
 
 	/* Set symbol number for output vector */
-	(*pvecOutputData).GetExData().iSymbolNo = 
-		(*pvecInputData).GetExData().iSymbolNo;
+	(*pvecOutputData).GetExData().iSymbolID = 
+		(*pvecInputData).GetExData().iSymbolID;
 }
 
 void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
@@ -89,8 +89,8 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 	CPilotModiClass::InitRot(ReceiverParam);
 
 	/* Get local parameters */
-	iNoCarrier = ReceiverParam.iNoCarrier;
-	iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
+	iNumCarrier = ReceiverParam.iNumCarrier;
+	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
 	iDFTSize = ReceiverParam.iFFTSizeN;
 
 	/* Parameters for debaring the DC carriers from evaluation. First check if
@@ -98,19 +98,19 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 	if (ReceiverParam.iCarrierKmin > 0)
 	{
 		/* In this case, no DC carriers are in the useful spectrum */
-		iNoDCCarriers = 0;
+		iNumDCCarriers = 0;
 		iStartDCCar = 0;
 	}
 	else
 	{
 		if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_A)
 		{
-			iNoDCCarriers = 3;
+			iNumDCCarriers = 3;
 			iStartDCCar = abs(ReceiverParam.iCarrierKmin) - 1;
 		}
 		else
 		{
-			iNoDCCarriers = 1;
+			iNumDCCarriers = 1;
 			iStartDCCar = abs(ReceiverParam.iCarrierKmin);
 		}
 	}
@@ -123,25 +123,25 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 
 	/* Additional delay from long interleaving has to be considered */
 	if (ReceiverParam.GetInterleaverDepth() == CParameter::SI_LONG)
-		iStartCnt += ReceiverParam.iNoSymPerFrame * D_LENGTH_LONG_INTERL;
+		iStartCnt += ReceiverParam.iNumSymPerFrame * D_LENGTH_LONG_INTERL;
 
 
 	/* Allocate memory for intermedia results */
-	veccEstChan.Init(iNoCarrier);
-	veccRefChan.Init(iNoCarrier);
-	vecrMSEAverage.Init(iNoCarrier, (_REAL) 0.0); /* Reset average with zeros */
+	veccEstChan.Init(iNumCarrier);
+	veccRefChan.Init(iNumCarrier);
+	vecrMSEAverage.Init(iNumCarrier, (_REAL) 0.0); /* Reset average with zeros */
 
 	/* Define block-sizes for inputs and output */
-	iInputBlockSize = iNoCarrier;
-	iInputBlockSize2 = iNoCarrier;
-	iOutputBlockSize = iNoCarrier;
+	iInputBlockSize = iNumCarrier;
+	iInputBlockSize2 = iNumCarrier;
+	iOutputBlockSize = iNumCarrier;
 }
 
 void CIdealChanEst::GetResults(CVector<_REAL>& vecrResults)
 {
-	vecrResults.Init(iNoCarrier, (_REAL) 0.0);
+	vecrResults.Init(iNumCarrier, (_REAL) 0.0);
 
 	/* Copy data in return vector */
-	for (int i = 0; i < iNoCarrier; i++)
+	for (int i = 0; i < iNumCarrier; i++)
 		vecrResults[i] = vecrMSEAverage[i] / lAvCnt;
 }

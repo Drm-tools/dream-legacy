@@ -49,10 +49,10 @@ public:
 	void GetResults(CVector<_REAL>& vecrResults);
 
 protected:
-	int	iNoCarrier;
-	int iNoSymPerFrame;
+	int	iNumCarrier;
+	int iNumSymPerFrame;
 	int iStartDCCar;
-	int iNoDCCarriers;
+	int iNumDCCarriers;
 	int iChanEstDelay;
 	int iDFTSize;
 
