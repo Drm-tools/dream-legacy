@@ -31,6 +31,24 @@
 # include <sys/termios.h>
 #endif
 
+#if !defined(HAVE_RIG_PARSE_MODE) && defined(HAVE_LIBHAMLIB)
+extern "C"
+{
+	extern rmode_t parse_mode(const char *);
+	extern vfo_t parse_vfo(const char *);
+	extern setting_t parse_func(const char *);
+	extern setting_t parse_level(const char *);
+	extern setting_t parse_parm(const char *);
+	extern const char* strstatus(enum rig_status_e);
+}
+# define rig_parse_mode parse_mode
+# define rig_parse_vfo parse_vfo
+# define rig_parse_func parse_func
+# define rig_parse_level parse_level
+# define rig_parse_parm parse_parm
+# define rig_strstatus strstatus
+#endif
+
 
 /* Implementation *************************************************************/
 CDRMSchedule::CDRMSchedule()
@@ -315,21 +333,30 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	vecSpecDRMRigs.Init(0);
 
 	/* Winradio G3 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(1508, "" /* TODO */, 0));
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G303, "" /* TODO */, 0));
 
 	/* AOR 7030 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(503, "" /* TODO */, 0));
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_AR7030,
+		"m_CW=9500,l_IF=-4200,l_AGC=3", 5 /* kHz frequency offset */));
 
+#ifdef RIG_MODEL_ELEKTOR304
 	/* Elektor 3/04 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(2501, "", 0));
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_ELEKTOR304, "", 0));
+#endif
 
 	/* JRC NRD 535 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(606,
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_NRD535,
 		"l_CWPITCH=-5000,m_CW=12000,l_IF=-2000,l_AGC=3" /* AGC=slow */,
 		3 /* kHz frequency offset */));
 
 	/* TenTec RX320D */
-	vecSpecDRMRigs.Add(CSpecDRMRig(1603, "" /* TODO */, 0));
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX320,
+		"l_AF=1,l_AGC=3,m_USB=6000", 0));
+
+	/* TenTec RX340D */
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX340,
+		"l_AF=1,m_USB=16000,l_AGC=3,l_IF=2000",
+		-12 /* kHz frequency offset */));
 
 
 	/* Load all possible front-end remotes in hamlib library */
@@ -390,7 +417,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 					"[" + QString().setNum(iCurModelID) + "] " +
 					veccapsHamlibModels[j].strManufacturer + " " +
 					veccapsHamlibModels[j].strModelName +
-					" (" + StrStatusHamlib(veccapsHamlibModels[j].eRigStatus) +
+					" (" + rig_strstatus(veccapsHamlibModels[j].eRigStatus) +
 					")",
 					this, SLOT(OnRemoteMenu(int)), 0, veciModelID.Size() - 1);
 
@@ -889,36 +916,6 @@ void StationsDlg::SetFrequency(const int iFreqkHz)
 	This code is based on patches and example code from Tomi Manninen and
 	Stephane Fillod (developer of hamlib)
 */
-#ifndef HAVE_RIG_PARSE_MODE
-extern "C"
-{
-	extern rmode_t parse_mode(const char *s);
-	extern vfo_t parse_vfo(const char *s);
-	extern setting_t parse_func(const char *s);
-	extern setting_t parse_level(const char *s);
-	extern setting_t parse_parm(const char *s);
-}
-# define parse_mode rig_parse_mode
-# define parse_vfo rig_parse_vfo
-# define parse_func rig_parse_func
-# define parse_level rig_parse_level
-# define parse_parm rig_parse_parm
-#endif
-
-const QString StationsDlg::StrStatusHamlib(enum rig_status_e status)
-{
-	switch (status)
-	{
-	case RIG_STATUS_ALPHA:		return "Alpha";
-	case RIG_STATUS_UNTESTED:	return "Untested";
-	case RIG_STATUS_BETA:		return "Beta";
-	case RIG_STATUS_STABLE:		return "Stable";
-	case RIG_STATUS_BUGGY:		return "Buggy";
-	case RIG_STATUS_NEW:		return "New";
-	}
-	return "";
-}
-
 int StationsDlg::PrintHamlibModelList(const struct rig_caps* caps, void* data)
 {
 	/* Access data members of class through pointer ((StationsDlg*) data).

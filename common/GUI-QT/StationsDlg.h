@@ -241,7 +241,6 @@ protected:
 	rig_model_t			iCurSelModelID;
 
 	static int			PrintHamlibModelList(const struct rig_caps* caps, void* data);
-	const QString		StrStatusHamlib(enum rig_status_e status);
 	_BOOLEAN			CheckForSpecDRMFE(const rig_model_t iID, int& iIndex);
 	_BOOLEAN			SetFrequencyHamlib(const int iFreqkHz);
 	void				InitHamlib(const rig_model_t newModID);
