@@ -30,9 +30,9 @@
 % Fixed for sample-rate conversiones of R ~ 1
 I = 10; % D = I
 % Number of taps per poly-phase
-NoTapsP = 15;
+NoTapsP = 10;
 % Cut-off frequency
-fc = 0.95 / I;
+fc = 1 / I;
 % MMSE filter-design and windowing
 h = I * firls(I * NoTapsP - 1, [0 fc fc 1], [1 1 0 0]) .* kaiser(I * NoTapsP, 5)';
 
@@ -47,8 +47,7 @@ fprintf(fid, '/* Filter taps in time-domain */\n\n');
 fprintf(fid, '#ifndef _RESAMPLEFILTER_H_\n');
 fprintf(fid, '#define _RESAMPLEFILTER_H_\n\n');
 
-
-fprintf(fid, '#define NO_TAPS_PER_PHASE            ');
+fprintf(fid, '#define NUM_TAPS_PER_PHASE           ');
 fprintf(fid, int2str(NoTapsP));
 fprintf(fid, '\n');
 fprintf(fid, '#define INTERP_DECIM_I_D             ');
@@ -57,7 +56,7 @@ fprintf(fid, '\n\n\n');
 
 % Write filter taps
 fprintf(fid, '/* Filter for ratios close to 1 */\n');
-fprintf(fid, 'static float fResTaps1To1[INTERP_DECIM_I_D][NO_TAPS_PER_PHASE] = {\n');
+fprintf(fid, 'static float fResTaps1To1[INTERP_DECIM_I_D][NUM_TAPS_PER_PHASE] = {\n');
 for i = 1:I
 	hTemp = h(i:I:end) ;
 	fprintf(fid, '{\n');
@@ -66,7 +65,6 @@ for i = 1:I
 	fprintf(fid, '},\n');
 end
 fprintf(fid, '};\n\n\n');
-   
 
 fprintf(fid, '#endif	/* _RESAMPLEFILTER_H_ */\n');
 fclose(fid);

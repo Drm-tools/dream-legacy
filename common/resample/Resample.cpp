@@ -79,7 +79,7 @@ int CResample::Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
 		/* Convolution */
 		ry1 = (_REAL) 0.0;
 		ry2 = (_REAL) 0.0;
-		for (i = 0; i < NO_TAPS_PER_PHASE; i++)
+		for (i = 0; i < NUM_TAPS_PER_PHASE; i++)
 		{
 			ry1 += fResTaps1To1[ip1][i] * vecrIntBuff[in1 - i];
 			ry2 += fResTaps1To1[ip2][i] * vecrIntBuff[in2 - i];
@@ -111,7 +111,7 @@ void CResample::Init(int iNewInputBlockSize)
 
 	/* History size must be one sample larger, because we use always TWO 
 	   convolutions */
-	iHistorySize = NO_TAPS_PER_PHASE + 1;
+	iHistorySize = NUM_TAPS_PER_PHASE + 1;
 
 	/* Calculate block duration */
 	rBlockDuration = (iInputBlockSize + iHistorySize - 1) * INTERP_DECIM_I_D;
@@ -149,11 +149,11 @@ void CAudioResample::Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput)
 			ip = (j * INTERP_DECIM_I_D / iRation) % INTERP_DECIM_I_D;
 
 			/* Sample position in input vector */
-			in = (int) (j / iRation) + NO_TAPS_PER_PHASE;
+			in = (int) (j / iRation) + NUM_TAPS_PER_PHASE;
 
 			/* Convolution */
 			ry = (_REAL) 0.0;
-			for (i = 0; i < NO_TAPS_PER_PHASE; i++)
+			for (i = 0; i < NUM_TAPS_PER_PHASE; i++)
 				ry += fResTaps1To1[ip][i] * vecrIntBuff[in - i];
 
 			rOutput[j] = ry;
@@ -168,5 +168,5 @@ void CAudioResample::Init(int iNewInputBlockSize, int iNewRation)
 	iOutputBlockSize = iInputBlockSize * iRation;
 
 	/* Allocate memory for internal buffer, clear sample history */
-	vecrIntBuff.Init(iInputBlockSize + NO_TAPS_PER_PHASE, (_REAL) 0.0);
+	vecrIntBuff.Init(iInputBlockSize + NUM_TAPS_PER_PHASE, (_REAL) 0.0);
 }
