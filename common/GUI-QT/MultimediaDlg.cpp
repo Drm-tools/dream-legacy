@@ -611,10 +611,8 @@ void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
 	if (NewPic.strFormat.compare("jpeg") != 0)
 		return;
 
-#ifdef FREEIMAGE_LIB
 	/* If we use freeimage as a static library, we need to initialize it first */
 	FreeImage_Initialise();
-#endif
 
 	/* Put input data in a new IO object */
 	MemIO memIO(NewPic.vecbRawData);
