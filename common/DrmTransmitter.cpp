@@ -137,14 +137,19 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	Param.MSCPrLe.iPartB = 1;
 	Param.MSCPrLe.iHierarch = 0;
 
+	/* Init service parameters */
 	Param.Stream[0].iLenPartA = 84;
 	Param.Stream[0].iLenPartB = 1040;
 	Param.Service[0].iServiceID = 163569;
-	Param.Service[0].strLabel = "Dream Test"; /* Not transmitted yet */
+	Param.Service[0].strLabel = "Dream Test"; /* Has to be UTF-8! */
+	Param.Service[0].iLanguage = 5; /* Language: 5 -> english */
+	Param.Service[0].iServiceDescr = 15; /* Service description: 
+											15 -> other music */
+
 	Param.eSymbolInterlMode = CParameter::SI_SHORT;
 	Param.eMSCCodingScheme = CParameter::CS_3_SM;
 	Param.eSDCCodingScheme = CParameter::CS_2_SM;
 
 	/* Set the number of MSC frames we want to generate */
-	ReadData.SetNumTransBlocks(20);
+	ReadData.SetNumTransBlocks(70);
 }
