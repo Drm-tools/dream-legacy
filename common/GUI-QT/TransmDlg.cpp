@@ -255,6 +255,10 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 		Service[0].AudioParam.bTextflag = TRUE;
 
 
+	/* Enable all controls */
+	EnableAllControlsForSet();
+
+
 	/* Set Menu ***************************************************************/
 	/* Help menu ------------------------------------------------------------ */
 	QPopupMenu* HelpMenu = new QPopupMenu(this);
@@ -381,9 +385,12 @@ TransmDialog::~TransmDialog()
 
 void TransmDialog::OnTimer()
 {
-	/* Set value for input level meter */
-	ProgrInputLevel->
-		setValue(TransThread.DRMTransmitter.GetReadData()->GetLevelMeter());
+	/* Set value for input level meter (only in "start" mode) */
+	if (bIsStarted == TRUE)
+	{
+		ProgrInputLevel->
+			setValue(TransThread.DRMTransmitter.GetReadData()->GetLevelMeter());
+	}
 }
 
 void TransmDialog::OnButtonStartStop()
@@ -397,7 +404,7 @@ void TransmDialog::OnButtonStartStop()
 
 		ButtonStartStop->setText("&Start");
 
-		EnableAllControls();
+		EnableAllControlsForSet();
 
 		bIsStarted = FALSE;
 	}
@@ -435,7 +442,7 @@ void TransmDialog::OnButtonStartStop()
 
 		ButtonStartStop->setText("&Stop");
 
-		DisableAllControls();
+		DisableAllControlsForSet();
 
 		bIsStarted = TRUE;
 	}
@@ -990,7 +997,7 @@ void TransmDialog::OnRadioBandwidth(int iID)
 		TransThread.DRMTransmitter.GetParameters()->GetWaveMode(), eNewSpecOcc);
 }
 
-void TransmDialog::DisableAllControls()
+void TransmDialog::DisableAllControlsForSet()
 {
 	GroupBoxChanParam->setEnabled(FALSE);
 	TabWidgetServices->setEnabled(FALSE);
@@ -999,13 +1006,16 @@ void TransmDialog::DisableAllControls()
 	GroupInput->setEnabled(TRUE); /* For run-mode */
 }
 
-void TransmDialog::EnableAllControls()
+void TransmDialog::EnableAllControlsForSet()
 {
 	GroupBoxChanParam->setEnabled(TRUE);
 	TabWidgetServices->setEnabled(TRUE);
 	ButtonGroupOutput->setEnabled(TRUE);
 
 	GroupInput->setEnabled(FALSE); /* For run-mode */
+
+	/* Reset status bar */
+	ProgrInputLevel->setValue(RET_VAL_LOG_0);
 }
 
 void TransmDialog::AddWhatsThisHelp()

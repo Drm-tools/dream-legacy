@@ -107,8 +107,8 @@ public:
 	virtual ~TransmDialog();
 
 protected:
-	void DisableAllControls();
-	void EnableAllControls();
+	void DisableAllControlsForSet();
+	void EnableAllControlsForSet();
 
 	QMenuBar*			pMenu;
 	QPopupMenu*			pSoundInMenu;

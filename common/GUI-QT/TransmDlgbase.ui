@@ -174,7 +174,7 @@ Institute for Communication Technology</string>
                             </property>
                             <property stdset="1">
                                 <name>title</name>
-                                <string>Input</string>
+                                <string>Input Audio Level [dB]</string>
                             </property>
                             <hbox>
                                 <property stdset="1">
