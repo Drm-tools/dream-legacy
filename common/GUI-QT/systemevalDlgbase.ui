@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>731</width>
-            <height>565</height>
+            <width>741</width>
+            <height>568</height>
         </rect>
     </property>
     <property stdset="1">
@@ -40,7 +40,7 @@
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout21</cstring>
+                <cstring>Layout22</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -674,7 +674,7 @@
                     <class>QLayoutWidget</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>Layout73</cstring>
+                        <cstring>Layout21</cstring>
                     </property>
                     <vbox>
                         <property stdset="1">
@@ -695,7 +695,7 @@
                                 <name>title</name>
                                 <string>Channel Estimation: Time Interpolation</string>
                             </property>
-                            <vbox>
+                            <hbox>
                                 <property stdset="1">
                                     <name>margin</name>
                                     <number>11</number>
@@ -704,24 +704,6 @@
                                     <name>spacing</name>
                                     <number>6</number>
                                 </property>
-                                <widget>
-                                    <class>QRadioButton</class>
-                                    <property stdset="1">
-                                        <name>name</name>
-                                        <cstring>RadioButtonTiLinear</cstring>
-                                    </property>
-                                    <property stdset="1">
-                                        <name>sizePolicy</name>
-                                        <sizepolicy>
-                                            <hsizetype>1</hsizetype>
-                                            <vsizetype>1</vsizetype>
-                                        </sizepolicy>
-                                    </property>
-                                    <property stdset="1">
-                                        <name>text</name>
-                                        <string>Linear Interpolation</string>
-                                    </property>
-                                </widget>
                                 <widget>
                                     <class>QRadioButton</class>
                                     <property stdset="1">
@@ -737,10 +719,28 @@
                                     </property>
                                     <property stdset="1">
                                         <name>text</name>
-                                        <string>Wiener Filtering</string>
+                                        <string>Wiener</string>
                                     </property>
                                 </widget>
-                            </vbox>
+                                <widget>
+                                    <class>QRadioButton</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>RadioButtonTiLinear</cstring>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>sizePolicy</name>
+                                        <sizepolicy>
+                                            <hsizetype>1</hsizetype>
+                                            <vsizetype>1</vsizetype>
+                                        </sizepolicy>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>text</name>
+                                        <string>Linear</string>
+                                    </property>
+                                </widget>
+                            </hbox>
                         </widget>
                         <widget>
                             <class>QButtonGroup</class>
@@ -752,7 +752,7 @@
                                 <name>title</name>
                                 <string>Channel Estimation: Frequency Interpolation</string>
                             </property>
-                            <vbox>
+                            <hbox>
                                 <property stdset="1">
                                     <name>margin</name>
                                     <number>11</number>
@@ -762,57 +762,40 @@
                                     <number>6</number>
                                 </property>
                                 <widget>
-                                    <class>QLayoutWidget</class>
+                                    <class>QRadioButton</class>
                                     <property stdset="1">
                                         <name>name</name>
-                                        <cstring>Layout62</cstring>
+                                        <cstring>RadioButtonFreqWiener</cstring>
                                     </property>
-                                    <hbox>
-                                        <property stdset="1">
-                                            <name>margin</name>
-                                            <number>0</number>
-                                        </property>
-                                        <property stdset="1">
-                                            <name>spacing</name>
-                                            <number>6</number>
-                                        </property>
-                                        <widget>
-                                            <class>QRadioButton</class>
-                                            <property stdset="1">
-                                                <name>name</name>
-                                                <cstring>RadioButtonFreqLinear</cstring>
-                                            </property>
-                                            <property stdset="1">
-                                                <name>sizePolicy</name>
-                                                <sizepolicy>
-                                                    <hsizetype>1</hsizetype>
-                                                    <vsizetype>1</vsizetype>
-                                                </sizepolicy>
-                                            </property>
-                                            <property stdset="1">
-                                                <name>text</name>
-                                                <string>Linear Interpolation</string>
-                                            </property>
-                                        </widget>
-                                        <widget>
-                                            <class>QRadioButton</class>
-                                            <property stdset="1">
-                                                <name>name</name>
-                                                <cstring>RadioButtonFreqWiener</cstring>
-                                            </property>
-                                            <property stdset="1">
-                                                <name>sizePolicy</name>
-                                                <sizepolicy>
-                                                    <hsizetype>1</hsizetype>
-                                                    <vsizetype>1</vsizetype>
-                                                </sizepolicy>
-                                            </property>
-                                            <property stdset="1">
-                                                <name>text</name>
-                                                <string>Wiener Filtering</string>
-                                            </property>
-                                        </widget>
-                                    </hbox>
+                                    <property stdset="1">
+                                        <name>sizePolicy</name>
+                                        <sizepolicy>
+                                            <hsizetype>1</hsizetype>
+                                            <vsizetype>1</vsizetype>
+                                        </sizepolicy>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>text</name>
+                                        <string>Wiener</string>
+                                    </property>
+                                </widget>
+                                <widget>
+                                    <class>QRadioButton</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>RadioButtonFreqLinear</cstring>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>sizePolicy</name>
+                                        <sizepolicy>
+                                            <hsizetype>1</hsizetype>
+                                            <vsizetype>1</vsizetype>
+                                        </sizepolicy>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>text</name>
+                                        <string>Linear</string>
+                                    </property>
                                 </widget>
                                 <widget>
                                     <class>QRadioButton</class>
@@ -829,10 +812,67 @@
                                     </property>
                                     <property stdset="1">
                                         <name>text</name>
-                                        <string>Zero Padding in Time Domain</string>
+                                        <string>DFT Zero Pad.</string>
                                     </property>
                                 </widget>
-                            </vbox>
+                            </hbox>
+                        </widget>
+                        <widget>
+                            <class>QButtonGroup</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>ButtonGroup2_2</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>title</name>
+                                <string>Time Sync Tracking</string>
+                            </property>
+                            <hbox>
+                                <property stdset="1">
+                                    <name>margin</name>
+                                    <number>11</number>
+                                </property>
+                                <property stdset="1">
+                                    <name>spacing</name>
+                                    <number>6</number>
+                                </property>
+                                <widget>
+                                    <class>QRadioButton</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>RadioButtonTiSyncEnergy</cstring>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>sizePolicy</name>
+                                        <sizepolicy>
+                                            <hsizetype>1</hsizetype>
+                                            <vsizetype>1</vsizetype>
+                                        </sizepolicy>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>text</name>
+                                        <string>Guard Energy</string>
+                                    </property>
+                                </widget>
+                                <widget>
+                                    <class>QRadioButton</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>RadioButtonTiSyncFirstPeak</cstring>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>sizePolicy</name>
+                                        <sizepolicy>
+                                            <hsizetype>1</hsizetype>
+                                            <vsizetype>1</vsizetype>
+                                        </sizepolicy>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>text</name>
+                                        <string>First Peak</string>
+                                    </property>
+                                </widget>
+                            </hbox>
                         </widget>
                     </vbox>
                 </widget>
@@ -1278,8 +1318,8 @@
         </sizehint>
         <container>0</container>
         <sizepolicy>
-            <hordata>5</hordata>
-            <verdata>7</verdata>
+            <hordata>1</hordata>
+            <verdata>1</verdata>
         </sizepolicy>
         <pixmap>image1</pixmap>
     </customwidget>

@@ -36,7 +36,7 @@
 _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 							  CComplexVector& veccChanEst, int iNewTiCorr)
 {
-	int			i;
+	int			i, j;
 	int			iIntShiftVal;
 	int			iFirstPathDelay;
 	int			iContrTiOffs;
@@ -47,6 +47,8 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 	CReal		rTotalEnergy;
 	CReal		rCurEnergy;
 	CReal		rCurCorrValue;
+	CReal		rWinEnergy;
+	CReal		rMaxWinEnergy;
 	_BOOLEAN	bDelayFound;
 	_BOOLEAN	bDelSprLenFound;
 
@@ -100,38 +102,72 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 		IIR1(vecrAvPoDeSp, SqMag(veccPilots), rLamAvPDS);
 	}
 
-
-	/* Detect first peak ---------------------------------------------------- */
-	/* Lower and higher bound */
-	rBoundHigher = Max(vecrAvPoDeSpRot) * rConst1;
-	rBoundLower = Min(vecrAvPoDeSpRot) * rConst2;
-
-	/* Calculate the peak bound, Eq (19) */
-	rPeakBound = Max(rBoundHigher, rBoundLower);
-
 	/* Rotate the averaged result vector to put the earlier peaks
 	   (which can also detected in a certain amount) at the beginning of
 	   the vector */
 	vecrAvPoDeSpRot.Merge(vecrAvPoDeSp(iStPoRot, iNoIntpFreqPil),
 		vecrAvPoDeSp(1, iStPoRot - 1));
 
-	/* Get final estimate, Eq (18) */
-	bDelayFound = FALSE; /* Init flag */
-	for (i = 0; i < iNoIntpFreqPil - 1; i++)
-	{
-		/* We are only interested in the first peak */
-		if (bDelayFound == FALSE)
-		{
-			if ((vecrAvPoDeSpRot[i] > vecrAvPoDeSpRot[i + 1]) &&
-				(vecrAvPoDeSpRot[i] > rPeakBound))
-			{
-				/* The first peak was found, store index */
-				iFirstPathDelay = i;
 
-				/* Set the flag */
-				bDelayFound = TRUE;
+	/* Different timing algorithms ------------------------------------------ */
+	switch (TypeTiSyncTrac)
+	{
+	case TSFIRSTPEAK:
+		/* Detect first peak algorithm proposed by Baoguo Yang */
+		/* Lower and higher bound */
+		rBoundHigher = Max(vecrAvPoDeSpRot) * rConst1;
+		rBoundLower = Min(vecrAvPoDeSpRot) * rConst2;
+
+		/* Calculate the peak bound, Eq (19) */
+		rPeakBound = Max(rBoundHigher, rBoundLower);
+
+		/* Get final estimate, Eq (18) */
+		bDelayFound = FALSE; /* Init flag */
+		for (i = 0; i < iNoIntpFreqPil - 1; i++)
+		{
+			/* We are only interested in the first peak */
+			if (bDelayFound == FALSE)
+			{
+				if ((vecrAvPoDeSpRot[i] > vecrAvPoDeSpRot[i + 1]) &&
+					(vecrAvPoDeSpRot[i] > rPeakBound))
+				{
+					/* The first peak was found, store index */
+					iFirstPathDelay = i;
+
+					/* Set the flag */
+					bDelayFound = TRUE;
+				}
 			}
 		}
+		break;
+
+	case TSENERGY:
+		/* Determin position of window with maximum energy in guard-interval.
+		   A window with the size of the guard-interval is moved over the entire
+		   profile and the energy inside this window is calculated. The window
+		   position which maximises this energy is taken as the new timing
+		   position */
+		rMaxWinEnergy = (CReal) 0.0;
+		iFirstPathDelay = 0;
+		for (i = 0; i < iNoIntpFreqPil - 1 - rGuardSizeFFT; i++)
+		{
+			rWinEnergy = (CReal) 0.0;
+
+			/* Energy IN the guard-interval */
+			for (j = 0; j < rGuardSizeFFT; j++)
+				rWinEnergy += vecrAvPoDeSpRot[i + j];
+
+			/* Get maximum */
+			if (rWinEnergy > rMaxWinEnergy)
+			{
+				rMaxWinEnergy = rWinEnergy;
+				iFirstPathDelay = i;
+			}
+		}
+
+		/* We always have a valid measurement, set flag */
+		bDelayFound = TRUE;
+		break;
 	}
 
 
@@ -160,26 +196,30 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 		rTiOffset = (_REAL) -iFirstPathDelay * iDFTSize / iNoCarrier -
 			veciNewMeasHist[0];
 
-		/* Adapt the linear control parameter to the region, where the peak was
-		   found. The region left of the desired timing position is critical,
-		   because we immediately get ISI if a peak appers here. Therefore we
-		   apply fast correction here. At the other positions, we
-		   smooth the controlling to improve the immunity against false peaks */
-		if (rTiOffset > 0)
-			rPropGain = CONT_PROP_BEFORE_GUARD_INT;
-		else
+		/* Different controlling parameters for different types of tracking */
+		switch (TypeTiSyncTrac)
 		{
-// TEST
-//			/* Very fast controlling if peak is near the optimal position */
-//			if (rTiOffset < 2 * (CReal) iTargetTimingPos * iDFTSize / iNoCarrier)
-//				rPropGain = 1;
-//			else
+		case TSFIRSTPEAK:
+			/* Adapt the linear control parameter to the region, where the peak
+			   was found. The region left of the desired timing position is
+			   critical, because we immediately get ISI if a peak appers here.
+			   Therefore we apply fast correction here. At the other positions,
+			   we smooth the controlling to improve the immunity against false
+			   peaks */
+			if (rTiOffset > 0)
+				rPropGain = CONT_PROP_BEFORE_GUARD_INT;
+			else
 				rPropGain = CONT_PROP_IN_GUARD_INT;
+			break;
+
+		case TSENERGY:
+			rPropGain = CONT_PROP_ENERGY_METHOD;
+			break;
 		}
 
 		/* Apply proportional control and fix result to sample grid */
 		rCurCorrValue = rTiOffset * rPropGain + rFracPartContr;
-		iContrTiOffs = Fix(rCurCorrValue);
+		iContrTiOffs = (int) Fix(rCurCorrValue);
 
 		/* Calculate new fractional part of controlling */
 		rFracPartContr = rCurCorrValue - iContrTiOffs;
@@ -295,13 +335,8 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	rFracPartTiCor = (CReal) 0.0;
 	rFracPartContr = (CReal) 0.0;
 
-	/* Define target position for first path. Should be close to zero but not
-	   exactely zero because even small estimation errors would lead to ISI. The
-	   target timing position must be at least 2 samples away from the guard-
-	   interval border */
-	iTargetTimingPos = (int) (rGuardSizeFFT / TARGET_TI_POS_FRAC_GUARD_INT);
-	if (iTargetTimingPos < 2)
-		iTargetTimingPos = 2;
+	/* Inits for the time synchronization tracking type */
+	SetTiSyncTracType(TypeTiSyncTrac);
 
 	/* Init estimation of length of impulse response with length of guard-
 	   interval */
@@ -309,6 +344,29 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iNoIntpFreqPil);
+}
+
+void CTimeSyncTrack::SetTiSyncTracType(ETypeTiSyncTrac eNewTy)
+{
+	TypeTiSyncTrac = eNewTy;
+
+	switch (TypeTiSyncTrac)
+	{
+	case TSFIRSTPEAK:
+		/* Define target position for first path. Should be close to zero but
+		   not exactely zero because even small estimation errors would lead to
+		   ISI. The target timing position must be at least 2 samples away from
+		   the guard-interval border */
+		iTargetTimingPos = (int) (rGuardSizeFFT / TARGET_TI_POS_FRAC_GUARD_INT);
+		if (iTargetTimingPos < 2)
+			iTargetTimingPos = 2;
+		break;
+
+	case TSENERGY:
+		/* No target timing position needed */
+		iTargetTimingPos = 0;
+		break;
+	}
 }
 
 void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
@@ -330,10 +388,9 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 	rStartGuard = 0;
 	rEndGuard = 0;
 
-	/* With this setting we only define the position of the impulse response in
-	   the plot. "- iTargetTimingPos" to get the "0" in the center of the
-	   graph */
-	iHalfSpec = (iNoIntpFreqPil - 1) / 2 - iTargetTimingPos;
+	/* With this setting we only define the position of the guard-interval
+	   in the plot. With this setting we position it centered */
+	iHalfSpec = (int) ((iNoIntpFreqPil - rGuardSizeFFT) / 2);
 
 	/* Init scale (in "ms") */
 	rScaleIncr = (_REAL) iDFTSize /
@@ -373,15 +430,27 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 	}
 
 	/* Return bounds */
-	if (rBoundHigher > 0)
-		rHigherBound = (_REAL) 10.0 * log10(rBoundHigher);
-	else
-		rHigherBound = RET_VAL_LOG_0;
+	switch (TypeTiSyncTrac)
+	{
+	case TSFIRSTPEAK:
+		if (rBoundHigher > 0)
+			rHigherBound = (_REAL) 10.0 * log10(rBoundHigher);
+		else
+			rHigherBound = RET_VAL_LOG_0;
 
-	if (rBoundLower > 0)
-		rLowerBound = (_REAL) 10.0 * log10(rBoundLower);
-	else
+		if (rBoundLower > 0)
+			rLowerBound = (_REAL) 10.0 * log10(rBoundLower);
+		else
+			rLowerBound = RET_VAL_LOG_0;
+		break;
+
+	case TSENERGY:
+		/* No bounds needed for energy type, set both values to "defined
+		   infinity value", so it does not show up in the plot */
+		rHigherBound = RET_VAL_LOG_0;
 		rLowerBound = RET_VAL_LOG_0;
+		break;
+	}
 
 	/* End point of guard interval */
 	rEndGuard = rScaleIncr * (rGuardSizeFFT - iTargetTimingPos);

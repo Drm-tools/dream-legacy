@@ -49,8 +49,9 @@
 
 
 /* Control parameters */
-#define CONT_PROP_IN_GUARD_INT				((_REAL) 0.06)//((_REAL) 0.08)
-#define CONT_PROP_BEFORE_GUARD_INT			((_REAL) 0.08)//((_REAL) 0.1)
+#define CONT_PROP_IN_GUARD_INT				((_REAL) 0.06)
+#define CONT_PROP_BEFORE_GUARD_INT			((_REAL) 0.08)
+#define CONT_PROP_ENERGY_METHOD				((_REAL) 0.02)
 
 /* Time constant for IIR averaging of PDS estimation */
 #define TICONST_PDS_EST_TISYNC				((CReal) 0.25) /* sec */
@@ -60,8 +61,10 @@
 class CTimeSyncTrack
 {
 public:
-	CTimeSyncTrack() : bTracking(FALSE) {}
+	CTimeSyncTrack() : bTracking(FALSE), TypeTiSyncTrac(TSENERGY) {}
 	virtual ~CTimeSyncTrack() {}
+
+	enum ETypeTiSyncTrac {TSENERGY, TSFIRSTPEAK};
 
 	void Init(CParameter& Parameter, int iNewSymbDelay);
 
@@ -74,6 +77,9 @@ public:
 
 	void StartTracking() {bTracking = TRUE;}
 	void StopTracking() {bTracking = FALSE;}
+
+	void SetTiSyncTracType(ETypeTiSyncTrac eNewTy);
+	ETypeTiSyncTrac GetTiSyncTracType() {return TypeTiSyncTrac;}
 
 protected:
 	CComplexVector			veccPilots;
@@ -109,6 +115,8 @@ protected:
 	CReal					rEstDelay;
 
 	CReal					rFracPartContr;
+
+	ETypeTiSyncTrac			TypeTiSyncTrac;
 };
 
 

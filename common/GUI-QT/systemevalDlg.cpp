@@ -46,7 +46,7 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 		QString().setNum(DRMReceiver.GetMSCMLC()->GetNoIterations()));
 
 
-	/* Inits for channel estimation switches */
+	/* Inits for channel estimation and time sync switches */
 	switch (DRMReceiver.
 		GetChanEst()->GetTimeInt())
 	{
@@ -73,6 +73,18 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 		RadioButtonFreqWiener->setChecked(TRUE);
 		break;
 	}
+
+	switch (DRMReceiver.GetChanEst()->GetTimeSyncTrack()->GetTiSyncTracType())
+	{
+	case CTimeSyncTrack::TSFIRSTPEAK:
+		RadioButtonTiSyncFirstPeak->setChecked(TRUE);
+		break;
+
+	case CTimeSyncTrack::TSENERGY:
+		RadioButtonTiSyncEnergy->setChecked(TRUE);
+		break;
+	}
+
 
 	/* Init progress bar for SNR */
 	ThermoSNR->setRange(0.0, 30.0);
@@ -102,6 +114,10 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 		this, SLOT(OnRadioFrequencyDft()));
 	connect(RadioButtonFreqWiener, SIGNAL(clicked()),
 		this, SLOT(OnRadioFrequencyWiener()));
+	connect(RadioButtonTiSyncEnergy, SIGNAL(clicked()),
+		this, SLOT(OnRadioTiSyncEnergy()));
+	connect(RadioButtonTiSyncFirstPeak, SIGNAL(clicked()),
+		this, SLOT(OnRadioTiSyncFirstPeak()));
 
 	connect(ButtonAvIR, SIGNAL(clicked()),
 		this, SLOT(OnButtonAvIR()));
@@ -531,6 +547,26 @@ void systemevalDlg::OnRadioFrequencyWiener()
 {
 	if (DRMReceiver.GetChanEst()->GetFreqInt() != CChannelEstimation::FWIENER)
 		DRMReceiver.GetChanEst()->SetFreqInt(CChannelEstimation::FWIENER);
+}
+
+void systemevalDlg::OnRadioTiSyncFirstPeak() 
+{
+	if (DRMReceiver.GetChanEst()->GetTimeSyncTrack()->GetTiSyncTracType() != 
+		CTimeSyncTrack::TSFIRSTPEAK)
+	{
+		DRMReceiver.GetChanEst()->GetTimeSyncTrack()->
+			SetTiSyncTracType(CTimeSyncTrack::TSFIRSTPEAK);
+	}
+}
+
+void systemevalDlg::OnRadioTiSyncEnergy() 
+{
+	if (DRMReceiver.GetChanEst()->GetTimeSyncTrack()->GetTiSyncTracType() != 
+		CTimeSyncTrack::TSENERGY)
+	{
+		DRMReceiver.GetChanEst()->GetTimeSyncTrack()->
+			SetTiSyncTracType(CTimeSyncTrack::TSENERGY);
+	}
 }
 
 void systemevalDlg::OnSliderIterChange(int value)

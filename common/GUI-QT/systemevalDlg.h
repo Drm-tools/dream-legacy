@@ -88,6 +88,8 @@ public slots:
 	void OnRadioFrequencyLinear();
 	void OnRadioFrequencyDft();
 	void OnRadioFrequencyWiener();
+	void OnRadioTiSyncFirstPeak();
+	void OnRadioTiSyncEnergy();
 	void OnSliderIterChange(int value);
 	void OnButtonAvIR();
 	void OnButtonTransFct();
