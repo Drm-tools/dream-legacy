@@ -41,7 +41,8 @@
 
 #define SOUNDBUFLEN 102400
 
-#define FRAGSIZE 1024
+#define FRAGSIZE 8192
+//#define FRAGSIZE 1024
 
 
 
@@ -59,10 +60,10 @@ void CSound::Init_HW( int mode )
 	int arg;      /* argument for ioctl calls */
 	int status;   /* return status of system calls */
 	
-	printf("fdsound: %d\n", fdSound);
+	qDebug("fdsound: %d", fdSound);
 	if (fdSound >0) 
 	{
-		printf("already open\n");
+		qDebug("already open");
 		return;	// already open
 	}
 
@@ -86,43 +87,44 @@ void CSound::Init_HW( int mode )
 	/* Set number of channels (0=mono, 1=stereo) */
 	arg = NUM_IN_OUT_CHANNELS - 1;
 	status = ioctl(fdSound, SNDCTL_DSP_STEREO, &arg);
-	if (status == -1)
-		perror("SNDCTL_DSP_CHANNELS ioctl failed");
+	if (status == -1) 
+		throw CGenErr("SNDCTL_DSP_CHANNELS ioctl failed");		
+
 	if (arg != (NUM_IN_OUT_CHANNELS - 1))
-		perror("unable to set number of channels");
+		throw CGenErr("unable to set number of channels");		
 	
 
 	/* Sampling rate */
 	arg = SOUNDCRD_SAMPLE_RATE;
 	status = ioctl(fdSound, SNDCTL_DSP_SPEED, &arg);
 	if (status == -1)
-		perror("SNDCTL_DSP_SPEED ioctl failed");
+		throw CGenErr("SNDCTL_DSP_SPEED ioctl failed");
 	if (arg != SOUNDCRD_SAMPLE_RATE)
-		perror("unable to set sample rate");
+		throw CGenErr("unable to set sample rate");
 	
 
 	/* Sample size */
 	arg = (BITS_PER_SAMPLE == 16) ? AFMT_S16_LE : AFMT_U8;      
 	status = ioctl(fdSound, SNDCTL_DSP_SAMPLESIZE, &arg);
 	if (status == -1)
-		perror("SNDCTL_DSP_SAMPLESIZE ioctl failed");
+		throw CGenErr("SNDCTL_DSP_SAMPLESIZE ioctl failed");
 	if (arg != ((BITS_PER_SAMPLE == 16) ? AFMT_S16_LE : AFMT_U8))
-		perror("unable to set sample size");
+		throw CGenErr("unable to set sample size");
 
 
 	/* Check capabilities of the sound card */
 	status = ioctl(fdSound, SNDCTL_DSP_GETCAPS, &arg);
 	if (status ==  -1)
-		perror("SNDCTL_DSP_GETCAPS ioctl failed");
+		throw CGenErr("SNDCTL_DSP_GETCAPS ioctl failed");
 	if ((arg & DSP_CAP_DUPLEX) == 0)
-		perror("Soundcard not full duplex capable!");
+		throw CGenErr("Soundcard not full duplex capable!");
 }
 
 
 int read_HW( void * recbuf, int size) {
 	
 	int ret = read(fdSound, recbuf, size * NUM_IN_OUT_CHANNELS * BYTES_PER_SAMPLE );
-//printf("%d ", ret); fflush(stdout);
+//qDebug("%d ", ret); fflush(stdout);
 
 	if (ret < 0) {
 		if ( (errno != EINTR) && (errno != EAGAIN))
@@ -176,165 +178,203 @@ void CSound::Init_HW( int mode ){
         snd_pcm_hw_params_t *hwparams;
         snd_pcm_sw_params_t *swparams;
 	unsigned int rrate;
-	snd_pcm_uframes_t period_size = FRAGSIZE;
+	snd_pcm_uframes_t period_size = FRAGSIZE * NUM_IN_OUT_CHANNELS/2;
+	snd_pcm_uframes_t buffer_size;
+	int periods = 2;
 	snd_pcm_t *  handle;
 	
 	
-	/* playback/record device directly to the kernel without sample rate conversion 
-   	- we do it on our own	*/
-	static const char *device = "hw:0,0";	
+	/* playback/record device */
+	static const char *recdevice = "hw:0,0";	
+	static const char *playdevice = "hw:0,0";	
 	
 	if (mode == RECORD) {
-
 		if (rhandle != NULL)
 			return;
 			
-		err = snd_pcm_open( &rhandle, device, SND_PCM_STREAM_CAPTURE, 0 );
+		err = snd_pcm_open( &rhandle, recdevice, SND_PCM_STREAM_CAPTURE, 0 );
 		if ( err != 0) 
 		{
-			printf("open error: %s\n", snd_strerror(err));
-			return;	
+			qDebug("open error: %s", snd_strerror(err));
+			throw CGenErr("alsa CSound::Init_HW record");	
 		}
 		handle = rhandle;
 	} else {
 		if (phandle != NULL)
 			return;
 
-		err = snd_pcm_open( &phandle, device, SND_PCM_STREAM_PLAYBACK, 0 );
+		err = snd_pcm_open( &phandle, playdevice, SND_PCM_STREAM_PLAYBACK, 0 );
 		if ( err != 0) 
 		{
-			printf("open error: %s\n", snd_strerror(err));
-			return;	
+			qDebug("open error: %s", snd_strerror(err));
+			throw CGenErr("alsa CSound::Init_HW playback");	
 		}
 		handle = phandle;
 	}
 	
-	
 	snd_pcm_hw_params_alloca(&hwparams);
 	snd_pcm_sw_params_alloca(&swparams);
-	
 	
 	/* Choose all parameters */
 	err = snd_pcm_hw_params_any(handle, hwparams);
 	if (err < 0) {
-		printf("Broken configuration : no configurations available: %s\n", snd_strerror(err));
-		return;
+		qDebug("Broken configuration : no configurations available: %s", snd_strerror(err));
+		throw CGenErr("alsa CSound::Init_HW ");	
 	}
 	/* Set the interleaved read/write format */
 	err = snd_pcm_hw_params_set_access(handle, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED);	
 
 	if (err < 0) {
-		printf("Access type not available : %s\n", snd_strerror(err));
-		return;
+		qDebug("Access type not available : %s", snd_strerror(err));
+		throw CGenErr("alsa CSound::Init_HW ");	
 		
 	}
 	/* Set the sample format */
 	err = snd_pcm_hw_params_set_format(handle, hwparams, SND_PCM_FORMAT_S16);
 	if (err < 0) {
-		printf("Sample format not available : %s\n", snd_strerror(err));
-		return;
+		qDebug("Sample format not available : %s", snd_strerror(err));
+		throw CGenErr("alsa CSound::Init_HW ");	
 	}
 	/* Set the count of channels */
 	err = snd_pcm_hw_params_set_channels(handle, hwparams, NUM_IN_OUT_CHANNELS);
 	if (err < 0) {
-		printf("Channels count (%i) not available s: %s\n", NUM_IN_OUT_CHANNELS, snd_strerror(err));
-		return;
+		qDebug("Channels count (%i) not available s: %s", NUM_IN_OUT_CHANNELS, snd_strerror(err));
+		throw CGenErr("alsa CSound::Init_HW ");
 	}
 	/* Set the stream rate */
 	rrate = SOUNDCRD_SAMPLE_RATE;
 	err = snd_pcm_hw_params_set_rate_near(handle, hwparams, &rrate, &dir);
 	if (err < 0) {
-		printf("Rate %iHz not available : %s dir %d\n", rrate, snd_strerror(err), dir);
-		return;
+		qDebug("Rate %iHz not available : %s dir %d", rrate, snd_strerror(err), dir);
+		throw CGenErr("alsa CSound::Init_HW ");
 		
 	}
 	if (rrate != SOUNDCRD_SAMPLE_RATE) {
-		printf("Rate doesn't match (requested %iHz, get %iHz)\n", rrate, err);
-		return;
+		qDebug("Rate doesn't match (requested %iHz, get %iHz)", rrate, err);
+		throw CGenErr("alsa CSound::Init_HW ");
 	}
 	
+#if 0
 	/* Set the period size */
-	err = snd_pcm_hw_params_set_period_size_min(handle, hwparams, &period_size, &dir);
+	dir=0;
+	err = snd_pcm_hw_params_set_period_size_max(handle, hwparams, &period_size, &dir);
 	if (err < 0) {
-		printf("Unable to set period time %i : %s dir: %d\n", period_size, snd_strerror(err), dir);
-		return;
+		qDebug("Unable to set period size %i : %s dir: %d", period_size, snd_strerror(err), dir);
+		throw CGenErr("alsa CSound::Init_HW ");
 	}
-	err = snd_pcm_hw_params_get_period_size(hwparams, &period_size, &dir);
-	if (err > 0) {
-		printf("Unable to get period size : %s\n", snd_strerror(err));
-		return;
+	qDebug("Actual period size %d", period_size);
+
+	/* Set buffer size */
+	buffer_size = period_size * periods;
+	qDebug("should be %d", buffer_size);
+	err = snd_pcm_hw_params_set_buffer_size_near(handle, hwparams, &buffer_size);
+	if (err < 0) {
+		qDebug("Unable to set buffer size %i : %s ", buffer_size,
+		 snd_strerror(err));
+		throw CGenErr("alsa CSound::Init_HW ");
 	}
+	qDebug("buffer size %d", buffer_size);
+#endif
+	dir=0;
+unsigned int buffer_time = 500000;              /* ring buffer length in us */
+        /* set the buffer time */
+        err = snd_pcm_hw_params_set_buffer_time_near(handle, hwparams, &buffer_time, &dir);
+        if (err < 0) {
+                qDebug("Unable to set buffer time %i for playback: %s\n", buffer_time, snd_strerror(err));
+		throw CGenErr("alsa CSound::Init_HW ");
+        }
+        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
+        if (err < 0) {
+                qDebug("Unable to get buffer size for playback: %s\n", snd_strerror(err));
+		throw CGenErr("alsa CSound::Init_HW ");
+        }
+	qDebug("buffer size %d", buffer_size);
+        /* set the period time */
+unsigned int period_time = 100000;              /* period time in us */
+        err = snd_pcm_hw_params_set_period_time_near(handle, hwparams, &period_time, &dir);
+        if (err < 0) {
+                qDebug("Unable to set period time %i for playback: %s\n", period_time, snd_strerror(err));
+		throw CGenErr("alsa CSound::Init_HW ");
+        }
+        err = snd_pcm_hw_params_get_period_size(hwparams, &period_size, &dir);
+        if (err < 0) {
+                qDebug("Unable to get period size for playback: %s\n", snd_strerror(err));
+		throw CGenErr("alsa CSound::Init_HW ");
+        }
+	qDebug("period size %d", period_size);
 
 	/* Write the parameters to device */
 	err = snd_pcm_hw_params(handle, hwparams);
 	if (err < 0) {
-		printf("Unable to set hw params : %s\n", snd_strerror(err));
-		return;
+		qDebug("Unable to set hw params : %s", snd_strerror(err));
+		throw CGenErr("alsa CSound::Init_HW ");
 	}
 	/* Get the current swparams */
 	err = snd_pcm_sw_params_current(handle, swparams);
 	if (err < 0) {
-		printf("Unable to determine current swparams : %s\n", snd_strerror(err));
-		return;
+		qDebug("Unable to determine current swparams : %s", snd_strerror(err));
+		throw CGenErr("alsa CSound::Init_HW ");
 	}
-	/* Start the transfer when the buffer immediately */
-	err = snd_pcm_sw_params_set_start_threshold(handle, swparams, 0);
-	if (err < 0) {
-		printf("Unable to set start threshold mode : %s\n", snd_strerror(err));
-		return;
-	}
-	/* Allow the transfer when at least period_size samples can be processed */
-	err = snd_pcm_sw_params_set_avail_min(handle, swparams, period_size);
-	if (err < 0) {
-		printf("Unable to set avail min : %s\n", snd_strerror(err));
-		return;
-	}
-	/* Align all transfers to 1 sample */
-	err = snd_pcm_sw_params_set_xfer_align(handle, swparams, 1);
-	if (err < 0) {
-		printf("Unable to set transfer align : %s\n", snd_strerror(err));
-		return;
+	if (mode == RECORD) {
+		/* Start the transfer when the buffer immediately */
+		err = snd_pcm_sw_params_set_start_threshold(handle, swparams, 0);
+		if (err < 0) {
+			qDebug("Unable to set start threshold mode : %s", snd_strerror(err));
+			throw CGenErr("alsa CSound::Init_HW ");
+		}
+		/* Allow the transfer when at least period_size samples can be processed */
+		err = snd_pcm_sw_params_set_avail_min(handle, swparams, period_size);
+		if (err < 0) {
+			qDebug("Unable to set avail min : %s", snd_strerror(err));
+			throw CGenErr("alsa CSound::Init_HW ");
+		}
+		/* Align all transfers to 1 sample */
+		err = snd_pcm_sw_params_set_xfer_align(handle, swparams, 1);
+		if (err < 0) {
+			qDebug("Unable to set transfer align : %s", snd_strerror(err));
+			throw CGenErr("alsa CSound::Init_HW ");
+		}
 	}
 	/* Write the parameters to the record/playback device */
 	err = snd_pcm_sw_params(handle, swparams);
 	if (err < 0) {
-		printf("Unable to set sw params : %s\n", snd_strerror(err));
-		return;
+		qDebug("Unable to set sw params : %s", snd_strerror(err));
+		throw CGenErr("alsa CSound::Init_HW ");
 	}
 	snd_pcm_start(handle);
-	printf("alsa init done\n");
+	qDebug("alsa init done");
 
 }
 
 int read_HW( void * recbuf, int size) {
 
-//printf("r"); fflush(stdout);
+//qDebug("r"); fflush(stdout);
 	int ret = snd_pcm_readi(rhandle, recbuf, size);
 
-//printf("ret: %d", ret); fflush(stdout);
+//qDebug("ret: %d", ret); fflush(stdout);
 
 	if (ret < 0) 
 	{
 		if (ret == -EPIPE) 
 		{    
-			printf("rpipe\n");
+			qDebug("rpipe");
 			/* Under-run */
-			printf("rprepare\n");
+			qDebug("rprepare");
 			ret = snd_pcm_prepare(rhandle);
 
 			if (ret < 0)
-				printf("Can't recover from underrun, prepare failed: %s\n", snd_strerror(ret));
+				qDebug("Can't recover from underrun, prepare failed: %s", snd_strerror(ret));
 
 			ret = snd_pcm_start(rhandle);
 
 			if (ret < 0)
-				printf("Can't recover from underrun, start failed: %s\n", snd_strerror(ret));
+				qDebug("Can't recover from underrun, start failed: %s", snd_strerror(ret));
 			return 0;
 
 		} 
 		else if (ret == -ESTRPIPE) 
 		{
-			printf("strpipe\n");
+			qDebug("strpipe");
 
 			/* Wait until the suspend flag is released */
 			while ((ret = snd_pcm_resume(rhandle)) == -EAGAIN)
@@ -345,13 +385,14 @@ int read_HW( void * recbuf, int size) {
 				ret = snd_pcm_prepare(rhandle);
 
 				if (ret < 0)
-					printf("Can't recover from suspend, prepare failed: %s\n", snd_strerror(ret));
+					qDebug("Can't recover from suspend, prepare failed: %s", snd_strerror(ret));
+					throw CGenErr("CSound:Read");
 			}
 			return 0;
 		} 
 		else 
 		{
-			printf("CSound::Read: %s\n", snd_strerror(ret));
+			qDebug("CSound::Read: %s", snd_strerror(ret));
 			throw CGenErr("CSound:Read");
 		}
 	} else 
@@ -363,36 +404,36 @@ int write_HW( _SAMPLE *playbuf, int size ){
 
 	int start = 0;
 	int ret;
-//printf("w"); fflush(stdout);
+//qDebug("w"); fflush(stdout);
 	while (size) {
 
 		ret = snd_pcm_writei(phandle, &playbuf[start], size );
 		if (ret < 0) {
 			if (ret ==  -EAGAIN) {
 				if ((ret = snd_pcm_wait (phandle, 100)) < 0) {
-			        	printf ("poll failed (%s)\n", snd_strerror (ret));
+			        	qDebug ("poll failed (%s)", snd_strerror (ret));
 			        	break;
 				}	           
 				continue;
 			} else 
 			if (ret == -EPIPE) {    /* under-run */
-printf("prepare\n");
+qDebug("underrun");
         			ret = snd_pcm_prepare(phandle);
         			if (ret < 0)
-                			printf("Can't recover from underrun, prepare failed: %s\n", snd_strerror(ret));
+                			qDebug("Can't recover from underrun, prepare failed: %s", snd_strerror(ret));
         			continue;
 			} else if (ret == -ESTRPIPE) {
-printf("strpipe\n");
+qDebug("strpipe");
         			while ((ret = snd_pcm_resume(phandle)) == -EAGAIN)
                 			sleep(1);       /* wait until the suspend flag is released */
         			if (ret < 0) {
                 			ret = snd_pcm_prepare(phandle);
                 			if (ret < 0)
-                        			printf("Can't recover from suspend, prepare failed: %s\n", snd_strerror(ret));
+                        			qDebug("Can't recover from suspend, prepare failed: %s", snd_strerror(ret));
         			}
         			continue;
 			} else {
-                                printf("Write error: %s\n", snd_strerror(ret));
+                                qDebug("Write error: %s", snd_strerror(ret));
 								throw CGenErr("Write error");
                         }
                         break;  /* skip one period */
@@ -406,103 +447,19 @@ printf("strpipe\n");
 
 
 
-/* ARTS code seems to work, unfortunatly arts recording is broken :-( A sine 
-   wave gets completely distorted */
-#ifdef USE_ARTS
-
-#include <artsc.h>
-
-static arts_stream_t pstream = NULL;
-static arts_stream_t rstream = NULL;
-
-void CSound::Init_HW( int mode)
-{
-	int arg;      /* argument for ioctl calls */
-	int status;   /* return status of system calls */
-		
-	
-	if (mode == RECORD) {
-		if (rstream != NULL)
-			return;
-	} else {
-		if (pstream != NULL)
-			return;
-	}	
-
-	
-	/* Init arts */
-	status = arts_init();
-	
-	if (status < 0) 
-	{   
-		fprintf(stderr, "arts_init error: %s\n", arts_error_text(status));
-		return;
-	}
-	
-	/* Set sampling parameters */
-	if (mode == RECORD ) {
-		rstream = arts_record_stream(SOUNDCRD_SAMPLE_RATE, BITS_PER_SAMPLE, 
-			NUM_IN_OUT_CHANNELS, "DRM");
-		/* Set to blocking */
-		status = arts_stream_set( rstream, ARTS_P_BLOCKING, 1);
-	} else {
-		pstream = arts_play_stream( SOUNDCRD_SAMPLE_RATE, BITS_PER_SAMPLE, 
-			NUM_IN_OUT_CHANNELS, "DRM");
-		/* Set to blocking */
-		status = arts_stream_set( pstream, ARTS_P_BLOCKING, 1);
-	}
-	
-	if (status != 1)
-		fprintf(stderr, "arts_stream_set: ARTS_P_BLOCKING error %s\n", 
-		arts_error_text(status));
-			
-}
-
-int read_HW( void * recbuf, int size) {
-
-	int ret = arts_read(rstream, recbuf, FRAGSIZE * NUM_IN_OUT_CHANNELS * BYTES_PER_SAMPLE );
-	if (ret < 0) {
-		fprintf(stderr, "CSound:Read error %s\n", arts_error_text(ret));
-		throw CGenErr("CSound:Read error");
-	} else
-		return ret / (NUM_IN_OUT_CHANNELS * BYTES_PER_SAMPLE);
-}
-
-int write_HW( _SAMPLE *playbuf, int size ){
-
-	int start = 0;
-	int ret;
-
-	size *= BYTES_PER_SAMPLE * NUM_IN_OUT_CHANNELS;
-
-	while (size) 
-	{
-		ret = arts_write(pstream, &playbuf[start], size);
-		if (ret < 0) 
-		{
-			fprintf(stderr, "CSound:Write error %s\n", arts_error_text(ret));
-			throw CGenErr("CSound:Write error");
-		}
-//printf("w%d\n", ret);
-		size -= ret;
-		start += ret / BYTES_PER_SAMPLE;
-	}
-	return 0;
-}
-#endif
-
 
 /* ************************************************************************* */
 
 class CSoundBuf : public CCyclicBuffer<_SAMPLE> {
 
 public:
+	CSoundBuf() : keep_running(TRUE) {}
 	void lock (void){ data_accessed.lock(); }
 	void unlock (void){ data_accessed.unlock(); }
 	
+	bool keep_running;
 protected:
 	QMutex	data_accessed;
-
 } SoundBufP, SoundBufR;
 
 
@@ -511,7 +468,7 @@ public:
 	virtual void run() {
 	
 	
-		while (1) {
+		while (SoundBufR.keep_running) {
 
 			int fill;
 
@@ -520,7 +477,7 @@ public:
 			SoundBufR.unlock();
 				
 			if (  (SOUNDBUFLEN - fill) > FRAGSIZE ) {
-//printf("f %d ", fill); fflush(stdout);
+//qDebug("f %d ", fill); fflush(stdout);
 				// enough space in the buffer
 				
 				int size = read_HW( tmprecbuf, FRAGSIZE);
@@ -543,6 +500,7 @@ public:
 			} else
 				usleep( 1000 );
 		}
+		qDebug("Rec Thread stopped");
 	}
 
 protected:
@@ -555,11 +513,9 @@ protected:
 
 void CSound::InitRecording(int iNewBufferSize)
 {
-	printf("initrec %d\n", iNewBufferSize);
+	qDebug("initrec %d", iNewBufferSize);
 
-	printf("initrec %d\n", iNewBufferSize);
-
-	/* Save buffer size */
+	/* Save < */
 	SoundBufR.lock();
 	iInBufferSize = iNewBufferSize;
 	SoundBufR.unlock();
@@ -574,27 +530,6 @@ void CSound::InitRecording(int iNewBufferSize)
 
 }
 
-void CSound::Close()
-{
-	printf("stoprec\n");
-#ifdef USE_DSP
-	if (fdSound >0)
-		close(fdSound);
-	fdSound = 0;
-#endif
-#ifdef USE_ALSA
-	if (rhandle != NULL)
-		snd_pcm_close( rhandle );
-
-	rhandle = NULL;
-#endif
-#ifdef HAVE_ARTS
-	if (rstream != NULL)
-		arts_close_stream( rstream );
-if (rstream != NULL) printf("ups\n");
-#endif
-}
-
 
 _BOOLEAN CSound::Read(CVector< _SAMPLE >& psData)
 {
@@ -602,14 +537,14 @@ _BOOLEAN CSound::Read(CVector< _SAMPLE >& psData)
 
 	SoundBufR.lock();	// we need exclusive access
 	
-//printf("r"); fflush(stdout);
+//qDebug("r"); fflush(stdout);
 	
 	while ( SoundBufR.GetFillLevel() < iInBufferSize ) {
 	
 		
 		// not enough data, sleep a little
 		SoundBufR.unlock();
-//printf("rw"); fflush(stdout);
+//qDebug("rw"); fflush(stdout);
 		usleep(1000); //1ms
 		SoundBufR.lock();
 	}
@@ -633,9 +568,7 @@ class PlayThread : public QThread {
 public:
 	virtual void run() {
 	
-	
-		while (1) {
-
+		while (SoundBufP.keep_running) {
 			int fill;
 
 			SoundBufP.lock();
@@ -644,7 +577,7 @@ public:
 				
 			if ( fill > (FRAGSIZE * NUM_IN_OUT_CHANNELS) ) {
 
-//printf("f%d ", fill); fflush(stdout);		 
+//qDebug("f%d ", fill);	 
 				// enough data in the buffer
 
 				CVectorEx<_SAMPLE>*	p;
@@ -661,17 +594,18 @@ public:
 
 			} else {
 			
+//qDebug("h %d", fill);
 				do {			
-//printf("h %d", fill); fflush(stdout);
 					usleep( 1000 );
 					
 					SoundBufP.lock();
 					fill = SoundBufP.GetFillLevel();
 					SoundBufP.unlock();
 
-				} while ( fill < SOUNDBUFLEN/2 );	// wait until buffer is at least half full
+				} while ((SoundBufP.keep_running) && ( fill < SOUNDBUFLEN/2 ));	// wait until buffer is at least half full
 			}
 		}
+		qDebug("Play Thread stopped");
 	}
 
 protected:
@@ -681,7 +615,7 @@ protected:
 
 void CSound::InitPlayback(int iNewBufferSize)
 {
-	printf("initplay %d\n", iNewBufferSize);
+	qDebug("initplay %d", iNewBufferSize);
 	
 	/* Save buffer size */
 	SoundBufP.lock();
@@ -717,7 +651,7 @@ while(1){
 		CVectorEx<_SAMPLE>*	ptarget;
 		 
 		 // data fits, so copy
-//printf("n"); fflush(stdout);		 
+//qDebug("n"); fflush(stdout);		 
 		 ptarget = SoundBufP.QueryWriteBuffer();
 
 		 for (int i=0; i < iBufferSize; i++)
@@ -730,5 +664,31 @@ while(1){
 
 	return FALSE;
 }
+void CSound::Close()
+{
+	qDebug("stoprec");
+	
+	// stop the recording and playback threads
+	
+	SoundBufR.keep_running = FALSE;
+	SoundBufP.keep_running = FALSE;
+
+	// wait 1sec max. for the threads to terminate
+	RecThread1.wait(1000);
+	PlayThread1.wait(1000);
+	
+#ifdef USE_DSP
+	if (fdSound >0)
+		close(fdSound);
+	fdSound = 0;
+#endif
+#ifdef USE_ALSA
+	if (rhandle != NULL)
+		snd_pcm_close( rhandle );
+
+	rhandle = NULL;
+#endif
+}
+
 
 #endif
