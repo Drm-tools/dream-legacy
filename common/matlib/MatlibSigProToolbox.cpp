@@ -131,41 +131,70 @@ CMatlibVector<CReal> Filter(const CMatlibVector<CReal>& fvB,
 							CMatlibVector<CReal>& fvZ)
 {
 	int						m, n, iLenCoeff;
-	CMatlibVector<CReal>	fvY(fvX.GetSize(), VTY_TEMP);
+	const int				iSizeA = fvA.GetSize();
+	const int				iSizeB = fvB.GetSize();
+	const int				iSizeX = fvX.GetSize();
+	const int				iSizeZ = fvZ.GetSize();
+	CMatlibVector<CReal>	fvY(iSizeX, VTY_TEMP);
 	CMatlibVector<CReal>	fvANew, fvBNew;
 
-	/* Length of coefficients */
-	iLenCoeff = Max((CReal) fvB.GetSize(), (CReal) fvA.GetSize());
-
-	/* Make fvB and fvA the same length (zero padding) */
-	if (fvB.GetSize() > fvA.GetSize())
+	if ((iSizeA == 1) && (fvA[0] == (CReal) 1.0))
 	{
-		fvBNew.Init(fvB.GetSize());
-		fvANew.Init(fvB.GetSize());
+		/* FIR filter ------------------------------------------------------- */
+		const int				iSizeXNew = iSizeX + iSizeZ;
+		CMatlibVector<CReal>	rvXNew(iSizeXNew);
 
-		fvBNew = fvB;
-		fvANew.Merge(fvA, Zeros(fvB.GetSize() - fvA.GetSize()));
+		/* Add old values to input vector */
+		rvXNew.Merge(fvZ, fvX);
+
+		/* Actual convolution */
+		for (m = 0; m < iSizeX; m++)
+		{
+			fvY[m] = (CReal) 0.0;
+
+			for (n = 0; n < iSizeB; n++)
+				fvY[m] += fvB[n] * rvXNew[m + iSizeB - n - 1];
+		}
+
+		/* Save last samples in state vector */
+		fvZ = rvXNew(iSizeXNew - iSizeZ + 1, iSizeXNew);
 	}
 	else
 	{
-		fvBNew.Init(fvA.GetSize());
-		fvANew.Init(fvA.GetSize());
+		/* IIR filter ------------------------------------------------------- */
+		/* Length of coefficients */
+		iLenCoeff = Max((CReal) iSizeB, (CReal) iSizeA);
 
-		fvANew = fvA;
-		fvBNew.Merge(fvB, Zeros(fvA.GetSize() - fvB.GetSize()));
-	}
-
-	/* Filter is implemented as a transposed direct form II structure */
-	for (m = 0; m < fvX.GetSize(); m++)
-	{
-		/* y(m) = (b(1) x(m) + z_1(m - 1)) / a(1) */
-		fvY[m] = (fvBNew[0] * fvX[m] + fvZ[0]) / fvANew[0];
-
-		for (n = 1; n < iLenCoeff; n++)
+		/* Make fvB and fvA the same length (zero padding) */
+		if (iSizeB > iSizeA)
 		{
-			/* z_{n - 2}(m) = b(n - 1) x(m) + z_{n - 1}(m - 1) -
-			   a(n - 1) y(m) */
-			fvZ[n - 1] = fvBNew[n] * fvX[m] + fvZ[n] - fvANew[n] * fvY[m];
+			fvBNew.Init(iSizeB);
+			fvANew.Init(iSizeB);
+
+			fvBNew = fvB;
+			fvANew.Merge(fvA, Zeros(iSizeB - iSizeA));
+		}
+		else
+		{
+			fvBNew.Init(iSizeA);
+			fvANew.Init(iSizeA);
+
+			fvANew = fvA;
+			fvBNew.Merge(fvB, Zeros(iSizeA - iSizeB));
+		}
+
+		/* Filter is implemented as a transposed direct form II structure */
+		for (m = 0; m < iSizeX; m++)
+		{
+			/* y(m) = (b(1) x(m) + z_1(m - 1)) / a(1) */
+			fvY[m] = (fvBNew[0] * fvX[m] + fvZ[0]) / fvANew[0];
+
+			for (n = 1; n < iLenCoeff; n++)
+			{
+				/* z_{n - 2}(m) = b(n - 1) x(m) + z_{n - 1}(m - 1) -
+				   a(n - 1) y(m) */
+				fvZ[n - 1] = fvBNew[n] * fvX[m] + fvZ[n] - fvANew[n] * fvY[m];
+			}
 		}
 	}
 
