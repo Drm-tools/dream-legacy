@@ -290,7 +290,7 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 
 	/* Initialize synchronization parameters */
 	Param.rResampleOffset = (_REAL) 0.0;
-	Param.rFreqOffsetAcqui = (_REAL) VIRTUAL_INTERMED_FREQ;
+	Param.rFreqOffsetAcqui = (_REAL) VIRTUAL_INTERMED_FREQ / SOUNDCRD_SAMPLE_RATE;
 	Param.rFreqOffsetTrack = (_REAL) 0.0;
 	Param.iTimingOffsTrack = 0;
 
