@@ -41,7 +41,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	int				iTimeDiffNew;
 	_COMPLEX		cNewPilot;
 	_COMPLEX		cCurChanEst;
-	CVector<_REAL>	vecrTiCorrEstSym;
+	CComplexVector	veccTiCorrEstSym;
 	_REAL			rSigOverEst;
 
 	/* Timing correction history -------------------------------------------- */
@@ -55,7 +55,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 	/* Update histories for channel estimates at the pilot positions -------- */
 	/* Init vector for storing time correlation estimation for one symbol */
-	vecrTiCorrEstSym.Init(iNumTapsSigEst, (_REAL) 0.0);
+	veccTiCorrEstSym.Init(iNumTapsSigEst, (CReal) 0.0);
 
 	for (i = 0; i < iNoCarrier; i++)
 	{
@@ -91,8 +91,8 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 					Rotate(matcChanAtPilPos[j][iPiHiIndex], i, iTimeDiffNew);
 
 				/* Simply add all results together and increment count */
-				vecrTiCorrEstSym[j] +=
-					real(conj(matcChanAtPilPos[0][iPiHiIndex]) * cNewPilot);
+				veccTiCorrEstSym[j] +=
+					conj(matcChanAtPilPos[0][iPiHiIndex]) * cNewPilot;
 			}
 		}
 	}
@@ -106,11 +106,11 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 		for (i = 0; i < iNumTapsSigEst; i++)
 		{
 			/* Subtract oldest value in history from current estimation */
-			vecrTiCorrEst[i] -= matrTiCorrEstHist[iCurIndTiCor][i];
+			veccTiCorrEst[i] -= matcTiCorrEstHist[iCurIndTiCor][i];
 
 			/* Add new value and write in memory */
-			vecrTiCorrEst[i] += vecrTiCorrEstSym[i];
-			matrTiCorrEstHist[iCurIndTiCor][i] = vecrTiCorrEstSym[i];
+			veccTiCorrEst[i] += veccTiCorrEstSym[i];
+			matcTiCorrEstHist[iCurIndTiCor][i] = veccTiCorrEstSym[i];
 		}
 
 		/* Increase position pointer and test if wrap */
@@ -130,7 +130,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 		else
 		{
 			/* Actual estimation of sigma */
-			rSigma = ModLinRegr(vecrTiCorrEst);
+			rSigma = ModLinRegr(veccTiCorrEst);
 
 			/* Use overestimated sigma for filter update */
 			rSigOverEst = rSigma * SIGMA_OVERESTIMATION_FACT;
@@ -279,8 +279,8 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 
 	/* Init matrix for estimation the correlation function in time direction
 	   (moving average) */
-	matrTiCorrEstHist.Init(NO_SYM_AVER_TI_CORR, iNumTapsSigEst, (_REAL) 0.0);
-	vecrTiCorrEst.Init(iNumTapsSigEst, (_REAL) 0.0);
+	matcTiCorrEstHist.Init(NO_SYM_AVER_TI_CORR, iNumTapsSigEst, (CReal) 0.0);
+	veccTiCorrEst.Init(iNumTapsSigEst, (CReal) 0.0);
 	iCurIndTiCor = 0;
 
 
@@ -449,12 +449,12 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 	return rMMSE;
 }
 
-CReal CTimeWiener::ModLinRegr(CRealVector& vecrCorrEst)
+CReal CTimeWiener::ModLinRegr(CComplexVector& veccCorrEst)
 {
 	/* Modified linear regresseion to estimate the "sigma" of the Gaussian
 	   correlation function */
 	/* Get vector length */
-	int iVecLen = Size(vecrCorrEst);
+	int iVecLen = Size(veccCorrEst);
 
 	/* Init vectors and variables */
 	CReal		rSigmaRet;
@@ -476,7 +476,7 @@ CReal CTimeWiener::ModLinRegr(CRealVector& vecrCorrEst)
 		%
 		% -> z = a0 + a1 * w
 	*/
-	Z = Log(Abs(vecrCorrEst)); /* acfm can be negative due to noise */
+	Z = Log(Abs(veccCorrEst)); /* acfm can be negative due to noise */
 	W = Tau * Tau;
 
 	Wm = Mean(W);

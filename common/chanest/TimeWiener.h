@@ -104,7 +104,7 @@ protected:
 							const int iLength);
 	inline int DisToNextPil(int iPiHiIndex, int iSymNo);
 	_REAL UpdateFilterCoef(_REAL rNewSNR, _REAL rNewSigma);
-	CReal ModLinRegr(CRealVector& vecrCorrEst);
+	CReal ModLinRegr(CComplexVector& veccCorrEst);
 
 	int					iNoCarrier;
 
@@ -114,8 +114,8 @@ protected:
 	
 	CMatrix<_COMPLEX>	matcChanAtPilPos;
 
-	CMatrix<_REAL>		matrTiCorrEstHist;
-	CRealVector			vecrTiCorrEst;
+	CMatrix<_COMPLEX>	matcTiCorrEstHist;
+	CComplexVector		veccTiCorrEst;
 	int					iCurIndTiCor;
 
 	int					iScatPilFreqInt; /* Frequency interpolation */
