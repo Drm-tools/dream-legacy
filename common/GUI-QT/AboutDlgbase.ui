@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>460</width>
-            <height>389</height>
+            <width>566</width>
+            <height>423</height>
         </rect>
     </property>
     <property stdset="1">
@@ -90,13 +90,13 @@
                             </property>
                             <property>
                                 <name>sizeType</name>
-                                <enum>Expanding</enum>
+                                <enum>Fixed</enum>
                             </property>
                             <property>
                                 <name>sizeHint</name>
                                 <size>
                                     <width>20</width>
-                                    <height>20</height>
+                                    <height>24</height>
                                 </size>
                             </property>
                         </spacer>
@@ -147,13 +147,13 @@
                             </property>
                             <property>
                                 <name>sizeType</name>
-                                <enum>Expanding</enum>
+                                <enum>Fixed</enum>
                             </property>
                             <property>
                                 <name>sizeHint</name>
                                 <size>
                                     <width>20</width>
-                                    <height>20</height>
+                                    <height>24</height>
                                 </size>
                             </property>
                         </spacer>
@@ -178,7 +178,7 @@
                             <class>QLayoutWidget</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>Layout6</cstring>
+                                <cstring>Layout8</cstring>
                             </property>
                             <hbox>
                                 <property stdset="1">
@@ -279,7 +279,7 @@
                                             </property>
                                             <property>
                                                 <name>sizeType</name>
-                                                <enum>Expanding</enum>
+                                                <enum>Fixed</enum>
                                             </property>
                                             <property>
                                                 <name>sizeHint</name>
@@ -334,7 +334,7 @@ Institute for Communication Technology</string>
                                             </property>
                                             <property>
                                                 <name>sizeType</name>
-                                                <enum>Expanding</enum>
+                                                <enum>Fixed</enum>
                                             </property>
                                             <property>
                                                 <name>sizeHint</name>
