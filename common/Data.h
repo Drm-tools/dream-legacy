@@ -34,9 +34,9 @@
 #include "FAC/FAC.h"
 #include "SDC/SDC.h"
 #include "TextMessage.h"
-#include "AudioFile.h"
+#include "util/AudioFile.h"
+#include "util/Utilities.h"
 #include <time.h>
-#include "DRMSignalIO.h" /* For signal meter */
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
 #else
