@@ -51,6 +51,7 @@ public:
 	void Reset(const TData tResetVal);
 
 	void Enlarge(const int iAddedSize);
+	void Add(const TData& tI) {Enlarge(1); pData[iVectorSize - 1] = tI;}
 
 	inline int Size() const {return iVectorSize;}
 
