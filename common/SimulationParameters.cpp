@@ -33,7 +33,6 @@
 void CDRMSimulation::SimScript()
 {
 	int				i;
-	_REAL			rStartSNR, rEndSNR, rStepSNR;
 	_REAL			rSNRCnt;
 	FILE*			pFileSimRes;
 	CVector<_REAL>	vecrMSE;
@@ -125,17 +124,22 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 #endif
 
 
-		/* Set simulation time or number of errors */
+		/* Set simulation time or number of errors. Slighty different convetion
+		   for __SIMTIME file name */
 		if (iSimTime != 0)
+		{
 			GenSimData.SetSimTime(iSimTime, 
-				SimFileName(Param, strSpecialRemark));
+				SimFileName(Param, strSpecialRemark, TRUE));
+		}
 		else
+		{
 			GenSimData.SetNumErrors(iSimNumErrors, 
-				SimFileName(Param, strSpecialRemark));
+				SimFileName(Param, strSpecialRemark, TRUE));
+		}
 
 		/* Open file for storing simulation results */
 		strSimFile = string(SIM_OUT_FILES_PATH) +
-			SimFileName(Param, strSpecialRemark) + string(".dat");
+			SimFileName(Param, strSpecialRemark, FALSE) + string(".dat");
 		pFileSimRes = fopen(strSimFile.c_str(), "w");
 		printf("%s\n", strSimFile.c_str()); /* Show name directly */
 
@@ -188,7 +192,8 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		exit(1);
 }
 
-string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf)
+string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
+								   _BOOLEAN bWithSNR)
 {
 /* 
 	File naming convention:
@@ -224,12 +229,14 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf)
 		break;
 	}
 
+
 	/* Channel number */
 	strFileName += "CH";
 	char chNumTmp;
 	sprintf(&chNumTmp, "%d", Param.iDRMChannelNum);
 	strFileName += chNumTmp;
 	strFileName += "_";
+
 
 	/* Robustness mode and spectrum occupancy */
 	switch (Param.GetWaveMode())
@@ -269,17 +276,20 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf)
 		break;
 	}
 
+
 	/* Number of iterations in MLC decoder */
 	strFileName += "It";
 	sprintf(chNumTmpLong, "%d", MSCMLCDecoder.GetInitNumIterations());
 	strFileName += chNumTmpLong;
 	strFileName += "_";
 
+
 	/* Protection level part B */
 	strFileName += "PL";
 	sprintf(chNumTmpLong, "%d", Param.MSCPrLe.iPartB);
 	strFileName += chNumTmpLong;
 	strFileName += "_";
+
 
 	/* MSC coding scheme */
 	switch (Param.eMSCCodingScheme)
@@ -301,9 +311,10 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf)
 		break;
 	}
 
+
 	/* Number of error events or simulation time */
 	int iCurNum;
-	string strMultPl = "";
+	string strMultPl = "_";
 	if (iSimTime != 0)
 	{
 		strFileName += "T"; /* T -> time */
@@ -317,12 +328,12 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf)
 	
 	if (iCurNum / 1000 > 0)
 	{
-		strMultPl = "K";
+		strMultPl = "K_";
 		iCurNum /= 1000;
 
 		if (iCurNum / 1000 > 0)
 		{
-			strMultPl = "M";
+			strMultPl = "M_";
 			iCurNum /= 1000;
 		}
 	}
@@ -332,12 +343,22 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf)
 	strFileName += strMultPl;
 
 
+	/* SNR range (optional) */
+	if (bWithSNR == TRUE)
+	{
+		strFileName += "SNR";
+		sprintf(chNumTmpLong, "%.1f-", rStartSNR);
+		strFileName += chNumTmpLong;
+		sprintf(chNumTmpLong, "%.1f-", rStepSNR);
+		strFileName += chNumTmpLong;
+		sprintf(chNumTmpLong, "%.1f_", rEndSNR);
+		strFileName += chNumTmpLong;
+	}
+
+
 	/* Special remark */
 	if (!strAddInf.empty())
-	{
-		strFileName += "_";
 		strFileName += strAddInf;
-	}
 
 	return strFileName;
 }

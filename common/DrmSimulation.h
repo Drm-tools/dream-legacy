@@ -64,10 +64,11 @@ public:
 protected:
 	void Run();
 	void Init();
-	string SimFileName(CParameter& Param, string strAddInf);
+	string SimFileName(CParameter& Param, string strAddInf, _BOOLEAN bWithSNR);
 
 	int iSimTime;
 	int iSimNumErrors;
+	_REAL rStartSNR, rEndSNR, rStepSNR;
 
 	/* Parameters */
 	CParameter				Param;

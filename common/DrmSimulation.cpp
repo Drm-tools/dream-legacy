@@ -254,7 +254,8 @@ void CDRMSimulation::Init()
 	SyncUsingPil.StartTrackPil();
 }
 
-CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0)
+CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
+	rStartSNR((_REAL) 0.0), rEndSNR((_REAL) 0.0), rStepSNR((_REAL) 0.0)
 {
 	/* Set all parameters to meaningful value for startup state. If we want to
 	   make a simulation we just have to specify the important values */
