@@ -3,7 +3,7 @@
  * Copyright (c) 2003
  *
  * Author(s):
- *	Volker Fischer, Phil Karn, Lius Morgan
+ *	Volker Fischer, Phil Karn, Morgan Lius
  *
  * Description:
  *
