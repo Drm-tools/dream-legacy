@@ -117,22 +117,34 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	Param.FACRepetition[0] = 0;
 	Param.FACNumRep = 1; /* Length of the repetition pattern table */
 
-	/* Date, time */
+	/* Init frame ID counter (index) */
+	Param.iFrameIDTransm = 0;
+
+	/* Date, time. TODO: use computer system time... */
 	Param.iDay = 0;
 	Param.iMonth = 0;
 	Param.iYear = 0;
 	Param.iUTCHour = 0;
 	Param.iUTCMin = 0;
 
-	/* Frame ID */
-	Param.iFrameIDTransm = 0;
-
 
 	/**************************************************************************/
-	/* In the current version only one service and one stream is supported. The
-	   IDs must be 0 in both cases */
+	/* Robustness mode and spectrum occupancy. Available transmission modes:
+	   RM_ROBUSTNESS_MODE_A: Gaussian channels, with minor fading,
+	   RM_ROBUSTNESS_MODE_B: Time and frequency selective channels, with longer
+	   delay spread,
+	   RM_ROBUSTNESS_MODE_C: As robustness mode B, but with higher Doppler
+	   spread,
+	   RM_ROBUSTNESS_MODE_D: As robustness mode B, but with severe delay and
+	   Doppler spread.
+	   Available bandwidths:
+	   SO_0: 4.5 kHz, SO_1: 5 kHz, SO_2: 9 kHz, SO_3: 10 kHz, SO_4: 18 kHz,
+	   SO_5: 20 kHz */
 	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 
+	/* Protection levels for MSC. Depend on the modulation scheme. Look at
+	   TableMLC.h, iCodRateCombMSC16SM, iCodRateCombMSC64SM,
+	   iCodRateCombMSC64HMsym, iCodRateCombMSC64HMmix for available numbers */
 	Param.MSCPrLe.iPartA = 0;
 	Param.MSCPrLe.iPartB = 1;
 	Param.MSCPrLe.iHierarch = 0;
@@ -140,6 +152,8 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	/* Either one audio or one data service can be chosen */
 	_BOOLEAN bIsAudio = FALSE;
 
+	/* In the current version only one service and one stream is supported. The
+	   stream IDs must be 0 in both cases */
 	if (bIsAudio == TRUE)
 	{
 		/* Audio */
@@ -159,19 +173,38 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 		Param.Service[0].DataParam.iStreamID = 0;
 	}
 
-	/* Length of part B is set automatically
-	   (equal error protection, if "= 0") */
+	/* Length of part B is set automatically (equal error protection (EEP),
+	   if "= 0"). Sets the number of bytes, should not exceed total number of
+	   bytes available in MSC block */
 	Param.Stream[0].iLenPartA = 80;
 
-	/* Init service parameters */
+	/* Init service parameters, 24 bit unsigned integer number */
 	Param.Service[0].iServiceID = 163569;
-	Param.Service[0].strLabel = "Dream Test"; /* Has to be UTF-8! */
-	Param.Service[0].iLanguage = 5; /* Language: 5 -> english */
-	Param.Service[0].iServiceDescr = 15; /* Service description: 
-											15 -> other music */
 
+	/* Service label data. Up to 16 bytes defining the label using UTF-8
+	   coding */
+	Param.Service[0].strLabel = "Dream Test";
+
+	/* Language (see TableFAC.h, "strTableLanguageCode[]") */
+	Param.Service[0].iLanguage = 5; /* 5 -> english */
+
+	/* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
+	Param.Service[0].iServiceDescr = 15; /* 15 -> other music */
+
+	/* Interleaver mode of MSC service. Long interleaving (2 s): SI_LONG,
+	   short interleaving (400 ms): SI_SHORT */
 	Param.eSymbolInterlMode = CParameter::SI_SHORT;
+
+	/* MSC modulation scheme. Available modes:
+	   16-QAM standard mapping (SM): CS_2_SM,
+	   64-QAM standard mapping (SM): CS_3_SM,
+	   64-QAM symmetrical hierarchical mapping (HMsym): CS_3_HMSYM,
+	   64-QAM mixture of the previous two mappings (HMmix): CS_3_HMMIX */
 	Param.eMSCCodingScheme = CParameter::CS_3_SM;
+
+	/* SDC modulation scheme. Available modes:
+	   4-QAM standard mapping (SM): CS_1_SM,
+	   16-QAM standard mapping (SM): CS_2_SM */
 	Param.eSDCCodingScheme = CParameter::CS_2_SM;
 
 	/* Set the number of MSC frames we want to generate */
