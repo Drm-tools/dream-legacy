@@ -77,16 +77,12 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 	/* Write data as wave in file */
-	Lock();
-
 	if (bDoWriteWaveFile == TRUE)
 	{
 		for (int i = 0; i < iInputBlockSize; i += 2)
 			WaveFileAudio.AddStereoSample((*pvecInputData)[i] /* left */,
 				(*pvecInputData)[i + 1] /* right */);
 	}
-
-	Unlock();
 }
 
 void CWriteData::InitInternal(CParameter& ReceiverParam)
