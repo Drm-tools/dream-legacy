@@ -72,20 +72,20 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal,
 	/* File menu ------------------------------------------------------------ */
 	pFileMenu = new QPopupMenu(this);
 	CHECK_PTR(pFileMenu);
-	pFileMenu->insertItem("C&lear all", this, SLOT(OnClearAll()),
+	pFileMenu->insertItem(tr("C&lear all"), this, SLOT(OnClearAll()),
 		CTRL+Key_X, 0);
 	pFileMenu->insertSeparator();
-	pFileMenu->insertItem("&Save...", this, SLOT(OnSave()), CTRL+Key_S, 1);
-	pFileMenu->insertItem("Save &all...", this, SLOT(OnSaveAll()),
+	pFileMenu->insertItem(tr("&Save..."), this, SLOT(OnSave()), CTRL+Key_S, 1);
+	pFileMenu->insertItem(tr("Save &all..."), this, SLOT(OnSaveAll()),
 		CTRL+Key_A, 2);
 	pFileMenu->insertSeparator();
-	pFileMenu->insertItem("&Close", this, SLOT(close()), 0, 3);
+	pFileMenu->insertItem(tr("&Close"), this, SLOT(close()), 0, 3);
 
 
 	/* Main menu bar -------------------------------------------------------- */
 	pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
-	pMenu->insertItem("&File", pFileMenu);
+	pMenu->insertItem(tr("&File"), pFileMenu);
 
 	/* Now tell the layout about the menu */
 	MultimediaDlgBaseLayout->setMenuBar(pMenu);
@@ -365,12 +365,12 @@ void MultimediaDlg::SetSlideShowPicture()
 	else
 	{
 		/* Show text that tells the user of load failure */
-		TextBrowser->setText("<br><br><center><b>Image could not be "
-			"loaded, " +
+		TextBrowser->setText("<br><br><center><b>" + tr("Image could not be "
+			"loaded, ") +
 			 QString(vecbyCurPict.strFormat.c_str()) +
-			 "-format not supported by this version of QT!"
-			"</b><br><br><br>If you want to view the image, "
-			"save it to file and use an external viewer</center>");
+			 tr("-format not supported by this version of QT!") +
+			"</b><br><br><br>" + tr("If you want to view the image, "
+			"save it to file and use an external viewer") + "</center>");
 	}
 
 	UpdateAccButtonsSlideShow();
@@ -486,8 +486,8 @@ void MultimediaDlg::ClearAllSlideShow()
 	UpdateAccButtonsSlideShow();
 
 	/* Init text browser window */
-	TextBrowser->setText("<center><h2>"
-		"MOT Slideshow Viewer</h2></center>");
+	TextBrowser->setText("<center><h2>" +
+		tr("MOT Slideshow Viewer") + "</h2></center>");
 }
 
 void MultimediaDlg::InitNotSupported()
@@ -503,8 +503,8 @@ void MultimediaDlg::InitNotSupported()
 	PushButtonStepBack->hide();
 
 	/* Show that application is not supported */
-	TextBrowser->setText("<center><h2>No data service or data service not "
-		"supported.</h2></center>");
+	TextBrowser->setText("<center><h2>" + tr("No data service or data service "
+		"not supported.") + "</h2></center>");
 }
 
 void MultimediaDlg::InitMOTSlideShow()

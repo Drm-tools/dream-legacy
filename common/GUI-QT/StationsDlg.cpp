@@ -279,14 +279,14 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	ListViewStations->clear();
 
 	/* We assume that one column is already there */
-	ListViewStations->setColumnText(0, "Station Name");
-	ListViewStations->addColumn("Time [UTC]");
-	ListViewStations->addColumn("Frequency [kHz]");
-	ListViewStations->addColumn("Target");
-	ListViewStations->addColumn("Power [KW]");
-	ListViewStations->addColumn("Country");
-	ListViewStations->addColumn("Site");
-	ListViewStations->addColumn("Language");
+	ListViewStations->setColumnText(0, tr("Station Name"));
+	ListViewStations->addColumn(tr("Time [UTC]"));
+	ListViewStations->addColumn(tr("Frequency [kHz]"));
+	ListViewStations->addColumn(tr("Target"));
+	ListViewStations->addColumn(tr("Power [KW]"));
+	ListViewStations->addColumn(tr("Country"));
+	ListViewStations->addColumn(tr("Site"));
+	ListViewStations->addColumn(tr("Language"));
 
 	/* Init vector for storing the pointer to the list view items */
 	vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
@@ -310,9 +310,9 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	/* View menu ------------------------------------------------------------ */
 	pViewMenu = new QPopupMenu(this);
 	CHECK_PTR(pViewMenu);
-	pViewMenu->insertItem("Show &only active stations", this,
+	pViewMenu->insertItem(tr("Show &only active stations"), this,
 		SLOT(OnShowStationsMenu(int)), 0, 0);
-	pViewMenu->insertItem("Show &all stations", this,
+	pViewMenu->insertItem(tr("Show &all stations"), this,
 		SLOT(OnShowStationsMenu(int)), 0, 1);
 
 	/* Set stations in list view which are active right now */
@@ -398,7 +398,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	veciModelID.Init(0);
 
 	/* Add menu entry "none" */
-	pRemoteMenu->insertItem("None", this, SLOT(OnRemoteMenu(int)), 0, 0);
+	pRemoteMenu->insertItem(tr("None"), this, SLOT(OnRemoteMenu(int)), 0, 0);
 	veciModelID.Add(0); /* ID 0 for "none" */
 
 	/* Only add menu entries if list was correctly received */
@@ -460,7 +460,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 
 	/* Only add "other" menu if front-ends are available */
 	if (status == RIG_OK)
-		pRemoteMenu->insertItem("Other", pRemoteMenuOther);
+		pRemoteMenu->insertItem(tr("Other"), pRemoteMenuOther);
 
 	if (bCheckWasSet == FALSE)
 	{
@@ -499,8 +499,8 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	/* Separator */
 	pRemoteMenu->insertSeparator();
 
-	const int iSMeterMenuID = pRemoteMenu->insertItem("Enable S-Meter", this,
-		SLOT(OnSMeterMenu(int)), 0);
+	const int iSMeterMenuID = pRemoteMenu->insertItem(tr("Enable S-Meter"),
+		this, SLOT(OnSMeterMenu(int)), 0);
 
 	/* Set check */
 	if (DRMReceiver.GetEnableSMeter() == TRUE)
@@ -510,8 +510,8 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	/* Separator */
 	pRemoteMenu->insertSeparator();
 
-	const int iModRigMenuID = pRemoteMenu->insertItem("With DRM Modification",
-		this, SLOT(OnModRigMenu(int)), 0);
+	const int iModRigMenuID = pRemoteMenu->insertItem(tr("With DRM "
+		"Modification"), this, SLOT(OnModRigMenu(int)), 0);
 
 	/* Set check */
 	if (DRMReceiver.GetEnableModRigSettings() == TRUE)
@@ -522,17 +522,17 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	/* Update menu ---------------------------------------------------------- */
 	QPopupMenu* pUpdateMenu = new QPopupMenu(this);
 	CHECK_PTR(pUpdateMenu);
-	pUpdateMenu->insertItem("&Get Update...", this, SLOT(OnGetUpdate()));
+	pUpdateMenu->insertItem(tr("&Get Update..."), this, SLOT(OnGetUpdate()));
 
 
 	/* Main menu bar -------------------------------------------------------- */
 	QMenuBar* pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
-	pMenu->insertItem("&View", pViewMenu);
+	pMenu->insertItem(tr("&View"), pViewMenu);
 #ifdef HAVE_LIBHAMLIB
-	pMenu->insertItem("&Remote", pRemoteMenu);
+	pMenu->insertItem(tr("&Remote"), pRemoteMenu);
 #endif
-	pMenu->insertItem("&Update", pUpdateMenu); /* String "Udate" used below */
+	pMenu->insertItem(tr("&Update"), pUpdateMenu); /* String "Udate" used below */
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
@@ -628,12 +628,12 @@ void StationsDlg::OnShowStationsMenu(int iID)
 
 void StationsDlg::OnGetUpdate()
 {
-	if (QMessageBox::information(this, "Dream Schedule Update",
-		"Dream tries to download the newest DRM schedule\nfrom "
+	if (QMessageBox::information(this, tr("Dream Schedule Update"),
+		tr("Dream tries to download the newest DRM schedule\nfrom "
 		"www.drm-dx.de (powered by Klaus Schneider).\nYour computer "
 		"must be connected to the internet.\n\nThe current file "
 		"DRMSchedule.ini will be overwritten.\nDo you want to "
-		"continue?",
+		"continue?"),
 		QMessageBox::Yes, QMessageBox::No) == 3 /* Yes */)
 	{
 		/* Try to download the current schedule. Copy the file to the
@@ -655,10 +655,11 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 
 			/* Notify the user of the failure */
 			QMessageBox::information(this, "Dream",
-				"Update failed. The following things may caused the failure:\n"
+				tr("Update failed. The following things may caused the "
+				"failure:\n"
 				"\t- the internet connection was not set up properly\n"
 				"\t- the server www.drm-dx.de is currently not available\n"
-				"\t- the file 'DRMSchedule.ini' could not be written",
+				"\t- the file 'DRMSchedule.ini' could not be written"),
 				QMessageBox::Ok);
 		}
 
@@ -669,14 +670,14 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 			{
 				/* Notify the user that update was successful */
 #ifdef _WIN32
-				QMessageBox::warning(this, "Dream", "Update successful.\n"
+				QMessageBox::warning(this, "Dream", tr("Update successful.\n"
 					"Due to network problems with the Windows version of QT, "
 					"the Dream software must be restarted after a DRMSchedule "
-					"update.\nPlease exit Dream now.",
+					"update.\nPlease exit Dream now."),
 					"Ok");
 #else
-				QMessageBox::information(this, "Dream", "Update successful.",
-					QMessageBox::Ok);
+				QMessageBox::information(this, "Dream",
+					tr("Update successful."), QMessageBox::Ok);
 #endif
 
 // FIXME: The following lines change the DRMSchedule object.
@@ -705,10 +706,10 @@ void StationsDlg::showEvent(QShowEvent* pEvent)
 	/* If number of stations is zero, we assume that the ini file is missing */
 	if (DRMSchedule.GetStationNumber() == 0)
 	{
-		QMessageBox::information(this, "Dream", "The file DRMSchedule.ini could "
-			"not be found or contains no data.\nNo stations can be displayed.\n"
-			"Try to download this file by using the 'Update' menu.",
-			QMessageBox::Ok);
+		QMessageBox::information(this, "Dream", tr("The file DRMSchedule.ini "
+			"could not be found or contains no data.\nNo stations can be "
+			"displayed.\nTry to download this file by using the 'Update' "
+			"menu."), QMessageBox::Ok);
 	}
 }
 
@@ -1079,12 +1080,12 @@ try
 	}
 
 	if (newModID == 0)
-		throw CGenErr("No rig model ID selected.");
+		throw CGenErr(tr("No rig model ID selected.").latin1());
 
 	/* Init rig */
 	pRig = rig_init(newModID);
 	if (pRig == NULL)
-		throw CGenErr("Initialization of hamlib failed.");
+		throw CGenErr(tr("Initialization of hamlib failed.").latin1());
 
 	/* Set config for hamlib */
 	string strHamlibConfig = DRMReceiver.GetHamlibConf();
@@ -1098,7 +1099,7 @@ try
 			rig_cleanup(pRig);
 			pRig = NULL;
 
-			throw CGenErr("Malformatted config string.");
+			throw CGenErr(tr("Malformatted config string.").latin1());
 		}
 		*q++ = '\0';
 
@@ -1111,7 +1112,7 @@ try
 			rig_cleanup(pRig);
 			pRig = NULL;
 
-			throw CGenErr("Rig set conf failed.");
+			throw CGenErr(tr("Rig set conf failed.").latin1());
 		}
 	}
 	if (p_dup)
@@ -1124,7 +1125,7 @@ try
 		rig_cleanup(pRig);
 		pRig = NULL;
 
-		throw CGenErr("Rig open failed.");
+		throw CGenErr(tr("Rig open failed.").latin1());
 	}
 
 	/* Ignore result, some rigs don't have support for this */
@@ -1151,7 +1152,7 @@ try
 				rig_cleanup(pRig);
 				pRig = NULL;
 
-				throw CGenErr("Malformatted config string.");
+				throw CGenErr(tr("Malformatted config string.").latin1());
 			}
 			*q++ = '\0';
 
@@ -1166,7 +1167,10 @@ try
 			{
 				ret = rig_set_mode(pRig, RIG_VFO_CURR, mode, atoi(q));
 				if (ret != RIG_OK)
-					cerr << "Rig set mode failed: " << rigerror(ret) << endl;
+				{
+					cerr << tr("Rig set mode failed: ") << rigerror(ret) <<
+					endl;
+				}
 			}
 			else if (p[0] == 'l' && (setting = rig_parse_level(p + 2)) !=
 				RIG_LEVEL_NONE)
@@ -1178,14 +1182,20 @@ try
 
 				ret = rig_set_level(pRig, RIG_VFO_CURR, setting, val);
 				if (ret != RIG_OK)
-					cerr << "Rig set level failed: " << rigerror(ret) << endl;
+				{
+					cerr << tr("Rig set level failed: ") << rigerror(ret) <<
+					endl;
+				}
 			}
 			else if (p[0] == 'f' && (setting = rig_parse_func(p + 2)) !=
 				RIG_FUNC_NONE)
 			{
 				ret = rig_set_func(pRig, RIG_VFO_CURR, setting, atoi(q));
 				if (ret != RIG_OK)
-					cerr << "Rig set func failed: " << rigerror(ret) << endl;
+				{
+					cerr << tr("Rig set func failed: ") << rigerror(ret) <<
+					endl;
+				}
 			}
 			else if (p[0] == 'p' && (setting = rig_parse_parm(p + 2)) !=
 				RIG_PARM_NONE)
@@ -1197,10 +1207,13 @@ try
 
 				ret = rig_set_parm(pRig, setting, val);
 				if (ret != RIG_OK)
-					cerr << "Rig set parm failed: " << rigerror(ret) << endl;
+				{
+					cerr << tr("Rig set parm failed: ") << rigerror(ret) <<
+					endl;
+				}
 			}
 			else
-				cerr << "Rig unknown setting: " << p << "=" << q << endl;
+				cerr << tr("Rig unknown setting: ") << p << "=" << q << endl;
 		}
 		if (p_dup)
 			free(p_dup);
@@ -1233,11 +1246,11 @@ void StationsDlg::AddWhatsThisHelp()
 {
 	/* Stations List */
 	QWhatsThis::add(ListViewStations,
-		"<b>Stations List:</b> In the stations list view all DRM stations "
-		"which are stored in the DRMSchedule.ini file are shown. It is "
-		"possible to show only active stations by changing a setting in "
-		"the 'view' menu. The color of the cube on the left of a menu "
-		"item shows the current status of the DRM transmission. A green "
+		"<b>" + tr("Stations List:") + "</b> " + tr("In the stations list "
+		"view all DRM stations which are stored in the DRMSchedule.ini file "
+		"are shown. It is possible to show only active stations by changing a "
+		"setting in the 'view' menu. The color of the cube on the left of a "
+		"menu item shows the current status of the DRM transmission. A green "
 		"box shows that the transmission takes place right now, a "
 		"yellow cube shows that this is a test transmission and with a "
 		"red cube it is shown that the transmission is offline.<br>"
@@ -1246,29 +1259,30 @@ void StationsDlg::AddWhatsThisHelp()
 		"be automatically switched to the current frequency and the "
 		"Dream software is reset to a new acquisition (to speed up the "
 		"synchronization process). Also, the log-file frequency edit "
-		"is automatically updated.");
+		"is automatically updated."));
 
 	/* Frequency Counter */
 	QWhatsThis::add(QwtCounterFrequency,
-		"<b>Frequency Counter:</b> The current frequency value can be "
-		"changed by using this counter. The tuning steps are 100 kHz "
-		"for the  buttons with three arrows, 10 kHz for the "
+		"<b>" + tr("Frequency Counter:") + "</b> " + tr("The current frequency "
+		"value can be changed by using this counter. The tuning steps are "
+		"100 kHz for the  buttons with three arrows, 10 kHz for the "
 		"buttons with two arrows and 1 kHz for the buttons having only "
 		"one arrow. By keeping the button pressed, the values are "
-		"increased / decreased automatically.");
+		"increased / decreased automatically."));
 
 	/* UTC time label */
 	QWhatsThis::add(TextLabelUTCTime,
-		"<b>UTC Time:</b> Shows the current Coordinated Universal Time (UTC) "
-		"which is also known as Greenwich Mean Time (GMT).");
+		"<b>" + tr("UTC Time:") + "</b> " + tr("Shows the current Coordinated "
+		"Universal Time (UTC) which is also known as Greenwich Mean Time "
+		"(GMT)."));
 
 #ifdef HAVE_LIBHAMLIB
 	/* S-meter */
 	const QString strSMeter =
-		"<b>Signal-Meter:</b> Shows the signal strength level in dB relative "
-		"to S9.<br>Note that not all front-ends controlled by hamlib support "
-		"this feature. If the s-meter is not available, the controls are "
-		"disabled.";
+		"<b>" + tr("Signal-Meter:") + "</b> " + tr("Shows the signal strength "
+		"level in dB relative to S9.") + "<br>" + tr("Note that not all "
+		"front-ends controlled by hamlib support this feature. If the s-meter "
+		"is not available, the controls are disabled.");
 
 	QWhatsThis::add(TextLabelSMeter, strSMeter);
 	QWhatsThis::add(ProgrSigStrength, strSMeter);

@@ -37,10 +37,10 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 	/* Set the text for the about dialog html text control */
 	TextViewCredits->setText(
 		"<p>" /* General description of Dream software */
-		"<big><b>Dream</b> is a software implementation of a Digital Radio "
-		"Mondiale (DRM) receiver. All what is needed to receive DRM "
+		"<big><b>Dream</b> " + tr("is a software implementation of a Digital "
+		"Radio Mondiale (DRM) receiver. All what is needed to receive DRM "
 		"transmissions is a PC with a sound card and a modified analog "
-		"short-wave (MW, LW) receiver.</big>"
+		"short-wave (MW, LW) receiver.") + "</big>"
 		"</p><br>"
 		"<p><font face=\"courier\">" /* GPL header text */
 		"This program is free software; you can redistribute it and/or modify "
@@ -55,15 +55,15 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 "
 		"USA"
 		"</font></p><br>" /* Our warning text */
-		"<p><font color=\"#ff0000\" face=\"courier\">"
-		"Although this software is going to be "
+		"<p><font color=\"#ff0000\" face=\"courier\">" +
+		tr("Although this software is going to be "
 		"distributed as free software under the terms of the GPL this does not "
 		"mean that its use is free of rights of others. The use may infringe "
-		"third party IP and thus may not be legal in some countries."
+		"third party IP and thus may not be legal in some countries.") +
 		"</font></p><br>"
 		"<p>" /* Libraries used by this compilation of Dream */
-		"<b>This compilation of Dream uses the following libraries:</b>"
-		"</p>"
+		"<b>" + tr("This compilation of Dream uses the following libraries:") +
+		"</b></p>"
 		"<ul>"
 		"<li><b>FFTW</b> <i>http://www.fftw.org</i></li>"
 #ifdef USE_FAAD2_LIBRARY
@@ -94,11 +94,12 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 
 	/* Set version number in about dialog */
 	QString strVersionText;
-	strVersionText = "<center><b>Dream, Version ";
+	strVersionText = "<center><b>" + tr("Dream, Version ");
 	strVersionText += VERSION;
-	strVersionText += "</b><br> Open-Source Software Implementation of a "
-		"DRM-Receiver<br>";
-	strVersionText += "Under the GNU General Public License (GPL)</center>";
+	strVersionText += "</b><br> " + tr("Open-Source Software Implementation of "
+		"a DRM-Receiver") + "<br>";
+	strVersionText += tr("Under the GNU General Public License (GPL)") +
+		"</center>";
 	TextLabelVersion->setText(strVersionText);
 }
 
@@ -126,23 +127,23 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	/* Help menu ------------------------------------------------------------ */
 	QPopupMenu* HelpMenu = new QPopupMenu(this);
 	CHECK_PTR(HelpMenu);
-    HelpMenu->insertItem("What's &This", this ,
+    HelpMenu->insertItem(tr("What's &This"), this ,
 		SLOT(OnHelpWhatsThis()), SHIFT+Key_F1);
 	HelpMenu->insertSeparator();
-	HelpMenu->insertItem("&About...", this, SLOT(OnHelpAbout()));
+	HelpMenu->insertItem(tr("&About..."), this, SLOT(OnHelpAbout()));
 
 
 	/* View menu ------------------------------------------------------------ */
 	QPopupMenu* EvalWinMenu = new QPopupMenu(this);
 	CHECK_PTR(EvalWinMenu);
-	EvalWinMenu->insertItem("&Evaluation Dialog...", this,
+	EvalWinMenu->insertItem(tr("&Evaluation Dialog..."), this,
 		SLOT(OnViewEvalDlg()), CTRL+Key_E);
-	EvalWinMenu->insertItem("M&ultimedia Dialog...", this,
+	EvalWinMenu->insertItem(tr("M&ultimedia Dialog..."), this,
 		SLOT(OnViewMultiMediaDlg()), CTRL+Key_U);
-	EvalWinMenu->insertItem("S&tations Dialog...", this,
+	EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
 		SLOT(OnViewStationsDlg()), CTRL+Key_T);
 	EvalWinMenu->insertSeparator();
-	EvalWinMenu->insertItem("E&xit", this, SLOT(close()), CTRL+Key_Q);
+	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q);
 
 
 	/* Settings menu  ------------------------------------------------------- */
@@ -187,9 +188,9 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	pSoundOutMenu->setItemChecked(iDefaultOutDev, TRUE);
 
 	/* Reiceiver mode menu */
-	pReceiverModeMenu->insertItem("DRM (digital)", this,
+	pReceiverModeMenu->insertItem(tr("DRM (digital)"), this,
 		SLOT(OnReceiverMode(int)), CTRL+Key_D, 0);
-	pReceiverModeMenu->insertItem("AM (analog)", this,
+	pReceiverModeMenu->insertItem(tr("AM (analog)"), this,
 		SLOT(OnReceiverMode(int)), CTRL+Key_A, 1);
 
 	/* Default is DRM mode */
@@ -199,18 +200,18 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 
 	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
-	pSettingsMenu->insertItem("Sound &In", pSoundInMenu);
-	pSettingsMenu->insertItem("Sound &Out", pSoundOutMenu);
+	pSettingsMenu->insertItem(tr("Sound &In"), pSoundInMenu);
+	pSettingsMenu->insertItem(tr("Sound &Out"), pSoundOutMenu);
 	pSettingsMenu->insertSeparator();
-	pSettingsMenu->insertItem("&Receiver Mode", pReceiverModeMenu);
+	pSettingsMenu->insertItem(tr("&Receiver Mode"), pReceiverModeMenu);
 
 
 	/* Main menu bar -------------------------------------------------------- */
 	pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
-	pMenu->insertItem("&View", EvalWinMenu);
-	pMenu->insertItem("&Settings", pSettingsMenu);
-	pMenu->insertItem("&?", HelpMenu);
+	pMenu->insertItem(tr("&View"), EvalWinMenu);
+	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
+	pMenu->insertItem(tr("&?"), HelpMenu);
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
@@ -242,7 +243,7 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	}
 
 	/* Analog demodulation window */
-	pAnalogDemDlg = new AnalogDemDlg(this, "Analog Demodulation", FALSE,
+	pAnalogDemDlg = new AnalogDemDlg(this, tr("Analog Demodulation"), FALSE,
 		Qt::WStyle_MinMax);
 
 	if (DRMReceiver.GeomAnalogDemDlg.bVisible == TRUE)
@@ -251,14 +252,15 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 		pAnalogDemDlg->hide();
 
 	/* Stations window */
-	pStationsDlg = new StationsDlg(this, "Stations", FALSE, Qt::WStyle_MinMax);
+	pStationsDlg = new StationsDlg(this, tr("Stations"), FALSE,
+		Qt::WStyle_MinMax);
 	if (DRMReceiver.GeomStationsDlg.bVisible == TRUE)
 		pStationsDlg->show();
 	else
 		pStationsDlg->hide();
 
 	/* Evaluation window */
-	pSysEvalDlg = new systemevalDlg(this, "System Evaluation", FALSE,
+	pSysEvalDlg = new systemevalDlg(this, tr("System Evaluation"), FALSE,
 		Qt::WStyle_MinMax);
 
 	if (DRMReceiver.GeomSystemEvalDlg.bVisible == TRUE)
@@ -267,7 +269,7 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 		pSysEvalDlg->hide();
 
 	/* Multimedia window */
-	pMultiMediaDlg = new MultimediaDlg(this, "Multimedia", FALSE,
+	pMultiMediaDlg = new MultimediaDlg(this, tr("Multimedia"), FALSE,
 		Qt::WStyle_MinMax);
 
 	if (DRMReceiver.GeomMultimediaDlg.bVisible == TRUE)
@@ -408,7 +410,7 @@ void FDRMDialog::OnTimer()
 		}
 		else
 		{
-			TextServiceLabel->setText(QString("No Service"));
+			TextServiceLabel->setText(tr("No Service"));
 
 			TextServiceIDRate->setText("");
 			TextServiceAudio->setText("");
@@ -495,7 +497,7 @@ void FDRMDialog::OnTimer()
 					(DRMReceiver.GetParameters()->Service[i].
 					DataParam.iStreamID != STREAM_ID_NOT_USED))
 				{
-					m_StaticService[i] += " + MM";
+					m_StaticService[i] += tr(" + MM");
 
 					/* Bit-rate of connected data stream */
 					m_StaticService[i] += " (" + QString().setNum(DRMReceiver.
@@ -552,12 +554,12 @@ void FDRMDialog::OnTimer()
 		TextTextMessage->setText("");
 
 		if (DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_DRM)
-			TextServiceLabel->setText(QString("Scanning..."));
+			TextServiceLabel->setText(tr("Scanning..."));
 		else
 		{
-			TextServiceLabel->setText(QString("Analog AM Mode"));
-			TextServiceIDRate->setText("Press Ctrl+A for new Acquisition, "
-				"Ctrl+D for DRM");
+			TextServiceLabel->setText(tr("Analog AM Mode"));
+			TextServiceIDRate->setText(tr("Press Ctrl+A for new Acquisition, "
+				"Ctrl+D for DRM"));
 		}
 	}
 
@@ -870,10 +872,10 @@ QString	FDRMDialog::SetServParamStr(int iServiceID)
 				}
 			}
 			else
-				strReturn += "Unknown Service";
+				strReturn += tr("Unknown Service");
 		}
 		else
-			strReturn += "Unknown Service";
+			strReturn += tr("Unknown Service");
 	}
 
 	return strReturn;
@@ -882,8 +884,9 @@ QString	FDRMDialog::SetServParamStr(int iServiceID)
 QString	FDRMDialog::SetBitrIDStr(int iServiceID)
 {
 	/* Bit-rate */
-	QString strServIDBitrate = "Bit Rate:" + QString().setNum(DRMReceiver.
-		GetParameters()->GetBitRateKbps(iServiceID, FALSE), 'f', 2) + " kbps";
+	QString strServIDBitrate = tr("Bit Rate:") + QString().setNum(DRMReceiver.
+		GetParameters()->GetBitRateKbps(iServiceID, FALSE), 'f', 2) +
+		tr(" kbps");
 
 	/* Equal or unequal error protection */
 	if (DRMReceiver.GetParameters()->IsEEP(iServiceID) == TRUE)
@@ -944,28 +947,28 @@ void FDRMDialog::AddWhatsThisHelp()
 */
 	/* Text Message */
 	QWhatsThis::add(TextTextMessage,
-		"<b>Text Message:</b> On the top right the text message label is "
-		"shown. This label only appears when an actual text message is "
-		"transmitted. If the current service does not transmit a text "
-		"message, the label will be invisible.");
+		"<b>" + tr("Text Message:") + "</b> " + tr("On the top right the text "
+		"message label is shown. This label only appears when an actual text "
+		"message is transmitted. If the current service does not transmit a "
+		"text message, the label will be invisible."));
 
 	/* Input Level */
 	const QString strInputLevel =
-		"<b>Input Level:</b> The input level meter shows the relative input "
-		"signal peak level in dB. If the level is too high, the meter turns "
-		"from green to red. The red region should be avoided since overload "
-		"causes distortions which degrade the reception performance. Too low "
-		"levels should be avoided too, since in this case the Signal-to-Noise "
-		"Ratio (SNR) degrades.";
+		"<b>" + tr("Input Level:") + "</b> " + tr("The input level meter shows "
+		"the relative input signal peak level in dB. If the level is too high, "
+		"the meter turns from green to red. The red region should be avoided "
+		"since overload causes distortions which degrade the reception "
+		"performance. Too low levels should be avoided too, since in this case "
+		"the Signal-to-Noise Ratio (SNR) degrades.");
 
 	QWhatsThis::add(TextLabelInputLevel, strInputLevel);
 	QWhatsThis::add(ProgrInputLevel, strInputLevel);
 
 	/* Status LEDs */
 	const QString strStatusLEDS =
-		"<b>Status LEDs:</b> The three status LEDs show the current CRC status "
-		"of the three logical channels of a DRM stream. These LEDs are the same "
-		"as the top LEDs on the Evaluation Dialog.";
+		"<b>" + tr("Status LEDs:") + "</b> " + tr("The three status LEDs show "
+		"the current CRC status of the three logical channels of a DRM stream. "
+		"These LEDs are the same as the top LEDs on the Evaluation Dialog.");
 
 	QWhatsThis::add(TextLabelStatusLEDs, strStatusLEDS);
 	QWhatsThis::add(CLED_MSC, strStatusLEDS);
@@ -974,26 +977,27 @@ void FDRMDialog::AddWhatsThisHelp()
 
 	/* Station Label and Info Display */
 	const QString strStationLabelOther =
-		"<b>Station Label and Info Display:</b> In the big label with the "
-		"black background the station label and some other information about "
-		"the current selected service is displayed. The red text on the top "
-		"shows the audio compression format (e.g. AAC), the sample rate of the "
-		"core coder without SBR (e.g. 24 kHz), if SBR is used and what audio "
-		"mode is used (mono, stereo, P-stereo -> low-complexity or parametric "
-		"stereo). In case SBR is used, the actual sample rate is twice the "
-		"sample rate of the core AAC decoder. The next two types of "
-		"information are the language and the program type of the service "
-		"(e.g. German / News).<br>The big turquoise text in the middle is "
-		"the station label. This label may appear later than the red text "
-		"since this information is transmitted in a different logical channel "
-		"of a DRM stream.<br>The turquoise text on the bottom shows the gross "
-		"bit-rate in kbits per second of the current selected service. The "
-		"abbreviations EEP and UEP stand for Equal Error Protection and "
-		"Unequal Error Protection. UEP is a feature of DRM for a graceful "
-		"degradation of the decoded audio signal in case of a bad reception "
-		"situation. UEP means that some parts of the audio is higher protected "
-		"and some parts are lower protected. On the right, the ID number "
-		"connected with this service is shown.";
+		"<b>" + tr("Station Label and Info Display:") + "</b> " + tr("In the "
+		"big label with the black background the station label and some other "
+		"information about the current selected service is displayed. The red "
+		"text on the top shows the audio compression format (e.g. AAC), the "
+		"sample rate of the core coder without SBR (e.g. 24 kHz), if SBR is "
+		"used and what audio mode is used (mono, stereo, P-stereo -> "
+		"low-complexity or parametric stereo). In case SBR is used, the actual "
+		"sample rate is twice the sample rate of the core AAC decoder. The "
+		"next two types of information are the language and the program type "
+		"of the service (e.g. German / News).") + "<br>" + tr("The big "
+		"turquoise text in the middle is the station label. This label may "
+		"appear later than the red text since this information is transmitted "
+		"in a different logical channel of a DRM stream.") + "<br>" + tr("The "
+		"turquoise text on the bottom shows the gross bit-rate in kbits per "
+		"second of the current selected service. The abbreviations EEP and "
+		"UEP stand for Equal Error Protection and Unequal Error Protection. "
+		"UEP is a feature of DRM for a graceful degradation of the decoded "
+		"audio signal in case of a bad reception situation. UEP means that "
+		"some parts of the audio is higher protected and some parts are lower "
+		"protected. On the right, the ID number connected with this service "
+		"is shown.");
 
 	QWhatsThis::add(TextServiceAudio, strStationLabelOther);
 	QWhatsThis::add(TextServiceLabel, strStationLabelOther);
@@ -1001,15 +1005,15 @@ void FDRMDialog::AddWhatsThisHelp()
 
 	/* Service Selectors */
 	const QString strServiceSel =
-		"<b>Service Selectors:</b> In a DRM stream up to four services can be "
-		"carried. The service type can either be audio, data or audio and "
-		"data. If a data service is selected, the Multimedia Dialog will "
-		"automatically show up. On the right of each service selection button "
-		"a short description of the service is shown. If a service is an audio "
-		"and data service, a \"+ MM\" is added to this text. If a service is "
-		"an audio and data service and this service is selected, by opening "
-		"the Multimedia Dialog, the data can be viewed while the audio is "
-		"still playing.";
+		"<b>" + tr("Service Selectors:") + "</b> " + tr("In a DRM stream up to "
+		"four services can be carried. The service type can either be audio, "
+		"data or audio and data. If a data service is selected, the Multimedia "
+		"Dialog will automatically show up. On the right of each service "
+		"selection button a short description of the service is shown. If a "
+		"service is an audio and data service, a \"+ MM\" is added to this "
+		"text. If a service is an audio and data service and this service "
+		"is selected, by opening the Multimedia Dialog, the data can be viewed "
+		"while the audio is still playing.");
 
 	QWhatsThis::add(PushButtonService1, strServiceSel);
 	QWhatsThis::add(PushButtonService2, strServiceSel);
@@ -1022,5 +1026,6 @@ void FDRMDialog::AddWhatsThisHelp()
 
 	/* Dream Logo */
 	QWhatsThis::add(PixmapLabelDreamLogo,
-		"<b>Dream Logo:</b> This is the official logo of the Dream software.");
+		"<b>" + tr("Dream Logo:") + "</b> " + tr("This is the official logo "
+		"of the Dream software."));
 }
