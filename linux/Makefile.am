@@ -122,7 +122,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	
 nodist_drm_SOURCES=$(BUILT_SOURCES)
 
-drm_CXXFLAGS=$(ARTSINCL) $(QWTINCL) -I../common/GUI-QT -I$(QTDIR)/include -DQT_THREAD_SUPPORT -DQT_DLL -D_REENTRANT -pg
+drm_CXXFLAGS=$(ARTSINCL) $(QWTINCL) -I../common/GUI-QT -I$(QTDIR)/include -DQT_THREAD_SUPPORT -D_REENTRANT -g -DQT_DLL
 
 moc/moc_MultColorLED.cpp: ../common/GUI-QT/MultColorLED.h
 	$(MOC) ../common/GUI-QT/MultColorLED.h -o moc/moc_MultColorLED.cpp
