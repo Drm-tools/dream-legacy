@@ -7,12 +7,17 @@ AM_INIT_AUTOMAKE(drm,1.0.8cvs)
 
 AM_CONFIG_HEADER(config.h)
 
-dnl Checks for programs.
+
+dnl Checks for programs
 AC_PROG_LIBTOOL
+AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_CPP
 AC_PROG_INSTALL
+AC_PROG_MAKE_SET
+AC_CHECK_PROGS(RPMBUILD, rpmbuild, rpm)
 AC_SUBST(LIBTOOL_DEPS)
+
 
 dnl Configuration Arguments
 
@@ -32,11 +37,6 @@ AC_ARG_WITH( hamlib,[  --with-hamlib           use hamlib library],WITHHAMLIB=$w
 
 AC_ARG_WITH( freeimage,[  --with-freeimage        use FreeImage library],WITHFREEIMAGE=$withval, WITHFREEIMAGE=no)
 
-dnl Checks for programs.
-AC_PROG_CC
-AC_PROG_CXX
-AC_PROG_MAKE_SET
-AC_CHECK_PROGS(RPMBUILD, rpmbuild, rpm)
 
 if test "$enable_alsa" = "yes"; then
 	AC_CHECK_HEADER(sys/asoundlib.h, , enable_alsa=no)
