@@ -137,9 +137,11 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	Param.MSCPrLe.iPartB = 1;
 	Param.MSCPrLe.iHierarch = 0;
 
+	/* Length of part B is set automatically
+	   (equal error protection, if "= 0") */
+	Param.Stream[0].iLenPartA = 80;
+
 	/* Init service parameters */
-	Param.Stream[0].iLenPartA = 84;
-	Param.Stream[0].iLenPartB = 1040;
 	Param.Service[0].iServiceID = 163569;
 	Param.Service[0].strLabel = "Dream Test"; /* Has to be UTF-8! */
 	Param.Service[0].iLanguage = 5; /* Language: 5 -> english */
