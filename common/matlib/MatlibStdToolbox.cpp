@@ -289,7 +289,7 @@ CReal _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 			0.5 * errorBound / h) && (left < right));
 		
 		if (integralError)
-			result =  _MAXREAL; /* NaN */
+			result = _MAXREAL; /* NaN */
 
 		return result;
 	}
@@ -452,12 +452,12 @@ CReal Quad(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 	return _integral(f, a, b, errorBound, integralBound, integralError, ru);
 }
 
-CMatlibVector<CComplex> Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
+CMatlibVector<CComplex> Fft(const CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
 {
-	int						i;
-	CFftPlans*				pCurPlan;
-	fftw_complex*			pFftwComplexIn;
-	fftw_complex*			pFftwComplexOut;
+	int				i;
+	CFftPlans*		pCurPlan;
+	fftw_complex*	pFftwComplexIn;
+	fftw_complex*	pFftwComplexOut;
 
 	const int				n(cvI.GetSize());
 
@@ -503,14 +503,14 @@ CMatlibVector<CComplex> Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPl
 	return cvReturn;
 }
 
-CMatlibVector<CComplex> Ifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
+CMatlibVector<CComplex> Ifft(const CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
 {
-	int						i;
-	CFftPlans*				pCurPlan;
-	fftw_complex*			pFftwComplexIn;
-	fftw_complex*			pFftwComplexOut;
+	int				i;
+	CFftPlans*		pCurPlan;
+	fftw_complex*	pFftwComplexIn;
+	fftw_complex*	pFftwComplexOut;
 
-	const int				n(cvI.GetSize());
+	const int		n(cvI.GetSize());
 
 	CMatlibVector<CComplex>	cvReturn(n, VTY_TEMP);
 
@@ -556,17 +556,17 @@ CMatlibVector<CComplex> Ifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftP
 	return cvReturn;
 }
 
-CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlans)
+CMatlibVector<CComplex> rfft(const CMatlibVector<CReal>& fvI, const CFftPlans& FftPlans)
 {
-	int					i;
-	CFftPlans*			pCurPlan;
-	fftw_real*			pFftwRealIn;
-	fftw_real*			pFftwRealOut;
+	int			i;
+	CFftPlans*	pCurPlan;
+	fftw_real*	pFftwRealIn;
+	fftw_real*	pFftwRealOut;
 
-	const int			iSizeI = fvI.GetSize();
-	const int			iLongLength(iSizeI);
-	const int			iShortLength(iLongLength / 2);
-	const int			iUpRoundShortLength((iLongLength + 1) / 2);
+	const int	iSizeI = fvI.GetSize();
+	const int	iLongLength(iSizeI);
+	const int	iShortLength(iLongLength / 2);
+	const int	iUpRoundShortLength((iLongLength + 1) / 2);
 	
 	CMatlibVector<CComplex>	cvReturn(iShortLength
 		/* Include Nyquist frequency in case of even N */ + 1, VTY_TEMP);
@@ -615,18 +615,18 @@ CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlan
 	return cvReturn;
 }
 
-CMatlibVector<CReal> rifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
+CMatlibVector<CReal> rifft(const CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
 {
 /*
 	This function only works with EVEN N!
 */
-	int					i;
-	CFftPlans*			pCurPlan;
-	fftw_real*			pFftwRealIn;
-	fftw_real*			pFftwRealOut;
+	int			i;
+	CFftPlans*	pCurPlan;
+	fftw_real*	pFftwRealIn;
+	fftw_real*	pFftwRealOut;
 
-	const int			iShortLength(cvI.GetSize() - 1); /* Nyquist frequency! */
-	const int			iLongLength(iShortLength * 2);
+	const int	iShortLength(cvI.GetSize() - 1); /* Nyquist frequency! */
+	const int	iLongLength(iShortLength * 2);
 
 	CMatlibVector<CReal> fvReturn(iLongLength, VTY_TEMP);
 

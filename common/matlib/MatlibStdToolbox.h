@@ -238,10 +238,10 @@ CMatlibMatrix<CComplex>		TranspH(const CMatlibMatrix<CComplex>& cmI)
 								{return Conj(Transp(cmI));} /* With conjugate complex */
 
 /* Fourier transformations (also included: real FFT) */
-CMatlibVector<CComplex>		Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans = CFftPlans());
-CMatlibVector<CComplex>		Ifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans = CFftPlans());
-CMatlibVector<CComplex>		rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlans = CFftPlans());
-CMatlibVector<CReal>		rifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans = CFftPlans());
+CMatlibVector<CComplex>		Fft(const CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans = CFftPlans());
+CMatlibVector<CComplex>		Ifft(const CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans = CFftPlans());
+CMatlibVector<CComplex>		rfft(const CMatlibVector<CReal>& fvI, const CFftPlans& FftPlans = CFftPlans());
+CMatlibVector<CReal>		rifft(const CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans = CFftPlans());
 
 
 /* Numerical integration */
