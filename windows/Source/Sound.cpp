@@ -44,7 +44,7 @@ _BOOLEAN CSound::Read(CVector<short>& psData)
 		OpenInDevice();
 
 		/* Reinit sound interface */
-		InitRecording(iBufferSizeIn);
+		InitRecording(iBufferSizeIn, bBlockingRec);
 
 		/* Reset flag */
 		bChangDevIn = FALSE;
@@ -52,7 +52,10 @@ _BOOLEAN CSound::Read(CVector<short>& psData)
 
 	/* Wait until data is available */
 	if (!(m_WaveInHeader[iWhichBufferIn].dwFlags & WHDR_DONE))
-		 WaitForSingleObject(m_WaveInEvent, INFINITE);
+		if (bBlockingRec == TRUE)
+			WaitForSingleObject(m_WaveInEvent, INFINITE);
+		else
+			return FALSE;
 
 	/* Check if buffers got lost */
 	int iNumInBufDone = 0;
@@ -126,7 +129,7 @@ void CSound::PrepareInBuffer(int iBufNum)
 	waveInPrepareHeader(m_WaveIn, &m_WaveInHeader[iBufNum], sizeof(WAVEHDR));
 }
 
-void CSound::InitRecording(int iNewBufferSize)
+void CSound::InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
 	int			i;
 	MMRESULT	result;
@@ -142,6 +145,7 @@ void CSound::InitRecording(int iNewBufferSize)
 
 	/* Set internal parameter */
 	iBufferSizeIn = iNewBufferSize;
+	bBlockingRec = bNewBlocking;
 
 	/* Reset interface so that all buffers are returned from the interface */
 	waveInReset(m_WaveIn);
@@ -229,7 +233,7 @@ _BOOLEAN CSound::Write(CVector<short>& psData)
 		OpenOutDevice();
 
 		/* Reinit sound interface */
-		InitPlayback(iBufferSizeOut);
+		InitPlayback(iBufferSizeOut, bBlockingPlay);
 
 		/* Reset flag */
 		bChangDevOut = FALSE;
@@ -241,7 +245,7 @@ _BOOLEAN CSound::Write(CVector<short>& psData)
 	/* Now check special cases (Buffer is full or empty) */
 	if (iCntPrepBuf == 0)
 	{
-		if (bBlocking == TRUE)
+		if (bBlockingPlay == TRUE)
 		{
 			/* Blocking wave out routine. Needed for transmitter. Always
 			   ensure that the buffer is completely filled to avoid buffer
@@ -349,7 +353,7 @@ void CSound::InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking)
 
 	/* Set internal parameters */
 	iBufferSizeOut = iNewBufferSize;
-	bBlocking = bNewBlocking;
+	bBlockingPlay = bNewBlocking;
 
 	/* Reset interface */
 	waveOutReset(m_WaveOut);
@@ -538,7 +542,10 @@ CSound::CSound()
 	iCurOutDev = 0;
 
 	/* Non-blocking wave out is default */
-	bBlocking = FALSE;
+	bBlockingPlay = FALSE;
+
+	/* Blocking wave in is default */
+	bBlockingRec = TRUE;
 }
 
 CSound::~CSound()

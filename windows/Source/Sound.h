@@ -67,7 +67,7 @@ public:
 	CSound();
 	virtual ~CSound();
 
-	void		InitRecording(int iNewBufferSize);
+	void		InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
 	void		InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
 	_BOOLEAN	Read(CVector<short>& psData);
 	_BOOLEAN	Write(CVector<short>& psData);
@@ -104,6 +104,7 @@ protected:
 	int				iBufferSizeIn;
 	int				iWhichBufferIn;
 	short*			psSoundcardBuffer[NUM_SOUND_BUFFERS_IN];
+	_BOOLEAN		bBlockingRec;
 
 	/* Wave out */
 	int				iBufferSizeOut;
@@ -111,7 +112,7 @@ protected:
 	short*			psPlaybackBuffer[NUM_SOUND_BUFFERS_OUT];
 	WAVEHDR			m_WaveOutHeader[NUM_SOUND_BUFFERS_OUT];
 	HANDLE			m_WaveOutEvent;
-	_BOOLEAN		bBlocking;
+	_BOOLEAN		bBlockingPlay;
 };
 
 
