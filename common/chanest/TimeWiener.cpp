@@ -137,9 +137,9 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 			/* Update the wiener filter, use averaged SNR */
 			if (rSigOverEst < rSigmaMax)
-				rMMSE = UpdateFilterCoef(rAvSNR, rSigOverEst);
+				rMMSE = UpdateFilterCoef(rAvSNR / iAvSNRCnt, rSigOverEst);
 			else
-				rMMSE = UpdateFilterCoef(rAvSNR, rSigmaMax);
+				rMMSE = UpdateFilterCoef(rAvSNR / iAvSNRCnt, rSigmaMax);
 
 			/* If no SNR improvent is achieved by the optimal filter, use
 			   SNR estimation for MMSE */
