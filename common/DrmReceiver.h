@@ -45,7 +45,6 @@
 #include "chanest/ChannelEstimation.h"
 #include "sync/FreqSyncAcq.h"
 #include "sync/TimeSync.h"
-#include "sync/RobModeDetection.h"
 #include "sync/SyncUsingPil.h"
 
 
@@ -67,7 +66,7 @@ public:
 	enum ERecState {RS_TRACKING, RS_ACQUISITION};
 
 	CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquDetecCnt(0),
-		iGoodSignCnt(0) {}
+		iGoodSignCnt(0), bWasFreqAcqu(TRUE) {}
 	virtual ~CDRMReceiver() {}
 
 	/* For GUI */
@@ -116,7 +115,6 @@ protected:
 
 	/* Modules */
 	CReceiveData			ReceiveData;
-	CRobModDet				RobModDet;
 	CInputResample			InputResample;
 	CFreqSyncAcq			FreqSyncAcq;
 	CTimeSync				TimeSync;
@@ -141,7 +139,6 @@ protected:
 	/* Buffers */
 	CCyclicBuffer<_REAL>	RecDataBuf;
 	CSingleBuffer<_REAL>	FreqSyncAcqBuf;
-	CSingleBuffer<_REAL>	RobModBuf;
 	CCyclicBuffer<_REAL>	InpResBuf;
 	CSingleBuffer<_REAL>	TimeSyncBuf;
 	CSingleBuffer<_COMPLEX>	OFDMDemodBuf;
@@ -162,6 +159,8 @@ protected:
 	int						iAcquDetecCnt;
 	int						iGoodSignCnt;
 	ERecState				eReceiverState;
+
+	_BOOLEAN				bWasFreqAcqu;
 };
 
 

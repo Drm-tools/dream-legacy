@@ -58,21 +58,32 @@ void CDRMReceiver::Run()
 			{
 				bEnoughData = TRUE;
 
-				/* Start using pilots in frequency domain, when acquisition is
-				   done (we assume that timing is also ready at this time!) */
 				if (FreqSyncAcq.GetAcquisition() == FALSE)
-					SyncUsingPil.StartTrackPil();
-			}
+				{
+					/* This flag ensures that the following functions are
+					   called only once after frequency acquisition was done */
+					if (bWasFreqAcqu == TRUE)
+					{
+// FIXME maybe do this a little bit later...
+/* Start using pilots in frequency domain, when acquisition is
+   done (we assume that timing is also ready at this time!) */
+SyncUsingPil.StartTrackPil();
 
-			/* Robustness mode detection ------------------------------------ */
-			if (RobModDet.ProcessData(ReceiverParam, FreqSyncAcqBuf,
-				RobModBuf))
-			{
-				bEnoughData = TRUE;
+						/* Frequency acquisition is done, now the filter for 
+						   guard-interval correlation can be designed */
+						TimeSync.SetFilterTaps(ReceiverParam.rFreqOffsetAcqui +
+							(_REAL) ReceiverParam.iIndexDCFreq /
+							ReceiverParam.iFFTSizeN);
+
+						bWasFreqAcqu = FALSE;
+					}
+				}
+				else
+					bWasFreqAcqu = TRUE;
 			}
 
 			/* Resample input DRM-stream ------------------------------------ */
-			if (InputResample.ProcessData(ReceiverParam, RobModBuf,
+			if (InputResample.ProcessData(ReceiverParam, FreqSyncAcqBuf,
 				InpResBuf))
 			{
 				bEnoughData = TRUE;
@@ -247,9 +258,7 @@ void CDRMReceiver::SetInStartMode()
 	StartParameters(ReceiverParam);
 
 	/* Activate acquisition */
-	RobModDet.StartAcquisition();
 	FreqSyncAcq.StartAcquisition();
-
 	TimeSync.StartAcquisition();
 	ChannelEstimation.GetTimeSyncTrack()->StopTracking();
 
@@ -262,6 +271,10 @@ void CDRMReceiver::SetInStartMode()
 	/* Set flag for receiver state */
 	eReceiverState = RS_ACQUISITION;
 
+	/* This flag is to ensure that some functions are called only once
+	   after frequency acquisition values was done */
+	bWasFreqAcqu = TRUE;
+
 	/* Reset counters for acquisition decision and "good signal" */
 	iAcquDetecCnt = 0;
 	iGoodSignCnt = 0;
@@ -273,13 +286,10 @@ void CDRMReceiver::SetInTrackingMode()
 	   routines are only called once when the tracking is actually started */
 	if (eReceiverState == RS_ACQUISITION)
 	{
-		RobModDet.StopAcquisition();
-
-		/* 4.5 kHz IIR filter is no longer needed, disable it */
-		FreqSyncAcq.DisableIIFFilter();
+		TimeSync.StopRMDetAcqu();
 
 		/* Acquisition is done, deactivate it now and start tracking */
-		TimeSync.StopAcquisition();
+		TimeSync.StopTimingAcqu();
 		ChannelEstimation.GetTimeSyncTrack()->StartTracking();
 
 		/* Reset acquisition for frame synchronization */
@@ -357,7 +367,6 @@ void CDRMReceiver::InitsForAllModules()
 {
 	/* Set init flags */
 	ReceiveData.SetInitFlag();
-	RobModDet.SetInitFlag();
 	InputResample.SetInitFlag();
 	FreqSyncAcq.SetInitFlag();
 	TimeSync.SetInitFlag();
@@ -388,7 +397,6 @@ void CDRMReceiver::InitsForWaveMode()
 
 	/* Set init flags */
 	ReceiveData.SetInitFlag();
-	RobModDet.SetInitFlag();
 	InputResample.SetInitFlag();
 	FreqSyncAcq.SetInitFlag();
 	TimeSync.SetInitFlag();

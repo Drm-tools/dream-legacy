@@ -44,7 +44,6 @@
 #include "chanest/ChannelEstimation.h"
 #include "sync/FreqSyncAcq.h"
 #include "sync/TimeSync.h"
-#include "sync/RobModeDetection.h"
 #include "sync/SyncUsingPil.h"
 #include "drmchannel/ChannelSimulation.h"
 
@@ -97,7 +96,6 @@ protected:
 	/* Receiver buffers */
 	CSingleBuffer<_REAL>	RecDataBuf;
 
-	CSingleBuffer<_REAL>	RobModBuf;
 	CCyclicBuffer<_REAL>	InpResBuf;
 	CCyclicBuffer<_REAL>	FreqSyncAcqBuf;
 	CSingleBuffer<_REAL>	TimeSyncBuf;
@@ -130,7 +128,6 @@ protected:
 	CDRMChannel				DRMChannel;
 
 	/* Receiver modules */
-	CRobModDet				RobModDet;
 	CInputResample			InputResample;
 	CFreqSyncAcq			FreqSyncAcq;
 	CTimeSync				TimeSync;

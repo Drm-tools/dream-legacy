@@ -42,7 +42,7 @@ void CDRMSimulation::SimScript()
 	eSimType = ST_CHANEST;
 	eSimType = ST_BITERROR;
 	eSimType = ST_NONE;
-
+	
 
 	/* Set the simulation priority to lowest possible value */
 #ifdef _WIN32
@@ -55,17 +55,26 @@ void CDRMSimulation::SimScript()
 	{
 	case ST_BITERROR:
 		/* Simulation: Bit error rate --------------------------------------- */
-		pFile = fopen("test/BitErrors.dat", "w");
+		/* File naming convention:
+		   Ber: Bit error rate simulation
+		   B3: Robustness mode and spectrum occupancy
+		   Chan5: Which channel was used
+		   1k: Minimum amount of seconds defined in Data.cpp
+		   10k: Value set by "SetNoErrors()"
+		   NoSync: Additional remarks
+
+		   example: BerB3_Chan5_1k_10k_NoSync */
+		pFile = fopen("test/BerA3_Chan1_2k_1k_NoSyncOptimalPara.dat", "w");
 
 		/* The associated code rate is R = 0,6 and the modulation is 64-QAM */
-		Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+		Param.InitCellMapTable(RM_ROBUSTNESS_MODE_A, SO_3);
 		Param.MSCPrLe.iPartB = 1;
 		Param.eMSCCodingScheme = CParameter::CS_3_SM;
 		Param.eSymbolInterlMode = CParameter::SI_LONG;
 
 //Param.eMSCCodingScheme = CParameter::CS_3_HMMIX;//CS_3_HMSYM;
 
-		Param.iDRMChannelNo = 4;
+		Param.iDRMChannelNo = 1;
 
 		/* Init the modules to adapt to the new parameters. We need to do that
 		   because the following routines call modul internal functions which
@@ -85,13 +94,13 @@ void CDRMSimulation::SimScript()
 //ChannelEstimation.SetFreqInt(CChannelEstimation::FDFTFILTER);
 
 
-		/* No of blocks for simulation */
-//		GenSimData.SetSimTime(20);
-		GenSimData.SetNoErrors(10000);
+		/* Length of simulation */
+//		GenSimData.SetSimTime(200);
+		GenSimData.SetNoErrors(1000);
 
 		MSCMLCDecoder.SetNoIterations(1);
 
-		for (rSNRCnt = 20; rSNRCnt <= 30; rSNRCnt += 0.3)
+		for (rSNRCnt = 12; rSNRCnt <= 16.5; rSNRCnt += 0.2)
 		{
 			Param.rSimSNRdB = rSNRCnt;
 

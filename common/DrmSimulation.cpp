@@ -124,11 +124,8 @@ else
 		/**********************************************************************\
 		* Receiver															   *
 		\**********************************************************************/
-		/* Robustness mode detection */
-		RobModDet.ProcessData(Param, RecDataBuf, RobModBuf);
-
 		/* Resample input DRM-stream */
-		InputResample.ProcessData(Param, RobModBuf, InpResBuf);
+		InputResample.ProcessData(Param, RecDataBuf, InpResBuf);
 
 		/* Frequency synchronization acquisition */
 		FreqSyncAcq.ProcessData(Param, InpResBuf, FreqSyncAcqBuf);
@@ -191,7 +188,6 @@ void CDRMSimulation::Init()
 
 	/* Receiver modules */
 	/* The order of modules are important! */
-	RobModDet.Init(Param, RobModBuf);
 	InputResample.Init(Param, InpResBuf);
 	FreqSyncAcq.Init(Param, FreqSyncAcqBuf);
 	TimeSync.Init(Param, TimeSyncBuf);
@@ -233,9 +229,8 @@ void CDRMSimulation::Init()
 	}
 
 	/* We only want to simulate tracking performance ------------------------ */
-	RobModDet.StopAcquisition();
-	FreqSyncAcq.DisableIIFFilter();
-	TimeSync.StopAcquisition();
+	TimeSync.StopTimingAcqu();
+	TimeSync.StopRMDetAcqu(); /* Robustness mode detection */
 	ChannelEstimation.GetTimeSyncTrack()->StartTracking();
 
 	/* Disable FAC evaluation to make sure that no mistakenly correct CRC
