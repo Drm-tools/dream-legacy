@@ -1019,37 +1019,20 @@ void StationsDlg::InitHamlib(const rig_model_t newModID)
 	if (strHamlibConfig.empty())
 	{
 		/* Generate string for port selection */
-#ifdef _WIN32
 		switch (eComNumber)
 		{
 		case CN_COM1:
-			strHamlibConfig = "rig_pathname=COM1";
+			strHamlibConfig = HAMLIB_CONF_COM1;
 			break;
 
 		case CN_COM2:
-			strHamlibConfig = "rig_pathname=COM2";
+			strHamlibConfig = HAMLIB_CONF_COM2;
 			break;
 
 		case CN_COM3:
-			strHamlibConfig = "rig_pathname=COM3";
+			strHamlibConfig = HAMLIB_CONF_COM3;
 			break;
 		}
-#else
-		switch (eComNumber)
-		{
-		case CN_COM1:
-			strHamlibConfig = "rig_pathname=/dev/ttyS0";
-			break;
-
-		case CN_COM2:
-			strHamlibConfig = "rig_pathname=/dev/ttyS1";
-			break;
-
-		case CN_COM3:
-			strHamlibConfig = "rig_pathname=/dev/ttyUSB0";
-			break;
-		}
-#endif
 	}
 
 	/* Config setup */
@@ -1085,13 +1068,13 @@ void StationsDlg::InitHamlib(const rig_model_t newModID)
 	/* Open rig */
 	if (ret = rig_open(pRig) != RIG_OK)
 	{
-		/* fail! */
+		/* Fail! */
 		cerr << "Rig open failed: " << rigerror(ret) << endl;
 		rig_cleanup(pRig);
 		pRig = NULL;
 	}
 
-	/* ignore result, some rigs don't have support for this */
+	/* Ignore result, some rigs don't have support for this */
 	rig_set_powerstat(pRig, RIG_POWER_ON);
 
 	/* Check for special DRM front-end selection */
@@ -1120,7 +1103,7 @@ void StationsDlg::InitHamlib(const rig_model_t newModID)
 			setting_t setting;
 			value_t val;
 
-			if (p[0] == 'm' && (mode = rig_parse_mode(p+2)) != RIG_MODE_NONE)
+			if (p[0] == 'm' && (mode = rig_parse_mode(p + 2)) != RIG_MODE_NONE)
 			{
 				ret = rig_set_mode(pRig, RIG_VFO_CURR, mode, atoi(q));
 				if (ret != RIG_OK)
@@ -1163,6 +1146,9 @@ void StationsDlg::InitHamlib(const rig_model_t newModID)
 		if (p_dup)
 			free(p_dup);
 	}
+
+	/* Set new model ID in receiver object which is needed for init-file */
+	DRMReceiver.SetHamlibModel(newModID);
 }
 #endif
 

@@ -78,6 +78,19 @@ extern CDRMReceiver	DRMReceiver;
 # define FILE_HANDLE					int
 #endif
 
+#ifdef HAVE_LIBHAMLIB
+/* Config string for com-port selection is different in Windows and Linux */
+# ifdef _WIN32
+#  define HAMLIB_CONF_COM1				"rig_pathname=COM1"
+#  define HAMLIB_CONF_COM2				"rig_pathname=COM2"
+#  define HAMLIB_CONF_COM3				"rig_pathname=COM3"
+# else
+#  define HAMLIB_CONF_COM1				"rig_pathname=/dev/ttyS0"
+#  define HAMLIB_CONF_COM2				"rig_pathname=/dev/ttyS1"
+#  define HAMLIB_CONF_COM3				"rig_pathname=/dev/ttyUSB0"
+# endif
+#endif
+
 
 /* Classes ********************************************************************/
 class CStationsItem
