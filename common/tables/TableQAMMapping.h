@@ -85,111 +85,231 @@ const _REAL rTableQAM4[2][2] = {
 
 /* Global functions ***********************************************************/
 /*
+	----------------------------------------------------------------------------
+	Implementation of distance to nearest constellation point (symbol) for all
+	QAM types
+*/
+inline CComplex MinDist4QAM(const CComplex cI)
+{
+	/* Return vector pointing to nearest signal point of this constellation.
+	   2 possible constellation points for real and imaginary axis */
+	return CComplex(
+		/* Real axis minimum distance */
+		Min(Abs(rTableQAM4[0][0] - Real(cI)), Abs(rTableQAM4[1][0] - Real(cI))),
+		/* Imaginary axis minimum distance */
+		Min(Abs(rTableQAM4[0][1] - Imag(cI)), Abs(rTableQAM4[1][1] - Imag(cI))));
+}
+
+inline CComplex MinDist16QAM(const CComplex cI)
+{
+	/* Return vector pointing to nearest signal point of this constellation.
+	   4 possible constellation points for real and imaginary axis */
+	return CComplex(
+		/* Real axis minimum distance */
+		Min(Abs(rTableQAM16[0][0] - Real(cI)), Abs(rTableQAM16[1][0] - Real(cI)),
+			Abs(rTableQAM16[2][0] - Real(cI)), Abs(rTableQAM16[3][0] - Real(cI))),
+		/* Imaginary axis minimum distance */
+		Min(Abs(rTableQAM16[0][1] - Imag(cI)), Abs(rTableQAM16[1][1] - Imag(cI)),
+			Abs(rTableQAM16[2][1] - Imag(cI)), Abs(rTableQAM16[3][1] - Imag(cI))));
+}
+
+inline CComplex MinDist64QAM(const CComplex cI)
+{
+	/* Return vector pointing to nearest signal point of this constellation.
+	   8 possible constellation points for real and imaginary axis */
+	return CComplex(
+		/* Real axis minimum distance */
+		Min(Abs(rTableQAM64SM[0][0] - Real(cI)), Abs(rTableQAM64SM[1][0] - Real(cI)),
+			Abs(rTableQAM64SM[2][0] - Real(cI)), Abs(rTableQAM64SM[3][0] - Real(cI)),
+			Abs(rTableQAM64SM[4][0] - Real(cI)), Abs(rTableQAM64SM[5][0] - Real(cI)),
+			Abs(rTableQAM64SM[6][0] - Real(cI)), Abs(rTableQAM64SM[7][0] - Real(cI))),
+		/* Imaginary axis minimum distance */
+		Min(Abs(rTableQAM64SM[0][1] - Imag(cI)), Abs(rTableQAM64SM[1][1] - Imag(cI)),
+			Abs(rTableQAM64SM[2][1] - Imag(cI)), Abs(rTableQAM64SM[3][1] - Imag(cI)),
+			Abs(rTableQAM64SM[4][1] - Imag(cI)), Abs(rTableQAM64SM[5][1] - Imag(cI)),
+			Abs(rTableQAM64SM[6][1] - Imag(cI)), Abs(rTableQAM64SM[7][1] - Imag(cI))));
+}
+
+
+/*
+	----------------------------------------------------------------------------
 	Implementation of hard decision for all QAM types
 */
 inline CComplex Dec4QAM(const CComplex cI)
 {
-	/* Return vector pointing to nearest signal point of this constellation.
-	   2 possible constellation points for real and imaginary axis */
-	return
-		CComplex(
-			/* Real axis minimum distance */
-			Min(
-				Abs(rTableQAM4[0][0] - Real(cI)),
-				Abs(rTableQAM4[1][0] - Real(cI))
-			),
-			/* Imaginary axis minimum distance */
-			Min(
-				Abs(rTableQAM4[0][1] - Imag(cI)),
-				Abs(rTableQAM4[1][1] - Imag(cI))
-			)
-		);
+	CReal rDecRe, rDecIm;
+
+	/* Real */
+	if (Abs(rTableQAM4[0][0] - Real(cI)) < Abs(rTableQAM4[1][0] - Real(cI)))
+		rDecRe = rTableQAM4[0][0];
+	else
+		rDecRe = rTableQAM4[1][0];
+
+	/* Imaginary */
+	if (Abs(rTableQAM4[0][1] - Imag(cI)) < Abs(rTableQAM4[1][1] - Imag(cI)))
+		rDecIm = rTableQAM4[0][1];
+	else
+		rDecIm = rTableQAM4[1][1];
+
+	return CComplex(rDecRe, rDecIm);
 }
 
 inline CComplex Dec16QAM(const CComplex cI)
 {
-	/* Return vector pointing to nearest signal point of this constellation.
-	   4 possible constellation points for real and imaginary axis */
-	return
-		CComplex(
-			/* Real axis minimum distance */
-			Min(
-				Min(
-					Min(
-						Abs(rTableQAM16[0][0] - Real(cI)),
-						Abs(rTableQAM16[1][0] - Real(cI))
-					),
-					Abs(rTableQAM16[2][0] - Real(cI))
-				),
-				Abs(rTableQAM16[3][0] - Real(cI))
-			),
-			/* Imaginary axis minimum distance */
-			Min(
-				Min(
-					Min(
-						Abs(rTableQAM16[0][1] - Imag(cI)),
-						Abs(rTableQAM16[1][1] - Imag(cI))
-					),
-					Abs(rTableQAM16[2][1] - Imag(cI))
-				),
-				Abs(rTableQAM16[3][1] - Imag(cI))
-			)
-		);
+	CReal rCurDist;
+
+	/* Real */
+	CReal rMinDist = Abs(rTableQAM16[0][0] - Real(cI));
+	CReal rDecRe = rTableQAM16[0][0];
+
+	rCurDist = Abs(rTableQAM16[1][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM16[1][0];
+	}
+
+	rCurDist = Abs(rTableQAM16[2][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM16[2][0];
+	}
+
+	rCurDist = Abs(rTableQAM16[3][0] - Real(cI));
+	if (rCurDist < rMinDist)
+		rDecRe = rTableQAM16[3][0];
+
+	/* Imaginary */
+	rMinDist = Abs(rTableQAM16[0][1] - Imag(cI));
+	CReal rDecIm = rTableQAM16[0][1];
+
+	rCurDist = Abs(rTableQAM16[1][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM16[1][1];
+	}
+
+	rCurDist = Abs(rTableQAM16[2][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM16[2][1];
+	}
+
+	rCurDist = Abs(rTableQAM16[3][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+		rDecIm = rTableQAM16[3][1];
+
+	return CComplex(rDecRe, rDecIm);
 }
 
 inline CComplex Dec64QAM(const CComplex cI)
 {
-	/* Return vector pointing to nearest signal point of this constellation.
-	   8 possible constellation points for real and imaginary axis */
-	return
-		CComplex(
-			/* Real axis minimum distance */
-			Min(
-				Min(
-					Min(
-						Min(
-							Min(
-								Min(
-									Min(
-										Abs(rTableQAM64SM[0][0] - Real(cI)),
-										Abs(rTableQAM64SM[1][0] - Real(cI))
-									),
-									Abs(rTableQAM64SM[2][0] - Real(cI))
-								),
-								Abs(rTableQAM64SM[3][0] - Real(cI))
-							),
-							Abs(rTableQAM64SM[4][0] - Real(cI))
-						),
-						Abs(rTableQAM64SM[5][0] - Real(cI))
-					),
-					Abs(rTableQAM64SM[6][0] - Real(cI))
-				),
-				Abs(rTableQAM64SM[7][0] - Real(cI))
-			),
-			/* Imaginary axis minimum distance */
-			Min(
-				Min(
-					Min(
-						Min(
-							Min(
-								Min(
-									Min(
-										Abs(rTableQAM64SM[0][1] - Imag(cI)),
-										Abs(rTableQAM64SM[1][1] - Imag(cI))
-									),
-									Abs(rTableQAM64SM[2][1] - Imag(cI))
-								),
-								Abs(rTableQAM64SM[3][1] - Imag(cI))
-							),
-							Abs(rTableQAM64SM[4][1] - Imag(cI))
-						),
-						Abs(rTableQAM64SM[5][1] - Imag(cI))
-					),
-					Abs(rTableQAM64SM[6][1] - Imag(cI))
-				),
-				Abs(rTableQAM64SM[7][1] - Imag(cI))
-			)
-		);
+	CReal rCurDist;
+
+	/* Real */
+	CReal rMinDist = Abs(rTableQAM64SM[0][0] - Real(cI));
+	CReal rDecRe = rTableQAM64SM[0][0];
+
+	rCurDist = Abs(rTableQAM64SM[1][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM64SM[1][0];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[2][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM64SM[2][0];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[3][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM64SM[3][0];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[4][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM64SM[4][0];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[5][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM64SM[5][0];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[6][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM64SM[6][0];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[7][0] - Real(cI));
+	if (rCurDist < rMinDist)
+		rDecRe = rTableQAM64SM[7][0];
+
+	/* Imaginary */
+	rMinDist = Abs(rTableQAM64SM[0][1] - Imag(cI));
+	CReal rDecIm = rTableQAM64SM[0][1];
+
+	rCurDist = Abs(rTableQAM64SM[1][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM64SM[1][1];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[2][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM64SM[2][1];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[3][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM64SM[3][1];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[4][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM64SM[4][1];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[5][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM64SM[5][1];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[6][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM64SM[6][1];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[7][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+		rDecIm = rTableQAM64SM[7][1];
+
+	return CComplex(rDecRe, rDecIm);
 }
 
 
