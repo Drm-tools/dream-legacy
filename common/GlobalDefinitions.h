@@ -83,12 +83,12 @@ typedef uint32_t						_UINT32BIT;
 /* Define type-specific information */
 #define SIZEOF__BYTE					8
 #define _MAXSHORT						32767
-#define _MAXREAL						((_REAL) 3.4e38) /* Max value for float types */
+#define _MAXREAL						((_REAL) 3.4e38) /* Max for float */
 
 
 
 /* Definitions for window message system ------------------------------------ */
-#define _MESSAGE_IDENT					unsigned int
+typedef unsigned int					_MESSAGE_IDENT;
 #define MS_FAC_CRC						1	/* MS: Message */
 #define MS_SDC_CRC						2
 #define MS_MSC_CRC						3
@@ -140,7 +140,7 @@ public:
 /* Mutex object to access data savely from different threads */
 /* QT mutex */
 #include <qthread.h>
-#define _MUTEXTYPE						QMutex
+typedef QMutex							_MUTEXTYPE;
 class CMutex
 {
 public:
