@@ -65,120 +65,120 @@ void CSettings::ReadIniFile()
 	/* Receiver ------------------------------------------------------------- */
 	/* Flip spectrum flag */
 	if (GetFlagIniSet(ini, "Receiver", "flipspectrum", bValue) == TRUE)
-		DRMReceiver.GetReceiver()->SetFlippedSpectrum(bValue);
+		pDRMRec->GetReceiver()->SetFlippedSpectrum(bValue);
 
 
 	/* Mute audio flag */
 	if (GetFlagIniSet(ini, "Receiver", "muteaudio", bValue) == TRUE)
-		DRMReceiver.GetWriteData()->MuteAudio(bValue);
+		pDRMRec->GetWriteData()->MuteAudio(bValue);
 
 
 	/* Bandpass filter flag */
 	if (GetFlagIniSet(ini, "Receiver", "filter", bValue) == TRUE)
-		DRMReceiver.GetOFDMDemod()->SetRecFilter(bValue);
+		pDRMRec->GetOFDMDemod()->SetRecFilter(bValue);
 
 
 	/* Sound In device */
 	if (GetNumericIniSet(ini, "Receiver", "snddevin", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
-		DRMReceiver.GetSoundInterface()->SetInDev(iValue);
+		pDRMRec->GetSoundInterface()->SetInDev(iValue);
 
 
 	/* Sound Out device */
 	if (GetNumericIniSet(ini, "Receiver", "snddevout", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
-		DRMReceiver.GetSoundInterface()->SetOutDev(iValue);
+		pDRMRec->GetSoundInterface()->SetOutDev(iValue);
 
 
 	/* Number of iterations for MLC setting */
 	if (GetNumericIniSet(ini, "Receiver", "mlciter", 0, MAX_NUM_MLC_IT, iValue) == TRUE)
-		DRMReceiver.GetMSCMLC()->SetNumIterations(iValue);
+		pDRMRec->GetMSCMLC()->SetNumIterations(iValue);
 
 
 #ifdef USE_QT_GUI
 	/* Logfile -------------------------------------------------------------- */
 	/* Start log file flag */
 	if (GetNumericIniSet(ini, "Logfile", "startlog", 0, MAX_SEC_LOG_FI_START, iValue) == TRUE)
-		DRMReceiver.GetParameters()->ReceptLog.SetDelLogStart(iValue);
+		pDRMRec->GetParameters()->ReceptLog.SetDelLogStart(iValue);
 
 
 	/* Frequency for log file */
 	if (GetNumericIniSet(ini, "Logfile", "frequency", 0, MAX_FREQ_LOG_FILE, iValue) == TRUE)
-		DRMReceiver.GetParameters()->ReceptLog.SetFrequency(iValue);
+		pDRMRec->GetParameters()->ReceptLog.SetFrequency(iValue);
 
 
 	/* Latitude string for log file */
-	DRMReceiver.GetParameters()->ReceptLog.SetLatitude(
+	pDRMRec->GetParameters()->ReceptLog.SetLatitude(
 		GetIniSetting(ini, "Logfile", "latitude"));
 
 
 	/* Longitude string for log file */
-	DRMReceiver.GetParameters()->ReceptLog.SetLongitude(
+	pDRMRec->GetParameters()->ReceptLog.SetLongitude(
 		GetIniSetting(ini, "Logfile", "longitude"));
 
 
 	/* Window geometry ------------------------------------------------------ */
 	/* Main window */
 	if (GetNumericIniSet(ini, "Window geometry", "mainxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomFdrmdialog.iXPos = iValue;
+		pDRMRec->GeomFdrmdialog.iXPos = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "mainypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomFdrmdialog.iYPos = iValue;
+		pDRMRec->GeomFdrmdialog.iYPos = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "mainhsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomFdrmdialog.iHSize = iValue;
+		pDRMRec->GeomFdrmdialog.iHSize = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "mainwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomFdrmdialog.iWSize = iValue;
+		pDRMRec->GeomFdrmdialog.iWSize = iValue;
 
 	/* System evaluation window */
 	if (GetNumericIniSet(ini, "Window geometry", "sysevxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomSystemEvalDlg.iXPos = iValue;
+		pDRMRec->GeomSystemEvalDlg.iXPos = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "sysevypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomSystemEvalDlg.iYPos = iValue;
+		pDRMRec->GeomSystemEvalDlg.iYPos = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "sysevhsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomSystemEvalDlg.iHSize = iValue;
+		pDRMRec->GeomSystemEvalDlg.iHSize = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "sysevwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomSystemEvalDlg.iWSize = iValue;
+		pDRMRec->GeomSystemEvalDlg.iWSize = iValue;
 	if (GetFlagIniSet(ini, "Window geometry", "sysevvis", bValue) == TRUE)
-		DRMReceiver.GeomSystemEvalDlg.bVisible = bValue;
+		pDRMRec->GeomSystemEvalDlg.bVisible = bValue;
 
 	/* Multimedia window */
 	if (GetNumericIniSet(ini, "Window geometry", "multdlgxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomMultimediaDlg.iXPos = iValue;
+		pDRMRec->GeomMultimediaDlg.iXPos = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "multdlgypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomMultimediaDlg.iYPos = iValue;
+		pDRMRec->GeomMultimediaDlg.iYPos = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "multdlghsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomMultimediaDlg.iHSize = iValue;
+		pDRMRec->GeomMultimediaDlg.iHSize = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "multdlgwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomMultimediaDlg.iWSize = iValue;
+		pDRMRec->GeomMultimediaDlg.iWSize = iValue;
 	if (GetFlagIniSet(ini, "Window geometry", "multdlgvis", bValue) == TRUE)
-		DRMReceiver.GeomMultimediaDlg.bVisible = bValue;
+		pDRMRec->GeomMultimediaDlg.bVisible = bValue;
 
 	/* Stations dialog */
 	if (GetNumericIniSet(ini, "Window geometry", "statdlgxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomStationsDlg.iXPos = iValue;
+		pDRMRec->GeomStationsDlg.iXPos = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "statdlgypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomStationsDlg.iYPos = iValue;
+		pDRMRec->GeomStationsDlg.iYPos = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "statdlghsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomStationsDlg.iHSize = iValue;
+		pDRMRec->GeomStationsDlg.iHSize = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "statdlgwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomStationsDlg.iWSize = iValue;
+		pDRMRec->GeomStationsDlg.iWSize = iValue;
 	if (GetFlagIniSet(ini, "Window geometry", "statdlgvis", bValue) == TRUE)
-		DRMReceiver.GeomStationsDlg.bVisible = bValue;
+		pDRMRec->GeomStationsDlg.bVisible = bValue;
 
 	/* Analog demodulation dialog */
 	if (GetNumericIniSet(ini, "Window geometry", "analdemxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomAnalogDemDlg.iXPos = iValue;
+		pDRMRec->GeomAnalogDemDlg.iXPos = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "analdemypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomAnalogDemDlg.iYPos = iValue;
+		pDRMRec->GeomAnalogDemDlg.iYPos = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "analdemhsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomAnalogDemDlg.iHSize = iValue;
+		pDRMRec->GeomAnalogDemDlg.iHSize = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "analdemwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		DRMReceiver.GeomAnalogDemDlg.iWSize = iValue;
+		pDRMRec->GeomAnalogDemDlg.iWSize = iValue;
 	if (GetFlagIniSet(ini, "Window geometry", "analdemvis", bValue) == TRUE)
-		DRMReceiver.GeomAnalogDemDlg.bVisible = bValue;
+		pDRMRec->GeomAnalogDemDlg.bVisible = bValue;
 
 
 	/* GUI customizations --------------------------------------------------- */
 	/* Color scheme main plot */
 	if (GetNumericIniSet(ini, "GUI", "colorscheme", 0, MAX_COLOR_SCHEMES_VAL, iValue) == TRUE)
-		DRMReceiver.iMainPlotColorStyle = iValue;
+		pDRMRec->iMainPlotColorStyle = iValue;
 #endif
 
 
@@ -186,18 +186,18 @@ void CSettings::ReadIniFile()
 	/* Hamlib --------------------------------------------------------------- */
 	/* Hamlib Model ID */
 	if (GetNumericIniSet(ini, "Hamlib",	"hamlib-model", 0, MAX_ID_HAMLIB, iValue) == TRUE)
-		DRMReceiver.SetHamlibModel(iValue);
+		pDRMRec->SetHamlibModel(iValue);
 
 	/* Hamlib configuration string */
-	DRMReceiver.SetHamlibConf(GetIniSetting(ini, "Hamlib", "hamlib-config"));
+	pDRMRec->SetHamlibConf(GetIniSetting(ini, "Hamlib", "hamlib-config"));
 
 	/* Enable s-meter flag */
 	if (GetFlagIniSet(ini, "Hamlib", "ensmeter", bValue) == TRUE)
-		DRMReceiver.SetEnableSMeter(bValue);
+		pDRMRec->SetEnableSMeter(bValue);
 
 	/* Enable DRM modified receiver flag */
 	if (GetFlagIniSet(ini, "Hamlib", "enmodrig", bValue) == TRUE)
-		DRMReceiver.SetEnableModRigSettings(bValue);
+		pDRMRec->SetEnableModRigSettings(bValue);
 #endif
 }
 
@@ -208,95 +208,95 @@ void CSettings::WriteIniFile()
 	/* Receiver ------------------------------------------------------------- */
 	/* Flip spectrum flag */
 	SetFlagIniSet(ini, "Receiver", "flipspectrum",
-		DRMReceiver.GetReceiver()->GetFlippedSpectrum());
+		pDRMRec->GetReceiver()->GetFlippedSpectrum());
 
 
 	/* Mute audio flag */
 	SetFlagIniSet(ini, "Receiver", "muteaudio",
-		DRMReceiver.GetWriteData()->GetMuteAudio());
+		pDRMRec->GetWriteData()->GetMuteAudio());
 
 
 	/* Bandpass filter flag */
 	SetFlagIniSet(ini, "Receiver", "filter",
-		DRMReceiver.GetOFDMDemod()->GetRecFilter());
+		pDRMRec->GetOFDMDemod()->GetRecFilter());
 
 
 	/* Sound In device */
 	SetNumericIniSet(ini, "Receiver", "snddevin",
-		DRMReceiver.GetSoundInterface()->GetInDev());
+		pDRMRec->GetSoundInterface()->GetInDev());
 
 
 	/* Sound Out device */
 	SetNumericIniSet(ini, "Receiver", "snddevout",
-		DRMReceiver.GetSoundInterface()->GetOutDev());
+		pDRMRec->GetSoundInterface()->GetOutDev());
 
 
 	/* Number of iterations for MLC setting */
 	SetNumericIniSet(ini, "Receiver", "mlciter",
-		DRMReceiver.GetMSCMLC()->GetInitNumIterations());
+		pDRMRec->GetMSCMLC()->GetInitNumIterations());
 
 
 #ifdef USE_QT_GUI
 	/* Logfile -------------------------------------------------------------- */
 	/* Start log file delayed */
 	SetNumericIniSet(ini, "Logfile", "startlog",
-		DRMReceiver.GetParameters()->ReceptLog.GetDelLogStart());
+		pDRMRec->GetParameters()->ReceptLog.GetDelLogStart());
 
 
 	/* Frequency for log file */
 	SetNumericIniSet(ini, "Logfile", "frequency",
-		DRMReceiver.GetParameters()->ReceptLog.GetFrequency());
+		pDRMRec->GetParameters()->ReceptLog.GetFrequency());
 
 
 	/* Latitude string for log file */
 	PutIniSetting(ini, "Logfile", "latitude",
-		DRMReceiver.GetParameters()->ReceptLog.GetLatitude().c_str());
+		pDRMRec->GetParameters()->ReceptLog.GetLatitude().c_str());
 
 
 	/* Longitude string for log file */
 	PutIniSetting(ini, "Logfile", "longitude",
-		DRMReceiver.GetParameters()->ReceptLog.GetLongitude().c_str());
+		pDRMRec->GetParameters()->ReceptLog.GetLongitude().c_str());
 
 
 	/* Window geometry ------------------------------------------------------ */
 	/* Main window */
-	SetNumericIniSet(ini, "Window geometry", "mainxpos", DRMReceiver.GeomFdrmdialog.iXPos);
-	SetNumericIniSet(ini, "Window geometry", "mainypos", DRMReceiver.GeomFdrmdialog.iYPos);
-	SetNumericIniSet(ini, "Window geometry", "mainhsize", DRMReceiver.GeomFdrmdialog.iHSize);
-	SetNumericIniSet(ini, "Window geometry", "mainwsize", DRMReceiver.GeomFdrmdialog.iWSize);
+	SetNumericIniSet(ini, "Window geometry", "mainxpos", pDRMRec->GeomFdrmdialog.iXPos);
+	SetNumericIniSet(ini, "Window geometry", "mainypos", pDRMRec->GeomFdrmdialog.iYPos);
+	SetNumericIniSet(ini, "Window geometry", "mainhsize", pDRMRec->GeomFdrmdialog.iHSize);
+	SetNumericIniSet(ini, "Window geometry", "mainwsize", pDRMRec->GeomFdrmdialog.iWSize);
 
 	/* System evaluation window */
-	SetNumericIniSet(ini, "Window geometry", "sysevxpos", DRMReceiver.GeomSystemEvalDlg.iXPos);
-	SetNumericIniSet(ini, "Window geometry", "sysevypos", DRMReceiver.GeomSystemEvalDlg.iYPos);
-	SetNumericIniSet(ini, "Window geometry", "sysevhsize", DRMReceiver.GeomSystemEvalDlg.iHSize);
-	SetNumericIniSet(ini, "Window geometry", "sysevwsize", DRMReceiver.GeomSystemEvalDlg.iWSize);
-	SetFlagIniSet(ini, "Window geometry", "sysevvis", DRMReceiver.GeomSystemEvalDlg.bVisible);
+	SetNumericIniSet(ini, "Window geometry", "sysevxpos", pDRMRec->GeomSystemEvalDlg.iXPos);
+	SetNumericIniSet(ini, "Window geometry", "sysevypos", pDRMRec->GeomSystemEvalDlg.iYPos);
+	SetNumericIniSet(ini, "Window geometry", "sysevhsize", pDRMRec->GeomSystemEvalDlg.iHSize);
+	SetNumericIniSet(ini, "Window geometry", "sysevwsize", pDRMRec->GeomSystemEvalDlg.iWSize);
+	SetFlagIniSet(ini, "Window geometry", "sysevvis", pDRMRec->GeomSystemEvalDlg.bVisible);
 
 	/* Multimedia window */
-	SetNumericIniSet(ini, "Window geometry", "multdlgxpos", DRMReceiver.GeomMultimediaDlg.iXPos);
-	SetNumericIniSet(ini, "Window geometry", "multdlgypos", DRMReceiver.GeomMultimediaDlg.iYPos);
-	SetNumericIniSet(ini, "Window geometry", "multdlghsize", DRMReceiver.GeomMultimediaDlg.iHSize);
-	SetNumericIniSet(ini, "Window geometry", "multdlgwsize", DRMReceiver.GeomMultimediaDlg.iWSize);
-	SetFlagIniSet(ini, "Window geometry", "multdlgvis", DRMReceiver.GeomMultimediaDlg.bVisible);
+	SetNumericIniSet(ini, "Window geometry", "multdlgxpos", pDRMRec->GeomMultimediaDlg.iXPos);
+	SetNumericIniSet(ini, "Window geometry", "multdlgypos", pDRMRec->GeomMultimediaDlg.iYPos);
+	SetNumericIniSet(ini, "Window geometry", "multdlghsize", pDRMRec->GeomMultimediaDlg.iHSize);
+	SetNumericIniSet(ini, "Window geometry", "multdlgwsize", pDRMRec->GeomMultimediaDlg.iWSize);
+	SetFlagIniSet(ini, "Window geometry", "multdlgvis", pDRMRec->GeomMultimediaDlg.bVisible);
 
 	/* Stations dialog */
-	SetNumericIniSet(ini, "Window geometry", "statdlgxpos", DRMReceiver.GeomStationsDlg.iXPos);
-	SetNumericIniSet(ini, "Window geometry", "statdlgypos", DRMReceiver.GeomStationsDlg.iYPos);
-	SetNumericIniSet(ini, "Window geometry", "statdlghsize", DRMReceiver.GeomStationsDlg.iHSize);
-	SetNumericIniSet(ini, "Window geometry", "statdlgwsize", DRMReceiver.GeomStationsDlg.iWSize);
-	SetFlagIniSet(ini, "Window geometry", "statdlgvis", DRMReceiver.GeomStationsDlg.bVisible);
+	SetNumericIniSet(ini, "Window geometry", "statdlgxpos", pDRMRec->GeomStationsDlg.iXPos);
+	SetNumericIniSet(ini, "Window geometry", "statdlgypos", pDRMRec->GeomStationsDlg.iYPos);
+	SetNumericIniSet(ini, "Window geometry", "statdlghsize", pDRMRec->GeomStationsDlg.iHSize);
+	SetNumericIniSet(ini, "Window geometry", "statdlgwsize", pDRMRec->GeomStationsDlg.iWSize);
+	SetFlagIniSet(ini, "Window geometry", "statdlgvis", pDRMRec->GeomStationsDlg.bVisible);
 
 	/* Analog demodulation dialog */
-	SetNumericIniSet(ini, "Window geometry", "analdemxpos", DRMReceiver.GeomAnalogDemDlg.iXPos);
-	SetNumericIniSet(ini, "Window geometry", "analdemypos", DRMReceiver.GeomAnalogDemDlg.iYPos);
-	SetNumericIniSet(ini, "Window geometry", "analdemhsize", DRMReceiver.GeomAnalogDemDlg.iHSize);
-	SetNumericIniSet(ini, "Window geometry", "analdemwsize", DRMReceiver.GeomAnalogDemDlg.iWSize);
-	SetFlagIniSet(ini, "Window geometry", "analdemvis", DRMReceiver.GeomAnalogDemDlg.bVisible);
+	SetNumericIniSet(ini, "Window geometry", "analdemxpos", pDRMRec->GeomAnalogDemDlg.iXPos);
+	SetNumericIniSet(ini, "Window geometry", "analdemypos", pDRMRec->GeomAnalogDemDlg.iYPos);
+	SetNumericIniSet(ini, "Window geometry", "analdemhsize", pDRMRec->GeomAnalogDemDlg.iHSize);
+	SetNumericIniSet(ini, "Window geometry", "analdemwsize", pDRMRec->GeomAnalogDemDlg.iWSize);
+	SetFlagIniSet(ini, "Window geometry", "analdemvis", pDRMRec->GeomAnalogDemDlg.bVisible);
 
 
 	/* GUI customizations --------------------------------------------------- */
 	/* Color scheme main plot */
-	SetNumericIniSet(ini, "GUI", "colorscheme", DRMReceiver.iMainPlotColorStyle);
+	SetNumericIniSet(ini, "GUI", "colorscheme", pDRMRec->iMainPlotColorStyle);
 #endif
 
 
@@ -304,16 +304,16 @@ void CSettings::WriteIniFile()
 	/* Hamlib --------------------------------------------------------------- */
 	/* Hamlib Model ID */
 	SetNumericIniSet(ini, "Hamlib", "hamlib-model",
-		DRMReceiver.GetHamlibModel());
+		pDRMRec->GetHamlibModel());
 
 	/* Hamlib configuration string */
-	PutIniSetting(ini, "Hamlib", "hamlib-config", DRMReceiver.GetHamlibConf().c_str());
+	PutIniSetting(ini, "Hamlib", "hamlib-config", pDRMRec->GetHamlibConf().c_str());
 
 	/* Enable s-meter flag */
-	SetFlagIniSet(ini, "Hamlib", "ensmeter", DRMReceiver.GetEnableSMeter());
+	SetFlagIniSet(ini, "Hamlib", "ensmeter", pDRMRec->GetEnableSMeter());
 
 	/* Enable DRM modified receiver flag */
-	SetFlagIniSet(ini, "Hamlib", "enmodrig", DRMReceiver.GetEnableModRigSettings());
+	SetFlagIniSet(ini, "Hamlib", "enmodrig", pDRMRec->GetEnableModRigSettings());
 #endif
 
 
@@ -410,7 +410,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		/* Flip spectrum flag ----------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-p", "--flipspectrum") == TRUE)
 		{
-			DRMReceiver.GetReceiver()->SetFlippedSpectrum(TRUE);
+			pDRMRec->GetReceiver()->SetFlippedSpectrum(TRUE);
 			continue;
 		}
 
@@ -418,7 +418,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		/* Mute audio flag -------------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-m", "--muteaudio") == TRUE)
 		{
-			DRMReceiver.GetWriteData()->MuteAudio(TRUE);
+			pDRMRec->GetWriteData()->MuteAudio(TRUE);
 			continue;
 		}
 
@@ -426,7 +426,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		/* Bandpass filter flag --------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-F", "--filter") == TRUE)
 		{
-			DRMReceiver.GetOFDMDemod()->SetRecFilter(TRUE);
+			pDRMRec->GetOFDMDemod()->SetRecFilter(TRUE);
 			continue;
 		}
 
@@ -435,7 +435,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetNumericArgument(argc, argv, i, "-I", "--snddevin", 0,
 			MAX_NUM_SND_DEV, rArgument) == TRUE)
 		{
-			DRMReceiver.GetSoundInterface()->SetInDev((int) rArgument);
+			pDRMRec->GetSoundInterface()->SetInDev((int) rArgument);
 			continue;
 		}
 
@@ -444,7 +444,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetNumericArgument(argc, argv, i, "-O", "--snddevout", 0,
 			MAX_NUM_SND_DEV, rArgument) == TRUE)
 		{
-			DRMReceiver.GetSoundInterface()->SetOutDev((int) rArgument);
+			pDRMRec->GetSoundInterface()->SetOutDev((int) rArgument);
 			continue;
 		}
 
@@ -453,7 +453,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "-f", "--fileio",
 			strArgument) == TRUE)
 		{
-			DRMReceiver.SetReadDRMFromFile(strArgument);
+			pDRMRec->SetReadDRMFromFile(strArgument);
 			continue;
 		}
 
@@ -462,7 +462,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "-w", "--writewav",
 			strArgument) == TRUE)
 		{
-			DRMReceiver.GetWriteData()-> StartWriteWaveFile(strArgument);
+			pDRMRec->GetWriteData()-> StartWriteWaveFile(strArgument);
 			continue;
 		}
 
@@ -471,7 +471,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetNumericArgument(argc, argv, i, "-i", "--mlciter", 0,
 			MAX_NUM_MLC_IT, rArgument) == TRUE)
 		{
-			DRMReceiver.GetMSCMLC()->SetNumIterations((int) rArgument);
+			pDRMRec->GetMSCMLC()->SetNumIterations((int) rArgument);
 			continue;
 		}
 
@@ -480,7 +480,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetNumericArgument(argc, argv, i, "-s", "--sampleoff",
 			MIN_SAM_OFFS_INI, MAX_SAM_OFFS_INI,	rArgument) == TRUE)
 		{
-			DRMReceiver.SetInitResOff(rArgument);
+			pDRMRec->SetInitResOff(rArgument);
 			continue;
 		}
 
@@ -510,17 +510,17 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			switch ((int) rArgument)
 			{
 			case 0:
-				DRMReceiver.GetReceiver()->
+				pDRMRec->GetReceiver()->
 					SetInChanSel(CReceiveData::CS_LEFT_CHAN);
 				break;
 
 			case 1:
-				DRMReceiver.GetReceiver()->
+				pDRMRec->GetReceiver()->
 					SetInChanSel(CReceiveData::CS_RIGHT_CHAN);
 				break;
 
 			case 2:
-				DRMReceiver.GetReceiver()->
+				pDRMRec->GetReceiver()->
 					SetInChanSel(CReceiveData::CS_MIX_CHAN);
 				break;
 			}
@@ -535,27 +535,27 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			switch ((int) rArgument)
 			{
 			case 0:
-				DRMReceiver.GetWriteData()->
+				pDRMRec->GetWriteData()->
 					SetOutChanSel(CWriteData::CS_BOTH_BOTH);
 				break;
 
 			case 1:
-				DRMReceiver.GetWriteData()->
+				pDRMRec->GetWriteData()->
 					SetOutChanSel(CWriteData::CS_LEFT_LEFT);
 				break;
 
 			case 2:
-				DRMReceiver.GetWriteData()->
+				pDRMRec->GetWriteData()->
 					SetOutChanSel(CWriteData::CS_RIGHT_RIGHT);
 				break;
 
 			case 3:
-				DRMReceiver.GetWriteData()->
+				pDRMRec->GetWriteData()->
 					SetOutChanSel(CWriteData::CS_LEFT_MIX);
 				break;
 
 			case 4:
-				DRMReceiver.GetWriteData()->
+				pDRMRec->GetWriteData()->
 					SetOutChanSel(CWriteData::CS_RIGHT_MIX);
 				break;
 			}
@@ -568,7 +568,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetNumericArgument(argc, argv, i, "-l", "--startlog", 1,
 			MAX_SEC_LOG_FI_START, rArgument) == TRUE)
 		{
-			DRMReceiver.GetParameters()->ReceptLog.
+			pDRMRec->GetParameters()->ReceptLog.
 				SetDelLogStart((int) rArgument);
 			continue;
 		}
@@ -578,7 +578,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetNumericArgument(argc, argv, i, "-r", "--frequency", 0,
 			MAX_FREQ_LOG_FILE, rArgument) == TRUE)
 		{
-			DRMReceiver.GetParameters()->ReceptLog.
+			pDRMRec->GetParameters()->ReceptLog.
 				SetFrequency((int) rArgument);
 			continue;
 		}
@@ -588,7 +588,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "-a", "--latitude",
 			strArgument) == TRUE)
 		{
-			DRMReceiver.GetParameters()->ReceptLog.SetLatitude(strArgument);
+			pDRMRec->GetParameters()->ReceptLog.SetLatitude(strArgument);
 			continue;
 		}
 
@@ -597,7 +597,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "-o", "--longitude",
 			strArgument) == TRUE)
 		{
-			DRMReceiver.GetParameters()->ReceptLog.SetLongitude(strArgument);
+			pDRMRec->GetParameters()->ReceptLog.SetLongitude(strArgument);
 			continue;
 		}
 
@@ -606,15 +606,25 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetNumericArgument(argc, argv, i, "-y", "--colorstyle", 0,
 			MAX_COLOR_SCHEMES_VAL, rArgument) == TRUE)
 		{
-			DRMReceiver.iMainPlotColorStyle = (int) rArgument;
+			pDRMRec->iMainPlotColorStyle = (int) rArgument;
 			continue;
 		}
+
 
 		/* MDI out address -------------------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "--mdioutadr", "--mdioutadr",
 			strArgument) == TRUE)
 		{
-			DRMReceiver.GetMDI()->SetNetwOutAddr(strArgument);
+			pDRMRec->GetMDI()->SetNetwOutAddr(strArgument);
+			continue;
+		}
+
+
+		/* MDI in port number ----------------------------------------------- */
+		if (GetNumericArgument(argc, argv, i, "--mdiinport", "--mdiinport", 0,
+			MAX_MDI_PORT_IN_NUM, rArgument) == TRUE)
+		{
+			pDRMRec->GetMDI()->SetNetwInPort((int) rArgument);
 			continue;
 		}
 #endif
@@ -624,7 +634,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "-C", "--hamlib-config",
 			strArgument) == TRUE)
 		{
-			DRMReceiver.SetHamlibConf(strArgument);
+			pDRMRec->SetHamlibConf(strArgument);
 			continue;
 		}
 
@@ -633,7 +643,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetNumericArgument(argc, argv, i, "-M", "--hamlib-model", 0,
 			MAX_ID_HAMLIB, rArgument) == TRUE)
 		{
-			DRMReceiver.SetHamlibModel((int) rArgument);
+			pDRMRec->SetHamlibModel((int) rArgument);
 			continue;
 		}
 
@@ -641,7 +651,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		/* Enable s-meter flag ---------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-T", "--ensmeter") == TRUE)
 		{
-			DRMReceiver.SetEnableSMeter(TRUE);
+			pDRMRec->SetEnableSMeter(TRUE);
 			continue;
 		}
 #endif
@@ -684,7 +694,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		}
 
 		/* Set new parameters */
-		DRMReceiver.GetFreqSyncAcq()->SetSearchWindow(rFreqAcSeWinCenter,
+		pDRMRec->GetFreqSyncAcq()->SetSearchWindow(rFreqAcSeWinCenter,
 			rFreqAcSeWinSize);
 	}
 
@@ -736,6 +746,7 @@ string CSettings::UsageArguments(char** argv)
 		"                              2: black-grey\n"
 		"  --mdioutadr <s>             MDI out network address\n"
 		"                              format [IP]:[port]\n"
+		"  --mdiinport <n>             set MDI in port number\n"
 #endif
 
 		"  -I <n>, --snddevin <n>      set sound in device\n"

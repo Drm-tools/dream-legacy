@@ -39,8 +39,6 @@
 #include <string>
 #include <fstream>
 
-extern CDRMReceiver	DRMReceiver;
-
 
 /* Definitions ****************************************************************/
 #define DREAM_INIT_FILE_NAME		"Dream.ini"
@@ -75,6 +73,8 @@ extern CDRMReceiver	DRMReceiver;
 
 /* Maximum value for color schemes for main plot */
 # define MAX_COLOR_SCHEMES_VAL		(NUM_AVL_COLOR_SCHEMES_PLOT - 1)
+
+# define MAX_MDI_PORT_IN_NUM		32768
 #endif
 
 #ifdef HAVE_LIBHAMLIB
@@ -91,6 +91,8 @@ extern CDRMReceiver	DRMReceiver;
 class CSettings
 {
 public:
+	CSettings(CDRMReceiver* pNDRMR) : pDRMRec(pNDRMR) {}
+
 	_BOOLEAN Load(int argc, char** argv);
 	void Save();
 
@@ -136,6 +138,9 @@ protected:
 					   _BOOLEAN bValue);
 	_BOOLEAN GetFlagIniSet(INIFile& theINI, string strSection, string strKey,
 						   _BOOLEAN& bValue);
+
+	/* Pointer to the DRM receiver object needed for the various settings */
+	CDRMReceiver* pDRMRec;
 };
 
 #endif // !defined(SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_)
