@@ -34,6 +34,7 @@
 #include "FAC/FAC.h"
 #include "SDC/SDC.h"
 #include "interleaver/SymbolInterleaver.h"
+#include "chanest/ChanEstTime.h"
 #include <time.h>
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
@@ -187,7 +188,8 @@ protected:
 
 /* Simulation for channel estimation ---------------------------------------- */
 class CIdealChanEst :
-	public CSimulationModul<CEquSig, CEquSig, CChanSimDataDemod>
+	public CSimulationModul<CEquSig, CEquSig, CChanSimDataDemod>, 
+	public CPilotModiClass
 {
 public:
 	CIdealChanEst() {}
@@ -210,7 +212,8 @@ protected:
 	int					iStartCnt;
 
 	int					iNumTapsChan;
-	CComplexMatrix		matRot;
+	CComplexMatrix		matcRot;
+	CComplexMatrix		matH;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

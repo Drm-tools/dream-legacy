@@ -252,7 +252,8 @@ void CGenSimData::SetSimTime(int iNewTi, string strNewFileName)
 	iCounter = 0;
 
 	/* Set file name */
-	strFileName = strNewFileName + "__SIMTIME" + ".dat";
+	strFileName =
+		string("test/") + strNewFileName + "__SIMTIME" + string(".dat");
 }
 
 void CGenSimData::SetNoErrors(int iNewNE, string strNewFileName)
@@ -266,7 +267,8 @@ void CGenSimData::SetNoErrors(int iNewNE, string strNewFileName)
 	iCounter = 0;
 
 	/* Set file name */
-	strFileName = strNewFileName + "__SIMTIME" + ".dat";
+	strFileName =
+		string("test/") + strNewFileName + "__SIMTIME" + string(".dat");
 }
 
 void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
@@ -478,34 +480,13 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Set symbol number for output vector */
 	(*pvecOutputData).GetExData().iSymbolNo = 
 		(*pvecInputData).GetExData().iSymbolNo;
-
-
-
-#if 0
-// TEST
-// Calculation of "a" matrix
-CComplexMatrix a;
-
-
-a.Init(iNoCarrier, iNoCarrier, (_REAL) 0.0);
-
-for (int m = 0; m < iNoCarrier; m++)
-	for (int k = 0; k < iNoCarrier; k++)
-		for (j = 0; j < iNumTapsChan; j++)
-			a[m][k] += (*pvecInputData2)[Abs(k - m)].veccTap[j] * matRot[k][j];
-
-
-static FILE* pFile = fopen("test/v.dat", "w");
-for (j = 0; j < iNoCarrier; j++)
-	fprintf(pFile, "%e", a[j][0]);
-fprintf(pFile, "\n");
-fflush(pFile);
-#endif
-
 }
 
 void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 {
+	/* Init base class for modifying the pilots (rotation) */
+	CPilotModiClass::InitRot(ReceiverParam);
+
 	/* Get local parameters */
 	iNoCarrier = ReceiverParam.iNoCarrier;
 	iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
@@ -513,21 +494,13 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 	iNumTapsChan = ReceiverParam.iNumTaps;
 
 	/* Init and calculate rotation matrix */
-	matRot.Init(iNoCarrier, iNumTapsChan);
+	matcRot.Init(iNoCarrier, iNumTapsChan);
 	for (int i = 0; i < iNoCarrier; i++)
-	{
 		for (int j = 0; j < iNumTapsChan; j++)
-		{
+			matcRot[i][j] =
+				Rotate((CReal) 1.0, i, ReceiverParam.iPathDelay[j] +
+				ReceiverParam.iOffUsfExtr);
 
-// FIXME use "_COMPLEX CPilotModiClass::Rotate" in ChanEstTime.cpp!!!!
-
-			/* First calculate the argument */
-			CReal rArg = (CReal) -2.0 * crPi * ReceiverParam.iPathDelay[j] * 
-				(ReceiverParam.iShiftedKmin + i) / iNoCarrier;
-
-			matRot[i][j] = CComplex(cos(rArg), sin(rArg)) / (CReal) iNoCarrier;
-		}
-	}
 
 	/* Parameters for debaring the DC carriers from evaluation. First check if
 	   we have only useful part on the right side of the DC carrier */
