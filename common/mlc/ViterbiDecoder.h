@@ -74,6 +74,7 @@ protected:
 
 	int						iTailbitParamL0;
 	int						iTailbitParamL1;
+	int						iTotalDecDepth;
 	_UINT64BIT				lOutBitMask;
 	CParameter::EChanType	eChannelType;
 };

@@ -50,6 +50,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	int				iCur;
 	int				iOld;
 	int				iNoOutBits;
+	CTrellisState*	pCurTrelState;
 
 	/* No of bits out is the sum of all protection levels */
 	iNoOutBits = iNoOutBitsPartA + iNoOutBitsPartB;
@@ -133,7 +134,8 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 		/* Try all possible output combinations of the encoder */
 		for (k = 0; k < MC_NO_OUTPUT_COMBINATIONS; k++)
 		{
-			/* For each metric we need same dis. count and puncturing pattern */
+			/* For each metric we need the same distance count and puncturing
+			   pattern */
 			iDistCnt = iDistCntGlob;
 			iPuncPatShiftRegShifted = iPuncPatShiftReg;
 
@@ -177,59 +179,63 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 
 		for (j = 0; j < MC_NO_STATES; j++)
 		{
+			/* Get pointer to current trellis state */
+			pCurTrelState = &TrelState[j];
+
 			/* Calculate metrics from the two previous states, use the old
 			   metric from the previous states plus the "transition-metric" - */
 			/* "0" */
 			rAccMetricPrev0 =
-				TrelState[TrelState[j].iPrev0Index].rMetric[iOld] +
-				rMetricSet[TrelState[j].iMetricPrev0];
+				TrelState[pCurTrelState->iPrev0Index].rMetric[iOld] +
+				rMetricSet[pCurTrelState->iMetricPrev0];
 			/* "1" */
 			rAccMetricPrev1 =
-				TrelState[TrelState[j].iPrev1Index].rMetric[iOld] +
-				rMetricSet[TrelState[j].iMetricPrev1];
+				TrelState[pCurTrelState->iPrev1Index].rMetric[iOld] +
+				rMetricSet[pCurTrelState->iMetricPrev1];
+
 
 			/* Take path with smallest metric ------------------------------- */
 			if (rAccMetricPrev0 < rAccMetricPrev1)
 			{
 				/* Save minimum metric for this state */
-				TrelState[j].rMetric[iCur] = rAccMetricPrev0;
+				pCurTrelState->rMetric[iCur] = rAccMetricPrev0;
 
 				/* Save decoded bits from surviving path */
-				TrelState[j].lDecodedBits[iCur] =
-					TrelState[TrelState[j].iPrev0Index].lDecodedBits[iOld];
+				pCurTrelState->lDecodedBits[iCur] =
+					TrelState[pCurTrelState->iPrev0Index].lDecodedBits[iOld];
 
 				/* Shift lDecodedBits vector since we want to add a new bit,
 				   in this case a "0", but we dont need to add this, it is
 				   already there */
-				TrelState[j].lDecodedBits[iCur] <<= 1;
+				pCurTrelState->lDecodedBits[iCur] <<= 1;
 			}
 			else
 			{
 				/* Save minimum metric for this state */
-				TrelState[j].rMetric[iCur] = rAccMetricPrev1;
+				pCurTrelState->rMetric[iCur] = rAccMetricPrev1;
 
 				/* Save decoded bits from surviving path */
-				TrelState[j].lDecodedBits[iCur] =
-					TrelState[TrelState[j].iPrev1Index].lDecodedBits[iOld];
+				pCurTrelState->lDecodedBits[iCur] =
+					TrelState[pCurTrelState->iPrev1Index].lDecodedBits[iOld];
 
 				/* Shift lDecodedBits vector since we want to add a new bit */
-				TrelState[j].lDecodedBits[iCur] <<= 1;
+				pCurTrelState->lDecodedBits[iCur] <<= 1;
 
 				/* Write resulting "1" in lDecodedBits-vector */
-				TrelState[j].lDecodedBits[iCur] |= 1;
+				pCurTrelState->lDecodedBits[iCur] |= 1;
 			}
 
-			/* Get minimum metric and index */
-			if (TrelState[j].rMetric[iCur] < rMinMetric)
+
+			/* Get minimum metric and index --------------------------------- */
+			if (pCurTrelState->rMetric[iCur] < rMinMetric)
 			{
-				rMinMetric = TrelState[j].rMetric[iCur];
+				rMinMetric = pCurTrelState->rMetric[iCur];
 				iMinMetricIndex = j;
 			}
 		}
 
 		/* Save decoded bit, but not before tailbits are used. Mask bit at
 		   the defined position in "lDecodedBits" by "MC_DECODING_DEPTH" */
-		const int iTotalDecDepth = MC_CONSTRAINT_LENGTH - 1 + MC_DECODING_DEPTH;
 		if (i >= iTotalDecDepth)
 		{
 			/* Mask bit */
@@ -250,7 +256,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 
 	/* Save last "MC_DECODING_DEPTH" bits. We use trellis state "0", because we
 	   KNOW that this is our last state (shift registers in the coder are filled
-	   with zeros at the end */
+	   with zeros at the end) */
 	for (i = 0; i < MC_DECODING_DEPTH; i++)
 	{
 		if ((TrelState[0].lDecodedBits[iOld] &
@@ -298,6 +304,10 @@ void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme, int iN1,
 
 CViterbiDecoder::CViterbiDecoder()
 {
+	/* Total decoder depth */
+	iTotalDecDepth = MC_CONSTRAINT_LENGTH - 1 + MC_DECODING_DEPTH;
+
+
 	/* Create trellis *********************************************************/
 	for (int i = 0; i < MC_NO_STATES; i++)
 	{
@@ -331,7 +341,7 @@ CViterbiDecoder::CViterbiDecoder()
 				i
 				/* Use generator-polynomial j */
 				, j) 
-				/* Shift generated bit to the right position */
+				/* Shift generated bit to the correct position */
 				<< j;
 
 			/* "1" */
@@ -344,7 +354,7 @@ CViterbiDecoder::CViterbiDecoder()
 				i | (1 << (MC_CONSTRAINT_LENGTH - 1))
 				/* Use generator-polynomial j */
 				, j)
-				/* Shift generated bit to the right position */
+				/* Shift generated bit to the correct position */
 				<< j;
 		}
 	}
