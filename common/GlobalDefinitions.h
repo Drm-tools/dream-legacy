@@ -70,6 +70,12 @@ using namespace std; /* Because of the library: "complex" */
 
 # define HAVE_LIBFREEIMAGE
 //# undef HAVE_LIBFREEIMAGE
+
+# define HAVE_LIBHAMLIB
+# undef HAVE_LIBHAMLIB
+
+/* Define if you have Hamlib >= 1.2.1 */
+# define HAVE_RIG_PARSE_MODE			1
 #endif
 
 
@@ -87,6 +93,10 @@ using namespace std; /* Because of the library: "complex" */
    more vulnerable to bad channel situations */
 #undef USE_SAMOFFS_TRACK_FRE_PIL
 
+/* Using max-log MAP decoder. A lot more memory and CPU is needed for this
+   method. This is just for showing the potential of an improved decoding
+   method and should not be activated for the "regular" version of Dream */
+#undef USE_MAX_LOG_MAP
 
 
 /* Define the application specific data-types ------------------------------- */
@@ -100,7 +110,6 @@ typedef bool							_BOOLEAN;
 typedef unsigned char/*bool*/			_BINARY;
 
 #if defined(_WIN32)
-typedef unsigned __int64 uint64_t;
 typedef unsigned __int32 uint32_t;
 typedef unsigned __int16 uint16_t;
 #else
@@ -110,20 +119,29 @@ typedef unsigned __int16 uint16_t;
 # if HAVE_STDINT_H
 #  include <stdint.h>
 # else
-typedef unsigned long long uint64_t;
 typedef unsigned long uint32_t;
 typedef unsigned int uint16_t;
 # endif
 #endif
 #endif
-typedef uint64_t						_UINT64BIT;
-typedef uint32_t						_UINT32BIT;
-typedef uint16_t						_UINT16BIT;
 
 /* Define type-specific information */
 #define SIZEOF__BYTE					8
 #define _MAXSHORT						32767
 #define _MAXREAL						((_REAL) 3.4e38) /* Max for float */
+
+
+/* MAP ---------------------------------------------------------------------- */
+#ifdef USE_MAX_LOG_MAP
+typedef _REAL							_DECISION;
+# define ML_SOFT_INF_MAX_VALUE			((_DECISION) 1e10)
+inline _BINARY ExtractBit(_DECISION dD) {return dD > 0 ? 1 : 0;}
+inline _DECISION BitToSoft(_BINARY biB) {return biB == 0 ? -1.0 : 1.0;}
+#else
+typedef _BINARY							_DECISION;
+#define ExtractBit(a)					(a)
+#define BitToSoft(a)					(a)
+#endif
 
 
 /* Definitions for window message system ------------------------------------ */

@@ -42,12 +42,12 @@ public:
 	CQAMMapping() {}
 	virtual ~CQAMMapping() {}
 
-	void Map(CVector<_BINARY>& vecbiInputData1, 
-			 CVector<_BINARY>& vecbiInputData2, 
-			 CVector<_BINARY>& vecbiInputData3, 
-			 CVector<_BINARY>& vecbiInputData4, 
-			 CVector<_BINARY>& vecbiInputData5, 
-			 CVector<_BINARY>& vecbiInputData6,
+	void Map(CVector<_DECISION>& vecInputData1, 
+			 CVector<_DECISION>& vecInputData2, 
+			 CVector<_DECISION>& vecInputData3, 
+			 CVector<_DECISION>& vecInputData4, 
+			 CVector<_DECISION>& vecInputData5, 
+			 CVector<_DECISION>& vecInputData6,
 			 CVector<_COMPLEX>* pcOutputData);
 	void Init(int iNewOutputBlockSize, CParameter::ECodScheme eNewCodingScheme);
 

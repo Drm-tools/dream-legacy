@@ -31,7 +31,7 @@
 
 /* Implementation *************************************************************/
 _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
-							  CVector<_BINARY>& vecbiOutputBits)
+							  CVector<_DECISION>& vecOutputBits)
 {
 	int				i;
 	int				iDistCnt;
@@ -441,14 +441,10 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 
 #undef BUTTERFLY
 
-		/* Extract hard decision for the current bit */
+
+		/* Calculate final soft out value */
 		if (i < iNumOutBits)
-		{
-			if (rL0 > rL1)
-				vecbiOutputBits[i] = 1;
-			else
-				vecbiOutputBits[i] = 0;
-		}
+			vecOutputBits[i] = rL0 - rL1;
 
 		/* Swap trellis data pointers (old -> new, new -> old) */
 		_VITMETRTYPE* pTMPTrelMetric = pCurTrelMetric;
@@ -476,7 +472,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 		iCurDecState = (iCurDecState >> 1) | (decCurBit << 5);
 
 		/* Set decisions "backwards" in actual result vector */
-		vecbiOutputBits[iNumOutBits - i - 1] = (_BINARY) decCurBit;
+		vecOutputBits[iNumOutBits - i - 1] = (_BINARY) decCurBit;
 	}
 #endif
 

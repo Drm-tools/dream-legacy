@@ -36,11 +36,8 @@
 
 
 /* Definitions ****************************************************************/
-/* Using max-log MAP decoder */
-#undef USE_MAX_LOG_MAP
-
-
-/* SIMD implementation is always fixed-point */
+/* SIMD implementation is always fixed-point (is disabled if MAP decoder is
+   activated!) */
 #define USE_SIMD
 #undef USE_SIMD
 
@@ -49,9 +46,12 @@
 #undef USE_MMX
 
 
+/* No MAP implementation for SIMD! */
+#ifdef USE_MAX_LOG_MAP
+# undef USE_SIMD
+#endif
+
 #ifdef USE_SIMD
-/* No MAP implementation for SIMD */
-# undef USE_MAX_LOG_MAP
 # ifndef USE_MMX
 #  define USE_SSE2
 # endif
@@ -97,12 +97,11 @@ public:
 	virtual ~CViterbiDecoder() {}
 
 	_REAL	Decode(CVector<CDistance>& vecNewDistance,
-				   CVector<_BINARY>& vecbiOutputBits);
+				   CVector<_DECISION>& vecOutputBits);
 	void	Init(CParameter::ECodScheme eNewCodingScheme,
 				 CParameter::EChanType eNewChannelType, int iN1, int iN2,
 			     int iNewNumOutBitsPartA, int iNewNumOutBitsPartB,
 			     int iPunctPatPartA, int iPunctPatPartB, int iLevel);
-
 
 protected:
 	/* Two trellis data vectors are needed for current and old state */

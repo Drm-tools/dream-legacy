@@ -86,8 +86,8 @@ protected:
 	CEngergyDispersal	EnergyDisp;
 
 	/* Internal buffers */
-	CVector<_BINARY>	vecbiEncInBuffer[MC_MAX_NUM_LEVELS];
-	CVector<_BINARY>	vecbiEncOutBuffer[MC_MAX_NUM_LEVELS];
+	CVector<_DECISION>	vecEncInBuffer[MC_MAX_NUM_LEVELS];
+	CVector<_DECISION>	vecEncOutBuffer[MC_MAX_NUM_LEVELS];
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& Parameter);
@@ -118,8 +118,8 @@ protected:
 	/* Internal buffers */
 	CVector<CDistance>	vecMetric;
 
-	CVector<_BINARY>	vecbiDecOutBits[MC_MAX_NUM_LEVELS];
-	CVector<_BINARY>	vecbiSubsetDef[MC_MAX_NUM_LEVELS];
+	CVector<_DECISION>	vecDecOutBits[MC_MAX_NUM_LEVELS];
+	CVector<_DECISION>	vecSubsetDef[MC_MAX_NUM_LEVELS];
 	int					iNumOutBits;
 
 	/* Accumulated metric */

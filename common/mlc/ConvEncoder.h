@@ -43,8 +43,9 @@ public:
 	CConvEncoder() {}
 	virtual ~CConvEncoder() {}
 
-	int		Encode(CVector<_BINARY>& vecInputData, 
-				   CVector<_BINARY>& vecOutputData);
+	int		Encode(CVector<_DECISION>& vecInputData, 
+				   CVector<_DECISION>& vecOutputData);
+
 	void	Init(CParameter::ECodScheme eNewCodingScheme,
 				 CParameter::EChanType eNewChannelType,
 				 int iN1, int iN2, int iNewNumInBitsPartA,
@@ -58,6 +59,13 @@ protected:
 	CVector<int>			veciTablePuncPat;
 
 	CParameter::EChanType	eChannelType;
+
+#ifdef USE_MAX_LOG_MAP
+	CShiftRegister<_DECISION>	vecStateMem;
+	_DECISION SoftConvolution(const _BYTE byNewStateShiftReg,
+							  CShiftRegister<_DECISION>& vecStateMem,
+							  const int iGenPolyn);
+#endif
 };
 
 

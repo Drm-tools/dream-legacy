@@ -38,7 +38,15 @@
 /* Classes ********************************************************************/
 inline _REAL Metric(const _REAL rDist, const _REAL rChan)
 {
+#ifdef USE_MAX_LOG_MAP
+	return rDist * rDist * rChan;
+#else
+	/* TODO: speed optimzation. For real and imaginary part, the result for
+	   "sqrt(rChan)" for the same rChan is calculated twice. Store result or
+	   make separate function which calculates real and imaginary at same
+	   time. This problem does not occur with MAP metric */
 	return rDist * sqrt(rChan);
+#endif
 }
 
 class CMLCMetric
@@ -48,19 +56,132 @@ public:
 	virtual ~CMLCMetric() {}
 
 	/* Return the number of used symbols for calculating one branch-metric */
-	void	CalculateMetric(CVector<CEquSig>* pcInSymb, 
-						    CVector<CDistance>& vecMetric, 
-							CVector<_BINARY>& vecbiSubsetDef1, 
-							CVector<_BINARY>& vecbiSubsetDef2,
-							CVector<_BINARY>& vecbiSubsetDef3, 
-							CVector<_BINARY>& vecbiSubsetDef4,
-							CVector<_BINARY>& vecbiSubsetDef5,
-							CVector<_BINARY>& vecbiSubsetDef6,
-							int iLevel, _BOOLEAN bIteration);
-	void	Init(int iNewInputBlockSize, CParameter::ECodScheme eNewCodingScheme);
-
+	void CalculateMetric(CVector<CEquSig>* pcInSymb, 
+					     CVector<CDistance>& vecMetric, 
+						 CVector<_DECISION>& vecSubsetDef1, 
+						 CVector<_DECISION>& vecSubsetDef2,
+						 CVector<_DECISION>& vecSubsetDef3, 
+						 CVector<_DECISION>& vecSubsetDef4,
+						 CVector<_DECISION>& vecSubsetDef5,
+						 CVector<_DECISION>& vecSubsetDef6,
+						 int iLevel, _BOOLEAN bIteration);
+	void Init(int iNewInputBlockSize, CParameter::ECodScheme eNewCodingScheme);
 
 protected:
+#ifdef USE_MAX_LOG_MAP
+	inline _REAL Minimum2(const _REAL rA, const _REAL rX0, const _REAL rX1,
+						  const _REAL rChan, const _REAL rLVal0) const
+	{
+		/* X0: L0 < 0
+		   X1: L0 > 0 */
+
+		/* First, calculate all distances */
+		_REAL rResult1 = Metric(fabs(rA - rX0), rChan);
+		_REAL rResult2 = Metric(fabs(rA - rX1), rChan);
+
+		/* Add L-value to metrics which to not correspond to correct hard decision */
+		if (rLVal0 > 0.0)
+			rResult1 += rLVal0;
+		else
+			rResult2 -= rLVal0;
+
+		/* Return smallest one */
+		if (rResult1 < rResult2)
+			return rResult1;
+		else
+			return rResult2;
+	}
+
+	inline _REAL Minimum4(const _REAL rA, const _REAL rX00, const _REAL rX01,
+						  const _REAL rX10, _REAL rX11, const _REAL rChan,
+						  const _REAL rLVal0) const
+	{
+		/* X00: L0 < 0
+		   X01: L0 > 0
+		   X10: L0 < 0
+		   X11: L0 > 0 */
+
+		/* First, calculate all distances */
+		_REAL rResult1 = Metric(fabs(rA - rX00), rChan);
+		_REAL rResult2 = Metric(fabs(rA - rX01), rChan);
+		_REAL rResult3 = Metric(fabs(rA - rX10), rChan);
+		_REAL rResult4 = Metric(fabs(rA - rX11), rChan);
+
+		/* Add L-value to metrics which to not correspond to correct hard decision */
+		if (rLVal0 > 0.0)
+		{
+			rResult1 += rLVal0;
+			rResult3 += rLVal0;
+		}
+		else
+		{
+			rResult2 -= rLVal0;
+			rResult4 -= rLVal0;
+		}
+
+		/* Search for smallest one */
+		_REAL rReturn = rResult1;
+		if (rResult2 < rReturn)
+			rReturn = rResult2;
+		if (rResult3 < rReturn)
+			rReturn = rResult3;
+		if (rResult4 < rReturn)
+			rReturn = rResult4;
+
+		return rReturn;
+	}
+
+	inline _REAL Minimum4(const _REAL rA, const _REAL rX00, const _REAL rX01,
+						  const _REAL rX10, _REAL rX11, const _REAL rChan,
+						  const _REAL rLVal0, const _REAL rLVal1) const
+	{
+		/* X00: L0 < 0, L1 < 0
+		   X01: L0 > 0, L1 < 0
+		   X10: L0 < 0, L1 > 0
+		   X11: L0 > 0, L1 > 0 */
+
+		/* First, calculate all distances */
+		_REAL rResult1 = Metric(fabs(rA - rX00), rChan);
+		_REAL rResult2 = Metric(fabs(rA - rX01), rChan);
+		_REAL rResult3 = Metric(fabs(rA - rX10), rChan);
+		_REAL rResult4 = Metric(fabs(rA - rX11), rChan);
+
+		/* Add L-value to metrics which to not correspond to correct hard decision */
+		if (rLVal0 > 0.0)
+		{
+			rResult1 += rLVal0;
+			rResult3 += rLVal0;
+		}
+		else
+		{
+			rResult2 -= rLVal0;
+			rResult4 -= rLVal0;
+		}
+
+		if (rLVal1 > 0.0)
+		{
+			rResult1 += rLVal1;
+			rResult2 += rLVal1;
+		}
+		else
+		{
+			rResult3 -= rLVal1;
+			rResult4 -= rLVal1;
+		}
+
+		/* Search for smallest one */
+		_REAL rReturn = rResult1;
+		if (rResult2 < rReturn)
+			rReturn = rResult2;
+		if (rResult3 < rReturn)
+			rReturn = rResult3;
+		if (rResult4 < rReturn)
+			rReturn = rResult4;
+
+		return rReturn;
+	}
+#endif
+
 	inline _REAL Minimum1(const _REAL rA, const _REAL rB,
 						  const _REAL rChan) const
 	{
@@ -75,7 +196,7 @@ protected:
 		const _REAL rResult1 = fabs(rA - rB1);
 		const _REAL rResult2 = fabs(rA - rB2);
 
-		/* Return smalles one */
+		/* Return smallest one */
 		if (rResult1 < rResult2)
 			return Metric(rResult1, rChan);
 		else

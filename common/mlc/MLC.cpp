@@ -55,7 +55,8 @@ void CMLCEncoder::ProcessDataInternal(CParameter& Parameter)
 			/* Bits */
 			for (i = 0; i < iM[j][0]; i++)
 			{
-				vecbiEncInBuffer[j][i] = (*pvecInputData)[iElementCounter];
+				vecEncInBuffer[j][i] =
+					BitToSoft((*pvecInputData)[iElementCounter]);
 
 				iElementCounter++;
 			}
@@ -67,8 +68,8 @@ void CMLCEncoder::ProcessDataInternal(CParameter& Parameter)
 			/* Bits */
 			for (i = 0; i < iM[j][1]; i++)
 			{
-				vecbiEncInBuffer[j][iM[j][0] + i] =
-					(*pvecInputData)[iElementCounter];
+				vecEncInBuffer[j][iM[j][0] + i] =
+					BitToSoft((*pvecInputData)[iElementCounter]);
 
 				iElementCounter++;
 			}
@@ -82,7 +83,8 @@ void CMLCEncoder::ProcessDataInternal(CParameter& Parameter)
 		   this case */
 		for (i = 0; i < iM[0][1]; i++)
 		{
-			vecbiEncInBuffer[0][i] = (*pvecInputData)[iElementCounter];
+			vecEncInBuffer[0][i] =
+				BitToSoft((*pvecInputData)[iElementCounter]);
 
 			iElementCounter++;
 		}
@@ -94,7 +96,8 @@ void CMLCEncoder::ProcessDataInternal(CParameter& Parameter)
 			/* Bits */
 			for (i = 0; i < iM[j][0]; i++)
 			{
-				vecbiEncInBuffer[j][i] = (*pvecInputData)[iElementCounter];
+				vecEncInBuffer[j][i] =
+					BitToSoft((*pvecInputData)[iElementCounter]);
 
 				iElementCounter++;
 			}
@@ -106,8 +109,8 @@ void CMLCEncoder::ProcessDataInternal(CParameter& Parameter)
 			/* Bits */
 			for (i = 0; i < iM[j][1]; i++)
 			{
-				vecbiEncInBuffer[j][iM[j][0] + i] =
-					(*pvecInputData)[iElementCounter];
+				vecEncInBuffer[j][iM[j][0] + i] =
+					BitToSoft((*pvecInputData)[iElementCounter]);
 
 				iElementCounter++;
 			}
@@ -117,22 +120,22 @@ void CMLCEncoder::ProcessDataInternal(CParameter& Parameter)
 
 	/* Convolutional encoder ------------------------------------------------ */
 	for (j = 0; j < iLevels; j++)
-		ConvEncoder[j].Encode(vecbiEncInBuffer[j], vecbiEncOutBuffer[j]);
+		ConvEncoder[j].Encode(vecEncInBuffer[j], vecEncOutBuffer[j]);
 
 
 	/* Bit interleaver ------------------------------------------------------ */
 	for (j = 0; j < iLevels; j++)
 		if (piInterlSequ[j] != -1)
-			BitInterleaver[piInterlSequ[j]].Interleave(vecbiEncOutBuffer[j]);
+			BitInterleaver[piInterlSequ[j]].Interleave(vecEncOutBuffer[j]);
 
 
 	/* QAM mapping ---------------------------------------------------------- */
-	QAMMapping.Map(vecbiEncOutBuffer[0],
-				   vecbiEncOutBuffer[1],
-				   vecbiEncOutBuffer[2],
-				   vecbiEncOutBuffer[3],
-				   vecbiEncOutBuffer[4],
-				   vecbiEncOutBuffer[5], pvecOutputData);
+	QAMMapping.Map(vecEncOutBuffer[0],
+				   vecEncOutBuffer[1],
+				   vecEncOutBuffer[2],
+				   vecEncOutBuffer[3],
+				   vecEncOutBuffer[4],
+				   vecEncOutBuffer[5], pvecOutputData);
 }
 
 void CMLCEncoder::InitInternal(CParameter& TransmParam)
@@ -177,10 +180,10 @@ void CMLCEncoder::InitInternal(CParameter& TransmParam)
 	{
 		/* Buffers for each encoder on all different levels */
 		/* Add bits from higher protected and lower protected part */
-		vecbiEncInBuffer[i].Init(iM[i][0] + iM[i][1]);
+		vecEncInBuffer[i].Init(iM[i][0] + iM[i][1]);
 	
 		/* Encoder output buffers for all levels. Must have the same length */
-		vecbiEncOutBuffer[i].Init(iNumEncBits);
+		vecEncOutBuffer[i].Init(iNumEncBits);
 	}
 
 	/* Define block-size for input and output */
@@ -232,8 +235,8 @@ fflush(pFile);
 				bIteration = FALSE;
 
 			MLCMetric.CalculateMetric(pvecInputData, vecMetric,
-				vecbiSubsetDef[0], vecbiSubsetDef[1], vecbiSubsetDef[2],
-				vecbiSubsetDef[3], vecbiSubsetDef[4], vecbiSubsetDef[5],
+				vecSubsetDef[0], vecSubsetDef[1], vecSubsetDef[2],
+				vecSubsetDef[3], vecSubsetDef[4], vecSubsetDef[5],
 				j, bIteration);
 
 
@@ -243,8 +246,7 @@ fflush(pFile);
 
 
 			/* Viterbi decoder ---------------------------------------------- */
-			rAccMetric =
-				ViterbiDecoder[j].Decode(vecMetric, vecbiDecOutBits[j]);
+			rAccMetric = ViterbiDecoder[j].Decode(vecMetric, vecDecOutBits[j]);
 
 			/* The last branch of encoding and interleaving must not be used at
 			   the very last loop */
@@ -254,13 +256,13 @@ fflush(pFile);
 				((k == iNumIterations) && !(j >= iIndexLastBranch)))
 			{
 				/* Convolutional encoder ------------------------------------ */
-				ConvEncoder[j].Encode(vecbiDecOutBits[j], vecbiSubsetDef[j]);
-			
+				ConvEncoder[j].Encode(vecDecOutBits[j], vecSubsetDef[j]);
+
 
 				/* Bit interleaver ------------------------------------------ */
 				if (piInterlSequ[j] != -1)
 					BitInterleaver[piInterlSequ[j]].
-						Interleave(vecbiSubsetDef[j]);
+						Interleave(vecSubsetDef[j]);
 			}
 		}
 	}
@@ -278,7 +280,8 @@ fflush(pFile);
 			/* Bits */
 			for (i = 0; i < iM[j][0]; i++)
 			{
-				(*pvecOutputData)[iElementCounter] = vecbiDecOutBits[j][i];
+				(*pvecOutputData)[iElementCounter] =
+					ExtractBit(vecDecOutBits[j][i]);
 
 				iElementCounter++;
 			}
@@ -291,7 +294,7 @@ fflush(pFile);
 			for (i = 0; i < iM[j][1]; i++)
 			{
 				(*pvecOutputData)[iElementCounter] =
-					vecbiDecOutBits[j][iM[j][0] + i];
+					ExtractBit(vecDecOutBits[j][iM[j][0] + i]);
 
 				iElementCounter++;
 			}
@@ -305,7 +308,8 @@ fflush(pFile);
 		   this case */
 		for (i = 0; i < iM[0][1]; i++)
 		{
-			(*pvecOutputData)[iElementCounter] = vecbiDecOutBits[0][i];
+			(*pvecOutputData)[iElementCounter] =
+				ExtractBit(vecDecOutBits[0][i]);
 
 			iElementCounter++;
 		}
@@ -316,7 +320,8 @@ fflush(pFile);
 			/* Bits */
 			for (i = 0; i < iM[j][0]; i++)
 			{
-				(*pvecOutputData)[iElementCounter] = vecbiDecOutBits[j][i];
+				(*pvecOutputData)[iElementCounter] =
+					ExtractBit(vecDecOutBits[j][i]);
 
 				iElementCounter++;
 			}
@@ -329,7 +334,7 @@ fflush(pFile);
 			for (i = 0; i < iM[j][1]; i++)
 			{
 				(*pvecOutputData)[iElementCounter] =
-					vecbiDecOutBits[j][iM[j][0] + i];
+					ExtractBit(vecDecOutBits[j][iM[j][0] + i]);
 
 				iElementCounter++;
 			}
@@ -410,11 +415,11 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 
 	/* Decoder output buffers for all levels. Have different length */
 	for (i = 0; i < iLevels; i++)
-		vecbiDecOutBits[i].Init(iM[i][0] + iM[i][1]);
+		vecDecOutBits[i].Init(iM[i][0] + iM[i][1]);
 
 	/* Buffers for subset definition (always number of encoded bits long) */
 	for (i = 0; i < MC_MAX_NUM_LEVELS; i++)
-		vecbiSubsetDef[i].Init(iNumEncBits);
+		vecSubsetDef[i].Init(iNumEncBits);
 
 	/* Init buffer for signal space */
 	vecSigSpacBuf.Init(iN_mux);
