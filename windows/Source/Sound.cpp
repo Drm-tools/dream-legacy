@@ -52,16 +52,20 @@ _BOOLEAN CSound::Read(CVector<short>& psData)
 
 	/* Wait until data is available */
 	if (!(m_WaveInHeader[iWhichBufferIn].dwFlags & WHDR_DONE))
+	{
 		if (bBlockingRec == TRUE)
 			WaitForSingleObject(m_WaveInEvent, INFINITE);
 		else
 			return FALSE;
+	}
 
 	/* Check if buffers got lost */
 	int iNumInBufDone = 0;
 	for (i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
+	{
 		if (m_WaveInHeader[i].dwFlags & WHDR_DONE)
 			iNumInBufDone++;
+	}
 
 	/* If the number of done buffers equals the total number of buffers, it is
 	   very likely that a buffer got lost -> set error flag */
