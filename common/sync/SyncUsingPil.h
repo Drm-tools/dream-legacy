@@ -95,6 +95,7 @@ protected:
 	int						iNumSymPerFrame;
 
 	_BOOLEAN				bBadFrameSync;
+	_BOOLEAN				bInitFrameSync;
 
 	_BOOLEAN				bSyncInput;
 

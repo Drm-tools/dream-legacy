@@ -102,7 +102,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		else
 			vecrCorrHistory.AddEnd(rResultIREst);
 
-		/* Search for minimum distance. Init value with a high number */
+		/* Search for minimum distance. Init value with a large number */
 		int iMinIndex = 0;
 		CReal rMinValue = _MAXREAL;
 		for (i = 0; i < iNumSymPerFrame; i++)
@@ -123,7 +123,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 				bBadFrameSync = FALSE;
 
 				/* Post Message for GUI (Good frame sync) */
-				PostWinMessage(MS_FRAME_SYNC, 0);
+				PostWinMessage(MS_FRAME_SYNC, 0); /* green */
 			}
 			else
 			{
@@ -138,8 +138,11 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 					/* Reset flag */
 					bBadFrameSync = FALSE;
 
-					/* Post Message for GUI for bad frame sync (red light) */
-					PostWinMessage(MS_FRAME_SYNC, 2);
+					/* Post Message for GUI for bad frame sync (red light). Do
+					   not show any light for the very first acquisition of the
+					   sync right after an initialization */
+					if (bInitFrameSync == FALSE)
+						PostWinMessage(MS_FRAME_SYNC, 2); /* red */
 				}
 				else
 				{
@@ -152,9 +155,12 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 
 					/* Post Message that frame sync was wrong but was not yet
 					   corrected (yellow light) */
-					PostWinMessage(MS_FRAME_SYNC, 1);
+					PostWinMessage(MS_FRAME_SYNC, 1); /* yellow */
 				}
 			}
+
+			/* Reset flag which shows that init was done */
+			bInitFrameSync = FALSE;
 		}
 	}
 	else
@@ -321,6 +327,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 
 	/* After an initialization the frame sync must be adjusted */
 	bBadFrameSync = TRUE;
+	bInitFrameSync = TRUE; /* Set flag to show that (re)-init was done */
 
 	/* Allocate memory for histories. Init history with large values, because
 	   we search for minimum! */
