@@ -44,13 +44,13 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 
 	/* Set Menu ***************************************************************/
 	/* Help menu ------------------------------------------------------------ */
-	QPopupMenu *HelpMenu = new QPopupMenu(this);
+	QPopupMenu* HelpMenu = new QPopupMenu(this);
 	CHECK_PTR(HelpMenu);
 	HelpMenu->insertItem("&About...", this, SLOT(OnHelpAbout()));
 
 
 	/* View menu ------------------------------------------------------------ */
-	QPopupMenu *EvalWinMenu = new QPopupMenu(this);
+	QPopupMenu* EvalWinMenu = new QPopupMenu(this);
 	CHECK_PTR(EvalWinMenu);
 	EvalWinMenu->insertItem("&Evaluation Dialog...", this,
 		SLOT(OnViewEvalDlg()), CTRL+Key_E);
