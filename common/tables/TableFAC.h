@@ -34,6 +34,10 @@
 
 
 /* Definitions ****************************************************************/
+/* ETSI ES201980V2.1.1: page 115, 7.5.3: ...FAC shall use 4-QAM mapping. A
+   fixed code rate shall be applied...R_all=0.6...
+   6 tailbits are used for the encoder to get in zero state ->
+   65 [number of cells] * 2 [4-QAM] * 0.6 [code-rate] - 6 [tailbits] = 72 */
 #define NUM_FAC_BITS_PER_BLOCK			72
 
 /* iTableNumOfServices[a][b]
