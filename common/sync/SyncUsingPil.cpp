@@ -311,7 +311,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Init time constant for IIR filter for frequency offset estimation */
-	rLamFreqOff = IIR1Lam((CReal) 30.0, (CReal) SOUNDCRD_SAMPLE_RATE /
+	rLamFreqOff = IIR1Lam(TICONST_FREQ_OFF_EST, (CReal) SOUNDCRD_SAMPLE_RATE /
 		ReceiverParam.iSymbolBlockSize);
 
 	/* Init vector for averaging the frequency offset estimation */
@@ -319,8 +319,8 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Init time constant for IIR filter for sample rate offset estimation */
-	rLamSamRaOff = IIR1Lam((CReal) 3.0, (CReal) SOUNDCRD_SAMPLE_RATE /
-		ReceiverParam.iSymbolBlockSize);
+	rLamSamRaOff = IIR1Lam(TICONST_SAMRATE_OFF_EST,
+		(CReal) SOUNDCRD_SAMPLE_RATE / ReceiverParam.iSymbolBlockSize);
 
 
 	/* Allocate memory for histories. Init history with large values, because

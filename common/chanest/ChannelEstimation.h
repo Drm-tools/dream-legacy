@@ -52,6 +52,12 @@
 #define LEN_WIENER_FILT_FREQ_RMC		11
 #define LEN_WIENER_FILT_FREQ_RMD		13
 
+/* Time constant for IIR averaging of fast signal power estimation */
+#define TICONST_SNREST_FAST				((CReal) 30.0) /* sec */
+
+/* Time constant for IIR averaging of slow signal power estimation */
+#define TICONST_SNREST_SLOW				((CReal) 100.0) /* sec */
+
 
 /* Classes ********************************************************************/
 class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>
@@ -150,7 +156,7 @@ protected:
 	int					iDCPos;
 	int					iPilOffset;
 	int					iNoWienerFilt;
-	CMatrix<CComplex>	matcWienerFilter;
+	CComplexMatrix		matcWienerFilter;
 
 	int					iInitCnt;
 

@@ -46,6 +46,29 @@
 /* Number of taps we want to use for sigma estimation */
 #define NO_TAPS_USED4SIGMA_EST			3
 
+/* Lengths of wiener filter for wiener filtering in time direction */
+#define LEN_WIENER_FILT_TIME_RMA		15
+#define LEN_WIENER_FILT_TIME_RMB		25
+#define LEN_WIENER_FILT_TIME_RMC		9
+#define LEN_WIENER_FILT_TIME_RMD		9
+
+/* Maximum values for doppler for a specific robustness mode.
+   Parameters found by looking at resulting filter coefficients. The values
+   "rSigma" are set to the maximum possible doppler frequency which can be
+   interpolated by the pilot frequency grid. Since we have a Gaussian
+   power spectral density, the power is never exactely zero. Therefore we
+   determine the point where the PDS has fallen below a 30 dB limit */
+#define MAX_SIGMA_RMA					((_REAL) 2.0 /* Hz */ / 2)
+#define MAX_SIGMA_RMB					((_REAL) 3.36 /* Hz */ / 2)
+#define MAX_SIGMA_RMC					((_REAL) 6.73 /* Hz */ / 2)
+#define MAX_SIGMA_RMD					((_REAL) 5.38 /* Hz */ / 2)
+
+/* Define a lower bound for the doppler */
+#define LOW_BOUND_SIGMA					((_REAL) 0.1 /* Hz */ / 2)
+
+/* Initial value for SNR */
+#define INIT_VALUE_SNR_WIEN_TIME_DB		((_REAL) 25.0) /* dB */
+
 
 /* Classes ********************************************************************/
 class CTimeWiener : public CChanEstTime
@@ -77,7 +100,7 @@ protected:
 
 	int					iLengthWiener;
 	int					iNoFiltPhasTi;
-	CMatrix<_REAL>		matrFiltTime;
+	CRealMatrix			matrFiltTime;
 	
 	CMatrix<_COMPLEX>	matcChanAtPilPos;
 
@@ -101,6 +124,7 @@ protected:
 
 	_REAL				Ts;
 	_REAL				rSigma;
+	_REAL				rSigmaMax;
 
 	_REAL				rMMSE;
 };

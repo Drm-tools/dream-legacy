@@ -373,9 +373,9 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	rSignalEst = (_REAL) 0.0;
 
 	/* Lambda for IIR filter */
-	rLamSNREstFast = IIR1Lam((CReal) 30.0, (CReal) SOUNDCRD_SAMPLE_RATE /
+	rLamSNREstFast = IIR1Lam(TICONST_SNREST_FAST, (CReal) SOUNDCRD_SAMPLE_RATE /
 		ReceiverParam.iSymbolBlockSize);
-	rLamSNREstSlow = IIR1Lam((CReal) 100.0, (CReal) SOUNDCRD_SAMPLE_RATE /
+	rLamSNREstSlow = IIR1Lam(TICONST_SNREST_SLOW, (CReal) SOUNDCRD_SAMPLE_RATE /
 		ReceiverParam.iSymbolBlockSize);
 
 
@@ -533,19 +533,10 @@ void CChannelEstimation::UpdateWienerFiltCoef(_REAL rNewSNR, _REAL rNewRatio)
 	int	iDiff;
 	int	iCurPil;
 
-	CComplexVector veccTempFilt(iLengthWiener);
-
-	/* Calculate all possible wiener filter */
+	/* Calculate all possible wiener filters */
 	for (j = 0; j < iNoWienerFilt; j++)
-	{
-		/* Calculate wiener filter-taps */
-		veccTempFilt = FreqOptimalFilter(iScatPilFreqInt, j, rNewSNR, 
+		matcWienerFilter[j] = FreqOptimalFilter(iScatPilFreqInt, j, rNewSNR,
 			rNewRatio, iLengthWiener);
-
-		/* Copy result in matrix */
-		for (i = 0; i < iLengthWiener; i++)
-			matcWienerFilter[j][i] = veccTempFilt[i];
-	}
 
 
 #if 0

@@ -151,7 +151,7 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 
 		/* Adapt the linear control parameter to the region, where the peak was
 		   found. The region left of the desired timing position is critical, 
-		   because we imideately get ISI if a peak appers here. Therefore we
+		   because we immediately get ISI if a peak appers here. Therefore we
 		   apply fast correction here. At the other positions, we 
 		   smooth the controlling to improve the immunity against false peaks */
 		if (rTiOffset > 0)
@@ -239,7 +239,7 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	vecrAvPoDeSp.Init(iNoIntpFreqPil, (CReal) 0.0);
 
 	/* Lambda for IIR filter for averaging the PDS */
-	rLamAvPDS = IIR1Lam((CReal) 0.25, (CReal) SOUNDCRD_SAMPLE_RATE /
+	rLamAvPDS = IIR1Lam(TICONST_PDS_EST_TISYNC, (CReal) SOUNDCRD_SAMPLE_RATE /
 		Parameter.iSymbolBlockSize);
 
 	/* Vector for rotated result */

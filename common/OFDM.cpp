@@ -227,7 +227,7 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	rNoisePowAvLeft = (_REAL) 0.0;
 	rNoisePowAvRight = (_REAL) 0.0;
 	rUsefPowAv = (_REAL) 0.0;
-	rLamSNREst = IIR1Lam((CReal) 30.0, (CReal) SOUNDCRD_SAMPLE_RATE /
+	rLamSNREst = IIR1Lam(TICONST_SIGNOIEST_OFDM, (CReal) SOUNDCRD_SAMPLE_RATE /
 		ReceiverParam.iSymbolBlockSize); /* Lambda for IIR filter */
 
 	/* Init SNR estimate */
@@ -245,7 +245,7 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Vector for power density spectrum of input signal */
 	iLenPowSpec = iDFTSize / 2;
 	vecrPowSpec.Init(iLenPowSpec, (_REAL) 0.0);
-	rLamPSD = IIR1Lam((CReal) 1.0, (CReal) SOUNDCRD_SAMPLE_RATE /
+	rLamPSD = IIR1Lam(TICONST_PSD_EST_OFDM, (CReal) SOUNDCRD_SAMPLE_RATE /
 		ReceiverParam.iSymbolBlockSize); /* Lambda for IIR filter */
 
 	/* Define block-sizes for input and output */

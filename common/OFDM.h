@@ -39,6 +39,14 @@
 #endif
 
 
+/* Definitions ****************************************************************/
+/* Time constant for IIR averaging of signal and noise power estimation */
+#define TICONST_SIGNOIEST_OFDM			((_REAL) 30.0) /* sec */
+
+/* Time constant for IIR averaging of PSD estimation */
+#define TICONST_PSD_EST_OFDM			((CReal) 1.0) /* sec */
+
+
 /* Classes ********************************************************************/
 class COFDMModulation : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {

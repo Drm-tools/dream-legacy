@@ -39,6 +39,12 @@
 #define HI_VALUE_FOR_MIN_SEARCH			((_REAL) 3.4E38) /* Max value for float types */
 #define CONTR_SAMP_OFF_INTEGRATION		((_REAL) 10.0)
 
+/* Time constant for IIR averaging of frequency offset estimation */
+#define TICONST_FREQ_OFF_EST			((CReal) 20.0) /* sec */
+
+/* Time constant for IIR averaging of sample rate offset estimation */
+#define TICONST_SAMRATE_OFF_EST			((CReal) 5.0) /* sec */
+
 
 /* Classes ********************************************************************/
 class CSyncUsingPil : public CReceiverModul<_COMPLEX, _COMPLEX>, 
