@@ -62,7 +62,7 @@ public:
 	enum EDatUnit {DU_SINGLE_PACKETS, DU_DATA_UNITS};
 
 	/* AD: Application Domain */
-	enum EApplDomain {AD_DRM_SPEC_APP, AD_DAB_SPEC_APP};
+	enum EApplDomain {AD_DRM_SPEC_APP, AD_DAB_SPEC_APP, AD_OTHER_SPEC_APP};
 
 	/* AC: Audio Coding */
 	enum EAudCod {AC_AAC, AC_CELP, AC_HVXC};
