@@ -25,7 +25,7 @@
     </property>
     <property stdset="1">
         <name>sizeGripEnabled</name>
-        <bool>false</bool>
+        <bool>true</bool>
     </property>
     <property>
         <name>layoutMargin</name>
