@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>464</width>
+            <width>460</width>
             <height>389</height>
         </rect>
     </property>
@@ -32,7 +32,7 @@
     </property>
     <property stdset="1">
         <name>sizeGripEnabled</name>
-        <bool>false</bool>
+        <bool>true</bool>
     </property>
     <property>
         <name>layoutMargin</name>
