@@ -189,11 +189,8 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Average results */
 		const _REAL rLam = 0.98;
-		rNoisePowAvLeft = 
-			rLam * rNoisePowAvLeft + (1 - rLam) * rPowLeftVCar;
-
-		rNoisePowAvRight = 
-			rLam * rNoisePowAvRight + (1 - rLam) * rPowRightVCar;
+		IIR1(rNoisePowAvLeft, rPowLeftVCar, rLam);
+		IIR1(rNoisePowAvRight, rPowRightVCar, rLam);
 
 		/* Take the smallest value of both to avoid getting sinusoid 
 		   interferer in the measurement */
@@ -205,7 +202,6 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 	/* Save averaged spectrum for plotting ---------------------------------- */
-	const _REAL rLambdaSpec = (_REAL) 0.99;
 	for (i = 0; i < iLenPowSpec; i++)
 	{
 		/* Power of this tap */
@@ -213,7 +209,7 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 			veccFFTWOutput[i].im * veccFFTWOutput[i].im;
 
 		/* Averaging (first order IIR filter) */
-		vecrPowSpec[i] = rLambdaSpec * (vecrPowSpec[i] - rCurPower) + rCurPower;
+		IIR1(vecrPowSpec[i], rCurPower, (_REAL) 0.99);
 	}
 }
 
@@ -277,10 +273,25 @@ void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
 		/* Apply the normalization (due to the FFT) */
 		for (int i = 0; i < iLenPowSpec; i++)
 		{
-			vecrData[i] = (_REAL) 10.0 * log10(vecrPowSpec[i] / rNormData);
+			_REAL rNormPowSpec = vecrPowSpec[i] / rNormData;
+
+			if (rNormPowSpec > 0)
+				vecrData[i] = (_REAL) 10.0 * log10(vecrPowSpec[i] / rNormData);
+			else
+				vecrData[i] = RET_VAL_LOG_0;
+
 			vecrScale[i] = (_REAL) i * rFactorScale;
 		}
 	}
+}
+
+_REAL COFDMDemodulation::GetSNREstdB() const 
+{
+	/* Bound the SNR at 0 dB */
+	if (rSNREstimate > (_REAL) 1.0)
+		return 10 * log10(rSNREstimate);
+	else
+		return (_REAL) 0.0;
 }
 
 

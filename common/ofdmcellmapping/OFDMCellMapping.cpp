@@ -226,7 +226,9 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 	if (iSymbolCounter == 0)
 	{
 		/* Check, if number of FAC cells is correct. If not, reset 
-		   output cyclic-buffer */
+		   output cyclic-buffer. An incorrect number of FAC cells can be if
+		   the "iSymbolCounterAbs" was changed, e.g. by the synchronization
+		   units */
 		if (iFACCellCounter != NO_FAC_CELLS)
 			SetBufReset2(); /* FAC: buffer number 2 */
 
@@ -242,7 +244,8 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 
 		if (iCurrentFrameID == 0)
 		{
-			/* Super-frame bound reached, test cell-counters */
+			/* Super-frame bound reached, test cell-counters (same as with the
+			   FAC cells, see above) */
 			if (iMSCCellCounter != iNoUsefMSCCellsPerFrame * 
 				NO_FRAMES_IN_SUPERFRAME)
 			{

@@ -101,6 +101,11 @@ enum ERobMode {RM_ROBUSTNESS_MODE_A, RM_ROBUSTNESS_MODE_B,
 /* Constants ---------------------------------------------------------------- */
 const _REAL crPi = ((_REAL) 3.14159265358979323846);
 
+
+/* Define a number for the case: log10(0), which would lead to #inf */
+#define RET_VAL_LOG_0					((_REAL) -200.0)
+
+
 /* Standard definitions */
 #define	TRUE							1
 #define FALSE							0

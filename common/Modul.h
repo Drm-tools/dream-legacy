@@ -567,12 +567,15 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Reset init flag */
 		bDoInit = FALSE;
+
+		return TRUE;
 	}
 
 	/* Special case if input block size is zero */
 	if (iInputBlockSize == 0)
 	{
 		InputBuffer.Clear();
+
 		return FALSE;
 	}
 
@@ -629,6 +632,8 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Reset init flag */
 		bDoInit = FALSE;
+
+		return TRUE;
 	}
 
 	/* This flag shows, if enough data was in the input buffer for processing */
@@ -690,6 +695,8 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Reset init flag */
 		bDoInit = FALSE;
+
+		return TRUE;
 	}
 
 	/* This flag shows, if enough data was in the input buffer for processing */
@@ -792,6 +799,8 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Reset init flag */
 		bDoInit = FALSE;
+
+		return TRUE;
 	}
 
 	/* Special case if input block size is zero and buffer, too */

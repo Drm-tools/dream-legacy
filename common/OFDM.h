@@ -68,7 +68,7 @@ public:
 
 	void GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
-	_REAL GetSNREstdB() const {return 10 * log10(rSNREstimate);}
+	_REAL GetSNREstdB() const;
 
 protected:
 	CVector<_REAL>			vecrPDSResult;

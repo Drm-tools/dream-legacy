@@ -94,9 +94,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter, CComplexVector& veccChanEst,
 	{
 		/* Average result, Eq (16) (Should be a moving average function, for 
 		   simplicity we have chosen an IIR filter here) */
-		const CReal rLambda = 0.9;
-		vecrAvPoDeSp = 
-			rLambda * vecrAvPoDeSp + (1 - rLambda) * SqMag(veccPilots);
+		IIR1(vecrAvPoDeSp, SqMag(veccPilots), (CReal) 0.9);
 	}
 
 	/* Rotate the averaged result vector to put the earlier peaks
@@ -275,8 +273,11 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 		/* Copy first part of data in output vector */
 		for (i = 0; i < iHalfSpec; i++)
 		{
-			vecrData[i] = (_REAL) 10.0 * 
-				log10(vecrAvPoDeSp[iNoIntpFreqPil - iHalfSpec + i]);
+			if (vecrAvPoDeSp[iNoIntpFreqPil - iHalfSpec + i] > 0)
+				vecrData[i] = (_REAL) 10.0 * 
+					log10(vecrAvPoDeSp[iNoIntpFreqPil - iHalfSpec + i]);
+			else
+				vecrData[i] = RET_VAL_LOG_0;
 
 			/* Scale */
 			vecrScale[i] = rScaleAbs;
@@ -289,7 +290,10 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 		/* Copy second part of data in output vector */
 		for (i = iHalfSpec; i < iNoIntpFreqPil; i++)
 		{
-			vecrData[i] = (_REAL) 10.0 * log10(vecrAvPoDeSp[i - iHalfSpec]);
+			if (vecrAvPoDeSp[i - iHalfSpec] > 0)
+				vecrData[i] = (_REAL) 10.0 * log10(vecrAvPoDeSp[i - iHalfSpec]);
+			else
+				vecrData[i] = RET_VAL_LOG_0;
 
 			/* Scale */
 			vecrScale[i] = rScaleAbs;
@@ -297,8 +301,15 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 		}
 
 		/* Return bounds */
-		rHigherBound = (_REAL) 10.0 * log10(rBoundHigher);
-		rLowerBound = (_REAL) 10.0 * log10(rBoundLower);
+		if (rBoundHigher > 0)
+			rHigherBound = (_REAL) 10.0 * log10(rBoundHigher);
+		else
+			rHigherBound = RET_VAL_LOG_0;
+
+		if (rBoundLower > 0)
+			rLowerBound = (_REAL) 10.0 * log10(rBoundLower);
+		else
+			rLowerBound = RET_VAL_LOG_0;
 
 		/* End point of guard interval */
 		rEndGuard = rScaleIncr * (iGuardSizeFFT - iTargetTimingPos);

@@ -181,9 +181,9 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				if (bTimingAcqu == TRUE)
 				{
 					/* Average the correlation results */
-					vecCorrAvBuf[iCorrAvInd] = (1 - rLambdaCoAv) * 
-						vecCorrAvBuf[iCorrAvInd] + rLambdaCoAv * 
-						vecrRMCorrBuffer[iSelectedMode][iRMCorrBufSize - 1];
+					IIR1(vecCorrAvBuf[iCorrAvInd],
+						vecrRMCorrBuffer[iSelectedMode][iRMCorrBufSize - 1],
+						1 - rLambdaCoAv);
 
 
 					/* Energy of guard-interval correlation ----------------- */
@@ -305,6 +305,51 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 	}
 
+
+
+#if 0
+// TEST
+// stress the system
+static int z = 100;
+if (z > 0)
+	z--;
+else
+{
+	z = 100;
+
+int itest = (int) ((_REAL) rand() / RAND_MAX * 4);
+ReceiverParam.SetWaveMode(GetRModeFromInd(itest));
+
+itest = (int) ((_REAL) rand() / RAND_MAX * 6);
+switch (itest)
+{
+case 0:
+	ReceiverParam.SetSpectrumOccup(SO_0);
+	break;
+case 1:
+	ReceiverParam.SetSpectrumOccup(SO_1);
+	break;
+case 2:
+	ReceiverParam.SetSpectrumOccup(SO_2);
+	break;
+case 3:
+	ReceiverParam.SetSpectrumOccup(SO_3);
+	break;
+case 4:
+	ReceiverParam.SetSpectrumOccup(SO_4);
+	break;
+case 5:
+	ReceiverParam.SetSpectrumOccup(SO_5);
+	break;
+default:
+	ReceiverParam.SetSpectrumOccup(SO_0);
+}
+}
+#endif
+
+
+
+
 	if (bTimingAcqu == TRUE)
 	{
 		/* Use all measured FFT-window start points for determining the "real" 
@@ -319,9 +364,8 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 			{
 				/* New measurement is in range -> use it for filtering */
 				/* Low-pass filter detected start of frame */
-				rStartIndex = LAMBDA_LOW_PASS_START * rStartIndex + 
-					(1 - LAMBDA_LOW_PASS_START) * 
-					(_REAL) iNewStartIndexField[i];
+				IIR1(rStartIndex, (_REAL) iNewStartIndexField[i],
+					LAMBDA_LOW_PASS_START);
 
 				/* Reset counters for non-linear correction algorithm */
 				iCorrCounter = 0;

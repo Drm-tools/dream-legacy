@@ -208,8 +208,13 @@ void CReceiveData::LevelMeter()
 
 _REAL CReceiveData::GetLevelMeter()
 {
+	_REAL rNormMicLevel = (_REAL) iCurMicMeterLev / _MAXSHORT;
+
 	/* Logarithmic measure */
-	return 20 * log10((_REAL) iCurMicMeterLev / _MAXSHORT);
+	if (rNormMicLevel > 0)
+		return 20 * log10(rNormMicLevel);
+	else
+		return RET_VAL_LOG_0;
 }
 
 void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
@@ -222,6 +227,7 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 	_REAL			rFactorScale;
 	_REAL			rNormData;
 	CRealVector		vecrFFTInput;
+	_REAL			rNormSqMag;
 
 	iLenInputVector = vecrInpData.Size();
 
@@ -250,8 +256,13 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 		/* Log power spectrum data */
 		for (i = 0; i < iLenSpecWithNyFreq; i++)
 		{
-			vecrData[i] = 
-				(_REAL) 10.0 * log10(SqMag(veccSpectrum[i]) / rNormData);
+			rNormSqMag = SqMag(veccSpectrum[i]) / rNormData;
+
+			if (rNormSqMag > 0)
+				vecrData[i] = 
+					(_REAL) 10.0 * log10(rNormSqMag);
+			else
+				vecrData[i] = RET_VAL_LOG_0;
 
 			vecrScale[i] = (_REAL) i * rFactorScale;
 		}

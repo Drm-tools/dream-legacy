@@ -71,19 +71,14 @@ public:
 	CTimeWiener* GetTimeWiener() {return &TimeWiener;}
 	CTimeSyncTrack* GetTimeSyncTrack() {return &TimeSyncTrack;}
 
-	/* Bound the SNR at 0 dB */
-	_REAL GetSNREstdB() const 
-		{if (rSNREstimate * rSNRCorrectFact > (_REAL) 1.0)
-			return 10 * log10(rSNREstimate * rSNRCorrectFact);
-		else
-			return (_REAL) 0.0;}
-
 	/* Set (get) frequency and time interpolation algorithm */
 	void SetFreqInt(ETypeIntFreq eNewTy) {TypeIntFreq = eNewTy;}
 	ETypeIntFreq GetFreqInt() {return TypeIntFreq;}
 	void SetTimeInt(ETypeIntTime eNewTy) {TypeIntTime = eNewTy;
 		SetInitFlag();}
-	ETypeIntTime GetTimeInt() {return TypeIntTime;}
+	ETypeIntTime GetTimeInt() const {return TypeIntTime;}
+
+	_REAL GetSNREstdB() const;
 	_REAL GetSigma() {return TimeWiener.GetSigma();}
 
 protected:

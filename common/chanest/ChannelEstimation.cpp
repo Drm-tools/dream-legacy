@@ -220,12 +220,10 @@ UpdateWienerFiltCoef(rSNRAftTiInt, (_REAL) ReceiverParam.RatioTgTu.iEnum /
 			/* The noise estimation is difference between the noise reduced
 			   signal and the noisy received signal
 			   \tilde{n} = \hat{r} - r */
-			rNoiseEst = rLam * rNoiseEst + 
-				(1 - rLam) * SqMag(matcHistory[0][i] - cModChanEst);
+			IIR1(rNoiseEst, SqMag(matcHistory[0][i] - cModChanEst), rLam);
 
 			/* The received signal power estimation is just \hat{r} */
-			rSignalEst = rLam * rSignalEst +
-				(1 - rLam) * SqMag(cModChanEst);
+			IIR1(rSignalEst, SqMag(cModChanEst), rLam);
 
 			/* Calculate final result (signal to noise ratio) */
 			if (rNoiseEst != 0)
@@ -440,8 +438,12 @@ void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 		   (carrier index as x-scale) */
 		for (int i = 0; i < iNoCarrier; i++)
 		{
-			vecrData[i] = 
-				(_REAL) 20.0 * log10(abs(veccChanEst[i]) / (_REAL) iNoCarrier);
+			_REAL rNormChanEst = abs(veccChanEst[i]) / (_REAL) iNoCarrier;
+				
+			if (rNormChanEst > 0)
+				vecrData[i] = (_REAL) 20.0 * log10(rNormChanEst);
+			else
+				vecrData[i] = RET_VAL_LOG_0;
 
 			/* Scale */
 			vecrScale[i] = i;
@@ -555,4 +557,13 @@ void CChannelEstimation::UpdateWienerFiltCoef(_REAL rNewSNR, _REAL rNewRatio)
 		for (i = 0; i < iLengthWiener; i++)
 			matcFiltFreq[j][i] = matcWienerFilter[iDiff][i];
 	}
+}
+
+_REAL CChannelEstimation::GetSNREstdB() const
+{
+	/* Bound the SNR at 0 dB */
+	if (rSNREstimate * rSNRCorrectFact > (_REAL) 1.0)
+		return 10 * log10(rSNREstimate * rSNRCorrectFact);
+	else
+		return (_REAL) 0.0;
 }
