@@ -100,18 +100,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	ProgrInputLevel->setAlarmLevel(-12.5);
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
 
-	/* Check "visible" settings flag if values are possible */
-	if ((pDRMRec->GeomAnalogDemDlg.bVisible == TRUE) &&
-		((pDRMRec->GeomSystemEvalDlg.bVisible == TRUE) ||
-		(pDRMRec->GeomMultimediaDlg.bVisible == TRUE)))
-	{
-		/* It makes no sense that these windows are shown at the same time ->
-		   use valid configuration */
-		pDRMRec->GeomAnalogDemDlg.bVisible = TRUE;
-		pDRMRec->GeomSystemEvalDlg.bVisible = FALSE;
-		pDRMRec->GeomMultimediaDlg.bVisible = FALSE;
-	}
-
 	/* Stations window */
 	pStationsDlg = new StationsDlg(pDRMRec, this, tr("Stations"), FALSE,
 		Qt::WStyle_MinMax);
@@ -224,25 +212,21 @@ FDRMDialog::~FDRMDialog()
 	pDRMRec->GeomFdrmdialog.iWSize = WinGeom.width();
 
 	/* Set "visible" flags for settings */
-	if (pAnalogDemDlg->isVisible())
-		pDRMRec->GeomAnalogDemDlg.bVisible = TRUE;
-	else
-		pDRMRec->GeomAnalogDemDlg.bVisible = FALSE;
+	pDRMRec->GeomAnalogDemDlg.bVisible = pAnalogDemDlg->isVisible();
+	pDRMRec->GeomStationsDlg.bVisible = pStationsDlg->isVisible();
 
-	if (pStationsDlg->isVisible())
-		pDRMRec->GeomStationsDlg.bVisible = TRUE;
+	/* Special treatment for multimedia and systen evaluation dialog since these
+	   windows are not used for AM demodulation */
+	if (pDRMRec->GetReceiverMode() == CDRMReceiver::RM_AM)
+	{
+		pDRMRec->GeomSystemEvalDlg.bVisible = bSysEvalDlgWasVis;
+		pDRMRec->GeomMultimediaDlg.bVisible = bMultMedDlgWasVis;
+	}
 	else
-		pDRMRec->GeomStationsDlg.bVisible = FALSE;
-
-	if (pSysEvalDlg->isVisible())
-		pDRMRec->GeomSystemEvalDlg.bVisible = TRUE;
-	else
-		pDRMRec->GeomSystemEvalDlg.bVisible = FALSE;
-
-	if (pMultiMediaDlg->isVisible())
-		pDRMRec->GeomMultimediaDlg.bVisible = TRUE;
-	else
-		pDRMRec->GeomMultimediaDlg.bVisible = FALSE;
+	{
+		pDRMRec->GeomSystemEvalDlg.bVisible = pSysEvalDlg->isVisible();
+		pDRMRec->GeomMultimediaDlg.bVisible = pMultiMediaDlg->isVisible();
+	}
 }
 
 void FDRMDialog::OnTimer()
@@ -451,6 +435,8 @@ void FDRMDialog::OnTimer()
 
 void FDRMDialog::SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo)
 {
+	const _BOOLEAN bModeHastChanged = pDRMRec->GetReceiverMode() != eNewReMo;
+
 	/* Set mode in receiver object */
 	pDRMRec->SetReceiverMode(eNewReMo);
 
@@ -463,12 +449,15 @@ void FDRMDialog::SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo)
 
 		pAnalogDemDlg->hide();
 
-		/* Recover visibility state */
-		if (bSysEvalDlgWasVis == TRUE)
-			pSysEvalDlg->show();
+		/* Recover visibility state (only if mode has changed) */
+		if (bModeHastChanged)
+		{
+			if (bSysEvalDlgWasVis == TRUE)
+				pSysEvalDlg->show();
 
-		if (bMultMedDlgWasVis == TRUE)
-			pMultiMediaDlg->show();
+			if (bMultMedDlgWasVis == TRUE)
+				pMultiMediaDlg->show();
+		}
 
 		/* Load correct schedule */
 		pStationsDlg->LoadSchedule(CDRMSchedule::SM_DRM);
