@@ -462,7 +462,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		
 		/* Number of iterations for MLC setting ----------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-i", "--mlciter", 0,
-			MAX_NUM_MLC_IT,	rArgument) == TRUE)
+			MAX_NUM_MLC_IT, rArgument) == TRUE)
 		{
 			DRMReceiver.GetMSCMLC()->SetNumIterations((int) rArgument);
 			continue;
@@ -486,11 +486,37 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			continue;
 		}
 
+
 		/* Frequency acquisition search window center ----------------------- */
 		if (GetNumericArgument(argc, argv, i, "-E", "--fracwincent", 0,
 			MAX_FREQ_AQC_SE_WIN_CEN, rArgument) == TRUE)
 		{
 			rFreqAcSeWinCenter = rArgument;
+			continue;
+		}
+
+
+		/* Input channel selection ------------------------------------------ */
+		if (GetNumericArgument(argc, argv, i, "-c", "--inchansel", 0,
+			MAX_VAL_IN_CHAN_SEL, rArgument) == TRUE)
+		{
+			switch ((int) rArgument)
+			{
+			case 0:
+				DRMReceiver.GetReceiver()->
+					SetInChanSel(CReceiveData::CS_LEFT_CHAN);
+				break;
+
+			case 1:
+				DRMReceiver.GetReceiver()->
+					SetInChanSel(CReceiveData::CS_RIGHT_CHAN);
+				break;
+
+			case 2:
+				DRMReceiver.GetReceiver()->
+					SetInChanSel(CReceiveData::CS_MIX_CHAN);
+				break;
+			}
 			continue;
 		}
 
@@ -622,41 +648,45 @@ string CSettings::UsageArguments(char** argv)
 	return
 		"Usage: " + string(argv[0]) + " [option] [argument]\n\n"
 		"Recognized options:\n\n"
-		"  -t, --transmitter          DRM transmitter mode\n"
-		"  -p, --flipspectrum         flip input spectrum\n"
-		"  -i <n>, --mlciter <n>      number of MLC iterations\n"
-		"                             allowed range: 0...4\n"
-		"                             default: 1\n"
-		"  -s <r>, --sampleoff <r>    sample rate offset initial value [Hz]\n"
-		"                             allowed range: -200.0...200.0\n"
-		"  -m, --muteaudio            mute audio output\n"
-		"  -f <s>, --fileio <s>       disable sound card,\n"
-		"                             use file <s> instead\n"
-		"  -w <s>, --writewav <s>     write output to wave file\n"
-		"  -S <r>, --fracwinsize <r>  freq. acqu. search window size [Hz]\n"
-		"  -E <r>, --fracwincent <r>  freq. acqu. search window center [Hz]\n"
-		"  -F, --filter               apply bandpass filter\n"
+		"  -t, --transmitter           DRM transmitter mode\n"
+		"  -p, --flipspectrum          flip input spectrum\n"
+		"  -i <n>, --mlciter <n>       number of MLC iterations\n"
+		"                              allowed range: 0...4\n"
+		"                              default: 1\n"
+		"  -s <r>, --sampleoff <r>     sample rate offset initial value [Hz]\n"
+		"                              allowed range: -200.0...200.0\n"
+		"  -m, --muteaudio             mute audio output\n"
+		"  -f <s>, --fileio <s>        disable sound card,\n"
+		"                              use file <s> instead\n"
+		"  -w <s>, --writewav <s>      write output to wave file\n"
+		"  -S <r>, --fracwinsize <r>   freq. acqu. search window size [Hz]\n"
+		"  -E <r>, --fracwincent <r>   freq. acqu. search window center [Hz]\n"
+		"  -F, --filter                apply bandpass filter\n"
+		"  -c <n>, --inchansel <n>     input channel selection\n"
+		"                              0: left channel\n"
+		"                              1: right channel\n"
+		"                              2: mix both channels (default)\n"
 
 #ifdef USE_QT_GUI
-		"  -r <n>, --frequency <n>    set frequency [kHz] for log file\n"
-		"  -a <s>, --latitude <s>     set latitude string for log file\n"
-		"  -o <s>, --longitude <s>    set longitude string for log file\n"
-		"  -l <n>, --startlog <n>     start log file (delayed by\n"
-		"                             <n> seconds)\n"
-		"                             allowed range: 1...3600\n"
-		"  -y <n>, --colorscheme <n>  set color scheme for main plot\n"
-		"                             0: blue-white (default)\n"
-		"                             1: green-black\n"
-		"                             2: black-grey\n"
+		"  -r <n>, --frequency <n>     set frequency [kHz] for log file\n"
+		"  -a <s>, --latitude <s>      set latitude string for log file\n"
+		"  -o <s>, --longitude <s>     set longitude string for log file\n"
+		"  -l <n>, --startlog <n>      start log file (delayed by\n"
+		"                              <n> seconds)\n"
+		"                              allowed range: 1...3600\n"
+		"  -y <n>, --colorscheme <n>   set color scheme for main plot\n"
+		"                              0: blue-white (default)\n"
+		"                              1: green-black\n"
+		"                              2: black-grey\n"
 #endif
 
-		"  -I <n>, --snddevin <n>     set sound in device\n"
-		"  -O <n>, --snddevout <n>    set sound out device\n"
+		"  -I <n>, --snddevin <n>      set sound in device\n"
+		"  -O <n>, --snddevout <n>     set sound out device\n"
 
 #ifdef HAVE_LIBHAMLIB
-		"  -M <n>, --hamlib-model <n> set Hamlib radio model ID\n"
-		"  -C, --hamlib-config <s>    set Hamlib config parameter\n"
-		"  -T, --ensmeter             enable S-Meter\n"
+		"  -M <n>, --hamlib-model <n>  set Hamlib radio model ID\n"
+		"  -C <s>, --hamlib-config <s> set Hamlib config parameter\n"
+		"  -T, --ensmeter              enable S-Meter\n"
 #endif
 
 		"\n  -h, -?, --help             this help text\n\n"

@@ -51,6 +51,9 @@ extern CDRMReceiver	DRMReceiver;
 /* Maximum number of iterations in MLC decoder */
 #define MAX_NUM_MLC_IT				4
 
+/* Maximum value of input channel selection */
+#define MAX_VAL_IN_CHAN_SEL			2
+
 /* Minimum and maximum of initial sample rate offset parameter */
 #define MIN_SAM_OFFS_INI			-200
 #define MAX_SAM_OFFS_INI			200
