@@ -68,7 +68,7 @@ public:
 	virtual ~CSound();
 
 	void		InitRecording(int iNewBufferSize);
-	void		InitPlayback(int iNewBufferSize);
+	void		InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
 	_BOOLEAN	Read(CVector<short>& psData);
 	_BOOLEAN	Write(CVector<short>& psData);
 
@@ -86,6 +86,7 @@ protected:
 	void		PrepareOutBuffer(int iBufNum);
 	void		AddInBuffer();
 	void		AddOutBuffer(int iBufNum);
+	void		GetDoneBuffer(int& iCntPrepBuf, int& iIndexDoneBuf);
 
 	WAVEFORMATEX	sWaveFormatEx;
 	UINT			iNumDevs;
@@ -109,6 +110,8 @@ protected:
 	HWAVEOUT		m_WaveOut;
 	short*			psPlaybackBuffer[NUM_SOUND_BUFFERS_OUT];
 	WAVEHDR			m_WaveOutHeader[NUM_SOUND_BUFFERS_OUT];
+	HANDLE			m_WaveOutEvent;
+	_BOOLEAN		bBlocking;
 };
 
 

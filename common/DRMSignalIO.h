@@ -58,11 +58,22 @@
 class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
+#ifdef WRITE_TRNSM_TO_FILE
 	CTransmitData() : pFileTransmitter(NULL) {}
+#else
+	CTransmitData(CSound* pNS) : pSound(pNS) {}
+#endif
 	virtual ~CTransmitData();
 
 protected:
-	FILE*	pFileTransmitter;
+#ifdef WRITE_TRNSM_TO_FILE
+	FILE*			pFileTransmitter;
+#else
+	CSound*			pSound;
+	CVector<short>	vecsDataOut;
+	int				iBlockCnt;
+	int				iNumBlocks;
+#endif
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& Parameter);

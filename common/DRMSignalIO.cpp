@@ -35,34 +35,49 @@
 \******************************************************************************/
 void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 {
+	int i;
+
+#ifdef WRITE_TRNSM_TO_FILE
 	/* Write data to file */
 	/* Use only real-part. Since we use only the real part of the signal, we
 	   have to double the amplitude */
-	for (int y = 0; y < iInputBlockSize; y++)
+	for (i = 0; i < iInputBlockSize; i++)
 	{
 #ifdef FILE_DRM_USING_RAW_DATA
 		const short sOut =
-			(short) ((*pvecInputData)[y].real() * 2 * (_REAL) 64.0);
+			(short) ((*pvecInputData)[i].real() * 2 * (_REAL) 64.0);
 
 		/* Write 2 bytes, 1 piece */
 		fwrite((const void*) &sOut, size_t(2), size_t(1), pFileTransmitter);
 #else
 		fprintf(pFileTransmitter, "%e\n",
-			(float) (*pvecInputData)[y].real() * 2 * (_REAL) 64.0);
+			(float) (*pvecInputData)[i].real() * 2 * (_REAL) 64.0);
 #endif
 	}
 
-	/* Flush the buffer instantly because the receiver is called right
-	   after finishing the transmitter. If the buffer is not flushed it can
-	   happen that some data is not written in the file */
+	/* Flush the file buffer */
 	fflush(pFileTransmitter);
+#else
+	/* Convert vector type. Fill vector with symbols (collect them) */
+	for (i = 0; i < iInputBlockSize * 2; i += 2)
+		vecsDataOut[iBlockCnt * iInputBlockSize * 2 + i] =
+			vecsDataOut[iBlockCnt * iInputBlockSize * 2 + i + 1] =
+			(short) ((*pvecInputData)[i / 2].real() * 2 * (_REAL) 64.0);
+
+	iBlockCnt++;
+	if (iBlockCnt == iNumBlocks)
+	{
+		iBlockCnt = 0;
+
+		/* Write data to sound card. Must be a blocking function */
+		pSound->Write(vecsDataOut);
+	}
+#endif
 }
 
 void CTransmitData::InitInternal(CParameter& TransmParam)
 {
-	/* Define block-size for input */
-	iInputBlockSize = TransmParam.iSymbolBlockSize;
-
+#ifdef WRITE_TRNSM_TO_FILE
 	/* Open file for writing data for transmitting */
 #ifdef FILE_DRM_USING_RAW_DATA
 	pFileTransmitter = fopen("test/TransmittedData.txt", "wb");
@@ -73,13 +88,30 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	/* Check for error */
 	if (pFileTransmitter == NULL)
 		throw CGenErr("The file test/TransmittedData.txt cannot be created.");
+#else
+	/* Init vector for storing a complete DRM frame number of OFDM symbols */
+	iBlockCnt = 0;
+	iNumBlocks = TransmParam.iNumSymPerFrame;
+	const int iTotalSize =
+		TransmParam.iSymbolBlockSize * 2 /* Stereo */ * iNumBlocks;
+
+	vecsDataOut.Init(iTotalSize);
+
+	/* Init sound interface */
+	pSound->InitPlayback(iTotalSize, TRUE);
+#endif
+
+	/* Define block-size for input */
+	iInputBlockSize = TransmParam.iSymbolBlockSize;
 }
 
 CTransmitData::~CTransmitData()
 {
+#ifdef WRITE_TRNSM_TO_FILE
 	/* Close file */
 	if (pFileTransmitter != NULL)
 		fclose(pFileTransmitter);
+#endif
 }
 
 
@@ -114,7 +146,8 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 			short tIn;
 
 			/* Read 2 bytes, 1 piece */
-			if (fread(&tIn, size_t(2), size_t(1), pFileReceiver) == size_t(0))
+			if (fread((void*) &tIn, size_t(2), size_t(1), pFileReceiver) ==
+				size_t(0))
 #else
 			float tIn;
 
@@ -147,10 +180,10 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 		{
 			/* We flip the spectrum by using the mirror spectrum at the negative
 			   frequencys. If we shift by half of the sample frequency, we can
-			   do the shift without need of Hilbert transformation */
+			   do the shift without the need of a Hilbert transformation */
 			if (bFlagInv == FALSE)
 			{
-				(*pvecOutputData)[i] = (_REAL) -1.0 * (*pvecOutputData)[i];
+				(*pvecOutputData)[i] = -(*pvecOutputData)[i];
 				bFlagInv = TRUE;
 			}
 			else
@@ -234,7 +267,7 @@ _REAL CReceiveData::GetLevelMeter()
 
 	/* Logarithmic measure */
 	if (rNormMicLevel > 0)
-		return 20 * log10(rNormMicLevel);
+		return (_REAL) 20.0 * log10(rNormMicLevel);
 	else
 		return RET_VAL_LOG_0;
 }

@@ -236,23 +236,30 @@ _BOOLEAN CSound::Write(CVector<short>& psData)
 	}
 
 	/* Get number of "done"-buffers and position of one of them */
-	iCntPrepBuf = 0;
-	for (i = 0; i < NUM_SOUND_BUFFERS_OUT; i++)
-	{
-		if (m_WaveOutHeader[i].dwFlags & WHDR_DONE)
-		{
-			iCntPrepBuf++;
-			iIndexDoneBuf = i;
-		}
-	}
+	GetDoneBuffer(iCntPrepBuf, iIndexDoneBuf);
 
 	/* Now check special cases (Buffer is full or empty) */
 	if (iCntPrepBuf == 0)
 	{
-		/* All buffers are filled, dump new block --------------------------- */
+		if (bBlocking == TRUE)
+		{
+			/* Blocking wave out routine. Needed for transmitter. Always
+			   ensure that the buffer is completely filled to avoid buffer
+			   underruns */
+			while (iCntPrepBuf == 0)
+			{
+				WaitForSingleObject(m_WaveOutEvent, INFINITE);
+
+				GetDoneBuffer(iCntPrepBuf, iIndexDoneBuf);
+			}
+		}
+		else
+		{
+			/* All buffers are filled, dump new block ----------------------- */
 // It would be better to kill half of the buffer blocks to set the start
 // back to the middle: TODO
-		return TRUE; /* An error occurred */
+			return TRUE; /* An error occurred */
+		}
 	}
 	else if (iCntPrepBuf == NUM_SOUND_BUFFERS_OUT)
 	{
@@ -288,6 +295,20 @@ _BOOLEAN CSound::Write(CVector<short>& psData)
 	return bError;
 }
 
+void CSound::GetDoneBuffer(int& iCntPrepBuf, int& iIndexDoneBuf)
+{
+	/* Get number of "done"-buffers and position of one of them */
+	iCntPrepBuf = 0;
+	for (int i = 0; i < NUM_SOUND_BUFFERS_OUT; i++)
+	{
+		if (m_WaveOutHeader[i].dwFlags & WHDR_DONE)
+		{
+			iCntPrepBuf++;
+			iIndexDoneBuf = i;
+		}
+	}
+}
+
 void CSound::AddOutBuffer(int iBufNum)
 {
 	/* Unprepare old wave-header */
@@ -312,7 +333,7 @@ void CSound::PrepareOutBuffer(int iBufNum)
 	waveOutPrepareHeader(m_WaveOut, &m_WaveOutHeader[iBufNum], sizeof(WAVEHDR));
 }
 
-void CSound::InitPlayback(int iNewBufferSize)
+void CSound::InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
 	int			i, j;
 	MMRESULT	result;
@@ -326,8 +347,9 @@ void CSound::InitPlayback(int iNewBufferSize)
 		bChangDevOut = FALSE;
 	}
 
-	/* Set internal parameter */
+	/* Set internal parameters */
 	iBufferSizeOut = iNewBufferSize;
+	bBlocking = bNewBlocking;
 
 	/* Reset interface */
 	waveOutReset(m_WaveOut);
@@ -364,8 +386,9 @@ void CSound::OpenOutDevice()
 		waveOutClose(m_WaveOut);
 	}
 
-	MMRESULT result = waveOutOpen(&m_WaveOut, iCurOutDev, &sWaveFormatEx, 0, 0,
-		CALLBACK_NULL);
+	MMRESULT result = waveOutOpen(&m_WaveOut, iCurOutDev, &sWaveFormatEx,
+		(DWORD) m_WaveOutEvent, NULL, CALLBACK_EVENT);
+
 	if (result != MMSYSERR_NOERROR)
 		throw CGenErr("Sound Interface Start, waveOutOpen() failed.");
 }
@@ -453,17 +476,22 @@ void CSound::Close()
 			throw CGenErr("Sound Interface, waveOutClose() failed.");
 	}
 
-	/* Close the handle for the event */
+	/* Close the handle for the events */
 	if (m_WaveInEvent != NULL)
 		CloseHandle(m_WaveInEvent);
+
+	if (m_WaveOutEvent != NULL)
+		CloseHandle(m_WaveOutEvent);
+
 }
 
 CSound::CSound()
 {
 	int i;
 
+	/* Should be initialized because an error can occur during init */
 	m_WaveInEvent = NULL;
-
+	m_WaveOutEvent = NULL;
 	m_WaveIn = NULL;
 	m_WaveOut = NULL;
 
@@ -500,9 +528,10 @@ CSound::CSound()
 		if (!waveInGetDevCaps(i, &m_WaveInDevCaps, sizeof(WAVEINCAPS)))
 			pstrDevices[i] = m_WaveInDevCaps.szPname;
 
-	/* We use an event controlled wave-in structure */
-	/* Create an event */
+	/* We use an event controlled wave-in (wave-out) structure */
+	/* Create events */
 	m_WaveInEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	m_WaveOutEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	/* Set flag to open devices */
 	bChangDevIn = TRUE;
@@ -511,6 +540,9 @@ CSound::CSound()
 	/* Default device number (first device in system) */
 	iCurInDev = 0;
 	iCurOutDev = 0;
+
+	/* Non-blocking wave out is default */
+	bBlocking = FALSE;
 }
 
 CSound::~CSound()
