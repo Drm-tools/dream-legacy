@@ -164,7 +164,7 @@
 <customwidgets>
     <customwidget>
         <class>QwtCounter</class>
-        <header location="global">U:/DRMProjekt/drm/libs/qwt_counter.h</header>
+        <header location="global">qwt_counter.h</header>
         <sizehint>
             <width>50</width>
             <height>10</height>
