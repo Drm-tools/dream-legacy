@@ -72,6 +72,7 @@ public:
 	CAudioSourceEncoder*	GetAudSrcEnc() {return &AudioSourceEncoder;}
 	CTransmitData*			GetTransData() {return &TransmitData;}
 
+	CSound*					GetSoundInterface() {return &SoundInterface;}
 	CParameter*				GetParameters() {return &TransmParam;}
 
 
