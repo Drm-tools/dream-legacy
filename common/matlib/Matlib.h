@@ -142,13 +142,13 @@ public:
 	}
 
 	/* Operator[] (Regular indices!!!) */
-	inline T operator[](int const iPos) const
+	inline T& operator[](int const iPos) const
 		{_TESTRNGR(iPos); return pData[iPos];}
 	inline T& operator[](int const iPos)
 		{_TESTRNGW(iPos); return pData[iPos];} // For use as l value
 
 	/* Operator() */
-	inline T operator()(int const iPos) const
+	inline T& operator()(int const iPos) const
 		{_TESTRNGR(iPos - 1); return pData[iPos - 1];}
 	inline T& operator()(int const iPos)
 		{_TESTRNGW(iPos - 1); return pData[iPos - 1];} // For use as l value
@@ -210,7 +210,6 @@ public:
 		{_VECOPCL(-= vecI[i]);}
 	inline CMatlibVector<CComplex>&	operator-=(const CMatlibVector<CComplex>& vecI)
 		{_VECOPCL(-= vecI[i]);}
-
 
 protected:
 	EVecTy	eVType;
@@ -517,8 +516,6 @@ CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA,
 }
 
 
-
-
 /******************************************************************************/
 /* CMatlibMatrix class ********************************************************/
 /******************************************************************************/
@@ -547,13 +544,13 @@ public:
 		{if (iRowSize > 0) return ppData[0].GetSize(); else return 0;}
 
 	/* Operator[] (Regular indices!!!) */
-	inline CMatlibVector<T> operator[](int const iPos) const
+	inline CMatlibVector<T>& operator[](int const iPos) const
 		{_TESTRNGRM(iPos); return ppData[iPos];}
 	inline CMatlibVector<T>& operator[](int const iPos)
 		{_TESTRNGWM(iPos); return ppData[iPos];} // For use as l value
 
 	/* Operator() */
-	inline CMatlibVector<T> operator()(int const iPos) const 
+	inline CMatlibVector<T>& operator()(int const iPos) const 
 		{_TESTRNGRM(iPos - 1); return ppData[iPos - 1];}
 	inline CMatlibVector<T>& operator()(int const iPos) 
 		{_TESTRNGWM(iPos - 1); return ppData[iPos - 1];} // For use as l value
@@ -578,7 +575,6 @@ public:
 		{_MATOPCL(/= rI);}
 	inline CMatlibMatrix<CComplex>& operator/=(const CComplex& cI)
 		{_MATOPCL(/= cI);}
-
 
 protected:
 	EVecTy				eVType;
