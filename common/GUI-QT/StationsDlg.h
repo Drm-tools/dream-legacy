@@ -43,6 +43,7 @@
 #include <qthread.h>
 #include <qwt_counter.h>
 #include <qaction.h>
+#include <qwhatsthis.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/StationsDlgbase.h"
@@ -170,6 +171,7 @@ protected:
 
 	void			SetStationsView();
     virtual void	showEvent(QShowEvent* pEvent);
+	void			AddWhatsThisHelp();
 
 	CDRMSchedule				DRMSchedule;
 	QPixmap						BitmCubeGreen;

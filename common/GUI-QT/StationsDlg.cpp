@@ -220,6 +220,9 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	, pRig(NULL)
 #endif
 {
+	/* Set help text for the controls */
+	AddWhatsThisHelp();
+
 	/* Define size of the bitmaps */
 	const int iXSize = 13;
 	const int iYSize = 13;
@@ -1852,4 +1855,33 @@ _BOOLEAN StationsDlg::SetFrequencyRX320D(const ECOMNumber eCOMNumber,
 #endif
 
   return bSucceeded;
+}
+
+void StationsDlg::AddWhatsThisHelp()
+{
+	/* Stations List */
+	QWhatsThis::add(ListViewStations,
+		"<b>Stations List:</b> In the stations list view all DRM stations "
+		"which are stored in the DRMSchedule.ini file are shown. It is "
+		"possible to show only active stations by changing a setting in "
+		"the 'view' menu. The color of the cube on the left of a menu "
+		"item shows the current status of the DRM transmission. A green "
+		"box shows that the transmission takes place right now, a "
+		"yellow cube shows that this is a test transmission and with a "
+		"red cube it is shown that the transmission is offline.<br>"
+		"The list can be sorted by clicking on the headline of the "
+		"column.<br>By clicking on a menu item, a remote front-end can "
+		"be automatically switched to the current frequency and the "
+		"Dream software is reset to a new acquisition (to speed up the "
+		"synchronization process). Also, the log-file frequency edit "
+		"is automatically updated.");
+
+	/* Frequency Counter */
+	QWhatsThis::add(QwtCounterFrequency,
+		"<b>Frequency Counter:</b> The current frequency value can be "
+		"changed by using this counter. The tuning steps are 100 kHz "
+		"for the  buttons with three arrows, 10 kHz for the "
+		"buttons with two arrows and 1 kHz for the buttons having only "
+		"one arrow. By keeping the button pressed, the values are "
+		"increased / decreased automatically.");
 }
