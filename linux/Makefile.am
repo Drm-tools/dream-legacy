@@ -95,6 +95,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/matlib/MatlibSigProToolbox.h \
 	../common/matlib/MatlibStdToolbox.h \
 	../common/SDC/SDC.h \
+	../common/TransmitterFilter.h \
 	../common/chanest/ChanEstTime.h \
 	../common/chanest/ChannelEstimation.h \
 	../common/chanest/TimeLinear.h \

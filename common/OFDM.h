@@ -56,8 +56,6 @@ public:
 
 	void SetCarOffset(const _REAL rNewCarOffset)
 		{rDefCarOffset = rNewCarOffset;}
-	_REAL GetCarOffset() {return rDefCarOffset;}
-
 
 protected:
 	CFftPlans				FftPlan;

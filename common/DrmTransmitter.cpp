@@ -225,7 +225,7 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	Param.eSDCCodingScheme = CParameter::CS_2_SM;
 
 	/* Set desired intermedia frequency (IF) in Hertz */
-	OFDMModulation.SetCarOffset(12000.0); /* Default: "VIRTUAL_INTERMED_FREQ" */
+	SetCarOffset(12000.0); /* Default: "VIRTUAL_INTERMED_FREQ" */
 
 #ifdef WRITE_TRNSM_TO_FILE
 	/* Set the number of MSC frames we want to generate */

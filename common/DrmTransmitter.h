@@ -57,7 +57,11 @@ public:
 #ifndef WRITE_TRNSM_TO_FILE
 		TransmitData(&SoundInterface),
 #endif
-		ReadData(&SoundInterface) {StartParameters(TransmParam);}
+		ReadData(&SoundInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
+	{
+		StartParameters(TransmParam);
+		SetCarOffset(rDefCarOffset);
+	}
 	virtual ~CDRMTransmitter() {}
 
 	void Init();
@@ -65,12 +69,20 @@ public:
 	void Stop();
 
 	/* Get pointer to internal modules */
-	COFDMModulation*		GetOFDMMod() {return &OFDMModulation;}
 	CAudioSourceEncoder*	GetAudSrcEnc() {return &AudioSourceEncoder;}
 	CTransmitData*			GetTransData() {return &TransmitData;}
 
 	CParameter*				GetParameters() {return &TransmParam;}
 
+
+	void SetCarOffset(const _REAL rNewCarOffset)
+	{
+		/* Has to be set in OFDM modulation and transmitter filter module */
+		OFDMModulation.SetCarOffset(rNewCarOffset);
+		TransmitData.SetCarOffset(rNewCarOffset);
+		rDefCarOffset = rNewCarOffset;
+	}
+	_REAL GetCarOffset() {return rDefCarOffset;}
 
 protected:
 	void StartParameters(CParameter& Param);
@@ -109,6 +121,8 @@ protected:
 	CTransmitData			TransmitData;
 
 	CSound					SoundInterface;
+
+	_REAL					rDefCarOffset;
 };
 
 

@@ -33,6 +33,7 @@
 #include "Modul.h"
 #include <math.h>
 #include "matlib/Matlib.h"
+#include "TransmitterFilter.h"
 
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
@@ -62,15 +63,20 @@ public:
 		OF_EP /* envelope / phase */};
 
 #ifdef WRITE_TRNSM_TO_FILE
-	CTransmitData() : pFileTransmitter(NULL) {}
+	CTransmitData() : pFileTransmitter(NULL),
+		rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ) {}
 	void SetIQOutput(const EOutFormat eFormat) {} /* Not used in file mode */
 	_BOOLEAN GetIQOutput() {return FALSE;}
 #else
-	CTransmitData(CSound* pNS) : pSound(pNS), eOutputFormat(OF_REAL_VAL) {}
+	CTransmitData(CSound* pNS) : pSound(pNS), eOutputFormat(OF_REAL_VAL),
+		rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ) {}
 	void SetIQOutput(const EOutFormat eFormat) {eOutputFormat = eFormat;}
 	EOutFormat GetIQOutput() {return eOutputFormat;}
 #endif
 	virtual ~CTransmitData();
+
+	void SetCarOffset(const CReal rNewCarOffset)
+		{rDefCarOffset = rNewCarOffset;}
 
 protected:
 #ifdef WRITE_TRNSM_TO_FILE
@@ -82,6 +88,13 @@ protected:
 	int				iNumBlocks;
 	EOutFormat		eOutputFormat;
 #endif
+
+	CReal			rDefCarOffset;
+	CRealVector		rvecA;
+	CRealVector		rvecB;
+	CRealVector		rvecZ; /* State memory */
+	CRealVector		rvecDataReal;
+	CRealVector		rvecDataImag;
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& Parameter);

@@ -58,6 +58,23 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 	/* Flush the file buffer */
 	fflush(pFileTransmitter);
 #else
+
+
+	/* Filtering of output signal (FIR filter) ------------------------------ */
+	/* Transfer input data in Matlib library vector */
+	for (i = 0; i < iInputBlockSize; i++)
+	{
+		rvecDataReal[i] = (*pvecInputData)[i].real();
+		rvecDataImag[i] = (*pvecInputData)[i].imag();
+	}
+
+	/* Actual filter routine (use saved state vector) */
+	rvecDataReal = Filter(rvecB, rvecA, rvecDataReal, rvecZ);
+
+	if (eOutputFormat == OF_IQ)
+		rvecDataImag = Filter(rvecB, rvecA, rvecDataImag, rvecZ);
+
+
 	/* Convert vector type. Fill vector with symbols (collect them) */
 	const int iNs2 = iInputBlockSize * 2;
 	for (i = 0; i < iNs2; i += 2)
@@ -66,9 +83,9 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 
 		/* Imaginary, real */
 		const short sCurOutReal =
-			(short) ((*pvecInputData)[i / 2].real() * (_REAL) 128.0);
+			(short) (rvecDataReal[i / 2] * (_REAL) 128.0);
 		const short sCurOutImag =
-			(short) ((*pvecInputData)[i / 2].imag() * (_REAL) 128.0);
+			(short) (rvecDataImag[i / 2] * (_REAL) 128.0);
 
 		/* Envelope, phase */
 		const short sCurOutEnv =
@@ -135,6 +152,77 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	/* Init sound interface */
 	pSound->InitPlayback(iTotalSize, TRUE);
 #endif
+
+	/* Init filter taps */
+	rvecB.Init(NUM_TAPS_TRANSMFILTER);
+
+	/* Choose correct filter for chosen DRM bandwidth. Also, adjust offset
+	   frequency for different modes. E.g., 5 kHz mode is on the right side
+	   of the DC frequency */
+	float* pCurFilt;
+	CReal rNormCurFreqOffset;
+
+	switch (TransmParam.GetSpectrumOccup())
+	{
+	case SO_0:
+		pCurFilt = fTransmFilt4_5;
+
+		/* Completely on the right side of DC */
+		rNormCurFreqOffset =
+			(rDefCarOffset + (CReal) 2250.0) / SOUNDCRD_SAMPLE_RATE;
+		break;
+
+	case SO_1:
+		pCurFilt = fTransmFilt5;
+
+		/* Completely on the right side of DC */
+		rNormCurFreqOffset =
+			(rDefCarOffset + (CReal) 2500.0) / SOUNDCRD_SAMPLE_RATE;
+		break;
+
+	case SO_2:
+		pCurFilt = fTransmFilt9;
+
+		/* Centered */
+		rNormCurFreqOffset = rDefCarOffset / SOUNDCRD_SAMPLE_RATE;
+		break;
+
+	case SO_3:
+		pCurFilt = fTransmFilt10;
+
+		/* Centered */
+		rNormCurFreqOffset = rDefCarOffset / SOUNDCRD_SAMPLE_RATE;
+		break;
+
+	case SO_4:
+		pCurFilt = fTransmFilt18;
+
+		/* Main part on the right side of DC */
+		rNormCurFreqOffset =
+			(rDefCarOffset + (CReal) 4500.0) / SOUNDCRD_SAMPLE_RATE;
+		break;
+
+	case SO_5:
+		pCurFilt = fTransmFilt20;
+
+		/* Main part on the right side of DC */
+		rNormCurFreqOffset =
+			(rDefCarOffset + (CReal) 5000.0) / SOUNDCRD_SAMPLE_RATE;
+		break;
+	}
+
+	/* Modulate filter to shift it to the correct IF frequency */
+	for (int i = 0; i < NUM_TAPS_TRANSMFILTER; i++)
+		rvecB[i] = pCurFilt[i] * Cos((CReal) 2.0 * crPi * rNormCurFreqOffset * i);
+
+	/* Only FIR filter */
+	rvecA.Init(1);
+	rvecA[0] = (CReal) 1.0;
+
+	/* State memory (init with zeros) and data vector */
+	rvecZ.Init(NUM_TAPS_TRANSMFILTER, (CReal) 0.0);
+	rvecDataReal.Init(TransmParam.iSymbolBlockSize);
+	rvecDataImag.Init(TransmParam.iSymbolBlockSize);
 
 	/* Define block-size for input */
 	iInputBlockSize = TransmParam.iSymbolBlockSize;
