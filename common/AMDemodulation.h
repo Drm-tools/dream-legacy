@@ -56,7 +56,10 @@
 
 /* Lower bound for estimated average amplitude. That is needed, since we 
    devide by this estimate so it must not be zero */
-#define LOWER_BOUND_AMP_LEVEL				((CReal) 1.0)
+#define LOWER_BOUND_AMP_LEVEL				((CReal) 10.0)
+
+/* Amplitude correction factor for demodulation */
+#define AM_AMPL_CORR_FACTOR					((CReal) 5.0)
 
 
 /* Classes ********************************************************************/

@@ -165,8 +165,9 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		{
 			if (eAGCType == AT_NO_AGC)
 			{
-				/* No modification of the signal */
-				rOutSignal = rvecInpTmp[j];
+				/* No modification of the signal (except of an amplitude
+				   correction factor) */
+				rOutSignal = rvecInpTmp[j] * AM_AMPL_CORR_FACTOR;
 			}
 			else
 			{
@@ -202,9 +203,9 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Start with phase null (can be arbitrarily chosen) */
 	cCurExp = (CReal) 1.0;
 
-	/* Init average amplitude estimation (needed for AGC) with high value so
-	   that the signal starts with low level */
-	rAvAmplEst = DES_AV_AMPL_AM_SIGNAL;
+	/* Init average amplitude estimation (needed for AGC) with desired
+	   amplitude */
+	rAvAmplEst = DES_AV_AMPL_AM_SIGNAL / AM_AMPL_CORR_FACTOR;
 
 
 	/* Inits for acquisition ------------------------------------------------ */
