@@ -299,19 +299,19 @@ void FDRMDialog::OnTimer()
 
 		/* Enable only so many number of channel switches as present in the 
 		   stream */
-		int iNoServices = DRMReceiver.GetParameters()->GetTotNumServices();
+		int iNumServices = DRMReceiver.GetParameters()->GetTotNumServices();
 
 		QString m_StaticService[MAX_NUM_SERVICES] = {"", "", "", ""};
 
-		/* Reset all buttons only if No of services has changed */
-		if (iOldNoServicesGUI != iNoServices)
+		/* Reset all buttons only if number of services has changed */
+		if (iOldNoServicesGUI != iNumServices)
 		{
 			PushButtonService1->setEnabled(FALSE);
 			PushButtonService2->setEnabled(FALSE);
 			PushButtonService3->setEnabled(FALSE);
 			PushButtonService4->setEnabled(FALSE);
 		}
-		iOldNoServicesGUI = iNoServices;
+		iOldNoServicesGUI = iNumServices;
 
 		for (int i = 0; i < MAX_NUM_SERVICES; i++)
 		{
