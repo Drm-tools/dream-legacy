@@ -173,18 +173,18 @@ CMatlibVector<CReal> Triang(const int iLen)
 	return fvRet;
 }
 
-CMatlibVector<CReal> Randn(const int iLength)
+CMatlibVector<CReal> Randn(const int iLen)
 {
 	/* Add some constant distributed random processes together */
-	_VECOP(CReal, iLength, 
+	_VECOP(CReal, iLen, 
 		(CReal) ((((CReal) 
 		rand() + rand() + rand() + rand() + rand() + rand() + rand()) 
 		/ RAND_MAX - 0.5) * /* sqrt(3) * 2 / sqrt(7) */ 1.3093));
 }
 
-CMatlibVector<CReal> Filter(const CMatlibVector<CReal>& fvB, 
-							const CMatlibVector<CReal>& fvA, 
-							const CMatlibVector<CReal>& fvX, 
+CMatlibVector<CReal> Filter(const CMatlibVector<CReal>& fvB,
+							const CMatlibVector<CReal>& fvA,
+							const CMatlibVector<CReal>& fvX,
 							CMatlibVector<CReal>& fvZ)
 {
 	int						m, n, iLenCoeff;
@@ -278,8 +278,8 @@ CMatlibVector<CReal> FirLP(const CReal rNormBW,
 	return fvRet;
 }
 
-CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB, 
-								   const CMatlibVector<CReal>& rvX, 
+CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB,
+								   const CMatlibVector<CReal>& rvX,
 								   CMatlibVector<CReal>& rvZ,
 								   const int iDecFact)
 {
@@ -338,7 +338,7 @@ CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB,
 	return cvY;
 }
 
-CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx, 
+CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx,
 							  const CMatlibVector<CReal>& vecrB)
 {
 /* 
@@ -419,7 +419,7 @@ CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx,
 	return vecrX;
 }
 
-CMatlibVector<CComplex> Levinson(const CMatlibVector<CComplex>& veccRx, 
+CMatlibVector<CComplex> Levinson(const CMatlibVector<CComplex>& veccRx,
 								 const CMatlibVector<CComplex>& veccB)
 {
 /* 

@@ -33,7 +33,14 @@
 
 
 /* Helpfunctions **************************************************************/
-CMatlibVector<CReal>	Randn(const int iLength);
+/* Randomize functions */
+CMatlibVector<CReal>	Randn(const int iLen);
+inline
+CMatlibVector<CReal>	Rand(const int iLen)
+							{_VECOP(CReal, iLen, (CReal) rand() / RAND_MAX);}
+
+
+/* Window functions */
 CMatlibVector<CReal>	Hann(const int iLen);
 CMatlibVector<CReal>	Hamming(const int iLen);
 CMatlibVector<CReal>	Nuttallwin(const int iLen);
@@ -100,15 +107,10 @@ inline void				IIR1(CMatlibVector<CReal>& rY,
 		IIR1(rY[i], rX[i], rLambda);
 }
 
+/* Two-sided one pole recursion */
 inline void				IIR1TwoSided(CReal& rY, const CReal& rX,
 									 const CReal rLamUp, const CReal rLamDown)
-{
-	/* Two-sided one pole recursion */
-	if (rX > rY)
-		rY = rLamUp * (rY - rX) + rX;
-	else
-		rY = rLamDown * (rY - rX) + rX;
-}
+							{rX > rY ? IIR1(rY, rX, rLamUp) : IIR1(rY, rX, rLamDown);}
 
 /* Get lambda for one-pole recursion from time constant */
 inline CReal			IIR1Lam(const CReal& rTau, const CReal& rFs)
