@@ -117,6 +117,7 @@ public:
 	CWriteData*				GetWriteData() {return &WriteData;}
 	CSound*					GetSoundInterface() {return &SoundInterface;}
 	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
+	CAMDemodulation*		GetAMDemod() {return &AMDemodulation;}
 
 
 	CParameter*				GetParameters() {return &ReceiverParam;}

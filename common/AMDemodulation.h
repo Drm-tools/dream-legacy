@@ -55,13 +55,16 @@
 class CAMDemodulation : public CReceiverModul<_REAL, _SAMPLE>
 {
 public:
-	CAMDemodulation() : bAcquisition(TRUE), bSearWinWasSet(FALSE) {}
+	CAMDemodulation() : bAcquisition(TRUE), bSearWinWasSet(FALSE),
+		bFlipFreqOffset(FALSE) {}
 	virtual ~CAMDemodulation() {}
 
-	void SetFilterTaps(CReal rNewOffsetNorm);
-	void SetAcqFreq(CReal rNewNormCenter);
+	void SetAcqFreq(const CReal rNewNormCenter);
+	void SetFlipCarrierFreq() {bFlipFreqOffset = TRUE;}
 
 protected:
+	void SetCarrierFrequency(const CReal rNormCurFreqOffset);
+
 	CRealVector					rvecA;
 	CRealVector					rvecBReal;
 	CRealVector					rvecBImag;
@@ -91,6 +94,9 @@ protected:
 	int							iSearchWinEnd;
 	_BOOLEAN					bSearWinWasSet;
 	CReal						rNormCenter;
+
+	CReal						rNormCurFreqOffset;
+	_BOOLEAN					bFlipFreqOffset;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

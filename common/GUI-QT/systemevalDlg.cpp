@@ -679,6 +679,10 @@ void systemevalDlg::OnCheckFlipSpectrum()
 	/* Set parameter in working thread module */
 	DRMReceiver.GetReceiver()->
 		SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
+
+	/* Also, flip estimated carrier frequency in AM demodulation module in case
+	   we are in AM mode */
+	DRMReceiver.GetAMDemod()->SetFlipCarrierFreq();
 }
 
 void systemevalDlg::OnCheckBoxMuteAudio()

@@ -34,9 +34,8 @@
 void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int		i, j;
-	CReal	rNormCurFreqOffset;
-	CReal	rMaxPeak;
 	int		iIndMaxPeak;
+	CReal	rMaxPeak;
 
 	/* Acquisition ---------------------------------------------------------- */
 	if (bAcquisition == TRUE)
@@ -79,9 +78,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 			rNormCurFreqOffset = (CReal) iIndMaxPeak / iHalfBuffer / 2;
 
 			/* Generate filter taps and set mixing constant */
-			SetFilterTaps(rNormCurFreqOffset);
-			cExpStep = CComplex(cos((_REAL) 2.0 * crPi * rNormCurFreqOffset),
-				-sin((_REAL) 2.0 * crPi * rNormCurFreqOffset));
+			SetCarrierFrequency(rNormCurFreqOffset);
 
 			/* Set global parameter for GUI */
 			ReceiverParam.rFreqOffsetAcqui = rNormCurFreqOffset;
@@ -92,6 +89,24 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 	else
 	{
+		/* Adjust estimated carrier frequency if the input spectrum was
+		   inverted */
+		if (bFlipFreqOffset == TRUE)
+		{
+			/* Flip normalized frequency */
+			rNormCurFreqOffset = (CReal) 0.5 - rNormCurFreqOffset;
+
+			/* Generate filter taps and set mixing constant */
+			SetCarrierFrequency(rNormCurFreqOffset);
+
+			/* Set new carrier frequency as global parameter for GUI */
+			ReceiverParam.rFreqOffsetAcqui = rNormCurFreqOffset;
+
+			/* Reset flag */
+			bFlipFreqOffset = FALSE;
+		}
+
+
 		/* AM demodulation -------------------------------------------------- */
 		/* Copy CVector data in CMatlibVector */
 		for (i = 0; i < iInputBlockSize; i++)
@@ -145,7 +160,7 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	iHalfBuffer = iTotalBufferSize / 2 + 1;
 
 	/* Allocate memory for FFT-histories and init with zeros */
-	vecrFFTHistory.Init(iTotalBufferSize, (_REAL) 0.0);
+	vecrFFTHistory.Init(iTotalBufferSize, (CReal) 0.0);
 	vecrFFTInput.Init(iTotalBufferSize);
 	veccFFTOutput.Init(iHalfBuffer);
 
@@ -155,7 +170,16 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	bAcquisition = TRUE;
 	iAquisitionCounter = NUM_BLOCKS_CARR_ACQUISITION;
 	/* Reset FFT-history */
-	vecrFFTHistory.Reset((_REAL) 0.0);
+	vecrFFTHistory.Reset((CReal) 0.0);
+
+	/* Reset flag for flipping carrier frequency estimation. This should be done
+	   in the init routine because the receiver could have been in DRM mode and
+	   the user had switched the "flip input spectrum" check. In this case, also
+	   this flag in the AM demodulation would have been set but AM demodulation
+	   was not activated at this time. When the user switches to AM
+	   demodulation, the estimated carrier frequency would be changed right
+	   after acquisition which is, of course, not correct */
+	bFlipFreqOffset = FALSE;
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iTotalBufferSize);
@@ -188,31 +212,32 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Define block-sizes for input and output */
-	iMaxOutputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
-		(_REAL) 0.4 /* 400 ms */ * 2 /* stereo */) +
+	iMaxOutputBlockSize = (int) ((CReal) SOUNDCRD_SAMPLE_RATE *
+		(CReal) 0.4 /* 400 ms */ * 2 /* stereo */) +
 		2 /* stereo */ * iSymbolBlockSize;
 
 	iInputBlockSize = iSymbolBlockSize;
 	iOutputBlockSize = 2 * iSymbolBlockSize;
 }
 
-void CAMDemodulation::SetFilterTaps(_REAL rNewOffsetNorm)
+void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 {
-	/* Calculate filter taps for complex Hilbert filter */
+	/* Calculate filter taps for complex Hilbert filter --------------------- */
 	rvecBReal.Init(NUM_TAPS_HILB_FILT_5);
 	rvecBImag.Init(NUM_TAPS_HILB_FILT_5);
 	rvecA.Init(1);
 
-	/* The filter should be on the right of the DC carrier */
-	rNewOffsetNorm += (_REAL) HILB_FILT_BNDWIDTH_5 / 2 / SOUNDCRD_SAMPLE_RATE;
+	/* The filter should be on the right side of the DC carrier */
+	const CReal rFiltCentOffs = rNormCurFreqOffset +
+		(CReal) HILB_FILT_BNDWIDTH_5 / 2 / SOUNDCRD_SAMPLE_RATE;
 
 	for (int i = 0; i < NUM_TAPS_HILB_FILT_5; i++)
 	{
 		rvecBReal[i] =
-			fHilLPProt5[i] * Cos((_REAL) 2.0 * crPi * rNewOffsetNorm * i);
+			fHilLPProt5[i] * Cos((CReal) 2.0 * crPi * rFiltCentOffs * i);
 
 		rvecBImag[i] =
-			fHilLPProt5[i] * Sin((_REAL) 2.0 * crPi * rNewOffsetNorm * i);
+			fHilLPProt5[i] * Sin((CReal) 2.0 * crPi * rFiltCentOffs * i);
 	}
 
 	/* Only FIR filter */
@@ -221,9 +246,14 @@ void CAMDemodulation::SetFilterTaps(_REAL rNewOffsetNorm)
 	/* Init state vector for filtering with zeros */
 	rvecZReal.Init(NUM_TAPS_HILB_FILT_5 - 1, (CReal) 0.0);
 	rvecZImag.Init(NUM_TAPS_HILB_FILT_5 - 1, (CReal) 0.0);
+
+
+	/* Set mixing constant -------------------------------------------------- */
+	cExpStep = CComplex(cos((CReal) 2.0 * crPi * rNormCurFreqOffset),
+		-sin((CReal) 2.0 * crPi * rNormCurFreqOffset));
 }
 
-void CAMDemodulation::SetAcqFreq(_REAL rNewNormCenter)
+void CAMDemodulation::SetAcqFreq(const CReal rNewNormCenter)
 {
 	/* Define search window for center frequency (used when aquisistion is
 	   active) */
