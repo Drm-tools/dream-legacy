@@ -38,7 +38,7 @@
 class CParameter : public CCellMappingTable
 {
 public:
-	CParameter() : bRunThread(FALSE), Stream(MAX_NO_STREAMS), iChanEstDelay(0),
+	CParameter() : bRunThread(FALSE), Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
 		FACRepitition(15) /* See 6.3.6 */, bUsingMultimedia(TRUE) {}
 	virtual ~CParameter() {}
 
@@ -123,6 +123,8 @@ public:
 		EHVXCRate	eHVXCRate; /* This field indicates the rate of the HVXC */
 		_BOOLEAN	bHVXCCRC; /* This field indicates whether the CRC is used or not */
 
+/* TODO: Copy operator. Now, default copy operator is used! */
+
 		/* This function is needed for detection changes in the class */
 		_BOOLEAN operator!=(const CAudioParam AudioParam)
 		{
@@ -169,6 +171,8 @@ public:
 		// "DAB specified application" not yet implemented!!!
 		EApplDomain eAppDomain; /* Application domain */
 		int			iUserAppIdent; /* User application identifier, only DAB */
+
+/* TODO: Copy operator. Now, default copy operator is used! */
 
 		/* This function is needed for detection changes in the class */
 		_BOOLEAN operator!=(const CDataParam DataParam)
@@ -241,14 +245,6 @@ public:
 			iHierarch = NewMSCProtLev.iHierarch;
 			return *this; 
 		}
-
-		_BOOLEAN operator!=(const CMSCProtLev MSCProtLev)
-		{
-			if (iPartA != MSCProtLev.iPartA) return TRUE;
-			if (iPartB != MSCProtLev.iPartB) return TRUE;
-			if (iHierarch != MSCProtLev.iHierarch) return TRUE;
-			return FALSE;
-		}
 	};
 
 	void			ResetServicesStreams();
@@ -272,6 +268,9 @@ public:
 	_REAL			GetDCFrequency() const {return SOUNDCRD_SAMPLE_RATE *
 						(rFreqOffsetAcqui + rFreqOffsetTrack);}
 	_REAL			GetSampFreqEst() const {return rResampleOffset;}
+
+	_REAL			GetBitRate(int iServiceID);
+	_BOOLEAN		IsEEP(int iServiceID); /* Is service equal error protection */
 
 
 	/* Parameters controlled by FAC ----------------------------------------- */
@@ -313,18 +312,20 @@ public:
 
 	/* Parameters controlled by SDC ----------------------------------------- */
 	void SetAudioParam(const int iShortID, const CAudioParam NewAudParam);
+	CAudioParam GetAudioParam(const int iShortID)
+		{return Service[iShortID].AudioParam;}
 	void SetDataParam(const int iShortID, const CDataParam NewDataParam);
+	CDataParam GetDataParam(const int iShortID)
+		{return Service[iShortID].DataParam;}
 
 	void SetMSCProtLev(const CMSCProtLev NewMSCPrLe, const _BOOLEAN bWithHierarch);
-
-	void SetStreamLenPartA(const int iStreamNo, const int iNewLenPartA);
-	void SetStreamLenPartB(const int iStreamNo, const int iNewLenPartB);
+	void SetStreamLen(const int iStreamID, const int iNewLenPartA, const int iNewLenPartB);
 
 	/* Protection levels for MSC */
 	CMSCProtLev			MSCPrLe;
 
 	CVector<CStream>	Stream;
-	CService			Service[MAX_NO_SERVICES];
+	CService			Service[MAX_NUM_SERVICES];
 
 	int					iNoBitsHierarchFrameTotal;
 
@@ -371,6 +372,7 @@ public:
 		void SetNumAAC(int iNewNum);
 		void SetLog(_BOOLEAN bLog);
 		void SetFrequency(int iNewFreq) {iFrequency = iNewFreq;}
+		void SetAdditText(string strNewTxt) {strAdditText = strNewTxt;}
 		void WriteParameters();
 
 	protected:
@@ -383,6 +385,7 @@ public:
 		_REAL			rAvSNR;
 		_BOOLEAN		bLogActivated;
 		FILE*			pFile;
+		string			strAdditText;
 	} ReceptLog;
 
 
