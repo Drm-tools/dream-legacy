@@ -75,7 +75,7 @@ int CResample::Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
 		ip1 = ik % INTERP_DECIM_I_D;
 		ip2 = (ik + 1) % INTERP_DECIM_I_D;
 
-		/* Sample positions in the input vector */
+		/* Sample positions in input vector */
 		in1 = (int) (ik / INTERP_DECIM_I_D);
 		in2 = (int) ((ik + 1) / INTERP_DECIM_I_D);
 
@@ -122,4 +122,43 @@ void CResample::Init(int iNewInputBlockSize)
 
 	/* Init absolute time for output stream (at the end of the history part */
 	rtOut = (_REAL) (iHistorySize - 1) * INTERP_DECIM_I_D;
+}
+
+void CAudioResample::Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput)
+{
+	int		i, j;
+	int		ip;
+	int		in;
+	_REAL	ry;
+
+	/* Move old data from the end to the history part of the buffer and 
+	   add new data (shift register) */
+	vecrIntBuff.AddEnd(rInput, iInputBlockSize);
+
+	/* Main loop */
+	for (j = 0; j < iOutputBlockSize; j++)
+	{
+		/* Phase for the linear interpolation-taps */
+		ip = (j * INTERP_DECIM_I_D / iRation) % INTERP_DECIM_I_D;
+
+		/* Sample position in input vector */
+		in = (int) (j / iRation) + NO_TAPS_PER_PHASE;
+
+		/* Convolution */
+		ry = (_REAL) 0.0;
+		for (i = 0; i < NO_TAPS_PER_PHASE; i++)
+			ry += fResTaps1To1[ip][i] * vecrIntBuff[in - i];
+
+		rOutput[j] = ry;
+	}
+}
+
+void CAudioResample::Init(int iNewInputBlockSize, int iNewRation)
+{
+	iRation = iNewRation;
+	iInputBlockSize = iNewInputBlockSize;
+	iOutputBlockSize = iInputBlockSize * iRation;
+
+	/* Allocate memory for internal buffer, clear sample history */
+	vecrIntBuff.Init(iInputBlockSize + NO_TAPS_PER_PHASE, (_REAL) 0.0);
 }

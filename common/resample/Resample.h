@@ -55,5 +55,24 @@ protected:
 	int						iInputBlockSize;
 };
 
+class CAudioResample
+{
+public:
+	CAudioResample() {}
+	virtual ~CAudioResample() {}
+
+	void Init(int iNewInputBlockSize, int iNewRation);
+	void Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput);
+
+protected:
+	int						iRation;
+
+	CShiftRegister<_REAL>	vecrIntBuff;
+	int						iHistorySize;
+
+	int						iInputBlockSize;
+	int						iOutputBlockSize;
+};
+
 
 #endif // !defined(RESAMPLE_H__3B0FEUFE7876F_FE8FE_CA63_4344_1912__INCLUDED_)
