@@ -32,7 +32,7 @@
 /******************************************************************************\
 * Signal level meter                                                           *
 \******************************************************************************/
-void CSignalLevelMeter::Update(_REAL rVal)
+void CSignalLevelMeter::Update(const _REAL rVal)
 {
 	/* Search for maximum. Decrease this max with time */
 	/* Decrease max with time */
@@ -50,7 +50,7 @@ void CSignalLevelMeter::Update(_REAL rVal)
 		rCurLevel = rCurAbsVal;
 }
 
-void CSignalLevelMeter::Update(CVector<_REAL> vecrVal)
+void CSignalLevelMeter::Update(const CVector<_REAL> vecrVal)
 {
 	/* Do the update for entire vector */
 	const int iVecSize = vecrVal.Size();
@@ -58,7 +58,7 @@ void CSignalLevelMeter::Update(CVector<_REAL> vecrVal)
 		Update(vecrVal[i]);
 }
 
-void CSignalLevelMeter::Update(CVector<_SAMPLE> vecsVal)
+void CSignalLevelMeter::Update(const CVector<_SAMPLE> vecsVal)
 {
 	/* Do the update for entire vector, convert to real */
 	const int iVecSize = vecsVal.Size();
