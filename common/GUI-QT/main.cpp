@@ -68,11 +68,6 @@ catch (CGenErr GenErr)
 {
 	ErrorMessage(GenErr.strError);
 }
-
-catch (...)
-{
-	ErrorMessage("Unknown error.");
-}
 	}
 };
 
@@ -127,11 +122,6 @@ catch (CGenErr GenErr)
 	ErrorMessage(GenErr.strError);
 }
 
-catch (...)
-{
-	ErrorMessage("Unknown error.");
-}
-
 	return 0;
 }
 
@@ -162,11 +152,26 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 
 void ErrorMessage(string strErrorString)
 {
+	/* Workaround for the QT problem */
+#ifdef _WIN32
+	string strError = "The following error occured:\n";
+	strError += strErrorString.c_str();
+	strError += "\n\nThe application will exit now.";
+
+	MessageBox(NULL, strError.c_str(), "Dream",
+		MB_SYSTEMMODAL | MB_OK | MB_ICONEXCLAMATION);
+#else
+	perror(strErrorString.c_str());
+#endif
+
+/*
+// Does not work correctly. If it is called by a different thread, the application
+// hangs! FIXME
 	QMessageBox::critical(0, "Dream",
 		QString("The following error occured:<br><b>") + 
 		QString(strErrorString.c_str()) +
 		"</b><br><br>The application will exit now.");
-
+*/
 	exit(1);
 }
 
