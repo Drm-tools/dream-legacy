@@ -96,7 +96,6 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/resample/Resample.h \
 	../common/resample/ResampleFilter.h \
 	../common/sourcedecoders/AudioSourceDecoder.h \
-	../common/sourcedecoders/faad.h \
 	../common/sync/FreqSyncAcq.h \
 	../common/sync/SyncUsingPil.h \
 	../common/sync/TimeSync.h \
