@@ -70,7 +70,7 @@ public:
 	void SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
 				 _REAL rLowerB, _REAL rHigherB,
 				 const _REAL rStartGuard, const _REAL rEndGuard, 
-				 const _REAL rEndIR);
+				 const _REAL rBeginIR, const _REAL rEndIR);
 	void SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,

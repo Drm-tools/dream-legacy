@@ -111,9 +111,10 @@ void CDRMPlot::SetData(CVector<_COMPLEX>& veccData, QColor color,
 void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 					   _REAL rLowerB, _REAL rHigherB,
 					   const _REAL rStartGuard, const _REAL rEndGuard,
-					   const _REAL rEndIR)
+					   const _REAL rBeginIR, const _REAL rEndIR)
 {
-	long	curveLow, curveHigh, curveLeft, curveRight, curveEndIR;
+	long	curveLow, curveHigh, curveLeft, curveRight;
+	long	curveBeginIR, curveEndIR;
 	double	dX[2], dY[2];
 
 	if (vecrScale.Size() != 0)
@@ -140,9 +141,11 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 		/* These bounds show the beginning and end of the guard-interval */
 		curveLeft = insertCurve("Guard-interval beginning");
 		curveRight = insertCurve("Guard-interval end");
+		curveBeginIR = insertCurve("Estimated begin of impulse response");
 		curveEndIR = insertCurve("Estimated end of impulse response");
 		setCurvePen(curveLeft, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
 		setCurvePen(curveRight, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
+		setCurvePen(curveBeginIR, QPen(SPEC_LINE2_COLOR_PLOT, 1, DotLine));
 		setCurvePen(curveEndIR, QPen(SPEC_LINE2_COLOR_PLOT, 1, DotLine));
 
 		dY[0] = cdAxMinLeft;
@@ -155,6 +158,10 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 		/* Right bound */
 		dX[0] = dX[1] = rEndGuard;
 		setCurveData(curveRight, dX, dY, 2);
+
+		/* Estimated begin of impulse response */
+		dX[0] = dX[1] = rBeginIR;
+		setCurveData(curveBeginIR, dX, dY, 2);
 
 		/* Estimated end of impulse response */
 		dX[0] = dX[1] = rEndIR;

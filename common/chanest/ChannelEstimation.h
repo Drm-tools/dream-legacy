@@ -82,7 +82,8 @@ public:
 		CVector<_REAL>& vecrScale);
 	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
 					 _REAL& rLowerBound, _REAL& rHigherBound,
-					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rLenIR);
+					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
+					 _REAL& rPDSEnd);
 
 
 	CTimeLinear* GetTimeLinear() {return &TimeLinear;}
@@ -134,6 +135,8 @@ protected:
 
 	int					iFFTSizeN;
 
+	CReal				rGuardSizeFFT;
+
 	CRealVector			vecrDFTWindow;
 	CRealVector			vecrDFTwindowInv;
 
@@ -153,8 +156,10 @@ protected:
 	_REAL				rSNREstimate;
 	_REAL				rSNRCorrectFact;
 	int					iUpCntWienFilt;
-	_REAL				rLenPDSEst;
-	_REAL				rMaxDelaySprInFra;
+
+	_REAL				rLenPDSEst; /* Needed for GetDelay() */
+	_REAL				rMaxLenPDSInFra;
+	_REAL				rMinOffsPDSInFra;
 
 	int					iStartZeroPadding;
 

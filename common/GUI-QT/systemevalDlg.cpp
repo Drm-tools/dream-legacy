@@ -218,7 +218,7 @@ void systemevalDlg::OnTimerChart()
 	CVector<_REAL>		vecrScale;
 	_REAL				rLowerBound, rHigherBound;
 	_REAL				rStartGuard, rEndGuard;
-	_REAL				rEstEndIR;
+	_REAL				rPDSBegin, rPDSEnd;
 
 	/* CHART ******************************************************************/
 	switch (CharType)
@@ -227,11 +227,11 @@ void systemevalDlg::OnTimerChart()
 		/* Get data from module */
 		DRMReceiver.GetChanEst()->
 			GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
-			rStartGuard, rEndGuard, rEstEndIR);
+			rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
 
 		/* Prepare graph and set data */
 		MainPlot->SetAvIR(vecrData, vecrScale, rLowerBound, rHigherBound, 
-			rStartGuard, rEndGuard, rEstEndIR);
+			rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
 		break;
 
 	case TRANSFERFUNCTION:

@@ -56,6 +56,11 @@
 /* Time constant for IIR averaging of PDS estimation */
 #define TICONST_PDS_EST_TISYNC				((CReal) 0.25) /* sec */
 
+/* Relative energy of estimated PDS we want to have in our window design for
+   Wiener filter in frequency direction. The norm is the total energy of
+   estimated PDS which is in the range of the guard-interval */
+#define ENERGY_WIN_WIENER_FREQ				((CReal) 0.999)
+
 
 /* Classes ********************************************************************/
 class CTimeSyncTrack
@@ -73,7 +78,8 @@ public:
 
 	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
 					 _REAL& rLowerBound, _REAL& rHigherBound,
-					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rLenIR);
+					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
+					 _REAL& rPDSEnd);
 
 	void StartTracking() {bTracking = TRUE;}
 	void StopTracking() {bTracking = FALSE;}
@@ -112,7 +118,8 @@ protected:
 
 	int						iInitCnt;
 
-	CReal					rEstDelay;
+	CReal					rEstPDSEnd; /* Estimated end of PSD */
+	CReal					rEstPDSBegin; /* Estimated beginning of PSD */
 
 	CReal					rFracPartContr;
 

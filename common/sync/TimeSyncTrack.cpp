@@ -51,7 +51,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	CReal		rWinEnergy;
 	CReal		rMaxWinEnergy;
 	_BOOLEAN	bDelayFound;
-	_BOOLEAN	bDelSprLenFound;
+	_BOOLEAN	bPSDResultFound;
 
 	/* Rotate the averaged PDP to follow the time shifts -------------------- */
 	/* Update timing correction history (shift register) */
@@ -237,37 +237,51 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 
 	/* Delay spread length estimation --------------------------------------- */
 	/* Total energy of estimated impulse response */
-	rTotalEnergy = Sum(vecrAvPoDeSp * vecrAvPoDeSp);
+	rTotalEnergy = Sum(vecrAvPoDeSp(1, Floor(rGuardSizeFFT)));
 
-	/* Calculate the point where "rEnergBound" part of the energy is included */
-	const CReal rEnergBound = (CReal) 0.9999999;
+	/* From left to the right -> search for end of PDS */
+	rEstPDSEnd = rGuardSizeFFT;
 	rCurEnergy = (CReal) 0.0;
-	bDelSprLenFound = FALSE;
-	rEstDelay = rGuardSizeFFT;
-	
-	for (i = 0; i < iNumIntpFreqPil; i++)
+	bPSDResultFound = FALSE;
+	for (i = 0; i < Ceil(rGuardSizeFFT); i++)
 	{
-		if (bDelSprLenFound == FALSE)
+		if (bPSDResultFound == FALSE)
 		{
-			rCurEnergy += vecrAvPoDeSp[i] * vecrAvPoDeSp[i];
+			rCurEnergy += vecrAvPoDeSp[i];
 
-			if (rCurEnergy > rEnergBound * rTotalEnergy)
+			if (rCurEnergy > ENERGY_WIN_WIENER_FREQ * rTotalEnergy)
 			{
 				/* Delay index */
-				rEstDelay = (_REAL) i;
+				rEstPDSEnd = (_REAL) i;
 
-				bDelSprLenFound = TRUE;
+				bPSDResultFound = TRUE;
 			}
 		}
 	}
 
-	/* Set return parameters. Bound the delay to the guard-interval length */
-	if (rEstDelay > rGuardSizeFFT)
-		rLenPDS = rGuardSizeFFT;
-	else
-		rLenPDS = rEstDelay;
+	/* From right to the left -> search for beginning of PDS */
+	rEstPDSBegin = (CReal) 0.0;
+	rCurEnergy = (CReal) 0.0;
+	bPSDResultFound = FALSE;
+	for (i = Floor(rGuardSizeFFT); i >= 0; i--)
+	{
+		if (bPSDResultFound == FALSE)
+		{
+			rCurEnergy += vecrAvPoDeSp[i];
 
-	rOffsPDS = (_REAL) 0.0; /* Not yet estimated */
+			if (rCurEnergy > ENERGY_WIN_WIENER_FREQ * rTotalEnergy)
+			{
+				/* Delay index */
+				rEstPDSBegin = (_REAL) i;
+
+				bPSDResultFound = TRUE;
+			}
+		}
+	}
+
+	/* Set return parameters */
+	rLenPDS = rEstPDSEnd - rEstPDSBegin;
+	rOffsPDS = rEstPDSBegin;
 }
 
 void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
@@ -341,9 +355,10 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	/* Inits for the time synchronization tracking type */
 	SetTiSyncTracType(TypeTiSyncTrac);
 
-	/* Init estimation of length of impulse response with length of guard-
-	   interval */
-	rEstDelay = rGuardSizeFFT;
+	/* Init begin and end of PDS estimation with zero and the length of guard-
+	   interval respectively */
+	rEstPDSBegin = (CReal) 0.0;
+	rEstPDSEnd = rGuardSizeFFT;
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iNumIntpFreqPil);
@@ -376,7 +391,7 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 								 CVector<_REAL>& vecrScale,
 								_REAL& rLowerBound, _REAL& rHigherBound,
 								_REAL& rStartGuard, _REAL& rEndGuard,
-								_REAL& rLenIR)
+								_REAL& rPDSBegin, _REAL& rPDSEnd)
 {
 	int		i;
 	int		iHalfSpec;
@@ -390,7 +405,8 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 	rLowerBound = (_REAL) 0.0;
 	rStartGuard = (_REAL) 0.0;
 	rEndGuard = (_REAL) 0.0;
-	rLenIR = (_REAL) 0.0;
+	rPDSBegin = (_REAL) 0.0;
+	rPDSEnd = (_REAL) 0.0;
 
 	/* Do copying of data only if vector is of non-zero length which means that
 	   the module was already initialized */
@@ -463,7 +479,8 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 		/* End point of guard interval */
 		rEndGuard = rScaleIncr * (rGuardSizeFFT - iTargetTimingPos);
 
-		/* Estmiated impulse response length */
-		rLenIR = rScaleIncr * (rEstDelay - iTargetTimingPos);
+		/* Estmiated begin and end of estimated PDS */
+		rPDSBegin = rScaleIncr * (rEstPDSBegin - iTargetTimingPos);
+		rPDSEnd = rScaleIncr * (rEstPDSEnd - iTargetTimingPos);
 	}
 }

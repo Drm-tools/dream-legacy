@@ -37,6 +37,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	_COMPLEX	cModChanEst;
 	_REAL		rSNRAftTiInt;
 	_REAL		rCurSNREst;
+	_REAL		rOffsPDSEst;
 
 	/* Move data in history-buffer (from iLenHistBuff - 1 towards 0) */
 	for (j = 0; j < iLenHistBuff - 1; j++)
@@ -68,13 +69,9 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* -------------------------------------------------------------------------
 	   Use time-interpolated channel estimate for timing synchronization 
 	   tracking */
-
-
-// TEST
-_REAL rOffsPDSEst; /* Not yet used */
-
 	TimeSyncTrack.Process(ReceiverParam, veccPilots, 
-		(*pvecInputData).GetExData().iCurTimeCorr, rLenPDSEst, rOffsPDSEst);
+		(*pvecInputData).GetExData().iCurTimeCorr, rLenPDSEst /* out */,
+		rOffsPDSEst /* out */);
 
 
 	/* Frequency-interploation ************************************************/
@@ -150,19 +147,23 @@ _REAL rOffsPDSEst; /* Not yet used */
 		{
 			iUpCntWienFilt--;
 
-			/* Get maximum delay spread in one DRM frame */
-			if (rLenPDSEst > rMaxDelaySprInFra)
-				rMaxDelaySprInFra = rLenPDSEst;
+			/* Get maximum delay spread and offset in one DRM frame */
+			if (rLenPDSEst > rMaxLenPDSInFra)
+				rMaxLenPDSInFra = rLenPDSEst;
+
+			if (rOffsPDSEst < rMinOffsPDSInFra)
+				rMinOffsPDSInFra = rOffsPDSEst;
 		}
 		else
 		{
 			/* Update filter taps */
-			UpdateWienerFiltCoef(rSNRAftTiInt, rMaxDelaySprInFra / iNumCarrier,
-				(CReal) 0.0);
+			UpdateWienerFiltCoef(rSNRAftTiInt, rMaxLenPDSInFra / iNumCarrier,
+				rMinOffsPDSInFra / iNumCarrier);
 
 			/* Reset counter and maximum storage variable */
 			iUpCntWienFilt = iNumSymPerFrame;
-			rMaxDelaySprInFra = (_REAL) 0.0;
+			rMaxLenPDSInFra = (_REAL) 0.0;
+			rMinOffsPDSInFra = rGuardSizeFFT;
 		}
 
 		/* FIR filter of the pilots with filter taps. We need to filter the
@@ -305,7 +306,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
 
 	/* Length of guard-interval with respect to FFT-size! */
-	int iGuardSizeFFT = iNumCarrier * 
+	rGuardSizeFFT = (_REAL) iNumCarrier *
 		ReceiverParam.RatioTgTu.iEnum / ReceiverParam.RatioTgTu.iDenom;
 
 	/* If robustness mode D is active, get DC position. This position cannot
@@ -381,7 +382,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Set start index for zero padding in time domain for DFT method */
-	iStartZeroPadding = iGuardSizeFFT;
+	iStartZeroPadding = (int) rGuardSizeFFT;
 	if (iStartZeroPadding > iNumIntpFreqPil)
 		iStartZeroPadding = iNumIntpFreqPil;
 
@@ -416,9 +417,10 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 	/* Init delay spread length estimation (index) */
 	rLenPDSEst = (_REAL) 0.0;
-	rMaxDelaySprInFra = (_REAL) 0.0; /* Maximum estimated delay spread in
-									    one DRM frame */
 
+	/* Init maximum estimated delay spread and offset in one DRM frame */
+	rMaxLenPDSInFra = (_REAL) 0.0;
+	rMinOffsPDSInFra = rGuardSizeFFT;
 
 	/* Inits for Wiener interpolation in frequency direction ---------------- */
 	/* Length of wiener filter */
@@ -683,13 +685,13 @@ void CChannelEstimation::GetAvPoDeSp(CVector<_REAL>& vecrData,
 									 CVector<_REAL>& vecrScale,
 									 _REAL& rLowerBound, _REAL& rHigherBound,
 									 _REAL& rStartGuard, _REAL& rEndGuard,
-									 _REAL& rLenIR)
+									 _REAL& rPDSBegin, _REAL& rPDSEnd)
 {
 	/* Lock resources */
 	Lock();
 
 	TimeSyncTrack.GetAvPoDeSp(vecrData, vecrScale, rLowerBound,
-		rHigherBound, rStartGuard, rEndGuard, rLenIR);
+		rHigherBound, rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
 
 	/* Release resources */
 	Unlock();
