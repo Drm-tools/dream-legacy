@@ -172,11 +172,6 @@ void CDRMSchedule::ReadStatTabFromFile(const string strFileName)
 	} while (!((iFileStat == EOF) || (bReadOK == FALSE)));
 
 	fclose(pFile);
-
-	/* If reading of file was not successful, do not use read parameters
-	   Clear list in this case */
-	if (bReadOK == FALSE)
-		StationsTable.Init(0);
 }
 
 _BOOLEAN CDRMSchedule::IsActive(int const iPos)
@@ -301,6 +296,16 @@ void StationsDlg::OnTimer()
 	SetStationsView();
 }
 
+void StationsDlg::showEvent(QShowEvent* pEvent)
+{
+	/* If number of stations is zero, we assume that the ini file is missing */
+	if (DRMSchedule.GetStationNumber() == 0)
+	{
+		QMessageBox::information(this, "Dream", "The file DRMSchedule.ini could "
+			"not be found. No stations can be displayed.", QMessageBox::Ok);
+	}
+}
+
 void StationsDlg::SetStationsView()
 {
 	QString strSelTabItemName = "";
@@ -327,17 +332,18 @@ void StationsDlg::SetStationsView()
 	{
 		if (!((bShowAll == FALSE) && (DRMSchedule.IsActive(i) == FALSE)))
 		{
-			QListViewItem* NewListItem = new QListViewItem(
-				ListViewStations, DRMSchedule.GetItem(i).strName.c_str(),
+			/* Generate new list item with all necessary column entries */
+			QListViewItem* NewListItem = new QListViewItem(ListViewStations,
+				DRMSchedule.GetItem(i).strName.c_str()			/* name */,
 				QString().sprintf("%04d-%04d",
 				DRMSchedule.GetItem(i).GetStartTimeNum(),
-				DRMSchedule.GetItem(i).GetStopTimeNum()),
-				QString().setNum(DRMSchedule.GetItem(i).iFreq),
-				DRMSchedule.GetItem(i).strTarget.c_str(),
-				QString().setNum(DRMSchedule.GetItem(i).rPower),
-				DRMSchedule.GetItem(i).strCountry.c_str(),
-				DRMSchedule.GetItem(i).strSite.c_str(),
-				DRMSchedule.GetItem(i).strLanguage.c_str());
+				DRMSchedule.GetItem(i).GetStopTimeNum())		/* time */,
+				QString().setNum(DRMSchedule.GetItem(i).iFreq)	/* frequency */,
+				DRMSchedule.GetItem(i).strTarget.c_str()		/* target */,
+				QString().setNum(DRMSchedule.GetItem(i).rPower)	/* power */,
+				DRMSchedule.GetItem(i).strCountry.c_str()		/* country */,
+				DRMSchedule.GetItem(i).strSite.c_str()			/* site */,
+				DRMSchedule.GetItem(i).strLanguage.c_str()		/* language */);
 
 			/* Check, if station is currently transmitting. If yes, set special
 			   pixmap */

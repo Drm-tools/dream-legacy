@@ -31,6 +31,7 @@
 #include <qbuttongroup.h>
 #include <qradiobutton.h>
 #include <qtimer.h>
+#include <qmessagebox.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/StationsDlgbase.h"
@@ -67,18 +68,18 @@ public:
 		iStopMinute = iStopTime - iStopHour * 100;
 	}
 
-	int				iStartHour;
-	int				iStartMinute;
-	int				iStopHour;
-	int				iStopMinute;
-	int				iFreq;
-	int				iDays;
-	string			strName;
-	string			strTarget;
-	string			strLanguage;
-	string			strSite;
-	string			strCountry;
-	_REAL			rPower;
+	int		iStartHour;
+	int		iStartMinute;
+	int		iStopHour;
+	int		iStopMinute;
+	int		iFreq;
+	int		iDays;
+	string	strName;
+	string	strTarget;
+	string	strLanguage;
+	string	strSite;
+	string	strCountry;
+	_REAL	rPower;
 };
 
 class CDRMSchedule
@@ -115,6 +116,7 @@ protected:
 	QPixmap			BitmCubeRed;
 	QTimer			Timer;
 	_BOOLEAN		bShowAll;
+    virtual void	showEvent(QShowEvent* pEvent);
 
 public slots:
 	void OnTimer();
