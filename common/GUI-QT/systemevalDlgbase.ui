@@ -1641,7 +1641,7 @@
                                     </property>
                                     <property stdset="1">
                                         <name>text</name>
-                                        <string>Modificated Metric</string>
+                                        <string>Modified Metrics</string>
                                     </property>
                                 </widget>
                             </vbox>

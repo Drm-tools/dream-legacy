@@ -1356,7 +1356,7 @@ void systemevalDlg::AddWhatsThisHelp()
 		"spacing (approx 525 Hz with DRM mode B). The bandpass filter must "
 		"have very sharp edges otherwise the gain in performance will be "
 		"very small so that it consumes high CPU power.</li>"
-		"<li><b>Modificated Metric:</b> Based on the "
+		"<li><b>Modified Metrics:</b> Based on the "
 		"information from the SNR versus sub-carrier estimation, the metric "
 		"for the Viterbi decoder can be modified so that sub-carriers with "
 		"high noise are attenuated and do not contribute too much to the "

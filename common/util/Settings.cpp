@@ -77,7 +77,7 @@ void CSettings::ReadIniFile()
 	if (GetFlagIniSet(ini, "Receiver", "filter", bValue) == TRUE)
 		pDRMRec->GetOFDMDemod()->SetRecFilter(bValue);
 
-	/* Modificated metric flag */
+	/* Modified metrics flag */
 	if (GetFlagIniSet(ini, "Receiver", "modmetric", bValue) == TRUE)
 		pDRMRec->GetChanEst()->SetIntCons(bValue);
 
@@ -256,7 +256,7 @@ void CSettings::WriteIniFile()
 	SetFlagIniSet(ini, "Receiver", "filter",
 		pDRMRec->GetOFDMDemod()->GetRecFilter());
 
-	/* Modificated metric flag */
+	/* Modified metrics flag */
 	SetFlagIniSet(ini, "Receiver", "modmetric",
 		pDRMRec->GetChanEst()->GetIntCons());
 
@@ -496,7 +496,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		}
 
 
-		/* Modificated metric flag ------------------------------------------ */
+		/* Modified metrics flag -------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-D", "--modmetric") == TRUE)
 		{
 			pDRMRec->GetChanEst()->SetIntCons(TRUE);
@@ -815,7 +815,7 @@ string CSettings::UsageArguments(char** argv)
 		"  -S <r>, --fracwinsize <r>   freq. acqu. search window size [Hz]\n"
 		"  -E <r>, --fracwincent <r>   freq. acqu. search window center [Hz]\n"
 		"  -F, --filter                apply bandpass filter\n"
-		"  -D, --modmetric             enable modificated metric\n"
+		"  -D, --modmetric             enable modified metrics\n"
 		"  -c <n>, --inchansel <n>     input channel selection\n"
 		"                              0: left channel\n"
 		"                              1: right channel\n"
