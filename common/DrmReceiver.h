@@ -155,6 +155,34 @@ public:
 	string					GetHamlibConf() const {return strHamlibConf;}
 #endif
 
+#ifdef USE_QT_GUI
+	/* DRMReceiver object serves as a storage a "exchange platform" for the
+	   window size and position parameters for init-file usage. This is not
+	   nice but it works for now. TODO: better solution */
+	class CWinGeom
+	{
+	public:
+		CWinGeom() : iXPos(0), iYPos(0), iHSize(0), iWSize(0) {}
+		int iXPos, iYPos;
+		int iHSize, iWSize;
+	};
+
+	/* Main window */
+	CWinGeom GeomFdrmdialog;
+
+	/* System evaluation window */
+	CWinGeom GeomSystemEvalDlg;
+
+	/* Multimedia window */
+	CWinGeom GeomMultimediaDlg;
+
+	/* Stations dialog */
+	CWinGeom GeomStationsDlg;
+
+	/* Analog demodulation dialog */
+	CWinGeom GeomAnalogDemDlg;
+#endif
+
 protected:
 	void					Run();
 	void					DetectAcqui();
