@@ -982,26 +982,32 @@ void systemevalDlg::AddWhatsThisHelp()
 	This text was taken from the only documentation of Dream software
 */
 	/* DC Frequency Offset */
-	QWhatsThis::add(TextFreqOffset,
+	const QString strDCFreqOffs =
 		tr("<b>DC Frequency Offset:</b> This is the "
 		"estimation of the DC frequency offset. This offset corresponds "
 		"to the resulting sound card intermedia frequency of the front-end. "
 		"This frequency is not restricted to a certain value. The only "
 		"restriction is that the DRM spectrum must be completely inside the "
-		"bandwidth of the sound card."));
+		"bandwidth of the sound card.");
+
+	QWhatsThis::add(TextFreqOffset, strDCFreqOffs);
+	QWhatsThis::add(ValueFreqOffset, strDCFreqOffs);
 
 	/* Sample Frequency Offset */
-	QWhatsThis::add(TextSampFreqOffset,
+	const QString strFreqOffset =
 		tr("<b>Sample Frequency Offset:</b> This is the "
 		"estimation of the sample rate offset between the sound card sample "
 		"rate of the local computer and the sample rate of the D / A (digital "
 		"to analog) converter in the transmitter. Usually the sample rate "
 		"offset is very constant for a given sound card. Therefore it is "
 		"useful to inform the Dream software about this value at application "
-		"startup to increase the acquisition speed and reliability."));
+		"startup to increase the acquisition speed and reliability.");
+
+	QWhatsThis::add(TextSampFreqOffset, strFreqOffset);
+	QWhatsThis::add(ValueSampFreqOffset, strFreqOffset);
 
 	/* Doppler / Delay */
-	QWhatsThis::add(TextWiener,
+	const QString strDopplerDelay =
 		tr("<b>Doppler / Delay:</b> The Doppler frequency "
 		"of the channel is estimated for the Wiener filter design of channel "
 		"estimation in time direction. If linear interpolation is set for "
@@ -1012,7 +1018,10 @@ void systemevalDlg::AddWhatsThisHelp()
 		"(PDS) is estimated from the impulse response estimation derived from "
 		"the channel estimation. This delay corresponds to the range between "
 		"the two vertical dashed black lines in the Impulse Response (IR) "
-		"plot."));
+		"plot.");
+
+	QWhatsThis::add(TextWiener, strDopplerDelay);
+	QWhatsThis::add(ValueWiener, strDopplerDelay);
 
 	/* I / O Interface LED */
 	const QString strLEDIOInterface =
