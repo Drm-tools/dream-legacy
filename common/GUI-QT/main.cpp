@@ -324,9 +324,11 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 
 #ifdef USE_QT_GUI /* QThread needed for log file timing */
 		/* Start log file flag ---------------------------------------------- */
-		if (GetFlagArgument(argc, argv, i, "-l", "--startlog") == TRUE)
+		if (GetNumericArgument(argc, argv, i, "-l", "--startlog", 0, 3600,
+			rArgument) == TRUE)
 		{
-			DRMReceiver.GetParameters()->ReceptLog.SetDelLogStart();
+			DRMReceiver.GetParameters()->ReceptLog.
+				SetDelLogStart((int) rArgument);
 			continue;
 		}
 
@@ -427,7 +429,9 @@ void UsageArguments(char** argv)
 		<< endl;
 	cerr << "  -o <s>, --longitude <s>    set longitude string for log file"
 		<< endl;
-	cerr << "  -l, --startlog             start log file (delayed)" << endl;
+	cerr << "  -l <n>, --startlog <n>     start log file (delayed by" << endl;
+	cerr << "                             n seconds)" << endl;
+	cerr << "                             allowed range: 0...3600" << endl;
 #endif
 
 	cerr << "  -I <n>, --snddevin <n>     set sound in device" << endl;

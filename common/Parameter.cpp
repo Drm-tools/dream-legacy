@@ -576,7 +576,7 @@ uint32_t CParameter::CRawSimData::Get()
 /* Reception log implementation --------------------------------------------- */
 CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), pFileLong(NULL),
 	pFileShort(NULL), iFrequency(0), strAdditText(""), strLatitude(""),
-	strLongitude(""), bDelayedLogStart(FALSE)
+	strLongitude(""), bDelayedLogStart(FALSE), iSecDelLogStart(0)
 {
 	ResetLog(TRUE);
 	ResetLog(FALSE);
@@ -742,7 +742,7 @@ void CParameter::CReceptLog::SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong)
 
 		/* The long version of log file has different header */
 		if (bIsLong == TRUE)
-			fprintf(pFile, "DATE,       TIME,     SNR, SYNC, FAC, MSC\n");
+			fprintf(pFile, "TIME,     SNR, SYNC, FAC, MSC\n");
 		else
 			fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE\n");
 
@@ -796,9 +796,8 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 
 				/* This data can be read by Microsoft Excel */
 				fprintf(pFileLong,
-					"%d-%02d-%02d, %02d:%02d:%02d, %3d,    %1d,   %1d,   %1d\n",
-					TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
-					TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
+					"%02d:%02d:%02d, %3d,    %1d,   %1d,   %1d\n",
+					TimeNow->tm_hour, TimeNow->tm_min,
 					TimeNow->tm_sec, (int) rCurSNR, iSyncInd, iFACInd, iMSCInd);
 			}
 			else

@@ -58,9 +58,6 @@ extern CDRMReceiver	DRMReceiver;
 /* Define this macro if you prefer the QT-type of displaying date and time */
 #define GUI_QT_DATE_TIME_TYPE
 
-/* Define the time out when the delayed log file should begin */
-#define DELAYED_LOG_FILE_TIME_OUT		60000 /* ms */
-
 
 /* Classes ********************************************************************/
 class systemevalDlg : public systemevalDlgBase

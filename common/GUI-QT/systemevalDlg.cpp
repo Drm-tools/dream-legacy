@@ -135,7 +135,11 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 	/* Activate delayed log file start if necessary (timer is set to shot
 	   only once) */
 	if (DRMReceiver.GetParameters()->ReceptLog.IsDelLogStart() == TRUE)
-		TimerLogFileStart.start(DELAYED_LOG_FILE_TIME_OUT, TRUE);
+	{
+		/* One shot timer */
+		TimerLogFileStart.start(DRMReceiver.GetParameters()->
+			ReceptLog.GetDelLogStart() * 1000 /* ms */, TRUE);
+	}
 
 	/* Update window */
 	OnTimerChart();

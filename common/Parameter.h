@@ -378,8 +378,9 @@ public:
 		void SetLongitude(const string strLon) {strLongitude = strLon;}
 		void SetAdditText(const string strNewTxt) {strAdditText = strNewTxt;}
 		void WriteParameters(const _BOOLEAN bIsLong);
-		void SetDelLogStart() {bDelayedLogStart = TRUE;}
+		void SetDelLogStart(const int iSecDel) {bDelayedLogStart = TRUE; iSecDelLogStart = iSecDel;}
 		_BOOLEAN IsDelLogStart() {return bDelayedLogStart;}
+		int GetDelLogStart() {return iSecDelLogStart;}
 
 	protected:
 		void ResetLog(const _BOOLEAN bIsLong);
@@ -398,6 +399,7 @@ public:
 		string			strLatitude;
 		string			strLongitude;
 		_BOOLEAN		bDelayedLogStart;
+		int				iSecDelLogStart;
 
 		CMutex			Mutex;
 	} ReceptLog;
