@@ -135,8 +135,10 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	/* MSC Constellation Scheme */
 	ComboBoxMSCConstellation->insertItem("SM 16-QAM", 0);
 	ComboBoxMSCConstellation->insertItem("SM 64-QAM", 1);
-	ComboBoxMSCConstellation->insertItem("HMsym 64-QAM", 2);
-	ComboBoxMSCConstellation->insertItem("HMmix 64-QAM", 3);
+
+// These modes should not be used right now, TODO
+//	ComboBoxMSCConstellation->insertItem("HMsym 64-QAM", 2);
+//	ComboBoxMSCConstellation->insertItem("HMmix 64-QAM", 3);
 
 	switch (TransThread.DRMTransmitter.GetParameters()->eMSCCodingScheme)
 	{
