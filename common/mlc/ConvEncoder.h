@@ -39,12 +39,12 @@
 class CConvEncoder
 {
 public:
-	CConvEncoder() {}
+	CConvEncoder();
 	virtual ~CConvEncoder() {}
 
 	int		Encode(CVector<_BINARY>& vecInputData, 
 				   CVector<_BINARY>& vecOutputData);
-	_BINARY Convolution(_BYTE byNewStateShiftReg, int iGenPolyn) const;
+	_BINARY Convolution(const _BYTE byNewStateShiftReg, const int iGenPolyn) const;
 	void	Init(CParameter::ECodScheme eNewCodingScheme,
 				 CParameter::EChanType eNewChannelType,
 				 int iN1, int iN2, int iNewNumInBitsPartA,
