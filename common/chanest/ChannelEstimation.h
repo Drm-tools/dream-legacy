@@ -145,6 +145,7 @@ protected:
 	int						iScatPilTimeInt; /* Time interpolation */
 
 	CComplexVector			veccChanEst;
+	CRealVector				vecrSqMagChanEst;
 
 	int						iFFTSizeN;
 

@@ -38,14 +38,13 @@
 /* Classes ********************************************************************/
 inline _REAL Metric(const _REAL rDist, const _REAL rChan)
 {
+	/* The calculation of "rChan" was done in the channel estimation module */
 #ifdef USE_MAX_LOG_MAP
+	/* | r / h - s | ^ 2 * | h | ^ 2 */
 	return rDist * rDist * rChan;
 #else
-	/* TODO: speed optimzation. For real and imaginary part, the result for
-	   "sqrt(rChan)" for the same rChan is calculated twice. Store result or
-	   make separate function which calculates real and imaginary at same
-	   time. This problem does not occur with MAP metric */
-	return rDist * sqrt(rChan);
+	/* | r / h - s | * | h | */
+	return rDist * rChan;
 #endif
 }
 

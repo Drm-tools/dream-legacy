@@ -224,12 +224,24 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 	/* Equalize the output vector ------------------------------------------- */
+	/* Calculate squared magnitude of channel estimation */
+	vecrSqMagChanEst = SqMag(veccChanEst);
+
 	/* Write to output vector. Take oldest symbol of history for output. Also,
 	   ship the channel state at a certain cell */
 	for (i = 0; i < iNumCarrier; i++)
 	{
 		(*pvecOutputData)[i].cSig = matcHistory[0][i] / veccChanEst[i];
-		(*pvecOutputData)[i].rChan = SqMag(veccChanEst[i]);
+
+#ifdef USE_MAX_LOG_MAP
+		/* In case of MAP we need the squared magnitude for the calculation of
+		   the metric */
+		(*pvecOutputData)[i].rChan = vecrSqMagChanEst[i];
+#else
+		/* In case of hard-desicions, we need the magnitude of the channel for
+		   the calculation of the metric */
+		(*pvecOutputData)[i].rChan = sqrt(vecrSqMagChanEst[i]);
+#endif
 	}
 
 
@@ -302,7 +314,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 					if ((_IsData(iCurCellFlag)) || (_IsPilot(iCurCellFlag)))
 					{
 						/* Signal estimation */
-						rSignalEst += (*pvecOutputData)[i].rChan;
+						rSignalEst += vecrSqMagChanEst[i];
 						iSNREstIniSigAvCnt++;
 					}
 
@@ -311,7 +323,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 					if (_IsFAC(iCurCellFlag)) /* FAC cell */
 					{
 						rNoiseEst += SqMag(Dec4QAM((*pvecOutputData)[i].cSig)) *
-							(*pvecOutputData)[i].rChan;
+							vecrSqMagChanEst[i];
 
 						iSNREstIniNoiseAvCnt++;
 					}
@@ -344,10 +356,10 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 					/* Use decision together with channel estimate to get
 					   estimates for signal and noise */
-					IIR1(rNoiseEst, rCurErrPow * (*pvecOutputData)[i].rChan,
+					IIR1(rNoiseEst, rCurErrPow * vecrSqMagChanEst[i],
 						rLamSNREstFast);
 
-					IIR1(rSignalEst, (*pvecOutputData)[i].rChan,
+					IIR1(rSignalEst, vecrSqMagChanEst[i],
 						rLamSNREstFast);
 
 					/* Calculate final result (signal to noise ratio) */
@@ -472,6 +484,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 	/* Allocate memory for channel estimation */
 	veccChanEst.Init(iNumCarrier);
+	vecrSqMagChanEst.Init(iNumCarrier);
 
 	/* Allocate memory for history buffer (Matrix) and zero out */
 	matcHistory.Init(iLenHistBuff, iNumCarrier,
