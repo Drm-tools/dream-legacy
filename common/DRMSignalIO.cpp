@@ -48,7 +48,7 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 	/* Actual filter routine (use saved state vector) */
 	rvecDataReal = Filter(rvecB, rvecA, rvecDataReal, rvecZReal);
 
-	if (eOutputFormat == OF_IQ)
+	if ((eOutputFormat == OF_IQ_POS) || (eOutputFormat == OF_IQ_NEG))
 		rvecDataImag = Filter(rvecB, rvecA, rvecDataImag, rvecZImag);
 
 
@@ -75,11 +75,18 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 			vecsDataOut[iCurIndex] = vecsDataOut[iCurIndex + 1] = sCurOutReal;
 			break;
 
-		case OF_IQ:
+		case OF_IQ_POS:
 			/* Send inphase and quadrature (I / Q) signal to stereo sound card
 			   output. I: left channel, Q: right channel */
 			vecsDataOut[iCurIndex] = sCurOutReal;
 			vecsDataOut[iCurIndex + 1] = sCurOutImag;
+			break;
+
+		case OF_IQ_NEG:
+			/* Send inphase and quadrature (I / Q) signal to stereo sound card
+			   output. I: right channel, Q: left channel */
+			vecsDataOut[iCurIndex] = sCurOutImag;
+			vecsDataOut[iCurIndex + 1] = sCurOutReal;
 			break;
 
 		case OF_EP:
@@ -285,12 +292,11 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 		case CS_MIX_CHAN:
 			for (i = 0; i < iOutputBlockSize; i++)
 			{
-				/* Mix left and right channel together. Prevent overflow! First,
-				   copy recorded data from "short" in "int" type variables */
-				const int iLeftChan = vecsSoundBuffer[2 * i];
-				const int iRightChan = vecsSoundBuffer[2 * i + 1];
+				/* Mix left and right channel together */
+				const _REAL rLeftChan = vecsSoundBuffer[2 * i];
+				const _REAL rRightChan = vecsSoundBuffer[2 * i + 1];
 
-				(*pvecOutputData)[i] = (_REAL) ((iLeftChan + iRightChan) / 2);
+				(*pvecOutputData)[i] = (rLeftChan + rRightChan) / 2;
 			}
 			break;
 
@@ -493,7 +499,7 @@ _REAL CReceiveData::HilbertFilt(const _REAL rRe, const _REAL rIm)
     for (i = 1; i < NUM_TAPS_IQ_INPUT_FILT; i += 2)
 		rSum += fHilFiltIQ[i] * vecrImHist[i];
 
-	return rSum + vecrReHist[IQ_INP_HIL_FILT_DELAY];
+	return (rSum + vecrReHist[IQ_INP_HIL_FILT_DELAY]) / 2;
 }
 
 CReceiveData::~CReceiveData()

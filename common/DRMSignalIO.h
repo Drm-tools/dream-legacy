@@ -66,8 +66,8 @@
 class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
-	enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ /* I / Q */,
-		OF_EP /* envelope / phase */};
+	enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
+		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
 
 	CTransmitData(CSound* pNS) : pSound(pNS), eOutputFormat(OF_REAL_VAL),
 		rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ), bUseSoundcard(TRUE),
