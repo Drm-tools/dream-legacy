@@ -74,6 +74,21 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		rOffsPDSEst /* out */);
 
 
+	/* Debar initialization of channel estimation in time direction */
+	if (iInitCnt > 0)
+	{
+		iInitCnt--;
+
+		/* Do not put out data in initialization phase */
+		iOutputBlockSize = 0;
+
+		/* Do not continue */
+		return;
+	}
+	else
+		iOutputBlockSize = iNumCarrier; 
+
+
 	/* Frequency-interploation ************************************************/
 	switch (TypeIntFreq)
 	{
@@ -259,48 +274,63 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			break;
 
 		case SNR_FAC:
-			/* Only use FAC cells for this SNR estimation method */
-			if (_IsFAC(ReceiverParam.matiMapTab[iModSymNum][i]))
+			/* SNR estimation with initialization */
+			if (iSNREstInitCnt > 0)
 			{
-				/* Get tentative decision for current FAC cell (squared) */
-				CReal rCurErrPow = TentativeFACDec((*pvecOutputData)[i].cSig);
+				/* Initial signal estimate. Use channel estimation from all
+				   cells. Apply averaging */
+				rSignalEst += (*pvecOutputData)[i].rChan;
 
-				/* Use decision together with channel estimate to get estimates
-				   for signal and noise */
-				IIR1(rNoiseEst, rCurErrPow * (*pvecOutputData)[i].rChan,
-					rLamSNREstFast);
+				iSNREstInitCnt--;
+			}
+			else
+			{
+				/* Only right after initialization phase apply initial SNR
+				   value */
+				if (bWasSNRInit == TRUE)
+				{
+					/* Normalize average */
+					rSignalEst /= iNumCellsSNRInit;
 
-				IIR1(rSignalEst, (*pvecOutputData)[i].rChan, rLamSNREstFast);
+					/* Apply initial SNR value */
+					rNoiseEst = rSignalEst / rSNREstimate;
 
-				/* Calculate final result (signal to noise ratio) */
-				if (rNoiseEst != (_REAL) 0.0)
-					rCurSNREst = rSignalEst / rNoiseEst;
-				else
-					rCurSNREst = (_REAL) 1.0;
+					bWasSNRInit = FALSE;
+				}
 
-				/* Bound the SNR at 0 dB */
-				if (rCurSNREst < (_REAL) 1.0)
-					rCurSNREst = (_REAL) 1.0;
+				/* Only use FAC cells for this SNR estimation method */
+				if (_IsFAC(ReceiverParam.matiMapTab[iModSymNum][i]))
+				{
+					/* Get tentative decision for current FAC cell (squared) */
+					CReal rCurErrPow =
+						TentativeFACDec((*pvecOutputData)[i].cSig);
 
-				/* The channel estimation algorithms need the SNR normalized to
-				   the energy of the pilots */
-				rSNREstimate = rCurSNREst / rSNRCorrectFact;
+					/* Use decision together with channel estimate to get
+					   estimates for signal and noise */
+					IIR1(rNoiseEst, rCurErrPow * (*pvecOutputData)[i].rChan,
+						rLamSNREstFast);
+
+					IIR1(rSignalEst, (*pvecOutputData)[i].rChan,
+						rLamSNREstFast);
+
+					/* Calculate final result (signal to noise ratio) */
+					if (rNoiseEst != (_REAL) 0.0)
+						rCurSNREst = rSignalEst / rNoiseEst;
+					else
+						rCurSNREst = (_REAL) 1.0;
+
+					/* Bound the SNR at 0 dB */
+					if (rCurSNREst < (_REAL) 1.0)
+						rCurSNREst = (_REAL) 1.0;
+
+					/* The channel estimation algorithms need the SNR normalized
+					   to the energy of the pilots */
+					rSNREstimate = rCurSNREst / rSNRCorrectFact;
+				}
 			}
 			break;
 		}
 	}
-
-
-	/* Debar initialization ------------------------------------------------- */
-	if (iInitCnt > 0)
-	{
-		iInitCnt--;
-
-		/* Do not put out data in initialization phase */
-		iOutputBlockSize = 0;
-	}
-	else
-		iOutputBlockSize = iNumCarrier; 
 }
 
 void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
@@ -323,7 +353,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	   mode D is active or not (by simply write: "if (iDCPos != 0)") */
 	if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_D)
 	{
-		/* Identify CD carrier position */
+		/* Identify DC carrier position */
 		for (int i = 0; i < iNumCarrier; i++)
 			if (_IsDC(ReceiverParam.matiMapTab[0][i]))
 				iDCPos = i;
@@ -410,6 +440,11 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	rSignalEst = (_REAL) 0.0;
 	rNoiseEst = (_REAL) 0.0;
 
+	/* For SNR estimation initialization */
+	iNumCellsSNRInit = iNumSymPerFrame * iNumCarrier; /* 1 DRM frame */
+	iSNREstInitCnt = iNumCellsSNRInit;
+	bWasSNRInit = TRUE;
+
 	/* Lambda for IIR filter */
 	rLamSNREstFast = IIR1Lam(TICONST_SNREST_FAST, (CReal) SOUNDCRD_SAMPLE_RATE /
 		ReceiverParam.iSymbolBlockSize);
@@ -474,11 +509,10 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	iUpCntWienFilt = iNumSymPerFrame;
 #endif
 
-	/* SNR definition */
-	_REAL rSNR = pow(10, INIT_VALUE_SNR_WIEN_FREQ_DB / 10);
-
-	/* Init wiener filter */
-	UpdateWienerFiltCoef(rSNR, (_REAL) ReceiverParam.RatioTgTu.iEnum / 
+	/* Initial Wiener filter. Use initial SNR definition and assume that the
+	   PDS ranges from the beginning of the guard-intervall to the end */
+	UpdateWienerFiltCoef(pow(10, INIT_VALUE_SNR_WIEN_FREQ_DB / 10),
+		(_REAL) ReceiverParam.RatioTgTu.iEnum / 
 		ReceiverParam.RatioTgTu.iDenom, (CReal) 0.0);
 
 

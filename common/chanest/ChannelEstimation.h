@@ -190,6 +190,9 @@ protected:
 	CComplexMatrix		matcWienerFilter;
 
 	int					iInitCnt;
+	int					iSNREstInitCnt;
+	int					iNumCellsSNRInit;
+	_BOOLEAN			bWasSNRInit;
 
 	
 	virtual void InitInternal(CParameter& ReceiverParam);
