@@ -13,6 +13,34 @@
         <source>Carrier Frequency: </source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>&lt;b&gt;Noise Reduction:&lt;/b&gt; The noise suppression is a frequency domain optimal filter design based algorithm. The noise PSD is estimated utilizing a minimum statistic. A problem of this type of algorithm is that it produces the so called &quot;musical tones&quot;. The noise becomes colored and sounds a bit strange. At the same time, the useful signal (which might be speech or music) is also distorted by the algorithm. By selecting the level of noise reduction, a compromise between distortion of the useful signal and actual noise reduction can be made.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;AGC (Automatic Gain Control):&lt;/b&gt; Input signals can have a large variation in power due to channel impairments. To compensate for that, an automatic gain control can be applied. The AGC has four settings: Off, Slow, Medium and Fast.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Filter Bandwidth:&lt;/b&gt; A band-pass filter is applied before the actual demodulation process. With this filter, adjacent signals are attenuated. The bandwidth of this filter can be chosen in steps of 1 Hz by using the slider bar. Clicking on the right or left side of the slider leveler will increase/decrease the bandwidth by 1 kHz. &lt;br&gt;The current filter bandwidth is indicated in the spectrum plot by a selection bar.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Demodulation Type:&lt;/b&gt; There are four different analog demodulation types available:&lt;ul&gt;&lt;li&gt;&lt;b&gt;AM:&lt;/b&gt; This analog demodulation type is used in most of the hardware radios. The envelope of the complex base-band signal is used followed by a high-pass filter to remove the DC offset.&lt;/li&gt;&lt;li&gt;&lt;b&gt;LSB / USB:&lt;/b&gt; These are single-side-band (SSB) demodulation types. Only one side of the spectrum is evaluated, the upper side band is used in USB and the lower side band with LSB. It is important for SSB demodulation that the DC frequency of the analog signal is known to get satisfactory results. The DC frequency is automatically estimated by starting a new acquisition or by clicking on the plot.&lt;/li&gt;&lt;li&gt;&lt;b&gt;FM:&lt;/b&gt; This is a narrow band frequency demodulation.&lt;/li&gt;&lt;/ul&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Mute Audio:&lt;/b&gt; The audio can be muted by checking this box. The reaction of checking or unchecking this box is delayed by approx. 1 second due to the audio buffers.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Save Audio as WAV:&lt;/b&gt; Save the audio signal as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this box will let the user choose a file name for the recording.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Carrier Frequency:&lt;/b&gt; The estimated carrier frequency of the analog signal is shown. The estimation of this parameter is done by using the estimated PSD of the input signal and doing a maximum search.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AnalogDemDlgBase</name>
@@ -570,15 +598,15 @@ Institute for Communication Technology</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;Station Label and Info Display:&lt;/b&gt; In the big label with the black background the station label and some other information about the current selected service is displayed. The red text on the top shows the audio compression format (e.g. AAC), the sample rate of the core coder without SBR (e.g. 24 kHz), if SBR is used and what audio mode is used (mono, stereo, P-stereo -&gt; low-complexity or parametric stereo). In case SBR is used, the actual sample rate is twice the sample rate of the core AAC decoder. The next two types of information are the language and the program type of the service (e.g. German / News).&lt;br&gt;The big turquoise text in the middle is the station label. This label may appear later than the red text since this information is transmitted in a different logical channel of a DRM stream.&lt;br&gt;The turquoise text on the bottom shows the gross bit-rate in kbits per second of the current selected service. The abbreviations EEP and UEP stand for Equal Error Protection and Unequal Error Protection. UEP is a feature of DRM for a graceful degradation of the decoded audio signal in case of a bad reception situation. UEP means that some parts of the audio is higher protected and some parts are lower protected. On the right, the ID number connected with this service is shown.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&lt;b&gt;Service Selectors:&lt;/b&gt; In a DRM stream up to four services can be carried. The service type can either be audio, data or audio and data. If a data service is selected, the Multimedia Dialog will automatically show up. On the right of each service selection button a short description of the service is shown. If a service is an audio and data service, a &quot;+ MM&quot; is added to this text. If a service is an audio and data service and this service is selected, by opening the Multimedia Dialog, the data can be viewed while the audio is still playing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>&lt;b&gt;Dream Logo:&lt;/b&gt; This is the official logo of the Dream software.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Station Label and Info Display:&lt;/b&gt; In the big label with the black background the station label and some other information about the current selected service is displayed. The red text on the top shows the audio compression format (e.g. AAC), the sample rate of the core coder without SBR (e.g. 24 kHz), if SBR is used and what audio mode is used (mono, stereo, P-stereo -&gt; low-complexity or parametric stereo). In case SBR is used, the actual sample rate is twice the sample rate of the core AAC decoder. The next two types of information are the language and the program type of the service (e.g. German / News).&lt;br&gt;The big turquoise text in the middle is the station label. This label may appear later than the red text since this information is transmitted in a different logical channel of a DRM stream.&lt;br&gt;The turquoise text on the bottom shows the gross bit-rate in kbits per second of the current selected service. The abbreviations EEP and UEP stand for Equal Error Protection and Unequal Error Protection. UEP is a feature of DRM for a graceful degradation of the decoded audio signal in case of a bad reception situation. UEP means that some parts of the audio is higher protected and some parts are lower protected (the ratio of higher protected part length to total length is shown in the brackets). On the right, the ID number connected with this service is shown.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
