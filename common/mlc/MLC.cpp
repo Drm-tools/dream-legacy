@@ -363,7 +363,7 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 	else
 		iIndexLastBranch = iLevels - 1;
 
-	iNoOutBits = iL[0] + iL[1] + iL[2];
+	iNumOutBits = iL[0] + iL[1] + iL[2];
 
 	/* Reset accumulated metric for reliability test of transmission */
 	rAccMetric = (_REAL) 0.0;
@@ -371,7 +371,7 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 
 	/* Init modules --------------------------------------------------------- */
 	/* Energy dispersal */
-	EnergyDisp.Init(iNoOutBits, iL[2]);
+	EnergyDisp.Init(iNumOutBits, iL[2]);
 
 	/* Viterby decoder */
 	for (i = 0; i < iLevels; i++)
@@ -421,7 +421,7 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 
 	/* Define block-size for input and output */
 	iInputBlockSize = iN_mux;
-	iOutputBlockSize = iNoOutBits;
+	iOutputBlockSize = iNumOutBits;
 }
 
 void CMLCDecoder::GetVectorSpace(CVector<_COMPLEX>& veccData)
@@ -476,17 +476,17 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 		piInterlSequ = iInterlSequ4SM;
 
 
-		/* iN: No of OFDM-cells of each protection level -------------------- */
+		/* iN: Number of OFDM-cells of each protection level ---------------- */
 		iN[0] = 0;
 		iN[1] = iN_mux;
 
 
-		/* iM: No of bits each level ---------------------------------------- */
+		/* iM: Number of bits each level ------------------------------------ */
 		iM[0][0] = 0;
 		iM[0][1] = 72;
 
 
-		/* iL: No of bits each protection level ----------------------------- */
+		/* iL: Number of bits each protection level ------------------------- */
 		/* Higher protected part */
 		iL[0] = 0;
 
@@ -521,12 +521,12 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			piInterlSequ = iInterlSequ4SM;
 
 
-			/* iN: No of OFDM-cells of each protection level ---------------- */
+			/* iN: Number of OFDM-cells of each protection level ------------ */
 			iN[0] = 0;
 			iN[1] = iN_mux;
 
 
-			/* iM: No of bits each level ------------------------------------ */
+			/* iM: Number of bits each level -------------------------------- */
 			iM[0][0] = 0;
 
 			/* M_0,2 = RX_0 * floor((2 * N_SDC - 12) / RY_0) */
@@ -535,7 +535,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 				iPuncturingPatterns[iCodRateCombSDC4SM][1]);
 
 
-			/* iL: No of bits each protection level ------------------------- */
+			/* iL: Number of bits each protection level --------------------- */
 			/* Higher protected part */
 			iL[0] = 0;
 
@@ -563,12 +563,12 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			piInterlSequ = iInterlSequ16SM;
 
 
-			/* iN: No of OFDM-cells of each protection level ---------------- */
+			/* iN: Number of OFDM-cells of each protection level ------------ */
 			iN[0] = 0;
 			iN[1] = iN_mux;
 
 
-			/* iM: No of bits each level ------------------------------------ */
+			/* iM: Number of bits each level -------------------------------- */
 			/* M_p,2 = RX_p * floor((N_2 - 6) / RY_p) */
 			for (i = 0; i < 2; i++)
 			{
@@ -581,7 +581,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			}
 			
 
-			/* iL: No of bits each protection level ------------------------- */
+			/* iL: Number of bits each protection level --------------------- */
 			/* Higher protected part */
 			iL[0] = 0;
 
@@ -632,7 +632,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			iNumEncBits = iN_mux * 2;
 
 
-			/* iN: No of OFDM-cells of each protection level ---------------- */
+			/* iN: Number of OFDM-cells of each protection level ------------ */
 			/* N_1 = ceil(8 * X / (2 * RY_Icm * sum(R_p)) * RY_Icm */
 			iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (2 *
 				/* RY_Icm */
@@ -659,7 +659,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			iN[1] = iN_mux - iN[0];
 
 
-			/* iM: No of bits each level ------------------------------------ */
+			/* iM: Number of bits each level -------------------------------- */
 			for (i = 0; i < 2; i++)
 			{
 				/* M_p,1 = 2 * N_1 * R_p */
@@ -679,7 +679,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			}
 
 
-			/* iL: No of bits each protection level ------------------------- */
+			/* iL: Number of bits each protection level --------------------- */
 			/* Higher protected part */
 			iL[0] = iM[0][0] + iM[1][0];
 
@@ -711,7 +711,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			iNumEncBits = iN_mux * 2;
 
 
-			/* iN: No of OFDM-cells of each protection level ---------------- */
+			/* iN: Number of OFDM-cells of each protection level ------------ */
 			/* N_1 = ceil(8 * X / (2 * RY_Icm * sum(R_p)) * RY_Icm */
 			iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (2 *
 				/* RY_Icm */
@@ -743,7 +743,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			iN[1] = iN_mux - iN[0];
 
 
-			/* iM: No of bits each level ------------------------------------ */
+			/* iM: Number of bits each level -------------------------------- */
 			for (i = 0; i < 3; i++)
 			{
 				/* M_p,1 = 2 * N_1 * R_p */
@@ -763,7 +763,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			}
 
 
-			/* iL: No of bits each protection level ------------------------- */
+			/* iL: Number of bits each protection level --------------------- */
 			/* Higher protected part */
 			iL[0] = iM[0][0] + iM[1][0] + iM[2][0];
 
@@ -800,7 +800,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			iNumEncBits = iN_mux * 2;
 
 
-			/* iN: No of OFDM-cells of each protection level ---------------- */
+			/* iN: Number of OFDM-cells of each protection level ------------ */
 			/* N_1 = ceil(8 * X / (2 * RY_Icm * sum(R_p)) * RY_Icm */
 			iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (2 *
 				/* RY_Icm */
@@ -827,7 +827,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			iN[1] = iN_mux - iN[0];
 
 
-			/* iM: No of bits each level ------------------------------------ */
+			/* iM: Number of bits each level -------------------------------- */
 			/* Level 0, contains the VSPP, treated differently */
 			/* M_0,1 */
 			iM[0][0] = 0;
@@ -859,7 +859,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			}
 
 
-			/* iL: No of bits each protection level ------------------------- */
+			/* iL: Number of bits each protection level --------------------- */
 			/* Higher protected part */
 			iL[0] = iM[1][0] + iM[2][0];
 
@@ -896,7 +896,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			iNumEncBits = iN_mux;
 
 
-			/* iN: No of OFDM-cells of each protection level ---------------- */
+			/* iN: Number of OFDM-cells of each protection level ------------ */
 			/* N_1 = ceil(8 * X / (RY_Icm * sum(R_p)) * RY_Icm */
 			iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (
 				/* RY_Icm */
@@ -938,7 +938,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			iN[1] = iN_mux - iN[0];
 
 
-			/* iM: No of bits each level ------------------------------------ */
+			/* iM: Number of bits each level -------------------------------- */
 			/* Real-parts of level 0, they contain the VSPP and treated
 			   differently */
 			/* M_0,1Re */
@@ -972,7 +972,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			}
 	
 
-			/* iL: No of bits each protection level ------------------------- */
+			/* iL: Number of bits each protection level --------------------- */
 			/* Higher protected part */
 			iL[0] = iM[1][0] + iM[2][0] + iM[3][0] + iM[4][0] + iM[5][0];
 
@@ -984,7 +984,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			break;
 		}
 
-		/* Set No of output bits for next module */
+		/* Set number of output bits for next module */
 		Parameter.SetNumDecodedBitsMSC(iL[0] + iL[1] + iL[2]);
 
 		/* Set total number of bits for hiearchical frame (needed for MSC

@@ -120,7 +120,7 @@ protected:
 
 	CVector<_BINARY>	vecbiDecOutBits[MC_MAX_NUM_LEVELS];
 	CVector<_BINARY>	vecbiSubsetDef[MC_MAX_NUM_LEVELS];
-	int					iNoOutBits;
+	int					iNumOutBits;
 
 	/* Accumulated metric */
 	_REAL				rAccMetric;
