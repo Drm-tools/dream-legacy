@@ -35,7 +35,7 @@
 /* Definitions ****************************************************************/
 /* Input bits are collected in bytes separately for imaginary and real part. 
    The order is: [i_0, i_1, i_2] and [q_0, q_1, q_2] -> {i, q} 
-   All entries are normalized according DRM-standard */
+   All entries are normalized according to the DRM-standard */
 const _REAL rTableQAM64SM[8][2] = {
 	{ 1.0801234497f,  1.0801234497f},
 	{-0.1543033499f, -0.1543033499f},
