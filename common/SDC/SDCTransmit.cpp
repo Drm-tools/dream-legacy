@@ -36,7 +36,7 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 	Put SDC parameters on a stream 
 */
 	int i;
-	int iNoUsedBits;
+	int iNumUsedBits;
 	int iLengthDataFieldBytes;
 	int	iUsefulBitsSDC;
 	_BYTE byFirstByte;
@@ -60,24 +60,32 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 
 	/* Data Entities -------------------------------------------------------- */
 	/* Init bit-count */
-	iNoUsedBits = 0;
+	iNumUsedBits = 0;
 
 // Choose types, TEST. Send only important types for this test!
 // TODO: test, if SDC block is long enough for all types!
 	/* Type 0 */
-	iNoUsedBits += DataEntityType0(pbiData, Parameter);
+	iNumUsedBits += DataEntityType0(pbiData, Parameter);
+
+// Only working for either one audio or data service!
+if (Parameter.iNumAudioService == 1)
+{
+	/* Type 9 */
+	iNumUsedBits += DataEntityType9(pbiData, 0, Parameter);
+}
+else
+{
+	/* Type 5 */
+	iNumUsedBits += DataEntityType5(pbiData, 0, Parameter);
+}
 
 	/* Type 1 */
-	iNoUsedBits += DataEntityType1(pbiData, 0, Parameter);
-
-	/* Type 9 */
-	iNoUsedBits += DataEntityType9(pbiData, 0, Parameter);
-
+	iNumUsedBits += DataEntityType1(pbiData, 0, Parameter);
 
 
 	/* Zero-pad the unused bits in this SDC-block 
 	   ("- 20" for the AFS-index and CRC!) */
-	for (i = 0; i < iUsefulBitsSDC - iNoUsedBits - 20; i++)
+	for (i = 0; i < iUsefulBitsSDC - iNumUsedBits - 20; i++)
 		(*pbiData).Enqueue((_UINT32BIT) 0, 1);
 
 
@@ -325,7 +333,7 @@ int CSDCTransmit::DataEntityType5(CVector<_BINARY>* pbiData, int ServiceID,
 	}
 
 	/* Application data */
-// Not used, yet!!!
+// Not used
 
 	return iNumBitsTotal + NUM_BITS_HEADER_SDC;
 }
