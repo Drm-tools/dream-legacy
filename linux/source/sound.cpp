@@ -166,7 +166,7 @@ int write_HW( _SAMPLE *playbuf, int size ){
 #define ALSA_PCM_NEW_HW_PARAMS_API
 #define ALSA_PCM_NEW_SW_PARAMS_API
 
-#include <sys/asoundlib.h>
+#include <alsa/asoundlib.h>
 
 static snd_pcm_t *rhandle = NULL;
 static snd_pcm_t *phandle = NULL;
