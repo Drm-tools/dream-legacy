@@ -35,16 +35,15 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 	int			i;
 	int			iMinIndex;
 	int			iCurIndex;
-	_REAL		rResultIREst;
-	_REAL		rResultPilPairEst;
-	_REAL		rMinValue;
-	_REAL		rSampFreqOffsetEst;
-	_COMPLEX	cOldFreqPilCorr;
-	_COMPLEX	cFreqOffEstVecSym;
-	_COMPLEX	cCurPilMult;
-	_COMPLEX	cErrVec;
-	_REAL		rFreqOffsetEst;
-	_REAL		rReTmp, rImTmp;
+	CReal		rResultIREst;
+	CReal		rResultPilPairEst;
+	CReal		rMinValue;
+	CReal		rFreqOffsetEst;
+	CReal		rReTmp, rImTmp;
+	CComplex	cOldFreqPilCorr;
+	CComplex	cFreqOffEstVecSym;
+	CComplex	cCurPilMult;
+	CComplex	cErrVec;
 
 
 	/**************************************************************************\
@@ -90,7 +89,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		   calculated in the Init-routine. Additionally, the index of the first
 		   pilot in the pair is stored in ".iNumCarrier". We calculate and
 		   averaging the Euclidean-norm of the resulting complex values */
-		rResultPilPairEst = (_REAL) 0.0;
+		rResultPilPairEst = (CReal) 0.0;
 		for (i = 0; i < iNumDiffFact; i++)
 		{
 			cErrVec = ((*pvecInputData)[vecDiffFact[i].iNumCarrier] *
@@ -184,7 +183,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 	\**************************************************************************/
 	if ((bSyncInput == FALSE) && (bTrackPil == TRUE))
 	{
-		cFreqOffEstVecSym = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
+		cFreqOffEstVecSym = CComplex((CReal) 0.0, (CReal) 0.0);
 
 		for (i = 0; i < NUM_FREQ_PILOTS; i++)
 		{
@@ -207,11 +206,11 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 			else
 				cOldFreqPil[i] = (*pvecInputData)[iPosFreqPil[i]];
 
-
+#ifdef USE_SAMOFFS_TRACK_FRE_PIL
 			/* Get phase difference for sample rate offset estimation. Average
 			   the vector, real and imaginary part separately */
 			IIR1(cFreqPilotPhDiff[i], cCurPilMult, rLamSamRaOff);
-
+#endif
 
 			/* Calculate estimation of frequency offset */
 			cFreqOffEstVecSym += cCurPilMult;
@@ -221,25 +220,24 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Frequency offset ------------------------------------------------- */
 		/* Correct frequency offset estimation for resample offset corrections.
 		   When a sample rate offset correction was applied, the frequency
-		   offset is shifted proportional to this correction. */
+		   offset is shifted proportional to this correction. The correction
+		   is mandatory if large sample rate offsets occur */
+
 		/* Get sample rate offset change */
 		CReal rDiffSamOffset =
 			rPrevSamRateOffset - ReceiverParam.rResampleOffset;
 
 		/* Correct sample-rate offset correction according to the proportional
 		   rule. Use relative DC frequency offset plus relative average offset
-		   of frequency pilots to the DC frequency */
-		CReal rCorDiffSamOffset = ((ReceiverParam.rFreqOffsetTrack +
-			ReceiverParam.rFreqOffsetAcqui) + rAvFreqPilDistToDC) *
-			rDiffSamOffset;
-
-		/* Normalize this offset so that it can be used as a phase correction
-		   for frequency offset estimation */
-		CReal rPhaseCorr =
-			rCorDiffSamOffset / SOUNDCRD_SAMPLE_RATE / rNormConstFOE;
+		   of frequency pilots to the DC frequency. Normalize this offset so
+		   that it can be used as a phase correction for frequency offset
+		   estimation  */
+		CReal rPhaseCorr = (ReceiverParam.rFreqOffsetAcqui +
+			ReceiverParam.rFreqOffsetTrack + rAvFreqPilDistToDC) *
+			rDiffSamOffset / SOUNDCRD_SAMPLE_RATE / rNormConstFOE;
 
 		/* Actual correction (rotate vector) */
-		cFreqOffVec *= _COMPLEX(Cos(rPhaseCorr), Sin(rPhaseCorr));
+		cFreqOffVec *= CComplex(Cos(rPhaseCorr), Sin(rPhaseCorr));
 
 		/* Save current resample offset for next symbol */
 		rPrevSamRateOffset = ReceiverParam.rResampleOffset;
@@ -251,30 +249,32 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Calculate argument */
 		rFreqOffsetEst = Angle(cFreqOffVec);
 
-		/* Correct measurement average for actually applied frequency 
+		/* Correct measurement average for actually applied frequency
 		   correction */
-		cFreqOffVec *= _COMPLEX(Cos(-rFreqOffsetEst), Sin(-rFreqOffsetEst));
+		cFreqOffVec *= CComplex(Cos(-rFreqOffsetEst), Sin(-rFreqOffsetEst));
 
+#ifndef USE_FRQOFFS_TRACK_GUARDCORR
 		/* Integrate the result for controling the frequency offset, normalize
 		   estimate */
 		ReceiverParam.rFreqOffsetTrack += rFreqOffsetEst * rNormConstFOE;
+#endif
 
 
+#ifdef USE_SAMOFFS_TRACK_FRE_PIL
 		/* Sample rate offset ----------------------------------------------- */
 		/* Calculate estimation of sample frequency offset. We use the different
 		   frequency offset estimations of the frequency pilots. We normalize
 		   them with the distance between them and average the result (/ 2.0) */
-		rSampFreqOffsetEst =
+		CReal rSampFreqOffsetEst =
 			((Angle(cFreqPilotPhDiff[1]) - Angle(cFreqPilotPhDiff[0])) /
 			(iPosFreqPil[1] - iPosFreqPil[0]) +
 			(Angle(cFreqPilotPhDiff[2]) - Angle(cFreqPilotPhDiff[0])) /
-			(iPosFreqPil[2] - iPosFreqPil[0])) / (_REAL) 2.0;
+			(iPosFreqPil[2] - iPosFreqPil[0])) / (CReal) 2.0;
 
 		/* Integrate the result for controling the resampling */
-// This is currently done in time-sync file
-//		ReceiverParam.rResampleOffset +=
-//			CONTR_SAMP_OFF_INTEGRATION * rSampFreqOffsetEst;
-
+		ReceiverParam.rResampleOffset +=
+			CONTR_SAMP_OFF_INTEGRATION * rSampFreqOffsetEst;
+#endif
 
 #ifdef _DEBUG_
 /* Save frequency and sample rate tracking */
@@ -289,7 +289,7 @@ fflush(pFile);
 	/* If synchronized DRM input stream is used, overwrite the detected
 	   frequency offest estimate by "0", because we know this value */
 	if (bSyncInput == TRUE)
-		ReceiverParam.rFreqOffsetTrack = (_REAL) 0.0;
+		ReceiverParam.rFreqOffsetTrack = (CReal) 0.0;
 
 
 	/* Copy data from input to the output. Data is not modified in this
@@ -370,10 +370,10 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 			/* Calculate phase correction term. This term is needed, because the
 			   desired position of the main peak (line of sight) is the middle
 			   of the guard-interval */
-			rArgumentTemp = (_REAL) 2.0 * crPi / ReceiverParam.iFFTSizeN *
+			rArgumentTemp = (CReal) 2.0 * crPi / ReceiverParam.iFFTSizeN *
 				ReceiverParam.iGuardSize / 2;
 			cPhaseCorTermDivi =
-				_COMPLEX(cos(rArgumentTemp), -sin(rArgumentTemp));
+				CComplex(Cos(rArgumentTemp), -Sin(rArgumentTemp));
 
 			/* Calculate differential factor */
 			vecDiffFact[iNumDiffFact].cDiff = 
@@ -385,7 +385,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	}
 
 
-	/* Frequency and sample rate offset estimation -------------------------- */
+	/* Frequency offset estimation ------------------------------------------ */
 	/* Get position of frequency pilots */
 	int iFreqPilCount = 0;
 	int iAvPilPos = 0;
@@ -406,23 +406,20 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	rAvFreqPilDistToDC =
 		(CReal) iAvPilPos / NUM_FREQ_PILOTS / ReceiverParam.iFFTSizeN;
 
-	/* Init memory for "old" frequency pilots and actual phase differences */
+	/* Init memory for "old" frequency pilots */
 	for (i = 0; i < NUM_FREQ_PILOTS; i++)
-	{
-		cOldFreqPil[i] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
-		cFreqPilotPhDiff[i] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
-	}
+		cOldFreqPil[i] = CComplex((CReal) 0.0, (CReal) 0.0);
 	
 	/* Nomalization constant for frequency offset estimation */
 	rNormConstFOE =
-		(_REAL) 1.0 / ((_REAL) 2.0 * crPi * ReceiverParam.iSymbolBlockSize);
+		(CReal) 1.0 / ((CReal) 2.0 * crPi * ReceiverParam.iSymbolBlockSize);
 
 	/* Init time constant for IIR filter for frequency offset estimation */
 	rLamFreqOff = IIR1Lam(TICONST_FREQ_OFF_EST, (CReal) SOUNDCRD_SAMPLE_RATE /
 		ReceiverParam.iSymbolBlockSize);
 
 	/* Init vector for averaging the frequency offset estimation */
-	cFreqOffVec = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
+	cFreqOffVec = CComplex((CReal) 0.0, (CReal) 0.0);
 
 	/* Init value for previous estimated sample rate offset with the current
 	   setting. This can be non-zero if, e.g., an initial sample rate offset
@@ -430,9 +427,16 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	rPrevSamRateOffset = ReceiverParam.rResampleOffset;
 
 
+#ifdef USE_SAMOFFS_TRACK_FRE_PIL
+	/* Inits for sample rate offset estimation algorithm -------------------- */
+	/* Init memory for actual phase differences */
+	for (i = 0; i < NUM_FREQ_PILOTS; i++)
+		cFreqPilotPhDiff[i] = CComplex((CReal) 0.0, (CReal) 0.0);
+
 	/* Init time constant for IIR filter for sample rate offset estimation */
 	rLamSamRaOff = IIR1Lam(TICONST_SAMRATE_OFF_EST,
 		(CReal) SOUNDCRD_SAMPLE_RATE / ReceiverParam.iSymbolBlockSize);
+#endif
 
 
 	/* Define block-sizes for input and output */
