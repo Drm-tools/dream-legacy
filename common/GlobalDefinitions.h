@@ -48,7 +48,7 @@ using namespace std; /* Because of the library: "complex" */
 #define _DEBUG_
 #undef _DEBUG_
 
-#define DREAM_VERSION_NUMBER			"1.0.3"
+#define DREAM_VERSION_NUMBER			"1.0.4"
 
 /* Define whether using GUI or non-GUI receiver */
 #define USE_QT_GUI
