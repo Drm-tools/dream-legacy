@@ -223,11 +223,9 @@ void CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData, int iLengthOfBody,
 	Parameter.Service[iTempShortID].strLabel = "";
 
 	/* Check the following restriction to the length of label: label: this is a
-	   variable length field of up to 16 bytes defining the label using UTF-8
-	   coding
+	   variable length field of up to 64 bytes defining the label
 	   TODO: Error handling at this point! */
-// Some DRM test files do not follow the 16 byte restriction in the DRM standard!!!
-//	if (iLengthOfBody <= 16)
+	if (iLengthOfBody <= 64)
 	{
 		/* Get all characters from SDC-stream */
 		for (i = 0; i < iLengthOfBody; i++)
