@@ -30,9 +30,9 @@
 % Fixed for sample-rate conversiones of R ~ 1
 I = 10; % D = I
 % Number of taps per poly-phase
-NoTapsP = 10;
+NoTapsP = 12;
 % Cut-off frequency
-fc = 1 / I;
+fc = 0.97 / I;
 % MMSE filter-design and windowing
 h = I * firls(I * NoTapsP - 1, [0 fc fc 1], [1 1 0 0]) .* kaiser(I * NoTapsP, 5)';
 
