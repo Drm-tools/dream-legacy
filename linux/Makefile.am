@@ -1,5 +1,5 @@
 bin_PROGRAMS = drm
-drm_LDADD   = $(ARTSLIBS)
+drm_LDFLAGS = -pg
 
 # these need to be generated before the rest can be compiled
 
@@ -139,7 +139,8 @@ nodist_drm_SOURCES=$(BUILT_SOURCES)
 dist-hook:
 	mkdir $(distdir)/moc
 
-drm_CXXFLAGS=$(ARTSINCL) $(QWTINCL) -I../common/GUI-QT -I$(QTDIR)/include -DQT_THREAD_SUPPORT -D_REENTRANT -g
+drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -I$(QTDIR)/include -DQT_THREAD_SUPPORT -D_REENTRANT -g
+
 
 moc/moc_MultColorLED.cpp: ../common/GUI-QT/MultColorLED.h
 	$(MOC) ../common/GUI-QT/MultColorLED.h -o moc/moc_MultColorLED.cpp

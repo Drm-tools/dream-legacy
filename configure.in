@@ -22,6 +22,7 @@ dnl Checks for programs.
 AC_PROG_CC
 AC_PROG_CXX
 AC_PROG_MAKE_SET
+AC_CHECK_PROGS(RPMBUILD, rpmbuild, rpm)
 
 AC_CHECK_HEADER(faad.h, , have_faad=no)
 AC_CHECK_LIB(faad,faacDecOpen, , exit 1, -lm )
@@ -96,5 +97,5 @@ dnl qwt
 AC_HAVE_LIBRARY(qwt, ,exit 1)
 AC_SUBST(QWTINCL, "-I/usr/include/qwt")
 
-AC_CONFIG_FILES(Makefile linux/Makefile )
+AC_CONFIG_FILES(Makefile linux/Makefile drm.spec)
 AC_OUTPUT
