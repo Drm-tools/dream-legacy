@@ -117,7 +117,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 						vecrPSDPilCor[i]) + vecrPSDPilCor[i];
 
 				/* Average RL and LR filter outputs */
-				vecrFiltRes = (vecrFiltResLR + vecrFiltResRL) / 2;
+				vecrFiltRes = vecrFiltResLR + vecrFiltResRL;
 		
 
 				/* Detect peaks by the distance to the filtered curve ------- */
@@ -143,7 +143,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 
 					/* Check all detected peaks in the "PSD-domain" if there are
 					   at least two peaks with approx the same power at the
-					   right places (positions of the desired pilots) */
+					   correct places (positions of the desired pilots) */
 					for (i = 0; i < iNumDetPeaks; i++)
 					{
 						/* Fill the vector with the values at the desired 
@@ -237,7 +237,7 @@ for (i = 1; i < iSearchWinSize; i++)
 	}
 	
 
-	fprintf(pFile1, "%e %e %e %e\n", vecrPSDPilCor[i], vecrFiltRes[i], rPeakMarker, rFinPM);
+	fprintf(pFile1, "%e %e %e %e\n", vecrPSDPilCor[i], vecrFiltRes[i] / 2, rPeakMarker, rFinPM);
 }
 fclose(pFile1);
 // close all;load freqacq.dat;semilogy(freqacq(:,1:2));hold;plot(freqacq(:,3),'*y');plot(freqacq(:,4),'*k');

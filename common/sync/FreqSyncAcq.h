@@ -43,7 +43,7 @@
 /* Definitions ****************************************************************/
 /* Bound for peak detection between filtered signal (in frequency direction) 
    and the unfiltered signal */
-#define PEAK_BOUND_FILT2SIGNAL			((CReal) 3.0)
+#define PEAK_BOUND_FILT2SIGNAL			((CReal) 1.5)
 /* Bound for sinusoid interferer cancellation algorithm */
 #define LEVEL_DIFF_EQU_DIST_FRPI		((CReal) 0.8)
 
