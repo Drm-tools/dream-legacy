@@ -480,6 +480,10 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* No timing corrections, timing is constant in this case */
 	(*pvecOutputData).GetExData().iCurTimeCorr = 0;
 	(*pvecOutputData2).GetExData().iCurTimeCorr = 0;
+
+	/* Symbol ID index is always ok */
+	(*pvecOutputData).GetExData().bSymbolIDHasChanged = FALSE;
+	(*pvecOutputData2).GetExData().bSymbolIDHasChanged = FALSE;
 }
 
 void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
