@@ -237,7 +237,7 @@ void CGenSimData::InitInternal(CParameter& TransmParam)
 
 	case 3:
 		/* US Consortium: slowest 0.1 Hz */
-		iMinNoBlocks = (int) ((_REAL) 10000.0 / (_REAL) 0.4);
+		iMinNoBlocks = (int) ((_REAL) 15000.0 / (_REAL) 0.4);
 		break;
 
 	case 4:
