@@ -314,10 +314,8 @@ else
 void CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData, int iLengthOfBody, 
 								  CParameter& Parameter)
 {
-	_UINT32BIT	iModJulDate;
-	_REAL		rJulDate;
-	_UINT32BIT	iZ, iA, iAlpha, iB, iC, iD, iE;
-	_REAL		rF;
+	_UINT32BIT	iModJulDate, iZ, iA, iAlpha, iB, iC, iD, iE;
+	_REAL		rJulDate, rF;
 
 	/* Modified Julian Date ------------------------------------------------- */
 	/* Get bits from stream */
