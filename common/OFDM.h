@@ -97,7 +97,8 @@ protected:
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
 
-class COFDMDemodSimulation : public CSimulationModul<_REAL, _COMPLEX>
+class COFDMDemodSimulation :
+	public CSimulationModul<CChanSimDataMod, _COMPLEX, CChanSimDataDemod>
 {
 public:
 	COFDMDemodSimulation() {FFTWPlan = NULL;}
@@ -117,6 +118,8 @@ protected:
 	int						iSymbolBlockSize;
 	int						iSymbolCounterTiSy;
 	int						iNoSymPerFrame;
+
+	int						iNumTapsChan;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

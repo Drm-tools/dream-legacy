@@ -83,7 +83,10 @@ protected:
 	void	gausstp(_REAL taps[], _REAL& s, int& over) const;
 };
 
-class CDRMChannel : public CSimulationModul<_COMPLEX, _REAL>, CChannelSim
+class CDRMChannel :
+	/* The third template argument "_COMPLEX" is not used since this module
+	   has only one input and one output buffer */
+	public CSimulationModul<_COMPLEX, CChanSimDataMod, _COMPLEX>, CChannelSim
 {
 public:
 	CDRMChannel() {}

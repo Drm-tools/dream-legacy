@@ -63,14 +63,6 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 			rTimePilotCorr += SqMag(cErrVec);
 		}
 
-#ifdef _DEBUG_
-/* Store frame-synchronization data in file */
-static FILE* pFile = fopen("test/testfra.dat", "w");
-fprintf(pFile, "%e\n", rTimePilotCorr);
-fflush(pFile);
-#endif
-
-
 		/* Store correlation results in a shift register for finding the peak */
 		vecrCorrHistory.AddEnd(rTimePilotCorr);
 
@@ -190,13 +182,12 @@ fflush(pFile);
 			CONTR_SAMP_OFF_INTEGRATION * rSampFreqOffsetEst;
 	}
 
+
 	/* If synchronized DRM input stream is used, overwrite the detected
 	   frequency offest estimate by "0", because we know this value */
 	if (bSyncInput == TRUE)
-	{
-		/* Set frequency offset to a fixed value (= 0) */
 		ReceiverParam.rFreqOffsetTrack = (_REAL) 0.0;	
-	}
+
 
 	/* Copy data from input to the output. Data is not modified in this 
 	   module */
@@ -216,8 +207,6 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 
 	/* Init internal parameters from global struct */
 	iTotalNoUsefCarr = ReceiverParam.iNoCarrier;
-	iDFTSize = ReceiverParam.iFFTSizeN;
-	iShiftedKmin = ReceiverParam.iShiftedKmin;
 
 	/* Check if symbol number per frame has changed. If yes, reset the 
 	   symbol counter */
@@ -254,7 +243,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 			/* Calculate phase correction term. This term is needed, because the
 			   desired position of the main peak (line of sight) is the middle
 			   of the guard-interval */
-			rArgumentTemp = (_REAL) 2.0 * crPi / iDFTSize *
+			rArgumentTemp = (_REAL) 2.0 * crPi / ReceiverParam.iFFTSizeN *
 				ReceiverParam.iGuardSize / 2;
 			cPhaseCorTermDivi = 
 				_COMPLEX(cos(rArgumentTemp), -sin(rArgumentTemp));

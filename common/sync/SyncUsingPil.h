@@ -66,9 +66,6 @@ protected:
 		int					iNoCarrier;
 	};
 
-	int						iDFTSize;
-	int						iShiftedKmin;
-
 
 	/* Variables for frame synchronization */
 	CVector<CPilotDiff>		vecDiffFact;

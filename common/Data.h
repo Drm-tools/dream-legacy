@@ -186,7 +186,8 @@ protected:
 
 
 /* Simulation for channel estimation ---------------------------------------- */
-class CIdealChanEst : public CSimulationModul<_COMPLEX, CEquSig>
+class CIdealChanEst :
+	public CSimulationModul<CEquSig, CEquSig, CChanSimDataDemod>
 {
 public:
 	CIdealChanEst() {}
@@ -208,19 +209,31 @@ protected:
 
 	int					iStartCnt;
 
+	int					iNumTapsChan;
+	CComplexMatrix		matRot;
+
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
 
-class CDataConv : public CReceiverModul<CEquSig, _COMPLEX>
-{
-public:
-	CDataConv() {}
-	virtual ~CDataConv() {}
 
+/******************************************************************************\
+* Data type conversion classes needed for simulation						   *
+\******************************************************************************/
+/* Conversion from channel output to resample module input */
+class CDataConvChanResam : public CReceiverModul<CChanSimDataMod, _REAL>
+{
 protected:
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+	virtual void InitInternal(CParameter& ReceiverParam)
+	{
+		iInputBlockSize = ReceiverParam.iSymbolBlockSize;
+		iOutputBlockSize = ReceiverParam.iSymbolBlockSize;
+	}
+	virtual void ProcessDataInternal(CParameter& ReceiverParam)
+	{
+		for (int i = 0; i < iOutputBlockSize; i++)
+			(*pvecOutputData)[i] = (*pvecInputData)[i].tOut;
+	}
 };
 
 

@@ -117,7 +117,7 @@ const _REAL crPi = ((_REAL) 3.14159265358979323846);
 class CDistance
 {
 public:
-	/* Distance towards 0, 1 */
+	/* Distance towards 0 or towards 1 */
 	_REAL rTow0;
 	_REAL rTow1;
 };
@@ -129,6 +129,23 @@ public:
 	_COMPLEX	cSig; /* Actual signal */
 	_REAL		rChan; /* Channel power at this cell */
 };
+
+
+// FIXME something nicer than using "MAX_NUM_TAPS_DRM_CHAN"
+/* For simulation, data from channel simulation */
+#define MAX_NUM_TAPS_DRM_CHAN			4
+template<class T> class CChanSimData
+{
+public:
+	T					tIn; /* Channel input data */
+	T					tOut; /* Output of the channel (with noise) */
+	T					tRef; /* Channel reference signal (without noise) */
+	_COMPLEX			veccTap[MAX_NUM_TAPS_DRM_CHAN]; /* Tap gains */
+};
+typedef CChanSimData<_REAL>		CChanSimDataMod; /* OFDM modulated signals */
+typedef CChanSimData<_COMPLEX>	CChanSimDataDemod; /* Demodulated signals */
+
+
 
 
 /* Prototypes for global functions ********************************************/

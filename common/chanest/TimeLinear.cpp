@@ -118,7 +118,7 @@ int CTimeLinear::Init(CParameter& Parameter)
 	/* Set length of history-buffer according to time-int-index */
 	iLenHistBuff = Parameter.iScatPilTimeInt + 1;
 	
-	/* Set No of carriers with DC */
+	/* Set number of carriers with DC */
 	iNoCarrier = Parameter.iNoCarrier;
 
 	/* Init timing correction history with zeros */

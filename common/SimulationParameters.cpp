@@ -33,12 +33,12 @@
 void CDRMSimulation::SimScript()
 {
 	int				i;
+	_REAL			rStartSNR, rEndSNR, rStepSNR;
 	_REAL			rSNRCnt;
 	FILE*			pFileBitEr;
 	FILE*			pFileMSE;
 	CVector<_REAL>	vecrMSE;
 	string			strSimFile;
-	_REAL			rStartSNR, rEndSNR, rStepSNR;
 	string			strSpecialRemark;
 	int				iSimTime = 0;
 	int				iSimNumErrors = 0;
@@ -57,21 +57,26 @@ void CDRMSimulation::SimScript()
 	if (eSimType != ST_NONE)
 	{
 		/* The associated code rate is R = 0,6 and the modulation is 64-QAM */
-		Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+
+
+Param.InitCellMapTable(RM_ROBUSTNESS_MODE_A, SO_2); // SO_0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
 		Param.MSCPrLe.iPartB = 1;
 		Param.eSymbolInterlMode = CParameter::SI_LONG;//SI_SHORT;//
 		Param.eMSCCodingScheme = CParameter::CS_3_SM;//CS_3_HMMIX;//CS_3_HMSYM;//
 
-		Param.iDRMChannelNo = 3;
+		Param.iDRMChannelNo = 2;
 
 		rStartSNR = (_REAL) 12.0;
-		rEndSNR = (_REAL) 26.0;
-		rStepSNR = (_REAL) 1.0;
-		strSpecialRemark = "test";
+		rEndSNR = (_REAL) 18.0;
+		rStepSNR = (_REAL) 0.3;
+		strSpecialRemark = "odin";
 
 		/* Length of simulation */
-//		iSimTime = 500;
-		iSimNumErrors = 400000;
+//		iSimTime = 20;
+		iSimNumErrors = 200000;
 
 
 ChannelEstimation.SetFreqInt(CChannelEstimation::FWIENER);
@@ -84,7 +89,7 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 
 		/* Init the modules to adapt to the new parameters. We need to do that
 		   because the following routines call modul internal functions which
-		   need correcetly initialized modules */
+		   need correctly initialized modules */
 		Init();
 
 		MSCMLCDecoder.SetNoIterations(1);

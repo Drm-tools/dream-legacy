@@ -144,14 +144,10 @@ void COFDMCellMapping::InitInternal(CParameter& TransmParam)
 	}
 
 	/* Define block-sizes for input and output of the module ---------------- */
-	/* MSC */
-	iInputBlockSize = TransmParam.veciNoMSCSym[0];
-	/* FAC */
-	iInputBlockSize2 = TransmParam.veciNoFACSym[0];
-	/* SDC */
-	iInputBlockSize3 = TransmParam.veciNoSDCSym[0];
-	/* Output */
-	iOutputBlockSize = TransmParam.iNoCarrier;
+	iInputBlockSize = TransmParam.veciNoMSCSym[0]; /* MSC */
+	iInputBlockSize2 = TransmParam.veciNoFACSym[0]; /* FAC */
+	iInputBlockSize3 = TransmParam.veciNoSDCSym[0]; /* SDC */
+	iOutputBlockSize = TransmParam.iNoCarrier; /* Output */
 }
 
 

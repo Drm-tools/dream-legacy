@@ -73,10 +73,10 @@ void CDRMTransmitter::TransmitterMainRoutine()
 
 	
 		/* Mapping of the MSC, FAC, SDC and pilots on the carriers ************/
-		OFDMCellMapping.ProcessMultipleData(TransmParam, IntlBuf,
-														FACMapBuf,
-														SDCMapBuf,
-														CarMapBuf);
+		OFDMCellMapping.ProcessData(TransmParam, IntlBuf,
+												 FACMapBuf,
+												 SDCMapBuf,
+												 CarMapBuf);
 	
 		/* OFDM-modulation ****************************************************/
 		OFDMModulation.ProcessData(TransmParam, CarMapBuf, OFDMModBuf);

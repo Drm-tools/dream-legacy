@@ -38,22 +38,110 @@ CMatlibVector<CReal> Sort(const CMatlibVector<CReal>& rvI)
 	fvRet = rvI;
 
 	/* Loop through the array one less than its total cell count */
-	for(int i = 0; i < rvI.GetSize() - 1; i++)
+	for (int i = 0; i < rvI.GetSize() - 1; i++)
 	{
 		/* Loop through every cell (value) in array */
-		for(int ii = 0; ii < rvI.GetSize() - 1; ii++) 
+		for (int j = 0; j < rvI.GetSize() - 1; j++) 
 		{
 			/* Compare the values and switch if necessary */
-			if (fvRet[ii] > fvRet[ii + 1]) 
+			if (fvRet[j] > fvRet[j + 1]) 
 			{ 
-				rSwap = fvRet[ii]; 
-				fvRet[ii] = fvRet[ii + 1]; 
-				fvRet[ii + 1] = rSwap; 
+				rSwap = fvRet[j]; 
+				fvRet[j] = fvRet[j + 1]; 
+				fvRet[j + 1] = rSwap; 
 			} 
 		}
 	}
 
 	return fvRet;
+}
+
+CMatlibMatrix<CReal> Eye(const int iLen)
+{
+	CMatlibMatrix<CReal> matrRet(iLen, iLen, VTY_TEMP);
+
+	/* Set all values except of the diagonal to zero, diagonal entries = 1 */
+	for (int i = 0; i < iLen; i++)
+	{
+		for (int j = 0; j < iLen; j++)
+		{
+			if (i == j)
+				matrRet[i][j] = (CReal) 1.0;
+			else
+				matrRet[i][j] = (CReal) 0.0;
+		}
+	}
+	
+	return matrRet;
+}
+
+CMatlibMatrix<CComplex> Inv(const CMatlibMatrix<CComplex>& matrI)
+{
+/*
+	Parts of the following code are taken from Ptolemy
+	(http://ptolemy.eecs.berkeley.edu/)
+
+	The input matrix must be square, this is NOT checked here!
+*/
+	_COMPLEX	temp;
+	int			row, col, i;
+
+	const int iSize = matrI.GetColSize();
+	CMatlibMatrix<CComplex> matrRet(iSize, iSize, VTY_TEMP);
+
+	/* Make a working copy of input matrix */
+	CMatlibMatrix<CComplex> work(matrI);
+
+	/* Set result to be the identity matrix */
+	matrRet = Eye(iSize);
+
+	for (i = 0; i < iSize; i++) 
+	{
+		/* Check that the element in (i,i) is not zero */
+		if ((Real(work[i][i]) == 0) && (Imag(work[i][i]) == 0)) 
+		{
+			/* Swap with a row below this one that has a non-zero element
+			   in the same column */
+			for (row = i + 1; row < iSize; row++)
+				if ((Real(work[i][i]) != 0) || (Imag(work[i][i]) != 0))
+					break;
+
+			/* Swap rows */
+			for (col = 0; col < iSize; col++) 
+			{
+				temp = work[i][col];
+				work[i][col] = work[row][col];
+				work[row][col] = temp;
+				temp = matrRet[i][col];
+				matrRet[i][col] = matrRet[row][col];
+				matrRet[row][col] = temp;
+			}
+		}
+
+		/* Divide every element in the row by element (i,i) */
+		temp = work[i][i];
+		for (col = 0; col < iSize; col++) 
+		{
+			work[i][col] /= temp;
+			matrRet[i][col] /= temp;
+		}
+
+		/* Zero out the rest of column i */
+		for (row = 0; row < iSize; row++) 
+		{
+			if (row != i)
+			{
+				temp = work[row][i];
+				for (col = iSize - 1; col >= 0; col--)
+				{
+					work[row][col] -= (temp * work[i][col]);
+					matrRet[row][col] -= (temp * matrRet[i][col]);
+				}
+			}
+		}
+	}
+
+	return matrRet;
 }
 
 CMatlibVector<CComplex> Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
@@ -215,4 +303,36 @@ CMatlibVector<CReal> rifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPla
 	delete[] pFftwRealOut;
 
 	return fvReturn;
+}
+
+
+/* FftPlans implementation -------------------------------------------------- */
+CFftPlans::~CFftPlans()
+{
+	if (bInitialized)
+	{
+		rfftw_destroy_plan(RFFTPlForw);
+		rfftw_destroy_plan(RFFTPlBackw);
+		fftw_destroy_plan(FFTPlForw);
+		fftw_destroy_plan(FFTPlBackw);
+	}
+}
+
+void CFftPlans::Init(const int iFSi)
+{
+	/* Delete old plans */
+	if (bInitialized)
+	{
+		rfftw_destroy_plan(RFFTPlForw);
+		rfftw_destroy_plan(RFFTPlBackw);
+		fftw_destroy_plan(FFTPlForw);
+		fftw_destroy_plan(FFTPlBackw);
+	}
+
+	RFFTPlForw = rfftw_create_plan(iFSi, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);
+	RFFTPlBackw = rfftw_create_plan(iFSi, FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE);
+	FFTPlForw = fftw_create_plan(iFSi, FFTW_FORWARD, FFTW_ESTIMATE);
+	FFTPlBackw = fftw_create_plan(iFSi, FFTW_BACKWARD, FFTW_ESTIMATE);
+
+	bInitialized = true;
 }

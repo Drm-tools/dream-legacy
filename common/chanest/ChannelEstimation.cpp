@@ -147,24 +147,23 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		 * Wiener filter													   *
 		\**********************************************************************/
 		/* Update filter coefficients once in one DRM frame */
-//		if (iUpCntWienFilt > 0)
-//			iUpCntWienFilt--;
-//		else
-//		{
-//			UpdateWienerFiltCoef(rSNRAftTiInt, (_REAL) ReceiverParam.RatioTgTu.iEnum / 
-//				ReceiverParam.RatioTgTu.iDenom);
+		if (iUpCntWienFilt > 0)
+		{
+			iUpCntWienFilt--;
 
+			/* Get maximum delay spread in one DRM frame */
+			if (rDelaySprEstInd > rMaxDelaySprInFra)
+				rMaxDelaySprInFra = rDelaySprEstInd;
+		}
+		else
+		{
+			/* Update filter taps */
+			UpdateWienerFiltCoef(rSNRAftTiInt, rMaxDelaySprInFra / iNoCarrier);
 
-// TODO rDelaySprEstInd should be averaged, smoothed! Maybe after smoothing
-// reactivate the "iUpCntWienFilt" condition...
-
-// TEST
-/* Update filter taps */
-UpdateWienerFiltCoef(rSNRAftTiInt, rDelaySprEstInd / iNoCarrier);
-
-//			/* Reset counter */
-//			iUpCntWienFilt = iNoSymPerFrame;
-//		}
+			/* Reset counter and maximum storage variable */
+			iUpCntWienFilt = iNoSymPerFrame;
+			rMaxDelaySprInFra = (_REAL) 0.0;
+		}
 
 		/* FIR filter of the pilots with filter taps. We need to filter the
 		   pilot positions as well to improve the SNR estimation (which 
@@ -241,8 +240,8 @@ UpdateWienerFiltCoef(rSNRAftTiInt, rDelaySprEstInd / iNoCarrier);
 			if (rCurSNREst < (_REAL) 1.0)
 				rCurSNREst = (_REAL) 1.0;
 
-			/* Average the final result */
-			IIR1(rSNREstimate, rCurSNREst, rLam);
+			/* Average the SNR with a two sided recursion */
+			IIR1TwoSided(rSNREstimate, rCurSNREst, rLam, 0.9999);
 		}
 	}
 
@@ -368,7 +367,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	iInitCnt = iLenHistBuff - 1;
 
 	/* Inits for SNR estimation (noise and signal averages) */
-	rSNREstimate = (_REAL) 1.0;
+	rSNREstimate = (_REAL) pow(10, (_REAL) 20.0 / 10);
 	rNoiseEst = (_REAL) 0.0;
 	rSignalEst = (_REAL) 0.0;
 
@@ -380,7 +379,9 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 	/* Init delay spread length estimation (index) */
 	rDelaySprEstInd = (_REAL) 0.0;
-	
+	rMaxDelaySprInFra = (_REAL) 0.0; /* Maximum estimated delay spread in
+									    one DRM frame */
+
 
 	/* Inits for Wiener interpolation in frequency direction ---------------- */
 	/* Length of wiener filter */
@@ -537,6 +538,20 @@ void CChannelEstimation::UpdateWienerFiltCoef(_REAL rNewSNR, _REAL rNewRatio)
 		for (i = 0; i < iLengthWiener; i++)
 			matcWienerFilter[j][i] = veccTempFilt[i];
 	}
+
+
+#if 0
+#ifdef _DEBUG_
+/* Save filter coefficients */
+static FILE* pFile = fopen("test/wienerfreq.dat", "w");
+for (j = 0; j < iNoWienerFilt; j++)
+	for (i = 0; i < iLengthWiener; i++)
+		fprintf(pFile, "%e\n", matcWienerFilter[j][i]);
+fflush(pFile);
+#endif
+#endif
+
+
 
 	/* Set matrix with filter taps, one filter for each carrier */
 	for (j = 0; j < iNoCarrier; j++)

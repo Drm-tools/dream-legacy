@@ -118,7 +118,7 @@ SyncUsingPil.StartTrackPil();
 			}
 
 			/* Demapping of the MSC, FAC, SDC and pilots off the carriers --- */
-			if (OFDMCellDemapping.ProcessMultipleData(ReceiverParam, ChanEstBuf,
+			if (OFDMCellDemapping.ProcessData(ReceiverParam, ChanEstBuf,
 				MSCCarDemapBuf, FACCarDemapBuf, SDCCarDemapBuf))
 			{
 				bEnoughData = TRUE;
@@ -166,7 +166,7 @@ SyncUsingPil.StartTrackPil();
 			}
 
 			/* MSC data/audio demultiplexer */
-			if (MSCDemultiplexer.ProcessMultipleData(ReceiverParam,
+			if (MSCDemultiplexer.ProcessData(ReceiverParam,
 				MSCMLCDecBuf, MSCDeMUXBufAud, MSCDeMUXBufData))
 			{
 				bEnoughData = TRUE;

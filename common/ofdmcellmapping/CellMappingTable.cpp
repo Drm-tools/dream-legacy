@@ -654,7 +654,7 @@ for (int z = 0; z < iNoSymbolsPerSuperframe; z++)
 		fprintf(pFile, "%e %e ", matcPilotCells[z][v].real(), 
 			matcPilotCells[z][v].imag());
 
-	fprintf(pFile, "\n"); // New line
+	fprintf(pFile, "\n");
 }
 fclose(pFile);
 #endif

@@ -71,7 +71,7 @@ void CDRMSimulation::Run()
 
 
 		/* Mapping of the MSC, FAC, SDC and pilots on the carriers */
-		OFDMCellMapping.ProcessMultipleData(Param, IntlBuf, FACMapBuf,
+		OFDMCellMapping.ProcessData(Param, IntlBuf, FACMapBuf,
 			SDCMapBuf, CarMapBuf);
 
 		/* OFDM-modulation */
@@ -79,55 +79,44 @@ void CDRMSimulation::Run()
 
 
 
+		/**********************************************************************\
+		* Channel    														   *
+		\**********************************************************************/
+		DRMChannel.TransferData(Param, OFDMModBuf, RecDataBuf);
+
+
+
+		/**********************************************************************\
+		* Receiver    														   *
+		\**********************************************************************/
 switch (eSimType)
 {
 case ST_MSECHANEST:
 case ST_BER_IDEALCHAN:
-		/**********************************************************************\
-		* MSE of channel estimation, ideal channel estimation				   *
-		\**********************************************************************/
-		/* DRM channel simulation ------------------------------------------- */
-		DRMChannel.TransferData(Param, OFDMModBuf, RecDataBuf, ChanInRefBuf,
-			ChanRefBuf);
-
-
-		/* Receiver --------------------------------------------------------- */
+		/* MSE of channel estimation, ideal channel estimation -------------- */
 		/* Special OFDM demodulation for channel estimation tests (with guard-
 		   interval removal) */
-		OFDMDemodSimulation.ProcessMultipleData(Param,
-			/* Input buffers */
-			RecDataBuf, ChanInRefBuf, ChanRefBuf,
-			/* Output buffers */
-			OFDMDemodBuf, OFDMDemodBuf2, DemChanInRefBuf, DemChanRefBuf);
-	
-		/* Channel estimation and equalisation */
-		ChannelEstimation.ProcessData(Param, OFDMDemodBuf, ChanEstBuf);
+		OFDMDemodSimulation.ProcessDataOut(Param, RecDataBuf,
+			ChanEstInBufSim, OFDMDemodBufChan2);
 
-		/* This module converts the "CEquSig" data type of "ChanEstBuf" to the
-		   "_COMPLEX" data type, because a module can only have ONE type of
-		   input buffers (even in ProcessMultipleData() case) */
-		DataConv.ProcessData(Param, ChanEstBuf, ChanEstBufForSim);
+		/* Channel estimation and equalization */
+		ChannelEstimation.ProcessData(Param, ChanEstInBufSim, ChanEstBuf);
 
 		/* Ideal channel estimation (with MSE calculation) */
-		IdealChanEst.ProcessMultipleData(Param,
-			/* Input buffers */
-			ChanEstBufForSim, OFDMDemodBuf2, DemChanInRefBuf, DemChanRefBuf,
-			/* Output buffer */
+		IdealChanEst.ProcessDataIn(Param, ChanEstBuf, OFDMDemodBufChan2,
 			ChanEstBuf);
 	break;
 
 
 case ST_BITERROR:
-		/**********************************************************************\
-		* Bit error rate (we can use all synchronization units here!)		   *
-		\**********************************************************************/
-		/* DRM channel simulation ------------------------------------------- */
-		DRMChannel.TransferData(Param, OFDMModBuf, RecDataBuf);
+		/* Bit error rate (we can use all synchronization units here!) ------ */
+		/* This module converts the "CChanSimDataMod" data type of "DRMChannel"
+		   to the "_REAL" data type, because a regular module can only have ONE
+		   type of input buffers */
+		DataConvChanResam.ProcessData(Param, RecDataBuf, ChanResInBuf);
 
-
-		/* Receiver --------------------------------------------------------- */
 		/* Resample input DRM-stream */
-		InputResample.ProcessData(Param, RecDataBuf, InpResBuf);
+		InputResample.ProcessData(Param, ChanResInBuf, InpResBuf);
 
 		/* Frequency synchronization acquisition */
 		FreqSyncAcq.ProcessData(Param, InpResBuf, FreqSyncAcqBuf);
@@ -147,7 +136,7 @@ case ST_BITERROR:
 }
 
 		/* Demapping of the MSC, FAC, SDC and pilots from the carriers */
-		OFDMCellDemapping.ProcessMultipleData(Param, ChanEstBuf,
+		OFDMCellDemapping.ProcessData(Param, ChanEstBuf,
 			MSCCarDemapBuf, FACCarDemapBuf, SDCCarDemapBuf);
 
 		/* FAC */
@@ -213,25 +202,26 @@ void CDRMSimulation::Init()
 	/* Special module for simulation */
 	EvaSimData.Init(Param);
 
+	/* Init channel. The channel must be initialized before the modules
+	   "OFDMDemodSimulation" and "IdealChanEst" because they need iNumTaps and
+	   tap delays in global struct */
+	DRMChannel.Init(Param, RecDataBuf);
+
 	/* Mode dependent initializations */
 	switch (eSimType)
 	{
 	case ST_MSECHANEST:
 	case ST_BER_IDEALCHAN:
-		/* Init channel */
-		DRMChannel.Init(Param, RecDataBuf, ChanInRefBuf, ChanRefBuf);
+		OFDMDemodSimulation.Init(Param, ChanEstInBufSim, OFDMDemodBufChan2);
 
-		OFDMDemodSimulation.Init(Param, OFDMDemodBuf, OFDMDemodBuf2,
-			DemChanInRefBuf, DemChanRefBuf);
-		
-		DataConv.Init(Param, ChanEstBufForSim);
-
+		/* Problem: "ChanEstBuf" is used for input and output buffer. That only
+		   works with single buffers. This solution works for this case but is
+		   not a very nice solution FIXME */
 		IdealChanEst.Init(Param, ChanEstBuf);
 		break;
 
 	case ST_BITERROR:
-		/* Init channel */
-		DRMChannel.Init(Param, RecDataBuf);
+		DataConvChanResam.Init(Param, ChanResInBuf);
 
 		OFDMDemodulation.Init(Param, OFDMDemodBuf);
 		break;

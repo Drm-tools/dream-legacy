@@ -50,24 +50,9 @@ class CFftPlans
 public:
 	CFftPlans() : RFFTPlForw(NULL), RFFTPlBackw(NULL), bInitialized(false) {}
 	CFftPlans(const int iFftSize) {Init(iFftSize);}
-	virtual ~CFftPlans() {if (bInitialized) {
-		rfftw_destroy_plan(RFFTPlForw); rfftw_destroy_plan(RFFTPlBackw);
-		fftw_destroy_plan(FFTPlForw); fftw_destroy_plan(FFTPlBackw);}}
+	virtual ~CFftPlans();
 
-	void Init(const int iFSi)
-	{
-		// Delete old plans
-		if (bInitialized) {
-			rfftw_destroy_plan(RFFTPlForw); rfftw_destroy_plan(RFFTPlBackw);
-			fftw_destroy_plan(FFTPlForw); fftw_destroy_plan(FFTPlBackw);}
-
-		RFFTPlForw = rfftw_create_plan(iFSi, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);
-		RFFTPlBackw = rfftw_create_plan(iFSi, FFTW_COMPLEX_TO_REAL, FFTW_ESTIMATE);
-		FFTPlForw = fftw_create_plan(iFSi, FFTW_FORWARD, FFTW_ESTIMATE);
-		FFTPlBackw = fftw_create_plan(iFSi, FFTW_BACKWARD, FFTW_ESTIMATE);
-
-		bInitialized = true;
-	}
+	void Init(const int iFSi);
 
 	rfftw_plan	RFFTPlForw;
 	rfftw_plan	RFFTPlBackw;
@@ -212,6 +197,12 @@ template<class T> T			Sum(const CMatlibVector<T>& vecI);
 
 CMatlibVector<CReal>		Sort(const CMatlibVector<CReal>& rvI);
 
+
+/* Matrix inverse */
+CMatlibMatrix<CComplex>		Inv(const CMatlibMatrix<CComplex>& matrI);
+
+/* Identity matrix */
+CMatlibMatrix<CReal>		Eye(const int iLen);
 
 /* Fourier transformations (also included: real FFT) */
 CMatlibVector<CComplex>		Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans = CFftPlans());

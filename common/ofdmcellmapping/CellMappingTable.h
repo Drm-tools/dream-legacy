@@ -80,30 +80,30 @@ public:
 	CMatrix<_COMPLEX>	matcPilotCells;
 
 	int					iNoSymbolsPerSuperframe;
-	int					iNoSymPerFrame; /* No of symbols per frame */
+	int					iNoSymPerFrame; /* Number of symbols per frame */
 	int					iNoCarrier;
 	int					iScatPilTimeInt; /* Time interpolation */
 	int					iScatPilFreqInt; /* Frequency interpolation */
 
-	int					iMaxNoMSCSym; /* Max no of MSC cells in a symbol */
-	int					iMaxNoFACSym; /* Max no of FAC cells in a symbol */
-	int					iMaxNoSDCSym; /* Max no of SDC cells in a symbol */
+	int					iMaxNoMSCSym; /* Max number of MSC cells in a symbol */
+	int					iMaxNoFACSym; /* Max number of FAC cells in a symbol */
+	int					iMaxNoSDCSym; /* Max number of SDC cells in a symbol */
 
-	/* No MSC in symbol */
+	/* Number of MSC cells in a symbol */
 	CVector<int>		veciNoMSCSym; 
 
-	/* No FAC in symbol */
+	/* Number of FAC cells in a symbol */
 	CVector<int>		veciNoFACSym; 
 
-	/* No SDC in symbol */
+	/* Number of SDC cells in a symbol */
 	CVector<int>		veciNoSDCSym;
 
 	int					iFFTSizeN; /* FFT size of the OFDM modulation */
-	int					iCarrierKmin; /* Carrier No of carrier with lowest frequency */
-	int					iCarrierKmax; /* Carrier No of carrier with highest frequency */
+	int					iCarrierKmin; /* Carrier index of carrier with lowest frequency */
+	int					iCarrierKmax; /* Carrier index of carrier with highest frequency */
 	int					iIndexDCFreq; /* Index of DC carrier */
-	int					iShiftedKmin; /* Shifted carrier min ("soundcard pass-band") */
-	int					iShiftedKmax; /* Shifted carrier max ("soundcard pass-band") */
+	int					iShiftedKmin; /* Shifted carrier min ("sound card pass-band") */
+	int					iShiftedKmax; /* Shifted carrier max ("sound card pass-band") */
 	CRatio				RatioTgTu; /* Ratio between guard-interval and useful part */
 	int					iGuardSize; /* Length of guard-interval measured in "time-bins" */
 	int					iSymbolBlockSize; /* Useful part plus guard-interval in "time-bins" */
@@ -115,6 +115,7 @@ public:
 	/* Needed for SNR estimation and simulation */
 	_REAL				rAvPowPerSymbol; /* Total average power per symbol */
 	_REAL				rAvPilPowPerSym; /* Average power of pilots per symbol */
+
 
 protected:
 	/* Internal parameters for MakeTable function --------------------------- */
@@ -130,6 +131,7 @@ protected:
 		/* For the gain */
 		const int*	piGainTable;
 	};
+
 
 private:
 	_COMPLEX	Polar2Cart(const _REAL rAbsolute, const int iPhase) const;

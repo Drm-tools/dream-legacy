@@ -211,6 +211,22 @@ void CMLCDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	for (i = 0; i < iInputBlockSize; i++)
 		vecSigSpacBuf[i] = (*pvecInputData)[i].cSig;
 
+
+
+#if 0
+// TEST
+static FILE* pFile = fopen("test/constellation.dat", "w");
+if (eChannelType == CParameter::CT_MSC) {
+for (i = 0; i < iInputBlockSize; i++)
+	fprintf(pFile, "%e %e\n", vecSigSpacBuf[i].real(), vecSigSpacBuf[i].imag());
+fflush(pFile);
+}
+// close all;load constellation.dat;constellation=complex(constellation(:,1),constellation(:,2));plot(constellation,'.')
+#endif
+
+
+
+
 	/* Iteration loop */
 	for (k = 0; k < iNoIterations + 1; k++)
 	{

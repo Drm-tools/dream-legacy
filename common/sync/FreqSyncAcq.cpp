@@ -80,7 +80,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 					vecrFFTOutput[iTotalBufferSize - i] * 
 					vecrFFTOutput[iTotalBufferSize - i];
 
-			/* Wait until we have sufficiant data averaged */
+			/* Wait until we have sufficient data averaged */
 			if (iAverageCounter > 0)
 			{
 				/* Decrease counter */
@@ -154,7 +154,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 						vecrPSDPilPoin[2] =
 							vecrPSD[veciPeakIndex[i] + piTableFreqPilots[2]];
 
-						/* Sort, to extract the higesht and second highest
+						/* Sort, to extract the highest and second highest
 						   peak */
 						vecrPSDPilPoin = Sort(vecrPSDPilPoin);
 

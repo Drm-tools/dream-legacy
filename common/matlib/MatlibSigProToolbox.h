@@ -53,14 +53,6 @@ CMatlibVector<CComplex>	Levinson(const CMatlibVector<CComplex>& veccRx,
 								 const CMatlibVector<CComplex>& veccB);
 
 
-/* Matrix inverse */
-CMatlibMatrix<CReal>	Inv(const CMatlibMatrix<CReal>& matrI);
-
-
-/* Identity matrix */
-CMatlibMatrix<CReal>	Eye(const int iLen);
-
-
 
 /* My own functions --------------------------------------------------------- */
 /* Complex FIR filter with decimation */
@@ -71,10 +63,12 @@ CMatlibVector<CComplex>	FirFiltDec(const CMatlibVector<CComplex>& cvB,
 
 
 /* Squared magnitude */
-inline CReal				SqMag(const CComplex& cI)
-								{return cI.real() * cI.real() + cI.imag() * cI.imag();}
-inline CMatlibVector<CReal>	SqMag(const CMatlibVector<CComplex>& veccI)
-								{_VECOP(CReal, veccI.GetSize(), SqMag(veccI[i]));}
+inline
+CReal					SqMag(const CComplex& cI)
+							{return cI.real() * cI.real() + cI.imag() * cI.imag();}
+inline
+CMatlibVector<CReal>	SqMag(const CMatlibVector<CComplex>& veccI)
+							{_VECOP(CReal, veccI.GetSize(), SqMag(veccI[i]));}
 
 
 /* One pole recursion (first order IIR)
@@ -82,6 +76,7 @@ inline CMatlibVector<CReal>	SqMag(const CMatlibVector<CComplex>& veccI)
 template<class CReal> inline
 void					IIR1(CReal& rY, const CReal& rX, const CReal rLambda)
 							{rY = rLambda * (rY - rX) + rX;}
+
 template<class CReal> inline
 void					IIR1(CMatlibVector<CReal>& rY,
 							 const CMatlibVector<CReal>& rX,
@@ -89,6 +84,16 @@ void					IIR1(CMatlibVector<CReal>& rY,
 {
 	for (int i = 0; i < rY.GetSize(); i++)
 		IIR1(rY[i], rX[i], rLambda);
+}
+
+template<class CReal> inline
+void					IIR1TwoSided(CReal& rY, const CReal& rX,
+									 const CReal rLamUp, const CReal rLamDown)
+{
+	if (rX > rY)
+		rY = rLamUp * (rY - rX) + rX;
+	else
+		rY = rLamDown * (rY - rX) + rX;
 }
 
 

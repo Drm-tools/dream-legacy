@@ -132,7 +132,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	/* Wiener interpolation, filtering and prediction ----------------------- */
 	for (i = 0; i < iNoCarrier; i += iScatPilFreqInt)
 	{
-		/* This check is for robustness mode D sinc "iScatPilFreqInt" is "1"
+		/* This check is for robustness mode D since "iScatPilFreqInt" is "1"
 		   in this case which would include the DC carrier in the for-loop */
 		if (!_IsDC(veciMapTab[i]))
 		{
@@ -217,7 +217,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 		break;
 
 	case RM_ROBUSTNESS_MODE_B:
-		iLengthWiener = 20;
+		iLengthWiener = 25;
 		rSigma = (_REAL) 3.36 / 2;
 		break;
 	
@@ -430,7 +430,6 @@ CReal CTimeWiener::ModLinRegr(CRealVector& vecrCorrEst)
 
 	Wmrem = W - Wm; /* Remove mean of W */
 
-	/* a1 = sum ( (w - wm).*(z - zm)) / sum( (w - wm).^2 ); */
 	A1 = Sum(Wmrem * (Z - Zm)) / Sum(Wmrem * Wmrem);
 
 	return (CReal) 0.5 / crPi * sqrt((CReal) -2.0 * A1) / Ts;

@@ -32,7 +32,8 @@
 /* Implementation *************************************************************/
 void CDRMChannel::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	int i, j;
+	int			i, j;
+	_COMPLEX	cCurTapSamp;
 
 	/* Save old values from the end of the vector */
 	for (i = 0; i < iMaxDelay; i++)
@@ -48,14 +49,18 @@ void CDRMChannel::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Direct path */
 	for (i = 0; i < iInputBlockSize; i++)
 	{
-		veccOutput[i] = tap[0].Update() * 
-			veccHistory[i + iMaxDelay /* - 0 */] * cCurExp[0];
+		cCurTapSamp = tap[0].Update() * cCurExp[0];
+
+		veccOutput[i] =	veccHistory[i + iMaxDelay /* - 0 */] * cCurTapSamp;
 
 		/* Rotate exp-pointer one step further by complex multiplication with 
 		   precalculated rotation vector cExpStep. This saves us from
 		   calling sin() and cos() functions all the time (iterative 
 		   calculation of these functions) */
 		cCurExp[0] *= cExpStep[0];
+
+		/* Store the tap gain */
+		(*pvecOutputData)[i].veccTap[0] = cCurTapSamp;
 	}
 
 	/* Echos */
@@ -63,37 +68,36 @@ void CDRMChannel::ProcessDataInternal(CParameter& ReceiverParam)
 	{
 		for (i = 0; i < iInputBlockSize; i++)
 		{
-			veccOutput[i] += tap[j].Update() * 
-				veccHistory[i + iMaxDelay - tap[j].GetDelay()] * cCurExp[j];
+			cCurTapSamp = tap[j].Update() * cCurExp[j];
+			
+			veccOutput[i] += 
+				veccHistory[i + iMaxDelay - tap[j].GetDelay()] * cCurTapSamp;
 
 			/* See above */
 			cCurExp[j] *= cExpStep[j];
+
+			/* Store the tap gain */
+			(*pvecOutputData)[i].veccTap[j] = cCurTapSamp;
 		}
 	}
 
 	/* Get real output vector and correct global gain */
 	for (i = 0; i < iInputBlockSize; i++)
-		(*pvecOutputData)[i] = veccOutput[i].real() * rGainCorr;
+		(*pvecOutputData)[i].tOut = veccOutput[i].real() * rGainCorr;
 
 	/* Additional white Gaussian noise (AWGN) */
 	for (i = 0; i < iInputBlockSize; i++)
-		(*pvecOutputData)[i] += randn() * rNoisepwrFactor;
+		(*pvecOutputData)[i].tOut += randn() * rNoisepwrFactor;
 
 
 	/* Reference signals for channel estimation evaluation ------------------ */
-// TODO
-// In case of bit error rate simulation no additional outputs are needed, TODO
-// nicer implementation of this!
-if (pvecOutputData2 != NULL){
-
 	/* Input reference signal. "* 2" due to the real-valued signal */
 	for (i = 0; i < iInputBlockSize; i++)
-		(*pvecOutputData2)[i] = (*pvecInputData)[i].real() * 2;
+		(*pvecOutputData)[i].tIn = (*pvecInputData)[i].real() * 2;
 
 	/* Channel reference signal (without additional noise) */
 	for (i = 0; i < iInputBlockSize; i++)
-		(*pvecOutputData3)[i] = veccOutput[i].real() * rGainCorr;
-}
+		(*pvecOutputData)[i].tRef = veccOutput[i].real() * rGainCorr;
 }
 
 void CDRMChannel::InitInternal(CParameter& ReceiverParam)
@@ -214,7 +218,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	case 7:
 		/* My own test channel, NOT DEFINED IN THE DRM STANDARD! 
 		   This channel has only one fading path */
-		rMyFading = 0.5;
+		rMyFading = 4;
 
 		iNoTaps = 1;
 		tap[0].Init(/* Delay: */	(_REAL) 0.0, 
@@ -237,10 +241,16 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 
 		/* Gain correction denominator */
 		rGainCorr += tap[i].GetGain() * tap[i].GetGain();
+
+		/* Get path delays for global struct */
+		ReceiverParam.iPathDelay[i] = tap[i].GetDelay();
 	}
 
 	/* Final gain correction value. "* 2" due to the real-valued signals */
 	rGainCorr = (_REAL) 1.0 / sqrt(rGainCorr) * 2;
+
+	/* Set number of taps in global struct */
+	ReceiverParam.iNumTaps = iNoTaps;
 
 
 	/* Memory allocation ---------------------------------------------------- */
@@ -304,10 +314,6 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	/* Define block-sizes for input and output */
 	iInputBlockSize = ReceiverParam.iSymbolBlockSize;
 	iOutputBlockSize = ReceiverParam.iSymbolBlockSize;
-
-	/* For reference signals */
-	iOutputBlockSize2 = ReceiverParam.iSymbolBlockSize;
-	iOutputBlockSize3 = ReceiverParam.iSymbolBlockSize;
 }
 	
 void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift, _REAL rNewFd)

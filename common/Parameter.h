@@ -352,6 +352,10 @@ public:
 	int					iNoBitErrors;
 	int					iChanEstDelay;
 
+	int					iNumTaps;
+	int					iPathDelay[MAX_NUM_TAPS_DRM_CHAN];
+
+
 	/* Simulation raw-data management. We have to implement a shift register
 	   with varying size. We do that by adding a variable for storing the
 	   current write position. */
@@ -367,27 +371,11 @@ public:
 		CRawSimData() : ciMaxDelBlocks(50), iCurWritePos(0) 
 			{veciShRegSt.Init(ciMaxDelBlocks);}
 
-		void Add(_UINT32BIT iNewSRS) 
-		{
-			/* Attention, function does not take care of overruns, data will be
-			   lost if added to a filled shift register! */
-			if (iCurWritePos < ciMaxDelBlocks) 
-				veciShRegSt[iCurWritePos++] = iNewSRS;
-		}
-
-		_UINT32BIT Get() 
-		{
-			/* We always use the first value of the array for reading and do a
-			   shift of the other data by adding a arbitrary value (0) at the
-			   end of the whole shift register */
-			_UINT32BIT iRet = veciShRegSt[0];
-			veciShRegSt.AddEnd(0);
-			iCurWritePos--;
-
-			return iRet;
-		}
+		void Add(_UINT32BIT iNewSRS);
+		_UINT32BIT Get();
 
 		void Reset() {iCurWritePos = 0;}
+
 
 	protected:
 		/* Max number of delayed blocks */

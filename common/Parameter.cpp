@@ -384,3 +384,25 @@ void CParameter::SetServID(const int iServID, const _UINT32BIT iNewServID)
 		DRMReceiver.InitsForMSC();
 	}
 }
+
+
+/* Implementaions for simulation -------------------------------------------- */
+void CParameter::CRawSimData::Add(_UINT32BIT iNewSRS) 
+{
+	/* Attention, function does not take care of overruns, data will be
+	   lost if added to a filled shift register! */
+	if (iCurWritePos < ciMaxDelBlocks) 
+		veciShRegSt[iCurWritePos++] = iNewSRS;
+}
+
+_UINT32BIT CParameter::CRawSimData::Get() 
+{
+	/* We always use the first value of the array for reading and do a
+	   shift of the other data by adding a arbitrary value (0) at the
+	   end of the whole shift register */
+	_UINT32BIT iRet = veciShRegSt[0];
+	veciShRegSt.AddEnd(0);
+	iCurWritePos--;
+
+	return iRet;
+}

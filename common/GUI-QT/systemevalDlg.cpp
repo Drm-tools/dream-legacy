@@ -178,12 +178,14 @@ void systemevalDlg::OnTimer()
 	_REAL				rSNREstimate;
 	_REAL				rEstEndIR;
 
-	/* SNR estimate. We use the minimum, since the SNR estimation from the
+	/* SNR estimate. Problem: the SNR estimation from the
 	   channel estimation only works if wiener interpolation is activated. If,
 	   e.g., linear interpolation is chosen, the SNR from this estimation will
-	   be very large */
-	rSNREstimate = Min(DRMReceiver.GetChanEst()->GetSNREstdB(), 
-		DRMReceiver.GetOFDMDemod()->GetSNREstdB());
+	   be wrong */
+	if (DRMReceiver.GetChanEst()->GetTimeInt() == CChannelEstimation::TWIENER)
+		rSNREstimate = DRMReceiver.GetChanEst()->GetSNREstdB();
+	else
+		rSNREstimate = DRMReceiver.GetOFDMDemod()->GetSNREstdB();
 
 	ThermoSNR->setValue(rSNREstimate);
 	TextSNR->setText("<center>SNR<br><b>" + 

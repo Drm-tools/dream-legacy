@@ -86,19 +86,18 @@ protected:
 	CSingleBuffer<_COMPLEX>	CarMapBuf;
 	CSingleBuffer<_COMPLEX>	OFDMModBuf;
 
+
 	/* Simulation */
-	CSingleBuffer<_REAL>	ChanRefBuf;
-	CSingleBuffer<_REAL>	ChanInRefBuf;
-	CSingleBuffer<_COMPLEX>	ChanEstBufForSim;
-	CCyclicBuffer<_COMPLEX>	DemChanRefBuf;
-	CCyclicBuffer<_COMPLEX>	DemChanInRefBuf;
-	CCyclicBuffer<_COMPLEX>	OFDMDemodBuf2;
-	
+	CCyclicBuffer<CChanSimDataDemod>	OFDMDemodBufChan2;
+
+	CSingleBuffer<_COMPLEX>				ChanEstInBufSim;
+	CSingleBuffer<CChanSimDataDemod>	ChanEstOutBufChan;
+
+	CSingleBuffer<CChanSimDataMod>		RecDataBuf;
+	CSingleBuffer<_REAL>				ChanResInBuf;
 
 
 	/* Receiver buffers */
-	CSingleBuffer<_REAL>	RecDataBuf;
-
 	CCyclicBuffer<_REAL>	InpResBuf;
 	CCyclicBuffer<_REAL>	FreqSyncAcqBuf;
 	CSingleBuffer<_REAL>	TimeSyncBuf;
@@ -149,7 +148,8 @@ protected:
 	CEvaSimData				EvaSimData;
 	COFDMDemodSimulation	OFDMDemodSimulation;
 	CIdealChanEst			IdealChanEst;
-	CDataConv				DataConv;
+
+	CDataConvChanResam		DataConvChanResam;
 };
 
 

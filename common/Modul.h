@@ -83,11 +83,11 @@ public:
 	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
 									CBuffer<TInput>& InputBuffer, 
 									CBuffer<TOutput>& OutputBuffer);
-	virtual void		ProcessMultipleData(CParameter& Parameter, 
-											CBuffer<TInput>& InputBuffer,
-											CBuffer<TInput>& InputBuffer2, 
-											CBuffer<TInput>& InputBuffer3, 
-											CBuffer<TOutput>& OutputBuffer);
+	virtual void		ProcessData(CParameter& Parameter, 
+									CBuffer<TInput>& InputBuffer,
+									CBuffer<TInput>& InputBuffer2, 
+									CBuffer<TInput>& InputBuffer3, 
+									CBuffer<TOutput>& OutputBuffer);
 	virtual _BOOLEAN	WriteData(CParameter& Parameter, 
 								  CBuffer<TInput>& InputBuffer);
 
@@ -126,15 +126,15 @@ public:
 	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
 									CBuffer<TInput>& InputBuffer, 
 									CBuffer<TOutput>& OutputBuffer);
-	virtual _BOOLEAN	ProcessMultipleData(CParameter& Parameter, 
-											CBuffer<TInput>& InputBuffer,
-											CBuffer<TOutput>& OutputBuffer, 
-											CBuffer<TOutput>& OutputBuffer2);
-	virtual _BOOLEAN	ProcessMultipleData(CParameter& Parameter, 
-											CBuffer<TInput>& InputBuffer,
-											CBuffer<TOutput>& OutputBuffer, 
-											CBuffer<TOutput>& OutputBuffer2, 
-											CBuffer<TOutput>& OutputBuffer3);
+	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
+									CBuffer<TInput>& InputBuffer,
+									CBuffer<TOutput>& OutputBuffer, 
+									CBuffer<TOutput>& OutputBuffer2);
+	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
+									CBuffer<TInput>& InputBuffer,
+									CBuffer<TOutput>& OutputBuffer, 
+									CBuffer<TOutput>& OutputBuffer2, 
+									CBuffer<TOutput>& OutputBuffer3);
 	virtual _BOOLEAN	WriteData(CParameter& Parameter, 
 								  CBuffer<TInput>& InputBuffer);
 
@@ -166,7 +166,7 @@ private:
 
 
 /* CSimulationModul --------------------------------------------------------- */
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput, class TInOut2>
 class CSimulationModul : public CModul<TInput, TOutput>
 {
 public:
@@ -178,60 +178,37 @@ public:
 							 CBuffer<TOutput>& OutputBuffer);
 	virtual void		Init(CParameter& Parameter,
 							 CBuffer<TOutput>& OutputBuffer,
-							 CBuffer<TOutput>& OutputBuffer2,
-							 CBuffer<TOutput>& OutputBuffer3);
-	virtual void		Init(CParameter& Parameter,
-							 CBuffer<TOutput>& OutputBuffer,
-							 CBuffer<TOutput>& OutputBuffer2,
-							 CBuffer<TOutput>& OutputBuffer3,
-							 CBuffer<TOutput>& OutputBuffer4);
-	virtual _BOOLEAN	ProcessMultipleData(CParameter& Parameter, 
-											CBuffer<TInput>& InputBuffer,
-											CBuffer<TInput>& InputBuffer2, 
-											CBuffer<TInput>& InputBuffer3,
-											CBuffer<TInput>& InputBuffer4,
-											CBuffer<TOutput>& OutputBuffer);
-	virtual _BOOLEAN	ProcessMultipleData(CParameter& Parameter, 
-											CBuffer<TInput>& InputBuffer,
-											CBuffer<TInput>& InputBuffer2, 
-											CBuffer<TInput>& InputBuffer3, 
-											CBuffer<TOutput>& OutputBuffer, 
-											CBuffer<TOutput>& OutputBuffer2, 
-											CBuffer<TOutput>& OutputBuffer3, 
-											CBuffer<TOutput>& OutputBuffer4);
-	virtual void TransferData(CParameter& Parameter, 
-							  CBuffer<TInput>& InputBuffer, 
-							  CBuffer<TOutput>& OutputBuffer);
-	virtual void TransferData(CParameter& Parameter, 
-							  CBuffer<TInput>& InputBuffer, 
-							  CBuffer<TOutput>& OutputBuffer, 
-							  CBuffer<TOutput>& OutputBuffer2, 
-							  CBuffer<TOutput>& OutputBuffer3);
+							 CBuffer<TInOut2>& OutputBuffer2);
+	virtual void		TransferData(CParameter& Parameter, 
+									 CBuffer<TInput>& InputBuffer, 
+									 CBuffer<TOutput>& OutputBuffer);
+
+
+// TEST "ProcessDataIn" "ProcessDataOut"
+	virtual _BOOLEAN	ProcessDataIn(CParameter& Parameter, 
+									  CBuffer<TInput>& InputBuffer,
+									  CBuffer<TInOut2>& InputBuffer2,
+									  CBuffer<TOutput>& OutputBuffer);
+	virtual _BOOLEAN	ProcessDataOut(CParameter& Parameter, 
+									   CBuffer<TInput>& InputBuffer,
+									   CBuffer<TOutput>& OutputBuffer, 
+									   CBuffer<TInOut2>& OutputBuffer2);
+
 
 protected:
 	/* Additional buffers if the derived class has multiple output streams */
-	CVectorEx<TOutput>*	pvecOutputData2;
-	CVectorEx<TOutput>*	pvecOutputData3;
-	CVectorEx<TOutput>*	pvecOutputData4;
+	CVectorEx<TInOut2>*	pvecOutputData2;
 
 	/* Max block-size are used to determine the size of the requiered buffer */
 	int					iMaxOutputBlockSize2;
-	int					iMaxOutputBlockSize3;
-	int					iMaxOutputBlockSize4;
 	/* Actual read (or written) size of the data */
 	int					iOutputBlockSize2;
-	int					iOutputBlockSize3;
-	int					iOutputBlockSize4;
 
 	/* Additional buffers if the derived class has multiple input streams */
-	CVectorEx<TInput>*	pvecInputData2;
-	CVectorEx<TInput>*	pvecInputData3;
-	CVectorEx<TInput>*	pvecInputData4;
+	CVectorEx<TInOut2>*	pvecInputData2;
 
 	/* Actual read (or written) size of the data */
 	int					iInputBlockSize2;
-	int					iInputBlockSize3;
-	int					iInputBlockSize4;
 };
 
 
@@ -322,7 +299,7 @@ void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter,
 
 template<class TInput, class TOutput> 
 _BOOLEAN CTransmitterModul<TInput, TOutput>::
-	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer, 
+	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
 				CBuffer<TOutput>& OutputBuffer)
 {
 	/* OUTPUT-DRIVEN modul implementation in the transmitter ---------------- */
@@ -362,10 +339,10 @@ _BOOLEAN CTransmitterModul<TInput, TOutput>::
 
 template<class TInput, class TOutput> 
 void CTransmitterModul<TInput, TOutput>::
-	ProcessMultipleData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
-						CBuffer<TInput>& InputBuffer2, 
-						CBuffer<TInput>& InputBuffer3, 
-						CBuffer<TOutput>& OutputBuffer)
+	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
+				CBuffer<TInput>& InputBuffer2,
+				CBuffer<TInput>& InputBuffer3,
+				CBuffer<TOutput>& OutputBuffer)
 {
 	/* OUTPUT-DRIVEN modul implementation in the transmitter ---------------- */
 	/* Look in output buffer if data is requested */
@@ -617,9 +594,9 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 template<class TInput, class TOutput> 
 _BOOLEAN CReceiverModul<TInput, TOutput>::
-	ProcessMultipleData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
-						CBuffer<TOutput>& OutputBuffer, 
-						CBuffer<TOutput>& OutputBuffer2)
+	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
+				CBuffer<TOutput>& OutputBuffer, 
+				CBuffer<TOutput>& OutputBuffer2)
 {
 	/* Check initialization flag. The initialization must be done OUTSIDE 
 	   the processing routine. This is ensured by doing it here, where we
@@ -679,10 +656,10 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 template<class TInput, class TOutput> 
 _BOOLEAN CReceiverModul<TInput, TOutput>::
-	ProcessMultipleData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
-						CBuffer<TOutput>& OutputBuffer, 
-						CBuffer<TOutput>& OutputBuffer2, 
-						CBuffer<TOutput>& OutputBuffer3)
+	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
+				CBuffer<TOutput>& OutputBuffer, 
+				CBuffer<TOutput>& OutputBuffer2, 
+				CBuffer<TOutput>& OutputBuffer3)
 {
 	/* Check initialization flag. The initialization must be done OUTSIDE 
 	   the processing routine. This is ensured by doing it here, where we
@@ -833,53 +810,42 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 /******************************************************************************\
 * Simulation modul (CSimulationModul)										   *
 \******************************************************************************/
-template<class TInput, class TOutput> 
-CSimulationModul<TInput, TOutput>::CSimulationModul()
+template<class TInput, class TOutput, class TInOut2>
+CSimulationModul<TInput, TOutput, TInOut2>::CSimulationModul()
 {
 	/* Initialize all member variables with zeros */
 	iMaxOutputBlockSize2 = 0;
-	iMaxOutputBlockSize3 = 0;
-	iMaxOutputBlockSize4 = 0;
 	iOutputBlockSize2 = 0;
-	iOutputBlockSize3 = 0;
-	iOutputBlockSize4 = 0;
 	iInputBlockSize2 = 0;
-	iInputBlockSize3 = 0;
-	iInputBlockSize4 = 0;
 	pvecOutputData2 = NULL;
-	pvecOutputData3 = NULL;
-	pvecOutputData4 = NULL;
 	pvecInputData2 = NULL;
-	pvecInputData3 = NULL;
-	pvecInputData4 = NULL;
 }
 
-template<class TInput, class TOutput> 
-void CSimulationModul<TInput, TOutput>::Init(CParameter& Parameter)
+template<class TInput, class TOutput, class TInOut2>
+void CSimulationModul<TInput, TOutput, TInOut2>::Init(CParameter& Parameter)
 {
 	/* Init base-class */
 	CModul<TInput, TOutput>::Init(Parameter);
 }
 
-template<class TInput, class TOutput> 
-void CSimulationModul<TInput, TOutput>::Init(CParameter& Parameter, 
-									  CBuffer<TOutput>& OutputBuffer)
+template<class TInput, class TOutput, class TInOut2>
+void CSimulationModul<TInput, TOutput, TInOut2>::
+	Init(CParameter& Parameter, 
+		 CBuffer<TOutput>& OutputBuffer)
 {
 	/* Init base-class */
 	CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
 }
 
-template<class TInput, class TOutput> 
-void CSimulationModul<TInput, TOutput>::Init(CParameter& Parameter, 
-									  CBuffer<TOutput>& OutputBuffer,
-									  CBuffer<TOutput>& OutputBuffer2,
-									  CBuffer<TOutput>& OutputBuffer3)
+template<class TInput, class TOutput, class TInOut2>
+void CSimulationModul<TInput, TOutput, TInOut2>::
+	Init(CParameter& Parameter, 
+		 CBuffer<TOutput>& OutputBuffer,
+		 CBuffer<TInOut2>& OutputBuffer2)
 {
 	/* Init some internal variables */
 	iMaxOutputBlockSize2 = 0;
-	iMaxOutputBlockSize3 = 0;
 	iOutputBlockSize2 = 0;
-	iOutputBlockSize3 = 0;
 
 	/* Init base-class */
 	CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
@@ -890,56 +856,13 @@ void CSimulationModul<TInput, TOutput>::Init(CParameter& Parameter,
 	else
 		if (iOutputBlockSize2 != 0)
 			OutputBuffer2.Init(iOutputBlockSize2);
-
-	if (iMaxOutputBlockSize3 != 0)
-		OutputBuffer3.Init(iMaxOutputBlockSize3);
-	else
-		if (iOutputBlockSize3 != 0)
-			OutputBuffer3.Init(iOutputBlockSize3);
 }
 
-template<class TInput, class TOutput> 
-void CSimulationModul<TInput, TOutput>::Init(CParameter& Parameter, 
-									  CBuffer<TOutput>& OutputBuffer,
-									  CBuffer<TOutput>& OutputBuffer2,
-									  CBuffer<TOutput>& OutputBuffer3,
-									  CBuffer<TOutput>& OutputBuffer4)
-{
-	/* Init some internal variables */
-	iMaxOutputBlockSize2 = 0;
-	iMaxOutputBlockSize3 = 0;
-	iMaxOutputBlockSize4 = 0;
-	iOutputBlockSize2 = 0;
-	iOutputBlockSize3 = 0;
-	iOutputBlockSize4 = 0;
-
-	/* Init base-class */
-	CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
-
-	/* Init output transfer buffers */
-	if (iMaxOutputBlockSize2 != 0)
-		OutputBuffer2.Init(iMaxOutputBlockSize2);
-	else
-		if (iOutputBlockSize2 != 0)
-			OutputBuffer2.Init(iOutputBlockSize2);
-
-	if (iMaxOutputBlockSize3 != 0)
-		OutputBuffer3.Init(iMaxOutputBlockSize3);
-	else
-		if (iOutputBlockSize3 != 0)
-			OutputBuffer3.Init(iOutputBlockSize3);
-
-	if (iMaxOutputBlockSize4 != 0)
-		OutputBuffer4.Init(iMaxOutputBlockSize4);
-	else
-		if (iOutputBlockSize4 != 0)
-			OutputBuffer4.Init(iOutputBlockSize4);
-}
-
-template<class TInput, class TOutput> 
-void CSimulationModul<TInput, TOutput>::TransferData(CParameter& Parameter, 
-												   CBuffer<TInput>& InputBuffer, 
-												   CBuffer<TOutput>& OutputBuffer)
+template<class TInput, class TOutput, class TInOut2>
+void CSimulationModul<TInput, TOutput, TInOut2>::
+	TransferData(CParameter& Parameter, 
+				 CBuffer<TInput>& InputBuffer, 
+				 CBuffer<TOutput>& OutputBuffer)
 {
 	/* TransferData needed for simulation */
 	/* Check, if enough input data is available */
@@ -964,65 +887,25 @@ void CSimulationModul<TInput, TOutput>::TransferData(CParameter& Parameter,
 	OutputBuffer.Put(iOutputBlockSize);
 }
 
-template<class TInput, class TOutput> 
-void CSimulationModul<TInput, TOutput>::TransferData(CParameter& Parameter, 
-												   CBuffer<TInput>& InputBuffer, 
-												   CBuffer<TOutput>& OutputBuffer, 
-												   CBuffer<TOutput>& OutputBuffer2, 
-												   CBuffer<TOutput>& OutputBuffer3)
-{
-	/* TransferData needed for simulation */
-	/* Check, if enough input data is available */
-	if (InputBuffer.GetFillLevel() < iInputBlockSize)
-	{
-		/* Set request flag */
-		InputBuffer.SetRequestFlag(TRUE);
-
-		return;
-	}
-
-	/* Get vector from transfer-buffer */
-	pvecInputData = InputBuffer.Get(iInputBlockSize);
-
-	/* Query vector from output transfer-buffer for writing */
-	pvecOutputData = OutputBuffer.QueryWriteBuffer();
-	pvecOutputData2 = OutputBuffer2.QueryWriteBuffer();
-	pvecOutputData3 = OutputBuffer3.QueryWriteBuffer();
-
-	/* Call the underlying processing-routine */
-	ProcessDataInternal(Parameter);
-
-	/* Write processed data from internal memory in transfer-buffer */
-	OutputBuffer.Put(iOutputBlockSize);
-	OutputBuffer2.Put(iOutputBlockSize2);
-	OutputBuffer3.Put(iOutputBlockSize3);
-}
-
-template<class TInput, class TOutput>
-_BOOLEAN CSimulationModul<TInput, TOutput>::
-	ProcessMultipleData(CParameter& Parameter, 
-						CBuffer<TInput>& InputBuffer,
-						CBuffer<TInput>& InputBuffer2, 
-						CBuffer<TInput>& InputBuffer3,
-						CBuffer<TInput>& InputBuffer4,
-						CBuffer<TOutput>& OutputBuffer)
+template<class TInput, class TOutput, class TInOut2>
+_BOOLEAN CSimulationModul<TInput, TOutput, TInOut2>::
+	ProcessDataIn(CParameter& Parameter, 
+				  CBuffer<TInput>& InputBuffer,
+				  CBuffer<TInOut2>& InputBuffer2,
+				  CBuffer<TOutput>& OutputBuffer)
 {
 	/* This flag shows, if enough data was in the input buffer for processing */
 	_BOOLEAN bEnoughData = FALSE;
 
 	/* Check if enough data is available in the input buffer for processing */
 	if ((InputBuffer.GetFillLevel() >= iInputBlockSize) &&
-		(InputBuffer2.GetFillLevel() >= iInputBlockSize2) && 
-		(InputBuffer3.GetFillLevel() >= iInputBlockSize3) && 
-		(InputBuffer4.GetFillLevel() >= iInputBlockSize4))
+		(InputBuffer2.GetFillLevel() >= iInputBlockSize2))
 	{
 		bEnoughData = TRUE;
 
 		/* Get vector from transfer-buffer */
 		pvecInputData = InputBuffer.Get(iInputBlockSize);
 		pvecInputData2 = InputBuffer2.Get(iInputBlockSize2);
-		pvecInputData3 = InputBuffer3.Get(iInputBlockSize3);
-		pvecInputData4 = InputBuffer4.Get(iInputBlockSize4);
 	
 		/* Query vector from output transfer-buffer for writing */
 		pvecOutputData = OutputBuffer.QueryWriteBuffer();
@@ -1040,37 +923,27 @@ _BOOLEAN CSimulationModul<TInput, TOutput>::
 	return bEnoughData;
 }
 
-template<class TInput, class TOutput> 
-_BOOLEAN CSimulationModul<TInput, TOutput>::
-	ProcessMultipleData(CParameter& Parameter,
-						CBuffer<TInput>& InputBuffer,
-						CBuffer<TInput>& InputBuffer2, 
-						CBuffer<TInput>& InputBuffer3, 
-						CBuffer<TOutput>& OutputBuffer, 
-						CBuffer<TOutput>& OutputBuffer2, 
-						CBuffer<TOutput>& OutputBuffer3, 
-						CBuffer<TOutput>& OutputBuffer4)
+template<class TInput, class TOutput, class TInOut2>
+_BOOLEAN CSimulationModul<TInput, TOutput, TInOut2>::
+	ProcessDataOut(CParameter& Parameter,
+				   CBuffer<TInput>& InputBuffer, 
+				   CBuffer<TOutput>& OutputBuffer, 
+				   CBuffer<TInOut2>& OutputBuffer2)
 {
 	/* This flag shows, if enough data was in the input buffer for processing */
 	_BOOLEAN bEnoughData = FALSE;
 
 	/* Check if enough data is available in the input buffer for processing */
-	if ((InputBuffer.GetFillLevel() >= iInputBlockSize) &&
-		(InputBuffer2.GetFillLevel() >= iInputBlockSize2) && 
-		(InputBuffer3.GetFillLevel() >= iInputBlockSize3))
+	if (InputBuffer.GetFillLevel() >= iInputBlockSize)
 	{
 		bEnoughData = TRUE;
 
 		/* Get vector from transfer-buffer */
 		pvecInputData = InputBuffer.Get(iInputBlockSize);
-		pvecInputData2 = InputBuffer2.Get(iInputBlockSize2);
-		pvecInputData3 = InputBuffer3.Get(iInputBlockSize3);
 	
 		/* Query vector from output transfer-buffer for writing */
 		pvecOutputData = OutputBuffer.QueryWriteBuffer();
 		pvecOutputData2 = OutputBuffer2.QueryWriteBuffer();
-		pvecOutputData3 = OutputBuffer3.QueryWriteBuffer();
-		pvecOutputData4 = OutputBuffer4.QueryWriteBuffer();
 		
 		/* Call the underlying processing-routine */
 		ProcessDataInternal(Parameter);
@@ -1078,8 +951,6 @@ _BOOLEAN CSimulationModul<TInput, TOutput>::
 		/* Write processed data from internal memory in transfer-buffers */
 		OutputBuffer.Put(iOutputBlockSize);
 		OutputBuffer2.Put(iOutputBlockSize2);
-		OutputBuffer3.Put(iOutputBlockSize3);
-		OutputBuffer4.Put(iOutputBlockSize3);
 	}
 
 	return bEnoughData;

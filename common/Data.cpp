@@ -235,6 +235,9 @@ void CGenSimData::InitInternal(CParameter& TransmParam)
 	/* Prepare shift register used for storing the start values of the PRBS
 	   shift register */
 	TransmParam.RawSimDa.Reset();
+
+	/* Init start time */
+	tiStartTime = time(NULL);
 }
 
 void CGenSimData::SetSimTime(int iNewTi, string strNewFileName)
@@ -250,7 +253,6 @@ void CGenSimData::SetSimTime(int iNewTi, string strNewFileName)
 
 	/* Set file name */
 	strFileName = strNewFileName + "__SIMTIME" + ".dat";
-	tiStartTime = time(NULL);
 }
 
 void CGenSimData::SetNoErrors(int iNewNE, string strNewFileName)
@@ -260,12 +262,11 @@ void CGenSimData::SetNoErrors(int iNewNE, string strNewFileName)
 	/* Set simulation count type */
 	eCntType = CT_ERRORS;
 
-	/* Reset counter, because we also look at the time */
+	/* Reset counter, because we also use it at the beginning of a run */
 	iCounter = 0;
 
 	/* Set file name */
 	strFileName = strNewFileName + "__SIMTIME" + ".dat";
-	tiStartTime = time(NULL);
 }
 
 void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
@@ -433,15 +434,15 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 	int i, j;
 
 	/* Calculation of channel tranfer function ------------------------------ */
-	/*	pvecInputData: ChanEstBuf			equalized signal \hat{s}(t)
-		pvecInputData2: OFDMDemodBuf2		received signal r(t)
-		pvecInputData3: DemChanInRefBuf		transmitted signal s(t)
-		pvecInputData4: DemChanRefBuf		received signal without noise (
-											channel reference signal) */
+	/*	pvecInputData.cSig		equalized signal \hat{s}(t)
+		pvecInputData2.tOut		received signal r(t)
+		pvecInputData2.tIn		transmitted signal s(t)
+		pvecInputData2.tRef		received signal without noise (channel
+									reference signal) */
 	for (i = 0; i < iNoCarrier; i++)
 	{
-		veccEstChan[i] = (*pvecInputData2)[i] / (*pvecInputData)[i];
-		veccRefChan[i] = (*pvecInputData4)[i] / (*pvecInputData3)[i];
+		veccEstChan[i] = (*pvecInputData2)[i].tOut / (*pvecInputData)[i].cSig;
+		veccRefChan[i] = (*pvecInputData2)[i].tRef / (*pvecInputData2)[i].tIn;
 	}
 
 	/* Debar DC carriers, set them to zero */
@@ -456,7 +457,7 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 		iStartCnt--;
 	else
 	{
-		/* MSE for all carriers --------------------------------------------- */
+		/* MSE for all carriers */
 		for (i = 0; i < iNoCarrier; i++)
 			vecrMSEAverage[i] += SqMag(veccEstChan[i] - veccRefChan[i]);
 
@@ -470,13 +471,37 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Write to output vector. Also, ship the channel state at a certain cell */
 	for (i = 0; i < iNoCarrier; i++)
 	{
-		(*pvecOutputData)[i].cSig = (*pvecInputData2)[i] / veccRefChan[i];
+		(*pvecOutputData)[i].cSig = (*pvecInputData2)[i].tOut / veccRefChan[i];
 		(*pvecOutputData)[i].rChan = SqMag(veccRefChan[i]);
 	}
 
 	/* Set symbol number for output vector */
 	(*pvecOutputData).GetExData().iSymbolNo = 
 		(*pvecInputData).GetExData().iSymbolNo;
+
+
+
+#if 0
+// TEST
+// Calculation of "a" matrix
+CComplexMatrix a;
+
+
+a.Init(iNoCarrier, iNoCarrier, (_REAL) 0.0);
+
+for (int m = 0; m < iNoCarrier; m++)
+	for (int k = 0; k < iNoCarrier; k++)
+		for (j = 0; j < iNumTapsChan; j++)
+			a[m][k] += (*pvecInputData2)[Abs(k - m)].veccTap[j] * matRot[k][j];
+
+
+static FILE* pFile = fopen("test/v.dat", "w");
+for (j = 0; j < iNoCarrier; j++)
+	fprintf(pFile, "%e", a[j][0]);
+fprintf(pFile, "\n");
+fflush(pFile);
+#endif
+
 }
 
 void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
@@ -485,16 +510,45 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 	iNoCarrier = ReceiverParam.iNoCarrier;
 	iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
 
-	/* Parameters for debaring the DC carriers from evaluation */
-	if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_A)
+	iNumTapsChan = ReceiverParam.iNumTaps;
+
+	/* Init and calculate rotation matrix */
+	matRot.Init(iNoCarrier, iNumTapsChan);
+	for (int i = 0; i < iNoCarrier; i++)
 	{
-		iNoDCCarriers = 3;
-		iStartDCCar = abs(ReceiverParam.iCarrierKmin) - 1;
+		for (int j = 0; j < iNumTapsChan; j++)
+		{
+
+// FIXME use "_COMPLEX CPilotModiClass::Rotate" in ChanEstTime.cpp!!!!
+
+			/* First calculate the argument */
+			CReal rArg = (CReal) -2.0 * crPi * ReceiverParam.iPathDelay[j] * 
+				(ReceiverParam.iShiftedKmin + i) / iNoCarrier;
+
+			matRot[i][j] = CComplex(cos(rArg), sin(rArg)) / (CReal) iNoCarrier;
+		}
+	}
+
+	/* Parameters for debaring the DC carriers from evaluation. First check if
+	   we have only useful part on the right side of the DC carrier */
+	if (ReceiverParam.iCarrierKmin > 0)
+	{
+		/* In this case, no DC carriers are in the useful spectrum */
+		iNoDCCarriers = 0;
+		iStartDCCar = 0;
 	}
 	else
 	{
-		iNoDCCarriers = 1;
-		iStartDCCar = abs(ReceiverParam.iCarrierKmin);
+		if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_A)
+		{
+			iNoDCCarriers = 3;
+			iStartDCCar = abs(ReceiverParam.iCarrierKmin) - 1;
+		}
+		else
+		{
+			iNoDCCarriers = 1;
+			iStartDCCar = abs(ReceiverParam.iCarrierKmin);
+		}
 	}
 
 	/* Init average counter */
@@ -516,8 +570,6 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 	/* Define block-sizes for inputs and output */
 	iInputBlockSize = iNoCarrier;
 	iInputBlockSize2 = iNoCarrier;
-	iInputBlockSize3 = iNoCarrier;
-	iInputBlockSize4 = iNoCarrier;
 	iOutputBlockSize = iNoCarrier;
 }
 
@@ -528,18 +580,4 @@ void CIdealChanEst::GetResults(CVector<_REAL>& vecrResults)
 	/* Copy data in return vector */
 	for (int i = 0; i < iNoCarrier; i++)
 		vecrResults[i] = vecrMSEAverage[i] / lAvCnt;
-}
-
-void CDataConv::ProcessDataInternal(CParameter& ReceiverParam)
-{
-	/* This module is used for conversion of "CEquSig" data into "_COMPLEX"
-	   data */
-	for (int i = 0; i < iOutputBlockSize; i++)
-		(*pvecOutputData)[i] = (*pvecInputData)[i].cSig;
-}
-
-void CDataConv::InitInternal(CParameter& ReceiverParam)
-{
-	iInputBlockSize = ReceiverParam.iNoCarrier;
-	iOutputBlockSize = ReceiverParam.iNoCarrier;
 }

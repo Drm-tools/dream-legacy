@@ -130,6 +130,7 @@ protected:
 	_REAL				rSNRCorrectFact;
 	int					iUpCntWienFilt;
 	_REAL				rDelaySprEstInd;
+	_REAL				rMaxDelaySprInFra;
 
 	int					iStartZeroPadding;
 
