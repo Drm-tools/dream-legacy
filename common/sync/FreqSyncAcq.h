@@ -42,10 +42,10 @@
 
 /* Definitions ****************************************************************/
 /* Bound for peak detection between filtered signal (in frequency direction) 
-   and the unfiltered signal */
-#define PEAK_BOUND_FILT2SIGNAL			((CReal) 1.5)
-/* Bound for sinusoid interferer cancellation algorithm */
-#define LEVEL_DIFF_EQU_DIST_FRPI		((CReal) 0.8)
+   and the unfiltered signal. Define different bounds for different relative
+   search window sizes */
+#define PEAK_BOUND_FILT2SIGNAL_1		((CReal) 1.5)
+#define PEAK_BOUND_FILT2SIGNAL_0_042	((CReal) 1.0)
 
 /* This value MUST BE AT LEAST 2, because otherwise we would get an overrun
    when we try to add a complete symbol to the buffer! */
@@ -107,6 +107,7 @@ protected:
 	_REAL						rWinSize;
 	int							iStartDCSearch;
 	int							iEndDCSearch;
+	_REAL						rPeakBoundFiltToSig;
 
 	CRealVector					vecrPSDPilCor;
 	CRealVector					vecrPSD;

@@ -125,8 +125,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 				iNumDetPeaks = 0;
 				for (i = iStartDCSearch; i < iEndDCSearch; i++)
 				{
-					if (vecrPSDPilCor[i] / vecrFiltRes[i] >
-						PEAK_BOUND_FILT2SIGNAL)
+					if (vecrPSDPilCor[i] / vecrFiltRes[i] > rPeakBoundFiltToSig)
 					{
 						veciPeakIndex[iNumDetPeaks] = i;
 						iNumDetPeaks++;
@@ -329,6 +328,13 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 
 	if (!((iEndDCSearch > 0) && (iEndDCSearch < iSearchWinSize)))
 		iEndDCSearch = iSearchWinSize;
+
+	/* Set bound for ratio between filtered signal to signal. Use a lower bound
+	   if the search window is smaller */
+	if (((_REAL) iEndDCSearch - iStartDCSearch) / iHalfBuffer < (_REAL) 0.042)
+		rPeakBoundFiltToSig = PEAK_BOUND_FILT2SIGNAL_0_042;
+	else
+		rPeakBoundFiltToSig = PEAK_BOUND_FILT2SIGNAL_1;
 
 
 	/* Init vectors and fft plan -------------------------------------------- */
