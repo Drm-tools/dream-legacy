@@ -42,7 +42,7 @@
 #endif
 
 
-void ParseArguments(QApplication& app);
-void UsageArguments(void);
+void ParseArguments(int argc, char** argv);
+void UsageArguments(char** argv);
 
 #endif // !defined(MAIN_H__3B0BA660_CA63_4344_BB2B_23DSG9876D31912__INCLUDED_)

@@ -75,24 +75,23 @@ int main(int argc, char** argv)
 {
 try
 {
+	/* Parse arguments */
+	ParseArguments(argc, argv);
+
 	/* Call simulation script. If simulation is activated, application is 
 	   automatically exit in that routine. If in the script no simulation is
 	   activated, this function will immediately return */
 	DRMSimulation.SimScript();
 
 	QApplication	app(argc, argv); // Application object
-
-	/* Parse arguments */
-	ParseArguments(app);
-
 	ReceiverThread	RecThread; // Working thread object
 	FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_MinMax); // Main dialog
 
-// Activate this to read DRM data from file
-//DRMReceiver.GetReceiver()->SetUseSoundcard(FALSE);
-
 // Activate this to start the transmitter and generate a DRM stream
 //DRMTransmitter.StartTransmitter();
+
+// Activate this to read DRM data from file
+//DRMReceiver.GetReceiver()->SetUseSoundcard(FALSE);
 
 	/* First, initialize the working thread. This should be done in an extra
 	   routine since we cannot 100% assume that the working thread is ealier
@@ -171,6 +170,7 @@ void ErrorMessage(string strErrorString)
 \******************************************************************************/
 int main(int argc, char** argv)
 {
+	ParseArguments(argc, argv);
 	DRMSimulation.SimScript();
 	DRMReceiver.Start();
 	return 0;
@@ -197,16 +197,16 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 
 
 /* Command line argument parser ***********************************************/
-void ParseArguments(QApplication& app)
+void ParseArguments(int argc, char** argv)
 {
 	/* QT docu: argv()[0] is the program name, argv()[1] is the first
 	   argument and argv()[argc()-1] is the last argument.
 	   Start with first argument, therefore "i = 1" */
-	for (int i = 1; i < app.argc(); i++)
+	for (int i = 1; i < argc; i++)
 	{
 		/* Flip spectrum flag ----------------------------------------------- */
-		if ((!strcmp(app.argv()[i], "--flipspectrum")) ||
-			(!strcmp(app.argv()[i], "-p")))
+		if ((!strcmp(argv[i], "--flipspectrum")) ||
+			(!strcmp(argv[i], "-p")))
 		{
 			DRMReceiver.GetReceiver()->SetFlippedSpectrum(TRUE);
 			continue;
@@ -214,8 +214,8 @@ void ParseArguments(QApplication& app)
 
 
 		/* Mute audio flag -------------------------------------------------- */
-		if ((!strcmp(app.argv()[i], "--muteaudio")) ||
-			(!strcmp(app.argv()[i], "-m")))
+		if ((!strcmp(argv[i], "--muteaudio")) ||
+			(!strcmp(argv[i], "-m")))
 		{
 			DRMReceiver.GetWriteData()->MuteAudio(TRUE);
 			continue;
@@ -223,8 +223,8 @@ void ParseArguments(QApplication& app)
 
 
 		/* Do not use sound card, read from file ---------------------------- */
-		if ((!strcmp(app.argv()[i], "--fromfile")) ||
-			(!strcmp(app.argv()[i], "-f")))
+		if ((!strcmp(argv[i], "--fromfile")) ||
+			(!strcmp(argv[i], "-f")))
 		{
 			DRMReceiver.GetReceiver()->SetUseSoundcard(FALSE);
 			continue;
@@ -232,21 +232,21 @@ void ParseArguments(QApplication& app)
 
 
 		/* Number of iterations for MLC setting ----------------------------- */
-		if ((!strcmp(app.argv()[i], "--mlciter")) ||
-			(!strcmp(app.argv()[i], "-i")))
+		if ((!strcmp(argv[i], "--mlciter")) ||
+			(!strcmp(argv[i], "-i")))
 		{
-			if (++i >= app.argc())
+			if (++i >= argc)
 			{
-				cerr << app.argv()[0] << ": ";
+				cerr << argv[0] << ": ";
 				cerr << "'--mlciter' needs a numeric argument between 0 and 4." << endl;
 				exit(1);
 			}
 
 			char *p;
-			int n = strtol(app.argv()[i], &p, 10);
+			int n = strtol(argv[i], &p, 10);
 			if (*p || n < 0 || n > 4)
 			{
-				cerr << app.argv()[0] << ": ";
+				cerr << argv[0] << ": ";
 				cerr << "'--mlciter' needs a numeric argument between 0 and 4." << endl;
 				exit(1);
 			}
@@ -257,21 +257,21 @@ void ParseArguments(QApplication& app)
 
 
 		/* Sample rate offset start value ----------------------------------- */
-		if ((!strcmp(app.argv()[i], "--sampleoff")) ||
-			(!strcmp(app.argv()[i], "-s")))
+		if ((!strcmp(argv[i], "--sampleoff")) ||
+			(!strcmp(argv[i], "-s")))
 		{
-			if (++i >= app.argc())
+			if (++i >= argc)
 			{
-				cerr << app.argv()[0] << ": ";
+				cerr << argv[0] << ": ";
 				cerr << "'--sampleoff' needs a numeric argument between -200.0 and 200.0." << endl;
 				exit(1);
 			}
 
 			char *p;
-			_REAL r = strtod(app.argv()[i], &p);
+			_REAL r = strtod(argv[i], &p);
 			if (*p || r < (_REAL) -200.0 || r > (_REAL) 200.0)
 			{
-				cerr << app.argv()[0] << ": ";
+				cerr << argv[0] << ": ";
 				cerr << "'--sampleoff' needs a numeric argument between -200.0 and 200.0." << endl;
 				exit(1);
 			}
@@ -282,25 +282,25 @@ void ParseArguments(QApplication& app)
 
 
 		/* Help (usage) flag ------------------------------------------------ */
-		if ((!strcmp(app.argv()[i], "--help")) ||
-			(!strcmp(app.argv()[i], "-h")) ||
-			(!strcmp(app.argv()[i], "-?")))
+		if ((!strcmp(argv[i], "--help")) ||
+			(!strcmp(argv[i], "-h")) ||
+			(!strcmp(argv[i], "-?")))
 		{
-			UsageArguments();
+			UsageArguments(argv);
 			exit(1);
 		}
 
 
 		/* Unknown option --------------------------------------------------- */
-		cerr << app.argv()[0] << ": ";
-		cerr << "Unknown option '" << app.argv()[i] << "' -- use '--help' for help" << endl;
+		cerr << argv[0] << ": ";
+		cerr << "Unknown option '" << argv[i] << "' -- use '--help' for help" << endl;
 		exit(1);
 	}
 }
 
-void UsageArguments(void)
+void UsageArguments(char** argv)
 {
-	cerr << "Usage: " << qApp->argv()[0] << " [option] [argument]" << endl;
+	cerr << "Usage: " << argv[0] << " [option] [argument]" << endl;
 	cerr << endl;
 	cerr << "Recognized options:" << endl;
 	cerr << endl;
@@ -315,6 +315,6 @@ void UsageArguments(void)
 	cerr << "                             read from file instead" << endl;
 	cerr << "  -h, -?, --help             this help text" << endl;
 	cerr << endl;
-	cerr << "Example: " << qApp->argv()[0] << " -p --sampleoff -0.23 -i 2" << endl;
+	cerr << "Example: " << argv[0] << " -p --sampleoff -0.23 -i 2" << endl;
 	cerr << endl;
 }
