@@ -165,7 +165,6 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 
 void CTextMessage::ReadHeader()
 {
-	/* Header ------------------------------------------------------- */
 	/* Toggle bit */
 	biToggleBit = (_BINARY) biStreamBuffer.Separate(1);
 
