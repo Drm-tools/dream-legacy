@@ -18,7 +18,6 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/CRC.cpp \
 	../common/DRMSignalIO.cpp \
 	../common/Data.cpp \
-	../common/DataDecoder.cpp \
 	../common/DrmReceiver.cpp \
 	../common/DrmSimulation.cpp \
 	../common/DrmTransmitter.cpp \
@@ -28,6 +27,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/Parameter.cpp \
 	../common/TextMessage.cpp \
 	../common/AMDemodulation.cpp \
+	../common/datadecoding/DataDecoder.cpp \
 	../common/FAC/FAC.cpp \
 	../common/matlib/MatlibSigProToolbox.cpp \
 	../common/matlib/MatlibStdToolbox.cpp \
@@ -62,7 +62,6 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/CRC.h \
 	../common/DRMSignalIO.h \
 	../common/Data.h \
-	../common/DataDecoder.h \
 	../common/DrmReceiver.h \
 	../common/DrmSimulation.h \
 	../common/DrmTransmitter.h \
@@ -75,6 +74,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/TextMessage.h \
 	../common/AMDemodulation.h \
 	../common/Vector.h \
+	../common/datadecoding/DataDecoder.h \
 	../common/FAC/FAC.h \
 	../common/matlib/Matlib.h \
 	../common/matlib/MatlibSigProToolbox.h \

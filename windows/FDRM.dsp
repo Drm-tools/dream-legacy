@@ -141,10 +141,6 @@ SOURCE=.\moc\systemevalDlgbase.cpp
 # End Group
 # Begin Source File
 
-SOURCE=..\common\AMDemodulation.cpp
-# End Source File
-# Begin Source File
-
 SOURCE="..\common\GUI-QT\DRMPlot.cpp"
 # End Source File
 # Begin Source File
@@ -319,6 +315,18 @@ SOURCE=..\common\ofdmcellmapping\CellMappingTable.cpp
 SOURCE=..\common\ofdmcellmapping\OFDMCellMapping.cpp
 # End Source File
 # End Group
+# Begin Group "Source datadecoding"
+
+# PROP Default_Filter ".c .cpp"
+# Begin Source File
+
+SOURCE=..\common\datadecoding\DataDecoder.cpp
+# End Source File
+# End Group
+# Begin Source File
+
+SOURCE=..\common\AMDemodulation.cpp
+# End Source File
 # Begin Source File
 
 SOURCE=..\common\sourcedecoders\AudioSourceDecoder.cpp
@@ -338,10 +346,6 @@ SOURCE=..\common\CRC.cpp
 # Begin Source File
 
 SOURCE=..\common\Data.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\DataDecoder.cpp
 # End Source File
 # Begin Source File
 
@@ -584,6 +588,14 @@ SOURCE=..\common\ofdmcellmapping\CellMappingTable.h
 SOURCE=..\common\ofdmcellmapping\OFDMCellMapping.h
 # End Source File
 # End Group
+# Begin Group "Header datadecoding"
+
+# PROP Default_Filter ".h"
+# Begin Source File
+
+SOURCE=..\common\datadecoding\DataDecoder.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\common\AMDemodulation.h
@@ -611,10 +623,6 @@ SOURCE=..\common\CRC.h
 # Begin Source File
 
 SOURCE=..\common\Data.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\DataDecoder.h
 # End Source File
 # Begin Source File
 
