@@ -765,10 +765,12 @@ _REAL CChannelEstimation::GetDelay() const
 }
 
 void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
+											 CVector<_REAL>& vecrGrpDly,
 											 CVector<_REAL>& vecrScale)
 {
 	/* Init output vectors */
 	vecrData.Init(iNumCarrier, (_REAL) 0.0);
+	vecrGrpDly.Init(iNumCarrier, (_REAL) 0.0);
 	vecrScale.Init(iNumCarrier, (_REAL) 0.0);
 
 	/* Do copying of data only if vector is of non-zero length which means that
@@ -778,16 +780,39 @@ void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 		/* Lock resources */
 		Lock();
 
+		/* Init old phase for group delay calculation */
+		_REAL rOldPhase = (_REAL) 0.0;
+		const _REAL rTu = (CReal) iFFTSizeN / SOUNDCRD_SAMPLE_RATE;
+
 		/* Copy data in output vector and set scale 
 		   (carrier index as x-scale) */
 		for (int i = 0; i < iNumCarrier; i++)
 		{
 			CReal rNormChanEst = Abs(veccChanEst[i]) / (CReal) iNumCarrier;
-				
+
+			/* Transfer function */
 			if (rNormChanEst > 0)
 				vecrData[i] = (CReal) 20.0 * Log10(rNormChanEst);
 			else
 				vecrData[i] = RET_VAL_LOG_0;
+
+			/* Group delay */
+			_REAL rDiffPhase = Angle(veccChanEst[i]) - rOldPhase;
+
+			/* Take care of wrap around of angle() function */
+			if (rDiffPhase > WRAP_AROUND_BOUND_GRP_DLY)
+				rDiffPhase -= 2.0 * crPi;
+			if (rDiffPhase < -WRAP_AROUND_BOUND_GRP_DLY)
+				rDiffPhase += 2.0 * crPi;
+
+			/* Apply normalization */
+			if (i == 0)
+				vecrGrpDly[i] = 0;
+			else
+				vecrGrpDly[i] = rDiffPhase * rTu * 1000.0 /* ms */;
+
+			/* Store old phase */
+			rOldPhase = Angle(veccChanEst[i]);
 
 			/* Scale */
 			vecrScale[i] = i;

@@ -80,7 +80,8 @@ public:
 				 _REAL rLowerB, _REAL rHigherB,
 				 const _REAL rStartGuard, const _REAL rEndGuard, 
 				 const _REAL rBeginIR, const _REAL rEndIR);
-	void SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
+					CVector<_REAL>& vecrScale);
 	void SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
@@ -96,6 +97,9 @@ public:
 protected:
 	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 				 const int  size = 0);
+	void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
+				 CVector<_REAL>& vecrScale, const int  size = 0,
+				 const int size2 = 0);
 	void SetData(CVector<_COMPLEX>& veccData, QColor color, const int  size);
 	void SetQAM4Grid();
 	void SetQAM16Grid();

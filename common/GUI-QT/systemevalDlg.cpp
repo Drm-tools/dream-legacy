@@ -312,6 +312,7 @@ void systemevalDlg::SetStatus(int MessID, int iMessPara)
 void systemevalDlg::OnTimerChart()
 {
 	CVector<_REAL>		vecrData;
+	CVector<_REAL>		vecrData2;
 	CVector<_COMPLEX>	veccData;
 	CVector<_REAL>		vecrScale;
 	_REAL				rLowerBound, rHigherBound;
@@ -334,10 +335,11 @@ void systemevalDlg::OnTimerChart()
 
 	case TRANSFERFUNCTION:
 		/* Get data from module */
-		DRMReceiver.GetChanEst()->GetTransferFunction(vecrData, vecrScale);
+		DRMReceiver.GetChanEst()->
+			GetTransferFunction(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
-		MainPlot->SetTranFct(vecrData, vecrScale);
+		MainPlot->SetTranFct(vecrData, vecrData2, vecrScale);
 		break;
 
 	case POWER_SPEC_DENSITY:

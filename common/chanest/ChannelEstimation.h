@@ -71,6 +71,10 @@
    window (defined by beginning and end value) */
 #undef UPD_WIENER_FREQ_EACH_DRM_FRAME
 
+/* Wrap around bound for calculation of group delay. It is wraped by the 2 pi
+   periodicity of the angle() function */
+#define WRAP_AROUND_BOUND_GRP_DLY		((_REAL) 4.0)
+
 
 /* Classes ********************************************************************/
 class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>
@@ -85,8 +89,8 @@ public:
 	enum ETypeIntTime {TLINEAR, TWIENER, TDECIDIR};
 	enum ETypeSNREst {SNR_FAC, SNR_PIL};
 
-	void GetTransferFunction(CVector<_REAL>& vecrData, 
-		CVector<_REAL>& vecrScale);
+	void GetTransferFunction(CVector<_REAL>& vecrData,
+		CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale);
 	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
 					 _REAL& rLowerBound, _REAL& rHigherBound,
 					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,

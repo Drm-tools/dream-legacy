@@ -44,8 +44,10 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 	setTitleFont(QFont("SansSerif", 8, QFont::Bold));
 	setAxisFont(QwtPlot::xBottom, QFont("SansSerif", 8));
 	setAxisFont(QwtPlot::yLeft, QFont("SansSerif", 8));
+	setAxisFont(QwtPlot::yRight, QFont("SansSerif", 8));
 	setAxisTitleFont(QwtPlot::xBottom, QFont("SansSerif", 8));
 	setAxisTitleFont(QwtPlot::yLeft, QFont("SansSerif", 8));
+	setAxisTitleFont(QwtPlot::yRight, QFont("SansSerif", 8));
 
 	/* Global frame */
 	setFrameStyle(QFrame::Panel|QFrame::Sunken);
@@ -135,6 +137,42 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	delete[] pdScale;
 }
 
+void CDRMPlot::SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
+					   CVector<_REAL>& vecrScale, const int size,
+					   const int size2)
+{
+	long curve1, curve2;
+
+	double* pdData1 = new double[vecrData1.Size()];
+	double* pdData2 = new double[vecrData2.Size()];
+	double* pdScale = new double[vecrScale.Size()];
+
+	/* Add curves */
+	curve1 = insertCurve("Graph 1");
+	curve2 = insertCurve("Graph 2", QwtPlot::xBottom, QwtPlot::yRight);
+
+	/* Curve colors */
+	setCurvePen(curve1, QPen(MainPenColorPlot, size, SolidLine, RoundCap,
+		RoundJoin));
+	setCurvePen(curve2, QPen(SpecLine2ColorPlot, size2, SolidLine, RoundCap,
+		RoundJoin));
+
+	/* Copy data from vectors in temporary arrays */
+	for (int i = 0; i < vecrScale.Size(); i++)
+	{
+		pdData1[i] = vecrData1[i];
+		pdData2[i] = vecrData2[i];
+		pdScale[i] = vecrScale[i];
+	}
+
+	setCurveData(curve1, pdScale, pdData1, vecrData1.Size());
+	setCurveData(curve2, pdScale, pdData2, vecrData2.Size());
+
+	delete[] pdData1;
+	delete[] pdData2;
+	delete[] pdScale;
+}
+
 void CDRMPlot::SetData(CVector<_COMPLEX>& veccData, QColor color,
 					   const int size)
 {
@@ -169,6 +207,7 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	{
 		/* Init chart for averaged impulse response */
 		setTitle("Estimated Channel Impulse Response");
+		enableAxis(QwtPlot::yRight, FALSE);
 		enableGridX(TRUE);
 		enableGridY(TRUE);
 		setAxisTitle(QwtPlot::xBottom, "Time [ms]");
@@ -255,21 +294,26 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	}
 }
 
-void CDRMPlot::SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+void CDRMPlot::SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
+						  CVector<_REAL>& vecrScale)
 {
 	/* Init chart for transfer function */
 	setTitle("Estimated Channel Transfer Function");
+	enableAxis(QwtPlot::yRight);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, "Carrier Index");
 	setAxisTitle(QwtPlot::yLeft, "TF [dB]");
+
+	setAxisTitle(QwtPlot::yRight, "Group Delay [ms]");
+	setAxisScale(QwtPlot::yRight, (double) -50.0, (double) 50.0);
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::yLeft, (double) -50.0, (double) 0.0);
 	setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) vecrScale.Size());
 
 	clear();
-	SetData(vecrData, vecrScale, 2);
+	SetData(vecrData, vecrData2, vecrScale, 2, 1);
 	replot();
 }
 
@@ -277,6 +321,7 @@ void CDRMPlot::SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
 	/* Init chart for audio spectrum */
 	setTitle("Audio Spectrum");
+	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, "Frequency [kHz]");
@@ -302,6 +347,7 @@ void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 
 	/* Init chart for power spectram density estimation */
 	setTitle("Shifted Power Spectral Density of Input Signal");
+	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, "Frequency [kHz]");
@@ -341,6 +387,7 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 
 	/* Init chart for power spectram density estimation */
 	setTitle("Input Spectrum");
+	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, "Frequency [kHz]");
@@ -394,6 +441,7 @@ void CDRMPlot::SetFACConst(CVector<_COMPLEX>& veccData)
 {
 	/* Init chart for FAC constellation */
 	setTitle("FAC Constellation");
+	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(FALSE);
 	enableGridY(FALSE);
 	setAxisTitle(QwtPlot::xBottom, "Real");
@@ -414,6 +462,7 @@ void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData,
 {
 	/* Init chart for SDC constellation */
 	setTitle("SDC Constellation");
+	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(FALSE);
 	enableGridY(FALSE);
 	setAxisTitle(QwtPlot::xBottom, "Real");
@@ -439,6 +488,7 @@ void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData,
 {
 	/* Init chart for MSC constellation */
 	setTitle("MSC Constellation");
+	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(FALSE);
 	enableGridY(FALSE);
 	setAxisTitle(QwtPlot::xBottom, "Real");
