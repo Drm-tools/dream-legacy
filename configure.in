@@ -125,8 +125,9 @@ fi
 dnl faad2 -----------------------------------------------------------------------
 if test "x$WITHFAAD2" = xyes; then
 	AC_CHECK_HEADER(faad.h, , have_faad=no)
-	AC_CHECK_LIB(faad,faacDecOpen, , exit 1, -lm )
-	AC_CHECK_LIB(faad,faacDecInitDRM, , have_faad=no, -lm )
+	AC_CHECK_LIB(faad,NeAACDecOpen, , exit 1, -lm )
+	AC_CHECK_LIB(faad,NeAACDecInitDRM, , have_faad=no, -lm )
+
 	if test "$have_faad" = "no"; then
 		AC_MSG_ERROR( "*** libfaad build without DRM support ***" )
 	fi
