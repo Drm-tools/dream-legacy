@@ -6,7 +6,7 @@
  *	Volker Fischer
  *
  * Description:
- *	See DataDecoder.cpp
+ *	Data module (using multimedia information carried in DRM stream)
  *
  ******************************************************************************
  *
@@ -26,27 +26,40 @@
  *
 \******************************************************************************/
 
-#if !defined(DATADECODER_H__3B0BA660_CA3452363E7A0D31912__INCLUDED_)
-#define DATADECODER_H__3B0BA660_CA3452363E7A0D31912__INCLUDED_
-
-#include "GlobalDefinitions.h"
-#include "Parameter.h"
-#include "Modul.h"
-#include "CRC.h"
+#include "DataDecoder.h"
 
 
-/* Classes ********************************************************************/
-class CDataDecoder : public CReceiverModul<_BINARY, _BINARY>
+/* Implementation *************************************************************/
+void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 {
-public:
-	CDataDecoder() {}
-	virtual ~CDataDecoder() {}
+	/* TODO: Implementation */
+}
 
-protected:
+void CDataDecoder::InitInternal(CParameter& ReceiverParam)
+{
+	int	iCurDataStreamID;
 
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
-};
+	/* Get current data stream ID */
+	iCurDataStreamID =
+		ReceiverParam.Service[ReceiverParam.GetCurSelDataService()].
+		DataParam.iStreamID;
 
+	/* Check, if service is activated */
+	if (iCurDataStreamID != STREAM_ID_NOT_USED)
+	{
+		/* Length of higher and lower protected part of data stream */
+		iLenDataHigh = ReceiverParam.Stream[iCurDataStreamID].iLenPartA;
+		iLenDataLow = ReceiverParam.Stream[iCurDataStreamID].iLenPartB;
+	}
+	else
+	{
+		/* Selected stream is not active, set everyting to zero */
+		iLenDataHigh = 0;
+		iLenDataLow = 0;
+	}
 
-#endif // !defined(DATADECODER_H__3B0BA660_CA3452363E7A0D31912__INCLUDED_)
+	iTotalNoInputBits = (iLenDataHigh + iLenDataLow) * SIZEOF__BYTE;
+
+	/* Set input block size */
+	iInputBlockSize = iTotalNoInputBits;
+}

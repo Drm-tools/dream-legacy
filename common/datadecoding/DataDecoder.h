@@ -6,7 +6,7 @@
  *	Volker Fischer
  *
  * Description:
- *	Data module (using multimedia information carried in DRM stream)
+ *	See DataDecoder.cpp
  *
  ******************************************************************************
  *
@@ -26,26 +26,30 @@
  *
 \******************************************************************************/
 
-#include "DataDecoder.h"
+#if !defined(DATADECODER_H__3B0BA660_CA3452363E7A0D31912__INCLUDED_)
+#define DATADECODER_H__3B0BA660_CA3452363E7A0D31912__INCLUDED_
+
+#include "GlobalDefinitions.h"
+#include "Parameter.h"
+#include "Modul.h"
+#include "CRC.h"
 
 
-/* Implementation *************************************************************/
-void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
+/* Classes ********************************************************************/
+class CDataDecoder : public CReceiverModul<_BINARY, _BINARY>
 {
-	/* TODO: Implementation */
-}
+public:
+	CDataDecoder() {}
+	virtual ~CDataDecoder() {}
 
-void CDataDecoder::InitInternal(CParameter& ReceiverParam)
-{
-// TODO : Implementation
-	iInputBlockSize = 0;
-#if 0
-/* Length of higher and lower protected part of audio stream */
-iLenAudHigh = ReceiverParam.Stream[iCurAudioStreamID].iLenPartA;
-iLenAudLow = ReceiverParam.Stream[iCurAudioStreamID].iLenPartB;
+protected:
+	int iLenDataHigh;
+	int iLenDataLow;
+	int iTotalNoInputBits;
+
+	virtual void InitInternal(CParameter& ReceiverParam);
+	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+};
 
 
-/* Define input block size */
-iInputBlockSize = (iLenAudHigh + iLenAudLow) * SIZEOF__BYTE;
-#endif
-}
+#endif // !defined(DATADECODER_H__3B0BA660_CA3452363E7A0D31912__INCLUDED_)
