@@ -341,7 +341,7 @@ void CSound::InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
 	int			i, j;
 	MMRESULT	result;
-	
+
 	/* Check if device must be opened or reinitialized */
 	if (bChangDevOut == TRUE)
 	{
