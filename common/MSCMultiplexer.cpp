@@ -106,6 +106,8 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Data ----------------------------------------------------------------- */
+	/* If multimedia is not used, set stream ID to "not used" which leads to
+	   an output size of "0" -> no output data generated */
 	if (ReceiverParam.bUsingMultimedia)
 		iCurDataStreamID = ReceiverParam.
 			Service[ReceiverParam.GetCurSelDataService()].DataParam.iStreamID;
