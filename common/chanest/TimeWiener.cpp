@@ -295,12 +295,46 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 
 
 	/* Calculate optimal filter --------------------------------------------- */
-	/* Init SNR value */
-	const _REAL rSNRdB = INIT_VALUE_SNR_WIEN_TIME_DB;
-	rSNR = pow(10, rSNRdB / 10);
+	/* Distinguish between simulation and regular receiver. When we run a
+	   simulation, the parameters are taken from simulation init */
+	if (ReceiverParam.eSimType == CParameter::ST_NONE)
+	{
+		/* Init SNR value */
+		rSNR = pow(10, INIT_VALUE_SNR_WIEN_TIME_DB / 10);
 
-	/* Init sigma value with maximum value */
-	rSigma = rSigmaMax;
+		/* Init sigma value with maximum value */
+		rSigma = rSigmaMax;
+	}
+	else
+	{
+		/* Get SNR */
+		rSNR = pow(10, ReceiverParam.rSimSNRdB / 10);
+	
+		/* Sigma from channel profiles */
+		switch (ReceiverParam.iDRMChannelNo)
+		{
+		case 1:
+		case 2:
+			rSigma = LOW_BOUND_SIGMA;
+			break;
+
+		case 3:
+		case 4:
+			rSigma = 1.0 / 2;
+			break;
+
+		case 5:
+			rSigma = 2.0 / 2;
+			break;
+
+		default: /* Including channel number 6 */
+			rSigma = rSigmaMax / 2;
+			break;
+		}
+
+		/* Reset flag to inhibit parameter adaptation */
+		bTracking = FALSE;
+	}
 
 	/* Calculate initialization wiener filter taps and init MMSE */
 	rMMSE = UpdateFilterCoef(rSNR, rSigma);
