@@ -32,9 +32,7 @@
 
 /* Implementation *************************************************************/
 int CConvEncoder::Encode(CVector<_BINARY>& vecInputData, 
-						 CVector<_BINARY>& vecOutputData,
-						 int iNoInBitsPartA, int iNoInBitsPartB, 
-						 int iPunctPatPartA, int iPunctPatPartB, int iLevel)
+						 CVector<_BINARY>& vecOutputData)
 {
 	int				i, k;
 	int				iOutputCounter;
@@ -43,52 +41,49 @@ int CConvEncoder::Encode(CVector<_BINARY>& vecInputData,
 	_UINT32BIT		iPuncPatShiftReg;
 	_BYTE			byStateShiftReg;
 	int				iNoBitsRegPunct;
-	int				iTotNoInputBits;
 
-	/* Set output size to zero, increment it each time a new bit is coded */
+	/* Set output size to zero, increment it each time a new bit is encoded */
 	iOutputCounter = 0;
 
 	/* Reset counter for puncturing and state-register */
 	iPunctCounter = 0;
 	byStateShiftReg = 0;
 
-	iTotNoInputBits = iNoInBitsPartA + iNoInBitsPartB;
-
 	/* FAC with no special tailbit pattern */
 	if (eChannelType == CParameter::CT_FAC)
-		iNoBitsRegPunct = iTotNoInputBits + MC_CONSTRAINT_LENGTH - 1;
+		iNoBitsRegPunct = iNumInBitsWithMemory;
 	else
-		iNoBitsRegPunct = iTotNoInputBits;
+		iNoBitsRegPunct = iNumInBits;
 
 	for (i = 0; i < iNoBitsRegPunct; i++)
 	{
 		/* Prepare puncturing pattern --------------------------------------- */
-		if (i < iNoInBitsPartA)
+		if (i < iNumInBitsPartA)
 		{
 			/* Puncturing patterns part A */
 			/* Refill shift register after a wrap */
 			if (iPunctCounter == 0)
-				iPuncPatShiftReg = iPuncturingPatterns[iPunctPatPartA][2];
+				iPuncPatShiftReg = iPartAPat;
 
 			/* Increase puncturing-counter and manage wrap */
 			iPunctCounter++;
-			if (iPunctCounter == iPuncturingPatterns[iPunctPatPartA][0])
+			if (iPunctCounter == iPartAPatLen)
 				iPunctCounter = 0;
 		}
 		else
 		{
 			/* Puncturing patterns part B */
 			/* Reset counter when beginning part B */
-			if (i == iNoInBitsPartA)
+			if (i == iNumInBitsPartA)
 				iPunctCounter = 0;
 
 			/* Refill shift register after a wrap */
 			if (iPunctCounter == 0)
-				iPuncPatShiftReg = iPuncturingPatterns[iPunctPatPartB][2];
+				iPuncPatShiftReg = iPartBPat;
 
 			/* Increase puncturing-counter and manage wrap */
 			iPunctCounter++;
-			if (iPunctCounter == iPuncturingPatterns[iPunctPatPartB][0])
+			if (iPunctCounter == iPartBPatLen)
 				iPunctCounter = 0;
 		}
 
@@ -97,9 +92,9 @@ int CConvEncoder::Encode(CVector<_BINARY>& vecInputData,
 		/* Shift bits in state-shift-register */
 		byStateShiftReg <<= 1;
 
-		/* In case of FAC, the tailbits must be calculated in this loop, check,
+		/* In case of FAC, the tailbits must be calculated in this loop. Check
 		   when end of vector is reached and no more bits must be added */
-		if (i < iTotNoInputBits)
+		if (i < iNumInBits)
 		{
 			/* Add new bit at the beginning */
 			if (vecInputData[i] == TRUE)
@@ -130,23 +125,8 @@ int CConvEncoder::Encode(CVector<_BINARY>& vecInputData,
 	/* Tailbit patterns are NOT USED with FAC! */
 	if (eChannelType != CParameter::CT_FAC)
 	{
-		/* Tailbit pattern calculated according DRM-standard. We have to 
-		   consider two cases because in HSYM "N1 + N2" is used instead of 
-		   only "N2" */
-		/* It is not yet clear if "iPunctPatPartB" is right at this place! */
-		if (iLevel == 0)
-			iTailbitPattern = 
-				iTailbitParamL0 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
-				(int) ((iTailbitParamL0 - 12) / 
-				iPuncturingPatterns[iPunctPatPartB][1]);
-		else
-			iTailbitPattern = 
-				iTailbitParamL1 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
-				(int) ((iTailbitParamL1 - 12) / 
-				iPuncturingPatterns[iPunctPatPartB][1]);
-	
 		/* Fill shift register for the first time */
-		iPuncPatShiftReg = iPunctPatTailbits[iTailbitPattern];
+		iPuncPatShiftReg = iTailBitPat;
 	
 		for (i = 0; i < MC_CONSTRAINT_LENGTH - 1; i++)
 		{
@@ -174,7 +154,7 @@ int CConvEncoder::Encode(CVector<_BINARY>& vecInputData,
 		}	
 	}
 
-	/* Return No of encoded bits */
+	/* Return number of encoded bits */
 	return iOutputCounter;
 }
 
@@ -198,10 +178,36 @@ _BINARY CConvEncoder::Convolution(_BYTE byNewStateShiftReg, int iGenPolyn) const
 	return binResult;
 }
 
-void CConvEncoder::Init(CParameter::ECodScheme eNewCodingScheme, int iN1, 
-						int iN2, CParameter::EChanType eNewChannelType)
+void CConvEncoder::Init(CParameter::ECodScheme eNewCodingScheme,
+						CParameter::EChanType eNewChannelType, int iN1, 
+						int iN2, int iNewNumInBitsPartA,
+						int iNewNumInBitsPartB, int iPunctPatPartA,
+						int iPunctPatPartB, int iLevel)
 {
-	/* We have to consider two cases because in HSYM "N1 + N2" is used 
+	int	iTailbitPattern;
+	int	iTailbitParamL0;
+	int	iTailbitParamL1;
+
+	/* Set number of out bits and save channel type */
+	iNumInBitsPartA = iNewNumInBitsPartA;
+	eChannelType = eNewChannelType;
+
+	/* Number of bits out is the sum of all protection levels */
+	iNumInBits = iNumInBitsPartA + iNewNumInBitsPartB;
+
+	/* Number of out bits including the state memory */
+	iNumInBitsWithMemory = iNumInBits + MC_CONSTRAINT_LENGTH - 1;
+
+
+	/* Set puncturing bit patterns and lengths ------------------------------ */
+	iPartAPat = iPuncturingPatterns[iPunctPatPartA][2];
+	iPartBPat = iPuncturingPatterns[iPunctPatPartB][2];
+	iPartAPatLen = iPuncturingPatterns[iPunctPatPartA][0];
+	iPartBPatLen = iPuncturingPatterns[iPunctPatPartB][0];
+
+	
+	/* Set tail-bit pattern ------------------------------------------------- */
+	/* We have to consider two cases because in HSYM "N1 + N2" is used
 	   instead of only "N2" to calculate the tailbit pattern */
 	switch (eNewCodingScheme)
 	{
@@ -220,5 +226,18 @@ void CConvEncoder::Init(CParameter::ECodScheme eNewCodingScheme, int iN1,
 		iTailbitParamL1 = 2 * iN2;
 	}
 
-	eChannelType = eNewChannelType;
+	/* Tailbit pattern calculated according DRM-standard. We have to consider
+	   two cases because in HSYM "N1 + N2" is used instead of only "N2" */
+	if (iLevel == 0)
+		iTailbitPattern =
+			iTailbitParamL0 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
+			(int) ((iTailbitParamL0 - 12) /
+			iPuncturingPatterns[iPunctPatPartB][1]);
+	else
+		iTailbitPattern =
+			iTailbitParamL1 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
+			(int) ((iTailbitParamL1 - 12) /
+			iPuncturingPatterns[iPunctPatPartB][1]);
+
+	iTailBitPat = iPunctPatTailbits[iTailbitPattern];
 }

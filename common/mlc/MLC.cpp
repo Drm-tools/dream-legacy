@@ -118,8 +118,7 @@ void CMLCEncoder::ProcessDataInternal(CParameter& Parameter)
 	for (j = 0; j < iLevels; j++)
 	{
 		iNoBitsOutDec =
-			ConvEncoder.Encode(vecbiEncInBuffer[j], vecbiEncOutBuffer[j],
-			iM[j][0], iM[j][1], iCodeRate[j][0], iCodeRate[j][1], j);
+			ConvEncoder[j].Encode(vecbiEncInBuffer[j], vecbiEncOutBuffer[j]);
 #ifdef _DEBUG_
 if (iNoBitsOutDec != iNoEncBits)
 {
@@ -159,7 +158,9 @@ void CMLCEncoder::InitInternal(CParameter& TransmParam)
 	EnergyDisp.Init(iNoInBits, iL[2]);
 
 	/* Encoder */
-	ConvEncoder.Init(eCodingScheme, iN[0], iN[1], eChannelType);
+	for (i = 0; i < iLevels; i++)
+		ConvEncoder[i].Init(eCodingScheme, eChannelType, iN[0], iN[1],
+			iM[i][0], iM[i][1], iCodeRate[i][0], iCodeRate[i][1], i);
 
 	/* Bit interleaver */
 	/* First init all possible interleaver (According table "TableMLC.h" ->
@@ -250,8 +251,8 @@ fflush(pFile);
 
 
 			/* Viterbi decoder ---------------------------------------------- */
-			rAccMetric = ViterbiDecoder.Decode(vecMetric, vecbiDecOutBits[j], 
-				iM[j][0], iM[j][1], iCodeRate[j][0], iCodeRate[j][1], j);
+			rAccMetric =
+				ViterbiDecoder[j].Decode(vecMetric, vecbiDecOutBits[j]);
 
 			/* The last branch of encoding and interleaving must not be used at
 			   the very last loop */
@@ -261,8 +262,7 @@ fflush(pFile);
 				((k == iNoIterations) && !(j >= iIndexLastBranch)))
 			{
 				/* Convolutional encoder ------------------------------------ */
-				ConvEncoder.Encode(vecbiDecOutBits[j], vecbiSubsetDef[j],
-					iM[j][0], iM[j][1], iCodeRate[j][0], iCodeRate[j][1], j);
+				ConvEncoder[j].Encode(vecbiDecOutBits[j], vecbiSubsetDef[j]);
 			
 
 				/* Bit interleaver ------------------------------------------ */
@@ -375,10 +375,14 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 	EnergyDisp.Init(iNoOutBits, iL[2]);
 
 	/* Viterby decoder */
-	ViterbiDecoder.Init(eCodingScheme, iN[0], iN[1], eChannelType);
+	for (i = 0; i < iLevels; i++)
+		ViterbiDecoder[i].Init(eCodingScheme, eChannelType, iN[0], iN[1], 
+			iM[i][0], iM[i][1], iCodeRate[i][0], iCodeRate[i][1], i);
 
 	/* Encoder */
-	ConvEncoder.Init(eCodingScheme, iN[0], iN[1], eChannelType);
+	for (i = 0; i < iLevels; i++)
+		ConvEncoder[i].Init(eCodingScheme, eChannelType, iN[0], iN[1],
+			iM[i][0], iM[i][1], iCodeRate[i][0], iCodeRate[i][1], i);
 
 	/* Bit interleaver */
 	/* First init all possible interleaver (According table "TableMLC.h" ->

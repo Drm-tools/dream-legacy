@@ -79,7 +79,7 @@ public:
 	virtual ~CMLCEncoder() {}
 
 protected:
-	CConvEncoder		ConvEncoder;
+	CConvEncoder		ConvEncoder[MC_MAX_NO_LEVELS];
 	/* Two different types of interleaver table */
 	CBitInterleaver		BitInterleaver[2];
 	CQAMMapping			QAMMapping;
@@ -108,12 +108,12 @@ public:
 	int GetNoIterations() const {return iNoIterations;}
 
 protected:
-	CViterbiDecoder		ViterbiDecoder;
+	CViterbiDecoder		ViterbiDecoder[MC_MAX_NO_LEVELS];
 	CMLCMetric			MLCMetric;
 	/* Two different types of deinterleaver table */
 	CBitDeinterleaver	BitDeinterleaver[2];
 	CBitInterleaver		BitInterleaver[2];
-	CConvEncoder		ConvEncoder;
+	CConvEncoder		ConvEncoder[MC_MAX_NO_LEVELS];
 	CEngergyDispersal	EnergyDisp;
 
 	/* Internal buffers */

@@ -43,16 +43,24 @@ public:
 	virtual ~CConvEncoder() {}
 
 	int		Encode(CVector<_BINARY>& vecInputData, 
-				   CVector<_BINARY>& vecOutputData,
-				   int iNoInBitsPartA, int iNoInBitsPartB, 
-				   int iPunctPatPartA, int iPunctPatPartB, int iLevel);
+				   CVector<_BINARY>& vecOutputData);
 	_BINARY Convolution(_BYTE byNewStateShiftReg, int iGenPolyn) const;
-	void	Init(CParameter::ECodScheme eNewCodingScheme, int iN1, int iN2, 
-				 CParameter::EChanType eNewChannelType);
+	void	Init(CParameter::ECodScheme eNewCodingScheme,
+				 CParameter::EChanType eNewChannelType,
+				 int iN1, int iN2, int iNewNumInBitsPartA,
+				 int iNewNumInBitsPartB, int iPunctPatPartA, int iPunctPatPartB,
+				 int iLevel);
 
 protected:
-	int						iTailbitParamL0;
-	int						iTailbitParamL1;
+	int						iNumInBitsPartA;
+	int						iNumInBits;
+	int						iNumInBitsWithMemory;
+	_UINT32BIT				iTailBitPat;
+	_UINT32BIT				iPartAPat;
+	int						iPartAPatLen;
+	_UINT32BIT				iPartBPat;
+	int						iPartBPatLen;
+
 	CParameter::EChanType	eChannelType;
 };
 
