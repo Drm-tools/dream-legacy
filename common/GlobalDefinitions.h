@@ -49,7 +49,7 @@ using namespace std;	// Because of the library: "complex"
 #undef _DEBUG_
 
 
-#define DREAM_VERSION_NUMBER			"0.9.2"
+#define DREAM_VERSION_NUMBER			"0.9.3"
 
 
 /* Define the application specific data-types ------------------------------- */
