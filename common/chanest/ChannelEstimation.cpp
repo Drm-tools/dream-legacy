@@ -145,11 +145,20 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		/**********************************************************************\
 		 * Wiener filter													   *
 		\**********************************************************************/
+		/* Update filter coefficients once in one DRM frame */
+		if (iUpCntWienFilt > 0)
+			iUpCntWienFilt--;
+		else
+		{
 
 // TEST
 /* Update filter taps */
 UpdateWienerFiltCoef(rSNRAftTiInt, (_REAL) ReceiverParam.RatioTgTu.iEnum / 
 	ReceiverParam.RatioTgTu.iDenom);
+
+			/* Reset counter */
+			iUpCntWienFilt = iNoSymPerFrame;
+		}
 
 		/* FIR filter of the pilots with filter taps. We need to filter the
 		   pilot positions as well to improve the SNR estimation (which 
@@ -399,6 +408,9 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 	/* Allocate temporary matlib vector for filter coefficients */
 	matcWienerFilter.Init(iNoWienerFilt, iLengthWiener);
+
+	/* Init Update counter for wiener filter update */
+	iUpCntWienFilt = iNoSymPerFrame;
 
 
 	/* SNR definition */

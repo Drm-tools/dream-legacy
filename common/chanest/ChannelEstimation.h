@@ -132,6 +132,7 @@ protected:
 	_REAL				rSignalEst;
 	_REAL				rSNREstimate;
 	_REAL				rSNRCorrectFact;
+	int					iUpCntWienFilt;
 
 	int					iStartZeroPadding;
 
