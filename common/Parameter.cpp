@@ -210,39 +210,35 @@ _REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
 
 _REAL CParameter::PartABLenRatio(const int iServiceID)
 {
-	/* Check the length of protection part A */
+	int iLenA = 0;
+	int iLenB = 0;
+
+	/* Get the length of protection part A and B */
 	if (Service[iServiceID].eAudDataFlag == SF_AUDIO)
 	{
+		/* Audio service */
 		if (Service[iServiceID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
 		{
-			const int iLenA =
-				Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartA;
-
-			const int iLenB =
-				Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartB;
-
-			const int iTotLen = iLenA + iLenB;
-
-			return (_REAL) iLenA / iTotLen;
+			iLenA = Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartA;
+			iLenB = Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartB;
 		}
 	}
 	else
 	{
+		/* Data service */
 		if (Service[iServiceID].DataParam.iStreamID != STREAM_ID_NOT_USED)
 		{
-			const int iLenA =
-				Stream[Service[iServiceID].DataParam.iStreamID].iLenPartA;
-
-			const int iLenB =
-				Stream[Service[iServiceID].DataParam.iStreamID].iLenPartB;
-
-			const int iTotLen = iLenA + iLenB;
-
-			return (_REAL) iLenA / iTotLen;
+			iLenA = Stream[Service[iServiceID].DataParam.iStreamID].iLenPartA;
+			iLenB = Stream[Service[iServiceID].DataParam.iStreamID].iLenPartB;
 		}
 	}
 
-	return (_REAL) 0.0;
+	const int iTotLen = iLenA + iLenB;
+
+	if (iTotLen != 0)
+		return (_REAL) iLenA / iTotLen;
+	else
+		return (_REAL) 0.0;
 }
 
 void CParameter::InitCellMapTable(const ERobMode eNewWaveMode,
