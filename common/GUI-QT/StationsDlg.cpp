@@ -764,8 +764,8 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 		break;
 
 	case CDRMSchedule::SM_ANALOG:
-		/* Sort list by target (4th column) */
-		ListViewStations->setSorting(3, TRUE);
+		/* Sort list by station name (1th column) */
+		ListViewStations->setSorting(0, TRUE);
 		break;
 	}
 
