@@ -176,7 +176,6 @@ CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB,
 								   const CMatlibVector<CReal>& rvX, 
 								   CMatlibVector<CReal>& rvZ,
 								   const int iDecFact)
-
 {
 	int			m, n, iCurPos;
 	const int	iSizeX = rvX.GetSize();
