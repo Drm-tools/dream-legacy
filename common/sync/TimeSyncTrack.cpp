@@ -307,7 +307,6 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 		/* "- iTargetTimingPos - 1" to get the "0" in the center of the graph */
 		iHalfSpec = iNoIntpFreqPil / 2 - iTargetTimingPos - 1;
 
-
 		/* Init scale (in "ms") */
 		rScaleIncr = (_REAL) iDFTSize / 
 			(SOUNDCRD_SAMPLE_RATE * iNoIntpFreqPil) * 1000 / 2;

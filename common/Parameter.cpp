@@ -494,7 +494,7 @@ void CParameter::CReceptLog::SetLog(_BOOLEAN bLog)
 		time(&ltime);
 		today = gmtime(&ltime); /* Should be UTC time */
 
-		pFile = fopen("Log.txt", "a");
+		pFile = fopen("DreamLog.txt", "a");
 
 		/* Beginning of new table (similar to standard DRM log file) */
 		fprintf(pFile, "\n>>>>\nDream\nSoftware Version %s\n",
@@ -505,7 +505,6 @@ void CParameter::CReceptLog::SetLog(_BOOLEAN bLog)
 			today->tm_hour, today->tm_min, today->tm_sec);
 
 		fprintf(pFile, "Frequency        \nLatitude         \nLongitude        \n\n");
-
 
 		fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE\n");
 		fflush(pFile);
@@ -544,7 +543,7 @@ void CParameter::CReceptLog::WriteParameters()
 			if (iNumSNR == 0)
 				iAverageSNR = 0;
 			else
-				iAverageSNR = (int) (rAvSNR / iNumSNR);
+				iAverageSNR = (int) (rAvSNR / iNumSNR + (_REAL) 0.5); /* Round */
 
 			/* If no sync, do not print number of AAC frames */
 			if (iNumCRCOkFAC == 0)
