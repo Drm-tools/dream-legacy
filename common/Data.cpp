@@ -410,7 +410,7 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 	{
 		/* If FAC CRC check failed we should increase the frame-counter 
 		   manually. If only FAC data was corrupted, the others can still
-		   decoder if they have the right frame number. In case of simulation
+		   decode if they have the right frame number. In case of simulation
 		   no FAC data is used, we have to increase the counter here */
 		ReceiverParam.iFrameIDReceiv++;
 
