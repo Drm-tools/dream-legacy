@@ -36,27 +36,29 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	QString strVersionText;
 	strVersionText = "<center><b>Dream, Version ";
 	strVersionText += DREAM_VERSION_NUMBER;
-	strVersionText += "</b><br> Open-Source Software Implementation of a DRM-Receiver<br>";
+	strVersionText += "</b><br> Open-Source Software Implementation of a "
+		"DRM-Receiver<br>";
 	strVersionText += "Under the GNU General Public License (GPL)</center>";
 	AboutDlg.TextLabelVersion->setText(strVersionText);
 
 
-	/* Set Menu ------------------------------------------------------------- */
-	/* Help menu */
+	/* Set Menu ***************************************************************/
+	/* Help menu ------------------------------------------------------------ */
 	QPopupMenu *HelpMenu = new QPopupMenu(this);
 	CHECK_PTR(HelpMenu);
 	HelpMenu->insertItem("&About...", this, SLOT(OnHelpAbout()));
 
-	/* View menu */
+
+	/* View menu ------------------------------------------------------------ */
 	QPopupMenu *EvalWinMenu = new QPopupMenu(this);
 	CHECK_PTR(EvalWinMenu);
-	EvalWinMenu->insertItem("&Evaluation Dialog", this, SLOT(OnViewEvalDlg()),
-		CTRL+Key_E);
+	EvalWinMenu->insertItem("&Evaluation Dialog...", this,
+		SLOT(OnViewEvalDlg()), CTRL+Key_E);
 	EvalWinMenu->insertSeparator();
 	EvalWinMenu->insertItem("E&xit", this, SLOT(close()), CTRL+Key_Q);
 
 
-	/* Settings menu */
+	/* Settings menu  ------------------------------------------------------- */
 	pSoundInMenu = new QPopupMenu(this);
 	CHECK_PTR(pSoundInMenu);
 	pSoundOutMenu = new QPopupMenu(this);
@@ -89,6 +91,7 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	DRMReceiver.GetSoundInterface()->SetInDev(iNumSoundDev);
 	DRMReceiver.GetSoundInterface()->SetOutDev(iNumSoundDev);
 
+	/* Reiceiver mode menu */
 	pReceiverModeMenu->insertItem("DRM (digital)", this,
 		SLOT(OnReceiverMode(int)), CTRL+Key_D, 0);
 	pReceiverModeMenu->insertItem("AM (analog)", this,
@@ -99,17 +102,22 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
 
 
-	QPopupMenu *SettingsMenu = new QPopupMenu(this);
-	CHECK_PTR(SettingsMenu);
-	SettingsMenu->insertItem("Sound &In", pSoundInMenu);
-	SettingsMenu->insertItem("Sound &Out", pSoundOutMenu);
-	SettingsMenu->insertSeparator();
-	SettingsMenu->insertItem("Receiver &Mode", pReceiverModeMenu);
+	pSettingsMenu = new QPopupMenu(this);
+	CHECK_PTR(pSettingsMenu);
+	pSettingsMenu->insertItem("Sound &In", pSoundInMenu);
+	pSettingsMenu->insertItem("Sound &Out", pSoundOutMenu);
+	pSettingsMenu->insertSeparator();
+	pSettingsMenu->insertItem("&Receiver Mode", pReceiverModeMenu);
+	pSettingsMenu->insertSeparator();
+	pSettingsMenu->insertItem("&Mute Audio", this,
+		SLOT(OnMuteAudio()), CTRL+Key_M, 0);
 
+
+	/* Main menu bar -------------------------------------------------------- */
 	pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
 	pMenu->insertItem("&View", EvalWinMenu);
-	pMenu->insertItem("&Settings", SettingsMenu);
+	pMenu->insertItem("&Settings", pSettingsMenu);
 	pMenu->insertItem("&?", HelpMenu);
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
@@ -135,12 +143,13 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	/* Evaluation window ("WGroupLeader" flag enabels that in both windows 
 	   controls can be clicked) */
 	pSysEvalDlg = new systemevalDlg(this, "System Evaluation", FALSE, 
-		Qt::WGroupLeader | Qt::WStyle_Minimize);
+		Qt::WGroupLeader | Qt::WStyle_MinMax);
 	pSysEvalDlg->hide();
 
 
 	/* Init current selected service */
 	DRMReceiver.GetParameters()->SetCurSelAudioService(0);
+	DRMReceiver.GetParameters()->SetCurSelDataService(0);
 	iCurSelServiceGUI = 0;
 	iOldNoServicesGUI = 0;
 
@@ -359,9 +368,18 @@ void FDRMDialog::OnTimer()
 		else
 		{
 			TextServiceLabel->setText(QString("Analog AM Mode"));
-			TextServiceIDRate->setText("Press Ctrl+A for new Acquisition, Ctrl+D for DRM");
+			TextServiceIDRate->setText("Press Ctrl+A for new Acquisition, "
+				"Ctrl+D for DRM");
 		}
 	}
+}
+
+void FDRMDialog::OnMuteAudio()
+{
+	pSettingsMenu->setItemChecked(0, !pSettingsMenu->isItemChecked(0));
+
+	/* Set parameter in working thread module */
+	DRMReceiver.GetWriteData()->MuteAudio(pSettingsMenu->isItemChecked(0));
 }
 
 void FDRMDialog::OnReceiverMode(int id)
@@ -413,6 +431,7 @@ void FDRMDialog::OnButtonService1()
 		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
 
 		DRMReceiver.GetParameters()->SetCurSelAudioService(0);
+		DRMReceiver.GetParameters()->SetCurSelDataService(0);
 		iCurSelServiceGUI = 0;
 	}
 }
@@ -430,6 +449,7 @@ void FDRMDialog::OnButtonService2()
 		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
 
 		DRMReceiver.GetParameters()->SetCurSelAudioService(1);
+		DRMReceiver.GetParameters()->SetCurSelDataService(1);
 		iCurSelServiceGUI = 1;
 	}
 }
@@ -447,6 +467,7 @@ void FDRMDialog::OnButtonService3()
 		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
 
 		DRMReceiver.GetParameters()->SetCurSelAudioService(2);
+		DRMReceiver.GetParameters()->SetCurSelDataService(2);
 		iCurSelServiceGUI = 2;
 	}
 }
@@ -464,6 +485,7 @@ void FDRMDialog::OnButtonService4()
 		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
 
 		DRMReceiver.GetParameters()->SetCurSelAudioService(3);
+		DRMReceiver.GetParameters()->SetCurSelDataService(3);
 		iCurSelServiceGUI = 3;
 	}
 }
@@ -569,40 +591,58 @@ QString	FDRMDialog::SetServParamStr(int iServiceID)
 		if (DRMReceiver.GetParameters()->Service[iServiceID].DataParam.
 			ePacketModInd == CParameter::PM_PACKET_MODE)
 		{
-			strReturn += " Packet Mode";
-			
-			switch (DRMReceiver.GetParameters()->Service[iServiceID].
-				DataParam.eDataUnitInd)
+			if (DRMReceiver.GetParameters()->Service[iServiceID].DataParam.
+				eAppDomain == CParameter::AD_DAB_SPEC_APP)
 			{
-			case CParameter::DU_SINGLE_PACKETS:
-				strReturn += " (Single Packets)";
-				break;
+				switch (DRMReceiver.GetParameters()->Service[iServiceID].
+					DataParam.iUserAppIdent)
+				{
+				case 1:
+					strReturn += "Dynamic labels";
+					break;
 
-			case CParameter::DU_DATA_UNITS:
-				strReturn += " (Data Units)";
-				break;
+				case 2:
+					strReturn += "MOT Slideshow";
+					break;
+
+				case 3:
+					strReturn += "MOT Broadcast Web Site";
+					break;
+
+				case 4:
+					strReturn += "TPEG";
+					break;
+
+				case 5:
+					strReturn += "DGPS";
+					break;
+				}
 			}
-
-			QString strTemp;
-
-			strTemp.setNum(DRMReceiver.GetParameters()->
-				Service[iServiceID].DataParam.iPacketID);
-			strReturn += " / ID: " + strTemp;
-
-			strTemp.setNum(DRMReceiver.GetParameters()->
-				Service[iServiceID].DataParam.iPacketLen);
-			strReturn += " / Len: " + strTemp;
-
-			switch (DRMReceiver.GetParameters()->Service[iServiceID].
-				DataParam.eAppDomain)
+			else
 			{
-			case CParameter::AD_DRM_SPEC_APP:
-				strReturn += " / DRM";
-				break;
+				strReturn += "Packet Mode";
+				
+				switch (DRMReceiver.GetParameters()->Service[iServiceID].
+					DataParam.eDataUnitInd)
+				{
+				case CParameter::DU_SINGLE_PACKETS:
+					strReturn += " (Single Packets)";
+					break;
 
-			case CParameter::AD_DAB_SPEC_APP:
-				strReturn += " / DAB";
-				break;
+				case CParameter::DU_DATA_UNITS:
+					strReturn += " (Data Units)";
+					break;
+				}
+
+				QString strTemp;
+
+				strTemp.setNum(DRMReceiver.GetParameters()->
+					Service[iServiceID].DataParam.iPacketID);
+				strReturn += " / ID: " + strTemp;
+
+				strTemp.setNum(DRMReceiver.GetParameters()->
+					Service[iServiceID].DataParam.iPacketLen);
+				strReturn += " / Len: " + strTemp;
 			}
 		}
 		else
