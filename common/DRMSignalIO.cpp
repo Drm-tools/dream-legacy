@@ -40,18 +40,18 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 #ifdef WRITE_TRNSM_TO_FILE
 	/* Write data to file */
 	/* Use only real-part. Since we use only the real part of the signal, we
-	   have to double the amplitude */
+	   have to double the amplitude (64 * 2 = 128) */
 	for (i = 0; i < iInputBlockSize; i++)
 	{
 #ifdef FILE_DRM_USING_RAW_DATA
 		const short sOut =
-			(short) ((*pvecInputData)[i].real() * 2 * (_REAL) 64.0);
+			(short) ((*pvecInputData)[i].real() * (_REAL) 128.0);
 
 		/* Write 2 bytes, 1 piece */
 		fwrite((const void*) &sOut, size_t(2), size_t(1), pFileTransmitter);
 #else
 		fprintf(pFileTransmitter, "%e\n",
-			(float) (*pvecInputData)[i].real() * 2 * (_REAL) 64.0);
+			(float) (*pvecInputData)[i].real() * (_REAL) 128.0);
 #endif
 	}
 
@@ -63,22 +63,39 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 	for (i = 0; i < iNs2; i += 2)
 	{
 		const int iCurIndex = iBlockCnt * iNs2 + i;
-		const short sCurOutReal =
-			(short) ((*pvecInputData)[i / 2].real() * 2 * (_REAL) 64.0);
-		const short sCurOutImag =
-			(short) ((*pvecInputData)[i / 2].imag() * 2 * (_REAL) 64.0);
 
-		if (bIQOutput == TRUE)
+		/* Imaginary, real */
+		const short sCurOutReal =
+			(short) ((*pvecInputData)[i / 2].real() * (_REAL) 128.0);
+		const short sCurOutImag =
+			(short) ((*pvecInputData)[i / 2].imag() * (_REAL) 128.0);
+
+		/* Envelope, phase */
+		const short sCurOutEnv =
+			(short) (Abs((*pvecInputData)[i / 2]) * (_REAL) 256.0);
+		const short sCurOutPhase = /* 2^15 / pi / 2 -> approx. 5000 */
+			(short) (Angle((*pvecInputData)[i / 2]) * (_REAL) 5000.0);
+
+		switch (eOutputFormat)
 		{
+		case OF_REAL_VAL:
+			/* Use real valued signal as output for both sound card channels */
+			vecsDataOut[iCurIndex] = vecsDataOut[iCurIndex + 1] = sCurOutReal;
+			break;
+
+		case OF_IQ:
 			/* Send inphase and quadrature (I / Q) signal to stereo sound card
 			   output. I: left channel, Q: right channel */
 			vecsDataOut[iCurIndex] = sCurOutReal;
 			vecsDataOut[iCurIndex + 1] = sCurOutImag;
-		}
-		else
-		{
-			/* Use real valued signal as output for both sound card channels */
-			vecsDataOut[iCurIndex] = vecsDataOut[iCurIndex + 1] = sCurOutReal;
+			break;
+
+		case OF_EP:
+			/* Send envelope and phase signal to stereo sound card
+			   output. Envelope: left channel, Phase: right channel */
+			vecsDataOut[iCurIndex] = sCurOutEnv;
+			vecsDataOut[iCurIndex + 1] = sCurOutPhase;
+			break;
 		}
 	}
 

@@ -58,14 +58,17 @@
 class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
+	enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ /* I / Q */,
+		OF_EP /* envelope / phase */};
+
 #ifdef WRITE_TRNSM_TO_FILE
 	CTransmitData() : pFileTransmitter(NULL) {}
-	void SetIQOutput(const _BOOLEAN bIQ) {} /* Not used in file mode */
+	void SetIQOutput(const EOutFormat eFormat) {} /* Not used in file mode */
 	_BOOLEAN GetIQOutput() {return FALSE;}
 #else
-	CTransmitData(CSound* pNS) : pSound(pNS), bIQOutput(FALSE) {}
-	void SetIQOutput(const _BOOLEAN bIQ) {bIQOutput = bIQ;}
-	_BOOLEAN GetIQOutput() {return bIQOutput;}
+	CTransmitData(CSound* pNS) : pSound(pNS), eOutputFormat(OF_REAL_VAL) {}
+	void SetIQOutput(const EOutFormat eFormat) {eOutputFormat = eFormat;}
+	EOutFormat GetIQOutput() {return eOutputFormat;}
 #endif
 	virtual ~CTransmitData();
 
@@ -77,7 +80,7 @@ protected:
 	CVector<short>	vecsDataOut;
 	int				iBlockCnt;
 	int				iNumBlocks;
-	_BOOLEAN		bIQOutput;
+	EOutFormat		eOutputFormat;
 #endif
 
 	virtual void InitInternal(CParameter& TransmParam);

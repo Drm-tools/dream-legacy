@@ -45,11 +45,21 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	/* Init controls with default settings */
 	ButtonStartStop->setText("&Start");
 
-	/* Output mode (real valued or I / Q) */
-	if (TransThread.DRMTransmitter.GetTransData()->GetIQOutput() == TRUE)
-		RadioButtonOutIQ->setChecked(TRUE);
-	else
+	/* Output mode (real valued, I / Q or E / P) */
+	switch (TransThread.DRMTransmitter.GetTransData()->GetIQOutput())
+	{
+	case CTransmitData::OF_REAL_VAL:
 		RadioButtonOutReal->setChecked(TRUE);
+		break;
+
+	case CTransmitData::OF_IQ:
+		RadioButtonOutIQ->setChecked(TRUE);
+		break;
+
+	case CTransmitData::OF_EP:
+		RadioButtonOutEP->setChecked(TRUE);
+		break;
+	}
 
 	/* Robustness mode */
 	switch (TransThread.DRMTransmitter.GetParameters()->GetWaveMode())
@@ -732,15 +742,25 @@ void TransmDialog::OnComboBoxProgramTypeHighlighted(int iID)
 
 void TransmDialog::OnRadioOutput(int iID)
 {
-	if (iID == 0)
+	switch (iID)
 	{
+	case 0:
 		/* Button "Real Valued" */
-		TransThread.DRMTransmitter.GetTransData()->SetIQOutput(FALSE);
-	}
-	else
-	{
+		TransThread.DRMTransmitter.GetTransData()->
+			SetIQOutput(CTransmitData::OF_REAL_VAL);
+		break;
+
+	case 1:
 		/* Button "I / Q" */
-		TransThread.DRMTransmitter.GetTransData()->SetIQOutput(TRUE);
+		TransThread.DRMTransmitter.GetTransData()->
+			SetIQOutput(CTransmitData::OF_IQ);
+		break;
+
+	case 2:
+		/* Button "E / P" */
+		TransThread.DRMTransmitter.GetTransData()->
+			SetIQOutput(CTransmitData::OF_EP);
+		break;
 	}
 }
 

@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>811</width>
-            <height>574</height>
+            <width>817</width>
+            <height>577</height>
         </rect>
     </property>
     <property stdset="1">
@@ -241,7 +241,7 @@ Institute for Communication Technology</string>
                                     </property>
                                     <property stdset="1">
                                         <name>text</name>
-                                        <string>Real valued</string>
+                                        <string>Real val.</string>
                                     </property>
                                     <property>
                                         <name>buttonGroupId</name>
@@ -261,6 +261,21 @@ Institute for Communication Technology</string>
                                     <property>
                                         <name>buttonGroupId</name>
                                         <number>1</number>
+                                    </property>
+                                </widget>
+                                <widget>
+                                    <class>QRadioButton</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>RadioButtonOutEP</cstring>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>text</name>
+                                        <string>E / P</string>
+                                    </property>
+                                    <property>
+                                        <name>buttonGroupId</name>
+                                        <number>2</number>
                                     </property>
                                 </widget>
                             </hbox>
