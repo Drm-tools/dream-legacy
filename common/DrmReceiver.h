@@ -127,6 +127,7 @@ public:
 	CSound*					GetSoundInterface() {return &SoundInterface;}
 	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
 	CAMDemodulation*		GetAMDemod() {return &AMDemodulation;}
+	CFreqSyncAcq*			GetFreqSyncAcq() {return &FreqSyncAcq;}
 
 
 	CParameter*				GetParameters() {return &ReceiverParam;}

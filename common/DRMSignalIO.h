@@ -47,7 +47,9 @@
 
 /* Length of vector for input spectrum. We use approx. 0.2 sec
    of sampled data for spectrum calculation, this is 2^13 = 8192 to 
-   make the FFT work more efficient */
+   make the FFT work more efficient. Make sure that this number is not smaller
+   than the symbol lenght in 48 khz domain of longest mode (which is mode A/B:
+   1280) */
 #define NUM_SMPLS_4_INPUT_SPECTRUM	8192
 
 /* Use raw 16 bit data or in text form for file format for DRM data. Defining
