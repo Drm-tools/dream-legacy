@@ -272,9 +272,21 @@ moc/AnalogDemDlgbase.cpp: ../common/GUI-QT/AnalogDemDlgbase.ui moc/AnalogDemDlgb
 # QT translation file (added by Stephane Fillod 11/10/2004)
 
 LUPDATE=lupdate
+LRELEASE=lrelease
 
-drm.ts: $(drmqtonly_SOURCES)
+dreamtr.ts: $(drmqtonly_SOURCES)
 	$(LUPDATE) $(drmqtonly_SOURCES) -ts $@
+
+languages/%.ts: $(drmqtonly_SOURCES)
+	mkdir -p languages
+	test -f $@ || cp -p ../common/GUI-QT/$@ languages/. || exit 0
+	$(LUPDATE) $(drmqtonly_SOURCES) -ts $@
+
+languages/%.qm: languages/%.ts
+	$(LRELEASE) $<
+
+%.qm: languages/%.qm
+	cp $< dreamtr.qm
 
 else
 drm_SOURCES = $(drmwithoutqt_SOURCES)
