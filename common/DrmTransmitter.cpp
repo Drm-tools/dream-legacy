@@ -170,6 +170,9 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 
 		/* Text message */
 		Param.Service[0].AudioParam.bTextflag = TRUE;
+
+		/* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
+		Param.Service[0].iServiceDescr = 15; /* 15 -> other music */
 	}
 	else
 	{
@@ -184,6 +187,10 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 		Param.Service[0].DataParam.iPacketLen = 45; /* TEST */
 		Param.Service[0].DataParam.eDataUnitInd = CParameter::DU_DATA_UNITS;
 		Param.Service[0].DataParam.eAppDomain = CParameter::AD_DAB_SPEC_APP;
+
+		/* The value 0 indicates that the application details are provided
+		   solely by SDC data entity type 5 */
+		Param.Service[0].iServiceDescr = 0;
 	}
 
 	/* Length of part B is set automatically (equal error protection (EEP),
@@ -200,9 +207,6 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 
 	/* Language (see TableFAC.h, "strTableLanguageCode[]") */
 	Param.Service[0].iLanguage = 5; /* 5 -> english */
-
-	/* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
-	Param.Service[0].iServiceDescr = 15; /* 15 -> other music */
 
 	/* Interleaver mode of MSC service. Long interleaving (2 s): SI_LONG,
 	   short interleaving (400 ms): SI_SHORT */
