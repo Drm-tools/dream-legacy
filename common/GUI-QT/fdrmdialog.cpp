@@ -731,6 +731,13 @@ QString	FDRMDialog::SetBitrIDStr(int iServiceID)
 void FDRMDialog::customEvent(QCustomEvent* Event)
 {
 	if (Event->type() == QEvent::User + 11)
-		pSysEvalDlg->SetStatus(((DRMEvent*) Event)->iMessType, 
-			((DRMEvent*) Event)->iStatus);
+	{
+		int iMessType = ((DRMEvent*) Event)->iMessType;
+		int iStatus = ((DRMEvent*) Event)->iStatus;
+
+		if (iMessType == MS_MOT_OBJ_STAT)
+			pMultiMediaDlg->SetStatus(iMessType, iStatus);
+		else
+			pSysEvalDlg->SetStatus(iMessType, iStatus);
+	}
 }

@@ -40,6 +40,7 @@
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../datadecoding/DABData.h"
+#include "MultColorLED.h"
 
 extern CDRMReceiver	DRMReceiver;
 
@@ -52,6 +53,8 @@ class MultimediaDlg : public MultimediaDlgBase
 public:
 	MultimediaDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
 		WFlags f = 0);
+
+	void SetStatus(int MessID, int iMessPara);
 
 protected:
 	QTimer			Timer;

@@ -59,10 +59,17 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 
 		CRC = CRCObject.GetCRC();
 
+		/* Store result in vector and show CRC in multimedia window */
 		if (CRC == (_UINT32BIT) (*pvecInputData).Separate(16))
+		{
 			veciCRCOk[j] = 1; /* CRC ok */
+			PostWinMessage(MS_MOT_OBJ_STAT, 0); /* Green light */
+		}
 		else
+		{
 			veciCRCOk[j] = 0; /* CRC wrong */
+			PostWinMessage(MS_MOT_OBJ_STAT, 2); /* Red light */
+		}
 	}
 
 
@@ -183,9 +190,10 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 						switch (iDABUserAppIdent)
 						{
 						case 2: /* MOTSlideshow */
+							/* Packet unit decoding */
 							DABData[iPacketID].
 								AddDataUnit(DataUnit[iPacketID].vecbiData,
-									MOTPicture);
+								MOTPicture);
 							break;
 						}
 					}

@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>400</width>
+            <width>396</width>
             <height>361</height>
         </rect>
     </property>
@@ -60,7 +60,7 @@
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout6</cstring>
+                <cstring>Layout2</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -71,6 +71,38 @@
                     <name>spacing</name>
                     <number>6</number>
                 </property>
+                <widget>
+                    <class>QLabel</class>
+                    <property stdset="1">
+                        <name>name</name>
+                        <cstring>TextLabel1</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>text</name>
+                        <string>Receiving Status:</string>
+                    </property>
+                </widget>
+                <widget>
+                    <class>CMultColorLED</class>
+                    <property stdset="1">
+                        <name>name</name>
+                        <cstring>LEDStatus</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>minimumSize</name>
+                        <size>
+                            <width>13</width>
+                            <height>13</height>
+                        </size>
+                    </property>
+                    <property stdset="1">
+                        <name>maximumSize</name>
+                        <size>
+                            <width>13</width>
+                            <height>13</height>
+                        </size>
+                    </property>
+                </widget>
                 <spacer>
                     <property>
                         <name>name</name>
@@ -115,10 +147,30 @@
         </widget>
     </vbox>
 </widget>
+<customwidgets>
+    <customwidget>
+        <class>CMultColorLED</class>
+        <header location="local">MultColorLED.h</header>
+        <sizehint>
+            <width>-1</width>
+            <height>-1</height>
+        </sizehint>
+        <container>0</container>
+        <sizepolicy>
+            <hordata>5</hordata>
+            <verdata>5</verdata>
+        </sizepolicy>
+        <pixmap>image1</pixmap>
+    </customwidget>
+</customwidgets>
 <images>
     <image>
         <name>image0</name>
         <data format="XPM.GZ" length="3102">789c5d96c96e1c470c86ef7a8a81793382726fb521c8c1926d79932cd9b22d39c881dd55a5c5da7739c8bba7fa27671044a5437f5d6c368bfcc99e17cf17fb3b5b8be72fd66e6ef9f6785a4c477cbd789eeecece9efefceb8fbfd79eb56e31ff5bbbe89efdb6f66cf776312db62fcef30ce6aa02358ded420b3e52ce3e824fc0b6f5dd00fe2a3cb810c0ac9ca2038fca39cafea45ce2084ec2b68913382bb751e229ca1d37e0636517e09f0fc1ce0d4efc7d10f6d149bc241c3a2fcf5f2e39c8be3cef63f63dfc3d806333b5b0e77be1367712dfb97037f476667a141ebcc443e72bf6e0ac1c343fdd8af17eda5766c92f7d541e3df24bbf94272ffe2f959317ff872b867f32ca59e379ad5c64df6c2d3948fc77c2b675f2fc4fe5c131ce2ff9e6b674c2725e5e9ebf4a4bd8f5c81f7d59b19cc70adbce237f7ca49ce53c7c23ec9c977a5f287ba93f17e5a07a947cb0f711f961897ff2bdc4cfb7cac98bfd7be1d80489ef1d3885ce497d9f94bd9e7f502e0eef27e8b79d9cf709dccedc75ae8dc2bbe0c10d2ceffb0caef954fd3b70ad96ee3733f7de26618ae0e8a6886664a39c5818faedd96596f3b27261c9ff28ec6b4ae0ff15380d9dc46b36846d1f44bfd0439f87de17f01b701906cdefe6cc433358c997f90e1efcc8e82f12b6deeb3ef235709f45af06fa1d6a7e03fc13fcdbc64665f4936dabbde8ef14dcf545f58cf960edd07ae8cd7870a86f947aa0bfed18b49f08f5b353e0007b827e6c0a639078a11f9b430a920fe4db969025bf1466764dd07e35bd721925de1fe0a9efad3cbf3eb31f629964deec801d0f49fc1d8043df58e93fd4db7365399fd817f693e81dfa0961ec93e81de70f894b823e09f322e4b14d92df6d70e98a95fc416fb11d6d9279f6169c86e53c443fc65ce78be80dfd1f4be706e987973373dbf941e60de63ff795c53ffa756e5f65e891bd9b444f2cf6814796f3205f3c255f903fc6f782eb7946793fe21bdbd18d529f3db09f92c44fd0ef185297e09fd03f639caa01fc635e8edcf5bdf41ffa7d1c934dd20f98b7634a7d96e751cfa94939cbfb10cfe4729b45ef987753aa4be23f0397d44a3d4dab3c687e91afd4e6a1487da0cfbaeb741ff330b9ec8be809f32ff9314da2a76fe0986d46bc4698f328f1994f33e7365a96f988ef63b58e721e46bcd9cd0bf6d07f0ea568bed14fd5ba2e30ce337b17ff8cef534ef3423cd053cebef1b28ffec9655e607c6f4a332fd8639e96a1d822fa46bcc539eba43e98e725d6f691fce3f74149cbf80ce675295d2d30f85e397792ff07e5baf0bc729f7be9ff33e5bac049b84e2cf9be07e57690fade0afba8bf5ff68463fdc483df29b751ec1f95fb28fdb1a9ec749e1f0873fdc3febaf01427d1efb5701eb2f4d3b1b2d69b3694b57ec4caf50f2cf9ab0728d2efa7ca9abfdd5b59860c9bd14c26996c8a395cde171b73648ecd89f9694effb3ceccb9b930972b9b2b736d6eeafd5b7367eeeb7a308fb07b32bf56362f7167dd6c9857e6b5796336cd5bf34eadde23be0feafda3d932dbe693d931bbe6b3f962f670f71c365fd5e69bf96ef6cd01ae7f98a65acdbe24efdd2acede0cc6eab533de84f9ea7f36910c11f17c4d234d94963694973654e8908ee8b85e9dd04f3aa5b395cdf9cae6822ee98aaee9866ee98eeee96165f3b8b279a25ff492d669835ed16b7a439bf5de5bf92d41efd5e6037da42ddaa64fb443bbf419f7be480e698feaf9e91b7da77d3aa01fd4504b3809f534a88d25479e0245364c555a234fe6b44ecdcc65590b3ee4233ee613fec9a77cc6e77cc1977cc5d77cc3abbacf8beff89e1ffeb31ef949b5f1cfef6bff021b56c2e2</data>
+    </image>
+    <image>
+        <name>image1</name>
+        <data format="XPM.GZ" length="646">789c6dd2c10ac2300c00d07bbf2234b7229d1ddec44f503c0ae2a154410f53d0ed20e2bf6bdb656dd6861dd23d9a66591b0587fd1654235ebded6f0edcd53e419d87ae7b1f4f9b8f906d0bfe012317426a70b07bdc2f3ec77f8ed6b89559061a0343d06a124cc105596482585094bc0ae599b04646c9018926491b2205e140c485cace25755c175d0a967b622ff900b8cc9c7d29af594ea722d589167f813aa852ba07d94b9dce296e883fe7bb163f23896753</data>
     </image>
 </images>
 <connections>

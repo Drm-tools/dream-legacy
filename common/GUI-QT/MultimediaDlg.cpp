@@ -35,6 +35,9 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal, WFla
 	/* Init transport ID for current picture */
 	iCurTransportID = 0;
 
+	/* Update time for color LED */
+	LEDStatus->SetUpdateTime(1000);
+
 	/* Connect timer signal */
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
@@ -120,4 +123,14 @@ void MultimediaDlg::hideEvent(QHideEvent* pEvent)
 {
 	/* Deactivate real-time timer */
 	Timer.stop();
+}
+
+void MultimediaDlg::SetStatus(int MessID, int iMessPara)
+{
+	switch(MessID)
+	{
+	case MS_MOT_OBJ_STAT:
+		LEDStatus->SetLight(iMessPara);
+		break;
+	}
 }
