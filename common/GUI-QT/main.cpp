@@ -31,9 +31,16 @@
 #include "../DrmTransmitter.h"
 #include "../DrmSimulation.h"
 
+#ifdef USE_QT_GUI
+# include <qapplication.h>
+# include <qthread.h>
+# include <qmessagebox.h>
+# include "fdrmdialog.h"
+#endif
+
 
 /* The receiver, transmitter and simulation are global objects */
-CDRMReceiver	DRMReceiver;
+CDRMReceiver	DRMReceiver; 
 CDRMTransmitter	DRMTransmitter;
 CDRMSimulation	DRMSimulation;
 
@@ -42,10 +49,6 @@ CDRMSimulation	DRMSimulation;
 /******************************************************************************\
 * Using GUI with QT                                                            *
 \******************************************************************************/
-#include <qapplication.h>
-#include <qthread.h>
-#include <qmessagebox.h>
-#include "fdrmdialog.h"
 
 /* This pointer is only used for the post-event routine */
 QApplication*	pApp = NULL;	
