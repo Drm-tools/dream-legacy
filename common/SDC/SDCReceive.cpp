@@ -336,10 +336,11 @@ void CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData, int iLengthOfBody,
 	_UINT32BIT	iModJulDate, iZ, iA, iAlpha, iB, iC, iD, iE;
 	_REAL		rJulDate, rF;
 
-	/* Modified Julian Date ------------------------------------------------- */
 	/* Get bits from stream */
 	iModJulDate = (*pbiData).Separate(17);
 
+
+	/* Modified Julian Date ------------------------------------------------- */
 	/* Definition of the Modified Julian Date */
 	rJulDate = (_REAL) iModJulDate + 2400000.5;
 
