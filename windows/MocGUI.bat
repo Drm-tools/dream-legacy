@@ -28,6 +28,7 @@ rem\****************************************************************************
 
 
 rem .h --------------
+%qtdir%\bin\moc.exe ..\common\GUI-QT\DialogUtil.h -o moc\moc_DialogUtil.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\MultColorLED.h -o moc\moc_MultColorLED.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\systemevalDlg.h -o moc\moc_systemevalDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\fdrmdialog.h -o moc\moc_fdrmdialog.cpp
