@@ -34,6 +34,7 @@
 #include <qpushbutton.h>
 #include <qcheckbox.h>
 #include <qwt_thermo.h>
+#include <qdatetime.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/systemevalDlgbase.h"
@@ -46,8 +47,12 @@
 #include "../Vector.h"
 #include "../DrmReceiver.h"
 
-
 extern CDRMReceiver	DRMReceiver;
+
+
+/* Definitions ****************************************************************/
+/* Define this macro if you prefer the QT-type of displaying date and time */
+#define GUI_QT_DATE_TIME_TYPE
 
 
 /* Classes ********************************************************************/
@@ -67,6 +72,7 @@ public:
 
 protected:
 	QTimer			Timer;
+	QTimer			TimerChart;
 	ECharType		CharType;
 	void			OnlyThisButDown(QPushButton* pButton);
     virtual void	showEvent(QShowEvent* pEvent);
@@ -74,6 +80,7 @@ protected:
 
 public slots:
 	void OnTimer();
+	void OnTimerChart();
 	void OnRadioTimeLinear();
 	void OnRadioTimeWiener();
 	void OnRadioFrequencyLinear();
@@ -89,5 +96,6 @@ public slots:
 	void OnButtonInpSpec();
 	void OnCheckFlipSpectrum();
 	void OnCheckBoxMuteAudio();
+	void OnCheckWriteLog();
 };
 

@@ -32,6 +32,14 @@
 FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	: FDRMDialogBase(parent, name, modal, f), AboutDlg(parent, 0, TRUE)
 {
+	/* Set version number in about dialog */
+	QString strVersionText;
+	strVersionText = "<center><b>Dream, Version ";
+	strVersionText += DREAM_VERSION_NUMBER;
+	strVersionText += "</b><br> Open-Source Software Implementation of a DRM-Receiver<br>";
+	strVersionText += "Under the GNU General Public License (GPL)</center>";
+	AboutDlg.TextLabelVersion->setText(strVersionText);
+
 	/* Set Menu */
 	QPopupMenu *HelpMenu = new QPopupMenu(this);
 	CHECK_PTR(HelpMenu);

@@ -124,24 +124,31 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 		this, SLOT(OnCheckFlipSpectrum()));
 	connect(CheckBoxMuteAudio, SIGNAL(clicked()),
 		this, SLOT(OnCheckBoxMuteAudio()));
+	connect(CheckBoxWriteLog, SIGNAL(clicked()),
+		this, SLOT(OnCheckWriteLog()));
 
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
+	connect(&TimerChart, SIGNAL(timeout()),
+		this, SLOT(OnTimerChart()));
+
+	/* Activte real-time timer */
+	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
 void systemevalDlg::showEvent(QShowEvent* pEvent)
 {
 	/* Activte real-time timers when window is shown */
-	Timer.start(GUI_CONTROL_UPDATE_TIME);
+	TimerChart.start(GUI_CONTROL_UPDATE_TIME);
 
 	/* Update window */
-	OnTimer();
+	OnTimerChart();
 }
 
 void systemevalDlg::hideEvent(QHideEvent* pEvent)
 {
-	/* Deactivate real-time timers when window is hide */
-	Timer.stop();
+	/* Deactivate real-time timers when window is hide to save CPU power */
+	TimerChart.stop();
 }
 
 void systemevalDlg::SetStatus(int MessID, int iMessPara)
@@ -178,71 +185,14 @@ void systemevalDlg::SetStatus(int MessID, int iMessPara)
 	}
 }
 
-void systemevalDlg::OnTimer()
+void systemevalDlg::OnTimerChart()
 {
 	CVector<_REAL>		vecrData;
 	CVector<_REAL>		vecrScale;
 	CVector<_COMPLEX>*	pveccData;
 	_REAL				rLowerBound, rHigherBound;
 	_REAL				rStartGuard, rEndGuard;
-	_REAL				rSNREstimate;
 	_REAL				rEstEndIR;
-
-	/* Show SNR if receiver is in tracking mode */
-	if (DRMReceiver.GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL)
-	{
-		/* SNR estimate. Problem: the SNR estimation from the
-		   channel estimation only works if wiener interpolation is activated.
-		   If, e.g., linear interpolation is chosen, the SNR from this
-		   estimation will be wrong */
-		if (DRMReceiver.GetChanEst()->GetTimeInt() == CChannelEstimation::TWIENER)
-			rSNREstimate = DRMReceiver.GetChanEst()->GetSNREstdB();
-		else
-			rSNREstimate = DRMReceiver.GetOFDMDemod()->GetSNREstdB();
-
-		TextSNR->setText("<center>SNR<br><b>" + 
-			QString().setNum(rSNREstimate, 'f', 1) + " dB</b></center>");
-	}
-	else
-	{
-		rSNREstimate = 0;
-
-		TextSNR->setText("SNR<br><b>---</b>");
-	}
-	ThermoSNR->setValue(rSNREstimate);
-
-
-#ifdef _DEBUG_
-	/* Metric values */
-	TextFreqOffset->setText("Metrics [dB]: \t\nMSC: " +
-		QString().setNum(
-		DRMReceiver.GetMSCMLC()->GetAccMetric(), 'f', 2) +	" / SDC: " +
-		QString().setNum(
-		DRMReceiver.GetSDCMLC()->GetAccMetric(), 'f', 2) +	" / FAC: " +
-		QString().setNum(
-		DRMReceiver.GetFACMLC()->GetAccMetric(), 'f', 2) + "\nDC Frequency: " +
-		QString().setNum(
-		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 3) + " Hz");
-#else
-	/* DC frequency */
-	TextFreqOffset->setText("DC Frequency of DRM Signal: \t\n" +
-		QString().setNum(
-		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
-#endif
-
-
-	/* Doppler estimation (assuming Gaussian doppler spectrum) */
-	TextWiener->setText("Doppler / Delay: \t\n" +
-		QString().setNum(
-		DRMReceiver.GetChanEst()->GetSigma(), 'f', 2) + " Hz / " +
-		QString().setNum(
-		DRMReceiver.GetChanEst()->GetDelay(), 'f', 2) + " ms");
-
-
-	/* Sample frequency offset estimation */
-	TextSampFreqOffset->setText("Sample Frequency Offset: \t\n" + QString().
-		setNum(DRMReceiver.GetParameters()->GetSampFreqEst(), 'f', 2) +	" Hz");
-
 
 	/* CHART ******************************************************************/
 	switch (CharType)
@@ -308,9 +258,73 @@ void systemevalDlg::OnTimer()
 			DRMReceiver.GetParameters()->eMSCCodingScheme);
 		break;
 	}
+}
+
+void systemevalDlg::OnTimer()
+{
+	/* SNR estimation ------------------------------------------------------- */
+	_REAL rSNREstimate;
+
+	/* Show SNR if receiver is in tracking mode */
+	if (DRMReceiver.GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL)
+	{
+		/* SNR estimate. Problem: the SNR estimation from the
+		   channel estimation only works if wiener interpolation is activated.
+		   If, e.g., linear interpolation is chosen, the SNR from this
+		   estimation will be wrong */
+		if (DRMReceiver.GetChanEst()->GetTimeInt() == CChannelEstimation::TWIENER)
+			rSNREstimate = DRMReceiver.GetChanEst()->GetSNREstdB();
+		else
+			rSNREstimate = DRMReceiver.GetOFDMDemod()->GetSNREstdB();
+
+		TextSNR->setText("<center>SNR<br><b>" + 
+			QString().setNum(rSNREstimate, 'f', 1) + " dB</b></center>");
+
+		/* Set SNR for log file */
+		DRMReceiver.GetParameters()->ReceptLog.SetSNR(rSNREstimate);
+	}
+	else
+	{
+		rSNREstimate = 0;
+
+		TextSNR->setText("SNR<br><b>---</b>");
+	}
+	ThermoSNR->setValue(rSNREstimate);
 
 
-	/* FAC info static ********************************************************/
+#ifdef _DEBUG_
+	/* Metric values */
+	TextFreqOffset->setText("Metrics [dB]: \t\nMSC: " +
+		QString().setNum(
+		DRMReceiver.GetMSCMLC()->GetAccMetric(), 'f', 2) +	" / SDC: " +
+		QString().setNum(
+		DRMReceiver.GetSDCMLC()->GetAccMetric(), 'f', 2) +	" / FAC: " +
+		QString().setNum(
+		DRMReceiver.GetFACMLC()->GetAccMetric(), 'f', 2) + "\nDC Frequency: " +
+		QString().setNum(
+		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 3) + " Hz");
+#else
+	/* DC frequency */
+	TextFreqOffset->setText("DC Frequency of DRM Signal: \t\n" +
+		QString().setNum(
+		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
+#endif
+
+
+	/* Doppler estimation (assuming Gaussian doppler spectrum) */
+	TextWiener->setText("Doppler / Delay: \t\n" +
+		QString().setNum(
+		DRMReceiver.GetChanEst()->GetSigma(), 'f', 2) + " Hz / " +
+		QString().setNum(
+		DRMReceiver.GetChanEst()->GetDelay(), 'f', 2) + " ms");
+
+
+	/* Sample frequency offset estimation */
+	TextSampFreqOffset->setText("Sample Frequency Offset: \t\n" + QString().
+		setNum(DRMReceiver.GetParameters()->GetSampFreqEst(), 'f', 2) +	" Hz");
+
+
+	/* FAC info static ------------------------------------------------------ */
 	QString strTemp;
 	QString m_StaticFACInfo = " ";
 
@@ -422,9 +436,10 @@ void systemevalDlg::OnTimer()
 	m_StaticFACInfo += "\r\n "; // ####################
 
 	/* Number of services */
-	strTemp = "Number of Services: \t\t";
-	strTemp += QString().setNum(DRMReceiver.GetParameters()->iNoAudioService +
-		DRMReceiver.GetParameters()->iNoDataService);
+	strTemp = "Number of Services: \t\tAudio: ";
+	strTemp += QString().setNum(DRMReceiver.GetParameters()->iNoAudioService);
+	strTemp += " / Data: ";
+	strTemp +=QString().setNum(DRMReceiver.GetParameters()->iNoDataService);
 	m_StaticFACInfo += strTemp;
 
 	m_StaticFACInfo += "\r\n "; // ####################
@@ -439,10 +454,21 @@ void systemevalDlg::OnTimer()
 		(DRMReceiver.GetParameters()->iYear == 0))
 	{
 		/* No time service available */
-		strTemp += "No time - date service available";
+		strTemp += "Service not available";
 	}
 	else
 	{
+#ifdef GUI_QT_DATE_TIME_TYPE
+		/* QT type of displaying date and time */
+		QDateTime DateTime;
+		DateTime.setDate(QDate(DRMReceiver.GetParameters()->iYear,
+			DRMReceiver.GetParameters()->iMonth,
+			DRMReceiver.GetParameters()->iDay));
+		DateTime.setTime(QTime(DRMReceiver.GetParameters()->iUTCHour,
+			DRMReceiver.GetParameters()->iUTCMin));
+
+		strTemp += DateTime.toString();
+#else
 		/* Set time and date */
 		QString strMin;
 		const int iMin = DRMReceiver.GetParameters()->iUTCMin;
@@ -463,6 +489,7 @@ void systemevalDlg::OnTimer()
 			QString().setNum(DRMReceiver.GetParameters()->iMonth) + "/" +
 			QString().setNum(DRMReceiver.GetParameters()->iDay) + "/" +
 			QString().setNum(DRMReceiver.GetParameters()->iYear);
+#endif
 	}
 
 	m_StaticFACInfo += strTemp;
@@ -596,3 +623,7 @@ void systemevalDlg::OnCheckBoxMuteAudio()
 	DRMReceiver.GetWriteData()->MuteAudio(CheckBoxMuteAudio->isChecked());
 }
 
+void systemevalDlg::OnCheckWriteLog()
+{
+	DRMReceiver.GetParameters()->ReceptLog.SetLog(CheckBoxWriteLog->isChecked());
+}
