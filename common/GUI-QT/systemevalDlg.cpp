@@ -1401,7 +1401,10 @@ void systemevalDlg::AddWhatsThisHelpChar(const ECharType NCharType)
 		/* SNR History */
 		strCurPlotHelp =
 			"<b>SNR History:</b> The history of the values for the "
-			"SNR and correctly decoded audio blocks is shown.";
+			"SNR and correctly decoded audio blocks is shown. The maximum "
+			"achievable number of correctly decoded audio blocks per DRM "
+			"frame is 10 or 5 depending on the audio sample rate (24 kHz "
+			"or 12 kHz AAC core bandwidth).";
 		break;
 	}
 
