@@ -75,16 +75,15 @@ public:
 #endif		
 		return pData[iPos];}
 
-#ifdef _DEBUG_
 	inline TData operator[](const int iPos) const {
+#ifdef _DEBUG_
 		if ((iPos < 0) || (iPos > iVectorSize - 1))
 		{
 			DebugError("Reading vector out of bounds", "Vector size",
 				iVectorSize, "New parameter", iPos);
 		}
-
-		return pData[iPos];}
 #endif
+		return pData[iPos];}
 
 	CVector<TData>&	operator=(const CVector<TData>& vecI) {
 #ifdef _DEBUG_
