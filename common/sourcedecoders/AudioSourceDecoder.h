@@ -51,6 +51,7 @@ public:
 	virtual ~CAudioSourceDecoder();
 
 protected:
+	class CInitErr {};
 	_BOOLEAN			bTextMessageUsed;
 	int					iNumAACFrames;
 	int					iNoHeaderBytes;

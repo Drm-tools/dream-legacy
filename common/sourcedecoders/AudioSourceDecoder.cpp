@@ -354,7 +354,7 @@ try
 
 		/* Check iAudioPayloadLen value, only positive values make sense */
 		if (iAudioPayloadLen < 0)
-			throw 0;
+			throw CInitErr();
 
 		/* Get number of bytes for higher protected blocks */
 		if (iLenAudHigh == 0)
@@ -418,10 +418,10 @@ try
 		iInputBlockSize = iTotalNoInputBits;
 	}
 	else
-		throw 0;
+		throw CInitErr();
 }
 
-catch(...)
+catch(CInitErr)
 {
 	/* Something was wrong, deactivate the module */
 	iInputBlockSize = 0;
