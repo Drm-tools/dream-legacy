@@ -112,9 +112,10 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	/* Init streams */
 	Param.ResetServicesStreams();
 
-	/* Use 6.3.6 to set these two parameters! */
-	Param.FACRepitition[0] = 0;
-	Param.FACNumRep = 1;
+	/* Use 6.3.6 to set these two parameters! If only one service with ID = 0
+	   is present, the following parameters are correct */
+	Param.FACRepetition[0] = 0;
+	Param.FACNumRep = 1; /* Length of the repetition pattern table */
 
 	/* Date, time */
 	Param.iDay = 0;
@@ -128,14 +129,35 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 
 
 	/**************************************************************************/
+	/* In the current version only one service and one stream is supported. The
+	   IDs must be 0 in both cases */
 	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
-	Param.iNumAudioService = 1;
-	Param.iNumDataService = 0;
-	Param.Service[0].AudioParam.iStreamID = 0;
 
 	Param.MSCPrLe.iPartA = 0;
 	Param.MSCPrLe.iPartB = 1;
 	Param.MSCPrLe.iHierarch = 0;
+
+	/* Either one audio or one data service can be chosen */
+	_BOOLEAN bIsAudio = FALSE;
+
+	if (bIsAudio == TRUE)
+	{
+		/* Audio */
+		Param.iNumAudioService = 1;
+		Param.iNumDataService = 0;
+
+		Param.Service[0].eAudDataFlag = CParameter::SF_AUDIO;
+		Param.Service[0].AudioParam.iStreamID = 0;
+	}
+	else
+	{
+		/* Data */
+		Param.iNumAudioService = 0;
+		Param.iNumDataService = 1;
+
+		Param.Service[0].eAudDataFlag = CParameter::SF_DATA;
+		Param.Service[0].DataParam.iStreamID = 0;
+	}
 
 	/* Length of part B is set automatically
 	   (equal error protection, if "= 0") */
