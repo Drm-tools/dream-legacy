@@ -268,21 +268,31 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 		else
 			PostWinMessage(MS_IOINTERFACE, 2); /* red light */
 
-		/* Write data to output buffer */
-		for (i = 0; i < iOutputBlockSize; i++)
+		/* Write data to output buffer. Do not set the switch command inside
+		   the for-loop for efficiency reasons */
+		switch (eInChanSelection)
 		{
-#ifdef MIX_INPUT_CHANNELS
-			/* Mix left and right channel together. Prevent overflow! First,
-			   copy recorded data from "short" in "int" type variables */
-			const int iLeftChan = vecsSoundBuffer[2 * i];
-			const int iRightChan = vecsSoundBuffer[2 * i + 1];
+		case CS_LEFT_CHAN:
+			for (i = 0; i < iOutputBlockSize; i++)
+				(*pvecOutputData)[i] = (_REAL) vecsSoundBuffer[2 * i];
+			break;
 
-			(*pvecOutputData)[i] = (_REAL) ((iLeftChan + iRightChan) / 2);
-#else
-			/* Use only desired channel, chosen by "RECORDING_CHANNEL" */
-			(*pvecOutputData)[i] =
-				(_REAL) vecsSoundBuffer[2 * i + RECORDING_CHANNEL];
-#endif
+		case CS_RIGHT_CHAN:
+			for (i = 0; i < iOutputBlockSize; i++)
+				(*pvecOutputData)[i] = (_REAL) vecsSoundBuffer[2 * i + 1];
+			break;
+
+		case CS_MIX_CHAN:
+			for (i = 0; i < iOutputBlockSize; i++)
+			{
+				/* Mix left and right channel together. Prevent overflow! First,
+				   copy recorded data from "short" in "int" type variables */
+				const int iLeftChan = vecsSoundBuffer[2 * i];
+				const int iRightChan = vecsSoundBuffer[2 * i + 1];
+
+				(*pvecOutputData)[i] = (_REAL) ((iLeftChan + iRightChan) / 2);
+			}
+			break;
 		}
 	}
 	else

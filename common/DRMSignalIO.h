@@ -55,14 +55,6 @@
    the following macro will enable the raw data option */
 #define FILE_DRM_USING_RAW_DATA
 
-/* If this flag is defined, both input channels are mixed together, therefore
-   no right or left channel choice must be made */
-#define MIX_INPUT_CHANNELS
-
-/* Chose recording channel: 0: Left, 1: Right, disabled if previous flag is
-   set! */
-#define RECORDING_CHANNEL			0
-
 
 /* Classes ********************************************************************/
 class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
@@ -118,10 +110,13 @@ protected:
 class CReceiveData : public CReceiverModul<_REAL, _REAL>
 {
 public:
+	enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN};
+
 	CReceiveData(CSound* pNS) : strInFileName("test/TransmittedData.txt"),
 		bUseSoundcard(TRUE), bNewUseSoundcard(TRUE), pSound(pNS),
 		pFileReceiver(NULL), bFippedSpectrum(FALSE),
-		vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0) {}
+		vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0),
+		eInChanSelection(CS_MIX_CHAN) {}
 	virtual ~CReceiveData();
 
 	_REAL GetLevelMeter() {return SignalLevelMeter.Level();}
@@ -132,6 +127,9 @@ public:
 
 	void SetReadFromFile(const string strNFN)
 		{bNewUseSoundcard = FALSE; strInFileName = strNFN; SetInitFlag();}
+
+	void SetInChanSel(const EInChanSel eNS) {eInChanSelection = eNS;}
+	EInChanSel GetInChanSel() {return eInChanSelection;}
 
 protected:
 	CSignalLevelMeter		SignalLevelMeter;
@@ -148,6 +146,8 @@ protected:
 	_BOOLEAN				bNewUseSoundcard;
 
 	string					strInFileName;
+
+	EInChanSel				eInChanSelection;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
