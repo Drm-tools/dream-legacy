@@ -54,7 +54,11 @@
 class CAudioSourceEncoder : public CTransmitterModul<_SAMPLE, _BINARY>
 {
 public:
-	CAudioSourceEncoder() : bUsingTextMessage(FALSE), hEncoder(NULL) {}
+	CAudioSourceEncoder() : bUsingTextMessage(FALSE)
+#ifdef USE_FAAC_LIBRARY
+		, hEncoder(NULL)
+#endif
+		{}
 	virtual ~CAudioSourceEncoder();
 
 	void SetTextMessage(const string& strText);
@@ -71,6 +75,7 @@ protected:
 	CDataEncoder			DataEncoder;
 	int						iTotPacketSize;
 	_BOOLEAN				bIsDataService;
+	int						iTotNumBitsForUsage;
 
 #ifdef USE_FAAC_LIBRARY
 	faacEncHandle			hEncoder;
@@ -85,6 +90,7 @@ protected:
 	CVector<int>			veciFrameLength;
 	int						iNumAACFrames;
 	int						iAudioPayloadLen;
+	int						iNumHigherProtectedBytes;
 
 	CAudioResample			ResampleObj;
 	CVector<_REAL>			vecTempResBufIn;
@@ -147,7 +153,6 @@ protected:
 	int					iLenDecOutPerChan;
 	int					iBadBlockCount;
 	int					iAudioPayloadLen;
-	int					iLenAudLow;
 
 	_BOOLEAN			bAudioWasOK;
 #endif
