@@ -37,20 +37,8 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 {
 	int i;
 
-	/* Filtering of output signal (FIR filter) ------------------------------ */
-	/* Transfer input data in Matlib library vector */
-	for (i = 0; i < iInputBlockSize; i++)
-	{
-		rvecDataReal[i] = (*pvecInputData)[i].real();
-		rvecDataImag[i] = (*pvecInputData)[i].imag();
-	}
-
-	/* Actual filter routine (use saved state vector) */
-	rvecDataReal = FftFilt(cvecB, rvecDataReal, rvecZReal, FftPlanBP);
-
-	if ((eOutputFormat == OF_IQ_POS) || (eOutputFormat == OF_IQ_NEG))
-		rvecDataImag = FftFilt(cvecB, rvecDataImag, rvecZImag, FftPlanBP);
-
+	/* Apply bandpass filter */
+	BPFilter.Process(*pvecInputData);
 
 	/* Convert vector type. Fill vector with symbols (collect them) */
 	const int iNs2 = iInputBlockSize * 2;
@@ -59,8 +47,10 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 		const int iCurIndex = iBlockCnt * iNs2 + i;
 
 		/* Imaginary, real */
-		const short sCurOutReal = (short) (rvecDataReal[i / 2] * rNormFactor);
-		const short sCurOutImag = (short) (rvecDataImag[i / 2] * rNormFactor);
+		const short sCurOutReal =
+			(short) ((*pvecInputData)[i / 2].real() * rNormFactor);
+		const short sCurOutImag =
+			(short) ((*pvecInputData)[i / 2].imag() * rNormFactor);
 
 		/* Envelope, phase */
 		const short sCurOutEnv =
@@ -165,90 +155,10 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 			throw CGenErr("The file " + strOutFileName + " cannot be created.");
 	}
 
-	/* Choose correct filter for chosen DRM bandwidth. Also, adjust offset
-	   frequency for different modes. E.g., 5 kHz mode is on the right side
-	   of the DC frequency */
-	CReal rBPFiltBW; /* Band-pass filter bandwidth */
-	const CReal rMargin = (CReal) 300.0; /* Hz */
 
-	switch (TransmParam.GetSpectrumOccup())
-	{
-	case SO_0:
-		rBPFiltBW = ((CReal) 4500.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
-
-		/* Completely on the right side of DC */
-		rNormCurFreqOffset =
-			(rDefCarOffset + (CReal) 2190.0) / SOUNDCRD_SAMPLE_RATE;
-		break;
-
-	case SO_1:
-		rBPFiltBW = ((CReal) 5000.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
-
-		/* Completely on the right side of DC */
-		rNormCurFreqOffset =
-			(rDefCarOffset + (CReal) 2440.0) / SOUNDCRD_SAMPLE_RATE;
-		break;
-
-	case SO_2:
-		rBPFiltBW = ((CReal) 9000.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
-
-		/* Centered */
-		rNormCurFreqOffset = rDefCarOffset / SOUNDCRD_SAMPLE_RATE;
-		break;
-
-	case SO_3:
-		rBPFiltBW = ((CReal) 10000.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
-
-		/* Centered */
-		rNormCurFreqOffset = rDefCarOffset / SOUNDCRD_SAMPLE_RATE;
-		break;
-
-	case SO_4:
-		rBPFiltBW = ((CReal) 18000.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
-
-		/* Main part on the right side of DC */
-		rNormCurFreqOffset =
-			(rDefCarOffset + (CReal) 4500.0) / SOUNDCRD_SAMPLE_RATE;
-		break;
-
-	case SO_5:
-		rBPFiltBW = ((CReal) 20000.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
-
-		/* Main part on the right side of DC */
-		rNormCurFreqOffset =
-			(rDefCarOffset + (CReal) 5000.0) / SOUNDCRD_SAMPLE_RATE;
-		break;
-	}
-
-	/* FFT plan is initialized with the long length */
-	FftPlanBP.Init(iSymbolBlockSize * 2);
-
-	/* State memory (init with zeros) and data vector */
-	rvecZReal.Init(iSymbolBlockSize, (CReal) 0.0);
-	rvecZImag.Init(iSymbolBlockSize, (CReal) 0.0);
-	rvecDataReal.Init(iSymbolBlockSize);
-	rvecDataImag.Init(iSymbolBlockSize);
-
-	/* "+ 1" because of the Nyquist frequency (filter in frequency domain) */
-	cvecB.Init(iSymbolBlockSize + 1);
-
-	/* Actual filter design */
-	CRealVector vecrFilter(iSymbolBlockSize);
-	vecrFilter = FirLP(rBPFiltBW, Nuttallwin(iSymbolBlockSize));
-
-	/* Copy actual filter coefficients. It is important to initialize the
-	   vectors with zeros because we also do a zero-padding */
-	CRealVector rvecB(2 * iSymbolBlockSize, (CReal) 0.0);
-
-	/* Modulate filter to shift it to the correct IF frequency */
-	for (int i = 0; i < iSymbolBlockSize; i++)
-	{
-		rvecB[i] =
-			vecrFilter[i] * Cos((CReal) 2.0 * crPi * rNormCurFreqOffset * i);
-	}
-
-	/* Transformation in frequency domain for fft filter */
-	cvecB = rfft(rvecB, FftPlanBP);
+	/* Init bandpass filter object */
+	BPFilter.Init(iSymbolBlockSize, rDefCarOffset,
+		TransmParam.GetSpectrumOccup());
 
 
 	/* All robustness modes and spectrum occupancies should have the same output
@@ -548,7 +458,8 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 
 	/* Get squared magnitude of spectrum */
 	CRealVector vecrSqMagSpect(iLenSpecWithNyFreq);
-	vecrSqMagSpect = SqMag(rfft(vecrFFTInput));
+	vecrSqMagSpect =
+		SqMag(rfft(vecrFFTInput * Hann(NUM_SMPLS_4_INPUT_SPECTRUM)));
 
 	/* Log power spectrum data */
 	for (i = 0; i < iLenSpecWithNyFreq; i++)

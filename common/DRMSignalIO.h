@@ -86,27 +86,22 @@ public:
 	}
 
 protected:
-	FILE*			pFileTransmitter;
-	CSound*			pSound;
-	CVector<short>	vecsDataOut;
-	int				iBlockCnt;
-	int				iNumBlocks;
-	EOutFormat		eOutputFormat;
+	FILE*				pFileTransmitter;
+	CSound*				pSound;
+	CVector<short>		vecsDataOut;
+	int					iBlockCnt;
+	int					iNumBlocks;
+	EOutFormat			eOutputFormat;
 
-	CReal			rDefCarOffset;
-	CRealVector		rvecZReal; /* State memory real part */
-	CRealVector		rvecZImag; /* State memory imaginary part */
-	CRealVector		rvecDataReal;
-	CRealVector		rvecDataImag;
-	CFftPlans		FftPlanBP;
-	CComplexVector	cvecB;
+	CDRMBandpassFilt	BPFilter;
+	CReal				rDefCarOffset;
 
-	CReal			rNormFactor;
+	CReal				rNormFactor;
 
-	int				iBigBlockSize;
+	int					iBigBlockSize;
 
-	string			strOutFileName;
-	_BOOLEAN		bUseSoundcard;
+	string				strOutFileName;
+	_BOOLEAN			bUseSoundcard;
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& Parameter);
