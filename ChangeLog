@@ -1,3 +1,11 @@
+1.2.2
+	- Lots of changes for AM demodulation: a separate main window for AM, noise reduction, 
+	  PLL and CW demodulation, changed AM bandpass filter
+	- SNR spectrum plot implemented in DRM-mode, which information is used to improve 
+	  reception under interference situations
+	- Added history plots for SNR/Audio, Delay/Doppler and Frequency/Sample Rate
+	- Small improvements and bug fixes
+
 1.1
 	- AAC encoder for Dream TX (using faac library)
 	- jpg-support for Windows version (using Freeimage library)
