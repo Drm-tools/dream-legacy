@@ -141,6 +141,14 @@ void CDRMPlot::OnTimerChart()
 			pDRMRec->GetParameters()->GetDCFrequency());
 		break;
 
+	case INP_SPEC_WATERF:
+		/* Get data from module */
+		pDRMRec->GetReceiver()->GetInputSpec(vecrData, vecrScale);
+
+		/* Prepare graph and set data */
+		SetInpSpecWaterf(vecrData, vecrScale);
+		break;
+
 	case INPUT_SIG_PSD:
 		/* Get data from module */
 		pDRMRec->GetReceiver()->GetInputPSD(vecrData, vecrScale);
@@ -252,6 +260,11 @@ void CDRMPlot::SetupChart(const ECharType eNewType)
 		/* Set up timer */
 		switch (eNewType)
 		{
+		case INP_SPEC_WATERF:
+			/* Very fast update */
+			TimerChart.changeInterval(GUI_CONTROL_UPDATE_WATERFALL);
+			break;
+
 		case AVERAGED_IR:
 		case TRANSFERFUNCTION:
 		case POWER_SPEC_DENSITY:
@@ -438,7 +451,9 @@ void CDRMPlot::SetupAvIR()
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, tr("Time [ms]"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, tr("IR [dB]"));
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Insert curves */
 	clear();
@@ -554,7 +569,9 @@ void CDRMPlot::SetupTranFct()
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, tr("TF [dB]"));
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	setAxisTitle(QwtPlot::yRight, tr("Group Delay [ms]"));
 	setAxisScale(QwtPlot::yRight, (double) -50.0, (double) 50.0);
@@ -604,7 +621,9 @@ void CDRMPlot::SetupAudioSpec()
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, "AS [dB]");
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::yLeft, (double) -90.0, (double) -20.0);
@@ -644,7 +663,9 @@ void CDRMPlot::SetupFreqSamOffsHist()
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, tr("Time [s]"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yRight, tr("Sample Rate Offset [Hz]"));
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Add main curves */
 	clear();
@@ -676,6 +697,7 @@ void CDRMPlot::SetFreqSamOffsHist(CVector<_REAL>& vecrData,
 
 	QString strYLeftLabel = tr("Freq. Offset [Hz] rel. to ") +
 		QString().setNum(rFreqOffAcquVal) + " Hz";
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, strYLeftLabel);
 
 	/* Customized auto-scaling. We adjust the y scale so that it is not larger
@@ -723,8 +745,10 @@ void CDRMPlot::SetupDopplerDelayHist()
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, tr("Delay [ms]"));
 	setAxisTitle(QwtPlot::yRight, tr("Doppler [Hz]"));
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::yLeft, (double) 0.0, (double) 10.0);
@@ -772,8 +796,10 @@ void CDRMPlot::SetupSNRAudHist()
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, tr("SNR [dB]"));
 	setAxisTitle(QwtPlot::yRight, tr("Corr. Dec. Audio / DRM-Frame"));
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Add main curves */
 	clear();
@@ -850,7 +876,9 @@ void CDRMPlot::SetupPSD()
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, tr("PSD [dB]"));
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::xBottom,
@@ -903,7 +931,9 @@ void CDRMPlot::SetupSNRSpectrum()
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, tr("WMER [dB]"));
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Add main curve */
 	clear();
@@ -963,7 +993,9 @@ void CDRMPlot::SetupInpSpec()
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, tr("Input Spectrum [dB]"));
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::xBottom,
@@ -1021,7 +1053,9 @@ void CDRMPlot::SetupInpPSD()
 	enableGridX(FALSE);
 	enableGridY(FALSE);
 	setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, tr("Input PSD [dB]"));
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Fixed scale */
 	const double dXScaleMax = (double) SOUNDCRD_SAMPLE_RATE / 2000;
@@ -1134,6 +1168,137 @@ void CDRMPlot::SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	replot();
 }
 
+void CDRMPlot::SetupInpSpecWaterf()
+{
+	setTitle(tr("Waterfall Input Spectrum"));
+	enableAxis(QwtPlot::yRight, FALSE);
+	enableGridX(FALSE);
+	enableGridY(FALSE);
+	setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
+	enableAxis(QwtPlot::yLeft, FALSE);
+
+	/* Fixed scale */
+	setAxisScale(QwtPlot::xBottom,
+		(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
+
+	/* Clear old plot data */
+	clear();
+
+	/* Clear background */
+	LastCanvasSize = canvas()->size(); /* Initial canvas size */
+	QPixmap Canvas(LastCanvasSize);
+	Canvas.fill(backgroundColor());
+	canvas()->setBackgroundPixmap(Canvas);
+}
+
+void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData,
+								CVector<_REAL>& vecrScale)
+{
+	int i, iStartScale, iEndScale;
+
+	/* First check if plot must be set up */
+	if (InitCharType != INP_SPEC_WATERF)
+	{
+		InitCharType = INP_SPEC_WATERF;
+		SetupInpSpecWaterf();
+	}
+
+	/* Calculate sizes */
+	const QSize CanvSize = canvas()->size();
+	int iLenScale = axisScaleDraw(QwtPlot::xBottom)->length();
+
+	if ((iLenScale > 0) && (iLenScale < CanvSize.width()))
+	{
+		/* Calculate start and end of scale (needed for the borders) */
+		iStartScale =
+			(int) Floor(((_REAL) CanvSize.width() - iLenScale) / 2) - 1;
+
+		iEndScale = iLenScale + iStartScale;
+	}
+	else
+	{
+		/* Something went wrong, use safe parameters */
+		iStartScale = 0;
+		iEndScale = CanvSize.width();
+		iLenScale = CanvSize.width();
+	}
+
+	/* Move complete block one line further. Use old bitmap */
+	const QPixmap* pBPixmap = canvas()->backgroundPixmap();
+
+	QPixmap Canvas(CanvSize);
+	/* In case the canvas size has changed or there is no bitmap, reset
+	   background */
+	if ((pBPixmap == NULL) || (LastCanvasSize != CanvSize))
+		Canvas.fill(backgroundColor());
+	else
+	{
+		bitBlt(&Canvas, 0, 1, pBPixmap, 0, 0,
+			CanvSize.width(), CanvSize.height() - 1, Qt::CopyROP);
+	}
+
+	/* Store current canvas size */
+	LastCanvasSize = CanvSize;
+
+	/* Paint new line (top line) */
+	QPainter Painter;
+	Painter.begin(&Canvas);
+
+	/* Left of the scale (left border) */
+	for (i = 0; i < iStartScale; i++)
+	{
+		/* Generate pixel */
+		Painter.setPen(backgroundColor());
+		Painter.drawPoint(i, 0); /* line 0 -> top line */
+	}
+
+	/* Actual waterfall data */
+	for (i = iStartScale; i < iEndScale; i++)
+	{
+		/* Init some constants */
+		const int iMaxHue = 359; /* Range of "Hue" is 0-359 */
+		const int iMaxSat = 255; /* Range of saturation is 0-255 */
+
+		/* Stretch width to entire canvas width */
+		const int iCurIdx =
+			(int) Round((_REAL) (i - iStartScale) / iLenScale * vecrData.Size());
+
+		/* Translate dB-values in colors */
+		const int iCurCol =
+			(int) Round((vecrData[iCurIdx] - MIN_VAL_INP_SPEC_Y_AXIS_DB) /
+			(MAX_VAL_INP_SPEC_Y_AXIS_DB - MIN_VAL_INP_SPEC_Y_AXIS_DB) *
+			iMaxHue);
+
+		/* Reverse colors and add some offset (to make it look a bit nicer) */
+		const int iColOffset = 60;
+		int iFinalCol = iMaxHue - iColOffset - iCurCol;
+		if (iFinalCol < 0) /* Prevent from out-of-range */
+			iFinalCol = 0;
+
+		/* Also change saturation to get dark colors when low level */
+		const int iCurSat = (int) ((1 - (_REAL) iFinalCol / iMaxHue) * iMaxSat);
+
+		/* Generate pixel */
+		Painter.setPen(QColor(iFinalCol, iCurSat, iCurSat, QColor::Hsv));
+		Painter.drawPoint(i, 0); /* line 0 -> top line */
+	}
+
+	/* Right of scale (right border) */
+	for (i = iEndScale; i < CanvSize.width(); i++)
+	{
+		/* Generate pixel */
+		Painter.setPen(backgroundColor());
+		Painter.drawPoint(i, 0); /* line 0 -> top line */
+	}
+
+	Painter.end();
+
+	/* Show the bitmap */
+	canvas()->setBackgroundPixmap(Canvas);
+
+	replot();
+}
+
 void CDRMPlot::SetupFACConst()
 {
 	/* Init chart for FAC constellation */
@@ -1142,7 +1307,9 @@ void CDRMPlot::SetupFACConst()
 	enableGridX(FALSE);
 	enableGridY(FALSE);
 	setAxisTitle(QwtPlot::xBottom, tr("Real"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Fixed scale (2 / sqrt(2)) */
 	setAxisScale(QwtPlot::xBottom, (double) -1.4142, (double) 1.4142);
@@ -1181,7 +1348,9 @@ void CDRMPlot::SetupSDCConst(const CParameter::ECodScheme eNewCoSc)
 	enableGridX(FALSE);
 	enableGridY(FALSE);
 	setAxisTitle(QwtPlot::xBottom, tr("Real"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Fixed scale (4 / sqrt(10)) */
 	setAxisScale(QwtPlot::xBottom, (double) -1.2649, (double) 1.2649);
@@ -1222,7 +1391,9 @@ void CDRMPlot::SetupMSCConst(const CParameter::ECodScheme eNewCoSc)
 	enableGridX(FALSE);
 	enableGridY(FALSE);
 	setAxisTitle(QwtPlot::xBottom, tr("Real"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Fixed scale (8 / sqrt(42)) */
 	setAxisScale(QwtPlot::xBottom, (double) -1.2344, (double) 1.2344);
@@ -1263,6 +1434,7 @@ void CDRMPlot::SetupAllConst()
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, tr("Real"));
+	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
 	/* Fixed scale */
@@ -1623,6 +1795,14 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 			"achievable number of correctly decoded audio blocks per DRM "
 			"frame is 10 or 5 depending on the audio sample rate (24 kHz "
 			"or 12 kHz AAC core bandwidth).");
+		break;
+
+	case INP_SPEC_WATERF:
+		/* Waterfall Display of Input Spectrum */
+		strCurPlotHelp =
+			tr("<b>Waterfall Display of Input Spectrum:</b> "
+			"The input spectrum is displayed as a waterfall type. The "
+			"different colors represent different levels.");
 		break;
 	}
 

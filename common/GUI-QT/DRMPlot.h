@@ -30,6 +30,9 @@
 #define DRMPLOT_H__FD6B2345234523453_804E1606C2AC__INCLUDED_
 
 #include <qwt_plot.h>
+#include <qwt_plot_canvas.h>
+#include <qwt_scldraw.h>
+#include <qpainter.h>
 #include <qtimer.h>
 #include <qwhatsthis.h>
 #include "../Vector.h"
@@ -38,6 +41,8 @@
 
 
 /* Definitions ****************************************************************/
+#define GUI_CONTROL_UPDATE_WATERFALL			100	/* Milliseconds */
+
 /* number of available color schemes for the plot */
 #define NUM_AVL_COLOR_SCHEMES_PLOT				3
 
@@ -93,7 +98,8 @@ public:
 		FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION,
 		POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM,
 		FREQ_SAM_OFFS_HIST, DOPPLER_DELAY_HIST, ALL_CONSTELLATION,
-		SNR_AUDIO_HIST, INPUT_SIG_PSD, SNR_SPECTRUM, INPUT_SIG_PSD_ANALOG};
+		SNR_AUDIO_HIST, INPUT_SIG_PSD, SNR_SPECTRUM, INPUT_SIG_PSD_ANALOG,
+		INP_SPEC_WATERF};
 
 	CDRMPlot(QWidget *p = 0, const char *name = 0);
 	virtual ~CDRMPlot() {}
@@ -119,6 +125,7 @@ public:
 	void SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 				   const _REAL rDCFreq, const _REAL rBWCenter = (_REAL) 0.0,
 				   const _REAL rBWWidth = (_REAL) 0.0);
+	void SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetFreqSamOffsHist(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
 							CVector<_REAL>& vecrScale,
 							const _REAL rFreqOffAcquVal);
@@ -164,6 +171,7 @@ protected:
 	void SetupMSCConst(const CParameter::ECodScheme eNewCoSc);
 	void SetupAllConst();
 	void SetupInpPSD();
+	void SetupInpSpecWaterf();
 
 	void AddWhatsThisHelpChar(const ECharType NCharType);
     virtual void showEvent(QShowEvent* pEvent);
@@ -176,6 +184,9 @@ protected:
 	QColor			SpecLine1ColorPlot;
 	QColor			SpecLine2ColorPlot;
 	QColor			PassBandColorPlot;
+	QColor			BckgrdColorPlot;
+
+	QSize			LastCanvasSize;
 
 	ECharType		CurCharType;
 	ECharType		InitCharType;

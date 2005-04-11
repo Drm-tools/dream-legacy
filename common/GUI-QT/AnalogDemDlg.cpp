@@ -124,6 +124,8 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(ButtonDRM, SIGNAL(clicked()), this, SIGNAL(SwitchToDRM()));
 	connect(MainPlot, SIGNAL(xAxisValSet(double)),
 		this, SLOT(OnChartxAxisValSet(double)));
+	connect(ButtonWaterfall, SIGNAL(clicked()),
+		this, SLOT(OnButtonWaterfall()));
 
 	/* Button groups */
 	connect(ButtonGroupDemodulation, SIGNAL(clicked(int)),
@@ -464,6 +466,15 @@ void AnalogDemDlg::OnChartxAxisValSet(double dVal)
 
 	/* Update chart */
 	MainPlot->Update();
+}
+
+void AnalogDemDlg::OnButtonWaterfall()
+{
+	/* Toggle between normal spectrum plot and waterfall spectrum plot */
+	if (ButtonWaterfall->state() == QButton::On)
+		MainPlot->SetupChart(CDRMPlot::INP_SPEC_WATERF);
+	else
+		MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
 }
 
 void AnalogDemDlg::AddWhatsThisHelp()

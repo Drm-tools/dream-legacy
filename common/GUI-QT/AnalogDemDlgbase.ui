@@ -94,6 +94,58 @@
                             <number>6</number>
                         </property>
                         <widget>
+                            <class>QPushButton</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>ButtonWaterfall</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>caption</name>
+                                <string></string>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>&amp;Waterfall</string>
+                            </property>
+                            <property stdset="1">
+                                <name>toggleButton</name>
+                                <bool>true</bool>
+                            </property>
+                            <property stdset="1">
+                                <name>autoDefault</name>
+                                <bool>true</bool>
+                            </property>
+                            <property stdset="1">
+                                <name>default</name>
+                                <bool>true</bool>
+                            </property>
+                            <property stdset="1">
+                                <name>toggleButton</name>
+                                <bool>true</bool>
+                            </property>
+                        </widget>
+                        <spacer>
+                            <property>
+                                <name>name</name>
+                                <cstring>Spacer2</cstring>
+                            </property>
+                            <property>
+                                <name>orientation</name>
+                                <enum>Vertical</enum>
+                            </property>
+                            <property>
+                                <name>sizeType</name>
+                                <enum>Expanding</enum>
+                            </property>
+                            <property>
+                                <name>sizeHint</name>
+                                <size>
+                                    <width>20</width>
+                                    <height>20</height>
+                                </size>
+                            </property>
+                        </spacer>
+                        <widget>
                             <class>QLabel</class>
                             <property stdset="1">
                                 <name>name</name>
@@ -114,7 +166,7 @@
                         <spacer>
                             <property>
                                 <name>name</name>
-                                <cstring>Spacer2</cstring>
+                                <cstring>Spacer2_2</cstring>
                             </property>
                             <property>
                                 <name>orientation</name>
@@ -491,7 +543,7 @@ Phase Offset</string>
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout4</cstring>
+                <cstring>Layout5</cstring>
             </property>
             <hbox>
                 <property stdset="1">
