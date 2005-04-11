@@ -195,10 +195,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 	/* Update window */
 	OnTimer();
-
-#ifdef _DEBUG_
-OnViewEvalDlg();
-#endif
 }
 
 FDRMDialog::~FDRMDialog()
