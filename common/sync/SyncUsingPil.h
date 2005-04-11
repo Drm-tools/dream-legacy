@@ -91,6 +91,7 @@ protected:
 	CReal					rSampleFreqEst;
 
 	int						iSymbCntFraSy;
+	int						iInitCntFraSy;
 
 	int						iNumSymPerFrame;
 

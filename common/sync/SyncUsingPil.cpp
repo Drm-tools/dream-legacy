@@ -101,74 +101,89 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		else
 			vecrCorrHistory.AddEnd(rResultIREst);
 
-		/* Search for maximum */
-		int iMaxIndex = 0;
-		CReal rMaxValue = -_MAXREAL;
-		for (i = 0; i < iNumSymPerFrame; i++)
+		/* Wait until history is filled completly */
+		if (iInitCntFraSy > 0)
+			iInitCntFraSy--;
+		else
 		{
-			if (vecrCorrHistory[i] > rMaxValue)
+			/* Search for maximum */
+			int iMaxIndex = 0;
+			CReal rMaxValue = -_MAXREAL;
+			for (i = 0; i < iNumSymPerFrame; i++)
 			{
-				rMaxValue = vecrCorrHistory[i];
-				iMaxIndex = i;
+				if (vecrCorrHistory[i] > rMaxValue)
+				{
+					rMaxValue = vecrCorrHistory[i];
+					iMaxIndex = i;
+				}
 			}
-		}
 
-		/* If maximum is in the middle of the interval -> check frame sync */
-		if (iMaxIndex == iMiddleOfInterval)
-		{
-			if (iSymbCntFraSy == iNumSymPerFrame - iMiddleOfInterval - 1)
+			/* For initial frame synchronization, use maximum directly */
+			if (bInitFrameSync == TRUE)
 			{
-				/* Reset flags */
-				bBadFrameSync = FALSE;
-				bFrameSyncWasOK = TRUE;
+				/* Reset init flag */
+				bInitFrameSync = FALSE;
 
-				/* Post Message for GUI (Good frame sync) */
-				PostWinMessage(MS_FRAME_SYNC, 0); /* green */
+				/* Set symbol ID index according to received data */
+				iSymbCntFraSy = iNumSymPerFrame - iMaxIndex - 1;
 			}
 			else
 			{
-				if (bBadFrameSync == TRUE)
+				/* If maximum is in the middle of the interval
+				   (check frame sync) */
+				if (iMaxIndex == iMiddleOfInterval)
 				{
-					/* Reset symbol ID index according to received data */
-					iSymbCntFraSy = iNumSymPerFrame - iMiddleOfInterval - 1;
-
-					/* Inform that symbol ID has changed */
-					bSymbolIDHasChanged = TRUE;
-
-					/* Reset flag */
-					bBadFrameSync = FALSE;
-
-					/* Post Message for GUI for bad frame sync (red light). Do
-					   not show any light for the very first acquisition of the
-					   sync right after an initialization */
-					if (bInitFrameSync == FALSE)
-						PostWinMessage(MS_FRAME_SYNC, 2); /* red */
-				}
-				else
-				{
-					/* One false detected frame sync should not reset the actual
-					   frame sync because the measurement could be wrong.
-					   Sometimes the frame sync detection gets false results. If
-					   the next time the frame sync is still unequal to the
-					   measurement, then correct it */
-					bBadFrameSync = TRUE;
-
-					if (bFrameSyncWasOK == TRUE)
+					if (iSymbCntFraSy == iNumSymPerFrame - iMiddleOfInterval - 1)
 					{
-						/* Post Message that frame sync was wrong but was not
-						   yet corrected (yellow light) */
-						PostWinMessage(MS_FRAME_SYNC, 1); /* yellow */
+						/* Reset flags */
+						bBadFrameSync = FALSE;
+						bFrameSyncWasOK = TRUE;
+
+						/* Post Message for GUI (Good frame sync) */
+						PostWinMessage(MS_FRAME_SYNC, 0); /* green */
 					}
 					else
-						PostWinMessage(MS_FRAME_SYNC, 2); /* red */
+					{
+						if (bBadFrameSync == TRUE)
+						{
+							/* Reset symbol ID index according to received
+							   data */
+							iSymbCntFraSy =
+								iNumSymPerFrame - iMiddleOfInterval - 1;
+
+							/* Inform that symbol ID has changed */
+							bSymbolIDHasChanged = TRUE;
+
+							/* Reset flag */
+							bBadFrameSync = FALSE;
+
+							PostWinMessage(MS_FRAME_SYNC, 2); /* red */
+						}
+						else
+						{
+							/* One false detected frame sync should not reset
+							   the actual frame sync because the measurement
+							   could be wrong. Sometimes the frame sync
+							   detection gets false results. If the next time
+							   the frame sync is still unequal to the
+							   measurement, then correct it */
+							bBadFrameSync = TRUE;
+
+							if (bFrameSyncWasOK == TRUE)
+							{
+								/* Post Message that frame sync was wrong but
+								   was not yet corrected (yellow light) */
+								PostWinMessage(MS_FRAME_SYNC, 1); /* yellow */
+							}
+							else
+								PostWinMessage(MS_FRAME_SYNC, 2); /* red */
+						}
+
+						/* Set flag for bad sync */
+						bFrameSyncWasOK = FALSE;
+					}
 				}
-
-				/* Set flag for bad sync */
-				bFrameSyncWasOK = FALSE;
 			}
-
-			/* Reset flag which shows that init was done */
-			bInitFrameSync = FALSE;
 		}
 	}
 	else
@@ -476,4 +491,7 @@ void CSyncUsingPil::StartAcquisition()
 	bBadFrameSync = TRUE;
 	bInitFrameSync = TRUE; /* Set flag to show that (re)-init was done */
 	bFrameSyncWasOK = FALSE;
+
+	/* Initialize count for filling the history buffer */
+	iInitCntFraSy = iNumSymPerFrame;
 }
