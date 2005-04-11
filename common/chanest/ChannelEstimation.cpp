@@ -32,10 +32,10 @@
 /* Implementation *************************************************************/
 void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	int			i, j, k;
-	int			iModSymNum;
-	_REAL		rCurSNREst;
-	_REAL		rOffsPDSEst;
+	int		i, j, k;
+	int		iModSymNum;
+	_REAL	rCurSNREst;
+	_REAL	rOffsPDSEst;
 
 	/* Check if symbol ID index has changed by the synchronization unit. If it
 	   has changed, reinit this module */
