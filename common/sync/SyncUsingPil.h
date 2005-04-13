@@ -45,6 +45,14 @@
 # define CONTR_SAMP_OFF_INTEGRATION		((_REAL) 3.0)
 #endif
 
+/* If this macro is defined, the DRM frame synchronization based on the impulse
+   response is used. The problem with this algorithm is that it does not perform
+   well if the IR is very long and / or the DRM bandwidth is small (only a few
+   scattered pilots are available)
+   If this macro is not defined, the DRM frame synchronization based on the
+   time pilots is used */
+#undef USE_DRM_FRAME_SYNC_IR_BASED
+
 
 /* Classes ********************************************************************/
 class CSyncUsingPil : public CReceiverModul<_COMPLEX, _COMPLEX>, 
@@ -77,12 +85,6 @@ protected:
 		CComplex	cPil1, cPil2;
 	};
 
-	/* Variables for frame synchronization */
-	CVector<CPilotCorr>		vecPilCorr;
-	int						iNumPilPairs;
-	CComplex				cR_HH;
-	CShiftRegister<CReal>	vecrCorrHistory;
-
 	/* Variables for frequency pilot estimation */
 	CVector<int>			iPosFreqPil;
 	CVector<CComplex>		cOldFreqPil;
@@ -94,6 +96,7 @@ protected:
 	int						iInitCntFraSy;
 
 	int						iNumSymPerFrame;
+	int						iNumCarrier;
 
 	_BOOLEAN				bBadFrameSync;
 	_BOOLEAN				bInitFrameSync;
@@ -109,12 +112,22 @@ protected:
 	CReal					rLamFreqOff;
 	CComplex				cFreqOffVec;
 
+
+	/* Variables for frame synchronization */
+	CShiftRegister<CReal>	vecrCorrHistory;
+
+#ifdef USE_DRM_FRAME_SYNC_IR_BASED
 	/* DRM frame synchronization using impulse response */
 	int						iNumPilInFirstSym;
 	CComplexVector			veccChan;
 	CRealVector				vecrTestImpResp;
-	int						iNumCarrier;
 	CFftPlans				FftPlan;
+#else
+	/* DRM frame synchronization based on time pilots */
+	CVector<CPilotCorr>		vecPilCorr;
+	int						iNumPilPairs;
+	CComplex				cR_HH;
+#endif
 
 	ERobMode				eCurRobMode;
 

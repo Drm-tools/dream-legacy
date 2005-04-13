@@ -41,6 +41,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 
 	if ((bSyncInput == FALSE) && (bAquisition == TRUE))
 	{
+#ifdef USE_DRM_FRAME_SYNC_IR_BASED
 		/* DRM frame synchronization using impulse response ----------------- */
 		/* We assume that the current received OFDM symbol is the first symbol
 		   in a DRM frame and estimate the channel transfer function at the
@@ -76,6 +77,10 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Calculate peak to average */
 		const CReal rResultIREst = Max(vecrTestImpResp) / Sum(vecrTestImpResp);
 
+		/* Store correlation results in a shift register for finding the peak */
+		vecrCorrHistory.AddEnd(rResultIREst);
+
+#else
 
 		/* DRM frame synchronization based on time pilots ------------------- */
 		/* Calculate correlation of received cells with pilot pairs */
@@ -91,16 +96,12 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 			rResultPilPairCorr += Real(cCorrRes);
 		}
 
+		/* Store correlation results in a shift register for finding the peak */
+		vecrCorrHistory.AddEnd(rResultPilPairCorr);
+#endif
+
 
 		/* Finding beginning of DRM frame in results ------------------------ */
-		/* Store correlation results in a shift register for finding the peak.
-		   Method of IR should not be used with robustness mode A because the
-		   guard-interval is too short in this mode */
-		if (eCurRobMode == RM_ROBUSTNESS_MODE_A)
-			vecrCorrHistory.AddEnd(rResultPilPairCorr);
-		else
-			vecrCorrHistory.AddEnd(rResultIREst);
-
 		/* Wait until history is filled completly */
 		if (iInitCntFraSy > 0)
 			iInitCntFraSy--;
@@ -366,12 +367,15 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	iMiddleOfInterval = iNumSymPerFrame / 2;
 
 
+#ifdef USE_DRM_FRAME_SYNC_IR_BASED
 	/* DRM frame synchronization using impulse response, inits--------------- */
 	/* Get number of pilots in first symbol of a DRM frame */
 	iNumPilInFirstSym = 0;
 	for (i = 0; i < iNumCarrier; i++)
+	{
 		if (_IsScatPil(ReceiverParam.matiMapTab[0][i]))
 			iNumPilInFirstSym++;
+	}
 
 	/* Init vector for "test" channel estimation result */
 	veccChan.Init(iNumPilInFirstSym);
@@ -380,6 +384,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iNumPilInFirstSym);
 
+#else
 
 	/* DRM frame synchronization based on time pilots, inits ---------------- */
 	/* Allocate memory for storing pilots and indices. Since we do
@@ -416,6 +421,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	const CReal rArgExp = crPi * rArgSinc;
 
 	cR_HH = Sinc(rArgSinc) * CComplex(Cos(rArgExp), -Sin(rArgExp));
+#endif
 
 
 	/* Frequency offset estimation ------------------------------------------ */
