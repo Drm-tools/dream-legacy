@@ -466,7 +466,7 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 					{
 
 // Problem: if two different services point to the same stream, they have different
-// IDs and the Journaline is resetted! TODO: fix this problem...
+// IDs and the Journaline is reset! TODO: fix this problem...
 
 						/* Reset Journaline decoder and store the new service
 						   ID number */

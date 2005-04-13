@@ -667,7 +667,7 @@ void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
 	FIBITMAP* fbmp =
 		FreeImage_LoadFromHandle(FIF_JPEG, &memIO, (fi_handle) &memIO);
 
-	/* After the reading functions, the IO must be resetted for the writing */
+	/* After the reading functions, the IO must be reset for the writing */
 	memIO.Reset();
 
 	/* Actual conversion */
