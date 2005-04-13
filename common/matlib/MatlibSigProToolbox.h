@@ -46,6 +46,11 @@ CMatlibVector<CReal>	Hamming(const int iLen);
 CMatlibVector<CReal>	Nuttallwin(const int iLen);
 CMatlibVector<CReal>	Bartlett(const int iLen);
 CMatlibVector<CReal>	Triang(const int iLen);
+CMatlibVector<CReal>	Kaiser(const int iLen, const CReal rBeta);
+
+
+/* Bessel function */
+CReal					Besseli(const CReal rNu, const CReal rZ);
 
 
 /* Filter data with a recursive (IIR) or nonrecursive (FIR) filter */
@@ -77,8 +82,8 @@ CMatlibVector<CReal>	FirLP(const CReal rNormBW,
 
 /* Complex FIR filter with decimation */
 CMatlibVector<CComplex>	FirFiltDec(const CMatlibVector<CComplex>& cvB,
-								   const CMatlibVector<CReal>& rvX,
-								   CMatlibVector<CReal>& rvZ,
+								   const CMatlibVector<CComplex>& cvX,
+								   CMatlibVector<CComplex>& cvZ,
 								   const int iDecFact);
 
 /* Squared magnitude */

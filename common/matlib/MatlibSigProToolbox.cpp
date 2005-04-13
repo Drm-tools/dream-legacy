@@ -173,6 +173,62 @@ CMatlibVector<CReal> Triang(const int iLen)
 	return fvRet;
 }
 
+CMatlibVector<CReal> Kaiser(const int iLen, const CReal rBeta)
+{
+	CReal		rX;
+	const int	iIsOdd = iLen % 2;
+	const int	n = (iLen + 1) / 2; /* Half vector size, round up */
+	CMatlibVector<CReal> fvRet(iLen);
+	CMatlibVector<CReal> fvW(n);
+
+	const CReal rNorm = Abs(Besseli((CReal) 0.0, rBeta));
+	const CReal rXind = (iLen - 1) * (iLen - 1);
+
+	if (iIsOdd == 0)
+		rX = (CReal) 0.5;
+	else
+		rX = (CReal) 0.0;
+
+	for (int i = 0; i < n; i++)
+	{
+		fvW[i] = Besseli((CReal) 0.0, rBeta * Sqrt((CReal) 1.0 -
+			(CReal) 4.0 * rX * rX / rXind)) / rNorm;
+		rX += (CReal) 1.0;
+	}
+
+	/* Symmetrical window */
+	fvRet.Merge(fvW(n, -1, iIsOdd + 1), fvW);
+
+	return Abs(fvRet);
+}
+
+CReal Besseli(const CReal rNu, const CReal rZ)
+{
+	const CReal	rEp = (CReal) 10e-9; /* Define accuracy */
+	const CReal	rY = rZ / (CReal) 2.0;
+	CReal		rReturn = (CReal) 1.0;
+	CReal		rD = (CReal) 1.0;
+	CReal		rS = (CReal) 1.0;
+
+#ifdef _DEBUG_
+	/* Only nu = 0 is supported right now! */
+	if (rNu != (CReal) 0.0)
+	{
+		DebugError("MatLibr: Besseli function", "The nu = ", rNu, \
+			" is not supported, only nu = ", 0);
+	}
+#endif
+
+	for (int i = 1; i <= 25 && rReturn * rEp <= rS; i++)
+	{
+		rD *= rY / i;
+		rS = rD * rD;
+		rReturn += rS;
+	}
+
+	return rReturn;
+}
+
 CMatlibVector<CReal> Randn(const int iLen)
 {
 	/* Add some constant distributed random processes together */
@@ -279,13 +335,13 @@ CMatlibVector<CReal> FirLP(const CReal rNormBW,
 }
 
 CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB,
-								   const CMatlibVector<CReal>& rvX,
-								   CMatlibVector<CReal>& rvZ,
+								   const CMatlibVector<CComplex>& cvX,
+								   CMatlibVector<CComplex>& cvZ,
 								   const int iDecFact)
 {
 	int			m, n, iCurPos;
-	const int	iSizeX = rvX.GetSize();
-	const int	iSizeZ = rvZ.GetSize();
+	const int	iSizeX = cvX.GetSize();
+	const int	iSizeZ = cvZ.GetSize();
 	const int	iSizeB = cvB.GetSize();
 	const int	iSizeXNew = iSizeX + iSizeZ;
 	const int	iSizeFiltHist = iSizeB - 1;
@@ -315,10 +371,10 @@ CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB,
 	}
 
 	CMatlibVector<CComplex>	cvY(iDecSizeY, VTY_TEMP);
-	CMatlibVector<CReal>	rvXNew(iSizeXNew);
+	CMatlibVector<CComplex>	cvXNew(iSizeXNew);
 
 	/* Add old values to input vector */
-	rvXNew.Merge(rvZ, rvX);
+	cvXNew.Merge(cvZ, cvX);
 
 	/* FIR filter */
 	for (m = 0; m < iDecSizeY; m++)
@@ -328,12 +384,12 @@ CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB,
 		cvY[m] = (CReal) 0.0;
 
 		for (n = 0; n < iSizeB; n++)
-			cvY[m] += cvB[n] * rvXNew[iCurPos - n];
+			cvY[m] += cvB[n] * cvXNew[iCurPos - n];
 	}
 
 	/* Save last samples in state vector */
-	rvZ.Init(iNewLenZ);
-	rvZ = rvXNew(iSizeXNew - iNewLenZ + 1, iSizeXNew);
+	cvZ.Init(iNewLenZ);
+	cvZ = cvXNew(iSizeXNew - iNewLenZ + 1, iSizeXNew);
 
 	return cvY;
 }
