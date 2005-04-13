@@ -81,7 +81,6 @@ drmwithoutqt_SOURCES = ../common/SimulationParameters.cpp \
 	../common/util/Settings.h \
 	../common/util/Utilities.h \
 	../common/SDC/SDC.h \
-	../common/ReceiverFilter.h \
 	../common/IQInputFilter.h \
 	../common/chanest/ChanEstTime.h \
 	../common/chanest/ChannelEstimation.h \
