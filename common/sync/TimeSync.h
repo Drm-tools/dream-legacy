@@ -34,7 +34,6 @@
 #include "../Vector.h"
 #include "../matlib/Matlib.h"
 #include "TimeSyncFilter.h"
-#include "../ReceiverFilter.h"
 
 
 /* Definitions ****************************************************************/
@@ -75,12 +74,12 @@ static float* fHilLPProt =				fHilLPProt5;
 
 #ifdef USE_FRQOFFS_TRACK_GUARDCORR
 /* Time constant for IIR averaging of frequency offset estimation */
-# define TICONST_FREQ_OFF_EST_GUCORR	((CReal) 60.0) /* sec */
+# define TICONST_FREQ_OFF_EST_GUCORR	((CReal) 1.0) /* sec */
 #endif
 
 
 /* Classes ********************************************************************/
-class CTimeSync : public CReceiverModul<_REAL, _REAL>
+class CTimeSync : public CReceiverModul<_COMPLEX, _COMPLEX>
 {
 public:
 	CTimeSync() : iTimeSyncPos(0), bSyncInput(FALSE), bTimingAcqu(FALSE),
@@ -110,7 +109,7 @@ protected:
 	int							iAveCorr;
 	int							iStepSizeGuardCorr;
 
-	CShiftRegister<_REAL>		HistoryBuf;
+	CShiftRegister<_COMPLEX>	HistoryBuf;
 	CShiftRegister<_COMPLEX>	HistoryBufCorr;
 	CShiftRegister<_REAL>		pMaxDetBuffer;
 	CRealVector					vecrHistoryFilt;
@@ -145,7 +144,7 @@ protected:
 
 	int							iSelectedMode;
 
-	CRealVector					rvecZ;
+	CComplexVector				cvecZ;
 	CComplexVector				cvecB;
 	CVector<_COMPLEX>			cvecOutTmpInterm;
 
@@ -171,8 +170,6 @@ protected:
 	int							iRMCorrBufSize;
 
 #ifdef USE_FRQOFFS_TRACK_GUARDCORR
-	CShiftRegister<_COMPLEX>	HistoryBufTrGuCorr;
-	CComplex					cCurExp;
 	CComplex					cFreqOffAv;
 	CReal						rLamFreqOff;
 	CReal						rNormConstFOE;

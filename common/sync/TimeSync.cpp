@@ -49,13 +49,13 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 	CReal			rMaxValRMCorr;
 	CReal			rSecHighPeak;
 	CReal			rFreqOffsetEst;
-	CRealVector		rvecInpTmp;
+	CComplexVector	cvecInpTmp;
 	CRealVector		rResMode(NUM_ROBUSTNESS_MODES);
 	/* Max number of detected peaks ("5" for safety reasons. Could be "2") */
 	CVector<int>	iNewStartIndexField(5);
 
 	/* Write new block of data at the end of shift register */
-	HistoryBuf.AddEnd((*pvecInputData), iInputBlockSize);
+	HistoryBuf.AddEnd(*pvecInputData, iInputBlockSize);
 
 	/* In case the time domain frequency offset estimation method is activated,
 	   the hilbert filtering of input signal must always be applied */
@@ -73,19 +73,19 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 		   performance with the 4.5 or 5 kHz modes (for the acquisition) */
 
 		/* The FIR filter intermediate buffer must be adjusted to the new
-		   input block size since the size can be vary */
-		rvecInpTmp.Init(iInputBlockSize);
+		   input block size since the size can be vary with time */
+		cvecInpTmp.Init(iInputBlockSize);
 
 		/* Copy CVector data in CMatlibVector */
 		for (i = 0; i < iInputBlockSize; i++)
-			rvecInpTmp[i] = (*pvecInputData)[i];
+			cvecInpTmp[i] = (*pvecInputData)[i];
 
 		/* Complex Hilbert filter. We use the copy constructor for storing
 		   the result since the sizes of the output vector varies with time.
 		   We decimate the signal with this function, too, because we only
 		   analyze a spectrum bandwith of approx. 5 [10] kHz */
 		CComplexVector cvecOutTmp(
-			FirFiltDec(cvecB, rvecInpTmp, rvecZ, GRDCRR_DEC_FACT));
+			FirFiltDec(cvecB, cvecInpTmp, cvecZ, GRDCRR_DEC_FACT));
 
 		/* Get size of new output vector */
 		iDecInpuSize = Size(cvecOutTmp);
@@ -111,28 +111,6 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 		   Therefore, the acquisition unit must work more precisely
 		   (see FreqSyncAcq.h) */
 
-		/* Apply the estimated frequency offset correction to the signal */
-		const CReal rNormCurFreqOffset = (CReal) 2.0 * crPi * GRDCRR_DEC_FACT *
-			(ReceiverParam.rFreqOffsetAcqui + ReceiverParam.rFreqOffsetTrack);
-
-		/* New rotation vector for exp() calculation */
-		const CComplex cExpStep =
-			CComplex(Cos(rNormCurFreqOffset), Sin(rNormCurFreqOffset));
-
-		for (i = 0; i < iDecInpuSize; i++)
-		{
-			cvecOutTmpInterm[i] = cvecOutTmp[i] * Conj(cCurExp);
-
-			/* Rotate exp-pointer on step further by complex multiplication with
-			   precalculated rotation vector cExpStep. This saves us from
-			   calling sin() and cos() functions all the time (iterative
-			   calculation of these functions) */
-			cCurExp *= cExpStep;
-		}
-
-		/* Add spectrum shifted data in history vector for correlation */
-		HistoryBufTrGuCorr.AddEnd(cvecOutTmpInterm, iDecInpuSize);
-
 		/* Guard-interval correlation at ML estimated timing position */
 		/* Calculate start points for correlation. Consider delay from
 		   Hilbert-filter */
@@ -147,8 +125,8 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 		{
 			/* Use start point from ML timing estimation. The input stream is
 			   automatically adjusted to have this point at "iDecSymBS" */
-			cGuardCorrFreqTrack += HistoryBufTrGuCorr[i + iCorrPosFirst] *
-				Conj(HistoryBufTrGuCorr[i + iCorrPosSec]);
+			cGuardCorrFreqTrack += HistoryBufCorr[i + iCorrPosFirst] *
+				Conj(HistoryBufCorr[i + iCorrPosSec]);
 		}
 
 		/* Average vector, real and imaginary part separately */
@@ -440,22 +418,30 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				/* If pre-defined number of outliers is exceed, correct */
 				if (iCorrCounter > NUM_SYM_BEFORE_RESET)
 				{
-					/* Correct filter-output */
-					rStartIndex = (CReal) iAveCorr / (NUM_SYM_BEFORE_RESET + 1);
-
-					/* Reset counter */
-					iCorrCounter = 0;
-					iAveCorr = 0;
-
 					/* If this is the first correction after an initialization
 					   was done, reset flag and do not show red light */
 					if (bInitTimingAcqu == TRUE)
+					{
+						/* Reset flag */
 						bInitTimingAcqu = FALSE;
+
+						/* Right after initialization, the first estimate is
+						   used for correction */
+						rStartIndex = (CReal) iNewStartIndexField[i];
+					}
 					else
 					{
+						/* Correct filter-output */
+						rStartIndex =
+							(CReal) iAveCorr / (NUM_SYM_BEFORE_RESET + 1);
+
 						/* GUI message that timing was corrected (red light) */
 						PostWinMessage(MS_TIME_SYNC, 2);
 					}
+
+					/* Reset counters */
+					iCorrCounter = 0;
+					iAveCorr = 0;
 				}
 				else
 				{
@@ -518,17 +504,14 @@ fflush(pFile);
 	   be larger than "0" since then the input block size would be also "0" and
 	   than the processing routine of the modul would not be called any more */
 	const int i2SymBlSize = iSymbolBlockSize + iSymbolBlockSize;
-	if (iStartIndex < HALF_MAX_NUM_TAPS_RECFILTER)
-		iStartIndex = HALF_MAX_NUM_TAPS_RECFILTER;
-	if (iStartIndex > i2SymBlSize - HALF_MAX_NUM_TAPS_RECFILTER)
-		iStartIndex = i2SymBlSize - HALF_MAX_NUM_TAPS_RECFILTER;
+	if (iStartIndex <= 0)
+		iStartIndex = 1;
+	if (iStartIndex >= i2SymBlSize)
+		iStartIndex = i2SymBlSize;
 
-	/* Cut out more than the useful part of the OFDM symbol so a pre-fft
-	   filtering can be applied in the next module */
-	const int iStart = iStartIndex - HALF_MAX_NUM_TAPS_RECFILTER;
-	const int iStop = iStartIndex + iDFTSize + HALF_MAX_NUM_TAPS_RECFILTER;
-	for (k = iStart; k < iStop; k++)
-		(*pvecOutputData)[k - iStart] = HistoryBuf[k];
+	/* Cut out the useful part of the OFDM symbol */
+	for (k = iStartIndex; k < iStartIndex + iDFTSize; k++)
+		(*pvecOutputData)[k - iStartIndex] = HistoryBuf[k];
 
 	/* If synchronized DRM input stream is used, overwrite the detected
 	   timing */
@@ -539,21 +522,11 @@ fflush(pFile);
 
 		/* Cut out guard-interval at right position -> no channel estimation
 		   needed when having only one path. No delay introduced in this
-		   module. In case of synchronized data, no receiver filter should
-		   be applied in the OFDM module, therefore add zeros at the beginning
-		   and end to get output size which is needed for the case with using
-		   a filter */
+		   module  */
 		for (k = iGuardSize; k < iSymbolBlockSize; k++)
 		{
-			(*pvecOutputData)[k - iGuardSize + HALF_MAX_NUM_TAPS_RECFILTER] =
+			(*pvecOutputData)[k - iGuardSize] = 
 				HistoryBuf[iTotalBufferSize - iInputBlockSize + k];
-		}
-
-		for (k = 0; k < HALF_MAX_NUM_TAPS_RECFILTER; k++)
-		{
-			(*pvecOutputData)[k] = (_REAL) 0.0;
-			(*pvecOutputData)[k + iDFTSize + HALF_MAX_NUM_TAPS_RECFILTER] =
-				(_REAL) 0.0;
 		}
 	}
 
@@ -641,7 +614,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 		rStartIndex = (CReal) iCenterOfBuf;
 
 	/* Some inits */
-	iCorrCounter = 0;
+	iCorrCounter = NUM_SYM_BEFORE_RESET;
 	iAveCorr = 0;
 	bInitTimingAcqu = TRUE; /* Flag to show that init was done */
 
@@ -744,12 +717,6 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	}
 
 #ifdef USE_FRQOFFS_TRACK_GUARDCORR
-	/* Allocate memory for vector and zero out */
-	HistoryBufTrGuCorr.Init(iCorrBuffSize, (CReal) 0.0);
-
-	/* Start with phase null (can be arbitrarily chosen) */
-	cCurExp = (_REAL) 1.0;
-
 	/* Init vector for averaging the frequency offset estimation */
 	cFreqOffAv = CComplex((CReal) 0.0, (CReal) 0.0);
 
@@ -764,11 +731,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iSymbolBlockSize; /* For the first loop */
-
-	/* We need more data then only iDFTSize since a pre-fft filtering can be
-	   applied in the next module. "2 *" because we need additional data at the
-	   beginning and at the end */
-	iOutputBlockSize = iDFTSize + 2 * HALF_MAX_NUM_TAPS_RECFILTER;
+	iOutputBlockSize = iDFTSize;
 }
 
 void CTimeSync::StartAcquisition()
@@ -787,6 +750,10 @@ void CTimeSync::StartAcquisition()
 
 	/* Set correction counter so that a non-linear correction is performed right
 	   at the beginning */
+
+// Problem: this settings is overwritten in the Init caused by setting the
+// SetInitFlag() two commands above. TODO: Find nice solution
+
 	iCorrCounter = NUM_SYM_BEFORE_RESET;
 
 	/* Reset the buffers which are storing data for correlation (for robustness
@@ -815,7 +782,7 @@ void CTimeSync::SetFilterTaps(CReal rNewOffsetNorm)
 			fHilLPProt[i] * Sin((CReal) 2.0 * crPi * rNewOffsetNorm * i));
 
 	/* Init state vector for filtering with zeros */
-	rvecZ.Init(NUM_TAPS_HILB_FILT - 1, (CReal) 0.0);
+	cvecZ.Init(NUM_TAPS_HILB_FILT - 1, (CReal) 0.0);
 }
 
 int CTimeSync::GetIndFromRMode(ERobMode eNewMode)
