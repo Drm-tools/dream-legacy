@@ -98,6 +98,13 @@ using namespace std; /* Because of the library: "complex" */
    method and should not be activated for the "regular" version of Dream */
 #undef USE_MAX_LOG_MAP
 
+/* This method tries to speed up the audio output after a re-synchronization
+   when long symbol interleaver is used. We work with erasure symbols to mark
+   data which is not yet received. We hope that the channel decoder can still
+   decode audio even if not all data is yet received to fill the interleaver
+   history */
+#define USE_ERASURE_FOR_FASTER_ACQ
+
 
 /* Define the application specific data-types ------------------------------- */
 typedef	double							_REAL;
@@ -129,6 +136,11 @@ typedef unsigned int uint16_t;
 #define SIZEOF__BYTE					8
 #define _MAXSHORT						32767
 #define _MAXREAL						((_REAL) 3.4e38) /* Max for float */
+
+#ifdef USE_ERASURE_FOR_FASTER_ACQ
+/* Use max-value for showing that this is an erasure */ 
+# define ERASURE_TAG_VALUE				_MAXREAL
+#endif
 
 
 /* MAP ---------------------------------------------------------------------- */
@@ -192,6 +204,9 @@ public:
 class CEquSig
 {
 public:
+	CEquSig() : cSig(_COMPLEX((_REAL) 0.0, (_REAL) 0.0)), rChan((_REAL) 0.0) {}
+	CEquSig(const _COMPLEX cNS, const _REAL rNC) : cSig(cNS), rChan(rNC) {}
+
 	_COMPLEX	cSig; /* Actual signal */
 	_REAL		rChan; /* Channel power at this cell */
 };

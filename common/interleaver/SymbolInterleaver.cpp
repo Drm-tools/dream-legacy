@@ -172,16 +172,31 @@ void CSymbDeinterleaver::InitInternal(CParameter& ReceiverParam)
 	}
 
 	/* Always allocate memory for long interleaver case (interleaver memory) */
-	matcDeinterlMemory.Init(D_LENGTH_LONG_INTERL, iN_MUX);
+	matcDeinterlMemory.Init(D_LENGTH_LONG_INTERL, iN_MUX
+#ifdef USE_ERASURE_FOR_FASTER_ACQ
+		, CEquSig(ERASURE_TAG_VALUE, ERASURE_TAG_VALUE) /* Init with erasures */
+#endif		
+		);
 
 	/* Index for addressing the buffers */
 	veciCurIndex.Init(D_LENGTH_LONG_INTERL);
 	for (i = 0; i < D_LENGTH_LONG_INTERL; i++)
 		veciCurIndex[i] = i;
 
-	/* After an initialization we do not put out data befor the number symbols
-	   of the interleaver delay have been processed */
-	iInitCnt = iD - 1;
+#ifdef USE_ERASURE_FOR_FASTER_ACQ
+	if (ReceiverParam.eSimType == CParameter::ST_NONE)
+	{
+		/* Output right after the first block */
+		iInitCnt = (int) Min(1, iD);
+	}
+	else
+#endif
+	{
+		/* After an initialization we do not put out data befor the number
+		   symbols of the interleaver delay have been processed (this is
+		   also needed in any case for simulations) */
+		iInitCnt = iD - 1;
+	}
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iN_MUX;

@@ -1043,6 +1043,20 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 		break;
 	}
+
+#ifdef USE_ERASURE_FOR_FASTER_ACQ
+	for (i = 0; i < iInputBlockSize; i++)
+	{
+		/* If input symbol is erasure, reset metrics to zero */
+		if ((*pcInSymb)[i].rChan == ERASURE_TAG_VALUE)
+		{
+			vecMetric[2 * i].rTow0 = (_REAL) 0.0;
+			vecMetric[2 * i].rTow1 = (_REAL) 0.0;
+			vecMetric[2 * i + 1].rTow0 = (_REAL) 0.0;
+			vecMetric[2 * i + 1].rTow1 = (_REAL) 0.0;
+		}
+	}
+#endif
 }
 
 void CMLCMetric::Init(int iNewInputBlockSize, CParameter::ECodScheme eNewCodingScheme)
