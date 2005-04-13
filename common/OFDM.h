@@ -31,7 +31,6 @@
 
 #include "Parameter.h"
 #include "Modul.h"
-#include "ReceiverFilter.h"
 
 #ifdef HAVE_DFFTW_H
 # include <dfftw.h>
@@ -41,9 +40,6 @@
 
 
 /* Definitions ****************************************************************/
-/* Time constant for IIR averaging of signal and noise power estimation */
-#define TICONST_SIGNOIEST_OFDM			((_REAL) 30.0) /* sec */
-
 /* Time constant for IIR averaging of PSD estimation */
 #define TICONST_PSD_EST_OFDM			((CReal) 1.0) /* sec */
 
@@ -77,22 +73,17 @@ protected:
 	virtual void ProcessDataInternal(CParameter& TransmParam);
 };
 
-class COFDMDemodulation : public CReceiverModul<_REAL, _COMPLEX>
+class COFDMDemodulation : public CReceiverModul<_COMPLEX, _COMPLEX>
 {
 public:
 	/* bUseRecFilter shall be set the FALSE as default since in case of
 	   BERIDEAL simulations, no filter shall be applied */
-	COFDMDemodulation() : iLenPowSpec(0), bUseRecFilter(FALSE) {}
+	COFDMDemodulation() : iLenPowSpec(0) {}
 	virtual ~COFDMDemodulation() {}
 
 	void GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
-	void SetRecFilter(const _BOOLEAN bNewF) {bUseRecFilter = bNewF;}
-	_BOOLEAN GetRecFilter() {return bUseRecFilter;}
-
 protected:
-	CVector<_REAL>			vecrPDSResult;
-
 	CFftPlans				FftPlan;
 	CComplexVector			veccFFTInput;
 	CComplexVector			veccFFTOutput;
@@ -106,20 +97,8 @@ protected:
 	int						iGuardSize;
 	int						iNumCarrier;
 
-	_COMPLEX				cCurExp;
-
 	CReal					rLamPSD;
 
-	_REAL					rInternIFNorm;
-
-	_BOOLEAN				bUseRecFilter;
-	CRealVector				rvecA;
-	CRealVector				rvecB;
-	CRealVector				rvecZReal; /* State memory real part */
-	CRealVector				rvecZImag; /* State memory imaginary part */
-	CRealVector				rvecDataReal;
-	CRealVector				rvecDataImag;
-	int						iNumTapsRecFilt;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
