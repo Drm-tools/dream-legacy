@@ -122,15 +122,19 @@ template<class TData> void CBuffer<TData>::Init(const int iNewBufferSize)
 \******************************************************************************/
 template<class TData> void CSingleBuffer<TData>::Init(const int iNewBufferSize)
 {
-	CBuffer<TData>::Init(iNewBufferSize);
+	/* Only initialize buffer when size has changed, otherwise preserve data */
+	if (iNewBufferSize != iBufferSize)
+	{
+		CBuffer<TData>::Init(iNewBufferSize);
 
-	/* Reset buffer parameters (empty buffer) */
-	iFillLevel = 0;
+		/* Reset buffer parameters (empty buffer) */
+		iFillLevel = 0;
+	}
 }
 
 template<class TData> CVectorEx<TData>* CSingleBuffer<TData>::Get(const int iRequestedSize)
 {
-	/* Get data ***************************************************************/
+	/* Get data */
 #ifdef _DEBUG_
 	if (iRequestedSize > iFillLevel)
 	{
@@ -165,16 +169,20 @@ template<class TData> void CSingleBuffer<TData>::Put(const int iOfferedSize)
 \******************************************************************************/
 template<class TData> void CCyclicBuffer<TData>::Init(const int iNewBufferSize)
 {
-	CBuffer<TData>::Init(iNewBufferSize);
+	/* Only initialize buffer when size has changed, otherwise preserve data */
+	if (iNewBufferSize != iBufferSize)
+	{
+		CBuffer<TData>::Init(iNewBufferSize);
 
-	/* Make in- and output buffer the same size as the main buffer to
-	   make sure that the worst-case is no problem */
-	vecInOutBuffer.Init(iNewBufferSize);
+		/* Make in- and output buffer the same size as the main buffer to
+		   make sure that the worst-case is no problem */
+		vecInOutBuffer.Init(iNewBufferSize);
 
-	/* Reset buffer parameters (empty buffer) */
-	iPut = 0;
-	iGet = 0;
-	iBufferState = BS_EMPTY;
+		/* Reset buffer parameters (empty buffer) */
+		iPut = 0;
+		iGet = 0;
+		iBufferState = BS_EMPTY;
+	}
 }
 
 template<class TData> void CCyclicBuffer<TData>::Clear()
@@ -206,7 +214,8 @@ template<class TData> CVectorEx<TData>* CCyclicBuffer<TData>::Get(const int iReq
 	}
 #endif
 
-	/* Get data ***************************************************************/
+
+	/* Get data ------------------------------------------------------------- */
 	iElementCount = 0;
 
 	/* Test if data can be read in one block */
@@ -266,7 +275,8 @@ template<class TData> void CCyclicBuffer<TData>::Put(const int iOfferedSize)
 	}
 #endif
 
-	/* Put data ***************************************************************/
+
+	/* Put data ------------------------------------------------------------- */
 	iElementCount = 0;
 
 	/* Test if data can be written in one block */

@@ -37,7 +37,7 @@
 
 /* Classes ********************************************************************/
 /* CModul ------------------------------------------------------------------- */
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 class CModul  
 {
 public:
@@ -71,7 +71,7 @@ private:
 
 
 /* CTransmitterModul -------------------------------------------------------- */
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 class CTransmitterModul : public CModul<TInput, TOutput>
 {
 public:
@@ -106,7 +106,7 @@ protected:
 
 
 /* CReceiverModul ----------------------------------------------------------- */
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 class CReceiverModul : public CModul<TInput, TOutput>
 {
 public:
@@ -219,7 +219,7 @@ protected:
 /******************************************************************************\
 * CModul																	   *
 \******************************************************************************/
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 CModul<TInput, TOutput>::CModul()
 {
 	/* Initialize everything with zeros */
@@ -230,7 +230,7 @@ CModul<TInput, TOutput>::CModul()
 	pvecOutputData = NULL;
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 void CModul<TInput, TOutput>::ProcessDataThreadSave(CParameter& Parameter)
 {
 	/* Get a lock for the resources */
@@ -243,7 +243,7 @@ void CModul<TInput, TOutput>::ProcessDataThreadSave(CParameter& Parameter)
 	Unlock();
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 void CModul<TInput, TOutput>::InitThreadSave(CParameter& Parameter)
 {
 	/* Get a lock for the resources */
@@ -268,7 +268,7 @@ void CModul<TInput, TOutput>::InitThreadSave(CParameter& Parameter)
 	}
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 void CModul<TInput, TOutput>::Init(CParameter& Parameter)
 {
 	/* Init some internal variables */
@@ -278,7 +278,7 @@ void CModul<TInput, TOutput>::Init(CParameter& Parameter)
 	InitThreadSave(Parameter);
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 void CModul<TInput, TOutput>::Init(CParameter& Parameter, 
 								   CBuffer<TOutput>& OutputBuffer)
 {
@@ -294,15 +294,17 @@ void CModul<TInput, TOutput>::Init(CParameter& Parameter,
 	if (iMaxOutputBlockSize != 0)
 		OutputBuffer.Init(iMaxOutputBlockSize);
 	else
+	{
 		if (iOutputBlockSize != 0)
 			OutputBuffer.Init(iOutputBlockSize);
+	}
 }
 
 
 /******************************************************************************\
 * Transmitter modul (CTransmitterModul)										   *
 \******************************************************************************/
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 CTransmitterModul<TInput, TOutput>::CTransmitterModul()
 {
 	/* Initialize all member variables with zeros */
@@ -312,7 +314,7 @@ CTransmitterModul<TInput, TOutput>::CTransmitterModul()
 	pvecInputData3 = NULL;
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter)
 {
 	/* Init some internal variables */
@@ -323,7 +325,7 @@ void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter)
 	CModul<TInput, TOutput>::Init(Parameter);
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter, 
 											  CBuffer<TOutput>& OutputBuffer)
 {
@@ -335,7 +337,7 @@ void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter,
 	CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 _BOOLEAN CTransmitterModul<TInput, TOutput>::
 	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
 				CBuffer<TOutput>& OutputBuffer)
@@ -375,7 +377,7 @@ _BOOLEAN CTransmitterModul<TInput, TOutput>::
 	return TRUE;
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 void CTransmitterModul<TInput, TOutput>::
 	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
 				CBuffer<TInput>& InputBuffer2,
@@ -428,7 +430,7 @@ void CTransmitterModul<TInput, TOutput>::
 	}
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 void CTransmitterModul<TInput, TOutput>::
 	ReadData(CParameter& Parameter, CBuffer<TOutput>& OutputBuffer)
 {
@@ -451,7 +453,7 @@ void CTransmitterModul<TInput, TOutput>::
 	}
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 _BOOLEAN CTransmitterModul<TInput, TOutput>::
 	WriteData(CParameter& Parameter, CBuffer<TInput>& InputBuffer)
 {
@@ -478,7 +480,7 @@ _BOOLEAN CTransmitterModul<TInput, TOutput>::
 /******************************************************************************\
 * Receiver modul (CReceiverModul)											   *
 \******************************************************************************/
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 CReceiverModul<TInput, TOutput>::CReceiverModul()
 {
 	/* Initialize all member variables with zeros */
@@ -494,15 +496,15 @@ CReceiverModul<TInput, TOutput>::CReceiverModul()
 	bDoInit = FALSE;
 }
 
-template<class TInput, class TOutput> void 
+template<class TInput, class TOutput> void
 CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter)
 {
 	/* Init base-class */
 	CModul<TInput, TOutput>::Init(Parameter);
 }
 
-template<class TInput, class TOutput> void 
-CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter, 
+template<class TInput, class TOutput> void
+CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
 									  CBuffer<TOutput>& OutputBuffer)
 {
 	/* Init flag */
@@ -512,8 +514,8 @@ CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
 	CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
 }
 
-template<class TInput, class TOutput> void 
-CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter, 
+template<class TInput, class TOutput> void
+CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
 									  CBuffer<TOutput>& OutputBuffer,
 									  CBuffer<TOutput>& OutputBuffer2)
 {
@@ -530,12 +532,14 @@ CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
 	if (iMaxOutputBlockSize2 != 0)
 		OutputBuffer2.Init(iMaxOutputBlockSize2);
 	else
+	{
 		if (iOutputBlockSize2 != 0)
 			OutputBuffer2.Init(iOutputBlockSize2);
+	}
 }
 
-template<class TInput, class TOutput> void 
-CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter, 
+template<class TInput, class TOutput> void
+CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
 									  CBuffer<TOutput>& OutputBuffer,
 									  CBuffer<TOutput>& OutputBuffer2,
 									  CBuffer<TOutput>& OutputBuffer3)
@@ -556,24 +560,28 @@ CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
 	if (iMaxOutputBlockSize2 != 0)
 		OutputBuffer2.Init(iMaxOutputBlockSize2);
 	else
+	{
 		if (iOutputBlockSize2 != 0)
 			OutputBuffer2.Init(iOutputBlockSize2);
+	}
 
 	if (iMaxOutputBlockSize3 != 0)
 		OutputBuffer3.Init(iMaxOutputBlockSize3);
 	else
+	{
 		if (iOutputBlockSize3 != 0)
 			OutputBuffer3.Init(iOutputBlockSize3);
+	}
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 _BOOLEAN CReceiverModul<TInput, TOutput>::
-	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer, 
+	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
 				CBuffer<TOutput>& OutputBuffer)
 {
-	/* Check initialization flag. The initialization must be done OUTSIDE 
+	/* Check initialization flag. The initialization must be done OUTSIDE
 	   the processing routine. This is ensured by doing it here, where we
-	   have control of calling the processing routine. Therefore we 
+	   have control of calling the processing routine. Therefore we
 	   introduced the flag */
 	if (bDoInit == TRUE)
 	{
@@ -582,8 +590,6 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Reset init flag */
 		bDoInit = FALSE;
-
-		return TRUE;
 	}
 
 	/* Special case if input block size is zero */
@@ -615,9 +621,6 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 		/* Call the underlying processing-routine */
 		ProcessDataThreadSave(Parameter);
 	
-		/* Write processed data from internal memory in transfer-buffer */
-		OutputBuffer.Put(iOutputBlockSize);
-
 		/* Reset output-buffers if flag was set by processing routine */
 		if (bResetBuf == TRUE)
 		{
@@ -625,20 +628,25 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 			bResetBuf = FALSE;
 			OutputBuffer.Clear();
 		}
+		else
+		{
+			/* Write processed data from internal memory in transfer-buffer */
+			OutputBuffer.Put(iOutputBlockSize);
+		}
 	}
 
 	return bEnoughData;
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 _BOOLEAN CReceiverModul<TInput, TOutput>::
 	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
-				CBuffer<TOutput>& OutputBuffer, 
+				CBuffer<TOutput>& OutputBuffer,
 				CBuffer<TOutput>& OutputBuffer2)
 {
-	/* Check initialization flag. The initialization must be done OUTSIDE 
+	/* Check initialization flag. The initialization must be done OUTSIDE
 	   the processing routine. This is ensured by doing it here, where we
-	   have control of calling the processing routine. Therefore we 
+	   have control of calling the processing routine. Therefore we
 	   introduced the flag */
 	if (bDoInit == TRUE)
 	{
@@ -647,8 +655,6 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Reset init flag */
 		bDoInit = FALSE;
-
-		return TRUE;
 	}
 
 	/* This flag shows, if enough data was in the input buffer for processing */
@@ -670,10 +676,6 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 		/* Call the underlying processing-routine */
 		ProcessDataThreadSave(Parameter);
 	
-		/* Write processed data from internal memory in transfer-buffers */
-		OutputBuffer.Put(iOutputBlockSize);
-		OutputBuffer2.Put(iOutputBlockSize2);
-
 		/* Reset output-buffers if flag was set by processing routine */
 		if (bResetBuf == TRUE)
 		{
@@ -681,27 +683,38 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 			bResetBuf = FALSE;
 			OutputBuffer.Clear();
 		}
+		else
+		{
+			/* Write processed data from internal memory in transfer-buffer */
+			OutputBuffer.Put(iOutputBlockSize);
+		}
+
 		if (bResetBuf2 == TRUE)
 		{
 			/* Reset flag and clear buffer */
 			bResetBuf2 = FALSE;
 			OutputBuffer2.Clear();
 		}
+		else
+		{
+			/* Write processed data from internal memory in transfer-buffer */
+			OutputBuffer2.Put(iOutputBlockSize2);
+		}
 	}
 
 	return bEnoughData;
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 _BOOLEAN CReceiverModul<TInput, TOutput>::
 	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
-				CBuffer<TOutput>& OutputBuffer, 
-				CBuffer<TOutput>& OutputBuffer2, 
+				CBuffer<TOutput>& OutputBuffer,
+				CBuffer<TOutput>& OutputBuffer2,
 				CBuffer<TOutput>& OutputBuffer3)
 {
-	/* Check initialization flag. The initialization must be done OUTSIDE 
+	/* Check initialization flag. The initialization must be done OUTSIDE
 	   the processing routine. This is ensured by doing it here, where we
-	   have control of calling the processing routine. Therefore we 
+	   have control of calling the processing routine. Therefore we
 	   introduced the flag */
 	if (bDoInit == TRUE)
 	{
@@ -710,8 +723,6 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Reset init flag */
 		bDoInit = FALSE;
-
-		return TRUE;
 	}
 
 	/* This flag shows, if enough data was in the input buffer for processing */
@@ -734,11 +745,6 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 		/* Call the underlying processing-routine */
 		ProcessDataThreadSave(Parameter);
 	
-		/* Write processed data from internal memory in transfer-buffers */
-		OutputBuffer.Put(iOutputBlockSize);
-		OutputBuffer2.Put(iOutputBlockSize2);
-		OutputBuffer3.Put(iOutputBlockSize3);
-
 		/* Reset output-buffers if flag was set by processing routine */
 		if (bResetBuf == TRUE)
 		{
@@ -746,30 +752,47 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 			bResetBuf = FALSE;
 			OutputBuffer.Clear();
 		}
+		else
+		{
+			/* Write processed data from internal memory in transfer-buffer */
+			OutputBuffer.Put(iOutputBlockSize);
+		}
+
 		if (bResetBuf2 == TRUE)
 		{
 			/* Reset flag and clear buffer */
 			bResetBuf2 = FALSE;
 			OutputBuffer2.Clear();
 		}
+		else
+		{
+			/* Write processed data from internal memory in transfer-buffer */
+			OutputBuffer2.Put(iOutputBlockSize2);
+		}
+
 		if (bResetBuf3 == TRUE)
 		{
 			/* Reset flag and clear buffer */
 			bResetBuf3 = FALSE;
 			OutputBuffer3.Clear();
 		}
+		else
+		{
+			/* Write processed data from internal memory in transfer-buffer */
+			OutputBuffer3.Put(iOutputBlockSize3);
+		}
 	}
 
 	return bEnoughData;
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 void CReceiverModul<TInput, TOutput>::
 	ReadData(CParameter& Parameter, CBuffer<TOutput>& OutputBuffer)
 {
-	/* Check initialization flag. The initialization must be done OUTSIDE 
+	/* Check initialization flag. The initialization must be done OUTSIDE
 	   the processing routine. This is ensured by doing it here, where we
-	   have control of calling the processing routine. Therefore we 
+	   have control of calling the processing routine. Therefore we
 	   introduced the flag */
 	if (bDoInit == TRUE)
 	{
@@ -778,8 +801,6 @@ void CReceiverModul<TInput, TOutput>::
 
 		/* Reset init flag */
 		bDoInit = FALSE;
-
-		return;
 	}
 
 	/* INPUT-DRIVEN modul implementation in the receiver -------------------- */
@@ -789,9 +810,6 @@ void CReceiverModul<TInput, TOutput>::
 	/* Call the underlying processing-routine */
 	ProcessDataThreadSave(Parameter);
 
-	/* Write processed data from internal memory in transfer-buffer */
-	OutputBuffer.Put(iOutputBlockSize);
-
 	/* Reset output-buffers if flag was set by processing routine */
 	if (bResetBuf == TRUE)
 	{
@@ -799,15 +817,20 @@ void CReceiverModul<TInput, TOutput>::
 		bResetBuf = FALSE;
 		OutputBuffer.Clear();
 	}
+	else
+	{
+		/* Write processed data from internal memory in transfer-buffer */
+		OutputBuffer.Put(iOutputBlockSize);
+	}
 }
 
-template<class TInput, class TOutput> 
+template<class TInput, class TOutput>
 _BOOLEAN CReceiverModul<TInput, TOutput>::
 	WriteData(CParameter& Parameter, CBuffer<TInput>& InputBuffer)
 {
-	/* Check initialization flag. The initialization must be done OUTSIDE 
+	/* Check initialization flag. The initialization must be done OUTSIDE
 	   the processing routine. This is ensured by doing it here, where we
-	   have control of calling the processing routine. Therefore we 
+	   have control of calling the processing routine. Therefore we
 	   introduced the flag */
 	if (bDoInit == TRUE)
 	{
@@ -816,8 +839,6 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Reset init flag */
 		bDoInit = FALSE;
-
-		return TRUE;
 	}
 
 	/* Special case if input block size is zero and buffer, too */
@@ -870,7 +891,7 @@ void CSimulationModul<TInput, TOutput, TInOut2>::Init(CParameter& Parameter)
 
 template<class TInput, class TOutput, class TInOut2>
 void CSimulationModul<TInput, TOutput, TInOut2>::
-	Init(CParameter& Parameter, 
+	Init(CParameter& Parameter,
 		 CBuffer<TOutput>& OutputBuffer)
 {
 	/* Init base-class */
@@ -879,7 +900,7 @@ void CSimulationModul<TInput, TOutput, TInOut2>::
 
 template<class TInput, class TOutput, class TInOut2>
 void CSimulationModul<TInput, TOutput, TInOut2>::
-	Init(CParameter& Parameter, 
+	Init(CParameter& Parameter,
 		 CBuffer<TOutput>& OutputBuffer,
 		 CBuffer<TInOut2>& OutputBuffer2)
 {
@@ -894,14 +915,16 @@ void CSimulationModul<TInput, TOutput, TInOut2>::
 	if (iMaxOutputBlockSize2 != 0)
 		OutputBuffer2.Init(iMaxOutputBlockSize2);
 	else
+	{
 		if (iOutputBlockSize2 != 0)
 			OutputBuffer2.Init(iOutputBlockSize2);
+	}
 }
 
 template<class TInput, class TOutput, class TInOut2>
 void CSimulationModul<TInput, TOutput, TInOut2>::
-	TransferData(CParameter& Parameter, 
-				 CBuffer<TInput>& InputBuffer, 
+	TransferData(CParameter& Parameter,
+				 CBuffer<TInput>& InputBuffer,
 				 CBuffer<TOutput>& OutputBuffer)
 {
 	/* TransferData needed for simulation */
@@ -929,7 +952,7 @@ void CSimulationModul<TInput, TOutput, TInOut2>::
 
 template<class TInput, class TOutput, class TInOut2>
 _BOOLEAN CSimulationModul<TInput, TOutput, TInOut2>::
-	ProcessDataIn(CParameter& Parameter, 
+	ProcessDataIn(CParameter& Parameter,
 				  CBuffer<TInput>& InputBuffer,
 				  CBuffer<TInOut2>& InputBuffer2,
 				  CBuffer<TOutput>& OutputBuffer)
@@ -946,7 +969,7 @@ _BOOLEAN CSimulationModul<TInput, TOutput, TInOut2>::
 		/* Get vector from transfer-buffer */
 		pvecInputData = InputBuffer.Get(iInputBlockSize);
 		pvecInputData2 = InputBuffer2.Get(iInputBlockSize2);
-	
+
 		/* Query vector from output transfer-buffer for writing */
 		pvecOutputData = OutputBuffer.QueryWriteBuffer();
 
@@ -955,7 +978,7 @@ _BOOLEAN CSimulationModul<TInput, TOutput, TInOut2>::
 
 		/* Call the underlying processing-routine */
 		ProcessDataInternal(Parameter);
-	
+
 		/* Write processed data from internal memory in transfer-buffer */
 		OutputBuffer.Put(iOutputBlockSize);
 	}
@@ -966,8 +989,8 @@ _BOOLEAN CSimulationModul<TInput, TOutput, TInOut2>::
 template<class TInput, class TOutput, class TInOut2>
 _BOOLEAN CSimulationModul<TInput, TOutput, TInOut2>::
 	ProcessDataOut(CParameter& Parameter,
-				   CBuffer<TInput>& InputBuffer, 
-				   CBuffer<TOutput>& OutputBuffer, 
+				   CBuffer<TInput>& InputBuffer,
+				   CBuffer<TOutput>& OutputBuffer,
 				   CBuffer<TInOut2>& OutputBuffer2)
 {
 	/* This flag shows, if enough data was in the input buffer for processing */
@@ -984,10 +1007,10 @@ _BOOLEAN CSimulationModul<TInput, TOutput, TInOut2>::
 		/* Query vector from output transfer-buffer for writing */
 		pvecOutputData = OutputBuffer.QueryWriteBuffer();
 		pvecOutputData2 = OutputBuffer2.QueryWriteBuffer();
-		
+
 		/* Call the underlying processing-routine */
 		ProcessDataInternal(Parameter);
-	
+
 		/* Write processed data from internal memory in transfer-buffers */
 		OutputBuffer.Put(iOutputBlockSize);
 		OutputBuffer2.Put(iOutputBlockSize2);
