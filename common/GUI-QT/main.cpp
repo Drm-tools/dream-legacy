@@ -79,7 +79,8 @@ public:
 		/* Set thread priority (The working thread should have a higher priority
 		   than the GUI) */
 #ifdef _WIN32
-		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+		SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 #endif
 
 		try
