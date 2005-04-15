@@ -79,7 +79,6 @@ public:
 		/* Set thread priority (The working thread should have a higher priority
 		   than the GUI) */
 #ifdef _WIN32
-		SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 #endif
 
@@ -115,6 +114,14 @@ try
 	QTranslator translator(0);
 	if (translator.load("dreamtr"))
 		app.installTranslator(&translator);
+
+#ifdef _WIN32
+	/* Set priority call for this application */
+	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+
+	/* Low priority for GUI thread */
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+#endif
 
 	if (bIsReceiver == FALSE)
 	{
