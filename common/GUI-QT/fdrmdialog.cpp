@@ -358,10 +358,15 @@ void FDRMDialog::OnTimer()
 				m_StaticService[i] = "<b>" + strLabel + 
 					"</b>" + strSpace + SetServParamStr(i);
 
-				/* Bit-rate */
-				m_StaticService[i] += " (" + QString().setNum(pDRMRec->
-					GetParameters()->GetBitRateKbps(i, FALSE), 'f', 2) +
-					" kbps)";
+				/* Bit-rate (only show if greater than 0) */
+				const _REAL rBitRate =
+					pDRMRec->GetParameters()->GetBitRateKbps(i, FALSE);
+
+				if (rBitRate > (_REAL) 0.0)
+				{
+					m_StaticService[i] += " (" +
+						QString().setNum(rBitRate, 'f', 2) + " kbps)";
+				}
 
 				/* Show, if a multimedia stream is connected to this service */
 				if ((pDRMRec->GetParameters()->Service[i].
