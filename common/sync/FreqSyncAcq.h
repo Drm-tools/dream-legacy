@@ -95,17 +95,20 @@ protected:
 
 	CFftPlans					FftPlan;
 	CRealVector					vecrFFTInput;
-	CComplexVector				veccFFTOutput;
+	CRealVector					vecrSqMagFFTOut;
 	CRealVector					vecrHammingWin;
+	CRealVector					vecrFFTResHist;
 
-	int							iTotalBufferSize;
+	int							iFrAcFFTSize;
 	int							iHistBufSize;
+	int							iFFTResHistSize;
 
 	int							iFFTSize;
 
 	_BOOLEAN					bAquisition;
 
 	int							iAquisitionCounter;
+	int							iAverageCounter;
 
 	_BOOLEAN					bSyncInput;
 

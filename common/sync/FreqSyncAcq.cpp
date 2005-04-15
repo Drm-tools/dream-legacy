@@ -55,7 +55,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 		/* Start algorithm when history memory is filled -------------------- */
-		/* Wait until history memory is filled for the first time */
+		/* Wait until history memory is filled for the first FFT operation */
 		if (iAquisitionCounter > 0)
 		{
 			/* Decrease counter */
@@ -63,146 +63,157 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 		else
 		{
-			/* Average the "NUM_BLOCKS_USED_FOR_AV" blocks (frequency domain) */
+			/* Copy vector to matlib vector and calculate real-valued FFTW */
+			const int iStartIdx = iHistBufSize - iFrAcFFTSize;
+			for (i = 0; i < iFrAcFFTSize; i++)
+				vecrFFTInput[i] = vecrFFTHistory[i + iStartIdx];
 
-// TODO: more efficient implementation
+			/* Calculate power spectrum (X = real(F)^2 + imag(F)^2) */
+			vecrSqMagFFTOut =
+				SqMag(rfft(vecrFFTInput * vecrHammingWin, FftPlan));
 
-			CRealVector	vecrPSD(iHalfBuffer, (CReal) 0.0);
+			/* Store result (shift register) */
+// TODO: order does not care with this shift register -> more efficient solution possible
+			vecrFFTResHist.Merge(
+				vecrFFTResHist(iHalfBuffer + 1, iFFTResHistSize),
+				vecrSqMagFFTOut);
 
-			const int iNumBlFFT =
-				(NUM_BLOCKS_USED_FOR_AV - 1) * NUM_BLOCKS_4_FREQ_ACQU;
-			for (j = 0; j < iNumBlFFT; j++)
+			/* Wait until we have sufficient data for averaging */
+			if (iAverageCounter > 0)
 			{
-				/* Copy vector to matlib vector */
-				for (i = 0; i < iTotalBufferSize; i++)
-					vecrFFTInput[i] = vecrFFTHistory[i + j * RMB_FFT_SIZE_N];
-
-				/* Calculate real-valued FFTW (Hamming weighted) */
-				veccFFTOutput = rfft(vecrFFTInput * vecrHammingWin, FftPlan);
-
-				/* Calculate power spectrum (X = real(F)^2 + imag(F)^2) and
-				   average results */
-				for (i = 1; i < iHalfBuffer; i++)
-					vecrPSD[i] += SqMag(veccFFTOutput[i]);
+				/* Decrease counter */
+				iAverageCounter--;
 			}
-
-			/* Correlate known frequency-pilot structure with power
-			   spectrum */
-			for (i = 0; i < iSearchWinSize; i++)
+			else
 			{
-				vecrPSDPilCor[i] =
-					vecrPSD[i + veciTableFreqPilots[0]] +
-					vecrPSD[i + veciTableFreqPilots[1]] +
-					vecrPSD[i + veciTableFreqPilots[2]];
-			}
+				/* Average results */
+				CRealVector	vecrPSD(iHalfBuffer, (CReal) 0.0);
 
-
-			/* -----------------------------------------------------------------
-			   Low pass filtering over frequency axis. We do the filtering 
-			   from both sides, once from right to left and then from left 
-			   to the right side. Afterwards, these results are averaged */
-			/* From the left edge to the right edge */
-			vecrFiltResLR[0] = vecrPSDPilCor[0];
-			for (i = 1; i < iSearchWinSize; i++)
-			{
-				vecrFiltResLR[i] = (vecrFiltResLR[i - 1] - vecrPSDPilCor[i]) *
-					LAMBDA_FREQ_IIR_FILT + vecrPSDPilCor[i];
-			}
-
-			/* From the right edge to the left edge */
-			vecrFiltResRL[iSearchWinSize - 1] =
-				vecrPSDPilCor[iSearchWinSize - 1];
-			for (i = iSearchWinSize - 2; i >= 0; i--)
-			{
-				vecrFiltResRL[i] = (vecrFiltResRL[i + 1] - vecrPSDPilCor[i]) *
-					LAMBDA_FREQ_IIR_FILT + vecrPSDPilCor[i];
-			}
-
-			/* Average RL and LR filter outputs */
-			vecrFiltRes = vecrFiltResLR + vecrFiltResRL;
-	
-
-			/* Detect peaks by the distance to the filtered curve ----------- */
-			/* Get peak indices of detected peaks */
-			iNumDetPeaks = 0;
-			for (i = iStartDCSearch; i < iEndDCSearch; i++)
-			{
-				if (vecrPSDPilCor[i] / vecrFiltRes[i] > rPeakBoundFiltToSig)
+				for (j = 0; j < NUM_BLOCKS_USED_FOR_AV; j++)
 				{
-					veciPeakIndex[iNumDetPeaks] = i;
-					iNumDetPeaks++;
+					vecrPSD += vecrFFTResHist(j * iHalfBuffer + 1,
+						(j + 1) * iHalfBuffer);
 				}
-			}
 
-			/* Check, if at least one peak was detected */
-			if (iNumDetPeaks > 0)
-			{
+				/* Correlate known frequency-pilot structure with power
+				   spectrum */
+				for (i = 0; i < iSearchWinSize; i++)
+				{
+					vecrPSDPilCor[i] =
+						vecrPSD[i + veciTableFreqPilots[0]] +
+						vecrPSD[i + veciTableFreqPilots[1]] +
+						vecrPSD[i + veciTableFreqPilots[2]];
+				}
+
+
 				/* -------------------------------------------------------------
-				   The following test shall exclude sinusoid interferers in
-				   the received spectrum */
-				CVector<int> vecbFlagVec(iNumDetPeaks, 1);
-
-				/* Check all detected peaks in the "PSD-domain" if there are
-				   at least two peaks with approx the same power at the
-				   correct places (positions of the desired pilots) */
-				for (i = 0; i < iNumDetPeaks; i++)
+				   Low pass filtering over frequency axis. We do the filtering 
+				   from both sides, once from right to left and then from left 
+				   to the right side. Afterwards, these results are averaged */
+				/* From the left edge to the right edge */
+				vecrFiltResLR[0] = vecrPSDPilCor[0];
+				for (i = 1; i < iSearchWinSize; i++)
 				{
-					/* Fill the vector with the values at the desired 
-					   pilot positions */
-					vecrPSDPilPoin[0] =
-						vecrPSD[veciPeakIndex[i] + veciTableFreqPilots[0]];
-					vecrPSDPilPoin[1] =
-						vecrPSD[veciPeakIndex[i] + veciTableFreqPilots[1]];
-					vecrPSDPilPoin[2] =
-						vecrPSD[veciPeakIndex[i] + veciTableFreqPilots[2]];
+					vecrFiltResLR[i] =
+						(vecrFiltResLR[i - 1] - vecrPSDPilCor[i]) *
+						LAMBDA_FREQ_IIR_FILT + vecrPSDPilCor[i];
+				}
 
-					/* Sort, to extract the highest and second highest
-					   peak */
-					vecrPSDPilPoin = Sort(vecrPSDPilPoin);
+				/* From the right edge to the left edge */
+				vecrFiltResRL[iSearchWinSize - 1] =
+					vecrPSDPilCor[iSearchWinSize - 1];
+				for (i = iSearchWinSize - 2; i >= 0; i--)
+				{
+					vecrFiltResRL[i] =
+						(vecrFiltResRL[i + 1] - vecrPSDPilCor[i]) *
+						LAMBDA_FREQ_IIR_FILT + vecrPSDPilCor[i];
+				}
 
-					/* Debar peak, if it is much higher than second highest
-					   peak (most probably a sinusoid interferer) */
-					if (vecrPSDPilPoin[2] / vecrPSDPilPoin[1] >
-						MAX_RAT_PEAKS_AT_PIL_POS)
+				/* Average RL and LR filter outputs */
+				vecrFiltRes = vecrFiltResLR + vecrFiltResRL;
+
+
+				/* Detect peaks by the distance to the filtered curve ------- */
+				/* Get peak indices of detected peaks */
+				iNumDetPeaks = 0;
+				for (i = iStartDCSearch; i < iEndDCSearch; i++)
+				{
+					if (vecrPSDPilCor[i] / vecrFiltRes[i] > rPeakBoundFiltToSig)
 					{
-						/* Reset "good-flag" */
-						vecbFlagVec[i] = 0;
+						veciPeakIndex[iNumDetPeaks] = i;
+						iNumDetPeaks++;
 					}
 				}
 
-
-				/* Get maximum ---------------------------------------------- */
-				/* First, get the first valid peak entry and init the 
-				   maximum with this value. We also detect, if a peak is 
-				   left */
-				bNoPeaksLeft = TRUE;
-				for (i = 0; i < iNumDetPeaks; i++)
+				/* Check, if at least one peak was detected */
+				if (iNumDetPeaks > 0)
 				{
-					if (vecbFlagVec[i] == 1)
-					{
-						/* At least one peak is left */
-						bNoPeaksLeft = FALSE;
+					/* ---------------------------------------------------------
+					   The following test shall exclude sinusoid interferers in
+					   the received spectrum */
+					CVector<int> vecbFlagVec(iNumDetPeaks, 1);
 
-						/* Init max value */
-						iMaxIndex = veciPeakIndex[i];
-						rMaxValue = vecrPSDPilCor[veciPeakIndex[i]];
-					}
-				}
-
-				if (bNoPeaksLeft == FALSE)
-				{
-					/* Actual maximum detection, take the remaining peak
-					   which has the highest value */
+					/* Check all detected peaks in the "PSD-domain" if there are
+					   at least two peaks with approx the same power at the
+					   correct places (positions of the desired pilots) */
 					for (i = 0; i < iNumDetPeaks; i++)
 					{
-						if ((vecbFlagVec[i] == 1) &&
-							(vecrPSDPilCor[veciPeakIndex[i]] >
-							rMaxValue))
+						/* Fill the vector with the values at the desired 
+						   pilot positions */
+						vecrPSDPilPoin[0] =
+							vecrPSD[veciPeakIndex[i] + veciTableFreqPilots[0]];
+						vecrPSDPilPoin[1] =
+							vecrPSD[veciPeakIndex[i] + veciTableFreqPilots[1]];
+						vecrPSDPilPoin[2] =
+							vecrPSD[veciPeakIndex[i] + veciTableFreqPilots[2]];
+
+						/* Sort, to extract the highest and second highest
+						   peak */
+						vecrPSDPilPoin = Sort(vecrPSDPilPoin);
+
+						/* Debar peak, if it is much higher than second highest
+						   peak (most probably a sinusoid interferer) */
+						if (vecrPSDPilPoin[2] / vecrPSDPilPoin[1] >
+							MAX_RAT_PEAKS_AT_PIL_POS)
 						{
+							/* Reset "good-flag" */
+							vecbFlagVec[i] = 0;
+						}
+					}
+
+
+					/* Get maximum ------------------------------------------ */
+					/* First, get the first valid peak entry and init the 
+					   maximum with this value. We also detect, if a peak is 
+					   left */
+					bNoPeaksLeft = TRUE;
+					for (i = 0; i < iNumDetPeaks; i++)
+					{
+						if (vecbFlagVec[i] == 1)
+						{
+							/* At least one peak is left */
+							bNoPeaksLeft = FALSE;
+
+							/* Init max value */
 							iMaxIndex = veciPeakIndex[i];
 							rMaxValue = vecrPSDPilCor[veciPeakIndex[i]];
 						}
 					}
+
+					if (bNoPeaksLeft == FALSE)
+					{
+						/* Actual maximum detection, take the remaining peak
+						   which has the highest value */
+						for (i = 0; i < iNumDetPeaks; i++)
+						{
+							if ((vecbFlagVec[i] == 1) &&
+								(vecrPSDPilCor[veciPeakIndex[i]] >
+								rMaxValue))
+							{
+								iMaxIndex = veciPeakIndex[i];
+								rMaxValue = vecrPSDPilCor[veciPeakIndex[i]];
+							}
+						}
 
 #ifdef _DEBUG_
 /* Stores all important parameters for last shot */
@@ -224,43 +235,44 @@ fclose(pFile1);
 #endif
 
 
-					/* ---------------------------------------------------------
-					   An acquisition frequency offest estimation was
-					   found */
-					/* Calculate frequency offset and set global parameter
-					   for offset */
-					ReceiverParam.rFreqOffsetAcqui =
-						(_REAL) iMaxIndex / iTotalBufferSize;
+						/* -----------------------------------------------------
+						   An acquisition frequency offest estimation was
+						   found */
+						/* Calculate frequency offset and set global parameter
+						   for offset */
+						ReceiverParam.rFreqOffsetAcqui =
+							(_REAL) iMaxIndex / iFrAcFFTSize;
 
-					/* Reset acquisition flag */
-					bAquisition = FALSE;
+						/* Reset acquisition flag */
+						bAquisition = FALSE;
 
 
-					/* Send out the data stored for FFT calculation --------- */
-					/* This does not work for bandpass filter. TODO: make
-					   this possible for bandpass filter, too */
-					if (bUseRecFilter == FALSE)
-					{
-						iOutputBlockSize = iHistBufSize;
-
-						/* Frequency offset correction */
-						const _REAL rNormCurFreqOffsFst = (_REAL) 2.0 * crPi *
-							(ReceiverParam.rFreqOffsetAcqui - rInternIFNorm);
-
-						for (i = 0; i < iHistBufSize; i++)
+						/* Send out the data stored for FFT calculation ----- */
+						/* This does not work for bandpass filter. TODO: make
+						   this possible for bandpass filter, too */
+						if (bUseRecFilter == FALSE)
 						{
-							/* Multiply with exp(j omega t) */
-							(*pvecOutputData)[i] = vecrFFTHistory[i] *
-								_COMPLEX(Cos(i * rNormCurFreqOffsFst),
-								Sin(-i * rNormCurFreqOffsFst));
-						}
+							iOutputBlockSize = iHistBufSize;
 
-						/* Init "exp-step" for regular frequency shift which is
-						   used in tracking mode to get contiuous mixing
-						   signal */
-						cCurExp =
-							_COMPLEX(Cos(iHistBufSize * rNormCurFreqOffsFst),
-							Sin(-iHistBufSize * rNormCurFreqOffsFst));
+							/* Frequency offset correction */
+							const _REAL rNormCurFreqOffsFst = (_REAL) 2.0 * crPi *
+								(ReceiverParam.rFreqOffsetAcqui - rInternIFNorm);
+
+							for (i = 0; i < iHistBufSize; i++)
+							{
+								/* Multiply with exp(j omega t) */
+								(*pvecOutputData)[i] = vecrFFTHistory[i] *
+									_COMPLEX(Cos(i * rNormCurFreqOffsFst),
+									Sin(-i * rNormCurFreqOffsFst));
+							}
+
+							/* Init "exp-step" for regular frequency shift which
+							   is used in tracking mode to get contiuous mixing
+							   signal */
+							cCurExp =
+								_COMPLEX(Cos(iHistBufSize * rNormCurFreqOffsFst),
+								Sin(-iHistBufSize * rNormCurFreqOffsFst));
+						}
 					}
 				}
 			}
@@ -327,8 +339,8 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	veciTableFreqPilots[2] =
 		iTableFreqPilRobModB[2][0] * NUM_BLOCKS_4_FREQ_ACQU;
 
-	/* Total buffer size */
-	iTotalBufferSize = RMB_FFT_SIZE_N * NUM_BLOCKS_4_FREQ_ACQU;
+	/* Size of FFT */
+	iFrAcFFTSize = RMB_FFT_SIZE_N * NUM_BLOCKS_4_FREQ_ACQU;
 
 
 	/* -------------------------------------------------------------------------
@@ -340,8 +352,8 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 
 	/* Length of the half of the spectrum of real input signal (the other half
 	   is the same because of the real input signal). We have to consider the
-	   Nyquist frequency ("iTotalBufferSize" is always even!) */
-	iHalfBuffer = iTotalBufferSize / 2 + 1;
+	   Nyquist frequency ("iFrAcFFTSize" is always even!) */
+	iHalfBuffer = iFrAcFFTSize / 2 + 1;
 
 	/* Search window is smaller than haft-buffer size because of correlation
 	   with pilot positions */
@@ -369,10 +381,10 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 
 	/* Init vectors and FFT-plan -------------------------------------------- */
 	/* Allocate memory for FFT-histories and init with zeros */
-	iHistBufSize = iTotalBufferSize * NUM_BLOCKS_USED_FOR_AV;
+	iHistBufSize = iFrAcFFTSize * NUM_BLOCKS_USED_FOR_AV;
 	vecrFFTHistory.Init(iHistBufSize, (_REAL) 0.0);
-	vecrFFTInput.Init(iTotalBufferSize);
-	veccFFTOutput.Init(iHalfBuffer);
+	vecrFFTInput.Init(iFrAcFFTSize);
+	vecrSqMagFFTOut.Init(iHalfBuffer);
 
 	/* Allocate memory for PSD after pilot correlation */
 	vecrPSDPilCor.Init(iHalfBuffer);
@@ -386,11 +398,15 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	veciPeakIndex.Init(iHalfBuffer);
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
-	FftPlan.Init(iTotalBufferSize);
+	FftPlan.Init(iFrAcFFTSize);
 
 	/* Init Hamming window */
-	vecrHammingWin.Init(iTotalBufferSize);
-	vecrHammingWin = Hamming(iTotalBufferSize);
+	vecrHammingWin.Init(iFrAcFFTSize);
+	vecrHammingWin = Hamming(iFrAcFFTSize);
+
+	/* Init history for SqMag FFT results */
+	iFFTResHistSize = iHalfBuffer * NUM_BLOCKS_USED_FOR_AV;
+	vecrFFTResHist.Init(iFFTResHistSize, (CReal) 0.0);
 
 
 	/* Frequency correction */
@@ -432,7 +448,8 @@ void CFreqSyncAcq::StartAcquisition()
 	bAquisition = TRUE;
 
 	/* Reset (or init) counters */
-	iAquisitionCounter = NUM_BLOCKS_4_FREQ_ACQU * NUM_BLOCKS_USED_FOR_AV;
+	iAquisitionCounter = NUM_BLOCKS_4_FREQ_ACQU;
+	iAverageCounter = NUM_BLOCKS_USED_FOR_AV;
 
 	/* Reset FFT-history */
 	vecrFFTHistory.Reset((_REAL) 0.0);
