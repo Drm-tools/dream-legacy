@@ -543,12 +543,9 @@ fflush(pFile);
 	   rearrangement of the filtered measurement */
 	iInputBlockSize = iSymbolBlockSize - iIntDiffToCenter;
 
-	/* In case of tracking the tracking offset must be reset since the
-	   acquisition result is constant after switching to tracking */
+	/* In acquisition mode, correct start index */
 	if (bTimingAcqu == TRUE)
 		rStartIndex += (CReal) iIntDiffToCenter;
-	else
-		ReceiverParam.iTimingOffsTrack += iIntDiffToCenter;
 
 
 	/* -------------------------------------------------------------------------
