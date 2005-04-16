@@ -60,11 +60,15 @@
 #define NUM_BLOCKS_USED_FOR_AV			3
 
 /* Lambda for IIR filter for estimating noise floor in frequency domain */
-#define LAMBDA_FREQ_IIR_FILT			((CReal) 0.9)
+#define LAMBDA_FREQ_IIR_FILT			((CReal) 0.95)
 
 /* Ratio between highest and second highest peak at the frequency pilot
    positions in the PSD estimation (after peak detection) */
 #define MAX_RAT_PEAKS_AT_PIL_POS		1.5
+
+/* Number of blocks storing the squared magnitude of FFT used for
+   averaging */
+#define NUM_FFT_RES_AV_BLOCKS			(NUM_BLOCKS_4_FREQ_ACQU * (NUM_BLOCKS_USED_FOR_AV - 1) + 1)
 
 
 /* Classes ********************************************************************/

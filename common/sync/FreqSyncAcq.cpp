@@ -55,8 +55,10 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 		/* Start algorithm when history memory is filled -------------------- */
-		/* Wait until history memory is filled for the first FFT operation */
-		if (iAquisitionCounter > 0)
+		/* Wait until history memory is filled for the first FFT operation.
+		   ("> 1" since, e.g., if we would have only one buffer, we can start
+		   immediately) */
+		if (iAquisitionCounter > 1)
 		{
 			/* Decrease counter */
 			iAquisitionCounter--;
@@ -79,7 +81,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 				vecrSqMagFFTOut);
 
 			/* Wait until we have sufficient data for averaging */
-			if (iAverageCounter > 0)
+			if (iAverageCounter > 1)
 			{
 				/* Decrease counter */
 				iAverageCounter--;
@@ -88,8 +90,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 			{
 				/* Average results */
 				CRealVector	vecrPSD(iHalfBuffer, (CReal) 0.0);
-
-				for (j = 0; j < NUM_BLOCKS_USED_FOR_AV; j++)
+				for (j = 0; j < NUM_FFT_RES_AV_BLOCKS; j++)
 				{
 					vecrPSD += vecrFFTResHist(j * iHalfBuffer + 1,
 						(j + 1) * iHalfBuffer);
@@ -405,7 +406,7 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	vecrHammingWin = Hamming(iFrAcFFTSize);
 
 	/* Init history for SqMag FFT results */
-	iFFTResHistSize = iHalfBuffer * NUM_BLOCKS_USED_FOR_AV;
+	iFFTResHistSize = iHalfBuffer * NUM_FFT_RES_AV_BLOCKS;
 	vecrFFTResHist.Init(iFFTResHistSize, (CReal) 0.0);
 
 
@@ -449,7 +450,7 @@ void CFreqSyncAcq::StartAcquisition()
 
 	/* Reset (or init) counters */
 	iAquisitionCounter = NUM_BLOCKS_4_FREQ_ACQU;
-	iAverageCounter = NUM_BLOCKS_USED_FOR_AV;
+	iAverageCounter = NUM_FFT_RES_AV_BLOCKS;
 
 	/* Reset FFT-history */
 	vecrFFTHistory.Reset((_REAL) 0.0);
