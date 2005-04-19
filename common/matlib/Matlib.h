@@ -158,6 +158,7 @@ public:
 
 	inline int GetSize() const {return iVectorLength;}
 	void Init(const int iIniLen, const T tIniVal = 0);
+	inline CMatlibVector<T>& Reset(const T tResVal = 0) {_VECOPCL(= tResVal);}
 	CMatlibVector<T>& PutIn(const int iFrom, const int iTo, CMatlibVector<T>& fvA);
 	CMatlibVector<T>& Merge(const CMatlibVector<T>& vecA, T& tB);
 	CMatlibVector<T>& Merge(const CMatlibVector<T>& vecA, const CMatlibVector<T>& vecB);
