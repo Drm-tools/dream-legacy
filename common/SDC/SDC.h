@@ -65,10 +65,11 @@ protected:
 class CSDCReceive
 {
 public:
+	enum ERetStatus {SR_OK, SR_BAD_CRC, SR_BAD_DATA};
 	CSDCReceive() {}
 	virtual ~CSDCReceive() {}
 
-	_BOOLEAN SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
+	ERetStatus SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
 
 protected:
 	_BOOLEAN DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody, CParameter& Parameter);

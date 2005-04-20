@@ -736,12 +736,13 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 #endif
 
 	/* Decode SDC block and return CRC status */
-	const _BOOLEAN bCRCOk = SDCReceive.SDCParam(pvecInputData, ReceiverParam);
-
-	if (bCRCOk)
-		PostWinMessage(MS_SDC_CRC, 0); /* Green light */
-	else
+	switch (SDCReceive.SDCParam(pvecInputData, ReceiverParam))
 	{
+	case CSDCReceive::SR_OK:
+		PostWinMessage(MS_SDC_CRC, 0); /* Green light */
+		break;
+
+	case CSDCReceive::SR_BAD_CRC:
 		/* SDC block depends on only a few parameters: robustness mode,
 		   DRM bandwidth and coding scheme (can be 4 or 16 QAM). If we
 		   initialize these parameters with resonable parameters it might
@@ -752,6 +753,12 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 		   show a red light if SDC CRC was not ok */
 		if (bFirstBlock == FALSE)
 			PostWinMessage(MS_SDC_CRC, 2); /* Red light */
+		break;
+
+	case CSDCReceive::SR_BAD_DATA:
+		/* CRC was ok but data seems to be incorrect */
+		PostWinMessage(MS_SDC_CRC, 1); /* Yellow light */
+		break;
 	}
 
 	/* Reset "first block" flag */

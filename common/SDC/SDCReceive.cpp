@@ -30,7 +30,8 @@
 
 
 /* Implementation *************************************************************/
-_BOOLEAN CSDCReceive::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
+CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
+											  CParameter& Parameter)
 {
 	/* Calculate length of data field in bytes
 	   (consistant to table 61 in (6.4.1)) */
@@ -121,12 +122,16 @@ _BOOLEAN CSDCReceive::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 			}
 		}
 
-		return TRUE;
+		/* If error was detected, return proper error code */
+		if (bError == TRUE)
+			return SR_BAD_DATA;
+		else
+			return SR_OK; /* everything was ok */
 	}
 	else
 	{
-		/* Data is corrupted, do not use it. Return failure as FALSE */
-		return FALSE;
+		/* Data is corrupted, do not use it. Return error code */
+		return SR_BAD_CRC;
 	}
 }
 
@@ -217,14 +222,13 @@ _BOOLEAN CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
 
 
 	/* Get label string ----------------------------------------------------- */
-	/* Reset label string */
-	Parameter.Service[iTempShortID].strLabel = "";
-
-	/* Check the following restriction to the length of label: label: this is a
-	   variable length field of up to 64 bytes defining the label
-	   TODO: Error handling at this point! */
+	/* Check the following restriction to the length of label: "label: this is a
+	   variable length field of up to 64 bytes defining the label" */
 	if (iLengthOfBody <= 64)
 	{
+		/* Reset label string */
+		Parameter.Service[iTempShortID].strLabel = "";
+
 		/* Get all characters from SDC-stream */
 		for (int i = 0; i < iLengthOfBody; i++)
 		{
@@ -234,9 +238,11 @@ _BOOLEAN CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
 			/* Append new character */
 			Parameter.Service[iTempShortID].strLabel.append(&cNewChar, 1);
 		}
-	}
 
-	return FALSE;
+		return FALSE;
+	}
+	else
+		return TRUE; /* error */
 }
 
 
