@@ -1089,7 +1089,9 @@ void systemevalDlg::AddWhatsThisHelp()
 		"approx. 1 second intervals and contains information about station "
 		"label, audio and data format, etc. The error protection is normally "
 		"lower than the protection of the FAC. Therefore this LED will turn "
-		"to red earlier than the FAC LED in general.");
+		"to red earlier than the FAC LED in general.<br>If the CRC check "
+		"is ok but errors in the content were detected, the LED turns "
+		"yellow.");
 
 	QWhatsThis::add(TextLabelLEDSDCCRC, strLEDSDCCRC);
 	QWhatsThis::add(LEDSDC, strLEDSDCCRC);
