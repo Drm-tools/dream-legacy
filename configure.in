@@ -102,10 +102,10 @@ if test "x$WITHQTGUI" = xyes; then
 	saved_ldflags="$LDFLAGS"
 	LDFLAGS="$LDFLAGS -L$QTDIR/lib"
 
-	AC_HAVE_LIBRARY(qt-mt,,exit 1)
+	AC_CHECK_LIB(qt-mt, main, ,exit 1)
 
 	AC_CHECK_FILE($QTDIR/include/qthread.h,  , exit 1)
-	CXXFLAGS="$CXXFLAGS -I$QTDIR/include"
+	CXXFLAGS="$CXXFLAGS -I$QTDIR/include -DQT_THREAD_SUPPORT -D_REENTRANT"
 	AC_SUBST(CXXFLAGS)
 
 	AC_PATH_PROG(MOC, moc,, "$QTDIR/bin")
@@ -121,7 +121,11 @@ if test "x$WITHQTGUI" = xyes; then
 	dnl qwt
 
 	AC_HAVE_LIBRARY(qwt, ,exit 1)
-	AC_SUBST(QWTINCL, "-I/usr/include/qwt")
+	AC_CHECK_HEADER(/usr/include/qwt/qwt.h, qwt_include="-I/usr/include/qwt", qwt_include="")
+	if test "$qwt_include" = ""; then
+		AC_CHECK_HEADER($QTDIR/include/qwt/qwt.h, qwt_include="-I$QTDIR/include/qwt", exit 1)
+	fi
+	AC_SUBST(QWTINCL, $qwt_include )
 	
 
 	AC_DEFINE(USE_QT_GUI, 1, [Define if you want to use the QT GUI])

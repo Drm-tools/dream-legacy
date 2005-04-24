@@ -297,6 +297,6 @@ drm_SOURCES = $(drmwithoutqt_SOURCES)
 endif
 
 
-drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -I$(QTDIR)/include -DQT_THREAD_SUPPORT -D_REENTRANT
+drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT
 
 
