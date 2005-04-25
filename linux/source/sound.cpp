@@ -121,10 +121,9 @@ void CSound::Init_HW( int mode )
 }
 
 
-int read_HW( void * recbuf, int size) {
+static int read_HW( void * recbuf, int size) {
 	
 	int ret = read(fdSound, recbuf, size * NUM_IN_OUT_CHANNELS * BYTES_PER_SAMPLE );
-//qDebug("%d ", ret); fflush(stdout);
 
 	if (ret < 0) {
 		if ( (errno != EINTR) && (errno != EAGAIN))
@@ -135,7 +134,7 @@ int read_HW( void * recbuf, int size) {
 		return ret / (NUM_IN_OUT_CHANNELS * BYTES_PER_SAMPLE);
 }
 
-int write_HW( _SAMPLE *playbuf, int size ){
+static int write_HW( _SAMPLE *playbuf, int size ){
 
 	int start = 0;
 	int ret;
@@ -156,6 +155,14 @@ int write_HW( _SAMPLE *playbuf, int size ){
 		start += ret / BYTES_PER_SAMPLE;
 	}
 	return 0;
+}
+
+static void close_HW( void ) {
+
+	if (fdSound >0)
+		close(fdSound);
+	fdSound = 0;
+
 }
 #endif
 
@@ -254,29 +261,8 @@ void CSound::Init_HW( int mode ){
 		throw CGenErr("alsa CSound::Init_HW ");
 	}
 	
-#if 0
-	/* Set the period size */
 	dir=0;
-	err = snd_pcm_hw_params_set_period_size_max(handle, hwparams, &period_size, &dir);
-	if (err < 0) {
-		qDebug("Unable to set period size %i : %s dir: %d", period_size, snd_strerror(err), dir);
-		throw CGenErr("alsa CSound::Init_HW ");
-	}
-	qDebug("Actual period size %d", period_size);
-
-	/* Set buffer size */
-	buffer_size = period_size * periods;
-	qDebug("should be %d", buffer_size);
-	err = snd_pcm_hw_params_set_buffer_size_near(handle, hwparams, &buffer_size);
-	if (err < 0) {
-		qDebug("Unable to set buffer size %i : %s ", buffer_size,
-		 snd_strerror(err));
-		throw CGenErr("alsa CSound::Init_HW ");
-	}
-	qDebug("buffer size %d", buffer_size);
-#endif
-	dir=0;
-unsigned int buffer_time = 500000;              /* ring buffer length in us */
+	unsigned int buffer_time = 500000;              /* ring buffer length in us */
         /* set the buffer time */
         err = snd_pcm_hw_params_set_buffer_time_near(handle, hwparams, &buffer_time, &dir);
         if (err < 0) {
@@ -290,7 +276,7 @@ unsigned int buffer_time = 500000;              /* ring buffer length in us */
         }
 	qDebug("buffer size %d", buffer_size);
         /* set the period time */
-unsigned int period_time = 100000;              /* period time in us */
+	unsigned int period_time = 100000;              /* period time in us */
         err = snd_pcm_hw_params_set_period_time_near(handle, hwparams, &period_time, &dir);
         if (err < 0) {
                 qDebug("Unable to set period time %i for playback: %s\n", period_time, snd_strerror(err));
@@ -346,12 +332,10 @@ unsigned int period_time = 100000;              /* period time in us */
 
 }
 
-int read_HW( void * recbuf, int size) {
+static int read_HW( void * recbuf, int size) {
 
-//qDebug("r"); fflush(stdout);
 	int ret = snd_pcm_readi(rhandle, recbuf, size);
 
-//qDebug("ret: %d", ret); fflush(stdout);
 
 	if (ret < 0) 
 	{
@@ -400,11 +384,11 @@ int read_HW( void * recbuf, int size) {
 			
 }
 
-int write_HW( _SAMPLE *playbuf, int size ){
+static int write_HW( _SAMPLE *playbuf, int size ){
 
 	int start = 0;
 	int ret;
-//qDebug("w"); fflush(stdout);
+
 	while (size) {
 
 		ret = snd_pcm_writei(phandle, &playbuf[start], size );
@@ -443,6 +427,14 @@ qDebug("strpipe");
 	}
 	return 0;
 }
+static void close_HW( void ) {
+
+	if (rhandle != NULL)
+		snd_pcm_close( rhandle );
+
+	rhandle = NULL;
+}
+
 #endif
 
 
@@ -477,7 +469,6 @@ public:
 			SoundBufR.unlock();
 				
 			if (  (SOUNDBUFLEN - fill) > (FRAGSIZE * NUM_IN_OUT_CHANNELS) ) {
-//qDebug("f %d ", fill); fflush(stdout);
 				// enough space in the buffer
 				
 				int size = read_HW( tmprecbuf, FRAGSIZE);
@@ -518,6 +509,7 @@ void CSound::InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	/* Save < */
 	SoundBufR.lock();
 	iInBufferSize = iNewBufferSize;
+	bBlockingRec = bNewBlocking;
 	SoundBufR.unlock();
 	
 	Init_HW( RECORD );
@@ -537,14 +529,12 @@ _BOOLEAN CSound::Read(CVector< _SAMPLE >& psData)
 
 	SoundBufR.lock();	// we need exclusive access
 	
-//qDebug("r"); fflush(stdout);
 	
 	while ( SoundBufR.GetFillLevel() < iInBufferSize ) {
 	
 		
 		// not enough data, sleep a little
 		SoundBufR.unlock();
-//qDebug("rw"); fflush(stdout);
 		usleep(1000); //1ms
 		SoundBufR.lock();
 	}
@@ -577,7 +567,6 @@ public:
 				
 			if ( fill > (FRAGSIZE * NUM_IN_OUT_CHANNELS) ) {
 
-//qDebug("f%d ", fill);	 
 				// enough data in the buffer
 
 				CVectorEx<_SAMPLE>*	p;
@@ -594,7 +583,6 @@ public:
 
 			} else {
 			
-//qDebug("h %d", fill);
 				do {			
 					usleep( 1000 );
 					
@@ -620,6 +608,7 @@ void CSound::InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	/* Save buffer size */
 	SoundBufP.lock();
 	iBufferSize = iNewBufferSize;
+	bBlockingPlay = bNewBlocking;
 	SoundBufP.unlock();
 
 	Init_HW( PLAY );
@@ -635,15 +624,16 @@ void CSound::InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking)
 _BOOLEAN CSound::Write(CVector< _SAMPLE >& psData)
 {
 
-#if 0
-// blocking write
-while(1){
-	SoundBufP.lock();
-	int fill = SOUNDBUFLEN - SoundBufP.GetFillLevel();
-	SoundBufP.unlock();
-	if ( fill > iBufferSize) break;
-}
-#endif	
+	if ( bBlockingPlay ) {
+		// blocking write
+		while(1){
+			SoundBufP.lock();
+			int fill = SOUNDBUFLEN - SoundBufP.GetFillLevel();
+			SoundBufP.unlock();
+			if ( fill > iBufferSize) break;
+		}
+	}
+	
 	SoundBufP.lock();	// we need exclusive access
 
 	if ( ( SOUNDBUFLEN - SoundBufP.GetFillLevel() ) > iBufferSize) {
@@ -651,7 +641,6 @@ while(1){
 		CVectorEx<_SAMPLE>*	ptarget;
 		 
 		 // data fits, so copy
-//qDebug("n"); fflush(stdout);		 
 		 ptarget = SoundBufP.QueryWriteBuffer();
 
 		 for (int i=0; i < iBufferSize; i++)
@@ -677,17 +666,7 @@ void CSound::Close()
 	RecThread1.wait(1000);
 	PlayThread1.wait(1000);
 	
-#ifdef USE_DSP
-	if (fdSound >0)
-		close(fdSound);
-	fdSound = 0;
-#endif
-#ifdef USE_ALSA
-	if (rhandle != NULL)
-		snd_pcm_close( rhandle );
-
-	rhandle = NULL;
-#endif
+	close_HW();	
 }
 
 

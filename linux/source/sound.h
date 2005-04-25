@@ -77,9 +77,9 @@ public:
 protected:
 	int 	iBufferSize, iInBufferSize;
 	void Init_HW( int mode );
-//	int read_HW( void * recbuf, int size );
-//	int write_HW( _SAMPLE * playbuf, int size ); 
 	short int *tmpplaybuf, *tmprecbuf;
+	_BOOLEAN	bBlockingRec;
+	_BOOLEAN	bBlockingPlay;
 	
 	
 #else
