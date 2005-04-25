@@ -172,10 +172,10 @@ CSoundCardSelMenu::CSoundCardSelMenu(CSound* pNS, QWidget* parent) :
 	/* Insert "Wave mapper". "iNumSoundDev" is no valid ID for a device, use
 	   this for wave-mapper */
 	pSoundInMenu->insertSeparator();
-	pSoundInMenu->insertItem(tr("Wave &Mapper Recording"), this,
+	pSoundInMenu->insertItem(tr("Primary Audio &Device (Recording)"), this,
 		SLOT(OnSoundInDevice(int)), 0, iNumSoundDev);
 	pSoundOutMenu->insertSeparator();
-	pSoundOutMenu->insertItem(tr("Wave &Mapper Playback"), this,
+	pSoundOutMenu->insertItem(tr("Primary Audio &Device (Playback)"), this,
 		SLOT(OnSoundOutDevice(int)), 0, iNumSoundDev);
 
 	/* Set default device. If no valid device was selected, select
