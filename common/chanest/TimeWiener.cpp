@@ -304,11 +304,11 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 		/* Init SNR value */
 		rSNR = pow(10, INIT_VALUE_SNR_WIEN_TIME_DB / 10);
 
-		/* Init sigma with a very large value. This make the acquisition more
+		/* Init sigma with a large value. This make the acquisition more
 		   robust in case of a large sample frequency offset. But we get more
 		   aliasing in the time domain and this could make the timing unit
 		   perform worse. Therefore, this is only a trade-off */
-		rSigma = rSigmaMax * 4;
+		rSigma = rSigmaMax;
 	}
 	else
 	{
