@@ -1436,6 +1436,7 @@ void CDRMPlot::SetupAllConst()
 	setAxisTitle(QwtPlot::xBottom, tr("Real"));
 	enableAxis(QwtPlot::yLeft, TRUE);
 	setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
+	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::xBottom, (double) -1.5, (double) 1.5);
