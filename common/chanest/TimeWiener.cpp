@@ -65,8 +65,10 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			   Move old estimates and put new value. Use reversed order to
 			   prepare vector for convolution */
 			for (j = iLengthWiener - 1; j > 0; j--)
+			{
 				matcChanAtPilPos[j][iPiHiIndex] =
 					matcChanAtPilPos[j - 1][iPiHiIndex];
+			}
 
 			/* Add new channel estimate: h = r / s, h: transfer function of the
 			   channel, r: received signal, s: transmitted signal */
