@@ -145,6 +145,7 @@ public:
 	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
 	CAMDemodulation*		GetAMDemod() {return &AMDemodulation;}
 	CFreqSyncAcq*			GetFreqSyncAcq() {return &FreqSyncAcq;}
+	CAudioSourceDecoder*	GetAudSorceDec() {return &AudioSourceDecoder;}
 #ifdef USE_QT_GUI
 	CMDI*					GetMDI() {return &MDI;}
 #endif
