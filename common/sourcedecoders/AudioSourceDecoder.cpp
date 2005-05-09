@@ -950,6 +950,10 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		ResampleObjR.Init(iLenDecOutPerChan,
 			(_REAL) SOUNDCRD_SAMPLE_RATE / iAudioSampleRate);
 
+		/* Clear reverberation objects */
+		AudioRevL.Clear();
+		AudioRevR.Clear();
+
 
 		/* AAC decoder ------------------------------------------------------ */
 		/* The maximum length for one audio frame is "iAudioPayloadLen". The
