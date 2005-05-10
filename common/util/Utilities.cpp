@@ -360,11 +360,13 @@ void CAudioReverb::setT60(const CReal rT60)
 	}
 }
 
-CReal CAudioReverb::ProcessSample(const CReal input)
+CReal CAudioReverb::ProcessSample(const CReal rLInput, const CReal rRInput)
 {
 	/* Compute one output sample */
 	CReal temp, temp0, temp1, temp2;
 
+	/* Mix stereophonic input signals to mono signal */
+	const CReal input = (CReal) 0.5 * (rLInput + rRInput);
 
 
 // TEST
@@ -383,7 +385,6 @@ rZ2 = (CReal) 0.00530040979453 * input - (CReal) -0.45354593336553 * filtinput;
 #else
 CReal filtinput = input;
 #endif
-
 
 
 	temp = allpassDelays_[0].Get();

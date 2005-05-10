@@ -144,8 +144,7 @@ protected:
 	CAudioResample		ResampleObjL;
 	CAudioResample		ResampleObjR;
 
-	CAudioReverb		AudioRevL;
-	CAudioReverb		AudioRevR;
+	CAudioReverb		AudioRev;
 
 	CVector<_REAL>		vecTempResBufInLeft;
 	CVector<_REAL>		vecTempResBufInRight;

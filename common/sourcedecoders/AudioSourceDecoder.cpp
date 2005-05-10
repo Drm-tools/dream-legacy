@@ -590,11 +590,13 @@ fflush(pFile2);
 					if (bUseReverbEffect == TRUE)
 					{
 						/* Cross-fade reverberation effect */
-						vecTempResBufOutOldLeft[i] += (1.0 - rAtt) * AudioRevL.
-							ProcessSample(vecTempResBufOutOldLeft[i]);
+						const _REAL rRevSam = (1.0 - rAtt) * AudioRev.
+							ProcessSample(vecTempResBufOutOldLeft[i],
+							vecTempResBufOutOldRight[i]);
 
-						vecTempResBufOutOldRight[i] += (1.0 - rAtt) * AudioRevR.
-							ProcessSample(vecTempResBufOutOldRight[i]);
+						/* Mono reverbration signal */
+						vecTempResBufOutOldLeft[i] += rRevSam;
+						vecTempResBufOutOldRight[i] += rRevSam;
 					}
 				}
 
@@ -616,11 +618,11 @@ fflush(pFile2);
 					/* Add Reverberation effect */
 					for (i = 0; i < iResOutBlockSize; i++)
 					{
-						vecTempResBufOutOldLeft[i] = AudioRevL.
-							ProcessSample(vecTempResBufOutOldLeft[i]);
-
-						vecTempResBufOutOldRight[i] = AudioRevR.
-							ProcessSample(vecTempResBufOutOldRight[i]);
+						/* Mono reverberation signal */
+						vecTempResBufOutOldLeft[i] =
+							vecTempResBufOutOldRight[i] = AudioRev.
+							ProcessSample(vecTempResBufOutOldLeft[i],
+							vecTempResBufOutOldRight[i]);
 					}
 				}
 			}
@@ -683,11 +685,11 @@ fflush(pFile2);
 					/* Add "last" reverbration only to old block */
 					for (i = 0; i < iResOutBlockSize; i++)
 					{
-						vecTempResBufOutOldLeft[i] = AudioRevL.
-							ProcessSample(vecTempResBufOutOldLeft[i]);
-
-						vecTempResBufOutOldRight[i] = AudioRevR.
-							ProcessSample(vecTempResBufOutOldRight[i]);
+						/* Mono reverberation signal */
+						vecTempResBufOutOldLeft[i] =
+							vecTempResBufOutOldRight[i] = AudioRev.
+							ProcessSample(vecTempResBufOutOldLeft[i],
+							vecTempResBufOutOldRight[i]);
 					}
 				}
 
@@ -704,11 +706,12 @@ fflush(pFile2);
 					if (bUseReverbEffect == TRUE)
 					{
 						/* Cross-fade reverberation effect */
-						vecTempResBufOutCurLeft[i] += (1.0 - rAtt) * AudioRevL.
-							ProcessSample(0);
+						const _REAL rRevSam = (1.0 - rAtt) * AudioRev.
+							ProcessSample(0, 0);
 
-						vecTempResBufOutCurRight[i] += (1.0 - rAtt) * AudioRevR.
-							ProcessSample(0);
+						/* Mono reverberation signal */
+						vecTempResBufOutCurLeft[i] += rRevSam;
+						vecTempResBufOutCurRight[i] += rRevSam;
 					}
 				}
 
@@ -950,9 +953,8 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		ResampleObjR.Init(iLenDecOutPerChan,
 			(_REAL) SOUNDCRD_SAMPLE_RATE / iAudioSampleRate);
 
-		/* Clear reverberation objects */
-		AudioRevL.Clear();
-		AudioRevR.Clear();
+		/* Clear reverberation object */
+		AudioRev.Clear();
 
 
 		/* AAC decoder ------------------------------------------------------ */
@@ -1022,8 +1024,7 @@ int CAudioSourceDecoder::GetNumCorDecAudio()
 
 CAudioSourceDecoder::CAudioSourceDecoder()
 #ifdef USE_FAAD2_LIBRARY
-	: AudioRevL((CReal) 1.0 /* seconds delay */),
-	AudioRevR((CReal) 1.0), bUseReverbEffect(TRUE)
+	: AudioRev((CReal) 1.0 /* seconds delay */), bUseReverbEffect(TRUE)
 #endif
 {
 #ifdef USE_FAAD2_LIBRARY

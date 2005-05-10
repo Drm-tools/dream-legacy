@@ -109,7 +109,7 @@ public:
 	CAudioReverb(const CReal rT60 = (CReal) 1.0);
 
 	void Clear();
-	CReal ProcessSample(const CReal input);
+	CReal ProcessSample(const CReal rLInput, const CReal rRInput);
 
 protected:
 	void setT60(const CReal rT60);
