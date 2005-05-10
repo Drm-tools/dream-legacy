@@ -115,10 +115,10 @@ protected:
 	void setT60(const CReal rT60);
 	_BOOLEAN isPrime(const int number);
 
-	CFIFO<CReal>	allpassDelays_[3];
-	CFIFO<CReal>	combDelays_[4];
-	CReal			allpassCoefficient_;
-	CReal			combCoefficient_[4];
+	CFIFO<int>	allpassDelays_[3];
+	CFIFO<int>	combDelays_[4];
+	CReal		allpassCoefficient_;
+	CReal		combCoefficient_[4];
 };
 
 

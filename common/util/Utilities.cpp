@@ -341,13 +341,13 @@ _BOOLEAN CAudioReverb::isPrime(const int number)
 void CAudioReverb::Clear()
 {
 	/* Reset and clear all internal state */
-	allpassDelays_[0].Reset((CReal) 0.0);
-	allpassDelays_[1].Reset((CReal) 0.0);
-	allpassDelays_[2].Reset((CReal) 0.0);
-	combDelays_[0].Reset((CReal) 0.0);
-	combDelays_[1].Reset((CReal) 0.0);
-	combDelays_[2].Reset((CReal) 0.0);
-	combDelays_[3].Reset((CReal) 0.0);
+	allpassDelays_[0].Reset(0);
+	allpassDelays_[1].Reset(0);
+	allpassDelays_[2].Reset(0);
+	combDelays_[0].Reset(0);
+	combDelays_[1].Reset(0);
+	combDelays_[2].Reset(0);
+	combDelays_[3].Reset(0);
 }
 
 void CAudioReverb::setT60(const CReal rT60)
@@ -390,19 +390,19 @@ CReal filtinput = input;
 	temp = allpassDelays_[0].Get();
 	temp0 = allpassCoefficient_ * temp;
 	temp0 += filtinput;
-	allpassDelays_[0].Add(temp0);
+	allpassDelays_[0].Add((int) temp0);
 	temp0 = -(allpassCoefficient_ * temp0) + temp;
 
 	temp = allpassDelays_[1].Get();
 	temp1 = allpassCoefficient_ * temp;
 	temp1 += temp0;
-	allpassDelays_[1].Add(temp1);
+	allpassDelays_[1].Add((int) temp1);
 	temp1 = -(allpassCoefficient_ * temp1) + temp;
 
 	temp = allpassDelays_[2].Get();
 	temp2 = allpassCoefficient_ * temp;
 	temp2 += temp1;
-	allpassDelays_[2].Add(temp2);
+	allpassDelays_[2].Add((int) temp2);
 	temp2 = -(allpassCoefficient_ * temp2) + temp;
 
 	const CReal temp3 = temp2 + (combCoefficient_[0] * combDelays_[0].Get());
@@ -410,10 +410,10 @@ CReal filtinput = input;
 	const CReal temp5 = temp2 + (combCoefficient_[2] * combDelays_[2].Get());
 	const CReal temp6 = temp2 + (combCoefficient_[3] * combDelays_[3].Get());
 
-	combDelays_[0].Add(temp3);
-	combDelays_[1].Add(temp4);
-	combDelays_[2].Add(temp5);
-	combDelays_[3].Add(temp6);
+	combDelays_[0].Add((int) temp3);
+	combDelays_[1].Add((int) temp4);
+	combDelays_[2].Add((int) temp5);
+	combDelays_[3].Add((int) temp6);
 
 	return 0.5 * (temp3 + temp4 + temp5 + temp6);
 }
