@@ -5,8 +5,8 @@
  * Author(s):
  *	Volker Fischer, Stephane Fillod, Tomi Manninen
  *
- * Description:
- *
+ * 5/15/2005 Andrea Russo
+ *	- added preview
  *
  ******************************************************************************
  *
@@ -158,7 +158,7 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 	fclose(pFile);
 }
 
-_BOOLEAN CDRMSchedule::IsActive(int const iPos)
+CDRMSchedule::StationState CDRMSchedule::IsActive(int const iPos)
 {
 	/* Get system time */
 	time_t ltime;
@@ -215,8 +215,24 @@ _BOOLEAN CDRMSchedule::IsActive(int const iPos)
 		/* Check time interval */
 		if (lStopTime > lStartTime)
 		{
-			if ((lCurTime >= lStartTime) && (lCurTime < lStopTime))
-				return TRUE;
+			if (lCurTime < lStopTime)
+			{
+				if (lCurTime >= lStartTime)
+					return IS_ACTIVE;
+				else
+				{
+					/* Check preview condition */
+
+// TODO: preview does not work if transmission starts today and ends
+// the next day!
+
+					if ((iSecondsPreview > 0) &&
+						(difftime(lStartTime, lCurTime)	<= iSecondsPreview))
+					{
+						return IS_PREVIEW;
+					}
+				}
+			}
 		}
 		else
 		{
@@ -224,18 +240,18 @@ _BOOLEAN CDRMSchedule::IsActive(int const iPos)
 			{
 				/* First day. Only check if we are after start time */
 				if (lCurTime >= lStartTime)
-					return TRUE;
+					return IS_ACTIVE;
 			}
 			else
 			{
 				/* Second day. Only check if we are before stop time */
 				if (lCurTime < lStopTime)
-					return TRUE;
+					return IS_ACTIVE;
 			}
 		}
 	}
 
-	return FALSE;
+	return IS_INACTIVE;
 }
 
 StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
@@ -273,6 +289,8 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	BitmCubeYellow.fill(QColor(255, 255, 0));
 	BitmCubeRed.resize(iXSize, iYSize);
 	BitmCubeRed.fill(QColor(255, 0, 0));
+	BitmCubeOrange.resize(iXSize, iYSize);
+	BitmCubeOrange.fill(QColor(255, 128, 0));
 
 #ifdef HAVE_LIBHAMLIB
 	/* Init progress bar for input s-meter */
@@ -331,6 +349,46 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Set stations in list view which are active right now */
 	bShowAll = FALSE;
 	pViewMenu->setItemChecked(0, TRUE);
+
+
+	/* Stations Preview menu ------------------------------------------------ */
+	pPreviewMenu = new QPopupMenu(this);
+	CHECK_PTR(pPreviewMenu);
+	pPreviewMenu->insertItem(tr("&Don't active stations preview"), this,
+		SLOT(OnShowPreviewMenu(int)), 0, 0);
+	pPreviewMenu->insertItem(tr("&5 minutes"), this,
+		SLOT(OnShowPreviewMenu(int)), 0, 1);
+	pPreviewMenu->insertItem(tr("&15 minutes"), this,
+		SLOT(OnShowPreviewMenu(int)), 0, 2);
+	pPreviewMenu->insertItem(tr("&30 minutes"), this,
+		SLOT(OnShowPreviewMenu(int)), 0, 3);
+
+	/* Set stations preview */
+	/* Retrive the setting saved into the .ini file */
+	DRMSchedule.SetSecondsPreview(pDRMRec->iSecondsPreview);
+	switch (DRMSchedule.GetSecondsPreview())
+	{
+	case NUM_SECONDS_PREV_5MIN:
+		pPreviewMenu->setItemChecked(1, TRUE);
+		break;
+
+	case NUM_SECONDS_PREV_15MIN:
+		pPreviewMenu->setItemChecked(2, TRUE);
+		break;
+
+	case NUM_SECONDS_PREV_30MIN:
+		pPreviewMenu->setItemChecked(3, TRUE);
+		break;
+
+	default: /* case 0: */
+		pPreviewMenu->setItemChecked(0, TRUE);
+		break;
+	}
+
+	pViewMenu->insertSeparator();
+	pViewMenu->insertItem(tr("Stations &preview"),pPreviewMenu);
+
+
 	SetStationsView();
 
 
@@ -601,6 +659,9 @@ StationsDlg::~StationsDlg()
 	pDRMRec->GeomStationsDlg.iHSize = WinGeom.height();
 	pDRMRec->GeomStationsDlg.iWSize = WinGeom.width();
 
+	/* Store preview settings */
+	pDRMRec->iSecondsPreview = DRMSchedule.GetSecondsPreview();
+
 #ifdef HAVE_LIBHAMLIB
 	if (pRig != NULL)
 	{
@@ -641,6 +702,37 @@ void StationsDlg::OnShowStationsMenu(int iID)
 	/* Taking care of checks in the menu */
 	pViewMenu->setItemChecked(0, 0 == iID);
 	pViewMenu->setItemChecked(1, 1 == iID);
+}
+
+void StationsDlg::OnShowPreviewMenu(int iID)
+{
+	switch (iID)
+	{
+	case 1:
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
+		break;
+
+	case 2:
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
+		break;
+
+	case 3:
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
+		break;
+
+	default: /* case 0: */
+		DRMSchedule.SetSecondsPreview(0);
+		break;
+	}
+
+	/* Update list view */
+	SetStationsView();
+
+	/* Taking care of checks in the menu */
+	pPreviewMenu->setItemChecked(0, 0 == iID);
+	pPreviewMenu->setItemChecked(1, 1 == iID);
+	pPreviewMenu->setItemChecked(2, 2 == iID);
+	pPreviewMenu->setItemChecked(3, 3 == iID);
 }
 
 void StationsDlg::OnGetUpdate()
@@ -803,7 +895,8 @@ void StationsDlg::SetStationsView()
 	/* Add new item for each station in list view */
 	for (int i = 0; i < iNumStations; i++)
 	{
-		if (!((bShowAll == FALSE) && (DRMSchedule.IsActive(i) == FALSE)))
+		if (!((bShowAll == FALSE) &&
+			(DRMSchedule.IsActive(i) == CDRMSchedule::IS_INACTIVE)))
 		{
 			/* Only insert item if it is not already in the list */
 			if (vecpListItems[i] == NULL)
@@ -842,7 +935,7 @@ void StationsDlg::SetStationsView()
 
 			/* Check, if station is currently transmitting. If yes, set
 			   special pixmap */
-			if (DRMSchedule.IsActive(i) == TRUE)
+			if (DRMSchedule.IsActive(i) == CDRMSchedule::IS_ACTIVE)
 			{
 				/* Check for "special case" transmissions */
 				if (DRMSchedule.GetItem(i).iDays == 0)
@@ -851,7 +944,12 @@ void StationsDlg::SetStationsView()
 					vecpListItems[i]->setPixmap(0, BitmCubeGreen);
 			}
 			else
-				vecpListItems[i]->setPixmap(0, BitmCubeRed);
+			{
+				if (DRMSchedule.IsActive(i) == CDRMSchedule::IS_PREVIEW)
+					vecpListItems[i]->setPixmap(0, BitmCubeOrange);
+				else
+					vecpListItems[i]->setPixmap(0, BitmCubeRed);
+			}
 		}
 		else
 		{
@@ -1331,6 +1429,8 @@ void StationsDlg::AddWhatsThisHelp()
 		"box shows that the transmission takes place right now, a "
 		"yellow cube shows that this is a test transmission and with a "
 		"red cube it is shown that the transmission is offline.<br>"
+		"If the stations preview is active an orange box shows the stations "
+		"that will be active.<br>"
 		"The list can be sorted by clicking on the headline of the "
 		"column.<br>By clicking on a menu item, a remote front-end can "
 		"be automatically switched to the current frequency and the "

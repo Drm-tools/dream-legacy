@@ -125,6 +125,11 @@ void CSettings::ReadIniFile()
 		GetIniSetting(ini, "Logfile", "longitude"));
 
 
+	/* Seconds for preview into Stations Dialog if zero then inactive */
+	if (GetNumericIniSet(ini, "Stations dialog", "preview", 0, MAX_NUM_SEC_PREVIEW, iValue) == TRUE)
+		pDRMRec->iSecondsPreview = iValue;
+
+
 	/* Window geometry ------------------------------------------------------ */
 	/* Main window */
 	if (GetNumericIniSet(ini, "Window geometry", "mainxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
@@ -308,6 +313,11 @@ void CSettings::WriteIniFile()
 	/* Longitude string for log file */
 	PutIniSetting(ini, "Logfile", "longitude",
 		pDRMRec->GetParameters()->ReceptLog.GetLongitude().c_str());
+
+
+	/* Seconds for preview into Stations Dialog if zero then inactive */
+	SetNumericIniSet(ini, "Stations dialog", "preview",
+		pDRMRec->iSecondsPreview);
 
 
 	/* Window geometry ------------------------------------------------------ */

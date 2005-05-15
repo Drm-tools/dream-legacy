@@ -90,6 +90,9 @@
 #define MAX_NUM_CHART_WIN_EV_DLG	50
 #define MAX_IND_CHART_TYPES			1000
 
+/* Maximum for preview */
+#define MAX_NUM_SEC_PREVIEW			3600
+
 
 /* Classes ********************************************************************/
 class CSettings

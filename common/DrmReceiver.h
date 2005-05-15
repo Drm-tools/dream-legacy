@@ -110,7 +110,7 @@ public:
 #endif
 #if defined(USE_QT_GUI) || defined(_WIN32)
 		, iMainPlotColorStyle(0), /* default color scheme: blue-white */
-		GeomChartWindows(0)
+		iSecondsPreview(0), GeomChartWindows(0)
 #endif
 		{}
 	virtual ~CDRMReceiver() {}
@@ -224,6 +224,7 @@ public:
 	CVector<CWinGeom> GeomChartWindows;
 
 	int iMainPlotColorStyle;
+	int iSecondsPreview;
 #endif
 
 	/* Interfaces to internal parameters/vectors used for the plot */

@@ -109,6 +109,11 @@
 #define DRMSCHEDULE_INI_FILE_NAME		"DRMSchedule.ini"
 #define AMSCHEDULE_INI_FILE_NAME		"AMSchedule.ini"
 
+/* Time definitions for preview */
+#define NUM_SECONDS_PREV_5MIN			300
+#define NUM_SECONDS_PREV_15MIN			900
+#define NUM_SECONDS_PREV_30MIN			1800
+
 
 /* Classes ********************************************************************/
 class CStationsItem
@@ -155,17 +160,24 @@ public:
 	virtual ~CDRMSchedule() {}
 
 	enum ESchedMode {SM_DRM, SM_ANALOG};
+	enum StationState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW};
 
 	void ReadStatTabFromFile(const ESchedMode eNewSchM);
 	ESchedMode GetSchedMode() {return eSchedMode;}
 
 	int GetStationNumber() {return StationsTable.Size();}
 	CStationsItem& GetItem(int const iPos) {return StationsTable[iPos];}
-	_BOOLEAN IsActive(int const iPos);
+	StationState IsActive(int const iPos);
+
+	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
+	int GetSecondsPreview() {return iSecondsPreview;}
 
 protected:
 	CVector<CStationsItem>	StationsTable;
 	ESchedMode				eSchedMode;
+
+	/* Minutes for stations preview in seconds if zero then no active */
+    int						iSecondsPreview;
 };
 
 
@@ -206,12 +218,14 @@ protected:
 	QPixmap						BitmCubeGreen;
 	QPixmap						BitmCubeYellow;
 	QPixmap						BitmCubeRed;
+	QPixmap						BitmCubeOrange;
 	QTimer						TimerList;
 	QTimer						TimerUTCLabel;
 	QTimer						TimerSMeter;
 	_BOOLEAN					bShowAll;
 	QUrlOperator				UrlUpdateSchedule;
 	QPopupMenu*					pViewMenu;
+	QPopupMenu*					pPreviewMenu;
 
 	CVector<MyListViewItem*>	vecpListItems;
 	CMutex						ListItemsMutex;
@@ -294,6 +308,7 @@ public slots:
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
 	void OnShowStationsMenu(int iID);
+	void OnShowPreviewMenu(int iID);
 	void OnGetUpdate();
 	void OnFreqCntNewValue(double dVal);
 };

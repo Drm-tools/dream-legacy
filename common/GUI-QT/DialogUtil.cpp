@@ -103,6 +103,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"<p>Manninen, Tomi</p>"
 		"<p>Pascutto, Gian C.</p>"
 		"<p>Richard, Doyle</p>"
+		"<p>Russo, Andrea</p>"
 		"</center>"
 		"<br><b>Parts of Dream are based on code by</b>"
 		"<center>"
@@ -124,6 +125,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"<p>Schall, Norbert</p>"
 		"<p>Schill, Dietmar</p>"
 		"<p>Schneider, Klaus</p>"
+		"<p>St&ouml;ppler, Simone</p>"
 		"<p>Varlamov, Oleg</p>"
 		"<p>Wade, Graham</p>"
 		"</center><br>");
