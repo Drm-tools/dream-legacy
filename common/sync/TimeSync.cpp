@@ -42,7 +42,6 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 	int				iNewStIndCount; 
 	int				iIntDiffToCenter;
 	int				iCurPos;
-	int				iStartIndex;
 	int				iDetectedRModeInd;
 	int				iDecInpuSize;
 	CReal			rMaxValue;
@@ -51,8 +50,12 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 	CReal			rFreqOffsetEst;
 	CComplexVector	cvecInpTmp;
 	CRealVector		rResMode(NUM_ROBUSTNESS_MODES);
+
 	/* Max number of detected peaks ("5" for safety reasons. Could be "2") */
 	CVector<int>	iNewStartIndexField(5);
+
+	/* Init start index (in case no timing could be detected or init phase) */
+	int iStartIndex = iSymbolBlockSize;
 
 	/* Write new block of data at the end of shift register */
 	HistoryBuf.AddEnd(*pvecInputData, iInputBlockSize);
@@ -233,89 +236,84 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							(rGuardPow[j] + rGuardPowBlock[j]) / 2;
 					}
 
-
 					/* Energy of guard intervall calculation and detection of
 					   peak is only needed if timing aquisition is true */
 					if (bTimingAcqu == TRUE)
 					{
-						/* Average the correlation results */
-						IIR1(vecCorrAvBuf[iCorrAvInd],
-							vecrRMCorrBuffer[iSelectedMode][iRMCorrBufSize - 1],
-							1 - rLambdaCoAv);
-
-
-						/* Energy of guard-interval correlation ------------- */
-						/* Optimized calculation of the guard-interval energy.
-						   We only add a new value und subtract the old value
-						   from the result. We only need one addition and a
-						   history buffer */
-						/* Subtract oldest value */
-						rGuardEnergy -= pMovAvBuffer[iPosInMovAvBuffer];
-
-						/* Add new value and write in memory */
-						rGuardEnergy += vecCorrAvBuf[iCorrAvInd];
-						pMovAvBuffer[iPosInMovAvBuffer] =
-							vecCorrAvBuf[iCorrAvInd];
-
-						/* Increase position pointer and test if wrap */
-						iPosInMovAvBuffer++;
-						if (iPosInMovAvBuffer == iMovAvBufSize)
-							iPosInMovAvBuffer = 0;
-
-
-						/* Taking care of correlation average buffer -------- */
-						/* We use a "cyclic buffer" structure. This index
-						   defines the position in the buffer */
-						iCorrAvInd++;
-						if (iCorrAvInd == iMaxDetBufSize)
+						/* Start timing detection not until initialization phase
+						   is finished */
+						if (iTiSyncInitCnt > 1)
 						{
-							/* Adaptation of the lambda parameter for
-							   guard-interval correlation averaging IIR filter.
-							   With this adaptation we achieve better averaging
-							   results. A lower bound is defined for this
-							   parameter */
-							if (rLambdaCoAv <= 0.1)
-								rLambdaCoAv = 0.1;
-							else
-								rLambdaCoAv /= 2;
-
-							iCorrAvInd = 0;
+							/* Decrease counter */
+							iTiSyncInitCnt--;
 						}
-
-
-						/* Detection buffer --------------------------------- */
-						/* Update buffer for storing the moving average
-						   results */
-						pMaxDetBuffer.AddEnd(rGuardEnergy);
-
-						/* Search for maximum */
-						iMaxIndex = 0;
-						rMaxValue = (CReal) -_MAXREAL; /* Init value */
-						for (k = 0; k < iMaxDetBufSize; k++)
+						else
 						{
-							if (pMaxDetBuffer[k] > rMaxValue)
+							/* Average the correlation results */
+							IIR1(vecCorrAvBuf[iCorrAvInd],
+								vecrRMCorrBuffer[iSelectedMode][iRMCorrBufSize - 1],
+								1 - rLambdaCoAv);
+
+
+							/* Energy of guard-interval correlation calculation
+							   (this is simply a moving average operation) */
+							vecrGuardEnMovAv.Add(vecCorrAvBuf[iCorrAvInd]);
+
+
+							/* Taking care of correlation average buffer ---- */
+							/* We use a "cyclic buffer" structure. This index
+							   defines the position in the buffer */
+							iCorrAvInd++;
+							if (iCorrAvInd == iMaxDetBufSize)
 							{
-								rMaxValue = pMaxDetBuffer[k];
-								iMaxIndex = k;
+								/* Adaptation of the lambda parameter for
+								   guard-interval correlation averaging IIR
+								   filter. With this adaptation we achieve
+								   better averaging results. A lower bound is
+								   defined for this parameter */
+								if (rLambdaCoAv <= 0.1)
+									rLambdaCoAv = 0.1;
+								else
+									rLambdaCoAv /= 2;
+
+								iCorrAvInd = 0;
 							}
-						}
 
-						/* If maximum is in the middle of the interval, mark
-						   position as the beginning of the FFT window */
-						if (iMaxIndex == iCenterOfMaxDetBuf)
-						{
-							/* The optimal start position for the FFT-window is
-							   the middle of the "MaxDetBuffer" */
-							iNewStartIndexField[iNewStIndCount] = 
-								iTimeSyncPos * GRDCRR_DEC_FACT -
-								iSymbolBlockSize / 2 -
-								/* Compensate for Hilbert-filter delay. The
-								   delay is introduced in the downsampled
-								   domain, therefore devide it by
-								   "GRDCRR_DEC_FACT" */
-								NUM_TAPS_HILB_FILT / 2 / GRDCRR_DEC_FACT;
 
-							iNewStIndCount++;
+							/* Detection buffer ----------------------------- */
+							/* Update buffer for storing the moving average
+							   results */
+							pMaxDetBuffer.AddEnd(vecrGuardEnMovAv.GetAverage());
+
+							/* Search for maximum */
+							iMaxIndex = 0;
+							rMaxValue = (CReal) -_MAXREAL; /* Init value */
+							for (k = 0; k < iMaxDetBufSize; k++)
+							{
+								if (pMaxDetBuffer[k] > rMaxValue)
+								{
+									rMaxValue = pMaxDetBuffer[k];
+									iMaxIndex = k;
+								}
+							}
+
+							/* If maximum is in the middle of the interval, mark
+							   position as the beginning of the FFT window */
+							if (iMaxIndex == iCenterOfMaxDetBuf)
+							{
+								/* The optimal start position for the FFT-window
+								   is the middle of the "MaxDetBuffer" */
+								iNewStartIndexField[iNewStIndCount] = 
+									iTimeSyncPos * GRDCRR_DEC_FACT -
+									iSymbolBlockSize / 2 -
+									/* Compensate for Hilbert-filter delay. The
+									   delay is introduced in the downsampled
+									   domain, therefore devide it by
+									   "GRDCRR_DEC_FACT" */
+									NUM_TAPS_HILB_FILT / 2 / GRDCRR_DEC_FACT;
+
+								iNewStIndCount++;
+							}
 						}
 					}
 
@@ -610,9 +608,9 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	/* Center of maximum detection buffer */
 	iCenterOfMaxDetBuf = (iMaxDetBufSize - 1) / 2;
 
-	/* Init Energy calculation after guard-interval correlation */
-	rGuardEnergy = (CReal) 0.0;
-	iPosInMovAvBuffer = 0;
+	/* Init Energy calculation after guard-interval correlation (moving
+	   average) */
+	vecrGuardEnMovAv.Init(iMovAvBufSize);
 
 	/* Start position of this value must be at the end of the observation
        window because we reset it at the beginning of the loop */
@@ -626,13 +624,16 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 		rStartIndex = (CReal) iCenterOfBuf;
 
 	/* Some inits */
-	iCorrCounter = NUM_SYM_BEFORE_RESET;
 	iAveCorr = 0;
 	bInitTimingAcqu = TRUE; /* Flag to show that init was done */
 
+	/* Set correction counter so that a non-linear correction is performed right
+	   at the beginning */
+	iCorrCounter = NUM_SYM_BEFORE_RESET;
+
+
 	/* Allocate memory for vectors and zero out */
 	HistoryBuf.Init(iTotalBufferSize, (CReal) 0.0);
-	pMovAvBuffer.Init(iMovAvBufSize, (CReal) 0.0);
 	pMaxDetBuffer.Init(iMaxDetBufSize, (CReal) 0.0);
 	HistoryBufCorr.Init(iCorrBuffSize, (CReal) 0.0);
 
@@ -644,6 +645,9 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 
 	/* Set the selected robustness mode index */
 	iSelectedMode = GetIndFromRMode(ReceiverParam.GetWaveMode());
+
+	/* Init init count for timing sync (one symbol) */
+	iTiSyncInitCnt = iDecSymBS / iStepSizeGuardCorr;
 
 
 	/* Inits for guard-interval correlation and robustness mode detection --- */
@@ -752,23 +756,21 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 
 void CTimeSync::StartAcquisition()
 {
+
+// TODO: check which initialization should be done here and which should be
+// moved to / from the "InitInternal()" function
+
 	/* The regular acquisition flags */
 	bTimingAcqu = TRUE;
 	bRobModAcqu = TRUE;
 
 	/* Set the init flag so that the "rStartIndex" can be initialized with the
-	   center of the buffer */
+	   center of the buffer and other important settings can be done */
 	SetInitFlag();
 	
 	/* This second flag is to determine the moment when the acquisition just
 	   finished. In this case, the tracking value must be reset */
 	bAcqWasActive = TRUE;
-
-	/* Set correction counter so that a non-linear correction is performed right
-	   at the beginning */
-
-// Problem: this settings is overwritten in the Init caused by setting the
-// SetInitFlag() two commands above. TODO: Find nice solution
 
 	iCorrCounter = NUM_SYM_BEFORE_RESET;
 

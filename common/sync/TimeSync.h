@@ -101,7 +101,7 @@ protected:
 	CShiftRegister<_COMPLEX>	HistoryBufCorr;
 	CShiftRegister<_REAL>		pMaxDetBuffer;
 	CRealVector					vecrHistoryFilt;
-	CRealVector					pMovAvBuffer;
+	CMovingAv<CReal>			vecrGuardEnMovAv;
 
 	CRealVector					vecCorrAvBuf;
 	int							iCorrAvInd;
@@ -118,9 +118,6 @@ protected:
 	int							iDFTSize;
 	CReal						rStartIndex;
 
-	int							iPosInMovAvBuffer;
-	CReal						rGuardEnergy;
-
 	int							iCenterOfBuf;
 
 	_BOOLEAN					bSyncInput;
@@ -130,6 +127,7 @@ protected:
 	_BOOLEAN					bRobModAcqu;
 	_BOOLEAN					bAcqWasActive;
 
+	int							iTiSyncInitCnt;
 	int							iRobModInitCnt;
 
 	int							iSelectedMode;
