@@ -60,16 +60,19 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	const CReal rActShiftTiCor = rFracPartTiCor -
 		(_REAL) vecTiCorrHist[0] * iNumCarrier / iDFTSize;
 
+	/* Integer part of shift */
+	const int iIntPartTiCorr = Round(rActShiftTiCor);
+
 	/* Extract the fractional part since we can only correct integer timing
 	   shifts */
-	rFracPartTiCor = rActShiftTiCor - (int) rActShiftTiCor;
+	rFracPartTiCor = rActShiftTiCor - iIntPartTiCorr;
 
 	/* Shift the values in the vector storing the averaged impulse response. We
 	   have to consider two cases for shifting (left and right shift) */
 	if (rActShiftTiCor < 0)
-		iIntShiftVal = (int) rActShiftTiCor + iNumIntpFreqPil;
+		iIntShiftVal = iIntPartTiCorr + iNumIntpFreqPil;
 	else
-		iIntShiftVal = (int) rActShiftTiCor;
+		iIntShiftVal = iIntPartTiCorr;
 
 	/* If new correction is out of range, do not apply rotation */
 	if ((iIntShiftVal > 0) && (iIntShiftVal < iNumIntpFreqPil))
@@ -247,7 +250,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 
 	/* Integration of timing corrections
 	   FIXME: Check for overrun of "iIntegTiCorrections" variable! */
-	iIntegTiCorrections += (long int) rActShiftTiCor;
+	iIntegTiCorrections += (long int) iIntPartTiCorr;
 
 	/* We need to consider the timing corrections done by the timing unit. What
 	   we want to estimate is only the real movement of the detected maximum
