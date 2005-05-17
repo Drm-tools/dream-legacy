@@ -365,8 +365,10 @@ CReal CAudioReverb::ProcessSample(const CReal rLInput, const CReal rRInput)
 	/* Compute one output sample */
 	CReal temp, temp0, temp1, temp2;
 
-	/* Mix stereophonic input signals to mono signal */
-	const CReal input = (CReal) 0.5 * (rLInput + rRInput);
+	/* Mix stereophonic input signals to mono signal (since the maximum value of
+	   the input signal is 0.5 * max due to the current implementation in
+	   AudioSourceDecoder.cpp, we cannot get an overrun) */
+	const CReal input = rLInput + rRInput;
 
 	temp = allpassDelays_[0].Get();
 	temp0 = allpassCoefficient_ * temp;
