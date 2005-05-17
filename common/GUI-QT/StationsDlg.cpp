@@ -158,13 +158,32 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 	fclose(pFile);
 }
 
-CDRMSchedule::StationState CDRMSchedule::IsActive(int const iPos)
+CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
 {
 	/* Get system time */
 	time_t ltime;
 	time(&ltime);
 
-	/* Current UTC time */
+	if (IsActive(iPos, ltime) == TRUE)
+		return IS_ACTIVE;
+	else
+	{
+		/* Station is not active, check preview condition */
+		if (iSecondsPreview > 0)
+		{
+			if (IsActive(iPos, ltime + iSecondsPreview) == TRUE)
+				return IS_PREVIEW;
+			else
+				return IS_INACTIVE;
+		}
+		else
+			return IS_INACTIVE;
+	}
+}
+
+_BOOLEAN CDRMSchedule::IsActive(const int iPos, const time_t ltime)
+{
+	/* Calculate time in UTC */
 	struct tm* gmtCur = gmtime(&ltime);
 	const time_t lCurTime = mktime(gmtCur);
 
@@ -215,24 +234,8 @@ CDRMSchedule::StationState CDRMSchedule::IsActive(int const iPos)
 		/* Check time interval */
 		if (lStopTime > lStartTime)
 		{
-			if (lCurTime < lStopTime)
-			{
-				if (lCurTime >= lStartTime)
-					return IS_ACTIVE;
-				else
-				{
-					/* Check preview condition */
-
-// TODO: preview does not work if transmission starts today and ends
-// the next day!
-
-					if ((iSecondsPreview > 0) &&
-						(difftime(lStartTime, lCurTime)	<= iSecondsPreview))
-					{
-						return IS_PREVIEW;
-					}
-				}
-			}
+			if ((lCurTime >= lStartTime) && (lCurTime < lStopTime))
+				return TRUE;
 		}
 		else
 		{
@@ -240,18 +243,18 @@ CDRMSchedule::StationState CDRMSchedule::IsActive(int const iPos)
 			{
 				/* First day. Only check if we are after start time */
 				if (lCurTime >= lStartTime)
-					return IS_ACTIVE;
+					return TRUE;
 			}
 			else
 			{
 				/* Second day. Only check if we are before stop time */
 				if (lCurTime < lStopTime)
-					return IS_ACTIVE;
+					return TRUE;
 			}
 		}
 	}
 
-	return IS_INACTIVE;
+	return FALSE;
 }
 
 StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
@@ -896,7 +899,7 @@ void StationsDlg::SetStationsView()
 	for (int i = 0; i < iNumStations; i++)
 	{
 		if (!((bShowAll == FALSE) &&
-			(DRMSchedule.IsActive(i) == CDRMSchedule::IS_INACTIVE)))
+			(DRMSchedule.CheckState(i) == CDRMSchedule::IS_INACTIVE)))
 		{
 			/* Only insert item if it is not already in the list */
 			if (vecpListItems[i] == NULL)
@@ -935,7 +938,7 @@ void StationsDlg::SetStationsView()
 
 			/* Check, if station is currently transmitting. If yes, set
 			   special pixmap */
-			if (DRMSchedule.IsActive(i) == CDRMSchedule::IS_ACTIVE)
+			if (DRMSchedule.CheckState(i) == CDRMSchedule::IS_ACTIVE)
 			{
 				/* Check for "special case" transmissions */
 				if (DRMSchedule.GetItem(i).iDays == 0)
@@ -945,7 +948,7 @@ void StationsDlg::SetStationsView()
 			}
 			else
 			{
-				if (DRMSchedule.IsActive(i) == CDRMSchedule::IS_PREVIEW)
+				if (DRMSchedule.CheckState(i) == CDRMSchedule::IS_PREVIEW)
 					vecpListItems[i]->setPixmap(0, BitmCubeOrange);
 				else
 					vecpListItems[i]->setPixmap(0, BitmCubeRed);

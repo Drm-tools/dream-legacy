@@ -166,13 +166,15 @@ public:
 	ESchedMode GetSchedMode() {return eSchedMode;}
 
 	int GetStationNumber() {return StationsTable.Size();}
-	CStationsItem& GetItem(int const iPos) {return StationsTable[iPos];}
-	StationState IsActive(int const iPos);
+	CStationsItem& GetItem(const int iPos) {return StationsTable[iPos];}
+	StationState CheckState(const int iPos);
 
 	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
 	int GetSecondsPreview() {return iSecondsPreview;}
 
 protected:
+	_BOOLEAN IsActive(const int iPos, const time_t ltime);
+
 	CVector<CStationsItem>	StationsTable;
 	ESchedMode				eSchedMode;
 
