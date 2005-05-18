@@ -29,7 +29,7 @@
 #if !defined(CRC_H__3B0BA660_CA63_4VASDGLJNAJ2B_23E7A0D31912__INCLUDED_)
 #define CRC_H__3B0BA660_CA63_4VASDGLJNAJ2B_23E7A0D31912__INCLUDED_
 
-#include "GlobalDefinitions.h"
+#include "../GlobalDefinitions.h"
 
 
 /* Classes ********************************************************************/
