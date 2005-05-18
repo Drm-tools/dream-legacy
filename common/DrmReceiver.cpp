@@ -294,11 +294,6 @@ void CDRMReceiver::InitReceiverMode()
 	/* Init all modules */
 	SetInStartMode();
 
-	/* Reset audio cyclic-buffer since AM mode and DRM mode use the same
-	   buffer. When init is called or modes are switched, the buffer could
-	   have some data left which lead to overrun */
-	AudSoDecBuf.Clear();
-
 	/* Reset new mode flag */
 	eNewReceiverMode = RM_NONE;
 }
@@ -503,6 +498,28 @@ void CDRMReceiver::InitsForAllModules()
 	DataDecoder.SetInitFlag();
 	WriteData.SetInitFlag();
 	AMDemodulation.SetInitFlag();
+
+	/* Clear all buffers (this is especially important for the "AudSoDecBuf"
+	   buffer since AM mode and DRM mode use the same buffer. When init is
+	   called or modes are switched, the buffer could have some data left which
+	   lead to an overrun) */
+	RecDataBuf.Clear();
+	InpResBuf.Clear();
+	FreqSyncAcqBuf.Clear();
+	TimeSyncBuf.Clear();
+	OFDMDemodBuf.Clear();
+	SyncUsingPilBuf.Clear();
+	ChanEstBuf.Clear();
+	MSCCarDemapBuf.Clear();
+	FACCarDemapBuf.Clear();
+	SDCCarDemapBuf.Clear();
+	DeintlBuf.Clear();
+	FACDecBuf.Clear();
+	SDCDecBuf.Clear();
+	MSCMLCDecBuf.Clear();
+	MSCDeMUXBufAud.Clear();
+	MSCDeMUXBufData.Clear();
+	AudSoDecBuf.Clear();
 }
 
 
