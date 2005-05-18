@@ -31,7 +31,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "../interleaver/BlockInterleaver.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 
 
 /* Classes ********************************************************************/

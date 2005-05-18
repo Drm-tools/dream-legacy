@@ -54,7 +54,6 @@ drmwithoutqt_SOURCES = \
 	../common/sync/TimeSyncTrack.cpp \
 	../common/GUI-QT/main.cpp \
 	source/sound.cpp \
-	../common/Buffer.h \
 	../common/DRMSignalIO.h \
 	../common/DataIO.h \
 	../common/DrmReceiver.h \
@@ -63,12 +62,10 @@ drmwithoutqt_SOURCES = \
 	../common/GlobalDefinitions.h \
 	../common/InputResample.h \
 	../common/MSCMultiplexer.h \
-	../common/Modul.h \
 	../common/OFDM.h \
 	../common/Parameter.h \
 	../common/TextMessage.h \
 	../common/AMDemodulation.h \
-	../common/Vector.h \
 	../common/datadecoding/DataDecoder.h \
 	../common/datadecoding/DABMOT.h \
 	../common/datadecoding/MOTSlideShow.h \
@@ -77,6 +74,9 @@ drmwithoutqt_SOURCES = \
 	../common/matlib/Matlib.h \
 	../common/matlib/MatlibSigProToolbox.h \
 	../common/matlib/MatlibStdToolbox.h \
+	../common/util/Modul.h \
+	../common/util/Vector.h \
+	../common/util/Buffer.h \
 	../common/util/CRC.h \
 	../common/util/AudioFile.h \
 	../common/util/Settings.h \

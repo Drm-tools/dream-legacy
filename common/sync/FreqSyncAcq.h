@@ -30,7 +30,7 @@
 #define FREQSYNC_H__3B0BA660EDOINBEROUEBGF4344_BB2B_23E7912__INCLUDED_
 
 #include "../Parameter.h"
-#include "../Modul.h"
+#include "../util/Modul.h"
 #include "../matlib/Matlib.h"
 #include "../util/Utilities.h"
 

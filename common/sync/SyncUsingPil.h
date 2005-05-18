@@ -30,8 +30,8 @@
 #define SYNCUSINGPIL_H__3B0BA660_CA63_434OBUVEE7A0D31912__INCLUDED_
 
 #include "../Parameter.h"
-#include "../Modul.h"
-#include "../Vector.h"
+#include "../util/Modul.h"
+#include "../util/Vector.h"
 #include "../chanest/ChanEstTime.h"
 
 

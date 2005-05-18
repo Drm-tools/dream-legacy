@@ -31,7 +31,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
-#include "../Modul.h"
+#include "../util/Modul.h"
 #include "../util/CRC.h"
 #include "../TextMessage.h"
 #include "../resample/Resample.h"

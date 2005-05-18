@@ -27,8 +27,8 @@
 #include "sound.h"
 
 #include "../../common/GlobalDefinitions.h"
-#include "../../common/Buffer.h"
-#include "../../common/Vector.h"
+#include "../../common/util/Buffer.h"
+#include "../../common/util/Vector.h"
 
 #ifdef WITH_SOUND
 #include <qthread.h>

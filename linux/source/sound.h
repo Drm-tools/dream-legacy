@@ -30,7 +30,7 @@
 #define _SOUND_H
 
 #include "../../common/GlobalDefinitions.h"
-#include "../../common/Vector.h"
+#include "../../common/util/Vector.h"
 
 #include <unistd.h>
 #include <fcntl.h>

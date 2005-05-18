@@ -32,7 +32,7 @@
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
 #include "../util/CRC.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 #include "../util/Utilities.h"
 
 

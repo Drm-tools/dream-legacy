@@ -33,7 +33,7 @@
 #include <mmsystem.h>
 
 #include "../../common/GlobalDefinitions.h"
-#include "../../common/Vector.h"
+#include "../../common/util/Vector.h"
 
 
 /* Definitions ****************************************************************/

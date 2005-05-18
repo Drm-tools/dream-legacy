@@ -30,7 +30,7 @@
 #define MLC_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../Modul.h"
+#include "../util/Modul.h"
 #include "../Parameter.h"
 #include "../tables/TableMLC.h"
 #include "../tables/TableCarMap.h"

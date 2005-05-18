@@ -31,7 +31,7 @@
 
 #include "ResampleFilter.h"
 #include "../GlobalDefinitions.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 
 
 /* Classes ********************************************************************/

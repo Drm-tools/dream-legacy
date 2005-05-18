@@ -737,7 +737,15 @@ SOURCE=..\common\util\AudioFile.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\util\Buffer.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\util\CRC.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\util\Modul.h
 # End Source File
 # Begin Source File
 
@@ -746,6 +754,10 @@ SOURCE=..\common\util\Settings.h
 # Begin Source File
 
 SOURCE=..\common\util\Utilities.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\util\Vector.h
 # End Source File
 # End Group
 # Begin Source File
@@ -759,10 +771,6 @@ SOURCE=..\common\sourcedecoders\AudioSourceDecoder.h
 # Begin Source File
 
 SOURCE=..\common\interleaver\BlockInterleaver.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\Buffer.h
 # End Source File
 # Begin Source File
 
@@ -806,10 +814,6 @@ SOURCE=..\common\MDI.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\Modul.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\MSCMultiplexer.h
 # End Source File
 # Begin Source File
@@ -839,10 +843,6 @@ SOURCE=..\common\interleaver\SymbolInterleaver.h
 # Begin Source File
 
 SOURCE=..\common\TextMessage.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\Vector.h
 # End Source File
 # End Group
 # Begin Group "Ressourcendateien"
