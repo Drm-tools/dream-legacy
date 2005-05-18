@@ -31,7 +31,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
-#include "../CRC.h"
+#include "../util/CRC.h"
 #include "../Vector.h"
 #include "../util/Utilities.h"
 

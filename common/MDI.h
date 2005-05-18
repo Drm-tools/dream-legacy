@@ -33,7 +33,7 @@
 #include "Parameter.h"
 #include "Vector.h"
 #include "Buffer.h"
-#include "CRC.h"
+#include "util/CRC.h"
 #include <qsocketdevice.h>
 #include <qsocketnotifier.h>
 

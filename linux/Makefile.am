@@ -1,8 +1,8 @@
 bin_PROGRAMS = drm
 
 
-drmwithoutqt_SOURCES = ../common/SimulationParameters.cpp \
-	../common/CRC.cpp \
+drmwithoutqt_SOURCES = \
+	../common/SimulationParameters.cpp \
 	../common/DRMSignalIO.cpp \
 	../common/DataIO.cpp \
 	../common/DrmReceiver.cpp \
@@ -21,6 +21,7 @@ drmwithoutqt_SOURCES = ../common/SimulationParameters.cpp \
 	../common/FAC/FAC.cpp \
 	../common/matlib/MatlibSigProToolbox.cpp \
 	../common/matlib/MatlibStdToolbox.cpp \
+	../common/util/CRC.cpp \
 	../common/util/Settings.cpp \
 	../common/util/Utilities.cpp \
 	../common/SDC/SDCReceive.cpp \
@@ -54,7 +55,6 @@ drmwithoutqt_SOURCES = ../common/SimulationParameters.cpp \
 	../common/GUI-QT/main.cpp \
 	source/sound.cpp \
 	../common/Buffer.h \
-	../common/CRC.h \
 	../common/DRMSignalIO.h \
 	../common/DataIO.h \
 	../common/DrmReceiver.h \
@@ -77,6 +77,7 @@ drmwithoutqt_SOURCES = ../common/SimulationParameters.cpp \
 	../common/matlib/Matlib.h \
 	../common/matlib/MatlibSigProToolbox.h \
 	../common/matlib/MatlibStdToolbox.h \
+	../common/util/CRC.h \
 	../common/util/AudioFile.h \
 	../common/util/Settings.h \
 	../common/util/Utilities.h \

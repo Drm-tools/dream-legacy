@@ -30,7 +30,7 @@
 #define TEXT_MESSAGE_H__3B00_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
 #include "GlobalDefinitions.h"
-#include "CRC.h"
+#include "util/CRC.h"
 #include "Vector.h"
 
 

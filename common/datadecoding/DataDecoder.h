@@ -32,7 +32,7 @@
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
 #include "../Modul.h"
-#include "../CRC.h"
+#include "../util/CRC.h"
 #include "../Vector.h"
 #include "MOTSlideShow.h"
 #include "Journaline.h"

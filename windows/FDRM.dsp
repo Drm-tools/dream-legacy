@@ -424,6 +424,10 @@ SOURCE=..\common\datadecoding\MOTSlideShow.cpp
 # PROP Default_Filter ".c .cpp"
 # Begin Source File
 
+SOURCE=..\common\util\CRC.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\util\Settings.cpp
 # End Source File
 # Begin Source File
@@ -446,10 +450,6 @@ SOURCE=..\common\interleaver\BlockInterleaver.cpp
 # Begin Source File
 
 SOURCE=..\common\drmchannel\ChannelSimulation.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\CRC.cpp
 # End Source File
 # Begin Source File
 
@@ -737,6 +737,10 @@ SOURCE=..\common\util\AudioFile.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\util\CRC.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\util\Settings.h
 # End Source File
 # Begin Source File
@@ -763,10 +767,6 @@ SOURCE=..\common\Buffer.h
 # Begin Source File
 
 SOURCE=..\common\drmchannel\ChannelSimulation.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\CRC.h
 # End Source File
 # Begin Source File
 

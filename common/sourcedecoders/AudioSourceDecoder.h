@@ -32,7 +32,7 @@
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
 #include "../Modul.h"
-#include "../CRC.h"
+#include "../util/CRC.h"
 #include "../TextMessage.h"
 #include "../resample/Resample.h"
 #include "../datadecoding/DataDecoder.h"

@@ -32,7 +32,7 @@
 #include "../GlobalDefinitions.h"
 #include "../tables/TableFAC.h"
 #include "../Parameter.h"
-#include "../CRC.h"
+#include "../util/CRC.h"
 #include "../Vector.h"
 
 
