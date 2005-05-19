@@ -26,10 +26,15 @@
 %*
 %******************************************************************************/
 
-function [] = plotsimres()
+function [] = plotsimres(doremcompname)
 global plotcolors;
 global LW;
 global figstretch;
+
+% Check parameters
+if nargin < 1
+    doremcompname = 0; % do not remove by default
+end
 
 close all;
 
@@ -112,7 +117,12 @@ if (numdataBERIDEAL > 0)
         simresBERIDEAL(i).name = removesimtype(simresBERIDEAL(i).name);             
 
         % remove length of simulation
-        simresBERIDEAL(i).name = removelenofsim(simresBERIDEAL(i).name, 5);         
+        simresBERIDEAL(i).name = removelenofsim(simresBERIDEAL(i).name, 5);
+        
+        % remove computer name if requested
+        if doremcompname ~= 0
+            simresBERIDEAL(i).name = removecompname(simresBERIDEAL(i).name);
+        end
     end
 
     setlegend(simresBERIDEAL, handles);
@@ -152,7 +162,12 @@ if (numdataBER > 0)
         simresBER(i).name = removesimtype(simresBER(i).name);        
 
         % remove length of simulation
-        simresBER(i).name = removelenofsim(simresBER(i).name, 6);         
+        simresBER(i).name = removelenofsim(simresBER(i).name, 6); 
+        
+        % remove computer name if requested
+        if doremcompname ~= 0
+            simresBER(i).name = removecompname(simresBER(i).name);
+        end        
     end
 
     setlegend(simresBER, handles);
@@ -192,7 +207,12 @@ if (numdataSYNC > 0)
         simresSYNC(i).name = removesimtype(simresSYNC(i).name);        
 
         % remove length of simulation
-        simresSYNC(i).name = removelenofsim(simresSYNC(i).name, 5);         
+        simresSYNC(i).name = removelenofsim(simresSYNC(i).name, 5);   
+        
+        % remove computer name if requested
+        if doremcompname ~= 0
+            simresSYNC(i).name = removecompname(simresSYNC(i).name);
+        end        
     end
 
     setlegend(simresSYNC, handles);
@@ -219,7 +239,7 @@ if (numdataMSE > 0)
     % plot results
     if (numdataMSE > 0)
         % first curve
-        handtmp = semilogy(resMSE(1).data, char(plotcolors(1)), 'LineWidth', LW);
+        handtmp = plot(10 * log10(resMSE(1).data), char(plotcolors(1)), 'LineWidth', LW);
         handles = handtmp(1);
 
         grid on;
@@ -228,7 +248,7 @@ if (numdataMSE > 0)
             % plot rest of the curves
             hold on;
             for i = 2:numdataMSE
-                handtmp = semilogy(resMSE(i).data, char(plotcolors(i)), 'LineWidth', LW);
+                handtmp = plot(10 * log10(resMSE(i).data), char(plotcolors(i)), 'LineWidth', LW);
                 handles = [handles handtmp(1)];
             end
         end
@@ -247,6 +267,11 @@ if (numdataMSE > 0)
         
         % remove length of simulation
         simresMSE(i).name = removelenofsim(simresMSE(i).name, 5);
+        
+        % remove computer name if requested
+        if doremcompname ~= 0
+            simresMSE(i).name = removecompname(simresMSE(i).name);
+        end        
     end
 
     setlegend(simresMSE, handles);
