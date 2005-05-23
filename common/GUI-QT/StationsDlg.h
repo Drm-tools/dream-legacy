@@ -55,10 +55,6 @@
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 
-#ifdef HAVE_LIBHAMLIB
-# include <hamlib/rig.h>
-#endif
-
 
 /* Definitions ****************************************************************/
 /* Define the timer interval of updating the list view */
@@ -85,23 +81,6 @@
 # define FILE_HANDLE					HANDLE
 #else
 # define FILE_HANDLE					int
-#endif
-
-#ifdef HAVE_LIBHAMLIB
-/* Config string for com-port selection is different in Windows and Linux */
-# ifdef _WIN32
-#  define HAMLIB_CONF_COM1				"rig_pathname=COM1"
-#  define HAMLIB_CONF_COM2				"rig_pathname=COM2"
-#  define HAMLIB_CONF_COM3				"rig_pathname=COM3"
-#  define HAMLIB_CONF_COM4				"rig_pathname=COM4"
-#  define HAMLIB_CONF_COM5				"rig_pathname=COM5"
-# else
-#  define HAMLIB_CONF_COM1				"rig_pathname=/dev/ttyS0"
-#  define HAMLIB_CONF_COM2				"rig_pathname=/dev/ttyS1"
-#  define HAMLIB_CONF_COM3				"rig_pathname=/dev/ttyS2"
-#  define HAMLIB_CONF_COM4				"rig_pathname=/dev/ttyS3"
-#  define HAMLIB_CONF_COM5				"rig_pathname=/dev/ttyUSB0"
-# endif
 #endif
 
 /* Name for DRM and AM schedule file. If you change something here, make sure
@@ -213,6 +192,7 @@ protected:
     virtual void	showEvent(QShowEvent* pEvent);
 	void			AddWhatsThisHelp();
 	void			SetUTCTimeLabel();
+	void			EnableSMeter(const _BOOLEAN bStatus);
 
 	CDRMReceiver*				pDRMRec;
 
@@ -243,60 +223,8 @@ protected:
 	QActionGroup*				agCOMPortSel;
 
 #ifdef HAVE_LIBHAMLIB
-	class CSpecDRMRig
-	{
-	public:
-		CSpecDRMRig() : iModelID(0), strDRMSetMod(""), strDRMSetNoMod(""),
-			iFreqOffs(0) {}
-		CSpecDRMRig(const CSpecDRMRig& nSpec) :
-			iModelID(nSpec.iModelID), strDRMSetMod(nSpec.strDRMSetMod),
-			strDRMSetNoMod(nSpec.strDRMSetNoMod), iFreqOffs(nSpec.iFreqOffs) {}
-		CSpecDRMRig(rig_model_t newID, string sSet, int iNFrOff,
-			string sModSet) : iModelID(newID), strDRMSetNoMod(sSet),
-			iFreqOffs(iNFrOff), strDRMSetMod(sModSet) {}
-
-		rig_model_t		iModelID; /* Model ID for hamlib */
-		string			strDRMSetMod; /* Special DRM settings (modified) */
-		string			strDRMSetNoMod; /* Special DRM settings (not mod.) */
-		int				iFreqOffs; /* Frequency offset */
-	};
-	CVector<CSpecDRMRig>	vecSpecDRMRigs;
-
-	QPopupMenu*				pRemoteMenuOther;
-	CVector<rig_model_t>	veciModelID;
-
-	class SDrRigCaps
-	{
-	public:
-		SDrRigCaps() : iModelID(0), strManufacturer(""), strModelName(""),
-			eRigStatus(RIG_STATUS_ALPHA) {}
-		SDrRigCaps(rig_model_t tNID, QString strNMan, QString strNModN,
-			rig_status_e eNSt) : iModelID(tNID),  strManufacturer(strNMan),
-			strModelName(strNModN), eRigStatus(eNSt) {}
-
-		inline SDrRigCaps& operator=(const SDrRigCaps& cNew)
-			{iModelID = cNew.iModelID; strManufacturer = cNew.strManufacturer;
-			strModelName = cNew.strModelName; eRigStatus = cNew.eRigStatus;
-			return *this;}
-
-		rig_model_t		iModelID;
-		QString			strManufacturer;
-		QString			strModelName;
-		rig_status_e	eRigStatus;
-	};
-	CVector<SDrRigCaps>	veccapsHamlibModels;
-	void SortHamlibModelList(CVector<SDrRigCaps>& veccapsHamlibModels);
-	void EnableSMeter(const _BOOLEAN bStatus);
-
-	rig_model_t			iCurSelModelID;
-
-	static int			PrintHamlibModelList(const struct rig_caps* caps, void* data);
-	_BOOLEAN			CheckForSpecDRMFE(const rig_model_t iID, int& iIndex);
-	_BOOLEAN			SetFrequency(const int iFreqkHz);
-	void				InitHamlib(const rig_model_t newModID);
-
-	RIG*				pRig;
-	_BOOLEAN			bSMeterEnabled;
+	QPopupMenu*					pRemoteMenuOther;
+	CVector<rig_model_t>		veciModelID;
 #endif
 
 public slots:

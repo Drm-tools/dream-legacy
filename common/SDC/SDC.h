@@ -52,11 +52,14 @@ public:
 
 protected:
 	void DataEntityType0(CVector<_BINARY>& vecbiData, CParameter& Parameter);
-	void DataEntityType1(CVector<_BINARY>& vecbiData, int ServiceID, CParameter& Parameter);
+	void DataEntityType1(CVector<_BINARY>& vecbiData, int ServiceID,
+						 CParameter& Parameter);
 // ...
-	void DataEntityType5(CVector<_BINARY>& vecbiData, int ServiceID, CParameter& Parameter);
+	void DataEntityType5(CVector<_BINARY>& vecbiData, int ServiceID,
+						 CParameter& Parameter);
 // ...
-	void DataEntityType9(CVector<_BINARY>& vecbiData, int ServiceID, CParameter& Parameter);
+	void DataEntityType9(CVector<_BINARY>& vecbiData, int ServiceID,
+						 CParameter& Parameter);
 
 
 	CCRC CRCObject;
@@ -72,16 +75,24 @@ public:
 	ERetStatus SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
 
 protected:
-	_BOOLEAN DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody, CParameter& Parameter);
-	_BOOLEAN DataEntityType1(CVector<_BINARY>* pbiData, const int iLengthOfBody, CParameter& Parameter);
+	_BOOLEAN DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter);
+	_BOOLEAN DataEntityType1(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter);
 // ...
-	_BOOLEAN DataEntityType3(CVector<_BINARY>* pbiData, const int iLengthOfBody, CParameter& Parameter);
-	_BOOLEAN DataEntityType4(CVector<_BINARY>* pbiData, const int iLengthOfBody, CParameter& Parameter);
-	_BOOLEAN DataEntityType5(CVector<_BINARY>* pbiData, const int iLengthOfBody, CParameter& Parameter);
+	_BOOLEAN DataEntityType3(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const _BOOLEAN bVersion);
+	_BOOLEAN DataEntityType4(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const _BOOLEAN bVersion);
+	_BOOLEAN DataEntityType5(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter);
 // ...
-	_BOOLEAN DataEntityType8(CVector<_BINARY>* pbiData, const int iLengthOfBody, CParameter& Parameter);
-	_BOOLEAN DataEntityType9(CVector<_BINARY>* pbiData, const int iLengthOfBody, CParameter& Parameter);
-
+	_BOOLEAN DataEntityType7(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const _BOOLEAN bVersion);
+	_BOOLEAN DataEntityType8(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter);
+	_BOOLEAN DataEntityType9(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter);
 
 	CCRC CRCObject;
 };

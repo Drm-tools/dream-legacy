@@ -245,6 +245,77 @@ public:
 		}
 	};
 
+	/* Alternative frequency signalling class */
+	class CAltFreqSign
+	{
+	public:
+		CAltFreqSign() {Reset();}
+
+		class CAltFreq
+		{
+		public:
+			CAltFreq() {Reset();}
+			CAltFreq(const CAltFreq& nAF) :
+				veciFrequencies(nAF.veciFrequencies),
+				veciServRestrict(nAF.veciServRestrict),
+				bIsSyncMultplx(nAF.bIsSyncMultplx),
+				iRegionID(nAF.iRegionID), iScheduleID(nAF.iScheduleID) {}
+
+			CAltFreq& operator=(const CAltFreq& nAF)
+			{
+				veciFrequencies.Init(nAF.veciFrequencies.Size());
+				veciFrequencies = nAF.veciFrequencies;
+
+				veciServRestrict.Init(nAF.veciServRestrict.Size());
+				veciServRestrict = nAF.veciServRestrict;
+
+				bIsSyncMultplx = nAF.bIsSyncMultplx;
+				iRegionID = nAF.iRegionID;
+				iScheduleID = nAF.iScheduleID;
+				return *this; 
+			}
+
+			_BOOLEAN operator==(const CAltFreq& nAF)
+			{
+				int i;
+
+				/* Vector sizes */
+				if (veciFrequencies.Size() != nAF.veciFrequencies.Size()) return FALSE;
+				if (veciServRestrict.Size() != nAF.veciServRestrict.Size()) return FALSE;
+
+				/* Vector contents */
+				for (i = 0; i < veciFrequencies.Size(); i++)
+					if (veciFrequencies[i] != nAF.veciFrequencies[i]) return FALSE;
+				for (i = 0; i < veciServRestrict.Size(); i++)
+					if (veciServRestrict[i] != nAF.veciServRestrict[i]) return FALSE;
+
+				if (bIsSyncMultplx != nAF.bIsSyncMultplx) return FALSE;
+				if (iRegionID != nAF.iRegionID) return FALSE;
+				if (iScheduleID != nAF.iScheduleID) return FALSE;
+				return TRUE;
+			}
+
+			void Reset()
+			{
+				veciFrequencies.Init(0);
+				veciServRestrict.Init(MAX_NUM_SERVICES, 0);
+				bIsSyncMultplx = FALSE;
+				iRegionID = iScheduleID = 0;
+			}
+
+			CVector<int>	veciFrequencies;
+			CVector<int>	veciServRestrict;
+			_BOOLEAN		bIsSyncMultplx;
+			int				iRegionID;
+			int				iScheduleID;
+		};
+
+		void Reset() {vecAltFreq.Init(0); bVersionFlag = FALSE;}
+
+		CVector<CAltFreq>	vecAltFreq;
+		_BOOLEAN			bVersionFlag;
+	} AltFreqSign;
+
 	void			ResetServicesStreams();
 	void			GetActiveServices(CVector<int>& veciActServ);
 	void			GetActiveStreams(CVector<int>& veciActStr);

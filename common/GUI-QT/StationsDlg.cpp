@@ -260,9 +260,6 @@ _BOOLEAN CDRMSchedule::IsActive(const int iPos, const time_t ltime)
 StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	const char* name, bool modal, WFlags f) : vecpListItems(0),
 	CStationsDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
-#ifdef HAVE_LIBHAMLIB
-	, pRig(NULL)
-#endif
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -396,73 +393,12 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 
 #ifdef HAVE_LIBHAMLIB
-	/* If config string is empty, set default COM port 1 */
-	if (pDRMRec->GetHamlibConf().empty())
-		pDRMRec->SetHamlibConf(HAMLIB_CONF_COM1);
-
-
 	/* Remote menu  --------------------------------------------------------- */
 	pRemoteMenu = new QPopupMenu(this);
 	CHECK_PTR(pRemoteMenu);
 
 	pRemoteMenuOther = new QPopupMenu(this);
 	CHECK_PTR(pRemoteMenuOther);
-
-	/* Special DRM front-end list */
-	vecSpecDRMRigs.Init(0);
-
-#ifdef RIG_MODEL_G303
-	/* Winradio G3 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G303,
-		"l_ATT=0,l_AGC=3", 0,
-		"l_ATT=0,l_AGC=3"));
-#endif
-
-#ifdef RIG_MODEL_AR7030
-	/* AOR 7030 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_AR7030,
-		"m_CW=9500,l_IF=-4200,l_AGC=3", 5 /* kHz frequency offset */,
-		"l_AGC=3"));
-#endif
-
-#ifdef RIG_MODEL_ELEKTOR304
-	/* Elektor 3/04 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_ELEKTOR304, "", 0, ""));
-#endif
-
-#ifdef RIG_MODEL_NRD535
-	/* JRC NRD 535 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_NRD535,
-		"l_CWPITCH=-5000,m_CW=12000,l_IF=-2000,l_AGC=3" /* AGC=slow */,
-		3 /* kHz frequency offset */,
-		"l_AGC=3"));
-#endif
-
-#ifdef RIG_MODEL_RX320
-	/* TenTec RX320D */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX320,
-		"l_AF=1,l_AGC=3,m_AM=6000", 0,
-		"l_AGC=3"));
-#endif
-
-#ifdef RIG_MODEL_RX340
-	/* TenTec RX340D */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX340,
-		"l_AF=1,m_USB=16000,l_AGC=3,l_IF=2000",
-		-12 /* kHz frequency offset */,
-		"l_AGC=3"));
-#endif
-
-
-	/* Load all possible front-end remotes in hamlib library */
-	rig_load_all_backends();
-
-	/* Get all models which are available. First, the vector for storing the
-	   data has to be initialized with zero length! A call-back function is
-	   called to return the different rigs */
-	veccapsHamlibModels.Init(0);
-	const int status = rig_list_foreach(PrintHamlibModelList, this);
-	SortHamlibModelList(veccapsHamlibModels); /* Sort list */
 
 	/* Init vector for storing the model IDs with zero length */
 	veciModelID.Init(0);
@@ -471,72 +407,69 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	pRemoteMenu->insertItem(tr("None"), this, SLOT(OnRemoteMenu(int)), 0, 0);
 	veciModelID.Add(0); /* ID 0 for "none" */
 
-	/* Only add menu entries if list was correctly received */
+	/* Number of supported rigs */
+	const int iNumRigs = pDRMRec->GetHamlib()->GetNumHamModels();
+
+	/* Add menu entries */
 	_BOOLEAN bCheckWasSet = FALSE;
-	if (status == RIG_OK)
+	for (int i = 0; i < iNumRigs; i++)
 	{
-		for (int j = 0; j < veccapsHamlibModels.Size(); j++)
+		/* Get rig details */
+		const CHamlib::SDrRigCaps CurSDRiCa =
+			pDRMRec->GetHamlib()->GetHamModel(i);
+
+		/* Store model ID */
+		veciModelID.Add(CurSDRiCa.iModelID);
+		const int iCurModIDIdx = veciModelID.Size() - 1;
+
+		/* Create menu objects which belong to an action group. We hope that
+		   QT takes care of all the new objects and deletes them... */
+		if (CurSDRiCa.bIsSpecRig == TRUE)
 		{
-			/* Create menu objects which belong to an action group. We hope that
-			   QT takes care of all the new objects and deletes them... */
-			const int iCurModelID = veccapsHamlibModels[j].iModelID;
-		
-			/* Store model ID */
-			veciModelID.Add(iCurModelID);
+			/* Main rigs */
+			pRemoteMenu->insertItem(
+				/* Set menu string. Should look like:
+				   [ID] Manuf. Model */
+				"[" + QString().setNum(CurSDRiCa.iModelID) + "] " +
+				CurSDRiCa.strManufacturer + " " +
+				CurSDRiCa.strModelName,
+				this, SLOT(OnRemoteMenu(int)), 0, iCurModIDIdx);
 
-			int iDummy;
-			if (CheckForSpecDRMFE(iCurModelID, iDummy) == TRUE)
+			/* Check for checking */
+			if (pDRMRec->GetHamlib()->GetHamlibModelID() == CurSDRiCa.iModelID)
 			{
-				pRemoteMenu->insertItem(
-					/* Set menu string. Should look like:
-					   [ID] Manuf. Model */
-					"[" + QString().setNum(iCurModelID) + "] " +
-					veccapsHamlibModels[j].strManufacturer + " " +
-					veccapsHamlibModels[j].strModelName,
-					this, SLOT(OnRemoteMenu(int)), 0, veciModelID.Size() - 1);
-
-				/* Check for checking and init if necessary */
-				if (pDRMRec->GetHamlibModel() == iCurModelID)
-				{
-					pRemoteMenu->setItemChecked(veciModelID.Size() - 1, TRUE);
-					bCheckWasSet = TRUE;
-					InitHamlib(iCurModelID); /* Init hamlib */
-				}
+				pRemoteMenu->setItemChecked(iCurModIDIdx, TRUE);
+				bCheckWasSet = TRUE;
 			}
-			else
-			{
-				/* "Other" menu */
-				pRemoteMenuOther->insertItem(
-					/* Set menu string. Should look like:
-					   [ID] Manuf. Model (status) */
-					"[" + QString().setNum(iCurModelID) + "] " +
-					veccapsHamlibModels[j].strManufacturer + " " +
-					veccapsHamlibModels[j].strModelName +
-					" (" + rig_strstatus(veccapsHamlibModels[j].eRigStatus) +
-					")",
-					this, SLOT(OnRemoteMenu(int)), 0, veciModelID.Size() - 1);
+		}
+		else
+		{
+			/* "Other" menu */
+			pRemoteMenuOther->insertItem(
+				/* Set menu string. Should look like:
+				   [ID] Manuf. Model (status) */
+				"[" + QString().setNum(CurSDRiCa.iModelID) + "] " +
+				CurSDRiCa.strManufacturer + " " +
+				CurSDRiCa.strModelName +
+				" (" + rig_strstatus(CurSDRiCa.eRigStatus) +
+				")",
+				this, SLOT(OnRemoteMenu(int)), 0, iCurModIDIdx);
 
-				/* Check for checking and init if necessary */
-				if (pDRMRec->GetHamlibModel() == iCurModelID)
-				{
-					pRemoteMenuOther->
-						setItemChecked(veciModelID.Size() - 1, TRUE);
-					bCheckWasSet = TRUE;
-					InitHamlib(iCurModelID); /* Init hamlib */
-				}
+			/* Check for checking */
+			if (pDRMRec->GetHamlib()->GetHamlibModelID() == CurSDRiCa.iModelID)
+			{
+				pRemoteMenuOther->setItemChecked(iCurModIDIdx, TRUE);
+				bCheckWasSet = TRUE;
 			}
 		}
 	}
 
-	/* Only add "other" menu if front-ends are available */
-	if (status == RIG_OK)
-		pRemoteMenu->insertItem(tr("Other"), pRemoteMenuOther);
+	/* Add "other" menu */
+	pRemoteMenu->insertItem(tr("Other"), pRemoteMenuOther);
 
+	/* If no rig was selected, set check to "none" */
 	if (bCheckWasSet == FALSE)
-	{
-		/* No remote as default */
 		pRemoteMenu->setItemChecked(0, TRUE);
-	}
 
 	/* Separator */
 	pRemoteMenu->insertSeparator();
@@ -556,44 +489,44 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	agCOMPortSel->addTo(pRemoteMenu);
 
 	/* Try to get the COM port number from the hamlib configure string */
-	if (pDRMRec->GetHamlibConf() == HAMLIB_CONF_COM1)
+	if (pDRMRec->GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM1)
 		pacMenuCOM1->setOn(TRUE);
 
-	if (pDRMRec->GetHamlibConf() == HAMLIB_CONF_COM2)
+	if (pDRMRec->GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM2)
 		pacMenuCOM2->setOn(TRUE);
 
-	if (pDRMRec->GetHamlibConf() == HAMLIB_CONF_COM3)
+	if (pDRMRec->GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM3)
 		pacMenuCOM3->setOn(TRUE);
 
-	if (pDRMRec->GetHamlibConf() == HAMLIB_CONF_COM4)
+	if (pDRMRec->GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM4)
 		pacMenuCOM4->setOn(TRUE);
 
-	if (pDRMRec->GetHamlibConf() == HAMLIB_CONF_COM5)
+	if (pDRMRec->GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM5)
 		pacMenuCOM5->setOn(TRUE);
 
 
 	/* Other settings ------------------------------------------------------- */
-	/* Enable s-meter */
 	/* Separator */
 	pRemoteMenu->insertSeparator();
 
+	/* Enable s-meter */
 	const int iSMeterMenuID = pRemoteMenu->insertItem(tr("Enable S-Meter"),
 		this, SLOT(OnSMeterMenu(int)), 0);
 
-	/* Set check */
-	if (pDRMRec->GetEnableSMeter() == TRUE)
-		pRemoteMenu->setItemChecked(iSMeterMenuID, 1);
+	/* S-meter settings */
+	pRemoteMenu->setItemChecked(iSMeterMenuID, pDRMRec->bEnableSMeter);
+	EnableSMeter(pDRMRec->bEnableSMeter);
 
-	/* Enable special settings for rigs */
 	/* Separator */
 	pRemoteMenu->insertSeparator();
 
+	/* Enable special settings for rigs */
 	const int iModRigMenuID = pRemoteMenu->insertItem(tr("With DRM "
 		"Modification"), this, SLOT(OnModRigMenu(int)), 0);
 
 	/* Set check */
-	if (pDRMRec->GetEnableModRigSettings() == TRUE)
-		pRemoteMenu->setItemChecked(iModRigMenuID, 1);
+	pRemoteMenu->setItemChecked(iModRigMenuID,
+		pDRMRec->GetHamlib()->GetEnableModRigSettings());
 #endif
 
 
@@ -649,7 +582,6 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Set up timers */
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
 	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
-	TimerSMeter.start(GUI_TIMER_S_METER);
 }
 
 StationsDlg::~StationsDlg()
@@ -664,15 +596,6 @@ StationsDlg::~StationsDlg()
 
 	/* Store preview settings */
 	pDRMRec->iSecondsPreview = DRMSchedule.GetSecondsPreview();
-
-#ifdef HAVE_LIBHAMLIB
-	if (pRig != NULL)
-	{
-		/* close everything */
-		rig_close(pRig);
-		rig_cleanup(pRig);
-	}
-#endif
 }
 
 void StationsDlg::SetUTCTimeLabel()
@@ -984,7 +907,7 @@ void StationsDlg::OnFreqCntNewValue(double dVal)
 {
 #ifdef HAVE_LIBHAMLIB
 	/* Set frequency to front-end */
-	SetFrequency((int) dVal);
+	pDRMRec->GetHamlib()->SetFrequency((int) dVal);
 #endif
 
 	/* Set selected frequency in log file class */
@@ -1024,16 +947,17 @@ void StationsDlg::OnSMeterMenu(int iID)
 	if (pRemoteMenu->isItemChecked(iID))
 	{
 		pRemoteMenu->setItemChecked(iID, FALSE);
-		pDRMRec->SetEnableSMeter(FALSE);
+		pDRMRec->bEnableSMeter = FALSE;
 	}
 	else
 	{
 		pRemoteMenu->setItemChecked(iID, TRUE);
-		pDRMRec->SetEnableSMeter(TRUE);
+		pDRMRec->bEnableSMeter = TRUE;
 	}
 
-	/* Init hamlib, use current selected model ID */
-	InitHamlib(iCurSelModelID);
+	/* Only try to enable s-meter if it is not ID 0 ("none") */
+	if (pDRMRec->GetHamlib()->GetHamlibModelID() != 0)
+		EnableSMeter(pDRMRec->bEnableSMeter);
 #endif
 }
 
@@ -1043,27 +967,19 @@ void StationsDlg::OnModRigMenu(int iID)
 	if (pRemoteMenu->isItemChecked(iID))
 	{
 		pRemoteMenu->setItemChecked(iID, FALSE);
-		pDRMRec->SetEnableModRigSettings(FALSE);
+		pDRMRec->GetHamlib()->SetEnableModRigSettings(FALSE);
 	}
 	else
 	{
 		pRemoteMenu->setItemChecked(iID, TRUE);
-		pDRMRec->SetEnableModRigSettings(TRUE);
+		pDRMRec->GetHamlib()->SetEnableModRigSettings(TRUE);
 	}
-
-	/* Init hamlib, use current selected model ID */
-	InitHamlib(iCurSelModelID);
 #endif
 }
 
 void StationsDlg::OnRemoteMenu(int iID)
 {
 #ifdef HAVE_LIBHAMLIB
-	/* Set ID if valid */
-	const int iNewModelID = veciModelID[iID];
-
-	InitHamlib(iNewModelID);
-
 	/* Take care of check */
 	for (int i = 0; i < veciModelID.Size(); i++)
 	{
@@ -1072,6 +988,14 @@ void StationsDlg::OnRemoteMenu(int iID)
 		pRemoteMenu->setItemChecked(i, i == iID);
 		pRemoteMenuOther->setItemChecked(i, i == iID);
 	}
+
+	/* Set ID */
+	pDRMRec->GetHamlib()->SetHamlibModelID(veciModelID[iID]);
+
+	/* If model is changed, update s-meter because new rig might have support
+	   for it. Only try to enable s-meter if it is not ID 0 ("none") */
+	if (iID != 0)
+		EnableSMeter(pDRMRec->bEnableSMeter);
 #endif
 }
 
@@ -1080,59 +1004,43 @@ void StationsDlg::OnComPortMenu(QAction* action)
 #ifdef HAVE_LIBHAMLIB
 	/* We cannot use the switch command for the non constant expressions here */
 	if (action == pacMenuCOM1)
-		pDRMRec->SetHamlibConf(HAMLIB_CONF_COM1);
+		pDRMRec->GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM1);
 
 	if (action == pacMenuCOM2)
-		pDRMRec->SetHamlibConf(HAMLIB_CONF_COM2);
+		pDRMRec->GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM2);
 
 	if (action == pacMenuCOM3)
-		pDRMRec->SetHamlibConf(HAMLIB_CONF_COM3);
+		pDRMRec->GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM3);
 
 	if (action == pacMenuCOM4)
-		pDRMRec->SetHamlibConf(HAMLIB_CONF_COM4);
+		pDRMRec->GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM4);
 
 	if (action == pacMenuCOM5)
-		pDRMRec->SetHamlibConf(HAMLIB_CONF_COM5);
-
-	/* Init hamlib, use current selected model ID */
-	InitHamlib(iCurSelModelID);
+		pDRMRec->GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM5);
 #endif
 }
 
 void StationsDlg::OnTimerSMeter()
 {
 #ifdef HAVE_LIBHAMLIB
-	if ((bSMeterEnabled == TRUE) && (pRig != 0))
-	{
-		value_t tValue;
+	/* Get current s-meter value */
+	_REAL rCurSigStr;
+	const CHamlib::ESMeterState eSMState =
+		pDRMRec->GetHamlib()->GetSMeter(rCurSigStr);
 
-		const int iRetVal =
-			rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &tValue);
-
-		if (!iRetVal)
-			ProgrSigStrength->setValue((_REAL) tValue.i);
-
-		/* If a time-out happened, do not update s-meter anymore (disable it) */
-		if (iRetVal == -RIG_ETIMEOUT)
-			EnableSMeter(FALSE);
-	}
+	/* If a time-out happened, do not update s-meter anymore (disable it) */
+	if (eSMState != CHamlib::SS_VALID)
+		EnableSMeter(FALSE);
+	else
+		ProgrSigStrength->setValue(rCurSigStr);
 #endif
 }
 
-
-#ifdef HAVE_LIBHAMLIB
-/******************************************************************************\
-* HAMLIB                                                                       *
-\******************************************************************************/
-/*
-	This code is based on patches and example code from Tomi Manninen and
-	Stephane Fillod (developer of hamlib)
-*/
 void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
 {
 	/* Both, GUI "enabled" and hamlib "enabled" must be fullfilled before
 	   s-meter is used */
-	if ((bStatus == TRUE) && (pDRMRec->GetEnableSMeter() == TRUE))
+	if ((bStatus == TRUE) && (pDRMRec->bEnableSMeter == TRUE))
 	{
 		/* Init progress bar for input s-meter */
 		ProgrSigStrength->setAlarmEnabled(TRUE);
@@ -1142,7 +1050,7 @@ void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
 		ProgrSigStrength->setEnabled(TRUE);
 		TextLabelSMeter->setEnabled(TRUE);
 
-		bSMeterEnabled = TRUE;
+		TimerSMeter.start(GUI_TIMER_S_METER);
 	}
 	else
 	{
@@ -1154,271 +1062,9 @@ void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
 		ProgrSigStrength->setEnabled(FALSE);
 		TextLabelSMeter->setEnabled(FALSE);
 
-		bSMeterEnabled = FALSE;
+		TimerSMeter.stop();
 	}
 }
-
-int StationsDlg::PrintHamlibModelList(const struct rig_caps* caps, void* data)
-{
-	/* Access data members of class through pointer ((StationsDlg*) data).
-	   Store new model in string vector. Use only relevant information */
-	((StationsDlg*) data)->veccapsHamlibModels.Add(SDrRigCaps(caps->rig_model,
-		caps->mfg_name, caps->model_name, caps->status));
-
-	return 1; /* !=0, we want them all! */
-}
-
-void StationsDlg::SortHamlibModelList(CVector<SDrRigCaps>& veccapsHamlibModels)
-{
-	/* Loop through the array one less than its total cell count */
-	const int iEnd = veccapsHamlibModels.Size() - 1;
-
-	for (int i = 0; i < iEnd; i++)
-	{
-		for (int j = 0; j < iEnd; j++)
-		{
-			/* Compare the values and switch if necessary */
-			if (veccapsHamlibModels[j].iModelID >
-				veccapsHamlibModels[j + 1].iModelID)
-			{
-				const SDrRigCaps instSwap = veccapsHamlibModels[j];
-				veccapsHamlibModels[j] = veccapsHamlibModels[j + 1];
-				veccapsHamlibModels[j + 1] = instSwap;
-			}
-		}
-	}
-}
-
-_BOOLEAN StationsDlg::CheckForSpecDRMFE(const rig_model_t iID, int& iIndex)
-{
-	_BOOLEAN bIsSpecialDRMrig = FALSE;
-	const int iVecSize = vecSpecDRMRigs.Size();
-
-	/* Check for special DRM front-end */
-	for (int i = 0; i < iVecSize; i++)
-	{
-		if (vecSpecDRMRigs[i].iModelID == iID)
-		{
-			bIsSpecialDRMrig = TRUE;
-			iIndex = i;
-		}
-	}
-
-	return bIsSpecialDRMrig;
-}
-
-_BOOLEAN StationsDlg::SetFrequency(const int iFreqkHz)
-{
-	_BOOLEAN bSucceeded = FALSE;
-
-	/* Prepare actual frequency value for hamlib */
-	int iActHamFreq = iFreqkHz;
-
-	/* Check if we have a modified or not modified receiver */
-	if (pDRMRec->GetEnableModRigSettings() == FALSE)
-	{
-		/* Check for special rig if there is a frequency offset */
-		int iIndex;
-		if (CheckForSpecDRMFE(iCurSelModelID, iIndex) == TRUE)
-			iActHamFreq += vecSpecDRMRigs[iIndex].iFreqOffs;
-	}
-
-	iActHamFreq *= 1000; /* Conversion from kHz to Hz */
-
-	/* Check if rig was opend properly */
-	if (pRig != NULL)
-	{
-		/* Set frequency */
-		if (rig_set_freq(pRig, RIG_VFO_CURR, iActHamFreq) == RIG_OK)
-			bSucceeded = TRUE;
-	}
-
-	return bSucceeded;
-}
-
-void StationsDlg::InitHamlib(const rig_model_t newModID)
-{
-	int ret;
-
-try
-{
-	/* Set value for current selected model ID */
-	iCurSelModelID = newModID;
-
-	/* Set new model ID in receiver object which is needed for init-file */
-	pDRMRec->SetHamlibModel(newModID);
-
-	/* If rig was already open, close it first */
-	if (pRig != NULL)
-	{
-		/* Close everything */
-		rig_close(pRig);
-		rig_cleanup(pRig);
-		pRig = NULL;
-	}
-
-	if (newModID == 0)
-		throw CGenErr(tr("No rig model ID selected.").latin1());
-
-	/* Init rig */
-	pRig = rig_init(newModID);
-	if (pRig == NULL)
-		throw CGenErr(tr("Initialization of hamlib failed.").latin1());
-
-	/* Set config for hamlib */
-	string strHamlibConfig = pDRMRec->GetHamlibConf();
-
-	/* Config setup */
-	char *p_dup, *p, *q, *n;
-	for (p = p_dup = strdup(strHamlibConfig.c_str()); p && *p != '\0'; p = n)
-	{
-		if ((q = strchr(p, '=')) == NULL)
-		{
-			rig_cleanup(pRig);
-			pRig = NULL;
-
-			throw CGenErr(tr("Malformatted config string.").latin1());
-		}
-		*q++ = '\0';
-
-		if ((n = strchr(q, ',')) != NULL)
-			*n++ = '\0';
-
-		ret = rig_set_conf(pRig, rig_token_lookup(pRig, p), q);
-		if (ret != RIG_OK)
-		{
-			rig_cleanup(pRig);
-			pRig = NULL;
-
-			throw CGenErr(tr("Rig set conf failed.").latin1());
-		}
-	}
-	if (p_dup)
-		free(p_dup);
-
-	/* Open rig */
-	if (ret = rig_open(pRig) != RIG_OK)
-	{
-		/* Fail! */
-		rig_cleanup(pRig);
-		pRig = NULL;
-
-		throw CGenErr(tr("Rig open failed.").latin1());
-	}
-
-	/* Ignore result, some rigs don't have support for this */
-	rig_set_powerstat(pRig, RIG_POWER_ON);
-
-	/* Check for special DRM front-end selection */
-	int iIndex;
-	if (CheckForSpecDRMFE(newModID, iIndex) == TRUE)
-	{
-		/* Get correct parameter string */
-		string strSet;
-		if (pDRMRec->GetEnableModRigSettings() == TRUE)
-			strSet = vecSpecDRMRigs[iIndex].strDRMSetMod;
-		else
-			strSet = vecSpecDRMRigs[iIndex].strDRMSetNoMod;
-
-		/* Parse special settings */
-		char *p_dup, *p, *q, *n;
-		for (p = p_dup = strdup(strSet.c_str()); p && *p != '\0'; p = n)
-		{
-			if ((q = strchr(p, '=')) == NULL)
-			{
-				/* Malformatted config string */
-				rig_cleanup(pRig);
-				pRig = NULL;
-
-				throw CGenErr(tr("Malformatted config string.").latin1());
-			}
-			*q++ = '\0';
-
-			if ((n = strchr(q, ',')) != NULL)
-				*n++ = '\0';
-
-			rmode_t mode;
-			setting_t setting;
-			value_t val;
-
-			if (p[0] == 'm' && (mode = rig_parse_mode(p + 2)) != RIG_MODE_NONE)
-			{
-				ret = rig_set_mode(pRig, RIG_VFO_CURR, mode, atoi(q));
-				if (ret != RIG_OK)
-				{
-					cerr << tr("Rig set mode failed: ") << rigerror(ret) <<
-					endl;
-				}
-			}
-			else if (p[0] == 'l' && (setting = rig_parse_level(p + 2)) !=
-				RIG_LEVEL_NONE)
-			{
-				if (RIG_LEVEL_IS_FLOAT(setting))
-					val.f = atof(q);
-				else
-					val.i = atoi(q);
-
-				ret = rig_set_level(pRig, RIG_VFO_CURR, setting, val);
-				if (ret != RIG_OK)
-				{
-					cerr << tr("Rig set level failed: ") << rigerror(ret) <<
-					endl;
-				}
-			}
-			else if (p[0] == 'f' && (setting = rig_parse_func(p + 2)) !=
-				RIG_FUNC_NONE)
-			{
-				ret = rig_set_func(pRig, RIG_VFO_CURR, setting, atoi(q));
-				if (ret != RIG_OK)
-				{
-					cerr << tr("Rig set func failed: ") << rigerror(ret) <<
-					endl;
-				}
-			}
-			else if (p[0] == 'p' && (setting = rig_parse_parm(p + 2)) !=
-				RIG_PARM_NONE)
-			{
-				if (RIG_PARM_IS_FLOAT(setting))
-					val.f = atof(q);
-				else
-					val.i = atoi(q);
-
-				ret = rig_set_parm(pRig, setting, val);
-				if (ret != RIG_OK)
-				{
-					cerr << tr("Rig set parm failed: ") << rigerror(ret) <<
-					endl;
-				}
-			}
-			else
-				cerr << tr("Rig unknown setting: ") << p << "=" << q << endl;
-		}
-		if (p_dup)
-			free(p_dup);
-	}
-
-	/* Check if s-meter capabilities are available */
-	if (pRig != NULL)
-	{
-		/* Check if s-meter can be used. Disable GUI control if not */
-		if (rig_has_get_level(pRig, RIG_LEVEL_STRENGTH))
-			EnableSMeter(TRUE);
-		else
-			EnableSMeter(FALSE);
-	}
-}
-
-catch (CGenErr GenErr)
-{
-	/* Print error message */
-	cerr << GenErr.strError << endl;
-
-	/* Disable s-meter controls */
-	EnableSMeter(FALSE);
-}
-}
-#endif
-
 
 void StationsDlg::AddWhatsThisHelp()
 {

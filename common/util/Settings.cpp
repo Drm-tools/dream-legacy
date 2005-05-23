@@ -233,18 +233,20 @@ void CSettings::ReadIniFile()
 	/* Hamlib --------------------------------------------------------------- */
 	/* Hamlib Model ID */
 	if (GetNumericIniSet(ini, "Hamlib",	"hamlib-model", 0, MAX_ID_HAMLIB, iValue) == TRUE)
-		pDRMRec->SetHamlibModel(iValue);
+		pDRMRec->GetHamlib()->SetHamlibModelID(iValue);
 
 	/* Hamlib configuration string */
-	pDRMRec->SetHamlibConf(GetIniSetting(ini, "Hamlib", "hamlib-config"));
+	pDRMRec->GetHamlib()->SetHamlibConf(GetIniSetting(ini, "Hamlib", "hamlib-config"));
 
+# ifdef USE_QT_GUI
 	/* Enable s-meter flag */
 	if (GetFlagIniSet(ini, "Hamlib", "ensmeter", bValue) == TRUE)
-		pDRMRec->SetEnableSMeter(bValue);
+		pDRMRec->bEnableSMeter = bValue;
+# endif
 
 	/* Enable DRM modified receiver flag */
 	if (GetFlagIniSet(ini, "Hamlib", "enmodrig", bValue) == TRUE)
-		pDRMRec->SetEnableModRigSettings(bValue);
+		pDRMRec->GetHamlib()->SetEnableModRigSettings(bValue);
 #endif
 }
 
@@ -391,16 +393,18 @@ void CSettings::WriteIniFile()
 	/* Hamlib --------------------------------------------------------------- */
 	/* Hamlib Model ID */
 	SetNumericIniSet(ini, "Hamlib", "hamlib-model",
-		pDRMRec->GetHamlibModel());
+		pDRMRec->GetHamlib()->GetHamlibModelID());
 
 	/* Hamlib configuration string */
-	PutIniSetting(ini, "Hamlib", "hamlib-config", pDRMRec->GetHamlibConf().c_str());
+	PutIniSetting(ini, "Hamlib", "hamlib-config", pDRMRec->GetHamlib()->GetHamlibConf().c_str());
 
+# ifdef USE_QT_GUI
 	/* Enable s-meter flag */
-	SetFlagIniSet(ini, "Hamlib", "ensmeter", pDRMRec->GetEnableSMeter());
+	SetFlagIniSet(ini, "Hamlib", "ensmeter", pDRMRec->bEnableSMeter);
+# endif
 
 	/* Enable DRM modified receiver flag */
-	SetFlagIniSet(ini, "Hamlib", "enmodrig", pDRMRec->GetEnableModRigSettings());
+	SetFlagIniSet(ini, "Hamlib", "enmodrig", pDRMRec->GetHamlib()->GetEnableModRigSettings());
 #endif
 
 
@@ -749,7 +753,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "-C", "--hamlib-config",
 			strArgument) == TRUE)
 		{
-			pDRMRec->SetHamlibConf(strArgument);
+			pDRMRec->GetHamlib()->SetHamlibConf(strArgument);
 			continue;
 		}
 
@@ -758,17 +762,19 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetNumericArgument(argc, argv, i, "-M", "--hamlib-model", 0,
 			MAX_ID_HAMLIB, rArgument) == TRUE)
 		{
-			pDRMRec->SetHamlibModel((int) rArgument);
+			pDRMRec->GetHamlib()->SetHamlibModelID((int) rArgument);
 			continue;
 		}
 
 
+# ifdef USE_QT_GUI
 		/* Enable s-meter flag ---------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-T", "--ensmeter") == TRUE)
 		{
-			pDRMRec->SetEnableSMeter(TRUE);
+			pDRMRec->bEnableSMeter = TRUE;
 			continue;
 		}
+# endif
 #endif
 
 

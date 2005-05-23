@@ -440,6 +440,9 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 	   decode */
 	Param.ResetCurSelAudDatServ();
 
+	/* Reset alternative frequencys */
+	Param.AltFreqSign.Reset();
+
 
 	/* Set the following parameters to zero states (initial states) --------- */
 	Param.ResetServicesStreams();

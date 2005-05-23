@@ -400,3 +400,393 @@ CReal CAudioReverb::ProcessSample(const CReal rLInput, const CReal rRInput)
 
 	return temp3 + temp4 + temp5 + temp6;
 }
+
+
+#ifdef HAVE_LIBHAMLIB
+/******************************************************************************\
+* Hamlib interface                                                             *
+\******************************************************************************/
+/*
+	This code is based on patches and example code from Tomi Manninen and
+	Stephane Fillod (developer of hamlib)
+*/
+CHamlib::CHamlib() : pRig(NULL), bModRigSettings(FALSE) ,iHamlibModelID(0),
+	bSMeterIsSupported(FALSE), strHamlibConf(HAMLIB_CONF_COM1)
+{
+	/* Special DRM front-end list */
+	vecSpecDRMRigs.Init(0);
+
+#ifdef RIG_MODEL_G303
+	/* Winradio G3 */
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G303,
+		"l_ATT=0,l_AGC=3", 0,
+		"l_ATT=0,l_AGC=3"));
+#endif
+
+#ifdef RIG_MODEL_AR7030
+	/* AOR 7030 */
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_AR7030,
+		"m_CW=9500,l_IF=-4200,l_AGC=3", 5 /* kHz frequency offset */,
+		"l_AGC=3"));
+#endif
+
+#ifdef RIG_MODEL_ELEKTOR304
+	/* Elektor 3/04 */
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_ELEKTOR304, "", 0, ""));
+#endif
+
+#ifdef RIG_MODEL_NRD535
+	/* JRC NRD 535 */
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_NRD535,
+		"l_CWPITCH=-5000,m_CW=12000,l_IF=-2000,l_AGC=3" /* AGC=slow */,
+		3 /* kHz frequency offset */,
+		"l_AGC=3"));
+#endif
+
+#ifdef RIG_MODEL_RX320
+	/* TenTec RX320D */
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX320,
+		"l_AF=1,l_AGC=3,m_AM=6000", 0,
+		"l_AGC=3"));
+#endif
+
+#ifdef RIG_MODEL_RX340
+	/* TenTec RX340D */
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX340,
+		"l_AF=1,m_USB=16000,l_AGC=3,l_IF=2000",
+		-12 /* kHz frequency offset */,
+		"l_AGC=3"));
+#endif
+
+	/* Load all available front-end remotes in hamlib library */
+	rig_load_all_backends();
+
+	/* Get all models which are available. First, the vector for storing the
+	   data has to be initialized with zero length! A call-back function is
+	   called to return the different rigs */
+	veccapsHamlibModels.Init(0);
+	rig_list_foreach(PrintHamlibModelList, this);
+
+	/* Sort list */
+	SortHamlibModelList(veccapsHamlibModels);
+}
+
+CHamlib::~CHamlib()
+{
+	if (pRig != NULL)
+	{
+		/* close everything */
+		rig_close(pRig);
+		rig_cleanup(pRig);
+	}
+}
+
+int CHamlib::PrintHamlibModelList(const struct rig_caps* caps,
+								  void* data)
+{
+	/* Access data members of class through pointer ((CHamlib*) data).
+	   Store new model in string vector. Use only relevant information */
+	int iIndex;
+	const _BOOLEAN bSpecRigIdx = ((CHamlib*) data)->
+		CheckForSpecDRMFE(caps->rig_model, iIndex);
+
+	((CHamlib*) data)->veccapsHamlibModels.Add(
+		SDrRigCaps(caps->rig_model,	caps->mfg_name, caps->model_name,
+		caps->status, bSpecRigIdx));
+
+	return 1; /* !=0, we want them all! */
+}
+
+_BOOLEAN CHamlib::CheckForSpecDRMFE(const rig_model_t iID, int& iIndex)
+{
+	_BOOLEAN bIsSpecialDRMrig = FALSE;
+	const int iVecSize = vecSpecDRMRigs.Size();
+
+	/* Check for special DRM front-end */
+	for (int i = 0; i < iVecSize; i++)
+	{
+		if (vecSpecDRMRigs[i].iModelID == iID)
+		{
+			bIsSpecialDRMrig = TRUE;
+			iIndex = i;
+		}
+	}
+
+	return bIsSpecialDRMrig;
+}
+
+void CHamlib::SortHamlibModelList(CVector<SDrRigCaps>& veccapsHamlMod)
+{
+	/* Loop through the array one less than its total cell count */
+	const int iEnd = veccapsHamlMod.Size() - 1;
+
+	for (int i = 0; i < iEnd; i++)
+	{
+		for (int j = 0; j < iEnd; j++)
+		{
+			/* Compare the values and switch if necessary */
+			if (veccapsHamlMod[j].iModelID >
+				veccapsHamlMod[j + 1].iModelID)
+			{
+				const SDrRigCaps instSwap = veccapsHamlMod[j];
+				veccapsHamlMod[j] = veccapsHamlMod[j + 1];
+				veccapsHamlMod[j + 1] = instSwap;
+			}
+		}
+	}
+}
+
+_BOOLEAN CHamlib::SetFrequency(const int iFreqkHz)
+{
+	_BOOLEAN bSucceeded = FALSE;
+
+	/* Check if rig was opend properly */
+	if (pRig != NULL)
+	{
+		/* Set frequency (consider frequency offset and conversion
+		   from kHz to Hz by "* 1000") */
+		if (rig_set_freq(pRig, RIG_VFO_CURR, (iFreqkHz + iFreqOffset) * 1000)
+			== RIG_OK)
+		{
+			bSucceeded = TRUE;
+		}
+	}
+
+	return bSucceeded;
+}
+
+CHamlib::ESMeterState CHamlib::GetSMeter(_REAL& rCurSigStr)
+{
+	ESMeterState eRetVal = SS_NOTVALID;
+	rCurSigStr = (_REAL) 0.0;
+
+	if ((pRig != NULL) && (bSMeterIsSupported == TRUE))
+	{
+		value_t tVal;
+		const int iHamlibRetVal =
+			rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &tVal);
+ 
+		if (!iHamlibRetVal)
+		{
+			rCurSigStr = (_REAL) tVal.i;
+			eRetVal = SS_VALID;
+		}
+
+		/* If a time-out happened, do not update s-meter anymore (disable it) */
+		if (iHamlibRetVal == -RIG_ETIMEOUT)
+		{
+			bSMeterIsSupported = FALSE;
+			eRetVal = SS_TIMEOUT;
+		}
+	}
+
+	return eRetVal;
+}
+
+void CHamlib::SetEnableModRigSettings(const _BOOLEAN bNSM)
+{
+	if (bModRigSettings != bNSM)
+	{
+		/* Set internal parameter */
+		bModRigSettings = bNSM;
+
+		/* Hamlib must be re-initialized with new parameter */
+		SetHamlibModelID(iHamlibModelID);
+	}
+}
+
+void CHamlib::SetHamlibConf(const string strNewC)
+{
+	if (strHamlibConf.compare(strNewC))
+	{
+		/* Set internal parameter */
+		strHamlibConf = strNewC;
+
+		/* Hamlib must be re-initialized with new parameter */
+		SetHamlibModelID(iHamlibModelID);
+	}
+}
+
+void CHamlib::SetHamlibModelID(const int iNewM)
+{
+	int ret;
+
+	/* Set value for current selected model ID */
+	iHamlibModelID = (rig_model_t) iNewM;
+
+	/* Init frequency offset */
+	iFreqOffset = 0;
+
+try
+{
+	/* If rig was already open, close it first */
+	if (pRig != NULL)
+	{
+		/* Close everything */
+		rig_close(pRig);
+		rig_cleanup(pRig);
+	}
+
+	if (iHamlibModelID == 0)
+		throw CGenErr("No rig model ID selected.");
+
+	/* Init rig */
+	pRig = rig_init(iHamlibModelID);
+	if (pRig == NULL)
+		throw CGenErr("Initialization of hamlib failed.");
+
+	/* Config setup */
+	char *p_dup, *p, *q, *n;
+	for (p = p_dup = strdup(strHamlibConf.c_str()); p && *p != '\0'; p = n)
+	{
+		if ((q = strchr(p, '=')) == NULL)
+		{
+			rig_cleanup(pRig);
+			pRig = NULL;
+
+			throw CGenErr("Malformatted config string.");
+		}
+		*q++ = '\0';
+
+		if ((n = strchr(q, ',')) != NULL)
+			*n++ = '\0';
+
+		ret = rig_set_conf(pRig, rig_token_lookup(pRig, p), q);
+		if (ret != RIG_OK)
+		{
+			rig_cleanup(pRig);
+			pRig = NULL;
+
+			throw CGenErr("Rig set conf failed.");
+		}
+	}
+	if (p_dup)
+		free(p_dup);
+
+	/* Open rig */
+	if (ret = rig_open(pRig) != RIG_OK)
+	{
+		/* Fail! */
+		rig_cleanup(pRig);
+		pRig = NULL;
+
+		throw CGenErr("Rig open failed.");
+	}
+
+	/* Ignore result, some rigs don't have support for this */
+	rig_set_powerstat(pRig, RIG_POWER_ON);
+
+	/* Check for special DRM front-end selection */
+	int iIndex;
+	if (CheckForSpecDRMFE(iHamlibModelID, iIndex) == TRUE)
+	{
+		/* Get correct parameter string */
+		string strSet;
+		if (bModRigSettings == TRUE)
+			strSet = vecSpecDRMRigs[iIndex].strDRMSetMod;
+		else
+		{
+			strSet = vecSpecDRMRigs[iIndex].strDRMSetNoMod;
+
+			/* Additionally, set frequency offset for this special rig */
+			iFreqOffset = vecSpecDRMRigs[iIndex].iFreqOffs;
+		}
+
+		/* Parse special settings */
+		char *p_dup, *p, *q, *n;
+		for (p = p_dup = strdup(strSet.c_str()); p && *p != '\0'; p = n)
+		{
+			if ((q = strchr(p, '=')) == NULL)
+			{
+				/* Malformatted config string */
+				rig_cleanup(pRig);
+				pRig = NULL;
+
+				throw CGenErr("Malformatted config string.");
+			}
+			*q++ = '\0';
+
+			if ((n = strchr(q, ',')) != NULL)
+				*n++ = '\0';
+
+			rmode_t mode;
+			setting_t setting;
+			value_t val;
+
+			if (p[0] == 'm' && (mode = rig_parse_mode(p + 2)) != RIG_MODE_NONE)
+			{
+				ret = rig_set_mode(pRig, RIG_VFO_CURR, mode, atoi(q));
+				if (ret != RIG_OK)
+				{
+					cerr << "Rig set mode failed: " << rigerror(ret) <<
+					endl;
+				}
+			}
+			else if (p[0] == 'l' && (setting = rig_parse_level(p + 2)) !=
+				RIG_LEVEL_NONE)
+			{
+				if (RIG_LEVEL_IS_FLOAT(setting))
+					val.f = atof(q);
+				else
+					val.i = atoi(q);
+
+				ret = rig_set_level(pRig, RIG_VFO_CURR, setting, val);
+				if (ret != RIG_OK)
+				{
+					cerr << "Rig set level failed: " << rigerror(ret) <<
+					endl;
+				}
+			}
+			else if (p[0] == 'f' && (setting = rig_parse_func(p + 2)) !=
+				RIG_FUNC_NONE)
+			{
+				ret = rig_set_func(pRig, RIG_VFO_CURR, setting, atoi(q));
+				if (ret != RIG_OK)
+				{
+					cerr << "Rig set func failed: " << rigerror(ret) <<
+					endl;
+				}
+			}
+			else if (p[0] == 'p' && (setting = rig_parse_parm(p + 2)) !=
+				RIG_PARM_NONE)
+			{
+				if (RIG_PARM_IS_FLOAT(setting))
+					val.f = atof(q);
+				else
+					val.i = atoi(q);
+
+				ret = rig_set_parm(pRig, setting, val);
+				if (ret != RIG_OK)
+				{
+					cerr << "Rig set parm failed: " << rigerror(ret) <<
+					endl;
+				}
+			}
+			else
+				cerr << "Rig unknown setting: " << p << "=" << q << endl;
+		}
+		if (p_dup)
+			free(p_dup);
+	}
+
+	/* Check if s-meter capabilities are available */
+	if (pRig != NULL)
+	{
+		/* Check if s-meter can be used. Disable GUI control if not */
+		if (rig_has_get_level(pRig, RIG_LEVEL_STRENGTH))
+			bSMeterIsSupported = TRUE;
+		else
+			bSMeterIsSupported = FALSE;
+	}
+}
+
+catch (CGenErr GenErr)
+{
+	/* Print error message */
+	cerr << GenErr.strError << endl;
+
+	/* Disable s-meter */
+	bSMeterIsSupported = FALSE;
+}
+}
+#endif

@@ -85,8 +85,12 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 		while (((iLengthOfBody = (*pbiData).Separate(7)) != 0) &&
 			(bError == FALSE) && (iBitsConsumed < iTotNumBitsWithoutCRC))
 		{
-			/* Version flag (not used in this implementation) */
-			(*pbiData).Separate(1);
+			/* Version flag */
+			_BOOLEAN bVersionFlag;
+			if ((*pbiData).Separate(1) == 0)
+				bVersionFlag = FALSE;
+			else
+				bVersionFlag = TRUE;
 
 			/* Data entity type */
 			/* First calculate number of bits for this entity ("+ 4" because of:
@@ -107,15 +111,22 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 				break;
 
 			case 3: /* Type 3 */
-				bError = DataEntityType3(pbiData, iLengthOfBody, Parameter);
+				bError = DataEntityType3(pbiData, iLengthOfBody, Parameter,
+					bVersionFlag);
 				break;
 
 			case 4: /* Type 4 */
-				bError = DataEntityType4(pbiData, iLengthOfBody, Parameter);
+				bError = DataEntityType4(pbiData, iLengthOfBody, Parameter,
+					bVersionFlag);
 				break;
 
 			case 5: /* Type 5 */
 				bError = DataEntityType5(pbiData, iLengthOfBody, Parameter);
+				break;
+
+			case 7: /* Type 7 */
+				bError = DataEntityType7(pbiData, iLengthOfBody, Parameter,
+					bVersionFlag);
 				break;
 
 			case 8: /* Type 8 */
@@ -272,15 +283,22 @@ _BOOLEAN CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
-									  CParameter& Parameter)
+									  CParameter& Parameter,
+									  const _BOOLEAN bVersion)
 {
-	_BOOLEAN bSyncMultplxFlag;
-	_BOOLEAN bEnhanceFlag;
-	_BOOLEAN bServRestrFlag;
-	_BOOLEAN bRegionSchedFlag;
+	int			i;
+	_BOOLEAN	bSyncMultplxFlag;
+	_BOOLEAN	bEnhanceFlag;
+	_BOOLEAN	bServRestrFlag;
+	_BOOLEAN	bRegionSchedFlag;
+	int			iServRestr;
 
 	/* Init number of frequency count */
-	int iNumFreq = iLengthOfBody;
+	int iNumFreqTmp = iLengthOfBody;
+
+	/* Init region ID and schedule ID with "not used" parameters */
+	int iRegionID = 0;
+	int iScheduleID = 0;
 
 	/* Synchronous Multiplex flag: this flag indicates whether the multiplex is
 	   broadcast synchronously */
@@ -355,10 +373,8 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		/* Short Id flags 4 bits. This field indicates, which services
 		   (identified by their Short Id) of the tuned DRM multiplex are carried
 		   in the DRM multiplex on the alternative frequencies by setting the
-		   corresponding bit to 1. The first bit (msb) refers to Short Id 3,
-		   while the last bit (lsb) refers to Short Id 0 of the tuned DRM
-		   multiplex */
-		(*pbiData).Separate(4);
+		   corresponding bit to 1 */
+		iServRestr = (*pbiData).Separate(4);
 
 		/* rfa 4 bits. This field (if present) is reserved for future additions
 		   and shall be set to zero until it is defined */
@@ -366,7 +382,7 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 			return TRUE;
 
 		/* Remove one byte from frequency count */
-		iNumFreq--;
+		iNumFreqTmp--;
 	}
 
 	/* Region/Schedule field: this 8 bit field is only present if the
@@ -379,31 +395,34 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		   the Region Id (value 1 to 15). The region may be described by one or
 		   more "Alternative frequency signalling: Region definition data entity
 		   - type 7" with this Region Id */
-		(*pbiData).Separate(4);
-
+		iRegionID = (*pbiData).Separate(4);
+ 
 		/* Schedule Id 4 bits. This field indicates whether the schedule is
 		   unspecified (value 0) or whether the alternative frequencies are
 		   valid just at certain times, in which case it carries the Schedule Id
 		   (value 1 to 15). The schedule is described by one or more
 		   "Alternative frequency signalling: Schedule definition data entity
 		   - type 4" with this Schedule Id */
-		(*pbiData).Separate(4);
+		iScheduleID = (*pbiData).Separate(4);
 
 		/* Remove one byte from frequency count */
-		iNumFreq--;
+		iNumFreqTmp--;
 	}
 
 	/* Check for error (length of body must be so long to include Service
 	   Restriction field and Region/Schedule field, also check that
 	   remaining number of bytes is devidable by 2 since we read 16 bits) */
-	if ((iNumFreq < 0) || (iNumFreq % 2 != 0))
+	if ((iNumFreqTmp < 0) || (iNumFreqTmp % 2 != 0))
 		return TRUE;
 
 	/* n frequencies: this field carries n 16 bit fields. n is in the
 	   range 1 to 16. The number of frequencies, n, is determined from the
 	   length field of the header and the value of the Service Restriction flag
 	   and the Region/Schedule flag */
-	for (int i = 0; i < iNumFreq / 2 /* 16 bits are read */; i++)
+	const int iNumFreq = iNumFreqTmp / 2; /* 16 bits are read */
+	CVector<int> veciFrequencies(iNumFreq);
+
+	for (i = 0; i < iNumFreq; i++)
 	{
 		/* rfu 1 bit. This field is reserved for future use of the frequency
 		   value field and shall be set to zero until defined */
@@ -412,7 +431,67 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 
 		/* Frequency value 15 bits. This field is coded as an unsigned integer
 		   and gives the frequency in kHz */
-		const int iFreqVal = (*pbiData).Separate(15);
+		veciFrequencies[i] = (*pbiData).Separate(15);
+	}
+
+	/* Now, set data in global struct */
+	/* Enhancement layer is not supported */
+	if (bEnhanceFlag == FALSE)
+	{
+		/* Check the version flag */
+		if (bVersion != Parameter.AltFreqSign.bVersionFlag)
+		{
+			/* If version flag is wrong, reset everything and save flag */
+			Parameter.AltFreqSign.Reset();
+			Parameter.AltFreqSign.bVersionFlag = bVersion;
+		}
+
+		/* Create temporary object and reset for initialization */
+		CParameter::CAltFreqSign::CAltFreq AltFreq;
+		AltFreq.Reset();
+
+		/* Set some parameters */
+		AltFreq.bIsSyncMultplx = bSyncMultplxFlag;
+		AltFreq.iRegionID = iRegionID;
+		AltFreq.iScheduleID = iScheduleID;
+
+		/* Set Service Restriction */
+		if (bServRestrFlag == TRUE)
+		{
+			/* The first bit (msb) refers to Short Id 3, while the last bit
+			   (lsb) refers to Short Id 0 of the tuned DRM multiplex */
+			for (i = 0; i < MAX_NUM_SERVICES; i++)
+			{
+				/* Mask last bit (lsb) */
+				AltFreq.veciServRestrict[i] = iServRestr & 1;
+
+				/* Shift by one bit to get information for next service */
+				iServRestr >>= 1;
+			}
+		}
+		else
+		{
+			/* All services are supported */
+			AltFreq.veciServRestrict.Reset(1);
+		}
+
+		/* Set frequencies */
+		for (i = 0; i < iNumFreq; i++)
+			AltFreq.veciFrequencies.Add(veciFrequencies[i]);
+
+		/* Now apply temporary object to global struct (first check if new
+		   object is not already there) */
+		int iCurNumAltFreq = Parameter.AltFreqSign.vecAltFreq.Size();
+
+		_BOOLEAN bAltFreqIsAlreadyThere = FALSE;
+		for (i = 0; i < iCurNumAltFreq; i++)
+		{
+			if (Parameter.AltFreqSign.vecAltFreq[i] == AltFreq)
+				bAltFreqIsAlreadyThere = TRUE;
+		}
+
+		if (bAltFreqIsAlreadyThere == FALSE)
+			Parameter.AltFreqSign.vecAltFreq.Add(AltFreq);
 	}
 
 	return FALSE;
@@ -424,7 +503,8 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 _BOOLEAN CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
-									  CParameter& Parameter)
+									  CParameter& Parameter,
+									  const _BOOLEAN bVersion)
 {
 	/* Check length -> must be 4 bytes */
 	if (iLengthOfBody != 4)
@@ -555,6 +635,75 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 	Parameter.SetDataParam(iTempShortID, DataParam);
 
 	return FALSE;
+}
+
+
+/******************************************************************************\
+* Data entity Type 7 (Alternative frequency signalling: Region definition)     *
+\******************************************************************************/
+_BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
+									  const int iLengthOfBody,
+									  CParameter& Parameter,
+									  const _BOOLEAN bVersion)
+{
+	/* Region Id: this field indicates the identifier for this region
+	   definition. Up to 15 different geographic regions with an individual
+	   Region Id (values 1 to 15) can be defined; the value 0 shall not be used,
+	   since it indicates "unspecified geographic area" in data entity
+	   type 3 and 11 */
+	const int iRegionID = (*pbiData).Separate(4);
+
+	/* Latitude: this field specifies the southerly point of the area in
+	   degrees, as a 2's complement number between -90 (south pole) and
+	   +90 (north pole) */
+	const int iLatitude = (*pbiData).Separate(8);
+
+	/* Longitude: this field specifies the westerly point of the area in
+	   degrees, as a 2's complement number between -180 (west) and
+	   +179 (east) */
+	const int iLongitude = (*pbiData).Separate(9);
+
+	/* Latitude Extent: this field specifies the size of the area to the north,
+	   in 1 degree steps; the value of Latitude plus the value of Latitude
+	   Extent shall be equal or less than 90 */
+	const int iLatitudeEx = (*pbiData).Separate(7);
+
+	/* Longitude Extent: this field specifies the size of the area to the east,
+	   in 1 degree steps; the value of Longitude plus the value of Longitude
+	   Extent may exceed the value +179 (i.e. wrap into the region of negative
+	   longitude values) */
+	const int iLongitudeEx = (*pbiData).Separate(8);
+
+	/* n CIRAF Zones: this field carries n CIRAF zones (n in the range 0 to 16).
+	   The number of CIRAF zones, n, is determined from the length field of the
+	   header - 4 */
+	for (int i = 0; i < iLengthOfBody - 4; i++)
+	{
+		/* Each CIRAF zone is coded as an 8 bit unsigned binary number in the
+		   range 1 to 85 */
+		const int iCIRAFZone = (*pbiData).Separate(8);
+
+		if ((iCIRAFZone == 0) || (iCIRAFZone > 85))
+			return TRUE; /* Error */
+
+/*
+	TODO: To check whether a certain longitude value is inside the specified
+	longitude range, the following formula in pseudo program code shall be used
+	(with my_longitude in the range -180 to +179):
+	inside_area = ( (my_longitude >= longitude) AND
+		(my_longitude <= (longitude + longitude_extent) ) OR
+		( ((longitude + longitude_extent) >= +180) AND
+		(my_longitude <= (longitude + longitude_extent - 360)) )
+*/
+	}
+
+	/* Error checking */
+	if ((iRegionID == 0) || (iLatitude + iLatitudeEx > 90))
+	{
+		return TRUE; /* Error */
+	}
+	else
+		return FALSE;
 }
 
 

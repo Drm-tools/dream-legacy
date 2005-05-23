@@ -32,6 +32,7 @@
 #include <iostream>
 #include "Parameter.h"
 #include "util/Buffer.h"
+#include "util/Utilities.h"
 #include "DataIO.h"
 #include "OFDM.h"
 #include "DRMSignalIO.h"
@@ -104,13 +105,9 @@ public:
 #ifdef USE_QT_GUI
 		, UtilizeFACData(&MDI), UtilizeSDCData(&MDI), MSCDemultiplexer(&MDI)
 #endif
-#ifdef HAVE_LIBHAMLIB
-		, strHamlibConf(""), iHamlibModelID(0), bEnableSMeter(TRUE),
-		bModRigSettings(FALSE)
-#endif
 #if defined(USE_QT_GUI) || defined(_WIN32)
 		, iMainPlotColorStyle(0), /* default color scheme: blue-white */
-		iSecondsPreview(0), GeomChartWindows(0)
+		iSecondsPreview(0), GeomChartWindows(0), bEnableSMeter(TRUE)
 #endif
 		{}
 	virtual ~CDRMReceiver() {}
@@ -149,6 +146,9 @@ public:
 #ifdef USE_QT_GUI
 	CMDI*					GetMDI() {return &MDI;}
 #endif
+#ifdef HAVE_LIBHAMLIB
+	CHamlib*				GetHamlib() {return &Hamlib;}
+#endif
 
 	CParameter*				GetParameters() {return &ReceiverParam;}
 	void					StartParameters(CParameter& Param);
@@ -170,22 +170,6 @@ public:
 	void					InitsForSDCCodSche();
 	void					InitsForMSC();
 	void					InitsForMSCDemux();
-
-#ifdef HAVE_LIBHAMLIB
-	void					SetHamlibModel(const int iNewM)
-								{iHamlibModelID = iNewM;}
-	int						GetHamlibModel() const {return iHamlibModelID;}
-	void					SetHamlibConf(const string strNewC)
-								{strHamlibConf = strNewC;}
-	string					GetHamlibConf() const {return strHamlibConf;}
-	void					SetEnableSMeter(const _BOOLEAN bNSM)
-								{bEnableSMeter = bNSM;}
-	_BOOLEAN				GetEnableSMeter() const {return bEnableSMeter;}
-	void					SetEnableModRigSettings(const _BOOLEAN bNSM)
-								{bModRigSettings = bNSM;}
-	_BOOLEAN				GetEnableModRigSettings() const
-								{return bModRigSettings;}
-#endif
 
 /* _WIN32 check because in Visual c++ the GUI files are always compiled even
    if USE_QT_GUI is set or not */
@@ -223,8 +207,9 @@ public:
 	/* Chart windows */
 	CVector<CWinGeom> GeomChartWindows;
 
-	int iMainPlotColorStyle;
-	int iSecondsPreview;
+	int			iMainPlotColorStyle;
+	int			iSecondsPreview;
+	_BOOLEAN	bEnableSMeter;
 #endif
 
 	/* Interfaces to internal parameters/vectors used for the plot */
@@ -306,10 +291,7 @@ protected:
 	_REAL					rInitResampleOffset;
 
 #ifdef HAVE_LIBHAMLIB
-	int						iHamlibModelID;
-	string					strHamlibConf;
-	_BOOLEAN				bEnableSMeter;
-	_BOOLEAN				bModRigSettings;
+	CHamlib					Hamlib;
 #endif
 
 	int						iSoundCrdDevIn;
