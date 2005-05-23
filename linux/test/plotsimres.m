@@ -40,16 +40,16 @@ global doremcompname;
 	close all;
 	
 	% definitions
-	plotcolors = {'b' 'g' 'r' 'm' 'k' 'y' 'c' ...
-        'b--' 'g--' 'r--' 'm--' 'k--' 'y--' 'c--' ...
-        'b.-' 'g.-' 'r.-' 'm.-' 'k.-' 'y.-' 'c.-'};
+	plotcolors = {'b-' 'g-' 'r-' 'k-' 'm-' 'y-' 'c-' ...
+        'b--' 'g--' 'r--' 'k--' 'm--' 'y--' 'c--' ...
+        'b.-' 'g.-' 'r.-' 'k.-' 'm.-' 'y.-' 'c.-'};
 	LW = 2; % line width
 	figstretch = 1.6;
-	
-	
+
+
 	% Get file names of simulation results files
 	files = dir('*.dat');
-	
+
 	% sort files by date
 	filedates = [];
 	for i = 1:length(files)
@@ -57,8 +57,8 @@ global doremcompname;
 	end
 	[dummy, sortdateidxs] = sort(filesdates);
 	files = files(sortdateidxs);
-	
-	
+
+
 	% sort out SIMTIME files ans MSE files
 	simresBERIDEAL = struct([]);
 	simresMSE = struct([]);
@@ -78,21 +78,21 @@ global doremcompname;
                 simrescntBERIDEAL = simrescntBERIDEAL + 1;
                 newestfile = 0;
             end
-            
+
             % sort out BER files
             if ~isempty(findstr(files(i).name, 'BER_'))
                 simresBER(simrescntBER).name = files(i).name;
                 simrescntBER = simrescntBER + 1;
                 newestfile = 1;             
             end
-	
+
             % sort out MSE files
             if ~isempty(findstr(files(i).name, 'MSE_'))
                 simresMSE(simrescntMSE).name = files(i).name;
                 simrescntMSE = simrescntMSE + 1;
                 newestfile = 2;               
             end
-            
+
             % sort out SYNC files
             if ~isempty(findstr(files(i).name, 'SYNC_'))
                 simresSYNC(simrescntSYNC).name = files(i).name;
@@ -125,7 +125,7 @@ global doremcompname;
             plotBERresults(simresBER);
 			plotMSEresults(simresMSE);
             plotSYNCresults(simresSYNC);
-	end        
+    end
 return;
 
 
@@ -139,38 +139,38 @@ global doremcompname;
     numdataBERIDEAL = length(simresBERIDEAL);
 	if (numdataBERIDEAL > 0)
         figure;
-        
+
         % load data
         for i = 1:numdataBERIDEAL
             resBERIDEAL(i).data = load(simresBERIDEAL(i).name);
         end
-	
+
         % plot results
         [handles simresBERIDEAL] = plotresults(resBERIDEAL, simresBERIDEAL);    
         numdataBERIDEAL= length(simresBERIDEAL); % update length (might have changed if data was empty)
-        
+
         % generate legend
         for i = 1:numdataBERIDEAL
             % remove underscores
             simresBERIDEAL(i).name = replaceunderscores(simresBERIDEAL(i).name);
-	
+
             % remove ".dat"
             simresBERIDEAL(i).name = removedat(simresBERIDEAL(i).name);        
-            
+
             % remove BERIDEAL
             simresBERIDEAL(i).name = removesimtype(simresBERIDEAL(i).name);             
-	
+
             % remove length of simulation
             simresBERIDEAL(i).name = removelenofsim(simresBERIDEAL(i).name, 5);
-            
+
             % remove computer name if requested
             if doremcompname ~= 0
                 simresBERIDEAL(i).name = removecompname(simresBERIDEAL(i).name);
             end
         end
-	
+
         setlegend(simresBERIDEAL, handles);
-	
+
         title('Bit-Error-Rate Results (BERIDEAL)');
         xlabel('SNR [dB]');
         ylabel('BER');
@@ -188,43 +188,44 @@ global doremcompname;
 	numdataBER= length(simresBER);
 	if (numdataBER > 0)
         figure;
-        
+
         % load data
         for i = 1:numdataBER
             resBER(i).data = load(simresBER(i).name);
         end
-	
+
         % plot results
         [handles simresBER] = plotresults(resBER, simresBER);    
         numdataBER= length(simresBER); % update length (might have changed if data was empty)
-	
+
         % generate legend
         for i = 1:numdataBER
             % remove underscores
             simresBER(i).name = replaceunderscores(simresBER(i).name);
-	
+
             % remove ".dat"
             simresBER(i).name = removedat(simresBER(i).name);
-            
+
             % remove BER
             simresBER(i).name = removesimtype(simresBER(i).name);        
-	
+
             % remove length of simulation
             simresBER(i).name = removelenofsim(simresBER(i).name, 6); 
-            
+
             % remove computer name if requested
             if doremcompname ~= 0
                 simresBER(i).name = removecompname(simresBER(i).name);
             end        
         end
-	
+
         setlegend(simresBER, handles);
-	
+
         title('Bit-Error-Rate Results (BER)');
         xlabel('SNR [dB]');
         ylabel('BER');
 	end
 return;
+
 
 
 % *******************************************************************
@@ -236,43 +237,44 @@ global doremcompname;
 	numdataSYNC= length(simresSYNC);
 	if (numdataSYNC > 0)
         figure;
-        
+
         % load data
         for i = 1:numdataSYNC
             resSYNC(i).data = load(simresSYNC(i).name);
         end
-	
+
         % plot results
         [handles simresSYNC] = plotresults(resSYNC, simresSYNC);    
         numdataSYNC= length(simresSYNC); % update length (might have changed if data was empty)
-	
+
         % generate legend
         for i = 1:numdataSYNC
             % remove underscores
             simresSYNC(i).name = replaceunderscores(simresSYNC(i).name);
-	
+
             % remove ".dat"
             simresSYNC(i).name = removedat(simresSYNC(i).name);
-            
+
             % remove BER
             simresSYNC(i).name = removesimtype(simresSYNC(i).name);        
-	
+
             % remove length of simulation
             simresSYNC(i).name = removelenofsim(simresSYNC(i).name, 5);   
-            
+
             % remove computer name if requested
             if doremcompname ~= 0
                 simresSYNC(i).name = removecompname(simresSYNC(i).name);
             end        
         end
-	
+
         setlegend(simresSYNC, handles);
-	
+
         title('Synchronization Results');
         xlabel('SNR [dB]');
         ylabel('user defined');
 	end
 return;
+
 
 
 % *******************************************************************
@@ -286,52 +288,38 @@ global LW;
     numdataMSE = length(simresMSE);
 	if (numdataMSE > 0)
         figure;
-        
+
         % load data
         for i = 1:numdataMSE
             resMSE(i).data = load(simresMSE(i).name).';
         end
-	
+
         % plot results
-        if (numdataMSE > 0)
-            % first curve
-            handtmp = plot(10 * log10(resMSE(1).data), char(plotcolors(1)), 'LineWidth', LW);
-            handles = handtmp(1);
-	
-            grid on;
-            
-            if (numdataMSE > 1)
-                % plot rest of the curves
-                hold on;
-                for i = 2:numdataMSE
-                    handtmp = plot(10 * log10(resMSE(i).data), char(plotcolors(i)), 'LineWidth', LW);
-                    handles = [handles handtmp(1)];
-                end
-            end
-        end
-	
+        [handles simresMSE] = plotresults(resMSE, simresMSE, 1);    
+        numdataMSE= length(simresMSE); % update length (might have changed if data was empty)
+
         % generate legend
         for i = 1:numdataMSE
             % remove underscores
             simresMSE(i).name = replaceunderscores(simresMSE(i).name);
-	
+
             % remove ".dat"
             simresMSE(i).name = removedat(simresMSE(i).name);
-            
+
             % remove MSE
             simresMSE(i).name = removesimtype(simresMSE(i).name);
-            
+
             % remove length of simulation
             simresMSE(i).name = removelenofsim(simresMSE(i).name, 5);
-            
+
             % remove computer name if requested
             if doremcompname ~= 0
                 simresMSE(i).name = removecompname(simresMSE(i).name);
-            end        
+            end
         end
-	
+
         setlegend(simresMSE, handles);
-        
+
         title('MSE of Channel Estimation Results');
         xlabel('subcarrier index');
         ylabel('MSE [dB]');
@@ -392,9 +380,14 @@ function [x] = removecompname(x)
 return;
 
 % plot results
-function [handles, simnames] = plotresults(simres, simnames)
+function [handles, simnames] = plotresults(simres, simnames, isMSEplot)
 global plotcolors;
 global LW;
+
+    % no MSE is default
+    if nargin ~= 3
+        isMSEplot = 0;
+    end
 
     % remove empty data
     simresnew = struct([]);
@@ -411,8 +404,13 @@ global LW;
     handles = [];
     if (numdata > 0)
         % first curve
-        handles = semilogy(simresnew(1).data(:, 1), simresnew(1).data(:, 2), ...
-            char(plotcolors(1)), 'LineWidth', LW);
+        if isMSEplot ~= 0
+            handtmp = plot(10 * log10(simresnew(1).data), char(plotcolors(1)), 'LineWidth', LW);
+            handles = handtmp(1);            
+        else
+            handles = semilogy(simresnew(1).data(:, 1), simresnew(1).data(:, 2), ...
+                char(plotcolors(1)), 'LineWidth', LW);
+        end
 
         grid on;
 
@@ -420,9 +418,14 @@ global LW;
             % plot rest of the curves
             hold on;
             for i = 2:numdata
-                handles = [handles ...
-                    semilogy(simresnew(i).data(:, 1), simresnew(i).data(:, 2), ...
-                    char(plotcolors(i)), 'LineWidth', LW)];
+                if isMSEplot ~= 0
+                    handtmp = plot(10 * log10(simresnew(i).data), char(plotcolors(i)), 'LineWidth', LW);
+                    handles = [handles handtmp(1)];
+                else
+                    handles = [handles ...
+                        semilogy(simresnew(i).data(:, 1), simresnew(i).data(:, 2), ...
+                        char(plotcolors(i)), 'LineWidth', LW)];
+                end
             end
         end
     end
