@@ -89,10 +89,14 @@ CMatlibVector<CComplex>	FirFiltDec(const CMatlibVector<CComplex>& cvB,
 /* Squared magnitude */
 inline CReal			SqMag(const CComplex& cI)
 							{return cI.real() * cI.real() + cI.imag() * cI.imag();}
+inline CReal			SqMag(const CReal& rI)
+							{return rI * rI;}
 inline
 CMatlibVector<CReal>	SqMag(const CMatlibVector<CComplex>& veccI)
 							{_VECOP(CReal, veccI.GetSize(), SqMag(veccI[i]));}
-
+inline
+CMatlibVector<CReal>	SqMag(const CMatlibVector<CReal>& vecrI)
+							{_VECOP(CReal, vecrI.GetSize(), SqMag(vecrI[i]));}
 
 /* One pole recursion (first order IIR)
    y_n = lambda * y_{n - 1} + (1 - lambda) * x_n */

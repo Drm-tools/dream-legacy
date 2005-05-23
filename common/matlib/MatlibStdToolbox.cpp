@@ -169,8 +169,10 @@ CMatlibMatrix<CComplex> Transp(const CMatlibMatrix<CComplex>& cmI)
 
 	/* Transpose matrix */
 	for (int i = 0; i < iRowSize; i++)
+	{
 		for (int j = 0; j < iColSize; j++)
-				matcRet[j][i] = cmI[i][j];
+			matcRet[j][i] = cmI[i][j];
+	}
 
 	return matcRet;
 }
@@ -258,7 +260,7 @@ printf("couldn't invert matrix, possibly singular.\n");
    Matlib internal calculations */
 CReal _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 				const CReal errorBound, CReal& integralBound,
-				bool& integralError, const CReal ru)
+				_BOOLEAN& integralError, const CReal ru)
 {
 /*
 	The following code (inclusive the actual Quad() function) is based on a
@@ -285,14 +287,18 @@ CReal _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 
 	/* Swap integration limits? */
 	if (a > b)
+	{
 		return -_integral(f, b, a, errorBound,
 			integralBound, integralError, ru);
+	}
 
 	/* Integrate over ]-infinity,+infinity[? */
 	if ((a == -_MAXREAL) && (b == _MAXREAL))
+	{
 		return _integral(f, 0, b, 0.5 * errorBound, integralBound,
 			integralError, ru) + _integral(f, a, 0, 0.5 * errorBound,
 			integralBound, integralError, ru);
+	}
 
 	/* Integrate over [a,+infinity[? */
 	if (b == _MAXREAL)
@@ -450,7 +456,7 @@ CReal _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 					if (left >= right)
 					{
 						/* The error bound specified is too small! */
-						integralError = true;
+						integralError = TRUE;
 						return _MAXREAL; /* NaN */
 					}
 					
@@ -500,13 +506,14 @@ CReal Quad(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 	ru *= 2;
 
 	CReal integralBound = errorBound;
-	bool integralError = false;
+	_BOOLEAN integralError = FALSE;
 
 	/* Compute */
 	return _integral(f, a, b, errorBound, integralBound, integralError, ru);
 }
 
-CMatlibVector<CComplex> Fft(const CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
+CMatlibVector<CComplex> Fft(const CMatlibVector<CComplex>& cvI,
+							const CFftPlans& FftPlans)
 {
 	int				i;
 	CFftPlans*		pCurPlan;
@@ -557,7 +564,8 @@ CMatlibVector<CComplex> Fft(const CMatlibVector<CComplex>& cvI, const CFftPlans&
 	return cvReturn;
 }
 
-CMatlibVector<CComplex> Ifft(const CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
+CMatlibVector<CComplex> Ifft(const CMatlibVector<CComplex>& cvI,
+							 const CFftPlans& FftPlans)
 {
 	int				i;
 	CFftPlans*		pCurPlan;
@@ -612,7 +620,8 @@ CMatlibVector<CComplex> Ifft(const CMatlibVector<CComplex>& cvI, const CFftPlans
 	return cvReturn;
 }
 
-CMatlibVector<CComplex> rfft(const CMatlibVector<CReal>& fvI, const CFftPlans& FftPlans)
+CMatlibVector<CComplex> rfft(const CMatlibVector<CReal>& fvI,
+							 const CFftPlans& FftPlans)
 {
 	int			i;
 	CFftPlans*	pCurPlan;
@@ -671,7 +680,8 @@ CMatlibVector<CComplex> rfft(const CMatlibVector<CReal>& fvI, const CFftPlans& F
 	return cvReturn;
 }
 
-CMatlibVector<CReal> rifft(const CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
+CMatlibVector<CReal> rifft(const CMatlibVector<CComplex>& cvI,
+						   const CFftPlans& FftPlans)
 {
 /*
 	This function only works with EVEN N!
