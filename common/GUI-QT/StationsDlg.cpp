@@ -7,6 +7,8 @@
  *
  * 5/15/2005 Andrea Russo
  *	- added preview
+ * 5/25/2005 Andrea Russo
+ *	- added "days" column in stations list view
  *
  ******************************************************************************
  *
@@ -292,17 +294,17 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 
 	/* First test for day constellations which allow to apply special names */
 	if (strDaysFlags == FLAG_STR_IRREGULAR_TRANSM)
-		strDaysShow = QObject::tr("irregular");
+		strDaysShow = QObject::tr("irregular").latin1();
 	else if (strDaysFlags == "1111111")
-		strDaysShow = QObject::tr("daily");
+		strDaysShow = QObject::tr("daily").latin1();
 	else if (strDaysFlags == "1111100")
-		strDaysShow = QObject::tr("from Sun to Thu");
+		strDaysShow = QObject::tr("from Sun to Thu").latin1();
 	else if (strDaysFlags == "1111110")
-		strDaysShow = QObject::tr("from Sun to Fri");
+		strDaysShow = QObject::tr("from Sun to Fri").latin1();
 	else if (strDaysFlags == "0111110")
-		strDaysShow = QObject::tr("from Mon to Fri");
+		strDaysShow = QObject::tr("from Mon to Fri").latin1();
 	else if (strDaysFlags == "0111111")
-		strDaysShow = QObject::tr("from Mon to Sat");
+		strDaysShow = QObject::tr("from Mon to Sat").latin1();
 	else
 	{
 		/* No special name could be applied, just list all active days */
@@ -317,7 +319,7 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 					strDaysShow += ",";
 
 				/* Add current day */
-				strDaysShow += strDayDef[i];
+				strDaysShow += strDayDef[i].latin1();
 			}
 		}
 	}
