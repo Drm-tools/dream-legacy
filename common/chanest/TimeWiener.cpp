@@ -384,7 +384,6 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 									 const int iLength)
 {
 	int i;
-	int iCurPos;
 
 	CRealVector	vecrReturn(iLength);
 	CRealVector vecrRpp(iLength);
@@ -399,7 +398,7 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 	   (Calculation of R_hp!) */
 	for (i = 0; i < iLength; i++)
 	{
-		iCurPos = i * iTimeInt + iDiff;
+		const int iCurPos = i * iTimeInt + iDiff;
 
 		vecrRhp[i] = exp(rFactorArgExp * iCurPos * iCurPos);
 	}
@@ -408,7 +407,7 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 	   (Calculation of R_pp!) */
 	for (i = 0; i < iLength; i++)
 	{
-		iCurPos = i * iTimeInt;
+		const int iCurPos = i * iTimeInt;
 
 		vecrRpp[i] = exp(rFactorArgExp * iCurPos * iCurPos);
 	}
