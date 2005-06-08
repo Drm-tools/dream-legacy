@@ -61,7 +61,7 @@ global doremcompname;
 	files = files(sortdateidxs);
 
 
-	% sort out SIMTIME files ans MSE files
+	% sort files
 	simresBERIDEAL = struct([]);
 	simresMSE = struct([]);
 	simresBER = struct([]);
@@ -112,17 +112,17 @@ global doremcompname;
 			plotMSEresults(simresMSE);
             plotSYNCresults(simresSYNC);
             plotBERIDEALresults(simresBERIDEAL);
-       case {1}
+        case {1}
 			plotMSEresults(simresMSE);
             plotSYNCresults(simresSYNC);
             plotBERIDEALresults(simresBERIDEAL);
             plotBERresults(simresBER);
-       case {2}
+        case {2}
             plotSYNCresults(simresSYNC);
             plotBERIDEALresults(simresBERIDEAL);
             plotBERresults(simresBER);
 			plotMSEresults(simresMSE);
-       otherwise
+        otherwise
             plotBERIDEALresults(simresBERIDEAL);
             plotBERresults(simresBER);
 			plotMSEresults(simresMSE);

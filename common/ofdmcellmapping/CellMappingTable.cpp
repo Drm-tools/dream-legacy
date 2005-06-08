@@ -38,7 +38,7 @@
 
 
 /* Implementation *************************************************************/
-void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode, 
+void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 								  ESpecOcc eNewSpectOccup)
 {
 	int				iNoMSCDummyCells; /* Number of MSC dummy cells */
@@ -235,7 +235,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	matiMapTab.Init(iNumSymbolsPerSuperframe, iNumCarrier);
 
 	/* Allocate memory for pilot cells definition and set it to zero */
-	matcPilotCells.Init(iNumSymbolsPerSuperframe, iNumCarrier, 
+	matcPilotCells.Init(iNumSymbolsPerSuperframe, iNumCarrier,
 		_COMPLEX((_REAL) 0.0, (_REAL) 0.0));
 
 	/* Allocate memory for vectors with number of certain cells */
@@ -258,7 +258,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		if (iFrameSym == 0)
 			iFACCounter = 0;
 
-		/* Calculate the start value of "p" in equation for gain reference 
+		/* Calculate the start value of "p" in equation for gain reference
 		   cells in Table 90 (8.4.4.1) */
 		iScatPilotsCounter = (int) ((_REAL) (iCarrierKmin -
 			(int) ((_REAL) iScatPilFreqInt / 2 + .5) -
@@ -285,14 +285,12 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 			case RM_ROBUSTNESS_MODE_B:
 				if ((iSym == 0) || (iSym == 1))
 					matiMapTab[iSym][iCarArrInd] = CM_SDC;
-
 				break;
 
 			case RM_ROBUSTNESS_MODE_C:
 			case RM_ROBUSTNESS_MODE_D:
 				if ((iSym == 0) || (iSym == 1) || (iSym == 2))
 					matiMapTab[iSym][iCarArrInd] = CM_SDC;
-
 				break;
 			}
 
@@ -304,7 +302,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				/* piTableFAC[x * 2]: first column; piTableFAC[x * 2 + 1]:
 				   second column */
 				if (piTableFAC[iFACCounter * 2] * iNumCarrier +
-					piTableFAC[iFACCounter * 2 + 1] == iFrameSym * 
+					piTableFAC[iFACCounter * 2 + 1] == iFrameSym *
 					iNumCarrier + iCar)
 				{
 					iFACCounter++;
@@ -352,7 +350,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 					ScatPilots.piConst[1] /* "y" */));
 
 				/* Phase_1024[s,k] =
-				       (4Z_256[n,m]pW_1024[n,m] + p^2(1 + s)Q_1024) mod 1024 */
+				   (4Z_256[n,m]pW_1024[n,m] + p^2(1 + s)Q_1024) mod 1024 */
 				iScatPilPhase = mod(4 * ScatPilots.piZ[in *
 					ScatPilots.iColSizeWZ + im] + ip *
 					ScatPilots.piW[in *
@@ -449,14 +447,18 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 				/* Apply complex value */
 				if (bIsFreqPilSpeciCase)
+				{
 					matcPilotCells[iSym][iCarArrInd] =
 						Polar2Cart(sqrt(AV_PILOT_POWER), mod(
 						piTableFreqPilots[iFreqPilotsCounter * 2 + 1] +
 						512, 1024));
+				}
 				else
+				{
 					matcPilotCells[iSym][iCarArrInd] =
 						Polar2Cart(sqrt(AV_PILOT_POWER),
 						piTableFreqPilots[iFreqPilotsCounter * 2 + 1]);
+				}
 
 				/* Increase counter and wrap if needed */
 				if (iFreqPilotsCounter == NUM_FREQ_PILOTS - 1)
@@ -578,7 +580,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		(int) (iMSCCounter / NUM_FRAMES_IN_SUPERFRAME);
 
 	/* Calculate dummy cells for MSC */
-	iNoMSCDummyCells = iMSCCounter - iNumUsefMSCCellsPerFrame  *
+	iNoMSCDummyCells = iMSCCounter - iNumUsefMSCCellsPerFrame *
 		NUM_FRAMES_IN_SUPERFRAME;
 
 	/* Correct last MSC count (because of dummy cells) */
