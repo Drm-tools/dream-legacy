@@ -7,6 +7,7 @@
 %*
 %* Description:
 %* 	This file automatically reads all relevant simulation results
+%*	Note: for correct outputs/plots this script needs Matlab > R14
 %*
 %******************************************************************************
 %*
@@ -409,9 +410,15 @@ global LW;
         if isMSEplot ~= 0
             handtmp = plot(10 * log10(simresnew(1).data), char(plotcolors(1)), 'LineWidth', LW);
             handles = handtmp(1);            
-        else
+		else
+			% if only one data point is available, use marker
+			optstr = char(plotcolors(1));
+			if length(simresnew(1).data(:, 1)) < 2
+				optstr = [optstr '*'];
+			end
+
             handles = semilogy(simresnew(1).data(:, 1), simresnew(1).data(:, 2), ...
-                char(plotcolors(1)), 'LineWidth', LW);
+                optstr, 'LineWidth', LW);
         end
 
         grid on;
@@ -423,10 +430,16 @@ global LW;
                 if isMSEplot ~= 0
                     handtmp = plot(10 * log10(simresnew(i).data), char(plotcolors(i)), 'LineWidth', LW);
                     handles = [handles handtmp(1)];
-                else
+				else
+					% if only one data point is available, use marker
+					optstr = char(plotcolors(i));
+					if length(simresnew(i).data(:, 1)) < 2
+						optstr = [optstr '*'];
+					end
+
                     handles = [handles ...
                         semilogy(simresnew(i).data(:, 1), simresnew(i).data(:, 2), ...
-                        char(plotcolors(i)), 'LineWidth', LW)];
+                        optstr, 'LineWidth', LW)];
                 end
             end
         end
