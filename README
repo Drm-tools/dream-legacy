@@ -99,9 +99,14 @@ Dream code Code-Style definitions
 
 	[command2]
 	{
-		/* Code 2 */
+		/* Code 2 (more than one line) */
 	}
 }
+
+- exception: if only one line of code, do not use brackets:
+
+[command1]
+	/* Code (only one line) */
 
 - switch command:
 
