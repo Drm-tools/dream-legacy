@@ -207,8 +207,15 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 
 	/* Set delay of this channel estimation type. The longer the delay is, the
 	   more "acausal" pilots can be used for interpolation. We use the same
-	   amount of causal and acausal filter taps here */
-	const int iSymDelyChanEst = (iLengthWiener / 2) * iScatPilTimeInt - 1;
+	   amount of causal and acausal filter taps here. Make sure that we get
+	   R_hp's which have the most energy collected:
+	   L = Np * TiPi - TiPi + 1 is the total number of cells which span our
+	   interpolation when we set a pilot on the left-most and right-most
+	   Ceil(L / 2) is the middle of the range, now we only have to consider
+	   half of the TiPi which is Floor(TiPi / 2) */
+	const int iSymDelyChanEst = (int) Ceil((CReal) (
+		iLengthWiener * iScatPilTimeInt - iScatPilTimeInt + 1) / 2) +
+		(int) Floor((CReal) iScatPilTimeInt / 2) - 1;
 
 	/* Set number of phases for wiener filter */
 	iNumFiltPhasTi = iScatPilTimeInt;
@@ -300,6 +307,9 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 			break;
 
 		case 3:
+			rSigma = 1.2 / 2;
+			break;
+
 		case 5:
 			rSigma = 2.0 / 2;
 			break;
@@ -385,7 +395,6 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 {
 	int i;
 
-	CRealVector	vecrReturn(iLength);
 	CRealVector vecrRpp(iLength);
 	CRealVector vecrRhp(iLength);
 
