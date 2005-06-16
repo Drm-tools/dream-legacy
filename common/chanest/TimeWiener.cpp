@@ -315,7 +315,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 			break;
 
 		case 8:
-			rSigma = ReceiverParam.iChan8Doppler;
+			rSigma = (_REAL) ReceiverParam.iChan8Doppler / 2;
 			break;
 
 		default: /* Including channel number 6 */
