@@ -7,6 +7,8 @@
  *
  * 6/8/2005 Andrea Russo
  *	- save Journaline pages as HTML
+ * 6/16/2005 Andrea Russo
+ *	- save path for storing pictures or Journaline pages
  *
  ******************************************************************************
  *
@@ -31,6 +33,7 @@
 
 MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	const char* name, bool modal, WFlags f) : pDRMRec(pNDRMR),
+	strCurrentSavePath(""),
 	MultimediaDlgBase(parent, name, modal, f)
 {
 #ifdef _WIN32 /* This works only reliable under Windows :-( */
@@ -469,6 +472,14 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 	}
 }
 
+void MultimediaDlg::SetCurrentSavePath(const QString strFileName)
+{
+	strCurrentSavePath = QFileInfo(QFile(strFileName)).dirPath();
+
+	if (strCurrentSavePath.right(1).latin1() != QString("/"))
+		strCurrentSavePath += "/";
+}
+
 void MultimediaDlg::OnSave()
 {
 	QString strFileName;
@@ -486,13 +497,16 @@ void MultimediaDlg::OnSave()
 			strDefFileName = "RecPic";
 
 		strFileName =
-			QFileDialog::getSaveFileName(strDefFileName + "." +
-			QString(vecRawImages[iCurImagePos].strFormat.c_str()),
+			QFileDialog::getSaveFileName(strCurrentSavePath + strDefFileName +
+			"." + QString(vecRawImages[iCurImagePos].strFormat.c_str()),
 			"*." + QString(vecRawImages[iCurImagePos].strFormat.c_str()), this);
 
 		/* Check if user not hit the cancel button */
 		if (!strFileName.isNull())
+		{
+			SetCurrentSavePath(strFileName);
 			SavePicture(iCurImagePos, strFileName);
+		}
 		break;
 
 	case CDataDecoder::AT_JOURNALINE:
@@ -512,11 +526,13 @@ void MultimediaDlg::OnSave()
 			"<tr><td><ul type=\"square\">" + strItems + "</ul></td></tr>\n"
 			"</table>\n</body>\n</html>";
 
-		strFileName = QFileDialog::getSaveFileName(strTitle + ".html",
-			"*.html", this);
+		strFileName = QFileDialog::getSaveFileName(strCurrentSavePath +
+			strTitle + ".html", "*.html", this);
 
 		if (!strFileName.isNull())
 		{
+			SetCurrentSavePath(strFileName);
+
 			/* Save Journaline page as a text stream */
 			QFile FileObj(strFileName);
 
@@ -749,7 +765,8 @@ void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
 	if (NewPic.strFormat.compare("jpeg") != 0)
 		return;
 
-	/* If we use freeimage as a static library, we need to initialize it first */
+	/* If we use freeimage as a static library, we need to initialize it
+	   first */
 	FreeImage_Initialise();
 
 	/* Put input data in a new IO object */

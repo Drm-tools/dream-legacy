@@ -40,6 +40,7 @@
 #include <qregexp.h>
 #include <qtooltip.h>
 #include <qtextstream.h>
+#include <qfileinfo.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/MultimediaDlgbase.h"
@@ -121,6 +122,7 @@ protected:
 	int						iCurJourObjID;
 	CDataDecoder::EAppType	eAppType;
 	CNewIDHistory			NewIDHistory;
+	QString					strCurrentSavePath;
 
 	void SetSlideShowPicture();
 	void SetJournalineText();
@@ -139,6 +141,8 @@ protected:
 
 	void ExtractJournalineBody(const int iCurJourID, const _BOOLEAN bHTMLExport,
 		QString &strTitle, QString &strItems);
+	
+	void SetCurrentSavePath(const QString strFileName);
 
 public slots:
 	void OnTimer();
