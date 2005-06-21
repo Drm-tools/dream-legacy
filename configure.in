@@ -123,6 +123,9 @@ if test "x$WITHQTGUI" = xyes; then
 	AC_HAVE_LIBRARY(qwt, ,exit 1)
 	AC_CHECK_HEADER(/usr/include/qwt/qwt.h, qwt_include="-I/usr/include/qwt", qwt_include="")
 	if test "$qwt_include" = ""; then
+		AC_CHECK_HEADER(/usr/local/include/qwt/qwt.h, qwt_include="-I/usr/local/include/qwt", qwt_include="")
+	fi
+	if test "$qwt_include" = ""; then
 		AC_CHECK_HEADER($QTDIR/include/qwt/qwt.h, qwt_include="-I$QTDIR/include/qwt", exit 1)
 	fi
 	AC_SUBST(QWTINCL, $qwt_include )
