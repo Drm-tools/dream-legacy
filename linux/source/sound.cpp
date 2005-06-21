@@ -50,7 +50,7 @@
 
 #ifdef USE_DEVDSP
 
-#include <linux/soundcard.h>
+#include <sys/soundcard.h>
 #include <errno.h>
 
 static int fdSound = 0;
