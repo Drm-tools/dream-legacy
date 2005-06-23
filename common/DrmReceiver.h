@@ -108,7 +108,7 @@ public:
 #if defined(USE_QT_GUI) || defined(_WIN32)
 		, iMainPlotColorStyle(0), /* default color scheme: blue-white */
 		iSecondsPreview(0), GeomChartWindows(0), bEnableSMeter(TRUE),
-		iSysEvalDlgPlotType(0)
+		iSysEvalDlgPlotType(0), strStoragePathMMDlg("")
 #endif
 		{}
 	virtual ~CDRMReceiver() {}
@@ -212,6 +212,7 @@ public:
 	int			iSecondsPreview;
 	_BOOLEAN	bEnableSMeter;
 	int			iSysEvalDlgPlotType;
+	string		strStoragePathMMDlg;
 #endif
 
 	/* Interfaces to internal parameters/vectors used for the plot */

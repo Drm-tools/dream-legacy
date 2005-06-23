@@ -109,21 +109,21 @@ void CSettings::ReadIniFile()
 	if (GetNumericIniSet(ini, "Logfile", "startlog", 0, MAX_SEC_LOG_FI_START, iValue) == TRUE)
 		pDRMRec->GetParameters()->ReceptLog.SetDelLogStart(iValue);
 
-
 	/* Frequency for log file */
 	if (GetNumericIniSet(ini, "Logfile", "frequency", 0, MAX_FREQ_LOG_FILE, iValue) == TRUE)
 		pDRMRec->GetParameters()->ReceptLog.SetFrequency(iValue);
-
 
 	/* Latitude string for log file */
 	pDRMRec->GetParameters()->ReceptLog.SetLatitude(
 		GetIniSetting(ini, "Logfile", "latitude"));
 
-
 	/* Longitude string for log file */
 	pDRMRec->GetParameters()->ReceptLog.SetLongitude(
 		GetIniSetting(ini, "Logfile", "longitude"));
 
+
+	/* Storage path for files saved from Multimedia dialog */
+	pDRMRec->strStoragePathMMDlg = GetIniSetting(ini, "Multimedia dialog", "storagepath");
 
 	/* Seconds for preview into Stations Dialog if zero then inactive */
 	if (GetNumericIniSet(ini, "Stations dialog", "preview", 0, MAX_NUM_SEC_PREVIEW, iValue) == TRUE)
@@ -306,21 +306,22 @@ void CSettings::WriteIniFile()
 	SetNumericIniSet(ini, "Logfile", "startlog",
 		pDRMRec->GetParameters()->ReceptLog.GetDelLogStart());
 
-
 	/* Frequency for log file */
 	SetNumericIniSet(ini, "Logfile", "frequency",
 		pDRMRec->GetParameters()->ReceptLog.GetFrequency());
-
 
 	/* Latitude string for log file */
 	PutIniSetting(ini, "Logfile", "latitude",
 		pDRMRec->GetParameters()->ReceptLog.GetLatitude().c_str());
 
-
 	/* Longitude string for log file */
 	PutIniSetting(ini, "Logfile", "longitude",
 		pDRMRec->GetParameters()->ReceptLog.GetLongitude().c_str());
 
+
+	/* Storage path for files saved from Multimedia dialog */
+	PutIniSetting(ini, "Multimedia dialog", "storagepath",
+		pDRMRec->strStoragePathMMDlg.c_str());
 
 	/* Seconds for preview into Stations Dialog if zero then inactive */
 	SetNumericIniSet(ini, "Stations dialog", "preview",

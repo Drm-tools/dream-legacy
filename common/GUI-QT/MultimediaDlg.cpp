@@ -33,7 +33,6 @@
 
 MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	const char* name, bool modal, WFlags f) : pDRMRec(pNDRMR),
-	strCurrentSavePath(""),
 	MultimediaDlgBase(parent, name, modal, f)
 {
 #ifdef _WIN32 /* This works only reliable under Windows :-( */
@@ -49,6 +48,9 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	resize(pDRMRec->GeomMultimediaDlg.iWSize,
 		pDRMRec->GeomMultimediaDlg.iHSize);
 #endif
+
+	/* Retrieve the setting saved into the .ini file */
+	SetCurrentSavePath(pDRMRec->strStoragePathMMDlg.c_str());
 
 	/* Picture controls should be invisable. These controls are only used for
 	   storing the resources */
@@ -132,6 +134,9 @@ MultimediaDlg::~MultimediaDlg()
 	pDRMRec->GeomMultimediaDlg.iYPos = WinGeom.y();
 	pDRMRec->GeomMultimediaDlg.iHSize = WinGeom.height();
 	pDRMRec->GeomMultimediaDlg.iWSize = WinGeom.width();
+
+	/* Store save path */
+	pDRMRec->strStoragePathMMDlg = strCurrentSavePath;
 }
 
 void MultimediaDlg::InitApplication(CDataDecoder::EAppType eNewAppType)
