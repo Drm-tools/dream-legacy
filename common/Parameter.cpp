@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -112,9 +112,9 @@ void CParameter::GetActiveServices(CVector<int>& veciActServ)
 
 void CParameter::GetActiveStreams(CVector<int>& veciActStr)
 {
-	int					i;
-	int					iNumStreams;
-	CVector<int>		vecbStreams(MAX_NUM_STREAMS, 0);
+	int				i;
+	int				iNumStreams;
+	CVector<int>	vecbStreams(MAX_NUM_STREAMS, 0);
 
 	/* Determine which streams are active */
 	for (i = 0; i < MAX_NUM_SERVICES; i++)
@@ -134,8 +134,10 @@ void CParameter::GetActiveStreams(CVector<int>& veciActStr)
 	/* Now, count streams */
 	iNumStreams = 0;
 	for (i = 0; i < MAX_NUM_STREAMS; i++)
+	{
 		if (vecbStreams[i] == 1)
 			iNumStreams++;
+	}
 
 	/* Now that we know how many streams are active, dimension vector */
 	veciActStr.Init(iNumStreams);
@@ -154,8 +156,6 @@ void CParameter::GetActiveStreams(CVector<int>& veciActStr)
 
 _REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
 {
-	int iNoBitsPerFrame;
-			
 	/* Init lengths to zero in case the stream is not yet assigned */
 	int iLenPartA = 0;
 	int iLenPartB = 0;
@@ -201,11 +201,11 @@ _REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
 	}
 
 	/* Total length in bits */
-	iNoBitsPerFrame = (iLenPartA + iLenPartB) * SIZEOF__BYTE;
+	const int iNumBitsPerFrame = (iLenPartA + iLenPartB) * SIZEOF__BYTE;
 
 	/* We have 3 frames with time duration of 1.2 seconds. Bit rate should be
 	   returned in kbps (/ 1000) */
-	return (_REAL) iNoBitsPerFrame * 3 / 1.2 / 1000;
+	return (_REAL) iNumBitsPerFrame * 3 / (_REAL) 1.2 / 1000;
 }
 
 _REAL CParameter::PartABLenRatio(const int iServiceID)
@@ -630,31 +630,31 @@ _REAL CParameter::GetSysToNomBWCorrFact()
 	switch (eSpectOccup)
 	{
 	case SO_0:
-		rNomBW = (_REAL) 4500.0; // Hz
+		rNomBW = (_REAL) 4500.0; /* Hz */
 		break;
 
 	case SO_1:
-		rNomBW = (_REAL) 5000.0; // Hz
+		rNomBW = (_REAL) 5000.0; /* Hz */
 		break;
 
 	case SO_2:
-		rNomBW = (_REAL) 9000.0; // Hz
+		rNomBW = (_REAL) 9000.0; /* Hz */
 		break;
 
 	case SO_3:
-		rNomBW = (_REAL) 10000.0; // Hz
+		rNomBW = (_REAL) 10000.0; /* Hz */
 		break;
 
 	case SO_4:
-		rNomBW = (_REAL) 18000.0; // Hz
+		rNomBW = (_REAL) 18000.0; /* Hz */
 		break;
 
 	case SO_5:
-		rNomBW = (_REAL) 20000.0; // Hz
+		rNomBW = (_REAL) 20000.0; /* Hz */
 		break;
 
 	default:
-		rNomBW = (_REAL) 10000.0; // Hz
+		rNomBW = (_REAL) 10000.0; /* Hz */
 		break;
 	}
 
