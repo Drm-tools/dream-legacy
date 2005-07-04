@@ -7,7 +7,7 @@
 %*
 %* Description:
 %* 	This file automatically reads all relevant simulation results
-%*	Note: for correct outputs/plots this script needs Matlab > R14
+%*	Note: for correct outputs/plots this script needs Matlab >= R14
 %*
 %******************************************************************************
 %*
