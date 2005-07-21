@@ -244,7 +244,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 		tap[0].Init(/* Delay: */	(_REAL) 0.0,
 					/* Gain: */		(_REAL) 1.0,
 					/* Fshift: */	(_REAL) 0.0,
-					/* Fd: */		(_REAL) ReceiverParam.iChan8Doppler);
+					/* Fd: */		(_REAL) ReceiverParam.iSpecChDoppler);
 		break;
 
 	case 9:
@@ -268,7 +268,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 
 		tap[0].Init(/* Delay: */	(_REAL) 0.0,
 					/* Gain: */		(_REAL) 1.0,
-					/* Fshift: */	(_REAL) 2.0, /* Hz <- shift paramter!) */
+					/* Fshift: */	(_REAL) ReceiverParam.iSpecChDoppler,
 					/* Fd: */		(_REAL) 0.0);
 		break;
 	}

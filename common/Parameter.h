@@ -494,7 +494,7 @@ public:
 	ESimType			eSimType;
 
 	int					iDRMChannelNum;
-	int					iChan8Doppler;
+	int					iSpecChDoppler;
 	_REAL				rBitErrRate;
 	_REAL				rSyncTestParam; /* For any other simulations, used
 										   with "ST_SYNC_PARAM" type */

@@ -54,17 +54,17 @@ void CDRMSimulation::SimScript()
 	\**************************************************************************/
 	/* Choose which type of simulation, if you choose "ST_NONE", the regular
 	   application will be started */
-	Param.eSimType = CParameter::ST_MSECHANEST;
-	Param.eSimType = CParameter::ST_SYNC_PARAM; /* Check "SetSyncInput()"s! */
 	Param.eSimType = CParameter::ST_BITERROR;
+	Param.eSimType = CParameter::ST_SYNC_PARAM; /* Check "SetSyncInput()"s! */
 	Param.eSimType = CParameter::ST_BER_IDEALCHAN;
+	Param.eSimType = CParameter::ST_MSECHANEST;
 	Param.eSimType = CParameter::ST_NONE; /* No simulation, regular GUI */
 
 
 	if (Param.eSimType != CParameter::ST_NONE)
 	{
 		Param.iDRMChannelNum = 8;
-Param.iChan8Doppler = 2; /* Hz (integer value!) */
+Param.iSpecChDoppler = 2; /* Hz (integer value!) */
 
 		rStartSNR = (_REAL) 15;
 		rEndSNR = (_REAL) 25;
@@ -107,7 +107,7 @@ Param.iChan8Doppler = 2; /* Hz (integer value!) */
 			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_A, SO_2);
 			Param.eSymbolInterlMode = CParameter::SI_SHORT;
 		}
-		else if (Param.iDRMChannelNum == 8)
+		else if ((Param.iDRMChannelNum == 8) || (Param.iDRMChannelNum == 10))
 		{
 			/* Special setting for channel 8 */
 			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_0);
@@ -157,7 +157,7 @@ Param.iChan8Doppler = 2; /* Hz (integer value!) */
 # endif
 #endif
 
-		/* Set simulation time or number of errors. Slighty different convetion
+		/* Set simulation time or number of errors. Slighty different convention
 		   for __SIMTIME file name */
 		if (iSimTime != 0)
 		{
@@ -170,11 +170,11 @@ Param.iChan8Doppler = 2; /* Hz (integer value!) */
 				SimFileName(Param, strSpecialRemark, TRUE));
 		}
 
-		/* Set file name for simulation results output */
+		/* Set file name for simulation results output (in case of MSE, plot
+		   SNR range, too) */
 		strSimFile = string(SIM_OUT_FILES_PATH) +
-			SimFileName(Param, strSpecialRemark, FALSE) + string(".dat");
-
-		printf("%s\n", strSimFile.c_str()); /* Show name directly */
+			SimFileName(Param, strSpecialRemark,
+			Param.eSimType == CParameter::ST_MSECHANEST) + string(".dat");
 
 		/* Open file for storing simulation results */
 		pFileSimRes = fopen(strSimFile.c_str(), "w");
@@ -182,6 +182,9 @@ Param.iChan8Doppler = 2; /* Hz (integer value!) */
 		/* If opening of file was not successful, exit simulation */
 		if (pFileSimRes == NULL)
 			exit(1);
+
+		/* Show name as console output */
+		printf("%s\n", strSimFile.c_str());
 
 		/* Main SNR loop */
 		for (rSNRCnt = rStartSNR; rSNRCnt <= rEndSNR; rSNRCnt += rStepSNR)
@@ -269,11 +272,11 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
 
 
 	/* Channel -------------------------------------------------------------- */
-	/* In case of channel 8 also write Doppler frequency in file name */
-	if (Param.iDRMChannelNum == 8)
+	/* In case of channels 8 / 10 also write Doppler frequency in file name */
+	if ((Param.iDRMChannelNum == 8) || (Param.iDRMChannelNum == 10))
 	{
 		sprintf(chNumTmpLong, "CH%d_%dHz_",
-			Param.iDRMChannelNum, Param.iChan8Doppler);
+			Param.iDRMChannelNum, Param.iSpecChDoppler);
 	}
 	else
 		sprintf(chNumTmpLong, "CH%d_", Param.iDRMChannelNum);
