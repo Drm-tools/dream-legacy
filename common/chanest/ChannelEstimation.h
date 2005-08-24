@@ -84,7 +84,7 @@ class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>
 {
 public:
 	CChannelEstimation() : iLenHistBuff(0), TypeIntFreq(FWIENER), 
-		TypeIntTime(TWIENER), eDFTWindowingMethod(DFT_WIN_HAMM),
+		TypeIntTime(TWIENER), eDFTWindowingMethod(DFT_WIN_HANN),
 		TypeSNREst(SNR_FAC), bInterfConsid(FALSE) {}
 	virtual ~CChannelEstimation() {}
 
@@ -129,7 +129,7 @@ public:
 	void StartSaRaOffAcq() {TimeSyncTrack.StartSaRaOffAcq(); SetInitFlag();}
 
 protected:
-	enum EDFTWinType {DFT_WIN_RECT, DFT_WIN_HAMM};
+	enum EDFTWinType {DFT_WIN_RECT, DFT_WIN_HAMM, DFT_WIN_HANN};
 	EDFTWinType				eDFTWindowingMethod;
 
 	int						iNumSymPerFrame;

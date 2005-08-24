@@ -511,11 +511,26 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Init window for DFT operation for frequency interpolation ------------ */
+	/* Simplified version of "Low-complexity Channel Estimator Based on
+	   Windowed DFT and Scalar Wiener Fitler for OFDM Systems" by Baoguo Yang,
+	   Zhigang Cao and K. B. Letaief */
 	/* Init memory */
 	vecrDFTWindow.Init(iNumIntpFreqPil);
 	vecrDFTwindowInv.Init(iNumCarrier);
 
-	/* Set window coefficients */
+	/* Set window coefficients. Do not use the edges of the windows */
+	const _REAL rWinExpFact = (_REAL) 0.0828; /* Value taken from paper */
+
+	const int iOvlSamOneSideShort =
+		(int) Ceil(rWinExpFact * iNumIntpFreqPil / 2);
+	const int iOvlSamOneSideLong = iOvlSamOneSideShort * iScatPilFreqInt;
+
+	const int iExpWinLenShort = iNumIntpFreqPil + 2 * iOvlSamOneSideShort;
+	const int iExpWinLenLong = iNumCarrier + 2 * iOvlSamOneSideLong;
+
+	CRealVector vecrExpWinShort(iExpWinLenShort);
+	CRealVector vecrExpWinLong(iExpWinLenLong);
+
 	switch (eDFTWindowingMethod)
 	{
 	case DFT_WIN_RECT:
@@ -524,11 +539,25 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 		break;
 
 	case DFT_WIN_HAMM:
-		vecrDFTWindow = Hamming(iNumIntpFreqPil);
-		vecrDFTwindowInv = (CReal) 1.0 / Hamming(iNumCarrier);
+		vecrExpWinShort = Hamming(iExpWinLenShort);
+		vecrDFTWindow = vecrExpWinShort(iOvlSamOneSideShort + 1,
+			iExpWinLenShort - iOvlSamOneSideShort);
+
+		vecrExpWinLong = Hamming(iExpWinLenLong);
+		vecrDFTwindowInv = (CReal) 1.0 / vecrExpWinLong(iOvlSamOneSideLong + 1,
+			iExpWinLenLong - iOvlSamOneSideLong);
+		break;
+
+	case DFT_WIN_HANN:
+		vecrExpWinShort = Hann(iExpWinLenShort);
+		vecrDFTWindow = vecrExpWinShort(iOvlSamOneSideShort + 1,
+			iExpWinLenShort - iOvlSamOneSideShort);
+
+		vecrExpWinLong = Hann(iExpWinLenLong);
+		vecrDFTwindowInv = (CReal) 1.0 / vecrExpWinLong(iOvlSamOneSideLong + 1,
+			iExpWinLenLong - iOvlSamOneSideLong);
 		break;
 	}
-
 
 	/* Set start index for zero padding in time domain for DFT method */
 	iStartZeroPadding = (int) rGuardSizeFFT;
