@@ -336,14 +336,30 @@ void FDRMDialog::OnTimer()
 				eAudDataFlag == CParameter::SF_AUDIO)
 			{
 				/* Language */
-				LabelLanguage->setText(strTableLanguageCode[pDRMRec->
-					GetParameters()->
-					Service[iCurSelAudioServ].iLanguage].c_str());
+				const int iLanguageID = pDRMRec->GetParameters()->
+					Service[iCurSelAudioServ].iLanguage;
+
+				if ((iLanguageID > 0) &&
+					(iLanguageID < LEN_TABLE_LANGUAGE_CODE))
+				{
+					LabelLanguage->setText(
+						strTableLanguageCode[iLanguageID].c_str());
+				}
+				else
+					LabelLanguage->setText("");
 
 				/* Program type */
-				LabelProgrType->setText(strTableProgTypCod[pDRMRec->
-					GetParameters()->
-					Service[iCurSelAudioServ].iServiceDescr].c_str());
+				const int iProgrammTypeID = pDRMRec->GetParameters()->
+					Service[iCurSelAudioServ].iServiceDescr;
+
+				if ((iProgrammTypeID > 0) &&
+					(iProgrammTypeID < LEN_TABLE_PROG_TYPE_CODE))
+				{
+					LabelProgrType->setText(
+						strTableProgTypCod[iProgrammTypeID].c_str());
+				}
+				else
+					LabelProgrType->setText("");
 			}
 		}
 		else
