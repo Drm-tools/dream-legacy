@@ -322,9 +322,14 @@ void FDRMDialog::OnTimer()
 			LabelBitrate->setText(strBitrate);
 
 			/* Service ID (plot number in hexadecimal format) */
-			LabelServiceID->setText("ID:" +
-				QString().setNum((long) pDRMRec->GetParameters()->
-				Service[iCurSelAudioServ].iServiceID, 16).upper());
+			const long iServiceID = (long) pDRMRec->GetParameters()->
+				Service[iCurSelAudioServ].iServiceID;
+
+			if (iServiceID != 0)
+			{
+				LabelServiceID->setText("ID:" +
+					QString().setNum(iServiceID, 16).upper());
+			}
 
 			/* Codec label */
 			LabelCodec->setText(GetCodecString(iCurSelAudioServ));
