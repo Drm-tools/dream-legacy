@@ -65,6 +65,7 @@ void CParameter::ResetServicesStreams()
 		Service[i].iServiceID = SERV_ID_NOT_USED;
 		Service[i].eCAIndication = CA_NOT_USED;
 		Service[i].iLanguage = 0;
+		Service[i].strCountryCode = "";
 		Service[i].eAudDataFlag = SF_AUDIO;
 		Service[i].iServiceDescr = 0;
 		Service[i].strLabel = "";

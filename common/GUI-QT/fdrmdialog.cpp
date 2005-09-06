@@ -116,6 +116,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	LabelServiceLabel->setText("");
 	LabelProgrType->setText("");
 	LabelLanguage->setText("");
+	LabelCountryCode->setText("");
 	LabelServiceID->setText("");
 
 	/* Init progress bar for input signal level */
@@ -361,6 +362,16 @@ void FDRMDialog::OnTimer()
 				else
 					LabelProgrType->setText("");
 			}
+
+			/* Country code */
+			const string strCntryCode = pDRMRec->GetParameters()->
+				Service[iCurSelAudioServ].strCountryCode;
+
+			if (!strCntryCode.empty())
+			{
+				LabelCountryCode->
+					setText(QString(strCntryCode.c_str()).upper());
+			}
 		}
 		else
 		{
@@ -371,6 +382,7 @@ void FDRMDialog::OnTimer()
 			LabelStereoMono->setText("");
 			LabelProgrType->setText("");
 			LabelLanguage->setText("");
+			LabelCountryCode->setText("");
 			LabelServiceID->setText("");
 		}
 
@@ -531,6 +543,7 @@ void FDRMDialog::OnTimer()
 		LabelStereoMono->setText("");
 		LabelProgrType->setText("");
 		LabelLanguage->setText("");
+		LabelCountryCode->setText("");
 		LabelServiceID->setText("");
 
 		/* Hide text message label */
@@ -892,6 +905,7 @@ void FDRMDialog::SetDisplayColor(const QColor newColor)
 	vecpWidgets.Add(FrameAudioDataParams);
 	vecpWidgets.Add(LabelProgrType);
 	vecpWidgets.Add(LabelLanguage);
+	vecpWidgets.Add(LabelCountryCode);
 	vecpWidgets.Add(LabelServiceID);
 	vecpWidgets.Add(TextLabelInputLevel);
 	vecpWidgets.Add(ProgrInputLevel);
@@ -1000,6 +1014,8 @@ void FDRMDialog::AddWhatsThisHelp()
 	QWhatsThis::add(LabelServiceLabel, strStationLabelOther);
 	QWhatsThis::add(LabelProgrType, strStationLabelOther);
 	QWhatsThis::add(LabelServiceID, strStationLabelOther);
+	QWhatsThis::add(LabelLanguage, strStationLabelOther);
+	QWhatsThis::add(LabelCountryCode, strStationLabelOther);
 	QWhatsThis::add(FrameAudioDataParams, strStationLabelOther);
 
 	/* Service Selectors */

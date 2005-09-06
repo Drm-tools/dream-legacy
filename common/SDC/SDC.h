@@ -93,6 +93,9 @@ protected:
 							 CParameter& Parameter);
 	_BOOLEAN DataEntityType9(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter);
+// ...
+	_BOOLEAN DataEntityType12(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter);
 
 	CCRC CRCObject;
 };

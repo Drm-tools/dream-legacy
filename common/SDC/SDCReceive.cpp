@@ -74,8 +74,8 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 		(*pbiData).Separate(4);
 
 		/* Init bit count and total number of bits for body */
-		int			iBitsConsumed = 4; /* 4 bits for AFS index */
-		const int	iTotNumBitsWithoutCRC = iUsefulBitsSDC - 16;
+		int iBitsConsumed = 4; /* 4 bits for AFS index */
+		const int iTotNumBitsWithoutCRC = iUsefulBitsSDC - 16;
 
 		/* Length of the body, excluding the initial 4 bits ("- 4"),
 		   measured in bytes ("/ 8").
@@ -135,6 +135,10 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 
 			case 9: /* Type 9 */
 				bError = DataEntityType9(pbiData, iLengthOfBody, Parameter);
+				break;
+
+			case 12: /* Type 12 */
+				bError = DataEntityType12(pbiData, iLengthOfBody, Parameter);
 				break;
 
 			default:
@@ -928,4 +932,57 @@ _BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 	}
 	else
 		return TRUE;
+}
+
+
+/******************************************************************************\
+* Data entity Type 12 (Language and country data entity)                       *
+\******************************************************************************/
+_BOOLEAN CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
+									   const int iLengthOfBody,
+									   CParameter& Parameter)
+{
+	int i;
+
+	/* Check length -> must be 5 bytes */
+	if (iLengthOfBody != 5)
+		return TRUE;
+
+	/* Short Id: this field indicates the short Id for the service concerned */
+	const int iShortID = (*pbiData).Separate(2);
+
+	/* rfu: these 2 bits are reserved for future use and shall be set to zero
+	   until they are defined */
+	if ((*pbiData).Separate(2) != 0)
+		return TRUE;
+
+	/* Language code: this 24-bit field identifies the language of the target
+	   audience of the service according to ISO 639-2 using three lower case
+	   characters as specified by ISO 8859-1. If the language is not specified,
+	   the field shall contain three "-" characters */
+	string strLanguageCode = "";
+	for (i = 0; i < 3; i++)
+	{
+		/* Get character */
+		const char cNewChar = (*pbiData).Separate(8);
+
+		/* Append new character */
+		strLanguageCode.append(&cNewChar, 1);
+	}
+
+	/* Country code: this 16-bit field identifies the country of origin of the
+	   service (the site of the studio) according to ISO 3166 using two lower
+	   case characters as specified by ISO 8859-1. If the country code is not
+	   specified, the field shall contain two "-" characters */
+	Parameter.Service[iShortID].strCountryCode = "";
+	for (i = 0; i < 2; i++)
+	{
+		/* Get character */
+		const char cNewChar = (*pbiData).Separate(8);
+
+		/* Append new character */
+		Parameter.Service[iShortID].strCountryCode.append(&cNewChar, 1);
+	}
+
+	return FALSE;
 }

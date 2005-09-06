@@ -202,6 +202,7 @@ public:
 		int			iLanguage;
 		ETyOServ	eAudDataFlag;
 		int			iServiceDescr;
+		string		strCountryCode;
 
 		/* Label of the service */
 		string		strLabel;
