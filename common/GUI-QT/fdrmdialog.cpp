@@ -320,10 +320,10 @@ void FDRMDialog::OnTimer()
 			}
 			LabelBitrate->setText(strBitrate);
 
-			/* Service ID */
+			/* Service ID (plot number in hexadecimal format) */
 			LabelServiceID->setText("ID:" +
 				QString().setNum((long) pDRMRec->GetParameters()->
-				Service[iCurSelAudioServ].iServiceID));
+				Service[iCurSelAudioServ].iServiceID, 16).upper());
 
 			/* Codec label */
 			LabelCodec->setText(GetCodecString(iCurSelAudioServ));
