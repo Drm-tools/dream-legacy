@@ -81,6 +81,46 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 
 	/* Init chart selector list view ---------------------------------------- */
+	/* Get pixmaps from dummy list view entries which where inserted in the
+	   qdesigner environment (storage container for the pixmaps) */
+	QListViewItem* pCurLiViIt = ListViewCharSel->firstChild();
+	const QPixmap pixSpectrum(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixSpectrPSD(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixSpectrInpSpec(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixSpectrWaterf(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixSpectrShiftedPSD(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixSpectrAudio(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixSpectrSNR(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixChannel(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixChannelIR(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixChannelTF(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixConstellation(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixFAC(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixSDC(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixMSC(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixHistory(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixSNRAudHist(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixDelDoppHist(*pCurLiViIt->pixmap(0));
+	pCurLiViIt = pCurLiViIt->firstChild();
+	const QPixmap pixFreqSamHist(*pCurLiViIt->pixmap(0));
+
+	/* Now clear the dummy list view items */	
 	ListViewCharSel->clear();
 
 	/* No sorting of items */
@@ -91,58 +131,86 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	CCharSelItem* pHistoryLiViIt =
 		new CCharSelItem(ListViewCharSel, tr("History"),
 		CDRMPlot::NONE_OLD, FALSE);
+	pHistoryLiViIt->setPixmap(0, pixHistory);
 
 	CCharSelItem* pConstellationLiViIt =
 		new CCharSelItem(ListViewCharSel, tr("Constellation"),
 		CDRMPlot::NONE_OLD, FALSE);
+	pConstellationLiViIt->setPixmap(0, pixConstellation);
 
 	CCharSelItem* pChannelLiViIt =
 		new CCharSelItem(ListViewCharSel, tr("Channel"),
 		CDRMPlot::NONE_OLD, FALSE);
+	pChannelLiViIt->setPixmap(0, pixChannel);
 
 	CCharSelItem* pSpectrumLiViIt =
 		new CCharSelItem(ListViewCharSel, tr("Spectrum"),
 		CDRMPlot::NONE_OLD, FALSE);
+	pSpectrumLiViIt->setPixmap(0, pixSpectrum);
+
  
 	/* Inser actual items. The list is not sorted -> items which are inserted
 	   first show up at the end of the list */
 	/* Spectrum */
 	CCharSelItem* pListItSNRSpec = new CCharSelItem(pSpectrumLiViIt,
 		tr("SNR Spectrum"), CDRMPlot::SNR_SPECTRUM);
+	pListItSNRSpec->setPixmap(0, pixSpectrSNR);
 	CCharSelItem* pListItAudSpec = new CCharSelItem(pSpectrumLiViIt,
 		tr("Audio Spectrum"), CDRMPlot::AUDIO_SPECTRUM);
+	pListItAudSpec->setPixmap(0, pixSpectrAudio);
 	CCharSelItem* pListItPowSpecDens = new CCharSelItem(pSpectrumLiViIt,
 		tr("Shifted PSD"), CDRMPlot::POWER_SPEC_DENSITY);
+	pListItPowSpecDens->setPixmap(0, pixSpectrShiftedPSD);
 	CCharSelItem* pListItInpSpecWater = new CCharSelItem(pSpectrumLiViIt,
 		tr("Waterfall Input Spectrum"), CDRMPlot::INP_SPEC_WATERF);
+	pListItInpSpecWater->setPixmap(0, pixSpectrWaterf);
 	CCharSelItem* pListItInpSpectrNoAv = new CCharSelItem(pSpectrumLiViIt,
 		tr("Input Spectrum"), CDRMPlot::INPUTSPECTRUM_NO_AV);
+	pListItInpSpectrNoAv->setPixmap(0, pixSpectrInpSpec);
 	CCharSelItem* pListItInpPSD = new CCharSelItem(pSpectrumLiViIt,
 		tr("Input PSD"), CDRMPlot::INPUT_SIG_PSD);
+	pListItInpPSD->setPixmap(0, pixSpectrPSD);
 
 	/* Constellation */
 	CCharSelItem* pListItConstMSC = new CCharSelItem(pConstellationLiViIt,
 		tr("MSC"), CDRMPlot::MSC_CONSTELLATION);
+	pListItConstMSC->setPixmap(0, pixMSC);
 	CCharSelItem* pListItConstSDC = new CCharSelItem(pConstellationLiViIt,
 		tr("SDC"), CDRMPlot::SDC_CONSTELLATION);
+	pListItConstSDC->setPixmap(0, pixSDC);
 	CCharSelItem* pListItConstFAC = new CCharSelItem(pConstellationLiViIt,
 		tr("FAC"), CDRMPlot::FAC_CONSTELLATION);
+	pListItConstFAC->setPixmap(0, pixFAC);
 	CCharSelItem* pListItConstAll = new CCharSelItem(pConstellationLiViIt,
 		tr("FAC / SDC / MSC"), CDRMPlot::ALL_CONSTELLATION);
+	pListItConstAll->setPixmap(0, pixConstellation);
 
 	/* History */
 	CCharSelItem* pListItHistFrSa = new CCharSelItem(pHistoryLiViIt,
 		tr("Frequency / Sample Rate"), CDRMPlot::FREQ_SAM_OFFS_HIST);
+	pListItHistFrSa->setPixmap(0, pixFreqSamHist);
 	CCharSelItem* pListItHistDeDo = new CCharSelItem(pHistoryLiViIt,
 		tr("Delay / Doppler"), CDRMPlot::DOPPLER_DELAY_HIST);
+	pListItHistDeDo->setPixmap(0, pixDelDoppHist);
 	CCharSelItem* pListItHistSNRAu = new CCharSelItem(pHistoryLiViIt,
 		tr("SNR / Audio"), CDRMPlot::SNR_AUDIO_HIST);
+	pListItHistSNRAu->setPixmap(0, pixSNRAudHist);
 
 	/* Channel */
 	CCharSelItem* pListItChanTF = new CCharSelItem(pChannelLiViIt,
 		tr("Transfer Function"), CDRMPlot::TRANSFERFUNCTION);
+	pListItChanTF->setPixmap(0, pixChannelTF);
 	CCharSelItem* pListItChanIR = new CCharSelItem(pChannelLiViIt,
 		tr("Impulse Response"), CDRMPlot::AVERAGED_IR);
+	pListItChanIR->setPixmap(0, pixChannelIR);
+
+	/* Use this trick to update the automatic column width adjustment to the
+	   new items inserted above. If we do not do the update, the column width
+	   is much larger than desired because of the dummy items inserted for
+	   storing the pixmaps in the QDesigner */
+	ListViewCharSel->setColumnWidth(0, 0);
+	ListViewCharSel->setColumnWidthMode(0, QListView::Maximum);
+
 
 /* _WIN32 fix because in Visual c++ the GUI files are always compiled even
    if USE_QT_GUI is set or not (problem with MDI in DRMReceiver) */

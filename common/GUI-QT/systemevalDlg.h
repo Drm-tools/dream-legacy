@@ -42,6 +42,7 @@
 #include <qlistview.h>
 #include <qbuttongroup.h>
 #include <qpopupmenu.h>
+#include <qpixmap.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/systemevalDlgbase.h"
