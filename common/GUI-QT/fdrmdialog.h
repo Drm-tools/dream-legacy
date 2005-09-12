@@ -80,7 +80,6 @@ protected:
 	int				iCurSelServiceGUI;
 	int				iOldNoServicesGUI;
 	QTimer			Timer;
-	CAboutDlg		AboutDlg;
 
 	_BOOLEAN		bSysEvalDlgWasVis;
 	_BOOLEAN		bMultMedDlgWasVis;
