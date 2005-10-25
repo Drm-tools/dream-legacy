@@ -355,8 +355,8 @@ void CAudioReverb::setT60(const CReal rT60)
 	/* Set the reverberation T60 decay time */
 	for (int i = 0; i < 4; i++)
 	{
-		combCoefficient_[i] = pow((CReal) 10.0, (-3.0 * combDelays_[i].Size() /
-			(rT60 * SOUNDCRD_SAMPLE_RATE)));
+		combCoefficient_[i] = pow((CReal) 10.0, (CReal) (-3.0 *
+			combDelays_[i].Size() / (rT60 * SOUNDCRD_SAMPLE_RATE)));
 	}
 }
 
