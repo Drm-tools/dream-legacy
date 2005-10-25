@@ -84,7 +84,7 @@ Dream code Code-Style definitions
 
 # GENERAL CONVENTIONS
 
-- tap size: 4 (taps are NOT replaced by spaces)
+- tab size: 4 (taps are NOT replaced by spaces)
 - maximum line width: 80 characters
 
 
