@@ -297,7 +297,7 @@ void CViterbiDecoder::TrellisUpdateSSE2(const _DECISIONTYPE* pCurDec,
 
 		/* Expand value in lowest byte to all 16 bytes (watch this part better) */
 		"punpcklbw %%xmm0,%%xmm0 ;"	/* lowest 2 bytes have same value */
-		"pshuflw $0,%%xmm0,%%xmm0 ;" /*  lowest 8 bytes have same value */
+		"pshuflw $0,%%xmm0,%%xmm0 ;" /* lowest 8 bytes have same value */
 		"punpcklqdq %%xmm0,%%xmm0 ;" /* all 16 bytes have same value */
 
 
@@ -319,7 +319,7 @@ void CViterbiDecoder::TrellisUpdateSSE2(const _DECISIONTYPE* pCurDec,
 			 point operations afterwards */
 
 		:
-		:"m"(pCurTrelMetric),"m"(pOldTrelMetric),"m"(chMet1),"m"(chMet2),"m"(pCurDec)
+		:"m"(pCurTrelMetric),"m"(pOldTrelMetric),"m"(pchMet1),"m"(pchMet2),"m"(pCurDec)
 	);
 
 #undef BFLY

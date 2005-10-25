@@ -369,7 +369,7 @@ void CViterbiDecoder::TrellisUpdateMMX(const _DECISIONTYPE* pCurDec,
 			 point operations afterwards */
 
 		:
-		:"m"(pCurTrelMetric),"m"(pOldTrelMetric),"m"(chMet1),"m"(chMet2),"m"(pCurDec)
+		:"m"(pCurTrelMetric),"m"(pOldTrelMetric),"m"(pchMet1),"m"(pchMet2),"m"(pCurDec)
 	);
 
 #undef BFLY
