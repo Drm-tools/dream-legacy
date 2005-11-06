@@ -93,6 +93,7 @@ switch (Param.eSimType)
 {
 case CParameter::ST_MSECHANEST:
 case CParameter::ST_BER_IDEALCHAN:
+case CParameter::ST_SINR:
 		/* MSE of channel estimation, ideal channel estimation -------------- */
 		/* Special OFDM demodulation for channel estimation tests (with guard-
 		   interval removal) */
@@ -212,6 +213,7 @@ void CDRMSimulation::Init()
 	{
 	case CParameter::ST_MSECHANEST:
 	case CParameter::ST_BER_IDEALCHAN:
+	case CParameter::ST_SINR:
 		/* Init OFDM demod before IdealChanEst, because the timing offset of
 		   useful part extraction is set here */
 		OFDMDemodSimulation.Init(Param, ChanEstInBufSim, OFDMDemodBufChan2);
