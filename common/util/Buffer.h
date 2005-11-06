@@ -155,10 +155,10 @@ template<class TData> void CSingleBuffer<TData>::Put(const int iOfferedSize)
 	iFillLevel += iOfferedSize;
 
 #ifdef _DEBUG_
-	if (iFillLevel > iBufferSize)
+	if (iFillLevel > this->iBufferSize)
 	{
 		DebugError("SingleBuffer Put()", "FillLevel",
-			iFillLevel, "Buffer size", iBufferSize);
+			iFillLevel, "Buffer size", this->iBufferSize);
 	}
 #endif
 }
