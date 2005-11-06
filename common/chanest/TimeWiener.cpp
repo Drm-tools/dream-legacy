@@ -439,6 +439,8 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 
 		case 8:
 		case 10:
+		case 11:
+		case 12:
 			rSigma = (_REAL) ReceiverParam.iSpecChDoppler / 2;
 			break;
 
@@ -658,13 +660,9 @@ CReal CTimeWiener::ModLinRegr(const CComplexVector& veccCorrEst)
 	const int iVecLen = Size(veccCorrEst);
 
 	/* Init vectors and variables */
-	CReal		rSigmaRet;
 	CRealVector Tau(iVecLen);
 	CRealVector Z(iVecLen);
 	CRealVector W(iVecLen);
-	CRealVector Wmrem(iVecLen);
-	CReal		Wm, Zm;
-	CReal		A1;
 
 	/* Generate the tau vector */
 	for (int i = 0; i < iVecLen; i++)
@@ -674,24 +672,19 @@ CReal CTimeWiener::ModLinRegr(const CComplexVector& veccCorrEst)
 	   z = ln(y); w = x ^ 2
 	   -> z = a0 + a1 * w */
 	Z = Log(Abs(veccCorrEst));
-
 	W = Tau * Tau;
 
-	Wm = Mean(W);
-	Zm = Mean(Z);
-
-	Wmrem = W - Wm; /* Remove mean of W */
-
-	A1 = Sum(Wmrem * (Z - Zm)) / Sum(Wmrem * Wmrem);
+	/* Apply linear regression */
+	const CReal A1 = LinRegr(W, Z);
 
 	/* Final sigma calculation from estimation and assumed Gaussian model */
-	rSigmaRet = (CReal) 0.5 / crPi * Sqrt((CReal) -2.0 * A1) / rTs;
+	const CReal rSigmaRet = (CReal) 0.5 / crPi * Sqrt((CReal) -2.0 * A1) / rTs;
 
 	/* Bound estimated sigma value */
 	if (rSigmaRet > rSigmaMax)
-		rSigmaRet = rSigmaMax;
-	if (rSigmaRet < LOW_BOUND_SIGMA)
-		rSigmaRet = LOW_BOUND_SIGMA;
-
-	return rSigmaRet;
+		return rSigmaMax;
+	else if (rSigmaRet < LOW_BOUND_SIGMA)
+		return LOW_BOUND_SIGMA;
+	else
+		return rSigmaRet;
 }
