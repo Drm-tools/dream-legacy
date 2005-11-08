@@ -114,11 +114,13 @@ const string strTableProgTypCod[LEN_TABLE_PROG_TYPE_CODE_TOT] = {
 	"Not used"
 };
 
+
 // TODO: the following table can be used for country code decoding
 // FIXME: if the following code is activated, the compiling under Linux takes forever...?
 /* Country code table according to ISO 3166 */
 /*
 #define LEN_TABLE_CNTRY_CODE			240
+
 const string strTableCntryCod[LEN_TABLE_CNTRY_CODE][2] = {
 	{"af", "Afghanistan"},
 	{"ax", "Aland Islands"},
@@ -376,6 +378,120 @@ static string GetName(const string strA2)
 	return "";
 }
 */
+
+
+/* CIRAF zones */
+#define LEN_TABLE_CIRAF_ZONES			86
+
+const string strTableCIRAFzones[LEN_TABLE_CIRAF_ZONES] = {
+	"", /* undefined */
+	"Alaska",
+	"western Canada",
+	"central Canada - west",
+	"central Canada - east, Baffin Island",
+	"Greenland",
+	"western USA",
+	"central USA",
+	"eastern USA",
+	"eastern Canada",
+	"Belize, Guatemala, Mexico",
+
+	"Caribbean, central America",
+//[11] = "Antilles, Costa Rica, Cuba, Dominican Republic, El Salvador, Haiti, Honduras, Jamaica, Nicaragua, Panama, Puerto Rico, West Indies",
+
+	"northwestern south America",
+//[12] = "Colombia, Ecuador, French Guiana, Guyana, northern Bolivia, northwestern Brazil, Peru, Surinam, Venezuela",
+
+	"northeastern Brazil",
+	"northern Argentina, northern Chile, Paraguay, southern Bolivia, Uruguay",
+	"southeastern Brazil",
+	"southern Argentina, southern Chile, Falkland Islands",
+	"Iceland",
+
+	"Scandanavia",
+//[18] = "Denmark, Finland, Norway, Sweden",
+
+	"western Russia northwest",
+	"western Russia north",
+	"central Russia northwest",
+	"central Russia north",
+	"central Russia east",
+	"eastern Russia northwest",
+	"eastern Russia north",
+	"eastern Russia northeast",
+
+	"UK, France, Benelux",
+//[27] = "Belgium, France, Great Britain, Ireland, Monaco, Netherlands",
+
+	"central and eastern Europe",
+//[28] = "Albania, Austria, Bosnia and Herzegovina, Bulgaria, Croatia, Czech Republic, Germany, Greece, Hungary, Italy, Luxembourg, Macedonia, Malta, Poland, Romania, Slovakia, Slovenia, Switzerland, Vatican, Yugoslavia",
+
+	"Baltics and western Russia",
+//[29] = "Armenia, Azerbaijan, Belarus, Estonia, Georgia, Latvia, Lithuania, Moldova, Ukraine, western Russia",
+
+	"Tajikistan, Turkmenistan, Uzbekistan, western Kazakhstan, western Kyrgyzstan, western Russia southeast",
+	"central Russia southwest, eastern Kazakhstan, eastern Kyrgyzstan",
+	"central Russia south, western Mongolia",
+	"central Russia southeast, eastern Mongolia",
+	"eastern Russia southwest: Sakhalin, Sikhote Alin",
+	"eastern Russia east: Kamchatka",
+	"Azores, Canary Island, Madeira",
+	"Algeria, Andorra, Morocco, Portugal, Spain, Tunisia",
+	"Egypt, Libya",
+
+	"Turkey, Iraq, Syria, Lebanon, Israel, Jordan, Arabian Pen.",
+//[39] = "Bahrain, Cyprus, Iraq, Israel, Jordan, Kuwait, Lebanon, Oman, Qatar, Saudi Arabia, Syria, Turkey, United Arab Emirates, Yemen",
+
+	"Afghanistan, Iran",
+	"Bangladesh, Bhutan, India, Nepal, Pakistan",
+	"western China",
+	"central China",
+	"eastern China, Macao, Hong Kong, North Korea, South Korea, Taiwan",
+	"Japan",
+
+	"west Africa",
+//[46] = "Benin, Burkina Faso, Cape Verde, C?e d'Ivoire, Gambia, Ghana, Guinea, Guinea-Bissau, Liberia, Mali, Mauritania, Niger, Nigeria, Senegal, Sierra Leone, Togo, Cameroon, Chad, Central African Republic, Equatorial Guinea, Gabon, S? Tom",
+
+	"western Sudan",
+	"Burundi, Eritrea, Ethiopia, eastern Sudan, Kenya, Somalia, Uganda",
+	"Kampuchea, Laos, Myanmar, Vietnam",
+	"Philippines",
+	"Malaysia, Papua New Guinea, western Indonesia",
+	"Angola, Burundi, Congo, Gabon, Zaire",
+	"Madagascar, Malawi, Mozambique, Seychelles, Zambia, Zimbabwe",
+	"Malaysia, Singapore, western Indonesia",
+	"northeastern Australia",
+	"Caledonia, Fiji/Vanuatu",
+	"Botswana, Lesotho, Namibia, Swaziland, South African Republic",
+	"western Australia",
+	"southeastern Australia",
+	"New Zealand",
+	"Hawaii",
+	"Phoenix Islands, Samoa",
+	"Cook Islands, Polynesia",
+	"Guam/Palau, Saipan",
+	"Kiribati, Marshall",
+	"central Atlantic - south: Ascension, St. Helena",
+	"Antarctica",
+	"southwestern Indian Ocean: Kerguelen",
+	"Antarctica",
+	"Antarctica",
+	"Antarctica",
+	"Antarctica",
+	"Antarctica",
+	"South Pole",
+	"North Pole",
+	"northeastern Pacific",
+	"central Pacific - northeast",
+	"central Pacific - southeast",
+	"central Indian Ocean",
+	"northern Atlantic",
+	"central Atlantic",
+	"northwestern Pacific",
+	"southern Pacific",
+	"southern Atlantic",
+	"southeastern Indian Ocean"
+};
 
 
 #endif // !defined(TABLE_FAC_H__3B0_CA63_4344_BGDEB2B_23E7912__INCLUDED_)
