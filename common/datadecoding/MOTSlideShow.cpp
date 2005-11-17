@@ -6,7 +6,7 @@
  *	Volker Fischer
  *
  * Description:
- *	MOT Slide Show application
+ *	MOT applications (MOT Slideshow and Broadcast Web Site)
  *
  ******************************************************************************
  *
@@ -129,37 +129,39 @@ void CMOTSlideShowEncoder::AddFileName(const string& strFileName,
 /******************************************************************************\
 * Decoder                                                                      *
 \******************************************************************************/
-void CMOTSlideShowDecoder::AddDataUnit(CVector<_BINARY>& vecbiNewData)
+void CMOTDecoder::AddDataUnit(CVector<_BINARY>& vecbiNewData)
 {
-	/* Add new data group (which is in one DRM data unit if SlideShow
+	/* Add new data group (which is in one DRM data unit if MOT
 	   application is used) and check if new MOT object is ready after adding
 	   this new data group */
 	if (MOTDAB.AddDataGroup(vecbiNewData) == TRUE)
 	{
-		/* Get new received SlideShow picture */
-		MOTDAB.GetMOTObject(MOTPicture);
-		bNewPicture = TRUE; /* Set flag for new picture */
+		/* Get new received MOT Object */
+		MOTDAB.GetMOTObject(MOTObject);
+		bNewObject = TRUE; /* Set flag for new object */
 	}
 }
 
-_BOOLEAN CMOTSlideShowDecoder::GetPicture(CMOTObject& NewPic)
+_BOOLEAN CMOTDecoder::GetObject(CMOTObject& NewObj)
 {
-	const int iRawDataSize = MOTPicture.vecbRawData.Size();
-
+	const int iRawDataSize = MOTObject.vecbRawData.Size();
+	
 	/* Init output object */
-	NewPic.Reset();
+	NewObj.Reset();
 
-	/* Only copy picture content if picture is available */
+	/* Only copy data content if is available */
 	if (iRawDataSize != 0)
-		NewPic = MOTPicture;
-
-	/* Check if this is an old or a new picture and return result */
-	_BOOLEAN bWasNewPicture = FALSE;
-	if (bNewPicture == TRUE)
+		NewObj = MOTObject;
+	else
+		bNewObject = FALSE;
+	
+	/* Check if this is an old or a new object and return result */
+	_BOOLEAN bWasNewObject = FALSE;
+	if (bNewObject == TRUE)
 	{
-		bNewPicture = FALSE;
-		bWasNewPicture = TRUE;
+		bNewObject = FALSE;
+		bWasNewObject = TRUE;
 	}
 
-	return bWasNewPicture;
+	return bWasNewObject;
 }

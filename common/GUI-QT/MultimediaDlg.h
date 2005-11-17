@@ -41,6 +41,8 @@
 #include <qtooltip.h>
 #include <qtextstream.h>
 #include <qfileinfo.h>
+#include <qdir.h>
+#include <qmessagebox.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/MultimediaDlgbase.h"
@@ -62,6 +64,9 @@
 /* Maximum number of levels. A maximum of 20 hierarchy levels is set
    (including the Main Menu and the final Message Object) */
 #define MAX_NUM_LEV_JOURNALINE			20
+
+/* Directory in which broadcast web site content is stored */
+#define MOT_BROADCAST_WEBSITE_PATH		"MOTCache"
 
 
 /* Classes ********************************************************************/
@@ -123,12 +128,15 @@ protected:
 	CDataDecoder::EAppType	eAppType;
 	CNewIDHistory			NewIDHistory;
 	QString					strCurrentSavePath;
+	QString					strDirMOTCache;
+	QString					strBWSHomePage;
 
 	void SetSlideShowPicture();
 	void SetJournalineText();
 	void UpdateAccButtonsSlideShow();
 	int GetIDLastPicture() {return vecRawImages.Size() - 1;}
-	void SavePicture(const int iPicID, const QString& strFileName);
+	void SaveMOTObject(CVector<_BYTE>& vecbRawData, const QString& strFileName);
+	void CreateDirectories(const QString& filename);
 	void ClearAllSlideShow();
 
 	void InitApplication(CDataDecoder::EAppType eNewAppType);
@@ -136,13 +144,17 @@ protected:
 	void InitNotSupported();
 	void InitMOTSlideShow();
 	void InitJournaline();
+	void InitBroadcastWebSite();
 
 	void JpgToPng(CMOTObject& NewPic);
 
 	void ExtractJournalineBody(const int iCurJourID, const _BOOLEAN bHTMLExport,
 		QString &strTitle, QString &strItems);
-	
+
 	void SetCurrentSavePath(const QString strFileName);
+	void AddRefreshHeader(const QString& strFileName);
+
+	_BOOLEAN openBrowser(QWidget *widget, const QString &filename);
 
 public slots:
 	void OnTimer();

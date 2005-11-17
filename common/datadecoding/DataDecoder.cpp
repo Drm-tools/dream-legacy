@@ -347,11 +347,18 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 				/* Decode all IDs regardless whether activated or not
 				   (iPacketID == or != iServPacketID) */
 				/* Only DAB multimedia is supported */
+
 				switch (eAppType)
 				{
 				case AT_MOTSLISHOW: /* MOTSlideshow */
 					/* Packet unit decoding */
-					MOTSlideShow[iPacketID].
+					MOTObject[iPacketID].
+						AddDataUnit(DataUnit[iPacketID].vecbiData);
+					break;
+
+				case AT_MOTBROADCASTWEBSITE: /* MOT Broadcast Web Site */
+					/* Packet unit decoding */
+					MOTObject[iPacketID].
 						AddDataUnit(DataUnit[iPacketID].vecbiData);
 					break;
 
@@ -441,11 +448,15 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 				   used with DAB */
 				const int iDABUserAppIdent = ReceiverParam.
 					Service[iCurSelDataServ].DataParam.iUserAppIdent;
-
+	
 				switch (iDABUserAppIdent)
 				{
 				case 2: /* MOTSlideshow */
 					eAppType = AT_MOTSLISHOW;
+					break;
+
+				case 3: /* MOT Broadcast Web Site */
+					eAppType = AT_MOTBROADCASTWEBSITE;
 					break;
 
 				/* The preliminary 11-bit user Application Type ID for the
@@ -497,16 +508,17 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 	iInputBlockSize = iTotalNumInputBits;
 }
 
-_BOOLEAN CDataDecoder::GetSlideShowPicture(CMOTObject& NewPic)
+_BOOLEAN CDataDecoder::GetMOTObject(CMOTObject& NewObj,
+									const EAppType eAppTypeReq)
 {
 	_BOOLEAN bReturn = FALSE;
 
 	/* Lock resources */
 	Lock();
 
-	/* Check if data service is SlideShow application */
-	if ((DoNotProcessData == FALSE) && (eAppType == AT_MOTSLISHOW))
-		bReturn = MOTSlideShow[iServPacketID].GetPicture(NewPic);
+	/* Check if data service is current MOT application */
+	if ((DoNotProcessData == FALSE) && (eAppType == eAppTypeReq))
+		bReturn = MOTObject[iServPacketID].GetObject(NewObj);
 
 	/* Release resources */
 	Unlock();

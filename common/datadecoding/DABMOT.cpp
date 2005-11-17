@@ -1093,7 +1093,7 @@ void CMOTDABDec::DecodeObject(CMOTObjectRaw& MOTObjectRaw)
 
 
 	/* MOT object must be reset before decoding, because if the contenttype
-	is not specified it remain set the content of the previous file */
+	   is not specified it remain set the content of the previous file */
 	MOTObject.Reset();
 
 

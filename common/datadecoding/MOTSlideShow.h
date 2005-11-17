@@ -63,18 +63,18 @@ protected:
 
 
 /* Decoder ------------------------------------------------------------------ */
-class CMOTSlideShowDecoder
+class CMOTDecoder
 {
 public:
-	CMOTSlideShowDecoder() : bNewPicture(FALSE) {}
-	virtual ~CMOTSlideShowDecoder() {}
+	CMOTDecoder() : bNewObject(FALSE) {}
+	virtual ~CMOTDecoder() {}
 
 	void AddDataUnit(CVector<_BINARY>& vecbiNewData);
-	_BOOLEAN GetPicture(CMOTObject& NewPic);
+	_BOOLEAN GetObject(CMOTObject& NewObj);
 
 protected:
-	_BOOLEAN	bNewPicture;
-	CMOTObject	MOTPicture;
+	_BOOLEAN	bNewObject;
+	CMOTObject	MOTObject;
 	CMOTDABDec	MOTDAB;
 };
 

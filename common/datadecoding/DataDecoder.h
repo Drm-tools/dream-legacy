@@ -75,9 +75,10 @@ public:
 	CDataDecoder() : iServPacketID(0), DoNotProcessData(TRUE),
 		eAppType(AT_NOT_SUP), iOldJournalineServiceID(0) {}
 	virtual ~CDataDecoder() {}
-	enum EAppType {AT_NOT_SUP, AT_MOTSLISHOW, AT_JOURNALINE};
+	enum EAppType {AT_NOT_SUP, AT_MOTSLISHOW, AT_JOURNALINE,
+		AT_MOTBROADCASTWEBSITE};
 
-	_BOOLEAN GetSlideShowPicture(CMOTObject& NewPic);
+	_BOOLEAN GetMOTObject(CMOTObject& NewPic, const EAppType eAppTypeReq);
 	void GetNews(const int iObjID, CNews& News);
 	EAppType GetAppType() {return eAppType;}
 
@@ -97,21 +98,21 @@ protected:
 		}
 	};
 
-	int						iTotalPacketSize;
-	int						iNumDataPackets;
-	int						iMaxPacketDataSize;
-	int						iServPacketID;
-	CVector<int>			veciCRCOk;
+	int				iTotalPacketSize;
+	int				iNumDataPackets;
+	int				iMaxPacketDataSize;
+	int				iServPacketID;
+	CVector<int>	veciCRCOk;
 
-	_BOOLEAN				DoNotProcessData;
+	_BOOLEAN		DoNotProcessData;
 
-	int						iContInd[MAX_NUM_PACK_PER_STREAM];
-	CDataUnit				DataUnit[MAX_NUM_PACK_PER_STREAM];
-	CMOTSlideShowDecoder	MOTSlideShow[MAX_NUM_PACK_PER_STREAM];
-	CJournaline				Journaline;
-	uint32_t				iOldJournalineServiceID;
+	int				iContInd[MAX_NUM_PACK_PER_STREAM];
+	CDataUnit		DataUnit[MAX_NUM_PACK_PER_STREAM];
+	CMOTDecoder		MOTObject[MAX_NUM_PACK_PER_STREAM];
+	CJournaline		Journaline;
+	uint32_t		iOldJournalineServiceID;
 
-	EAppType				eAppType;
+	EAppType		eAppType;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

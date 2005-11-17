@@ -9,6 +9,8 @@
  *	- save Journaline pages as HTML
  * 6/16/2005 Andrea Russo
  *	- save path for storing pictures or Journaline pages
+ * 11/17/2005 Andrea Russo
+ * - BroadcastWebSite implementation
  *
  ******************************************************************************
  *
@@ -31,6 +33,7 @@
 #include "MultimediaDlg.h"
 
 
+/* Implementation *************************************************************/
 MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	const char* name, bool modal, WFlags f) : pDRMRec(pNDRMR),
 	MultimediaDlgBase(parent, name, modal, f)
@@ -75,6 +78,11 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		"<table><tr><td><img source=\"PixmapLogoJournaline\"></td>"
 		"<td><h2>NewsService Journaline" + QString(QChar(174)) /* (R) */ +
 		"</h2></td></tr></table>";
+
+	/* Inits for broadcast website application */
+	strDirMOTCache = MOT_BROADCAST_WEBSITE_PATH;
+	strBWSHomePage = "";
+
 
 	/* Set Menu ***************************************************************/
 	/* File menu ------------------------------------------------------------ */
@@ -155,6 +163,10 @@ void MultimediaDlg::InitApplication(CDataDecoder::EAppType eNewAppType)
 		InitJournaline();
 		break;
 
+	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
+		InitBroadcastWebSite();
+		break;
+
 	default:
 		InitNotSupported();
 		break;
@@ -180,10 +192,10 @@ void MultimediaDlg::OnTextChanged()
 
 void MultimediaDlg::OnTimer()
 {
-	CMOTObject	NewPic;
-	QPixmap		NewImage;
+	CMOTObject	NewObj;
+	QPixmap	NewImage;
 	FILE*		pFiBody;
-	int			iCurNumPict;
+	int		iCurNumPict;
 
 	/* Check out which application is transmitted right now */
 	CDataDecoder::EAppType eNewAppType =
@@ -196,11 +208,11 @@ void MultimediaDlg::OnTimer()
 	{
 	case CDataDecoder::AT_MOTSLISHOW:
 		/* Poll the data decoder module for new picture */
-		if (pDRMRec->GetDataDecoder()->GetSlideShowPicture(NewPic) == TRUE)
+		if (pDRMRec->GetDataDecoder()->GetMOTObject(NewObj, eAppType) == TRUE)
 		{
 			/* Store received picture */
 			iCurNumPict = vecRawImages.Size();
-			vecRawImages.Add(NewPic);
+			vecRawImages.Add(NewObj);
 
 			/* If the last received picture was selected, automatically show
 			   new picture */
@@ -212,6 +224,51 @@ void MultimediaDlg::OnTimer()
 			else
 				UpdateAccButtonsSlideShow();
 		}
+		break;
+
+	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
+		/* Poll the data decoder module for new object */
+		if (pDRMRec->GetDataDecoder()->GetMOTObject(NewObj, eAppType) == TRUE)
+		{
+			/* Store received MOT object on disk */
+			const QString strNewObjName = NewObj.strName.c_str();
+			const QString strFileName =
+				QString(strDirMOTCache + "/" + strNewObjName);
+
+			SaveMOTObject(NewObj.vecbRawData, strFileName);
+
+			/* Check if DABMOT could not unzip */
+			const _BOOLEAN bZipped =
+				(strNewObjName.right(3).upper() == ".GZ");
+
+			/* Add an html header for refresh the page every n seconds */
+			if ((NewObj.strFormat == "html") && (bZipped == FALSE))
+				AddRefreshHeader(strFileName);
+
+			if (strNewObjName.left(9).upper() == "INDEX.HTM")
+			{
+				/* The home page is available */
+				if (bZipped == FALSE)
+				{
+					/* Set new homepage file name and init dialog */
+					strBWSHomePage = strNewObjName;
+					InitBroadcastWebSite();
+				}
+				else
+				{
+					TextBrowser->setText("<center><h2>" +
+						tr("MOT Broadcast Web Site")
+						+ "</h2><br>"
+						+ tr("The home page is available")
+						+ "<br><br>"
+						+ tr("Impossible to uncompress the home page.<br>"
+						"For uncompress data compile Dream with Freeimage.<br>"
+						"Compress files will be saved on disk here:<br>" +
+						strDirMOTCache + "/") + "</center>");
+				}
+			}
+		}
+
 		break;
 
 	case CDataDecoder::AT_JOURNALINE:
@@ -360,8 +417,25 @@ void MultimediaDlg::OnButtonStepBack()
 
 void MultimediaDlg::OnButtonStepForw()
 {
-	iCurImagePos++;
-	SetSlideShowPicture();
+	/* Different behaviour for slideshow and broadcast web site */
+	switch (eAppType)
+	{
+	case CDataDecoder::AT_MOTSLISHOW:
+		iCurImagePos++;
+		SetSlideShowPicture();
+		break;
+
+	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
+		/* Try to open browser */
+		if (!openBrowser(this, strDirMOTCache + "/" + strBWSHomePage))
+		{
+			QMessageBox::information(this, "Dream",
+				tr("Impossible to start the default browser.\n"
+				"Open manually the home page:\n" + strDirMOTCache +
+				"/" + strBWSHomePage), QMessageBox::Ok);
+		}
+		break;
+	}
 }
 
 void MultimediaDlg::OnButtonJumpBegin()
@@ -515,7 +589,7 @@ void MultimediaDlg::OnSave()
 		if (!strFileName.isNull())
 		{
 			SetCurrentSavePath(strFileName);
-			SavePicture(iCurImagePos, strFileName);
+			SaveMOTObject(vecRawImages[iCurImagePos].vecbRawData, strFileName);
 		}
 		break;
 
@@ -585,29 +659,8 @@ void MultimediaDlg::OnSaveAll()
 			strFileName = strDirName + strFileName + "." +
 				QString(vecRawImages[j].strFormat.c_str());
 
-			SavePicture(j, strFileName);
+			SaveMOTObject(vecRawImages[j].vecbRawData, strFileName);
 		}
-	}
-}
-
-void MultimediaDlg::SavePicture(const int iPicID, const QString& strFileName)
-{
-	/* Get picture size */
-	const int iPicSize = vecRawImages[iPicID].vecbRawData.Size();
-
-	/* Open file */
-	FILE* pFiBody = fopen(strFileName.latin1(), "wb");
-
-	if (pFiBody != NULL)
-	{
-		for (int i = 0; i < iPicSize; i++)
-		{
-			fwrite((void*) &vecRawImages[iPicID].vecbRawData[i],
-				size_t(1), size_t(1), pFiBody);
-		}
-
-		/* Close the file afterwards */
-		fclose(pFiBody);
 	}
 }
 
@@ -642,6 +695,45 @@ void MultimediaDlg::InitNotSupported()
 	/* Show that application is not supported */
 	TextBrowser->setText("<center><h2>" + tr("No data service or data service "
 		"not supported.") + "</h2></center>");
+}
+
+void MultimediaDlg::InitBroadcastWebSite()
+{
+	/* Hide all controls, disable menu items */
+	pFileMenu->setItemEnabled(0, FALSE);
+	pFileMenu->setItemEnabled(1, FALSE);
+	pFileMenu->setItemEnabled(2, FALSE);
+	PushButtonStepForw->show();
+	PushButtonStepForw->setEnabled(FALSE);
+	PushButtonJumpBegin->hide();
+	PushButtonJumpEnd->hide();
+	LabelCurPicNum->hide();
+	PushButtonStepBack->hide();
+	QToolTip::remove(TextBrowser);
+
+	if (strBWSHomePage != "")
+	{
+		/* This is the button for opening the browser */
+		PushButtonStepForw->setEnabled(TRUE);
+
+		/* Display text that index page was received an can be opened */
+		TextBrowser->setText("<center><h2>" + tr("MOT Broadcast Web Site")
+			+ "</h2><br>"
+			+ tr("The homepage is available.")
+			+ "<br><br>" +
+			tr("Press the button for opening the default browser.")
+			+ "</center>");
+	}
+	else
+	{
+		/* Show initial text */
+		TextBrowser->setText("<center><h2>" + tr("MOT Broadcast Web Site") +
+			"</h2></center>");
+
+		/* Create the cache directory if not exist */
+		if (!QFileInfo(strDirMOTCache).exists())
+			QDir().mkdir(strDirMOTCache);
+	}
 }
 
 void MultimediaDlg::InitMOTSlideShow()
@@ -696,6 +788,126 @@ void MultimediaDlg::InitJournaline()
 	QToolTip::remove(TextBrowser);
 
 	NewIDHistory.Reset();
+}
+
+void MultimediaDlg::CreateDirectories(const QString& filename)
+{
+/*
+	This function is for creating a complete directory structure to a given
+	file name. If there is a pathname like this:
+	/html/files/images/myimage.gif 
+	this function create all the folders into MOTCache:
+	/html
+	/html/files
+	/html/files/images
+	QFileInfo only creates a file if the pathname is valid. If not all folders
+	are created, QFileInfo will not save the file. There was no QT function
+	or a hint the QT mailing list found in which does the job of this function.
+*/
+	int i = 0;
+
+	while (i < filename.length())
+	{
+		_BOOLEAN bFound = FALSE;
+
+		while ((i < filename.length()) && (bFound == FALSE))
+		{
+			if (filename[i] == '/')
+				bFound = TRUE;
+			else
+				i++;
+		}
+
+		if (bFound == TRUE)
+		{
+			/* create directory */
+			const QString sDirName = filename.left(i);
+
+			if (!QFileInfo(sDirName).exists())
+				QDir().mkdir(sDirName);
+		}
+
+		i++;
+	}
+}
+
+void MultimediaDlg::AddRefreshHeader(const QString& strFileName)
+{
+/*
+	Add a html header for refresh the page every n seconds.
+*/
+	/* Open file for append (text mode) */
+	FILE* pFiBody = fopen(strFileName.latin1(), "at");
+	
+	if (pFiBody != NULL)
+	{
+		fputs("<META http-equiv=\"REFRESH\" content=\"10\">", pFiBody);
+
+		/* Close the file afterwards */
+		fclose(pFiBody);
+	}
+}
+
+void MultimediaDlg::SaveMOTObject(CVector<_BYTE>& vecbRawData,
+								  const QString& strFileName)
+{
+	/* First, create directory for storing the file (if not exists) */
+	CreateDirectories(strFileName.latin1());
+	
+	/* Data size in bytes */
+	const int iSize = vecbRawData.Size();
+
+	/* Open file */
+	FILE* pFiBody = fopen(strFileName.latin1(), "wb");
+	
+	if (pFiBody != NULL)
+	{
+		/* Write data byte-wise */
+		for (int i = 0; i < iSize; i++)
+			fwrite((void*) &vecbRawData[i], size_t(1), size_t(1), pFiBody);
+
+		/* Close the file afterwards */
+		fclose(pFiBody);
+	}
+}
+
+_BOOLEAN MultimediaDlg::openBrowser(QWidget *widget, const QString &filename)
+{
+	_BOOLEAN bResult = FALSE;
+
+#ifdef _WIN32
+	/* Running in an MS Windows environment */
+	if (NULL != widget)
+	{
+		bResult = (reinterpret_cast<int>(ShellExecute(NULL, "open",
+			filename.latin1(), NULL, NULL, SW_SHOWNORMAL)) > 32);
+	}
+#else
+	Q_UNUSED(widget);
+
+	/* try with KDE */
+	string strStartBrowser = "kfmclient exec \"";
+	strStartBrowser += filename.latin1();
+	strStartBrowser += "\"";
+	const int retval = system(strStartBrowser.c_str());
+
+	if (retval != -1)
+	{
+		if ((WEXITSTATUS(retval) != 1) && (retval != 0))
+		{
+			/* try with gnome */
+			strStartBrowser = "gnome-open \"";
+			strStartBrowser += filename.latin1();
+			strStartBrowser += "\"";
+			retval = system(strStartBrowser.c_str());
+		}
+	}
+
+	if ((WEXITSTATUS(retval) == 1) || (retval == 0))
+		bResult = TRUE;
+#endif
+
+	return bResult;
 }
 
 void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
