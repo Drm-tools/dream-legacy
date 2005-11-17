@@ -1091,6 +1091,12 @@ void CMOTDABDec::DecodeObject(CMOTObjectRaw& MOTObjectRaw)
 	unsigned char	ucParamId;
 	unsigned char	ucDatafield;
 
+
+	/* MOT object must be reset before decoding, because if the contenttype
+	is not specified it remain set the content of the previous file */
+	MOTObject.Reset();
+
+
 	/* Header --------------------------------------------------------------- */
 	/* ETSI EN 301 234 */
 	MOTObjectRaw.Header.vecbiData.ResetBitAccess();
