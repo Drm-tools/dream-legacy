@@ -889,7 +889,7 @@ _BOOLEAN MultimediaDlg::openBrowser(QWidget *widget, const QString &filename)
 	string strStartBrowser = "kfmclient exec \"";
 	strStartBrowser += filename.latin1();
 	strStartBrowser += "\"";
-	const int retval = system(strStartBrowser.c_str());
+	int retval = system(strStartBrowser.c_str());
 
 	if (retval != -1)
 	{
