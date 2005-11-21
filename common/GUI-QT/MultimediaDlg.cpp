@@ -1,9 +1,9 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2005
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrea Russo
  *
  * 6/8/2005 Andrea Russo
  *	- save Journaline pages as HTML
