@@ -1,13 +1,16 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2005
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrew Murphy
  *
  * Description:
- *	
+ *	See AnalogDemDlg.cpp
  *
+ * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
+ *	- Additional widgets for displaying AMSS information
+ *	
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -40,17 +43,23 @@
 #include <qwt_dial.h>
 #include <qwt_dial_needle.h>
 #include <qlayout.h>
+#include <qprogressbar.h>
+#include <qcombobox.h>
+#include <qlistbox.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/AnalogDemDlgbase.h"
+# include "../../Windows/moc/AMSSDlgbase.h"
 #else
 # include "moc/AnalogDemDlgbase.h"
+# include "moc/AMSSDlgbase.h"
 #endif
 #include "DialogUtil.h"
 #include "DRMPlot.h"
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
 #include "../DrmReceiver.h"
+#include "../tables/TableAMSS.h"
 
 
 /* Definitions ****************************************************************/
@@ -59,6 +68,30 @@
 
 
 /* Classes ********************************************************************/
+/* AMSS dialog -------------------------------------------------------------- */
+class CAMSSDlg : public CAMSSDlgBase
+{
+	Q_OBJECT
+
+public:
+	CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, WFlags f = 0);
+
+protected:
+	CDRMReceiver*	pDRMRec;
+
+	QTimer			Timer;
+	QTimer			TimerPLLPhaseDial;
+	void			AddWhatsThisHelp();
+	virtual void	hideEvent(QHideEvent* pEvent);
+
+public slots:
+	void OnTimer();
+	void OnTimerPLLPhaseDial();
+};
+
+
+/* Analog demodulation dialog ----------------------------------------------- */
 class AnalogDemDlg : public AnalogDemDlgBase
 {
 	Q_OBJECT
@@ -67,7 +100,6 @@ public:
 	AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
-	virtual ~AnalogDemDlg() {}
 	void UpdatePlotsStyle();
 
 protected:
@@ -75,9 +107,11 @@ protected:
 
 	QTimer			Timer;
 	QTimer			TimerPLLPhaseDial;
+	CAMSSDlg		AMSSDlg;
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
-    virtual void	showEvent(QShowEvent* pEvent) {UpdateControls();}
+    virtual void	showEvent(QShowEvent* pEvent);
+	virtual void	hideEvent(QHideEvent* pEvent);
 	virtual void	closeEvent(QCloseEvent* pEvent);
 
 	int iBwAM;

@@ -1,15 +1,18 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2005
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrew Murphy
  *
  * Description:
  *	SDC data stream decoding (receiver)
  *
- ******************************************************************************
  *
+ * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
+ *	- AMSS data entity groups (no AFS index), added eSDCType, data type 11
+ *
+ ******************************************************************************
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation; either version 2 of the License, or (at your option) any later
@@ -35,11 +38,28 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 {
 	/* Calculate length of data field in bytes
 	   (consistant to table 61 in (6.4.1)) */
-	const int iLengthDataFieldBytes = 
-		(int) ((_REAL) (Parameter.iNumSDCBitsPerSFrame - 20) / 8);
+	int iLengthDataFieldBytes;
+	int iUsefulBitsSDC;
+	int iNumBytesForCRCCheck;
+	int iBitsConsumed;
 
-	/* 20 bits from AFS index and CRC */
-	const int iUsefulBitsSDC = 20 + iLengthDataFieldBytes * 8;
+	if (eSDCType == SDC_DRM)
+	{
+		iLengthDataFieldBytes =
+			(int) ((_REAL) (Parameter.iNumSDCBitsPerSFrame - 20) / 8);
+
+		/* 20 bits from AFS index and CRC */
+		iUsefulBitsSDC= 20 + iLengthDataFieldBytes * 8;
+	}
+	else	// SDC_AMSS
+	{
+		iLengthDataFieldBytes =
+			(int) ((_REAL) (Parameter.iNumSDCBitsPerSFrame - 16) / 8);
+
+		/* 16 bits from CRC */
+		iUsefulBitsSDC = 16 + iLengthDataFieldBytes * 8;
+	}
+
 
 	/* CRC ------------------------------------------------------------------ */
 	/* Check the CRC of this data block */
@@ -51,12 +71,24 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 	Check) field shall contain a 16-bit CRC calculated over the AFS
 	index coded in an 8-bit field (4 msbs are 0) and the data field.
 	4 MSBs from AFS-index. Insert four "0" in the data-stream */
-	const _BYTE byFirstByte = (_BYTE) (*pbiData).Separate(4);
-	CRCObject.AddByte(byFirstByte);
+	if (eSDCType == SDC_DRM) /* Skip for AMSS */
+	{
+		const _BYTE byFirstByte = (_BYTE) (*pbiData).Separate(4);
+		CRCObject.AddByte(byFirstByte);
+	}
 
-	/* "- 4": Four bits already used, "/ SIZEOF__BYTE": We add bytes, not bits,
-	   "- 2": 16 bits for CRC at the end */
-	const int iNumBytesForCRCCheck = (iUsefulBitsSDC - 4) / SIZEOF__BYTE - 2;
+	if (eSDCType == SDC_DRM)
+	{
+		/* "- 4": Four bits already used, "/ SIZEOF__BYTE": We add bytes, not
+		   bits, "- 2": 16 bits for CRC at the end */
+		iNumBytesForCRCCheck = (iUsefulBitsSDC - 4) / SIZEOF__BYTE - 2;
+	}
+	else
+	{
+		/* Consider 2 bytes for CRC ("- 2") */
+		iNumBytesForCRCCheck = iUsefulBitsSDC / SIZEOF__BYTE - 2;
+	}
+
 	for (int i = 0; i < iNumBytesForCRCCheck; i++)
 		CRCObject.AddByte((_BYTE) (*pbiData).Separate(SIZEOF__BYTE));
 
@@ -71,10 +103,15 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 
 		/* AFS index */
 		/* Reconfiguration index (not used by this application) */
-		(*pbiData).Separate(4);
+		if (eSDCType == SDC_DRM) /* Skip for AMSS */
+			(*pbiData).Separate(4);
 
 		/* Init bit count and total number of bits for body */
-		int iBitsConsumed = 4; /* 4 bits for AFS index */
+		if (eSDCType == SDC_DRM)
+			iBitsConsumed = 4; /* 4 bits for AFS index */
+		else
+			iBitsConsumed = 0; /* 0 for AMSS, no AFS index */
+
 		const int iTotNumBitsWithoutCRC = iUsefulBitsSDC - 16;
 
 		/* Length of the body, excluding the initial 4 bits ("- 4"),
@@ -135,6 +172,11 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 
 			case 9: /* Type 9 */
 				bError = DataEntityType9(pbiData, iLengthOfBody, Parameter);
+				break;
+
+			case 11: /* Type 11 */
+				bError = DataEntityType11(pbiData, iLengthOfBody, Parameter,
+					bVersionFlag);
 				break;
 
 			case 12: /* Type 12 */
@@ -932,6 +974,225 @@ _BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 	}
 	else
 		return TRUE;
+}
+
+/******************************************************************************\
+* Data entity Type 11 (Alternative frequency signalling - other services)      *
+\******************************************************************************/
+_BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
+									   const int iLengthOfBody,
+									   CParameter& Parameter,
+									   const _BOOLEAN bVersion)
+{
+	int				i;
+	_BOOLEAN		bShortIDAnnounceFlag;
+	_BOOLEAN		bRegionSchedFlag;
+	_BOOLEAN		bSameService;
+	int				iShortIDAnnounce = 0;
+	int				iSystemID;
+	int				iRegionID = 0;
+	int				iScheduleID = 0;
+	int				iFrequencyEntryLength;
+	unsigned long	iOtherServiceID;
+	
+	/* Init number of frequency count */
+	int iNumFreqTmp = iLengthOfBody;
+
+	/* Short ID/Announcement flag: specifies contents of short
+	   IF / announcement field */
+	switch ((*pbiData).Separate(1))
+	{
+	case 0: /* 0 */
+		/* Conatins short ID */
+		bShortIDAnnounceFlag = FALSE;
+		break;
+
+	case 1: /* 1 */
+		/* Contains announcement ID */
+		bShortIDAnnounceFlag = TRUE;
+		break;
+	}
+
+	/* Short Id / announcement field */
+	iShortIDAnnounce = (*pbiData).Separate(2);
+
+	/* Region/Schedule flag: this field indicates whether the list of
+	   frequencies is restricted by region and/or schedule or not */
+	switch ((*pbiData).Separate(1))
+	{
+	case 0: /* 0 */
+		/* No restriction */
+		bRegionSchedFlag = FALSE;
+		break;
+
+	case 1: /* 1 */
+		/* Region and/or schedule applies to this list of frequencies */
+		bRegionSchedFlag = TRUE;
+		break;
+	}
+
+	/* Same service ID flag: this field indicates whether the specified
+	   other service carries the same audio programme or not */
+	switch ((*pbiData).Separate(1))
+	{
+	case 0: /* 0 */
+		/* No restriction */
+		bSameService = FALSE;
+		break;
+
+	case 1: /* 1 */
+		/* Region and/or schedule applies to this list of frequencies */
+		bSameService = TRUE;
+		break;
+	}
+
+	/* RFA - 2 bits */
+	(*pbiData).Separate(2); 
+
+	/* Other system ID */
+	iSystemID = (*pbiData).Separate(5);
+
+	/* Remove one byte from frequency count */
+	iNumFreqTmp--;
+
+	/* Optional Region/schedule ID */
+	if (bRegionSchedFlag == TRUE)
+	{
+		iRegionID = (*pbiData).Separate(4);
+		iScheduleID = (*pbiData).Separate(4);
+
+		/* Remove one byte from frequency count */
+		iNumFreqTmp--;
+	}
+
+	switch (iSystemID)
+	{
+	case 0:
+	case 1:
+	case 3:
+	case 6:
+	case 9:
+		/* DRM, FM-RDS (Euro & North American grid, PI+ECC),
+		   FM-RDS (Asia grid, PI+ECC), DAB (ECC + audio service ID) */
+		iOtherServiceID = (*pbiData).Separate(24);
+
+		/* Remove three bytes from frequency count */
+		iNumFreqTmp -= 3;
+		break;
+
+	case 4:
+	case 7:
+	case 10:
+		/* FM RDS (Euro & North American grid, PI only),
+		   FM-RDS (Asia grid, PI only), DAB (audio service ID only) */
+		iOtherServiceID = (*pbiData).Separate(16);
+
+		/* Remove two bytes from frequency count */
+		iNumFreqTmp -= 2;
+		break;
+
+	case 11:
+		/* DAB (data service ID) */
+		iOtherServiceID = (*pbiData).Separate(32);
+		
+		/* Remove four bytes from frequency count */
+		iNumFreqTmp -= 4;
+		break;
+	}
+
+	/* n frequencies: this field carries n, variable length bit fields. n is in
+	   the range 1 to 16. The number of frequencies, n, is determined from the
+	   length field of the header and the value of the Service Restriction flag
+	   and the Region/Schedule flag */
+	switch (iSystemID)
+	{
+	case 0:
+	case 1:
+	case 2:
+		/* 16 bit frequency value for DRM/AM frequency */
+		iFrequencyEntryLength = 2;
+		break;
+
+	default:
+		/* 8 bit frequency value for all other broadcast systems currently
+		   defined */
+		iFrequencyEntryLength = 1;
+	}
+	
+	/* Check for error (length of body must be so long to include Service
+	   Restriction field and Region/Schedule field, also check that
+	   remaining number of bytes is devisible by iFrequencyEntryLength since
+	   we read iFrequencyEntryLength * 8 bits) */
+	if ( (iNumFreqTmp <= 0) || ((iNumFreqTmp % iFrequencyEntryLength) != 0) )
+		return TRUE;
+
+	/* 16 bits are read */
+	const int iNumFreq = iNumFreqTmp / iFrequencyEntryLength;
+	CVector<int> veciFrequencies(iNumFreq);
+
+	for (i = 0; i < iNumFreq; i++)
+	{
+		/* Frequency value iFrequencyEntryLength*8 bits. This field is coded as
+		   an unsigned integer
+		   and gives the frequency in kHz */
+		veciFrequencies[i] = (*pbiData).Separate(iFrequencyEntryLength*8);
+
+		if (iFrequencyEntryLength == 2) // mask off top bit, undefined
+			veciFrequencies[i] &= (unsigned short) 0x7fff;
+	}
+
+	/* Now, set data in global struct */
+	/* Enhancement layer is not supported */
+	/* Check the version flag */
+	if (bVersion != Parameter.AltFreqOtherServicesSign.bVersionFlag)
+	{
+		/* If version flag is wrong, reset everything and save flag */
+		Parameter.AltFreqOtherServicesSign.Reset();
+		Parameter.AltFreqOtherServicesSign.bVersionFlag = bVersion;
+	}
+
+	/* Create temporary object and reset for initialization */
+	CParameter::CAltFreqOtherServicesSign::
+		CAltFreqOtherServices AltFreqOtherServices;
+
+	AltFreqOtherServices.Reset();
+
+	/* Set some parameters */
+	AltFreqOtherServices.bShortIDAnnounceFlag = bShortIDAnnounceFlag;
+	AltFreqOtherServices.iShortIDAnnounce = iShortIDAnnounce;
+	AltFreqOtherServices.bRegionSchedFlag = bRegionSchedFlag;
+	AltFreqOtherServices.bSameService = bSameService;
+	AltFreqOtherServices.iSystemID = iSystemID;
+	AltFreqOtherServices.iRegionID = iRegionID;
+	AltFreqOtherServices.iScheduleID = iScheduleID ;
+	AltFreqOtherServices.iOtherServiceID = iOtherServiceID;
+
+	/* Set frequencies */
+	for (i = 0; i < iNumFreq; i++)
+		AltFreqOtherServices.veciFrequencies.Add(veciFrequencies[i]);
+
+	/* Now apply temporary object to global struct (first check if new
+	   object is not already there) */
+	const int iCurNumAltFreqOtherServices =
+		Parameter.AltFreqOtherServicesSign.vecAltFreqOtherServices.Size();
+
+	_BOOLEAN bAltFreqIsAlreadyThere = FALSE;
+	for (i = 0; i < iCurNumAltFreqOtherServices; i++)
+	{
+		if (Parameter.AltFreqOtherServicesSign.vecAltFreqOtherServices[i] ==
+			AltFreqOtherServices)
+		{
+			bAltFreqIsAlreadyThere = TRUE;
+		}
+	}
+
+	if (bAltFreqIsAlreadyThere == FALSE)
+	{
+		Parameter.AltFreqOtherServicesSign.vecAltFreqOtherServices.
+			Add(AltFreqOtherServices);
+	}
+	
+	return FALSE;
 }
 
 

@@ -1,12 +1,15 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2005
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrew Murphy
  *
  * Description:
  *	See SDC.cpp
+ *
+ * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
+ *	- AMSS data entity groups (no AFS index), added eSDCType, data type 11
  *
  ******************************************************************************
  *
@@ -35,7 +38,6 @@
 #include "../util/Vector.h"
 #include "../util/Utilities.h"
 
-
 /* Definitions ****************************************************************/
 /* Number of bits of header of SDC block */
 #define NUM_BITS_HEADER_SDC			12
@@ -61,7 +63,6 @@ protected:
 	void DataEntityType9(CVector<_BINARY>& vecbiData, int ServiceID,
 						 CParameter& Parameter);
 
-
 	CCRC CRCObject;
 };
 
@@ -69,10 +70,12 @@ class CSDCReceive
 {
 public:
 	enum ERetStatus {SR_OK, SR_BAD_CRC, SR_BAD_DATA};
-	CSDCReceive() {}
+	enum ESDCType {SDC_DRM, SDC_AMSS};
+	CSDCReceive() : eSDCType(SDC_DRM) {}
 	virtual ~CSDCReceive() {}
 
 	ERetStatus SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
+	void SetSDCType(ESDCType sdcType) { eSDCType = sdcType; }
 
 protected:
 	_BOOLEAN DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody,
@@ -94,10 +97,13 @@ protected:
 	_BOOLEAN DataEntityType9(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter);
 // ...
+	_BOOLEAN DataEntityType11(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const _BOOLEAN bVersion);
 	_BOOLEAN DataEntityType12(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter);
 
-	CCRC CRCObject;
+	CCRC		CRCObject;
+	ESDCType	eSDCType;
 };
 
 
