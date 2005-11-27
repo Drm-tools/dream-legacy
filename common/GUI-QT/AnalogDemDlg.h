@@ -134,6 +134,7 @@ public slots:
 	void OnRadioNoiRed(int iID);
 	void OnNewAMAcquisition() {pDRMRec->SetReceiverMode(CDRMReceiver::RM_AM);}
 	void OnButtonWaterfall();
+	void OnButtonAMSS();
 
 signals:
 	void SwitchToDRM();

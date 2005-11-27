@@ -129,11 +129,14 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 
 	/* Connect controls ----------------------------------------------------- */
-	connect(ButtonDRM, SIGNAL(clicked()), this, SIGNAL(SwitchToDRM()));
-	connect(MainPlot, SIGNAL(xAxisValSet(double)),
-		this, SLOT(OnChartxAxisValSet(double)));
+	connect(ButtonDRM, SIGNAL(clicked()),
+		this, SIGNAL(SwitchToDRM()));
+	connect(ButtonAMSS, SIGNAL(clicked()),
+		this, SLOT(OnButtonAMSS()));
 	connect(ButtonWaterfall, SIGNAL(clicked()),
 		this, SLOT(OnButtonWaterfall()));
+	connect(MainPlot, SIGNAL(xAxisValSet(double)),
+		this, SLOT(OnChartxAxisValSet(double)));
 
 	/* Button groups */
 	connect(ButtonGroupDemodulation, SIGNAL(clicked(int)),
@@ -503,6 +506,12 @@ void AnalogDemDlg::OnButtonWaterfall()
 		MainPlot->SetupChart(CDRMPlot::INP_SPEC_WATERF);
 	else
 		MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
+}
+
+void AnalogDemDlg::OnButtonAMSS()
+{
+	/* Open AMSS window */
+	AMSSDlg.show();
 }
 
 void AnalogDemDlg::AddWhatsThisHelp()
@@ -932,6 +941,8 @@ void CAMSSDlg::OnTimer()
 
 	TextCurrentBlock->setText(QString().setNum(pDRMRec->GetAMSSDecode()->
 		GetCurrentBlock(), 10));
+
+	TextBlockBits->setText(pDRMRec->GetAMSSDecode()->GetCurrentBlockBits());
 
 	ProgressBarAMSS->setProgress(pDRMRec->GetAMSSDecode()->
 		GetPercentageDataEntityGroupComplete());
