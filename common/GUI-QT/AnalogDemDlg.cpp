@@ -187,6 +187,9 @@ void AnalogDemDlg::hideEvent(QHideEvent* pEvent)
 
 void AnalogDemDlg::closeEvent(QCloseEvent* pEvent)
 {
+	/* Close AMSS window */
+	AMSSDlg.hide();
+
 	/* Set window geometry data in DRMReceiver module */
 	QRect WinGeom = geometry();
 
