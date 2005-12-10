@@ -92,13 +92,6 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 #endif
 
 
-/* Some other definitions */
-#define For(a, b, c)		for (a = (b); a <= (c); a++) {
-#define If(a)				if (a) {
-#define Else				} else {
-#define End					}
-
-
 /* Classes ********************************************************************/
 /* Prototypes */
 template<class T> class			CMatlibVector;
