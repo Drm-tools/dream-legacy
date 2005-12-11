@@ -34,12 +34,6 @@
 #include "../matlib/Matlib.h"
 #include "../util/Utilities.h"
 
-#ifdef HAVE_DRFFTW_H
-# include <drfftw.h>
-#else
-# include <rfftw.h>
-#endif
-
 
 /* Definitions ****************************************************************/
 /* Bound for peak detection between filtered signal (in frequency direction) 
@@ -99,7 +93,7 @@ public:
 
 protected:
 	CVector<int>				veciTableFreqPilots;
-	CShiftRegister<fftw_real>	vecrFFTHistory;
+	CShiftRegister<_REAL>		vecrFFTHistory;
 
 	CFftPlans					FftPlan;
 	CRealVector					vecrFFTInput;

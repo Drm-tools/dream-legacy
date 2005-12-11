@@ -159,7 +159,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		\**********************************************************************/
 		/* ---------------------------------------------------------------------
 		   Put all pilots at the beginning of the vector. The "real" length of
-		   the vector "pcFFTWInput" is longer than the No of pilots, but we 
+		   the input vector is longer than the number of pilots, but we 
 		   calculate the FFT only over "iNumCarrier / iScatPilFreqInt + 1"
 		   values (this is the number of pilot positions) */
 		/* Weighting pilots with window */

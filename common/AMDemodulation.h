@@ -35,12 +35,6 @@
 #include "matlib/Matlib.h"
 #include "resample/Resample.h"
 
-#ifdef HAVE_DRFFTW_H
-# include <drfftw.h>
-#else
-# include <rfftw.h>
-#endif
-
 
 /* Definitions ****************************************************************/
 /* Set value for desired amplitude for AM signal, controlled by the AGC. Maximum

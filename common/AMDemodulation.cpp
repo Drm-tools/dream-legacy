@@ -585,7 +585,7 @@ _BOOLEAN CFreqOffsAcq::Run(const CVector<_REAL>& vecrInpData)
 		}
 		else
 		{
-			/* Copy vector to matlib vector and calculate real-valued FFTW */
+			/* Copy vector to matlib vector and calculate real-valued FFT */
 			for (int i = 0; i < iTotalBufferSize; i++)
 				vecrFFTInput[i] = vecrFFTHistory[i];
 

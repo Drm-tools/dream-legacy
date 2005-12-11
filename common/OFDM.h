@@ -31,12 +31,7 @@
 
 #include "Parameter.h"
 #include "util/Modul.h"
-
-#ifdef HAVE_DFFTW_H
-# include <dfftw.h>
-#else
-# include <fftw.h>
-#endif
+#include "../matlib/Matlib.h"
 
 
 /* Definitions ****************************************************************/

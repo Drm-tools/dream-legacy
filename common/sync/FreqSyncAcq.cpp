@@ -37,7 +37,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int			i, j;
 	int			iMaxIndex;
-	fftw_real	rMaxValue;
+	CReal		rMaxValue;
 	int			iNumDetPeaks;
 	int			iDiffTemp;
 	CReal		rLevDiff;
@@ -65,7 +65,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 		else
 		{
-			/* Copy vector to matlib vector and calculate real-valued FFTW */
+			/* Copy vector to matlib vector and calculate real-valued FFT */
 			const int iStartIdx = iHistBufSize - iFrAcFFTSize;
 			for (i = 0; i < iFrAcFFTSize; i++)
 				vecrFFTInput[i] = vecrFFTHistory[i + iStartIdx];

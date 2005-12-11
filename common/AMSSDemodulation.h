@@ -35,12 +35,6 @@
 #include "matlib/Matlib.h"
 #include "resample/Resample.h"
 
-#ifdef HAVE_DRFFTW_H
-# include <drfftw.h>
-#else
-# include <rfftw.h>
-#endif
-
 #define AMSS_PLL_LOOP_GAIN						((CReal) 0.00015)
 #define AMSS_PLL_LOOP_FILTER_LAMBDA				((CReal) 0.99)
 

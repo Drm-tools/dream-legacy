@@ -39,12 +39,6 @@
 #include "TimeLinear.h"
 #include "TimeWiener.h"
 
-#ifdef HAVE_DFFTW_H
-# include <dfftw.h>
-#else
-# include <fftw.h>
-#endif
-
 
 /* Definitions ****************************************************************/
 #define LEN_WIENER_FILT_FREQ_RMA		6

@@ -47,11 +47,6 @@
 #else
 # include "source/sound.h"
 #endif
-#ifdef HAVE_DFFTW_H
-# include <dfftw.h>
-#else
-# include <fftw.h>
-#endif
 #include <time.h>
 
 
