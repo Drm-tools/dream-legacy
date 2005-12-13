@@ -705,8 +705,8 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 	}
 	else
 	{
-		/* Not used */
-		(*pbiData).Separate(iLengthOfBody * 8 - 16);
+		/* AppIdent */
+		DataParam.iUserAppIdent = (*pbiData).Separate(iLengthOfBody * 8 - 16);
 	}
 
 	/* Set new parameters in global struct */
