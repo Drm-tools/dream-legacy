@@ -473,9 +473,9 @@ void MultimediaDlg::OnButtonStepForw()
 		if (!openBrowser(this, strDirMOTCache + "/" + strBWSHomePage))
 		{
 			QMessageBox::information(this, "Dream",
-				tr("Impossible to start the default browser.\n"
-				"Open manually the home page:\n" + strDirMOTCache +
-				"/" + strBWSHomePage), QMessageBox::Ok);
+				tr("Failed to start the default browser.\n"
+				"Open the home page:\n" + strDirMOTCache +
+				"/" + strBWSHomePage + "\nmanually."), QMessageBox::Ok);
 		}
 		break;
 	}
@@ -764,7 +764,7 @@ void MultimediaDlg::InitBroadcastWebSite()
 			+ "</h2><br>"
 			+ tr("The homepage is available.")
 			+ "<br><br>" +
-			tr("Press the button for opening the default browser.")
+			tr("Press the button to open it in the default browser.")
 			+ "</center>");
 	}
 	else
