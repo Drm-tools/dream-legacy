@@ -858,6 +858,23 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 	/* Lock mutex for modifying the vecpListItems */
 	ListItemsMutex.Lock();
 
+	/* Store the current sort settings before switching */
+	if (eNewSchM != DRMSchedule.GetSchedMode())
+	{
+		switch (DRMSchedule.GetSchedMode())
+		{
+		case CDRMSchedule::SM_DRM:
+			pDRMRec->SortParamDRM.iColumn = iCurrentSortColumn;
+			pDRMRec->SortParamDRM.bAscending = bCurrentSortAscending;
+			break;
+
+		case CDRMSchedule::SM_ANALOG:
+			pDRMRec->SortParamAnalog.iColumn = iCurrentSortColumn;
+			pDRMRec->SortParamAnalog.bAscending = bCurrentSortAscending;
+			break;
+		}
+	}
+
 	/* Delete all old list view items (it is important that the vector
 	   "vecpListItems" was initialized to 0 at creation of the global object
 	   otherwise this may cause an segmentation fault) */
