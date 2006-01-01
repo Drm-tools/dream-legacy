@@ -111,7 +111,7 @@ drmwithoutqt_SOURCES = \
 	../common/sync/TimeSync.h \
 	../common/sync/TimeSyncFilter.h \
 	../common/sync/TimeSyncTrack.h \
-	../common/sync/TableAMSS.h \
+	../common/tables/TableAMSS.h \
 	../common/tables/TableCarMap.h \
 	../common/tables/TableDRMGlobal.h \
 	../common/tables/TableFAC.h \
