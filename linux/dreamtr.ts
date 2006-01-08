@@ -2,15 +2,7 @@
 <context>
     <name>AnalogDemDlg</name>
     <message>
-        <source>Click on the plot to set the demod. frequency</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source> Hz</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Carrier Frequency: </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -26,10 +18,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;Demodulation Type:&lt;/b&gt; There are four different analog demodulation types available:&lt;ul&gt;&lt;li&gt;&lt;b&gt;AM:&lt;/b&gt; This analog demodulation type is used in most of the hardware radios. The envelope of the complex base-band signal is used followed by a high-pass filter to remove the DC offset.&lt;/li&gt;&lt;li&gt;&lt;b&gt;LSB / USB:&lt;/b&gt; These are single-side-band (SSB) demodulation types. Only one side of the spectrum is evaluated, the upper side band is used in USB and the lower side band with LSB. It is important for SSB demodulation that the DC frequency of the analog signal is known to get satisfactory results. The DC frequency is automatically estimated by starting a new acquisition or by clicking on the plot.&lt;/li&gt;&lt;li&gt;&lt;b&gt;FM:&lt;/b&gt; This is a narrow band frequency demodulation.&lt;/li&gt;&lt;/ul&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&lt;b&gt;Mute Audio:&lt;/b&gt; The audio can be muted by checking this box. The reaction of checking or unchecking this box is delayed by approx. 1 second due to the audio buffers.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -38,7 +26,59 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;Carrier Frequency:&lt;/b&gt; The estimated carrier frequency of the analog signal is shown. The estimation of this parameter is done by using the estimated PSD of the input signal and doing a maximum search.</source>
+        <source>S&amp;tations Dialog...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>E&amp;xit</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Sound Card Selection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;DRM (digital)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New &amp;AM Acquisition</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Click on the plot to set the demodulation frequency</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Carrier&lt;br&gt;Frequency:&lt;b&gt;&lt;br&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Demodulation Type:&lt;/b&gt; The following analog demodulation types are available:&lt;ul&gt;&lt;li&gt;&lt;b&gt;AM:&lt;/b&gt; This analog demodulation type is used in most of the hardware radios. The envelope of the complex base-band signal is used followed by a high-pass filter to remove the DC offset. Additionally, a low pass filter with the same bandwidth as the pass-band filter is applied to reduce the noise caused by non-linear distortions.&lt;/li&gt;&lt;li&gt;&lt;b&gt;LSB / USB:&lt;/b&gt; These are single-side-band (SSB) demodulation types. Only one side of the spectrum is evaluated, the upper side band is used in USB and the lower side band with LSB. It is important for SSB demodulation that the DC frequency of the analog signal is known to get satisfactory results. The DC frequency is automatically estimated by starting a new acquisition or by clicking on the plot.&lt;/li&gt;&lt;li&gt;&lt;b&gt;CW:&lt;/b&gt; This demodulation type can be used to receive CW signals. Only a narrow frequency band in a fixed distance to the mixing frequency is used. By clicking on the spectrum plot, the center position of the band pass filter can be set.&lt;/li&gt;&lt;li&gt;&lt;b&gt;FM:&lt;/b&gt; This is a narrow band frequency demodulation.&lt;/li&gt;&lt;/ul&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Carrier Frequency:&lt;/b&gt; The (estimated) carrier frequency of the analog signal is shown. (The estimation of this parameter can be done by the Autom Frequency Acquisition which uses the estimated PSD of the input signal and applies a maximum search.)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;PLL:&lt;/b&gt; The Phase-Lock-Loop (PLL) tracks the carrier of the modulated received signal. The resulting phase offset between the reference oscillator and the received carrier is displayed in a dial control. If the pointer is almost steady, the PLL is locked. If the pointer of the dial control turns quickly, the PLL is out of lock. To get the PLL locked, the frequency offset to the true carrier frequency must not exceed a few Hz.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Auto Frequency Acquisition:&lt;/b&gt; Clicking on the input spectrum plot changes the mixing frequency for demodulation. If the Auto Frequency Acquisition is enabled, the largest peak near the curser is selected.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -50,10 +90,6 @@
     </message>
     <message>
         <source>TextFreqOffset</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Chart</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -109,10 +145,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&amp;Close</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Filter Bandwidth</source>
         <translation type="unfinished"></translation>
     </message>
@@ -130,6 +162,101 @@
     </message>
     <message>
         <source>High</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Indicators</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Waterfall</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PLL
+Phase Offset</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>CW</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>PLL</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Enable</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Auto Frequency Acquisition</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;DRM</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;AMSS</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>CAMSSDlg</name>
+    <message>
+        <source></source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No AMSS detected</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Awaiting AMSS data...</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>CAMSSDlgBase</name>
+    <message>
+        <source>AMSS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AMSS Decoding</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>ServiceLabelAMSS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AMSSInfo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Block:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bits:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>SDC:  </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>................</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AFS:  </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AMSS Offset</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -180,15 +307,15 @@ Institute for Communication Technology</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Copyright (C) 2001 - 2004</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>TextViewCredits</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>&amp;OK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2001 - 2005</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -446,6 +573,44 @@ Institute for Communication Technology</source>
         <source>&lt;b&gt;SNR History:&lt;/b&gt; The history of the values for the SNR and correctly decoded audio blocks is shown. The maximum achievable number of correctly decoded audio blocks per DRM frame is 10 or 5 depending on the audio sample rate (24 kHz or 12 kHz AAC core bandwidth).</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Waterfall Input Spectrum</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Waterfall Display of Input Spectrum:&lt;/b&gt; The input spectrum is displayed as a waterfall type. The different colors represent different levels.</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>CDreamHelpMenu</name>
+    <message>
+        <source>What&apos;s &amp;This</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;About...</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>CSoundCardSelMenu</name>
+    <message>
+        <source>Primary Audio &amp;Device (Recording)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Primary Audio &amp;Device (Playback)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sound &amp;In</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sound &amp;Out</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CStationsDlgBase</name>
@@ -482,14 +647,6 @@ Institute for Communication Technology</source>
 <context>
     <name>FDRMDialog</name>
     <message>
-        <source>What&apos;s &amp;This</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&amp;About...</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&amp;Evaluation Dialog...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -503,26 +660,6 @@ Institute for Communication Technology</source>
     </message>
     <message>
         <source>E&amp;xit</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>DRM (digital)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>AM (analog)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sound &amp;In</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sound &amp;Out</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&amp;Receiver Mode</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -566,22 +703,6 @@ Institute for Communication Technology</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Analog AM Mode</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Press Ctrl+A for new Acquisition, Ctrl+D for DRM</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Unknown Service</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Bit Rate:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source> kbps</source>
         <translation type="unfinished"></translation>
     </message>
@@ -602,11 +723,39 @@ Institute for Communication Technology</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;Dream Logo:&lt;/b&gt; This is the official logo of the Dream software.</source>
+        <source>&amp;Sound Card Selection</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;Station Label and Info Display:&lt;/b&gt; In the big label with the black background the station label and some other information about the current selected service is displayed. The red text on the top shows the audio compression format (e.g. AAC), the sample rate of the core coder without SBR (e.g. 24 kHz), if SBR is used and what audio mode is used (mono, stereo, P-stereo -&gt; low-complexity or parametric stereo). In case SBR is used, the actual sample rate is twice the sample rate of the core AAC decoder. The next two types of information are the language and the program type of the service (e.g. German / News).&lt;br&gt;The big turquoise text in the middle is the station label. This label may appear later than the red text since this information is transmitted in a different logical channel of a DRM stream.&lt;br&gt;The turquoise text on the bottom shows the gross bit-rate in kbits per second of the current selected service. The abbreviations EEP and UEP stand for Equal Error Protection and Unequal Error Protection. UEP is a feature of DRM for a graceful degradation of the decoded audio signal in case of a bad reception situation. UEP means that some parts of the audio is higher protected and some parts are lower protected (the ratio of higher protected part length to total length is shown in the brackets). On the right, the ID number connected with this service is shown.</source>
+        <source>&amp;AM (analog)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New &amp;DRM Acquisition</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Set D&amp;isplay Color...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Blue / White</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Green / Black</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>B&amp;lack / Grey</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Plot Style</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Station Label and Info Display:&lt;/b&gt; In the big label with the black background the station label and some other information about the current selected service is displayed. The magenta text on the top shows the bit-rate of the current selected service (The abbreviations EEP and UEP stand for Equal Error Protection and Unequal Error Protection. UEP is a feature of DRM for a graceful degradation of the decoded audio signal in case of a bad reception situation. UEP means that some parts of the audio is higher protected and some parts are lower protected (the ratio of higher protected part length to total length is shown in the brackets)), the audio compression format (e.g. AAC), if SBR is used and what audio mode is used (Mono, Stereo, P-Stereo -&gt; low-complexity or parametric stereo). In case SBR is used, the actual sample rate is twice the sample rate of the core AAC decoder. The next two types of information are the language and the program type of the service (e.g. German / News).&lt;br&gt;The big turquoise text in the middle is the station label. This label may appear later than the magenta text since this information is transmitted in a different logical channel of a DRM stream. On the right, the ID number connected with this service is shown.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -617,37 +766,7 @@ Institute for Communication Technology</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Volker Fischer, Alexander Kurpiers</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Darmstadt University of Technology
-Institute for Communication Technology</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>TextTextMessage</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Input
-Level [dB]</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Status</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>TextServiceAudio</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>TextServiceLabel</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>TextServiceIDRate</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -684,6 +803,42 @@ Level [dB]</source>
     </message>
     <message>
         <source>TextMiniService4</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Level [dB]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>15 kbps</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AAC+</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stereo</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Deutsche Welle</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>German</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>DE</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>1001</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -729,6 +884,30 @@ Level [dB]</source>
         <source>No data service or data service not supported.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Set &amp;Font...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MOT Broadcast Web Site</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The home page is available</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The homepage is available.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Press the button to open it in the default browser.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>MultimediaDlgBase</name>
@@ -746,6 +925,61 @@ Level [dB]</source>
     </message>
     <message>
         <source>&amp;Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>QObject</name>
+    <message>
+        <source>Sun</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mon</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Tue</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Wed</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Thu</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Fri</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Sat</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>irregular</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>daily</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>from Sun to Thu</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>from Sun to Fri</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>from Mon to Fri</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>from Mon to Sat</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -858,50 +1092,6 @@ Please exit Dream now.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>No rig model ID selected.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Initialization of hamlib failed.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Malformatted config string.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Rig set conf failed.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Rig open failed.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Rig set mode failed: </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Rig set level failed: </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Rig set func failed: </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Rig set parm failed: </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Rig unknown setting: </source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;Stations List:&lt;/b&gt; In the stations list view all DRM stations which are stored in the DRMSchedule.ini file are shown. It is possible to show only active stations by changing a setting in the &apos;view&apos; menu. The color of the cube on the left of a menu item shows the current status of the DRM transmission. A green box shows that the transmission takes place right now, a yellow cube shows that this is a test transmission and with a red cube it is shown that the transmission is offline.&lt;br&gt;The list can be sorted by clicking on the headline of the column.&lt;br&gt;By clicking on a menu item, a remote front-end can be automatically switched to the current frequency and the Dream software is reset to a new acquisition (to speed up the synchronization process). Also, the log-file frequency edit is automatically updated.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&lt;b&gt;Frequency Counter:&lt;/b&gt; The current frequency value can be changed by using this counter. The tuning steps are 100 kHz for the  buttons with three arrows, 10 kHz for the buttons with two arrows and 1 kHz for the buttons having only one arrow. By keeping the button pressed, the values are increased / decreased automatically.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -911,6 +1101,34 @@ Please exit Dream now.</source>
     </message>
     <message>
         <source>&lt;b&gt;Signal-Meter:&lt;/b&gt; Shows the signal strength level in dB relative to S9.&lt;br&gt;Note that not all front-ends controlled by hamlib support this feature. If the s-meter is not available, the controls are disabled.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;5 minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;15 minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;30 minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stations &amp;preview</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Stations List:&lt;/b&gt; In the stations list view all DRM stations which are stored in the DRMSchedule.ini file are shown. It is possible to show only active stations by changing a setting in the &apos;view&apos; menu. The color of the cube on the left of a menu item shows the current status of the DRM transmission. A green box shows that the transmission takes place right now, a yellow cube shows that this is a test transmission and with a red cube it is shown that the transmission is offline.&lt;br&gt;If the stations preview is active an orange box shows the stations that will be active.&lt;br&gt;The list can be sorted by clicking on the headline of the column.&lt;br&gt;By clicking on a menu item, a remote front-end can be automatically switched to the current frequency and the Dream software is reset to a new acquisition (to speed up the synchronization process). Also, the log-file frequency edit is automatically updated.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Days</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -951,22 +1169,6 @@ Please exit Dream now.</source>
     <message>
         <source>Dream DRM Transmitter<byte value="xb"/>
 This is a test transmission</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Wave &amp;Mapper Recording</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Wave &amp;Mapper Playback</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sound &amp;In</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Sound &amp;Out</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1011,6 +1213,10 @@ This is a test transmission</source>
     </message>
     <message>
         <source>&lt;b&gt;MSC interleaver mode:&lt;/b&gt; The symbol interleaver depth can be either short (approx. 400 ms) or long (approx. 2 s). The longer the interleaver the better the channel decoder can correct errors from slow fading signals. But the longer the interleaver length the longer the delay until (after a re-synchronization) audio can be heard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Sound Card Selection</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1392,14 +1598,6 @@ Bandwidth        </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;FAC CRC LED:&lt;/b&gt; This LED shows the Cyclic Redundancy Check (CRC) of the Fast Access Channel (FAC) of DRM. FAC is one of the three logical channels and is always modulated with a 4-QAM. If the FAC CRC check was successful, the receiver changes to tracking mode. The FAC LED is the indication whether the receiver is synchronized to a DRM transmission or not.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>&lt;b&gt;SDC CRC LED:&lt;/b&gt; This LED shows the CRC check result of the Service Description Channel (SDC) which is one logical channel of the DRM stream. This data is transmitted in approx. 1 second intervals and contains information about station label, audio and data format, etc. The error protection is normally lower than the protection of the FAC. Therefore this LED will turn to red earlier than the FAC LED in general.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&lt;b&gt;MSC CRC LED:&lt;/b&gt; This LED shows the status of the Main Service Channel (MSC). This channel contains the actual audio and data bits. The LED shows the CRC check of the AAC core decoder. The SBR has a separate CRC, but this status is not shown with this LED. If SBR CRC is wrong but the AAC CRC is ok one can still hear something (of course, the high frequencies are not there in this case). If this LED turns red, interruptions of the audio are heard. The yellow light shows that only one 40 ms audio frame CRC was wrong. This causes usually no hearable artifacts.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1472,11 +1670,35 @@ Bandwidth        </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;Interferer Rejection:&lt;/b&gt; There are two algorithms available to reject interferers:&lt;ul&gt;&lt;li&gt;&lt;b&gt;Bandpass filter (BP-Filter):&lt;/b&gt; The bandpass filter is designed to have the same bandwidth as the DRM signal. If, e.g., a strong signal is close to the border of the actual DRM signal, under some conditions this signal will produce interference in the useful bandwidth of the DRM signal although it is not on the same frequency as the DRM signal. The reason for that behaviour lies in the way the OFDM demodulation is done. Since OFDM demodulation is a block-wise operation, a windowing has to be applied (which is rectangular in case of OFDM). As a result, the spectrum of a signal is convoluted with a Sinc function in the frequency domain. If a sinusoidal signal close to the border of the DRM signal is considered, its spectrum will not be a distinct peak but a shifted Sinc function. So its spectrum is broadened caused by the windowing. Thus, it will spread in the DRM spectrum and act as an in-band interferer.&lt;br&gt;There is a special case if the sinusoidal signal is in a distance of a multiple of the carrier spacing of the DRM signal. Since the Sinc function has zeros at certain positions it happens that in this case the zeros are exactly at the sub-carrier frequencies of the DRM signal. In this case, no interference takes place. If the sinusoidal signal is in a distance of a multiple of the carrier spacing plus half of the carrier spacing away from the DRM signal, the interference reaches its maximum.&lt;br&gt;As a result, if only one DRM signal is present in the 20 kHz bandwidth, bandpass filtering has no effect. Also,  if the interferer is far away from the DRM signal, filtering will not give much improvement since the squared magnitude of the spectrum of the Sinc function is approx -15 dB down at 1 1/2 carrier spacing (approx 70 Hz with DRM mode B) and goes down to approx -30 dB at 10 times the carrier spacing plus 1 / 2 of the carrier spacing (approx 525 Hz with DRM mode B). The bandpass filter must have very sharp edges otherwise the gain in performance will be very small so that it consumes high CPU power.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Modificated Metric:&lt;/b&gt; Based on the information from the SNR versus sub-carrier estimation, the metric for the Viterbi decoder can be modified so that sub-carriers with high noise are attenuated and do not contribute too much to the decoding result. That can improve reception under bad conditions but may worsen the reception in situations where a lot of fading happens and no interferer are present since the SNR estimation may be not correct.&lt;/li&gt;&lt;/ul&gt;</source>
+        <source>&lt;b&gt;MLC, Number of Iterations:&lt;/b&gt; In DRM, a multilevel channel coder is used. With this code it is possible to iterate the decoding process in the decoder to improve the decoding result. The more iterations are used the better the result will be. But switching to more iterations will increase the CPU load. Simulations showed that the first iteration (number of iterations = 1) gives the most improvement (approx. 1.5 dB at a BER of 10-4 on a Gaussian channel, Mode A, 10 kHz bandwidth). The improvement of the second iteration will be as small as 0.3 dB.&lt;br&gt;The recommended number of iterations given in the DRM standard is one iteration (number of iterations = 1).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;MLC, Number of Iterations:&lt;/b&gt; In DRM, a multilevel channel coder is used. With this code it is possible to iterate the decoding process in the decoder to improve the decoding result. The more iterations are used the better the result will be. But switching to more iterations will increase the CPU load. Simulations showed that the first iteration (number of iterations = 1) gives the most improvement (approx. 1.5 dB at a BER of 10-4 on a Gaussian channel, Mode A, 10 kHz bandwidth). The improvement of the second iteration will be as small as 0.3 dB.&lt;br&gt;The recommended number of iterations given in the DRM standard is one iteration (number of iterations = 1).</source>
+        <source>Waterfall Input Spectrum</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;FAC CRC LED:&lt;/b&gt; This LED shows the Cyclic Redundancy Check (CRC) of the Fast Access Channel (FAC) of DRM. FAC is one of the three logical channels and is always modulated with a 4-QAM. If the FAC CRC check was successful, the receiver changes to tracking mode. The FAC LED is the indication whether the receiver is synchronized to a DRM transmission or not.&lt;br&gt;The bandwidth of the DRM signal, the constellation scheme of MSC and SDC channels and the interleaver depth are some of the parameters which are provided by the FAC.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;SDC CRC LED:&lt;/b&gt; This LED shows the CRC check result of the Service Description Channel (SDC) which is one logical channel of the DRM stream. This data is transmitted in approx. 1 second intervals and contains information about station label, audio and data format, etc. The error protection is normally lower than the protection of the FAC. Therefore this LED will turn to red earlier than the FAC LED in general.&lt;br&gt;If the CRC check is ok but errors in the content were detected, the LED turns yellow.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Reverberation Effect:&lt;/b&gt; If this check box is checked, a reverberation effect is applied each time an audio drop-out occurs. With this effect it is possible to mask short drop-outs.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Interferer Rejection:&lt;/b&gt; There are two algorithms available to reject interferers:&lt;ul&gt;&lt;li&gt;&lt;b&gt;Bandpass Filter (BP-Filter):&lt;/b&gt; The bandpass filter is designed to have the same bandwidth as the DRM signal. If, e.g., a strong signal is close to the border of the actual DRM signal, under some conditions this signal will produce interference in the useful bandwidth of the DRM signal although it is not on the same frequency as the DRM signal. The reason for that behaviour lies in the way the OFDM demodulation is done. Since OFDM demodulation is a block-wise operation, a windowing has to be applied (which is rectangular in case of OFDM). As a result, the spectrum of a signal is convoluted with a Sinc function in the frequency domain. If a sinusoidal signal close to the border of the DRM signal is considered, its spectrum will not be a distinct peak but a shifted Sinc function. So its spectrum is broadened caused by the windowing. Thus, it will spread in the DRM spectrum and act as an in-band interferer.&lt;br&gt;There is a special case if the sinusoidal signal is in a distance of a multiple of the carrier spacing of the DRM signal. Since the Sinc function has zeros at certain positions it happens that in this case the zeros are exactly at the sub-carrier frequencies of the DRM signal. In this case, no interference takes place. If the sinusoidal signal is in a distance of a multiple of the carrier spacing plus half of the carrier spacing away from the DRM signal, the interference reaches its maximum.&lt;br&gt;As a result, if only one DRM signal is present in the 20 kHz bandwidth, bandpass filtering has no effect. Also,  if the interferer is far away from the DRM signal, filtering will not give much improvement since the squared magnitude of the spectrum of the Sinc function is approx -15 dB down at 1 1/2 carrier spacing (approx 70 Hz with DRM mode B) and goes down to approx -30 dB at 10 times the carrier spacing plus 1 / 2 of the carrier spacing (approx 525 Hz with DRM mode B). The bandpass filter must have very sharp edges otherwise the gain in performance will be very small.&lt;/li&gt;&lt;li&gt;&lt;b&gt;Modified Metrics:&lt;/b&gt; Based on the information from the SNR versus sub-carrier estimation, the metrics for the Viterbi decoder can be modified so that sub-carriers with high noise are attenuated and do not contribute too much to the decoding result. That can improve reception under bad conditions but may worsen the reception in situations where a lot of fading happens and no interferer are present since the SNR estimation may be not correct.&lt;/li&gt;&lt;/ul&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;MSC WMER / MSC MER:&lt;/b&gt; Modulation Error Ratio (MER) and weighted MER (WMER) calculated on the MSC cells is shown. The MER is calculated as follows: For each equalized MSC cell (only MSC cells, no FAC cells, no SDC cells, no pilot cells), the error vector from the nearest ideal point of the constellation diagram is measured. The squared magnitude of this error is found, and a mean of the squared errors is calculated (over one frame). The MER is the ratio in [dB] of the mean of the squared magnitudes of the ideal points of the constellation diagram to the mean squared error. This gives an estimate of the ratio of the total signal power to total noise power at the input to the equalizer for channels with flat frequency response.&lt;br&gt; In case of the WMER, the calculations of the means are multiplied by the squared magnitude of the estimated channel response.&lt;br&gt;For more information see ETSI TS 102 349.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Frequency / Sample Rate</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1639,10 +1861,6 @@ Bandwidth        </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Log File, Save Data</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Log File, Freq:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1655,19 +1873,107 @@ Bandwidth        </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Interferer Rej.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>BP-Filter</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mod. Metric</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&amp;Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Log File, Audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reverberation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Interferer Rejection</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Bandpass Filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified Metrics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MSC WMER / MSC MER:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MER</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-Spectrum</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-InpPSD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-InpSpectr</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-Waterfall</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-ShiftedPSD</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-AudSpectr</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-SNRSpectr</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-Channel</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-IR</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-TF</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-Constellation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-FAC</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-SDC</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-MSC</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-History</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-SNRAudiHist</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-DelDopp</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>D-FreqSam</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
