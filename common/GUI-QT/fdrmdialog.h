@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrea Russo
  *
  * Description:
  *	
@@ -49,6 +49,7 @@
 #include "systemevalDlg.h"
 #include "MultimediaDlg.h"
 #include "StationsDlg.h"
+#include "LiveScheduleDlg.h"
 #include "AnalogDemDlg.h"
 #include "MultColorLED.h"
 #include "../DrmReceiver.h"
@@ -72,6 +73,7 @@ protected:
 	systemevalDlg*	pSysEvalDlg;
 	MultimediaDlg*	pMultiMediaDlg;
 	StationsDlg*	pStationsDlg;
+    LiveScheduleDlg* pLiveScheduleDlg;
 	AnalogDemDlg*	pAnalogDemDlg;
 	QMenuBar*		pMenu;
 	QPopupMenu*		pReceiverModeMenu;
@@ -103,6 +105,7 @@ public slots:
 	void OnViewEvalDlg();
 	void OnViewMultiMediaDlg();
 	void OnViewStationsDlg();
+	void OnViewLiveScheduleDlg();
 	void OnSwitchToDRM() {SetReceiverMode(CDRMReceiver::RM_DRM);}
 	void OnSwitchToAM() {SetReceiverMode(CDRMReceiver::RM_AM);}
 	void OnMenuSetDisplayColor();

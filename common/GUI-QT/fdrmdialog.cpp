@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrea Russo
  *
  * Description:
  *	
@@ -57,14 +57,18 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	QPopupMenu* EvalWinMenu = new QPopupMenu(this);
 	CHECK_PTR(EvalWinMenu);
 	EvalWinMenu->insertItem(tr("&Evaluation Dialog..."), this,
-		SLOT(OnViewEvalDlg()), CTRL+Key_E);
+		SLOT(OnViewEvalDlg()), CTRL+Key_E, 0);
 	EvalWinMenu->insertItem(tr("M&ultimedia Dialog..."), this,
-		SLOT(OnViewMultiMediaDlg()), CTRL+Key_U);
+		SLOT(OnViewMultiMediaDlg()), CTRL+Key_U, 1);
 	EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
-		SLOT(OnViewStationsDlg()), CTRL+Key_T);
+		SLOT(OnViewStationsDlg()), CTRL+Key_T, 2);
+	EvalWinMenu->insertItem(tr("&Live Schedule Dialog"), this,
+		SLOT(OnViewLiveScheduleDlg()), CTRL+Key_L, 3);
 	EvalWinMenu->insertSeparator();
-	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q);
+	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q, 4);
 
+	/* Disable live schedule menu item */
+	EvalWinMenu->setItemEnabled(3, FALSE);
 
 	/* Settings menu  ------------------------------------------------------- */
 	pSettingsMenu = new QPopupMenu(this);
@@ -133,6 +137,14 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 		pStationsDlg->show();
 	else
 		pStationsDlg->hide();
+
+	/* Live Schedule window */
+	pLiveScheduleDlg = new LiveScheduleDlg(pDRMRec, this, tr("Live Schedule"), FALSE,
+		Qt::WStyle_MinMax);
+	if (pDRMRec->GeomLiveScheduleDlg.bVisible == TRUE)
+		pLiveScheduleDlg->show();
+	else
+		pLiveScheduleDlg->hide();
 
 	/* Evaluation window */
 	pSysEvalDlg = new systemevalDlg(pDRMRec, this, tr("System Evaluation"),
@@ -523,6 +535,21 @@ void FDRMDialog::OnTimer()
 			}
 		}
 
+		/* detect if AFS informations are available */
+		if (pDRMRec->GetParameters()->AltFreqSign.vecAltFreq.Size() > 0)
+		{
+			/* enable live schedule menu item */
+			pMenu->setItemEnabled(3, TRUE);
+
+			/* show AFS label */
+			if (pDRMRec->GetParameters()->Service[0].
+				eAudDataFlag == CParameter::SF_AUDIO)
+					m_StaticService[0] += tr(" + AFS");
+		}
+		else
+			/* disable live schedule menu item */
+			pMenu->setItemEnabled(3, FALSE);
+		
 		/* Set texts */
 		TextMiniService1->setText(m_StaticService[0]);
 		TextMiniService2->setText(m_StaticService[1]);
@@ -600,6 +627,7 @@ void FDRMDialog::SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo)
 
 		pSysEvalDlg->hide();
 		pMultiMediaDlg->hide();
+		pLiveScheduleDlg->hide();
 
 		pAnalogDemDlg->show();
 
@@ -708,6 +736,12 @@ void FDRMDialog::OnViewStationsDlg()
 {
 	/* Show evauation window */
 	pStationsDlg->show();
+}
+
+void FDRMDialog::OnViewLiveScheduleDlg()
+{
+	/* Show evauation window */
+	pLiveScheduleDlg->show();
 }
 
 void FDRMDialog::OnMenuSetDisplayColor()

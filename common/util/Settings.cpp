@@ -201,6 +201,34 @@ void CSettings::ReadIniFile()
 	if (GetFlagIniSet(ini, "Window geometry", "statdlgvis", bValue) == TRUE)
 		pDRMRec->GeomStationsDlg.bVisible = bValue;
 
+	/* Live schedule dialog */
+	if (GetNumericIniSet(ini, "Window geometry", "scheddlgxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+		pDRMRec->GeomLiveScheduleDlg.iXPos = iValue;
+	if (GetNumericIniSet(ini, "Window geometry", "scheddlgypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+		pDRMRec->GeomLiveScheduleDlg.iYPos = iValue;
+	if (GetNumericIniSet(ini, "Window geometry", "scheddlghsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+		pDRMRec->GeomLiveScheduleDlg.iHSize = iValue;
+	if (GetNumericIniSet(ini, "Window geometry", "scheddlgwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+		pDRMRec->GeomLiveScheduleDlg.iWSize = iValue;
+	if (GetFlagIniSet(ini, "Window geometry", "scheddlgvis", bValue) == TRUE)
+		pDRMRec->GeomLiveScheduleDlg.bVisible = bValue;
+
+	/* Sort order and column for schedule */
+	if (GetNumericIniSet(ini, "Live schedule dialog", "sortcolumn", 0, MAX_COLUMN_NUMBER, iValue) == TRUE)
+		pDRMRec->SortParamLiveSched.iColumn = iValue;
+	if (GetFlagIniSet(ini, "Live schedule dialog", "sortascending", bValue) == TRUE)
+		pDRMRec->SortParamLiveSched.bAscending = bValue;
+
+	/* Seconds for preview into live schedule dialog if zero then inactive */
+	if (GetNumericIniSet(ini, "Live schedule dialog", "preview", 0, MAX_NUM_SEC_PREVIEW, iValue) == TRUE)
+		pDRMRec->iSecondsPreviewLiveSched = iValue;
+
+	if (GetFlagIniSet(ini, "Live schedule dialog", "showall", bValue) == TRUE)
+		pDRMRec->bShowAllStations = bValue;
+
+	/* Storage path for files saved from live schedule dialog */
+	pDRMRec->strStoragePathLiveScheduleDlg = GetIniSetting(ini, "Live schedule dialog", "storagepath");
+
 	/* Analog demodulation dialog */
 	if (GetNumericIniSet(ini, "Window geometry", "analdemxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
 		pDRMRec->GeomAnalogDemDlg.iXPos = iValue;
@@ -417,6 +445,30 @@ void CSettings::WriteIniFile()
 	SetNumericIniSet(ini, "Window geometry", "statdlghsize", pDRMRec->GeomStationsDlg.iHSize);
 	SetNumericIniSet(ini, "Window geometry", "statdlgwsize", pDRMRec->GeomStationsDlg.iWSize);
 	SetFlagIniSet(ini, "Window geometry", "statdlgvis", pDRMRec->GeomStationsDlg.bVisible);
+
+	/* Live schedule dialog */
+	SetNumericIniSet(ini, "Window geometry", "scheddlgxpos", pDRMRec->GeomLiveScheduleDlg.iXPos);
+	SetNumericIniSet(ini, "Window geometry", "scheddlgypos", pDRMRec->GeomLiveScheduleDlg.iYPos);
+	SetNumericIniSet(ini, "Window geometry", "scheddlghsize", pDRMRec->GeomLiveScheduleDlg.iHSize);
+	SetNumericIniSet(ini, "Window geometry", "scheddlgwsize", pDRMRec->GeomLiveScheduleDlg.iWSize);
+	SetFlagIniSet(ini, "Window geometry", "scheddlgvis", pDRMRec->GeomLiveScheduleDlg.bVisible);
+
+	/* Sort order and column for schedule */
+	SetNumericIniSet(ini, "Live schedule dialog", "sortcolumn",
+		pDRMRec->SortParamLiveSched.iColumn);
+	SetFlagIniSet(ini, "Live schedule dialog", "sortascending",
+		pDRMRec->SortParamLiveSched.bAscending);
+
+	/* Seconds for preview into live schedule dialog if zero then inactive */
+	SetNumericIniSet(ini, "Live schedule dialog", "preview",
+		pDRMRec->iSecondsPreviewLiveSched);
+
+	SetFlagIniSet(ini, "Live schedule dialog", "showall",
+		pDRMRec->bShowAllStations);
+
+	/* Storage path for files saved from live schedule dialog */
+	PutIniSetting(ini, "Live schedule dialog", "storagepath",
+		pDRMRec->strStoragePathLiveScheduleDlg.c_str());
 
 	/* Analog demodulation dialog */
 	SetNumericIniSet(ini, "Window geometry", "analdemxpos", pDRMRec->GeomAnalogDemDlg.iXPos);

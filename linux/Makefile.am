@@ -130,6 +130,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/systemevalDlg.cpp \
 	../common/GUI-QT/MultimediaDlg.cpp \
 	../common/GUI-QT/StationsDlg.cpp \
+	../common/GUI-QT/LiveScheduleDlg.cpp \
 	../common/GUI-QT/AnalogDemDlg.cpp \
 	../common/MDI.cpp \
 	../common/GUI-QT/fdrmdialogbase.ui \
@@ -138,6 +139,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/systemevalDlgbase.ui \
 	../common/GUI-QT/MultimediaDlgbase.ui \
 	../common/GUI-QT/StationsDlgbase.ui \
+	../common/GUI-QT/LiveScheduleDlgbase.ui \
 	../common/GUI-QT/AnalogDemDlgbase.ui \
 	../common/GUI-QT/AMSSDlgbase.ui \
 	../common/GUI-QT/MultimediaDlg.h \
@@ -148,6 +150,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/DialogUtil.h \
 	../common/GUI-QT/DRMPlot.h \
 	../common/GUI-QT/StationsDlg.h \
+	../common/GUI-QT/LiveScheduleDlg.h \
 	../common/GUI-QT/AnalogDemDlg.h \
 	../common/MDI.h
 
@@ -165,6 +168,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/systemevalDlgbase.cpp \
 	moc/moc_MultimediaDlg.cpp moc/moc_MultimediaDlgbase.cpp moc/MultimediaDlgbase.h moc/MultimediaDlgbase.cpp \
 	moc/moc_StationsDlg.cpp moc/moc_StationsDlgbase.cpp moc/StationsDlgbase.h moc/StationsDlgbase.cpp \
+	moc/moc_LiveScheduleDlg.cpp moc/moc_LiveScheduleDlgbase.cpp moc/LiveScheduleDlgbase.h moc/LiveScheduleDlgbase.cpp \
 	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp \
 	moc/moc_AMSSDlgbase.cpp moc/AMSSDlgbase.h moc/AMSSDlgbase.cpp \
@@ -264,6 +268,19 @@ moc/StationsDlgbase.h: ../common/GUI-QT/StationsDlgbase.ui
 
 moc/StationsDlgbase.cpp: ../common/GUI-QT/StationsDlgbase.ui moc/StationsDlgbase.h
 	$(UIC) ../common/GUI-QT/StationsDlgbase.ui -i moc/StationsDlgbase.h -o moc/StationsDlgbase.cpp
+
+
+moc/moc_LiveScheduleDlg.cpp: ../common/GUI-QT/LiveScheduleDlg.h
+	$(MOC) ../common/GUI-QT/LiveScheduleDlg.h -o moc/moc_LiveScheduleDlg.cpp
+		
+moc/moc_LiveScheduleDlgbase.cpp: moc/LiveScheduleDlgbase.h
+	$(MOC) moc/LiveScheduleDlgbase.h -o moc/moc_LiveScheduleDlgbase.cpp
+	
+moc/LiveScheduleDlgbase.h: ../common/GUI-QT/LiveScheduleDlgbase.ui
+	$(UIC) ../common/GUI-QT/LiveScheduleDlgbase.ui -o moc/LiveScheduleDlgbase.h
+
+moc/LiveScheduleDlgbase.cpp: ../common/GUI-QT/LiveScheduleDlgbase.ui moc/LiveScheduleDlgbase.h
+	$(UIC) ../common/GUI-QT/LiveScheduleDlgbase.ui -i moc/LiveScheduleDlgbase.h -o moc/LiveScheduleDlgbase.cpp
 
 
 moc/moc_AnalogDemDlg.cpp: ../common/GUI-QT/AnalogDemDlg.h

@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer, Andrew Murphy
+ *	Volker Fischer, Andrew Murphy, Andrea Russo
  *
  * Description:
  *	See DrmReceiver.cpp
@@ -111,12 +111,15 @@ public:
 #endif
 #if defined(USE_QT_GUI) || defined(_WIN32)
 		, iMainPlotColorStyle(0), /* default color scheme: blue-white */
-		iSecondsPreview(0), GeomChartWindows(0), bEnableSMeter(TRUE),
+		iSecondsPreview(0), iSecondsPreviewLiveSched(0), bShowAllStations(TRUE),
+		GeomChartWindows(0), bEnableSMeter(TRUE),
 		iSysEvalDlgPlotType(0), strStoragePathMMDlg(""),
+		strStoragePathLiveScheduleDlg(""),
 		iMainDisplayColor(16711680), /* Red */
 		SortParamAnalog(0, TRUE), /* Sort list by station name  */
 		/* Sort list by transmit power (5th column), most powerful on top */
 		SortParamDRM(4, FALSE),
+		SortParamLiveSched(0, FALSE), /* sort by frequency */
 		FontParamMMDlg("", 1, 0, FALSE)
 #endif
 		{}
@@ -213,6 +216,9 @@ public:
 	/* Stations dialog */
 	CWinGeom GeomStationsDlg;
 
+	/* Live schedule */
+	CWinGeom GeomLiveScheduleDlg;
+
 	/* Analog demodulation dialog */
 	CWinGeom GeomAnalogDemDlg;
 
@@ -224,6 +230,10 @@ public:
 
 	int			iMainPlotColorStyle;
 	int			iSecondsPreview;
+
+	/* Parameters for live schedule dialog */
+	int			iSecondsPreviewLiveSched;
+	_BOOLEAN	bShowAllStations;
 
 	/* Sort parameters for stations dialog */
 	class CSortParam
@@ -241,6 +251,9 @@ public:
 
 	/* DRM sort parameter in stations dialog */
 	CSortParam SortParamDRM;
+
+	/* sort parameter in live schedule dialog */
+	CSortParam SortParamLiveSched;
 
 	/* Font parameters for Multimedia Dlg */
 	class CFontParam
@@ -262,6 +275,7 @@ public:
 	_BOOLEAN	bEnableSMeter;
 	int			iSysEvalDlgPlotType;
 	string		strStoragePathMMDlg;
+	string		strStoragePathLiveScheduleDlg;
 	int			iMainDisplayColor;
 #endif
 
