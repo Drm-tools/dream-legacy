@@ -594,6 +594,29 @@ Institute for Communication Technology</source>
     </message>
 </context>
 <context>
+    <name>CLiveScheduleDlgBase</name>
+    <message>
+        <source>Live Schedule</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Column 1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>New Item</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>TextLabelUTCTime</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>CSoundCardSelMenu</name>
     <message>
         <source>Primary Audio &amp;Device (Recording)</source>
@@ -758,6 +781,18 @@ Institute for Communication Technology</source>
         <source>&lt;b&gt;Station Label and Info Display:&lt;/b&gt; In the big label with the black background the station label and some other information about the current selected service is displayed. The magenta text on the top shows the bit-rate of the current selected service (The abbreviations EEP and UEP stand for Equal Error Protection and Unequal Error Protection. UEP is a feature of DRM for a graceful degradation of the decoded audio signal in case of a bad reception situation. UEP means that some parts of the audio is higher protected and some parts are lower protected (the ratio of higher protected part length to total length is shown in the brackets)), the audio compression format (e.g. AAC), if SBR is used and what audio mode is used (Mono, Stereo, P-Stereo -&gt; low-complexity or parametric stereo). In case SBR is used, the actual sample rate is twice the sample rate of the core AAC decoder. The next two types of information are the language and the program type of the service (e.g. German / News).&lt;br&gt;The big turquoise text in the middle is the station label. This label may appear later than the magenta text since this information is transmitted in a different logical channel of a DRM stream. On the right, the ID number connected with this service is shown.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>&amp;Live Schedule Dialog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Live Schedule</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source> + AFS</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>FDRMDialogBase</name>
@@ -839,6 +874,77 @@ Institute for Communication Technology</source>
     </message>
     <message>
         <source>1001</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>LiveScheduleDlg</name>
+    <message>
+        <source>Frequency [kHz]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Time [UTC]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Target</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Days</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show &amp;only active stations</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Show &amp;all stations</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;5 minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;15 minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;30 minutes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Stations &amp;preview</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Save...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;View</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AFS Live Schedule</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Live Schedule List:&lt;/b&gt; In the live schedule list view AFS (Alternative Frequency Signalling) informations trasmitted into the current DRM signal.It is possible to show only active stations by changing a setting in the &apos;view&apos; menu. The color of the cube on the left of a menu item shows the current status of the DRM transmission. A green box shows that the transmission takes place right now, a yellow cube shows that this is a test transmission and with a red cube it is shown that the transmission is offline.&lt;br&gt;If the stations preview is active an orange box shows the stations that will be active.&lt;br&gt;The list can be sorted by clicking on the headline of the column.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;UTC Time:&lt;/b&gt; Shows the current Coordinated Universal Time (UTC) which is also known as Greenwich Mean Time (GMT).</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

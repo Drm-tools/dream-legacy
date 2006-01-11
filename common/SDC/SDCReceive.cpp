@@ -1111,7 +1111,6 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 		break;
 
 	case 1: /* 1 */
-		/* Region and/or schedule applies to this list of frequencies */
 		bSameService = TRUE;
 		break;
 	}
