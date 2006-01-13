@@ -67,9 +67,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	EvalWinMenu->insertSeparator();
 	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q, 4);
 
-	/* Disable live schedule menu item */
-	EvalWinMenu->setItemEnabled(3, FALSE);
-
 	/* Settings menu  ------------------------------------------------------- */
 	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
@@ -142,9 +139,15 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	pLiveScheduleDlg = new LiveScheduleDlg(pDRMRec, this, tr("Live Schedule"), FALSE,
 		Qt::WStyle_MinMax);
 	if (pDRMRec->GeomLiveScheduleDlg.bVisible == TRUE)
+	{
 		pLiveScheduleDlg->show();
+		bLiveSchedDlgWasVis = TRUE;
+	}
 	else
+	{
 		pLiveScheduleDlg->hide();
+		bLiveSchedDlgWasVis = FALSE;
+	}
 
 	/* Evaluation window */
 	pSysEvalDlg = new systemevalDlg(pDRMRec, this, tr("System Evaluation"),
@@ -249,17 +252,20 @@ FDRMDialog::~FDRMDialog()
 	pDRMRec->GeomAnalogDemDlg.bVisible = pAnalogDemDlg->isVisible();
 	pDRMRec->GeomStationsDlg.bVisible = pStationsDlg->isVisible();
 
-	/* Special treatment for multimedia and systen evaluation dialog since these
+	/* Special treatment for multimedia live schedule
+	   and systen evaluation dialog since these
 	   windows are not used for AM demodulation */
 	if (pDRMRec->GetReceiverMode() == CDRMReceiver::RM_AM)
 	{
 		pDRMRec->GeomSystemEvalDlg.bVisible = bSysEvalDlgWasVis;
 		pDRMRec->GeomMultimediaDlg.bVisible = bMultMedDlgWasVis;
+		pDRMRec->GeomLiveScheduleDlg.bVisible = bLiveSchedDlgWasVis;
 	}
 	else
 	{
 		pDRMRec->GeomSystemEvalDlg.bVisible = pSysEvalDlg->isVisible();
 		pDRMRec->GeomMultimediaDlg.bVisible = pMultiMediaDlg->isVisible();
+		pDRMRec->GeomLiveScheduleDlg.bVisible = pLiveScheduleDlg->isVisible();
 	}
 }
 
@@ -536,19 +542,14 @@ void FDRMDialog::OnTimer()
 		}
 
 		/* detect if AFS informations are available */
-		if (pDRMRec->GetParameters()->AltFreqSign.vecAltFreq.Size() > 0)
+		if ((pDRMRec->GetParameters()->AltFreqSign.vecAltFreq.Size() > 0)
+			|| (pDRMRec->GetParameters()->AltFreqOtherServicesSign.vecAltFreqOtherServices.Size() > 0))
 		{
-			/* enable live schedule menu item */
-			pMenu->setItemEnabled(3, TRUE);
-
 			/* show AFS label */
 			if (pDRMRec->GetParameters()->Service[0].
 				eAudDataFlag == CParameter::SF_AUDIO)
 					m_StaticService[0] += tr(" + AFS");
 		}
-		else
-			/* disable live schedule menu item */
-			pMenu->setItemEnabled(3, FALSE);
 		
 		/* Set texts */
 		TextMiniService1->setText(m_StaticService[0]);
@@ -610,6 +611,9 @@ void FDRMDialog::SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo)
 
 			if (bMultMedDlgWasVis == TRUE)
 				pMultiMediaDlg->show();
+
+			if (bLiveSchedDlgWasVis == TRUE)
+				pLiveScheduleDlg->show();
 		}
 
 		/* Load correct schedule */
@@ -624,6 +628,7 @@ void FDRMDialog::SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo)
 		/* Store visibility state */
 		bSysEvalDlgWasVis = pSysEvalDlg->isVisible();
 		bMultMedDlgWasVis = pMultiMediaDlg->isVisible();
+		bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
 
 		pSysEvalDlg->hide();
 		pMultiMediaDlg->hide();

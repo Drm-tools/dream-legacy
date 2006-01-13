@@ -85,6 +85,7 @@ protected:
 
 	_BOOLEAN		bSysEvalDlgWasVis;
 	_BOOLEAN		bMultMedDlgWasVis;
+	_BOOLEAN		bLiveSchedDlgWasVis;
 
 	virtual void	customEvent(QCustomEvent* Event);
 	void			SetService(int iNewServiceID);
