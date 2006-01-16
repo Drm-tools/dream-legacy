@@ -793,6 +793,9 @@ void LiveScheduleDlg::OnSave()
 	const int iCurSelAudioServ = pDRMRec->GetParameters()->GetCurSelAudioService();
 	QString strStationName = pDRMRec->GetParameters()->Service[iCurSelAudioServ].strLabel.c_str();
 
+	/* Lock mutex for use the vecpListItems */
+	ListItemsMutex.Lock();
+
 	/* Force the sort for all items */ 
  	ListViewStations->firstChild()
 		->sortChildItems(iCurrentSortColumn,bCurrentSortAscending);
@@ -811,6 +814,8 @@ void LiveScheduleDlg::OnSave()
 				"</tr>\n";
         myItem = myItem->nextSibling();
     }
+
+	ListItemsMutex.Unlock();
 
 	if (strSchedule != "")
 	{
