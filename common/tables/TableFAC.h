@@ -384,113 +384,92 @@ static string GetName(const string strA2)
 #define LEN_TABLE_CIRAF_ZONES			86
 
 const string strTableCIRAFzones[LEN_TABLE_CIRAF_ZONES] = {
-	"", /* undefined */
-	"Alaska",
-	"western Canada",
-	"central Canada - west",
-	"central Canada - east, Baffin Island",
-	"Greenland",
-	"western USA",
-	"central USA",
-	"eastern USA",
-	"eastern Canada",
-	"Belize, Guatemala, Mexico",
-
-	"Caribbean, central America",
-//[11] = "Antilles, Costa Rica, Cuba, Dominican Republic, El Salvador, Haiti, Honduras, Jamaica, Nicaragua, Panama, Puerto Rico, West Indies",
-
-	"northwestern south America",
-//[12] = "Colombia, Ecuador, French Guiana, Guyana, northern Bolivia, northwestern Brazil, Peru, Surinam, Venezuela",
-
-	"northeastern Brazil",
-	"northern Argentina, northern Chile, Paraguay, southern Bolivia, Uruguay",
-	"southeastern Brazil",
-	"southern Argentina, southern Chile, Falkland Islands",
-	"Iceland",
-
-	"Scandanavia",
-//[18] = "Denmark, Finland, Norway, Sweden",
-
-	"western Russia northwest",
-	"western Russia north",
-	"central Russia northwest",
-	"central Russia north",
-	"central Russia east",
-	"eastern Russia northwest",
-	"eastern Russia north",
-	"eastern Russia northeast",
-
-	"UK, France, Benelux",
-//[27] = "Belgium, France, Great Britain, Ireland, Monaco, Netherlands",
-
-	"central and eastern Europe",
-//[28] = "Albania, Austria, Bosnia and Herzegovina, Bulgaria, Croatia, Czech Republic, Germany, Greece, Hungary, Italy, Luxembourg, Macedonia, Malta, Poland, Romania, Slovakia, Slovenia, Switzerland, Vatican, Yugoslavia",
-
-	"Baltics and western Russia",
-//[29] = "Armenia, Azerbaijan, Belarus, Estonia, Georgia, Latvia, Lithuania, Moldova, Ukraine, western Russia",
-
-	"Tajikistan, Turkmenistan, Uzbekistan, western Kazakhstan, western Kyrgyzstan, western Russia southeast",
-	"central Russia southwest, eastern Kazakhstan, eastern Kyrgyzstan",
-	"central Russia south, western Mongolia",
-	"central Russia southeast, eastern Mongolia",
-	"eastern Russia southwest: Sakhalin, Sikhote Alin",
-	"eastern Russia east: Kamchatka",
-	"Azores, Canary Island, Madeira",
-	"Algeria, Andorra, Morocco, Portugal, Spain, Tunisia",
-	"Egypt, Libya",
-
-	"Turkey, Iraq, Syria, Lebanon, Israel, Jordan, Arabian Pen.",
-//[39] = "Bahrain, Cyprus, Iraq, Israel, Jordan, Kuwait, Lebanon, Oman, Qatar, Saudi Arabia, Syria, Turkey, United Arab Emirates, Yemen",
-
-	"Afghanistan, Iran",
-	"Bangladesh, Bhutan, India, Nepal, Pakistan",
-	"western China",
-	"central China",
-	"eastern China, Macao, Hong Kong, North Korea, South Korea, Taiwan",
-	"Japan",
-
-	"west Africa",
-//[46] = "Benin, Burkina Faso, Cape Verde, C?e d'Ivoire, Gambia, Ghana, Guinea, Guinea-Bissau, Liberia, Mali, Mauritania, Niger, Nigeria, Senegal, Sierra Leone, Togo, Cameroon, Chad, Central African Republic, Equatorial Guinea, Gabon, S? Tom",
-
-	"western Sudan",
-	"Burundi, Eritrea, Ethiopia, eastern Sudan, Kenya, Somalia, Uganda",
-	"Kampuchea, Laos, Myanmar, Vietnam",
-	"Philippines",
-	"Malaysia, Papua New Guinea, western Indonesia",
-	"Angola, Burundi, Congo, Gabon, Zaire",
-	"Madagascar, Malawi, Mozambique, Seychelles, Zambia, Zimbabwe",
-	"Malaysia, Singapore, western Indonesia",
-	"northeastern Australia",
-	"Caledonia, Fiji/Vanuatu",
-	"Botswana, Lesotho, Namibia, Swaziland, South African Republic",
-	"western Australia",
-	"southeastern Australia",
-	"New Zealand",
-	"Hawaii",
-	"Phoenix Islands, Samoa",
-	"Cook Islands, Polynesia",
-	"Guam/Palau, Saipan",
-	"Kiribati, Marshall",
-	"central Atlantic - south: Ascension, St. Helena",
-	"Antarctica",
-	"southwestern Indian Ocean: Kerguelen",
-	"Antarctica",
-	"Antarctica",
-	"Antarctica",
-	"Antarctica",
-	"Antarctica",
-	"South Pole",
-	"North Pole",
-	"northeastern Pacific",
-	"central Pacific - northeast",
-	"central Pacific - southeast",
-	"central Indian Ocean",
-	"northern Atlantic",
-	"central Atlantic",
-	"northwestern Pacific",
-	"southern Pacific",
-	"southern Atlantic",
-	"southeastern Indian Ocean"
+	"", /* 0 undefined */
+	"Alaska", /* 1 */
+	"west Canada", /* 2 */
+	"central Canada - west", /* 3 */
+	"central Canada - east, Baffin Island", /* 4 */
+	"Greenland", /* 5 */
+	"west USA", /* 6 */
+	"central USA", /* 7 */
+	"east USA", /* 8 */
+	"east Canada", /* 9 */
+	"Belize, Guatemala, Mexico", /* 10 */
+	"Caribbean, central America",  /* 11 */
+	"northwestern south America", /* 12 */
+	"northeast Brazil", /* 13 */
+	"southwestern south America", /* 14 */
+	"southeast Brazil",  /* 15 */
+	"south Argentina, south Chile, Falkland Islands", /* 16 */
+	"Iceland", /* 17 */
+	"Scandanavia", /* 18 */
+	"west Russia northwest", /* 19 */
+	"west Russia north", /* 20 */
+	"central Russia northwest", /* 21 */
+	"central Russia north", /* 22 */
+	"central Russia east", /* 23 */
+	"east Russia northwest", /* 24 */
+	"east Russia north", /* 25 */
+	"east Russia northeast", /* 26 */
+	"northwest Europe", /* 27 */
+	"central east south Europe", /* 28 */
+	"Baltics and west Russia", /* 29 */
+	"central Asia, west Russia southeast", /* 30 */
+	"central Russia southwest, east Kazakhstan, east Kyrgyzstan", /* 31 */
+	"central Russia south, west Mongolia", /* 32 */
+	"central Russia southeast, east Mongolia", /* 33 */
+	"east Russia southwest: Sakhalin, Sikhote Alin", /* 34 */
+	"east Russia east: Kamchatka", /* 35 */
+	"Azores, Canary Island, Madeira", /* 36 */
+	"southwest Europe, northwest Africa", /* 37 */
+	"Egypt, Libya", /* 38 */
+	"Middle East", /* 39 */
+	"Afghanistan, Iran", /* 40 */
+	"Bangladesh, Bhutan, India, Nepal, Pakistan", /* 41 */
+	"west China", /* 42 */
+	"central China", /* 43 */
+	"east China, Macao, Hong Kong, North Korea, South Korea, Taiwan", /* 44 */
+	"Japan", /* 45 */
+	"west Africa", /* 46 */
+	"west Sudan", /* 47 */
+	"Horn of Africa", /* 48 */
+	"Kampuchea, Laos, Myanmar, Vietnam", /* 49 */
+	"Philippines", /* 50 */
+	"Malaysia, Papua New Guinea, west Indonesia", /* 51 */
+	"Angola, Burundi, Congo, Gabon, Zaire", /* 52 */
+	"Madagascar, Malawi, Mozambique, Seychelles, Zambia, Zimbabwe", /* 53 */
+	"Malaysia, Singapore, west Indonesia", /* 54 */
+	"northeast Australia", /* 55 */
+	"Caledonia, Fiji/Vanuatu", /* 56 */
+	"Botswana, Lesotho, Namibia, Swaziland, South African Republic", /* 57 */
+	"west Australia", /* 58 */
+	"southeast Australia", /* 59 */
+	"New Zealand", /* 60 */
+	"Hawaii", /* 61 */
+	"Phoenix Islands, Samoa", /* 62 */
+	"Cook Islands, Polynesia", /* 63 */
+	"Guam/Palau, Saipan", /* 64 */
+	"Kiribati, Marshall", /* 65 */
+	"central Atlantic - south: Ascension, St. Helena", /* 66 */
+	"Antarctica", /* 67 */
+	"southwest Indian Ocean: Kerguelen", /* 68 */
+	"Antarctica", /* 69 */
+	"Antarctica", /* 70 */
+	"Antarctica", /* 71 */
+	"Antarctica", /* 72 */
+	"Antarctica", /* 73 */
+	"South Pole", /* 74 */
+	"North Pole", /* 75 */
+	"northeast Pacific", /* 76 */
+	"central Pacific - northeast", /* 77 */
+	"central Pacific - southeast", /* 78 */
+	"central Indian Ocean", /* 79 */
+	"northern Atlantic", /* 80 */
+	"central Atlantic", /* 81 */
+	"northwest Pacific", /* 82 */
+	"south Pacific", /* 83 */
+	"south Atlantic", /* 84 */
+	"southeast Indian Ocean" /* 85 */
 };
 
 
