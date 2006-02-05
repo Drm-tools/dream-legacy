@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>505</width>
+            <width>501</width>
             <height>422</height>
         </rect>
     </property>
@@ -86,7 +86,7 @@
                         <column>
                             <property>
                                 <name>text</name>
-                                <string>Start</string>
+                                <string>Time [UTC]</string>
                             </property>
                             <property>
                                 <name>clickable</name>
