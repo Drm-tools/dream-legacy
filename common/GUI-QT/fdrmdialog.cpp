@@ -62,10 +62,12 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 		SLOT(OnViewMultiMediaDlg()), CTRL+Key_U, 1);
 	EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
 		SLOT(OnViewStationsDlg()), CTRL+Key_T, 2);
-	EvalWinMenu->insertItem(tr("&Live Schedule Dialog"), this,
+	EvalWinMenu->insertItem(tr("&Live Schedule Dialog..."), this,
 		SLOT(OnViewLiveScheduleDlg()), CTRL+Key_L, 3);
+	EvalWinMenu->insertItem(tr("&Programme Guide..."), this,
+		SLOT(OnViewEPGDlg()), CTRL+Key_P, 4);
 	EvalWinMenu->insertSeparator();
-	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q, 4);
+	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q, 5);
 
 	/* Settings menu  ------------------------------------------------------- */
 	pSettingsMenu = new QPopupMenu(this);
@@ -148,6 +150,10 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 		pLiveScheduleDlg->hide();
 		bLiveSchedDlgWasVis = FALSE;
 	}
+
+	/* Programme Guide Window */
+	pEPGDlg = new EPGDlg(pDRMRec, this, tr("Programme Guide"), FALSE,
+		Qt::WStyle_MinMax);
 
 	/* Evaluation window */
 	pSysEvalDlg = new systemevalDlg(pDRMRec, this, tr("System Evaluation"),
@@ -512,7 +518,14 @@ void FDRMDialog::OnTimer()
 					(pDRMRec->GetParameters()->Service[i].
 					DataParam.iStreamID != STREAM_ID_NOT_USED))
 				{
-					m_StaticService[i] += tr(" + MM");
+
+					if (pDRMRec->GetParameters()->Service[i].
+						DataParam.iUserAppIdent == AT_MOTEPG)
+					{
+						m_StaticService[i] += tr(" + EPG"); /* EPG service */
+					}
+					else
+						m_StaticService[i] += tr(" + MM"); /* other multimedia service */
 
 					/* Bit-rate of connected data stream */
 					m_StaticService[i] += " (" + QString().setNum(pDRMRec->
@@ -633,6 +646,7 @@ void FDRMDialog::SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo)
 		pSysEvalDlg->hide();
 		pMultiMediaDlg->hide();
 		pLiveScheduleDlg->hide();
+		pEPGDlg->hide();
 
 		pAnalogDemDlg->show();
 
@@ -721,7 +735,7 @@ void FDRMDialog::OnViewEvalDlg()
 {
 	if (pDRMRec->GetReceiverMode() == CDRMReceiver::RM_DRM)
 	{
-		/* Show evauation window in DRM mode */
+		/* Show evaluation window in DRM mode */
 		pSysEvalDlg->show();
 	}
 	else
@@ -733,20 +747,26 @@ void FDRMDialog::OnViewEvalDlg()
 
 void FDRMDialog::OnViewMultiMediaDlg()
 {
-	/* Show evaluation window */
+	/* Show Multimedia window */
 	pMultiMediaDlg->show();
 }
 
 void FDRMDialog::OnViewStationsDlg()
 {
-	/* Show evauation window */
+	/* Show stations window */
 	pStationsDlg->show();
 }
 
 void FDRMDialog::OnViewLiveScheduleDlg()
 {
-	/* Show evauation window */
+	/* Show live schedule window */
 	pLiveScheduleDlg->show();
+}
+
+void FDRMDialog::OnViewEPGDlg()
+{
+	/* Show programme guide window */
+    pEPGDlg->show();
 }
 
 void FDRMDialog::OnMenuSetDisplayColor()
@@ -923,6 +943,18 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 					strReturn = "DGPS";
 					break;
 
+				case 6:
+					strReturn = "TMC";
+					break;
+					
+				case AT_MOTEPG:
+					strReturn = "EPG - Electronic Programme Guide";
+					break;
+
+				case 8:
+					strReturn = "Java";
+					break;
+
 				case 0x44A: /* Journaline */
 					strReturn = "Journaline";
 					break;
@@ -1005,7 +1037,7 @@ void FDRMDialog::AddWhatsThisHelp()
 		tr("<b>Text Message:</b> On the top right the text "
 		"message label is shown. This label only appears when an actual text "
 		"message is transmitted. If the current service does not transmit a "
-		"text message, the label will be invisible."));
+		"text message, the label will be disabled."));
 
 	/* Input Level */
 	const QString strInputLevel =
@@ -1065,14 +1097,20 @@ void FDRMDialog::AddWhatsThisHelp()
 	/* Service Selectors */
 	const QString strServiceSel =
 		tr("<b>Service Selectors:</b> In a DRM stream up to "
-		"four services can be carried. The service type can either be audio, "
-		"data or audio and data. If a data service is selected, the Multimedia "
-		"Dialog will automatically show up. On the right of each service "
-		"selection button a short description of the service is shown. If a "
-		"service is an audio and data service, a \"+ MM\" is added to this "
-		"text. If a service is an audio and data service and this service "
-		"is selected, by opening the Multimedia Dialog, the data can be viewed "
-		"while the audio is still playing.");
+		"four services can be carried. The service can be an audio service, "
+		"a data service or an audio service with data. "
+		"Audio services can have associated text messages, in addition to any data component. "
+		"If a Multimedia data service is selected, the Multimedia Dialog will automatically show up. "
+		"On the right of each service selection button a short description of the service is shown. "
+		"If an audio service has associated Multimedia data, \"+ MM\" is added to this text. " 
+		"If such a service is selected, opening the Multimedia Dialog will allow the data to be viewed "
+		"while the audio is still playing. If the data component of a service is not Multimedia, "
+		"but an EPG (Electronic Programme Guide) \"+ EPG\" is added to the description. "
+		"The accumulated Programme Guides for all stations can be viewed by opening the Programme Guide Dialog. "
+		"The selected channel in the Programme Guide Dialog defaults to the station being received. "
+		"If Alternative Frequency Signalling is available, \"+ AFS\" is added to the description. "
+		"In this case the alternative frequencies can be viewed by opening the Live Schedule Dialog."
+	);
 
 	QWhatsThis::add(PushButtonService1, strServiceSel);
 	QWhatsThis::add(PushButtonService2, strServiceSel);

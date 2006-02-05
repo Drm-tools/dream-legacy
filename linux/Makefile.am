@@ -137,6 +137,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/MultimediaDlg.cpp \
 	../common/GUI-QT/StationsDlg.cpp \
 	../common/GUI-QT/LiveScheduleDlg.cpp \
+	../common/GUI-QT/EPGDlg.cpp \
 	../common/GUI-QT/AnalogDemDlg.cpp \
 	../common/MDI.cpp \
 	../common/GUI-QT/fdrmdialogbase.ui \
@@ -146,6 +147,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/MultimediaDlgbase.ui \
 	../common/GUI-QT/StationsDlgbase.ui \
 	../common/GUI-QT/LiveScheduleDlgbase.ui \
+	../common/GUI-QT/EPGDlgbase.ui \
 	../common/GUI-QT/AnalogDemDlgbase.ui \
 	../common/GUI-QT/AMSSDlgbase.ui \
 	../common/GUI-QT/MultimediaDlg.h \
@@ -157,6 +159,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/DRMPlot.h \
 	../common/GUI-QT/StationsDlg.h \
 	../common/GUI-QT/LiveScheduleDlg.h \
+	../common/GUI-QT/EPGDlg.h \
 	../common/GUI-QT/AnalogDemDlg.h \
 	../common/MDI.h \
 	../common/datadecoding/epg/epgdecode.cpp \
@@ -179,6 +182,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_MultimediaDlg.cpp moc/moc_MultimediaDlgbase.cpp moc/MultimediaDlgbase.h moc/MultimediaDlgbase.cpp \
 	moc/moc_StationsDlg.cpp moc/moc_StationsDlgbase.cpp moc/StationsDlgbase.h moc/StationsDlgbase.cpp \
 	moc/moc_LiveScheduleDlg.cpp moc/moc_LiveScheduleDlgbase.cpp moc/LiveScheduleDlgbase.h moc/LiveScheduleDlgbase.cpp \
+	moc/moc_EPGDlg.cpp moc/moc_EPGDlgbase.cpp moc/EPGDlgbase.h moc/EPGDlgbase.cpp \
 	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp \
 	moc/moc_AMSSDlgbase.cpp moc/AMSSDlgbase.h moc/AMSSDlgbase.cpp \
@@ -291,6 +295,19 @@ moc/LiveScheduleDlgbase.h: ../common/GUI-QT/LiveScheduleDlgbase.ui
 
 moc/LiveScheduleDlgbase.cpp: ../common/GUI-QT/LiveScheduleDlgbase.ui moc/LiveScheduleDlgbase.h
 	$(UIC) ../common/GUI-QT/LiveScheduleDlgbase.ui -i moc/LiveScheduleDlgbase.h -o moc/LiveScheduleDlgbase.cpp
+
+
+moc/moc_EPGDlg.cpp: ../common/GUI-QT/EPGDlg.h
+	$(MOC) ../common/GUI-QT/EPGDlg.h -o moc/moc_EPGDlg.cpp
+		
+moc/moc_EPGDlgbase.cpp: moc/EPGDlgbase.h
+	$(MOC) moc/EPGDlgbase.h -o moc/moc_EPGDlgbase.cpp
+	
+moc/EPGDlgbase.h: ../common/GUI-QT/EPGDlgbase.ui
+	$(UIC) ../common/GUI-QT/EPGDlgbase.ui -o moc/EPGDlgbase.h
+
+moc/EPGDlgbase.cpp: ../common/GUI-QT/EPGDlgbase.ui moc/EPGDlgbase.h
+	$(UIC) ../common/GUI-QT/EPGDlgbase.ui -i moc/EPGDlgbase.h -o moc/EPGDlgbase.cpp
 
 
 moc/moc_AnalogDemDlg.cpp: ../common/GUI-QT/AnalogDemDlg.h

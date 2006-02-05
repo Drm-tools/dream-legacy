@@ -1,4 +1,4 @@
-rem/******************************************************************************\
+Rem/******************************************************************************\
 rem * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
 rem * Copyright (c) 2001-2005
 rem *
@@ -27,6 +27,7 @@ rem *
 rem\******************************************************************************/
 
 
+
 rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GUI-QT\DialogUtil.h -o moc\moc_DialogUtil.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\MultColorLED.h -o moc\moc_MultColorLED.cpp
@@ -38,6 +39,7 @@ rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GUI-QT\StationsDlg.h -o moc\moc_StationsDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\LiveScheduleDlg.h -o moc\moc_LiveScheduleDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\AnalogDemDlg.h -o moc\moc_AnalogDemDlg.cpp
+%qtdir%\bin\moc.exe ..\common\GUI-QT\EPGDlg.h -o moc\moc_EPGDlg.cpp
 %qtdir%\bin\moc.exe ..\common\MDI.h -o moc\moc_MDI.cpp
 
 
@@ -77,5 +79,10 @@ rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\AMSSDlgbase.ui -o moc\AMSSDlgbase.h  
 %qtdir%\bin\uic.exe ..\common\GUI-QT\AMSSDlgbase.ui -i AMSSDlgbase.h -o moc\AMSSDlgbase.cpp  
 %qtdir%\bin\moc.exe moc\AMSSDlgbase.h -o moc\moc_AMSSDlgbase.cpp
+
+%qtdir%\bin\uic.exe ..\common\GUI-QT\EPGDlgbase.ui -o moc\EPGDlgbase.h  
+%qtdir%\bin\uic.exe ..\common\GUI-QT\EPGDlgbase.ui -i EPGDlgbase.h -o moc\EPGDlgbase.cpp  
+%qtdir%\bin\moc.exe moc\EPGDlgbase.h -o moc\moc_EPGDlgbase.cpp
+%qtdir%\bin\moc.exe ..\common\GUI-QT\EPGDlg.h -o moc\moc_EPGDlg.cpp
 
 pause

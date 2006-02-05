@@ -81,7 +81,7 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 {
   public:
     CDataDecoder ():iServPacketID (0), DoNotProcessData (TRUE),
-	iOldJournalineServiceID (0), eAppType (AT_NOT_SUP)
+	iOldJournalineServiceID (0), eAppType (AT_NOT_SUP), bDecodeEPG(TRUE)
     {
     }
     virtual ~ CDataDecoder ()
@@ -99,6 +99,10 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     {
 	return eAppType;
     }
+
+	/* Parameter for activate/deactivate EPG decoding */
+	void		SetDecodeEPG(const _BOOLEAN bDecEPG) {bDecodeEPG = bDecEPG;}
+	_BOOLEAN	GetDecodeEPG() {return bDecodeEPG;}
 
   protected:
     class CDataUnit
@@ -134,6 +138,8 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 
     virtual void InitInternal (CParameter & ReceiverParam);
     virtual void ProcessDataInternal (CParameter & ReceiverParam);
+
+	_BOOLEAN	bDecodeEPG; /* enable/disable epg decoding */
 };
 
 

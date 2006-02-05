@@ -112,6 +112,10 @@ SOURCE=.\moc\AnalogDemDlgbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\EPGDlgbase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\fdrmdialogbase.cpp
 # End Source File
 # Begin Source File
@@ -141,6 +145,14 @@ SOURCE=.\moc\moc_DialogUtil.cpp
 # Begin Source File
 
 SOURCE=.\moc\moc_DRMPlot.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_EPGDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_EPGDlgbase.cpp
 # End Source File
 # Begin Source File
 
@@ -226,6 +238,10 @@ SOURCE="..\common\GUI-QT\DialogUtil.cpp"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\DRMPlot.cpp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\EPGDlg.cpp"
 # End Source File
 # Begin Source File
 
@@ -582,6 +598,10 @@ SOURCE="..\common\GUI-QT\DialogUtil.h"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\DRMPlot.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\EPGDlg.h"
 # End Source File
 # Begin Source File
 

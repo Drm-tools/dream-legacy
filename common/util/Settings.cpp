@@ -103,6 +103,9 @@ void CSettings::ReadIniFile()
 	if (GetNumericIniSet(ini, "Receiver", "mlciter", 0, MAX_NUM_MLC_IT, iValue) == TRUE)
 		pDRMRec->GetMSCMLC()->SetNumIterations(iValue);
 
+	/* Activate/Deactivate EPG decoding */
+	if (GetFlagIniSet(ini, "EPG", "decodeepg", bValue) == TRUE)
+		pDRMRec->GetDataDecoder()->SetDecodeEPG(bValue);
 
 #ifdef USE_QT_GUI
 	/* Logfile -------------------------------------------------------------- */
@@ -200,6 +203,18 @@ void CSettings::ReadIniFile()
 		pDRMRec->GeomStationsDlg.iWSize = iValue;
 	if (GetFlagIniSet(ini, "Window geometry", "statdlgvis", bValue) == TRUE)
 		pDRMRec->GeomStationsDlg.bVisible = bValue;
+
+	/* EPG dialog */
+	if (GetNumericIniSet(ini, "Window geometry", "epgdlgxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+		pDRMRec->GeomEPGDlg.iXPos = iValue;
+	if (GetNumericIniSet(ini, "Window geometry", "epgdlgypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+		pDRMRec->GeomEPGDlg.iYPos = iValue;
+	if (GetNumericIniSet(ini, "Window geometry", "epgdlghsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+		pDRMRec->GeomEPGDlg.iHSize = iValue;
+	if (GetNumericIniSet(ini, "Window geometry", "epgdlgwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+		pDRMRec->GeomEPGDlg.iWSize = iValue;
+	if (GetFlagIniSet(ini, "Window geometry", "epgdlgvis", bValue) == TRUE)
+		pDRMRec->GeomEPGDlg.bVisible = bValue;
 
 	/* Live schedule dialog */
 	if (GetNumericIniSet(ini, "Window geometry", "scheddlgxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
@@ -367,6 +382,9 @@ void CSettings::WriteIniFile()
 	SetNumericIniSet(ini, "Receiver", "mlciter",
 		pDRMRec->GetMSCMLC()->GetInitNumIterations());
 
+	/* Active/Deactivate EPG decoding */
+	SetFlagIniSet(ini, "EPG", "decodeepg"
+		, pDRMRec->GetDataDecoder()->GetDecodeEPG());
 
 #ifdef USE_QT_GUI
 	/* Logfile -------------------------------------------------------------- */
@@ -445,6 +463,13 @@ void CSettings::WriteIniFile()
 	SetNumericIniSet(ini, "Window geometry", "statdlghsize", pDRMRec->GeomStationsDlg.iHSize);
 	SetNumericIniSet(ini, "Window geometry", "statdlgwsize", pDRMRec->GeomStationsDlg.iWSize);
 	SetFlagIniSet(ini, "Window geometry", "statdlgvis", pDRMRec->GeomStationsDlg.bVisible);
+
+	/* EPG dialog */
+	SetNumericIniSet(ini, "Window geometry", "epgdlgxpos", pDRMRec->GeomEPGDlg.iXPos);
+	SetNumericIniSet(ini, "Window geometry", "epgdlgypos", pDRMRec->GeomEPGDlg.iYPos);
+	SetNumericIniSet(ini, "Window geometry", "epgdlghsize", pDRMRec->GeomEPGDlg.iHSize);
+	SetNumericIniSet(ini, "Window geometry", "epgdlgwsize", pDRMRec->GeomEPGDlg.iWSize);
+	SetFlagIniSet(ini, "Window geometry", "epgdlgvis", pDRMRec->GeomEPGDlg.bVisible);
 
 	/* Live schedule dialog */
 	SetNumericIniSet(ini, "Window geometry", "scheddlgxpos", pDRMRec->GeomLiveScheduleDlg.iXPos);

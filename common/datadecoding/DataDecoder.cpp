@@ -359,51 +359,54 @@ CDataDecoder::ProcessDataInternal (CParameter & ReceiverParam)
 				AddDataUnit (DataUnit[iPacketID].vecbiData);
 			    break;
 			case AT_MOTEPG:	/* EPG */
-			    /* Packet unit decoding */
-			    MOTObject[iPacketID].
-				AddDataUnit (DataUnit[iPacketID].vecbiData);
-			    /* Application Decoding - must run all the time and in background */
-			    if ((DoNotProcessData == FALSE)
-				&& MOTObject[iPacketID].NewObjectAvailable ())
-			      {
-				  CMOTObject NewObj;
-				  MOTObject[iServPacketID].
-				      GetNextObject (NewObj);
-				  string fileName;
-				  if (NewObj.iContentType == 7)
-				    {
-					int service =
-					    ReceiverParam.
-					    GetCurSelDataService ();
-					fileName =
-					    epgFilename (NewObj.ScopeStart,
-							 ReceiverParam.
-							 Service[service].
-							 iServiceID,
-							 NewObj.
-							 iContentSubType,
-							 NewObj.
-							 vecbProfileSubset.
-							 size () > 0);
-				    }
-				  else
-				    {
-					fileName = NewObj.strName;
-				    }
+				if (GetDecodeEPG() == TRUE) /* if EPG decoding is active */
+				{
+					/* Packet unit decoding */
+					MOTObject[iPacketID].
+					AddDataUnit (DataUnit[iPacketID].vecbiData);
+					/* Application Decoding - must run all the time and in background */
+					if ((DoNotProcessData == FALSE)
+					&& MOTObject[iPacketID].NewObjectAvailable ())
+					{
+						CMOTObject NewObj;
+						MOTObject[iServPacketID].
+							  GetNextObject (NewObj);
+						string fileName;
+						if (NewObj.iContentType == 7)
+							{
+							int service =
+								ReceiverParam.
+								GetCurSelDataService ();
+							fileName =
+								epgFilename (NewObj.ScopeStart,
+									 ReceiverParam.
+									 Service[service].
+									 iServiceID,
+									 NewObj.
+									 iContentSubType,
+									 NewObj.
+									 vecbProfileSubset.
+									 size () > 0);
+							}
+						else
+							{
+							fileName = NewObj.strName;
+							}
 
-				  string path =
-				      string (EPG_SAVE_PATH) + "/" + fileName;
-				  mkdirs (path);
-				  FILE *f = fopen (path.c_str (), "wb");
-				  if (f)
-				    {
-					fwrite (&NewObj.Body.vecData.front (),
-						1,
-						NewObj.Body.vecData.size (),
-						f);
-					fclose (f);
-				    }
-			      }
+						string path =
+							  string (EPG_SAVE_PATH) + "/" + fileName;
+						mkdirs (path);
+						FILE *f = fopen (path.c_str (), "wb");
+						if (f)
+						{
+							fwrite (&NewObj.Body.vecData.front (),
+								1,
+								NewObj.Body.vecData.size (),
+								f);
+							fclose (f);
+						}
+					}
+				}
 			    break;
 
 			case AT_MOTBROADCASTWEBSITE:	/* MOT Broadcast Web Site */

@@ -50,10 +50,14 @@
 #include "MultimediaDlg.h"
 #include "StationsDlg.h"
 #include "LiveScheduleDlg.h"
+#include "EPGDlg.h"
 #include "AnalogDemDlg.h"
 #include "MultColorLED.h"
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
+
+/* Define for application type EPG */
+#define AT_MOTEPG 	7
 
 
 /* Classes ********************************************************************/
@@ -73,15 +77,16 @@ protected:
 	systemevalDlg*	pSysEvalDlg;
 	MultimediaDlg*	pMultiMediaDlg;
 	StationsDlg*	pStationsDlg;
-    LiveScheduleDlg* pLiveScheduleDlg;
+	LiveScheduleDlg*	pLiveScheduleDlg;
+	EPGDlg*		pEPGDlg;
 	AnalogDemDlg*	pAnalogDemDlg;
 	QMenuBar*		pMenu;
 	QPopupMenu*		pReceiverModeMenu;
 	QPopupMenu*		pSettingsMenu;
 	QPopupMenu*		pPlotStyleMenu;
-	int				iCurSelServiceGUI;
-	int				iOldNoServicesGUI;
-	QTimer			Timer;
+	int			iCurSelServiceGUI;
+	int			iOldNoServicesGUI;
+	QTimer		Timer;
 
 	_BOOLEAN		bSysEvalDlgWasVis;
 	_BOOLEAN		bMultMedDlgWasVis;
@@ -92,8 +97,8 @@ protected:
 	void			AddWhatsThisHelp();
 	void			SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo);
 
-	QString			GetCodecString(const int iServiceID);
-	QString			GetTypeString(const int iServiceID);
+	QString		GetCodecString(const int iServiceID);
+	QString		GetTypeString(const int iServiceID);
 
 	void			SetDisplayColor(const QColor newColor);
 
@@ -107,6 +112,7 @@ public slots:
 	void OnViewMultiMediaDlg();
 	void OnViewStationsDlg();
 	void OnViewLiveScheduleDlg();
+	void OnViewEPGDlg();
 	void OnSwitchToDRM() {SetReceiverMode(CDRMReceiver::RM_DRM);}
 	void OnSwitchToAM() {SetReceiverMode(CDRMReceiver::RM_AM);}
 	void OnMenuSetDisplayColor();
