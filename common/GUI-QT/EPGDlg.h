@@ -46,6 +46,7 @@
 #include <qlistview.h>
 #include <qlabel.h>
 #include <qtimer.h>
+#include <qpixmap.h>
 
 #include "../DrmReceiver.h"
 #include "../datadecoding/epg/EPG.h"
@@ -55,6 +56,13 @@
 
 /* Define the timer interval of updating */
 #define GUI_TIMER_EPG_UPDATE		60000 /* ms (1 minute) */
+
+/* list view columns */
+#define COL_START		0
+#define COL_NAME		1
+#define	COL_GENRE		2
+#define	COL_DESCRIPTION	3
+#define COL_DURATION	4
 
 /* Classes ********************************************************************/
 class EPGDlg : public CEPGDlgbase
@@ -73,14 +81,18 @@ public:
     	
 protected:
 	
-    virtual void showEvent(QShowEvent *e);
+    virtual	void showEvent(QShowEvent *e);
 	virtual void hideEvent(QHideEvent* pEvent);
-	
+
+	_BOOLEAN IsActive(const QString start, const QString duration, const time_t ltime);
+
+	QPixmap			BitmCubeGreen;
+
     QDate date;
     bool do_updates;
     EPG epg;
-	CDRMReceiver*		pDRMRec;
-	QTimer				Timer;
+	CDRMReceiver*	pDRMRec;
+	QTimer			Timer;
 
 public slots:
     void nextDay();

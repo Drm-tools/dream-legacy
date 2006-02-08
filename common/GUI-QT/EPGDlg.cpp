@@ -51,6 +51,14 @@ EPGDlg::EPGDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* auto resize of the programme name column */
 	Data->setColumnWidthMode(COL_NAME, QListView::Maximum);
 
+	/* Define size of the bitmaps */
+	const int iXSize = 8;
+	const int iYSize = 8;
+
+	/* Create bitmaps */
+	BitmCubeGreen.resize(iXSize, iYSize);
+	BitmCubeGreen.fill(QColor(0, 255, 0));
+
 	/* Connections ---------------------------------------------------------- */
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
@@ -89,8 +97,32 @@ EPGDlg::~EPGDlg()
 }
 
 void EPGDlg::OnTimer()
-{
-	select();
+{	
+    if ((basic->text() == tr("no basic profile data"))
+		|| (advanced->text() == tr("no advanced profile data")))
+		/* not all informations are loaded */
+ 		select();
+	else
+		if (date == QDate::currentDate()) /* if today */
+		{
+			/* Get system time */
+			time_t ltime;
+			time(&ltime);
+
+			/* Extract values from the list */
+			QListViewItem * myItem = Data->firstChild();
+
+			while( myItem )
+			{
+				/* Check, if the programme is now on line. If yes, set
+				special pixmap */
+				if (IsActive(myItem->text(COL_START),myItem->text(COL_DURATION),ltime))
+					myItem->setPixmap(COL_START, BitmCubeGreen);
+				else
+					myItem->setPixmap(COL_START,QPixmap()); /* no pixmap */
+				myItem = myItem->nextSibling();
+			}
+		}
 }
 
 void EPGDlg::showEvent(QShowEvent *e) 
@@ -183,11 +215,11 @@ void EPGDlg::select()
     if (!do_updates)
 	    return;
     Data->clear();
-    basic->setText("no basic profile data");
-    advanced->setText("no advanced profile data");
+    basic->setText(tr("no basic profile data"));
+    advanced->setText(tr("no advanced profile data"));
     QString chan = channel->currentText();
     if(!epg.sids.contains(chan)) {
-	    (void) new QListViewItem(Data, "no data");
+	    (void) new QListViewItem(Data, tr("no data"));
          return;
     }
     CDateAndTime d;
@@ -196,26 +228,69 @@ void EPGDlg::select()
     d.day = date.day();
     epg.select(chan, d);
     if(epg.progs.count()==0) {
-	    (void) new QListViewItem(Data, "no data");
+	    (void) new QListViewItem(Data, tr("no data"));
 	    return;
     }
-    Data->setSorting(0);
+    Data->setSorting(COL_START);
+
     for (QMap < uint32_t, EPG::CProg >::Iterator i = epg.progs.begin();
-	 i != epg.progs.end(); i++) {
+	 i != epg.progs.end(); i++)
+	{
 	    const EPG::CProg & p = i.data();
 	    QString name;
 	    if(p.name=="" && p.mainGenre !="")
           name = "unknown " + p.mainGenre + " programme";
         else
           name = p.name;
-	    (void) new QListViewItem(Data, p.start, name, p.mainGenre, p.description);
-    }
+	    QListViewItem* CurrItem = new QListViewItem(Data, p.start, name, p.mainGenre, p.description, p.duration);
+
+		if (date == QDate::currentDate())
+		{
+			/* Get system time */
+			time_t ltime;
+			time(&ltime);
+
+			/* Check, if the programme is now on line. If yes, set
+			special pixmap */
+			if (IsActive(p.start,p.duration,ltime))
+				CurrItem->setPixmap(COL_START, BitmCubeGreen);
+		}
+	}
+
     QString xml;
     xml = epg.basic.doc.toString();
-    if(xml != "")
+    if(xml.length() > 0)
         basic->setText(xml);
+
     xml = epg.advanced.doc.toString();
-    if(xml != "")
+    if(xml.length() > 0)
         advanced->setText(xml);
 }
 
+_BOOLEAN EPGDlg::IsActive(const QString start, const QString duration, const time_t ltime)
+{
+	int iStartHour = start.left(2).toInt();
+	int iStartMinute = start.right(2).toInt();
+	int iDuration = duration.left(2).toInt();
+
+	/* Calculate time in UTC */
+	struct tm* gmtCur = gmtime(&ltime);
+	const time_t lCurTime = mktime(gmtCur);
+
+	/* Get start time */
+	struct tm* gmtStart = gmtime(&ltime);
+	gmtStart->tm_hour = iStartHour;
+	gmtStart->tm_min = iStartMinute;
+	const time_t lStartTime = mktime(gmtStart);
+
+	/* Get stop time */
+	struct tm* gmtStop = gmtime(&ltime);
+	gmtStop->tm_hour = iStartHour;
+	gmtStop->tm_min = iStartMinute + iDuration;
+	const time_t lStopTime = mktime(gmtStop);
+
+	if ((lCurTime >= lStartTime) && (lCurTime < lStopTime))
+		return TRUE;
+	else
+		return FALSE;
+}
