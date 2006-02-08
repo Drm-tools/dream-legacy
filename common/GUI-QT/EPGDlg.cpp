@@ -269,9 +269,12 @@ void EPGDlg::select()
 
 _BOOLEAN EPGDlg::IsActive(const QString start, const QString duration, const time_t ltime)
 {
+	/* extract hours and minutes from the strings hh:mm */
 	int iStartHour = start.left(2).toInt();
 	int iStartMinute = start.right(2).toInt();
-	int iDuration = duration.left(2).toInt();
+
+	int iDurationHour = duration.left(2).toInt();
+	int iDurationMinute = duration.right(2).toInt();
 
 	/* Calculate time in UTC */
 	struct tm* gmtCur = gmtime(&ltime);
@@ -285,8 +288,8 @@ _BOOLEAN EPGDlg::IsActive(const QString start, const QString duration, const tim
 
 	/* Get stop time */
 	struct tm* gmtStop = gmtime(&ltime);
-	gmtStop->tm_hour = iStartHour;
-	gmtStop->tm_min = iStartMinute + iDuration;
+	gmtStop->tm_hour = iStartHour + iDurationHour;
+	gmtStop->tm_min = iStartMinute + iDurationMinute;
 	const time_t lStopTime = mktime(gmtStop);
 
 	if ((lCurTime >= lStartTime) && (lCurTime < lStopTime))
