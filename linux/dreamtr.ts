@@ -604,10 +604,6 @@ Institute for Communication Technology</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Start</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
@@ -637,6 +633,10 @@ Institute for Communication Technology</source>
     </message>
     <message>
         <source>EPG decoding is disabled</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Time [UTC]</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -711,6 +711,21 @@ Institute for Communication Technology</source>
     </message>
     <message>
         <source>&amp;Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>EPGDlg</name>
+    <message>
+        <source>no basic profile data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>no advanced profile data</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>no data</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
