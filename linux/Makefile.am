@@ -126,7 +126,7 @@ drmwithoutqt_SOURCES = \
 	../common/MDI/MDINull.h \
 	../common/MDI/MDITagItemDecoders.h \
 	../common/MDI/MDITagItems.h \
-	../common/MDI/MDITagPacketDecoder.h	 \
+	../common/MDI/MDITagPacketDecoder.h \
 	../common/MDI/PacketInOut.h \
 	../common/MDI/PacketSocketNull.h \
 	../common/MDI/RSCITagItemDecoders.h \
