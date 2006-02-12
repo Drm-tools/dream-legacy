@@ -1,6 +1,6 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2006
  *
  * Author(s):
  *	Volker Fischer
@@ -31,84 +31,6 @@
 
 #include "TimeSyncTrack.h"
 
-/* OPH: Calculate the delay according to the rdel tag of RSCI */
-CRealVector& CTimeSyncTrack::CalculateRdel(CParameter& Parameter)
-{
-
-	// Define the intervals in ascending order of threshold percentage
-
-	CReal rTotEgy = Sum(vecrAvPoDeSpRot);
-
-	CReal rIntervalAccum= (CReal) 0.0; 
-	const int ciNumDelayIntervals = vecrRdelThresholds.GetSize();
-	CRealVector vecrIntervalStart, vecrIntervalEnd;
-	vecrRdelIntervals.Init(ciNumDelayIntervals);
-	vecrIntervalStart.Init(ciNumDelayIntervals);
-	vecrIntervalEnd.Init(ciNumDelayIntervals);
-
-
-	int i=0;
-
-	int j;
-
-	for (j=ciNumDelayIntervals-1; j>=0; j--)
-	{
-		CReal rIntervalThresh = rTotEgy * ((CReal) 1.0 - (vecrRdelThresholds[j]/ (CReal)100.0)) * (CReal) 0.5;
-		for (;rIntervalAccum<rIntervalThresh && i<iNumIntpFreqPil;i++)
-		{
-			rIntervalAccum += vecrAvPoDeSpRot[i];
-		}
-		vecrIntervalStart[j] = i;
-	}
-
-	i=iNumIntpFreqPil - 1;
-	rIntervalAccum = (CReal) 0.0;
-
-	for (j=ciNumDelayIntervals-1; j>=0; j--)
-	{
-		float rIntervalThresh = rTotEgy * ((CReal) 1.0 - (vecrRdelThresholds[j]/ (CReal)100.0)) * (CReal) 0.5;
-		for (;rIntervalAccum<rIntervalThresh && i>=0;i--)
-		{
-			rIntervalAccum += vecrAvPoDeSpRot[i];
-		}
-		vecrIntervalEnd[j] = i;
-	}
-
-	for (j=0; j<ciNumDelayIntervals; j++)
-	{
-		
-
-		CReal rInterval = ((float)(vecrIntervalEnd[j]-vecrIntervalStart[j]))* Parameter.iFFTSizeN / (SOUNDCRD_SAMPLE_RATE * Parameter.iNumIntpFreqPil * Parameter.iScatPilFreqInt) * 1000;
-		//clip the delay interval values for display purposes
-		if(rInterval < -9.9) rInterval=-9.9f;
-		if(rInterval > 9.9) rInterval=9.9f;
-		vecrRdelIntervals[j] = rInterval;
-
-	
-	}
-	return vecrRdelIntervals;
-
-}
-
-_REAL CTimeSyncTrack::CalculateRdop(CParameter& Parameter)
-{
-
-	/* Initialise accumulators for sum of squares and sum of squared differences */
-	CReal rSumSqDiff = (CReal) 0;
-	CReal rSumSqChan = (CReal) 0;
-
-	/* now do the calculation */
-	for (int i=0; i<veccPilots.GetSize(); i++)
-	{
-		rSumSqDiff += SqMag(veccPilots[i] - veccOldImpulseResponse[i]);
-		rSumSqChan += SqMag(veccPilots[i]);
-	}
-
-	CReal rTs = (_REAL) Parameter.iSymbolBlockSize / SOUNDCRD_SAMPLE_RATE;
-
-	return Sqrt(rSumSqDiff / rSumSqChan) / (crPi * rTs);
-
-}
 
 /* Implementation *************************************************************/
 void CTimeSyncTrack::Process(CParameter& Parameter,
@@ -152,7 +74,8 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	else
 		iIntShiftVal = iIntPartTiCorr;
 
-	/* OPH: copy latest impulse response into old impulse response store (for rdop calculation) */
+	/* OPH: copy latest impulse response into old impulse response store
+	   (for rdop calculation) */
 	veccOldImpulseResponse = veccPilots;
 
 	/* If new correction is out of range, do not apply rotation */
@@ -163,9 +86,8 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 			vecrAvPoDeSp(1, iIntShiftVal));
 
 		/* OPH: rotate old impulse response vector */
-		veccOldImpulseResponse.Merge(veccOldImpulseResponse(iIntShiftVal + 1, iNumIntpFreqPil),
-			veccOldImpulseResponse(1, iIntShiftVal));
-
+		veccOldImpulseResponse.Merge(veccOldImpulseResponse(iIntShiftVal + 1,
+			iNumIntpFreqPil), veccOldImpulseResponse(1, iIntShiftVal));
 	}
 
 
@@ -598,14 +520,14 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	/* Init variable for storing the old difference of maximum position */
 	iOldNonZeroDiff = 0;
 
-	/* (O.Haffenden) Vector for power delay spread estimation for previous symbol(used for RSCI rdop calculation) */
+	/* (O.Haffenden) Vector for power delay spread estimation for previous
+	   symbol (used for RSCI rdop calculation) */
 	veccOldImpulseResponse.Init(iNumIntpFreqPil, (CReal) 0.0);
 	vecrRdelThresholds.Init(3);
-	vecrRdelThresholds[0] = (CReal)90;
-	vecrRdelThresholds[1] = (CReal)95;
-	vecrRdelThresholds[2] = (CReal)99;
+	vecrRdelThresholds[0] = (CReal) 90.0;
+	vecrRdelThresholds[1] = (CReal) 95.0;
+	vecrRdelThresholds[2] = (CReal) 99.0;
 	vecrRdelIntervals.Init(3);
-
 }
 
 CReal CTimeSyncTrack::GetSamOffHz(int iDiff, int iLen)
@@ -740,4 +662,88 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 		rPDSBegin = rScaleIncr * (rEstPDSBegin - iTargetTimingPos);
 		rPDSEnd = rScaleIncr * (rEstPDSEnd - iTargetTimingPos);
 	}
+}
+
+/* OPH: Calculate the delay according to the rdel tag of RSCI */
+CRealVector& CTimeSyncTrack::CalculateRdel(CParameter& Parameter)
+{
+	/* Define the intervals in ascending order of threshold percentage */
+	CReal rTotEgy = Sum(vecrAvPoDeSpRot);
+
+	CReal rIntervalAccum= (CReal) 0.0; 
+	const int ciNumDelayIntervals = vecrRdelThresholds.GetSize();
+	CRealVector vecrIntervalStart, vecrIntervalEnd;
+	vecrRdelIntervals.Init(ciNumDelayIntervals);
+	vecrIntervalStart.Init(ciNumDelayIntervals);
+	vecrIntervalEnd.Init(ciNumDelayIntervals);
+
+	int i = 0;
+	int j;
+
+	for (j = ciNumDelayIntervals - 1; j >= 0; j--)
+	{
+		CReal rIntervalThresh = rTotEgy *
+			((CReal) 1.0 - (vecrRdelThresholds[j] / (CReal) 100.0)) *
+			(CReal) 0.5;
+
+		for (; rIntervalAccum < rIntervalThresh && i < iNumIntpFreqPil; i++)
+		{
+			rIntervalAccum += vecrAvPoDeSpRot[i];
+		}
+		vecrIntervalStart[j] = i;
+	}
+
+	i = iNumIntpFreqPil - 1;
+	rIntervalAccum = (CReal) 0.0;
+
+	for (j = ciNumDelayIntervals - 1; j >= 0; j--)
+	{
+		_REAL rIntervalThresh = rTotEgy *
+			((CReal) 1.0 - (vecrRdelThresholds[j] / (CReal) 100.0)) *
+			(CReal) 0.5;
+
+		for (; rIntervalAccum < rIntervalThresh && i >= 0; i--)
+		{
+			rIntervalAccum += vecrAvPoDeSpRot[i];
+		}
+		vecrIntervalEnd[j] = i;
+	}
+
+	for (j = 0; j < ciNumDelayIntervals; j++)
+	{
+		CReal rInterval =
+			((_REAL) (vecrIntervalEnd[j] - vecrIntervalStart[j])) *
+			Parameter.iFFTSizeN / (SOUNDCRD_SAMPLE_RATE *
+			Parameter.iNumIntpFreqPil * Parameter.iScatPilFreqInt) * 1000;
+
+		/* Clip the delay interval values for display purposes */
+		if (rInterval < (CReal) -9.9)
+			rInterval = (CReal) -9.9;
+
+		if (rInterval > (CReal) 9.9)
+			rInterval = (CReal) 9.9;
+
+		vecrRdelIntervals[j] = rInterval;
+	}
+
+	return vecrRdelIntervals;
+}
+
+_REAL CTimeSyncTrack::CalculateRdop(CParameter& Parameter)
+{
+	/* Initialise accumulators for sum of squares and sum of squared
+	   differences */
+	CReal rSumSqDiff = (CReal) 0.0;
+	CReal rSumSqChan = (CReal) 0.0;
+
+	/* Now do the calculation */
+	for (int i = 0; i < veccPilots.GetSize(); i++)
+	{
+		rSumSqDiff += SqMag(veccPilots[i] - veccOldImpulseResponse[i]);
+		rSumSqChan += SqMag(veccPilots[i]);
+	}
+
+	CReal rTs = (_REAL) Parameter.iSymbolBlockSize / SOUNDCRD_SAMPLE_RATE;
+
+	return Sqrt(rSumSqDiff / rSumSqChan) / (crPi * rTs);
 }

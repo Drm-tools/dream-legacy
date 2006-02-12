@@ -1,6 +1,6 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2006
  *
  * Author(s):
  *	Volker Fischer
@@ -157,10 +157,10 @@ protected:
 
 	CReal GetSamOffHz(int iDiff, int iLen);
 
-	/* O.Haffenden variables for rdop and rdel calculation */
+	/* O. Haffenden variables for rdop and rdel calculation */
 	CComplexVector			veccOldImpulseResponse;
-	CRealVector vecrRdelThresholds;
-	CRealVector vecrRdelIntervals;
+	CRealVector				vecrRdelThresholds;
+	CRealVector				vecrRdelIntervals;
 };
 
 
