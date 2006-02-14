@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>493</width>
+            <width>489</width>
             <height>422</height>
         </rect>
     </property>
@@ -310,7 +310,11 @@
                     </property>
                     <property stdset="1">
                         <name>text</name>
-                        <string>Close</string>
+                        <string>&amp;Close</string>
+                    </property>
+                    <property stdset="1">
+                        <name>default</name>
+                        <bool>false</bool>
                     </property>
                 </widget>
             </hbox>
@@ -612,4 +616,17 @@
         <slot>accept()</slot>
     </connection>
 </connections>
+<tabstops>
+    <tabstop>Data</tabstop>
+    <tabstop>pages</tabstop>
+    <tabstop>channel</tabstop>
+    <tabstop>Prev</tabstop>
+    <tabstop>day</tabstop>
+    <tabstop>month</tabstop>
+    <tabstop>year</tabstop>
+    <tabstop>Next</tabstop>
+    <tabstop>close</tabstop>
+    <tabstop>basic</tabstop>
+    <tabstop>advanced</tabstop>
+</tabstops>
 </UI>
