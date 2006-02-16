@@ -55,6 +55,7 @@
 #include "MultColorLED.h"
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
+#include "GUIUtilities.h"
 
 /* Define for application type EPG */
 #define AT_MOTEPG 	7
@@ -72,21 +73,21 @@ public:
 	virtual ~FDRMDialog();
 
 protected:
-	CDRMReceiver*	pDRMRec;
+	CDRMReceiver*		pDRMRec;
 
-	systemevalDlg*	pSysEvalDlg;
-	MultimediaDlg*	pMultiMediaDlg;
-	StationsDlg*	pStationsDlg;
+	systemevalDlg*		pSysEvalDlg;
+	MultimediaDlg*		pMultiMediaDlg;
+	StationsDlg*		pStationsDlg;
 	LiveScheduleDlg*	pLiveScheduleDlg;
-	EPGDlg*		pEPGDlg;
-	AnalogDemDlg*	pAnalogDemDlg;
-	QMenuBar*		pMenu;
-	QPopupMenu*		pReceiverModeMenu;
-	QPopupMenu*		pSettingsMenu;
-	QPopupMenu*		pPlotStyleMenu;
-	int			iCurSelServiceGUI;
-	int			iOldNoServicesGUI;
-	QTimer		Timer;
+	EPGDlg*				pEPGDlg;
+	AnalogDemDlg*		pAnalogDemDlg;
+	QMenuBar*			pMenu;
+	QPopupMenu*			pReceiverModeMenu;
+	QPopupMenu*			pSettingsMenu;
+	QPopupMenu*			pPlotStyleMenu;
+	int					iCurSelServiceGUI;
+	int					iOldNoServicesGUI;
+	QTimer				Timer;
 
 	_BOOLEAN		bSysEvalDlgWasVis;
 	_BOOLEAN		bMultMedDlgWasVis;
@@ -97,8 +98,8 @@ protected:
 	void			AddWhatsThisHelp();
 	void			SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo);
 
-	QString		GetCodecString(const int iServiceID);
-	QString		GetTypeString(const int iServiceID);
+	QString			GetCodecString(const int iServiceID);
+	QString			GetTypeString(const int iServiceID);
 
 	void			SetDisplayColor(const QColor newColor);
 

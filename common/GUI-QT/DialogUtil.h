@@ -43,7 +43,7 @@
 #endif
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
-
+#include "GUIUtilities.h"
 
 /* Classes ********************************************************************/
 /* DRM events --------------------------------------------------------------- */

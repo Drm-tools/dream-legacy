@@ -47,6 +47,7 @@
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 #include <qfiledialog.h>
+#include "GUIUtilities.h"
 
 /* Definitions ****************************************************************/
 /* Define the timer interval of updating the list view */

@@ -183,6 +183,14 @@ void AnalogDemDlg::hideEvent(QHideEvent* pEvent)
 {
 	/* Close AMSS window */
 	AMSSDlg.hide();
+
+	/* Set window geometry data in DRMReceiver module */
+	QRect WinGeom = geometry();
+
+	pDRMRec->GeomAnalogDemDlg.iXPos = WinGeom.x();
+	pDRMRec->GeomAnalogDemDlg.iYPos = WinGeom.y();
+	pDRMRec->GeomAnalogDemDlg.iHSize = WinGeom.height();
+	pDRMRec->GeomAnalogDemDlg.iWSize = WinGeom.width();
 }
 
 void AnalogDemDlg::closeEvent(QCloseEvent* pEvent)
@@ -709,6 +717,8 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Activte real-time timers */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
+
+	SetDialogCaption(this, tr("AMSS"));
 }
 
 void CAMSSDlg::hideEvent(QHideEvent* pEvent)

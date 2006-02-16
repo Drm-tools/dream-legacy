@@ -36,6 +36,8 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 {
 	int i;
 
+	SetDialogCaption(this, tr("Dream DRM Transmitter"));
+
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 

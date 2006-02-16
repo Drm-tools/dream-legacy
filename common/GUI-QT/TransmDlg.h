@@ -59,7 +59,7 @@
 #include "DialogUtil.h"
 #include "../DrmTransmitter.h"
 #include "../Parameter.h"
-
+#include "GUIUtilities.h"
 
 /* Classes ********************************************************************/
 /* Thread class for the transmitter */

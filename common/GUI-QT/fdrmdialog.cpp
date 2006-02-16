@@ -130,16 +130,22 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
 
 	/* Stations window */
-	pStationsDlg = new StationsDlg(pDRMRec, this, tr("Stations"), FALSE,
+	pStationsDlg = new StationsDlg(pDRMRec, this, "", FALSE,
 		Qt::WStyle_MinMax);
+
+	SetDialogCaption(pStationsDlg, tr("Stations"));
+
 	if (pDRMRec->GeomStationsDlg.bVisible == TRUE)
 		pStationsDlg->show();
 	else
 		pStationsDlg->hide();
 
 	/* Live Schedule window */
-	pLiveScheduleDlg = new LiveScheduleDlg(pDRMRec, this, tr("Live Schedule"), FALSE,
+	pLiveScheduleDlg = new LiveScheduleDlg(pDRMRec, this, "", FALSE,
 		Qt::WStyle_MinMax);
+
+	SetDialogCaption(pLiveScheduleDlg, tr("Live Schedule"));
+
 	if (pDRMRec->GeomLiveScheduleDlg.bVisible == TRUE)
 	{
 		pLiveScheduleDlg->show();
@@ -152,12 +158,16 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	}
 
 	/* Programme Guide Window */
-	pEPGDlg = new EPGDlg(pDRMRec, this, tr("Programme Guide"), FALSE,
+	pEPGDlg = new EPGDlg(pDRMRec, this, "", FALSE,
 		Qt::WStyle_MinMax);
 
+	SetDialogCaption(pEPGDlg, tr("Programme Guide"));
+
 	/* Evaluation window */
-	pSysEvalDlg = new systemevalDlg(pDRMRec, this, tr("System Evaluation"),
+	pSysEvalDlg = new systemevalDlg(pDRMRec, this, "",
 		FALSE, Qt::WStyle_MinMax);
+
+	SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
 
 	if (pDRMRec->GeomSystemEvalDlg.bVisible == TRUE)
 	{
@@ -171,8 +181,10 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	}
 
 	/* Multimedia window */
-	pMultiMediaDlg = new MultimediaDlg(pDRMRec, this, tr("Multimedia"), FALSE,
+	pMultiMediaDlg = new MultimediaDlg(pDRMRec, this, "", FALSE,
 		Qt::WStyle_MinMax);
+
+	SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
 
 	if (pDRMRec->GeomMultimediaDlg.bVisible == TRUE)
 	{
@@ -186,8 +198,10 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	}
 
 	/* Analog demodulation window */
-	pAnalogDemDlg = new AnalogDemDlg(pDRMRec, NULL, tr("Analog Demodulation"),
+	pAnalogDemDlg = new AnalogDemDlg(pDRMRec, NULL, "",
 		FALSE, Qt::WStyle_MinMax);
+
+	SetDialogCaption(pAnalogDemDlg, tr("Analog Demodulation"));
 
 	if (pDRMRec->GeomAnalogDemDlg.bVisible == TRUE)
 		SetReceiverMode(CDRMReceiver::RM_AM);
@@ -533,7 +547,7 @@ void FDRMDialog::OnTimer()
 			/* Check, if service is used */
 			if (pDRMRec->GetParameters()->Service[i].IsActive())
 			{
-				/* Do UTF-8 to string converion with the label strings */
+				/* Do UTF-8 to string conversion with the label strings */
 				QString strLabel = QString().fromUtf8(QCString(pDRMRec->
 					GetParameters()->Service[i].strLabel.c_str()));
 

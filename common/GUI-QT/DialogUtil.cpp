@@ -34,6 +34,8 @@
 CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 	: CAboutDlgBase(parent, name, modal, f)
 {
+	SetDialogCaption(this, tr("About Dream"));
+
 	/* Set the text for the about dialog html text control */
 	TextViewCredits->setText(
 		"<p>" /* General description of Dream software */
