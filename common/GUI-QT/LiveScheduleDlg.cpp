@@ -664,18 +664,26 @@ void LiveScheduleDlg::LoadSchedule()
 	/* Update list view */
 	SetStationsView();
 
-	/* Get current service */
-	const int iCurSelAudioServ = pDRMRec->GetParameters()->GetCurSelAudioService();
+	QString strTitle = tr("Live Schedule");
 
-	if (pDRMRec->GetParameters()->Service[iCurSelAudioServ].IsActive())
+	if (DRMSchedule.GetStationNumber() > 0)
 	{
-		/* Do UTF-8 to string conversion with the label strings */
-		QString strStationName = QString().fromUtf8(QCString(pDRMRec->GetParameters()
-			->Service[iCurSelAudioServ].strLabel.c_str()));
+		/* Get current service */
+		const int iCurSelAudioServ = pDRMRec->GetParameters()->GetCurSelAudioService();
 
-		/* add station name on the title of the dialog */
-		SetDialogCaption(this, tr("Live Schedule") + " [" + strStationName + "]");
+		if (pDRMRec->GetParameters()->Service[iCurSelAudioServ].IsActive())
+		{
+			/* Do UTF-8 to string conversion with the label strings */
+			QString strStationName = QString().fromUtf8(QCString(pDRMRec->GetParameters()
+				->Service[iCurSelAudioServ].strLabel.c_str()));
+
+			/* add station name on the title of the dialog */
+			if (strStationName != "")
+				strTitle += " [" + strStationName.stripWhiteSpace() + "]";
+		}
 	}
+
+	SetDialogCaption(this, strTitle);
 }
 
 void LiveScheduleDlg::showEvent(QShowEvent* pEvent)
