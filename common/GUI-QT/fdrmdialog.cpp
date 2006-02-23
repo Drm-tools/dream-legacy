@@ -241,6 +241,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 		this, SLOT(OnSwitchToDRM()));
 	connect(pAnalogDemDlg, SIGNAL(ViewStationsDlg()),
 		this, SLOT(OnViewStationsDlg()));
+	connect(pAnalogDemDlg, SIGNAL(ViewLiveScheduleDlg()),
+		this, SLOT(OnViewLiveScheduleDlg()));
 	connect(pAnalogDemDlg, SIGNAL(Closed()),
 		this, SLOT(close()));
 
@@ -272,7 +274,7 @@ FDRMDialog::~FDRMDialog()
 	pDRMRec->GeomAnalogDemDlg.bVisible = pAnalogDemDlg->isVisible();
 	pDRMRec->GeomStationsDlg.bVisible = pStationsDlg->isVisible();
 
-	/* Special treatment for multimedia live schedule
+	/* Special treatment for multimedia
 	   and systen evaluation dialog since these
 	   windows are not used for AM demodulation */
 	if (pDRMRec->GetReceiverMode() == CDRMReceiver::RM_AM)

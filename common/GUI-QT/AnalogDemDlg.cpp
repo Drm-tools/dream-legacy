@@ -61,6 +61,8 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	CHECK_PTR(EvalWinMenu);
 	EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
 		SIGNAL(ViewStationsDlg()), CTRL+Key_T);
+	EvalWinMenu->insertItem(tr("&Live Schedule Dialog..."), this,
+		SIGNAL(ViewLiveScheduleDlg()), CTRL+Key_L);
 	EvalWinMenu->insertSeparator();
 	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q);
 
@@ -726,7 +728,7 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 
-	SetDialogCaption(this, tr("AMSS"));
+	SetDialogCaption(this, tr("AMSS - AM Signalling System"));
 }
 
 void CAMSSDlg::hideEvent(QHideEvent* pEvent)

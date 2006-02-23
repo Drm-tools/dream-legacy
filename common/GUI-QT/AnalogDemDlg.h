@@ -140,5 +140,6 @@ public slots:
 signals:
 	void SwitchToDRM();
 	void ViewStationsDlg();
+	void ViewLiveScheduleDlg();
 	void Closed();
 };
