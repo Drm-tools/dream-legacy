@@ -253,8 +253,7 @@ protected:
 	CVector<_BINARY>	bBlock2Store;
 
 	_BOOLEAN			blStoredBlock2Valid;
-	_BINARY				bVersionFlag;
-	_BINARY				bOldVersionFlag;
+	_BOOLEAN			bVersionFlag;
 
 	_BOOLEAN			blFirstEverBlock1;
 	

@@ -322,7 +322,7 @@ void CAMSSDecode::InitInternal(CParameter& ReceiverParam)
 	
 	blDataEntityGroupSegmentsReceived.Init(MAX_DATA_ENTITY_GROUP_SEGMENTS, 0);
 
-	bVersionFlag = 0;
+	bVersionFlag = FALSE;
 
 	ResetStatus(ReceiverParam);
 }
@@ -365,19 +365,38 @@ void CAMSSDecode::ProcessDataInternal(CParameter& ReceiverParam)
 
 void CAMSSDecode::DecodeBlock1(CVector<_BINARY>& bBits, CParameter& ReceiverParam)
 {
-	_BINARY		bLocalVersionFlag;
+	_BOOLEAN	bLocalVersionFlag;
 	int			i;
+
+	uint32_t	iServiceID;
+	int			iAMSSCarrierMode;
+	int			iLanguage;
 
 	bBits.ResetBitAccess();
 	
-	bLocalVersionFlag = bBits.Separate(1);
+	/* Version flag */
+	if (bBits.Separate(1) == 0)
+		bLocalVersionFlag = FALSE;
+	else
+		bLocalVersionFlag = TRUE;
 
-	ReceiverParam.iAMSSCarrierMode = bBits.Separate(3);
+	iAMSSCarrierMode = bBits.Separate(3);
 	iTotalDataEntityGroupSegments = bBits.Separate(4) + 1;
-	ReceiverParam.Service[0].iLanguage = bBits.Separate(4);
-	ReceiverParam.Service[0].iServiceID = bBits.Separate(24);
+	
+	iLanguage = bBits.Separate(4);
+	iServiceID = bBits.Separate(24);
 
-	if ( (bVersionFlag != bLocalVersionFlag) || blFirstEverBlock1 )	// discard entire current data entity group
+	if (iServiceID != ReceiverParam.Service[0].iServiceID)
+	{
+		ReceiverParam.ResetServicesStreams();
+		ReceiverParam.AltFreqOtherServicesSign.Reset();
+	}
+
+	ReceiverParam.iAMSSCarrierMode = iAMSSCarrierMode;
+	ReceiverParam.Service[0].iLanguage = iLanguage;
+	ReceiverParam.Service[0].iServiceID = iServiceID;
+
+	if ( (bVersionFlag != bLocalVersionFlag) || blFirstEverBlock1)	// discard entire current data entity group
 	{
 		if (!blFirstEverBlock1)		// give benefit of doubt to any block 2 already received unless outside the total num we expect
 			blDataEntityGroupSegmentsReceived.Reset(0);
