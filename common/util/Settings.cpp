@@ -1029,14 +1029,10 @@ string CSettings::UsageArguments(char** argv)
 		"Recognized options:\n\n"
 		"  -t, --transmitter           DRM transmitter mode\n"
 		"  -p, --flipspectrum          flip input spectrum\n"
-		"  -i <n>, --mlciter <n>       number of MLC iterations\n"
-		"                              allowed range: 0...4\n"
-		"                              default: 1\n"
-		"  -s <r>, --sampleoff <r>     sample rate offset initial value [Hz]\n"
-		"                              allowed range: -200.0...200.0\n"
+		"  -i <n>, --mlciter <n>       number of MLC iterations (allowed range: 0...4 default: 1)\n"
+		"  -s <r>, --sampleoff <r>     sample rate offset initial value [Hz] (allowed range: -200.0...200.0)\n"
 		"  -m, --muteaudio             mute audio output\n"
-		"  -f <s>, --fileio <s>        disable sound card,\n"
-		"                              use file <s> instead\n"
+		"  -f <s>, --fileio <s>        disable sound card, use file <s> instead\n"
 		"  -w <s>, --writewav <s>      write output to wave file\n"
 		"  -S <r>, --fracwinsize <r>   freq. acqu. search window size [Hz]\n"
 		"  -E <r>, --fracwincent <r>   freq. acqu. search window center [Hz]\n"
@@ -1056,28 +1052,22 @@ string CSettings::UsageArguments(char** argv)
 		"                              2: L muted, R -> R\n"
 		"                              3: mix -> L, R muted\n"
 		"                              4: L muted, mix -> R\n"
-		"  -e <n>, --decodeepg <n>     enable/disable epg decoding\n"
-		"                              0: off\n"
-		"                              1: on\n"
+		"  -e <n>, --decodeepg <n>     enable/disable epg decoding (0: off; 1: on)\n"
 
 #ifdef USE_QT_GUI
 		"  -r <n>, --frequency <n>     set frequency [kHz] for log file\n"
 		"  -a <s>, --latitude <s>      set latitude string for log file\n"
 		"  -o <s>, --longitude <s>     set longitude string for log file\n"
-		"  -l <n>, --startlog <n>      start log file (delayed by\n"
-		"                              <n> seconds)\n"
-		"                              allowed range: 1...3600\n"
+		"  -l <n>, --startlog <n>      start log file (delayed by <n> seconds, allowed range: 1...3600)\n"
 		"  -y <n>, --colorscheme <n>   set color scheme for main plot\n"
 		"                              0: blue-white (default)\n"
 		"                              1: green-black\n"
 		"                              2: black-grey\n"
 #endif
-		"  --mdioutadr <s>             MDI out network address\n"
-		"                              format [IP#]:[port]\n"
+		"  --mdioutadr <s>             MDI out network address format [IP#]:[port]\n"
 		"  --mdiprofile <s>            MDI/RSCI output profile: A|B|C|D|Q|M\n"
 		"  --mdiinport <n>             set MDI in port number\n"
-		"  --mdiinmreq <s>             MDI in multicast group address and\n"
-		"                              interface format [IP#]:[IP#]\n"
+		"  --mdiinmreq <s>             MDI in multicast group address and interface format [IP#]:[IP#]\n"
 		"  --rsciinport <n>            set RSCI control input port number\n"
 
 
@@ -1091,13 +1081,13 @@ string CSettings::UsageArguments(char** argv)
 		"  -T, --ensmeter              enable S-Meter\n"
 #endif
 
-		"\n  -h, -?, --help             this help text\n\n"
+		"\n  -h, -?, --help             this help text\n"
 		"Example: " + string(argv[0]) +
 		" -p --sampleoff -0.23 -i 2 "
 #ifdef USE_QT_GUI
 		"-r 6140 -a 50°13\\'N -o 8°34\\'E --mdioutadr 127.0.0.1:3002"
 #endif
-		"\n\n";
+		"\n";
 }
 
 _BOOLEAN CSettings::GetFlagArgument(int argc, char** argv, int& i,
