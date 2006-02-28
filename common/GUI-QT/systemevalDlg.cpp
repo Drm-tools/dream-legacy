@@ -1121,6 +1121,10 @@ void systemevalDlg::OnCheckWriteLog()
 
 		pDRMRec->GetParameters()->ReceptLog.SetLog(FALSE);
 	}
+
+	/* if clicked by accel key set the focus */
+	if (!CheckBoxWriteLog->hasFocus())
+		CheckBoxWriteLog->setFocus();
 }
 
 void systemevalDlg::OnTimerLogFileShort()

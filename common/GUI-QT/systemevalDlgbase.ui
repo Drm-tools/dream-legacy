@@ -1588,7 +1588,7 @@
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
-                                                <string>Flip Input Spectrum</string>
+                                                <string>&amp;Flip Input Spectrum</string>
                                             </property>
                                         </widget>
                                         <widget>
@@ -1599,7 +1599,7 @@
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
-                                                <string>Mute Audio</string>
+                                                <string>Mute &amp;Audio</string>
                                             </property>
                                         </widget>
                                     </vbox>
@@ -1749,7 +1749,7 @@
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
-                                                <string>Log File, Freq:</string>
+                                                <string>&amp;Log File, Freq:</string>
                                             </property>
                                         </widget>
                                         <widget>
@@ -1799,7 +1799,7 @@
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
-                                                <string>Save Audio as WAV</string>
+                                                <string>&amp;Save Audio as WAV</string>
                                             </property>
                                         </widget>
                                         <widget>
@@ -1810,7 +1810,7 @@
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
-                                                <string>Reverberation</string>
+                                                <string>&amp;Reverberation</string>
                                             </property>
                                         </widget>
                                     </hbox>
@@ -1874,7 +1874,7 @@
                                     </property>
                                     <property stdset="1">
                                         <name>text</name>
-                                        <string>Bandpass Filter</string>
+                                        <string>&amp;Bandpass Filter</string>
                                     </property>
                                 </widget>
                                 <widget>
@@ -1885,7 +1885,7 @@
                                     </property>
                                     <property stdset="1">
                                         <name>text</name>
-                                        <string>Modified Metrics</string>
+                                        <string>Modified &amp;Metrics</string>
                                     </property>
                                 </widget>
                             </vbox>
@@ -2105,6 +2105,9 @@
     <tabstop>CheckBoxWriteLog</tabstop>
     <tabstop>EdtFrequency</tabstop>
     <tabstop>CheckBoxSaveAudioWave</tabstop>
+    <tabstop>CheckBoxReverb</tabstop>
     <tabstop>CheckBoxRecFilter</tabstop>
+    <tabstop>CheckBoxModiMetric</tabstop>
+    <tabstop>ListViewCharSel</tabstop>
 </tabstops>
 </UI>
