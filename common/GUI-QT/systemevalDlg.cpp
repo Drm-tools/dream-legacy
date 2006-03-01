@@ -428,6 +428,13 @@ systemevalDlg::~systemevalDlg()
 	hideEvent(NULL);
 }
 
+void SetWidgetFocus(QWidget* w)
+{
+	/* if clicked by accel key set the focus */
+	if (w->isEnabled() && !w->hasFocus())
+		w->setFocus();
+}
+
 void systemevalDlg::UpdateControls()
 {
 	/* Slider for MLC number of iterations */
@@ -985,6 +992,9 @@ void systemevalDlg::OnCheckFlipSpectrum()
 	/* Set parameter in working thread module */
 	pDRMRec->GetReceiver()->
 		SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
+
+	/* if clicked by accel key set the focus */
+	SetWidgetFocus(CheckBoxFlipSpec);
 }
 
 void systemevalDlg::OnCheckRecFilter()
@@ -995,24 +1005,36 @@ void systemevalDlg::OnCheckRecFilter()
 
 	/* If filter status is changed, a new aquisition is necessary */
 	pDRMRec->SetReceiverMode(CDRMReceiver::RM_DRM);
+
+	/* if clicked by accel key set the focus */
+	SetWidgetFocus(CheckBoxRecFilter);
 }
 
 void systemevalDlg::OnCheckModiMetric()
 {
 	/* Set parameter in working thread module */
 	pDRMRec->GetChanEst()->SetIntCons(CheckBoxModiMetric->isChecked());
+
+	/* if clicked by accel key set the focus */
+	SetWidgetFocus(CheckBoxModiMetric);
 }
 
 void systemevalDlg::OnCheckBoxMuteAudio()
 {
 	/* Set parameter in working thread module */
 	pDRMRec->GetWriteData()->MuteAudio(CheckBoxMuteAudio->isChecked());
+
+	/* if clicked by accel key set the focus */
+	SetWidgetFocus(CheckBoxMuteAudio);
 }
 
 void systemevalDlg::OnCheckBoxReverb()
 {
 	/* Set parameter in working thread module */
 	pDRMRec->GetAudSorceDec()->SetReverbEffect(CheckBoxReverb->isChecked());
+
+	/* if clicked by accel key set the focus */
+	SetWidgetFocus(CheckBoxReverb);
 }
 
 void systemevalDlg::OnCheckSaveAudioWAV()
@@ -1123,8 +1145,7 @@ void systemevalDlg::OnCheckWriteLog()
 	}
 
 	/* if clicked by accel key set the focus */
-	if (!CheckBoxWriteLog->hasFocus())
-		CheckBoxWriteLog->setFocus();
+	SetWidgetFocus(CheckBoxWriteLog);
 }
 
 void systemevalDlg::OnTimerLogFileShort()
