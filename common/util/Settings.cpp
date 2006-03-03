@@ -256,6 +256,27 @@ void CSettings::ReadIniFile()
 	if (GetFlagIniSet(ini, "Window geometry", "analdemvis", bValue) == TRUE)
 		pDRMRec->GeomAnalogDemDlg.bVisible = bValue;
 
+	/* demodulation */
+	if (GetNumericIniSet(ini, "Analog demodulation dialog", "demodulation", 0, CAMDemodulation::DT_FM , iValue) == TRUE)
+		pDRMRec->GetAMDemod()->SetDemodType((CAMDemodulation::EDemodType) iValue);
+
+	/* AGC */
+	if (GetNumericIniSet(ini, "Analog demodulation dialog", "agc", 0, CAGC::AT_FAST, iValue) == TRUE)
+		pDRMRec->GetAMDemod()->SetAGCType((CAGC::EType) iValue);
+
+	/* noise reduction */
+	if (GetNumericIniSet(ini, "Analog demodulation dialog", "noisered", 0, CAMDemodulation::NR_HIGH, iValue) == TRUE)
+		pDRMRec->GetAMDemod()->SetNoiRedType((CAMDemodulation::ENoiRedType) iValue);
+
+	/* pll enabled/disabled */
+	if (GetFlagIniSet(ini, "Analog demodulation dialog", "enablepll", bValue) == TRUE)
+		pDRMRec->GetAMDemod()->EnablePLL(bValue);
+
+	/* auto frequency acquisition */
+	if (GetFlagIniSet(ini, "Analog demodulation dialog", "autofreqacq", bValue) == TRUE)
+		pDRMRec->GetAMDemod()->EnableAutoFreqAcq(bValue);
+
+
 	/* AMSS dialog */
 	if (GetNumericIniSet(ini, "Window geometry", "amssxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
 		pDRMRec->GeomAMSSDlg.iXPos = iValue;
@@ -501,6 +522,27 @@ void CSettings::WriteIniFile()
 	SetNumericIniSet(ini, "Window geometry", "analdemhsize", pDRMRec->GeomAnalogDemDlg.iHSize);
 	SetNumericIniSet(ini, "Window geometry", "analdemwsize", pDRMRec->GeomAnalogDemDlg.iWSize);
 	SetFlagIniSet(ini, "Window geometry", "analdemvis", pDRMRec->GeomAnalogDemDlg.bVisible);
+
+	/* demodulation */
+	SetNumericIniSet(ini, "Analog demodulation dialog", "demodulation",
+		pDRMRec->GetAMDemod()->GetDemodType());
+
+	/* AGC */
+	SetNumericIniSet(ini, "Analog demodulation dialog", "agc",
+		pDRMRec->GetAMDemod()->GetAGCType());
+
+	/* noise reduction */
+	SetNumericIniSet(ini, "Analog demodulation dialog", "noisered",
+		pDRMRec->GetAMDemod()->GetNoiRedType());
+
+	/* pll enabled/disabled */
+	SetFlagIniSet(ini, "Analog demodulation dialog", "enablepll",
+		pDRMRec->GetAMDemod()->PLLEnabled());
+
+	/* auto frequency acquisition */
+	SetFlagIniSet(ini, "Analog demodulation dialog", "autofreqacq",
+		pDRMRec->GetAMDemod()->AutoFreqAcqEnabled());
+
 
 	/* AMSS dialog */
 	SetNumericIniSet(ini, "Window geometry", "amssxpos", pDRMRec->GeomAMSSDlg.iXPos);
@@ -1085,7 +1127,7 @@ string CSettings::UsageArguments(char** argv)
 		"Example: " + string(argv[0]) +
 		" -p --sampleoff -0.23 -i 2 "
 #ifdef USE_QT_GUI
-		"-r 6140 -a 50°13\\'N -o 8°34\\'E --mdioutadr 127.0.0.1:3002"
+		"-r 6140 -a 5013\\'N -o 834\\'E --mdioutadr 127.0.0.1:3002"
 #endif
 		"\n";
 }

@@ -105,9 +105,30 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	iBwCW = 150; /* Hz */
 	iBwFM = 6000; /* Hz */
 	iBwAM = 10000; /* Hz */
-	pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
-	pDRMRec->GetAMDemod()->SetFilterBW(iBwAM);
-	pDRMRec->GetAMDemod()->SetAGCType(CAGC::AT_MEDIUM);
+	
+	/* Store filter bandwidth for the demodulation type */
+	switch (pDRMRec->GetAMDemod()->GetDemodType())
+	{
+	case CAMDemodulation::DT_AM:
+		pDRMRec->GetAMDemod()->SetFilterBW(iBwAM);
+		break;
+
+	case CAMDemodulation::DT_LSB:
+		pDRMRec->GetAMDemod()->SetFilterBW(iBwLSB);
+		break;
+
+	case CAMDemodulation::DT_USB:
+		pDRMRec->GetAMDemod()->SetFilterBW(iBwUSB);
+		break;
+
+	case CAMDemodulation::DT_CW:
+		pDRMRec->GetAMDemod()->SetFilterBW(iBwCW);
+		break;
+
+	case CAMDemodulation::DT_FM:
+		pDRMRec->GetAMDemod()->SetFilterBW(iBwFM);
+		break;
+	}
 
 	/* Init slider control for bandwidth setting */
 	SliderBandwidth->setRange(0, SOUNDCRD_SAMPLE_RATE / 2);
@@ -175,6 +196,9 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 void AnalogDemDlg::showEvent(QShowEvent* pEvent)
 {
+	OnTimer();
+	OnTimerPLLPhaseDial();
+
 	/* Activate real-time timers */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
@@ -748,6 +772,9 @@ void CAMSSDlg::hideEvent(QHideEvent* pEvent)
 
 void CAMSSDlg::showEvent(QShowEvent* pEvent)
 {
+	OnTimer();
+	OnTimerPLLPhaseDial();
+
 	/* Activate real-time timers */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
