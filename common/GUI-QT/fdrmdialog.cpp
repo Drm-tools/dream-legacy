@@ -780,9 +780,18 @@ void FDRMDialog::SetService(int iNewServiceID)
 	pDRMRec->GetParameters()->SetCurSelDataService(iNewServiceID);
 	iCurSelServiceGUI = iNewServiceID;
 
-	/* If service is only data service, activate multimedia window */
-	if (pDRMRec->GetParameters()->Service[iNewServiceID].eAudDataFlag ==
+
+	/* Eventually activate multimedia window */
+	int iAppIdent = pDRMRec->GetParameters()->Service[iNewServiceID].
+						DataParam.iUserAppIdent;
+
+	/* If service is only data service or has a multimedia content
+	   , activate multimedia window */
+	if ((pDRMRec->GetParameters()->Service[iNewServiceID].eAudDataFlag ==
 		CParameter::SF_DATA)
+		|| (iAppIdent == AT_MOTSLISHOW)
+		|| (iAppIdent == AT_JOURNALINE)
+		|| (iAppIdent == AT_MOTBROADCASTWEBSITE))
 	{
 		OnViewMultiMediaDlg();
 	}
@@ -984,11 +993,11 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 					strReturn = "Dynamic labels";
 					break;
 
-				case 2:
+				case AT_MOTSLISHOW:
 					strReturn = "MOT Slideshow";
 					break;
 
-				case 3:
+				case AT_MOTBROADCASTWEBSITE:
 					strReturn = "MOT WebSite";
 					break;
 
@@ -1012,7 +1021,7 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 					strReturn = "Java";
 					break;
 
-				case 0x44A: /* Journaline */
+				case AT_JOURNALINE: /* Journaline */
 					strReturn = "Journaline";
 					break;
 				}

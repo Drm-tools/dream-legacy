@@ -57,9 +57,11 @@
 #include "../util/Vector.h"
 
 
-/* Define for application type EPG */
+/* Define for application types */
+#define AT_MOTSLISHOW 2
+#define AT_MOTBROADCASTWEBSITE 3
+#define AT_JOURNALINE 0x44A
 #define AT_MOTEPG 	7
-
 
 /* Classes ********************************************************************/
 class FDRMDialog : public FDRMDialogBase
