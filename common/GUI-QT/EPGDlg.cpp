@@ -130,11 +130,17 @@ void EPGDlg::showEvent(QShowEvent *e)
     // Use the currently receiving channel 
     CParameter* pP = pDRMRec->GetParameters();
     int sNo = pP->GetCurSelAudioService();
-    CParameter::CService& s = pDRMRec->GetParameters()->Service[sNo];
-    QString label = s.strLabel.c_str();
-    if(label!="") {
-        epg.addChannel(label, s.iServiceID);
-    }
+
+	CParameter::CService& s = pDRMRec->GetParameters()->Service[sNo];
+	QString label = s.strLabel.c_str();
+
+	if ((pDRMRec->GetParameters()->Service[sNo].
+		DataParam.iUserAppIdent == CDataDecoder::AT_MOTEPG)
+		&& (label!=""))
+	{
+		epg.addChannel(label, s.iServiceID);
+	}
+
     // use the current date
     date = QDate::currentDate();
     // update the channels combobox from the epg
