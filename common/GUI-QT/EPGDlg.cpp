@@ -133,9 +133,8 @@ void EPGDlg::showEvent(QShowEvent *e)
 
 	CParameter::CService& s = pDRMRec->GetParameters()->Service[sNo];
 	QString label = s.strLabel.c_str();
-
-	if ((pDRMRec->GetParameters()->Service[sNo].
-		DataParam.iUserAppIdent == CDataDecoder::AT_MOTEPG)
+	
+	if ((s.DataParam.iUserAppIdent == CDataDecoder::AT_MOTEPG)
 		&& (label!=""))
 	{
 		epg.addChannel(label, s.iServiceID);
