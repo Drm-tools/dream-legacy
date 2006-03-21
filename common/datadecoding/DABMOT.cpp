@@ -1311,8 +1311,36 @@ CMOTObject::uncompress ()
     else
 	Body.vecData.Init (0);
 #else
-    /* Can't unzip so change the filename */
-    strName = strName + ".gz";
+	#ifdef HAVE_ZLIB_LIBRARY
+		CVector < _BYTE > vecbRawDataOut;
+		CVector < _BYTE > &vecbRawDataIn = Body.vecData;
+		/* Extract the original file size */
+		unsigned long dest_len = gzGetOriginalSize ();
+
+		if (dest_len < MAX_DEC_NUM_BYTES_ZIP_DATA)
+		{
+			vecbRawDataOut.Init (dest_len);
+
+			/* Actual decompression call */
+			const int zerr = ::uncompress(&vecbRawDataOut[0],
+						 &dest_len, &vecbRawDataIn[0],
+						 vecbRawDataIn.Size ());
+
+			if (zerr == Z_OK)
+			{
+				/* Copy data */
+				Body.vecData.Init (dest_len);
+				Body.vecData = vecbRawDataOut;
+			}
+			else
+				Body.vecData.Init (0);
+		}
+		else
+			Body.vecData.Init (0);
+	#else
+		/* Can't unzip so change the filename */
+		strName = strName + ".gz";
+	#endif
 #endif
 }
 

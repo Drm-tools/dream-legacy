@@ -38,6 +38,10 @@
 
 #ifdef HAVE_LIBFREEIMAGE
 # include <FreeImage.h>
+#else
+	#ifdef HAVE_ZLIB_LIBRARY
+	#include <zlib.h>
+	#endif
 #endif
 
 

@@ -392,9 +392,11 @@ CDataDecoder::ProcessDataInternal (CParameter & ReceiverParam)
 							{
 							fileName = NewObj.strName;
 							}
-#ifndef HAVE_LIBFREEIMAGE
+#ifndef HAVE_ZLIB_LIBRARY
+	#ifndef HAVE_LIBFREEIMAGE
                         if(advanced)
                             fileName += ".gz";
+	#endif
 #endif
 						string path =
 							  string (EPG_SAVE_PATH) + "/" + fileName;
