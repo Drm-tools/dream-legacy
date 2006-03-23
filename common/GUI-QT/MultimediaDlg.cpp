@@ -285,7 +285,9 @@ void MultimediaDlg::OnTimer()
 				(strNewObjName.right(3).upper() == ".GZ");
 
 			/* Add an html header for refresh the page every n seconds */
-			if ((NewObj.strFormat == "html") && (bZipped == FALSE))
+			if ((pDRMRec->bAddRefreshHeader) 
+					&& (NewObj.strFormat == "html")
+					&& (bZipped == FALSE))
 				AddRefreshHeader(strFileName);
 
 			if (strNewObjName.left(9).upper() == "INDEX.HTM")

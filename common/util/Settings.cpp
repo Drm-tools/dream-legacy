@@ -133,6 +133,10 @@ void CSettings::ReadIniFile()
 	if (GetNumericIniSet(ini, "Multimedia dialog", "motbwsrefresh", MIN_MOT_BWS_REFRESH_TIME, MAX_MOT_BWS_REFRESH_TIME, iValue) == TRUE)
 		pDRMRec->iMOTBWSRefreshTime = iValue;
 
+	/* MOT BWS add refresh header for pages saved from Multimedia dialog */
+	if (GetFlagIniSet(ini, "Multimedia dialog", "addrefresh", bValue) == TRUE)
+		pDRMRec->bAddRefreshHeader = bValue;
+
 	/* Store font saved from Multimedia dialog */
 	pDRMRec->FontParamMMDlg.strFamily = GetIniSetting(ini, "Multimedia dialog", "fontfamily");
 
@@ -436,6 +440,10 @@ void CSettings::WriteIniFile()
 	/* MOT BWS refresh time for pages saved from Multimedia dialog */
 	SetNumericIniSet(ini, "Multimedia dialog", "motbwsrefresh",
 		pDRMRec->iMOTBWSRefreshTime);
+
+	/* MOT BWS add refresh header for pages saved from Multimedia dialog */
+	SetFlagIniSet(ini, "Multimedia dialog", "addrefresh",
+		pDRMRec->bAddRefreshHeader);
 
 	/* Store font saved from Multimedia dialog */
 	PutIniSetting(ini, "Multimedia dialog", "fontfamily",
