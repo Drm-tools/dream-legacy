@@ -425,7 +425,8 @@ systemevalDlg::~systemevalDlg()
 
 	/* Call the hide event handler routine to make sure the chart window sizes
 	   and positions are stored */
-	hideEvent(NULL);
+	if (this->isVisible())
+		hideEvent(NULL);
 }
 
 void systemevalDlg::UpdateControls()
