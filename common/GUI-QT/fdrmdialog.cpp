@@ -169,8 +169,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 	SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
 
-	if ((pDRMRec->GeomSystemEvalDlg.bVisible == TRUE)
-		&& (pDRMRec->GeomAnalogDemDlg.bVisible == FALSE))
+	if (pDRMRec->GeomSystemEvalDlg.bVisible == TRUE)
 	{
 		pSysEvalDlg->show();
 		bSysEvalDlgWasVis = TRUE;
@@ -187,8 +186,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 	SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
 
-	if ((pDRMRec->GeomMultimediaDlg.bVisible == TRUE)
-		&& (pDRMRec->GeomAnalogDemDlg.bVisible == FALSE))
+	if (pDRMRec->GeomMultimediaDlg.bVisible == TRUE)
 	{
 		pMultiMediaDlg->show();
 		bMultMedDlgWasVis = TRUE;
