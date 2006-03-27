@@ -117,7 +117,10 @@ void EPGDlg::OnTimer()
 				/* Check, if the programme is now on line. If yes, set
 				special pixmap */
 				if (IsActive(myItem->text(COL_START),myItem->text(COL_DURATION),ltime))
+				{
 					myItem->setPixmap(COL_START, BitmCubeGreen);
+					Data->ensureItemVisible(myItem);
+				}
 				else
 					myItem->setPixmap(COL_START,QPixmap()); /* no pixmap */
 				myItem = myItem->nextSibling();
@@ -214,6 +217,9 @@ void EPGDlg::setYear(int n)
 
 void EPGDlg::select()
 {
+QListViewItem* CurrActiveItem;
+_BOOLEAN bIsOnLine = FALSE;
+
     if (!do_updates)
 	    return;
     Data->clear();
@@ -267,7 +273,11 @@ void EPGDlg::select()
 			/* Check, if the programme is now on line. If yes, set
 			special pixmap */
 			if (IsActive(p.start,p.duration,ltime))
+			{
 				CurrItem->setPixmap(COL_START, BitmCubeGreen);
+				CurrActiveItem = CurrItem;
+				bIsOnLine = TRUE;
+			}
 		}
 	}
 
@@ -279,6 +289,9 @@ void EPGDlg::select()
     xml = epg.advanced.doc.toString();
     if(xml.length() > 0)
         advanced->setText(xml);
+
+	if (bIsOnLine == TRUE)
+		Data->ensureItemVisible(CurrActiveItem);
 }
 
 _BOOLEAN EPGDlg::IsActive(const QString start, const QString duration, const time_t ltime)
