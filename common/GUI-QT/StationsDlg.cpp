@@ -748,8 +748,13 @@ void StationsDlg::OnShowPreviewMenu(int iID)
 
 void StationsDlg::AddUpdateDateTime()
 {
-QString strFile;
-
+/*
+	Set time and date of current DRM schedule in the menu text for
+	querying a new schedule (online schedule update).
+	If no schedule file exists, do not show any time and date.
+*/
+	// make sure we check the correct file (DRM or AM schedule)
+	QString strFile;
 	switch (DRMSchedule.GetSchedMode())
 	{
 		case CDRMSchedule::SM_DRM:
@@ -761,15 +766,19 @@ QString strFile;
 			break;
 	}
 
+	// init with empty string in case there is no schedule file
 	QString s = "";
 
+	// get time and date information
 	QFileInfo f = QFileInfo(strFile);
+	if (f.exists()) // make sure the DRM schedule file exists
+	{
+		// use QT-type of data string for displaying
+		s = tr(" (last update: ")
+			+ f.lastModified().date().toString() + ")";
+	}
 
-	if (f.exists())
-		s = " " + tr("last update ")
-			+ f.lastModified().date().toString();
-
-	pUpdateMenu->changeItem(tr("&Get Update...") + s, 0);
+	pUpdateMenu->changeItem(tr("&Get Update") + s + "...", 0);
 }
 
 void StationsDlg::OnGetUpdate()
