@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>679</width>
+            <width>667</width>
             <height>413</height>
         </rect>
     </property>
@@ -44,7 +44,7 @@
     <property>
         <name>layoutSpacing</name>
     </property>
-    <vbox>
+    <grid>
         <property stdset="1">
             <name>margin</name>
             <number>11</number>
@@ -53,7 +53,7 @@
             <name>spacing</name>
             <number>6</number>
         </property>
-        <widget>
+        <widget row="0"  column="0" >
             <class>QListView</class>
             <column>
                 <property>
@@ -96,11 +96,11 @@
                 <bool>true</bool>
             </property>
         </widget>
-        <widget>
+        <widget row="1"  column="0" >
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout7</cstring>
+                <cstring>Layout28</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -184,6 +184,45 @@
                 <spacer>
                     <property>
                         <name>name</name>
+                        <cstring>Spacer4</cstring>
+                    </property>
+                    <property>
+                        <name>orientation</name>
+                        <enum>Horizontal</enum>
+                    </property>
+                    <property>
+                        <name>sizeType</name>
+                        <enum>Minimum</enum>
+                    </property>
+                    <property>
+                        <name>sizeHint</name>
+                        <size>
+                            <width>20</width>
+                            <height>20</height>
+                        </size>
+                    </property>
+                </spacer>
+                <widget>
+                    <class>QCheckBox</class>
+                    <property stdset="1">
+                        <name>name</name>
+                        <cstring>CheckBoxFreeze</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>sizePolicy</name>
+                        <sizepolicy>
+                            <hsizetype>1</hsizetype>
+                            <vsizetype>0</vsizetype>
+                        </sizepolicy>
+                    </property>
+                    <property stdset="1">
+                        <name>text</name>
+                        <string>F&amp;reeze</string>
+                    </property>
+                </widget>
+                <spacer>
+                    <property>
+                        <name>name</name>
                         <cstring>Spacer5</cstring>
                     </property>
                     <property>
@@ -202,23 +241,6 @@
                         </size>
                     </property>
                 </spacer>
-                <widget>
-                    <class>QLayoutWidget</class>
-                    <property stdset="1">
-                        <name>name</name>
-                        <cstring>Layout5</cstring>
-                    </property>
-                    <hbox>
-                        <property stdset="1">
-                            <name>margin</name>
-                            <number>0</number>
-                        </property>
-                        <property stdset="1">
-                            <name>spacing</name>
-                            <number>6</number>
-                        </property>
-                    </hbox>
-                </widget>
                 <widget>
                     <class>QLayoutWidget</class>
                     <property stdset="1">
@@ -257,7 +279,7 @@
                 </widget>
             </hbox>
         </widget>
-    </vbox>
+    </grid>
 </widget>
 <images>
     <image>

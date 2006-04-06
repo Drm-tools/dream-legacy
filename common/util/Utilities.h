@@ -241,5 +241,35 @@ protected:
 };
 #endif
 
+inline int Complement2toInt(const unsigned int iSize, CVector<_BINARY>* pbiData)
+{
+	int iVal = 0;
+	const int iVecSize = iSize - 1;
+
+	_BINARY bSign = (*pbiData).Separate(1);
+
+	if (bSign == 0)
+		iVal = (int) (*pbiData).Separate(iVecSize);
+	else
+	{
+		int k;
+
+		unsigned int iPowerOf2 = 1;
+
+		iPowerOf2 <<= (iVecSize - 1); /* power(2,iVecSize-1) */
+
+		for (k = iVecSize - 1; k >= 0; k--)
+		{
+			if ((*pbiData).Separate(1) == 0)
+				iVal = iVal + iPowerOf2;
+
+			iPowerOf2 >>= 1; /* divide for 2 */
+		}
+
+		iVal = -1 * (iVal + 1);
+	}	
+
+	return iVal;
+}
 
 #endif // !defined(UTILITIES_H__3B0BA660_CA63_4344_B3452345D31912__INCLUDED_)

@@ -715,7 +715,6 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 	return FALSE;
 }
 
-
 /******************************************************************************\
 * Data entity Type 7 (Alternative frequency signalling: Region definition)     *
 \******************************************************************************/
@@ -736,12 +735,15 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 	/* Latitude: this field specifies the southerly point of the area in
 	   degrees, as a 2's complement number between -90 (south pole) and
 	   +90 (north pole) */
-	const int iLatitude = (*pbiData).Separate(8);
+
+
+	const int iLatitude = Complement2toInt(8, pbiData);
 
 	/* Longitude: this field specifies the westerly point of the area in
 	   degrees, as a 2's complement number between -180 (west) and
 	   +179 (east) */
-	const int iLongitude = (*pbiData).Separate(9);
+
+	const int iLongitude = Complement2toInt(9, pbiData);
 
 	/* Latitude Extent: this field specifies the size of the area to the north,
 	   in 1 degree steps; the value of Latitude plus the value of Latitude
@@ -783,7 +785,10 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 	}
 
 	/* Error checking */
-	if ((iRegionID == 0) || (iLatitude + iLatitudeEx > 90))
+	if ((iRegionID == 0)
+		|| (iLatitude + iLatitudeEx > 90)
+		|| (iLongitude < -180) || (iLongitude > 179)
+		|| (iLatitude < -90) || (iLatitude > 90))
 	{
 		return TRUE; /* Error */
 	}

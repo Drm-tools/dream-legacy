@@ -38,6 +38,7 @@
 #include <qlabel.h>
 #include <qfiledialog.h>
 #include <qtextstream.h>
+#include <qcheckbox.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/LiveScheduleDlgbase.h"
@@ -57,6 +58,7 @@
 #define GUI_TIMER_UTC_TIME_LABEL		1000 /* ms (1 second) */
 
 #define COL_FREQ 0 /* frequency column */
+#define COL_TARGET 3 /* target column */
 
 /* Time definitions for preview */
 #define NUM_SECONDS_PREV_5MIN			300
@@ -71,14 +73,16 @@ class CLiveScheduleItem
 {
 public:
 	CLiveScheduleItem() : strFreq(""), strDaysFlags(""),
-		strTarget(""),  iStartTime(0), iDuration(0), strSystem("") {}
+		strTarget(""),  iStartTime(0), iDuration(0)
+		, strSystem(""), bInsideTargetArea(FALSE) {}
 
 	string		strFreq;
-	string	strTarget;
-	string	strDaysFlags;
-	int		iStartTime;
-	int		iDuration;
-	string	strSystem;
+	string		strTarget;
+	string		strDaysFlags;
+	int			iStartTime;
+	int			iDuration;
+	string		strSystem;
+	_BOOLEAN	bInsideTargetArea;
 };
 
 class CDRMLiveSchedule
@@ -95,7 +99,8 @@ public:
 	void LoadAFSInformations(const CParameter::CAltFreqSign AltFreqSign
 			, const CParameter::CAltFreqOtherServicesSign AltFreqOtherServicesSign);
 
-	QString DecodeTargets(const int iRegionID, const CVector<CParameter::CAltFreqRegion> vecAltFreqRegions);
+	void DecodeTargets(const int iRegionID, const CVector<CParameter::CAltFreqRegion> vecAltFreqRegions
+		, QString& strRegions , _BOOLEAN& bIntoTargetArea);
 	string DecodeFrequency(const int iSystemID, const int iFreq);
 
 	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
@@ -103,13 +108,20 @@ public:
 
 	string Binary2String(const int iVal);
 
+	void SetReceiverCoordinates(const string strLatitude, const string strLongitude);
+
 protected:
 	_BOOLEAN IsActive(const int iPos, const time_t ltime);
 
 	CVector<CLiveScheduleItem>	StationsTable;
 
 	/* Minutes for stations preview in seconds if zero then no active */
-	int						iSecondsPreview;
+	int			iSecondsPreview;
+
+	/* receiver coordinates */
+	int			iReceiverLatitude;
+	int			iReceiverLongitude;
+	_BOOLEAN	bCheckCoordinates;
 };
 
 class MyListLiveViewItem : public QListViewItem
@@ -157,6 +169,7 @@ protected:
 
 	CDRMLiveSchedule			DRMSchedule;
 	QPixmap						BitmCubeGreen;
+	QPixmap						BitmCubeGreenLittle;
 	QPixmap						BitmCubeYellow;
 	QPixmap						BitmCubeRed;
 	QPixmap						BitmCubeOrange;
@@ -169,7 +182,8 @@ protected:
 
 	CVector<MyListLiveViewItem*>	vecpListItems;
 	CMutex						ListItemsMutex;
-	QString					strCurrentSavePath;
+	QString						strCurrentSavePath;
+
 public slots:
 	void OnTimerList();
 	void OnTimerUTCLabel() {SetUTCTimeLabel();}
@@ -177,4 +191,5 @@ public slots:
 	void OnShowPreviewMenu(int iID);
 	void OnHeaderClicked(int c);
 	void OnSave();
+	void OnCheckFreeze();
 };

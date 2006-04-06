@@ -132,11 +132,97 @@ string strDaysShow = "";
 return QString(strDaysShow.c_str());
 }
 
-QString CDRMLiveSchedule::DecodeTargets(const int iRegionID, const CVector<CParameter::CAltFreqRegion> vecAltFreqRegions)
+void CDRMLiveSchedule::SetReceiverCoordinates(const string strLatitude, const string strLongitude)
+{
+int iLatitude;
+int iLongitude;
+
+int i;
+QString sVal;
+QChar ch;
+_BOOLEAN bStop;
+
+	/* parse the latitude and longitude string stored into Dream settings for
+		extract local latitude degrees and longitude degrees */
+
+	bCheckCoordinates = FALSE;
+
+	const QString strCurLat = QString(strLatitude.c_str());
+	const QString strCurLong = QString(strLongitude.c_str());
+
+	if ((strCurLat != "") && (strCurLong != "")) 
+	{
+		sVal = "";
+		bStop = FALSE;
+
+		/* scan the string for extract the first n digits */
+		/* latitude max 2 digits */
+		for (i = 0; i <= 1; i++)
+		{
+			if (bStop == FALSE)
+			{
+				ch = strCurLat.at(i);
+				if (ch.isDigit() == TRUE)
+					sVal = sVal + ch;
+				else
+					bStop = TRUE;
+			}
+		}
+
+		if (sVal != "")
+		{
+			iLatitude = sVal.toInt();
+
+			if (strCurLat.contains('S') > 0)
+				iLatitude = -1 * iLatitude;
+
+			if ((iLatitude <= 90) && (iLatitude >= -90))
+			{
+				sVal = "";
+				bStop = FALSE;
+
+				/* scan the string for extract the first n digits */
+				/* longitude max 3 digits */
+
+				for (i = 0; i <= 2; i++) 
+				{
+					if (bStop == FALSE)
+					{
+						ch = strCurLong.at(i);
+					
+						if (ch.isDigit() == TRUE)
+							sVal = sVal + ch;
+						else
+							bStop = TRUE;
+					}
+				}
+
+				if (sVal != "")
+				{
+					iLongitude = sVal.toInt();
+
+					if (strCurLong.contains('W') > 0)
+						iLongitude = -1 * iLongitude;
+				
+					if ((iLongitude >= -180) && (iLongitude <= 179))
+					{
+						iReceiverLatitude = iLatitude;
+						iReceiverLongitude = iLongitude;
+
+						bCheckCoordinates = TRUE;
+					}
+				}
+			}
+		}
+	}
+}
+
+void CDRMLiveSchedule::DecodeTargets(const int iRegionID, const CVector<CParameter::CAltFreqRegion> vecAltFreqRegions
+										, QString& strRegions, _BOOLEAN& bIntoTargetArea)
 {
 int iCIRAF;
 
-	QString strRegions = "";
+	strRegions = "";
 	
 	if (iRegionID > 0)
 	{
@@ -145,22 +231,76 @@ int iCIRAF;
 		{
 			if (vecAltFreqRegions[k].iRegionID == iRegionID)
 			{
-				/* Targets */					
-				for (int kk = 0; kk < vecAltFreqRegions[k].veciCIRAFZones.Size(); kk++)
-				{
-					iCIRAF = vecAltFreqRegions[k].veciCIRAFZones[kk];
+				const int iLatitude = vecAltFreqRegions[k].iLatitude;
+				const int iLongitude = vecAltFreqRegions[k].iLongitude;
 
+				const int iLatitudeEx = vecAltFreqRegions[k].iLatitudeEx;
+				const int iLongitudeEx = vecAltFreqRegions[k].iLongitudeEx;
+
+				int iCIRAFSize = vecAltFreqRegions[k].veciCIRAFZones.Size();
+
+				if (iCIRAFSize > 0)
+				{
+					/* Targets */					
+					for (int kk = 0; kk < iCIRAFSize ; kk++)
+					{
+						iCIRAF = vecAltFreqRegions[k].veciCIRAFZones[kk];
+
+						if (strRegions != "")
+							strRegions += ", ";
+	
+						strRegions += QString(strTableCIRAFzones[iCIRAF].c_str());
+					}
+				}
+				else
+				{
+					/* if ciraf zones aren't defined show the latitude and
+						longitude of the centre of the target area */
+					
 					if (strRegions != "")
 						strRegions += ", ";
-	
-					strRegions += QString(strTableCIRAFzones[iCIRAF].c_str());
+
+					int iLatitudeMed = (iLatitude + (iLatitudeEx / 2));
+
+					strRegions += "latitude "
+							+ QString::number(abs(iLatitudeMed));
+
+					if (iLatitudeMed < 0)
+						strRegions += "° S";
+					else
+						strRegions += "° N";
+
+					int iLongitudeMed = (iLongitude + (iLongitudeEx / 2));
+
+					if (iLongitudeMed >= 180)
+							iLongitudeMed = iLongitudeMed - 360;
+
+					strRegions += "  longitude "
+							+ QString::number(abs(iLongitudeMed));
+
+					if (iLongitudeMed < 0)
+						strRegions += "° W";
+					else
+						strRegions += "° E";
+				}
+
+				/* check if receiver coordinates are into target area */
+				if (bCheckCoordinates == TRUE)
+				{
+					_BOOLEAN bLongitudeOK = ((iReceiverLongitude >= iLongitude)
+						&& (iReceiverLongitude <= (iLongitude + iLongitudeEx)))
+						|| (((iLongitude + iLongitudeEx) >= 180) &&
+						(iReceiverLongitude <= (iLongitude + iLongitudeEx - 360)));
+
+					_BOOLEAN bLatitudeOK = ((iReceiverLatitude >= iLatitude)
+						&& (iReceiverLatitude <= (iLatitude + iLatitudeEx)));
+
+					bIntoTargetArea = bIntoTargetArea || (bLongitudeOK && bLatitudeOK);
 				}
 			}
 			k++;
 		}
 	}
-
-	return strRegions;
 }
 
 string CDRMLiveSchedule::DecodeFrequency(const int iSystemID, const int iFreq)
@@ -206,8 +346,9 @@ int j;
 int k;
 
 _BOOLEAN bFound;
-QString strSystem;
-QString strRegions;
+QString  strSystem;
+QString  strRegions;
+_BOOLEAN bIntoTargetArea;
 
 /* Init table for stations */
 StationsTable.Init(0);
@@ -227,11 +368,13 @@ for (z = 0; z < iSize; z++)
 	//	AltFreq.veciServRestrict[k];
 	
 	strRegions = "";
+	bIntoTargetArea = FALSE;
+
 	bFound = FALSE;
 
 	if (AltFreq.bRegionSchedFlag == TRUE)
 	{
-		strRegions = DecodeTargets(AltFreq.iRegionID, AltFreqSign.vecAltFreqRegions);
+		DecodeTargets(AltFreq.iRegionID, AltFreqSign.vecAltFreqRegions, strRegions, bIntoTargetArea);
 
 		if (AltFreq.iScheduleID > 0)
 		{
@@ -264,6 +407,9 @@ for (z = 0; z < iSize; z++)
 						/* Add the target */
 						LiveScheduleItem.strTarget = strRegions.latin1();
 
+						/* Local receiver coordinates are into target area or not */
+						LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
+
 						/* Add the system (transmission mode) */
 						LiveScheduleItem.strSystem = "DRM";
 
@@ -288,6 +434,9 @@ for (z = 0; z < iSize; z++)
 
 			/* Add the target */
 			LiveScheduleItem.strTarget = strRegions.latin1();
+
+			/* Local receiver coordinates are into target area or not */
+			LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
 
 			/* Add the system (transmission mode) */
 			LiveScheduleItem.strSystem = "DRM";
@@ -339,12 +488,13 @@ for (z = 0; z < iSize; z++)
 		}
 
 		strRegions = "";
+		bIntoTargetArea = FALSE;
 
 		bFound = FALSE;
 
 		if (AltFreqOther.bRegionSchedFlag == TRUE)
 		{
-			strRegions = DecodeTargets(AltFreqOther.iRegionID, AltFreqSign.vecAltFreqRegions);
+			DecodeTargets(AltFreqOther.iRegionID, AltFreqSign.vecAltFreqRegions, strRegions, bIntoTargetArea);
 
 			if (AltFreqOther.iScheduleID > 0)
 			{
@@ -377,6 +527,9 @@ for (z = 0; z < iSize; z++)
 							/* Add the target */
 							LiveScheduleItem.strTarget = strRegions.latin1();
 
+							/* Local receiver coordinates are into target area or not */
+							LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
+
 							/* Add the system (transmission mode) */
 							LiveScheduleItem.strSystem = strSystem.latin1();
 
@@ -401,6 +554,9 @@ for (z = 0; z < iSize; z++)
 
 				/* Add the target */
 				LiveScheduleItem.strTarget = strRegions.latin1();
+
+				/* Local receiver coordinates are into target area or not */
+				LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
 
 				/* Add the system (transmission mode) */
 				LiveScheduleItem.strSystem = strSystem.latin1();
@@ -448,6 +604,11 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Create bitmaps */
 	BitmCubeGreen.resize(iXSize, iYSize);
 	BitmCubeGreen.fill(QColor(0, 255, 0));
+
+	BitmCubeGreenLittle.resize(5, 5);
+	BitmCubeGreenLittle.fill(QColor(0, 255, 0));
+
+
 	BitmCubeYellow.resize(iXSize, iYSize);
 	BitmCubeYellow.fill(QColor(255, 255, 0));
 	BitmCubeRed.resize(iXSize, iYSize);
@@ -471,7 +632,7 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* this for add spaces into the column and show all the header caption */
 	vecpListItems.Init(1);
 	vecpListItems[0] = new MyListLiveViewItem(ListViewStations,
-		"0000000000000");
+		"00000000000000000");
 
 	/* Init UTC time shown with a label control */
 	SetUTCTimeLabel();
@@ -533,6 +694,10 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	pViewMenu->insertSeparator();
 	pViewMenu->insertItem(tr("Stations &preview"),pPreviewMenu);
 
+	/* Get current receiver latitude and longitude if defined */
+	DRMSchedule.SetReceiverCoordinates(pDRMRec->GetParameters()->ReceptLog.GetLatitude()
+			,pDRMRec->GetParameters()->ReceptLog.GetLongitude());
+
 	SetStationsView();
 
 	/* File menu ------------------------------------------------------------ */
@@ -562,6 +727,10 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	connect(ListViewStations->header(), SIGNAL(clicked(int)),
 		this, SLOT(OnHeaderClicked(int)));
+
+	/* Check boxes */
+	connect(CheckBoxFreeze, SIGNAL(clicked()),
+		this, SLOT(OnCheckFreeze()));
 }
 
 LiveScheduleDlg::~LiveScheduleDlg()
@@ -586,6 +755,18 @@ LiveScheduleDlg::~LiveScheduleDlg()
 
 	/* Store save path */
 	pDRMRec->strStoragePathLiveScheduleDlg = strCurrentSavePath.latin1();
+}
+
+void LiveScheduleDlg::OnCheckFreeze()
+{
+	/* if CheckBoxFreeze is checked the schedule is freezed */
+	if (CheckBoxFreeze->isChecked())
+		TimerList.stop();
+	else
+	{
+		OnTimerList();
+		TimerList.start(GUI_TIMER_LIST_VIEW_UPDATE); /* Stations list */
+	}
 }
 
 void LiveScheduleDlg::SetUTCTimeLabel()
@@ -733,11 +914,15 @@ void LiveScheduleDlg::showEvent(QShowEvent* pEvent)
 {
 	/* Update window */
 	OnTimerUTCLabel();
-	OnTimerList();
-
-	/* Activate real-time timer when window is shown */
-	TimerList.start(GUI_TIMER_LIST_VIEW_UPDATE); /* Stations list */
 	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
+
+	if (!CheckBoxFreeze->isChecked())
+	{
+		OnTimerList();
+
+		/* Activate real-time timer when window is shown */
+		TimerList.start(GUI_TIMER_LIST_VIEW_UPDATE); /* Stations list */
+	}
 }
 
 void LiveScheduleDlg::hideEvent(QHideEvent* pEvent)
@@ -780,18 +965,22 @@ void LiveScheduleDlg::SetStationsView()
 				bListHastChanged = TRUE;
 			}
 
+			/* If receiver coordinates are into target area add a little cube green */
+			if (DRMSchedule.GetItem(i).bInsideTargetArea == TRUE)
+				vecpListItems[i]->setPixmap(COL_TARGET, BitmCubeGreenLittle);
+
 			/* Check, if station is currently transmitting. If yes, set
 			   special pixmap */
 			if (DRMSchedule.CheckState(i) == CDRMLiveSchedule::IS_ACTIVE)
 			{
-				vecpListItems[i]->setPixmap(0, BitmCubeGreen);
+				vecpListItems[i]->setPixmap(COL_FREQ, BitmCubeGreen);
 			}
 			else
 			{
 				if (DRMSchedule.CheckState(i) == CDRMLiveSchedule::IS_PREVIEW)
-					vecpListItems[i]->setPixmap(0, BitmCubeOrange);
+					vecpListItems[i]->setPixmap(COL_FREQ, BitmCubeOrange);
 				else
-					vecpListItems[i]->setPixmap(0, BitmCubeRed);
+					vecpListItems[i]->setPixmap(COL_FREQ, BitmCubeRed);
 			}
 
 		}
@@ -941,16 +1130,19 @@ void LiveScheduleDlg::AddWhatsThisHelp()
 	/* Stations List */
 	QWhatsThis::add(ListViewStations,
 		tr("<b>Live Schedule List:</b> In the live schedule list "
-		"view AFS (Alternative Frequency Signalling) informations trasmitted "
-            "into the current DRM signal."
+		"it's possible to view AFS (Alternative Frequency Signalling) "
+		"informations trasmitted with the current DRM or AMSS signal.</b>"
 		"It is possible to show only active stations by changing a "
-		"setting in the 'view' menu. The color of the cube on the left of a "
-		"menu item shows the current status of the DRM transmission. A green "
-		"box shows that the transmission takes place right now, a "
-		"yellow cube shows that this is a test transmission and with a "
-		"red cube it is shown that the transmission is offline.<br>"
+		"setting in the 'view' menu.<br>"
+		"The color of the cube on the left of the "
+		"frequency shows the current status of the transmission.<br>"
+		"A green box shows that the transmission takes place right now "
+		"a red cube it is shown that the transmission is offline.<br>"
 		"If the stations preview is active an orange box shows the stations "
 		"that will be active.<br>"
+		"A little green cube on the left of the target column show that the receiver"
+		" coordinates (latitude and longitude) stored into Dream settings are into"
+		" the target area of this transmission.<br>"
 		"The list can be sorted by clicking on the headline of the "
 		"column."));
 
@@ -959,6 +1151,10 @@ void LiveScheduleDlg::AddWhatsThisHelp()
 		tr("<b>UTC Time:</b> Shows the current Coordinated "
 		"Universal Time (UTC) which is also known as Greenwich Mean Time "
 		"(GMT)."));
+
+	/* Check box freeze */
+	QWhatsThis::add(CheckBoxFreeze,
+		tr("<b>Freeze:</b> If this check box is selectd the live schedule is freezed."));
 }
 
 
