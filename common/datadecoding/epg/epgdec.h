@@ -29,14 +29,39 @@
 
 #ifndef _EPGDEC_H
 #define _EPGDEC_H
-#include <stdlib.h>
 #include "../../GlobalDefinitions.h"
+#include <qdom.h>
+#include <vector>
+using namespace std;
 
-void attr_decode (char *name, char *value,
-		  uint8_t element, uint8_t attr, uint8_t * buf, size_t len);
-const char *element_name (uint8_t tag);
-size_t tlv (uint8_t * t, size_t * l, uint8_t ** v, uint8_t * buf);
-size_t tokens (uint8_t * buf, uint8_t * stop);
-size_t defaultcontent (uint8_t * buf);
-void puttext (char *out, uint8_t * buf, size_t len);
+class tag_length_value
+{
+public:
+       
+      tag_length_value(const _BYTE* p);
+      
+      bool is_cdata() const { return tag == 1; }
+      bool is_epg() const { return tag == 2; }
+      bool is_service_information() const { return tag == 3; }
+      bool is_string_token_table() const { return tag == 4; }
+      bool is_default_id() const { return tag == 5; }
+      bool is_child_element() const { return (5<tag) && (tag<0x80); }
+      bool is_attribute() const { return tag>=0x80; }
+
+      uint8_t tag;
+      size_t length;
+      _BYTE* value;
+};
+
+class CEPGDecoder
+{
+  public:
+    CEPGDecoder ()
+    {
+    }
+    void decode (const vector<_BYTE>&);
+
+    QDomDocument doc;
+
+};
 #endif

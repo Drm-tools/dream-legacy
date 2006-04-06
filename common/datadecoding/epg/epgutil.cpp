@@ -71,7 +71,7 @@ epgFilename (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
     string name;
     ostringstream s (name);
     s << setfill ('0') << setw (4) << date.year;
-    s << setw (2) << int (date.month) << int (date.day);
+    s << setw (2) << int (date.month) << setw(2) << int (date.day);
     s << hex << setw (4) << ((unsigned long) sid);
     string fileName;
     switch (type)

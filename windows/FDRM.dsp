@@ -455,15 +455,7 @@ SOURCE=..\common\datadecoding\epg\epgdec.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\datadecoding\epg\epgdecode.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\datadecoding\epg\epgutil.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\datadecoding\epg\mjd.cpp
 # End Source File
 # End Group
 # Begin Source File
@@ -852,15 +844,7 @@ SOURCE=..\common\datadecoding\epg\epgdec.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\datadecoding\epg\epgdecode.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\datadecoding\epg\epgutil.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\datadecoding\epg\mjd.h
 # End Source File
 # End Group
 # Begin Source File

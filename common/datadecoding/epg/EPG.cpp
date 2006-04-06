@@ -1488,16 +1488,17 @@ EPG::parseDoc (const QDomNode & n)
 			      }
 			    if (e.tagName () == "genre")
 			      {
+				  QString genre = e.attribute ("href");
+				  int i = genre.findRev(':');
+				  if(i != -1)
+				      genre = genre.mid(i+1);
 				  QString type = e.attribute ("type", "main");
 				  if (type == "main")
-				      p.mainGenre.push_back( 
-					  genres[e.attribute ("href")]);
+				      p.mainGenre.push_back( genres[genre]);
 				  else if (type == "secondary")
-				      p.secondaryGenre.push_back(
-					  genres[e.attribute ("href")]);
+				      p.secondaryGenre.push_back( genres[genre]);
 				  else if (type == "other")
-				      p.otherGenre.push_back(
-					  genres[e.attribute ("href")]);
+				      p.otherGenre.push_back( genres[genre]);
 			      }
 			}
 		      l2 = l2.nextSibling ();

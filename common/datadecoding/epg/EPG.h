@@ -32,7 +32,7 @@
 #include <qstring.h>
 #include "../../GlobalDefinitions.h"
 #include "../DABMOT.h"
-#include "epgdecode.h"
+#include "epgdec.h"
 
 class EPG
 {
