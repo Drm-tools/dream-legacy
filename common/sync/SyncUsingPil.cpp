@@ -41,47 +41,6 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 
 	if ((bSyncInput == FALSE) && (bAquisition == TRUE))
 	{
-#ifdef USE_DRM_FRAME_SYNC_IR_BASED
-		/* DRM frame synchronization using impulse response ----------------- */
-		/* We assume that the current received OFDM symbol is the first symbol
-		   in a DRM frame and estimate the channel transfer function at the
-		   pilot positions (the positions of pilots in the first OFDM symbol in
-		   a DRM frame). Then we calculate an FFT to get the impulse response of
-		   the channel. If the assumption was correct and this really was the
-		   correct OFDM symbol, we will get something which looks like an
-		   impulse response (contains peaks -> peak-to-average ratio is high).
-		   If not, we will certainly get only noise -> no peaks -> peak to
-		   average ratio is small. This is because the transmitted values at
-		   the pilot positions are different from the values at the pilot cells
-		   when transmitting the correct OFDM symbol (which we assumed) */
-
-		/* Pick pilot positions and calculate "test" channel estimation */
-		int iCurIndex = 0;
-		for (i = 0; i < iNumCarrier; i++)
-		{
-			if (_IsScatPil(ReceiverParam.matiMapTab[0][i]))
-			{
-				/* Get channel estimate */
-				veccChan[iCurIndex] =
-					(*pvecInputData)[i] / ReceiverParam.matcPilotCells[0][i];
-
-				/* We have to introduce a new index because not on all carriers
-				   is a pilot */
-				iCurIndex++;
-			}
-		}
-
-		/* Calculate abs(IFFT) for getting estimate of impulse response */
-		vecrTestImpResp = Abs(Ifft(veccChan, FftPlan));
-
-		/* Calculate peak to average */
-		const CReal rResultIREst = Max(vecrTestImpResp) / Sum(vecrTestImpResp);
-
-		/* Store correlation results in a shift register for finding the peak */
-		vecrCorrHistory.AddEnd(rResultIREst);
-
-#else
-
 		/* DRM frame synchronization based on time pilots ------------------- */
 		/* Calculate correlation of received cells with pilot pairs */
 		CReal rResultPilPairCorr = (CReal) 0.0;
@@ -98,7 +57,6 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Store correlation results in a shift register for finding the peak */
 		vecrCorrHistory.AddEnd(rResultPilPairCorr);
-#endif
 
 
 		/* Finding beginning of DRM frame in results ------------------------ */
@@ -372,25 +330,6 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	iMiddleOfInterval = iNumSymPerFrame / 2;
 
 
-#ifdef USE_DRM_FRAME_SYNC_IR_BASED
-	/* DRM frame synchronization using impulse response, inits--------------- */
-	/* Get number of pilots in first symbol of a DRM frame */
-	iNumPilInFirstSym = 0;
-	for (i = 0; i < iNumCarrier; i++)
-	{
-		if (_IsScatPil(ReceiverParam.matiMapTab[0][i]))
-			iNumPilInFirstSym++;
-	}
-
-	/* Init vector for "test" channel estimation result */
-	veccChan.Init(iNumPilInFirstSym);
-	vecrTestImpResp.Init(iNumPilInFirstSym);
-
-	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
-	FftPlan.Init(iNumPilInFirstSym);
-
-#else
-
 	/* DRM frame synchronization based on time pilots, inits ---------------- */
 	/* Allocate memory for storing pilots and indices. Since we do
 	   not know the resulting "iNumPilPairs" we allocate memory for the
@@ -426,7 +365,6 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	const CReal rArgExp = crPi * rArgSinc;
 
 	cR_HH = Sinc(rArgSinc) * CComplex(Cos(rArgExp), -Sin(rArgExp));
-#endif
 
 
 	/* Frequency offset estimation ------------------------------------------ */
