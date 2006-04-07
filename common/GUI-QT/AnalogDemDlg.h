@@ -115,12 +115,6 @@ protected:
 	virtual void	hideEvent(QHideEvent* pEvent);
 	virtual void	closeEvent(QCloseEvent* pEvent);
 
-	int iBwAM;
-	int iBwLSB;
-	int iBwUSB;
-	int iBwCW;
-	int iBwFM;
-
 public slots:
 	void OnTimer();
 	void OnTimerPLLPhaseDial();

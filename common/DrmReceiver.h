@@ -120,7 +120,12 @@ public:
 		/* Sort list by transmit power (5th column), most powerful on top */
 		SortParamDRM(4, FALSE),
 		SortParamLiveSched(0, FALSE), /* sort by frequency */
-		FontParamMMDlg("", 1, 0, FALSE)
+		FontParamMMDlg("", 1, 0, FALSE),
+		iBwAM(10000),
+		iBwLSB(5000),
+		iBwUSB(5000),
+		iBwCW(150),
+		iBwFM(6000)
 #endif
 	{MDI.SetDRMReceiver(this);}  /* OPH: ideally this would be done in the initialiser but passing 'this' is unsafe there */
 
@@ -220,6 +225,7 @@ public:
 
 	/* Analog demodulation dialog */
 	CWinGeom GeomAnalogDemDlg;
+	
 
 	/* Analog demodulation dialog */
 	CWinGeom GeomAMSSDlg;
@@ -281,6 +287,12 @@ public:
 	string		strStoragePathMMDlg;
 	string		strStoragePathLiveScheduleDlg;
 	int			iMainDisplayColor;
+	/* Analog demodulation filter bandwidth */
+	int			iBwAM;
+	int			iBwLSB;
+	int			iBwUSB;
+	int			iBwCW;
+	int			iBwFM;
 #endif
 
 	/* Interfaces to internal parameters/vectors used for the plot */

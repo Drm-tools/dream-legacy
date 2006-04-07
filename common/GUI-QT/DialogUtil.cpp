@@ -102,6 +102,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"<p>Fine, Mark J.</p>"
 		"<p>Haffenden, Oliver</p>"
 		"<p>Manninen, Tomi</p>"
+		"<p>Moore, Josh</p>" 
 		"<p>Murphy, Andrew</p>"
 		"<p>Pascutto, Gian C.</p>"
 		"<p>Richard, Doyle</p>"

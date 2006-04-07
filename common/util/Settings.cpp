@@ -264,6 +264,28 @@ void CSettings::ReadIniFile()
 	if (GetFlagIniSet(ini, "Window geometry", "analdemvis", bValue) == TRUE)
 		pDRMRec->GeomAnalogDemDlg.bVisible = bValue;
 
+	/* filter bandwidth (max = SOUNDCRD_SAMPLE_RATE / 2 = typically 24000 Hz = 24 kHz) */
+
+	/* AM filter bandwidth */
+	if (GetNumericIniSet(ini, "Analog demodulation dialog", "filterbwam", 0, SOUNDCRD_SAMPLE_RATE / 2, iValue) == TRUE)
+		pDRMRec->iBwAM = (int) iValue;
+
+	/* USB filter bandwidth */
+	if (GetNumericIniSet(ini, "Analog demodulation dialog", "filterbwusb", 0, SOUNDCRD_SAMPLE_RATE / 2, iValue) == TRUE)
+		pDRMRec->iBwUSB = (int) iValue;
+
+	/* LSB filter bandwidth */
+	if (GetNumericIniSet(ini, "Analog demodulation dialog", "filterbwlsb", 0, SOUNDCRD_SAMPLE_RATE / 2, iValue) == TRUE)
+		pDRMRec->iBwLSB = (int) iValue;
+
+	/* CW filter bandwidth */
+	if (GetNumericIniSet(ini, "Analog demodulation dialog", "filterbwcw", 0, SOUNDCRD_SAMPLE_RATE / 2, iValue) == TRUE)
+		pDRMRec->iBwCW = (int) iValue;
+
+	/* FM filter bandwidth */
+	if (GetNumericIniSet(ini, "Analog demodulation dialog", "filterbwfm", 0, SOUNDCRD_SAMPLE_RATE / 2, iValue) == TRUE)
+		pDRMRec->iBwFM = (int) iValue;
+	
 	/* demodulation */
 	if (GetNumericIniSet(ini, "Analog demodulation dialog", "demodulation", 0, CAMDemodulation::DT_FM , iValue) == TRUE)
 		pDRMRec->GetAMDemod()->SetDemodType((CAMDemodulation::EDemodType) iValue);
@@ -538,6 +560,23 @@ void CSettings::WriteIniFile()
 	SetNumericIniSet(ini, "Window geometry", "analdemhsize", pDRMRec->GeomAnalogDemDlg.iHSize);
 	SetNumericIniSet(ini, "Window geometry", "analdemwsize", pDRMRec->GeomAnalogDemDlg.iWSize);
 	SetFlagIniSet(ini, "Window geometry", "analdemvis", pDRMRec->GeomAnalogDemDlg.bVisible);
+
+	/* filter bandwidth */
+	
+	/* AM filter bandwidth */
+	SetNumericIniSet(ini, "Analog demodulation dialog", "filterbwam", pDRMRec->iBwAM);
+
+	/* USB filter bandwidth */
+	SetNumericIniSet(ini, "Analog demodulation dialog", "filterbwusb", pDRMRec->iBwUSB);
+
+	/* LSB filter bandwidth */
+	SetNumericIniSet(ini, "Analog demodulation dialog", "filterbwlsb", pDRMRec->iBwLSB);
+
+	/* CW filter bandwidth */
+	SetNumericIniSet(ini, "Analog demodulation dialog", "filterbwcw", pDRMRec->iBwCW);
+
+	/* FM filter bandwidth */
+	SetNumericIniSet(ini, "Analog demodulation dialog", "filterbwfm", pDRMRec->iBwFM);
 
 	/* demodulation */
 	SetNumericIniSet(ini, "Analog demodulation dialog", "demodulation",

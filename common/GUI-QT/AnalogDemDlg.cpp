@@ -99,34 +99,27 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	QToolTip::add(MainPlot,
 		tr("Click on the plot to set the demodulation frequency"));
 
-	/* Set default settings -> AM: 10 kHz; SSB: 5 kHz; medium AGC */
-	iBwLSB = 5000; /* Hz */
-	iBwUSB = 5000; /* Hz */
-	iBwCW = 150; /* Hz */
-	iBwFM = 6000; /* Hz */
-	iBwAM = 10000; /* Hz */
-	
-	/* Store filter bandwidth for the demodulation type */
+	/* Load user's saved filter bandwidth for the demodulation type. */
 	switch (pDRMRec->GetAMDemod()->GetDemodType())
 	{
 	case CAMDemodulation::DT_AM:
-		pDRMRec->GetAMDemod()->SetFilterBW(iBwAM);
+		pDRMRec->GetAMDemod()->SetFilterBW(pDRMRec->iBwAM);
 		break;
 
 	case CAMDemodulation::DT_LSB:
-		pDRMRec->GetAMDemod()->SetFilterBW(iBwLSB);
+		pDRMRec->GetAMDemod()->SetFilterBW(pDRMRec->iBwLSB);
 		break;
 
 	case CAMDemodulation::DT_USB:
-		pDRMRec->GetAMDemod()->SetFilterBW(iBwUSB);
+		pDRMRec->GetAMDemod()->SetFilterBW(pDRMRec->iBwUSB);
 		break;
 
 	case CAMDemodulation::DT_CW:
-		pDRMRec->GetAMDemod()->SetFilterBW(iBwCW);
+		pDRMRec->GetAMDemod()->SetFilterBW(pDRMRec->iBwCW);
 		break;
 
 	case CAMDemodulation::DT_FM:
-		pDRMRec->GetAMDemod()->SetFilterBW(iBwFM);
+		pDRMRec->GetAMDemod()->SetFilterBW(pDRMRec->iBwFM);
 		break;
 	}
 
@@ -390,27 +383,27 @@ void AnalogDemDlg::OnRadioDemodulation(int iID)
 	{
 	case 0:
 		pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
-		pDRMRec->GetAMDemod()->SetFilterBW(iBwAM);
+		pDRMRec->GetAMDemod()->SetFilterBW(pDRMRec->iBwAM);
 		break;
 
 	case 1:
 		pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_LSB);
-		pDRMRec->GetAMDemod()->SetFilterBW(iBwLSB);
+		pDRMRec->GetAMDemod()->SetFilterBW(pDRMRec->iBwLSB);
 		break;
 
 	case 2:
 		pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_USB);
-		pDRMRec->GetAMDemod()->SetFilterBW(iBwUSB);
+		pDRMRec->GetAMDemod()->SetFilterBW(pDRMRec->iBwUSB);
 		break;
 
 	case 3:
 		pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_CW);
-		pDRMRec->GetAMDemod()->SetFilterBW(iBwCW);
+		pDRMRec->GetAMDemod()->SetFilterBW(pDRMRec->iBwCW);
 		break;
 
 	case 4:
 		pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_FM);
-		pDRMRec->GetAMDemod()->SetFilterBW(iBwFM);
+		pDRMRec->GetAMDemod()->SetFilterBW(pDRMRec->iBwFM);
 		break;
 	}
 
@@ -472,23 +465,23 @@ void AnalogDemDlg::OnSliderBWChange(int value)
 	switch (pDRMRec->GetAMDemod()->GetDemodType())
 	{
 	case CAMDemodulation::DT_AM:
-		iBwAM = value;
+		pDRMRec->iBwAM = value;
 		break;
 
 	case CAMDemodulation::DT_LSB:
-		iBwLSB = value;
+		pDRMRec->iBwLSB = value;
 		break;
 
 	case CAMDemodulation::DT_USB:
-		iBwUSB = value;
+		pDRMRec->iBwUSB = value;
 		break;
 
 	case CAMDemodulation::DT_CW:
-		iBwCW = value;
+		pDRMRec->iBwCW = value;
 		break;
 
 	case CAMDemodulation::DT_FM:
-		iBwFM = value;
+		pDRMRec->iBwFM = value;
 		break;
 	}
 
