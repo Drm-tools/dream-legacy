@@ -103,12 +103,17 @@ void EPGDlg::OnTimer()
 		/* not all informations are loaded */
  		select();
 	else
-		if (date == QDate::currentDate()) /* if today */
-		{
-			/* Get system time */
-			time_t ltime;
-			time(&ltime);
+	{
+		/* Get current UTC time */
+		time_t ltime;
+		time(&ltime);
+		struct tm* gmtCur = gmtime(&ltime);
 
+		/* today in UTC */
+		QDate todayUTC = QDate(gmtCur->tm_year + 1900, gmtCur->tm_mon + 1, gmtCur->tm_mday);
+
+		if (date == todayUTC) /* if today */
+		{
 			/* Extract values from the list */
 			QListViewItem * myItem = Data->firstChild();
 
@@ -126,6 +131,7 @@ void EPGDlg::OnTimer()
 				myItem = myItem->nextSibling();
 			}
 		}
+	}
 }
 
 void EPGDlg::showEvent(QShowEvent *e) 
@@ -264,12 +270,16 @@ _BOOLEAN bIsOnLine = FALSE;
           name = p.name;
 	    QListViewItem* CurrItem = new QListViewItem(Data, p.start, name, genre, p.description, p.duration);
 
-		if (date == QDate::currentDate())
-		{
-			/* Get system time */
-			time_t ltime;
-			time(&ltime);
+		/* Get current UTC time */
+		time_t ltime;
+		time(&ltime);
+		struct tm* gmtCur = gmtime(&ltime);
 
+		/* today in UTC */
+		QDate todayUTC = QDate(gmtCur->tm_year + 1900, gmtCur->tm_mon + 1, gmtCur->tm_mday);
+
+		if (date == todayUTC) /* if today */
+		{
 			/* Check, if the programme is now on line. If yes, set
 			special pixmap */
 			if (IsActive(p.start,p.duration,ltime))
