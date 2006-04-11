@@ -187,8 +187,7 @@ drmqtonly_SOURCES = \
 	../common/datadecoding/epg/epgdec.h \
 	../common/datadecoding/epg/epgdec.cpp \
 	../common/datadecoding/epg/EPG.cpp \
-	../common/datadecoding/epg/EPG.h \
-	../common/GUI-QT/GUIUtilities.h
+	../common/datadecoding/epg/EPG.h
 
 drm_SOURCES = $(drmwithoutqt_SOURCES) $(drmqtonly_SOURCES)
 
