@@ -19,7 +19,6 @@ drmwithoutqt_SOURCES = \
 	../common/datadecoding/DABMOT.cpp \
 	../common/datadecoding/MOTSlideShow.cpp \
 	../common/datadecoding/Journaline.cpp \
-	../common/datadecoding/epg/epgdec.cpp \
 	../common/datadecoding/epg/epgutil.cpp \
 	../common/FAC/FAC.cpp \
 	../common/matlib/MatlibSigProToolbox.cpp \
@@ -85,7 +84,6 @@ drmwithoutqt_SOURCES = \
 	../common/datadecoding/DABMOT.h \
 	../common/datadecoding/MOTSlideShow.h \
 	../common/datadecoding/Journaline.h \
-	../common/datadecoding/epg/epgdec.h \
 	../common/datadecoding/epg/epgutil.h \
 	../common/FAC/FAC.h \
 	../common/matlib/Matlib.h \
@@ -186,6 +184,8 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/EPGDlg.h \
 	../common/GUI-QT/AnalogDemDlg.h \
 	../common/MDI/PacketSocketQT.h \
+	../common/datadecoding/epg/epgdec.h \
+	../common/datadecoding/epg/epgdec.cpp \
 	../common/datadecoding/epg/EPG.cpp \
 	../common/datadecoding/epg/EPG.h \
 	../common/GUI-QT/GUIUtilities.h
