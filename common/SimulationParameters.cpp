@@ -53,7 +53,25 @@ void CDRMSimulation::SimScript()
 	* Simulation settings vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*
 	\**************************************************************************/
 	/* Choose which type of simulation, if you choose "ST_NONE", the regular
-	   application will be started */
+	   application will be started
+	   For ease of use, all possible types are plotted below. To enable a
+	   certain type, just cut and past it at the end of the list
+	   There are  different types of simulations available:
+	   ST_BITERROR: BER simulation using actual channel estimation algorithms
+			(either Wiener, linear or DFT method, can be set by
+			eChanEstFreqIntType and eChanEstTimIntType)
+	   ST_SYNC_PARAM: testing synchronization units (requires modifications in
+			the actual synchronization code to make it work)
+	   ST_MSECHANEST: MSE versus carrier for channel estimation algorithms
+	   ST_BER_IDEALCHAN: BER assuming ideal channel estimation
+	
+	   Make sure the /drm/[linux, windows]/test directory exists since all the
+	   simulation results are stored there. Together with the actual simulation
+	   results, a file called x__SIMTIME.dat is also created and updated very 
+	   frequently, showing the remaining time. 
+	   By using the skript "plotsimres.m" in Matlab, a nice plot of the results 
+	   is generated automatically (this script reads all available simulation
+	   results) */
 	Param.eSimType = CParameter::ST_BITERROR;
 	Param.eSimType = CParameter::ST_SYNC_PARAM; /* Check "SetSyncInput()"s! */
 	Param.eSimType = CParameter::ST_BER_IDEALCHAN;
@@ -63,32 +81,41 @@ void CDRMSimulation::SimScript()
 
 	if (Param.eSimType != CParameter::ST_NONE)
 	{
-		Param.iDRMChannelNum = 8;
+		/* Choose channel model. The channel numbers are according to the
+		   numbers in the DRM-standard (e.g., channel number 1 is AWGN) plus
+		   some additional channel profiles defined by the author */
+		Param.iDRMChannelNum = 1;
+
+/* This parameter is only needed for the non-standard special channels 8, 10, 11, 12 */
 Param.iSpecChDoppler = 2; /* Hz (integer value!) */
 
-		rStartSNR = (_REAL) 15;
-		rEndSNR = (_REAL) 25;
-		rStepSNR = (_REAL) 1.0;
-		strSpecialRemark = "refideal";
+		/* Defines the SNR range for the simulation. A start, stop and step
+		   value can be set here */
+		rStartSNR = (_REAL) 14;
+		rEndSNR = (_REAL) 15.2;
+		rStepSNR = (_REAL) 0.3;
 
-		/* Length of simulation */
-//		iSimTime = 100;
-		iSimNumErrors = 100000;
+		/* A string which is appended to the result files */
+		strSpecialRemark = "AWGNtest";
+
+		/* Define length of simulation. Only one of the following methods can
+		   be used: time or number of bit errors:
+		   iSimTime: simulation time in seconds of the virtual DRM stream (which
+		   is not the simulation time)
+		   iSimNumErrors: number of bit errors */
+		iSimTime = 100;
+//		iSimNumErrors = 100000;
 
 
-		iNumItMLC = 1; /* Number of iterations for MLC */
+		/* Number of iterations for MLC */
+		iNumItMLC = 1;
 
 		/* The associated code rate is R = 0,6 and the modulation is 64-QAM */
 		Param.MSCPrLe.iPartB = 1;
 		Param.eMSCCodingScheme = CParameter::CS_3_SM;
 
 
-// TEST (for schnieter)
-//Param.eMSCCodingScheme = CParameter::CS_2_SM;
-//Param.eSDCCodingScheme = CParameter::CS_1_SM;
-
-
-
+		/* Choose the type of channel estimation algorithms used for simlation */
 		eChanEstFreqIntType = CChannelEstimation::FWIENER;//FDFTFILTER;//FLINEAR;
 		eChanEstTimIntType = CChannelEstimation::TWIENER;//TLINEAR;
 
@@ -118,10 +145,6 @@ Param.iSpecChDoppler = 2; /* Hz (integer value!) */
 			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 			Param.eSymbolInterlMode = CParameter::SI_LONG;
 		}
-
-
-// TEST -> for robustness mode detection
-//Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 
 
 	/**************************************************************************\
