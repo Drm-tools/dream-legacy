@@ -130,17 +130,17 @@ if test "x$WITHQTGUI" = xyes; then
 	dnl qwt
 
 	AC_HAVE_LIBRARY(qwt, ,exit 1)
-	AC_CHECK_HEADER(/usr/include/qwt/qwt.h, qwt_include="/usr/include/qwt", qwt_include="")
+	AC_CHECK_HEADER(/usr/include/qwt/qwt.h, qwt_include="/usr/include/qwt", qwt_include="", [#include <qt.h>])
 	if test "$qwt_include" = ""; then
-		AC_CHECK_HEADER(/usr/local/include/qwt/qwt.h, qwt_include="/usr/local/include/qwt", qwt_include="")
+		AC_CHECK_HEADER(/usr/local/include/qwt/qwt.h, qwt_include="/usr/local/include/qwt", qwt_include="", [#include <qt.h>])
 	fi
 	if test "$qwt_include" = ""; then
-		AC_CHECK_HEADER($QTDIR/include/qwt/qwt.h, qwt_include="$QTDIR/include/qwt", exit 1)
+		AC_CHECK_HEADER($QTDIR/include/qwt/qwt.h, qwt_include="$QTDIR/include/qwt", exit 1, [#include <qt.h>])
 	fi
 	AC_SUBST(QWTINCL, -I$qwt_include )
 	
 	dnl check for new functions from version 4.2
-	AC_CHECK_HEADER($qwt_include/qwt_dial_needle.h, qwt_version_ok=yes,)
+	AC_CHECK_HEADER($qwt_include/qwt_dial_needle.h, qwt_version_ok=yes, ,[#include <qt.h>])
 	if test "$qwt_version_ok" = ""; then
 		AC_MSG_ERROR( "Your version of qwt is too old!")
 	fi
@@ -180,7 +180,7 @@ dnl zlib -----------------------------------------------------------------------
 AC_CHECK_HEADER(zlib.h, ,have_zlib=no,)
 AC_CHECK_LIB(z, deflate, , have_zlib=no)
 if test "x$have_zlib" = "xno"; then
-	AC_MSG_ERROR( "zlib library not found" )
+	AC_MSG_WARN( "zlib library not found" )
 else
 	AC_DEFINE(HAVE_ZLIB_LIBRARY, 1, [Define if you want to use the zlib library])
 fi
