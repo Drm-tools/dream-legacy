@@ -52,6 +52,7 @@
 #include "LiveScheduleDlg.h"
 #include "EPGDlg.h"
 #include "AnalogDemDlg.h"
+#include "MultSettingsDlg.h"
 #include "MultColorLED.h"
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
@@ -116,6 +117,7 @@ public slots:
 	void OnViewStationsDlg();
 	void OnViewLiveScheduleDlg();
 	void OnViewEPGDlg();
+	void OnViewMultSettingsDlg();
 	void OnSwitchToDRM() {SetReceiverMode(CDRMReceiver::RM_DRM);}
 	void OnSwitchToAM() {SetReceiverMode(CDRMReceiver::RM_AM);}
 	void OnMenuSetDisplayColor();

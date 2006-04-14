@@ -41,7 +41,7 @@ rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GUI-QT\AnalogDemDlg.h -o moc\moc_AnalogDemDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\EPGDlg.h -o moc\moc_EPGDlg.cpp
 %qtdir%\bin\moc.exe ..\common\MDI\PacketSocketQT.h -o moc\moc_PacketSocketQT.cpp
-
+%qtdir%\bin\moc.exe ..\common\GUI-QT\MultSettingsDlg.h -o moc\moc_MultSettingsDlg.cpp
 
 rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -o moc\fdrmdialogbase.h  
@@ -83,6 +83,9 @@ rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\EPGDlgbase.ui -o moc\EPGDlgbase.h  
 %qtdir%\bin\uic.exe ..\common\GUI-QT\EPGDlgbase.ui -i EPGDlgbase.h -o moc\EPGDlgbase.cpp  
 %qtdir%\bin\moc.exe moc\EPGDlgbase.h -o moc\moc_EPGDlgbase.cpp
-%qtdir%\bin\moc.exe ..\common\GUI-QT\EPGDlg.h -o moc\moc_EPGDlg.cpp
+
+%qtdir%\bin\uic.exe ..\common\GUI-QT\MultSettingsDlgbase.ui -o moc\MultSettingsDlgbase.h  
+%qtdir%\bin\uic.exe ..\common\GUI-QT\MultSettingsDlgbase.ui -i MultSettingsDlgbase.h -o moc\MultSettingsDlgbase.cpp  
+%qtdir%\bin\moc.exe moc\MultSettingsDlgbase.h -o moc\moc_MultSettingsDlgbase.cpp
 
 pause

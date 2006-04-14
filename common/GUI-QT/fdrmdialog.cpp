@@ -95,6 +95,10 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	/* Set check */
 	pPlotStyleMenu->setItemChecked(pDRMRec->iMainPlotColorStyle, TRUE);
 
+	/* multimedia settings */
+	pSettingsMenu->insertSeparator();
+	pSettingsMenu->insertItem(tr("&Multimedia settings..."), this,
+		SLOT(OnViewMultSettingsDlg()));
 
 	/* Main menu bar -------------------------------------------------------- */
 	pMenu = new QMenuBar(this);
@@ -827,6 +831,17 @@ void FDRMDialog::OnViewLiveScheduleDlg()
 {
 	/* Show live schedule window */
 	pLiveScheduleDlg->show();
+}
+
+void FDRMDialog::OnViewMultSettingsDlg()
+{
+	/* Show multimedia settings window */
+	MultSettingsDlg* pMultSettingsDlg = new MultSettingsDlg(pDRMRec, this, "", TRUE,
+		Qt::WStyle_Dialog);
+
+	//SetDialogCaption(pMultSettingsDlg, tr("Multimedia settings"));
+
+	pMultSettingsDlg->show();
 }
 
 void FDRMDialog::OnViewEPGDlg()

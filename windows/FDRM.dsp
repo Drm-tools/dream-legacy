@@ -124,6 +124,10 @@ SOURCE=.\moc\LiveScheduleDlgbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\MultSettingsDlgbase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\moc_AboutDlgbase.cpp
 # End Source File
 # Begin Source File
@@ -169,6 +173,14 @@ SOURCE=.\moc\moc_LiveScheduleDlg.cpp
 # Begin Source File
 
 SOURCE=.\moc\moc_LiveScheduleDlgbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_MultSettingsDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_MultSettingsDlgbase.cpp
 # End Source File
 # Begin Source File
 
@@ -259,6 +271,10 @@ SOURCE="..\common\GUI-QT\fdrmdialog.cpp"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\LiveScheduleDlg.cpp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\MultSettingsDlg.cpp"
 # End Source File
 # Begin Source File
 
@@ -650,6 +666,10 @@ SOURCE="..\common\GUI-QT\fdrmdialog.h"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\LiveScheduleDlg.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\MultSettingsDlg.h"
 # End Source File
 # Begin Source File
 

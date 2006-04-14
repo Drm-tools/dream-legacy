@@ -26,6 +26,9 @@
  *
 \******************************************************************************/
 
+#ifndef _MULTIMEDIADLG_H
+#define _MULTIMEDIADLG_H
+
 #include <qtextbrowser.h>
 #include <qmime.h>
 #include <qimage.h>
@@ -173,3 +176,5 @@ public slots:
 	void OnTextChanged();
 	void OnSetFont();
 };
+
+#endif
