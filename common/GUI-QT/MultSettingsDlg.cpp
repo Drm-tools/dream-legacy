@@ -78,40 +78,45 @@ void MultSettingsDlg::showEvent(QShowEvent* pEvent)
 
 void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN bDeleteDirs = FALSE)
 {
-	/* Delete files into sPath with scan recursive */
+	/* Delete files into sPath directory with scan recursive */
 
 	QDir dir(sPath);
-	dir.setFilter(QDir::Files | QDir::Dirs | QDir::NoSymLinks);
 
-	/* Eventually apply the filter */
-	if (sFilter != "")
-		dir.setNameFilter(sFilter);
-
-	dir.setSorting( QDir::DirsFirst );
-
-	const QFileInfoList *list = dir.entryInfoList();
-	QFileInfoListIterator it( *list ); /* create list iterator */
-
-	for(QFileInfo *fi; (fi=it.current()); ++it )
+	/* Check if the directory exists */
+	if (dir.exists())
 	{
-		/* for each file/dir */
-		/* if directory...=> scan recursive */
-		if (fi->isDir())
+		dir.setFilter(QDir::Files | QDir::Dirs | QDir::NoSymLinks);
+
+		/* Eventually apply the filter */
+		if (sFilter != "")
+			dir.setNameFilter(sFilter);
+
+		dir.setSorting( QDir::DirsFirst );
+
+		const QFileInfoList *list = dir.entryInfoList();
+		QFileInfoListIterator it( *list ); /* create list iterator */
+
+		for(QFileInfo *fi; (fi=it.current()); ++it )
 		{
-			if(fi->fileName()!="." && fi->fileName()!="..")
+			/* for each file/dir */
+			/* if directory...=> scan recursive */
+			if (fi->isDir())
 			{
-				ClearCache(fi->filePath(), sFilter, bDeleteDirs);
+				if(fi->fileName()!="." && fi->fileName()!="..")
+				{
+					ClearCache(fi->filePath(), sFilter, bDeleteDirs);
 				
-				/* Eventually delete the directory */
-				if (bDeleteDirs == TRUE)
-					dir.rmdir(fi->fileName());
+					/* Eventually delete the directory */
+					if (bDeleteDirs == TRUE)
+						dir.rmdir(fi->fileName());
+				}
 			}
+			else
+			{
+				/* Is a file so remove it */
+				dir.remove(fi->fileName());
+			}	
 		}
-		else
-		{
-			/* Is a file so remove it */
-			dir.remove(fi->fileName());
-		}	
 	}
 }
 
