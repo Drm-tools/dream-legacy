@@ -158,6 +158,7 @@ void CMDIConcrete::SetFACData(_BOOLEAN bFACOK, CVectorEx<_BINARY>& vecbiFACData,
 #ifdef HAVE_LIBHAMLIB
 	CReal rCurSigStr;
 	pReceiver->GetHamlib()->GetSMeter(rCurSigStr);
+	rCurSigStr += S9_DBUV;
 	TagItemGeneratorSignalStrength.GenTag(TRUE, rCurSigStr);
 #else
 	TagItemGeneratorSignalStrength.GenTag(FALSE, 0);
