@@ -1,18 +1,18 @@
 [Project]
 FileName=FDRM.dev
 Name=FDRM
-UnitCount=193
+UnitCount=220
 Type=0
 Ver=1
 ObjFiles=
-Includes=..\..\..\qt-3\include;..\..\include\qwt;..\..\WinFAAD2Inst\faad2\include;..\..\WinHamlibInst\lib;..\..\WinFhGJourLib\journaline_20040318;..\..\WinFAACInst\faac\include;..\common\GUI-QT
-Libs=..\..\..\qt-3\lib;..\..\WinHamlibInst\lib
+Includes=..\..\..\qt3\include;..\..\include\qwt;..\common;..\common\GUI-QT;..\..\WinHamlibInst\lib;..\..\WinFAAC960Inst\faac\include;..\..\WinFAAD2Inst\faad2\include;..\..\WinFhGJourLib\journaline_20040318
+Libs=..\..\..\qt3\lib
 PrivateResource=FDRM_private.rc
 ResourceIncludes=
 MakeIncludes=
 Compiler=-Wall_@@_-mthreads_@@_-fexceptions -frtti_@@_-DQT_DLL_@@_-DQT_THREAD_SUPPORT_@@_-DQT_ACCESSIBILITY_SUPPORT_@@_-DQT_TABLET_SUPPORT_@@_-DQT_NO_DEBUG_@@_-DHAVE_STDINT_H_@@_-D_WINDOWS_@@_-DNDEBUG_@@_-DWIN32_@@_
 CppCompiler=-mthreads_@@_-fexceptions -frtti _@@_-DQT_DLL_@@_-DQT_THREAD_SUPPORT_@@_-DQT_ACCESSIBILITY_SUPPORT_@@_-DQT_TABLET_SUPPORT_@@_-DQT_NO_DEBUG_@@_-DHAVE_STDINT_H_@@_-D_WINDOWS_@@_-DNDEBUG_@@_-DWIN32_@@__@@_
-Linker=-lqwt_@@_-lfaac_@@_-lfaad_@@_-lws2_32_@@_-lwinmm_@@_-lFhGJournalLine_@@_-lrfftw_@@_-lfftw_@@_-lz_@@_-lfreeimage_@@__@@_-lqtmain_@@_-lqt-mt_@@_-Wl,-enable-stdcall-fixup_@@_-Wl,-enable-auto-import -Wl,-enable-runtime-pseudo-reloc -mthreads -Wl,-s -Wl,-subsystem,windows_@@_../../WinHamlibInst/lib/libhamlib.lib_@@_
+Linker=-lqwt_@@_-lfaac_@@_-lfaad2_@@_-lws2_32_@@_-lwinmm_@@_-lFhGJournalLine_@@_-lrfftw_@@_-lfftw_@@_-lz_@@_-lqtmain_@@_-lqt-mt_@@_-Wl,-enable-stdcall-fixup_@@_-Wl,-enable-auto-import -Wl,-enable-runtime-pseudo-reloc -mthreads -Wl,-s -Wl,-subsystem,windows_@@_../../WinHamlibInst/lib/libhamlib.lib_@@_
 IsCpp=1
 Icon=
 ExeOutput=
@@ -169,16 +169,6 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit17]
-FileName=moc\moc_MDI.cpp
-CompileCpp=1
-Folder=moc
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit18]
 FileName=moc\moc_MultColorLED.cpp
 CompileCpp=1
 Folder=moc
@@ -188,7 +178,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit19]
+[Unit18]
 FileName=moc\moc_MultimediaDlg.cpp
 CompileCpp=1
 Folder=moc
@@ -198,7 +188,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit20]
+[Unit19]
 FileName=moc\moc_MultimediaDlgbase.cpp
 CompileCpp=1
 Folder=moc
@@ -208,7 +198,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit21]
+[Unit20]
 FileName=moc\moc_StationsDlg.cpp
 CompileCpp=1
 Folder=moc
@@ -218,7 +208,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit22]
+[Unit21]
 FileName=moc\moc_StationsDlgbase.cpp
 CompileCpp=1
 Folder=moc
@@ -228,7 +218,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit23]
+[Unit22]
 FileName=moc\moc_systemevalDlg.cpp
 CompileCpp=1
 Folder=moc
@@ -238,7 +228,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit24]
+[Unit23]
 FileName=moc\moc_systemevalDlgbase.cpp
 CompileCpp=1
 Folder=moc
@@ -248,7 +238,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit25]
+[Unit24]
 FileName=moc\moc_TransmDlg.cpp
 CompileCpp=1
 Folder=moc
@@ -258,7 +248,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit26]
+[Unit25]
 FileName=moc\moc_TransmDlgbase.cpp
 CompileCpp=1
 Folder=moc
@@ -268,7 +258,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit27]
+[Unit26]
 FileName=moc\MultimediaDlgbase.cpp
 CompileCpp=1
 Folder=Sources
@@ -278,7 +268,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit28]
+[Unit27]
 FileName=moc\MultimediaDlgbase.h
 CompileCpp=1
 Folder=Headers
@@ -288,7 +278,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit29]
+[Unit28]
 FileName=moc\StationsDlgbase.cpp
 CompileCpp=1
 Folder=Sources
@@ -298,7 +288,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit30]
+[Unit29]
 FileName=moc\StationsDlgbase.h
 CompileCpp=1
 Folder=Headers
@@ -308,7 +298,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit31]
+[Unit30]
 FileName=moc\systemevalDlgbase.cpp
 CompileCpp=1
 Folder=Sources
@@ -318,7 +308,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit32]
+[Unit31]
 FileName=moc\systemevalDlgbase.h
 CompileCpp=1
 Folder=Headers
@@ -328,7 +318,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit33]
+[Unit32]
 FileName=moc\TransmDlgbase.cpp
 CompileCpp=1
 Folder=Sources
@@ -338,7 +328,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit34]
+[Unit33]
 FileName=Source\Sound.h
 CompileCpp=1
 Folder=Headers
@@ -348,7 +338,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit35]
+[Unit34]
 FileName=Source\Sound.cpp
 CompileCpp=1
 Folder=Sources
@@ -358,7 +348,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit36]
+[Unit35]
 FileName=..\common\TextMessage.h
 CompileCpp=1
 Folder=Headers
@@ -368,7 +358,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit37]
+[Unit36]
 FileName=..\common\AMDemodulation.cpp
 CompileCpp=1
 Folder=Sources
@@ -378,7 +368,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit38]
+[Unit37]
 FileName=..\common\AMDemodulation.h
 CompileCpp=1
 Folder=Headers
@@ -388,7 +378,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit39]
+[Unit38]
 FileName=..\common\DataIO.cpp
 CompileCpp=1
 Folder=Sources
@@ -398,7 +388,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit40]
+[Unit39]
 FileName=..\common\DataIO.h
 CompileCpp=1
 Folder=Headers
@@ -408,7 +398,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit41]
+[Unit40]
 FileName=..\common\DrmReceiver.cpp
 CompileCpp=1
 Folder=Sources
@@ -418,7 +408,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit42]
+[Unit41]
 FileName=..\common\DrmReceiver.h
 CompileCpp=1
 Folder=Headers
@@ -428,7 +418,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit43]
+[Unit42]
 FileName=..\common\DRMSignalIO.cpp
 CompileCpp=1
 Folder=Sources
@@ -438,7 +428,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit44]
+[Unit43]
 FileName=..\common\DRMSignalIO.h
 CompileCpp=1
 Folder=Headers
@@ -448,7 +438,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit45]
+[Unit44]
 FileName=..\common\DrmSimulation.cpp
 CompileCpp=1
 Folder=Sources
@@ -458,7 +448,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit46]
+[Unit45]
 FileName=..\common\DrmSimulation.h
 CompileCpp=1
 Folder=Headers
@@ -468,7 +458,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit47]
+[Unit46]
 FileName=..\common\DrmTransmitter.cpp
 CompileCpp=1
 Folder=Sources
@@ -478,7 +468,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit48]
+[Unit47]
 FileName=..\common\DrmTransmitter.h
 CompileCpp=1
 Folder=Headers
@@ -488,7 +478,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit49]
+[Unit48]
 FileName=..\common\InputResample.cpp
 CompileCpp=1
 Folder=Sources
@@ -498,7 +488,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit50]
+[Unit49]
 FileName=..\common\InputResample.h
 CompileCpp=1
 Folder=Headers
@@ -508,7 +498,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit51]
+[Unit50]
 FileName=..\common\IQInputFilter.h
 CompileCpp=1
 Folder=Headers
@@ -518,27 +508,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit52]
-FileName=..\common\MDI.cpp
-CompileCpp=1
-Folder=Sources
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit53]
-FileName=..\common\MDI.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit54]
+[Unit51]
 FileName=..\common\MSCMultiplexer.cpp
 CompileCpp=1
 Folder=Sources
@@ -548,7 +518,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit55]
+[Unit52]
 FileName=..\common\MSCMultiplexer.h
 CompileCpp=1
 Folder=Headers
@@ -558,7 +528,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit56]
+[Unit53]
 FileName=..\common\OFDM.cpp
 CompileCpp=1
 Folder=Sources
@@ -568,7 +538,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit57]
+[Unit54]
 FileName=..\common\OFDM.h
 CompileCpp=1
 Folder=Headers
@@ -578,7 +548,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit58]
+[Unit55]
 FileName=..\common\Parameter.cpp
 CompileCpp=1
 Folder=Sources
@@ -588,7 +558,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit59]
+[Unit56]
 FileName=..\common\Parameter.h
 CompileCpp=1
 Folder=Headers
@@ -598,7 +568,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit60]
+[Unit57]
 FileName=..\common\SimulationParameters.cpp
 CompileCpp=1
 Folder=Sources
@@ -608,7 +578,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit61]
+[Unit58]
 FileName=..\common\TextMessage.cpp
 CompileCpp=1
 Folder=Sources
@@ -618,7 +588,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit62]
+[Unit59]
 FileName=..\common\chanest\ChanEstTime.cpp
 CompileCpp=1
 Folder=Sources
@@ -628,7 +598,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit63]
+[Unit60]
 FileName=..\common\chanest\ChanEstTime.h
 CompileCpp=1
 Folder=Headers
@@ -638,7 +608,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit64]
+[Unit61]
 FileName=..\common\chanest\ChannelEstimation.cpp
 CompileCpp=1
 Folder=Sources
@@ -648,7 +618,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit65]
+[Unit62]
 FileName=..\common\chanest\ChannelEstimation.h
 CompileCpp=1
 Folder=Headers
@@ -658,7 +628,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit66]
+[Unit63]
 FileName=..\common\chanest\IdealChannelEstimation.cpp
 CompileCpp=1
 Folder=Sources
@@ -668,7 +638,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit67]
+[Unit64]
 FileName=..\common\chanest\IdealChannelEstimation.h
 CompileCpp=1
 Folder=Headers
@@ -678,7 +648,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit68]
+[Unit65]
 FileName=..\common\chanest\TimeLinear.cpp
 CompileCpp=1
 Folder=Headers
@@ -688,7 +658,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit69]
+[Unit66]
 FileName=..\common\chanest\TimeLinear.h
 CompileCpp=1
 Folder=Headers
@@ -698,7 +668,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit70]
+[Unit67]
 FileName=..\common\chanest\TimeWiener.cpp
 CompileCpp=1
 Folder=Sources
@@ -708,7 +678,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit71]
+[Unit68]
 FileName=..\common\chanest\TimeWiener.h
 CompileCpp=1
 Folder=Headers
@@ -718,7 +688,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit72]
+[Unit69]
 FileName=..\common\datadecoding\DABMOT.cpp
 CompileCpp=1
 Folder=Sources
@@ -728,7 +698,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit73]
+[Unit70]
 FileName=..\common\datadecoding\DABMOT.h
 CompileCpp=1
 Folder=Headers
@@ -738,7 +708,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit74]
+[Unit71]
 FileName=..\common\datadecoding\DataDecoder.cpp
 CompileCpp=1
 Folder=Sources
@@ -748,7 +718,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit75]
+[Unit72]
 FileName=..\common\datadecoding\DataDecoder.h
 CompileCpp=1
 Folder=Headers
@@ -758,7 +728,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit76]
+[Unit73]
 FileName=..\common\datadecoding\Journaline.cpp
 CompileCpp=1
 Folder=Sources
@@ -768,7 +738,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit77]
+[Unit74]
 FileName=..\common\datadecoding\Journaline.h
 CompileCpp=1
 Folder=Headers
@@ -778,7 +748,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit78]
+[Unit75]
 FileName=..\common\datadecoding\MOTSlideShow.cpp
 CompileCpp=1
 Folder=Sources
@@ -788,7 +758,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit79]
+[Unit76]
 FileName=..\common\datadecoding\MOTSlideShow.h
 CompileCpp=1
 Folder=Headers
@@ -798,7 +768,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit80]
+[Unit77]
 FileName=..\common\drmchannel\ChannelSimulation.h
 CompileCpp=1
 Folder=Headers
@@ -808,7 +778,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit81]
+[Unit78]
 FileName=..\common\drmchannel\ChannelSimulation.cpp
 CompileCpp=1
 Folder=Sources
@@ -818,7 +788,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit82]
+[Unit79]
 FileName=..\common\FAC\FAC.h
 CompileCpp=1
 Folder=Headers
@@ -828,7 +798,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit83]
+[Unit80]
 FileName=..\common\FAC\FAC.cpp
 CompileCpp=1
 Folder=Sources
@@ -838,7 +808,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit84]
+[Unit81]
 FileName=..\common\GUI-QT\TransmDlg.h
 CompileCpp=1
 Folder=Headers
@@ -848,7 +818,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit85]
+[Unit82]
 FileName=..\common\GUI-QT\AnalogDemDlg.cpp
 CompileCpp=1
 Folder=Sources
@@ -858,7 +828,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit86]
+[Unit83]
 FileName=..\common\GUI-QT\AnalogDemDlg.h
 CompileCpp=1
 Folder=Headers
@@ -868,7 +838,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit87]
+[Unit84]
 FileName=..\common\GUI-QT\DialogUtil.cpp
 CompileCpp=1
 Folder=Sources
@@ -878,7 +848,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit88]
+[Unit85]
 FileName=..\common\GUI-QT\DialogUtil.h
 CompileCpp=1
 Folder=Headers
@@ -888,7 +858,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit89]
+[Unit86]
 FileName=..\common\GUI-QT\DRMPlot.cpp
 CompileCpp=1
 Folder=Sources
@@ -898,7 +868,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit90]
+[Unit87]
 FileName=..\common\GUI-QT\DRMPlot.h
 CompileCpp=1
 Folder=Headers
@@ -908,7 +878,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit91]
+[Unit88]
 FileName=..\common\GUI-QT\fdrmdialog.cpp
 CompileCpp=1
 Folder=Sources
@@ -918,7 +888,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit92]
+[Unit89]
 FileName=..\common\GUI-QT\fdrmdialog.h
 CompileCpp=1
 Folder=Headers
@@ -928,7 +898,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit93]
+[Unit90]
 FileName=..\common\GUI-QT\main.cpp
 CompileCpp=1
 Folder=Sources
@@ -938,7 +908,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit94]
+[Unit91]
 FileName=..\common\GUI-QT\MultColorLED.cpp
 CompileCpp=1
 Folder=Sources
@@ -948,7 +918,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit95]
+[Unit92]
 FileName=..\common\GUI-QT\MultColorLED.h
 CompileCpp=1
 Folder=Headers
@@ -958,7 +928,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit96]
+[Unit93]
 FileName=..\common\GUI-QT\MultimediaDlg.cpp
 CompileCpp=1
 Folder=Sources
@@ -968,7 +938,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit97]
+[Unit94]
 FileName=..\common\GUI-QT\MultimediaDlg.h
 CompileCpp=1
 Folder=Headers
@@ -978,7 +948,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit98]
+[Unit95]
 FileName=..\common\GUI-QT\StationsDlg.cpp
 CompileCpp=1
 Folder=Sources
@@ -988,7 +958,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit99]
+[Unit96]
 FileName=..\common\GUI-QT\StationsDlg.h
 CompileCpp=1
 Folder=Headers
@@ -998,7 +968,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit100]
+[Unit97]
 FileName=..\common\GUI-QT\systemevalDlg.cpp
 CompileCpp=1
 Folder=Sources
@@ -1008,7 +978,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit101]
+[Unit98]
 FileName=..\common\GUI-QT\systemevalDlg.h
 CompileCpp=1
 Folder=Headers
@@ -1018,7 +988,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit102]
+[Unit99]
 FileName=..\common\GUI-QT\TransmDlg.cpp
 CompileCpp=1
 Folder=Sources
@@ -1028,7 +998,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit103]
+[Unit100]
 FileName=..\common\interleaver\SymbolInterleaver.h
 CompileCpp=1
 Folder=Headers
@@ -1038,7 +1008,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit104]
+[Unit101]
 FileName=..\common\interleaver\BlockInterleaver.cpp
 CompileCpp=1
 Folder=Sources
@@ -1048,7 +1018,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit105]
+[Unit102]
 FileName=..\common\interleaver\BlockInterleaver.h
 CompileCpp=1
 Folder=Headers
@@ -1058,7 +1028,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit106]
+[Unit103]
 FileName=..\common\interleaver\SymbolInterleaver.cpp
 CompileCpp=1
 Folder=Sources
@@ -1068,7 +1038,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit107]
+[Unit104]
 FileName=..\common\matlib\MatlibStdToolbox.h
 CompileCpp=1
 Folder=Headers
@@ -1078,7 +1048,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit108]
+[Unit105]
 FileName=..\common\matlib\Matlib.h
 CompileCpp=1
 Folder=Headers
@@ -1088,7 +1058,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit109]
+[Unit106]
 FileName=..\common\matlib\MatlibSigProToolbox.cpp
 CompileCpp=1
 Folder=Sources
@@ -1098,7 +1068,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit110]
+[Unit107]
 FileName=..\common\matlib\MatlibSigProToolbox.h
 CompileCpp=1
 Folder=Headers
@@ -1108,7 +1078,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit111]
+[Unit108]
 FileName=..\common\matlib\MatlibStdToolbox.cpp
 CompileCpp=1
 Folder=Sources
@@ -1118,7 +1088,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit112]
+[Unit109]
 FileName=..\common\mlc\ViterbiDecoder.h
 CompileCpp=1
 Folder=Headers
@@ -1128,7 +1098,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit113]
+[Unit110]
 FileName=..\common\mlc\BitInterleaver.cpp
 CompileCpp=1
 Folder=Sources
@@ -1138,7 +1108,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit114]
+[Unit111]
 FileName=..\common\mlc\BitInterleaver.h
 CompileCpp=1
 Folder=Headers
@@ -1148,7 +1118,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit115]
+[Unit112]
 FileName=..\common\mlc\ChannelCode.cpp
 CompileCpp=1
 Folder=Sources
@@ -1158,7 +1128,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit116]
+[Unit113]
 FileName=..\common\mlc\ChannelCode.h
 CompileCpp=1
 Folder=Headers
@@ -1168,7 +1138,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit117]
+[Unit114]
 FileName=..\common\mlc\ConvEncoder.cpp
 CompileCpp=1
 Folder=Sources
@@ -1178,7 +1148,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit118]
+[Unit115]
 FileName=..\common\mlc\ConvEncoder.h
 CompileCpp=1
 Folder=Headers
@@ -1188,7 +1158,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit119]
+[Unit116]
 FileName=..\common\mlc\EnergyDispersal.cpp
 CompileCpp=1
 Folder=Sources
@@ -1198,7 +1168,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit120]
+[Unit117]
 FileName=..\common\mlc\EnergyDispersal.h
 CompileCpp=1
 Folder=Headers
@@ -1208,7 +1178,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit121]
+[Unit118]
 FileName=..\common\mlc\Metric.cpp
 CompileCpp=1
 Folder=Sources
@@ -1218,7 +1188,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit122]
+[Unit119]
 FileName=..\common\mlc\Metric.h
 CompileCpp=1
 Folder=Headers
@@ -1228,7 +1198,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit123]
+[Unit120]
 FileName=..\common\mlc\MLC.cpp
 CompileCpp=1
 Folder=Sources
@@ -1238,7 +1208,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit124]
+[Unit121]
 FileName=..\common\mlc\MLC.h
 CompileCpp=1
 Folder=Headers
@@ -1248,7 +1218,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit125]
+[Unit122]
 FileName=..\common\mlc\QAMMapping.cpp
 CompileCpp=1
 Folder=Sources
@@ -1258,7 +1228,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit126]
+[Unit123]
 FileName=..\common\mlc\QAMMapping.h
 CompileCpp=1
 Folder=Headers
@@ -1268,7 +1238,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit127]
+[Unit124]
 FileName=..\common\mlc\TrellisUpdateMMX.cpp
 CompileCpp=1
 Folder=Sources
@@ -1278,7 +1248,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit128]
+[Unit125]
 FileName=..\common\mlc\TrellisUpdateSSE2.cpp
 CompileCpp=1
 Folder=Sources
@@ -1288,7 +1258,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit129]
+[Unit126]
 FileName=..\common\mlc\ViterbiDecoder.cpp
 CompileCpp=1
 Folder=Sources
@@ -1298,7 +1268,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit130]
+[Unit127]
 FileName=..\common\ofdmcellmapping\OFDMCellMapping.h
 CompileCpp=1
 Folder=Headers
@@ -1308,7 +1278,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit131]
+[Unit128]
 FileName=..\common\ofdmcellmapping\CellMappingTable.cpp
 CompileCpp=1
 Folder=Sources
@@ -1318,7 +1288,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit132]
+[Unit129]
 FileName=..\common\ofdmcellmapping\CellMappingTable.h
 CompileCpp=1
 Folder=Sources
@@ -1328,7 +1298,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit133]
+[Unit130]
 FileName=..\common\ofdmcellmapping\OFDMCellMapping.cpp
 CompileCpp=1
 Folder=Sources
@@ -1338,7 +1308,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit134]
+[Unit131]
 FileName=..\common\resample\ResampleFilter.h
 CompileCpp=1
 Folder=Headers
@@ -1348,7 +1318,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit135]
+[Unit132]
 FileName=..\common\resample\Resample.cpp
 CompileCpp=1
 Folder=Sources
@@ -1358,7 +1328,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit136]
+[Unit133]
 FileName=..\common\resample\Resample.h
 CompileCpp=1
 Folder=Headers
@@ -1368,7 +1338,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit137]
+[Unit134]
 FileName=..\common\SDC\SDCTransmit.cpp
 CompileCpp=1
 Folder=Sources
@@ -1378,7 +1348,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit138]
+[Unit135]
 FileName=..\common\SDC\SDC.h
 CompileCpp=1
 Folder=Headers
@@ -1388,7 +1358,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit139]
+[Unit136]
 FileName=..\common\SDC\SDCReceive.cpp
 CompileCpp=1
 Folder=Sources
@@ -1398,7 +1368,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit140]
+[Unit137]
 FileName=..\common\sourcedecoders\AudioSourceDecoder.h
 CompileCpp=1
 Folder=Headers
@@ -1408,7 +1378,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit141]
+[Unit138]
 FileName=..\common\sourcedecoders\AudioSourceDecoder.cpp
 CompileCpp=1
 Folder=Sources
@@ -1418,7 +1388,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit142]
+[Unit139]
 FileName=..\common\sync\TimeSyncTrack.h
 CompileCpp=1
 Folder=Headers
@@ -1428,7 +1398,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit143]
+[Unit140]
 FileName=..\common\sync\FreqSyncAcq.cpp
 CompileCpp=1
 Folder=Sources
@@ -1438,7 +1408,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit144]
+[Unit141]
 FileName=..\common\sync\FreqSyncAcq.h
 CompileCpp=1
 Folder=Headers
@@ -1448,7 +1418,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit145]
+[Unit142]
 FileName=..\common\sync\SyncUsingPil.cpp
 CompileCpp=1
 Folder=Sources
@@ -1458,7 +1428,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit146]
+[Unit143]
 FileName=..\common\sync\SyncUsingPil.h
 CompileCpp=1
 Folder=Headers
@@ -1468,7 +1438,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit147]
+[Unit144]
 FileName=..\common\sync\TimeSync.cpp
 CompileCpp=1
 Folder=Headers
@@ -1478,7 +1448,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit148]
+[Unit145]
 FileName=..\common\sync\TimeSync.h
 CompileCpp=1
 Folder=Headers
@@ -1488,7 +1458,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit149]
+[Unit146]
 FileName=..\common\sync\TimeSyncFilter.h
 CompileCpp=1
 Folder=Headers
@@ -1498,7 +1468,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit150]
+[Unit147]
 FileName=..\common\sync\TimeSyncTrack.cpp
 CompileCpp=1
 Folder=Headers
@@ -1508,7 +1478,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit151]
+[Unit148]
 FileName=..\common\tables\TableQAMMapping.h
 CompileCpp=1
 Folder=Headers
@@ -1518,7 +1488,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit152]
+[Unit149]
 FileName=..\common\tables\TableCarMap.h
 CompileCpp=1
 Folder=Headers
@@ -1528,7 +1498,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit153]
+[Unit150]
 FileName=..\common\tables\TableDRMGlobal.h
 CompileCpp=1
 Folder=Headers
@@ -1538,7 +1508,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit154]
+[Unit151]
 FileName=..\common\tables\TableFAC.h
 CompileCpp=1
 Folder=Headers
@@ -1548,7 +1518,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit155]
+[Unit152]
 FileName=..\common\tables\TableMLC.h
 CompileCpp=1
 Folder=Headers
@@ -1558,7 +1528,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit156]
+[Unit153]
 FileName=..\common\util\Vector.h
 CompileCpp=1
 Folder=Headers
@@ -1568,7 +1538,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit157]
+[Unit154]
 FileName=..\common\util\AudioFile.h
 CompileCpp=1
 Folder=Headers
@@ -1578,7 +1548,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit158]
+[Unit155]
 FileName=..\common\util\Buffer.h
 CompileCpp=1
 Folder=Headers
@@ -1588,7 +1558,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit159]
+[Unit156]
 FileName=..\common\util\CRC.cpp
 CompileCpp=1
 Folder=Sources
@@ -1598,7 +1568,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit160]
+[Unit157]
 FileName=..\common\util\CRC.h
 CompileCpp=1
 Folder=Headers
@@ -1608,7 +1578,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit161]
+[Unit158]
 FileName=..\common\util\Modul.h
 CompileCpp=1
 Folder=Headers
@@ -1618,7 +1588,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit162]
+[Unit159]
 FileName=..\common\util\Settings.cpp
 CompileCpp=1
 Folder=Sources
@@ -1628,7 +1598,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit163]
+[Unit160]
 FileName=..\common\util\Settings.h
 CompileCpp=1
 Folder=Headers
@@ -1638,7 +1608,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit164]
+[Unit161]
 FileName=..\common\util\Utilities.cpp
 CompileCpp=1
 Folder=Sources
@@ -1648,7 +1618,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit165]
+[Unit162]
 FileName=..\common\util\Utilities.h
 CompileCpp=1
 Folder=Headers
@@ -1658,7 +1628,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit166]
+[Unit163]
 FileName=..\common\AMSSDemodulation.h
 CompileCpp=1
 Folder=Headers
@@ -1668,10 +1638,40 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit168]
+[Unit164]
+FileName=moc\AMSSDlgbase.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit165]
 FileName=moc\AMSSDlgbase.cpp
 CompileCpp=1
 Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit166]
+FileName=..\common\AMSSDemodulation.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit168]
+FileName=..\common\GlobalDefinitions.h
+CompileCpp=1
+Folder=Headers
 Compile=1
 Link=1
 Priority=1000
@@ -1717,26 +1717,6 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit167]
-FileName=moc\AMSSDlgbase.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit169]
-FileName=..\common\AMSSDemodulation.cpp
-CompileCpp=1
-Folder=Sources
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit170]
 FileName=moc\moc_AMSSDlgbase.cpp
 CompileCpp=1
 Folder=Sources
@@ -1746,77 +1726,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit171]
-FileName=..\common\GlobalDefinitions.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit173]
-FileName=moc\moc_LiveScheduleDlgbase.cpp
-CompileCpp=1
-Folder=moc
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit175]
-FileName=moc\LiveScheduleDlgbase.h
-CompileCpp=1
-Folder=moc
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit174]
-FileName=moc\LiveScheduleDlgbase.cpp
-CompileCpp=1
-Folder=moc
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit176]
-FileName=moc\moc_LiveScheduleDlg.cpp
-CompileCpp=1
-Folder=moc
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit177]
-FileName=..\common\GUI-QT\LiveScheduleDlg.cpp
-CompileCpp=1
-Folder=Sources
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit178]
-FileName=moc\EPGDlgbase.h
-CompileCpp=1
-Folder=moc
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit172]
+[Unit169]
 FileName=..\common\GUI-QT\LiveScheduleDlg.h
 CompileCpp=1
 Folder=Headers
@@ -1826,7 +1736,57 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit179]
+[Unit170]
+FileName=moc\moc_LiveScheduleDlgbase.cpp
+CompileCpp=1
+Folder=moc
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit171]
+FileName=moc\LiveScheduleDlgbase.cpp
+CompileCpp=1
+Folder=moc
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit173]
+FileName=moc\moc_LiveScheduleDlg.cpp
+CompileCpp=1
+Folder=moc
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit175]
+FileName=moc\EPGDlgbase.h
+CompileCpp=1
+Folder=moc
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit174]
+FileName=..\common\GUI-QT\LiveScheduleDlg.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit176]
 FileName=moc\moc_EPGDlg.cpp
 CompileCpp=1
 Folder=moc
@@ -1836,7 +1796,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit180]
+[Unit177]
 FileName=moc\moc_EPGDlgbase.cpp
 CompileCpp=1
 Folder=moc
@@ -1846,7 +1806,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit181]
+[Unit178]
 FileName=moc\EPGDlgbase.cpp
 CompileCpp=1
 Folder=moc
@@ -1856,7 +1816,17 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit183]
+[Unit172]
+FileName=moc\LiveScheduleDlgbase.h
+CompileCpp=1
+Folder=moc
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit179]
 FileName=..\common\datadecoding\epg\EPG.cpp
 CompileCpp=1
 Folder=Sources
@@ -1866,7 +1836,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit184]
+[Unit180]
 FileName=..\common\datadecoding\epg\EPG.h
 CompileCpp=1
 Folder=Headers
@@ -1876,7 +1846,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit185]
+[Unit181]
 FileName=..\common\datadecoding\epg\epgdec.cpp
 CompileCpp=1
 Folder=Sources
@@ -1886,37 +1856,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit186]
-FileName=..\common\datadecoding\epg\epgdec.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit188]
-FileName=..\common\datadecoding\epg\epgdecode.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit190]
-FileName=..\common\datadecoding\epg\epgutil.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit189]
+[Unit183]
 FileName=..\common\datadecoding\epg\epgutil.cpp
 CompileCpp=1
 Folder=Sources
@@ -1926,27 +1866,17 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit187]
-FileName=..\common\datadecoding\epg\epgdecode.cpp
+[Unit184]
+FileName=..\common\datadecoding\epg\epgutil.h
 CompileCpp=1
-Folder=Sources
+Folder=Headers
 Compile=1
 Link=1
 Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit191]
-FileName=..\common\datadecoding\epg\mjd.cpp
-CompileCpp=1
-Folder=Sources
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit192]
+[Unit185]
 FileName=..\common\GUI-QT\EPGDlg.h
 CompileCpp=1
 Folder=Headers
@@ -1956,17 +1886,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit194]
-FileName=..\common\datadecoding\EPG.cpp
-CompileCpp=1
-Folder=FDRM
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit193]
+[Unit186]
 FileName=..\common\GUI-QT\EPGDlg.cpp
 CompileCpp=1
 Folder=Sources
@@ -1976,10 +1896,90 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit196]
-FileName=..\common\datadecoding\EPG.h
+[Unit188]
+FileName=..\common\MDI\MDI.h
 CompileCpp=1
-Folder=FDRM
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit190]
+FileName=..\common\MDI\MDIConcrete.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit189]
+FileName=..\common\MDI\MDIConcrete.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit187]
+FileName=..\common\MDI\TagPacketGenerator.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit191]
+FileName=..\common\MDI\MDIDefinitions.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit192]
+FileName=..\common\MDI\MDIInBuffer.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit194]
+FileName=..\common\MDI\MDINull.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit193]
+FileName=..\common\MDI\MDIInBuffer.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit196]
+FileName=..\common\MDI\MDITagItemDecoders.h
+CompileCpp=1
+Folder=Headers
 Compile=1
 Link=1
 Priority=1000
@@ -1987,9 +1987,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit197]
-FileName=..\common\datadecoding\EPG.cpp
+FileName=..\common\MDI\MDITagItems.cpp
 CompileCpp=1
-Folder=FDRM
+Folder=Sources
 Compile=1
 Link=1
 Priority=1000
@@ -1997,9 +1997,249 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit182]
-FileName=..\common\datadecoding\epg\mjd.h
+FileName=..\common\datadecoding\epg\epgdec.h
 CompileCpp=1
 Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit195]
+FileName=..\common\MDI\MDITagItemDecoders.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit198]
+FileName=..\common\MDI\MDITagItems.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit199]
+FileName=..\common\MDI\MDITagPacketDecoder.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit200]
+FileName=..\common\MDI\MDITagPacketDecoder.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit201]
+FileName=..\common\MDI\PacketInOut.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit202]
+FileName=..\common\MDI\PacketSocketNull.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit203]
+FileName=..\common\MDI\PacketSocketNull.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit204]
+FileName=..\common\MDI\PacketSocketQT.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit205]
+FileName=..\common\MDI\PacketSocketQT.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit206]
+FileName=..\common\MDI\RSCITagItemDecoders.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit207]
+FileName=..\common\MDI\RSCITagItemDecoders.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit208]
+FileName=..\common\MDI\TagItemDecoder.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit209]
+FileName=..\common\MDI\TagPacketDecoder.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit210]
+FileName=..\common\MDI\TagPacketDecoder.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit211]
+FileName=..\common\MDI\TagPacketDecoderRSCIControl.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit212]
+FileName=..\common\MDI\TagPacketDecoderRSCIControl.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit213]
+FileName=..\common\MDI\TagPacketGenerator.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit214]
+FileName=..\common\GUI-QT\MultSettingsDlg.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit215]
+FileName=..\common\GUI-QT\MultSettingsDlg.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit216]
+FileName=moc\moc_PacketSocketQT.cpp
+CompileCpp=1
+Folder=moc
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit217]
+FileName=moc\moc_MultSettingsDlg.cpp
+CompileCpp=1
+Folder=moc
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit218]
+FileName=moc\moc_MultSettingsDlgbase.cpp
+CompileCpp=1
+Folder=moc
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit219]
+FileName=moc\MultSettingsDlgbase.h
+CompileCpp=1
+Folder=moc
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit220]
+FileName=moc\MultSettingsDlgbase.cpp
+CompileCpp=1
+Folder=moc
 Compile=1
 Link=1
 Priority=1000
