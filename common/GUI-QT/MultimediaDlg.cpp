@@ -98,7 +98,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Set FhG IIS text */
 	strFhGIISText =
 		"<table><tr><td><img source=\"PixmapFhGIIS\"></td>"
-		"<td><font face=\"Courier\" size=\"-1\">Features NewsService "
+		"<td><font face=\"" + QString(FONT_COURIER) + "\" size=\"-1\">Features NewsService "
 		"Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
 		"Germany. For more information visit http://www.iis.fhg.de/dab"
 		"</font></td></tr></table>";
@@ -106,7 +106,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Set Journaline headline text */
 	strJournalineHeadText =
 		"<table><tr><td><img source=\"PixmapLogoJournaline\"></td>"
-		"<td><h2>NewsService Journaline" + QString(QChar(174)) /* (R) */ +
+		"<td valign=\"middle\"><h2>NewsService Journaline" + QString(QChar(174)) /* (R) */ +
 		"</h2></td></tr></table>";
 
 	/* Inits for broadcast website application */
@@ -307,7 +307,7 @@ void MultimediaDlg::OnTimer()
 						+ tr("The home page is available")
 						+ "<br><br>"
 						+ tr("Impossible to uncompress the home page.<br>"
-						"For uncompress data compile Dream with Freeimage.<br>"
+						"For uncompress data compile Dream with zlib or Freeimage.<br>"
 						"Compress files will be saved on disk here:<br>" +
 						strDirMOTCache + "/") + "</center>");
 				}
@@ -392,15 +392,15 @@ void MultimediaDlg::SetJournalineText()
 	/* Set html text. Standard design. The first character must be a "<". This
 	   is used to identify whether normal text is displayed or an ID was set */
 	QString strAllText =
+		strJournalineHeadText +
 		"<table>"
-		"<tr><th>" + strJournalineHeadText + "</th></tr>"
 		"<tr><td><hr></td></tr>" /* horizontial line */
-		"<tr><th><stylebody><b>" + strTitle + "</b></stylebody></th></tr>"
+		"<tr><td><stylebody><b><center>" + strTitle + "</center></b></stylebody></td></tr>"
 		"<tr><td><stylebody><ul type=\"square\">" + strItems +
 		"</ul></stylebody></td></tr>"
 		"<tr><td><hr></td></tr>" /* horizontial line */
-		"<tr><td>" + strFhGIISText + "</td></tr>"
-		"</table>";
+		"</table>"
+		+ strFhGIISText;
 
 	/* Only update text browser if text has changed */
 	if (TextBrowser->text().compare(strAllText) != 0)
@@ -1114,7 +1114,7 @@ void MultimediaDlg::OnSetFont()
 	{
 		/* Store the current text and then reset it */
 		QString strOldText = TextBrowser->text();
-		TextBrowser->setText("");
+		TextBrowser->setText("<br>");
 
 		/* Set the new font */
 		fontTextBrowser = newFont;

@@ -60,6 +60,7 @@
 #include "../DrmReceiver.h"
 #include "MultColorLED.h"
 #include "../datadecoding/DABMOT.h"
+#include "DialogUtil.h"
 
 #ifdef HAVE_LIBFREEIMAGE
 # include <FreeImage.h>

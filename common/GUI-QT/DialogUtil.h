@@ -44,6 +44,14 @@
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 
+/* Definitions ****************************************************************/
+
+/* Definition for Courier font */
+#ifdef _WIN32
+	#define FONT_COURIER	"Courier New"
+#else
+	#define FONT_COURIER	"Courier"
+#endif
 
 /* Classes ********************************************************************/
 /* DRM events --------------------------------------------------------------- */
