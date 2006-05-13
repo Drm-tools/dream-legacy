@@ -163,7 +163,7 @@ protected:
 	virtual void	hideEvent(QHideEvent* pEvent);
 	void			SetCurrentSavePath(const QString strFileName);
 	QString			ExtractDaysFlagString(const string strDaysFlags);
-	QString			ExtractTime(const int iTime);
+	QString			ExtractTime(const int iTimeStart, const int iDuration);
 
 	CDRMReceiver*				pDRMRec;
 

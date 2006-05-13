@@ -53,40 +53,75 @@ while (s.length() < 7)
 return s;
 }
 
-QString LiveScheduleDlg::ExtractTime(const int iTime)
+QString LiveScheduleDlg::ExtractTime(const int iTimeStart, const int iDuration)
 {
-string sHours = "";
-string sMinutes = "";
+string sStartHours = "";
+string sStartMinutes = "";
+string sStopHours = "";
+string sStopMinutes = "";
 string sDays = "";
 string sResult = "";
 
-	int iMinutes = iTime % 60;
-	int iHours = iTime / 60;
-		
-	if (iMinutes < 10)
-		sMinutes = "0";
+if ((iTimeStart == 0) && (iDuration == 0))
+	return "";
 
-	if (iHours>24)
+	/* Start time */
+	int iStartMinutes = iTimeStart % 60;
+	int iStartHours = iTimeStart / 60;
+		
+	if (iStartMinutes < 10)
+		sStartMinutes = "0";
+
+	if (iStartHours < 10)
+		sStartHours = "0";
+
+	sStartHours += QString::number(iStartHours).latin1();
+	sStartMinutes += QString::number(iStartMinutes).latin1();
+
+	/* Stop time */	
+	_BOOLEAN bAllWeek24Hours = FALSE;
+    const int iTimeStop = iTimeStart + iDuration;
+
+	int iStopMinutes = iTimeStop % 60;
+	int iStopHours = iTimeStop / 60;
+		
+	if (iStopMinutes < 10)
+		sStopMinutes = "0";
+
+	if (iStopHours>24)
 	{
-		int iDays = iHours / 24;
-		
-		if (iDays > 1)
-		{
-			sDays += " (";
-			sDays += QString::number(iDays).latin1(); 
-			sDays += " days)";
+		int iDays = iStopHours / 24;
+
+		if (iDays == 7)
+			/* All the week */
+			bAllWeek24Hours = TRUE;
+		else
+		{		
+			/* Add information about days duration */
+			if (iDays > 1)
+			{
+				sDays += " (";
+				sDays += QString::number(iDays).latin1(); 
+				sDays += " days)";
+			}		
+			iStopHours = iStopHours % 24;
 		}
-		
-		iHours = iHours % 24;
 	}
-	
-	if (iHours < 10)
-		sHours = "0";
 
-	sHours += QString::number(iHours).latin1();
-	sMinutes += QString::number(iMinutes).latin1();
+	if (iStopHours < 10)
+		sStopHours = "0";
 
-	sResult = sHours + ":" + sMinutes + sDays;
+	sStopHours += QString::number(iStopHours).latin1();
+	sStopMinutes += QString::number(iStopMinutes).latin1();
+
+	if (bAllWeek24Hours == TRUE)
+		sResult = "24 hours, 7 days a week";
+	else	
+	{
+		sResult = sStartHours + ":" + sStartMinutes
+			+ "-" + sStopHours + ":" + sStopMinutes + sDays;
+	}
+
 	return QString(sResult.c_str());
 }
 
@@ -627,7 +662,7 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	ListViewStations->addColumn(tr("System"));
 	ListViewStations->addColumn(tr("Time [UTC]"));
 	ListViewStations->addColumn(tr("Target"));
-	ListViewStations->addColumn(tr("Days"));
+	ListViewStations->addColumn(tr("Start day"));
 
 	/* Set right alignment for numeric columns */
 	ListViewStations->setColumnAlignment(COL_FREQ, Qt::AlignRight);
@@ -958,9 +993,7 @@ void LiveScheduleDlg::SetStationsView()
 				vecpListItems[i] = new MyListLiveViewItem(ListViewStations,
 					QString(DRMSchedule.GetItem(i).strFreq.c_str()) /* freq. */,
 					QString(DRMSchedule.GetItem(i).strSystem.c_str())   /* system */,
-					ExtractTime(DRMSchedule.GetItem(i).iStartTime) + "-" +
-					ExtractTime(DRMSchedule.GetItem(i).iStartTime + DRMSchedule.GetItem(i).iDuration) /* time */,
-
+					ExtractTime(DRMSchedule.GetItem(i).iStartTime, DRMSchedule.GetItem(i).iDuration) /* time */,
 					QString(DRMSchedule.GetItem(i).strTarget.c_str())   /* target */,
 					ExtractDaysFlagString(DRMSchedule.GetItem(i).strDaysFlags) /* Show list of days */);
 
@@ -1097,7 +1130,7 @@ void LiveScheduleDlg::OnSave()
 			"<th>" + tr("System") + "</th>"
 			"<th>" + tr("Time [UTC]") + "</th>"
 			"<th>" + tr("Target") + "</th>"
-			"<th>" + tr("Days") + "</th>\n"
+			"<th>" + tr("Start day") + "</th>\n"
 			"</tr>\n"
 			+ strSchedule +
 			"</table>\n"
