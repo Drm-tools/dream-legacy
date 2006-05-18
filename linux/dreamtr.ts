@@ -81,6 +81,10 @@
         <source>&lt;b&gt;Auto Frequency Acquisition:&lt;/b&gt; Clicking on the input spectrum plot changes the mixing frequency for demodulation. If the Auto Frequency Acquisition is enabled, the largest peak near the curser is selected.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>&amp;Live Schedule Dialog...</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>AnalogDemDlgBase</name>
@@ -628,15 +632,15 @@ Institute for Communication Technology</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Close</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>EPG decoding is disabled</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Time [UTC]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Close</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -656,6 +660,37 @@ Institute for Communication Technology</source>
     </message>
     <message>
         <source>TextLabelUTCTime</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>F&amp;reeze</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>CMultSettingsDlgBase</name>
+    <message>
+        <source>Multimedia settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>MOT Broadcast Web Site</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Add refresh header of seconds</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Clear cache</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>EPG - Electronic Programme Guide</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -820,10 +855,6 @@ Institute for Communication Technology</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Analog Demodulation</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source> kbps</source>
         <translation type="unfinished"></translation>
     </message>
@@ -865,6 +896,14 @@ Institute for Communication Technology</source>
     </message>
     <message>
         <source>&lt;b&gt;Service Selectors:&lt;/b&gt; In a DRM stream up to four services can be carried. The service can be an audio service, a data service or an audio service with data. Audio services can have associated text messages, in addition to any data component. If a Multimedia data service is selected, the Multimedia Dialog will automatically show up. On the right of each service selection button a short description of the service is shown. If an audio service has associated Multimedia data, &quot;+ MM&quot; is added to this text. If such a service is selected, opening the Multimedia Dialog will allow the data to be viewed while the audio is still playing. If the data component of a service is not Multimedia, but an EPG (Electronic Programme Guide) &quot;+ EPG&quot; is added to the description. The accumulated Programme Guides for all stations can be viewed by opening the Programme Guide Dialog. The selected channel in the Programme Guide Dialog defaults to the station being received. If Alternative Frequency Signalling is available, &quot;+ AFS&quot; is added to the description. In this case the alternative frequencies can be viewed by opening the Live Schedule Dialog.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Multimedia settings...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Multimedia settings</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -954,10 +993,6 @@ Institute for Communication Technology</source>
 <context>
     <name>LiveScheduleDlg</name>
     <message>
-        <source>Frequency [kHz]</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>System</source>
         <translation type="unfinished"></translation>
     </message>
@@ -967,10 +1002,6 @@ Institute for Communication Technology</source>
     </message>
     <message>
         <source>Target</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Days</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1018,11 +1049,27 @@ Institute for Communication Technology</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;Live Schedule List:&lt;/b&gt; In the live schedule list view AFS (Alternative Frequency Signalling) informations trasmitted into the current DRM signal.It is possible to show only active stations by changing a setting in the &apos;view&apos; menu. The color of the cube on the left of a menu item shows the current status of the DRM transmission. A green box shows that the transmission takes place right now, a yellow cube shows that this is a test transmission and with a red cube it is shown that the transmission is offline.&lt;br&gt;If the stations preview is active an orange box shows the stations that will be active.&lt;br&gt;The list can be sorted by clicking on the headline of the column.</source>
+        <source>&lt;b&gt;UTC Time:&lt;/b&gt; Shows the current Coordinated Universal Time (UTC) which is also known as Greenwich Mean Time (GMT).</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;UTC Time:&lt;/b&gt; Shows the current Coordinated Universal Time (UTC) which is also known as Greenwich Mean Time (GMT).</source>
+        <source>Frequency [kHz/MHz]</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Start day</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Live Schedule</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Live Schedule List:&lt;/b&gt; In the live schedule list it&apos;s possible to view AFS (Alternative Frequency Signalling) informations trasmitted with the current DRM or AMSS signal.&lt;/b&gt;It is possible to show only active stations by changing a setting in the &apos;view&apos; menu.&lt;br&gt;The color of the cube on the left of the frequency shows the current status of the transmission.&lt;br&gt;A green box shows that the transmission takes place right now a red cube it is shown that the transmission is offline.&lt;br&gt;If the stations preview is active an orange box shows the stations that will be active.&lt;br&gt;A little green cube on the left of the target column show that the receiver coordinates (latitude and longitude) stored into Dream settings are into the target area of this transmission.&lt;br&gt;The list can be sorted by clicking on the headline of the column.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Freeze:&lt;/b&gt; If this check box is selectd the live schedule is freezed.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1315,6 +1362,14 @@ Please exit Dream now.</source>
         <source>&lt;b&gt;Signal-Meter:&lt;/b&gt; Shows the signal strength level in dB relative to S9.&lt;br&gt;Note that not all front-ends controlled by hamlib support this feature. If the s-meter is not available, the controls are disabled.</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source> (last update: </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Get Update</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>TransmDialog</name>
@@ -1401,6 +1456,10 @@ This is a test transmission</source>
     </message>
     <message>
         <source>&lt;b&gt;MSC interleaver mode:&lt;/b&gt; The symbol interleaver depth can be either short (approx. 400 ms) or long (approx. 2 s). The longer the interleaver the better the channel decoder can correct errors from slow fading signals. But the longer the interleaver length the longer the delay until (after a re-synchronization) audio can be heard.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Dream DRM Transmitter</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2113,14 +2172,6 @@ Bandwidth        </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Flip Input Spectrum</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Mute Audio</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>TextNumOfIterations</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2129,19 +2180,7 @@ Bandwidth        </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Log File, Freq:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>kHz</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Save Audio as WAV</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Reverberation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -2149,15 +2188,35 @@ Bandwidth        </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Bandpass Filter</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Modified Metrics</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&amp;Close</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Flip Input Spectrum</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Mute &amp;Audio</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Log File, Freq:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Save Audio as WAV</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Reverberation</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;Bandpass Filter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Modified &amp;Metrics</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
