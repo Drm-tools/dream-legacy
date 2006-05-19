@@ -117,7 +117,7 @@ public:
 	virtual ~CAMSSPhaseDemod() { }
 
 	void SetAcqFreq(const CReal rNewNormCenter);
-	_BOOLEAN CAMSSPhaseDemod::GetPLLPhase(CReal& rPhaseOut);
+	_BOOLEAN GetPLLPhase(CReal& rPhaseOut);
 
 protected:
 	virtual void InitInternal(CParameter& ReceiverParam);
