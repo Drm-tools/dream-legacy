@@ -31,26 +31,26 @@
 
 string CDRMLiveSchedule::Binary2String(const int iVal)
 {
-int p;
-string s = "";
-int iTempVal = iVal;
+	int p;
+	string s = "";
+	int iTempVal = iVal;
 
-while (iTempVal != 0)
-{
-	p = iTempVal % 2;
+	while (iTempVal != 0)
+	{
+		p = iTempVal % 2;
 
-	if (p == 1)
-		s = s + "1";
-	else
-		s = s + "0";
-	
-	iTempVal = iTempVal / 2;
+		if (p == 1)
+			s = s + "1";
+		else
+			s = s + "0";
+		
+		iTempVal = iTempVal / 2;
+	}
 	/* complete the string with zeros (length must be 7) */
 	while (s.length() < 7)
 		s = "0" + s;
-}
 
-return s;
+	return s;
 }
 
 QString LiveScheduleDlg::ExtractTime(const int iTimeStart, const int iDuration)
