@@ -5,14 +5,14 @@ UnitCount=220
 Type=0
 Ver=1
 ObjFiles=
-Includes=..\..\..\qt3\include;..\..\include\qwt;..\common;..\common\GUI-QT;..\..\WinHamlibInst\lib;..\..\WinFAAC960Inst\faac\include;..\..\WinFAAD2Inst\faad2\include;..\..\WinFhGJourLib\journaline_20040318
-Libs=..\..\..\qt3\lib
+Includes=..\common\GUI-QT;\qt-3\include;D:\Dev-Cpp\include\qwt;D:\Dev-Cpp\WinFAAD2Inst\faad2\include;D:\Dev-Cpp\WinHamlibInst\lib;D:\Dev-Cpp\WinFhGJourLib\journaline_20040318;D:\Dev-Cpp\WinFAAC960Inst\faac\include
+Libs=\qt-3\lib
 PrivateResource=FDRM_private.rc
 ResourceIncludes=
 MakeIncludes=
 Compiler=-Wall_@@_-mthreads_@@_-fexceptions -frtti_@@_-DQT_DLL_@@_-DQT_THREAD_SUPPORT_@@_-DQT_ACCESSIBILITY_SUPPORT_@@_-DQT_TABLET_SUPPORT_@@_-DQT_NO_DEBUG_@@_-DHAVE_STDINT_H_@@_-D_WINDOWS_@@_-DNDEBUG_@@_-DWIN32_@@_
 CppCompiler=-mthreads_@@_-fexceptions -frtti _@@_-DQT_DLL_@@_-DQT_THREAD_SUPPORT_@@_-DQT_ACCESSIBILITY_SUPPORT_@@_-DQT_TABLET_SUPPORT_@@_-DQT_NO_DEBUG_@@_-DHAVE_STDINT_H_@@_-D_WINDOWS_@@_-DNDEBUG_@@_-DWIN32_@@__@@_
-Linker=-lqwt_@@_-lfaac_@@_-lfaad2_@@_-lws2_32_@@_-lwinmm_@@_-lFhGJournalLine_@@_-lrfftw_@@_-lfftw_@@_-lz_@@_-lqtmain_@@_-lqt-mt_@@_-Wl,-enable-stdcall-fixup_@@_-Wl,-enable-auto-import -Wl,-enable-runtime-pseudo-reloc -mthreads -Wl,-s -Wl,-subsystem,windows_@@_../../WinHamlibInst/lib/libhamlib.lib_@@_
+Linker=-lqwt_@@_-lfaac_@@_-lfaad2_@@_-lhamlib_@@_-lFhGJournalLine_@@_-lrfftw_@@_-lfftw_@@_-lz_@@_-lqtmain_@@_-lqt-mt_@@_-lws2_32_@@_-lwinmm_@@_-Wl,-enable-stdcall-fixup_@@_-Wl,-enable-auto-import -Wl,-enable-runtime-pseudo-reloc -mthreads -Wl,-s -Wl,-subsystem,windows_@@_
 IsCpp=1
 Icon=
 ExeOutput=
@@ -1896,57 +1896,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit188]
-FileName=..\common\MDI\MDI.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
 [Unit190]
-FileName=..\common\MDI\MDIConcrete.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit189]
-FileName=..\common\MDI\MDIConcrete.cpp
-CompileCpp=1
-Folder=Sources
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit187]
-FileName=..\common\MDI\TagPacketGenerator.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit191]
-FileName=..\common\MDI\MDIDefinitions.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit192]
 FileName=..\common\MDI\MDIInBuffer.cpp
 CompileCpp=1
 Folder=Sources
@@ -1956,8 +1906,38 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
+[Unit187]
+FileName=..\common\MDI\MDIRSCI.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit191]
+FileName=moc\moc_PacketSocketQT.cpp
+CompileCpp=1
+Folder=moc
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit192]
+FileName=moc\moc_MultSettingsDlgbase.cpp
+CompileCpp=1
+Folder=moc
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
 [Unit194]
-FileName=..\common\MDI\MDINull.h
+FileName=..\common\GUI-QT\MultSettingsDlg.h
 CompileCpp=1
 Folder=Headers
 Compile=1
@@ -1967,19 +1947,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit193]
-FileName=..\common\MDI\MDIInBuffer.h
+FileName=moc\moc_MultSettingsDlg.cpp
 CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit196]
-FileName=..\common\MDI\MDITagItemDecoders.h
-CompileCpp=1
-Folder=Headers
+Folder=moc
 Compile=1
 Link=1
 Priority=1000
@@ -1987,7 +1957,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit197]
-FileName=..\common\MDI\MDITagItems.cpp
+FileName=..\common\MDI\TagPacketDecoderRSCIControl.cpp
 CompileCpp=1
 Folder=Sources
 Compile=1
@@ -2006,7 +1976,87 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
+[Unit188]
+FileName=..\common\MDI\MDIInBuffer.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit189]
+FileName=..\common\MDI\MDIRSCI.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
 [Unit195]
+FileName=..\common\GUI-QT\MultSettingsDlg.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit196]
+FileName=..\common\MDI\TagPacketDecoderRSCIControl.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit198]
+FileName=..\common\MDI\TagPacketDecoder.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit199]
+FileName=..\common\MDI\TagPacketDecoderMDI.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit200]
+FileName=..\common\MDI\TagPacketGenerator.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit201]
+FileName=..\common\MDI\MDIDecode.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit202]
 FileName=..\common\MDI\MDITagItemDecoders.cpp
 CompileCpp=1
 Folder=Sources
@@ -2016,18 +2066,8 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit198]
-FileName=..\common\MDI\MDITagItems.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit199]
-FileName=..\common\MDI\MDITagPacketDecoder.cpp
+[Unit203]
+FileName=..\common\MDI\MDITagItems.cpp
 CompileCpp=1
 Folder=Sources
 Compile=1
@@ -2036,27 +2076,7 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit200]
-FileName=..\common\MDI\MDITagPacketDecoder.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit201]
-FileName=..\common\MDI\PacketInOut.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit202]
+[Unit204]
 FileName=..\common\MDI\PacketSocketNull.cpp
 CompileCpp=1
 Folder=Sources
@@ -2066,30 +2086,10 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
-[Unit203]
-FileName=..\common\MDI\PacketSocketNull.h
-CompileCpp=1
-Folder=Headers
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit204]
+[Unit205]
 FileName=..\common\MDI\PacketSocketQT.cpp
 CompileCpp=1
 Folder=Sources
-Compile=1
-Link=1
-Priority=1000
-OverrideBuildCmd=0
-BuildCmd=
-
-[Unit205]
-FileName=..\common\MDI\PacketSocketQT.h
-CompileCpp=1
-Folder=Headers
 Compile=1
 Link=1
 Priority=1000
@@ -2107,9 +2107,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit207]
-FileName=..\common\MDI\RSCITagItemDecoders.h
+FileName=..\common\MDI\TagPacketDecoderMDI.cpp
 CompileCpp=1
-Folder=Headers
+Folder=Sources
 Compile=1
 Link=1
 Priority=1000
@@ -2117,7 +2117,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit208]
-FileName=..\common\MDI\TagItemDecoder.h
+FileName=..\common\MDI\TagPacketGenerator.h
 CompileCpp=1
 Folder=Headers
 Compile=1
@@ -2127,9 +2127,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit209]
-FileName=..\common\MDI\TagPacketDecoder.cpp
+FileName=..\common\MDI\MDIDecode.h
 CompileCpp=1
-Folder=Sources
+Folder=Headers
 Compile=1
 Link=1
 Priority=1000
@@ -2137,7 +2137,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit210]
-FileName=..\common\MDI\TagPacketDecoder.h
+FileName=..\common\MDI\MDIDefinitions.h
 CompileCpp=1
 Folder=Headers
 Compile=1
@@ -2147,9 +2147,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit211]
-FileName=..\common\MDI\TagPacketDecoderRSCIControl.cpp
+FileName=..\common\MDI\MDITagItemDecoders.h
 CompileCpp=1
-Folder=Sources
+Folder=Headers
 Compile=1
 Link=1
 Priority=1000
@@ -2157,7 +2157,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit212]
-FileName=..\common\MDI\TagPacketDecoderRSCIControl.h
+FileName=..\common\MDI\MDITagItems.h
 CompileCpp=1
 Folder=Headers
 Compile=1
@@ -2167,9 +2167,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit213]
-FileName=..\common\MDI\TagPacketGenerator.cpp
+FileName=..\common\MDI\PacketInOut.h
 CompileCpp=1
-Folder=Sources
+Folder=Headers
 Compile=1
 Link=1
 Priority=1000
@@ -2177,9 +2177,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit214]
-FileName=..\common\GUI-QT\MultSettingsDlg.cpp
+FileName=..\common\MDI\PacketSocketNull.h
 CompileCpp=1
-Folder=Sources
+Folder=Headers
 Compile=1
 Link=1
 Priority=1000
@@ -2187,7 +2187,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit215]
-FileName=..\common\GUI-QT\MultSettingsDlg.h
+FileName=..\common\MDI\PacketSocketQT.h
 CompileCpp=1
 Folder=Headers
 Compile=1
@@ -2197,9 +2197,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit216]
-FileName=moc\moc_PacketSocketQT.cpp
+FileName=..\common\MDI\RSCITagItemDecoders.h
 CompileCpp=1
-Folder=moc
+Folder=Headers
 Compile=1
 Link=1
 Priority=1000
@@ -2207,9 +2207,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit217]
-FileName=moc\moc_MultSettingsDlg.cpp
+FileName=..\common\MDI\TagItemDecoder.h
 CompileCpp=1
-Folder=moc
+Folder=Headers
 Compile=1
 Link=1
 Priority=1000
@@ -2217,9 +2217,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit218]
-FileName=moc\moc_MultSettingsDlgbase.cpp
+FileName=..\common\MDI\TagPacketDecoder.h
 CompileCpp=1
-Folder=moc
+Folder=Headers
 Compile=1
 Link=1
 Priority=1000

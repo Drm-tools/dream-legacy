@@ -63,7 +63,7 @@ void CPacketSocketQT::SendPacket(const vector<_BYTE>& vecbydata)
 	char *p = new char[vecbydata.size()];
 	for(size_t i=0; i<vecbydata.size(); i++)
 	p[i]=vecbydata[i];
-	Q_LONG bytes_written = SocketDevice.writeBlock(p, vecbydata.size(),
+	uint32_t bytes_written = SocketDevice.writeBlock(p, vecbydata.size(),
 		HostAddrOut, iHostPortOut);
 	if(bytes_written==-1)
 	    cout << "error sending packet : " << SocketDevice.error() << endl;
@@ -84,11 +84,16 @@ _BOOLEAN CPacketSocketQT::SetNetwOutAddr(const string& strNewAddr)
            iHostPortOut = parts[1].toInt();
            break;
       case 3:
-	  	   QHostAddress AddrInterface(parts[0]);
+		QHostAddress AddrInterface;
+	  	AddrInterface.setAddress(parts[0]);
            bAddressOK = HostAddrOut.setAddress(parts[1]);
            iHostPortOut = parts[2].toInt();
            const SOCKET s = SocketDevice.socket();
-	   uint32_t mc_if = htonl(AddrInterface.toIPv4Address());
+#if QT_VERSION > 230
+		   uint32_t mc_if = htonl(AddrInterface.toIPv4Address());
+#else
+		   uint32_t mc_if = htonl(inet_addr(AddrInterface.toString().toLatin1()));
+#endif
            if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF, 
              (char*) &mc_if, sizeof(mc_if))==SOCKET_ERROR)
                bAddressOK = FALSE;
@@ -131,7 +136,12 @@ _BOOLEAN CPacketSocketQT::SetNetwInAddr(const string& strNewAddr)
 
 	/* Multicast ? */
 	
-	if (AddrGroup.toIPv4Address() == 0)
+#if QT_VERSION > 230
+	uint32_t gp = htonl(AddrGroup.toIPv4Address());
+#else
+	uint32_t gp = htonl(inet_addr(AddrGroup.toString.toLatin1()));
+#endif
+	if (gp == 0)
 	{
                                   
 		/* Initialize the listening socket. */
@@ -149,8 +159,13 @@ _BOOLEAN CPacketSocketQT::SetNetwInAddr(const string& strNewAddr)
 		                     return FALSE;
                              }
   
+#if QT_VERSION > 230
 		mreq.imr_multiaddr.s_addr = htonl(AddrGroup.toIPv4Address());
 		mreq.imr_interface.s_addr = htonl(AddrInterface.toIPv4Address());
+#else
+		mreq.imr_multiaddr.s_addr = htonl(inet_addr(AddrGroup.toString.toLatin1()));
+		mreq.imr_interface.s_addr = htonl(inet_addr(AddrInterface.toString.toLatin1()));
+#endif
         const SOCKET s = SocketDevice.socket();
         int n = setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*) &mreq,
 				sizeof(mreq));

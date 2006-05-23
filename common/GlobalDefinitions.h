@@ -68,14 +68,14 @@ using namespace std; /* Because of the library: "complex" */
 # define HAVE_JOURNALINE
 //# undef HAVE_JOURNALINE
 
-//# define HAVE_LIBFREEIMAGE
-# undef HAVE_LIBFREEIMAGE
+# define HAVE_LIBFREEIMAGE
+//# undef HAVE_LIBFREEIMAGE
 
-//# define HAVE_LIBHAMLIB
-# undef HAVE_LIBHAMLIB
+# define HAVE_LIBHAMLIB
+//# undef HAVE_LIBHAMLIB
 
-# define HAVE_ZLIB_LIBRARY
-//# undef HAVE_ZLIB_LIBRARY
+//# define HAVE_ZLIB_LIBRARY
+# undef HAVE_ZLIB_LIBRARY
 
 /* Define if you have Hamlib >= 1.2.1 */
 # define HAVE_RIG_PARSE_MODE			1

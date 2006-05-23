@@ -516,7 +516,11 @@ SOURCE=..\common\util\Utilities.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\common\MDI\MDIConcrete.cpp
+SOURCE=..\common\MDI\MDIDecode.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\MDIRSCI.cpp
 # End Source File
 # Begin Source File
 
@@ -532,7 +536,7 @@ SOURCE=..\common\MDI\MDITagItems.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\MDI\MDITagPacketDecoder.cpp
+SOURCE=..\common\MDI\TagPacketDecoderMDI.cpp
 # End Source File
 # Begin Source File
 
@@ -925,11 +929,11 @@ SOURCE=..\common\util\Vector.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\common\MDI\MDI.h
+SOURCE=..\common\MDI\MDIRSCI.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\MDI\MDIConcrete.h
+SOURCE=..\common\MDI\MDIDecode.h
 # End Source File
 # Begin Source File
 
@@ -941,10 +945,6 @@ SOURCE=..\common\MDI\MDIInBuffer.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\MDI\MDINull.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\MDI\MDITagItemDecoders.h
 # End Source File
 # Begin Source File
@@ -953,7 +953,7 @@ SOURCE=..\common\MDI\MDITagItems.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\MDI\MDITagPacketDecoder.h
+SOURCE=..\common\MDI\TagPacketDecoderMDI.h
 # End Source File
 # Begin Source File
 

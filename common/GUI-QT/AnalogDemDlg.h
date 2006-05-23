@@ -46,6 +46,7 @@
 #include <qprogressbar.h>
 #include <qcombobox.h>
 #include <qlistbox.h>
+/* This include is for setting the progress bar style */
 #include <qmotifstyle.h>
 
 #ifdef _WIN32

@@ -288,7 +288,7 @@ void CSettings::ReadIniFile()
 	
 	/* demodulation */
 	if (GetNumericIniSet(ini, "Analog demodulation dialog", "demodulation", 0, CAMDemodulation::DT_FM , iValue) == TRUE)
-		pDRMRec->GetAMDemod()->SetDemodType((CAMDemodulation::EDemodType) iValue);
+		pDRMRec->AMDemodType = (CAMDemodulation::EDemodType) iValue;
 
 	/* AGC */
 	if (GetNumericIniSet(ini, "Analog demodulation dialog", "agc", 0, CAGC::AT_FAST, iValue) == TRUE)
@@ -1198,7 +1198,7 @@ string CSettings::UsageArguments(char** argv)
 		"Example: " + string(argv[0]) +
 		" -p --sampleoff -0.23 -i 2 "
 #ifdef USE_QT_GUI
-		"-r 6140 -a 50°13\\'N -o 8°34\\'E --mdioutadr 127.0.0.1:3002"
+		"-r 6140 -a 50°13\\'N -o 8°34\\'E --rsioutadr 127.0.0.1:3002"
 #endif
 		"\n";
 }
