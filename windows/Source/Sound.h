@@ -37,7 +37,7 @@
 class CSoundInterface
 {
 public:
-    CSoundInterface():iCurDev(-1),vecstrDevices(),m_WaveEvent(NULL){}
+    CSoundInterface():iCurDev(0),vecstrDevices(),m_WaveEvent(NULL){}
 	virtual void		Enumerate(vector<string>& names){ names = vecstrDevices; }
 	virtual void		SetDev(int iNewDev) { iCurDev = iNewDev; }
 	int			GetDev() {return iCurDev;}
@@ -45,7 +45,7 @@ public:
 	void		Close();
 
 protected:
-	vector<string>			vecstrDevices;
+	vector<string>	vecstrDevices;
 	int				iCurDev;
 	WAVEFORMATEX	sWaveFormatEx;
 	BOOLEAN			bChangDev;

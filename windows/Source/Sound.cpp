@@ -75,9 +75,6 @@ CSoundIn::CSoundIn():CSoundInterface(),m_WaveIn(NULL)
 	/* Set flag to open devices */
 	bChangDev = TRUE;
 
-	/* Default device number, Primary Capture Device */
-	/* TODO does not work well with hot pluggable devices! */
-	iCurDev = iNumDevs-1;
 
 	/* Blocking wave in is default */
 	bBlocking = TRUE;
