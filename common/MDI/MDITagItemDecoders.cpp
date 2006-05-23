@@ -37,8 +37,8 @@
 
 
 #include "MDITagItemDecoders.h"
-#include "MDIInBuffer.h"
 #include "../Parameter.h"
+#include <iostream>
 
 string CTagItemDecoderProTy::GetTagName(void) {return "*ptr";}
 void CTagItemDecoderProTy::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
@@ -61,19 +61,18 @@ void CTagItemDecoderProTy::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	if (iLen != 64)
 		return; // TODO: error handling!!!!!!!!!!!!!!!!!!!!!!
 
+	CDCPProtocol p;
 	/* Decode protocol type (32 bits = 4 bytes) */
-	string strProtType = "";
+	p.protocol = "";
 	for (int i = 0; i < 4 /* bytes */; i++)
-		strProtType += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
+		p.protocol += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
 
-	if (strProtType.compare("DMDI") != 0)
-	{
-		// TODO
-	}
 
 	/* Get major and minor revision of protocol */
-	const int iMdiMajRev = (int) vecbiTag.Separate(16);
-	const int iMdiMinRev = (int) vecbiTag.Separate(16);
+	p.major = (int) vecbiTag.Separate(16);
+	p.minor = (int) vecbiTag.Separate(16);
+	
+	protocols.push_back(p);
 }
 
 string CTagItemDecoderLoFrCnt::GetTagName(void) {return "dlfc";}
@@ -83,10 +82,8 @@ void CTagItemDecoderLoFrCnt::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLe
 	if (iLen != 32)
 		return; // TODO: error handling!!!!!!!!!!!!!!!!!!!!!!
 
-	int iLogFraCnt = (int) vecbiTag.Separate(32);
+	dlfc = (uint32_t) vecbiTag.Separate(32);
 
-// TODO:
-/* Do something with the count */
 }
 
 
@@ -99,12 +96,12 @@ void CTagItemDecoderFAC::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		return; // TODO: error handling!!!!!!!!!!!!!!!!!!!!!!
 
 	/* Copy incoming FAC data */
-	pMDIInPkt->vecbiFACData.Init(NUM_FAC_BITS_PER_BLOCK);
-	pMDIInPkt->vecbiFACData.ResetBitAccess();
+	vecbidata.Init(NUM_FAC_BITS_PER_BLOCK);
+	vecbidata.ResetBitAccess();
 
 	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE; i++)
 	{
-		pMDIInPkt->vecbiFACData.
+		vecbidata.
 			Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 }
@@ -123,14 +120,13 @@ void CTagItemDecoderSDC::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	/* Copy incoming SDC data */
 	const int iSDCDataSize = iLen - 4;
 
-	pMDIInPkt->vecbiSDCData.Init(iSDCDataSize);
-	pMDIInPkt->vecbiSDCData.ResetBitAccess();
+	vecbidata.Init(iSDCDataSize);
+	vecbidata.ResetBitAccess();
 
 	/* We have to copy bits instead of bytes since the length of SDC data is
 	   usually not a multiple of 8 */
 	for (int i = 0; i < iSDCDataSize; i++)
-		pMDIInPkt->vecbiSDCData.Enqueue(vecbiTag.Separate(1), 1);
-
+		vecbidata.Enqueue(vecbiTag.Separate(1), 1);
 }
 
 
@@ -146,22 +142,22 @@ void CTagItemDecoderRobMod::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen
 	{
 	case 0:
 		/* Robustness mode A */
-		pMDIInPkt->eRobMode = RM_ROBUSTNESS_MODE_A;
+		eRobMode = RM_ROBUSTNESS_MODE_A;
 		break;
 
 	case 1:
 		/* Robustness mode B */
-		pMDIInPkt->eRobMode = RM_ROBUSTNESS_MODE_B;
+		eRobMode = RM_ROBUSTNESS_MODE_B;
 		break;
 
 	case 2:
 		/* Robustness mode C */
-		pMDIInPkt->eRobMode = RM_ROBUSTNESS_MODE_C;
+		eRobMode = RM_ROBUSTNESS_MODE_C;
 		break;
 
 	case 3:
 		/* Robustness mode D */
-		pMDIInPkt->eRobMode = RM_ROBUSTNESS_MODE_D;
+		eRobMode = RM_ROBUSTNESS_MODE_D;
 		break;
 	}
 }
@@ -179,20 +175,15 @@ string CTagItemDecoderStr::GetTagName(void)
 	}
 }
 
-void CTagItemDecoderStr::SetStreamNumber(const int iNumber)
-{
-	iStreamNumber = iNumber;
-}
-
 void CTagItemDecoderStr::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	/* Copy stream data */
-	pMDIInPkt->vecbiStr[iStreamNumber].Init(iLen);
-	pMDIInPkt->vecbiStr[iStreamNumber].ResetBitAccess();
+	vecbidata.Init(iLen);
+	vecbidata.ResetBitAccess();
 
 	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 	{
-		pMDIInPkt->vecbiStr[iStreamNumber].
+		vecbidata.
 			Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 }
@@ -252,9 +243,8 @@ string CTagItemDecoderInfo::GetTagName(void) {return "info";}
 
 void CTagItemDecoderInfo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
-// TODO use text somehow
 	/* Decode info string */
-	string strInfo = "";
+	strInfo = "";
 	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 		strInfo += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
 }

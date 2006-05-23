@@ -54,83 +54,25 @@
 /* Implementation *************************************************************/
 void CMSCDemultiplexer::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	/* Audio ---------------------------------------------------------------- */
-	/* Extract audio data from input-stream */
-	ExtractData(*pvecInputData, *pvecOutputData, AudStreamPos);
-
-
-	/* Data ----------------------------------------------------------------- */
-	/* Extract data from input-stream */
-	ExtractData(*pvecInputData, *pvecOutputData2, DataStreamPos);
-
-
-#ifdef USE_QT_GUI
-	/* MDI ------------------------------------------------------------------ */
-	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
-	   in case of simulation because in this case there is no MDI) */
-	if (pMDI != NULL)
-	{
-		/* Only put data in MDI object if MDI is enabled */
-		if (pMDI->GetMDIOutEnabled() == TRUE)
-		{
-			/* Put all streams to MDI object */
-			for (int j = 0; j < veciMDIActStre.Size(); j++)
-			{
-				/* Prepare temporary vector */
-				CVectorEx<_BINARY> vecbiStrData;
-				vecbiStrData.Init(vecMDIStrPos[j].iLenLow +
-					vecMDIStrPos[j].iLenHigh);
-
-				/* Extract data */
-				ExtractData(*pvecInputData, vecbiStrData, vecMDIStrPos[j]);
-
-				/* Now put the data to the MDI object */
-				pMDI->SetStreamData(veciMDIActStre[j], vecbiStrData);
-			}
-		}
-
-		if (pMDI->GetMDIInEnabled() == TRUE)
-		{
-			/* Get stream data from received MDI packets */
-			/* OutputData1 is audio */
-			pMDI->GetStreamData(*pvecOutputData, iOutputBlockSize,
-				iAudioStreamID);
-
-			/* OutputData2 is data */
-			pMDI->GetStreamData(*pvecOutputData2, iOutputBlockSize2,
-				iDataStreamID);
-		}
-	}
-#endif
+ 	for(size_t i=0; i<4; i++)
+		ExtractData(*pvecInputData, *vecpvecOutputData[i], StreamPos[i]);
 }
 
 void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 {
+ 	for(size_t i=0; i<4; i++)
+ 	{
+		StreamPos[i] = GetStreamPos(ReceiverParam, i);
+		veciOutputBlockSize[i] = StreamPos[i].iLenHigh + StreamPos[i].iLenLow;
+	}
 	/* Audio ---------------------------------------------------------------- */
 	/* Get audio stream ID of current selected audio service (might be an
 	   invalid stream) */
-	iAudioStreamID = ReceiverParam.
+	int iAudioStreamID = ReceiverParam.
 		Service[ReceiverParam.GetCurSelAudioService()].AudioParam.iStreamID;
 
-	/* Check if current selected service is an audio service and get stream
-	   position */
-	if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
-		eAudDataFlag == CParameter::SF_AUDIO)
-	{
-		AudStreamPos = GetStreamPos(ReceiverParam, iAudioStreamID);
-	}
-	else
-	{
-		/* This is not an audio stream, zero the lengths */
-		AudStreamPos.iLenHigh = 0;
-		AudStreamPos.iLenLow = 0;
-	}
-
-	/* Set audio output block size */
-	iOutputBlockSize = AudStreamPos.iLenHigh + AudStreamPos.iLenLow;
-
 	/* Set number of output bits for audio decoder in global struct */
-	ReceiverParam.SetNumAudioDecoderBits(iOutputBlockSize);
+	ReceiverParam.SetNumAudioDecoderBits(veciOutputBlockSize[iAudioStreamID]);
 
 
 	/* Data ----------------------------------------------------------------- */
@@ -138,30 +80,11 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 	   an output size of "0" -> no output data generated */
 	if (ReceiverParam.bUsingMultimedia)
 	{
-		iDataStreamID = ReceiverParam.
+		int iStreamID = ReceiverParam.
 			Service[ReceiverParam.GetCurSelDataService()].DataParam.iStreamID;
+		/* Set number of output bits for data decoder in global struct */
+		ReceiverParam.SetNumDataDecoderBits(veciOutputBlockSize[iStreamID]);
 	}
-	else
-		iDataStreamID = STREAM_ID_NOT_USED;
-
-	/* Get stream position of current selected data service */
-	DataStreamPos = GetStreamPos(ReceiverParam, iDataStreamID);
-
-	/* Set data output block size */
-	iOutputBlockSize2 = DataStreamPos.iLenHigh + DataStreamPos.iLenLow;
-
-	/* Set number of output bits for data decoder in global struct */
-	ReceiverParam.SetNumDataDecoderBits(iOutputBlockSize2);
-
-
-#ifdef USE_QT_GUI
-	/* MDI ------------------------------------------------------------------ */
-	/* Get all active streams and stream positions */
-	ReceiverParam.GetActiveStreams(veciMDIActStre);
-
-	for (int i = 0; i < veciMDIActStre.Size(); i++)
-		vecMDIStrPos[i] = GetStreamPos(ReceiverParam, veciMDIActStre[i]);
-#endif
 
 
 	/* Set input block size */

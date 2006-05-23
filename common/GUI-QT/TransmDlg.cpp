@@ -275,8 +275,7 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
-		new CSoundCardSelMenu(TransThread.DRMTransmitter.
-		GetSoundInterface(), this));
+		new CSoundCardSelMenu(TransThread.DRMTransmitter.GetSoundInInterface(), TransThread.DRMTransmitter.GetSoundOutInterface(), this));
 
 	/* Main menu bar */
 	pMenu = new QMenuBar(this);

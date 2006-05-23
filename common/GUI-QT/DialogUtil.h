@@ -44,15 +44,15 @@
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 
+
 /* Definitions ****************************************************************/
 
 /* Definition for Courier font */
 #ifdef _WIN32
-	#define FONT_COURIER	"Courier New"
+	#define FONT_COURIER    "Courier New"
 #else
-	#define FONT_COURIER	"Courier"
+	#define FONT_COURIER    "Courier"
 #endif
-
 /* Classes ********************************************************************/
 /* DRM events --------------------------------------------------------------- */
 class DRMEvent : public QCustomEvent
@@ -100,13 +100,17 @@ class CSoundCardSelMenu : public QPopupMenu
 	Q_OBJECT
 
 public:
-	CSoundCardSelMenu(CSound* pNS, QWidget* parent = 0);
+	CSoundCardSelMenu(CSoundIn* pNSIn, CSoundOut* pNSOut, QWidget* parent = 0);
 
 protected:
-	CSound*		pSoundIF;
-	int			iNumSoundDev;
-	QPopupMenu*	pSoundInMenu;
-	QPopupMenu*	pSoundOutMenu;
+	CSoundIn*		pSoundInIF;
+	CSoundOut*		pSoundOutIF;
+	vector<string>	vecSoundInNames;
+	vector<string>	vecSoundOutNames;
+	int				iNumSoundInDev;
+	int				iNumSoundOutDev;
+	QPopupMenu*		pSoundInMenu;
+	QPopupMenu*		pSoundOutMenu;
 
 public slots:
 	void OnSoundInDevice(int id);

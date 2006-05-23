@@ -31,17 +31,17 @@
 #ifdef HAVE_JOURNALINE
 /* Implementation *************************************************************/
 /* Set these to 1 for more debug information. Needed by Journaline library */
-#ifdef WIN32
-extern "C" int showDdNewsSvcDecErr = 0;
-extern "C" int showDdNewsSvcDecInfo = 0;
-extern "C" int showDdDabDgDecErr = 0;
-extern "C" int showDdDabDgDecInfo = 0;
-#else
+extern "C" {
+extern int showDdNewsSvcDecErr;
+extern int showDdNewsSvcDecInfo;
+extern int showDdDabDgDecErr;
+extern int showDdDabDgDecInfo;
+}
+
 int showDdNewsSvcDecErr = 0;
 int showDdNewsSvcDecInfo = 0;
 int showDdDabDgDecErr = 0;
 int showDdDabDgDecInfo = 0;
-#endif
 
 CJournaline::CJournaline() : dgdec(NULL), newsdec(NULL)
 {

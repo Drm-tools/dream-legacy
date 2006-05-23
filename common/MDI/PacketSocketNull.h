@@ -37,16 +37,15 @@ class CPacketSocketNull : public CPacketSocket
 public:
 
 	// Set the sink which will receive the packets
-	virtual void SetPacketSink(CPacketSink *pSink);
+	void SetPacketSink(CPacketSink *pSink);
 	// Stop sending packets to the sink
-	virtual void ResetPacketSink(void);
+	void ResetPacketSink(void);
 
 	// Send packet to the socket
-	virtual void SendPacket(CVector<_BINARY> vecbiPacket);
+	void SendPacket(const vector<_BYTE>& vecbydata);
 
-	virtual _BOOLEAN SetNetwOutAddr(const string strNewIPPort);
-	virtual _BOOLEAN SetNetwInPort(const int iPort);
-	virtual _BOOLEAN SetNetwInMcast(const string strNewIPIP);
+	_BOOLEAN SetNetwOutAddr(const string& str);
+	_BOOLEAN SetNetwInAddr(const string& str);
 };
 
 #endif

@@ -60,29 +60,5 @@
 #define MDI_IN_BUF_LEN				4
 
 
-	/* Class for keeping track of status flags for RSCI rsta tag */
-class CRSCIStatusFlags
-{
-public:
-	CRSCIStatusFlags(): bSyncOK(FALSE), bFACOK(FALSE), bSDCOK(FALSE), bNextSDCOK(FALSE), bAudioOK(FALSE) {}
-
-	void SetSyncStatus(const _BOOLEAN bOK) { bSyncOK = bOK;}
-	void SetFACStatus(const _BOOLEAN bOK) { bFACOK = bOK;}
-	void SetSDCStatus(const _BOOLEAN bOK) { bNextSDCOK = bOK;} /* Delay SDC by one frame */
-	void SetAudioStatus(const _BOOLEAN bOK) { bAudioOK = bOK;}
-	void Update(void) {bSyncOK = FALSE; bSDCOK = bNextSDCOK, bFACOK = FALSE; bAudioOK = FALSE;} /* SDC keeps its value if no SDC is present */
-
-	_BOOLEAN GetFACStatus() const {return bFACOK;}
-	_BOOLEAN GetSDCStatus() const {return bSDCOK;}
-	_BOOLEAN GetAudioStatus() const {return bAudioOK;}
-	_BOOLEAN GetSyncStatus() const {return bSyncOK;}
-
-private:
-	_BOOLEAN bFACOK;
-	_BOOLEAN bSDCOK;
-	_BOOLEAN bNextSDCOK;
-	_BOOLEAN bAudioOK;
-	_BOOLEAN bSyncOK;
-};
 
 #endif

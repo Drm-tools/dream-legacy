@@ -665,7 +665,7 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 }
 
 /* OPH: Calculate the delay according to the rdel tag of RSCI */
-CRealVector& CTimeSyncTrack::CalculateRdel(CParameter& Parameter)
+void CTimeSyncTrack::CalculateRdel(CParameter& Parameter)
 {
 	/* Define the intervals in ascending order of threshold percentage */
 	CReal rTotEgy = Sum(vecrAvPoDeSpRot);
@@ -726,10 +726,11 @@ CRealVector& CTimeSyncTrack::CalculateRdel(CParameter& Parameter)
 		vecrRdelIntervals[j] = rInterval;
 	}
 
-	return vecrRdelIntervals;
+	Parameter.vecrRdelThresholds = vecrRdelThresholds;
+	Parameter.vecrRdelIntervals = vecrRdelIntervals;
 }
 
-_REAL CTimeSyncTrack::CalculateRdop(CParameter& Parameter)
+void CTimeSyncTrack::CalculateRdop(CParameter& Parameter)
 {
 	/* Initialise accumulators for sum of squares and sum of squared
 	   differences */
@@ -745,5 +746,5 @@ _REAL CTimeSyncTrack::CalculateRdop(CParameter& Parameter)
 
 	CReal rTs = (_REAL) Parameter.iSymbolBlockSize / SOUNDCRD_SAMPLE_RATE;
 
-	return Sqrt(rSumSqDiff / rSumSqChan) / (crPi * rTs);
+	Parameter.rRdop = Sqrt(rSumSqDiff / rSumSqChan) / (crPi * rTs);
 }

@@ -100,6 +100,7 @@
 #define FLAG_STR_IRREGULAR_TRANSM		"0000000"
 #define CHR_ACTIVE_DAY_MARKER			'1'
 
+#include <iostream>
 
 /* Classes ********************************************************************/
 class CStationsItem
@@ -108,7 +109,7 @@ public:
 	CStationsItem() : iStartHour(0), iStartMinute(0), iStopHour(0), strName(""),
 		iStopMinute(0), iFreq(0), strDaysFlags(""), strDaysShow(""),
 		strTarget(""), strLanguage(""), strSite(""), strCountry(""),
-		rPower((_REAL) 0.0) {}
+		rPower((_REAL) 0.0) { }
 
 	int GetStartTimeNum() {return iStartHour * 100 + iStartMinute;}
 	int GetStopTimeNum() {return iStopHour * 100 + iStopMinute;}

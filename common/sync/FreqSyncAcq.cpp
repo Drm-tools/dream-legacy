@@ -48,9 +48,6 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 	if (iFreeSymbolCounter >= ReceiverParam.iNumSymPerFrame)
 	{
 		iFreeSymbolCounter = 0;
-		/* Send message to MDI to indicate another frame's worth of data have been received */
-		if (pMDI->GetMDIOutEnabled() == TRUE) // OPH 20060330 - this was confusing the MDI input
-			pMDI->SendUnlockedFrame(ReceiverParam);
 	}
 
 	if (bAquisition == TRUE)

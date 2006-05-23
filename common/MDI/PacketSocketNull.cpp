@@ -43,21 +43,16 @@ void CPacketSocketNull::ResetPacketSink(void)
 }
 
 // Send packet to the socket
-void CPacketSocketNull::SendPacket(CVector<_BINARY> vecbiPacket)
+void CPacketSocketNull::SendPacket(const vector<_BYTE>& vecbydata)
 {
 }
 
-_BOOLEAN CPacketSocketNull::SetNetwOutAddr(const string strNewIPPort)
-{
-	return TRUE;
-}
-
-_BOOLEAN CPacketSocketNull::SetNetwInPort(const int iPort)
+_BOOLEAN CPacketSocketNull::SetNetwOutAddr(const string& str)
 {
 	return TRUE;
 }
 
-_BOOLEAN CPacketSocketNull::SetNetwInMcast(const string strNewIPIP)
+_BOOLEAN CPacketSocketNull::SetNetwInAddr(const string& str)
 {
 	return TRUE;
 }

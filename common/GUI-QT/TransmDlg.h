@@ -73,7 +73,7 @@ public:
 		DRMTransmitter.Stop();
 
 		if (wait(5000) == FALSE)
-			ErrorMessage("Termination of sound interface thread failed.");
+			ErrorMessage("Termination of working thread failed.");
 	}
 
 	virtual void run()

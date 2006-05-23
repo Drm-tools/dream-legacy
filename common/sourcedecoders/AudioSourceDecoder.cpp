@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include "AudioSourceDecoder.h"
-
+#include <iostream>
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -415,15 +415,12 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 
 	bGoodValues = FALSE;
 
-	CVector<_BINARY> vecbiAudioFrameStatus;
-	vecbiAudioFrameStatus.Init(0);
-	vecbiAudioFrameStatus.ResetBitAccess();
+	ReceiverParam.vecbiAudioFrameStatus.Init(0);
+	ReceiverParam.vecbiAudioFrameStatus.ResetBitAccess();
 
 	/* Check if something went wrong in the initialization routine */
 	if (DoNotProcessData == TRUE)
 	{
-		if (pMDI != NULL)
-			pMDI->SetAudioFrameStatus(FALSE, vecbiAudioFrameStatus);
 		return;
 	}
 
@@ -444,8 +441,6 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Check if audio shall not be decoded */
 	if (DoNotProcessAudDecoder == TRUE)
 	{
-		if (pMDI != NULL)
-			pMDI->SetAudioFrameStatus(FALSE, vecbiAudioFrameStatus);
 		return;
 	}
 	
@@ -609,7 +604,7 @@ fflush(pFile2);
 					veciFrameLength[j] + 1);
 
 				/* OPH: add frame status to vector for RSCI */
-				vecbiAudioFrameStatus.Add(DecFrameInfo.error==0 ? 0 : 1);
+				ReceiverParam.vecbiAudioFrameStatus.Add(DecFrameInfo.error==0 ? 0 : 1);
 				if (DecFrameInfo.error != 0)
 
 					bCurBlockOK = FALSE; /* Set error flag */
@@ -662,7 +657,7 @@ fflush(pFile2);
 				/* DRM AAC header was wrong, set flag to "bad block" */ 
 				bCurBlockOK = FALSE;
 				/* OPH: update audio status vector for RSCI */	
-				vecbiAudioFrameStatus.Add(1);
+				ReceiverParam.vecbiAudioFrameStatus.Add(1);
 			}
 #endif
 	}
@@ -683,7 +678,7 @@ fflush(pFile2);
 			bCurBlockOK = TRUE;
 			
 		/* OPH: update audio status vector for RSCI */	
-        vecbiAudioFrameStatus.Add(bCurBlockOK == TRUE ? 0 : 1);
+        ReceiverParam.vecbiAudioFrameStatus.Add(bCurBlockOK == TRUE ? 0 : 1);
 
 #if 0
 // Store CELP-data in file
@@ -758,7 +753,8 @@ for (i = 0; i < iResOutBlockSize; i++)
 			if (bAudioWasOK == TRUE)
 			{
 				/* Post message to show that CRC was wrong (yellow light) */
-				PostWinMessage(MS_MSC_CRC, 1);
+				//PostWinMessage(MS_MSC_CRC, 1);
+				ReceiverParam.ReceiveStatus.SetAudioStatus(DATA_ERROR);
 
 				/* Fade-out old block to avoid "clicks" in audio. We use linear
 				   fading which gives a log-fading impression */
@@ -794,7 +790,8 @@ for (i = 0; i < iResOutBlockSize; i++)
 			else
 			{
 				/* Post message to show that CRC was wrong (red light) */
-				PostWinMessage(MS_MSC_CRC, 2);
+				//PostWinMessage(MS_MSC_CRC, 2);
+				ReceiverParam.ReceiveStatus.SetAudioStatus(CRC_ERROR);
 
 				if (bUseReverbEffect == TRUE)
 				{
@@ -825,7 +822,8 @@ for (i = 0; i < iResOutBlockSize; i++)
 			iNumCorDecAudio++;
 
 			/* Post message to show that CRC was OK */
-			PostWinMessage(MS_MSC_CRC, 0);
+			//PostWinMessage(MS_MSC_CRC, 0);
+			ReceiverParam.ReceiveStatus.SetAudioStatus(RX_OK);
 
 			if (bAudioWasOK == FALSE)
 			{
@@ -888,9 +886,6 @@ for (i = 0; i < iResOutBlockSize; i++)
 			vecTempResBufOutOldRight[i] = vecTempResBufOutCurRight[i];
 		}
 	}
-	if (pMDI != NULL)
-		pMDI->SetAudioFrameStatus(bGoodValues, vecbiAudioFrameStatus);
-
 }
 
 void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
@@ -1273,9 +1268,9 @@ int CAudioSourceDecoder::GetNumCorDecAudio()
 	return iRet;
 }
 
-CAudioSourceDecoder::CAudioSourceDecoder(CMDI *pNM) : pMDI(pNM)
+CAudioSourceDecoder::CAudioSourceDecoder()
 #ifdef USE_FAAD2_LIBRARY
-	, AudioRev((CReal) 1.0 /* seconds delay */), bUseReverbEffect(TRUE)
+	: AudioRev((CReal) 1.0 /* seconds delay */), bUseReverbEffect(TRUE)
 #endif
 {
 #ifdef USE_FAAD2_LIBRARY

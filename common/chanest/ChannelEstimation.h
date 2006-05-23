@@ -38,7 +38,6 @@
 #include "../sync/TimeSyncTrack.h"
 #include "TimeLinear.h"
 #include "TimeWiener.h"
-#include "../MDI/MDI.h"
 
 
 /* Definitions ****************************************************************/
@@ -78,7 +77,7 @@
 class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>
 {
 public:
-	CChannelEstimation(CMDI *pNM) : pMDI(pNM),
+	CChannelEstimation() :
 	    iLenHistBuff(0), TypeIntFreq(FWIENER), 
 		TypeIntTime(TWIENER), eDFTWindowingMethod(DFT_WIN_HAMM),
 		TypeSNREst(SNR_FAC), bInterfConsid(FALSE) {}
@@ -115,10 +114,8 @@ public:
 	void SetSNREst(ETypeSNREst eNewTy) {TypeSNREst = eNewTy; SetInitFlag();}
 	ETypeSNREst GetSNREst() {return TypeSNREst;}
 
-	_BOOLEAN GetSNREstdB(_REAL& rSNREstRes) const;
-	_REAL GetMSCMEREstdB(); /* MER on MSC cells */
-	_REAL GetMSCWMEREstdB(); /* Weighted MER on MSC cells */
-	_BOOLEAN GetSigma(_REAL& rSigma);
+	_REAL GetSNREstdB() const;
+	_REAL GetSigma();
 	_REAL GetDelay() const;
 	_REAL GetMinDelay();
 
@@ -193,8 +190,6 @@ protected:
 
 	_BOOLEAN				bInterfConsid;
 
-	CMDI*					pMDI;
-
 	/* Needed for GetDelay() */
 	_REAL					rLenPDSEst;
 	CShiftRegister<CReal>	vecrDelayHist;
@@ -210,7 +205,7 @@ protected:
 	_REAL CalAndBoundSNR(const _REAL rSignalEst, const _REAL rNoiseEst);
 
 	/* OPH: RSCI interference tag calculation */
-	void CalculateRint(CParameter& ReceiverParam, CReal &rIntFreq, CReal &rINR, CReal &rICR);
+	void CalculateRint(CParameter& ReceiverParam);
 
 	/* Wiener interpolation in frequency direction */
 	void UpdateWienerFiltCoef(CReal rNewSNR, CReal rRatPDSLen,

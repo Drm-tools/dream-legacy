@@ -47,11 +47,12 @@ drmwithoutqt_SOURCES = \
 	../common/mlc/TrellisUpdateSSE2.cpp \
 	../common/mlc/QAMMapping.cpp \
 	../common/mlc/ChannelCode.cpp \
-	../common/MDI/MDIConcrete.cpp \
+	../common/MDI/MDIRSCI.cpp \
+	../common/MDI/MDIDecode.cpp \
 	../common/MDI/MDIInBuffer.cpp \
 	../common/MDI/MDITagItemDecoders.cpp \
 	../common/MDI/MDITagItems.cpp \
-	../common/MDI/MDITagPacketDecoder.cpp	 \
+	../common/MDI/TagPacketDecoderMDI.cpp	 \
 	../common/MDI/PacketSocketNull.cpp \
 	../common/MDI/RSCITagItemDecoders.cpp \
 	../common/MDI/TagPacketDecoder.cpp \
@@ -66,7 +67,8 @@ drmwithoutqt_SOURCES = \
 	../common/sync/SyncUsingPil.cpp \
 	../common/sync/TimeSyncTrack.cpp \
 	../common/GUI-QT/main.cpp \
-	source/sound.cpp \
+	source/soundin.cpp \
+	source/soundout.cpp \
 	../common/DRMSignalIO.h \
 	../common/DataIO.h \
 	../common/DrmReceiver.h \
@@ -115,14 +117,13 @@ drmwithoutqt_SOURCES = \
 	../common/mlc/QAMMapping.h \
 	../common/mlc/ViterbiDecoder.h \
 	../common/mlc/ChannelCode.h \
-	../common/MDI/MDI.h \
-	../common/MDI/MDIConcrete.h \
+	../common/MDI/MDIRSCI.h \
 	../common/MDI/MDIDefinitions.h \
+	../common/MDI/MDIDecode.h \
 	../common/MDI/MDIInBuffer.h \
-	../common/MDI/MDINull.h \
 	../common/MDI/MDITagItemDecoders.h \
 	../common/MDI/MDITagItems.h \
-	../common/MDI/MDITagPacketDecoder.h \
+	../common/MDI/TagPacketDecoderMDI.h \
 	../common/MDI/PacketInOut.h \
 	../common/MDI/PacketSocketNull.h \
 	../common/MDI/RSCITagItemDecoders.h \

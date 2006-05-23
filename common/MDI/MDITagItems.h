@@ -32,7 +32,7 @@
 #include "../GlobalDefinitions.h"
 #include "MDIDefinitions.h"
 #include "../Parameter.h"
-#include "../util/Vector.h"
+#include "../util/Buffer.h"
 
 /* Base class for all of the tag item generators. Handles some of the functions common to all tag items */
 class CTagItemGenerator
@@ -63,9 +63,9 @@ public:
 	CTagItemGeneratorWithProfiles(void);
 	_BOOLEAN IsInProfile(char cProfile);
 protected:
-	virtual string GetTagName(void) {return "";}
+	virtual string GetTagName(void) =0;
 //private:
-	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
+	virtual string GetProfiles(void)=0; // Return a string containing the set of profiles for this tag
 };
 
 class CTagItemGeneratorProTyMDI : public CTagItemGeneratorWithProfiles /* *ptr tag for MDI */
@@ -100,7 +100,7 @@ protected:
 class CTagItemGeneratorFAC : public CTagItemGeneratorWithProfiles /* fac_ tag */
 {
 public:
-	void GenTag(_BOOLEAN bFACOK, CVectorEx<_BINARY>& vecbiFACData);
+	void GenTag(CParameter& Parameter, CSingleBuffer<_BINARY>& FACData);
 protected:
 	virtual string GetTagName(void);
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
@@ -109,7 +109,7 @@ protected:
 class CTagItemGeneratorSDC : public CTagItemGeneratorWithProfiles /* sdc_ tag */
 {
 public:
-	void GenTag(_BOOLEAN bSDCOK, CVectorEx<_BINARY>& vecbiSDCData);
+	void GenTag(CParameter& Parameter, CSingleBuffer<_BINARY>& FACData);
 protected:
 	virtual string GetTagName(void);
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
@@ -147,7 +147,7 @@ class CTagItemGeneratorStr : public CTagItemGeneratorWithProfiles /* strx tag */
 public:
 	CTagItemGeneratorStr();
 	void SetStreamNumber(const int iStrNum);
-	void GenTag(CVectorEx<_BINARY>& vecbiStrData);
+	void GenTag(CParameter& Parameter, CSingleBuffer<_BINARY>& FACData);
 protected:
 	virtual string GetTagName(void);
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
@@ -204,7 +204,7 @@ protected:
 class CTagItemGeneratorRAFS : public CTagItemGeneratorWithProfiles /* RAFS tag */
 {
 public:
-	void GenTag(const _BOOLEAN bIsValid, CVector<_BINARY>& vecbiAudioStatus);
+	void GenTag(CParameter& Parameter);
 protected:
 	virtual string GetTagName(void);
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
@@ -231,7 +231,7 @@ protected:
 class CTagItemGeneratorReceiverStatus : public CTagItemGeneratorWithProfiles /* rsta tag */
 {
 public:
-	void GenTag(const CRSCIStatusFlags &Flags);
+	void GenTag(CParameter& Parameter);
 protected:
 	virtual string GetTagName(void);
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
@@ -249,7 +249,7 @@ protected:
 class CTagItemGeneratorRxDemodMode : public CTagItemGeneratorWithProfiles /* rdmo */
 {
 public:
-	//void GenTag(const CDRMReceiver::ERecMode eMode); /* ERecMode defined in DRMReceiver.h but can't include it! */
+	void GenTag(const ERecMode eMode); /* ERecMode defined in DRMReceiver.h but can't include it! */
 protected:
 	virtual string GetTagName(void);
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag

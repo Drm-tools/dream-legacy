@@ -36,20 +36,18 @@
 
 class CTagItemDecoder;
 
-class CTagPacketDecoder : public CPacketSink
+class CTagPacketDecoder
 {
 public:
 	CTagPacketDecoder();
 
 	// This should be in its own class
-	virtual void DecodeAFPacket(CVector<_BINARY>& vecbiAFPkt); 
+	virtual void DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt); 
 
 	// Decode all the tags in the tag packet. To do things before or after the decoding,
 	// override this and call the base class function to do the decoding
-	virtual void DecodeTagPacket(CVector<_BINARY>& vecbiPkt, const int iPayloadLen); 
+	virtual void DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, int iPayloadLen); 
 
-	// Implement SendPacket method from the CPacketSink interface
-	virtual void SendPacket(CVector<_BINARY> vecbiPacket);
 protected:
 	// Go through all the tag item decoders to find one that matches the current tag name.
 	int DecodeTag(CVector<_BINARY>& vecbiTag);

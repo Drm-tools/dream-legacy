@@ -40,23 +40,22 @@
 
 // constructor: adds all of the decoders in the vocabulary to the list
 CTagPacketDecoderRSCIControl::CTagPacketDecoderRSCIControl(void) 
-: pDRMReceiver(0)
-, TagItemDecoderCfre(0)
+: pDRMReceiver(NULL)
+, TagItemDecoderCact(NULL)
+, TagItemDecoderCfre(NULL)
+, TagItemDecoderCdmo(NULL)
 {
 	// Add each tag item decoder to the vocabulary
+	AddTagItemDecoder(&TagItemDecoderCact);
 	AddTagItemDecoder(&TagItemDecoderCfre);
+	AddTagItemDecoder(&TagItemDecoderCdmo);
 }
 
 
 void CTagPacketDecoderRSCIControl::SetReceiver(CDRMReceiver *pReceiver)
 {
 	pDRMReceiver = pReceiver;
+	TagItemDecoderCact.SetReceiver(pReceiver);
 	TagItemDecoderCfre.SetReceiver(pReceiver);
-}
-	// Override tag packet decode routine to do extra things afterwards
-void CTagPacketDecoderRSCIControl::DecodeTagPacket(CVector<_BINARY>& vecbiPkt, const int iPayloadLen)
-{
-	// Do any pre-decode stuff
-	CTagPacketDecoder::DecodeTagPacket(vecbiPkt, iPayloadLen);
-	// Do any post-decode stuff
+	TagItemDecoderCdmo.SetReceiver(pReceiver);
 }

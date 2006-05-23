@@ -44,18 +44,19 @@
 #include "TagPacketDecoder.h"
 #include "TagItemDecoder.h"
 #include "../util/CRC.h"
+#include <iostream>
+
 CTagPacketDecoder::CTagPacketDecoder() : vecpTagItemDecoders(0)
 {
 }
 
 // This should be in its own class
-void CTagPacketDecoder::DecodeAFPacket(CVector<_BINARY>& vecbiAFPkt)
+void CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 {
 	int i;
 
 	/* CRC check ------------------------------------------------------------ */
 	CCRC CRCObject;
-
 	// FIXME: is this length always the correct length? In the actual packet
 	// there is also a value for the length included!!!???!???
 	const int iLenAFPkt = vecbiAFPkt.Size();
@@ -90,6 +91,7 @@ void CTagPacketDecoder::DecodeAFPacket(CVector<_BINARY>& vecbiAFPkt)
 	/* Check if string is correct */
 	if (strSyncASCII.compare("AF") != 0)
 	{
+		cerr << "not an AF packet" << endl;
 		return; // TODO: error handling!!!!!!!!!!!!!!!!!!!!!!
 	}
 
@@ -150,7 +152,7 @@ void CTagPacketDecoder::DecodeAFPacket(CVector<_BINARY>& vecbiAFPkt)
 
 	// Decode all the tags in the tag packet. To do things before or after the decoding,
 	// override this and call the base class function to do the decoding
-void CTagPacketDecoder::DecodeTagPacket(CVector<_BINARY>& vecbiPkt, const int iPayloadLen)
+void CTagPacketDecoder::DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, const int iPayloadLen)
 {
 	/* Decode all tags */
 	int iCurConsBytes = 0;
@@ -158,7 +160,6 @@ void CTagPacketDecoder::DecodeTagPacket(CVector<_BINARY>& vecbiPkt, const int iP
 	/* Each tag must have at least a header with 8 bytes -> "- 8" */
 	while (iCurConsBytes < iPayloadLen - 8)
 		iCurConsBytes += DecodeTag(vecbiPkt);
-
 }
 
 	// Go through all the tag item decoders to find one that matches the current tag name.
@@ -170,7 +171,6 @@ int CTagPacketDecoder::DecodeTag(CVector<_BINARY>& vecbiTag)
 	string strTagName = "";
 	for (i = 0; i < 4; i++)
 		strTagName += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
-
 	/* Get tag data length (4 bytes = 32 bits) */
 	const int iLenDataBits = vecbiTag.Separate(32);
 
@@ -203,11 +203,4 @@ int CTagPacketDecoder::DecodeTag(CVector<_BINARY>& vecbiTag)
 void CTagPacketDecoder::AddTagItemDecoder(CTagItemDecoder *pTagItemDecoder)
 {
 	vecpTagItemDecoders.Add(pTagItemDecoder);
-}
-
-void CTagPacketDecoder::SendPacket(CVector<_BINARY> vecbiPacket)
-{
-	// Assume it's an AF packet
-	// TODO: identify and decode PFT and IPIO packets
-	DecodeAFPacket(vecbiPacket);
 }

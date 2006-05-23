@@ -26,7 +26,7 @@
 \******************************************************************************/
 
 #include "LiveScheduleDlg.h"
-
+#include <iostream>
 /* Implementation *************************************************************/
 
 string CDRMLiveSchedule::Binary2String(const int iVal)
@@ -45,10 +45,10 @@ while (iTempVal != 0)
 		s = s + "0";
 	
 	iTempVal = iTempVal / 2;
+	/* complete the string with zeros (length must be 7) */
+	while (s.length() < 7)
+		s = "0" + s;
 }
-/* complete the string with zeros (length must be 7) */
-while (s.length() < 7)
-	s = "0" + s;
 
 return s;
 }
@@ -688,7 +688,7 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	SetCurrentSavePath(pDRMRec->strStoragePathLiveScheduleDlg.c_str());
 
 	/* Set stations in list view which are active right now */
-	bShowAll = 	pDRMRec->bShowAllStations;
+	bShowAll =	pDRMRec->bShowAllStations;
 
 	if (bShowAll)
 		pViewMenu->setItemChecked(1, TRUE);
@@ -1091,7 +1091,7 @@ void LiveScheduleDlg::OnSave()
 	ListItemsMutex.Lock();
 
 	/* Force the sort for all items */ 
- 	ListViewStations->firstChild()
+	ListViewStations->firstChild()
 		->sortChildItems(iCurrentSortColumn,bCurrentSortAscending);
 
 	/* Extract values from the list */

@@ -31,7 +31,6 @@
 
 #include "TagPacketDecoder.h"
 #include "RSCITagItemDecoders.h"
-#include "MDIInBuffer.h"
 
 class CDRMReceiver;
 
@@ -45,15 +44,14 @@ public:
 	// This MUST be called soon after construction.
 	void SetReceiver(CDRMReceiver *pReceiver);
 
-	// Override tag packet decode routine to do extra things afterwards
-	virtual void DecodeTagPacket(CVector<_BINARY>& vecbiAFPkt, const int iPayloadLen); 
-
 private:
 	// Decoders send settings to the receiver
 	CDRMReceiver * pDRMReceiver;
 
 	// Decoders for each of the tag items in the vocabulary
+	CTagItemDecoderCact			TagItemDecoderCact;
 	CTagItemDecoderCfre			TagItemDecoderCfre;
+	CTagItemDecoderCdmo			TagItemDecoderCdmo;
 	// TODO other RSCI control tag items
 };
 

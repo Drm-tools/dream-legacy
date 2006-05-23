@@ -55,7 +55,7 @@ void CReadData::InitInternal(CParameter& TransmParam)
 		(_REAL) 0.4 /* 400 ms */ * 2 /* stereo */);
 
 	/* Init sound interface and intermediate buffer */
-	pSound->InitRecording(iOutputBlockSize, FALSE);
+	pSound->Init(iOutputBlockSize, FALSE);
 	vecsSoundBuffer.Init(iOutputBlockSize);
 
 	/* Init level meter */
@@ -139,9 +139,9 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Put data to sound card interface. Show sound card state on GUI */
 	if (pSound->Write(vecsTmpAudData) == FALSE)
-		PostWinMessage(MS_IOINTERFACE, 0); /* green light */
+		ReceiverParam.ReceiveStatus.SetInterfaceStatus(RX_OK);
 	else
-		PostWinMessage(MS_IOINTERFACE, 1); /* yellow light */
+		ReceiverParam.ReceiveStatus.SetInterfaceStatus(DATA_ERROR);
 
 	/* Write data as wave in file */
 	if (bDoWriteWaveFile == TRUE)
@@ -180,7 +180,7 @@ void CWriteData::InitInternal(CParameter& ReceiverParam)
 		bSoundBlocking = bNewSoundBlocking;
 
 	/* Init sound interface with blocking or non-blocking behaviour */
-	pSound->InitPlayback(iAudFrameSize * 2 /* stereo */, bSoundBlocking);
+	pSound->Init(iAudFrameSize * 2 /* stereo */, bSoundBlocking);
 
 	/* Init intermediate buffer needed for different channel selections */
 	vecsTmpAudData.Init(iAudFrameSize * 2 /* stereo */);
@@ -193,7 +193,7 @@ void CWriteData::InitInternal(CParameter& ReceiverParam)
 	iInputBlockSize = iAudFrameSize * 2 /* stereo */;
 }
 
-CWriteData::CWriteData(CSound* pNS) : pSound(pNS), /* Sound interface */
+CWriteData::CWriteData(CSoundOut* pNS) : pSound(pNS), /* Sound interface */
 	bMuteAudio(FALSE), bDoWriteWaveFile(FALSE),
 	bSoundBlocking(FALSE), bNewSoundBlocking(FALSE),
 	/* Inits for audio spectrum plotting */
@@ -641,49 +641,19 @@ void CGenerateFACData::InitInternal(CParameter& TransmParam)
 /* Receiver */
 void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
-	   in case of simulation because in this case there is no MDI) */
-	if (pMDI != NULL)
-	{
-		/* Check if MDI in is enabled and query data if enabled */
-		if (pMDI->GetMDIInEnabled() == TRUE)
-		{
-			/* Data in "pvecInputData" will be overwritten! */
-			ReceiverParam.SetWaveMode(pMDI->GetFACData(*pvecInputData));
-		}
-	}
-
 	/* Do not use received FAC data in case of simulation */
 	if (bSyncInput == FALSE)
 	{
 		bCRCOk = FACReceive.FACParam(pvecInputData, ReceiverParam);
-
-		if (bCRCOk == TRUE)
-		{
-			PostWinMessage(MS_FAC_CRC, 0);
-
-			/* Set FAC status in log file */
-			ReceiverParam.ReceptLog.SetFAC(TRUE);
-		}
-		else
-		{
-			PostWinMessage(MS_FAC_CRC, 2);
-
-			/* Set FAC status in log file */
-			ReceiverParam.ReceptLog.SetFAC(FALSE);
-		}
+		/* Set FAC status in log file */
+		ReceiverParam.ReceptLog.SetFAC(bCRCOk);
+		/* Set FAC status for RSCI & GUI */
+		if(bCRCOk)
+			ReceiverParam.ReceiveStatus.SetFACStatus(RX_OK);
+        else
+			ReceiverParam.ReceiveStatus.SetFACStatus(CRC_ERROR);
 	}
 
-	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
-	   in case of simulation because in this case there is no MDI) */
-	if (pMDI != NULL)
-	{
-		/* Only put data in MDI object if MDI is enabled */
-		if (pMDI->GetMDIOutEnabled() == TRUE)
-			pMDI->SetFACData(bCRCOk, *pvecInputData, ReceiverParam);
-	}
-
-	
 	if ((bSyncInput == TRUE) || (bCRCOk == FALSE))
 	{
 		/* If FAC CRC check failed we should increase the frame-counter 
@@ -731,25 +701,13 @@ void CGenerateSDCData::InitInternal(CParameter& TransmParam)
 /* Receiver */
 void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
-	   in case of simulation because in this case there is no MDI) */
-	if (pMDI != NULL)
-	{
-		/* Check if MDI in is enabled and query data if enabled */
-		if (pMDI->GetMDIInEnabled() == TRUE)
-		{
-			/* Data in "pvecInputData" will be overwritten! */
-			pMDI->GetSDCData(*pvecInputData);
-		}
-	}
-
 	_BOOLEAN bSDCOK = FALSE;
 
 	/* Decode SDC block and return CRC status */
 	switch (SDCReceive.SDCParam(pvecInputData, ReceiverParam))
 	{
 	case CSDCReceive::SR_OK:
-		PostWinMessage(MS_SDC_CRC, 0); /* Green light */
+		ReceiverParam.ReceiveStatus.SetSDCStatus(RX_OK);
 		bSDCOK = TRUE;
 		break;
 
@@ -763,22 +721,13 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 		   case that the parameters are not correct. In this case do not
 		   show a red light if SDC CRC was not ok */
 		if (bFirstBlock == FALSE)
-			PostWinMessage(MS_SDC_CRC, 2); /* Red light */
+			ReceiverParam.ReceiveStatus.SetSDCStatus(CRC_ERROR);
 		break;
 
 	case CSDCReceive::SR_BAD_DATA:
 		/* CRC was ok but data seems to be incorrect */
-		PostWinMessage(MS_SDC_CRC, 1); /* Yellow light */
+		ReceiverParam.ReceiveStatus.SetSDCStatus(DATA_ERROR);
 		break;
-	}
-
-	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
-	   in case of simulation because in this case there is no MDI) */
-	if (pMDI != NULL)
-	{
-			/* Only put data in MDI object if MDI is enabled */
-		if (pMDI->GetMDIOutEnabled() == TRUE)
-			pMDI->SetSDCData(bSDCOK, *pvecInputData);
 	}
 
 	/* Reset "first block" flag */

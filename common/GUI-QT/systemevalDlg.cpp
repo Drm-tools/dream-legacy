@@ -212,12 +212,9 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	ListViewCharSel->setColumnWidthMode(0, QListView::Maximum);
 
 
-/* _WIN32 fix because in Visual c++ the GUI files are always compiled even
-   if USE_QT_GUI is set or not (problem with MDI in DRMReceiver) */
-#ifdef USE_QT_GUI
 	/* If MDI in is enabled, disable some of the controls and use different
 	   initialization for the chart and chart selector */
-	if (pDRMRec->GetMDI()->GetMDIInEnabled() == TRUE)
+	if (pDRMRec->GetRSIIn()->GetInEnabled() == TRUE)
 	{
 		ListViewCharSel->setEnabled(FALSE);
 		SliderNoOfIterations->setEnabled(FALSE);
@@ -331,7 +328,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 			break;
 		}
 	}
-#endif
 
 	/* Init context menu for list view */
 	pListViewContextMenu = new QPopupMenu(this, tr("ListView context menu"));
@@ -442,7 +438,7 @@ void systemevalDlg::UpdateControls()
 	}
 
 	/* Update for channel estimation and time sync switches */
-	switch (pDRMRec->GetChanEst()->GetTimeInt())
+	switch (pDRMRec->GetTimeInt())
 	{
 	case CChannelEstimation::TLINEAR:
 		if (!RadioButtonTiLinear->isChecked())
@@ -455,7 +451,7 @@ void systemevalDlg::UpdateControls()
 		break;
 	}
 
-	switch (pDRMRec->GetChanEst()->GetFreqInt())
+	switch (pDRMRec->GetFreqInt())
 	{
 	case CChannelEstimation::FLINEAR:
 		if (!RadioButtonFreqLinear->isChecked())
@@ -473,7 +469,7 @@ void systemevalDlg::UpdateControls()
 		break;
 	}
 
-	switch (pDRMRec->GetChanEst()->GetTimeSyncTrack()->GetTiSyncTracType())
+	switch (pDRMRec->GetTiSyncTracType())
 	{
 	case CTimeSyncTrack::TSFIRSTPEAK:
 		if (!RadioButtonTiSyncFirstPeak->isChecked())
@@ -489,7 +485,7 @@ void systemevalDlg::UpdateControls()
 	/* Update settings checkbuttons */
 	CheckBoxReverb->setChecked(pDRMRec->GetAudSorceDec()->GetReverbEffect());
 	CheckBoxRecFilter->setChecked(pDRMRec->GetFreqSyncAcq()->GetRecFilter());
-	CheckBoxModiMetric->setChecked(pDRMRec->GetChanEst()->GetIntCons());
+	CheckBoxModiMetric->setChecked(pDRMRec->GetIntCons());
 	CheckBoxMuteAudio->setChecked(pDRMRec->GetWriteData()->GetMuteAudio());
 	CheckBoxFlipSpec->
 		setChecked(pDRMRec->GetReceiver()->GetFlippedSpectrum());
@@ -655,61 +651,97 @@ void systemevalDlg::SetStatus(int MessID, int iMessPara)
 	}
 }
 
+void systemevalDlg::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
+{
+	switch(state)
+	{
+	case NOT_PRESENT:
+		LED->Reset(); /* GREY */
+		break;
+
+	case CRC_ERROR:
+		LED->SetLight(2); /* RED */
+		break;
+
+	case DATA_ERROR:
+		LED->SetLight(1); /* YELLOW */
+		break;
+
+	case RX_OK:
+		LED->SetLight(0); /* GREEN */
+		break;
+	}
+}
+
 void systemevalDlg::OnTimer()
 {
-	_REAL rSNREstimate;
-	_REAL rSigmaEst;
+	CParameter& ReceiverParam = *(pDRMRec->GetParameters());
+
+	SetStatus(LEDMSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
+    SetStatus(LEDSDC, ReceiverParam.ReceiveStatus.GetSDCStatus());
+    SetStatus(LEDFAC, ReceiverParam.ReceiveStatus.GetFACStatus());
+    SetStatus(LEDFrameSync, ReceiverParam.ReceiveStatus.GetFrameSyncStatus());
+    SetStatus(LEDTimeSync, ReceiverParam.ReceiveStatus.GetTimeSyncStatus());
+    SetStatus(LEDIOInterface, ReceiverParam.ReceiveStatus.GetInterfaceStatus());
 
 	/* Show SNR if receiver is in tracking mode */
 	if (pDRMRec->GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL)
 	{
-		/* Get SNR value and use it if available and valid */
-		if (pDRMRec->GetChanEst()->GetSNREstdB(rSNREstimate))
+		/* Get a consistant snapshot */
+		ReceiverParam.Lock();
+		
+		/* We only get SNR from a local DREAM Front-End */
+		_REAL rSNR = ReceiverParam.rSNREstimate;
+		if (rSNR >= 0.0)
 		{
 			/* SNR */
 			ValueSNR->setText("<b>" +
-				QString().setNum(rSNREstimate, 'f', 1) + " dB</b>");
-
-			/* MSC WMER / MER */
-			ValueMERWMER->setText(QString().
-				setNum(pDRMRec->GetChanEst()->GetMSCWMEREstdB(), 'f', 1) +
-				" dB / " + QString().
-				setNum(pDRMRec->GetChanEst()->GetMSCMEREstdB(), 'f', 1) +
-				" dB");
-
+				QString().setNum(rSNR, 'f', 1) + " dB</b>");
 			/* Set SNR for log file */
-			pDRMRec->GetParameters()->ReceptLog.SetSNR(rSNREstimate);
+			ReceiverParam.ReceptLog.SetSNR(rSNR);
 		}
 		else
 		{
 			ValueSNR->setText("<b>---</b>");
+		}
+		/* We get MER from a local DREAM Front-End or and RSCI input but not an MDI input */
+		_REAL rMER = ReceiverParam.rMER;
+		if (rMER >= 0.0 )
+		{
+			ValueMERWMER->setText(QString().
+				setNum(ReceiverParam.rWMERMSC, 'f', 1) + " dB / "
+                + QString().setNum(rMER, 'f', 1) + " dB");
+		}
+		else
+		{
 			ValueMERWMER->setText("<b>---</b>");
 		}
 
 		/* Doppler estimation (assuming Gaussian doppler spectrum) */
-		if (pDRMRec->GetChanEst()->GetSigma(rSigmaEst))
+		if (ReceiverParam.rSigmaEstimate >= 0.0)
 		{
 			/* Plot delay and Doppler values */
 			ValueWiener->setText(
-				QString().setNum(rSigmaEst, 'f', 2) + " Hz / " +
-				QString().setNum(
-				pDRMRec->GetChanEst()->GetMinDelay(), 'f', 2) + " ms");
+				QString().setNum(ReceiverParam.rSigmaEstimate, 'f', 2) + " Hz / "
+				+ QString().setNum(ReceiverParam.rMinDelay, 'f', 2) + " ms");
 		}
 		else
 		{
 			/* Plot only delay, Doppler not available */
-			ValueWiener->setText("--- / " + QString().setNum(
-				pDRMRec->GetChanEst()->GetMinDelay(), 'f', 2) + " ms");
+			ValueWiener->setText("--- / "
+            + QString().setNum(ReceiverParam.rMinDelay, 'f', 2) + " ms");
 		}
 
 		/* Sample frequency offset estimation */
-		const _REAL rCurSamROffs = pDRMRec->GetParameters()->GetSampFreqEst();
+		const _REAL rCurSamROffs = ReceiverParam.GetSampFreqEst();
 
 		/* Display value in [Hz] and [ppm] (parts per million) */
 		ValueSampFreqOffset->setText(
 			QString().setNum(rCurSamROffs, 'f', 2) + " Hz (" +
 			QString().setNum((int) (rCurSamROffs / SOUNDCRD_SAMPLE_RATE * 1e6))
 			+ " ppm)");
+
+		ReceiverParam.Unlock();
 	}
 	else
 	{
@@ -742,7 +774,7 @@ void systemevalDlg::OnTimer()
    if USE_QT_GUI is set or not (problem with MDI in DRMReceiver) */
 #ifdef USE_QT_GUI
 	/* If MDI in is enabled, do not show any synchronization parameter */
-	if (pDRMRec->GetMDI()->GetMDIInEnabled() == TRUE)
+	if (pDRMRec->GetRSIIn()->GetInEnabled() == TRUE)
 	{
 		ValueSNR->setText("<b>---</b>");
 		ValueMERWMER->setText("<b>---</b>");
@@ -891,51 +923,49 @@ void systemevalDlg::OnTimer()
 
 void systemevalDlg::OnRadioTimeLinear() 
 {
-	if (pDRMRec->GetChanEst()->GetTimeInt() != CChannelEstimation::TLINEAR)
-		pDRMRec->GetChanEst()->SetTimeInt(CChannelEstimation::TLINEAR);
+	if (pDRMRec->GetTimeInt() != CChannelEstimation::TLINEAR)
+		pDRMRec->SetTimeInt(CChannelEstimation::TLINEAR);
 }
 
 void systemevalDlg::OnRadioTimeWiener() 
 {
-	if (pDRMRec->GetChanEst()->GetTimeInt() != CChannelEstimation::TWIENER)
-		pDRMRec->GetChanEst()->SetTimeInt(CChannelEstimation::TWIENER);
+	if (pDRMRec->GetTimeInt() != CChannelEstimation::TWIENER)
+		pDRMRec->SetTimeInt(CChannelEstimation::TWIENER);
 }
 
 void systemevalDlg::OnRadioFrequencyLinear() 
 {
-	if (pDRMRec->GetChanEst()->GetFreqInt() != CChannelEstimation::FLINEAR)
-		pDRMRec->GetChanEst()->SetFreqInt(CChannelEstimation::FLINEAR);
+	if (pDRMRec->GetFreqInt() != CChannelEstimation::FLINEAR)
+		pDRMRec->SetFreqInt(CChannelEstimation::FLINEAR);
 }
 
 void systemevalDlg::OnRadioFrequencyDft() 
 {
-	if (pDRMRec->GetChanEst()->GetFreqInt() != CChannelEstimation::FDFTFILTER)
-		pDRMRec->GetChanEst()->SetFreqInt(CChannelEstimation::FDFTFILTER);
+	if (pDRMRec->GetFreqInt() != CChannelEstimation::FDFTFILTER)
+		pDRMRec->SetFreqInt(CChannelEstimation::FDFTFILTER);
 }
 
 void systemevalDlg::OnRadioFrequencyWiener() 
 {
-	if (pDRMRec->GetChanEst()->GetFreqInt() != CChannelEstimation::FWIENER)
-		pDRMRec->GetChanEst()->SetFreqInt(CChannelEstimation::FWIENER);
+	if (pDRMRec->GetFreqInt() != CChannelEstimation::FWIENER)
+		pDRMRec->SetFreqInt(CChannelEstimation::FWIENER);
 }
 
 void systemevalDlg::OnRadioTiSyncFirstPeak() 
 {
-	if (pDRMRec->GetChanEst()->GetTimeSyncTrack()->GetTiSyncTracType() != 
+	if (pDRMRec->GetTiSyncTracType() != 
 		CTimeSyncTrack::TSFIRSTPEAK)
 	{
-		pDRMRec->GetChanEst()->GetTimeSyncTrack()->
-			SetTiSyncTracType(CTimeSyncTrack::TSFIRSTPEAK);
+		pDRMRec->SetTiSyncTracType(CTimeSyncTrack::TSFIRSTPEAK);
 	}
 }
 
 void systemevalDlg::OnRadioTiSyncEnergy() 
 {
-	if (pDRMRec->GetChanEst()->GetTimeSyncTrack()->GetTiSyncTracType() != 
+	if (pDRMRec->GetTiSyncTracType() != 
 		CTimeSyncTrack::TSENERGY)
 	{
-		pDRMRec->GetChanEst()->GetTimeSyncTrack()->
-			SetTiSyncTracType(CTimeSyncTrack::TSENERGY);
+		pDRMRec->SetTiSyncTracType(CTimeSyncTrack::TSENERGY);
 	}
 }
 
@@ -995,13 +1025,13 @@ void systemevalDlg::OnCheckRecFilter()
 		SetRecFilter(CheckBoxRecFilter->isChecked());
 
 	/* If filter status is changed, a new aquisition is necessary */
-	pDRMRec->SetReceiverMode(CDRMReceiver::RM_DRM);
+	pDRMRec->SetReceiverMode(RM_DRM);
 }
 
 void systemevalDlg::OnCheckModiMetric()
 {
 	/* Set parameter in working thread module */
-	pDRMRec->GetChanEst()->SetIntCons(CheckBoxModiMetric->isChecked());
+	pDRMRec->SetIntCons(CheckBoxModiMetric->isChecked());
 }
 
 void systemevalDlg::OnCheckBoxMuteAudio()
@@ -1058,21 +1088,19 @@ void systemevalDlg::OnCheckWriteLog()
 {
 	if (CheckBoxWriteLog->isChecked())
 	{
-		/* Activte log file timer for long and short log file */
+		/* Activate log file timer for long and short log file */
 		TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
 		TimerLogFileLong.start(1000); /* Every second */
 
-		/* Get frequency from front-end edit control */
-		QString strFreq = EdtFrequency->text();
-		iCurFrequency = strFreq.toUInt();
-		pDRMRec->GetParameters()->ReceptLog.SetFrequency(iCurFrequency);
+		/* frequency should be already there? */
+		pDRMRec->GetParameters()->ReceptLog.SetFrequency(pDRMRec->GetFrequency());
 
 		/* Set some other information obout this receiption */
 		QString strAddText = "";
 
 		/* Check if receiver does receive a DRM signal */
 		if ((pDRMRec->GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL) &&
-			(pDRMRec->GetReceiverMode() == CDRMReceiver::RM_DRM))
+			(pDRMRec->GetReceiverMode() == RM_DRM))
 		{
 			/* First get current selected audio service */
 			int iCurSelServ =
@@ -1558,9 +1586,8 @@ void systemevalDlg::AddWhatsThisHelp()
 		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
 		"box will let the user choose a file name for the recording."));
 
-#if QT_VERSION == 230
-	/* If QWhatsThis is added don't work the right click popup 
-		under QT230 this work */
+#if QT_VERSION <= 230
+	/* if QWhatsThis is added don't work the right click popup (it used to work in QT2.3) */
 
 	/* Chart Selector */
 	QWhatsThis::add(ListViewCharSel,

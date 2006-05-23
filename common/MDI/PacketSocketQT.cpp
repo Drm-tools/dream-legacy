@@ -29,7 +29,9 @@
 \******************************************************************************/
 
 #include "PacketSocketQT.h"
-
+#include <qstringlist.h>
+#include <errno.h>
+#include <iostream>
 
 CPacketSocketQT::CPacketSocketQT() : SocketDevice(QSocketDevice::Datagram /* UDP */)
 {
@@ -55,133 +57,126 @@ void CPacketSocketQT::ResetPacketSink(void)
 }
 
 // Send packet to the socket
-void CPacketSocketQT::SendPacket(CVector<_BINARY> vecbiPacket)
+void CPacketSocketQT::SendPacket(const vector<_BYTE>& vecbydata)
 {
-	const int iSizeBytes =
-		(int) ceil((_REAL) vecbiPacket.Size() / SIZEOF__BYTE);
-
-	CVector<_BYTE> vecbyPacket(iSizeBytes);
-
-	/* Copy binary vector in byte vector */
-	vecbiPacket.ResetBitAccess();
-	for (int i = 0; i < iSizeBytes; i++)
-		vecbyPacket[i] = (_BYTE) vecbiPacket.Separate(SIZEOF__BYTE);
-
 	/* Send packet to network */
-	SocketDevice.writeBlock((const char*) &vecbyPacket[0], iSizeBytes,
+	char *p = new char[vecbydata.size()];
+	for(size_t i=0; i<vecbydata.size(); i++)
+	p[i]=vecbydata[i];
+	Q_LONG bytes_written = SocketDevice.writeBlock(p, vecbydata.size(),
 		HostAddrOut, iHostPortOut);
+	if(bytes_written==-1)
+	    cout << "error sending packet : " << SocketDevice.error() << endl;
 }
 
-
-_BOOLEAN CPacketSocketQT::SetNetwOutAddr(const string strNewIPPort)
+_BOOLEAN CPacketSocketQT::SetNetwOutAddr(const string& strNewAddr)
 {
+	/* syntax
+	1:  <ip>:<port>
+	2:  <ip>:<ip>:<port>
+     */
 	/* Init return flag and copy string in QT-String "QString" */
 	_BOOLEAN bAddressOK = FALSE;
-	const QString strIPPort = strNewIPPort.c_str();
-
-	/* The address should be in the form of [IP]:[port], so first get the
-	   position of the colon (and check if a colon is present */
-	const int iPosofColon = strIPPort.find(':');
-
-	/* The IP address has at least seven digits */
-	if (iPosofColon >= 7)
-	{
-		/* Set network output host address (from the other listening client).
-		   Use the part of the string left of the colon position */
-		QHostAddress HostAddrOutTMP;
-
-		const _BOOLEAN bAddrOk =
-			HostAddrOutTMP.setAddress(strIPPort.left(iPosofColon));
-
-		if (bAddrOk == TRUE)
-		{
-			/* Get port number from string. Use the part of the string which is
-			   on the right side of the colon */
-			const int iPortTMP =
-				strIPPort.right(strIPPort.length() - iPosofColon - 1).toUInt();
-
-			/* Check the range of the port number */
-			if ((iPortTMP > 0) && (iPortTMP <= 65535))
-			{
-				/* Address was ok, accept parameters and set internal values */
-				iHostPortOut = iPortTMP;
-				HostAddrOut = HostAddrOutTMP;
-
-				/* Enable MDI and set "OK" flag */
-				bAddressOK = TRUE;
-			}
-		}
-	}
-
+	QStringList parts = QStringList::split(":", strNewAddr.c_str(), TRUE);
+	switch(parts.count()) {
+      case 2:
+           bAddressOK = HostAddrOut.setAddress(parts[0]);
+           iHostPortOut = parts[1].toInt();
+           break;
+      case 3:
+	  	   QHostAddress AddrInterface(parts[0]);
+           bAddressOK = HostAddrOut.setAddress(parts[1]);
+           iHostPortOut = parts[2].toInt();
+           const SOCKET s = SocketDevice.socket();
+	   uint32_t mc_if = htonl(AddrInterface.toIPv4Address());
+           if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF, 
+             (char*) &mc_if, sizeof(mc_if))==SOCKET_ERROR)
+               bAddressOK = FALSE;
+           break;
+    }
 	return bAddressOK;
 }
 
-_BOOLEAN CPacketSocketQT::SetNetwInPort(const int iPort)
+
+_BOOLEAN CPacketSocketQT::SetNetwInAddr(const string& strNewAddr)
 {
-	/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
-	return SocketDevice.bind(QHostAddress((Q_UINT32) 0), iPort);
-}
 
-_BOOLEAN CPacketSocketQT::SetNetwInMcast(const string strNewIPIP)
-{
-	struct ip_mreq mreq;
+	/* syntax
+	1:  <port>
+	2:  <ip>:<port>
+	3:  <ip>:<ip>:<port>
+	4:  <ip>::<port>
+     */
+	int iPort;
+	QHostAddress AddrGroup, AddrInterface;
+	/* Init return flag and copy string to a QString */
+	_BOOLEAN bAddressOK = FALSE;
+	QStringList parts = QStringList::split(":", strNewAddr.c_str(), TRUE);
+	switch(parts.count()) {
+      case 1:
+           iPort = parts[0].toInt();
+           break;
+      case 2:
+           AddrGroup.setAddress(parts[0]);
+           iPort = parts[1].toInt();
+           break;
+      case 3:
+           if(parts[0].length()>0)
+               AddrInterface.setAddress(parts[0]);
+           if(parts[1].length()>0)
+               AddrGroup.setAddress(parts[1]);
+           iPort = parts[2].toUInt();
+           break;
+    }
 
-	/* Copy string in QT-String "QString" */
-	const QString strIPIP = strNewIPIP.c_str();
-
-	/* The address should be in the form of [IP]:[IP], so first get the
-	   position of the colon (and check if a colon is present) */
-	const int iPosofColon = strIPIP.find(':');
-
-	/* The IP address has at least seven digits */
-	if (iPosofColon >= 7)
+	/* Multicast ? */
+	
+	if (AddrGroup.toIPv4Address() == 0)
 	{
-		/* Get group IP from string. Use the part of the string which is
-		   on the left side of the colon */
-		const QString strGroup = strIPIP.left(iPosofColon);
-
-		/* Get interface IP from string. Use the part of the string which is
-		   on the right side of the colon */
-		const QString strIface =
-			strIPIP.right(strIPIP.length() - iPosofColon - 1);
-
-		mreq.imr_multiaddr.s_addr = inet_addr(strGroup.latin1());
-		mreq.imr_interface.s_addr = inet_addr(strIface.latin1());
-
-		if ((ntohl(mreq.imr_multiaddr.s_addr) & 0xe0000000) == 0xe0000000)
-		{
-			const SOCKET s = SocketDevice.socket();
-
-			return setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*) &mreq,
-				sizeof(mreq)) != SOCKET_ERROR;
+                                  
+		/* Initialize the listening socket. */
+		SocketDevice.bind(AddrInterface, iPort);
+    }
+	else
+	{
+		struct ip_mreq mreq;
+		
+		/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
+        bool ok = SocketDevice.bind(QHostAddress(UINT32(0)), iPort);
+        if(ok == false) {
+		QSocketDevice::Error x = SocketDevice.error();
+		cout << "bind failed" << endl;
+		                     return FALSE;
+                             }
+  
+		mreq.imr_multiaddr.s_addr = htonl(AddrGroup.toIPv4Address());
+		mreq.imr_interface.s_addr = htonl(AddrInterface.toIPv4Address());
+        const SOCKET s = SocketDevice.socket();
+        int n = setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*) &mreq,
+				sizeof(mreq));
+		if(n==SOCKET_ERROR) {
+			cout << strerror(errno) << endl;
+			return FALSE;
 		}
+		return TRUE;
 	}
 
-	return FALSE;
+	return TRUE;
 }
 
 void CPacketSocketQT::OnDataReceived()
 {
-	CVector<_BYTE> vecsRecBuf(MAX_SIZE_BYTES_NETW_BUF);
+	vector<_BYTE> vecsRecBuf(MAX_SIZE_BYTES_NETW_BUF);
 
 	/* Read block from network interface */
 	const int iNumBytesRead = SocketDevice.readBlock(
 		(char*) &vecsRecBuf[0], MAX_SIZE_BYTES_NETW_BUF);
+	vecsRecBuf.resize(iNumBytesRead);
 
 	if (iNumBytesRead > 0)
 	{
-		/* Copy data from network buffer and decode received packet */
-		CVector<_BINARY> vecbiPkt(iNumBytesRead * SIZEOF__BYTE);
-		vecbiPkt.ResetBitAccess();
-		for (int i = 0; i < iNumBytesRead; i++)
-			vecbiPkt.Enqueue(vecsRecBuf[i], SIZEOF__BYTE);
-
-		/* Decode the incoming packet thread-safe */
-		Mutex.Lock();
-
+		/* Decode the incoming packet */
 		if (pPacketSink != NULL)
-			pPacketSink->SendPacket(vecbiPkt);
-
-		Mutex.Unlock();
+			pPacketSink->SendPacket(vecsRecBuf);
 	}
 }

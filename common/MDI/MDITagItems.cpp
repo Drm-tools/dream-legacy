@@ -38,6 +38,7 @@
 \******************************************************************************/
 
 #include "MDITagItems.h"
+#include <iostream>
 
 CTagItemGeneratorWithProfiles::CTagItemGeneratorWithProfiles()
 {
@@ -77,7 +78,7 @@ void CTagItemGeneratorProTyMDI::GenTag()
 }
 
 string CTagItemGeneratorProTyMDI::GetTagName(void) {return "*ptr";}
-string CTagItemGeneratorProTyMDI::GetProfiles(void) {return "M";}
+string CTagItemGeneratorProTyMDI::GetProfiles(void) {return "ADM";}
 
 void CTagItemGeneratorProTyRSCI::GenTag()
 {	
@@ -121,58 +122,72 @@ void CTagItemGeneratorLoFrCnt::GenTag()
 string CTagItemGeneratorLoFrCnt::GetTagName(void) {return "dlfc";}
 string CTagItemGeneratorLoFrCnt::GetProfiles(void) {return "ABCDQM";}
 
-void CTagItemGeneratorFAC::GenTag(_BOOLEAN bFACOK, CVectorEx<_BINARY>& vecbiFACData)
+void CTagItemGeneratorFAC::GenTag(
+	 CParameter& Parameter, 
+	 CSingleBuffer<_BINARY>& FACData
+	 )
 {
-	if (bFACOK == FALSE)
+	if (Parameter.ReceiveStatus.GetFACStatus() == FALSE)
 	{
 		/* Empty tag if FAC is invalid */
 		PrepareTag(0);
+		FACData.Clear();
 	}
 	else
 	{
-
 		/* Length: 9 bytes = 72 bits */
 		PrepareTag(NUM_FAC_BITS_PER_BLOCK);
+		CVectorEx<_BINARY>* pvecbiFACData = FACData.Get(NUM_FAC_BITS_PER_BLOCK);
 
 		/* Channel parameters, service parameters, CRC */
-		vecbiFACData.ResetBitAccess();
+		pvecbiFACData->ResetBitAccess();
 
 		/* FAC data is always 72 bits long which is 9 bytes, copy data byte-wise */
 		for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE; i++)
-			Enqueue(vecbiFACData.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+			Enqueue(pvecbiFACData->Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 }
 
 string CTagItemGeneratorFAC::GetTagName(void) {return "fac_";}
 string CTagItemGeneratorFAC::GetProfiles(void) {return "ACDQM";}
 
-void CTagItemGeneratorSDC::GenTag(_BOOLEAN bSDCOK, CVectorEx<_BINARY>& vecbiSDCData)
+void CTagItemGeneratorSDC::GenTag(
+	 CParameter& Parameter, 
+	 CSingleBuffer<_BINARY>& SDCData
+)
 {
-	if (bSDCOK == FALSE)
+	if (Parameter.ReceiveStatus.GetSDCStatus() == FALSE)
 	{
 		PrepareTag(0);
+		SDCData.Clear();
+		return;
 	}
-	else
+
+	if(SDCData.GetFillLevel() < Parameter.iNumSDCBitsPerSFrame)
 	{
+		PrepareTag(0);
+		return;
+	}
+
 	/* Fixed by O.Haffenden, BBC R&D */
 		/* The input SDC vector is 4 bits SDC index + a whole number of bytes plus padding. */
 		/* The padding is not sent in the MDI */
-		const int iLenSDCDataBits = SIZEOF__BYTE * ((vecbiSDCData.Size() - 4) / SIZEOF__BYTE) + 4;
+		const int iLenSDCDataBits = SIZEOF__BYTE * ((Parameter.iNumSDCBitsPerSFrame - 4) / SIZEOF__BYTE) + 4;
 
 		/* Length: "length SDC block" bytes. Our SDC data vector does not
 		   contain the 4 bits "Rfu" */
 		PrepareTag(iLenSDCDataBits + 4);
+		CVectorEx<_BINARY>* pvecbiSDCData = SDCData.Get(Parameter.iNumSDCBitsPerSFrame);
 
 		/* Service Description Channel Block */
-		vecbiSDCData.ResetBitAccess();
+		pvecbiSDCData->ResetBitAccess();
 
 		Enqueue((uint32_t) 0, 4); /* Rfu */
 
 		/* We have to copy bits instead of bytes since the length of SDC data is
 		   usually not a multiple of 8 */
 		for (int i = 0; i < iLenSDCDataBits; i++)
-			Enqueue(vecbiSDCData.Separate(1), 1);
-	}
+			Enqueue(pvecbiSDCData->Separate(1), 1);
 }
 
 string CTagItemGeneratorSDC::GetTagName(void) {return "sdc_";}
@@ -293,23 +308,25 @@ void CTagItemGeneratorStr::SetStreamNumber(const int iStrNum)
 	iStreamNumber = iStrNum;
 }
 
-void CTagItemGeneratorStr::GenTag(CVectorEx<_BINARY>& vecbiStrData)
+void CTagItemGeneratorStr::GenTag(
+	 CParameter& Parameter, 
+	 CSingleBuffer<_BINARY>& MSCData
+	 )
 {
-
-	const int iLenStrData = vecbiStrData.Size();
-
+	const int iLenStrData = Parameter.GetStreamLen(iStreamNumber);
 	/* Only generate this tag if stream input data is not of zero length */
 	if ((iLenStrData != 0) && (iStreamNumber < MAX_NUM_STREAMS))
 	{
 		PrepareTag(iLenStrData);
+		CVectorEx<_BINARY>* pvecbiStrData = MSCData.Get(iLenStrData);
 
 		/* Data */
-		vecbiStrData.ResetBitAccess();
+		pvecbiStrData->ResetBitAccess();
 
 		/* Data is always a multiple of 8 -> copy bytes */
 		for (int i = 0; i < iLenStrData / SIZEOF__BYTE; i++)
 		{
-			Enqueue(vecbiStrData.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+			Enqueue(pvecbiStrData->Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 		}
 	}
 }
@@ -401,9 +418,11 @@ void CTagItemGeneratorRDEL::GenTag(const _BOOLEAN bIsValid, const CRealVector &v
 string CTagItemGeneratorRDEL::GetTagName(void) {return "rdel";}
 string CTagItemGeneratorRDEL::GetProfiles(void) {return "ABCDQ";}
 
-void CTagItemGeneratorRAFS::GenTag(const _BOOLEAN bIsValid, CVector<_BINARY>& vecbiAudioStatus)
+void CTagItemGeneratorRAFS::GenTag(CParameter& Parameter)
 {
-	if (bIsValid == FALSE)
+	const int iNumUnits = Parameter.vecbiAudioFrameStatus.Size();
+	
+	if (iNumUnits == 0)
 	{
 		/* zero length tag item */
 		PrepareTag(0);
@@ -411,11 +430,10 @@ void CTagItemGeneratorRAFS::GenTag(const _BOOLEAN bIsValid, CVector<_BINARY>& ve
 	else
 	{
 		/* Header - length is always 48 */
-		const int iNumUnits = vecbiAudioStatus.Size();
 		PrepareTag(48);
 
 		/* data */
-		vecbiAudioStatus.ResetBitAccess();
+		Parameter.vecbiAudioFrameStatus.ResetBitAccess();
 
 		/* number of units: 8 bits */
 		Enqueue(iNumUnits, 8);
@@ -423,7 +441,7 @@ void CTagItemGeneratorRAFS::GenTag(const _BOOLEAN bIsValid, CVector<_BINARY>& ve
 		/* status for each unit */
 		for (int i=0; i<iNumUnits; i++)
 		{
-			Enqueue(vecbiAudioStatus.Separate(1),1);
+			Enqueue(Parameter.vecbiAudioFrameStatus.Separate(1),1);
 		}
 		/* pad the rest with zeros */
 		Enqueue(0, 40-iNumUnits);
@@ -486,13 +504,13 @@ void CTagItemGeneratorSignalStrength::GenTag(const _BOOLEAN bIsValid, const _REA
 string CTagItemGeneratorSignalStrength::GetTagName(void) {return "rdbv";}
 string CTagItemGeneratorSignalStrength::GetProfiles(void) {return "ABCDQ";}
 
-void CTagItemGeneratorReceiverStatus::GenTag(const CRSCIStatusFlags &Flags)
+void CTagItemGeneratorReceiverStatus::GenTag(CParameter& Parameter)
 {
 	PrepareTag(4*SIZEOF__BYTE);
-	Enqueue(Flags.GetSyncStatus()==TRUE ? 0 : 1, SIZEOF__BYTE); /* 0=ok, 1=bad */
-	Enqueue(Flags.GetFACStatus()==TRUE ? 0 : 1, SIZEOF__BYTE); /* 0=ok, 1=bad */
-	Enqueue(Flags.GetSDCStatus()==TRUE ? 0 : 1, SIZEOF__BYTE); /* 0=ok, 1=bad */
-	Enqueue(Flags.GetAudioStatus()==TRUE ? 0 : 1, SIZEOF__BYTE); /* 0=ok, 1=bad */
+	Enqueue(Parameter.ReceiveStatus.GetTimeSyncStatus()==RX_OK ? 0 : 1, SIZEOF__BYTE); /* 0=ok, 1=bad */
+	Enqueue(Parameter.ReceiveStatus.GetFACStatus()==RX_OK ? 0 : 1, SIZEOF__BYTE); /* 0=ok, 1=bad */
+	Enqueue(Parameter.ReceiveStatus.GetSDCStatus()==RX_OK ? 0 : 1, SIZEOF__BYTE); /* 0=ok, 1=bad */
+	Enqueue(Parameter.ReceiveStatus.GetAudioStatus()==RX_OK ? 0 : 1, SIZEOF__BYTE); /* 0=ok, 1=bad */
 }
 
 string CTagItemGeneratorReceiverStatus::GetTagName(void) {return "rsta";}
@@ -507,8 +525,7 @@ void CTagItemGeneratorProfile::GenTag(const char cProfile)
 string CTagItemGeneratorProfile::GetTagName(void) {return "rpro";}
 string CTagItemGeneratorProfile::GetProfiles(void) {return "ABCDQ";}
 
-//void CTagItemGeneratorRxDemodMode::GenTag(const CDRMReceiver::ERecMode eMode) /* ERecMode defined in DRMReceiver.h but can't include it! */
-/*void CMDI::GenTagRxDemodMode(ERecMode eMode) // rdmo
+void CTagItemGeneratorRxDemodMode::GenTag(ERecMode eMode) // rdmo
 {
 	PrepareTag(4*SIZEOF__BYTE);
 	switch (eMode)
@@ -533,7 +550,7 @@ string CTagItemGeneratorProfile::GetProfiles(void) {return "ABCDQ";}
 		break;
 	}
 	
-}*/
+}
 
 string CTagItemGeneratorRxDemodMode::GetTagName(void) {return "rdmo";}
 string CTagItemGeneratorRxDemodMode::GetProfiles(void) {return "ABCDQ";}
@@ -647,7 +664,6 @@ void CTagItemGenerator::GenEmptyTag(void) // Generates valid tag item with zero 
 void CTagItemGenerator::PrepareTag(const int iLenDataBits)
 {
 	string strTagName = GetTagName();
-
 	/* Init vector length. 4 bytes for tag name and 4 bytes for data length
 	   plus the length of the actual data */
 	vecbiTagData.Init(8 * SIZEOF__BYTE + iLenDataBits);
@@ -659,6 +675,7 @@ void CTagItemGenerator::PrepareTag(const int iLenDataBits)
 
 	/* Set tag data length */
 	vecbiTagData.Enqueue((uint32_t) iLenDataBits, 32);
+
 }
 
 // Put the bits to the bit vector (avoids derived classes needing to access the bit vector directly

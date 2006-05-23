@@ -96,10 +96,11 @@ protected:
 	_BOOLEAN		bMultMedDlgWasVis;
 	_BOOLEAN		bLiveSchedDlgWasVis;
 
+	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
 	virtual void	customEvent(QCustomEvent* Event);
 	void			SetService(int iNewServiceID);
 	void			AddWhatsThisHelp();
-	void			SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo);
+	void			SetReceiverMode(const ERecMode eNewReMo);
 
 	QString			GetCodecString(const int iServiceID);
 	QString			GetTypeString(const int iServiceID);
@@ -118,8 +119,8 @@ public slots:
 	void OnViewLiveScheduleDlg();
 	void OnViewEPGDlg();
 	void OnViewMultSettingsDlg();
-	void OnSwitchToDRM() {SetReceiverMode(CDRMReceiver::RM_DRM);}
-	void OnSwitchToAM() {SetReceiverMode(CDRMReceiver::RM_AM);}
+	void OnSwitchToDRM() {SetReceiverMode(RM_DRM);}
+	void OnSwitchToAM() {SetReceiverMode(RM_AM);}
 	void OnMenuSetDisplayColor();
 	void OnMenuPlotStyle(int value);
 };

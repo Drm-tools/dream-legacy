@@ -30,100 +30,112 @@
 #if !defined(MDI_CONCRETE_H_INCLUDED)
 #define MDI_CONCRETE_H_INCLUDED
 
-#include "MDI.h"
+#include "../GlobalDefinitions.h"
 
 #ifdef USE_QT_GUI
+#  include "MDIInBuffer.h"
 #  include "PacketSocketQT.h"
-#else
-#  include "PacketSocketNull.h"
 #endif
 
 
-#include "../GlobalDefinitions.h"
-#include "MDIDefinitions.h"
-#include "MDITagItems.h"
-#include "MDIInBuffer.h"
-#include "../Parameter.h"
-#include "../util/Vector.h"
-#include "../util/Buffer.h"
+#include "../util/Modul.h"
 #include "../util/CRC.h"
 
-#include "MDITagPacketDecoder.h"
+#include "MDIDefinitions.h"
+#include "MDITagItems.h"
 #include "TagPacketDecoderRSCIControl.h"
 #include "TagPacketGenerator.h"
 
-
-
-/* Definitions ****************************************************************/
-
-class CDRMReceiver; /* forward declaration so it can contain a pointer back to the DRMReceiver */
-
 /* Classes ********************************************************************/
-class CMDIConcrete : public CMDI
+class CRSIMDIInRCIOut : public CReceiverModul<_BINARY, _BINARY>
+#ifdef USE_QT_GUI
+			, public CPacketSink
+#endif
 {
 public:
-	CMDIConcrete();
-	void SetDRMReceiver(CDRMReceiver *pRx);
+	CRSIMDIInRCIOut();
+	virtual ~CRSIMDIInRCIOut() {}
 
-	virtual ~CMDIConcrete() {}
+	/* CRSIMDIInInterface */
+	void SetInAddr(const string& strAddr);
+	_BOOLEAN GetInEnabled() {return bMDIInEnabled;}
 
-	/* MDI out */
-	void SetFACData(_BOOLEAN bFACOK, CVectorEx<_BINARY>& vecbiFACData, CParameter& Parameter);
-	void SetSDCData(_BOOLEAN bSDCOK, CVectorEx<_BINARY>& vecbiSDCData);
-	void SetStreamData(const int iStrNum, CVectorEx<_BINARY>& vecbiStrData);
-	void SetMERs(const _REAL rRMER, const _REAL rRWMM, const _REAL rRWMF);
-	void SetRDEL(const CRealVector &vecrThresholds, const CRealVector &vecrIntervals);
-	void SetRDOP(const CReal rDoppler);
-	void SetInterference(const CReal rIntFreq, const CReal rINR, const CReal rICR);
-	void SetAudioFrameStatus(_BOOLEAN bIsValid, CVector<_BINARY>& vecbiAudioStatus);
+	/* CRCIOutInterface */
+	void SetOutAddr(const string& strArgument);
+	_BOOLEAN GetOutEnabled() {return bMDIOutEnabled;}
+	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC=bNAFPktCRC;}
 
-	void SendUnlockedFrame(CParameter& Parameter); /* called once per frame even if the Rx isn't synchronised */
+#ifdef USE_QT_GUI
+	/* CPacketSink */
+	void SendPacket(const vector<_BYTE>& vecbydata);
+#endif
 
-	_BOOLEAN SetNetwOutAddr(const string strNewIPPort);
-	_BOOLEAN GetMDIOutEnabled() {return bMDIOutEnabled;}
+	/* CReceiverModul */
+	void InitInternal(CParameter& ReceiverParam);
+	void ProcessDataInternal(CParameter& ReceiverParam);
 
-	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC = bNAFPktCRC;}
-	_BOOLEAN GetAFPktCRC() {return bUseAFCRC;}
-
-	void SetProfile(const char cProf) {cProfile = cProf;}
-
-	/* MDI in */
-	ERobMode GetFACData(CVectorEx<_BINARY>& vecbiFACData);
-	void GetSDCData(CVectorEx<_BINARY>& vecbiSDCData);
-	void GetStreamData(CVectorEx<_BINARY>& vecbiStrData, const int iLen,
-		const int iStrNum);
-	_BOOLEAN SetNetwInPort(const int iPort);
-	_BOOLEAN SetNetwInMcast(const string strNewIPIP);
-	_BOOLEAN SetNetwInPortRSCI(const int iPort);
-	_BOOLEAN GetMDIInEnabled() {return bMDIInEnabled;}
+	void TransmitPacket(CVector<_BINARY>& vecbidata);
 
 protected:
-	_BOOLEAN					bSDCOutWasSet; // OPH - this flag was causing interaction between MDI in and out
-	_BOOLEAN					bSDCInWasSet;
 
+#ifdef USE_QT_GUI
+	CMDIInBuffer	  queue;
+	CPacketSocketQT				PacketSocket;
+#endif
+
+	_BOOLEAN					bUseAFCRC;
+
+	CSingleBuffer<_BINARY>		MDIInBuffer;
+	_BOOLEAN					bMDIOutEnabled;
+	_BOOLEAN					bMDIInEnabled;
+};
+
+class CRSIMDIOutRCIIn
+#ifdef USE_QT_GUI
+: public CPacketSink
+#endif
+{
+public:
+	CRSIMDIOutRCIIn();
+	virtual ~CRSIMDIOutRCIIn() {}
+	/* RSCI/MDI out */
+
+	CVector<_BINARY> GenMDIPacket();
+
+	void SendLockedFrame(CParameter& Parameter,
+						CSingleBuffer<_BINARY>& FACData,
+						CSingleBuffer<_BINARY>& SDCData,
+						vector<CSingleBuffer<_BINARY> >& vecMSCData
+	);
+	void SendUnlockedFrame(CParameter& Parameter); /* called once per frame even if the Rx isn't synchronised */
+
+	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC = bNAFPktCRC;}
+	void SetOutAddr(const string& strArgument);
+	void SetInAddr(const string& strAddr);
+	virtual void SetProfile(const char c);
 	
-	/* MDI transmit --------------------------------------------------------- */
+	virtual _BOOLEAN GetOutEnabled() {return bMDIOutEnabled;} 
+	virtual _BOOLEAN GetInEnabled() {return bMDIInEnabled;}
+	void GetNextPacket(CSingleBuffer<_BINARY>&	buf);
+	void TransmitPacket(CVector<_BINARY> vecbidata);
 
+#ifdef USE_QT_GUI
+	void SendPacket(const vector<_BYTE>& vecbydata);
+#endif
 
+protected:
+#ifdef USE_QT_GUI
+	CPacketSocketQT				PacketSocket;
+#endif
 	
 	void SetEnableMDIOut(const _BOOLEAN bNEnMOut) {bMDIOutEnabled = bNEnMOut;}
 
-	void SendPacket(CVector<_BINARY> vecbiPacket);
-
-	CVector<_BINARY> GenMDIPacket(const _BOOLEAN bWithSDC);
-
-	void ResetTags(const _BOOLEAN bResetSDC);
+	void ResetTags();
 
 	uint32_t					iLogFraCnt;
 
 	_BOOLEAN					bMDIOutEnabled;
 	_BOOLEAN					bMDIInEnabled;
-
-	/* Counter for unlocked frames, to keep generating RSCI even when unlocked */
-	int iUnlockedCount;
-
-	/* Flags used for generating the rsta tag */
-	CRSCIStatusFlags  RSCIStatusFlags;
 
 	/* Generators for all of the MDI and RSCI tags */
 
@@ -165,27 +177,10 @@ protected:
 	_BOOLEAN					bUseAFCRC;
 	char						cProfile;
 
-	/* MDI receive ---------------------------------------------------------- */
-
-	// Null packet socket has no dependence on QT. (but doesn't do anything either!)
-#ifdef USE_QT_GUI
-	CPacketSocketQT				PacketSocket;
-#else
-	CPacketSocketNull			PacketSocket;
-#endif
-
-	void SetEnableMDIIn(const _BOOLEAN bNEnMIn) {bMDIInEnabled = bNEnMIn;}
-
-	CTagPacketDecoderMDI TagPacketDecoderMDI;
 	CTagPacketDecoderRSCIControl TagPacketDecoderRSCIControl;
 
-	CMDIInPkt					CurMDIPkt;
-	CMDIInBuffer				MDIInBuffer;
+	CSingleBuffer<_BINARY>		MDIInBuffer;
 
-	CMutex						Mutex;
-
-	CDRMReceiver *				pReceiver;
 };
-
 
 #endif // !defined(MDI_H__3B0346264660_CA63_3452345DGERH31912__INCLUDED_)

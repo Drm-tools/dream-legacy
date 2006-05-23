@@ -70,7 +70,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	QPopupMenu* pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
-		new CSoundCardSelMenu(pDRMRec->GetSoundInterface(), this));
+		new CSoundCardSelMenu(pDRMRec->GetSoundInInterface(), pDRMRec->GetSoundOutInterface(), this));
 	pSettingsMenu->insertItem(tr("&DRM (digital)"), this,
 		SIGNAL(SwitchToDRM()), CTRL+Key_D);
 	pSettingsMenu->insertItem(tr("New &AM Acquisition"), this,
@@ -754,9 +754,9 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Activate real-time timers */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
-
 	/* set the progress bar style */
 	ProgressBarAMSS->setStyle( new QMotifStyle() );
+
 }
 
 void CAMSSDlg::hideEvent(QHideEvent* pEvent)

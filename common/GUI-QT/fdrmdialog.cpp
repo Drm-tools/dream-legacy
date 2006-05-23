@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include "fdrmdialog.h"
-
+#include <iostream>
 
 /* Implementation *************************************************************/
 FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
@@ -73,7 +73,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
-		new CSoundCardSelMenu(pDRMRec->GetSoundInterface(), this));
+		new CSoundCardSelMenu(pDRMRec->GetSoundInInterface(), pDRMRec->GetSoundOutInterface(), this));
 	pSettingsMenu->insertItem(tr("&AM (analog)"), this,
 		SLOT(OnSwitchToAM()), CTRL+Key_A);
 	pSettingsMenu->insertItem(tr("New &DRM Acquisition"), this,
@@ -206,15 +206,16 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 		FALSE, Qt::WStyle_MinMax);
 
 	if (pDRMRec->GeomAnalogDemDlg.bVisible == TRUE)
-		SetReceiverMode(CDRMReceiver::RM_AM);
+		SetReceiverMode(RM_AM);
 	else
-		SetReceiverMode(CDRMReceiver::RM_DRM);
+		SetReceiverMode(RM_DRM);
 
 	/* Enable multimedia */
 	pDRMRec->GetParameters()->EnableMultimedia(TRUE);
 
 	/* Init current selected service */
 	pDRMRec->GetParameters()->ResetCurSelAudDatServ();
+
 	iCurSelServiceGUI = 0;
 	iOldNoServicesGUI = 0;
 
@@ -279,7 +280,7 @@ FDRMDialog::~FDRMDialog()
 	/* Special treatment for multimedia
 	   and systen evaluation dialog since these
 	   windows are not used for AM demodulation */
-	if (pDRMRec->GetReceiverMode() == CDRMReceiver::RM_AM)
+	if (pDRMRec->GetReceiverMode() == RM_AM)
 	{
 		pDRMRec->GeomSystemEvalDlg.bVisible = bSysEvalDlgWasVis;
 		pDRMRec->GeomMultimediaDlg.bVisible = bMultMedDlgWasVis;
@@ -292,27 +293,52 @@ FDRMDialog::~FDRMDialog()
 		pDRMRec->GeomLiveScheduleDlg.bVisible = pLiveScheduleDlg->isVisible();
 	}
 }
+void FDRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
+{
+	switch(state)
+	{
+	case NOT_PRESENT:
+		LED->Reset(); /* GREY */
+		break;
+
+	case CRC_ERROR:
+		LED->SetLight(2); /* RED */
+		break;
+
+	case DATA_ERROR:
+		LED->SetLight(1); /* YELLOW */
+		break;
+
+	case RX_OK:
+		LED->SetLight(0); /* GREEN */
+		break;
+	}
+}
 
 void FDRMDialog::OnTimer()
 {
 	/* Input level meter */
 	ProgrInputLevel->setValue(pDRMRec->GetReceiver()->GetLevelMeter());
+	
+	CParameter& ReceiverParam = *(pDRMRec->GetParameters());
+
+	SetStatus(CLED_MSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
+    SetStatus(CLED_SDC, ReceiverParam.ReceiveStatus.GetSDCStatus());
+    SetStatus(CLED_FAC, ReceiverParam.ReceiveStatus.GetFACStatus());
 
 	/* Check if receiver does receive a DRM signal */
 	if ((pDRMRec->GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL) &&
-		(pDRMRec->GetReceiverMode() == CDRMReceiver::RM_DRM))
+		(pDRMRec->GetReceiverMode() == RM_DRM))
 	{
 		/* Receiver does receive a DRM signal ------------------------------- */
 		/* First get current selected services */
-		const int iCurSelAudioServ =
-			pDRMRec->GetParameters()->GetCurSelAudioService();
-		const int iCurSelDataServ =
-			pDRMRec->GetParameters()->GetCurSelDataService();
+		const int iCurSelAudioServ = ReceiverParam.GetCurSelAudioService();
+		const int iCurSelDataServ = ReceiverParam.GetCurSelDataService();
 
 		/* If selected service is audio and text message is true */
-		if ((pDRMRec->GetParameters()->Service[iCurSelAudioServ].
+		if ((ReceiverParam.Service[iCurSelAudioServ].
 			eAudDataFlag == CParameter::SF_AUDIO) &&
-			(pDRMRec->GetParameters()->Service[iCurSelAudioServ].
+			(ReceiverParam.Service[iCurSelAudioServ].
 			AudioParam.bTextflag == TRUE))
 		{
 			/* Activate text window */
@@ -321,7 +347,7 @@ void FDRMDialog::OnTimer()
 			/* Text message of current selected audio service 
 			   (UTF-8 decoding) */
             QCString utf8Message = 
-                   pDRMRec->GetParameters()->Service[iCurSelAudioServ]
+                   ReceiverParam.Service[iCurSelAudioServ]
                    .AudioParam.strTextMessage.c_str();
             QString textMessage = QString().fromUtf8(utf8Message);
             QString formattedMessage = "";
@@ -375,21 +401,21 @@ void FDRMDialog::OnTimer()
 		}
 
 		/* Check whether service parameters were not transmitted yet */
-		if (pDRMRec->GetParameters()->Service[iCurSelAudioServ].IsActive())
+		if (ReceiverParam.Service[iCurSelAudioServ].IsActive())
 		{
 			/* Service label (UTF-8 encoded string -> convert) */
 			LabelServiceLabel->setText(QString().fromUtf8(QCString(
-				pDRMRec->GetParameters()->Service[iCurSelAudioServ].
+				ReceiverParam.Service[iCurSelAudioServ].
 				strLabel.c_str())));
 
 			/* Bit-rate */
-			QString strBitrate = QString().setNum(pDRMRec->GetParameters()->
+			QString strBitrate = QString().setNum(ReceiverParam.
 				GetBitRateKbps(iCurSelAudioServ, FALSE), 'f', 2) +
 				tr(" kbps");
 
 			/* Equal or unequal error protection */
 			const _REAL rPartABLenRat =
-				pDRMRec->GetParameters()->PartABLenRatio(iCurSelAudioServ);
+				ReceiverParam.PartABLenRatio(iCurSelAudioServ);
 
 			if (rPartABLenRat != (_REAL) 0.0)
 			{
@@ -405,7 +431,7 @@ void FDRMDialog::OnTimer()
 			LabelBitrate->setText(strBitrate);
 
 			/* Service ID (plot number in hexadecimal format) */
-			const long iServiceID = (long) pDRMRec->GetParameters()->
+			const long iServiceID = (long) ReceiverParam.
 				Service[iCurSelAudioServ].iServiceID;
 
 			if (iServiceID != 0)
@@ -425,7 +451,7 @@ void FDRMDialog::OnTimer()
 				eAudDataFlag == CParameter::SF_AUDIO)
 			{
 				/* Language */
-				const int iLanguageID = pDRMRec->GetParameters()->
+				const int iLanguageID = ReceiverParam.
 					Service[iCurSelAudioServ].iLanguage;
 
 				if ((iLanguageID > 0) &&
@@ -438,7 +464,7 @@ void FDRMDialog::OnTimer()
 					LabelLanguage->setText("");
 
 				/* Program type */
-				const int iProgrammTypeID = pDRMRec->GetParameters()->
+				const int iProgrammTypeID = ReceiverParam.
 					Service[iCurSelAudioServ].iServiceDescr;
 
 				if ((iProgrammTypeID > 0) &&
@@ -452,7 +478,7 @@ void FDRMDialog::OnTimer()
 			}
 
 			/* Country code */
-			const string strCntryCode = pDRMRec->GetParameters()->
+			const string strCntryCode = ReceiverParam.
 				Service[iCurSelAudioServ].strCountryCode;
 
 			if (!strCntryCode.empty())
@@ -481,13 +507,13 @@ void FDRMDialog::OnTimer()
 		/* Make sure a possible service was selected. If not, correct. Make sure
 		   an audio service is selected. If we have a data only service, we do
 		   not want to have the button pressed */
-		if (((!pDRMRec->GetParameters()->Service[iCurSelServiceGUI].IsActive()) ||
+		if (((!ReceiverParam.Service[iCurSelServiceGUI].IsActive()) ||
 			(iCurSelServiceGUI != iCurSelAudioServ) &&
-			pDRMRec->GetParameters()->Service[iCurSelAudioServ].IsActive()) &&
+			ReceiverParam.Service[iCurSelAudioServ].IsActive()) &&
 			/* Make sure current selected audio service is not a data only
 			   serivce */
-			(pDRMRec->GetParameters()->Service[iCurSelAudioServ].IsActive() &&
-			(pDRMRec->GetParameters()->Service[iCurSelAudioServ].eAudDataFlag !=
+			(ReceiverParam.Service[iCurSelAudioServ].IsActive() &&
+			(ReceiverParam.Service[iCurSelAudioServ].eAudDataFlag !=
 			CParameter::SF_DATA)))
 		{
 			/* Reset checks */
@@ -520,7 +546,7 @@ void FDRMDialog::OnTimer()
 				break;
 			}
 		}
-		else if (pDRMRec->GetParameters()->Service[iCurSelServiceGUI].
+		else if (ReceiverParam.Service[iCurSelServiceGUI].
 			eAudDataFlag ==	CParameter::SF_DATA)
 		{
 			/* In case we only have data services, reset checks */
@@ -534,7 +560,7 @@ void FDRMDialog::OnTimer()
 		/* Service selector ------------------------------------------------- */
 		/* Enable only so many number of channel switches as present in the
 		   stream */
-		const int iNumServices = pDRMRec->GetParameters()->GetTotNumServices();
+		const int iNumServices = ReceiverParam.GetTotNumServices();
 
 		QString m_StaticService[MAX_NUM_SERVICES] = {"", "", "", ""};
 
@@ -551,11 +577,11 @@ void FDRMDialog::OnTimer()
 		for (int i = 0; i < MAX_NUM_SERVICES; i++)
 		{
 			/* Check, if service is used */
-			if (pDRMRec->GetParameters()->Service[i].IsActive())
+			if (ReceiverParam.Service[i].IsActive())
 			{
 				/* Do UTF-8 to string conversion with the label strings */
-				QString strLabel = QString().fromUtf8(QCString(pDRMRec->
-					GetParameters()->Service[i].strLabel.c_str()));
+				QString strLabel = QString().fromUtf8(
+				QCString(ReceiverParam.Service[i].strLabel.c_str()));
 
 				/* Label for service selection button (service label, codec
 				   and Mono / Stereo information) */
@@ -565,7 +591,7 @@ void FDRMDialog::OnTimer()
 
 				/* Bit-rate (only show if greater than 0) */
 				const _REAL rBitRate =
-					pDRMRec->GetParameters()->GetBitRateKbps(i, FALSE);
+					ReceiverParam.GetBitRateKbps(i, FALSE);
 
 				if (rBitRate > (_REAL) 0.0)
 				{
@@ -574,13 +600,13 @@ void FDRMDialog::OnTimer()
 				}
 
 				/* Show, if a multimedia stream is connected to this service */
-				if ((pDRMRec->GetParameters()->Service[i].
+				if ((ReceiverParam.Service[i].
 					eAudDataFlag == CParameter::SF_AUDIO) && 
-					(pDRMRec->GetParameters()->Service[i].
+					(ReceiverParam.Service[i].
 					DataParam.iStreamID != STREAM_ID_NOT_USED))
 				{
 
-					if (pDRMRec->GetParameters()->Service[i].
+					if (ReceiverParam.Service[i].
 						DataParam.iUserAppIdent == AT_MOTEPG)
 					{
 						m_StaticService[i] += tr(" + EPG"); /* EPG service */
@@ -589,8 +615,8 @@ void FDRMDialog::OnTimer()
 						m_StaticService[i] += tr(" + MM"); /* other multimedia service */
 
 					/* Bit-rate of connected data stream */
-					m_StaticService[i] += " (" + QString().setNum(pDRMRec->
-						GetParameters()->GetBitRateKbps(i, TRUE), 'f', 2) +
+					m_StaticService[i] += " (" + QString().setNum(
+					ReceiverParam.GetBitRateKbps(i, TRUE), 'f', 2) +
 						" kbps)";
 				}
 
@@ -616,11 +642,11 @@ void FDRMDialog::OnTimer()
 		}
 
 		/* detect if AFS informations are available */
-		if ((pDRMRec->GetParameters()->AltFreqSign.vecAltFreq.Size() > 0)
-			|| (pDRMRec->GetParameters()->AltFreqOtherServicesSign.vecAltFreqOtherServices.Size() > 0))
+		if ((ReceiverParam.AltFreqSign.vecAltFreq.Size() > 0)
+			|| (ReceiverParam.AltFreqOtherServicesSign.vecAltFreqOtherServices.Size() > 0))
 		{
 			/* show AFS label */
-			if (pDRMRec->GetParameters()->Service[0].
+			if (ReceiverParam.Service[0].
 				eAudDataFlag == CParameter::SF_AUDIO)
 					m_StaticService[0] += tr(" + AFS");
 		}
@@ -661,7 +687,7 @@ void FDRMDialog::OnTimer()
 	}
 }
 
-void FDRMDialog::SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo)
+void FDRMDialog::SetReceiverMode(const ERecMode eNewReMo)
 {
 	const _BOOLEAN bModeHastChanged = pDRMRec->GetReceiverMode() != eNewReMo;
 
@@ -671,7 +697,7 @@ void FDRMDialog::SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo)
 	/* Make sure correct evaluation dialog is shown */
 	switch (eNewReMo)
 	{
-	case CDRMReceiver::RM_DRM:
+	case RM_DRM:
 		/* For DRM mode, always show main window */
 		show();
 
@@ -694,7 +720,7 @@ void FDRMDialog::SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo)
 		pStationsDlg->LoadSchedule(CDRMSchedule::SM_DRM);
 		break;
 
-	case CDRMReceiver::RM_AM:
+	case RM_AM:
 		/* Main window is not needed, hide it. If Multimedia window was open,
 		   hide it. Make sure analog demodulation dialog is visible */
 		hide();
@@ -803,7 +829,7 @@ void FDRMDialog::SetService(int iNewServiceID)
 
 void FDRMDialog::OnViewEvalDlg()
 {
-	if (pDRMRec->GetReceiverMode() == CDRMReceiver::RM_DRM)
+	if (pDRMRec->GetReceiverMode() == RM_DRM)
 	{
 		/* Show evaluation window in DRM mode */
 		pSysEvalDlg->show();

@@ -139,7 +139,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	if (bUseSoundcard == TRUE)
 	{
 		/* Init sound interface */
-		pSound->InitPlayback(iBigBlockSize, TRUE);
+		pSound->Init(iBigBlockSize, TRUE);
 	}
 	else
 	{
@@ -191,9 +191,9 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 		/* Get data from sound interface. The read function must be a
 		   blocking function! */
 		if (pSound->Read(vecsSoundBuffer) == FALSE)
-			PostWinMessage(MS_IOINTERFACE, 0); /* green light */
+			Parameter.ReceiveStatus.SetInterfaceStatus(RX_OK);
 		else
-			PostWinMessage(MS_IOINTERFACE, 2); /* red light */
+			Parameter.ReceiveStatus.SetInterfaceStatus(CRC_ERROR);
 
 		/* Write data to output buffer. Do not set the switch command inside
 		   the for-loop for efficiency reasons */
@@ -352,7 +352,7 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 		/* Init sound interface. Set it to one symbol. The sound card interface
 		   has to taken care about the buffering data of a whole MSC block.
 		   Use stereo input (* 2) */
-		pSound->InitRecording(Parameter.iSymbolBlockSize * 2);
+		pSound->Init(Parameter.iSymbolBlockSize * 2);
 
 		/* Init buffer size for taking stereo input */
 		vecsSoundBuffer.Init(Parameter.iSymbolBlockSize * 2);

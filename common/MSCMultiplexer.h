@@ -34,20 +34,12 @@
 #include "util/Buffer.h"
 #include "util/Modul.h"
 #include "util/Vector.h"
-#ifdef USE_QT_GUI
-# include "MDI/MDI.h"
-#endif
-
 
 /* Classes ********************************************************************/
 class CMSCDemultiplexer : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-#ifdef USE_QT_GUI
-	CMSCDemultiplexer(CMDI* pNM) : pMDI(pNM), vecMDIStrPos(MAX_NUM_STREAMS) {}
-#else
 	CMSCDemultiplexer() {}
-#endif
 	virtual ~CMSCDemultiplexer() {}
 
 protected:
@@ -59,18 +51,7 @@ protected:
 		int	iLenHigh;
 	};
 
-	SStreamPos			AudStreamPos;
-	SStreamPos			DataStreamPos;
-
-#ifdef USE_QT_GUI
-	/* MDI */
-	CMDI*				pMDI;
-	CVector<SStreamPos>	vecMDIStrPos;
-	CVector<int>		veciMDIActStre;
-#endif
-
-	int					iDataStreamID;
-	int					iAudioStreamID;
+	SStreamPos			StreamPos[4];
 
 	SStreamPos GetStreamPos(CParameter& Param, const int iStreamID);
 	void ExtractData(CVectorEx<_BINARY>& vecIn, CVectorEx<_BINARY>& vecOut,

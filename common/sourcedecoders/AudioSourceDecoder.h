@@ -34,7 +34,6 @@
 #include "../resample/Resample.h"
 #include "../datadecoding/DataDecoder.h"
 #include "../util/Utilities.h"
-#include "../MDI/MDI.h"
 
 #ifdef USE_FAAD2_LIBRARY
 # include "neaacdec.h"
@@ -181,7 +180,7 @@ protected:
 class CAudioSourceDecoder : public CReceiverModul<_BINARY, _SAMPLE>
 {
 public:
-	CAudioSourceDecoder(CMDI *pNM);
+	CAudioSourceDecoder();
 
 	virtual ~CAudioSourceDecoder();
 
@@ -263,9 +262,6 @@ protected:
 #ifdef USE_CELP_DECODER
 	/* TODO put here decoder specific things */
 #endif
-
-	CMDI				*pMDI;
-
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };

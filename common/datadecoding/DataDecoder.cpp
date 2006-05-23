@@ -206,7 +206,7 @@ CDataDecoder::ProcessDataInternal (CParameter & ReceiverParam)
     (*pvecInputData).ResetBitAccess ();
 
     for (j = 0; j < iNumDataPackets; j++)
-      {
+    {
 	  /* Check the CRC of this packet */
 	  CRCObject.Reset (16);
 
@@ -217,16 +217,16 @@ CDataDecoder::ProcessDataInternal (CParameter & ReceiverParam)
 
 	  /* Store result in vector and show CRC in multimedia window */
 	  if (CRCObject.CheckCRC ((*pvecInputData).Separate (16)) == TRUE)
-	    {
+	  {
 		veciCRCOk[j] = 1;	/* CRC ok */
-		PostWinMessage (MS_MOT_OBJ_STAT, 0);	/* Green light */
-	    }
+		ReceiverParam.ReceiveStatus.SetMOTStatus(RX_OK);
+	  }
 	  else
-	    {
+	  {
 		veciCRCOk[j] = 0;	/* CRC wrong */
-		PostWinMessage (MS_MOT_OBJ_STAT, 2);	/* Red light */
-	    }
-      }
+		ReceiverParam.ReceiveStatus.SetMOTStatus(CRC_ERROR);
+	  }
+    }
 
 
     /* Extract packet data -------------------------------------------------- */

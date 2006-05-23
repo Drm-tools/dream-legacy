@@ -46,6 +46,7 @@
 
 
 #include "TagPacketGenerator.h"
+#include <iostream>
 
 CTagPacketGenerator::CTagPacketGenerator(void) : vecTagItemGenerators(0) 
 {
@@ -64,8 +65,11 @@ CVector<_BINARY> CTagPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC)
 // TODO: check if padding bits are needed to get byte alignment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	int iPayloadLenBytes = 0;
 		
-	for (j=0; j<vecTagItemGenerators.Size(); j++)
-		iPayloadLenBytes += vecTagItemGenerators[j]->GetTotalLength() / SIZEOF__BYTE;
+	for (j=0; j<vecTagItemGenerators.size(); j++)
+	{
+		int n = vecTagItemGenerators[j]->GetTotalLength() / SIZEOF__BYTE;
+		iPayloadLenBytes += n;
+	}
 
 	/* 10 bytes AF header, 2 bytes CRC, payload */
 	const int iAFPktLenBits =
@@ -119,7 +123,7 @@ CVector<_BINARY> CTagPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC)
 
 // TODO: copy data byte wise -> check if possible to do that...
 
-	for (j=0; j<vecTagItemGenerators.Size(); j++)
+	for (j=0; j<vecTagItemGenerators.size(); j++)
 	{
 		vecTagItemGenerators[j]->PutTagItemData(vecbiAFPkt);
 	}
@@ -146,13 +150,12 @@ CVector<_BINARY> CTagPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC)
 	}
 	else
 		vecbiAFPkt.Enqueue((uint32_t) 0, 16);
-
 	return vecbiAFPkt;
 }
 
 void CTagPacketGenerator::AddTagItem(CTagItemGenerator *pGenerator)
 {
-	vecTagItemGenerators.Add(pGenerator);
+	vecTagItemGenerators.push_back(pGenerator);
 }
 
 

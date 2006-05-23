@@ -29,75 +29,7 @@
 #ifndef _SOUND_H
 #define _SOUND_H
 
-#include "../../common/GlobalDefinitions.h"
-#include "../../common/util/Vector.h"
-
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-
-/* Definitions ****************************************************************/
-#define	NUM_IN_OUT_CHANNELS		2		/* Stereo recording (but we only
-										   use one channel for recording) */
-#define	BITS_PER_SAMPLE			16		/* Use all bits of the D/A-converter */
-#define BYTES_PER_SAMPLE		2		/* Number of bytes per sample */
-
-#define RECORDING_CHANNEL		0		/* 0: Left, 1: Right
-
-/* Classes ********************************************************************/
-class CSound
-{
-public:
-	CSound() {}
-	virtual ~CSound() {}
-
-	/* Not implemented yet, always return one device and default string */
-	int		GetNumDev() {return 1;}
-	string	GetDeviceName(int iDiD) {return "Default Sound Device";}
-	void	SetOutDev(int iNewDev) {}
-	void	SetInDev(int iNewDev) {}
-
-	/* Return invalid device ID which is the same as using "wave mapper" which
-	   we assume here to be used */
-	int		GetOutDev() {return 1;}
-	int		GetInDev() {return 1;}
-
-#if WITH_SOUND
-	void InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-	void InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
-	_BOOLEAN Read(CVector<short>& psData);
-	_BOOLEAN Write(CVector<short>& psData);
-
-	void Close();
-	
-protected:
-	int 	iBufferSize, iInBufferSize;
-	void Init_HW( int mode );
-
-	friend class RecThread;
-	friend class PlayThread;
-	static int read_HW( void * recbuf, int size);
-	static int write_HW( _SAMPLE *playbuf, int size );
-	void close_HW( void );
-	
-	short int *tmpplaybuf, *tmprecbuf;
-	_BOOLEAN	bBlockingRec;
-	_BOOLEAN	bBlockingPlay;
-	
-	
-#else
-	/* Dummy definitions */
-	void InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE){}
-	void InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE){}
-	_BOOLEAN Read(CVector<short>& psData){return FALSE;}
-	_BOOLEAN Write(CVector<short>& psData){return FALSE;}
-	void Close(){}
-#endif
-};
-
+#include "soundin.h"
+#include "soundout.h"
 
 #endif

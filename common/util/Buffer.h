@@ -270,7 +270,7 @@ template<class TData> void CCyclicBuffer<TData>::Put(const int iOfferedSize)
 #ifdef _DEBUG_
 	if (iAvailSpace < iOfferedSize)
 	{
-		DebugError("CyclicBuffer Put()", "Availabe space",
+		DebugError("CyclicBuffer Put()", "Available space",
 			iAvailSpace, "Offered size", iOfferedSize);
 	}
 #endif

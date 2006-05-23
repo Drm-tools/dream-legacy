@@ -438,27 +438,28 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* After processing last symbol of the frame */
 	if (iModSymNum == iNumSymPerFrame - 1)
 	{
-		/* Calculate and generate RSCI tags */
-		/* rmer */
+		ReceiverParam.Lock();
+		/* Calculate and generate RSCI measurement values */
+		/* rmer (MER for MSC) */
 		CReal rMER =
 			CalAndBoundSNR(AV_DATA_CELLS_POWER, rNoiseEstMERAcc / iCountMERAcc);
 
 		/* Bound MER at 0 dB */
-		rMER = (rMER > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rMER) : (_REAL) 0.0);
+		ReceiverParam.rMER = (rMER > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rMER) : (_REAL) 0.0);
 
-		/* rwmm */
+		/* rwmm (WMER for MSC)*/
 		CReal rWMM = AV_DATA_CELLS_POWER *
 			CalAndBoundSNR(rSignalEstWMMAcc, rNoiseEstWMMAcc);
 
 		/* Bound the MER at 0 dB */
-		rWMM = (rWMM > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rWMM) : (_REAL) 0.0);
+		ReceiverParam.rWMERMSC = (rWMM > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rWMM) : (_REAL) 0.0);
 
-		/* rwmf */
+		/* rwmf (WMER for FAC) */
 		CReal rWMF = AV_DATA_CELLS_POWER *
 			CalAndBoundSNR(rSignalEstWMFAcc, rNoiseEstWMFAcc);
 
 		/* Bound the MER at 0 dB */
-		rWMF = (rWMF > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rWMF) : (_REAL) 0.0);
+		ReceiverParam.rWMERFAC = (rWMF > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rWMF) : (_REAL) 0.0);
 
 		/* Reset all the accumulators and counters */
 		rNoiseEstMERAcc = (_REAL) 0.0;
@@ -468,22 +469,18 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		rSignalEstWMFAcc = (_REAL) 0.0;
 		rNoiseEstWMFAcc = (_REAL) 0.0;
 
-		/* Save CPU by omitting calculations if MDI (RSCI) output not enabled */
-		if (pMDI != NULL && pMDI->GetMDIOutEnabled())
+		if (ReceiverParam.bMeasureDelay)
+    	    TimeSyncTrack.CalculateRdel(ReceiverParam);
+
+		if (ReceiverParam.bMeasureDoppler)
+			TimeSyncTrack.CalculateRdop(ReceiverParam);
+
+		if (ReceiverParam.bMeasureInterference)
 		{
-			CReal rIntFreq=0, rINR=0, rICR=0;
-
-			pMDI->SetMERs(rMER, rWMM, rWMF);
-
-			pMDI->SetRDEL(TimeSyncTrack.GetRdelThresholds(),
-				TimeSyncTrack.CalculateRdel(ReceiverParam));
-
-			pMDI->SetRDOP(TimeSyncTrack.CalculateRdop(ReceiverParam));
-
 			/* Calculate interference tag */
-			CalculateRint(ReceiverParam, rIntFreq, rINR, rICR);
-			pMDI->SetInterference(rIntFreq, rINR, rICR);
+			CalculateRint(ReceiverParam);
 		}
+		ReceiverParam.Unlock();
 	}
 
 
@@ -502,9 +499,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 }
 
 /* OPH: Calculate the values for the rint RSCI tag */
-void CChannelEstimation::CalculateRint(CParameter& ReceiverParam,
-									   CReal &rIntFreq, CReal &rINR,
-									   CReal &rICR)
+void CChannelEstimation::CalculateRint(CParameter& ReceiverParam)
 {
 	CReal rMaxNoiseEst = (CReal) 0.0;
 	CReal rSumNoiseEst = (CReal) 0.0;
@@ -525,18 +520,18 @@ void CChannelEstimation::CalculateRint(CParameter& ReceiverParam,
 	}
 
 	/* Interference to noise ratio */
-	rINR = CalAndBoundSNR(rMaxNoiseEst, rSumNoiseEst / iNumCarrier);
-	rINR = (rINR > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rINR) : (_REAL) 0.0);
+	_REAL rINRtmp = CalAndBoundSNR(rMaxNoiseEst, rSumNoiseEst / iNumCarrier);
+	ReceiverParam.rINR = (rINRtmp > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rINRtmp) : (_REAL) 0.0);
 
 	/* Interference to (single) carrier ratio */
-	rICR = CalAndBoundSNR(rMaxNoiseEst,
+	_REAL rICRtmp = CalAndBoundSNR(rMaxNoiseEst,
 		AV_DATA_CELLS_POWER * rSumSigEst/iNumCarrier);
 
 
-	rICR = (rICR > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rICR) : (_REAL) 0.0);
+	ReceiverParam.rICR = (rICRtmp > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rICRtmp) : (_REAL) 0.0);
 		
 	/* Interferer frequency */
-	rIntFreq = ((_REAL) iMaxIntCarrier + ReceiverParam.iCarrierKmin) /
+	ReceiverParam.rIntFreq = ((_REAL) iMaxIntCarrier + ReceiverParam.iCarrierKmin) /
 		ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
 }
 
@@ -956,22 +951,22 @@ _REAL CChannelEstimation::CalAndBoundSNR(const _REAL rSignalEst,
 	return rReturn;
 }
 
-_BOOLEAN CChannelEstimation::GetSNREstdB(_REAL& rSNREstRes) const
+
+_REAL CChannelEstimation::GetSNREstdB() const
 {
+	if (bSNRInitPhase == TRUE)
+		return -1.0;
+
 	const _REAL rNomBWSNR = rSNREstimate * rSNRSysToNomBWCorrFact;
 
 	/* Bound the SNR at 0 dB */
 	if ((rNomBWSNR > (_REAL) 1.0) && (bSNRInitPhase == FALSE))
-		rSNREstRes = (_REAL) 10.0 * log10(rNomBWSNR);
+		return (_REAL) 10.0 * log10(rNomBWSNR);
 	else
-		rSNREstRes = (_REAL) 0.0;
-
-	if (bSNRInitPhase == TRUE)
-		return FALSE;
-	else
-		return TRUE;
+		return (_REAL) 0.0;
 }
 
+#if 0
 _REAL CChannelEstimation::GetMSCMEREstdB()
 {
 	/* Calculate final result (signal to noise ratio) and consider correction
@@ -1014,21 +1009,16 @@ _REAL CChannelEstimation::GetMSCWMEREstdB()
 	else
 		return (_REAL) 0.0;
 }
+#endif
 
-_BOOLEAN CChannelEstimation::GetSigma(_REAL& rSigma)
+_REAL CChannelEstimation::GetSigma()
 {
 	/* Doppler estimation is only implemented in the Wiener time interpolation
 	   module */
 	if (TypeIntTime == TWIENER)
-	{
-		rSigma = TimeWiener.GetSigma();
-		return TRUE;
-	}
+		return TimeWiener.GetSigma();
 	else
-	{
-		rSigma = (_REAL) 0.0;
-		return FALSE;
-	}
+		return -1.0;
 }
 
 _REAL CChannelEstimation::GetDelay() const
@@ -1044,7 +1034,8 @@ _REAL CChannelEstimation::GetMinDelay()
 	Lock();
 
 	/* Return minimum delay in history */
-	_REAL rMinDelay = vecrDelayHist[0];
+	//_REAL rMinDelay = vecrDelayHist[0];
+	_REAL rMinDelay = 0.0;
 	for (int i = 0; i < iLenDelayHist; i++)
 	{
 		if (rMinDelay > vecrDelayHist[i])

@@ -30,21 +30,90 @@
 #define RSCI_TAG_ITEM_DECODERS_H_INCLUDED
 
 #include "TagItemDecoder.h"
+#include "../Parameter.h"
 
 class CDRMReceiver;
 
+// RSCI Status
+class CTagItemDecoderRSI : public CTagItemDecoder      
+{
+public:
+	CTagItemDecoderRSI(CParameter* pP, const string& s) : pParameter(pP), tag(s) {}
+	virtual string GetTagName() { return tag; }
+protected:
+		  
+    _REAL decodeDb(CVector<_BINARY>& vecbiTag);
+	CParameter *pParameter;
+	string tag;
+};
+
+class CTagItemDecoderRdbv : public CTagItemDecoderRSI      
+{
+public:
+	CTagItemDecoderRdbv(CParameter* pP) : CTagItemDecoderRSI(pP, "rdbv") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
+
+class CTagItemDecoderRsta : public CTagItemDecoderRSI      
+{
+public:
+	CTagItemDecoderRsta(CParameter* pP) : CTagItemDecoderRSI(pP, "rsta") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
+
+class CTagItemDecoderRwmf : public CTagItemDecoderRSI      
+{
+public:
+	CTagItemDecoderRwmf(CParameter* pP) : CTagItemDecoderRSI(pP, "rwmf") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
+
+class CTagItemDecoderRwmm : public CTagItemDecoderRSI      
+{
+public:
+	CTagItemDecoderRwmm(CParameter* pP) : CTagItemDecoderRSI(pP, "rwmm") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
+
+class CTagItemDecoderRmer : public CTagItemDecoderRSI      
+{
+public:
+	CTagItemDecoderRmer(CParameter* pP) : CTagItemDecoderRSI(pP, "rmer") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
 
 // RSCI control
 
-class CTagItemDecoderCfre : public CTagItemDecoder      
+class CTagItemDecoderRCI : public CTagItemDecoder      
 {
 public:
-	CTagItemDecoderCfre(CDRMReceiver *pReceiver) : pDRMReceiver(pReceiver) {}
+	CTagItemDecoderRCI(CDRMReceiver *pReceiver, const string& s) : 
+	pDRMReceiver(pReceiver),tag(s) {}
 	void SetReceiver(CDRMReceiver *pReceiver) {pDRMReceiver = pReceiver;}
-	virtual string GetTagName(void);
-	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
-private:
+	virtual string GetTagName() { return tag; }
+protected:
 	CDRMReceiver *pDRMReceiver;
+	string tag;
 };
 
+class CTagItemDecoderCact : public CTagItemDecoderRCI      
+{
+public:
+	CTagItemDecoderCact(CDRMReceiver *pReceiver) : CTagItemDecoderRCI(pReceiver, "cact") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
+
+class CTagItemDecoderCfre : public CTagItemDecoderRCI      
+{
+public:
+	CTagItemDecoderCfre(CDRMReceiver *pReceiver) : CTagItemDecoderRCI(pReceiver, "cfre") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
+
+class CTagItemDecoderCdmo : public CTagItemDecoderRCI      
+{
+public:
+	CTagItemDecoderCdmo(CDRMReceiver *pReceiver) : CTagItemDecoderRCI(pReceiver, "cdmo") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
 #endif

@@ -68,7 +68,7 @@ public:
 	enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
 
-	CTransmitData(CSound* pNS) : pSound(pNS), eOutputFormat(OF_REAL_VAL),
+	CTransmitData(CSoundOut* pNS) : pSound(pNS), eOutputFormat(OF_REAL_VAL),
 		rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ), bUseSoundcard(TRUE),
 		strOutFileName("test/TransmittedData.txt"), pFileTransmitter(NULL) {}
 	virtual ~CTransmitData();
@@ -87,7 +87,7 @@ public:
 
 protected:
 	FILE*				pFileTransmitter;
-	CSound*				pSound;
+	CSoundOut*			pSound;
 	CVector<short>		vecsDataOut;
 	int					iBlockCnt;
 	int					iNumBlocks;
@@ -113,7 +113,7 @@ public:
 	enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
 		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO};
 
-	CReceiveData(CSound* pNS) : strInFileName("test/TransmittedData.txt"),
+	CReceiveData(CSoundIn* pNS) : strInFileName("test/TransmittedData.txt"),
 		bUseSoundcard(TRUE), bNewUseSoundcard(TRUE), pSound(pNS),
 		pFileReceiver(NULL), bFippedSpectrum(FALSE),
 		vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0),
@@ -138,7 +138,7 @@ protected:
 	
 	FILE*					pFileReceiver;
 
-	CSound*					pSound;
+	CSoundIn*				pSound;
 	CVector<_SAMPLE>		vecsSoundBuffer;
 
 	CShiftRegister<_REAL>	vecrInpData;

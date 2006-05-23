@@ -30,39 +30,29 @@
 #define MDI_IN_BUFFER_H_INCLUDED
 
 #include "../GlobalDefinitions.h"
-#include "MDIDefinitions.h"
-#include "../util/Vector.h"
-#include "../util/Buffer.h"
-
-
-class CMDIInPkt
-{
-public:
-	/* Implement copy constructor, copy operator and initializations */
-	CMDIInPkt() : vecbiStr(MAX_NUM_STREAMS) {Reset();}
-	CMDIInPkt(const CMDIInPkt& nMDI) {*this = nMDI;}
-	CMDIInPkt& operator=(const CMDIInPkt& nMDI);
-	void Reset();
-
-	/* Actual data (made public for easier access, TODO: nicer solution) */
-	CVector<_BINARY>			vecbiFACData;
-	CVector<_BINARY>			vecbiSDCData;
-	CVector<CVector<_BINARY> >	vecbiStr;
-	ERobMode					eRobMode;
-};
-
+#ifdef USE_QT_GUI
+#include <qwaitcondition.h>
+#endif
+#include <vector>
 
 class CMDIInBuffer
 {
 public:
-	CMDIInBuffer() : vecMDIDataBuf(MDI_IN_BUF_LEN) {}
+	CMDIInBuffer() : buffer()
+#ifdef USE_QT_GUI
+	,guard(),blocker()
+#endif
+	{}
 
-	_BOOLEAN Put(const CMDIInPkt& nMDIData);
-	_BOOLEAN Get(CMDIInPkt& nMDIData);
+	_BOOLEAN Put(const vector<_BYTE>& data);
+	_BOOLEAN Get(vector<_BYTE>& data);
 
 protected:
-	void Reset();
-	CCyclicBuffer<CMDIInPkt> vecMDIDataBuf;
+#ifdef USE_QT_GUI
+	QMutex guard;
+	QWaitCondition blocker;
+#endif
+	vector<_BYTE> buffer;
 };
 
 #endif

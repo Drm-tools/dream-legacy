@@ -1383,7 +1383,6 @@ EPG::getFile (CEPGDecoder & epg, const QString & fileName)
 {
     epg.doc.setContent (QString (""));
     QFile file (fileName);
-    cout << fileName << endl; cout.flush();
     if (!file.open (IO_ReadOnly))
       {
 	  return;

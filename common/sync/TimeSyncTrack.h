@@ -105,9 +105,9 @@ public:
 	ETypeTiSyncTrac GetTiSyncTracType() {return TypeTiSyncTrac;}
  
 	/* OPH: calculation of delay and doppler using RSCI method */
-	CRealVector& CalculateRdel(CParameter& Parameter);
+	void CalculateRdel(CParameter& Parameter);
 	CRealVector& GetRdelThresholds() {return vecrRdelThresholds;}
-	_REAL CalculateRdop(CParameter& Parameter);
+	void CalculateRdop(CParameter& Parameter);
 
 
 protected:

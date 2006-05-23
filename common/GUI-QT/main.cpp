@@ -41,7 +41,7 @@
 # include "fdrmdialog.h"
 # include "TransmDlg.h"
 #endif
-
+#include <iostream>
 
 /* Implementation *************************************************************/
 #ifdef USE_QT_GUI
@@ -69,9 +69,11 @@ public:
 		/* Stop working thread and wait until it is ready for terminating. We
 		   set a time-out of 5 seconds */
 		DRMReceiver.Stop();
-
-		if (wait(5000) == FALSE)
-			ErrorMessage("Termination of sound interface thread failed.");
+#ifdef __MINGW32__
+		msleep(2000); /* wait does not seem to wait on mingw */
+#endif
+		if (this->wait(5000) == FALSE)
+			ErrorMessage("Termination of working thread failed.");
 	}
 
 	virtual void run()
@@ -117,10 +119,10 @@ try
 
 #ifdef _WIN32
 	/* Set priority class for this application */
-	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+	//SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 
 	/* Low priority for GUI thread */
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+	//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
 #endif
 
 	if (bIsReceiver == FALSE)

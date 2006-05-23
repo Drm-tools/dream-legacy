@@ -410,7 +410,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				iAveCorr = 0;
 
 				/* GUI message that timing is ok */
-				PostWinMessage(MS_TIME_SYNC, 0);
+				ReceiverParam.ReceiveStatus.SetTimeSyncStatus(RX_OK);
 				ReceiverParam.ReceptLog.SetSync(TRUE);
 
 				/* Acquisition was successful, reset init flag (just in case it
@@ -449,7 +449,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							(CReal) iAveCorr / (NUM_SYM_BEFORE_RESET + 1);
 
 						/* GUI message that timing was corrected (red light) */
-						PostWinMessage(MS_TIME_SYNC, 2);
+						ReceiverParam.ReceiveStatus.SetTimeSyncStatus(CRC_ERROR);
 					}
 
 					/* Reset counters */
@@ -461,8 +461,8 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 					/* GUI message that timing is yet ok (yellow light). Do not
 					   show any light if init was done right before this */
 					if (bInitTimingAcqu == FALSE)
-						PostWinMessage(MS_TIME_SYNC, 1);
-				} 
+						ReceiverParam.ReceiveStatus.SetTimeSyncStatus(DATA_ERROR);
+				}
 				ReceiverParam.ReceptLog.SetSync(FALSE);
 			}
 
@@ -495,7 +495,7 @@ fflush(pFile);
 
 		/* Timing acquisition was successfully finished, show always green
 		   light */
-		PostWinMessage(MS_TIME_SYNC, 0);
+		ReceiverParam.ReceiveStatus.SetTimeSyncStatus(RX_OK);
 		ReceiverParam.ReceptLog.SetSync(TRUE);
 
 #ifdef _DEBUG_

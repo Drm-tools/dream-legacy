@@ -64,7 +64,6 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 		iUsefulBitsSDC = 16 + iLengthDataFieldBytes * 8;
 	}
 
-
 	/* CRC ------------------------------------------------------------------ */
 	/* Check the CRC of this data block */
 	CRCObject.Reset(16);
@@ -263,7 +262,7 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 			/* Data length for hierarchical */
 			iLenPartB = (*pbiData).Separate(12);
 
-			/* Set new parameters in global struct. Lenght of part A is zero
+			/* Set new parameters in global struct. Length of part A is zero
 			   with hierarchical modulation */
 			Parameter.SetStreamLen(i, 0, iLenPartB);
 		}

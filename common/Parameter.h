@@ -40,13 +40,20 @@
 #include "ofdmcellmapping/CellMappingTable.h"
 #include "matlib/Matlib.h"
 
+enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};
+enum ETypeIntTime {TLINEAR, TWIENER};
+enum ETypeSNREst {SNR_FAC, SNR_PIL};
+enum ETypeRxStatus { NOT_PRESENT, CRC_ERROR, DATA_ERROR, RX_OK };
+	/* RM: Receiver mode (analog or digital demodulation) */
+enum ERecMode {RM_DRM, RM_AM, RM_NONE};
 
 /* Classes ********************************************************************/
 class CParameter : public CCellMappingTable
 {
 public:
 	CParameter() : bRunThread(FALSE), Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
-		bUsingMultimedia(TRUE),	iCurSelAudioService(0), iCurSelDataService(0)
+		bUsingMultimedia(TRUE),	iCurSelAudioService(0), iCurSelDataService(0),
+		vecbiAudioFrameStatus()
 		{}
 	virtual ~CParameter() {}
 
@@ -621,6 +628,7 @@ public:
 
 	void SetMSCProtLev(const CMSCProtLev NewMSCPrLe, const _BOOLEAN bWithHierarch);
 	void SetStreamLen(const int iStreamID, const int iNewLenPartA, const int iNewLenPartB);
+	int GetStreamLen(const int iStreamID);
 
 	/* Protection levels for MSC */
 	CMSCProtLev			MSCPrLe;
@@ -722,6 +730,38 @@ public:
 		CMutex			Mutex;
 	} ReceptLog;
 
+	/* Class for keeping track of status flags for RSCI rsta tag */
+	class CReceiveStatus
+	{
+	public:
+		CReceiveStatus(): FSyncOK(NOT_PRESENT), TSyncOK(NOT_PRESENT), 
+		FACOK(NOT_PRESENT), SDCOK(NOT_PRESENT), AudioOK(NOT_PRESENT) {}
+	
+		void SetFrameSyncStatus(const ETypeRxStatus OK) { FSyncOK = OK;}
+		void SetTimeSyncStatus(const ETypeRxStatus OK) { TSyncOK = OK;}
+		void SetInterfaceStatus(const ETypeRxStatus OK) { InterfaceOK = OK;}
+		void SetFACStatus(const ETypeRxStatus OK) { FACOK = OK;}
+		void SetSDCStatus(const ETypeRxStatus OK) { SDCOK = OK;}
+		void SetAudioStatus(const ETypeRxStatus OK) { AudioOK = OK;}
+		void SetMOTStatus(const ETypeRxStatus OK) { MOTOK = OK;}
+
+		ETypeRxStatus GetFrameSyncStatus() const {return FSyncOK;}
+		ETypeRxStatus GetTimeSyncStatus() const {return TSyncOK;}
+		ETypeRxStatus GetInterfaceStatus() const {return InterfaceOK;}
+		ETypeRxStatus GetFACStatus() const {return FACOK;}
+		ETypeRxStatus GetSDCStatus() const {return SDCOK;}
+		ETypeRxStatus GetAudioStatus() const {return AudioOK;}
+		ETypeRxStatus GetMOTStatus() const {return MOTOK;}
+
+	private:
+		ETypeRxStatus FSyncOK;
+		ETypeRxStatus TSyncOK;
+		ETypeRxStatus InterfaceOK;
+		ETypeRxStatus FACOK;
+		ETypeRxStatus SDCOK;
+		ETypeRxStatus AudioOK;
+		ETypeRxStatus MOTOK;
+	} ReceiveStatus;
 
 	/* Simulation ----------------------------------------------------------- */
 	ESimType			eSimType;
@@ -788,6 +828,32 @@ protected:
 
 	ERobMode			eRobustnessMode; /* E.g.: Mode A, B, C or D */
 	ESpecOcc			eSpectOccup;
+	
+	CMutex Mutex;
+public:
+	void				Lock() { Mutex.Lock(); }
+	void				Unlock() { Mutex.Unlock(); }
+   	/* Channel Estimation */
+   	_REAL rSNREstimate;
+   	_REAL rMER;
+   	_REAL rWMERMSC;
+   	_REAL rWMERFAC;
+   	_REAL rSigmaEstimate;
+   	_REAL rMinDelay;
+
+	_BOOLEAN bMeasureDelay;
+	CRealVector vecrRdel;
+	CRealVector vecrRdelThresholds;
+	CRealVector vecrRdelIntervals;
+	_BOOLEAN bMeasureDoppler;
+	_REAL rRdop;
+	/* interference */
+	_BOOLEAN bMeasureInterference;
+    _REAL rIntFreq, rINR, rICR;
+	_REAL rSigStr;
+	_BOOLEAN bValidSigStr;
+ 	ERecMode GetReceiverMode();
+	CVector<_BINARY> vecbiAudioFrameStatus;
 };
 
 

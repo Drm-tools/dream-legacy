@@ -46,7 +46,7 @@
 class CPacketSink
 {
 public:
-	virtual void SendPacket(CVector<_BINARY> vecbiPacket) = 0;
+	virtual void SendPacket(const vector<_BYTE>& vecbydata) = 0;
 };
 
 
@@ -67,9 +67,8 @@ public:
 // Multiple inheritance is ok because both parents are pure abstract (interfaces). Discuss.
 class CPacketSocket : public CPacketSink, public CPacketSource
 {
-	virtual _BOOLEAN SetNetwOutAddr(const string strNewIPPort) = 0;
-	virtual _BOOLEAN SetNetwInPort(const int iPort) = 0;
-	virtual _BOOLEAN SetNetwInMcast(const string strNewIPIP) = 0;
+	virtual _BOOLEAN SetNetwOutAddr(const string& strNew) = 0;
+	virtual _BOOLEAN SetNetwInAddr(const string& str) = 0;
 };
 
 // TODO add CPacketSinkFile (using DCP FF layer), etc.

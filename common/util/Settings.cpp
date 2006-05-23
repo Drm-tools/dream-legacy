@@ -86,17 +86,17 @@ void CSettings::ReadIniFile()
 
 	/* Modified metrics flag */
 	if (GetFlagIniSet(ini, "Receiver", "modmetric", bValue) == TRUE)
-		pDRMRec->GetChanEst()->SetIntCons(bValue);
+		pDRMRec->SetIntCons(bValue);
 
 
 	/* Sound In device */
 	if (GetNumericIniSet(ini, "Receiver", "snddevin", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
-		pDRMRec->GetSoundInterface()->SetInDev(iValue);
+		pDRMRec->GetSoundInInterface()->SetDev(iValue);
 
 
 	/* Sound Out device */
 	if (GetNumericIniSet(ini, "Receiver", "snddevout", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
-		pDRMRec->GetSoundInterface()->SetOutDev(iValue);
+		pDRMRec->GetSoundOutInterface()->SetDev(iValue);
 
 
 	/* Number of iterations for MLC setting */
@@ -288,7 +288,7 @@ void CSettings::ReadIniFile()
 	
 	/* demodulation */
 	if (GetNumericIniSet(ini, "Analog demodulation dialog", "demodulation", 0, CAMDemodulation::DT_FM , iValue) == TRUE)
-		pDRMRec->AMDemodType = (CAMDemodulation::EDemodType) iValue;
+		pDRMRec->GetAMDemod()->SetDemodType((CAMDemodulation::EDemodType) iValue);
 
 	/* AGC */
 	if (GetNumericIniSet(ini, "Analog demodulation dialog", "agc", 0, CAGC::AT_FAST, iValue) == TRUE)
@@ -416,17 +416,17 @@ void CSettings::WriteIniFile()
 
 	/* Modified metrics flag */
 	SetFlagIniSet(ini, "Receiver", "modmetric",
-		pDRMRec->GetChanEst()->GetIntCons());
+		pDRMRec->GetIntCons());
 
 
 	/* Sound In device */
 	SetNumericIniSet(ini, "Receiver", "snddevin",
-		pDRMRec->GetSoundInterface()->GetInDev());
+		pDRMRec->GetSoundInInterface()->GetDev());
 
 
 	/* Sound Out device */
 	SetNumericIniSet(ini, "Receiver", "snddevout",
-		pDRMRec->GetSoundInterface()->GetOutDev());
+		pDRMRec->GetSoundOutInterface()->GetDev());
 
 
 	/* Number of iterations for MLC setting */
@@ -780,7 +780,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		/* Modified metrics flag -------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-D", "--modmetric") == TRUE)
 		{
-			pDRMRec->GetChanEst()->SetIntCons(TRUE);
+			pDRMRec->SetIntCons(TRUE);
 			continue;
 		}
 
@@ -789,7 +789,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetNumericArgument(argc, argv, i, "-I", "--snddevin", 0,
 			MAX_NUM_SND_DEV, rArgument) == TRUE)
 		{
-			pDRMRec->GetSoundInterface()->SetInDev((int) rArgument);
+			pDRMRec->GetSoundInInterface()->SetDev((int) rArgument);
 			continue;
 		}
 
@@ -798,7 +798,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetNumericArgument(argc, argv, i, "-O", "--snddevout", 0,
 			MAX_NUM_SND_DEV, rArgument) == TRUE)
 		{
-			pDRMRec->GetSoundInterface()->SetOutDev((int) rArgument);
+			pDRMRec->GetSoundOutInterface()->SetDev((int) rArgument);
 			continue;
 		}
 
@@ -1002,46 +1002,62 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 
 #endif
 		/* MDI out address -------------------------------------------------- */
-		if (GetStringArgument(argc, argv, i, "--mdioutadr", "--mdioutadr",
+		if (GetStringArgument(argc, argv, i, "--mdiout", "--mdiout",
 			strArgument) == TRUE)
 		{
-			pDRMRec->GetMDI()->SetNetwOutAddr(strArgument);
+			//pDRMTx->SetMDIOutAddr(strArgument);
+			cerr << "content server mode not implemented yet, perhaps you wanted rsiout" << endl;
 			continue;
 		}
 
-
-		/* MDI out profile */
-		if (GetStringArgument(argc, argv, i, "--mdiprofile", "--mdiprofile",
+		/* MDI in address -------------------------------------------------- */
+		if (GetStringArgument(argc, argv, i, "--mdiin", "--mdiin",
 			strArgument) == TRUE)
 		{
-			pDRMRec->GetMDI()->SetProfile(strArgument[0]);
+			//pDRMTx->SetMDIInAddr(strArgument);
+			cerr << "modulator mode not implemented yet, perhaps you wanted rsiin" << endl;
 			continue;
 		}
 
-		/* MDI in port number ----------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "--mdiinport", "--mdiinport", 0,
-			MAX_MDI_PORT_IN_NUM, rArgument) == TRUE)
-		{
-			pDRMRec->GetMDI()->SetNetwInPort((int) rArgument);
-			continue;
-		}
-
-		/* OPH: RSCI control data input port number */
-		if (GetNumericArgument(argc, argv, i, "--rsciinport", "--rsciinport", 0,
-			MAX_MDI_PORT_IN_NUM, rArgument) == TRUE)
-		{
-			pDRMRec->GetMDI()->SetNetwInPortRSCI((int) rArgument);
-			continue;
-		}
-
-		/* MDI in multi cast params ------------------------------------------ */
-		if (GetStringArgument(argc, argv, i, "--mdiinmreq", "--mdiinmreq",
+		/* RSCI status output profile */
+		if (GetStringArgument(argc, argv, i, "--rsioutprofile", "--rsioutprofile",
 			strArgument) == TRUE)
 		{
-			pDRMRec->GetMDI()->SetNetwInMcast(strArgument);
+			pDRMRec->GetRSIOut()->SetProfile(strArgument[0]);
 			continue;
 		}
 
+		/* RSCI status out address -------------------------------------------------- */
+		if (GetStringArgument(argc, argv, i, "--rsiout", "--rsiout",
+			strArgument) == TRUE)
+		{
+			pDRMRec->GetRSIOut()->SetOutAddr(strArgument);
+			continue;
+		}
+
+		/* RSCI status in address -------------------------------------------------- */
+		if (GetStringArgument(argc, argv, i, "--rsiin", "--rsiin",
+			strArgument) == TRUE)
+		{
+			pDRMRec->GetRSIIn()->SetInAddr(strArgument);
+			continue;
+		}
+
+		/* RSCI control out address */
+		if (GetStringArgument(argc, argv, i, "--rciout", "--rciout",
+			strArgument) == TRUE)
+		{
+			pDRMRec->GetRSIIn()->SetOutAddr(strArgument);
+			continue;
+		}
+
+		/* OPH: RSCI control in address */
+		if (GetStringArgument(argc, argv, i, "--rciin", "--rciin",
+			strArgument) == TRUE)
+		{
+			pDRMRec->GetRSIOut()->SetInAddr(strArgument);
+			continue;
+		}
 
 #ifdef HAVE_LIBHAMLIB
 		/* Hamlib config string --------------------------------------------- */
@@ -1161,13 +1177,13 @@ string CSettings::UsageArguments(char** argv)
 		"                              1: green-black\n"
 		"                              2: black-grey\n"
 #endif
-		"  --mdioutadr <s>             MDI out network address format [IP#]:[port]\n"
-		"  --mdiprofile <s>            MDI/RSCI output profile: A|B|C|D|Q|M\n"
-		"  --mdiinport <n>             set MDI in port number\n"
-		"  --mdiinmreq <s>             MDI in multicast group address and interface format [IP#]:[IP#]\n"
-		"  --rsciinport <n>            set RSCI control input port number\n"
-
-
+		"  --mdiout <s>                MDI out address format [IP#]:[port] (for Content Server)\n"
+		"  --mdiin  <s>                MDI in address (for modulator)\n"
+		"  --rsioutprofile <s>         MDI/RSCI output profile: A|B|C|D|Q|M\n"
+		"  --rsiout <s>                MDI in multicast group address and interface format [IP#]:[IP#]\n"
+		"  --rsiin <s>                 RSCI/MDI status input address format [IP#]:[IP#]:[port]\n"
+		"  --rciout <s>                RSCI Control output format [IP#]:[IP#]\n"
+		"  --rciin <s>                 RSCI Control input address number format [IP#]:[IP#]:[IP#]\n"
 
 		"  -I <n>, --snddevin <n>      set sound in device\n"
 		"  -O <n>, --snddevout <n>     set sound out device\n"

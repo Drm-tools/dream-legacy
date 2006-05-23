@@ -46,6 +46,7 @@
 #include <qprogressbar.h>
 #include <qcombobox.h>
 #include <qlistbox.h>
+#include <qmotifstyle.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/AnalogDemDlgbase.h"
@@ -61,8 +62,6 @@
 #include "../DrmReceiver.h"
 #include "../tables/TableAMSS.h"
 
-/* this include is for set the progress bar style */
-#include <qmotifstyle.h>
 
 /* Definitions ****************************************************************/
 /* Update time of PLL phase dial control */
@@ -129,7 +128,7 @@ public slots:
 	void OnChartxAxisValSet(double dVal);
 	void OnSliderBWChange(int value);
 	void OnRadioNoiRed(int iID);
-	void OnNewAMAcquisition() {pDRMRec->SetReceiverMode(CDRMReceiver::RM_AM);}
+	void OnNewAMAcquisition() {pDRMRec->SetReceiverMode(RM_AM);}
 	void OnButtonWaterfall();
 	void OnButtonAMSS();
 

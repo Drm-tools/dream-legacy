@@ -3,20 +3,10 @@
  * Copyright (c) 2004
  *
  * Author(s):
- *	Volker Fischer, Julian Cable
+ *	Volker Fischer, Oliver Haffenden
  *
  * Description:
- *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
- *	(MDI), Receiver Status and Control Interface (RSCI)  
- *  and Distribution and Communications Protocol (DCP) as described in
- *	ETSI TS 102 820,  ETSI TS 102 349 and ETSI TS 102 821 respectively.
- *
- *	This module implements a buffer for decoded Digital Radio Mondiale (DRM) 
- *  Multiplex Distribution Interface (MDI) packets at the receiver input.
- *	
- *	see ETSI TS 102 820 and ETSI TS 102 821.
- *
- *	
+ *	simple blocking buffer
  *
  ******************************************************************************
  *
@@ -37,85 +27,40 @@
 \******************************************************************************/
 
 #include "MDIInBuffer.h"
+#include <iostream>
 
-_BOOLEAN CMDIInBuffer::Put(const CMDIInPkt& nMDIData)
+/* write the received packet to the buffer, if the previous one was not read yet
+ * it will be lost, but we need new data in preference to old and we should be
+ * able to keep up, so that's OK
+ */
+_BOOLEAN
+CMDIInBuffer::Put(const vector<_BYTE>& data)
 {
-	/* Buffer is full, return error */
-	if (vecMDIDataBuf.GetFillLevel() == MDI_IN_BUF_LEN)
-	{
-		Reset();
-		return FALSE;
-	}
-
-	/* Put data in three steps (as required by cyclic buffer) */
-	CVectorEx<CMDIInPkt>* pInData = vecMDIDataBuf.QueryWriteBuffer();
-	(*pInData)[0] = nMDIData;
-	vecMDIDataBuf.Put(1);
-
-	return TRUE;
+#ifdef USE_QT_GUI
+	guard.lock();
+	buffer = data;
+	blocker.wakeOne();
+	guard.unlock();
+#else
+	buffer = data;
+#endif
 }
 
-_BOOLEAN CMDIInBuffer::Get(CMDIInPkt& nMDIData)
+/* get the buffer contents, but if it takes more than a second, return an empty buffer
+ * clear the buffer after reading it so we don't read the same buffer twice
+ * Its possible signals could get lost :(
+ */
+_BOOLEAN
+CMDIInBuffer::Get(vector<_BYTE>& data)
 {
-	/* Buffer is empty, return error */
-	if (vecMDIDataBuf.GetFillLevel() == 0)
-	{
-		/* Reset return data and buffer */
-		nMDIData.Reset();
-		Reset();
-
-		return FALSE;
-	}
-
-	/* Cyclic buffer always returns data in a vector */
-	CVectorEx<CMDIInPkt>* pInData = vecMDIDataBuf.Get(1);
-	nMDIData = (*pInData)[0];
-
-	return TRUE;
-}
-
-void CMDIInBuffer::Reset()
-{
-	vecMDIDataBuf.Clear();
-	
-	/* Set the buffer pointers maximum far apart */
-	for (int i = 0; i < MDI_IN_BUF_LEN / 2; i++)
-	{
-		CVectorEx<CMDIInPkt>* pInData = vecMDIDataBuf.QueryWriteBuffer();
-		(*pInData)[0].Reset(); /* Empty object */
-		vecMDIDataBuf.Put(1);
-	}
-}
-
-
-/* MDI in buffer implementation ***********************************************/
-CMDIInPkt& CMDIInPkt::operator=(const CMDIInPkt& nMDI)
-{
-	/* First initialize the vectors with the correct size, then copy the data */
-	vecbiFACData.Init(nMDI.vecbiFACData.Size());
-	vecbiFACData = nMDI.vecbiFACData;
-
-	vecbiSDCData.Init(nMDI.vecbiSDCData.Size());
-	vecbiSDCData = nMDI.vecbiSDCData;
-
-	vecbiStr.Init(MAX_NUM_STREAMS);
-	for (int i = 0; i < MAX_NUM_STREAMS; i++)
-	{
-		vecbiStr[i].Init(nMDI.vecbiStr[i].Size());
-		vecbiStr[i] = nMDI.vecbiStr[i];
-	}
-
-	eRobMode = nMDI.eRobMode;
-
-	return *this;
-}
-
-void CMDIInPkt::Reset()
-{
-	vecbiFACData.Init(0);
-	vecbiSDCData.Init(0);
-	eRobMode = RM_ROBUSTNESS_MODE_B;
-
-	for (int i = 0; i < MAX_NUM_STREAMS; i++)
-		vecbiStr[i].Init(0);
+#ifdef USE_QT_GUI
+	guard.lock();
+	blocker.wait(&guard, 1000);
+	data = buffer;
+	buffer.clear();
+	guard.unlock();
+#else
+	data = buffer;
+	buffer.clear();
+#endif
 }

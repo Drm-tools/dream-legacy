@@ -99,7 +99,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 						bFrameSyncWasOK = TRUE;
 
 						/* Post Message for GUI (Good frame sync) */
-						PostWinMessage(MS_FRAME_SYNC, 0); /* green */
+						ReceiverParam.ReceiveStatus.SetFrameSyncStatus(RX_OK);
 					}
 					else
 					{
@@ -116,7 +116,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 							/* Reset flag */
 							bBadFrameSync = FALSE;
 
-							PostWinMessage(MS_FRAME_SYNC, 2); /* red */
+							ReceiverParam.ReceiveStatus.SetFrameSyncStatus(CRC_ERROR);
 						}
 						else
 						{
@@ -132,10 +132,10 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 							{
 								/* Post Message that frame sync was wrong but
 								   was not yet corrected (yellow light) */
-								PostWinMessage(MS_FRAME_SYNC, 1); /* yellow */
+								ReceiverParam.ReceiveStatus.SetFrameSyncStatus(DATA_ERROR);
 							}
 							else
-								PostWinMessage(MS_FRAME_SYNC, 2); /* red */
+								ReceiverParam.ReceiveStatus.SetFrameSyncStatus(CRC_ERROR);
 						}
 
 						/* Set flag for bad sync */
@@ -149,7 +149,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 	{
 		/* Frame synchronization has successfully finished, show always green
 		   light */
-		PostWinMessage(MS_FRAME_SYNC, 0);
+		ReceiverParam.ReceiveStatus.SetFrameSyncStatus(RX_OK);
 	}
 
 	/* Set current symbol ID and flag in extended data of output vector */

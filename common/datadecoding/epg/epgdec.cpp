@@ -571,7 +571,7 @@ static void attribute(map<string,string>& out, _BYTE element_tag, tag_length_val
     string value;
     if(tab.decode == enum_attr) {
       int index = tlv.value[0];
-      int num_vals = int(tab.vals[0]);
+      int num_vals = reinterpret_cast<int>(tab.vals[0]);
       if(index<num_vals && index>0)
         value = tab.vals[index];
       else

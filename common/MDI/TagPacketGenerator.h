@@ -32,7 +32,6 @@
 #include "../GlobalDefinitions.h"
 #include "MDIDefinitions.h"
 #include "MDITagItems.h"
-#include "MDIInBuffer.h"
 #include "MDITagItems.h"
 #include "../Parameter.h"
 #include "../util/Vector.h"
@@ -44,11 +43,11 @@ class CTagPacketGenerator
 {
 public:
 	CTagPacketGenerator(void); 
-	void Reset(void) {vecTagItemGenerators.Init(0);}
+	void Reset(void) {vecTagItemGenerators.clear();}
 	CVector<_BINARY> GenAFPacket(const _BOOLEAN bUseAFCRC);
 	void AddTagItem(CTagItemGenerator *pGenerator);
 private:
-	CVector<CTagItemGenerator *> vecTagItemGenerators;
+	vector<CTagItemGenerator *> vecTagItemGenerators;
 	int							iSeqNumber;
 };
 

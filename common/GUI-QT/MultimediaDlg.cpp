@@ -240,6 +240,25 @@ void MultimediaDlg::OnTimer()
 	FILE*		pFiBody;
 	int		iCurNumPict;
 
+	switch(pDRMRec->GetParameters()->ReceiveStatus.GetMOTStatus())
+	{
+	case NOT_PRESENT:
+		LEDStatus->Reset(); /* GREY */
+		break;
+
+	case CRC_ERROR:
+		LEDStatus->SetLight(2); /* RED */
+		break;
+
+	case DATA_ERROR:
+		LEDStatus->SetLight(1); /* YELLOW */
+		break;
+
+	case RX_OK:
+		LEDStatus->SetLight(0); /* GREEN */
+		break;
+	}
+
 	/* Check out which application is transmitted right now */
 	CDataDecoder::EAppType eNewAppType =
 		pDRMRec->GetDataDecoder()->GetAppType();
@@ -435,6 +454,9 @@ void MultimediaDlg::SetStatus(int MessID, int iMessPara)
 	case MS_MOT_OBJ_STAT:
 		LEDStatus->SetLight(iMessPara);
 		break;
+	case MS_RESET_ALL:
+		LEDStatus->Reset();
+		break;
 	}
 }
 
@@ -515,15 +537,14 @@ void MultimediaDlg::SetSlideShowPicture()
 	/* Load picture in QT format */
 	if (NewImage.loadFromData(&imagedata[0], imagedata.size()))
 	{
-		# if QT_VERSION > 230
-			/* The slideshow pictures are not 
-				updated correctly without this line */
+# if QT_VERSION > 230
+		/* The slideshow pictures are not 
+           updated correctly without this line: */
+		/* If the text is empty there is segmentation fault
+			 browsing the images */
 
-			/* If the text is empty there is segmentation fault
-				browsing the images */
-
-			TextBrowser->setText("<br>");
-		#endif
+		TextBrowser->setText("<br>");
+#endif
 
 		/* Set new picture in source factory and set it in text control */
 		QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",

@@ -33,6 +33,7 @@
 #include "Buffer.h"
 #include "Vector.h"
 #include "../Parameter.h"
+#include <iostream>
 
 
 /* Classes ********************************************************************/
@@ -124,6 +125,10 @@ public:
 							 CBuffer<TOutput>& OutputBuffer,
 							 CBuffer<TOutput>& OutputBuffer2,
 							 CBuffer<TOutput>& OutputBuffer3);
+	virtual void		Init(CParameter& Parameter, 
+							 CBuffer<TOutput>& OutputBuffer,
+							 CBuffer<TOutput>& OutputBuffer2,
+							 vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
 	virtual void		ReadData(CParameter& Parameter, 
 								 CBuffer<TOutput>& OutputBuffer);
 	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
@@ -138,6 +143,11 @@ public:
 									CBuffer<TOutput>& OutputBuffer, 
 									CBuffer<TOutput>& OutputBuffer2, 
 									CBuffer<TOutput>& OutputBuffer3);
+	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
+									CBuffer<TInput>& InputBuffer,
+									CBuffer<TOutput>& OutputBuffer, 
+									CBuffer<TOutput>& OutputBuffer2, 
+									vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
 	virtual _BOOLEAN	WriteData(CParameter& Parameter, 
 								  CBuffer<TInput>& InputBuffer);
 
@@ -145,17 +155,22 @@ protected:
 	void SetBufReset1() {bResetBuf = TRUE;}
 	void SetBufReset2() {bResetBuf2 = TRUE;}
 	void SetBufReset3() {bResetBuf3 = TRUE;}
+	void SetBufResetN() {for(size_t i=0; i<vecbResetBuf.size(); i++)
+     vecbResetBuf[i] = TRUE;}
 
 	/* Additional buffers if the derived class has multiple output streams */
 	CVectorEx<TOutput>*	pvecOutputData2;
 	CVectorEx<TOutput>*	pvecOutputData3;
+	vector<CVectorEx<TOutput>*>	vecpvecOutputData;
 
-	/* Max block-size are used to determine the size of the requiered buffer */
+	/* Max block-size are used to determine the size of the required buffer */
 	int					iMaxOutputBlockSize2;
 	int					iMaxOutputBlockSize3;
+	vector<int>			veciMaxOutputBlockSize;
 	/* Actual read (or written) size of the data */
 	int					iOutputBlockSize2;
 	int					iOutputBlockSize3;
+	vector<int>			veciOutputBlockSize;
 
 private:
 	/* Init flag */
@@ -165,6 +180,7 @@ private:
 	_BOOLEAN			bResetBuf;
 	_BOOLEAN			bResetBuf2;
 	_BOOLEAN			bResetBuf3;
+	vector<_BOOLEAN>	vecbResetBuf;
 };
 
 
@@ -575,6 +591,55 @@ CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
 	}
 }
 
+template<class TInput, class TOutput> void
+CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
+									  CBuffer<TOutput>& OutputBuffer,
+									  CBuffer<TOutput>& OutputBuffer2,
+									  vector< CSingleBuffer<TOutput> >& vecOutputBuffer)
+{
+	size_t i;
+	/* Init some internal variables */
+	iMaxOutputBlockSize2 = 0;
+	iMaxOutputBlockSize3 = 0;
+	veciMaxOutputBlockSize.resize(vecOutputBuffer.size());
+    for(i=0; i<veciMaxOutputBlockSize.size(); i++)
+		veciMaxOutputBlockSize[i]=0;
+	iOutputBlockSize2 = 0;
+	iOutputBlockSize3 = 0;
+	veciOutputBlockSize.resize(vecOutputBuffer.size());
+    for(i=0; i<veciOutputBlockSize.size(); i++)
+		veciOutputBlockSize[i]=0;
+	bResetBuf = FALSE;
+	bResetBuf2 = FALSE;
+	bResetBuf3 = FALSE;
+	vecbResetBuf.resize(vecOutputBuffer.size());
+    for(i=0; i<vecbResetBuf.size(); i++)
+		vecbResetBuf[i]=FALSE;
+
+	/* Init base-class */
+	CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
+
+	/* Init output transfer buffers */
+	if (iMaxOutputBlockSize2 != 0)
+		OutputBuffer2.Init(iMaxOutputBlockSize2);
+	else
+	{
+		if (iOutputBlockSize2 != 0)
+			OutputBuffer2.Init(iOutputBlockSize2);
+	}
+
+    for(i=0; i<veciMaxOutputBlockSize.size(); i++)
+    {
+		if (veciMaxOutputBlockSize[i] != 0)
+			vecOutputBuffer[i].Init(veciMaxOutputBlockSize[i]);
+		else
+		{
+			if (veciOutputBlockSize[i] != 0)
+				vecOutputBuffer[i].Init(veciOutputBlockSize[i]);
+		}
+    }
+}
+
 template<class TInput, class TOutput>
 _BOOLEAN CReceiverModul<TInput, TOutput>::
 	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
@@ -782,6 +847,95 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 		{
 			/* Write processed data from internal memory in transfer-buffer */
 			OutputBuffer3.Put(iOutputBlockSize3);
+		}
+	}
+
+	return bEnoughData;
+}
+
+template<class TInput, class TOutput>
+_BOOLEAN CReceiverModul<TInput, TOutput>::
+	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
+				CBuffer<TOutput>& OutputBuffer,
+				CBuffer<TOutput>& OutputBuffer2,
+				vector< CSingleBuffer<TOutput> >& vecOutputBuffer)
+{
+	/* Check initialization flag. The initialization must be done OUTSIDE
+	   the processing routine. This is ensured by doing it here, where we
+	   have control of calling the processing routine. Therefore we
+	   introduced the flag */
+	if (bDoInit == TRUE)
+	{
+		/* Call init routine */
+		Init(Parameter, OutputBuffer, OutputBuffer2, vecOutputBuffer);
+
+		/* Reset init flag */
+		bDoInit = FALSE;
+	}
+
+	/* This flag shows, if enough data was in the input buffer for processing */
+	_BOOLEAN bEnoughData = FALSE;
+
+	/* INPUT-DRIVEN modul implementation in the receiver -------------------- */
+	/* Check if enough data is available in the input buffer for processing */
+	if (InputBuffer.GetFillLevel() >= this->iInputBlockSize)
+	{
+		size_t i;
+		bEnoughData = TRUE;
+
+		/* Get vector from transfer-buffer */
+		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
+	
+		/* Query vector from output transfer-buffer for writing */
+		this->pvecOutputData = OutputBuffer.QueryWriteBuffer();
+		pvecOutputData2 = OutputBuffer2.QueryWriteBuffer();
+		vecpvecOutputData.resize(vecOutputBuffer.size());
+		for(i=0; i<vecOutputBuffer.size(); i++)
+		{
+			vecpvecOutputData[i] = vecOutputBuffer[i].QueryWriteBuffer();
+		}
+		
+		/* Call the underlying processing-routine */
+		this->ProcessDataThreadSave(Parameter);
+	
+		/* Reset output-buffers if flag was set by processing routine */
+		if (bResetBuf == TRUE)
+		{
+			/* Reset flag and clear buffer */
+			bResetBuf = FALSE;
+			OutputBuffer.Clear();
+		}
+		else
+		{
+			/* Write processed data from internal memory in transfer-buffer */
+			OutputBuffer.Put(this->iOutputBlockSize);
+		}
+
+		if (bResetBuf2 == TRUE)
+		{
+			/* Reset flag and clear buffer */
+			bResetBuf2 = FALSE;
+			OutputBuffer2.Clear();
+		}
+		else
+		{
+			/* Write processed data from internal memory in transfer-buffer */
+			OutputBuffer2.Put(iOutputBlockSize2);
+		}
+
+		for(i=0; i<vecOutputBuffer.size(); i++)
+		{
+			if (vecbResetBuf[i] == TRUE)
+			{
+				/* Reset flag and clear buffer */
+				vecbResetBuf[i] = FALSE;
+				vecOutputBuffer[i].Clear();
+			}
+			else
+			{
+				/* Write processed data from internal memory in transfer-buffer */
+				vecOutputBuffer[i].Put(veciOutputBlockSize[i]);
+			}
 		}
 	}
 
@@ -1022,5 +1176,30 @@ _BOOLEAN CSimulationModul<TInput, TOutput, TInOut2>::
 	return bEnoughData;
 }
 
+/* Take an input buffer and split it 2 ways */
+
+template<class TInput>
+class CSplitModul: public CReceiverModul<TInput, TInput>
+{
+protected:
+	virtual void SetInputBlockSize(CParameter& ReceiverParam) = 0;
+
+	virtual void InitInternal(CParameter& ReceiverParam)
+	{
+		this->SetInputBlockSize(ReceiverParam);
+		this->iOutputBlockSize = this->iInputBlockSize;
+		this->iOutputBlockSize2 = this->iInputBlockSize;
+	}
+
+	virtual void ProcessDataInternal(CParameter& ReceiverParam)
+	{
+		for (int i = 0; i < this->iInputBlockSize; i++)
+		{
+			TInput n = (*(this->pvecInputData))[i];
+			(*this->pvecOutputData)[i] = n;
+			(*this->pvecOutputData2)[i] = n;
+		}
+	}
+};
 
 #endif // !defined(AFX_MODUL_H__41E39CD3_2AEC_400E_907B_148C0EC17A43__INCLUDED_)

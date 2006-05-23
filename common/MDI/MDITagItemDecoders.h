@@ -31,88 +31,85 @@
 
 #include "TagItemDecoder.h"
 
-class CMDIInPkt;
-
 class CTagItemDecoderProTy : public CTagItemDecoder
 {
 public:
-	CTagItemDecoderProTy(CMDIInPkt* pInPkt) : pMDIInPkt(pInPkt) {}
+	class CDCPProtocol
+	{
+     public:
+      string protocol;
+      int major;
+      int minor;
+	};
+	CTagItemDecoderProTy(){}
 	virtual string GetTagName(void);
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
-private:
-	CMDIInPkt * pMDIInPkt;
+	vector<CDCPProtocol> protocols;
 };
 
 class CTagItemDecoderLoFrCnt : public CTagItemDecoder   
 {
 public:
-	CTagItemDecoderLoFrCnt(CMDIInPkt* pInPkt) : pMDIInPkt(pInPkt) {}
+	CTagItemDecoderLoFrCnt(){}
 	virtual string GetTagName(void);
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
-private:
-	CMDIInPkt * pMDIInPkt;
+	uint32_t dlfc;
 };
 
 class CTagItemDecoderFAC : public CTagItemDecoder       
 {
 public:
-	CTagItemDecoderFAC(CMDIInPkt* pInPkt) : pMDIInPkt(pInPkt) {}
+	CTagItemDecoderFAC(){}
 	virtual string GetTagName(void);
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
-private:
-	CMDIInPkt * pMDIInPkt;
+	CVector<_BINARY> vecbidata;
 };
 
 class CTagItemDecoderSDC : public CTagItemDecoder       
 {
 public:
-	CTagItemDecoderSDC(CMDIInPkt* pInPkt) : pMDIInPkt(pInPkt) {}
+	CTagItemDecoderSDC(){}
 	virtual string GetTagName(void);
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
-private:
-	CMDIInPkt * pMDIInPkt;
+	CVector<_BINARY> vecbidata;
 };
 
 class CTagItemDecoderRobMod : public CTagItemDecoder    
 {
 public:
-	CTagItemDecoderRobMod(CMDIInPkt* pInPkt) : pMDIInPkt(pInPkt) {}
+	CTagItemDecoderRobMod(){}
 	virtual string GetTagName(void);
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
-private:
-	CMDIInPkt * pMDIInPkt;
+	CVector<_BINARY> vecbidata;
+	ERobMode					eRobMode;
 };
 
 class CTagItemDecoderStr : public CTagItemDecoder       
 {
 public:
-	CTagItemDecoderStr(CMDIInPkt* pInPkt, const int iStreamNum) : pMDIInPkt(pInPkt) , iStreamNumber(iStreamNum) {}
-	void SetStreamNumber(const int iNumber); // Should be called just after construction to identify which tag it is
-	virtual string GetTagName(void);
+	CTagItemDecoderStr() : vecbidata(),iStreamNumber(0) {}
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
-private:
+	virtual string GetTagName(void);
+	CVector<_BINARY> vecbidata;
 	int iStreamNumber;
-	CMDIInPkt * pMDIInPkt;
 };
 
 class CTagItemDecoderSDCChanInf : public CTagItemDecoder
 {
 public:
-	CTagItemDecoderSDCChanInf(CMDIInPkt* pInPkt) : pMDIInPkt(pInPkt) {}
+	CTagItemDecoderSDCChanInf(){}
 	virtual string GetTagName(void);
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
-private:
-	CMDIInPkt * pMDIInPkt;
+	CVector<_BINARY> vecbidata;
 };
 
 class CTagItemDecoderInfo : public CTagItemDecoder      
 {
 public:
-	CTagItemDecoderInfo(CMDIInPkt* pInPkt) : pMDIInPkt(pInPkt) {}
+	CTagItemDecoderInfo(){}
 	virtual string GetTagName(void);
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
-private:
-	CMDIInPkt * pMDIInPkt;
+	string strInfo;
 };
 
 #endif

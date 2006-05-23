@@ -360,19 +360,21 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	BitmCubeOrange.resize(iXSize, iYSize);
 	BitmCubeOrange.fill(QColor(255, 128, 0));
 
-#ifdef HAVE_LIBHAMLIB
-	/* Init progress bar for input s-meter */
-	ProgrSigStrength->setRange(S_METER_THERMO_MIN, S_METER_THERMO_MAX);
-	ProgrSigStrength->setOrientation(QwtThermo::Horizontal, QwtThermo::Top);
-	ProgrSigStrength->setAlarmLevel(S_METER_THERMO_ALARM);
-	ProgrSigStrength->setAlarmColor(QColor(255, 0, 0));
-	ProgrSigStrength->setScale(S_METER_THERMO_MIN, S_METER_THERMO_MAX, 10.0);
-	EnableSMeter(FALSE); /* disable for initialization */
-#else
-	/* s-meter only implemented for hamlib */
-	ProgrSigStrength->hide();
-	TextLabelSMeter->hide();
-#endif
+	if (pDRMRec->SignalStrengthAvailable())
+	{
+		/* Init progress bar for input s-meter */
+		ProgrSigStrength->setRange(S_METER_THERMO_MIN, S_METER_THERMO_MAX);
+		ProgrSigStrength->setOrientation(QwtThermo::Horizontal, QwtThermo::Top);
+		ProgrSigStrength->setAlarmLevel(S_METER_THERMO_ALARM);
+		ProgrSigStrength->setAlarmColor(QColor(255, 0, 0));
+		ProgrSigStrength->setScale(S_METER_THERMO_MIN, S_METER_THERMO_MAX, 10.0);
+		EnableSMeter(FALSE); /* disable for initialization */
+	}
+	else
+	{
+		ProgrSigStrength->hide();
+		TextLabelSMeter->hide();
+	}
 
 	/* Clear list box for file names and set up columns */
 	ListViewStations->clear();
@@ -408,7 +410,6 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	/* Init UTC time shown with a label control */
 	SetUTCTimeLabel();
-
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
@@ -461,9 +462,7 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	pViewMenu->insertSeparator();
 	pViewMenu->insertItem(tr("Stations &preview"),pPreviewMenu);
 
-
 	SetStationsView();
-
 
 #ifdef HAVE_LIBHAMLIB
 	/* Remote menu  --------------------------------------------------------- */
@@ -1028,7 +1027,6 @@ void StationsDlg::SetStationsView()
 				/* Set flag for sorting the list */
 				bListHastChanged = TRUE;
 			}
-
 			/* Check, if station is currently transmitting. If yes, set
 			   special pixmap */
 			if (DRMSchedule.CheckState(i) == CDRMSchedule::IS_ACTIVE)
@@ -1078,13 +1076,8 @@ void StationsDlg::SetStationsView()
 
 void StationsDlg::OnFreqCntNewValue(double dVal)
 {
-#ifdef HAVE_LIBHAMLIB
 	/* Set frequency to front-end */
-	pDRMRec->GetHamlib()->SetFrequency((int) dVal);
-#endif
-
-	/* Set selected frequency in log file class */
-	pDRMRec->GetParameters()->ReceptLog.SetFrequency((int) dVal);
+	pDRMRec->SetFrequency((int) dVal);
 }
 
 void StationsDlg::OnHeaderClicked(int c)
@@ -1111,25 +1104,25 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		   "ReceptLog.SetFrequency()" needed, too */
 		QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
 
-#ifdef HAVE_LIBHAMLIB
 		/* Now tell the receiver that the frequency has changed */
 		switch (DRMSchedule.GetSchedMode())
 		{
 		case CDRMSchedule::SM_DRM:
-			pDRMRec->SetReceiverMode(CDRMReceiver::RM_DRM);
+			pDRMRec->SetReceiverMode(RM_DRM);
 			break;
 
 		case CDRMSchedule::SM_ANALOG:
-			pDRMRec->SetReceiverMode(CDRMReceiver::RM_AM);
+			pDRMRec->SetReceiverMode(RM_AM);
 			break;
 		}
-#endif
 	}
 }
 
 void StationsDlg::OnSMeterMenu(int iID)
 {
-#ifdef HAVE_LIBHAMLIB
+	if (pDRMRec->SignalStrengthAvailable()==FALSE)
+	   return;
+
 	if (pRemoteMenu->isItemChecked(iID))
 	{
 		pRemoteMenu->setItemChecked(iID, FALSE);
@@ -1141,10 +1134,7 @@ void StationsDlg::OnSMeterMenu(int iID)
 		pDRMRec->bEnableSMeter = TRUE;
 	}
 
-	/* Only try to enable s-meter if it is not ID 0 ("none") */
-	if (pDRMRec->GetHamlib()->GetHamlibModelID() != 0)
-		EnableSMeter(pDRMRec->bEnableSMeter);
-#endif
+	EnableSMeter(pDRMRec->bEnableSMeter);
 }
 
 void StationsDlg::OnModRigMenu(int iID)
@@ -1208,18 +1198,15 @@ void StationsDlg::OnComPortMenu(QAction* action)
 
 void StationsDlg::OnTimerSMeter()
 {
-#ifdef HAVE_LIBHAMLIB
 	/* Get current s-meter value */
-	_REAL rCurSigStr;
-	const CHamlib::ESMeterState eSMState =
-		pDRMRec->GetHamlib()->GetSMeter(rCurSigStr);
+	_BOOLEAN bValid = pDRMRec->GetParameters()->bValidSigStr;
+	_REAL rCurSigStr = pDRMRec->GetParameters()->rSigStr;
 
 	/* If a time-out happened, do not update s-meter anymore (disable it) */
-	if (eSMState != CHamlib::SS_VALID)
+	if (bValid==FALSE)
 		EnableSMeter(FALSE);
 	else
 		ProgrSigStrength->setValue(rCurSigStr);
-#endif
 }
 
 void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)

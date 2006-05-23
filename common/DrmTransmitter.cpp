@@ -46,7 +46,8 @@ void CDRMTransmitter::Stop()
 {
 	TransmParam.bRunThread = FALSE;
 
-	SoundInterface.Close();
+	SoundInInterface.Close();
+	SoundOutInterface.Close();
 }
 
 void CDRMTransmitter::Run()
@@ -115,8 +116,8 @@ void CDRMTransmitter::Init()
 	TransmitData.Init(TransmParam);
 }
 
-CDRMTransmitter::CDRMTransmitter() : TransmitData(&SoundInterface),
-	ReadData(&SoundInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
+CDRMTransmitter::CDRMTransmitter() : TransmitData(&SoundOutInterface),
+	ReadData(&SoundInInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
 {
 	/* Init streams */
 	TransmParam.ResetServicesStreams();

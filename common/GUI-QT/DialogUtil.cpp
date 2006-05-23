@@ -157,8 +157,8 @@ CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QPopupMenu(parent)
 
 
 /* Sound card selection menu ------------------------------------------------ */
-CSoundCardSelMenu::CSoundCardSelMenu(CSound* pNS, QWidget* parent) :
-	pSoundIF(pNS), QPopupMenu(parent)
+CSoundCardSelMenu::CSoundCardSelMenu(CSoundIn* pNSIn, CSoundOut* pNSOut, QWidget* parent) :
+	pSoundInIF(pNSIn), pSoundOutIF(pNSOut), QPopupMenu(parent)
 {
 	pSoundInMenu = new QPopupMenu(parent);
 	CHECK_PTR(pSoundInMenu);
@@ -166,34 +166,31 @@ CSoundCardSelMenu::CSoundCardSelMenu(CSound* pNS, QWidget* parent) :
 	CHECK_PTR(pSoundOutMenu);
 
 	/* Get sound device names */
-	iNumSoundDev = pSoundIF->GetNumDev();
-	for (int i = 0; i < iNumSoundDev; i++)
+	pSoundInIF->Enumerate(vecSoundInNames);
+	iNumSoundInDev = vecSoundInNames.size();
+	for (int i = 0; i < iNumSoundInDev; i++)
 	{
-		const string strName = pSoundIF->GetDeviceName(i);
-		pSoundInMenu->insertItem(QString(strName.c_str()), this,
+		pSoundInMenu->insertItem(QString(vecSoundInNames[i].c_str()), this,
 			SLOT(OnSoundInDevice(int)), 0, i);
-		pSoundOutMenu->insertItem(QString(strName.c_str()), this,
+	}
+
+	pSoundOutIF->Enumerate(vecSoundOutNames);
+	iNumSoundOutDev = vecSoundOutNames.size();
+	for (int i = 0; i < iNumSoundOutDev; i++)
+	{
+		pSoundOutMenu->insertItem(QString(vecSoundOutNames[i].c_str()), this,
 			SLOT(OnSoundOutDevice(int)), 0, i);
 	}
 
-	/* Insert "Wave mapper". "iNumSoundDev" is no valid ID for a device, use
-	   this for wave-mapper */
-	pSoundInMenu->insertSeparator();
-	pSoundInMenu->insertItem(tr("Primary Audio &Device (Recording)"), this,
-		SLOT(OnSoundInDevice(int)), 0, iNumSoundDev);
-	pSoundOutMenu->insertSeparator();
-	pSoundOutMenu->insertItem(tr("Primary Audio &Device (Playback)"), this,
-		SLOT(OnSoundOutDevice(int)), 0, iNumSoundDev);
-
 	/* Set default device. If no valid device was selected, select
 	   "Wave mapper" */
-	int iDefaultInDev = pSoundIF->GetInDev();
-	if ((iDefaultInDev > iNumSoundDev) || (iDefaultInDev < 0))
-		iDefaultInDev = iNumSoundDev;
+	int iDefaultInDev = pSoundInIF->GetDev();
+	if ((iDefaultInDev > iNumSoundInDev) || (iDefaultInDev < 0))
+		iDefaultInDev = iNumSoundInDev;
 
-	int iDefaultOutDev = pSoundIF->GetOutDev();
-	if ((iDefaultOutDev > iNumSoundDev) || (iDefaultOutDev < 0))
-		iDefaultOutDev = iNumSoundDev;
+	int iDefaultOutDev = pSoundOutIF->GetDev();
+	if ((iDefaultOutDev > iNumSoundOutDev) || (iDefaultOutDev < 0))
+		iDefaultOutDev = iNumSoundOutDev;
 
 	pSoundInMenu->setItemChecked(iDefaultInDev, TRUE);
 	pSoundOutMenu->setItemChecked(iDefaultOutDev, TRUE);
@@ -204,18 +201,18 @@ CSoundCardSelMenu::CSoundCardSelMenu(CSound* pNS, QWidget* parent) :
 
 void CSoundCardSelMenu::OnSoundInDevice(int id)
 {
-	pSoundIF->SetInDev(id);
+	pSoundInIF->SetDev(id);
 
 	/* Taking care of checks in the menu. "+ 1" because of wave mapper entry */
-	for (int i = 0; i < iNumSoundDev + 1; i++)
+	for (int i = 0; i < iNumSoundInDev + 1; i++)
 		pSoundInMenu->setItemChecked(i, i == id);
 }
 
 void CSoundCardSelMenu::OnSoundOutDevice(int id)
 {
-	pSoundIF->SetOutDev(id);
+	pSoundOutIF->SetDev(id);
 
 	/* Taking care of checks in the menu. "+ 1" because of wave mapper entry */
-	for (int i = 0; i < iNumSoundDev + 1; i++)
+	for (int i = 0; i < iNumSoundOutDev + 1; i++)
 		pSoundOutMenu->setItemChecked(i, i == id);
 }

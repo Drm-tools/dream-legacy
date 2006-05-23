@@ -71,11 +71,10 @@ public:
 	virtual void ResetPacketSink(void);
 
 	// Send packet to the socket
-	virtual void SendPacket(CVector<_BINARY> vecbiPacket);
+	void SendPacket(const vector<_BYTE>& vecbydata);
 
-	virtual _BOOLEAN SetNetwOutAddr(const string strNewIPPort);
-	virtual _BOOLEAN SetNetwInPort(const int iPort);
-	virtual _BOOLEAN SetNetwInMcast(const string strNewIPIP);
+	virtual _BOOLEAN SetNetwOutAddr(const string& str);
+	virtual _BOOLEAN SetNetwInAddr(const string& str);
 
 private:
 	CPacketSink *pPacketSink;
@@ -85,8 +84,6 @@ private:
 
 	QSocketDevice				SocketDevice;
 	QSocketNotifier*			pSocketNotivRead;
-
-	CMutex						Mutex;
 
 public slots:
 	void OnDataReceived();

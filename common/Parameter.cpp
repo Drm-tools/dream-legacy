@@ -170,8 +170,7 @@ void CParameter::GetActiveStreams(CVector<int>& veciActStr)
 _REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
 {
 	/* Init lengths to zero in case the stream is not yet assigned */
-	int iLenPartA = 0;
-	int iLenPartB = 0;
+	int iLen = 0;
 
 	/* First, check if audio or data service and get lengths */
 	if (Service[iServiceID].eAudDataFlag == SF_AUDIO)
@@ -181,44 +180,23 @@ _REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
 		if (bAudData == TRUE)
 		{
 			if (Service[iServiceID].DataParam.iStreamID != STREAM_ID_NOT_USED)
-			{
-				iLenPartA =
-					Stream[Service[iServiceID].DataParam.iStreamID].iLenPartA;
-
-				iLenPartB =
-					Stream[Service[iServiceID].DataParam.iStreamID].iLenPartB;
-			}
+				iLen = GetStreamLen( Service[iServiceID].DataParam.iStreamID);
 		}
 		else
 		{
 			if (Service[iServiceID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
-			{
-				iLenPartA =
-					Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartA;
-
-				iLenPartB =
-					Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartB;
-			}
+				iLen = GetStreamLen( Service[iServiceID].AudioParam.iStreamID);
 		}
 	}
 	else
 	{
 		if (Service[iServiceID].DataParam.iStreamID != STREAM_ID_NOT_USED)
-		{
-			iLenPartA =
-				Stream[Service[iServiceID].DataParam.iStreamID].iLenPartA;
-
-			iLenPartB =
-				Stream[Service[iServiceID].DataParam.iStreamID].iLenPartB;
-		}
+			iLen = GetStreamLen( Service[iServiceID].DataParam.iStreamID);
 	}
-
-	/* Total length in bits */
-	const int iNumBitsPerFrame = (iLenPartA + iLenPartB) * SIZEOF__BYTE;
 
 	/* We have 3 frames with time duration of 1.2 seconds. Bit rate should be
 	   returned in kbps (/ 1000) */
-	return (_REAL) iNumBitsPerFrame * 3 / (_REAL) 1.2 / 1000;
+	return (_REAL) iLen * SIZEOF__BYTE * 3 / (_REAL) 1.2 / 1000;
 }
 
 _REAL CParameter::PartABLenRatio(const int iServiceID)
@@ -343,6 +321,11 @@ void CParameter::SetStreamLen(const int iStreamID, const int iNewLenPartA,
 		/* Set init flags */
 		DRMReceiver.InitsForMSC();
 	}
+}
+
+int CParameter::GetStreamLen(const int iStreamID)
+{
+	return Stream[iStreamID].iLenPartA + Stream[iStreamID].iLenPartB;
 }
 
 void CParameter::SetNumDecodedBitsMSC(const int iNewNumDecodedBitsMSC)
@@ -998,9 +981,8 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 				if (DRMReceiver.GetReceiverState() ==
 					CDRMReceiver::AS_WITH_SIGNAL)
 				{
-					rDelay = DRMReceiver.GetChanEst()->GetMinDelay();
-					if (DRMReceiver.GetChanEst()->GetSigma(rDoppler) == FALSE)
-						rDoppler = (_REAL) 0.0;
+					rDelay = DRMReceiver.GetParameters()->rMinDelay;
+                    rDoppler = DRMReceiver.GetParameters()->rSigmaEstimate;
 				}
 
 				/* Get robustness mode string */
@@ -1144,3 +1126,9 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 		/* To prevent errors if user views the file during reception */
 	}
 }
+
+ERecMode CParameter::GetReceiverMode()
+{
+ return DRMReceiver.GetReceiverMode();		 
+}
+

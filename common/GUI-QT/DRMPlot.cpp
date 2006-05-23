@@ -98,7 +98,7 @@ void CDRMPlot::OnTimerChart()
 	{
 	case AVERAGED_IR:
 		/* Get data from module */
-		pDRMRec->GetChanEst()->
+		pDRMRec->
 			GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
 			rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
 
@@ -109,7 +109,7 @@ void CDRMPlot::OnTimerChart()
 
 	case TRANSFERFUNCTION:
 		/* Get data from module */
-		pDRMRec->GetChanEst()->
+		pDRMRec->
 			GetTransferFunction(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
@@ -126,7 +126,7 @@ void CDRMPlot::OnTimerChart()
 
 	case SNR_SPECTRUM:
 		/* Get data from module */
-		pDRMRec->GetChanEst()->GetSNRProfile(vecrData, vecrScale);
+		pDRMRec->GetSNRProfile(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
 		SetSNRSpectrum(vecrData, vecrScale);

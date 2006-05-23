@@ -39,9 +39,6 @@
 #include "TextMessage.h"
 #include "util/AudioFile.h"
 #include "util/Utilities.h"
-#ifdef USE_QT_GUI
-# include "MDI/MDI.h"
-#endif
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
 #else
@@ -76,13 +73,13 @@
 class CReadData : public CTransmitterModul<_SAMPLE, _SAMPLE>
 {
 public:
-	CReadData(CSound* pNS) : pSound(pNS) {}
+	CReadData(CSoundIn* pNS) : pSound(pNS) {}
 	virtual ~CReadData() {}
 
 	_REAL GetLevelMeter() {return SignalLevelMeter.Level();}
 
 protected:
-	CSound*				pSound;
+	CSoundIn*			pSound;
 	CVector<_SAMPLE>	vecsSoundBuffer;
 	CSignalLevelMeter	SignalLevelMeter;
 
@@ -96,7 +93,7 @@ public:
 	enum EOutChanSel {CS_BOTH_BOTH, CS_LEFT_LEFT, CS_RIGHT_RIGHT,
 		CS_LEFT_MIX, CS_RIGHT_MIX};
 
-	CWriteData(CSound* pNS);
+	CWriteData(CSoundOut* pNS);
 	virtual ~CWriteData() {}
 
 	void StartWriteWaveFile(const string strFileName);
@@ -115,7 +112,7 @@ public:
 	EOutChanSel GetOutChanSel() {return eOutChanSel;}
 
 protected:
-	CSound*					pSound;
+	CSoundOut*				pSound;
 	_BOOLEAN				bMuteAudio;
 	CWaveFile				WaveFileAudio;
 	_BOOLEAN				bDoWriteWaveFile;
@@ -192,11 +189,7 @@ protected:
 class CUtilizeFACData : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-#ifdef USE_QT_GUI
-	CUtilizeFACData(CMDI* pNM) : pMDI(pNM),
-#else
 	CUtilizeFACData() :
-#endif
 		bSyncInput(FALSE), bCRCOk(FALSE) {}
 	virtual ~CUtilizeFACData() {}
 
@@ -207,11 +200,6 @@ public:
 
 protected:
 	CFACReceive FACReceive;
-
-#ifdef USE_QT_GUI
-	CMDI*		pMDI;
-#endif
-
 	_BOOLEAN	bCRCOk;
 	_BOOLEAN	bSyncInput;
 
@@ -237,22 +225,13 @@ protected:
 class CUtilizeSDCData : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-#ifdef USE_QT_GUI
-	CUtilizeSDCData(CMDI* pNM) : pMDI(pNM) {}
-#else
 	CUtilizeSDCData() {}
-#endif
 	virtual ~CUtilizeSDCData() {}
 
 	CSDCReceive* GetSDCReceive() {return &SDCReceive;}
 
 protected:
 	CSDCReceive SDCReceive;
-
-#ifdef USE_QT_GUI
-	CMDI*		pMDI;
-#endif
-
 	_BOOLEAN	bFirstBlock;
 
 	virtual void InitInternal(CParameter& ReceiverParam);

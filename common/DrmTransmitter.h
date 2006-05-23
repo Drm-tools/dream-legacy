@@ -63,7 +63,8 @@ public:
 	CTransmitData*			GetTransData() {return &TransmitData;}
 	CReadData*				GetReadData() {return &ReadData;}
 
-	CSound*					GetSoundInterface() {return &SoundInterface;}
+	CSoundIn*				GetSoundInInterface() {return &SoundInInterface;}
+	CSoundOut*				GetSoundOutInterface() {return &SoundOutInterface;}
 	CParameter*				GetParameters() {return &TransmParam;}
 
 
@@ -111,7 +112,8 @@ protected:
 	COFDMModulation			OFDMModulation;
 	CTransmitData			TransmitData;
 
-	CSound					SoundInterface;
+	CSoundIn				SoundInInterface;
+	CSoundOut				SoundOutInterface;
 
 	_REAL					rDefCarOffset;
 };
