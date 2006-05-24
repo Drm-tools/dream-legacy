@@ -273,6 +273,30 @@ void CDRMReceiver::Run()
 					/* Use information of FAC CRC for detecting the acquisition
 					   requirement */
 					DetectAcquiFAC();
+
+#if 0
+/* TEST store information about alternative frequency transmitted in SDC */
+static FILE* pFile = fopen("test/altfreq.dat", "w");
+
+int inum = ReceiverParam.AltFreqSign.vecAltFreq.Size();
+for (int z = 0; z < inum; z++)
+{
+	fprintf(pFile, "sync:%d sr:", ReceiverParam.AltFreqSign.vecAltFreq[z].bIsSyncMultplx);
+
+	for (int k = 0; k < 4; k++)
+		fprintf(pFile, "%d", ReceiverParam.AltFreqSign.vecAltFreq[z].veciServRestrict[k]);
+	fprintf(pFile, " fr:");
+
+	for (int kk = 0; kk < ReceiverParam.AltFreqSign.vecAltFreq[z].veciFrequencies.Size(); kk++)
+		fprintf(pFile, "%d ", ReceiverParam.AltFreqSign.vecAltFreq[z].veciFrequencies[kk]);
+
+	fprintf(pFile, " rID:%d sID:%d   /   ", ReceiverParam.AltFreqSign.vecAltFreq[z].iRegionID,
+		ReceiverParam.AltFreqSign.vecAltFreq[z].iScheduleID);
+}
+fprintf(pFile, "\n");
+fflush(pFile);
+#endif
+
 				}
 
 				if (UtilizeSDCData.WriteData(ReceiverParam, SDCUseBuf))
