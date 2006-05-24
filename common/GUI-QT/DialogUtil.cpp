@@ -164,11 +164,12 @@ CSoundCardSelMenu::CSoundCardSelMenu(CSoundIn* pNSIn, CSoundOut* pNSOut, QWidget
 	CHECK_PTR(pSoundInMenu);
 	pSoundOutMenu = new QPopupMenu(parent);
 	CHECK_PTR(pSoundOutMenu);
+	int i;
 
 	/* Get sound device names */
 	pSoundInIF->Enumerate(vecSoundInNames);
 	iNumSoundInDev = vecSoundInNames.size();
-	for (int i = 0; i < iNumSoundInDev; i++)
+	for (i = 0; i < iNumSoundInDev; i++)
 	{
 		pSoundInMenu->insertItem(QString(vecSoundInNames[i].c_str()), this,
 			SLOT(OnSoundInDevice(int)), 0, i);
@@ -176,7 +177,7 @@ CSoundCardSelMenu::CSoundCardSelMenu(CSoundIn* pNSIn, CSoundOut* pNSOut, QWidget
 
 	pSoundOutIF->Enumerate(vecSoundOutNames);
 	iNumSoundOutDev = vecSoundOutNames.size();
-	for (int i = 0; i < iNumSoundOutDev; i++)
+	for (i = 0; i < iNumSoundOutDev; i++)
 	{
 		pSoundOutMenu->insertItem(QString(vecSoundOutNames[i].c_str()), this,
 			SLOT(OnSoundOutDevice(int)), 0, i);

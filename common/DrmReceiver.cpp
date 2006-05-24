@@ -651,8 +651,8 @@ Param.ResetCurSelAudDatServ();
 
 void CDRMReceiver::InitsForAllModules()
 {
-     if(RSIOut.GetOutEnabled())
-     {
+	if(RSIOut.GetOutEnabled())
+	{
 		ReceiverParam.bMeasureDelay = TRUE;
 		ReceiverParam.bMeasureDoppler = TRUE;
 		ReceiverParam.bMeasureInterference = TRUE;
@@ -666,10 +666,13 @@ void CDRMReceiver::InitsForAllModules()
 	/* Set init flags */
 	SplitFAC.SetInitFlag();
 	SplitSDC.SetInitFlag();
-	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
+	for(size_t ia=0; i<MAX_NUM_STREAMS; i++)
 	{
 		SplitMSC[i].SetStream(i);
 		SplitMSC[i].SetInitFlag();
+		MSCDecBuf[i].Clear();
+		MSCUseBuf[i].Clear();
+		MSCSendBuf[i].Clear();
 	}
 	ReceiveData.SetInitFlag();
 	InputResample.SetInitFlag();
@@ -728,12 +731,6 @@ void CDRMReceiver::InitsForAllModules()
 	SDCDecBuf.Clear();
 	MSCMLCDecBuf.Clear();
 	RSIPacketBuf.Clear();
-	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
-	{
-		MSCDecBuf[i].Clear();
-		MSCUseBuf[i].Clear();
-		MSCSendBuf[i].Clear();
-	}
 	AudSoDecBuf.Clear();
 }
 
