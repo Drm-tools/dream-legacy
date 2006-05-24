@@ -666,7 +666,7 @@ void CDRMReceiver::InitsForAllModules()
 	/* Set init flags */
 	SplitFAC.SetInitFlag();
 	SplitSDC.SetInitFlag();
-	for(size_t ia=0; i<MAX_NUM_STREAMS; i++)
+	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
 	{
 		SplitMSC[i].SetStream(i);
 		SplitMSC[i].SetInitFlag();
