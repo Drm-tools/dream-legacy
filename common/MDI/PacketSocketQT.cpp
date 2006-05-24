@@ -89,10 +89,10 @@ _BOOLEAN CPacketSocketQT::SetNetwOutAddr(const string& strNewAddr)
            bAddressOK = HostAddrOut.setAddress(parts[1]);
            iHostPortOut = parts[2].toInt();
            const SOCKET s = SocketDevice.socket();
-#if QT_VERSION > 230
-		   uint32_t mc_if = htonl(AddrInterface.toIPv4Address());
+#if QT_VERSION == 230
+		   uint32_t mc_if = htonl(AddrInterface.ip4Addr());
 #else
-		   uint32_t mc_if = htonl(inet_addr(AddrInterface.toString().toLatin1()));
+		   uint32_t mc_if = htonl(AddrInterface.toIPv4Address());
 #endif
            if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF, 
              (char*) &mc_if, sizeof(mc_if))==SOCKET_ERROR)
@@ -136,10 +136,10 @@ _BOOLEAN CPacketSocketQT::SetNetwInAddr(const string& strNewAddr)
 
 	/* Multicast ? */
 	
-#if QT_VERSION > 230
-	uint32_t gp = htonl(AddrGroup.toIPv4Address());
+#if QT_VERSION == 230
+	uint32_t gp = htonl(AddrGroup.ip4Addr());
 #else
-	uint32_t gp = htonl(inet_addr(AddrGroup.toString.toLatin1()));
+	uint32_t gp = htonl(AddrGroup.toIPv4Address());
 #endif
 	if (gp == 0)
 	{
@@ -159,12 +159,12 @@ _BOOLEAN CPacketSocketQT::SetNetwInAddr(const string& strNewAddr)
 		                     return FALSE;
                              }
   
-#if QT_VERSION > 230
+#if QT_VERSION == 230
+		mreq.imr_multiaddr.s_addr = htonl(AddrGroup.ip4Addr());
+		mreq.imr_interface.s_addr = htonl(AddrInterface.ip4Addr());
+#else
 		mreq.imr_multiaddr.s_addr = htonl(AddrGroup.toIPv4Address());
 		mreq.imr_interface.s_addr = htonl(AddrInterface.toIPv4Address());
-#else
-		mreq.imr_multiaddr.s_addr = htonl(inet_addr(AddrGroup.toString.toLatin1()));
-		mreq.imr_interface.s_addr = htonl(inet_addr(AddrInterface.toString.toLatin1()));
 #endif
         const SOCKET s = SocketDevice.socket();
         int n = setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*) &mreq,

@@ -31,7 +31,11 @@
 
 #include "../GlobalDefinitions.h"
 #ifdef USE_QT_GUI
+# if QT_VERSION == 230
+#include <qthread.h>
+# else
 #include <qwaitcondition.h>
+# endif
 #endif
 #include <vector>
 
