@@ -68,7 +68,6 @@ protected:
 	void close_HW( void );
 	
 	int 	iBufferSize, iInBufferSize;
-	int	iCurrentDevice;
 	short int *tmprecbuf;
 	_BOOLEAN	bBlockingRec;
 #ifdef USE_ALSA
@@ -91,11 +90,13 @@ protected:
 	
 #else
 	/* Dummy definitions */
-	void InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE){}
+	void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE){}
 	_BOOLEAN Read(CVector<short>& psData){return FALSE;}
 	void Close(){}
 #endif
+protected:
 	vector<string> names;
+	int	iCurrentDevice;
 };
 
 

@@ -68,7 +68,6 @@ protected:
 	int write_HW( _SAMPLE *playbuf, int size );
 	void close_HW( void );
 	
-	int	iCurrentDevice;
 	int 	iBufferSize, iInBufferSize;
 	short int *tmpplaybuf;
 	_BOOLEAN	bBlockingPlay;
@@ -98,6 +97,7 @@ protected:
 	void Close(){}
 #endif
 	vector<string> names;
+	int	iCurrentDevice;
 };
 
 

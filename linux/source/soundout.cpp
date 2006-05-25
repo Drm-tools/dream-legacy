@@ -43,17 +43,21 @@
 #include <sys/soundcard.h>
 #include <errno.h>
 
-CSoundOut::CSoundOut() : iCurrentDevice(0),fdSound(0),names()
+CSoundOut::CSoundOut() : iCurrentDevice(-1),fdSound(0),names()
 {
 	PlayThread.pSoundOut = this;
 	ifstream sndstat("/dev/sndstat");
-	if(sndstat.is_open()){
-		while(!sndstat.eof()){
+	if(sndstat.is_open())
+	{
+		while(!sndstat.eof())
+		{
 			char s[80];
 			sndstat.getline(s,sizeof(s));
-			if(string(s)=="Audio devices:") {
+			if(string(s)=="Audio devices:")
+			{
 				char sep[20];
-				while(true){
+				while(true)
+				{
 					sndstat.getline(s,sizeof(s));
 					if(string(s) != "")
 					{
@@ -66,16 +70,6 @@ CSoundOut::CSoundOut() : iCurrentDevice(0),fdSound(0),names()
 		}
 		sndstat.close();
 	}
-}
-
-void CSoundOut::SetDev(int iNewDevice)
-{
-	iCurrentDevice = iNewDevice;
-}
-
-int CSoundOut::GetDev()
-{
-	return iCurrentDevice;
 }
 
 void CSoundOut::Init_HW()
@@ -146,14 +140,16 @@ void CSoundOut::Init_HW()
 		throw CGenErr("Soundcard not full duplex capable!");
 }
 
-int CSoundOut::write_HW( _SAMPLE *playbuf, int size ){
+int CSoundOut::write_HW( _SAMPLE *playbuf, int size )
+{
 
 	int start = 0;
 	int ret;
 
 	size *= BYTES_PER_SAMPLE * NUM_OUT_CHANNELS;
 
-	while (size) {
+	while (size)
+	{
 
 		ret = write(fdSound, &playbuf[start], size);
 		if (ret < 0) {
@@ -169,7 +165,8 @@ int CSoundOut::write_HW( _SAMPLE *playbuf, int size ){
 	return 0;
 }
 
-void CSoundOut::close_HW( void ) {
+void CSoundOut::close_HW( void )
+{
 
 	if (fdSound >0)
 		close(fdSound);
@@ -187,13 +184,15 @@ void CSoundOut::close_HW( void ) {
 
 #include <alsa/asoundlib.h>
 
-CSoundOut::CSoundOut() : iCurrentDevice(0),devices(),handle(NULL),names()
+CSoundOut::CSoundOut() : iCurrentDevice(-1),devices(),handle(NULL),names()
 {
 	PlayThread.pSoundOut = this;
 	ifstream sndstat("/proc/asound/pcm");
-	if(sndstat.is_open()){
+	if(sndstat.is_open())
+	{
 		vector<string> playback_devices;
-		while(!sndstat.eof()){
+		while(!sndstat.eof())
+		{
 			char s[200];
 			sndstat.getline(s,sizeof(s));
 			if(strlen(s)==0)
@@ -224,21 +223,12 @@ CSoundOut::CSoundOut() : iCurrentDevice(0),devices(),handle(NULL),names()
 	}
 }
 
-void CSoundOut::SetDev(int iNewDevice)
+void CSoundOut::Init_HW()
 {
-	iCurrentDevice = iNewDevice;
-}
-
-int CSoundOut::GetDev()
-{
-	return iCurrentDevice;
-}
-
-void CSoundOut::Init_HW(){
 
 	int err, dir;
-        snd_pcm_hw_params_t *hwparams;
-        snd_pcm_sw_params_t *swparams;
+    snd_pcm_hw_params_t *hwparams;
+    snd_pcm_sw_params_t *swparams;
 	unsigned int rrate;
 	snd_pcm_uframes_t period_size = FRAGSIZE * NUM_OUT_CHANNELS/2;
 	snd_pcm_uframes_t buffer_size;
@@ -246,6 +236,17 @@ void CSoundOut::Init_HW(){
 	
 	
 	/* playback device */
+	if(devices.size()==0)
+		throw CGenErr("alsa CSoundOut::Init_HW no playback devices available!");	
+
+	/* Default ? */
+	if(iCurrentDevice < 0)
+		iCurrentDevice = devices.size()-1;
+
+	/* out of range ? (could happen from command line parameter or USB device unplugged */
+	if(iCurrentDevice >= devices.size())
+		iCurrentDevice = devices.size()-1;
+
 	string playdevice = devices[iCurrentDevice];
 	
 	if (handle != NULL)
@@ -390,7 +391,8 @@ void CSoundOut::Init_HW(){
 
 }
 
-int CSoundOut::write_HW( _SAMPLE *playbuf, int size ){
+int CSoundOut::write_HW( _SAMPLE *playbuf, int size )
+{
 
 	int start = 0;
 	int ret;
@@ -446,7 +448,8 @@ qDebug("strpipe");
 	return 0;
 }
 
-void CSoundOut::close_HW( void ) {
+void CSoundOut::close_HW( void )
+{
 
 	if (handle != NULL)
 		snd_pcm_close( handle );
@@ -567,5 +570,17 @@ void CSoundOut::Close()
 	close_HW();	
 }
 
-
+#else
+CSoundOut::CSoundOut():names(),iCurrentDevice(0){}
 #endif
+
+void CSoundOut::SetDev(int iNewDevice)
+{
+	iCurrentDevice = iNewDevice;
+}
+
+int CSoundOut::GetDev()
+{
+	return iCurrentDevice;
+}
+

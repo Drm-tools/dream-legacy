@@ -54,13 +54,13 @@
 /* Implementation *************************************************************/
 void CMSCDemultiplexer::ProcessDataInternal(CParameter& ReceiverParam)
 {
- 	for(size_t i=0; i<4; i++)
+ 	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
 		ExtractData(*pvecInputData, *vecpvecOutputData[i], StreamPos[i]);
 }
 
 void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 {
- 	for(size_t i=0; i<4; i++)
+ 	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
  	{
 		StreamPos[i] = GetStreamPos(ReceiverParam, i);
 		veciOutputBlockSize[i] = StreamPos[i].iLenHigh + StreamPos[i].iLenLow;
@@ -72,7 +72,8 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 		Service[ReceiverParam.GetCurSelAudioService()].AudioParam.iStreamID;
 
 	/* Set number of output bits for audio decoder in global struct */
-	ReceiverParam.SetNumAudioDecoderBits(veciOutputBlockSize[iAudioStreamID]);
+	if(iAudioStreamID != STREAM_ID_NOT_USED)
+		ReceiverParam.SetNumAudioDecoderBits(veciOutputBlockSize[iAudioStreamID]);
 
 
 	/* Data ----------------------------------------------------------------- */
@@ -83,9 +84,9 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 		int iStreamID = ReceiverParam.
 			Service[ReceiverParam.GetCurSelDataService()].DataParam.iStreamID;
 		/* Set number of output bits for data decoder in global struct */
-		ReceiverParam.SetNumDataDecoderBits(veciOutputBlockSize[iStreamID]);
+		if(iStreamID != STREAM_ID_NOT_USED)
+			ReceiverParam.SetNumDataDecoderBits(veciOutputBlockSize[iStreamID]);
 	}
-
 
 	/* Set input block size */
 	iInputBlockSize = ReceiverParam.iNumDecodedBitsMSC;

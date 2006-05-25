@@ -238,6 +238,15 @@ void CSoundIn::OpenDevice()
 		waveInReset(m_WaveIn);
 		waveInClose(m_WaveIn);
 	}
+
+	/* Default ? */
+	if(iCurDev < 0)
+		iCurDev = vecstrDevices.size()-1;
+
+	/* out of range ? */
+	if(iCurDev >= vecstrDevices.size())
+		iCurDev = vecstrDevices.size()-1;
+
 	int mmdev = iCurDev;
 	if(iCurDev == (vecstrDevices.size()-1))
 	    mmdev = WAVE_MAPPER;
@@ -537,6 +546,15 @@ void CSoundOut::OpenDevice()
 		waveOutReset(m_WaveOut);
 		waveOutClose(m_WaveOut);
 	}
+
+	/* Default ? */
+	if(iCurDev < 0)
+		iCurDev = vecstrDevices.size()-1;
+
+	/* out of range ? */
+	if(iCurDev >= vecstrDevices.size())
+		iCurDev = vecstrDevices.size()-1;
+
 	int mmdev = iCurDev;
 	if(iCurDev == (vecstrDevices.size()-1))
 	    mmdev = WAVE_MAPPER;

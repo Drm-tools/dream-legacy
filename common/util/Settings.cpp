@@ -91,20 +91,12 @@ void CSettings::ReadIniFile()
 
 	/* Sound In device */
 	if (GetNumericIniSet(ini, "Receiver", "snddevin", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
-	{
-		if(iValue==-1)
-			iValue=0;
 		pDRMRec->GetSoundInInterface()->SetDev(iValue);
-	}
 
 
 	/* Sound Out device */
 	if (GetNumericIniSet(ini, "Receiver", "snddevout", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
-	{
-		if(iValue==-1)
-			iValue=0;
 		pDRMRec->GetSoundOutInterface()->SetDev(iValue);
-	}
 
 
 	/* Number of iterations for MLC setting */
@@ -1184,13 +1176,13 @@ string CSettings::UsageArguments(char** argv)
 		"                              1: green-black\n"
 		"                              2: black-grey\n"
 #endif
-		"  --mdiout <s>                MDI out address format [IP#]:[port] (for Content Server)\n"
-		"  --mdiin  <s>                MDI in address (for modulator)\n"
+		"  --mdiout <s>                MDI out address format [IP#:]IP#:port (for Content Server)\n"
+		"  --mdiin  <s>                MDI in address (for modulator) [[IP#:]IP:]port\n"
 		"  --rsioutprofile <s>         MDI/RSCI output profile: A|B|C|D|Q|M\n"
-		"  --rsiout <s>                MDI in multicast group address and interface format [IP#]:[IP#]\n"
-		"  --rsiin <s>                 RSCI/MDI status input address format [IP#]:[IP#]:[port]\n"
-		"  --rciout <s>                RSCI Control output format [IP#]:[IP#]\n"
-		"  --rciin <s>                 RSCI Control input address number format [IP#]:[IP#]:[IP#]\n"
+		"  --rsiout <s>                MDI/RSCI output address format [IP#:]IP#:port\n"
+		"  --rsiin <s>                 RSCI/MDI status input address format [[IP#:]IP#:]port\n"
+		"  --rciout <s>                RSCI Control output format IP#:port\n"
+		"  --rciin <s>                 RSCI Control input address number format [IP#:]port\n"
 
 		"  -I <n>, --snddevin <n>      set sound in device\n"
 		"  -O <n>, --snddevout <n>     set sound out device\n"
@@ -1198,14 +1190,14 @@ string CSettings::UsageArguments(char** argv)
 #ifdef HAVE_LIBHAMLIB
 		"  -M <n>, --hamlib-model <n>  set Hamlib radio model ID\n"
 		"  -C <s>, --hamlib-config <s> set Hamlib config parameter\n"
-		"  -T, --ensmeter              enable S-Meter\n"
 #endif
+		"  -T, --ensmeter              enable S-Meter\n"
 
 		"\n  -h, -?, --help             this help text\n"
 		"Example: " + string(argv[0]) +
 		" -p --sampleoff -0.23 -i 2 "
 #ifdef USE_QT_GUI
-		"-r 6140 -a 50°13\\'N -o 8°34\\'E --rsioutadr 127.0.0.1:3002"
+		"-r 6140 -a 50°13\\'N -o 8°34\\'E --rsiout 127.0.0.1:3002"
 #endif
 		"\n";
 }

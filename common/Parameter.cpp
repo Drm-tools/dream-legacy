@@ -179,19 +179,16 @@ _REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
 		   stream */
 		if (bAudData == TRUE)
 		{
-			if (Service[iServiceID].DataParam.iStreamID != STREAM_ID_NOT_USED)
-				iLen = GetStreamLen( Service[iServiceID].DataParam.iStreamID);
+			iLen = GetStreamLen( Service[iServiceID].DataParam.iStreamID);
 		}
 		else
 		{
-			if (Service[iServiceID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
-				iLen = GetStreamLen( Service[iServiceID].AudioParam.iStreamID);
+			iLen = GetStreamLen( Service[iServiceID].AudioParam.iStreamID);
 		}
 	}
 	else
 	{
-		if (Service[iServiceID].DataParam.iStreamID != STREAM_ID_NOT_USED)
-			iLen = GetStreamLen( Service[iServiceID].DataParam.iStreamID);
+		iLen = GetStreamLen( Service[iServiceID].DataParam.iStreamID);
 	}
 
 	/* We have 3 frames with time duration of 1.2 seconds. Bit rate should be
@@ -325,7 +322,10 @@ void CParameter::SetStreamLen(const int iStreamID, const int iNewLenPartA,
 
 int CParameter::GetStreamLen(const int iStreamID)
 {
-	return Stream[iStreamID].iLenPartA + Stream[iStreamID].iLenPartB;
+	if(iStreamID != STREAM_ID_NOT_USED)
+		return Stream[iStreamID].iLenPartA + Stream[iStreamID].iLenPartB;
+	else
+		return 0;
 }
 
 void CParameter::SetNumDecodedBitsMSC(const int iNewNumDecodedBitsMSC)
