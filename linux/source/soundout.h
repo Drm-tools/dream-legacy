@@ -75,7 +75,6 @@ protected:
 
 #ifdef USE_ALSA
 	snd_pcm_t *handle;
-	vector<string> names;
 	vector<string> devices;
 #endif
 #ifdef USE_DEVDSP
@@ -98,6 +97,7 @@ protected:
 	_BOOLEAN Write(CVector<short>& psData){return FALSE;}
 	void Close(){}
 #endif
+	vector<string> names;
 };
 
 

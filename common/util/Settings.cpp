@@ -91,12 +91,20 @@ void CSettings::ReadIniFile()
 
 	/* Sound In device */
 	if (GetNumericIniSet(ini, "Receiver", "snddevin", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
+	{
+		if(iValue==-1)
+			iValue=0;
 		pDRMRec->GetSoundInInterface()->SetDev(iValue);
+	}
 
 
 	/* Sound Out device */
 	if (GetNumericIniSet(ini, "Receiver", "snddevout", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
+	{
+		if(iValue==-1)
+			iValue=0;
 		pDRMRec->GetSoundOutInterface()->SetDev(iValue);
+	}
 
 
 	/* Number of iterations for MLC setting */
@@ -115,7 +123,7 @@ void CSettings::ReadIniFile()
 
 	/* Frequency for log file */
 	if (GetNumericIniSet(ini, "Logfile", "frequency", 0, MAX_FREQ_LOG_FILE, iValue) == TRUE)
-		pDRMRec->GetParameters()->ReceptLog.SetFrequency(iValue);
+		pDRMRec->SetFrequency(iValue);
 
 	/* Latitude string for log file */
 	pDRMRec->GetParameters()->ReceptLog.SetLatitude(
@@ -968,8 +976,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetNumericArgument(argc, argv, i, "-r", "--frequency", 0,
 			MAX_FREQ_LOG_FILE, rArgument) == TRUE)
 		{
-			pDRMRec->GetParameters()->ReceptLog.
-				SetFrequency((int) rArgument);
+			pDRMRec->SetFrequency((int) rArgument);
 			continue;
 		}
 

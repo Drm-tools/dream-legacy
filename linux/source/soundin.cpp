@@ -47,20 +47,9 @@
 #include <sys/soundcard.h>
 #include <errno.h>
 
-CSoundIn::CSoundIn():iCurrentDevice(0)
-#ifdef USE_ALSA
-	,handle(NULL)
-#endif
-#ifdef USE_DEVDSP
-	,fdSound(0)
-#endif
-	{
-		RecThread.pSoundIn = this;
-	}
-
-void CSoundIn::Enumerate(vector<string>& choices)
+CSoundIn::CSoundIn():iCurrentDevice(0),fdSound(0),names()
 {
-	choices.clear();
+	RecThread.pSoundIn = this;
 	ifstream sndstat("/dev/sndstat");
 	if(sndstat.is_open()){
 		while(!sndstat.eof()){
@@ -71,7 +60,7 @@ void CSoundIn::Enumerate(vector<string>& choices)
 				while(true){
 					sndstat.getline(s,sizeof(s));
 					if(string(s) != "")
-						choices.push_back(s);
+						names.push_back(s);
 					else
 						break;
 				}
@@ -182,7 +171,7 @@ void CSoundIn::close_HW( void ) {
 #define ALSA_PCM_NEW_HW_PARAMS_API
 #define ALSA_PCM_NEW_SW_PARAMS_API
 
-CSoundIn::CSoundIn():iCurrentDevice(0),names(),devices(),handle(NULL)
+CSoundIn::CSoundIn():iCurrentDevice(0),handle(NULL),devices(),names()
 {
 	RecThread.pSoundIn = this;
 	ifstream sndstat("/proc/asound/pcm");

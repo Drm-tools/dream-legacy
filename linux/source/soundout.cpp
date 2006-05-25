@@ -43,7 +43,7 @@
 #include <sys/soundcard.h>
 #include <errno.h>
 
-CSoundOut::CSoundOut() : iCurrentDevice(0),names(),devices(),fdSound(0)
+CSoundOut::CSoundOut() : iCurrentDevice(0),fdSound(0),names()
 {
 	PlayThread.pSoundOut = this;
 	ifstream sndstat("/dev/sndstat");
@@ -187,7 +187,7 @@ void CSoundOut::close_HW( void ) {
 
 #include <alsa/asoundlib.h>
 
-CSoundOut::CSoundOut() : iCurrentDevice(0),names(),devices(),handle(NULL)
+CSoundOut::CSoundOut() : iCurrentDevice(0),devices(),handle(NULL),names()
 {
 	PlayThread.pSoundOut = this;
 	ifstream sndstat("/proc/asound/pcm");
