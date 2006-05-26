@@ -25,6 +25,10 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
-#include "Version.h"
 
-char dream_version[] = "1.6.7cvs";
+#ifndef _VERSION_H
+#define _VERSION_H
+
+extern char dream_version[];
+
+#endif
