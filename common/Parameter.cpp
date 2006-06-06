@@ -495,7 +495,7 @@ void CParameter::SetCurSelAudioService(const int iNewService)
 		iCurSelAudioService = iNewService;
 
 		/* Set init flags */
-		DRMReceiver.InitsForMSCDemux();
+		DRMReceiver.InitsForAudParam();
 	}
 }
 
@@ -512,7 +512,7 @@ void CParameter::SetCurSelDataService(const int iNewService)
 		iCurSelDataService = iNewService;
 
 		/* Set init flags */
-		DRMReceiver.InitsForMSCDemux();
+		DRMReceiver.InitsForDataParam();
 	}
 }
 

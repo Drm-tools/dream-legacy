@@ -131,7 +131,7 @@ void CSettings::ReadIniFile()
 		pDRMRec->GetParameters()->ReceptLog.SetLoggingEnabled(bValue);
 
 	/* logging delay value */
-	if (GetNumericIniSet(ini, "Logfile", "logdelay", 0, MAX_SEC_LOG_FI_START, iValue) == TRUE)
+	if (GetNumericIniSet(ini, "Logfile", "delay", 0, MAX_SEC_LOG_FI_START, iValue) == TRUE)
 		pDRMRec->GetParameters()->ReceptLog.SetDelLogStart(iValue);
 
 	/* Latitude string for log file */
@@ -461,7 +461,7 @@ void CSettings::WriteIniFile()
 		pDRMRec->GetParameters()->ReceptLog.GetLoggingEnabled());
 
 	/* Start log file delayed */
-	SetNumericIniSet(ini, "Logfile", "logdelay",
+	SetNumericIniSet(ini, "Logfile", "delay",
 		pDRMRec->GetParameters()->ReceptLog.GetDelLogStart());
 
 	/* Frequency for log file */
