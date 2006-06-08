@@ -733,6 +733,33 @@ public:
 		CMutex			Mutex;
 	} ReceptLog;
 
+	/* Class for store informations about last service selected ------------- */
+
+	class CLastService
+	{
+	public:
+		CLastService() {Reset();}
+
+		void Reset()
+		{
+			iService = 0;
+			iServiceID = SERV_ID_NOT_USED;
+		};
+
+		void Save(const int iCurSel, const int iCurServiceID)
+		{
+			if (iCurServiceID != SERV_ID_NOT_USED)
+			{
+				iService = iCurSel;
+				iServiceID = iCurServiceID;
+			}
+		};
+
+		/* store only fac parameters */
+		int	iService;
+		int	iServiceID;
+	};
+
 	/* Class for keeping track of status flags for RSCI rsta tag */
 	class CReceiveStatus
 	{
@@ -832,6 +859,11 @@ protected:
 	ERobMode			eRobustnessMode; /* E.g.: Mode A, B, C or D */
 	ESpecOcc			eSpectOccup;
 	
+
+	/* For resync to last service------------------------------------------- */
+	CLastService	LastAudioService;
+	CLastService	LastDataService;
+
 	CMutex Mutex;
 public:
 	void				Lock() { Mutex.Lock(); }

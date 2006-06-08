@@ -623,11 +623,11 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 // have a problem. We should check as soon as we have information about services
 // if service 0 is really the audio service
 
-Param.ResetCurSelAudDatServ();
-
 
 	/* Set the following parameters to zero states (initial states) --------- */
 	Param.ResetServicesStreams();
+
+	Param.ResetCurSelAudDatServ();
 
 	/* Protection levels */
 	Param.MSCPrLe.iPartA = 0;

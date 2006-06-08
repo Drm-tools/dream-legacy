@@ -40,6 +40,16 @@ void CParameter::ResetServicesStreams()
 {
 	int i;
 
+	/* Store informations about last services selected
+		 this for select current service automatically after a resync */
+
+	if (iCurSelAudioService > 0)
+		LastAudioService.Save(iCurSelAudioService, Service[iCurSelAudioService].iServiceID);
+
+	if (iCurSelDataService > 0)
+		LastDataService.Save(iCurSelDataService, Service[iCurSelDataService].iServiceID);
+
+
 	/* Reset everything to possible start values */
 	for (i = 0; i < MAX_NUM_SERVICES; i++)
 	{
@@ -494,6 +504,8 @@ void CParameter::SetCurSelAudioService(const int iNewService)
 	{
 		iCurSelAudioService = iNewService;
 
+		LastAudioService.Reset();
+
 		/* Set init flags */
 		DRMReceiver.InitsForAudParam();
 	}
@@ -510,6 +522,8 @@ void CParameter::SetCurSelDataService(const int iNewService)
 		(Service[iNewService].DataParam.iStreamID != STREAM_ID_NOT_USED))
 	{
 		iCurSelDataService = iNewService;
+		
+		LastDataService.Reset();
 
 		/* Set init flags */
 		DRMReceiver.InitsForDataParam();
@@ -572,6 +586,35 @@ void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
 
 		/* Set init flags */
 		DRMReceiver.InitsForMSC();
+
+
+		/* If the receiver has lost the sync automatically restore 
+			last current service selected */
+
+		if ((iServID > 0) && (iNewServID > 0))
+		{
+			if (LastAudioService.iServiceID == iNewServID)
+			{
+				/* Restore last audio service selected */
+				iCurSelAudioService = LastAudioService.iService;
+
+				LastAudioService.Reset();
+
+				/* Set init flags */
+				DRMReceiver.InitsForAudParam();
+			}
+
+			if (LastDataService.iServiceID == iNewServID)
+			{
+				/* Restore last data service selected */
+				iCurSelDataService = LastDataService.iService;
+
+				LastDataService.Reset();
+
+				/* Set init flags */
+				DRMReceiver.InitsForDataParam();
+			}
+		}
 	}
 }
 
