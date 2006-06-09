@@ -1034,8 +1034,7 @@ _REAL CChannelEstimation::GetMinDelay()
 	Lock();
 
 	/* Return minimum delay in history */
-	//_REAL rMinDelay = vecrDelayHist[0];
-	_REAL rMinDelay = 0.0;
+	_REAL rMinDelay = 1000.0;
 	for (int i = 0; i < iLenDelayHist; i++)
 	{
 		if (rMinDelay > vecrDelayHist[i])
@@ -1066,6 +1065,9 @@ void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 
 		/* Lock resources */
 		Lock();
+
+		/* TODO - decide if this allows the if(i==0) test to be removed */
+		rOldPhase = Angle(veccChanEst[0]);
 
 		/* Init constants for normalization */
 		const _REAL rTu = (CReal) iFFTSizeN / SOUNDCRD_SAMPLE_RATE;

@@ -100,11 +100,15 @@ void CSettings::ReadIniFile()
 	/* Sound In device */
 	if (GetNumericIniSet(ini, "Receiver", "snddevin", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
 		pDRMRec->GetSoundInInterface()->SetDev(iValue);
+	else
+		pDRMRec->GetSoundInInterface()->SetDev(0);
 
 
 	/* Sound Out device */
 	if (GetNumericIniSet(ini, "Receiver", "snddevout", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
 		pDRMRec->GetSoundOutInterface()->SetDev(iValue);
+	else
+		pDRMRec->GetSoundOutInterface()->SetDev(0);
 
 	/* Number of iterations for MLC setting */
 	if (GetNumericIniSet(ini, "Receiver", "mlciter", 0, MAX_NUM_MLC_IT, iValue) == TRUE)
