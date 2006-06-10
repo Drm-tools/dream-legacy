@@ -6,6 +6,11 @@
  *	Volker Fischer
  *
  * Description:
+ *
+ * SetLight():
+ *	0: Green
+ *	1: Yellow
+ *	2: Red
  *	
  *
  ******************************************************************************
@@ -35,7 +40,7 @@
 
 
 /* Definitions ****************************************************************/
-#define DEFAULT_UPDATE_TIME				500
+#define DEFAULT_UPDATE_TIME				600
 
 /* The red and yellow light should be on at least this interval */
 #define MIN_TIME_FOR_RED_LIGHT			100
@@ -52,6 +57,7 @@ public:
 
 	void SetUpdateTime(int iNUTi);
 	void SetLight(int iNewStatus);
+	void Reset();
 
 
 protected:

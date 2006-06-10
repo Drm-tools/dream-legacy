@@ -34,6 +34,15 @@
 #include <qpushbutton.h>
 #include <qcheckbox.h>
 #include <qwt_thermo.h>
+#include <qdatetime.h>
+#include <qlineedit.h>
+#include <qtooltip.h>
+#include <qfiledialog.h>
+#include <qwhatsthis.h>
+#include <qlistview.h>
+#include <qbuttongroup.h>
+#include <qpopupmenu.h>
+#include <qpixmap.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/systemevalDlgbase.h"
@@ -43,11 +52,13 @@
 #include "DRMPlot.h"
 #include "MultColorLED.h"
 #include "../GlobalDefinitions.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 #include "../DrmReceiver.h"
 
 
-extern CDRMReceiver	DRMReceiver;
+/* Definitions ****************************************************************/
+/* Define this macro if you prefer the QT-type of displaying date and time */
+#define GUI_QT_DATE_TIME_TYPE
 
 
 /* Classes ********************************************************************/
@@ -56,36 +67,74 @@ class systemevalDlg : public systemevalDlgBase
 	Q_OBJECT
 
 public:
-	enum ECharType {IMPULSERESPONSE, AVERAGED_IR, TRANSFERFUNCTION, 
-					FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION, 
-					POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV};
+	systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
-	systemevalDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-		WFlags f = 0);
+	virtual ~systemevalDlg();
 
 	void SetStatus(int MessID, int iMessPara);
+	void UpdatePlotsStyle();
 
 protected:
-	QTimer		Timer;
-	ECharType	CharType;
-	void		OnlyThisButDown(QPushButton* pButton);
+	class CCharSelItem : public QListViewItem
+	{
+	public:
+		CCharSelItem(QListView* parent, QString str1,
+			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
+			QListViewItem(parent, str1), eCharTy(eNewCharTy)
+			{setSelectable(bSelble);}
+		CCharSelItem(QListViewItem* parent, QString str1,
+			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
+			QListViewItem(parent, str1), eCharTy(eNewCharTy)
+			{setSelectable(bSelble);}
+
+		CDRMPlot::ECharType GetCharType() {return eCharTy;}
+
+	protected:
+		CDRMPlot::ECharType eCharTy;
+	};
+
+	CDRMReceiver*		pDRMRec;
+
+	QTimer				Timer;
+	QTimer				TimerLogFileLong;
+	QTimer				TimerLogFileShort;
+	QTimer				TimerLogFileStart;
+	int					iCurFrequency;
+    virtual void		showEvent(QShowEvent* pEvent);
+	virtual void		hideEvent(QHideEvent* pEvent);
+	void				UpdateControls();
+	void				AddWhatsThisHelp();
+	CDRMPlot*			OpenChartWin(const CDRMPlot::ECharType eNewType);
+
+	QString				GetRobModeStr();
+	QString				GetSpecOccStr();
+
+	QPopupMenu*			pListViewContextMenu;
+	CVector<CDRMPlot*>	vecpDRMPlots;
 
 public slots:
 	void OnTimer();
+	void OnTimerLogFileLong();
+	void OnTimerLogFileShort();
+	void OnTimerLogFileStart();
 	void OnRadioTimeLinear();
 	void OnRadioTimeWiener();
 	void OnRadioFrequencyLinear();
 	void OnRadioFrequencyDft();
 	void OnRadioFrequencyWiener();
+	void OnRadioTiSyncFirstPeak();
+	void OnRadioTiSyncEnergy();
 	void OnSliderIterChange(int value);
-	void OnButtonAvIR();
-	void OnButtonTransFct();
-	void OnButtonFACConst();
-	void OnButtonSDCConst();
-	void OnButtonMSCConst();
-	void OnButtonPSD();
-	void OnButtonInpSpec();
 	void OnCheckFlipSpectrum();
 	void OnCheckBoxMuteAudio();
+	void OnCheckBoxReverb();
+	void OnCheckWriteLog();
+	void OnCheckSaveAudioWAV();
+	void OnCheckRecFilter();
+	void OnCheckModiMetric();
+	void OnListSelChanged(QListViewItem* NewSelIt);
+	void OnListViContMenu();
+	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt,
+		int iCol);
 };
-

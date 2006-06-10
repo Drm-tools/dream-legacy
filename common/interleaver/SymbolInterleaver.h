@@ -31,7 +31,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
-#include "../Modul.h"
+#include "../util/Modul.h"
 #include "BlockInterleaver.h"
 
 
@@ -53,10 +53,10 @@ public:
 
 protected:
 	int					iN_MUX;
-	CVector<_COMPLEX>	veccInterlMemory[D_LENGTH_LONG_INTERL];
-	int					iCurIndex[D_LENGTH_LONG_INTERL];
-	int					iD;
+	CMatrix<_COMPLEX>	matcInterlMemory;
+	CVector<int>		veciCurIndex;
 	CVector<int>		veciIntTable;
+	int					iD;
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);
@@ -71,10 +71,11 @@ public:
 
 protected:
 	int					iN_MUX;
-	CVector<CEquSig>	veccDeinterlMemory[D_LENGTH_LONG_INTERL];
-	int					iCurIndex[D_LENGTH_LONG_INTERL];
-	int					iD;
+	CMatrix<CEquSig>	matcDeinterlMemory;
+	CVector<int>		veciCurIndex;
 	CVector<int>		veciIntTable;
+	int					iD;
+	int					iInitCnt;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

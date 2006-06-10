@@ -30,14 +30,20 @@
 #define SYNCUSINGPIL_H__3B0BA660_CA63_434OBUVEE7A0D31912__INCLUDED_
 
 #include "../Parameter.h"
-#include "../Modul.h"
+#include "../util/Modul.h"
+#include "../util/Vector.h"
 #include "../chanest/ChanEstTime.h"
 
 
 /* Definitions ****************************************************************/
-#define HI_VALUE_FOR_MIN_SEARCH			3.4E38 /* Max value for float types */
-#define CONTR_FREQ_OFF_INTEGRATION		((_REAL) 0.1)
-#define CONTR_SAMP_OFF_INTEGRATION		((_REAL) 0.7)
+/* Time constant for IIR averaging of frequency offset estimation */
+#define TICONST_FREQ_OFF_EST			((CReal) 1.0) /* sec */
+
+#ifdef USE_SAMOFFS_TRACK_FRE_PIL
+/* Time constant for IIR averaging of sample rate offset estimation */
+# define TICONST_SAMRATE_OFF_EST		((CReal) 20.0) /* sec */
+# define CONTR_SAMP_OFF_INTEGRATION		((_REAL) 3.0)
+#endif
 
 
 /* Classes ********************************************************************/
@@ -45,8 +51,13 @@ class CSyncUsingPil : public CReceiverModul<_COMPLEX, _COMPLEX>,
 					  public CPilotModiClass
 {
 public:
-	CSyncUsingPil() : bSyncInput(FALSE), bAquisition(FALSE), bTrackPil(FALSE)
-		{}
+	CSyncUsingPil() :
+#ifdef USE_SAMOFFS_TRACK_FRE_PIL
+		cFreqPilotPhDiff(NUM_FREQ_PILOTS),
+#endif
+		bSyncInput(FALSE), bAquisition(FALSE), bTrackPil(FALSE),
+		iSymbCntFraSy(0), iNumSymPerFrame(0),
+		iPosFreqPil(NUM_FREQ_PILOTS), cOldFreqPil(NUM_FREQ_PILOTS) {}
 	virtual ~CSyncUsingPil() {}
 
 	/* To set the module up for synchronized DRM input data stream */
@@ -59,39 +70,58 @@ public:
 	void StopTrackPil() {bTrackPil = FALSE;}
 
 protected:
-	class CPilotDiff
+	class CPilotCorr
 	{
 	public:
-		_COMPLEX			cDiff;
-		int					iNoCarrier;
+		int			iIdx1, iIdx2;
+		CComplex	cPil1, cPil2;
 	};
 
-	int						iDFTSize;
-	int						iShiftedKmin;
-
-
-	/* Variables for frame synchronization */
-	CVector<CPilotDiff>		vecDiffFact;
-	int						iNoDiffFact;
-	CShiftRegister<_REAL>	vecrCorrHistory;
-
 	/* Variables for frequency pilot estimation */
-	int						iPosFreqPil[NO_FREQ_PILOTS];
-	_COMPLEX				cOldFreqPil[NO_FREQ_PILOTS];
-	_REAL					rFreqPilotPhDiff[NO_FREQ_PILOTS];
-	_REAL					rNormConstFOE;
-	_REAL					rSampleFreqEst;
+	CVector<int>			iPosFreqPil;
+	CVector<CComplex>		cOldFreqPil;
 
-	int						iSymbolCounterTiSy;
+	CReal					rNormConstFOE;
+	CReal					rSampleFreqEst;
 
-	int						iNoSymPerFrame;
+	int						iSymbCntFraSy;
+	int						iInitCntFraSy;
+
+	int						iNumSymPerFrame;
+	int						iNumCarrier;
 
 	_BOOLEAN				bBadFrameSync;
+	_BOOLEAN				bInitFrameSync;
+	_BOOLEAN				bFrameSyncWasOK;
 
 	_BOOLEAN				bSyncInput;
 
 	_BOOLEAN				bAquisition;
 	_BOOLEAN				bTrackPil;
+
+	int						iMiddleOfInterval;
+
+	CReal					rLamFreqOff;
+	CComplex				cFreqOffVec;
+
+
+	/* Variables for frame synchronization */
+	CShiftRegister<CReal>	vecrCorrHistory;
+
+	/* DRM frame synchronization based on time pilots */
+	CVector<CPilotCorr>		vecPilCorr;
+	int						iNumPilPairs;
+	CComplex				cR_HH;
+
+	ERobMode				eCurRobMode;
+
+	CReal					rAvFreqPilDistToDC;
+	CReal					rPrevSamRateOffset;
+
+#ifdef USE_SAMOFFS_TRACK_FRE_PIL
+	CReal					rLamSamRaOff;
+	CVector<CComplex>		cFreqPilotPhDiff;
+#endif
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

@@ -31,29 +31,41 @@
 
 #include "../GlobalDefinitions.h"
 #include "../tables/TableMLC.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 #include "../Parameter.h"
+#include "ChannelCode.h"
 
 
 /* Classes ********************************************************************/
-class CConvEncoder
+class CConvEncoder : public CChannelCode
 {
 public:
 	CConvEncoder() {}
 	virtual ~CConvEncoder() {}
 
-	int		Encode(CVector<_BINARY>& vecInputData, 
-				   CVector<_BINARY>& vecOutputData,
-				   int iNoInBitsPartA, int iNoInBitsPartB, 
-				   int iPunctPatPartA, int iPunctPatPartB, int iLevel);
-	_BINARY Convolution(_BYTE byNewStateShiftReg, int iGenPolyn) const;
-	void	Init(CParameter::ECodScheme eNewCodingScheme, int iN1, int iN2, 
-				 CParameter::EChanType eNewChannelType);
+	int		Encode(CVector<_DECISION>& vecInputData, 
+				   CVector<_DECISION>& vecOutputData);
+
+	void	Init(CParameter::ECodScheme eNewCodingScheme,
+				 CParameter::EChanType eNewChannelType,
+				 int iN1, int iN2, int iNewNumInBitsPartA,
+				 int iNewNumInBitsPartB, int iPunctPatPartA, int iPunctPatPartB,
+				 int iLevel);
 
 protected:
-	int						iTailbitParamL0;
-	int						iTailbitParamL1;
+	int						iNumInBits;
+	int						iNumInBitsWithMemory;
+
+	CVector<int>			veciTablePuncPat;
+
 	CParameter::EChanType	eChannelType;
+
+#ifdef USE_MAX_LOG_MAP
+	CShiftRegister<_DECISION>	vecStateMem;
+	_DECISION SoftConvolution(const _BYTE byNewStateShiftReg,
+							  CShiftRegister<_DECISION>& vecStateMem,
+							  const int iGenPolyn);
+#endif
 };
 
 

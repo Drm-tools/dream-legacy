@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrea Russo
  *
  * Description:
  *	
@@ -36,52 +36,75 @@
 #include <qevent.h>
 #include <qcstring.h>
 #include <qlayout.h>
+#include <qwhatsthis.h>
+#include <qpalette.h>
+#include <qcolordialog.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/fdrmdialogbase.h"
-# include "../../Windows/moc/AboutDlgbase.h"
 #else
 # include "moc/fdrmdialogbase.h"
-# include "moc/AboutDlgbase.h"
 #endif
+#include "DialogUtil.h"
 #include "systemevalDlg.h"
+#include "MultimediaDlg.h"
+#include "StationsDlg.h"
+#include "LiveScheduleDlg.h"
+#include "EPGDlg.h"
+#include "AnalogDemDlg.h"
+#include "MultSettingsDlg.h"
+#include "MultColorLED.h"
 #include "../DrmReceiver.h"
+#include "../util/Vector.h"
 
 
-extern CDRMReceiver	DRMReceiver;
-
+/* Define for application types */
+#define AT_MOTSLISHOW 2
+#define AT_MOTBROADCASTWEBSITE 3
+#define AT_JOURNALINE 0x44A
+#define AT_MOTEPG 	7
 
 /* Classes ********************************************************************/
-class DRMEvent : public QCustomEvent
-{
-public:
-	DRMEvent(int iNewMeTy, int iNewSt) : 
-		QCustomEvent(QEvent::User + 11), iMessType(iNewMeTy), iStatus(iNewSt) {}
-
-	int iMessType;
-	int iStatus;
-};
-
-
 class FDRMDialog : public FDRMDialogBase
 {
 	Q_OBJECT
 
 public:
-	FDRMDialog(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-		WFlags f = 0);
+	FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE,	WFlags f = 0);
+
+	virtual ~FDRMDialog();
 
 protected:
-	systemevalDlg*	pSysEvalDlg;
-    QMenuBar*		pMenu;
-	int				iCurSelServiceGUI;
-	int				iOldNoServicesGUI;
-	QTimer			Timer;
-	CAboutDlgBase	AboutDlg;
+	CDRMReceiver*		pDRMRec;
 
-	QString			SetServParamStr(int iServiceID);
-	QString			SetBitrIDStr(int iServiceID);
+	systemevalDlg*		pSysEvalDlg;
+	MultimediaDlg*		pMultiMediaDlg;
+	StationsDlg*		pStationsDlg;
+	LiveScheduleDlg*	pLiveScheduleDlg;
+	EPGDlg*				pEPGDlg;
+	AnalogDemDlg*		pAnalogDemDlg;
+	QMenuBar*			pMenu;
+	QPopupMenu*			pReceiverModeMenu;
+	QPopupMenu*			pSettingsMenu;
+	QPopupMenu*			pPlotStyleMenu;
+	int					iCurSelServiceGUI;
+	int					iOldNoServicesGUI;
+	QTimer				Timer;
+
+	_BOOLEAN		bSysEvalDlgWasVis;
+	_BOOLEAN		bMultMedDlgWasVis;
+	_BOOLEAN		bLiveSchedDlgWasVis;
+
 	virtual void	customEvent(QCustomEvent* Event);
+	void			SetService(int iNewServiceID);
+	void			AddWhatsThisHelp();
+	void			SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo);
+
+	QString			GetCodecString(const int iServiceID);
+	QString			GetTypeString(const int iServiceID);
+
+	void			SetDisplayColor(const QColor newColor);
 
 public slots:
 	void OnTimer();
@@ -90,6 +113,13 @@ public slots:
 	void OnButtonService3();
 	void OnButtonService4();
 	void OnViewEvalDlg();
-	void OnHelpAbout();
+	void OnViewMultiMediaDlg();
+	void OnViewStationsDlg();
+	void OnViewLiveScheduleDlg();
+	void OnViewEPGDlg();
+	void OnViewMultSettingsDlg();
+	void OnSwitchToDRM() {SetReceiverMode(CDRMReceiver::RM_DRM);}
+	void OnSwitchToAM() {SetReceiverMode(CDRMReceiver::RM_AM);}
+	void OnMenuSetDisplayColor();
+	void OnMenuPlotStyle(int value);
 };
-

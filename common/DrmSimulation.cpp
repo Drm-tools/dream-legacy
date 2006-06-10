@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -33,9 +33,9 @@
 void CDRMSimulation::Run()
 {
 /*
- The hand over of data is done via an intermediate-buffer. The calling 
- convention is always "input-buffer, output-buffer". Additional, the 
- DRM-parameters are fed to the function 
+ The hand over of data is done via an intermediate-buffer. The calling
+ convention is always "input-buffer, output-buffer". Additional, the
+ DRM-parameters are fed to the function
 */
 
 	/* Initialization of the modules */
@@ -71,7 +71,7 @@ void CDRMSimulation::Run()
 
 
 		/* Mapping of the MSC, FAC, SDC and pilots on the carriers */
-		OFDMCellMapping.ProcessMultipleData(Param, IntlBuf, FACMapBuf, 
+		OFDMCellMapping.ProcessData(Param, IntlBuf, FACMapBuf,
 			SDCMapBuf, CarMapBuf);
 
 		/* OFDM-modulation */
@@ -79,56 +79,45 @@ void CDRMSimulation::Run()
 
 
 
-if (eSimType == ST_CHANEST)
-{
 		/**********************************************************************\
-		* Channel															   *
+		* Channel    														   *
 		\**********************************************************************/
-		/* DRM channel simulation */
-		DRMChannel.TransferData(Param, OFDMModBuf, RecDataBuf, ChanInRefBuf, 
-			ChanRefBuf);
-
-
-
-		/**********************************************************************\
-		* Receiver															   *
-		\**********************************************************************/
-		/* Special OFDM demodulation for channel estimation tests (with guard-
-		   interval removal) */
-		OFDMDemodSimulation.ProcessMultipleData(Param, 
-			RecDataBuf, ChanInRefBuf, ChanRefBuf, 
-			OFDMDemodBuf, OFDMDemodBuf2, DemChanInRefBuf, DemChanRefBuf);
-	
-		/* Channel estimation and equalisation */
-		ChannelEstimation.ProcessData(Param, OFDMDemodBuf, ChanEstBuf);
-
-		/* This module converts the "CEquSig" data type of "ChanEstBuf" to the
-		   "_COMPLEX" data type, because a module can only have ONE type of 
-		   input buffers (even in ProcessMultipleData() case) */
-		DataConv.ProcessData(Param, ChanEstBuf, ChanEstBufForSim);
-
-		/* Evaluate channel estimation result */
-		EvalChanEst.WriteData(Param, ChanEstBufForSim, OFDMDemodBuf2, 
-			DemChanInRefBuf, DemChanRefBuf);
-}
-else
-{
-		/**********************************************************************\
-		* Channel															   *
-		\**********************************************************************/
-		/* DRM channel simulation */
 		DRMChannel.TransferData(Param, OFDMModBuf, RecDataBuf);
 
 
 
 		/**********************************************************************\
-		* Receiver															   *
+		* Receiver    														   *
 		\**********************************************************************/
-		/* Robustness mode detection */
-		RobModDet.ProcessData(Param, RecDataBuf, RobModBuf);
+switch (Param.eSimType)
+{
+case CParameter::ST_MSECHANEST:
+case CParameter::ST_BER_IDEALCHAN:
+case CParameter::ST_SINR:
+		/* MSE of channel estimation, ideal channel estimation -------------- */
+		/* Special OFDM demodulation for channel estimation tests (with guard-
+		   interval removal) */
+		OFDMDemodSimulation.ProcessDataOut(Param, RecDataBuf,
+			ChanEstInBufSim, OFDMDemodBufChan2);
+
+		/* Channel estimation and equalization */
+		ChannelEstimation.ProcessData(Param, ChanEstInBufSim, ChanEstBuf);
+
+		/* Ideal channel estimation (with MSE calculation) */
+		IdealChanEst.ProcessDataIn(Param, ChanEstBuf, OFDMDemodBufChan2,
+			ChanEstBuf);
+	break;
+
+
+default: /* Other types like ST_BITERROR or ST_SYNC_PARAM */
+		/* Bit error rate (we can use all synchronization units here!) ------ */
+		/* This module converts the "CChanSimDataMod" data type of "DRMChannel"
+		   to the "_REAL" data type, because a regular module can only have ONE
+		   type of input buffers */
+		DataConvChanResam.ProcessData(Param, RecDataBuf, ChanResInBuf);
 
 		/* Resample input DRM-stream */
-		InputResample.ProcessData(Param, RobModBuf, InpResBuf);
+		InputResample.ProcessData(Param, ChanResInBuf, InpResBuf);
 
 		/* Frequency synchronization acquisition */
 		FreqSyncAcq.ProcessData(Param, InpResBuf, FreqSyncAcqBuf);
@@ -139,28 +128,30 @@ else
 		/* OFDM-demodulation */
 		OFDMDemodulation.ProcessData(Param, TimeSyncBuf, OFDMDemodBuf);
 
-		/* Synchronisation in the frequency domain (using pilots) */
+		/* Synchronization in the frequency domain (using pilots) */
 		SyncUsingPil.ProcessData(Param, OFDMDemodBuf, SyncUsingPilBuf);
 
-		/* Channel estimation and equalisation */
+		/* Channel estimation and equalization */
 		ChannelEstimation.ProcessData(Param, SyncUsingPilBuf, ChanEstBuf);
+	break;
+}
 
 		/* Demapping of the MSC, FAC, SDC and pilots from the carriers */
-		OFDMCellDemapping.ProcessMultipleData(Param, ChanEstBuf, 
+		OFDMCellDemapping.ProcessData(Param, ChanEstBuf,
 			MSCCarDemapBuf, FACCarDemapBuf, SDCCarDemapBuf);
 
-		/* FAC -------------------------------------------------------------- */
+		/* FAC */
 		FACMLCDecoder.ProcessData(Param, FACCarDemapBuf, FACDecBuf);
 		UtilizeFACData.WriteData(Param, FACDecBuf);
 
 
-		/* SDC -------------------------------------------------------------- */
+		/* SDC */
 		SDCMLCDecoder.ProcessData(Param, SDCCarDemapBuf, SDCDecBuf);
 		UtilizeSDCData.WriteData(Param, SDCDecBuf);
 
 
-		/* MSC -------------------------------------------------------------- */
-		/* Convolutional deinterleaver */
+		/* MSC */
+		/* Symbol de-interleaver */
 		SymbDeinterleaver.ProcessData(Param, MSCCarDemapBuf, DeintlBuf);
 
 		/* MLC-decoder */
@@ -168,16 +159,15 @@ else
 
 		/* Evaluate simulation data */
 		EvaSimData.WriteData(Param, MSCMLCDecBuf);
-}
 	}
 }
 
 void CDRMSimulation::Init()
 {
-	/* Defines no of cells, important! */
+	/* Defines number of cells, important! */
 	OFDMCellMapping.Init(Param, CarMapBuf);
 
-	/* Defines No of SDC bits per super-frame */
+	/* Defines number of SDC bits per super-frame */
 	SDCMLCEncoder.Init(Param, SDCMapBuf);
 	
 	MSCMLCEncoder.Init(Param, MLCEncBuf);
@@ -191,13 +181,17 @@ void CDRMSimulation::Init()
 
 	/* Receiver modules */
 	/* The order of modules are important! */
-	RobModDet.Init(Param, RobModBuf);
 	InputResample.Init(Param, InpResBuf);
 	FreqSyncAcq.Init(Param, FreqSyncAcqBuf);
 	TimeSync.Init(Param, TimeSyncBuf);
 	SyncUsingPil.Init(Param, SyncUsingPilBuf);
+
+	/* Channel estimation init must be called before OFDMDemodSimulation
+	   module, because the delay is set here which the other modules use! */
 	ChannelEstimation.Init(Param, ChanEstBuf);
-	OFDMCellDemapping.Init(Param, MSCCarDemapBuf, FACCarDemapBuf, SDCCarDemapBuf);
+	
+	OFDMCellDemapping.Init(Param, MSCCarDemapBuf, FACCarDemapBuf, 
+		SDCCarDemapBuf);
 	FACMLCDecoder.Init(Param, FACDecBuf);
 	UtilizeFACData.Init(Param);
 	SDCMLCDecoder.Init(Param, SDCDecBuf);
@@ -209,46 +203,112 @@ void CDRMSimulation::Init()
 	/* Special module for simulation */
 	EvaSimData.Init(Param);
 
-	/* Init channel */
+	/* Init channel. The channel must be initialized before the modules
+	   "OFDMDemodSimulation" and "IdealChanEst" because they need iNumTaps and
+	   tap delays in global struct */
 	DRMChannel.Init(Param, RecDataBuf);
 
 	/* Mode dependent initializations */
-	if (eSimType == ST_CHANEST)
+	switch (Param.eSimType)
 	{
-		OFDMDemodSimulation.Init(Param, OFDMDemodBuf, OFDMDemodBuf2, 
-			DemChanInRefBuf, DemChanRefBuf);
-		EvalChanEst.Init(Param);
+	case CParameter::ST_MSECHANEST:
+	case CParameter::ST_BER_IDEALCHAN:
+	case CParameter::ST_SINR:
+		/* Init OFDM demod before IdealChanEst, because the timing offset of
+		   useful part extraction is set here */
+		OFDMDemodSimulation.Init(Param, ChanEstInBufSim, OFDMDemodBufChan2);
 
-		DataConv.Init(Param, ChanEstBufForSim);
+		/* Problem: "ChanEstBuf" is used for input and output buffer. That only
+		   works with single buffers. This solution works for this case but is
+		   not a very nice solution FIXME */
+		IdealChanEst.Init(Param, ChanEstBuf);
+		break;
 
-		/* Init channel */
-		DRMChannel.Init(Param, RecDataBuf, ChanInRefBuf, ChanRefBuf);
-	}
-	else
-	{
+	default: /* Other types like ST_BITERROR or ST_SYNC_PARAM */
+		DataConvChanResam.Init(Param, ChanResInBuf);
+
 		OFDMDemodulation.Init(Param, OFDMDemodBuf);
-
-		/* Init channel */
-		DRMChannel.Init(Param, RecDataBuf);
+		break;
 	}
+
+
+	/* Clear all buffers ---------------------------------------------------- */
+	/* The buffers must be cleared in case there is some data left in the
+	   buffers from the last simulation (with, e.g., different SNR) */
+	DataBuf.Clear();
+	MLCEncBuf.Clear();
+	IntlBuf.Clear();
+	GenFACDataBuf.Clear();
+	FACMapBuf.Clear();
+	GenSDCDataBuf.Clear();
+	SDCMapBuf.Clear();
+	CarMapBuf.Clear();
+	OFDMModBuf.Clear();
+	OFDMDemodBufChan2.Clear();
+	ChanEstInBufSim.Clear();
+	ChanEstOutBufChan.Clear();
+	RecDataBuf.Clear();
+	ChanResInBuf.Clear();
+	InpResBuf.Clear();
+	FreqSyncAcqBuf.Clear();
+	TimeSyncBuf.Clear();
+	OFDMDemodBuf.Clear();
+	SyncUsingPilBuf.Clear();
+	ChanEstBuf.Clear();
+	MSCCarDemapBuf.Clear();
+	FACCarDemapBuf.Clear();
+	SDCCarDemapBuf.Clear();
+	DeintlBuf.Clear();
+	FACDecBuf.Clear();
+	SDCDecBuf.Clear();
+	MSCMLCDecBuf.Clear();
+
+
+	/* We only want to simulate tracking performance ------------------------ */
+	TimeSync.StopTimingAcqu();
+	TimeSync.StopRMDetAcqu(); /* Robustness mode detection */
+	ChannelEstimation.GetTimeSyncTrack()->StartTracking();
+
+	/* We stop tracking of time wiener interpolation since during acquisition,
+	   no automatic update of the statistic estimates is done. We need that
+	   because we set the correct parameters once in the init routine */
+	ChannelEstimation.GetTimeWiener()->StopTracking();
+
+	/* Disable FAC evaluation to make sure that no mistakenly correct CRC
+	   sets false parameters which can cause run-time errors */
+	UtilizeFACData.SetSyncInput(TRUE);
+
+	/* We have to first start aquisition and then stop it right after it to set
+	   internal parameters */
+	SyncUsingPil.StartAcquisition();
+	SyncUsingPil.StopAcquisition();
+
+	SyncUsingPil.StartTrackPil();
 }
 
-CDRMSimulation::CDRMSimulation()
+CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
+	rStartSNR((_REAL) 0.0), rEndSNR((_REAL) 0.0), rStepSNR((_REAL) 0.0)
+	, UtilizeFACData(&MDI), UtilizeSDCData(&MDI), ChannelEstimation(&MDI), FreqSyncAcq(&MDI)
 {
 	/* Set all parameters to meaningful value for startup state. If we want to
 	   make a simulation we just have to specify the important values */
 	/* Init streams */
 	Param.ResetServicesStreams();
 
-	/* These parameters are not yet used by this application */
-	Param.iAFSIndex = 1;
-	Param.iReConfigIndex = 0;
-	Param.eAFSFlag = CParameter::AS_VALID;
-	Param.eBaseEnhFlag = CParameter::BE_BASE_LAYER;
 
-	/* Use 6.3.6 to set this two parameters! */
-	Param.FACRepitition[0] = 0;
-	Param.FACNoRep = 1;
+	/* Service paramters (only use service 0) ------------------------------- */
+	/* Data service */
+	Param.iNumAudioService = 0;
+	Param.iNumDataService = 1;
+
+	Param.Service[0].eAudDataFlag = CParameter::SF_DATA;
+	Param.Service[0].DataParam.iStreamID = 0;
+	Param.Service[0].DataParam.ePacketModInd = CParameter::PM_SYNCHRON_STR_MODE;
+	Param.Service[0].iServiceID = 1; /* Service ID must be set for activation */
+
+	/* Stream */
+	Param.Stream[0].iLenPartA = 0; // EEP, if "= 0"
+
 
 	/* Date, time */
 	Param.iDay = 0;
@@ -263,31 +323,21 @@ CDRMSimulation::CDRMSimulation()
 
 	/* Initialize synchronization parameters */
 	Param.rResampleOffset = (_REAL) 0.0;
-	Param.rFreqOffsetAcqui = (_REAL) 0.0;
+	Param.rFreqOffsetAcqui = (_REAL) VIRTUAL_INTERMED_FREQ / SOUNDCRD_SAMPLE_RATE;
 	Param.rFreqOffsetTrack = (_REAL) 0.0;
-	Param.rTimingOffsTrack = (_REAL) 0.0;
+	Param.iTimingOffsTrack = 0;
 
 	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
-	Param.iNoAudioService = 1;
-	Param.iNoDataService = 0;
-	Param.Service[0].AudioParam.iStreamID = 0;
 
 	Param.MSCPrLe.iPartA = 1;
 	Param.MSCPrLe.iPartB = 1;
 	Param.MSCPrLe.iHierarch = 0;
 
-	Param.Stream[0].iLenPartA = 0; // EEP, if "= 0"
 	Param.eSymbolInterlMode = CParameter::SI_SHORT;
 	Param.eMSCCodingScheme = CParameter::CS_3_SM;
 	Param.eSDCCodingScheme = CParameter::CS_2_SM;
 
 	/* DRM channel parameters */
-	Param.iDRMChannelNo = 1;
-	Param.rSimSNRdB = 25;
-
-	/* Simulation type */
-	eSimType = ST_CHANEST;
-
-	/* Length of simulation */
-	GenSimData.SetSimTime(300);
+	Param.iDRMChannelNum = 1;
+	Param.SetNominalSNRdB(25);
 }

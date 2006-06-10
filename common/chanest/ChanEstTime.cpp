@@ -33,7 +33,8 @@
 void CPilotModiClass::InitRot(CParameter& Parameter) 
 {
 	/* Inits for timing correction. We need FFT size and start carrier */
-	iFFTSizeN = Parameter.iFFTSizeN;
+	/* Pre calculate the argument of the exp function */
+	rArgMult = (_REAL) -2.0 * crPi / Parameter.iFFTSizeN;
 	
 	/* Index of minimum useful carrier */
 	iKminAbs = Parameter.iShiftedKmin;
@@ -42,10 +43,16 @@ void CPilotModiClass::InitRot(CParameter& Parameter)
 _COMPLEX CPilotModiClass::Rotate(const _COMPLEX cI, const int iCN, 
 								 const int iTiDi) const
 {
-	/* First calculate the argument */
-	_REAL rArg = (_REAL) 2.0 * crPi * iTiDi * (_REAL) (iKminAbs + iCN) / 
-		iFFTSizeN;
+	/* If "iTiDi" equals "0", rArg is also "0", we need no cos or sin
+	   function */
+	if (iTiDi != 0)
+	{
+		/* First calculate the argument */
+		const _REAL rArg = rArgMult * iTiDi * (iKminAbs + iCN);
 
-	/* * exp(2 * pi * TimeDiff / norm) */
-	return _COMPLEX(cos(rArg), sin(rArg)) * cI;
+		/* * exp(2 * pi * TimeDiff / norm) */
+		return _COMPLEX(cos(rArg), sin(rArg)) * cI;
+	}
+	else
+		return cI;
 }

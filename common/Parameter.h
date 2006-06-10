@@ -1,14 +1,21 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2005
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrew Murphy, Andrea Russo
  *
  * Description:
  *	See Parameter.cpp
  *
- ******************************************************************************
+ * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
+ *	- Additions to include AMSS demodulation (Added class
+ *    CAltFreqOtherServicesSign)
+ *
+ * 11/28/2005 Andrea Russo
+ *	- Added classes for store alternative frequencies schedules and regions
+ *
+ *******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -38,14 +45,14 @@
 class CParameter : public CCellMappingTable
 {
 public:
-	CParameter() : bRunThread(FALSE), Stream(MAX_NO_STREAMS), 
-		FACRepitition(15) /* See 6.3.6 */ {}
+	CParameter() : bRunThread(FALSE), Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
+		bUsingMultimedia(TRUE),	iCurSelAudioService(0), iCurSelDataService(0)
+
+		{}
 	virtual ~CParameter() {}
 
-	/* Enumerations --------------------------------------------------------- */
-	/* BE: Basement, enhancement */
-	enum ETransLay {BE_BASE_LAYER, BE_ENHM_LAYER};
-	
+
+	/* Enumerations --------------------------------------------------------- */	
 	/* CA: CA system */
 	enum ECACond {CA_USED, CA_NOT_USED};
 
@@ -62,7 +69,7 @@ public:
 	enum EDatUnit {DU_SINGLE_PACKETS, DU_DATA_UNITS};
 
 	/* AD: Application Domain */
-	enum EApplDomain {AD_DRM_SPEC_APP, AD_DAB_SPEC_APP};
+	enum EApplDomain {AD_DRM_SPEC_APP, AD_DAB_SPEC_APP, AD_OTHER_SPEC_APP};
 
 	/* AC: Audio Coding */
 	enum EAudCod {AC_AAC, AC_CELP, AC_HVXC};
@@ -71,7 +78,7 @@ public:
 	enum ESBRFlag {SB_NOT_USED, SB_USED};
 
 	/* AM: Audio Mode */
-	enum EAudMode {AM_MONO, AM_LC_STEREO, AM_STEREO};
+	enum EAudMode {AM_MONO, AM_P_STEREO, AM_STEREO};
 
 	/* HR: HVXC Rate */
 	enum EHVXCRate {HR_2_KBIT, HR_4_KBIT};
@@ -86,7 +93,11 @@ public:
 	enum ESymIntMod {SI_LONG, SI_SHORT};
 
 	/* CT: Channel Type */
-	enum EChanType {CT_MSC, CT_SDC, CT_FAC};	
+	enum EChanType {CT_MSC, CT_SDC, CT_FAC};
+
+	/* ST: Simulation Type */
+	enum ESimType {ST_NONE, ST_BITERROR, ST_MSECHANEST, ST_BER_IDEALCHAN,
+		ST_SYNC_PARAM, ST_SINR};
 
 
 	/* Classes -------------------------------------------------------------- */
@@ -106,16 +117,21 @@ public:
 		_BOOLEAN	bTextflag; /* Indicates whether a text message is present or not */
 		_BOOLEAN	bEnhanceFlag; /* Enhancement flag */
 
-// For AAC: Mono, LC Stereo, Stereo
+
+		/* For AAC: Mono, LC Stereo, Stereo --------------------------------- */
 		EAudMode	eAudioMode; /* Audio mode */
 
-// For CELP
+
+		/* For CELP --------------------------------------------------------- */
 		int			iCELPIndex; /* This field indicates the CELP bit rate index */
 		_BOOLEAN	bCELPCRC; /* This field indicates whether the CRC is used or not*/
 
-// For HVXC
+
+		/* For HVXC --------------------------------------------------------- */
 		EHVXCRate	eHVXCRate; /* This field indicates the rate of the HVXC */
 		_BOOLEAN	bHVXCCRC; /* This field indicates whether the CRC is used or not */
+
+/* TODO: Copy operator. Now, default copy operator is used! */
 
 		/* This function is needed for detection changes in the class */
 		_BOOLEAN operator!=(const CAudioParam AudioParam)
@@ -154,13 +170,17 @@ public:
 
 		EPackMod	ePacketModInd; /* Packet mode indicator */
 
-// In case of packet mode:
+
+		/* In case of packet mode ------------------------------------------- */
 		EDatUnit	eDataUnitInd; /* Data unit indicator */
-		int			iPacketID; /* Packet Id */
+		int			iPacketID; /* Packet Id (2 bits) */
 		int			iPacketLen; /* Packet length */
 
 		// "DAB specified application" not yet implemented!!!
-		EApplDomain eAppDomain; /* Application domain */ 
+		EApplDomain eAppDomain; /* Application domain */
+		int			iUserAppIdent; /* User application identifier, only DAB */
+
+/* TODO: Copy operator. Now, default copy operator is used! */
 
 		/* This function is needed for detection changes in the class */
 		_BOOLEAN operator!=(const CDataParam DataParam)
@@ -171,23 +191,29 @@ public:
 			{
 				if (eDataUnitInd != DataParam.eDataUnitInd) return TRUE;
 				if (iPacketID != DataParam.iPacketID) return TRUE;
-				if (eAppDomain != DataParam.eAppDomain) return TRUE;
 				if (iPacketLen != DataParam.iPacketLen) return TRUE;
+				if (eAppDomain != DataParam.eAppDomain) return TRUE;
+				if (DataParam.eAppDomain == AD_DAB_SPEC_APP)
+					if (iUserAppIdent != DataParam.iUserAppIdent) return TRUE;
 			}
 			return FALSE;
 		}
 	};
+
 
 	class CService
 	{
 	public:
 		CService() : strLabel("") {}
 
-		_UINT32BIT	iServiceID;
+		_BOOLEAN IsActive() {return iServiceID != SERV_ID_NOT_USED;}
+
+		uint32_t	iServiceID;
 		ECACond		eCAIndication;
 		int			iLanguage;
 		ETyOServ	eAudDataFlag;
 		int			iServiceDescr;
+		string		strCountryCode;
 
 		/* Label of the service */
 		string		strLabel;
@@ -229,39 +255,334 @@ public:
 			iHierarch = NewMSCProtLev.iHierarch;
 			return *this; 
 		}
-
-		_BOOLEAN operator!=(const CMSCProtLev MSCProtLev)
-		{
-			if (iPartA != MSCProtLev.iPartA) return TRUE;
-			if (iPartB != MSCProtLev.iPartB) return TRUE;
-			if (iHierarch != MSCProtLev.iHierarch) return TRUE;
-			return FALSE;
-		}
 	};
 
+
+	/* Alternative Frequency Signalling ***************************************/
+	/* Alternative frequency signalling Schedules informations class */
+	class CAltFreqSched
+	{
+	public:
+		CAltFreqSched() {Reset();}
+		CAltFreqSched(const CAltFreqSched& nAFS) :
+			iScheduleID(nAFS.iScheduleID),
+			iDayCode(nAFS.iDayCode),
+			iStartTime(nAFS.iStartTime),
+			iDuration(nAFS.iDuration) {}
+
+		CAltFreqSched& operator=(const CAltFreqSched& nAFS)
+		{
+			iScheduleID = nAFS.iScheduleID;
+			iDayCode = nAFS.iDayCode;
+			iStartTime = nAFS.iStartTime;
+			iDuration = nAFS.iDuration;
+
+			return *this; 
+		}
+
+		_BOOLEAN operator==(const CAltFreqSched& nAFS)
+		{
+			if (iScheduleID != nAFS.iScheduleID) return FALSE;
+			if (iDayCode != nAFS.iDayCode) return FALSE;
+			if (iStartTime != nAFS.iStartTime) return FALSE;
+			if (iDuration != nAFS.iDuration) return FALSE;
+
+			return TRUE;
+		}
+
+		void Reset()
+		{
+			iScheduleID = 0;
+			iDayCode = 0;
+			iStartTime = 0;
+			iDuration = 0;
+		}
+
+		int iScheduleID;
+		int iDayCode;
+		int iStartTime;
+		int iDuration;
+	};
+
+	/* Alternative frequency signalling Regions informations class */
+	class CAltFreqRegion
+	{
+	public:
+		CAltFreqRegion() {Reset();}
+		CAltFreqRegion(const CAltFreqRegion& nAFR) :
+			iRegionID(nAFR.iRegionID),
+			iLatitude(nAFR.iLatitude),
+			iLongitude(nAFR.iLongitude),
+			iLatitudeEx(nAFR.iLatitudeEx),
+			iLongitudeEx(nAFR.iLongitudeEx),
+			veciCIRAFZones(nAFR.veciCIRAFZones) {}
+
+		CAltFreqRegion& operator=(const CAltFreqRegion& nAFR)
+		{
+			iRegionID = nAFR.iRegionID;
+
+			iLatitude = nAFR.iLatitude;
+			iLongitude = nAFR.iLongitude;
+			iLatitudeEx = nAFR.iLatitudeEx;
+			iLongitudeEx = nAFR.iLongitudeEx;
+
+			veciCIRAFZones.Init(nAFR.veciCIRAFZones.Size());
+			veciCIRAFZones = nAFR.veciCIRAFZones;
+
+			return *this; 
+		}
+
+		_BOOLEAN operator==(const CAltFreqRegion& nAFR)
+		{
+			if (iRegionID != nAFR.iRegionID) return FALSE;
+
+			if (iLatitude != nAFR.iLatitude) return FALSE;
+			if (iLongitude != nAFR.iLongitude) return FALSE;
+			if (iLatitudeEx != nAFR.iLatitudeEx) return FALSE;
+			if (iLongitudeEx != nAFR.iLongitudeEx) return FALSE;
+
+			/* Vector sizes */
+			if (veciCIRAFZones.Size() != nAFR.veciCIRAFZones.Size()) return FALSE;
+
+			/* Vector contents */
+			for (int i = 0; i < veciCIRAFZones.Size(); i++)
+				if (veciCIRAFZones[i] != nAFR.veciCIRAFZones[i]) return FALSE;
+
+			return TRUE;
+		}
+
+		void Reset()
+		{
+			iRegionID = 0;
+			veciCIRAFZones.Init(0);
+			iLatitude = 0;
+			iLongitude = 0;
+			iLatitudeEx = 0;
+			iLongitudeEx = 0;
+		}
+
+		int				iRegionID;
+		CVector<int>	veciCIRAFZones;
+		int				iLatitude;
+		int				iLongitude;
+		int				iLatitudeEx;
+		int				iLongitudeEx;
+	};
+
+	/* Alternative frequency signalling class */
+	class CAltFreqSign
+	{
+	public:
+		CAltFreqSign() {Reset();}
+
+		class CAltFreq
+		{
+		public:
+			CAltFreq() {Reset();}
+			CAltFreq(const CAltFreq& nAF) :
+				veciFrequencies(nAF.veciFrequencies),
+				veciServRestrict(nAF.veciServRestrict),
+				bIsSyncMultplx(nAF.bIsSyncMultplx),
+				iRegionID(nAF.iRegionID), iScheduleID(nAF.iScheduleID),
+				bRegionSchedFlag(nAF.bRegionSchedFlag) {}
+
+			CAltFreq& operator=(const CAltFreq& nAF)
+			{
+				veciFrequencies.Init(nAF.veciFrequencies.Size());
+				veciFrequencies = nAF.veciFrequencies;
+
+				veciServRestrict.Init(nAF.veciServRestrict.Size());
+				veciServRestrict = nAF.veciServRestrict;
+
+				bIsSyncMultplx = nAF.bIsSyncMultplx;
+				iRegionID = nAF.iRegionID;
+				iScheduleID = nAF.iScheduleID;
+				bRegionSchedFlag = nAF.bRegionSchedFlag;
+				return *this; 
+			}
+
+			_BOOLEAN operator==(const CAltFreq& nAF)
+			{
+				int i;
+
+				/* Vector sizes */
+				if (veciFrequencies.Size() != nAF.veciFrequencies.Size()) return FALSE;
+				if (veciServRestrict.Size() != nAF.veciServRestrict.Size()) return FALSE;
+
+				/* Vector contents */
+				for (i = 0; i < veciFrequencies.Size(); i++)
+					if (veciFrequencies[i] != nAF.veciFrequencies[i]) return FALSE;
+				for (i = 0; i < veciServRestrict.Size(); i++)
+					if (veciServRestrict[i] != nAF.veciServRestrict[i]) return FALSE;
+
+				if (bIsSyncMultplx != nAF.bIsSyncMultplx) return FALSE;
+				if (iRegionID != nAF.iRegionID) return FALSE;
+				if (iScheduleID != nAF.iScheduleID) return FALSE;
+
+				if (bRegionSchedFlag != nAF.bRegionSchedFlag) return FALSE;
+
+				return TRUE;
+			}
+
+			void Reset()
+			{
+				veciFrequencies.Init(0);
+				veciServRestrict.Init(MAX_NUM_SERVICES, 0);
+				bIsSyncMultplx = FALSE;
+				bRegionSchedFlag = FALSE;
+				iRegionID = iScheduleID = 0;
+			}
+
+			CVector<int>	veciFrequencies;
+			CVector<int>	veciServRestrict;
+			_BOOLEAN		bIsSyncMultplx;
+			_BOOLEAN		bRegionSchedFlag;
+			int				iRegionID;
+			int				iScheduleID;
+		};
+
+		void Reset()
+		{
+			vecAltFreqRegions.Init(0);
+			vecAltFreqSchedules.Init(0);
+			vecAltFreq.Init(0);
+			bVersionFlag = FALSE;
+		}
+
+		CVector<CAltFreq>		vecAltFreq;
+		CVector<CAltFreqSched>	vecAltFreqSchedules;
+		CVector<CAltFreqRegion>	vecAltFreqRegions;
+		_BOOLEAN				bVersionFlag;
+	} AltFreqSign;
+
+	/* Other Services alternative frequency signalling class */
+	class CAltFreqOtherServicesSign
+	{
+	public:
+		CAltFreqOtherServicesSign() {Reset();}
+
+		class CAltFreqOtherServices
+		{
+		public:
+			CAltFreqOtherServices() {Reset();}
+			CAltFreqOtherServices(const CAltFreqOtherServices& nAF) :
+				veciFrequencies(nAF.veciFrequencies),
+				bShortIDAnnounceFlag(nAF.bShortIDAnnounceFlag),
+				iShortIDAnnounce(nAF.iShortIDAnnounce),
+				bRegionSchedFlag(nAF.bRegionSchedFlag),
+				bSameService(nAF.bSameService),
+				iSystemID(nAF.iSystemID),
+				iRegionID(nAF.iRegionID), iScheduleID(nAF.iScheduleID),
+				iOtherServiceID(nAF.iOtherServiceID)
+				{}
+
+			CAltFreqOtherServices& operator=(const CAltFreqOtherServices& nAF)
+			{
+				veciFrequencies.Init(nAF.veciFrequencies.Size());
+				veciFrequencies = nAF.veciFrequencies;
+
+				bShortIDAnnounceFlag = nAF.bShortIDAnnounceFlag;
+				iShortIDAnnounce = nAF.iShortIDAnnounce;
+				bRegionSchedFlag = nAF.bRegionSchedFlag;
+				bSameService = nAF.bSameService;
+				iSystemID = nAF.iSystemID;
+				iRegionID = nAF.iRegionID;
+				iScheduleID = nAF.iScheduleID;
+				iOtherServiceID = nAF.iOtherServiceID;
+
+				return *this;
+			}
+
+			_BOOLEAN operator==(const CAltFreqOtherServices& nAF)
+			{
+				int i;
+
+				/* Vector sizes */
+				if (veciFrequencies.Size() != nAF.veciFrequencies.Size()) return FALSE;
+
+				/* Vector contents */
+				for (i = 0; i < veciFrequencies.Size(); i++)
+					if (veciFrequencies[i] != nAF.veciFrequencies[i]) return FALSE;
+				
+				if (bShortIDAnnounceFlag != nAF.bShortIDAnnounceFlag) return FALSE;
+				if (iShortIDAnnounce != nAF.iShortIDAnnounce) return FALSE;
+				if (bRegionSchedFlag != nAF.bRegionSchedFlag) return FALSE;
+				if (bSameService != nAF.bSameService) return FALSE;
+
+				if (iSystemID != nAF.iSystemID) return FALSE;
+				if (iRegionID != nAF.iRegionID) return FALSE;
+				if (iScheduleID != nAF.iScheduleID) return FALSE;
+				if (iOtherServiceID != nAF.iOtherServiceID) return FALSE;
+				return TRUE;
+			}
+
+			void Reset()
+			{
+				veciFrequencies.Init(0);
+				bShortIDAnnounceFlag = FALSE;
+				iShortIDAnnounce = 0;
+				bRegionSchedFlag = FALSE;
+				bSameService = TRUE;
+				iSystemID = 0;
+				iRegionID = iScheduleID = 0;
+				iOtherServiceID = 0;
+			}
+
+			CVector<int>	veciFrequencies;
+			_BOOLEAN		bShortIDAnnounceFlag;
+			int				iShortIDAnnounce;
+			_BOOLEAN		bRegionSchedFlag;
+			_BOOLEAN		bSameService;
+			int				iSystemID;
+			int				iRegionID;
+			int				iScheduleID;
+			unsigned long	iOtherServiceID;
+		};
+
+		void Reset() {vecAltFreqOtherServices.Init(0); bVersionFlag = FALSE;}
+
+		CVector<CAltFreqOtherServices>	vecAltFreqOtherServices;
+		_BOOLEAN						bVersionFlag;
+	} AltFreqOtherServicesSign;
+
+
+	/* Misc. Functions ------------------------------------------------------ */
 	void			ResetServicesStreams();
+	void			GetActiveServices(CVector<int>& veciActServ);
 	void			GetActiveStreams(CVector<int>& veciActStr);
+	int				GetNumActiveServices();
 	void			InitCellMapTable(const ERobMode eNewWaveMode, const ESpecOcc eNewSpecOcc);
 
-	void			SetNoDecodedBitsMSC(const int iNewNoDecodedBitsMSC);
-	void			SetNoDecodedBitsSDC(const int iNewNoDecodedBitsSDC);
+	void			SetNumDecodedBitsMSC(const int iNewNumDecodedBitsMSC);
+	void			SetNumDecodedBitsSDC(const int iNewNumDecodedBitsSDC);
+	void			SetNumBitsHieraFrTot(const int iNewNumBitsHieraFrTot);
+	void			SetNumAudioDecoderBits(const int iNewNumAudioDecoderBits);
+	void			SetNumDataDecoderBits(const int iNewNumDataDecoderBits);
 
 	_BOOLEAN		SetWaveMode(const ERobMode eNewWaveMode);
 	ERobMode		GetWaveMode() const {return eRobustnessMode;}
 
-	void			SetCurSelectedService(const int iNewService);
-	int				GetCurSelectedService() const {return iCurSelService;}
+	void			SetCurSelAudioService(const int iNewService);
+	int				GetCurSelAudioService() const {return iCurSelAudioService;}
+	void			SetCurSelDataService(const int iNewService);
+	int				GetCurSelDataService() const {return iCurSelDataService;}
 
-	_REAL			GetFrequencyOffset() const {return SOUNDCRD_SAMPLE_RATE *
+	void			ResetCurSelAudDatServ() {iCurSelAudioService = 0; iCurSelDataService = 0;}
+
+	void			EnableMultimedia(const _BOOLEAN bFlag);
+	_BOOLEAN		GetEnableMultimedia() const {return bUsingMultimedia;}
+
+	_REAL			GetDCFrequency() const {return SOUNDCRD_SAMPLE_RATE *
 						(rFreqOffsetAcqui + rFreqOffsetTrack);}
 	_REAL			GetSampFreqEst() const {return rResampleOffset;}
 
-
-
+	_REAL			GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData);
+	_REAL			PartABLenRatio(const int iServiceID);
 
 
 	/* Parameters controlled by FAC ----------------------------------------- */
 	void			SetInterleaverDepth(const ESymIntMod eNewDepth);
+	ESymIntMod		GetInterleaverDepth() {return eSymbolInterlMode;}
 
 	void			SetMSCCodingScheme(const ECodScheme eNewScheme);
 	void			SetSDCCodingScheme(const ECodScheme eNewScheme);
@@ -269,17 +590,13 @@ public:
 	void			SetSpectrumOccup(ESpecOcc eNewSpecOcc);
 	ESpecOcc		GetSpectrumOccup() const {return eSpectOccup;}
 
-	void			SetNoAudioServ(const int iNewNoAuSe);
-	void			SetNoDataServ(const int iNewNoDaSe);
+	void			SetNumOfServices(const int iNNumAuSe, const int iNNumDaSe);
+	int				GetTotNumServices()
+						{return iNumAudioService + iNumDataService;}
 
 	void			SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl);
-	void			SetServID(const int iServID, const _UINT32BIT iNewServID);
+	void			SetServID(const int iServID, const uint32_t iNewServID);
 
-	/* These two parameters are only for transmitter */
-	CVector<int>	FACRepitition; /* See 6.3.6 */
-	int				FACNoRep;
-
-	ETransLay		eBaseEnhFlag;
 
 	/* Symbol interleaver mode (long or short interleaving) */
 	ESymIntMod		eSymbolInterlMode; 
@@ -288,34 +605,37 @@ public:
 	ECodScheme		eSDCCodingScheme; /* SDC coding scheme */
 
 
-	int				iNoAudioService;
-	int				iNoDataService;
-	int				iReConfigIndex;
+	int				iNumAudioService;
+	int				iNumDataService;
 
-	EAFSVali		eAFSFlag;
+	/* AMSS */
+	int				iAMSSCarrierMode;
 
 
 	/* Parameters controlled by SDC ----------------------------------------- */
 	void SetAudioParam(const int iShortID, const CAudioParam NewAudParam);
+	CAudioParam GetAudioParam(const int iShortID)
+		{return Service[iShortID].AudioParam;}
 	void SetDataParam(const int iShortID, const CDataParam NewDataParam);
+	CDataParam GetDataParam(const int iShortID)
+		{return Service[iShortID].DataParam;}
 
 	void SetMSCProtLev(const CMSCProtLev NewMSCPrLe, const _BOOLEAN bWithHierarch);
-
-	void SetStreamLenPartA(const int iStreamNo, const int iNewLenPartA);
-	void SetStreamLenPartB(const int iStreamNo, const int iNewLenPartB);
+	void SetStreamLen(const int iStreamID, const int iNewLenPartA, const int iNewLenPartB);
 
 	/* Protection levels for MSC */
 	CMSCProtLev			MSCPrLe;
 
 	CVector<CStream>	Stream;
-	CService			Service[MAX_NO_SERVICES];
+	CService			Service[MAX_NUM_SERVICES];
 
-	int					iNoBitsHierarchFrameTotal;
-
-	int					iNoDecodedBitsMSC;
-	int					iNoSDCBitsPerSFrame; /* Number of SDC bits per super-frame */
-
-	int					iAFSIndex;
+	/* These values are used to set input and output block sizes of some
+	   modules */
+	int					iNumBitsHierarchFrameTotal;
+	int					iNumDecodedBitsMSC;
+	int					iNumSDCBitsPerSFrame; /* Number of SDC bits per super-frame */
+	int					iNumAudioDecoderBits; /* Number of input bits for audio module */
+	int					iNumDataDecoderBits; /* Number of input bits for data decoder module */
 
 	/* Date */
 	int					iYear;
@@ -333,29 +653,174 @@ public:
 	int					iFrameIDReceiv;
 
 
-// Synchronization **********************
+	/* Synchronization ------------------------------------------------------ */
 	_REAL				rFreqOffsetAcqui;
 	_REAL				rFreqOffsetTrack;
 
 	_REAL				rResampleOffset;
 
-	_REAL				rTimingOffsTrack;
+	int					iTimingOffsTrack;
 
 
-// Simulation **********************
-	int					iDRMChannelNo;
-	_REAL				rSimSNRdB;
+	/* Reception log -------------------------------------------------------- */
+	class CReceptLog
+	{
+	public:
+		CReceptLog();
+		virtual ~CReceptLog() {CloseFile(pFileLong, TRUE);
+			CloseFile(pFileShort, FALSE);}
+
+		void SetFAC(const _BOOLEAN bCRCOk);
+		void SetMSC(const _BOOLEAN bCRCOk);
+		void SetSync(const _BOOLEAN bCRCOk);
+		void SetSNR(const _REAL rNewCurSNR);
+		void SetNumAAC(const int iNewNum);
+		void SetLog(const _BOOLEAN bLog);
+		void SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong);
+		void SetFrequency(const int iNewFreq) {iFrequency = iNewFreq;}
+		int GetFrequency() {return iFrequency;}
+		void SetLatitude(const string strLat) {strLatitude = strLat;}
+		string GetLatitude() {return strLatitude;}
+		void SetLongitude(const string strLon) {strLongitude = strLon;}
+		string GetLongitude() {return strLongitude;}
+		void SetAdditText(const string strNewTxt) {strAdditText = strNewTxt;}
+		void WriteParameters(const _BOOLEAN bIsLong);
+		void SetDelLogStart(const int iSecDel);
+		_BOOLEAN IsDelLogStart() {return bDelayedLogStart;}
+		int GetDelLogStart() {return iSecDelLogStart;}
+
+		void ResetTransParams();
+		void SetMSCScheme(const ECodScheme eNewMCS) {eCurMSCScheme = eNewMCS;}
+		void SetRobMode(const ERobMode eNewRM) {eCurRobMode = eNewRM;}
+		void SetProtLev(const CMSCProtLev eNPL) {CurProtLev = eNPL;}
+
+	protected:
+		void ResetLog(const _BOOLEAN bIsLong);
+		void CloseFile(FILE* pFile, const _BOOLEAN bIsLong);
+		int				iNumSNR;
+		int				iNumCRCOkFAC, iNumCRCOkMSC;
+		int				iNumCRCOkMSCLong, iNumCRCMSCLong;
+		int				iNumAACFrames, iTimeCntShort;
+		time_t			TimeCntLong;
+		_BOOLEAN		bSyncOK, bFACOk, bMSCOk;
+		_BOOLEAN		bSyncOKValid, bFACOkValid, bMSCOkValid;
+		int				iFrequency;
+		_REAL			rAvSNR, rCurSNR;
+		_REAL			rMaxSNR, rMinSNR;
+		_BOOLEAN		bLogActivated;
+		FILE*			pFileLong;
+		FILE*			pFileShort;
+		string			strAdditText;
+		string			strLatitude;
+		string			strLongitude;
+		_BOOLEAN		bDelayedLogStart;
+		int				iSecDelLogStart;
+
+		ERobMode		eCurRobMode;
+		ECodScheme		eCurMSCScheme;
+		CMSCProtLev		CurProtLev;
+
+		CMutex			Mutex;
+	} ReceptLog;
+
+
+	/* Class for store informations about last service selected ------------- */
+
+	class CLastService
+	{
+	public:
+		CLastService() {Reset();}
+
+		void Reset()
+		{
+			iService = 0;
+			iServiceID = SERV_ID_NOT_USED;
+		};
+
+		void Save(const int iCurSel, const int iCurServiceID)
+		{
+			if (iCurServiceID != SERV_ID_NOT_USED)
+			{
+				iService = iCurSel;
+				iServiceID = iCurServiceID;
+			}
+		};
+
+		/* store only fac parameters */
+		int	iService;
+		int	iServiceID;
+	};
+
+	/* Simulation ----------------------------------------------------------- */
+	ESimType			eSimType;
+
+	int					iDRMChannelNum;
+	int					iSpecChDoppler;
 	_REAL				rBitErrRate;
-	int					iNoBitErrors;
+	_REAL				rSyncTestParam; /* For any other simulations, used
+										   with "ST_SYNC_PARAM" type */
+	_REAL				rSINR;
+	int					iNumBitErrors;
+	int					iChanEstDelay;
 
+	int					iNumTaps;
+	int					iPathDelay[MAX_NUM_TAPS_DRM_CHAN];
+	_REAL				rGainCorr;
+	int					iOffUsfExtr;
+
+	void SetNominalSNRdB(const _REAL rSNRdBNominal);
+	_REAL GetNominalSNRdB();
+	void SetSystemSNRdB(const _REAL rSNRdBSystem) {rSysSimSNRdB = rSNRdBSystem;}
+	_REAL GetSystemSNRdB() const {return rSysSimSNRdB;}
+	_REAL GetSysSNRdBPilPos() const;
+
+	/* Simulation raw-data management. We have to implement a shift register
+	   with varying size. We do that by adding a variable for storing the
+	   current write position. */
+	class CRawSimData
+	{
+	/* We have to implement a shift register with varying size. We do that
+	   by adding a variable for storing the current write position. We use
+	   always the first value of the array for reading and do a shift of the
+	   other data by adding a arbitrary value (0) at the end of the whole
+	   shift register */
+	public:
+		/* Here, the maximal size of the shift register is set */
+		CRawSimData() : ciMaxDelBlocks(50), iCurWritePos(0) 
+			{veciShRegSt.Init(ciMaxDelBlocks);}
+
+		void Add(uint32_t iNewSRS);
+		uint32_t Get();
+
+		void Reset() {iCurWritePos = 0;}
+
+	protected:
+		/* Max number of delayed blocks */
+		int							ciMaxDelBlocks;
+		CShiftRegister<uint32_t>	veciShRegSt;
+		int							iCurWritePos;
+	} RawSimDa;
+
+
+	/* General -------------------------------------------------------------- */
+	_REAL				GetSysToNomBWCorrFact();
 	_BOOLEAN			bRunThread;
+	_BOOLEAN			bUsingMultimedia;
 
 protected:
+	_REAL				rSysSimSNRdB;
+
 	/* Current selected audio service for processing */
-	int					iCurSelService;
+	int					iCurSelAudioService;
+	int					iCurSelDataService;
 
 	ERobMode			eRobustnessMode; /* E.g.: Mode A, B, C or D */
 	ESpecOcc			eSpectOccup;
+
+	/* For resync to last service-------------------------------------------- */
+
+	CLastService	LastAudioService;
+	CLastService	LastDataService;
 };
 
 

@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -32,105 +32,134 @@
 /* Implementation *************************************************************/
 void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	int			i;
-	_REAL		rTimePilotCorr;
-	int			iMinIndex;
-	_REAL		rMinValue;
-	_REAL		rSampFreqOffsetEst;
-	_COMPLEX	cOldFreqPilCorr;
-	int			iMiddleOfInterval;
-	_COMPLEX	cFreqOffsetEstTemp;
-	_REAL		rFreqOffsetEst;
-
+	int i;
 
 	/**************************************************************************\
 	* Frame synchronization detection										   *
 	\**************************************************************************/
-	/* Increase symbol counter and take care of wrap around */
-	iSymbolCounterTiSy++;
-	if (iSymbolCounterTiSy == iNoSymPerFrame)
-		iSymbolCounterTiSy = 0;
+	_BOOLEAN bSymbolIDHasChanged = FALSE;
 
 	if ((bSyncInput == FALSE) && (bAquisition == TRUE))
 	{
-		/* We use a differential demodulation of the time-pilots, because there
-		   is no channel-estimation done, yet. The differential factors are pre-
-		   calculated in the Init-routine. Additionally, the index of the first
-		   pilot in the pair is stored in ".iNoCarrier". We calculate and 
-		   averaging the Euclidean-norm of the resulting complex values */
-		rTimePilotCorr = (_REAL) 0.0;
-		for (i = 0; i < iNoDiffFact; i++)
-			rTimePilotCorr += norm((*pvecInputData)[vecDiffFact[i].iNoCarrier] *
-				vecDiffFact[i].cDiff - 
-				(*pvecInputData)[vecDiffFact[i].iNoCarrier + 1]);
-
-#ifdef _DEBUG_
-// Store frame-synchronization data in file
-static FILE* pFile = fopen("test/testfra.dat", "w");
-fprintf(pFile, "%e\n", rTimePilotCorr);
-fflush(pFile);
-#endif
-
-		/* Store correlation results in a shift register for finding the peak */
-		vecrCorrHistory.AddEnd(rTimePilotCorr);
-
-		/* Search for minimum distance. Init value with a high number */
-		iMinIndex = 0;
-		rMinValue = (_REAL) HI_VALUE_FOR_MIN_SEARCH; 
-		for (i = 0; i < iNoSymPerFrame; i++)
+		/* DRM frame synchronization based on time pilots ------------------- */
+		/* Calculate correlation of received cells with pilot pairs */
+		CReal rResultPilPairCorr = (CReal) 0.0;
+		for (i = 0; i < iNumPilPairs; i++)
 		{
-			if (vecrCorrHistory[i] < rMinValue)
-			{
-				rMinValue = vecrCorrHistory[i];
-				iMinIndex = i;
-			}
+			/* Actual correlation */
+			const CComplex cCorrRes = (*pvecInputData)[vecPilCorr[i].iIdx1] *
+				Conj(vecPilCorr[i].cPil1) *
+				Conj((*pvecInputData)[vecPilCorr[i].iIdx2]) *
+				vecPilCorr[i].cPil2 * cR_HH;
+
+			rResultPilPairCorr += Real(cCorrRes);
 		}
 
-		/* If minimum is in the middle of the interval -> check frame sync */
-		iMiddleOfInterval = iNoSymPerFrame / 2;
+		/* Store correlation results in a shift register for finding the peak */
+		vecrCorrHistory.AddEnd(rResultPilPairCorr);
 
-		if (iMinIndex == iMiddleOfInterval)
+
+		/* Finding beginning of DRM frame in results ------------------------ */
+		/* Wait until history is filled completly */
+		if (iInitCntFraSy > 0)
+			iInitCntFraSy--;
+		else
 		{
-			if (iSymbolCounterTiSy == iNoSymPerFrame - iMiddleOfInterval - 1)
+			/* Search for maximum */
+			int iMaxIndex = 0;
+			CReal rMaxValue = -_MAXREAL;
+			for (i = 0; i < iNumSymPerFrame; i++)
 			{
-				/* Reset flag */
-				bBadFrameSync = FALSE;
+				if (vecrCorrHistory[i] > rMaxValue)
+				{
+					rMaxValue = vecrCorrHistory[i];
+					iMaxIndex = i;
+				}
+			}
 
-				/* Post Message for GUI (Good frame sync) */
-				PostWinMessage(MS_FRAME_SYNC, 0);
+			/* For initial frame synchronization, use maximum directly */
+			if (bInitFrameSync == TRUE)
+			{
+				/* Reset init flag */
+				bInitFrameSync = FALSE;
+
+				/* Set symbol ID index according to received data */
+				iSymbCntFraSy = iNumSymPerFrame - iMaxIndex - 1;
 			}
 			else
 			{
-				if (bBadFrameSync == TRUE)
+				/* If maximum is in the middle of the interval
+				   (check frame sync) */
+				if (iMaxIndex == iMiddleOfInterval)
 				{
-					/* Reset symbol counter according to received data */
-					iSymbolCounterTiSy = iNoSymPerFrame - iMiddleOfInterval - 1;
+					if (iSymbCntFraSy == iNumSymPerFrame - iMiddleOfInterval - 1)
+					{
+						/* Reset flags */
+						bBadFrameSync = FALSE;
+						bFrameSyncWasOK = TRUE;
 
-					/* Reset flag */
-					bBadFrameSync = FALSE;
+						/* Post Message for GUI (Good frame sync) */
+						PostWinMessage(MS_FRAME_SYNC, 0); /* green */
+					}
+					else
+					{
+						if (bBadFrameSync == TRUE)
+						{
+							/* Reset symbol ID index according to received
+							   data */
+							iSymbCntFraSy =
+								iNumSymPerFrame - iMiddleOfInterval - 1;
 
-					/* Post Message for GUI for bad frame sync (red light) */
-					PostWinMessage(MS_FRAME_SYNC, 2);
-				}
-				else
-				{
-					/* One false detected frame sync should not reset the actual
-					   frame sync because the measurement could be wrong. 
-					   Sometimes the frame sync detection gets false results. If
-					   the next time the frame sync is still unequal to the 
-					   measurement, then correct it */
-					bBadFrameSync = TRUE;
+							/* Inform that symbol ID has changed */
+							bSymbolIDHasChanged = TRUE;
 
-					/* Post Message that frame sync was wrong but was not yet
-					   corrected (yellow light) */
-					PostWinMessage(MS_FRAME_SYNC, 1);
+							/* Reset flag */
+							bBadFrameSync = FALSE;
+
+							PostWinMessage(MS_FRAME_SYNC, 2); /* red */
+						}
+						else
+						{
+							/* One false detected frame sync should not reset
+							   the actual frame sync because the measurement
+							   could be wrong. Sometimes the frame sync
+							   detection gets false results. If the next time
+							   the frame sync is still unequal to the
+							   measurement, then correct it */
+							bBadFrameSync = TRUE;
+
+							if (bFrameSyncWasOK == TRUE)
+							{
+								/* Post Message that frame sync was wrong but
+								   was not yet corrected (yellow light) */
+								PostWinMessage(MS_FRAME_SYNC, 1); /* yellow */
+							}
+							else
+								PostWinMessage(MS_FRAME_SYNC, 2); /* red */
+						}
+
+						/* Set flag for bad sync */
+						bFrameSyncWasOK = FALSE;
+					}
 				}
 			}
 		}
 	}
+	else
+	{
+		/* Frame synchronization has successfully finished, show always green
+		   light */
+		PostWinMessage(MS_FRAME_SYNC, 0);
+	}
 
-	/* Set current symbol number in extended data of output vector */
-	(*pvecOutputData).GetExData().iSymbolNo = iSymbolCounterTiSy;
+	/* Set current symbol ID and flag in extended data of output vector */
+	(*pvecOutputData).GetExData().iSymbolID = iSymbCntFraSy;
+	(*pvecOutputData).GetExData().bSymbolIDHasChanged = bSymbolIDHasChanged;
+
+	/* Increase symbol counter and take care of wrap around */
+	iSymbCntFraSy++;
+	if (iSymbCntFraSy >= iNumSymPerFrame)
+		iSymbCntFraSy = 0;
 
 
 	/**************************************************************************\
@@ -138,72 +167,140 @@ fflush(pFile);
 	\**************************************************************************/
 	if ((bSyncInput == FALSE) && (bTrackPil == TRUE))
 	{
-		cFreqOffsetEstTemp = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
-		for (i = 0; i < NO_FREQ_PILOTS; i++)
+		CComplex cFreqOffEstVecSym = CComplex((CReal) 0.0, (CReal) 0.0);
+
+		for (i = 0; i < NUM_FREQ_PILOTS; i++)
 		{
 			/* The old pilots must be rotated due to timing corrections */
-			cOldFreqPilCorr = Rotate(cOldFreqPil[i], iPosFreqPil[i], 
-				-(*pvecInputData).GetExData().iCurTimeCorr);
+			const CComplex cOldFreqPilCorr =
+				Rotate(cOldFreqPil[i], iPosFreqPil[i],
+				(*pvecInputData).GetExData().iCurTimeCorr);
 
-			/* Get phase difference */
-			rFreqPilotPhDiff[i] = 
-				arg((*pvecInputData)[iPosFreqPil[i]] * conj(cOldFreqPilCorr));
-
-			/* Calculate estimation of frequency offset */
-			cFreqOffsetEstTemp += 
-				(*pvecInputData)[iPosFreqPil[i]] * conj(cOldFreqPilCorr);
+			/* Calculate the inner product of the sum */
+			const CComplex cCurPilMult =
+				(*pvecInputData)[iPosFreqPil[i]] * Conj(cOldFreqPilCorr);
 
 			/* Save "old" frequency pilots for next symbol. Special treatment
 			   for robustness mode D (carriers 7 and 21) necessary 
 			   (See 8.4.2.2) */
-			if ((ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_D) && 
+
+// TODO: take care of initialization phase: do not start using estimates until
+// the first "old pilots" were stored. Also, an "initial frequecy offset
+// estimate" should be made and rFreqOffsetTrack should be set to this value!
+
+			if ((ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_D) &&
 				(i < 2))
 			{
 				cOldFreqPil[i] = -(*pvecInputData)[iPosFreqPil[i]];
 			}
 			else
 				cOldFreqPil[i] = (*pvecInputData)[iPosFreqPil[i]];
+
+#ifdef USE_SAMOFFS_TRACK_FRE_PIL
+			/* Get phase difference for sample rate offset estimation. Average
+			   the vector, real and imaginary part separately */
+			IIR1(cFreqPilotPhDiff[i], cCurPilMult, rLamSamRaOff);
+#endif
+
+			/* Calculate estimation of frequency offset */
+			cFreqOffEstVecSym += cCurPilMult;
 		}
 
-		/* Calculate frequency offset */
-		rFreqOffsetEst = arg(cFreqOffsetEstTemp) * rNormConstFOE;
 
+		/* Frequency offset ------------------------------------------------- */
+		/* Correct frequency offset estimation for resample offset corrections.
+		   When a sample rate offset correction was applied, the frequency
+		   offset is shifted proportional to this correction. The correction
+		   is mandatory if large sample rate offsets occur */
+
+		/* Get sample rate offset change */
+		const CReal rDiffSamOffset =
+			rPrevSamRateOffset - ReceiverParam.rResampleOffset;
+
+		/* Save current resample offset for next symbol */
+		rPrevSamRateOffset = ReceiverParam.rResampleOffset;
+
+		/* Correct sample-rate offset correction according to the proportional
+		   rule. Use relative DC frequency offset plus relative average offset
+		   of frequency pilots to the DC frequency. Normalize this offset so
+		   that it can be used as a phase correction for frequency offset
+		   estimation  */
+		CReal rPhaseCorr = (ReceiverParam.rFreqOffsetAcqui +
+			ReceiverParam.rFreqOffsetTrack + rAvFreqPilDistToDC) *
+			rDiffSamOffset / SOUNDCRD_SAMPLE_RATE / rNormConstFOE;
+
+		/* Actual correction (rotate vector) */
+		cFreqOffVec *= CComplex(Cos(rPhaseCorr), Sin(rPhaseCorr));
+
+
+		/* Average vector, real and imaginary part separately */
+		IIR1(cFreqOffVec, cFreqOffEstVecSym, rLamFreqOff);
+
+		/* Calculate argument */
+		const CReal rFreqOffsetEst = Angle(cFreqOffVec);
+
+		/* Correct measurement average for actually applied frequency
+		   correction */
+		cFreqOffVec *= CComplex(Cos(-rFreqOffsetEst), Sin(-rFreqOffsetEst));
+
+#ifndef USE_FRQOFFS_TRACK_GUARDCORR
+		/* Integrate the result for controling the frequency offset, normalize
+		   estimate */
+		ReceiverParam.rFreqOffsetTrack += rFreqOffsetEst * rNormConstFOE;
+#endif
+
+
+#ifdef USE_SAMOFFS_TRACK_FRE_PIL
+		/* Sample rate offset ----------------------------------------------- */
 		/* Calculate estimation of sample frequency offset. We use the different
-		   frequency offset estimations of the frequency pilots. We normalize 
+		   frequency offset estimations of the frequency pilots. We normalize
 		   them with the distance between them and average the result (/ 2.0) */
-		rSampFreqOffsetEst = ((rFreqPilotPhDiff[1] - rFreqPilotPhDiff[0]) / 
-			(iPosFreqPil[1] - iPosFreqPil[0]) +	
-			(rFreqPilotPhDiff[2] - rFreqPilotPhDiff[0]) / 
-			(iPosFreqPil[2] - iPosFreqPil[0])) / (_REAL) 2.0;
-
-
-		/* Using estimated parameters for controlling ----------------------- */
-		/* Integrate the result for controling the frequency offset */
-		ReceiverParam.rFreqOffsetTrack += 
-			CONTR_FREQ_OFF_INTEGRATION * rFreqOffsetEst;
+		CReal rSampFreqOffsetEst =
+			((Angle(cFreqPilotPhDiff[1]) - Angle(cFreqPilotPhDiff[0])) /
+			(iPosFreqPil[1] - iPosFreqPil[0]) +
+			(Angle(cFreqPilotPhDiff[2]) - Angle(cFreqPilotPhDiff[0])) /
+			(iPosFreqPil[2] - iPosFreqPil[0])) / (CReal) 2.0;
 
 		/* Integrate the result for controling the resampling */
-		ReceiverParam.rResampleOffset += 
+		ReceiverParam.rResampleOffset +=
 			CONTR_SAMP_OFF_INTEGRATION * rSampFreqOffsetEst;
+#endif
+
+#ifdef _DEBUG_
+/* Save frequency and sample rate tracking */
+static FILE* pFile = fopen("test/freqtrack.dat", "w");
+fprintf(pFile, "%e %e\n", SOUNDCRD_SAMPLE_RATE * ReceiverParam.rFreqOffsetTrack,
+	ReceiverParam.rResampleOffset);
+fflush(pFile);
+#endif
 	}
+
 
 	/* If synchronized DRM input stream is used, overwrite the detected
 	   frequency offest estimate by "0", because we know this value */
 	if (bSyncInput == TRUE)
-	{
-		/* Set frequency offset to a fixed value (= 0) */
-		ReceiverParam.rFreqOffsetTrack = (_REAL) 0.0;	
-	}
+		ReceiverParam.rFreqOffsetTrack = (CReal) 0.0;
 
-	/* Copy data from input to the output. Data is not modified in this module */
-	for (i = 0; i < iOutputBlockSize; i++)
-		(*pvecOutputData)[i] = (*pvecInputData)[i];
+	/* Do not ship data before first frame synchronization was done. The flag
+	   "bAquisition" must not be set to FALSE since in that case we would run
+	   into an infinite loop since we would not ever ship any data. But since
+	   the flag is set after this module, we should be fine with that. */
+	if ((bInitFrameSync == TRUE) && (bSyncInput == FALSE))
+		iOutputBlockSize = 0;
+	else
+	{
+		iOutputBlockSize = iNumCarrier;
+
+		/* Copy data from input to the output. Data is not modified in this
+		   module */
+		for (i = 0; i < iOutputBlockSize; i++)
+			(*pvecOutputData)[i] = (*pvecInputData)[i];
+	}
 }
 
 void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 {
 	int			i;
-	int			iTotalNoUsefCarr;
 	_COMPLEX	cPhaseCorTermDivi;
 	_REAL		rArgumentTemp;
 
@@ -211,90 +308,139 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	CPilotModiClass::InitRot(ReceiverParam);
 
 	/* Init internal parameters from global struct */
-	iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
-	iTotalNoUsefCarr = ReceiverParam.iNoCarrier;
-	iDFTSize = ReceiverParam.iFFTSizeN;
-	iShiftedKmin = ReceiverParam.iShiftedKmin;
+	iNumCarrier = ReceiverParam.iNumCarrier;
+	eCurRobMode = ReceiverParam.GetWaveMode();
 
-	/* After an initialization the frame sync must be adjusted */
-	bBadFrameSync = TRUE;
+	/* Check if symbol number per frame has changed. If yes, reset the
+	   symbol counter */
+	if (iNumSymPerFrame != ReceiverParam.iNumSymPerFrame)
+	{
+		/* Init internal counter for symbol number */
+		iSymbCntFraSy = 0;
 
-	/* Allocate memory for storing differential complex factors. Since we do 
-	   not know the resulting "iNoDiffFact" we allocate memory for the 
-	   worst case, i.e. "iTotalNoUsefCarr" */
-	vecDiffFact.Init(iTotalNoUsefCarr);
+		/* Refresh parameter */
+		iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
+	}
 
-	/* Calculate differential complex factors for time-synchronization pilots.
-	   Use only first symbol of "matcPilotCells", because there are the pilots
-	   for Frame-synchronization */
-	iNoDiffFact = 0;
-	for (i = 0; i < iTotalNoUsefCarr - 1; i++)
+	/* Allocate memory for histories. Init history with small values, because
+	   we search for maximum! */
+	vecrCorrHistory.Init(iNumSymPerFrame, -_MAXREAL);
+
+	/* Set middle of observation interval */
+	iMiddleOfInterval = iNumSymPerFrame / 2;
+
+
+	/* DRM frame synchronization based on time pilots, inits ---------------- */
+	/* Allocate memory for storing pilots and indices. Since we do
+	   not know the resulting "iNumPilPairs" we allocate memory for the
+	   worst case, i.e. "iNumCarrier" */
+	vecPilCorr.Init(iNumCarrier);
+
+	/* Store pilots and indices for calculating the correlation. Use only first
+	   symbol of "matcPilotCells", because there are the pilots for
+	   Frame-synchronization */
+	iNumPilPairs = 0;
+
+	for (i = 0; i < iNumCarrier - 1; i++)
 	{
 		/* Only successive pilots (in frequency direction) are used */
 		if (_IsPilot(ReceiverParam.matiMapTab[0][i]) &&
 			_IsPilot(ReceiverParam.matiMapTab[0][i + 1]))
 		{
-			/* Store index of first pilot of the couple */
-			vecDiffFact[iNoDiffFact].iNoCarrier = i;
+			/* Store indices and complex numbers */
+			vecPilCorr[iNumPilPairs].iIdx1 = i;
+			vecPilCorr[iNumPilPairs].iIdx2 = i + 1;
+			vecPilCorr[iNumPilPairs].cPil1 = ReceiverParam.matcPilotCells[0][i];
+			vecPilCorr[iNumPilPairs].cPil2 =
+				ReceiverParam.matcPilotCells[0][i + 1];
 
-			/* Calculate phase correction term. This term is needed, because the
-			   desired position of the main peak (line of sight) is the middle
-			   of the guard-interval */
-			rArgumentTemp = (_REAL) 2 * crPi / iDFTSize * ReceiverParam.iGuardSize / 2;
-			cPhaseCorTermDivi = _COMPLEX(cos(rArgumentTemp), -sin(rArgumentTemp));
-
-			/* Calculate differential factor */
-			vecDiffFact[iNoDiffFact].cDiff = ReceiverParam.matcPilotCells[0][i + 1] / 
-				ReceiverParam.matcPilotCells[0][i] * cPhaseCorTermDivi;
-
-			iNoDiffFact++;
+			iNumPilPairs++;
 		}
 	}
 
+	/* Calculate channel correlation in frequency direction. Use rectangular
+	   shaped PDS with the length of the guard-interval */
+	const CReal rArgSinc =
+		(CReal) ReceiverParam.iGuardSize / ReceiverParam.iFFTSizeN;
+	const CReal rArgExp = crPi * rArgSinc;
+
+	cR_HH = Sinc(rArgSinc) * CComplex(Cos(rArgExp), -Sin(rArgExp));
+
+
+	/* Frequency offset estimation ------------------------------------------ */
 	/* Get position of frequency pilots */
 	int iFreqPilCount = 0;
-	for (i = 0; i < iTotalNoUsefCarr - 1; i++)
+	int iAvPilPos = 0;
+	for (i = 0; i < iNumCarrier - 1; i++)
 	{
-		if (ReceiverParam.matiMapTab[0][i] & CM_FRE_PI)
+		if (_IsFreqPil(ReceiverParam.matiMapTab[0][i]))
 		{
+			/* For average frequency pilot position to DC carrier */
+			iAvPilPos += i + ReceiverParam.iCarrierKmin;
+			
 			iPosFreqPil[iFreqPilCount] = i;
 			iFreqPilCount++;
 		}
 	}
 
-	/* Init memory for "old" frequency pilots and actual phase differences */
-	for (i = 0; i < NO_FREQ_PILOTS; i++)
-	{
-		cOldFreqPil[i] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
-		rFreqPilotPhDiff[i] = (_REAL) 0.0;
-	}
+	/* Average distance of the frequency pilots from the DC carrier. Needed for
+	   corrections for sample rate offset changes. Normalized to sample rate! */
+	rAvFreqPilDistToDC =
+		(CReal) iAvPilPos / NUM_FREQ_PILOTS / ReceiverParam.iFFTSizeN;
+
+	/* Init memory for "old" frequency pilots */
+	for (i = 0; i < NUM_FREQ_PILOTS; i++)
+		cOldFreqPil[i] = CComplex((CReal) 0.0, (CReal) 0.0);
 	
 	/* Nomalization constant for frequency offset estimation */
-	rNormConstFOE = 
-		(_REAL) 1.0 / ((_REAL) 2.0 * crPi * ReceiverParam.iSymbolBlockSize);
+	rNormConstFOE =
+		(CReal) 1.0 / ((CReal) 2.0 * crPi * ReceiverParam.iSymbolBlockSize);
 
-	/* Init global frequency (resampling) offset tracking value */
-	ReceiverParam.rResampleOffset = (_REAL) 0.0;
-	ReceiverParam.rFreqOffsetTrack = (_REAL) 0.0;
+	/* Init time constant for IIR filter for frequency offset estimation */
+	rLamFreqOff = IIR1Lam(TICONST_FREQ_OFF_EST, (CReal) SOUNDCRD_SAMPLE_RATE /
+		ReceiverParam.iSymbolBlockSize);
 
-	/* Allocate memory for historys. Init history with large values, because
-	   we search for minimum! */
-	vecrCorrHistory.Init(iNoSymPerFrame, (_REAL) HI_VALUE_FOR_MIN_SEARCH);
+	/* Init vector for averaging the frequency offset estimation */
+	cFreqOffVec = CComplex((CReal) 0.0, (CReal) 0.0);
 
-	/* For simulation set this value here in the init routine */
-	if (bSyncInput == TRUE)
-		iSymbolCounterTiSy = iNoSymPerFrame - 1;
+	/* Init value for previous estimated sample rate offset with the current
+	   setting. This can be non-zero if, e.g., an initial sample rate offset
+	   was set by command line arguments */
+	rPrevSamRateOffset = ReceiverParam.rResampleOffset;
+
+
+#ifdef USE_SAMOFFS_TRACK_FRE_PIL
+	/* Inits for sample rate offset estimation algorithm -------------------- */
+	/* Init memory for actual phase differences */
+	for (i = 0; i < NUM_FREQ_PILOTS; i++)
+		cFreqPilotPhDiff[i] = CComplex((CReal) 0.0, (CReal) 0.0);
+
+	/* Init time constant for IIR filter for sample rate offset estimation */
+	rLamSamRaOff = IIR1Lam(TICONST_SAMRATE_OFF_EST,
+		(CReal) SOUNDCRD_SAMPLE_RATE / ReceiverParam.iSymbolBlockSize);
+#endif
+
 
 	/* Define block-sizes for input and output */
-	iInputBlockSize = iTotalNoUsefCarr;
-	iOutputBlockSize = iTotalNoUsefCarr;
+	iInputBlockSize = iNumCarrier;
+	iMaxOutputBlockSize = iNumCarrier;
 }
 
-void CSyncUsingPil::StartAcquisition() 
+void CSyncUsingPil::StartAcquisition()
 {
 	/* Init internal counter for symbol number */
-	iSymbolCounterTiSy = 0;
+	iSymbCntFraSy = 0;
+
+	/* Reset correlation history */
+	vecrCorrHistory.Reset(-_MAXREAL);
 
 	bAquisition = TRUE;
-}
 
+	/* After an initialization the frame sync must be adjusted */
+	bBadFrameSync = TRUE;
+	bInitFrameSync = TRUE; /* Set flag to show that (re)-init was done */
+	bFrameSyncWasOK = FALSE;
+
+	/* Initialize count for filling the history buffer */
+	iInitCntFraSy = iNumSymPerFrame;
+}

@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -31,23 +31,50 @@
 
 #include "GlobalDefinitions.h"
 #include "Parameter.h"
-#include "Buffer.h"
-#include "Modul.h"
-#include "Vector.h"
+#include "util/Buffer.h"
+#include "util/Modul.h"
+#include "util/Vector.h"
+#ifdef USE_QT_GUI
+# include "MDI/MDI.h"
+#endif
 
 
 /* Classes ********************************************************************/
 class CMSCDemultiplexer : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
+#ifdef USE_QT_GUI
+	CMSCDemultiplexer(CMDI* pNM) : pMDI(pNM), vecMDIStrPos(MAX_NUM_STREAMS) {}
+#else
 	CMSCDemultiplexer() {}
+#endif
 	virtual ~CMSCDemultiplexer() {}
 
 protected:
-	int	iOffsetAudLow;
-	int	iOffsetAudHigh;
-	int	iLenAudLow;
-	int	iLenAudHigh;
+	struct SStreamPos
+	{
+		int	iOffsetLow;
+		int	iOffsetHigh;
+		int	iLenLow;
+		int	iLenHigh;
+	};
+
+	SStreamPos			AudStreamPos;
+	SStreamPos			DataStreamPos;
+
+#ifdef USE_QT_GUI
+	/* MDI */
+	CMDI*				pMDI;
+	CVector<SStreamPos>	vecMDIStrPos;
+	CVector<int>		veciMDIActStre;
+#endif
+
+	int					iDataStreamID;
+	int					iAudioStreamID;
+
+	SStreamPos GetStreamPos(CParameter& Param, const int iStreamID);
+	void ExtractData(CVectorEx<_BINARY>& vecIn, CVectorEx<_BINARY>& vecOut,
+					 SStreamPos& StrPos);
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

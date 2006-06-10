@@ -1,0 +1,1134 @@
+/******************************************************************************\
+ * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
+ * Copyright (c) 2001-2005
+ *
+ * Author(s):
+ *	Volker Fischer, Andrea Russo, Julian Cable
+ *
+ * 6/8/2005 Andrea Russo
+ *	- save Journaline pages as HTML
+ * 6/16/2005 Andrea Russo
+ *	- save path for storing pictures or Journaline pages
+ * 11/17/2005 Andrea Russo
+ * - BroadcastWebSite implementation
+ * 11/29/2005 Andrea Russo
+ * - set and save the TextBrowser font
+ *
+ ******************************************************************************
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+\******************************************************************************/
+
+#include "MultimediaDlg.h"
+
+
+/* Implementation *************************************************************/
+MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
+	const char* name, bool modal, WFlags f) : pDRMRec(pNDRMR),
+	MultimediaDlgBase(parent, name, modal, f)
+{
+#ifdef _WIN32 /* This works only reliable under Windows :-( */
+	/* Get window geometry data from DRMReceiver module and apply it */
+	const QRect WinGeom(pDRMRec->GeomMultimediaDlg.iXPos,
+		pDRMRec->GeomMultimediaDlg.iYPos,
+		pDRMRec->GeomMultimediaDlg.iWSize,
+		pDRMRec->GeomMultimediaDlg.iHSize);
+
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+#else /* Under Linux only restore the size */
+	resize(pDRMRec->GeomMultimediaDlg.iWSize,
+		pDRMRec->GeomMultimediaDlg.iHSize);
+#endif
+
+	/* Store the default font */
+	fontDefault = TextBrowser->font();
+
+	/* Retrieve the setting saved into the .ini file */
+	SetCurrentSavePath(pDRMRec->strStoragePathMMDlg.c_str());
+
+	/* Retrieve the font setting saved into the .ini file */
+	if (pDRMRec->FontParamMMDlg.strFamily != "")
+	{
+		fontTextBrowser =
+			QFont(QString(pDRMRec->FontParamMMDlg.strFamily.c_str()),
+			pDRMRec->FontParamMMDlg.intPointSize,
+			pDRMRec->FontParamMMDlg.intWeight,
+			pDRMRec->FontParamMMDlg.bItalic);
+	}
+	else
+	{
+		/* If not defined, retrieve the default font */
+		fontTextBrowser = fontDefault;
+	}
+
+	/* Add body's stylesheet */
+	QStyleSheetItem* styleBody =
+		new QStyleSheetItem(TextBrowser->styleSheet(), "stylebody");
+
+	styleBody->setFontFamily(fontTextBrowser.family());
+	styleBody->setFontSize(fontTextBrowser.pointSize());
+	styleBody->setFontWeight(fontTextBrowser.weight());
+	styleBody->setFontItalic(fontTextBrowser.italic());
+
+	/* Picture controls should be invisable. These controls are only used for
+	   storing the resources */
+	PixmapFhGIIS->hide();
+	PixmapLogoJournaline->hide();
+
+	/* Set pictures in source factory */
+	QMimeSourceFactory::defaultFactory()->setImage("PixmapFhGIIS",
+		PixmapFhGIIS->pixmap()->convertToImage());
+	QMimeSourceFactory::defaultFactory()->setImage("PixmapLogoJournaline",
+		PixmapLogoJournaline->pixmap()->convertToImage());
+
+	/* Set FhG IIS text */
+	strFhGIISText =
+		"<table><tr><td><img source=\"PixmapFhGIIS\"></td>"
+		"<td><font face=\"" + QString(FONT_COURIER) + "\" size=\"-1\">Features NewsService "
+		"Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
+		"Germany. For more information visit http://www.iis.fhg.de/dab"
+		"</font></td></tr></table>";
+
+	/* Set Journaline headline text */
+	strJournalineHeadText =
+		"<table><tr><td><img source=\"PixmapLogoJournaline\"></td>"
+		"<td valign=\"middle\"><h2>NewsService Journaline" + QString(QChar(174)) /* (R) */ +
+		"</h2></td></tr></table>";
+
+	/* Inits for broadcast website application */
+	strDirMOTCache = MOT_BROADCAST_WEBSITE_PATH;
+	strBWSHomePage = "";
+
+
+	/* Set Menu ***************************************************************/
+	/* File menu ------------------------------------------------------------ */
+	pFileMenu = new QPopupMenu(this);
+	CHECK_PTR(pFileMenu);
+	pFileMenu->insertItem(tr("C&lear all"), this, SLOT(OnClearAll()),
+		CTRL+Key_X, 0);
+	pFileMenu->insertSeparator();
+	pFileMenu->insertItem(tr("&Save..."), this, SLOT(OnSave()), CTRL+Key_S, 1);
+	pFileMenu->insertItem(tr("Save &all..."), this, SLOT(OnSaveAll()),
+		CTRL+Key_A, 2);
+	pFileMenu->insertSeparator();
+	pFileMenu->insertItem(tr("&Close"), this, SLOT(close()), 0, 3);
+
+
+	/* Settings menu  ------------------------------------------------------- */
+	QPopupMenu* pSettingsMenu = new QPopupMenu(this);
+	CHECK_PTR(pSettingsMenu);
+	pSettingsMenu->insertItem(tr("Set &Font..."), this, SLOT(OnSetFont()));
+
+
+	/* Main menu bar -------------------------------------------------------- */
+	pMenu = new QMenuBar(this);
+	CHECK_PTR(pMenu);
+	pMenu->insertItem(tr("&File"), pFileMenu);
+	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
+
+	/* Now tell the layout about the menu */
+	MultimediaDlgBaseLayout->setMenuBar(pMenu);
+
+	
+	/* Update time for color LED */
+	LEDStatus->SetUpdateTime(1000);
+
+	/* Init slide-show (needed for setting up vectors and indices) */
+	ClearAllSlideShow();
+
+	/* Init container and GUI */
+	InitApplication(pDRMRec->GetDataDecoder()->GetAppType());
+
+
+	/* Connect controls */
+	connect(PushButtonStepBack, SIGNAL(clicked()),
+		this, SLOT(OnButtonStepBack()));
+	connect(PushButtonStepForw, SIGNAL(clicked()),
+		this, SLOT(OnButtonStepForw()));
+	connect(PushButtonJumpBegin, SIGNAL(clicked()),
+		this, SLOT(OnButtonJumpBegin()));
+	connect(PushButtonJumpEnd, SIGNAL(clicked()),
+		this, SLOT(OnButtonJumpEnd()));
+	connect(TextBrowser, SIGNAL(textChanged()),
+		this, SLOT(OnTextChanged()));
+
+	connect(&Timer, SIGNAL(timeout()),
+		this, SLOT(OnTimer()));
+}
+
+MultimediaDlg::~MultimediaDlg()
+{
+	/* Set window geometry data in DRMReceiver module */
+	QRect WinGeom = geometry();
+
+	pDRMRec->GeomMultimediaDlg.iXPos = WinGeom.x();
+	pDRMRec->GeomMultimediaDlg.iYPos = WinGeom.y();
+	pDRMRec->GeomMultimediaDlg.iHSize = WinGeom.height();
+	pDRMRec->GeomMultimediaDlg.iWSize = WinGeom.width();
+
+	/* Store save path */
+	pDRMRec->strStoragePathMMDlg = strCurrentSavePath.latin1();
+
+	/* Store current TextBrowser font */
+	pDRMRec->FontParamMMDlg.strFamily = fontTextBrowser.family().latin1();
+	pDRMRec->FontParamMMDlg.intPointSize = fontTextBrowser.pointSize();
+	pDRMRec->FontParamMMDlg.intWeight = fontTextBrowser.weight();
+	pDRMRec->FontParamMMDlg.bItalic = fontTextBrowser.italic();
+}
+
+void MultimediaDlg::InitApplication(CDataDecoder::EAppType eNewAppType)
+{
+	/* Set internal parameter */
+	eAppType = eNewAppType;
+
+	/* Actual inits */
+	switch (eAppType)
+	{
+	case CDataDecoder::AT_MOTSLISHOW:
+		InitMOTSlideShow();
+		break;
+
+	case CDataDecoder::AT_JOURNALINE:
+		InitJournaline();
+		break;
+
+	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
+		InitBroadcastWebSite();
+		break;
+
+	default:
+		InitNotSupported();
+		break;
+	}
+}
+
+void MultimediaDlg::OnTextChanged()
+{
+	/* Check, if the current text is a link ID or regular text */
+	if (TextBrowser->text().compare(TextBrowser->text().left(1), "<") != 0)
+	{
+		/* Save old ID */
+		NewIDHistory.Add(iCurJourObjID);
+
+		/* Set text to news ID text which was selected by the user */
+		iCurJourObjID = TextBrowser->text().toInt();
+		SetJournalineText();
+
+		/* Enable back button */
+		PushButtonStepBack->setEnabled(TRUE);
+	}
+}
+
+void MultimediaDlg::OnTimer()
+{
+	CMOTObject	NewObj;
+	QPixmap	NewImage;
+	FILE*		pFiBody;
+	int		iCurNumPict;
+
+	/* Check out which application is transmitted right now */
+	CDataDecoder::EAppType eNewAppType =
+		pDRMRec->GetDataDecoder()->GetAppType();
+
+	if (eNewAppType != eAppType)
+		InitApplication(eNewAppType);
+
+	switch (eAppType)
+	{
+	case CDataDecoder::AT_MOTSLISHOW:
+		/* Poll the data decoder module for new picture */
+		if (pDRMRec->GetDataDecoder()->GetMOTObject(NewObj, eAppType) == TRUE)
+		{
+			/* Store received picture */
+			iCurNumPict = vecRawImages.Size();
+			vecRawImages.Add(NewObj);
+
+			/* If the last received picture was selected, automatically show
+			   new picture */
+			if (iCurImagePos == iCurNumPict - 1)
+			{
+				iCurImagePos = iCurNumPict;
+				SetSlideShowPicture();
+			}
+			else
+				UpdateAccButtonsSlideShow();
+		}
+		break;
+
+	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
+		/* Poll the data decoder module for new object */
+		if (pDRMRec->GetDataDecoder()->GetMOTObject(NewObj, eAppType) == TRUE)
+		{
+			/* Store received MOT object on disk */
+			const QString strNewObjName = NewObj.strName.c_str();
+			const QString strFileName =
+				QString(strDirMOTCache + "/" + strNewObjName);
+
+			SaveMOTObject(NewObj.Body.vecData, strFileName);
+
+			/* Check if DABMOT could not unzip */
+			const _BOOLEAN bZipped =
+				(strNewObjName.right(3).upper() == ".GZ");
+
+			/* Add an html header for refresh the page every n seconds */
+			if ((pDRMRec->bAddRefreshHeader) 
+					&& (NewObj.strFormat == "html")
+					&& (bZipped == FALSE))
+				AddRefreshHeader(strFileName);
+
+			if (strNewObjName.left(9).upper() == "INDEX.HTM")
+			{
+				/* The home page is available */
+				if (bZipped == FALSE)
+				{
+					/* Set new homepage file name and init dialog */
+					strBWSHomePage = strNewObjName;
+					InitBroadcastWebSite();
+				}
+				else
+				{
+					TextBrowser->setText("<center><h2>" +
+						tr("MOT Broadcast Web Site")
+						+ "</h2><br>"
+						+ tr("The home page is available")
+						+ "<br><br>"
+						+ tr("Impossible to uncompress the home page.<br>"
+						"For uncompress data compile Dream with zlib or Freeimage.<br>"
+						"Compress files will be saved on disk here:<br>" +
+						strDirMOTCache + "/") + "</center>");
+				}
+			}
+		}
+		break;
+
+	case CDataDecoder::AT_JOURNALINE:
+		SetJournalineText();
+		break;
+	}
+}
+
+void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
+										  const _BOOLEAN bHTMLExport,
+										  QString& strTitle, QString& strItems)
+{
+	/* Get news from actual Journaline decoder */
+	CNews News;
+	pDRMRec->GetDataDecoder()->GetNews(iCurJourID, News);
+
+	/* Decode UTF-8 coding for title */
+	strTitle = QString().fromUtf8(QCString(News.sTitle.c_str()));
+
+	strItems = "";
+	for (int i = 0; i < News.vecItem.Size(); i++)
+	{
+		QString strCurItem;
+		if (bHTMLExport == FALSE)
+		{
+			/* Decode UTF-8 coding of this item text */
+			strCurItem = QString().fromUtf8(
+				QCString(News.vecItem[i].sText.c_str()));
+		}
+		else
+		{
+			/* In case of HTML export, do not decode UTF-8 coding */
+			strCurItem = News.vecItem[i].sText.c_str();
+		}
+
+		/* Replace \n by html command <br> */
+		strCurItem = strCurItem.replace(QRegExp("\n"), "<br>");
+
+		if (News.vecItem[i].iLink == JOURNALINE_IS_NO_LINK)
+		{
+			/* Only text, no link */
+			strItems += strCurItem + QString("<br>");
+		}
+		else if (News.vecItem[i].iLink == JOURNALINE_LINK_NOT_ACTIVE)
+		{
+			/* Un-ordered list item without link */
+			strItems += QString("<li>") + strCurItem + QString("</li>");
+		}
+		else
+		{
+			if (bHTMLExport == FALSE) 
+			{
+				QString strLinkStr = QString().setNum(News.vecItem[i].iLink);
+
+				/* Un-ordered list item with link */
+				strItems += QString("<li><a href=\"") + strLinkStr +
+					QString("\">") + strCurItem +
+					QString("</a></li>");
+
+				/* Store link location in factory (stores ID) */
+				QMimeSourceFactory::defaultFactory()->
+					setText(strLinkStr, strLinkStr);
+			}
+			else
+				strItems += QString("<li>") + strCurItem + QString("</li>");
+		}
+	}
+}
+
+void MultimediaDlg::SetJournalineText()
+{
+	/* Get title and body with html links */
+	QString strTitle("");
+	QString strItems("");
+	ExtractJournalineBody(iCurJourObjID, FALSE, strTitle, strItems);
+
+	/* Set html text. Standard design. The first character must be a "<". This
+	   is used to identify whether normal text is displayed or an ID was set */
+	QString strAllText =
+		strJournalineHeadText +
+		"<table>"
+		"<tr><td><hr></td></tr>" /* horizontial line */
+		"<tr><td><stylebody><b><center>" + strTitle + "</center></b></stylebody></td></tr>"
+		"<tr><td><stylebody><ul type=\"square\">" + strItems +
+		"</ul></stylebody></td></tr>"
+		"<tr><td><hr></td></tr>" /* horizontial line */
+		"</table>"
+		+ strFhGIISText;
+
+	/* Only update text browser if text has changed */
+	if (TextBrowser->text().compare(strAllText) != 0)
+		TextBrowser->setText(strAllText);
+
+	/* Enable / disable "save" menu item if title is present or not */
+	if (strTitle == "")
+		pFileMenu->setItemEnabled(1, FALSE);
+	else
+		pFileMenu->setItemEnabled(1, TRUE);
+}
+
+void MultimediaDlg::showEvent(QShowEvent* pEvent)
+{
+	/* Activte real-time timer when window is shown */
+	Timer.start(GUI_CONTROL_UPDATE_TIME);
+
+	/* Update window */
+	OnTimer();
+}
+
+void MultimediaDlg::hideEvent(QHideEvent* pEvent)
+{
+	/* Deactivate real-time timer so that it does not get new pictures */
+	Timer.stop();
+}
+
+void MultimediaDlg::SetStatus(int MessID, int iMessPara)
+{
+	switch(MessID)
+	{
+	case MS_MOT_OBJ_STAT:
+		LEDStatus->SetLight(iMessPara);
+		break;
+	}
+}
+
+void MultimediaDlg::OnButtonStepBack()
+{
+	switch (eAppType)
+	{
+	case CDataDecoder::AT_MOTSLISHOW:
+		iCurImagePos--;
+		SetSlideShowPicture();
+		break;
+
+	case CDataDecoder::AT_JOURNALINE:
+		/* Step one level back, get ID from history */
+		iCurJourObjID = NewIDHistory.Back();
+
+		/* If root ID is reached, disable back button */
+		if (iCurJourObjID == 0)
+			PushButtonStepBack->setEnabled(FALSE);
+
+		SetJournalineText();
+		break;
+	}
+}
+
+void MultimediaDlg::OnButtonStepForw()
+{
+	/* Different behaviour for slideshow and broadcast web site */
+	switch (eAppType)
+	{
+	case CDataDecoder::AT_MOTSLISHOW:
+		iCurImagePos++;
+		SetSlideShowPicture();
+		break;
+
+	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
+		/* Try to open browser */
+		if (!openBrowser(this, strDirMOTCache + "/" + strBWSHomePage))
+		{
+			QMessageBox::information(this, "Dream",
+				tr("Failed to start the default browser.\n"
+				"Open the home page:\n" + strDirMOTCache +
+				"/" + strBWSHomePage + "\nmanually."), QMessageBox::Ok);
+		}
+		break;
+	}
+}
+
+void MultimediaDlg::OnButtonJumpBegin()
+{
+	/* Reset current picture number to zero (begin) */
+	iCurImagePos = 0;
+	SetSlideShowPicture();
+}
+
+void MultimediaDlg::OnButtonJumpEnd()
+{
+	/* Go to last received picture */
+	iCurImagePos = GetIDLastPicture();
+	SetSlideShowPicture();
+}
+
+void MultimediaDlg::SetSlideShowPicture()
+{
+	QPixmap		NewImage;
+
+	/* Copy current image from image storage vector */
+	CMOTObject vecbyCurPict(vecRawImages[iCurImagePos]);
+
+	/* The standard version of QT does not have jpeg support, if FreeImage
+	   library is installed, the following routine converts the picture to
+	   png which can be displayed */
+	JpgToPng(vecbyCurPict);
+
+	CVector<_BYTE>& imagedata = vecbyCurPict.Body.vecData;
+	const QString imagename(vecbyCurPict.strName.c_str());
+
+	/* Load picture in QT format */
+	if (NewImage.loadFromData(&imagedata[0], imagedata.size()))
+	{
+		# if QT_VERSION > 230
+			/* The slideshow pictures are not 
+				updated correctly without this line */
+
+			/* If the text is empty there is segmentation fault
+				browsing the images */
+
+			TextBrowser->setText("<br>");
+		#endif
+
+		/* Set new picture in source factory and set it in text control */
+		QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
+			NewImage.convertToImage());
+
+		TextBrowser->setText("<center><img source=\"MOTSlideShowimage\">"
+			"</center>");
+	}
+	else
+	{
+		/* Show text that tells the user of load failure */
+		TextBrowser->setText("<br><br><center><b>" + tr("Image could not be "
+			"loaded, ") +
+			 QString(vecbyCurPict.strFormat.c_str()) +
+			 tr("-format not supported by this version of QT!") +
+			"</b><br><br><br>" + tr("If you want to view the image, "
+			"save it to file and use an external viewer") + "</center>");
+	}
+
+	/* Remove previous tool tip */
+	QToolTip::remove(TextBrowser);
+
+	/* Add tool tip showing the name of the picture */
+	if (imagename.length() != 0)
+		QToolTip::add(TextBrowser,imagename);
+
+	UpdateAccButtonsSlideShow();
+}
+
+void MultimediaDlg::UpdateAccButtonsSlideShow()
+{
+	/* Set enable menu entry for saving a picture */
+	if (iCurImagePos < 0)
+	{
+		pFileMenu->setItemEnabled(0, FALSE);
+		pFileMenu->setItemEnabled(1, FALSE);
+		pFileMenu->setItemEnabled(2, FALSE);
+	}
+	else
+	{
+		pFileMenu->setItemEnabled(0, TRUE);
+		pFileMenu->setItemEnabled(1, TRUE);
+		pFileMenu->setItemEnabled(2, TRUE);
+	}
+
+	if (iCurImagePos <= 0)
+	{
+		/* We are already at the beginning */
+		PushButtonStepBack->setEnabled(FALSE);
+		PushButtonJumpBegin->setEnabled(FALSE);
+	}
+	else
+	{
+		PushButtonStepBack->setEnabled(TRUE);
+		PushButtonJumpBegin->setEnabled(TRUE);
+	}
+
+	if (iCurImagePos == GetIDLastPicture())
+	{
+		/* We are already at the end */
+		PushButtonStepForw->setEnabled(FALSE);
+		PushButtonJumpEnd->setEnabled(FALSE);
+	}
+	else
+	{
+		PushButtonStepForw->setEnabled(TRUE);
+		PushButtonJumpEnd->setEnabled(TRUE);
+	}
+
+	QString strTotImages = QString().setNum(GetIDLastPicture() + 1);
+	QString strNumImage = QString().setNum(iCurImagePos + 1);
+
+	QString strSep("");
+
+	for (int i = 0; i < (strTotImages.length() - strNumImage.length()); i++)
+		strSep += " ";
+
+	LabelCurPicNum->setText(strSep + strNumImage + "/" + strTotImages);
+
+	/* If no picture was received, show the following text */
+	if (iCurImagePos < 0)
+	{
+		/* Init text browser window */
+		TextBrowser->setText("<center><h2>" +
+			tr("MOT Slideshow Viewer") + "</h2></center>");
+	}
+}
+
+void MultimediaDlg::SetCurrentSavePath(const QString strFileName)
+{
+	if (strFileName.right(1).latin1() != QString("/"))
+	{
+		strCurrentSavePath = QFileInfo(strFileName).dirPath();
+
+		if (strCurrentSavePath.right(1).latin1() != QString("/"))
+			strCurrentSavePath += "/";
+	}
+	else
+		strCurrentSavePath = strFileName;
+}
+
+void MultimediaDlg::OnSave()
+{
+	QString strFileName;
+	QString strDefFileName;
+	QString strExt;
+	QString strFilter;
+
+	switch (eAppType)
+	{
+	case CDataDecoder::AT_MOTSLISHOW:
+
+		strExt = QString(vecRawImages[iCurImagePos].strFormat.c_str());
+
+		if (strExt.length() == 0)
+			strFilter = "*.*";
+		else
+			strFilter = "*." + strExt;
+
+		/* Show "save file" dialog */
+		/* Set file name */
+		strDefFileName = vecRawImages[iCurImagePos].strName.c_str();
+
+		/* Use default file name if no file name was transmitted */
+		if (strDefFileName.length() == 0)
+			strDefFileName = "RecPic";
+
+		if ((strDefFileName.contains(".") == 0) && (strExt.length() > 0))
+				strDefFileName += "." + strExt;
+
+		strFileName =
+			QFileDialog::getSaveFileName(strCurrentSavePath + strDefFileName,
+			strFilter, this);
+
+		/* Check if user not hit the cancel button */
+		if (!strFileName.isNull())
+		{
+			SetCurrentSavePath(strFileName);
+			SaveMOTObject(vecRawImages[iCurImagePos].Body.vecData, strFileName);
+		}
+		break;
+
+	case CDataDecoder::AT_JOURNALINE:
+		/* Save to file current journaline page */
+		QString strTitle("");
+		QString strItems("");
+
+		/* TRUE = without html links */
+		ExtractJournalineBody(iCurJourObjID, TRUE, strTitle, strItems);
+
+		/* Prepare HTML page for storing the content (header, body tags, etc) */
+		QString strJornalineText = "<html>\n<head>\n"
+			"<meta http-equiv=\"content-Type\" "
+			"content=\"text/html; charset=utf-8\">\n<title>" + strTitle +
+			"</title>\n</head>\n\n<body>\n<table>\n"
+			"<tr><th>" + strTitle + "</th></tr>\n"
+			"<tr><td><ul type=\"square\">" + strItems + "</ul></td></tr>\n"
+			"</table>\n"
+			/* Add current date and time */
+			"<br><p align=right><font size=-2><i>" +
+			QDateTime().currentDateTime().toString() + "</i></font></p>"
+			"</body>\n</html>";
+
+		strFileName = QFileDialog::getSaveFileName(strCurrentSavePath +
+			strTitle + ".html", "*.html", this);
+
+		if (!strFileName.isNull())
+		{
+			SetCurrentSavePath(strFileName);
+
+			/* Save Journaline page as a text stream */
+			QFile FileObj(strFileName);
+
+			if (FileObj.open(IO_WriteOnly))
+			{
+				QTextStream TextStream(&FileObj);
+				TextStream << strJornalineText; /* Actual writing */
+				FileObj.close();
+			}
+		}
+		break;
+	}
+}
+
+void MultimediaDlg::OnSaveAll()
+{
+	/* Let the user choose a directory */
+	QString strDirName =
+		QFileDialog::getExistingDirectory(NULL, this);
+
+	if (!strDirName.isNull())
+	{
+		/* add slashes if not present */
+		if (strDirName.right(1) != "/")
+			strDirName += "/";
+
+		/* Loop over all pictures received yet */
+		for (int j = 0; j < GetIDLastPicture() + 1; j++)
+		{
+			const CMOTObject& o = vecRawImages[j];
+			QString strFileName = o.strName.c_str();
+			QString strExt = QString(o.strFormat.c_str());
+
+			if (strFileName.length() == 0)
+			{
+				/* Construct file name from date and picture number (default) */
+				strFileName = "Dream_" + QDate().currentDate().toString() +
+					"_#" + QString().setNum(j);
+			}
+
+			/* Add directory and ending */
+			strFileName = strDirName + strFileName;
+
+			if ((strFileName.contains(".") == 0) && (strExt.length() > 0))
+				strFileName += "." + strExt;
+			
+			SaveMOTObject(o.Body.vecData, strFileName);
+		}
+	}
+}
+
+void MultimediaDlg::ClearAllSlideShow()
+{
+	/* Init vector which will store the received images with zero size */
+	vecRawImages.Init(0);
+
+	/* Init current image position */
+	iCurImagePos = -1;
+
+	/* Update GUI */
+	UpdateAccButtonsSlideShow();
+
+	/* Remove tool tips */
+	QToolTip::remove(TextBrowser);
+}
+
+void MultimediaDlg::InitNotSupported()
+{
+	/* Hide all controls, disable menu items */
+	pFileMenu->setItemEnabled(0, FALSE);
+	pFileMenu->setItemEnabled(1, FALSE);
+	pFileMenu->setItemEnabled(2, FALSE);
+	PushButtonStepForw->hide();
+	PushButtonJumpBegin->hide();
+	PushButtonJumpEnd->hide();
+	LabelCurPicNum->hide();
+	PushButtonStepBack->hide();
+	QToolTip::remove(TextBrowser);
+
+	/* Show that application is not supported */
+	TextBrowser->setText("<center><h2>" + tr("No data service or data service "
+		"not supported.") + "</h2></center>");
+}
+
+void MultimediaDlg::InitBroadcastWebSite()
+{
+	/* Hide all controls, disable menu items */
+	pFileMenu->setItemEnabled(0, FALSE);
+	pFileMenu->setItemEnabled(1, FALSE);
+	pFileMenu->setItemEnabled(2, FALSE);
+	PushButtonStepForw->show();
+	PushButtonStepForw->setEnabled(FALSE);
+	PushButtonJumpBegin->hide();
+	PushButtonJumpEnd->hide();
+	LabelCurPicNum->hide();
+	PushButtonStepBack->hide();
+	QToolTip::remove(TextBrowser);
+
+	if (strBWSHomePage != "")
+	{
+		/* This is the button for opening the browser */
+		PushButtonStepForw->setEnabled(TRUE);
+
+		/* Display text that index page was received an can be opened */
+		TextBrowser->setText("<center><h2>" + tr("MOT Broadcast Web Site")
+			+ "</h2><br>"
+			+ tr("The homepage is available.")
+			+ "<br><br>" +
+			tr("Press the button to open it in the default browser.")
+			+ "</center>");
+	}
+	else
+	{
+		/* Show initial text */
+		TextBrowser->setText("<center><h2>" + tr("MOT Broadcast Web Site") +
+			"</h2></center>");
+
+		/* Create the cache directory if not exist */
+		if (!QFileInfo(strDirMOTCache).exists())
+			QDir().mkdir(strDirMOTCache);
+	}
+}
+
+void MultimediaDlg::InitMOTSlideShow()
+{
+	/* Make all browse buttons visible */
+	PushButtonStepBack->show();
+	PushButtonStepForw->show();
+	PushButtonJumpBegin->show();
+	PushButtonJumpEnd->show();
+	LabelCurPicNum->show();
+
+	/* Set current image position to the last picture and display it (if at
+	   least one picture is available) */
+	iCurImagePos = GetIDLastPicture();
+	if (iCurImagePos >= 0)
+		SetSlideShowPicture();
+	else
+	{
+		/* Remove tool tips */
+		QToolTip::remove(TextBrowser);
+	}
+
+	/* Update buttons and menu */
+	UpdateAccButtonsSlideShow();
+}
+
+void MultimediaDlg::InitJournaline()
+{
+	/* Disable "clear all" menu item */
+	pFileMenu->setItemEnabled(0, FALSE);
+
+	/* Disable "save" menu items */
+	pFileMenu->setItemEnabled(1, FALSE);
+	pFileMenu->setItemEnabled(2, FALSE);
+
+	/* Only one back button is visible and enabled */
+	PushButtonStepForw->hide();
+	PushButtonJumpBegin->hide();
+	PushButtonJumpEnd->hide();
+	LabelCurPicNum->hide();
+
+	/* Show back button and disable it because we always start at the root
+	   object */
+	PushButtonStepBack->show();
+	PushButtonStepBack->setEnabled(FALSE);
+
+	/* Init text browser window */
+	iCurJourObjID = 0;
+	SetJournalineText();
+
+	/* Remove tool tips */
+	QToolTip::remove(TextBrowser);
+
+	NewIDHistory.Reset();
+}
+
+void MultimediaDlg::CreateDirectories(const QString& filename)
+{
+/*
+	This function is for creating a complete directory structure to a given
+	file name. If there is a pathname like this:
+	/html/files/images/myimage.gif 
+	this function create all the folders into MOTCache:
+	/html
+	/html/files
+	/html/files/images
+	QFileInfo only creates a file if the pathname is valid. If not all folders
+	are created, QFileInfo will not save the file. There was no QT function
+	or a hint the QT mailing list found in which does the job of this function.
+*/
+	int i = 0;
+
+	while (uint(i) < filename.length())
+	{
+		_BOOLEAN bFound = FALSE;
+
+		while ((uint(i) < filename.length()) && (bFound == FALSE))
+		{
+			if (filename[i] == '/')
+				bFound = TRUE;
+			else
+				i++;
+		}
+
+		if (bFound == TRUE)
+		{
+			/* create directory */
+			const QString sDirName = filename.left(i);
+
+			if (!QFileInfo(sDirName).exists())
+				QDir().mkdir(sDirName);
+		}
+
+		i++;
+	}
+}
+
+void MultimediaDlg::AddRefreshHeader(const QString& strFileName)
+{
+/*
+	Add a html header to refresh the page every n seconds.
+*/
+	/* Open file for append (text mode) */
+	FILE* pFiBody = fopen(strFileName.latin1(), "at");
+	
+	if (pFiBody != NULL)
+	{
+		fputs("<META http-equiv=\"REFRESH\" content=\""
+			+ QString::number(pDRMRec->iMOTBWSRefreshTime)
+			+ "\">", pFiBody);
+
+		/* Close the file afterwards */
+		fclose(pFiBody);
+	}
+}
+
+void MultimediaDlg::SaveMOTObject(const CVector<_BYTE>& vecbRawData,
+								  const QString& strFileName)
+{
+	/* First, create directory for storing the file (if not exists) */
+	CreateDirectories(strFileName.latin1());
+	
+	/* Data size in bytes */
+	const int iSize = vecbRawData.Size();
+
+	/* Open file */
+	FILE* pFiBody = fopen(strFileName.latin1(), "wb");
+	
+	if (pFiBody != NULL)
+	{
+		/* Write data byte-wise */
+		for (int i = 0; i < iSize; i++)
+		{
+            	const _BYTE b = vecbRawData[i];
+				fwrite(&b, size_t(1), size_t(1), pFiBody);
+		}
+
+		/* Close the file afterwards */
+		fclose(pFiBody);
+	}
+}
+
+_BOOLEAN MultimediaDlg::openBrowser(QWidget *widget, const QString &filename)
+{
+	_BOOLEAN bResult = FALSE;
+
+#ifdef _WIN32
+	/* Running in an MS Windows environment */
+	if (NULL != widget)
+	{
+		bResult = (reinterpret_cast<int>(ShellExecute(NULL, "open",
+			filename.latin1(), NULL, NULL, SW_SHOWNORMAL)) > 32);
+	}
+#else
+	Q_UNUSED(widget);
+
+	/* try with KDE */
+	string strStartBrowser = "kfmclient exec \"";
+	strStartBrowser += filename.latin1();
+	strStartBrowser += "\"";
+	int retval = system(strStartBrowser.c_str());
+
+	if (retval != -1)
+	{
+		if ((WEXITSTATUS(retval) != 1) && (retval != 0))
+		{
+			/* try with gnome */
+			strStartBrowser = "gnome-open \"";
+			strStartBrowser += filename.latin1();
+			strStartBrowser += "\"";
+			retval = system(strStartBrowser.c_str());
+		}
+	}
+
+	if ((WEXITSTATUS(retval) == 1) || (retval == 0))
+		bResult = TRUE;
+#endif
+
+	return bResult;
+}
+
+void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
+{
+#ifdef HAVE_LIBFREEIMAGE
+	/* This class is needed for FreeImage load and save from memory. This code
+	   is based on an example code shipped with FreeImage library */
+	class MemIO : public FreeImageIO
+	{
+	public :
+		/* Assign function pointers in constructor */
+		MemIO(CVector<_BYTE> vecNewData) : vecbyData(vecNewData), iPos(0)
+			{read_proc  = _ReadProc; write_proc = _WriteProc;
+			tell_proc = _TellProc; seek_proc = _SeekProc;}
+		CVector<_BYTE>& GetData() {return vecbyData;}
+		void Reset() {iPos = 0;}
+
+		static long DLL_CALLCONV _TellProc(fi_handle handle)
+			{return ((MemIO*) handle)->iPos;} /* Return current position */
+
+		static unsigned DLL_CALLCONV _ReadProc(void* buffer, unsigned size,
+			unsigned count, fi_handle handle)
+		{
+			MemIO* memIO = (MemIO*) handle;
+			_BYTE* tmpBuf = (_BYTE*) buffer;
+
+			/* Copy new data in internal storage vector. Write at current iPos
+			   and increment position. Check for out-of-range, too */
+			for (unsigned int c = 0; c < count; c++)
+			{
+				for (unsigned int i = 0; i < size; i++)
+				{
+					if (memIO->iPos < memIO->vecbyData.Size())
+						*tmpBuf++ = memIO->vecbyData[memIO->iPos++];
+				}
+			}
+
+			return count;
+		}
+
+		static unsigned DLL_CALLCONV _WriteProc(void* buffer, unsigned size,
+			unsigned count, fi_handle handle)
+		{
+			MemIO* memIO = (MemIO*) handle;
+			_BYTE* tmpBuf = (_BYTE*) buffer;
+
+			/* Make sure, enough space is available */
+			const long int iSpaceLeft =
+				memIO->vecbyData.Size() - (memIO->iPos + size * count);
+
+			if (iSpaceLeft < 0)
+				memIO->vecbyData.Enlarge(-iSpaceLeft);
+
+			/* Copy data */
+			for (unsigned int c = 0; c < count; c++)
+			{
+				for (unsigned int i = 0; i < size; i++)
+					memIO->vecbyData[memIO->iPos++] = *tmpBuf++;
+			}
+
+			return count;
+		}
+
+		static int DLL_CALLCONV _SeekProc(fi_handle handle, long offset,
+			int origin)
+		{
+			if (origin == SEEK_SET)
+				((MemIO*) handle)->iPos = offset; /* From beginning */
+			else
+				((MemIO*) handle)->iPos += offset; /* From current position */
+
+			return 0;
+		}
+
+	private:
+		CVector<_BYTE>	vecbyData;
+		long int		iPos;
+	};
+
+	/* Only jpeg images are converted here */
+	if (NewPic.strFormat.compare("jpeg") != 0)
+		return;
+
+	/* If we use freeimage as a static library, we need to initialize it
+	   first */
+	FreeImage_Initialise();
+
+	/* Put input data in a new IO object */
+	MemIO memIO(NewPic.Body.vecData);
+
+	/* Load data from memory */
+	FIBITMAP* fbmp =
+		FreeImage_LoadFromHandle(FIF_JPEG, &memIO, (fi_handle) &memIO);
+
+	/* After the reading functions, the IO must be reset for the writing */
+	memIO.Reset();
+
+	/* Actual conversion */
+	if (FreeImage_SaveToHandle(FIF_PNG, fbmp, &memIO, (fi_handle) &memIO))
+	{
+		/* Get converted data and set new format string */
+		NewPic.Body.vecData.Init(memIO.GetData().Size()); /* Size has certainly
+															changed */
+		NewPic.Body.vecData = memIO.GetData(); /* Actual copying */
+		NewPic.strFormat = "png"; /* New format string */
+	}
+#endif
+}
+
+void MultimediaDlg::OnSetFont()
+{
+	_BOOLEAN bok;
+
+	/* Open the font dialog */
+	QFont newFont = QFontDialog::getFont(&bok, fontTextBrowser, this);
+
+	if (bok == TRUE)
+	{
+		/* Store the current text and then reset it */
+		QString strOldText = TextBrowser->text();
+		TextBrowser->setText("<br>");
+
+		/* Set the new font */
+		fontTextBrowser = newFont;
+
+		/* Change the body stylesheet */
+		QStyleSheetItem* styleBody =
+			TextBrowser->styleSheet()->item("stylebody");
+
+		styleBody->setFontFamily(fontTextBrowser.family());
+		styleBody->setFontSize(fontTextBrowser.pointSize());
+		styleBody->setFontWeight(fontTextBrowser.weight());
+		styleBody->setFontItalic(fontTextBrowser.italic());
+
+		/* Restore the text for refresh it with the new font */
+		TextBrowser->setText(strOldText);
+	}
+}

@@ -31,7 +31,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 #include "../ofdmcellmapping/OFDMCellMapping.h"
 #include "../matlib/Matlib.h"
 #include "ChanEstTime.h"
@@ -49,13 +49,15 @@ public:
 	virtual ~CTimeLinear() {}
 
 	virtual int Init(CParameter& Parameter);
-	virtual void Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
-						  CComplexVector& veccOutputData, 
-						  CVector<int>& veciMapTab, 
-						  CVector<_COMPLEX>& veccPilotCells);
+	virtual _REAL Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
+						   CComplexVector& veccOutputData, 
+						   CVector<int>& veciMapTab, 
+						   CVector<_COMPLEX>& veccPilotCells, _REAL rSNR);
 
 protected:
-	int					iNoCarrier;
+	int					iNumCarrier;
+	int					iNumIntpFreqPil;
+	int					iScatPilFreqInt;
 	CMatrix<_COMPLEX>	matcChanEstHist;
 
 	int					iLenHistBuff;

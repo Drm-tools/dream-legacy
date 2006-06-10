@@ -30,92 +30,113 @@
 #define FREQSYNC_H__3B0BA660EDOINBEROUEBGF4344_BB2B_23E7912__INCLUDED_
 
 #include "../Parameter.h"
-#include "../Modul.h"
+#include "../util/Modul.h"
 #include "../matlib/Matlib.h"
-#include <drfftw.h>
-
+#include "../util/Utilities.h"
+#include "../MDI/MDI.h"
 
 /* Definitions ****************************************************************/
 /* Bound for peak detection between filtered signal (in frequency direction) 
-   and the unfiltered signal */
-#define PEAK_BOUND_FILT2SIGNAL			((CReal) 3.0)
-/* Bound for sinusoid interferer cancellation algorithm */
-#define LEVEL_DIFF_EQU_DIST_FRPI		((CReal) 0.8)
+   and the unfiltered signal. Define different bounds for different relative
+   search window sizes */
+#define PEAK_BOUND_FILT2SIGNAL_1		((CReal) 9)
+#define PEAK_BOUND_FILT2SIGNAL_0_042	((CReal) 7)
 
-#define NO_BLOCKS_4_FREQ_ACQU			4
+/* This value MUST BE AT LEAST 2, because otherwise we would get an overrun
+   when we try to add a complete symbol to the buffer! */
+#ifdef USE_FRQOFFS_TRACK_GUARDCORR
+# define NUM_BLOCKS_4_FREQ_ACQU			30 /* Accuracy must be higher */
+#else
+# define NUM_BLOCKS_4_FREQ_ACQU			6
+#endif
 
-/* Number of blocks before using the average of input spectrum */
-#define NO_BLOCKS_BEFORE_US_AV			8
+/* Number of block used for averaging */
+#define NUM_BLOCKS_USED_FOR_AV			3
 
-/* The average symbol duration of all possible robustness modes is 22.5 ms. A
-   timeout of 5 seconds corresponds from that to 222 */
-#define AVERAGE_TIME_OUT_NUMBER			222
+/* Lambda for IIR filter for estimating noise floor in frequency domain */
+#define LAMBDA_FREQ_IIR_FILT			((CReal) 0.87)
 
 /* Ratio between highest and second highest peak at the frequency pilot
    positions in the PSD estimation (after peak detection) */
-#define MAX_RAT_PEAKS_AT_PIL_POS		2 /* 3 dB */
+#define MAX_RAT_PEAKS_AT_PIL_POS_HIGH	((CReal) 0.99)
+
+/* Ratio between highest and lowest peak at frequency pilot positions (see
+   above) */
+#define MAX_RAT_PEAKS_AT_PIL_POS_LOW	((CReal) 0.8)
+
+/* Number of blocks storing the squared magnitude of FFT used for
+   averaging */
+#define NUM_FFT_RES_AV_BLOCKS			(NUM_BLOCKS_4_FREQ_ACQU * (NUM_BLOCKS_USED_FOR_AV - 1) + 1)
 
 
 /* Classes ********************************************************************/
-class CFreqSyncAcq : public CReceiverModul<_REAL, _REAL>
+class CFreqSyncAcq : public CReceiverModul<_REAL, _COMPLEX>
 {
 public:
-	CFreqSyncAcq() : RFFTWPlan(NULL), bSyncInput(FALSE), bAquisition(FALSE), 
-		rCenterFreq((_REAL) 0.0),
-		rWinSize((_REAL) 0.0), bIIRFiltEnabled(FALSE) {}
-	virtual ~CFreqSyncAcq();
+	CFreqSyncAcq(CMDI *pNM) : pMDI(pNM), bSyncInput(FALSE), bAquisition(FALSE), 
+		rWinSize((_REAL) SOUNDCRD_SAMPLE_RATE / 2),
+		veciTableFreqPilots(3), /* 3 freqency pilots */
+		rCenterFreq((_REAL) SOUNDCRD_SAMPLE_RATE / 4), bUseRecFilter(FALSE) {}
+	virtual ~CFreqSyncAcq() {}
 
 	void SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize);
 
 	void StartAcquisition();
+	void StopAcquisition() {bAquisition = FALSE;}
 	_BOOLEAN GetAcquisition() {return bAquisition;}
-	void DisableIIFFilter() {bIIRFiltEnabled = FALSE;}
+
+	void SetRecFilter(const _BOOLEAN bNewF) {bUseRecFilter = bNewF;}
+	_BOOLEAN GetRecFilter() {return bUseRecFilter;}
 
 	/* To set the module up for synchronized DRM input data stream */
 	void SetSyncInput(_BOOLEAN bNewS) {bSyncInput = bNewS;}
 
 protected:
-	int							piTableFreqPilots[3]; /* 3 freqency pilots */
-	CShiftRegister<fftw_real>	vecrFFTHistory;
-	CVector<fftw_real>			vecrFFTOutput;
-	rfftw_plan					RFFTWPlan;
-	int							iSymbolBlockSize;
-	int							iTotalBufferSize;
+	CVector<int>				veciTableFreqPilots;
+	CShiftRegister<_REAL>		vecrFFTHistory;
+
+	CFftPlans					FftPlan;
+	CRealVector					vecrFFTInput;
+	CRealVector					vecrSqMagFFTOut;
+	CRealVector					vecrHammingWin;
+	CMovingAv<CRealVector>		vvrPSDMovAv;
+
+	int							iFrAcFFTSize;
+	int							iHistBufSize;
 
 	int							iFFTSize;
 
 	_BOOLEAN					bAquisition;
 
 	int							iAquisitionCounter;
+	int							iAverageCounter;
 
 	_BOOLEAN					bSyncInput;
-
-	_REAL						rDesFreqPosNorm;
 
 	_REAL						rCenterFreq;
 	_REAL						rWinSize;
 	int							iStartDCSearch;
 	int							iEndDCSearch;
-
-	_BOOLEAN					bIIRFiltEnabled;
-
-	CRealVector					rvecA;
-	CRealVector					rvecB;
-	CRealVector					rvecZ;
-	CRealVector					rvecInpTmp;
-	CRealVector					rvecOutTmp;
+	_REAL						rPeakBoundFiltToSig;
 
 	CRealVector					vecrPSDPilCor;
-	CRealVector					vecrPSD;
 	int							iHalfBuffer;
 	int							iSearchWinSize;
 	CRealVector					vecrFiltResLR;
 	CRealVector					vecrFiltResRL;
 	CRealVector					vecrFiltRes;
 	CVector<int>				veciPeakIndex;
-	int							iAverageCounter;
 
-	int							iAverTimeOutCnt;
+	_COMPLEX					cCurExp;
+	_REAL						rInternIFNorm;
+
+	CDRMBandpassFilt			BPFilter;
+	_BOOLEAN					bUseRecFilter;
+
+	/* OPH: counter to count symbols within a frame in order to generate */
+	/* RSCI output even when unlocked */
+	int							iFreeSymbolCounter;
+	CMDI						*pMDI;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

@@ -32,29 +32,49 @@
 #include "../GlobalDefinitions.h"
 #include "../tables/TableCarMap.h"
 #include "../tables/TableFAC.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 
 
 /* Definitions ****************************************************************/
-/* We define a bit for each flag to allow multiple assignments */
-#define	CM_DC			1	/* Bit 0 */ // CM: Carrier Mapping
-#define	CM_MSC			2	/* Bit 1 */
-#define	CM_SDC			4	/* Bit 2 */
-#define	CM_FAC			8	/* Bit 3 */
-#define	CM_TI_PI		16	/* Bit 4 */
-#define	CM_FRE_PI		32	/* Bit 5 */
-#define	CM_SCAT_PI		64	/* Bit 6 */
-#define	CM_BOOSTED_PI	128	/* Bit 7 */
+/* Power definitions for pilots, boosted pilots and data cells (average) */
+#define AV_DATA_CELLS_POWER		((_REAL) 1.0)
+#define AV_PILOT_POWER			((_REAL) 2.0)
+#define AV_BOOSTED_PIL_POWER	((_REAL) 4.0)
 
-/* Function for determining if this is a pilot */
-#define _IsPilot(a) (((a) == CM_TI_PI) || ((a) == CM_FRE_PI) || ((a) == CM_SCAT_PI))
+
+/* We define a bit for each flag to allow multiple assignments */
+#define	CM_DC					1	/* Bit 0 */ // CM: Carrier Mapping
+#define	CM_MSC					2	/* Bit 1 */
+#define	CM_SDC					4	/* Bit 2 */
+#define	CM_FAC					8	/* Bit 3 */
+#define	CM_TI_PI				16	/* Bit 4 */
+#define	CM_FRE_PI				32	/* Bit 5 */
+#define	CM_SCAT_PI				64	/* Bit 6 */
+#define	CM_BOOSTED_PI			128	/* Bit 7 */
+
+/* Definitions for checking the cells */
+#define _IsDC(a)				((a) & CM_DC)
+
+#define _IsMSC(a)				((a) & CM_MSC)
+#define _IsSDC(a)				((a) & CM_SDC)
+#define _IsFAC(a)				((a) & CM_FAC)
+
+#define _IsData(a)				(((a) & CM_MSC) || ((a) & CM_SDC) || ((a) & CM_FAC))
+
+
+#define _IsTiPil(a)				((a) & CM_TI_PI)
+#define _IsFreqPil(a)			((a) & CM_FRE_PI)
+#define _IsScatPil(a)			((a) & CM_SCAT_PI)
+
+#define _IsPilot(a)				(((a) & CM_TI_PI) || ((a) & CM_FRE_PI) || ((a) & CM_SCAT_PI))
+#define _IsBoosPil(a)			((a) & CM_BOOSTED_PI)
 
 
 /* Classes ********************************************************************/
 class CCellMappingTable
 {
 public:
-	CCellMappingTable() : iNoSymbolsPerSuperframe(0) {}
+	CCellMappingTable() : iNumSymbolsPerSuperframe(0) {}
 	virtual ~CCellMappingTable() {}
 
 	void MakeTable(ERobMode eNewRobustnessMode, ESpecOcc eNewSpectOccup);
@@ -65,41 +85,40 @@ public:
 	CMatrix<int>		matiMapTab; 
 	CMatrix<_COMPLEX>	matcPilotCells;
 
-	int					iNoSymbolsPerSuperframe;
-	int					iNoSymPerFrame; /* No of symbols per frame */
-	int					iNoCarrier;
+	int					iNumSymbolsPerSuperframe;
+	int					iNumSymPerFrame; /* Number of symbols per frame */
+	int					iNumCarrier;
 	int					iScatPilTimeInt; /* Time interpolation */
 	int					iScatPilFreqInt; /* Frequency interpolation */
 
-	int					iMaxNoMSCSym; /* Max no of MSC cells in a symbol */
-	int					iMaxNoFACSym; /* Max no of FAC cells in a symbol */
-	int					iMaxNoSDCSym; /* Max no of SDC cells in a symbol */
+	int					iMaxNumMSCSym; /* Max number of MSC cells in a symbol */
 
-	/* No MSC in symbol */
-	CVector<int>		veciNoMSCSym; 
+	/* Number of MSC cells in a symbol */
+	CVector<int>		veciNumMSCSym; 
 
-	/* No FAC in symbol */
-	CVector<int>		veciNoFACSym; 
+	/* Number of FAC cells in a symbol */
+	CVector<int>		veciNumFACSym; 
 
-	/* No SDC in symbol */
-	CVector<int>		veciNoSDCSym;
+	/* Number of SDC cells in a symbol */
+	CVector<int>		veciNumSDCSym;
 
 	int					iFFTSizeN; /* FFT size of the OFDM modulation */
-	int					iCarrierKmin; /* Carrier No of carrier with lowest frequency */
-	int					iCarrierKmax; /* Carrier No of carrier with highest frequency */
+	int					iCarrierKmin; /* Carrier index of carrier with lowest frequency */
+	int					iCarrierKmax; /* Carrier index of carrier with highest frequency */
 	int					iIndexDCFreq; /* Index of DC carrier */
-	int					iShiftedKmin; /* Shifted carrier min ("soundcard pass-band") */
-	int					iShiftedKmax; /* Shifted carrier max ("soundcard pass-band") */
+	int					iShiftedKmin; /* Shifted carrier min ("sound card pass-band") */
+	int					iShiftedKmax; /* Shifted carrier max ("sound card pass-band") */
 	CRatio				RatioTgTu; /* Ratio between guard-interval and useful part */
 	int					iGuardSize; /* Length of guard-interval measured in "time-bins" */
 	int					iSymbolBlockSize; /* Useful part plus guard-interval in "time-bins" */
-	int					iNoIntpFreqPil; /* No of time-interploated frequency pilots */
+	int					iNumIntpFreqPil; /* Number of time-interploated frequency pilots */
 
-	int					iNoUsefMSCCellsPerFrame; /* Number of MSC cells per multiplex frame N_{MUX} */
-	int					iNoSDCCellsPerSFrame; /* Number of SDC cells per super-frame */
+	int					iNumUsefMSCCellsPerFrame; /* Number of MSC cells per multiplex frame N_{MUX} */
+	int					iNumSDCCellsPerSFrame; /* Number of SDC cells per super-frame */
 
 	/* Needed for SNR estimation and simulation */
-	_REAL				rAvPowPerSymbol;
+	_REAL				rAvPowPerSymbol; /* Total average power per symbol */
+	_REAL				rAvScatPilPow; /* Average power of scattered pilots per cell */
 
 protected:
 	/* Internal parameters for MakeTable function --------------------------- */
@@ -115,6 +134,7 @@ protected:
 		/* For the gain */
 		const int*	piGainTable;
 	};
+
 
 private:
 	_COMPLEX	Polar2Cart(const _REAL rAbsolute, const int iPhase) const;

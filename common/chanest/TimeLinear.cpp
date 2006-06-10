@@ -30,12 +30,13 @@
 
 
 /* Implementation *************************************************************/
-void CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
-						   CComplexVector& veccOutputData, 
-						   CVector<int>& veciMapTab, 
-						   CVector<_COMPLEX>& veccPilotCells)
+_REAL CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
+						    CComplexVector& veccOutputData, 
+						    CVector<int>& veciMapTab, 
+						    CVector<_COMPLEX>& veccPilotCells, _REAL rSNR)
 {
-	int			j, i;
+	int			i, j;
+	int			iPiHiIndex;
 	int			iTimeDiffOld;
 	int			iTimeDiffNew;
 	_COMPLEX	cOldPilot;
@@ -47,12 +48,12 @@ void CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	   (from iLenHistBuff - 1 towards 0) */
 	for (j = 0; j < iLenHistBuff - 1; j++)
 	{
-		for (i = 0; i < iNoCarrier; i++)
+		for (i = 0; i < iNumIntpFreqPil; i++)
 			matcChanEstHist[j][i] = matcChanEstHist[j + 1][i];
 	}
 
 	/* Clear current symbol for new channel estimates */
-	for (i = 0; i < iNoCarrier; i++)
+	for (i = 0; i < iNumIntpFreqPil; i++)
 		matcChanEstHist[iLenHistBuff - 1][i] = 
 			_COMPLEX((_REAL) 0.0, (_REAL) 0.0);
 
@@ -68,13 +69,16 @@ void CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 	/* Main loop ------------------------------------------------------------ */
 	/* Identify and calculate transfer function at the pilot positions */
-	for (i = 0; i < iNoCarrier; i++)
+	for (i = 0; i < iNumCarrier; i++)
 	{
-		if (veciMapTab[i] & CM_SCAT_PI)
+		if (_IsScatPil(veciMapTab[i]))
 		{
+			/* Pilots are only every "iScatPilFreqInt"'th carrier */
+			iPiHiIndex = i / iScatPilFreqInt;
+
 			/* h = r / s, h: transfer function of channel, r: received signal, 
 			   s: transmitted signal */
-			matcChanEstHist[iLenHistBuff - 1][i] = 
+			matcChanEstHist[iLenHistBuff - 1][iPiHiIndex] = 
 				(*pvecInputData)[i] / veccPilotCells[i];
 
 			/* Linear interpolate in time direction from this current pilot to 
@@ -83,13 +87,15 @@ void CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			{
 				/* We need to correct pilots due to timing corrections ------ */
 				/* Calculate timing difference to old and new pilot */
-				iTimeDiffOld = vecTiCorrHist[j] - vecTiCorrHist[0];
-				iTimeDiffNew = vecTiCorrHist[j] /* - 0 */;
+				iTimeDiffOld = vecTiCorrHist[0]	- vecTiCorrHist[j];
+				iTimeDiffNew = 0				- vecTiCorrHist[j];
 				
 				/* Correct pilot information for phase rotation */
-				cOldPilot = Rotate(matcChanEstHist[0][i], i, iTimeDiffOld);
+				cOldPilot = Rotate(
+					matcChanEstHist[0][iPiHiIndex], i, iTimeDiffOld);
 				cNewPilot = Rotate(
-					matcChanEstHist[iLenHistBuff - 1][i], i, iTimeDiffNew);
+					matcChanEstHist[iLenHistBuff - 1][iPiHiIndex], i,
+					iTimeDiffNew);
 
 
 				/* Linear interpolation ------------------------------------- */
@@ -97,14 +103,17 @@ void CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 				cGrad = (cNewPilot - cOldPilot) / (_REAL) (iLenHistBuff - 1);
 
 				/* Apply linear interpolation to cells in between */
-				matcChanEstHist[j][i] = cGrad * (_REAL) j + cOldPilot;
+				matcChanEstHist[j][iPiHiIndex] = cGrad * (_REAL) j + cOldPilot;
 			}
 		}
 	}
 
 	/* Copy channel estimation from current symbol in output buffer */
-	for (i = 0; i < iNoCarrier; i++)
+	for (i = 0; i < iNumIntpFreqPil; i++)
 		veccOutputData[i] = matcChanEstHist[0][i];
+
+	/* No SNR improvement by linear interpolation */
+	return rSNR;
 }
 
 int CTimeLinear::Init(CParameter& Parameter)
@@ -112,19 +121,21 @@ int CTimeLinear::Init(CParameter& Parameter)
 	/* Init base class, must be at the beginning of this init! */
 	CPilotModiClass::InitRot(Parameter);
 
+	/* Get parameters from global struct */
+	iNumCarrier = Parameter.iNumCarrier;
+	iNumIntpFreqPil = Parameter.iNumIntpFreqPil;
+	iScatPilFreqInt = Parameter.iScatPilFreqInt;
+
 	/* Set length of history-buffer according to time-int-index */
 	iLenHistBuff = Parameter.iScatPilTimeInt + 1;
 	
-	/* Set No of carriers with DC */
-	iNoCarrier = Parameter.iNoCarrier;
-
 	/* Init timing correction history with zeros */
 	iLenTiCorrHist = iLenHistBuff - 1;
 	vecTiCorrHist.Init(iLenTiCorrHist, 0);
 
-	/* Allocate memory for channel estimation history and init with zeros */
-	matcChanEstHist.Init(iLenHistBuff, iNoCarrier, 
-		_COMPLEX((_REAL) 0.0, (_REAL) 0.0));
+	/* Allocate memory for channel estimation history and init with ones */
+	matcChanEstHist.Init(iLenHistBuff, iNumIntpFreqPil, 
+		_COMPLEX((_REAL) 1.0, (_REAL) 0.0));
 
 	/* Return delay of channel estimation in time direction */
 	return iLenHistBuff;

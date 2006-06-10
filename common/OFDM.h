@@ -30,47 +30,58 @@
 #define OFDM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
 #include "Parameter.h"
-#include "Modul.h"
-#include <dfftw.h>
+#include "util/Modul.h"
+#include "../matlib/Matlib.h"
+
+
+/* Definitions ****************************************************************/
+/* Time constant for IIR averaging of PSD estimation */
+#define TICONST_PSD_EST_OFDM			((CReal) 1.0) /* sec */
 
 
 /* Classes ********************************************************************/
 class COFDMModulation : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
-	COFDMModulation() {FFTWPlan = NULL;}
-	virtual ~COFDMModulation();
+	COFDMModulation() : rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ) {}
+	virtual ~COFDMModulation() {}
+
+	void SetCarOffset(const _REAL rNewCarOffset)
+		{rDefCarOffset = rNewCarOffset;}
 
 protected:
-	fftw_plan				FFTWPlan;
-	CVector<fftw_complex>	veccFFTWInput;
-	CVector<fftw_complex>	veccFFTWOutput;
+	CFftPlans				FftPlan;
+
+	CComplexVector			veccFFTInput;
+	CComplexVector			veccFFTOutput;
 
 	int						iShiftedKmin;
-	int						iShiftedKmax;
+	int						iEndIndex;
 	int						iDFTSize;
 	int						iGuardSize;
+
+	_COMPLEX				cCurExp;
+	_COMPLEX				cExpStep;
+	_REAL					rDefCarOffset;
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);
 };
 
-class COFDMDemodulation : public CReceiverModul<_REAL, _COMPLEX>
+class COFDMDemodulation : public CReceiverModul<_COMPLEX, _COMPLEX>
 {
 public:
-	COFDMDemodulation() {FFTWPlan = NULL;}
-	virtual ~COFDMDemodulation();
+	/* bUseRecFilter shall be set the FALSE as default since in case of
+	   BERIDEAL simulations, no filter shall be applied */
+	COFDMDemodulation() : iLenPowSpec(0) {}
+	virtual ~COFDMDemodulation() {}
 
 	void GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
-	_REAL GetSNREstdB() const {return 10 * log10(rSNREstimate);}
-
 protected:
-	CVector<_REAL>			vecrPDSResult;
-
-	fftw_plan				FFTWPlan;
-	CVector<fftw_complex>	veccFFTWInput;
-	CVector<fftw_complex>	veccFFTWOutput;
+	CFftPlans				FftPlan;
+	CComplexVector			veccFFTInput;
+	CComplexVector			veccFFTOutput;
 
 	CVector<_REAL>			vecrPowSpec;
 	int						iLenPowSpec;
@@ -79,38 +90,39 @@ protected:
 	int						iShiftedKmax;
 	int						iDFTSize;
 	int						iGuardSize;
-	int						iNoCarrier;
+	int						iNumCarrier;
 
-	_COMPLEX				cCurExp;
+	CReal					rLamPSD;
 
-	_REAL					rNoisePowAvLeft;
-	_REAL					rNoisePowAvRight;
-	_REAL					rSNREstimate;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
 
-class COFDMDemodSimulation : public CSimulationModul<_REAL, _COMPLEX>
+class COFDMDemodSimulation :
+	public CSimulationModul<CChanSimDataMod, _COMPLEX, CChanSimDataDemod>
 {
 public:
-	COFDMDemodSimulation() {FFTWPlan = NULL;}
-	virtual ~COFDMDemodSimulation();
+	COFDMDemodSimulation() {}
+	virtual ~COFDMDemodSimulation() {}
 
 protected:
-	fftw_plan				FFTWPlan;
-	CVector<fftw_complex>	veccFFTWInput;
-	CVector<fftw_complex>	veccFFTWOutput;
+	CFftPlans				FftPlan;
+	CComplexVector			veccFFTInput;
+	CComplexVector			veccFFTOutput;
+
 	int						iStartPointGuardRemov;
 
 	int						iShiftedKmin;
 	int						iShiftedKmax;
 	int						iDFTSize;
 	int						iGuardSize;
-	int						iNoCarrier;
+	int						iNumCarrier;
 	int						iSymbolBlockSize;
 	int						iSymbolCounterTiSy;
-	int						iNoSymPerFrame;
+	int						iNumSymPerFrame;
+
+	int						iNumTapsChan;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

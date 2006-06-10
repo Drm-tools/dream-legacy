@@ -34,14 +34,18 @@
 CMultColorLED::CMultColorLED(QWidget * parent, const char * name, WFlags f) : 
 	QLabel(parent, name, f)
 {
+	/* Define size of the bitmaps */
+	const int iXSize = 13;
+	const int iYSize = 13;
+
 	/* Create bitmaps */
-	BitmCubeGreen.resize(13, 13);
+	BitmCubeGreen.resize(iXSize, iYSize);
 	BitmCubeGreen.fill(QColor(0, 255, 0));
-	BitmCubeRed.resize(13, 13);
+	BitmCubeRed.resize(iXSize, iYSize);
 	BitmCubeRed.fill(QColor(255, 0, 0));
-	BitmCubeGrey.resize(13, 13);
+	BitmCubeGrey.resize(iXSize, iYSize);
 	BitmCubeGrey.fill(QColor(192, 192, 192));
-	BitmCubeYellow.resize(13, 13);
+	BitmCubeYellow.resize(iXSize, iYSize);
 	BitmCubeYellow.fill(QColor(255, 255, 0));
 
 	/* Set modified style */
@@ -50,9 +54,7 @@ CMultColorLED::CMultColorLED(QWidget * parent, const char * name, WFlags f) :
 	setIndent(0);
 
 	/* Init color flags */
-	bFlagRedLi = false;
-	bFlagGreenLi = false;
-	bFlagYellowLi = false;
+	Reset();
 
 	/* Set init-bitmap */
 	setPixmap(BitmCubeGrey);
@@ -86,6 +88,16 @@ void CMultColorLED::OnTimerGreenLight()
 
 void CMultColorLED::OnTimerYellowLight() 
 {
+	bFlagYellowLi = false;
+
+	UpdateColor();
+}
+
+void CMultColorLED::Reset()
+{
+	/* Reset color flags */
+	bFlagRedLi = false;
+	bFlagGreenLi = false;
 	bFlagYellowLi = false;
 
 	UpdateColor();

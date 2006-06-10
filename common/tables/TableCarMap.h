@@ -34,10 +34,10 @@
 
 /* Definitions ****************************************************************/
 /* FAC ************************************************************************/
-#define NO_FAC_CELLS			65
+#define NUM_FAC_CELLS			65
 
 /* FAC positions. The two numbers are {symbol no, carrier no} */
-const int iTableFACRobModA[NO_FAC_CELLS][2] = {
+const int iTableFACRobModA[NUM_FAC_CELLS][2] = {
 	{2, 26}, {2, 46}, {2, 66}, {2, 86},
 	{3, 10}, {3, 30}, {3, 50}, {3, 70}, {3, 90},
 	{4, 14}, {4, 22}, {4, 34}, {4, 62}, {4, 74}, {4, 94},
@@ -52,7 +52,7 @@ const int iTableFACRobModA[NO_FAC_CELLS][2] = {
 	{13, 38}, {13, 58}, {13, 78}
 };
 
-const int iTableFACRobModB[NO_FAC_CELLS][2] = {
+const int iTableFACRobModB[NUM_FAC_CELLS][2] = {
 	{2, 13}, {2, 25}, {2, 43}, {2, 55}, {2, 67},
 	{3, 15}, {3, 27}, {3, 45}, {3, 57}, {3, 69},
 	{4, 17}, {4, 29}, {4, 47}, {4, 59}, {4, 71},
@@ -67,7 +67,7 @@ const int iTableFACRobModB[NO_FAC_CELLS][2] = {
 	{13, 23}, {13, 35}, {13, 47}, {13, 65}, {13, 77},
 };
 
-const int iTableFACRobModC[NO_FAC_CELLS][2] = {
+const int iTableFACRobModC[NUM_FAC_CELLS][2] = {
 	{3, 9}, {3, 21}, {3, 45}, {3, 57},
 	{4, 23}, {4, 35}, {4, 47},
 	{5, 13}, {5, 25}, {5, 37}, {5, 49},
@@ -86,7 +86,7 @@ const int iTableFACRobModC[NO_FAC_CELLS][2] = {
 	{18, 15}, {18, 27}, {18, 39}, {18, 51}
 };
 
-const int iTableFACRobModD[NO_FAC_CELLS][2] = {
+const int iTableFACRobModD[NUM_FAC_CELLS][2] = {
 	{3, 9}, {3, 18}, {3, 27},
 	{4, 10}, {4, 19},
 	{5, 11}, {5, 20}, {5, 29},
@@ -111,26 +111,26 @@ const int iTableFACRobModD[NO_FAC_CELLS][2] = {
 
 
 /* Frequency pilots ***********************************************************/
-#define NO_FREQ_PILOTS			3
-const int iTableFreqPilRobModA[NO_FREQ_PILOTS][2] = {
+#define NUM_FREQ_PILOTS			3
+const int iTableFreqPilRobModA[NUM_FREQ_PILOTS][2] = {
 	{18, 205},
 	{54, 836},
 	{72, 215}
 };
 
-const int iTableFreqPilRobModB[NO_FREQ_PILOTS][2] = {
+const int iTableFreqPilRobModB[NUM_FREQ_PILOTS][2] = {
 	{16, 331},
 	{48, 651},
 	{64, 555}
 };
 
-const int iTableFreqPilRobModC[NO_FREQ_PILOTS][2] = {
+const int iTableFreqPilRobModC[NUM_FREQ_PILOTS][2] = {
 	{11, 214},
 	{33, 392},
 	{44, 242}
 };
 
-const int iTableFreqPilRobModD[NO_FREQ_PILOTS][2] = {
+const int iTableFreqPilRobModD[NUM_FREQ_PILOTS][2] = {
 	{7,	788},
 	{21, 1014},
 	{28, 332}
@@ -139,8 +139,8 @@ const int iTableFreqPilRobModD[NO_FREQ_PILOTS][2] = {
 
 /* Time pilots ****************************************************************/
 /* The two numbers are: {carrier no, phase} (Phases are normalized to 1024) */
-#define RMA_NO_TIME_PIL		21
-const int iTableTimePilRobModA[RMA_NO_TIME_PIL][2] = {
+#define RMA_NUM_TIME_PIL	21
+const int iTableTimePilRobModA[RMA_NUM_TIME_PIL][2] = {
 	{17, 973},
 	{18, 205},
 	{19, 717},
@@ -164,8 +164,8 @@ const int iTableTimePilRobModA[RMA_NO_TIME_PIL][2] = {
 	{73, 727}
 };
 
-#define RMB_NO_TIME_PIL		19
-const int iTableTimePilRobModB[RMB_NO_TIME_PIL][2] = {
+#define RMB_NUM_TIME_PIL	19
+const int iTableTimePilRobModB[RMB_NUM_TIME_PIL][2] = {
 	{14, 304},
 	{16, 331},
 	{18, 108},
@@ -187,8 +187,8 @@ const int iTableTimePilRobModB[RMB_NO_TIME_PIL][2] = {
 	{68, 428}
 };
 
-#define RMC_NO_TIME_PIL		19
-const int iTableTimePilRobModC[RMC_NO_TIME_PIL][2] = {
+#define RMC_NUM_TIME_PIL	19
+const int iTableTimePilRobModC[RMC_NUM_TIME_PIL][2] = {
 	{8, 722},
 	{10, 466},
 	{11, 214},
@@ -210,8 +210,8 @@ const int iTableTimePilRobModC[RMC_NO_TIME_PIL][2] = {
 	{46, 754}
 };
 
-#define RMD_NO_TIME_PIL		21
-const int iTableTimePilRobModD[RMD_NO_TIME_PIL][2] = {
+#define RMD_NUM_TIME_PIL	21
+const int iTableTimePilRobModD[RMD_NUM_TIME_PIL][2] = {
 	{5, 636},
 	{6, 124},
 	{7, 788},
@@ -318,8 +318,8 @@ const int iScatPilZRobModD[SIZE_ROW_WZ_ROB_MOD_D][SIZE_COL_WZ_ROB_MOD_D] = {
 const int iScatPilQRobModD = 14;
 
 /* Gain definitions of scattered pilots ------------------------------------- */
-#define NO_BOOSTED_SCAT_PILOTS	4
-const int iScatPilGainRobModA[6][NO_BOOSTED_SCAT_PILOTS] = {
+#define NUM_BOOSTED_SCAT_PILOTS		4
+const int iScatPilGainRobModA[6][NUM_BOOSTED_SCAT_PILOTS] = {
 	{2, 6, 98, 102},
 	{2, 6, 110, 114},
 	{-102, -98, 98, 102},
@@ -328,7 +328,7 @@ const int iScatPilGainRobModA[6][NO_BOOSTED_SCAT_PILOTS] = {
 	{-110, -106, 346, 350}
 };
 
-const int iScatPilGainRobModB[6][NO_BOOSTED_SCAT_PILOTS] = {
+const int iScatPilGainRobModB[6][NUM_BOOSTED_SCAT_PILOTS] = {
 	{1, 3, 89, 91},
 	{1, 3, 101, 103},
 	{-91, -89, 89, 91},
@@ -337,7 +337,7 @@ const int iScatPilGainRobModB[6][NO_BOOSTED_SCAT_PILOTS] = {
 	{-99, -97, 309, 311}
 };
 
-const int iScatPilGainRobModC[6][NO_BOOSTED_SCAT_PILOTS] = {
+const int iScatPilGainRobModC[6][NUM_BOOSTED_SCAT_PILOTS] = {
 	{0, 0, 0, 0},
 	{0, 0, 0, 0},
 	{0, 0, 0, 0},
@@ -346,7 +346,7 @@ const int iScatPilGainRobModC[6][NO_BOOSTED_SCAT_PILOTS] = {
 	{-67, -65, 211, 213}
 };
 
-const int iScatPilGainRobModD[6][NO_BOOSTED_SCAT_PILOTS] = {
+const int iScatPilGainRobModD[6][NUM_BOOSTED_SCAT_PILOTS] = {
 	{0, 0, 0, 0},
 	{0, 0, 0, 0},
 	{0, 0, 0, 0},

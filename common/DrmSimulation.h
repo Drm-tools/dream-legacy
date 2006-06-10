@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -32,8 +32,8 @@
 #include <iostream>
 #include "GlobalDefinitions.h"
 #include "Parameter.h"
-#include "Buffer.h"
-#include "Data.h"
+#include "util/Buffer.h"
+#include "DataIO.h"
 #include "OFDM.h"
 #include "DRMSignalIO.h"
 #include "MSCMultiplexer.h"
@@ -42,11 +42,12 @@
 #include "interleaver/SymbolInterleaver.h"
 #include "ofdmcellmapping/OFDMCellMapping.h"
 #include "chanest/ChannelEstimation.h"
+#include "chanest/IdealChannelEstimation.h"
 #include "sync/FreqSyncAcq.h"
 #include "sync/TimeSync.h"
-#include "sync/RobModeDetection.h"
 #include "sync/SyncUsingPil.h"
 #include "drmchannel/ChannelSimulation.h"
+#include "MDI/MDINull.h"
 
 
 
@@ -54,8 +55,6 @@
 class CDRMSimulation
 {
 public:
-	enum ESimType {ST_NONE, ST_BITERROR, ST_CHANEST};
-
 	CDRMSimulation();
 	virtual ~CDRMSimulation() {}
 
@@ -66,54 +65,54 @@ public:
 protected:
 	void Run();
 	void Init();
+	string SimFileName(CParameter& Param, string strAddInf, _BOOLEAN bWithSNR);
 
-	ESimType				eSimType;
+	int iSimTime;
+	int iSimNumErrors;
+	_REAL rStartSNR, rEndSNR, rStepSNR;
 
 	/* Parameters */
 	CParameter				Param;
 	
+
+	/* Buffers -------------------------------------------------------------- */
+	/* If you want to add a new buffer, make sure that it is cleared in the
+	   "Init()" routine! */
 	/* Transmitter buffers */
-	CSingleBuffer<_BINARY>	DataBuf;
-	CSingleBuffer<_COMPLEX>	MLCEncBuf;
-	CCyclicBuffer<_COMPLEX>	IntlBuf;
-
-	CSingleBuffer<_BINARY>	GenFACDataBuf;
-	CCyclicBuffer<_COMPLEX>	FACMapBuf;
-
-	CSingleBuffer<_BINARY>	GenSDCDataBuf;
-	CCyclicBuffer<_COMPLEX>	SDCMapBuf;
-	
-	CSingleBuffer<_COMPLEX>	CarMapBuf;
-	CSingleBuffer<_COMPLEX>	OFDMModBuf;
+	CSingleBuffer<_BINARY>				DataBuf;
+	CSingleBuffer<_COMPLEX>				MLCEncBuf;
+	CCyclicBuffer<_COMPLEX>				IntlBuf;
+	CSingleBuffer<_BINARY>				GenFACDataBuf;
+	CCyclicBuffer<_COMPLEX>				FACMapBuf;
+	CSingleBuffer<_BINARY>				GenSDCDataBuf;
+	CCyclicBuffer<_COMPLEX>				SDCMapBuf;
+	CSingleBuffer<_COMPLEX>				CarMapBuf;
+	CSingleBuffer<_COMPLEX>				OFDMModBuf;
 
 	/* Simulation */
-	CSingleBuffer<_REAL>	ChanRefBuf;
-	CSingleBuffer<_REAL>	ChanInRefBuf;
-	CSingleBuffer<_COMPLEX>	DemChanRefBuf;
-	CSingleBuffer<_COMPLEX>	DemChanInRefBuf;
-	CSingleBuffer<_COMPLEX>	OFDMDemodBuf2;
-	CSingleBuffer<_COMPLEX>	ChanEstBufForSim;
-	
+	CCyclicBuffer<CChanSimDataDemod>	OFDMDemodBufChan2;
+	CSingleBuffer<_COMPLEX>				ChanEstInBufSim;
+	CSingleBuffer<CChanSimDataDemod>	ChanEstOutBufChan;
+	CSingleBuffer<CChanSimDataMod>		RecDataBuf;
+	CSingleBuffer<_REAL>				ChanResInBuf;
+
 	/* Receiver buffers */
-	CSingleBuffer<_REAL>	RecDataBuf;
-
-	CSingleBuffer<_REAL>	RobModBuf;
-	CCyclicBuffer<_REAL>	InpResBuf;
-	CCyclicBuffer<_REAL>	FreqSyncAcqBuf;
-	CSingleBuffer<_REAL>	TimeSyncBuf;
-	CSingleBuffer<_COMPLEX>	OFDMDemodBuf;
-	CSingleBuffer<_COMPLEX>	SyncUsingPilBuf;
-	CSingleBuffer<CEquSig>	ChanEstBuf;
-	CCyclicBuffer<CEquSig>	MSCCarDemapBuf;
-	CCyclicBuffer<CEquSig>	FACCarDemapBuf;
-	CCyclicBuffer<CEquSig>	SDCCarDemapBuf;
-	CSingleBuffer<CEquSig>	DeintlBuf;
-	CSingleBuffer<_BINARY>	FACDecBuf;
-	CSingleBuffer<_BINARY>	SDCDecBuf;
-	CSingleBuffer<_BINARY>	MSCMLCDecBuf;
+	CCyclicBuffer<_REAL>				InpResBuf;
+	CSingleBuffer<_COMPLEX>				FreqSyncAcqBuf;
+	CSingleBuffer<_COMPLEX>				TimeSyncBuf;
+	CSingleBuffer<_COMPLEX>				OFDMDemodBuf;
+	CSingleBuffer<_COMPLEX>				SyncUsingPilBuf;
+	CSingleBuffer<CEquSig>				ChanEstBuf;
+	CCyclicBuffer<CEquSig>				MSCCarDemapBuf;
+	CCyclicBuffer<CEquSig>				FACCarDemapBuf;
+	CCyclicBuffer<CEquSig>				SDCCarDemapBuf;
+	CSingleBuffer<CEquSig>				DeintlBuf;
+	CSingleBuffer<_BINARY>				FACDecBuf;
+	CSingleBuffer<_BINARY>				SDCDecBuf;
+	CSingleBuffer<_BINARY>				MSCMLCDecBuf;
 
 
-
+	/* Modules -------------------------------------------------------------- */
 	/* Transmitter modules */
 	CGenSimData				GenSimData;			
 
@@ -130,7 +129,6 @@ protected:
 	CDRMChannel				DRMChannel;
 
 	/* Receiver modules */
-	CRobModDet				RobModDet;
 	CInputResample			InputResample;
 	CFreqSyncAcq			FreqSyncAcq;
 	CTimeSync				TimeSync;
@@ -148,8 +146,12 @@ protected:
 	/* Simulation modules */
 	CEvaSimData				EvaSimData;
 	COFDMDemodSimulation	OFDMDemodSimulation;
-	CEvalChanEst			EvalChanEst;
-	CDataConv				DataConv;
+	CIdealChanEst			IdealChanEst;
+
+	CDataConvChanResam		DataConvChanResam;
+
+	/* Dummy MDI */
+	CMDINull				MDI;
 };
 
 

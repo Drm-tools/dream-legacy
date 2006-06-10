@@ -30,26 +30,14 @@
 #define DRMCHANNEL_H__3B0BA660_CA63_4344_BB2B_2OJVBEWJBWV_INCLUDED_
 
 #include "../Parameter.h"
-#include "../Modul.h"
+#include "../util/Modul.h"
 #include <time.h>
 
 
 /* Definitions ****************************************************************/
-/* Set this parameter to "0" if you want to use the spectrum occupancies given
-   in the drm-standard (e.g., exactely 9 or 10 kHz). Set it to "1" if you want
-   to simulate the system bandwith, occupied by the active carriers */
-#define USE_SYSTEM_BANDWIDTH		0
-
 #define FIRLENGTH					24
         
 #define fsqr(a)						((a) * (a))
-
-/* 2nd Order Butterworth filter to smooth interpolation */
-#define A2							-1.56101807580072
-#define A3							0.64135153805756
-#define B1							0.02008336556421
-#define B2							0.04016673112842
-#define B3							0.02008336556421
 
 
 /* Classes ********************************************************************/
@@ -79,8 +67,6 @@ protected:
 	_REAL		fir_buff[FIRLENGTH][2]; /* FIR buffer */
 	_REAL		lastI, lastQ;	/* last FIR output, needed for interpolation */
 	_REAL		nextI, nextQ;	/* next FIR output */
-	_COMPLEX	out_1, out_2;	/* delayed output for IIR */
-	_COMPLEX	in_0, in_1, in_2;
 
 	_REAL fd;					/* Fading rate */
 	_REAL fshift;				/* Doppler shift */
@@ -92,7 +78,10 @@ protected:
 	void	gausstp(_REAL taps[], _REAL& s, int& over) const;
 };
 
-class CDRMChannel : public CSimulationModul<_COMPLEX, _REAL>, CChannelSim
+class CDRMChannel :
+	/* The third template argument "_COMPLEX" is not used since this module
+	   has only one input and one output buffer */
+	public CSimulationModul<_COMPLEX, CChanSimDataMod, _COMPLEX>, CChannelSim
 {
 public:
 	CDRMChannel() {}
@@ -103,7 +92,7 @@ protected:
 	_COMPLEX			cCurExp[4];
 	_COMPLEX			cExpStep[4];
 
-	int					iNoTaps;
+	int					iNumTaps;
 	CVector<_COMPLEX>	veccHistory;
 	int					iMaxDelay;
 	int					iLenHist;

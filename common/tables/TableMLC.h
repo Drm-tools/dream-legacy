@@ -33,58 +33,61 @@
 
 
 /* Definitions ****************************************************************/
-/* Default no of iterations at application startup */
-#define MC_NO_ITERATIONS			1
-
-/* We initialize each new block of data all branches-metrics with the following
-   value exept of the zero-state. This can be done since we actually KNOW that
-   the zero state MUST be the transmitted one. The initialization vaule should
-   be fairly high */
-#define MC_METRIC_INIT_VALUE		1000
+/* Default number of iterations at application startup */
+#define MC_NUM_ITERATIONS				1
 
 /* Generator polynomials used for channel coding (octal form, defined by 
    a leading "0"!). We must bit-reverse the octal-forms given in the standard 
    since we shift bits from right to the left! */
 /* In this implementation we shift bits from right to left, therefore the order
    of the code-words are: [..., b_(0, i), b_(1, i), b(2, i), b(3, i), ...] */
-#define MC_NO_OUTPUT_BITS_PER_STEP	4	// MC: Multi-level Coder
-const _BYTE byGeneratorMatrix[MC_NO_OUTPUT_BITS_PER_STEP] = {
+#define MC_NUM_OUTPUT_BITS_PER_STEP		4	/* MC: Multi-level Coder */
+const _BYTE byGeneratorMatrix[MC_NUM_OUTPUT_BITS_PER_STEP] = {
 	0155,	/* (133) x_{0, i} */
 	0117,	/* (171) x_{1, i} */
 	0123,	/* (145) x_{2, i} */
 	0155	/* (133) x_{3, i} */
 };
 
-#define MC_CONSTRAINT_LENGTH		7
-/* Decoding depth is MC_CONSTRAINT_LENGTH - 1 because we use the bits which
-   are falling out of the shift register in the viterby algorithm. Be
-   aware that the decoding depth must be shorter than "_UINT64BIT" has bits! */
-#define MC_DECODING_DEPTH			(9 * MC_CONSTRAINT_LENGTH)
+#define MC_CONSTRAINT_LENGTH			7
 
 /* Since we have a periodical structure in the trellis it
    is enough to build one step. 2^(MC_CONSTRAINT_LENGTH - 1) states have
    to be considered. ("- 1": since one bit is the transition to the next 
    state) */
-#define MC_NO_STATES				(1 << (MC_CONSTRAINT_LENGTH - 1))
-#define MC_NO_OUTPUT_COMBINATIONS	(1 << MC_NO_OUTPUT_BITS_PER_STEP)
+#define MC_NUM_STATES					(1 << (MC_CONSTRAINT_LENGTH - 1))
+#define MC_NUM_OUTPUT_COMBINATIONS		(1 << MC_NUM_OUTPUT_BITS_PER_STEP)
 
 /* Maximum number of levels (Its in case of HMmix) */
-#define MC_MAX_NO_LEVELS			6
+#define MC_MAX_NUM_LEVELS				6
+
 
 /* Puncturing --------------------------------------------------------------- */
-/* {a, b, c}: a = No of groups, b = No of "1"s, c = Patterns */
-/* We define the metrics order: [b_3, b_2, b_1, b_0], we put complete 
-   puncturing patterns in one 32-bit variable */
-#define PB_1(Line, BitPos)			(1 << (4 * Line + BitPos))
-#define PB_0(Line, BitPos)			(0) /* Only dummy command for "0" */
-const _UINT32BIT iPuncturingPatterns[13][3] = {
+/* Only these types of patterns are used in DRM */
+#define PP_TYPE_0000					0 /* not used, dummy */
+#define PP_TYPE_1111					1
+#define PP_TYPE_0111					2
+#define PP_TYPE_0011					3
+#define PP_TYPE_0001					4
+#define PP_TYPE_0101					5
+
+/* {a, b, c ...}: a = Number of groups, b = Number of "1"s, c = Patterns */
+const uint32_t iPuncturingPatterns[13][10] = {
 /*
 B0: 1
 B1: 1
 B2: 1
 B3: 1
 */
-	{1, 4,	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_1(0, 3)},
+	{1, 4,
+	 PP_TYPE_1111,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000},
 
 /*
 B0: 1 1 1
@@ -92,9 +95,15 @@ B1: 1 1 1
 B2: 1 1 1
 B3: 1 0 0
 */
-	{3, 10, PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_1(0, 3) |
-			PB_1(1, 0) | PB_1(1, 1) | PB_1(1, 2) | PB_0(1, 3) |
-			PB_1(2, 0) | PB_1(2, 1) | PB_1(2, 2) | PB_0(2, 3)},
+	{3, 10,
+	 PP_TYPE_1111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000},
 
 /*
 B0: 1
@@ -102,7 +111,15 @@ B1: 1
 B2: 1
 B3: 0
 */
-	{1, 3,	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_0(0, 3)},
+	{1, 3,
+	 PP_TYPE_0111,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000},
 
 /*
 B0: 1 1 1 1
@@ -110,10 +127,15 @@ B1: 1 1 1 1
 B2: 1 1 1 0
 B3: 0 0 0 0
 */
-	{4, 11,	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_0(0, 3) |
-			PB_1(1, 0) | PB_1(1, 1) | PB_1(1, 2) | PB_0(1, 3) |
-			PB_1(2, 0) | PB_1(2, 1) | PB_1(2, 2) | PB_0(2, 3) |
-			PB_1(3, 0) | PB_1(3, 1) | PB_0(3, 2) | PB_0(3, 3)},
+	{4, 11,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0011,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000},
 
 /*
 B0: 1
@@ -121,7 +143,15 @@ B1: 1
 B2: 0
 B3: 0
 */
-	{1, 2,	PB_1(0, 0) | PB_1(0, 1) | PB_0(0, 2) | PB_0(0, 3)},
+	{1, 2,
+	 PP_TYPE_0011,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000},
 
 /*
 B0: 1 1 1 1
@@ -129,10 +159,15 @@ B1: 1 0 1 0
 B2: 0 1 0 0
 B3: 0 0 0 0
 */
-	{4, 7,	PB_1(0, 0) | PB_1(0, 1) | PB_0(0, 2) | PB_0(0, 3) |
-			PB_1(1, 0) | PB_0(1, 1) | PB_1(1, 2) | PB_0(1, 3) |
-			PB_1(2, 0) | PB_1(2, 1) | PB_0(2, 2) | PB_0(2, 3) |
-			PB_1(3, 0) | PB_0(3, 1) | PB_0(3, 2) | PB_0(3, 3)},
+	{4, 7,
+	 PP_TYPE_0011,
+	 PP_TYPE_0101,
+	 PP_TYPE_0011,
+	 PP_TYPE_0001,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000},
 
 /*
 B0: 1 1 1
@@ -140,9 +175,15 @@ B1: 1 0 1
 B2: 0 0 0
 B3: 0 0 0
 */
-	{3, 5,	PB_1(0, 0) | PB_1(0, 1) | PB_0(0, 2) | PB_0(0, 3) |
-			PB_1(1, 0) | PB_0(1, 1) | PB_0(1, 2) | PB_0(1, 3) |
-			PB_1(2, 0) | PB_1(2, 1) | PB_0(2, 2) | PB_0(2, 3)},
+	{3, 5,
+	 PP_TYPE_0011,
+	 PP_TYPE_0001,
+	 PP_TYPE_0011,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000},
 
 /*
 B0: 1 1
@@ -150,8 +191,15 @@ B1: 1 0
 B2: 0 0
 B3: 0 0
 */
-	{2, 3,	PB_1(0, 0) | PB_1(0, 1) | PB_0(0, 2) | PB_0(0, 3) |
-			PB_1(1, 0) | PB_0(1, 1) | PB_0(1, 2) | PB_0(1, 3)},
+	{2, 3,
+	 PP_TYPE_0011,
+	 PP_TYPE_0001,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000},
 
 /*
 B0: 1 1 1 1 1 1 1 1
@@ -159,14 +207,15 @@ B1: 1 0 0 1 0 0 1 0
 B2: 0 0 0 0 0 0 0 0
 B3: 0 0 0 0 0 0 0 0
 */
-	{8, 11, PB_1(0, 0) | PB_1(0, 1) | PB_0(0, 2) | PB_0(0, 3) |
-			PB_1(1, 0) | PB_0(1, 1) | PB_0(1, 2) | PB_0(1, 3) |
-			PB_1(2, 0) | PB_0(2, 1) | PB_0(2, 2) | PB_0(2, 3) |
-			PB_1(3, 0) | PB_1(3, 1) | PB_0(3, 2) | PB_0(3, 3) |
-			PB_1(4, 0) | PB_0(4, 1) | PB_0(4, 2) | PB_0(4, 3) |
-			PB_1(5, 0) | PB_0(5, 1) | PB_0(5, 2) | PB_0(5, 3) |
-			PB_1(6, 0) | PB_1(6, 1) | PB_0(6, 2) | PB_0(6, 3) |
-			PB_1(7, 0) | PB_0(7, 1) | PB_0(7, 2) | PB_0(7, 3)},
+	{8, 11,
+	 PP_TYPE_0011,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0011,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0011,
+	 PP_TYPE_0001},
 
 /*
 B0: 1 1 1
@@ -174,9 +223,15 @@ B1: 1 0 0
 B2: 0 0 0
 B3: 0 0 0
 */
-	{3, 4,	PB_1(0, 0) | PB_1(0, 1) | PB_0(0, 2) | PB_0(0, 3) |
-			PB_1(1, 0) | PB_0(1, 1) | PB_0(1, 2) | PB_0(1, 3) |
-			PB_1(2, 0) | PB_0(2, 1) | PB_0(2, 2) | PB_0(2, 3)},
+	{3, 4,
+	 PP_TYPE_0011,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000},
 
 /*
 B0: 1 1 1 1
@@ -184,10 +239,15 @@ B1: 1 0 0 0
 B2: 0 0 0 0
 B3: 0 0 0 0
 */
-	{4, 5,	PB_1(0, 0) | PB_1(0, 1) | PB_0(0, 2) | PB_0(0, 3) |
-			PB_1(1, 0) | PB_0(1, 1) | PB_0(1, 2) | PB_0(1, 3) |
-			PB_1(2, 0) | PB_0(2, 1) | PB_0(2, 2) | PB_0(2, 3) |
-			PB_1(3, 0) | PB_0(3, 1) | PB_0(3, 2) | PB_0(3, 3)},
+	{4, 5,
+	 PP_TYPE_0011,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000,
+	 PP_TYPE_0000},
 
 /*
 B0: 1 1 1 1 1 1 1
@@ -195,13 +255,15 @@ B1: 1 0 0 0 0 0 0
 B2: 0 0 0 0 0 0 0
 B3: 0 0 0 0 0 0 0
 */
-	{7, 8,	PB_1(0, 0) | PB_1(0, 1) | PB_0(0, 2) | PB_0(0, 3) |
-			PB_1(1, 0) | PB_0(1, 1) | PB_0(1, 2) | PB_0(1, 3) |
-			PB_1(2, 0) | PB_0(2, 1) | PB_0(2, 2) | PB_0(2, 3) |
-			PB_1(3, 0) | PB_0(3, 1) | PB_0(3, 2) | PB_0(3, 3) |
-			PB_1(4, 0) | PB_0(4, 1) | PB_0(4, 2) | PB_0(4, 3) |
-			PB_1(5, 0) | PB_0(5, 1) | PB_0(5, 2) | PB_0(5, 3) |
-			PB_1(6, 0) | PB_0(6, 1) | PB_0(6, 2) | PB_0(6, 3)},
+	{7, 8,
+	 PP_TYPE_0011,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0000},
 
 /*
 B0: 1 1 1 1 1 1 1 1
@@ -209,30 +271,32 @@ B1: 1 0 0 0 0 0 0 0
 B2: 0 0 0 0 0 0 0 0
 B3: 0 0 0 0 0 0 0 0
 */
-	{8, 9,	PB_1(0, 0) | PB_1(0, 1) | PB_0(0, 2) | PB_0(0, 3) |
-			PB_1(1, 0) | PB_0(1, 1) | PB_0(1, 2) | PB_0(1, 3) |
-			PB_1(2, 0) | PB_0(2, 1) | PB_0(2, 2) | PB_0(2, 3) |
-			PB_1(3, 0) | PB_0(3, 1) | PB_0(3, 2) | PB_0(3, 3) |
-			PB_1(4, 0) | PB_0(4, 1) | PB_0(4, 2) | PB_0(4, 3) |
-			PB_1(5, 0) | PB_0(5, 1) | PB_0(5, 2) | PB_0(5, 3) |
-			PB_1(6, 0) | PB_0(6, 1) | PB_0(6, 2) | PB_0(6, 3) |
-			PB_1(7, 0) | PB_0(7, 1) | PB_0(7, 2) | PB_0(7, 3)}
+	{8, 9,
+	 PP_TYPE_0011,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001,
+	 PP_TYPE_0001}
 };
 
 /* Puncturing patterns for tailbits */
-const _UINT32BIT iPunctPatTailbits[12] = {
+#define LENGTH_TAIL_BIT_PAT				6
+const uint32_t iPunctPatTailbits[12][LENGTH_TAIL_BIT_PAT] = {
 /*
 B0: 1 1 1 1 1 1
 B1: 1 1 1 1 1 1
 B2: 0 0 0 0 0 0
 B3: 0 0 0 0 0 0
 */
-	PB_1(0, 0) | PB_1(0, 1) | PB_0(0, 2) | PB_0(0, 3) |
-    PB_1(1, 0) | PB_1(1, 1) | PB_0(1, 2) | PB_0(1, 3) |
-    PB_1(2, 0) | PB_1(2, 1) | PB_0(2, 2) | PB_0(2, 3) |
-    PB_1(3, 0) | PB_1(3, 1) | PB_0(3, 2) | PB_0(3, 3) |
-    PB_1(4, 0) | PB_1(4, 1) | PB_0(4, 2) | PB_0(4, 3) |
-    PB_1(5, 0) | PB_1(5, 1) | PB_0(5, 2) | PB_0(5, 3),
+	{PP_TYPE_0011,
+	 PP_TYPE_0011,
+	 PP_TYPE_0011,
+	 PP_TYPE_0011,
+	 PP_TYPE_0011,
+	 PP_TYPE_0011},
 
 /*
 B0: 1 1 1 1 1 1
@@ -240,12 +304,12 @@ B1: 1 1 1 1 1 1
 B2: 1 0 0 0 0 0
 B3: 0 0 0 0 0 0
 */
-	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_0(0, 3) |
-    PB_1(1, 0) | PB_1(1, 1) | PB_0(1, 2) | PB_0(1, 3) |
-    PB_1(2, 0) | PB_1(2, 1) | PB_0(2, 2) | PB_0(2, 3) |
-    PB_1(3, 0) | PB_1(3, 1) | PB_0(3, 2) | PB_0(3, 3) |
-    PB_1(4, 0) | PB_1(4, 1) | PB_0(4, 2) | PB_0(4, 3) |
-    PB_1(5, 0) | PB_1(5, 1) | PB_0(5, 2) | PB_0(5, 3),
+	{PP_TYPE_0111,
+	 PP_TYPE_0011,
+	 PP_TYPE_0011,
+	 PP_TYPE_0011,
+	 PP_TYPE_0011,
+	 PP_TYPE_0011},
 
 /*
 B0: 1 1 1 1 1 1
@@ -253,12 +317,12 @@ B1: 1 1 1 1 1 1
 B2: 1 0 0 1 0 0
 B3: 0 0 0 0 0 0
 */
-	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_0(0, 3) |
-    PB_1(1, 0) | PB_1(1, 1) | PB_0(1, 2) | PB_0(1, 3) |
-    PB_1(2, 0) | PB_1(2, 1) | PB_0(2, 2) | PB_0(2, 3) |
-    PB_1(3, 0) | PB_1(3, 1) | PB_1(3, 2) | PB_0(3, 3) |
-    PB_1(4, 0) | PB_1(4, 1) | PB_0(4, 2) | PB_0(4, 3) |
-    PB_1(5, 0) | PB_1(5, 1) | PB_0(5, 2) | PB_0(5, 3),
+	{PP_TYPE_0111,
+	 PP_TYPE_0011,
+	 PP_TYPE_0011,
+	 PP_TYPE_0111,
+	 PP_TYPE_0011,
+	 PP_TYPE_0011},
 
 /*
 B0: 1 1 1 1 1 1
@@ -266,12 +330,12 @@ B1: 1 1 1 1 1 1
 B2: 1 1 0 1 0 0
 B3: 0 0 0 0 0 0
 */
-	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_0(0, 3) |
-    PB_1(1, 0) | PB_1(1, 1) | PB_1(1, 2) | PB_0(1, 3) |
-    PB_1(2, 0) | PB_1(2, 1) | PB_0(2, 2) | PB_0(2, 3) |
-    PB_1(3, 0) | PB_1(3, 1) | PB_1(3, 2) | PB_0(3, 3) |
-    PB_1(4, 0) | PB_1(4, 1) | PB_0(4, 2) | PB_0(4, 3) |
-    PB_1(5, 0) | PB_1(5, 1) | PB_0(5, 2) | PB_0(5, 3),
+	{PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0011,
+	 PP_TYPE_0111,
+	 PP_TYPE_0011,
+	 PP_TYPE_0011},
 
 /*
 B0: 1 1 1 1 1 1
@@ -279,12 +343,12 @@ B1: 1 1 1 1 1 1
 B2: 1 1 0 1 1 0
 B3: 0 0 0 0 0 0
 */
-	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_0(0, 3) |
-    PB_1(1, 0) | PB_1(1, 1) | PB_1(1, 2) | PB_0(1, 3) |
-    PB_1(2, 0) | PB_1(2, 1) | PB_0(2, 2) | PB_0(2, 3) |
-    PB_1(3, 0) | PB_1(3, 1) | PB_1(3, 2) | PB_0(3, 3) |
-    PB_1(4, 0) | PB_1(4, 1) | PB_1(4, 2) | PB_0(4, 3) |
-    PB_1(5, 0) | PB_1(5, 1) | PB_0(5, 2) | PB_0(5, 3),
+	{PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0011,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0011},
 
 /*
 B0: 1 1 1 1 1 1
@@ -292,12 +356,12 @@ B1: 1 1 1 1 1 1
 B2: 1 1 1 1 1 0
 B3: 0 0 0 0 0 0
 */
-	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_0(0, 3) |
-    PB_1(1, 0) | PB_1(1, 1) | PB_1(1, 2) | PB_0(1, 3) |
-    PB_1(2, 0) | PB_1(2, 1) | PB_1(2, 2) | PB_0(2, 3) |
-    PB_1(3, 0) | PB_1(3, 1) | PB_1(3, 2) | PB_0(3, 3) |
-    PB_1(4, 0) | PB_1(4, 1) | PB_1(4, 2) | PB_0(4, 3) |
-    PB_1(5, 0) | PB_1(5, 1) | PB_0(5, 2) | PB_0(5, 3),
+	{PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0011},
 
 /*
 B0: 1 1 1 1 1 1
@@ -305,12 +369,12 @@ B1: 1 1 1 1 1 1
 B2: 1 1 1 1 1 1
 B3: 0 0 0 0 0 0
 */
-	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_0(0, 3) |
-    PB_1(1, 0) | PB_1(1, 1) | PB_1(1, 2) | PB_0(1, 3) |
-    PB_1(2, 0) | PB_1(2, 1) | PB_1(2, 2) | PB_0(2, 3) |
-    PB_1(3, 0) | PB_1(3, 1) | PB_1(3, 2) | PB_0(3, 3) |
-    PB_1(4, 0) | PB_1(4, 1) | PB_1(4, 2) | PB_0(4, 3) |
-    PB_1(5, 0) | PB_1(5, 1) | PB_1(5, 2) | PB_0(5, 3),
+	{PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111},
 
 /*
 B0: 1 1 1 1 1 1
@@ -318,12 +382,12 @@ B1: 1 1 1 1 1 1
 B2: 1 1 1 1 1 1
 B3: 1 0 0 0 0 0
 */
-	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_1(0, 3) |
-    PB_1(1, 0) | PB_1(1, 1) | PB_1(1, 2) | PB_0(1, 3) |
-    PB_1(2, 0) | PB_1(2, 1) | PB_1(2, 2) | PB_0(2, 3) |
-    PB_1(3, 0) | PB_1(3, 1) | PB_1(3, 2) | PB_0(3, 3) |
-    PB_1(4, 0) | PB_1(4, 1) | PB_1(4, 2) | PB_0(4, 3) |
-    PB_1(5, 0) | PB_1(5, 1) | PB_1(5, 2) | PB_0(5, 3),
+	{PP_TYPE_1111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111},
 
 /*
 B0: 1 1 1 1 1 1
@@ -331,12 +395,12 @@ B1: 1 1 1 1 1 1
 B2: 1 1 1 1 1 1
 B3: 1 0 0 1 0 0
 */
-	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_1(0, 3) |
-    PB_1(1, 0) | PB_1(1, 1) | PB_1(1, 2) | PB_0(1, 3) |
-    PB_1(2, 0) | PB_1(2, 1) | PB_1(2, 2) | PB_0(2, 3) |
-    PB_1(3, 0) | PB_1(3, 1) | PB_1(3, 2) | PB_1(3, 3) |
-    PB_1(4, 0) | PB_1(4, 1) | PB_1(4, 2) | PB_0(4, 3) |
-    PB_1(5, 0) | PB_1(5, 1) | PB_1(5, 2) | PB_0(5, 3),
+	{PP_TYPE_1111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111,
+	 PP_TYPE_1111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111},
 
 /*
 B0: 1 1 1 1 1 1
@@ -344,12 +408,12 @@ B1: 1 1 1 1 1 1
 B2: 1 1 1 1 1 1
 B3: 1 1 0 1 0 0
 */
-	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_1(0, 3) |
-    PB_1(1, 0) | PB_1(1, 1) | PB_1(1, 2) | PB_1(1, 3) |
-    PB_1(2, 0) | PB_1(2, 1) | PB_1(2, 2) | PB_0(2, 3) |
-    PB_1(3, 0) | PB_1(3, 1) | PB_1(3, 2) | PB_1(3, 3) |
-    PB_1(4, 0) | PB_1(4, 1) | PB_1(4, 2) | PB_0(4, 3) |
-    PB_1(5, 0) | PB_1(5, 1) | PB_1(5, 2) | PB_0(5, 3),
+	{PP_TYPE_1111,
+	 PP_TYPE_1111,
+	 PP_TYPE_0111,
+	 PP_TYPE_1111,
+	 PP_TYPE_0111,
+	 PP_TYPE_0111},
 
 /*
 B0: 1 1 1 1 1 1
@@ -357,12 +421,12 @@ B1: 1 1 1 1 1 1
 B2: 1 1 1 1 1 1
 B3: 1 1 0 1 0 1
 */
-	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_1(0, 3) |
-    PB_1(1, 0) | PB_1(1, 1) | PB_1(1, 2) | PB_1(1, 3) |
-    PB_1(2, 0) | PB_1(2, 1) | PB_1(2, 2) | PB_0(2, 3) |
-    PB_1(3, 0) | PB_1(3, 1) | PB_1(3, 2) | PB_1(3, 3) |
-    PB_1(4, 0) | PB_1(4, 1) | PB_1(4, 2) | PB_0(4, 3) |
-    PB_1(5, 0) | PB_1(5, 1) | PB_1(5, 2) | PB_1(5, 3),
+	{PP_TYPE_1111,
+	 PP_TYPE_1111,
+	 PP_TYPE_0111,
+	 PP_TYPE_1111,
+	 PP_TYPE_0111,
+	 PP_TYPE_1111},
 
 /*
 B0: 1 1 1 1 1 1
@@ -370,15 +434,13 @@ B1: 1 1 1 1 1 1
 B2: 1 1 1 1 1 1
 B3: 1 1 1 1 0 1
 */
-	PB_1(0, 0) | PB_1(0, 1) | PB_1(0, 2) | PB_1(0, 3) |
-    PB_1(1, 0) | PB_1(1, 1) | PB_1(1, 2) | PB_1(1, 3) |
-    PB_1(2, 0) | PB_1(2, 1) | PB_1(2, 2) | PB_1(2, 3) |
-    PB_1(3, 0) | PB_1(3, 1) | PB_1(3, 2) | PB_1(3, 3) |
-    PB_1(4, 0) | PB_1(4, 1) | PB_1(4, 2) | PB_0(4, 3) |
-    PB_1(5, 0) | PB_1(5, 1) | PB_1(5, 2) | PB_1(5, 3)
+	{PP_TYPE_1111,
+	 PP_TYPE_1111,
+	 PP_TYPE_1111,
+	 PP_TYPE_1111,
+	 PP_TYPE_0111,
+	 PP_TYPE_1111},
 };
-#undef PB_1
-#undef PB_0
 
 
 /* Code rate combinations --------------------------------------------------- */
@@ -439,11 +501,11 @@ const int iCodRateCombFDC4SM = {
    [0]: t_0 = 13;
    [1]: t_0 = 21;
    "-1": no interleaver in this level */
-const int iInterlSequ4SM[MC_MAX_NO_LEVELS] =     { 1, -1, -1, -1, -1, -1};
-const int iInterlSequ16SM[MC_MAX_NO_LEVELS] =    { 0,  1, -1, -1, -1, -1};
-const int iInterlSequ64SM[MC_MAX_NO_LEVELS] =    {-1,  0,  1, -1, -1, -1};
-const int iInterlSequ64HMsym[MC_MAX_NO_LEVELS] = {-1,  0,  1, -1, -1, -1};
-const int iInterlSequ64HMmix[MC_MAX_NO_LEVELS] = {-1, -1,  0,  0,  1,  1};
+const int iInterlSequ4SM[MC_MAX_NUM_LEVELS] =     { 1, -1, -1, -1, -1, -1};
+const int iInterlSequ16SM[MC_MAX_NUM_LEVELS] =    { 0,  1, -1, -1, -1, -1};
+const int iInterlSequ64SM[MC_MAX_NUM_LEVELS] =    {-1,  0,  1, -1, -1, -1};
+const int iInterlSequ64HMsym[MC_MAX_NUM_LEVELS] = {-1,  0,  1, -1, -1, -1};
+const int iInterlSequ64HMmix[MC_MAX_NUM_LEVELS] = {-1, -1,  0,  0,  1,  1};
 
 
 #endif // !defined(_TABLE_MLC_H__3B0_CA63_4344_BB2B_23E7912__INCLUDED_)
