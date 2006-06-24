@@ -63,17 +63,29 @@ using namespace std; /* Because of the library: "complex" */
 # define HAVE_JOURNALINE
 //# undef HAVE_JOURNALINE
 
-# define HAVE_LIBFREEIMAGE
-//# undef HAVE_LIBFREEIMAGE
 
 # define HAVE_LIBHAMLIB
 //# undef HAVE_LIBHAMLIB
 
-//# define HAVE_ZLIB_LIBRARY
-# undef HAVE_ZLIB_LIBRARY
-
 /* Define if you have Hamlib >= 1.2.1 */
 # define HAVE_RIG_PARSE_MODE			1
+
+/* set sensible defaults for QT2 or QT3 */
+# ifdef USE_QT_GUI
+#  include <qglobal.h>
+# endif
+# if defined(QT_VERSION) && QT_VERSION < 0x030000
+#  define HAVE_LIBFREEIMAGE
+//#  undef HAVE_LIBFREEIMAGE
+//#  define HAVE_ZLIB_LIBRARY
+#  undef HAVE_ZLIB_LIBRARY
+# else
+//# define HAVE_LIBFREEIMAGE
+#  undef HAVE_LIBFREEIMAGE
+#  define HAVE_ZLIB_LIBRARY
+//# undef HAVE_ZLIB_LIBRARY
+# endif
+
 #endif
 
 
