@@ -986,8 +986,8 @@ _BOOLEAN MultimediaDlg::openBrowser(QWidget *widget, const QString &filename)
 	/* Running in an MS Windows environment */
 	if (NULL != widget)
 	{
-		bResult = (reinterpret_cast<int>(ShellExecute(NULL, "open",
-			filename.latin1(), NULL, NULL, SW_SHOWNORMAL)) > 32);
+		bResult = (ShellExecute(NULL, "open",
+			filename.latin1(), NULL, NULL, SW_SHOWNORMAL) > (HINSTANCE)32);
 	}
 #else
 	Q_UNUSED(widget);
