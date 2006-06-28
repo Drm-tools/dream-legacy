@@ -69,6 +69,9 @@ public:
 		/* Stop working thread and wait until it is ready for terminating. We
 		   set a time-out of 5 seconds */
 		DRMReceiver.Stop();
+#if defined(_WIN32) && (QT_VERSION<0x030305)
+		sleep(2); /* QThread::wait seems broken on QTWIN 3.3.4 */
+#endif
 		if (this->wait(5000) == FALSE)
 			ErrorMessage("Termination of working thread failed.");
 	}

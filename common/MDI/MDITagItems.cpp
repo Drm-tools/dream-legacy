@@ -313,21 +313,26 @@ void CTagItemGeneratorStr::GenTag(
 	 CSingleBuffer<_BINARY>& MSCData
 	 )
 {
-	const int iLenStrData = Parameter.GetStreamLen(iStreamNumber);
+	const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(iStreamNumber);
 	/* Only generate this tag if stream input data is not of zero length */
-	if ((iLenStrData != 0) && (iStreamNumber < MAX_NUM_STREAMS))
+	if (iLenStrData == 0)
+		return;
+
+	CVectorEx<_BINARY>* pvecbiStrData = MSCData.Get(iLenStrData);
+	/* check we have data in the vector */
+	if(iLenStrData != pvecbiStrData->Size())
+		return;
+
+	if(iStreamNumber >= MAX_NUM_STREAMS)
+		return;
+
+	PrepareTag(iLenStrData);
+
+	pvecbiStrData->ResetBitAccess();
+	/* Data is always a multiple of 8 -> copy bytes */
+	for (int i = 0; i < iLenStrData / SIZEOF__BYTE; i++)
 	{
-		PrepareTag(iLenStrData);
-		CVectorEx<_BINARY>* pvecbiStrData = MSCData.Get(iLenStrData);
-
-		/* Data */
-		pvecbiStrData->ResetBitAccess();
-
-		/* Data is always a multiple of 8 -> copy bytes */
-		for (int i = 0; i < iLenStrData / SIZEOF__BYTE; i++)
-		{
-			Enqueue(pvecbiStrData->Separate(SIZEOF__BYTE), SIZEOF__BYTE);
-		}
+		Enqueue(pvecbiStrData->Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 }
 

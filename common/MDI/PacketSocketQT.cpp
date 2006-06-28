@@ -95,7 +95,7 @@ _BOOLEAN CPacketSocketQT::SetNetwOutAddr(const string& strNewAddr)
            bAddressOK = HostAddrOut.setAddress(parts[1]);
            iHostPortOut = parts[2].toInt();
            const SOCKET s = SocketDevice.socket();
-#if QT_VERSION == 230
+#if QT_VERSION < 0x030000
 		   uint32_t mc_if = htonl(AddrInterface.ip4Addr());
 #else
 		   uint32_t mc_if = htonl(AddrInterface.toIPv4Address());
@@ -142,18 +142,17 @@ _BOOLEAN CPacketSocketQT::SetNetwInAddr(const string& strNewAddr)
 
 	/* Multicast ? */
 	
-#if QT_VERSION == 230
-	uint32_t gp = htonl(AddrGroup.ip4Addr());
+#if QT_VERSION < 0x030000
+	uint32_t gp = AddrGroup.ip4Addr();
 #else
-	uint32_t gp = htonl(AddrGroup.toIPv4Address());
+	uint32_t gp = AddrGroup.toIPv4Address();
 #endif
 	if (gp == 0)
 	{
-                                  
 		/* Initialize the listening socket. */
 		SocketDevice.bind(AddrInterface, iPort);
     }
-	else
+	else if ((gp & 0xe0000000) == 0xe0000000) /* multicast! */
 	{
 		struct ip_mreq mreq;
 
@@ -166,7 +165,7 @@ _BOOLEAN CPacketSocketQT::SetNetwInAddr(const string& strNewAddr)
 			   return FALSE;
 		}
 
-#if QT_VERSION == 230
+#if QT_VERSION < 0x030000
 		mreq.imr_multiaddr.s_addr = htonl(AddrGroup.ip4Addr());
 		mreq.imr_interface.s_addr = htonl(AddrInterface.ip4Addr());
 #else
@@ -184,6 +183,11 @@ _BOOLEAN CPacketSocketQT::SetNetwInAddr(const string& strNewAddr)
 		}
 		return TRUE;
 	}
+	else /* one address specified, but not multicast - listen on a specific interface */
+	{
+		/* Initialize the listening socket. */
+		SocketDevice.bind(AddrGroup, iPort);
+    }
 	return TRUE;
 }
 
@@ -194,10 +198,10 @@ void CPacketSocketQT::OnDataReceived()
 	/* Read block from network interface */
 	const int iNumBytesRead = SocketDevice.readBlock(
 		(char*) &vecsRecBuf[0], MAX_SIZE_BYTES_NETW_BUF);
-	vecsRecBuf.resize(iNumBytesRead);
 
 	if (iNumBytesRead > 0)
 	{
+		vecsRecBuf.resize(iNumBytesRead);
 		/* Decode the incoming packet */
 		if (pPacketSink != NULL)
 			pPacketSink->SendPacket(vecsRecBuf);

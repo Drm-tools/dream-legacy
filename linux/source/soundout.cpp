@@ -210,7 +210,7 @@ void CSoundOut::Init_HW()
 #ifdef USE_QT_GUI
 		qDebug("open error: %s", snd_strerror(err));
 #endif
-		throw CGenErr("alsa CSoundOut::Init_HW playback, can't open "+playdevice+" ("+names[iCurrentDevice]);	
+		throw CGenErr("alsa CSoundOut::Init_HW playback, can't open "+playdevice+" ("+names[iCurrentDevice]+")");
 	}
 
 	snd_pcm_hw_params_alloca(&hwparams);
@@ -494,6 +494,7 @@ _BOOLEAN CSoundOut::Write(CVector< _SAMPLE >& psData)
 
 	return FALSE;
 }
+
 void CSoundOut::Close()
 {
 #ifdef USE_QT_GUI

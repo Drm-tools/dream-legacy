@@ -53,7 +53,7 @@ CDRMReceiver::CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquRestartCnt(0),
 		UtilizeFACData(), UtilizeSDCData(), MSCDemultiplexer(),
 		iAudioStreamID(STREAM_ID_NOT_USED), iDataStreamID(STREAM_ID_NOT_USED),
 		RSIIn(), DecodeRSIMDI(), RSIOut(), RSIPacketBuf(),
-		MSCDecBuf(4), MSCUseBuf(4), MSCSendBuf(4),
+		MSCDecBuf(MAX_NUM_STREAMS), MSCUseBuf(MAX_NUM_STREAMS), MSCSendBuf(MAX_NUM_STREAMS),
 		ChannelEstimation(), AudioSourceDecoder(), FreqSyncAcq()
 #if defined(USE_QT_GUI) || defined(_WIN32)
 		, iMainPlotColorStyle(0), /* default color scheme: blue-white */
@@ -120,6 +120,7 @@ void CDRMReceiver::Run()
 				{
 					SplitMSC[i].ProcessData(ReceiverParam, MSCDecBuf[i], MSCUseBuf[i], MSCSendBuf[i]);
 				}
+
 				bFrameToSend=TRUE;
 			}
 			else

@@ -195,7 +195,7 @@ void CSoundIn::Init_HW(){
 #ifdef USE_QT_GUI
 		qDebug("open error: %s", snd_strerror(err));
 #endif
-		throw CGenErr("alsa CSoundIn::Init_HW record, can't open "+recdevice+" ("+names[iCurrentDevice]);	
+		throw CGenErr("alsa CSoundIn::Init_HW record, can't open "+recdevice+" ("+names[iCurrentDevice]+")");
 	}
 	
 	snd_pcm_hw_params_alloca(&hwparams);
