@@ -197,6 +197,7 @@ public:
 #else
 	_BOOLEAN				SignalStrengthAvailable() { return FALSE; }
 #endif
+	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
 	CParameter*				GetParameters() {return &ReceiverParam;}
 	void					StartParameters(CParameter& Param);

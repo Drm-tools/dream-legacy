@@ -1163,6 +1163,25 @@ ERecMode CParameter::GetReceiverMode()
  return DRMReceiver.GetReceiverMode();		 
 }
 
+/* push from RSCI RX_STATUS */
+void CParameter::SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr)
+{
+	bValidSignalStrength = bValid;
+	rSigStr = rNewSigStr;
+}
+
+_BOOLEAN CParameter::GetSignalStrength(_REAL rSigStr)
+{
+	/* see if we can pull a local value from the receiver */
+	_REAL r;
+	if(DRMReceiver.GetSignalStrength(r))
+	{
+		bValidSignalStrength = TRUE;
+		rSigStr = r;
+	}
+	/* otherwise leave the present values untouched */
+}
+
 void CParameter::CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)
 { 
 	FSyncOK = OK;

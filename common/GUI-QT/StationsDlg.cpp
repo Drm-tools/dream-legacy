@@ -1205,8 +1205,8 @@ void StationsDlg::OnComPortMenu(QAction* action)
 void StationsDlg::OnTimerSMeter()
 {
 	/* Get current s-meter value */
-	_BOOLEAN bValid = pDRMRec->GetParameters()->bValidSigStr;
-	_REAL rCurSigStr = pDRMRec->GetParameters()->rSigStr;
+	_REAL rCurSigStr;
+	_BOOLEAN bValid = pDRMRec->GetSignalStrength(rCurSigStr);
 
 	/* If a time-out happened, do not update s-meter anymore (disable it) */
 	if (bValid==FALSE)
@@ -1217,9 +1217,9 @@ void StationsDlg::OnTimerSMeter()
 
 void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
 {
-	/* Both, GUI "enabled" and hamlib "enabled" must be fullfilled before
+	/* Need both, GUI "enabled" and signal strength available before
 	   s-meter is used */
-	if ((bStatus == TRUE) && (pDRMRec->bEnableSMeter == TRUE))
+	if ((bStatus == TRUE) && (pDRMRec->SignalStrengthAvailable()))
 	{
 		/* Init progress bar for input s-meter */
 		ProgrSigStrength->setAlarmEnabled(TRUE);

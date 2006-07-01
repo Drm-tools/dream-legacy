@@ -416,6 +416,11 @@ CHamlib::CHamlib() : pRig(NULL), bModRigSettings(FALSE) ,iHamlibModelID(0),
 	/* Special DRM front-end list */
 	vecSpecDRMRigs.Init(0);
 
+#ifdef RIG_MODEL_DWT
+	/* Digital World Traveller */
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_DWT, "", 0, ""));
+#endif
+
 #ifdef RIG_MODEL_G303
 	/* Winradio G3 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G303,

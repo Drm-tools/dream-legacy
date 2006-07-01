@@ -895,8 +895,10 @@ public:
 	/* interference */
 	_BOOLEAN bMeasureInterference;
     _REAL rIntFreq, rINR, rICR;
+	void SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr);
+	_BOOLEAN GetSignalStrength(_REAL rSigStr);
+	_BOOLEAN bValidSignalStrength;
 	_REAL rSigStr;
-	_BOOLEAN bValidSigStr;
  	ERecMode GetReceiverMode();
 	CVector<_BINARY> vecbiAudioFrameStatus;
 };

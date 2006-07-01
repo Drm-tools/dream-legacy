@@ -3,7 +3,7 @@
  * Copyright (c) 2001-2005
  *
  * Author(s):
- *	Volker Fischer, Andrew Murphy
+ *	Volker Fischer, Andrew Murphy, Julian Cable
  *
  * Description:
  *	DRM-receiver
@@ -1109,6 +1109,15 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
  	ReceiverParam.ReceptLog.SetFrequency(iNewFreqkHz);
 #ifdef HAVE_LIBHAMLIB
 	return Hamlib.SetFrequency(iNewFreqkHz);
+#else
+	return FALSE;
+#endif
+}
+
+_BOOLEAN CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
+{
+#ifdef HAVE_LIBHAMLIB
+	return Hamlib.GetSMeter(rSigStr)==CHamlib::SS_VALID;
 #else
 	return FALSE;
 #endif
