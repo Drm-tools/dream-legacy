@@ -739,6 +739,7 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	PhaseDialAMSS->setScaleOptions(QwtDial::ScaleTicks);
 
 	TextAMSSServiceLabel->setText("");
+	TextAMSSCountryCode->setText("");
 	TextAMSSInfo->setText("");
 
 	ListBoxAMSSAFSList->setEnabled(FALSE);
@@ -799,6 +800,19 @@ void CAMSSDlg::OnTimer()
 	}
 	else
 		TextAMSSServiceLabel->setText(tr(""));
+
+	/* Country code */
+	const QString strCntryCode = QString(pDRMRec->GetParameters()->
+		Service[0].strCountryCode.c_str()).lower(); /* must be of 2 lowercase chars */
+
+	if ((pDRMRec->GetParameters()->Service[0].IsActive()) &&
+	   (strCntryCode != ""))
+	{
+		TextAMSSCountryCode->
+			setText(QString(GetName(strCntryCode.latin1()).c_str()));
+	}
+	else
+		TextAMSSCountryCode->setText("");
 
 	/* Get number of alternative services */
 	const int iNumAltServices = pDRMRec->GetParameters()->
