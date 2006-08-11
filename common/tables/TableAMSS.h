@@ -34,15 +34,18 @@
 
 
 /* Definitions ****************************************************************/
-#define LEN_TABLE_AMSS_CARRIER_MODE		5
+#define LEN_TABLE_AMSS_CARRIER_MODE		8
 
 const string strTableAMSSCarrierMode[LEN_TABLE_AMSS_CARRIER_MODE] =
 {
-	"No Carrier Control",
-	"AMC Mode 1 (-3dB)",
-	"AMC Mode 2 (-6dB)",
-	"DAM Mode 1 (+3dB)",
-	"DAM Mode 2 (+6dB)"
+	"No Carrier Control",	// 0 0 0
+	"reserved",				// 0 0 1
+	"AMC Mode 1 (-3dB)",	// 0 1 0
+	"AMC Mode 2 (-6dB)",	// 0 1 1
+	"DAM Mode 1 (+3dB)",	// 1 0 0
+	"DAM Mode 2 (+6dB)",	// 1 0 1
+	"reserved",				// 1 1 0
+	"reserved"				// 1 1 1
 };
 
 
