@@ -507,6 +507,28 @@ void CDRMReceiver::InitReceiverMode()
 	eNewReceiverMode = RM_NONE;
 }
 
+#ifdef USE_QT_GUI
+void CDRMReceiver::run()
+{
+	/* Set thread priority (the working thread should have a higher priority
+	   than tthe GUI) */
+#ifdef _WIN32
+	if(GetEnableProcessPriority())
+		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+#endif
+	try
+	{
+		/* Call receiver main routine */
+		Start();
+	}
+	catch(CGenErr GenErr)
+	{
+		ErrorMessage(GenErr.strError);
+	}
+	qDebug("Working thread complete");
+}
+#endif
+
 void CDRMReceiver::Start()
 {
 	/* Set run flag so that the thread can work */
@@ -528,7 +550,6 @@ void CDRMReceiver::Start()
 void CDRMReceiver::Stop()
 {
 	ReceiverParam.bRunThread = FALSE;
-
 }
 
 void CDRMReceiver::SetAMDemodAcq(_REAL rNewNorCen)

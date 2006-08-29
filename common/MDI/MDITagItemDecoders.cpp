@@ -210,13 +210,13 @@ void CTagItemDecoderSDCChanInf::DecodeTag(CVector<_BINARY>& vecbiTag, const int 
 	/* Get stream parameters */
 
 	/* Determine if hierarchical modulation is used */ // TODO
-_BOOLEAN bHierarchical = FALSE;
+	_BOOLEAN bHierarchical = FALSE;
 
 	for (int i = 0; i < iNumStreams; i++)
 	{
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hierarchical data */
-		if ((i == 0) && (bHierarchical = TRUE))
+		if ((i == 0) && (bHierarchical == TRUE))
 		{
 			/* Protection level for hierarchical */ // TODO
 			vecbiTag.Separate(2);

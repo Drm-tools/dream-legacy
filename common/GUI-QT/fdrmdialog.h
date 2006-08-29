@@ -98,6 +98,7 @@ protected:
 
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
 	virtual void	customEvent(QCustomEvent* Event);
+	virtual void	closeEvent(QCloseEvent* ce);
 	void			SetService(int iNewServiceID);
 	void			AddWhatsThisHelp();
 	void			SetReceiverMode(const ERecMode eNewReMo);

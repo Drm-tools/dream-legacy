@@ -59,45 +59,6 @@ CDRMReceiver	DRMReceiver;
 /* This pointer is only used for the post-event routine */
 QApplication*	pApp = NULL;
 
-
-/* Thread class for the receiver */
-class CReceiverThread : public QThread
-{
-public:
-	void Stop()
-	{
-		/* Stop working thread and wait until it is ready for terminating. We
-		   set a time-out of 5 seconds */
-		DRMReceiver.Stop();
-#if defined(_WIN32) && (QT_VERSION<0x030305)
-		sleep(2); /* QThread::wait seems broken on QTWIN 3.3.4 */
-#endif
-		if (this->wait(5000) == FALSE)
-			ErrorMessage("Termination of working thread failed.");
-	}
-
-	virtual void run()
-	{
-		/* Set thread priority (The working thread should have a higher priority
-		   than the GUI) */
-#ifdef _WIN32
-		if(DRMReceiver.GetEnableProcessPriority())
-			SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
-#endif
-
-		try
-		{
-			/* Call receiver main routine */
-			DRMReceiver.Start();
-		}
-
-		catch (CGenErr GenErr)
-		{
-			ErrorMessage(GenErr.strError);
-		}
-	}
-};
-
 int main(int argc, char** argv)
 {
 try
@@ -148,20 +109,17 @@ try
 		   ready than the GUI thread */
 		DRMReceiver.Init();
 
-		CReceiverThread	RecThread; /* Working thread object */
 		FDRMDialog		MainDlg(&DRMReceiver, 0, 0, FALSE, Qt::WStyle_MinMax);
 
-		/* Start thread */
-		RecThread.start();
+		/* Start working thread */
+		DRMReceiver.start();
 
 		/* Set main window */
 		app.setMainWidget(&MainDlg);
 		pApp = &app; /* Needed for post-event routine */
 
-		/* Working thread must be initialized before starting the GUI! */
+		/* Working thread has been initialized so start the GUI! */
 		app.exec();
-
-		RecThread.Stop();
 	}
 
 	/* Save settings to init-file */

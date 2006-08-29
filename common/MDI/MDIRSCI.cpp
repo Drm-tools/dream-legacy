@@ -132,7 +132,7 @@ void CRSIMDIOutRCIIn::SendUnlockedFrame(CParameter& Parameter)
 	/* Generate some other tags */
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
-	_REAL rSigStr;
+	_REAL rSigStr = 0.0;
 	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
 	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
 

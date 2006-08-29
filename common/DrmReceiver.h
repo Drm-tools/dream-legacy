@@ -105,6 +105,9 @@ protected:
 };
 
 class CDRMReceiver
+#ifdef USE_QT_GUI
+	: public QThread
+#endif
 {
 public:
 	/* Acquisition state of receiver */
@@ -117,6 +120,9 @@ public:
 	virtual ~CDRMReceiver() {}
 
 	/* For GUI */
+#ifdef USE_QT_GUI
+	virtual void			run();
+#endif
 	void					Init();
 	void					Start();
 	void					Stop();
