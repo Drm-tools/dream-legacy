@@ -1203,8 +1203,8 @@ string CSettings::UsageArguments(char** argv)
 // TODO: Use macro definitions for help text, too (instead of hard-coded numbers)!
 
 	return
-		"Usage: " + string(argv[0]) + " [option] [argument]\n\n"
-		"Recognized options:\n\n"
+		"Usage: " + string(argv[0]) + " [option] [argument]\n"
+		"Recognized options:\n"
 		"  -t, --transmitter           DRM transmitter mode\n"
 		"  -p, --flipspectrum          flip input spectrum\n"
 		"  -i <n>, --mlciter <n>       number of MLC iterations (allowed range: 0...4 default: 1)\n"
@@ -1217,19 +1217,12 @@ string CSettings::UsageArguments(char** argv)
 		"  -F, --filter                apply bandpass filter\n"
 		"  -D, --modmetric             enable modified metrics\n"
 		"  -c <n>, --inchansel <n>     input channel selection\n"
-		"                              0: left channel\n"
-		"                              1: right channel\n"
-		"                              2: mix both channels (default)\n"
-		"                              3: I / Q input positive\n"
-		"                              4: I / Q input negative\n"
-		"                              5: I / Q input positive (0 Hz IF)\n"
-		"                              6: I / Q input negative (0 Hz IF)\n"
+		"                              0: left channel;   1: right channel;   2: mix both channels (default)\n"
+		"                              3: I / Q input positive;   4: I / Q input negative\n"
+		"                              5: I / Q input positive (0 Hz IF);   6: I / Q input negative (0 Hz IF)\n"
 		"  -u <n>, --outchansel <n>    output channel selection\n"
-		"                              0: L -> L, R -> R (default)\n"
-		"                              1: L -> L, R muted\n"
-		"                              2: L muted, R -> R\n"
-		"                              3: mix -> L, R muted\n"
-		"                              4: L muted, mix -> R\n"
+		"                              0: L -> L, R -> R (default);   1: L -> L, R muted;   2: L muted, R -> R\n"
+		"                              3: mix -> L, R muted;   4: L muted, mix -> R\n"
 		"  -e <n>, --decodeepg <n>     enable/disable epg decoding (0: off; 1: on)\n"
 
 #ifdef USE_QT_GUI
@@ -1239,9 +1232,7 @@ string CSettings::UsageArguments(char** argv)
 		"  -o <s>, --longitude <s>     set longitude string for log file\n"
 		"  -l <n>, --logdelay <n>      delay start of logging by <n> seconds, allowed range: 0...3600)\n"
 		"  -y <n>, --colorscheme <n>   set color scheme for main plot\n"
-		"                              0: blue-white (default)\n"
-		"                              1: green-black\n"
-		"                              2: black-grey\n"
+		"                              0: blue-white (default);   1: green-black;   2: black-grey\n"
 #endif
 		"  --mdiout <s>                MDI out address format [IP#:]IP#:port (for Content Server)\n"
 		"  --mdiin  <s>                MDI in address (for modulator) [[IP#:]IP:]port\n"
@@ -1263,7 +1254,7 @@ string CSettings::UsageArguments(char** argv)
 		"  -P, --processpriority <n>   enable/disable high priority for working thread\n"
 #endif
 
-		"\n  -h, -?, --help             this help text\n"
+		"  -h, -?, --help             this help text\n"
 		"Example: " + string(argv[0]) +
 		" -p --sampleoff -0.23 -i 2 "
 #ifdef USE_QT_GUI
