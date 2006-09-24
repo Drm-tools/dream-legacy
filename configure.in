@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 AC_INIT(common/GUI-QT/main.cpp)
 
-AM_INIT_AUTOMAKE(drm,1.6.28cvs)
+AM_INIT_AUTOMAKE(drm,1.6.29cvs)
 
 
 AM_CONFIG_HEADER(config.h)
@@ -41,6 +41,7 @@ AC_ARG_WITH( hamlib,[  --with-hamlib           use hamlib library],WITHHAMLIB=$w
 
 AC_ARG_WITH( freeimage,[  --with-freeimage        use FreeImage library],WITHFREEIMAGE=$withval, WITHFREEIMAGE=no)
 
+AC_ARG_WITH( libpcap,[  --with-libpcap        use pcap library],WITHPCAP=$withval, WITHPCAP=no)
 
 if test "$enable_simulation" = "yes"; then
 	dnl Only minimal configuration for simulation
@@ -52,9 +53,10 @@ if test "$enable_simulation" = "yes"; then
 	WITHJOURNALINE=no
 	WITHHAMLIB=no
 	WITHFREEIMAGE=no
+	WITHPCAP=no
 fi
 
-if test "$enable_alsa" = "yes"; then
+if test "x$enable_alsa" = "xyes"; then
 	AC_CHECK_HEADER(sys/asoundlib.h, , enable_alsa=no)
 	AC_CHECK_LIB(asound, snd_pcm_open, , enable_alsa=no)
 	if test "$enable_alsa" = "no"; then
@@ -65,7 +67,7 @@ if test "$enable_alsa" = "yes"; then
 	fi
 fi
 
-if test "$enable_sound" = "yes"; then
+if test "x$enable_sound" = "xyes"; then
 
 	AC_DEFINE(WITH_SOUND, 1, [Define if you want to use sound])
 	if (test "$enable_alsa" = "no")
@@ -130,18 +132,19 @@ if test "x$WITHQTGUI" = xyes; then
 	dnl qwt
 
 	AC_HAVE_LIBRARY(qwt, ,exit 1)
-	AC_CHECK_HEADER(/usr/include/qwt/qwt.h, qwt_include="/usr/include/qwt", qwt_include="", [#include <qt.h>])
-	if test "$qwt_include" = ""; then
-		AC_CHECK_HEADER(/usr/local/include/qwt/qwt.h, qwt_include="/usr/local/include/qwt", qwt_include="", [#include <qt.h>])
+
+	AC_CHECK_HEADER(/usr/include/qwt/qwt.h, qwt_include="/usr/include/qwt", qwt_include="")
+	if test "x$qwt_include" = "x"; then
+		AC_CHECK_HEADER(/usr/local/include/qwt/qwt.h, qwt_include="/usr/local/include/qwt", qwt_include="")
 	fi
-	if test "$qwt_include" = ""; then
-		AC_CHECK_HEADER($QTDIR/include/qwt/qwt.h, qwt_include="$QTDIR/include/qwt", exit 1, [#include <qt.h>])
+	if test "x$qwt_include" = "x"; then
+		AC_CHECK_HEADER($QTDIR/include/qwt/qwt.h, qwt_include="$QTDIR/include/qwt", exit 1)
 	fi
 	AC_SUBST(QWTINCL, -I$qwt_include )
 	
 	dnl check for new functions from version 4.2
-	AC_CHECK_HEADER($qwt_include/qwt_dial_needle.h, qwt_version_ok=yes, ,[#include <qt.h>])
-	if test "$qwt_version_ok" = ""; then
+	AC_CHECK_HEADER($qwt_include/qwt_dial_needle.h, qwt_version_ok=yes, qwt_version_ok=no)
+	if test "x$qwt_version_ok" = "xno"; then
 		AC_MSG_ERROR( "Your version of qwt is too old!")
 	fi
 
@@ -200,6 +203,17 @@ if test "x$WITHFREEIMAGE" = xyes; then
 		AC_MSG_ERROR( "FreeImage library not found" )
 	fi
 fi
+
+dnl libpcap (optional) --------------------------------------------------------
+if test "x$WITHPCAP" = xyes; then
+	AC_CHECK_HEADER(pcap.h, , have_pcap=no)
+	AC_CHECK_LIB(pcap,pcap_next_ex, , have_pcap=no)
+
+	if test "x$have_pcap" = "xno"; then
+		AC_MSG_ERROR( "pcap library not found" )
+	fi
+fi
+
 
 dnl PUT THIS AT THE END, because FhG Journaline library has undefined symbols
 dnl Journaline (optional) -------------------------------------------------------

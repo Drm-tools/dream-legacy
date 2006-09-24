@@ -35,12 +35,21 @@
 
 #include <qsocketdevice.h>
 #include <qsocketnotifier.h>
+#include <qdatetime.h>
 #ifdef _WIN32
 # include <winsock2.h>
 # include <ws2tcpip.h>
 #else
 # include <netinet/in.h>
 # include <arpa/inet.h>
+#endif
+#ifdef HAVE_LIBPCAP
+# include <pcap.h>
+#endif
+#ifdef HAVE_LIBWTAP
+extern "C" {
+# include <wtap.h>
+}
 #endif
 
 /* Some defines needed for compatibility when using Linux */
@@ -84,6 +93,16 @@ private:
 
 	QSocketDevice				SocketDevice;
 	QSocketNotifier*			pSocketNotivRead;
+
+#if defined(HAVE_LIBWTAP) || defined(HAVE_LIBPCAP)
+#ifdef HAVE_LIBPCAP
+    pcap_t						*pf;
+#endif
+#ifdef HAVE_LIBWTAP
+    wtap						*pf;
+#endif
+	QTime						timeKeeper;
+#endif
 
 public slots:
 	void OnDataReceived();

@@ -38,6 +38,7 @@
 # endif
 #endif
 #include <vector>
+#include <queue>
 
 class CMDIInBuffer
 {
@@ -52,7 +53,7 @@ public:
 	void Get(vector<_BYTE>& data);
 
 protected:
-	vector<_BYTE> buffer;
+	queue< vector<_BYTE> > buffer;
 #ifdef USE_QT_GUI
 	QMutex guard;
 	QWaitCondition blocker;

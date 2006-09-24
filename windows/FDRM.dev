@@ -5,14 +5,14 @@ UnitCount=228
 Type=0
 Ver=1
 ObjFiles=
-Includes=..\common\GUI-QT;..\libs;C:\qt-3-mingw\include;D:\Dev-Cpp\include\qwt
+Includes=..\common\GUI-QT;..\libs;C:\qt-3-mingw\include;D:\Dev-Cpp\include\qwt;D:\Dev-Cpp\wireshark-0.99.3a\wiretap;D:\Dev-Cpp\include\glib-2.0;D:\Dev-Cpp\lib\glib-2.0\include
 Libs=..\libs;C:\qt-3-mingw\lib
 PrivateResource=FDRM_private.rc
 ResourceIncludes=
 MakeIncludes=
 Compiler=-Wall_@@_-mthreads_@@_-fexceptions -frtti_@@_-DQT_DLL_@@_-DQT_THREAD_SUPPORT_@@_-DQT_ACCESSIBILITY_SUPPORT_@@_-DQT_TABLET_SUPPORT_@@_-DQT_NO_DEBUG_@@_-DHAVE_STDINT_H_@@_-D_WINDOWS_@@_-DNDEBUG_@@_-DWIN32_@@_
 CppCompiler=-Wall_@@_-mthreads_@@_-fexceptions -frtti _@@_-DQT_DLL_@@_-DQT_THREAD_SUPPORT_@@_-DQT_ACCESSIBILITY_SUPPORT_@@_-DQT_TABLET_SUPPORT_@@_-DQT_NO_DEBUG_@@_-DHAVE_STDINT_H_@@_-D_WINDOWS_@@_-DNDEBUG_@@_-DWIN32_@@__@@_
-Linker=-lqwt_@@_-lfaac_@@_-lfaad2_@@_-lhamlib_@@_-lFhGJournalLine_@@_-lrfftw_@@_-lfftw_@@_-lz_@@_-lqtmain_@@_-lqt-mt_@@_-lws2_32_@@_-lwinmm_@@_-Wl,-enable-stdcall-fixup_@@_-Wl,-enable-auto-import -Wl,-enable-runtime-pseudo-reloc -mthreads -Wl, -Wl,-subsystem,windows_@@_
+Linker=-lqwt_@@_-lfaac_@@_-lfaad2_@@_-lhamlib_@@_-lFhGJournalLine_@@_-lrfftw_@@_-lfftw_@@_-lz_@@_-lwtap_@@_-lqtmain_@@_-lqt-mt_@@_-lws2_32_@@_-lwinmm_@@_-Wl,-enable-stdcall-fixup_@@_-Wl,-enable-auto-import -Wl,-enable-runtime-pseudo-reloc -mthreads -Wl, -Wl,-subsystem,windows_@@_
 IsCpp=1
 Icon=
 ExeOutput=
@@ -27,7 +27,7 @@ CustomMakefile=
 IncludeVersionInfo=0
 SupportXPThemes=0
 CompilerSet=0
-CompilerSettings=00000010010010010000ha
+CompilerSettings=00000010010010000001ha
 
 [Unit1]
 FileName=resource.h
@@ -2325,3 +2325,4 @@ Link=1
 Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
+

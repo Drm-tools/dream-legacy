@@ -30,180 +30,302 @@
 
 #include "PacketSocketQT.h"
 #include <qstringlist.h>
+#include <qtimer.h>
+#include <iostream>
 #include <errno.h>
+#include <sys/time.h>
 
-CPacketSocketQT::CPacketSocketQT() : SocketDevice(QSocketDevice::Datagram /* UDP */)
+CPacketSocketQT::CPacketSocketQT ():SocketDevice (QSocketDevice::
+			  Datagram /* UDP */ )
+#if defined(HAVE_LIBWTAP) || defined(HAVE_LIBPCAP)
+			  , pf(NULL)
+#endif
 {
 	/* Generate the socket notifier and connect the signal */
-	pSocketNotivRead = new QSocketNotifier(SocketDevice.socket(),
-		QSocketNotifier::Read);
+	pSocketNotivRead = new QSocketNotifier (SocketDevice.socket (),
+											QSocketNotifier::Read);
 
 	/* Connect the "activated" signal */
-    QObject::connect(pSocketNotivRead, SIGNAL(activated(int)),
-		this, SLOT(OnDataReceived()));
+	QObject::connect (pSocketNotivRead, SIGNAL (activated (int)),
+					  this, SLOT (OnDataReceived ()));
 }
 
 // Set the sink which will receive the packets
-void CPacketSocketQT::SetPacketSink(CPacketSink *pSink)
+void
+CPacketSocketQT::SetPacketSink (CPacketSink * pSink)
 {
 	pPacketSink = pSink;
 }
 
 // Stop sending packets to the sink
-void CPacketSocketQT::ResetPacketSink(void)
+void
+CPacketSocketQT::ResetPacketSink (void)
 {
 	pPacketSink = NULL;
 }
 
 // Send packet to the socket
-void CPacketSocketQT::SendPacket(const vector<_BYTE>& vecbydata)
+void
+CPacketSocketQT::SendPacket (const vector < _BYTE > &vecbydata)
 {
 	/* Send packet to network */
-	char *p = new char[vecbydata.size()];
-	for(size_t i=0; i<vecbydata.size(); i++)
-		p[i]=vecbydata[i];
-	uint32_t bytes_written = SocketDevice.writeBlock(p, vecbydata.size(),
-		HostAddrOut, iHostPortOut);
+	char *p = new char[vecbydata.size ()];
+	for (size_t i = 0; i < vecbydata.size (); i++)
+		p[i] = vecbydata[i];
+	Q_LONG bytes_written = SocketDevice.writeBlock (p, vecbydata.size (),
+													  HostAddrOut,
+													  iHostPortOut);
 	/* should we throw an exception or silently accept? */
 	/* the most likely cause is that we are sending unicast and no-one
 	   is listening, or the interface is down, there is no route */
-	if(bytes_written==-1)
+	if (bytes_written == -1)
 	{
-	 	QSocketDevice::Error x = SocketDevice.error();
-	 	if(x != QSocketDevice::NetworkFailure)
-			qDebug("error sending packet");	    
+		QSocketDevice::Error x = SocketDevice.error ();
+		if (x != QSocketDevice::NetworkFailure)
+			qDebug ("error sending packet");
 	}
 }
 
-_BOOLEAN CPacketSocketQT::SetNetwOutAddr(const string& strNewAddr)
+_BOOLEAN
+CPacketSocketQT::SetNetwOutAddr (const string & strNewAddr)
 {
 	/* syntax
-	1:  <ip>:<port>
-	2:  <ip>:<ip>:<port>
-     */
+	   1:  <ip>:<port>
+	   2:  <ip>:<ip>:<port>
+	 */
 	/* Init return flag and copy string in QT-String "QString" */
 	_BOOLEAN bAddressOK = FALSE;
-	QStringList parts = QStringList::split(":", strNewAddr.c_str(), TRUE);
-	switch(parts.count()) {
-      case 2:
-           bAddressOK = HostAddrOut.setAddress(parts[0]);
-           iHostPortOut = parts[1].toInt();
-           break;
-      case 3:
+	QStringList parts = QStringList::split (":", strNewAddr.c_str (), TRUE);
+	switch (parts.count ())
+	{
+	case 2:
+		bAddressOK = HostAddrOut.setAddress (parts[0]);
+		iHostPortOut = parts[1].toInt ();
+		break;
+	case 3:
 		QHostAddress AddrInterface;
-	  	AddrInterface.setAddress(parts[0]);
-           bAddressOK = HostAddrOut.setAddress(parts[1]);
-           iHostPortOut = parts[2].toInt();
-           const SOCKET s = SocketDevice.socket();
+		AddrInterface.setAddress (parts[0]);
+		bAddressOK = HostAddrOut.setAddress (parts[1]);
+		iHostPortOut = parts[2].toInt ();
+		const SOCKET s = SocketDevice.socket ();
 #if QT_VERSION < 0x030000
-		   uint32_t mc_if = htonl(AddrInterface.ip4Addr());
+		uint32_t mc_if = htonl (AddrInterface.ip4Addr ());
 #else
-		   uint32_t mc_if = htonl(AddrInterface.toIPv4Address());
+		uint32_t mc_if = htonl (AddrInterface.toIPv4Address ());
 #endif
-           if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF, 
-             (char*) &mc_if, sizeof(mc_if))==SOCKET_ERROR)
-               bAddressOK = FALSE;
-           break;
-    }
+		if (setsockopt (s, IPPROTO_IP, IP_MULTICAST_IF,
+						(char *) &mc_if, sizeof (mc_if)) == SOCKET_ERROR)
+			bAddressOK = FALSE;
+		break;
+	}
 	return bAddressOK;
 }
 
 
-_BOOLEAN CPacketSocketQT::SetNetwInAddr(const string& strNewAddr)
+_BOOLEAN
+CPacketSocketQT::SetNetwInAddr (const string & strNewAddr)
 {
 
 	/* syntax
-	1:  <port>
-	2:  <ip>:<port>
-	3:  <ip>:<ip>:<port>
-	4:  <ip>::<port>
-     */
+	   1:  <port>
+	   2:  <group ip>:<port>
+	   3:  <interface ip>:<group ip>:<port>
+	   4:  <interface ip>::<port>
+	   5:  :<group ip>:<port>
+	 */
 	int iPort;
 	QHostAddress AddrGroup, AddrInterface;
-	/* Init return flag and copy string to a QString */
-	_BOOLEAN bAddressOK = FALSE;
-	QStringList parts = QStringList::split(":", strNewAddr.c_str(), TRUE);
-	switch(parts.count()) {
-      case 1:
-           iPort = parts[0].toInt();
-           break;
-      case 2:
-           AddrGroup.setAddress(parts[0]);
-           iPort = parts[1].toInt();
-           break;
-      case 3:
-           if(parts[0].length()>0)
-               AddrInterface.setAddress(parts[0]);
-           if(parts[1].length()>0)
-               AddrGroup.setAddress(parts[1]);
-           iPort = parts[2].toUInt();
-           break;
-    }
+	QStringList parts = QStringList::split (":", strNewAddr.c_str (), TRUE);
+	switch (parts.count ())
+	{
+	case 1:
+		bool ok;
+		iPort = parts[0].toInt (&ok);
+		if(!ok)
+		{
+#if defined(HAVE_LIBWTAP) || defined(HAVE_LIBPCAP)
+			/* it might be a file */
+#ifdef HAVE_LIBPCAP
+			char errbuf[PCAP_ERRBUF_SIZE];
+			pf = pcap_open_offline(parts[0].latin1(), errbuf);
+#endif
+#ifdef HAVE_LIBWTAP
+			int err;
+			gchar *err_info;
+			pf = wtap_open_offline(parts[0].latin1(), &err, &err_info, FALSE);
+#endif
+			if ( pf != NULL)
+			{
+				timeKeeper = QTime::currentTime();
+				QTimer::singleShot(400, this, SLOT(OnDataReceived()));
+				return TRUE;
+    		}
+#endif
+			throw CGenErr ("Can't parse rsiin arg");
+		}
+		break;
+	case 2:
+		AddrGroup.setAddress (parts[0]);
+		iPort = parts[1].toInt ();
+		break;
+	case 3:
+		if (parts[0].length () > 0)
+			AddrInterface.setAddress (parts[0]);
+		if (parts[1].length () > 0)
+			AddrGroup.setAddress (parts[1]);
+		iPort = parts[2].toUInt ();
+		break;
+	default:
+		throw CGenErr ("Can't parse rsiin arg");
+	}
 
 	/* Multicast ? */
-	
+
 #if QT_VERSION < 0x030000
-	uint32_t gp = AddrGroup.ip4Addr();
+	uint32_t gp = AddrGroup.ip4Addr ();
 #else
-	uint32_t gp = AddrGroup.toIPv4Address();
+	uint32_t gp = AddrGroup.toIPv4Address ();
 #endif
 	if (gp == 0)
 	{
 		/* Initialize the listening socket. */
-		SocketDevice.bind(AddrInterface, iPort);
-    }
-	else if ((gp & 0xe0000000) == 0xe0000000) /* multicast! */
+		SocketDevice.bind (AddrInterface, iPort);
+	}
+	else if ((gp & 0xe0000000) == 0xe0000000)	/* multicast! */
 	{
 		struct ip_mreq mreq;
 
 		/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
-        bool ok = SocketDevice.bind(QHostAddress(UINT32(0)), iPort);
-        if(ok == false)
+		bool ok = SocketDevice.bind (QHostAddress (UINT32 (0)), iPort);
+		if (ok == false)
 		{
-		 	QSocketDevice::Error x = SocketDevice.error();
-			throw CGenErr("Can't bind to port to receive packets");
-			   return FALSE;
+			QSocketDevice::Error x = SocketDevice.error ();
+			throw CGenErr ("Can't bind to port to receive packets");
+			return FALSE;
 		}
 
 #if QT_VERSION < 0x030000
-		mreq.imr_multiaddr.s_addr = htonl(AddrGroup.ip4Addr());
-		mreq.imr_interface.s_addr = htonl(AddrInterface.ip4Addr());
+		mreq.imr_multiaddr.s_addr = htonl (AddrGroup.ip4Addr ());
+		mreq.imr_interface.s_addr = htonl (AddrInterface.ip4Addr ());
 #else
-		mreq.imr_multiaddr.s_addr = htonl(AddrGroup.toIPv4Address());
-		mreq.imr_interface.s_addr = htonl(AddrInterface.toIPv4Address());
+		mreq.imr_multiaddr.s_addr = htonl (AddrGroup.toIPv4Address ());
+		mreq.imr_interface.s_addr = htonl (AddrInterface.toIPv4Address ());
 #endif
-        const SOCKET s = SocketDevice.socket();
-        int n = setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*) &mreq,
-				sizeof(mreq));
-		if(n==SOCKET_ERROR)
+		const SOCKET s = SocketDevice.socket ();
+		int n = setsockopt (s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *) &mreq,
+							sizeof (mreq));
+		if (n == SOCKET_ERROR)
 		{
-			throw CGenErr(
-			string("Can't join multicast group to receive packets: ")
-			 + strerror(errno));
+			throw
+				CGenErr (string
+						 ("Can't join multicast group to receive packets: ") +
+						 strerror (errno));
 		}
 		return TRUE;
 	}
-	else /* one address specified, but not multicast - listen on a specific interface */
+	else						/* one address specified, but not multicast - listen on a specific interface */
 	{
 		/* Initialize the listening socket. */
-		SocketDevice.bind(AddrGroup, iPort);
-    }
+		SocketDevice.bind (AddrGroup, iPort);
+	}
 	return TRUE;
 }
 
-void CPacketSocketQT::OnDataReceived()
+void
+CPacketSocketQT::OnDataReceived ()
 {
-	vector<_BYTE> vecsRecBuf(MAX_SIZE_BYTES_NETW_BUF);
+	vector < _BYTE > vecsRecBuf (MAX_SIZE_BYTES_NETW_BUF);
+
+#if defined(HAVE_LIBWTAP) || defined(HAVE_LIBPCAP)
+	if(pf)
+	{ 
+		int link_len = 0;
+		const _BYTE* pkt_data;
+#ifdef HAVE_LIBPCAP
+   		struct pcap_pkthdr *header;
+		int res;
+		const u_char* data;
+		/* Retrieve the packet from the file */
+		if((res = pcap_next_ex( pf, &header, &data)) != 1)
+		{
+			cout << "pcap read result: " << res << endl;
+			pcap_close(pf);
+			pf = NULL;
+			return;
+		}
+		else
+		{
+			int lt = pcap_datalink(pf);
+			pkt_data = (_BYTE*)data;
+			/* 14 bytes ethernet header */
+			if(lt==DLT_EN10MB)
+			{
+				link_len=14;
+			}
+			/* raw IP header ? */
+			if(lt==DLT_RAW)
+			{
+				link_len=0;
+			}
+		}
+#endif
+#ifdef HAVE_LIBWTAP
+		int res, err;
+		gchar *err_info;
+		long int data_offset;
+		/* Retrieve the packet from the file */
+		if((res = wtap_read(pf, &err, &err_info, &data_offset)) == 0)
+		{
+			cout << "wtap read result: " << res << endl;
+			wtap_close(pf);
+			pf = NULL;
+			return;
+		}
+		else
+		{
+		 	struct wtap_pkthdr *phdr = wtap_phdr(pf);
+			pkt_data = (_BYTE*)wtap_buf_ptr(pf);
+			/* 14 bytes ethernet header */
+			if(phdr->pkt_encap == WTAP_ENCAP_ETHERNET)
+			{
+				link_len=14;
+			}
+			/* raw IP header ? */
+			if(phdr->pkt_encap == WTAP_ENCAP_RAW_IP)
+			{
+				link_len=0;
+			}
+		}
+#endif
+		/* 4n bytes IP header, 8 bytes UDP header */
+		int udp_ip_hdr_len = 4*(pkt_data[link_len] & 0x0f) + 8;
+		int ip_packet_len = ntohs(*(uint16_t*)&pkt_data[link_len+2]);
+		int data_len = ip_packet_len - udp_ip_hdr_len;
+		vecsRecBuf.resize (data_len);
+			for(int i=0; i<data_len; i++)
+				vecsRecBuf[i] = pkt_data[link_len+udp_ip_hdr_len+i];
+		/* Decode the incoming packet */
+		if (pPacketSink != NULL)
+			pPacketSink->SendPacket (vecsRecBuf);
+		QTime iNow = QTime::currentTime();
+		int iDelay = 400 - timeKeeper.msecsTo(iNow);
+		if(iDelay < 0)
+		    iDelay = 0;
+		QTimer::singleShot(iDelay, this, SLOT(OnDataReceived()));
+		timeKeeper = timeKeeper.addMSecs(400);
+		return;
+	}
+#endif
 
 	/* Read block from network interface */
-	const int iNumBytesRead = SocketDevice.readBlock(
-		(char*) &vecsRecBuf[0], MAX_SIZE_BYTES_NETW_BUF);
+	const int iNumBytesRead = SocketDevice.readBlock ((char *) &vecsRecBuf[0],
+													  MAX_SIZE_BYTES_NETW_BUF);
 
 	if (iNumBytesRead > 0)
 	{
-		vecsRecBuf.resize(iNumBytesRead);
+		vecsRecBuf.resize (iNumBytesRead);
 		/* Decode the incoming packet */
 		if (pPacketSink != NULL)
-			pPacketSink->SendPacket(vecsRecBuf);
+			pPacketSink->SendPacket (vecsRecBuf);
 	}
 }

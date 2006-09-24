@@ -433,10 +433,7 @@ CDataDecoder::DecodeEPG(const CParameter& ReceiverParam)
 		FILE *f = fopen (path.c_str (), "wb");
 		if (f)
 		{
-			fwrite (&NewObj.Body.vecData.front (),
-				1,
-				NewObj.Body.vecData.size (),
-				f);
+			fwrite (&NewObj.Body.vecData.front(), 1, NewObj.Body.vecData.size(), f);
 			fclose (f);
 		}
 	}

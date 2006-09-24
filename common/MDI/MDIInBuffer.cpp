@@ -38,11 +38,16 @@ CMDIInBuffer::Put(const vector<_BYTE>& data)
 {
 #ifdef USE_QT_GUI
 	guard.lock();
-	buffer = data;
-	blocker.wakeOne();
+	if(buffer.empty())
+	{
+		buffer.push(data);
+		blocker.wakeOne();
+	}
+	else
+		buffer.push(data);
 	guard.unlock();
 #else
-	buffer = data;
+	buffer.push(data);
 #endif
 }
 
@@ -55,12 +60,13 @@ CMDIInBuffer::Get(vector<_BYTE>& data)
 {
 #ifdef USE_QT_GUI
 	guard.lock();
-	blocker.wait(&guard, 1000);
-	data = buffer;
-	buffer.clear();
+	while(buffer.empty())
+		blocker.wait(&guard, 1000);
+	data = buffer.front();
+	buffer.pop();
 	guard.unlock();
 #else
-	data = buffer;
-	buffer.clear();
+	data = buffer.front();
+	buffer.pop();
 #endif
 }
