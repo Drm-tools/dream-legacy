@@ -46,6 +46,8 @@ CSoundIn::CSoundIn():iCurrentDevice(-1),dev(),names(),devices()
 {
 	RecThread.pSoundIn = this;
 	getdevices(names, devices, false);
+	/* Set flag to open devices */
+	bChangDev = TRUE;
 }
 
 void CSoundIn::Init_HW()
@@ -473,7 +475,15 @@ void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	bBlockingRec = bNewBlocking;
 	RecThread.SoundBuf.unlock();
 	
-	Init_HW( );
+	/* Check if device must be opened or reinitialized */
+	if (bChangDev == TRUE)
+	{
+
+		Init_HW( );
+
+		/* Reset flag */
+		bChangDev = FALSE;
+	}
 
 	if ( RecThread.running() == FALSE ) {
 		RecThread.SoundBuf.Init( SOUNDBUFLEN );
@@ -487,6 +497,16 @@ void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 _BOOLEAN CSoundIn::Read(CVector< _SAMPLE >& psData)
 {
 	CVectorEx<_SAMPLE>*	p;
+
+	/* Check if device must be opened or reinitialized */
+	if (bChangDev == TRUE)
+	{
+		/* Reinit sound interface */
+		Init(iBufferSize, bBlockingRec);
+
+		/* Reset flag */
+		bChangDev = FALSE;
+	}
 
 	RecThread.SoundBuf.lock();	// we need exclusive access
 	
@@ -528,14 +548,23 @@ void CSoundIn::Close()
 	}
 	
 	close_HW();
+
+	/* Set flag to open devices the next time it is initialized */
+	bChangDev = TRUE;
 }
 
 #endif
 
 void CSoundIn::SetDev(int iNewDevice)
 {
-	iCurrentDevice = iNewDevice;
+	/* Change only in case new device id is not already active */
+	if (iNewDevice != iCurrentDevice)
+	{
+		iCurrentDevice = iNewDevice;
+		bChangDev = TRUE;
+	}
 }
+
 
 int CSoundIn::GetDev()
 {

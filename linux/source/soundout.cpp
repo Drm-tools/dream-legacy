@@ -47,6 +47,8 @@ CSoundOut::CSoundOut() : iCurrentDevice(-1),dev(),names(),devices()
 {
 	PlayThread.pSoundOut = this;
 	getdevices(names, devices, true);
+	/* Set flag to open devices */
+	bChangDev = TRUE;
 }
 
 void CSoundOut::Init_HW()
@@ -452,7 +454,15 @@ void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	bBlockingPlay = bNewBlocking;
 	PlayThread.SoundBuf.unlock();
 
-	Init_HW();
+	/* Check if device must be opened or reinitialized */
+	if (bChangDev == TRUE)
+	{
+
+		Init_HW( );
+
+		/* Reset flag */
+		bChangDev = FALSE;
+	}
 
 	if ( PlayThread.running() == FALSE ) {
 		PlayThread.SoundBuf.Init( SOUNDBUFLEN );
@@ -464,6 +474,15 @@ void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 
 _BOOLEAN CSoundOut::Write(CVector< _SAMPLE >& psData)
 {
+	/* Check if device must be opened or reinitialized */
+	if (bChangDev == TRUE)
+	{
+		/* Reinit sound interface */
+		Init(iBufferSize, bBlockingPlay);
+
+		/* Reset flag */
+		bChangDev = FALSE;
+	}
 
 	if ( bBlockingPlay ) {
 		// blocking write
@@ -508,6 +527,9 @@ void CSoundOut::Close()
 	}
 	
 	close_HW();	
+
+	/* Set flag to open devices the next time it is initialized */
+	bChangDev = TRUE;
 }
 
 #else
@@ -516,7 +538,12 @@ CSoundOut::CSoundOut():names(),iCurrentDevice(-1){}
 
 void CSoundOut::SetDev(int iNewDevice)
 {
-	iCurrentDevice = iNewDevice;
+	/* Change only in case new device id is not already active */
+	if (iNewDevice != iCurrentDevice)
+	{
+		iCurrentDevice = iNewDevice;
+		bChangDev = TRUE;
+	}
 }
 
 int CSoundOut::GetDev()

@@ -91,6 +91,7 @@ protected:
 #endif
 protected:
 	vector<string> names;
+    _BOOLEAN bChangDev;
 	int	iCurrentDevice;
 };
 
