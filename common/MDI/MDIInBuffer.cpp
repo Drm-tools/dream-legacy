@@ -38,13 +38,9 @@ CMDIInBuffer::Put(const vector<_BYTE>& data)
 {
 #ifdef USE_QT_GUI
 	guard.lock();
+	buffer.push(data);
 	if(buffer.empty())
-	{
-		buffer.push(data);
 		blocker.wakeOne();
-	}
-	else
-		buffer.push(data);
 	guard.unlock();
 #else
 	buffer.push(data);
@@ -60,12 +56,39 @@ CMDIInBuffer::Get(vector<_BYTE>& data)
 {
 #ifdef USE_QT_GUI
 	guard.lock();
-	blocker.wait(&guard, 1000);
-	data = buffer.front();
-	buffer.pop();
+	if(buffer.empty())
+	{
+		if(blocker.wait(&guard, 1000))
+		{
+			cout << "signalled data avail" << endl;
+			if(buffer.empty())
+				data.clear();
+			else
+			{
+				data = buffer.front();
+				buffer.pop();
+			}
+		}
+		else
+		{
+			cout << "RSI timeout" << endl;
+			data.clear();
+		}
+	}
+	else
+	{
+		cout << "queued data avail" << endl;
+		data = buffer.front();
+		buffer.pop();
+	}
 	guard.unlock();
 #else
-	data = buffer.front();
-	buffer.pop();
+	if(buffer.empty())
+		data.clear();
+	else
+	{
+		data = buffer.front();
+		buffer.pop();
+	}
 #endif
 }

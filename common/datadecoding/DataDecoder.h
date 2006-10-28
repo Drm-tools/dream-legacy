@@ -81,8 +81,10 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 {
   public:
     CDataDecoder ():iServPacketID (0), DoNotProcessData (TRUE),
-	iOldJournalineServiceID (0), eAppType (AT_NOT_SUP), bDecodeEPG(TRUE)
+	iOldJournalineServiceID (0), bDecodeEPG(TRUE)
     {
+		for(int i=0; i<MAX_NUM_PACK_PER_STREAM; i++)
+			eAppType[i] = AT_NOT_SUP;
     }
     virtual ~ CDataDecoder ()
     {
@@ -93,12 +95,13 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 	    AT_JAVA
     };
 
-    _BOOLEAN GetMOTObject (CMOTObject & NewObj, const EAppType eAppTypeReq);
+    _BOOLEAN GetMOTObject (CMOTObject & NewPic, const EAppType eAppTypeReq);
     _BOOLEAN GetMOTDirectory (CMOTDirectory & MOTDirectoryOut, const EAppType eAppTypeReq);
+
     void GetNews (const int iObjID, CNews & News);
     EAppType GetAppType ()
     {
-	return eAppType;
+		return eAppType[iServPacketID];
     }
 
 	/* Parameter for activate/deactivate EPG decoding */
@@ -135,7 +138,7 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     CJournaline Journaline;
     uint32_t iOldJournalineServiceID;
 
-    EAppType eAppType;
+    EAppType eAppType[MAX_NUM_PACK_PER_STREAM];
 
     virtual void InitInternal (CParameter & ReceiverParam);
     virtual void ProcessDataInternal (CParameter & ReceiverParam);

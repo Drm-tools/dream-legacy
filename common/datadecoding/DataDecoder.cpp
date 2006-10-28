@@ -351,7 +351,7 @@ CDataDecoder::ProcessDataInternal (CParameter & ReceiverParam)
 		         (iPacketID == or != iServPacketID) */
 		      /* Only DAB multimedia is supported */
 
-		      switch (eAppType)
+		      switch (eAppType[iPacketID])
 			{
 			case AT_MOTSLISHOW:	/* MOTSlideshow */
 			    /* Packet unit decoding */
@@ -360,19 +360,16 @@ CDataDecoder::ProcessDataInternal (CParameter & ReceiverParam)
 			    break;
 			case AT_MOTEPG:	/* EPG */
 				/* Packet unit decoding */
-				MOTObject[iPacketID].
-				AddDataUnit (DataUnit[iPacketID].vecbiData);
+				MOTObject[iEPGPacketID].AddDataUnit (DataUnit[iPacketID].vecbiData);
 			    break;
 
 			case AT_MOTBROADCASTWEBSITE:	/* MOT Broadcast Web Site */
 			    /* Packet unit decoding */
-			    MOTObject[iPacketID].
-				AddDataUnit (DataUnit[iPacketID].vecbiData);
+			    MOTObject[iPacketID].AddDataUnit (DataUnit[iPacketID].vecbiData);
 			    break;
 
 			case AT_JOURNALINE:
-			    Journaline.AddDataUnit (DataUnit[iPacketID].
-						    vecbiData);
+			    Journaline.AddDataUnit (DataUnit[iPacketID].vecbiData);
 			    break;
 			default:	/* do nothing */
 			    ;
@@ -400,6 +397,7 @@ CDataDecoder::DecodeEPG(const CParameter& ReceiverParam)
 {
 	/* Application Decoding - must run all the time and in background */
 	if ((DoNotProcessData == FALSE)
+	&& (iEPGPacketID>=0)
 	&& MOTObject[iEPGPacketID].NewObjectAvailable())
 	{
 		CMOTObject NewObj;
@@ -462,7 +460,7 @@ CDataDecoder::InitInternal (CParameter & ReceiverParam)
     iTotalNumInputBytes = iTotalNumInputBits / SIZEOF__BYTE;
 
     /* Init application type (will be overwritten by correct type later */
-    eAppType = AT_NOT_SUP;
+    //eAppType[iServPacketID] = AT_NOT_SUP;
 
     /* Check, if service is activated. Also, only packet services can be
        decoded */
@@ -511,38 +509,38 @@ CDataDecoder::InitInternal (CParameter & ReceiverParam)
 		      switch (iDABUserAppIdent)
 			{
 			case 2:	/* MOTSlideshow */
-			    eAppType = AT_MOTSLISHOW;
+			    eAppType[iServPacketID] = AT_MOTSLISHOW;
 			    break;
 
 			case 3:	/* MOT Broadcast Web Site */
-			    eAppType = AT_MOTBROADCASTWEBSITE;
+			    eAppType[iServPacketID] = AT_MOTBROADCASTWEBSITE;
 			    break;
 
 			case 4:
-			    eAppType = AT_MOTTPEG;
+			    eAppType[iServPacketID] = AT_MOTTPEG;
 			    break;
 
 			case 5:
-			    eAppType = AT_DGPS;
+			    eAppType[iServPacketID] = AT_DGPS;
 			    break;
 
 			case 6:
-			    eAppType = AT_TMC;
+			    eAppType[iServPacketID] = AT_TMC;
 			    break;
 
 			case 7:
-			    eAppType = AT_MOTEPG;
+			    eAppType[iServPacketID] = AT_MOTEPG;
 			    break;
 
 			case 8:
-			    eAppType = AT_JAVA;
+			    eAppType[iServPacketID] = AT_JAVA;
 			    break;
 
 
 			    /* The preliminary 11-bit user Application Type ID for the
 			       NewsService Journaline shall be 0x44A */
 			case 0x44A:	/* Journaline */
-			    eAppType = AT_JOURNALINE;
+			    eAppType[iServPacketID] = AT_JOURNALINE;
 
 			    /* Check, if service ID of Journaline application has
 			       changed, that indicates that a new transmission is
@@ -589,7 +587,7 @@ CDataDecoder::InitInternal (CParameter & ReceiverParam)
     iInputBlockSize = iTotalNumInputBits;
 
 	iEPGService = -1; /* no service */
-	iEPGPacketID = 0;
+	iEPGPacketID = -1;
 
     /* look for EPG */
     for(int i=0; i<3; i++)
@@ -614,12 +612,12 @@ CDataDecoder::GetMOTObject (CMOTObject & NewObj, const EAppType eAppTypeReq)
     Lock ();
 
     /* Check if data service is current MOT application */
-    if ((DoNotProcessData == FALSE) && (eAppType == eAppTypeReq)
+    if ((DoNotProcessData == FALSE) && (eAppType[iServPacketID] == eAppTypeReq)
 	&& MOTObject[iServPacketID].NewObjectAvailable ())
-      {
+    {
 	  MOTObject[iServPacketID].GetNextObject (NewObj);
 	  bReturn = TRUE;
-      }
+    }
     /* Release resources */
     Unlock ();
 
@@ -635,11 +633,11 @@ CDataDecoder::GetMOTDirectory (CMOTDirectory & MOTDirectoryOut, const EAppType e
     Lock ();
 
     /* Check if data service is current MOT application */
-    if ((DoNotProcessData == FALSE) && (eAppType == eAppTypeReq))
-      {
-	  MOTObject[iServPacketID].GetDirectory (MOTDirectoryOut);
-	  bReturn = TRUE;
-      }
+    if ((DoNotProcessData == FALSE) && (eAppType[iServPacketID] == eAppTypeReq))
+    {
+        MOTObject[iServPacketID].GetDirectory (MOTDirectoryOut);
+        bReturn = TRUE;
+    }
     /* Release resources */
     Unlock ();
 
@@ -653,7 +651,7 @@ CDataDecoder::GetNews (const int iObjID, CNews & News)
     Lock ();
 
     /* Check if data service is Journaline application */
-    if ((DoNotProcessData == FALSE) && (eAppType == AT_JOURNALINE))
+    if ((DoNotProcessData == FALSE) && (eAppType[iServPacketID] == AT_JOURNALINE))
 	Journaline.GetNews (iObjID, News);
 
     /* Release resources */

@@ -171,7 +171,7 @@ void CSoundOut::close_HW( void )
 
 #include <alsa/asoundlib.h>
 
-CSoundOut::CSoundOut() : iCurrentDevice(-1),devices(),handle(NULL),names()
+CSoundOut::CSoundOut() : iCurrentDevice(-1),devices(),handle(NULL),names(),bChangDev(TRUE)
 {
 	PlayThread.pSoundOut = this;
 	getdevices(names, devices, true);
@@ -502,9 +502,10 @@ _BOOLEAN CSoundOut::Write(CVector< _SAMPLE >& psData)
 		 
 		 // data fits, so copy
 		 ptarget = PlayThread.SoundBuf.QueryWriteBuffer();
-
 		 for (int i=0; i < iBufferSize; i++)
+		 {
 		 	(*ptarget)[i] = psData[i];
+		}
 
 		 PlayThread.SoundBuf.Put( iBufferSize );
 	}

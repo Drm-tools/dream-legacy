@@ -72,7 +72,11 @@ protected:
 class CSoundBuf : public CCyclicBuffer<_SAMPLE> {
 
 public:
-	CSoundBuf() : keep_running(TRUE) {}
+	CSoundBuf() : keep_running(TRUE)
+#ifdef USE_QT_GUI
+	, data_accessed()
+#endif
+	{}
 	bool keep_running;
 #ifdef USE_QT_GUI
 	void lock (){ data_accessed.lock(); }

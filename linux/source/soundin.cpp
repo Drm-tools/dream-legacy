@@ -163,7 +163,7 @@ void CSoundIn::close_HW( void ) {
 #define ALSA_PCM_NEW_HW_PARAMS_API
 #define ALSA_PCM_NEW_SW_PARAMS_API
 
-CSoundIn::CSoundIn():iCurrentDevice(-1),handle(NULL),devices(),names()
+CSoundIn::CSoundIn():iCurrentDevice(-1),handle(NULL),devices(),names(),bChangDev(TRUE)
 {
 	RecThread.pSoundIn = this;
 	getdevices(names, devices, false);
