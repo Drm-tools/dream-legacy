@@ -97,7 +97,7 @@ bool CPft::DecodePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut)
 		return false;
 
 	vector<_BYTE> frag;
-	for(int i=iHeaderLen; i<vecIn.size(); i++)
+	for(i=iHeaderLen; i<vecIn.size(); i++)
 		frag.push_back(vecIn[i]);
 	if(iFEC==1)
 		return DecodePFTPacketWithFEC(frag, vecOut);
