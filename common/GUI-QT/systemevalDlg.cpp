@@ -419,7 +419,8 @@ systemevalDlg::~systemevalDlg()
 
 	/* Store current plot type. Convert plot type into an integer type.
        TODO: better solution */
-	pDRMRec->iSysEvalDlgPlotType = (int) MainPlot->GetChartType();
+	if (pDRMRec->GetRSIIn()->GetInEnabled() == FALSE)
+		pDRMRec->iSysEvalDlgPlotType = (int) MainPlot->GetChartType();
 
 	/* Call the hide event handler routine to make sure the chart window sizes
 	   and positions are stored */
