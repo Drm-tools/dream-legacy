@@ -86,6 +86,29 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 			vecsDataOut[iCurIndex + 1] = sCurOutPhase;
 			break;
 		}
+		if (bUseSoundcard == FALSE)
+		{
+			/* Write data to file */
+			switch(eOutFileMode)
+			{
+			case OFF_RAW:
+				/* Write 2 bytes, 2 pieces */
+				fwrite((const void*) &vecsDataOut[iCurIndex], size_t(2), 
+						size_t(2), pFileTransmitter);
+				break;
+			case OFF_TXT:
+				/* This can be read with Matlab "load" command */
+				fprintf(pFileTransmitter, "%d\n %d\n", vecsDataOut[iCurIndex],
+						vecsDataOut[iCurIndex+1]);
+				break;
+			case OFF_WAV:
+				if (eOutputFormat==OF_REAL_VAL)
+					WaveFile.AddMonoSample(vecsDataOut[iCurIndex]);
+				else
+					WaveFile.AddStereoSample(vecsDataOut[iCurIndex],
+									vecsDataOut[iCurIndex+1]);
+			}
+		}
 	}
 
 	iBlockCnt++;
@@ -100,23 +123,11 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 		}
 		else
 		{
-			/* Write data to file */
-			for (i = 0; i < iBigBlockSize; i++)
+			if(eOutFileMode == OFF_WAV)
 			{
-#ifdef FILE_DRM_USING_RAW_DATA
-				const short sOut = vecsDataOut[i];
-
-				/* Write 2 bytes, 1 piece */
-				fwrite((const void*) &sOut, size_t(2), size_t(1),
-					pFileTransmitter);
-#else
-				/* This can be read with Matlab "load" command */
-				fprintf(pFileTransmitter, "%d\n", vecsDataOut[i]);
-#endif
+				/* Flush the file buffer */
+				fflush(pFileTransmitter);
 			}
-
-			/* Flush the file buffer */
-			fflush(pFileTransmitter);
 		}
 	}
 }
@@ -144,15 +155,23 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	else
 	{
 		/* Open file for writing data for transmitting */
-#ifdef FILE_DRM_USING_RAW_DATA
-		pFileTransmitter = fopen(strOutFileName.c_str(), "wb");
-#else
-		pFileTransmitter = fopen(strOutFileName.c_str(), "w");
-#endif
-
-		/* Check for error */
-		if (pFileTransmitter == NULL)
-			throw CGenErr("The file " + strOutFileName + " cannot be created.");
+		switch(eOutFileMode)
+		{
+		case OFF_RAW:
+			pFileTransmitter = fopen(strOutFileName.c_str(), "wb");
+			/* Check for error */
+			if (pFileTransmitter == NULL)
+				throw CGenErr("The file " + strOutFileName + " cannot be created.");
+			break;
+		case OFF_TXT:
+			pFileTransmitter = fopen(strOutFileName.c_str(), "w");
+			/* Check for error */
+			if (pFileTransmitter == NULL)
+				throw CGenErr("The file " + strOutFileName + " cannot be created.");
+			break;
+		case OFF_WAV:
+			WaveFile.Open(strOutFileName, eOutputFormat!=OF_REAL_VAL);
+		}
 	}
 
 
@@ -162,7 +181,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 
 	/* All robustness modes and spectrum occupancies should have the same output
-	   power. Calculate the normaization factor based on the average power of
+	   power. Calculate the normalisation factor based on the average power of
 	   symbol (the number 3000 was obtained through output tests) */
 	rNormFactor = (CReal) 3000.0 / Sqrt(TransmParam.rAvPowPerSymbol);
 
@@ -170,11 +189,24 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	iInputBlockSize = iSymbolBlockSize;
 }
 
-CTransmitData::~CTransmitData()
+void CTransmitData::CloseFile()
 {
 	/* Close file */
-	if (pFileTransmitter != NULL)
-		fclose(pFileTransmitter);
+	if(eOutFileMode==OFF_WAV)
+	{
+		WaveFile.Close();
+	}
+	else
+	{
+		if (pFileTransmitter != NULL)
+			fclose(pFileTransmitter);
+	}
+	
+}
+
+CTransmitData::~CTransmitData()
+{
+	CloseFile();
 }
 
 
@@ -283,16 +315,14 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 		/* Read data from file ---------------------------------------------- */
 		for (i = 0; i < iOutputBlockSize; i++)
 		{
-			/* If enf-of-file is reached, stop simulation */
-#ifdef FILE_DRM_USING_RAW_DATA
+			/* If end-of-file is reached, stop simulation */
+#ifndef FILE_DRM_USING_RAW_DATA
 			short tIn;
-
 			/* Read 2 bytes, 1 piece */
 			if (fread((void*) &tIn, size_t(2), size_t(1), pFileReceiver) ==
 				size_t(0))
 #else
 			float tIn;
-
 			if (fscanf(pFileReceiver, "%e\n", &tIn) == EOF)
 #endif
 			{
@@ -362,10 +392,10 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 		/* Open file for reading data from transmitter. Open file only once */
 		if (pFileReceiver == NULL)
 		{
-#ifdef FILE_DRM_USING_RAW_DATA
-			pFileReceiver = fopen(strInFileName.c_str(), "rb");
-#else
+#ifndef FILE_DRM_USING_RAW_DATA
 			pFileReceiver = fopen(strInFileName.c_str(), "r");
+#else
+			pFileReceiver = fopen(strInFileName.c_str(), "rb");
 #endif
 		}
 

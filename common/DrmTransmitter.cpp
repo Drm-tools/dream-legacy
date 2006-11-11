@@ -28,9 +28,34 @@
 
 #include "DrmTransmitter.h"
 
-
 /* Implementation *************************************************************/
-void CDRMTransmitter::Start()
+_REAL CDRMTransmitter::GetLevelMeter()
+{
+	return ReadData.GetLevelMeter();
+}
+
+void
+CDRMTransmitter::SetReadFromFile(const string & strNFN)
+{
+	ReadData.SetReadFromFile(strNFN);
+	bReadFromFile = TRUE;
+}
+
+void
+CDRMTransmitter::SetWriteToFile(const string & strNFN, const string & strType)
+{
+	TransmitData.SetWriteToFile(strNFN, strType);
+	bWriteToFile = TRUE;
+}
+
+void
+CDRMTransmitter::Stop()
+{
+	TransmParam.bRunThread = FALSE;
+}
+
+void
+CDRMTransmitter::run()
 {
 	/* Set run flag */
 	TransmParam.bRunThread = TRUE;
@@ -38,66 +63,63 @@ void CDRMTransmitter::Start()
 	/* Initialization of the modules */
 	Init();
 
-	/* Start the transmitter run routine */
-	Run();
-}
-
-void CDRMTransmitter::Stop()
-{
-	TransmParam.bRunThread = FALSE;
-
-	SoundInInterface.Close();
-	SoundOutInterface.Close();
-}
-
-void CDRMTransmitter::Run()
-{
+	try
+	{
 /*
 	The hand over of data is done via an intermediate-buffer. The calling
 	convention is always "input-buffer, output-buffer". Additional, the
 	DRM-parameters are fed to the function
 */
-	while (TransmParam.bRunThread)
+		while (TransmParam.bRunThread)
+		{
+			/* MSC *************************************************************** */
+			/* Read the source signal */
+			ReadData.ReadData(TransmParam, DataBuf);
+
+			/* Audio source encoder */
+			AudioSourceEncoder.ProcessData(TransmParam, DataBuf, AudSrcBuf);
+
+			/* MLC-encoder */
+			MSCMLCEncoder.ProcessData(TransmParam, AudSrcBuf, MLCEncBuf);
+
+			/* Convolutional interleaver */
+			SymbInterleaver.ProcessData(TransmParam, MLCEncBuf, IntlBuf);
+
+			/* FAC *************************************************************** */
+			GenerateFACData.ReadData(TransmParam, GenFACDataBuf);
+			FACMLCEncoder.ProcessData(TransmParam, GenFACDataBuf, FACMapBuf);
+
+			/* SDC *************************************************************** */
+			GenerateSDCData.ReadData(TransmParam, GenSDCDataBuf);
+			SDCMLCEncoder.ProcessData(TransmParam, GenSDCDataBuf, SDCMapBuf);
+
+			/* Mapping of the MSC, FAC, SDC and pilots on the carriers *********** */
+			OFDMCellMapping.ProcessData(TransmParam, IntlBuf, FACMapBuf,
+										SDCMapBuf, CarMapBuf);
+
+			/* OFDM-modulation *************************************************** */
+			OFDMModulation.ProcessData(TransmParam, CarMapBuf, OFDMModBuf);
+
+			/* Transmit the signal *********************************************** */
+			TransmitData.WriteData(TransmParam, OFDMModBuf);
+		}
+
+		if (bReadFromFile == FALSE)
+			SoundInInterface.Close();
+		if (bWriteToFile)
+			TransmitData.CloseFile();
+		else
+			SoundOutInterface.Close();
+	}
+
+	catch(CGenErr GenErr)
 	{
-		/* MSC ****************************************************************/
-		/* Read the source signal */
-		ReadData.ReadData(TransmParam, DataBuf);
-
-		/* Audio source encoder */
-		AudioSourceEncoder.ProcessData(TransmParam, DataBuf, AudSrcBuf);
-
-		/* MLC-encoder */
-		MSCMLCEncoder.ProcessData(TransmParam, AudSrcBuf, MLCEncBuf);
-
-		/* Convolutional interleaver */
-		SymbInterleaver.ProcessData(TransmParam, MLCEncBuf, IntlBuf);
-
-
-		/* FAC ****************************************************************/
-		GenerateFACData.ReadData(TransmParam, GenFACDataBuf);
-		FACMLCEncoder.ProcessData(TransmParam, GenFACDataBuf, FACMapBuf);
-
-
-		/* SDC ****************************************************************/
-		GenerateSDCData.ReadData(TransmParam, GenSDCDataBuf);
-		SDCMLCEncoder.ProcessData(TransmParam, GenSDCDataBuf, SDCMapBuf);
-
-	
-		/* Mapping of the MSC, FAC, SDC and pilots on the carriers ************/
-		OFDMCellMapping.ProcessData(TransmParam, IntlBuf, FACMapBuf, SDCMapBuf,
-			CarMapBuf);
-
-
-		/* OFDM-modulation ****************************************************/
-		OFDMModulation.ProcessData(TransmParam, CarMapBuf, OFDMModBuf);
-
-
-		/* Transmit the signal ************************************************/
-		TransmitData.WriteData(TransmParam, OFDMModBuf);
+		ErrorMessage(GenErr.strError);
 	}
 }
 
-void CDRMTransmitter::Init()
+void
+CDRMTransmitter::Init()
 {
 	/* Defines number of cells, important! */
 	OFDMCellMapping.Init(TransmParam, CarMapBuf);
@@ -116,8 +138,10 @@ void CDRMTransmitter::Init()
 	TransmitData.Init(TransmParam);
 }
 
-CDRMTransmitter::CDRMTransmitter() : ReadData(&SoundInInterface), 
-TransmitData(&SoundOutInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
+CDRMTransmitter::CDRMTransmitter():ReadData(&SoundInInterface),
+TransmitData(&SoundOutInterface),
+rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ), bWriteToFile(FALSE),
+bReadFromFile(FALSE)
 {
 	/* Init streams */
 	TransmParam.ResetServicesStreams();
@@ -131,7 +155,6 @@ TransmitData(&SoundOutInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
 	TransmParam.iYear = 0;
 	TransmParam.iUTCHour = 0;
 	TransmParam.iUTCMin = 0;
-
 
 	/**************************************************************************/
 	/* Robustness mode and spectrum occupancy. Available transmission modes:
@@ -172,7 +195,7 @@ TransmitData(&SoundOutInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
 		TransmParam.Service[0].AudioParam.bTextflag = TRUE;
 
 		/* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
-		TransmParam.Service[0].iServiceDescr = 15; /* 15 -> other music */
+		TransmParam.Service[0].iServiceDescr = 15;	/* 15 -> other music */
 	}
 	else
 	{
@@ -184,9 +207,11 @@ TransmitData(&SoundOutInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
 		TransmParam.Service[0].DataParam.iStreamID = 0;
 
 		/* Init SlideShow application */
-		TransmParam.Service[0].DataParam.iPacketLen = 45; /* TEST */
-		TransmParam.Service[0].DataParam.eDataUnitInd = CParameter::DU_DATA_UNITS;
-		TransmParam.Service[0].DataParam.eAppDomain = CParameter::AD_DAB_SPEC_APP;
+		TransmParam.Service[0].DataParam.iPacketLen = 45;	/* TEST */
+		TransmParam.Service[0].DataParam.eDataUnitInd =
+			CParameter::DU_DATA_UNITS;
+		TransmParam.Service[0].DataParam.eAppDomain =
+			CParameter::AD_DAB_SPEC_APP;
 
 		/* The value 0 indicates that the application details are provided
 		   solely by SDC data entity type 5 */
@@ -201,7 +226,7 @@ TransmitData(&SoundOutInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
 	TransmParam.Service[0].strLabel = "Dream Test";
 
 	/* Language (see TableFAC.h, "strTableLanguageCode[]") */
-	TransmParam.Service[0].iLanguage = 5; /* 5 -> english */
+	TransmParam.Service[0].iLanguage = 5;	/* 5 -> english */
 
 	/* Interleaver mode of MSC service. Long interleaving (2 s): SI_LONG,
 	   short interleaving (400 ms): SI_SHORT */
@@ -220,11 +245,12 @@ TransmitData(&SoundOutInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
 	TransmParam.eSDCCodingScheme = CParameter::CS_2_SM;
 
 	/* Set desired intermedia frequency (IF) in Hertz */
-	SetCarOffset(12000.0); /* Default: "VIRTUAL_INTERMED_FREQ" */
-
+	SetCarOffset(12000.0);		/* Default: "VIRTUAL_INTERMED_FREQ" */
 
 // UEP only works with Dream receiver, FIXME! -> disabled for now
-const _BOOLEAN bUEBIsUsed = FALSE; // TEST
+	const
+		_BOOLEAN
+		bUEBIsUsed = FALSE;		// TEST
 	if (bUEBIsUsed == TRUE)
 	{
 		// TEST

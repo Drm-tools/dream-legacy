@@ -842,6 +842,19 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			continue;
 		}
 
+ 		/* Do not use sound card, write COFDM to file ----------------------- */
+ 		if (GetStringArgument(argc, argv, i, "-x", "--fileout", strArgument) == TRUE)
+ 		{
+ 			tx_settings["fileout"] = strArgument;
+ 			continue;
+ 		}
+ 
+ 		/* set COFDM output format ------------------------------------------ */
+ 		if (GetStringArgument(argc, argv, i, "-z", "--outfmt", strArgument) == TRUE)
+ 		{
+ 			tx_settings["outfmt"] = strArgument;
+ 			continue;
+ 		}
 
 		/* Write output data to file as WAV --------------------------------- */
 		if (GetStringArgument(argc, argv, i, "-w", "--writewav",
@@ -1193,8 +1206,10 @@ string CSettings::UsageArguments(char** argv)
 		"  -i <n>, --mlciter <n>       number of MLC iterations (allowed range: 0...4 default: 1)\n"
 		"  -s <r>, --sampleoff <r>     sample rate offset initial value [Hz] (allowed range: -200.0...200.0)\n"
 		"  -m, --muteaudio             mute audio output\n"
-		"  -f <s>, --fileio <s>        disable sound card, use file <s> instead\n"
-		"  -w <s>, --writewav <s>      write output to wave file\n"
+		"  -f <s>, --fileio <s>        disable sound card input, use file <s> instead\n"
+		"  -z <s>, --fileout <s>       disable sound card COFDM output, use file <s> instead\n"
+		"  -x <s>, --outfmt <s>        disable sound card, use file <s> instead\n"
+		"  -w <s>, --writewav <s>      write decoded audio output to wave file\n"
 		"  -S <r>, --fracwinsize <r>   freq. acqu. search window size [Hz]\n"
 		"  -E <r>, --fracwincent <r>   freq. acqu. search window center [Hz]\n"
 		"  -F, --filter                apply bandpass filter\n"
@@ -1219,7 +1234,7 @@ string CSettings::UsageArguments(char** argv)
 		"  --mdiin  <s>                MDI in address (for modulator) [[IP#:]IP:]port\n"
 		"  --rsioutprofile <s>         MDI/RSCI output profile: A|B|C|D|Q|M\n"
 		"  --rsiout <s>                MDI/RSCI output address format [IP#:]IP#:port\n"
-		"  --rsiin <s>                 RSCI/MDI status input address format [[IP#:]IP#:]port\n"
+		"  --rsiin <s>                 RSCI/MDI status input address format [[IP#:]IP#:]port|file\n"
 		"  --rciout <s>                RSCI Control output format IP#:port\n"
 		"  --rciin <s>                 RSCI Control input address number format [IP#:]port\n"
 

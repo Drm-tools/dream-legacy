@@ -42,7 +42,7 @@
 //#define FRAGSIZE 1024
 
 /* Classes ********************************************************************/
-class CSoundIn 
+class CSoundIn : public CSoundInterface
 {
 public:
 	CSoundIn();

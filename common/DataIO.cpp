@@ -36,12 +36,35 @@
 /* Transmitter -------------------------------------------------------------- */
 void CReadData::ProcessDataInternal(CParameter& TransmParam)
 {
-	/* Get data from sound interface */
-	pSound->Read(vecsSoundBuffer);
+	if((bNewUseSoundcard==FALSE) && (bUseSoundcard==TRUE))
+	{
+		pFile = fopen(strInFileName.c_str(), "rb");
+		bUseSoundcard = FALSE;
+	}
 
-	/* Write data to output buffer */
-	for (int i = 0; i < iOutputBlockSize; i++)
-		(*pvecOutputData)[i] = vecsSoundBuffer[i];
+	if(bUseSoundcard)
+	{
+		/* Get data from sound interface */
+		pSound->Read(vecsSoundBuffer);
+		/* Write data to output buffer */
+		for (int i = 0; i < iOutputBlockSize; i++)
+			(*pvecOutputData)[i] = vecsSoundBuffer[i];
+	}
+	else
+	{
+		/* Get data from WAV FILE */
+		_SAMPLE n;
+		for (int i = 0; i < iOutputBlockSize; i++)
+		{
+			if(feof(pFile)) /* loop */
+			{
+			 	fclose(pFile);
+				pFile = fopen(strInFileName.c_str(), "rb");
+			}
+			fread(&n, sizeof(_SAMPLE), 1, pFile);
+			(*pvecOutputData)[i] = n;
+		}
+	}
 
 	/* Update level meter */
 	SignalLevelMeter.Update((*pvecOutputData));

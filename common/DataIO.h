@@ -73,15 +73,26 @@
 class CReadData : public CTransmitterModul<_SAMPLE, _SAMPLE>
 {
 public:
-	CReadData(CSoundIn* pNS) : pSound(pNS) {}
+	CReadData(CSoundIn* pNS) : pSound(pNS),
+	vecsSoundBuffer(),SignalLevelMeter(),
+	bUseSoundcard(TRUE),bNewUseSoundcard(TRUE),
+	strInFileName(""),pFile(NULL)
+	{}
 	virtual ~CReadData() {}
 
 	_REAL GetLevelMeter() {return SignalLevelMeter.Level();}
+	void SetReadFromFile(const string strNFN)
+		{bNewUseSoundcard = FALSE; strInFileName = strNFN;}
 
 protected:
 	CSoundIn*			pSound;
 	CVector<_SAMPLE>	vecsSoundBuffer;
 	CSignalLevelMeter	SignalLevelMeter;
+	_BOOLEAN			bUseSoundcard;
+	_BOOLEAN			bNewUseSoundcard;
+
+	string				strInFileName;
+	FILE*				pFile;
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);

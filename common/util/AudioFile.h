@@ -31,67 +31,26 @@
 #define AUDIOFILE_H__FD6B234594328533_80UWFB06C2AC__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-
+#include "Vector.h"
+#ifdef HAVE_LIBAUDIOFILE
+# include <audiofile.h>
+#endif
 
 /* Classes ********************************************************************/
 class CWaveFile
 {
 public:
-	CWaveFile() : pFile(NULL), iBytesWritten(0) {}
-	virtual ~CWaveFile() {if (pFile != NULL) Close();}
-
-	void Open(const string strFileName)
-	{
-		if (pFile != NULL)
-			Close();
-
-		const CWaveHdr WaveHeader =
-		{
-			/* Use always stereo and PCM */
-			{'R', 'I', 'F', 'F'}, 0, {'W', 'A', 'V', 'E'},
-			{'f', 'm', 't', ' '}, 16, 1, 2, SOUNDCRD_SAMPLE_RATE,
-			SOUNDCRD_SAMPLE_RATE * 4 /* same as block align */,
-			4 /* block align */, 16,
-			{'d', 'a', 't', 'a'}, 0
-		};
-
-		pFile = fopen(strFileName.c_str(), "wb");
-		if (pFile != NULL)
-		{
-			iBytesWritten = sizeof(CWaveHdr);
-			fwrite((const void*) &WaveHeader, size_t(sizeof(CWaveHdr)),
-				size_t(1), pFile);
-		}
-	}
-
-	void AddStereoSample(const _SAMPLE sLeft, const _SAMPLE sRight)
-	{
-		if (pFile != NULL)
-		{
-			iBytesWritten += 2 * sizeof(_SAMPLE);
-			fwrite((const void*) &sLeft, size_t(2), size_t(1), pFile);
-			fwrite((const void*) &sRight, size_t(2), size_t(1), pFile);
-		}
-	}
-
-	void Close()
-	{
-		if (pFile != NULL)
-		{
-			const uint32_t iFileLength = iBytesWritten - 8;
-			fseek(pFile, 4 /* offset */, SEEK_SET /* origin */);
-			fwrite((const void*) &iFileLength, size_t(4), size_t(1), pFile);
-
-			const uint32_t iDataLength = iBytesWritten - sizeof(CWaveHdr);
-			fseek(pFile, 40 /* offset */, SEEK_SET /* origin */);
-			fwrite((const void*) &iDataLength, size_t(4), size_t(1), pFile);
-
-			fclose(pFile);
-			pFile = NULL;
-		}
-	}
+	CWaveFile();
+	~CWaveFile();
+	void Open(const string strFileName, bool stereo=true);
+	void AddStereoSample(const _SAMPLE sLeft, const _SAMPLE sRight);
+	void AddMonoSample(const _SAMPLE s);
+	void Close();
 
 protected:
+#ifdef HAVE_LIBAUDIOFILE
+	AFfilehandle file;
+#else
 	struct CWaveHdr
 	{
 		/* Wave header struct */
@@ -110,9 +69,27 @@ protected:
 		uint32_t iDataLength; /* Length of data */
 	};
 
-	FILE*		pFile;
+	FILE*		file;
 	uint32_t	iBytesWritten;
+#endif
 };
 
+
+class CWaveFileIn
+{
+public:
+	CWaveFileIn();
+	~CWaveFileIn();
+
+	void Open(const string strFileName);
+	_BOOLEAN Read(CVector<short>& psData);
+	void Close();
+
+protected:
+#ifdef HAVE_LIBAUDIOFILE
+	AFfilehandle file;
+	int channelCount;
+#endif
+};
 
 #endif // AUDIOFILE_H__FD6B234594328533_80UWFB06C2AC__INCLUDED_

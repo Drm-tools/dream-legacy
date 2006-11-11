@@ -363,7 +363,7 @@ public:
 		CVector<_REAL>& vecrScale);
 
 protected:
-	void					Run();
+	void					Run(_BOOLEAN);
 	void					DetectAcquiFAC();
 	void					DetectAcquiSymbol();
 	void					InitReceiverMode();
@@ -449,8 +449,6 @@ protected:
 	CRSIMDIInRCIOut			RSIIn;
 	CDecodeRSIMDI			DecodeRSIMDI;
 	CRSIMDIOutRCIIn			RSIOut;
-
-	_BOOLEAN				bDoInitRun;
 
 	_REAL					rInitResampleOffset;
 

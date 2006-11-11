@@ -38,7 +38,7 @@ const int CDRMReceiver::MAX_UNLOCKED_COUNT=2;
 
 /* Implementation *************************************************************/
 CDRMReceiver::CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquRestartCnt(0),
-		iGoodSignCnt(0), bDoInitRun(FALSE),
+		iGoodSignCnt(0),
 		eReceiverMode(RM_DRM),	eNewReceiverMode(RM_NONE),
 		ReceiveData(&SoundInInterface), WriteData(&SoundOutInterface),
 		rInitResampleOffset((_REAL) 0.0), iAcquDetecCnt(0),
@@ -84,7 +84,7 @@ CDRMReceiver::CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquRestartCnt(0),
 {
 }
 
-void CDRMReceiver::Run()
+void CDRMReceiver::Run(_BOOLEAN bRunOnce)
 {
 	_BOOLEAN bEnoughData = TRUE;
 	_BOOLEAN bFrameToSend=FALSE;
@@ -98,7 +98,7 @@ void CDRMReceiver::Run()
 
 		/* Receive data ----------------------------------------------------- */
 
-		if ((RSIIn.GetInEnabled() == TRUE) && (bDoInitRun == FALSE)) /* don't wait for a packet in Init mode */
+		if ((RSIIn.GetInEnabled() == TRUE) && (bRunOnce == FALSE)) /* don't wait for a packet in Init mode */
 		{
 			RSIPacketBuf.Clear();
 			RSIIn.ReadData(ReceiverParam, RSIPacketBuf);
@@ -148,7 +148,7 @@ void CDRMReceiver::Run()
 			/* Init flag */
 			bEnoughData = FALSE;
 
-			if ((eReceiverMode == RM_AM) || bDoInitRun)
+			if ((eReceiverMode == RM_AM) || bRunOnce)
 			{
 				/* The incoming samples are split 2 ways using a new CSplit
 				   class. One set are passed to the existing AM demodulator.
@@ -205,7 +205,7 @@ void CDRMReceiver::Run()
 					bEnoughData = TRUE;
 			}
 
-			if ((eReceiverMode == RM_DRM) || bDoInitRun)
+			if ((eReceiverMode == RM_DRM) || bRunOnce)
 			{
 
 				/* Demodulator */
@@ -380,6 +380,8 @@ fflush(pFile);
 						bEnoughData = TRUE;
 				}
 			}
+			if(bRunOnce)
+				return;
 		}
 		if(RSIOut.GetOutEnabled())
 		{
@@ -474,8 +476,7 @@ void CDRMReceiver::DetectAcquiFAC()
 void CDRMReceiver::Init()
 {
 	/* Set flags so that we have only one loop in the Run() routine which is
-	   enough for initializing all modues */
-	bDoInitRun = TRUE;
+	   enough for initializing all modules */
 	ReceiverParam.bRunThread = TRUE;
 
 	/* Set init flags in all modules */
@@ -486,10 +487,9 @@ void CDRMReceiver::Init()
 	SetInStartMode();
 	iUnlockedCount = MAX_UNLOCKED_COUNT;
 	/* Run once */
-	Run();
+	Run(TRUE);
 
 	/* Reset flags */
-	bDoInitRun = FALSE;
 	ReceiverParam.bRunThread = FALSE;
 }
 
@@ -516,7 +516,7 @@ void CDRMReceiver::InitReceiverMode()
 void CDRMReceiver::run()
 {
 	/* Set thread priority (the working thread should have a higher priority
-	   than tthe GUI) */
+	   than the GUI) */
 #ifdef _WIN32
 	if(GetEnableProcessPriority())
 		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
@@ -544,7 +544,7 @@ void CDRMReceiver::Start()
 
 	do
 	{
-		Run();
+		Run(FALSE); /* run continuously */
 
 	} while (ReceiverParam.bRunThread);
 

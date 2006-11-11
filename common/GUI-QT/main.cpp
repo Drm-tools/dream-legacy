@@ -93,6 +93,11 @@ try
 	if (bIsReceiver == FALSE)
 	{
 		TransmDialog MainDlg(0, 0, FALSE, Qt::WStyle_MinMax);
+ 		map<string,string> tx_settings;
+ 		tx_settings["outfmt"]="wav";
+ 		Settings.GetTransmitterSettings(tx_settings);
+		if(tx_settings.find("fileout") != tx_settings.end())
+ 			MainDlg.GetTx()->GetTransData()->SetWriteToFile(tx_settings["fileout"], tx_settings["outfmt"]);
 
 		/* Set main window */
 		app.setMainWidget(&MainDlg);
@@ -104,9 +109,9 @@ try
 	}
 	else
 	{
-		/* First, initialize the working thread. This should be done in an extra
-		   routine since we cannot 100% assume that the working thread is ealier
-		   ready than the GUI thread */
+		/* First, initialize the working thread. This is done before letting the GUI initialise so that
+		 * the GUI can access initialised data in the working thread.
+		 */
 		DRMReceiver.Init();
 
 		FDRMDialog		MainDlg(&DRMReceiver, 0, 0, FALSE, Qt::WStyle_MinMax);

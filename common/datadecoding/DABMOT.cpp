@@ -864,9 +864,10 @@ CMOTDABDec::AddDataUnit (CVector < _BINARY > &vecbiNewData)
 						   SIZEOF__BYTE);
 			}
 		  }		/* of DG type 6 */
-#if 0 //Commented until we can test it with a real compressed directory
+#if 1 //Commented until we can test it with a real compressed directory
 		else if (iDataGroupType == 7)	/* MOT directory compressed */
 		  {
+			cout << "DG7 seg " << iSegmentNum << ", last=" << int(biLastFlag) << endl;
 		      if (MOTmode != directoryMode)
 			{
 			    /* mode change, throw away any headers */

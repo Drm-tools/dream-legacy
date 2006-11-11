@@ -124,8 +124,20 @@ const int iTableCELP16kHzUEPParams[LEN_CELP_16KHZ_UEP_PARAMS_TAB][8] = {
 };
 
 
+/* Interfaces ********************************************************************/
+class CAudioSourceEncoderInterface
+{
+	virtual void SetTextMessage(const string& strText)=0;
+	virtual void ClearTextMessage()=0;
+
+	virtual void SetPicFileName(const string& strFileName, const string& strFormat)=0;
+	virtual void ClearPicFileNames()=0;
+	virtual _BOOLEAN GetTransStat(string& strCPi, _REAL& rCPe)=0;
+};
+
 /* Classes ********************************************************************/
 class CAudioSourceEncoder : public CTransmitterModul<_SAMPLE, _BINARY>
+							, public CAudioSourceEncoderInterface
 {
 public:
 	CAudioSourceEncoder() : bUsingTextMessage(FALSE)

@@ -35,6 +35,7 @@
 #include "IQInputFilter.h"
 #include "util/Modul.h"
 #include "util/Utilities.h"
+#include "util/AudioFile.h"
 
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
@@ -56,17 +57,14 @@
    1280) */
 #define NUM_SMPLS_4_INPUT_SPECTRUM	(NUM_AV_BLOCKS_PSD * LEN_PSD_AV_EACH_BLOCK)
 
-/* Use raw 16 bit data or in text form for file format for DRM data. Defining
-   the following macro will enable the raw data option */
-#define FILE_DRM_USING_RAW_DATA
-
-
 /* Classes ********************************************************************/
 class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
 	enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
+
+	enum EFileOutFormat { OFF_RAW, OFF_TXT, OFF_WAV };
 
 	CTransmitData(CSoundOut* pNS) : pFileTransmitter(NULL), pSound(pNS), 
 		eOutputFormat(OF_REAL_VAL), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
@@ -79,14 +77,23 @@ public:
 	void SetCarOffset(const CReal rNewCarOffset)
 		{rDefCarOffset = rNewCarOffset;}
 
-	void SetWriteToFile(const string strNFN)
+	void SetWriteToFile(const string& strNFN, const string& strMode)
 	{
 		strOutFileName = strNFN;
 		bUseSoundcard = FALSE;
+		if(strMode=="txt")
+			eOutFileMode = OFF_TXT;
+		if(strMode=="raw")
+			eOutFileMode = OFF_RAW;
+		if(strMode=="wav")
+			eOutFileMode = OFF_WAV;
 	}
+
+	void CloseFile();
 
 protected:
 	FILE*				pFileTransmitter;
+	CWaveFile			WaveFile;
 	CSoundOut*			pSound;
 	CVector<short>		vecsDataOut;
 	int					iBlockCnt;
@@ -96,6 +103,7 @@ protected:
 	CDRMBandpassFilt	BPFilter;
 	CReal				rDefCarOffset;
 
+	EFileOutFormat 		eOutFileMode;
 	CReal				rNormFactor;
 
 	int					iBigBlockSize;

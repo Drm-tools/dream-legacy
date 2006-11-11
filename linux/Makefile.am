@@ -25,6 +25,7 @@ drmwithoutqt_SOURCES = \
 	../common/matlib/MatlibSigProToolbox.cpp \
 	../common/matlib/MatlibStdToolbox.cpp \
 	../common/util/CRC.cpp \
+	../common/util/AudioFile.cpp \
 	../common/util/Settings.cpp \
 	../common/util/Utilities.cpp \
 	../common/util/LogPrint.cpp \

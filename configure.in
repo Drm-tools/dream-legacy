@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 AC_INIT(common/GUI-QT/main.cpp)
 
-AM_INIT_AUTOMAKE(drm,1.6.39cvs)
+AM_INIT_AUTOMAKE(drm,1.7testing.1)
 
 
 AM_CONFIG_HEADER(config.h)
@@ -42,6 +42,8 @@ AC_ARG_WITH( hamlib,[  --with-hamlib           use hamlib library],WITHHAMLIB=$w
 AC_ARG_WITH( freeimage,[  --with-freeimage        use FreeImage library],WITHFREEIMAGE=$withval, WITHFREEIMAGE=no)
 
 AC_ARG_WITH( libpcap,[  --with-libpcap        use pcap library],WITHPCAP=$withval, WITHPCAP=no)
+
+AC_ARG_WITH( libaudiofile,[  --with-libaudiofile        use audiofile library],WITHAUDIOFILE=$withval, WITHAUDIOFILE=no)
 
 if test "$enable_simulation" = "yes"; then
 	dnl Only minimal configuration for simulation
@@ -208,9 +210,21 @@ dnl libpcap (optional) --------------------------------------------------------
 if test "x$WITHPCAP" = xyes; then
 	AC_CHECK_HEADER(pcap.h, , have_pcap=no)
 	AC_CHECK_LIB(pcap,pcap_next_ex, , have_pcap=no)
+	AC_DEFINE(HAVE_LIBPCAP, 1, [Define if you have libpcap])
 
 	if test "x$have_pcap" = "xno"; then
 		AC_MSG_ERROR( "pcap library not found" )
+	fi
+fi
+
+dnl libaudiofile (optional) --------------------------------------------------------
+if test "x$WITHAUDIOFILE" = xyes; then
+	AC_CHECK_HEADER(audiofile.h, , have_audiofile=no)
+	AC_CHECK_LIB(audiofile, afNewFileSetup, , have_audiofile=no)
+	AC_DEFINE(HAVE_LIBAUDIOFILE, 1, [Define if you have libaudiofile])
+
+	if test "x$have_audiofile" = "xno"; then
+		AC_MSG_ERROR( "audiofile library not found" )
 	fi
 fi
 

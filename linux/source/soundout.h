@@ -41,7 +41,7 @@
 //#define FRAGSIZE 1024
 
 /* Classes ********************************************************************/
-class CSoundOut //: public CSelectionInterface
+class CSoundOut : public CSoundInterface
 {
 public:
 	CSoundOut();

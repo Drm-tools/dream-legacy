@@ -120,6 +120,10 @@ public:
 
 	_BOOLEAN Load(int argc, char** argv);
 	void Save();
+ 	void GetTransmitterSettings(map<string, string>& settings)
+ 	{
+ 		settings = tx_settings;
+ 	}
 
 protected:
 	void ReadIniFile();
@@ -166,6 +170,7 @@ protected:
 
 	/* Pointer to the DRM receiver object needed for the various settings */
 	CDRMReceiver* pDRMRec;
+ 	map<string, string> tx_settings;
 };
 
 #endif // !defined(SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_)

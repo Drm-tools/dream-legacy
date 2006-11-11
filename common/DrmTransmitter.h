@@ -49,22 +49,43 @@
 
 /* Classes ********************************************************************/
 class CDRMTransmitter
+	: /* implements */ public CAudioSourceEncoderInterface
+#ifdef USE_QT_GUI
+	, public QThread
+#endif
 {
 public:
-	CDRMTransmitter();
-	virtual ~CDRMTransmitter() {}
+							CDRMTransmitter();
+	virtual 				~CDRMTransmitter() {}
 
-	void Init();
-	void Start();
-	void Stop();
+	void					Init();
+	void					Start();
+	void					Stop();
+#ifdef USE_QT_GUI
+	void					run();
+#else
+	void					start() {}
+	int						wait(int) {return 1;}
+	bool					finished(){return true;}
+#endif
+
+	_REAL 					GetLevelMeter();
+	void 					SetReadFromFile(const string& strNFN);
+	void					SetWriteToFile(const string& strNFN, const string& strType);
+
+	/* CAudioSourceEncoderInterface */
+	void SetTextMessage(const string& strText) { AudioSourceEncoder.SetTextMessage(strText); }
+	void ClearTextMessage() { AudioSourceEncoder.ClearTextMessage(); }
+	void SetPicFileName(const string& strFileName, const string& strFormat)
+		{ AudioSourceEncoder.SetPicFileName(strFileName, strFormat); }
+	void ClearPicFileNames() { AudioSourceEncoder.ClearPicFileNames(); }
+	_BOOLEAN GetTransStat(string& strCPi, _REAL& rCPe)
+		{ return AudioSourceEncoder.GetTransStat(strCPi, rCPe); }
 
 	/* Get pointer to internal modules */
-	CAudioSourceEncoder*	GetAudSrcEnc() {return &AudioSourceEncoder;}
 	CTransmitData*			GetTransData() {return &TransmitData;}
-	CReadData*				GetReadData() {return &ReadData;}
-
-	CSoundIn*				GetSoundInInterface() {return &SoundInInterface;}
-	CSoundOut*				GetSoundOutInterface() {return &SoundOutInterface;}
+	CSoundInterface*		GetSoundInInterface() {return &SoundInInterface;}
+	CSoundInterface*		GetSoundOutInterface() {return &SoundOutInterface;}
 	CParameter*				GetParameters() {return &TransmParam;}
 
 
@@ -78,7 +99,6 @@ public:
 	_REAL GetCarOffset() {return rDefCarOffset;}
 
 protected:
-	void Run();
 
 	/* Parameters */
 	CParameter				TransmParam;
@@ -116,6 +136,8 @@ protected:
 	CSoundOut				SoundOutInterface;
 
 	_REAL					rDefCarOffset;
+	_BOOLEAN				bWriteToFile;
+	_BOOLEAN				bReadFromFile;
 };
 
 
