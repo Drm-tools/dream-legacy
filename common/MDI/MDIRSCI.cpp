@@ -68,6 +68,10 @@ CRSIMDIOutRCIIn::CRSIMDIOutRCIIn() : iLogFraCnt(0),
 	/* Default settings for the "special protocol settings" ----------------- */
 	/* Use CRC for AF packets */
 	bUseAFCRC = TRUE;
+	/* default profile, otherwise using --rsiout with no --rsioutprofile generates empty
+	 * AF packets
+	 */
+	cProfile = 'A';
 
 }
 

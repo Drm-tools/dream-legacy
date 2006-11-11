@@ -943,47 +943,14 @@ void FDRMDialog::OnMenuPlotStyle(int value)
 
 void FDRMDialog::closeEvent(QCloseEvent* ce)
 {
-#if 0
-	switch( QMessageBox::question( this, "Dream",
-									"Do you really want to exit?",
-									QMessageBox::Yes|QMessageBox::Default,
-									QMessageBox::No,
-									QMessageBox::NoButton
-									)){
-	case QMessageBox::No:
-		ce->ignore();
-		break;
-	case QMessageBox::Yes:
-		pDRMRec->Stop();
-		(void)pDRMRec->wait(5000);
-		if(pDRMRec->finished())
-		{
-			QMessageBox::information(this, "Dream", "Exit\n",
-				"Working thread terminated");
-		}
-		else
-		{
-			QMessageBox::critical(this, "Dream", "Exit\n",
-				"Termination of working thread failed");
-		}
-		ce->accept();
-		break;
-	default: // just for sanity
-		ce->ignore();
-		break;
-	}
-#else
 	pDRMRec->Stop();
-	#ifdef USE_QT_GUI
-		(void)pDRMRec->wait(5000);
-		if(!pDRMRec->finished())
-		{
-			QMessageBox::critical(this, "Dream", "Exit\n",
+	(void)pDRMRec->wait(5000);
+	if(!pDRMRec->finished())
+	{
+		QMessageBox::critical(this, "Dream", "Exit\n",
 				"Termination of working thread failed");
-		}
-	#endif
+	}
 	ce->accept();
-#endif
 }
 
 void FDRMDialog::customEvent(QCustomEvent* Event)

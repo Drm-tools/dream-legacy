@@ -27,7 +27,9 @@
 \******************************************************************************/
 
 #include "MDIInBuffer.h"
+#ifdef USE_QT_GUI
 #include <qdatetime.h>
+#endif
 #include <iostream>
 
 /* write the received packet to the buffer, if the previous one was not read yet

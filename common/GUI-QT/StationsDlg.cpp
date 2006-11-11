@@ -500,44 +500,34 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 		/* Create menu objects which belong to an action group. We hope that
 		   QT takes care of all the new objects and deletes them... */
+
+		/* Set menu string. Should look like: [ID] Manuf. Model */
+		QString strMenuText = 
+				"[" + QString().setNum(CurSDRiCa.iModelID) + "] " +
+				CurSDRiCa.strManufacturer.c_str() + " " +
+				CurSDRiCa.strModelName.c_str();
+		QPopupMenu*	pMenu;
 		if (CurSDRiCa.bIsSpecRig == TRUE)
 		{
 			/* Main rigs */
-			pRemoteMenu->insertItem(
-				/* Set menu string. Should look like:
-				   [ID] Manuf. Model */
-				"[" + QString().setNum(CurSDRiCa.iModelID) + "] " +
-				CurSDRiCa.strManufacturer + " " +
-				CurSDRiCa.strModelName,
-				this, SLOT(OnRemoteMenu(int)), 0, iCurModIDIdx);
-
-			/* Check for checking */
-			if (pDRMRec->GetHamlib()->GetHamlibModelID() == CurSDRiCa.iModelID)
-			{
-				pRemoteMenu->setItemChecked(iCurModIDIdx, TRUE);
-				bCheckWasSet = TRUE;
-			}
+			pMenu = pRemoteMenu;
 		}
 		else
 		{
 			/* "Other" menu */
-			pRemoteMenuOther->insertItem(
-				/* Set menu string. Should look like:
-				   [ID] Manuf. Model (status) */
-				"[" + QString().setNum(CurSDRiCa.iModelID) + "] " +
-				CurSDRiCa.strManufacturer + " " +
-				CurSDRiCa.strModelName +
-				" (" + rig_strstatus(CurSDRiCa.eRigStatus) +
-				")",
-				this, SLOT(OnRemoteMenu(int)), 0, iCurModIDIdx);
-
-			/* Check for checking */
-			if (pDRMRec->GetHamlib()->GetHamlibModelID() == CurSDRiCa.iModelID)
-			{
-				pRemoteMenuOther->setItemChecked(iCurModIDIdx, TRUE);
-				bCheckWasSet = TRUE;
-			}
+			pMenu = pRemoteMenuOther;
+			/* Set menu string. Should look like: [ID] Manuf. Model (status) */
+			strMenuText = strMenuText + " (" + rig_strstatus(CurSDRiCa.eRigStatus) + ")";
 		}
+		pMenu->insertItem(strMenuText, this, SLOT(OnRemoteMenu(int)), 0, iCurModIDIdx);
+
+		/* Check for checking */
+		if (pDRMRec->GetHamlib()->GetHamlibModelID() == CurSDRiCa.iModelID)
+		{
+			pMenu->setItemChecked(iCurModIDIdx, TRUE);
+			bCheckWasSet = TRUE;
+		}
+
 	}
 
 	/* Add "other" menu */

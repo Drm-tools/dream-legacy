@@ -122,6 +122,9 @@ public:
 	/* For GUI */
 #ifdef USE_QT_GUI
 	virtual void			run();
+#else /* keep the windows builds happy when compiling without the GUI */
+	int						wait(int) { return 0;}
+	bool					finished() { return true; }
 #endif
 	void					Init();
 	void					Start();

@@ -41,7 +41,6 @@
 
 #ifdef HAVE_LIBHAMLIB
 # include <hamlib/rig.h>
-# include <qstring.h>
 #endif
 
 
@@ -162,7 +161,7 @@ public:
 	public:
 		SDrRigCaps() : iModelID(0), strManufacturer(""), strModelName(""),
 			eRigStatus(RIG_STATUS_ALPHA), bIsSpecRig(FALSE) {}
-		SDrRigCaps(rig_model_t tNID, QString strNMan, QString strNModN,
+		SDrRigCaps(rig_model_t tNID, const char* strNMan, const char* strNModN,
 			rig_status_e eNSt, _BOOLEAN bNSRI) : iModelID(tNID),
 			strManufacturer(strNMan), strModelName(strNModN),
 			eRigStatus(eNSt), bIsSpecRig(bNSRI) {}
@@ -182,8 +181,8 @@ public:
 		}
 
 		rig_model_t		iModelID;
-		QString			strManufacturer;
-		QString			strModelName;
+		string			strManufacturer;
+		string			strModelName;
 		rig_status_e	eRigStatus;
 		_BOOLEAN		bIsSpecRig;
 	};
