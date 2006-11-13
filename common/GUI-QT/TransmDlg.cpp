@@ -516,7 +516,7 @@ void TransmDialog::OnComboBoxAudioSourceHighlighted(int iID)
 			QString::null, "Wave Files (*.wav)", this ) );
 		if ( s.isEmpty() )
 			return;
-		DRMTransmitter.SetReadFromFile(s);
+		DRMTransmitter.SetReadFromFile(s.latin1());
 		ComboBoxAudioSource->changeItem(s, iID);	
 	}
 	else
