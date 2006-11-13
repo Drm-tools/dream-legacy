@@ -498,12 +498,6 @@ void TransmDialog::OnButtonStartStop()
 		 	DRMTransmitter.GetSoundOutInterface()->SetDev(iDev);
 		}
 
-		/* Set thread priority (The working thread should have a higher priority
-			than the GUI) */
-#ifdef _WIN32
-		SetThreadPriority(DRMTransmitter, THREAD_PRIORITY_ABOVE_NORMAL);
-#endif
-
 		DRMTransmitter.start();
 
 		ButtonStartStop->setText(tr("&Stop"));

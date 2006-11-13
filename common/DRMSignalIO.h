@@ -35,12 +35,16 @@
 #include "IQInputFilter.h"
 #include "util/Modul.h"
 #include "util/Utilities.h"
-#include "util/AudioFile.h"
 
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
 #else
 # include "source/sound.h"
+#endif
+#ifdef HAVE_LIBSNDFILE
+# include <sndfile.h>
+#else
+# include "util/AudioFile.h"
 #endif
 
 
@@ -66,9 +70,9 @@ public:
 
 	enum EFileOutFormat { OFF_RAW, OFF_TXT, OFF_WAV };
 
-	CTransmitData(CSoundOut* pNS) : pFileTransmitter(NULL), pSound(pNS), 
+	CTransmitData(CSoundOut* pNS) : pFile(NULL), pSound(pNS), 
 		eOutputFormat(OF_REAL_VAL), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
-		strOutFileName("test/TransmittedData.txt"), bUseSoundcard(TRUE) {}
+		strFileName("test/TransmittedData.txt"), bUseSoundcard(TRUE) {}
 	virtual ~CTransmitData();
 
 	void SetIQOutput(const EOutFormat eFormat) {eOutputFormat = eFormat;}
@@ -79,7 +83,7 @@ public:
 
 	void SetWriteToFile(const string& strNFN, const string& strMode)
 	{
-		strOutFileName = strNFN;
+		strFileName = strNFN;
 		bUseSoundcard = FALSE;
 		if(strMode=="txt")
 			eOutFileMode = OFF_TXT;
@@ -89,11 +93,15 @@ public:
 			eOutFileMode = OFF_WAV;
 	}
 
-	void CloseFile();
+	void Stop();
 
 protected:
-	FILE*				pFileTransmitter;
+#ifdef HAVE_LIBSNDFILE
+	SNDFILE*			pFile;
+#else
+	FILE*				pFile;
 	CWaveFile			WaveFile;
+#endif
 	CSoundOut*			pSound;
 	CVector<short>		vecsDataOut;
 	int					iBlockCnt;
@@ -108,7 +116,7 @@ protected:
 
 	int					iBigBlockSize;
 
-	string				strOutFileName;
+	string				strFileName;
 	_BOOLEAN			bUseSoundcard;
 
 	virtual void InitInternal(CParameter& TransmParam);
@@ -119,9 +127,9 @@ class CReceiveData : public CReceiverModul<_REAL, _REAL>
 {
 public:
 	enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
-		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO};
+		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO, CS_MONO};
 
-	CReceiveData(CSoundIn* pNS) : pFileReceiver(NULL), pSound(pNS),
+	CReceiveData(CSoundIn* pNS) : pFile(NULL), pSound(pNS),
 	vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0),
 	bFippedSpectrum(FALSE), bUseSoundcard(TRUE), bNewUseSoundcard(TRUE),
 	strInFileName("test/TransmittedData.txt"), eInChanSelection(CS_MIX_CHAN)
@@ -144,8 +152,11 @@ public:
 protected:
 	CSignalLevelMeter		SignalLevelMeter;
 	
-	FILE*					pFileReceiver;
-
+#ifdef HAVE_LIBSNDFILE
+	SNDFILE*				pFile;
+#else
+	FILE*					pFile;
+#endif
 	CSoundIn*				pSound;
 	CVector<_SAMPLE>		vecsSoundBuffer;
 

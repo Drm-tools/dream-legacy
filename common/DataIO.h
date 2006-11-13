@@ -37,7 +37,6 @@
 #include "FAC/FAC.h"
 #include "SDC/SDC.h"
 #include "TextMessage.h"
-#include "util/AudioFile.h"
 #include "util/Utilities.h"
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
@@ -45,6 +44,11 @@
 # include "source/sound.h"
 #endif
 #include <time.h>
+#ifdef HAVE_LIBSNDFILE
+# include <sndfile.h>
+#else
+# include "util/AudioFile.h"
+#endif
 
 /* Definitions ****************************************************************/
 /* In case of random-noise, define number of blocks */
@@ -83,6 +87,7 @@ public:
 	_REAL GetLevelMeter() {return SignalLevelMeter.Level();}
 	void SetReadFromFile(const string strNFN)
 		{bNewUseSoundcard = FALSE; strInFileName = strNFN;}
+	void Stop();
 
 protected:
 	CSoundIn*			pSound;
@@ -92,7 +97,11 @@ protected:
 	_BOOLEAN			bNewUseSoundcard;
 
 	string				strInFileName;
+#ifdef HAVE_LIBSNDFILE
+	SNDFILE*			pFile;
+#else
 	FILE*				pFile;
+#endif
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);
@@ -104,10 +113,13 @@ public:
 	enum EOutChanSel {CS_BOTH_BOTH, CS_LEFT_LEFT, CS_RIGHT_RIGHT,
 		CS_LEFT_MIX, CS_RIGHT_MIX};
 
+	enum EFileOutFormat { OFF_RAW, OFF_TXT, OFF_WAV };
+
 	CWriteData(CSoundOut* pNS);
 	virtual ~CWriteData() {}
 
-	void StartWriteWaveFile(const string strFileName);
+	void StartWriteWaveFile(const string strFileName,
+				EFileOutFormat eFmt = OFF_WAV);
 	_BOOLEAN GetIsWriteWaveFile() {return bDoWriteWaveFile;}
 	void StopWriteWaveFile();
 
@@ -125,7 +137,11 @@ public:
 protected:
 	CSoundOut*				pSound;
 	_BOOLEAN				bMuteAudio;
+#ifdef HAVE_LIBSNDFILE
+	SNDFILE*				pFile;
+#else
 	CWaveFile				WaveFileAudio;
+#endif
 	_BOOLEAN				bDoWriteWaveFile;
 	_BOOLEAN				bSoundBlocking;
 	_BOOLEAN				bNewSoundBlocking;

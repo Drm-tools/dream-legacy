@@ -57,6 +57,12 @@ CDRMTransmitter::Stop()
 void
 CDRMTransmitter::run()
 {
+	/* Set thread priority (the working thread should have a higher priority
+	   than the GUI) */
+#ifdef _WIN32
+	if(GetEnableProcessPriority())
+		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+#endif
 	/* Set run flag */
 	TransmParam.bRunThread = TRUE;
 
@@ -103,13 +109,8 @@ CDRMTransmitter::run()
 			/* Transmit the signal *********************************************** */
 			TransmitData.WriteData(TransmParam, OFDMModBuf);
 		}
-
-		if (bReadFromFile == FALSE)
-			SoundInInterface.Close();
-		if (bWriteToFile)
-			TransmitData.CloseFile();
-		else
-			SoundOutInterface.Close();
+		ReadData.Stop();
+		TransmitData.Stop();
 	}
 
 	catch(CGenErr GenErr)
@@ -140,8 +141,11 @@ CDRMTransmitter::Init()
 
 CDRMTransmitter::CDRMTransmitter():ReadData(&SoundInInterface),
 TransmitData(&SoundOutInterface),
-rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ), bWriteToFile(FALSE),
-bReadFromFile(FALSE)
+rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ), 
+#ifdef _WIN32
+	bProcessPriorityEnabled(TRUE),
+#endif
+bWriteToFile(FALSE), bReadFromFile(FALSE)
 {
 	/* Init streams */
 	TransmParam.ResetServicesStreams();

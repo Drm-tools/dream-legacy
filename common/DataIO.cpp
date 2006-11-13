@@ -28,18 +28,46 @@
 
 #include "DataIO.h"
 
-
 /* Implementation *************************************************************/
 /******************************************************************************\
 * MSC data																	   *
 \******************************************************************************/
 /* Transmitter -------------------------------------------------------------- */
+void CReadData::Stop()
+{
+	if(bUseSoundcard)
+	{
+		pSound->Close();
+	}
+	else
+	{
+#ifdef HAVE_LIBSNDFILE
+		sf_close(pFile);
+#else
+		fclose(pFile);
+#endif
+	}
+}
+
 void CReadData::ProcessDataInternal(CParameter& TransmParam)
 {
 	if((bNewUseSoundcard==FALSE) && (bUseSoundcard==TRUE))
 	{
-		pFile = fopen(strInFileName.c_str(), "rb");
 		bUseSoundcard = FALSE;
+#ifdef HAVE_LIBSNDFILE
+		SF_INFO sfinfo;
+		memset(&sfinfo, 0, sizeof(SF_INFO));
+		pFile = sf_open(strInFileName.c_str(), SFM_READ, &sfinfo);
+		/* for now, we will insist on 48 kHz mono 16bit */
+		if(pFile == NULL
+		|| sfinfo.channels != 1
+		|| sfinfo.samplerate != 48000)
+		throw CGenErr(string("Sound File Open() failed for ") + strInFileName);
+#else
+		pFile = fopen(strInFileName.c_str(), "rb");
+		if(pFile == NULL)
+		throw CGenErr(string("Sound File Open() failed for ") + strInFileName);
+#endif
 	}
 
 	if(bUseSoundcard)
@@ -56,12 +84,24 @@ void CReadData::ProcessDataInternal(CParameter& TransmParam)
 		_SAMPLE n;
 		for (int i = 0; i < iOutputBlockSize; i++)
 		{
+#ifdef HAVE_LIBSNDFILE
+			sf_count_t  c = sf_readf_short(pFile, &n, 1);
+			if(c==0) /* EOF - loop */
+			{
+				sf_close(pFile);
+				SF_INFO sfinfo;
+				memset(&sfinfo, 0, sizeof(SF_INFO));
+				pFile = sf_open(strInFileName.c_str(), SFM_READ, &sfinfo);
+				(void)sf_readf_short(pFile, &n, 1);
+			}
+#else
 			if(feof(pFile)) /* loop */
 			{
 			 	fclose(pFile);
 				pFile = fopen(strInFileName.c_str(), "rb");
 			}
 			fread(&n, sizeof(_SAMPLE), 1, pFile);
+#endif
 			(*pvecOutputData)[i] = n;
 		}
 	}
@@ -181,8 +221,16 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 		{
 			for (i = 0; i < iInputBlockSize; i += 2)
 			{
-				WaveFileAudio.AddStereoSample((*pvecInputData)[i] /* left */,
+#ifdef HAVE_LIBSNDFILE
+				short buffer[2];
+				buffer[0] = (*pvecInputData)[i];
+				buffer[1] = (*pvecInputData)[i+1];
+				(void)sf_writef_short(pFile, buffer, 1);
+#else
+				WaveFileAudio.AddStereoSample(
+					(*pvecInputData)[i] /* left */,
 					(*pvecInputData)[i + 1] /* right */);
+#endif
 			}
 		}
 	}
@@ -219,24 +267,35 @@ void CWriteData::InitInternal(CParameter& ReceiverParam)
 CWriteData::CWriteData(CSoundOut* pNS) : pSound(pNS), /* Sound interface */
 	bMuteAudio(FALSE), bDoWriteWaveFile(FALSE),
 	bSoundBlocking(FALSE), bNewSoundBlocking(FALSE),
+	eOutChanSel(CS_BOTH_BOTH), 
+	rMixNormConst(MIX_OUT_CHAN_NORM_CONST),
 	/* Inits for audio spectrum plotting */
 	vecsOutputData((int) NUM_BLOCKS_AV_AUDIO_SPEC * NUM_SMPLS_4_AUDIO_SPECTRUM *
 	2 /* stereo */, 0), /* Init with zeros */
 	FftPlan(NUM_SMPLS_4_AUDIO_SPECTRUM),
 	veccFFTInput(NUM_SMPLS_4_AUDIO_SPECTRUM),
 	veccFFTOutput(NUM_SMPLS_4_AUDIO_SPECTRUM),
-	eOutChanSel(CS_BOTH_BOTH), rMixNormConst(MIX_OUT_CHAN_NORM_CONST),
 	vecrHammingWindow(NUM_SMPLS_4_AUDIO_SPECTRUM)
 {
 	/* Constructor */
 }
 
-void CWriteData::StartWriteWaveFile(const string strFileName)
+void CWriteData::StartWriteWaveFile(
+	const string strFileName, EFileOutFormat eFmt
+)
 {
 	/* No Lock(), Unlock() needed here */
 	if (bDoWriteWaveFile == FALSE)
 	{
+#ifdef HAVE_LIBSNDFILE
+		SF_INFO sfinfo;
+		sfinfo.samplerate = 48000;
+		sfinfo.channels = 2;
+		sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
+	    pFile = sf_open(strFileName.c_str(), SFM_WRITE, &sfinfo);		
+#else
 		WaveFileAudio.Open(strFileName);
+#endif
 		bDoWriteWaveFile = TRUE;
 	}
 }
@@ -244,10 +303,12 @@ void CWriteData::StartWriteWaveFile(const string strFileName)
 void CWriteData::StopWriteWaveFile()
 {
 	Lock();
-
+#ifdef HAVE_LIBSNDFILE
+	sf_close(pFile);
+#else
 	WaveFileAudio.Close();
+#endif
 	bDoWriteWaveFile = FALSE;
-
 	Unlock();
 }
 

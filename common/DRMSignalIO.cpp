@@ -89,25 +89,48 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 		if (bUseSoundcard == FALSE)
 		{
 			/* Write data to file */
+#ifdef HAVE_LIBSNDFILE
+			if (eOutputFormat==OF_REAL_VAL)
+			{
+				(void)sf_writef_short(pFile, &vecsDataOut[iCurIndex], 1);
+			}
+			else
+			{
+				short buffer[2];
+				buffer[0] = vecsDataOut[iCurIndex];
+				buffer[1] = vecsDataOut[iCurIndex+1];
+				(void)sf_writef_short(pFile, buffer, 1);
+			}
+#else
 			switch(eOutFileMode)
 			{
 			case OFF_RAW:
-				/* Write 2 bytes, 2 pieces */
-				fwrite((const void*) &vecsDataOut[iCurIndex], size_t(2), 
-						size_t(2), pFileTransmitter);
+				if (eOutputFormat==OF_REAL_VAL)
+					fwrite((const void*) &vecsDataOut[iCurIndex], 2, 1, pFile);
+				else
+				{
+					short buffer[2];
+					buffer[0] = vecsDataOut[iCurIndex];
+					buffer[1] = vecsDataOut[iCurIndex+1];
+					fwrite((const void*) buffer, 2, 2, pFile);
+				}
 				break;
 			case OFF_TXT:
 				/* This can be read with Matlab "load" command */
-				fprintf(pFileTransmitter, "%d\n %d\n", vecsDataOut[iCurIndex],
+				if (eOutputFormat==OF_REAL_VAL)
+					fprintf(pFile, "%d\n", vecsDataOut[iCurIndex]);
+				else
+					fprintf(pFile, "%d\n %d\n", vecsDataOut[iCurIndex],
 						vecsDataOut[iCurIndex+1]);
 				break;
 			case OFF_WAV:
 				if (eOutputFormat==OF_REAL_VAL)
-					WaveFile.AddMonoSample(vecsDataOut[iCurIndex]);
+					WaveFile.AddStereoSample(vecsDataOut[iCurIndex], 0);
 				else
 					WaveFile.AddStereoSample(vecsDataOut[iCurIndex],
 									vecsDataOut[iCurIndex+1]);
 			}
+#endif
 		}
 	}
 
@@ -123,10 +146,14 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 		}
 		else
 		{
-			if(eOutFileMode == OFF_WAV)
+			if(eOutFileMode != OFF_WAV)
 			{
 				/* Flush the file buffer */
-				fflush(pFileTransmitter);
+#ifdef HAVE_LIBSNDFILE
+				sf_write_sync(pFile);
+#else
+				fflush(pFile);
+#endif
 			}
 		}
 	}
@@ -134,9 +161,9 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 
 void CTransmitData::InitInternal(CParameter& TransmParam)
 {
-	float*	pCurFilt;
-	int		iNumTapsTransmFilt;
-	CReal	rNormCurFreqOffset;
+	//float*	pCurFilt;
+	//int		iNumTapsTransmFilt;
+	//CReal	rNormCurFreqOffset;
 
 	const int iSymbolBlockSize = TransmParam.iSymbolBlockSize;
 
@@ -155,23 +182,42 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	else
 	{
 		/* Open file for writing data for transmitting */
+#ifdef HAVE_LIBSNDFILE
+		SF_INFO sfinfo;
+		sfinfo.samplerate = 48000;
+		sfinfo.channels = (eOutputFormat==OF_REAL_VAL)?1:2;
 		switch(eOutFileMode)
 		{
 		case OFF_RAW:
-			pFileTransmitter = fopen(strOutFileName.c_str(), "wb");
-			/* Check for error */
-			if (pFileTransmitter == NULL)
-				throw CGenErr("The file " + strOutFileName + " cannot be created.");
+			sfinfo.format = SF_FORMAT_RAW | SF_FORMAT_PCM_16;
 			break;
 		case OFF_TXT:
-			pFileTransmitter = fopen(strOutFileName.c_str(), "w");
-			/* Check for error */
-			if (pFileTransmitter == NULL)
-				throw CGenErr("The file " + strOutFileName + " cannot be created.");
+			sfinfo.format = SF_FORMAT_MAT4 | SF_FORMAT_PCM_16;
 			break;
 		case OFF_WAV:
-			WaveFile.Open(strOutFileName, eOutputFormat!=OF_REAL_VAL);
+			sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
+			break;
 		}
+	    pFile = sf_open(strFileName.c_str(), SFM_WRITE, &sfinfo);		
+#else
+		switch(eOutFileMode)
+		{
+		case OFF_RAW:
+			pFile = fopen(strFileName.c_str(), "wb");
+			/* Check for error */
+			if (pFile == NULL)
+				throw CGenErr("The file " + strFileName + " cannot be created.");
+			break;
+		case OFF_TXT:
+			pFile = fopen(strFileName.c_str(), "w");
+			/* Check for error */
+			if (pFile == NULL)
+				throw CGenErr("The file " + strFileName + " cannot be created.");
+			break;
+		case OFF_WAV:
+			WaveFile.Open(strFileName);
+		}
+#endif
 	}
 
 
@@ -189,24 +235,32 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	iInputBlockSize = iSymbolBlockSize;
 }
 
-void CTransmitData::CloseFile()
+void CTransmitData::Stop()
 {
-	/* Close file */
-	if(eOutFileMode==OFF_WAV)
+	if (bUseSoundcard == TRUE)
 	{
-		WaveFile.Close();
+		/* Init sound interface */
+		pSound->Close();
 	}
 	else
 	{
-		if (pFileTransmitter != NULL)
-			fclose(pFileTransmitter);
+		/* Close file */
+#ifdef HAVE_LIBSNDFILE
+		if (pFile != NULL)
+			sf_close(pFile);
+#else
+		if(eOutFileMode==OFF_WAV)
+			WaveFile.Close();
+		else
+			if (pFile != NULL)
+				fclose(pFile);
+#endif
 	}
-	
 }
 
 CTransmitData::~CTransmitData()
 {
-	CloseFile();
+	Stop();
 }
 
 
@@ -226,123 +280,137 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 			Parameter.ReceiveStatus.SetInterfaceStatus(RX_OK);
 		else
 			Parameter.ReceiveStatus.SetInterfaceStatus(CRC_ERROR);
-
-		/* Write data to output buffer. Do not set the switch command inside
-		   the for-loop for efficiency reasons */
-		switch (eInChanSelection)
-		{
-		case CS_LEFT_CHAN:
-			for (i = 0; i < iOutputBlockSize; i++)
-				(*pvecOutputData)[i] = (_REAL) vecsSoundBuffer[2 * i];
-			break;
-
-		case CS_RIGHT_CHAN:
-			for (i = 0; i < iOutputBlockSize; i++)
-				(*pvecOutputData)[i] = (_REAL) vecsSoundBuffer[2 * i + 1];
-			break;
-
-		case CS_MIX_CHAN:
-			for (i = 0; i < iOutputBlockSize; i++)
-			{
-				/* Mix left and right channel together */
-				const _REAL rLeftChan = vecsSoundBuffer[2 * i];
-				const _REAL rRightChan = vecsSoundBuffer[2 * i + 1];
-
-				(*pvecOutputData)[i] = (rLeftChan + rRightChan) / 2;
-			}
-			break;
-
-		/* I / Q input */
-		case CS_IQ_POS:
-			for (i = 0; i < iOutputBlockSize; i++)
-			{
-				(*pvecOutputData)[i] =
-					HilbertFilt((_REAL) vecsSoundBuffer[2 * i],
-					(_REAL) vecsSoundBuffer[2 * i + 1]);
-			}
-			break;
-
-		case CS_IQ_NEG:
-			for (i = 0; i < iOutputBlockSize; i++)
-			{
-				(*pvecOutputData)[i] =
-					HilbertFilt((_REAL) vecsSoundBuffer[2 * i + 1],
-					(_REAL) vecsSoundBuffer[2 * i]);
-			}
-			break;
-
-		case CS_IQ_POS_ZERO:
-			for (i = 0; i < iOutputBlockSize; i++)
-			{
-				/* Shift signal to vitual intermediate frequency before applying
-				   the Hilbert filtering */
-				_COMPLEX cCurSig = _COMPLEX((_REAL) vecsSoundBuffer[2 * i],
-					(_REAL) vecsSoundBuffer[2 * i + 1]);
-
-				cCurSig *= cCurExp;
-
-				/* Rotate exp-pointer on step further by complex multiplication
-				   with precalculated rotation vector cExpStep */
-				cCurExp *= cExpStep;
-
-				(*pvecOutputData)[i] =
-					HilbertFilt(cCurSig.real(), cCurSig.imag());
-			}
-			break;
-
-		case CS_IQ_NEG_ZERO:
-			for (i = 0; i < iOutputBlockSize; i++)
-			{
-				/* Shift signal to vitual intermediate frequency before applying
-				   the Hilbert filtering */
-				_COMPLEX cCurSig = _COMPLEX((_REAL) vecsSoundBuffer[2 * i + 1],
-					(_REAL) vecsSoundBuffer[2 * i]);
-
-				cCurSig *= cCurExp;
-
-				/* Rotate exp-pointer on step further by complex multiplication
-				   with precalculated rotation vector cExpStep */
-				cCurExp *= cExpStep;
-
-				(*pvecOutputData)[i] =
-					HilbertFilt(cCurSig.real(), cCurSig.imag());
-			}
-			break;
-		}
 	}
 	else
 	{
 		/* Read data from file ---------------------------------------------- */
+#ifdef HAVE_LIBSNDFILE
+		int channels = (eInChanSelection==CS_MONO)?1:2;
+		int iSamples = iOutputBlockSize*channels;
+		short *buffer = new short[iSamples];
+		sf_count_t c = sf_readf_short(pFile, buffer, iOutputBlockSize);
+		if(c==iOutputBlockSize)
+		{
+			for (i = 0; i < iSamples; i++)
+				vecsSoundBuffer[i] = buffer[i];
+		}
+		else
+		{
+		   	sf_close(pFile);
+		   	pFile=NULL;
+			Parameter.bRunThread = FALSE;
+			/* Set output block size to zero to avoid writing invalid data */
+			iOutputBlockSize = 0;
+			delete[] buffer;
+			return;
+		}
+		delete[] buffer;
+#else
 		for (i = 0; i < iOutputBlockSize; i++)
 		{
-			/* If end-of-file is reached, stop simulation */
-#ifndef FILE_DRM_USING_RAW_DATA
-			short tIn;
+# ifdef FILE_DRM_USING_RAW_DATA
+			short n;
 			/* Read 2 bytes, 1 piece */
-			if (fread((void*) &tIn, size_t(2), size_t(1), pFileReceiver) ==
-				size_t(0))
-#else
-			float tIn;
-			if (fscanf(pFileReceiver, "%e\n", &tIn) == EOF)
-#endif
+			if (fread((void*) &n, size_t(2), size_t(1), pFile) == size_t(0))
+# else
+			float n;
+			if (fscanf(pFile, "%e\n", &n) == EOF)
+# endif
 			{
+			   	fclose(pFile);
+			   	pFile=NULL;
 				Parameter.bRunThread = FALSE;
-
 				/* Set output block size to zero to avoid writing invalid
 				   data */
 				iOutputBlockSize = 0;
-
 				return;	
 			}
 			else
 			{
 				/* Write internal output buffer */
-				(*pvecOutputData)[i] = (_REAL) tIn;
+				(*pvecOutputData)[i] = (_REAL) n;
 			}
 		}
+#endif
 	}
+	/* Write data to output buffer. Do not set the switch command inside
+		   the for-loop for efficiency reasons */
+	switch (eInChanSelection)
+	{
+	case CS_LEFT_CHAN:
+		for (i = 0; i < iOutputBlockSize; i++)
+			(*pvecOutputData)[i] = (_REAL) vecsSoundBuffer[2 * i];
+		break;
+	case CS_RIGHT_CHAN:
+		for (i = 0; i < iOutputBlockSize; i++)
+			(*pvecOutputData)[i] = (_REAL) vecsSoundBuffer[2 * i + 1];
+		break;
+	case CS_MIX_CHAN:
+		for (i = 0; i < iOutputBlockSize; i++)
+		{
+			/* Mix left and right channel together */
+			const _REAL rLeftChan = vecsSoundBuffer[2 * i];
+			const _REAL rRightChan = vecsSoundBuffer[2 * i + 1];
+				(*pvecOutputData)[i] = (rLeftChan + rRightChan) / 2;
+		}
+		break;
+		/* I / Q input */
+	case CS_IQ_POS:
+		for (i = 0; i < iOutputBlockSize; i++)
+		{
+			(*pvecOutputData)[i] =
+				HilbertFilt((_REAL) vecsSoundBuffer[2 * i],
+				(_REAL) vecsSoundBuffer[2 * i + 1]);
+		}
+		break;
+	case CS_IQ_NEG:
+		for (i = 0; i < iOutputBlockSize; i++)
+		{
+			(*pvecOutputData)[i] =
+				HilbertFilt((_REAL) vecsSoundBuffer[2 * i + 1],
+				(_REAL) vecsSoundBuffer[2 * i]);
+		}
+		break;
 
+	case CS_IQ_POS_ZERO:
+		for (i = 0; i < iOutputBlockSize; i++)
+		{
+			/* Shift signal to vitual intermediate frequency before applying
+			   the Hilbert filtering */
+			_COMPLEX cCurSig = _COMPLEX((_REAL) vecsSoundBuffer[2 * i],
+				(_REAL) vecsSoundBuffer[2 * i + 1]);
+				cCurSig *= cCurExp;
+				/* Rotate exp-pointer on step further by complex multiplication
+			   with precalculated rotation vector cExpStep */
+			cCurExp *= cExpStep;
+				(*pvecOutputData)[i] =
+				HilbertFilt(cCurSig.real(), cCurSig.imag());
+		}
+		break;
 
+	case CS_IQ_NEG_ZERO:
+		for (i = 0; i < iOutputBlockSize; i++)
+		{
+			/* Shift signal to virtual intermediate frequency before applying
+			   the Hilbert filtering */
+			_COMPLEX cCurSig = _COMPLEX((_REAL) vecsSoundBuffer[2 * i + 1],
+				(_REAL) vecsSoundBuffer[2 * i]);
+				cCurSig *= cCurExp;
+				/* Rotate exp-pointer one step further by complex multiplication
+			   with precalculated rotation vector cExpStep */
+			cCurExp *= cExpStep;
+				(*pvecOutputData)[i] =
+				HilbertFilt(cCurSig.real(), cCurSig.imag());
+		}
+		break;
+
+	case CS_MONO: /* Only for file input !!! */
+#ifdef HAVE_LIBSNDFILE
+		for (i = 0; i < iOutputBlockSize; i++)
+			(*pvecOutputData)[i] = (_REAL) vecsSoundBuffer[i];
+#endif
+		break;
+	}
 	/* Flip spectrum if necessary ------------------------------------------- */
 	if (bFippedSpectrum == TRUE)
 	{
@@ -363,7 +431,6 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 		}
 	}
 
-
 	/* Copy data in buffer for spectrum calculation */
 	vecrInpData.AddEnd((*pvecOutputData), iOutputBlockSize);
 
@@ -377,6 +444,9 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 	if (bNewUseSoundcard != bUseSoundcard)
 		bUseSoundcard = bNewUseSoundcard;
 
+	/* Init buffer size for taking stereo input */
+	vecsSoundBuffer.Init(Parameter.iSymbolBlockSize * 2);
+
 	if (bUseSoundcard == TRUE)
 	{
 		/* Init sound interface. Set it to one symbol. The sound card interface
@@ -384,23 +454,30 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 		   Use stereo input (* 2) */
 		pSound->Init(Parameter.iSymbolBlockSize * 2);
 
-		/* Init buffer size for taking stereo input */
-		vecsSoundBuffer.Init(Parameter.iSymbolBlockSize * 2);
 	}
 	else
 	{
 		/* Open file for reading data from transmitter. Open file only once */
-		if (pFileReceiver == NULL)
+		if (pFile == NULL)
 		{
-#ifndef FILE_DRM_USING_RAW_DATA
-			pFileReceiver = fopen(strInFileName.c_str(), "r");
+#ifdef HAVE_LIBSNDFILE
+			SF_INFO sfinfo;
+			memset(&sfinfo, 0, sizeof(SF_INFO));
+			pFile = sf_open(strInFileName.c_str(), SFM_READ, &sfinfo);
+			if(sfinfo.channels==1)
+				eInChanSelection = CS_MONO;
 #else
-			pFileReceiver = fopen(strInFileName.c_str(), "rb");
+# ifdef FILE_DRM_USING_RAW_DATA
+			pFile = fopen(strInFileName.c_str(), "rb");
+# else
+			pFile = fopen(strInFileName.c_str(), "r");
+# endif
+			eInChanSelection = CS_MONO;
 #endif
 		}
 
 		/* Check for error */
-		if (pFileReceiver == NULL)
+		if (pFile == NULL)
 			throw CGenErr("The file " + strInFileName + " must exist.");
 	}
 
@@ -455,8 +532,12 @@ _REAL CReceiveData::HilbertFilt(const _REAL rRe, const _REAL rIm)
 CReceiveData::~CReceiveData()
 {
 	/* Close file (if opened) */
-	if (pFileReceiver != NULL)
-		fclose(pFileReceiver);
+	if (pFile != NULL)
+#ifdef HAVE_LIBSNDFILE
+		sf_close(pFile);
+#else
+		fclose(pFile);
+#endif
 }
 
 void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,

@@ -68,6 +68,13 @@ public:
 	int						wait(int) {return 1;}
 	bool					finished(){return true;}
 #endif
+#ifdef _WIN32
+	void SetEnableProcessPriority(_BOOLEAN bValue)
+		{bProcessPriorityEnabled = bValue;}
+
+	_BOOLEAN GetEnableProcessPriority()
+		{return bProcessPriorityEnabled;}
+#endif
 
 	_REAL 					GetLevelMeter();
 	void 					SetReadFromFile(const string& strNFN);
@@ -136,6 +143,9 @@ protected:
 	CSoundOut				SoundOutInterface;
 
 	_REAL					rDefCarOffset;
+#ifdef _WIN32
+	_BOOLEAN				bProcessPriorityEnabled;
+#endif
 	_BOOLEAN				bWriteToFile;
 	_BOOLEAN				bReadFromFile;
 };
