@@ -236,10 +236,11 @@ void MultimediaDlg::OnTextChanged()
 void MultimediaDlg::OnTimer()
 {
 	CMOTObject	NewObj;
-	QPixmap	NewImage;
+	QPixmap		NewImage;
 	FILE*		pFiBody;
-	int		iCurNumPict;
+	int			iCurNumPict;
 	_BOOLEAN	bMainPage;
+	_BOOLEAN	bShowInfo = TRUE;
 
 	switch(pDRMRec->GetParameters()->ReceiveStatus.GetMOTStatus())
 	{
@@ -374,12 +375,16 @@ void MultimediaDlg::OnTimer()
 	case CDataDecoder::AT_JOURNALINE:
 		SetJournalineText();
 		break;
+
+	default:
+		bShowInfo = FALSE;
+		break;
 	}
 
 	/* Add the service description into the dialog caption */
 	QString strTitle = tr("Multimedia");
 
-	if (eAppType != CDataDecoder::AT_NOT_SUP)
+	if (bShowInfo == TRUE)
 	{
 		CParameter& ReceiverParam = *(pDRMRec->GetParameters());
 
