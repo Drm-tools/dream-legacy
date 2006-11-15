@@ -375,6 +375,44 @@ void MultimediaDlg::OnTimer()
 		SetJournalineText();
 		break;
 	}
+
+	/* Add the service description into the dialog caption */
+	QString strTitle = tr("Multimedia");
+
+	if (eAppType != CDataDecoder::AT_NOT_SUP)
+	{
+		CParameter& ReceiverParam = *(pDRMRec->GetParameters());
+
+		/* Get current data service */
+		const int iCurSelDataServ = ReceiverParam.GetCurSelDataService();
+
+		if (ReceiverParam.Service[iCurSelDataServ].IsActive())
+		{
+			/* Do UTF-8 to string conversion with the label strings */
+			QString strLabel = QString().fromUtf8(QCString(ReceiverParam
+				.Service[iCurSelDataServ].strLabel.c_str())).stripWhiteSpace();
+
+			/* Service ID (plot number in hexadecimal format) */
+			const long iServiceID = (long) ReceiverParam.
+				Service[iCurSelDataServ].iServiceID;
+
+			QString strServiceID = "";
+
+			if (iServiceID != 0)
+			{
+				if (strLabel != "")
+					strLabel += " ";
+
+				strServiceID = "ID:" +
+					QString().setNum(iServiceID, 16).upper();
+			}
+
+			/* add the description on the title of the dialog */
+			if (strLabel != "" || strServiceID != "")
+				strTitle += " [" + strLabel + strServiceID + "]";
+		}
+	}
+	SetDialogCaption(this, strTitle);
 }
 
 void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
