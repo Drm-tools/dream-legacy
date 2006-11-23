@@ -423,8 +423,10 @@ CDataDecoder::DecodeEPG(const CParameter & ReceiverParam)
 								   NewObj.iContentSubType, advanced);
 
 #if !defined(HAVE_ZLIB_LIBRARY) && !defined(HAVE_LIBFREEIMAGE)
-			if (advanced)
-				fileName += ".gz";
+			const string& s = NewObj.strName;
+			if (s.size() >= 3)
+				if (s.substr(s.size() - 3, 3) == ".gz")
+					fileName += ".gz";
 #endif
 		}
 		else
