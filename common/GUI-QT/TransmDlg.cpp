@@ -67,7 +67,7 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	TextLabelCurPict->setText("");
 
 	/* Output mode (real valued, I / Q or E / P) */
-	switch (DRMTransmitter.GetTransData()->GetIQOutput())
+	switch (DRMTransmitter.GetIQOutput())
 	{
 	case CTransmitData::OF_REAL_VAL:
 		RadioButtonOutReal->setChecked(TRUE);
@@ -87,7 +87,7 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	}
 
 	/* Robustness mode */
-	switch (DRMTransmitter.GetParameters()->GetWaveMode())
+	switch (DRMTransmitter.TransmParam.GetWaveMode())
 	{
 	case RM_ROBUSTNESS_MODE_A:
 		RadioButtonRMA->setChecked(TRUE);
@@ -107,7 +107,7 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	}
 
 	/* Bandwidth */
-	switch (DRMTransmitter.GetParameters()->GetSpectrumOccup())
+	switch (DRMTransmitter.TransmParam.GetSpectrumOccup())
 	{
 	case SO_0:
 		RadioButtonBandwidth45->setChecked(TRUE);
@@ -146,7 +146,7 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	ComboBoxMSCInterleaver->insertItem(tr("2 s (Long Interleaving)"), 0);
 	ComboBoxMSCInterleaver->insertItem(tr("400 ms (Short Interleaving)"), 1);
 
-	switch (DRMTransmitter.GetParameters()->eSymbolInterlMode)
+	switch (DRMTransmitter.TransmParam.eSymbolInterlMode)
 	{
 	case CParameter::SI_LONG:
 		ComboBoxMSCInterleaver->setCurrentItem(0);
@@ -165,7 +165,7 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 //	ComboBoxMSCConstellation->insertItem(tr("HMsym 64-QAM"), 2);
 //	ComboBoxMSCConstellation->insertItem(tr("HMmix 64-QAM"), 3);
 
-	switch (DRMTransmitter.GetParameters()->eMSCCodingScheme)
+	switch (DRMTransmitter.TransmParam.eMSCCodingScheme)
 	{
 	case CParameter::CS_2_SM:
 		ComboBoxMSCConstellation->setCurrentItem(0);
@@ -188,7 +188,7 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	ComboBoxSDCConstellation->insertItem(tr("4-QAM"), 0);
 	ComboBoxSDCConstellation->insertItem(tr("16-QAM"), 1);
 
-	switch (DRMTransmitter.GetParameters()->eSDCCodingScheme)
+	switch (DRMTransmitter.TransmParam.eSDCCodingScheme)
 	{
 	case CParameter::CS_1_SM:
 		ComboBoxSDCConstellation->setCurrentItem(0);
@@ -202,25 +202,25 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	/* Service parameters --------------------------------------------------- */
 	/* Service label */
 	LineEditServiceLabel->setText(DRMTransmitter.
-		GetParameters()->Service[0].strLabel.c_str());
+		TransmParam.Service[0].strLabel.c_str());
 
 	/* Service ID */
 	LineEditServiceID->setText(QString().setNum(
-		(int)DRMTransmitter.GetParameters()->Service[0].iServiceID));
+		(int)DRMTransmitter.TransmParam.Service[0].iServiceID));
 
 	/* Language */
 	for (i = 0; i < LEN_TABLE_LANGUAGE_CODE; i++)
 		ComboBoxLanguage->insertItem(strTableLanguageCode[i].c_str(), i);
 
 	ComboBoxLanguage->setCurrentItem(DRMTransmitter.
-		GetParameters()->Service[0].iLanguage);
+		TransmParam.Service[0].iLanguage);
 
 	/* Program type */
 	for (i = 0; i < LEN_TABLE_PROG_TYPE_CODE; i++)
 		ComboBoxProgramType->insertItem(strTableProgTypCod[i].c_str(), i);
 
 	ComboBoxProgramType->setCurrentItem(DRMTransmitter.
-		GetParameters()->Service[0].iServiceDescr);
+		TransmParam.Service[0].iServiceDescr);
 
 	/* Sound card IF */
 	LineEditSndCrdIF->setText(QString().number(
@@ -293,7 +293,7 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	MultiLineEditTextMessage->insertLine(vecstrTextMessage[1].c_str());
 
 	/* Now make sure that the text message flag is activated in global struct */
-	DRMTransmitter.GetParameters()->
+	DRMTransmitter.TransmParam.
 		Service[0].AudioParam.bTextflag = TRUE;
 
 
@@ -463,13 +463,13 @@ void TransmDialog::OnButtonStartStop()
 	{
 		/* Start transmitter */
 		/* Set text message */
-		DRMTransmitter.ClearTextMessage();
+		DRMTransmitter.ClearTextMessages();
 
 		for (i = 1; i < vecstrTextMessage.Size(); i++)
-			DRMTransmitter.SetTextMessage(vecstrTextMessage[i]);
+			DRMTransmitter.AddTextMessage(vecstrTextMessage[i]);
 
 		/* Set file names for data application */
-		DRMTransmitter.ClearPicFileNames();
+		DRMTransmitter.ClearPics();
 
 		/* Iteration through list view items. Code based on QT sample code for
 		   list view items */
@@ -484,7 +484,7 @@ void TransmDialog::OnButtonStartStop()
 			QFileInfo FileInfo(strFileName);
 			const QString strFormat = FileInfo.extension(FALSE);
 
-			DRMTransmitter.SetPicFileName(strFileName.latin1(), strFormat.latin1());
+			DRMTransmitter.AddPic(strFileName.latin1(), strFormat.latin1());
 		}
 
 		if(ComboBoxCOFDMdest->currentText()==QString("wav file"))
@@ -541,7 +541,7 @@ void TransmDialog::EnableTextMessage(const _BOOLEAN bFlag)
 		PushButtonClearAllText->setEnabled(TRUE);
 
 		/* Set text message flag in global struct */
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			Service[0].AudioParam.bTextflag = TRUE;
 	}
 	else
@@ -553,7 +553,7 @@ void TransmDialog::EnableTextMessage(const _BOOLEAN bFlag)
 		PushButtonClearAllText->setEnabled(FALSE);
 
 		/* Set text message flag in global struct */
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			Service[0].AudioParam.bTextflag = FALSE;
 	}
 }
@@ -585,21 +585,21 @@ void TransmDialog::EnableAudio(const _BOOLEAN bFlag)
 		ComboBoxProgramType->setEnabled(TRUE);
 
 		/* Only one audio service */
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			iNumAudioService = 1;
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			iNumDataService = 0;
 
 		/* Audio flag of this service */
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			Service[0].eAudDataFlag = CParameter::SF_AUDIO;
 
 		/* Always use stream number 0 right now, TODO */
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			Service[0].AudioParam.iStreamID = 0;
 
 		/* Programme Type code, get it from combo box */
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			Service[0].iServiceDescr = ComboBoxProgramType->currentItem();
 
 		ComboBoxAudioSource->setEnabled(TRUE);
@@ -641,30 +641,30 @@ void TransmDialog::EnableData(const _BOOLEAN bFlag)
 		PushButtonAddFile->setEnabled(TRUE);
 
 		/* Only one data service */
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			iNumAudioService = 0;
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			iNumDataService = 1;
 
 		/* Data flag for this service */
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			Service[0].eAudDataFlag = CParameter::SF_DATA;
 
 		/* Always use stream number 0, TODO */
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			Service[0].DataParam.iStreamID = 0;
 
 		/* Init SlideShow application */
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			Service[0].DataParam.iPacketLen = 45; /* TEST */
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			Service[0].DataParam.eDataUnitInd = CParameter::DU_DATA_UNITS;
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			Service[0].DataParam.eAppDomain = CParameter::AD_DAB_SPEC_APP;
 
 		/* The value 0 indicates that the application details are provided
 		   solely by SDC data entity type 5 */
-		DRMTransmitter.GetParameters()->
+		DRMTransmitter.TransmParam.
 			Service[0].iServiceDescr = 0;
 	}
 	else
@@ -797,7 +797,7 @@ void TransmDialog::OnComboBoxTextMessageHighlighted(int iID)
 void TransmDialog::OnTextChangedServiceID(const QString& strID)
 {
 	/* Convert string to unsigned integer "toUInt()" */
-	DRMTransmitter.GetParameters()->Service[0].iServiceID =
+	DRMTransmitter.TransmParam.Service[0].iServiceID =
 		strID.toUInt();
 }
 
@@ -805,7 +805,7 @@ void TransmDialog::OnTextChangedServiceLabel(const QString& strLabel)
 {
 	/* Set additional text for log file. Conversion from QString to STL
 	   string is needed (done with .utf8() function of QT string) */
-	DRMTransmitter.GetParameters()->Service[0].strLabel =
+	DRMTransmitter.TransmParam.Service[0].strLabel =
 		strLabel.utf8();
 }
 
@@ -814,12 +814,12 @@ void TransmDialog::OnComboBoxMSCInterleaverHighlighted(int iID)
 	switch (iID)
 	{
 	case 0:
-		DRMTransmitter.GetParameters()->eSymbolInterlMode =
+		DRMTransmitter.TransmParam.eSymbolInterlMode =
 			CParameter::SI_LONG;
 		break;
 
 	case 1:
-		DRMTransmitter.GetParameters()->eSymbolInterlMode =
+		DRMTransmitter.TransmParam.eSymbolInterlMode =
 			CParameter::SI_SHORT;
 		break;
 	}
@@ -830,22 +830,22 @@ void TransmDialog::OnComboBoxMSCConstellationHighlighted(int iID)
 	switch (iID)
 	{
 	case 0:
-		DRMTransmitter.GetParameters()->eMSCCodingScheme =
+		DRMTransmitter.TransmParam.eMSCCodingScheme =
 			CParameter::CS_2_SM;
 		break;
 
 	case 1:
-		DRMTransmitter.GetParameters()->eMSCCodingScheme =
+		DRMTransmitter.TransmParam.eMSCCodingScheme =
 			CParameter::CS_3_SM;
 		break;
 
 	case 2:
-		DRMTransmitter.GetParameters()->eMSCCodingScheme =
+		DRMTransmitter.TransmParam.eMSCCodingScheme =
 			CParameter::CS_3_HMSYM;
 		break;
 
 	case 3:
-		DRMTransmitter.GetParameters()->eMSCCodingScheme =
+		DRMTransmitter.TransmParam.eMSCCodingScheme =
 			CParameter::CS_3_HMMIX;
 		break;
 	}
@@ -857,12 +857,12 @@ void TransmDialog::OnComboBoxMSCConstellationHighlighted(int iID)
 
 void TransmDialog::OnComboBoxMSCProtLevHighlighted(int iID)
 {
-	DRMTransmitter.GetParameters()->MSCPrLe.iPartB = iID;
+	DRMTransmitter.TransmParam.MSCPrLe.iPartB = iID;
 }
 
 void TransmDialog::UpdateMSCProtLevCombo()
 {
-	if (DRMTransmitter.GetParameters()->eMSCCodingScheme ==
+	if (DRMTransmitter.TransmParam.eMSCCodingScheme ==
 		CParameter::CS_2_SM)
 	{
 		/* Only two protection levels possible in 16 QAM mode */
@@ -882,7 +882,7 @@ void TransmDialog::UpdateMSCProtLevCombo()
 
 	/* Set protection level to 1 */
 	ComboBoxMSCProtLev->setCurrentItem(1);
-	DRMTransmitter.GetParameters()->MSCPrLe.iPartB = 1;
+	DRMTransmitter.TransmParam.MSCPrLe.iPartB = 1;
 }
 
 void TransmDialog::OnComboBoxSDCConstellationHighlighted(int iID)
@@ -890,12 +890,12 @@ void TransmDialog::OnComboBoxSDCConstellationHighlighted(int iID)
 	switch (iID)
 	{
 	case 0:
-		DRMTransmitter.GetParameters()->eSDCCodingScheme =
+		DRMTransmitter.TransmParam.eSDCCodingScheme =
 			CParameter::CS_1_SM;
 		break;
 
 	case 1:
-		DRMTransmitter.GetParameters()->eSDCCodingScheme =
+		DRMTransmitter.TransmParam.eSDCCodingScheme =
 			CParameter::CS_2_SM;
 		break;
 	}
@@ -903,12 +903,12 @@ void TransmDialog::OnComboBoxSDCConstellationHighlighted(int iID)
 
 void TransmDialog::OnComboBoxLanguageHighlighted(int iID)
 {
-	DRMTransmitter.GetParameters()->Service[0].iLanguage = iID;
+	DRMTransmitter.TransmParam.Service[0].iLanguage = iID;
 }
 
 void TransmDialog::OnComboBoxProgramTypeHighlighted(int iID)
 {
-	DRMTransmitter.GetParameters()->Service[0].iServiceDescr = iID;
+	DRMTransmitter.TransmParam.Service[0].iServiceDescr = iID;
 }
 
 void TransmDialog::OnRadioOutput(int iID)
@@ -917,26 +917,22 @@ void TransmDialog::OnRadioOutput(int iID)
 	{
 	case 0:
 		/* Button "Real Valued" */
-		DRMTransmitter.GetTransData()->
-			SetIQOutput(CTransmitData::OF_REAL_VAL);
+		DRMTransmitter.SetIQOutput(CTransmitData::OF_REAL_VAL);
 		break;
 
 	case 1:
 		/* Button "I / Q (pos)" */
-		DRMTransmitter.GetTransData()->
-			SetIQOutput(CTransmitData::OF_IQ_POS);
+		DRMTransmitter.SetIQOutput(CTransmitData::OF_IQ_POS);
 		break;
 
 	case 2:
 		/* Button "I / Q (neg)" */
-		DRMTransmitter.GetTransData()->
-			SetIQOutput(CTransmitData::OF_IQ_NEG);
+		DRMTransmitter.SetIQOutput(CTransmitData::OF_IQ_NEG);
 		break;
 
 	case 3:
 		/* Button "E / P" */
-		DRMTransmitter.GetTransData()->
-			SetIQOutput(CTransmitData::OF_EP);
+		DRMTransmitter.SetIQOutput(CTransmitData::OF_EP);
 		break;
 	}
 }
@@ -1046,8 +1042,8 @@ void TransmDialog::OnRadioRobustnessMode(int iID)
 	}
 
 	/* Set new robustness mode. Spectrum occupancy is the same as before */
-	DRMTransmitter.GetParameters()->InitCellMapTable(eNewRobMode,
-		DRMTransmitter.GetParameters()->GetSpectrumOccup());
+	DRMTransmitter.TransmParam.InitCellMapTable(eNewRobMode,
+		DRMTransmitter.TransmParam.GetSpectrumOccup());
 }
 
 void TransmDialog::OnRadioBandwidth(int iID)
@@ -1082,8 +1078,8 @@ void TransmDialog::OnRadioBandwidth(int iID)
 	}
 
 	/* Set new spectrum occupancy. Robustness mode is the same as before */
-	DRMTransmitter.GetParameters()->InitCellMapTable(
-		DRMTransmitter.GetParameters()->GetWaveMode(), eNewSpecOcc);
+	DRMTransmitter.TransmParam.InitCellMapTable(
+		DRMTransmitter.TransmParam.GetWaveMode(), eNewSpecOcc);
 }
 
 void TransmDialog::OnToggleCheckBoxMDIoutEnable(bool bState)

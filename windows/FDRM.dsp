@@ -601,6 +601,10 @@ SOURCE=..\common\sourcedecoders\AudioSourceDecoder.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\sourcedecoders\AudioSourceEncoder.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\interleaver\BlockInterleaver.cpp
 # End Source File
 # Begin Source File
@@ -1038,7 +1042,18 @@ SOURCE=..\common\AMSSDemodulation.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\sourcedecoders\AudioSourceDecoderInterface.h
+# Begin Source File
+# Begin Source File
+
 SOURCE=..\common\sourcedecoders\AudioSourceDecoder.h
+# Begin Source File
+
+SOURCE=..\common\sourcedecoders\AudioSourceEncoderInterface.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\sourcedecoders\AudioSourceEncoder.h
 # End Source File
 # Begin Source File
 

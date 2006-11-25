@@ -27,125 +27,21 @@
 \******************************************************************************/
 
 #include "DrmTransmitter.h"
+#include <iostream>
+#include "util/Buffer.h"
+#include "mlc/MLC.h"
+#include "interleaver/SymbolInterleaver.h"
+#include "ofdmcellmapping/OFDMCellMapping.h"
+#include "OFDM.h"
+#include "DRMSignalIO.h"
+#include "sourcedecoders/AudioSourceEncoder.h"
 
 /* Implementation *************************************************************/
-_REAL CDRMTransmitter::GetLevelMeter()
-{
-	return ReadData.GetLevelMeter();
-}
-
-void
-CDRMTransmitter::SetReadFromFile(const string & strNFN)
-{
-	ReadData.SetReadFromFile(strNFN);
-	bReadFromFile = TRUE;
-}
-
-void
-CDRMTransmitter::SetWriteToFile(const string & strNFN, const string & strType)
-{
-	TransmitData.SetWriteToFile(strNFN, strType);
-	bWriteToFile = TRUE;
-}
-
-void
-CDRMTransmitter::Stop()
-{
-	TransmParam.bRunThread = FALSE;
-}
-
-void
-CDRMTransmitter::run()
-{
-	/* Set thread priority (the working thread should have a higher priority
-	   than the GUI) */
-#ifdef _WIN32
-	if(GetEnableProcessPriority())
-		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
-#endif
-	/* Set run flag */
-	TransmParam.bRunThread = TRUE;
-
-	/* Initialization of the modules */
-	Init();
-
-	try
-	{
-/*
-	The hand over of data is done via an intermediate-buffer. The calling
-	convention is always "input-buffer, output-buffer". Additional, the
-	DRM-parameters are fed to the function
-*/
-		while (TransmParam.bRunThread)
-		{
-			/* MSC *************************************************************** */
-			/* Read the source signal */
-			ReadData.ReadData(TransmParam, DataBuf);
-
-			/* Audio source encoder */
-			AudioSourceEncoder.ProcessData(TransmParam, DataBuf, AudSrcBuf);
-
-			/* MLC-encoder */
-			MSCMLCEncoder.ProcessData(TransmParam, AudSrcBuf, MLCEncBuf);
-
-			/* Convolutional interleaver */
-			SymbInterleaver.ProcessData(TransmParam, MLCEncBuf, IntlBuf);
-
-			/* FAC *************************************************************** */
-			GenerateFACData.ReadData(TransmParam, GenFACDataBuf);
-			FACMLCEncoder.ProcessData(TransmParam, GenFACDataBuf, FACMapBuf);
-
-			/* SDC *************************************************************** */
-			GenerateSDCData.ReadData(TransmParam, GenSDCDataBuf);
-			SDCMLCEncoder.ProcessData(TransmParam, GenSDCDataBuf, SDCMapBuf);
-
-			/* Mapping of the MSC, FAC, SDC and pilots on the carriers *********** */
-			OFDMCellMapping.ProcessData(TransmParam, IntlBuf, FACMapBuf,
-										SDCMapBuf, CarMapBuf);
-
-			/* OFDM-modulation *************************************************** */
-			OFDMModulation.ProcessData(TransmParam, CarMapBuf, OFDMModBuf);
-
-			/* Transmit the signal *********************************************** */
-			TransmitData.WriteData(TransmParam, OFDMModBuf);
-		}
-		ReadData.Stop();
-		TransmitData.Stop();
-	}
-
-	catch(CGenErr GenErr)
-	{
-		ErrorMessage(GenErr.strError);
-	}
-}
-
-void
-CDRMTransmitter::Init()
-{
-	/* Defines number of cells, important! */
-	OFDMCellMapping.Init(TransmParam, CarMapBuf);
-
-	/* Defines number of SDC bits per super-frame */
-	SDCMLCEncoder.Init(TransmParam, SDCMapBuf);
-
-	MSCMLCEncoder.Init(TransmParam, MLCEncBuf);
-	SymbInterleaver.Init(TransmParam, IntlBuf);
-	GenerateFACData.Init(TransmParam, GenFACDataBuf);
-	FACMLCEncoder.Init(TransmParam, FACMapBuf);
-	GenerateSDCData.Init(TransmParam, GenSDCDataBuf);
-	OFDMModulation.Init(TransmParam, OFDMModBuf);
-	AudioSourceEncoder.Init(TransmParam, AudSrcBuf);
-	ReadData.Init(TransmParam, DataBuf);
-	TransmitData.Init(TransmParam);
-}
-
-CDRMTransmitter::CDRMTransmitter():ReadData(&SoundInInterface),
-TransmitData(&SoundOutInterface),
-rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ), 
-#ifdef _WIN32
-	bProcessPriorityEnabled(TRUE),
-#endif
-bWriteToFile(FALSE), bReadFromFile(FALSE)
+CDRMTransmitter::CDRMTransmitter():
+	rCarOffset((_REAL) VIRTUAL_INTERMED_FREQ), eOutputFormat(CTransmitData::OF_REAL_VAL),
+	bProcessPriorityEnabled(TRUE), pReadData(NULL), pAudioSourceEncoder(NULL),
+	strInputFileName(""), strOutputFileName(""), strOutputFileType(""),
+	vecstrTexts(), vecstrPics(), vecstrPicTypes()
 {
 	/* Init streams */
 	TransmParam.ResetServicesStreams();
@@ -266,5 +162,200 @@ bWriteToFile(FALSE), bReadFromFile(FALSE)
 		   if "= 0"). Sets the number of bytes, should not exceed total number
 		   of bytes available in MSC block */
 		TransmParam.Stream[0].iLenPartA = 0;
+	}
+}
+
+_REAL CDRMTransmitter::GetLevelMeter()
+{
+	if(pReadData==NULL)
+		throw CGenErr("Can't read level meter when transmitter stopped");
+	return pReadData->GetLevelMeter();
+}
+
+void
+CDRMTransmitter::AddTextMessage(const string& strText)
+{
+	vecstrTexts.push_back(strText);
+}
+
+void
+CDRMTransmitter::ClearTextMessages()
+{
+	vecstrTexts.clear();
+}
+
+void
+CDRMTransmitter::AddPic(const string& strFileName, const string& strFormat)
+{
+	vecstrPics.push_back(strFileName);
+	vecstrPicTypes.push_back(strFormat);
+}
+
+void
+CDRMTransmitter::ClearPics()
+{
+	vecstrPics.clear();
+	vecstrPicTypes.clear();
+}
+
+_BOOLEAN
+CDRMTransmitter::GetTransStat(string& strCPi, _REAL& rCPe)
+{
+	if(pAudioSourceEncoder==NULL)
+		throw CGenErr("Can't read tranmission status when transmitter stopped");
+	return pAudioSourceEncoder->GetTransStat(strCPi, rCPe);
+}
+
+void
+CDRMTransmitter::SetReadFromFile(const string & strNFN)
+{
+	strInputFileName = strNFN;
+}
+
+void
+CDRMTransmitter::SetWriteToFile(const string & strNFN, const string & strType)
+{
+	strOutputFileName = strNFN;
+	strOutputFileType = strType;
+}
+
+void
+CDRMTransmitter::Stop()
+{
+	TransmParam.bRunThread = FALSE;
+}
+
+void
+CDRMTransmitter::run()
+{
+
+	/* Buffers */
+	CSingleBuffer<_SAMPLE>	DataBuf;
+	CSingleBuffer<_BINARY>	AudSrcBuf;
+
+	CSingleBuffer<_COMPLEX>	MLCEncBuf;
+	CCyclicBuffer<_COMPLEX>	IntlBuf;
+
+	CSingleBuffer<_BINARY>	GenFACDataBuf;
+	CCyclicBuffer<_COMPLEX>	FACMapBuf;
+
+	CSingleBuffer<_BINARY>	GenSDCDataBuf;
+	CCyclicBuffer<_COMPLEX>	SDCMapBuf;
+	
+	CSingleBuffer<_COMPLEX>	CarMapBuf;
+	CSingleBuffer<_COMPLEX>	OFDMModBuf;
+
+	/* Modules */
+	CReadData				ReadData(&SoundInInterface);
+	CAudioSourceEncoder		AudioSourceEncoder;
+	CMSCMLCEncoder			MSCMLCEncoder;
+	CSymbInterleaver		SymbInterleaver;
+	CGenerateFACData		GenerateFACData;
+	CFACMLCEncoder			FACMLCEncoder;
+	CGenerateSDCData		GenerateSDCData;
+	CSDCMLCEncoder			SDCMLCEncoder;
+	COFDMCellMapping		OFDMCellMapping;
+	COFDMModulation			OFDMModulation;
+	CTransmitData			TransmitData(&SoundOutInterface);
+
+
+	/* Set thread priority (the working thread should have a higher priority than the GUI) */
+#ifdef _WIN32
+	if(GetEnableProcessPriority())
+		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+#endif
+
+	/* Initialization of the modules */
+
+	/* Has to be set in OFDM modulation and transmitter filter module */
+	OFDMModulation.SetCarOffset(rCarOffset);
+	TransmitData.SetCarOffset(rCarOffset);
+
+	/* Defines number of cells, important! */
+	OFDMCellMapping.Init(TransmParam, CarMapBuf);
+
+	/* Defines number of SDC bits per super-frame */
+	SDCMLCEncoder.Init(TransmParam, SDCMapBuf);
+
+	MSCMLCEncoder.Init(TransmParam, MLCEncBuf);
+	SymbInterleaver.Init(TransmParam, IntlBuf);
+	GenerateFACData.Init(TransmParam, GenFACDataBuf);
+	FACMLCEncoder.Init(TransmParam, FACMapBuf);
+	GenerateSDCData.Init(TransmParam, GenSDCDataBuf);
+	OFDMModulation.Init(TransmParam, OFDMModBuf);
+
+	AudioSourceEncoder.ClearTextMessages();
+	int i;
+	for(i=0; i<vecstrTexts.size(); i++)
+		AudioSourceEncoder.AddTextMessage(vecstrTexts[i]);
+	AudioSourceEncoder.ClearPics();
+	for(i=0; i<vecstrPics.size(); i++)
+		AudioSourceEncoder.AddPic(vecstrPics[i], vecstrPicTypes[i]);
+	AudioSourceEncoder.Init(TransmParam, AudSrcBuf);
+	pAudioSourceEncoder = &AudioSourceEncoder;
+
+	if(strInputFileName != "")
+		ReadData.SetReadFromFile(strInputFileName);
+	ReadData.Init(TransmParam, DataBuf);
+	pReadData = &ReadData;
+
+	if(strOutputFileName != "")
+		TransmitData.SetWriteToFile(strOutputFileName, strOutputFileType);
+	TransmitData.Init(TransmParam);
+
+
+
+	/* Set run flag */
+	TransmParam.bRunThread = TRUE;
+
+	try
+	{
+/*
+	The hand over of data is done via an intermediate-buffer. The calling
+	convention is always "input-buffer, output-buffer". Additional, the
+	DRM-parameters are fed to the function
+*/
+		while (TransmParam.bRunThread)
+		{
+			/* MSC *************************************************************** */
+			/* Read the source signal */
+			ReadData.ReadData(TransmParam, DataBuf);
+
+			/* Audio source encoder */
+			AudioSourceEncoder.ProcessData(TransmParam, DataBuf, AudSrcBuf);
+
+			/* MLC-encoder */
+			MSCMLCEncoder.ProcessData(TransmParam, AudSrcBuf, MLCEncBuf);
+
+			/* Convolutional interleaver */
+			SymbInterleaver.ProcessData(TransmParam, MLCEncBuf, IntlBuf);
+
+			/* FAC *************************************************************** */
+			GenerateFACData.ReadData(TransmParam, GenFACDataBuf);
+			FACMLCEncoder.ProcessData(TransmParam, GenFACDataBuf, FACMapBuf);
+
+			/* SDC *************************************************************** */
+			GenerateSDCData.ReadData(TransmParam, GenSDCDataBuf);
+			SDCMLCEncoder.ProcessData(TransmParam, GenSDCDataBuf, SDCMapBuf);
+
+			/* Mapping of the MSC, FAC, SDC and pilots on the carriers *********** */
+			OFDMCellMapping.ProcessData(TransmParam, IntlBuf, FACMapBuf,
+										SDCMapBuf, CarMapBuf);
+
+			/* OFDM-modulation *************************************************** */
+			OFDMModulation.ProcessData(TransmParam, CarMapBuf, OFDMModBuf);
+
+			/* Transmit the signal *********************************************** */
+			TransmitData.WriteData(TransmParam, OFDMModBuf);
+		}
+		ReadData.Stop();
+		TransmitData.Stop();
+		pReadData = NULL;
+		pAudioSourceEncoder = NULL;
+	}
+
+	catch(CGenErr GenErr)
+	{
+		ErrorMessage(GenErr.strError);
 	}
 }

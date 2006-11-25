@@ -97,7 +97,7 @@ try
  		tx_settings["outfmt"]="wav";
  		Settings.GetTransmitterSettings(tx_settings);
 		if(tx_settings.find("fileout") != tx_settings.end())
- 			MainDlg.GetTx()->GetTransData()->SetWriteToFile(tx_settings["fileout"], tx_settings["outfmt"]);
+ 			MainDlg.GetTx()->SetWriteToFile(tx_settings["fileout"], tx_settings["outfmt"]);
 
 		/* Set main window */
 		app.setMainWidget(&MainDlg);

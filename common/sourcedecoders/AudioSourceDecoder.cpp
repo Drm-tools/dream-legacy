@@ -6,7 +6,7 @@
  *	Volker Fischer
  *
  * Description:
- *	Audio source encoder/decoder
+ *	Audio source decoder
  *
  ******************************************************************************
  *
@@ -29,379 +29,89 @@
 #include "AudioSourceDecoder.h"
 #include <iostream>
 
-/* Implementation *************************************************************/
-/******************************************************************************\
-* Encoder                                                                      *
-\******************************************************************************/
-void CAudioSourceEncoder::ProcessDataInternal(CParameter& TransmParam)
-{
-	int i, j;
 
-	/* Reset data to zero. This is important since usually not all data is used
-	   and this data has to be set to zero as defined in the DRM standard */
-	for (i = 0; i < iOutputBlockSize; i++)
-		(*pvecOutputData)[i] = 0;
+/* Definitions ****************************************************************/
+
+// TEST -> for now only use CRC calculation
+#define USE_CELP_DECODER
 
 
-#ifdef USE_FAAC_LIBRARY
-	if (bIsDataService == FALSE)
-	{
-		/* AAC encoder ------------------------------------------------------ */
-		/* Resample data to encoder bit-rate */
-		/* Change type of data (short -> real), take left channel! */
-		for (i = 0; i < iInputBlockSize / 2; i++)
-			vecTempResBufIn[i] = (*pvecInputData)[i * 2];
 
-		/* Resample data */
-		ResampleObj.Resample(vecTempResBufIn, vecTempResBufOut);
+/* Elements of table for UEP parameters for CELP:
+   - CELP bit rate index
+   - Bit rate (bits / s)
+   - Audio frame length (ms)
+   - Higher protected part (bits/audio frame)
+   - Lower protected part (bits/audio frame)
+   - Higher protected part (bytes/audio super frame)
+   - Lower protected part (bytes/audio super frame)
+   - Audio super frame length (bytes) */
+/* 8 kHz sampling rate */
+#define LEN_CELP_8KHZ_UEP_PARAMS_TAB			27
+const int iTableCELP8kHzUEPParams[LEN_CELP_8KHZ_UEP_PARAMS_TAB][8] = {
+	{ 3850, 40, 36, 118,  45, 148, 193},
+	{ 4250, 40, 36, 134,  45, 168, 213},
+	{ 4650, 40, 36, 150,  45, 188, 233},
+	{ 5700, 20, 24,  90,  60, 225, 285},
+	{ 6000, 20, 24,  96,  60, 240, 300},
+	{ 6300, 20, 24, 102,  60, 255, 315},
+	{ 6600, 20, 24, 108,  60, 270, 330},
+	{ 6900, 20, 24, 114,  60, 285, 345},
+	{ 7100, 20, 24, 118,  60, 295, 355},
+	{ 7300, 20, 24, 122,  60, 305, 365},
+	{ 7700, 20, 36, 118,  90, 295, 385},
+	{ 8300, 20, 36, 130,  90, 325, 415},
+	{ 8700, 20, 36, 138,  90, 345, 435},
+	{ 9100, 20, 36, 146,  90, 365, 455},
+	{ 9500, 20, 36, 154,  90, 385, 475},
+	{ 9900, 20, 36, 162,  90, 405, 495},
+	{10300, 20, 36, 170,  90, 425, 515},
+	{10500, 20, 36, 174,  90, 435, 525},
+	{10700, 20, 36, 178,  90, 445, 535},
+	{11000, 10, 24,  86, 120, 430, 550},
+	{11400, 10, 24,  90, 120, 450, 570},
+	{11800, 10, 24,  94, 120, 470, 590},
+	{12000, 10, 24,  96, 120, 480, 600},
+	{12200, 10, 24,  98, 120, 490, 610}
+};
 
-		/* Split data in individual audio blocks */
-		for (j = 0; j < iNumAACFrames; j++)
-		{
-			/* Convert _REAL type to _SAMPLE type, copy in smaller buffer */
-			for (i = 0; i < lNumSampEncIn; i++)
-			{
-				vecsEncInData[i] =
-					Real2Sample(vecTempResBufOut[j * lNumSampEncIn + i]);
-			}
+/* 16 kHz sampling rate */
+#define LEN_CELP_16KHZ_UEP_PARAMS_TAB			32
+const int iTableCELP16kHzUEPParams[LEN_CELP_16KHZ_UEP_PARAMS_TAB][8] = {
+	{10900, 20, 64, 154, 160, 385, 545},
+	{11500, 20, 64, 166, 160, 415, 575},
+	{12100, 20, 64, 178, 160, 445, 605},
+	{12700, 20, 64, 190, 160, 475, 635},
+	{13300, 20, 64, 202, 160, 505, 665},
+	{13900, 20, 64, 214, 160, 535, 695},
+	{14300, 20, 64, 222, 160, 555, 715},
+	{14700, 20, 92, 202, 230, 505, 735},
+	{15900, 20, 92, 226, 230, 565, 795},
+	{17100, 20, 92, 250, 230, 625, 855},
+	{17900, 20, 92, 266, 230, 665, 895},
+	{18700, 20, 92, 282, 230, 705, 935},
+	{19500, 20, 92, 298, 230, 745, 975},
+	{20300, 20, 92, 314, 230, 785, 1015},
+	{21100, 20, 92, 330, 230, 825, 1055},
+	{13600, 10, 50,  86, 250, 430, 680},
+	{14200, 10, 50,  92, 250, 460, 710},
+	{14800, 10, 50,  98, 250, 490, 740},
+	{15400, 10, 50, 104, 250, 520, 770},
+	{16000, 10, 50, 110, 250, 550, 800},
+	{16600, 10, 50, 116, 250, 580, 830},
+	{17000, 10, 50, 120, 250, 600, 850},
+	{17400, 10, 64, 110, 320, 550, 870},
+	{18600, 10, 64, 122, 320, 610, 930},
+	{19800, 10, 64, 134, 320, 670, 990},
+	{20600, 10, 64, 142, 320, 710, 1030},
+	{21400, 10, 64, 150, 320, 750, 1070},
+	{22200, 10, 64, 158, 320, 790, 1110},
+	{23000, 10, 64, 166, 320, 830, 1150},
+	{23800, 10, 64, 174, 320, 870, 1190}
+};
 
-			/* Actual AAC encoding */
-			CVector<unsigned char> vecsTmpData(lMaxBytesEncOut);
-			int bytesEncoded = faacEncEncode(hEncoder,
-				(int32_t*) &vecsEncInData[0], lNumSampEncIn, &vecsTmpData[0],
-				lMaxBytesEncOut);
+/* Implementation ****************************************************************/
 
-			if (bytesEncoded > 0)
-			{
-				/* Extract CRC */
-				aac_crc_bits[j] = vecsTmpData[0];
-
-				/* Extract actual data */
-				for (i = 0; i < bytesEncoded - 1 /* "-1" for CRC */; i++)
-					audio_frame[j][i] = vecsTmpData[i + 1];
-
-				/* Store block lengths for boarders in AAC super-frame-header */
-				veciFrameLength[j] = bytesEncoded - 1;
-			}
-			else
-			{
-				/* Encoder is in initialization phase, reset CRC and length */
-				aac_crc_bits[j] = 0;
-				veciFrameLength[j] = 0;
-			}
-		}
-
-		/* Write data to output vector */
-		/* First init buffer with zeros */
-		for (i = 0; i < iOutputBlockSize; i++)
-			(*pvecOutputData)[i] = 0;
-
-		/* Reset bit extraction access */
-		(*pvecOutputData).ResetBitAccess();
-
-		/* AAC super-frame-header */
-		int iAccFrameLength = 0;
-		for (j = 0; j < iNumAACFrames - 1; j++)
-		{
-			iAccFrameLength += veciFrameLength[j];
-
-			/* Frame border in bytes (12 bits) */
-			(*pvecOutputData).Enqueue(iAccFrameLength, 12);
-		}
-
-		/* Byte-alignment (4 bits) in case of 10 audio frames */
-		if (iNumAACFrames == 10)
-			(*pvecOutputData).Enqueue(0, 4);
-
-		/* Higher protected part */
-		int iCurNumBytes = 0;
-		for (j = 0; j < iNumAACFrames; j++)
-		{
-			/* Data */
-			for (i = 0; i < iNumHigherProtectedBytes; i++)
-			{
-				/* Check if enough data is available, set data to 0 if not */
-				if (i < veciFrameLength[j])
-					(*pvecOutputData).Enqueue(audio_frame[j][i], 8);
-				else
-					(*pvecOutputData).Enqueue(0, 8);
-
-				iCurNumBytes++;
-			}
-
-			/* CRCs */
-			(*pvecOutputData).Enqueue(aac_crc_bits[j], 8);
-		}
-
-		/* Lower protected part */
-		for (j = 0; j < iNumAACFrames; j++)
-		{
-			for (i = iNumHigherProtectedBytes; i < veciFrameLength[j]; i++)
-			{
-				/* If encoder produced too many bits, we have to drop them */
-				if (iCurNumBytes < iAudioPayloadLen)
-					(*pvecOutputData).Enqueue(audio_frame[j][i], 8);
-
-				iCurNumBytes++;
-			}
-		}
-
-#ifdef _DEBUG_
-/* Save number of bits actually used by audio encoder */
-static FILE* pFile = fopen("test/audbits.dat", "w");
-fprintf(pFile, "%d %d\n", iAudioPayloadLen, iCurNumBytes);
-fflush(pFile);
-#endif
-	}
-#endif
-
-
-	/* Data service and text message application ---------------------------- */
-	if (bIsDataService == TRUE)
-	{
-// TODO: make a separate modul for data encoding
-		/* Write data packets in stream */
-		CVector<_BINARY> vecbiData;
-		const int iNumPack = iOutputBlockSize / iTotPacketSize;
-		int iPos = 0;
-
-		for (int j = 0; j < iNumPack; j++)
-		{
-			/* Get new packet */
-			DataEncoder.GeneratePacket(vecbiData);
-
-			/* Put it on stream */
-			for (i = 0; i < iTotPacketSize; i++)
-			{
-				(*pvecOutputData)[iPos] = vecbiData[i];
-				iPos++;
-			}
-		}
-	}
-	else
-	{
-		/* Text message application. Last four bytes in stream are written */
-		if (bUsingTextMessage == TRUE)
-		{
-			/* Always four bytes for text message "piece" */
-			CVector<_BINARY> vecbiTextMessBuf(
-				SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
-
-			/* Get a "piece" */
-			TextMessage.Encode(vecbiTextMessBuf);
-
-			/* Calculate start point for text message */
-			const int iByteStartTextMess = iTotNumBitsForUsage - SIZEOF__BYTE *
-				NUM_BYTES_TEXT_MESS_IN_AUD_STR;
-
-			/* Add text message bytes to output stream */
-			for (i = iByteStartTextMess; i < iTotNumBitsForUsage; i++)
-				(*pvecOutputData)[i] = vecbiTextMessBuf[i -	iByteStartTextMess];
-		}
-	}
-}
-
-void CAudioSourceEncoder::InitInternal(CParameter& TransmParam)
-{
-	int iCurStreamID;
-
-int iCurSelServ = 0; // TEST
-
-	/* Calculate number of input samples in mono. Audio block are always
-	   400 ms long */
-	const int iNumInSamplesMono = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
-		(_REAL) 0.4 /* 400 ms */);
-
-	/* Set the total available number of bits, byte aligned */
-	iTotNumBitsForUsage =
-		(TransmParam.iNumDecodedBitsMSC / SIZEOF__BYTE) * SIZEOF__BYTE;
-
-	/* Total number of bytes which can be used for data and audio */
-	const int iTotNumBytesForUsage = iTotNumBitsForUsage / SIZEOF__BYTE;
-
-	if (TransmParam.iNumDataService == 1)
-	{
-		/* Data service ----------------------------------------------------- */
-		bIsDataService = TRUE;
-		iTotPacketSize = DataEncoder.Init(TransmParam);
-
-		/* Get stream ID for data service */
-		iCurStreamID = TransmParam.Service[iCurSelServ].DataParam.iStreamID;
-	}
-	else
-	{
-		/* Audio service ---------------------------------------------------- */
-		bIsDataService = FALSE;
-
-		/* Get stream ID for audio service */
-		iCurStreamID = TransmParam.Service[iCurSelServ].AudioParam.iStreamID;
-
-#ifdef USE_FAAC_LIBRARY
-		/* Total frame size is input block size minus the bytes for the text
-		   message (if text message is used) */
-		int iTotAudFraSizeBits = iTotNumBitsForUsage;
-		if (bUsingTextMessage == TRUE)
-			iTotAudFraSizeBits -= SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
-
-		/* Set encoder sample rate. This parameter decides other parameters */
-// TEST make threshold decision TODO: improvement
-if (iTotAudFraSizeBits > 7000) /* in bits! */
-	lEncSamprate = 24000;
-else
-	lEncSamprate = 12000;
-
-		int iTimeEachAudBloMS;
-		int	iNumHeaderBytes;
-
-		switch (lEncSamprate)
-		{
-		case 12000:
-			iTimeEachAudBloMS = 80; /* ms */
-			iNumAACFrames = 5;
-			iNumHeaderBytes = 6;
-			TransmParam.Service[iCurSelServ].AudioParam.eAudioSamplRate =
-				CParameter::AS_12KHZ; /* Set parameter in global struct */
-			break;
-
-		case 24000:
-			iTimeEachAudBloMS = 40; /* ms */
-			iNumAACFrames = 10;
-			iNumHeaderBytes = 14;
-			TransmParam.Service[iCurSelServ].AudioParam.eAudioSamplRate =
-				CParameter::AS_24KHZ; /* Set parameter in global struct */
-			break;
-		}
-
-		/* The audio_payload_length is derived from the length of the audio
-		   super frame (data_length_of_part_A + data_length_of_part_B)
-		   subtracting the audio super frame overhead (bytes used for the audio
-		   super frame header() and for the aac_crc_bits) (5.3.1.1, Table 5) */
-		iAudioPayloadLen = iTotAudFraSizeBits / SIZEOF__BYTE -
-			iNumHeaderBytes - iNumAACFrames /* for CRCs */;
-
-		const int iActEncOutBytes = (int) (iAudioPayloadLen / iNumAACFrames);
-
-		/* Set to mono */
-		TransmParam.Service[iCurSelServ].AudioParam.eAudioMode =
-			CParameter::AM_MONO;
-
-		/* Open encoder instance */
-		if (hEncoder != NULL)
-			faacEncClose(hEncoder);
-
-		hEncoder = faacEncOpen(lEncSamprate, 1 /* mono */,
-			&lNumSampEncIn, &lMaxBytesEncOut);
-
-// TEST needed since 960 transform length is not yet implemented in faac!
-int iBitRate;
-if (lNumSampEncIn == 1024)
-{
-	iBitRate = (int) (((_REAL) iActEncOutBytes * SIZEOF__BYTE * 960.0 / 1024.0) /
-		iTimeEachAudBloMS * 1000);
-}
-else
-{
-	iBitRate = (int) (((_REAL) iActEncOutBytes * SIZEOF__BYTE) /
-		iTimeEachAudBloMS * 1000);
-}
-
-		/* Set encoder configuration */
-		CurEncFormat = faacEncGetCurrentConfiguration(hEncoder);
-		CurEncFormat->inputFormat = FAAC_INPUT_16BIT;
-		CurEncFormat->useTns = 1;
-		CurEncFormat->aacObjectType = LOW;
-		CurEncFormat->mpegVersion = MPEG4;
-		CurEncFormat->outputFormat = 0; /* (0 = Raw; 1 = ADTS -> Raw) */
-		CurEncFormat->bitRate = iBitRate;
-		CurEncFormat->bandWidth = 0; /* Let the encoder choose the bandwidth */
-		faacEncSetConfiguration(hEncoder, CurEncFormat);
-
-		/* Init storage for actual data, CRCs and frame lengths */
-		audio_frame.Init(iNumAACFrames, lMaxBytesEncOut);
-		vecsEncInData.Init(lNumSampEncIn);
-		aac_crc_bits.Init(iNumAACFrames);
-		veciFrameLength.Init(iNumAACFrames);
-
-		/* Additional buffers needed for resampling since we need conversation
-		   between _SAMPLE and _REAL */
-		vecTempResBufIn.Init(iNumInSamplesMono);
-		vecTempResBufOut.Init(lNumSampEncIn * iNumAACFrames, (_REAL) 0.0);
-
-		/* Init resample objects */
-// TEST needed since 960 transform length is not yet implemented in faac!
-if (lNumSampEncIn == 1024)
-{
-	ResampleObj.Init(iNumInSamplesMono,
-		(_REAL) lEncSamprate / SOUNDCRD_SAMPLE_RATE * 1024.0 / 960.0);
-}
-else
-{
-	ResampleObj.Init(iNumInSamplesMono,
-		(_REAL) lEncSamprate / SOUNDCRD_SAMPLE_RATE);
-}
-
-		/* Calculate number of bytes for higher protected blocks */
-		iNumHigherProtectedBytes =
-			(TransmParam.Stream[iCurStreamID].iLenPartA
-			- iNumHeaderBytes - iNumAACFrames /* CRC bytes */) / iNumAACFrames;
-
-		if (iNumHigherProtectedBytes < 0)
-			iNumHigherProtectedBytes = 0;
-#endif
-	}
-
-	/* Adjust part B length for SDC stream. Notice, that the
-	   "TransmParam.iNumDecodedBitsMSC" paramter depends on these settings.
-	   Thus, lenght part A and B have to be set before, preferably in the
-	   DRMTransmitter initialization */
-	if ((TransmParam.Stream[iCurStreamID].iLenPartA == 0) ||
-		(iTotNumBytesForUsage < TransmParam.Stream[iCurStreamID].iLenPartA))
-	{
-		/* Equal error protection was chosen or protection part A was chosen too
-		   high, set to equal error protection! */
-		TransmParam.Stream[iCurStreamID].iLenPartA = 0;
-		TransmParam.Stream[iCurStreamID].iLenPartB = iTotNumBytesForUsage;
-	}
-	else
-		TransmParam.Stream[iCurStreamID].iLenPartB = iTotNumBytesForUsage -
-			TransmParam.Stream[iCurStreamID].iLenPartA;
-
-	/* Define input and output block size */
-	iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
-	iInputBlockSize = iNumInSamplesMono * 2 /* stereo */;
-}
-
-void CAudioSourceEncoder::SetTextMessage(const string& strText)
-{
-	/* Set text message in text message object */
-	TextMessage.SetMessage(strText);
-
-	/* Set text message flag */
-	bUsingTextMessage = TRUE;
-}
-
-void CAudioSourceEncoder::ClearTextMessage()
-{
-	/* Clear all text segments */
-	TextMessage.ClearAllText();
-
-	/* Clear text message flag */
-	bUsingTextMessage = FALSE;
-}
-
-CAudioSourceEncoder::~CAudioSourceEncoder()
-{
-#ifdef USE_FAAC_LIBRARY
-	/* Close encoder instance afterwards */
-	if (hEncoder != NULL)
-		faacEncClose(hEncoder);
-#endif
-}
-
-
-/******************************************************************************\
-* Decoder                                                                      *
-\******************************************************************************/
 void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int					i, j;
@@ -1290,3 +1000,4 @@ CAudioSourceDecoder::~CAudioSourceDecoder()
 	NeAACDecClose(HandleAACDecoder);
 #endif
 }
+

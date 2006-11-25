@@ -29,17 +29,10 @@
 #if !defined(DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
 #define DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
-#include <iostream>
-#include "util/Buffer.h"
 #include "Parameter.h"
 #include "DataIO.h"
-#include "mlc/MLC.h"
-#include "interleaver/SymbolInterleaver.h"
-#include "ofdmcellmapping/OFDMCellMapping.h"
-#include "OFDM.h"
 #include "DRMSignalIO.h"
-#include "sourcedecoders/AudioSourceDecoder.h"
-
+#include "sourcedecoders/AudioSourceEncoderInterface.h"
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
 #else
@@ -58,9 +51,6 @@ public:
 							CDRMTransmitter();
 	virtual 				~CDRMTransmitter() {}
 
-	void					Init();
-	void					Start();
-	void					Stop();
 #ifdef USE_QT_GUI
 	void					run();
 #else
@@ -68,86 +58,55 @@ public:
 	int						wait(int) {return 1;}
 	bool					finished(){return true;}
 #endif
-#ifdef _WIN32
-	void SetEnableProcessPriority(_BOOLEAN bValue)
-		{bProcessPriorityEnabled = bValue;}
+	void					Stop();
 
-	_BOOLEAN GetEnableProcessPriority()
-		{return bProcessPriorityEnabled;}
-#endif
+	void					SetEnableProcessPriority(_BOOLEAN bValue)
+								{bProcessPriorityEnabled = bValue;}
+	_BOOLEAN				GetEnableProcessPriority()
+								{return bProcessPriorityEnabled;}
 
 	_REAL 					GetLevelMeter();
 	void 					SetReadFromFile(const string& strNFN);
 	void					SetWriteToFile(const string& strNFN, const string& strType);
 
-	/* CAudioSourceEncoderInterface */
-	void SetTextMessage(const string& strText) { AudioSourceEncoder.SetTextMessage(strText); }
-	void ClearTextMessage() { AudioSourceEncoder.ClearTextMessage(); }
-	void SetPicFileName(const string& strFileName, const string& strFormat)
-		{ AudioSourceEncoder.SetPicFileName(strFileName, strFormat); }
-	void ClearPicFileNames() { AudioSourceEncoder.ClearPicFileNames(); }
-	_BOOLEAN GetTransStat(string& strCPi, _REAL& rCPe)
-		{ return AudioSourceEncoder.GetTransStat(strCPi, rCPe); }
+	/* Source Encoder Interface */
+	void					AddTextMessage(const string& strText);
+	void					ClearTextMessages();
+	void					AddPic(const string& strFileName, const string& strFormat);
+	void					ClearPics();
+	_BOOLEAN				GetTransStat(string& strCPi, _REAL& rCPe);
 
-	/* Get pointer to internal modules */
-	CTransmitData*			GetTransData() {return &TransmitData;}
-	CSoundInterface*		GetSoundInInterface() {return &SoundInInterface;}
-	CSoundInterface*		GetSoundOutInterface() {return &SoundOutInterface;}
-	CParameter*				GetParameters() {return &TransmParam;}
+	void					SetIQOutput(const CTransmitData::EOutFormat eFormat)
+								{eOutputFormat = eFormat;}
+	CTransmitData::EOutFormat	GetIQOutput() {return eOutputFormat;}
+	void					SetCarOffset(const _REAL rNewCarOffset)
+								{ rCarOffset = rNewCarOffset; }
+	_REAL					GetCarOffset() {return rCarOffset;}
 
-
-	void SetCarOffset(const _REAL rNewCarOffset)
-	{
-		/* Has to be set in OFDM modulation and transmitter filter module */
-		OFDMModulation.SetCarOffset(rNewCarOffset);
-		TransmitData.SetCarOffset(rNewCarOffset);
-		rDefCarOffset = rNewCarOffset;
-	}
-	_REAL GetCarOffset() {return rDefCarOffset;}
-
-protected:
+	CSoundIn*				GetSoundInInterface() {return &SoundInInterface;}
+	CSoundOut*				GetSoundOutInterface() {return &SoundOutInterface;}
 
 	/* Parameters */
 	CParameter				TransmParam;
-	
-	/* Buffers */
-	CSingleBuffer<_SAMPLE>	DataBuf;
-	CSingleBuffer<_BINARY>	AudSrcBuf;
 
-	CSingleBuffer<_COMPLEX>	MLCEncBuf;
-	CCyclicBuffer<_COMPLEX>	IntlBuf;
+protected:
 
-	CSingleBuffer<_BINARY>	GenFACDataBuf;
-	CCyclicBuffer<_COMPLEX>	FACMapBuf;
+	/* TODO - add these to CParameter */
+	_REAL					rCarOffset;
+	enum CTransmitData::EOutFormat eOutputFormat;
 
-	CSingleBuffer<_BINARY>	GenSDCDataBuf;
-	CCyclicBuffer<_COMPLEX>	SDCMapBuf;
-	
-	CSingleBuffer<_COMPLEX>	CarMapBuf;
-	CSingleBuffer<_COMPLEX>	OFDMModBuf;
-
-	/* Modules */
-	CReadData				ReadData;
-	CAudioSourceEncoder		AudioSourceEncoder;
-	CMSCMLCEncoder			MSCMLCEncoder;
-	CSymbInterleaver		SymbInterleaver;
-	CGenerateFACData		GenerateFACData;
-	CFACMLCEncoder			FACMLCEncoder;
-	CGenerateSDCData		GenerateSDCData;
-	CSDCMLCEncoder			SDCMLCEncoder;
-	COFDMCellMapping		OFDMCellMapping;
-	COFDMModulation			OFDMModulation;
-	CTransmitData			TransmitData;
-
+	_BOOLEAN				bProcessPriorityEnabled;
+	CReadData*				pReadData;
+	CAudioSourceEncoderInterface* pAudioSourceEncoder;
+	string					strInputFileName;
+	string					strOutputFileName;
+	string					strOutputFileType;
+	vector<string>			vecstrTexts;
+	vector<string>			vecstrPics;
+	vector<string>			vecstrPicTypes;
+	/* TODO not wanted if files or MDI used */
 	CSoundIn				SoundInInterface;
 	CSoundOut				SoundOutInterface;
-
-	_REAL					rDefCarOffset;
-#ifdef _WIN32
-	_BOOLEAN				bProcessPriorityEnabled;
-#endif
-	_BOOLEAN				bWriteToFile;
-	_BOOLEAN				bReadFromFile;
 };
 
 

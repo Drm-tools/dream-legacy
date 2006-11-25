@@ -65,6 +65,7 @@ drmwithoutqt_SOURCES = \
 	../common/ofdmcellmapping/OFDMCellMapping.cpp \
 	../common/resample/Resample.cpp \
 	../common/sourcedecoders/AudioSourceDecoder.cpp \
+	../common/sourcedecoders/AudioSourceEncoder.cpp \
 	../common/sync/FreqSyncAcq.cpp \
 	../common/sync/TimeSync.cpp \
 	../common/sync/SyncUsingPil.cpp \
@@ -142,7 +143,10 @@ drmwithoutqt_SOURCES = \
 	../common/ofdmcellmapping/OFDMCellMapping.h \
 	../common/resample/Resample.h \
 	../common/resample/ResampleFilter.h \
+	../common/sourcedecoders/AudioSourceDecoderInterface.h \
 	../common/sourcedecoders/AudioSourceDecoder.h \
+	../common/sourcedecoders/AudioSourceEncoder.h \
+	../common/sourcedecoders/AudioSourceEncoderInterface.h \
 	../common/sync/FreqSyncAcq.h \
 	../common/sync/SyncUsingPil.h \
 	../common/sync/TimeSync.h \
