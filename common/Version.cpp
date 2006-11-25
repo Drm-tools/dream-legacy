@@ -27,4 +27,4 @@
 \******************************************************************************/
 #include "Version.h"
 
-char dream_version[] = "1.7testing.1";
+char dream_version[] = "1.7testing.2";

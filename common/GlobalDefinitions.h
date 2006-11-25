@@ -66,8 +66,11 @@ using namespace std; /* Because of the library: "complex" */
 //# define HAVE_LIBWTAP
 # undef HAVE_LIBWTAP
 
-# define HAVE_LIBPCAP
-//# undef HAVE_LIBPCAP
+//# define HAVE_LIBPCAP
+# undef HAVE_LIBPCAP
+
+//# define HAVE_LIBSNDFILE
+# undef HAVE_LIBSNDFILE
 
 # define HAVE_LIBHAMLIB
 //# undef HAVE_LIBHAMLIB
@@ -80,8 +83,8 @@ using namespace std; /* Because of the library: "complex" */
 #  include <qglobal.h>
 # endif
 # if defined(QT_VERSION) && QT_VERSION < 0x030000
-//#  define HAVE_LIBFREEIMAGE
-#  undef HAVE_LIBFREEIMAGE
+#  define HAVE_LIBFREEIMAGE
+//#  undef HAVE_LIBFREEIMAGE
 //#  define HAVE_ZLIB_LIBRARY
 #  undef HAVE_ZLIB_LIBRARY
 # else
@@ -89,7 +92,6 @@ using namespace std; /* Because of the library: "complex" */
 #  undef HAVE_LIBFREEIMAGE
 #  define HAVE_ZLIB_LIBRARY
 //# undef HAVE_ZLIB_LIBRARY
-//#  define HAVE_LIBSNDFILE
 # endif
 
 #endif

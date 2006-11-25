@@ -4,7 +4,7 @@
  *
  * Author(s):
  *	Volker Fischer
- *
+ * 
  * Description:
  *
  ******************************************************************************
@@ -422,10 +422,17 @@ CHamlib::CHamlib() : pRig(NULL), bModRigSettings(FALSE) ,iHamlibModelID(0),
 #endif
 
 #ifdef RIG_MODEL_G303
-	/* Winradio G3 */
+	/* Winradio G3 */ 
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G303,
 		"l_ATT=0,l_AGC=3", 0,
 		"l_ATT=0,l_AGC=3"));
+#endif
+
+#ifdef RIG_MODEL_G313
+	/* Winradio G313 */
+	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G313,
+		"l_ATT=0,l_AGC=5", 0,
+		"l_ATT=0,l_AGC=5"));
 #endif
 
 #ifdef RIG_MODEL_AR7030
@@ -683,11 +690,11 @@ try
 
 	/* Ignore result, some rigs don't have support for this */
 	rig_set_powerstat(pRig, RIG_POWER_ON);
-
+	
 	/* Check for special DRM front-end selection */
 	int iIndex;
 	if (CheckForSpecDRMFE(iHamlibModelID, iIndex) == TRUE)
-	{
+	{		
 		/* Get correct parameter string */
 		string strSet;
 		if (bModRigSettings == TRUE)
@@ -703,7 +710,7 @@ try
 		/* Parse special settings */
 		char *p_dup, *p, *q, *n;
 		for (p = p_dup = strdup(strSet.c_str()); p && *p != '\0'; p = n)
-		{
+		{			
 			if ((q = strchr(p, '=')) == NULL)
 			{
 				/* Malformatted config string */
@@ -732,7 +739,7 @@ try
 			}
 			else if (p[0] == 'l' && (setting = rig_parse_level(p + 2)) !=
 				RIG_LEVEL_NONE)
-			{
+			{				
 				if (RIG_LEVEL_IS_FLOAT(setting))
 					val.f = atof(q);
 				else

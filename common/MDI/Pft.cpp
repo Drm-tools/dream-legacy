@@ -36,7 +36,7 @@
 
 CPft::CPft(int isrc, int idst) : iSource(isrc), iDest(idst), mapFragments()
 {
-	cerr << "CPft()" << endl;
+	//cerr << "CPft()" << endl;
 }
 
 bool CPft::DecodePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut)
