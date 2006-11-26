@@ -33,6 +33,16 @@
 
 #include "DABMOT.h"
 #include "../util/Utilities.h"
+#include <algorithm>
+#include <cctype>
+
+struct to_lower {
+  int operator() ( int ch )
+  {
+	    return std::tolower ( ch );
+  }
+};
+
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -67,12 +77,13 @@ if (iFileNameSize > 128)
 
     /* Get ending string which declares the type of the file. Make lowercase */
 
-// The following line is not working for Linux!!!! TODO!
-#ifdef _WIN32
+//  TODO! if transform works on MSVC6 then make code common
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
     const string strFormat =
 	_strlwr (_strdup (NewMOTObject.strFormat.c_str ()));
 #else
-    const string strFormat = NewMOTObject.strFormat;
+    string strFormat = NewMOTObject.strFormat;
+	transform(strFormat.begin(), strFormat.end(), strFormat.begin(), to_lower());
 #endif
 
 

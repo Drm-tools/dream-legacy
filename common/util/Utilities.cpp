@@ -26,13 +26,14 @@
 \******************************************************************************/
 
 #include "Utilities.h"
-
+#include <sstream>
 
 /* Implementation *************************************************************/
 /******************************************************************************\
 * Signal level meter                                                           *
 \******************************************************************************/
-void CSignalLevelMeter::Update(const _REAL rVal)
+void
+CSignalLevelMeter::Update(const _REAL rVal)
 {
 	/* Search for maximum. Decrease this max with time */
 	/* Decrease max with time */
@@ -50,7 +51,8 @@ void CSignalLevelMeter::Update(const _REAL rVal)
 		rCurLevel = rCurAbsVal;
 }
 
-void CSignalLevelMeter::Update(const CVector<_REAL> vecrVal)
+void
+CSignalLevelMeter::Update(const CVector < _REAL > vecrVal)
 {
 	/* Do the update for entire vector */
 	const int iVecSize = vecrVal.Size();
@@ -58,7 +60,8 @@ void CSignalLevelMeter::Update(const CVector<_REAL> vecrVal)
 		Update(vecrVal[i]);
 }
 
-void CSignalLevelMeter::Update(const CVector<_SAMPLE> vecsVal)
+void
+CSignalLevelMeter::Update(const CVector < _SAMPLE > vecsVal)
 {
 	/* Do the update for entire vector, convert to real */
 	const int iVecSize = vecsVal.Size();
@@ -68,39 +71,43 @@ void CSignalLevelMeter::Update(const CVector<_SAMPLE> vecsVal)
 
 _REAL CSignalLevelMeter::Level()
 {
-	const _REAL rNormMicLevel = rCurLevel / _MAXSHORT;
+	const _REAL
+		rNormMicLevel = rCurLevel / _MAXSHORT;
 
 	/* Logarithmic measure */
 	if (rNormMicLevel > 0)
-		return (_REAL) 20.0 * log10(rNormMicLevel);
+		return 20.0 * log10(rNormMicLevel);
 	else
 		return RET_VAL_LOG_0;
 }
 
-
 /******************************************************************************\
 * Bandpass filter                                                              *
 \******************************************************************************/
-void CDRMBandpassFilt::Process(CVector<_COMPLEX>& veccData)
+void
+CDRMBandpassFilt::Process(CVector < _COMPLEX > &veccData)
 {
-	int	i;
+	int i;
 
 	/* Copy CVector data in CMatlibVector */
 	for (i = 0; i < iBlockSize; i++)
 		cvecDataTmp[i] = veccData[i];
 
 	/* Apply FFT filter */
-	cvecDataTmp = CComplexVector(
-		FftFilt(cvecB, Real(cvecDataTmp), rvecZReal, FftPlanBP),
-		FftFilt(cvecB, Imag(cvecDataTmp), rvecZImag, FftPlanBP));
+	cvecDataTmp =
+		CComplexVector(FftFilt
+					   (cvecB, Real(cvecDataTmp), rvecZReal, FftPlanBP),
+					   FftFilt(cvecB, Imag(cvecDataTmp), rvecZImag,
+							   FftPlanBP));
 
 	/* Copy CVector data in CMatlibVector */
 	for (i = 0; i < iBlockSize; i++)
 		veccData[i] = cvecDataTmp[i];
 }
 
-void CDRMBandpassFilt::Init(const int iNewBlockSize, const _REAL rOffsetHz,
-							const ESpecOcc eSpecOcc, const EFiltType eNFiTy)
+void
+CDRMBandpassFilt::Init(const int iNewBlockSize, const _REAL rOffsetHz,
+					   const ESpecOcc eSpecOcc, const EFiltType eNFiTy)
 {
 	CReal rMargin;
 
@@ -114,13 +121,13 @@ void CDRMBandpassFilt::Init(const int iNewBlockSize, const _REAL rOffsetHz,
 	   frequency for different modes. E.g., 5 kHz mode is on the right side
 	   of the DC frequency */
 	CReal rNormCurFreqOffset;
-	CReal rBPFiltBW; /* Band-pass filter bandwidth */
+	CReal rBPFiltBW;			/* Band-pass filter bandwidth */
 
 	/* Negative margin for receiver filter for better interferer rejection */
 	if (eNFiTy == FT_TRANSMITTER)
-		rMargin = (CReal) 300.0; /* Hz */
+		rMargin = (CReal) 300.0;	/* Hz */
 	else
-		rMargin = (CReal) -200.0; /* Hz */
+		rMargin = (CReal) - 200.0;	/* Hz */
 
 	switch (eSpecOcc)
 	{
@@ -202,14 +209,14 @@ void CDRMBandpassFilt::Init(const int iNewBlockSize, const _REAL rOffsetHz,
 	cvecB = rfft(rvecB, FftPlanBP);
 }
 
-
 /******************************************************************************\
 * Modified Julian Date                                                         *
 \******************************************************************************/
-void CModJulDate::Set(const uint32_t iModJulDate)
+void
+CModJulDate::Set(const uint32_t iModJulDate)
 {
-	uint32_t	iZ, iA, iAlpha, iB, iC, iD, iE;
-	_REAL		rJulDate, rF;
+	uint32_t iZ, iA, iAlpha, iB, iC, iD, iE;
+	_REAL rJulDate, rF;
 
 	/* Definition of the Modified Julian Date */
 	rJulDate = (_REAL) iModJulDate + 2400000.5;
@@ -244,7 +251,7 @@ void CModJulDate::Set(const uint32_t iModJulDate)
 
 	// The day of the month dd (with decimals) is:
 	// dd = B - D - INT(30.6001*E) + F
-	iDay = iB - iD - (int) ((_REAL) 30.6001 * iE);// + rF;
+	iDay = iB - iD - (int) ((_REAL) 30.6001 * iE);	// + rF;
 
 	// The month number mm is:
 	// mm = E - 1, if E < 13.5
@@ -265,7 +272,6 @@ void CModJulDate::Set(const uint32_t iModJulDate)
 		iYear = iC - 4715;
 }
 
-
 /******************************************************************************\
 * Audio Reverberation                                                          *
 \******************************************************************************/
@@ -284,7 +290,7 @@ void CModJulDate::Set(const uint32_t iModJulDate)
 CAudioReverb::CAudioReverb(const CReal rT60)
 {
 	/* Delay lengths for 44100 Hz sample rate */
-	int lengths[9] = {1777, 1847, 1993, 2137, 389, 127, 43, 211, 179};
+	int lengths[9] = { 1777, 1847, 1993, 2137, 389, 127, 43, 211, 179 };
 	const CReal scaler = (CReal) SOUNDCRD_SAMPLE_RATE / 44100.0;
 
 	int delay, i;
@@ -332,13 +338,14 @@ _BOOLEAN CAudioReverb::isPrime(const int number)
 				return FALSE;
 		}
 
-		return TRUE; /* prime */
+		return TRUE;			/* prime */
 	}
 	else
-		return FALSE; /* even */
+		return FALSE;			/* even */
 }
 
-void CAudioReverb::Clear()
+void
+CAudioReverb::Clear()
 {
 	/* Reset and clear all internal state */
 	allpassDelays_[0].Reset(0);
@@ -350,25 +357,33 @@ void CAudioReverb::Clear()
 	combDelays_[3].Reset(0);
 }
 
-void CAudioReverb::setT60(const CReal rT60)
+void
+CAudioReverb::setT60(const CReal rT60)
 {
 	/* Set the reverberation T60 decay time */
 	for (int i = 0; i < 4; i++)
 	{
 		combCoefficient_[i] = pow((CReal) 10.0, (CReal) (-3.0 *
-			combDelays_[i].Size() / (rT60 * SOUNDCRD_SAMPLE_RATE)));
+														 combDelays_[i].
+														 Size() / (rT60 *
+																   SOUNDCRD_SAMPLE_RATE)));
 	}
 }
 
 CReal CAudioReverb::ProcessSample(const CReal rLInput, const CReal rRInput)
 {
 	/* Compute one output sample */
-	CReal temp, temp0, temp1, temp2;
+	CReal
+		temp,
+		temp0,
+		temp1,
+		temp2;
 
 	/* Mix stereophonic input signals to mono signal (since the maximum value of
 	   the input signal is 0.5 * max due to the current implementation in
 	   AudioSourceDecoder.cpp, we cannot get an overrun) */
-	const CReal input = rLInput + rRInput;
+	const CReal
+		input = rLInput + rRInput;
 
 	temp = allpassDelays_[0].Get();
 	temp0 = allpassCoefficient_ * temp;
@@ -388,10 +403,14 @@ CReal CAudioReverb::ProcessSample(const CReal rLInput, const CReal rRInput)
 	allpassDelays_[2].Add((int) temp2);
 	temp2 = -(allpassCoefficient_ * temp2) + temp;
 
-	const CReal temp3 = temp2 + (combCoefficient_[0] * combDelays_[0].Get());
-	const CReal temp4 = temp2 + (combCoefficient_[1] * combDelays_[1].Get());
-	const CReal temp5 = temp2 + (combCoefficient_[2] * combDelays_[2].Get());
-	const CReal temp6 = temp2 + (combCoefficient_[3] * combDelays_[3].Get());
+	const CReal
+		temp3 = temp2 + (combCoefficient_[0] * combDelays_[0].Get());
+	const CReal
+		temp4 = temp2 + (combCoefficient_[1] * combDelays_[1].Get());
+	const CReal
+		temp5 = temp2 + (combCoefficient_[2] * combDelays_[2].Get());
+	const CReal
+		temp6 = temp2 + (combCoefficient_[3] * combDelays_[3].Get());
 
 	combDelays_[0].Add((int) temp3);
 	combDelays_[1].Add((int) temp4);
@@ -401,7 +420,6 @@ CReal CAudioReverb::ProcessSample(const CReal rLInput, const CReal rRInput)
 	return temp3 + temp4 + temp5 + temp6;
 }
 
-
 #ifdef HAVE_LIBHAMLIB
 /******************************************************************************\
 * Hamlib interface                                                             *
@@ -410,8 +428,8 @@ CReal CAudioReverb::ProcessSample(const CReal rLInput, const CReal rRInput)
 	This code is based on patches and example code from Tomi Manninen and
 	Stephane Fillod (developer of hamlib)
 */
-CHamlib::CHamlib() : pRig(NULL), bModRigSettings(FALSE) ,iHamlibModelID(0),
-	bSMeterIsSupported(FALSE), strHamlibConf(HAMLIB_CONF_COM1)
+CHamlib::CHamlib():pRig(NULL), bModRigSettings(FALSE), iHamlibModelID(0),
+bSMeterIsSupported(FALSE), strHamlibConf(HAMLIB_CONF_COM1)
 {
 	/* Special DRM front-end list */
 	vecSpecDRMRigs.Init(0);
@@ -422,27 +440,26 @@ CHamlib::CHamlib() : pRig(NULL), bModRigSettings(FALSE) ,iHamlibModelID(0),
 #endif
 
 #ifdef RIG_MODEL_G303
-	/* Winradio G3 */ 
+	/* Winradio G3 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G303,
-		"l_ATT=0,l_AGC=3", 0,
-		"l_ATT=0,l_AGC=3"));
+								   "l_ATT=0,l_AGC=3", 0, "l_ATT=0,l_AGC=3"));
 #endif
 
 #ifdef RIG_MODEL_G313
 	/* Winradio G313 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G313,
-		"l_ATT=0,l_AGC=5", 0,
-		"l_ATT=0,l_AGC=5"));
+								   "l_ATT=0,l_AGC=5", 0, "l_ATT=0,l_AGC=5"));
 #endif
 
 #ifdef RIG_MODEL_AR7030
 	/* AOR 7030 */
-//	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_AR7030,
-//		"m_CW=9500,l_IF=-4200,l_AGC=3", 5 /* kHz frequency offset */,
-//		"l_AGC=3"));
+//  vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_AR7030,
+//      "m_CW=9500,l_IF=-4200,l_AGC=3", 5 /* kHz frequency offset */,
+//      "l_AGC=3"));
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_AR7030,
-		"m_AM=3,l_AGC=5", 0 /* kHz frequency offset */,
-		"m_AM=2,l_AGC=5"));
+								   "m_AM=3,l_AGC=5",
+								   0 /* kHz frequency offset */ ,
+								   "m_AM=2,l_AGC=5"));
 #endif
 
 #ifdef RIG_MODEL_ELEKTOR304
@@ -453,24 +470,24 @@ CHamlib::CHamlib() : pRig(NULL), bModRigSettings(FALSE) ,iHamlibModelID(0),
 #ifdef RIG_MODEL_NRD535
 	/* JRC NRD 535 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_NRD535,
-		"l_CWPITCH=-5000,m_CW=12000,l_IF=-2000,l_AGC=3" /* AGC=slow */,
-		3 /* kHz frequency offset */,
-		"l_AGC=3"));
+								   "l_CWPITCH=-5000,m_CW=12000,l_IF=-2000,l_AGC=3"
+								   /* AGC=slow */ ,
+								   3 /* kHz frequency offset */ ,
+								   "l_AGC=3"));
 #endif
 
 #ifdef RIG_MODEL_RX320
 	/* TenTec RX320D */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX320,
-		"l_AF=1,l_AGC=3,m_AM=6000", 0,
-		"l_AGC=3"));
+								   "l_AF=1,l_AGC=3,m_AM=6000", 0, "l_AGC=3"));
 #endif
 
 #ifdef RIG_MODEL_RX340
 	/* TenTec RX340D */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX340,
-		"l_AF=1,m_USB=16000,l_AGC=3,l_IF=2000",
-		-12 /* kHz frequency offset */,
-		"l_AGC=3"));
+								   "l_AF=1,m_USB=16000,l_AGC=3,l_IF=2000",
+								   -12 /* kHz frequency offset */ ,
+								   "l_AGC=3"));
 #endif
 
 	/* Load all available front-end remotes in hamlib library */
@@ -496,26 +513,29 @@ CHamlib::~CHamlib()
 	}
 }
 
-int CHamlib::PrintHamlibModelList(const struct rig_caps* caps,
-								  void* data)
+int
+CHamlib::PrintHamlibModelList(const struct rig_caps *caps, void *data)
 {
 	/* Access data members of class through pointer ((CHamlib*) data).
 	   Store new model in string vector. Use only relevant information */
 	int iIndex;
-	const _BOOLEAN bSpecRigIdx = ((CHamlib*) data)->
+	const _BOOLEAN bSpecRigIdx = ((CHamlib *) data)->
 		CheckForSpecDRMFE(caps->rig_model, iIndex);
 
-	((CHamlib*) data)->veccapsHamlibModels.Add(
-		SDrRigCaps(caps->rig_model,	caps->mfg_name, caps->model_name,
-		caps->status, bSpecRigIdx));
+	((CHamlib *) data)->veccapsHamlibModels.
+		Add(SDrRigCaps
+			(caps->rig_model, caps->mfg_name, caps->model_name, caps->status,
+			 bSpecRigIdx));
 
-	return 1; /* !=0, we want them all! */
+	return 1;					/* !=0, we want them all! */
 }
 
-_BOOLEAN CHamlib::CheckForSpecDRMFE(const rig_model_t iID, int& iIndex)
+_BOOLEAN CHamlib::CheckForSpecDRMFE(const rig_model_t iID, int &iIndex)
 {
-	_BOOLEAN bIsSpecialDRMrig = FALSE;
-	const int iVecSize = vecSpecDRMRigs.Size();
+	_BOOLEAN
+		bIsSpecialDRMrig = FALSE;
+	const int
+		iVecSize = vecSpecDRMRigs.Size();
 
 	/* Check for special DRM front-end */
 	for (int i = 0; i < iVecSize; i++)
@@ -530,7 +550,8 @@ _BOOLEAN CHamlib::CheckForSpecDRMFE(const rig_model_t iID, int& iIndex)
 	return bIsSpecialDRMrig;
 }
 
-void CHamlib::SortHamlibModelList(CVector<SDrRigCaps>& veccapsHamlMod)
+void
+CHamlib::SortHamlibModelList(CVector < SDrRigCaps > &veccapsHamlMod)
 {
 	/* Loop through the array one less than its total cell count */
 	const int iEnd = veccapsHamlMod.Size() - 1;
@@ -540,8 +561,7 @@ void CHamlib::SortHamlibModelList(CVector<SDrRigCaps>& veccapsHamlMod)
 		for (int j = 0; j < iEnd; j++)
 		{
 			/* Compare the values and switch if necessary */
-			if (veccapsHamlMod[j].iModelID >
-				veccapsHamlMod[j + 1].iModelID)
+			if (veccapsHamlMod[j].iModelID > veccapsHamlMod[j + 1].iModelID)
 			{
 				const SDrRigCaps instSwap = veccapsHamlMod[j];
 				veccapsHamlMod[j] = veccapsHamlMod[j + 1];
@@ -553,7 +573,8 @@ void CHamlib::SortHamlibModelList(CVector<SDrRigCaps>& veccapsHamlMod)
 
 _BOOLEAN CHamlib::SetFrequency(const int iFreqkHz)
 {
-	_BOOLEAN bSucceeded = FALSE;
+	_BOOLEAN
+		bSucceeded = FALSE;
 
 	/* Check if rig was opend properly */
 	if (pRig != NULL)
@@ -570,7 +591,7 @@ _BOOLEAN CHamlib::SetFrequency(const int iFreqkHz)
 	return bSucceeded;
 }
 
-CHamlib::ESMeterState CHamlib::GetSMeter(_REAL& rCurSigStr)
+CHamlib::ESMeterState CHamlib::GetSMeter(_REAL & rCurSigStr)
 {
 	ESMeterState eRetVal = SS_NOTVALID;
 	rCurSigStr = (_REAL) 0.0;
@@ -578,9 +599,10 @@ CHamlib::ESMeterState CHamlib::GetSMeter(_REAL& rCurSigStr)
 	if ((pRig != NULL) && (bSMeterIsSupported == TRUE))
 	{
 		value_t tVal;
-		const int iHamlibRetVal =
+		const int
+			iHamlibRetVal =
 			rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &tVal);
- 
+
 		if (!iHamlibRetVal)
 		{
 			rCurSigStr = (_REAL) tVal.i;
@@ -598,7 +620,8 @@ CHamlib::ESMeterState CHamlib::GetSMeter(_REAL& rCurSigStr)
 	return eRetVal;
 }
 
-void CHamlib::SetEnableModRigSettings(const _BOOLEAN bNSM)
+void
+CHamlib::SetEnableModRigSettings(const _BOOLEAN bNSM)
 {
 	if (bModRigSettings != bNSM)
 	{
@@ -610,7 +633,8 @@ void CHamlib::SetEnableModRigSettings(const _BOOLEAN bNSM)
 	}
 }
 
-void CHamlib::SetHamlibConf(const string strNewC)
+void
+CHamlib::SetHamlibConf(const string strNewC)
 {
 	if (strHamlibConf.compare(strNewC))
 	{
@@ -622,7 +646,8 @@ void CHamlib::SetHamlibConf(const string strNewC)
 	}
 }
 
-void CHamlib::SetHamlibModelID(const int iNewM)
+void
+CHamlib::SetHamlibModelID(const int iNewM)
 {
 	int ret;
 
@@ -632,176 +657,192 @@ void CHamlib::SetHamlibModelID(const int iNewM)
 	/* Init frequency offset */
 	iFreqOffset = 0;
 
-try
-{
-	/* If rig was already open, close it first */
-	if (pRig != NULL)
+	try
 	{
-		/* Close everything */
-		rig_close(pRig);
-		rig_cleanup(pRig);
-	}
-
-	if (iHamlibModelID == 0)
-		throw CGenErr("No rig model ID selected.");
-
-	/* Init rig */
-	pRig = rig_init(iHamlibModelID);
-	if (pRig == NULL)
-		throw CGenErr("Initialization of hamlib failed.");
-
-	/* Config setup */
-	char *p_dup, *p, *q, *n;
-	for (p = p_dup = _strdup(strHamlibConf.c_str()); p && *p != '\0'; p = n)
-	{
-		if ((q = strchr(p, '=')) == NULL)
+		/* If rig was already open, close it first */
+		if (pRig != NULL)
 		{
+			/* Close everything */
+			rig_close(pRig);
+			rig_cleanup(pRig);
+			pRig = NULL;
+		}
+
+		if (iHamlibModelID == 0)
+			throw CGenErr("No rig model ID selected.");
+
+		/* Init rig */
+		pRig = rig_init(iHamlibModelID);
+		if (pRig == NULL)
+			throw CGenErr("Initialization of hamlib failed.");
+
+		/* Config setup */
+		if (strHamlibConf != "")
+		{
+			istringstream params(strHamlibConf);
+			while (!params.eof())
+			{
+				string name, value;
+				getline(params, name, '=');
+				getline(params, value, ',');
+				if (name == "" || value == "")
+				{
+					rig_cleanup(pRig);
+					pRig = NULL;
+
+					throw CGenErr(string("Malformatted config string: ") +
+								  strHamlibConf);
+				}
+				ret =
+					rig_set_conf(pRig, rig_token_lookup(pRig, name.c_str()),
+								 value.c_str());
+				if (ret != RIG_OK)
+				{
+					rig_cleanup(pRig);
+					pRig = NULL;
+
+					throw CGenErr("Rig set conf failed.");
+				}
+			}
+		}
+
+		/* Open rig */
+		if (ret = rig_open(pRig) != RIG_OK)
+		{
+			/* Fail! */
 			rig_cleanup(pRig);
 			pRig = NULL;
 
-			throw CGenErr("Malformatted config string.");
+			throw CGenErr("Rig open failed.");
 		}
-		*q++ = '\0';
 
-		if ((n = strchr(q, ',')) != NULL)
-			*n++ = '\0';
+		/* Ignore result, some rigs don't have support for this */
+		rig_set_powerstat(pRig, RIG_POWER_ON);
 
-		ret = rig_set_conf(pRig, rig_token_lookup(pRig, p), q);
-		if (ret != RIG_OK)
+		/* Check for special DRM front-end selection */
+		int iIndex;
+		if (CheckForSpecDRMFE(iHamlibModelID, iIndex) == TRUE)
 		{
-			rig_cleanup(pRig);
-			pRig = NULL;
-
-			throw CGenErr("Rig set conf failed.");
-		}
-	}
-	if (p_dup)
-		free(p_dup);
-
-	/* Open rig */
-	if (ret = rig_open(pRig) != RIG_OK)
-	{
-		/* Fail! */
-		rig_cleanup(pRig);
-		pRig = NULL;
-
-		throw CGenErr("Rig open failed.");
-	}
-
-	/* Ignore result, some rigs don't have support for this */
-	rig_set_powerstat(pRig, RIG_POWER_ON);
-	
-	/* Check for special DRM front-end selection */
-	int iIndex;
-	if (CheckForSpecDRMFE(iHamlibModelID, iIndex) == TRUE)
-	{		
-		/* Get correct parameter string */
-		string strSet;
-		if (bModRigSettings == TRUE)
-			strSet = vecSpecDRMRigs[iIndex].strDRMSetMod;
-		else
-		{
-			strSet = vecSpecDRMRigs[iIndex].strDRMSetNoMod;
-
-			/* Additionally, set frequency offset for this special rig */
-			iFreqOffset = vecSpecDRMRigs[iIndex].iFreqOffs;
-		}
-
-		/* Parse special settings */
-		char *p_dup, *p, *q, *n;
-		for (p = p_dup = _strdup(strSet.c_str()); p && *p != '\0'; p = n)
-		{			
-			if ((q = strchr(p, '=')) == NULL)
-			{
-				/* Malformatted config string */
-				rig_cleanup(pRig);
-				pRig = NULL;
-
-				throw CGenErr("Malformatted config string.");
-			}
-			*q++ = '\0';
-
-			if ((n = strchr(q, ',')) != NULL)
-				*n++ = '\0';
-
-			rmode_t mode;
-			setting_t setting;
-			value_t val;
-
-			if (p[0] == 'm' && (mode = rig_parse_mode(p + 2)) != RIG_MODE_NONE)
-			{
-				ret = rig_set_mode(pRig, RIG_VFO_CURR, mode, atoi(q));
-				if (ret != RIG_OK)
-				{
-					cerr << "Rig set mode failed: " << rigerror(ret) <<
-					endl;
-				}
-			}
-			else if (p[0] == 'l' && (setting = rig_parse_level(p + 2)) !=
-				RIG_LEVEL_NONE)
-			{				
-				if (RIG_LEVEL_IS_FLOAT(setting))
-					val.f = atof(q);
-				else
-					val.i = atoi(q);
-
-				ret = rig_set_level(pRig, RIG_VFO_CURR, setting, val);
-				if (ret != RIG_OK)
-				{
-					cerr << "Rig set level failed: " << rigerror(ret) <<
-					endl;
-				}
-			}
-			else if (p[0] == 'f' && (setting = rig_parse_func(p + 2)) !=
-				RIG_FUNC_NONE)
-			{
-				ret = rig_set_func(pRig, RIG_VFO_CURR, setting, atoi(q));
-				if (ret != RIG_OK)
-				{
-					cerr << "Rig set func failed: " << rigerror(ret) <<
-					endl;
-				}
-			}
-			else if (p[0] == 'p' && (setting = rig_parse_parm(p + 2)) !=
-				RIG_PARM_NONE)
-			{
-				if (RIG_PARM_IS_FLOAT(setting))
-					val.f = atof(q);
-				else
-					val.i = atoi(q);
-
-				ret = rig_set_parm(pRig, setting, val);
-				if (ret != RIG_OK)
-				{
-					cerr << "Rig set parm failed: " << rigerror(ret) <<
-					endl;
-				}
-			}
+			/* Get correct parameter string */
+			string strSet;
+			if (bModRigSettings == TRUE)
+				strSet = vecSpecDRMRigs[iIndex].strDRMSetMod;
 			else
-				cerr << "Rig unknown setting: " << p << "=" << q << endl;
+			{
+				strSet = vecSpecDRMRigs[iIndex].strDRMSetNoMod;
+
+				/* Additionally, set frequency offset for this special rig */
+				iFreqOffset = vecSpecDRMRigs[iIndex].iFreqOffs;
+			}
+
+			if (strSet != "")
+			{
+				/* Parse special settings */
+				istringstream params(strSet);
+				while (!params.eof())
+				{
+					string p, name, value;
+					rmode_t mode;
+					setting_t setting;
+					value_t val;
+
+					getline(params, p, '_');
+					getline(params, name, '=');
+					getline(params, value, ',');
+					if (p == "" || p.length() != 1 || name == ""
+						|| value == "")
+					{
+						/* Malformatted config string */
+						rig_cleanup(pRig);
+						pRig = NULL;
+
+						throw CGenErr(string("Malformatted config string: ") +
+									  strSet);
+					}
+
+					switch (p[0])
+					{
+					case 'm':
+						mode = rig_parse_mode(name.c_str());
+						if (mode != RIG_MODE_NONE)
+						{
+							ret =
+								rig_set_mode(pRig, RIG_VFO_CURR, mode,
+											 atoi(value.c_str()));
+							if (ret != RIG_OK)
+								cerr << "Rig set mode failed: " <<
+									rigerror(ret) << endl;
+						}
+						break;
+					case 'l':
+						setting = rig_parse_level(name.c_str());
+						if (setting != RIG_LEVEL_NONE)
+						{
+							if (RIG_LEVEL_IS_FLOAT(setting))
+								val.f = atof(value.c_str());
+							else
+								val.i = atoi(value.c_str());
+
+							ret =
+								rig_set_level(pRig, RIG_VFO_CURR, setting,
+											  val);
+							if (ret != RIG_OK)
+								cerr << "Rig set level failed: " <<
+									rigerror(ret) << endl;
+						}
+						break;
+					case 'f':
+						setting = rig_parse_func(name.c_str());
+						if (setting != RIG_FUNC_NONE)
+						{
+							ret =
+								rig_set_func(pRig, RIG_VFO_CURR, setting,
+											 atoi(value.c_str()));
+							if (ret != RIG_OK)
+								cerr << "Rig set func failed: " <<
+									rigerror(ret) << endl;
+						}
+						break;
+					case 'p':
+						setting = rig_parse_parm(name.c_str());
+						if (setting != RIG_PARM_NONE)
+						{
+							if (RIG_PARM_IS_FLOAT(setting))
+								val.f = atof(value.c_str());
+							else
+								val.i = atoi(value.c_str());
+
+							ret = rig_set_parm(pRig, setting, val);
+							if (ret != RIG_OK)
+								cerr << "Rig set parm failed: " <<
+									rigerror(ret) << endl;
+						}
+					default:
+						cerr << "Rig unknown setting: " << p << "_" << name <<
+							"=" << value << endl;
+					}
+				}
+			}
 		}
-		if (p_dup)
-			free(p_dup);
+
+		/* Check if s-meter capabilities are available */
+		if (pRig != NULL)
+		{
+			/* Check if s-meter can be used. Disable GUI control if not */
+			if (rig_has_get_level(pRig, RIG_LEVEL_STRENGTH))
+				bSMeterIsSupported = TRUE;
+			else
+				bSMeterIsSupported = FALSE;
+		}
 	}
 
-	/* Check if s-meter capabilities are available */
-	if (pRig != NULL)
+	catch(CGenErr GenErr)
 	{
-		/* Check if s-meter can be used. Disable GUI control if not */
-		if (rig_has_get_level(pRig, RIG_LEVEL_STRENGTH))
-			bSMeterIsSupported = TRUE;
-		else
-			bSMeterIsSupported = FALSE;
+		/* Print error message */
+		cerr << GenErr.strError << endl;
+
+		/* Disable s-meter */
+		bSMeterIsSupported = FALSE;
 	}
-}
-
-catch (CGenErr GenErr)
-{
-	/* Print error message */
-	cerr << GenErr.strError << endl;
-
-	/* Disable s-meter */
-	bSMeterIsSupported = FALSE;
-}
 }
 #endif
