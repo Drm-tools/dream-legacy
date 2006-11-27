@@ -161,16 +161,13 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 
 void CTransmitData::InitInternal(CParameter& TransmParam)
 {
-	//float*	pCurFilt;
-	//int		iNumTapsTransmFilt;
-	//CReal	rNormCurFreqOffset;
-
 	const int iSymbolBlockSize = TransmParam.iSymbolBlockSize;
 
 	/* Init vector for storing a complete DRM frame number of OFDM symbols */
 	iBlockCnt = 0;
 	iNumBlocks = TransmParam.iNumSymPerFrame;
 	iBigBlockSize = iSymbolBlockSize * 2 /* Stereo */ * iNumBlocks;
+	rDefCarOffset = TransmParam.rCarOffset;
 
 	vecsDataOut.Init(iBigBlockSize);
 

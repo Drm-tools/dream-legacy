@@ -65,9 +65,6 @@
 class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
-	enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
-		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
-
 	enum EFileOutFormat { OFF_RAW, OFF_TXT, OFF_WAV };
 
 	CTransmitData(CSoundOut* pNS) : pFile(NULL), pSound(pNS), 
@@ -77,9 +74,6 @@ public:
 
 	void SetIQOutput(const EOutFormat eFormat) {eOutputFormat = eFormat;}
 	EOutFormat GetIQOutput() {return eOutputFormat;}
-
-	void SetCarOffset(const CReal rNewCarOffset)
-		{rDefCarOffset = rNewCarOffset;}
 
 	void SetWriteToFile(const string& strNFN, const string& strMode)
 	{

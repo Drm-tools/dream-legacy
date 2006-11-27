@@ -838,6 +838,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "-f", "--fileio",
 			strArgument) == TRUE)
 		{
+ 			tx_settings["filein"] = strArgument;
 			pDRMRec->SetReadDRMFromFile(strArgument);
 			continue;
 		}
@@ -953,26 +954,31 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			switch ((int) rArgument)
 			{
 			case 0:
+ 				tx_settings["outchansel"] = "0";
 				pDRMRec->GetWriteData()->
 					SetOutChanSel(CWriteData::CS_BOTH_BOTH);
 				break;
 
 			case 1:
+ 				tx_settings["outchansel"] = "1";
 				pDRMRec->GetWriteData()->
 					SetOutChanSel(CWriteData::CS_LEFT_LEFT);
 				break;
 
 			case 2:
+ 				tx_settings["outchansel"] = "2";
 				pDRMRec->GetWriteData()->
 					SetOutChanSel(CWriteData::CS_RIGHT_RIGHT);
 				break;
 
 			case 3:
+ 				tx_settings["outchansel"] = "3";
 				pDRMRec->GetWriteData()->
 					SetOutChanSel(CWriteData::CS_LEFT_MIX);
 				break;
 
 			case 4:
+ 				tx_settings["outchansel"] = "4";
 				pDRMRec->GetWriteData()->
 					SetOutChanSel(CWriteData::CS_RIGHT_MIX);
 				break;
@@ -1066,8 +1072,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "--mdiout", "--mdiout",
 			strArgument) == TRUE)
 		{
-			//pDRMTx->SetMDIOutAddr(strArgument);
-			cerr << "content server mode not implemented yet, perhaps you wanted rsiout" << endl;
+ 			tx_settings["mdiout"] = strArgument;
 			continue;
 		}
 
@@ -1075,8 +1080,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "--mdiin", "--mdiin",
 			strArgument) == TRUE)
 		{
-			//pDRMTx->SetMDIInAddr(strArgument);
-			cerr << "modulator mode not implemented yet, perhaps you wanted rsiin" << endl;
+ 			tx_settings["mdiin"] = strArgument;
 			continue;
 		}
 

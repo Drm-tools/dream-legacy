@@ -74,6 +74,7 @@ class CPacketSocketQT : public QObject, public CPacketSocket
 
 public:
 	CPacketSocketQT();
+	virtual ~CPacketSocketQT();
 	// Set the sink which will receive the packets
 	virtual void SetPacketSink(CPacketSink *pSink);
 	// Stop sending packets to the sink

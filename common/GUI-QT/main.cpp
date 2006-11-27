@@ -92,12 +92,13 @@ try
 
 	if (bIsReceiver == FALSE)
 	{
-		TransmDialog MainDlg(0, 0, FALSE, Qt::WStyle_MinMax);
+		CDRMTransmitter	DRMTransmitter;
+		TransmDialog MainDlg(DRMTransmitter, 0, 0, FALSE, Qt::WStyle_MinMax);
  		map<string,string> tx_settings;
  		tx_settings["outfmt"]="wav";
  		Settings.GetTransmitterSettings(tx_settings);
 		if(tx_settings.find("fileout") != tx_settings.end())
- 			MainDlg.GetTx()->SetWriteToFile(tx_settings["fileout"], tx_settings["outfmt"]);
+ 			DRMTransmitter.SetWriteToFile(tx_settings["fileout"], tx_settings["outfmt"]);
 
 		/* Set main window */
 		app.setMainWidget(&MainDlg);

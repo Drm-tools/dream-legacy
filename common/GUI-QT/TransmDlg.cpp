@@ -29,16 +29,65 @@
 #include "TransmDlg.h"
 #include <qmessagebox.h>
 
+#ifdef WIN32
 
-TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
-						   WFlags f)
-	: TransmDlgBase(parent, name, modal, f), bIsStarted(FALSE),
+void GetNetworkInterfaces(vector<string>& vecstrEths)
+{
+	INTERFACE_INFO InterfaceList[20];
+	unsigned long nBytesReturned;
+	INT iErr;
+
+	iErr = WSAIoctl(sd, SIO_GET_INTERFACE_LIST, 0, 0,
+				&InterfaceList, sizeof(InterfaceList), &nBytesReturned, 0, 0);
+}
+
+#else
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <net/if.h>
+
+void GetNetworkInterfaces(vector<string>& vecstrEths)
+{
+	char buff[1024];
+	struct ifconf ifc;
+	struct ifreq *ifr;
+	int skfd;
+	int i;
+
+	skfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (skfd < 0)
+	{
+		perror("socket");
+		return;
+	}
+
+	ifc.ifc_len = sizeof(buff);
+	ifc.ifc_buf = buff;
+	if (ioctl(skfd, SIOCGIFCONF, &ifc) < 0)
+	{
+		perror("ioctl(SIOCGIFCONF)");
+		return;
+	}
+
+	ifr = ifc.ifc_req;
+
+	vecstrEths.clear();
+	for (i = 0; i < ifc.ifc_len / sizeof(struct ifreq); i++)
+		vecstrEths.push_back(ifr[i].ifr_name);
+
+}
+#endif
+
+TransmDialog::TransmDialog(
+	CDRMTransmitter& tx,
+	QWidget* parent, const char* name,
+	bool modal, WFlags f
+	): DRMTransmitter(tx),
+	TransmDlgBase(parent, name, modal, f), bIsStarted(FALSE),
 	vecstrTextMessage(1) /* 1 for new text */, iIDCurrentText(0)
 {
 	int i;
 	vector<string> vecAudioSources;
-	CSoundInterface* pSoundIn;
-	CSoundInterface* pSoundOut;
 
 	SetDialogCaption(this, tr("Dream DRM Transmitter"));
 
@@ -67,21 +116,21 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	TextLabelCurPict->setText("");
 
 	/* Output mode (real valued, I / Q or E / P) */
-	switch (DRMTransmitter.GetIQOutput())
+	switch (DRMTransmitter.TransmParam.eOutputFormat)
 	{
-	case CTransmitData::OF_REAL_VAL:
+	case OF_REAL_VAL:
 		RadioButtonOutReal->setChecked(TRUE);
 		break;
 
-	case CTransmitData::OF_IQ_POS:
+	case OF_IQ_POS:
 		RadioButtonOutIQPos->setChecked(TRUE);
 		break;
 
-	case CTransmitData::OF_IQ_NEG:
+	case OF_IQ_NEG:
 		RadioButtonOutIQNeg->setChecked(TRUE);
 		break;
 
-	case CTransmitData::OF_EP:
+	case OF_EP:
 		RadioButtonOutEP->setChecked(TRUE);
 		break;
 	}
@@ -224,13 +273,23 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 
 	/* Sound card IF */
 	LineEditSndCrdIF->setText(QString().number(
-		DRMTransmitter.GetCarOffset(), 'f', 2));
+		DRMTransmitter.TransmParam.rCarOffset, 'f', 2));
+
+	/* Fill MDI Source/Dest selection */
+	vector<string> vecstrEths;
+	ComboBoxMDIinInterface->insertItem("any");
+	ComboBoxMDIoutInterface->insertItem("any");
+	GetNetworkInterfaces(vecstrEths);
+	for (i = 0; i < vecstrEths.size(); i++)
+	{
+		ComboBoxMDIinInterface->insertItem(vecstrEths[i]);
+		ComboBoxMDIoutInterface->insertItem(vecstrEths[i]);
+	}
 
 	/* Fill COFDM Dest selection */
-	pSoundOut = DRMTransmitter.GetSoundOutInterface();
 	/* Get sound device names */
 	vecAudioSources.clear();
-	pSoundOut->Enumerate(vecAudioSources);
+	DRMTransmitter.GetSoundOutChoices(vecAudioSources);
 	for (i = 0; i < vecAudioSources.size(); i++)
 	{
 		ComboBoxCOFDMdest->insertItem(QString(vecAudioSources[i].c_str()));
@@ -266,10 +325,9 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	EnableData(FALSE);
 	
 	/* Fill Audio source selection */
-	pSoundIn = DRMTransmitter.GetSoundInInterface();
 	/* Get sound device names */
 	vecAudioSources.clear();
-	pSoundIn->Enumerate(vecAudioSources);
+	DRMTransmitter.GetSoundInChoices(vecAudioSources);
 	vecAudioSources.push_back("wav file");
 	for (i = 0; i < vecAudioSources.size(); i++)
 	{
@@ -296,17 +354,17 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	DRMTransmitter.TransmParam.
 		Service[0].AudioParam.bTextflag = TRUE;
 
+	LineEditMDIinGroup->setEnabled(FALSE);
+	LineEditMDIinGroup->setInputMask("000.000.000.000;_");
+	LineEditMDIoutDest->setInputMask("000.000.000.000;_");
+	LineEditMDIinPort->setInputMask("00009;_");
+	LineEditMDIoutPort->setInputMask("00009;_");
 
 	/* Enable all controls */
 	EnableAllControlsForSet();
 
 
 	/* Set Menu ***************************************************************/
-	/* Settings menu  ------------------------------------------------------- */
-	//pSettingsMenu = new QPopupMenu(this);
-	//CHECK_PTR(pSettingsMenu);
-	//pSettingsMenu->insertItem(tr("&Sound Card Selection"),
-	//	new CSoundCardSelMenu(DRMTransmitter.GetSoundInInterface(), DRMTransmitter.GetSoundOutInterface(), this));
 
 	/* Main menu bar */
 	pMenu = new QMenuBar(this);
@@ -345,6 +403,12 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnToggleCheckBoxEnableCOFDM(bool)));
 	connect(PushButtonChoseOutputFile, SIGNAL(clicked()),
 		this, SLOT(OnPushButtonChooseOutputFileName()));
+	connect(CheckBoxMDIinEnable, SIGNAL(toggled(bool)),
+		this, SLOT( OnToggleCheckBoxMDIinEnable(bool)));
+	connect(CheckBoxMDIinMcast, SIGNAL(toggled(bool)),
+		this, SLOT( OnToggleCheckBoxMDIinMcast(bool)));
+	connect(CheckBoxMDIoutEnable, SIGNAL(toggled(bool)),
+		this, SLOT( OnToggleCheckBoxMDIoutEnable(bool)));
 
 	/* Combo boxes */
 	connect(ComboBoxCOFDMdest, SIGNAL(activated(int)),
@@ -365,6 +429,10 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnComboBoxTextMessageHighlighted(int)));
 	connect(ComboBoxMSCProtLev, SIGNAL(highlighted(int)),
 		this, SLOT(OnComboBoxMSCProtLevHighlighted(int)));
+	connect(ComboBoxMDIinInterface, SIGNAL(highlighted(int)),
+		this, SLOT(OnComboBoxMDIinInterfaceHighlighted(int)));
+	connect(ComboBoxMDIoutInterface, SIGNAL(highlighted(int)),
+		this, SLOT(OnComboBoxMDIoutInterfaceHighlighted(int)));
 
 	/* Button groups */
 	connect(ButtonGroupRobustnessMode, SIGNAL(clicked(int)),
@@ -385,6 +453,14 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnTextChangedSndCrdIF(const QString&)));
 	connect(LineEditOutputFileName, SIGNAL(textChanged(const QString&)),
 		this, SLOT(OnTextChangedOutputFileName(const QString&)));
+	connect(LineEditMDIinPort, SIGNAL(textChanged(const QString&)),
+		this, SLOT(OnTextChangedMDIinPort(const QString&)));
+	connect(LineEditMDIinGroup, SIGNAL(textChanged(const QString&)),
+		this, SLOT(OnTextChangedMDIinGroup(const QString&)));
+	connect(LineEditMDIoutPort, SIGNAL(textChanged(const QString&)),
+		this, SLOT(OnTextChangedMDIoutPort(const QString&)));
+	connect(LineEditMDIoutDest, SIGNAL(textChanged(const QString&)),
+		this, SLOT(OnTextChangedMDIoutDest(const QString&)));
 
 	connect(&Timer, SIGNAL(timeout()), 
 		this, SLOT(OnTimer()));
@@ -495,8 +571,40 @@ void TransmDialog::OnButtonStartStop()
 		else
 		{
 		 	int iDev = ComboBoxCOFDMdest->currentItem();
-		 	DRMTransmitter.GetSoundOutInterface()->SetDev(iDev);
+		 	DRMTransmitter.SetSoundOutInterface(iDev);
 		}
+
+		QString addr="";
+		if(CheckBoxMDIinEnable->isChecked())
+		{
+			QString port = LineEditMDIinPort->text();
+			QString group = LineEditMDIinGroup->text();
+			QString interface = ComboBoxMDIinInterface->currentText();
+			if(CheckBoxMDIinMcast->isChecked())
+				if(interface=="any")
+					addr = QString(":")+group+":"+port;
+				else
+					addr = interface+":"+group+":"+port;
+			else
+				if(interface=="any")
+					addr = port;
+				else
+					addr = interface+":"+port;
+		}
+		DRMTransmitter.strMDIinAddr = addr.latin1();
+
+		addr="";
+		if(CheckBoxMDIoutEnable->isChecked())
+		{
+			string dest = LineEditMDIoutDest->text();
+			string port = LineEditMDIoutPort->text();
+			string interface = ComboBoxMDIoutInterface->currentText();
+			if(interface=="any")
+				addr = dest+":"+port;
+			else
+				addr = interface+":"+dest+":"+port;
+		}
+		DRMTransmitter.strMDIoutAddr = addr.latin1();
 
 		DRMTransmitter.start();
 
@@ -521,7 +629,7 @@ void TransmDialog::OnComboBoxAudioSourceHighlighted(int iID)
 	}
 	else
 	{
-		DRMTransmitter.GetSoundInInterface()->SetDev(iID);
+		DRMTransmitter.SetSoundInInterface(iID);
 	}
 }
 
@@ -917,22 +1025,22 @@ void TransmDialog::OnRadioOutput(int iID)
 	{
 	case 0:
 		/* Button "Real Valued" */
-		DRMTransmitter.SetIQOutput(CTransmitData::OF_REAL_VAL);
+		DRMTransmitter.TransmParam.eOutputFormat=OF_REAL_VAL;
 		break;
 
 	case 1:
 		/* Button "I / Q (pos)" */
-		DRMTransmitter.SetIQOutput(CTransmitData::OF_IQ_POS);
+		DRMTransmitter.TransmParam.eOutputFormat=OF_IQ_POS;
 		break;
 
 	case 2:
 		/* Button "I / Q (neg)" */
-		DRMTransmitter.SetIQOutput(CTransmitData::OF_IQ_NEG);
+		DRMTransmitter.TransmParam.eOutputFormat=OF_IQ_NEG;
 		break;
 
 	case 3:
 		/* Button "E / P" */
-		DRMTransmitter.SetIQOutput(CTransmitData::OF_EP);
+		DRMTransmitter.TransmParam.eOutputFormat=OF_EP;
 		break;
 	}
 }
@@ -960,8 +1068,7 @@ void TransmDialog::OnTextChangedOutputFileName(const QString& strFile)
 
 void TransmDialog::OnTextChangedSndCrdIF(const QString& strIF)
 {
-	/* Convert string to floating point value "toFloat()" */
-	DRMTransmitter.SetCarOffset(strIF.toFloat());
+	DRMTransmitter.TransmParam.rCarOffset = strIF.toFloat();
 }
 
 void TransmDialog::OnRadioRobustnessMode(int iID)
@@ -1082,6 +1189,30 @@ void TransmDialog::OnRadioBandwidth(int iID)
 		DRMTransmitter.TransmParam.GetWaveMode(), eNewSpecOcc);
 }
 
+void TransmDialog::OnToggleCheckBoxMDIinEnable(bool bState)
+{
+}
+
+void TransmDialog::OnTextChangedMDIinPort(const QString& strLabel)
+{
+}
+
+void TransmDialog::OnTextChangedMDIinGroup(const QString& strLabel)
+{
+}
+
+void TransmDialog::OnToggleCheckBoxMDIinMcast(bool bState)
+{
+	if (bState)
+		LineEditMDIinGroup->setEnabled(TRUE);
+	else
+		LineEditMDIinGroup->setEnabled(FALSE);
+}
+
+void TransmDialog::OnComboBoxMDIinInterfaceHighlighted(int iID)
+{
+}
+
 void TransmDialog::OnToggleCheckBoxMDIoutEnable(bool bState)
 {
 }
@@ -1095,22 +1226,6 @@ void TransmDialog::OnTextChangedMDIoutDest(const QString& strLabel)
 }
 
 void TransmDialog::OnComboBoxMDIoutInterfaceHighlighted(int iID)
-{
-}
-
-void TransmDialog::OnToggleCheckBoxMDIinEnable(bool bState)
-{
-}
-
-void TransmDialog::OnTextChangedMDIinPort(const QString& strLabel)
-{
-}
-
-void TransmDialog::OnToggleCheckBoxMDIinMcast(bool bState)
-{
-}
-
-void TransmDialog::OnComboBoxMDIinInterfaceHighlighted(int iID)
 {
 }
 
@@ -1147,8 +1262,8 @@ void TransmDialog::EnableAllControlsForSet()
 	GroupBoxSDC->setEnabled(TRUE);
 	ButtonGroupRobustnessMode->setEnabled(TRUE);
 	ButtonGroupOutput->setEnabled(TRUE);
-	GroupBoxMDIin->setEnabled(FALSE); /* until MDI implemented */
-	GroupBoxMDIout->setEnabled(FALSE); /* until MDI implemented */
+	GroupBoxMDIin->setEnabled(TRUE);
+	GroupBoxMDIout->setEnabled(TRUE);
 	GroupBoxCOFDMout->setEnabled(TRUE);
 
 	GroupInput->setEnabled(FALSE); /* For run-mode */

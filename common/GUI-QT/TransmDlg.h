@@ -68,10 +68,12 @@ class TransmDialog : public TransmDlgBase
 	Q_OBJECT
 
 public:
-	TransmDialog(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-		WFlags f = 0);
+	TransmDialog(
+				CDRMTransmitter& tx,
+				QWidget* parent = 0, const char* name = 0,
+				bool modal = FALSE, WFlags f = 0
+				);
 	virtual ~TransmDialog();
- 	CDRMTransmitter* GetTx() { return &DRMTransmitter; }
 
 protected:
 	void DisableAllControlsForSet();
@@ -81,7 +83,7 @@ protected:
 	QPopupMenu*			pSettingsMenu;
 	QTimer				Timer;
 
-	CDRMTransmitter		DRMTransmitter;
+	CDRMTransmitter&	DRMTransmitter;
 	_BOOLEAN			bIsStarted;
 	CVector<string>		vecstrTextMessage;
 	int					iIDCurrentText;
@@ -127,6 +129,7 @@ public slots:
 	void OnComboBoxMDIoutInterfaceHighlighted(int iID);
 	void OnToggleCheckBoxMDIinEnable(bool bState);
 	void OnTextChangedMDIinPort(const QString& strLabel);
+	void OnTextChangedMDIinGroup(const QString& strLabel);
 	void OnToggleCheckBoxMDIinMcast(bool bState);
 	void OnComboBoxMDIinInterfaceHighlighted(int iID);
 

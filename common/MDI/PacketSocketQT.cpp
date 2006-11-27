@@ -54,6 +54,27 @@ CPacketSocketQT::CPacketSocketQT ():
 	SocketDevice.setAddressReusable(true);
 }
 
+CPacketSocketQT::~CPacketSocketQT()
+{
+	if(pPacketSink)
+		delete pPacketSink;
+
+	if(pSocketNotivRead)
+	{
+		pSocketNotivRead->disconnect();
+		delete pSocketNotivRead;
+	}
+
+#ifdef HAVE_LIBPCAP
+	if(pf)
+		pcap_close(pf);
+#endif
+#ifdef HAVE_LIBWTAP
+	if(pf)
+		wtap_close(pf);
+#endif
+}
+
 // Set the sink which will receive the packets
 void
 CPacketSocketQT::SetPacketSink (CPacketSink * pSink)

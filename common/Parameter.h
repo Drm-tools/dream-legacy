@@ -47,6 +47,9 @@ enum ETypeRxStatus {NOT_PRESENT, CRC_ERROR, DATA_ERROR, RX_OK};
 	/* RM: Receiver mode (analog or digital demodulation) */
 
 enum ERecMode {RM_DRM, RM_AM, RM_NONE};
+enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
+		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
+
 
 /* Classes ********************************************************************/
 class CParameter : public CCellMappingTable
@@ -902,6 +905,10 @@ public:
 	_REAL rSigStr;
  	ERecMode GetReceiverMode();
 	CVector<_BINARY> vecbiAudioFrameStatus;
+
+	/* For Transmitter */
+	_REAL rCarOffset;
+	enum EOutFormat eOutputFormat;
 };
 
 

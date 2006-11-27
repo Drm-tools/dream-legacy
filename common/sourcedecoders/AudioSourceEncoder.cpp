@@ -203,12 +203,11 @@ void CAudioSourceEncoder::InitInternal(CParameter& TransmParam)
 {
 	int iCurStreamID;
 
-int iCurSelServ = 0; // TEST
+	int iCurSelServ = 0; // TEST
 
-	/* Calculate number of input samples in mono. Audio block are always
-	   400 ms long */
-	const int iNumInSamplesMono = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
-		(_REAL) 0.4 /* 400 ms */);
+	/* Calculate number of input samples in mono.
+	 * Audio blocks are always 400 ms long */
+	const int iNumInSamplesMono = int(_REAL(SOUNDCRD_SAMPLE_RATE) * 0.4);
 
 	/* Set the total available number of bits, byte aligned */
 	iTotNumBitsForUsage =
@@ -242,11 +241,11 @@ int iCurSelServ = 0; // TEST
 			iTotAudFraSizeBits -= SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
 
 		/* Set encoder sample rate. This parameter decides other parameters */
-// TEST make threshold decision TODO: improvement
-if (iTotAudFraSizeBits > 7000) /* in bits! */
-	lEncSamprate = 24000;
-else
-	lEncSamprate = 12000;
+		// TEST make threshold decision TODO: improvement
+		if (iTotAudFraSizeBits > 7000) /* in bits! */
+			lEncSamprate = 24000;
+		else
+			lEncSamprate = 12000;
 
 		int iTimeEachAudBloMS;
 		int	iNumHeaderBytes;

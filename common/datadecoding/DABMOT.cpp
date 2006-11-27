@@ -33,6 +33,16 @@
 
 #include "DABMOT.h"
 #include "../util/Utilities.h"
+#include <algorithm>
+#include <cctype>
+
+struct to_lower {
+	int operator() ( int ch )
+	{
+		return std::tolower ( ch );
+	}
+};
+
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -72,10 +82,9 @@ if (iFileNameSize > 128)
     const string strFormat =
 	_strlwr (_strdup (NewMOTObject.strFormat.c_str ()));
 #else
-    const string strFormat = NewMOTObject.strFormat;
+	string strFormat = NewMOTObject.strFormat;
+	transform(strFormat.begin(), strFormat.end(), strFormat.begin(), to_lower());
 #endif
-
-
 
     /* gif: 0, image: 2 */
     if (strFormat.compare ("gif") == 0)

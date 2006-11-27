@@ -76,24 +76,17 @@ public:
 	void					ClearPics();
 	_BOOLEAN				GetTransStat(string& strCPi, _REAL& rCPe);
 
-	void					SetIQOutput(const CTransmitData::EOutFormat eFormat)
-								{eOutputFormat = eFormat;}
-	CTransmitData::EOutFormat	GetIQOutput() {return eOutputFormat;}
-	void					SetCarOffset(const _REAL rNewCarOffset)
-								{ rCarOffset = rNewCarOffset; }
-	_REAL					GetCarOffset() {return rCarOffset;}
-
-	CSoundIn*				GetSoundInInterface() {return &SoundInInterface;}
-	CSoundOut*				GetSoundOutInterface() {return &SoundOutInterface;}
+	void					GetSoundInChoices(vector<string>&);
+	void					GetSoundOutChoices(vector<string>&);
+	void					SetSoundInInterface(int);
+	void					SetSoundOutInterface(int);
 
 	/* Parameters */
 	CParameter				TransmParam;
+	string					strMDIinAddr;
+	string					strMDIoutAddr;
 
 protected:
-
-	/* TODO - add these to CParameter */
-	_REAL					rCarOffset;
-	enum CTransmitData::EOutFormat eOutputFormat;
 
 	_BOOLEAN				bProcessPriorityEnabled;
 	CReadData*				pReadData;
@@ -104,9 +97,9 @@ protected:
 	vector<string>			vecstrTexts;
 	vector<string>			vecstrPics;
 	vector<string>			vecstrPicTypes;
-	/* TODO not wanted if files or MDI used */
-	CSoundIn				SoundInInterface;
-	CSoundOut				SoundOutInterface;
+	int						iSoundInDev;
+	int						iSoundOutDev;
+	_BOOLEAN				bCOFDMout;
 };
 
 
