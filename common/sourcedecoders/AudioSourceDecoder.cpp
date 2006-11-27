@@ -351,8 +351,8 @@ else
 	}
 
 	/* Adjust part B length for SDC stream. Notice, that the
-	   "TransmParam.iNumDecodedBitsMSC" paramter depends on these settings.
-	   Thus, lenght part A and B have to be set before, preferably in the
+	   "TransmParam.iNumDecodedBitsMSC" parameter depends on these settings.
+	   Thus, length part A and B have to be set before, preferably in the
 	   DRMTransmitter initialization */
 	if ((TransmParam.Stream[iCurStreamID].iLenPartA == 0) ||
 		(iTotNumBytesForUsage < TransmParam.Stream[iCurStreamID].iLenPartA))
