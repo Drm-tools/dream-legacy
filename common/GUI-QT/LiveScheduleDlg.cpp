@@ -632,6 +632,8 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	BitmCubeRed.fill(QColor(255, 0, 0));
 	BitmCubeOrange.resize(iXSize, iYSize);
 	BitmCubeOrange.fill(QColor(255, 128, 0));
+	BitmCubePink.resize(iXSize, iYSize);
+	BitmCubePink.fill(QColor(255, 128, 128));
 
 	/* Clear list box for file names and set up columns */
 	ListViewStations->clear();
@@ -989,18 +991,24 @@ void LiveScheduleDlg::SetStationsView()
 
 			/* Check, if station is currently transmitting. If yes, set
 			   special pixmap */
-			if (DRMSchedule.CheckState(i) == CDRMLiveSchedule::IS_ACTIVE)
+			switch (DRMSchedule.CheckState(i))
 			{
-				vecpListItems[i]->setPixmap(COL_FREQ, BitmCubeGreen);
-			}
-			else
-			{
-				if (DRMSchedule.CheckState(i) == CDRMLiveSchedule::IS_PREVIEW)
+				case CDRMLiveSchedule::IS_ACTIVE:
+					vecpListItems[i]->setPixmap(COL_FREQ, BitmCubeGreen);
+					break;
+				case CDRMLiveSchedule::IS_PREVIEW:
 					vecpListItems[i]->setPixmap(COL_FREQ, BitmCubeOrange);
-				else
+					break;
+				case CDRMLiveSchedule::IS_SOON_INACTIVE:
+					vecpListItems[i]->setPixmap(COL_FREQ, BitmCubePink);
+					break;
+				case CDRMLiveSchedule::IS_INACTIVE:
 					vecpListItems[i]->setPixmap(COL_FREQ, BitmCubeRed);
+					break;
+				default:
+					vecpListItems[i]->setPixmap(COL_FREQ, BitmCubeRed);
+					break;
 			}
-
 		}
 		else
 		{
@@ -1155,7 +1163,8 @@ void LiveScheduleDlg::AddWhatsThisHelp()
 		"The color of the cube on the left of the "
 		"frequency shows the current status of the transmission.<br>"
 		"A green box shows that the transmission takes place right now "
-		"a red cube it is shown that the transmission is offline.<br>"
+		"a red cube it is shown that the transmission is offline, "
+		"a pink cube shown that the transmission soon will be offline.<br>"
 		"If the stations preview is active an orange box shows the stations "
 		"that will be active.<br>"
 		"A little green cube on the left of the target column show that the receiver"
@@ -1183,7 +1192,13 @@ CDRMLiveSchedule::StationState CDRMLiveSchedule::CheckState(const int iPos)
 	time(&ltime);
 
 	if (IsActive(iPos, ltime) == TRUE)
-		return IS_ACTIVE;
+	{
+		/* Check if the station soon will be inactive */ 
+		if (IsActive(iPos, ltime + NUM_SECONDS_SOON_INACTIVE) == TRUE)
+			return IS_ACTIVE;
+		else
+			return IS_SOON_INACTIVE;
+	}
 	else
 	{
 		/* Station is not active, check preview condition */

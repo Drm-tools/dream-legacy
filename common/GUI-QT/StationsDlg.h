@@ -96,6 +96,8 @@
 #define NUM_SECONDS_PREV_15MIN			900
 #define NUM_SECONDS_PREV_30MIN			1800
 
+#define NUM_SECONDS_SOON_INACTIVE		600
+
 /* String definitions for schedule days */
 #define FLAG_STR_IRREGULAR_TRANSM		"0000000"
 #define CHR_ACTIVE_DAY_MARKER			'1'
@@ -153,7 +155,7 @@ public:
 	virtual ~CDRMSchedule() {}
 
 	enum ESchedMode {SM_DRM, SM_ANALOG};
-	enum StationState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW};
+	enum StationState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
 
 	void ReadStatTabFromFile(const ESchedMode eNewSchM);
 	ESchedMode GetSchedMode() {return eSchedMode;}
@@ -223,6 +225,7 @@ protected:
 	QPixmap						BitmCubeYellow;
 	QPixmap						BitmCubeRed;
 	QPixmap						BitmCubeOrange;
+	QPixmap						BitmCubePink;
 	QTimer						TimerList;
 	QTimer						TimerUTCLabel;
 	QTimer						TimerSMeter;
