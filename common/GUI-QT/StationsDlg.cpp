@@ -184,7 +184,13 @@ CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
 	time(&ltime);
 
 	if (IsActive(iPos, ltime) == TRUE)
-		return IS_ACTIVE;
+	{
+		/* Check if the station soon will be inactive */ 
+		if (IsActive(iPos, ltime + NUM_SECONDS_SOON_INACTIVE) == TRUE)
+			return IS_ACTIVE;
+		else
+			return IS_SOON_INACTIVE;
+	}
 	else
 	{
 		/* Station is not active, check preview condition */
@@ -360,6 +366,8 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	BitmCubeRed.fill(QColor(255, 0, 0));
 	BitmCubeOrange.resize(iXSize, iYSize);
 	BitmCubeOrange.fill(QColor(255, 128, 0));
+	BitmCubePink.resize(iXSize, iYSize);
+	BitmCubePink.fill(QColor(255, 128, 128));
 
 	if (pDRMRec->SignalStrengthAvailable())
 	{
@@ -1023,25 +1031,26 @@ void StationsDlg::SetStationsView()
 				/* Set flag for sorting the list */
 				bListHastChanged = TRUE;
 			}
+
 			/* Check, if station is currently transmitting. If yes, set
 			   special pixmap */
-			if (DRMSchedule.CheckState(i) == CDRMSchedule::IS_ACTIVE)
+			switch (DRMSchedule.CheckState(i))
 			{
-				/* Check for "special case" transmissions */
-				if (DRMSchedule.GetItem(i).strDaysFlags ==
-					FLAG_STR_IRREGULAR_TRANSM)
-				{
-					vecpListItems[i]->setPixmap(0, BitmCubeYellow);
-				}
-				else
+				case CDRMSchedule::IS_ACTIVE:
 					vecpListItems[i]->setPixmap(0, BitmCubeGreen);
-			}
-			else
-			{
-				if (DRMSchedule.CheckState(i) == CDRMSchedule::IS_PREVIEW)
+					break;
+				case CDRMSchedule::IS_PREVIEW:
 					vecpListItems[i]->setPixmap(0, BitmCubeOrange);
-				else
+					break;
+				case CDRMSchedule::IS_SOON_INACTIVE:
+					vecpListItems[i]->setPixmap(0, BitmCubePink);
+					break;
+				case CDRMSchedule::IS_INACTIVE:
 					vecpListItems[i]->setPixmap(0, BitmCubeRed);
+					break;
+				default:
+					vecpListItems[i]->setPixmap(0, BitmCubeRed);
+					break;
 			}
 		}
 		else
@@ -1252,7 +1261,8 @@ void StationsDlg::AddWhatsThisHelp()
 		"menu item shows the current status of the DRM transmission. A green "
 		"box shows that the transmission takes place right now, a "
 		"yellow cube shows that this is a test transmission and with a "
-		"red cube it is shown that the transmission is offline.<br>"
+		"red cube it is shown that the transmission is offline, "
+		"a pink cube shown that the transmission soon will be offline.<br>"
 		"If the stations preview is active an orange box shows the stations "
 		"that will be active.<br>"
 		"The list can be sorted by clicking on the headline of the "
