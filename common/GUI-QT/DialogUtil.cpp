@@ -66,18 +66,18 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"<ul>"
 		"<li><b>FFTW</b> <i>http://www.fftw.org</i></li>"
 #ifdef USE_FAAD2_LIBRARY
-		"<li><b>FAAD2</b> <i>AAC/HE-AAC/HE-AACv2/DRM decoder "
+		"<li><b>FAAD2</b> (" + QString(FAAD2_VERSION) + ") <i>AAC/HE-AAC/HE-AACv2/DRM decoder "
 		"(c) Ahead Software, www.nero.com (http://faac.sf.net)</i></li>"
 #endif
 #ifdef USE_FAAC_LIBRARY
 		"<li><b>FAAC</b> <i>http://faac.sourceforge.net</i></li>"
 #endif
 #ifdef USE_QT_GUI /* QWT */
-		"<li><b>QWT</b> <i>Dream is based in part on the work of the Qwt "
+		"<li><b>QWT</b> (" + QString(QWT_VERSION_STR) + ") <i>Dream is based in part on the work of the Qwt "
 		"project (http://qwt.sf.net).</i></li>"
 #endif
 #ifdef HAVE_LIBHAMLIB
-		"<li><b>Hamlib</b> <i>http://hamlib.sourceforge.net</i></li>"
+		"<li><b>Hamlib</b> (" + QString(hamlib_version) + ") <i>http://hamlib.sourceforge.net</i></li>"
 #endif
 #ifdef HAVE_JOURNALINE
 		"<li><b>FhG IIS Journaline Decoder</b> <i>Features NewsService "
@@ -85,12 +85,12 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"Germany. For more information visit http://www.iis.fhg.de/dab</i></li>"
 #endif
 #ifdef HAVE_LIBFREEIMAGE
-		"<li><b>FreeImage</b> <i>This software uses the FreeImage open source "
+		"<li><b>FreeImage</b> (" + QString(FreeImage_GetVersion()) + ") <i>This software uses the FreeImage open source "
 		"image library. See http://freeimage.sourceforge.net for details. "
 		"FreeImage is used under the GNU GPL.</i></li>"
 #endif
 #ifdef HAVE_LIBPCAP
-		"<li><b>LIBPCAP</b> <i>http://www.tcpdump.org/ "
+		"<li><b>LIBPCAP</b> (" + QString(pcap_lib_version()) + ") <i>http://www.tcpdump.org/ "
 		"This product includes software developed by the Computer Systems "
 		"Engineering Group at Lawrence Berkeley Laboratory.</i></li>"
 #endif
