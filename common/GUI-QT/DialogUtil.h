@@ -48,6 +48,10 @@
 # include <qwt_global.h> /* for extract the library version */
 #endif
 
+#ifdef HAVE_LIBFREEIMAGE
+# include <FreeImage.h> /* for extract the library version */
+#endif
+
 /* Definitions ****************************************************************/
 
 /* Definition for Courier font */
