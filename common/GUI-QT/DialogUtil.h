@@ -44,6 +44,9 @@
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 
+#ifdef USE_QT_GUI
+# include <qwt_global.h> /* for extract the library version */
+#endif
 
 /* Definitions ****************************************************************/
 
