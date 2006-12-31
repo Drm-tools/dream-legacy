@@ -47,7 +47,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="$(QTDIR)\include,../libs,../common/GUI-QT"
+				AdditionalIncludeDirectories="&quot;$(QTDIR)\include&quot;;../libs;&quot;../common/GUI-QT&quot;;../../WpdPack/Include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;QT_DLL;QT_THREAD_SUPPORT;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -71,11 +71,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libfaac.lib libhamlib.lib libfftw.lib libfaad.lib imm32.lib wsock32.lib winmm.lib $(QTDIR)\lib\qt-mt3.lib $(QTDIR)\lib\qtmain.lib libqwt.lib libfhgjournaline.lib shell32.lib user32.lib"
+				AdditionalDependencies="libfaac.lib libhamlib.lib libfftw.lib libfaad.lib imm32.lib wsock32.lib winmm.lib $(QTDIR)\lib\qt-mt3.lib $(QTDIR)\lib\qtmain.lib libqwt.lib libfhgjournaline.lib shell32.lib user32.lib wpcap.lib libsndfile-1.lib"
 				OutputFile="Release/Dream.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="../libs"
+				AdditionalLibraryDirectories="C:\Documents and Settings\Julian\My Documents\Visual Studio 2005\Projects\dream\drm-cvs\libs"
 				IgnoreDefaultLibraryNames="MSVCRTD, LIBCMT"
 				ProgramDatabaseFile=".\Release/Dream.pdb"
 				SubSystem="2"
@@ -141,7 +141,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(QTDIR)\include,../libs,../common/GUI-QT"
+				AdditionalIncludeDirectories="&quot;$(QTDIR)\include&quot;;../libs;&quot;../common/GUI-QT&quot;;../../WpdPack/Include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;QT_DLL;QT_THREAD_SUPPORT;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -166,11 +166,11 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libfaac.lib libhamlib.lib imm32.lib wsock32.lib winmm.lib $(QTDIR)\lib\qt-mt3.lib $(QTDIR)\lib\qtmain.lib libfftw.lib libfaad.lib libqwt.lib libfhgjournaline.lib shell32.lib user32.lib"
+				AdditionalDependencies="libfaac.lib libhamlib.lib libfftw.lib libfaad.lib imm32.lib wsock32.lib winmm.lib $(QTDIR)\lib\qt-mt3.lib $(QTDIR)\lib\qtmain.lib libqwt.lib libfhgjournaline.lib shell32.lib user32.lib wpcap.lib libsndfile-1.lib"
 				OutputFile="Debug/Dream.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="../libs"
+				AdditionalLibraryDirectories="C:\Documents and Settings\Julian\My Documents\Visual Studio 2005\Projects\dream\drm-cvs\libs"
 				IgnoreDefaultLibraryNames="MSVCRT"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/Dream.pdb"
@@ -346,28 +346,6 @@
 			</File>
 			<File
 				RelativePath="..\common\DataIO.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\common\Version.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -674,6 +652,28 @@
 					/>
 				</FileConfiguration>
 			</File>
+			<File
+				RelativePath="..\common\Version.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
 			<Filter
 				Name="Source GUI, App"
 				>
@@ -788,6 +788,28 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\common\GUI-QT\GeneralSettingsDlg.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath="..\common\GUI-QT\LiveScheduleDlg.cpp"
 					>
 					<FileConfiguration
@@ -881,28 +903,6 @@
 				</File>
 				<File
 					RelativePath="..\common\GUI-QT\MultSettingsDlg.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\common\GUI-QT\GeneralSettingsDlg.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -1082,6 +1082,28 @@
 					</File>
 					<File
 						RelativePath="moc\fdrmdialogbase.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="moc\GeneralSettingsDlgbase.cpp"
 						>
 						<FileConfiguration
 							Name="Release|Win32"
@@ -1345,6 +1367,50 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="moc\moc_GeneralSettingsDlg.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="moc\moc_GeneralSettingsDlgbase.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
 						RelativePath="moc\moc_LiveScheduleDlg.cpp"
 						>
 						<FileConfiguration
@@ -1478,50 +1544,6 @@
 					</File>
 					<File
 						RelativePath="moc\moc_MultSettingsDlgbase.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="moc\moc_GeneralSettingsDlg.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="moc\moc_GeneralSettingsDlgbase.cpp"
 						>
 						<FileConfiguration
 							Name="Release|Win32"
@@ -1720,28 +1742,6 @@
 					</File>
 					<File
 						RelativePath="moc\MultSettingsDlgbase.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="moc\GeneralSettingsDlgbase.cpp"
 						>
 						<FileConfiguration
 							Name="Release|Win32"
@@ -2642,6 +2642,10 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\common\util\Reassemble.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\common\util\Settings.cpp"
 					>
 					<FileConfiguration
@@ -2684,9 +2688,6 @@
 							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\common\util\Reassemble.cpp" >
 				</File>
 			</Filter>
 			<Filter
@@ -2811,6 +2812,10 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\common\MDI\Pft.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\common\MDI\RSCITagItemDecoders.cpp"
 					>
 					<FileConfiguration
@@ -2857,9 +2862,6 @@
 				<File
 					RelativePath="..\common\MDI\TagPacketDecoderMDI.cpp"
 					>
-				</File>
-				<File
-					RelativePath="..\common\MDI\Pft.cpp" >
 				</File>
 				<File
 					RelativePath="..\common\MDI\TagPacketDecoderRSCIControl.cpp"
@@ -2920,19 +2922,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\sourcedecoders\AudioSourceDecoderInterface.h"
-				>
-			</File>
-			<File
-				RelativePath="..\common\sourcedecoders\AudioSourceEncoderInterface.h"
-				>
-			</File>
-			<File
 				RelativePath="..\common\sourcedecoders\AudioSourceDecoder.h"
 				>
 			</File>
 			<File
+				RelativePath="..\common\sourcedecoders\AudioSourceDecoderInterface.h"
+				>
+			</File>
+			<File
 				RelativePath="..\common\sourcedecoders\AudioSourceEncoder.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\sourcedecoders\AudioSourceEncoderInterface.h"
 				>
 			</File>
 			<File
@@ -2961,10 +2963,6 @@
 			</File>
 			<File
 				RelativePath="..\common\DrmTransmitter.h"
-				>
-			</File>
-			<File
-				RelativePath="..\common\Version.h"
 				>
 			</File>
 			<File
@@ -3011,6 +3009,10 @@
 				RelativePath="..\common\TextMessage.h"
 				>
 			</File>
+			<File
+				RelativePath="..\common\Version.h"
+				>
+			</File>
 			<Filter
 				Name="Header GUI, App"
 				>
@@ -3035,6 +3037,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\common\GUI-QT\GeneralSettingsDlg.h"
+					>
+				</File>
+				<File
 					RelativePath="..\common\GUI-QT\LiveScheduleDlg.h"
 					>
 				</File>
@@ -3048,10 +3054,6 @@
 				</File>
 				<File
 					RelativePath="..\common\GUI-QT\MultSettingsDlg.h"
-					>
-				</File>
-				<File
-					RelativePath="..\common\GUI-QT\GeneralSettingsDlg.h"
 					>
 				</File>
 				<File
@@ -3285,6 +3287,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\common\util\Reassemble.h"
+					>
+				</File>
+				<File
 					RelativePath="..\common\util\Settings.h"
 					>
 				</File>
@@ -3295,9 +3301,6 @@
 				<File
 					RelativePath="..\common\util\Vector.h"
 					>
-				</File>
-				<File
-					RelativePath="..\common\util\Reassemble.h" >
 				</File>
 			</Filter>
 			<Filter
@@ -3340,6 +3343,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\common\MDI\Pft.h"
+					>
+				</File>
+				<File
 					RelativePath="..\common\MDI\RSCITagItemDecoders.h"
 					>
 				</File>
@@ -3362,9 +3369,6 @@
 				<File
 					RelativePath="..\common\MDI\TagPacketGenerator.h"
 					>
-				</File>
-				<File
-					RelativePath="..\common\MDI\Pft.h" >
 				</File>
 			</Filter>
 		</Filter>

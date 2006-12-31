@@ -28,17 +28,38 @@
 
 #include "TransmDlg.h"
 #include <qmessagebox.h>
+#include <qhostaddress.h>
 
 #ifdef WIN32
 
-void GetNetworkInterfaces(vector<string>& vecstrEths)
+void TransmDialog::GetNetworkInterfaces()
 {
-	INTERFACE_INFO InterfaceList[20];
-	unsigned long nBytesReturned;
-	INT iErr;
+	vecIpIf.clear();
+	ipIf i;
+	i.name = "any";
+	i.addr = 0;
+	vecIpIf.push_back(i);
+#ifdef HAVE_LIBPCAP
+	pcap_if_t *alldevs;
+	pcap_if_t *d;
+	char errbuf[PCAP_ERRBUF_SIZE+1];
+	/* Retrieve the device list */
+	if(pcap_findalldevs(&alldevs, errbuf) == -1)
+	{
+		QMessageBox::critical(NULL, "Dream", "Exit\n", errbuf);
+		return;
+	}
+	for(d=alldevs;d;d=d->next)
+	{
+		pcap_addr_t *a=d->addresses;
+		i.addr = ((struct sockaddr_in *)a->addr)->sin_addr.s_addr;
+		i.name = d->name;
+		vecIpIf.push_back(i);
+	}
 
-	iErr = WSAIoctl(sd, SIO_GET_INTERFACE_LIST, 0, 0,
-				&InterfaceList, sizeof(InterfaceList), &nBytesReturned, 0, 0);
+	/* Free the device list */
+	pcap_freealldevs(alldevs);
+#endif
 }
 
 #else
@@ -46,13 +67,17 @@ void GetNetworkInterfaces(vector<string>& vecstrEths)
 #include <sys/ioctl.h>
 #include <net/if.h>
 
-void GetNetworkInterfaces(vector<string>& vecstrEths)
+void TransmDialog::GetNetworkInterfaces()
 {
 	char buff[1024];
 	struct ifconf ifc;
 	struct ifreq *ifr;
 	int skfd;
-	int i;
+	vecIpIf.clear();
+	ipIf i;
+	i.name = "any";
+	i.addr = 0;
+	vecIpIf.push_back(i);
 
 	skfd = socket(AF_INET, SOCK_DGRAM, 0);
 	if (skfd < 0)
@@ -71,10 +96,14 @@ void GetNetworkInterfaces(vector<string>& vecstrEths)
 
 	ifr = ifc.ifc_req;
 
-	vecstrEths.clear();
-	for (i = 0; i < ifc.ifc_len / sizeof(struct ifreq); i++)
-		vecstrEths.push_back(ifr[i].ifr_name);
-
+	int j;
+	for (j = 0; j < ifc.ifc_len / sizeof(struct ifreq); j++)
+	{
+		ipIf i;
+		i.addr = ((struct sockaddr_in *)&ifr[j].ifr_addr)->sin_addr.s_addr;
+		i.name = ifr[j].ifr_name;
+		vecIpIf.push_back(i);
+	}
 }
 #endif
 
@@ -276,14 +305,11 @@ TransmDialog::TransmDialog(
 		DRMTransmitter.TransmParam.rCarOffset, 'f', 2));
 
 	/* Fill MDI Source/Dest selection */
-	vector<string> vecstrEths;
-	ComboBoxMDIinInterface->insertItem("any");
-	ComboBoxMDIoutInterface->insertItem("any");
-	GetNetworkInterfaces(vecstrEths);
-	for (i = 0; i < vecstrEths.size(); i++)
+	GetNetworkInterfaces();
+	for(i=0; i<vecIpIf.size(); i++)
 	{
-		ComboBoxMDIinInterface->insertItem(vecstrEths[i]);
-		ComboBoxMDIoutInterface->insertItem(vecstrEths[i]);
+		ComboBoxMDIinInterface->insertItem(vecIpIf[i].name);
+		ComboBoxMDIoutInterface->insertItem(vecIpIf[i].name);
 	}
 
 	/* Fill COFDM Dest selection */
@@ -579,17 +605,17 @@ void TransmDialog::OnButtonStartStop()
 		{
 			QString port = LineEditMDIinPort->text();
 			QString group = LineEditMDIinGroup->text();
-			QString interface = ComboBoxMDIinInterface->currentText();
+			int iInterface = ComboBoxMDIinInterface->currentItem();
 			if(CheckBoxMDIinMcast->isChecked())
-				if(interface=="any")
-					addr = QString(":")+group+":"+port;
+				if(vecIpIf[iInterface].name=="any")
+					addr = group+":"+port;
 				else
-					addr = interface+":"+group+":"+port;
+					addr = QHostAddress(vecIpIf[iInterface].addr).toString()+":"+group+":"+port;
 			else
-				if(interface=="any")
+				if(vecIpIf[iInterface].name=="any")
 					addr = port;
 				else
-					addr = interface+":"+port;
+					addr = QHostAddress(vecIpIf[iInterface].addr).toString()+":"+":"+port;
 		}
 		DRMTransmitter.strMDIinAddr = addr.latin1();
 
@@ -598,11 +624,11 @@ void TransmDialog::OnButtonStartStop()
 		{
 			string dest = LineEditMDIoutDest->text();
 			string port = LineEditMDIoutPort->text();
-			string interface = ComboBoxMDIoutInterface->currentText();
-			if(interface=="any")
+			int iInterface = ComboBoxMDIoutInterface->currentItem();
+			if(vecIpIf[iInterface].name=="any")
 				addr = dest+":"+port;
 			else
-				addr = interface+":"+dest+":"+port;
+				addr = QHostAddress(vecIpIf[iInterface].addr).toString()+":"+dest+":"+port;
 		}
 		DRMTransmitter.strMDIoutAddr = addr.latin1();
 
@@ -1244,7 +1270,11 @@ void TransmDialog::DisableAllControlsForSet()
 	ButtonGroupOutput->setEnabled(FALSE);
 	GroupBoxMDIin->setEnabled(FALSE);
 	GroupBoxMDIout->setEnabled(FALSE);
-	GroupBoxCOFDMout->setEnabled(FALSE);
+	//GroupBoxCOFDMout->setEnabled(FALSE);
+	LineEditSndCrdIF->setEnabled(FALSE);
+	CheckBoxCOFDMenable->setEnabled(FALSE);
+	ComboBoxCOFDMdest->setEnabled(FALSE);
+	LineEditOutputFileName->setEnabled(FALSE);
 
 	GroupInput->setEnabled(TRUE); /* For run-mode */
 }
@@ -1264,7 +1294,11 @@ void TransmDialog::EnableAllControlsForSet()
 	ButtonGroupOutput->setEnabled(TRUE);
 	GroupBoxMDIin->setEnabled(TRUE);
 	GroupBoxMDIout->setEnabled(TRUE);
-	GroupBoxCOFDMout->setEnabled(TRUE);
+	//GroupBoxCOFDMout->setEnabled(TRUE);
+	LineEditSndCrdIF->setEnabled(TRUE);
+	CheckBoxCOFDMenable->setEnabled(TRUE);
+	ComboBoxCOFDMdest->setEnabled(TRUE);
+	LineEditOutputFileName->setEnabled(TRUE);
 
 	GroupInput->setEnabled(FALSE); /* For run-mode */
 

@@ -87,12 +87,15 @@ protected:
 	_BOOLEAN			bIsStarted;
 	CVector<string>		vecstrTextMessage;
 	int					iIDCurrentText;
-	_BOOLEAN			GetMessageText(const int iID);
+	struct			ipIf {string name; uint32_t addr;};
+	vector<ipIf>vecIpIf;
+	_BOOLEAN		GetMessageText(const int iID);
 	void				UpdateMSCProtLevCombo();
 	void				EnableTextMessage(const _BOOLEAN bFlag);
 	void				EnableAudio(const _BOOLEAN bFlag);
 	void				EnableData(const _BOOLEAN bFlag);
 	void				AddWhatsThisHelp();
+	void				GetNetworkInterfaces();
 
 
 public slots:

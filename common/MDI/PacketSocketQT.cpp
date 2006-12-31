@@ -121,6 +121,7 @@ CPacketSocketQT::SetNetwOutAddr (const string & strNewAddr)
 	/* Init return flag and copy string in QT-String "QString" */
 	_BOOLEAN bAddressOK = FALSE;
 	QStringList parts = QStringList::split (":", strNewAddr.c_str (), TRUE);
+	cout << strNewAddr << endl;
 	switch (parts.count ())
 	{
 	case 2:
@@ -159,6 +160,7 @@ CPacketSocketQT::SetNetwInAddr (const string & strNewAddr)
 	   5:  :<group ip>:<port>
 	 */
 	int iPort=-1;
+	cout << strNewAddr << endl;
 	QHostAddress AddrGroup, AddrInterface;
 	QStringList parts = QStringList::split (":", strNewAddr.c_str (), TRUE);
 	bool ok;

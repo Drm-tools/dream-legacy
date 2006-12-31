@@ -1,18 +1,18 @@
 [Project]
 FileName=FDRM.dev
 Name=FDRM
-UnitCount=232
+UnitCount=235
 Type=0
 Ver=1
 ObjFiles=
-Includes=..\common\GUI-QT;..\libs;C:\qt-3-mingw\include;D:\Dev-Cpp\include\qwt;D:\Dev-Cpp\wireshark-0.99.3a\wiretap;D:\Dev-Cpp\include\glib-2.0;D:\Dev-Cpp\lib\glib-2.0\include
+Includes=..\common\GUI-QT;..\libs;C:\qt-3-mingw\include;"C:\Documents and Settings\Julian\My Documents\Visual Studio 2005\Projects\dream\drm-build\libs";..\..\WpdPack\Include
 Libs=..\libs;C:\qt-3-mingw\lib
 PrivateResource=FDRM_private.rc
 ResourceIncludes=
 MakeIncludes=
 Compiler=-Wall_@@_-mthreads_@@_-fexceptions -frtti_@@_-DQT_DLL_@@_-DQT_THREAD_SUPPORT_@@_-DQT_ACCESSIBILITY_SUPPORT_@@_-DQT_TABLET_SUPPORT_@@_-DQT_NO_DEBUG_@@_-DHAVE_STDINT_H_@@_-D_WINDOWS_@@_-DNDEBUG_@@_-DWIN32_@@_
 CppCompiler=-Wall_@@_-mthreads_@@_-fexceptions -frtti _@@_-DQT_DLL_@@_-DQT_THREAD_SUPPORT_@@_-DQT_ACCESSIBILITY_SUPPORT_@@_-DQT_TABLET_SUPPORT_@@_-DQT_NO_DEBUG_@@_-DHAVE_STDINT_H_@@_-D_WINDOWS_@@_-DNDEBUG_@@_-DWIN32_@@__@@_
-Linker=-lqwt_@@_-lfaac_@@_-lfaad2_@@_-lhamlib_@@_-lFhGJournalLine_@@_-lrfftw_@@_-lfftw_@@_-lz_@@_-lwtap_@@_-lqtmain_@@_-lqt-mt_@@_-lws2_32_@@_-lwinmm_@@_-Wl,-enable-stdcall-fixup_@@_-Wl,-enable-auto-import -Wl,-enable-runtime-pseudo-reloc -mthreads -Wl, -Wl,-subsystem,windows_@@_
+Linker=-lqwt_@@_-lfaac_@@_-lfaad2_@@_-lFhGJournalLine_@@_-lrfftw_@@_-lfftw_@@_-lz_@@_-lqtmain_@@_-lqt-mt_@@_-lws2_32_@@_-lwinmm_@@_../libs/wpcap.lib_@@_../libs/libsndfile-1.lib_@@_../libs/libhamlib-1-2-5-2.lib_@@_-Wl,-enable-stdcall-fixup_@@_-Wl,-enable-auto-import -Wl,-enable-runtime-pseudo-reloc -mthreads -Wl, -Wl,-subsystem,windows_@@_
 IsCpp=1
 Icon=
 ExeOutput=
@@ -2367,9 +2367,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit233]
-FileName=..\common\sourcedecoders\AudioSourceDecoderInterface.h
+FileName=..\common\sourcedecoders\AudioSourceEncoderInterface.h
 CompileCpp=1
-Folder=Sources
+Folder=Headers
 Compile=1
 Link=1
 Priority=1000
@@ -2377,9 +2377,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit234]
-FileName=..\common\sourcedecoders\AudioSourceEncoderInterface.h
+FileName=..\common\sourcedecoders\AudioSourceEncoder.h
 CompileCpp=1
-Folder=Sources
+Folder=Headers
 Compile=1
 Link=1
 Priority=1000
@@ -2387,7 +2387,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit235]
-FileName=..\common\sourcedecoders\AudioSourceEncoder.h
+FileName=..\common\sourcedecoders\AudioSourceEncoder.cpp
 CompileCpp=1
 Folder=Sources
 Compile=1
