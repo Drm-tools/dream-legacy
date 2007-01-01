@@ -26,8 +26,8 @@
  *
 \******************************************************************************/
 
-#include "DrmTransmitter.h"
 #include "MDI/MDIRSCI.h" /* OPH: need this near the top so winsock2 is included before winsock */
+#include "DrmTransmitter.h"
 #include "MDI/MDIDecode.h"
 #include "util/Buffer.h"
 #include "mlc/MLC.h"
@@ -372,8 +372,9 @@ CDRMTransmitter::run()
 	if(strMDIinAddr != "")
 	{
 		/* set the input address*/
-		//MDIIn.SetInAddr(strMDIinAddr); mega crashes at the moment - just say no!
-		strMDIinAddr="";
+		MDIIn.SetInAddr(strMDIinAddr);
+		MDIIn.SetInitFlag();
+		//strMDIinAddr="";
 	}
 	else
 	{
@@ -402,9 +403,27 @@ CDRMTransmitter::run()
 	if(strMDIoutAddr!="")
 	{
 		/* set the output address */
-		//MDIOut.SetProfile('M'); awaiting testing
-		//MDIOut.SetOutAddr(strMDIoutAddr);
-		strMDIoutAddr="";
+		MDIOut.SetProfile('M'); 
+		MDIOut.SetOutAddr(strMDIoutAddr);
+		//MDIOut.SetInitFlag();
+		//strMDIoutAddr="";
+	}
+
+	SplitFAC.SetInitFlag();
+	FACBuf.Clear();
+	FACTxBuf.Clear();
+	FACSendBuf.Clear();
+	SplitSDC.SetInitFlag();
+	SDCBuf.Clear();
+	SDCTxBuf.Clear();
+	SDCSendBuf.Clear();
+	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
+	{
+		SplitMSC[i].SetStream(i);
+		SplitMSC[i].SetInitFlag();
+		MSCBuf[i].Clear();
+		MSCTxBuf[i].Clear();
+		MSCSendBuf[i].Clear();
 	}
 
 	/* Set run flag */
@@ -421,10 +440,19 @@ CDRMTransmitter::run()
 		{
 			if(MDIIn.GetInEnabled())
 			{
-				MDIPacketBuf.Clear();
+				MDIPacketBuf.Init(16384);
+				//MDIPacketBuf.Clear();
 				MDIIn.ReadData(TransmParam, MDIPacketBuf);
 				if(MDIPacketBuf.GetFillLevel()>0)
+				{
+					FACBuf.Init(72);
+					SDCBuf.Init(10000);
+					MSCBuf[0].Init(10000);
+					MSCBuf[1].Init(10000);
+					MSCBuf[2].Init(10000);
+					MSCBuf[3].Init(10000);
 					DecodeMDI.ProcessData(TransmParam, MDIPacketBuf, FACBuf, SDCBuf, MSCBuf);
+				}
 			}
 			else
 			{
@@ -443,7 +471,7 @@ CDRMTransmitter::run()
 			}
 
 			/* TODO optimise - split only if needed */
-/*
+
 			SplitFAC.ProcessData(TransmParam, FACBuf, FACTxBuf, FACSendBuf);
 
 			if(SDCBuf.GetFillLevel()==TransmParam.iNumSDCBitsPerSFrame)
@@ -455,7 +483,7 @@ CDRMTransmitter::run()
 			{
 				SplitMSC[i].ProcessData(TransmParam, MSCBuf[i], MSCTxBuf[i], MSCSendBuf[i]);
 			}
-*/
+
 			if(bCOFDMout)
 			{
 				/* MLC-encoder */

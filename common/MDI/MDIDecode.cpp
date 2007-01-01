@@ -55,6 +55,8 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 	ReceiverParam.SetWaveMode(TagPacketDecoderMDI.TagItemDecoderRobMod.eRobMode);
 	CVector<_BINARY>& vecbiFACData = TagPacketDecoderMDI.TagItemDecoderFAC.vecbidata;
 	CVector<_BINARY>& vecbiSDCData = TagPacketDecoderMDI.TagItemDecoderSDC.vecbidata;
+	if(pvecOutputData->Size()==0)
+		pvecOutputData->Init(NUM_FAC_BITS_PER_BLOCK);
 	pvecOutputData->Reset(0);
 	if (vecbiFACData.Size() > 0)
 	{
@@ -71,8 +73,10 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 		iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 	}
 
-	pvecOutputData2->Reset(0);
 	const int iLenBitsMDISDCdata = vecbiSDCData.Size();
+	if(pvecOutputData2->Size()==0)
+		pvecOutputData2->Init(iLenBitsMDISDCdata);
+	pvecOutputData2->Reset(0);
 	if (iLenBitsMDISDCdata > 0)
 	{
 		/* If receiver is correctly initialized, the input vector should be
@@ -97,7 +101,7 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 	else
 	{
 		pvecOutputData2->Reset(0);
-    }
+	}
 
 	/* Get stream data from received RSCI / MDI packets */
 	for(size_t i=0; i<vecpvecOutputData.size(); i++)
@@ -121,7 +125,7 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 			}
 			veciOutputBlockSize[i] = iStreamLen;
 		}
-    }
+  }
 
 	// TODO RSCI Data Items, MER, etc.
 }

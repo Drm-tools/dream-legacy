@@ -52,7 +52,7 @@ protected:
 	CVectorEx<TInput>*	pvecInputData;
 	CVectorEx<TOutput>*	pvecOutputData;
 
-	/* Max block-size are used to determine the size of the requiered buffer */
+	/* Max block-size are used to determine the size of the required buffer */
 	int					iMaxOutputBlockSize;
 	/* Actual read (or written) size of the data */
 	int					iInputBlockSize;

@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 AC_INIT(common/GUI-QT/main.cpp)
 
-AM_INIT_AUTOMAKE(drm,1.7testing.4)
+AM_INIT_AUTOMAKE(drm,1.7testing.5)
 
 
 AM_CONFIG_HEADER(config.h)

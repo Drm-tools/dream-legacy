@@ -52,7 +52,7 @@ void TransmDialog::GetNetworkInterfaces()
 	for(d=alldevs;d;d=d->next)
 	{
 		pcap_addr_t *a=d->addresses;
-		i.addr = ((struct sockaddr_in *)a->addr)->sin_addr.s_addr;
+		i.addr = ntohl(((struct sockaddr_in *)a->addr)->sin_addr.s_addr);
 		i.name = d->name;
 		vecIpIf.push_back(i);
 	}
@@ -100,7 +100,7 @@ void TransmDialog::GetNetworkInterfaces()
 	for (j = 0; j < ifc.ifc_len / sizeof(struct ifreq); j++)
 	{
 		ipIf i;
-		i.addr = ((struct sockaddr_in *)&ifr[j].ifr_addr)->sin_addr.s_addr;
+		i.addr = ntohl(((struct sockaddr_in *)&ifr[j].ifr_addr)->sin_addr.s_addr);
 		i.name = ifr[j].ifr_name;
 		vecIpIf.push_back(i);
 	}
@@ -308,8 +308,8 @@ TransmDialog::TransmDialog(
 	GetNetworkInterfaces();
 	for(i=0; i<vecIpIf.size(); i++)
 	{
-		ComboBoxMDIinInterface->insertItem(vecIpIf[i].name);
-		ComboBoxMDIoutInterface->insertItem(vecIpIf[i].name);
+		ComboBoxMDIinInterface->insertItem(vecIpIf[i].name.c_str());
+		ComboBoxMDIoutInterface->insertItem(vecIpIf[i].name.c_str());
 	}
 
 	/* Fill COFDM Dest selection */
@@ -381,10 +381,12 @@ TransmDialog::TransmDialog(
 		Service[0].AudioParam.bTextflag = TRUE;
 
 	LineEditMDIinGroup->setEnabled(FALSE);
+#if QT_VERSION <= 230
 	LineEditMDIinGroup->setInputMask("000.000.000.000;_");
 	LineEditMDIoutDest->setInputMask("000.000.000.000;_");
 	LineEditMDIinPort->setInputMask("00009;_");
 	LineEditMDIoutPort->setInputMask("00009;_");
+#endif
 
 	/* Enable all controls */
 	EnableAllControlsForSet();
@@ -622,8 +624,8 @@ void TransmDialog::OnButtonStartStop()
 		addr="";
 		if(CheckBoxMDIoutEnable->isChecked())
 		{
-			string dest = LineEditMDIoutDest->text();
-			string port = LineEditMDIoutPort->text();
+			QString dest = LineEditMDIoutDest->text();
+			QString port = LineEditMDIoutPort->text();
 			int iInterface = ComboBoxMDIoutInterface->currentItem();
 			if(vecIpIf[iInterface].name=="any")
 				addr = dest+":"+port;
