@@ -29,7 +29,11 @@
 #define _SOUND_COMMON_H
 
 #ifdef USE_QT_GUI
-#include <qmutex.h>
+# if QT_VERSION <= 233
+#  include <qthread.h>
+# else
+#  include <qmutex.h>
+# endif
 #endif
 #include "../../common/util/Buffer.h"
 #ifdef USE_ALSA

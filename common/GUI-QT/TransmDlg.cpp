@@ -381,7 +381,7 @@ TransmDialog::TransmDialog(
 		Service[0].AudioParam.bTextflag = TRUE;
 
 	LineEditMDIinGroup->setEnabled(FALSE);
-#if QT_VERSION <= 230
+#if QT_VERSION > 233
 	LineEditMDIinGroup->setInputMask("000.000.000.000;_");
 	LineEditMDIoutDest->setInputMask("000.000.000.000;_");
 	LineEditMDIinPort->setInputMask("00009;_");
