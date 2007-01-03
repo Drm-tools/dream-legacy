@@ -398,7 +398,6 @@ void CRSIMDIInRCIOut::ProcessDataInternal(CParameter& ReceiverParam)
 #else
 	// use a select here
 #endif
-	cout << vecbydata.size() << " bytes from network, outputblocksize: " << iOutputBlockSize << " bits" << endl;
 	iOutputBlockSize = vecbydata.size()*SIZEOF__BYTE;
 	pvecOutputData->Init(iOutputBlockSize);
 	pvecOutputData->ResetBitAccess();

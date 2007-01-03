@@ -374,6 +374,7 @@ CDRMTransmitter::run()
 		/* set the input address*/
 		MDIIn.SetInAddr(strMDIinAddr);
 		MDIIn.SetInitFlag();
+		DecodeMDI.SetInitFlag();
 		//strMDIinAddr="";
 	}
 	else
@@ -417,6 +418,8 @@ CDRMTransmitter::run()
 	SDCBuf.Clear();
 	SDCTxBuf.Clear();
 	SDCSendBuf.Clear();
+	FACBuf.Init(72);
+	SDCBuf.Init(10000);
 	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
 	{
 		SplitMSC[i].SetStream(i);
@@ -424,6 +427,7 @@ CDRMTransmitter::run()
 		MSCBuf[i].Clear();
 		MSCTxBuf[i].Clear();
 		MSCSendBuf[i].Clear();
+		MSCBuf[i].Init(10000);
 	}
 
 	/* Set run flag */
@@ -445,12 +449,6 @@ CDRMTransmitter::run()
 				MDIIn.ReadData(TransmParam, MDIPacketBuf);
 				if(MDIPacketBuf.GetFillLevel()>0)
 				{
-					FACBuf.Init(72);
-					SDCBuf.Init(10000);
-					MSCBuf[0].Init(10000);
-					MSCBuf[1].Init(10000);
-					MSCBuf[2].Init(10000);
-					MSCBuf[3].Init(10000);
 					DecodeMDI.ProcessData(TransmParam, MDIPacketBuf, FACBuf, SDCBuf, MSCBuf);
 				}
 			}

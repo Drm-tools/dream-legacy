@@ -104,6 +104,7 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 	/* Get stream data from received RSCI / MDI packets */
+	veciOutputBlockSize.resize(vecpvecOutputData.size());
 	for(size_t i=0; i<vecpvecOutputData.size(); i++)
 	{
 		CVector<_BINARY>& vecbiStr = TagPacketDecoderMDI.TagItemDecoderStr[i].vecbidata;
@@ -120,8 +121,8 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 			/* Data is always a multiple of 8 -> copy bytes */
 			for (int j = 0; j < iStreamLen / SIZEOF__BYTE; j++)
 			{
-				pvecOutputData->Enqueue(
-					vecbiStr.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+				uint32_t byte = vecbiStr.Separate(SIZEOF__BYTE);
+				pvecOutputData->Enqueue(byte, SIZEOF__BYTE);
 			}
 			veciOutputBlockSize[i] = iStreamLen;
 		}

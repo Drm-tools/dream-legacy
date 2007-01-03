@@ -39,7 +39,6 @@
 void
 CMDIInBuffer::Put(const vector<_BYTE>& data)
 {
-	cout << "put " << data.size() << " byte datagram" << endl;
 #ifdef USE_QT_GUI
 	guard.lock();
 	buffer.push(data);
@@ -92,6 +91,5 @@ CMDIInBuffer::Get(vector<_BYTE>& data)
 		data = buffer.front();
 		buffer.pop();
 	}
-	cout << "got " << data.size() << " byte datagram" << endl;
 #endif
 }
