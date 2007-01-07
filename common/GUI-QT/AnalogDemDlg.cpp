@@ -740,6 +740,7 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	TextAMSSServiceLabel->setText("");
 	TextAMSSCountryCode->setText("");
+	TextAMSSTimeDate->setText("");
 	TextAMSSInfo->setText("");
 
 	ListBoxAMSSAFSList->setEnabled(FALSE);
@@ -802,17 +803,39 @@ void CAMSSDlg::OnTimer()
 		TextAMSSServiceLabel->setText(tr(""));
 
 	/* Country code */
-	const QString strCntryCode = QString(pDRMRec->GetParameters()->
-		Service[0].strCountryCode.c_str()).lower(); /* must be of 2 lowercase chars */
+	const string strCntryCode = pDRMRec->GetParameters()->
+		Service[0].strCountryCode; /* must be of 2 lowercase chars */
 
 	if ((pDRMRec->GetParameters()->Service[0].IsActive()) &&
-	   (strCntryCode != ""))
+	   (!strCntryCode.empty()))
 	{
 		TextAMSSCountryCode->
-			setText(QString(GetName(strCntryCode.latin1()).c_str()));
+			setText(QString(GetName(strCntryCode).c_str()));
 	}
 	else
 		TextAMSSCountryCode->setText("");
+
+	/* Time, date */
+	if ((pDRMRec->GetParameters()->iUTCHour == 0) &&
+		(pDRMRec->GetParameters()->iUTCMin == 0) &&
+		(pDRMRec->GetParameters()->iDay == 0) &&
+		(pDRMRec->GetParameters()->iMonth == 0) &&
+		(pDRMRec->GetParameters()->iYear == 0))
+	{
+		/* No time service available */
+		TextAMSSTimeDate->setText("");
+	}
+	else
+	{
+		QDateTime DateTime;
+		DateTime.setDate(QDate(pDRMRec->GetParameters()->iYear,
+			pDRMRec->GetParameters()->iMonth,
+			pDRMRec->GetParameters()->iDay));
+		DateTime.setTime(QTime(pDRMRec->GetParameters()->iUTCHour,
+			pDRMRec->GetParameters()->iUTCMin));
+
+		TextAMSSTimeDate->setText(DateTime.toString());
+	}
 
 	/* Get number of alternative services */
 	const int iNumAltServices = pDRMRec->GetParameters()->
