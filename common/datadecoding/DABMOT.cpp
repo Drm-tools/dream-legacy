@@ -45,8 +45,8 @@
 
 
 /* Implementation *************************************************************/
-ostream& operator<< (ostream& out, CDateAndTime& d) { d.dump(out); }
-ostream& operator<< (ostream& out, CMOTObject& o) { o.dump(out); }
+ostream& operator<< (ostream& out, CDateAndTime& d) { d.dump(out); return out;}
+ostream& operator<< (ostream& out, CMOTObject& o) { o.dump(out); return out;}
 /******************************************************************************\
 * Encoder                                                                      *
 \******************************************************************************/

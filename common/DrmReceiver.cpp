@@ -1161,6 +1161,7 @@ _BOOLEAN CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
 {
 	if (upstreamRSCI.GetInEnabled() == TRUE)
 	{
+		return FALSE;
 	}
 	else
 	{
