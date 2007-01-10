@@ -373,6 +373,7 @@ _BOOLEAN CRSIMDIInRCIOut::SetFrequency(int iNewFreqkHz)
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorCfre);
 	CVector<_BINARY> packet = TagPacketGenerator.GenAFPacket(bUseAFCRC);
    	TransmitPacket(packet);
+	return TRUE;
 }
 
 /* bits to bytes and send */

@@ -29,6 +29,7 @@
 #include "ReceptionLog.h"
 #include "Version.h"
 #include "matlib/MatlibStdToolbox.h"
+#include <time.h>
 
 /*  implementation --------------------------------------------- */
 CReceptLog::CReceptLog() : iNumAACFrames(10), pFileLong(NULL),

@@ -462,7 +462,6 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 
 		exit(1);
 	}
-
 }
 
 string CSettings::UsageArguments(char** argv)

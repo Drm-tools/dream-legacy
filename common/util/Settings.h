@@ -130,7 +130,7 @@ protected:
 	void ReadIniFile();
 	void WriteIniFile();
 
-	_BOOLEAN ParseArguments(int argc, char** argv);
+	void ParseArguments(int argc, char** argv);
 	_BOOLEAN GetFlagArgument(int argc, char** argv, int& i, string strShortOpt,
 							 string strLongOpt);
 	_BOOLEAN GetStringArgument(int argc, char** argv, int& i,

@@ -36,13 +36,6 @@
 #include <algorithm>
 #include <cctype>
 
-struct to_lower {
-	int operator() ( int ch )
-	{
-		return std::tolower ( ch );
-	}
-};
-
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -77,13 +70,11 @@ if (iFileNameSize > 128)
 
     /* Get ending string which declares the type of the file. Make lowercase */
 
-// The following line is not working for Linux!!!! TODO!
-#ifdef _WIN32
-    const string strFormat =
-	_strlwr (_strdup (NewMOTObject.strFormat.c_str ()));
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
+	strFormat = _strlwr(_strdup(NewMOTObject.strFormat.c_str()));
 #else
-	string strFormat = NewMOTObject.strFormat;
-	transform(strFormat.begin(), strFormat.end(), strFormat.begin(), to_lower());
+	transform(NewMOTObject.strFormat.begin(), NewMOTObject.strFormat.end(),
+			  strFormat.begin(), (int (*)(int)) tolower);
 #endif
 
     /* gif: 0, image: 2 */
