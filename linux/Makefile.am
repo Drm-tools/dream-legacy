@@ -13,6 +13,7 @@ drmwithoutqt_SOURCES = \
 	../common/MSCMultiplexer.cpp \
 	../common/OFDM.cpp \
 	../common/Parameter.cpp \
+	../common/ReceptionLog.cpp \
 	../common/TextMessage.cpp \
 	../common/AMDemodulation.cpp \
 	../common/AMSSDemodulation.cpp \
@@ -54,6 +55,7 @@ drmwithoutqt_SOURCES = \
 	../common/MDI/MDIInBuffer.cpp \
 	../common/MDI/MDITagItemDecoders.cpp \
 	../common/MDI/MDITagItems.cpp \
+	../common/MDI/RCITagItems.cpp \
 	../common/MDI/PacketSocketNull.cpp \
 	../common/MDI/RSCITagItemDecoders.cpp \
 	../common/MDI/TagPacketDecoder.cpp \
@@ -85,6 +87,7 @@ drmwithoutqt_SOURCES = \
 	../common/MSCMultiplexer.h \
 	../common/OFDM.h \
 	../common/Parameter.h \
+	../common/ReceptionLog.h \
 	../common/TextMessage.h \
 	../common/AMDemodulation.h \
 	../common/AMSSDemodulation.h \
@@ -130,6 +133,7 @@ drmwithoutqt_SOURCES = \
 	../common/MDI/MDIInBuffer.h \
 	../common/MDI/MDITagItemDecoders.h \
 	../common/MDI/MDITagItems.h \
+	../common/MDI/RCITagItems.h \
 	../common/MDI/TagPacketDecoderMDI.h \
 	../common/MDI/PacketInOut.h \
 	../common/MDI/PacketSocketNull.h \

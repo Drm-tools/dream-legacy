@@ -39,6 +39,7 @@
 #include "GlobalDefinitions.h"
 #include "ofdmcellmapping/CellMappingTable.h"
 #include "matlib/Matlib.h"
+#include "ReceptionLog.h"
 
 enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};
 enum ETypeIntTime {TLINEAR, TWIENER};
@@ -49,6 +50,8 @@ enum ETypeRxStatus {NOT_PRESENT, CRC_ERROR, DATA_ERROR, RX_OK};
 enum ERecMode {RM_DRM, RM_AM, RM_NONE};
 enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
+/* Acquisition state of receiver */
+enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 
 
 /* Classes ********************************************************************/
@@ -57,10 +60,21 @@ class CParameter : public CCellMappingTable
 public:
 	CParameter() : Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
 		bRunThread(FALSE), bUsingMultimedia(TRUE),	iCurSelAudioService(0), 
-		iCurSelDataService(0), vecbiAudioFrameStatus()
+		iCurSelDataService(0), vecbiAudioFrameStatus(),
+		eReceiverMode(RM_DRM),eAcquiState(AS_NO_SIGNAL)
 		{}
 	virtual ~CParameter() {}
 
+	static const uint32_t I_ROBUSTNESS_MODE;
+	static const uint32_t I_SPECTRUM_OCCUPANCY;
+	static const uint32_t I_INTERLEAVER;
+	static const uint32_t I_MSC_CODE;
+	static const uint32_t I_SDC_CODE;
+	static const uint32_t I_SDC;
+	static const uint32_t I_MSC;
+	static const uint32_t I_MSC_DEMUX;
+	static const uint32_t I_AUDIO;
+	static const uint32_t I_DATA;
 
 	/* Enumerations --------------------------------------------------------- */	
 	/* CA: CA system */
@@ -95,9 +109,6 @@ public:
 
 	/* AS: Audio Sampling rate */
 	enum EAudSamRat {AS_8_KHZ, AS_12KHZ, AS_16KHZ, AS_24KHZ};
-
-	/* CS: Coding Scheme */
-	enum ECodScheme {CS_1_SM, CS_2_SM, CS_3_SM, CS_3_HMSYM, CS_3_HMMIX};
 
 	/* SI: Symbol Interleaver */
 	enum ESymIntMod {SI_LONG, SI_SHORT};
@@ -260,23 +271,6 @@ public:
 			return FALSE;
 		}
 	};
-
-	class CMSCProtLev
-	{
-	public:
-		int	iPartA; /* MSC protection level for part A */
-		int	iPartB; /* MSC protection level for part B */
-		int	iHierarch; /* MSC protection level for hierachical frame */
-
-		CMSCProtLev& operator=(const CMSCProtLev& NewMSCProtLev)
-		{
-			iPartA = NewMSCProtLev.iPartA;
-			iPartB = NewMSCProtLev.iPartB;
-			iHierarch = NewMSCProtLev.iHierarch;
-			return *this; 
-		}
-	};
-
 
 	/* Alternative Frequency Signalling ***************************************/
 	/* Alternative frequency signalling Schedules informations class */
@@ -568,6 +562,9 @@ public:
 
 
 	/* Misc. Functions ------------------------------------------------------ */
+	void			SetInitFlags(uint32_t);
+	void			ClearInitFlags(uint32_t);
+	_BOOLEAN		TestInitFlag(uint32_t);
 	void			ResetServicesStreams();
 	void			GetActiveServices(CVector<int>& veciActServ);
 	void			GetActiveStreams(CVector<int>& veciActStr);
@@ -617,14 +614,17 @@ public:
 
 	void			SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl);
 	void			SetServID(const int iServID, const uint32_t iNewServID);
+	void			SetReceiverMode(ERecMode eNewReceiverMode)
+						{eReceiverMode=eNewReceiverMode;}
+	ERecMode		GetReceiverMode() {return eReceiverMode;}
 
+	uint32_t		uInitFlags;
 
 	/* Symbol interleaver mode (long or short interleaving) */
 	ESymIntMod		eSymbolInterlMode; 
 
 	ECodScheme		eMSCCodingScheme; /* MSC coding scheme */
 	ECodScheme		eSDCCodingScheme; /* SDC coding scheme */
-
 
 	int				iNumAudioService;
 	int				iNumDataService;
@@ -634,15 +634,15 @@ public:
 
 
 	/* Parameters controlled by SDC ----------------------------------------- */
-	void SetAudioParam(const int iShortID, const CAudioParam NewAudParam);
+	void		SetAudioParam(const int iShortID, const CAudioParam NewAudParam);
 	CAudioParam GetAudioParam(const int iShortID)
 		{return Service[iShortID].AudioParam;}
-	void SetDataParam(const int iShortID, const CDataParam NewDataParam);
-	CDataParam GetDataParam(const int iShortID)
+	void		SetDataParam(const int iShortID, const CDataParam NewDataParam);
+	CDataParam  GetDataParam(const int iShortID)
 		{return Service[iShortID].DataParam;}
 
-	void SetMSCProtLev(const CMSCProtLev NewMSCPrLe, const _BOOLEAN bWithHierarch);
-	void SetStreamLen(const int iStreamID, const int iNewLenPartA, const int iNewLenPartB);
+	void		SetMSCProtLev(const CMSCProtLev NewMSCPrLe, const _BOOLEAN bWithHierarch);
+	void		SetStreamLen(const int iStreamID, const int iNewLenPartA, const int iNewLenPartB);
 	int GetStreamLen(const int iStreamID);
 
 	/* Protection levels for MSC */
@@ -685,68 +685,7 @@ public:
 
 
 	/* Reception log -------------------------------------------------------- */
-	class CReceptLog
-	{
-	public:
-		CReceptLog();
-		virtual ~CReceptLog() {CloseFile(pFileLong, TRUE);
-			CloseFile(pFileShort, FALSE);}
-
-		void StartLogging();
-		void StopLogging();
-		void SetFAC(const _BOOLEAN bCRCOk);
-		void SetMSC(const _BOOLEAN bCRCOk);
-		void SetSync(const _BOOLEAN bCRCOk);
-		void SetSNR(const _REAL rNewCurSNR);
-		void SetNumAAC(const int iNewNum);
-		void SetLoggingEnabled(const _BOOLEAN bLog) { bLogEnabled = bLog; }
-		_BOOLEAN GetLoggingEnabled() {return bLogEnabled;}
-		_BOOLEAN GetLoggingActivated() {return bLogActivated;}
-		void SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong);
-		void SetFrequency(const int iNewFreq) {iFrequency = iNewFreq;}
-		int GetFrequency() {return iFrequency;}
-		void SetLatitude(const string strLat) {strLatitude = strLat;}
-		string GetLatitude() {return strLatitude;}
-		void SetLongitude(const string strLon) {strLongitude = strLon;}
-		string GetLongitude() {return strLongitude;}
-		void SetAdditText(const string strNewTxt) {strAdditText = strNewTxt;}
-		void WriteParameters(const _BOOLEAN bIsLong);
-		void SetDelLogStart(const int iSecDel) { iSecDelLogStart = iSecDel; }
-		int GetDelLogStart() {return iSecDelLogStart;}
-
-		void ResetTransParams();
-		void SetMSCScheme(const ECodScheme eNewMCS) {eCurMSCScheme = eNewMCS;}
-		void SetRobMode(const ERobMode eNewRM) {eCurRobMode = eNewRM;}
-		void SetProtLev(const CMSCProtLev eNPL) {CurProtLev = eNPL;}
-
-	protected:
-		void ResetLog(const _BOOLEAN bIsLong);
-		void CloseFile(FILE* pFile, const _BOOLEAN bIsLong);
-		int				iNumSNR;
-		int				iNumCRCOkFAC, iNumCRCOkMSC;
-		int				iNumCRCOkMSCLong, iNumCRCMSCLong;
-		int				iNumAACFrames, iTimeCntShort;
-		time_t			TimeCntLong;
-		_BOOLEAN		bSyncOK, bFACOk, bMSCOk;
-		_BOOLEAN		bSyncOKValid, bFACOkValid, bMSCOkValid;
-		int				iFrequency;
-		_REAL			rAvSNR, rCurSNR;
-		_REAL			rMaxSNR, rMinSNR;
-		_BOOLEAN		bLogActivated;
-		_BOOLEAN		bLogEnabled;
-		FILE*			pFileLong;
-		FILE*			pFileShort;
-		string			strAdditText;
-		string			strLatitude;
-		string			strLongitude;
-		int				iSecDelLogStart;
-
-		ERobMode		eCurRobMode;
-		ECodScheme		eCurMSCScheme;
-		CMSCProtLev		CurProtLev;
-
-		CMutex			Mutex;
-	} ReceptLog;
+	CReceptLog ReceptLog;
 
 	/* Class for store informations about last service selected ------------- */
 
@@ -903,8 +842,9 @@ public:
 	_BOOLEAN GetSignalStrength(_REAL rSigStr);
 	_BOOLEAN bValidSignalStrength;
 	_REAL rSigStr;
- 	ERecMode GetReceiverMode();
 	CVector<_BINARY> vecbiAudioFrameStatus;
+	ERecMode		eReceiverMode;
+	EAcqStat		eAcquiState;
 
 	/* For Transmitter */
 	_REAL rCarOffset;

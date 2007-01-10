@@ -334,8 +334,8 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	Param.MSCPrLe.iHierarch = 0;
 
 	Param.eSymbolInterlMode = CParameter::SI_SHORT;
-	Param.eMSCCodingScheme = CParameter::CS_3_SM;
-	Param.eSDCCodingScheme = CParameter::CS_2_SM;
+	Param.eMSCCodingScheme = CS_3_SM;
+	Param.eSDCCodingScheme = CS_2_SM;
 
 	/* DRM channel parameters */
 	Param.iDRMChannelNum = 1;

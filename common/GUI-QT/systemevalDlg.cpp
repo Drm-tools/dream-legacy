@@ -688,7 +688,7 @@ void systemevalDlg::OnTimer()
     SetStatus(LEDIOInterface, ReceiverParam.ReceiveStatus.GetInterfaceStatus());
 
 	/* Show SNR if receiver is in tracking mode */
-	if (pDRMRec->GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL)
+	if (pDRMRec->GetReceiverState() == AS_WITH_SIGNAL)
 	{
 		/* Get a consistant snapshot */
 		ReceiverParam.Lock();
@@ -818,11 +818,11 @@ void systemevalDlg::OnTimer()
 	/* SDC */
 	switch (pDRMRec->GetParameters()->eSDCCodingScheme)
 	{
-	case CParameter::CS_1_SM:
+	case CS_1_SM:
 		strFACInfo = "4-QAM / ";
 		break;
 
-	case CParameter::CS_2_SM:
+	case CS_2_SM:
 		strFACInfo = "16-QAM / ";
 		break;
 	}
@@ -830,19 +830,19 @@ void systemevalDlg::OnTimer()
 	/* MSC */
 	switch (pDRMRec->GetParameters()->eMSCCodingScheme)
 	{
-	case CParameter::CS_2_SM:
+	case CS_2_SM:
 		strFACInfo += "SM 16-QAM";
 		break;
 
-	case CParameter::CS_3_SM:
+	case CS_3_SM:
 		strFACInfo += "SM 64-QAM";
 		break;
 
-	case CParameter::CS_3_HMSYM:
+	case CS_3_HMSYM:
 		strFACInfo += "HMsym 64-QAM";
 		break;
 
-	case CParameter::CS_3_HMMIX:
+	case CS_3_HMMIX:
 		strFACInfo += "HMmix 64-QAM";
 		break;
 	}
@@ -1079,7 +1079,7 @@ void systemevalDlg::OnCheckSaveAudioWAV()
 
 void systemevalDlg::OnTimerLogFileStart()
 {
- 	CParameter::CReceptLog& ReceptLog = pDRMRec->GetParameters()->ReceptLog;
+ 	CReceptLog& ReceptLog = pDRMRec->GetParameters()->ReceptLog;
 
 	/* Start logging (if not already done) */
 	if ( ReceptLog.GetLoggingEnabled() && !ReceptLog.GetLoggingActivated())
@@ -1106,7 +1106,7 @@ void systemevalDlg::OnCheckWriteLog()
 		QString strAddText = "";
 
 		/* Check if receiver does receive a DRM signal */
-		if ((pDRMRec->GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL) &&
+		if ((pDRMRec->GetReceiverState() == AS_WITH_SIGNAL) &&
 			(pDRMRec->GetReceiverMode() == RM_DRM))
 		{
 			/* First get current selected audio service */
@@ -1593,7 +1593,7 @@ void systemevalDlg::AddWhatsThisHelp()
 		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
 		"box will let the user choose a file name for the recording."));
 
-#if QT_VERSION <= 233
+#if QT_VERSION < 0x030000
 	/* if QWhatsThis is added don't work the right click popup (it used to work in QT2.3) */
 
 	/* Chart Selector */

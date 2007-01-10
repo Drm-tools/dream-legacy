@@ -30,7 +30,7 @@
 
 
 /* Implementation *************************************************************/
-CVector<int> CChannelCode::GenPuncPatTable(CParameter::ECodScheme eNewCodingScheme,
+CVector<int> CChannelCode::GenPuncPatTable(ECodScheme eNewCodingScheme,
 										   CParameter::EChanType eNewChannelType,
 										   int iN1, int iN2,
 										   int iNewNumOutBitsPartA,
@@ -67,12 +67,12 @@ CVector<int> CChannelCode::GenPuncPatTable(CParameter::ECodScheme eNewCodingSche
 	   instead of only "N2" to calculate the tailbit pattern */
 	switch (eNewCodingScheme)
 	{
-	case CParameter::CS_3_HMMIX:
+	case CS_3_HMMIX:
 		iTailbitParamL0 = iN1 + iN2;
 		iTailbitParamL1 = iN2;
 		break;
 
-	case CParameter::CS_3_HMSYM:
+	case CS_3_HMSYM:
 		iTailbitParamL0 = 2 * (iN1 + iN2);
 		iTailbitParamL1 = 2 * iN2;
 		break;

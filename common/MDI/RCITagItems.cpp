@@ -1,12 +1,23 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001-2006
+ * Copyright (c) 2007
  *
  * Author(s):
- *	Andrea Russo, Julian Cable
+ *	Volker Fischer, Julian Cable, Oliver Haffenden
  *
  * Description:
- *	Dream program version number
+ *	Implements Digital Radio Mondiale (DRM) 
+ *	(RCI), Receiver Status and Control Interface (RSCI)  
+ *  and Distribution and Communications Protocol (DCP) as described in
+ *	ETSI TS 102 349 and ETSI TS 102 821 respectively.
+ *
+ *  This module derives, from the CTagItemGenerator base class, tag item generators 
+ *  specialised to generate each of the tag items defined in RCI and RSCI.
+ *  . 
+ *  An intermediate derived class, CTagItemGeneratorWithProfiles, is used as the
+ *  base class for all these tag item generators. This takes care of the common
+ *	task of checking whether a given tag is in a particular profile.
+ *  The profiles for each tag are defined by the GetProfiles() member function.
  *
  ******************************************************************************
  *
@@ -25,6 +36,18 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
-#include "Version.h"
 
-char dream_version[] = "1.7testing.6";
+#include "RCITagItems.h"
+
+void CTagItemGeneratorCfre::GenTag(int iNewFreqkHz)
+{
+	/* Length: 4 bytes = 32 bits */
+	PrepareTag(32);
+
+	/* RF Frequency */
+	Enqueue(1000*iNewFreqkHz, 32);
+
+}
+
+string CTagItemGeneratorCfre::GetTagName(void) {return "cfre";}
+

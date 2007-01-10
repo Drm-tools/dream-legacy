@@ -112,7 +112,7 @@ Param.iSpecChDoppler = 2; /* Hz (integer value!) */
 
 		/* The associated code rate is R = 0,6 and the modulation is 64-QAM */
 		Param.MSCPrLe.iPartB = 1;
-		Param.eMSCCodingScheme = CParameter::CS_3_SM;
+		Param.eMSCCodingScheme = CS_3_SM;
 
 
 		/* Choose the type of channel estimation algorithms used for simlation */
@@ -393,19 +393,19 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
 	/* MSC coding scheme ---------------------------------------------------- */
 	switch (Param.eMSCCodingScheme)
 	{
-	case CParameter::CS_2_SM:
+	case CS_2_SM:
 		strFileName += "16SM_";
 		break;
 
-	case CParameter::CS_3_SM:
+	case CS_3_SM:
 		strFileName += "64SM_";
 		break;
 
-	case CParameter::CS_3_HMMIX:
+	case CS_3_HMMIX:
 		strFileName += "64MIX_";
 		break;
 
-	case CParameter::CS_3_HMSYM:
+	case CS_3_HMSYM:
 		strFileName += "64SYM_";
 		break;
 	}

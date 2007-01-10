@@ -37,6 +37,7 @@
 #include "MDI/MDIRSCI.h" /* OPH: need this near the top so winsock2 is included before winsock */
 #include "MDI/MDIDecode.h"
 #include "Parameter.h"
+#include "util/Settings.h"
 #include "util/Buffer.h"
 #include "util/Utilities.h"
 #include "DataIO.h"
@@ -110,14 +111,13 @@ class CDRMReceiver
 #endif
 {
 public:
-	/* Acquisition state of receiver */
-	enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 
 	/* Receiver state */
 	enum ERecState {RS_TRACKING, RS_ACQUISITION};
 
-	CDRMReceiver();
+	CDRMReceiver(CSettings& Settings);
 	virtual ~CDRMReceiver() {}
+	void save(CSettings& Settings);
 
 	/* For GUI */
 #ifdef USE_QT_GUI
@@ -129,8 +129,10 @@ public:
 	void					Init();
 	void					Start();
 	void					Stop();
-	EAcqStat				GetReceiverState() {return eAcquiState;}
-	ERecMode				GetReceiverMode() {return eReceiverMode;}
+	EAcqStat				GetReceiverState() 
+								{return ReceiverParam.eAcquiState;}
+	ERecMode				GetReceiverMode() 
+								{return ReceiverParam.GetReceiverMode();}
 	void					SetReceiverMode(ERecMode eNewMode)
 								{eNewReceiverMode = eNewMode;}
 
@@ -187,9 +189,6 @@ public:
 		{ChannelEstimation.GetSNRProfile(vecrData, vecrScale);}
 
 #ifdef _WIN32
-	void SetEnableProcessPriority(_BOOLEAN bValue)
-		{bProcessPriorityEnabled = bValue;}
-
 	_BOOLEAN GetEnableProcessPriority()
 		{return bProcessPriorityEnabled;}
 #endif
@@ -213,8 +212,8 @@ public:
 	CAMSSDecode*			GetAMSSDecode() {return &AMSSDecode;}
 	CFreqSyncAcq*			GetFreqSyncAcq() {return &FreqSyncAcq;}
 	CAudioSourceDecoder*	GetAudSorceDec() {return &AudioSourceDecoder;}
-	CRSIMDIInRCIOut*		GetRSIIn() {return &RSIIn;}
-	CRSIMDIOutRCIIn*		GetRSIOut() {return &RSIOut;}
+	CRSIMDIInRCIOut*		GetRSIIn() {return &upstreamRSCI;}
+	CRSIMDIOutRCIIn*		GetRSIOut() {return &downstreamRSCI;}
 #ifdef HAVE_LIBHAMLIB
 	CHamlib*				GetHamlib() {return &Hamlib;}
 	_BOOLEAN				SignalStrengthAvailable() { return TRUE; }
@@ -229,8 +228,6 @@ public:
 	void					SetInTrackingMode();
 	void					SetInTrackingModeDelayed();
 
-	void					SetReadDRMFromFile(const string strNFN);
-
 	void					InitsForAllModules();
 
 	void					InitsForWaveMode();
@@ -243,6 +240,7 @@ public:
 	void					InitsForSDCCodSche();
 	void					InitsForMSC();
 	void					InitsForMSCDemux();
+	void					CheckInitsNeeded();
 
 /* _WIN32 check because in Visual c++ the GUI files are always compiled even
    if USE_QT_GUI is set or not */
@@ -431,13 +429,11 @@ protected:
 	vector<CSingleBuffer<_BINARY> >	MSCSendBuf;
 	CCyclicBuffer<_SAMPLE>			AudSoDecBuf;
 
-	EAcqStat				eAcquiState;
 	int						iAcquRestartCnt;
 	int						iAcquDetecCnt;
 	int						iGoodSignCnt;
 	int						iDelayedTrackModeCnt;
 	ERecState				eReceiverState;
-	ERecMode				eReceiverMode;
 	ERecMode				eNewReceiverMode;
 
 	CSoundIn				SoundInInterface;
@@ -446,9 +442,9 @@ protected:
 	int						iAudioStreamID;
 	int						iDataStreamID;
 
-	CRSIMDIInRCIOut			RSIIn;
+	CRSIMDIInRCIOut			upstreamRSCI;
 	CDecodeRSIMDI			DecodeRSIMDI;
-	CRSIMDIOutRCIIn			RSIOut;
+	CRSIMDIOutRCIIn			downstreamRSCI;
 
 	_REAL					rInitResampleOffset;
 

@@ -182,8 +182,8 @@ void CSDCTransmit::DataEntityType0(CVector<_BINARY>& vecbiData,
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hirarchical data */
 		if ((i == 0) && 
-			((Parameter.eMSCCodingScheme == CParameter::CS_3_HMSYM) ||
-			(Parameter.eMSCCodingScheme == CParameter::CS_3_HMMIX)))
+			((Parameter.eMSCCodingScheme == CS_3_HMSYM) ||
+			(Parameter.eMSCCodingScheme == CS_3_HMMIX)))
 		{
 			/* Protection level for hierarchical */
 			vecbiData.Enqueue((uint32_t) Parameter.MSCPrLe.iHierarch, 2);

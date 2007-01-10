@@ -66,11 +66,11 @@ using namespace std; /* Because of the library: "complex" */
 //# define HAVE_LIBWTAP
 # undef HAVE_LIBWTAP
 
-//# define HAVE_LIBPCAP
-# undef HAVE_LIBPCAP
+# define HAVE_LIBPCAP
+//# undef HAVE_LIBPCAP
 
-//# define HAVE_LIBSNDFILE
-# undef HAVE_LIBSNDFILE
+# define HAVE_LIBSNDFILE
+//# undef HAVE_LIBSNDFILE
 
 # define HAVE_LIBHAMLIB
 //# undef HAVE_LIBHAMLIB
@@ -200,6 +200,8 @@ enum ESpecOcc {SO_0, SO_1, SO_2, SO_3, SO_4, SO_5}; /* SO: Spectrum Occupancy */
 enum ERobMode {RM_ROBUSTNESS_MODE_A, RM_ROBUSTNESS_MODE_B,
 		RM_ROBUSTNESS_MODE_C, RM_ROBUSTNESS_MODE_D,
 		RM_NO_MODE_DETECTED}; /* RM: Robustness Mode */
+	/* CS: Coding Scheme */
+enum ECodScheme {CS_1_SM, CS_2_SM, CS_3_SM, CS_3_HMSYM, CS_3_HMMIX};
 
 
 /* Constants ---------------------------------------------------------------- */
@@ -225,6 +227,22 @@ public:
 	/* Distance towards 0 or towards 1 */
 	_REAL rTow0;
 	_REAL rTow1;
+};
+
+class CMSCProtLev
+{
+public:
+	int	iPartA; /* MSC protection level for part A */
+	int	iPartB; /* MSC protection level for part B */
+	int	iHierarch; /* MSC protection level for hierachical frame */
+
+	CMSCProtLev& operator=(const CMSCProtLev& NewMSCProtLev)
+	{
+		iPartA = NewMSCProtLev.iPartA;
+		iPartB = NewMSCProtLev.iPartB;
+		iHierarch = NewMSCProtLev.iHierarch;
+		return *this; 
+	}
 };
 
 /* Viterbi needs information of equalized received signal and channel */

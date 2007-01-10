@@ -68,7 +68,7 @@ protected:
 	int	iNumEncBits;
 
 	CParameter::EChanType	eChannelType;
-	CParameter::ECodScheme	eCodingScheme;
+	ECodScheme				eCodingScheme;
 };
 
 class CMLCEncoder : public CTransmitterModul<_BINARY, _COMPLEX>, 

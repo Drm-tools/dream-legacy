@@ -44,7 +44,6 @@
 
 #include "MDIRSCI.h"
 #include "../DrmReceiver.h"
-#include <iostream>
 
 /* Implementation *************************************************************/
 CRSIMDIOutRCIIn::CRSIMDIOutRCIIn() : iLogFraCnt(0),
@@ -142,6 +141,15 @@ void CRSIMDIOutRCIIn::SendUnlockedFrame(CParameter& Parameter)
 	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
 
 	TransmitPacket(GenMDIPacket());
+}
+
+void CRSIMDIOutRCIIn::SendAMFrame(CParameter& Parameter)
+{
+}
+
+void CRSIMDIOutRCIIn::SetReceiver(CDRMReceiver *pReceiver)
+{
+	TagPacketDecoderRSCIControl.SetReceiver(pReceiver);
 }
 
 /* Actual MDI protocol implementation *****************************************/
@@ -328,6 +336,8 @@ void CRSIMDIOutRCIIn::TransmitPacket(CVector<_BINARY> vecbidata)
 CRSIMDIInRCIOut::CRSIMDIInRCIOut() :
 	bMDIInEnabled(FALSE), bMDIOutEnabled(FALSE), bUseAFCRC(TRUE)
 {
+	/* Init constant tag */
+	TagItemGeneratorProTyRSCI.GenTag();
 }
 
 void CRSIMDIInRCIOut::SetInAddr(const string& strAddr)
@@ -353,6 +363,16 @@ void CRSIMDIInRCIOut::SetOutAddr(const string& strArgument)
 #endif
 	if(bAddressOK)
 		bMDIOutEnabled = TRUE;
+}
+
+_BOOLEAN CRSIMDIInRCIOut::SetFrequency(int iNewFreqkHz)
+{
+	TagPacketGenerator.Reset();
+	TagItemGeneratorCfre.GenTag(iNewFreqkHz);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyRSCI);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorCfre);
+	CVector<_BINARY> packet = TagPacketGenerator.GenAFPacket(bUseAFCRC);
+   	TransmitPacket(packet);
 }
 
 /* bits to bytes and send */

@@ -30,8 +30,6 @@
 #define SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../DrmReceiver.h"
-#include "../DrmTransmitter.h"
 #ifdef USE_QT_GUI
 # include "../GUI-QT/DRMPlot.h"
 #endif
@@ -113,30 +111,28 @@
 #define MAX_MOT_BWS_REFRESH_TIME	1800
 
 /* Classes ********************************************************************/
+
 class CSettings
 {
 public:
-	CSettings(CDRMReceiver* pNDRMR) : pDRMRec(pNDRMR) {}
+	CSettings() {}
 
-	_BOOLEAN Load(int argc, char** argv);
+	void Load(int argc, char** argv);
 	void Save();
- 	void GetTransmitterSettings(map<string, string>& settings)
- 	{
- 		settings = tx_settings;
- 	}
+	string UsageArguments(char** argv);
+	string Get(const string& sSection, const string& sKey, 
+		   const string& sDefaultVal = "");
+	void Put(const string& psSection, const string& sKey, const string& sValue);
+	void Put(const string& psSection, const string& sKey, const int);
 
 protected:
+
 	void ReadIniFile();
 	void WriteIniFile();
 
 	_BOOLEAN ParseArguments(int argc, char** argv);
-	string UsageArguments(char** argv);
 	_BOOLEAN GetFlagArgument(int argc, char** argv, int& i, string strShortOpt,
 							 string strLongOpt);
-	_BOOLEAN GetNumericArgument(int argc, char** argv, int& i,
-								string strShortOpt, string strLongOpt,
-								_REAL rRangeStart, _REAL rRangeStop,
-								_REAL& rValue);
 	_BOOLEAN GetStringArgument(int argc, char** argv, int& i,
 							   string strShortOpt, string strLongOpt,
 							   string& strArg);
@@ -167,10 +163,7 @@ protected:
 					   _BOOLEAN bValue);
 	_BOOLEAN GetFlagIniSet(INIFile& theINI, string strSection, string strKey,
 						   _BOOLEAN& bValue);
-
-	/* Pointer to the DRM receiver object needed for the various settings */
-	CDRMReceiver* pDRMRec;
- 	map<string, string> tx_settings;
+	INIFile iniFile;
 };
 
 #endif // !defined(SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_)

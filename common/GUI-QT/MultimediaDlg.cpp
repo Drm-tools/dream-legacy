@@ -623,7 +623,7 @@ void MultimediaDlg::SetSlideShowPicture()
 	/* Load picture in QT format */
 	if (NewImage.loadFromData(&imagedata[0], imagedata.size()))
 	{
-# if QT_VERSION > 230
+#if QT_VERSION >= 0x030000
 		/* The slideshow pictures are not 
            updated correctly without this line: */
 		/* If the text is empty there is segmentation fault

@@ -53,8 +53,6 @@
 int argc = 0;
 QApplication app(argc, NULL);
 
-/* The receiver is a global object */
-CDRMReceiver	DRMReceiver;
 
 /* This pointer is only used for the post-event routine */
 QApplication*	pApp = NULL;
@@ -71,8 +69,13 @@ try
 	DRMSimulation.SimScript();
 
 	/* Parse arguments and load settings from init-file */
-	CSettings Settings(&DRMReceiver);
-	const _BOOLEAN bIsReceiver = Settings.Load(argc, argv);
+	CSettings Settings;
+	_BOOLEAN bIsReceiver = TRUE;
+
+	Settings.Load(argc, argv);
+
+	if(Settings.Get("Global", "role")=="transmitter")
+		bIsReceiver = FALSE;
 
 	/* Load and install multi-language support (if available) */
 	QTranslator translator(0);
@@ -80,7 +83,7 @@ try
 		app.installTranslator(&translator);
 
 #ifdef _WIN32
-	if(DRMReceiver.GetEnableProcessPriority())
+	if(Settings.Get("Receiver", "processpriority")=="1")
 	{
 		/* Set priority class for this application */
 		SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
@@ -92,14 +95,8 @@ try
 
 	if (bIsReceiver == FALSE)
 	{
-		CDRMTransmitter	DRMTransmitter;
+		CDRMTransmitter	DRMTransmitter(Settings);
 		TransmDialog MainDlg(DRMTransmitter, 0, 0, FALSE, Qt::WStyle_MinMax);
- 		map<string,string> tx_settings;
- 		tx_settings["outfmt"]="wav";
- 		Settings.GetTransmitterSettings(tx_settings);
-		if(tx_settings.find("fileout") != tx_settings.end())
- 			DRMTransmitter.SetWriteToFile(tx_settings["fileout"], tx_settings["outfmt"]);
-
 		/* Set main window */
 		app.setMainWidget(&MainDlg);
 		pApp = &app; /* Needed for post-event routine */
@@ -110,6 +107,7 @@ try
 	}
 	else
 	{
+		CDRMReceiver DRMReceiver(Settings);
 		/* First, initialize the working thread. This is done before letting the GUI initialise so that
 		 * the GUI can access initialised data in the working thread.
 		 */
@@ -126,6 +124,8 @@ try
 
 		/* Working thread has been initialized so start the GUI! */
 		app.exec();
+		
+		DRMReceiver.save(Settings);
 	}
 
 	/* Save settings to init-file */

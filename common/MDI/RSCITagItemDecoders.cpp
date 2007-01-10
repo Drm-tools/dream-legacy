@@ -118,6 +118,9 @@ void CTagItemDecoderCfre::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	if (iLen != 32)
 		return;
 
+	if (pDRMReceiver == NULL)
+		return;
+
 	const int iNewFrequency = vecbiTag.Separate(32);
 
 	pDRMReceiver->SetFrequency(iNewFrequency/1000);

@@ -29,7 +29,7 @@
 #define _SOUND_COMMON_H
 
 #ifdef USE_QT_GUI
-# if QT_VERSION <= 233
+# if QT_VERSION < 0x030000
 #  include <qthread.h>
 # else
 #  include <qmutex.h>

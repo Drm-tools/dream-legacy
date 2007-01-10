@@ -29,6 +29,7 @@
 #if !defined(DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
 #define DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
+#include "util/Settings.h"
 #include "Parameter.h"
 #include "DataIO.h"
 #include "DRMSignalIO.h"
@@ -48,7 +49,7 @@ class CDRMTransmitter
 #endif
 {
 public:
-							CDRMTransmitter();
+							CDRMTransmitter(CSettings& Settings);
 	virtual 				~CDRMTransmitter() {}
 
 #ifdef USE_QT_GUI

@@ -222,8 +222,8 @@ void CTagItemGeneratorSDCChanInf::GenTag(CParameter& Parameter)
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hierarchical data */
 		if ((i == 0) &&
-			((Parameter.eMSCCodingScheme == CParameter::CS_3_HMSYM) ||
-			(Parameter.eMSCCodingScheme == CParameter::CS_3_HMMIX)))
+			((Parameter.eMSCCodingScheme == CS_3_HMSYM) ||
+			(Parameter.eMSCCodingScheme == CS_3_HMMIX)))
 		{
 			/* Protection level for hierarchical */
 			Enqueue((uint32_t) Parameter.MSCPrLe.iHierarch, 2);

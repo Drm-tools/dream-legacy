@@ -556,6 +556,10 @@ SOURCE=..\common\MDI\MDITagItems.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\MDI\RCITagItems.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\MDI\TagPacketDecoderMDI.cpp
 # End Source File
 # Begin Source File
@@ -650,6 +654,10 @@ SOURCE=..\common\OFDM.cpp
 # Begin Source File
 
 SOURCE=..\common\Parameter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\ReceptionLog.cpp
 # End Source File
 # Begin Source File
 
@@ -993,6 +1001,10 @@ SOURCE=..\common\MDI\MDITagItems.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\MDI\RCITagItems.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\MDI\TagPacketDecoderMDI.h
 # End Source File
 # Begin Source File
@@ -1110,6 +1122,10 @@ SOURCE=..\common\OFDM.h
 # Begin Source File
 
 SOURCE=..\common\Parameter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\ReceptionLog.h
 # End Source File
 # Begin Source File
 

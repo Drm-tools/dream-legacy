@@ -245,19 +245,19 @@ TransmDialog::TransmDialog(
 
 	switch (DRMTransmitter.TransmParam.eMSCCodingScheme)
 	{
-	case CParameter::CS_2_SM:
+	case CS_2_SM:
 		ComboBoxMSCConstellation->setCurrentItem(0);
 		break;
 
-	case CParameter::CS_3_SM:
+	case CS_3_SM:
 		ComboBoxMSCConstellation->setCurrentItem(1);
 		break;
 
-//	case CParameter::CS_3_HMSYM:
+//	case CS_3_HMSYM:
 //		ComboBoxMSCConstellation->setCurrentItem(2);
 //		break;
 //
-//	case CParameter::CS_3_HMMIX:
+//	case CS_3_HMMIX:
 //		ComboBoxMSCConstellation->setCurrentItem(3);
 //		break;
 	}
@@ -268,11 +268,11 @@ TransmDialog::TransmDialog(
 
 	switch (DRMTransmitter.TransmParam.eSDCCodingScheme)
 	{
-	case CParameter::CS_1_SM:
+	case CS_1_SM:
 		ComboBoxSDCConstellation->setCurrentItem(0);
 		break;
 
-	case CParameter::CS_2_SM:
+	case CS_2_SM:
 		ComboBoxSDCConstellation->setCurrentItem(1);
 		break;
 	}
@@ -381,7 +381,7 @@ TransmDialog::TransmDialog(
 		Service[0].AudioParam.bTextflag = TRUE;
 
 	LineEditMDIinGroup->setEnabled(FALSE);
-#if QT_VERSION > 233
+#if QT_VERSION >= 0x030000
 	LineEditMDIinGroup->setInputMask("000.000.000.000;_");
 	LineEditMDIoutDest->setInputMask("000.000.000.000;_");
 	LineEditMDIinPort->setInputMask("00009;_");
@@ -966,23 +966,19 @@ void TransmDialog::OnComboBoxMSCConstellationHighlighted(int iID)
 	switch (iID)
 	{
 	case 0:
-		DRMTransmitter.TransmParam.eMSCCodingScheme =
-			CParameter::CS_2_SM;
+		DRMTransmitter.TransmParam.eMSCCodingScheme = CS_2_SM;
 		break;
 
 	case 1:
-		DRMTransmitter.TransmParam.eMSCCodingScheme =
-			CParameter::CS_3_SM;
+		DRMTransmitter.TransmParam.eMSCCodingScheme = CS_3_SM;
 		break;
 
 	case 2:
-		DRMTransmitter.TransmParam.eMSCCodingScheme =
-			CParameter::CS_3_HMSYM;
+		DRMTransmitter.TransmParam.eMSCCodingScheme = CS_3_HMSYM;
 		break;
 
 	case 3:
-		DRMTransmitter.TransmParam.eMSCCodingScheme =
-			CParameter::CS_3_HMMIX;
+		DRMTransmitter.TransmParam.eMSCCodingScheme = CS_3_HMMIX;
 		break;
 	}
 
@@ -998,8 +994,7 @@ void TransmDialog::OnComboBoxMSCProtLevHighlighted(int iID)
 
 void TransmDialog::UpdateMSCProtLevCombo()
 {
-	if (DRMTransmitter.TransmParam.eMSCCodingScheme ==
-		CParameter::CS_2_SM)
+	if (DRMTransmitter.TransmParam.eMSCCodingScheme == CS_2_SM)
 	{
 		/* Only two protection levels possible in 16 QAM mode */
 		ComboBoxMSCProtLev->clear();
@@ -1026,13 +1021,11 @@ void TransmDialog::OnComboBoxSDCConstellationHighlighted(int iID)
 	switch (iID)
 	{
 	case 0:
-		DRMTransmitter.TransmParam.eSDCCodingScheme =
-			CParameter::CS_1_SM;
+		DRMTransmitter.TransmParam.eSDCCodingScheme = CS_1_SM;
 		break;
 
 	case 1:
-		DRMTransmitter.TransmParam.eSDCCodingScheme =
-			CParameter::CS_2_SM;
+		DRMTransmitter.TransmParam.eSDCCodingScheme = CS_2_SM;
 		break;
 	}
 }

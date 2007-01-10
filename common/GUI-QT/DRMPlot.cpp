@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "DRMPlot.h"
+#include "../DrmReceiver.h"
 
 
 /* Implementation *************************************************************/
@@ -1353,7 +1354,7 @@ void CDRMPlot::SetFACConst(CVector<_COMPLEX>& veccData)
 	replot();
 }
 
-void CDRMPlot::SetupSDCConst(const CParameter::ECodScheme eNewCoSc)
+void CDRMPlot::SetupSDCConst(const ECodScheme eNewCoSc)
 {
 	/* Init chart for SDC constellation */
 	setTitle(tr("SDC Constellation"));
@@ -1371,7 +1372,7 @@ void CDRMPlot::SetupSDCConst(const CParameter::ECodScheme eNewCoSc)
 
 	/* Insert grid */
 	clear();
-	if (eNewCoSc == CParameter::CS_1_SM)
+	if (eNewCoSc == CS_1_SM)
 		SetQAM4Grid();
 	else
 		SetQAM16Grid();
@@ -1383,8 +1384,7 @@ void CDRMPlot::SetupSDCConst(const CParameter::ECodScheme eNewCoSc)
 	MarkerSym1.setBrush(QBrush(MainPenColorConst));
 }
 
-void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData,
-						   CParameter::ECodScheme eNewCoSc)
+void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc)
 {
 	/* Always set up plot. TODO: only set up plot if constellation
 	   scheme has changed */
@@ -1396,7 +1396,7 @@ void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData,
 	replot();
 }
 
-void CDRMPlot::SetupMSCConst(const CParameter::ECodScheme eNewCoSc)
+void CDRMPlot::SetupMSCConst(const ECodScheme eNewCoSc)
 {
 	/* Init chart for MSC constellation */
 	setTitle(tr("MSC Constellation"));
@@ -1414,7 +1414,7 @@ void CDRMPlot::SetupMSCConst(const CParameter::ECodScheme eNewCoSc)
 
 	/* Insert grid */
 	clear();
-	if (eNewCoSc == CParameter::CS_2_SM)
+	if (eNewCoSc == CS_2_SM)
 		SetQAM16Grid();
 	else
 		SetQAM64Grid();
@@ -1426,8 +1426,7 @@ void CDRMPlot::SetupMSCConst(const CParameter::ECodScheme eNewCoSc)
 	MarkerSym1.setBrush(QBrush(MainPenColorConst));
 }
 
-void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData,
-						   CParameter::ECodScheme eNewCoSc)
+void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc)
 {
 	/* Always set up plot. TODO: only set up plot if constellation
 	   scheme has changed */

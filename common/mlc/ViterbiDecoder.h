@@ -98,7 +98,7 @@ public:
 
 	_REAL	Decode(CVector<CDistance>& vecNewDistance,
 				   CVector<_DECISION>& vecOutputBits);
-	void	Init(CParameter::ECodScheme eNewCodingScheme,
+	void	Init(ECodScheme eNewCodingScheme,
 				 CParameter::EChanType eNewChannelType, int iN1, int iN2,
 			     int iNewNumOutBitsPartA, int iNewNumOutBitsPartB,
 			     int iPunctPatPartA, int iPunctPatPartB, int iLevel);

@@ -543,6 +543,28 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\common\ReceptionLog.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\common\resample\Resample.cpp"
 				>
 				<FileConfiguration
@@ -2768,6 +2790,28 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\common\MDI\RCITagItems.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath="..\common\MDI\PacketSocketNull.cpp"
 					>
 					<FileConfiguration
@@ -2987,6 +3031,10 @@
 			</File>
 			<File
 				RelativePath="..\common\Parameter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\ReceptionLog.h"
 				>
 			</File>
 			<File
@@ -3328,6 +3376,10 @@
 				</File>
 				<File
 					RelativePath="..\common\MDI\MDITagItems.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\MDI\RCITagItems.h"
 					>
 				</File>
 				<File

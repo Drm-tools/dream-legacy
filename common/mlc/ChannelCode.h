@@ -53,7 +53,7 @@ public:
 		return vecbiParity[byNewStateShiftReg & byGeneratorMatrix[iGenPolyn]];
 	}
 
-	CVector<int> GenPuncPatTable(CParameter::ECodScheme eNewCodingScheme,
+	CVector<int> GenPuncPatTable(ECodScheme eNewCodingScheme,
 								 CParameter::EChanType eNewChannelType,
 								 int iN1, int iN2,
 								 int iNewNumOutBitsPartA,

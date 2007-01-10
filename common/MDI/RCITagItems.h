@@ -1,12 +1,12 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001-2006
+ * Copyright (c) 2007
  *
  * Author(s):
- *	Andrea Russo, Julian Cable
+ *	Volker Fischer, Oliver Haffenden, Julian Cable
  *
  * Description:
- *	Dream program version number
+ *	see RCITagItems.cpp
  *
  ******************************************************************************
  *
@@ -25,6 +25,19 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
-#include "Version.h"
 
-char dream_version[] = "1.7testing.6";
+#ifndef RCI_TAG_ITEMS_H_INCLUDED
+#define RCI_TAG_ITEMS_H_INCLUDED
+
+#include "MDITagItems.h"
+
+class CTagItemGeneratorCfre : public CTagItemGenerator /* cfre tag */
+{
+public:
+	void GenTag(int iNewFreqkHz);
+protected:
+	string GetTagName(void);
+	string GetProfiles(void) { return ""; }
+};
+
+#endif

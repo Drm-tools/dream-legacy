@@ -34,16 +34,32 @@
 \******************************************************************************/
 
 #include "Settings.h"
+#ifdef _WIN32
+#include "windows.h"
+#endif
 
+#include "iostream"
+#include "sstream"
 
 /* Implementation *************************************************************/
-_BOOLEAN CSettings::Load(int argc, char** argv)
+void CSettings::Load(int argc, char** argv)
 {
+	/* Defaults */
+	Put("Global", "role", "receiver");
+
 	/* First load settings from init-file and then parse command line arguments.
 	   The command line arguments overwrite settings in init-file! */
 	ReadIniFile();
 
-	return ParseArguments(argc, argv);
+	ParseArguments(argc, argv);
+#if 1
+	for(INIFile::iterator i=iniFile.begin(); i!=iniFile.end(); i++)
+	{
+      cout << "[" << i->first << "]" << endl;
+      for(INISection::iterator j=i->second.begin(); j!=i->second.end(); j++)
+			   cout << j->first << "=" << j->second << endl;
+    }
+#endif	
 }
 
 void CSettings::Save()
@@ -52,650 +68,40 @@ void CSettings::Save()
 	WriteIniFile();
 }
 
+string CSettings::Get(const string& sSection, const string& sKey, const string& sDefaultVal)
+{
+	INIFile::iterator s = iniFile.find(sSection);
+	if(s == iniFile.end())
+		return "";
+	INISection::iterator k = s->second.find(sKey);
+	if(k == s->second.end())
+		return "";
+	return k->second;
+}
+
+void CSettings::Put(const string& sSection, const string& sKey, const string& sValue)
+{
+ 	 iniFile[sSection][sKey]=sValue;
+}
+
+void CSettings::Put(const string& sSection, const string& sKey, const int iValue)
+{
+ 	 stringstream s;
+ 	 s << iValue;
+ 	 iniFile[sSection][sKey]=s.str();
+}
 
 /* Read and write init-file ***************************************************/
 void CSettings::ReadIniFile()
 {
-	int			iValue;
-	_BOOLEAN	bValue;
-
 	/* Load data from init-file */
-	INIFile ini = LoadIni(DREAM_INIT_FILE_NAME);
-#if 0
-	for(INIFile::iterator i=ini.begin(); i!=ini.end(); i++)
-	{
-      cout << "[" << i->first << "]" << endl;
-      for(INISection::iterator j=i->second.begin(); j!=i->second.end(); j++)
-			   cout << j->first << "=" << j->second << endl;
-    }
-#endif	
-
-
-	/* Receiver ------------------------------------------------------------- */
-	/* Flip spectrum flag */
-	if (GetFlagIniSet(ini, "Receiver", "flipspectrum", bValue) == TRUE)
-		pDRMRec->GetReceiver()->SetFlippedSpectrum(bValue);
-
-
-	/* Mute audio flag */
-	if (GetFlagIniSet(ini, "Receiver", "muteaudio", bValue) == TRUE)
-		pDRMRec->GetWriteData()->MuteAudio(bValue);
-
-
-	/* Reverberation flag */
-	if (GetFlagIniSet(ini, "Receiver", "reverb", bValue) == TRUE)
-		pDRMRec->GetAudSorceDec()->SetReverbEffect(bValue);
-
-
-	/* Bandpass filter flag */
-	if (GetFlagIniSet(ini, "Receiver", "filter", bValue) == TRUE)
-		pDRMRec->GetFreqSyncAcq()->SetRecFilter(bValue);
-
-
-	/* Modified metrics flag */
-	if (GetFlagIniSet(ini, "Receiver", "modmetric", bValue) == TRUE)
-		pDRMRec->SetIntCons(bValue);
-
-
-	/* Sound In device */
-	if (GetNumericIniSet(ini, "Receiver", "snddevin", -1, MAX_NUM_SND_DEV, iValue) == TRUE)
-		pDRMRec->GetSoundInInterface()->SetDev(iValue);
-	else
-		pDRMRec->GetSoundInInterface()->SetDev(0);
-
-
-	/* Sound Out device */
-	if (GetNumericIniSet(ini, "Receiver", "snddevout", -1, MAX_NUM_SND_DEV, iValue) == TRUE)
-		pDRMRec->GetSoundOutInterface()->SetDev(iValue);
-	else
-		pDRMRec->GetSoundOutInterface()->SetDev(0);
-
-	/* Number of iterations for MLC setting */
-	if (GetNumericIniSet(ini, "Receiver", "mlciter", 0, MAX_NUM_MLC_IT, iValue) == TRUE)
-		pDRMRec->GetMSCMLC()->SetNumIterations(iValue);
-
-	/* Wanted RF Frequency file */
-	if (GetNumericIniSet(ini, "Receiver", "frequency", 0, MAX_RF_FREQ, iValue) == TRUE)
-		pDRMRec->SetFrequency(iValue);
-
-#ifdef WIN32
-	/* Enable/Disable process priority flag */
-	if (GetFlagIniSet(ini, "Receiver", "processpriority", bValue) == TRUE)
-		pDRMRec->SetEnableProcessPriority(bValue);
-#endif
-
-	/* Activate/Deactivate EPG decoding */
-	if (GetFlagIniSet(ini, "EPG", "decodeepg", bValue) == TRUE)
-		pDRMRec->GetDataDecoder()->SetDecodeEPG(bValue);
-
-#ifdef USE_QT_GUI
-	/* Logfile -------------------------------------------------------------- */
-	/* Start log file flag */
-	if (GetFlagIniSet(ini, "Logfile", "enablelog", bValue) == TRUE)
-		pDRMRec->GetParameters()->ReceptLog.SetLoggingEnabled(bValue);
-
-	/* logging delay value */
-	if (GetNumericIniSet(ini, "Logfile", "delay", 0, MAX_SEC_LOG_FI_START, iValue) == TRUE)
-		pDRMRec->GetParameters()->ReceptLog.SetDelLogStart(iValue);
-
-	/* Latitude string for log file */
-	pDRMRec->GetParameters()->ReceptLog.SetLatitude(
-		GetIniSetting(ini, "Logfile", "latitude"));
-
-	/* Longitude string for log file */
-	pDRMRec->GetParameters()->ReceptLog.SetLongitude(
-		GetIniSetting(ini, "Logfile", "longitude"));
-
-
-	/* Storage path for files saved from Multimedia dialog */
-	pDRMRec->strStoragePathMMDlg = GetIniSetting(ini, "Multimedia dialog", "storagepath");
-
-	/* MOT BWS refresh time for pages saved from Multimedia dialog */
-	if (GetNumericIniSet(ini, "Multimedia dialog", "motbwsrefresh", MIN_MOT_BWS_REFRESH_TIME, MAX_MOT_BWS_REFRESH_TIME, iValue) == TRUE)
-		pDRMRec->iMOTBWSRefreshTime = iValue;
-
-	/* MOT BWS add refresh header for pages saved from Multimedia dialog */
-	if (GetFlagIniSet(ini, "Multimedia dialog", "addrefresh", bValue) == TRUE)
-		pDRMRec->bAddRefreshHeader = bValue;
-
-	/* Store font saved from Multimedia dialog */
-	pDRMRec->FontParamMMDlg.strFamily = GetIniSetting(ini, "Multimedia dialog", "fontfamily");
-
-	if (GetNumericIniSet(ini, "Multimedia dialog", "fontpointsize", 1, MAX_FONT_POINT_SIZE, iValue) == TRUE)
-		pDRMRec->FontParamMMDlg.intPointSize = iValue;
-
-	if (GetNumericIniSet(ini, "Multimedia dialog", "fontweight", 0, MAX_FONT_WEIGHT, iValue) == TRUE)
-		pDRMRec->FontParamMMDlg.intWeight = iValue;
-
-	if (GetFlagIniSet(ini, "Multimedia dialog", "fontitalic", bValue) == TRUE)
-		pDRMRec->FontParamMMDlg.bItalic = bValue;
-
-	/* Seconds for preview into Stations Dialog if zero then inactive */
-	if (GetNumericIniSet(ini, "Stations dialog", "preview", 0, MAX_NUM_SEC_PREVIEW, iValue) == TRUE)
-		pDRMRec->iSecondsPreview = iValue;
-
-	/* Sort order and column for DRM schedule and analog schedule */
-	if (GetNumericIniSet(ini, "Stations dialog", "sortcolumndrm", 0, MAX_COLUMN_NUMBER, iValue) == TRUE)
-		pDRMRec->SortParamDRM.iColumn = iValue;
-	if (GetNumericIniSet(ini, "Stations dialog", "sortcolumnanalog", 0, MAX_COLUMN_NUMBER, iValue) == TRUE)
-		pDRMRec->SortParamAnalog.iColumn = iValue;
-
-	if (GetFlagIniSet(ini, "Stations dialog", "sortascendingdrm", bValue) == TRUE)
-		pDRMRec->SortParamDRM.bAscending = bValue;
-	if (GetFlagIniSet(ini, "Stations dialog", "sortascendinganalog", bValue) == TRUE)
-		pDRMRec->SortParamAnalog.bAscending = bValue;
-
-
-	/* Window geometry ------------------------------------------------------ */
-	/* Main window */
-	if (GetNumericIniSet(ini, "Window geometry", "mainxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomFdrmdialog.iXPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "mainypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomFdrmdialog.iYPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "mainhsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomFdrmdialog.iHSize = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "mainwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomFdrmdialog.iWSize = iValue;
-
-	/* System evaluation window */
-	if (GetNumericIniSet(ini, "Window geometry", "sysevxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomSystemEvalDlg.iXPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "sysevypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomSystemEvalDlg.iYPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "sysevhsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomSystemEvalDlg.iHSize = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "sysevwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomSystemEvalDlg.iWSize = iValue;
-	if (GetFlagIniSet(ini, "Window geometry", "sysevvis", bValue) == TRUE)
-		pDRMRec->GeomSystemEvalDlg.bVisible = bValue;
-
-	/* Multimedia window */
-	if (GetNumericIniSet(ini, "Window geometry", "multdlgxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomMultimediaDlg.iXPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "multdlgypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomMultimediaDlg.iYPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "multdlghsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomMultimediaDlg.iHSize = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "multdlgwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomMultimediaDlg.iWSize = iValue;
-	if (GetFlagIniSet(ini, "Window geometry", "multdlgvis", bValue) == TRUE)
-		pDRMRec->GeomMultimediaDlg.bVisible = bValue;
-
-	/* Stations dialog */
-	if (GetNumericIniSet(ini, "Window geometry", "statdlgxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomStationsDlg.iXPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "statdlgypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomStationsDlg.iYPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "statdlghsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomStationsDlg.iHSize = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "statdlgwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomStationsDlg.iWSize = iValue;
-	if (GetFlagIniSet(ini, "Window geometry", "statdlgvis", bValue) == TRUE)
-		pDRMRec->GeomStationsDlg.bVisible = bValue;
-
-	/* EPG dialog */
-	if (GetNumericIniSet(ini, "Window geometry", "epgdlgxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomEPGDlg.iXPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "epgdlgypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomEPGDlg.iYPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "epgdlghsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomEPGDlg.iHSize = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "epgdlgwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomEPGDlg.iWSize = iValue;
-	if (GetFlagIniSet(ini, "Window geometry", "epgdlgvis", bValue) == TRUE)
-		pDRMRec->GeomEPGDlg.bVisible = bValue;
-
-	/* Live schedule dialog */
-	if (GetNumericIniSet(ini, "Window geometry", "scheddlgxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomLiveScheduleDlg.iXPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "scheddlgypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomLiveScheduleDlg.iYPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "scheddlghsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomLiveScheduleDlg.iHSize = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "scheddlgwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomLiveScheduleDlg.iWSize = iValue;
-	if (GetFlagIniSet(ini, "Window geometry", "scheddlgvis", bValue) == TRUE)
-		pDRMRec->GeomLiveScheduleDlg.bVisible = bValue;
-
-	/* Sort order and column for schedule */
-	if (GetNumericIniSet(ini, "Live schedule dialog", "sortcolumn", 0, MAX_COLUMN_NUMBER, iValue) == TRUE)
-		pDRMRec->SortParamLiveSched.iColumn = iValue;
-	if (GetFlagIniSet(ini, "Live schedule dialog", "sortascending", bValue) == TRUE)
-		pDRMRec->SortParamLiveSched.bAscending = bValue;
-
-	/* Seconds for preview into live schedule dialog if zero then inactive */
-	if (GetNumericIniSet(ini, "Live schedule dialog", "preview", 0, MAX_NUM_SEC_PREVIEW, iValue) == TRUE)
-		pDRMRec->iSecondsPreviewLiveSched = iValue;
-
-	if (GetFlagIniSet(ini, "Live schedule dialog", "showall", bValue) == TRUE)
-		pDRMRec->bShowAllStations = bValue;
-
-	/* Storage path for files saved from live schedule dialog */
-	pDRMRec->strStoragePathLiveScheduleDlg = GetIniSetting(ini, "Live schedule dialog", "storagepath");
-
-	/* Analog demodulation dialog */
-	if (GetNumericIniSet(ini, "Window geometry", "analdemxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomAnalogDemDlg.iXPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "analdemypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomAnalogDemDlg.iYPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "analdemhsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomAnalogDemDlg.iHSize = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "analdemwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomAnalogDemDlg.iWSize = iValue;
-	if (GetFlagIniSet(ini, "Window geometry", "analdemvis", bValue) == TRUE)
-		pDRMRec->GeomAnalogDemDlg.bVisible = bValue;
-
-	/* filter bandwidth (max = SOUNDCRD_SAMPLE_RATE / 2 = typically 24000 Hz = 24 kHz) */
-
-	/* AM filter bandwidth */
-	if (GetNumericIniSet(ini, "Analog demodulation dialog", "filterbwam", 0, SOUNDCRD_SAMPLE_RATE / 2, iValue) == TRUE)
-		pDRMRec->iBwAM = (int) iValue;
-
-	/* USB filter bandwidth */
-	if (GetNumericIniSet(ini, "Analog demodulation dialog", "filterbwusb", 0, SOUNDCRD_SAMPLE_RATE / 2, iValue) == TRUE)
-		pDRMRec->iBwUSB = (int) iValue;
-
-	/* LSB filter bandwidth */
-	if (GetNumericIniSet(ini, "Analog demodulation dialog", "filterbwlsb", 0, SOUNDCRD_SAMPLE_RATE / 2, iValue) == TRUE)
-		pDRMRec->iBwLSB = (int) iValue;
-
-	/* CW filter bandwidth */
-	if (GetNumericIniSet(ini, "Analog demodulation dialog", "filterbwcw", 0, SOUNDCRD_SAMPLE_RATE / 2, iValue) == TRUE)
-		pDRMRec->iBwCW = (int) iValue;
-
-	/* FM filter bandwidth */
-	if (GetNumericIniSet(ini, "Analog demodulation dialog", "filterbwfm", 0, SOUNDCRD_SAMPLE_RATE / 2, iValue) == TRUE)
-		pDRMRec->iBwFM = (int) iValue;
-	
-	/* demodulation */
-	if (GetNumericIniSet(ini, "Analog demodulation dialog", "demodulation", 0, CAMDemodulation::DT_FM , iValue) == TRUE)
-		pDRMRec->AMDemodType = (CAMDemodulation::EDemodType) iValue;
-
-	/* AGC */
-	if (GetNumericIniSet(ini, "Analog demodulation dialog", "agc", 0, CAGC::AT_FAST, iValue) == TRUE)
-		pDRMRec->GetAMDemod()->SetAGCType((CAGC::EType) iValue);
-
-	/* noise reduction */
-	if (GetNumericIniSet(ini, "Analog demodulation dialog", "noisered", 0, CAMDemodulation::NR_HIGH, iValue) == TRUE)
-		pDRMRec->GetAMDemod()->SetNoiRedType((CAMDemodulation::ENoiRedType) iValue);
-
-	/* pll enabled/disabled */
-	if (GetFlagIniSet(ini, "Analog demodulation dialog", "enablepll", bValue) == TRUE)
-		pDRMRec->GetAMDemod()->EnablePLL(bValue);
-
-	/* auto frequency acquisition */
-	if (GetFlagIniSet(ini, "Analog demodulation dialog", "autofreqacq", bValue) == TRUE)
-		pDRMRec->GetAMDemod()->EnableAutoFreqAcq(bValue);
-
-
-	/* AMSS dialog */
-	if (GetNumericIniSet(ini, "Window geometry", "amssxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomAMSSDlg.iXPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "amssypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomAMSSDlg.iYPos = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "amsshsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomAMSSDlg.iHSize = iValue;
-	if (GetNumericIniSet(ini, "Window geometry", "amsswsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-		pDRMRec->GeomAMSSDlg.iWSize = iValue;
-	if (GetFlagIniSet(ini, "Window geometry", "amssvis", bValue) == TRUE)
-		pDRMRec->GeomAMSSDlg.bVisible = bValue;
-
-	/* Chart windows */
-	int iNumChartWin = 0;
-	if (GetNumericIniSet(ini, "Window geometry", "numchartwin", 0, MAX_NUM_CHART_WIN_EV_DLG, iValue) == TRUE)
-		iNumChartWin = iValue;
-
-	pDRMRec->GeomChartWindows.Init(iNumChartWin);
-	for (int i = 0; i < iNumChartWin; i++)
-	{
-		/* Convert number to string */
-		char chNumTmpLong[256];
-
-		sprintf(chNumTmpLong, "chwin%dxpos", i);
-		if (GetNumericIniSet(ini, "Window geometry", chNumTmpLong, 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-			pDRMRec->GeomChartWindows[i].iXPos = iValue;
-
-		sprintf(chNumTmpLong, "chwin%dypos", i);
-		if (GetNumericIniSet(ini, "Window geometry", chNumTmpLong, 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-			pDRMRec->GeomChartWindows[i].iYPos = iValue;
-
-		sprintf(chNumTmpLong, "chwin%dhsize", i);
-		if (GetNumericIniSet(ini, "Window geometry", chNumTmpLong, 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-			pDRMRec->GeomChartWindows[i].iHSize = iValue;
-
-		sprintf(chNumTmpLong, "chwin%dwsize", i);
-		if (GetNumericIniSet(ini, "Window geometry", chNumTmpLong, 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
-			pDRMRec->GeomChartWindows[i].iWSize = iValue;
-
-		sprintf(chNumTmpLong, "chwin%dtype", i);
-		if (GetNumericIniSet(ini, "Window geometry", chNumTmpLong, 0, MAX_IND_CHART_TYPES, iValue) == TRUE)
-			pDRMRec->GeomChartWindows[i].iType = iValue;
-	}
-
-
-	/* Other ---------------------------------------------------------------- */
-	/* Color scheme main plot */
-	if (GetNumericIniSet(ini, "GUI", "colorscheme", 0, MAX_COLOR_SCHEMES_VAL, iValue) == TRUE)
-		pDRMRec->iMainPlotColorStyle = iValue;
-
-	/* System evaluation dialog plot type. Maximum value is the last element
-	   in the plot type enum! */
-	if (GetNumericIniSet(ini, "GUI", "sysevplottype", 0, CDRMPlot::NONE_OLD, iValue) == TRUE)
-		pDRMRec->iSysEvalDlgPlotType = iValue;
-
-	/* Main window display color */
-	if (GetNumericIniSet(ini, "GUI", "maindispcolor", 0, MAX_NUM_COL_MAIN_DISP, iValue) == TRUE)
-		pDRMRec->iMainDisplayColor = iValue;
-#endif
-
-
-#ifdef HAVE_LIBHAMLIB
-	/* Hamlib --------------------------------------------------------------- */
-	/* Hamlib Model ID */
-	if (GetNumericIniSet(ini, "Hamlib",	"hamlib-model", 0, MAX_ID_HAMLIB, iValue) == TRUE)
-		pDRMRec->GetHamlib()->SetHamlibModelID(iValue);
-
-	/* Hamlib configuration string */
-	pDRMRec->GetHamlib()->SetHamlibConf(GetIniSetting(ini, "Hamlib", "hamlib-config"));
-
-# ifdef USE_QT_GUI
-	/* Enable s-meter flag */
-	if (GetFlagIniSet(ini, "Hamlib", "ensmeter", bValue) == TRUE)
-		pDRMRec->bEnableSMeter = bValue;
-# endif
-
-	/* Enable DRM modified receiver flag */
-	if (GetFlagIniSet(ini, "Hamlib", "enmodrig", bValue) == TRUE)
-		pDRMRec->GetHamlib()->SetEnableModRigSettings(bValue);
-#endif
+	iniFile = LoadIni(DREAM_INIT_FILE_NAME);
 }
 
 void CSettings::WriteIniFile()
 {
-	INIFile ini;
-
-	/* Receiver ------------------------------------------------------------- */
-	/* Flip spectrum flag */
-	SetFlagIniSet(ini, "Receiver", "flipspectrum",
-		pDRMRec->GetReceiver()->GetFlippedSpectrum());
-
-
-	/* Mute audio flag */
-	SetFlagIniSet(ini, "Receiver", "muteaudio",
-		pDRMRec->GetWriteData()->GetMuteAudio());
-
-
-	/* Reverberation */
-	SetFlagIniSet(ini, "Receiver", "reverb",
-		pDRMRec->GetAudSorceDec()->GetReverbEffect());
-
-
-	/* Bandpass filter flag */
-	SetFlagIniSet(ini, "Receiver", "filter",
-		pDRMRec->GetFreqSyncAcq()->GetRecFilter());
-
-
-	/* Modified metrics flag */
-	SetFlagIniSet(ini, "Receiver", "modmetric",
-		pDRMRec->GetIntCons());
-
-
-	/* Sound In device */
-	SetNumericIniSet(ini, "Receiver", "snddevin",
-		pDRMRec->GetSoundInInterface()->GetDev());
-
-
-	/* Sound Out device */
-	SetNumericIniSet(ini, "Receiver", "snddevout",
-		pDRMRec->GetSoundOutInterface()->GetDev());
-
-
-	/* Number of iterations for MLC setting */
-	SetNumericIniSet(ini, "Receiver", "mlciter",
-		pDRMRec->GetMSCMLC()->GetInitNumIterations());
-
-	/* Active/Deactivate EPG decoding */
-	SetFlagIniSet(ini, "EPG", "decodeepg",
-		pDRMRec->GetDataDecoder()->GetDecodeEPG());
-
-#ifdef USE_QT_GUI
-	/* Logfile -------------------------------------------------------------- */
-	/* log or nolog? */
-	SetFlagIniSet(ini, "Logfile", "enablelog",
-		pDRMRec->GetParameters()->ReceptLog.GetLoggingEnabled());
-
-	/* Start log file delayed */
-	SetNumericIniSet(ini, "Logfile", "delay",
-		pDRMRec->GetParameters()->ReceptLog.GetDelLogStart());
-
-	/* Frequency for log file */
-	SetNumericIniSet(ini, "Logfile", "frequency",
-		pDRMRec->GetParameters()->ReceptLog.GetFrequency());
-
-#ifdef WIN32
-	/* Enable/Disable process priority flag */
-	SetFlagIniSet(ini, "Receiver", "processpriority",
-		pDRMRec->GetEnableProcessPriority());
-#endif
-
-	/* Latitude string for log file */
-	PutIniSetting(ini, "Logfile", "latitude",
-		pDRMRec->GetParameters()->ReceptLog.GetLatitude().c_str());
-
-	/* Longitude string for log file */
-	PutIniSetting(ini, "Logfile", "longitude",
-		pDRMRec->GetParameters()->ReceptLog.GetLongitude().c_str());
-
-	/* Storage path for files saved from Multimedia dialog */
-	PutIniSetting(ini, "Multimedia dialog", "storagepath",
-		pDRMRec->strStoragePathMMDlg.c_str());
-
-	/* MOT BWS refresh time for pages saved from Multimedia dialog */
-	SetNumericIniSet(ini, "Multimedia dialog", "motbwsrefresh",
-		pDRMRec->iMOTBWSRefreshTime);
-
-	/* MOT BWS add refresh header for pages saved from Multimedia dialog */
-	SetFlagIniSet(ini, "Multimedia dialog", "addrefresh",
-		pDRMRec->bAddRefreshHeader);
-
-	/* Store font saved from Multimedia dialog */
-	PutIniSetting(ini, "Multimedia dialog", "fontfamily",
-		pDRMRec->FontParamMMDlg.strFamily.c_str());
-
-	SetNumericIniSet(ini, "Multimedia dialog", "fontpointsize",
-		pDRMRec->FontParamMMDlg.intPointSize);
-
-	SetNumericIniSet(ini, "Multimedia dialog", "fontweight",
-		pDRMRec->FontParamMMDlg.intWeight);
-
-	SetFlagIniSet(ini, "Multimedia dialog", "fontitalic",
-		pDRMRec->FontParamMMDlg.bItalic);
-
-	/* Seconds for preview into Stations Dialog if zero then inactive */
-	SetNumericIniSet(ini, "Stations dialog", "preview",
-		pDRMRec->iSecondsPreview);
-
-	/* Sort order and column for DRM schedule and analog schedule */
-	SetNumericIniSet(ini, "Stations dialog", "sortcolumndrm",
-		pDRMRec->SortParamDRM.iColumn);
-	SetNumericIniSet(ini, "Stations dialog", "sortcolumnanalog",
-		pDRMRec->SortParamAnalog.iColumn);
-	SetFlagIniSet(ini, "Stations dialog", "sortascendingdrm",
-		pDRMRec->SortParamDRM.bAscending);
-	SetFlagIniSet(ini, "Stations dialog", "sortascendinganalog",
-		pDRMRec->SortParamAnalog.bAscending);
-
-
-	/* Window geometry ------------------------------------------------------ */
-	/* Main window */
-	SetNumericIniSet(ini, "Window geometry", "mainxpos", pDRMRec->GeomFdrmdialog.iXPos);
-	SetNumericIniSet(ini, "Window geometry", "mainypos", pDRMRec->GeomFdrmdialog.iYPos);
-	SetNumericIniSet(ini, "Window geometry", "mainhsize", pDRMRec->GeomFdrmdialog.iHSize);
-	SetNumericIniSet(ini, "Window geometry", "mainwsize", pDRMRec->GeomFdrmdialog.iWSize);
-
-	/* System evaluation window */
-	SetNumericIniSet(ini, "Window geometry", "sysevxpos", pDRMRec->GeomSystemEvalDlg.iXPos);
-	SetNumericIniSet(ini, "Window geometry", "sysevypos", pDRMRec->GeomSystemEvalDlg.iYPos);
-	SetNumericIniSet(ini, "Window geometry", "sysevhsize", pDRMRec->GeomSystemEvalDlg.iHSize);
-	SetNumericIniSet(ini, "Window geometry", "sysevwsize", pDRMRec->GeomSystemEvalDlg.iWSize);
-	SetFlagIniSet(ini, "Window geometry", "sysevvis", pDRMRec->GeomSystemEvalDlg.bVisible);
-
-	/* Multimedia window */
-	SetNumericIniSet(ini, "Window geometry", "multdlgxpos", pDRMRec->GeomMultimediaDlg.iXPos);
-	SetNumericIniSet(ini, "Window geometry", "multdlgypos", pDRMRec->GeomMultimediaDlg.iYPos);
-	SetNumericIniSet(ini, "Window geometry", "multdlghsize", pDRMRec->GeomMultimediaDlg.iHSize);
-	SetNumericIniSet(ini, "Window geometry", "multdlgwsize", pDRMRec->GeomMultimediaDlg.iWSize);
-	SetFlagIniSet(ini, "Window geometry", "multdlgvis", pDRMRec->GeomMultimediaDlg.bVisible);
-
-	/* Stations dialog */
-	SetNumericIniSet(ini, "Window geometry", "statdlgxpos", pDRMRec->GeomStationsDlg.iXPos);
-	SetNumericIniSet(ini, "Window geometry", "statdlgypos", pDRMRec->GeomStationsDlg.iYPos);
-	SetNumericIniSet(ini, "Window geometry", "statdlghsize", pDRMRec->GeomStationsDlg.iHSize);
-	SetNumericIniSet(ini, "Window geometry", "statdlgwsize", pDRMRec->GeomStationsDlg.iWSize);
-	SetFlagIniSet(ini, "Window geometry", "statdlgvis", pDRMRec->GeomStationsDlg.bVisible);
-
-	/* EPG dialog */
-	SetNumericIniSet(ini, "Window geometry", "epgdlgxpos", pDRMRec->GeomEPGDlg.iXPos);
-	SetNumericIniSet(ini, "Window geometry", "epgdlgypos", pDRMRec->GeomEPGDlg.iYPos);
-	SetNumericIniSet(ini, "Window geometry", "epgdlghsize", pDRMRec->GeomEPGDlg.iHSize);
-	SetNumericIniSet(ini, "Window geometry", "epgdlgwsize", pDRMRec->GeomEPGDlg.iWSize);
-	SetFlagIniSet(ini, "Window geometry", "epgdlgvis", pDRMRec->GeomEPGDlg.bVisible);
-
-	/* Live schedule dialog */
-	SetNumericIniSet(ini, "Window geometry", "scheddlgxpos", pDRMRec->GeomLiveScheduleDlg.iXPos);
-	SetNumericIniSet(ini, "Window geometry", "scheddlgypos", pDRMRec->GeomLiveScheduleDlg.iYPos);
-	SetNumericIniSet(ini, "Window geometry", "scheddlghsize", pDRMRec->GeomLiveScheduleDlg.iHSize);
-	SetNumericIniSet(ini, "Window geometry", "scheddlgwsize", pDRMRec->GeomLiveScheduleDlg.iWSize);
-	SetFlagIniSet(ini, "Window geometry", "scheddlgvis", pDRMRec->GeomLiveScheduleDlg.bVisible);
-
-	/* Sort order and column for schedule */
-	SetNumericIniSet(ini, "Live schedule dialog", "sortcolumn",
-		pDRMRec->SortParamLiveSched.iColumn);
-	SetFlagIniSet(ini, "Live schedule dialog", "sortascending",
-		pDRMRec->SortParamLiveSched.bAscending);
-
-	/* Seconds for preview into live schedule dialog if zero then inactive */
-	SetNumericIniSet(ini, "Live schedule dialog", "preview",
-		pDRMRec->iSecondsPreviewLiveSched);
-
-	SetFlagIniSet(ini, "Live schedule dialog", "showall",
-		pDRMRec->bShowAllStations);
-
-	/* Storage path for files saved from live schedule dialog */
-	PutIniSetting(ini, "Live schedule dialog", "storagepath",
-		pDRMRec->strStoragePathLiveScheduleDlg.c_str());
-
-	/* Analog demodulation dialog */
-	SetNumericIniSet(ini, "Window geometry", "analdemxpos", pDRMRec->GeomAnalogDemDlg.iXPos);
-	SetNumericIniSet(ini, "Window geometry", "analdemypos", pDRMRec->GeomAnalogDemDlg.iYPos);
-	SetNumericIniSet(ini, "Window geometry", "analdemhsize", pDRMRec->GeomAnalogDemDlg.iHSize);
-	SetNumericIniSet(ini, "Window geometry", "analdemwsize", pDRMRec->GeomAnalogDemDlg.iWSize);
-	SetFlagIniSet(ini, "Window geometry", "analdemvis", pDRMRec->GeomAnalogDemDlg.bVisible);
-
-	/* filter bandwidth */
-	
-	/* AM filter bandwidth */
-	SetNumericIniSet(ini, "Analog demodulation dialog", "filterbwam", pDRMRec->iBwAM);
-
-	/* USB filter bandwidth */
-	SetNumericIniSet(ini, "Analog demodulation dialog", "filterbwusb", pDRMRec->iBwUSB);
-
-	/* LSB filter bandwidth */
-	SetNumericIniSet(ini, "Analog demodulation dialog", "filterbwlsb", pDRMRec->iBwLSB);
-
-	/* CW filter bandwidth */
-	SetNumericIniSet(ini, "Analog demodulation dialog", "filterbwcw", pDRMRec->iBwCW);
-
-	/* FM filter bandwidth */
-	SetNumericIniSet(ini, "Analog demodulation dialog", "filterbwfm", pDRMRec->iBwFM);
-
-	/* demodulation */
-	SetNumericIniSet(ini, "Analog demodulation dialog", "demodulation",
-		pDRMRec->GetAMDemod()->GetDemodType());
-
-	/* AGC */
-	SetNumericIniSet(ini, "Analog demodulation dialog", "agc",
-		pDRMRec->GetAMDemod()->GetAGCType());
-
-	/* noise reduction */
-	SetNumericIniSet(ini, "Analog demodulation dialog", "noisered",
-		pDRMRec->GetAMDemod()->GetNoiRedType());
-
-	/* pll enabled/disabled */
-	SetFlagIniSet(ini, "Analog demodulation dialog", "enablepll",
-		pDRMRec->GetAMDemod()->PLLEnabled());
-
-	/* auto frequency acquisition */
-	SetFlagIniSet(ini, "Analog demodulation dialog", "autofreqacq",
-		pDRMRec->GetAMDemod()->AutoFreqAcqEnabled());
-
-
-	/* AMSS dialog */
-	SetNumericIniSet(ini, "Window geometry", "amssxpos", pDRMRec->GeomAMSSDlg.iXPos);
-	SetNumericIniSet(ini, "Window geometry", "amssypos", pDRMRec->GeomAMSSDlg.iYPos);
-	SetNumericIniSet(ini, "Window geometry", "amsshsize", pDRMRec->GeomAMSSDlg.iHSize);
-	SetNumericIniSet(ini, "Window geometry", "amsswsize", pDRMRec->GeomAMSSDlg.iWSize);
-	SetFlagIniSet(ini, "Window geometry", "amssvis", pDRMRec->GeomAMSSDlg.bVisible);
-
-	/* Chart windows */
-	const int iNumChartWin = pDRMRec->GeomChartWindows.Size();
-	SetNumericIniSet(ini, "Window geometry", "numchartwin", iNumChartWin);
-
-	for (int i = 0; i < iNumChartWin; i++)
-	{
-		/* Convert number to string */
-		char chNumTmpLong[256];
-
-		sprintf(chNumTmpLong, "chwin%dxpos", i);
-		SetNumericIniSet(ini, "Window geometry", chNumTmpLong, pDRMRec->GeomChartWindows[i].iXPos);
-
-		sprintf(chNumTmpLong, "chwin%dypos", i);
-		SetNumericIniSet(ini, "Window geometry", chNumTmpLong, pDRMRec->GeomChartWindows[i].iYPos);
-
-		sprintf(chNumTmpLong, "chwin%dhsize", i);
-		SetNumericIniSet(ini, "Window geometry", chNumTmpLong, pDRMRec->GeomChartWindows[i].iHSize);
-
-		sprintf(chNumTmpLong, "chwin%dwsize", i);
-		SetNumericIniSet(ini, "Window geometry", chNumTmpLong, pDRMRec->GeomChartWindows[i].iWSize);
-
-		sprintf(chNumTmpLong, "chwin%dtype", i);
-		SetNumericIniSet(ini, "Window geometry", chNumTmpLong, pDRMRec->GeomChartWindows[i].iType);
-	}
-
-
-	/* Other ---------------------------------------------------------------- */
-	/* Color scheme main plot */
-	SetNumericIniSet(ini, "GUI", "colorscheme", pDRMRec->iMainPlotColorStyle);
-
-	/* System evaluation dialog plot type */
-	SetNumericIniSet(ini, "GUI", "sysevplottype", pDRMRec->iSysEvalDlgPlotType);
-
-	/* Main window display color */
-	SetNumericIniSet(ini, "GUI", "maindispcolor", pDRMRec->iMainDisplayColor);
-#endif
-
-
-#ifdef HAVE_LIBHAMLIB
-	/* Hamlib --------------------------------------------------------------- */
-	/* Hamlib Model ID */
-	SetNumericIniSet(ini, "Hamlib", "hamlib-model",
-		pDRMRec->GetHamlib()->GetHamlibModelID());
-
-	/* Hamlib configuration string */
-	PutIniSetting(ini, "Hamlib", "hamlib-config", pDRMRec->GetHamlib()->GetHamlibConf().c_str());
-
-# ifdef USE_QT_GUI
-	/* Enable s-meter flag */
-	SetFlagIniSet(ini, "Hamlib", "ensmeter", pDRMRec->bEnableSMeter);
-# endif
-
-	/* Enable DRM modified receiver flag */
-	SetFlagIniSet(ini, "Hamlib", "enmodrig", pDRMRec->GetHamlib()->GetEnableModRigSettings());
-#endif
-
-
 	/* Save settings in init-file */
-	SaveIni(ini, DREAM_INIT_FILE_NAME);
+	SaveIni(iniFile, DREAM_INIT_FILE_NAME);
 }
 
 _BOOLEAN CSettings::GetNumericIniSet(INIFile& theINI, string strSection,
@@ -765,11 +171,7 @@ void CSettings::SetFlagIniSet(INIFile& theINI, string strSection, string strKey,
 /* Command line argument parser ***********************************************/
 _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 {
-	_BOOLEAN	bIsReceiver = TRUE;
-	_REAL		rArgument;
 	string		strArgument;
-	_REAL		rFreqAcSeWinSize = (_REAL) 0.0;
-	_REAL		rFreqAcSeWinCenter = (_REAL) 0.0;
 
 	/* QT docu: argv()[0] is the program name, argv()[1] is the first
 	   argument and argv()[argc()-1] is the last argument.
@@ -779,7 +181,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		/* DRM transmitter mode flag ---------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-t", "--transmitter") == TRUE)
 		{
-			bIsReceiver = FALSE;
+			Put("Global", "role", "transmitter");
 			continue;
 		}
 
@@ -787,316 +189,184 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		/* Flip spectrum flag ----------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-p", "--flipspectrum") == TRUE)
 		{
-			pDRMRec->GetReceiver()->SetFlippedSpectrum(TRUE);
+			Put("Receiver", "flipspectrum", "1");
 			continue;
 		}
-
 
 		/* Mute audio flag -------------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-m", "--muteaudio") == TRUE)
 		{
-			pDRMRec->GetWriteData()->MuteAudio(TRUE);
+			Put("Receiver", "muteaudio", "1");
 			continue;
 		}
-
 
 		/* Bandpass filter flag --------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-F", "--filter") == TRUE)
 		{
-			pDRMRec->GetFreqSyncAcq()->SetRecFilter(TRUE);
+			Put("Receiver", "filter", "1");
 			continue;
 		}
-
 
 		/* Modified metrics flag -------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-D", "--modmetric") == TRUE)
 		{
-			pDRMRec->SetIntCons(TRUE);
+			Put("Receiver", "modmetric", "1");
 			continue;
 		}
-
 
 		/* Sound In device -------------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-I", "--snddevin", -1,
-			MAX_NUM_SND_DEV, rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-I", "--snddevin", strArgument) == TRUE)
 		{
-			pDRMRec->GetSoundInInterface()->SetDev((int) rArgument);
+			Put("Global", "snddevin", strArgument);
 			continue;
 		}
-
 
 		/* Sound Out device ------------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-O", "--snddevout", -1,
-			MAX_NUM_SND_DEV, rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-O", "--snddevout", strArgument) == TRUE)
 		{
-			pDRMRec->GetSoundOutInterface()->SetDev((int) rArgument);
+			Put("Global", "snddevout", strArgument);
 			continue;
 		}
 
-
 		/* Do not use sound card, read from file ---------------------------- */
-		if (GetStringArgument(argc, argv, i, "-f", "--fileio",
-			strArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-f", "--fileio", strArgument) == TRUE)
 		{
- 			tx_settings["filein"] = strArgument;
-			pDRMRec->SetReadDRMFromFile(strArgument);
+			Put("Global", "filein", strArgument);
 			continue;
 		}
 
  		/* Do not use sound card, write COFDM to file ----------------------- */
  		if (GetStringArgument(argc, argv, i, "-x", "--fileout", strArgument) == TRUE)
  		{
- 			tx_settings["fileout"] = strArgument;
+			Put("Global", "fileout", strArgument);
  			continue;
  		}
  
  		/* set COFDM output format ------------------------------------------ */
  		if (GetStringArgument(argc, argv, i, "-z", "--outfmt", strArgument) == TRUE)
  		{
- 			tx_settings["outfmt"] = strArgument;
+			Put("Transmitter", "outfmt", strArgument);
  			continue;
  		}
 
 		/* Write output data to file as WAV --------------------------------- */
-		if (GetStringArgument(argc, argv, i, "-w", "--writewav",
-			strArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-w", "--writewav", strArgument) == TRUE)
 		{
-			pDRMRec->GetWriteData()-> StartWriteWaveFile(strArgument);
+			Put("Global", "writewav", strArgument);
 			continue;
 		}
-
 		
 		/* Number of iterations for MLC setting ----------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-i", "--mlciter", 0,
-			MAX_NUM_MLC_IT, rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-i", "--mlciter", strArgument) == TRUE)
 		{
-			pDRMRec->GetMSCMLC()->SetNumIterations((int) rArgument);
+			Put("Receiver", "mlciter", strArgument);
 			continue;
 		}
-
 
 		/* Sample rate offset start value ----------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-s", "--sampleoff",
-			MIN_SAM_OFFS_INI, MAX_SAM_OFFS_INI,	rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-s", "--sampleoff", strArgument) == TRUE)
 		{
-			pDRMRec->SetInitResOff(rArgument);
+			Put("Receiver", "sampleoff", strArgument);
 			continue;
 		}
-
 
 		/* Frequency acquisition search window size ------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-S", "--fracwinsize", 0,
-			MAX_FREQ_AQC_SE_WIN_SI, rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-S", "--fracwinsize", strArgument) == TRUE)
 		{
-			rFreqAcSeWinSize = rArgument;
+			Put("Receiver", "fracwinsize", strArgument);
 			continue;
 		}
-
 
 		/* Frequency acquisition search window center ----------------------- */
-		if (GetNumericArgument(argc, argv, i, "-E", "--fracwincent", 0,
-			MAX_FREQ_AQC_SE_WIN_CEN, rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-E", "--fracwincent", strArgument) == TRUE)
 		{
-			rFreqAcSeWinCenter = rArgument;
+			Put("Receiver", "fracwincent", strArgument);
 			continue;
 		}
-
 
 		/* Input channel selection ------------------------------------------ */
-		if (GetNumericArgument(argc, argv, i, "-c", "--inchansel", 0,
-			MAX_VAL_IN_CHAN_SEL, rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-c", "--inchansel", strArgument) == TRUE)
 		{
-			switch ((int) rArgument)
-			{
-			case 0:
-				pDRMRec->GetReceiver()->
-					SetInChanSel(CReceiveData::CS_LEFT_CHAN);
-				break;
-
-			case 1:
-				pDRMRec->GetReceiver()->
-					SetInChanSel(CReceiveData::CS_RIGHT_CHAN);
-				break;
-
-			case 2:
-				pDRMRec->GetReceiver()->
-					SetInChanSel(CReceiveData::CS_MIX_CHAN);
-				break;
-
-			case 3:
-				pDRMRec->GetReceiver()->
-					SetInChanSel(CReceiveData::CS_IQ_POS);
-				break;
-
-			case 4:
-				pDRMRec->GetReceiver()->
-					SetInChanSel(CReceiveData::CS_IQ_NEG);
-				break;
-
-			case 5:
-				pDRMRec->GetReceiver()->
-					SetInChanSel(CReceiveData::CS_IQ_POS_ZERO);
-				break;
-
-			case 6:
-				pDRMRec->GetReceiver()->
-					SetInChanSel(CReceiveData::CS_IQ_NEG_ZERO);
-				break;
-			}
+			Put("Receiver", "inchansel", strArgument);
 			continue;
 		}
 
-
 		/* Output channel selection ----------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-u", "--outchansel", 0,
-			MAX_VAL_OUT_CHAN_SEL, rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-u", "--outchansel", strArgument) == TRUE)
 		{
-			switch ((int) rArgument)
-			{
-			case 0:
- 				tx_settings["outchansel"] = "0";
-				pDRMRec->GetWriteData()->
-					SetOutChanSel(CWriteData::CS_BOTH_BOTH);
-				break;
-
-			case 1:
- 				tx_settings["outchansel"] = "1";
-				pDRMRec->GetWriteData()->
-					SetOutChanSel(CWriteData::CS_LEFT_LEFT);
-				break;
-
-			case 2:
- 				tx_settings["outchansel"] = "2";
-				pDRMRec->GetWriteData()->
-					SetOutChanSel(CWriteData::CS_RIGHT_RIGHT);
-				break;
-
-			case 3:
- 				tx_settings["outchansel"] = "3";
-				pDRMRec->GetWriteData()->
-					SetOutChanSel(CWriteData::CS_LEFT_MIX);
-				break;
-
-			case 4:
- 				tx_settings["outchansel"] = "4";
-				pDRMRec->GetWriteData()->
-					SetOutChanSel(CWriteData::CS_RIGHT_MIX);
-				break;
-			}
+			Put("Receiver", "outchansel", strArgument);
+			Put("Transmitter", "outchansel", strArgument);
 			continue;
 		}
 
 		/* Wanted RF Frequency   ------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-r", "--frequency", 0,
-			MAX_RF_FREQ, rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-r", "--frequency", strArgument) == TRUE)
 		{
-			pDRMRec->SetFrequency((int) rArgument);
+			Put("Receiver", "frequency", strArgument);
 			continue;
 		}
 
-#ifdef WIN32
 		/* Enable/Disable process priority flag */
-		if (GetNumericArgument(argc, argv, i, "-P", "--processpriority", 0,
-			1, rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-P", "--processpriority", strArgument) == TRUE)
 		{
-			switch ((int) rArgument)
-			{
-			case 0:
-				pDRMRec->SetEnableProcessPriority(FALSE);
-				break;
-
-			case 1:
-				pDRMRec->SetEnableProcessPriority(TRUE);
-				break;
-			}
+			Put("Receiver", "processpriority", strArgument);
+			Put("Transmitter", "processpriority", strArgument);
 			continue;
 		}
-#endif
 
 		/* enable/disable epg decoding ----------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-e", "--decodeepg", 0,
-			1, rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-e", "--decodeepg", strArgument) == TRUE)
 		{
-			switch ((int) rArgument)
-			{
-			case 0:
-				pDRMRec->GetDataDecoder()->SetDecodeEPG(FALSE);
-				break;
-
-			case 1:
-				pDRMRec->GetDataDecoder()->SetDecodeEPG(TRUE);
-				break;
-			}
+			Put("Receiver", "decodeepg", strArgument);
 			continue;
 		}
 
-#ifdef USE_QT_GUI /* QThread needed for log file timing */
-
 		/* log enable flag  ---------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-g", "--enablelog", 0, 1,
-			rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-g", "--enablelog", strArgument) == TRUE)
 		{
-			switch ((int) rArgument)
-			{
-			case 0:
-				pDRMRec->GetParameters()->ReceptLog.SetLoggingEnabled(FALSE);
-				break;
-
-			case 1:
-				pDRMRec->GetParameters()->ReceptLog.SetLoggingEnabled(TRUE);
-				break;
-			}
+			Put("Logfile", "enablelog", strArgument);
 			continue;
 		}
 
 		/* log file delay value  ---------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-l", "--logdelay", 0,
-			MAX_SEC_LOG_FI_START, rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-l", "--logdelay", strArgument) == TRUE)
 		{
-			pDRMRec->GetParameters()->ReceptLog.
-				SetDelLogStart((int) rArgument);
+			Put("Logfile", "delay", strArgument);
 			continue;
 		}
 
 		/* Latitude string for log file ------------------------------------- */
-		if (GetStringArgument(argc, argv, i, "-a", "--latitude",
-			strArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-a", "--latitude", strArgument) == TRUE)
 		{
-			pDRMRec->GetParameters()->ReceptLog.SetLatitude(strArgument);
+			Put("Logfile", "latitude", strArgument);
 			continue;
 		}
 
-
 		/* Longitude string for log file ------------------------------------ */
-		if (GetStringArgument(argc, argv, i, "-o", "--longitude",
-			strArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-o", "--longitude", strArgument) == TRUE)
 		{
-			pDRMRec->GetParameters()->ReceptLog.SetLongitude(strArgument);
+			Put("Logfile", "longitude", strArgument);
 			continue;
 		}
 
 		/* Color scheme main plot ------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-y", "--colorscheme", 0,
-			MAX_COLOR_SCHEMES_VAL, rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-y", "--colorscheme", strArgument) == TRUE)
 		{
-			pDRMRec->iMainPlotColorStyle = (int) rArgument;
+			Put("GUI", "colorscheme", strArgument);
 			continue;
 		}
 
-#endif
 		/* MDI out address -------------------------------------------------- */
-		if (GetStringArgument(argc, argv, i, "--mdiout", "--mdiout",
-			strArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-mdiout", "--mdiout", strArgument) == TRUE)
 		{
- 			tx_settings["mdiout"] = strArgument;
+			Put("Transmitter", "mdiout", strArgument);
 			continue;
 		}
 
 		/* MDI in address -------------------------------------------------- */
-		if (GetStringArgument(argc, argv, i, "--mdiin", "--mdiin",
-			strArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-mdiin", "--mdiin", strArgument) == TRUE)
 		{
- 			tx_settings["mdiin"] = strArgument;
+			Put("Transmitter", "mdiin", strArgument);
 			continue;
 		}
 
@@ -1104,7 +374,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "--rsioutprofile", "--rsioutprofile",
 			strArgument) == TRUE)
 		{
-			pDRMRec->GetRSIOut()->SetProfile(strArgument[0]);
+			Put("Receiver", "rsioutprofile", strArgument);
 			continue;
 		}
 
@@ -1112,7 +382,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "--rsiout", "--rsiout",
 			strArgument) == TRUE)
 		{
-			pDRMRec->GetRSIOut()->SetOutAddr(strArgument);
+			Put("Receiver", "rsiout", strArgument);
 			continue;
 		}
 
@@ -1120,7 +390,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "--rsiin", "--rsiin",
 			strArgument) == TRUE)
 		{
-			pDRMRec->GetRSIIn()->SetInAddr(strArgument);
+			Put("Receiver", "rsiin", strArgument);
 			continue;
 		}
 
@@ -1128,7 +398,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "--rciout", "--rciout",
 			strArgument) == TRUE)
 		{
-			pDRMRec->GetRSIIn()->SetOutAddr(strArgument);
+			Put("Receiver", "rciout", strArgument);
 			continue;
 		}
 
@@ -1136,7 +406,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "--rciin", "--rciin",
 			strArgument) == TRUE)
 		{
-			pDRMRec->GetRSIOut()->SetInAddr(strArgument);
+			Put("Receiver", "rciin", strArgument);
 			continue;
 		}
 
@@ -1145,30 +415,27 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "-C", "--hamlib-config",
 			strArgument) == TRUE)
 		{
-			pDRMRec->GetHamlib()->SetHamlibConf(strArgument);
+			Put("Hamlib", "hamlib-config", strArgument);
 			continue;
 		}
-
 
 		/* Hamlib Model ID -------------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-M", "--hamlib-model", 0,
-			MAX_ID_HAMLIB, rArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "-M", "--hamlib-model",
+			strArgument) == TRUE)
 		{
-			pDRMRec->GetHamlib()->SetHamlibModelID((int) rArgument);
+			Put("Hamlib", "hamlib-model", strArgument);
 			continue;
 		}
-
 
 # ifdef USE_QT_GUI
 		/* Enable s-meter flag ---------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-T", "--ensmeter") == TRUE)
 		{
-			pDRMRec->bEnableSMeter = TRUE;
+			Put("Hamlib", "ensmeter", "1");
 			continue;
 		}
 # endif
 #endif
-
 
 		/* Help (usage) flag ------------------------------------------------ */
 		if ((!strcmp(argv[i], "--help")) ||
@@ -1196,22 +463,6 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		exit(1);
 	}
 
-	/* Set parameters for frequency acquisition search window if needed */
-	if (rFreqAcSeWinSize != (_REAL) 0.0)
-	{
-		if (rFreqAcSeWinCenter == (_REAL) 0.0)
-		{
-			/* If no center was specified, set default parameter (in the
-			   middle of the available spectrum) */
-			rFreqAcSeWinCenter = (_REAL) SOUNDCRD_SAMPLE_RATE / 4;
-		}
-
-		/* Set new parameters */
-		pDRMRec->GetFreqSyncAcq()->SetSearchWindow(rFreqAcSeWinCenter,
-			rFreqAcSeWinSize);
-	}
-
-	return bIsReceiver;
 }
 
 string CSettings::UsageArguments(char** argv)
@@ -1308,38 +559,6 @@ _BOOLEAN CSettings::GetStringArgument(int argc, char** argv, int& i,
 	else
 		return FALSE;
 }
-
-_BOOLEAN CSettings::GetNumericArgument(int argc, char** argv, int& i,
-									   string strShortOpt, string strLongOpt,
-									   _REAL rRangeStart, _REAL rRangeStop,
-									   _REAL& rValue)
-{
-	if ((!strShortOpt.compare(argv[i])) || (!strLongOpt.compare(argv[i])))
-	{
-		if (++i >= argc)
-		{
-			cerr << argv[0] << ": ";
-			cerr << "'" << strLongOpt << "' needs a numeric argument between "
-				<< rRangeStart << " and " << rRangeStop << endl;
-			exit(1);
-		}
-
-		char *p;
-		rValue = strtod(argv[i], &p);
-		if (*p || rValue < rRangeStart || rValue > rRangeStop)
-		{
-			cerr << argv[0] << ": ";
-			cerr << "'" << strLongOpt << "' needs a numeric argument between "
-				<< rRangeStart << " and " << rRangeStop << endl;
-			exit(1);
-		}
-
-		return TRUE;
-	}
-	else
-		return FALSE;
-}
-
 
 /* INI File routines using the STL ********************************************/
 /* The following code was taken from "INI File Tools (STLINI)" written by

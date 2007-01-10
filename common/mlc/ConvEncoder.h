@@ -46,7 +46,7 @@ public:
 	int		Encode(CVector<_DECISION>& vecInputData, 
 				   CVector<_DECISION>& vecOutputData);
 
-	void	Init(CParameter::ECodScheme eNewCodingScheme,
+	void	Init(ECodScheme eNewCodingScheme,
 				 CParameter::EChanType eNewChannelType,
 				 int iN1, int iN2, int iNewNumInBitsPartA,
 				 int iNewNumInBitsPartB, int iPunctPatPartA, int iPunctPatPartB,

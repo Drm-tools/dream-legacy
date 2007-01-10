@@ -65,7 +65,7 @@ protected:
 };
 
 /* Implementation *************************************************************/
-CDRMTransmitter::CDRMTransmitter():
+CDRMTransmitter::CDRMTransmitter(CSettings& Settings):
 	bProcessPriorityEnabled(TRUE), pReadData(NULL), pAudioSourceEncoder(NULL),
 	strInputFileName(""), strOutputFileName(""), strOutputFileType(""),
 	vecstrTexts(), vecstrPics(), vecstrPicTypes(),
@@ -165,12 +165,12 @@ CDRMTransmitter::CDRMTransmitter():
 	   64-QAM standard mapping (SM): CS_3_SM,
 	   64-QAM symmetrical hierarchical mapping (HMsym): CS_3_HMSYM,
 	   64-QAM mixture of the previous two mappings (HMmix): CS_3_HMMIX */
-	TransmParam.eMSCCodingScheme = CParameter::CS_3_SM;
+	TransmParam.eMSCCodingScheme = CS_3_SM;
 
 	/* SDC modulation scheme. Available modes:
 	   4-QAM standard mapping (SM): CS_1_SM,
 	   16-QAM standard mapping (SM): CS_2_SM */
-	TransmParam.eSDCCodingScheme = CParameter::CS_2_SM;
+	TransmParam.eSDCCodingScheme = CS_2_SM;
 
 	/* Set desired intermediate frequency (IF) in Hertz */
 	TransmParam.rCarOffset=12000.0;		/* Default: "VIRTUAL_INTERMED_FREQ" */

@@ -409,13 +409,13 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			   64 QAM */
 			switch (ReceiverParam.eMSCCodingScheme)
 			{
-			case CParameter::CS_3_SM:
-			case CParameter::CS_3_HMSYM:
-			case CParameter::CS_3_HMMIX:
+			case CS_3_SM:
+			case CS_3_HMSYM:
+			case CS_3_HMMIX:
 				rCurErrPow = SqMag(MinDist64QAM((*pvecOutputData)[i].cSig));
 				break;
 
-			case CParameter::CS_2_SM:
+			case CS_2_SM:
 				rCurErrPow = SqMag(MinDist16QAM((*pvecOutputData)[i].cSig));
 				break;
 			}

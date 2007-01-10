@@ -156,7 +156,7 @@ inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
 	QString sTitle = "";
 
 #ifdef _MSC_VER
-# if QT_VERSION == 230
+#if QT_VERSION < 0x030000
 	sTitle.fill(' ', 10000);
 	sTitle += "Qt";
 # endif

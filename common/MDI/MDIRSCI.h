@@ -44,6 +44,7 @@
 
 #include "MDIDefinitions.h"
 #include "MDITagItems.h"
+#include "RCITagItems.h"
 #include "TagPacketDecoderRSCIControl.h"
 #include "TagPacketGenerator.h"
 
@@ -65,6 +66,7 @@ public:
 	void SetOutAddr(const string& strArgument);
 	_BOOLEAN GetOutEnabled() {return bMDIOutEnabled;}
 	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC=bNAFPktCRC;}
+	_BOOLEAN SetFrequency(int iNewFreqkHz);
 
 #ifdef USE_QT_GUI
 	/* CPacketSink */
@@ -90,6 +92,15 @@ protected:
 	CSingleBuffer<_BINARY>		MDIInBuffer;
 	_BOOLEAN					bMDIOutEnabled;
 	_BOOLEAN					bMDIInEnabled;
+
+	/* Tag Item Generators */
+
+	CTagItemGeneratorProTyRSCI TagItemGeneratorProTyRSCI; /* *ptr tag */
+	CTagItemGeneratorCfre TagItemGeneratorCfre;
+
+	/* TAG Packet generator */
+	CTagPacketGenerator TagPacketGenerator;
+
 };
 
 class CRSIMDIOutRCIIn
@@ -110,6 +121,7 @@ public:
 						vector<CSingleBuffer<_BINARY> >& vecMSCData
 	);
 	void SendUnlockedFrame(CParameter& Parameter); /* called once per frame even if the Rx isn't synchronised */
+	void SendAMFrame(CParameter& Parameter);
 
 	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC = bNAFPktCRC;}
 	void SetOutAddr(const string& strArgument);
@@ -120,6 +132,7 @@ public:
 	virtual _BOOLEAN GetInEnabled() {return bMDIInEnabled;}
 	void GetNextPacket(CSingleBuffer<_BINARY>&	buf);
 	void TransmitPacket(CVector<_BINARY> vecbidata);
+	void SetReceiver(CDRMReceiver *pReceiver);
 
 #ifdef USE_QT_GUI
 	void SendPacket(const vector<_BYTE>& vecbydata);

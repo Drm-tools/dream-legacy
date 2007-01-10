@@ -211,7 +211,7 @@ _DECISION CConvEncoder::SoftConvolution(const _BYTE byNewStateShiftReg,
 }
 #endif
 
-void CConvEncoder::Init(CParameter::ECodScheme eNewCodingScheme,
+void CConvEncoder::Init(ECodScheme eNewCodingScheme,
 						CParameter::EChanType eNewChannelType, int iN1, 
 						int iN2, int iNewNumInBitsPartA,
 						int iNewNumInBitsPartB, int iPunctPatPartA,

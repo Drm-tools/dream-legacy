@@ -64,7 +64,7 @@ public:
 						 CVector<_DECISION>& vecSubsetDef5,
 						 CVector<_DECISION>& vecSubsetDef6,
 						 int iLevel, _BOOLEAN bIteration);
-	void Init(int iNewInputBlockSize, CParameter::ECodScheme eNewCodingScheme);
+	void Init(int iNewInputBlockSize, ECodScheme eNewCodingScheme);
 
 protected:
 #ifdef USE_MAX_LOG_MAP
@@ -225,7 +225,7 @@ protected:
 
 
 	int						iInputBlockSize;
-	CParameter::ECodScheme	eMapType;
+	ECodScheme	eMapType;
 };
 
 
