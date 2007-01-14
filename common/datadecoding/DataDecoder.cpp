@@ -458,8 +458,12 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 	iTotalNumInputBits = ReceiverParam.iNumDataDecoderBits;
 	iTotalNumInputBytes = iTotalNumInputBits / SIZEOF__BYTE;
 
+	/* Get the packet ID of the selected service */
+	iServPacketID =
+		ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketID;
+
 	/* Init application type (will be overwritten by correct type later */
-	//eAppType[iServPacketID] = AT_NOT_SUP;
+	eAppType[iServPacketID] = AT_NOT_SUP;
 
 	/* Check, if service is activated. Also, only packet services can be
 	   decoded */
@@ -490,10 +494,6 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 
 			/* Number of data packets in one data block */
 			iNumDataPackets = iTotalNumInputBytes / iTotalPacketSize;
-
-			/* Get the packet ID of the selected service */
-			iServPacketID =
-				ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketID;
 
 			/* Only DAB application supported */
 			if (ReceiverParam.Service[iCurSelDataServ].DataParam.
