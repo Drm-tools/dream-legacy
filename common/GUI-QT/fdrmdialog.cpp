@@ -362,7 +362,7 @@ void FDRMDialog::OnTimer()
 			}
 		}
 
-		const int iCurSelDataServ = ReceiverParam.GetCurSelDataService();
+		//const int iCurSelDataServ = ReceiverParam.GetCurSelDataService();
 
 		/* If selected service is audio and text message is true */
 		if ((ReceiverParam.Service[iCurSelAudioServ].
@@ -380,7 +380,7 @@ void FDRMDialog::OnTimer()
 					.AudioParam.strTextMessage.c_str();
 			QString textMessage = QString().fromUtf8(utf8Message);
 			QString formattedMessage = "";
-			for (int i = 0; i < textMessage.length(); i++)
+			for (size_t i = 0; i < textMessage.length(); i++)
 			{
 				switch (textMessage.at(i).unicode())
 				{
@@ -767,6 +767,9 @@ void FDRMDialog::SetReceiverMode(const ERecMode eNewReMo)
 		/* Load correct schedule */
 		pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
 		break;
+
+	case RM_NONE:
+		break;
 	}
 }
 
@@ -835,8 +838,8 @@ void FDRMDialog::SetService(int iNewServiceID)
 {
 	pDRMRec->GetParameters()->SetCurSelAudioService(iNewServiceID);
 	pDRMRec->GetParameters()->SetCurSelDataService(iNewServiceID);
-
 	iCurSelServiceGUI = iNewServiceID;
+
 
 	/* Eventually activate multimedia window */
 	int iAppIdent = pDRMRec->GetParameters()->Service[iNewServiceID].

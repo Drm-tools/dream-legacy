@@ -932,7 +932,7 @@ void LiveScheduleDlg::LoadSchedule()
 	SetDialogCaption(this, strTitle);
 }
 
-void LiveScheduleDlg::showEvent(QShowEvent* pEvent)
+void LiveScheduleDlg::showEvent(QShowEvent*)
 {
 	/* Update window */
 	OnTimerUTCLabel();
@@ -947,7 +947,7 @@ void LiveScheduleDlg::showEvent(QShowEvent* pEvent)
 	}
 }
 
-void LiveScheduleDlg::hideEvent(QHideEvent* pEvent)
+void LiveScheduleDlg::hideEvent(QHideEvent*)
 {
 	/* Deactivate real-time timers */
 	TimerList.stop();

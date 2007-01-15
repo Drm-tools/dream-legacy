@@ -285,33 +285,9 @@ public:
 			iStartTime(nAFS.iStartTime),
 			iDuration(nAFS.iDuration) {}
 
-		CAltFreqSched& operator=(const CAltFreqSched& nAFS)
-		{
-			iScheduleID = nAFS.iScheduleID;
-			iDayCode = nAFS.iDayCode;
-			iStartTime = nAFS.iStartTime;
-			iDuration = nAFS.iDuration;
-
-			return *this; 
-		}
-
-		_BOOLEAN operator==(const CAltFreqSched& nAFS)
-		{
-			if (iScheduleID != nAFS.iScheduleID) return FALSE;
-			if (iDayCode != nAFS.iDayCode) return FALSE;
-			if (iStartTime != nAFS.iStartTime) return FALSE;
-			if (iDuration != nAFS.iDuration) return FALSE;
-
-			return TRUE;
-		}
-
-		void Reset()
-		{
-			iScheduleID = 0;
-			iDayCode = 0;
-			iStartTime = 0;
-			iDuration = 0;
-		}
+		CAltFreqSched& operator=(const CAltFreqSched& nAFS);
+		_BOOLEAN operator==(const CAltFreqSched& nAFS);
+		void Reset();
 
 		int iScheduleID;
 		int iDayCode;
@@ -335,56 +311,9 @@ public:
 		{
 		}
 
-		CAltFreqRegion & operator=(const CAltFreqRegion & nAFR)
-		{
-			iRegionID = nAFR.iRegionID;
-
-			iLatitude = nAFR.iLatitude;
-			iLongitude = nAFR.iLongitude;
-			iLatitudeEx = nAFR.iLatitudeEx;
-			iLongitudeEx = nAFR.iLongitudeEx;
-
-			veciCIRAFZones.Init(nAFR.veciCIRAFZones.Size());
-			veciCIRAFZones = nAFR.veciCIRAFZones;
-
-			return *this;
-		}
-
-		_BOOLEAN operator==(const CAltFreqRegion & nAFR)
-		{
-			if (iRegionID != nAFR.iRegionID)
-				return FALSE;
-
-			if (iLatitude != nAFR.iLatitude)
-				return FALSE;
-			if (iLongitude != nAFR.iLongitude)
-				return FALSE;
-			if (iLatitudeEx != nAFR.iLatitudeEx)
-				return FALSE;
-			if (iLongitudeEx != nAFR.iLongitudeEx)
-				return FALSE;
-
-			/* Vector sizes */
-			if (veciCIRAFZones.Size() != nAFR.veciCIRAFZones.Size())
-				return FALSE;
-
-			/* Vector contents */
-			for (int i = 0; i < veciCIRAFZones.Size(); i++)
-				if (veciCIRAFZones[i] != nAFR.veciCIRAFZones[i])
-					return FALSE;
-
-			return TRUE;
-		}
-
-		void Reset()
-		{
-			iRegionID = 0;
-			veciCIRAFZones.Init(0);
-			iLatitude = 0;
-			iLongitude = 0;
-			iLatitudeEx = 0;
-			iLongitudeEx = 0;
-		}
+		CAltFreqRegion & operator=(const CAltFreqRegion & nAFR);
+		_BOOLEAN operator==(const CAltFreqRegion & nAFR);
+		void Reset();
 
 		int iRegionID;
 		CVector < int >veciCIRAFZones;
@@ -419,60 +348,9 @@ public:
 			{
 			}
 
-			CAltFreq & operator=(const CAltFreq & nAF)
-			{
-				veciFrequencies.Init(nAF.veciFrequencies.Size());
-				veciFrequencies = nAF.veciFrequencies;
-
-				veciServRestrict.Init(nAF.veciServRestrict.Size());
-				veciServRestrict = nAF.veciServRestrict;
-
-				bIsSyncMultplx = nAF.bIsSyncMultplx;
-				iRegionID = nAF.iRegionID;
-				iScheduleID = nAF.iScheduleID;
-				bRegionSchedFlag = nAF.bRegionSchedFlag;
-				return *this;
-			}
-
-			_BOOLEAN operator==(const CAltFreq & nAF)
-			{
-				int i;
-
-				/* Vector sizes */
-				if (veciFrequencies.Size() != nAF.veciFrequencies.Size())
-					return FALSE;
-				if (veciServRestrict.Size() != nAF.veciServRestrict.Size())
-					return FALSE;
-
-				/* Vector contents */
-				for (i = 0; i < veciFrequencies.Size(); i++)
-					if (veciFrequencies[i] != nAF.veciFrequencies[i])
-						return FALSE;
-				for (i = 0; i < veciServRestrict.Size(); i++)
-					if (veciServRestrict[i] != nAF.veciServRestrict[i])
-						return FALSE;
-
-				if (bIsSyncMultplx != nAF.bIsSyncMultplx)
-					return FALSE;
-				if (iRegionID != nAF.iRegionID)
-					return FALSE;
-				if (iScheduleID != nAF.iScheduleID)
-					return FALSE;
-
-				if (bRegionSchedFlag != nAF.bRegionSchedFlag)
-					return FALSE;
-
-				return TRUE;
-			}
-
-			void Reset()
-			{
-				veciFrequencies.Init(0);
-				veciServRestrict.Init(MAX_NUM_SERVICES, 0);
-				bIsSyncMultplx = FALSE;
-				bRegionSchedFlag = FALSE;
-				iRegionID = iScheduleID = 0;
-			}
+			CAltFreq & operator=(const CAltFreq & nAF);
+			_BOOLEAN operator==(const CAltFreq & nAF);
+			void Reset();
 
 			CVector < int >veciFrequencies;
 			CVector < int >veciServRestrict;
@@ -482,18 +360,14 @@ public:
 			int iScheduleID;
 		};
 
-		void Reset()
-		{
-			vecAltFreqRegions.Init(0);
-			vecAltFreqSchedules.Init(0);
-			vecAltFreq.Init(0);
-			bVersionFlag = FALSE;
-		}
+		void Reset();
+		void dump(const string& filename);
 
 		CVector < CAltFreq > vecAltFreq;
 		CVector < CAltFreqSched > vecAltFreqSchedules;
 		CVector < CAltFreqRegion > vecAltFreqRegions;
 		_BOOLEAN bVersionFlag;
+
 	} AltFreqSign;
 
 	/* Other Services alternative frequency signalling class */
@@ -524,67 +398,9 @@ public:
 			}
 
 			CAltFreqOtherServices & operator=(const CAltFreqOtherServices &
-											  nAF)
-			{
-				veciFrequencies.Init(nAF.veciFrequencies.Size());
-				veciFrequencies = nAF.veciFrequencies;
-
-				bShortIDAnnounceFlag = nAF.bShortIDAnnounceFlag;
-				iShortIDAnnounce = nAF.iShortIDAnnounce;
-				bRegionSchedFlag = nAF.bRegionSchedFlag;
-				bSameService = nAF.bSameService;
-				iSystemID = nAF.iSystemID;
-				iRegionID = nAF.iRegionID;
-				iScheduleID = nAF.iScheduleID;
-				iOtherServiceID = nAF.iOtherServiceID;
-
-				return *this;
-			}
-
-			_BOOLEAN operator==(const CAltFreqOtherServices & nAF)
-			{
-				int i;
-
-				/* Vector sizes */
-				if (veciFrequencies.Size() != nAF.veciFrequencies.Size())
-					return FALSE;
-
-				/* Vector contents */
-				for (i = 0; i < veciFrequencies.Size(); i++)
-					if (veciFrequencies[i] != nAF.veciFrequencies[i])
-						return FALSE;
-
-				if (bShortIDAnnounceFlag != nAF.bShortIDAnnounceFlag)
-					return FALSE;
-				if (iShortIDAnnounce != nAF.iShortIDAnnounce)
-					return FALSE;
-				if (bRegionSchedFlag != nAF.bRegionSchedFlag)
-					return FALSE;
-				if (bSameService != nAF.bSameService)
-					return FALSE;
-
-				if (iSystemID != nAF.iSystemID)
-					return FALSE;
-				if (iRegionID != nAF.iRegionID)
-					return FALSE;
-				if (iScheduleID != nAF.iScheduleID)
-					return FALSE;
-				if (iOtherServiceID != nAF.iOtherServiceID)
-					return FALSE;
-				return TRUE;
-			}
-
-			void Reset()
-			{
-				veciFrequencies.Init(0);
-				bShortIDAnnounceFlag = FALSE;
-				iShortIDAnnounce = 0;
-				bRegionSchedFlag = FALSE;
-				bSameService = TRUE;
-				iSystemID = 0;
-				iRegionID = iScheduleID = 0;
-				iOtherServiceID = 0;
-			}
+											  nAF);
+			_BOOLEAN operator==(const CAltFreqOtherServices & nAF);
+			void Reset();
 
 			CVector<int>	veciFrequencies;
 			_BOOLEAN		bShortIDAnnounceFlag;
@@ -601,6 +417,7 @@ public:
 
 		CVector<CAltFreqOtherServices>	vecAltFreqOtherServices;
 		_BOOLEAN						bVersionFlag;
+
 	} AltFreqOtherServicesSign;
 
 

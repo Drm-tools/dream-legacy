@@ -32,19 +32,21 @@
 void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam);
 
 /* Implementation *************************************************************/
-void CParameter::ResetServicesStreams()
+void
+CParameter::ResetServicesStreams()
 {
 	int i;
 
 	/* Store informations about last services selected
-		 this for select current service automatically after a resync */
+	   this for select current service automatically after a resync */
 
 	if (iCurSelAudioService > 0)
-		LastAudioService.Save(iCurSelAudioService, Service[iCurSelAudioService].iServiceID);
+		LastAudioService.Save(iCurSelAudioService,
+							  Service[iCurSelAudioService].iServiceID);
 
 	if (iCurSelDataService > 0)
-		LastDataService.Save(iCurSelDataService, Service[iCurSelDataService].iServiceID);
-
+		LastDataService.Save(iCurSelDataService,
+							 Service[iCurSelDataService].iServiceID);
 
 	/* Reset everything to possible start values */
 	for (i = 0; i < MAX_NUM_SERVICES; i++)
@@ -97,7 +99,8 @@ void CParameter::ResetServicesStreams()
 	iUTCMin = 0;
 }
 
-int CParameter::GetNumActiveServices()
+int
+CParameter::GetNumActiveServices()
 {
 	int iNumAcServ = 0;
 
@@ -110,9 +113,10 @@ int CParameter::GetNumActiveServices()
 	return iNumAcServ;
 }
 
-void CParameter::GetActiveServices(CVector<int>& veciActServ)
+void
+CParameter::GetActiveServices(CVector < int >&veciActServ)
 {
-	CVector<int> vecbServices(MAX_NUM_SERVICES, 0);
+	CVector < int >vecbServices(MAX_NUM_SERVICES, 0);
 
 	/* Init return vector */
 	veciActServ.Init(0);
@@ -130,11 +134,12 @@ void CParameter::GetActiveServices(CVector<int>& veciActServ)
 	}
 }
 
-void CParameter::GetActiveStreams(CVector<int>& veciActStr)
+void
+CParameter::GetActiveStreams(CVector < int >&veciActStr)
 {
-	int				i;
-	int				iNumStreams;
-	CVector<int>	vecbStreams(MAX_NUM_STREAMS, 0);
+	int i;
+	int iNumStreams;
+	CVector < int >vecbStreams(MAX_NUM_STREAMS, 0);
 
 	/* Determine which streams are active */
 	for (i = 0; i < MAX_NUM_SERVICES; i++)
@@ -174,7 +179,8 @@ void CParameter::GetActiveStreams(CVector<int>& veciActStr)
 	}
 }
 
-_REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
+_REAL
+	CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
 {
 	/* Init lengths to zero in case the stream is not yet assigned */
 	int iLen = 0;
@@ -186,24 +192,25 @@ _REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
 		   stream */
 		if (bAudData == TRUE)
 		{
-			iLen = GetStreamLen( Service[iServiceID].DataParam.iStreamID);
+			iLen = GetStreamLen(Service[iServiceID].DataParam.iStreamID);
 		}
 		else
 		{
-			iLen = GetStreamLen( Service[iServiceID].AudioParam.iStreamID);
+			iLen = GetStreamLen(Service[iServiceID].AudioParam.iStreamID);
 		}
 	}
 	else
 	{
-		iLen = GetStreamLen( Service[iServiceID].DataParam.iStreamID);
+		iLen = GetStreamLen(Service[iServiceID].DataParam.iStreamID);
 	}
 
 	/* We have 3 frames with time duration of 1.2 seconds. Bit rate should be
 	   returned in kbps (/ 1000) */
-	return (_REAL) iLen * SIZEOF__BYTE * 3 / (_REAL) 1.2 / 1000;
+	return (_REAL) iLen *SIZEOF__BYTE * 3 / (_REAL) 1.2 / 1000;
 }
 
-_REAL CParameter::PartABLenRatio(const int iServiceID)
+_REAL
+CParameter::PartABLenRatio(const int iServiceID)
 {
 	int iLenA = 0;
 	int iLenB = 0;
@@ -214,8 +221,10 @@ _REAL CParameter::PartABLenRatio(const int iServiceID)
 		/* Audio service */
 		if (Service[iServiceID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
 		{
-			iLenA = Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartA;
-			iLenB = Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartB;
+			iLenA =
+				Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartA;
+			iLenB =
+				Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartB;
 		}
 	}
 	else
@@ -236,8 +245,9 @@ _REAL CParameter::PartABLenRatio(const int iServiceID)
 		return (_REAL) 0.0;
 }
 
-void CParameter::InitCellMapTable(const ERobMode eNewWaveMode,
-								  const ESpecOcc eNewSpecOcc)
+void
+CParameter::InitCellMapTable(const ERobMode eNewWaveMode,
+							 const ESpecOcc eNewSpecOcc)
 {
 	/* Set new values and make table */
 	eRobustnessMode = eNewWaveMode;
@@ -245,16 +255,13 @@ void CParameter::InitCellMapTable(const ERobMode eNewWaveMode,
 	MakeTable(eRobustnessMode, eSpectOccup);
 }
 
-_BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
+_BOOLEAN
+CParameter::SetWaveMode(const ERobMode eNewWaveMode)
 {
 	/* First check if spectrum occupancy and robustness mode pair is defined */
-	if ((
-		(eNewWaveMode == RM_ROBUSTNESS_MODE_C) || 
-		(eNewWaveMode == RM_ROBUSTNESS_MODE_D)
-		) && !(
-		(eSpectOccup == SO_3) ||
-		(eSpectOccup == SO_5)
-		))
+	if (((eNewWaveMode == RM_ROBUSTNESS_MODE_C) ||
+		 (eNewWaveMode == RM_ROBUSTNESS_MODE_D)) && !((eSpectOccup == SO_3) ||
+													  (eSpectOccup == SO_5)))
 	{
 		/* Set spectrum occupance to a valid parameter */
 		eSpectOccup = SO_3;
@@ -281,16 +288,14 @@ _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
 		return FALSE;
 }
 
-void CParameter::SetSpectrumOccup(ESpecOcc eNewSpecOcc)
+void
+CParameter::SetSpectrumOccup(ESpecOcc eNewSpecOcc)
 {
 	/* First check if spectrum occupancy and robustness mode pair is defined */
-	if ((
-		(eRobustnessMode == RM_ROBUSTNESS_MODE_C) || 
-		(eRobustnessMode == RM_ROBUSTNESS_MODE_D)
-		) && !(
-		(eNewSpecOcc == SO_3) ||
-		(eNewSpecOcc == SO_5)
-		))
+	if (((eRobustnessMode == RM_ROBUSTNESS_MODE_C) ||
+		 (eRobustnessMode == RM_ROBUSTNESS_MODE_D)) && !((eNewSpecOcc == SO_3)
+														 || (eNewSpecOcc ==
+															 SO_5)))
 	{
 		/* Set spectrum occupance to a valid parameter */
 		eNewSpecOcc = SO_3;
@@ -309,8 +314,9 @@ void CParameter::SetSpectrumOccup(ESpecOcc eNewSpecOcc)
 	}
 }
 
-void CParameter::SetStreamLen(const int iStreamID, const int iNewLenPartA,
-							  const int iNewLenPartB)
+void
+CParameter::SetStreamLen(const int iStreamID, const int iNewLenPartA,
+						 const int iNewLenPartB)
 {
 	/* Apply changes only if parameters have changed */
 	if ((Stream[iStreamID].iLenPartA != iNewLenPartA) ||
@@ -319,49 +325,54 @@ void CParameter::SetStreamLen(const int iStreamID, const int iNewLenPartA,
 		/* Use new parameters */
 		Stream[iStreamID].iLenPartA = iNewLenPartA;
 		Stream[iStreamID].iLenPartB = iNewLenPartB;
-		SetInitFlags(I_MSC);		
+		SetInitFlags(I_MSC);
 	}
 }
 
-int CParameter::GetStreamLen(const int iStreamID)
+int
+CParameter::GetStreamLen(const int iStreamID)
 {
-	if(iStreamID != STREAM_ID_NOT_USED)
+	if (iStreamID != STREAM_ID_NOT_USED)
 		return Stream[iStreamID].iLenPartA + Stream[iStreamID].iLenPartB;
 	else
 		return 0;
 }
 
-void CParameter::SetNumDecodedBitsMSC(const int iNewNumDecodedBitsMSC)
+void
+CParameter::SetNumDecodedBitsMSC(const int iNewNumDecodedBitsMSC)
 {
 	/* Apply changes only if parameters have changed */
 	if (iNewNumDecodedBitsMSC != iNumDecodedBitsMSC)
 	{
 		iNumDecodedBitsMSC = iNewNumDecodedBitsMSC;
-		SetInitFlags(I_MSC_DEMUX);		
+		SetInitFlags(I_MSC_DEMUX);
 	}
 }
 
-void CParameter::SetNumDecodedBitsSDC(const int iNewNumDecodedBitsSDC)
+void
+CParameter::SetNumDecodedBitsSDC(const int iNewNumDecodedBitsSDC)
 {
 	/* Apply changes only if parameters have changed */
 	if (iNewNumDecodedBitsSDC != iNumSDCBitsPerSFrame)
 	{
 		iNumSDCBitsPerSFrame = iNewNumDecodedBitsSDC;
-		SetInitFlags(I_SDC);		
+		SetInitFlags(I_SDC);
 	}
 }
 
-void CParameter::SetNumBitsHieraFrTot(const int iNewNumBitsHieraFrTot)
+void
+CParameter::SetNumBitsHieraFrTot(const int iNewNumBitsHieraFrTot)
 {
 	/* Apply changes only if parameters have changed */
 	if (iNewNumBitsHieraFrTot != iNumBitsHierarchFrameTotal)
 	{
 		iNumBitsHierarchFrameTotal = iNewNumBitsHieraFrTot;
-		SetInitFlags(I_MSC_DEMUX);		
+		SetInitFlags(I_MSC_DEMUX);
 	}
 }
 
-void CParameter::SetNumAudioDecoderBits(const int iNewNumAudioDecoderBits)
+void
+CParameter::SetNumAudioDecoderBits(const int iNewNumAudioDecoderBits)
 {
 	/* Apply changes only if parameters have changed */
 	if (iNewNumAudioDecoderBits != iNumAudioDecoderBits)
@@ -370,7 +381,8 @@ void CParameter::SetNumAudioDecoderBits(const int iNewNumAudioDecoderBits)
 	}
 }
 
-void CParameter::SetNumDataDecoderBits(const int iNewNumDataDecoderBits)
+void
+CParameter::SetNumDataDecoderBits(const int iNewNumDataDecoderBits)
 {
 	/* Apply changes only if parameters have changed */
 	if (iNewNumDataDecoderBits != iNumDataDecoderBits)
@@ -379,8 +391,9 @@ void CParameter::SetNumDataDecoderBits(const int iNewNumDataDecoderBits)
 	}
 }
 
-void CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe,
-							   const _BOOLEAN bWithHierarch)
+void
+CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe,
+						  const _BOOLEAN bWithHierarch)
 {
 	_BOOLEAN bParamersHaveChanged = FALSE;
 
@@ -399,73 +412,77 @@ void CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe,
 		if (NewMSCPrLe.iHierarch != MSCPrLe.iHierarch)
 		{
 			MSCPrLe.iHierarch = NewMSCPrLe.iHierarch;
-		
+
 			bParamersHaveChanged = TRUE;
 		}
 	}
 
 	/* In case parameters have changed, set init flags */
 	if (bParamersHaveChanged == TRUE)
-		SetInitFlags(I_MSC);		
+		SetInitFlags(I_MSC);
 
 	/* Set new protection levels in reception log file */
 	ReceptLog.SetProtLev(MSCPrLe);
 
 }
 
-void CParameter::SetAudioParam(const int iShortID,
-							   const CAudioParam NewAudParam)
+void
+CParameter::SetAudioParam(const int iShortID, const CAudioParam NewAudParam)
 {
 	/* Apply changes only if parameters have changed */
 	if (Service[iShortID].AudioParam != NewAudParam)
 	{
 		Service[iShortID].AudioParam = NewAudParam;
-		SetInitFlags(I_AUDIO);		
+		SetInitFlags(I_AUDIO);
 	}
 }
 
-void CParameter::SetDataParam(const int iShortID, 
-										const CDataParam NewDataParam)
+void
+CParameter::SetDataParam(const int iShortID, const CDataParam NewDataParam)
 {
 	/* Apply changes only if parameters have changed */
 	if (Service[iShortID].DataParam != NewDataParam)
 	{
 		Service[iShortID].DataParam = NewDataParam;
-		SetInitFlags(I_DATA);		
+		SetInitFlags(I_DATA);
 	}
 }
 
-void CParameter::SetInterleaverDepth(const ESymIntMod eNewDepth)
+void
+CParameter::SetInterleaverDepth(const ESymIntMod eNewDepth)
 {
 	if (eSymbolInterlMode != eNewDepth)
 	{
 		eSymbolInterlMode = eNewDepth;
-		SetInitFlags(I_INTERLEAVER);		
+		SetInitFlags(I_INTERLEAVER);
 	}
 }
 
-void CParameter::SetMSCCodingScheme(const ECodScheme eNewScheme)
+void
+CParameter::SetMSCCodingScheme(const ECodScheme eNewScheme)
 {
 	if (eMSCCodingScheme != eNewScheme)
 	{
 		eMSCCodingScheme = eNewScheme;
-		SetInitFlags(I_MSC_CODE);		
+		SetInitFlags(I_MSC_CODE);
 	}
 
 	/* Set new coding scheme in reception log */
 	ReceptLog.SetMSCScheme(eNewScheme);
 }
 
-void CParameter::SetSDCCodingScheme(const ECodScheme eNewScheme)
+void
+CParameter::SetSDCCodingScheme(const ECodScheme eNewScheme)
 {
 	if (eSDCCodingScheme != eNewScheme)
 	{
 		eSDCCodingScheme = eNewScheme;
-		SetInitFlags(I_SDC_CODE);		
+		SetInitFlags(I_SDC_CODE);
 	}
 }
 
-void CParameter::SetCurSelAudioService(const int iNewService)
+void
+CParameter::SetCurSelAudioService(const int iNewService)
 {
 	/* Change the current selected audio service ID only if the new ID does
 	   contain an audio service. If not, keep the old ID. In that case it is
@@ -480,7 +497,8 @@ void CParameter::SetCurSelAudioService(const int iNewService)
 	}
 }
 
-void CParameter::SetCurSelDataService(const int iNewService)
+void
+CParameter::SetCurSelDataService(const int iNewService)
 {
 	/* Change the current selected data service ID only if the new ID does
 	   contain a data service. If not, keep the old ID. In that case it is
@@ -496,7 +514,8 @@ void CParameter::SetCurSelDataService(const int iNewService)
 	}
 }
 
-void CParameter::EnableMultimedia(const _BOOLEAN bFlag)
+void
+CParameter::EnableMultimedia(const _BOOLEAN bFlag)
 {
 	if (bUsingMultimedia != bFlag)
 	{
@@ -505,7 +524,8 @@ void CParameter::EnableMultimedia(const _BOOLEAN bFlag)
 	}
 }
 
-void CParameter::SetNumOfServices(const int iNNumAuSe, const int iNNumDaSe)
+void
+CParameter::SetNumOfServices(const int iNNumAuSe, const int iNNumDaSe)
 {
 	/* Check whether number of activated services is not greater than the
 	   number of services signalled by the FAC because it can happen that
@@ -526,7 +546,8 @@ void CParameter::SetNumOfServices(const int iNNumAuSe, const int iNNumDaSe)
 	}
 }
 
-void CParameter::SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl)
+void
+CParameter::SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl)
 {
 	if (Service[iServID].eAudDataFlag != iNewADaFl)
 	{
@@ -535,7 +556,8 @@ void CParameter::SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl)
 	}
 }
 
-void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
+void
+CParameter::SetServID(const int iServID, const uint32_t iNewServID)
 {
 	if (Service[iServID].iServiceID != iNewServID)
 	{
@@ -547,7 +569,7 @@ void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
 		SetInitFlags(I_MSC);
 
 		/* If the receiver has lost the sync automatically restore 
-			last current service selected */
+		   last current service selected */
 
 		if ((iServID > 0) && (iNewServID > 0))
 		{
@@ -566,54 +588,61 @@ void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
 	}
 }
 
-
 /* Implementaions for simulation -------------------------------------------- */
-void CParameter::CRawSimData::Add(uint32_t iNewSRS) 
+void
+CParameter::CRawSimData::Add(uint32_t iNewSRS)
 {
 	/* Attention, function does not take care of overruns, data will be
 	   lost if added to a filled shift register! */
-	if (iCurWritePos < ciMaxDelBlocks) 
+	if (iCurWritePos < ciMaxDelBlocks)
 		veciShRegSt[iCurWritePos++] = iNewSRS;
 }
 
-uint32_t CParameter::CRawSimData::Get() 
+uint32_t
+CParameter::CRawSimData::Get()
 {
 	/* We always use the first value of the array for reading and do a
 	   shift of the other data by adding a arbitrary value (0) at the
 	   end of the whole shift register */
-	uint32_t iRet = veciShRegSt[0];
+	uint32_t
+		iRet = veciShRegSt[0];
 	veciShRegSt.AddEnd(0);
 	iCurWritePos--;
 
 	return iRet;
 }
 
-_REAL CParameter::GetSysSNRdBPilPos() const
+_REAL
+CParameter::GetSysSNRdBPilPos() const
 {
 /*
 	Get system SNR in dB for the pilot positions. Since the average power of
 	the pilots is higher than the data cells, the SNR is also higher at these
 	positions compared to the total SNR of the DRM signal.
 */
-	return (_REAL) 10.0 * log10(pow((_REAL) 10.0, rSysSimSNRdB / 10) /
-		rAvPowPerSymbol * rAvScatPilPow * (_REAL) iNumCarrier);
+	return (_REAL) 10.0 *log10(pow((_REAL) 10.0, rSysSimSNRdB / 10) /
+							   rAvPowPerSymbol * rAvScatPilPow *
+							   (_REAL) iNumCarrier);
 }
 
-_REAL CParameter::GetNominalSNRdB()
+_REAL
+CParameter::GetNominalSNRdB()
 {
 	/* Convert SNR from system bandwidth to nominal bandwidth */
-	return (_REAL) 10.0 * log10(pow((_REAL) 10.0, rSysSimSNRdB / 10) *
-		GetSysToNomBWCorrFact());
+	return (_REAL) 10.0 *log10(pow((_REAL) 10.0, rSysSimSNRdB / 10) *
+							   GetSysToNomBWCorrFact());
 }
 
-void CParameter::SetNominalSNRdB(const _REAL rSNRdBNominal)
+void
+CParameter::SetNominalSNRdB(const _REAL rSNRdBNominal)
 {
 	/* Convert SNR from nominal bandwidth to system bandwidth */
-	rSysSimSNRdB = (_REAL) 10.0 * log10(pow((_REAL) 10.0, rSNRdBNominal / 10) /
-		GetSysToNomBWCorrFact());
+	rSysSimSNRdB = (_REAL) 10.0 *log10(pow((_REAL) 10.0, rSNRdBNominal / 10) /
+									   GetSysToNomBWCorrFact());
 }
 
-_REAL CParameter::GetSysToNomBWCorrFact()
+_REAL
+CParameter::GetSysToNomBWCorrFact()
 {
 	_REAL rNomBW;
 
@@ -621,212 +650,332 @@ _REAL CParameter::GetSysToNomBWCorrFact()
 	switch (eSpectOccup)
 	{
 	case SO_0:
-		rNomBW = (_REAL) 4500.0; /* Hz */
+		rNomBW = (_REAL) 4500.0;	/* Hz */
 		break;
 
 	case SO_1:
-		rNomBW = (_REAL) 5000.0; /* Hz */
+		rNomBW = (_REAL) 5000.0;	/* Hz */
 		break;
 
 	case SO_2:
-		rNomBW = (_REAL) 9000.0; /* Hz */
+		rNomBW = (_REAL) 9000.0;	/* Hz */
 		break;
 
 	case SO_3:
-		rNomBW = (_REAL) 10000.0; /* Hz */
+		rNomBW = (_REAL) 10000.0;	/* Hz */
 		break;
 
 	case SO_4:
-		rNomBW = (_REAL) 18000.0; /* Hz */
+		rNomBW = (_REAL) 18000.0;	/* Hz */
 		break;
 
 	case SO_5:
-		rNomBW = (_REAL) 20000.0; /* Hz */
+		rNomBW = (_REAL) 20000.0;	/* Hz */
 		break;
 
 	default:
-		rNomBW = (_REAL) 10000.0; /* Hz */
+		rNomBW = (_REAL) 10000.0;	/* Hz */
 		break;
 	}
 
 	/* Calculate system bandwidth (N / T_u) */
-	const _REAL rSysBW = (_REAL) iNumCarrier /
-		iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+	const _REAL
+		rSysBW = (_REAL) iNumCarrier / iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
 
 	return rSysBW / rNomBW;
 }
 
-
 /* push from RSCI RX_STATUS */
-void CParameter::SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr)
+void
+CParameter::SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr)
 {
 	bValidSignalStrength = bValid;
 	rSigStr = rNewSigStr;
 }
 
-_BOOLEAN CParameter::GetSignalStrength(_REAL rOutSigStr)
+_BOOLEAN
+CParameter::GetSignalStrength(_REAL rOutSigStr)
 {
-	if(bValidSignalStrength)
+	if (bValidSignalStrength)
 		rOutSigStr = rSigStr;
 
 	return bValidSignalStrength;
 }
 
-void CParameter::CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)
-{ 
-	FSyncOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_FRAME_SYNC,colour);
-}
-void CParameter::CReceiveStatus::SetTimeSyncStatus(const ETypeRxStatus OK)
-{ 
-	TSyncOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_TIME_SYNC,colour);
-}
-void CParameter::CReceiveStatus::SetInterfaceStatus(const ETypeRxStatus OK)
-{ 
-	InterfaceOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_IOINTERFACE,colour);
-}
-void CParameter::CReceiveStatus::SetFACStatus(const ETypeRxStatus OK)
-{ 
-	FACOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_FAC_CRC,colour);
-}
-void CParameter::CReceiveStatus::SetSDCStatus(const ETypeRxStatus OK)
-{ 
-	SDCOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_SDC_CRC,colour);
-}
-void CParameter::CReceiveStatus::SetAudioStatus(const ETypeRxStatus OK)
-{ 
-	AudioOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_MSC_CRC,colour);
-}
-void CParameter::CReceiveStatus::SetMOTStatus(const ETypeRxStatus OK)
+void
+CParameter::CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)
 {
-	MOTOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
+	FSyncOK = OK;
+	int
+		colour = 2;
+	switch (OK)
+	{
+	case CRC_ERROR:
+		colour = 2;
+		break;
+	case DATA_ERROR:
+		colour = 1;
+		break;
+	case RX_OK:
+		colour = 0;
+		break;
+	case NOT_PRESENT:
+		break;
 	}
-	PostWinMessage(MS_MOT_OBJ_STAT,colour);
+	PostWinMessage(MS_FRAME_SYNC, colour);
 }
 
-ETypeRxStatus CParameter::CReceiveStatus::GetFrameSyncStatus()
+void
+CParameter::CReceiveStatus::SetTimeSyncStatus(const ETypeRxStatus OK)
+{
+	TSyncOK = OK;
+	int
+		colour = 2;
+	switch (OK)
+	{
+	case CRC_ERROR:
+		colour = 2;
+		break;
+	case DATA_ERROR:
+		colour = 1;
+		break;
+	case RX_OK:
+		colour = 0;
+		break;
+	case NOT_PRESENT:
+		break;
+	}
+	PostWinMessage(MS_TIME_SYNC, colour);
+}
+
+void
+CParameter::CReceiveStatus::SetInterfaceStatus(const ETypeRxStatus OK)
+{
+	InterfaceOK = OK;
+	int
+		colour = 2;
+	switch (OK)
+	{
+	case CRC_ERROR:
+		colour = 2;
+		break;
+	case DATA_ERROR:
+		colour = 1;
+		break;
+	case RX_OK:
+		colour = 0;
+		break;
+	case NOT_PRESENT:
+		break;
+	}
+	PostWinMessage(MS_IOINTERFACE, colour);
+}
+
+void
+CParameter::CReceiveStatus::SetFACStatus(const ETypeRxStatus OK)
+{
+	FACOK = OK;
+	int
+		colour = 2;
+	switch (OK)
+	{
+	case CRC_ERROR:
+		colour = 2;
+		break;
+	case DATA_ERROR:
+		colour = 1;
+		break;
+	case RX_OK:
+		colour = 0;
+		break;
+	case NOT_PRESENT:
+		break;
+	}
+	PostWinMessage(MS_FAC_CRC, colour);
+}
+
+void
+CParameter::CReceiveStatus::SetSDCStatus(const ETypeRxStatus OK)
+{
+	SDCOK = OK;
+	int
+		colour = 2;
+	switch (OK)
+	{
+	case CRC_ERROR:
+		colour = 2;
+		break;
+	case DATA_ERROR:
+		colour = 1;
+		break;
+	case RX_OK:
+		colour = 0;
+		break;
+	case NOT_PRESENT:
+		break;
+	}
+	PostWinMessage(MS_SDC_CRC, colour);
+}
+
+void
+CParameter::CReceiveStatus::SetAudioStatus(const ETypeRxStatus OK)
+{
+	AudioOK = OK;
+	int
+		colour = 2;
+	switch (OK)
+	{
+	case CRC_ERROR:
+		colour = 2;
+		break;
+	case DATA_ERROR:
+		colour = 1;
+		break;
+	case RX_OK:
+		colour = 0;
+		break;
+	case NOT_PRESENT:
+		break;
+	}
+	PostWinMessage(MS_MSC_CRC, colour);
+}
+
+void
+CParameter::CReceiveStatus::SetMOTStatus(const ETypeRxStatus OK)
+{
+	MOTOK = OK;
+	int
+		colour = 2;
+	switch (OK)
+	{
+	case CRC_ERROR:
+		colour = 2;
+		break;
+	case DATA_ERROR:
+		colour = 1;
+		break;
+	case RX_OK:
+		colour = 0;
+		break;
+	case NOT_PRESENT:
+		break;
+	}
+	PostWinMessage(MS_MOT_OBJ_STAT, colour);
+}
+
+ETypeRxStatus
+CParameter::CReceiveStatus::GetFrameSyncStatus()
 {
 	return FSyncOK;
 }
-ETypeRxStatus CParameter::CReceiveStatus::GetTimeSyncStatus()
+
+ETypeRxStatus
+CParameter::CReceiveStatus::GetTimeSyncStatus()
 {
 	return TSyncOK;
 }
-ETypeRxStatus CParameter::CReceiveStatus::GetInterfaceStatus()
+
+ETypeRxStatus
+CParameter::CReceiveStatus::GetInterfaceStatus()
 {
 	return InterfaceOK;
 }
-ETypeRxStatus CParameter::CReceiveStatus::GetFACStatus()
+
+ETypeRxStatus
+CParameter::CReceiveStatus::GetFACStatus()
 {
 	return FACOK;
 }
-ETypeRxStatus CParameter::CReceiveStatus::GetSDCStatus()
+
+ETypeRxStatus
+CParameter::CReceiveStatus::GetSDCStatus()
 {
 	return SDCOK;
 }
-ETypeRxStatus CParameter::CReceiveStatus::GetAudioStatus()
+
+ETypeRxStatus
+CParameter::CReceiveStatus::GetAudioStatus()
 {
 	return AudioOK;
 }
-ETypeRxStatus CParameter::CReceiveStatus::GetMOTStatus()
+
+ETypeRxStatus
+CParameter::CReceiveStatus::GetMOTStatus()
 {
 	return MOTOK;
 }
 
-const uint32_t CParameter::I_ROBUSTNESS_MODE = 1;
-const uint32_t CParameter::I_SPECTRUM_OCCUPANCY = 2;
-const uint32_t CParameter::I_INTERLEAVER = 4;
-const uint32_t CParameter::I_MSC_CODE = 8;
-const uint32_t CParameter::I_SDC_CODE = 16;
-const uint32_t CParameter::I_SDC = 32;
-const uint32_t CParameter::I_MSC = 64;
-const uint32_t CParameter::I_MSC_DEMUX = 128;
-const uint32_t CParameter::I_AUDIO = 256;
-const uint32_t CParameter::I_DATA = 512;
+const
+	uint32_t
+	CParameter::I_ROBUSTNESS_MODE = 1;
+const uint32_t
+	CParameter::I_SPECTRUM_OCCUPANCY = 2;
+const
+	uint32_t
+	CParameter::I_INTERLEAVER = 4;
+const
+	uint32_t
+	CParameter::I_MSC_CODE = 8;
+const
+	uint32_t
+	CParameter::I_SDC_CODE = 16;
+const
+	uint32_t
+	CParameter::I_SDC = 32;
+const
+	uint32_t
+	CParameter::I_MSC = 64;
+const
+	uint32_t
+	CParameter::I_MSC_DEMUX = 128;
+const
+	uint32_t
+	CParameter::I_AUDIO = 256;
+const
+	uint32_t
+	CParameter::I_DATA = 512;
 
-void CParameter::SetInitFlags(uint32_t uMask)
+void
+CParameter::SetInitFlags(uint32_t uMask)
 {
 	uInitFlags |= uMask;
 }
 
-void CParameter::ClearInitFlags(uint32_t uMask)
+void
+CParameter::ClearInitFlags(uint32_t uMask)
 {
 	uInitFlags &= (~uMask);
 }
 
-_BOOLEAN CParameter::TestInitFlag(uint32_t uMask)
+_BOOLEAN
+CParameter::TestInitFlag(uint32_t uMask)
 {
-	return (uInitFlags&uMask)?TRUE:FALSE;
+	return (uInitFlags & uMask) ? TRUE : FALSE;
 }
 
-_BOOLEAN CParameter::CGPSInformation::SetLatLongDegreesMinutes(const string& sNewLat, const string& sNewLong) 
-{ 
+_BOOLEAN
+	CParameter::CGPSInformation::
+SetLatLongDegreesMinutes(const string & sNewLat, const string & sNewLong)
+{
 	if (sNewLat.empty() || sNewLong.empty())
 		return FALSE;
 
-	char chrDegrees = 0xb0; // degrees char based on Latin-1
+	char
+		chrDegrees = 0xb0;		// degrees char based on Latin-1
 
-	string sLat, sLong;
-	
-	sLat = sNewLat;		// take a local copy we can alter
+	string
+		sLat,
+		sLong;
+
+	sLat = sNewLat;				// take a local copy we can alter
 	sLong = sNewLong;
-	
-	int Degrees, Minutes;
 
-	size_t pos;
+	int
+		Degrees,
+		Minutes;
+
+	size_t
+		pos;
 
 	//lat
 	pos = sLat.find(chrDegrees);
@@ -837,9 +986,10 @@ _BOOLEAN CParameter::CGPSInformation::SetLatLongDegreesMinutes(const string& sNe
 	if (pos != string::npos)
 		sLat.replace(pos, 1, " ");
 
-	stringstream ssLat(sLat);
+	stringstream
+	ssLat(sLat);
 	ssLat >> Degrees >> Minutes;
-	rLatitudeDegrees = Degrees + (Minutes/60.0);
+	rLatitudeDegrees = Degrees + (Minutes / 60.0);
 
 	if (sLat.find("N") == string::npos)	// N not found, so must be south
 		rLatitudeDegrees *= -1;
@@ -853,12 +1003,270 @@ _BOOLEAN CParameter::CGPSInformation::SetLatLongDegreesMinutes(const string& sNe
 	if (pos != string::npos)
 		sLong.replace(pos, 1, " ");
 
-	stringstream ssLong(sLong);
+	stringstream
+	ssLong(sLong);
 	ssLong >> Degrees >> Minutes;
-	rLongitudeDegrees = Degrees + (Minutes/60.0);
+	rLongitudeDegrees = Degrees + (Minutes / 60.0);
 
 	if (sNewLat.find("E") == string::npos)	// E not found, so must be west
 		rLongitudeDegrees *= -1;
 
 	return TRUE;
+}
+
+CParameter::CAltFreqSched & CParameter::CAltFreqSched::
+operator=(const CParameter::CAltFreqSched & nAFS)
+{
+	iScheduleID = nAFS.iScheduleID;
+	iDayCode = nAFS.iDayCode;
+	iStartTime = nAFS.iStartTime;
+	iDuration = nAFS.iDuration;
+
+	return *this;
+}
+
+_BOOLEAN
+	CParameter::CAltFreqSched::operator==(const CParameter::
+										  CAltFreqSched & nAFS)
+{
+	if (iScheduleID != nAFS.iScheduleID)
+		return FALSE;
+	if (iDayCode != nAFS.iDayCode)
+		return FALSE;
+	if (iStartTime != nAFS.iStartTime)
+		return FALSE;
+	if (iDuration != nAFS.iDuration)
+		return FALSE;
+
+	return TRUE;
+}
+
+void
+CParameter::CAltFreqSched::Reset()
+{
+	iScheduleID = 0;
+	iDayCode = 0;
+	iStartTime = 0;
+	iDuration = 0;
+}
+
+CParameter::CAltFreqRegion & CParameter::CAltFreqRegion::
+operator=(const CParameter::CAltFreqRegion & nAFR)
+{
+	iRegionID = nAFR.iRegionID;
+
+	iLatitude = nAFR.iLatitude;
+	iLongitude = nAFR.iLongitude;
+	iLatitudeEx = nAFR.iLatitudeEx;
+	iLongitudeEx = nAFR.iLongitudeEx;
+
+	veciCIRAFZones.Init(nAFR.veciCIRAFZones.Size());
+	veciCIRAFZones = nAFR.veciCIRAFZones;
+
+	return *this;
+}
+
+_BOOLEAN
+	CParameter::CAltFreqRegion::operator==(const CParameter::
+										   CAltFreqRegion & nAFR)
+{
+	if (iRegionID != nAFR.iRegionID)
+		return FALSE;
+
+	if (iLatitude != nAFR.iLatitude)
+		return FALSE;
+	if (iLongitude != nAFR.iLongitude)
+		return FALSE;
+	if (iLatitudeEx != nAFR.iLatitudeEx)
+		return FALSE;
+	if (iLongitudeEx != nAFR.iLongitudeEx)
+		return FALSE;
+
+	/* Vector sizes */
+	if (veciCIRAFZones.Size() != nAFR.veciCIRAFZones.Size())
+		return FALSE;
+
+	/* Vector contents */
+	for (int i = 0; i < veciCIRAFZones.Size(); i++)
+		if (veciCIRAFZones[i] != nAFR.veciCIRAFZones[i])
+			return FALSE;
+
+	return TRUE;
+}
+
+void
+CParameter::CAltFreqRegion::Reset()
+{
+	iRegionID = 0;
+	veciCIRAFZones.Init(0);
+	iLatitude = 0;
+	iLongitude = 0;
+	iLatitudeEx = 0;
+	iLongitudeEx = 0;
+}
+
+CParameter::CAltFreqSign::CAltFreq &
+	CParameter::CAltFreqSign::CAltFreq::
+operator=(const CParameter::CAltFreqSign::CAltFreq & nAF)
+{
+	veciFrequencies.Init(nAF.veciFrequencies.Size());
+	veciFrequencies = nAF.veciFrequencies;
+
+	veciServRestrict.Init(nAF.veciServRestrict.Size());
+	veciServRestrict = nAF.veciServRestrict;
+
+	bIsSyncMultplx = nAF.bIsSyncMultplx;
+	iRegionID = nAF.iRegionID;
+	iScheduleID = nAF.iScheduleID;
+	bRegionSchedFlag = nAF.bRegionSchedFlag;
+	return *this;
+}
+
+_BOOLEAN
+	CParameter::CAltFreqSign::CAltFreq::operator==(const CParameter::
+												   CAltFreqSign::
+												   CAltFreq & nAF)
+{
+	int
+		i;
+
+/* Vector sizes */
+	if (veciFrequencies.Size() != nAF.veciFrequencies.Size())
+		return FALSE;
+	if (veciServRestrict.Size() != nAF.veciServRestrict.Size())
+		return FALSE;
+
+/* Vector contents */
+	for (i = 0; i < veciFrequencies.Size(); i++)
+		if (veciFrequencies[i] != nAF.veciFrequencies[i])
+			return FALSE;
+	for (i = 0; i < veciServRestrict.Size(); i++)
+		if (veciServRestrict[i] != nAF.veciServRestrict[i])
+			return FALSE;
+
+	if (bIsSyncMultplx != nAF.bIsSyncMultplx)
+		return FALSE;
+	if (iRegionID != nAF.iRegionID)
+		return FALSE;
+	if (iScheduleID != nAF.iScheduleID)
+		return FALSE;
+
+	if (bRegionSchedFlag != nAF.bRegionSchedFlag)
+		return FALSE;
+
+	return TRUE;
+}
+
+void
+CParameter::CAltFreqSign::CAltFreq::Reset()
+{
+	veciFrequencies.Init(0);
+	veciServRestrict.Init(MAX_NUM_SERVICES, 0);
+	bIsSyncMultplx = FALSE;
+	bRegionSchedFlag = FALSE;
+	iRegionID = iScheduleID = 0;
+}
+
+void
+CParameter::CAltFreqSign::Reset()
+{
+	vecAltFreqRegions.Init(0);
+	vecAltFreqSchedules.Init(0);
+	vecAltFreq.Init(0);
+	bVersionFlag = FALSE;
+}
+
+void
+CParameter::CAltFreqSign::dump(const string & filename)
+{
+	static FILE *
+		pFile = fopen(filename.c_str(), "w");
+
+	int
+		inum = vecAltFreq.Size();
+	for (int z = 0; z < inum; z++)
+	{
+		fprintf(pFile, "sync:%d sr:", vecAltFreq[z].bIsSyncMultplx);
+
+		for (int k = 0; k < 4; k++)
+			fprintf(pFile, "%d", vecAltFreq[z].veciServRestrict[k]);
+		fprintf(pFile, " fr:");
+
+		for (int kk = 0; kk < vecAltFreq[z].veciFrequencies.Size(); kk++)
+			fprintf(pFile, "%d ", vecAltFreq[z].veciFrequencies[kk]);
+
+		fprintf(pFile, " rID:%d sID:%d   /   ",
+				vecAltFreq[z].iRegionID, vecAltFreq[z].iScheduleID);
+	}
+	fprintf(pFile, "\n");
+	fflush(pFile);
+}
+
+CParameter::CAltFreqOtherServicesSign::CAltFreqOtherServices &
+	CParameter::CAltFreqOtherServicesSign::CAltFreqOtherServices::
+operator=(const CParameter::CAltFreqOtherServicesSign::
+		  CAltFreqOtherServices & nAF)
+{
+	veciFrequencies.Init(nAF.veciFrequencies.Size());
+	veciFrequencies = nAF.veciFrequencies;
+
+	bShortIDAnnounceFlag = nAF.bShortIDAnnounceFlag;
+	iShortIDAnnounce = nAF.iShortIDAnnounce;
+	bRegionSchedFlag = nAF.bRegionSchedFlag;
+	bSameService = nAF.bSameService;
+	iSystemID = nAF.iSystemID;
+	iRegionID = nAF.iRegionID;
+	iScheduleID = nAF.iScheduleID;
+	iOtherServiceID = nAF.iOtherServiceID;
+
+	return *this;
+}
+
+_BOOLEAN
+	CParameter::CAltFreqOtherServicesSign::CAltFreqOtherServices::
+operator==(const CAltFreqOtherServices & nAF)
+{
+	int
+		i;
+
+	/* Vector sizes */
+	if (veciFrequencies.Size() != nAF.veciFrequencies.Size())
+		return FALSE;
+
+	/* Vector contents */
+	for (i = 0; i < veciFrequencies.Size(); i++)
+		if (veciFrequencies[i] != nAF.veciFrequencies[i])
+			return FALSE;
+
+	if (bShortIDAnnounceFlag != nAF.bShortIDAnnounceFlag)
+		return FALSE;
+	if (iShortIDAnnounce != nAF.iShortIDAnnounce)
+		return FALSE;
+	if (bRegionSchedFlag != nAF.bRegionSchedFlag)
+		return FALSE;
+	if (bSameService != nAF.bSameService)
+		return FALSE;
+
+	if (iSystemID != nAF.iSystemID)
+		return FALSE;
+	if (iRegionID != nAF.iRegionID)
+		return FALSE;
+	if (iScheduleID != nAF.iScheduleID)
+		return FALSE;
+	if (iOtherServiceID != nAF.iOtherServiceID)
+		return FALSE;
+	return TRUE;
+}
+
+void
+CParameter::CAltFreqOtherServicesSign::CAltFreqOtherServices::Reset()
+{
+	veciFrequencies.Init(0);
+	bShortIDAnnounceFlag = FALSE;
+	iShortIDAnnounce = 0;
+	bRegionSchedFlag = FALSE;
+	bSameService = TRUE;
+	iSystemID = 0;
+	iRegionID = iScheduleID = 0;
+	iOtherServiceID = 0;
 }

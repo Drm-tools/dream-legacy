@@ -34,7 +34,7 @@
 /* Implementation *************************************************************/
 AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	const char* name, bool modal, WFlags f): AnalogDemDlgBase(parent, name, modal, f),
-	AMSSDlg(pNDRMR, parent, name, modal, f), pDRMRec(pNDRMR)
+	pDRMRec(pNDRMR), AMSSDlg(pNDRMR, parent, name, modal, f)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -189,7 +189,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 }
 
-void AnalogDemDlg::showEvent(QShowEvent* pEvent)
+void AnalogDemDlg::showEvent(QShowEvent*)
 {
 	OnTimer();
 	OnTimerPLLPhaseDial();
@@ -207,7 +207,7 @@ void AnalogDemDlg::showEvent(QShowEvent* pEvent)
 	UpdateControls();
 }
 
-void AnalogDemDlg::hideEvent(QHideEvent* pEvent)
+void AnalogDemDlg::hideEvent(QHideEvent*)
 {
 	/* stop real-time timers */
 	Timer.stop();
@@ -227,7 +227,7 @@ void AnalogDemDlg::hideEvent(QHideEvent* pEvent)
 	pDRMRec->GeomAnalogDemDlg.iWSize = WinGeom.width();
 }
 
-void AnalogDemDlg::closeEvent(QCloseEvent* pEvent)
+void AnalogDemDlg::closeEvent(QCloseEvent*)
 {
 	pDRMRec->GeomAMSSDlg.bVisible = AMSSDlg.isVisible();
 
@@ -707,8 +707,8 @@ void AnalogDemDlg::AddWhatsThisHelp()
 	Added phase offset display for AMSS demodulation loop.
 */
 CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
-	const char* name, bool modal, WFlags f) : pDRMRec(pNDRMR),
-	CAMSSDlgBase(parent, name, modal, f)
+	const char* name, bool modal, WFlags f) : CAMSSDlgBase(parent, name, modal, f),
+	pDRMRec(pNDRMR)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -760,7 +760,7 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 }
 
-void CAMSSDlg::hideEvent(QHideEvent* pEvent)
+void CAMSSDlg::hideEvent(QHideEvent*)
 {
 	/* stop real-time timers */
 	Timer.stop();
@@ -775,7 +775,7 @@ void CAMSSDlg::hideEvent(QHideEvent* pEvent)
 	pDRMRec->GeomAMSSDlg.iWSize = WinGeom.width();
 }
 
-void CAMSSDlg::showEvent(QShowEvent* pEvent)
+void CAMSSDlg::showEvent(QShowEvent*)
 {
 	OnTimer();
 	OnTimerPLLPhaseDial();

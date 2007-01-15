@@ -171,11 +171,9 @@ CSoundIn::CSoundIn(): devices(), handle(NULL), names(),bChangDev(TRUE), iCurrent
 
 void CSoundIn::Init_HW(){
 
-	int err, dir=0;
-	snd_pcm_hw_params_t *hwparams;
+	int err;
 	snd_pcm_sw_params_t *swparams;
 	snd_pcm_uframes_t period_size = FRAGSIZE * NUM_IN_CHANNELS/2;
-	snd_pcm_uframes_t buffer_size;
 	
 	/* Default ? */
 	if(iCurrentDevice < 0)
@@ -199,111 +197,24 @@ void CSoundIn::Init_HW(){
 #endif
 		throw CGenErr("alsa CSoundIn::Init_HW record, can't open "+recdevice+" ("+names[iCurrentDevice]+")");
 	}
-	
-	snd_pcm_hw_params_alloca(&hwparams);
-	snd_pcm_sw_params_alloca(&swparams);
-	
-	/* Choose all parameters */
-	err = snd_pcm_hw_params_any(handle, hwparams);
-	if (err < 0) {
-#ifdef USE_QT_GUI
-		qDebug("Broken configuration : no configurations available: %s", snd_strerror(err));
-#endif
-		throw CGenErr("alsa CSoundIn::Init_HW ");	
-	}
-	/* Set the interleaved read/write format */
-	err = snd_pcm_hw_params_set_access(handle, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED);	
 
-	if (err < 0) {
+	if ((err = snd_pcm_set_params(handle,
+								  SND_PCM_FORMAT_S16,
+								  SND_PCM_ACCESS_RW_INTERLEAVED,
+								  NUM_IN_CHANNELS,
+								  SOUNDCRD_SAMPLE_RATE, 1, 500000)) < 0)
+	{							/* 0.5sec */
 #ifdef USE_QT_GUI
-		qDebug("Access type not available : %s", snd_strerror(err));
+		qDebug("params error: %s", snd_strerror(err));
 #endif
-		throw CGenErr("alsa CSoundIn::Init_HW ");	
-		
-	}
-	/* Set the sample format */
-	err = snd_pcm_hw_params_set_format(handle, hwparams, SND_PCM_FORMAT_S16);
-	if (err < 0) {
-#ifdef USE_QT_GUI
-		qDebug("Sample format not available : %s", snd_strerror(err));
-#endif
-		throw CGenErr("alsa CSoundIn::Init_HW ");	
-	}
-	/* Set the count of channels */
-	err = snd_pcm_hw_params_set_channels(handle, hwparams, NUM_IN_CHANNELS);
-	if (err < 0) {
-#ifdef USE_QT_GUI
-		qDebug("Channels count (%i) not available s: %s", NUM_IN_CHANNELS, snd_strerror(err));
-#endif
-		throw CGenErr("alsa CSoundIn::Init_HW ");
-	}
-	/* Set the stream rate */
-	dir=0;
-	err = snd_pcm_hw_params_set_rate(handle, hwparams, SOUNDCRD_SAMPLE_RATE, dir);
-	if (err < 0) {
-#ifdef USE_QT_GUI
-		qDebug("Rate %iHz not available : %s", SOUNDCRD_SAMPLE_RATE, snd_strerror(err));
-#endif
-		throw CGenErr("alsa CSoundIn::Init_HW ");
-		
-	}
-	dir=0;
-	unsigned int buffer_time = 500000;              /* ring buffer length in us */
-        /* set the buffer time */
-        err = snd_pcm_hw_params_set_buffer_time_near(handle, hwparams, &buffer_time, &dir);
-        if (err < 0) {
-#ifdef USE_QT_GUI
-                qDebug("Unable to set buffer time %i for playback: %s\n", buffer_time, snd_strerror(err));
-#endif
-		throw CGenErr("alsa CSoundIn::Init_HW ");
-        }
-        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
-        if (err < 0) {
-#ifdef USE_QT_GUI
-                qDebug("Unable to get buffer size for playback: %s\n", snd_strerror(err));
-#endif
-		throw CGenErr("alsa CSoundIn::Init_HW ");
-        }
-#ifdef USE_QT_GUI
-	// qDebug("buffer size %d", buffer_size);
-#endif
-        /* set the period time */
-	unsigned int period_time = 100000;              /* period time in us */
-        err = snd_pcm_hw_params_set_period_time_near(handle, hwparams, &period_time, &dir);
-        if (err < 0) {
-#ifdef USE_QT_GUI
-                qDebug("Unable to set period time %i for playback: %s\n", period_time, snd_strerror(err));
-#endif
-		throw CGenErr("alsa CSoundIn::Init_HW ");
-        }
-        err = snd_pcm_hw_params_get_period_size_min(hwparams, &period_size, &dir);
-        if (err < 0) {
-#ifdef USE_QT_GUI
-                qDebug("Unable to get period size for playback: %s\n", snd_strerror(err));
-#endif
-		throw CGenErr("alsa CSoundIn::Init_HW ");
-        }
-#ifdef USE_QT_GUI
-	// qDebug("period size %d", period_size);
-#endif
+		throw CGenErr("alsa CSoundIn::Init_HW playback, can't configure " +
+					  recdevice + " (" + names[iCurrentDevice] + ")");
 
-	/* Write the parameters to device */
-	err = snd_pcm_hw_params(handle, hwparams);
-	if (err < 0) {
-#ifdef USE_QT_GUI
-		qDebug("Unable to set hw params : %s", snd_strerror(err));
-#endif
-		throw CGenErr("alsa CSoundIn::Init_HW ");
-	}
-	/* Get the current swparams */
-	err = snd_pcm_sw_params_current(handle, swparams);
-	if (err < 0) {
-#ifdef USE_QT_GUI
-		qDebug("Unable to determine current swparams : %s", snd_strerror(err));
-#endif
-		throw CGenErr("alsa CSoundIn::Init_HW ");
+		throw CGenErr("alsa CSoundIn::Init_HW ");	
 	}
 	/* Start the transfer when the buffer immediately */
+	snd_pcm_sw_params_alloca(&swparams);
+	err = snd_pcm_sw_params_current(handle, swparams);
 	err = snd_pcm_sw_params_set_start_threshold(handle, swparams, 0);
 	if (err < 0) {
 #ifdef USE_QT_GUI

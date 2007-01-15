@@ -504,7 +504,8 @@ CDRMReceiver::CDRMReceiver(CSettings& Settings):
 	/* Other ---------------------------------------------------------------- */
 	/* Color scheme main plot */
 	sValue = Settings.Get("GUI", "colorscheme");
-	iMainPlotColorStyle = atoi(sValue.c_str());
+	if (sValue != "")
+		iMainPlotColorStyle = atoi(sValue.c_str());
 
 	/* System evaluation dialog plot type. Maximum value is the last element
 	   in the plot type enum! */
@@ -828,25 +829,7 @@ void CDRMReceiver::Run(_BOOLEAN bRunOnce)
 
 #if 0
 /* TEST store information about alternative frequency transmitted in SDC */
-static FILE* pFile = fopen("test/altfreq.dat", "w");
-
-int inum = ReceiverParam.AltFreqSign.vecAltFreq.Size();
-for (int z = 0; z < inum; z++)
-{
-	fprintf(pFile, "sync:%d sr:", ReceiverParam.AltFreqSign.vecAltFreq[z].bIsSyncMultplx);
-
-	for (int k = 0; k < 4; k++)
-		fprintf(pFile, "%d", ReceiverParam.AltFreqSign.vecAltFreq[z].veciServRestrict[k]);
-	fprintf(pFile, " fr:");
-
-	for (int kk = 0; kk < ReceiverParam.AltFreqSign.vecAltFreq[z].veciFrequencies.Size(); kk++)
-		fprintf(pFile, "%d ", ReceiverParam.AltFreqSign.vecAltFreq[z].veciFrequencies[kk]);
-
-	fprintf(pFile, " rID:%d sID:%d   /   ", ReceiverParam.AltFreqSign.vecAltFreq[z].iRegionID,
-		ReceiverParam.AltFreqSign.vecAltFreq[z].iScheduleID);
-}
-fprintf(pFile, "\n");
-fflush(pFile);
+				ReceiverParam.AltFreqSign.dump("test/altfreq.dat");
 #endif
 
 				}
@@ -1705,7 +1688,6 @@ void CDRMReceiver::save(CSettings& Settings)
 	/* Active/Deactivate EPG decoding */
 	Settings.Put("EPG", "decodeepg", DataDecoder.GetDecodeEPG());
 
-#ifdef USE_QT_GUI
 	/* Logfile -------------------------------------------------------------- */
 	/* log or nolog? */
 	Settings.Put("Logfile", "enablelog", ReceiverParam.ReceptLog.GetLoggingEnabled());
@@ -1727,6 +1709,7 @@ void CDRMReceiver::save(CSettings& Settings)
 	/* Longitude string for log file */
 	Settings.Put("Logfile", "longitude", ReceiverParam.ReceptLog.GetLongitude());
 
+#ifdef USE_QT_GUI
 	/* Storage path for files saved from Multimedia dialog */
 	Settings.Put("Multimedia dialog", "storagepath", strStoragePathMMDlg);
 
