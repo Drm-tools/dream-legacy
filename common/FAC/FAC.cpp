@@ -126,6 +126,9 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	case CS_2_SM:
 		(*pbiFACData).Enqueue(3 /* 11 */, 2);
 		break;
+
+	default:
+		break;
 	}
 
 	/* SDC mode */
@@ -137,6 +140,9 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	case CS_1_SM:
 		(*pbiFACData).Enqueue(1 /* 1 */, 1);
+		break;
+
+	default:
 		break;
 	}
 
@@ -500,7 +506,7 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 			Parameter.SetSDCCodingScheme(CS_1_SM);
 			break;
 		}
-
+			
 		/* Number of services */
 		/* Search table for entry */
 		int iNumServTabEntry = (*pbiFACData).Separate(4);
@@ -531,11 +537,13 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		switch ((*pbiFACData).Separate(1))
 		{
 		case 0: /* 0 */
-			Parameter.Service[iTempShortID].eCAIndication = CParameter::CA_NOT_USED;
+			Parameter.Service[iTempShortID].eCAIndication = 
+				CParameter::CA_NOT_USED;
 			break;
 
 		case 1: /* 1 */
-			Parameter.Service[iTempShortID].eCAIndication = CParameter::CA_USED;
+			Parameter.Service[iTempShortID].eCAIndication = 
+				CParameter::CA_USED;
 			break;
 		}
 

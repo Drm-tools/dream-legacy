@@ -587,8 +587,8 @@ for (z = 0; z < iSize; z++)
 }
 
 LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
-	const char* name, bool modal, WFlags f) : vecpListItems(0),
-	CLiveScheduleDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
+	const char* name, bool modal, WFlags f): CLiveScheduleDlgBase(parent, name, modal, f),
+	pDRMRec(pNDRMR), vecpListItems(0)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();

@@ -292,6 +292,9 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 		iLengthWiener = LEN_WIENER_FILT_TIME_RMD;
 		rSigmaMax = MAX_SIGMA_RMD;
 		break;
+	
+	default:
+		break;
 	}
 
 	/* Set delay of this channel estimation type. The longer the delay is, the

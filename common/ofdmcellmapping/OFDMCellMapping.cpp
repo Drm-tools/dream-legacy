@@ -125,6 +125,9 @@ void COFDMCellMapping::InitInternal(CParameter& TransmParam)
 	/* Choose right dummy cells for MSC QAM scheme */
 	switch (TransmParam.eMSCCodingScheme)
 	{
+	case CS_1_SM: /* no 4QAM in MSC */
+		break;
+
 	case CS_2_SM:
 		pcDummyCells = (_COMPLEX*) &cDummyCells16QAM[0];
 		break;

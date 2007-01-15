@@ -33,7 +33,7 @@
 /******************************************************************************\
 * Transmitter                                                                  *
 \******************************************************************************/
-void CTransmitData::ProcessDataInternal(CParameter& Parameter)
+void CTransmitData::ProcessDataInternal(CParameter&)
 {
 	int i;
 
@@ -174,7 +174,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	if (bUseSoundcard == TRUE)
 	{
 		/* Init sound interface */
-		pSound->Init(iBigBlockSize, TRUE);
+		pSound->Init(iBigBlockSize);
 	}
 	else
 	{

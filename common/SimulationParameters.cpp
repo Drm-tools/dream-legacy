@@ -254,7 +254,7 @@ Param.iSpecChDoppler = 2; /* Hz (integer value!) */
 	}
 }
 
-string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
+string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
 								   _BOOLEAN bWithSNR)
 {
 /* 
@@ -277,7 +277,7 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
 	string strFileName = "";
 
 	/* What type of simulation ---------------------------------------------- */
-	switch (Param.eSimType)
+	switch (SaveParam.eSimType)
 	{
 	case CParameter::ST_BITERROR:
 		strFileName += "BER_";
@@ -291,24 +291,27 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
 	case CParameter::ST_SYNC_PARAM:
 		strFileName += "SYNC_";
 		break;
+	case CParameter::ST_NONE:
+	case CParameter::ST_SINR:
+		break;
 	}
 
 
 	/* Channel -------------------------------------------------------------- */
 	/* In case of channels 8 / 10 also write Doppler frequency in file name */
-	if ((Param.iDRMChannelNum == 8) || (Param.iDRMChannelNum == 10))
+	if ((SaveParam.iDRMChannelNum == 8) || (SaveParam.iDRMChannelNum == 10))
 	{
 		sprintf(chNumTmpLong, "CH%d_%dHz_",
-			Param.iDRMChannelNum, Param.iSpecChDoppler);
+			SaveParam.iDRMChannelNum, SaveParam.iSpecChDoppler);
 	}
 	else
-		sprintf(chNumTmpLong, "CH%d_", Param.iDRMChannelNum);
+		sprintf(chNumTmpLong, "CH%d_", SaveParam.iDRMChannelNum);
 
 	strFileName += chNumTmpLong;
 
 
 	/* Robustness mode and spectrum occupancy ------------------------------- */
-	switch (Param.GetWaveMode())
+	switch (SaveParam.GetWaveMode())
 	{
 	case RM_ROBUSTNESS_MODE_A:
 		strFileName += "A";
@@ -322,8 +325,10 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
 	case RM_ROBUSTNESS_MODE_D:
 		strFileName += "D";
 		break;
+	case RM_NO_MODE_DETECTED:
+		break;
 	}
-	switch (Param.GetSpectrumOccup())
+	switch (SaveParam.GetSpectrumOccup())
 	{
 	case SO_0:
 		strFileName += "0_";
@@ -348,7 +353,7 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
 
 	/* Channel estimation method -------------------------------------------- */
 	/* In case of BER simulation, print out channel estimation methods used */
-	if (Param.eSimType == CParameter::ST_BITERROR)
+	if (SaveParam.eSimType == CParameter::ST_BITERROR)
 	{
 		/* Time direction */
 		switch (ChannelEstimation.GetTimeInt())
@@ -386,13 +391,16 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
 
 
 	/* Protection level part B ---------------------------------------------- */
-	sprintf(chNumTmpLong, "PL%d_", Param.MSCPrLe.iPartB);
+	sprintf(chNumTmpLong, "PL%d_", SaveParam.MSCPrLe.iPartB);
 	strFileName += chNumTmpLong;
 
 
 	/* MSC coding scheme ---------------------------------------------------- */
-	switch (Param.eMSCCodingScheme)
+	switch (SaveParam.eMSCCodingScheme)
 	{
+	case CS_1_SM:
+		break;
+
 	case CS_2_SM:
 		strFileName += "16SM_";
 		break;

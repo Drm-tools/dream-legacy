@@ -37,8 +37,8 @@
 
 /* Implementation *************************************************************/
 MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
-	const char* name, bool modal, WFlags f) : pDRMRec(pNDRMR),
-	MultimediaDlgBase(parent, name, modal, f)
+	const char* name, bool modal, WFlags f) :
+	MultimediaDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
 {
 #ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
@@ -237,7 +237,6 @@ void MultimediaDlg::OnTimer()
 {
 	CMOTObject	NewObj;
 	QPixmap		NewImage;
-	FILE*		pFiBody;
 	int			iCurNumPict;
 	_BOOLEAN	bMainPage;
 	_BOOLEAN	bShowInfo = TRUE;
@@ -518,7 +517,7 @@ void MultimediaDlg::SetJournalineText()
 		pFileMenu->setItemEnabled(1, TRUE);
 }
 
-void MultimediaDlg::showEvent(QShowEvent* pEvent)
+void MultimediaDlg::showEvent(QShowEvent*)
 {
 	/* Activte real-time timer when window is shown */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
@@ -527,7 +526,7 @@ void MultimediaDlg::showEvent(QShowEvent* pEvent)
 	OnTimer();
 }
 
-void MultimediaDlg::hideEvent(QHideEvent* pEvent)
+void MultimediaDlg::hideEvent(QHideEvent*)
 {
 	/* Deactivate real-time timer so that it does not get new pictures */
 	Timer.stop();
@@ -565,6 +564,9 @@ void MultimediaDlg::OnButtonStepBack()
 
 		SetJournalineText();
 		break;
+
+	default:
+		break;
 	}
 }
 
@@ -587,6 +589,9 @@ void MultimediaDlg::OnButtonStepForw()
 				"Open the home page:\n" + strDirMOTCache +
 				"/" + strBWSHomePage + "\nmanually."), QMessageBox::Ok);
 		}
+		break;
+
+	default:
 		break;
 	}
 }
@@ -705,7 +710,7 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 
 	QString strSep("");
 
-	for (int i = 0; i < (strTotImages.length() - strNumImage.length()); i++)
+	for (size_t i = 0; i < (strTotImages.length() - strNumImage.length()); i++)
 		strSep += " ";
 
 	LabelCurPicNum->setText(strSep + strNumImage + "/" + strTotImages);
@@ -774,43 +779,48 @@ void MultimediaDlg::OnSave()
 		break;
 
 	case CDataDecoder::AT_JOURNALINE:
-		/* Save to file current journaline page */
-		QString strTitle("");
-		QString strItems("");
-
-		/* TRUE = without html links */
-		ExtractJournalineBody(iCurJourObjID, TRUE, strTitle, strItems);
-
-		/* Prepare HTML page for storing the content (header, body tags, etc) */
-		QString strJornalineText = "<html>\n<head>\n"
-			"<meta http-equiv=\"content-Type\" "
-			"content=\"text/html; charset=utf-8\">\n<title>" + strTitle +
-			"</title>\n</head>\n\n<body>\n<table>\n"
-			"<tr><th>" + strTitle + "</th></tr>\n"
-			"<tr><td><ul type=\"square\">" + strItems + "</ul></td></tr>\n"
-			"</table>\n"
-			/* Add current date and time */
-			"<br><p align=right><font size=-2><i>" +
-			QDateTime().currentDateTime().toString() + "</i></font></p>"
-			"</body>\n</html>";
-
-		strFileName = QFileDialog::getSaveFileName(strCurrentSavePath +
-			strTitle + ".html", "*.html", this);
-
-		if (!strFileName.isNull())
 		{
-			SetCurrentSavePath(strFileName);
+			/* Save to file current journaline page */
+			QString strTitle("");
+			QString strItems("");
 
-			/* Save Journaline page as a text stream */
-			QFile FileObj(strFileName);
+			/* TRUE = without html links */
+			ExtractJournalineBody(iCurJourObjID, TRUE, strTitle, strItems);
 
-			if (FileObj.open(IO_WriteOnly))
+			/* Prepare HTML page for storing the content (header, body tags, etc) */
+			QString strJornalineText = "<html>\n<head>\n"
+				"<meta http-equiv=\"content-Type\" "
+				"content=\"text/html; charset=utf-8\">\n<title>" + strTitle +
+				"</title>\n</head>\n\n<body>\n<table>\n"
+				"<tr><th>" + strTitle + "</th></tr>\n"
+				"<tr><td><ul type=\"square\">" + strItems + "</ul></td></tr>\n"
+				"</table>\n"
+				/* Add current date and time */
+				"<br><p align=right><font size=-2><i>" +
+				QDateTime().currentDateTime().toString() + "</i></font></p>"
+				"</body>\n</html>";
+
+			strFileName = QFileDialog::getSaveFileName(strCurrentSavePath +
+				strTitle + ".html", "*.html", this);
+
+			if (!strFileName.isNull())
 			{
-				QTextStream TextStream(&FileObj);
-				TextStream << strJornalineText; /* Actual writing */
-				FileObj.close();
+				SetCurrentSavePath(strFileName);
+
+				/* Save Journaline page as a text stream */
+				QFile FileObj(strFileName);
+
+				if (FileObj.open(IO_WriteOnly))
+				{
+					QTextStream TextStream(&FileObj);
+					TextStream << strJornalineText; /* Actual writing */
+					FileObj.close();
+				}
 			}
 		}
+		break;
+	
+	default:
 		break;
 	}
 }
@@ -1207,6 +1217,8 @@ void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
 		NewPic.Body.vecData = memIO.GetData(); /* Actual copying */
 		NewPic.strFormat = "png"; /* New format string */
 	}
+#else
+	(void)NewPic; /* quiet compiler warning */
 #endif
 }
 

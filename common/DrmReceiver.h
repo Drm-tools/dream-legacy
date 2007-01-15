@@ -56,11 +56,8 @@
 #include "sync/SyncUsingPil.h"
 #include "AMDemodulation.h"
 #include "AMSSDemodulation.h"
-#ifdef _WIN32
-# include "../../Windows/source/sound.h"
-#else
-# include "source/sound.h"
-#endif
+#include "Sound.h"
+
 
 
 /* Definitions ****************************************************************/
@@ -83,7 +80,7 @@
 /* Classes ********************************************************************/
 class CSplitFAC : public CSplitModul<_BINARY>
 {
-	void SetInputBlockSize(CParameter& p)
+	void SetInputBlockSize(CParameter&)
 		{this->iInputBlockSize = NUM_FAC_BITS_PER_BLOCK;}
 };
 
@@ -204,8 +201,8 @@ public:
 	COFDMDemodulation*		GetOFDMDemod() {return &OFDMDemodulation;}
 	CSyncUsingPil*			GetSyncUsPil() {return &SyncUsingPil;}
 	CWriteData*				GetWriteData() {return &WriteData;}
-	CSoundIn*				GetSoundInInterface() {return &SoundInInterface;}
-	CSoundOut*				GetSoundOutInterface() {return &SoundOutInterface;}
+	CSoundInInterface*		GetSoundInInterface() {return pSoundInInterface;}
+	CSoundOutInterface*		GetSoundOutInterface() {return pSoundOutInterface;}
 	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
 	CAMDemodulation*		GetAMDemod() {return &AMDemodulation;}
 	CAMSSPhaseDemod*		GetAMSSPhaseDemod() {return &AMSSPhaseDemod;}
@@ -241,6 +238,153 @@ public:
 	void					InitsForMSC();
 	void					InitsForMSCDemux();
 	void					CheckInitsNeeded();
+
+
+	/* Interfaces to internal parameters/vectors used for the plot */
+	void GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
+		CVector<_REAL>& vecrSamOffs, CVector<_REAL>& vecrScale,
+		_REAL& rFreqAquVal);
+
+	void GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
+		CVector<_REAL>& vecrDoppler, CVector<_REAL>& vecrScale);
+
+	void GetSNRHist(CVector<_REAL>& vecrSNR, CVector<_REAL>& vecrCDAud,
+		CVector<_REAL>& vecrScale);
+
+protected:
+	void					Run(_BOOLEAN);
+	void					DetectAcquiFAC();
+	void					DetectAcquiSymbol();
+	void					InitReceiverMode();
+	void					UpdateParamHistories();
+
+	/* Modules */
+	CSoundInInterface*		pSoundInInterface;
+	CSoundOutInterface*		pSoundOutInterface;
+	CReceiveData			ReceiveData;
+	CWriteData				WriteData;
+	CInputResample			InputResample;
+	CFreqSyncAcq			FreqSyncAcq;
+	CTimeSync				TimeSync;
+	COFDMDemodulation		OFDMDemodulation;
+	CSyncUsingPil			SyncUsingPil;
+	CChannelEstimation		ChannelEstimation;
+	COFDMCellDemapping		OFDMCellDemapping;
+	CFACMLCDecoder			FACMLCDecoder;
+	CUtilizeFACData			UtilizeFACData;
+	CSDCMLCDecoder			SDCMLCDecoder;
+	CUtilizeSDCData			UtilizeSDCData;
+	CSymbDeinterleaver		SymbDeinterleaver;
+	CMSCMLCDecoder			MSCMLCDecoder;
+	CMSCDemultiplexer		MSCDemultiplexer;
+	CAudioSourceDecoder		AudioSourceDecoder;
+	CDataDecoder			DataDecoder;
+	CSplit					Split;
+	CSplitFAC				SplitFAC;
+	CSplitSDC				SplitSDC;
+	CSplitMSC				SplitMSC[MAX_NUM_STREAMS];
+	CAMDemodulation			AMDemodulation;
+	CAMSSPhaseDemod			AMSSPhaseDemod;
+	CAMSSExtractBits		AMSSExtractBits;
+	CAMSSDecode				AMSSDecode;
+
+	CRSIMDIInRCIOut			upstreamRSCI;
+	CDecodeRSIMDI			DecodeRSIMDI;
+	CRSIMDIOutRCIIn			downstreamRSCI;
+
+	/* Parameters */
+	CParameter				ReceiverParam;
+
+	/* Buffers */
+	CSingleBuffer<_REAL>			AMDataBuf;
+	CSingleBuffer<_REAL>			AMSSDataBuf;
+	CSingleBuffer<_REAL>			AMSSPhaseBuf;
+	CCyclicBuffer<_REAL>			AMSSResPhaseBuf;
+	CCyclicBuffer<_BINARY>			AMSSBitsBuf;
+
+	CSingleBuffer<_REAL>			RecDataBuf;
+	CCyclicBuffer<_REAL>			InpResBuf;
+	CCyclicBuffer<_COMPLEX>			FreqSyncAcqBuf;
+	CSingleBuffer<_COMPLEX>			TimeSyncBuf;
+	CSingleBuffer<_COMPLEX>			OFDMDemodBuf;
+	CSingleBuffer<_COMPLEX>			SyncUsingPilBuf;
+	CSingleBuffer<CEquSig>			ChanEstBuf;
+	CCyclicBuffer<CEquSig>			MSCCarDemapBuf;
+	CCyclicBuffer<CEquSig>			FACCarDemapBuf;
+	CCyclicBuffer<CEquSig>			SDCCarDemapBuf;
+	CSingleBuffer<CEquSig>			DeintlBuf;
+	CSingleBuffer<_BINARY>			FACDecBuf;
+	CSingleBuffer<_BINARY>			FACUseBuf;
+	CSingleBuffer<_BINARY>			FACSendBuf;
+	CSingleBuffer<_BINARY>			SDCDecBuf;
+	CSingleBuffer<_BINARY>			SDCUseBuf;
+	CSingleBuffer<_BINARY>			SDCSendBuf;
+	CSingleBuffer<_BINARY>			MSCMLCDecBuf;
+	CSingleBuffer<_BINARY>			RSIPacketBuf;
+	vector<CSingleBuffer<_BINARY> >	MSCDecBuf;
+	vector<CSingleBuffer<_BINARY> >	MSCUseBuf;
+	vector<CSingleBuffer<_BINARY> >	MSCSendBuf;
+	CCyclicBuffer<_SAMPLE>			AudSoDecBuf;
+
+	int						iAcquRestartCnt;
+	int						iAcquDetecCnt;
+	int						iGoodSignCnt;
+	int						iDelayedTrackModeCnt;
+	ERecState				eReceiverState;
+	ERecMode				eNewReceiverMode;
+
+	int						iAudioStreamID;
+	int						iDataStreamID;
+
+
+	_REAL					rInitResampleOffset;
+
+#ifdef HAVE_LIBHAMLIB
+	CHamlib					Hamlib;
+#endif
+
+	int						iSoundCrdDevIn;
+	int						iSoundCrdDevOut;
+
+
+	/* Storing parameters for plot */
+	CShiftRegister<_REAL>	vecrFreqSyncValHist;
+	CShiftRegister<_REAL>	vecrSamOffsValHist;
+	CShiftRegister<_REAL>	vecrLenIRHist;
+	CShiftRegister<_REAL>	vecrDopplerHist;
+	CShiftRegister<_REAL>	vecrSNRHist;
+	CShiftRegister<int>		veciCDAudHist;
+	int						iAvCntParamHist;
+	_REAL					rAvLenIRHist;
+	_REAL					rAvDopplerHist;
+	_REAL					rAvSNRHist;
+	int						iCurrentCDAud;
+	CMutex					MutexHist;
+	CVectorEx<_BINARY>		vecbiMostRecentSDC;
+	int						iFreqkHz;
+
+	/* number of frames without FAC data before generating free-running RSCI */
+	static const int		MAX_UNLOCKED_COUNT;
+
+	/* Counter for unlocked frames, to keep generating RSCI even when unlocked */
+	int						iUnlockedCount;
+
+public:
+	_BOOLEAN				bEnableSMeter;
+
+	/* Analog demodulation settings */
+	int						iBwAM;
+	int						iBwLSB;
+	int						iBwUSB;
+	int						iBwCW;
+	int						iBwFM;
+	CAMDemodulation::EDemodType	AMDemodType;
+
+#ifdef _WIN32
+	_BOOLEAN				bProcessPriorityEnabled;
+#endif
+	_BOOLEAN				bReadFromFile;
+	time_t					time_keeper;
 
 /* _WIN32 check because in Visual c++ the GUI files are always compiled even
    if USE_QT_GUI is set or not */
@@ -315,6 +459,14 @@ public:
 	/* sort parameter in live schedule dialog */
 	CSortParam SortParamLiveSched;
 
+
+	int				iSysEvalDlgPlotType;
+	int				iMOTBWSRefreshTime;
+	_BOOLEAN		bAddRefreshHeader;
+	string			strStoragePathMMDlg;
+	string			strStoragePathLiveScheduleDlg;
+	int				iMainDisplayColor;
+
 	/* Font parameters for Multimedia Dlg */
 	class CFontParam
 	{
@@ -331,158 +483,7 @@ public:
 	};
 
 	CFontParam		FontParamMMDlg;
-
-	_BOOLEAN		bEnableSMeter;
-	int				iSysEvalDlgPlotType;
-	int				iMOTBWSRefreshTime;
-	_BOOLEAN		bAddRefreshHeader;
-	string			strStoragePathMMDlg;
-	string			strStoragePathLiveScheduleDlg;
-	int				iMainDisplayColor;
-
-	/* Analog demodulation settings */
-	int				iBwAM;
-	int				iBwLSB;
-	int				iBwUSB;
-	int				iBwCW;
-	int				iBwFM;
-	CAMDemodulation::EDemodType	AMDemodType;
 #endif
-
-	/* Interfaces to internal parameters/vectors used for the plot */
-	void GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
-		CVector<_REAL>& vecrSamOffs, CVector<_REAL>& vecrScale,
-		_REAL& rFreqAquVal);
-
-	void GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
-		CVector<_REAL>& vecrDoppler, CVector<_REAL>& vecrScale);
-
-	void GetSNRHist(CVector<_REAL>& vecrSNR, CVector<_REAL>& vecrCDAud,
-		CVector<_REAL>& vecrScale);
-
-protected:
-	void					Run(_BOOLEAN);
-	void					DetectAcquiFAC();
-	void					DetectAcquiSymbol();
-	void					InitReceiverMode();
-	void					UpdateParamHistories();
-
-	/* Modules */
-	CReceiveData			ReceiveData;
-	CWriteData				WriteData;
-	CInputResample			InputResample;
-	CFreqSyncAcq			FreqSyncAcq;
-	CTimeSync				TimeSync;
-	COFDMDemodulation		OFDMDemodulation;
-	CSyncUsingPil			SyncUsingPil;
-	CChannelEstimation		ChannelEstimation;
-	COFDMCellDemapping		OFDMCellDemapping;
-	CFACMLCDecoder			FACMLCDecoder;
-	CUtilizeFACData			UtilizeFACData;
-	CSDCMLCDecoder			SDCMLCDecoder;
-	CUtilizeSDCData			UtilizeSDCData;
-	CSymbDeinterleaver		SymbDeinterleaver;
-	CMSCMLCDecoder			MSCMLCDecoder;
-	CMSCDemultiplexer		MSCDemultiplexer;
-	CAudioSourceDecoder		AudioSourceDecoder;
-	CDataDecoder			DataDecoder;
-	CSplit					Split;
-	CSplitFAC				SplitFAC;
-	CSplitSDC				SplitSDC;
-	CSplitMSC				SplitMSC[MAX_NUM_STREAMS];
-	CAMDemodulation			AMDemodulation;
-	CAMSSPhaseDemod			AMSSPhaseDemod;
-	CAMSSExtractBits		AMSSExtractBits;
-	CAMSSDecode				AMSSDecode;
-
-	/* Parameters */
-	CParameter				ReceiverParam;
-
-	/* Buffers */
-	CSingleBuffer<_REAL>			AMDataBuf;
-	CSingleBuffer<_REAL>			AMSSDataBuf;
-	CSingleBuffer<_REAL>			AMSSPhaseBuf;
-	CCyclicBuffer<_REAL>			AMSSResPhaseBuf;
-	CCyclicBuffer<_BINARY>			AMSSBitsBuf;
-
-	CSingleBuffer<_REAL>			RecDataBuf;
-	CCyclicBuffer<_REAL>			InpResBuf;
-	CCyclicBuffer<_COMPLEX>			FreqSyncAcqBuf;
-	CSingleBuffer<_COMPLEX>			TimeSyncBuf;
-	CSingleBuffer<_COMPLEX>			OFDMDemodBuf;
-	CSingleBuffer<_COMPLEX>			SyncUsingPilBuf;
-	CSingleBuffer<CEquSig>			ChanEstBuf;
-	CCyclicBuffer<CEquSig>			MSCCarDemapBuf;
-	CCyclicBuffer<CEquSig>			FACCarDemapBuf;
-	CCyclicBuffer<CEquSig>			SDCCarDemapBuf;
-	CSingleBuffer<CEquSig>			DeintlBuf;
-	CSingleBuffer<_BINARY>			FACDecBuf;
-	CSingleBuffer<_BINARY>			FACUseBuf;
-	CSingleBuffer<_BINARY>			FACSendBuf;
-	CSingleBuffer<_BINARY>			SDCDecBuf;
-	CSingleBuffer<_BINARY>			SDCUseBuf;
-	CSingleBuffer<_BINARY>			SDCSendBuf;
-	CSingleBuffer<_BINARY>			MSCMLCDecBuf;
-	CSingleBuffer<_BINARY>			RSIPacketBuf;
-	vector<CSingleBuffer<_BINARY> >	MSCDecBuf;
-	vector<CSingleBuffer<_BINARY> >	MSCUseBuf;
-	vector<CSingleBuffer<_BINARY> >	MSCSendBuf;
-	CCyclicBuffer<_SAMPLE>			AudSoDecBuf;
-
-	int						iAcquRestartCnt;
-	int						iAcquDetecCnt;
-	int						iGoodSignCnt;
-	int						iDelayedTrackModeCnt;
-	ERecState				eReceiverState;
-	ERecMode				eNewReceiverMode;
-
-	CSoundIn				SoundInInterface;
-	CSoundOut				SoundOutInterface;
-
-	int						iAudioStreamID;
-	int						iDataStreamID;
-
-	CRSIMDIInRCIOut			upstreamRSCI;
-	CDecodeRSIMDI			DecodeRSIMDI;
-	CRSIMDIOutRCIIn			downstreamRSCI;
-
-	_REAL					rInitResampleOffset;
-
-#ifdef HAVE_LIBHAMLIB
-	CHamlib					Hamlib;
-#endif
-
-	int						iSoundCrdDevIn;
-	int						iSoundCrdDevOut;
-
-
-	/* Storing parameters for plot */
-	CShiftRegister<_REAL>	vecrFreqSyncValHist;
-	CShiftRegister<_REAL>	vecrSamOffsValHist;
-	CShiftRegister<_REAL>	vecrLenIRHist;
-	CShiftRegister<_REAL>	vecrDopplerHist;
-	CShiftRegister<_REAL>	vecrSNRHist;
-	CShiftRegister<int>		veciCDAudHist;
-	int						iAvCntParamHist;
-	_REAL					rAvLenIRHist;
-	_REAL					rAvDopplerHist;
-	_REAL					rAvSNRHist;
-	int						iCurrentCDAud;
-	CMutex					MutexHist;
-	CVectorEx<_BINARY>		vecbiMostRecentSDC;
-	int						iFreqkHz;
-
-	/* number of frames without FAC data before generating free-running RSCI */
-	static const int		MAX_UNLOCKED_COUNT;
-
-	/* Counter for unlocked frames, to keep generating RSCI even when unlocked */
-	int						iUnlockedCount;
-
-#ifdef _WIN32
-	_BOOLEAN				bProcessPriorityEnabled;
-#endif
-	_BOOLEAN				bReadFromFile;
-	time_t					time_keeper;
 
 };
 

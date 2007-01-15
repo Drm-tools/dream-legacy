@@ -28,6 +28,8 @@
 #ifndef _SOUND_COMMON_H
 #define _SOUND_COMMON_H
 
+#include "../../common/Sound.h"
+
 #ifdef USE_QT_GUI
 # if QT_VERSION < 0x030000
 #  include <qthread.h>
@@ -46,15 +48,6 @@
 #define	NUM_OUT_CHANNELS		2		/* Stereo Playback */
 #define	BITS_PER_SAMPLE			16		/* Use all bits of the D/A-converter */
 #define BYTES_PER_SAMPLE		2		/* Number of bytes per sample */
-
-class CSoundInterface
-{
-public:
-	virtual void		Enumerate(vector<string>& names)=0;
-	virtual void		SetDev(int iNewDev)=0;
-	virtual int			GetDev()=0;
-	virtual void		Close()=0;
-};
 
 #ifdef USE_DEVDSP
 #include <map>

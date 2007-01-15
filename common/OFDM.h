@@ -46,6 +46,9 @@ public:
 	COFDMModulation() : rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ) {}
 	virtual ~COFDMModulation() {}
 
+	void SetCarOffset(const _REAL rNewCarOffset)
+		{rDefCarOffset = rNewCarOffset;}
+
 protected:
 	CFftPlans				FftPlan;
 

@@ -35,12 +35,7 @@
 #include "IQInputFilter.h"
 #include "util/Modul.h"
 #include "util/Utilities.h"
-
-#ifdef _WIN32
-# include "../../Windows/source/sound.h"
-#else
-# include "source/sound.h"
-#endif
+#include "Sound.h"
 #ifdef HAVE_LIBSNDFILE
 # include <sndfile.h>
 #else
@@ -67,7 +62,7 @@ class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
 public:
 	enum EFileOutFormat { OFF_RAW, OFF_TXT, OFF_WAV };
 
-	CTransmitData(CSoundOut* pNS) : pFile(NULL), pSound(pNS), 
+	CTransmitData(CSoundOutInterface* pNS) : pFile(NULL), pSound(pNS), 
 		eOutputFormat(OF_REAL_VAL), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
 		strFileName("test/TransmittedData.txt"), bUseSoundcard(TRUE) {}
 	virtual ~CTransmitData();
@@ -96,7 +91,7 @@ protected:
 	FILE*				pFile;
 	CWaveFile			WaveFile;
 #endif
-	CSoundOut*			pSound;
+	CSoundOutInterface*	pSound;
 	CVector<short>		vecsDataOut;
 	int					iBlockCnt;
 	int					iNumBlocks;
@@ -123,7 +118,7 @@ public:
 	enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
 		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO, CS_MONO};
 
-	CReceiveData(CSoundIn* pNS) : pFile(NULL), pSound(pNS),
+	CReceiveData(CSoundInInterface* pNS) : pFile(NULL), pSound(pNS),
 	vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0),
 	bFippedSpectrum(FALSE), bUseSoundcard(TRUE), bNewUseSoundcard(TRUE),
 	strInFileName("test/TransmittedData.txt"), eInChanSelection(CS_MIX_CHAN)
@@ -151,7 +146,7 @@ protected:
 #else
 	FILE*					pFile;
 #endif
-	CSoundIn*				pSound;
+	CSoundInInterface*		pSound;
 	CVector<_SAMPLE>		vecsSoundBuffer;
 
 	CShiftRegister<_REAL>	vecrInpData;

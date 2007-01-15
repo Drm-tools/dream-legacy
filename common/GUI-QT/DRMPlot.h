@@ -37,7 +37,9 @@
 #include <qwhatsthis.h>
 #include "../util/Vector.h"
 #include "../Parameter.h"
-class CDRMReceiver;
+#include "../DrmReceiver.h"
+
+
 /* Definitions ****************************************************************/
 #define GUI_CONTROL_UPDATE_WATERFALL			100	/* Milliseconds */
 

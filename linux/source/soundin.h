@@ -42,7 +42,7 @@
 //#define FRAGSIZE 1024
 
 /* Classes ********************************************************************/
-class CSoundIn : public CSoundInterface
+class CSoundIn : public CSoundInInterface
 {
 public:
 	CSoundIn();
@@ -52,8 +52,14 @@ public:
 	virtual void				SetDev(int iNewDevice);
 	virtual int					GetDev();
 
+	virtual string GetDeviceName() { return ""; }
+	virtual void StartRecording(const std::string&) {}
+	virtual void StopRecording() {}
+	virtual _BOOLEAN CurrentlyRecording() { return FALSE; }
+    virtual _BOOLEAN SetReadFromFile(const string&, _BOOLEAN) { return FALSE; }
+
 #if WITH_SOUND
-	void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
+	void Init(int iNewBufferSize);
 	_BOOLEAN Read(CVector<short>& psData);
 	void Close();
 	

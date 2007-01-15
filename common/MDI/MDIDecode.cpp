@@ -136,7 +136,7 @@ void CDecodeRSIMDI::InitInternal(CParameter& ReceiverParam)
 		iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 		//iOutputBlockSize2 = ReceiverParam.iNumSDCBitsPerSFrame;
 		iMaxOutputBlockSize2 = 1024;
-		int numstreams = ReceiverParam.Stream.Size();
+		size_t numstreams = size_t(ReceiverParam.Stream.Size());
 		//vecpvecOutputData.resize(numstreams);
 		for(size_t i=0; i<numstreams; i++)
 		{

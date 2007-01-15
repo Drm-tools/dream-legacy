@@ -38,11 +38,7 @@
 #include "SDC/SDC.h"
 #include "TextMessage.h"
 #include "util/Utilities.h"
-#ifdef _WIN32
-# include "../../Windows/source/sound.h"
-#else
-# include "source/sound.h"
-#endif
+#include "Sound.h"
 #include <time.h>
 #ifdef HAVE_LIBSNDFILE
 # include <sndfile.h>
@@ -77,7 +73,7 @@
 class CReadData : public CTransmitterModul<_SAMPLE, _SAMPLE>
 {
 public:
-	CReadData(CSoundIn* pNS) : pSound(pNS),
+	CReadData(CSoundInInterface* pNS) : pSound(pNS),
 	vecsSoundBuffer(),SignalLevelMeter(),
 	bUseSoundcard(TRUE),bNewUseSoundcard(TRUE),
 	strInFileName(""),pFile(NULL)
@@ -90,7 +86,7 @@ public:
 	void Stop();
 
 protected:
-	CSoundIn*			pSound;
+	CSoundInInterface*	pSound;
 	CVector<_SAMPLE>	vecsSoundBuffer;
 	CSignalLevelMeter	SignalLevelMeter;
 	_BOOLEAN			bUseSoundcard;
@@ -115,7 +111,7 @@ public:
 
 	enum EFileOutFormat { OFF_RAW, OFF_TXT, OFF_WAV };
 
-	CWriteData(CSoundOut* pNS);
+	CWriteData(CSoundOutInterface* pNS);
 	virtual ~CWriteData() {}
 
 	void StartWriteWaveFile(const string strFileName,
@@ -126,16 +122,13 @@ public:
 	void MuteAudio(_BOOLEAN bNewMA) {bMuteAudio = bNewMA;}
 	_BOOLEAN GetMuteAudio() {return bMuteAudio;}
 
-	void SetSoundBlocking(const _BOOLEAN bNewBl)
-		{bNewSoundBlocking = bNewBl; SetInitFlag();}
-
 	void GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
 	void SetOutChanSel(const EOutChanSel eNS) {eOutChanSel = eNS;}
 	EOutChanSel GetOutChanSel() {return eOutChanSel;}
 
 protected:
-	CSoundOut*				pSound;
+	CSoundOutInterface*		pSound;
 	_BOOLEAN				bMuteAudio;
 #ifdef HAVE_LIBSNDFILE
 	SNDFILE*				pFile;
@@ -143,8 +136,6 @@ protected:
 	CWaveFile				WaveFileAudio;
 #endif
 	_BOOLEAN				bDoWriteWaveFile;
-	_BOOLEAN				bSoundBlocking;
-	_BOOLEAN				bNewSoundBlocking;
 	CVector<_SAMPLE>		vecsTmpAudData;
 	EOutChanSel				eOutChanSel;
 	_REAL					rMixNormConst;
@@ -278,7 +269,7 @@ protected:
 		iInputBlockSize = ReceiverParam.iSymbolBlockSize;
 		iOutputBlockSize = ReceiverParam.iSymbolBlockSize;
 	}
-	virtual void ProcessDataInternal(CParameter& ReceiverParam)
+	virtual void ProcessDataInternal(CParameter&)
 	{
 		for (int i = 0; i < iOutputBlockSize; i++)
 			(*pvecOutputData)[i] = (*pvecInputData)[i].tOut;
@@ -295,7 +286,8 @@ protected:
 		iOutputBlockSize = ReceiverParam.iSymbolBlockSize;
 		iOutputBlockSize2 = ReceiverParam.iSymbolBlockSize;
 	}
-	virtual void ProcessDataInternal(CParameter& ReceiverParam)
+
+	virtual void ProcessDataInternal(CParameter&)
 	{
 		for (int i = 0; i < iInputBlockSize; i++)
 		{

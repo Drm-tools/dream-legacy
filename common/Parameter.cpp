@@ -31,9 +31,6 @@
 
 void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam);
 
-// To be replaced by something nicer!!! TODO
-#include "DrmReceiver.h"
-
 /* Implementation *************************************************************/
 void CParameter::ResetServicesStreams()
 {
@@ -683,6 +680,7 @@ void CParameter::CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_FRAME_SYNC,colour);
 }
@@ -694,6 +692,7 @@ void CParameter::CReceiveStatus::SetTimeSyncStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_TIME_SYNC,colour);
 }
@@ -705,6 +704,7 @@ void CParameter::CReceiveStatus::SetInterfaceStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_IOINTERFACE,colour);
 }
@@ -716,6 +716,7 @@ void CParameter::CReceiveStatus::SetFACStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_FAC_CRC,colour);
 }
@@ -727,6 +728,7 @@ void CParameter::CReceiveStatus::SetSDCStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_SDC_CRC,colour);
 }
@@ -738,6 +740,7 @@ void CParameter::CReceiveStatus::SetAudioStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_MSC_CRC,colour);
 }
@@ -749,6 +752,7 @@ void CParameter::CReceiveStatus::SetMOTStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_MOT_OBJ_STAT,colour);
 }
@@ -806,4 +810,55 @@ void CParameter::ClearInitFlags(uint32_t uMask)
 _BOOLEAN CParameter::TestInitFlag(uint32_t uMask)
 {
 	return (uInitFlags&uMask)?TRUE:FALSE;
+}
+
+_BOOLEAN CParameter::CGPSInformation::SetLatLongDegreesMinutes(const string& sNewLat, const string& sNewLong) 
+{ 
+	if (sNewLat.empty() || sNewLong.empty())
+		return FALSE;
+
+	char chrDegrees = 0xb0; // degrees char based on Latin-1
+
+	string sLat, sLong;
+	
+	sLat = sNewLat;		// take a local copy we can alter
+	sLong = sNewLong;
+	
+	int Degrees, Minutes;
+
+	size_t pos;
+
+	//lat
+	pos = sLat.find(chrDegrees);
+	if (pos != string::npos)
+		sLat.replace(pos, 1, " ");
+
+	pos = sLat.find("\'");
+	if (pos != string::npos)
+		sLat.replace(pos, 1, " ");
+
+	stringstream ssLat(sLat);
+	ssLat >> Degrees >> Minutes;
+	rLatitudeDegrees = Degrees + (Minutes/60.0);
+
+	if (sLat.find("N") == string::npos)	// N not found, so must be south
+		rLatitudeDegrees *= -1;
+
+	//long
+	pos = sLong.find(chrDegrees);
+	if (pos != string::npos)
+		sLong.replace(pos, 1, " ");
+
+	pos = sLong.find("\'");
+	if (pos != string::npos)
+		sLong.replace(pos, 1, " ");
+
+	stringstream ssLong(sLong);
+	ssLong >> Degrees >> Minutes;
+	rLongitudeDegrees = Degrees + (Minutes/60.0);
+
+	if (sNewLat.find("E") == string::npos)	// E not found, so must be west
+		rLongitudeDegrees *= -1;
+
+	return TRUE;
 }

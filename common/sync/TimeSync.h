@@ -64,12 +64,10 @@
 # define GRDCRR_DEC_FACT				4
 # define NUM_TAPS_HILB_FILT				NUM_TAPS_HILB_FILT_10
 # define HILB_FILT_BNDWIDTH				HILB_FILT_BNDWIDTH_10
-static float* fHilLPProt =				fHilLPProt10;
 #else
 # define GRDCRR_DEC_FACT				8
 # define NUM_TAPS_HILB_FILT				NUM_TAPS_HILB_FILT_5
 # define HILB_FILT_BNDWIDTH				HILB_FILT_BNDWIDTH_5
-static float* fHilLPProt =				fHilLPProt5;
 #endif
 
 #ifdef USE_FRQOFFS_TRACK_GUARDCORR

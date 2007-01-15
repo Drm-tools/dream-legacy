@@ -39,17 +39,16 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int				i, j, k;
 	int				iMaxIndex;
-	int				iNewStIndCount; 
 	int				iIntDiffToCenter;
 	int				iCurPos;
-	int				iDetectedRModeInd;
 	int				iDecInpuSize;
 	CReal			rMaxValue;
 	CReal			rMaxValRMCorr;
 	CReal			rSecHighPeak;
-	CReal			rFreqOffsetEst;
+	//CReal			rFreqOffsetEst;
 	CComplexVector	cvecInpTmp;
 	CRealVector		rResMode(NUM_ROBUSTNESS_MODES);
+	int				iNewStIndCount; /* TODO is this really ever used uninitialised ? */
 
 	/* Max number of detected peaks ("5" for safety reasons. Could be "2") */
 	CVector<int>	iNewStartIndexField(5);
@@ -335,6 +334,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				}
 				else
 				{
+					int	iDetectedRModeInd=-1; /* ensures test fails if no assigment in loop */
 					/* Correlation of guard-interval correlation with prepared
 					   cos-vector. Store highest peak */
 					rMaxValRMCorr = (CReal) 0.0;
@@ -386,6 +386,10 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				}
 			}
 		}
+	}
+	else
+	{
+		iNewStIndCount = 0; /* quiet compiler warning - code seems safe */
 	}
 
 	if (bTimingAcqu == TRUE)
@@ -786,7 +790,11 @@ void CTimeSync::StartAcquisition()
 
 void CTimeSync::SetFilterTaps(const CReal rNewOffsetNorm)
 {
-#ifndef USE_10_KHZ_HILBFILT
+#ifdef USE_10_KHZ_HILBFILT
+	float * fHilLPProt = fHilLPProt10;
+#else
+	float * fHilLPProt = fHilLPProt5;
+
 	/* The filter should be on the right of the DC carrier in 5 kHz mode */
 	rNewOffsetNorm += (CReal) HILB_FILT_BNDWIDTH / 2 / SOUNDCRD_SAMPLE_RATE;
 #endif
@@ -804,13 +812,13 @@ void CTimeSync::SetFilterTaps(const CReal rNewOffsetNorm)
 }
 
 CTimeSync::CTimeSync() : iTimeSyncPos(0), bSyncInput(FALSE), bTimingAcqu(FALSE),
-	bAcqWasActive(FALSE), bRobModAcqu(FALSE),
+	bRobModAcqu(FALSE), bAcqWasActive(FALSE), rLambdaCoAv((CReal) 1.0),
 	iLengthIntermCRes(NUM_ROBUSTNESS_MODES),
 	iPosInIntermCResBuf(NUM_ROBUSTNESS_MODES),
 	iLengthOverlap(NUM_ROBUSTNESS_MODES), iLenUsefPart(NUM_ROBUSTNESS_MODES),
 	iLenGuardInt(NUM_ROBUSTNESS_MODES), cGuardCorr(NUM_ROBUSTNESS_MODES),
-	rGuardPow(NUM_ROBUSTNESS_MODES), cGuardCorrBlock(NUM_ROBUSTNESS_MODES),
-	rGuardPowBlock(NUM_ROBUSTNESS_MODES), rLambdaCoAv((CReal) 1.0)
+	cGuardCorrBlock(NUM_ROBUSTNESS_MODES), rGuardPow(NUM_ROBUSTNESS_MODES),
+	rGuardPowBlock(NUM_ROBUSTNESS_MODES)
 {
 	/* Init Hilbert filter. Since the frequency offset correction was
 	   done in the previous module, the offset for the filter is

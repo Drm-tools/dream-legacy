@@ -38,11 +38,14 @@
 #include "sourcedecoders/AudioSourceEncoder.h"
 #include <iostream>
 
+#include "../linux/source/soundin.h"
+#include "../linux/source/soundout.h"
+
 /* cloned from DrmReceiver - TODO better solution */
 
 class CSplitFAC : public CSplitModul<_BINARY>
 {
-	void SetInputBlockSize(CParameter& p)
+	void SetInputBlockSize(CParameter&)
 		{this->iInputBlockSize = NUM_FAC_BITS_PER_BLOCK;}
 };
 
@@ -315,7 +318,7 @@ CDRMTransmitter::run()
 	CSingleBuffer<_COMPLEX>	OFDMModBuf;
 
 	/* Modules */
-	CSoundIn*				pSoundInInterface = NULL;
+	CSoundInInterface*		pSoundInInterface = NULL;
 	if(strInputFileName=="")
 		pSoundInInterface = new CSoundIn;
 	CReadData				ReadData(pSoundInInterface);
@@ -328,7 +331,7 @@ CDRMTransmitter::run()
 	CSDCMLCEncoder			SDCMLCEncoder;
 	COFDMCellMapping		OFDMCellMapping;
 	COFDMModulation			OFDMModulation;
-	CSoundOut*				pSoundOutInterface = NULL;
+	CSoundOutInterface*		pSoundOutInterface = NULL;
 	if(strOutputFileName=="")
 		pSoundOutInterface = new CSoundOut;
 	CTransmitData			TransmitData(pSoundOutInterface);
@@ -387,7 +390,7 @@ CDRMTransmitter::run()
 		ReadData.Init(TransmParam, DataBuf);
 
 		AudioSourceEncoder.ClearTextMessages();
-		int i;
+		size_t i;
 		for(i=0; i<vecstrTexts.size(); i++)
 			AudioSourceEncoder.AddTextMessage(vecstrTexts[i]);
 

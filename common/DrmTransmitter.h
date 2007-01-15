@@ -34,12 +34,6 @@
 #include "DataIO.h"
 #include "DRMSignalIO.h"
 #include "sourcedecoders/AudioSourceEncoderInterface.h"
-#ifdef _WIN32
-# include "../../Windows/source/sound.h"
-#else
-# include "source/sound.h"
-#endif
-
 
 /* Classes ********************************************************************/
 class CDRMTransmitter

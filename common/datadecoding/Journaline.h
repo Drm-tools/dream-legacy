@@ -75,7 +75,7 @@ public:
 	CJournaline();
 	virtual ~CJournaline();
 
-	void GetNews(const int iObjID, CNews& News);
+	void GetNews(int iObjID, CNews& News);
 	void AddDataUnit(CVector<_BINARY>& vecbiNewData);
 	void Reset() {ResetOpenJournalineDecoder();}
 
@@ -87,7 +87,7 @@ protected:
 
 	/* Callback functions for journaline decoder internal tasks */
 	static void obj_avail_cb(unsigned long, NEWS_SVC_DEC_obj_availability_t*,
-		void* data) {}
+		void*) {}
 	static void dg_cb(const DAB_DATAGROUP_DECODER_msc_datagroup_header_t*,
 		const unsigned long len, const unsigned char* buf, void* data)
 		{NEWS_SVC_DEC_putData(((CJournaline*) data)->newsdec, len, buf);}
@@ -100,7 +100,7 @@ public:
 	CJournaline() {}
 	virtual ~CJournaline() {}
 
-	void GetNews(const int iObjID, CNews& News)
+	void GetNews(int, CNews& News)
 	{
 		/* Show in GUI that Journaline decoder is not available */
 		News.sTitle = "Dream Decoder Message";
@@ -108,7 +108,7 @@ public:
 		News.vecItem[0].iLink = JOURNALINE_IS_NO_LINK;
 		News.vecItem[0].sText = "No Journaline decoder available.";
 	}
-	void AddDataUnit(CVector<_BINARY>& vecbiNewData) {}
+	void AddDataUnit(CVector<_BINARY>&) {}
 	void Reset() {}
 };
 #endif

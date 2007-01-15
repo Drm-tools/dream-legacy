@@ -31,7 +31,7 @@
 
 
 /* Implementation *************************************************************/
-void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
+void CAMDemodulation::ProcessDataInternal(CParameter&)
 {
 	int i;
 
@@ -246,7 +246,7 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW,
 	vecrFilter = FirLP(rBPNormBW, Nuttallwin(iHilFiltBlLen));
 
 	/* Adjust center of filter for respective demodulation types */
-	CReal rBPNormFreqOffset;
+	CReal rBPNormFreqOffset = (CReal) 0.0;;
 	const CReal rSSBMargin = SSB_DC_MARGIN_HZ / SOUNDCRD_SAMPLE_RATE;
 	switch (eDemodType)
 	{
@@ -378,6 +378,9 @@ void CAMDemodulation::SetNoiRedType(const ENoiRedType eNewType)
 
 			case NR_HIGH:
 				NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_HIGH);
+				break;
+
+			case NR_OFF:
 				break;
 		}
 	}
@@ -559,6 +562,9 @@ void CAGC::SetType(const EType eNewType)
 	case AT_FAST:
 		rAttack = IIR1Lam(0.005, SOUNDCRD_SAMPLE_RATE);
 		rDecay = IIR1Lam(0.200, SOUNDCRD_SAMPLE_RATE);
+		break;
+
+	case AT_NO_AGC:
 		break;
 	}
 }
@@ -763,19 +769,19 @@ void CNoiseReduction::UpdateNoiseEst(CRealVector& vecrNoisePSD,
 	Implements a mimium statistic proposed by R. Martin
 */
 	/* Set weighting factor for minimum statistic */
-	CReal rWeiFact;
+	CReal rWeiFact = MIN_STAT_WEIGHT_FACTOR_MED;
 	switch (eNoiRedDegree)
 	{
 	case NR_LOW:
-		rWeiFact = MIN_STAT_WEIGTH_FACTOR_LOW;
+		rWeiFact = MIN_STAT_WEIGHT_FACTOR_LOW;
 		break;
 
 	case NR_MEDIUM:
-		rWeiFact = MIN_STAT_WEIGTH_FACTOR_MED;
+		rWeiFact = MIN_STAT_WEIGHT_FACTOR_MED;
 		break;
 
 	case NR_HIGH:
-		rWeiFact = MIN_STAT_WEIGTH_FACTOR_HIGH;
+		rWeiFact = MIN_STAT_WEIGHT_FACTOR_HIGH;
 		break;
 	}
 

@@ -27,14 +27,13 @@
 \******************************************************************************/
 
 #include "MLC.h"
-#include "../DrmReceiver.h"
 
 
 /* Implementation *************************************************************/
 /******************************************************************************\
 * MLC-encoder                                                                  *
 \******************************************************************************/
-void CMLCEncoder::ProcessDataInternal(CParameter& Parameter)
+void CMLCEncoder::ProcessDataInternal(CParameter&)
 {
 	int	i, j;
 	int iElementCounter;
@@ -196,7 +195,7 @@ void CMLCEncoder::InitInternal(CParameter& TransmParam)
 /******************************************************************************\
 * MLC-decoder                                                                  *
 \******************************************************************************/
-void CMLCDecoder::ProcessDataInternal(CParameter& ReceiverParam)
+void CMLCDecoder::ProcessDataInternal(CParameter&)
 {
 	int			i, j, k;
 	int			iElementCounter;
@@ -599,6 +598,9 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			/* Very strong protected part (VSPP) */
 			iL[2] = 0;
 			break;
+
+		default:
+			break;
 		}
 
 		/* Set number of bits for one SDC-block */
@@ -989,6 +991,9 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 
 			/* Very strong protected part (VSPP) */
 			iL[2] = iM[0][1];
+			break;
+
+		default:
 			break;
 		}
 

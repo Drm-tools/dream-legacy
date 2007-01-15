@@ -49,7 +49,7 @@ void CReadData::Stop()
 	}
 }
 
-void CReadData::ProcessDataInternal(CParameter& TransmParam)
+void CReadData::ProcessDataInternal(CParameter&)
 {
 	if((bNewUseSoundcard==FALSE) && (bUseSoundcard==TRUE))
 	{
@@ -110,7 +110,7 @@ void CReadData::ProcessDataInternal(CParameter& TransmParam)
 	SignalLevelMeter.Update((*pvecOutputData));
 }
 
-void CReadData::InitInternal(CParameter& TransmParam)
+void CReadData::InitInternal(CParameter&)
 {
 	/* Define block-size for output, an audio frame always corresponds
 	   to 400 ms. We use always stereo blocks */
@@ -118,7 +118,7 @@ void CReadData::InitInternal(CParameter& TransmParam)
 		(_REAL) 0.4 /* 400 ms */ * 2 /* stereo */);
 
 	/* Init sound interface and intermediate buffer */
-	pSound->Init(iOutputBlockSize, FALSE);
+	pSound->Init(iOutputBlockSize);
 	vecsSoundBuffer.Init(iOutputBlockSize);
 
 	/* Init level meter */
@@ -239,19 +239,15 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 	vecsOutputData.AddEnd((*pvecInputData), iInputBlockSize);
 }
 
-void CWriteData::InitInternal(CParameter& ReceiverParam)
+void CWriteData::InitInternal(CParameter&)
 {
 	/* An audio frame always corresponds to 400 ms.
 	   We use always stereo blocks */
 	const int iAudFrameSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
 		(_REAL) 0.4 /* 400 ms */);
 
-	/* Check if blocking behaviour of sound interface shall be changed */
-	if (bNewSoundBlocking != bSoundBlocking)
-		bSoundBlocking = bNewSoundBlocking;
-
-	/* Init sound interface with blocking or non-blocking behaviour */
-	pSound->Init(iAudFrameSize * 2 /* stereo */, bSoundBlocking);
+	/* Init sound interface */
+	pSound->Init(iAudFrameSize * 2 /* stereo */);
 
 	/* Init intermediate buffer needed for different channel selections */
 	vecsTmpAudData.Init(iAudFrameSize * 2 /* stereo */);
@@ -264,9 +260,8 @@ void CWriteData::InitInternal(CParameter& ReceiverParam)
 	iInputBlockSize = iAudFrameSize * 2 /* stereo */;
 }
 
-CWriteData::CWriteData(CSoundOut* pNS) : pSound(pNS), /* Sound interface */
+CWriteData::CWriteData(CSoundOutInterface* pNS) : pSound(pNS), /* Sound interface */
 	bMuteAudio(FALSE), bDoWriteWaveFile(FALSE),
-	bSoundBlocking(FALSE), bNewSoundBlocking(FALSE),
 	eOutChanSel(CS_BOTH_BOTH), 
 	rMixNormConst(MIX_OUT_CHAN_NORM_CONST),
 	/* Inits for audio spectrum plotting */
@@ -281,7 +276,7 @@ CWriteData::CWriteData(CSoundOut* pNS) : pSound(pNS), /* Sound interface */
 }
 
 void CWriteData::StartWriteWaveFile(
-	const string strFileName, EFileOutFormat eFmt
+	const string strFileName, EFileOutFormat
 )
 {
 	/* No Lock(), Unlock() needed here */
@@ -414,9 +409,9 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 			pFileCurPos = fopen(strFileName.c_str(), "w");
 			if (pFileCurPos != NULL)
 			{
-				fprintf(pFileCurPos, "%d / %d (%d min elapsed, estimated "
-					"time remaining: %d min)", iCounter, iNumSimBlocks,
-					tiElTi / 60, lReTi / 60);
+				fprintf(pFileCurPos,
+					"%d / %d (%ld min elapsed, estimated time remaining: %ld min)",
+					iCounter, iNumSimBlocks, tiElTi / 60, lReTi / 60);
 
 				/* Write current paramter value */
 				_REAL rCurParamVal;
@@ -470,10 +465,9 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 				pFileCurPos = fopen(strFileName.c_str(), "w");
 				if (pFileCurPos != NULL)
 				{
-					fprintf(pFileCurPos, "%d / %d (%d min elapsed, estimated "
-						"time remaining: %d min [%.1f days])",
-						TransmParam.iNumBitErrors, iNumErrors, tiElTi / 60,
-						lReTi / 60, rReDays);
+					fprintf(pFileCurPos,
+						"%d / %d (%ld min elapsed, estimated time remaining: %ld min [%.1f days])",
+						TransmParam.iNumBitErrors, iNumErrors, tiElTi / 60, lReTi / 60, rReDays);
 
 					/* Add current value of BER */
 					fprintf(pFileCurPos, "\n%e %e", TransmParam.
@@ -492,16 +486,14 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 				if (pFileCurPos != NULL)
 				{
 					fprintf(pFileCurPos,
-						"%d / %d (%d min elapsed, estimated minimum"
-						" time remaining: %d min)\n",
+						"%d / %d (%ld min elapsed, estimated minimum time remaining: %ld min)\n",
 						iCounter, iMinNumBlocks, tiElTi / 60, lReTi / 60);
 
 					lReTi = (long int)
 						(((_REAL) iNumErrors - TransmParam.iNumBitErrors) /
 						TransmParam.iNumBitErrors * tiElTi);
 					fprintf(pFileCurPos,
-						"%d / %d (%d min elapsed, estimated"
-						" time remaining: %d min)",
+						"%d / %d (%ld min elapsed, estimated time remaining: %ld min)",
 						TransmParam.iNumBitErrors, iNumErrors, tiElTi / 60,
 						lReTi / 60);
 

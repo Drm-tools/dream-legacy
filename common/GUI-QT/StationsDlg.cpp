@@ -56,7 +56,7 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 	char		cName[iMaxLenName];
 	int			iFileStat;
 	_BOOLEAN	bReadOK = TRUE;
-	FILE*		pFile;
+	FILE*		pFile = NULL;
 
 	/* Save new mode */
 	eSchedMode = eNewSchM;
@@ -332,9 +332,9 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 }
 
 StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
-	const char* name, bool modal, WFlags f) : vecpListItems(0),
+	const char* name, bool modal, WFlags f) :
 	CStationsDlgBase(parent, name, modal, f), pDRMRec(pNDRMR),
-	bReInitOnFrequencyChange(FALSE)
+	bReInitOnFrequencyChange(FALSE), vecpListItems(0)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -845,14 +845,14 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 	}
 }
 
-void StationsDlg::hideEvent(QHideEvent* pEvent)
+void StationsDlg::hideEvent(QHideEvent*)
 {
 	/* Deactivate real-time timers */
 	TimerList.stop();
 	TimerUTCLabel.stop();
 }
 
-void StationsDlg::showEvent(QShowEvent* pEvent)
+void StationsDlg::showEvent(QShowEvent*)
 {
 	/* If number of stations is zero, we assume that the ini file is missing */
 	if (DRMSchedule.GetStationNumber() == 0)

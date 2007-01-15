@@ -73,9 +73,9 @@
 
 /* Minimum statistic weightning factors. With this value the degree of noise
    reduction can be adjusted. We use three settings here */
-#define MIN_STAT_WEIGTH_FACTOR_LOW			((CReal) 0.4)
-#define MIN_STAT_WEIGTH_FACTOR_MED			((CReal) 1.0)
-#define MIN_STAT_WEIGTH_FACTOR_HIGH			((CReal) 2.0)
+#define MIN_STAT_WEIGHT_FACTOR_LOW			((CReal) 0.4)
+#define MIN_STAT_WEIGHT_FACTOR_MED			((CReal) 1.0)
+#define MIN_STAT_WEIGHT_FACTOR_HIGH			((CReal) 2.0)
 
 /* Time constant for IIR averaging of PSD estimation */
 #define TICONST_PSD_EST_SIG_NOISE_RED		((CReal) 1.0) /* sec */

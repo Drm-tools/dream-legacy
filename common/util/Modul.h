@@ -1289,7 +1289,7 @@ protected:
 		this->iOutputBlockSize2 = this->iInputBlockSize;
 	}
 
-	virtual void ProcessDataInternal(CParameter& ReceiverParam)
+	virtual void ProcessDataInternal(CParameter&)
 	{
 		for (int i = 0; i < this->iInputBlockSize; i++)
 		{

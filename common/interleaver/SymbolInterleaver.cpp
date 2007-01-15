@@ -38,7 +38,7 @@
 /******************************************************************************\
 * Symbol interleaver														   *
 \******************************************************************************/
-void CSymbInterleaver::ProcessDataInternal(CParameter& TransmParam)
+void CSymbInterleaver::ProcessDataInternal(CParameter&)
 {
 	int i, j;
 
@@ -110,7 +110,7 @@ void CSymbInterleaver::InitInternal(CParameter& TransmParam)
 /******************************************************************************\
 * Symbol deinterleaver														   *
 \******************************************************************************/
-void CSymbDeinterleaver::ProcessDataInternal(CParameter& ReceiverParam)
+void CSymbDeinterleaver::ProcessDataInternal(CParameter&)
 {
 	int i, j;
 

@@ -32,6 +32,7 @@ drmwithoutqt_SOURCES = \
 	../common/util/Reassemble.cpp \
 	../common/SDC/SDCReceive.cpp \
 	../common/SDC/SDCTransmit.cpp \
+	../common/IQInputFilter.cpp \
 	../common/chanest/ChannelEstimation.cpp \
 	../common/chanest/TimeLinear.cpp \
 	../common/chanest/TimeWiener.cpp \
@@ -66,17 +67,22 @@ drmwithoutqt_SOURCES = \
 	../common/ofdmcellmapping/CellMappingTable.cpp \
 	../common/ofdmcellmapping/OFDMCellMapping.cpp \
 	../common/resample/Resample.cpp \
+	../common/resample/ResampleFilter.cpp \
 	../common/sourcedecoders/AudioSourceDecoder.cpp \
 	../common/sourcedecoders/AudioSourceEncoder.cpp \
 	../common/sync/FreqSyncAcq.cpp \
 	../common/sync/TimeSync.cpp \
 	../common/sync/SyncUsingPil.cpp \
 	../common/sync/TimeSyncTrack.cpp \
+	../common/sync/TimeSyncFilter.cpp \
+	../common/tables/TableCarMap.cpp \
+	../common/tables/TableFAC.cpp \
 	../common/GUI-QT/main.cpp \
 	source/soundcommon.cpp \
 	source/soundin.cpp \
 	source/soundout.cpp \
 	../common/Version.h \
+	../common/Sound.h \
 	../common/DRMSignalIO.h \
 	../common/DataIO.h \
 	../common/DrmReceiver.h \
@@ -433,4 +439,4 @@ drm_SOURCES = $(drmwithoutqt_SOURCES)
 endif
 
 
-drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT
+drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -Wextra -Wsign-promo -Wcomment -fno-for-scope

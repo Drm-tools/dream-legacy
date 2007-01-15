@@ -1,9 +1,9 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2004
+ * Copyright (c) 2007
  *
  * Author(s):
- *	Volker Fischer, Oliver Haffenden
+ *	Volker Fischer, Oliver Haffenden, Andrew Murphy
  *
  * Description:
  *	see MDITagItems.cpp
@@ -302,6 +302,16 @@ protected:
 	virtual string GetTagName(void);
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
 	int iStreamNumber;
+};
+
+//andrewm - 7/11/2006
+class CTagItemGeneratorGPSInformation : public CTagItemGeneratorWithProfiles /* rgps */
+{
+public:
+	void GenTag(_BOOLEAN bIsValid, CParameter::CGPSInformation& GPSInformation);
+protected:
+	virtual string GetTagName(void);
+	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
 };
 
 

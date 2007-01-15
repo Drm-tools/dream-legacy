@@ -31,8 +31,9 @@
 
 /* Implementation *************************************************************/
 systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
-	const char* name, bool modal, WFlags f) : vecpDRMPlots(0),
-	systemevalDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
+	const char* name, bool modal, WFlags f) :
+	systemevalDlgBase(parent, name, modal, f), pDRMRec(pNDRMR),
+	vecpDRMPlots(0)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -510,7 +511,7 @@ void systemevalDlg::UpdateControls()
 	}
 }
 
-void systemevalDlg::showEvent(QShowEvent* pEvent)
+void systemevalDlg::showEvent(QShowEvent*)
 {
 	/* Restore chart windows */
 	const int iNumChartWin = pDRMRec->GeomChartWindows.Size();
@@ -548,7 +549,7 @@ void systemevalDlg::showEvent(QShowEvent* pEvent)
 	UpdateControls();
 }
 
-void systemevalDlg::hideEvent(QHideEvent* pEvent)
+void systemevalDlg::hideEvent(QHideEvent*)
 {
 	/* Store size and position of all additional chart windows */
 	pDRMRec->GeomChartWindows.Init(0);
@@ -825,6 +826,9 @@ void systemevalDlg::OnTimer()
 	case CS_2_SM:
 		strFACInfo = "16-QAM / ";
 		break;
+
+	default:
+		break;
 	}
 
 	/* MSC */
@@ -844,6 +848,9 @@ void systemevalDlg::OnTimer()
 
 	case CS_3_HMMIX:
 		strFACInfo += "HMmix 64-QAM";
+		break;
+
+	default:
 		break;
 	}
 
@@ -988,8 +995,7 @@ void systemevalDlg::OnListSelChanged(QListViewItem* NewSelIt)
 	MainPlot->SetupChart(((CCharSelItem*) NewSelIt)->GetCharType());
 }
 
-void systemevalDlg::OnListRightButClicked(QListViewItem* NewSelIt,
-										  const QPoint& iPnt, int iCol)
+void systemevalDlg::OnListRightButClicked(QListViewItem* NewSelIt, const QPoint&, int)
 {
 	/* Make sure that list item is valid */
 	if (NewSelIt != NULL)

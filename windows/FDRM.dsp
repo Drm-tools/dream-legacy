@@ -390,6 +390,10 @@ SOURCE=..\common\mlc\ViterbiDecoder.cpp
 
 SOURCE=..\common\FAC\FAC.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=..\common\tables\TableFAC.cpp
+# End Source File
 # End Group
 # Begin Group "Source SDC"
 

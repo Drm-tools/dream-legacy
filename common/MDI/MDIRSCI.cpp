@@ -1,9 +1,9 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2004
+ * Copyright (c) 2007
  *
  * Author(s):
- *	Volker Fischer, Julian Cable, Oliver Haffenden
+ *	Volker Fischer, Julian Cable, Oliver Haffenden, Andrew Murphy
  *
  * Description:
   *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
@@ -47,8 +47,8 @@
 
 /* Implementation *************************************************************/
 CRSIMDIOutRCIIn::CRSIMDIOutRCIIn() : iLogFraCnt(0),
-	bMDIInEnabled(FALSE), bMDIOutEnabled(FALSE),
-	vecTagItemGeneratorRBP(MAX_NUM_STREAMS), vecTagItemGeneratorStr(MAX_NUM_STREAMS)
+	bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE),
+	vecTagItemGeneratorStr(MAX_NUM_STREAMS), vecTagItemGeneratorRBP(MAX_NUM_STREAMS)
 {
 	/* Initialise all the generators for strx and rbpx tags */
 	for (int i=0; i<MAX_NUM_STREAMS; i++)
@@ -98,6 +98,8 @@ void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
 	   with each AF packet */
 	TagItemGeneratorSDCChanInf.GenTag(Parameter);
 
+	TagItemGeneratorInfo.GenTag(Parameter.sReceiverID);	/* rinf */
+
 	/* RSCI tags ------------------------------------------------------------ */
 	TagItemGeneratorRAFS.GenTag(Parameter);
 	TagItemGeneratorRWMF.GenTag(TRUE, Parameter.rWMERFAC); /* WMER for FAC */
@@ -110,6 +112,18 @@ void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
 	TagItemGeneratorReceiverStatus.GenTag(Parameter);
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
+
+
+	/* Generate some other tags */
+	_REAL rSigStr = 0.0;
+	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
+	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
+
+	if (Parameter.GPSInformation.GetGPSSource() == CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY)
+		Parameter.GPSInformation.SetPositionAvailable(Parameter.GPSInformation.SetLatLongDegreesMinutes(Parameter.ReceptLog.GetLatitude(), Parameter.ReceptLog.GetLongitude()));
+	
+	TagItemGeneratorGPSInformation.GenTag(Parameter.GPSInformation.GetUse(), Parameter.GPSInformation);	/* rgps */
+	
 	CVector<_BINARY> packet = GenMDIPacket();
    	TransmitPacket(packet);
 }
@@ -134,16 +148,22 @@ void CRSIMDIOutRCIIn::SendUnlockedFrame(CParameter& Parameter)
 	TagItemGeneratorReceiverStatus.GenTag(Parameter);
 
 	/* Generate some other tags */
+	TagItemGeneratorInfo.GenTag(Parameter.sReceiverID);	/* rinf */
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
 	_REAL rSigStr = 0.0;
 	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
 	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
 
+	if (Parameter.GPSInformation.GetGPSSource() == CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY)
+		Parameter.GPSInformation.SetPositionAvailable(Parameter.GPSInformation.SetLatLongDegreesMinutes(Parameter.ReceptLog.GetLatitude(), Parameter.ReceptLog.GetLongitude()));
+	
+	TagItemGeneratorGPSInformation.GenTag(Parameter.GPSInformation.GetUse(), Parameter.GPSInformation);	/* rgps */
+
 	TransmitPacket(GenMDIPacket());
 }
 
-void CRSIMDIOutRCIIn::SendAMFrame(CParameter& Parameter)
+void CRSIMDIOutRCIIn::SendAMFrame(CParameter&)
 {
 }
 
@@ -173,6 +193,12 @@ CVector<_BINARY> CRSIMDIOutRCIIn::GenMDIPacket()
 	/* *ptr tag */
 	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorProTyMDI);
 	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorProTyRSCI);
+
+	/* rinf taf */
+	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorInfo);
+
+	/* rgps tag */
+	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorGPSInformation);
 
 	/* rpro tag */
 	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorProfile);
@@ -235,6 +261,7 @@ void CRSIMDIOutRCIIn::ResetTags()
 	TagItemGeneratorReceiverStatus.Reset(); /* rsta */
 
 	TagItemGeneratorProfile.Reset(); /* rpro */
+	TagItemGeneratorGPSInformation.Reset();	/* rgps */
 
 	/* This group of tags might not be generated, so make an empty version in case */
 	
@@ -262,7 +289,8 @@ void CRSIMDIOutRCIIn::ResetTags()
 
 void CRSIMDIOutRCIIn::GetNextPacket(CSingleBuffer<_BINARY>& buf)
 {
-	// TODO MDIInBuffer.Get(buf);
+	// TODO 
+	(void)buf;
 }
 
 void CRSIMDIOutRCIIn::SetInAddr(const string& strAddr)
@@ -317,8 +345,8 @@ void CRSIMDIOutRCIIn::TransmitPacket(CVector<_BINARY> vecbidata)
 {
 	vector<_BYTE> packet;
 	vecbidata.ResetBitAccess();
-	int bits = vecbidata.Size();
-	int bytes = bits / SIZEOF__BYTE;
+	size_t bits = vecbidata.Size();
+	size_t bytes = bits / SIZEOF__BYTE;
 	packet.reserve(bytes);
 	for(size_t i=0; i<bytes; i++)
 	{
@@ -334,7 +362,7 @@ void CRSIMDIOutRCIIn::TransmitPacket(CVector<_BINARY> vecbidata)
 * MDI receive                                                                  *
 \******************************************************************************/
 CRSIMDIInRCIOut::CRSIMDIInRCIOut() :
-	bMDIInEnabled(FALSE), bMDIOutEnabled(FALSE), bUseAFCRC(TRUE)
+	bUseAFCRC(TRUE), bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE)
 {
 	/* Init constant tag */
 	TagItemGeneratorProTyRSCI.GenTag();
@@ -382,7 +410,7 @@ void CRSIMDIInRCIOut::TransmitPacket(CVector<_BINARY>& vecbidata)
 {
 	vector<_BYTE> packet;
 	vecbidata.ResetBitAccess();
-	for(size_t i=0; i<vecbidata.Size()/SIZEOF__BYTE; i++)
+	for(size_t i=0; i<size_t(vecbidata.Size()/SIZEOF__BYTE); i++)
 		packet.push_back(vecbidata.Separate(SIZEOF__BYTE));
 #ifdef USE_QT_GUI
 	PacketSocket.SendPacket(packet);
@@ -405,13 +433,13 @@ void CRSIMDIInRCIOut::SendPacket(const vector<_BYTE>& vecbydata)
 }
 #endif
 
-void CRSIMDIInRCIOut::InitInternal(CParameter& ReceiverParam)
+void CRSIMDIInRCIOut::InitInternal(CParameter&)
 {
 	iInputBlockSize = 1; /* anything is enough but not zero */
 	iMaxOutputBlockSize = 2048*SIZEOF__BYTE; /* bigger than an ethernet packet */
 }
 
-void CRSIMDIInRCIOut::ProcessDataInternal(CParameter& ReceiverParam)
+void CRSIMDIInRCIOut::ProcessDataInternal(CParameter&)
 {
 	vector<_BYTE> vecbydata;
 #ifdef USE_QT_GUI
@@ -422,6 +450,6 @@ void CRSIMDIInRCIOut::ProcessDataInternal(CParameter& ReceiverParam)
 	iOutputBlockSize = vecbydata.size()*SIZEOF__BYTE;
 	pvecOutputData->Init(iOutputBlockSize);
 	pvecOutputData->ResetBitAccess();
-	for(size_t i=0; i<iOutputBlockSize/SIZEOF__BYTE; i++)
+	for(size_t i=0; i<size_t(iOutputBlockSize/SIZEOF__BYTE); i++)
 		pvecOutputData->Enqueue(vecbydata[i], SIZEOF__BYTE);
 }

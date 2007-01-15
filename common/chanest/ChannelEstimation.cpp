@@ -402,7 +402,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Use MSC cells for this SNR estimation method */
 		if (_IsMSC(ReceiverParam.matiMapTab[iModSymNum][i]))
 		{
-			CReal rCurErrPow;
+			CReal rCurErrPow = 0.0;
 
 			/* Get tentative decision for this MSC QAM symbol and calculate
 			   squared distance as a measure for the noise. MSC can be 16 or
@@ -417,6 +417,9 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 			case CS_2_SM:
 				rCurErrPow = SqMag(MinDist16QAM((*pvecOutputData)[i].cSig));
+				break;
+
+			default:
 				break;
 			}
 
@@ -764,6 +767,9 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 	case RM_ROBUSTNESS_MODE_D:
 		iLengthWiener = LEN_WIENER_FILT_FREQ_RMD;
+		break;
+	
+	default:
 		break;
 	}
 

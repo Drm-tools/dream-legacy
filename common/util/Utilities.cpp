@@ -109,7 +109,7 @@ void
 CDRMBandpassFilt::Init(const int iNewBlockSize, const _REAL rOffsetHz,
 					   const ESpecOcc eSpecOcc, const EFiltType eNFiTy)
 {
-	CReal rMargin;
+	CReal rMargin=0.0;
 
 	/* Set internal parameter */
 	iBlockSize = iNewBlockSize;
@@ -120,8 +120,9 @@ CDRMBandpassFilt::Init(const int iNewBlockSize, const _REAL rOffsetHz,
 	/* Choose correct filter for chosen DRM bandwidth. Also, adjust offset
 	   frequency for different modes. E.g., 5 kHz mode is on the right side
 	   of the DC frequency */
-	CReal rNormCurFreqOffset;
-	CReal rBPFiltBW;			/* Band-pass filter bandwidth */
+	CReal rNormCurFreqOffset = rOffsetHz / SOUNDCRD_SAMPLE_RATE;
+	/* Band-pass filter bandwidth */
+	CReal rBPFiltBW = ((CReal) 10000.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
 
 	/* Negative margin for receiver filter for better interferer rejection */
 	if (eNFiTy == FT_TRANSMITTER)
@@ -428,8 +429,9 @@ CReal CAudioReverb::ProcessSample(const CReal rLInput, const CReal rRInput)
 	This code is based on patches and example code from Tomi Manninen and
 	Stephane Fillod (developer of hamlib)
 */
-CHamlib::CHamlib():pRig(NULL), bModRigSettings(FALSE), iHamlibModelID(0),
-bSMeterIsSupported(FALSE), strHamlibConf(HAMLIB_CONF_COM1)
+CHamlib::CHamlib():pRig(NULL), bSMeterIsSupported(FALSE),
+		bModRigSettings(FALSE), iHamlibModelID(0),
+		strHamlibConf(HAMLIB_CONF_COM1), iFreqOffset(0)
 {
 	/* Special DRM front-end list */
 	vecSpecDRMRigs.Init(0);
@@ -707,7 +709,8 @@ CHamlib::SetHamlibModelID(const int iNewM)
 		}
 
 		/* Open rig */
-		if (ret = rig_open(pRig) != RIG_OK)
+		ret = rig_open(pRig);
+		if (ret != RIG_OK)
 		{
 			/* Fail! */
 			rig_cleanup(pRig);

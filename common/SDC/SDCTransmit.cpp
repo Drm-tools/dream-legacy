@@ -266,7 +266,7 @@ void CSDCTransmit::DataEntityType1(CVector<_BINARY>& vecbiData, int ServiceID,
 void CSDCTransmit::DataEntityType5(CVector<_BINARY>& vecbiData, int ServiceID,
 								   CParameter& Parameter)
 {
-	int	iNumBitsTotal;
+	int	iNumBitsTotal = 0;
 
 	/* Set total number of bits */
 	switch (Parameter.Service[ServiceID].DataParam.ePacketModInd)
@@ -343,6 +343,8 @@ void CSDCTransmit::DataEntityType5(CVector<_BINARY>& vecbiData, int ServiceID,
 		case CParameter::AD_DAB_SPEC_APP:
 			vecbiData.Enqueue(1 /* 0001 */, 4);
 			break;
+		default:
+			throw CGenErr("bad application domain in SDC preparation");
 		}
 
 		/* Packet length */

@@ -32,6 +32,7 @@
 class CAudioSourceDecoderInterface
 {
 public:
+	virtual ~CAudioSourceDecoderInterface() {}
 	virtual int GetNumCorDecAudio()=0;
 	virtual void SetReverbEffect(const _BOOLEAN bNER)=0;
 	virtual _BOOLEAN GetReverbEffect()=0;

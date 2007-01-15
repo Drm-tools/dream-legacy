@@ -37,12 +37,14 @@ void logStatus(char *format, ...);
 void logWarning(char *format, ...);
 void logError(char *format, ...);
 
-
 class CChainingLogPrinter;
 
 class CLogPrinter
 {
 public:
+	CLogPrinter() {}
+	virtual ~CLogPrinter() {}
+
 	virtual void LogStatus(char *s) = 0;
 	virtual void LogWarning(char *s) = 0;
 	virtual void LogError(char *s) = 0;

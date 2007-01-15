@@ -2101,6 +2101,28 @@
 						/>
 					</FileConfiguration>
 				</File>
+ 				<File
+ 					RelativePath="..\common\tables\TableFAC.cpp"
+ 					>
+ 					<FileConfiguration
+ 						Name="Release|Win32"
+ 						>
+ 						<Tool
+ 							Name="VCCLCompilerTool"
+ 							AdditionalIncludeDirectories=""
+ 							PreprocessorDefinitions=""
+ 						/>
+ 					</FileConfiguration>
+ 					<FileConfiguration
+ 						Name="Debug|Win32"
+ 						>
+ 						<Tool
+ 							Name="VCCLCompilerTool"
+ 							AdditionalIncludeDirectories=""
+ 							PreprocessorDefinitions=""
+ 						/>
+ 					</FileConfiguration>
+ 				</File>
 			</Filter>
 			<Filter
 				Name="Source SDC"

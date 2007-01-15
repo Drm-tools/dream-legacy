@@ -109,7 +109,8 @@ void CTagItemDecoderCact::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 	const int iNewState = vecbiTag.Separate(8) - '0';
 
-	//pDRMReceiver->SetState(iNewState);
+	// TODO pDRMReceiver->SetState(iNewState);
+	(void)iNewState;
 
 }
 

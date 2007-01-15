@@ -158,14 +158,14 @@ void CPrintfLogPrinter::LogErrorSpecific(char *s)
 	printf("ERROR: %s\n",s);
 }
 
-void CNullLogPrinter::LogStatus(char *s)
+void CNullLogPrinter::LogStatus(char *)
 {
 }
 
-void CNullLogPrinter::LogWarning(char *s)
+void CNullLogPrinter::LogWarning(char *)
 {
 }
 
-void CNullLogPrinter::LogError(char *s)
+void CNullLogPrinter::LogError(char *)
 {
 }

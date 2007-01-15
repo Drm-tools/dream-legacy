@@ -34,7 +34,7 @@
 using namespace std;
 
 /* Implementation *************************************************************/
-void CAMSSPhaseDemod::ProcessDataInternal(CParameter& ReceiverParam)
+void CAMSSPhaseDemod::ProcessDataInternal(CParameter&)
 {
 	int i;
 

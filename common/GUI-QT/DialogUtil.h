@@ -107,11 +107,12 @@ class CSoundCardSelMenu : public QPopupMenu
 	Q_OBJECT
 
 public:
-	CSoundCardSelMenu(CSoundIn* pNSIn, CSoundOut* pNSOut, QWidget* parent = 0);
+	CSoundCardSelMenu(CSoundInInterface* pNSIn,
+	CSoundOutInterface* pNSOut, QWidget* parent = 0);
 
 protected:
-	CSoundIn*		pSoundInIF;
-	CSoundOut*		pSoundOutIF;
+	CSoundInInterface*	pSoundInIF;
+	CSoundOutInterface*	pSoundOutIF;
 	vector<string>	vecSoundInNames;
 	vector<string>	vecSoundOutNames;
 	int				iNumSoundInDev;

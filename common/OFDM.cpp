@@ -34,7 +34,7 @@
 /******************************************************************************\
 * OFDM-modulation                                                              *
 \******************************************************************************/
-void COFDMModulation::ProcessDataInternal(CParameter& TransmParam)
+void COFDMModulation::ProcessDataInternal(CParameter&)
 {
 	int	i;
 
@@ -78,7 +78,6 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 	iDFTSize = TransmParam.iFFTSizeN;
 	iGuardSize = TransmParam.iGuardSize;
 	iShiftedKmin = TransmParam.iShiftedKmin;
-	rDefCarOffset = TransmParam.rCarOffset;
 
 	/* Last index */
 	iEndIndex = TransmParam.iShiftedKmax + 1;
@@ -111,7 +110,7 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 /******************************************************************************\
 * OFDM-demodulation                                                            *
 \******************************************************************************/
-void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
+void COFDMDemodulation::ProcessDataInternal(CParameter&)
 {
 	int i;
 
@@ -227,7 +226,7 @@ void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
 /******************************************************************************\
 * OFDM-demodulation only for simulation purposes, with guard interval removal  *
 \******************************************************************************/
-void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
+void COFDMDemodSimulation::ProcessDataInternal(CParameter&)
 {
 	int i, j;
 	int iEndPointGuardRemov;

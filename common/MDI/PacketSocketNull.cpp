@@ -33,7 +33,7 @@
 #include "PacketSocketNull.h"
 
 // Set the sink which will receive the packets
-void CPacketSocketNull::SetPacketSink(CPacketSink *pSink)
+void CPacketSocketNull::SetPacketSink(CPacketSink*)
 {
 }
 
@@ -43,16 +43,16 @@ void CPacketSocketNull::ResetPacketSink(void)
 }
 
 // Send packet to the socket
-void CPacketSocketNull::SendPacket(const vector<_BYTE>& vecbydata)
+void CPacketSocketNull::SendPacket(const vector<_BYTE>&)
 {
 }
 
-_BOOLEAN CPacketSocketNull::SetNetwOutAddr(const string& str)
+_BOOLEAN CPacketSocketNull::SetNetwOutAddr(const string&)
 {
 	return TRUE;
 }
 
-_BOOLEAN CPacketSocketNull::SetNetwInAddr(const string& str)
+_BOOLEAN CPacketSocketNull::SetNetwInAddr(const string&)
 {
 	return TRUE;
 }

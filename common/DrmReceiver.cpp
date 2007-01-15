@@ -34,14 +34,27 @@
 
 #include "DrmReceiver.h"
 
+#include "../linux/source/soundin.h"
+#include "../linux/source/soundout.h"
+
 const int CDRMReceiver::MAX_UNLOCKED_COUNT=2;
 
 /* Implementation *************************************************************/
-CDRMReceiver::CDRMReceiver(CSettings& Settings)
-	:	iAcquRestartCnt(0), iGoodSignCnt(0),
-		eNewReceiverMode(RM_NONE),
-		ReceiveData(&SoundInInterface), WriteData(&SoundOutInterface),
-		rInitResampleOffset((_REAL) 0.0), iAcquDetecCnt(0),
+CDRMReceiver::CDRMReceiver(CSettings& Settings):
+		pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
+		ReceiveData(pSoundInInterface), WriteData(pSoundOutInterface),
+		FreqSyncAcq(),
+		ChannelEstimation(),
+		UtilizeFACData(), UtilizeSDCData(), MSCDemultiplexer(),
+		AudioSourceDecoder(),
+		upstreamRSCI(), DecodeRSIMDI(), downstreamRSCI(),
+		RSIPacketBuf(),
+		MSCDecBuf(MAX_NUM_STREAMS), MSCUseBuf(MAX_NUM_STREAMS), MSCSendBuf(MAX_NUM_STREAMS),
+		iAcquRestartCnt(0),
+		iAcquDetecCnt(0),
+		iGoodSignCnt(0),
+		iAudioStreamID(STREAM_ID_NOT_USED), iDataStreamID(STREAM_ID_NOT_USED),
+		rInitResampleOffset((_REAL) 0.0),
 		vecrFreqSyncValHist(LEN_HIST_PLOT_SYNC_PARMS),
 		vecrSamOffsValHist(LEN_HIST_PLOT_SYNC_PARMS),
 		vecrLenIRHist(LEN_HIST_PLOT_SYNC_PARMS),
@@ -49,38 +62,35 @@ CDRMReceiver::CDRMReceiver(CSettings& Settings)
 		vecrSNRHist(LEN_HIST_PLOT_SYNC_PARMS),
 		veciCDAudHist(LEN_HIST_PLOT_SYNC_PARMS), iAvCntParamHist(0),
 		rAvLenIRHist((_REAL) 0.0), rAvDopplerHist((_REAL) 0.0),
-		rAvSNRHist((_REAL) 0.0), iCurrentCDAud(0),
-		UtilizeFACData(), UtilizeSDCData(), MSCDemultiplexer(),
-		iAudioStreamID(STREAM_ID_NOT_USED), iDataStreamID(STREAM_ID_NOT_USED),
-		upstreamRSCI(), DecodeRSIMDI(), downstreamRSCI(), RSIPacketBuf(),
-		MSCDecBuf(MAX_NUM_STREAMS), MSCUseBuf(MAX_NUM_STREAMS), MSCSendBuf(MAX_NUM_STREAMS),
-		ChannelEstimation(), AudioSourceDecoder(), FreqSyncAcq()
-#if defined(USE_QT_GUI) || defined(_WIN32)
-		, iMainPlotColorStyle(0), /* default color scheme: blue-white */
-		iSecondsPreview(0), iSecondsPreviewLiveSched(0), bShowAllStations(TRUE),
-		GeomChartWindows(0), bEnableSMeter(TRUE),
-		iSysEvalDlgPlotType(0), strStoragePathMMDlg(""),
-		strStoragePathLiveScheduleDlg(""),
-		bAddRefreshHeader(TRUE),
-		iMOTBWSRefreshTime(10),
-		SortParamAnalog(0, TRUE), /* Sort list by station name  */
-		/* Sort list by transmit power (5th column), most powerful on top */
-		SortParamDRM(4, FALSE),
-		SortParamLiveSched(0, FALSE), /* sort by frequency */
-		iMainDisplayColor(0xff0000), /* Red */
-		FontParamMMDlg("", 1, 0, FALSE),
+		rAvSNRHist((_REAL) 0.0),
+		iCurrentCDAud(0),
+		bEnableSMeter(TRUE),
 		iBwAM(10000),
 		iBwLSB(5000),
 		iBwUSB(5000),
 		iBwCW(150),
 		iBwFM(6000),
-		AMDemodType(CAMDemodulation::DT_AM)
-#endif
+		AMDemodType(CAMDemodulation::DT_AM),
 #ifdef _WIN32
-		, bProcessPriorityEnabled(TRUE)
+		bProcessPriorityEnabled(TRUE),
 #endif
-		, bReadFromFile(FALSE), time_keeper(0)
-
+		bReadFromFile(FALSE), time_keeper(0)
+#if defined(USE_QT_GUI) || defined(_WIN32)
+		, GeomChartWindows(0),
+		iMainPlotColorStyle(0), /* default color scheme: blue-white */
+		iSecondsPreview(0), iSecondsPreviewLiveSched(0), bShowAllStations(TRUE),
+		SortParamAnalog(0, TRUE), /* Sort list by station name  */
+		/* Sort list by transmit power (5th column), most powerful on top */
+		SortParamDRM(4, FALSE),
+		SortParamLiveSched(0, FALSE), /* sort by frequency */
+		iSysEvalDlgPlotType(0),
+		iMOTBWSRefreshTime(10),
+		bAddRefreshHeader(TRUE),
+		strStoragePathMMDlg(""),
+		strStoragePathLiveScheduleDlg(""),
+		iMainDisplayColor(0xff0000), /* Red */
+		FontParamMMDlg("", 1, 0, FALSE)
+#endif
 {
 	downstreamRSCI.SetReceiver(this);
 
@@ -99,7 +109,6 @@ CDRMReceiver::CDRMReceiver(CSettings& Settings)
 		   output must be a blocking function otherwise we cannot achieve a
 		   synchronized stream */
 		ReceiveData.SetReadFromFile(sValue);
-		WriteData.SetSoundBlocking(TRUE);
 		bReadFromFile = TRUE;
 	}
 
@@ -130,11 +139,11 @@ CDRMReceiver::CDRMReceiver(CSettings& Settings)
 
 	/* Sound In device */
 	sValue = Settings.Get("Global", "snddevin");
-	SoundInInterface.SetDev(atoi(sValue.c_str()));
+	pSoundInInterface->SetDev(atoi(sValue.c_str()));
 
 	/* Sound Out device */
 	sValue = Settings.Get("Global", "snddevout");
-	SoundOutInterface.SetDev(atoi(sValue.c_str()));
+	pSoundOutInterface->SetDev(atoi(sValue.c_str()));
 
 	/* Number of iterations for MLC setting */
 	sValue = Settings.Get("Receiver", "mlciter");
@@ -1051,8 +1060,8 @@ void CDRMReceiver::Start()
 	} while (ReceiverParam.bRunThread);
 
 	if( (upstreamRSCI.GetInEnabled() == FALSE) && (bReadFromFile == FALSE) )
-		SoundInInterface.Close();
-	SoundOutInterface.Close();
+		pSoundInInterface->Close();
+	pSoundOutInterface->Close();
 }
 
 void CDRMReceiver::Stop()
@@ -1655,6 +1664,7 @@ _BOOLEAN CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
 {
 	if (upstreamRSCI.GetInEnabled() == TRUE)
 	{
+		return FALSE;
 	}
 	else
 	{
@@ -1684,10 +1694,10 @@ void CDRMReceiver::save(CSettings& Settings)
 	Settings.Put("Receiver", "modmetric", ChannelEstimation.GetIntCons());
 
 	/* Sound In device */
-	Settings.Put("Global", "snddevin", SoundInInterface.GetDev());
+	Settings.Put("Global", "snddevin", pSoundInInterface->GetDev());
 
 	/* Sound Out device */
-	Settings.Put("Global", "snddevout", SoundOutInterface.GetDev());
+	Settings.Put("Global", "snddevout", pSoundOutInterface->GetDev());
 
 	/* Number of iterations for MLC setting */
 	Settings.Put("Receiver", "mlciter", MSCMLCDecoder.GetInitNumIterations());

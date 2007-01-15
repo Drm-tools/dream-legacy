@@ -58,7 +58,9 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 class CParameter : public CCellMappingTable
 {
 public:
-	CParameter() : Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
+	CParameter() :
+		sReceiverID("                "), sSerialNumber("000000"),
+		Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
 		bRunThread(FALSE), bUsingMultimedia(TRUE),	iCurSelAudioService(0), 
 		iCurSelDataService(0), vecbiAudioFrameStatus(),
 		eReceiverMode(RM_DRM),eAcquiState(AS_NO_SIGNAL)
@@ -186,26 +188,25 @@ public:
 
 	class CDataParam
 	{
-	public:
-		int			iStreamID; /* Stream Id of the stream which carries the data service */
+	  public:
+		int iStreamID;			/* Stream Id of the stream which carries the data service */
 
-		EPackMod	ePacketModInd; /* Packet mode indicator */
-
+		EPackMod ePacketModInd;	/* Packet mode indicator */
 
 		/* In case of packet mode ------------------------------------------- */
-		EDatUnit	eDataUnitInd; /* Data unit indicator */
-		int			iPacketID; /* Packet Id (2 bits) */
-		int			iPacketLen; /* Packet length */
+		EDatUnit eDataUnitInd;	/* Data unit indicator */
+		int iPacketID;			/* Packet Id (2 bits) */
+		int iPacketLen;			/* Packet length */
 
 		// "DAB specified application" not yet implemented!!!
-		EApplDomain eAppDomain; /* Application domain */
-		int			iUserAppIdent; /* User application identifier, only DAB */
+		EApplDomain eAppDomain;	/* Application domain */
+		int iUserAppIdent;		/* User application identifier, only DAB */
 
 /* TODO: Copy operator. Now, default copy operator is used! */
-		CDataParam& operator=(const CDataParam DataParam)
+		  CDataParam & operator=(const CDataParam DataParam)
 		{
 			iStreamID = DataParam.iStreamID;
-		 	eDataUnitInd = DataParam.eDataUnitInd;
+			eDataUnitInd = DataParam.eDataUnitInd;
 			iPacketID = DataParam.iPacketID;
 			iPacketLen = DataParam.iPacketLen;
 			eAppDomain = DataParam.eAppDomain;
@@ -321,17 +322,20 @@ public:
 	/* Alternative frequency signalling Regions informations class */
 	class CAltFreqRegion
 	{
-	public:
-		CAltFreqRegion() {Reset();}
-		CAltFreqRegion(const CAltFreqRegion& nAFR) :
-			iRegionID(nAFR.iRegionID),
+	  public:
+		CAltFreqRegion()
+		{
+			Reset();
+		}
+		CAltFreqRegion(const CAltFreqRegion & nAFR):iRegionID(nAFR.iRegionID),
 			veciCIRAFZones(nAFR.veciCIRAFZones),
 			iLatitude(nAFR.iLatitude),
 			iLongitude(nAFR.iLongitude),
-			iLatitudeEx(nAFR.iLatitudeEx),
-			iLongitudeEx(nAFR.iLongitudeEx) {}
+			iLatitudeEx(nAFR.iLatitudeEx), iLongitudeEx(nAFR.iLongitudeEx)
+		{
+		}
 
-		CAltFreqRegion& operator=(const CAltFreqRegion& nAFR)
+		CAltFreqRegion & operator=(const CAltFreqRegion & nAFR)
 		{
 			iRegionID = nAFR.iRegionID;
 
@@ -343,24 +347,31 @@ public:
 			veciCIRAFZones.Init(nAFR.veciCIRAFZones.Size());
 			veciCIRAFZones = nAFR.veciCIRAFZones;
 
-			return *this; 
+			return *this;
 		}
 
-		_BOOLEAN operator==(const CAltFreqRegion& nAFR)
+		_BOOLEAN operator==(const CAltFreqRegion & nAFR)
 		{
-			if (iRegionID != nAFR.iRegionID) return FALSE;
+			if (iRegionID != nAFR.iRegionID)
+				return FALSE;
 
-			if (iLatitude != nAFR.iLatitude) return FALSE;
-			if (iLongitude != nAFR.iLongitude) return FALSE;
-			if (iLatitudeEx != nAFR.iLatitudeEx) return FALSE;
-			if (iLongitudeEx != nAFR.iLongitudeEx) return FALSE;
+			if (iLatitude != nAFR.iLatitude)
+				return FALSE;
+			if (iLongitude != nAFR.iLongitude)
+				return FALSE;
+			if (iLatitudeEx != nAFR.iLatitudeEx)
+				return FALSE;
+			if (iLongitudeEx != nAFR.iLongitudeEx)
+				return FALSE;
 
 			/* Vector sizes */
-			if (veciCIRAFZones.Size() != nAFR.veciCIRAFZones.Size()) return FALSE;
+			if (veciCIRAFZones.Size() != nAFR.veciCIRAFZones.Size())
+				return FALSE;
 
 			/* Vector contents */
 			for (int i = 0; i < veciCIRAFZones.Size(); i++)
-				if (veciCIRAFZones[i] != nAFR.veciCIRAFZones[i]) return FALSE;
+				if (veciCIRAFZones[i] != nAFR.veciCIRAFZones[i])
+					return FALSE;
 
 			return TRUE;
 		}
@@ -375,33 +386,40 @@ public:
 			iLongitudeEx = 0;
 		}
 
-		int				iRegionID;
-		CVector<int>	veciCIRAFZones;
-		int				iLatitude;
-		int				iLongitude;
-		int				iLatitudeEx;
-		int				iLongitudeEx;
+		int iRegionID;
+		CVector < int >veciCIRAFZones;
+		int iLatitude;
+		int iLongitude;
+		int iLatitudeEx;
+		int iLongitudeEx;
 	};
 
 	/* Alternative frequency signalling class */
 	class CAltFreqSign
 	{
-	public:
-		CAltFreqSign() {Reset();}
+	  public:
+		CAltFreqSign()
+		{
+			Reset();
+		}
 
 		class CAltFreq
 		{
-		public:
-			CAltFreq() {Reset();}
-			CAltFreq(const CAltFreq& nAF) :
-				veciFrequencies(nAF.veciFrequencies),
+		  public:
+			CAltFreq()
+			{
+				Reset();
+			}
+			CAltFreq(const CAltFreq & nAF):veciFrequencies(nAF.
+														   veciFrequencies),
 				veciServRestrict(nAF.veciServRestrict),
 				bIsSyncMultplx(nAF.bIsSyncMultplx),
 				bRegionSchedFlag(nAF.bRegionSchedFlag),
-				iRegionID(nAF.iRegionID),
-				iScheduleID(nAF.iScheduleID) {}
+				iRegionID(nAF.iRegionID), iScheduleID(nAF.iScheduleID)
+			{
+			}
 
-			CAltFreq& operator=(const CAltFreq& nAF)
+			CAltFreq & operator=(const CAltFreq & nAF)
 			{
 				veciFrequencies.Init(nAF.veciFrequencies.Size());
 				veciFrequencies = nAF.veciFrequencies;
@@ -413,28 +431,36 @@ public:
 				iRegionID = nAF.iRegionID;
 				iScheduleID = nAF.iScheduleID;
 				bRegionSchedFlag = nAF.bRegionSchedFlag;
-				return *this; 
+				return *this;
 			}
 
-			_BOOLEAN operator==(const CAltFreq& nAF)
+			_BOOLEAN operator==(const CAltFreq & nAF)
 			{
 				int i;
 
 				/* Vector sizes */
-				if (veciFrequencies.Size() != nAF.veciFrequencies.Size()) return FALSE;
-				if (veciServRestrict.Size() != nAF.veciServRestrict.Size()) return FALSE;
+				if (veciFrequencies.Size() != nAF.veciFrequencies.Size())
+					return FALSE;
+				if (veciServRestrict.Size() != nAF.veciServRestrict.Size())
+					return FALSE;
 
 				/* Vector contents */
 				for (i = 0; i < veciFrequencies.Size(); i++)
-					if (veciFrequencies[i] != nAF.veciFrequencies[i]) return FALSE;
+					if (veciFrequencies[i] != nAF.veciFrequencies[i])
+						return FALSE;
 				for (i = 0; i < veciServRestrict.Size(); i++)
-					if (veciServRestrict[i] != nAF.veciServRestrict[i]) return FALSE;
+					if (veciServRestrict[i] != nAF.veciServRestrict[i])
+						return FALSE;
 
-				if (bIsSyncMultplx != nAF.bIsSyncMultplx) return FALSE;
-				if (iRegionID != nAF.iRegionID) return FALSE;
-				if (iScheduleID != nAF.iScheduleID) return FALSE;
+				if (bIsSyncMultplx != nAF.bIsSyncMultplx)
+					return FALSE;
+				if (iRegionID != nAF.iRegionID)
+					return FALSE;
+				if (iScheduleID != nAF.iScheduleID)
+					return FALSE;
 
-				if (bRegionSchedFlag != nAF.bRegionSchedFlag) return FALSE;
+				if (bRegionSchedFlag != nAF.bRegionSchedFlag)
+					return FALSE;
 
 				return TRUE;
 			}
@@ -448,12 +474,12 @@ public:
 				iRegionID = iScheduleID = 0;
 			}
 
-			CVector<int>	veciFrequencies;
-			CVector<int>	veciServRestrict;
-			_BOOLEAN		bIsSyncMultplx;
-			_BOOLEAN		bRegionSchedFlag;
-			int				iRegionID;
-			int				iScheduleID;
+			CVector < int >veciFrequencies;
+			CVector < int >veciServRestrict;
+			_BOOLEAN bIsSyncMultplx;
+			_BOOLEAN bRegionSchedFlag;
+			int iRegionID;
+			int iScheduleID;
 		};
 
 		void Reset()
@@ -464,34 +490,41 @@ public:
 			bVersionFlag = FALSE;
 		}
 
-		CVector<CAltFreq>		vecAltFreq;
-		CVector<CAltFreqSched>	vecAltFreqSchedules;
-		CVector<CAltFreqRegion>	vecAltFreqRegions;
-		_BOOLEAN				bVersionFlag;
+		CVector < CAltFreq > vecAltFreq;
+		CVector < CAltFreqSched > vecAltFreqSchedules;
+		CVector < CAltFreqRegion > vecAltFreqRegions;
+		_BOOLEAN bVersionFlag;
 	} AltFreqSign;
 
 	/* Other Services alternative frequency signalling class */
 	class CAltFreqOtherServicesSign
 	{
-	public:
-		CAltFreqOtherServicesSign() {Reset();}
+	  public:
+		CAltFreqOtherServicesSign()
+		{
+			Reset();
+		}
 
 		class CAltFreqOtherServices
 		{
-		public:
-			CAltFreqOtherServices() {Reset();}
-			CAltFreqOtherServices(const CAltFreqOtherServices& nAF) :
-				veciFrequencies(nAF.veciFrequencies),
+		  public:
+			CAltFreqOtherServices()
+			{
+				Reset();
+			}
+			CAltFreqOtherServices(const CAltFreqOtherServices &
+								  nAF):veciFrequencies(nAF.veciFrequencies),
 				bShortIDAnnounceFlag(nAF.bShortIDAnnounceFlag),
 				iShortIDAnnounce(nAF.iShortIDAnnounce),
 				bRegionSchedFlag(nAF.bRegionSchedFlag),
-				bSameService(nAF.bSameService),
-				iSystemID(nAF.iSystemID),
+				bSameService(nAF.bSameService), iSystemID(nAF.iSystemID),
 				iRegionID(nAF.iRegionID), iScheduleID(nAF.iScheduleID),
 				iOtherServiceID(nAF.iOtherServiceID)
-				{}
+			{
+			}
 
-			CAltFreqOtherServices& operator=(const CAltFreqOtherServices& nAF)
+			CAltFreqOtherServices & operator=(const CAltFreqOtherServices &
+											  nAF)
 			{
 				veciFrequencies.Init(nAF.veciFrequencies.Size());
 				veciFrequencies = nAF.veciFrequencies;
@@ -508,26 +541,36 @@ public:
 				return *this;
 			}
 
-			_BOOLEAN operator==(const CAltFreqOtherServices& nAF)
+			_BOOLEAN operator==(const CAltFreqOtherServices & nAF)
 			{
 				int i;
 
 				/* Vector sizes */
-				if (veciFrequencies.Size() != nAF.veciFrequencies.Size()) return FALSE;
+				if (veciFrequencies.Size() != nAF.veciFrequencies.Size())
+					return FALSE;
 
 				/* Vector contents */
 				for (i = 0; i < veciFrequencies.Size(); i++)
-					if (veciFrequencies[i] != nAF.veciFrequencies[i]) return FALSE;
-				
-				if (bShortIDAnnounceFlag != nAF.bShortIDAnnounceFlag) return FALSE;
-				if (iShortIDAnnounce != nAF.iShortIDAnnounce) return FALSE;
-				if (bRegionSchedFlag != nAF.bRegionSchedFlag) return FALSE;
-				if (bSameService != nAF.bSameService) return FALSE;
+					if (veciFrequencies[i] != nAF.veciFrequencies[i])
+						return FALSE;
 
-				if (iSystemID != nAF.iSystemID) return FALSE;
-				if (iRegionID != nAF.iRegionID) return FALSE;
-				if (iScheduleID != nAF.iScheduleID) return FALSE;
-				if (iOtherServiceID != nAF.iOtherServiceID) return FALSE;
+				if (bShortIDAnnounceFlag != nAF.bShortIDAnnounceFlag)
+					return FALSE;
+				if (iShortIDAnnounce != nAF.iShortIDAnnounce)
+					return FALSE;
+				if (bRegionSchedFlag != nAF.bRegionSchedFlag)
+					return FALSE;
+				if (bSameService != nAF.bSameService)
+					return FALSE;
+
+				if (iSystemID != nAF.iSystemID)
+					return FALSE;
+				if (iRegionID != nAF.iRegionID)
+					return FALSE;
+				if (iScheduleID != nAF.iScheduleID)
+					return FALSE;
+				if (iOtherServiceID != nAF.iOtherServiceID)
+					return FALSE;
 				return TRUE;
 			}
 
@@ -632,6 +675,9 @@ public:
 	/* AMSS */
 	int				iAMSSCarrierMode;
 
+	/* Serial number and received ID */
+	string sReceiverID;
+	string sSerialNumber;
 
 	/* Parameters controlled by SDC ----------------------------------------- */
 	void		SetAudioParam(const int iShortID, const CAudioParam NewAudParam);
@@ -710,17 +756,19 @@ public:
 		};
 
 		/* store only fac parameters */
-		int	iService;
+		int iService;
 		uint32_t iServiceID;
 	};
 
 	/* Class for keeping track of status flags for RSCI rsta tag */
 	class CReceiveStatus
 	{
-	public:
-		CReceiveStatus(): FSyncOK(NOT_PRESENT), TSyncOK(NOT_PRESENT), 
-		FACOK(NOT_PRESENT), SDCOK(NOT_PRESENT), AudioOK(NOT_PRESENT) {}
-	
+	  public:
+		CReceiveStatus():FSyncOK(NOT_PRESENT), TSyncOK(NOT_PRESENT),
+			FACOK(NOT_PRESENT), SDCOK(NOT_PRESENT), AudioOK(NOT_PRESENT)
+		{
+		}
+
 		void SetFrameSyncStatus(const ETypeRxStatus OK);
 		void SetTimeSyncStatus(const ETypeRxStatus OK);
 		void SetInterfaceStatus(const ETypeRxStatus OK);
@@ -736,7 +784,7 @@ public:
 		ETypeRxStatus GetSDCStatus();
 		ETypeRxStatus GetAudioStatus();
 		ETypeRxStatus GetMOTStatus();
-	private:
+	  private:
 		ETypeRxStatus FSyncOK;
 		ETypeRxStatus TSyncOK;
 		ETypeRxStatus InterfaceOK;
@@ -747,26 +795,32 @@ public:
 	} ReceiveStatus;
 
 	/* Simulation ----------------------------------------------------------- */
-	ESimType			eSimType;
+	ESimType eSimType;
 
-	int					iDRMChannelNum;
-	int					iSpecChDoppler;
-	_REAL				rBitErrRate;
-	_REAL				rSyncTestParam; /* For any other simulations, used
-										   with "ST_SYNC_PARAM" type */
-	_REAL				rSINR;
-	int					iNumBitErrors;
-	int					iChanEstDelay;
+	int iDRMChannelNum;
+	int iSpecChDoppler;
+	_REAL rBitErrRate;
+	_REAL rSyncTestParam;		/* For any other simulations, used
+								   with "ST_SYNC_PARAM" type */
+	_REAL rSINR;
+	int iNumBitErrors;
+	int iChanEstDelay;
 
-	int					iNumTaps;
-	int					iPathDelay[MAX_NUM_TAPS_DRM_CHAN];
-	_REAL				rGainCorr;
-	int					iOffUsfExtr;
+	int iNumTaps;
+	int iPathDelay[MAX_NUM_TAPS_DRM_CHAN];
+	_REAL rGainCorr;
+	int iOffUsfExtr;
 
 	void SetNominalSNRdB(const _REAL rSNRdBNominal);
 	_REAL GetNominalSNRdB();
-	void SetSystemSNRdB(const _REAL rSNRdBSystem) {rSysSimSNRdB = rSNRdBSystem;}
-	_REAL GetSystemSNRdB() const {return rSysSimSNRdB;}
+	void SetSystemSNRdB(const _REAL rSNRdBSystem)
+	{
+		rSysSimSNRdB = rSNRdBSystem;
+	}
+	_REAL GetSystemSNRdB() const
+	{
+		return rSysSimSNRdB;
+	}
 	_REAL GetSysSNRdBPilPos() const;
 
 	/* Simulation raw-data management. We have to implement a shift register
@@ -802,6 +856,230 @@ public:
 	_BOOLEAN			bRunThread;
 	_BOOLEAN			bUsingMultimedia;
 
+	//andrewm - GPS location
+	class CGPSInformation
+	{
+	  public:
+		CGPSInformation():bUse(FALSE),
+			eGPSSource(GPS_SOURCE_INVALID),
+			bSatellitesVisibleAvailable(FALSE),
+			bPositionAvailable(FALSE), bAltitudeAvailable(FALSE),
+			bTimeAvailable(FALSE), bDateAvailable(FALSE),
+			bSpeedAvailable(FALSE), bHeadingAvailable(FALSE)
+		{
+		}
+
+		void SetUse(_BOOLEAN bNewuse)
+		{
+			bUse = bNewuse;
+		}
+		_BOOLEAN GetUse()
+		{
+			return bUse;
+		}
+
+		enum EGPSSource
+		{ GPS_SOURCE_INVALID, GPS_SOURCE_GPS_RECEIVER,
+				GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER, GPS_SOURCE_MANUAL_ENTRY,
+				GPS_SOURCE_NOT_AVAILABLE };
+
+		EGPSSource GetGPSSource()
+		{
+			return eGPSSource;
+		}
+		void SetGPSSource(EGPSSource eNewSource)
+		{
+			eGPSSource = eNewSource;
+		}
+
+		void SetSatellitesVisibleAvailable(_BOOLEAN bNewSatVisAv)
+		{
+			bSatellitesVisibleAvailable = bNewSatVisAv;
+		}
+		_BOOLEAN GetSatellitesVisibleAvailable()
+		{
+			return bSatellitesVisibleAvailable;
+		}
+
+		void SetSatellitesVisible(uint8_t uiNewSatVis)
+		{
+			uiSatellitesVisible = uiNewSatVis;
+		}
+		uint8_t GetSatellitesVisible()
+		{
+			return uiSatellitesVisible;
+		}
+
+		void SetPositionAvailable(_BOOLEAN bNewPosAv)
+		{
+			bPositionAvailable = bNewPosAv;
+		}
+		_BOOLEAN GetPositionAvailable()
+		{
+			return bPositionAvailable;
+		}
+
+		void SetLatLongDegrees(_REAL rNewLatDeg, _REAL rNewLongDeg)
+		{
+			rLatitudeDegrees = rNewLatDeg;
+			rLongitudeDegrees = rNewLongDeg;
+		}
+		_REAL GetLatitudeDegrees()
+		{
+			return rLatitudeDegrees;
+		}
+		_REAL GetLongitudeDegrees()
+		{
+			return rLongitudeDegrees;
+		}
+
+		_BOOLEAN SetLatLongDegreesMinutes(const string & sNewLat,
+										  const string & sNewLong);
+
+		void SetAltitudeAvailable(_BOOLEAN bNewAltAv)
+		{
+			bAltitudeAvailable = bNewAltAv;
+		}
+		_BOOLEAN GetAltitudeAvailable()
+		{
+			return bAltitudeAvailable;
+		}
+
+		void SetAltitudeMetres(_REAL rNewAlt)
+		{
+			rAltitudeMetres = rNewAlt;
+		}
+		_REAL GetAltitudeMetres()
+		{
+			return rAltitudeMetres;
+		}
+
+		void SetTimeAvailable(_BOOLEAN bNewTimeAv)
+		{
+			bTimeAvailable = bNewTimeAv;
+		}
+		_BOOLEAN GetTimeAvailable()
+		{
+			return bTimeAvailable;
+		}
+
+		void SetTime(uint8_t uiNewHours, uint8_t uiNewMinutes,
+					 uint8_t uiNewSeconds)
+		{
+			uiTimeHours = uiNewHours;
+			uiTimeMinutes = uiNewMinutes;
+			uiTimeSeconds = uiNewSeconds;
+		}
+		uint8_t GetTimeHours()
+		{
+			return uiTimeHours;
+		}
+		uint8_t GetTimeMinutes()
+		{
+			return uiTimeMinutes;
+		}
+		uint8_t GetTimeSeconds()
+		{
+			return uiTimeSeconds;
+		}
+
+		void SetDateAvailable(_BOOLEAN bNewDateAv)
+		{
+			bDateAvailable = bNewDateAv;
+		}
+		_BOOLEAN GetDateAvailable()
+		{
+			return bDateAvailable;
+		}
+
+		void SetDate(uint8_t uiNewDay, uint8_t uiNewMonth, uint16_t uiNewYear)
+		{
+			uiDateDay = uiNewDay;
+			uiDateMonth = uiNewMonth;
+			uiDateYear = uiNewYear;
+		}
+		uint8_t GetDateDay()
+		{
+			return uiDateDay;
+		}
+		uint8_t GetDateMonth()
+		{
+			return uiDateMonth;
+		}
+		uint16_t GetDateYear()
+		{
+			return uiDateYear;
+		}
+
+		void SetSpeedAvailable(_BOOLEAN bNewSpeedAv)
+		{
+			bSpeedAvailable = bNewSpeedAv;
+		}
+		_BOOLEAN GetSpeedAvailable()
+		{
+			return bSpeedAvailable;
+		}
+
+		void SetSpeedMetresPerSecond(_REAL rNewSpeed)
+		{
+			rSpeedMetresPerSecond = rNewSpeed;
+		}
+		_REAL GetSpeedMetresPerSecond()
+		{
+			return rSpeedMetresPerSecond;
+		}
+
+		void SetHeadingAvailable(_BOOLEAN bNewHeadAv)
+		{
+			bHeadingAvailable = bNewHeadAv;
+		}
+		_BOOLEAN GetHeadingAvailable()
+		{
+			return bHeadingAvailable;
+		}
+
+		void SetHeadingDegreesFromNorth(uint8_t uiNewHeading)
+		{
+			uiHeadingDegreesFromNorth = uiNewHeading;
+		}
+		uint8_t GetHeadingDegreesFromNorth()
+		{
+			return uiHeadingDegreesFromNorth;
+		}
+
+	  private:
+		_BOOLEAN bUse;
+
+		EGPSSource eGPSSource;
+
+		_BOOLEAN bSatellitesVisibleAvailable;
+		uint8_t uiSatellitesVisible;
+
+		_BOOLEAN bPositionAvailable;
+		_REAL rLatitudeDegrees;	// +ve for North
+		_REAL rLongitudeDegrees;	// +ve for East
+
+		_BOOLEAN bAltitudeAvailable;
+		_REAL rAltitudeMetres;
+
+		_BOOLEAN bTimeAvailable;
+		uint8_t uiTimeHours;
+		uint8_t uiTimeMinutes;
+		uint8_t uiTimeSeconds;
+
+		_BOOLEAN bDateAvailable;
+		uint8_t uiDateDay;
+		uint8_t uiDateMonth;
+		uint16_t uiDateYear;
+
+		_BOOLEAN bSpeedAvailable;
+		_REAL rSpeedMetresPerSecond;
+
+		_BOOLEAN bHeadingAvailable;
+		uint8_t uiHeadingDegreesFromNorth;
+
+	}
+	GPSInformation;
 protected:
 	_REAL				rSysSimSNRdB;
 

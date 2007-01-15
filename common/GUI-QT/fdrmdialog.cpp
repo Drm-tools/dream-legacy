@@ -31,8 +31,7 @@
 
 /* Implementation *************************************************************/
 FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
-	bool modal, WFlags f) : pDRMRec(pNDRMR),
-	FDRMDialogBase(parent, name, modal, f)
+	bool modal, WFlags f) : FDRMDialogBase(parent, name, modal, f), pDRMRec(pNDRMR)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -512,7 +511,7 @@ void FDRMDialog::OnTimer()
 			if (!strCntryCode.empty())
 			{
 				LabelCountryCode->
-					setText(QString(GetName(strCntryCode).c_str()));
+					setText(QString(GetISOCountryName(strCntryCode).c_str()));
 			}
 			else
 				LabelCountryCode->setText("");

@@ -1,9 +1,9 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2004
+ * Copyright (c) 2007
  *
  * Author(s):
- *	Volker Fischer, Oliver Haffenden, Julian Cable
+ *	Volker Fischer, Oliver Haffenden, Julian Cable, Andrew Murphy
  *
  * Description:
  *	see MDIRSCI.cpp
@@ -179,6 +179,8 @@ protected:
 	CTagItemGeneratorRxActivated TagItemGeneratorRxActivated; /* ract */
 	CTagItemGeneratorRxBandwidth TagItemGeneratorRxBandwidth; /* rbw_ */
 	CTagItemGeneratorRxService TagItemGeneratorRxService; /* rser */
+
+	CTagItemGeneratorGPSInformation TagItemGeneratorGPSInformation; /* rgps */
 
 	CVector<CTagItemGeneratorStr>	vecTagItemGeneratorStr; /* strx tag */
 

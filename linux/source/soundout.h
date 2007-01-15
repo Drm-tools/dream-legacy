@@ -41,7 +41,7 @@
 //#define FRAGSIZE 1024
 
 /* Classes ********************************************************************/
-class CSoundOut : public CSoundInterface
+class CSoundOut : public CSoundOutInterface
 {
 public:
 	CSoundOut();
@@ -50,9 +50,15 @@ public:
 	virtual void				Enumerate(vector<string>& choices) {choices = names;}
 	virtual void				SetDev(int iNewDevice);
 	virtual int					GetDev();
+	virtual string GetDeviceName() { return ""; }
+	virtual void StartRecording(const std::string&) { }
+	virtual void StopRecording() { }
+	virtual _BOOLEAN CurrentlyRecording() { return FALSE; }
+	virtual _BOOLEAN SetWriteToFile(const string&) { return FALSE; }
+
 
 #if WITH_SOUND
-	void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
+	void Init(int iNewBufferSize);
 	_BOOLEAN Write(CVector<short>& psData);
 
 	void Close();

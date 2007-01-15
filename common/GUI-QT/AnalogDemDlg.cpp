@@ -33,9 +33,8 @@
 
 /* Implementation *************************************************************/
 AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
-	const char* name, bool modal, WFlags f) : pDRMRec(pNDRMR),
-	AnalogDemDlgBase(parent, name, modal, f),
-	AMSSDlg(pNDRMR, parent, name, modal, f)
+	const char* name, bool modal, WFlags f): AnalogDemDlgBase(parent, name, modal, f),
+	AMSSDlg(pNDRMR, parent, name, modal, f), pDRMRec(pNDRMR)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -810,7 +809,7 @@ void CAMSSDlg::OnTimer()
 	   (!strCntryCode.empty()))
 	{
 		TextAMSSCountryCode->
-			setText(QString(GetName(strCntryCode).c_str()));
+			setText(QString(GetISOCountryName(strCntryCode).c_str()));
 	}
 	else
 		TextAMSSCountryCode->setText("");

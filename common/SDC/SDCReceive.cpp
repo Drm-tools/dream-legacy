@@ -336,11 +336,11 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 									  const _BOOLEAN bVersion)
 {
 	int			i;
-	_BOOLEAN	bSyncMultplxFlag;
-	_BOOLEAN	bEnhanceFlag;
-	_BOOLEAN	bServRestrFlag;
-	_BOOLEAN	bRegionSchedFlag;
-	int			iServRestr;
+	_BOOLEAN	bSyncMultplxFlag = FALSE;
+	_BOOLEAN	bEnhanceFlag = FALSE;
+	_BOOLEAN	bServRestrFlag = FALSE;
+	_BOOLEAN	bRegionSchedFlag = FALSE;
+	int			iServRestr = 0;
 
 	/* Init number of frequency count */
 	int iNumFreqTmp = iLengthOfBody;
@@ -560,6 +560,14 @@ _BOOLEAN CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
 	if (iLengthOfBody != 4)
 		return TRUE;
 
+	/* TODO version processing not implemented yet */
+	if(bVersion)
+	{
+	}
+	else
+	{
+	}
+
 	/* Schedule Id: this field indicates the Schedule Id for the defined
 	   schedule. Up to 15 different schedules with an individual Schedule Id
 	   (values 1 to 15) can be defined; the value 0 shall not be used, since it
@@ -723,6 +731,14 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 									  const _BOOLEAN bVersion)
 {
 	int i;
+
+	/* TODO version processing not implemented yet */
+	if(bVersion)
+	{
+	}
+	else
+	{
+	}
 
 	/* Region Id: this field indicates the identifier for this region
 	   definition. Up to 15 different geographic regions with an individual
@@ -1059,9 +1075,9 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 									   const _BOOLEAN bVersion)
 {
 	int				i;
-	_BOOLEAN		bShortIDAnnounceFlag;
-	_BOOLEAN		bRegionSchedFlag;
-	_BOOLEAN		bSameService;
+	_BOOLEAN		bShortIDAnnounceFlag = FALSE;
+	_BOOLEAN		bRegionSchedFlag = FALSE;
+	_BOOLEAN		bSameService = FALSE;
 	int				iShortIDAnnounce = 0;
 	int				iSystemID;
 	int				iRegionID = 0;

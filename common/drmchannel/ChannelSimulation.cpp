@@ -30,7 +30,7 @@
 
 
 /* Implementation *************************************************************/
-void CDRMChannel::ProcessDataInternal(CParameter& ReceiverParam)
+void CDRMChannel::ProcessDataInternal(CParameter&)
 {
 	int			i, j;
 	_COMPLEX	cCurTapSamp;

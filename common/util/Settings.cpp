@@ -169,7 +169,7 @@ void CSettings::SetFlagIniSet(INIFile& theINI, string strSection, string strKey,
 
 
 /* Command line argument parser ***********************************************/
-_BOOLEAN CSettings::ParseArguments(int argc, char** argv)
+void CSettings::ParseArguments(int argc, char** argv)
 {
 	string		strArgument;
 

@@ -120,13 +120,13 @@ fprintf(fid, '\n\n\n');
 
 % Write filter taps
 fprintf(fid, '/* Low pass prototype for Hilbert-filter 5 kHz bandwidth */\n');
-fprintf(fid, 'static float fHilLPProt5[NUM_TAPS_HILB_FILT_5] =\n');
+fprintf(fid, 'float fHilLPProt5[NUM_TAPS_HILB_FILT_5] =\n');
 fprintf(fid, '{\n');
 fprintf(fid, '	%.20ff,\n', b5(1:end - 1));
 fprintf(fid, '	%.20ff\n', b5(end));
 fprintf(fid, '};\n\n');
 fprintf(fid, '/* Low pass prototype for Hilbert-filter 10 kHz bandwidth */\n');
-fprintf(fid, 'static float fHilLPProt10[NUM_TAPS_HILB_FILT_10] =\n');
+fprintf(fid, 'float fHilLPProt10[NUM_TAPS_HILB_FILT_10] =\n');
 fprintf(fid, '{\n');
 fprintf(fid, '	%.20ff,\n', b10(1:end - 1));
 fprintf(fid, '	%.20ff\n', b10(end));

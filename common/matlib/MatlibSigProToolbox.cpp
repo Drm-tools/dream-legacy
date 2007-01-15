@@ -210,14 +210,14 @@ CReal Besseli(const CReal rNu, const CReal rZ)
 	CReal		rD = (CReal) 1.0;
 	CReal		rS = (CReal) 1.0;
 
-#ifdef _DEBUG_
 	/* Only nu = 0 is supported right now! */
 	if (rNu != (CReal) 0.0)
 	{
+#ifdef _DEBUG_
 		DebugError("MatLibr: Besseli function", "The nu = ", rNu, \
 			" is not supported, only nu = ", 0);
-	}
 #endif
+	}
 
 	for (int i = 1; i <= 25 && rReturn * rEp <= rS; i++)
 	{

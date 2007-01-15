@@ -50,7 +50,7 @@ MultSettingsDlg::~MultSettingsDlg()
 {
 }
 
-void MultSettingsDlg::hideEvent(QHideEvent* pEvent)
+void MultSettingsDlg::hideEvent(QHideEvent*)
 {
 	/* save current settings */
 	if (CheckBoxAddRefresh->isChecked())
@@ -70,7 +70,7 @@ void MultSettingsDlg::hideEvent(QHideEvent* pEvent)
 	pDRMRec->iMOTBWSRefreshTime = iMOTRefresh;
 }
 
-void MultSettingsDlg::showEvent(QShowEvent* pEvent)
+void MultSettingsDlg::showEvent(QShowEvent*)
 {
 	if (pDRMRec->bAddRefreshHeader == TRUE)
 		CheckBoxAddRefresh->setChecked(TRUE);

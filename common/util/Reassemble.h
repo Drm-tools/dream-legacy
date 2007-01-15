@@ -35,10 +35,7 @@ class CSegmentTrackerN
 {
 public:
 
-	CSegmentTrackerN ()
-	{
-		Reset ();
-	}
+	CSegmentTrackerN():vecbHaveSegment() { }
 
 	void Reset ()
 	{
@@ -104,14 +101,15 @@ class CReassemblerN
 {
 public:
 
-	CReassemblerN ()
+	CReassemblerN(): vecData(), vecLastSegment(),
+		iLastSegmentNum(-1), iLastSegmentSize(-1), iSegmentSize(0),
+		Tracker(), bReady(false)
 	{
-		Reset ();
 	}
 
 	CReassemblerN (const CReassemblerN & r);
 
-	virtual ~ CReassemblerN ()
+	virtual ~CReassemblerN ()
 	{
 	}
 

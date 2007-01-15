@@ -198,6 +198,9 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 		ScatPilots.piGainTable = &iScatPilGainRobModD[iSpecOccArrayIndex][0];
 		break;
+
+	default:
+		break;
 	}
 
 	/* Get number of carriers with DC */
@@ -291,6 +294,9 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 			case RM_ROBUSTNESS_MODE_D:
 				if ((iSym == 0) || (iSym == 1) || (iSym == 2))
 					matiMapTab[iSym][iCarArrInd] = CM_SDC;
+				break;
+
+			default:
 				break;
 			}
 

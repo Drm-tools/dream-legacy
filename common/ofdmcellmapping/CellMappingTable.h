@@ -124,6 +124,9 @@ protected:
 	/* Internal parameters for MakeTable function --------------------------- */
 	struct CScatPilots
 	{	
+		CScatPilots(): piConst(NULL), iColSizeWZ(0), piW(NULL), piZ(NULL),
+		iQ(0),piGainTable(NULL) {}
+
 		/* For the pase */
 		const int*  piConst;
 		int			iColSizeWZ;

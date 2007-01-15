@@ -32,6 +32,7 @@
 class CAudioSourceEncoderInterface
 {
 public:
+	virtual ~CAudioSourceEncoderInterface() {}
 	virtual void AddTextMessage(const string& strText)=0;
 	virtual void ClearTextMessages()=0;
 

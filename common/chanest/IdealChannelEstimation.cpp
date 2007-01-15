@@ -107,8 +107,6 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 
 void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 {
-	int m, k;
-
 	/* Init base class for modifying the pilots (rotation) */
 	CPilotModiClass::InitRot(ReceiverParam);
 

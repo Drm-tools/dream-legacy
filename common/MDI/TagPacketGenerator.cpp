@@ -58,16 +58,16 @@ CVector<_BINARY> CTagPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC)
 	The AF layer encapsulates a single TAG Packet. Mandatory TAG items:
 	*ptr, dlfc, fac_, sdc_, sdci, robm, str0-3
 */
-	int					i,j;
+	size_t				i;
 	CVector<_BINARY>	vecbiAFPkt;
 
 	/* Payload length in bytes */
 // TODO: check if padding bits are needed to get byte alignment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	int iPayloadLenBytes = 0;
 		
-	for (j=0; j<vecTagItemGenerators.size(); j++)
+	for (i=0; i<vecTagItemGenerators.size(); i++)
 	{
-		int n = vecTagItemGenerators[j]->GetTotalLength() / SIZEOF__BYTE;
+		int n = vecTagItemGenerators[i]->GetTotalLength() / SIZEOF__BYTE;
 		iPayloadLenBytes += n;
 	}
 
@@ -123,9 +123,9 @@ CVector<_BINARY> CTagPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC)
 
 // TODO: copy data byte wise -> check if possible to do that...
 
-	for (j=0; j<vecTagItemGenerators.size(); j++)
+	for (i=0; i<vecTagItemGenerators.size(); i++)
 	{
-		vecTagItemGenerators[j]->PutTagItemData(vecbiAFPkt);
+		vecTagItemGenerators[i]->PutTagItemData(vecbiAFPkt);
 	}
 
 	/* CRC: CRC calculated as described in annex A if the CF field is 1,
