@@ -410,7 +410,7 @@ void FDRMDialog::OnTimer()
 					break;
 
 				default:
-				formattedMessage += textMessage[i];
+				formattedMessage += textMessage[int(i)];
 				}
 			}
 			formattedMessage = "<center>" + formattedMessage + "</center>";
