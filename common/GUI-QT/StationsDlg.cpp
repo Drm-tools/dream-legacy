@@ -433,7 +433,6 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	bShowAll = FALSE;
 	pViewMenu->setItemChecked(0, TRUE);
 
-
 	/* Stations Preview menu ------------------------------------------------ */
 	pPreviewMenu = new QPopupMenu(this);
 	CHECK_PTR(pPreviewMenu);
@@ -704,7 +703,21 @@ void StationsDlg::OnShowStationsMenu(int iID)
 {
 	/* Show only active stations if ID is 0, else show all */
 	if (iID == 0)
+	{
 		bShowAll = FALSE;
+
+		/* clear all and reload. If the list is too big this increase the performance */
+		ListViewStations->clear();
+	
+		/* Lock mutex for modifying the vecpListItems */
+		ListItemsMutex.Lock();
+
+		vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
+
+		/* Unlock BEFORE calling the stations view update because in this function
+		   the mutex is locked, too! */
+		ListItemsMutex.Unlock();
+	}
 	else
 		bShowAll = TRUE;
 
@@ -980,6 +993,11 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 
 void StationsDlg::SetStationsView()
 {
+	/* Stop the timer and disable the list */
+	TimerList.stop();
+	ListViewStations->setUpdatesEnabled(FALSE);
+	ListViewStations->setEnabled(FALSE);
+
 	/* Set lock because of list view items. These items could be changed
 	   by another thread */
 	ListItemsMutex.Lock();
@@ -990,8 +1008,10 @@ void StationsDlg::SetStationsView()
 	/* Add new item for each station in list view */
 	for (int i = 0; i < iNumStations; i++)
 	{
+		CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
+
 		if (!((bShowAll == FALSE) &&
-			(DRMSchedule.CheckState(i) == CDRMSchedule::IS_INACTIVE)))
+			(iState == CDRMSchedule::IS_INACTIVE)))
 		{
 			/* Only insert item if it is not already in the list */
 			if (vecpListItems[i] == NULL)
@@ -1034,7 +1054,7 @@ void StationsDlg::SetStationsView()
 
 			/* Check, if station is currently transmitting. If yes, set
 			   special pixmap */
-			switch (DRMSchedule.CheckState(i))
+			switch (iState)
 			{
 				case CDRMSchedule::IS_ACTIVE:
 					vecpListItems[i]->setPixmap(0, BitmCubeGreen);
@@ -1058,7 +1078,7 @@ void StationsDlg::SetStationsView()
 			/* Delete this item since it is not used anymore */
 			if (vecpListItems[i] != NULL)
 			{
-				/* If one deletes a menu item in QT list view, it is
+				/* If one deletes a item in QT list view, it is
 				   automaticall removed from the list and the list gets
 				   repainted */
 				delete vecpListItems[i];
@@ -1077,6 +1097,11 @@ void StationsDlg::SetStationsView()
 		ListViewStations->sort();
 
 	ListItemsMutex.Unlock();
+	
+	/* Start the timer and enable the list */
+	ListViewStations->setUpdatesEnabled(TRUE);
+	ListViewStations->setEnabled(TRUE);
+	TimerList.start(GUI_TIMER_LIST_VIEW_STAT);
 }
 
 void StationsDlg::OnFreqCntNewValue(double dVal)
