@@ -34,6 +34,8 @@
 
 #include "DrmReceiver.h"
 
+#include "util/LogPrint.h"
+
 const int CDRMReceiver::MAX_UNLOCKED_COUNT=2;
 
 /* Implementation *************************************************************/
@@ -159,13 +161,26 @@ void CDRMReceiver::Run()
 			/* Init flag */
 			bEnoughData = FALSE;
 
+			// Split samples, one output to the demodulation, another for IQ recording
+			if (SplitForIQRecord.ProcessData(ReceiverParam, RecDataBuf, DemodDataBuf, IQRecordDataBuf))
+			{
+				bEnoughData = TRUE;
+			}
+
+			// Write output I/Q file 
+			if (WriteIQFile.WriteData(ReceiverParam, IQRecordDataBuf))
+			{
+				bEnoughData = TRUE;
+			}
+
+
 			if ((eReceiverMode == RM_AM) || bDoInitRun)
 			{
 				/* The incoming samples are split 2 ways using a new CSplit
 				   class. One set are passed to the existing AM demodulator.
 				   The other set are passed to the new AMSS demodulator. The
 				   AMSS and AM demodulators work completely independently */
-				if (Split.ProcessData(ReceiverParam, RecDataBuf, AMDataBuf,
+				if (Split.ProcessData(ReceiverParam, DemodDataBuf, AMDataBuf,
 					AMSSDataBuf))
 				{
 					bEnoughData = TRUE;
@@ -225,7 +240,7 @@ void CDRMReceiver::Run()
 				{
 
 					/* Resample input DRM-stream -------------------------------- */
-					if (InputResample.ProcessData(ReceiverParam, RecDataBuf,
+					if (InputResample.ProcessData(ReceiverParam, DemodDataBuf,
 						InpResBuf))
 					{
 						bEnoughData = TRUE;
@@ -418,7 +433,10 @@ fflush(pFile);
 			}
 			else
 			{
-				downstreamRSCI.SendAMFrame(ReceiverParam);
+				if (AMDemodulation.GetFrameBoundary())
+				{
+					downstreamRSCI.SendAMFrame(ReceiverParam);
+				}
 			}
 		}
 }
@@ -491,6 +509,8 @@ void CDRMReceiver::DetectAcquiFAC()
 
 void CDRMReceiver::Init()
 {
+	CFileLogPrinter::Instantiate();
+
 	/* Set flags so that we have only one loop in the Run() routine which is
 	   enough for initializing all modues */
 	bDoInitRun = TRUE;
@@ -509,6 +529,7 @@ void CDRMReceiver::Init()
 	/* Reset flags */
 	bDoInitRun = FALSE;
 	ReceiverParam.bRunThread = FALSE;
+
 }
 
 void CDRMReceiver::InitReceiverMode()
@@ -522,6 +543,15 @@ void CDRMReceiver::InitReceiverMode()
 	{
 		/* Tell the SDC decoder that it's AMSS to decode (no AFS index) */
 		UtilizeSDCData.GetSDCReceive()->SetSDCType(CSDCReceive::SDC_AMSS);
+
+		/* Set the receive status - this affects the RSI output */
+		ReceiverParam.ReceiveStatus.SetTimeSyncStatus(NOT_PRESENT);
+		ReceiverParam.ReceiveStatus.SetFrameSyncStatus(NOT_PRESENT);
+		ReceiverParam.ReceiveStatus.SetFACStatus(NOT_PRESENT);
+		ReceiverParam.ReceiveStatus.SetSDCStatus(NOT_PRESENT);
+		ReceiverParam.ReceiveStatus.SetAudioStatus(NOT_PRESENT);
+		ReceiverParam.ReceiveStatus.SetMOTStatus(NOT_PRESENT);
+
 	}
 	else
 		UtilizeSDCData.GetSDCReceive()->SetSDCType(CSDCReceive::SDC_DRM);
@@ -793,6 +823,8 @@ void CDRMReceiver::InitsForAllModules()
 	Split.SetInitFlag();
 	AMDemodulation.SetInitFlag();
 
+	SplitForIQRecord.SetInitFlag();
+	WriteIQFile.SetInitFlag();
 	/* AMSS */
 	AMSSPhaseDemod.SetInitFlag();
 	AMSSExtractBits.SetInitFlag();
@@ -807,6 +839,9 @@ void CDRMReceiver::InitsForAllModules()
 	   lead to an overrun) */
 	RecDataBuf.Clear();
 	AMDataBuf.Clear();
+
+	DemodDataBuf.Clear();
+	IQRecordDataBuf.Clear();
 	
 	AMSSDataBuf.Clear();
 	AMSSPhaseBuf.Clear();
@@ -853,6 +888,9 @@ void CDRMReceiver::InitsForWaveMode()
 	FreqSyncAcq.SetInitFlag();
 	Split.SetInitFlag();
 	AMDemodulation.SetInitFlag();
+
+	SplitForIQRecord.SetInitFlag();
+	WriteIQFile.SetInitFlag();
 	
 	AMSSPhaseDemod.SetInitFlag();
 	AMSSExtractBits.SetInitFlag();
@@ -1159,6 +1197,13 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 	else
 	{
  		ReceiverParam.ReceptLog.SetFrequency(iNewFreqkHz);
+
+		/* tell the RSCI and IQ file writer that freq has changed in case it needs to start a new file */
+		if (downstreamRSCI.GetOutEnabled() == TRUE)
+			downstreamRSCI.NewFrequency(ReceiverParam);
+
+		//WriteIQFile.NewFrequency(ReceiverParam);
+
 #ifdef HAVE_LIBHAMLIB
 		return Hamlib.SetFrequency(iNewFreqkHz);
 #else
@@ -1182,3 +1227,17 @@ _BOOLEAN CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
 #endif
 	}
 }
+
+void CDRMReceiver::SetRSIRecording(const _BOOLEAN bOn, const char cPro)
+{
+	downstreamRSCI.SetRSIRecording(ReceiverParam, bOn, cPro);
+}
+
+void CDRMReceiver::SetIQRecording(const _BOOLEAN bOn)
+{
+	if (bOn)
+		WriteIQFile.StartRecording(ReceiverParam);
+	else
+		WriteIQFile.StopRecording();
+}
+

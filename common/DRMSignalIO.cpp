@@ -186,6 +186,15 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 {
 	int i;
 
+	/* OPH: update free-running symbol counter */
+	iFreeSymbolCounter++;
+	if (iFreeSymbolCounter >= Parameter.iNumSymPerFrame)
+	{
+		iFreeSymbolCounter = 0;
+		/* calculate the PSD once per frame for the RSI output */
+		CalculatePSD(Parameter);
+	}
+
 	if (bUseSoundcard == TRUE)
 	{
 		/* Using sound card ------------------------------------------------- */
@@ -395,6 +404,10 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 
 	/* Define output block-size */
 	iOutputBlockSize = Parameter.iSymbolBlockSize;
+
+	/* OPH: init free-running symbol counter */
+	iFreeSymbolCounter = 0;
+
 }
 
 _REAL CReceiveData::HilbertFilt(const _REAL rRe, const _REAL rIm)
@@ -480,12 +493,15 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 }
 
 void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
-							   CVector<_REAL>& vecrScale)
+							   CVector<_REAL>& vecrScale,
+							   const int iLenPSDAvEachBlock,
+							   const int iNumAvBlocksPSD,
+							   const int iPSDOverlap)
 {
 	int i;
 
 	/* Length of spectrum vector including Nyquist frequency */
-	const int iLenSpecWithNyFreq = LEN_PSD_AV_EACH_BLOCK / 2 + 1;
+	const int iLenSpecWithNyFreq = iLenPSDAvEachBlock / 2 + 1;
 
 	/* Init input and output vectors */
 	vecrData.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
@@ -499,23 +515,23 @@ void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
 		(_REAL) SOUNDCRD_SAMPLE_RATE / iLenSpecWithNyFreq / 2000;
 
 	const _REAL rNormData = (_REAL) _MAXSHORT * _MAXSHORT *
-		LEN_PSD_AV_EACH_BLOCK * LEN_PSD_AV_EACH_BLOCK *
-		NUM_AV_BLOCKS_PSD * NUM_AV_BLOCKS_PSD;
+		iLenPSDAvEachBlock * iLenPSDAvEachBlock *
+		iNumAvBlocksPSD * iNumAvBlocksPSD;
 
 	/* Init intermediate vectors */
 	CRealVector vecrAvSqMagSpect(iLenSpecWithNyFreq, (CReal) 0.0);
-	CRealVector vecrFFTInput(LEN_PSD_AV_EACH_BLOCK);
+	CRealVector vecrFFTInput(iLenPSDAvEachBlock);
 
 	/* Init Hamming window */
-	CRealVector vecrHammWin(Hamming(LEN_PSD_AV_EACH_BLOCK));
+	CRealVector vecrHammWin(Hamming(iLenPSDAvEachBlock));
 
 	/* Calculate FFT of each small block and average results (estimation
 	   of PSD of input signal) */
-	for (int j = 0; j < NUM_AV_BLOCKS_PSD; j++)
+	for (int j = 0; j < iNumAvBlocksPSD; j++)
 	{
 		/* Copy data from shift register in Matlib vector */
-		for (i = 0; i < LEN_PSD_AV_EACH_BLOCK; i++)
-			vecrFFTInput[i] = vecrInpData[i + j * LEN_PSD_AV_EACH_BLOCK];
+		for (i = 0; i < iLenPSDAvEachBlock; i++)
+			vecrFFTInput[i] = vecrInpData[i + j * (iLenPSDAvEachBlock - iPSDOverlap)];
 
 		/* Apply Hamming window */
 		vecrFFTInput *= vecrHammWin;
@@ -539,4 +555,34 @@ void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
 
 	/* Release resources */
 	Unlock();
+}
+
+/* Calculate PSD and put it into the CParameter class */
+/* To be used by the rsi output */
+void CReceiveData::CalculatePSD(CParameter &ReceiverParam)
+{
+	CVector<_REAL>		vecrData;
+	CVector<_REAL>		vecrScale;
+
+	/* TODO should something be done with rFactorScale ? */
+	//const _REAL rFactorScale =
+	//	(_REAL) SOUNDCRD_SAMPLE_RATE / LEN_PSD_AV_EACH_BLOCK_RSI;
+
+	GetInputPSD(vecrData, vecrScale, LEN_PSD_AV_EACH_BLOCK_RSI, NUM_AV_BLOCKS_PSD_RSI, PSD_OVERLAP_RSI);
+
+	/* extract the values from -8kHz to +8kHz relative to 12kHz, i.e. 4kHz to 20kHz */
+	/*const int startBin = 4000.0 * LEN_PSD_AV_EACH_BLOCK_RSI /SOUNDCRD_SAMPLE_RATE;
+	const int endBin = 20000.0 * LEN_PSD_AV_EACH_BLOCK_RSI /SOUNDCRD_SAMPLE_RATE;*/
+	/* The above calculation doesn't round in the way FhG expect. Probably better to specify directly */
+	/* TODO: ought to depend on the spectral occupancy and be wider in 18/20k */
+	const int startBin = 22;
+	const int endBin = 106;
+
+	int i,j;
+	
+	ReceiverParam.vecrPSD.Init(endBin - startBin + 1, (_REAL) 0.0);
+
+	for (i=0, j=startBin; j<=endBin; i++,j++)
+		ReceiverParam.vecrPSD[i] = vecrData[j];
+
 }

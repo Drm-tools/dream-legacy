@@ -49,12 +49,19 @@
 #define NUM_AV_BLOCKS_PSD			16
 #define LEN_PSD_AV_EACH_BLOCK		512
 
+/* same but for the rpsd tag */
+#define NUM_AV_BLOCKS_PSD_RSI	150
+#define LEN_PSD_AV_EACH_BLOCK_RSI		256
+#define PSD_OVERLAP_RSI	128
+
 /* Length of vector for input spectrum. We use approx. 0.2 sec
    of sampled data for spectrum calculation, this is 2^13 = 8192 to 
    make the FFT work more efficient. Make sure that this number is not smaller
    than the symbol lenght in 48 khz domain of longest mode (which is mode A/B:
    1280) */
-#define NUM_SMPLS_4_INPUT_SPECTRUM	(NUM_AV_BLOCKS_PSD * LEN_PSD_AV_EACH_BLOCK)
+/* The RSI output needs 400ms with a 50% overlap, so this needs more space 
+   I think the RSCI spec is slightly wrong - using 150 windows consumes just over 400ms, 149 would be exact */
+#define NUM_SMPLS_4_INPUT_SPECTRUM	(NUM_AV_BLOCKS_PSD_RSI * (LEN_PSD_AV_EACH_BLOCK_RSI-PSD_OVERLAP_RSI)+PSD_OVERLAP_RSI)
 
 /* Use raw 16 bit data or in text form for file format for DRM data. Defining
    the following macro will enable the raw data option */
@@ -122,7 +129,10 @@ public:
 
 	_REAL GetLevelMeter() {return SignalLevelMeter.Level();}
 	void GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-	void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 							   
+							   const int iLenPSDAvEachBlock = LEN_PSD_AV_EACH_BLOCK,
+							   const int iNumAvBlocksPSD = NUM_AV_BLOCKS_PSD,
+							   const int iPSDOverlap = 0);
 
 	void SetFlippedSpectrum(const _BOOLEAN bNewF) {bFippedSpectrum = bNewF;}
 	_BOOLEAN GetFlippedSpectrum() {return bFippedSpectrum;}
@@ -158,8 +168,14 @@ protected:
 
 	_REAL HilbertFilt(const _REAL rRe, const _REAL rIm);
 
+	/* OPH: counter to count symbols within a frame in order to generate */
+	/* RSCI output */
+	int							iFreeSymbolCounter;
+
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+
+	void CalculatePSD(CParameter& ReceiverParam);
 };
 
 

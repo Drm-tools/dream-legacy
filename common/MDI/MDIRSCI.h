@@ -47,6 +47,7 @@
 #include "RCITagItems.h"
 #include "TagPacketDecoderRSCIControl.h"
 #include "TagPacketGenerator.h"
+#include "RSISubscriber.h"
 
 /* Classes ********************************************************************/
 class CRSIMDIInRCIOut : public CReceiverModul<_BINARY, _BINARY>
@@ -104,16 +105,13 @@ protected:
 };
 
 class CRSIMDIOutRCIIn
-#ifdef USE_QT_GUI
-: public CPacketSink
-#endif
 {
 public:
 	CRSIMDIOutRCIIn();
 	virtual ~CRSIMDIOutRCIIn() {}
 	/* RSCI/MDI out */
 
-	CVector<_BINARY> GenMDIPacket();
+	void GenMDIPacket();
 
 	void SendLockedFrame(CParameter& Parameter,
 						CSingleBuffer<_BINARY>& FACData,
@@ -123,25 +121,19 @@ public:
 	void SendUnlockedFrame(CParameter& Parameter); /* called once per frame even if the Rx isn't synchronised */
 	void SendAMFrame(CParameter& Parameter);
 
-	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC = bNAFPktCRC;}
+	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC);
 	void SetOutAddr(const string& strArgument);
 	void SetInAddr(const string& strAddr);
+	void SetRSIRecording(CParameter& Parameter, const _BOOLEAN bOn, const char cPro);
 	virtual void SetProfile(const char c);
+	void NewFrequency(CParameter& Parameter); /* needs to be called in case a new RSCI file needs to be started */
 	
 	virtual _BOOLEAN GetOutEnabled() {return bMDIOutEnabled;} 
 	virtual _BOOLEAN GetInEnabled() {return bMDIInEnabled;}
 	void GetNextPacket(CSingleBuffer<_BINARY>&	buf);
-	void TransmitPacket(CVector<_BINARY> vecbidata);
 	void SetReceiver(CDRMReceiver *pReceiver);
 
-#ifdef USE_QT_GUI
-	void SendPacket(const vector<_BYTE>& vecbydata);
-#endif
-
 protected:
-#ifdef USE_QT_GUI
-	CPacketSocketQT				PacketSocket;
-#endif
 	
 	void SetEnableMDIOut(const _BOOLEAN bNEnMOut) {bMDIOutEnabled = bNEnMOut;}
 
@@ -181,6 +173,8 @@ protected:
 	CTagItemGeneratorRxService TagItemGeneratorRxService; /* rser */
 
 	CTagItemGeneratorGPSInformation TagItemGeneratorGPSInformation; /* rgps */
+	CTagItemGeneratorPowerSpectralDensity TagItemGeneratorPowerSpectralDensity; /* rpsd */
+	CTagItemGeneratorPilots TagItemGeneratorPilots; /* rpil */
 
 	CVector<CTagItemGeneratorStr>	vecTagItemGeneratorStr; /* strx tag */
 
@@ -190,11 +184,17 @@ protected:
 	/* TAG Packet generator */
 	CTagPacketGeneratorWithProfiles TagPacketGenerator;
 
+	CVector<CRSISubscriber *> vecRSISubscribers;
+
+	/* instantiate subscribers for the main I/O socket and for a file */
+	CRSISubscriberSocket RSISubscriberSocketMain;
+	CRSISubscriberFile RSISubscriberFile;
+
+
 	/* Special settings */
-	_BOOLEAN					bUseAFCRC;
 	char						cProfile;
 
-	CTagPacketDecoderRSCIControl TagPacketDecoderRSCIControl;
+
 
 	CSingleBuffer<_BINARY>		MDIInBuffer;
 

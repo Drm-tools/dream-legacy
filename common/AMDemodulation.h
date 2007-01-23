@@ -273,6 +273,9 @@ public:
 	CReal GetCurMixFreqOffs() const
 		{return rNormCurMixFreqOffs * SOUNDCRD_SAMPLE_RATE;}
 
+	_BOOLEAN GetFrameBoundary() {return iFreeSymbolCounter==0;}
+
+
 protected:
 	void SetBPFilter(const CReal rNewBPNormBW, const CReal rNewNormFreqOffset,
 		const EDemodType eDemodType);
@@ -318,6 +321,10 @@ protected:
 	CAGC						AGC;
 	CNoiseReduction				NoiseReduction;
 	ENoiRedType					NoiRedType;
+
+	/* OPH: counter to count symbols within a frame in order to generate */
+	/* RSCI output */
+	int							iFreeSymbolCounter;
 
 
 	virtual void InitInternal(CParameter& ReceiverParam);

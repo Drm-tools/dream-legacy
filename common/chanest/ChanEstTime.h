@@ -45,7 +45,7 @@ public:
 
 	void InitRot(CParameter& Parameter);
 
-protected:
+//protected:
 	_COMPLEX Rotate(const _COMPLEX cI, const int iCN, const int iTiDi) const;
 
 private:

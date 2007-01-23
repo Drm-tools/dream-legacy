@@ -65,8 +65,9 @@ class CParameter:public CCellMappingTable
 		Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
 		bRunThread(FALSE), bUsingMultimedia(TRUE),
 		iCurSelAudioService(0), iCurSelDataService(0),
-		vecbiAudioFrameStatus()
+		vecbiAudioFrameStatus(), vecrPSD(0)
 	{
+		GenerateRandomSerialNumber();
 	}
 	virtual ~ CParameter()
 	{
@@ -669,6 +670,7 @@ class CParameter:public CCellMappingTable
 	} AltFreqOtherServicesSign;
 
 	/* Misc. Functions ------------------------------------------------------ */
+	void GenerateRandomSerialNumber();
 	void ResetServicesStreams();
 	void GetActiveServices(CVector < int >&veciActServ);
 	void GetActiveStreams(CVector < int >&veciActStr);
@@ -1326,11 +1328,16 @@ class CParameter:public CCellMappingTable
 	_BOOLEAN bMeasureInterference;
 	_REAL rIntFreq, rINR, rICR;
 	void SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr);
-	_BOOLEAN GetSignalStrength(_REAL rSigStr);
+	_BOOLEAN GetSignalStrength(_REAL &rSigStr);
 	_BOOLEAN bValidSignalStrength;
 	_REAL rSigStr;
 	ERecMode GetReceiverMode();
 	CVector < _BINARY > vecbiAudioFrameStatus;
+
+	/* vector to hold the PSD valued for the rpsd tag. */
+	CVector<_REAL> vecrPSD;
+
+	CMatrix<_COMPLEX> matcReceivedPilotValues;
 };
 
 #endif // !defined(PARAMETER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

@@ -33,6 +33,7 @@
 #include "../Parameter.h"
 
 class CDRMReceiver;
+class CRSISubscriber;
 
 // RSCI Status
 class CTagItemDecoderRSI : public CTagItemDecoder      
@@ -116,4 +117,23 @@ public:
 	CTagItemDecoderCdmo(CDRMReceiver *pReceiver) : CTagItemDecoderRCI(pReceiver, "cdmo") {}
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 };
+
+class CTagItemDecoderCrec : public CTagItemDecoderRCI
+{
+public:
+	CTagItemDecoderCrec(CDRMReceiver *pReceiver) : CTagItemDecoderRCI(pReceiver, "crec") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
+
+class CTagItemDecoderCpro : public CTagItemDecoderRCI
+{
+public:
+	CTagItemDecoderCpro(CDRMReceiver *pReceiver, CRSISubscriber *pSubscriber) 
+		: CTagItemDecoderRCI(pReceiver, "crec"), pRSISubscriber(pSubscriber) {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+	void SetSubscriber(CRSISubscriber *pSubscriber) {pRSISubscriber = pSubscriber;}
+private:
+	CRSISubscriber * pRSISubscriber;
+};
+
 #endif

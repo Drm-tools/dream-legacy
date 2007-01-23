@@ -59,13 +59,14 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	for (i = 0; i < iNumCarrier; i++)
 		matcHistory[iLenHistBuff - 1][i] = (*pvecInputData)[i];
 
+	const int iSymbolCounter = (*pvecInputData).GetExData().iSymbolID;
+
 
 	/* Time interpolation *****************************************************/
 #ifdef USE_DD_WIENER_FILT_TIME
 	/* For decision directed channel estimation, it is important to know the
 	   types of all cells, not only the pilot cells. Therefore, we have to take
 	   care of frame ID here, too */
-	const int iSymbolCounter = (*pvecInputData).GetExData().iSymbolID;
 
 	if (iSymbolCounter == 0)
 	{
@@ -85,6 +86,11 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	   frame number */
 	const int iCurSymbIDTiInt = (*pvecInputData).GetExData().iSymbolID;
 #endif
+
+	/* Update the pilot memory for rpil tag of RSCI */
+	UpdateRSIPilotStore(ReceiverParam, pvecInputData, ReceiverParam.matiMapTab[iCurSymbIDTiInt],
+						   ReceiverParam.matcPilotCells[iCurSymbIDTiInt], iSymbolCounter);
+
 
 	/* Get symbol-counter for next symbol. Use the count from the frame 
 	   synchronization (in OFDM.cpp). Call estimation routine */
@@ -816,6 +822,13 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iNumCarrier;
 	iMaxOutputBlockSize = iNumCarrier; 
+
+
+	/* inits for RSCI pilot store */
+	matcRSIPilotStore.Init(iNumSymPerFrame / iScatPilTimeInt, iNumCarrier/iScatPilFreqInt + 1, 
+		_COMPLEX(_REAL(0.0),_REAL(0.0)));
+	iTimeDiffAccuRSI = 0;
+
 }
 
 CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
@@ -1214,4 +1227,90 @@ void CChannelEstimation::GetAvPoDeSp(CVector<_REAL>& vecrData,
 
 	/* Release resources */
 	Unlock();
+}
+
+void CChannelEstimation::UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorEx<_COMPLEX>* pvecInputData,
+		CVector<int>& veciMapTab, CVector<_COMPLEX>& veccPilotCells, const int iSymbolCounter)
+{
+	int			j, i;
+	int			iPiHiIdx;
+	int			iTimeDiffNew;
+	_COMPLEX	cNewPilot;
+
+	/* Clear time diff accumulator at start of the frame */
+	if (iSymbolCounter == 0)
+	{
+		iTimeDiffAccuRSI = 0;
+	}
+	else
+	{
+		/* Add the latest timing step onto the reference value */
+		iTimeDiffAccuRSI += (*pvecInputData).GetExData().iCurTimeCorr;
+	}
+
+
+	/* calculate the spacing between scattered pilots in a given symbol */
+	int iScatPilFreqSpacing = iScatPilFreqInt * iScatPilTimeInt;
+
+	/* Data is stored in the array with one row per pilot repetition, and in freq order in each row */
+	/* Each row has one element per pilot-bearing carrier */
+	/* This avoids having a jagged array with different lengths in different rows */
+	int iRow = iSymbolCounter / ReceiverParam.iScatPilTimeInt;
+
+	int iScatPilFreqInt = ReceiverParam.iScatPilFreqInt;
+
+
+	/* Find the first pilot */
+	int iFirstPilotCarrier = 0;
+
+	while (!_IsScatPil(veciMapTab[iFirstPilotCarrier]) )
+		iFirstPilotCarrier += iScatPilFreqInt;
+
+
+	/* Fill in the matrix for channel estimates at the pilot positions -------- */
+	/* Step by the pilot spacing in a given symbol */
+	for (i = iFirstPilotCarrier, iPiHiIdx = iFirstPilotCarrier/iScatPilFreqInt; 
+			i < iNumCarrier; i += iScatPilFreqSpacing, iPiHiIdx+=iScatPilTimeInt)
+	{
+		/* Identify and calculate transfer function at the pilot positions */
+		if (_IsScatPil(veciMapTab[i])) /* This will almost always be true */
+		{
+			/* Add new channel estimate: h = r / s, h: transfer function of the
+			   channel, r: received signal, s: transmitted signal */
+			cNewPilot = (*pvecInputData)[i] / veccPilotCells[i];
+
+			/* We need to correct pilots due to timing corrections */
+			/* Calculate timing difference: use the one you want to correct (the current one = 0) - the reference one */
+			cNewPilot =	pTimeInt->Rotate(cNewPilot, i, -iTimeDiffAccuRSI);
+
+		}
+		else /* it must be the DC carrier in mode D. Set to complex zero */
+		{
+			cNewPilot = _COMPLEX(_REAL(0.0),_REAL(0.0));
+		}
+
+		/* Store it in the matrix */
+		matcRSIPilotStore[iRow][iPiHiIdx] = cNewPilot;
+	}
+
+	/* Is it the last symbol of the frame? If so, transfer to the CParam object for output via RSI */
+	if (iSymbolCounter == ReceiverParam.iNumSymPerFrame - 1)
+	{
+		/* copy into CParam object */
+		ReceiverParam.matcReceivedPilotValues.Init(iNumSymPerFrame / iScatPilTimeInt, iNumCarrier/iScatPilFreqInt + 1, 
+				_COMPLEX(_REAL(0.0),_REAL(0.0)));
+		//ReceiverParam.matcReceivedPilotValues = matcRSIPilotStore; // No assignment operator specified so compiler provides shallow copy
+		// copy it a row at a time (vector provides an assignment operator)
+		for (i=0; i<iNumSymPerFrame / iScatPilTimeInt; i++)
+			ReceiverParam.matcReceivedPilotValues[i] = matcRSIPilotStore[i];
+
+
+		/* clear the local copy */
+		matcRSIPilotStore.Init(iNumSymPerFrame / iScatPilTimeInt, iNumCarrier/iScatPilFreqInt + 1, 
+				_COMPLEX(_REAL(0.0),_REAL(0.0)));
+
+	}
+
+
+
 }

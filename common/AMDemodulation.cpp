@@ -31,9 +31,17 @@
 
 
 /* Implementation *************************************************************/
-void CAMDemodulation::ProcessDataInternal(CParameter&)
+void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int i;
+
+	/* OPH: update free-running symbol counter */
+	iFreeSymbolCounter++;
+	if (iFreeSymbolCounter >= ReceiverParam.iNumSymPerFrame)
+	{
+		iFreeSymbolCounter = 0;
+	}
+
 
 	/* Frequency offset estimation if requested */
 	if (FreqOffsAcq.Run(*pvecInputData))
@@ -211,6 +219,10 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 	iInputBlockSize = iSymbolBlockSize;
 	iOutputBlockSize = 2 * iSymbolBlockSize; /* Stereo */
+
+	/* OPH: init free-running symbol counter */
+	iFreeSymbolCounter = 0;
+
 }
 
 void CAMDemodulation::SetNormCurMixFreqOffs(const CReal rNewNormCurMixFreqOffs)

@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include "DataIO.h"
-
+#include <iomanip>
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -742,3 +742,175 @@ void CUtilizeSDCData::InitInternal(CParameter& ReceiverParam)
 	/* Define block-size for input */
 	iInputBlockSize = ReceiverParam.iNumSDCBitsPerSFrame;
 }
+
+
+/* CWriteIQFile : module for writing an IQ or IF file */
+
+CWriteIQFile::CWriteIQFile() : pFile(0), iFrequency(0)
+{
+}
+
+CWriteIQFile::~CWriteIQFile() 
+{
+	if (pFile != 0)
+		fclose(pFile);
+}
+
+void CWriteIQFile::StartRecording(CParameter& ReceiverParam)
+{
+	if (pFile!=0)
+		fclose(pFile);
+
+	iFrequency = ReceiverParam.ReceptLog.GetFrequency();
+
+	/* Get current UTC time */
+	time_t ltime;
+	time(&ltime);
+	struct tm* gmtCur = gmtime(&ltime);
+
+	stringstream filename;
+	filename << ReceiverParam.sReceiverID << "_";
+	filename << setw(4) << setfill('0') << gmtCur->tm_year + 1900 << "-" << setw(2) << setfill('0')<< gmtCur->tm_mon + 1;
+	filename << "-" << setw(2) << setfill('0')<< gmtCur->tm_mday << "_";
+	filename << setw(2) << setfill('0') << gmtCur->tm_hour << "-" << setw(2) << setfill('0')<< gmtCur->tm_min;
+	filename << "-" << setw(2) << setfill('0')<< gmtCur->tm_sec << "_";
+	filename << setw(8) << setfill('0') << (iFrequency*1000) << ".iq" << (SOUNDCRD_SAMPLE_RATE/1000);
+
+	pFile = fopen(filename.str().c_str(), "wb");
+
+}
+
+void CWriteIQFile::StopRecording()
+{
+	if (pFile !=0)
+		fclose (pFile);
+	pFile = 0;
+}
+
+void CWriteIQFile::NewFrequency(CParameter &ReceiverParam)
+{
+	// Has it really changed?
+	int iNewFrequency = ReceiverParam.ReceptLog.GetFrequency();
+
+	if (iNewFrequency != iFrequency)
+	{
+		iFrequency = iNewFrequency;
+
+		if (pFile != 0)
+		{
+			StopRecording();
+			StartRecording(ReceiverParam);
+		}
+	}
+
+}
+
+
+void CWriteIQFile::InitInternal(CParameter& ReceiverParam)
+{
+	/* Get parameters from info class */
+	const int iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
+
+	iInputBlockSize = iSymbolBlockSize;
+
+	/* Init temporary vector for filter input and output */
+	rvecInpTmp.Init(iSymbolBlockSize);
+	cvecHilbert.Init(iSymbolBlockSize);
+
+	/* Init mixer */
+	Mixer.Init(iSymbolBlockSize);
+
+	/* Inits for Hilbert and DC filter -------------------------------------- */
+	/* Hilbert filter block length is the same as input block length */
+	iHilFiltBlLen = iSymbolBlockSize;
+
+	/* Init state vector for filtering with zeros */
+	rvecZReal.Init(iHilFiltBlLen, (CReal) 0.0);
+	rvecZImag.Init(iHilFiltBlLen, (CReal) 0.0);
+
+	/* "+ 1" because of the Nyquist frequency (filter in frequency domain) */
+	cvecBReal.Init(iHilFiltBlLen + 1);
+	cvecBImag.Init(iHilFiltBlLen + 1);
+
+	/* FFT plans are initialized with the long length */
+	FftPlansHilFilt.Init(iHilFiltBlLen * 2);
+
+	/* Set up the band-pass filter */
+
+		/* Set internal parameter */
+	const CReal rBPNormBW = CReal(0.4);
+
+	/* Actual prototype filter design */
+	CRealVector vecrFilter(iHilFiltBlLen);
+	vecrFilter = FirLP(rBPNormBW, Nuttallwin(iHilFiltBlLen));
+
+	/* Assume the IQ will be centred on a quarter of the soundcard sampling rate (e.g. 12kHz @ 48kHz) */
+	const CReal rBPNormCentOffset = CReal(0.25);
+
+	/* Set filter coefficients ---------------------------------------------- */
+	/* Not really necessary since bandwidth will never be changed */
+	const CReal rStartPhase = (CReal) iHilFiltBlLen * crPi * rBPNormCentOffset;
+
+	/* Copy actual filter coefficients. It is important to initialize the
+	   vectors with zeros because we also do a zero-padding */
+	CRealVector rvecBReal(2 * iHilFiltBlLen, (CReal) 0.0);
+	CRealVector rvecBImag(2 * iHilFiltBlLen, (CReal) 0.0);
+	for (int i = 0; i < iHilFiltBlLen; i++)
+	{
+		rvecBReal[i] = vecrFilter[i] *
+			Cos((CReal) 2.0 * crPi * rBPNormCentOffset * i - rStartPhase);
+
+		rvecBImag[i] = vecrFilter[i] *
+			Sin((CReal) 2.0 * crPi * rBPNormCentOffset * i - rStartPhase);
+	}
+
+	/* Transformation in frequency domain for fft filter */
+	cvecBReal = rfft(rvecBReal, FftPlansHilFilt);
+	cvecBImag = rfft(rvecBImag, FftPlansHilFilt);
+
+}
+
+void CWriteIQFile::ProcessDataInternal(CParameter& ReceiverParam)
+{
+	int i;
+
+	if (pFile == 0)
+		return;
+
+	/* Band-pass filter and mixer ------------------------------------------- */
+	/* Copy CVector data in CMatlibVector */
+	for (i = 0; i < iInputBlockSize; i++)
+		rvecInpTmp[i] = (*pvecInputData)[i];
+
+	/* Cut out a spectrum part of desired bandwidth */
+	cvecHilbert = CComplexVector(
+		FftFilt(cvecBReal, rvecInpTmp, rvecZReal, FftPlansHilFilt),
+		FftFilt(cvecBImag, rvecInpTmp, rvecZImag, FftPlansHilFilt));
+
+	/* Mix it down to zero frequency */
+	Mixer.SetMixFreq(CReal(0.25));
+	Mixer.Process(cvecHilbert);
+
+	/* Write to the file */
+
+	_SAMPLE re, im;
+	_BYTE bytes[4];
+
+	CReal rScale = CReal(1.0);
+	for (i=0; i<iInputBlockSize; i++)
+	{
+		re = _SAMPLE(cvecHilbert[i].real() * rScale);
+		im = _SAMPLE(cvecHilbert[i].imag() * rScale);
+		bytes[0] = re & 0xFF;
+		bytes[1] = (re>>8) & 0xFF;
+		bytes[2] = im & 0xFF;
+		bytes[3] = (im>>8) & 0xFF;
+
+		fwrite(bytes, 4, sizeof(_BYTE), pFile);
+	}
+
+
+
+
+}
+

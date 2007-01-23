@@ -52,25 +52,18 @@ CTagPacketGenerator::CTagPacketGenerator(void) : vecTagItemGenerators(0)
 {
 }
 
-CVector<_BINARY> CTagPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC)
+CVector<_BYTE> CTagPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC)
 {
 /*
 	The AF layer encapsulates a single TAG Packet. Mandatory TAG items:
 	*ptr, dlfc, fac_, sdc_, sdci, robm, str0-3
 */
-	size_t				i;
 	CVector<_BINARY>	vecbiAFPkt;
 
 	/* Payload length in bytes */
 // TODO: check if padding bits are needed to get byte alignment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	int iPayloadLenBytes = 0;
+	int iPayloadLenBytes = GetTagPacketLength();
 		
-	for (i=0; i<vecTagItemGenerators.size(); i++)
-	{
-		int n = vecTagItemGenerators[i]->GetTotalLength() / SIZEOF__BYTE;
-		iPayloadLenBytes += n;
-	}
-
 	/* 10 bytes AF header, 2 bytes CRC, payload */
 	const int iAFPktLenBits =
 		iPayloadLenBytes * SIZEOF__BYTE + 12 * SIZEOF__BYTE;
@@ -123,10 +116,7 @@ CVector<_BINARY> CTagPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC)
 
 // TODO: copy data byte wise -> check if possible to do that...
 
-	for (i=0; i<vecTagItemGenerators.size(); i++)
-	{
-		vecTagItemGenerators[i]->PutTagItemData(vecbiAFPkt);
-	}
+	PutTagPacketData(vecbiAFPkt);
 
 	/* CRC: CRC calculated as described in annex A if the CF field is 1,
 	   otherwise 0000_[16] */
@@ -150,8 +140,46 @@ CVector<_BINARY> CTagPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC)
 	}
 	else
 		vecbiAFPkt.Enqueue((uint32_t) 0, 16);
-	return vecbiAFPkt;
+
+	return PackBytes(vecbiAFPkt);
 }
+
+CVector<_BYTE> CTagPacketGenerator::PackBytes(CVector<_BINARY> &vecbiPacket)
+{
+	/* Convert to bytes and return */
+	CVector<_BYTE> vecbyPacket;
+	vecbiPacket.ResetBitAccess();
+	size_t bits = vecbiPacket.Size();
+	size_t bytes = bits / SIZEOF__BYTE;
+	vecbyPacket.reserve(bytes);
+	for(size_t i=0; i<bytes; i++)
+	{
+	 	_BYTE byte = (_BYTE)vecbiPacket.Separate(SIZEOF__BYTE);
+		vecbyPacket.push_back(byte);
+	}
+	return vecbyPacket;
+}
+
+void CTagPacketGenerator::PutTagPacketData(CVector<_BINARY> &vecbiDestination)
+{
+	for (size_t i=0; i<vecTagItemGenerators.size(); i++)
+	{
+		vecTagItemGenerators[i]->PutTagItemData(vecbiDestination);
+	}
+}
+
+int CTagPacketGenerator::GetTagPacketLength(void)
+{
+	int iPayloadLenBytes = 0;
+		
+	for (size_t i=0; i<vecTagItemGenerators.size(); i++)
+	{
+		int n = vecTagItemGenerators[i]->GetTotalLength() / SIZEOF__BYTE;
+		iPayloadLenBytes += n;
+	}
+	return iPayloadLenBytes;
+}
+
 
 void CTagPacketGenerator::AddTagItem(CTagItemGenerator *pGenerator)
 {
@@ -169,8 +197,27 @@ void CTagPacketGeneratorWithProfiles::SetProfile(const char cProf)
 	cProfile = cProf;
 }
 
-void CTagPacketGeneratorWithProfiles::AddTagItemIfInProfile(CTagItemGeneratorWithProfiles *pGenerator)
+
+void CTagPacketGeneratorWithProfiles::PutTagPacketData(CVector<_BINARY> &vecbiDestination)
 {
-	if (pGenerator->IsInProfile(cProfile))
-		AddTagItem(pGenerator);
+	for (size_t i=0; i<vecTagItemGenerators.size(); i++)
+	{
+		if (vecTagItemGenerators[i]->IsInProfile(cProfile))
+			vecTagItemGenerators[i]->PutTagItemData(vecbiDestination);
+	}
+}
+
+int CTagPacketGeneratorWithProfiles::GetTagPacketLength(void)
+{
+	int iPayloadLenBytes = 0;
+		
+	for (size_t i=0; i<vecTagItemGenerators.size(); i++)
+	{
+		if (vecTagItemGenerators[i]->IsInProfile(cProfile))
+		{
+			int n = vecTagItemGenerators[i]->GetTotalLength() / SIZEOF__BYTE;
+			iPayloadLenBytes += n;
+		}
+	}
+	return iPayloadLenBytes;
 }

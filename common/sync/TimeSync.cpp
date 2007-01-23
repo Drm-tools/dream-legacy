@@ -48,7 +48,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 	//CReal			rFreqOffsetEst;
 	CComplexVector	cvecInpTmp;
 	CRealVector		rResMode(NUM_ROBUSTNESS_MODES);
-	int				iNewStIndCount; /* TODO is this really ever used uninitialised ? */
+	int				iNewStIndCount = 0;
 
 	/* Max number of detected peaks ("5" for safety reasons. Could be "2") */
 	CVector<int>	iNewStartIndexField(5);
@@ -386,10 +386,6 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				}
 			}
 		}
-	}
-	else
-	{
-		iNewStIndCount = 0; /* quiet compiler warning - code seems safe */
 	}
 
 	if (bTimingAcqu == TRUE)

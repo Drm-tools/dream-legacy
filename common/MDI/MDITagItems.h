@@ -43,6 +43,7 @@ public:
 	void Reset(void); // Resets bit vector to zero length (i.e. no header)
 	void GenEmptyTag(void); // Generates valid tag item with zero payload length
 	virtual ~CTagItemGenerator() {}
+	virtual _BOOLEAN IsInProfile(char cProfile);
 
 protected:
 	virtual string GetTagName(void) = 0; // Return the tag name
@@ -62,7 +63,7 @@ class CTagItemGeneratorWithProfiles : public CTagItemGenerator
 {
 public:
 	CTagItemGeneratorWithProfiles(void);
-	_BOOLEAN IsInProfile(char cProfile);
+	virtual _BOOLEAN IsInProfile(char cProfile);
 protected:
 	virtual string GetTagName(void) =0;
 //private:
@@ -309,6 +310,26 @@ class CTagItemGeneratorGPSInformation : public CTagItemGeneratorWithProfiles /* 
 {
 public:
 	void GenTag(_BOOLEAN bIsValid, CParameter::CGPSInformation& GPSInformation);
+protected:
+	virtual string GetTagName(void);
+	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
+};
+
+// oliver 17/1/2007
+class CTagItemGeneratorPowerSpectralDensity : public CTagItemGeneratorWithProfiles /* rpsd */
+{
+public:
+	void GenTag(CParameter& Parameter);
+protected:
+	virtual string GetTagName(void);
+	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
+};
+
+
+class CTagItemGeneratorPilots : public CTagItemGeneratorWithProfiles /* rpil */
+{
+public:
+	void GenTag(CParameter& Parameter);
 protected:
 	virtual string GetTagName(void);
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag

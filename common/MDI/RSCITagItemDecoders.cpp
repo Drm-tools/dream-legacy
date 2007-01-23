@@ -142,4 +142,30 @@ void CTagItemDecoderCdmo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		pDRMReceiver->SetReceiverMode(RM_AM);
 }
 
+void CTagItemDecoderCrec::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	if (iLen != 32)
+		return;
+
+	string s = "";
+	for (int i = 0; i < 2; i++)
+		s += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
+	char c3 = (char) vecbiTag.Separate(SIZEOF__BYTE);
+	char c4 = (char) vecbiTag.Separate(SIZEOF__BYTE);
+
+	if(s == "st")
+		pDRMReceiver->SetRSIRecording(c4=='1', c3);
+	if(s == "iq")
+		pDRMReceiver->SetIQRecording(c4=='1');
+}
+
+void CTagItemDecoderCpro::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	if (iLen != 8)
+		return;
+
+	char c = vecbiTag.Separate(SIZEOF__BYTE);
+	if (pRSISubscriber != NULL)
+		pRSISubscriber->SetProfile(c);
+}
 /* TODO: other control tag items */

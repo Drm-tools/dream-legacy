@@ -3,10 +3,14 @@
  * Copyright (c) 2004
  *
  * Author(s):
- *	Volker Fischer, Oliver Haffenden
+ *	Oliver Haffenden
  *
  * Description:
- *	see TagPacketDecoderRSCIControl.cpp
+ *  
+ * See PacketSinkFile.h
+ * 
+ * 
+ *	
  *
  ******************************************************************************
  *
@@ -26,37 +30,41 @@
  *
 \******************************************************************************/
 
-#ifndef TAG_PACKET_DECODER_RSCI_CONTROL_H_INCLUDED
-#define TAG_PACKET_DECODER_RSCI_CONTROL_H_INCLUDED
+#include "PacketSinkFile.h"
 
-#include "TagPacketDecoder.h"
-#include "RSCITagItemDecoders.h"
-
-class CDRMReceiver;
-class CRSISubscriber;
-
-class CTagPacketDecoderRSCIControl : public CTagPacketDecoder
+CPacketSinkRawFile::CPacketSinkRawFile()
+: pFile(0)
 {
-public:
-	// constructor: adds all of the decoders in the vocabulary to the list
-	CTagPacketDecoderRSCIControl(void);
+}
 
-	// Sets the object's pointer to the receiver which it will send commands to.
-	// This MUST be called soon after construction.
-	void SetReceiver(CDRMReceiver *pReceiver);
-	void SetSubscriber(CRSISubscriber *pSubscriber);
+void CPacketSinkRawFile::SendPacket(const vector<_BYTE> &vecbydata)
+{
+	if (pFile == 0)
+		return;
 
-private:
-	// Decoders send settings to the receiver
-	CDRMReceiver * pDRMReceiver;
+	_BYTE b;
+	for (size_t i = 0; i < vecbydata.size (); i++)
+	{
+		b = vecbydata[i];
+		fwrite(&b,1,1,pFile);
+	}
 
-	// Decoders for each of the tag items in the vocabulary
-	CTagItemDecoderCact			TagItemDecoderCact;
-	CTagItemDecoderCfre			TagItemDecoderCfre;
-	CTagItemDecoderCdmo			TagItemDecoderCdmo;
-	CTagItemDecoderCrec			TagItemDecoderCrec;
-	CTagItemDecoderCpro			TagItemDecoderCpro;
-	// TODO other RSCI control tag items
-};
+}
 
-#endif
+void CPacketSinkRawFile::StartRecording(const string strFileName)
+{
+	if (pFile != 0)
+		fclose(pFile);
+
+	pFile = fopen(strFileName.c_str(), "wb");
+
+}
+
+void CPacketSinkRawFile::StopRecording()
+{
+	if (pFile != 0)
+	{
+		fclose(pFile);
+		pFile = 0;
+	}
+}

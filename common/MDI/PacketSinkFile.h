@@ -3,10 +3,19 @@
  * Copyright (c) 2004
  *
  * Author(s):
- *	Volker Fischer, Oliver Haffenden
+ *	Oliver Haffenden
  *
  * Description:
- *	see TagPacketDecoderRSCIControl.cpp
+ *	
+ *  This defines a concrete subclass of CPacketSink that writes to a file
+ *  For the moment this will be a raw file but FF could be added as a decorator
+ *  The writing can be stopped and started - if it is not currently writing,
+ *  any packets it receives will be silently discarded
+ *  
+ *
+ *  
+ *  
+ *  
  *
  ******************************************************************************
  *
@@ -26,37 +35,24 @@
  *
 \******************************************************************************/
 
-#ifndef TAG_PACKET_DECODER_RSCI_CONTROL_H_INCLUDED
-#define TAG_PACKET_DECODER_RSCI_CONTROL_H_INCLUDED
+#ifndef PACKET_SINK_FILE_INCLUDED
+#define PACKET_SINK_FILE_INCLUDED
 
-#include "TagPacketDecoder.h"
-#include "RSCITagItemDecoders.h"
+#include "PacketInOut.h"
 
-class CDRMReceiver;
-class CRSISubscriber;
-
-class CTagPacketDecoderRSCIControl : public CTagPacketDecoder
+class CPacketSinkRawFile : public CPacketSink
 {
 public:
-	// constructor: adds all of the decoders in the vocabulary to the list
-	CTagPacketDecoderRSCIControl(void);
+	CPacketSinkRawFile();
+	virtual void SendPacket(const vector<_BYTE>& vecbydata);
+	virtual ~CPacketSinkRawFile() {}
 
-	// Sets the object's pointer to the receiver which it will send commands to.
-	// This MUST be called soon after construction.
-	void SetReceiver(CDRMReceiver *pReceiver);
-	void SetSubscriber(CRSISubscriber *pSubscriber);
+	void StartRecording(const string strFileName);
+	void StopRecording();
 
 private:
-	// Decoders send settings to the receiver
-	CDRMReceiver * pDRMReceiver;
-
-	// Decoders for each of the tag items in the vocabulary
-	CTagItemDecoderCact			TagItemDecoderCact;
-	CTagItemDecoderCfre			TagItemDecoderCfre;
-	CTagItemDecoderCdmo			TagItemDecoderCdmo;
-	CTagItemDecoderCrec			TagItemDecoderCrec;
-	CTagItemDecoderCpro			TagItemDecoderCpro;
-	// TODO other RSCI control tag items
+	FILE *pFile;
 };
+
 
 #endif

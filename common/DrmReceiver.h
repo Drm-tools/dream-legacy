@@ -141,6 +141,9 @@ public:
 	_BOOLEAN 				SetFrequency(int iNewFreqkHz);
 	int		 				GetFrequency() { return iFreqkHz; }
 
+	void SetRSIRecording(const _BOOLEAN bOn, const char cPro);
+	void SetIQRecording(const _BOOLEAN bOn);
+
 	/* Channel Estimation */
 	void SetFreqInt(CChannelEstimation::ETypeIntFreq eNewTy) 
 		{ChannelEstimation.SetFreqInt(eNewTy);}
@@ -285,6 +288,8 @@ protected:
 	CAudioSourceDecoder		AudioSourceDecoder;
 	CDataDecoder			DataDecoder;
 	CSplit					Split;
+	CSplit					SplitForIQRecord;
+	CWriteIQFile			WriteIQFile;
 	CSplitFAC				SplitFAC;
 	CSplitSDC				SplitSDC;
 	CSplitMSC				SplitMSC[MAX_NUM_STREAMS];
@@ -306,6 +311,9 @@ protected:
 	CSingleBuffer<_REAL>			AMSSPhaseBuf;
 	CCyclicBuffer<_REAL>			AMSSResPhaseBuf;
 	CCyclicBuffer<_BINARY>			AMSSBitsBuf;
+
+	CSingleBuffer<_REAL>			DemodDataBuf;
+	CSingleBuffer<_REAL>			IQRecordDataBuf;
 
 	CSingleBuffer<_REAL>			RecDataBuf;
 	CCyclicBuffer<_REAL>			InpResBuf;

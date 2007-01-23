@@ -2848,6 +2848,48 @@
 							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
+				<File
+					RelativePath="..\common\MDI\PacketSinkFile.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				<File
+					RelativePath="..\common\MDI\RSISubscriber.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\common\MDI\Pft.cpp"
@@ -3388,6 +3430,14 @@
 				</File>
 				<File
 					RelativePath="..\common\MDI\PacketSocketQT.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\MDI\PacketSinkFile.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\MDI\RSISubscriber.h"
 					>
 				</File>
 				<File

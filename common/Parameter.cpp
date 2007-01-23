@@ -1173,7 +1173,7 @@ void CParameter::SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr)
 	rSigStr = rNewSigStr;
 }
 
-_BOOLEAN CParameter::GetSignalStrength(_REAL rSigStr)
+_BOOLEAN CParameter::GetSignalStrength(_REAL &rSigStr)
 {
 	/* see if we can pull a local value from the receiver */
 	_REAL r;
@@ -1349,4 +1349,34 @@ _BOOLEAN CParameter::CGPSInformation::SetLatLongDegreesMinutes(const string& sNe
 		rLongitudeDegrees *= -1;
 
 	return TRUE;
+}
+
+void CParameter::GenerateRandomSerialNumber()
+{
+        //seed random number generator
+        srand(time(0));
+
+
+        char randomChars[36];
+
+
+        for (int q=0; q < 36; q++)
+        {
+                if (q < 26)
+                        randomChars[q] = q+97;
+                else
+                        randomChars[q] = (q-26)+48;
+        }
+
+
+        char serialNumTemp[7];
+                        
+        for (int i=0; i < 6; i++)
+                serialNumTemp[i] = randomChars[(int) 35.0*rand()/RAND_MAX];
+
+
+        serialNumTemp[6] = '\0';
+
+
+        sSerialNumber = serialNumTemp;
 }

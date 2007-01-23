@@ -42,7 +42,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 								  ESpecOcc eNewSpectOccup)
 {
 	int				iNoMSCDummyCells; /* Number of MSC dummy cells */
-	int				iNumTimePilots; /* Number of time pilots per frame */
+	int				iNumTimePilots=0; /* Number of time pilots per frame */
 	CScatPilots		ScatPilots;
 	int				iSym;
 	int				iFrameSym;
@@ -53,11 +53,11 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	int				iFACCounter;
 	int				iScatPilPhase;
 	int				iCarArrInd;
-	int				iSpecOccArrayIndex;
+	int				iSpecOccArrayIndex=0;
 	/* Tables */
-	const int*		piTableFAC;
-	const int*		piTableTimePilots;
-	const int*		piTableFreqPilots;
+	const int*		piTableFAC=NULL;
+	const int*		piTableTimePilots=NULL;
+	const int*		piTableFreqPilots=NULL;
 
 
 	/* Set Parameters and pointers to the tables ******************************/
@@ -252,6 +252,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	   definitions! E.g., first define all carriers as MSC cells */
 	iFreqPilotsCounter = 0;
 	iTimePilotsCounter = 0;
+	iFACCounter = 0;
 	for (iSym = 0; iSym < iNumSymbolsPerSuperframe; iSym++)
 	{
 		/* Frame symbol: Counts symbols in one frame, not super frame! */

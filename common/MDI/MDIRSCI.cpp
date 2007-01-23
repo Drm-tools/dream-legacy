@@ -48,7 +48,8 @@
 /* Implementation *************************************************************/
 CRSIMDIOutRCIIn::CRSIMDIOutRCIIn() : iLogFraCnt(0),
 	bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE),
-	vecTagItemGeneratorStr(MAX_NUM_STREAMS), vecTagItemGeneratorRBP(MAX_NUM_STREAMS)
+	vecTagItemGeneratorStr(MAX_NUM_STREAMS), vecTagItemGeneratorRBP(MAX_NUM_STREAMS),
+	vecRSISubscribers(0)
 {
 	/* Initialise all the generators for strx and rbpx tags */
 	for (int i=0; i<MAX_NUM_STREAMS; i++)
@@ -66,12 +67,14 @@ CRSIMDIOutRCIIn::CRSIMDIOutRCIIn() : iLogFraCnt(0),
 
 
 	/* Default settings for the "special protocol settings" ----------------- */
-	/* Use CRC for AF packets */
-	bUseAFCRC = TRUE;
 	/* default profile, otherwise using --rsiout with no --rsioutprofile generates empty
 	 * AF packets
 	 */
-	cProfile = 'A';
+	SetProfile('A');
+
+
+	/* Add the file subscriber to the list of subscribers */
+	vecRSISubscribers.Add(&RSISubscriberFile);
 
 }
 
@@ -112,6 +115,8 @@ void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
 	TagItemGeneratorReceiverStatus.GenTag(Parameter);
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
+	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
+	TagItemGeneratorPilots.GenTag(Parameter);
 
 
 	/* Generate some other tags */
@@ -124,28 +129,37 @@ void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
 	
 	TagItemGeneratorGPSInformation.GenTag(Parameter.GPSInformation.GetUse(), Parameter.GPSInformation);	/* rgps */
 	
-	CVector<_BINARY> packet = GenMDIPacket();
-   	TransmitPacket(packet);
+	GenMDIPacket();
 }
 
 void CRSIMDIOutRCIIn::SendUnlockedFrame(CParameter& Parameter)
 {
 	/* This is called once per frame if the receiver is unlocked */
 
-	/* In the MDI profile, ignore this altogether since I assume there's no point */
-	/* in generating empty packets with no reception monitoring information */
-	if (cProfile == 'M')
-		return;
+	/* In the MDI profile, we used to ignore this altogether since "I assume there's no point */
+	/* in generating empty packets with no reception monitoring information" */
+	/* But now there could be multiple profiles at the same time. TODO: decide what to do! */
+/*	if (cProfile == 'M')
+		return;*/
 
 	/* Send empty tags for most tag items */
 	ResetTags();
 
+	TagItemGeneratorFAC.GenEmptyTag();
+	TagItemGeneratorSDC.GenEmptyTag();
+
 	/* mode is unknown - make empty robm tag */
 	TagItemGeneratorRobMod.GenEmptyTag();
+
+	TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode());
 
 	TagItemGeneratorSDCChanInf.GenEmptyTag();
 
 	TagItemGeneratorReceiverStatus.GenTag(Parameter);
+
+	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
+
+	TagItemGeneratorPilots.GenEmptyTag();
 
 	/* Generate some other tags */
 	TagItemGeneratorInfo.GenTag(Parameter.sReceiverID);	/* rinf */
@@ -160,20 +174,63 @@ void CRSIMDIOutRCIIn::SendUnlockedFrame(CParameter& Parameter)
 	
 	TagItemGeneratorGPSInformation.GenTag(Parameter.GPSInformation.GetUse(), Parameter.GPSInformation);	/* rgps */
 
-	TransmitPacket(GenMDIPacket());
+	GenMDIPacket();
 }
 
-void CRSIMDIOutRCIIn::SendAMFrame(CParameter&)
+void CRSIMDIOutRCIIn::SendAMFrame(CParameter& Parameter)
 {
+		/* This is called once per 400ms if the receiver is in AM mode */
+
+	/* In the MDI profile, ignore this altogether since there's no DRM information */
+	/*if (cProfile == 'M')
+		return;*/
+
+	/* Send empty tags for most tag items */
+	ResetTags();
+
+	TagItemGeneratorFAC.GenEmptyTag();
+	TagItemGeneratorSDC.GenEmptyTag();
+	/* mode is unknown - make empty robm tag */
+	TagItemGeneratorRobMod.GenEmptyTag();
+
+	/* demod mode */
+	TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode());
+
+	TagItemGeneratorSDCChanInf.GenEmptyTag();
+
+	/* These will be set appropriately when the rx is put into AM mode */
+	/* We need to decide what "appropriate" settings are */
+	TagItemGeneratorReceiverStatus.GenTag(Parameter); 
+
+	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
+
+	TagItemGeneratorPilots.GenEmptyTag();
+
+	/* Generate some other tags */
+	TagItemGeneratorInfo.GenTag(Parameter.sReceiverID);	/* rinf */
+	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
+	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
+	_REAL rSigStr = 0.0;
+	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
+	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
+
+	if (Parameter.GPSInformation.GetGPSSource() == CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY)
+		Parameter.GPSInformation.SetPositionAvailable(Parameter.GPSInformation.SetLatLongDegreesMinutes(Parameter.ReceptLog.GetLatitude(), Parameter.ReceptLog.GetLongitude()));
+	
+	TagItemGeneratorGPSInformation.GenTag(Parameter.GPSInformation.GetUse(), Parameter.GPSInformation);	/* rgps */
+
+	// TransmitPacket(GenMDIPacket());
+	GenMDIPacket();
+
 }
 
 void CRSIMDIOutRCIIn::SetReceiver(CDRMReceiver *pReceiver)
 {
-	TagPacketDecoderRSCIControl.SetReceiver(pReceiver);
+	RSISubscriberSocketMain.SetReceiver(pReceiver);
 }
 
 /* Actual MDI protocol implementation *****************************************/
-CVector<_BINARY> CRSIMDIOutRCIIn::GenMDIPacket()
+void CRSIMDIOutRCIIn::GenMDIPacket()
 {
 	/* Reset the tag packet generator */
 	TagPacketGenerator.Reset();
@@ -188,65 +245,75 @@ CVector<_BINARY> CRSIMDIOutRCIIn::GenMDIPacket()
 	TagItemGeneratorProfile.GenTag(cProfile);
 
 	/* dlfc tag */
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorLoFrCnt);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorLoFrCnt);
 
 	/* *ptr tag */
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorProTyMDI);
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorProTyRSCI);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyMDI);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyRSCI);
 
 	/* rinf taf */
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorInfo);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorInfo);
 
 	/* rgps tag */
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorGPSInformation);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorGPSInformation);
 
 	/* rpro tag */
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorProfile);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorProfile);
 
 	/* rdmo - note that this is currently empty */
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorRxDemodMode);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorRxDemodMode);
 
 	/* ract */
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorRxActivated);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorRxActivated);
 
 	/* rfre tag */
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorRxFrequency);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorRxFrequency);
 
 	/* fac_ tag */
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorFAC);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorFAC);
 
 	/* sdc_ tag */
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorSDC);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorSDC);
 
 	/* sdci tag */
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorSDCChanInf);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorSDCChanInf);
 
 	/* robm tag */
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorRobMod);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorRobMod);
 
 	/* strx tag */
-	int j;
-	for (j = 0; j < MAX_NUM_STREAMS; j++)
+	size_t i;
+	for (i = 0; i < MAX_NUM_STREAMS; i++)
 	{
-		TagPacketGenerator.AddTagItemIfInProfile(&vecTagItemGeneratorStr[j]);
+		TagPacketGenerator.AddTagItem(&vecTagItemGeneratorStr[i]);
 	}
 
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorSignalStrength);
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorRAFS);
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorRMER);
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorRWMM);
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorRWMF);
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorRDEL);
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorRDOP);
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorRINT);
-	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorReceiverStatus);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorSignalStrength);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorRAFS);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorRMER);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorRWMM);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorRWMF);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorRDEL);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorRDOP);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorRINT);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorReceiverStatus);
 
-	for (j = 0; j < MAX_NUM_STREAMS; j++)
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorPowerSpectralDensity);
+
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorPilots);
+
+
+	for (i = 0; i < MAX_NUM_STREAMS; i++)
 	{
-		TagPacketGenerator.AddTagItemIfInProfile(&vecTagItemGeneratorRBP[j]);
+		TagPacketGenerator.AddTagItem(&vecTagItemGeneratorRBP[i]);
 	}
 
-	return TagPacketGenerator.GenAFPacket(bUseAFCRC);
+	/*return TagPacketGenerator.GenAFPacket(bUseAFCRC);*/
+
+	/* transmit a packet to each subscriber */
+	for (i = 0; i < vecRSISubscribers.size(); i++)
+		vecRSISubscribers[i]->TransmitPacket(&TagPacketGenerator);
+
 }
 
 void CRSIMDIOutRCIIn::ResetTags()
@@ -262,6 +329,9 @@ void CRSIMDIOutRCIIn::ResetTags()
 
 	TagItemGeneratorProfile.Reset(); /* rpro */
 	TagItemGeneratorGPSInformation.Reset();	/* rgps */
+
+	TagItemGeneratorPowerSpectralDensity.Reset();
+	TagItemGeneratorPilots.Reset();
 
 	/* This group of tags might not be generated, so make an empty version in case */
 	
@@ -300,11 +370,9 @@ void CRSIMDIOutRCIIn::SetInAddr(const string& strAddr)
 
 #ifdef USE_QT_GUI
 	// Delegate to socket
-	_BOOLEAN bOK = PacketSocket.SetNetwInAddr(strAddr);
+	_BOOLEAN bOK = RSISubscriberSocketMain.SetInAddr(strAddr);
+	(void)bOK;
 
-	if (bOK)
-		// Connect socket to the MDI decoder
-		PacketSocket.SetPacketSink(this);
 #endif
 }
 
@@ -313,50 +381,48 @@ void CRSIMDIOutRCIIn::SetOutAddr(const string& strArgument)
 	_BOOLEAN bAddressOK = TRUE;
 	// Delegate to socket
 #ifdef USE_QT_GUI
-	bAddressOK = PacketSocket.SetNetwOutAddr(strArgument);
+	bAddressOK = RSISubscriberSocketMain.SetOutAddr(strArgument);
 #endif
 
 	// If successful, set flag to enable MDI output
 	if (bAddressOK)
+	{
 		SetEnableMDIOut(TRUE);
+		vecRSISubscribers.Add(&RSISubscriberSocketMain);
+	}
 }
 
 void CRSIMDIOutRCIIn::SetProfile(const char c)
 {
+	RSISubscriberSocketMain.SetProfile(c);
 	cProfile = c;
 }
 
-#ifdef USE_QT_GUI
-void CRSIMDIOutRCIIn::SendPacket(const vector<_BYTE>& vecbydata)
+void CRSIMDIOutRCIIn::SetAFPktCRC(const _BOOLEAN bNAFPktCRC)
 {
-	CVectorEx<_BINARY> vecbidata;
-	vecbidata.Init(vecbydata.size()*SIZEOF__BYTE);
-	vecbidata.ResetBitAccess();
-	for(size_t i=0; i<vecbydata.size(); i++)
-		vecbidata.Enqueue(vecbydata[i], SIZEOF__BYTE);
-	CTagPacketDecoder::Error err = 
-		TagPacketDecoderRSCIControl.DecodeAFPacket(vecbidata);
-	if(err != CTagPacketDecoder::E_OK)
-		cerr << "bad RSCI Control Packet Received" << endl;
+	RSISubscriberSocketMain.SetAFPktCRC(bNAFPktCRC);
 }
-#endif
 
-void CRSIMDIOutRCIIn::TransmitPacket(CVector<_BINARY> vecbidata)
+void CRSIMDIOutRCIIn::SetRSIRecording(CParameter& Parameter, const _BOOLEAN bOn, const char cPro)
 {
-	vector<_BYTE> packet;
-	vecbidata.ResetBitAccess();
-	size_t bits = vecbidata.Size();
-	size_t bytes = bits / SIZEOF__BYTE;
-	packet.reserve(bytes);
-	for(size_t i=0; i<bytes; i++)
+	if (bOn)
 	{
-	 	_BYTE byte = (_BYTE)vecbidata.Separate(SIZEOF__BYTE);
-		packet.push_back(byte);
+		RSISubscriberFile.SetProfile(cPro);
+		RSISubscriberFile.StartRecording(Parameter);
+		bMDIOutEnabled = TRUE;
 	}
-#ifdef USE_QT_GUI
-	PacketSocket.SendPacket(packet);
-#endif
+	else
+	{
+		RSISubscriberFile.StopRecording();
+	}
 }
+
+ /* needs to be called in case a new RSCI file needs to be started */
+void CRSIMDIOutRCIIn::NewFrequency(CParameter& Parameter)
+{
+	RSISubscriberFile.NewFrequency(Parameter);
+}
+
 
 /******************************************************************************\
 * MDI receive                                                                  *
@@ -399,8 +465,12 @@ _BOOLEAN CRSIMDIInRCIOut::SetFrequency(int iNewFreqkHz)
 	TagItemGeneratorCfre.GenTag(iNewFreqkHz);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyRSCI);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorCfre);
-	CVector<_BINARY> packet = TagPacketGenerator.GenAFPacket(bUseAFCRC);
-   	TransmitPacket(packet);
+	CVector<_BYTE> packet = TagPacketGenerator.GenAFPacket(bUseAFCRC);
+
+#ifdef USE_QT_GUI
+	PacketSocket.SendPacket(packet);
+#endif
+
 	return TRUE;
 }
 

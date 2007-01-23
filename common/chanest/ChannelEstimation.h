@@ -212,6 +212,11 @@ protected:
 
 	/* OPH: RSCI interference tag calculation */
 	void CalculateRint(CParameter& ReceiverParam);
+	void UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorEx<_COMPLEX>* pvecInputData,
+		CVector<int>& veciMapTab, CVector<_COMPLEX>& veccPilotCells, const int iSymbolCounter);
+
+	CMatrix<_COMPLEX>	matcRSIPilotStore;
+	int iTimeDiffAccuRSI; /* Accumulator for time differences for RSI pilot output */
 
 	/* Wiener interpolation in frequency direction */
 	void UpdateWienerFiltCoef(CReal rNewSNR, CReal rRatPDSLen,

@@ -56,8 +56,10 @@ CPacketSocketQT::CPacketSocketQT ():
 
 CPacketSocketQT::~CPacketSocketQT()
 {
+	/* this class doesn't own the packet Sink object!
 	if(pPacketSink)
 		delete pPacketSink;
+	*/
 
 	if(pSocketNotivRead)
 	{

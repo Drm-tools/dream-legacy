@@ -588,6 +588,14 @@ SOURCE=..\common\MDI\PacketSocketQT.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\MDI\PacketSinkFile.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\RSISubscriber.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\MDI\RSCITagItemDecoders.cpp
 # End Source File
 # Begin Source File
@@ -1033,6 +1041,14 @@ SOURCE=..\common\MDI\PacketSocketNull.h
 # Begin Source File
 
 SOURCE=..\common\MDI\PacketSocketQT.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\PacketSinkFile.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\RSISubscriber.h
 # End Source File
 # Begin Source File
 

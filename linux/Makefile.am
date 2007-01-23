@@ -56,7 +56,9 @@ drmwithoutqt_SOURCES = \
 	../common/MDI/MDITagItemDecoders.cpp \
 	../common/MDI/MDITagItems.cpp \
 	../common/MDI/RCITagItems.cpp \
+	../common/MDI/RSISubscriber.cpp \
 	../common/MDI/PacketSocketNull.cpp \
+	../common/MDI/PacketSinkFile.cpp \
 	../common/MDI/RSCITagItemDecoders.cpp \
 	../common/MDI/TagPacketDecoder.cpp \
 	../common/MDI/TagPacketDecoderMDI.cpp \
@@ -136,6 +138,7 @@ drmwithoutqt_SOURCES = \
 	../common/MDI/MDITagItemDecoders.h \
 	../common/MDI/MDITagItems.h \
 	../common/MDI/RCITagItems.h \
+	../common/MDI/RSISubscriber.h \
 	../common/MDI/TagPacketDecoderMDI.h \
 	../common/MDI/PacketInOut.h \
 	../common/MDI/PacketSocketNull.h \
@@ -209,6 +212,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/EPGDlg.h \
 	../common/GUI-QT/AnalogDemDlg.h \
 	../common/MDI/PacketSocketQT.h \
+	../common/MDI/PacketSinkFile.h \
 	../common/datadecoding/epg/epgdec.h \
 	../common/datadecoding/epg/epgdec.cpp \
 	../common/datadecoding/epg/EPG.cpp \

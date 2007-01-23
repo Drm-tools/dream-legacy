@@ -39,6 +39,7 @@
 #include "TextMessage.h"
 #include "util/AudioFile.h"
 #include "util/Utilities.h"
+#include "AMDemodulation.h" // For CMixer
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
 #else
@@ -276,6 +277,41 @@ protected:
 			(*pvecOutputData2)[i] = (*pvecInputData)[i];
 		}
 	}
+};
+
+
+class CWriteIQFile : public CReceiverModul<_REAL, _REAL>
+{
+public:
+	CWriteIQFile();
+	virtual ~CWriteIQFile();
+
+	void StartRecording(CParameter& ReceiverParam);
+	void StopRecording();
+
+	void NewFrequency(CParameter &ReceiverParam);
+
+protected:
+	FILE *					pFile;
+	CVector<_SAMPLE>		vecsTmpAudData;
+
+	virtual void InitInternal(CParameter& ReceiverParam);
+	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+
+	/* For doing the IF to IQ conversion (stolen from AM demod) */
+	CRealVector					rvecInpTmp;
+	CComplexVector				cvecHilbert;
+	int							iHilFiltBlLen;
+	CFftPlans					FftPlansHilFilt;
+
+	CComplexVector				cvecBReal;
+	CComplexVector				cvecBImag;
+	CRealVector					rvecZReal;
+	CRealVector					rvecZImag;
+
+	CMixer						Mixer;
+
+	int							iFrequency; // For use in generating filename
 };
 
 

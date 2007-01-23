@@ -40,6 +40,8 @@
 #include "MDITagItems.h"
 #include <iostream>
 
+#include "../util/LogPrint.h"
+
 CTagItemGeneratorWithProfiles::CTagItemGeneratorWithProfiles()
 {
 }
@@ -49,10 +51,15 @@ _BOOLEAN CTagItemGeneratorWithProfiles::IsInProfile(char cProfile)
 	string strProfiles = GetProfiles();
 
 	for (size_t i=0; i<strProfiles.length(); i++)
-		if (strProfiles[i] == cProfile)
+		if (strProfiles[i] == char(toupper(cProfile)))
 			return TRUE;
 
 		return FALSE;
+}
+
+_BOOLEAN CTagItemGenerator::IsInProfile(char cProfile)
+{
+	return TRUE;
 }
 
 /* Default implementation: unless otherwise specified, tag will be in all RSCI profiles, but not MDI */
@@ -533,7 +540,7 @@ void CTagItemGeneratorProfile::GenTag(const char cProfile)
 string CTagItemGeneratorProfile::GetTagName(void) {return "rpro";}
 string CTagItemGeneratorProfile::GetProfiles(void) {return "ABCDQ";}
 
-void CTagItemGeneratorRxDemodMode::GenTag(ERecMode eMode) // rdmo
+void CTagItemGeneratorRxDemodMode::GenTag(const ERecMode eMode) // rdmo
 {
 	PrepareTag(4*SIZEOF__BYTE);
 	switch (eMode)
@@ -861,3 +868,112 @@ void CTagItemGeneratorGPSInformation::GenTag(_BOOLEAN bIsValid, CParameter::CGPS
 
 string CTagItemGeneratorGPSInformation::GetTagName(void) {return "rgps";}
 string CTagItemGeneratorGPSInformation::GetProfiles(void) {return "AD";}
+
+void CTagItemGeneratorPowerSpectralDensity::GenTag(CParameter &Parameter)
+{
+	PrepareTag(Parameter.vecrPSD.Size() * SIZEOF__BYTE);
+
+	for (int i=0; i< Parameter.vecrPSD.Size(); i++)
+	{
+		uint32_t p = uint8_t(Parameter.vecrPSD[i] * _REAL(-2.0));
+		Enqueue((uint32_t) p, SIZEOF__BYTE);
+	}
+
+}
+
+string CTagItemGeneratorPowerSpectralDensity::GetTagName(void) {return "rpsd";}
+string CTagItemGeneratorPowerSpectralDensity::GetProfiles(void) {return "AD";}
+
+string CTagItemGeneratorPilots::GetTagName(void) {return "rpil";}
+string CTagItemGeneratorPilots::GetProfiles(void) {return "AD";}
+
+void CTagItemGeneratorPilots::GenTag(CParameter &Parameter)
+{
+	// Get parameters from parameter struct 
+	int iScatPilTimeInt = Parameter.iScatPilTimeInt;
+	int iScatPilFreqInt = Parameter.iScatPilFreqInt;
+	int iNumCarrier = Parameter.iNumCarrier;
+	int iNumSymPerFrame = Parameter.iNumSymPerFrame;
+	/* do we need these ? */
+	//int iNumIntpFreqPil = Parameter.iNumIntpFreqPil;
+	//int iFFTSizeN = Parameter.iFFTSizeN;
+
+	// calculate the spacing between scattered pilots in a given symbol
+	int iScatPilFreqSpacing = iScatPilFreqInt * iScatPilTimeInt;
+
+	// Calculate how long the tag will be and write the fields that apply to the whole frame 
+
+	// Total number of pilots = number of pilot bearing carriers * number of pilot pattern repeats per frame 
+	// NB the DC carrier in mode D is INCLUDED in this calculation (and in the tag) 
+	int iTotalNumPilots = ((iNumCarrier-1)/iScatPilFreqInt + 1) * iNumSymPerFrame/iScatPilTimeInt;
+
+	int iTagLen = 4*SIZEOF__BYTE; // first 4 bytes apply to the whole frame 
+	iTagLen += iNumSymPerFrame * 4 * SIZEOF__BYTE; // 4 bytes at start of each symbol (spec typo?) 
+	iTagLen += iTotalNumPilots*2*2*SIZEOF__BYTE; // 4 bytes per pilot value (2 byte re, 2 byte imag) 
+
+	logStatus("rpil gentag: pilots %d tag length %d", iTotalNumPilots, iTagLen);
+
+	PrepareTag(iTagLen);
+
+	// fields for the whole frame 
+	Enqueue((uint32_t) iNumSymPerFrame, SIZEOF__BYTE); // SN = number of symbols 
+	Enqueue((uint32_t) iScatPilTimeInt, SIZEOF__BYTE); // SR = symbol repetition 
+	Enqueue((uint32_t) 0, 2*SIZEOF__BYTE);  // rfu 
+
+	// Now do each symbol in turn 
+	for (int iSymbolNumber = 0; iSymbolNumber<iNumSymPerFrame; iSymbolNumber++)
+	{		
+		// Which row of the matrix? 
+		int iRow = iSymbolNumber / iScatPilTimeInt;
+		int i,iCarrier;
+
+		// Find the first pilot in this symbol (this could be calculated directly, but that calculation would belong in the CellMappingTable class)
+		int iFirstPilotCarrier = 0;
+
+		while (!_IsScatPil(Parameter.matiMapTab[iSymbolNumber][iFirstPilotCarrier]) )
+		{
+			iFirstPilotCarrier += iScatPilFreqInt;
+		}
+
+		// Find the biggest value we need to represent for this symbol 
+
+		_REAL rMax = _REAL(0.0);
+		int iNumPilots = 0;
+
+		// Start from first pilot and step by the pilot spacing (iScatPilFreqInt*iScatPilTimeInt) 
+		for (i=iFirstPilotCarrier/iScatPilFreqInt, iCarrier = iFirstPilotCarrier; 
+			iCarrier < iNumCarrier; i+=iScatPilTimeInt, iCarrier+=iScatPilFreqSpacing)
+		{
+			iNumPilots ++;
+			// Is it really a pilot? This will be false only in Mode D for the DC carrier 
+			if ( _IsScatPil(Parameter.matiMapTab[iSymbolNumber][iCarrier]))
+			{
+				_COMPLEX cPil = Parameter.matcReceivedPilotValues[iRow][i];
+				if (cPil.real() > rMax) rMax = cPil.real();
+				if (-cPil.real() > rMax) rMax = -cPil.real();
+				if (cPil.imag() > rMax) rMax = cPil.imag();
+				if (-cPil.imag() > rMax) rMax = -cPil.imag();
+			}
+		}
+
+		// Calculate the exponent for the block 
+		_REAL rExponent = Ceil(Log(rMax)/Log(_REAL(2.0)));
+		_REAL rScale = 32767 * pow(_REAL(2.0), -rExponent);
+
+		logStatus("max=%f, exponent=%f, scale=%f", rMax, rExponent, rScale);
+		// Put to the tag 
+		Enqueue((uint32_t) iNumPilots, SIZEOF__BYTE); // PN = number of pilots 
+		Enqueue((uint32_t) iFirstPilotCarrier, SIZEOF__BYTE); // PO = pilot offset 
+		Enqueue((uint32_t) rExponent, 2*SIZEOF__BYTE);
+
+		// Step through the pilots again and write the values 
+		for (i=iFirstPilotCarrier/iScatPilFreqInt, iCarrier=iFirstPilotCarrier; 
+				iCarrier<iNumCarrier; i+=iScatPilTimeInt, iCarrier += iScatPilFreqSpacing)
+		{
+			Enqueue((uint32_t) (Parameter.matcReceivedPilotValues[iRow][i].real() * rScale), 2*SIZEOF__BYTE);
+			Enqueue((uint32_t) (Parameter.matcReceivedPilotValues[iRow][i].imag() * rScale), 2*SIZEOF__BYTE);				
+		}
+
+	} // next symbol
+
+}

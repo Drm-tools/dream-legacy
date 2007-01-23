@@ -428,7 +428,19 @@ void CSettings::ReadIniFile()
 		pDRMRec->GetParameters()->GPSInformation.SetGPSSource(CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY);
 
 	/* Serial Number */
-	pDRMRec->GetParameters()->sSerialNumber = GetIniSetting(ini, "Receiver", "serialnumber");
+	string sTempSerialNumber = GetIniSetting(ini, "Receiver", "serialnumber");
+	if (sTempSerialNumber == "")
+		pDRMRec->GetParameters()->GenerateRandomSerialNumber();
+	else
+        pDRMRec->GetParameters()->sSerialNumber = sTempSerialNumber;
+
+	if (pDRMRec->GetParameters()->sSerialNumber.length() > 6)
+		pDRMRec->GetParameters()->sSerialNumber.erase(6, pDRMRec->GetParameters()->sSerialNumber.length()-6);
+
+	// Pad to a minimum of 6 characters
+	while (pDRMRec->GetParameters()->sSerialNumber.length() < 6)
+		pDRMRec->GetParameters()->sSerialNumber += "_";
+		
 	GenerateReceiverID();
 }
 
@@ -1160,6 +1172,19 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			continue;
 		}
 
+		if (GetStringArgument(argc, argv, i, "--rsirecordprofile", "--rsirecordprofile", 
+			strArgument) == TRUE)
+		{
+			pDRMRec->SetRSIRecording(TRUE, strArgument[0]);
+			continue;
+		}
+
+		if (GetNumericArgument(argc, argv, i, "--recordiq", "--recordiq", 0, 1, rArgument) == TRUE)
+		{
+			pDRMRec->SetIQRecording(rArgument==1);
+			continue;
+		}
+
 #ifdef HAVE_LIBHAMLIB
 		/* Hamlib config string --------------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "-C", "--hamlib-config",
@@ -1557,7 +1582,7 @@ void CSettings::GenerateReceiverID()
 	unsigned int iMajor = 0;
 	unsigned int iMinor = 0;
 
-	pDRMRec->GetParameters()->sReceiverID = "drem";
+	pDRMRec->GetParameters()->sReceiverID = "drea";
 
 	sVer = dream_version;
 
@@ -1576,9 +1601,6 @@ void CSettings::GenerateReceiverID()
 	ssInfoVer << setw(2) << setfill('0') << iImplementation << setw(2) << setfill('0') << iMajor << setw(2) << setfill('0') << iMinor;
 
 	pDRMRec->GetParameters()->sReceiverID += ssInfoVer.str();
-
-	if (pDRMRec->GetParameters()->sSerialNumber.length() > 6)
-		pDRMRec->GetParameters()->sSerialNumber.erase(6, pDRMRec->GetParameters()->sSerialNumber.length()-6);
 
 	pDRMRec->GetParameters()->sReceiverID += pDRMRec->GetParameters()->sSerialNumber;
 }

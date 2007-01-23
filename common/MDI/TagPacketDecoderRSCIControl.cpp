@@ -44,11 +44,15 @@ CTagPacketDecoderRSCIControl::CTagPacketDecoderRSCIControl(void)
 , TagItemDecoderCact(NULL)
 , TagItemDecoderCfre(NULL)
 , TagItemDecoderCdmo(NULL)
+, TagItemDecoderCrec(NULL)
+, TagItemDecoderCpro(NULL, NULL)
 {
 	// Add each tag item decoder to the vocabulary
 	AddTagItemDecoder(&TagItemDecoderCact);
 	AddTagItemDecoder(&TagItemDecoderCfre);
 	AddTagItemDecoder(&TagItemDecoderCdmo);
+	AddTagItemDecoder(&TagItemDecoderCrec);
+	AddTagItemDecoder(&TagItemDecoderCpro);
 }
 
 
@@ -58,4 +62,10 @@ void CTagPacketDecoderRSCIControl::SetReceiver(CDRMReceiver *pReceiver)
 	TagItemDecoderCact.SetReceiver(pReceiver);
 	TagItemDecoderCfre.SetReceiver(pReceiver);
 	TagItemDecoderCdmo.SetReceiver(pReceiver);
+	TagItemDecoderCrec.SetReceiver(pReceiver);
+}
+
+void CTagPacketDecoderRSCIControl::SetSubscriber(CRSISubscriber *pSubscriber)
+{
+	TagItemDecoderCpro.SetSubscriber(pSubscriber);
 }

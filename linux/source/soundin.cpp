@@ -42,7 +42,7 @@
 #include <sys/soundcard.h>
 #include <errno.h>
 
-CSoundIn::CSoundIn():iCurrentDevice(-1),dev(),names(),devices()
+CSoundIn::CSoundIn():devices(),dev(),names(),iCurrentDevice(-1)
 {
 	RecThread.pSoundIn = this;
 	getdevices(names, devices, false);
@@ -52,18 +52,6 @@ CSoundIn::CSoundIn():iCurrentDevice(-1),dev(),names(),devices()
 
 void CSoundIn::Init_HW()
 {
-	int arg;      /* argument for ioctl calls */
-	int status;   /* return status of system calls */
-	
-#if 0
-	if (dev.fildes() >0) 
-	{
-#ifdef USE_QT_GUI
-//		qDebug("already open");
-#endif
-		return;	// already open
-	}
-#endif
 	/* Open sound device (Use O_RDWR only when writing a program which is
 	   going to both record and play back digital audio) */
 	if(devices.size()==0)
@@ -74,7 +62,7 @@ void CSoundIn::Init_HW()
 		iCurrentDevice = devices.size()-1;
 
 	/* out of range ? (could happen from command line parameter or USB device unplugged */
-	if(iCurrentDevice >= devices.size())
+	if(iCurrentDevice >= int(devices.size()))
 		iCurrentDevice = devices.size()-1;
 
 	string devname = devices[iCurrentDevice];
