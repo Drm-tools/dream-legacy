@@ -2848,6 +2848,7 @@
 							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
+				</File>
 				<File
 					RelativePath="..\common\MDI\PacketSinkFile.cpp"
 					>
@@ -2869,6 +2870,7 @@
 							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
+				</File>
 				<File
 					RelativePath="..\common\MDI\RSISubscriber.cpp"
 					>
