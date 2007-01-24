@@ -58,7 +58,7 @@
 				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
-				DisableSpecificWarnings="4521;4189"
+				DisableSpecificWarnings="4521;4189;4505"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -155,7 +155,7 @@
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
-				DisableSpecificWarnings="4521;4189"
+				DisableSpecificWarnings="4521;4189;4505"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -2070,7 +2070,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\common\tables\TableFAC.cpp"
+					RelativePath="..\common\tables\TableCarMap.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -2092,7 +2092,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\common\tables\TableCarMap.cpp"
+					RelativePath="..\common\tables\TableFAC.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -2806,6 +2806,28 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\common\MDI\PacketSinkFile.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath="..\common\MDI\PacketSocketNull.cpp"
 					>
 					<FileConfiguration
@@ -2829,50 +2851,6 @@
 				</File>
 				<File
 					RelativePath="..\common\MDI\PacketSocketQT.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\common\MDI\PacketSinkFile.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\common\MDI\RSISubscriber.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -2921,6 +2899,28 @@
 				</File>
 				<File
 					RelativePath="..\common\MDI\RSCITagItemDecoders.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\MDI\RSISubscriber.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -3427,19 +3427,15 @@
 					>
 				</File>
 				<File
+					RelativePath="..\common\MDI\PacketSinkFile.h"
+					>
+				</File>
+				<File
 					RelativePath="..\common\MDI\PacketSocketNull.h"
 					>
 				</File>
 				<File
 					RelativePath="..\common\MDI\PacketSocketQT.h"
-					>
-				</File>
-				<File
-					RelativePath="..\common\MDI\PacketSinkFile.h"
-					>
-				</File>
-				<File
-					RelativePath="..\common\MDI\RSISubscriber.h"
 					>
 				</File>
 				<File
@@ -3452,6 +3448,10 @@
 				</File>
 				<File
 					RelativePath="..\common\MDI\RSCITagItemDecoders.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\MDI\RSISubscriber.h"
 					>
 				</File>
 				<File
