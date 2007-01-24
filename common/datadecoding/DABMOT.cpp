@@ -653,7 +653,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 	_BINARY biTransportIDFlag = 0;
 	int iLenIndicat;
 	int iSegmentSize;
-	TTransportID TransportID;
+	TTransportID TransportID = -1;
 
 	/* Get length of data unit */
 	iLenGroupDataField = vecbiNewData.Size();

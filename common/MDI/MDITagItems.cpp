@@ -57,7 +57,7 @@ _BOOLEAN CTagItemGeneratorWithProfiles::IsInProfile(char cProfile)
 		return FALSE;
 }
 
-_BOOLEAN CTagItemGenerator::IsInProfile(char cProfile)
+_BOOLEAN CTagItemGenerator::IsInProfile(char)
 {
 	return TRUE;
 }

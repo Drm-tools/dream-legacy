@@ -1232,9 +1232,9 @@ void CChannelEstimation::GetAvPoDeSp(CVector<_REAL>& vecrData,
 void CChannelEstimation::UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorEx<_COMPLEX>* pvecInputData,
 		CVector<int>& veciMapTab, CVector<_COMPLEX>& veccPilotCells, const int iSymbolCounter)
 {
-	int			j, i;
+	int			i;
 	int			iPiHiIdx;
-	int			iTimeDiffNew;
+	//int			iTimeDiffNew;
 	_COMPLEX	cNewPilot;
 
 	/* Clear time diff accumulator at start of the frame */

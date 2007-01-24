@@ -1305,11 +1305,11 @@ _BOOLEAN CParameter::CGPSInformation::SetLatLongDegreesMinutes(const string& sNe
 	if (sNewLat.empty() || sNewLong.empty())
 		return FALSE;
 
-	char chrDegrees = 0xb0; // degrees char based on Latin-1
+	unsigned char chrDegrees = 0xb0; /* degrees char based on Latin-1 */
 
 	string sLat, sLong;
 	
-	sLat = sNewLat;		// take a local copy we can alter
+	sLat = sNewLat;		/* take a local copy we can alter */
 	sLong = sNewLong;
 	
 	int Degrees, Minutes;
@@ -1329,7 +1329,7 @@ _BOOLEAN CParameter::CGPSInformation::SetLatLongDegreesMinutes(const string& sNe
 	ssLat >> Degrees >> Minutes;
 	rLatitudeDegrees = Degrees + (Minutes/60.0);
 
-	if (sLat.find("N") == string::npos)	// N not found, so must be south
+	if (sLat.find("N") == string::npos)	/* N not found, so must be south */
 		rLatitudeDegrees *= -1;
 
 	//long
@@ -1345,7 +1345,7 @@ _BOOLEAN CParameter::CGPSInformation::SetLatLongDegreesMinutes(const string& sNe
 	ssLong >> Degrees >> Minutes;
 	rLongitudeDegrees = Degrees + (Minutes/60.0);
 
-	if (sNewLat.find("E") == string::npos)	// E not found, so must be west
+	if (sNewLat.find("E") == string::npos)	/* E not found, so must be west */
 		rLongitudeDegrees *= -1;
 
 	return TRUE;
@@ -1353,7 +1353,7 @@ _BOOLEAN CParameter::CGPSInformation::SetLatLongDegreesMinutes(const string& sNe
 
 void CParameter::GenerateRandomSerialNumber()
 {
-        //seed random number generator
+        /* seed random number generator */
         srand(time(0));
 
 

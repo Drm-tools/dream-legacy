@@ -1,7 +1,7 @@
 [Project]
 FileName=FDRM.dev
 Name=FDRM
-UnitCount=239
+UnitCount=245
 Type=0
 Ver=1
 ObjFiles=
@@ -2437,9 +2437,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit240]
-FileName=..\common\MDI\PacketSinkFile.cpp
+FileName=..\common\MDI\PacketSinkFile.h
 CompileCpp=1
-Folder=Sources
+Folder=DI/Headers
 Compile=1
 Link=1
 Priority=1000
@@ -2447,9 +2447,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit241]
-FileName=..\common\MDI\PacketSinkFile.h
+FileName=..\common\MDI\RSISubscriber.h
 CompileCpp=1
-Folder=Headers
+Folder=DI/Headers
 Compile=1
 Link=1
 Priority=1000
@@ -2459,7 +2459,7 @@ BuildCmd=
 [Unit242]
 FileName=..\common\MDI\RSISubscriber.cpp
 CompileCpp=1
-Folder=Sources
+Folder=DI/Sources
 Compile=1
 Link=1
 Priority=1000
@@ -2467,9 +2467,29 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit243]
-FileName=..\common\MDI\RSISubscriber.h
+FileName=..\common\MDI\PacketSinkFile.cpp
+CompileCpp=1
+Folder=DI/Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit244]
+FileName=..\common\util\LogPrint.h
 CompileCpp=1
 Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit245]
+FileName=..\common\util\LogPrint.cpp
+CompileCpp=1
+Folder=Sources
 Compile=1
 Link=1
 Priority=1000
