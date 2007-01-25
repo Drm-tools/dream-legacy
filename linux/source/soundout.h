@@ -29,7 +29,7 @@
 #ifndef _SOUNDOUT_H
 #define _SOUNDOUT_H
 
-#include "../../common/GlobalDefinitions.h"
+#include "../../common/soundinterface.h"
 #include "../../common/util/Buffer.h"
 #include "soundcommon.h"
 
@@ -41,7 +41,7 @@
 //#define FRAGSIZE 1024
 
 /* Classes ********************************************************************/
-class CSoundOut //: public CSelectionInterface
+class CSoundOut : public CSoundOutInterface
 {
 public:
 	CSoundOut();

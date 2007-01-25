@@ -42,7 +42,6 @@
 # include "moc/AboutDlgbase.h"
 #endif
 #include "../DrmReceiver.h"
-#include "../util/Vector.h"
 
 #ifdef USE_QT_GUI
 # include <qwt_global.h> /* for extract the library version */
@@ -107,17 +106,18 @@ class CSoundCardSelMenu : public QPopupMenu
 	Q_OBJECT
 
 public:
-	CSoundCardSelMenu(CSoundIn* pNSIn, CSoundOut* pNSOut, QWidget* parent = 0);
+	CSoundCardSelMenu(CSelectionInterface* pNSIn,
+						CSelectionInterface* pNSOut, QWidget* parent = 0);
 
 protected:
-	CSoundIn*		pSoundInIF;
-	CSoundOut*		pSoundOutIF;
-	vector<string>	vecSoundInNames;
-	vector<string>	vecSoundOutNames;
-	int				iNumSoundInDev;
-	int				iNumSoundOutDev;
-	QPopupMenu*		pSoundInMenu;
-	QPopupMenu*		pSoundOutMenu;
+	CSelectionInterface*	pSoundInIF;
+	CSelectionInterface*	pSoundOutIF;
+	vector<string>			vecSoundInNames;
+	vector<string>			vecSoundOutNames;
+	int						iNumSoundInDev;
+	int						iNumSoundOutDev;
+	QPopupMenu*				pSoundInMenu;
+	QPopupMenu*				pSoundOutMenu;
 
 public slots:
 	void OnSoundInDevice(int id);

@@ -164,6 +164,8 @@ drmwithoutqt_SOURCES = \
 	../common/tables/TableFAC.h \
 	../common/tables/TableMLC.h \
 	../common/tables/TableQAMMapping.h \
+	../common/selectioninterface.h \
+	../common/soundinterface.h \
 	source/sound.h \
 	source/soundcommon.h \
 	source/soundin.h \

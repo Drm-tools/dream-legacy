@@ -1166,24 +1166,24 @@ ERecMode CParameter::GetReceiverMode()
  return DRMReceiver.GetReceiverMode();		 
 }
 
-/* push from RSCI RX_STATUS */
+/* push from RSCI RX_STATUS OR (TODO) Hamlib */
 void CParameter::SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr)
 {
+	Mutex.Lock();
 	bValidSignalStrength = bValid;
 	rSigStr = rNewSigStr;
+	Mutex.Unlock();
 }
 
-_BOOLEAN CParameter::GetSignalStrength(_REAL &rSigStr)
+_BOOLEAN CParameter::GetSignalStrength(_REAL &rOutSigStr)
 {
-	/* see if we can pull a local value from the receiver */
-	_REAL r;
-	if(DRMReceiver.GetSignalStrength(r))
-	{
-		bValidSignalStrength = TRUE;
-		rSigStr = r;
-	}
-	/* otherwise leave the present values untouched */
-	return bValidSignalStrength;
+	_BOOLEAN bValid;
+	Mutex.Lock();
+	bValid = bValidSignalStrength;
+	if(bValid)
+		rOutSigStr = rSigStr;
+	Mutex.Unlock();
+	return bValid;
 }
 
 void CParameter::CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)

@@ -59,14 +59,13 @@ public:
 	void Stop();
 
 	/* Get pointer to internal modules */
+	CSoundInInterface*		GetSoundInInterface() {return &SoundInInterface;}
+	CSoundOutInterface*		GetSoundOutInterface() {return &SoundOutInterface;}
 	CAudioSourceEncoder*	GetAudSrcEnc() {return &AudioSourceEncoder;}
 	CTransmitData*			GetTransData() {return &TransmitData;}
 	CReadData*				GetReadData() {return &ReadData;}
 
-	CSoundIn*				GetSoundInInterface() {return &SoundInInterface;}
-	CSoundOut*				GetSoundOutInterface() {return &SoundOutInterface;}
 	CParameter*				GetParameters() {return &TransmParam;}
-
 
 	void SetCarOffset(const _REAL rNewCarOffset)
 	{

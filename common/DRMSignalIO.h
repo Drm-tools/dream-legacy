@@ -30,17 +30,12 @@
 #define DRMSIGNALIO_H__3B0BA660_CA63_4344_B_23E7A0D31912__INCLUDED_
 
 #include "Parameter.h"
+#include "soundinterface.h"
 #include <math.h>
 #include "matlib/Matlib.h"
 #include "IQInputFilter.h"
 #include "util/Modul.h"
 #include "util/Utilities.h"
-
-#ifdef _WIN32
-# include "../../Windows/source/sound.h"
-#else
-# include "source/sound.h"
-#endif
 
 
 /* Definitions ****************************************************************/
@@ -75,7 +70,7 @@ public:
 	enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
 
-	CTransmitData(CSoundOut* pNS) : pFileTransmitter(NULL), pSound(pNS), 
+	CTransmitData(CSoundOutInterface* pNS) : pFileTransmitter(NULL), pSound(pNS), 
 		eOutputFormat(OF_REAL_VAL), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
 		strOutFileName("test/TransmittedData.txt"), bUseSoundcard(TRUE) {}
 	virtual ~CTransmitData();
@@ -94,7 +89,7 @@ public:
 
 protected:
 	FILE*				pFileTransmitter;
-	CSoundOut*			pSound;
+	CSoundOutInterface*	pSound;
 	CVector<short>		vecsDataOut;
 	int					iBlockCnt;
 	int					iNumBlocks;
@@ -120,7 +115,7 @@ public:
 	enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
 		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO};
 
-	CReceiveData(CSoundIn* pNS) : pFileReceiver(NULL), pSound(pNS),
+	CReceiveData(CSoundInInterface* pNS) : pFileReceiver(NULL), pSound(pNS),
 	vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0),
 	bFippedSpectrum(FALSE), bUseSoundcard(TRUE), bNewUseSoundcard(TRUE),
 	strInFileName("test/TransmittedData.txt"), eInChanSelection(CS_MIX_CHAN)
@@ -148,7 +143,7 @@ protected:
 	
 	FILE*					pFileReceiver;
 
-	CSoundIn*				pSound;
+	CSoundInInterface*		pSound;
 	CVector<_SAMPLE>		vecsSoundBuffer;
 
 	CShiftRegister<_REAL>	vecrInpData;

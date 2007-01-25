@@ -96,6 +96,7 @@ protected:
 	_BOOLEAN		bSysEvalDlgWasVis;
 	_BOOLEAN		bMultMedDlgWasVis;
 	_BOOLEAN		bLiveSchedDlgWasVis;
+	ERecMode		eReceiverMode;
 
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
 	virtual void	customEvent(QCustomEvent* Event);
@@ -122,8 +123,8 @@ public slots:
 	void OnViewEPGDlg();
 	void OnViewMultSettingsDlg();
 	void OnViewGeneralSettingsDlg();
-	void OnSwitchToDRM() {SetReceiverMode(RM_DRM);}
-	void OnSwitchToAM() {SetReceiverMode(RM_AM);}
+	void OnSwitchToDRM();
+	void OnSwitchToAM();
 	void OnMenuSetDisplayColor();
 	void OnMenuPlotStyle(int value);
 };

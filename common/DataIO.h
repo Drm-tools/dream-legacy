@@ -32,6 +32,7 @@
 #if !defined(DATA_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
 #define DATA_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
+# include "soundinterface.h"
 #include "Parameter.h"
 #include "util/Modul.h"
 #include "FAC/FAC.h"
@@ -40,12 +41,6 @@
 #include "util/AudioFile.h"
 #include "util/Utilities.h"
 #include "AMDemodulation.h" // For CMixer
-#ifdef _WIN32
-# include "../../Windows/source/sound.h"
-#else
-# include "source/sound.h"
-#endif
-#include <time.h>
 
 /* Definitions ****************************************************************/
 /* In case of random-noise, define number of blocks */
@@ -74,13 +69,13 @@
 class CReadData : public CTransmitterModul<_SAMPLE, _SAMPLE>
 {
 public:
-	CReadData(CSoundIn* pNS) : pSound(pNS) {}
+	CReadData(CSoundInInterface* pNS) : pSound(pNS) {}
 	virtual ~CReadData() {}
 
 	_REAL GetLevelMeter() {return SignalLevelMeter.Level();}
 
 protected:
-	CSoundIn*			pSound;
+	CSoundInInterface*	pSound;
 	CVector<_SAMPLE>	vecsSoundBuffer;
 	CSignalLevelMeter	SignalLevelMeter;
 
@@ -94,7 +89,7 @@ public:
 	enum EOutChanSel {CS_BOTH_BOTH, CS_LEFT_LEFT, CS_RIGHT_RIGHT,
 		CS_LEFT_MIX, CS_RIGHT_MIX};
 
-	CWriteData(CSoundOut* pNS);
+	CWriteData(CSoundOutInterface* pNS);
 	virtual ~CWriteData() {}
 
 	void StartWriteWaveFile(const string strFileName);
@@ -113,7 +108,7 @@ public:
 	EOutChanSel GetOutChanSel() {return eOutChanSel;}
 
 protected:
-	CSoundOut*				pSound;
+	CSoundOutInterface*		pSound;
 	_BOOLEAN				bMuteAudio;
 	CWaveFile				WaveFileAudio;
 	_BOOLEAN				bDoWriteWaveFile;

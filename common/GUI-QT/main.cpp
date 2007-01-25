@@ -111,6 +111,12 @@ try
 
 		FDRMDialog		MainDlg(&DRMReceiver, 0, 0, FALSE, Qt::WStyle_MinMax);
 
+		/* TODO better persistance variable */
+		if(DRMReceiver.GeomAnalogDemDlg.bVisible)
+			DRMReceiver.SetReceiverMode(RM_AM);
+		else
+			DRMReceiver.SetReceiverMode(RM_DRM);
+
 		/* Start working thread */
 		DRMReceiver.start();
 

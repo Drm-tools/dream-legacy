@@ -55,11 +55,7 @@
 #include "sync/SyncUsingPil.h"
 #include "AMDemodulation.h"
 #include "AMSSDemodulation.h"
-#ifdef _WIN32
-# include "../../Windows/source/sound.h"
-#else
-# include "source/sound.h"
-#endif
+#include "soundinterface.h"
 
 
 /* Definitions ****************************************************************/
@@ -117,7 +113,7 @@ public:
 	enum ERecState {RS_TRACKING, RS_ACQUISITION};
 
 	CDRMReceiver();
-	virtual ~CDRMReceiver() {}
+	virtual ~CDRMReceiver();
 
 	/* For GUI */
 #ifdef USE_QT_GUI
@@ -198,6 +194,8 @@ public:
 #endif
 
 	/* Get pointer to internal modules */
+	CSelectionInterface*	GetSoundInInterface() {return pSoundInInterface;}
+	CSelectionInterface*	GetSoundOutInterface() {return pSoundOutInterface;}
 	CUtilizeFACData*		GetFAC() {return &UtilizeFACData;}
 	CUtilizeSDCData*		GetSDC() {return &UtilizeSDCData;}
 	CTimeSync*				GetTimeSync() {return &TimeSync;}
@@ -208,8 +206,6 @@ public:
 	COFDMDemodulation*		GetOFDMDemod() {return &OFDMDemodulation;}
 	CSyncUsingPil*			GetSyncUsPil() {return &SyncUsingPil;}
 	CWriteData*				GetWriteData() {return &WriteData;}
-	CSoundIn*				GetSoundInInterface() {return &SoundInInterface;}
-	CSoundOut*				GetSoundOutInterface() {return &SoundOutInterface;}
 	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
 	CAMDemodulation*		GetAMDemod() {return &AMDemodulation;}
 	CAMSSPhaseDemod*		GetAMSSPhaseDemod() {return &AMSSPhaseDemod;}
@@ -218,12 +214,8 @@ public:
 	CAudioSourceDecoder*	GetAudSorceDec() {return &AudioSourceDecoder;}
 	CRSIMDIInRCIOut*		GetRSIIn() {return &upstreamRSCI;}
 	CRSIMDIOutRCIIn*		GetRSIOut() {return &downstreamRSCI;}
-#ifdef HAVE_LIBHAMLIB
 	CHamlib*				GetHamlib() {return &Hamlib;}
 	_BOOLEAN				SignalStrengthAvailable() { return TRUE; }
-#else
-	_BOOLEAN				SignalStrengthAvailable() { return FALSE; }
-#endif
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
 	CParameter*				GetParameters() {return &ReceiverParam;}
@@ -267,8 +259,8 @@ protected:
 	void					UpdateParamHistories();
 
 	/* Modules */
-	CSoundIn				SoundInInterface;
-	CSoundOut				SoundOutInterface;
+	CSoundInInterface*		pSoundInInterface;
+	CSoundOutInterface*		pSoundOutInterface;
 	CReceiveData			ReceiveData;
 	CWriteData				WriteData;
 	CInputResample			InputResample;
@@ -360,10 +352,6 @@ protected:
 	CHamlib					Hamlib;
 #endif
 
-	int						iSoundCrdDevIn;
-	int						iSoundCrdDevOut;
-
-
 	/* Storing parameters for plot */
 	CShiftRegister<_REAL>	vecrFreqSyncValHist;
 	CShiftRegister<_REAL>	vecrSamOffsValHist;
@@ -385,6 +373,19 @@ protected:
 
 	/* Counter for unlocked frames, to keep generating RSCI even when unlocked */
 	int						iUnlockedCount;
+
+#ifdef USE_QT_GUI
+	class CRigPoll : public QThread
+	{
+	public:
+		CRigPoll(CDRMReceiver* pRx):pDrmRec(pRx),bQuit(FALSE){ }
+		virtual void	run();
+		virtual void	stop(){bQuit=TRUE;}
+	protected:
+			CDRMReceiver* pDrmRec;
+			_BOOLEAN	bQuit;
+	} RigPoll;
+#endif
 
 public:
 	_BOOLEAN				bEnableSMeter;

@@ -31,7 +31,8 @@
 
 /* Implementation *************************************************************/
 FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
-	bool modal, WFlags f) : FDRMDialogBase(parent, name, modal, f), pDRMRec(pNDRMR)
+	bool modal, WFlags f) : FDRMDialogBase(parent, name, modal, f), pDRMRec(pNDRMR),
+	eReceiverMode(RM_NONE)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -209,10 +210,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	pAnalogDemDlg = new AnalogDemDlg(pDRMRec, NULL, "Analog Demodulation",
 		FALSE, Qt::WStyle_MinMax);
 
-	if (pDRMRec->GeomAnalogDemDlg.bVisible == TRUE)
-		SetReceiverMode(RM_AM);
-	else
-		SetReceiverMode(RM_DRM);
+	/* initialise the mode from the Receiver Object */
+	SetReceiverMode(pDRMRec->GetReceiverMode());
 
 	/* Enable multimedia */
 	pDRMRec->GetParameters()->EnableMultimedia(TRUE);
@@ -321,6 +320,11 @@ void FDRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 
 void FDRMDialog::OnTimer()
 {
+
+	/* has the receiver changed mode ? */
+	if(pDRMRec->GetReceiverMode() != eReceiverMode)
+		SetReceiverMode(pDRMRec->GetReceiverMode());
+
 	/* Input level meter */
 	ProgrInputLevel->setValue(pDRMRec->GetReceiver()->GetLevelMeter());
 	
@@ -716,11 +720,6 @@ void FDRMDialog::OnTimer()
 
 void FDRMDialog::SetReceiverMode(const ERecMode eNewReMo)
 {
-	const _BOOLEAN bModeHastChanged = pDRMRec->GetReceiverMode() != eNewReMo;
-
-	/* Set mode in receiver object */
-	pDRMRec->SetReceiverMode(eNewReMo);
-
 	/* Make sure correct evaluation dialog is shown */
 	switch (eNewReMo)
 	{
@@ -731,7 +730,7 @@ void FDRMDialog::SetReceiverMode(const ERecMode eNewReMo)
 		pAnalogDemDlg->hide();
 
 		/* Recover visibility state (only if mode has changed) */
-		if (bModeHastChanged)
+		if (eNewReMo != eReceiverMode)
 		{
 			if (bSysEvalDlgWasVis == TRUE)
 				pSysEvalDlg->show();
@@ -771,6 +770,22 @@ void FDRMDialog::SetReceiverMode(const ERecMode eNewReMo)
 	case RM_NONE:
 		break;
 	}
+	eReceiverMode = eNewReMo;
+}
+
+	/* Set mode in receiver object
+	 * OnTimer will update the GUI
+	 * when the receiver has actioned
+	 * this.
+	 */
+void FDRMDialog::OnSwitchToDRM()
+{
+	pDRMRec->SetReceiverMode(RM_DRM);
+}
+
+void FDRMDialog::OnSwitchToAM()
+{
+	pDRMRec->SetReceiverMode(RM_AM);
 }
 
 void FDRMDialog::OnButtonService1()

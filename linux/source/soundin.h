@@ -29,7 +29,7 @@
 #ifndef _SOUNDIN_H
 #define _SOUNDIN_H
 
-#include "../../common/GlobalDefinitions.h"
+#include "../../common/soundinterface.h"
 #include "../../common/util/Buffer.h"
 #include "soundcommon.h"
 
@@ -42,7 +42,7 @@
 //#define FRAGSIZE 1024
 
 /* Classes ********************************************************************/
-class CSoundIn 
+class CSoundIn : public CSoundInInterface
 {
 public:
 	CSoundIn();

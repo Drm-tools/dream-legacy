@@ -193,7 +193,7 @@ void CWriteData::InitInternal(CParameter&)
 	iInputBlockSize = iAudFrameSize * 2 /* stereo */;
 }
 
-CWriteData::CWriteData(CSoundOut* pNS) : pSound(pNS), /* Sound interface */
+CWriteData::CWriteData(CSoundOutInterface* pNS) : pSound(pNS), /* Sound interface */
 	bMuteAudio(FALSE), bDoWriteWaveFile(FALSE),
 	bSoundBlocking(FALSE), bNewSoundBlocking(FALSE),
 	eOutChanSel(CS_BOTH_BOTH), rMixNormConst(MIX_OUT_CHAN_NORM_CONST),

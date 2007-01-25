@@ -116,24 +116,28 @@ void CChainingLogPrinter::SetNextInstance(CLogPrinter *pInstance)
 
 CFileLogPrinter::CFileLogPrinter()
 {
-	mpLogFile = fopen("DreamLog.txt", "w");
+	mpLogFile = fopen("DreamLog.txt", "a");
 	fprintf(mpLogFile, "Start of logfile\n");
+	fflush(mpLogFile);
 }
 
 
 void CFileLogPrinter::LogStatusSpecific(char *s)
 {
 	fprintf(mpLogFile, "STATUS: %s\n",s);
+	fflush(mpLogFile);
 }
 
 void CFileLogPrinter::LogWarningSpecific(char *s)
 {
 	fprintf(mpLogFile, "WARNING: %s\n",s);
+	fflush(mpLogFile);
 }
 
 void CFileLogPrinter::LogErrorSpecific(char *s)
 {
 	fprintf(mpLogFile, "ERROR: %s\n",s);
+	fflush(mpLogFile);
 }
 
 CFileLogPrinter *CFileLogPrinter::mpInstance = 0;
@@ -146,16 +150,19 @@ void CFileLogPrinter::Instantiate()
 void CPrintfLogPrinter::LogStatusSpecific(char *s)
 {
 	printf("STATUS: %s\n",s);
+	fflush(stdout);
 }
 
 void CPrintfLogPrinter::LogWarningSpecific(char *s)
 {
 	printf("WARNING: %s\n",s);
+	fflush(stdout);
 }
 
 void CPrintfLogPrinter::LogErrorSpecific(char *s)
 {
 	printf("ERROR: %s\n",s);
+	fflush(stdout);
 }
 
 void CNullLogPrinter::LogStatus(char *)

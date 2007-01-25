@@ -35,13 +35,18 @@
 #include "DrmReceiver.h"
 
 #include "util/LogPrint.h"
+#ifdef _WIN32
+# include "../windows/Source/Sound.h"
+#else
+# include "../linux/source/sound.h"
+#endif
 
 const int CDRMReceiver::MAX_UNLOCKED_COUNT=2;
 
 /* Implementation *************************************************************/
 CDRMReceiver::CDRMReceiver() :
-		SoundInInterface(), SoundOutInterface(),
-		ReceiveData(&SoundInInterface), WriteData(&SoundOutInterface),
+		pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
+		ReceiveData(pSoundInInterface), WriteData(pSoundOutInterface),
 		FreqSyncAcq(),
 		ChannelEstimation(),
 		UtilizeFACData(), UtilizeSDCData(), MSCDemultiplexer(),
@@ -66,6 +71,9 @@ CDRMReceiver::CDRMReceiver() :
 		rAvLenIRHist((_REAL) 0.0), rAvDopplerHist((_REAL) 0.0),
 		rAvSNRHist((_REAL) 0.0),
 		iCurrentCDAud(0),
+#ifdef USE_QT_GUI
+		RigPoll(this),
+#endif
 		bEnableSMeter(TRUE),
 		iBwAM(10000),
 		iBwLSB(5000),
@@ -95,6 +103,17 @@ CDRMReceiver::CDRMReceiver() :
 #endif
 {
 	downstreamRSCI.SetReceiver(this);
+#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
+	RigPoll.start();
+#endif
+}
+
+CDRMReceiver::~CDRMReceiver()
+{
+#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
+	RigPoll.stop();
+	RigPoll.wait();
+#endif
 }
 
 void CDRMReceiver::Run()
@@ -102,7 +121,7 @@ void CDRMReceiver::Run()
 	_BOOLEAN bEnoughData = TRUE;
 	_BOOLEAN bFrameToSend=FALSE;
 
-		/* Check for parameter changes from GUI thread ---------------------- */
+		/* Check for parameter changes from RSCI or GUI thread --------------- */
 		/* The parameter changes are done through flags, the actual
 		   initialization is done in this (the working) thread to avoid
 		   problems with shared data */
@@ -154,7 +173,16 @@ void CDRMReceiver::Run()
 		}
 
 		if (upstreamRSCI.GetInEnabled() == FALSE)
+		{
 			ReceiveData.ReadData(ReceiverParam, RecDataBuf);
+#ifndef USE_QT_GUI
+			/* TODO - get the polling interval sensible */
+			_BOOLEAN bValid;
+			_REAL r;
+			bValid = Hamlib.GetSMeter(r)==CHamlib::SS_VALID;
+			ReceiverParam.SetSignalStrength(bValid, r);
+#endif
+		}
 
 		while (bEnoughData && ReceiverParam.bRunThread)
 		{
@@ -597,8 +625,8 @@ void CDRMReceiver::Start()
 	} while (ReceiverParam.bRunThread);
 
 	if( (upstreamRSCI.GetInEnabled() == FALSE) && (bReadFromFile == FALSE) )
-		SoundInInterface.Close();
-	SoundOutInterface.Close();
+		pSoundInInterface->Close();
+	pSoundOutInterface->Close();
 }
 
 void CDRMReceiver::Stop()
@@ -1212,21 +1240,34 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 	}
 }
 
+/* if we have QT, use a thread to poll the signal strength
+ * otherwise do it when needed
+ */
+
 _BOOLEAN CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
 {
-	if (upstreamRSCI.GetInEnabled() == TRUE)
-	{
-		return FALSE;
-	}
-	else
+	return ReceiverParam.GetSignalStrength(rSigStr);
+}
+
+#ifdef USE_QT_GUI
+void
+CDRMReceiver::CRigPoll::run()
+{
+	while(bQuit==FALSE)
 	{
 #ifdef HAVE_LIBHAMLIB
-		return Hamlib.GetSMeter(rSigStr)==CHamlib::SS_VALID;
-#else
-		return FALSE;
+		if (pDrmRec->GetRSIIn()->GetInEnabled() == FALSE)
+		{
+			_BOOLEAN bValid;
+			_REAL r;
+			bValid = pDrmRec->GetHamlib()->GetSMeter(r)==CHamlib::SS_VALID;
+			pDrmRec->GetParameters()->SetSignalStrength(bValid, r);
+		}
 #endif
+		msleep(400);
 	}
 }
+#endif
 
 void CDRMReceiver::SetRSIRecording(const _BOOLEAN bOn, const char cPro)
 {

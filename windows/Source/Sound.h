@@ -29,32 +29,9 @@
 #if !defined(AFX_SOUNDIN_H__9518A621_7F78_11D3_8C0D_EEBF182CF549__INCLUDED_)
 #define AFX_SOUNDIN_H__9518A621_7F78_11D3_8C0D_EEBF182CF549__INCLUDED_
 
-#include "../../common/GlobalDefinitions.h"
-#include "../../common/util/Vector.h"
+#include "../../common/soundinterface.h"
 #include <windows.h>
 #include <mmsystem.h>
-/* Classes ********************************************************************/
-class CSoundInterface
-{
-public:
-    CSoundInterface():  vecstrDevices(),iCurDev(0),m_WaveEvent(NULL){}
-	virtual void		Enumerate(vector<string>& names){ names = vecstrDevices; }
-	virtual void		SetDev(int iNewDev) { iCurDev = iNewDev; }
-	int			GetDev() {return iCurDev;}
-
-	void		Close();
-	virtual ~CSoundInterface() {}
-
-protected:
-	vector<string>	vecstrDevices;
-	int				iCurDev;
-	WAVEFORMATEX	sWaveFormatEx;
-	BOOLEAN			bChangDev;
-	HANDLE			m_WaveEvent;
-	int				iBufferSize;
-	int				iWhichBuffer;
-	_BOOLEAN		bBlocking;
-};
 
 /* Set this number as high as we have to prebuffer symbols for one MSC block.
    In case of robustness mode D we have 24 symbols */
@@ -63,7 +40,7 @@ protected:
 #define NUM_SOUND_BUFFERS_OUT	3		/* Number of sound card buffers */
 
 /* Classes ********************************************************************/
-class CSoundIn : public CSoundInterface
+class CSoundIn : public CSoundInInterface
 {
 public:
 	CSoundIn();
@@ -78,6 +55,15 @@ protected:
 	void		PrepareBuffer(int iBufNum);
 	void		AddBuffer();
 
+	vector<string>	vecstrDevices;
+	int				iCurDev;
+	WAVEFORMATEX	sWaveFormatEx;
+	BOOLEAN			bChangDev;
+	HANDLE			m_WaveEvent;
+	int				iBufferSize;
+	int				iWhichBuffer;
+	_BOOLEAN		bBlocking;
+
 	/* Wave in */
 	WAVEINCAPS		m_WaveInDevCaps;
 	HWAVEIN			m_WaveIn;
@@ -86,7 +72,7 @@ protected:
 
 };
 
-class CSoundOut : public CSoundInterface
+class CSoundOut : public CSoundOutInterface
 {
 public:
 	CSoundOut();
@@ -102,6 +88,15 @@ protected:
 	void		PrepareBuffer(int iBufNum);
 	void		AddBuffer(int iBufNum);
 	void		GetDoneBuffer(int& iCntPrepBuf, int& iIndexDoneBuf);
+
+	vector<string>	vecstrDevices;
+	int				iCurDev;
+	WAVEFORMATEX	sWaveFormatEx;
+	BOOLEAN			bChangDev;
+	HANDLE			m_WaveEvent;
+	int				iBufferSize;
+	int				iWhichBuffer;
+	_BOOLEAN		bBlocking;
 
 	/* Wave out */
 	WAVEOUTCAPS		m_WaveOutDevCaps;
