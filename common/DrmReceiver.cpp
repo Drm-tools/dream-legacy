@@ -537,7 +537,7 @@ void CDRMReceiver::DetectAcquiFAC()
 
 void CDRMReceiver::Init()
 {
-	CFileLogPrinter::Instantiate();
+	//CFileLogPrinter::Instantiate();
 
 	/* Set flags so that we have only one loop in the Run() routine which is
 	   enough for initializing all modues */

@@ -170,7 +170,11 @@ protected:
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 
-	void CalculatePSD(CParameter& ReceiverParam);
+	void PutPSD(CParameter& ReceiverParam);
+	void CalculatePSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 							   
+							   const int iLenPSDAvEachBlock = LEN_PSD_AV_EACH_BLOCK,
+							   const int iNumAvBlocksPSD = NUM_AV_BLOCKS_PSD,
+							   const int iPSDOverlap = 0);
 };
 
 
