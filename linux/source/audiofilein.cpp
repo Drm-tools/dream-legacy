@@ -83,6 +83,10 @@ CAudioFileIn::Read(CVector<short>& psData)
 		delay.tv_nsec = delay_ns % 1000000000LL;
 		nanosleep(&delay, NULL);
 	}
+
+	if (pFileReceiver == NULL)
+		return TRUE;
+
 	/* Read data from file ---------------------------------------------- */
 	int iOutputBlockSize = psData.Size() / 2; /* psData is stereo ! */
 	for (int i = 0; i < iOutputBlockSize; i++)
@@ -110,7 +114,7 @@ CAudioFileIn::Read(CVector<short>& psData)
 		psData[2*i+1] = (short)tIn;
 #endif
 	}
-	return TRUE;
+	return FALSE;
 }
 
 void

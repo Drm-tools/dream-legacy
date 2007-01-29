@@ -81,6 +81,10 @@ CAudioFileIn::Read(CVector<short>& psData)
 	{
 		Sleep(uint32_t(delay_ms)-10);
 	}
+
+	if (pFileReceiver == NULL)
+		return TRUE;
+
 	/* Read data from file ---------------------------------------------- */
 	for (int i = 0; i < psData.Size()/2; i++)
 	{
@@ -107,7 +111,7 @@ CAudioFileIn::Read(CVector<short>& psData)
 		psData[2*i+1] = (short)tIn;
 #endif
 	}
-	return TRUE;
+	return FALSE;
 }
 
 void
