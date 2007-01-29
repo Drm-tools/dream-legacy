@@ -36,6 +36,7 @@
 #include "IQInputFilter.h"
 #include "util/Modul.h"
 #include "util/Utilities.h"
+#include "util/Pacer.h"
 
 
 /* Definitions ****************************************************************/
@@ -115,10 +116,9 @@ public:
 	enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
 		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO};
 
-	CReceiveData(CSoundInInterface* pNS) : pFileReceiver(NULL), pSound(pNS),
+	CReceiveData() : pSound(NULL),
 	vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0),
-	bFippedSpectrum(FALSE), bUseSoundcard(TRUE), bNewUseSoundcard(TRUE),
-	strInFileName("test/TransmittedData.txt"), eInChanSelection(CS_MIX_CHAN)
+	bFippedSpectrum(FALSE), eInChanSelection(CS_MIX_CHAN)
 		 {}
 	virtual ~CReceiveData();
 
@@ -132,27 +132,19 @@ public:
 	void SetFlippedSpectrum(const _BOOLEAN bNewF) {bFippedSpectrum = bNewF;}
 	_BOOLEAN GetFlippedSpectrum() {return bFippedSpectrum;}
 
-	void SetReadFromFile(const string strNFN)
-		{bNewUseSoundcard = FALSE; strInFileName = strNFN; SetInitFlag();}
-
+	void SetSoundInterface(CSoundInInterface* pS) { pSound = pS;}
 	void SetInChanSel(const EInChanSel eNS) {eInChanSelection = eNS;}
 	EInChanSel GetInChanSel() {return eInChanSelection;}
 
 protected:
 	CSignalLevelMeter		SignalLevelMeter;
 	
-	FILE*					pFileReceiver;
-
 	CSoundInInterface*		pSound;
 	CVector<_SAMPLE>		vecsSoundBuffer;
 
 	CShiftRegister<_REAL>	vecrInpData;
 
 	_BOOLEAN				bFippedSpectrum;
-	_BOOLEAN				bUseSoundcard;
-	_BOOLEAN				bNewUseSoundcard;
-
-	string					strInFileName;
 
 	EInChanSel				eInChanSelection;
 

@@ -81,6 +81,7 @@ drmwithoutqt_SOURCES = \
 	source/soundcommon.cpp \
 	source/soundin.cpp \
 	source/soundout.cpp \
+	source/audiofilein.cpp \
 	../common/Version.h \
 	../common/DRMSignalIO.h \
 	../common/DataIO.h \
@@ -166,6 +167,7 @@ drmwithoutqt_SOURCES = \
 	../common/tables/TableQAMMapping.h \
 	../common/selectioninterface.h \
 	../common/soundinterface.h \
+	source/audiofilein.h \
 	source/sound.h \
 	source/soundcommon.h \
 	source/soundin.h \
@@ -262,7 +264,6 @@ moc/moc_DialogUtil.cpp: ../common/GUI-QT/DialogUtil.h
 
 moc/moc_PacketSocketQT.cpp: ../common/MDI/PacketSocketQT.h
 	$(MOC) ../common/MDI/PacketSocketQT.h -o moc/moc_PacketSocketQT.cpp
-
 
 moc/moc_AboutDlgbase.cpp: moc/AboutDlgbase.h
 	$(MOC) moc/AboutDlgbase.h -o moc/moc_AboutDlgbase.cpp
@@ -440,3 +441,4 @@ endif
 
 #drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -fno-for-scope -ansi -Wshadow -Werror -Weffc++ -Wsign-promo -Wcomment 
 drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -fno-for-scope -Wsign-promo -Wcomment
+drm_LDFLAGS=-lrt

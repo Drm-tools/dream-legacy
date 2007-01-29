@@ -697,6 +697,10 @@ SOURCE=.\Source\Sound.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\audiofilein.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\interleaver\SymbolInterleaver.cpp
 # End Source File
 # Begin Source File
@@ -1162,6 +1166,10 @@ SOURCE=..\common\soundinterface.h
 # Begin Source File
 
 SOURCE=.\Source\Sound.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Source\audiofilein.h
 # End Source File
 # Begin Source File
 

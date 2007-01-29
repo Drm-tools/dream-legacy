@@ -38,15 +38,18 @@
 #ifdef _WIN32
 # include "../windows/Source/Sound.h"
 #else
-# include "../linux/source/sound.h"
+# include "../linux/source/soundin.h"
+# include "../linux/source/soundout.h"
+# include "../linux/source/audiofilein.h"
 #endif
 
 const int CDRMReceiver::MAX_UNLOCKED_COUNT=2;
 
+// TODO don't create a CSoundIn if its not going to be used. It helps for now because of SetDev in the GUI
 /* Implementation *************************************************************/
 CDRMReceiver::CDRMReceiver() :
 		pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
-		ReceiveData(pSoundInInterface), WriteData(pSoundOutInterface),
+		ReceiveData(), WriteData(pSoundOutInterface),
 		FreqSyncAcq(),
 		ChannelEstimation(),
 		UtilizeFACData(), UtilizeSDCData(), MSCDemultiplexer(),
@@ -114,6 +117,8 @@ CDRMReceiver::~CDRMReceiver()
 	RigPoll.stop();
 	RigPoll.wait();
 #endif
+	delete pSoundInInterface;
+	delete pSoundOutInterface;
 }
 
 void CDRMReceiver::Run()
@@ -738,12 +743,16 @@ void CDRMReceiver::SetInTrackingModeDelayed()
 
 void CDRMReceiver::SetReadDRMFromFile(const string strNFN)
 {
+	delete pSoundInInterface;
+	CAudioFileIn* p = new CAudioFileIn;
+	p->SetFileName(strNFN);
+	pSoundInInterface = p;
+	bReadFromFile = TRUE;
 	/* If DRM data is read from file instead of using the sound card, the sound
 	   output must be a blocking function otherwise we cannot achieve a
 	   synchronized stream */
-	ReceiveData.SetReadFromFile(strNFN);
-	WriteData.SetSoundBlocking(TRUE);
-	bReadFromFile = TRUE;
+	/* remove this once CAudioFileIn pacing is working */
+	//WriteData.SetSoundBlocking(TRUE);
 }
 
 void CDRMReceiver::StartParameters(CParameter& Param)
@@ -828,6 +837,7 @@ void CDRMReceiver::InitsForAllModules()
 		MSCUseBuf[i].Clear();
 		MSCSendBuf[i].Clear();
 	}
+	ReceiveData.SetSoundInterface(pSoundInInterface);
 	ReceiveData.SetInitFlag();
 	InputResample.SetInitFlag();
 	FreqSyncAcq.SetInitFlag();
@@ -911,6 +921,7 @@ void CDRMReceiver::InitsForWaveMode()
 	iAcquDetecCnt = 0;
 
 	/* Set init flags */
+	ReceiveData.SetSoundInterface(pSoundInInterface);
 	ReceiveData.SetInitFlag();
 	InputResample.SetInitFlag();
 	FreqSyncAcq.SetInitFlag();

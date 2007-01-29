@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "DRMSignalIO.h"
+#include <iostream>
 
 
 /* Implementation *************************************************************/
@@ -137,6 +138,11 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 	vecsDataOut.Init(iBigBlockSize);
 
+	if (pFileTransmitter != NULL)
+	{
+		fclose(pFileTransmitter);
+	}
+
 	if (bUseSoundcard == TRUE)
 	{
 		/* Init sound interface */
@@ -144,6 +150,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	}
 	else
 	{
+
 		/* Open file for writing data for transmitting */
 #ifdef FILE_DRM_USING_RAW_DATA
 		pFileTransmitter = fopen(strOutFileName.c_str(), "wb");
@@ -195,9 +202,9 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 		PutPSD(Parameter);
 	}
 
-	if (bUseSoundcard == TRUE)
-	{
-		/* Using sound card ------------------------------------------------- */
+	if(pSound == NULL)
+		return;
+
 		/* Get data from sound interface. The read function must be a
 		   blocking function! */
 		if (pSound->Read(vecsSoundBuffer) == FALSE)
@@ -287,41 +294,6 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 			}
 			break;
 		}
-	}
-	else
-	{
-		/* Read data from file ---------------------------------------------- */
-		for (i = 0; i < iOutputBlockSize; i++)
-		{
-			/* If enf-of-file is reached, stop simulation */
-#ifdef FILE_DRM_USING_RAW_DATA
-			short tIn;
-
-			/* Read 2 bytes, 1 piece */
-			if (fread((void*) &tIn, size_t(2), size_t(1), pFileReceiver) ==
-				size_t(0))
-#else
-			float tIn;
-
-			if (fscanf(pFileReceiver, "%e\n", &tIn) == EOF)
-#endif
-			{
-				Parameter.bRunThread = FALSE;
-
-				/* Set output block size to zero to avoid writing invalid
-				   data */
-				iOutputBlockSize = 0;
-
-				return;	
-			}
-			else
-			{
-				/* Write internal output buffer */
-				(*pvecOutputData)[i] = (_REAL) tIn;
-			}
-		}
-	}
-
 
 	/* Flip spectrum if necessary ------------------------------------------- */
 	if (bFippedSpectrum == TRUE)
@@ -353,36 +325,17 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 
 void CReceiveData::InitInternal(CParameter& Parameter)
 {
-	/* Check if "new" flag for sound card usage has changed */
-	if (bNewUseSoundcard != bUseSoundcard)
-		bUseSoundcard = bNewUseSoundcard;
-
-	if (bUseSoundcard == TRUE)
-	{
-		/* Init sound interface. Set it to one symbol. The sound card interface
+	/* Init sound interface. Set it to one symbol. The sound card interface
 		   has to taken care about the buffering data of a whole MSC block.
 		   Use stereo input (* 2) */
-		pSound->Init(Parameter.iSymbolBlockSize * 2);
 
-		/* Init buffer size for taking stereo input */
-		vecsSoundBuffer.Init(Parameter.iSymbolBlockSize * 2);
-	}
-	else
-	{
-		/* Open file for reading data from transmitter. Open file only once */
-		if (pFileReceiver == NULL)
-		{
-#ifdef FILE_DRM_USING_RAW_DATA
-			pFileReceiver = fopen(strInFileName.c_str(), "rb");
-#else
-			pFileReceiver = fopen(strInFileName.c_str(), "r");
-#endif
-		}
+	if(pSound == NULL)
+		return;
 
-		/* Check for error */
-		if (pFileReceiver == NULL)
-			throw CGenErr("The file " + strInFileName + " must exist.");
-	}
+	pSound->Init(Parameter.iSymbolBlockSize * 2);
+
+	/* Init buffer size for taking stereo input */
+	vecsSoundBuffer.Init(Parameter.iSymbolBlockSize * 2);
 
 	/* Init signal meter */
 	SignalLevelMeter.Init(0);
@@ -400,7 +353,6 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 		(_REAL) 2.0 * crPi * ((_REAL) VIRTUAL_INTERMED_FREQ / SOUNDCRD_SAMPLE_RATE);
 
 	cExpStep = _COMPLEX(cos(rNormCurFreqOffsetIQ), sin(rNormCurFreqOffsetIQ));
-
 
 	/* Define output block-size */
 	iOutputBlockSize = Parameter.iSymbolBlockSize;
@@ -438,9 +390,6 @@ _REAL CReceiveData::HilbertFilt(const _REAL rRe, const _REAL rIm)
 
 CReceiveData::~CReceiveData()
 {
-	/* Close file (if opened) */
-	if (pFileReceiver != NULL)
-		fclose(pFileReceiver);
 }
 
 void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,

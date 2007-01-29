@@ -29,6 +29,7 @@
 #include "audiofilein.h"
 #include <windows.h>
 #include <iostream>
+#define FILE_DRM_USING_RAW_DATA
 
 CAudioFileIn::CAudioFileIn(): CSoundInInterface(), pFileReceiver(NULL),
 			strInFileName(), interval(0), timekeeper(0)
@@ -44,13 +45,11 @@ void
 CAudioFileIn::SetFileName(const string& strFileName)
 {
 	strInFileName = strFileName;
-	cout << "CAudioFileIn::SetFileName(" << strFileName << ")" << endl;
 }
 
 void
 CAudioFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
-	cout << "CAudioFileIn::Init" << endl;
 	/* Check previously a file was being used */
 	if (pFileReceiver != NULL)
 	{
@@ -63,32 +62,27 @@ CAudioFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	if (pFileReceiver == NULL)
 		throw CGenErr("The file " + strInFileName + " must exist.");
 
-	/* The FILETIME structure is a 64-bit value representing 
-	 * the number of 100-nanosecond intervals since January 1, 1601. 
-	*/
-	FILETIME now;
-	GetSystemTimeAsFileTime(&now);
-	timekeeper = *(uint64_t*)&now;
-	/* interval also with 100ns resolution */
-	interval = uint64_t(1e7 * double(iNewBufferSize) / double(SOUNDCRD_SAMPLE_RATE));
+	interval = uint64_t(1e7 * double(iNewBufferSize) / double(SOUNDCRD_SAMPLE_RATE)/ 2.0);
+	FILETIME ft;
+	GetSystemTimeAsFileTime(&ft);
+	timekeeper = *(uint64_t*)&ft;
+	timekeeper += interval;
 }
 
 _BOOLEAN
 CAudioFileIn::Read(CVector<short>& psData)
 {
-	cout << "CAudioFileIn::Read" << endl;
-	FILETIME now;
-	GetSystemTimeAsFileTime(&now);
-	uint64_t now = *(uint64_t*)&now;
-	int64_t delay = timekeeper + interval - now_us;
+	FILETIME ft;
+	GetSystemTimeAsFileTime(&ft);
+	uint64_t now = *(uint64_t*)&ft;
+	double delay_ms = (double(timekeeper) - double(now))/10000.0;
 	timekeeper += interval;
-	if(delay > 20000LL) /* don't expect too much resolution from Sleep */
+	if(delay_ms > 10.0)
 	{
-		Sleep(delay/10LL); /* us */
+		Sleep(uint32_t(delay_ms)-10);
 	}
 	/* Read data from file ---------------------------------------------- */
-	int iOutputBlockSize = psData.Size();
-	for (int i = 0; i < iOutputBlockSize; i++)
+	for (int i = 0; i < psData.Size()/2; i++)
 	{
 #ifdef FILE_DRM_USING_RAW_DATA
 		short tIn;
@@ -99,7 +93,8 @@ CAudioFileIn::Read(CVector<short>& psData)
 			rewind(pFileReceiver);
 			fread((void*) &tIn, size_t(2), size_t(1), pFileReceiver);
 		}
-		psData[i] = (short)tIn;
+		psData[2*i] = (short)tIn;
+		psData[2*i+1] = (short)tIn;
 #else
 		float tIn;
 
@@ -108,7 +103,8 @@ CAudioFileIn::Read(CVector<short>& psData)
 			/* If end-of-file is reached, stop simulation */
 			return FALSE;
 		}
-		psData[i] = (short)tIn;
+		psData[2*i] = (short)tIn;
+		psData[2*i+1] = (short)tIn;
 #endif
 	}
 	return TRUE;
@@ -117,7 +113,6 @@ CAudioFileIn::Read(CVector<short>& psData)
 void
 CAudioFileIn::Close()
 {
-	cout << "CAudioFileIn::Close" << endl;
 	/* Close file (if opened) */
 	if (pFileReceiver != NULL)
 		fclose(pFileReceiver);

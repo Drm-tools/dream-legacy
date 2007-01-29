@@ -62,7 +62,7 @@ CAudioFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	if (pFileReceiver == NULL)
 		throw CGenErr("The file " + strInFileName + " must exist.");
 
-	interval = uint64_t(1e9 * double(iNewBufferSize) / double(SOUNDCRD_SAMPLE_RATE));
+	interval = uint64_t(1e9 * double(iNewBufferSize) / double(SOUNDCRD_SAMPLE_RATE) / 2ULL);
 	timespec now;
 	clock_gettime(CLOCK_REALTIME, &now);
 	timekeeper = 1000000000ULL * uint64_t(now.tv_sec) + uint64_t(now.tv_nsec);
@@ -81,7 +81,7 @@ CAudioFileIn::Read(CVector<short>& psData)
 		timespec delay;
 		delay.tv_sec = delay_ns / 1000000000LL;
 		delay.tv_nsec = delay_ns % 1000000000LL;
-		//nanosleep(&delay, NULL);
+		nanosleep(&delay, NULL);
 	}
 	/* Read data from file ---------------------------------------------- */
 	int iOutputBlockSize = psData.Size() / 2; /* psData is stereo ! */
@@ -97,7 +97,7 @@ CAudioFileIn::Read(CVector<short>& psData)
 			fread((void*) &tIn, size_t(2), size_t(1), pFileReceiver);
 		}
 		psData[2*i] = (short)tIn;
-		psData[2*i+1] = 0;
+		psData[2*i+1] = (short)tIn;
 #else
 		float tIn;
 
@@ -107,7 +107,7 @@ CAudioFileIn::Read(CVector<short>& psData)
 			return FALSE;
 		}
 		psData[2*i] = (short)tIn;
-		psData[2*i+1] = 0;
+		psData[2*i+1] = (short)tIn;
 #endif
 	}
 	return TRUE;

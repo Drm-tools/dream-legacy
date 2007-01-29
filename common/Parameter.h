@@ -60,8 +60,7 @@ enum ERecMode
 class CParameter:public CCellMappingTable
 {
   public:
-	CParameter():
-		sReceiverID("                "), sSerialNumber("000000"),
+	CParameter():sReceiverID("                "), sSerialNumber("000000"),
 		Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
 		bRunThread(FALSE), bUsingMultimedia(TRUE),
 		iCurSelAudioService(0), iCurSelDataService(0),
@@ -120,7 +119,7 @@ class CParameter:public CCellMappingTable
 
 	/* CS: Coding Scheme */
 	enum ECodScheme
-	{CS_1_SM, CS_2_SM, CS_3_SM, CS_3_HMSYM, CS_3_HMMIX};
+	{ CS_1_SM, CS_2_SM, CS_3_SM, CS_3_HMSYM, CS_3_HMMIX };
 
 	/* SI: Symbol Interleaver */
 	enum ESymIntMod
@@ -226,7 +225,7 @@ class CParameter:public CCellMappingTable
 		int iUserAppIdent;		/* User application identifier, only DAB */
 
 /* TODO: Copy operator. Now, default copy operator is used! */
-		  CDataParam & operator=(const CDataParam DataParam)
+		CDataParam& operator=(const CDataParam DataParam)
 		{
 			iStreamID = DataParam.iStreamID;
 			eDataUnitInd = DataParam.eDataUnitInd;
@@ -318,7 +317,7 @@ class CParameter:public CCellMappingTable
 		int iPartB;				/* MSC protection level for part B */
 		int iHierarch;			/* MSC protection level for hierachical frame */
 
-		  CMSCProtLev & operator=(const CMSCProtLev & NewMSCProtLev)
+		CMSCProtLev& operator=(const CMSCProtLev& NewMSCProtLev)
 		{
 			iPartA = NewMSCProtLev.iPartA;
 			iPartB = NewMSCProtLev.iPartB;
@@ -336,14 +335,14 @@ class CParameter:public CCellMappingTable
 		{
 			Reset();
 		}
-		CAltFreqSched(const CAltFreqSched & nAFS):iScheduleID(nAFS.
+		CAltFreqSched(const CAltFreqSched& nAFS):iScheduleID(nAFS.
 															  iScheduleID),
 			iDayCode(nAFS.iDayCode), iStartTime(nAFS.iStartTime),
 			iDuration(nAFS.iDuration)
 		{
 		}
 
-		CAltFreqSched & operator=(const CAltFreqSched & nAFS)
+		CAltFreqSched& operator=(const CAltFreqSched& nAFS)
 		{
 			iScheduleID = nAFS.iScheduleID;
 			iDayCode = nAFS.iDayCode;
@@ -353,7 +352,7 @@ class CParameter:public CCellMappingTable
 			return *this;
 		}
 
-		_BOOLEAN operator==(const CAltFreqSched & nAFS)
+		_BOOLEAN operator==(const CAltFreqSched& nAFS)
 		{
 			if (iScheduleID != nAFS.iScheduleID)
 				return FALSE;
@@ -389,7 +388,7 @@ class CParameter:public CCellMappingTable
 		{
 			Reset();
 		}
-		CAltFreqRegion(const CAltFreqRegion & nAFR):iRegionID(nAFR.iRegionID),
+		CAltFreqRegion(const CAltFreqRegion& nAFR):iRegionID(nAFR.iRegionID),
 			veciCIRAFZones(nAFR.veciCIRAFZones),
 			iLatitude(nAFR.iLatitude),
 			iLongitude(nAFR.iLongitude),
@@ -397,7 +396,7 @@ class CParameter:public CCellMappingTable
 		{
 		}
 
-		CAltFreqRegion & operator=(const CAltFreqRegion & nAFR)
+		CAltFreqRegion& operator=(const CAltFreqRegion& nAFR)
 		{
 			iRegionID = nAFR.iRegionID;
 
@@ -412,7 +411,7 @@ class CParameter:public CCellMappingTable
 			return *this;
 		}
 
-		_BOOLEAN operator==(const CAltFreqRegion & nAFR)
+		_BOOLEAN operator==(const CAltFreqRegion& nAFR)
 		{
 			if (iRegionID != nAFR.iRegionID)
 				return FALSE;
@@ -472,7 +471,7 @@ class CParameter:public CCellMappingTable
 			{
 				Reset();
 			}
-			CAltFreq(const CAltFreq & nAF):veciFrequencies(nAF.
+			CAltFreq(const CAltFreq& nAF):veciFrequencies(nAF.
 														   veciFrequencies),
 				veciServRestrict(nAF.veciServRestrict),
 				bIsSyncMultplx(nAF.bIsSyncMultplx),
@@ -481,7 +480,7 @@ class CParameter:public CCellMappingTable
 			{
 			}
 
-			CAltFreq & operator=(const CAltFreq & nAF)
+			CAltFreq& operator=(const CAltFreq& nAF)
 			{
 				veciFrequencies.Init(nAF.veciFrequencies.Size());
 				veciFrequencies = nAF.veciFrequencies;
@@ -496,7 +495,7 @@ class CParameter:public CCellMappingTable
 				return *this;
 			}
 
-			_BOOLEAN operator==(const CAltFreq & nAF)
+			_BOOLEAN operator==(const CAltFreq& nAF)
 			{
 				int i;
 
@@ -574,7 +573,7 @@ class CParameter:public CCellMappingTable
 			{
 				Reset();
 			}
-			CAltFreqOtherServices(const CAltFreqOtherServices &
+			CAltFreqOtherServices(const CAltFreqOtherServices&
 								  nAF):veciFrequencies(nAF.veciFrequencies),
 				bShortIDAnnounceFlag(nAF.bShortIDAnnounceFlag),
 				iShortIDAnnounce(nAF.iShortIDAnnounce),
@@ -585,8 +584,7 @@ class CParameter:public CCellMappingTable
 			{
 			}
 
-			CAltFreqOtherServices & operator=(const CAltFreqOtherServices &
-											  nAF)
+			CAltFreqOtherServices& operator=(const CAltFreqOtherServices& nAF)
 			{
 				veciFrequencies.Init(nAF.veciFrequencies.Size());
 				veciFrequencies = nAF.veciFrequencies;
@@ -603,7 +601,7 @@ class CParameter:public CCellMappingTable
 				return *this;
 			}
 
-			_BOOLEAN operator==(const CAltFreqOtherServices & nAF)
+			_BOOLEAN operator==(const CAltFreqOtherServices& nAF)
 			{
 				int i;
 
@@ -1085,8 +1083,9 @@ class CParameter:public CCellMappingTable
 
 		enum EGPSSource
 		{ GPS_SOURCE_INVALID, GPS_SOURCE_GPS_RECEIVER,
-				GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER, GPS_SOURCE_MANUAL_ENTRY,
-				GPS_SOURCE_NOT_AVAILABLE };
+			GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER, GPS_SOURCE_MANUAL_ENTRY,
+			GPS_SOURCE_NOT_AVAILABLE
+		};
 
 		EGPSSource GetGPSSource()
 		{
@@ -1138,8 +1137,8 @@ class CParameter:public CCellMappingTable
 			return rLongitudeDegrees;
 		}
 
-		_BOOLEAN SetLatLongDegreesMinutes(const string & sNewLat,
-										  const string & sNewLong);
+		_BOOLEAN SetLatLongDegreesMinutes(const string& sNewLat,
+										  const string& sNewLong);
 
 		void SetAltitudeAvailable(_BOOLEAN bNewAltAv)
 		{
@@ -1328,16 +1327,16 @@ class CParameter:public CCellMappingTable
 	_BOOLEAN bMeasureInterference;
 	_REAL rIntFreq, rINR, rICR;
 	void SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr);
-	_BOOLEAN GetSignalStrength(_REAL &rSigStr);
+	_BOOLEAN GetSignalStrength(_REAL& rSigStr);
 	_BOOLEAN bValidSignalStrength;
 	_REAL rSigStr;
 	ERecMode GetReceiverMode();
-	CVector < _BINARY > vecbiAudioFrameStatus;
+	CVector <_BINARY> vecbiAudioFrameStatus;
 
 	/* vector to hold the PSD valued for the rpsd tag. */
-	CVector<_REAL> vecrPSD;
+	CVector <_REAL> vecrPSD;
 
-	CMatrix<_COMPLEX> matcReceivedPilotValues;
+	CMatrix <_COMPLEX> matcReceivedPilotValues;
 };
 
 #endif // !defined(PARAMETER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
