@@ -36,7 +36,7 @@
 #include "IQInputFilter.h"
 #include "util/Modul.h"
 #include "util/Utilities.h"
-#include "util/Pacer.h"
+//#include "util/Pacer.h"
 
 
 /* Definitions ****************************************************************/
