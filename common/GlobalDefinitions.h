@@ -146,6 +146,7 @@ typedef signed char int8_t;
 typedef unsigned char uint8_t;
 typedef unsigned __int32 uint32_t;
 typedef unsigned __int16 uint16_t;
+typedef unsigned __int64 uint64_t;
 #else
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
