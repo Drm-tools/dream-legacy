@@ -39,7 +39,7 @@ uint64_t CPacer::nstogo()
   GetSystemTimeAsFileTime(&ft);
   liNow.LowPart = ft.dwLowDateTime;
   liNow.HighPart = ft.dwHighDateTime;
-  return (uint64_t)100ULL*(timekeeper - liNow.QuadPart);
+  return (uint64_t)100*(timekeeper - liNow.QuadPart);
 }
 
 void CPacer::wait()
