@@ -481,7 +481,18 @@ void FDRMDialog::OnTimer()
 			if (pDRMRec->GetParameters()->Service[iCurSelAudioServ].
 				eAudDataFlag == CParameter::SF_AUDIO)
 			{
-				/* Language */
+			/* SDC Language */
+			const string strLangCode = ReceiverParam.
+				Service[iCurSelAudioServ].strLanguageCode;
+
+			if ((!strLangCode.empty()) && (strLangCode != "---"))
+			{
+				 LabelLanguage->
+					setText(QString(GetISOLanguageName(strLangCode).c_str()));
+			}
+			else
+			{
+				/* FAC Language */
 				const int iLanguageID = ReceiverParam.
 					Service[iCurSelAudioServ].iLanguage;
 
@@ -493,6 +504,7 @@ void FDRMDialog::OnTimer()
 				}
 				else
 					LabelLanguage->setText("");
+			}
 
 				/* Program type */
 				const int iProgrammTypeID = ReceiverParam.

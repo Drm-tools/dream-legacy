@@ -740,6 +740,9 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	TextAMSSServiceLabel->setText("");
 	TextAMSSCountryCode->setText("");
 	TextAMSSTimeDate->setText("");
+	TextAMSSLanguage->setText("");
+	TextAMSSServiceID->setText("");
+	TextAMSSAMCarrierMode->setText("");
 	TextAMSSInfo->setText("");
 
 	ListBoxAMSSAFSList->setEnabled(FALSE);
@@ -813,6 +816,23 @@ void CAMSSDlg::OnTimer()
 	}
 	else
 		TextAMSSCountryCode->setText("");
+
+	/* SDC Language code */
+
+	if (pDRMRec->GetParameters()->Service[0].IsActive())
+	{
+		const string strLangCode = pDRMRec->GetParameters()->
+			Service[0].strLanguageCode; /* must be of 3 lowercase chars */
+
+		if ((!strLangCode.empty()) && (strLangCode != "---"))
+			 TextAMSSLanguage->
+				setText(QString(GetISOLanguageName(strLangCode).c_str()));
+		else
+			TextAMSSLanguage->setText(QString(strTableLanguageCode[pDRMRec->
+				GetParameters()->Service[0].iLanguage].c_str()));
+	}
+	else
+		TextAMSSLanguage->setText("");
 
 	/* Time, date */
 	if ((pDRMRec->GetParameters()->iUTCHour == 0) &&
@@ -906,11 +926,11 @@ void CAMSSDlg::OnTimer()
 
 				if (iSystemID == 0 || iSystemID == 1)
 				{
-					freqEntry += " ID:0x";
+					freqEntry += " ID:";
 					freqEntry +=
 						QString().setNum((long) pDRMRec->GetParameters()->
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
-						iOtherServiceID, 16);
+						iOtherServiceID, 16).upper();
 				}
 				break;
 
@@ -932,20 +952,20 @@ void CAMSSDlg::OnTimer()
 
 				if (iSystemID == 3)
 				{
-					freqEntry += " ECC+PI:0x";
+					freqEntry += " ECC+PI:";
 					freqEntry +=
 						QString().setNum((long) pDRMRec->GetParameters()->
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
-						iOtherServiceID, 16);
+						iOtherServiceID, 16).upper();
 				}
 
 				if (iSystemID == 4)
 				{
-					freqEntry += " PI:0x";
+					freqEntry += " PI:";
 					freqEntry +=
 						QString().setNum((long) pDRMRec->GetParameters()->
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
-						iOtherServiceID, 16);
+						iOtherServiceID, 16).upper();
 				}
 				break;
 
@@ -967,20 +987,20 @@ void CAMSSDlg::OnTimer()
 
 				if (iSystemID == 6)
 				{
-					freqEntry += " ECC+PI:0x";
+					freqEntry += " ECC+PI:";
 					freqEntry +=
 						QString().setNum((long) pDRMRec->GetParameters()->
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
-						iOtherServiceID, 16);
+						iOtherServiceID, 16).upper();
 				}
 
 				if (iSystemID == 7)
 				{
-					freqEntry += " PI:0x";
+					freqEntry += " PI:";
 					freqEntry +=
 						QString().setNum((long) pDRMRec->GetParameters()->
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
-						iOtherServiceID, 16);
+						iOtherServiceID, 16).upper();
 				}
 				break;
 
@@ -1019,18 +1039,16 @@ void CAMSSDlg::OnTimer()
 		/* Display 'block 1' info */
 		if (pDRMRec->GetAMSSDecode()->GetBlock1Status())
 		{
-			QString strServIDCarrierMode = strTableLanguageCode[pDRMRec->
-				GetParameters()->Service[0].iLanguage].c_str();
+			TextAMSSInfo->setText("");
 
-			strServIDCarrierMode += " / ID:0x";
-			strServIDCarrierMode += QString().setNum(
-				(long) pDRMRec->GetParameters()->Service[0].iServiceID, 16);
+			TextAMSSLanguage->setText(QString(strTableLanguageCode[pDRMRec->
+				GetParameters()->Service[0].iLanguage].c_str()));
 
-			strServIDCarrierMode += " / ";
-			strServIDCarrierMode += strTableAMSSCarrierMode[pDRMRec->
-				GetParameters()->iAMSSCarrierMode].c_str();
+			TextAMSSServiceID->setText("ID:" + QString().setNum(
+				(long) pDRMRec->GetParameters()->Service[0].iServiceID, 16).upper());
 
-			TextAMSSInfo->setText(strServIDCarrierMode);
+			TextAMSSAMCarrierMode->setText(QString(strTableAMSSCarrierMode[pDRMRec->
+				GetParameters()->iAMSSCarrierMode].c_str()));
 		}
 	}
 

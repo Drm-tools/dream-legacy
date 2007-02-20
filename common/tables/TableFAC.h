@@ -74,6 +74,24 @@ extern const struct elCountry TableCountryCode[LEN_TABLE_COUNTRY_CODE];
 
 string GetISOCountryName(const string strA2);
 
+/* Language code table according to ISO/IEC 639-2 */
+
+#define LEN_TABLE_ISO_LANGUAGE_CODE			483
+
+#define LEN_ISO_LANGUAGE_CODE				3
+#define MAX_LEN_DESC_ISO_LANGUAGE_CODE		44
+
+struct elLanguage {
+	char	strISOCode [LEN_ISO_LANGUAGE_CODE+1];
+	char	strDesc [MAX_LEN_DESC_ISO_LANGUAGE_CODE+1];
+	};
+ 
+extern const struct elLanguage TableISOLanguageCode[LEN_TABLE_ISO_LANGUAGE_CODE];
+
+/* Get language name from ISO 3166 */
+
+string GetISOLanguageName(const string strA3);
+
 /* CIRAF zones */
 #define LEN_TABLE_CIRAF_ZONES			86
 

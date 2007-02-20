@@ -279,6 +279,7 @@ class CParameter:public CCellMappingTable
 		ETyOServ eAudDataFlag;
 		int iServiceDescr;
 		string strCountryCode;
+		string strLanguageCode;
 
 		/* Label of the service */
 		string strLabel;

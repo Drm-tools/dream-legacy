@@ -1310,14 +1310,14 @@ _BOOLEAN CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
 	   audience of the service according to ISO 639-2 using three lower case
 	   characters as specified by ISO 8859-1. If the language is not specified,
 	   the field shall contain three "-" characters */
-	string strLanguageCode = "";
+	Parameter.Service[iShortID].strLanguageCode = "";
 	for (i = 0; i < 3; i++)
 	{
 		/* Get character */
 		const char cNewChar = (*pbiData).Separate(8);
 
 		/* Append new character */
-		strLanguageCode.append(&cNewChar, 1);
+		Parameter.Service[iShortID].strLanguageCode.append(&cNewChar, 1);
 	}
 
 	/* Country code: this 16-bit field identifies the country of origin of the
