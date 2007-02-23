@@ -76,7 +76,7 @@ string GetISOCountryName(const string strA2);
 
 /* Language code table according to ISO/IEC 639-2 */
 
-#define LEN_TABLE_ISO_LANGUAGE_CODE			483
+#define LEN_TABLE_ISO_LANGUAGE_CODE			505
 
 #define LEN_ISO_LANGUAGE_CODE				3
 #define MAX_LEN_DESC_ISO_LANGUAGE_CODE		44

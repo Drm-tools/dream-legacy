@@ -809,7 +809,7 @@ void CAMSSDlg::OnTimer()
 		Service[0].strCountryCode; /* must be of 2 lowercase chars */
 
 	if ((pDRMRec->GetParameters()->Service[0].IsActive()) &&
-	   (!strCntryCode.empty()))
+	   (!strCntryCode.empty()) && (strCntryCode != "--"))
 	{
 		TextAMSSCountryCode->
 			setText(QString(GetISOCountryName(strCntryCode).c_str()));

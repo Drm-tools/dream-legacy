@@ -524,7 +524,7 @@ void FDRMDialog::OnTimer()
 			const string strCntryCode = ReceiverParam.
 				Service[iCurSelAudioServ].strCountryCode;
 
-			if (!strCntryCode.empty())
+			if ((!strCntryCode.empty()) && (strCntryCode != "--"))
 			{
 				LabelCountryCode->
 					setText(QString(GetISOCountryName(strCntryCode).c_str()));
