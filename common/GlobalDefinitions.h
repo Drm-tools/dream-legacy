@@ -146,14 +146,20 @@ typedef unsigned char/*bool*/			_BINARY;
 #elif HAVE_INTTYPES_H
 # include <inttypes.h>
 #elif defined(_WIN32)
-typedef signed char int8_t;
+# ifndef HAVE_INT8_T
+#  define HAVE_INT8_T 1
+   typedef signed char int8_t;
+# endif
+# ifndef HAVE_INT16_T
+#  define HAVE_INT16_T 1
+   typedef signed __int16 int16_t;
+# endif
+# ifndef HAVE_INT32_T
+#  define HAVE_INT32_T 1
+   typedef signed __int32 int32_t;
+# endif
 typedef unsigned char uint8_t;
 typedef unsigned __int16 uint16_t;
-// TODO find the other definitions of these and reconcile
-# ifndef HAVE_LIBPCAP // winpcap defines these two
-typedef signed __int16 int16_t;
-typedef signed __int32 int32_t;
-# endif
 typedef unsigned __int32 uint32_t;
 typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
@@ -166,9 +172,6 @@ typedef signed long int32_t;
 typedef unsigned long uint32_t;
 typedef signed long long int64_t;
 typedef unsigned long long uint64_t;
-#endif
-#ifdef USE_FAAC_LIBRARY
-# define HAVE_INT32_T
 #endif
 
 /* Define type-specific information */
