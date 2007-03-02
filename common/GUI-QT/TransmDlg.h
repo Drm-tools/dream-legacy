@@ -47,9 +47,9 @@
 #include <qlayout.h>
 #include <qthread.h>
 #include <qtimer.h>
-#include <qwt_thermo.h>
 #include <qwhatsthis.h>
 #include <qprogressbar.h>
+#include <qwt/qwt_thermo.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/TransmDlgbase.h"

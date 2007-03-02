@@ -32,7 +32,7 @@
 #include <qstring.h>
 #include <qmenubar.h>
 #include <qpopupmenu.h>
-#include <qwt_thermo.h>
+#include <qwt/qwt_thermo.h>
 #include <qevent.h>
 #include <qcstring.h>
 #include <qlayout.h>

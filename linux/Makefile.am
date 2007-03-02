@@ -170,6 +170,7 @@ drmwithoutqt_SOURCES = \
 	../common/tables/TableQAMMapping.h \
 	../common/selectioninterface.h \
 	../common/soundinterface.h \
+	../common/soundnull.h \
 	../common/audiofilein.h \
 	source/alsa.h \
 	source/sound.h \

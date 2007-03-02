@@ -414,7 +414,7 @@ CDataDecoder::DecodeEPG(const CParameter & ReceiverParam)
 			fileName = epgFilename(NewObj.ScopeStart, iScopeId,
 								   NewObj.iContentSubType, advanced);
 
-#if !defined(HAVE_ZLIB_LIBRARY) && !defined(HAVE_LIBFREEIMAGE)
+#if !defined(HAVE_LIBZ) && !defined(HAVE_LIBFREEIMAGE)
 			const string& s = NewObj.strName;
 			if (s.size() >= 3)
 				if (s.substr(s.size() - 3, 3) == ".gz")

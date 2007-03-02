@@ -39,13 +39,7 @@
 #include "OFDM.h"
 #include "DRMSignalIO.h"
 #include "sourcedecoders/AudioSourceDecoder.h"
-
-#ifdef _WIN32
-# include "../../Windows/source/sound.h"
-#else
-# include "source/sound.h"
-#endif
-
+#include "soundinterface.h"
 
 /* Classes ********************************************************************/
 class CDRMTransmitter
@@ -59,8 +53,8 @@ public:
 	void Stop();
 
 	/* Get pointer to internal modules */
-	CSoundInInterface*		GetSoundInInterface() {return &SoundInInterface;}
-	CSoundOutInterface*		GetSoundOutInterface() {return &SoundOutInterface;}
+	CSoundInInterface*		GetSoundInInterface() {return pSoundInInterface;}
+	CSoundOutInterface*		GetSoundOutInterface() {return pSoundOutInterface;}
 	CAudioSourceEncoder*	GetAudSrcEnc() {return &AudioSourceEncoder;}
 	CTransmitData*			GetTransData() {return &TransmitData;}
 	CReadData*				GetReadData() {return &ReadData;}
@@ -98,6 +92,9 @@ protected:
 	CSingleBuffer<_COMPLEX>	CarMapBuf;
 	CSingleBuffer<_COMPLEX>	OFDMModBuf;
 
+	CSoundInInterface*		pSoundInInterface;
+	CSoundOutInterface*		pSoundOutInterface;
+
 	/* Modules */
 	CReadData				ReadData;
 	CAudioSourceEncoder		AudioSourceEncoder;
@@ -110,9 +107,6 @@ protected:
 	COFDMCellMapping		OFDMCellMapping;
 	COFDMModulation			OFDMModulation;
 	CTransmitData			TransmitData;
-
-	CSoundIn				SoundInInterface;
-	CSoundOut				SoundOutInterface;
 
 	_REAL					rDefCarOffset;
 };

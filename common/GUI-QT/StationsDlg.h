@@ -42,13 +42,13 @@
 #include <qlayout.h>
 #include <qftp.h>
 #include <qthread.h>
-#include <qwt_counter.h>
 #include <qaction.h>
 #include <qwhatsthis.h>
 #include <qlabel.h>
-#include <qwt_thermo.h>
 #include <qfileinfo.h>
 #include <qdatetime.h>
+#include <qwt/qwt_thermo.h>
+#include <qwt/qwt_counter.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/StationsDlgbase.h"

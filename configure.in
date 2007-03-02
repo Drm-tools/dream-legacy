@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 AC_INIT(common/GUI-QT/main.cpp)
 
-AM_INIT_AUTOMAKE(drm,1.7.10cvs)
+AM_INIT_AUTOMAKE(drm,1.7.11cvs)
 
 
 AM_CONFIG_HEADER(config.h)
@@ -133,17 +133,8 @@ if test "x$WITHQTGUI" = xyes; then
 
 	AC_HAVE_LIBRARY(qwt, ,exit 1)
 
-	AC_CHECK_HEADER(/usr/include/qwt/qwt.h, qwt_include="/usr/include/qwt", qwt_include="")
-	if test "x$qwt_include" = "x"; then
-		AC_CHECK_HEADER(/usr/local/include/qwt/qwt.h, qwt_include="/usr/local/include/qwt", qwt_include="")
-	fi
-	if test "x$qwt_include" = "x"; then
-		AC_CHECK_HEADER($QTDIR/include/qwt/qwt.h, qwt_include="$QTDIR/include/qwt", exit 1)
-	fi
-	AC_SUBST(QWTINCL, -I$qwt_include )
-	
 	dnl check for new functions from version 4.2
-	AC_CHECK_HEADER($qwt_include/qwt_dial_needle.h, qwt_version_ok=yes, qwt_version_ok=no)
+	AC_CHECK_HEADER(qwt/qwt_dial_needle.h, qwt_version_ok=yes, qwt_version_ok=no)
 	if test "x$qwt_version_ok" = "xno"; then
 		AC_MSG_ERROR( "Your version of qwt is too old!")
 	fi
@@ -177,15 +168,6 @@ if test "x$WITHFAAD2" = xyes; then
 		AC_MSG_ERROR( "*** libfaad build without DRM support ***" )
 	fi
 	AC_DEFINE(USE_FAAD2_LIBRARY, 1, [Define if you want to use the faad2 library])
-fi
-
-dnl zlib ------------------------------------------------------------------------
-AC_CHECK_HEADER(zlib.h, ,have_zlib=no,)
-AC_CHECK_LIB(z, deflate, , have_zlib=no)
-if test "x$have_zlib" = "xno"; then
-	AC_MSG_WARN( "zlib library not found" )
-else
-	AC_DEFINE(HAVE_ZLIB_LIBRARY, 1, [Define if you want to use the zlib library])
 fi
 
 dnl faac (optional) -------------------------------------------------------------

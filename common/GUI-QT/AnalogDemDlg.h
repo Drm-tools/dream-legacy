@@ -40,8 +40,8 @@
 #include <qcheckbox.h>
 #include <qfiledialog.h>
 #include <qslider.h>
-#include <qwt_dial.h>
-#include <qwt_dial_needle.h>
+#include <qwt/qwt_dial.h>
+#include <qwt/qwt_dial_needle.h>
 #include <qlayout.h>
 #include <qprogressbar.h>
 #include <qcombobox.h>

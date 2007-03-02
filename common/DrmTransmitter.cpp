@@ -27,6 +27,16 @@
 \******************************************************************************/
 
 #include "DrmTransmitter.h"
+#ifdef WITH_SOUND
+# ifdef _WIN32
+#  include "../windows/Source/Sound.h"
+# else
+#  include "../linux/source/soundin.h"
+#  include "../linux/source/soundout.h"
+# endif
+#else
+# include "soundnull.h"
+#endif
 
 
 /* Implementation *************************************************************/
@@ -46,8 +56,8 @@ void CDRMTransmitter::Stop()
 {
 	TransmParam.bRunThread = FALSE;
 
-	SoundInInterface.Close();
-	SoundOutInterface.Close();
+	if(pSoundInInterface) pSoundInInterface->Close();
+	if(pSoundOutInterface) pSoundOutInterface->Close();
 }
 
 void CDRMTransmitter::Run()
@@ -116,8 +126,14 @@ void CDRMTransmitter::Init()
 	TransmitData.Init(TransmParam);
 }
 
-CDRMTransmitter::CDRMTransmitter() : ReadData(&SoundInInterface), 
-TransmitData(&SoundOutInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
+CDRMTransmitter::CDRMTransmitter() :
+#ifdef WITH_SOUND
+	pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
+#else
+	pSoundInInterface(new CSoundInNull), pSoundOutInterface(new CSoundOutNull),
+#endif
+	ReadData(pSoundInInterface), TransmitData(pSoundOutInterface),
+	rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
 {
 	/* Init streams */
 	TransmParam.ResetServicesStreams();

@@ -86,13 +86,13 @@ using namespace std; /* Because of the library: "complex" */
 # if defined(QT_VERSION) && QT_VERSION < 0x030000
 #  define HAVE_LIBFREEIMAGE
 //#  undef HAVE_LIBFREEIMAGE
-//#  define HAVE_ZLIB_LIBRARY
-#  undef HAVE_ZLIB_LIBRARY
+//#  define HAVE_LIBZ 1
+#  undef HAVE_LIBZ
 # else
 //# define HAVE_LIBFREEIMAGE
 #  undef HAVE_LIBFREEIMAGE
-#  define HAVE_ZLIB_LIBRARY
-//# undef HAVE_ZLIB_LIBRARY
+#  define HAVE_LIBZ 1
+//# undef HAVE_LIBZ
 # endif
 
 #endif

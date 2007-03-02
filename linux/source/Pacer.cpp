@@ -9,7 +9,14 @@
 CPacer::CPacer(uint64_t ns)
 {
 	timespec now;
+#if _POSIX_TIMERS>0
 	int r = clock_gettime(CLOCK_REALTIME, &now);
+#else
+	timeval t;
+	int r = gettimeofday(&t, NULL);
+	now.tv_sec = t.tv_sec;
+	now.tv_nsec = 1000*t.tv_usec;
+#endif
 	if(r<0)
 		perror("time");
 	interval = ns;
@@ -38,7 +45,14 @@ void CPacer::wait()
 uint64_t CPacer::nstogo()
 {
 	timespec now;
-	clock_gettime(CLOCK_REALTIME, &now);
+#if _POSIX_TIMERS>0
+	int r = clock_gettime(CLOCK_REALTIME, &now);
+#else
+	timeval t;
+	int r = gettimeofday(&t, NULL);
+	now.tv_sec = t.tv_sec;
+	now.tv_nsec = 1000*t.tv_usec;
+#endif
 	uint64_t now_ns = 1000000000LL*now.tv_sec+now.tv_nsec;
 	if(timekeeper<=now_ns)
 		return 0;

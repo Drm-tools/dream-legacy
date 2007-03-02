@@ -33,7 +33,6 @@
 #include <qslider.h>
 #include <qpushbutton.h>
 #include <qcheckbox.h>
-#include <qwt_thermo.h>
 #include <qdatetime.h>
 #include <qlineedit.h>
 #include <qtooltip.h>
@@ -43,6 +42,7 @@
 #include <qbuttongroup.h>
 #include <qpopupmenu.h>
 #include <qpixmap.h>
+#include <qwt/qwt_thermo.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/systemevalDlgbase.h"

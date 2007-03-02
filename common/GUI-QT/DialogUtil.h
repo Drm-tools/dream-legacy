@@ -44,7 +44,7 @@
 #include "../DrmReceiver.h"
 
 #ifdef USE_QT_GUI
-# include <qwt_global.h> /* for extract the library version */
+# include <qwt/qwt_global.h> /* for extract the library version */
 #endif
 
 #ifdef HAVE_LIBFREEIMAGE

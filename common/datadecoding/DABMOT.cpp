@@ -35,7 +35,7 @@
 #include "../util/Utilities.h"
 #include <algorithm>
 #include <cctype>
-#ifdef HAVE_ZLIB_LIBRARY
+#ifdef HAVE_LIBZ
 #include <zlib.h>
 #else
 #ifdef HAVE_LIBFREEIMAGE
@@ -1397,7 +1397,7 @@ CReassembler::gzGetOriginalSize() const
 _BOOLEAN
 CReassembler::uncompress()
 {
-#ifdef HAVE_ZLIB_LIBRARY
+#ifdef HAVE_LIBZ
 	CVector < _BYTE > vecbRawDataOut;
 	/* Extract the original file size */
 	unsigned long dest_len = gzGetOriginalSize();
