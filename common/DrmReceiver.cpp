@@ -1034,9 +1034,6 @@ void CDRMReceiver::InitsForMSCDemux()
 	{
 		SplitMSC[i].SetStream(i);
 		SplitMSC[i].SetInitFlag();
-		MSCDecBuf[i].Clear();
-		MSCUseBuf[i].Clear();
-		MSCSendBuf[i].Clear();
 	}
 	InitsForAudParam();
 	InitsForDataParam();
@@ -1049,6 +1046,13 @@ void CDRMReceiver::InitsForMSCDemux()
 
 void CDRMReceiver::InitsForAudParam()
 {
+	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
+	{
+		MSCDecBuf[i].Clear();
+		MSCUseBuf[i].Clear();
+		MSCSendBuf[i].Clear();
+	}
+
 	/* Set init flags */
 	DecodeRSIMDI.SetInitFlag();
 	MSCDemultiplexer.SetInitFlag();
