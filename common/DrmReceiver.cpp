@@ -1034,6 +1034,9 @@ void CDRMReceiver::InitsForMSCDemux()
 	{
 		SplitMSC[i].SetStream(i);
 		SplitMSC[i].SetInitFlag();
+		MSCDecBuf[i].Clear();
+		MSCUseBuf[i].Clear();
+		MSCSendBuf[i].Clear();
 	}
 	InitsForAudParam();
 	InitsForDataParam();
