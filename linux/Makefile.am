@@ -6,7 +6,6 @@ drmwithoutqt_SOURCES = \
 	../common/SimulationParameters.cpp \
 	../common/DRMSignalIO.cpp \
 	../common/DataIO.cpp \
-	../common/GPSReceiver.cpp \
 	../common/DrmReceiver.cpp \
 	../common/DrmSimulation.cpp \
 	../common/DrmTransmitter.cpp \
@@ -84,7 +83,6 @@ drmwithoutqt_SOURCES = \
 	../common/Version.h \
 	../common/DRMSignalIO.h \
 	../common/DataIO.h \
-	../common/GPSReceiver.h \
 	../common/DrmReceiver.h \
 	../common/DrmSimulation.h \
 	../common/DrmTransmitter.h \
@@ -186,6 +184,7 @@ endif
 if USE_QT
 
 drmqtonly_SOURCES = \
+	../common/GPSReceiver.cpp \
 	../common/GUI-QT/DialogUtil.cpp \
 	../common/GUI-QT/DRMPlot.cpp \
 	../common/GUI-QT/fdrmdialog.cpp \
@@ -212,6 +211,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/EPGDlgbase.ui \
 	../common/GUI-QT/AnalogDemDlgbase.ui \
 	../common/GUI-QT/AMSSDlgbase.ui \
+	../common/GPSReceiver.h \
 	../common/GUI-QT/MultimediaDlg.h \
 	../common/GUI-QT/fdrmdialog.h \
 	../common/GUI-QT/TransmDlg.h \

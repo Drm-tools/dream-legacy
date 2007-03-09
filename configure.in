@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 AC_INIT(common/GUI-QT/main.cpp)
 
-AM_INIT_AUTOMAKE(drm,1.8.1cvs)
+AM_INIT_AUTOMAKE(drm,1.8.2cvs)
 
 
 AM_CONFIG_HEADER(config.h)
@@ -83,10 +83,6 @@ else
 	AM_CONDITIONAL(WITH_SOUND, false)
 fi
  
-if test "x$enable_gps" = "xyes"; then
-	AC_DEFINE(USE_GPS, 1, [Define if you want to use gps])
-fi
-
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_LANG_CPLUSPLUS
@@ -152,6 +148,14 @@ if test "x$WITHQTGUI" = xyes; then
 	AM_CONDITIONAL(USE_QT, true)
 else
 	AM_CONDITIONAL(USE_QT, false)
+fi
+
+if test "x$enable_gps" = "xyes"; then
+	if test "x$WITHQTGUI" = xyes; then
+		AC_DEFINE(USE_GPS, 1, [Define if you want to use gps])
+	else
+		AC_MSG_ERROR("gps needs qt");
+	fi
 fi
 
 dnl Hamlib (optional) -----------------------------------------------------------

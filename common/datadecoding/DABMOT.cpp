@@ -1364,6 +1364,8 @@ CReassembler::IsZipped() const
 	see GZIP file format specification
 	http://www.ietf.org/rfc/rfc1952.txt
 */
+	if(vecData.Size()<3)
+		return FALSE;
 	/* Check for gzip header [31, 139, 8] */
 	if ((vecData[0] == 31) && (vecData[1] == 139) && (vecData[2] == 8))
 		return TRUE;
