@@ -923,7 +923,7 @@ void CParameter::CReceptLog::SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong)
 				fprintf(pFile, "%d kHz", iFrequency);
 			
 			fprintf(pFile, "\nLatitude         %7s", GetLatitudeDegreesMinutesString().c_str());
-			fprintf(pFile, "\nLongitude        %7s", GetLatitudeDegreesMinutesString().c_str());
+			fprintf(pFile, "\nLongitude        %7s", GetLongitudeDegreesMinutesString().c_str());
 
 			/* Write additional text */
 			if (strAdditText != "")
