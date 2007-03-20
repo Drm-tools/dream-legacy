@@ -969,7 +969,7 @@ void systemevalDlg::OnTimer()
 	if (ReceiverParam.GPSRxData.GetSpeedAvailable())
 		qStrSpeedHeading += QString().setNum(ReceiverParam.GPSRxData.GetSpeedMetresPerSecond(), 'f', 1) + " m/s";
 	else
-		qStrSpeedHeading += "?       ";
+		qStrSpeedHeading += "?";
 
 
 	qStrSpeedHeading += "  Heading: ";
