@@ -392,7 +392,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(&TimerLogFileStart, SIGNAL(timeout()),
 		this, SLOT(OnTimerLogFileStart()));
 
-	Timer.stop();
+	/* Activate real-time timer */
+	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	StopLogTimers();
 
 	/* Activate log file start if necessary. */
@@ -538,12 +539,6 @@ void systemevalDlg::showEvent(QShowEvent*)
 
 	/* Update controls */
 	UpdateControls();
-
-	/* update data */
-	OnTimer();
-
-	/* Activate real-time timer */
-	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
 void systemevalDlg::hideEvent(QHideEvent*)
@@ -579,9 +574,6 @@ void systemevalDlg::hideEvent(QHideEvent*)
 
 	/* We do not need the pointers anymore, reset vector */
 	vecpDRMPlots.Init(0);
-
-	/* stop real-time timer */
-	Timer.stop();
 }
 
 void systemevalDlg::StopLogTimers()
@@ -688,6 +680,21 @@ void systemevalDlg::OnTimer()
 {
 	CParameter& ReceiverParam = *(pDRMRec->GetParameters());
 
+	/* Show SNR if receiver is in tracking mode */
+	if ((pDRMRec->GetReceiverState() == AS_WITH_SIGNAL) &&
+		(pDRMRec->GetReceiverMode() == RM_DRM) &&
+		(ReceiverParam.ReceptLog.GetLoggingActivated()))
+	{
+		/* We only get SNR from a local DREAM Front-End */
+		_REAL rSNR = ReceiverParam.rSNREstimate;
+
+		/* Set SNR for log file */
+		if (rSNR >= 0.0)
+			ReceiverParam.ReceptLog.SetSNR(rSNR);
+	}
+
+	if (this->isVisible())
+	{
 	SetStatus(LEDMSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
     SetStatus(LEDSDC, ReceiverParam.ReceiveStatus.GetSDCStatus());
     SetStatus(LEDFAC, ReceiverParam.ReceiveStatus.GetFACStatus());
@@ -708,8 +715,6 @@ void systemevalDlg::OnTimer()
 			/* SNR */
 			ValueSNR->setText("<b>" +
 				QString().setNum(rSNR, 'f', 1) + " dB</b>");
-			/* Set SNR for log file */
-			ReceiverParam.ReceptLog.SetSNR(rSNR);
 		}
 		else
 		{
@@ -1008,6 +1013,7 @@ void systemevalDlg::OnTimer()
 
 	/* Update controls */
 	UpdateControls();
+	}
 }
 
 void systemevalDlg::OnRadioTimeLinear() 
