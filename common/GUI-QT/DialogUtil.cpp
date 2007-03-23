@@ -94,6 +94,9 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"This product includes software developed by the Computer Systems "
 		"Engineering Group at Lawrence Berkeley Laboratory.</i></li>"
 #endif
+#ifdef USE_GPS
+		"<li><b>With GPS support</b></li>"
+#endif
 		"</ul><br><br><hr/><br><br>"
 		"<center><b>HISTORY</b></center><br>"
         "The Dream software development was started at <i>Darmstadt University "
