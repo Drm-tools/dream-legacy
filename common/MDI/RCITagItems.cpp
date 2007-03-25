@@ -51,3 +51,30 @@ void CTagItemGeneratorCfre::GenTag(int iNewFreqkHz)
 
 string CTagItemGeneratorCfre::GetTagName(void) {return "cfre";}
 
+void CTagItemGeneratorCdmo::GenTag(const ERecMode eMode) // cdmo
+{
+	PrepareTag(4*SIZEOF__BYTE);
+	switch (eMode)
+	{
+	case RM_DRM:
+		Enqueue((uint32_t) 'd', SIZEOF__BYTE);
+		Enqueue((uint32_t) 'r', SIZEOF__BYTE);
+		Enqueue((uint32_t) 'm', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		break;
+	case RM_AM:
+		Enqueue((uint32_t) 'a', SIZEOF__BYTE);
+		Enqueue((uint32_t) 'm', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		break;
+	default:
+		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
+		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
+		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
+		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
+		break;
+	}
+}
+
+string CTagItemGeneratorCdmo::GetTagName(void) {return "cdmo";}

@@ -136,6 +136,7 @@ void CTagItemDecoderCdmo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	string s = "";
 	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 		s += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
+cout << "received cdmo " << s << endl;
 	if(s == "drm_")
 		pDRMReceiver->SetReceiverMode(RM_DRM);
 	if(s == "am__")

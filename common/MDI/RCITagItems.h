@@ -40,4 +40,13 @@ protected:
 	string GetProfiles(void) { return ""; }
 };
 
+class CTagItemGeneratorCdmo : public CTagItemGenerator /* cdmo tag */
+{
+public:
+	void GenTag(const ERecMode eMode);
+protected:
+	string GetTagName(void);
+	string GetProfiles(void) { return ""; }
+};
+
 #endif

@@ -460,7 +460,7 @@ void CRSIMDIInRCIOut::SetOutAddr(const string& strArgument)
 		bMDIOutEnabled = TRUE;
 }
 
-_BOOLEAN CRSIMDIInRCIOut::SetFrequency(int iNewFreqkHz)
+void CRSIMDIInRCIOut::SetFrequency(int iNewFreqkHz)
 {
 	TagPacketGenerator.Reset();
 	TagItemGeneratorCfre.GenTag(iNewFreqkHz);
@@ -471,8 +471,19 @@ _BOOLEAN CRSIMDIInRCIOut::SetFrequency(int iNewFreqkHz)
 #ifdef USE_QT_GUI
 	PacketSocket.SendPacket(packet);
 #endif
+}
 
-	return TRUE;
+void CRSIMDIInRCIOut::SetReceiverMode(ERecMode eNewMode)
+{
+	TagPacketGenerator.Reset();
+	TagItemGeneratorCdmo.GenTag(eNewMode);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyRSCI);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorCdmo);
+	CVector<_BYTE> packet = TagPacketGenerator.GenAFPacket(bUseAFCRC);
+
+#ifdef USE_QT_GUI
+	PacketSocket.SendPacket(packet);
+#endif
 }
 
 /* bits to bytes and send */

@@ -67,7 +67,8 @@ public:
 	void SetOutAddr(const string& strArgument);
 	_BOOLEAN GetOutEnabled() {return bMDIOutEnabled;}
 	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC=bNAFPktCRC;}
-	_BOOLEAN SetFrequency(int iNewFreqkHz);
+	void SetFrequency(int iNewFreqkHz);
+	void SetReceiverMode(ERecMode eNewMode);
 
 #ifdef USE_QT_GUI
 	/* CPacketSink */
@@ -98,6 +99,7 @@ protected:
 
 	CTagItemGeneratorProTyRSCI TagItemGeneratorProTyRSCI; /* *ptr tag */
 	CTagItemGeneratorCfre TagItemGeneratorCfre;
+	CTagItemGeneratorCdmo TagItemGeneratorCdmo;
 
 	/* TAG Packet generator */
 	CTagPacketGenerator TagPacketGenerator;
