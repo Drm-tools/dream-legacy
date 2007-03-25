@@ -794,9 +794,6 @@ void FDRMDialog::SetReceiverMode(const ERecMode eNewReMo)
 
 void FDRMDialog::showEvent(QShowEvent*)
 {
-	/* Update window */
-	OnTimer();
-
 	/* Set timer for real-time controls */
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
