@@ -1005,6 +1005,9 @@ void StationsDlg::SetStationsView()
 {
 	/* Stop the timer and disable the list */
 	TimerList.stop();
+
+	const _BOOLEAN bListFocus = ListViewStations->hasFocus();
+
 	ListViewStations->setUpdatesEnabled(FALSE);
 	ListViewStations->setEnabled(FALSE);
 
@@ -1111,6 +1114,10 @@ void StationsDlg::SetStationsView()
 	/* Start the timer and enable the list */
 	ListViewStations->setUpdatesEnabled(TRUE);
 	ListViewStations->setEnabled(TRUE);
+
+	if (bListFocus == TRUE)
+		ListViewStations->setFocus();
+
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT);
 }
 
