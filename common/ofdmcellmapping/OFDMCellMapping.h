@@ -31,7 +31,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
-#include "../Modul.h"
+#include "../util/Modul.h"
 #include "../tables/TableCarMap.h"
 #include "../tables/TableFAC.h"
 
@@ -44,6 +44,8 @@ public:
 	virtual ~COFDMCellMapping() {}
 
 protected:
+	int			iNumSymPerFrame;
+	int			iNumCarrier;
 	int			iSymbolCounter;
 	_COMPLEX*	pcDummyCells;
 
@@ -58,6 +60,11 @@ public:
 	virtual ~COFDMCellDemapping() {}
 
 protected:
+	int		iNumSymPerFrame;
+	int		iNumCarrier;
+	int		iNumUsefMSCCellsPerFrame;
+	int		iNumSDCCellsPerSFrame;
+
 	int		iSymbolCounter;
 	int		iCurrentFrameID;
 

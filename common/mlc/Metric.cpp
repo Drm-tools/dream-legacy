@@ -6,9 +6,13 @@
  *	Volker Fischer
  *
  * Description:
- * The metric is cacluated as follows:
- * M = ||r - s * h||^2 = ||h||^2 * ||r / h - s||^2
- *	
+ *
+ * The metric is calculated as follows:
+ * Using ML: M = |r - s * h| = |h| * |r / h - s|
+ * Using MAP: M = |r - s * h|^2 = |h|^2 * |r / h - s|^2
+ *
+ * Subset definition:
+ * [1 2 3]  -> ([vecSubsetDef1 vecSubsetDef2 vecSubsetDef3])
  *
  ******************************************************************************
  *
@@ -31,15 +35,31 @@
 #include "Metric.h"
 
 
+/* Definitions ****************************************************************/
+/* Definitions for binary numbers (BI). On the left is most sigificant bit */
+#define BI_00	0 /* Two bits */
+#define BI_01	1
+#define BI_10	2
+#define BI_11	3
+#define BI_000	0 /* Three bits */
+#define BI_001	1
+#define BI_010	2
+#define BI_011	3
+#define BI_100	4
+#define BI_101	5
+#define BI_110	6
+#define BI_111	7
+
+
 /* Implementation *************************************************************/
-void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb, 
-								 CVector<CDistance>& vecMetric, 
-								 CVector<_BINARY>& vecbiSubsetDef1, 
-								 CVector<_BINARY>& vecbiSubsetDef2,
-								 CVector<_BINARY>& vecbiSubsetDef3, 
-								 CVector<_BINARY>& vecbiSubsetDef4,
-								 CVector<_BINARY>& vecbiSubsetDef5,
-								 CVector<_BINARY>& vecbiSubsetDef6,
+void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
+								 CVector<CDistance>& vecMetric,
+								 CVector<_DECISION>& vecSubsetDef1, 
+								 CVector<_DECISION>& vecSubsetDef2,
+								 CVector<_DECISION>& vecSubsetDef3, 
+								 CVector<_DECISION>& vecSubsetDef4,
+								 CVector<_DECISION>& vecSubsetDef5,
+								 CVector<_DECISION>& vecSubsetDef6,
 								 int iLevel, _BOOLEAN bIteration)
 {
 	int i, k;
@@ -57,21 +77,21 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 			/* Real part ---------------------------------------------------- */
 			/* Distance to "0" */
 			vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-				rTableQAM4[0][0]) * (*pcInSymb)[i].rChan;
+				rTableQAM4[0][0], (*pcInSymb)[i].rChan);
 
 			/* Distance to "1" */
 			vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(), 
-				rTableQAM4[1][0]) * (*pcInSymb)[i].rChan;
+				rTableQAM4[1][0], (*pcInSymb)[i].rChan);
 
 
 			/* Imaginary part ----------------------------------------------- */
 			/* Distance to "0" */
 			vecMetric[k + 1].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(), 
-				rTableQAM4[0][1]) * (*pcInSymb)[i].rChan;
+				rTableQAM4[0][1], (*pcInSymb)[i].rChan);
 
 			/* Distance to "1" */
 			vecMetric[k + 1].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(), 
-				rTableQAM4[1][1]) * (*pcInSymb)[i].rChan;
+				rTableQAM4[1][1], (*pcInSymb)[i].rChan);
 		}
 
 		break;
@@ -89,35 +109,61 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 				if (bIteration == TRUE)
 				{
 					/* Real part -------------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef2" */
-					iTabInd0 = vecbiSubsetDef2[k] & 1;
+#ifdef USE_MAX_LOG_MAP
+					vecMetric[k].rTow0 =
+						Minimum2((*pcInSymb)[i].cSig.real(),
+						rTableQAM16[BI_00 /* [0  0] */][0],
+						rTableQAM16[BI_01 /* [0  1] */][0],
+						(*pcInSymb)[i].rChan, vecSubsetDef2[k]);
+
+					vecMetric[k].rTow1 =
+						Minimum2((*pcInSymb)[i].cSig.real(),
+						rTableQAM16[BI_10 /* [1  0] */][0],
+						rTableQAM16[BI_11 /* [1  1] */][0],
+						(*pcInSymb)[i].rChan, vecSubsetDef2[k]);
+#else
+					/* Lowest bit defined by "vecSubsetDef2" */
+					iTabInd0 = ExtractBit(vecSubsetDef2[k]) & 1;
 
 					/* Distance to "0" */
-					vecMetric[k].rTow0 = 
+					vecMetric[k].rTow0 =
 						Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM16[iTabInd0][0]) * (*pcInSymb)[i].rChan;
+						rTableQAM16[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 					/* Distance to "1" */
-					vecMetric[k].rTow1 = 
+					vecMetric[k].rTow1 =
 						Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM16[iTabInd0 | (1 << 1)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM16[iTabInd0 | (1 << 1)][0],
+						(*pcInSymb)[i].rChan);
+#endif
 
 
 					/* Imaginary part --------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef2" */
-					iTabInd0 = vecbiSubsetDef2[k + 1] & 1;
+#ifdef USE_MAX_LOG_MAP
+					vecMetric[k + 1].rTow0 = Minimum2((*pcInSymb)[i].cSig.imag(),
+						rTableQAM16[BI_00 /* [0  0] */][1],
+						rTableQAM16[BI_01 /* [0  1] */][1],
+						(*pcInSymb)[i].rChan, vecSubsetDef2[k + 1]);
+
+					vecMetric[k + 1].rTow1 = Minimum2((*pcInSymb)[i].cSig.imag(),
+						rTableQAM16[BI_10 /* [1  0] */][1],
+						rTableQAM16[BI_11 /* [1  1] */][1],
+						(*pcInSymb)[i].rChan, vecSubsetDef2[k + 1]);
+#else
+					/* Lowest bit defined by "vecSubsetDef2" */
+					iTabInd0 = ExtractBit(vecSubsetDef2[k + 1]) & 1;
 
 					/* Distance to "0" */
-					vecMetric[k + 1].rTow0 = 
+					vecMetric[k + 1].rTow0 =
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM16[iTabInd0][1]) * (*pcInSymb)[i].rChan;
+						rTableQAM16[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 					/* Distance to "1" */
-					vecMetric[k + 1].rTow1 = 
+					vecMetric[k + 1].rTow1 =
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM16[iTabInd0 | (1 << 1)][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM16[iTabInd0 | (1 << 1)][1],
+						(*pcInSymb)[i].rChan);
+#endif
 				}
 				else
 				{
@@ -127,26 +173,30 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 						
 					/* Calculate distances */
 					/* Real part */
-					vecMetric[k].rTow0 = 
+					vecMetric[k].rTow0 =
 						Minimum2((*pcInSymb)[i].cSig.real(), 
-						rTableQAM16[0 /* [0  0] */][0],
-						rTableQAM16[1 /* [0  1] */][0]) * (*pcInSymb)[i].rChan;
+						rTableQAM16[BI_00 /* [0  0] */][0],
+						rTableQAM16[BI_01 /* [0  1] */][0],
+						(*pcInSymb)[i].rChan);
 
-					vecMetric[k].rTow1 = 
+					vecMetric[k].rTow1 =
 						Minimum2((*pcInSymb)[i].cSig.real(),
-						rTableQAM16[2 /* [1  0] */][0],
-						rTableQAM16[3 /* [1  1] */][0]) * (*pcInSymb)[i].rChan;
+						rTableQAM16[BI_10 /* [1  0] */][0],
+						rTableQAM16[BI_11 /* [1  1] */][0],
+						(*pcInSymb)[i].rChan);
 
 					/* Imaginary part */
-					vecMetric[k + 1].rTow0 = 
+					vecMetric[k + 1].rTow0 =
 						Minimum2((*pcInSymb)[i].cSig.imag(),
-						rTableQAM16[0 /* [0  0] */][1],
-						rTableQAM16[1 /* [0  1] */][1]) * (*pcInSymb)[i].rChan;
+						rTableQAM16[BI_00 /* [0  0] */][1],
+						rTableQAM16[BI_01 /* [0  1] */][1],
+						(*pcInSymb)[i].rChan);
 
-					vecMetric[k + 1].rTow1 = 
+					vecMetric[k + 1].rTow1 =
 						Minimum2((*pcInSymb)[i].cSig.imag(), 
-						rTableQAM16[2 /* [1  0] */][1],
-						rTableQAM16[3 /* [1  1] */][1]) * (*pcInSymb)[i].rChan;
+						rTableQAM16[BI_10 /* [1  0] */][1],
+						rTableQAM16[BI_11 /* [1  1] */][1],
+						(*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -156,29 +206,57 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 			for (i = 0, k = 0; i < iInputBlockSize; i++, k += 2)
 			{
 				/* Real part ------------------------------------------------ */
-				/* Higest bit defined by "vecbiSubsetDef1" */
-				iTabInd0 = ((vecbiSubsetDef1[k] & 1) << 1);
+#ifdef USE_MAX_LOG_MAP
+				vecMetric[k].rTow0 =
+					Minimum2((*pcInSymb)[i].cSig.real(),
+					rTableQAM16[BI_00 /* [0  0] */][0],
+					rTableQAM16[BI_10 /* [1  0] */][0],
+					(*pcInSymb)[i].rChan, vecSubsetDef1[k]);
+
+				vecMetric[k].rTow1 =
+					Minimum2((*pcInSymb)[i].cSig.real(),
+					rTableQAM16[BI_01 /* [0  1] */][0],
+					rTableQAM16[BI_11 /* [1  1] */][0],
+					(*pcInSymb)[i].rChan, vecSubsetDef1[k]);
+#else
+				/* Higest bit defined by "vecSubsetDef1" */
+				iTabInd0 = ((ExtractBit(vecSubsetDef1[k]) & 1) << 1);
 
 				/* Distance to "0" */
-				vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-					rTableQAM16[iTabInd0][0]) * (*pcInSymb)[i].rChan;
+				vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(),
+					rTableQAM16[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 				/* Distance to "1" */
 				vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-					rTableQAM16[iTabInd0 | 1][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM16[iTabInd0 | 1][0], (*pcInSymb)[i].rChan);
+#endif
 
 
 				/* Imaginary part ------------------------------------------- */
-				/* Higest bit defined by "vecbiSubsetDef1" */
-				iTabInd0 = ((vecbiSubsetDef1[k + 1] & 1) << 1);
+#ifdef USE_MAX_LOG_MAP
+				vecMetric[k + 1].rTow0 =
+					Minimum2((*pcInSymb)[i].cSig.imag(),
+					rTableQAM16[BI_00 /* [0  0] */][1],
+					rTableQAM16[BI_10 /* [1  0] */][1],
+					(*pcInSymb)[i].rChan, vecSubsetDef1[k + 1]);
+
+				vecMetric[k + 1].rTow1 =
+					Minimum2((*pcInSymb)[i].cSig.imag(),
+					rTableQAM16[BI_01 /* [0  1] */][1],
+					rTableQAM16[BI_11 /* [1  1] */][1],
+					(*pcInSymb)[i].rChan, vecSubsetDef1[k + 1]);
+#else
+				/* Higest bit defined by "vecSubsetDef1" */
+				iTabInd0 = ((ExtractBit(vecSubsetDef1[k + 1]) & 1) << 1);
 
 				/* Distance to "0" */
 				vecMetric[k + 1].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(), 
-					rTableQAM16[iTabInd0][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM16[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 				/* Distance to "1" */
 				vecMetric[k + 1].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM16[iTabInd0 | 1][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM16[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
+#endif
 			}
 
 			break;
@@ -200,78 +278,115 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 				if (bIteration == TRUE)
 				{
 					/* Real part -------------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef3" next bit defined
-					   by "vecbiSubsetDef2" */
+#ifdef USE_MAX_LOG_MAP
+					vecMetric[k].rTow0 = 
+						Minimum4((*pcInSymb)[i].cSig.real(), 
+						rTableQAM64SM[BI_000 /* [0 0 0] */][0],
+						rTableQAM64SM[BI_010 /* [0 1 0] */][0],
+						rTableQAM64SM[BI_001 /* [0 0 1] */][0],
+						rTableQAM64SM[BI_011 /* [0 1 1] */][0],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef2[k], vecSubsetDef3[k]);
+
+					vecMetric[k].rTow1 = 
+						Minimum4((*pcInSymb)[i].cSig.real(),
+						rTableQAM64SM[BI_100 /* [1 0 0] */][0], 
+						rTableQAM64SM[BI_110 /* [1 1 0] */][0], 
+						rTableQAM64SM[BI_101 /* [1 0 1] */][0], 
+						rTableQAM64SM[BI_111 /* [1 1 1] */][0],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef2[k], vecSubsetDef3[k]);
+#else
+					/* Lowest bit defined by "vecSubsetDef3" next bit defined
+					   by "vecSubsetDef2" */
 					iTabInd0 = 
-						(vecbiSubsetDef3[k] & 1) | 
-						((vecbiSubsetDef2[k] & 1) << 1);
+						(ExtractBit(vecSubsetDef3[k]) & 1) | 
+						((ExtractBit(vecSubsetDef2[k]) & 1) << 1);
 
 					vecMetric[k].rTow0 = 
 						Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64SM[iTabInd0][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0][0],	(*pcInSymb)[i].rChan);
 
 					vecMetric[k].rTow1 = 
 						Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM64SM[iTabInd0 | (1 << 2)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0 | (1 << 2)][0],
+						(*pcInSymb)[i].rChan);
+#endif
 
 
 					/* Imaginary part --------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef3" next bit defined
-					   by "vecbiSubsetDef2" */
+#ifdef USE_MAX_LOG_MAP
+					vecMetric[k + 1].rTow0 = 
+						Minimum4((*pcInSymb)[i].cSig.imag(), 
+						rTableQAM64SM[BI_000 /* [0 0 0] */][1],
+						rTableQAM64SM[BI_010 /* [0 1 0] */][1],
+						rTableQAM64SM[BI_001 /* [0 0 1] */][1],
+						rTableQAM64SM[BI_011 /* [0 1 1] */][1],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef2[k + 1], vecSubsetDef3[k + 1]);
+
+					vecMetric[k + 1].rTow1 = 
+						Minimum4((*pcInSymb)[i].cSig.imag(),
+						rTableQAM64SM[BI_100 /* [1 0 0] */][1],
+						rTableQAM64SM[BI_110 /* [1 1 0] */][1],
+						rTableQAM64SM[BI_101 /* [1 0 1] */][1],
+						rTableQAM64SM[BI_111 /* [1 1 1] */][1],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef2[k + 1], vecSubsetDef3[k + 1]);
+#else
+					/* Lowest bit defined by "vecSubsetDef3" next bit defined
+					   by "vecSubsetDef2" */
 					iTabInd0 = 
-						(vecbiSubsetDef3[k + 1] & 1) | 
-						((vecbiSubsetDef2[k + 1] & 1) << 1);
+						(ExtractBit(vecSubsetDef3[k + 1]) & 1) | 
+						((ExtractBit(vecSubsetDef2[k + 1]) & 1) << 1);
 
 					/* Calculate distances, imaginary part */
 					vecMetric[k + 1].rTow0 = 
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64SM[iTabInd0][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0][1],	(*pcInSymb)[i].rChan);
 
 					vecMetric[k + 1].rTow1 = 
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64SM[iTabInd0 | (1 << 2)][1]) * 
-						(*pcInSymb)[i].rChan;
-
+						rTableQAM64SM[iTabInd0 | (1 << 2)][1],
+						(*pcInSymb)[i].rChan);
+#endif
 				}
 				else
 				{
 					/* Real part -------------------------------------------- */
 					vecMetric[k].rTow0 = 
 						Minimum4((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64SM[0 /* [0 0 0] */][0],
-						rTableQAM64SM[1 /* [0 0 1] */][0],
-						rTableQAM64SM[2 /* [0 1 0] */][0],
-						rTableQAM64SM[3 /* [0 1 1] */][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[BI_000 /* [0 0 0] */][0],
+						rTableQAM64SM[BI_001 /* [0 0 1] */][0],
+						rTableQAM64SM[BI_010 /* [0 1 0] */][0],
+						rTableQAM64SM[BI_011 /* [0 1 1] */][0],
+						(*pcInSymb)[i].rChan);
 
-					vecMetric[k].rTow1 = 
+					vecMetric[k].rTow1 =
 						Minimum4((*pcInSymb)[i].cSig.real(),
-						rTableQAM64SM[4 /* [1 0 0] */][0], 
-						rTableQAM64SM[5 /* [1 0 1] */][0], 
-						rTableQAM64SM[6 /* [1 1 0] */][0], 
-						rTableQAM64SM[7 /* [1 1 1] */][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[BI_100 /* [1 0 0] */][0],
+						rTableQAM64SM[BI_101 /* [1 0 1] */][0],
+						rTableQAM64SM[BI_110 /* [1 1 0] */][0],
+						rTableQAM64SM[BI_111 /* [1 1 1] */][0],
+						(*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
-					vecMetric[k + 1].rTow0 = 
+					vecMetric[k + 1].rTow0 =
 						Minimum4((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64SM[0 /* [0 0 0] */][1],
-						rTableQAM64SM[1 /* [0 0 1] */][1],
-						rTableQAM64SM[2 /* [0 1 0] */][1],
-						rTableQAM64SM[3 /* [0 1 1] */][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[BI_000 /* [0 0 0] */][1],
+						rTableQAM64SM[BI_001 /* [0 0 1] */][1],
+						rTableQAM64SM[BI_010 /* [0 1 0] */][1],
+						rTableQAM64SM[BI_011 /* [0 1 1] */][1],
+						(*pcInSymb)[i].rChan);
 
-					vecMetric[k + 1].rTow1 = 
+					vecMetric[k + 1].rTow1 =
 						Minimum4((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64SM[4 /* [1 0 0] */][1], 
-						rTableQAM64SM[5 /* [1 0 1] */][1], 
-						rTableQAM64SM[6 /* [1 1 0] */][1], 
-						rTableQAM64SM[7 /* [1 1 1] */][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[BI_100 /* [1 0 0] */][1],
+						rTableQAM64SM[BI_101 /* [1 0 1] */][1],
+						rTableQAM64SM[BI_110 /* [1 1 0] */][1],
+						rTableQAM64SM[BI_111 /* [1 1 1] */][1],
+						(*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -283,70 +398,151 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 				if (bIteration == TRUE)
 				{
 					/* Real part -------------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef3",highest defined
-					   by "vecbiSubsetDef1" */
+#ifdef USE_MAX_LOG_MAP
+					vecMetric[k].rTow0 =
+						Minimum4((*pcInSymb)[i].cSig.real(), 
+						rTableQAM64SM[BI_000 /* [0 0 0] */][0],
+						rTableQAM64SM[BI_100 /* [1 0 0] */][0],
+						rTableQAM64SM[BI_001 /* [0 0 1] */][0],
+						rTableQAM64SM[BI_101 /* [1 0 1] */][0],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef1[k], vecSubsetDef3[k]);
+
+					vecMetric[k].rTow1 =
+						Minimum4((*pcInSymb)[i].cSig.real(),
+						rTableQAM64SM[BI_010 /* [0 1 0] */][0], 
+						rTableQAM64SM[BI_110 /* [1 1 0] */][0], 
+						rTableQAM64SM[BI_011 /* [0 1 1] */][0], 
+						rTableQAM64SM[BI_111 /* [1 1 1] */][0],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef1[k], vecSubsetDef3[k]);
+#else
+					/* Lowest bit defined by "vecSubsetDef3",highest defined
+					   by "vecSubsetDef1" */
 					iTabInd0 = 
-						((vecbiSubsetDef1[k] & 1) << 2) | 
-						(vecbiSubsetDef3[k] & 1);
+						((ExtractBit(vecSubsetDef1[k]) & 1) << 2) | 
+						(ExtractBit(vecSubsetDef3[k]) & 1);
 
 					vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64SM[iTabInd0][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0][0],	(*pcInSymb)[i].rChan);
 
 					vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM64SM[iTabInd0 | (1 << 1)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0 | (1 << 1)][0],
+						(*pcInSymb)[i].rChan);
+#endif
 
 
 					/* Imaginary part --------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef3",highest defined
-					   by "vecbiSubsetDef1" */
+#ifdef USE_MAX_LOG_MAP
+					vecMetric[k + 1].rTow0 =
+						Minimum4((*pcInSymb)[i].cSig.imag(), 
+						rTableQAM64SM[BI_000 /* [0 0 0] */][1],
+						rTableQAM64SM[BI_100 /* [1 0 0] */][1],
+						rTableQAM64SM[BI_001 /* [0 0 1] */][1],
+						rTableQAM64SM[BI_101 /* [1 0 1] */][1],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef1[k + 1], vecSubsetDef3[k + 1]);
+
+					vecMetric[k + 1].rTow1 =
+						Minimum4((*pcInSymb)[i].cSig.imag(),
+						rTableQAM64SM[BI_010 /* [0 1 0] */][1], 
+						rTableQAM64SM[BI_110 /* [1 1 0] */][1], 
+						rTableQAM64SM[BI_011 /* [0 1 1] */][1], 
+						rTableQAM64SM[BI_111 /* [1 1 1] */][1],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef1[k + 1], vecSubsetDef3[k + 1]);
+#else
+					/* Lowest bit defined by "vecSubsetDef3",highest defined
+					   by "vecSubsetDef1" */
 					iTabInd0 = 
-						((vecbiSubsetDef1[k + 1] & 1) << 2) | 
-						(vecbiSubsetDef3[k + 1] & 1);
+						((ExtractBit(vecSubsetDef1[k + 1]) & 1) << 2) | 
+						(ExtractBit(vecSubsetDef3[k + 1]) & 1);
 
-					vecMetric[k + 1].rTow0 = 
+					vecMetric[k + 1].rTow0 =
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64SM[iTabInd0][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0][1],
+						(*pcInSymb)[i].rChan);
 
-					vecMetric[k + 1].rTow1 = 
+					vecMetric[k + 1].rTow1 =
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64SM[iTabInd0 | (1 << 1)][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0 | (1 << 1)][1],
+						(*pcInSymb)[i].rChan);
+#endif
 				}
 				else
 				{
 					/* There are two possible points for each bit. Both have to
 					   be used. In the first step: {i_2} = 0, Higest bit 
-					   defined by "vecbiSubsetDef1" */
+					   defined by "vecSubsetDef1" */
 
 					/* Real part -------------------------------------------- */
-					iTabInd0 = ((vecbiSubsetDef1[k] & 1) << 2);
-					vecMetric[k].rTow0 = 
-						Minimum2((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64SM[iTabInd0][0],
-						rTableQAM64SM[iTabInd0 | 1][0]) * (*pcInSymb)[i].rChan;
+#ifdef USE_MAX_LOG_MAP
+					vecMetric[k].rTow0 =
+						Minimum4((*pcInSymb)[i].cSig.real(), 
+						rTableQAM64SM[BI_000 /* [0 0 0] */][0],
+						rTableQAM64SM[BI_100 /* [1 0 0] */][0],
+						rTableQAM64SM[BI_001 /* [0 0 1] */][0],
+						rTableQAM64SM[BI_101 /* [1 0 1] */][0],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef1[k]);
 
-					iTabInd0 = ((vecbiSubsetDef1[k] & 1) << 2) | (1 << 1);
-					vecMetric[k].rTow1 = 
-						Minimum2((*pcInSymb)[i].cSig.real(), 
+					vecMetric[k].rTow1 =
+						Minimum4((*pcInSymb)[i].cSig.real(),
+						rTableQAM64SM[BI_010 /* [0 1 0] */][0], 
+						rTableQAM64SM[BI_110 /* [1 1 0] */][0], 
+						rTableQAM64SM[BI_011 /* [0 1 1] */][0], 
+						rTableQAM64SM[BI_111 /* [1 1 1] */][0],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef1[k]);
+#else
+					iTabInd0 = ((ExtractBit(vecSubsetDef1[k]) & 1) << 2);
+					vecMetric[k].rTow0 =
+						Minimum2((*pcInSymb)[i].cSig.real(),
 						rTableQAM64SM[iTabInd0][0],
-						rTableQAM64SM[iTabInd0 | 1][0]) * (*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0 | 1][0], (*pcInSymb)[i].rChan);
+
+					iTabInd0 = ((ExtractBit(vecSubsetDef1[k]) & 1) << 2) |
+						(1 << 1);
+					vecMetric[k].rTow1 =
+						Minimum2((*pcInSymb)[i].cSig.real(),
+						rTableQAM64SM[iTabInd0][0],
+						rTableQAM64SM[iTabInd0 | 1][0], (*pcInSymb)[i].rChan);
+#endif
 
 
 					/* Imaginary part --------------------------------------- */
-					iTabInd0 = ((vecbiSubsetDef1[k + 1] & 1) << 2);
-					vecMetric[k + 1].rTow0 = 
-						Minimum2((*pcInSymb)[i].cSig.imag(), 
-						rTableQAM64SM[iTabInd0][1],
-						rTableQAM64SM[iTabInd0 | 1][1]) * (*pcInSymb)[i].rChan;
+#ifdef USE_MAX_LOG_MAP
+					vecMetric[k + 1].rTow0 =
+						Minimum4((*pcInSymb)[i].cSig.imag(), 
+						rTableQAM64SM[BI_000 /* [0 0 0] */][1],
+						rTableQAM64SM[BI_100 /* [1 0 0] */][1],
+						rTableQAM64SM[BI_001 /* [0 0 1] */][1],
+						rTableQAM64SM[BI_101 /* [1 0 1] */][1],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef1[k + 1]);
 
-					iTabInd0 = ((vecbiSubsetDef1[k + 1] & 1) << 2) | (1 << 1);
-					vecMetric[k + 1].rTow1 = 
+					vecMetric[k + 1].rTow1 =
+						Minimum4((*pcInSymb)[i].cSig.imag(),
+						rTableQAM64SM[BI_010 /* [0 1 0] */][1], 
+						rTableQAM64SM[BI_110 /* [1 1 0] */][1], 
+						rTableQAM64SM[BI_011 /* [0 1 1] */][1], 
+						rTableQAM64SM[BI_111 /* [1 1 1] */][1],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef1[k + 1]);
+#else
+					iTabInd0 = ((ExtractBit(vecSubsetDef1[k + 1]) & 1) << 2);
+					vecMetric[k + 1].rTow0 =
 						Minimum2((*pcInSymb)[i].cSig.imag(),
 						rTableQAM64SM[iTabInd0][1],
-						rTableQAM64SM[iTabInd0 | 1][1]) * (*pcInSymb)[i].rChan;
+						rTableQAM64SM[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
+
+					iTabInd0 = ((ExtractBit(vecSubsetDef1[k + 1]) & 1) << 2) |
+						(1 << 1);
+					vecMetric[k + 1].rTow1 =
+						Minimum2((*pcInSymb)[i].cSig.imag(),
+						rTableQAM64SM[iTabInd0][1],
+						rTableQAM64SM[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
+#endif
 				}
 			}
 
@@ -356,32 +552,72 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 			for (i = 0, k = 0; i < iInputBlockSize; i++, k += 2)
 			{
 				/* Real part ------------------------------------------------ */
-				/* Higest bit defined by "vecbiSubsetDef1" next bit defined
-				   by "vecbiSubsetDef2" */
-				iTabInd0 = 
-					((vecbiSubsetDef1[k] & 1) << 2) | 
-					((vecbiSubsetDef2[k] & 1) << 1);
+#ifdef USE_MAX_LOG_MAP
+				vecMetric[k].rTow0 =
+					Minimum4((*pcInSymb)[i].cSig.real(),
+					rTableQAM64SM[BI_000 /* [0 0 0] */][0],
+					rTableQAM64SM[BI_100 /* [1 0 0] */][0],
+					rTableQAM64SM[BI_010 /* [0 1 0] */][0],
+					rTableQAM64SM[BI_110 /* [1 1 0] */][0],
+					(*pcInSymb)[i].rChan,
+					vecSubsetDef1[k], vecSubsetDef2[k]);
 
-				vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-					rTableQAM64SM[iTabInd0][0]) * (*pcInSymb)[i].rChan;
+				vecMetric[k].rTow1 =
+					Minimum4((*pcInSymb)[i].cSig.real(),
+					rTableQAM64SM[BI_001 /* [0 0 1] */][0],
+					rTableQAM64SM[BI_101 /* [1 0 1] */][0],
+					rTableQAM64SM[BI_011 /* [0 1 1] */][0],
+					rTableQAM64SM[BI_111 /* [1 1 1] */][0],
+					(*pcInSymb)[i].rChan,
+					vecSubsetDef1[k], vecSubsetDef2[k]);
+#else
+				/* Higest bit defined by "vecSubsetDef1" next bit defined
+				   by "vecSubsetDef2" */
+				iTabInd0 =
+					((ExtractBit(vecSubsetDef1[k]) & 1) << 2) |
+					((ExtractBit(vecSubsetDef2[k]) & 1) << 1);
+
+				vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(),
+					rTableQAM64SM[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 				vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-					rTableQAM64SM[iTabInd0 | 1][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM64SM[iTabInd0 | 1][0], (*pcInSymb)[i].rChan);
+#endif
 
 
 				/* Imaginary part ------------------------------------------- */
-				/* Higest bit defined by "vecbiSubsetDef1" next bit defined
-				   by "vecbiSubsetDef2" */
-				iTabInd0 = 
-					((vecbiSubsetDef1[k + 1] & 1) << 2) | 
-					((vecbiSubsetDef2[k + 1] & 1) << 1);
+#ifdef USE_MAX_LOG_MAP
+				vecMetric[k + 1].rTow0 =
+					Minimum4((*pcInSymb)[i].cSig.imag(),
+					rTableQAM64SM[BI_000 /* [0 0 0] */][1],
+					rTableQAM64SM[BI_100 /* [1 0 0] */][1],
+					rTableQAM64SM[BI_010 /* [0 1 0] */][1],
+					rTableQAM64SM[BI_110 /* [1 1 0] */][1],
+					(*pcInSymb)[i].rChan,
+					vecSubsetDef1[k + 1], vecSubsetDef2[k + 1]);
+
+				vecMetric[k + 1].rTow1 =
+					Minimum4((*pcInSymb)[i].cSig.imag(),
+					rTableQAM64SM[BI_001 /* [0 0 1] */][1],
+					rTableQAM64SM[BI_101 /* [1 0 1] */][1],
+					rTableQAM64SM[BI_011 /* [0 1 1] */][1],
+					rTableQAM64SM[BI_111 /* [1 1 1] */][1],
+					(*pcInSymb)[i].rChan,
+					vecSubsetDef1[k + 1], vecSubsetDef2[k + 1]);
+#else
+				/* Higest bit defined by "vecSubsetDef1" next bit defined
+				   by "vecSubsetDef2" */
+				iTabInd0 =
+					((ExtractBit(vecSubsetDef1[k + 1]) & 1) << 2) |
+					((ExtractBit(vecSubsetDef2[k + 1]) & 1) << 1);
 
 				/* Calculate distances, imaginary part */
 				vecMetric[k + 1].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM64SM[iTabInd0][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM64SM[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 				vecMetric[k + 1].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM64SM[iTabInd0 | 1][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM64SM[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
+#endif
 			}
 
 			break;
@@ -403,75 +639,73 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 				if (bIteration == TRUE)
 				{
 					/* Real part -------------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef3" next bit defined
-					   by "vecbiSubsetDef2" */
+					/* Lowest bit defined by "vecSubsetDef3" next bit defined
+					   by "vecSubsetDef2" */
 					iTabInd0 = 
-						(vecbiSubsetDef3[k] & 1) | 
-						((vecbiSubsetDef2[k] & 1) << 1);
+						(ExtractBit(vecSubsetDef3[k]) & 1) | 
+						((ExtractBit(vecSubsetDef2[k]) & 1) << 1);
 
 					vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64HMsym[iTabInd0][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 					vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM64HMsym[iTabInd0 | (1 << 2)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | (1 << 2)][0],
+						(*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef3" next bit defined
-					   by "vecbiSubsetDef2" */
-					iTabInd0 = 
-						(vecbiSubsetDef3[k + 1] & 1) | 
-						((vecbiSubsetDef2[k + 1] & 1) << 1);
+					/* Lowest bit defined by "vecSubsetDef3" next bit defined
+					   by "vecSubsetDef2" */
+					iTabInd0 =
+						(ExtractBit(vecSubsetDef3[k + 1]) & 1) | 
+						((ExtractBit(vecSubsetDef2[k + 1]) & 1) << 1);
 
 					/* Calculate distances, imaginary part */
-					vecMetric[k + 1].rTow0 = 
+					vecMetric[k + 1].rTow0 =
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMsym[iTabInd0][1]) * (*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0][1], (*pcInSymb)[i].rChan);
 
-					vecMetric[k + 1].rTow1 = 
+					vecMetric[k + 1].rTow1 =
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMsym[iTabInd0 | (1 << 2)][1]) * 
-						(*pcInSymb)[i].rChan;
-
+						rTableQAM64HMsym[iTabInd0 | (1 << 2)][1],
+						(*pcInSymb)[i].rChan);
 				}
 				else
-				{				
+				{
 					/* Real part -------------------------------------------- */
-					vecMetric[k].rTow0 = 
+					vecMetric[k].rTow0 =
 						Minimum4((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64HMsym[0 /* [0 0 0] */][0],
-						rTableQAM64HMsym[1 /* [0 0 1] */][0],
-						rTableQAM64HMsym[2 /* [0 1 0] */][0],
-						rTableQAM64HMsym[3 /* [0 1 1] */][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[BI_000 /* [0 0 0] */][0],
+						rTableQAM64HMsym[BI_001 /* [0 0 1] */][0],
+						rTableQAM64HMsym[BI_010 /* [0 1 0] */][0],
+						rTableQAM64HMsym[BI_011 /* [0 1 1] */][0],
+						(*pcInSymb)[i].rChan);
 
-					vecMetric[k].rTow1 = 
+					vecMetric[k].rTow1 =
 						Minimum4((*pcInSymb)[i].cSig.real(),
-						rTableQAM64HMsym[4 /* [1 0 0] */][0], 
-						rTableQAM64HMsym[5 /* [1 0 1] */][0], 
-						rTableQAM64HMsym[6 /* [1 1 0] */][0], 
-						rTableQAM64HMsym[7 /* [1 1 1] */][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[BI_100 /* [1 0 0] */][0], 
+						rTableQAM64HMsym[BI_101 /* [1 0 1] */][0], 
+						rTableQAM64HMsym[BI_110 /* [1 1 0] */][0], 
+						rTableQAM64HMsym[BI_111 /* [1 1 1] */][0],
+						(*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
-					vecMetric[k + 1].rTow0 = 
+					vecMetric[k + 1].rTow0 =
 						Minimum4((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMsym[0 /* [0 0 0] */][1],
-						rTableQAM64HMsym[1 /* [0 0 1] */][1],
-						rTableQAM64HMsym[2 /* [0 1 0] */][1],
-						rTableQAM64HMsym[3 /* [0 1 1] */][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[BI_000 /* [0 0 0] */][1],
+						rTableQAM64HMsym[BI_001 /* [0 0 1] */][1],
+						rTableQAM64HMsym[BI_010 /* [0 1 0] */][1],
+						rTableQAM64HMsym[BI_011 /* [0 1 1] */][1],
+						(*pcInSymb)[i].rChan);
 
-					vecMetric[k + 1].rTow1 = 
+					vecMetric[k + 1].rTow1 =
 						Minimum4((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMsym[4 /* [1 0 0] */][1], 
-						rTableQAM64HMsym[5 /* [1 0 1] */][1], 
-						rTableQAM64HMsym[6 /* [1 1 0] */][1], 
-						rTableQAM64HMsym[7 /* [1 1 1] */][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[BI_100 /* [1 0 0] */][1], 
+						rTableQAM64HMsym[BI_101 /* [1 0 1] */][1], 
+						rTableQAM64HMsym[BI_110 /* [1 1 0] */][1], 
+						rTableQAM64HMsym[BI_111 /* [1 1 1] */][1],
+						(*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -483,74 +717,75 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 				if (bIteration == TRUE)
 				{
 					/* Real part -------------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef3",highest defined
-					   by "vecbiSubsetDef1" */
-					iTabInd0 = 
-						((vecbiSubsetDef1[k] & 1) << 2) | 
-						(vecbiSubsetDef3[k] & 1);
+					/* Lowest bit defined by "vecSubsetDef3",highest defined
+					   by "vecSubsetDef1" */
+					iTabInd0 =
+						((ExtractBit(vecSubsetDef1[k]) & 1) << 2) | 
+						(ExtractBit(vecSubsetDef3[k]) & 1);
 
 					vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64HMsym[iTabInd0][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0][0],
+						(*pcInSymb)[i].rChan);
 
 					vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM64HMsym[iTabInd0 | (1 << 1)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | (1 << 1)][0],
+						(*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef3",highest defined
-					   by "vecbiSubsetDef1" */
-					iTabInd0 = 
-						((vecbiSubsetDef1[k + 1] & 1) << 2) | 
-						(vecbiSubsetDef3[k + 1] & 1);
+					/* Lowest bit defined by "vecSubsetDef3",highest defined
+					   by "vecSubsetDef1" */
+					iTabInd0 =
+						((ExtractBit(vecSubsetDef1[k + 1]) & 1) << 2) | 
+						(ExtractBit(vecSubsetDef3[k + 1]) & 1);
 
-					vecMetric[k + 1].rTow0 = 
+					vecMetric[k + 1].rTow0 =
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMsym[iTabInd0][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0][1], (*pcInSymb)[i].rChan);
 
-					vecMetric[k + 1].rTow1 = 
+					vecMetric[k + 1].rTow1 =
 						Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMsym[iTabInd0 | (1 << 1)][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | (1 << 1)][1],
+						(*pcInSymb)[i].rChan);
 				}
 				else
 				{
 					/* There are two possible points for each bit. Both have to
 					   be used. In the first step: {i_2} = 0, Higest bit 
-					   defined by "vecbiSubsetDef1" */
+					   defined by "vecSubsetDef1" */
 
 					/* Real part -------------------------------------------- */
-					iTabInd0 = ((vecbiSubsetDef1[k] & 1) << 2);
-					vecMetric[k].rTow0 = 
+					iTabInd0 = ((ExtractBit(vecSubsetDef1[k]) & 1) << 2);
+					vecMetric[k].rTow0 =
 						Minimum2((*pcInSymb)[i].cSig.real(), 
 						rTableQAM64HMsym[iTabInd0][0],
-						rTableQAM64HMsym[iTabInd0 | 1][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | 1][0],
+						(*pcInSymb)[i].rChan);
 
-					iTabInd0 = ((vecbiSubsetDef1[k] & 1) << 2) | (1 << 1);
-					vecMetric[k].rTow1 = 
+					iTabInd0 = ((ExtractBit(vecSubsetDef1[k]) & 1) << 2) |
+						(1 << 1);
+					vecMetric[k].rTow1 =
 						Minimum2((*pcInSymb)[i].cSig.real(), 
 						rTableQAM64HMsym[iTabInd0][0],
-						rTableQAM64HMsym[iTabInd0 | 1][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | 1][0],
+						(*pcInSymb)[i].rChan);
 
 
 					/* Imaginary part --------------------------------------- */
-					iTabInd0 = ((vecbiSubsetDef1[k + 1] & 1) << 2);
-					vecMetric[k + 1].rTow0 = 
+					iTabInd0 = ((ExtractBit(vecSubsetDef1[k + 1]) & 1) << 2);
+					vecMetric[k + 1].rTow0 =
 						Minimum2((*pcInSymb)[i].cSig.imag(), 
 						rTableQAM64HMsym[iTabInd0][1],
-						rTableQAM64HMsym[iTabInd0 | 1][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | 1][1],
+						(*pcInSymb)[i].rChan);
 
-					iTabInd0 = ((vecbiSubsetDef1[k + 1] & 1) << 2) | (1 << 1);
-					vecMetric[k + 1].rTow1 = 
+					iTabInd0 = ((ExtractBit(vecSubsetDef1[k + 1]) & 1) << 2) |
+						(1 << 1);
+					vecMetric[k + 1].rTow1 =
 						Minimum2((*pcInSymb)[i].cSig.imag(),
 						rTableQAM64HMsym[iTabInd0][1],
-						rTableQAM64HMsym[iTabInd0 | 1][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMsym[iTabInd0 | 1][1],
+						(*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -560,32 +795,32 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 			for (i = 0, k = 0; i < iInputBlockSize; i++, k += 2)
 			{
 				/* Real part ------------------------------------------------ */
-				/* Higest bit defined by "vecbiSubsetDef1" next bit defined
-				   by "vecbiSubsetDef2" */
-				iTabInd0 = 
-					((vecbiSubsetDef1[k] & 1) << 2) | 
-					((vecbiSubsetDef2[k] & 1) << 1);
+				/* Higest bit defined by "vecSubsetDef1" next bit defined
+				   by "vecSubsetDef2" */
+				iTabInd0 =
+					((ExtractBit(vecSubsetDef1[k]) & 1) << 2) | 
+					((ExtractBit(vecSubsetDef2[k]) & 1) << 1);
 
 				vecMetric[k].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-					rTableQAM64HMsym[iTabInd0][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMsym[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 				vecMetric[k].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-					rTableQAM64HMsym[iTabInd0 | 1][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMsym[iTabInd0 | 1][0], (*pcInSymb)[i].rChan);
 
 
 				/* Imaginary part ------------------------------------------- */
-				/* Higest bit defined by "vecbiSubsetDef1" next bit defined
-				   by "vecbiSubsetDef2" */
-				iTabInd0 = 
-					((vecbiSubsetDef1[k + 1] & 1) << 2) | 
-					((vecbiSubsetDef2[k + 1] & 1) << 1);
+				/* Higest bit defined by "vecSubsetDef1" next bit defined
+				   by "vecSubsetDef2" */
+				iTabInd0 =
+					((ExtractBit(vecSubsetDef1[k + 1]) & 1) << 2) | 
+					((ExtractBit(vecSubsetDef2[k + 1]) & 1) << 1);
 
 				/* Calculate distances, imaginary part */
 				vecMetric[k + 1].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM64HMsym[iTabInd0][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMsym[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 				vecMetric[k + 1].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM64HMsym[iTabInd0 | 1][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMsym[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
 			}
 
 			break;
@@ -607,36 +842,35 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 				if (bIteration == TRUE)
 				{
 					/* Real part -------------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef5" next bit defined
-					   by "vecbiSubsetDef3" */
-					iTabInd0 = 
-						(vecbiSubsetDef5[i] & 1) | 
-						((vecbiSubsetDef3[i] & 1) << 1);
+					/* Lowest bit defined by "vecSubsetDef5" next bit defined
+					   by "vecSubsetDef3" */
+					iTabInd0 =
+						(ExtractBit(vecSubsetDef5[i]) & 1) | 
+						((ExtractBit(vecSubsetDef3[i]) & 1) << 1);
 
 					vecMetric[i].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64HMmix[iTabInd0][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 					vecMetric[i].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM64HMmix[iTabInd0 | (1 << 2)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | (1 << 2)][0],
+						(*pcInSymb)[i].rChan);
 				}
 				else
 				{
 					/* Real part -------------------------------------------- */
 					vecMetric[i].rTow0 = Minimum4((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64HMmix[0 /* [0 0 0] */][0],
-						rTableQAM64HMmix[1 /* [0 0 1] */][0],
-						rTableQAM64HMmix[2 /* [0 1 0] */][0],
-						rTableQAM64HMmix[3 /* [0 1 1] */][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[BI_000 /* [0 0 0] */][0],
+						rTableQAM64HMmix[BI_001 /* [0 0 1] */][0],
+						rTableQAM64HMmix[BI_010 /* [0 1 0] */][0],
+						rTableQAM64HMmix[BI_011 /* [0 1 1] */][0],
+						(*pcInSymb)[i].rChan);
 
 					vecMetric[i].rTow1 = Minimum4((*pcInSymb)[i].cSig.real(),
-						rTableQAM64HMmix[4 /* [1 0 0] */][0], 
-						rTableQAM64HMmix[5 /* [1 0 1] */][0], 
-						rTableQAM64HMmix[6 /* [1 1 0] */][0], 
-						rTableQAM64HMmix[7 /* [1 1 1] */][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[BI_100 /* [1 0 0] */][0], 
+						rTableQAM64HMmix[BI_101 /* [1 0 1] */][0], 
+						rTableQAM64HMmix[BI_110 /* [1 1 0] */][0], 
+						rTableQAM64HMmix[BI_111 /* [1 1 1] */][0],
+						(*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -648,37 +882,36 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 				if (bIteration == TRUE)
 				{
 					/* Imaginary part --------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef6" next bit defined
-					   by "vecbiSubsetDef4" */
-					iTabInd0 = 
-						(vecbiSubsetDef6[i] & 1) | 
-						((vecbiSubsetDef4[i] & 1) << 1);
+					/* Lowest bit defined by "vecSubsetDef6" next bit defined
+					   by "vecSubsetDef4" */
+					iTabInd0 =
+						(ExtractBit(vecSubsetDef6[i]) & 1) | 
+						((ExtractBit(vecSubsetDef4[i]) & 1) << 1);
 
 					/* Calculate distances, imaginary part */
 					vecMetric[i].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMmix[iTabInd0][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 					vecMetric[i].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMmix[iTabInd0 | (1 << 2)][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | (1 << 2)][1],
+						(*pcInSymb)[i].rChan);
 				}
 				else
 				{
 					/* Imaginary part --------------------------------------- */
 					vecMetric[i].rTow0 = Minimum4((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMmix[0 /* [0 0 0] */][1],
-						rTableQAM64HMmix[1 /* [0 0 1] */][1],
-						rTableQAM64HMmix[2 /* [0 1 0] */][1],
-						rTableQAM64HMmix[3 /* [0 1 1] */][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[BI_000 /* [0 0 0] */][1],
+						rTableQAM64HMmix[BI_001 /* [0 0 1] */][1],
+						rTableQAM64HMmix[BI_010 /* [0 1 0] */][1],
+						rTableQAM64HMmix[BI_011 /* [0 1 1] */][1],
+						(*pcInSymb)[i].rChan);
 
 					vecMetric[i].rTow1 = Minimum4((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMmix[4 /* [1 0 0] */][1], 
-						rTableQAM64HMmix[5 /* [1 0 1] */][1], 
-						rTableQAM64HMmix[6 /* [1 1 0] */][1], 
-						rTableQAM64HMmix[7 /* [1 1 1] */][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[BI_100 /* [1 0 0] */][1], 
+						rTableQAM64HMmix[BI_101 /* [1 0 1] */][1], 
+						rTableQAM64HMmix[BI_110 /* [1 1 0] */][1], 
+						rTableQAM64HMmix[BI_111 /* [1 1 1] */][1],
+						(*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -690,38 +923,38 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 				if (bIteration == TRUE)
 				{
 					/* Real part -------------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef5",highest defined
-					   by "vecbiSubsetDef1" */
-					iTabInd0 = 
-						((vecbiSubsetDef1[i] & 1) << 2) | 
-						(vecbiSubsetDef5[i] & 1);
+					/* Lowest bit defined by "vecSubsetDef5",highest defined
+					   by "vecSubsetDef1" */
+					iTabInd0 =
+						((ExtractBit(vecSubsetDef1[i]) & 1) << 2) | 
+						(ExtractBit(vecSubsetDef5[i]) & 1);
 
 					vecMetric[i].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-						rTableQAM64HMmix[iTabInd0][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 					vecMetric[i].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-						rTableQAM64HMmix[iTabInd0 | (1 << 1)][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | (1 << 1)][0],
+						(*pcInSymb)[i].rChan);
 				}
 				else
 				{
 					/* There are two possible points for each bit. Both have to
 					   be used. In the first step: {i_2} = 0, Higest bit 
-					   defined by "vecbiSubsetDef1" */
+					   defined by "vecSubsetDef1" */
 
 					/* Real part -------------------------------------------- */
-					iTabInd0 = ((vecbiSubsetDef1[i] & 1) << 2);
+					iTabInd0 = ((ExtractBit(vecSubsetDef1[i]) & 1) << 2);
 					vecMetric[i].rTow0 = Minimum2((*pcInSymb)[i].cSig.real(), 
 						rTableQAM64HMmix[iTabInd0][0],
-						rTableQAM64HMmix[iTabInd0 | 1][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | 1][0],
+						(*pcInSymb)[i].rChan);
 
-					iTabInd0 = ((vecbiSubsetDef1[i] & 1) << 2) | (1 << 1);
+					iTabInd0 =
+						((ExtractBit(vecSubsetDef1[i]) & 1) << 2) | (1 << 1);
 					vecMetric[i].rTow1 = Minimum2((*pcInSymb)[i].cSig.real(), 
 						rTableQAM64HMmix[iTabInd0][0],
-						rTableQAM64HMmix[iTabInd0 | 1][0]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | 1][0],
+						(*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -733,38 +966,36 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 				if (bIteration == TRUE)
 				{
 					/* Imaginary part --------------------------------------- */
-					/* Lowest bit defined by "vecbiSubsetDef6",highest defined
-					   by "vecbiSubsetDef2" */
-					iTabInd0 = 
-						((vecbiSubsetDef2[i] & 1) << 2) | 
-						(vecbiSubsetDef6[i] & 1);
+					/* Lowest bit defined by "vecSubsetDef6",highest defined
+					   by "vecSubsetDef2" */
+					iTabInd0 =
+						((ExtractBit(vecSubsetDef2[i]) & 1) << 2) | 
+						(ExtractBit(vecSubsetDef6[i]) & 1);
 
 					vecMetric[i].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMmix[iTabInd0][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 					vecMetric[i].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(),
-						rTableQAM64HMmix[iTabInd0 | (1 << 1)][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | (1 << 1)][1],
+						(*pcInSymb)[i].rChan);
 				}
 				else
 				{
 					/* There are two possible points for each bit. Both have to
 					   be used. In the first step: {i_2} = 0, Higest bit 
-					   defined by "vecbiSubsetDef1" */
+					   defined by "vecSubsetDef1" */
 
 					/* Imaginary part ------------------------------------------- */
-					iTabInd0 = ((vecbiSubsetDef2[i] & 1) << 2);
+					iTabInd0 = ((ExtractBit(vecSubsetDef2[i]) & 1) << 2);
 					vecMetric[i].rTow0 = Minimum2((*pcInSymb)[i].cSig.imag(), 
 						rTableQAM64HMmix[iTabInd0][1],
-						rTableQAM64HMmix[iTabInd0 | 1][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
 
-					iTabInd0 = ((vecbiSubsetDef2[i] & 1) << 2) | (1 << 1);
+					iTabInd0 =
+						((ExtractBit(vecSubsetDef2[i]) & 1) << 2) | (1 << 1);
 					vecMetric[i].rTow1 = Minimum2((*pcInSymb)[i].cSig.imag(),
 						rTableQAM64HMmix[iTabInd0][1],
-						rTableQAM64HMmix[iTabInd0 | 1][1]) * 
-						(*pcInSymb)[i].rChan;
+						rTableQAM64HMmix[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
 				}
 			}
 
@@ -774,17 +1005,17 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 			for (i = 0; i < iInputBlockSize; i++)
 			{
 				/* Real part ------------------------------------------------ */
-				/* Higest bit defined by "vecbiSubsetDef1" next bit defined
-				   by "vecbiSubsetDef2" */
-				iTabInd0 = 
-					((vecbiSubsetDef1[i] & 1) << 2) | 
-					((vecbiSubsetDef3[i] & 1) << 1);
+				/* Higest bit defined by "vecSubsetDef1" next bit defined
+				   by "vecSubsetDef2" */
+				iTabInd0 =
+					((ExtractBit(vecSubsetDef1[i]) & 1) << 2) | 
+					((ExtractBit(vecSubsetDef3[i]) & 1) << 1);
 
 				vecMetric[i].rTow0 = Minimum1((*pcInSymb)[i].cSig.real(), 
-					rTableQAM64HMmix[iTabInd0][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMmix[iTabInd0][0], (*pcInSymb)[i].rChan);
 
 				vecMetric[i].rTow1 = Minimum1((*pcInSymb)[i].cSig.real(),
-					rTableQAM64HMmix[iTabInd0 | 1][0]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMmix[iTabInd0 | 1][0], (*pcInSymb)[i].rChan);
 			}
 
 			break;
@@ -793,18 +1024,18 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 			for (i = 0; i < iInputBlockSize; i++)
 			{
 				/* Imaginary part ------------------------------------------- */
-				/* Higest bit defined by "vecbiSubsetDef1" next bit defined
-				   by "vecbiSubsetDef2" */
-				iTabInd0 = 
-					((vecbiSubsetDef2[i] & 1) << 2) | 
-					((vecbiSubsetDef4[i] & 1) << 1);
+				/* Higest bit defined by "vecSubsetDef1" next bit defined
+				   by "vecSubsetDef2" */
+				iTabInd0 =
+					((ExtractBit(vecSubsetDef2[i]) & 1) << 2) | 
+					((ExtractBit(vecSubsetDef4[i]) & 1) << 1);
 
 				/* Calculate distances, imaginary part */
 				vecMetric[i].rTow0 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM64HMmix[iTabInd0][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMmix[iTabInd0][1], (*pcInSymb)[i].rChan);
 
 				vecMetric[i].rTow1 = Minimum1((*pcInSymb)[i].cSig.imag(),
-					rTableQAM64HMmix[iTabInd0 | 1][1]) * (*pcInSymb)[i].rChan;
+					rTableQAM64HMmix[iTabInd0 | 1][1], (*pcInSymb)[i].rChan);
 			}
 
 			break;
@@ -812,6 +1043,36 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 		break;
 	}
+
+#ifdef USE_ERASURE_FOR_FASTER_ACQ
+	/* Take care of special case with "CS_3_HMMIX" */
+	if (eMapType != CParameter::CS_3_HMMIX)
+	{
+		for (i = 0; i < iInputBlockSize; i++)
+		{
+			/* If input symbol is erasure, reset metrics to zero */
+			if ((*pcInSymb)[i].rChan == ERASURE_TAG_VALUE)
+			{
+				vecMetric[2 * i].rTow0 = (_REAL) 0.0;
+				vecMetric[2 * i].rTow1 = (_REAL) 0.0;
+				vecMetric[2 * i + 1].rTow0 = (_REAL) 0.0;
+				vecMetric[2 * i + 1].rTow1 = (_REAL) 0.0;
+			}
+		}
+	}
+	else
+	{
+		for (i = 0; i < iInputBlockSize; i++)
+		{
+			/* If input symbol is erasure, reset metrics to zero */
+			if ((*pcInSymb)[i].rChan == ERASURE_TAG_VALUE)
+			{
+				vecMetric[i].rTow0 = (_REAL) 0.0;
+				vecMetric[i].rTow1 = (_REAL) 0.0;
+			}
+		}
+	}
+#endif
 }
 
 void CMLCMetric::Init(int iNewInputBlockSize, CParameter::ECodScheme eNewCodingScheme)
@@ -820,41 +1081,16 @@ void CMLCMetric::Init(int iNewInputBlockSize, CParameter::ECodScheme eNewCodingS
 	eMapType = eNewCodingScheme;
 }
 
-_REAL CMLCMetric::Minimum1(_REAL rA, _REAL rB) const
-{
-	/* The minium in case of only one parameter is trivial */
-	return (rA - rB) * (rA - rB);
-}
-
-_REAL CMLCMetric::Minimum2(_REAL rA, _REAL rB1, _REAL rB2) const
-{
-	/* First calculate all distances */
-	_REAL rResult1 = fabs(rA - rB1);
-	_REAL rResult2 = fabs(rA - rB2);
-
-	/* Return smalles one */
-	if (rResult1 < rResult2)
-		return rResult1 * rResult1;
-	else
-		return rResult2 * rResult2;
-}
-
-_REAL CMLCMetric::Minimum4(_REAL rA, _REAL rB1, _REAL rB2, _REAL rB3, _REAL rB4) const
-{
-	/* First calculate all distances */
-	_REAL rResult1 = fabs(rA - rB1);
-	_REAL rResult2 = fabs(rA - rB2);
-	_REAL rResult3 = fabs(rA - rB3);
-	_REAL rResult4 = fabs(rA - rB4);
-
-	/* Search for smalles one */
-	_REAL rReturn = rResult1;
-	if (rResult2 < rReturn)
-		rReturn = rResult2;
-	if (rResult3 < rReturn)
-		rReturn = rResult3;
-	if (rResult4 < rReturn)
-		rReturn = rResult4;
-
-	return rReturn * rReturn;
-}
+/* Cleanup definitions afterwards */
+#undef BI_00
+#undef BI_01
+#undef BI_10
+#undef BI_11
+#undef BI_000
+#undef BI_001
+#undef BI_010
+#undef BI_011
+#undef BI_100
+#undef BI_101
+#undef BI_110
+#undef BI_111

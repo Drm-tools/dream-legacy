@@ -5,7 +5,7 @@
  *	Volker Fischer
  *
  * Description:
- *	c++ Mathamatic Library (Matlib), signal processing toolbox
+ *	c++ Mathematic Library (Matlib), signal processing toolbox
  *
  ******************************************************************************
  *
@@ -32,11 +32,26 @@
 #include "MatlibStdToolbox.h"
 
 
-/* Classes ********************************************************************/
-CMatlibVector<CReal>	Randn(const int iLength);
-CMatlibVector<CReal>	Sinc(const CMatlibVector<CReal>& fvI);
+/* Helpfunctions **************************************************************/
+/* Randomize functions */
+CMatlibVector<CReal>	Randn(const int iLen);
+inline
+CMatlibVector<CReal>	Rand(const int iLen)
+							{_VECOP(CReal, iLen, (CReal) rand() / RAND_MAX);}
+
+
+/* Window functions */
 CMatlibVector<CReal>	Hann(const int iLen);
 CMatlibVector<CReal>	Hamming(const int iLen);
+CMatlibVector<CReal>	Nuttallwin(const int iLen);
+CMatlibVector<CReal>	Bartlett(const int iLen);
+CMatlibVector<CReal>	Triang(const int iLen);
+CMatlibVector<CReal>	Kaiser(const int iLen, const CReal rBeta);
+
+
+/* Bessel function */
+CReal					Besseli(const CReal rNu, const CReal rZ);
+
 
 /* Filter data with a recursive (IIR) or nonrecursive (FIR) filter */
 CMatlibVector<CReal>	Filter(const CMatlibVector<CReal>& fvB, 
@@ -44,14 +59,77 @@ CMatlibVector<CReal>	Filter(const CMatlibVector<CReal>& fvB,
 							   const CMatlibVector<CReal>& fvX, 
 							   CMatlibVector<CReal>& fvZ);
 
-/* Levinson durbin recursion */
-CMatlibVector<CReal>	Levinson(const CMatlibVector<CReal> vecrRx, 
-								 const CMatlibVector<CReal> vecrB);
-CMatlibVector<CComplex>	Levinson(const CMatlibVector<CComplex> veccRx, 
-								 const CMatlibVector<CComplex> veccB);
 
-void GetIIRTaps(CMatlibVector<CReal>& vecrB, CMatlibVector<CReal>& vecrA, 
-				const CReal rFreqOff);
+/* Levinson durbin recursion */
+CMatlibVector<CReal>	Levinson(const CMatlibVector<CReal>& vecrRx, 
+								 const CMatlibVector<CReal>& vecrB);
+CMatlibVector<CComplex>	Levinson(const CMatlibVector<CComplex>& veccRx, 
+								 const CMatlibVector<CComplex>& veccB);
+
+
+/* Sinc-function */
+inline CReal			Sinc(const CReal& rI)
+							{return rI == (CReal) 0.0 ? (CReal) 1.0 : sin(crPi * rI) / (crPi * rI);}
+inline
+CMatlibVector<CReal>	Sinc(const CMatlibVector<CReal>& fvI)
+							{_VECOP(CReal, fvI.GetSize(), Sinc(fvI[i]));}
+
+
+/* My own functions --------------------------------------------------------- */
+/* Dominant eigenvector */
+CMatlibVector<CReal>	DomEig(const CMatlibMatrix<CReal>& rmI, const CReal rEpsilon = 1e-5);
+
+/* Linear regression */
+CReal					LinRegr(const CMatlibVector<CReal>& rvX, const CMatlibVector<CReal>& rvY);
+
+/* Lowpass filter design using windowing method */
+CMatlibVector<CReal>	FirLP(const CReal rNormBW,
+							  const CMatlibVector<CReal>& rvWin);
+
+/* Complex FIR filter with decimation */
+CMatlibVector<CComplex>	FirFiltDec(const CMatlibVector<CComplex>& cvB,
+								   const CMatlibVector<CComplex>& cvX,
+								   CMatlibVector<CComplex>& cvZ,
+								   const int iDecFact);
+
+/* Squared magnitude */
+inline CReal			SqMag(const CComplex& cI)
+							{return cI.real() * cI.real() + cI.imag() * cI.imag();}
+inline CReal			SqMag(const CReal& rI)
+							{return rI * rI;}
+inline
+CMatlibVector<CReal>	SqMag(const CMatlibVector<CComplex>& veccI)
+							{_VECOP(CReal, veccI.GetSize(), SqMag(veccI[i]));}
+inline
+CMatlibVector<CReal>	SqMag(const CMatlibVector<CReal>& vecrI)
+							{_VECOP(CReal, vecrI.GetSize(), SqMag(vecrI[i]));}
+
+/* One pole recursion (first order IIR)
+   y_n = lambda * y_{n - 1} + (1 - lambda) * x_n */
+inline void				IIR1(CReal& rY, const CReal& rX, const CReal rLambda)
+							{rY = rLambda * (rY - rX) + rX;}
+
+inline void				IIR1(CComplex& cY, const CComplex& cX, const CReal rLambda)
+							{cY = rLambda * (cY - cX) + cX;}
+
+inline void				IIR1(CMatlibVector<CReal>& rY,
+							 const CMatlibVector<CReal>& rX,
+							 const CReal rLambda)
+{
+	const int iSize = rY.GetSize();
+
+	for (int i = 0; i < iSize; i++)
+		IIR1(rY[i], rX[i], rLambda);
+}
+
+/* Two-sided one pole recursion */
+inline void				IIR1TwoSided(CReal& rY, const CReal& rX,
+									 const CReal rLamUp, const CReal rLamDown)
+							{rX > rY ? IIR1(rY, rX, rLamUp) : IIR1(rY, rX, rLamDown);}
+
+/* Get lambda for one-pole recursion from time constant */
+inline CReal			IIR1Lam(const CReal& rTau, const CReal& rFs)
+							{return exp((CReal) -1.0 / (rTau * rFs));}
 
 
 #endif	/* _MATLIB_SIGNAL_PROC_TOOLBOX_H_ */

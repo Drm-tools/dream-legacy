@@ -30,7 +30,7 @@
 #define ENERGYDISPERSAL_H__3B0BA660_CA63_4344_2B_23453E7A0D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 
 
 /* Classes ********************************************************************/
@@ -41,14 +41,14 @@ public:
 	virtual ~CEngergyDispersal() {}
 
 	void ProcessData(CVector<_BINARY>* pbiData);		
-	void Init(int iNewNoInBits, int iNewLengthVSPP);
+	void Init(int iNewNumInBits, int iNewLengthVSPP);
 
 protected:
-	int			iNoInBits;
+	int			iNumInBits;
 	int			iStartIndVSPP;
 	int			iEndIndVSPP;
-	_UINT32BIT	iShiftRegisterSPP;
-	_UINT32BIT	iShiftRegisterVSPP;
+	uint32_t	iShiftRegisterSPP;
+	uint32_t	iShiftRegisterVSPP;
 };
 
 

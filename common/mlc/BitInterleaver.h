@@ -31,7 +31,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "../interleaver/BlockInterleaver.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 
 
 /* Classes ********************************************************************/
@@ -42,15 +42,15 @@ public:
 	virtual ~CBitInterleaver() {}
 
 	void Init(int iNewx_in1, int iNewx_in2, int it_0);
-	void Interleave(CVector<_BINARY>& InputData);
+	void Interleave(CVector<_DECISION>& InputData);
 
 protected:
 	int					ix_in1;
 	int					ix_in2;
 	CVector<int>		veciIntTable1;
 	CVector<int>		veciIntTable2;
-	CVector<_BINARY>	vecbiInterlMemory1;
-	CVector<_BINARY>	vecbiInterlMemory2;
+	CVector<_DECISION>	vecInterlMemory1;
+	CVector<_DECISION>	vecInterlMemory2;
 };
 
 class CBitDeinterleaver: public CBlockInterleaver

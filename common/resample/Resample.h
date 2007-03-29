@@ -31,7 +31,7 @@
 
 #include "ResampleFilter.h"
 #include "../GlobalDefinitions.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 
 
 /* Classes ********************************************************************/
@@ -41,17 +41,38 @@ public:
 	CResample() {}
 	virtual ~CResample() {}
 
-	void Init(int iNewInputBlockSize);
-	int Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput, _REAL rRation);
+	void Init(const int iNewInputBlockSize);
+	int Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
+				 _REAL rRation);
 
 protected:
-	_REAL			rTStep;
-	_REAL			rtOut;
+	_REAL					rTStep;
+	_REAL					rtOut;
+	_REAL					rBlockDuration;
 
-	CVector<_REAL>	vecrIntBuff;
-	int				iHistorySize;
+	CShiftRegister<_REAL>	vecrIntBuff;
+	int						iHistorySize;
 
-	int				iInputBlockSize;
+	int						iInputBlockSize;
+};
+
+class CAudioResample
+{
+public:
+	CAudioResample() {}
+	virtual ~CAudioResample() {}
+
+	void Init(int iNewInputBlockSize, _REAL rNewRation);
+	void Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput);
+
+protected:
+	_REAL					rRation;
+
+	CShiftRegister<_REAL>	vecrIntBuff;
+	int						iHistorySize;
+
+	int						iInputBlockSize;
+	int						iOutputBlockSize;
 };
 
 
