@@ -168,7 +168,18 @@ drmwithoutqt_SOURCES = \
 	../common/soundinterface.h \
 	../common/soundnull.h \
 	../common/audiofilein.h
-if WITH_SOUND
+if USE_OSS
+drm_sound_SOURCES = \
+	source/soundcommon.cpp \
+	source/soundin.cpp \
+	source/soundout.cpp \
+	source/sound.h \
+	source/soundcommon.h \
+	source/soundin.h \
+	source/soundout.h
+endif
+
+if USE_ALSA
 drm_sound_SOURCES = \
 	source/soundcommon.cpp \
 	source/soundin.cpp \
@@ -300,7 +311,6 @@ moc/fdrmdialogbase.h: ../common/GUI-QT/fdrmdialogbase.ui
 moc/fdrmdialogbase.cpp: ../common/GUI-QT/fdrmdialogbase.ui moc/fdrmdialogbase.h
 	$(UIC) ../common/GUI-QT/fdrmdialogbase.ui -i moc/fdrmdialogbase.h -o moc/fdrmdialogbase.cpp
 
-
 moc/moc_TransmDlg.cpp: ../common/GUI-QT/TransmDlg.h
 	$(MOC) ../common/GUI-QT/TransmDlg.h -o moc/moc_TransmDlg.cpp
 	
@@ -312,7 +322,6 @@ moc/TransmDlgbase.h: ../common/GUI-QT/TransmDlgbase.ui
 
 moc/TransmDlgbase.cpp: ../common/GUI-QT/TransmDlgbase.ui moc/TransmDlgbase.h
 	$(UIC) ../common/GUI-QT/TransmDlgbase.ui -i moc/TransmDlgbase.h -o moc/TransmDlgbase.cpp
-
 
 moc/moc_systemevalDlg.cpp: ../common/GUI-QT/systemevalDlg.h
 	$(MOC) ../common/GUI-QT/systemevalDlg.h -o moc/moc_systemevalDlg.cpp
@@ -326,7 +335,6 @@ moc/systemevalDlgbase.h: ../common/GUI-QT/systemevalDlgbase.ui
 moc/systemevalDlgbase.cpp: ../common/GUI-QT/systemevalDlgbase.ui moc/systemevalDlgbase.h
 	$(UIC) ../common/GUI-QT/systemevalDlgbase.ui -i moc/systemevalDlgbase.h -o moc/systemevalDlgbase.cpp
 
-
 moc/moc_MultimediaDlg.cpp: ../common/GUI-QT/MultimediaDlg.h
 	$(MOC) ../common/GUI-QT/MultimediaDlg.h -o moc/moc_MultimediaDlg.cpp
 		
@@ -338,7 +346,6 @@ moc/MultimediaDlgbase.h: ../common/GUI-QT/MultimediaDlgbase.ui
 
 moc/MultimediaDlgbase.cpp: ../common/GUI-QT/MultimediaDlgbase.ui moc/MultimediaDlgbase.h
 	$(UIC) ../common/GUI-QT/MultimediaDlgbase.ui -i moc/MultimediaDlgbase.h -o moc/MultimediaDlgbase.cpp
-
 
 moc/moc_StationsDlg.cpp: ../common/GUI-QT/StationsDlg.h
 	$(MOC) ../common/GUI-QT/StationsDlg.h -o moc/moc_StationsDlg.cpp
@@ -352,7 +359,6 @@ moc/StationsDlgbase.h: ../common/GUI-QT/StationsDlgbase.ui
 moc/StationsDlgbase.cpp: ../common/GUI-QT/StationsDlgbase.ui moc/StationsDlgbase.h
 	$(UIC) ../common/GUI-QT/StationsDlgbase.ui -i moc/StationsDlgbase.h -o moc/StationsDlgbase.cpp
 
-
 moc/moc_LiveScheduleDlg.cpp: ../common/GUI-QT/LiveScheduleDlg.h
 	$(MOC) ../common/GUI-QT/LiveScheduleDlg.h -o moc/moc_LiveScheduleDlg.cpp
 		
@@ -364,7 +370,6 @@ moc/LiveScheduleDlgbase.h: ../common/GUI-QT/LiveScheduleDlgbase.ui
 
 moc/LiveScheduleDlgbase.cpp: ../common/GUI-QT/LiveScheduleDlgbase.ui moc/LiveScheduleDlgbase.h
 	$(UIC) ../common/GUI-QT/LiveScheduleDlgbase.ui -i moc/LiveScheduleDlgbase.h -o moc/LiveScheduleDlgbase.cpp
-
 
 moc/moc_MultSettingsDlg.cpp: ../common/GUI-QT/MultSettingsDlg.h
 	$(MOC) ../common/GUI-QT/MultSettingsDlg.h -o moc/moc_MultSettingsDlg.cpp
@@ -378,7 +383,6 @@ moc/MultSettingsDlgbase.h: ../common/GUI-QT/MultSettingsDlgbase.ui
 moc/MultSettingsDlgbase.cpp: ../common/GUI-QT/MultSettingsDlgbase.ui moc/MultSettingsDlgbase.h
 	$(UIC) ../common/GUI-QT/MultSettingsDlgbase.ui -i moc/MultSettingsDlgbase.h -o moc/MultSettingsDlgbase.cpp
 
-
 moc/moc_GeneralSettingsDlg.cpp: ../common/GUI-QT/GeneralSettingsDlg.h
 	$(MOC) ../common/GUI-QT/GeneralSettingsDlg.h -o moc/moc_GeneralSettingsDlg.cpp
 		
@@ -390,7 +394,6 @@ moc/GeneralSettingsDlgbase.h: ../common/GUI-QT/GeneralSettingsDlgbase.ui
 
 moc/GeneralSettingsDlgbase.cpp: ../common/GUI-QT/GeneralSettingsDlgbase.ui moc/GeneralSettingsDlgbase.h
 	$(UIC) ../common/GUI-QT/GeneralSettingsDlgbase.ui -i moc/GeneralSettingsDlgbase.h -o moc/GeneralSettingsDlgbase.cpp
-
 
 moc/moc_EPGDlg.cpp: ../common/GUI-QT/EPGDlg.h
 	$(MOC) ../common/GUI-QT/EPGDlg.h -o moc/moc_EPGDlg.cpp
@@ -404,7 +407,6 @@ moc/EPGDlgbase.h: ../common/GUI-QT/EPGDlgbase.ui
 moc/EPGDlgbase.cpp: ../common/GUI-QT/EPGDlgbase.ui moc/EPGDlgbase.h
 	$(UIC) ../common/GUI-QT/EPGDlgbase.ui -i moc/EPGDlgbase.h -o moc/EPGDlgbase.cpp
 
-
 moc/moc_AnalogDemDlg.cpp: ../common/GUI-QT/AnalogDemDlg.h
 	$(MOC) ../common/GUI-QT/AnalogDemDlg.h -o moc/moc_AnalogDemDlg.cpp
 		
@@ -416,7 +418,6 @@ moc/AnalogDemDlgbase.h: ../common/GUI-QT/AnalogDemDlgbase.ui
 
 moc/AnalogDemDlgbase.cpp: ../common/GUI-QT/AnalogDemDlgbase.ui moc/AnalogDemDlgbase.h
 	$(UIC) ../common/GUI-QT/AnalogDemDlgbase.ui -i moc/AnalogDemDlgbase.h -o moc/AnalogDemDlgbase.cpp
-	
 	
 moc/moc_AMSSDlgbase.cpp: moc/AMSSDlgbase.h
 	$(MOC) moc/AMSSDlgbase.h -o moc/moc_AMSSDlgbase.cpp
@@ -454,4 +455,3 @@ endif
 
 #drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -fno-for-scope -ansi -Wshadow -Werror -Weffc++ -Wsign-promo -Wcomment 
 drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -fno-for-scope -Wsign-promo -Wcomment
-drm_LDFLAGS=-lrt -lasound
