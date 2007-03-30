@@ -33,6 +33,7 @@
 #include "../DrmTransmitter.h"
 #include "../DrmSimulation.h"
 #include "../util/Settings.h"
+#include "../GPSReceiver.h"
 
 #ifdef USE_QT_GUI
 # include <qapplication.h>
@@ -40,7 +41,6 @@
 # include <qmessagebox.h>
 # include "fdrmdialog.h"
 # include "TransmDlg.h"
-# include "../GPSReceiver.h"
 #endif
 #include <iostream>
 
@@ -109,7 +109,7 @@ try
 		   routine since we cannot 100% assume that the working thread is ealier
 		   ready than the GUI thread */
 		DRMReceiver.Init();
-	
+
 		CGPSReceiver* pGPSReceiver=NULL;
 		if(DRMReceiver.GetParameters()->eGPSSource == CParameter::GPS_SOURCE_GPS_RECEIVER)
 		{
@@ -120,11 +120,6 @@ try
 		}
 
 		FDRMDialog		MainDlg(&DRMReceiver, 0, 0, FALSE, Qt::WStyle_MinMax);
-
-		if(DRMReceiver.GeomAnalogDemDlg.bVisible == TRUE)
-			DRMReceiver.SetReceiverMode(RM_AM);
-		else
-			DRMReceiver.SetReceiverMode(RM_DRM);
 
 		/* Start working thread */
 		DRMReceiver.start();

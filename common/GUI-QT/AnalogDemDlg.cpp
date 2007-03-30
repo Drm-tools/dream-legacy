@@ -184,9 +184,9 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(&TimerPLLPhaseDial, SIGNAL(timeout()),
 		this, SLOT(OnTimerPLLPhaseDial()));
 
-	/* Don't activate real-time timers, wait for show event */
-	//Timer.start(GUI_CONTROL_UPDATE_TIME);
-	//TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
+	/* Activate real-time timers */
+	Timer.start(GUI_CONTROL_UPDATE_TIME);
+	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 }
 
 void AnalogDemDlg::showEvent(QShowEvent*)
@@ -349,20 +349,10 @@ void AnalogDemDlg::UpdatePlotsStyle()
 
 void AnalogDemDlg::OnTimer()
 {
-	switch(pDRMRec->GetReceiverMode())
-	{
-	case RM_DRM:
-		SwitchToDRM();
-		break;
-	case RM_AM:
-		/* Carrier frequency of AM signal */
-		TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
-		+ QString().setNum(pDRMRec->GetAMDemod()->GetCurMixFreqOffs(), 'f', 2)
-		+ " Hz</b>");
-		break;
-	case RM_NONE:
-		break;
-	}
+	/* Carrier frequency of AM signal */
+	TextFreqOffset->setText(tr("Carrier<br>Frequency:<b><br>") +
+		QString().setNum(pDRMRec->GetAMDemod()->GetCurMixFreqOffs(), 'f', 2) +
+		" Hz</b>");
 }
 
 void AnalogDemDlg::OnTimerPLLPhaseDial()
@@ -765,9 +755,9 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(&TimerPLLPhaseDial, SIGNAL(timeout()),
 		this, SLOT(OnTimerPLLPhaseDial()));
 
-	/* Don't activate real-time timers - wait for show event */
-	//Timer.start(GUI_CONTROL_UPDATE_TIME);
-	//TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
+	/* Activate real-time timers */
+	Timer.start(GUI_CONTROL_UPDATE_TIME);
+	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 	/* set the progress bar style */
 	ProgressBarAMSS->setStyle( new QMotifStyle() );
 
