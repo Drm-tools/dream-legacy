@@ -280,7 +280,7 @@ void FDRMDialog::OnTimer()
 		/* stopping the timer is normally done by the hide signal, but at startup we
 		 * are already hidden and the hide signal doesn't hit the slot
 		 */
-		if(eReceiverMode == RM_DRM)
+		if(eReceiverMode != RM_AM)
 		{
 			Timer.stop();
 			ChangeGUIModeToAM();
