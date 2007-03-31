@@ -233,9 +233,6 @@ void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 	pDRMRec->GeomAnalogDemDlg.bVisible = TRUE;
 	pDRMRec->GeomAMSSDlg.bVisible = AMSSDlg.isVisible();
 
-	/* Close AMSS window, make sure its timers stop too */
-	AMSSDlg.hide();
-
 	/* tell every other window to close too */
 	emit Closed();
 
