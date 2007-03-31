@@ -26,8 +26,6 @@
  *
 \******************************************************************************/
 
-#ifdef USE_ALSA
-
 #include "alsa.h"
 #include <iostream>
 #include <sstream>
@@ -313,5 +311,3 @@ CAlsaSoundOut::Close()
 		handle = NULL;
 	}
 }
-
-#endif

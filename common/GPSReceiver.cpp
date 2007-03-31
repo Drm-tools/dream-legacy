@@ -31,8 +31,8 @@
 #include "GPSReceiver.h"
 
 #ifdef USE_QT_GUI
-
-#include <qsignal.h>
+# include <qsignal.h>
+#endif
 
 #include <fstream>
 #include <iostream>
@@ -43,18 +43,18 @@ using namespace std;
 const short CGPSReceiver::c_sMaximumStateMachineCyclesSinceLastGPSDReplyBeforeReset = 10;
 const unsigned short CGPSReceiver::c_usReconnectIntervalSeconds = 10;
 
-CGPSReceiver::CGPSReceiver() :
-	m_GPSdPort(2947),
-	m_GPSdHostName("localhost")
+CGPSReceiver::CGPSReceiver() : m_GPSdPort(2947), m_GPSdHostName("localhost")
 {
 	m_bFinished = FALSE;
 	m_eGPSState = DISCONNECTED;
 
 	m_pGPSRxData = &m_GPSRxData;
 
+#ifdef USE_QT_GUI
 	//connect signals
 	connect(&m_Socket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
 	connect(&m_Socket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
+#endif
 
 	m_sStateMachineCyclesSinceLastGPSDReply = c_sMaximumStateMachineCyclesSinceLastGPSDReplyBeforeReset;
 }
@@ -65,6 +65,7 @@ CGPSReceiver::~CGPSReceiver()
 
 void CGPSReceiver::run()
 {
+#ifdef USE_QT_GUI
 	try
 	{
 		// Call GPS main routine 
@@ -74,10 +75,12 @@ void CGPSReceiver::run()
 	{
 		ErrorMessage(GenErr.strError);
 	}
+#endif
 }
 
 void CGPSReceiver::Start()
 {
+#ifdef USE_QT_GUI
 	while (!m_bFinished)
 	{
 		switch(m_eGPSState)
@@ -171,6 +174,7 @@ void CGPSReceiver::Start()
 		m_sStateMachineCyclesSinceLastGPSDReply++;
 	}
 
+#endif
 }
 
 void CGPSReceiver::DecodeGPSDReply(string Reply)
@@ -327,13 +331,13 @@ void CGPSReceiver::DecodeY(string Value)
 
 void CGPSReceiver::slotReadyRead()
 {
+#ifdef USE_QT_GUI
 	while (m_Socket.canReadLine())
 		DecodeGPSDReply((const char*) m_Socket.readLine());
+#endif
 }
 
 void CGPSReceiver::slotSocketError(int)
 {
 	m_eGPSState = COMMS_ERROR;
 }
-
-#endif

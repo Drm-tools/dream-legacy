@@ -1540,7 +1540,7 @@ void CParameter::FillGRPSData()
 	{
 		//source
 		RGPSData.SetGPSSource(CParameter::CRGPSData::GPS_SOURCE_GPS_RECEIVER);
-		
+
 		//satellites visible
 		if (GPSRxData.GetSatellitesVisibleAvailable())
 		{

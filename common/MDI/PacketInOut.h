@@ -69,6 +69,7 @@ public:
 // Multiple inheritance is ok because both parents are pure abstract (interfaces). Discuss.
 class CPacketSocket : public CPacketSink, public CPacketSource
 {
+public:
 	virtual _BOOLEAN SetNetwOutAddr(const string& strNew) = 0;
 	virtual _BOOLEAN SetNetwInAddr(const string& str) = 0;
 };

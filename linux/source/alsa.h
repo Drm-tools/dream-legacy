@@ -26,8 +26,6 @@
  *
 \******************************************************************************/
 
-#ifdef USE_ALSA
-
 #ifndef _ALSA_H
 #define _ALSA_H
 
@@ -71,7 +69,5 @@ protected:
 	vector<string> devices;
 	int dev;
 };
-
-#endif
 
 #endif

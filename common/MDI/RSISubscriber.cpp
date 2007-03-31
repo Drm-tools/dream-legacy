@@ -33,6 +33,11 @@
 #include "RSISubscriber.h"
 #include "../DrmReceiver.h"
 #include "TagPacketGenerator.h"
+#ifdef USE_QT_GUI
+# include "PacketSocketQT.h"
+#else
+# include "PacketSocketNull.h"
+#endif
 #include <iomanip>
 
 
@@ -80,8 +85,17 @@ void CRSISubscriber::SendPacket(const vector<_BYTE>& vecbydata)
 }
 
 
-CRSISubscriberSocket::CRSISubscriberSocket()
+#ifdef USE_QT_GUI
+CRSISubscriberSocket::CRSISubscriberSocket():PacketSocket(*new CPacketSocketQT())
+#else
+CRSISubscriberSocket::CRSISubscriberSocket():PacketSocket(*new CPacketSocketNull())
+#endif
 {
+}
+
+CRSISubscriberSocket::~CRSISubscriberSocket()
+{
+	delete &PacketSocket;
 }
 
 _BOOLEAN CRSISubscriberSocket::SetOutAddr(const string& strArgument)

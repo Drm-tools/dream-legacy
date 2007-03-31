@@ -42,7 +42,7 @@
 #include "GlobalDefinitions.h"
 #include "ofdmcellmapping/CellMappingTable.h"
 #include "matlib/Matlib.h"
-#include "GPSReceiver.h"
+# include "GPSReceiver.h"
 
 
 enum ETypeIntFreq

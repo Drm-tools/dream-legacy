@@ -209,7 +209,7 @@ void CDRMReceiver::Run()
 		if (upstreamRSCI.GetInEnabled() == FALSE)
 		{
 			ReceiveData.ReadData(ReceiverParam, RecDataBuf);
-#ifndef USE_QT_GUI
+#if defined(HAVE_LIBHAMLIB) && !defined(USE_QT_GUI)
 			/* TODO - get the polling interval sensible */
 			_BOOLEAN bValid;
 			_REAL r;

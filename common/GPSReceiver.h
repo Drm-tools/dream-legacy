@@ -32,8 +32,8 @@
 #include "GlobalDefinitions.h"
 
 #ifdef USE_QT_GUI
-
-#include <qsocket.h>
+# include <qsocket.h>
+#endif
 
 class CAutoMutex
 {
@@ -46,7 +46,7 @@ public:
 };
 
 class CGPSRxData
-// *TODO* - put satus stuff from CParameter::CGPSInformation in here
+// *TODO* - put status stuff from CParameter::CGPSInformation in here
 {
 public:
 	CGPSRxData() 
@@ -164,10 +164,12 @@ class CGPSReceiver
 	: public QObject, public QThread
 #endif
 {
+#ifdef USE_QT_GUI
 	Q_OBJECT
+#endif
 public:
 	CGPSReceiver();
-	~CGPSReceiver();
+	virtual ~CGPSReceiver();
 	
 	void SetGPSRxData(CGPSRxData* pGPSRxData) { m_pGPSRxData = pGPSRxData; }
 	void SetGPSd(const string& host, int port) { m_GPSdHostName = host; m_GPSdPort = port; }
@@ -195,16 +197,15 @@ protected:
 
 	unsigned short m_GPSdPort;
 	string	m_GPSdHostName;
-
-	QSocket	m_Socket;
-
 	_BOOLEAN m_bFinished;
+
+#ifdef USE_QT_GUI
+	QSocket	m_Socket;
 
 public slots:
 	void slotReadyRead();
 	void slotSocketError(int);
+#endif
 };
-
-#endif // QT
 
 #endif // !defined(_GPSRECEIVER_H_)
