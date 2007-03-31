@@ -29,7 +29,32 @@
 #ifndef _SOUND_H
 #define _SOUND_H
 
-#include "soundin.h"
-#include "soundout.h"
+#ifdef USE_OSS
+# include "soundin.h"
+# include "soundout.h"
+#endif
+
+#ifdef USE_ALSA
+# include "soundin.h"
+# include "soundout.h"
+#endif
+
+#ifdef USE_JACK
+# include "jack.h"
+typedef CSoundInJack CSoundIn;
+typedef CSoundOutJack CSoundOut;
+#endif
+
+#ifdef USE_PORTAUDIO
+# include "portaudio.h"
+typedef CPaIn CSoundIn;
+typedef CPaOut CSoundOut;
+#endif
+
+#if !defined(USE_OSS) && !defined(USE_ALSA) && !defined(USE_JACK) && !defined(USE_PORTAUDIO)
+# include "../../common/soundnull.h"
+typedef CSoundInNull CSoundIn;
+typedef CSoundOutNull CSoundOut;
+#endif
 
 #endif

@@ -165,7 +165,7 @@ if test "x$enable_hamlib" = "xyes"; then
 	AC_DEFINE(HAVE_HAMLIB, 1, [Define if you have Hamlib]),
 	PKG_CHECK_EXISTS([hamlib >= 1.2.1], hamlib121=yes, hamlib121=no)
 	if test "x$hamlib121" = "xyes"; then
-		AC_DEFINE(HAVE_RIG_PARSE_MODE, 1, [Define if you have Hamlib >= 1.2.1]),
+		AC_DEFINE(HAVE_RIG_PARSE_MODE, 1, [Define if you have Hamlib >= 1.2.1])
 	fi
 	LIBS+=" $hamlib_LIBS"
 else
@@ -215,8 +215,8 @@ echo
 echo
 echo " 	simulation mode selected:			$enable_simulation"
 echo " 	alsa sound driver selected:			$enable_alsa"
-echo "	portaudio sound driver selected:		$enable_portaudio"
-echo "	jack sound driver selected:			$enable_jack"
+echo "	portaudio sound driver selected:		$enable_portaudio (not working yet)"
+echo "	jack sound driver selected:			$enable_jack (not tested)"
 echo "	oss sound driver selected: 			$enable_oss"
 echo "	QT GUI selected:				$enable_qt"
 echo "	rig control via hamlib supported:	 	$enable_hamlib"

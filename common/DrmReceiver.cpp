@@ -35,16 +35,11 @@
 #include "DrmReceiver.h"
 
 #include "util/LogPrint.h"
-#ifdef WITH_SOUND
 # ifdef _WIN32
 #  include "../windows/Source/Sound.h"
 # else
-#  include "../linux/source/soundin.h"
-#  include "../linux/source/soundout.h"
+#  include "../linux/source/sound.h"
 # endif
-#else
-# include "soundnull.h"
-#endif
 # include "audiofilein.h"
 
 const int CDRMReceiver::MAX_UNLOCKED_COUNT=2;
@@ -52,11 +47,7 @@ const int CDRMReceiver::MAX_UNLOCKED_COUNT=2;
 // TODO don't create a CSoundIn if its not going to be used. It helps for now because of SetDev in the GUI
 /* Implementation *************************************************************/
 CDRMReceiver::CDRMReceiver() :
-#ifdef WITH_SOUND
 		pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
-#else
-		pSoundInInterface(new CSoundInNull), pSoundOutInterface(new CSoundOutNull),
-#endif
 		ReceiveData(), WriteData(pSoundOutInterface),
 		FreqSyncAcq(),
 		ChannelEstimation(),

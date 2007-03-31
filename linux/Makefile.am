@@ -167,13 +167,13 @@ drmwithoutqt_SOURCES = \
 	../common/selectioninterface.h \
 	../common/soundinterface.h \
 	../common/soundnull.h \
-	../common/audiofilein.h
+	../common/audiofilein.h \
+	source/sound.h
+
 if USE_OSS
 drm_sound_SOURCES = \
+	source/oss.cpp \
 	source/soundcommon.cpp \
-	source/soundin.cpp \
-	source/soundout.cpp \
-	source/sound.h \
 	source/soundcommon.h \
 	source/soundin.h \
 	source/soundout.h
@@ -181,15 +181,23 @@ endif
 
 if USE_ALSA
 drm_sound_SOURCES = \
-	source/soundcommon.cpp \
-	source/soundin.cpp \
-	source/soundout.cpp \
 	source/alsa.cpp \
-	source/alsa.h \
-	source/sound.h \
+	source/soundcommon.cpp \
 	source/soundcommon.h \
 	source/soundin.h \
 	source/soundout.h
+endif
+
+if USE_JACK
+drm_sound_SOURCES = \
+	source/jack.cpp \
+	source/jack.h
+endif
+
+if USE_PORTAUDIO
+drm_sound_SOURCES = \
+	source/portaudio.cpp \
+	source/portaudio.h
 endif
 
 if USE_QT

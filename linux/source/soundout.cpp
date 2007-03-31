@@ -38,7 +38,7 @@
 
 /*****************************************************************************/
 
-#ifdef USE_DEVDSP
+#ifdef USE_OSS
 
 #include <sys/soundcard.h>
 #include <errno.h>
