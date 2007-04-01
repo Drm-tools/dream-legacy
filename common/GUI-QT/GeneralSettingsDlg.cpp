@@ -175,17 +175,27 @@ _BOOLEAN bAllCompiled = FALSE;
 
 		const QChar chrDegrees = QChar(0XB0); /* Degrees char on Latin-1 */
 
-		/* Receiver coordinates */
-		pDRMRec->GetParameters()->ReceptLog.SetLatitude(
-			QString(EdtLatitudeDegrees->text()
-			 + chrDegrees + EdtLatitudeMinutes->text() 
-			 + "'" + EdtLatitudeNS->text().upper()).latin1());
+		if (!bAllEmpty)
+		{
+			/* Receiver coordinates */
+			pDRMRec->GetParameters()->ReceptLog.SetLatitude(
+				QString(EdtLatitudeDegrees->text()
+				+ chrDegrees + EdtLatitudeMinutes->text() 
+				+ "'" + EdtLatitudeNS->text().upper()).latin1());
 
 
-		pDRMRec->GetParameters()->ReceptLog.SetLongitude(
-			QString(EdtLongitudeDegrees->text()
-			 + chrDegrees + EdtLongitudeMinutes->text() 
-			 + "'" + EdtLongitudeEW->text().upper()).latin1());
+			pDRMRec->GetParameters()->ReceptLog.SetLongitude(
+				QString(EdtLongitudeDegrees->text()
+				+ chrDegrees + EdtLongitudeMinutes->text() 
+				+ "'" + EdtLongitudeEW->text().upper()).latin1());
+		}
+		else
+		{
+			/* Receiver coordinates */
+			pDRMRec->GetParameters()->ReceptLog.SetLatitude("");
+
+			pDRMRec->GetParameters()->ReceptLog.SetLongitude("");
+		}
 
 		accept(); /* If the values are valid close the dialog */
 	}

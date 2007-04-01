@@ -693,8 +693,8 @@ void FDRMDialog::ChangeGUIModeToDRM()
 {
 	show();
 
-	/* Load correct schedule */
-	pStationsDlg->LoadSchedule(CDRMSchedule::SM_DRM);
+	/* Set correct schedule */
+	pStationsDlg->SetCurrentSchedule(CDRMSchedule::SM_DRM);
 
 	if (bStationsDlgWasVis == TRUE)
 		pStationsDlg->show();
@@ -710,6 +710,9 @@ void FDRMDialog::ChangeGUIModeToDRM()
 
 	if (bMultMedDlgWasVis == TRUE)
 		pMultiMediaDlg->show();
+
+	if (pStationsDlg->isVisible())
+		pStationsDlg->LoadSchedule(CDRMSchedule::SM_DRM);
 
 	pSysEvalDlg->StartTimerLogFileStart();
 
@@ -737,16 +740,22 @@ void FDRMDialog::ChangeGUIModeToAM()
 
 	pSysEvalDlg->StopLogTimers();
 
-	/* Load correct schedule */
-	pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
-
 	this->hide();
 
 	pAnalogDemDlg->show();
 
+	/* Set correct schedule */
+	pStationsDlg->SetCurrentSchedule(CDRMSchedule::SM_ANALOG);
+
 	if (bStationsDlgWasVis == TRUE)
 		pStationsDlg->show();
-	
+
+	if (bLiveSchedDlgWasVis == TRUE)
+		pLiveScheduleDlg->show();
+
+	if (pStationsDlg->isVisible())
+		pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
+
 	eReceiverMode = RM_AM;
 }
 
@@ -766,6 +775,8 @@ void FDRMDialog::hideEvent(QHideEvent*)
 void FDRMDialog::OnSwitchToDRM()
 {
 	bStationsDlgWasVis = pStationsDlg->isVisible();
+	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
+
 	pDRMRec->SetReceiverMode(RM_DRM);
 	OnTimer();
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
@@ -774,6 +785,7 @@ void FDRMDialog::OnSwitchToDRM()
 void FDRMDialog::OnSwitchToAM()
 {
 	bStationsDlgWasVis = pStationsDlg->isVisible();
+	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
 	pDRMRec->SetReceiverMode(RM_AM);
 }
 
@@ -1005,7 +1017,15 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	else
 	{
 		pDRMRec->GeomStationsDlg.bVisible = pStationsDlg->isVisible();
+
+		if (pStationsDlg->isVisible())
+			pStationsDlg->hide();
+
 		pDRMRec->GeomLiveScheduleDlg.bVisible = pLiveScheduleDlg->isVisible();
+
+		if (pLiveScheduleDlg->isVisible())
+			pLiveScheduleDlg->hide();
+
 		/* we saved these when we were in DRM Mode */
 		pDRMRec->GeomSystemEvalDlg.bVisible = bSysEvalDlgWasVis;
 		pDRMRec->GeomMultimediaDlg.bVisible = bMultMedDlgWasVis;
