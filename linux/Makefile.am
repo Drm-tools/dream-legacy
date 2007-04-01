@@ -197,7 +197,9 @@ endif
 if USE_PORTAUDIO
 drm_sound_SOURCES = \
 	source/portaudio.cpp \
-	source/portaudio.h
+	source/portaudio.h \
+	source/pa_ringbuffer.c \
+	source/pa_ringbuffer.h
 endif
 
 if USE_QT

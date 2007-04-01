@@ -26,7 +26,7 @@
  *
 \******************************************************************************/
 
-#include "pa.h"
+#include "portaudio.h"
 #include <iostream>
 
 /* This routine will be called by the PortAudio engine when audio is needed.
@@ -45,7 +45,6 @@ captureCallback(const void *inputBuffer, void *outputBuffer,
 	long bytes = framesPerBuffer*2*sizeof(short);
 	long avail = PaUtil_GetRingBufferWriteAvailable(&This->ringBuffer);
 	PaUtil_WriteRingBuffer(&This->ringBuffer, inputBuffer, (avail<bytes)?avail:bytes);
-	//cout << "capture got " << bytes << " wrote " << ((avail<bytes)?avail:bytes)<< endl;
 	if(statusFlags&paInputOverflow)
 		This->xruns++;
 	return 0;
@@ -62,7 +61,6 @@ playbackCallback(const void *inputBuffer, void *outputBuffer,
 	long bytes = framesPerBuffer*2*sizeof(short);
 	long avail = PaUtil_GetRingBufferReadAvailable(&This->ringBuffer);
 	PaUtil_ReadRingBuffer(&This->ringBuffer, outputBuffer, (avail<bytes)?avail:bytes);
-	//cout << "playback want " << bytes << " got " << ((avail<bytes)?avail:bytes) << endl;
 	if(statusFlags&paOutputUnderflow)
 		This->xruns++;
 	return 0;
@@ -171,7 +169,10 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 			pParameters.device = Pa_GetDefaultOutputDevice();
 	}
 	else
+	{
+		cout << "opening " << devices[dev] << endl;
 		pParameters.device = devices[dev];
+	}
 
  	if(pParameters.device == paNoDevice)
 		return;
@@ -193,7 +194,7 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 		minRingBufferSize = 4*framesPerBuffer*channels*sizeof(short);
 	}
 
-	/* See you specific host's API docs for info on using this field */
+	/* See the specific host's API docs for info on using this field */
 	pParameters.hostApiSpecificStreamInfo = NULL;
 
 	/* flags that can be used to define dither, clip settings and more */

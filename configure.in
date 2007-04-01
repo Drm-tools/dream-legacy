@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 AC_INIT(common/GUI-QT/main.cpp)
 
-AM_INIT_AUTOMAKE(drm,1.8.13unstable)
+AM_INIT_AUTOMAKE(drm,1.8.14unstable)
 
 AM_CONFIG_HEADER(config.h)
 
@@ -26,9 +26,9 @@ AC_ARG_ENABLE( oss,[  --enable-oss        open sound system support], enable_oss
 
 AC_ARG_ENABLE( alsa, [  --enable-alsa           use alsa sound lib], enable_alsa=$enableval, enable_alsa=yes)
 
-AC_ARG_ENABLE( portaudio,[  --enable-portaudio   open sound systen support], enable_portaudio=$enableval, enable_portaudio=no)
+AC_ARG_ENABLE( portaudio,[  --enable-portaudio   open sound system support], enable_portaudio=$enableval, enable_portaudio=no)
 
-AC_ARG_ENABLE( jack,[  --enable-jack   open sound systen support], enable_jack=$enableval, enable_jack=no)
+AC_ARG_ENABLE( jack,[  --enable-jack   open sound system support], enable_jack=$enableval, enable_jack=no)
 
 AC_ARG_ENABLE( qt,[  --enable-qt     use QT3 GUI], enable_qt=$enableval, enable_qt=yes)
 
@@ -215,7 +215,7 @@ echo
 echo
 echo " 	simulation mode selected:			$enable_simulation"
 echo " 	alsa sound driver selected:			$enable_alsa"
-echo "	portaudio sound driver selected:		$enable_portaudio (not working yet)"
+echo "	portaudio sound driver selected:		$enable_portaudio (alpha)"
 echo "	jack sound driver selected:			$enable_jack (alpha)"
 echo "	oss sound driver selected: 			$enable_oss"
 echo "	QT GUI selected:				$enable_qt"
