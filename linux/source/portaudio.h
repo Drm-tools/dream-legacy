@@ -44,8 +44,8 @@ public:
 	virtual int			GetDev();
 
 	void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-	_BOOLEAN	Read(CVector<float>& psData);
-	_BOOLEAN	Write(CVector<float>& psData);
+	_BOOLEAN	Read(CVector<short>& psData);
+	_BOOLEAN	Write(CVector<short>& psData);
 	void		Close();
 
 	PaUtilRingBuffer ringBuffer;
@@ -73,7 +73,7 @@ public:
 
 	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
 	virtual void		Close();
-	virtual _BOOLEAN	Read(CVector<float>& psData);
+	virtual _BOOLEAN	Read(CVector<short>& psData);
 
 protected:
 
@@ -91,7 +91,7 @@ public:
 
 	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
 	virtual void		Close();
-	virtual _BOOLEAN	Write(CVector<float>& psData);
+	virtual _BOOLEAN	Write(CVector<short>& psData);
 
 protected:
 

@@ -121,7 +121,7 @@ CDRMReceiver::~CDRMReceiver()
 		RigPoll.stop();
 	}
 	if(RigPoll.wait(1000)==FALSE)
-		cout << "error terminating rig polling thread" << endl;;
+		cout << "error terminating rig polling thread" << endl;
 #endif
 	delete pSoundInInterface;
 	delete pSoundOutInterface;

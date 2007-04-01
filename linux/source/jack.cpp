@@ -97,6 +97,17 @@ capture_stereo(jack_nframes_t nframes, void *arg)
 	return 0;
 }
 
+pair< string, string>
+CJackPorts::get_ports(int dev)
+{
+	const size_t n = devices.size();
+	if(n==0)
+		return pair<string,string>("","");
+	if(dev<0 || dev>=n)
+		return ports[devices[n-1]]; 
+	return ports[devices[dev]]; 
+}
+
 void
 CJackPorts::load(jack_client_t * client, unsigned long flags)
 {
@@ -289,14 +300,23 @@ CSoundInJack::CSoundInJack():iBufferSize(0), bBlocking(TRUE),dev(-1),ports(),cap
 			throw "Jack: no more ports available";
 		}
 	}
+	/* fill the ringbuffer with silence to get us started while we wait for the receiver */
+	jack_ringbuffer_reset(capture_data.buff);
+	jack_ringbuffer_data_t wd[2];
+	jack_ringbuffer_get_write_vector(capture_data.buff, wd);
+	memset(wd[0].buf, 0, wd[0].len);
+	if(wd[1].len>0)
+		memset(wd[1].buf, 0, wd[1].len);
+	(void)jack_ringbuffer_write_advance(capture_data.buff, wd[0].len);
 	data.capture_data = &capture_data;
+
+	ports.load(data.client, JackPortIsOutput);
 
 	if (jack_activate(data.client))
 	{
 		throw "Jack: cannot activate client";
 	}
 	data.is_active = true;
-	ports.load(data.client, JackPortIsOutput);
 }
 
 CSoundInJack::CSoundInJack(const CSoundInJack & e):
@@ -317,7 +337,22 @@ CSoundInJack & CSoundInJack::operator=(const CSoundInJack & e)
 
 CSoundInJack::~CSoundInJack()
 {
+cout << "CSoundInJack::~CSoundInJack" << endl;
 	Close();
+	if(data.client==NULL)
+		return;
+
+	if (data.is_active && jack_deactivate(data.client))
+	{
+		throw "Jack: cannot deactivate client";
+	}
+	data.is_active = false;
+	data.capture_data = NULL;
+	if (jack_activate(data.client))
+	{
+		throw "Jack: cannot activate client";
+	}
+	data.is_active = true;
 }
 
 void
@@ -378,7 +413,8 @@ CSoundInJack::Read(CVector < short >&psData)
 	size_t bytes = iBufferSize * sizeof(short);
 	timespec delay;
 	delay.tv_sec = 0;
-	delay.tv_nsec = 10000000L;
+	const long one_ms = 1000000L; // nanoseconds
+	delay.tv_nsec = 100*one_ms;
 	while (jack_ringbuffer_read_space(capture_data.buff) < bytes)
 	{
 		nanosleep(&delay, NULL);
@@ -397,6 +433,7 @@ CSoundInJack::Read(CVector < short >&psData)
 void
 CSoundInJack::Close()
 {
+cout << "CSoundInJack::Close" << endl;
 	jack_port_disconnect(data.client, capture_data.left);
 	jack_port_disconnect(data.client, capture_data.right);
 }
@@ -428,18 +465,29 @@ CSoundOutJack::CSoundOutJack():iBufferSize(0), bBlocking(TRUE),dev(-1)
 	}
 
 	data.play_data = &play_data;
+	ports.load(data.client, JackPortIsInput);
 
 	if (jack_activate(data.client))
 	{
 		throw "Jack: cannot activate client";
 	}
 	data.is_active = true;
-	ports.load(data.client, JackPortIsInput);
 }
 
 CSoundOutJack::~CSoundOutJack()
 {
 	Close();
+	if (data.is_active && jack_deactivate(data.client))
+	{
+		throw "Jack: cannot deactivate client";
+	}
+	data.is_active = false;
+	data.capture_data = NULL;
+	if (jack_activate(data.client))
+	{
+		throw "Jack: cannot activate client";
+	}
+	data.is_active = true;
 }
 
 CSoundOutJack::CSoundOutJack(const CSoundOutJack & e):

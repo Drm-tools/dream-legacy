@@ -42,7 +42,7 @@ captureCallback(const void *inputBuffer, void *outputBuffer,
 	/* Cast data passed through stream to our structure. */
 	CPaCommon *This = (CPaCommon *) userData;
 	(void) outputBuffer;		/* Prevent unused variable warning. */
-	long bytes = framesPerBuffer*2*sizeof(float);
+	long bytes = framesPerBuffer*2*sizeof(short);
 	long avail = PaUtil_GetRingBufferWriteAvailable(&This->ringBuffer);
 	PaUtil_WriteRingBuffer(&This->ringBuffer, inputBuffer, (avail<bytes)?avail:bytes);
 	//cout << "capture got " << bytes << " wrote " << ((avail<bytes)?avail:bytes)<< endl;
@@ -59,7 +59,7 @@ playbackCallback(const void *inputBuffer, void *outputBuffer,
 {
 	CPaCommon *This = (CPaCommon *) userData;
 	(void) inputBuffer;			/* Prevent unused variable warning. */
-	long bytes = framesPerBuffer*2*sizeof(float);
+	long bytes = framesPerBuffer*2*sizeof(short);
 	long avail = PaUtil_GetRingBufferReadAvailable(&This->ringBuffer);
 	PaUtil_ReadRingBuffer(&This->ringBuffer, outputBuffer, (avail<bytes)?avail:bytes);
 	//cout << "playback want " << bytes << " got " << ((avail<bytes)?avail:bytes) << endl;
@@ -161,7 +161,7 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	memset(&pParameters, sizeof(pParameters), 0);
 	pParameters.channelCount = 2;
 	pParameters.hostApiSpecificStreamInfo = NULL;
-	pParameters.sampleFormat = paFloat32;
+	pParameters.sampleFormat = paInt16;
 
 	if(dev < 0 || dev >= int(devices.size()))
 	{
@@ -185,12 +185,12 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	if (is_capture)
 	{
 		pParameters.suggestedLatency = Pa_GetDeviceInfo(pParameters.device)->defaultLowInputLatency;
-		minRingBufferSize = 2*framesPerBuffer*channels*sizeof(float);
+		minRingBufferSize = 2*framesPerBuffer*channels*sizeof(short);
 	}
 	else
 	{
 		pParameters.suggestedLatency = 0.8;
-		minRingBufferSize = 4*framesPerBuffer*channels*sizeof(float);
+		minRingBufferSize = 4*framesPerBuffer*channels*sizeof(short);
 	}
 
 	/* See you specific host's API docs for info on using this field */
@@ -264,12 +264,12 @@ CPaCommon::Close()
 }
 
 _BOOLEAN
-CPaCommon::Read(CVector < float >&psData)
+CPaCommon::Read(CVector < short >&psData)
 {
 	if(stream==NULL)
 		return TRUE;
 
-	size_t bytes = psData.Size() * sizeof(float);
+	size_t bytes = psData.Size() * sizeof(short);
 
 	while(PaUtil_GetRingBufferReadAvailable(&ringBuffer)<int(bytes))
 	{
@@ -287,12 +287,12 @@ CPaCommon::Read(CVector < float >&psData)
 }
 
 _BOOLEAN
-CPaCommon::Write(CVector < float >&psData)
+CPaCommon::Write(CVector < short >&psData)
 {
 	if(stream==NULL)
 		return TRUE;
 
-	size_t bytes = psData.Size() * sizeof(float);
+	size_t bytes = psData.Size() * sizeof(short);
 
 	//cout << "Write: got " << bytes << " can put " << PaUtil_GetRingBufferWriteAvailable(&ringBuffer) << endl;
 	if (PaUtil_GetRingBufferWriteAvailable(&ringBuffer) < int(bytes))
@@ -329,7 +329,7 @@ CPaIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 }
 
 _BOOLEAN
-CPaIn::Read(CVector<float>& psData)
+CPaIn::Read(CVector<short>& psData)
 {
 	return hw.Read(psData);
 }
@@ -356,7 +356,7 @@ CPaOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 }
 
 _BOOLEAN
-CPaOut::Write(CVector<float>& psData)
+CPaOut::Write(CVector<short>& psData)
 {
 	return hw.Write(psData);
 }

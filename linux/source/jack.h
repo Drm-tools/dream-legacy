@@ -55,7 +55,7 @@ public:
 	CJackPorts():devices(),ports(){}
 	vector<string> devices;
 	void load(jack_client_t * client, unsigned long flags);
- 	pair< string, string>get_ports(int dev) { return ports[devices[dev]]; }
+ 	pair< string, string>get_ports(int dev);
 protected:
  	map<string, pair< string, string> > ports;
 };
