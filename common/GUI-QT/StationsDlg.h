@@ -240,7 +240,7 @@ protected:
 	QPopupMenu*					pUpdateMenu;
 
 	CVector<MyListViewItem*>	vecpListItems;
-	CMutex						ListItemsMutex;
+	QMutex						ListItemsMutex;
 
 	QPopupMenu*					pRemoteMenu;
 

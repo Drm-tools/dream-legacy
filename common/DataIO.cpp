@@ -460,8 +460,8 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 
 		/* P(X) = X^9 + X^5 + 1,
 		   in this implementation we have to shift n-1! */
-		biPRBSbit = ((iTempShiftRegister1 >> 4) & 1) ^
-			((iTempShiftRegister1 >> 8) & 1);
+		biPRBSbit = _BINARY(((iTempShiftRegister1 >> 4) & 1) ^
+			((iTempShiftRegister1 >> 8) & 1));
 
 		/* Shift bits in shift register and add new bit */
 		iShiftRegister <<= 1;
@@ -579,8 +579,8 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* P(X) = X^9 + X^5 + 1,
 		   in this implementation we have to shift n-1! */
-		biPRBSbit = ((iTempShiftRegister1 >> 4) & 1) ^
-			((iTempShiftRegister1 >> 8) & 1);
+		biPRBSbit = _BINARY(((iTempShiftRegister1 >> 4) & 1) ^
+			((iTempShiftRegister1 >> 8) & 1));
 
 		/* Shift bits in shift register and add new bit */
 		iShiftRegister <<= 1;
@@ -872,7 +872,7 @@ void CWriteIQFile::InitInternal(CParameter& ReceiverParam)
 
 }
 
-void CWriteIQFile::ProcessDataInternal(CParameter& ReceiverParam)
+void CWriteIQFile::ProcessDataInternal(CParameter&)
 {
 	int i;
 
@@ -903,10 +903,10 @@ void CWriteIQFile::ProcessDataInternal(CParameter& ReceiverParam)
 	{
 		re = _SAMPLE(cvecHilbert[i].real() * rScale);
 		im = _SAMPLE(cvecHilbert[i].imag() * rScale);
-		bytes[0] = re & 0xFF;
-		bytes[1] = (re>>8) & 0xFF;
-		bytes[2] = im & 0xFF;
-		bytes[3] = (im>>8) & 0xFF;
+		bytes[0] = _BYTE(re & 0xFF);
+		bytes[1] = _BYTE((re>>8) & 0xFF);
+		bytes[2] = _BYTE(im & 0xFF);
+		bytes[3] = _BYTE((im>>8) & 0xFF);
 
 		fwrite(bytes, 4, sizeof(_BYTE), pFile);
 	}

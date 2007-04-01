@@ -86,8 +86,15 @@ using namespace std; /* Because of the library: "complex" */
 
 /* set sensible defaults for QT2 or QT3 */
 # ifdef USE_QT_GUI
-#  include <qglobal.h>
+# include <qglobal.h>
+#else
+# ifdef _WIN32
+#  define _WIN32_WINNT 0x0400
+#  include <winsock2.h>
+#  include <windows.h>
 # endif
+# endif
+
 # if defined(QT_VERSION) && QT_VERSION < 0x030000
 #  define HAVE_LIBFREEIMAGE
 //#  undef HAVE_LIBFREEIMAGE

@@ -39,8 +39,8 @@ public:
 	CAudioFileIn();
 	virtual ~CAudioFileIn();
 
-	virtual void		Enumerate(vector<string>& choices) { }
-	virtual void		SetDev(int iNewDevice) {}
+	virtual void		Enumerate(vector<string>&) { }
+	virtual void		SetDev(int) {}
 	virtual int			GetDev() { return -1; }
 	virtual void		SetFileName(const string& strFileName);
 

@@ -31,6 +31,7 @@
 #include "GPSReceiver.h"
 
 #ifdef USE_QT_GUI
+# include <qsocket.h>
 # include <qsignal.h>
 #endif
 

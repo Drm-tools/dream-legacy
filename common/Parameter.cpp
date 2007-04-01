@@ -1488,33 +1488,33 @@ void CParameter::CRGPSData::SetTimeDate(const time_t ttSecondsSince1970)
 	struct tm*	p_ts;
 	p_ts = gmtime(&ttSecondsSince1970);
 
-	uiTimeHours = p_ts->tm_hour;
-	uiTimeMinutes = p_ts->tm_min;
-	uiTimeSeconds = p_ts->tm_sec;
+	uiTimeHours = uint8_t(p_ts->tm_hour);
+	uiTimeMinutes = uint8_t(p_ts->tm_min);
+	uiTimeSeconds = uint8_t(p_ts->tm_sec);
 
-	uiDateYear = 1900+p_ts->tm_year;
-	uiDateMonth = 1+p_ts->tm_mon;
-	uiDateDay = p_ts->tm_mday;
+	uiDateYear = uint16_t(1900+p_ts->tm_year);
+	uiDateMonth = uint8_t(1+p_ts->tm_mon);
+	uiDateDay = uint8_t(p_ts->tm_mday);
 }
 
 void CParameter::GenerateRandomSerialNumber()
 {
 	//seed random number generator
-	srand(time(0));
+	srand((unsigned int)time(0));
 
 	char randomChars[36];
 
-	for (int q=0; q < 36; q++)
+	for (size_t q=0; q < 36; q++)
 	{
 		if (q < 26)
-			randomChars[q] = q+97;
+			randomChars[q] = char(q)+97;
 		else
-			randomChars[q] = (q-26)+48;
+			randomChars[q] = (char(q)-26)+48;
 	}
 
 	char serialNumTemp[7];
 			
-	for (int i=0; i < 6; i++)
+	for (size_t i=0; i < 6; i++)
 		serialNumTemp[i] = randomChars[(int) 35.0*rand()/RAND_MAX];
 
 	serialNumTemp[6] = '\0';

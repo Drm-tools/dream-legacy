@@ -140,7 +140,7 @@ CDataEncoder::GeneratePacket(CVector < _BINARY > &vecbiPacket)
 
 	/* "byLengthBody" was defined in the header */
 	for (i = 0; i < (iTotalPacketSize / SIZEOF__BYTE - 2); i++)
-		CRCObject.AddByte(vecbiPacket.Separate(SIZEOF__BYTE));
+		CRCObject.AddByte(_BYTE(vecbiPacket.Separate(SIZEOF__BYTE)));
 
 	/* Now, pointer in "enqueue"-function is back at the same place, add CRC */
 	vecbiPacket.Enqueue(CRCObject.GetCRC(), 16);

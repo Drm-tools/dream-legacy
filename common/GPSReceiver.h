@@ -30,19 +30,17 @@
 #define _GPSRECEIVER_H_
 
 #include "GlobalDefinitions.h"
-
-#ifdef USE_QT_GUI
-# include <qsocket.h>
-#endif
+#include <qsocket.h>
+#include <qthread.h>
+#include <qmutex.h>
 
 class CAutoMutex
 {
 public:
-	CAutoMutex(CMutex& Mutex) : m_Mutex(Mutex) { m_Mutex.Lock(); }
-	~CAutoMutex() { m_Mutex.Unlock(); }
+	CAutoMutex(QMutex& Mutex) : m_Mutex(Mutex) { m_Mutex.lock(); }
+	~CAutoMutex() { m_Mutex.unlock(); }
 
-	CMutex& m_Mutex;
-	
+	QMutex& m_Mutex;
 };
 
 class CGPSRxData
@@ -64,8 +62,8 @@ public:
 	void SetSatellitesVisibleAvailable(_BOOLEAN bNew) { CAutoMutex mutex(m_Mutex); m_bSatellitesVisibleAvailable = bNew; }
 	_BOOLEAN GetSatellitesVisibleAvailable() { CAutoMutex mutex(m_Mutex); return m_bSatellitesVisibleAvailable; }	
 	
-	void SetSatellitesVisible(unsigned short usSatellitesVisible) { CAutoMutex mutex(m_Mutex); m_usSatellitesVisible = usSatellitesVisible; }
-	unsigned short GetSatellitesVisible() { CAutoMutex mutex(m_Mutex); return m_usSatellitesVisible; } 
+	void SetSatellitesVisible(uint16_t usSatellitesVisible) { CAutoMutex mutex(m_Mutex); m_usSatellitesVisible = usSatellitesVisible; }
+	uint16_t GetSatellitesVisible() { CAutoMutex mutex(m_Mutex); return m_usSatellitesVisible; } 
 	
 	/////////
 	
@@ -88,7 +86,7 @@ public:
 	void SetHeadingAvailable(_BOOLEAN bNew) { CAutoMutex mutex(m_Mutex); m_bHeadingAvailable = bNew; }
 	_BOOLEAN GetHeadingAvailable() { CAutoMutex mutex(m_Mutex); return m_bHeadingAvailable; }	
 	
-	void SetHeadingDegrees(unsigned short usHeadingDegrees) { CAutoMutex mutex(m_Mutex); m_usHeadingDegrees = usHeadingDegrees; }
+	void SetHeadingDegrees(uint16_t usHeadingDegrees) { CAutoMutex mutex(m_Mutex); m_usHeadingDegrees = usHeadingDegrees; }
 	unsigned short GetHeadingDegrees() { CAutoMutex mutex(m_Mutex); return m_usHeadingDegrees; } 
 
 	/////////
@@ -96,8 +94,8 @@ public:
 	void SetTimeAndDateAvailable(_BOOLEAN bNew) { CAutoMutex mutex(m_Mutex); m_bTimeAndDateAvailable = bNew; }
 	_BOOLEAN GetTimeAndDateAvailable() { CAutoMutex mutex(m_Mutex); return m_bTimeAndDateAvailable; }	
 	
-	void SetTimeSecondsSince1970(unsigned long ulTimeSecondsSince1970) { CAutoMutex mutex(m_Mutex); m_ulTimeSecondsSince1970 = ulTimeSecondsSince1970; }
-	unsigned long GetTimeSecondsSince1970() { CAutoMutex mutex(m_Mutex); return m_ulTimeSecondsSince1970; }
+	void SetTimeSecondsSince1970(uint32_t ulTimeSecondsSince1970) { CAutoMutex mutex(m_Mutex); m_ulTimeSecondsSince1970 = ulTimeSecondsSince1970; }
+	uint32_t GetTimeSecondsSince1970() { CAutoMutex mutex(m_Mutex); return m_ulTimeSecondsSince1970; }
 
 	/////////
 
@@ -122,7 +120,7 @@ public:
 
 private:
 	_BOOLEAN m_bSatellitesVisibleAvailable;
-	unsigned short m_usSatellitesVisible;
+	uint16_t m_usSatellitesVisible;
 
 	_BOOLEAN m_bPositionAvailable;
 	float	m_fLatitudeDegrees;
@@ -132,15 +130,15 @@ private:
 	float	m_fSpeedMetresPerSecond;
 
 	_BOOLEAN m_bHeadingAvailable;
-	unsigned short	m_usHeadingDegrees;
+	uint16_t	m_usHeadingDegrees;
 
 	_BOOLEAN m_bTimeAndDateAvailable;
-	unsigned long	m_ulTimeSecondsSince1970;
+	uint32_t m_ulTimeSecondsSince1970;
 
 	_BOOLEAN m_bAltitudeAvailable;
 	float m_fAltitudeMetres;
 
-	CMutex m_Mutex;
+	QMutex m_Mutex;
 
 	EFix	m_eFix;
 	EStatus m_eStatus;
@@ -160,19 +158,15 @@ private:
 
 
 class CGPSReceiver
-#ifdef USE_QT_GUI
 	: public QObject, public QThread
-#endif
 {
-#ifdef USE_QT_GUI
 	Q_OBJECT
-#endif
 public:
 	CGPSReceiver();
 	virtual ~CGPSReceiver();
 	
 	void SetGPSRxData(CGPSRxData* pGPSRxData) { m_pGPSRxData = pGPSRxData; }
-	void SetGPSd(const string& host, int port) { m_GPSdHostName = host; m_GPSdPort = port; }
+	void SetGPSd(const string& host, uint16_t port) { m_GPSdHostName = host; m_GPSdPort = port; }
 	virtual void	run();
 	void Stop() { m_bFinished = TRUE; }
 
@@ -195,17 +189,17 @@ protected:
 	CGPSRxData		m_GPSRxData;
 	CGPSRxData*		m_pGPSRxData;
 
-	unsigned short m_GPSdPort;
+	uint16_t m_GPSdPort;
 	string	m_GPSdHostName;
 	_BOOLEAN m_bFinished;
 
-#ifdef USE_QT_GUI
 	QSocket	m_Socket;
 
 public slots:
+
 	void slotReadyRead();
 	void slotSocketError(int);
-#endif
+
 };
 
 #endif // !defined(_GPSRECEIVER_H_)

@@ -1123,7 +1123,7 @@ void CDRMReceiver::UpdateParamHistories()
 	/* Only update histories if the receiver is in tracking mode */
 	if (eReceiverState == RS_TRACKING)
 	{
-		MutexHist.Lock(); /* MUTEX vvvvvvvvvv */
+		MutexHist.lock(); /* MUTEX vvvvvvvvvv */
 
 		/* Frequency offset tracking values */
 		vecrFreqSyncValHist.AddEnd(
@@ -1167,7 +1167,7 @@ void CDRMReceiver::UpdateParamHistories()
 			rAvSNRHist = (_REAL) 0.0;
 		}
 
-		MutexHist.Unlock(); /* MUTEX ^^^^^^^^^^ */
+		MutexHist.unlock(); /* MUTEX ^^^^^^^^^^ */
 	}
 }
 
@@ -1182,7 +1182,7 @@ void CDRMReceiver::GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
 	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 
 	/* Lock resources */
-	MutexHist.Lock();
+	MutexHist.lock();
 
 	/* Simply copy history buffers in output buffers */
 	vecrFreqOffs = vecrFreqSyncValHist;
@@ -1200,7 +1200,7 @@ void CDRMReceiver::GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
 	rFreqAquVal = ReceiverParam.rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
 
 	/* Release resources */
-	MutexHist.Unlock();
+	MutexHist.unlock();
 }
 
 void CDRMReceiver::GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
@@ -1213,7 +1213,7 @@ void CDRMReceiver::GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
 	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 
 	/* Lock resources */
-	MutexHist.Lock();
+	MutexHist.lock();
 
 	/* Simply copy history buffers in output buffers */
 	vecrLenIR = vecrLenIRHist;
@@ -1229,7 +1229,7 @@ void CDRMReceiver::GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
 		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rDRMFrameDur / 60;
 
 	/* Release resources */
-	MutexHist.Unlock();
+	MutexHist.unlock();
 }
 
 void CDRMReceiver::GetSNRHist(CVector<_REAL>& vecrSNR,
@@ -1242,7 +1242,7 @@ void CDRMReceiver::GetSNRHist(CVector<_REAL>& vecrSNR,
 	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 
 	/* Lock resources */
-	MutexHist.Lock();
+	MutexHist.lock();
 
 	/* Simply copy history buffer in output buffer */
 	vecrSNR = vecrSNRHist;
@@ -1264,7 +1264,7 @@ void CDRMReceiver::GetSNRHist(CVector<_REAL>& vecrSNR,
 	}
 
 	/* Release resources */
-	MutexHist.Unlock();
+	MutexHist.unlock();
 }
 
 _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)

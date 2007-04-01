@@ -684,13 +684,13 @@ void StationsDlg::OnShowStationsMenu(int iID)
 		ListViewStations->clear();
 	
 		/* Lock mutex for modifying the vecpListItems */
-		ListItemsMutex.Lock();
+		ListItemsMutex.lock();
 
 		vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
 
 		/* Unlock BEFORE calling the stations view update because in this function
 		   the mutex is locked, too! */
-		ListItemsMutex.Unlock();
+		ListItemsMutex.unlock();
 	}
 	else
 		bShowAll = TRUE;
@@ -984,7 +984,7 @@ void StationsDlg::SetCurrentSchedule(const CDRMSchedule::ESchedMode eNewSchM)
 void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 {
 	/* Lock mutex for modifying the vecpListItems */
-	ListItemsMutex.Lock();
+	ListItemsMutex.lock();
 
 	SetSortSettings(eNewSchM);
 
@@ -1005,7 +1005,7 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 
 	/* Unlock BEFORE calling the stations view update because in this function
 	   the mutex is locked, too! */
-	ListItemsMutex.Unlock();
+	ListItemsMutex.unlock();
 
 	/* Update list view */
 	SetStationsView();
@@ -1027,7 +1027,7 @@ void StationsDlg::SetStationsView()
 
 	/* Set lock because of list view items. These items could be changed
 	   by another thread */
-	ListItemsMutex.Lock();
+	ListItemsMutex.lock();
 
 	const int iNumStations = DRMSchedule.GetStationNumber();
 	_BOOLEAN bListHastChanged = FALSE;
@@ -1123,7 +1123,7 @@ void StationsDlg::SetStationsView()
 	if (bListHastChanged == TRUE)
 		ListViewStations->sort();
 
-	ListItemsMutex.Unlock();
+	ListItemsMutex.unlock();
 	
 	/* Start the timer and enable the list */
 	ListViewStations->setUpdatesEnabled(TRUE);

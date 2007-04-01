@@ -859,7 +859,7 @@ QString MyListLiveViewItem::key(int column, bool ascending) const
 void LiveScheduleDlg::LoadSchedule()
 {
 	/* Lock mutex for modifying the vecpListItems */
-	ListItemsMutex.Lock();
+	ListItemsMutex.lock();
 
 	/* Delete all old list view items (it is important that the vector
 	   "vecpListItems" was initialized to 0 at creation of the global object
@@ -885,7 +885,7 @@ void LiveScheduleDlg::LoadSchedule()
 
 	/* Unlock BEFORE calling the stations view update because in this function
 	   the mutex is locked, too! */
-	ListItemsMutex.Unlock();
+	ListItemsMutex.unlock();
 
 	/* Update list view */
 	SetStationsView();
@@ -959,7 +959,7 @@ void LiveScheduleDlg::SetStationsView()
 {
 	/* Set lock because of list view items. These items could be changed
 	   by another thread */
-	ListItemsMutex.Lock();
+	ListItemsMutex.lock();
 
 	const int iNumStations = DRMSchedule.GetStationNumber();
 
@@ -1034,7 +1034,7 @@ void LiveScheduleDlg::SetStationsView()
 	if (bListHastChanged == TRUE)
 		ListViewStations->sort();
 
-	ListItemsMutex.Unlock();
+	ListItemsMutex.unlock();
 }
 
 void LiveScheduleDlg::OnHeaderClicked(int c)
@@ -1079,7 +1079,7 @@ void LiveScheduleDlg::OnSave()
 	QString strStationName = pDRMRec->GetParameters()->Service[iCurSelAudioServ].strLabel.c_str();
 
 	/* Lock mutex for use the vecpListItems */
-	ListItemsMutex.Lock();
+	ListItemsMutex.lock();
 
 	/* Force the sort for all items */ 
  	ListViewStations->firstChild()
@@ -1100,7 +1100,7 @@ void LiveScheduleDlg::OnSave()
         myItem = myItem->nextSibling();
     }
 
-	ListItemsMutex.Unlock();
+	ListItemsMutex.unlock();
 
 	if (strSchedule != "")
 	{

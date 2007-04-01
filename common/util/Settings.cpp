@@ -1285,7 +1285,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		{
 			const string strHelp = UsageArguments(argv);
 
-#if defined(_WIN32)
+#if defined(USE_QT_GUI) && defined(_WIN32)
 			MessageBox(NULL, strHelp.c_str(), "Dream",
 				MB_SYSTEMMODAL | MB_OK | MB_ICONINFORMATION);
 #else
@@ -1526,11 +1526,11 @@ CSettings::INIFile CSettings::LoadIni(const char* filename)
 		memset(buffer, 0, sizeof(buffer));
 		file.getline(buffer, sizeof(buffer));
 
-		if ((temp = strchr(buffer, '\n')))
-			*temp = '\0'; /* Cut off at newline */
+		temp = strchr(buffer, '\n');
+		if (temp) *temp = '\0'; /* Cut off at newline */
 
-		if ((temp = strchr(buffer, '\r')))
-			*temp = '\0'; /* Cut off at linefeeds */
+		temp = strchr(buffer, '\r');
+		if (temp) *temp = '\0'; /* Cut off at linefeeds */
 
 		if ((buffer[0] == '[') && (temp = strrchr(buffer, ']')))
 		{   /* if line is like -->   [section name] */

@@ -289,7 +289,7 @@ void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 
 		/* "byLengthBody" was defined in the header */
 		for (i = 0; i < byLengthBody + 2 /* Header */; i++)
-			CRCObject.AddByte(biStreamBuffer.Separate(SIZEOF__BYTE));
+			CRCObject.AddByte(_BYTE(biStreamBuffer.Separate(SIZEOF__BYTE)));
 
 		if (CRCObject.CheckCRC(biStreamBuffer.Separate(16)) == TRUE)
 		{
@@ -351,7 +351,7 @@ void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 				for (i = 0; i < byLengthBody; i++)
 				{
 					Segment[bySegmentID].byData[i] =
-						biStreamBuffer.Separate(SIZEOF__BYTE);
+						_BINARY(biStreamBuffer.Separate(SIZEOF__BYTE));
 				}
 
 				/* Set length of this segment and OK flag */
@@ -398,7 +398,7 @@ void CTextMessageDecoder::ReadHeader()
 	biLastFlag = (_BINARY) biStreamBuffer.Separate(1);
 
 	/* Command flag */
-	biCommandFlag = biStreamBuffer.Separate(1);
+	biCommandFlag = _BINARY(biStreamBuffer.Separate(1));
 
 	if (biCommandFlag == 1)
 	{

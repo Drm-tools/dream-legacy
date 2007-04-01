@@ -251,7 +251,7 @@ inline int Complement2toInt(const unsigned int iSize, CVector<_BINARY>* pbiData)
 	int iVal = 0;
 	const int iVecSize = iSize - 1;
 
-	_BINARY bSign = (*pbiData).Separate(1);
+	_BINARY bSign = (_BINARY)(*pbiData).Separate(1);
 
 	if (bSign == 0)
 		iVal = (int) (*pbiData).Separate(iVecSize);

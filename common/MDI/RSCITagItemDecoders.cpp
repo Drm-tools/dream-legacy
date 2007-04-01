@@ -165,7 +165,7 @@ void CTagItemDecoderCpro::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	if (iLen != 8)
 		return;
 
-	char c = vecbiTag.Separate(SIZEOF__BYTE);
+	char c = char(vecbiTag.Separate(SIZEOF__BYTE));
 	if (pRSISubscriber != NULL)
 		pRSISubscriber->SetProfile(c);
 }

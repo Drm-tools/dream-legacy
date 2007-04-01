@@ -57,6 +57,10 @@
 #include "AMSSDemodulation.h"
 #include "soundinterface.h"
 
+#ifdef USE_QT_GUI
+	#include <qthread.h>
+	#include <qmutex.h>
+#endif
 
 /* Definitions ****************************************************************/
 /* Number of FAC frames until the acquisition is activated in case a signal
@@ -361,7 +365,9 @@ protected:
 	_REAL					rAvDopplerHist;
 	_REAL					rAvSNRHist;
 	int						iCurrentCDAud;
-	CMutex					MutexHist;
+#ifdef USE_QT_GUI
+	QMutex					MutexHist;
+#endif
 	CVectorEx<_BINARY>		vecbiMostRecentSDC;
 	int						iFreqkHz;
 

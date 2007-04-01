@@ -1109,8 +1109,8 @@ class CParameter:public CCellMappingTable
 		void SetSatellitesVisibleAvailable(_BOOLEAN bNewSatVisAv) {	bSatellitesVisibleAvailable = bNewSatVisAv; }
 		_BOOLEAN GetSatellitesVisibleAvailable() { return bSatellitesVisibleAvailable; }
 
-		void SetSatellitesVisible(uint8_t uiNewSatVis) { uiSatellitesVisible = uiNewSatVis;	}
-		uint8_t GetSatellitesVisible() { return uiSatellitesVisible; }
+		void SetSatellitesVisible(uint16_t uiNewSatVis) { uiSatellitesVisible = uiNewSatVis;	}
+		uint16_t GetSatellitesVisible() { return uiSatellitesVisible; }
 
 		void SetPositionAvailable(_BOOLEAN bNewPosAv) { bPositionAvailable = bNewPosAv; }
 		_BOOLEAN GetPositionAvailable() { return bPositionAvailable; }
@@ -1162,7 +1162,7 @@ class CParameter:public CCellMappingTable
 		EGPSSource eGPSSource;
 
 		_BOOLEAN bSatellitesVisibleAvailable;
-		uint8_t uiSatellitesVisible;
+		uint16_t uiSatellitesVisible;
 
 		_BOOLEAN bPositionAvailable;
 		_REAL rLatitudeDegrees;	// +ve for North

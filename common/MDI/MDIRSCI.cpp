@@ -373,7 +373,8 @@ void CRSIMDIOutRCIIn::SetInAddr(const string& strAddr)
 	// Delegate to socket
 	_BOOLEAN bOK = RSISubscriberSocketMain.SetInAddr(strAddr);
 	(void)bOK;
-
+#else
+	(void)strAddr;
 #endif
 }
 
@@ -383,6 +384,8 @@ void CRSIMDIOutRCIIn::SetOutAddr(const string& strArgument)
 	// Delegate to socket
 #ifdef USE_QT_GUI
 	bAddressOK = RSISubscriberSocketMain.SetOutAddr(strArgument);
+#else
+	(void)strArgument;
 #endif
 
 	// If successful, set flag to enable MDI output
@@ -446,6 +449,8 @@ void CRSIMDIInRCIOut::SetInAddr(const string& strAddr)
 	if (bOK)
 		// Connect socket to the MDI decoder
 		PacketSocket.SetPacketSink(this);
+#else
+	(void)strAddr;
 #endif
 }
 
@@ -455,6 +460,9 @@ void CRSIMDIInRCIOut::SetOutAddr(const string& strArgument)
 	// Delegate to socket
 #ifdef USE_QT_GUI
 	bAddressOK = PacketSocket.SetNetwOutAddr(strArgument);
+#else
+	(void)strArgument;
+	bAddressOK=FALSE;
 #endif
 	if(bAddressOK)
 		bMDIOutEnabled = TRUE;
@@ -494,7 +502,7 @@ void CRSIMDIInRCIOut::TransmitPacket(CVector<_BINARY>& vecbidata)
 	vector<_BYTE> packet;
 	vecbidata.ResetBitAccess();
 	for(size_t i=0; i<size_t(vecbidata.Size()/SIZEOF__BYTE); i++)
-		packet.push_back(vecbidata.Separate(SIZEOF__BYTE));
+		packet.push_back(_BYTE(vecbidata.Separate(SIZEOF__BYTE)));
 #ifdef USE_QT_GUI
 	PacketSocket.SendPacket(packet);
 #endif

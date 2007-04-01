@@ -187,7 +187,7 @@ protected:
 	QPopupMenu*					pFileMenu;
 
 	CVector<MyListLiveViewItem*>	vecpListItems;
-	CMutex						ListItemsMutex;
+	QMutex						ListItemsMutex;
 	QString						strCurrentSavePath;
 
 public slots:

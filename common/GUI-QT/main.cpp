@@ -235,7 +235,7 @@ catch (CGenErr GenErr)
 }
 
 void ErrorMessage(string strErrorString) {perror(strErrorString.c_str());}
-void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam) {}
+void PostWinMessage(const _MESSAGE_IDENT, const int) {}
 #endif /* USE_QT_GUI */
 
 
