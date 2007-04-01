@@ -289,6 +289,12 @@ void FDRMDialog::OnTimer()
 	case RM_NONE: // wait until working thread starts operating
 		break;
 	}
+	/* open the stations dialog after the main dialog is initialised */
+	if(eNewReceiverMode != RM_NONE && eReceiverMode == RM_NONE)
+	{
+		if (pDRMRec->GeomStationsDlg.bVisible == TRUE)
+			pStationsDlg->show();
+	}
 }
 
 void FDRMDialog::UpdateDisplay()
