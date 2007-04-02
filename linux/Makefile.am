@@ -459,7 +459,7 @@ languages/%.qm: languages/%.ts
 	cp $< dreamtr.qm
 
 else
-drm_SOURCES = $(drmwithoutqt_SOURCES)
+drm_SOURCES = $(drmwithoutqt_SOURCES) $(drm_sound_SOURCES)
 endif
 
 

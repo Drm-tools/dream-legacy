@@ -1524,7 +1524,9 @@ void CParameter::GenerateRandomSerialNumber()
 
 void CParameter::FillGRPSData()
 {
+#ifdef USE_QT_GUI
 	if (eGPSSource == CParameter::GPS_SOURCE_MANUAL_ENTRY)
+#endif
 	{
 		RGPSData.SetGPSSource(CParameter::CRGPSData::GPS_SOURCE_MANUAL_ENTRY);
 		RGPSData.SetSatellitesVisibleAvailable(FALSE);
@@ -1536,6 +1538,7 @@ void CParameter::FillGRPSData()
 		RGPSData.SetSpeedAvailable(FALSE);
 		RGPSData.SetHeadingAvailable(FALSE);
 	}
+#ifdef USE_QT_GUI
 	else if (eGPSSource == GPS_SOURCE_GPS_RECEIVER)
 	{
 		//source
@@ -1602,4 +1605,5 @@ void CParameter::FillGRPSData()
 			RGPSData.SetHeadingAvailable(FALSE);
 		
 	}
+#endif
 }

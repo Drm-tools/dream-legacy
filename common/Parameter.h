@@ -42,8 +42,11 @@
 #include "GlobalDefinitions.h"
 #include "ofdmcellmapping/CellMappingTable.h"
 #include "matlib/Matlib.h"
+#ifdef USE_QT_GUI
 # include "GPSReceiver.h"
-
+#else
+class CGPSRxData {};
+#endif
 
 enum ETypeIntFreq
 { FLINEAR, FDFTFILTER, FWIENER };

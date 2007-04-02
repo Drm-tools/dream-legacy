@@ -1123,7 +1123,9 @@ void CDRMReceiver::UpdateParamHistories()
 	/* Only update histories if the receiver is in tracking mode */
 	if (eReceiverState == RS_TRACKING)
 	{
-		MutexHist.lock(); /* MUTEX vvvvvvvvvv */
+#ifdef USE_QT_GUI
+		MutexHist.lock();
+#endif
 
 		/* Frequency offset tracking values */
 		vecrFreqSyncValHist.AddEnd(
@@ -1167,14 +1169,17 @@ void CDRMReceiver::UpdateParamHistories()
 			rAvSNRHist = (_REAL) 0.0;
 		}
 
-		MutexHist.unlock(); /* MUTEX ^^^^^^^^^^ */
+#ifdef USE_QT_GUI
+		MutexHist.unlock();
+#endif
 	}
 }
 
-void CDRMReceiver::GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
-									  CVector<_REAL>& vecrSamOffs,
-									  CVector<_REAL>& vecrScale,
-									  _REAL& rFreqAquVal)
+void
+CDRMReceiver::GetFreqSamOffsHist(
+	CVector<_REAL>& vecrFreqOffs, CVector<_REAL>& vecrSamOffs,
+	CVector<_REAL>& vecrScale, _REAL& rFreqAquVal
+)
 {
 	/* Init output vectors */
 	vecrFreqOffs.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
@@ -1182,7 +1187,9 @@ void CDRMReceiver::GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
 	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 
 	/* Lock resources */
+#ifdef USE_QT_GUI
 	MutexHist.lock();
+#endif
 
 	/* Simply copy history buffers in output buffers */
 	vecrFreqOffs = vecrFreqSyncValHist;
@@ -1200,7 +1207,9 @@ void CDRMReceiver::GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
 	rFreqAquVal = ReceiverParam.rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
 
 	/* Release resources */
+#ifdef USE_QT_GUI
 	MutexHist.unlock();
+#endif
 }
 
 void CDRMReceiver::GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
@@ -1213,7 +1222,9 @@ void CDRMReceiver::GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
 	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 
 	/* Lock resources */
+#ifdef USE_QT_GUI
 	MutexHist.lock();
+#endif
 
 	/* Simply copy history buffers in output buffers */
 	vecrLenIR = vecrLenIRHist;
@@ -1229,7 +1240,9 @@ void CDRMReceiver::GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
 		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rDRMFrameDur / 60;
 
 	/* Release resources */
+#ifdef USE_QT_GUI
 	MutexHist.unlock();
+#endif
 }
 
 void CDRMReceiver::GetSNRHist(CVector<_REAL>& vecrSNR,
@@ -1242,7 +1255,9 @@ void CDRMReceiver::GetSNRHist(CVector<_REAL>& vecrSNR,
 	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 
 	/* Lock resources */
+#ifdef USE_QT_GUI
 	MutexHist.lock();
+#endif
 
 	/* Simply copy history buffer in output buffer */
 	vecrSNR = vecrSNRHist;
@@ -1264,7 +1279,9 @@ void CDRMReceiver::GetSNRHist(CVector<_REAL>& vecrSNR,
 	}
 
 	/* Release resources */
+#ifdef USE_QT_GUI
 	MutexHist.unlock();
+#endif
 }
 
 _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
