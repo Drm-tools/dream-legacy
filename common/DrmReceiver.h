@@ -58,8 +58,10 @@
 #include "soundinterface.h"
 
 #ifdef USE_QT_GUI
-	#include <qthread.h>
-	#include <qmutex.h>
+# include <qthread.h>
+# if QT_VERSION >= 0x030000
+#  include <qmutex.h>
+# endif
 #endif
 
 /* Definitions ****************************************************************/

@@ -28,12 +28,28 @@
 
 #include "DialogUtil.h"
 #include "../Version.h"
+#ifdef USE_ALSA
+# include <alsa/version.h>
+#endif
+#ifdef USE_OSS
+# include <sys/soundcard.h>
+#endif
+#ifdef USE_PORTAUDIO
+# include <portaudio.h>
+#endif
+#ifdef HAVE_LIBSNDFILE
+# include <sndfile.h>
+#endif
 
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */
 CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 	: CAboutDlgBase(parent, name, modal, f)
 {
+#ifdef HAVE_LIBSNDFILE
+	char  sfversion [128] ;
+	sf_command (NULL, SFC_GET_LIB_VERSION, sfversion, sizeof (sfversion)) ;
+#endif
 	/* Set the text for the about dialog html text control */
 	TextViewCredits->setText(
 		"<p>" /* General description of Dream software */
@@ -73,6 +89,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"<li><b>FAAC</b> <i>http://faac.sourceforge.net</i></li>"
 #endif
 #ifdef USE_QT_GUI /* QWT */
+		"<li><b>Qt</b> (" + QString(QT_VERSION_STR) + ") <i>http://www.trolltech.com</i></li>"
 		"<li><b>QWT</b> (" + QString(QWT_VERSION_STR) + ") <i>Dream is based in part on the work of the Qwt "
 		"project (http://qwt.sf.net).</i></li>"
 #endif
@@ -94,7 +111,21 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"This product includes software developed by the Computer Systems "
 		"Engineering Group at Lawrence Berkeley Laboratory.</i></li>"
 #endif
-		"<li><b>With GPS support using gpsd http://gpsd.berlios.de</b></li>"
+#ifdef HAVE_LIBSNDFILE
+		"<li><b>LIBSNDFILE</b> (" + QString(sfversion) + ") <i>http://www.mega-nerd.com/libsndfile</i></li>"
+#endif
+#ifdef USE_OSS
+		"<li><b>OSS</b> (" + QString("Open Sound System version %1").arg(SOUND_VERSION, 0, 16) + ")</li>"
+#endif
+#ifdef USE_ALSA
+		"<li><b>ALSA</b> (" + QString(SND_LIB_VERSION_STR) + ") <i>http://www.alsa-project.org</i></li>"
+#endif
+#ifdef USE_PORTAUDIO
+		"<li><b>portaudio</b> ("+QString(Pa_GetVersionText())+") <i>http://www.jackaudio.org</i></li>"
+#endif
+#ifdef USE_JACK
+		"<li><b>libjack</b> (The Jack Audio Connection Kit) <i>http://www.jackaudio.org</i></li>"
+#endif
 		"</ul><br><br><hr/><br><br>"
 		"<center><b>HISTORY</b></center><br>"
         "The Dream software development was started at <i>Darmstadt University "

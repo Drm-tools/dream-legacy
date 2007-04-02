@@ -88,12 +88,14 @@ using namespace std; /* Because of the library: "complex" */
 # ifdef USE_QT_GUI
 # include <qglobal.h>
 #else
-# ifdef _WIN32
-#  define _WIN32_WINNT 0x0400
-#  include <winsock2.h>
-#  include <windows.h>
 # endif
-# endif
+
+/* this is needed by Pacer.h Pacer.cpp and maybe others */
+#ifdef _WIN32
+# define _WIN32_WINNT 0x0400
+# include <winsock2.h>
+# include <windows.h>
+#endif
 
 # if defined(QT_VERSION) && QT_VERSION < 0x030000
 #  define HAVE_LIBFREEIMAGE
