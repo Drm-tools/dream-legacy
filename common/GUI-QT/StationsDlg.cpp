@@ -869,7 +869,11 @@ void StationsDlg::showEvent(QShowEvent*)
 {
 	/* Load the schedule if necessary */
 	if (DRMSchedule.GetStationNumber() == 0)
+	{
 		LoadSchedule(DRMSchedule.GetSchedMode());
+		/* for update the scrollbars */
+		ListViewStations->triggerUpdate();
+	}
 
 	/* If number of stations is zero, we assume that the ini file is missing */
 	if (DRMSchedule.GetStationNumber() == 0)
