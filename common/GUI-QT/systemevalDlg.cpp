@@ -931,6 +931,7 @@ void systemevalDlg::OnTimer()
 	FACTimeDateL->setText(tr("Received time - date:")); /* Label */
 	FACTimeDateV->setText(strFACInfo); /* Value */
 
+#ifdef USE_QT_GUI
 	//display GPS info
 
 
@@ -1003,6 +1004,8 @@ void systemevalDlg::OnTimer()
 		qStrTime += "Satellites: ?";
 
 	TextLabelGPSTime->setText(qStrTime);
+
+#endif
 
 	/* Update controls */
 	UpdateControls();

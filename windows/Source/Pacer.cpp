@@ -1,11 +1,6 @@
 
 #include "../../common/util/Pacer.h"
 
-#ifdef _WIN32
-# define _WIN32_WINNT 0x0400
-# include <windows.h>
-#endif
-
   /* The FILETIME structure is a 64-bit value representing 
    * the number of 100-nanosecond intervals since January 1, 1601. 
    */

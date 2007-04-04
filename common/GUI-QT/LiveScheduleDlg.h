@@ -39,6 +39,7 @@
 #include <qfiledialog.h>
 #include <qtextstream.h>
 #include <qcheckbox.h>
+#include <qthread.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/LiveScheduleDlgbase.h"
