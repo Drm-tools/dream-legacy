@@ -32,7 +32,9 @@
 #include "GlobalDefinitions.h"
 #include <qsocket.h>
 #include <qthread.h>
-#include <qmutex.h>
+# if QT_VERSION >= 0x030000 	 
+#  include <qmutex.h>
+# endif
 
 class CAutoMutex
 {
