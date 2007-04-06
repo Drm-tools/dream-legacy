@@ -32,10 +32,7 @@
 #include "GlobalDefinitions.h"
 #include <qsocket.h>
 #include <qthread.h>
-
-# if QT_VERSION >= 0x030000
-#  include <qmutex.h>
-# endif
+#include <qmutex.h>
 
 class CAutoMutex
 {
@@ -196,7 +193,7 @@ protected:
 	string	m_GPSdHostName;
 	_BOOLEAN m_bFinished;
 
-	QSocket	m_Socket;
+	QSocket *mp_Socket;
 
 public slots:
 

@@ -44,18 +44,14 @@ using namespace std;
 const short CGPSReceiver::c_sMaximumStateMachineCyclesSinceLastGPSDReplyBeforeReset = 10;
 const unsigned short CGPSReceiver::c_usReconnectIntervalSeconds = 10;
 
-CGPSReceiver::CGPSReceiver() : m_GPSdPort(2947), m_GPSdHostName("localhost")
+CGPSReceiver::CGPSReceiver() :
+	m_eGPSState(DISCONNECTED),
+ m_GPSdPort(2947), m_GPSdHostName("localhost"),
+	m_bFinished(FALSE),
+mp_Socket(NULL)
 {
-	m_bFinished = FALSE;
-	m_eGPSState = DISCONNECTED;
 
 	m_pGPSRxData = &m_GPSRxData;
-
-#ifdef USE_QT_GUI
-	//connect signals
-	connect(&m_Socket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
-	connect(&m_Socket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
-#endif
 
 	m_sStateMachineCyclesSinceLastGPSDReply = c_sMaximumStateMachineCyclesSinceLastGPSDReplyBeforeReset;
 }
@@ -90,11 +86,17 @@ void CGPSReceiver::Start()
 				m_pGPSRxData->SetStatus(CGPSRxData::GPS_RX_NOT_CONNECTED);
 
 				m_sStateMachineCyclesSinceLastGPSDReply = c_sMaximumStateMachineCyclesSinceLastGPSDReplyBeforeReset;
+				if(mp_Socket == NULL)
+				{
+			        mp_Socket = new QSocket();
+					connect(mp_Socket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
+					connect(mp_Socket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
+				}
 
-				switch(m_Socket.state())
+				switch(mp_Socket->state())
 				{
 					case(QSocket::Idle):		// stay put
-						m_Socket.connectToHost(m_GPSdHostName.c_str(), m_GPSdPort);
+						mp_Socket->connectToHost(m_GPSdHostName.c_str(), m_GPSdPort);
 						break;
 					case(QSocket::HostLookup):	// stay put, wait for open
 						usleep(100000);
@@ -116,7 +118,7 @@ void CGPSReceiver::Start()
 
 				m_sStateMachineCyclesSinceLastGPSDReply = c_sMaximumStateMachineCyclesSinceLastGPSDReplyBeforeReset;
 
-				switch(m_Socket.state())
+				switch(mp_Socket->state())
 				{
 					case(QSocket::Idle):
 					case(QSocket::HostLookup):
@@ -127,10 +129,10 @@ void CGPSReceiver::Start()
 						break;
 					case (QSocket::Connection):	// send init string
 						//clear current buffer
-						while(m_Socket.canReadLine())
-							m_Socket.readLine();
+						while(mp_Socket->canReadLine())
+							mp_Socket->readLine();
 
-						m_Socket.writeBlock("W1\n",2);	// try to force gpsd into watcher mode
+						mp_Socket->writeBlock("W1\n",2);	// try to force gpsd into watcher mode
 						usleep(100000);								// sleep for 2 seconds
 						m_eGPSState = WAITING;
 						break;
@@ -140,7 +142,7 @@ void CGPSReceiver::Start()
 			case WAITING:
 				m_pGPSRxData->SetStatus(CGPSRxData::GPS_RX_NO_DATA);
 				
-				if (m_Socket.state() != QSocket::Connection)
+				if (mp_Socket->state() != QSocket::Connection)
 					m_eGPSState = DISCONNECTED;
 		
 				if (m_sStateMachineCyclesSinceLastGPSDReply >= c_sMaximumStateMachineCyclesSinceLastGPSDReplyBeforeReset)
@@ -152,22 +154,26 @@ void CGPSReceiver::Start()
 
 			case STREAMING:
 				m_pGPSRxData->SetStatus(CGPSRxData::GPS_RX_DATA_AVAILABLE);
-				if (m_Socket.state() != QSocket::Connection)
+				if (mp_Socket->state() != QSocket::Connection)
 					m_eGPSState = DISCONNECTED;
 
 				if (m_sStateMachineCyclesSinceLastGPSDReply >= c_sMaximumStateMachineCyclesSinceLastGPSDReplyBeforeReset)
 				{
 					m_eGPSState = DISCONNECTED;		// give up, should have been in watcher mode but something terrible has happened, try to reopen socket to see if that helps!
-					m_Socket.close();
+					mp_Socket->close();
 				}
 				
 				//otherwise stay put
 				break;
 
 			case COMMS_ERROR:
-				m_Socket.close(); // try and free the resources - maybe we need to destroy the socket ?
-				sleep(30);		// sleep for 30 seconds
+				mp_Socket->close(); // try and free the resources - maybe we need to destroy the socket ?
+				disconnect(mp_Socket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
+				disconnect(mp_Socket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
+				delete mp_Socket;
+				mp_Socket = NULL;
 				m_eGPSState = DISCONNECTED;
+				sleep(30);		// sleep for 30 seconds
 				break;
 		}
 
@@ -333,8 +339,8 @@ void CGPSReceiver::DecodeY(string Value)
 void CGPSReceiver::slotReadyRead()
 {
 #ifdef USE_QT_GUI
-	while (m_Socket.canReadLine())
-		DecodeGPSDReply((const char*) m_Socket.readLine());
+	while (mp_Socket->canReadLine())
+		DecodeGPSDReply((const char*) mp_Socket->readLine());
 #endif
 }
 
