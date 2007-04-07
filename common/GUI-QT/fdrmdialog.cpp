@@ -260,11 +260,13 @@ void FDRMDialog::OnTimer()
 		if(eReceiverMode != RM_DRM)
 			ChangeGUIModeToDRM();
 		{
+			CParameter& ReceiverParam = *(pDRMRec->GetParameters());
 
 			/* Input level meter */
-			ProgrInputLevel->setValue(pDRMRec->GetReceiver()->GetLevelMeter());
+			_REAL rSigStr;
+			if(pDRMRec->GetSignalStrength(rSigStr))
+				ProgrInputLevel->setValue(rSigStr);
 	
-			CParameter& ReceiverParam = *(pDRMRec->GetParameters());
 			SetStatus(CLED_MSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
 			SetStatus(CLED_SDC, ReceiverParam.ReceiveStatus.GetSDCStatus());
 			SetStatus(CLED_FAC, ReceiverParam.ReceiveStatus.GetFACStatus());

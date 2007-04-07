@@ -91,7 +91,7 @@ class CDRMLiveSchedule
 {
 public:
 	CDRMLiveSchedule():StationsTable(),iSecondsPreview(0),
-	iReceiverLatitude(0),iReceiverLongitude(0),bCheckCoordinates(FALSE)
+	dReceiverLatitude(0),dReceiverLongitude(0),bCheckCoordinates(FALSE)
 	{}
 
 	virtual ~CDRMLiveSchedule() {}
@@ -113,7 +113,7 @@ public:
 
 	string Binary2String(const int iVal);
 
-	void SetReceiverCoordinates(const string strLatitude, const string strLongitude);
+	void SetReceiverCoordinates(double latitude, double longitude);
 	QString ExtractFirstDigits(const QString s, const int iDigits);
 
 protected:
@@ -125,8 +125,8 @@ protected:
 	int			iSecondsPreview;
 
 	/* receiver coordinates */
-	int			iReceiverLatitude;
-	int			iReceiverLongitude;
+	double		dReceiverLatitude;
+	double		dReceiverLongitude;
 	_BOOLEAN	bCheckCoordinates;
 };
 

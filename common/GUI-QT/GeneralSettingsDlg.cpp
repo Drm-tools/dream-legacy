@@ -173,28 +173,25 @@ _BOOLEAN bAllCompiled = FALSE;
 	{
 		/* save current settings */
 
-		const QChar chrDegrees = QChar(0XB0); /* Degrees char on Latin-1 */
-
 		if (!bAllEmpty)
 		{
-			/* Receiver coordinates */
-			pDRMRec->GetParameters()->ReceptLog.SetLatitude(
-				QString(EdtLatitudeDegrees->text()
-				+ chrDegrees + EdtLatitudeMinutes->text() 
-				+ "'" + EdtLatitudeNS->text().upper()).latin1());
+			double latitude, longitude;
 
+			latitude = EdtLatitudeDegrees->text().toDouble() + EdtLatitudeMinutes->text().toDouble()/60.0;
+			if(EdtLatitudeNS->text().upper().latin1()[0]=='S')
+				latitude = - latitude;
 
-			pDRMRec->GetParameters()->ReceptLog.SetLongitude(
-				QString(EdtLongitudeDegrees->text()
-				+ chrDegrees + EdtLongitudeMinutes->text() 
-				+ "'" + EdtLongitudeEW->text().upper()).latin1());
+			longitude = EdtLongitudeDegrees->text().toDouble() + EdtLongitudeMinutes->text().toDouble()/60;
+			if(EdtLongitudeEW->text().upper().latin1()[0]=='W')
+				longitude = - longitude;
+
+			pDRMRec->GetParameters()->ReceptLog.GPSData.SetPositionAvailable(TRUE);
+			pDRMRec->GetParameters()->ReceptLog.GPSData.SetLatLongDegrees(latitude, longitude);
+
 		}
 		else
 		{
-			/* Receiver coordinates */
-			pDRMRec->GetParameters()->ReceptLog.SetLatitude("");
-
-			pDRMRec->GetParameters()->ReceptLog.SetLongitude("");
+			pDRMRec->GetParameters()->ReceptLog.GPSData.SetPositionAvailable(FALSE);
 		}
 
 		accept(); /* If the values are valid close the dialog */
@@ -246,49 +243,67 @@ _BOOLEAN bStop;
 
 void GeneralSettingsDlg::ExtractReceiverCoordinates()
 {
-QString sVal;
-QString strCoord;
+	QString sVal, sDir;
 
 	/* parse the latitude and longitude string stored into Dream settings to
 		extract local latitude and longitude coordinates */
 
+	double latitude, longitude;
+	pDRMRec->GetParameters()->ReceptLog.GPSData.GetLatLongDegrees(latitude, longitude);
 
 	/* Extract latitude values */
 
-	strCoord = QString(pDRMRec->GetParameters()->ReceptLog.GetLatitudeDegreesMinutesString().c_str());
+	if(latitude<0.0)
+	{
+		latitude = -latitude;
+		EdtLatitudeNS->setText("S");
+	}
+	else
+	{
+		EdtLatitudeNS->setText("N");
+	}
 
 	/* Extract degrees */
 
 	/* Latitude degrees max 2 digits */
-	sVal = ExtractDigits(strCoord, 1, 2);
+	sVal = QString("%1").arg(int(latitude));
 
 	EdtLatitudeDegrees->setText(sVal);
 
 	/* Extract minutes */
-	sVal = ExtractDigits(strCoord, sVal.length() + 2, 2);
+	sVal = QString("%1").arg( int(60.0*latitude) % 60 );
 
 	EdtLatitudeMinutes->setText(sVal);
 
-	EdtLatitudeNS->setText(strCoord.at(strCoord.length() - 1).upper());
-
-
 	/* Extract longitude values */
 
-	strCoord = QString(pDRMRec->GetParameters()->ReceptLog.GetLongitudeDegreesMinutesString().c_str());
+	if(longitude<0.0)
+	{
+		longitude = -longitude;
+		EdtLongitudeEW->setText("W");
+	}
+	else if(longitude>180.0)
+	{
+		longitude = 360.0-longitude;
+		EdtLongitudeEW->setText("E");
+	}
+	else
+	{
+		EdtLongitudeEW->setText("E");
+	}
 
 	/* Extract degrees */
 
 	/* Longitude degrees max 3 digits */
-	sVal = ExtractDigits(strCoord, 1, 3);
+	sVal = QString("%1").arg(int(longitude));
 
 	EdtLongitudeDegrees->setText(sVal);
 
 	/* Extract minutes */
-	sVal = ExtractDigits(strCoord, sVal.length() + 2, 2);
+	sVal = QString("%1").arg( int(60.0*longitude) % 60 );
 
 	EdtLongitudeMinutes->setText(sVal);
 
-	EdtLongitudeEW->setText(strCoord.at(strCoord.length() - 1).upper());
 }
 
 void GeneralSettingsDlg::AddWhatsThisHelp()

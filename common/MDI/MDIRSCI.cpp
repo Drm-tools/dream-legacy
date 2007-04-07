@@ -125,8 +125,7 @@ void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
 	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
 	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
 
-	Parameter.FillGRPSData();
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.RGPSData);	// rgps
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.ReceptLog.GPSData);	// rgps
 	
 	GenMDIPacket();
 }
@@ -170,8 +169,7 @@ void CRSIMDIOutRCIIn::SendUnlockedFrame(CParameter& Parameter)
 	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
 	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
 
-	Parameter.FillGRPSData();
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.RGPSData);	/* rgps */
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.ReceptLog.GPSData);	/* rgps */
 
 	GenMDIPacket();
 }
@@ -215,8 +213,7 @@ void CRSIMDIOutRCIIn::SendAMFrame(CParameter& Parameter)
 	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
 	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
 
-	Parameter.FillGRPSData();
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.RGPSData);	/* rgps */
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.ReceptLog.GPSData);	/* rgps */
 
 	// TransmitPacket(GenMDIPacket());
 	GenMDIPacket();

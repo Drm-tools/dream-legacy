@@ -181,63 +181,18 @@ _BOOLEAN bStop;
 	return sVal;
 }
 
-void CDRMLiveSchedule::SetReceiverCoordinates(const string strLatitude, const string strLongitude)
+void CDRMLiveSchedule::SetReceiverCoordinates(double latitude, double longitude)
 {
-int iLatitude;
-int iLongitude;
-
-QString sVal;
-
-	/* parse the latitude and longitude string stored into Dream settings for
-		extract local latitude degrees and longitude degrees */
-
-	bCheckCoordinates = FALSE;
-
-	const QString strCurLat = QString(strLatitude.c_str());
-	const QString strCurLong = QString(strLongitude.c_str());
-
-	if ((strCurLat != "") && (strCurLong != "")) 
-	{
-		/* latitude max 2 digits */
-		sVal = ExtractFirstDigits(strCurLat, 2);
-
-		if (sVal != "")
-		{
-			iLatitude = sVal.toInt();
-
-			if (strCurLat.contains('S') > 0)
-				iLatitude = -1 * iLatitude;
-
-			if ((iLatitude <= 90) && (iLatitude >= -90))
-			{
-				/* longitude max 3 digits */
-
-				sVal = ExtractFirstDigits(strCurLong, 3);
-
-				if (sVal != "")
-				{
-					iLongitude = sVal.toInt();
-
-					if (strCurLong.contains('W') > 0)
-						iLongitude = -1 * iLongitude;
-				
-					if ((iLongitude >= -180) && (iLongitude <= 179))
-					{
-						iReceiverLatitude = iLatitude;
-						iReceiverLongitude = iLongitude;
-
-						bCheckCoordinates = TRUE;
-					}
-				}
-			}
-		}
-	}
+	dReceiverLatitude = latitude;
+	dReceiverLongitude = longitude;
 }
 
 void CDRMLiveSchedule::DecodeTargets(const int iRegionID, const CVector<CParameter::CAltFreqRegion> vecAltFreqRegions
 										, QString& strRegions, _BOOLEAN& bIntoTargetArea)
 {
-int iCIRAF;
+	int iCIRAF;
+	int iReceiverLatitude = int(dReceiverLatitude);
+	int iReceiverLongitude = int(dReceiverLongitude);
 
 	strRegions = "";
 	
@@ -714,8 +669,12 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	pViewMenu->insertItem(tr("Stations &preview"),pPreviewMenu);
 
 	/* Get current receiver latitude and longitude if defined */
-	DRMSchedule.SetReceiverCoordinates(pDRMRec->GetParameters()->ReceptLog.GetLatitudeDegreesMinutesString()
-			,pDRMRec->GetParameters()->ReceptLog.GetLongitudeDegreesMinutesString());
+	if(pDRMRec->GetParameters()->ReceptLog.GPSData.GetPositionAvailable())
+	{
+		double latitude, longitude;
+		pDRMRec->GetParameters()->ReceptLog.GPSData.GetLatLongDegrees(latitude, longitude);
+		DRMSchedule.SetReceiverCoordinates(latitude, longitude);
+	}
 
 	SetStationsView();
 

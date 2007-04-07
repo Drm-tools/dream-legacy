@@ -68,6 +68,7 @@ protected:
 	class CPlayThread : public CThread
 	{
 	public:
+		virtual ~CPlayThread(){}
 		virtual void run();
 		CSoundBuf SoundBuf;
 		CSoundOut*	pSoundOut;

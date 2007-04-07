@@ -69,6 +69,7 @@ protected:
 	class CRecThread : public CThread
 	{
 	public:
+		virtual ~CRecThread(){}
 		virtual void run();
 		CSoundBuf SoundBuf;
 		CSoundIn*	pSoundIn;

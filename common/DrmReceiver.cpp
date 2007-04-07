@@ -200,6 +200,10 @@ void CDRMReceiver::Run()
 		if (upstreamRSCI.GetInEnabled() == FALSE)
 		{
 			ReceiveData.ReadData(ReceiverParam, RecDataBuf);
+			/* TODO sort out if SMeter from hamlib and internally measured signal level are
+			 * the same parameter or we want to store both separately
+			 */
+			ReceiverParam.SetSignalStrength(eAcquiState == AS_WITH_SIGNAL, ReceiveData.GetLevelMeter());
 #if defined(HAVE_LIBHAMLIB) && !defined(USE_QT_GUI)
 			/* TODO - get the polling interval sensible */
 			_BOOLEAN bValid;
@@ -226,7 +230,6 @@ void CDRMReceiver::Run()
 				bEnoughData = TRUE;
 			}
 
-
 			if ((eReceiverMode == RM_AM) || bDoInitRun)
 			{
 				/* The incoming samples are split 2 ways using a new CSplit
@@ -238,7 +241,6 @@ void CDRMReceiver::Run()
 				{
 					bEnoughData = TRUE;
 				}
-
 
 				/* AM demodulation ------------------------------------------ */
 				if (AMDemodulation.ProcessData(ReceiverParam, AMDataBuf,
@@ -258,7 +260,6 @@ void CDRMReceiver::Run()
 					bEnoughData = TRUE;
 				}
 
-				
 				/* AMSS resampling */
 				if (InputResample.ProcessData(ReceiverParam, AMSSPhaseBuf,
 					AMSSResPhaseBuf))
