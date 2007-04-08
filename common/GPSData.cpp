@@ -271,10 +271,8 @@ CGPSData::GetTimeDate(uint32_t & year, uint8_t & month, uint8_t & day,
 
 string CGPSData::GetTimeDate()
 {
-	struct tm *
-		p_ts;
-	time_t
-		tt;
+	struct tm * p_ts;
+	time_t tt;
 	{
 		CAutoMutex mutex(m_Mutex);
 		tt = time_t(m_ulTimeSecondsSince1970);

@@ -1275,9 +1275,15 @@ void StationsDlg::OnTimerSMeter()
 
 	/* If a time-out happened, do not update s-meter anymore (disable it) */
 	if (bValid==FALSE)
+	{
 		EnableSMeter(FALSE);
+	}
 	else
+	{
+		if(ProgrSigStrength->isEnabled()==FALSE)
+			EnableSMeter(TRUE);
 		ProgrSigStrength->setValue(rCurSigStr);
+	}
 }
 
 void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)

@@ -322,6 +322,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 
 	/* Update level meter */
 	SignalLevelMeter.Update((*pvecOutputData));
+	Parameter.SetIFSignalLevel(SignalLevelMeter.Level());
 }
 
 void CReceiveData::InitInternal(CParameter& Parameter)

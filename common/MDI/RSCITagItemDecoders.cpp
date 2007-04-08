@@ -51,7 +51,11 @@ void CTagItemDecoderRdbv::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	if (iLen != 16)
 		return;
- 	 pParameter->SetSignalStrength(TRUE, decodeDb(vecbiTag));
+	_REAL rSigStr = decodeDb(vecbiTag);
+ 	 pParameter->SetSignalStrength(TRUE, rSigStr);
+	 /* this is the only signal strength we have so update the IF level too.
+	  * TODO scaling factor ? */
+ 	 pParameter->SetIFSignalLevel(rSigStr);
 }
 
 void CTagItemDecoderRsta::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)

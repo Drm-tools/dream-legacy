@@ -263,9 +263,7 @@ void FDRMDialog::OnTimer()
 			CParameter& ReceiverParam = *(pDRMRec->GetParameters());
 
 			/* Input level meter */
-			_REAL rSigStr;
-			if(pDRMRec->GetSignalStrength(rSigStr))
-				ProgrInputLevel->setValue(rSigStr);
+			ProgrInputLevel->setValue(ReceiverParam.GetIFSignalLevel());
 	
 			SetStatus(CLED_MSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
 			SetStatus(CLED_SDC, ReceiverParam.ReceiveStatus.GetSDCStatus());

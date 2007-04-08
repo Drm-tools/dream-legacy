@@ -803,28 +803,51 @@ void CParameter::CReceptLog::SetMSC(const _BOOLEAN bCRCOk)
 	}
 }
 
-void CParameter::CReceptLog::SetSNR(const _REAL rNewCurSNR)
+void CParameter::CShortLog::SetSNR(const _REAL rNewCurSNR)
 {
-	if (bLogActivated == TRUE)
-	{
-		Mutex.Lock();
+	iNumSNR++;
 
-		/* Set parameter for long log file version */
-		rCurSNR = rNewCurSNR;
+	/* Average SNR values */
+	rSumSNR += rNewCurSNR;
 
-		iNumSNR++;
+	/* Set minimum and maximum of SNR */
+	if (rNewCurSNR > rMaxSNR)
+		rMaxSNR = rNewCurSNR;
+	if (rNewCurSNR < rMinSNR)
+		rMinSNR = rNewCurSNR;
+}
 
-		/* Average SNR values */
-		rAvSNR += rNewCurSNR;
+void CParameter::CShortLog::SetSignalStrength(const _REAL rNewCurSigStr)
+{
+	iNumSigStr++;
 
-		/* Set minimum and maximum of SNR */
-		if (rNewCurSNR > rMaxSNR)
-			rMaxSNR = rNewCurSNR;
-		if (rNewCurSNR < rMinSNR)
-			rMinSNR = rNewCurSNR;
+	/* Average SigStr values */
+	rSumSigStr += rNewCurSigStr;
 
-		Mutex.Unlock();
-	}
+	/* Set minimum and maximum of SigStr */
+	if (rNewCurSigStr > rMaxSigStr)
+		rMaxSigStr = rNewCurSigStr;
+	if (rNewCurSigStr < rMinSigStr)
+		rMinSigStr = rNewCurSigStr;
+}
+
+void CParameter::CLongLog::SetSNR(const _REAL rNewCurSNR)
+{
+	rCurSNR = rNewCurSNR;
+}
+
+void CParameter::CLongLog::SetSignalStrength(const _REAL rNewCurSigStr)
+{
+	rCurSigStr = rNewCurSigStr;
+}
+
+void CParameter::SetSNR(const _REAL rNewCurSNR)
+{
+	Mutex.Lock();
+	rSNREstimate = rNewCurSNR;
+	ReceptLog.shortlog.SetSNR(rNewCurSNR);
+	ReceptLog.longlog.SetSNR(rNewCurSNR);
+	Mutex.Unlock();
 }
 
 void CParameter::CReceptLog::SetNumAAC(const int iNewNum)
@@ -877,14 +900,6 @@ void CParameter::CReceptLog::StartLogging()
 	/* Long */
 	longlog.open("DreamLogLong.csv", ltime);
 
-	/* Init maximum and mininum value of SNR */
-	rMaxSNR = 0;
-	rMinSNR = 1000; /* Init with high value */
-
-	/* Init maximum and mininum value of signal strength */
-	rMaxSigStr = 0;
-	rMinSigStr = 1000; /* Init with high value */
-
 	Mutex.Unlock();
 }
 
@@ -901,8 +916,16 @@ void CParameter::CShortLog::reset()
 {
 	pLog->iNumCRCOkFAC = 0;
 	pLog->iNumCRCOkMSC = 0;
-	pLog->iNumSNR = 0;
-	pLog->rAvSNR = (_REAL) 0.0;
+
+	iNumSNR = 0;
+	rSumSNR = (_REAL) 0.0;
+	rMaxSNR = 0;
+	rMinSNR = 1000; /* Init with high value */
+
+	iNumSigStr = 0;
+	rSumSigStr = (_REAL) 0.0;
+	rMaxSigStr = 0;
+	rMinSigStr = 1000; /* Init with high value */
 }
 
 void CParameter::CLongLog::reset()
@@ -920,7 +943,7 @@ void CParameter::CLongLog::reset()
 	pLog->iNumCRCMSCLong = 0;
 	pLog->iNumCRCOkMSCLong = 0;
 
-	pLog->rCurSNR = (_REAL) 0.0;
+	rCurSNR = (_REAL) 0.0;
 }
 
 void CParameter::CShortLog::writeHeader(time_t now)
@@ -981,7 +1004,10 @@ void CParameter::CShortLog::writeHeader(time_t now)
 		else
 			fprintf(pFile, "\n");
 
-		fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE    RXL\n");
+		fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE");
+		if(pLog->bRxlEnabled)
+			fprintf(pFile, "    RXL\n");
+		fprintf(pFile, "\n");
 	}
 	iTimeCntShort = 0;
 }
@@ -1015,14 +1041,18 @@ void CParameter::CLongLog::writeHeader(time_t)
 
 void CParameter::CShortLog::writeTrailer()
 {
-	/* Set min and max values of SNR. Check values first */
-	if (pLog->rMaxSNR < pLog->rMinSNR)
+	if (rMaxSNR > rMinSNR)
+		fprintf(pFile, "\nSNR min: %4.1f, max: %4.1f\n", rMinSNR, rMaxSNR);
+	else
+		fprintf(pFile, "\nSNR min: %4.1f, max: %4.1f\n", 0.0, 0.0);
+
+	if(pLog->bRxlEnabled)
 	{
-		/* It seems that no SNR value was set, set both max and min to 0 */
-		pLog->rMaxSNR = 0;
-		pLog->rMinSNR = 0;
+		if (rMaxSigStr > rMinSigStr)
+			fprintf(pFile, "\nRXL min: %4.1f, max: %4.1f\n", rMinSigStr, rMaxSigStr);
+		else
+			fprintf(pFile, "\nRXL min: %4.1f, max: %4.1f\n", 0.0, 0.0);
 	}
-	fprintf(pFile, "\nSNR min: %4.1f, max: %4.1f\n", pLog->rMinSNR, pLog->rMaxSNR);
 
 	/* Short log file ending */
 	fprintf(pFile, "\nCRC: \n");
@@ -1039,13 +1069,19 @@ void CParameter::CShortLog::writeParameters()
 	if (pLog->bLogActivated == FALSE)
 		return;
 
-	int iAverageSNR, iTmpNumAAC;
+	int iAverageSNR, iAverageSigStr, iTmpNumAAC;
 
 	/* Avoid division by zero */
-	if (pLog->iNumSNR == 0)
-		iAverageSNR = 0;
+	if (iNumSNR > 0)
+		iAverageSNR = (int) Round(rSumSNR / iNumSNR);
 	else
-		iAverageSNR = (int) Round(pLog->rAvSNR / pLog->iNumSNR);
+		iAverageSNR = 0;
+
+	/* Avoid division by zero */
+	if (iNumSigStr > 0)
+		iAverageSigStr = (int) Round(rSumSigStr / iNumSigStr);
+	else
+		iAverageSigStr = 0;
 
 	/* If no sync, do not print number of AAC frames. If the number
 	   of correct FAC CRCs is lower than 10%, we assume that
@@ -1057,9 +1093,11 @@ void CParameter::CShortLog::writeParameters()
 
 	try
 	{
-		fprintf(pFile, "  %04d   %2d      %3d  %4d/%02d        0\n",
+		fprintf(pFile, "  %04d   %2d      %3d  %4d/%02d        0",
 		iTimeCntShort, iAverageSNR, pLog->iNumCRCOkFAC, pLog->iNumCRCOkMSC, iTmpNumAAC);
-
+		if(pLog->bRxlEnabled)
+			fprintf(pFile, "     %02d", iAverageSigStr);
+		fprintf(pFile, "\n");
 		fflush(pFile);
 	}
 	catch (...)
@@ -1099,12 +1137,12 @@ void CParameter::CLongLog::writeParameters()
 
 	/* Get parameters for delay and Doppler. In case the receiver is
 	   not synchronized, set parameters to zero */
-	_REAL rDoppler = (_REAL) 0.0;
 	_REAL rDelay = (_REAL) 0.0;
+	_REAL rDoppler = (_REAL) 0.0;
 	if (DRMReceiver.GetReceiverState() == AS_WITH_SIGNAL)
 	{
 		rDelay = DRMReceiver.GetParameters()->rMinDelay;
-                 rDoppler = DRMReceiver.GetParameters()->rSigmaEstimate;
+		rDoppler = DRMReceiver.GetParameters()->rSigmaEstimate;
 	}
 
 	/* Get robustness mode string */
@@ -1197,11 +1235,11 @@ void CParameter::CLongLog::writeParameters()
 			iCurProtLevPartB, iCurProtLevPartH,
 			TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
 			TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
-			TimeNow->tm_sec, pLog->rCurSNR, iSyncInd, iFACInd, iMSCInd,
+			TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
 			pLog->iNumCRCMSCLong, pLog->iNumCRCOkMSCLong,
 			rDoppler, rDelay);
 		if(pLog->bRxlEnabled)
-			fprintf(pFile, ",   %5.2f", pLog->rSigStr);
+			fprintf(pFile, ",   %5.2f", rCurSigStr);
 		if(pLog->bPositionEnabled)
 		{
 			double latitude, longitude;
@@ -1235,13 +1273,29 @@ EAcqStat CParameter::GetReceiverState()
 	return DRMReceiver.GetReceiverState();
 }
 
+void CParameter::SetIFSignalLevel(_REAL rNewSigStr)
+{
+	Mutex.Lock();
+	ReceptLog.rIFSigStr = rNewSigStr;
+	Mutex.Unlock();
+}
 
-/* push from RSCI RX_STATUS OR (TODO) Hamlib */
+_REAL CParameter::GetIFSignalLevel()
+{
+	_REAL r;
+	Mutex.Lock();
+	r = ReceptLog.rIFSigStr;
+	Mutex.Unlock();
+	return r;
+}
+
 void CParameter::SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr)
 {
 	Mutex.Lock();
 	ReceptLog.bValidSignalStrength = bValid;
 	ReceptLog.rSigStr = rNewSigStr;
+	ReceptLog.shortlog.SetSignalStrength(rNewSigStr);
+	ReceptLog.longlog.SetSignalStrength(rNewSigStr);
 	Mutex.Unlock();
 }
 

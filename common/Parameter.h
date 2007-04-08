@@ -731,10 +731,6 @@ class CParameter:public CCellMappingTable
 	{
 		return SOUNDCRD_SAMPLE_RATE * (rFreqOffsetAcqui + rFreqOffsetTrack);
 	}
-	_REAL GetSampFreqEst() const
-	{
-		return rResampleOffset;
-	}
 
 	_REAL GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData);
 	_REAL PartABLenRatio(const int iServiceID);
@@ -839,6 +835,7 @@ class CParameter:public CCellMappingTable
 	int iTimingOffsTrack;
 
 	/* Reception log -------------------------------------------------------- */
+
 	class CReceptLog; // forward
 
 	class CLog
@@ -865,8 +862,13 @@ class CParameter:public CCellMappingTable
 		virtual void writeHeader(time_t);
 		virtual void writeTrailer();
 		virtual void reset();
+		void SetSNR(_REAL);
+		void SetSignalStrength(_REAL);
 	protected:
 		int iTimeCntShort;
+		int iNumSNR, iNumSigStr;
+		_REAL rSumSNR, rMaxSNR, rMinSNR;
+		_REAL rSumSigStr, rMaxSigStr, rMinSigStr;
 	};
 
 	class CLongLog: public CLog
@@ -876,8 +878,12 @@ class CParameter:public CCellMappingTable
 		virtual void writeHeader(time_t);
 		virtual void writeTrailer();
 		virtual void reset();
+		void SetSNR(_REAL);
+		void SetSignalStrength(_REAL);
 	protected:
 		time_t TimeCntLong;
+		_REAL rCurSNR;
+		_REAL rCurSigStr;
 	};
 
 	class CReceptLog
@@ -900,7 +906,6 @@ class CParameter:public CCellMappingTable
 		void SetFAC(const _BOOLEAN bCRCOk);
 		void SetMSC(const _BOOLEAN bCRCOk);
 		void SetSync(const _BOOLEAN bCRCOk);
-		void SetSNR(const _REAL rNewCurSNR);
 		void SetNumAAC(const int iNewNum);
 
 		void SetLoggingEnabled(const _BOOLEAN bLog) { bLogEnabled = bLog; }
@@ -961,19 +966,17 @@ class CParameter:public CCellMappingTable
 		CGPSData GPSData; /* TODO facade this ? */
 		_BOOLEAN bValidSignalStrength;
 		_REAL rSigStr;  
-
-	  protected:
+		_REAL rIFSigStr;  
 	    CShortLog shortlog;
 	    CLongLog longlog;
-		int iNumSNR;
+
+	  protected:
 		int iNumCRCOkFAC, iNumCRCOkMSC;
 		int iNumCRCOkMSCLong, iNumCRCMSCLong;
 		int iNumAACFrames;
 		_BOOLEAN bSyncOK, bFACOk, bMSCOk;
 		_BOOLEAN bSyncOKValid, bFACOkValid, bMSCOkValid;
 		int iFrequency;
-		_REAL rAvSNR, rCurSNR, rMaxSNR, rMinSNR;
-		_REAL rAvSigStr, rCurSigStr, rMaxSigStr, rMinSigStr;
 		_BOOLEAN bLogActivated;
 		_BOOLEAN bLogEnabled;
 		_BOOLEAN bRxlEnabled;
@@ -989,7 +992,7 @@ class CParameter:public CCellMappingTable
 		CMutex Mutex;
 	} ReceptLog;
 
-	/* Class for store informations about last service selected ------------- */
+	/* Class to store information about the last service selected ------------- */
 
 	class CLastService
 	{
@@ -1019,7 +1022,7 @@ class CParameter:public CCellMappingTable
 		uint32_t iServiceID;
 	};
 
-	/* Class for keeping track of status flags for RSCI rsta tag */
+	/* Class to keep track of status flags for RSCI rsta tag */
 	class CReceiveStatus
 	{
 	  public:
@@ -1146,12 +1149,14 @@ class CParameter:public CCellMappingTable
 		Mutex.Unlock();
 	}
 	/* Channel Estimation */
+	void SetSNR(_REAL);
 	_REAL rSNREstimate;
 	_REAL rMER;
 	_REAL rWMERMSC;
 	_REAL rWMERFAC;
 	_REAL rSigmaEstimate;
 	_REAL rMinDelay;
+	_REAL rMaxDelay;
 
 	_BOOLEAN bMeasureDelay;
 	CRealVector vecrRdel;
@@ -1167,6 +1172,11 @@ class CParameter:public CCellMappingTable
 	_REAL rMaxPSDwrtSig;
 	_REAL rMaxPSDFreq;
 	
+	/* the signal level as measured at IF by dream */
+	void SetIFSignalLevel(_REAL);
+	_REAL GetIFSignalLevel();
+
+	/* the signal level as measured (at RF ?) by the front end */
 	void SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr);
 	_BOOLEAN GetSignalStrength(_REAL& rSigStr);
 

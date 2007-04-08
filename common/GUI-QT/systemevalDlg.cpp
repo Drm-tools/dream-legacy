@@ -673,19 +673,6 @@ void systemevalDlg::OnTimer()
 {
 	CParameter& ReceiverParam = *(pDRMRec->GetParameters());
 
-	/* Show SNR if receiver is in tracking mode */
-	if ((pDRMRec->GetReceiverState() == AS_WITH_SIGNAL) &&
-		(pDRMRec->GetReceiverMode() == RM_DRM) &&
-		(ReceiverParam.ReceptLog.GetLoggingActivated()))
-	{
-		/* We only get SNR from a local DREAM Front-End */
-		_REAL rSNR = ReceiverParam.rSNREstimate;
-
-		/* Set SNR for log file */
-		if (rSNR >= 0.0)
-			ReceiverParam.ReceptLog.SetSNR(rSNR);
-	}
-
 	if (this->isVisible())
 	{
 	SetStatus(LEDMSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
@@ -713,7 +700,7 @@ void systemevalDlg::OnTimer()
 		{
 			ValueSNR->setText("<b>---</b>");
 		}
-		/* We get MER from a local DREAM Front-End or and RSCI input but not an MDI input */
+		/* We get MER from a local DREAM Front-End or an RSCI input but not an MDI input */
 		_REAL rMER = ReceiverParam.rMER;
 		if (rMER >= 0.0 )
 		{
@@ -742,7 +729,7 @@ void systemevalDlg::OnTimer()
 		}
 
 		/* Sample frequency offset estimation */
-		const _REAL rCurSamROffs = ReceiverParam.GetSampFreqEst();
+		const _REAL rCurSamROffs = ReceiverParam.rResampleOffset;
 
 		/* Display value in [Hz] and [ppm] (parts per million) */
 		ValueSampFreqOffset->setText(
@@ -985,9 +972,7 @@ void systemevalDlg::OnTimer()
 
 	if (ReceiverParam.ReceptLog.GPSData.GetTimeAndDateAvailable())
 	{
-		QDateTime qDT;
-		qDT.setTime_t(ReceiverParam.ReceptLog.GPSData.GetTimeSecondsSince1970(), Qt::UTC);
-		qStrTime += "UTC: " + qDT.toString() + "  ";
+		qStrTime += "UTC: " + ReceiverParam.ReceptLog.GPSData.GetTimeDate() + "  ";
 	}
 	else
 		qStrTime = "UTC: ?  ";

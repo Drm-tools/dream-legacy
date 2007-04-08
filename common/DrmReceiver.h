@@ -362,10 +362,9 @@ protected:
 	CShiftRegister<_REAL>	vecrDopplerHist;
 	CShiftRegister<_REAL>	vecrSNRHist;
 	CShiftRegister<int>		veciCDAudHist;
-	int						iAvCntParamHist;
-	_REAL					rAvLenIRHist;
-	_REAL					rAvDopplerHist;
-	_REAL					rAvSNRHist;
+	int						iSymbolCount;
+	_REAL					rSumDopplerHist;
+	_REAL					rSumSNRHist;
 	int						iCurrentCDAud;
 #ifdef USE_QT_GUI
 	QMutex					MutexHist;

@@ -69,9 +69,8 @@ CDRMReceiver::CDRMReceiver() :
 		vecrLenIRHist(LEN_HIST_PLOT_SYNC_PARMS),
 		vecrDopplerHist(LEN_HIST_PLOT_SYNC_PARMS),
 		vecrSNRHist(LEN_HIST_PLOT_SYNC_PARMS),
-		veciCDAudHist(LEN_HIST_PLOT_SYNC_PARMS), iAvCntParamHist(0),
-		rAvLenIRHist((_REAL) 0.0), rAvDopplerHist((_REAL) 0.0),
-		rAvSNRHist((_REAL) 0.0),
+		veciCDAudHist(LEN_HIST_PLOT_SYNC_PARMS), iSymbolCount(0),
+		rSumDopplerHist((_REAL) 0.0), rSumSNRHist((_REAL) 0.0),
 		iCurrentCDAud(0),
 #ifdef USE_QT_GUI
 		RigPoll(),
@@ -107,7 +106,7 @@ CDRMReceiver::CDRMReceiver() :
 #if defined(USE_QT_GUI)
 	RigPoll.setReceiver(this);
 # if defined(HAVE_LIBHAMLIB)
-	if(Hamlib.GetHamlibModelID() != 0)
+	if(bEnableSMeter && upstreamRSCI.GetInEnabled()==FALSE)
 		RigPoll.start();
 # endif
 #endif
@@ -117,9 +116,7 @@ CDRMReceiver::~CDRMReceiver()
 {
 #if defined(USE_QT_GUI)
 	if(RigPoll.running())
-	{
 		RigPoll.stop();
-	}
 	if(RigPoll.wait(1000)==FALSE)
 		cout << "error terminating rig polling thread" << endl;
 #endif
@@ -141,15 +138,15 @@ void CDRMReceiver::Run()
 
 		/* Check for changes in front end selection */
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-		if(Hamlib.GetHamlibModelID()==0)
-		{
-			if(RigPoll.running() )
-				RigPoll.stop();
-		}
-		else
+		if(bEnableSMeter && upstreamRSCI.GetInEnabled()==FALSE)
 		{
 			if(RigPoll.running() == FALSE)
 				RigPoll.start();
+		}
+		else
+		{
+			if(RigPoll.running() )
+				RigPoll.stop();
 		}
 #endif
 
@@ -200,10 +197,6 @@ void CDRMReceiver::Run()
 		if (upstreamRSCI.GetInEnabled() == FALSE)
 		{
 			ReceiveData.ReadData(ReceiverParam, RecDataBuf);
-			/* TODO sort out if SMeter from hamlib and internally measured signal level are
-			 * the same parameter or we want to store both separately
-			 */
-			ReceiverParam.SetSignalStrength(eAcquiState == AS_WITH_SIGNAL, ReceiveData.GetLevelMeter());
 #if defined(HAVE_LIBHAMLIB) && !defined(USE_QT_GUI)
 			/* TODO - get the polling interval sensible */
 			_BOOLEAN bValid;
@@ -948,10 +941,9 @@ void CDRMReceiver::InitsForWaveMode()
 {
 	/* Reset averaging of the parameter histories (needed, e.g., because the
 	   number of OFDM symbols per DRM frame might have changed) */
-	iAvCntParamHist = 0;
-	rAvLenIRHist = (_REAL) 0.0;
-	rAvDopplerHist = (_REAL) 0.0;
-	rAvSNRHist = (_REAL) 0.0;
+	iSymbolCount = 0;
+	rSumDopplerHist = (_REAL) 0.0;
+	rSumSNRHist = (_REAL) 0.0;
 
 	/* After a new robustness mode was detected, give the time synchronization
 	   a bit more time for its job */
@@ -1095,25 +1087,6 @@ void CDRMReceiver::InitsForDataParam()
 /* Parameter histories for plot --------------------------------------------- */
 void CDRMReceiver::UpdateParamHistories()
 {
-     /* update parameters in the Parameter object. This replaces 
-     direct calls to the channelestimation class in the evaluation dialog
-     negative dB values are used to indicate invalid values
-      */
-   	/* TODO: make this work with upstreamRSCI */
-
-	if(upstreamRSCI.GetInEnabled())
-	{
- 	}
- 	else
- 	{
-	    ReceiverParam.rSNREstimate = ChannelEstimation.GetSNREstdB();
-
-     	/* MERs are updated in the RSCI part of ChannelEstimation */
-
-	    ReceiverParam.rSigmaEstimate = ChannelEstimation.GetSigma();
-
-   	 	ReceiverParam.rMinDelay = ChannelEstimation.GetMinDelay();
-	}
 
    	/* TODO: do not use the shift register class, build a new
 	   one which just increments a pointer in a buffer and put
@@ -1129,33 +1102,27 @@ void CDRMReceiver::UpdateParamHistories()
 #endif
 
 		/* Frequency offset tracking values */
-		vecrFreqSyncValHist.AddEnd(
-			ReceiverParam.rFreqOffsetTrack *
-			SOUNDCRD_SAMPLE_RATE);
+		vecrFreqSyncValHist.AddEnd(ReceiverParam.rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE);
 
 		/* Sample rate offset estimation */
-		vecrSamOffsValHist.AddEnd(ReceiverParam.
-			GetSampFreqEst());
-
+		vecrSamOffsValHist.AddEnd(ReceiverParam.rResampleOffset);
 		/* Signal to Noise ratio estimates */
-		rAvSNRHist += ReceiverParam.rSNREstimate;
+		rSumSNRHist += ReceiverParam.rSNREstimate;
 
 /* TODO - reconcile this with Ollies RSCI Doppler code in ChannelEstimation */
-		/* Average Doppler and delay estimates */
-		rAvLenIRHist += ChannelEstimation.GetDelay();
-		rAvDopplerHist += ReceiverParam.rSigmaEstimate;
+		/* Average Doppler estimate */
+		rSumDopplerHist += ReceiverParam.rSigmaEstimate;
 
 		/* Only evaluate Doppler and delay once in one DRM frame */
-		iAvCntParamHist++;
-		if (iAvCntParamHist == ReceiverParam.iNumSymPerFrame)
+		iSymbolCount++;
+		if (iSymbolCount == ReceiverParam.iNumSymPerFrame)
 		{
 			/* Apply averaged values to the history vectors */
-			vecrLenIRHist.AddEnd(
-				rAvLenIRHist / ReceiverParam.iNumSymPerFrame);
-			vecrDopplerHist.AddEnd(
-				rAvDopplerHist / ReceiverParam.iNumSymPerFrame);
-			vecrSNRHist.AddEnd(
-				rAvSNRHist / ReceiverParam.iNumSymPerFrame);
+			vecrLenIRHist.AddEnd( (ReceiverParam.rMinDelay + ReceiverParam.rMaxDelay) / 2.0 );
+
+			vecrSNRHist.AddEnd( rSumSNRHist / ReceiverParam.iNumSymPerFrame);
+
+			vecrDopplerHist.AddEnd( rSumDopplerHist / ReceiverParam.iNumSymPerFrame);
 
 			/* At the same time, add number of correctly decoded audio blocks.
 			   This number is updated once a DRM frame. Since the other
@@ -1164,10 +1131,9 @@ void CDRMReceiver::UpdateParamHistories()
 			veciCDAudHist.AddEnd(iCurrentCDAud);
 
 			/* Reset parameters used for averaging */
-			iAvCntParamHist = 0;
-			rAvLenIRHist = (_REAL) 0.0;
-			rAvDopplerHist = (_REAL) 0.0;
-			rAvSNRHist = (_REAL) 0.0;
+			iSymbolCount = 0;
+			rSumDopplerHist = (_REAL) 0.0;
+			rSumSNRHist = (_REAL) 0.0;
 		}
 
 #ifdef USE_QT_GUI
@@ -1329,19 +1295,16 @@ CDRMReceiver::CRigPoll::run()
 {
 	while(bQuit==FALSE)
 	{
-		if (pDrmRec->GetRSIIn()->GetInEnabled() == FALSE)
-		{
 #ifdef HAVE_LIBHAMLIB
-			_BOOLEAN bValid;
-			_REAL r;
-			bValid = pDrmRec->GetHamlib()->GetSMeter(r)==CHamlib::SS_VALID;
-			// Apply any correction
-			if (bValid)
-				r += pDrmRec->GetParameters()->rSigStrengthCorrection;
+		_BOOLEAN bValid;
+		_REAL r;
+		bValid = pDrmRec->GetHamlib()->GetSMeter(r)==CHamlib::SS_VALID;
+		// Apply any correction
+		if (bValid)
+			r += pDrmRec->GetParameters()->rSigStrengthCorrection;
 
-			pDrmRec->GetParameters()->SetSignalStrength(bValid, r);
+		pDrmRec->GetParameters()->SetSignalStrength(bValid, r);
 #endif
-		}
 		msleep(400);
 	}
 }

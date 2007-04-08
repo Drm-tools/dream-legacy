@@ -52,7 +52,6 @@ public:
 };
 
 class CGPSData
-// *TODO* - put status stuff from CParameter::CGPSInformation in here
 {
 public:
 	CGPSData() 

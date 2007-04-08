@@ -129,7 +129,6 @@ public:
 		 {}
 	virtual ~CReceiveData();
 
-	_REAL GetLevelMeter() {return SignalLevelMeter.Level();}
 	void GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 							   
 							   const int iLenPSDAvEachBlock = LEN_PSD_AV_EACH_BLOCK,
