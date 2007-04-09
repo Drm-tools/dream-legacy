@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 AC_INIT(common/GUI-QT/main.cpp)
 
-AM_INIT_AUTOMAKE(drm,1.8.26unstable)
+AM_INIT_AUTOMAKE(drm,1.8.27unstable)
 
 AM_CONFIG_HEADER(config.h)
 
@@ -164,7 +164,7 @@ dnl Hamlib (optional) ----------------------------------------------------------
 if test "x$enable_hamlib" = "xyes"; then
 	PKG_CHECK_MODULES(hamlib, hamlib, , enable_hamlib=no)
 	if test "x$enable_hamlib" = "xyes"; then
-		AC_DEFINE(HAVE_HAMLIB, 1, [Define if you have Hamlib])
+		AC_DEFINE(HAVE_LIBHAMLIB, 1, [Define if you have Hamlib])
 		LIBS="$LIBS $hamlib_LIBS"
 		hamlib121=`$PKG_CONFIG --exists --print-errors 'hamlib >= 1.2.1' 2>&1`
 		if test "x$hamlib121" = x; then
