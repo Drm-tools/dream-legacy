@@ -215,6 +215,7 @@ dnl can't check the library, as it has unresolved symbols ?
 #AC_CHECK_LIB(journaline, CRC_Check_16, , enable_journaline=no, -lreadline)
 if test "x$enable_journaline" = xyes; then
 	AC_DEFINE(HAVE_JOURNALINE, 1, [Define if you have libjournaline])
+	LIBS="$LIBS -ljournaline"
 fi
 
 AC_CONFIG_FILES(Makefile linux/Makefile drm.spec)
