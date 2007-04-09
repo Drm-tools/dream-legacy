@@ -369,6 +369,7 @@
 						PreprocessorDefinitions=""
 					/>
 				</FileConfiguration>
+			</File>
 			<File
 				RelativePath="..\common\GPSReceiver.cpp"
 				>
