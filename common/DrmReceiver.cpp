@@ -35,12 +35,8 @@
 #include "DrmReceiver.h"
 
 #include "util/LogPrint.h"
-# ifdef _WIN32
-#  include "../windows/Source/Sound.h"
-# else
-#  include "../linux/source/sound.h"
-# endif
-# include "audiofilein.h"
+#include "sound.h"
+#include "audiofilein.h"
 
 const int CDRMReceiver::MAX_UNLOCKED_COUNT=2;
 

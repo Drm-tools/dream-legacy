@@ -198,10 +198,10 @@ endif
 
 if USE_PORTAUDIO
 drm_sound_SOURCES = \
-	source/portaudio.cpp \
-	source/portaudio.h \
-	source/pa_ringbuffer.c \
-	source/pa_ringbuffer.h
+	../common/sound/drm_portaudio.cpp \
+	../common/sound/drm_portaudio.h \
+	../common/sound/pa_ringbuffer.c \
+	../common/sound/pa_ringbuffer.h
 endif
 
 if USE_QT

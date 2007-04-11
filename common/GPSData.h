@@ -47,7 +47,7 @@ public:
 
 	QMutex& m_Mutex;
 #else
-	CAutoMutex(int Mutex) {}
+	CAutoMutex(int) {}
 #endif
 };
 

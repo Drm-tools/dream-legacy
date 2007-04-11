@@ -1006,7 +1006,7 @@ void CParameter::CShortLog::writeHeader(time_t now)
 
 		fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE");
 		if(pLog->bRxlEnabled)
-			fprintf(pFile, "    RXL\n");
+			fprintf(pFile, "     RXL\n");
 		fprintf(pFile, "\n");
 	}
 	iTimeCntShort = 0;
@@ -1096,7 +1096,7 @@ void CParameter::CShortLog::writeParameters()
 		fprintf(pFile, "  %04d   %2d      %3d  %4d/%02d        0",
 		iTimeCntShort, iAverageSNR, pLog->iNumCRCOkFAC, pLog->iNumCRCOkMSC, iTmpNumAAC);
 		if(pLog->bRxlEnabled)
-			fprintf(pFile, "     %02d", iAverageSigStr);
+			fprintf(pFile, "      %02d", iAverageSigStr);
 		fprintf(pFile, "\n");
 		fflush(pFile);
 	}

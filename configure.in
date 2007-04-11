@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 AC_INIT(common/GUI-QT/main.cpp)
 
-AM_INIT_AUTOMAKE(drm,1.8.27unstable)
+AM_INIT_AUTOMAKE(drm,1.8.28unstable)
 
 AM_CONFIG_HEADER(config.h)
 
@@ -109,7 +109,7 @@ AC_LANG_CPLUSPLUS
 dnl Checks for typedefs, structures, and compiler characteristics.
 
 dnl Checks for some external libraries that need to be installed
-LDFLAGS="$LDFLAGS -L$PWD/libs"
+LIBS="$LIBS -L$PWD/libs"
 CXXFLAGS="$CXXFLAGS -I$PWD/libs"
 CFLAGS="$CFLAGS -I$PWD/libs"
 
@@ -137,7 +137,7 @@ if test "x$enable_qt" = "xyes"; then
 	AM_CONDITIONAL(USE_QT, true)
 	CFLAGS="$CFLAGS $qt_CFLAGS"
 	CXXFLAGS="$CXXFLAGS $qt_CFLAGS"
-	LDFLAGS="$LDFLAGS $qt_LIBS"
+	LIBS="$LIBS $qt_LIBS"
 
 	dnl qwt
 

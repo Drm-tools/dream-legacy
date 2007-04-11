@@ -3,10 +3,10 @@
  * Copyright (c) 2007
  *
  * Author(s):
- *	Andrew Murphy
- *
- * Description:
- *	See GPSReceiver.cpp
+ *	Julian Cable
+ * 
+ * Decription:
+ * sound interface selection
  *
  ******************************************************************************
  *
@@ -26,48 +26,39 @@
  *
 \******************************************************************************/
 
-#if !defined(_GPSRECEIVER_H_)
-#define _GPSRECEIVER_H_
+#ifndef _SOUND_H
+#define _SOUND_H
 
-#include "GPSData.h"
-#include <qsocket.h>
-#include <qthread.h>
-#if QT_VERSION >= 0x030000 	 
-# include <qmutex.h>
+#if defined(_WIN32) && !defined(USE_PORTAUDIO)
+# include "../windows/Source/Sound.h"
 #endif
-#include <qtimer.h>
 
-class CGPSReceiver : public QObject
-{
-	Q_OBJECT
-public:
-	CGPSReceiver(CGPSData&);
-	virtual ~CGPSReceiver();
+#ifdef USE_OSS
+# include "../linux/source/soundin.h"
+# include "../linux/source/soundout.h"
+#endif
 
-protected:
+#ifdef USE_ALSA
+# include "../linux/source/soundin.h"
+# include "../linux/source/soundout.h"
+#endif
 
-	void open();
-	void close();
+#ifdef USE_JACK
+# include "../linux/source/jack.h"
+typedef CSoundInJack CSoundIn;
+typedef CSoundOutJack CSoundOut;
+#endif
 
-	void DecodeGPSDReply(string Reply);
-	void DecodeString(char Command, string Value);
-	void DecodeO(string Value);
-	void DecodeY(string Value);
-	
-	static const unsigned short c_usReconnectIntervalSeconds;
+#ifdef USE_PORTAUDIO
+# include "sound/drm_portaudio.h"
+typedef CPaIn CSoundIn;
+typedef CPaOut CSoundOut;
+#endif
 
-	CGPSData&	m_GPSData;
-	QSocket*	m_pSocket;
-	QTimer*		m_pTimer;
+#if !defined(_WIN32) &&!defined(USE_OSS) && !defined(USE_ALSA) && !defined(USE_JACK) && !defined(USE_PORTAUDIO)
+# include "sound/soundnull.h"
+typedef CSoundInNull CSoundIn;
+typedef CSoundOutNull CSoundOut;
+#endif
 
-public slots:
-
-	void slotInit();
-	void slotConnected();
-	void slotAbort();
-	void slotReadyRead();
-	void slotSocketError(int);
-
-};
-
-#endif // !defined(_GPSRECEIVER_H_)
+#endif

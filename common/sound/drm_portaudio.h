@@ -26,8 +26,8 @@
  *
 \******************************************************************************/
 
-#ifndef _PA_H
-#define _PA_H
+#ifndef _DRM_PORTAUDIO_H
+#define _DRM_PORTAUDIO_H
 
 #include "../../common/soundinterface.h"
 #include <portaudio.h>

@@ -972,7 +972,7 @@ void systemevalDlg::OnTimer()
 
 	if (ReceiverParam.ReceptLog.GPSData.GetTimeAndDateAvailable())
 	{
-		qStrTime = "UTC: " + ReceiverParam.ReceptLog.GPSData.GetTimeDate().c_str() + "  ";
+		qStrTime = QString("UTC: ") + ReceiverParam.ReceptLog.GPSData.GetTimeDate().c_str() + "  ";
 	}
 	else
 		qStrTime = "UTC: ?  ";

@@ -27,12 +27,7 @@
 \******************************************************************************/
 
 #include "DrmTransmitter.h"
-# ifdef _WIN32
-#  include "../windows/Source/Sound.h"
-# else
-#  include "../linux/source/sound.h"
-# endif
-
+#include "sound.h"
 
 /* Implementation *************************************************************/
 void CDRMTransmitter::Start()

@@ -33,7 +33,6 @@
 #ifdef USE_QT_GUI
 # include <qsocket.h>
 # include <qsignal.h>
-# include <qtimer.h>
 #endif
 
 #include <sstream>
@@ -44,6 +43,7 @@ const unsigned short CGPSReceiver::c_usReconnectIntervalSeconds = 30;
 
 CGPSReceiver::CGPSReceiver(CGPSData& data): m_GPSData(data),m_pSocket(NULL)
 {	
+    m_pTimer = new QTimer(this);
 	open();
 }
 
@@ -226,6 +226,7 @@ void CGPSReceiver::DecodeY(string Value)
 
 void CGPSReceiver::slotInit()
 {
+	disconnect(m_pTimer);
 	open();
 }
 
@@ -237,13 +238,15 @@ void CGPSReceiver::slotConnected()
 		m_pSocket->readLine();
 
 	m_pSocket->writeBlock("W1\n",2);	// try to force gpsd into watcher mode
-	QTimer::singleShot(30000, this, SLOT(slotConnected()));
+	connect( m_pTimer, SIGNAL(timeout()), SLOT(slotAbort()) );
+	m_pTimer->start(c_usReconnectIntervalSeconds*1000);
 }
 
 void CGPSReceiver::slotAbort()
 {
+	disconnect(m_pTimer);
 	close();
-	QTimer::singleShot(30000, this, SLOT(slotInit()));
+	open();
 }
 
 void CGPSReceiver::slotReadyRead()
@@ -251,11 +254,12 @@ void CGPSReceiver::slotReadyRead()
 	m_GPSData.SetStatus(CGPSData::GPS_RX_DATA_AVAILABLE);
 	while (m_pSocket->canReadLine())
 		DecodeGPSDReply((const char*) m_pSocket->readLine());
-	QTimer::singleShot(30000, this, SLOT(slotConnected()));
+	m_pTimer->start(c_usReconnectIntervalSeconds*1000, TRUE); // if no data in 30 seconds abort
 }
 
 void CGPSReceiver::slotSocketError(int)
 {
 	close();
-	QTimer::singleShot(30000, this, SLOT(slotInit()));
+	connect( m_pTimer, SIGNAL(timeout()), SLOT(slotInit()) );
+	m_pTimer->start(c_usReconnectIntervalSeconds*1000, TRUE);
 }
