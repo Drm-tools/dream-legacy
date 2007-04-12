@@ -1185,7 +1185,11 @@ SOURCE=..\common\soundinterface.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\soundnull.h
+SOURCE=..\common\sound.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\sound\soundnull.h
 # End Source File
 # Begin Source File
 
