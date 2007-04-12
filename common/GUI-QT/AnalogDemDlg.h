@@ -111,6 +111,7 @@ protected:
 	QTimer			Timer;
 	QTimer			TimerPLLPhaseDial;
 	CAMSSDlg		AMSSDlg;
+
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
     virtual void	showEvent(QShowEvent* pEvent);
@@ -132,6 +133,7 @@ public slots:
 	void OnNewAMAcquisition() {pDRMRec->SetReceiverMode(RM_AM);}
 	void OnButtonWaterfall();
 	void OnButtonAMSS();
+	void OnSwitchToDRM();
 
 signals:
 	void SwitchToDRM();

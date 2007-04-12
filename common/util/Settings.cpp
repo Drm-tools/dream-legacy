@@ -290,11 +290,6 @@ void CSettings::ReadIniFile()
 	if (GetFlagIniSet(ini, "Window geometry", "analdemvis", bValue) == TRUE)
 		pDRMRec->GeomAnalogDemDlg.bVisible = bValue;
 
-	if(pDRMRec->GeomAnalogDemDlg.bVisible == TRUE)
-		pDRMRec->SetReceiverMode(RM_AM);
-	else
-		pDRMRec->SetReceiverMode(RM_DRM);
-
 	/* filter bandwidth (max = SOUNDCRD_SAMPLE_RATE / 2 = typically 24000 Hz = 24 kHz) */
 
 	/* AM filter bandwidth */

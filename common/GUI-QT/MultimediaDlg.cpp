@@ -40,19 +40,16 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	const char* name, bool modal, WFlags f) :
 	MultimediaDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
 {
-#ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
-	const QRect WinGeom(pDRMRec->GeomMultimediaDlg.iXPos,
+	const QRect WinGeom(
+		pDRMRec->GeomMultimediaDlg.iXPos,
 		pDRMRec->GeomMultimediaDlg.iYPos,
 		pDRMRec->GeomMultimediaDlg.iWSize,
-		pDRMRec->GeomMultimediaDlg.iHSize);
+		pDRMRec->GeomMultimediaDlg.iHSize
+	);
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
-#else /* Under Linux only restore the size */
-	resize(pDRMRec->GeomMultimediaDlg.iWSize,
-		pDRMRec->GeomMultimediaDlg.iHSize);
-#endif
 
 	/* Store the default font */
 	fontDefault = TextBrowser->font();
@@ -174,22 +171,6 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 MultimediaDlg::~MultimediaDlg()
 {
-	/* Set window geometry data in DRMReceiver module */
-	QRect WinGeom = geometry();
-
-	pDRMRec->GeomMultimediaDlg.iXPos = WinGeom.x();
-	pDRMRec->GeomMultimediaDlg.iYPos = WinGeom.y();
-	pDRMRec->GeomMultimediaDlg.iHSize = WinGeom.height();
-	pDRMRec->GeomMultimediaDlg.iWSize = WinGeom.width();
-
-	/* Store save path */
-	pDRMRec->strStoragePathMMDlg = strCurrentSavePath.latin1();
-
-	/* Store current TextBrowser font */
-	pDRMRec->FontParamMMDlg.strFamily = fontTextBrowser.family().latin1();
-	pDRMRec->FontParamMMDlg.intPointSize = fontTextBrowser.pointSize();
-	pDRMRec->FontParamMMDlg.intWeight = fontTextBrowser.weight();
-	pDRMRec->FontParamMMDlg.bItalic = fontTextBrowser.italic();
 }
 
 void MultimediaDlg::InitApplication(CDataDecoder::EAppType eNewAppType)
@@ -532,6 +513,23 @@ void MultimediaDlg::hideEvent(QHideEvent*)
 {
 	/* Deactivate real-time timer so that it does not get new pictures */
 	Timer.stop();
+
+	/* Set window geometry data in DRMReceiver module */
+	QRect WinGeom = geometry();
+
+	pDRMRec->GeomMultimediaDlg.iXPos = WinGeom.x();
+	pDRMRec->GeomMultimediaDlg.iYPos = WinGeom.y();
+	pDRMRec->GeomMultimediaDlg.iHSize = WinGeom.height();
+	pDRMRec->GeomMultimediaDlg.iWSize = WinGeom.width();
+
+	/* Store save path */
+	pDRMRec->strStoragePathMMDlg = strCurrentSavePath.latin1();
+
+	/* Store current TextBrowser font */
+	pDRMRec->FontParamMMDlg.strFamily = fontTextBrowser.family().latin1();
+	pDRMRec->FontParamMMDlg.intPointSize = fontTextBrowser.pointSize();
+	pDRMRec->FontParamMMDlg.intWeight = fontTextBrowser.weight();
+	pDRMRec->FontParamMMDlg.bItalic = fontTextBrowser.italic();
 }
 
 void MultimediaDlg::SetStatus(int MessID, int iMessPara)

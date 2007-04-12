@@ -34,7 +34,6 @@ EPGDlg::EPGDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 :CEPGDlgbase(parent, name, modal, f),epg(),pDRMRec(pNDRMR)
 {
 
-#ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
 	const QRect WinGeom(pDRMRec->GeomEPGDlg.iXPos,
 		pDRMRec->GeomEPGDlg.iYPos,
@@ -43,10 +42,6 @@ EPGDlg::EPGDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
-#else /* Under Linux only restore the size */
-	resize(pDRMRec->GeomEPGDlg.iWSize,
-		pDRMRec->GeomEPGDlg.iHSize);
-#endif
 
 	/* auto resize of the programme name column */
 	Data->setColumnWidthMode(COL_NAME, QListView::Maximum);
@@ -90,13 +85,6 @@ EPGDlg::EPGDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 EPGDlg::~EPGDlg()
 {
-	/* Set window geometry data in DRMReceiver module */
-	QRect WinGeom = geometry();
-
-	pDRMRec->GeomEPGDlg.iXPos = WinGeom.x();
-	pDRMRec->GeomEPGDlg.iYPos = WinGeom.y();
-	pDRMRec->GeomEPGDlg.iHSize = WinGeom.height();
-	pDRMRec->GeomEPGDlg.iWSize = WinGeom.width();
 }
 
 void EPGDlg::OnTimer()
@@ -177,6 +165,14 @@ void EPGDlg::hideEvent(QHideEvent*)
 {
 	/* Deactivate real-time timer */
 	Timer.stop();
+
+	/* Set window geometry data in DRMReceiver module */
+	QRect WinGeom = geometry();
+
+	pDRMRec->GeomEPGDlg.iXPos = WinGeom.x();
+	pDRMRec->GeomEPGDlg.iYPos = WinGeom.y();
+	pDRMRec->GeomEPGDlg.iHSize = WinGeom.height();
+	pDRMRec->GeomEPGDlg.iWSize = WinGeom.width();
 }
 
 void EPGDlg::previousDay()

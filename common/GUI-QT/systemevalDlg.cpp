@@ -37,20 +37,16 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-#ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
-	const QRect WinGeom(pDRMRec->GeomSystemEvalDlg.iXPos,
+	const QRect WinGeom(
+		pDRMRec->GeomSystemEvalDlg.iXPos,
 		pDRMRec->GeomSystemEvalDlg.iYPos,
 		pDRMRec->GeomSystemEvalDlg.iWSize,
-		pDRMRec->GeomSystemEvalDlg.iHSize);
+		pDRMRec->GeomSystemEvalDlg.iHSize
+	);
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
-#else /* Under Linux only restore the size */
-	resize(pDRMRec->GeomSystemEvalDlg.iWSize,
-		pDRMRec->GeomSystemEvalDlg.iHSize);
-#endif
-
 
 	/* Init controls -------------------------------------------------------- */
 	/* Init main plot */
@@ -402,23 +398,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 systemevalDlg::~systemevalDlg()
 {
-	/* Set window geometry data in DRMReceiver module */
-	QRect WinGeom = geometry();
-
-	pDRMRec->GeomSystemEvalDlg.iXPos = WinGeom.x();
-	pDRMRec->GeomSystemEvalDlg.iYPos = WinGeom.y();
-	pDRMRec->GeomSystemEvalDlg.iHSize = WinGeom.height();
-	pDRMRec->GeomSystemEvalDlg.iWSize = WinGeom.width();
-
-	/* Store current plot type. Convert plot type into an integer type.
-       TODO: better solution */
-	if (pDRMRec->GetRSIIn()->GetInEnabled() == FALSE)
-		pDRMRec->iSysEvalDlgPlotType = (int) MainPlot->GetChartType();
-
-	/* Call the hide event handler routine to make sure the chart window sizes
-	   and positions are stored */
-	if (this->isVisible())
-		hideEvent(NULL);
 }
 
 void systemevalDlg::UpdateControls()
@@ -574,6 +553,20 @@ void systemevalDlg::hideEvent(QHideEvent*)
 
 	/* We do not need the pointers anymore, reset vector */
 	vecpDRMPlots.Init(0);
+
+	/* Set window geometry data in DRMReceiver module */
+	QRect WinGeom = geometry();
+
+	pDRMRec->GeomSystemEvalDlg.iXPos = WinGeom.x();
+	pDRMRec->GeomSystemEvalDlg.iYPos = WinGeom.y();
+	pDRMRec->GeomSystemEvalDlg.iHSize = WinGeom.height();
+	pDRMRec->GeomSystemEvalDlg.iWSize = WinGeom.width();
+
+	/* Store current plot type. Convert plot type into an integer type.
+       TODO: better solution */
+	if (pDRMRec->GetRSIIn()->GetInEnabled() == FALSE)
+		pDRMRec->iSysEvalDlgPlotType = (int) MainPlot->GetChartType();
+
 }
 
 void systemevalDlg::StopLogTimers()

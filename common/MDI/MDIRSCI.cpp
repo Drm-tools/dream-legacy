@@ -475,6 +475,7 @@ void CRSIMDIInRCIOut::SetFrequency(int iNewFreqkHz)
 
 void CRSIMDIInRCIOut::SetReceiverMode(ERecMode eNewMode)
 {
+cout << "send cdmo" << endl; cout.flush();
 	TagPacketGenerator.Reset();
 	TagItemGeneratorCdmo.GenTag(eNewMode);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyRSCI);

@@ -339,19 +339,16 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-#ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
-	const QRect WinGeom(pDRMRec->GeomStationsDlg.iXPos,
+	const QRect WinGeom(
+		pDRMRec->GeomStationsDlg.iXPos,
 		pDRMRec->GeomStationsDlg.iYPos,
 		pDRMRec->GeomStationsDlg.iWSize,
-		pDRMRec->GeomStationsDlg.iHSize);
+		pDRMRec->GeomStationsDlg.iHSize
+	);
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
-#else /* Under Linux only restore the size */
-	resize(pDRMRec->GeomStationsDlg.iWSize,
-		pDRMRec->GeomStationsDlg.iHSize);
-#endif
 
 	/* Define size of the bitmaps */
 	const int iXSize = 13;
@@ -661,30 +658,6 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 StationsDlg::~StationsDlg()
 {
-	/* Set window geometry data in DRMReceiver module */
-	QRect WinGeom = geometry();
-
-	pDRMRec->GeomStationsDlg.iXPos = WinGeom.x();
-	pDRMRec->GeomStationsDlg.iYPos = WinGeom.y();
-	pDRMRec->GeomStationsDlg.iHSize = WinGeom.height();
-	pDRMRec->GeomStationsDlg.iWSize = WinGeom.width();
-
-	/* Store preview settings */
-	pDRMRec->iSecondsPreview = DRMSchedule.GetSecondsPreview();
-
-	/* Store sort settings */
-	switch (DRMSchedule.GetSchedMode())
-	{
-	case CDRMSchedule::SM_DRM:
-		pDRMRec->SortParamDRM.iColumn = iCurrentSortColumn;
-		pDRMRec->SortParamDRM.bAscending = bCurrentSortAscending;
-		break;
-
-	case CDRMSchedule::SM_ANALOG:
-		pDRMRec->SortParamAnalog.iColumn = iCurrentSortColumn;
-		pDRMRec->SortParamAnalog.bAscending = bCurrentSortAscending;
-		break;
-	}
 }
 
 void StationsDlg::SetUTCTimeLabel()
@@ -868,6 +841,31 @@ void StationsDlg::hideEvent(QHideEvent*)
 	TimerList.stop();
 	TimerUTCLabel.stop();
 	EnableSMeter(FALSE);
+
+	/* Set window geometry data in DRMReceiver module */
+	QRect WinGeom = geometry();
+
+	pDRMRec->GeomStationsDlg.iXPos = WinGeom.x();
+	pDRMRec->GeomStationsDlg.iYPos = WinGeom.y();
+	pDRMRec->GeomStationsDlg.iHSize = WinGeom.height();
+	pDRMRec->GeomStationsDlg.iWSize = WinGeom.width();
+
+	/* Store preview settings */
+	pDRMRec->iSecondsPreview = DRMSchedule.GetSecondsPreview();
+
+	/* Store sort settings */
+	switch (DRMSchedule.GetSchedMode())
+	{
+	case CDRMSchedule::SM_DRM:
+		pDRMRec->SortParamDRM.iColumn = iCurrentSortColumn;
+		pDRMRec->SortParamDRM.bAscending = bCurrentSortAscending;
+		break;
+
+	case CDRMSchedule::SM_ANALOG:
+		pDRMRec->SortParamAnalog.iColumn = iCurrentSortColumn;
+		pDRMRec->SortParamAnalog.bAscending = bCurrentSortAscending;
+		break;
+	}
 }
 
 void StationsDlg::showEvent(QShowEvent*)

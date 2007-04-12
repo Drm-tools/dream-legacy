@@ -593,19 +593,16 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-#ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
-	const QRect WinGeom(pDRMRec->GeomLiveScheduleDlg.iXPos,
+	const QRect WinGeom(
+		pDRMRec->GeomLiveScheduleDlg.iXPos,
 		pDRMRec->GeomLiveScheduleDlg.iYPos,
 		pDRMRec->GeomLiveScheduleDlg.iWSize,
-		pDRMRec->GeomLiveScheduleDlg.iHSize);
+		pDRMRec->GeomLiveScheduleDlg.iHSize
+	);
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
-#else /* Under Linux only restore the size */
-	resize(pDRMRec->GeomLiveScheduleDlg.iWSize,
-		pDRMRec->GeomLiveScheduleDlg.iHSize);
-#endif
 
 	/* Set sorting behaviour of the list */
 	ListViewStations->setSorting(pDRMRec->SortParamLiveSched.iColumn,
@@ -760,26 +757,6 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 LiveScheduleDlg::~LiveScheduleDlg()
 {
-	/* Set window geometry data in DRMReceiver module */
-	QRect WinGeom = geometry();
-
-	pDRMRec->GeomLiveScheduleDlg.iXPos = WinGeom.x();
-	pDRMRec->GeomLiveScheduleDlg.iYPos = WinGeom.y();
-	pDRMRec->GeomLiveScheduleDlg.iHSize = WinGeom.height();
-	pDRMRec->GeomLiveScheduleDlg.iWSize = WinGeom.width();
-
-	/* Store preview settings */
-	pDRMRec->iSecondsPreviewLiveSched = DRMSchedule.GetSecondsPreview();
-
-	/* Store sort settings */
-	pDRMRec->SortParamLiveSched.iColumn = iCurrentSortColumn;
-	pDRMRec->SortParamLiveSched.bAscending = bCurrentSortAscending;
-
-	/* Store preview settings */
-	pDRMRec->bShowAllStations = bShowAll;
-
-	/* Store save path */
-	pDRMRec->strStoragePathLiveScheduleDlg = strCurrentSavePath.latin1();
 }
 
 void LiveScheduleDlg::OnCheckFreeze()
@@ -955,6 +932,27 @@ void LiveScheduleDlg::hideEvent(QHideEvent*)
 	/* Deactivate real-time timers */
 	TimerList.stop();
 	TimerUTCLabel.stop();
+
+	/* Set window geometry data in DRMReceiver module */
+	QRect WinGeom = geometry();
+
+	pDRMRec->GeomLiveScheduleDlg.iXPos = WinGeom.x();
+	pDRMRec->GeomLiveScheduleDlg.iYPos = WinGeom.y();
+	pDRMRec->GeomLiveScheduleDlg.iHSize = WinGeom.height();
+	pDRMRec->GeomLiveScheduleDlg.iWSize = WinGeom.width();
+
+	/* Store preview settings */
+	pDRMRec->iSecondsPreviewLiveSched = DRMSchedule.GetSecondsPreview();
+
+	/* Store sort settings */
+	pDRMRec->SortParamLiveSched.iColumn = iCurrentSortColumn;
+	pDRMRec->SortParamLiveSched.bAscending = bCurrentSortAscending;
+
+	/* Store preview settings */
+	pDRMRec->bShowAllStations = bShowAll;
+
+	/* Store save path */
+	pDRMRec->strStoragePathLiveScheduleDlg = strCurrentSavePath.latin1();
 }
 
 void LiveScheduleDlg::SetStationsView()

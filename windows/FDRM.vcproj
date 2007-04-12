@@ -3190,11 +3190,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\sound.h"
-				>
-			</File>
-			<File
-				RelativePath="..\common\sound\soundnull.h"
+				RelativePath="..\common\soundnull.h"
 				>
 			</File>
 			<File

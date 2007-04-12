@@ -37,7 +37,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-#ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
 	const QRect WinGeom(pDRMRec->GeomFdrmdialog.iXPos,
 		pDRMRec->GeomFdrmdialog.iYPos,
@@ -46,10 +45,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
-#else /* Under Linux only restore the size */
-	resize(pDRMRec->GeomFdrmdialog.iWSize,
-		pDRMRec->GeomFdrmdialog.iHSize);
-#endif
 
 
 	/* Set Menu ***************************************************************/
@@ -144,10 +139,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 	SetDialogCaption(pStationsDlg, tr("Stations"));
 
-	if (pDRMRec->GeomStationsDlg.bVisible == TRUE)
-		pStationsDlg->show();
-	else
-		pStationsDlg->hide();
+	bStationsDlgWasVis = pDRMRec->GeomStationsDlg.bVisible;
 
 	/* Live Schedule window */
 	pLiveScheduleDlg = new LiveScheduleDlg(pDRMRec, this, "", FALSE,
@@ -155,22 +147,14 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 	SetDialogCaption(pLiveScheduleDlg, tr("Live Schedule"));
 
-	if (pDRMRec->GeomLiveScheduleDlg.bVisible == TRUE)
-	{
-		pLiveScheduleDlg->show();
-		bLiveSchedDlgWasVis = TRUE;
-	}
-	else
-	{
-		pLiveScheduleDlg->hide();
-		bLiveSchedDlgWasVis = FALSE;
-	}
+	bLiveSchedDlgWasVis = pDRMRec->GeomLiveScheduleDlg.bVisible;
 
 	/* Programme Guide Window */
-	pEPGDlg = new EPGDlg(pDRMRec, this, "", FALSE,
-		Qt::WStyle_MinMax);
+	pEPGDlg = new EPGDlg(pDRMRec, this, "", FALSE, Qt::WStyle_MinMax);
 
 	SetDialogCaption(pEPGDlg, tr("Programme Guide"));
+
+	bEPGDlgWasVis = pDRMRec->GeomEPGDlg.bVisible;
 
 	/* Evaluation window */
 	pSysEvalDlg = new systemevalDlg(pDRMRec, this, "",
@@ -178,16 +162,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 	SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
 
-	if (pDRMRec->GeomSystemEvalDlg.bVisible == TRUE)
-	{
-		pSysEvalDlg->show();
-		bSysEvalDlgWasVis = TRUE;
-	}
-	else
-	{
-		pSysEvalDlg->hide();
-		bSysEvalDlgWasVis = FALSE;
-	}
+	bSysEvalDlgWasVis = pDRMRec->GeomSystemEvalDlg.bVisible;
 
 	/* Multimedia window */
 	pMultiMediaDlg = new MultimediaDlg(pDRMRec, this, "", FALSE,
@@ -195,23 +170,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 	SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
 
-	if (pDRMRec->GeomMultimediaDlg.bVisible == TRUE)
-	{
-		pMultiMediaDlg->show();
-		bMultMedDlgWasVis = TRUE;
-	}
-	else
-	{
-		pMultiMediaDlg->hide();
-		bMultMedDlgWasVis = FALSE;
-	}
+	bMultMedDlgWasVis = pDRMRec->GeomMultimediaDlg.bVisible;
 
 	/* Analog demodulation window */
 	pAnalogDemDlg = new AnalogDemDlg(pDRMRec, NULL, "Analog Demodulation",
 		FALSE, Qt::WStyle_MinMax);
-
-	/* initialise the mode from the Receiver Object */
-	SetReceiverMode(pDRMRec->GetReceiverMode());
 
 	/* Enable multimedia */
 	pDRMRec->GetParameters()->EnableMultimedia(TRUE);
@@ -243,8 +206,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	connect(PushButtonService4, SIGNAL(clicked()),
 		this, SLOT(OnButtonService4()));
 
-	connect(pAnalogDemDlg, SIGNAL(SwitchToDRM()),
-		this, SLOT(OnSwitchToDRM()));
+	connect(pAnalogDemDlg, SIGNAL(SwitchToDRM()), this, SLOT(OnSwitchToDRM()));
 	connect(pAnalogDemDlg, SIGNAL(ViewStationsDlg()),
 		this, SLOT(OnViewStationsDlg()));
 	connect(pAnalogDemDlg, SIGNAL(ViewLiveScheduleDlg()),
@@ -259,43 +221,14 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	TextTextMessage->setText("");
 	TextTextMessage->setEnabled(FALSE);
 
-	/* Update window */
-	OnTimer();
-
-	/* Set timer for real-time controls */
+	/* Activate real-time timers */
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
 FDRMDialog::~FDRMDialog()
 {
-	/* Set window geometry data in DRMReceiver module */
-	QRect WinGeom = geometry();
-
-	pDRMRec->GeomFdrmdialog.iXPos = WinGeom.x();
-	pDRMRec->GeomFdrmdialog.iYPos = WinGeom.y();
-	pDRMRec->GeomFdrmdialog.iHSize = WinGeom.height();
-	pDRMRec->GeomFdrmdialog.iWSize = WinGeom.width();
-
-	/* Set "visible" flags for settings */
-	pDRMRec->GeomAnalogDemDlg.bVisible = pAnalogDemDlg->isVisible();
-	pDRMRec->GeomStationsDlg.bVisible = pStationsDlg->isVisible();
-
-	/* Special treatment for multimedia
-	   and systen evaluation dialog since these
-	   windows are not used for AM demodulation */
-	if (pDRMRec->GetReceiverMode() == RM_AM)
-	{
-		pDRMRec->GeomSystemEvalDlg.bVisible = bSysEvalDlgWasVis;
-		pDRMRec->GeomMultimediaDlg.bVisible = bMultMedDlgWasVis;
-		pDRMRec->GeomLiveScheduleDlg.bVisible = bLiveSchedDlgWasVis;
-	}
-	else
-	{
-		pDRMRec->GeomSystemEvalDlg.bVisible = pSysEvalDlg->isVisible();
-		pDRMRec->GeomMultimediaDlg.bVisible = pMultiMediaDlg->isVisible();
-		pDRMRec->GeomLiveScheduleDlg.bVisible = pLiveScheduleDlg->isVisible();
-	}
 }
+
 void FDRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 {
 	switch(state)
@@ -320,398 +253,252 @@ void FDRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 
 void FDRMDialog::OnTimer()
 {
+	ERecMode eNewReceiverMode = pDRMRec->GetReceiverMode();
+	switch(eNewReceiverMode)
+	{
+	case RM_DRM:
+		if(eReceiverMode != RM_DRM)
+			ChangeGUIModeToDRM();
+		{
+
+			/* Input level meter */
+			ProgrInputLevel->setValue(pDRMRec->GetReceiver()->GetLevelMeter());
+	
+			CParameter& ReceiverParam = *(pDRMRec->GetParameters());
+			SetStatus(CLED_MSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
+			SetStatus(CLED_SDC, ReceiverParam.ReceiveStatus.GetSDCStatus());
+			SetStatus(CLED_FAC, ReceiverParam.ReceiveStatus.GetFACStatus());
+
+			/* Check if receiver does receive a signal */
+			if(pDRMRec->GetReceiverState() == AS_WITH_SIGNAL)
+				UpdateDisplay();
+			else
+				ClearDisplay();
+		}
+		break;
+	case RM_AM:
+		/* stopping the timer is normally done by the hide signal, but at startup we
+		 * are already hidden and the hide signal doesn't hit the slot
+		 */
+		if(eReceiverMode == RM_DRM)
+		{
+			Timer.stop();
+			ChangeGUIModeToAM();
+		} /* otherwise we might still be changing to DRM from AM */
+		break;
+	case RM_NONE: // wait until working thread starts operating
+		break;
+	}
+	/* open the stations dialog after the main dialog is initialised */
+	if(eNewReceiverMode != RM_NONE && eReceiverMode == RM_NONE)
+	{
+		if (pDRMRec->GeomStationsDlg.bVisible == TRUE)
+			pStationsDlg->show();
+	}
+}
+
+void FDRMDialog::UpdateDisplay()
+{
 	CParameter& ReceiverParam = *(pDRMRec->GetParameters());
 
-	if (pDRMRec->GetReceiverMode() == RM_DRM)
+	/* Receiver does receive a DRM signal ------------------------------- */
+	/* First get current selected services */
+	int iCurSelAudioServ = ReceiverParam.GetCurSelAudioService();
+
+	/* If the current audio service is not active or is an only data service
+	   select the first audio service available */
+
+	if (!ReceiverParam.Service[iCurSelAudioServ].IsActive() ||
+	    ReceiverParam.Service[iCurSelAudioServ].AudioParam.iStreamID == STREAM_ID_NOT_USED ||
+	    ReceiverParam.Service[iCurSelAudioServ].eAudDataFlag == CParameter::SF_DATA)
 	{
-		/* Input level meter */
-		ProgrInputLevel->setValue(pDRMRec->GetReceiver()->GetLevelMeter());
-	
-		SetStatus(CLED_MSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
-		SetStatus(CLED_SDC, ReceiverParam.ReceiveStatus.GetSDCStatus());
-		SetStatus(CLED_FAC, ReceiverParam.ReceiveStatus.GetFACStatus());
+		int i = 0;
+		_BOOLEAN bStop = FALSE;
+
+		while ((bStop == FALSE) && (i < MAX_NUM_SERVICES))
+		{
+			if (ReceiverParam.Service[i].IsActive() &&
+			    ReceiverParam.Service[i].AudioParam.iStreamID != STREAM_ID_NOT_USED &&
+			    ReceiverParam.Service[i].eAudDataFlag == CParameter::SF_AUDIO)
+			{
+				iCurSelAudioServ = i;
+				bStop = TRUE;
+			}
+			else
+				i++;
+		}
 	}
 
-	/* Check if receiver does receive a signal */
-	if ((pDRMRec->GetReceiverState() == AS_WITH_SIGNAL) &&
-		(pDRMRec->GetReceiverMode() == RM_DRM))
+	//const int iCurSelDataServ = ReceiverParam.GetCurSelDataService();
+
+	/* If selected service is audio and text message is true */
+	if ((ReceiverParam.Service[iCurSelAudioServ].
+		eAudDataFlag == CParameter::SF_AUDIO) &&
+		(ReceiverParam.Service[iCurSelAudioServ].
+		AudioParam.bTextflag == TRUE))
 	{
-		/* Receiver does receive a DRM signal ------------------------------- */
-		/* First get current selected services */
-		int iCurSelAudioServ = ReceiverParam.GetCurSelAudioService();
+		/* Activate text window */
+		TextTextMessage->setEnabled(TRUE);
 
-		/* If the current audio service is not active or is an only data service
-		   select the first audio service available */
-
-		if (!ReceiverParam.Service[iCurSelAudioServ].IsActive() ||
-		    ReceiverParam.Service[iCurSelAudioServ].AudioParam.iStreamID == STREAM_ID_NOT_USED ||
-		    ReceiverParam.Service[iCurSelAudioServ].eAudDataFlag == CParameter::SF_DATA)
+		/* Text message of current selected audio service 
+		   (UTF-8 decoding) */
+		QCString utf8Message = 
+			ReceiverParam.Service[iCurSelAudioServ]
+				.AudioParam.strTextMessage.c_str();
+		QString textMessage = QString().fromUtf8(utf8Message);
+		QString formattedMessage = "";
+		for (size_t i = 0; i < textMessage.length(); i++)
 		{
-			int i = 0;
-			_BOOLEAN bStop = FALSE;
-
-			while ((bStop == FALSE) && (i < MAX_NUM_SERVICES))
+			switch (textMessage.at(i).unicode())
 			{
-				if (ReceiverParam.Service[i].IsActive() &&
-				    ReceiverParam.Service[i].AudioParam.iStreamID != STREAM_ID_NOT_USED &&
-				    ReceiverParam.Service[i].eAudDataFlag == CParameter::SF_AUDIO)
-				{
-					iCurSelAudioServ = i;
-					bStop = TRUE;
-				}
-				else
-					i++;
-			}
-		}
-
-		//const int iCurSelDataServ = ReceiverParam.GetCurSelDataService();
-
-		/* If selected service is audio and text message is true */
-		if ((ReceiverParam.Service[iCurSelAudioServ].
-			eAudDataFlag == CParameter::SF_AUDIO) &&
-			(ReceiverParam.Service[iCurSelAudioServ].
-			AudioParam.bTextflag == TRUE))
-		{
-			/* Activate text window */
-			TextTextMessage->setEnabled(TRUE);
-
-			/* Text message of current selected audio service 
-			   (UTF-8 decoding) */
-			QCString utf8Message = 
-				ReceiverParam.Service[iCurSelAudioServ]
-					.AudioParam.strTextMessage.c_str();
-			QString textMessage = QString().fromUtf8(utf8Message);
-			QString formattedMessage = "";
-			for (size_t i = 0; i < textMessage.length(); i++)
-			{
-				switch (textMessage.at(i).unicode())
-				{
-				case 0x0A:
-					/* Code 0x0A may be inserted to indicate a preferred
-					   line break */
-				case 0x1F:
-					/* Code 0x1F (hex) may be inserted to indicate a
-					   preferred word break. This code may be used to
+			case 0x0A:
+				/* Code 0x0A may be inserted to indicate a preferred
+				   line break */
+			case 0x1F:
+				/* Code 0x1F (hex) may be inserted to indicate a
+				   preferred word break. This code may be used to
 					   display long words comprehensibly */
-					formattedMessage += "<br>";
-					break;
+				formattedMessage += "<br>";
+				break;
 
-				case 0x0B:
-					/* End of a headline */
-					formattedMessage = "<b><u>" 
-                                     + formattedMessage 
-                                     + "</u></b></center><br><center>";
-					break;
+			case 0x0B:
+				/* End of a headline */
+				formattedMessage = "<b><u>" 
+                                    + formattedMessage 
+                                    + "</u></b></center><br><center>";
+				break;
 
-				case '<':
-					formattedMessage += "&lt;";
-					break;
+			case '<':
+				formattedMessage += "&lt;";
+				break;
 
-				case '>':
-					formattedMessage += "&gt;";
-					break;
+			case '>':
+				formattedMessage += "&gt;";
+				break;
 
-				default:
+			default:
 				formattedMessage += textMessage[int(i)];
-				}
-			}
-			formattedMessage = "<center>" + formattedMessage + "</center>";
-			TextTextMessage->setText(formattedMessage);
-		}
-		else
-		{
-			/* Deactivate text window */
-			TextTextMessage->setEnabled(FALSE);
-
-			/* Clear Text */
-			TextTextMessage->setText("");
-		}
-
-		/* Check whether service parameters were not transmitted yet */
-		if (ReceiverParam.Service[iCurSelAudioServ].IsActive())
-		{
-			/* Service label (UTF-8 encoded string -> convert) */
-			LabelServiceLabel->setText(QString().fromUtf8(QCString(
-				ReceiverParam.Service[iCurSelAudioServ].
-				strLabel.c_str())));
-
-			/* Bit-rate */
-			QString strBitrate = QString().setNum(ReceiverParam.
-				GetBitRateKbps(iCurSelAudioServ, FALSE), 'f', 2) +
-				tr(" kbps");
-
-			/* Equal or unequal error protection */
-			const _REAL rPartABLenRat =
-				ReceiverParam.PartABLenRatio(iCurSelAudioServ);
-
-			if (rPartABLenRat != (_REAL) 0.0)
-			{
-				/* Print out the percentage of part A length to total length */
-				strBitrate += " UEP (" +
-					QString().setNum(rPartABLenRat * 100, 'f', 1) + " %)";
-			}
-			else
-			{
-				/* If part A is zero, equal error protection (EEP) is used */
-				strBitrate += " EEP";
-			}
-			LabelBitrate->setText(strBitrate);
-
-			/* Service ID (plot number in hexadecimal format) */
-			const long iServiceID = (long) ReceiverParam.
-				Service[iCurSelAudioServ].iServiceID;
-
-			if (iServiceID != 0)
-			{
-				LabelServiceID->setText("ID:" +
-					QString().setNum(iServiceID, 16).upper());
-			}
-			else
-				LabelServiceID->setText("");
-
-			/* Codec label */
-			LabelCodec->setText(GetCodecString(iCurSelAudioServ));
-
-			/* Type (Mono / Stereo) label */
-			LabelStereoMono->setText(GetTypeString(iCurSelAudioServ));
-
-			/* Language and program type labels (only for audio service) */
-			if (pDRMRec->GetParameters()->Service[iCurSelAudioServ].
-				eAudDataFlag == CParameter::SF_AUDIO)
-			{
-			/* SDC Language */
-			const string strLangCode = ReceiverParam.
-				Service[iCurSelAudioServ].strLanguageCode;
-
-			if ((!strLangCode.empty()) && (strLangCode != "---"))
-			{
-				 LabelLanguage->
-					setText(QString(GetISOLanguageName(strLangCode).c_str()));
-			}
-			else
-			{
-				/* FAC Language */
-				const int iLanguageID = ReceiverParam.
-					Service[iCurSelAudioServ].iLanguage;
-
-				if ((iLanguageID > 0) &&
-					(iLanguageID < LEN_TABLE_LANGUAGE_CODE))
-				{
-					LabelLanguage->setText(
-						strTableLanguageCode[iLanguageID].c_str());
-				}
-				else
-					LabelLanguage->setText("");
-			}
-
-				/* Program type */
-				const int iProgrammTypeID = ReceiverParam.
-					Service[iCurSelAudioServ].iServiceDescr;
-
-				if ((iProgrammTypeID > 0) &&
-					(iProgrammTypeID < LEN_TABLE_PROG_TYPE_CODE))
-				{
-					LabelProgrType->setText(
-						strTableProgTypCod[iProgrammTypeID].c_str());
-				}
-				else
-					LabelProgrType->setText("");
-			}
-
-			/* Country code */
-			const string strCntryCode = ReceiverParam.
-				Service[iCurSelAudioServ].strCountryCode;
-
-			if ((!strCntryCode.empty()) && (strCntryCode != "--"))
-			{
-				LabelCountryCode->
-					setText(QString(GetISOCountryName(strCntryCode).c_str()));
-			}
-			else
-				LabelCountryCode->setText("");
-		}
-		else
-		{
-			LabelServiceLabel->setText(tr("No Service"));
-
-			LabelBitrate->setText("");
-			LabelCodec->setText("");
-			LabelStereoMono->setText("");
-			LabelProgrType->setText("");
-			LabelLanguage->setText("");
-			LabelCountryCode->setText("");
-			LabelServiceID->setText("");
-		}
-
-
-		/* Update service selector ------------------------------------------ */
-		/* Make sure a possible service was selected. If not, correct. Make sure
-		   an audio service is selected. If we have a data only service, we do
-		   not want to have the button pressed */
-		if (((!ReceiverParam.Service[iCurSelServiceGUI].IsActive()) ||
-			(iCurSelServiceGUI != iCurSelAudioServ) &&
-			ReceiverParam.Service[iCurSelAudioServ].IsActive()) &&
-			/* Make sure current selected audio service is not a data only
-			   service */
-			(ReceiverParam.Service[iCurSelAudioServ].IsActive() &&
-			(ReceiverParam.Service[iCurSelAudioServ].eAudDataFlag !=
-			CParameter::SF_DATA)))
-		{
-			/* Reset checks */
-			PushButtonService1->setOn(FALSE);
-			PushButtonService2->setOn(FALSE);
-			PushButtonService3->setOn(FALSE);
-			PushButtonService4->setOn(FALSE);
-
-			/* Set right flag */
-			switch (iCurSelAudioServ)
-			{
-			case 0:
-				PushButtonService1->setOn(TRUE);
-				iCurSelServiceGUI = 0;
-				break;
-
-			case 1:
-				PushButtonService2->setOn(TRUE);
-				iCurSelServiceGUI = 1;
-				break;
-
-			case 2:
-				PushButtonService3->setOn(TRUE);
-				iCurSelServiceGUI = 2;
-				break;
-
-			case 3:
-				PushButtonService4->setOn(TRUE);
-				iCurSelServiceGUI = 3;
-				break;
 			}
 		}
-		else if (ReceiverParam.Service[iCurSelServiceGUI].
-			eAudDataFlag ==	CParameter::SF_DATA)
-		{
-			/* In case we only have data services, reset checks */
-			PushButtonService1->setOn(FALSE);
-			PushButtonService2->setOn(FALSE);
-			PushButtonService3->setOn(FALSE);
-			PushButtonService4->setOn(FALSE);
-		}
-
-
-		/* Service selector ------------------------------------------------- */
-		/* Enable only so many number of channel switches as present in the
-		   stream */
-		const int iNumServices = ReceiverParam.GetTotNumServices();
-
-		QString m_StaticService[MAX_NUM_SERVICES] = {"", "", "", ""};
-
-		/* Reset all buttons only if number of services has changed */
-		if (iOldNoServicesGUI != iNumServices)
-		{
-			PushButtonService1->setEnabled(FALSE);
-			PushButtonService2->setEnabled(FALSE);
-			PushButtonService3->setEnabled(FALSE);
-			PushButtonService4->setEnabled(FALSE);
-		}
-		iOldNoServicesGUI = iNumServices;
-
-		for (int i = 0; i < MAX_NUM_SERVICES; i++)
-		{
-			/* Check, if service is used */
-			if (ReceiverParam.Service[i].IsActive())
-			{
-				/* Do UTF-8 to string conversion with the label strings */
-				QString strLabel = QString().fromUtf8(
-				QCString(ReceiverParam.Service[i].strLabel.c_str()));
-
-				/* Label for service selection button (service label, codec
-				   and Mono / Stereo information) */
-				m_StaticService[i] = strLabel + "  |   ";
-				m_StaticService[i] += GetCodecString(i) + " ";
-				m_StaticService[i] += GetTypeString(i);
-
-				/* Bit-rate (only show if greater than 0) */
-				const _REAL rBitRate =
-					ReceiverParam.GetBitRateKbps(i, FALSE);
-
-				if (rBitRate > (_REAL) 0.0)
-				{
-					m_StaticService[i] += " (" +
-						QString().setNum(rBitRate, 'f', 2) + " kbps)";
-				}
-
-				/* Show, if a multimedia stream is connected to this service */
-				if ((ReceiverParam.Service[i].
-					eAudDataFlag == CParameter::SF_AUDIO) && 
-					(ReceiverParam.Service[i].
-					DataParam.iStreamID != STREAM_ID_NOT_USED))
-				{
-
-					if (ReceiverParam.Service[i].
-						DataParam.iUserAppIdent == AT_MOTEPG)
-					{
-						m_StaticService[i] += tr(" + EPG"); /* EPG service */
-					}
-					else
-						m_StaticService[i] += tr(" + MM"); /* other multimedia service */
-
-					/* Bit-rate of connected data stream */
-					m_StaticService[i] += " (" + QString().setNum(
-					ReceiverParam.GetBitRateKbps(i, TRUE), 'f', 2) +
-						" kbps)";
-				}
-
-				switch (i)
-				{
-				case 0:
-					PushButtonService1->setEnabled(TRUE);
-					break;
-
-				case 1:
-					PushButtonService2->setEnabled(TRUE);
-					break;
-
-				case 2:
-					PushButtonService3->setEnabled(TRUE);
-					break;
-
-				case 3:
-					PushButtonService4->setEnabled(TRUE);
-					break;
-				}
-			}
-		}
-
-		/* detect if AFS informations are available */
-		if ((ReceiverParam.AltFreqSign.vecAltFreq.Size() > 0)
-			|| (ReceiverParam.AltFreqOtherServicesSign.vecAltFreqOtherServices.Size() > 0))
-		{
-			/* show AFS label */
-			if (ReceiverParam.Service[0].
-				eAudDataFlag == CParameter::SF_AUDIO)
-					m_StaticService[0] += tr(" + AFS");
-		}
-		
-		/* Set texts */
-		TextMiniService1->setText(m_StaticService[0]);
-		TextMiniService2->setText(m_StaticService[1]);
-		TextMiniService3->setText(m_StaticService[2]);
-		TextMiniService4->setText(m_StaticService[3]);
+		formattedMessage = "<center>" + formattedMessage + "</center>";
+		TextTextMessage->setText(formattedMessage);
 	}
 	else
 	{
-		/* No signal is currently received ---------------------------------- */
-		/* Disable service buttons and associated labels */
-		PushButtonService1->setEnabled(FALSE);
-		PushButtonService2->setEnabled(FALSE);
-		PushButtonService3->setEnabled(FALSE);
-		PushButtonService4->setEnabled(FALSE);
-		TextMiniService1->setText("");
-		TextMiniService2->setText("");
-		TextMiniService3->setText("");
-		TextMiniService4->setText("");
+		/* Deactivate text window */
+		TextTextMessage->setEnabled(FALSE);
 
-		/* Main text labels */
+		/* Clear Text */
+		TextTextMessage->setText("");
+	}
+
+	/* Check whether service parameters were not transmitted yet */
+	if (ReceiverParam.Service[iCurSelAudioServ].IsActive())
+	{
+		/* Service label (UTF-8 encoded string -> convert) */
+		LabelServiceLabel->setText(QString().fromUtf8(QCString(
+			ReceiverParam.Service[iCurSelAudioServ].
+			strLabel.c_str())));
+
+		/* Bit-rate */
+		QString strBitrate = QString().setNum(ReceiverParam.
+			GetBitRateKbps(iCurSelAudioServ, FALSE), 'f', 2) +
+			tr(" kbps");
+
+		/* Equal or unequal error protection */
+		const _REAL rPartABLenRat =
+			ReceiverParam.PartABLenRatio(iCurSelAudioServ);
+
+		if (rPartABLenRat != (_REAL) 0.0)
+		{
+			/* Print out the percentage of part A length to total length */
+			strBitrate += " UEP (" +
+				QString().setNum(rPartABLenRat * 100, 'f', 1) + " %)";
+		}
+		else
+		{
+			/* If part A is zero, equal error protection (EEP) is used */
+			strBitrate += " EEP";
+		}
+		LabelBitrate->setText(strBitrate);
+
+		/* Service ID (plot number in hexadecimal format) */
+		const long iServiceID = (long) ReceiverParam.
+			Service[iCurSelAudioServ].iServiceID;
+
+		if (iServiceID != 0)
+		{
+			LabelServiceID->setText("ID:" +
+				QString().setNum(iServiceID, 16).upper());
+		}
+		else
+			LabelServiceID->setText("");
+
+		/* Codec label */
+		LabelCodec->setText(GetCodecString(iCurSelAudioServ));
+
+		/* Type (Mono / Stereo) label */
+		LabelStereoMono->setText(GetTypeString(iCurSelAudioServ));
+
+		/* Language and program type labels (only for audio service) */
+		if (pDRMRec->GetParameters()->Service[iCurSelAudioServ].
+			eAudDataFlag == CParameter::SF_AUDIO)
+		{
+		/* SDC Language */
+		const string strLangCode = ReceiverParam.
+			Service[iCurSelAudioServ].strLanguageCode;
+
+		if ((!strLangCode.empty()) && (strLangCode != "---"))
+		{
+			 LabelLanguage->
+				setText(QString(GetISOLanguageName(strLangCode).c_str()));
+		}
+		else
+		{
+			/* FAC Language */
+			const int iLanguageID = ReceiverParam.
+				Service[iCurSelAudioServ].iLanguage;
+
+			if ((iLanguageID > 0) &&
+				(iLanguageID < LEN_TABLE_LANGUAGE_CODE))
+			{
+				LabelLanguage->setText(
+					strTableLanguageCode[iLanguageID].c_str());
+			}
+			else
+				LabelLanguage->setText("");
+		}
+
+			/* Program type */
+			const int iProgrammTypeID = ReceiverParam.
+				Service[iCurSelAudioServ].iServiceDescr;
+
+			if ((iProgrammTypeID > 0) &&
+				(iProgrammTypeID < LEN_TABLE_PROG_TYPE_CODE))
+			{
+				LabelProgrType->setText(
+					strTableProgTypCod[iProgrammTypeID].c_str());
+			}
+			else
+				LabelProgrType->setText("");
+		}
+
+		/* Country code */
+		const string strCntryCode = ReceiverParam.
+			Service[iCurSelAudioServ].strCountryCode;
+
+		if ((!strCntryCode.empty()) && (strCntryCode != "--"))
+		{
+			LabelCountryCode->
+				setText(QString(GetISOCountryName(strCntryCode).c_str()));
+		}
+		else
+			LabelCountryCode->setText("");
+		}
+	else
+	{
+		LabelServiceLabel->setText(tr("No Service"));
+
 		LabelBitrate->setText("");
 		LabelCodec->setText("");
 		LabelStereoMono->setText("");
@@ -719,82 +506,253 @@ void FDRMDialog::OnTimer()
 		LabelLanguage->setText("");
 		LabelCountryCode->setText("");
 		LabelServiceID->setText("");
-
-		/* Hide text message label */
-		TextTextMessage->setEnabled(FALSE);
-		TextTextMessage->setText("");
-
-		LabelServiceLabel->setText(tr("Scanning..."));
 	}
+
+
+	/* Update service selector ------------------------------------------ */
+	/* Make sure a possible service was selected. If not, correct. Make sure
+	   an audio service is selected. If we have a data only service, we do
+	   not want to have the button pressed */
+	if (((!ReceiverParam.Service[iCurSelServiceGUI].IsActive()) ||
+		(iCurSelServiceGUI != iCurSelAudioServ) &&
+		ReceiverParam.Service[iCurSelAudioServ].IsActive()) &&
+		/* Make sure current selected audio service is not a data only
+		   service */
+		(ReceiverParam.Service[iCurSelAudioServ].IsActive() &&
+		(ReceiverParam.Service[iCurSelAudioServ].eAudDataFlag !=
+		CParameter::SF_DATA)))
+	{
+		/* Reset checks */
+		PushButtonService1->setOn(FALSE);
+		PushButtonService2->setOn(FALSE);
+		PushButtonService3->setOn(FALSE);
+		PushButtonService4->setOn(FALSE);
+
+		/* Set right flag */
+		switch (iCurSelAudioServ)
+		{
+		case 0:
+			PushButtonService1->setOn(TRUE);
+			iCurSelServiceGUI = 0;
+			break;
+
+		case 1:
+			PushButtonService2->setOn(TRUE);
+			iCurSelServiceGUI = 1;
+			break;
+
+		case 2:
+			PushButtonService3->setOn(TRUE);
+			iCurSelServiceGUI = 2;
+			break;
+
+		case 3:
+			PushButtonService4->setOn(TRUE);
+			iCurSelServiceGUI = 3;
+			break;
+		}
+	}
+	else if (ReceiverParam.Service[iCurSelServiceGUI].
+		eAudDataFlag ==	CParameter::SF_DATA)
+	{
+		/* In case we only have data services, reset checks */
+		PushButtonService1->setOn(FALSE);
+		PushButtonService2->setOn(FALSE);
+		PushButtonService3->setOn(FALSE);
+		PushButtonService4->setOn(FALSE);
+	}
+
+	/* Service selector ------------------------------------------------- */
+	/* Enable only so many number of channel switches as present in the stream */
+	const int iNumServices = ReceiverParam.GetTotNumServices();
+
+	QString m_StaticService[MAX_NUM_SERVICES] = {"", "", "", ""};
+
+	/* Reset all buttons only if number of services has changed */
+	if (iOldNoServicesGUI != iNumServices)
+	{
+		PushButtonService1->setEnabled(FALSE);
+		PushButtonService2->setEnabled(FALSE);
+		PushButtonService3->setEnabled(FALSE);
+		PushButtonService4->setEnabled(FALSE);
+	}
+	iOldNoServicesGUI = iNumServices;
+
+	for (int i = 0; i < MAX_NUM_SERVICES; i++)
+	{
+		/* Check, if service is used */
+		if (ReceiverParam.Service[i].IsActive())
+		{
+			/* Do UTF-8 to string conversion with the label strings */
+			QString strLabel = QString().fromUtf8(
+			QCString(ReceiverParam.Service[i].strLabel.c_str()));
+
+			/* Label for service selection button (service label, codec
+			   and Mono / Stereo information) */
+			m_StaticService[i] = strLabel + "  |   ";
+			m_StaticService[i] += GetCodecString(i) + " ";
+			m_StaticService[i] += GetTypeString(i);
+
+			/* Bit-rate (only show if greater than 0) */
+			const _REAL rBitRate =
+				ReceiverParam.GetBitRateKbps(i, FALSE);
+
+			if (rBitRate > (_REAL) 0.0)
+			{
+				m_StaticService[i] += " (" +
+					QString().setNum(rBitRate, 'f', 2) + " kbps)";
+			}
+
+			/* Show, if a multimedia stream is connected to this service */
+			if ((ReceiverParam.Service[i].
+				eAudDataFlag == CParameter::SF_AUDIO) && 
+				(ReceiverParam.Service[i].
+				DataParam.iStreamID != STREAM_ID_NOT_USED))
+			{
+
+				if (ReceiverParam.Service[i].
+					DataParam.iUserAppIdent == AT_MOTEPG)
+				{
+					m_StaticService[i] += tr(" + EPG"); /* EPG service */
+				}
+				else
+					m_StaticService[i] += tr(" + MM"); /* other multimedia service */
+
+				/* Bit-rate of connected data stream */
+				m_StaticService[i] += " (" + QString().setNum(
+				ReceiverParam.GetBitRateKbps(i, TRUE), 'f', 2) +
+					" kbps)";
+			}
+
+			switch (i)
+			{
+			case 0:
+				PushButtonService1->setEnabled(TRUE);
+				break;
+
+			case 1:
+				PushButtonService2->setEnabled(TRUE);
+				break;
+
+			case 2:
+				PushButtonService3->setEnabled(TRUE);
+				break;
+
+			case 3:
+				PushButtonService4->setEnabled(TRUE);
+				break;
+			}
+		}
+	}
+
+	/* detect if AFS informations are available */
+	if ((ReceiverParam.AltFreqSign.vecAltFreq.Size() > 0)
+		|| (ReceiverParam.AltFreqOtherServicesSign.vecAltFreqOtherServices.Size() > 0))
+	{
+		/* show AFS label */
+		if (ReceiverParam.Service[0].
+			eAudDataFlag == CParameter::SF_AUDIO)
+				m_StaticService[0] += tr(" + AFS");
+	}
+		
+	/* Set texts */
+	TextMiniService1->setText(m_StaticService[0]);
+	TextMiniService2->setText(m_StaticService[1]);
+	TextMiniService3->setText(m_StaticService[2]);
+	TextMiniService4->setText(m_StaticService[3]);
 }
 
-void FDRMDialog::SetReceiverMode(const ERecMode eNewReMo)
+void FDRMDialog::ClearDisplay()
 {
-	const _BOOLEAN bModeHastChanged = pDRMRec->GetReceiverMode() != eNewReMo;
+	/* No signal is currently received ---------------------------------- */
+	/* Disable service buttons and associated labels */
+	PushButtonService1->setEnabled(FALSE);
+	PushButtonService2->setEnabled(FALSE);
+	PushButtonService3->setEnabled(FALSE);
+	PushButtonService4->setEnabled(FALSE);
+	TextMiniService1->setText("");
+	TextMiniService2->setText("");
+	TextMiniService3->setText("");
+	TextMiniService4->setText("");
 
-	/* Set mode in receiver object */
-	pDRMRec->SetReceiverMode(eNewReMo);
+	/* Main text labels */
+	LabelBitrate->setText("");
+	LabelCodec->setText("");
+	LabelStereoMono->setText("");
+	LabelProgrType->setText("");
+	LabelLanguage->setText("");
+	LabelCountryCode->setText("");
+	LabelServiceID->setText("");
 
-	/* Make sure correct evaluation dialog is shown */
-	switch (eNewReMo)
+	/* Hide text message label */
+	TextTextMessage->setEnabled(FALSE);
+	TextTextMessage->setText("");
+
+	LabelServiceLabel->setText(tr("Scanning..."));
+}
+
+void FDRMDialog::ChangeGUIModeToDRM()
+{
+	show();
+
+	/* Recover visibility state (only if mode has changed) */
+	if (eReceiverMode != RM_DRM)
 	{
-	case RM_DRM:
-		/* For DRM mode, always show main window */
-		show();
+		/*
+		if (bStationsDlgWasVis == TRUE)
+			pStationsDlg->show();
 
-		pAnalogDemDlg->hide();
+		if (bLiveSchedDlgWasVis == TRUE)
+			pLiveScheduleDlg->show();
+		*/
 
-		/* Recover visibility state (only if mode has changed) */
-		if (bModeHastChanged)
-		{
-			if (bSysEvalDlgWasVis == TRUE)
-				pSysEvalDlg->show();
+		if (bEPGDlgWasVis == TRUE)
+			pEPGDlg->show();
 
-			if (bMultMedDlgWasVis == TRUE)
-				pMultiMediaDlg->show();
+		if (bSysEvalDlgWasVis == TRUE)
+			pSysEvalDlg->show();
 
-			if (bLiveSchedDlgWasVis == TRUE)
-				pLiveScheduleDlg->show();
-		}
-
-		pSysEvalDlg->StartTimerLogFileStart();
-
-		/* Load correct schedule */
-		pStationsDlg->LoadSchedule(CDRMSchedule::SM_DRM);
-		break;
-
-	case RM_AM:
-		/* Main window is not needed, hide it. If Multimedia window was open,
-		   hide it. Make sure analog demodulation dialog is visible */
-		hide();
-
-		/* Store visibility state */
-		bSysEvalDlgWasVis = pSysEvalDlg->isVisible();
-		bMultMedDlgWasVis = pMultiMediaDlg->isVisible();
-		bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
-
-		pSysEvalDlg->hide();
-		pMultiMediaDlg->hide();
-		pLiveScheduleDlg->hide();
-		pEPGDlg->hide();
-
-		pSysEvalDlg->StopLogTimers();
-
-		pAnalogDemDlg->show();
-
-		/* Load correct schedule */
-		pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
-		break;
-
-	case RM_NONE:
-		break;
+		if (bMultMedDlgWasVis == TRUE)
+			pMultiMediaDlg->show();
 	}
-	eReceiverMode = eNewReMo;
+
+	pSysEvalDlg->StartTimerLogFileStart();
+
+	/* Load correct schedule */
+	pStationsDlg->LoadSchedule(CDRMSchedule::SM_DRM);
+
+	eReceiverMode = RM_DRM;
+}
+
+void FDRMDialog::ChangeGUIModeToAM()
+{
+	/* Main window is not needed, hide it. If Multimedia window was open,
+		  hide it. Make sure analog demodulation dialog is visible */
+	/* Store visibility state */
+	bSysEvalDlgWasVis = pSysEvalDlg->isVisible();
+	bMultMedDlgWasVis = pMultiMediaDlg->isVisible();
+	bEPGDlgWasVis = pEPGDlg->isVisible();
+
+	pSysEvalDlg->hide();
+	pMultiMediaDlg->hide();
+	pEPGDlg->hide();
+
+	pSysEvalDlg->StopLogTimers();
+
+	/* Load correct schedule */
+	pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
+
+	this->hide();
+
+	pAnalogDemDlg->show();
+
+	eReceiverMode = RM_AM;
 }
 
 void FDRMDialog::showEvent(QShowEvent*)
 {
 	/* Set timer for real-time controls */
+	OnTimer();
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
@@ -806,12 +764,14 @@ void FDRMDialog::hideEvent(QHideEvent*)
 
 void FDRMDialog::OnSwitchToDRM()
 {
-	SetReceiverMode(RM_DRM);
+	pDRMRec->SetReceiverMode(RM_DRM);
+	OnTimer();
+ 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
 void FDRMDialog::OnSwitchToAM()
 {
-	SetReceiverMode(RM_AM);
+	pDRMRec->SetReceiverMode(RM_AM);
 }
 
 void FDRMDialog::OnButtonService1()
@@ -986,13 +946,85 @@ void FDRMDialog::OnMenuPlotStyle(int value)
 
 void FDRMDialog::closeEvent(QCloseEvent* ce)
 {
-	pDRMRec->Stop();
-	(void)pDRMRec->wait(5000);
-	if(!pDRMRec->finished())
+	/* the close event has been actioned and we want to shut
+	 * down, but the main window should be the last thing to
+	 * close so that the user knows the program has completed
+	 * when the window closes
+	 */
+
+	/* this can be called in two situations:
+	 * DRM Mode:
+	 * 	this window is visible and this routine is responsible
+	 * 	for storing state, hiding other windows, stopping the working
+	 * 	thread and remaining open until the rest of the system is shut
+	 * 	down
+	 * AM Mode:
+	 *  this window is hidden, the AnalogDemDlg has stored state,
+	 *  stayed open until the system is cleared down and then emitted
+	 *  our signal
+	 */
+	if(isVisible())  /* or should we test eReceiverMode ? */
 	{
-		QMessageBox::critical(this, "Dream", "Exit\n",
+		pDRMRec->GeomStationsDlg.bVisible = pStationsDlg->isVisible();
+		pDRMRec->GeomLiveScheduleDlg.bVisible = pLiveScheduleDlg->isVisible();
+		/* first remember the state of the windows */
+		pDRMRec->GeomAnalogDemDlg.bVisible = FALSE;
+		pDRMRec->GeomSystemEvalDlg.bVisible = pSysEvalDlg->isVisible();
+		pDRMRec->GeomMultimediaDlg.bVisible = pMultiMediaDlg->isVisible();
+		pDRMRec->GeomEPGDlg.bVisible = pEPGDlg->isVisible();
+
+		/* stop any asynchronous GUI actions */
+		pSysEvalDlg->StopLogTimers();
+		Timer.stop();
+
+		/* now close all the windows except the main window */
+
+		pSysEvalDlg->hide();
+		pMultiMediaDlg->hide();
+		pLiveScheduleDlg->hide();
+		pEPGDlg->hide();
+		pStationsDlg->hide();
+		pAnalogDemDlg->hide();
+
+		/* request that the working thread stops
+		 * TODO move this to main and pass a close routine to here and 
+		 * AnalogDemDlg to cover gps and anything else
+		 * or possible have a new ALWAYS hidden main dialogue box
+		 * that manages startup and close-down */
+		pDRMRec->Stop();
+		(void)pDRMRec->wait(5000);
+		if(!pDRMRec->finished())
+		{
+			QMessageBox::critical(this, "Dream", "Exit\n",
 				"Termination of working thread failed");
+		}
 	}
+	else
+	{
+		pDRMRec->GeomStationsDlg.bVisible = pStationsDlg->isVisible();
+		pDRMRec->GeomLiveScheduleDlg.bVisible = pLiveScheduleDlg->isVisible();
+		/* we saved these when we were in DRM Mode */
+		pDRMRec->GeomSystemEvalDlg.bVisible = bSysEvalDlgWasVis;
+		pDRMRec->GeomMultimediaDlg.bVisible = bMultMedDlgWasVis;
+		pDRMRec->GeomEPGDlg.bVisible = bEPGDlgWasVis;
+	}
+
+	/* this dialog is always responsible for storing its
+	 * own positions. Do it here rather than in the destructor
+	 * because we don't know exactly when the destructor will
+	 * be called
+	 */
+
+	/* Set window geometry data in DRMReceiver module */
+	QRect WinGeom = geometry();
+
+	pDRMRec->GeomFdrmdialog.iXPos = WinGeom.x();
+	pDRMRec->GeomFdrmdialog.iYPos = WinGeom.y();
+	pDRMRec->GeomFdrmdialog.iHSize = WinGeom.height();
+	pDRMRec->GeomFdrmdialog.iWSize = WinGeom.width();
+
+
+	/* now let QT close us */
 	ce->accept();
 }
 

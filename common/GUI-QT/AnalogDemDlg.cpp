@@ -29,6 +29,7 @@
 \******************************************************************************/
 
 #include "AnalogDemDlg.h"
+#include <qmessagebox.h>
 
 
 /* Implementation *************************************************************/
@@ -39,20 +40,16 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-#ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
-	const QRect WinGeom(pDRMRec->GeomAnalogDemDlg.iXPos,
+	const QRect WinGeom(
+		pDRMRec->GeomAnalogDemDlg.iXPos,
 		pDRMRec->GeomAnalogDemDlg.iYPos,
 		pDRMRec->GeomAnalogDemDlg.iWSize,
-		pDRMRec->GeomAnalogDemDlg.iHSize);
+		pDRMRec->GeomAnalogDemDlg.iHSize
+	);
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
-#else /* Under Linux only restore the size */
-	resize(pDRMRec->GeomAnalogDemDlg.iWSize,
-		pDRMRec->GeomAnalogDemDlg.iHSize);
-#endif
-
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
@@ -71,7 +68,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
 		new CSoundCardSelMenu(pDRMRec->GetSoundInInterface(), pDRMRec->GetSoundOutInterface(), this));
 	pSettingsMenu->insertItem(tr("&DRM (digital)"), this,
-		SIGNAL(SwitchToDRM()), CTRL+Key_D);
+		SLOT(OnSwitchToDRM()), CTRL+Key_D);
 	pSettingsMenu->insertItem(tr("New &AM Acquisition"), this,
 		SLOT(OnNewAMAcquisition()), CTRL+Key_A);
 
@@ -148,7 +145,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	/* Connect controls ----------------------------------------------------- */
 	connect(ButtonDRM, SIGNAL(clicked()),
-		this, SIGNAL(SwitchToDRM()));
+		this, SLOT(OnSwitchToDRM()));
 	connect(ButtonAMSS, SIGNAL(clicked()),
 		this, SLOT(OnButtonAMSS()));
 	connect(ButtonWaterfall, SIGNAL(clicked()),
@@ -184,9 +181,9 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(&TimerPLLPhaseDial, SIGNAL(timeout()),
 		this, SLOT(OnTimerPLLPhaseDial()));
 
-	/* Activate real-time timers */
-	Timer.start(GUI_CONTROL_UPDATE_TIME);
-	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
+	/* Don't activate real-time timers, wait for show event */
+	//Timer.start(GUI_CONTROL_UPDATE_TIME);
+	//TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 }
 
 void AnalogDemDlg::showEvent(QShowEvent*)
@@ -227,23 +224,39 @@ void AnalogDemDlg::hideEvent(QHideEvent*)
 	pDRMRec->GeomAnalogDemDlg.iWSize = WinGeom.width();
 }
 
-void AnalogDemDlg::closeEvent(QCloseEvent*)
+void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 {
+	/* stop real-time timers */
+	Timer.stop();
+	TimerPLLPhaseDial.stop();
+
+	pDRMRec->GeomAnalogDemDlg.bVisible = TRUE;
 	pDRMRec->GeomAMSSDlg.bVisible = AMSSDlg.isVisible();
 
-	/* Close AMSS window */
+	/* Close AMSS window, make sure its timers stop too */
 	AMSSDlg.hide();
+
+	/* tell every other window to close too */
+	emit Closed();
 
 	/* Set window geometry data in DRMReceiver module */
 	QRect WinGeom = geometry();
 
+	/* save our position */
 	pDRMRec->GeomAnalogDemDlg.iXPos = WinGeom.x();
 	pDRMRec->GeomAnalogDemDlg.iYPos = WinGeom.y();
 	pDRMRec->GeomAnalogDemDlg.iHSize = WinGeom.height();
 	pDRMRec->GeomAnalogDemDlg.iWSize = WinGeom.width();
 
-	/* Tell the invisible main window to close, too */
-	emit Closed();
+	/* request that the working thread stops */
+	pDRMRec->Stop();
+	(void)pDRMRec->wait(5000);
+	if(!pDRMRec->finished())
+	{
+		QMessageBox::critical(this, "Dream", "Exit\n",
+				"Termination of working thread failed");
+	}
+	ce->accept();
 }
 
 void AnalogDemDlg::UpdateControls()
@@ -347,12 +360,28 @@ void AnalogDemDlg::UpdatePlotsStyle()
 	MainPlot->SetPlotStyle(pDRMRec->iMainPlotColorStyle);
 }
 
+void AnalogDemDlg::OnSwitchToDRM()
+{
+	hide();
+	SwitchToDRM();
+}
+
 void AnalogDemDlg::OnTimer()
 {
-	/* Carrier frequency of AM signal */
-	TextFreqOffset->setText(tr("Carrier<br>Frequency:<b><br>") +
-		QString().setNum(pDRMRec->GetAMDemod()->GetCurMixFreqOffs(), 'f', 2) +
-		" Hz</b>");
+	switch(pDRMRec->GetReceiverMode())
+	{
+	case RM_DRM:
+		SwitchToDRM();
+		break;
+	case RM_AM:
+		/* Carrier frequency of AM signal */
+		TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
+		+ QString().setNum(pDRMRec->GetAMDemod()->GetCurMixFreqOffs(), 'f', 2)
+		+ " Hz</b>");
+		break;
+	case RM_NONE:
+		break;
+	}
 }
 
 void AnalogDemDlg::OnTimerPLLPhaseDial()
@@ -713,7 +742,6 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-#ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
 	const QRect WinGeom(pDRMRec->GeomAMSSDlg.iXPos,
 		pDRMRec->GeomAMSSDlg.iYPos,
@@ -722,10 +750,6 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
-#else /* Under Linux only restore the size */
-	resize(pDRMRec->GeomAMSSDlg.iWSize,
-		pDRMRec->GeomAMSSDlg.iHSize);
-#endif
 
 	/* Init AMSS PLL phase dial control */
 	PhaseDialAMSS->setMode(QwtDial::RotateNeedle);
@@ -755,9 +779,9 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(&TimerPLLPhaseDial, SIGNAL(timeout()),
 		this, SLOT(OnTimerPLLPhaseDial()));
 
-	/* Activate real-time timers */
-	Timer.start(GUI_CONTROL_UPDATE_TIME);
-	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
+	/* Don't activate real-time timers - wait for show event */
+	//Timer.start(GUI_CONTROL_UPDATE_TIME);
+	//TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 	/* set the progress bar style */
 	ProgressBarAMSS->setStyle( new QMotifStyle() );
 
