@@ -59,12 +59,13 @@ protected:
 	CGPSData&	m_GPSData;
 	QSocket*	m_pSocket;
 	QTimer*		m_pTimer;
+	int			m_iCounter;
 
 public slots:
 
 	void slotInit();
 	void slotConnected();
-	void slotAbort();
+	void slotTimeout();
 	void slotReadyRead();
 	void slotSocketError(int);
 

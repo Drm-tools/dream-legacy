@@ -41,7 +41,7 @@ using namespace std;
 
 const unsigned short CGPSReceiver::c_usReconnectIntervalSeconds = 30;
 
-CGPSReceiver::CGPSReceiver(CGPSData& data): m_GPSData(data),m_pSocket(NULL)
+CGPSReceiver::CGPSReceiver(CGPSData& data): m_GPSData(data),m_pSocket(NULL),m_iCounter(0)
 {	
     m_pTimer = new QTimer(this);
 	open();
@@ -58,6 +58,8 @@ void CGPSReceiver::open()
 	if(m_pSocket == NULL)
 	{
 		m_pSocket = new QSocket();
+		if(m_pSocket == NULL)
+			return;
 		connect(m_pSocket, SIGNAL(connected()), this, SLOT(slotConnected()));
 		connect(m_pSocket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
 		connect(m_pSocket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
@@ -67,6 +69,9 @@ void CGPSReceiver::open()
 
 void CGPSReceiver::close()
 {
+	if(m_pSocket == NULL)
+		return;
+	m_GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
 	m_pSocket->close();
 	disconnect(m_pSocket, SIGNAL(connected()), this, SLOT(slotConnected()));
 	disconnect(m_pSocket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
@@ -232,29 +237,37 @@ void CGPSReceiver::slotInit()
 
 void CGPSReceiver::slotConnected()
 {
+	m_iCounter = 0;
 	m_GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
-	//clear current buffer
+	// clear current buffer
 	while(m_pSocket->canReadLine())
 		m_pSocket->readLine();
 
 	m_pSocket->writeBlock("W1\n",2);	// try to force gpsd into watcher mode
-	connect( m_pTimer, SIGNAL(timeout()), SLOT(slotAbort()) );
+	connect( m_pTimer, SIGNAL(timeout()), SLOT(slotTimeout()) );
 	m_pTimer->start(c_usReconnectIntervalSeconds*1000);
 }
 
-void CGPSReceiver::slotAbort()
+void CGPSReceiver::slotTimeout()
 {
-	disconnect(m_pTimer);
-	close();
-	open();
+	m_iCounter--;
+	if(m_iCounter==0)
+	{
+		disconnect(m_pTimer);
+		close();
+		open();
+	}
+	else
+		m_GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
 }
 
 void CGPSReceiver::slotReadyRead()
 {
+	m_iCounter = c_usReconnectIntervalSeconds/5;
 	m_GPSData.SetStatus(CGPSData::GPS_RX_DATA_AVAILABLE);
 	while (m_pSocket->canReadLine())
 		DecodeGPSDReply((const char*) m_pSocket->readLine());
-	m_pTimer->start(c_usReconnectIntervalSeconds*1000, TRUE); // if no data in 30 seconds abort
+	m_pTimer->start(5*1000, TRUE); // if no data in 30 seconds abort
 }
 
 void CGPSReceiver::slotSocketError(int)
