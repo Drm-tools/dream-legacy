@@ -916,6 +916,8 @@ class CParameter:public CCellMappingTable
 
 		void SetPositionEnabled(const _BOOLEAN b) { bPositionEnabled = b; }
 		_BOOLEAN GetPositionEnabled() { return bPositionEnabled; }
+		unsigned int ExtractMinutes(double dblDeg);
+
 
 		_BOOLEAN GetLoggingActivated()
 		{

@@ -181,7 +181,7 @@ _BOOLEAN bAllCompiled = FALSE;
 			if(EdtLatitudeNS->text().upper().latin1()[0]=='S')
 				latitude = - latitude;
 
-			longitude = EdtLongitudeDegrees->text().toDouble() + EdtLongitudeMinutes->text().toDouble()/60;
+			longitude = EdtLongitudeDegrees->text().toDouble() + EdtLongitudeMinutes->text().toDouble()/60.0;
 			if(EdtLongitudeEW->text().upper().latin1()[0]=='W')
 				longitude = - longitude;
 
@@ -263,6 +263,8 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 		EdtLatitudeNS->setText("N");
 	}
 
+	unsigned int Minutes;
+
 	/* Extract degrees */
 
 	/* Latitude degrees max 2 digits */
@@ -271,7 +273,8 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 	EdtLatitudeDegrees->setText(sVal);
 
 	/* Extract minutes */
-	sVal = QString("%1").arg( int(60.0*latitude) % 60 );
+	Minutes = pDRMRec->GetParameters()->ReceptLog.ExtractMinutes(latitude);
+	sVal = QString("%1").arg(Minutes);
 
 	EdtLatitudeMinutes->setText(sVal);
 
@@ -294,13 +297,15 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 
 	/* Extract degrees */
 
+	Minutes = pDRMRec->GetParameters()->ReceptLog.ExtractMinutes(longitude);
+
 	/* Longitude degrees max 3 digits */
 	sVal = QString("%1").arg(int(longitude));
 
 	EdtLongitudeDegrees->setText(sVal);
 
 	/* Extract minutes */
-	sVal = QString("%1").arg( int(60.0*longitude) % 60 );
+	sVal = QString("%1").arg(Minutes);
 
 	EdtLongitudeMinutes->setText(sVal);
 

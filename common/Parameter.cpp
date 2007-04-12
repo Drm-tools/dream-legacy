@@ -803,6 +803,15 @@ void CParameter::CReceptLog::SetMSC(const _BOOLEAN bCRCOk)
 	}
 }
 
+unsigned int CParameter::CReceptLog::ExtractMinutes(double dblDeg)
+{
+	unsigned int Degrees;
+
+	/* Extract degrees */
+	Degrees = (unsigned int) dblDeg;
+	return (unsigned int) (((floor((dblDeg - Degrees) * 1000000) / 1000000) + 0.00005) * 60.0);
+}
+
 void CParameter::CShortLog::SetSNR(const _REAL rNewCurSNR)
 {
 	iNumSNR++;
@@ -983,7 +992,7 @@ void CParameter::CShortLog::writeHeader(time_t now)
 				c='N';
 				val = latitude;
 			}
-			fprintf(pFile, "Latitude          %2d\xb0%02d'%c\n", int(val), int(60.0*val)%60, c);
+			fprintf(pFile, "Latitude          %2d\xb0%02d'%c\n", int(val), pLog->ExtractMinutes(val), c);
 
 			if(longitude<0.0)
 			{
@@ -995,7 +1004,7 @@ void CParameter::CShortLog::writeHeader(time_t now)
 				c='E';
 				val = longitude;
 			}
-			fprintf(pFile, "Longitude        %3d\xb0%02d'%c\n", int(val), int(60.0*val)%60, c);
+			fprintf(pFile, "Longitude        %3d\xb0%02d'%c\n", int(val), pLog->ExtractMinutes(val), c);
 		}
 
 		/* Write additional text */
