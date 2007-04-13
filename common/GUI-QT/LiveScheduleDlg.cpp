@@ -665,14 +665,6 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	pViewMenu->insertSeparator();
 	pViewMenu->insertItem(tr("Stations &preview"),pPreviewMenu);
 
-	/* Get current receiver latitude and longitude if defined */
-	if(pDRMRec->GetParameters()->ReceptLog.GPSData.GetPositionAvailable())
-	{
-		double latitude, longitude;
-		pDRMRec->GetParameters()->ReceptLog.GPSData.GetLatLongDegrees(latitude, longitude);
-		DRMSchedule.SetReceiverCoordinates(latitude, longitude);
-	}
-
 	SetStationsView();
 
 	/* File menu ------------------------------------------------------------ */
@@ -792,6 +784,14 @@ void LiveScheduleDlg::OnShowPreviewMenu(int iID)
 
 void LiveScheduleDlg::OnTimerList()
 {
+	/* Get current receiver latitude and longitude if defined */
+	if(pDRMRec->GetParameters()->ReceptLog.GPSData.GetPositionAvailable())
+	{
+		double latitude, longitude;
+		pDRMRec->GetParameters()->ReceptLog.GPSData.GetLatLongDegrees(latitude, longitude);
+		DRMSchedule.SetReceiverCoordinates(latitude, longitude);
+	}
+
 	/* Update schedule and list view */
 		LoadSchedule();
 }
@@ -870,14 +870,6 @@ void LiveScheduleDlg::LoadSchedule()
 
 void LiveScheduleDlg::showEvent(QShowEvent*)
 {
-	/* Get current receiver latitude and longitude if defined */
-	if(pDRMRec->GetParameters()->ReceptLog.GPSData.GetPositionAvailable())
-	{
-		double latitude, longitude;
-		pDRMRec->GetParameters()->ReceptLog.GPSData.GetLatLongDegrees(latitude, longitude);
-		DRMSchedule.SetReceiverCoordinates(latitude, longitude);
-	}
-
 	/* Update window */
 	OnTimerUTCLabel();
 	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
