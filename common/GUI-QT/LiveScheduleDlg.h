@@ -91,7 +91,7 @@ class CDRMLiveSchedule
 {
 public:
 	CDRMLiveSchedule():StationsTable(),iSecondsPreview(0),
-	dReceiverLatitude(0),dReceiverLongitude(0),bCheckCoordinates(FALSE)
+	dReceiverLatitude(0),dReceiverLongitude(0)
 	{}
 
 	virtual ~CDRMLiveSchedule() {}
@@ -127,7 +127,6 @@ protected:
 	/* receiver coordinates */
 	double		dReceiverLatitude;
 	double		dReceiverLongitude;
-	_BOOLEAN	bCheckCoordinates;
 };
 
 class MyListLiveViewItem : public QListViewItem

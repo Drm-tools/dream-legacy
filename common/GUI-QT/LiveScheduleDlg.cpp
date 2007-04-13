@@ -257,18 +257,15 @@ void CDRMLiveSchedule::DecodeTargets(const int iRegionID, const CVector<CParamet
 				}
 
 				/* check if receiver coordinates are into target area */
-				if (bCheckCoordinates == TRUE)
-				{
-					_BOOLEAN bLongitudeOK = ((iReceiverLongitude >= iLongitude)
-						&& (iReceiverLongitude <= (iLongitude + iLongitudeEx)))
-						|| (((iLongitude + iLongitudeEx) >= 180) &&
-						(iReceiverLongitude <= (iLongitude + iLongitudeEx - 360)));
+				_BOOLEAN bLongitudeOK = ((iReceiverLongitude >= iLongitude)
+					&& (iReceiverLongitude <= (iLongitude + iLongitudeEx)))
+					|| (((iLongitude + iLongitudeEx) >= 180) &&
+					(iReceiverLongitude <= (iLongitude + iLongitudeEx - 360)));
 
-					_BOOLEAN bLatitudeOK = ((iReceiverLatitude >= iLatitude)
-						&& (iReceiverLatitude <= (iLatitude + iLatitudeEx)));
+				_BOOLEAN bLatitudeOK = ((iReceiverLatitude >= iLatitude)
+					&& (iReceiverLatitude <= (iLatitude + iLatitudeEx)));
 
-					bIntoTargetArea = bIntoTargetArea || (bLongitudeOK && bLatitudeOK);
-				}
+				bIntoTargetArea = bIntoTargetArea || (bLongitudeOK && bLatitudeOK);
 			}
 			k++;
 		}
@@ -873,6 +870,14 @@ void LiveScheduleDlg::LoadSchedule()
 
 void LiveScheduleDlg::showEvent(QShowEvent*)
 {
+	/* Get current receiver latitude and longitude if defined */
+	if(pDRMRec->GetParameters()->ReceptLog.GPSData.GetPositionAvailable())
+	{
+		double latitude, longitude;
+		pDRMRec->GetParameters()->ReceptLog.GPSData.GetLatLongDegrees(latitude, longitude);
+		DRMSchedule.SetReceiverCoordinates(latitude, longitude);
+	}
+
 	/* Update window */
 	OnTimerUTCLabel();
 	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
