@@ -1,10 +1,15 @@
 TEMPLATE	= app
 TARGET		= dream
-CONFIG		+= qt warn_on debug portaudio
+CONFIG		+= qt warn_on debug
 VPATH		+= common/GUI-QT
 
 DEFINES		+= VERSION="1.8.28unstable"
-DEFINES		+= HAVE_DLFCN_H=1 HAVE_INTTYPES_H=1 HAVE_JOURNALINE=1 HAVE_JOURNALINE_NML_H=1 HAVE_LIBFAAC=1 HAVE_LIBFAAD=1 HAVE_LIBPCAP=1 HAVE_LIBQWT=1 HAVE_LIBRT=1 HAVE_LIBSNDFILE=1 HAVE_LIBZ=1 HAVE_MEMORY_H=1 HAVE_STDINT_H=1 HAVE_STDLIB_H=1 HAVE_STRINGS_H=1 HAVE_STRING_H=1 HAVE_SYS_STAT_H=1 HAVE_SYS_TYPES_H=1 HAVE_UNISTD_H=1 STDC_HEADERS=1 USE_FAAC_LIBRARY=1 USE_FAAD2_LIBRARY=1 USE_QT_GUI=1
+DEFINES		+= HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H HAVE_STRINGS_H HAVE_STRING_H STDC_HEADERS
+DEFINES		+= HAVE_INTTYPES_H HAVE_STDINT_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H HAVE_UNISTD_H
+DEFINES		+= HAVE_JOURNALINE HAVE_LIBFAAC HAVE_LIBFAAD HAVE_LIBPCAP HAVE_LIBQWT HAVE_LIBSNDFILE HAVE_LIBZ
+DEFINES		+= USE_FAAC_LIBRARY USE_FAAD2_LIBRARY USE_QT_GUI
+INCLUDEPATH	+= libs
+LIBS 		+= -Llibs
 LIBS 		+= -lsndfile -lz -lqwt -lfhgjournaline -lpcap -lfaac -lfaad
 FORMS		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui
 FORMS		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
@@ -13,29 +18,32 @@ FORMS		+= GeneralSettingsDlgbase.ui MultSettingsDlgbase.ui AboutDlgbase.ui
 
 macx {
 	TEMPLATE	= pbuilder
+	CONFIG		+= portaudio
 	OBJECTS_DIR	= darwin
-	DEFINES		+= USE_PORTAUDIO
-	INCLUDEPATH += /Users/Shared/src/drm /Users/Shared/src/drm/libs /Users/Shared/src/drm/darwin
-	INCLUDEPATH += /usr/local/include /opt/local/include
-	LIBS 		+= -L/Users/Shared/src/drm/libs -L/usr/local/lib -L/opt/local/lib
+	DEFINES		+= USE_PORTAUDIO 
+	DEFINES		+= HAVE_DFFTW_H HAVE_DRFFTW_H
+	INCLUDEPATH	+= darwin
+	INCLUDEPATH	+= /usr/local/include /opt/local/include
+	LIBS 		+= -L/usr/local/lib -L/opt/local/lib
 	LIBS 		+= -framework CoreAudio -framework AudioToolbox -framework AudioUnit
 	LIBS 		+= -ldrfftw -ldfftw 
 	UI_DIR		= darwin/moc
 	MOC_DIR		= darwin/moc
-	SOURCES		+= linux/source/Pacer.cpp   
 }
 
 unix {
 	TEMPLATE	= app
-	DEFINES		+= HAVE_FFTW_H=1 HAVE_RFFTW_H=1
-	MAKEFILE	= Makefile.qt
-	INCLUDEPATH += libs linux
-	LIBS 		+= -Llibs
-	LIBS 		+= -lfftw -lrfftw -lrt
-	OBJECTS_DIR	= linux
-	UI_DIR		= linux/moc
-	MOC_DIR		= linux/moc
-	SOURCES		+= linux/source/Pacer.cpp common/sound/pa_ringbuffer.c
+	SOURCES		+= linux/source/Pacer.cpp
+	!macx {
+		DEFINES		+= HAVE_FFTW_H HAVE_RFFTW_H
+		MAKEFILE	= Makefile.qt
+		INCLUDEPATH	+= linux
+		LIBS 		+= -lfftw -lrfftw -lrt
+		OBJECTS_DIR	= linux
+		UI_DIR		= linux/moc
+		MOC_DIR		= linux/moc
+		SOURCES		+= common/sound/pa_ringbuffer.c
+	}
 }
 
 win32 {
