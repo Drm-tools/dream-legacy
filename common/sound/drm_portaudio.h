@@ -29,7 +29,7 @@
 #ifndef _DRM_PORTAUDIO_H
 #define _DRM_PORTAUDIO_H
 
-#include "../../common/soundinterface.h"
+#include "../soundinterface.h"
 #include <portaudio.h>
 #include "pa_ringbuffer.h"
 
