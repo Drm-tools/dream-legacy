@@ -49,20 +49,11 @@
 /******************************************************************************\
 * Using GUI with QT                                                            *
 \******************************************************************************/
-/* Application object must be initialized before the DRMReceiver object because
-   of the QT functions used in the MDI module. TODO: better solution */
-int argc = 0;
-QApplication app(argc, NULL);
-
-/* The receiver is a global object */
-CDRMReceiver	DRMReceiver;
 
 /* This pointer is only used for the post-event routine */
 QApplication*	pApp = NULL;
 
 int main(int argc, char** argv)
-{
-try
 {
 	CDRMSimulation DRMSimulation;
 
@@ -70,6 +61,15 @@ try
 	   automatically exit in that routine. If in the script no simulation is
 	   activated, this function will immediately return */
 	DRMSimulation.SimScript();
+
+try
+{
+	/* Application object must be initialized before the DRMReceiver object
+ 	* because of the QT functions used in the MDI module. TODO: better solution
+ 	*/
+	QApplication app(argc, argv);
+
+	CDRMReceiver	DRMReceiver;
 
 	/* Parse arguments and load settings from init-file */
 	CSettings Settings(&DRMReceiver);
@@ -106,23 +106,23 @@ try
 	else
 	{
 		/* First, initialize the working thread. This should be done in an extra
-		   routine since we cannot 100% assume that the working thread is ealier
-		   ready than the GUI thread */
+		   routine since we cannot 100% assume that the working thread is
+		   ready before the GUI thread */
+
+		if(DRMReceiver.GeomAnalogDemDlg.bVisible == TRUE)
+			DRMReceiver.SetReceiverMode(RM_AM);
+		else
+			DRMReceiver.SetReceiverMode(RM_DRM);
+
 		DRMReceiver.Init();
 	
 		CGPSReceiver* pGPSReceiver=NULL;
 		if(DRMReceiver.GetParameters()->ReceptLog.GPSData.GetGPSSource() != CGPSData::GPS_SOURCE_MANUAL_ENTRY)
 		{
 			pGPSReceiver = new CGPSReceiver(DRMReceiver.GetParameters()->ReceptLog.GPSData);
-			//pGPSReceiver->start();
 		}
 
 		FDRMDialog		MainDlg(&DRMReceiver, 0, 0, FALSE, Qt::WStyle_MinMax);
-
-		if(DRMReceiver.GeomAnalogDemDlg.bVisible == TRUE)
-			DRMReceiver.SetReceiverMode(RM_AM);
-		else
-			DRMReceiver.SetReceiverMode(RM_DRM);
 
 		/* Start working thread */
 		DRMReceiver.start();

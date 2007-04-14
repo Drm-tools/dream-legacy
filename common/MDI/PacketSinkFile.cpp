@@ -1,6 +1,6 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2004
+ * British Broadcasting Corporation
+ * Copyright (c) 2007
  *
  * Author(s):
  *	Oliver Haffenden
@@ -8,9 +8,6 @@
  * Description:
  *  
  * See PacketSinkFile.h
- * 
- * 
- *	
  *
  ******************************************************************************
  *
@@ -33,14 +30,42 @@
 #include "PacketSinkFile.h"
 
 CPacketSinkRawFile::CPacketSinkRawFile()
-: pFile(0)
+: pFile(0), bIsRecording(0), bReopenFile(FALSE)
 {
 }
 
-void CPacketSinkRawFile::SendPacket(const vector<_BYTE> &vecbydata)
+void CPacketSinkRawFile::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16_t)
 {
-	if (pFile == 0)
-		return;
+       if (!bIsRecording) // not recording
+       {
+               if (pFile != 0) // close file if one is open
+               {
+                       fclose(pFile);
+                       pFile = 0;
+               }
+               return;
+       }
+
+       if (bReopenFile) // file is open but we want to start a new one
+       {
+               bReopenFile = FALSE;
+               if (pFile)
+               {
+                       fclose(pFile);
+               }
+               pFile = 0;
+       }
+
+       if (!pFile) // either wasn't open, or we just closed it
+       {
+               pFile = fopen(strFileName.c_str(), "wb");
+               if (!pFile)
+             {
+                       // Failed to open
+                       bIsRecording = FALSE;
+                       return;
+               }
+       }
 
 	_BYTE b;
 	for (size_t i = 0; i < vecbydata.size (); i++)
@@ -51,20 +76,20 @@ void CPacketSinkRawFile::SendPacket(const vector<_BYTE> &vecbydata)
 
 }
 
-void CPacketSinkRawFile::StartRecording(const string strFileName)
+_BOOLEAN CPacketSinkRawFile::SetDestination(const string& strFName)
 {
-	if (pFile != 0)
-		fclose(pFile);
+	strFileName = strFName;
+	return TRUE;
+}
 
-	pFile = fopen(strFileName.c_str(), "wb");
-
+void CPacketSinkRawFile::StartRecording()
+{
+	if (bIsRecording) // file already open: close it and open new file
+		bReopenFile = TRUE;
+	bIsRecording = TRUE;
 }
 
 void CPacketSinkRawFile::StopRecording()
 {
-	if (pFile != 0)
-	{
-		fclose(pFile);
-		pFile = 0;
-	}
+	bIsRecording = FALSE;
 }

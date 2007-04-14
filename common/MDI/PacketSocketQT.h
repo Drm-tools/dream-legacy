@@ -40,23 +40,11 @@
 # include <netinet/in.h>
 # include <arpa/inet.h>
 #endif
-#ifdef HAVE_LIBPCAP
-# include <pcap.h>
-#endif
-#ifdef HAVE_LIBWTAP
-extern "C" {
-# include <wtap.h>
-}
-#endif
 
 #ifdef _WIN32
-    /* Always include winsock2.h before windows.h */
-	#ifndef HAVE_LIBPCAP
-    /* winsock2.h is already included into libpcap */
-	# include <winsock2.h>
-	# include <ws2tcpip.h>
-	#endif
-
+/* Always include winsock2.h before windows.h */
+# include <winsock2.h>
+# include <ws2tcpip.h>
 # include <windows.h>
 #endif
 
@@ -73,7 +61,6 @@ typedef int SOCKET;
    double of this size should be ok for all possible cases */
 #define MAX_SIZE_BYTES_NETW_BUF		10000
 
-
 #include "PacketInOut.h"
 
 class CPacketSocketQT : public QObject, public CPacketSocket
@@ -89,10 +76,12 @@ public:
 	virtual void ResetPacketSink(void);
 
 	// Send packet to the socket
-	void SendPacket(const vector<_BYTE>& vecbydata);
+	void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
-	virtual _BOOLEAN SetNetwOutAddr(const string& str);
-	virtual _BOOLEAN SetNetwInAddr(const string& str);
+	virtual _BOOLEAN SetDestination(const string& str);
+	virtual _BOOLEAN SetOrigin(const string& str);
+
+	virtual _BOOLEAN GetDestination(string& str);
 
 private:
 	CPacketSink *pPacketSink;
@@ -102,16 +91,6 @@ private:
 
 	QSocketDevice				SocketDevice;
 	QSocketNotifier*			pSocketNotivRead;
-
-#ifdef HAVE_LIBPCAP
-    pcap_t						*pf;
-	QTime						timeKeeper;
-#else
-#ifdef HAVE_LIBWTAP
-    wtap						*pf;
-	QTime						timeKeeper;
-#endif
-#endif
 
 public slots:
 	void OnDataReceived();

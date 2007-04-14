@@ -30,6 +30,80 @@
 
 
 /* Implementation *************************************************************/
+
+CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
+	rStartSNR(0.0), rEndSNR(0.0), rStepSNR(0.0),
+	Param(NULL),
+	DataBuf(), MLCEncBuf(), IntlBuf(), GenFACDataBuf(), FACMapBuf(), GenSDCDataBuf(),
+	SDCMapBuf(), CarMapBuf(), OFDMModBuf(), OFDMDemodBufChan2(), ChanEstInBufSim(),
+	ChanEstOutBufChan(),
+	RecDataBuf(), ChanResInBuf(), InpResBuf(), FreqSyncAcqBuf(), TimeSyncBuf(),
+	OFDMDemodBuf(), SyncUsingPilBuf(), ChanEstBuf(),
+	MSCCarDemapBuf(), FACCarDemapBuf(), SDCCarDemapBuf(), DeintlBuf(),
+	FACDecBuf(), SDCDecBuf(), MSCMLCDecBuf(), GenSimData(),			
+	MSCMLCEncoder(), SymbInterleaver(), GenerateFACData(), FACMLCEncoder(),
+	GenerateSDCData(), SDCMLCEncoder(), OFDMCellMapping(), OFDMModulation(),
+	DRMChannel(), InputResample(), FreqSyncAcq(), TimeSync(), OFDMDemodulation(),
+	SyncUsingPil(), ChannelEstimation(), OFDMCellDemapping(), FACMLCDecoder(), UtilizeFACData(),
+	SDCMLCDecoder(), UtilizeSDCData(), SymbDeinterleaver(), MSCMLCDecoder(), EvaSimData(),
+	OFDMDemodSimulation(), IdealChanEst(), DataConvChanResam()
+{
+	/* Set all parameters to meaningful value for startup state. If we want to
+	   make a simulation we just have to specify the important values */
+	/* Init streams */
+	Param.ResetServicesStreams();
+
+
+	/* Service parameters (only use service 0) ------------------------------- */
+	/* Data service */
+	Param.SetNumOfServices(0,1);
+
+	Param.SetAudDataFlag(0,  CParameter::SF_DATA);
+
+	CParameter::CDataParam DataParam;
+	DataParam.iStreamID = 0;
+	DataParam.ePacketModInd = CParameter::PM_SYNCHRON_STR_MODE;
+	Param.SetDataParam(0, DataParam);
+
+	//Param.SetCurSelDataService(1); /* Service ID must be set for activation */
+	Param.SetCurSelDataService(0); /* Service ID must be set for activation */
+
+	/* Stream */
+	Param.SetStreamLen(0, 0, 0); // EEP, if "= 0"
+
+
+	/* Date, time */
+	Param.iDay = 0;
+	Param.iMonth = 0;
+	Param.iYear = 0;
+	Param.iUTCHour = 0;
+	Param.iUTCMin = 0;
+
+	/* Frame IDs */
+	Param.iFrameIDTransm = 0;
+	Param.iFrameIDReceiv = 0;
+
+	/* Initialize synchronization parameters */
+	Param.rResampleOffset = (_REAL) 0.0;
+	Param.rFreqOffsetAcqui = (_REAL) VIRTUAL_INTERMED_FREQ / SOUNDCRD_SAMPLE_RATE;
+	Param.rFreqOffsetTrack = (_REAL) 0.0;
+	Param.iTimingOffsTrack = 0;
+
+	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+
+	Param.MSCPrLe.iPartA = 1;
+	Param.MSCPrLe.iPartB = 1;
+	Param.MSCPrLe.iHierarch = 0;
+
+	Param.eSymbolInterlMode = CParameter::SI_SHORT;
+	Param.eMSCCodingScheme = CParameter::CS_3_SM;
+	Param.eSDCCodingScheme = CParameter::CS_2_SM;
+
+	/* DRM channel parameters */
+	Param.iDRMChannelNum = 1;
+	Param.SetNominalSNRdB(25);
+}
+
 void CDRMSimulation::Run()
 {
 /*
@@ -286,59 +360,3 @@ void CDRMSimulation::Init()
 	SyncUsingPil.StartTrackPil();
 }
 
-CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
-	rStartSNR((_REAL) 0.0), rEndSNR((_REAL) 0.0), rStepSNR((_REAL) 0.0),
-	FreqSyncAcq(), ChannelEstimation(),
-	UtilizeFACData(), UtilizeSDCData()
-{
-	/* Set all parameters to meaningful value for startup state. If we want to
-	   make a simulation we just have to specify the important values */
-	/* Init streams */
-	Param.ResetServicesStreams();
-
-
-	/* Service paramters (only use service 0) ------------------------------- */
-	/* Data service */
-	Param.iNumAudioService = 0;
-	Param.iNumDataService = 1;
-
-	Param.Service[0].eAudDataFlag = CParameter::SF_DATA;
-	Param.Service[0].DataParam.iStreamID = 0;
-	Param.Service[0].DataParam.ePacketModInd = CParameter::PM_SYNCHRON_STR_MODE;
-	Param.Service[0].iServiceID = 1; /* Service ID must be set for activation */
-
-	/* Stream */
-	Param.Stream[0].iLenPartA = 0; // EEP, if "= 0"
-
-
-	/* Date, time */
-	Param.iDay = 0;
-	Param.iMonth = 0;
-	Param.iYear = 0;
-	Param.iUTCHour = 0;
-	Param.iUTCMin = 0;
-
-	/* Frame IDs */
-	Param.iFrameIDTransm = 0;
-	Param.iFrameIDReceiv = 0;
-
-	/* Initialize synchronization parameters */
-	Param.rResampleOffset = (_REAL) 0.0;
-	Param.rFreqOffsetAcqui = (_REAL) VIRTUAL_INTERMED_FREQ / SOUNDCRD_SAMPLE_RATE;
-	Param.rFreqOffsetTrack = (_REAL) 0.0;
-	Param.iTimingOffsTrack = 0;
-
-	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
-
-	Param.MSCPrLe.iPartA = 1;
-	Param.MSCPrLe.iPartB = 1;
-	Param.MSCPrLe.iHierarch = 0;
-
-	Param.eSymbolInterlMode = CParameter::SI_SHORT;
-	Param.eMSCCodingScheme = CParameter::CS_3_SM;
-	Param.eSDCCodingScheme = CParameter::CS_2_SM;
-
-	/* DRM channel parameters */
-	Param.iDRMChannelNum = 1;
-	Param.SetNominalSNRdB(25);
-}

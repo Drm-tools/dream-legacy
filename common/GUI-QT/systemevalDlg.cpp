@@ -1243,13 +1243,13 @@ void systemevalDlg::OnCheckWriteLog()
 void systemevalDlg::OnTimerLogFileShort()
 {
 	/* Write new parameters in log file (short version) */
-	pDRMRec->GetParameters()->ReceptLog.WriteParameters(FALSE);
+	pDRMRec->GetParameters()->ReceptLog.WriteParameters(pDRMRec, FALSE);
 }
 
 void systemevalDlg::OnTimerLogFileLong()
 {
 	/* Write new parameters in log file (long version) */
-	pDRMRec->GetParameters()->ReceptLog.WriteParameters(TRUE);
+	pDRMRec->GetParameters()->ReceptLog.WriteParameters(pDRMRec, TRUE);
 }
 
 QString	systemevalDlg::GetRobModeStr()

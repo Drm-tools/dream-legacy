@@ -43,16 +43,21 @@ void CPacketSocketNull::ResetPacketSink(void)
 }
 
 // Send packet to the socket
-void CPacketSocketNull::SendPacket(const vector<_BYTE>&)
+void CPacketSocketNull::SendPacket(const vector<_BYTE>&, uint32_t, uint16_t)
 {
 }
 
-_BOOLEAN CPacketSocketNull::SetNetwOutAddr(const string&)
+_BOOLEAN CPacketSocketNull::SetOrigin(const string&)
 {
 	return TRUE;
 }
 
-_BOOLEAN CPacketSocketNull::SetNetwInAddr(const string&)
+_BOOLEAN CPacketSocketNull::SetDestination(const string&)
+{
+	return TRUE;
+}
+
+_BOOLEAN CPacketSocketNull::GetDestination(string&)
 {
 	return TRUE;
 }

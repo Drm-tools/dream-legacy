@@ -1033,13 +1033,11 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			switch ((int) rArgument)
 			{
 			case 0:
-				pDRMRec->GetReceiver()->
-					SetInChanSel(CReceiveData::CS_LEFT_CHAN);
+				pDRMRec->GetReceiver()-> SetInChanSel(CReceiveData::CS_LEFT_CHAN);
 				break;
 
 			case 1:
-				pDRMRec->GetReceiver()->
-					SetInChanSel(CReceiveData::CS_RIGHT_CHAN);
+				pDRMRec->GetReceiver()-> SetInChanSel(CReceiveData::CS_RIGHT_CHAN);
 				break;
 
 			case 2:
@@ -1225,7 +1223,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "--rsiout", "--rsiout",
 			strArgument) == TRUE)
 		{
-			pDRMRec->GetRSIOut()->SetOutAddr(strArgument);
+			pDRMRec->GetRSIOut()->SetDestination(strArgument);
 			continue;
 		}
 
@@ -1233,7 +1231,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "--rsiin", "--rsiin",
 			strArgument) == TRUE)
 		{
-			pDRMRec->GetRSIIn()->SetInAddr(strArgument);
+			pDRMRec->GetRSIIn()->SetOrigin(strArgument);
 			continue;
 		}
 
@@ -1241,7 +1239,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "--rciout", "--rciout",
 			strArgument) == TRUE)
 		{
-			pDRMRec->GetRSIIn()->SetOutAddr(strArgument);
+			pDRMRec->GetRSIIn()->SetDestination(strArgument);
 			continue;
 		}
 
@@ -1249,7 +1247,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetStringArgument(argc, argv, i, "--rciin", "--rciin",
 			strArgument) == TRUE)
 		{
-			pDRMRec->GetRSIOut()->SetInAddr(strArgument);
+			pDRMRec->GetRSIOut()->SetOrigin(strArgument);
 			continue;
 		}
 

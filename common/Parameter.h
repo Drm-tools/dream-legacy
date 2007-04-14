@@ -49,6 +49,8 @@
 # include "GPSData.h"
 #endif
 
+class CDRMReceiver;
+
 enum ETypeIntFreq
 { FLINEAR, FDFTFILTER, FWIENER };
 enum ETypeIntTime
@@ -72,20 +74,8 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 class CParameter:public CCellMappingTable
 {
   public:
-	CParameter():
-		sReceiverID("                "),
-		Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
-		bRunThread(FALSE), bUsingMultimedia(TRUE),
-		iCurSelAudioService(0), iCurSelDataService(0),
-		rSigStrengthCorrection(_REAL(0.0)),
-		vecbiAudioFrameStatus(),
-		vecrPSD(0)
-	{
-		GenerateRandomSerialNumber();
-	}
-	virtual ~ CParameter()
-	{
-	}
+	CParameter(CDRMReceiver *pRx);
+	virtual ~CParameter();
 
 	/* Enumerations --------------------------------------------------------- */
 	/* CA: CA system */
@@ -239,7 +229,6 @@ class CParameter:public CCellMappingTable
 		EApplDomain eAppDomain;	/* Application domain */
 		int iUserAppIdent;		/* User application identifier, only DAB */
 
-/* TODO: Copy operator. Now, default copy operator is used! */
 		CDataParam& operator=(const CDataParam DataParam)
 		{
 			iStreamID = DataParam.iStreamID;
@@ -281,6 +270,28 @@ class CParameter:public CCellMappingTable
 	  public:
 		CService():strLabel("")
 		{
+		}
+
+		CService(const CService& s): iServiceID(s.iServiceID), eCAIndication(s.eCAIndication),
+			iLanguage(s.iLanguage), eAudDataFlag(s.eAudDataFlag), iServiceDescr(s.iServiceDescr),
+			strCountryCode(s.strCountryCode), strLanguageCode(s.strLanguageCode), strLabel(s.strLabel),
+			AudioParam(s.AudioParam), DataParam(s.DataParam)
+		{
+		}
+
+		CService& operator=(const CService& s)
+		{
+			iServiceID = s.iServiceID;
+			eCAIndication = s.eCAIndication;
+			iLanguage = s.iLanguage;
+			eAudDataFlag = s.eAudDataFlag;
+			iServiceDescr = s.iServiceDescr;
+			strCountryCode = s.strCountryCode;
+			strLanguageCode = s.strLanguageCode;
+			strLabel = s.strLabel;
+			AudioParam = s.AudioParam;
+			DataParam = s.DataParam;
+			return *this;
 		}
 
 		_BOOLEAN IsActive()
@@ -686,8 +697,8 @@ class CParameter:public CCellMappingTable
 	/* Misc. Functions ------------------------------------------------------ */
 	void GenerateRandomSerialNumber();
 	void ResetServicesStreams();
-	void GetActiveServices(CVector < int >&veciActServ);
-	void GetActiveStreams(CVector < int >&veciActStr);
+	void GetActiveServices(vector<int>& veciActServ);
+	void GetActiveStreams(vector<int>& veciActStr);
 	int GetNumActiveServices();
 	void InitCellMapTable(const ERobMode eNewWaveMode,
 						  const ESpecOcc eNewSpecOcc);
@@ -703,6 +714,8 @@ class CParameter:public CCellMappingTable
 	{
 		return eRobustnessMode;
 	}
+
+	void SetServiceParameters(int iShortID, const CService& newService);
 
 	void SetCurSelAudioService(const int iNewService);
 	int GetCurSelAudioService() const
@@ -760,6 +773,8 @@ class CParameter:public CCellMappingTable
 	void SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl);
 	void SetServID(const int iServID, const uint32_t iNewServID);
 
+	CDRMReceiver * pDRMRec;
+
 	/* Symbol interleaver mode (long or short interleaving) */
 	ESymIntMod eSymbolInterlMode;
 
@@ -782,28 +797,21 @@ class CParameter:public CCellMappingTable
 
 
 	/* Parameters controlled by SDC ----------------------------------------- */
-	void SetAudioParam(const int iShortID, const CAudioParam NewAudParam);
-	CAudioParam GetAudioParam(const int iShortID)
-	{
-		return Service[iShortID].AudioParam;
-	}
-	void SetDataParam(const int iShortID, const CDataParam NewDataParam);
-	CDataParam GetDataParam(const int iShortID)
-	{
-		return Service[iShortID].DataParam;
-	}
+	void SetAudioParam(const int iShortID, const CAudioParam& NewAudParam);
+	CAudioParam GetAudioParam(const int iShortID);
+	CDataParam GetDataParam(const int iShortID);
+	void SetDataParam(const int iShortID, const CDataParam& NewDataParam);
 
-	void SetMSCProtLev(const CMSCProtLev NewMSCPrLe,
-					   const _BOOLEAN bWithHierarch);
-	void SetStreamLen(const int iStreamID, const int iNewLenPartA,
-					  const int iNewLenPartB);
+	void SetMSCProtLev(const CMSCProtLev NewMSCPrLe, const _BOOLEAN bWithHierarch);
+	void SetStreamLen(const int iStreamID, const int iNewLenPartA, const int iNewLenPartB);
+	void GetStreamLen(const int iStreamID, int& iLenPartA, int& iLenPartB);
 	int GetStreamLen(const int iStreamID);
 
 	/* Protection levels for MSC */
 	CMSCProtLev MSCPrLe;
 
-	CVector < CStream > Stream;
-	CService Service[MAX_NUM_SERVICES];
+	vector<CStream> Stream;
+	vector<CService> Service;
 
 	/* These values are used to set input and output block sizes of some
 	   modules */
@@ -846,7 +854,7 @@ class CParameter:public CCellMappingTable
 		void open(const char* filename, const time_t now);
 		void setLog(CReceptLog* pl) { pLog = pl; }
 		void close();
-		virtual void writeParameters()=0;
+		virtual void writeParameters(CDRMReceiver*)=0;
 		virtual void writeHeader(time_t)=0;
 		virtual void writeTrailer()=0;
 		virtual void reset()=0;
@@ -858,7 +866,7 @@ class CParameter:public CCellMappingTable
 	class CShortLog: public CLog
 	{
 	public:
-		virtual void writeParameters();
+		virtual void writeParameters(CDRMReceiver*);
 		virtual void writeHeader(time_t);
 		virtual void writeTrailer();
 		virtual void reset();
@@ -874,7 +882,7 @@ class CParameter:public CCellMappingTable
 	class CLongLog: public CLog
 	{
 	public:
-		virtual void writeParameters();
+		virtual void writeParameters(CDRMReceiver*);
 		virtual void writeHeader(time_t);
 		virtual void writeTrailer();
 		virtual void reset();
@@ -902,7 +910,7 @@ class CParameter:public CCellMappingTable
 
 		void StartLogging();
 		void StopLogging();
-		void WriteParameters(_BOOLEAN bLong);
+		void WriteParameters(CDRMReceiver* pDRMRec, _BOOLEAN bLong);
 		void SetFAC(const _BOOLEAN bCRCOk);
 		void SetMSC(const _BOOLEAN bCRCOk);
 		void SetSync(const _BOOLEAN bCRCOk);
@@ -1214,9 +1222,11 @@ class CParameter:public CCellMappingTable
 		
 	} FrontEndParameters;
 
+	ERecMode GetReceiverMode() { return eReceiverMode; }
+	ERecMode eReceiverMode;
+	EAcqStat GetReceiverState() { return eAcquiState; }
+	EAcqStat eAcquiState;
 
-	ERecMode GetReceiverMode();
-	EAcqStat GetReceiverState();
 	CVector <_BINARY> vecbiAudioFrameStatus;
 	_BOOLEAN bMeasurePSD;
 

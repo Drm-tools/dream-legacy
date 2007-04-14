@@ -202,6 +202,7 @@ public:
 
 	void			SetEnableModRigSettings(const _BOOLEAN bNSM);
 	_BOOLEAN		GetEnableModRigSettings() const {return bModRigSettings;}
+	string			GetInfo() const { if(pRig) return rig_get_info(pRig); return ""; }
 
 protected:
 	class CSpecDRMRig

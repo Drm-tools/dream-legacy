@@ -38,13 +38,9 @@
 #else
 # include "PacketSocketNull.h"
 #endif
-#include <iomanip>
 
 
-CRSISubscriber::CRSISubscriber(CPacketSink *pSink)
-: pPacketSink(pSink)
-, pDRMReceiver(0)
-, bUseAFCRC(TRUE)
+CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink), cProfile(0), pDRMReceiver(0), bUseAFCRC(TRUE)
 {
 	TagPacketDecoderRSCIControl.SetSubscriber(this);
 }
@@ -64,111 +60,94 @@ void CRSISubscriber::TransmitPacket(CTagPacketGeneratorWithProfiles *pGenerator)
 {
 	if (pPacketSink != 0)
 	{
-		pGenerator->SetProfile(cProfile);
-		pPacketSink->SendPacket(pGenerator->GenAFPacket(bUseAFCRC));
+	 	pGenerator->SetProfile(cProfile);
+		pPacketSink->SendPacket(AFPacketGenerator.GenAFPacket(bUseAFCRC, pGenerator));
 	}
 }
 
 
 /* implementation of function from CPacketSink interface - process incoming RCI commands */
-void CRSISubscriber::SendPacket(const vector<_BYTE>& vecbydata)
+void CRSISubscriber::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16_t)
 {
 	CVectorEx<_BINARY> vecbidata;
 	vecbidata.Init(vecbydata.size()*SIZEOF__BYTE);
 	vecbidata.ResetBitAccess();
 	for(size_t i=0; i<vecbydata.size(); i++)
 		vecbidata.Enqueue(vecbydata[i], SIZEOF__BYTE);
-	CTagPacketDecoder::Error err = 
-		TagPacketDecoderRSCIControl.DecodeAFPacket(vecbidata);
+	CTagPacketDecoder::Error err = TagPacketDecoderRSCIControl.DecodeAFPacket(vecbidata);
 	if(err != CTagPacketDecoder::E_OK)
 		cerr << "bad RSCI Control Packet Received" << endl;
 }
 
 
-#ifdef USE_QT_GUI
-CRSISubscriberSocket::CRSISubscriberSocket():PacketSocket(*new CPacketSocketQT())
-#else
-CRSISubscriberSocket::CRSISubscriberSocket():PacketSocket(*new CPacketSocketNull())
-#endif
+/* TODO wrap a sendto in a class and store it in pPacketSink */
+CRSISubscriberSocket::CRSISubscriberSocket(CPacketSink *pSink):CRSISubscriber(pSink),pSocket(NULL)
+,uIf(0),uAddr(0),uPort(0)
 {
+#ifdef USE_QT_GUI
+	pSocket = new CPacketSocketQT;
+#else
+	pSocket = new CPacketSocketNull;
+#endif
+	pPacketSink = pSocket;
 }
 
 CRSISubscriberSocket::~CRSISubscriberSocket()
 {
-	delete &PacketSocket;
+	delete pSocket;
 }
 
-_BOOLEAN CRSISubscriberSocket::SetOutAddr(const string& strArgument)
+_BOOLEAN CRSISubscriberSocket::SetDestination(const string& str)
 {
-	_BOOLEAN bAddressOK = PacketSocket.SetNetwOutAddr(strArgument);
-	
-	/* Only connect the sink to the socket if the setup is successful */
-	if (bAddressOK)
-		pPacketSink = &PacketSocket;
-
-	return bAddressOK;
+	strDestination = str;
+	if(pSocket)
+		return pSocket->SetDestination(str);
+	return FALSE;;
 }
 
-_BOOLEAN CRSISubscriberSocket::SetInAddr(const string& strAddr)
+_BOOLEAN CRSISubscriberSocket::GetDestination(string& str)
 {
-	// Delegate to socket
-	_BOOLEAN bOK = PacketSocket.SetNetwInAddr(strAddr);
-
-	if (bOK)
-		// Connect socket to the MDI decoder
-		PacketSocket.SetPacketSink(this);
-return PacketSocket.SetNetwInAddr(strAddr);
+	/* want the canonical version so incoming can match */
+	if(pSocket)
+		return pSocket->GetDestination(str);
+	return FALSE;
 }
 
-CRSISubscriberFile::CRSISubscriberFile()
-: CRSISubscriber(&PacketSinkFile)
-, bIsRecording(FALSE)
-, iFrequency(0)
+_BOOLEAN CRSISubscriberSocket::SetOrigin(const string& str)
+{
+	if(pSocket)
+	{
+		// Delegate to socket
+		_BOOLEAN bOK = pSocket->SetOrigin(str);
+
+		if (bOK)
+			// Connect socket to the MDI decoder
+			pSocket->SetPacketSink(this);
+		return bOK;
+	}
+	return FALSE;
+}
+
+CRSISubscriberFile::CRSISubscriberFile(): CRSISubscriber(&PacketSinkFile)
 {
 }
 
-void CRSISubscriberFile::StartRecording(CParameter &ReceiverParam)
+_BOOLEAN CRSISubscriberFile::SetDestination(const string& strFName)
 {
-	iFrequency = ReceiverParam.ReceptLog.GetFrequency();
+	return PacketSinkFile.SetDestination(strFName);
+}
 
-	/* Get current UTC time */
-	time_t ltime;
-	time(&ltime);
-	struct tm* gmtCur = gmtime(&ltime);
+_BOOLEAN CRSISubscriberFile::GetDestination(string& strFName)
+{
+	return PacketSinkFile.GetDestination(strFName);
+}
 
-	stringstream filename;
-	filename << ReceiverParam.sDataFilesDirectory;
-	filename << ReceiverParam.sReceiverID << "_";
-	filename << setw(4) << setfill('0') << gmtCur->tm_year + 1900 << "-" << setw(2) << setfill('0')<< gmtCur->tm_mon + 1;
-	filename << "-" << setw(2) << setfill('0')<< gmtCur->tm_mday << "_";
-	filename << setw(2) << setfill('0') << gmtCur->tm_hour << "-" << setw(2) << setfill('0')<< gmtCur->tm_min;
-	filename << "-" << setw(2) << setfill('0')<< gmtCur->tm_sec << "_";
-	filename << setw(8) << setfill('0') << (iFrequency*1000) << ".rs" << char(toupper(cProfile));
-
-	PacketSinkFile.StartRecording(filename.str());
-
-	bIsRecording = TRUE;
+void CRSISubscriberFile::StartRecording()
+{
+	PacketSinkFile.StartRecording();
 }
 
 void CRSISubscriberFile::StopRecording()
 {
 	PacketSinkFile.StopRecording();
-	bIsRecording = FALSE;
-}
-
-void CRSISubscriberFile::NewFrequency(CParameter &ReceiverParam)
-{
-	/* Has it really changed? */
-	int iNewFrequency = ReceiverParam.ReceptLog.GetFrequency();
-
-	if (iNewFrequency != iFrequency)
-	{
-		iFrequency = iNewFrequency;
-
-		if (bIsRecording)
-		{
-			StopRecording();
-			StartRecording(ReceiverParam);
-		}
-	}
 }

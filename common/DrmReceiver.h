@@ -106,6 +106,13 @@ protected:
 	int iStreamID;
 };
 
+class CSplitAudio : public CSplitModul<_SAMPLE>
+{
+	void SetInputBlockSize(CParameter& p)
+		{this->iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE * (_REAL) 0.4 /* 400 ms */) * 2 /* stereo */;}
+};
+
+
 class CDRMReceiver
 #ifdef USE_QT_GUI
 	: public QThread
@@ -126,7 +133,7 @@ public:
 	void					Init();
 	void					Start();
 	void					Stop();
-	EAcqStat				GetReceiverState() {return eAcquiState;}
+	EAcqStat				GetReceiverState() {return pReceiverParam->eAcquiState;}
 	ERecMode				GetReceiverMode() {return eReceiverMode;}
 	void					SetReceiverMode(ERecMode eNewMode)
 								{eNewReceiverMode = eNewMode;}
@@ -213,15 +220,15 @@ public:
 	CAMSSDecode*			GetAMSSDecode() {return &AMSSDecode;}
 	CFreqSyncAcq*			GetFreqSyncAcq() {return &FreqSyncAcq;}
 	CAudioSourceDecoder*	GetAudSorceDec() {return &AudioSourceDecoder;}
-	CRSIMDIInRCIOut*		GetRSIIn() {return &upstreamRSCI;}
-	CRSIMDIOutRCIIn*		GetRSIOut() {return &downstreamRSCI;}
+	CUpstreamDI*			GetRSIIn() {return &upstreamRSCI;}
+	CDownstreamDI*			GetRSIOut() {return &downstreamRSCI;}
 #ifdef HAVE_LIBHAMLIB
 	CHamlib*				GetHamlib() {return &Hamlib;}
 #endif
 	_BOOLEAN				SignalStrengthAvailable() { return TRUE; }
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
-	CParameter*				GetParameters() {return &ReceiverParam;}
+	CParameter*				GetParameters() {return pReceiverParam;}
 	void					StartParameters(CParameter& Param);
 	void					SetInStartMode();
 	void					SetInTrackingMode();
@@ -285,6 +292,8 @@ protected:
 	CSplit					Split;
 	CSplit					SplitForIQRecord;
 	CWriteIQFile			WriteIQFile;
+	CSplitAudio				SplitAudio;
+	CAudioSourceEncoderRx	AudioSourceEncoder; // For encoding the audio for RSI
 	CSplitFAC				SplitFAC;
 	CSplitSDC				SplitSDC;
 	CSplitMSC				SplitMSC[MAX_NUM_STREAMS];
@@ -293,12 +302,14 @@ protected:
 	CAMSSExtractBits		AMSSExtractBits;
 	CAMSSDecode				AMSSDecode;
 
-	CRSIMDIInRCIOut			upstreamRSCI;
+	CUpstreamDI				upstreamRSCI;
 	CDecodeRSIMDI			DecodeRSIMDI;
-	CRSIMDIOutRCIIn			downstreamRSCI;
+	CDownstreamDI			downstreamRSCI;
 
 	/* Parameters */
-	CParameter				ReceiverParam;
+	CParameter*				pReceiverParam;
+	CParameter*				pDRMParam;
+	CParameter*				pAMParam;
 
 	/* Buffers */
 	CSingleBuffer<_REAL>			AMDataBuf;
@@ -332,9 +343,11 @@ protected:
 	vector<CSingleBuffer<_BINARY> >	MSCDecBuf;
 	vector<CSingleBuffer<_BINARY> >	MSCUseBuf;
 	vector<CSingleBuffer<_BINARY> >	MSCSendBuf;
+	CSingleBuffer<_BINARY>			EncAMAudioBuf;
 	CCyclicBuffer<_SAMPLE>			AudSoDecBuf;
+	CCyclicBuffer<_SAMPLE>			AMAudioBuf;
+	CCyclicBuffer<_SAMPLE>			AMSoEncBuf; // For encoding
 
-	EAcqStat				eAcquiState;
 	int						iAcquRestartCnt;
 	int						iAcquDetecCnt;
 	int						iGoodSignCnt;
@@ -378,16 +391,16 @@ protected:
 	/* Counter for unlocked frames, to keep generating RSCI even when unlocked */
 	int						iUnlockedCount;
 
-#ifdef USE_QT_GUI
+#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
 	class CRigPoll : public QThread
 	{
 	public:
-		CRigPoll():pDrmRec(NULL),bQuit(FALSE){ }
+		CRigPoll():pDRMRec(NULL),bQuit(FALSE){ }
 		virtual void	run();
 		virtual void	stop(){bQuit=TRUE;}
-		void setReceiver(CDRMReceiver* pRx){pDrmRec=pRx;}
+		void 			SetReceiver(CDRMReceiver* prx) { pDRMRec = prx; }
 	protected:
-			CDRMReceiver* pDrmRec;
+			CDRMReceiver* pDRMRec;
 			_BOOLEAN	bQuit;
 	} RigPoll;
 #endif

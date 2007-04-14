@@ -52,6 +52,7 @@ drmwithoutqt_SOURCES = \
 	../common/mlc/TrellisUpdateSSE2.cpp \
 	../common/mlc/QAMMapping.cpp \
 	../common/mlc/ChannelCode.cpp \
+	../common/MDI/AFPacketGenerator.cpp \
 	../common/MDI/MDIRSCI.cpp \
 	../common/MDI/MDIDecode.cpp \
 	../common/MDI/MDIInBuffer.cpp \
@@ -133,6 +134,7 @@ drmwithoutqt_SOURCES = \
 	../common/mlc/QAMMapping.h \
 	../common/mlc/ViterbiDecoder.h \
 	../common/mlc/ChannelCode.h \
+	../common/MDI/AFPacketGenerator.h \
 	../common/MDI/MDIRSCI.h \
 	../common/MDI/MDIDefinitions.h \
 	../common/MDI/MDIDecode.h \
@@ -221,6 +223,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/GeneralSettingsDlg.cpp \
 	../common/GUI-QT/EPGDlg.cpp \
 	../common/GUI-QT/AnalogDemDlg.cpp \
+	../common/MDI/PacketSourceFile.cpp \
 	../common/MDI/PacketSocketQT.cpp \
 	../common/GUI-QT/fdrmdialogbase.ui \
 	../common/GUI-QT/TransmDlgbase.ui \
@@ -248,6 +251,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/GeneralSettingsDlg.h \
 	../common/GUI-QT/EPGDlg.h \
 	../common/GUI-QT/AnalogDemDlg.h \
+	../common/MDI/PacketSourceFile.h \
 	../common/MDI/PacketSocketQT.h \
 	../common/MDI/PacketSinkFile.h \
 	../common/datadecoding/epg/epgdec.h \
@@ -276,7 +280,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp \
 	moc/moc_AMSSDlgbase.cpp moc/AMSSDlgbase.h moc/AMSSDlgbase.cpp \
-	moc/moc_PacketSocketQT.cpp moc/moc_GPSReceiver.cpp
+	moc/moc_PacketSourceFile.cpp moc/moc_PacketSocketQT.cpp moc/moc_GPSReceiver.cpp
 
 # and should be cleaned by make clean
 
@@ -294,6 +298,9 @@ moc/moc_DRMPlot.cpp: ../common/GUI-QT/DRMPlot.h
 
 moc/moc_DialogUtil.cpp: ../common/GUI-QT/DialogUtil.h
 	$(MOC) ../common/GUI-QT/DialogUtil.h -o moc/moc_DialogUtil.cpp
+
+moc/moc_PacketSourceFile.cpp: ../common/MDI/PacketSourceFile.h
+	$(MOC) ../common/MDI/PacketSourceFile.h -o moc/moc_PacketSourceFile.cpp
 
 moc/moc_PacketSocketQT.cpp: ../common/MDI/PacketSocketQT.h
 	$(MOC) ../common/MDI/PacketSocketQT.h -o moc/moc_PacketSocketQT.cpp

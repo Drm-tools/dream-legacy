@@ -57,15 +57,16 @@ class CPacketSocketNull : public CPacketSocket
 public:
 
 	// Set the sink which will receive the packets
-	void SetPacketSink(CPacketSink *pSink);
+	virtual void SetPacketSink(CPacketSink *pSink);
 	// Stop sending packets to the sink
-	void ResetPacketSink(void);
+	virtual void ResetPacketSink(void);
 
 	// Send packet to the socket
-	void SendPacket(const vector<_BYTE>& vecbydata);
+	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
-	_BOOLEAN SetNetwOutAddr(const string& str);
-	_BOOLEAN SetNetwInAddr(const string& str);
+	_BOOLEAN SetDestination(const string& str);
+	_BOOLEAN SetOrigin(const string& str);
+	_BOOLEAN GetDestination(string& str);
 };
 
 #endif

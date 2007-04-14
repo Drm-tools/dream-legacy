@@ -44,12 +44,21 @@
 
 #include "MDIRSCI.h"
 #include "../DrmReceiver.h"
+#ifdef USE_QT_GUI
+#  include "PacketSocketQT.h"
+#  include "PacketSourceFile.h"
+#else
+# include "PacketSocketNull.h"
+#endif
+#include <sstream>
+#include <iomanip>
+#include <qhostaddress.h>
 
 /* Implementation *************************************************************/
-CRSIMDIOutRCIIn::CRSIMDIOutRCIIn() : iLogFraCnt(0),
-	bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE),
+CDownstreamDI::CDownstreamDI() : iLogFraCnt(0),
+	bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE),bIsRecording(FALSE),
 	vecTagItemGeneratorStr(MAX_NUM_STREAMS), vecTagItemGeneratorRBP(MAX_NUM_STREAMS),
-	vecRSISubscribers(0)
+	RSISubscribers(),pRSISubscriberFile(new CRSISubscriberFile)
 {
 	/* Initialise all the generators for strx and rbpx tags */
 	for (int i=0; i<MAX_NUM_STREAMS; i++)
@@ -65,24 +74,25 @@ CRSIMDIOutRCIIn::CRSIMDIOutRCIIn() : iLogFraCnt(0),
 	TagItemGeneratorProTyMDI.GenTag();
 	TagItemGeneratorProTyRSCI.GenTag();
 
-
-	/* Default settings for the "special protocol settings" ----------------- */
-	/* default profile, otherwise using --rsiout with no --rsioutprofile generates empty
-	 * AF packets
-	 */
-	SetProfile('A');
-
-
 	/* Add the file subscriber to the list of subscribers */
-	vecRSISubscribers.Add(&RSISubscriberFile);
+	RSISubscribers[""] = pRSISubscriberFile;
 
 }
 
+CDownstreamDI::~CDownstreamDI() 
+{
+	for(map<string,CRSISubscriber*>::iterator i = RSISubscribers.begin();
+			i!=RSISubscribers.end(); i++)
+	{
+		delete i->second;
+	}
+}
+
 /******************************************************************************\
-* MDI transmit                                                                 *
+* DI send status, receive control                                             *
 \******************************************************************************/
 /* Access functions ***********************************************************/
-void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
+void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 						CSingleBuffer<_BINARY>& FACData,
 						CSingleBuffer<_BINARY>& SDCData,
 						vector<CSingleBuffer<_BINARY> >& vecMSCData
@@ -90,7 +100,8 @@ void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
 {
 	TagItemGeneratorFAC.GenTag(Parameter, FACData);
 	TagItemGeneratorSDC.GenTag(Parameter, SDCData);
-	for (size_t i = 0; i < vecMSCData.size(); i++)
+	//for (size_t i = 0; i < vecMSCData.size(); i++)
+	for (size_t i = 0; i < MAX_NUM_STREAMS; i++)
 	{
 		vecTagItemGeneratorStr[i].GenTag(Parameter, vecMSCData[i]);
 	}
@@ -119,7 +130,6 @@ void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
 	TagItemGeneratorPilots.GenTag(Parameter);
 
-
 	/* Generate some other tags */
 	_REAL rSigStr = 0.0;
 	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
@@ -127,10 +137,10 @@ void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
 
 	TagItemGeneratorGPS.GenTag(TRUE, Parameter.ReceptLog.GPSData);	// rgps
 	
-	GenMDIPacket();
+	GenDIPacket();
 }
 
-void CRSIMDIOutRCIIn::SendUnlockedFrame(CParameter& Parameter)
+void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 {
 	/* This is called once per frame if the receiver is unlocked */
 
@@ -171,10 +181,10 @@ void CRSIMDIOutRCIIn::SendUnlockedFrame(CParameter& Parameter)
 
 	TagItemGeneratorGPS.GenTag(TRUE, Parameter.ReceptLog.GPSData);	/* rgps */
 
-	GenMDIPacket();
+	GenDIPacket();
 }
 
-void CRSIMDIOutRCIIn::SendAMFrame(CParameter& Parameter)
+void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& CodedAudioData)
 {
 		/* This is called once per 400ms if the receiver is in AM mode */
 
@@ -203,7 +213,10 @@ void CRSIMDIOutRCIIn::SendAMFrame(CParameter& Parameter)
 
 	TagItemGeneratorPilots.GenEmptyTag();
 
-	TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
+	TagItemGeneratorRNIP.GenTag(TRUE, Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
+
+	// Generate a rama tag with the encoded audio data
+	TagItemGeneratorAMAudio.GenTag(Parameter, CodedAudioData);
 
 	/* Generate some other tags */
 	TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
@@ -215,18 +228,17 @@ void CRSIMDIOutRCIIn::SendAMFrame(CParameter& Parameter)
 
 	TagItemGeneratorGPS.GenTag(TRUE, Parameter.ReceptLog.GPSData);	/* rgps */
 
-	// TransmitPacket(GenMDIPacket());
-	GenMDIPacket();
-
+	GenDIPacket();
 }
 
-void CRSIMDIOutRCIIn::SetReceiver(CDRMReceiver *pReceiver)
+void CDownstreamDI::SetReceiver(CDRMReceiver *pReceiver)
 {
-	RSISubscriberSocketMain.SetReceiver(pReceiver);
+	/* use the File subscriber to handle RSCI commands */
+	pRSISubscriberFile->SetReceiver(pReceiver);
 }
 
-/* Actual MDI protocol implementation *****************************************/
-void CRSIMDIOutRCIIn::GenMDIPacket()
+/* Actual DRM DI protocol implementation *****************************************/
+void CDownstreamDI::GenDIPacket()
 {
 	/* Reset the tag packet generator */
 	TagPacketGenerator.Reset();
@@ -236,9 +248,6 @@ void CRSIMDIOutRCIIn::GenMDIPacket()
 
 	/* Increment MDI packet counter and generate counter tag */
 	TagItemGeneratorLoFrCnt.GenTag();
-
-	/* Generate the rpro tag to indicate the current profile */
-	TagItemGeneratorProfile.GenTag(cProfile);
 
 	/* dlfc tag */
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorLoFrCnt);
@@ -283,6 +292,7 @@ void CRSIMDIOutRCIIn::GenMDIPacket()
 	{
 		TagPacketGenerator.AddTagItem(&vecTagItemGeneratorStr[i]);
 	}
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorAMAudio);
 
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorSignalStrength);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorRAFS);
@@ -308,12 +318,16 @@ void CRSIMDIOutRCIIn::GenMDIPacket()
 	/*return TagPacketGenerator.GenAFPacket(bUseAFCRC);*/
 
 	/* transmit a packet to each subscriber */
-	for (i = 0; i < vecRSISubscribers.size(); i++)
-		vecRSISubscribers[i]->TransmitPacket(&TagPacketGenerator);
-
+	for(map<string,CRSISubscriber*>::iterator s = RSISubscribers.begin();
+			s!=RSISubscribers.end(); s++)
+	{
+		// re-generate the profile tag for each subscriber
+		TagItemGeneratorProfile.GenTag(s->second->GetProfile());
+		s->second->TransmitPacket(&TagPacketGenerator);
+	}
 }
 
-void CRSIMDIOutRCIIn::ResetTags()
+void CDownstreamDI::ResetTags()
 {
 	/* Do not reset "*ptr" tag because this one is static */
 	/* This group of tags are generated each time so don't need empty tags generated */
@@ -352,161 +366,292 @@ void CRSIMDIOutRCIIn::ResetTags()
 		vecTagItemGeneratorRBP[i].GenEmptyTag(); // make empty version of mandatory tag that isn't implemented 
 	}
 
+	TagItemGeneratorAMAudio.Reset(); // don't make the tag in DRM mode
+
 	TagItemGeneratorSDC.GenEmptyTag();
 }
 
-void CRSIMDIOutRCIIn::GetNextPacket(CSingleBuffer<_BINARY>& buf)
+void CDownstreamDI::GetNextPacket(CSingleBuffer<_BINARY>&)
 {
 	// TODO 
-	(void)buf;
 }
 
-void CRSIMDIOutRCIIn::SetInAddr(const string& strAddr)
+_BOOLEAN CDownstreamDI::SetOrigin(const string& strAddr)
 {
-	/* If port number is set, MDI input will be enabled */
-	bMDIInEnabled = TRUE;
+	/* only allow one listening address */
+	if(bMDIInEnabled == TRUE)
+		return FALSE;
 
-#ifdef USE_QT_GUI
-	// Delegate to socket
-	_BOOLEAN bOK = RSISubscriberSocketMain.SetInAddr(strAddr);
-	(void)bOK;
-#else
-	(void)strAddr;
-#endif
-}
-
-void CRSIMDIOutRCIIn::SetOutAddr(const string& strArgument)
-{
-	_BOOLEAN bAddressOK = TRUE;
-	// Delegate to socket
-#ifdef USE_QT_GUI
-	bAddressOK = RSISubscriberSocketMain.SetOutAddr(strArgument);
-#else
-	(void)strArgument;
-#endif
-
-	// If successful, set flag to enable MDI output
-	if (bAddressOK)
+	if(source == NULL)
 	{
-		SetEnableMDIOut(TRUE);
-		vecRSISubscribers.Add(&RSISubscriberSocketMain);
+#ifdef USE_QT_GUI
+		source = new CPacketSocketQT;
+#endif
 	}
+
+	if(source == NULL)
+		return FALSE;
+
+	// Delegate to socket
+	_BOOLEAN bOK = source->SetOrigin(strAddr);
+
+	if (bOK)
+	{
+		source->SetPacketSink(this);
+		bMDIInEnabled = TRUE;
+		return TRUE;
+	}
+	return FALSE;
 }
 
-void CRSIMDIOutRCIIn::SetProfile(const char c)
+_BOOLEAN CDownstreamDI::SetDestination(const string& str)
 {
-	RSISubscriberSocketMain.SetProfile(c);
+	/* allow multiple destinations, allow destinations to send cpro instructions back */
+
+	if (RSISubscribers.size() <= MAX_NUM_RSI_SUBSCRIBERS)
+	{
+		CRSISubscriberSocket* p = new CRSISubscriberSocket(NULL);
+		_BOOLEAN bAddressOK = p->SetDestination(str);
+		// If successful, set flag to enable MDI output
+		if (bAddressOK)
+		{
+			string a;
+			bMDIOutEnabled = TRUE;
+			if(p->GetDestination(a))
+			{
+				/* TODO incoporate port */
+				RSISubscribers[a] = p;
+			}
+			return TRUE;
+		}
+		else
+			delete p;
+	}
+	return FALSE;
+}
+
+_BOOLEAN CDownstreamDI::GetDestination(string& str)
+{
+	return FALSE; // makes no sense 
+}
+
+void CDownstreamDI::SetProfile(char c)
+{
+	/* set profile for all subscribers with no profile */
+	for(map<string,CRSISubscriber*>::iterator i = RSISubscribers.begin();
+			i!=RSISubscribers.end(); i++)
+	{
+		if(i->second->GetProfile() == 0)
+			i->second->SetProfile(c);
+	}
 	cProfile = c;
 }
 
-void CRSIMDIOutRCIIn::SetAFPktCRC(const _BOOLEAN bNAFPktCRC)
+void CDownstreamDI::SetAFPktCRC(const _BOOLEAN bNAFPktCRC)
 {
-	RSISubscriberSocketMain.SetAFPktCRC(bNAFPktCRC);
+	for(map<string,CRSISubscriber*>::iterator i = RSISubscribers.begin();
+			i!=RSISubscribers.end(); i++)
+			i->second->SetAFPktCRC(bNAFPktCRC);
 }
 
-void CRSIMDIOutRCIIn::SetRSIRecording(CParameter& Parameter, const _BOOLEAN bOn, const char cPro)
+string CDownstreamDI::GetRSIfilename(CParameter& Parameter)
+{
+	/* Get current UTC time */
+	time_t ltime;
+	time(&ltime);
+	struct tm* gmtCur = gmtime(&ltime);
+
+	iFrequency = Parameter.ReceptLog.GetFrequency(); // remember this for later
+
+	stringstream filename;
+	filename << Parameter.sDataFilesDirectory;
+	filename << Parameter.sReceiverID << "_";
+	filename << setw(4) << setfill('0') << gmtCur->tm_year + 1900 << "-" << setw(2) << setfill('0')<< gmtCur->tm_mon + 1;
+	filename << "-" << setw(2) << setfill('0')<< gmtCur->tm_mday << "_";
+	filename << setw(2) << setfill('0') << gmtCur->tm_hour << "-" << setw(2) << setfill('0')<< gmtCur->tm_min;
+	filename << "-" << setw(2) << setfill('0')<< gmtCur->tm_sec << "_";
+	filename << setw(8) << setfill('0') << (iFrequency*1000) << ".rs" << char(toupper(cProfile));
+	return filename.str();
+}
+
+void CDownstreamDI::SetRSIRecording(CParameter& Parameter, const _BOOLEAN bOn, char cPro)
 {
 	if (bOn)
 	{
-		RSISubscriberFile.SetProfile(cPro);
-		RSISubscriberFile.StartRecording(Parameter);
+		pRSISubscriberFile->SetProfile(cPro);
+
+		pRSISubscriberFile->SetDestination(GetRSIfilename(Parameter));
+		pRSISubscriberFile->StartRecording();
 		bMDIOutEnabled = TRUE;
+		bIsRecording = TRUE;
 	}
 	else
 	{
-		RSISubscriberFile.StopRecording();
+		pRSISubscriberFile->StopRecording();
+		bIsRecording = FALSE;
 	}
 }
 
  /* needs to be called in case a new RSCI file needs to be started */
-void CRSIMDIOutRCIIn::NewFrequency(CParameter& Parameter)
+void CDownstreamDI::NewFrequency(CParameter& Parameter)
 {
-	RSISubscriberFile.NewFrequency(Parameter);
+	/* Has it really changed? */
+	int iNewFrequency = Parameter.ReceptLog.GetFrequency();
+
+	if (iNewFrequency != iFrequency)
+	{
+		if (bIsRecording)
+		{
+			pRSISubscriberFile->StopRecording();
+			pRSISubscriberFile->SetDestination(GetRSIfilename(Parameter));
+			pRSISubscriberFile->StartRecording();
+		}
+	}
 }
 
+/* this gets called with incoming RSCI Control packets.
+ * Send it on to the RSISubscriber. This probably doesn't have the receiver pointer
+ * but it can use it to let the far end control the profile
+ * so send it to the File subscriber as well which we know does have the pointer.
+ */
+
+void CDownstreamDI::SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr, uint16_t port)
+{
+	stringstream key;
+	QHostAddress a(addr);
+	key << a.toString() << ":" << port;
+	map<string,CRSISubscriber*>::iterator s = RSISubscribers.find(key.str());
+	if(s != RSISubscribers.end())
+		s->second->SendPacket(vecbydata);
+	pRSISubscriberFile->SendPacket(vecbydata);
+}
 
 /******************************************************************************\
-* MDI receive                                                                  *
+* DI receive status, send control                                             * 
 \******************************************************************************/
-CRSIMDIInRCIOut::CRSIMDIInRCIOut() :
-	bUseAFCRC(TRUE), bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE)
+CUpstreamDI::CUpstreamDI() : source(NULL), sink(NULL), bUseAFCRC(TRUE), bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE)
 {
 	/* Init constant tag */
 	TagItemGeneratorProTyRSCI.GenTag();
 }
 
-void CRSIMDIInRCIOut::SetInAddr(const string& strAddr)
+CUpstreamDI::~CUpstreamDI()
 {
-	/* If port number is set, MDI input will be enabled */
-	bMDIInEnabled = TRUE;
-#ifdef USE_QT_GUI
-	// Delegate to socket
-	_BOOLEAN bOK = PacketSocket.SetNetwInAddr(strAddr);
+	if(source)
+	{
+		if(sink && (void*)sink != (void*)source)
+			delete sink;
+		delete source;
+	}
+}
 
+_BOOLEAN CUpstreamDI::SetOrigin(const string& str)
+{
+	/* only allow one listening address */
+	if(bMDIInEnabled == TRUE)
+		return FALSE;
+
+	if(source)
+		return FALSE;
+
+	strOrigin = str;
+
+	// try a socket
+#ifdef USE_QT_GUI
+	source = new CPacketSocketQT;
+#else
+	source = new CPacketSocketNull;
+#endif
+
+	// Delegate to socket
+	_BOOLEAN bOK = source->SetOrigin(str);
+
+	if(!bOK)
+	{
+		// try a file
+		delete source;
+		source = NULL;
+#ifdef USE_QT_GUI
+		source = new CPacketSourceFile;
+		bOK = source->SetOrigin(str);
+#endif
+	}
 	if (bOK)
-		// Connect socket to the MDI decoder
-		PacketSocket.SetPacketSink(this);
-#else
-	(void)strAddr;
-#endif
+	{
+		source->SetPacketSink(this);
+		bMDIInEnabled = TRUE;
+		return TRUE;
+	}
+	return FALSE;
 }
 
-void CRSIMDIInRCIOut::SetOutAddr(const string& strArgument)
+_BOOLEAN CUpstreamDI::SetDestination(const string& str)
 {
-	_BOOLEAN bAddressOK = TRUE;
-	// Delegate to socket
+	strDestination = str;
+	if(sink==NULL)
+	{
 #ifdef USE_QT_GUI
-	bAddressOK = PacketSocket.SetNetwOutAddr(strArgument);
-#else
-	(void)strArgument;
-	bAddressOK=FALSE;
+		sink = new CPacketSocketQT;
 #endif
-	if(bAddressOK)
-		bMDIOutEnabled = TRUE;
+	}
+
+	if(sink==NULL)
+		return FALSE;
+
+	bMDIOutEnabled = sink->SetDestination(strDestination);
+
+	return bMDIOutEnabled;
 }
 
-void CRSIMDIInRCIOut::SetFrequency(int iNewFreqkHz)
+_BOOLEAN CUpstreamDI::GetDestination(string& str)
+{
+	if(sink)
+		return sink->GetDestination(str);
+	return FALSE;
+}
+
+void
+CUpstreamDI::doSendPacket(const vector<_BYTE>& vecbydata)
+{
+	if(bMDIOutEnabled)
+	{
+		sink->SendPacket(vecbydata);
+	}
+}
+
+void CUpstreamDI::SetFrequency(int iNewFreqkHz)
 {
 	TagPacketGenerator.Reset();
 	TagItemGeneratorCfre.GenTag(iNewFreqkHz);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyRSCI);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorCfre);
-	CVector<_BYTE> packet = TagPacketGenerator.GenAFPacket(bUseAFCRC);
-
-#ifdef USE_QT_GUI
-	PacketSocket.SendPacket(packet);
-#endif
+	CVector<_BYTE> packet = AFPacketGenerator.GenAFPacket(bUseAFCRC, &TagPacketGenerator);
+	doSendPacket(packet);
 }
 
-void CRSIMDIInRCIOut::SetReceiverMode(ERecMode eNewMode)
+void CUpstreamDI::SetReceiverMode(ERecMode eNewMode)
 {
-cout << "send cdmo" << endl; cout.flush();
 	TagPacketGenerator.Reset();
 	TagItemGeneratorCdmo.GenTag(eNewMode);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyRSCI);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorCdmo);
-	CVector<_BYTE> packet = TagPacketGenerator.GenAFPacket(bUseAFCRC);
-
-#ifdef USE_QT_GUI
-	PacketSocket.SendPacket(packet);
-#endif
+	CVector<_BYTE> packet = AFPacketGenerator.GenAFPacket(bUseAFCRC, &TagPacketGenerator);
+	doSendPacket(packet);
 }
 
 /* bits to bytes and send */
 
-void CRSIMDIInRCIOut::TransmitPacket(CVector<_BINARY>& vecbidata)
+void CUpstreamDI::TransmitPacket(CVector<_BINARY>& vecbidata)
 {
 	vector<_BYTE> packet;
 	vecbidata.ResetBitAccess();
 	for(size_t i=0; i<size_t(vecbidata.Size()/SIZEOF__BYTE); i++)
 		packet.push_back(_BYTE(vecbidata.Separate(SIZEOF__BYTE)));
-#ifdef USE_QT_GUI
-	PacketSocket.SendPacket(packet);
-#endif
+	doSendPacket(packet);
 }
 
-#ifdef USE_QT_GUI
-void CRSIMDIInRCIOut::SendPacket(const vector<_BYTE>& vecbydata)
+/* we only support one upstream RSCI source, so ignore the source address */
+void CUpstreamDI::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16_t)
 {
 	if(vecbydata[0]=='P')
 	{
@@ -519,22 +664,17 @@ void CRSIMDIInRCIOut::SendPacket(const vector<_BYTE>& vecbydata)
 	else
 		queue.Put(vecbydata);
 }
-#endif
 
-void CRSIMDIInRCIOut::InitInternal(CParameter&)
+void CUpstreamDI::InitInternal(CParameter&)
 {
 	iInputBlockSize = 1; /* anything is enough but not zero */
 	iMaxOutputBlockSize = 2048*SIZEOF__BYTE; /* bigger than an ethernet packet */
 }
 
-void CRSIMDIInRCIOut::ProcessDataInternal(CParameter&)
+void CUpstreamDI::ProcessDataInternal(CParameter&)
 {
 	vector<_BYTE> vecbydata;
-#ifdef USE_QT_GUI
 	queue.Get(vecbydata);
-#else
-	// use a select here
-#endif
 	iOutputBlockSize = vecbydata.size()*SIZEOF__BYTE;
 	pvecOutputData->Init(iOutputBlockSize);
 	pvecOutputData->ResetBitAccess();

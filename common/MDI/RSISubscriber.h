@@ -34,6 +34,7 @@
 #include "PacketInOut.h"
 #include "PacketSinkFile.h"
 #include "PacketInOut.h"
+#include "AFPacketGenerator.h"
 
 class CPacketSink;
 class CDRMReceiver;
@@ -50,6 +51,7 @@ public:
 
 	/* Set the profile for this subscriber - could be different for different subscribers */
 	void SetProfile(const char c);
+	char GetProfile(void) const {return cProfile;}
 
 	/* Generate and send a packet */
 	void TransmitPacket(CTagPacketGeneratorWithProfiles *pGenerator);
@@ -58,7 +60,7 @@ public:
 
 
 	/* from CPacketSink interface */
-		virtual void SendPacket(const vector<_BYTE>& vecbydata);
+	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
 protected:
 	CPacketSink *pPacketSink;
@@ -66,25 +68,27 @@ protected:
 private:
 	CTagPacketDecoderRSCIControl TagPacketDecoderRSCIControl;
 	CDRMReceiver *pDRMReceiver;
+	CAFPacketGenerator AFPacketGenerator;
 
 	_BOOLEAN bUseAFCRC;
-
 };
 
 
 class CRSISubscriberSocket : public CRSISubscriber
 {
 public:
-	CRSISubscriberSocket();
+	CRSISubscriberSocket(CPacketSink *pSink = NULL);
 	virtual ~CRSISubscriberSocket();
 
-	_BOOLEAN SetOutAddr(const string& strArgument);
-	_BOOLEAN SetInAddr(const string& strAddr);
-
+	_BOOLEAN SetOrigin(const string& str);
+	_BOOLEAN SetDestination(const string& str);
+	_BOOLEAN GetDestination(string& addr);
 
 private:
-	CPacketSocket&				PacketSocket;
-
+	CPacketSocket* pSocket;
+	string strDestination;
+	uint32_t uIf, uAddr;
+	uint16_t uPort;
 };
 
 
@@ -93,15 +97,13 @@ class CRSISubscriberFile : public CRSISubscriber
 public:
 	CRSISubscriberFile();
 
-	void StartRecording(CParameter &ReceiverParam);
+	_BOOLEAN SetDestination(const string& strFName);
+	void StartRecording();
 	void StopRecording();
-	/* this needs to be called when the frequency changes so the filename can be changed */
-	void NewFrequency(CParameter& ReceiverParam);
 
+	_BOOLEAN GetDestination(string& addr);
 private:
 	CPacketSinkRawFile PacketSinkFile;
-	_BOOLEAN bIsRecording;
-	int	iFrequency;
 };
 
 #endif

@@ -562,7 +562,6 @@ void CReceiveData::PutPSD(CParameter &ReceiverParam)
 
 	CalculatePSDInterferenceTag(ReceiverParam, vecrData);
 
-
 }
 
 void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD)

@@ -38,6 +38,9 @@ public:
 	// constructor: adds all of the decoders in the vocabulary to the list
 	CTagPacketDecoderMDI();
 
+	// Overridden tag packet decoder function - clear the str tags before decoding
+	virtual void DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, int iPayloadLen);
+
 	// Decoders for each of the tag items in the vocabulary
 	CTagItemDecoderProTy		TagItemDecoderProTy;
 	CTagItemDecoderLoFrCnt		TagItemDecoderLoFrCnt;
@@ -47,6 +50,8 @@ public:
 	vector<CTagItemDecoderStr>	TagItemDecoderStr;
 	CTagItemDecoderSDCChanInf	TagItemDecoderSDCChanInf;
 	CTagItemDecoderInfo			TagItemDecoderInfo;
+	CTagItemDecoderRxDemodMode	TagItemDecoderRxDemodMode;
+	CTagItemDecoderAMAudio		TagItemDecoderAMAudio;
 };
 
 #endif

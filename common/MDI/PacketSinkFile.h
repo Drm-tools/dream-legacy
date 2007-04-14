@@ -1,6 +1,6 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2004
+ * British Broadcasting Corporation
+ * Copyright (c) 2007
  *
  * Author(s):
  *	Oliver Haffenden
@@ -11,11 +11,6 @@
  *  For the moment this will be a raw file but FF could be added as a decorator
  *  The writing can be stopped and started - if it is not currently writing,
  *  any packets it receives will be silently discarded
- *  
- *
- *  
- *  
- *  
  *
  ******************************************************************************
  *
@@ -44,15 +39,19 @@ class CPacketSinkRawFile : public CPacketSink
 {
 public:
 	CPacketSinkRawFile();
-	virtual void SendPacket(const vector<_BYTE>& vecbydata);
 	virtual ~CPacketSinkRawFile() {}
+	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
-	void StartRecording(const string strFileName);
+	virtual _BOOLEAN SetDestination(const string& strFName);
+	virtual _BOOLEAN GetDestination(string& strFName) { strFName = strFileName; return TRUE; }
+	void StartRecording();
 	void StopRecording();
 
 private:
 	FILE *pFile;
+	_BOOLEAN bIsRecording;
+	_BOOLEAN bReopenFile;
+	string strFileName;
 };
-
 
 #endif

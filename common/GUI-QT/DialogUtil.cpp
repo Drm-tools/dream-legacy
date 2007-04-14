@@ -40,6 +40,12 @@
 #ifdef HAVE_LIBSNDFILE
 # include <sndfile.h>
 #endif
+#ifdef HAVE_LIBPCAP
+# include <pcap.h>
+#endif
+#ifdef HAVE_LIBWIRETAP
+# include <wtap.h>
+#endif
 
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */

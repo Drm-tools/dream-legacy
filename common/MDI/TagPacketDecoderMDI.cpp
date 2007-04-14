@@ -44,6 +44,9 @@ CTagPacketDecoderMDI::CTagPacketDecoderMDI()
 ,	TagItemDecoderStr()
 ,	TagItemDecoderSDCChanInf()
 ,	TagItemDecoderInfo()
+,	TagItemDecoderRxDemodMode()
+,	TagItemDecoderAMAudio()
+
 {
 
 	// Add the tag item decoders to the base class list of decoders
@@ -61,4 +64,20 @@ CTagPacketDecoderMDI::CTagPacketDecoderMDI()
 	}
 	AddTagItemDecoder(&TagItemDecoderSDCChanInf);
 	AddTagItemDecoder(&TagItemDecoderInfo);
+	AddTagItemDecoder(&TagItemDecoderRxDemodMode);
+	AddTagItemDecoder(&TagItemDecoderAMAudio);
+}
+
+void CTagPacketDecoderMDI::DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, int iPayloadLen)
+{
+	// Set strx tags data to zero length in case they are not present
+	for(int i=0; i<MAX_NUM_STREAMS; i++)
+	{
+		TagItemDecoderStr[i].vecbidata.Init(0);
+	}
+	TagItemDecoderAMAudio.vecbidata.Init(0);
+	TagItemDecoderFAC.vecbidata.Init(0);
+	TagItemDecoderSDC.vecbidata.Init(0);
+	// Call base class function to do the actual decoding
+	CTagPacketDecoder::DecodeTagPacket(vecbiPkt, iPayloadLen);
 }

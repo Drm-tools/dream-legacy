@@ -41,8 +41,7 @@
 
 void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	CTagPacketDecoder::Error err = 
-							TagPacketDecoderMDI.DecodeAFPacket(*pvecInputData);
+	CTagPacketDecoder::Error err = TagPacketDecoderMDI.DecodeAFPacket(*pvecInputData);
 	if(err == CTagPacketDecoder::E_OK)
 	{
 		ReceiverParam.ReceiveStatus.SetInterfaceStatus(RX_OK);
@@ -123,6 +122,41 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 		}
     }
 
+	if (TagPacketDecoderMDI.TagItemDecoderRxDemodMode.eMode == RM_AM)
+	{
+		CVector<_BINARY>& vecbiAMAudio = TagPacketDecoderMDI.TagItemDecoderAMAudio.vecbidata;
+		CVector<_BINARY>* pvecOutputData = vecpvecOutputData[0];
+		// Now check length of data vector
+		const int iLen = pvecOutputData->Size();
+		const int iStreamLen = vecbiAMAudio.Size();
+		if (iLen >= iStreamLen)
+		{
+			// Copy data
+			vecbiAMAudio.ResetBitAccess();
+			pvecOutputData->ResetBitAccess();
+			// Data is always a multiple of 8 -> copy bytes
+			for (int j = 0; j < iStreamLen / SIZEOF__BYTE; j++)
+			{
+				pvecOutputData->Enqueue(
+				vecbiAMAudio.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+			}
+			veciOutputBlockSize[0] = iStreamLen;
+		}
+		if (iLen != 0)
+		{
+			/* Get the audio parameters for decoding the coded AM */
+			CParameter::CAudioParam AudioParam = TagPacketDecoderMDI.TagItemDecoderAMAudio.AudioParams;
+			/* Write the audio settings into the parameter object
+			 * CParameter takes care of keeping separate data for AM and DRM
+			 */
+			ReceiverParam.SetAudioParam(0, AudioParam);
+			ReceiverParam.SetStreamLen(0, 0, iStreamLen/SIZEOF__BYTE);
+			ReceiverParam.SetNumOfServices(1,0);
+			ReceiverParam.SetCurSelAudioService(0);
+			ReceiverParam.SetNumDecodedBitsMSC(iStreamLen); // is this necessary?
+		}
+	}
+
 	// TODO RSCI Data Items, MER, etc.
 }
 
@@ -131,7 +165,7 @@ void CDecodeRSIMDI::InitInternal(CParameter& ReceiverParam)
 		iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 		//iOutputBlockSize2 = ReceiverParam.iNumSDCBitsPerSFrame;
 		iMaxOutputBlockSize2 = 1024;
-		size_t numstreams = ReceiverParam.Stream.Size();
+		size_t numstreams = ReceiverParam.Stream.size();
 		//vecpvecOutputData.resize(numstreams);
 		for(size_t i=0; i<numstreams; i++)
 		{
