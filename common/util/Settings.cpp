@@ -36,6 +36,7 @@
 \******************************************************************************/
 
 #include "Settings.h"
+#include <sstream>
 #include <iomanip>
 using namespace std;
 
@@ -140,17 +141,30 @@ void CSettings::ReadIniFile()
 	if (GetFlagIniSet(ini, "Logfile", "enablelog", bValue) == TRUE)
 		pDRMRec->GetParameters()->ReceptLog.SetLoggingEnabled(bValue);
 
+	/* log file flag for storing signal strength in long log */
+	if (GetFlagIniSet(ini, "Logfile", "enablerxl", bValue) == TRUE)
+		pDRMRec->GetParameters()->ReceptLog.SetRxlEnabled(bValue);
+
+	/* log file flag for storing lat/long in long log */
+	if (GetFlagIniSet(ini, "Logfile", "enablepositiondata", bValue) == TRUE)
+		pDRMRec->GetParameters()->ReceptLog.SetPositionEnabled(bValue);
+
 	/* logging delay value */
 	if (GetNumericIniSet(ini, "Logfile", "delay", 0, MAX_SEC_LOG_FI_START, iValue) == TRUE)
 		pDRMRec->GetParameters()->ReceptLog.SetDelLogStart(iValue);
 
 	/* Latitude string for log file */
-	pDRMRec->GetParameters()->ReceptLog.SetLatitude(
-		GetIniSetting(ini, "Logfile", "latitude"));
-
+	string latitude = GetIniSetting(ini, "Logfile", "latitude");
 	/* Longitude string for log file */
-	pDRMRec->GetParameters()->ReceptLog.SetLongitude(
-		GetIniSetting(ini, "Logfile", "longitude"));
+	string longitude = GetIniSetting(ini, "Logfile", "longitude");
+
+	if(latitude != "" && longitude != "")
+	{
+		pDRMRec->GetParameters()->ReceptLog.GPSData.SetPositionAvailable(TRUE);
+		pDRMRec->GetParameters()->ReceptLog.GPSData.SetLatLongDegrees(atof(latitude.c_str()), atof(longitude.c_str()));
+	}
+	else
+		pDRMRec->GetParameters()->ReceptLog.GPSData.SetPositionAvailable(FALSE);
 
 	/* Storage path for files saved from Multimedia dialog */
 	pDRMRec->strStoragePathMMDlg = GetIniSetting(ini, "Multimedia dialog", "storagepath");
@@ -441,20 +455,20 @@ void CSettings::ReadIniFile()
 	if (GetFlagIniSet(ini, "GPS", "usegpsd", bValue) == TRUE)
 	{
 		if (bValue)
-			pDRMRec->GetParameters()->eGPSSource = CParameter::GPS_SOURCE_GPS_RECEIVER;
+			pDRMRec->GetParameters()->ReceptLog.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
 		else
-			pDRMRec->GetParameters()->eGPSSource = CParameter::GPS_SOURCE_MANUAL_ENTRY;
+			pDRMRec->GetParameters()->ReceptLog.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
 	}
 	else
 	{
-		pDRMRec->GetParameters()->eGPSSource = CParameter::GPS_SOURCE_MANUAL_ENTRY;
+		pDRMRec->GetParameters()->ReceptLog.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
 	}
 
-	pDRMRec->GetParameters()->sGPSdHost = GetIniSetting(ini, "GPS", "host", "localhost");
+	pDRMRec->GetParameters()->ReceptLog.GPSData.host = GetIniSetting(ini, "GPS", "host", "localhost");
 	if (GetNumericIniSet(ini, "GPS", "port", 0, 32767, iValue) == TRUE)
-		pDRMRec->GetParameters()->iGPSdPort = iValue;
+		pDRMRec->GetParameters()->ReceptLog.GPSData.port = iValue;
 	else
-		pDRMRec->GetParameters()->iGPSdPort = 2947;
+		pDRMRec->GetParameters()->ReceptLog.GPSData.port = 2947;
 
 	/* Serial Number */
 	sValue = GetIniSetting(ini, "Receiver", "serialnumber");
@@ -537,6 +551,14 @@ void CSettings::WriteIniFile()
 	SetFlagIniSet(ini, "Logfile", "enablelog",
 		pDRMRec->GetParameters()->ReceptLog.GetLoggingEnabled());
 
+	/* log signal strength in long log ? */
+	SetFlagIniSet(ini, "Logfile", "enablerxl",
+		pDRMRec->GetParameters()->ReceptLog.GetRxlEnabled());
+
+	/* log position in long log ? */
+	SetFlagIniSet(ini, "Logfile", "enablepositiondata",
+		pDRMRec->GetParameters()->ReceptLog.GetPositionEnabled());
+
 	/* Start log file delayed */
 	SetNumericIniSet(ini, "Logfile", "delay",
 		pDRMRec->GetParameters()->ReceptLog.GetDelLogStart());
@@ -547,13 +569,21 @@ void CSettings::WriteIniFile()
 		pDRMRec->GetEnableProcessPriority());
 #endif
 
-	/* Latitude string for log file */
-	PutIniSetting(ini, "Logfile", "latitude",
-		pDRMRec->GetParameters()->ReceptLog.GetLatitudeDegreesString().c_str());
+	if(pDRMRec->GetParameters()->ReceptLog.GPSData.GetPositionAvailable())
+	{
+		double latitude, longitude;
+		stringstream ssLat, ssLong;
 
-	/* Longitude string for log file */
-	PutIniSetting(ini, "Logfile", "longitude",
-		pDRMRec->GetParameters()->ReceptLog.GetLongitudeDegreesString().c_str());
+		pDRMRec->GetParameters()->ReceptLog.GPSData.GetLatLongDegrees(latitude, longitude);
+
+		ssLat << latitude; ssLong << longitude;
+
+		/* Latitude string for log file */
+		PutIniSetting(ini, "Logfile", "latitude", ssLat.str().c_str());
+
+		/* Longitude string for log file */
+		PutIniSetting(ini, "Logfile", "longitude", ssLong.str().c_str());
+	}
 
 	/* Storage path for files saved from Multimedia dialog */
 	PutIniSetting(ini, "Multimedia dialog", "storagepath",
@@ -786,11 +816,11 @@ void CSettings::WriteIniFile()
 	
 
 	/* GPS */
-	if (pDRMRec->GetParameters()->eGPSSource == CParameter::GPS_SOURCE_GPS_RECEIVER)
+	if (pDRMRec->GetParameters()->ReceptLog.GPSData.GetGPSSource() == CGPSData::GPS_SOURCE_GPS_RECEIVER)
 	{
 		SetFlagIniSet(ini, "GPS", "usegpsd", TRUE);
-		PutIniSetting(ini, "GPS", "host", pDRMRec->GetParameters()->sGPSdHost.c_str());
-		SetNumericIniSet(ini, "GPS", "port", pDRMRec->GetParameters()->iGPSdPort);
+		PutIniSetting(ini, "GPS", "host", pDRMRec->GetParameters()->ReceptLog.GPSData.host.c_str());
+		SetNumericIniSet(ini, "GPS", "port", pDRMRec->GetParameters()->ReceptLog.GPSData.port);
 	}
 	else
 		SetFlagIniSet(ini, "GPS", "usegpsd", FALSE);
@@ -1147,26 +1177,14 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			continue;
 		}
 
-		/* Latitude string for log file ------------------------------------- */
-		if (GetStringArgument(argc, argv, i, "-a", "--latitude",
-			strArgument) == TRUE)
+		/* Latitude & Longitude string for log file ------------------------------------- */
+		string latitude, longitude;
+		if (GetStringArgument(argc, argv, i, "-a", "--latitude", latitude)
+		&& GetStringArgument(argc, argv, i, "-o", "--longitude", longitude) )
 		{
-			pDRMRec->GetParameters()->ReceptLog.SetLatitude(strArgument);
+			pDRMRec->GetParameters()->ReceptLog.GPSData.SetLatLongDegrees(atof(latitude.c_str()), atof(longitude.c_str()));
 			continue;
 		}
-
-
-		/* Longitude string for log file ------------------------------------ */
-		if (GetStringArgument(argc, argv, i, "-o", "--longitude",
-			strArgument) == TRUE)
-		{
-			pDRMRec->GetParameters()->ReceptLog.SetLongitude(strArgument);
-			continue;
-		}
-
-
-
-
 
 		/* Color scheme main plot ------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-y", "--colorscheme", 0,
@@ -1285,7 +1303,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		{
 			const string strHelp = UsageArguments(argv);
 
-#if defined(_WIN32)
+#if defined(USE_QT_GUI) && defined(_WIN32)
 			MessageBox(NULL, strHelp.c_str(), "Dream",
 				MB_SYSTEMMODAL | MB_OK | MB_ICONINFORMATION);
 #else
@@ -1526,11 +1544,11 @@ CSettings::INIFile CSettings::LoadIni(const char* filename)
 		memset(buffer, 0, sizeof(buffer));
 		file.getline(buffer, sizeof(buffer));
 
-		if ((temp = strchr(buffer, '\n')))
-			*temp = '\0'; /* Cut off at newline */
+		temp = strchr(buffer, '\n');
+		if (temp) *temp = '\0'; /* Cut off at newline */
 
-		if ((temp = strchr(buffer, '\r')))
-			*temp = '\0'; /* Cut off at linefeeds */
+		temp = strchr(buffer, '\r');
+		if (temp) *temp = '\0'; /* Cut off at linefeeds */
 
 		if ((buffer[0] == '[') && (temp = strrchr(buffer, ']')))
 		{   /* if line is like -->   [section name] */

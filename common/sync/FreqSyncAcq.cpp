@@ -77,9 +77,15 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 			for (i = 0; i < iFrAcFFTSize; i++)
 				vecrFFTInput[i] = vecrFFTHistory[i + iStartIdx];
 
+			static CMatlibVector<CReal> vecRet;
+			vecRet.Init(vecrFFTInput.GetSize(), VTY_TEMP);
+
+			for (int k = 0; k < vecrFFTInput.GetSize(); k++)
+				vecRet[k] = vecrFFTInput[k] * vecrHammingWin[k];
+
 			/* Calculate power spectrum (X = real(F)^2 + imag(F)^2) */
 			vecrSqMagFFTOut =
-				SqMag(rfft(vecrFFTInput * vecrHammingWin, FftPlan));
+				SqMag(rfft(vecRet, FftPlan));
 
 			/* Calculate moving average for better estimate of PSD */
 			vvrPSDMovAv.Add(vecrSqMagFFTOut);

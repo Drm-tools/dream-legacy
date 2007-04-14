@@ -260,11 +260,11 @@ void FDRMDialog::OnTimer()
 		if(eReceiverMode != RM_DRM)
 			ChangeGUIModeToDRM();
 		{
+			CParameter& ReceiverParam = *(pDRMRec->GetParameters());
 
 			/* Input level meter */
-			ProgrInputLevel->setValue(pDRMRec->GetReceiver()->GetLevelMeter());
+			ProgrInputLevel->setValue(ReceiverParam.GetIFSignalLevel());
 	
-			CParameter& ReceiverParam = *(pDRMRec->GetParameters());
 			SetStatus(CLED_MSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
 			SetStatus(CLED_SDC, ReceiverParam.ReceiveStatus.GetSDCStatus());
 			SetStatus(CLED_FAC, ReceiverParam.ReceiveStatus.GetFACStatus());
@@ -280,7 +280,7 @@ void FDRMDialog::OnTimer()
 		/* stopping the timer is normally done by the hide signal, but at startup we
 		 * are already hidden and the hide signal doesn't hit the slot
 		 */
-		if(eReceiverMode == RM_DRM)
+		if(eReceiverMode != RM_AM)
 		{
 			Timer.stop();
 			ChangeGUIModeToAM();
@@ -288,12 +288,6 @@ void FDRMDialog::OnTimer()
 		break;
 	case RM_NONE: // wait until working thread starts operating
 		break;
-	}
-	/* open the stations dialog after the main dialog is initialised */
-	if(eNewReceiverMode != RM_NONE && eReceiverMode == RM_NONE)
-	{
-		if (pDRMRec->GeomStationsDlg.bVisible == TRUE)
-			pStationsDlg->show();
 	}
 }
 
@@ -691,47 +685,54 @@ void FDRMDialog::ClearDisplay()
 	LabelServiceLabel->setText(tr("Scanning..."));
 }
 
+/* change mode is only called when the mode REALLY has changed
+ * so no conditionals are needed in this routine
+ */
+
 void FDRMDialog::ChangeGUIModeToDRM()
 {
 	show();
 
-	/* Recover visibility state (only if mode has changed) */
-	if (eReceiverMode != RM_DRM)
-	{
-		/*
-		if (bStationsDlgWasVis == TRUE)
-			pStationsDlg->show();
+	/* Set correct schedule */
+	pStationsDlg->SetCurrentSchedule(CDRMSchedule::SM_DRM);
 
-		if (bLiveSchedDlgWasVis == TRUE)
-			pLiveScheduleDlg->show();
-		*/
+	if (bStationsDlgWasVis == TRUE)
+		pStationsDlg->show();
 
-		if (bEPGDlgWasVis == TRUE)
-			pEPGDlg->show();
+	if (bLiveSchedDlgWasVis == TRUE)
+		pLiveScheduleDlg->show();
 
-		if (bSysEvalDlgWasVis == TRUE)
-			pSysEvalDlg->show();
+	if (bEPGDlgWasVis == TRUE)
+		pEPGDlg->show();
 
-		if (bMultMedDlgWasVis == TRUE)
-			pMultiMediaDlg->show();
-	}
+	if (bSysEvalDlgWasVis == TRUE)
+		pSysEvalDlg->show();
+
+	if (bMultMedDlgWasVis == TRUE)
+		pMultiMediaDlg->show();
+
+	if (pStationsDlg->isVisible())
+		pStationsDlg->LoadSchedule(CDRMSchedule::SM_DRM);
 
 	pSysEvalDlg->StartTimerLogFileStart();
-
-	/* Load correct schedule */
-	pStationsDlg->LoadSchedule(CDRMSchedule::SM_DRM);
 
 	eReceiverMode = RM_DRM;
 }
 
+/* Main window is not needed, hide it.
+ * If DRM only windows are open, hide them.
+ * Make sure analog demodulation dialog is visible
+ */
+
 void FDRMDialog::ChangeGUIModeToAM()
 {
-	/* Main window is not needed, hide it. If Multimedia window was open,
-		  hide it. Make sure analog demodulation dialog is visible */
 	/* Store visibility state */
-	bSysEvalDlgWasVis = pSysEvalDlg->isVisible();
-	bMultMedDlgWasVis = pMultiMediaDlg->isVisible();
-	bEPGDlgWasVis = pEPGDlg->isVisible();
+	if (eReceiverMode != RM_NONE)
+	{
+		bSysEvalDlgWasVis = pSysEvalDlg->isVisible();
+		bMultMedDlgWasVis = pMultiMediaDlg->isVisible();
+		bEPGDlgWasVis = pEPGDlg->isVisible();
+	}
 
 	pSysEvalDlg->hide();
 	pMultiMediaDlg->hide();
@@ -739,12 +740,21 @@ void FDRMDialog::ChangeGUIModeToAM()
 
 	pSysEvalDlg->StopLogTimers();
 
-	/* Load correct schedule */
-	pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
-
 	this->hide();
 
 	pAnalogDemDlg->show();
+
+	/* Set correct schedule */
+	pStationsDlg->SetCurrentSchedule(CDRMSchedule::SM_ANALOG);
+
+	if (bStationsDlgWasVis == TRUE)
+		pStationsDlg->show();
+
+	if (bLiveSchedDlgWasVis == TRUE)
+		pLiveScheduleDlg->show();
+
+	if (pStationsDlg->isVisible())
+		pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
 
 	eReceiverMode = RM_AM;
 }
@@ -764,6 +774,9 @@ void FDRMDialog::hideEvent(QHideEvent*)
 
 void FDRMDialog::OnSwitchToDRM()
 {
+	bStationsDlgWasVis = pStationsDlg->isVisible();
+	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
+
 	pDRMRec->SetReceiverMode(RM_DRM);
 	OnTimer();
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
@@ -771,6 +784,8 @@ void FDRMDialog::OnSwitchToDRM()
 
 void FDRMDialog::OnSwitchToAM()
 {
+	bStationsDlgWasVis = pStationsDlg->isVisible();
+	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
 	pDRMRec->SetReceiverMode(RM_AM);
 }
 
@@ -963,7 +978,7 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	 *  stayed open until the system is cleared down and then emitted
 	 *  our signal
 	 */
-	if(isVisible())  /* or should we test eReceiverMode ? */
+	if(eReceiverMode == RM_DRM)
 	{
 		pDRMRec->GeomStationsDlg.bVisible = pStationsDlg->isVisible();
 		pDRMRec->GeomLiveScheduleDlg.bVisible = pLiveScheduleDlg->isVisible();
@@ -988,9 +1003,9 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 
 		/* request that the working thread stops
 		 * TODO move this to main and pass a close routine to here and 
-		 * AnalogDemDlg to cover gps and anything else
-		 * or possible have a new ALWAYS hidden main dialogue box
-		 * that manages startup and close-down */
+		* AnalogDemDlg to cover gps and anything else
+		* or possible have a new ALWAYS hidden main dialogue box
+		* that manages startup and close-down */
 		pDRMRec->Stop();
 		(void)pDRMRec->wait(5000);
 		if(!pDRMRec->finished())
@@ -1002,7 +1017,15 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	else
 	{
 		pDRMRec->GeomStationsDlg.bVisible = pStationsDlg->isVisible();
+
+		if (pStationsDlg->isVisible())
+			pStationsDlg->hide();
+
 		pDRMRec->GeomLiveScheduleDlg.bVisible = pLiveScheduleDlg->isVisible();
+
+		if (pLiveScheduleDlg->isVisible())
+			pLiveScheduleDlg->hide();
+
 		/* we saved these when we were in DRM Mode */
 		pDRMRec->GeomSystemEvalDlg.bVisible = bSysEvalDlgWasVis;
 		pDRMRec->GeomMultimediaDlg.bVisible = bMultMedDlgWasVis;

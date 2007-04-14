@@ -401,7 +401,6 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		break;
 	}
 
-
 	/* OPH: WMER, WMM and WMF estimation ------------------------------------ */
 	for (i = 0; i < iNumCarrier; i++)
 	{
@@ -455,10 +454,54 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 	}
 
+	/* SNR and Doppler are updated every symbol.
+	 * TODO is this necessary ? */
+
+	/* set SNR in ReceiverParam (SetSNR does locking!) */
+	if (bSNRInitPhase == TRUE)
+	{
+   		ReceiverParam.SetSNR(-1.0);
+	}
+	else
+	{
+		const _REAL rNomBWSNR = rSNREstimate * rSNRSysToNomBWCorrFact;
+
+		/* Bound the SNR at 0 dB */
+		if (rNomBWSNR > 1.0 )
+   			ReceiverParam.SetSNR(10.0 * log10(rNomBWSNR));
+		else
+   			ReceiverParam.SetSNR(0.0);
+	}
+
+	ReceiverParam.Lock();
+
+	/* Doppler estimation is only implemented in the
+	 * Wiener time interpolation module */
+	if (TypeIntTime == TWIENER)
+   		ReceiverParam.rSigmaEstimate = TimeWiener.GetSigma();
+	else
+   		ReceiverParam.rSigmaEstimate = -1.0;
+
 	/* After processing last symbol of the frame */
 	if (iModSymNum == iNumSymPerFrame - 1)
 	{
-		ReceiverParam.Lock();
+
+		/* set minimum and maximum delay from history */
+		_REAL rMinDelay = 1000.0;
+		_REAL rMaxDelay = 0.0;
+		for (int i = 0; i < iLenDelayHist; i++)
+		{
+			if (rMinDelay > vecrDelayHist[i])
+				rMinDelay = vecrDelayHist[i];
+			if(rMaxDelay < vecrDelayHist[i])
+				rMaxDelay = vecrDelayHist[i];
+		}
+
+		/* Return delay in ms */
+		_REAL rDelayScale = _REAL(iFFTSizeN) / _REAL(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil * iScatPilFreqInt) * 1000.0;
+		ReceiverParam.rMinDelay = rMinDelay * rDelayScale;
+		ReceiverParam.rMaxDelay = rMaxDelay * rDelayScale;
+
 		/* Calculate and generate RSCI measurement values */
 		/* rmer (MER for MSC) */
 		CReal rMER =
@@ -500,8 +543,8 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			/* Calculate interference tag */
 			CalculateRint(ReceiverParam);
 		}
-		ReceiverParam.Unlock();
 	}
+	ReceiverParam.Unlock();
 
 
 	/* Interferer consideration --------------------------------------------- */
@@ -988,6 +1031,7 @@ _REAL CChannelEstimation::CalAndBoundSNR(const _REAL rSignalEst,
 }
 
 
+#if 0
 _REAL CChannelEstimation::GetSNREstdB() const
 {
 	if (bSNRInitPhase == TRUE)
@@ -1002,7 +1046,6 @@ _REAL CChannelEstimation::GetSNREstdB() const
 		return (_REAL) 0.0;
 }
 
-#if 0
 _REAL CChannelEstimation::GetMSCMEREstdB()
 {
 	/* Calculate final result (signal to noise ratio) and consider correction
@@ -1045,7 +1088,6 @@ _REAL CChannelEstimation::GetMSCWMEREstdB()
 	else
 		return (_REAL) 0.0;
 }
-#endif
 
 _REAL CChannelEstimation::GetSigma()
 {
@@ -1067,7 +1109,7 @@ _REAL CChannelEstimation::GetDelay() const
 _REAL CChannelEstimation::GetMinDelay()
 {
 	/* Lock because of vector "vecrDelayHist" access */
-	Lock();
+	//Lock();
 
 	/* Return minimum delay in history */
 	_REAL rMinDelay = 1000.0;
@@ -1077,12 +1119,13 @@ _REAL CChannelEstimation::GetMinDelay()
 			rMinDelay = vecrDelayHist[i];
 	}
 
-	Unlock();
+	//Unlock();
 
 	/* Return delay in ms */
 	return rMinDelay * iFFTSizeN / 
 		(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil * iScatPilFreqInt) * 1000;
 }
+#endif
 
 void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 											 CVector<_REAL>& vecrGrpDly,

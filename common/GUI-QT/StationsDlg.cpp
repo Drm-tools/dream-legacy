@@ -59,7 +59,7 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 	FILE*		pFile = NULL;
 
 	/* Save new mode */
-	eSchedMode = eNewSchM;
+	SetSchedMode(eNewSchM);
 
 	/* Open file and init table for stations */
 	StationsTable.Init(0);
@@ -400,9 +400,6 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	ListViewStations->setColumnAlignment(2, Qt::AlignRight);
 	ListViewStations->setColumnAlignment(4, Qt::AlignRight);
 
-	/* Load the current schedule from file and initialize list view */
-	LoadSchedule(CDRMSchedule::SM_DRM);
-
 	/* Set up frequency selector control (QWTCounter control) */
 	QwtCounterFrequency->setRange(0.0, 30000.0, 1.0);
 	QwtCounterFrequency->setNumButtons(3); /* Three buttons on each side */
@@ -687,13 +684,13 @@ void StationsDlg::OnShowStationsMenu(int iID)
 		ListViewStations->clear();
 	
 		/* Lock mutex for modifying the vecpListItems */
-		ListItemsMutex.Lock();
+		ListItemsMutex.lock();
 
 		vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
 
 		/* Unlock BEFORE calling the stations view update because in this function
 		   the mutex is locked, too! */
-		ListItemsMutex.Unlock();
+		ListItemsMutex.unlock();
 	}
 	else
 		bShowAll = TRUE;
@@ -870,6 +867,14 @@ void StationsDlg::hideEvent(QHideEvent*)
 
 void StationsDlg::showEvent(QShowEvent*)
 {
+	/* Load the schedule if necessary */
+	if (DRMSchedule.GetStationNumber() == 0)
+	{
+		LoadSchedule(DRMSchedule.GetSchedMode());
+		/* for update the scrollbars */
+		ListViewStations->triggerUpdate();
+	}
+
 	/* If number of stations is zero, we assume that the ini file is missing */
 	if (DRMSchedule.GetStationNumber() == 0)
 	{
@@ -929,11 +934,8 @@ QString MyListViewItem::key(int column, bool ascending) const
 		return QListViewItem::key(column, ascending);
 }
 
-void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
+void StationsDlg::SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM)
 {
-	/* Lock mutex for modifying the vecpListItems */
-	ListItemsMutex.Lock();
-
 	/* Store the current sort settings before switching */
 	if (eNewSchM != DRMSchedule.GetSchedMode())
 	{
@@ -942,29 +944,16 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 		case CDRMSchedule::SM_DRM:
 			pDRMRec->SortParamDRM.iColumn = iCurrentSortColumn;
 			pDRMRec->SortParamDRM.bAscending = bCurrentSortAscending;
+
 			break;
 
 		case CDRMSchedule::SM_ANALOG:
 			pDRMRec->SortParamAnalog.iColumn = iCurrentSortColumn;
 			pDRMRec->SortParamAnalog.bAscending = bCurrentSortAscending;
+
 			break;
 		}
 	}
-
-	/* Delete all old list view items (it is important that the vector
-	   "vecpListItems" was initialized to 0 at creation of the global object
-	   otherwise this may cause an segmentation fault) */
-	for (int i = 0; i < vecpListItems.Size(); i++)
-	{
-		if (vecpListItems[i] != NULL)
-			delete vecpListItems[i];
-	}
-
-	/* Read initialization file */
-	DRMSchedule.ReadStatTabFromFile(eNewSchM);
-
-	/* Init vector for storing the pointer to the list view items */
-	vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
 
 	/* Set sorting behaviour of the list */
 	switch (eNewSchM)
@@ -986,10 +975,41 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 
 		break;
 	}
+}
+
+void StationsDlg::SetCurrentSchedule(const CDRMSchedule::ESchedMode eNewSchM)
+{
+	SetSortSettings(eNewSchM);
+
+	/* Save new mode */
+	DRMSchedule.SetSchedMode(eNewSchM);
+}
+
+void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
+{
+	/* Lock mutex for modifying the vecpListItems */
+	ListItemsMutex.lock();
+
+	SetSortSettings(eNewSchM);
+
+	/* Delete all old list view items (it is important that the vector
+	   "vecpListItems" was initialized to 0 at creation of the global object
+	   otherwise this may cause an segmentation fault) */
+	for (int i = 0; i < vecpListItems.Size(); i++)
+	{
+		if (vecpListItems[i] != NULL)
+			delete vecpListItems[i];
+	}
+
+	/* Read initialization file */
+	DRMSchedule.ReadStatTabFromFile(eNewSchM);
+
+	/* Init vector for storing the pointer to the list view items */
+	vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
 
 	/* Unlock BEFORE calling the stations view update because in this function
 	   the mutex is locked, too! */
-	ListItemsMutex.Unlock();
+	ListItemsMutex.unlock();
 
 	/* Update list view */
 	SetStationsView();
@@ -1011,7 +1031,7 @@ void StationsDlg::SetStationsView()
 
 	/* Set lock because of list view items. These items could be changed
 	   by another thread */
-	ListItemsMutex.Lock();
+	ListItemsMutex.lock();
 
 	const int iNumStations = DRMSchedule.GetStationNumber();
 	_BOOLEAN bListHastChanged = FALSE;
@@ -1107,7 +1127,7 @@ void StationsDlg::SetStationsView()
 	if (bListHastChanged == TRUE)
 		ListViewStations->sort();
 
-	ListItemsMutex.Unlock();
+	ListItemsMutex.unlock();
 	
 	/* Start the timer and enable the list */
 	ListViewStations->setUpdatesEnabled(TRUE);
@@ -1255,9 +1275,15 @@ void StationsDlg::OnTimerSMeter()
 
 	/* If a time-out happened, do not update s-meter anymore (disable it) */
 	if (bValid==FALSE)
+	{
 		EnableSMeter(FALSE);
+	}
 	else
+	{
+		if(ProgrSigStrength->isEnabled()==FALSE)
+			EnableSMeter(TRUE);
 		ProgrSigStrength->setValue(rCurSigStr);
+	}
 }
 
 void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)

@@ -31,7 +31,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "TagPacketDecoderRSCIControl.h"
-#include "PacketSocketQT.h"
+#include "PacketInOut.h"
 #include "PacketSinkFile.h"
 #include "PacketInOut.h"
 
@@ -76,13 +76,14 @@ class CRSISubscriberSocket : public CRSISubscriber
 {
 public:
 	CRSISubscriberSocket();
+	virtual ~CRSISubscriberSocket();
 
 	_BOOLEAN SetOutAddr(const string& strArgument);
 	_BOOLEAN SetInAddr(const string& strAddr);
 
 
 private:
-	CPacketSocketQT				PacketSocket;
+	CPacketSocket&				PacketSocket;
 
 };
 

@@ -56,7 +56,7 @@
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
-				WarningLevel="4"
+				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DisableSpecificWarnings="4521;4189;4505"
 			/>
@@ -152,7 +152,7 @@
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
-				WarningLevel="4"
+				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
 				DisableSpecificWarnings="4521;4189;4505"
@@ -328,6 +328,28 @@
 			</File>
 			<File
 				RelativePath="..\common\DataIO.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\common\GPSData.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -3130,6 +3152,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\GPSData.h"
+				>
+			</File>
+			<File
 				RelativePath="..\common\GPSReceiver.h"
 				>
 			</File>
@@ -3190,7 +3216,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\soundnull.h"
+				RelativePath="..\common\sound.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\sound\soundnull.h"
 				>
 			</File>
 			<File

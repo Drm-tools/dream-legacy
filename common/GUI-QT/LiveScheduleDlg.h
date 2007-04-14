@@ -39,6 +39,7 @@
 #include <qfiledialog.h>
 #include <qtextstream.h>
 #include <qcheckbox.h>
+#include <qthread.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/LiveScheduleDlgbase.h"
@@ -90,7 +91,7 @@ class CDRMLiveSchedule
 {
 public:
 	CDRMLiveSchedule():StationsTable(),iSecondsPreview(0),
-	iReceiverLatitude(0),iReceiverLongitude(0),bCheckCoordinates(FALSE)
+	dReceiverLatitude(0),dReceiverLongitude(0)
 	{}
 
 	virtual ~CDRMLiveSchedule() {}
@@ -112,7 +113,7 @@ public:
 
 	string Binary2String(const int iVal);
 
-	void SetReceiverCoordinates(const string strLatitude, const string strLongitude);
+	void SetReceiverCoordinates(double latitude, double longitude);
 	QString ExtractFirstDigits(const QString s, const int iDigits);
 
 protected:
@@ -124,9 +125,8 @@ protected:
 	int			iSecondsPreview;
 
 	/* receiver coordinates */
-	int			iReceiverLatitude;
-	int			iReceiverLongitude;
-	_BOOLEAN	bCheckCoordinates;
+	double		dReceiverLatitude;
+	double		dReceiverLongitude;
 };
 
 class MyListLiveViewItem : public QListViewItem
@@ -187,7 +187,7 @@ protected:
 	QPopupMenu*					pFileMenu;
 
 	CVector<MyListLiveViewItem*>	vecpListItems;
-	CMutex						ListItemsMutex;
+	QMutex						ListItemsMutex;
 	QString						strCurrentSavePath;
 
 public slots:

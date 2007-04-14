@@ -43,7 +43,7 @@
 #define	BITS_PER_SAMPLE			16		/* Use all bits of the D/A-converter */
 #define BYTES_PER_SAMPLE		2		/* Number of bytes per sample */
 
-#ifdef USE_DEVDSP
+#ifdef USE_OSS
 #include <map>
 
 class COSSDev

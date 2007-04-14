@@ -117,7 +117,7 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	   a field combining the CF, MAJ and MIN fields */
 	/* CF: CRC Flag, 0 if the CRC field is not used (CRC value shall be
 	   0000_[16]) or 1 if the CRC field contains a valid CRC (1 bit long) */
-	if ((_BOOLEAN) vecbiAFPkt.Separate(1))
+	if (vecbiAFPkt.Separate(1)==1)
 	{
 		/* Use CRC check which was already done */
 		if (!bCRCOk)

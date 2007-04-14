@@ -181,63 +181,18 @@ _BOOLEAN bStop;
 	return sVal;
 }
 
-void CDRMLiveSchedule::SetReceiverCoordinates(const string strLatitude, const string strLongitude)
+void CDRMLiveSchedule::SetReceiverCoordinates(double latitude, double longitude)
 {
-int iLatitude;
-int iLongitude;
-
-QString sVal;
-
-	/* parse the latitude and longitude string stored into Dream settings for
-		extract local latitude degrees and longitude degrees */
-
-	bCheckCoordinates = FALSE;
-
-	const QString strCurLat = QString(strLatitude.c_str());
-	const QString strCurLong = QString(strLongitude.c_str());
-
-	if ((strCurLat != "") && (strCurLong != "")) 
-	{
-		/* latitude max 2 digits */
-		sVal = ExtractFirstDigits(strCurLat, 2);
-
-		if (sVal != "")
-		{
-			iLatitude = sVal.toInt();
-
-			if (strCurLat.contains('S') > 0)
-				iLatitude = -1 * iLatitude;
-
-			if ((iLatitude <= 90) && (iLatitude >= -90))
-			{
-				/* longitude max 3 digits */
-
-				sVal = ExtractFirstDigits(strCurLong, 3);
-
-				if (sVal != "")
-				{
-					iLongitude = sVal.toInt();
-
-					if (strCurLong.contains('W') > 0)
-						iLongitude = -1 * iLongitude;
-				
-					if ((iLongitude >= -180) && (iLongitude <= 179))
-					{
-						iReceiverLatitude = iLatitude;
-						iReceiverLongitude = iLongitude;
-
-						bCheckCoordinates = TRUE;
-					}
-				}
-			}
-		}
-	}
+	dReceiverLatitude = latitude;
+	dReceiverLongitude = longitude;
 }
 
 void CDRMLiveSchedule::DecodeTargets(const int iRegionID, const CVector<CParameter::CAltFreqRegion> vecAltFreqRegions
 										, QString& strRegions, _BOOLEAN& bIntoTargetArea)
 {
-int iCIRAF;
+	int iCIRAF;
+	int iReceiverLatitude = int(dReceiverLatitude);
+	int iReceiverLongitude = int(dReceiverLongitude);
 
 	strRegions = "";
 	
@@ -302,18 +257,15 @@ int iCIRAF;
 				}
 
 				/* check if receiver coordinates are into target area */
-				if (bCheckCoordinates == TRUE)
-				{
-					_BOOLEAN bLongitudeOK = ((iReceiverLongitude >= iLongitude)
-						&& (iReceiverLongitude <= (iLongitude + iLongitudeEx)))
-						|| (((iLongitude + iLongitudeEx) >= 180) &&
-						(iReceiverLongitude <= (iLongitude + iLongitudeEx - 360)));
+				_BOOLEAN bLongitudeOK = ((iReceiverLongitude >= iLongitude)
+					&& (iReceiverLongitude <= (iLongitude + iLongitudeEx)))
+					|| (((iLongitude + iLongitudeEx) >= 180) &&
+					(iReceiverLongitude <= (iLongitude + iLongitudeEx - 360)));
 
-					_BOOLEAN bLatitudeOK = ((iReceiverLatitude >= iLatitude)
-						&& (iReceiverLatitude <= (iLatitude + iLatitudeEx)));
+				_BOOLEAN bLatitudeOK = ((iReceiverLatitude >= iLatitude)
+					&& (iReceiverLatitude <= (iLatitude + iLatitudeEx)));
 
-					bIntoTargetArea = bIntoTargetArea || (bLongitudeOK && bLatitudeOK);
-				}
+				bIntoTargetArea = bIntoTargetArea || (bLongitudeOK && bLatitudeOK);
 			}
 			k++;
 		}
@@ -713,10 +665,6 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	pViewMenu->insertSeparator();
 	pViewMenu->insertItem(tr("Stations &preview"),pPreviewMenu);
 
-	/* Get current receiver latitude and longitude if defined */
-	DRMSchedule.SetReceiverCoordinates(pDRMRec->GetParameters()->ReceptLog.GetLatitudeDegreesMinutesString()
-			,pDRMRec->GetParameters()->ReceptLog.GetLongitudeDegreesMinutesString());
-
 	SetStationsView();
 
 	/* File menu ------------------------------------------------------------ */
@@ -836,6 +784,14 @@ void LiveScheduleDlg::OnShowPreviewMenu(int iID)
 
 void LiveScheduleDlg::OnTimerList()
 {
+	/* Get current receiver latitude and longitude if defined */
+	if(pDRMRec->GetParameters()->ReceptLog.GPSData.GetPositionAvailable())
+	{
+		double latitude, longitude;
+		pDRMRec->GetParameters()->ReceptLog.GPSData.GetLatLongDegrees(latitude, longitude);
+		DRMSchedule.SetReceiverCoordinates(latitude, longitude);
+	}
+
 	/* Update schedule and list view */
 		LoadSchedule();
 }
@@ -859,7 +815,7 @@ QString MyListLiveViewItem::key(int column, bool ascending) const
 void LiveScheduleDlg::LoadSchedule()
 {
 	/* Lock mutex for modifying the vecpListItems */
-	ListItemsMutex.Lock();
+	ListItemsMutex.lock();
 
 	/* Delete all old list view items (it is important that the vector
 	   "vecpListItems" was initialized to 0 at creation of the global object
@@ -885,7 +841,7 @@ void LiveScheduleDlg::LoadSchedule()
 
 	/* Unlock BEFORE calling the stations view update because in this function
 	   the mutex is locked, too! */
-	ListItemsMutex.Unlock();
+	ListItemsMutex.unlock();
 
 	/* Update list view */
 	SetStationsView();
@@ -959,7 +915,7 @@ void LiveScheduleDlg::SetStationsView()
 {
 	/* Set lock because of list view items. These items could be changed
 	   by another thread */
-	ListItemsMutex.Lock();
+	ListItemsMutex.lock();
 
 	const int iNumStations = DRMSchedule.GetStationNumber();
 
@@ -1034,7 +990,7 @@ void LiveScheduleDlg::SetStationsView()
 	if (bListHastChanged == TRUE)
 		ListViewStations->sort();
 
-	ListItemsMutex.Unlock();
+	ListItemsMutex.unlock();
 }
 
 void LiveScheduleDlg::OnHeaderClicked(int c)
@@ -1079,7 +1035,7 @@ void LiveScheduleDlg::OnSave()
 	QString strStationName = pDRMRec->GetParameters()->Service[iCurSelAudioServ].strLabel.c_str();
 
 	/* Lock mutex for use the vecpListItems */
-	ListItemsMutex.Lock();
+	ListItemsMutex.lock();
 
 	/* Force the sort for all items */ 
  	ListViewStations->firstChild()
@@ -1100,7 +1056,7 @@ void LiveScheduleDlg::OnSave()
         myItem = myItem->nextSibling();
     }
 
-	ListItemsMutex.Unlock();
+	ListItemsMutex.unlock();
 
 	if (strSchedule != "")
 	{

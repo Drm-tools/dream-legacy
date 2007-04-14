@@ -111,12 +111,10 @@ try
 		DRMReceiver.Init();
 	
 		CGPSReceiver* pGPSReceiver=NULL;
-		if(DRMReceiver.GetParameters()->eGPSSource == CParameter::GPS_SOURCE_GPS_RECEIVER)
+		if(DRMReceiver.GetParameters()->ReceptLog.GPSData.GetGPSSource() != CGPSData::GPS_SOURCE_MANUAL_ENTRY)
 		{
-			pGPSReceiver = new CGPSReceiver;
-			pGPSReceiver->SetGPSRxData(&DRMReceiver.GetParameters()->GPSRxData);
-			pGPSReceiver->SetGPSd(DRMReceiver.GetParameters()->sGPSdHost, DRMReceiver.GetParameters()->iGPSdPort);
-			pGPSReceiver->start();
+			pGPSReceiver = new CGPSReceiver(DRMReceiver.GetParameters()->ReceptLog.GPSData);
+			//pGPSReceiver->start();
 		}
 
 		FDRMDialog		MainDlg(&DRMReceiver, 0, 0, FALSE, Qt::WStyle_MinMax);
@@ -140,8 +138,9 @@ try
 
 		if(pGPSReceiver)
 		{
-			pGPSReceiver->Stop();
-			pGPSReceiver->wait();
+			//pGPSReceiver->Stop();
+			//pGPSReceiver->wait();
+			delete pGPSReceiver;
 		}
 	}
 
@@ -235,7 +234,7 @@ catch (CGenErr GenErr)
 }
 
 void ErrorMessage(string strErrorString) {perror(strErrorString.c_str());}
-void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam) {}
+void PostWinMessage(const _MESSAGE_IDENT, const int) {}
 #endif /* USE_QT_GUI */
 
 

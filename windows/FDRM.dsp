@@ -649,6 +649,10 @@ SOURCE=..\common\DataIO.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\GPSData.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\GPSReceiver.cpp
 # End Source File
 # Begin Source File
@@ -1117,6 +1121,10 @@ SOURCE=..\common\DataIO.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\GPSData.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\GPSReceiver.h
 # End Source File
 # Begin Source File
@@ -1185,7 +1193,11 @@ SOURCE=..\common\soundinterface.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\soundnull.h
+SOURCE=..\common\sound.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\sound\soundnull.h
 # End Source File
 # Begin Source File
 

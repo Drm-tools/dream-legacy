@@ -314,7 +314,7 @@ _BOOLEAN CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
 		for (int i = 0; i < iLengthOfBody; i++)
 		{
 			/* Get character */
-			const char cNewChar = (*pbiData).Separate(8);
+			const char cNewChar = char((*pbiData).Separate(8));
 
 			/* Append new character */
 			Parameter.Service[iTempShortID].strLabel.append(&cNewChar, 1);
@@ -1314,7 +1314,7 @@ _BOOLEAN CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
 	for (i = 0; i < 3; i++)
 	{
 		/* Get character */
-		const char cNewChar = (*pbiData).Separate(8);
+		const char cNewChar = char((*pbiData).Separate(8));
 
 		/* Append new character */
 		Parameter.Service[iShortID].strLanguageCode.append(&cNewChar, 1);
@@ -1328,7 +1328,7 @@ _BOOLEAN CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
 	for (i = 0; i < 2; i++)
 	{
 		/* Get character */
-		const char cNewChar = (*pbiData).Separate(8);
+		const char cNewChar = char((*pbiData).Separate(8));
 
 		/* Append new character */
 		Parameter.Service[iShortID].strCountryCode.append(&cNewChar, 1);

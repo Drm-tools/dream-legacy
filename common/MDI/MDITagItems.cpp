@@ -731,20 +731,8 @@ void CTagItemGenerator::Enqueue(uint32_t iInformation, const int iNumOfBits)
 /* e.g. rpil, rpsd, ... */
 
 //andrewm - 2006-12-08
-void CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CParameter::CRGPSData& RGPSData) // Long/Lat in degrees
+void CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CGPSData& GPSData) // Long/Lat in degrees
 {
-
-	int iLatitudeDegrees;
-	uint8_t uiLatitudeMinutes;
-	uint16_t uiLatitudeMinuteFractions;
-
-	int iLongitudeDegrees;
-	uint8_t uiLongitudeMinutes;
-	uint16_t uiLongitudeMinuteFractions;
-
-	int iAltitudeMetres;
-	uint8_t uiAltitudeMetreFractions;
-
 	if (bIsValid == FALSE)
 	{
 
@@ -754,21 +742,21 @@ void CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CParameter::CRGPSData& RGPS
 	{
 		PrepareTag(26*SIZEOF__BYTE);
 
-		switch (RGPSData.GetGPSSource())
+		switch (GPSData.GetGPSSource())
 		{
-			case CParameter::CRGPSData::GPS_SOURCE_INVALID:
+			case CGPSData::GPS_SOURCE_INVALID:
 				Enqueue((uint32_t) 0x00, SIZEOF__BYTE);
 				break;
-			case CParameter::CRGPSData::GPS_SOURCE_GPS_RECEIVER:
+			case CGPSData::GPS_SOURCE_GPS_RECEIVER:
 				Enqueue((uint32_t) 0x01, SIZEOF__BYTE);
 				break;
-			case CParameter::CRGPSData::GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER:
+			case CGPSData::GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER:
 				Enqueue((uint32_t) 0x02, SIZEOF__BYTE);
 				break;
-			case CParameter::CRGPSData::GPS_SOURCE_MANUAL_ENTRY:
+			case CGPSData::GPS_SOURCE_MANUAL_ENTRY:
 				Enqueue((uint32_t) 0x03, SIZEOF__BYTE);
 				break;
-			case CParameter::CRGPSData::GPS_SOURCE_NOT_AVAILABLE:
+			case CGPSData::GPS_SOURCE_NOT_AVAILABLE:
 				Enqueue((uint32_t) 0xFF, SIZEOF__BYTE);
 				break;
 			default:
@@ -777,32 +765,43 @@ void CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CParameter::CRGPSData& RGPS
 		}
 
 
-		if (RGPSData.GetSatellitesVisibleAvailable())
+		if (GPSData.GetSatellitesVisibleAvailable())
 		{
-			Enqueue((uint32_t) RGPSData.GetSatellitesVisible(), SIZEOF__BYTE);
+			Enqueue((uint32_t) GPSData.GetSatellitesVisible(), SIZEOF__BYTE);
 		}
 		else
 		{
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 		}
 
-		if (RGPSData.GetPositionAvailable())
+		if (GPSData.GetPositionAvailable())
 		{
-			if (RGPSData.GetLatitudeDegrees() >= 0)
-				iLatitudeDegrees = (int) RGPSData.GetLatitudeDegrees();
+			double latitude, longitude;
+			int iLatitudeDegrees;
+			uint8_t uiLatitudeMinutes;
+			uint16_t uiLatitudeMinuteFractions;
+
+			int iLongitudeDegrees;
+			uint8_t uiLongitudeMinutes;
+			uint16_t uiLongitudeMinuteFractions;
+
+			GPSData.GetLatLongDegrees(latitude, longitude);
+
+			if (latitude >= 0)
+				iLatitudeDegrees = (int) latitude;
 			else
-				iLatitudeDegrees = (int) RGPSData.GetLatitudeDegrees() - 1;
+				iLatitudeDegrees = (int) latitude - 1;
 
-			uiLatitudeMinutes = (uint8_t) ( 60.0 * (RGPSData.GetLatitudeDegrees() - iLatitudeDegrees) );
-			uiLatitudeMinuteFractions = (uint16_t) ( ((60.0 * (RGPSData.GetLatitudeDegrees() - iLatitudeDegrees)) - uiLatitudeMinutes) * 65536.0 );
+			uiLatitudeMinutes = (uint8_t) ( 60.0 * (latitude - iLatitudeDegrees) );
+			uiLatitudeMinuteFractions = (uint16_t) ( ((60.0 * (latitude - iLatitudeDegrees)) - uiLatitudeMinutes) * 65536.0 );
 
-			if (RGPSData.GetLongitudeDegrees() >= 0)
-				iLongitudeDegrees = (int) RGPSData.GetLongitudeDegrees();
+			if (longitude >= 0)
+				iLongitudeDegrees = (int) longitude;
 			else
-				iLongitudeDegrees = (int) RGPSData.GetLongitudeDegrees() - 1;
+				iLongitudeDegrees = (int) longitude - 1;
 
-			uiLongitudeMinutes = (uint8_t) ( 60.0 * (RGPSData.GetLongitudeDegrees() - iLongitudeDegrees) );
-			uiLongitudeMinuteFractions = (uint16_t) ( ((60.0 * (RGPSData.GetLongitudeDegrees() - iLongitudeDegrees)) - uiLongitudeMinutes) * 65536.0 );
+			uiLongitudeMinutes = (uint8_t) ( 60.0 * (longitude - iLongitudeDegrees) );
+			uiLongitudeMinuteFractions = (uint16_t) ( ((60.0 * (longitude - iLongitudeDegrees)) - uiLongitudeMinutes) * 65536.0 );
 
 			Enqueue((uint32_t) iLatitudeDegrees, 2*SIZEOF__BYTE);
 			Enqueue((uint32_t) uiLatitudeMinutes, SIZEOF__BYTE);
@@ -822,14 +821,17 @@ void CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CParameter::CRGPSData& RGPS
 		}
 
 
-		if (RGPSData.GetAltitudeAvailable())
+		if (GPSData.GetAltitudeAvailable())
 		{
-			if (RGPSData.GetAltitudeMetres() >= 0)
-				iAltitudeMetres = (int) RGPSData.GetAltitudeMetres();
-			else
-				iAltitudeMetres = (int) (RGPSData.GetAltitudeMetres() - 1);
+			int iAltitudeMetres;
+			uint8_t uiAltitudeMetreFractions;
 
-			uiAltitudeMetreFractions = (uint8_t) ( 256.0 * (RGPSData.GetAltitudeMetres() - iAltitudeMetres) );
+			if (GPSData.GetAltitudeMetres() >= 0)
+				iAltitudeMetres = (int) GPSData.GetAltitudeMetres();
+			else
+				iAltitudeMetres = (int) (GPSData.GetAltitudeMetres() - 1);
+
+			uiAltitudeMetreFractions = (uint8_t) ( 256.0 * (GPSData.GetAltitudeMetres() - iAltitudeMetres) );
 			
 
 			Enqueue((uint32_t) iAltitudeMetres, 2*SIZEOF__BYTE);
@@ -842,36 +844,31 @@ void CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CParameter::CRGPSData& RGPS
 		}
 
 
-		if (RGPSData.GetTimeAvailable())
+		if (GPSData.GetTimeAndDateAvailable())
 		{
-			Enqueue((uint32_t) RGPSData.GetTimeHours(), SIZEOF__BYTE);
-			Enqueue((uint32_t) RGPSData.GetTimeMinutes(), SIZEOF__BYTE);
-			Enqueue((uint32_t) RGPSData.GetTimeSeconds(), SIZEOF__BYTE);
+			uint32_t year;
+			uint8_t month, day, hour, minute, second;
+			GPSData.GetTimeDate(year, month, day, hour, minute, second);
+			Enqueue((uint32_t) hour, SIZEOF__BYTE);
+			Enqueue((uint32_t) minute, SIZEOF__BYTE);
+			Enqueue((uint32_t) second, SIZEOF__BYTE);
+			Enqueue(year, SIZEOF__BYTE);
+			Enqueue((uint32_t) month, 2*SIZEOF__BYTE);
+			Enqueue((uint32_t) day, SIZEOF__BYTE);
 		}
 		else
 		{
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
-		}
-		
-
-		if (RGPSData.GetDateAvailable())
-		{
-			Enqueue((uint32_t) RGPSData.GetDateYear(), SIZEOF__BYTE);
-			Enqueue((uint32_t) RGPSData.GetDateMonth(), 2*SIZEOF__BYTE);
-			Enqueue((uint32_t) RGPSData.GetDateDay(), SIZEOF__BYTE);
-		}
-		else
-		{
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 			Enqueue((uint32_t) 0xff, 2*SIZEOF__BYTE);
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 		}
 
-		if (RGPSData.GetSpeedAvailable())
+		if (GPSData.GetSpeedAvailable())
 		{
-			Enqueue((uint32_t) (RGPSData.GetSpeedMetresPerSecond()*10.0), 2*SIZEOF__BYTE);
+			Enqueue((uint32_t) (GPSData.GetSpeedMetresPerSecond()*10.0), 2*SIZEOF__BYTE);
 		}
 		else
 		{
@@ -879,9 +876,9 @@ void CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CParameter::CRGPSData& RGPS
 		}
 
 
-		if (RGPSData.GetHeadingAvailable())
+		if (GPSData.GetHeadingAvailable())
 		{
-			Enqueue((uint32_t) RGPSData.GetHeadingDegreesFromNorth(), 2*SIZEOF__BYTE);
+			Enqueue((uint32_t) GPSData.GetHeadingDegrees(), 2*SIZEOF__BYTE);
 		}
 		else
 		{

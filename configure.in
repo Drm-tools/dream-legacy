@@ -2,11 +2,9 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 AC_INIT(common/GUI-QT/main.cpp)
 
-AM_INIT_AUTOMAKE(drm,1.8.8cvs)
-
+AM_INIT_AUTOMAKE(drm,1.9.0cvs)
 
 AM_CONFIG_HEADER(config.h)
-
 
 dnl Checks for programs
 AC_PROG_LIBTOOL
@@ -17,80 +15,111 @@ AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 AC_CHECK_PROGS(RPMBUILD, rpmbuild, rpm)
 AC_SUBST(LIBTOOL_DEPS)
+PKG_PROG_PKG_CONFIG
 
 
 dnl Configuration Arguments
 
-AC_ARG_ENABLE( alsa, [  --enable-alsa           use alsa sound lib], enable_alsa=$enableval, enable_alsa=no)
-
-AC_ARG_ENABLE( sound,[  --enable-sound          generic sound support], enable_sound=$enableval, enable_sound=yes)
-
 AC_ARG_ENABLE( simulation,[  --enable-simulation     simulation mode], enable_simulation=$enableval, enable_simulation=no)
 
-AC_ARG_WITH( qtgui,[  --with-qtgui            use GUI QT],WITHQTGUI=$withval, WITHQTGUI=yes)
+AC_ARG_ENABLE( oss,[  --enable-oss        open sound system support], enable_oss=$enableval, enable_oss=yes)
 
-AC_ARG_WITH( qtdir,[  --with-qtdir=path to QT],QTDIR=$withval)
+AC_ARG_ENABLE( alsa, [  --enable-alsa           use alsa sound lib], enable_alsa=$enableval, enable_alsa=yes)
 
-AC_ARG_WITH( faad2,[  --with-faad2            use faad2 library for decoding AAC audio],WITHFAAD2=$withval, WITHFAAD2=yes)
+AC_ARG_ENABLE( portaudio,[  --enable-portaudio   open sound system support], enable_portaudio=$enableval, enable_portaudio=no)
 
-AC_ARG_WITH( faac,[  --with-faac             use faac library for encoding AAC audio],WITHFAAC=$withval, WITHFAAC=no)
+AC_ARG_ENABLE( jack,[  --enable-jack   open sound system support], enable_jack=$enableval, enable_jack=no)
 
-AC_ARG_WITH( journaline,[  --with-journaline       support Journaline],WITHJOURNALINE=$withval, WITHJOURNALINE=no)
+AC_ARG_ENABLE( qt,[  --enable-qt     use QT3 GUI], enable_qt=$enableval, enable_qt=yes)
 
-AC_ARG_WITH( hamlib,[  --with-hamlib           use hamlib library],WITHHAMLIB=$withval, WITHHAMLIB=no)
+AC_ARG_ENABLE( faad2,[  --enable-faad2     use faad2 library for decoding AAC audio], enable_faad2=$enableval, enable_faad2=yes)
 
-AC_ARG_WITH( freeimage,[  --with-freeimage        use FreeImage library],WITHFREEIMAGE=$withval, WITHFREEIMAGE=no)
+AC_ARG_ENABLE( faac,[  --enable-faac     use faac library for encoding AAC audio], enable_faac=$enableval, enable_faac=yes)
 
-AC_ARG_WITH( libpcap,[  --with-libpcap          use pcap library],WITHPCAP=$withval, WITHPCAP=no)
+AC_ARG_ENABLE( journaline,[  --enable-journaline     use journaline library], enable_journaline=$enableval, enable_journaline=yes)
+
+AC_ARG_ENABLE( hamlib,[  --enable-hamlib     use hamlib library], enable_hamlib=$enableval, enable_hamlib=yes)
+
+AC_ARG_ENABLE( pcap,[  --enable-pcap     use pcap library], enable_pcap=$enableval, enable_pcap=yes)
+
+AC_ARG_ENABLE( sndfile,[  --enable-sndfile     use sndfile library], enable_sndfile=$enableval, enable_sndfile=yes)
 
 if test "$enable_simulation" = "yes"; then
 	dnl Only minimal configuration for simulation
 	enable_alsa=no
-	enable_sound=no
-	WITHQTGUI=no
-	WITHFAAD2=no
-	WITHFAAC=no
-	WITHJOURNALINE=no
-	WITHHAMLIB=no
-	WITHFREEIMAGE=no
-	WITHPCAP=no
+	enable_oss=no
+	enable_portaudio=no
+	enable_jack=no
+	enable_gps=no
+	enable_qt=no
+	enable_faad2=no
+	enable_faac=no
+	enable_journaline=no
+	enable_hamlib=no
+	enable_pcap=no
+	enable_sndfile=no
+fi
+
+PKG_CHECK_MODULES(alsa, alsa, , enable_alsa=no)
+PKG_CHECK_MODULES(portaudio, portaudio-2.0, , enable_portaudio=no)
+PKG_CHECK_MODULES(jack, jack, , enable_jack=no)
+AC_CHECK_HEADER(sys/soundcard.h, , enable_oss=no)
+
+if test "x$enable_jack" = "xyes"; then
+	AC_DEFINE(USE_JACK, 1, [Define if you want to use the jack audio lib])
+	AM_CONDITIONAL(USE_JACK, true)
+	LIBS="$LIBS $jack_LIBS"
+	enable_oss=no
+	enable_portaudio=no
+	enable_alsa=no
+else
+	AM_CONDITIONAL(USE_JACK, false)
 fi
 
 if test "x$enable_alsa" = "xyes"; then
-	AC_CHECK_HEADER(sys/asoundlib.h, , enable_alsa=no)
-	AC_CHECK_LIB(asound, snd_pcm_open, , enable_alsa=no)
-	if test "$enable_alsa" = "no"; then
-		AC_MSG_WARN( "*** Could not find libasound. Switching to --disable-alsa" )
-	else
-		AC_DEFINE(USE_ALSA, 1, [Define if you want to use the ALSA audio lib])
-		enable_sound=yes
-	fi
+	AC_DEFINE(USE_ALSA, 1, [Define if you want to use the ALSA audio lib])
+	AM_CONDITIONAL(USE_ALSA, true)
+	LIBS="$LIBS $alsa_LIBS"
+	enable_oss=no
+	enable_portaudio=no
+else
+	AM_CONDITIONAL(USE_ALSA, false)
 fi
 
-if test "x$enable_sound" = "xyes"; then
-
-	AC_DEFINE(WITH_SOUND, 1, [Define if you want to use sound])
-	if (test "$enable_alsa" = "no")
-	then
-		
-		dnl fall back is to use /dev/dsp
-		AC_DEFINE(USE_DEVDSP, 1, [Define if you want to use /dev/dsp for sound])
-	fi
-	AM_CONDITIONAL(WITH_SOUND, true)
+if test "x$enable_portaudio" = "xyes"; then
+	AC_DEFINE(USE_PORTAUDIO, 1, [Define if you want to use the portaudio audio lib])
+	AM_CONDITIONAL(USE_PORTAUDIO, true)
+	LIBS="$LIBS $portaudio_LIBS"
+	enable_oss=no
 else
-	AM_CONDITIONAL(WITH_SOUND, false)
+	AM_CONDITIONAL(USE_PORTAUDIO, false)
+fi
+ 
+if test "x$enable_oss" = "xyes"; then
+	AC_DEFINE(USE_OSS, 1, [Define if you want to use the OSS audio lib])
+	AM_CONDITIONAL(USE_OSS, true)
+else
+	AM_CONDITIONAL(USE_OSS, false)
 fi
  
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_LANG_CPLUSPLUS
 
-
 dnl Checks for typedefs, structures, and compiler characteristics.
 
 dnl Checks for some external libraries that need to be installed
+LIBS="$LIBS -L$PWD/libs"
+CXXFLAGS="$CXXFLAGS -I$PWD/libs"
+CFLAGS="$CFLAGS -I$PWD/libs"
+
 AC_LANG(C++)
+
+dnl libz ------------------------------------------------------------------------
 AC_CHECK_LIB(z, inflateEnd)
+
+dnl librt ------------------------------------------------------------------------
+AC_CHECK_LIB(rt, clock_gettime)
 
 dnl fftw ------------------------------------------------------------------------
 AC_SEARCH_LIBS(fftw_create_plan, dfftw fftw, , exit 1)
@@ -99,47 +128,30 @@ AC_CHECK_HEADERS(dfftw.h fftw.h)
 AC_CHECK_HEADERS(drfftw.h rfftw.h)
 
 dnl QT --------------------------------------------------------------------------
-if test "x$WITHQTGUI" = xyes; then
-	if test "no$QTDIR" = "no"; then
-		AC_MSG_ERROR( "*** Please set QTDIR ***" )
-	fi
-
-	saved_ldflags="$LDFLAGS"
-	LDFLAGS="$LDFLAGS -L$QTDIR/lib"
-
-	AC_CHECK_LIB(qt-mt, main, ,exit 1)
-
-	AC_CHECK_HEADER($QTDIR/include/qthread.h,  have_qthread=yes, have_qthread=no)
-	if test "x$have_qthread" = xyes; then
-		CXXFLAGS="$CXXFLAGS -I$QTDIR/include -DQT_THREAD_SUPPORT -D_REENTRANT"
-	else
-		AC_CHECK_HEADER($QTDIR/include/qt3/qthread.h,  have_qthread=yes, have_qthread=no)
-		if test "x$have_qthread" = xyes; then
-			CXXFLAGS="$CXXFLAGS -I$QTDIR/include/qt3 -DQT_THREAD_SUPPORT -D_REENTRANT"
-		else
-			AC_MSG_ERROR("No qthread.h found");
-		fi
-	fi
-	AC_SUBST(CXXFLAGS)
-
-	AC_PATH_PROG(MOC, moc,, "$QTDIR/bin")
-	if test -z "$MOC"; then
-		AC_MSG_ERROR("No moc found in $QTDIR/bin");
-	fi
-	AC_PATH_PROG(UIC, uic,, "$QTDIR/bin")
-	if test -z "$UIC"; then
-		AC_MSG_ERROR("No uic found in $QTDIR/bin");
-	fi
+PKG_CHECK_MODULES(qt, qt-mt, , enable_qt=no)
+if test "x$enable_qt" = "xyes"; then
+	QTDIR=`$PKG_CONFIG --variable=exec_prefix qt-mt`
 	AC_SUBST(QTDIR)
+	AC_PATH_PROG(MOC, moc,, $QTDIR/bin)
+	AC_PATH_PROG(UIC, uic,, $QTDIR/bin)
+	AM_CONDITIONAL(USE_QT, true)
+	CFLAGS="$CFLAGS $qt_CFLAGS"
+	CXXFLAGS="$CXXFLAGS $qt_CFLAGS"
+	LIBS="$LIBS $qt_LIBS"
 
 	dnl qwt
 
 	AC_HAVE_LIBRARY(qwt, ,exit 1)
 
-	dnl check for new functions from version 4.2
+	dnl check for at least version 4.2
 	AC_CHECK_HEADER(qwt/qwt_dial_needle.h, qwt_version_ok=yes, qwt_version_ok=no)
 	if test "x$qwt_version_ok" = "xno"; then
 		AC_MSG_ERROR( "Your version of qwt is too old!")
+	fi
+	dnl check we don't have qwt 5 by mistake
+	AC_CHECK_HEADER(qwt/qwt_scldiv.h, qwt_version_ok=yes, qwt_version_ok=no)
+	if test "x$qwt_version_ok" = "xno"; then
+		AC_MSG_ERROR( "Your version of qwt is too new!")
 	fi
 
 	AC_DEFINE(USE_QT_GUI, 1, [Define if you want to use the QT GUI])
@@ -149,66 +161,77 @@ else
 fi
 
 dnl Hamlib (optional) -----------------------------------------------------------
-if test "x$WITHHAMLIB" = xyes; then
-	AC_CHECK_HEADER(hamlib/rig.h, , have_hamlib=no)
-	AC_CHECK_LIB(hamlib,rig_init, , have_hamlib=no)
-	
-	if test "x$have_hamlib" = "xno"; then
-		AC_MSG_ERROR( "Hamlib library not found" )
+if test "x$enable_hamlib" = "xyes"; then
+	PKG_CHECK_MODULES(hamlib, hamlib, , enable_hamlib=no)
+	if test "x$enable_hamlib" = "xyes"; then
+		AC_DEFINE(HAVE_LIBHAMLIB, 1, [Define if you have Hamlib])
+		LIBS="$LIBS $hamlib_LIBS"
+		hamlib121=`$PKG_CONFIG --exists --print-errors 'hamlib >= 1.2.1' 2>&1`
+		if test "x$hamlib121" = x; then
+			hamlib121=yes
+			AC_DEFINE(HAVE_RIG_PARSE_MODE, 1, [Define if you have Hamlib >= 1.2.1])
+		else
+			hamlib121=no
+		fi
 	else
-		AC_CHECK_LIB(hamlib, rig_parse_mode, 
-		AC_DEFINE(HAVE_RIG_PARSE_MODE, 1, [Define if you have Hamlib >= 1.2.1]), )
+		hamlib121=no
 	fi
+else
+	hamlib121=no
 fi
 
 dnl faad2 -----------------------------------------------------------------------
-if test "x$WITHFAAD2" = xyes; then
-	AC_CHECK_HEADER(faad.h, , have_faad=no)
-	AC_CHECK_LIB(faad,NeAACDecOpen, , exit 1, -lm )
-	AC_CHECK_LIB(faad,NeAACDecInitDRM, , have_faad=no, -lm )
-
-	if test "$have_faad" = "no"; then
+AC_CHECK_HEADER(faad.h, , enable_faad2=no)
+AC_CHECK_LIB(faad,NeAACDecOpen, , enable_faad2=no, -lm )
+if test "x$enable_faad2" = xyes; then
+	AC_CHECK_LIB(faad,NeAACDecInitDRM, , enable_faad2=no, -lm )
+	if test "x$enable_faad2" = "xno"; then
 		AC_MSG_ERROR( "*** libfaad build without DRM support ***" )
 	fi
 	AC_DEFINE(USE_FAAD2_LIBRARY, 1, [Define if you want to use the faad2 library])
 fi
 
 dnl faac (optional) -------------------------------------------------------------
-if test "x$WITHFAAC" = xyes; then
-	AC_HAVE_LIBRARY(faac, ,exit 1)
+AC_HAVE_LIBRARY(faac, , enable_faac=no)
+if test "x$enable_faac" = xyes; then
 	AC_DEFINE(USE_FAAC_LIBRARY, 1, [Define if you want to use the faac library])
 fi
 
-dnl FreeImage (optional) --------------------------------------------------------
-if test "x$WITHFREEIMAGE" = xyes; then
-	AC_CHECK_HEADER(FreeImage.h, , have_freeimage=no)
-	AC_CHECK_LIB(freeimage,FreeImage_LoadFromHandle, , have_freeimage=no)
+dnl libpcap (optional) ----------------------------------------------------------
+AC_CHECK_HEADER(pcap.h, , enable_pcap=no)
+AC_CHECK_LIB(pcap,pcap_next_ex, , enable_pcap=no)
 
-	if test "x$have_freeimage" = "xno"; then
-		AC_MSG_ERROR( "FreeImage library not found" )
-	fi
+dnl libsndfile (optional) -------------------------------------------------------
+PKG_CHECK_MODULES(libsndfile, sndfile,,enable_sndfile=no)
+if test "x$enable_sndfile" = xyes; then
+	AC_DEFINE(HAVE_LIBSNDFILE, 1, [Define if you have libsndfile])
+	LIBS="$LIBS $libsndfile_LIBS"
 fi
-
-dnl libpcap (optional) --------------------------------------------------------
-if test "x$WITHPCAP" = xyes; then
-	AC_CHECK_HEADER(pcap.h, , have_pcap=no)
-	AC_CHECK_LIB(pcap,pcap_next_ex, , have_pcap=no)
-
-	if test "x$have_pcap" = "xno"; then
-		AC_MSG_ERROR( "pcap library not found" )
-	fi
-fi
-
 
 dnl PUT THIS AT THE END, because FhG Journaline library has undefined symbols
 dnl Journaline (optional) -------------------------------------------------------
-if test "x$WITHJOURNALINE" = xyes; then
-	dnl can't check the library, as it has unresolved symbols
-	AC_CHECK_HEADERS(journaline/NML.h, ,exit 1)
-	AC_DEFINE(HAVE_JOURNALINE, 1, [Define if you have libfhgjournaline])
-	LIBS="-lfhgjournaline $LIBS"
+AC_CHECK_HEADERS(journaline/NML.h, , enable_journaline=no)
+if test "x$enable_journaline" = xyes; then
+	AC_DEFINE(HAVE_JOURNALINE, 1, [Define if you have libjournaline])
+	LIBS="$LIBS -lfhgjournaline"
 fi
-
 
 AC_CONFIG_FILES(Makefile linux/Makefile drm.spec)
 AC_OUTPUT
+echo
+echo
+echo " 	simulation mode selected:			$enable_simulation"
+echo " 	alsa sound driver selected:			$enable_alsa"
+echo "	portaudio sound driver selected:		$enable_portaudio (alpha)"
+echo "	jack sound driver selected:			$enable_jack (alpha)"
+echo "	oss sound driver selected: 			$enable_oss"
+echo "	QT GUI selected:				$enable_qt"
+echo "	rig control via hamlib supported:	 	$enable_hamlib"
+echo "	hamlib with rigparse mode:			$hamlib121"
+echo "	AAC decoding supported:				$enable_faad2"
+echo "	AAC encoding supported:				$enable_faac"
+echo "	pcap file format supported:			$enable_pcap"
+echo "	libsndfile supported:				$enable_sndfile"
+echo "	journaline supported:				$enable_journaline"
+echo
+echo

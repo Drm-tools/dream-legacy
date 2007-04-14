@@ -36,10 +36,7 @@
 #include <qsocketdevice.h>
 #include <qsocketnotifier.h>
 #include <qdatetime.h>
-#ifdef _WIN32
-# include <winsock2.h>
-# include <ws2tcpip.h>
-#else
+#ifndef _WIN32
 # include <netinet/in.h>
 # include <arpa/inet.h>
 #endif
@@ -50,6 +47,17 @@
 extern "C" {
 # include <wtap.h>
 }
+#endif
+
+#ifdef _WIN32
+    /* Always include winsock2.h before windows.h */
+	#ifndef HAVE_LIBPCAP
+    /* winsock2.h is already included into libpcap */
+	# include <winsock2.h>
+	# include <ws2tcpip.h>
+	#endif
+
+# include <windows.h>
 #endif
 
 /* Some defines needed for compatibility when using Linux */

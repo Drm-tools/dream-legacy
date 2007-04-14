@@ -27,17 +27,7 @@
 \******************************************************************************/
 
 #include "DrmTransmitter.h"
-#ifdef WITH_SOUND
-# ifdef _WIN32
-#  include "../windows/Source/Sound.h"
-# else
-#  include "../linux/source/soundin.h"
-#  include "../linux/source/soundout.h"
-# endif
-#else
-# include "soundnull.h"
-#endif
-
+#include "sound.h"
 
 /* Implementation *************************************************************/
 void CDRMTransmitter::Start()
@@ -127,11 +117,7 @@ void CDRMTransmitter::Init()
 }
 
 CDRMTransmitter::CDRMTransmitter() :
-#ifdef WITH_SOUND
 	pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
-#else
-	pSoundInInterface(new CSoundInNull), pSoundOutInterface(new CSoundOutNull),
-#endif
 	ReadData(pSoundInInterface), TransmitData(pSoundOutInterface),
 	rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
 {

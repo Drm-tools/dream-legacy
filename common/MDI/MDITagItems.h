@@ -318,7 +318,7 @@ protected:
 class CTagItemGeneratorGPS : public CTagItemGeneratorWithProfiles /* rgps */
 {
 public:
-	void GenTag(_BOOLEAN bIsValid, CParameter::CRGPSData& RGPSData);
+	void GenTag(_BOOLEAN bIsValid, CGPSData& GPSData);
 protected:
 	virtual string GetTagName(void);
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag

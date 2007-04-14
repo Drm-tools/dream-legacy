@@ -86,8 +86,10 @@ using namespace std; /* Because of the library: "complex" */
 
 /* set sensible defaults for QT2 or QT3 */
 # ifdef USE_QT_GUI
-#  include <qglobal.h>
+# include <qglobal.h>
+#else
 # endif
+
 # if defined(QT_VERSION) && QT_VERSION < 0x030000
 #  define HAVE_LIBFREEIMAGE
 //#  undef HAVE_LIBFREEIMAGE

@@ -489,10 +489,10 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 			{
 				/* Extract higher protected part bytes (8 bits per byte) */
 				for (j = 0; j < iNumHigherProtectedBytes; j++)
-					audio_frame[i][j] = (*pvecInputData).Separate(8);
+					audio_frame[i][j] = _BINARY((*pvecInputData).Separate(8));
 
 				/* Extract CRC bits (8 bits) */
-				aac_crc_bits[i] = (*pvecInputData).Separate(8);
+				aac_crc_bits[i] = _BINARY((*pvecInputData).Separate(8));
 			}
 
 			/* Lower-protected part */
@@ -507,7 +507,7 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 				for (j = 0; j < iNumLowerProtectedBytes; j++)
 				{
 					audio_frame[i][iNumHigherProtectedBytes + j] =
-						(*pvecInputData).Separate(8);
+						_BINARY((*pvecInputData).Separate(8));
 				}
 			}
 		}
@@ -527,7 +527,7 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 
 			/* Extract CRC bits (8 bits) if used */
 			if (bCELPCRC == TRUE)
-				celp_crc_bits[i] = (*pvecInputData).Separate(8);
+				celp_crc_bits[i] = _BINARY((*pvecInputData).Separate(8));
 		}
 
 		/* Lower-protected part */
@@ -1085,7 +1085,7 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 			veciFrameLength.Init(iNumAudioFrames);
 
 			/* Init AAC-decoder */
-			NeAACDecInitDRM(&HandleAACDecoder, iAACSampleRate, iDRMchanMode);
+			NeAACDecInitDRM(&HandleAACDecoder, iAACSampleRate, (unsigned char)iDRMchanMode);
 #else
 			/* No AAC decoder available */
 			throw CInitErr(ET_AUDDECODER);

@@ -116,11 +116,6 @@ public:
 	void SetSNREst(ETypeSNREst eNewTy) {TypeSNREst = eNewTy; SetInitFlag();}
 	ETypeSNREst GetSNREst() {return TypeSNREst;}
 
-	_REAL GetSNREstdB() const;
-	_REAL GetSigma();
-	_REAL GetDelay() const;
-	_REAL GetMinDelay();
-
 	void StartSaRaOffAcq() {TimeSyncTrack.StartSaRaOffAcq(); SetInitFlag();}
 
 protected:

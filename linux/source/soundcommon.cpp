@@ -25,8 +25,8 @@
 \******************************************************************************/
 
 #include "soundin.h"
+#include "soundout.h"
 
-#ifdef WITH_SOUND
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -35,255 +35,330 @@
 #include <fstream>
 #include <sstream>
 
-/*****************************************************************************/
+/* ************************************************************************* */
 
-# ifdef USE_DEVDSP
-
-#include <sys/soundcard.h>
-#include <errno.h>
-
-map < string, COSSDev::devdata > COSSDev::dev;
-
-void
-COSSDev::devdata::open(const string & name, int mode)
-{
-#if 1
-	if (fd == 0)
-	{
-		fd =::open(name.c_str(), O_RDWR);
-		int
-			arg,
-			status;
-		/* Get ready for us.
-		   ioctl(audio_fd, SNDCTL_DSP_SYNC, 0) can be used when application wants 
-		   to wait until last byte written to the device has been played (it doesn't
-		   wait in recording mode). After that the call resets (stops) the device
-		   and returns back to the calling program. Note that this call may take
-		   several seconds to execute depending on the amount of data in the 
-		   buffers. close() calls SNDCTL_DSP_SYNC automaticly */
-		ioctl(fd, SNDCTL_DSP_SYNC, 0);
-
-		/* Set sampling parameters always so that number of channels (mono/stereo) 
-		   is set before selecting sampling rate! */
-		/* Set number of channels (0=mono, 1=stereo) */
-		arg = NUM_OUT_CHANNELS - 1;
-		status = ioctl(fd, SNDCTL_DSP_STEREO, &arg);
-		if (status == -1)
-			throw
-			CGenErr(string("SNDCTL_DSP_CHANNELS ioctl failed: ") +
-					strerror(errno));
-
-		if (arg != (NUM_OUT_CHANNELS - 1))
-			throw
-			CGenErr("unable to set number of channels");
-
-		/* Sampling rate */
-		arg = SOUNDCRD_SAMPLE_RATE;
-		status = ioctl(fd, SNDCTL_DSP_SPEED, &arg);
-		if (status == -1)
-			throw
-			CGenErr("SNDCTL_DSP_SPEED ioctl failed");
-		if (arg != SOUNDCRD_SAMPLE_RATE)
-			throw
-			CGenErr("unable to set sample rate");
-
-		/* Sample size */
-		arg = (BITS_PER_SAMPLE == 16) ? AFMT_S16_LE : AFMT_U8;
-		status = ioctl(fd, SNDCTL_DSP_SAMPLESIZE, &arg);
-		if (status == -1)
-			throw
-			CGenErr("SNDCTL_DSP_SAMPLESIZE ioctl failed");
-		if (arg != ((BITS_PER_SAMPLE == 16) ? AFMT_S16_LE : AFMT_U8))
-			throw
-			CGenErr("unable to set sample size");
-#if 1
-		/* Check capabilities of the sound card */
-		status = ioctl(fd, SNDCTL_DSP_GETCAPS, &arg);
-		if (status == -1)
-			throw
-			CGenErr("SNDCTL_DSP_GETCAPS ioctl failed");
-		if ((arg & DSP_CAP_DUPLEX) == 0)
-			throw
-			CGenErr("Soundcard not full duplex capable!");
+CSoundIn::CSoundIn():devices(),names(),iCurrentDevice(-1)
+#ifdef USE_OSS
+,dev()
 #endif
-	}
-#else
-	if (fd == 0)
-	{
-		fd =::open(name.c_str(), mode);
-	}
-	else
-	{
-		::close(fd);
-		/* this might work if there was a way to wait for the card to
-		   be ready to open again */
-		fd =::open(name.c_str(), O_RDWR);
-	}
+#ifdef USE_ALSA
+,handle(NULL)
 #endif
-	if (fd > 0)
-		count++;
-	else
-	{
-		fd = 0;
-	}
+{
+	RecThread.pSoundIn = this;
+	getdevices(names, devices, false);
+	/* Set flag to open devices */
+	bChangDev = TRUE;
 }
 
 void
-COSSDev::devdata::close()
+CSoundIn::CRecThread::run()
 {
-	if (fd && ((--count) == 0))
-	{
-		::close(fd);
-		fd = 0;
-	}
-}
+	while (SoundBuf.keep_running) {
 
-int
-COSSDev::devdata::fildes()
-{
-	return fd;
-}
+		int fill;
 
-void
-COSSDev::open(const string & devname, int mode)
-{
-	name = devname;
-	dev[name].open(name, mode);
-}
+		SoundBuf.lock();
+		fill = SoundBuf.GetFillLevel();
+		SoundBuf.unlock();
+			
+		if (  (SOUNDBUFLEN - fill) > (FRAGSIZE * NUM_IN_CHANNELS) ) {
+			// enough space in the buffer
+			
+			int size = pSoundIn->read_HW( tmprecbuf, FRAGSIZE);
 
-void
-COSSDev::close()
-{
-	dev[name].close();
-}
+			// common code
+			if (size > 0) {
+				CVectorEx<_SAMPLE>*	ptarget;
 
-void
-getdevices(vector < string > &names, vector < string > &devices,
-		   bool playback)
-{
-	vector < string > tmp;
-	names.clear();
-	devices.clear();
-	ifstream sndstat("/dev/sndstat");
-	if (!sndstat.is_open())
-	{
-		sndstat.close();
-		sndstat.clear();
-		sndstat.open("/proc/asound/oss/sndstat");
-	}
+				/* Copy data from temporary buffer in output buffer */
+				SoundBuf.lock();
 
-	if (sndstat.is_open())
-	{
-		while (!(sndstat.eof() || sndstat.fail()))
-		{
-			char s[80];
-			sndstat.getline(s, sizeof(s));
+				ptarget = SoundBuf.QueryWriteBuffer();
 
-			if (strstr(s, "Audio devices:") != NULL)
-			{
-				while (true)
-				{
-					sndstat.getline(s, sizeof(s));
-					if (strlen(s) > 0)
-						tmp.push_back(s);
-					else
-						break;
-				}
+				for (int i = 0; i < size * NUM_IN_CHANNELS; i++)
+					(*ptarget)[i] = tmprecbuf[i];
+
+				SoundBuf.Put( size * NUM_IN_CHANNELS );
+				SoundBuf.unlock();
 			}
+		} else {
+			msleep( 1 );
 		}
 	}
-	sndstat.close();
-
-	/* if there is more than one device, let the user chose */
-	if (tmp.size() > 0)
-	{
-		names.resize(tmp.size());
-		devices.resize(tmp.size());
-		size_t i;
-		for (i = 0; i < tmp.size(); i++)
-		{
-			stringstream o(tmp[i]);
-			char p, name[200];
-			int n;
-			o >> n >> p;
-			o.getline(name, sizeof(name), ':');
-			names[n] = name;
-		}
-		devices[0] = "/dev/dsp";
-		for (i = 1; i < names.size(); i++)
-		{
-			devices[i] = "/dev/dsp";
-			devices[i] += '0' + i;
-		}
-	}
-	else
-	{
-		if (playback)
-			names.push_back("Default Playback Device");
-		else
-			names.push_back("Default Capture Device");
-		devices.push_back("/dev/dsp");
-	}
-}
-
-# endif
-
-/*****************************************************************************/
-
-# ifdef USE_ALSA
-
-void
-getdevices(vector < string > &names, vector < string > &devices,
-		   bool playback)
-{
-	vector < string > tmp;
-	names.clear();
-	devices.clear();
-	ifstream sndstat("/proc/asound/pcm");
-	if (sndstat.is_open())
-	{
-		while (!(sndstat.eof() || sndstat.fail()))
-		{
-			char s[200];
-			sndstat.getline(s, sizeof(s));
-			if (strlen(s) == 0)
-				break;
-			if (strstr(s, playback ? "playback" : "capture") != NULL)
-				tmp.push_back(s);
-		}
-		sndstat.close();
-	}
-	if (tmp.size() > 0)
-	{
-		sort(tmp.begin(), tmp.end());
-		for (size_t i = 0; i < tmp.size(); i++)
-		{
-			stringstream o(tmp[i]);
-			char p, n[200], d[200], cap[80];
-			int maj, min;
-			o >> maj >> p >> min;
-			o >> p;
-			o.getline(n, sizeof(n), ':');
-			o.getline(d, sizeof(d), ':');
-			o.getline(cap, sizeof(cap));
-			stringstream dev;
-			dev << "plughw:" << maj << "," << min;
-			devices.push_back(dev.str());
-			names.push_back(n);
-		}
-	}
-	if (playback)
-	{
-		names.push_back("Default Playback Device");
-		devices.push_back("dmix");
-	}
-	else
-	{
-		names.push_back("Default Capture Device");
-		devices.push_back("dsnoop");
-	}
-}
-
-# endif
-
+#ifdef USE_QT_GUI
+	qDebug("Rec Thread stopped");
 #endif
+}
+
+
+/* Wave in ********************************************************************/
+
+void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+{
+#ifdef USE_QT_GUI
+	qDebug("initrec %d", iNewBufferSize);
+#endif
+
+	/* Save < */
+	RecThread.SoundBuf.lock();
+	iInBufferSize = iNewBufferSize;
+	bBlockingRec = bNewBlocking;
+	RecThread.SoundBuf.unlock();
+	
+	/* Check if device must be opened or reinitialized */
+	if (bChangDev == TRUE)
+	{
+
+		Init_HW( );
+
+		/* Reset flag */
+		bChangDev = FALSE;
+	}
+
+	if ( RecThread.running() == FALSE ) {
+		RecThread.SoundBuf.lock();
+		RecThread.SoundBuf.Init( SOUNDBUFLEN );
+		RecThread.SoundBuf.unlock();
+		RecThread.start();
+	}
+
+}
+
+
+_BOOLEAN CSoundIn::Read(CVector< _SAMPLE >& psData)
+{
+	CVectorEx<_SAMPLE>*	p;
+
+	/* Check if device must be opened or reinitialized */
+	if (bChangDev == TRUE)
+	{
+		/* Reinit sound interface */
+		Init(iBufferSize, bBlockingRec);
+
+		/* Reset flag */
+		bChangDev = FALSE;
+	}
+
+	RecThread.SoundBuf.lock();	// we need exclusive access
+	
+	if(iCurrentDevice == -1)
+		iCurrentDevice = names.size()-1;
+
+	while ( RecThread.SoundBuf.GetFillLevel() < iInBufferSize ) {
+	
+		
+		// not enough data, sleep a little
+		RecThread.SoundBuf.unlock();
+		usleep(1000); //1ms
+		RecThread.SoundBuf.lock();
+	}
+	
+	// copy data
+	
+	p = RecThread.SoundBuf.Get( iInBufferSize );
+	for (int i=0; i<iInBufferSize; i++)
+		psData[i] = (*p)[i];
+	
+	RecThread.SoundBuf.unlock();
+
+	return FALSE;
+}
+
+void CSoundIn::Close()
+{
+#ifdef USE_QT_GUI
+	qDebug("stoprec");
+#endif
+
+	// stop the recording threads
+	
+	if (RecThread.running() ) {
+		RecThread.SoundBuf.keep_running = FALSE;
+		// wait 1sec max. for the threads to terminate
+		RecThread.wait(1000);
+	}
+	
+	close_HW();
+
+	/* Set flag to open devices the next time it is initialized */
+	bChangDev = TRUE;
+}
+
+void CSoundIn::SetDev(int iNewDevice)
+{
+	/* Change only in case new device id is not already active */
+	if (iNewDevice != iCurrentDevice)
+	{
+		iCurrentDevice = iNewDevice;
+		bChangDev = TRUE;
+	}
+}
+
+int CSoundIn::GetDev()
+{
+	return iCurrentDevice;
+}
+
+CSoundOut::CSoundOut():devices(),names(),iCurrentDevice(-1)
+#ifdef USE_OSS
+,dev()
+#endif
+#ifdef USE_ALSA
+,handle(NULL)
+#endif
+{
+	PlayThread.pSoundOut = this;
+	getdevices(names, devices, true);
+	/* Set flag to open devices */
+	bChangDev = TRUE;
+}
+
+void CSoundOut::CPlayThread::run()
+{
+	while ( SoundBuf.keep_running ) {
+		int fill;
+
+		SoundBuf.lock();
+		fill = SoundBuf.GetFillLevel();
+		SoundBuf.unlock();
+			
+		if ( fill > (FRAGSIZE * NUM_OUT_CHANNELS) ) {
+
+			// enough data in the buffer
+
+			CVectorEx<_SAMPLE>*	p;
+			
+			SoundBuf.lock();
+			p = SoundBuf.Get( FRAGSIZE * NUM_OUT_CHANNELS );
+
+			for (int i=0; i < FRAGSIZE * NUM_OUT_CHANNELS; i++)
+				tmpplaybuf[i] = (*p)[i];
+
+			SoundBuf.unlock();
+			
+			pSoundOut->write_HW( tmpplaybuf, FRAGSIZE );
+
+		} else {
+		
+			do {			
+				msleep( 1 );
+				
+				SoundBuf.lock();
+				fill = SoundBuf.GetFillLevel();
+				SoundBuf.unlock();
+
+			} while ((SoundBuf.keep_running) && ( fill < SOUNDBUFLEN/2 ));	// wait until buffer is at least half full
+		}
+	}
+#ifdef USE_QT_GUI
+	qDebug("Play Thread stopped");
+#endif
+}
+
+void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+{
+#ifdef USE_QT_GUI
+	qDebug("initplay %d", iNewBufferSize);
+#endif
+	
+	/* Save buffer size */
+	PlayThread.SoundBuf.lock();
+	iBufferSize = iNewBufferSize;
+	bBlockingPlay = bNewBlocking;
+	PlayThread.SoundBuf.unlock();
+
+	/* Check if device must be opened or reinitialized */
+	if (bChangDev == TRUE)
+	{
+
+		Init_HW( );
+
+		/* Reset flag */
+		bChangDev = FALSE;
+	}
+
+	if ( PlayThread.running() == FALSE ) {
+		PlayThread.SoundBuf.lock();
+		PlayThread.SoundBuf.Init( SOUNDBUFLEN );
+		PlayThread.SoundBuf.unlock();
+		PlayThread.start();
+	}
+}
+
+_BOOLEAN CSoundOut::Write(CVector< _SAMPLE >& psData)
+{
+	/* Check if device must be opened or reinitialized */
+	if (bChangDev == TRUE)
+	{
+		/* Reinit sound interface */
+		Init(iBufferSize, bBlockingPlay);
+
+		/* Reset flag */
+		bChangDev = FALSE;
+	}
+
+	if ( bBlockingPlay ) {
+		// blocking write
+		while( PlayThread.SoundBuf.keep_running ) {
+			PlayThread.SoundBuf.lock();
+			int fill = SOUNDBUFLEN - PlayThread.SoundBuf.GetFillLevel();
+			PlayThread.SoundBuf.unlock();
+			if ( fill > iBufferSize) break;
+		}
+	}
+	
+	PlayThread.SoundBuf.lock();	// we need exclusive access
+
+	if ( ( SOUNDBUFLEN - PlayThread.SoundBuf.GetFillLevel() ) > iBufferSize) {
+		 
+		CVectorEx<_SAMPLE>*	ptarget;
+		 
+		 // data fits, so copy
+		 ptarget = PlayThread.SoundBuf.QueryWriteBuffer();
+		 for (int i=0; i < iBufferSize; i++)
+		 {
+		 	(*ptarget)[i] = psData[i];
+		}
+
+		 PlayThread.SoundBuf.Put( iBufferSize );
+	}
+	
+	PlayThread.SoundBuf.unlock();
+
+	return FALSE;
+}
+
+void CSoundOut::Close()
+{
+#ifdef USE_QT_GUI
+	qDebug("stopplay");
+#endif
+	
+	// stop the playback thread
+	if (PlayThread.running() ) {
+		PlayThread.SoundBuf.keep_running = FALSE;
+		PlayThread.wait(1000);
+	}
+	
+	close_HW();	
+
+	/* Set flag to open devices the next time it is initialized */
+	bChangDev = TRUE;
+}
+
+void CSoundOut::SetDev(int iNewDevice)
+{
+	/* Change only in case new device id is not already active */
+	if (iNewDevice != iCurrentDevice)
+	{
+		iCurrentDevice = iNewDevice;
+		bChangDev = TRUE;
+	}
+}
+
+int CSoundOut::GetDev()
+{
+	return iCurrentDevice;
+}
+

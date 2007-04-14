@@ -52,7 +52,6 @@ public:
 	virtual void				SetDev(int iNewDevice);
 	virtual int					GetDev();
 
-#if WITH_SOUND
 	void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
 	_BOOLEAN Read(CVector<short>& psData);
 	void Close();
@@ -66,16 +65,11 @@ protected:
 	short int *tmprecbuf;
 	_BOOLEAN	bBlockingRec;
 	vector<string> devices;
-#ifdef USE_ALSA
-	snd_pcm_t *handle;
-#endif
-#ifdef USE_DEVDSP
-	COSSDev dev;
-#endif
 
 	class CRecThread : public CThread
 	{
 	public:
+		virtual ~CRecThread(){}
 		virtual void run();
 		CSoundBuf SoundBuf;
 		CSoundIn*	pSoundIn;
@@ -83,17 +77,16 @@ protected:
 		_SAMPLE	tmprecbuf[NUM_IN_CHANNELS * FRAGSIZE];
 	} RecThread;
 	
-#else
-	/* Dummy definitions */
-	void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE){}
-	_BOOLEAN Read(CVector<short>& psData){return FALSE;}
-	void Close(){}
-#endif
 protected:
 	vector<string> names;
     _BOOLEAN bChangDev;
 	int	iCurrentDevice;
+#ifdef USE_ALSA
+	snd_pcm_t *handle;
+#endif
+#ifdef USE_OSS
+	COSSDev dev;
+#endif
 };
-
 
 #endif

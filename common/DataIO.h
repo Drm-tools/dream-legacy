@@ -292,6 +292,7 @@ protected:
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+	void		 OpenFile(CParameter& ReceiverParam);
 
 	/* For doing the IF to IQ conversion (stolen from AM demod) */
 	CRealVector					rvecInpTmp;
@@ -307,6 +308,8 @@ protected:
 	CMixer						Mixer;
 
 	int							iFrequency; // For use in generating filename
+	_BOOLEAN					bIsRecording;
+
 };
 
 

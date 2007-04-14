@@ -673,19 +673,6 @@ void systemevalDlg::OnTimer()
 {
 	CParameter& ReceiverParam = *(pDRMRec->GetParameters());
 
-	/* Show SNR if receiver is in tracking mode */
-	if ((pDRMRec->GetReceiverState() == AS_WITH_SIGNAL) &&
-		(pDRMRec->GetReceiverMode() == RM_DRM) &&
-		(ReceiverParam.ReceptLog.GetLoggingActivated()))
-	{
-		/* We only get SNR from a local DREAM Front-End */
-		_REAL rSNR = ReceiverParam.rSNREstimate;
-
-		/* Set SNR for log file */
-		if (rSNR >= 0.0)
-			ReceiverParam.ReceptLog.SetSNR(rSNR);
-	}
-
 	if (this->isVisible())
 	{
 	SetStatus(LEDMSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
@@ -713,7 +700,7 @@ void systemevalDlg::OnTimer()
 		{
 			ValueSNR->setText("<b>---</b>");
 		}
-		/* We get MER from a local DREAM Front-End or and RSCI input but not an MDI input */
+		/* We get MER from a local DREAM Front-End or an RSCI input but not an MDI input */
 		_REAL rMER = ReceiverParam.rMER;
 		if (rMER >= 0.0 )
 		{
@@ -742,7 +729,7 @@ void systemevalDlg::OnTimer()
 		}
 
 		/* Sample frequency offset estimation */
-		const _REAL rCurSamROffs = ReceiverParam.GetSampFreqEst();
+		const _REAL rCurSamROffs = ReceiverParam.rResampleOffset;
 
 		/* Display value in [Hz] and [ppm] (parts per million) */
 		ValueSampFreqOffset->setText(
@@ -933,54 +920,49 @@ void systemevalDlg::OnTimer()
 
 	//display GPS info
 
-
-	switch (ReceiverParam.GPSRxData.GetStatus())
+	switch (ReceiverParam.ReceptLog.GPSData.GetStatus())
 	{
-		case CGPSRxData::GPS_RX_NOT_CONNECTED:
+		case CGPSData::GPS_RX_NOT_CONNECTED:
 			LEDGPS->SetLight(2); // Red
 			break;
 
-		case CGPSRxData::GPS_RX_NO_DATA:
+		case CGPSData::GPS_RX_NO_DATA:
 			LEDGPS->SetLight(1); // Yellow
 			break;
 
-		case CGPSRxData::GPS_RX_DATA_AVAILABLE:
+		case CGPSData::GPS_RX_DATA_AVAILABLE:
 			LEDGPS->SetLight(0); // Green
 			break;
 	}
 
 	QString qStrPosition;
-	if (ReceiverParam.GPSRxData.GetPositionAvailable())
-		{
-			float fLatDeg, fLongDeg;
-			ReceiverParam.GPSRxData.GetLatLongDegrees(fLatDeg, fLongDeg);
-
-			qStrPosition = "Lat: "+QString().setNum(fLatDeg, 'f', 4) + "\260  " +	"Long: "+ QString().setNum(fLongDeg, 'f', 4) + "\260";
-		}
+	if (ReceiverParam.ReceptLog.GPSData.GetPositionAvailable())
+	{
+		double latitude, longitude;
+		ReceiverParam.ReceptLog.GPSData.GetLatLongDegrees(latitude, longitude);
+		qStrPosition = QString("Lat: %1\260  Long: %2\260").arg(latitude, 0, 'f', 4).arg(longitude,0, 'f',4);
+	}
 	else
 		qStrPosition = "Lat: ?  Long: ?";
 
-	if (ReceiverParam.GPSRxData.GetAltitudeAvailable())
-		qStrPosition += "  Alt: " + QString().setNum(ReceiverParam.GPSRxData.GetAltitudeMetres(), 'f', 0) + "m";
+	if (ReceiverParam.ReceptLog.GPSData.GetAltitudeAvailable())
+		qStrPosition += QString("  Alt: %1 m").arg(ReceiverParam.ReceptLog.GPSData.GetAltitudeMetres(), 0, 'f', 0);
 	else
 		qStrPosition += "  Alt: ?";
 
 	TextLabelGPSPosition->setText(qStrPosition);
 
-
-
 	QString qStrSpeedHeading;
 	qStrSpeedHeading = "Speed: ";
 
-	if (ReceiverParam.GPSRxData.GetSpeedAvailable())
-		qStrSpeedHeading += QString().setNum(ReceiverParam.GPSRxData.GetSpeedMetresPerSecond(), 'f', 1) + " m/s";
+	if (ReceiverParam.ReceptLog.GPSData.GetSpeedAvailable())
+		qStrSpeedHeading += QString("%1 m/s").arg(ReceiverParam.ReceptLog.GPSData.GetSpeedMetresPerSecond(), 0, 'f', 1);
 	else
 		qStrSpeedHeading += "?";
 
-
 	qStrSpeedHeading += "  Heading: ";
-	if (ReceiverParam.GPSRxData.GetHeadingAvailable())
-		qStrSpeedHeading += QString().setNum(ReceiverParam.GPSRxData.GetHeadingDegrees()) + "\260";
+	if (ReceiverParam.ReceptLog.GPSData.GetHeadingAvailable())
+		qStrSpeedHeading += QString("%1\260").arg(ReceiverParam.ReceptLog.GPSData.GetHeadingDegrees());
 	else
 		qStrSpeedHeading += "?";
 
@@ -988,17 +970,15 @@ void systemevalDlg::OnTimer()
 
 	QString qStrTime;
 
-	if (ReceiverParam.GPSRxData.GetTimeAndDateAvailable())
+	if (ReceiverParam.ReceptLog.GPSData.GetTimeAndDateAvailable())
 	{
-		QDateTime qDT;
-		qDT.setTime_t(ReceiverParam.GPSRxData.GetTimeSecondsSince1970());
-		qStrTime += "UTC: " + qDT.toString() + "  ";
+		qStrTime = QString("UTC: ") + ReceiverParam.ReceptLog.GPSData.GetTimeDate().c_str() + "  ";
 	}
 	else
 		qStrTime = "UTC: ?  ";
 
-	if (ReceiverParam.GPSRxData.GetSatellitesVisibleAvailable())
-		qStrTime += "Satellites: " + QString().setNum(ReceiverParam.GPSRxData.GetSatellitesVisible());
+	if (ReceiverParam.ReceptLog.GPSData.GetSatellitesVisibleAvailable())
+		qStrTime += "Satellites: " + QString().setNum(ReceiverParam.ReceptLog.GPSData.GetSatellitesVisible());
 	else
 		qStrTime += "Satellites: ?";
 

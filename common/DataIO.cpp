@@ -460,8 +460,8 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 
 		/* P(X) = X^9 + X^5 + 1,
 		   in this implementation we have to shift n-1! */
-		biPRBSbit = ((iTempShiftRegister1 >> 4) & 1) ^
-			((iTempShiftRegister1 >> 8) & 1);
+		biPRBSbit = _BINARY(((iTempShiftRegister1 >> 4) & 1) ^
+			((iTempShiftRegister1 >> 8) & 1));
 
 		/* Shift bits in shift register and add new bit */
 		iShiftRegister <<= 1;
@@ -579,8 +579,8 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* P(X) = X^9 + X^5 + 1,
 		   in this implementation we have to shift n-1! */
-		biPRBSbit = ((iTempShiftRegister1 >> 4) & 1) ^
-			((iTempShiftRegister1 >> 8) & 1);
+		biPRBSbit = _BINARY(((iTempShiftRegister1 >> 4) & 1) ^
+			((iTempShiftRegister1 >> 8) & 1));
 
 		/* Shift bits in shift register and add new bit */
 		iShiftRegister <<= 1;
@@ -747,7 +747,7 @@ void CUtilizeSDCData::InitInternal(CParameter& ReceiverParam)
 
 /* CWriteIQFile : module for writing an IQ or IF file */
 
-CWriteIQFile::CWriteIQFile() : pFile(0), iFrequency(0)
+CWriteIQFile::CWriteIQFile() : pFile(0), iFrequency(0), bIsRecording(FALSE)
 {
 }
 
@@ -759,9 +759,11 @@ CWriteIQFile::~CWriteIQFile()
 
 void CWriteIQFile::StartRecording(CParameter& ReceiverParam)
 {
-	if (pFile!=0)
-		fclose(pFile);
+	bIsRecording = TRUE;
+}
 
+void CWriteIQFile::OpenFile(CParameter& ReceiverParam)
+{
 	iFrequency = ReceiverParam.ReceptLog.GetFrequency();
 
 	/* Get current UTC time */
@@ -784,29 +786,12 @@ void CWriteIQFile::StartRecording(CParameter& ReceiverParam)
 
 void CWriteIQFile::StopRecording()
 {
-	if (pFile !=0)
-		fclose (pFile);
-	pFile = 0;
+	bIsRecording = FALSE;
 }
 
 void CWriteIQFile::NewFrequency(CParameter &ReceiverParam)
 {
-	// Has it really changed?
-	int iNewFrequency = ReceiverParam.ReceptLog.GetFrequency();
-
-	if (iNewFrequency != iFrequency)
-	{
-		iFrequency = iNewFrequency;
-
-		if (pFile != 0)
-		{
-			StopRecording();
-			StartRecording(ReceiverParam);
-		}
-	}
-
 }
-
 
 void CWriteIQFile::InitInternal(CParameter& ReceiverParam)
 {
@@ -876,8 +861,34 @@ void CWriteIQFile::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int i;
 
-	if (pFile == 0)
+	// is recording switched on?
+    if (!bIsRecording)
+    {
+		if (pFile != NULL)
+		{
+			fclose(pFile); // close file if currently open
+			pFile = NULL;
+		}
 		return;
+	}
+	// Has the frequency changed? If so, close any open file (a new one will be opened)
+	int iNewFrequency = ReceiverParam.ReceptLog.GetFrequency();
+
+	if (iNewFrequency != iFrequency)
+	{
+		 iFrequency = iNewFrequency;
+		 // If file is currently open, close it
+		 if (pFile != NULL)
+		 {
+			fclose(pFile);
+			pFile = NULL;
+		 }
+	 }
+	 // Now open the file with correct name if it isn't currently open
+	if (!pFile)
+	{
+		OpenFile(ReceiverParam);
+	}
 
 	/* Band-pass filter and mixer ------------------------------------------- */
 	/* Copy CVector data in CMatlibVector */
@@ -903,10 +914,10 @@ void CWriteIQFile::ProcessDataInternal(CParameter& ReceiverParam)
 	{
 		re = _SAMPLE(cvecHilbert[i].real() * rScale);
 		im = _SAMPLE(cvecHilbert[i].imag() * rScale);
-		bytes[0] = re & 0xFF;
-		bytes[1] = (re>>8) & 0xFF;
-		bytes[2] = im & 0xFF;
-		bytes[3] = (im>>8) & 0xFF;
+		bytes[0] = _BYTE(re & 0xFF);
+		bytes[1] = _BYTE((re>>8) & 0xFF);
+		bytes[2] = _BYTE(im & 0xFF);
+		bytes[3] = _BYTE((im>>8) & 0xFF);
 
 		fwrite(bytes, 4, sizeof(_BYTE), pFile);
 	}

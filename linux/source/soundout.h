@@ -33,7 +33,6 @@
 #include "../../common/util/Buffer.h"
 #include "soundcommon.h"
 
-
 /* Definitions ****************************************************************/
 #define SOUNDBUFLEN 102400
 
@@ -51,7 +50,6 @@ public:
 	virtual void				SetDev(int iNewDevice);
 	virtual int					GetDev();
 
-#if WITH_SOUND
 	void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
 	_BOOLEAN Write(CVector<short>& psData);
 
@@ -67,16 +65,10 @@ protected:
 	_BOOLEAN	bBlockingPlay;
 	vector<string> devices;
 
-#ifdef USE_ALSA
-	snd_pcm_t *handle;
-#endif
-#ifdef USE_DEVDSP
-	COSSDev dev;
-#endif
-
 	class CPlayThread : public CThread
 	{
 	public:
+		virtual ~CPlayThread(){}
 		virtual void run();
 		CSoundBuf SoundBuf;
 		CSoundOut*	pSoundOut;
@@ -84,16 +76,16 @@ protected:
 		_SAMPLE	tmpplaybuf[NUM_OUT_CHANNELS * FRAGSIZE];
 	} PlayThread;
 	
-#else
-	/* Dummy definitions */
-	void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE){}
-	_BOOLEAN Write(CVector<short>& psData){return FALSE;}
-	void Close(){}
-#endif
 	vector<string> names;
     _BOOLEAN bChangDev;
 	int	iCurrentDevice;
-};
+#ifdef USE_ALSA
+	snd_pcm_t *handle;
+#endif
+#ifdef USE_OSS
+	COSSDev dev;
+#endif
 
+};
 
 #endif

@@ -35,8 +35,9 @@
 #ifdef USE_QT_GUI
 #  include "MDIInBuffer.h"
 #  include "PacketSocketQT.h"
+#else
+# include "PacketSocketNull.h"
 #endif
-
 
 #include "../util/Modul.h"
 #include "../util/CRC.h"

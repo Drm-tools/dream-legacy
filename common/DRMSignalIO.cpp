@@ -28,7 +28,6 @@
 
 #include "DRMSignalIO.h"
 #include <iostream>
-#include "util/LogPrint.h"
 
 
 /* Implementation *************************************************************/
@@ -323,6 +322,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 
 	/* Update level meter */
 	SignalLevelMeter.Update((*pvecOutputData));
+	Parameter.SetIFSignalLevel(SignalLevelMeter.Level());
 }
 
 void CReceiveData::InitInternal(CParameter& Parameter)
@@ -583,7 +583,6 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 		_REAL rDCFrequency = ReceiverParam.GetDCFrequency();
 		rFreqKmin = rDCFrequency + _REAL(ReceiverParam.iCarrierKmin)/ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
 		rFreqKmax = rDCFrequency + _REAL(ReceiverParam.iCarrierKmax)/ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
-		//logStatus("GetDCFrequency() returned %f rFreqKmin %f rFreqKmax %f", rDCFrequency, rFreqKmin, rFreqKmax);
 	}
 	else
 	{
@@ -610,7 +609,6 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 		_REAL rPowerInSMeterBW = CalcTotalPower(vecrPSD, FreqToBin(rFreqSMeterMin), FreqToBin(rFreqSMeterMax)); 
 
 		/* Write it to the receiver params to help with calculating the signal strength */
-		//logStatus("rSigPower %f sPowerInSMeterBW %f", rSigPower, rPowerInSMeterBW);
 
 		rCorrection += _REAL(10.0) * log10(rSigPower/rPowerInSMeterBW);
 	} 
@@ -622,9 +620,6 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 		rCorrection += ReceiverParam.FrontEndParameters.rCalFactorAM;
 
 	ReceiverParam.rSigStrengthCorrection = rCorrection;
-
-
-	//logStatus("Correction %fdB", rCorrection);
 
 	return;
 
@@ -651,8 +646,6 @@ void CReceiveData::CalculatePSDInterferenceTag(CParameter &ReceiverParam, CVecto
 	}
 	int iSearchStartBin = FreqToBin(rFreqSearchMin);
 	int iSearchEndBin = FreqToBin(rFreqSearchMax);
-
-	//logStatus("search freq %f to %f bin %d to %d", rFreqSearchMin, rFreqSearchMax, iSearchStartBin, iSearchEndBin);
 
 	if (iSearchStartBin < 0) iSearchStartBin = 0;
 	if (iSearchEndBin > LEN_PSD_AV_EACH_BLOCK_RSI/2)
@@ -684,8 +677,6 @@ void CReceiveData::CalculatePSDInterferenceTag(CParameter &ReceiverParam, CVecto
 
 	/* interferer frequency */
 	ReceiverParam.rMaxPSDFreq = _REAL(iMaxPSDBin) * _REAL(SOUNDCRD_SAMPLE_RATE) / _REAL(LEN_PSD_AV_EACH_BLOCK_RSI) - rIFCentreFrequency;
-
-	//logStatus("rnip: maxbin %i maxpsd %f sigpower %f ratio %f freq %f", iMaxPSDBin, rMaxPSD, rSigPowerExcludingInterferer, ReceiverParam.rMaxPSDwrtSig, ReceiverParam.rMaxPSDFreq);
 
 }
 

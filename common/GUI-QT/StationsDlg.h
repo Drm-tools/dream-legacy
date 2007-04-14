@@ -159,6 +159,7 @@ public:
 
 	void ReadStatTabFromFile(const ESchedMode eNewSchM);
 	ESchedMode GetSchedMode() {return eSchedMode;}
+	void SetSchedMode(const ESchedMode eNewSchM) {eSchedMode = eNewSchM; StationsTable.Init(0);};
 
 	int GetStationNumber() {return StationsTable.Size();}
 	CStationsItem& GetItem(const int iPos) {return StationsTable[iPos];}
@@ -205,6 +206,7 @@ public:
 	virtual ~StationsDlg();
 
 	void LoadSchedule(CDRMSchedule::ESchedMode eNewSchM);
+	void SetCurrentSchedule(const CDRMSchedule::ESchedMode eNewSchM);
 
 	int				iCurrentSortColumn;
 	_BOOLEAN		bCurrentSortAscending;
@@ -217,6 +219,7 @@ protected:
 	void			SetUTCTimeLabel();
 	void			EnableSMeter(const _BOOLEAN bStatus);
 	void			AddUpdateDateTime();
+	void			SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM);
 
 	CDRMReceiver*				pDRMRec;
 
@@ -237,7 +240,7 @@ protected:
 	QPopupMenu*					pUpdateMenu;
 
 	CVector<MyListViewItem*>	vecpListItems;
-	CMutex						ListItemsMutex;
+	QMutex						ListItemsMutex;
 
 	QPopupMenu*					pRemoteMenu;
 
