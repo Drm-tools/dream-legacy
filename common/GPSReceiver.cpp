@@ -76,7 +76,7 @@ void CGPSReceiver::close()
 	disconnect(m_pSocket, SIGNAL(connected()), this, SLOT(slotConnected()));
 	disconnect(m_pSocket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
 	disconnect(m_pSocket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
-	delete m_pSocket;
+	//delete m_pSocket;
 	m_pSocket = NULL;
 }
 
