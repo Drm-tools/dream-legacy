@@ -1015,7 +1015,7 @@ void CParameter::CShortLog::writeHeader(time_t now)
 
 		fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE");
 		if(pLog->bRxlEnabled)
-			fprintf(pFile, "     RXL\n");
+			fprintf(pFile, "      RXL\n");
 		fprintf(pFile, "\n");
 	}
 	iTimeCntShort = 0;

@@ -908,6 +908,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 	string		strArgument;
 	_REAL		rFreqAcSeWinSize = (_REAL) 0.0;
 	_REAL		rFreqAcSeWinCenter = (_REAL) 0.0;
+	string latitude, longitude;
 
 	/* QT docu: argv()[0] is the program name, argv()[1] is the first
 	   argument and argv()[argc()-1] is the last argument.
@@ -1177,12 +1178,23 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			continue;
 		}
 
-		/* Latitude & Longitude string for log file ------------------------------------- */
-		string latitude, longitude;
-		if (GetStringArgument(argc, argv, i, "-a", "--latitude", latitude)
-		&& GetStringArgument(argc, argv, i, "-o", "--longitude", longitude) )
+		/* Latitude & Longitude strings for log file ------------------------- */
+		if(GetStringArgument(argc, argv, i, "-a", "--latitude", latitude))
 		{
-			pDRMRec->GetParameters()->ReceptLog.GPSData.SetLatLongDegrees(atof(latitude.c_str()), atof(longitude.c_str()));
+			if(latitude!="" && longitude !="")
+			{
+				pDRMRec->GetParameters()->ReceptLog.GPSData.SetLatLongDegrees(atof(latitude.c_str()), atof(longitude.c_str()));
+				pDRMRec->GetParameters()->ReceptLog.GPSData.SetPositionAvailable(TRUE);
+			}
+			continue;
+		}
+
+		if(GetStringArgument(argc, argv, i, "-o", "--longitude", longitude))
+		{
+			if(latitude!="" && longitude !="")
+			{
+				pDRMRec->GetParameters()->ReceptLog.GPSData.SetLatLongDegrees(atof(latitude.c_str()), atof(longitude.c_str()));
+			}
 			continue;
 		}
 
@@ -1307,7 +1319,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			MessageBox(NULL, strHelp.c_str(), "Dream",
 				MB_SYSTEMMODAL | MB_OK | MB_ICONINFORMATION);
 #else
-			cerr << strHelp;
+			cerr << strHelp << endl;
 #endif
 
 			exit(1);
@@ -1370,6 +1382,8 @@ string CSettings::UsageArguments(char** argv)
 #ifdef USE_QT_GUI
 		"  -g <n>, --enablelog <n>     enable/disable logging (0: no logging; 1: logging\n"
 		"  -r <n>, --frequency <n>     set frequency [kHz] for log file\n"
+		"  -a <n>  --latitude  <n>     latitude (decimal degrees) for log file\n"
+		"  -o <n>  --longitude <n>     longitude (decimal degrees) for log file\n"
 		"  -l <n>, --logdelay <n>      delay start of logging by <n> seconds, allowed range: 0...3600)\n"
 		"  -y <n>, --colorscheme <n>   set color scheme for main plot\n"
 		"                              0: blue-white (default);   1: green-black;   2: black-grey\n"
@@ -1402,7 +1416,7 @@ string CSettings::UsageArguments(char** argv)
 #ifdef USE_QT_GUI
 		"-r 6140 --rsiout 127.0.0.1:3002"
 #endif
-		"\n";
+		;
 }
 
 _BOOLEAN CSettings::GetFlagArgument(int, char** argv, int& i,
