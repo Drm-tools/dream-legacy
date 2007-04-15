@@ -1084,7 +1084,7 @@ _BOOLEAN MultimediaDlg::openBrowser(QWidget *widget, const QString &filename)
 	{
 		QString f = filename;
 
-		bResult = (ShellExecuteA(NULL, "open",
+		bResult = (ShellExecute(NULL, "open",
 			f.replace(QRegExp("/"),"\\").latin1(), NULL, NULL, SW_SHOWNORMAL) > (HINSTANCE)32);
 	}
 #else

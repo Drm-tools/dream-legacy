@@ -556,6 +556,10 @@ SOURCE=..\common\util\Reassemble.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\common\MDI\AFPacketGenerator.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\MDI\MDIDecode.cpp
 # End Source File
 # Begin Source File
@@ -1018,6 +1022,10 @@ SOURCE=..\common\util\Vector.h
 # Begin Group "Header MDI"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\common\MDI\AFPacketGenerator.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\common\MDI\MDIRSCI.h

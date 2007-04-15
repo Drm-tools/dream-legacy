@@ -1,12 +1,12 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001-2006
+ * British Broadcasting Corporation
+ * Copyright (c) 2007
  *
  * Author(s):
- *	Andrea Russo, Julian Cable
+ *	Volker Fischer, Oliver Haffenden
  *
  * Description:
- *	Dream program version number
+ *	see AFPacketGenerator.cpp
  *
  ******************************************************************************
  *
@@ -25,6 +25,27 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
-#include "Version.h"
+#ifndef AF_PACKET_GENERATOR_H_INCLUDED
+#define AF_PACKET_GENERATOR_H_INCLUDED
 
-char dream_version[] = "1.9unstable-3";
+#include "../GlobalDefinitions.h"
+#include "../Parameter.h"
+#include "../util/Vector.h"
+#include "../util/Buffer.h"
+#include "../util/CRC.h"
+
+class CTagPacketGenerator;
+
+class CAFPacketGenerator
+{
+public:
+	CAFPacketGenerator() : iSeqNumber(0) {}
+
+	CVector<_BYTE> GenAFPacket(const _BOOLEAN bUseAFCRC, CTagPacketGenerator *pTagPacketGenerator);
+
+private:
+	CVector<_BYTE> PackBytes(CVector<_BINARY> &vecbiPacket);
+	int							iSeqNumber;
+};
+
+#endif

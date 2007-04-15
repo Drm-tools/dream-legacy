@@ -2842,8 +2842,48 @@
 				Name="Source MDI"
 				>
 				<File
+					RelativePath="..\common\MDI\AFPacketGenerator.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath="..\common\MDI\MDIDecode.cpp"
 					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\common\MDI\MDIInBuffer.cpp"
@@ -3540,6 +3580,10 @@
 			<Filter
 				Name="Header MDI"
 				>
+				<File
+					RelativePath="..\common\MDI\AFPacketGenerator.h"
+					>
+				</File>
 				<File
 					RelativePath="..\common\MDI\MDIDecode.h"
 					>

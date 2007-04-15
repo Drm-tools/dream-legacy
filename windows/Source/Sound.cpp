@@ -64,7 +64,7 @@ CSoundIn::CSoundIn():CSoundInInterface(),m_WaveIn(NULL)
 
 	/* Get info about the devices and store the names */
 	for (i = 0; i < iNumDevs; i++)
-		if (!waveInGetDevCapsA(i, &m_WaveInDevCaps, sizeof(WAVEINCAPS)))
+		if (!waveInGetDevCaps(i, &m_WaveInDevCaps, sizeof(WAVEINCAPS)))
 			vecstrDevices.push_back(m_WaveInDevCaps.szPname);
 	vecstrDevices.push_back("Primary Capture Device");
 
@@ -359,7 +359,7 @@ CSoundOut::CSoundOut():CSoundOutInterface(),m_WaveOut(NULL)
 
 	/* Get info about the devices and store the names */
 	for (i = 0; i < iNumDevs; i++)
-		if (!waveOutGetDevCapsA(i, &m_WaveOutDevCaps, sizeof(WAVEOUTCAPS)))
+		if (!waveOutGetDevCaps(i, &m_WaveOutDevCaps, sizeof(WAVEOUTCAPS)))
 			vecstrDevices.push_back(m_WaveOutDevCaps.szPname);
 		}
 	vecstrDevices.push_back("Primary Playback Device");

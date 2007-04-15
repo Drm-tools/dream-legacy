@@ -44,33 +44,33 @@ const int
 // TODO don't create a CSoundIn if its not going to be used. It helps for now because of SetDev in the GUI
 /* Implementation *************************************************************/
 CDRMReceiver::CDRMReceiver():
-	pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
-	ReceiveData(), WriteData(pSoundOutInterface),
-	FreqSyncAcq(),
-	ChannelEstimation(),
-	UtilizeFACData(), UtilizeSDCData(), MSCDemultiplexer(),
-	AudioSourceDecoder(),
-	upstreamRSCI(), DecodeRSIMDI(), downstreamRSCI(),
-	pReceiverParam(NULL), pDRMParam(NULL), pAMParam(NULL),
-	RSIPacketBuf(),
-	MSCDecBuf(MAX_NUM_STREAMS), MSCUseBuf(MAX_NUM_STREAMS),
-	MSCSendBuf(MAX_NUM_STREAMS), iAcquRestartCnt(0),
-	iAcquDetecCnt(0), iGoodSignCnt(0), eReceiverMode(RM_DRM),
-	eNewReceiverMode(RM_NONE), iAudioStreamID(STREAM_ID_NOT_USED),
-	iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE),
-	rInitResampleOffset((_REAL) 0.0),
-	vecrFreqSyncValHist(LEN_HIST_PLOT_SYNC_PARMS),
-	vecrSamOffsValHist(LEN_HIST_PLOT_SYNC_PARMS),
-	vecrLenIRHist(LEN_HIST_PLOT_SYNC_PARMS),
-	vecrDopplerHist(LEN_HIST_PLOT_SYNC_PARMS),
-	vecrSNRHist(LEN_HIST_PLOT_SYNC_PARMS),
-	veciCDAudHist(LEN_HIST_PLOT_SYNC_PARMS), iSymbolCount(0),
-	rSumDopplerHist((_REAL) 0.0), rSumSNRHist((_REAL) 0.0), iCurrentCDAud(0),
+pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
+ReceiveData(), WriteData(pSoundOutInterface),
+FreqSyncAcq(),
+ChannelEstimation(),
+UtilizeFACData(), UtilizeSDCData(), MSCDemultiplexer(),
+AudioSourceDecoder(),
+upstreamRSCI(), DecodeRSIMDI(), downstreamRSCI(),
+pReceiverParam(NULL), pDRMParam(NULL), pAMParam(NULL),
+RSIPacketBuf(),
+MSCDecBuf(MAX_NUM_STREAMS), MSCUseBuf(MAX_NUM_STREAMS),
+MSCSendBuf(MAX_NUM_STREAMS), iAcquRestartCnt(0),
+iAcquDetecCnt(0), iGoodSignCnt(0), eReceiverMode(RM_DRM),
+eNewReceiverMode(RM_NONE), iAudioStreamID(STREAM_ID_NOT_USED),
+iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE),
+rInitResampleOffset((_REAL) 0.0),
+vecrFreqSyncValHist(LEN_HIST_PLOT_SYNC_PARMS),
+vecrSamOffsValHist(LEN_HIST_PLOT_SYNC_PARMS),
+vecrLenIRHist(LEN_HIST_PLOT_SYNC_PARMS),
+vecrDopplerHist(LEN_HIST_PLOT_SYNC_PARMS),
+vecrSNRHist(LEN_HIST_PLOT_SYNC_PARMS),
+veciCDAudHist(LEN_HIST_PLOT_SYNC_PARMS), iSymbolCount(0),
+rSumDopplerHist((_REAL) 0.0), rSumSNRHist((_REAL) 0.0), iCurrentCDAud(0),
 #ifdef USE_QT_GUI
 	RigPoll(),
 #endif
 	iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
-	AMDemodType(CAMDemodulation::DT_AM),
+AMDemodType(CAMDemodulation::DT_AM),
 #ifdef _WIN32
 	bProcessPriorityEnabled(TRUE),
 #endif
@@ -103,6 +103,8 @@ CDRMReceiver::~CDRMReceiver()
 	delete pSoundOutInterface;
 }
 
+
+
 void
 CDRMReceiver::Run()
 {
@@ -115,7 +117,7 @@ CDRMReceiver::Run()
 	if (eNewReceiverMode != RM_NONE)
 		InitReceiverMode();
 
-	CParameter& ReceiverParam = *pReceiverParam;
+	CParameter & ReceiverParam = *pReceiverParam;
 
 	/* Check for changes in front end selection */
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
@@ -131,53 +133,38 @@ CDRMReceiver::Run()
 	}
 #endif
 
-	/* Receive data ----------------------------------------------------- */
+	/* Input - from upstream RSCI or input and demodulation from sound card / file */
 
-	if ((upstreamRSCI.GetInEnabled() == TRUE) && (bDoInitRun == FALSE))	/* don't wait for a packet in Init mode */
+	if (upstreamRSCI.GetInEnabled() == TRUE)
 	{
-		RSIPacketBuf.Clear();
-		upstreamRSCI.ReadData(ReceiverParam, RSIPacketBuf);
-		if (RSIPacketBuf.GetFillLevel() > 0)
+		if (bDoInitRun == FALSE)	/* don't wait for a packet in Init mode */
 		{
-			time_keeper = time(NULL);
-			DecodeRSIMDI.ProcessData(ReceiverParam, RSIPacketBuf, FACDecBuf, SDCDecBuf, MSCDecBuf);
-			SplitFAC.ProcessData(ReceiverParam, FACDecBuf, FACUseBuf, FACSendBuf);
-			/* if we have an SDC block, make a copy and keep it until the next frame is to be sent */
-			if (SDCDecBuf.GetFillLevel() == ReceiverParam.iNumSDCBitsPerSFrame)
+			RSIPacketBuf.Clear();
+			upstreamRSCI.ReadData(ReceiverParam, RSIPacketBuf);
+			if (RSIPacketBuf.GetFillLevel() > 0)
 			{
-				SplitSDC.ProcessData(ReceiverParam, SDCDecBuf, SDCUseBuf, SDCSendBuf);
+				time_keeper = time(NULL);
+				DecodeRSIMDI.ProcessData(ReceiverParam, RSIPacketBuf, FACDecBuf, SDCDecBuf, MSCDecBuf);
+				bFrameToSend = TRUE;
 			}
 			else
-			{	/* is this needed, or will DecodeRSIMDI do this anyway? */
-				SDCUseBuf.Clear();
-				SDCSendBuf.Clear();
-			}
-			for (size_t i = 0; i < MSCDecBuf.size(); i++)
 			{
-				SplitMSC[i].ProcessData(ReceiverParam, MSCDecBuf[i], MSCUseBuf[i], MSCSendBuf[i]);
-			}
-
-			bFrameToSend = TRUE;
-		}
-		else
-		{
-			time_t now = time(NULL);
-			if ((now - time_keeper) > 2)
-			{
-				ReceiverParam.ReceiveStatus.SetInterfaceStatus(NOT_PRESENT);
-				ReceiverParam.ReceiveStatus.SetTimeSyncStatus(NOT_PRESENT);
-				ReceiverParam.ReceiveStatus.SetFrameSyncStatus(NOT_PRESENT);
-				ReceiverParam.ReceiveStatus.SetFACStatus(NOT_PRESENT);
-				ReceiverParam.ReceiveStatus.SetSDCStatus(NOT_PRESENT);
-				ReceiverParam.ReceiveStatus.SetAudioStatus(NOT_PRESENT);
-				ReceiverParam.ReceiveStatus.SetMOTStatus(NOT_PRESENT);
+				time_t now = time(NULL);
+				if ((now - time_keeper) > 2)
+				{
+					ReceiverParam.ReceiveStatus.SetInterfaceStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.SetTimeSyncStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.SetFrameSyncStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.SetFACStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.SetSDCStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.SetAudioStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.SetMOTStatus(NOT_PRESENT);
+				}
 			}
 		}
 	}
-
-	if (upstreamRSCI.GetInEnabled() == FALSE)
+	else
 	{
-		ReceiveData.ReadData(ReceiverParam, RecDataBuf);
 #if defined(HAVE_LIBHAMLIB) && !defined(USE_QT_GUI)
 		/* TODO - get the polling interval sensible */
 		_BOOLEAN bValid;
@@ -185,8 +172,43 @@ CDRMReceiver::Run()
 		bValid = Hamlib.GetSMeter(r) == CHamlib::SS_VALID;
 		ReceiverParam.SetSignalStrength(bValid, r);
 #endif
+		ReceiveData.ReadData(ReceiverParam, RecDataBuf);
+
+		if ((eReceiverMode == RM_AM) || bDoInitRun)
+		{
+				DemodulateAM(bEnoughData);
+				DecodeAM(bEnoughData);
+		}
+
+		if ((eReceiverMode == RM_DRM) || bDoInitRun)
+		{
+				DemodulateDRM(bEnoughData);
+				DecodeDRM(bEnoughData, bFrameToSend);
+		}
 	}
 
+	/* Split the data for downstream RSCI and local processing. TODO make this conditional */
+	if (eReceiverMode == RM_AM)
+	{
+		SplitFAC.ProcessData(ReceiverParam, FACDecBuf, FACUseBuf, FACSendBuf);
+
+		/* if we have an SDC block, make a copy and keep it until the next frame is to be sent */
+		if (SDCDecBuf.GetFillLevel() == ReceiverParam.iNumSDCBitsPerSFrame)
+		{
+			SplitSDC.ProcessData(ReceiverParam, SDCDecBuf, SDCUseBuf, SDCSendBuf);
+		}
+
+		for (size_t i = 0; i < MSCDecBuf.size(); i++)
+		{
+			SplitMSC[i].ProcessData(ReceiverParam, MSCDecBuf[i], MSCUseBuf[i], MSCSendBuf[i]);
+		}
+	}
+	else
+	{
+		SplitAudio.ProcessData(ReceiverParam, AMAudioBuf, AudSoDecBuf, AMSoEncBuf);
+	}
+
+	/* decoding */
 	while (bEnoughData && ReceiverParam.bRunThread)
 	{
 		/* Init flag */
@@ -206,250 +228,16 @@ CDRMReceiver::Run()
 
 		if ((eReceiverMode == RM_AM) || bDoInitRun)
 		{
-			/* The incoming samples are split 2 ways using a new CSplit
-			   class. One set are passed to the existing AM demodulator.
-			   The other set are passed to the new AMSS demodulator. The
-			   AMSS and AM demodulators work completely independently */
-			if (Split.ProcessData(ReceiverParam, DemodDataBuf, AMDataBuf, AMSSDataBuf))
-			{
-				bEnoughData = TRUE;
-			}
-
-			/* AM demodulation ------------------------------------------ */
-			if (AMDemodulation.ProcessData(ReceiverParam, AMDataBuf, AMAudioBuf))
-			{
-				bEnoughData = TRUE;
-			}
-
-			/* Split 2 ways - for playing/saving and also for AAC encoding for RSI */
-			if (SplitAudio.ProcessData(ReceiverParam, AMAudioBuf, AudSoDecBuf, AMSoEncBuf))
-			{
-				bEnoughData = TRUE;
-			}
-
-			/* Encode audio for RSI output */
-
-			if (downstreamRSCI.GetOutEnabled())
-			{
-				if (AudioSourceEncoder.ProcessData(ReceiverParam, AMSoEncBuf, MSCDecBuf[0]))
-				{
-					SplitMSC[0].ProcessData(ReceiverParam, MSCDecBuf[0], MSCUseBuf[0], MSCSendBuf[0]);
-					bEnoughData = TRUE;
-					bFrameToSend = TRUE;
-				}
-			}
-
-			/* Play and/or save the audio */
-			if (WriteData.WriteData(ReceiverParam, AudSoDecBuf))
-				bEnoughData = TRUE;
-
-			/* AMSS phase demodulation */
-			if (AMSSPhaseDemod.ProcessData(ReceiverParam, AMSSDataBuf, AMSSPhaseBuf))
-			{
-				bEnoughData = TRUE;
-			}
-
-			/* AMSS resampling */
-			if (InputResample.ProcessData(ReceiverParam, AMSSPhaseBuf, AMSSResPhaseBuf))
-			{
-				bEnoughData = TRUE;
-			}
-
-			/* AMSS bit extraction */
-			if (AMSSExtractBits.ProcessData(ReceiverParam, AMSSResPhaseBuf, AMSSBitsBuf))
-			{
-				bEnoughData = TRUE;
-			}
-
-			/* AMSS data decoding */
-			if (AMSSDecode.ProcessData(ReceiverParam, AMSSBitsBuf, SDCDecBuf))
-			{
-				bEnoughData = TRUE;
-			}
-
-			if (UtilizeSDCData.WriteData(ReceiverParam, SDCDecBuf))
-				bEnoughData = TRUE;
+			UtilizeAM(bEnoughData);
 		}
 
 		if ((eReceiverMode == RM_DRM) || bDoInitRun)
 		{
-
-			/* Demodulator */
-
-			if (upstreamRSCI.GetInEnabled() == FALSE)
-			{
-
-				/* Resample input DRM-stream -------------------------------- */
-				if (InputResample.ProcessData(ReceiverParam, DemodDataBuf, InpResBuf))
-				{
-					bEnoughData = TRUE;
-				}
-
-				/* Frequency synchronization acquisition -------------------- */
-				if (FreqSyncAcq.ProcessData(ReceiverParam, InpResBuf, FreqSyncAcqBuf))
-				{
-					bEnoughData = TRUE;
-				}
-
-				/* Time synchronization ------------------------------------- */
-				if (TimeSync.ProcessData(ReceiverParam, FreqSyncAcqBuf, TimeSyncBuf))
-				{
-					bEnoughData = TRUE;
-
-					/* Use count of OFDM-symbols for detecting aquisition
-					   state */
-					DetectAcquiSymbol();
-				}
-
-				/* OFDM-demodulation ---------------------------------------- */
-				if (OFDMDemodulation.ProcessData(ReceiverParam, TimeSyncBuf, OFDMDemodBuf))
-				{
-					bEnoughData = TRUE;
-				}
-
-				/* Synchronization in the frequency domain (using pilots) --- */
-				if (SyncUsingPil.ProcessData(ReceiverParam, OFDMDemodBuf, SyncUsingPilBuf))
-				{
-					bEnoughData = TRUE;
-				}
-
-				/* Channel estimation and equalisation ---------------------- */
-				if (ChannelEstimation.ProcessData(ReceiverParam, SyncUsingPilBuf,
-												  ChanEstBuf))
-				{
-					bEnoughData = TRUE;
-
-					/* If this module has finished, all synchronization units
-					   have also finished their OFDM symbol based estimates.
-					   Update synchronization parameters histories */
-					UpdateParamHistories();
-				}
-
-				/* Demapping of the MSC, FAC, SDC and pilots off the carriers */
-				if (OFDMCellDemapping.ProcessData(ReceiverParam, ChanEstBuf,
-												  MSCCarDemapBuf,
-												  FACCarDemapBuf,
-												  SDCCarDemapBuf))
-				{
-					bEnoughData = TRUE;
-				}
-
-				/* FAC ------------------------------------------------------ */
-				if (FACMLCDecoder.ProcessData(ReceiverParam, FACCarDemapBuf, FACDecBuf))
-				{
-					bEnoughData = TRUE;
-					SplitFAC.ProcessData(ReceiverParam, FACDecBuf, FACUseBuf, FACSendBuf);
-					bFrameToSend = TRUE;
-				}
-
-				/* SDC ------------------------------------------------------ */
-				if (SDCMLCDecoder.ProcessData(ReceiverParam, SDCCarDemapBuf, SDCDecBuf))
-				{
-					bEnoughData = TRUE;
-					SplitSDC.ProcessData(ReceiverParam, SDCDecBuf, SDCUseBuf, SDCSendBuf);
-				}
-
-				/* MSC ------------------------------------------------------ */
-				/* Symbol de-interleaver */
-				if (SymbDeinterleaver.ProcessData(ReceiverParam, MSCCarDemapBuf, DeintlBuf))
-				{
-					bEnoughData = TRUE;
-				}
-
-				/* MLC decoder */
-				if (MSCMLCDecoder.ProcessData(ReceiverParam, DeintlBuf, MSCMLCDecBuf))
-				{
-					bEnoughData = TRUE;
-				}
-
-				/* MSC demultiplexer (will leave FAC & SDC alone! */
-				if (MSCDemultiplexer.ProcessData(ReceiverParam, MSCMLCDecBuf, MSCDecBuf))
-				{
-					for (size_t i = 0; i < MSCDecBuf.size(); i++)
-					{
-						SplitMSC[i].ProcessData(ReceiverParam, MSCDecBuf[i], MSCUseBuf[i], MSCSendBuf[i]);
-					}
-					bEnoughData = TRUE;
-				}
-
-			}
-
-			/* Decoder, common for local and RSI Input */
-			if (UtilizeFACData.WriteData(ReceiverParam, FACUseBuf))
-			{
-				bEnoughData = TRUE;
-				bFrameToSend = TRUE;
-
-				/* Use information of FAC CRC for detecting the acquisition
-				   requirement */
-				DetectAcquiFAC();
-
-#if 0
-/* TEST store information about alternative frequency transmitted in SDC */
-				static FILE *pFile = fopen("test/altfreq.dat", "w");
-
-				int inum = ReceiverParam.AltFreqSign.vecAltFreq.Size();
-				for (int z = 0; z < inum; z++)
-				{
-					fprintf(pFile, "sync:%d sr:",
-							ReceiverParam.AltFreqSign.vecAltFreq[z].
-							bIsSyncMultplx);
-
-					for (int k = 0; k < 4; k++)
-						fprintf(pFile, "%d",
-								ReceiverParam.AltFreqSign.vecAltFreq[z].
-								veciServRestrict[k]);
-					fprintf(pFile, " fr:");
-
-					for (int kk = 0;
-						 kk <
-						 ReceiverParam.AltFreqSign.vecAltFreq[z].
-						 veciFrequencies.Size(); kk++)
-						fprintf(pFile, "%d ",
-								ReceiverParam.AltFreqSign.vecAltFreq[z].
-								veciFrequencies[kk]);
-
-					fprintf(pFile, " rID:%d sID:%d   /   ",
-							ReceiverParam.AltFreqSign.vecAltFreq[z].iRegionID,
-							ReceiverParam.AltFreqSign.vecAltFreq[z].
-							iScheduleID);
-				}
-				fprintf(pFile, "\n");
-				fflush(pFile);
-#endif
-
-			}
-
-			if (UtilizeSDCData.WriteData(ReceiverParam, SDCUseBuf))
-			{
-				bEnoughData = TRUE;
-			}
-
-			/* Data decoding */
-			if (iDataStreamID != STREAM_ID_NOT_USED)
-			{
-				if (DataDecoder.WriteData(ReceiverParam, MSCUseBuf[iDataStreamID]))
-					bEnoughData = TRUE;
-			}
-			/* Source decoding (audio) */
-			if (iAudioStreamID != STREAM_ID_NOT_USED)
-			{
-				if (AudioSourceDecoder.ProcessData(ReceiverParam,
-												   MSCUseBuf[iAudioStreamID],
-												   AudSoDecBuf))
-				{
-					bEnoughData = TRUE;
-
-					/* Store the number of correctly decoded audio blocks for
-					 *                            the history */
-					iCurrentCDAud = AudioSourceDecoder.GetNumCorDecAudio();
-				}
-				/* Play and/or save the audio */
-				if (WriteData.WriteData(ReceiverParam, AudSoDecBuf))
-					bEnoughData = TRUE;
-			}
+			UtilizeDRM(bEnoughData);
 		}
 	}
+
+	/* output to downstream RSCI */
 	if (downstreamRSCI.GetOutEnabled())
 	{
 		if (eReceiverMode == RM_DRM)
@@ -463,39 +251,257 @@ CDRMReceiver::Run()
 					if (iUnlockedCount < MAX_UNLOCKED_COUNT)
 						iUnlockedCount++;
 					else
-					{
 						downstreamRSCI.SendUnlockedFrame(ReceiverParam);
-					}
 			}
 			else if (bFrameToSend)
 			{
-				downstreamRSCI.SendLockedFrame(ReceiverParam, FACSendBuf,
-											   SDCSendBuf, MSCSendBuf);
+				downstreamRSCI.SendLockedFrame(ReceiverParam, FACSendBuf, SDCSendBuf, MSCSendBuf);
 				iUnlockedCount = 0;
 				bFrameToSend = FALSE;
 			}
 		}
 		else
 		{
+
+			/* Encode audio for RSI output */
+			if (AudioSourceEncoder.ProcessData(ReceiverParam, AMSoEncBuf, MSCSendBuf[0]))
+			{
+				bFrameToSend = TRUE;
+			}
+
 			if (bFrameToSend)
 			{
 				downstreamRSCI.SendAMFrame(ReceiverParam, MSCSendBuf[0]);
 			}
+
+		}
+	}
+
+	/* Play and/or save the audio */
+	if (iAudioStreamID != STREAM_ID_NOT_USED)
+	{
+		if (WriteData.WriteData(ReceiverParam, AudSoDecBuf))
+		{
+			bEnoughData = TRUE;
 		}
 	}
 }
 
 void
-CDRMReceiver::DetectAcquiSymbol()
+CDRMReceiver::DemodulateDRM(_BOOLEAN& bEnoughData)
 {
-	/* Only for aquisition detection if no signal was decoded before */
-	if(pReceiverParam->eAcquiState == AS_NO_SIGNAL)
-	{
-		/* Increment symbol counter and check if bound is reached */
-		iAcquDetecCnt++;
+	CParameter & ReceiverParam = *pReceiverParam;
 
-		if (iAcquDetecCnt > NUM_OFDMSYM_U_ACQ_WITHOUT)
-			SetInStartMode();
+	/* Resample input DRM-stream -------------------------------- */
+	if (InputResample.ProcessData(ReceiverParam, DemodDataBuf, InpResBuf))
+	{
+		bEnoughData = TRUE;
+	}
+
+	/* Frequency synchronization acquisition -------------------- */
+	if (FreqSyncAcq.ProcessData(ReceiverParam, InpResBuf, FreqSyncAcqBuf))
+	{
+		bEnoughData = TRUE;
+	}
+
+	/* Time synchronization ------------------------------------- */
+	if (TimeSync.ProcessData(ReceiverParam, FreqSyncAcqBuf, TimeSyncBuf))
+	{
+		bEnoughData = TRUE;
+
+		/* Use count of OFDM-symbols for detecting
+		 * aquisition state for acquisition detection
+		 * only if no signal was decoded before */
+		if (pReceiverParam->eAcquiState == AS_NO_SIGNAL)
+		{
+			/* Increment symbol counter and check if bound is reached */
+			iAcquDetecCnt++;
+
+			if (iAcquDetecCnt > NUM_OFDMSYM_U_ACQ_WITHOUT)
+				SetInStartMode();
+		}
+	}
+
+	/* OFDM-demodulation ---------------------------------------- */
+	if (OFDMDemodulation.
+		ProcessData(ReceiverParam, TimeSyncBuf, OFDMDemodBuf))
+	{
+		bEnoughData = TRUE;
+	}
+
+	/* Synchronization in the frequency domain (using pilots) --- */
+	if (SyncUsingPil.
+		ProcessData(ReceiverParam, OFDMDemodBuf, SyncUsingPilBuf))
+	{
+		bEnoughData = TRUE;
+	}
+
+	/* Channel estimation and equalisation ---------------------- */
+	if (ChannelEstimation.
+		ProcessData(ReceiverParam, SyncUsingPilBuf, ChanEstBuf))
+	{
+		bEnoughData = TRUE;
+
+		/* If this module has finished, all synchronization units
+		   have also finished their OFDM symbol based estimates.
+		   Update synchronization parameters histories */
+		UpdateParamHistories();
+	}
+
+	/* Demapping of the MSC, FAC, SDC and pilots off the carriers */
+	if (OFDMCellDemapping.ProcessData(ReceiverParam, ChanEstBuf,
+									  MSCCarDemapBuf,
+									  FACCarDemapBuf, SDCCarDemapBuf))
+	{
+		bEnoughData = TRUE;
+	}
+
+}
+
+void
+CDRMReceiver::DecodeDRM(_BOOLEAN& bEnoughData, _BOOLEAN& bFrameToSend)
+{
+	CParameter & ReceiverParam = *pReceiverParam;
+
+	/* FAC ------------------------------------------------------ */
+	if (FACMLCDecoder.ProcessData(ReceiverParam, FACCarDemapBuf, FACDecBuf))
+	{
+		bEnoughData = TRUE;
+		bFrameToSend = TRUE;
+	}
+
+	/* SDC ------------------------------------------------------ */
+	if (SDCMLCDecoder.ProcessData(ReceiverParam, SDCCarDemapBuf, SDCDecBuf))
+	{
+		bEnoughData = TRUE;
+	}
+
+	/* MSC ------------------------------------------------------ */
+
+	/* Symbol de-interleaver */
+	if (SymbDeinterleaver.ProcessData(ReceiverParam, MSCCarDemapBuf, DeintlBuf))
+	{
+		bEnoughData = TRUE;
+	}
+
+	/* MLC decoder */
+	if (MSCMLCDecoder.ProcessData(ReceiverParam, DeintlBuf, MSCMLCDecBuf))
+	{
+		bEnoughData = TRUE;
+	}
+
+	/* MSC demultiplexer (will leave FAC & SDC alone! */
+	if (MSCDemultiplexer.ProcessData(ReceiverParam, MSCMLCDecBuf, MSCDecBuf))
+	{
+		bEnoughData = TRUE;
+	}
+}
+
+void
+CDRMReceiver::UtilizeDRM(_BOOLEAN& bEnoughData)
+{
+	CParameter & ReceiverParam = *pReceiverParam;
+
+	if (UtilizeFACData.WriteData(ReceiverParam, FACUseBuf))
+	{
+		bEnoughData = TRUE;
+
+		/* Use information of FAC CRC for detecting the acquisition
+		   requirement */
+		DetectAcquiFAC();
+#if 0
+		saveSDCtoFile();
+#endif
+	}
+
+	if (UtilizeSDCData.WriteData(ReceiverParam, SDCUseBuf))
+	{
+		bEnoughData = TRUE;
+	}
+
+	/* Data decoding */
+	if (iDataStreamID != STREAM_ID_NOT_USED)
+	{
+		if (DataDecoder.WriteData(ReceiverParam, MSCUseBuf[iDataStreamID]))
+			bEnoughData = TRUE;
+	}
+	/* Source decoding (audio) */
+	if (iAudioStreamID != STREAM_ID_NOT_USED)
+	{
+		if (AudioSourceDecoder.ProcessData(ReceiverParam,
+										   MSCUseBuf[iAudioStreamID],
+										   AudSoDecBuf))
+		{
+			bEnoughData = TRUE;
+
+			/* Store the number of correctly decoded audio blocks for
+			 *                            the history */
+			iCurrentCDAud = AudioSourceDecoder.GetNumCorDecAudio();
+		}
+	}
+}
+
+void
+CDRMReceiver::DemodulateAM(_BOOLEAN& bEnoughData)
+{
+	CParameter & ReceiverParam = *pReceiverParam;
+
+	/* The incoming samples are split 2 ways.
+	   One set is passed to the existing AM demodulator.
+	   The other set is passed to the new AMSS demodulator.
+	   The AMSS and AM demodulators work completely independently
+	 */
+	if (Split.ProcessData(ReceiverParam, DemodDataBuf, AMDataBuf, AMSSDataBuf))
+	{
+		bEnoughData = TRUE;
+	}
+
+	/* AM demodulation ------------------------------------------ */
+	if (AMDemodulation.ProcessData(ReceiverParam, AMDataBuf, AMAudioBuf))
+	{
+		bEnoughData = TRUE;
+	}
+
+	/* AMSS phase demodulation */
+	if (AMSSPhaseDemod.ProcessData(ReceiverParam, AMSSDataBuf, AMSSPhaseBuf))
+	{
+		bEnoughData = TRUE;
+	}
+}
+
+void
+CDRMReceiver::DecodeAM(_BOOLEAN& bEnoughData)
+{
+	CParameter & ReceiverParam = *pReceiverParam;
+
+	/* AMSS resampling */
+	if (InputResample.ProcessData(ReceiverParam, AMSSPhaseBuf, AMSSResPhaseBuf))
+	{
+		bEnoughData = TRUE;
+	}
+
+	/* AMSS bit extraction */
+	if (AMSSExtractBits.
+		ProcessData(ReceiverParam, AMSSResPhaseBuf, AMSSBitsBuf))
+	{
+		bEnoughData = TRUE;
+	}
+
+	/* AMSS data decoding */
+	if (AMSSDecode.ProcessData(ReceiverParam, AMSSBitsBuf, SDCDecBuf))
+	{
+		bEnoughData = TRUE;
+	}
+}
+
+void
+CDRMReceiver::UtilizeAM(_BOOLEAN& bEnoughData)
+{
+	CParameter & ReceiverParam = *pReceiverParam;
+
+	if (UtilizeSDCData.WriteData(ReceiverParam, SDCDecBuf))
+	{
+		bEnoughData = TRUE;
 	}
 }
 
@@ -516,7 +522,8 @@ CDRMReceiver::DetectAcquiFAC()
 		iAcquRestartCnt++;
 
 		/* Check situation when receiver must be set back in start mode */
-		if ((pReceiverParam->eAcquiState == AS_WITH_SIGNAL) && (iAcquRestartCnt > NUM_FAC_FRA_U_ACQ_WITH))
+		if ((pReceiverParam->eAcquiState == AS_WITH_SIGNAL)
+			&& (iAcquRestartCnt > NUM_FAC_FRA_U_ACQ_WITH))
 		{
 			SetInStartMode();
 		}
@@ -560,20 +567,12 @@ CDRMReceiver::Init()
 	bDoInitRun = TRUE;
 	pReceiverParam->bRunThread = TRUE;
 
-	/* Set init flags in all modules */
-	InitsForAllModules();
-
-	/* Now the actual initialization */
-	/* Reset all parameters to start parameter settings */
-	SetInStartMode();
-	iUnlockedCount = MAX_UNLOCKED_COUNT;
 	/* Run once */
 	Run();
 
 	/* Reset flags */
 	bDoInitRun = FALSE;
 	pReceiverParam->bRunThread = FALSE;
-
 }
 
 void
@@ -586,10 +585,10 @@ CDRMReceiver::InitReceiverMode()
 
 	if (eReceiverMode == RM_AM)
 	{
-		if(pAMParam == NULL)
+		if (pAMParam == NULL)
 		{
 			/* its the first time we have been in AM mode */
-			if(pDRMParam == NULL)
+			if (pDRMParam == NULL)
 			{
 				/* DRM Mode was never invoked so we get to claim the default parameter instance */
 				pAMParam = pReceiverParam;
@@ -606,7 +605,7 @@ CDRMReceiver::InitReceiverMode()
 			pReceiverParam = pAMParam;
 		}
 
-		if(pReceiverParam == NULL)
+		if (pReceiverParam == NULL)
 			throw CGenErr("Something went terribly wrong in the Receiver");
 
 		/* Tell the SDC decoder that it's AMSS to decode (no AFS index) */
@@ -622,10 +621,10 @@ CDRMReceiver::InitReceiverMode()
 	}
 	else
 	{
-		if(pDRMParam == NULL)
+		if (pDRMParam == NULL)
 		{
 			/* its the first time we have been in DRM mode */
-			if(pAMParam == NULL)
+			if (pAMParam == NULL)
 			{
 				/* AM Mode was never invoked so we get to claim the default parameter instance */
 				pDRMParam = pReceiverParam;
@@ -642,7 +641,7 @@ CDRMReceiver::InitReceiverMode()
 			pReceiverParam = pDRMParam;
 		}
 
-		if(pReceiverParam == NULL)
+		if (pReceiverParam == NULL)
 			throw CGenErr("Something went terribly wrong in the Receiver");
 
 		UtilizeSDCData.GetSDCReceive()->SetSDCType(CSDCReceive::SDC_DRM);
@@ -722,8 +721,57 @@ CDRMReceiver::SetAMDemodAcq(_REAL rNewNorCen)
 void
 CDRMReceiver::SetInStartMode()
 {
+	iUnlockedCount = MAX_UNLOCKED_COUNT;
+
 	/* Load start parameters for all modules */
-	StartParameters(*pReceiverParam);
+
+	/* Define with which parameters the receiver should try to decode the
+	   signal. If we are correct with our assumptions, the receiver does not
+	   need to reinitialize */
+	pReceiverParam->InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+
+	/* Set initial MLC parameters */
+	pReceiverParam->SetInterleaverDepth(CParameter::SI_LONG);
+	pReceiverParam->SetMSCCodingScheme(CParameter::CS_3_SM);
+	pReceiverParam->SetSDCCodingScheme(CParameter::CS_2_SM);
+
+	/* Select the service we want to decode. Always zero, because we do not
+	   know how many services are transmitted in the signal we want to
+	   decode */
+
+	/* TODO: if service 0 is not used but another service is the audio service
+	 * we have a problem. We should check as soon as we have information about
+	 * services if service 0 is really the audio service
+	 */
+
+	/* Set the following parameters to zero states (initial states) --------- */
+	pReceiverParam->ResetServicesStreams();
+
+	pReceiverParam->ResetCurSelAudDatServ();
+
+	/* Protection levels */
+	pReceiverParam->MSCPrLe.iPartA = 0;
+	pReceiverParam->MSCPrLe.iPartB = 1;
+	pReceiverParam->MSCPrLe.iHierarch = 0;
+
+	/* Number of audio and data services */
+	pReceiverParam->iNumAudioService = 0;
+	pReceiverParam->iNumDataService = 0;
+
+	/* We start with FAC ID = 0 (arbitrary) */
+	pReceiverParam->iFrameIDReceiv = 0;
+
+	/* Set synchronization parameters */
+	pReceiverParam->rResampleOffset = rInitResampleOffset;	/* Initial resample offset */
+	pReceiverParam->rFreqOffsetAcqui = (_REAL) 0.0;
+	pReceiverParam->rFreqOffsetTrack = (_REAL) 0.0;
+	pReceiverParam->iTimingOffsTrack = 0;
+
+	/* Init reception log (log long) transmission parameters. TODO: better solution */
+	pReceiverParam->ReceptLog.ResetTransParams();
+
+	/* Initialization of the modules */
+	InitsForAllModules();
 
 	/* Activate acquisition */
 	FreqSyncAcq.StartAcquisition();
@@ -835,63 +883,6 @@ CDRMReceiver::SetReadDRMFromFile(const string strNFN)
 	else
 		ReceiveData.SetInChanSel(CReceiveData::CS_MIX_CHAN);
 	bReadFromFile = TRUE;
-}
-
-void
-CDRMReceiver::StartParameters(CParameter & Param)
-{
-/*
-	Reset all parameters to starting values. This is done at the startup of the
-	application and also when the S/N of the received signal is too low and
-	no receiption is left -> Reset all parameters
-*/
-
-	/* Define with which parameters the receiver should try to decode the
-	   signal. If we are correct with our assumptions, the receiver does not
-	   need to reinitialize */
-	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
-
-	/* Set initial MLC parameters */
-	Param.SetInterleaverDepth(CParameter::SI_LONG);
-	Param.SetMSCCodingScheme(CParameter::CS_3_SM);
-	Param.SetSDCCodingScheme(CParameter::CS_2_SM);
-
-	/* Select the service we want to decode. Always zero, because we do not
-	   know how many services are transmitted in the signal we want to
-	   decode */
-
-// TODO: if service 0 is not used but another service is the audio service we
-// have a problem. We should check as soon as we have information about services
-// if service 0 is really the audio service
-
-	/* Set the following parameters to zero states (initial states) --------- */
-	Param.ResetServicesStreams();
-
-	Param.ResetCurSelAudDatServ();
-
-	/* Protection levels */
-	Param.MSCPrLe.iPartA = 0;
-	Param.MSCPrLe.iPartB = 1;
-	Param.MSCPrLe.iHierarch = 0;
-
-	/* Number of audio and data services */
-	Param.iNumAudioService = 0;
-	Param.iNumDataService = 0;
-
-	/* We start with FAC ID = 0 (arbitrary) */
-	Param.iFrameIDReceiv = 0;
-
-	/* Set synchronization parameters */
-	Param.rResampleOffset = rInitResampleOffset;	/* Initial resample offset */
-	Param.rFreqOffsetAcqui = (_REAL) 0.0;
-	Param.rFreqOffsetTrack = (_REAL) 0.0;
-	Param.iTimingOffsTrack = 0;
-
-	/* Init reception log (log long) transmission parameters. TODO: better solution */
-	Param.ReceptLog.ResetTransParams();
-
-	/* Initialization of the modules */
-	InitsForAllModules();
 }
 
 void
@@ -1328,8 +1319,7 @@ CDRMReceiver::GetSNRHist(CVector < _REAL > &vecrSNR,
 #endif
 }
 
-_BOOLEAN
-CDRMReceiver::SetFrequency(int iNewFreqkHz)
+_BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 {
 	if (iFreqkHz == iNewFreqkHz)
 		return TRUE;
@@ -1362,8 +1352,7 @@ CDRMReceiver::SetFrequency(int iNewFreqkHz)
  * otherwise do it when needed
  */
 
-_BOOLEAN
-CDRMReceiver::GetSignalStrength(_REAL & rSigStr)
+_BOOLEAN CDRMReceiver::GetSignalStrength(_REAL & rSigStr)
 {
 	return pReceiverParam->GetSignalStrength(rSigStr);
 }
@@ -1372,11 +1361,12 @@ CDRMReceiver::GetSignalStrength(_REAL & rSigStr)
 void
 CDRMReceiver::CRigPoll::run()
 {
-	CHamlib& rig = *pDRMRec->GetHamlib();
+	CHamlib & rig = *pDRMRec->GetHamlib();
 	while (bQuit == FALSE)
 	{
-		_REAL r;
-		if(rig.GetSMeter(r) == CHamlib::SS_VALID)
+		_REAL
+			r;
+		if (rig.GetSMeter(r) == CHamlib::SS_VALID)
 		{
 			// Apply any correction
 			r += pDRMRec->GetParameters()->rSigStrengthCorrection;
@@ -1402,4 +1392,34 @@ CDRMReceiver::SetIQRecording(const _BOOLEAN bOn)
 		WriteIQFile.StartRecording(*pReceiverParam);
 	else
 		WriteIQFile.StopRecording();
+}
+
+/* TEST store information about alternative frequency transmitted in SDC */
+void
+CDRMReceiver::saveSDCtoFile()
+{
+	CParameter & ReceiverParam = *pReceiverParam;
+	static FILE *pFile = NULL;
+
+	if(pFile == NULL)
+		pFile = fopen("test/altfreq.dat", "w");
+
+	int inum = ReceiverParam.AltFreqSign.vecAltFreq.Size();
+	for (int z = 0; z < inum; z++)
+	{
+		fprintf(pFile, "sync:%d sr:", ReceiverParam.AltFreqSign.vecAltFreq[z].bIsSyncMultplx);
+
+		for (int k = 0; k < 4; k++)
+				fprintf(pFile, "%d", ReceiverParam.AltFreqSign.vecAltFreq[z].  veciServRestrict[k]);
+		fprintf(pFile, " fr:");
+
+		for (int kk = 0; kk < ReceiverParam.AltFreqSign.vecAltFreq[z].veciFrequencies.Size(); kk++)
+			fprintf(pFile, "%d ", ReceiverParam.AltFreqSign.vecAltFreq[z].  veciFrequencies[kk]);
+
+		fprintf(pFile, " rID:%d sID:%d   /   ",
+					ReceiverParam.AltFreqSign.vecAltFreq[z].iRegionID,
+					ReceiverParam.AltFreqSign.vecAltFreq[z].iScheduleID);
+	}
+	fprintf(pFile, "\n");
+	fflush(pFile);
 }

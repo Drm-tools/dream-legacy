@@ -229,7 +229,6 @@ public:
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
 	CParameter*				GetParameters() {return pReceiverParam;}
-	void					StartParameters(CParameter& Param);
 	void					SetInStartMode();
 	void					SetInTrackingMode();
 	void					SetInTrackingModeDelayed();
@@ -263,10 +262,17 @@ public:
 
 protected:
 	void					Run();
+	void					DemodulateDRM(_BOOLEAN&);
+	void					DecodeDRM(_BOOLEAN&, _BOOLEAN&);
+	void					UtilizeDRM(_BOOLEAN&);
+	void					DemodulateAM(_BOOLEAN&);
+	void					DecodeAM(_BOOLEAN&);
+	void					UtilizeAM(_BOOLEAN&);
 	void					DetectAcquiFAC();
 	void					DetectAcquiSymbol();
 	void					InitReceiverMode();
 	void					UpdateParamHistories();
+	void					saveSDCtoFile();
 
 	/* Modules */
 	CSoundInInterface*		pSoundInInterface;

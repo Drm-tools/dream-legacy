@@ -186,7 +186,7 @@ void ErrorMessage(string strErrorString)
 	strError += "\n\nThe application will exit now.";
 
 #ifdef _WIN32
-	MessageBoxA(NULL, strError.c_str(), "Dream", MB_SYSTEMMODAL | MB_OK | MB_ICONEXCLAMATION);
+	MessageBox(NULL, strError.c_str(), "Dream", MB_SYSTEMMODAL | MB_OK | MB_ICONEXCLAMATION);
 #else
 	perror(strError.c_str());
 #endif
