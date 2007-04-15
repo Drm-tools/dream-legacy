@@ -2,15 +2,8 @@ TEMPLATE	= app
 TARGET		= dream
 CONFIG		+= qt warn_on debug
 VPATH		+= common/GUI-QT
-
-DEFINES		+= VERSION="1.9.1unstable"
-DEFINES		+= HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H HAVE_STRINGS_H HAVE_STRING_H STDC_HEADERS
-DEFINES		+= HAVE_INTTYPES_H HAVE_STDINT_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H HAVE_UNISTD_H
-DEFINES		+= HAVE_JOURNALINE HAVE_LIBFAAC HAVE_LIBFAAD HAVE_LIBPCAP HAVE_LIBQWT HAVE_LIBSNDFILE HAVE_LIBZ
-DEFINES		+= USE_FAAC_LIBRARY USE_FAAD2_LIBRARY USE_QT_GUI
 INCLUDEPATH	+= libs
 LIBS 		+= -Llibs
-LIBS 		+= -lsndfile -lz -lqwt -lfhgjournaline -lpcap -lfaac -lfaad
 FORMS		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui
 FORMS		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
 FORMS		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
@@ -32,8 +25,14 @@ macx {
 }
 
 unix {
-	TEMPLATE	= app
+	LIBS 		+= -lsndfile -lpcap
+	LIBS 		+= -lz -lqwt -lfhgjournaline -lfaac -lfaad
 	SOURCES		+= linux/source/Pacer.cpp
+	DEFINES		+= HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H 
+	DEFINES		+= HAVE_STRINGS_H HAVE_STRING_H STDC_HEADERS
+	DEFINES		+= HAVE_INTTYPES_H HAVE_STDINT_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H HAVE_UNISTD_H
+	DEFINES		+= HAVE_JOURNALINE HAVE_LIBFAAC HAVE_LIBFAAD HAVE_LIBPCAP HAVE_LIBSNDFILE HAVE_LIBZ
+	DEFINES		+= USE_FAAC_LIBRARY USE_FAAD2_LIBRARY USE_QT_GUI
 	!macx {
 		DEFINES		+= HAVE_FFTW_H HAVE_RFFTW_H
 		MAKEFILE	= Makefile.qt
@@ -51,7 +50,12 @@ win32 {
 	OBJECTS_DIR	= windows
 	UI_DIR		= windows/moc
 	MOC_DIR		= windows/moc
-	SOURCES		+= windows/Source/Pacer.cpp   
+# this next line could be cross platform if the windows library names do not start with lib
+	LIBS 		+= zdll.lib libqwt.lib libfhgjournaline.lib libfaac.lib libfaad.lib libhamlib.lib
+#	LIBS		+= /NODEFAULTLIB:MSVCRT.LIB
+	LIBS		+= FFTW2dll.lib RFFTW2dll.lib
+	HEADERS		+= windows/Source/Sound.h windows/Source/SoundWin.h 
+	SOURCES		+= windows/Source/Pacer.cpp windows/Source/Sound.cpp
 }
 
 hamlib {
