@@ -1302,7 +1302,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			const string strHelp = UsageArguments(argv);
 
 #if defined(USE_QT_GUI) && defined(_WIN32)
-			MessageBox(NULL, strHelp.c_str(), "Dream",
+			MessageBoxA(NULL, strHelp.c_str(), "Dream",
 				MB_SYSTEMMODAL | MB_OK | MB_ICONINFORMATION);
 #else
 			cerr << strHelp;
