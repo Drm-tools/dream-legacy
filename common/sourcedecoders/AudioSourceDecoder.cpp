@@ -562,7 +562,6 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	/* Check if something went wrong in the initialization routine */
 	if (DoNotProcessData == TRUE)
 	{
-	cout << "CAudioSourceDecoder::ProcessDataInternal do not process data" << endl;
 		return;
 	}
 
@@ -581,7 +580,6 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	/* Check if audio shall not be decoded */
 	if (DoNotProcessAudDecoder == TRUE)
 	{
-	cout << "CAudioSourceDecoder::ProcessDataInternal do not process audio" << endl;
 		return;
 	}
 
@@ -624,7 +622,6 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 
 		if (bGoodValues == TRUE)
 		{
-	cout << "CAudioSourceDecoder::ProcessDataInternal good values" << endl;
 			/* Higher-protected part */
 			for (i = 0; i < iNumAudioFrames; i++)
 			{
@@ -754,7 +751,6 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 														0 ? 0 : 1);
 				if (DecFrameInfo.error != 0)
 				{
-cout << "audio decode frame error" << endl;
 					bCurBlockOK = FALSE;	/* Set error flag */
 				}
 				else

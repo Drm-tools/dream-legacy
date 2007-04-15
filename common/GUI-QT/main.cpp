@@ -138,8 +138,6 @@ try
 
 		if(pGPSReceiver)
 		{
-			//pGPSReceiver->Stop();
-			//pGPSReceiver->wait();
 			delete pGPSReceiver;
 		}
 	}

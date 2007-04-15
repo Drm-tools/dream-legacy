@@ -27,4 +27,4 @@
 \******************************************************************************/
 #include "Version.h"
 
-char dream_version[] = "1.9unstable-3";
+char dream_version[] = "1.9unstable-4";

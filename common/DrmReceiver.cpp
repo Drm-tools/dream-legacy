@@ -110,6 +110,7 @@ CDRMReceiver::Run()
 {
 	_BOOLEAN bEnoughData = TRUE;
 	_BOOLEAN bFrameToSend = FALSE;
+	size_t i;
 
 	/* Check for parameter changes from RSCI or GUI thread --------------- */
 	/* The parameter changes are done through flags, the actual initialization
@@ -174,22 +175,25 @@ CDRMReceiver::Run()
 #endif
 		ReceiveData.ReadData(ReceiverParam, RecDataBuf);
 
-		if ((eReceiverMode == RM_AM) || bDoInitRun)
+		switch(eReceiverMode)
 		{
-				DemodulateAM(bEnoughData);
-				DecodeAM(bEnoughData);
-		}
-
-		if ((eReceiverMode == RM_DRM) || bDoInitRun)
-		{
+		case RM_DRM:
 				DemodulateDRM(bEnoughData);
 				DecodeDRM(bEnoughData, bFrameToSend);
+				break;
+		case RM_AM:
+				DemodulateAM(bEnoughData);
+				DecodeAM(bEnoughData);
+				break;
+		case RM_NONE:
+				break;
 		}
 	}
 
 	/* Split the data for downstream RSCI and local processing. TODO make this conditional */
-	if (eReceiverMode == RM_AM)
+	switch(eReceiverMode)
 	{
+	case RM_DRM:
 		SplitFAC.ProcessData(ReceiverParam, FACDecBuf, FACUseBuf, FACSendBuf);
 
 		/* if we have an SDC block, make a copy and keep it until the next frame is to be sent */
@@ -198,14 +202,16 @@ CDRMReceiver::Run()
 			SplitSDC.ProcessData(ReceiverParam, SDCDecBuf, SDCUseBuf, SDCSendBuf);
 		}
 
-		for (size_t i = 0; i < MSCDecBuf.size(); i++)
+		for (i = 0; i < MSCDecBuf.size(); i++)
 		{
 			SplitMSC[i].ProcessData(ReceiverParam, MSCDecBuf[i], MSCUseBuf[i], MSCSendBuf[i]);
 		}
-	}
-	else
-	{
+		break;
+	case RM_AM:
 		SplitAudio.ProcessData(ReceiverParam, AMAudioBuf, AudSoDecBuf, AMSoEncBuf);
+		break;
+	case RM_NONE:
+		break;
 	}
 
 	/* decoding */
@@ -226,32 +232,37 @@ CDRMReceiver::Run()
 			bEnoughData = TRUE;
 		}
 
-		if ((eReceiverMode == RM_AM) || bDoInitRun)
+		switch(eReceiverMode)
 		{
-			UtilizeAM(bEnoughData);
-		}
-
-		if ((eReceiverMode == RM_DRM) || bDoInitRun)
-		{
+		case RM_DRM:
 			UtilizeDRM(bEnoughData);
+			break;
+		case RM_AM:
+			UtilizeAM(bEnoughData);
+			break;
+		case RM_NONE:
+			break;
 		}
 	}
 
 	/* output to downstream RSCI */
 	if (downstreamRSCI.GetOutEnabled())
 	{
-		if (eReceiverMode == RM_DRM)
+		switch(eReceiverMode)
 		{
+		case RM_DRM:
 			if (ReceiverParam.eAcquiState == AS_NO_SIGNAL)
 			{
 				/* we will get one of these between each FAC block, and occasionally we */
 				/* might get two, so don't start generating free-wheeling RSCI until we've. */
 				/* had three in a row */
 				if (FreqSyncAcq.GetUnlockedFrameBoundary())
+				{
 					if (iUnlockedCount < MAX_UNLOCKED_COUNT)
 						iUnlockedCount++;
 					else
 						downstreamRSCI.SendUnlockedFrame(ReceiverParam);
+				}
 			}
 			else if (bFrameToSend)
 			{
@@ -259,21 +270,17 @@ CDRMReceiver::Run()
 				iUnlockedCount = 0;
 				bFrameToSend = FALSE;
 			}
-		}
-		else
-		{
-
+			break;
+		case RM_AM:
 			/* Encode audio for RSI output */
 			if (AudioSourceEncoder.ProcessData(ReceiverParam, AMSoEncBuf, MSCSendBuf[0]))
-			{
 				bFrameToSend = TRUE;
-			}
 
 			if (bFrameToSend)
-			{
 				downstreamRSCI.SendAMFrame(ReceiverParam, MSCSendBuf[0]);
-			}
-
+			break;
+		case RM_NONE:
+			break;
 		}
 	}
 
@@ -308,7 +315,6 @@ CDRMReceiver::DemodulateDRM(_BOOLEAN& bEnoughData)
 	if (TimeSync.ProcessData(ReceiverParam, FreqSyncAcqBuf, TimeSyncBuf))
 	{
 		bEnoughData = TRUE;
-
 		/* Use count of OFDM-symbols for detecting
 		 * aquisition state for acquisition detection
 		 * only if no signal was decoded before */
@@ -579,7 +585,6 @@ void
 CDRMReceiver::InitReceiverMode()
 {
 	eReceiverMode = eNewReceiverMode;
-
 	/* Init all modules */
 	SetInStartMode();
 
