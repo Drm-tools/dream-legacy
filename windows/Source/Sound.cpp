@@ -361,7 +361,6 @@ CSoundOut::CSoundOut():CSoundOutInterface(),m_WaveOut(NULL)
 	for (i = 0; i < iNumDevs; i++)
 		if (!waveOutGetDevCaps(i, &m_WaveOutDevCaps, sizeof(WAVEOUTCAPS)))
 			vecstrDevices.push_back(m_WaveOutDevCaps.szPname);
-		}
 	vecstrDevices.push_back("Primary Playback Device");
 
 	/* We use an event controlled wave-out structure */

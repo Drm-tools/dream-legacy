@@ -600,6 +600,10 @@ SOURCE=..\common\MDI\PacketSinkFile.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\MDI\PacketSourceFile.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\MDI\RSISubscriber.cpp
 # End Source File
 # Begin Source File
@@ -1073,6 +1077,10 @@ SOURCE=..\common\MDI\PacketSocketQT.h
 # Begin Source File
 
 SOURCE=..\common\MDI\PacketSinkFile.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\PacketSourceFile.h
 # End Source File
 # Begin Source File
 

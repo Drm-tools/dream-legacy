@@ -38,12 +38,12 @@ extern int showDdDabDgDecErr;
 extern int showDdDabDgDecInfo;
 }
 
-/*
+
 int showDdNewsSvcDecErr = 0;
 int showDdNewsSvcDecInfo = 0;
 int showDdDabDgDecErr = 0;
 int showDdDabDgDecInfo = 0;
-*/
+
 CJournaline::CJournaline() : dgdec(NULL), newsdec(NULL)
 {
 	/* This will be the first call to the Journaline decoder open function, the

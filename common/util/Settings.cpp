@@ -38,6 +38,10 @@
 #include "Settings.h"
 #include <sstream>
 #include <iomanip>
+#ifdef _WIN32
+# include <windows.h>
+#endif
+
 using namespace std;
 
 extern char dream_version[];
