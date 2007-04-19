@@ -1,12 +1,12 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001-2006
+ * British Broadcasting Corporation
+ * Copyright (c) 2007
  *
  * Author(s):
- *	Andrea Russo, Julian Cable
+ *	Juian Cable
  *
  * Description:
- *	Dream program version number
+ *	Implementation of a CPacketSource that reads from a file
  *
  ******************************************************************************
  *
@@ -25,6 +25,35 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
-#include "Version.h"
 
-char dream_version[] = "1.9unstable-6";
+#ifndef _PACKETSOURCE_FILE_H
+#define _PACKETSOURCE_FILE_H
+
+#include "../GlobalDefinitions.h"
+#include "../util/Vector.h"
+#include "../util/Buffer.h"
+#include "PacketInOut.h"
+#include <qobject.h>
+#include <qdatetime.h>
+
+class CPacketSourceFile : public QObject, public CPacketSource
+{
+	Q_OBJECT
+public:
+	CPacketSourceFile();
+	virtual ~CPacketSourceFile();
+	// Set the sink which will receive the packets
+	virtual void SetPacketSink(CPacketSink *pSink);
+	// Stop sending packets to the sink
+	virtual void ResetPacketSink(void);
+	virtual _BOOLEAN SetOrigin(const string& str);
+private:
+	CPacketSink		*pPacketSink;
+	QTime			timeKeeper;
+    void*			pf;
+	_BOOLEAN		bRaw;
+public slots:
+	void OnDataReceived();
+};
+
+#endif

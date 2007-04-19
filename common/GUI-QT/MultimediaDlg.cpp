@@ -32,10 +32,10 @@
  *
 \******************************************************************************/
 
-#include "MultimediaDlg.h"
 #ifdef _WIN32
 # include <windows.h>
 #endif
+#include "MultimediaDlg.h"
 
 /* Implementation *************************************************************/
 MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
