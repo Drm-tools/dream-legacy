@@ -110,7 +110,7 @@ protected:
 
 class CSplitAudio : public CSplitModul<_SAMPLE>
 {
-	void SetInputBlockSize(CParameter& p)
+	void SetInputBlockSize(CParameter&)
 		{this->iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE * (_REAL) 0.4 /* 400 ms */) * 2 /* stereo */;}
 };
 

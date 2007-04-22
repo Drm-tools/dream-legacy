@@ -199,7 +199,7 @@ protected:
 		AudioSourceEncoderImpl.InitInternalRx(Param, iInputBlockSize, iOutputBlockSize);
 	}
 
-	virtual void ProcessDataInternal(CParameter& Param)
+	virtual void ProcessDataInternal(CParameter& )
 	{
 		AudioSourceEncoderImpl.ProcessDataInternal(pvecInputData, pvecOutputData, iInputBlockSize, iOutputBlockSize);
 	}
@@ -230,7 +230,7 @@ protected:
 		AudioSourceEncoderImpl.InitInternalTx(TransmParam, iInputBlockSize, iOutputBlockSize);
 	}
 	
-	virtual void ProcessDataInternal(CParameter& TransmParam)
+	virtual void ProcessDataInternal(CParameter& )
 	{
 		AudioSourceEncoderImpl.ProcessDataInternal(pvecInputData, pvecOutputData, iInputBlockSize, iOutputBlockSize);
 	}
