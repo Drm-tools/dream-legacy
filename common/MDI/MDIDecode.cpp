@@ -145,7 +145,7 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 		if (iLen != 0)
 		{
 			/* Get the audio parameters for decoding the coded AM */
-			CParameter::CAudioParam AudioParam = TagPacketDecoderMDI.TagItemDecoderAMAudio.AudioParams;
+			CAudioParam AudioParam = TagPacketDecoderMDI.TagItemDecoderAMAudio.AudioParams;
 			/* Write the audio settings into the parameter object
 			 * CParameter takes care of keeping separate data for AM and DRM
 			 */

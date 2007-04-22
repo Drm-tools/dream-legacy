@@ -29,17 +29,15 @@
 
 #include "EPGDlg.h"
 
-EPGDlg::EPGDlg(CDRMReceiver* pNDRMR, QWidget* parent,
+EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, WFlags f)
-:CEPGDlgbase(parent, name, modal, f),epg(),pDRMRec(pNDRMR)
+:CEPGDlgbase(parent, name, modal, f),epg(),DRMReceiver(NDRMR),Settings(NSettings)
 {
 
-	/* Get window geometry data from DRMReceiver module and apply it */
-	const QRect WinGeom(pDRMRec->GeomEPGDlg.iXPos,
-		pDRMRec->GeomEPGDlg.iYPos,
-		pDRMRec->GeomEPGDlg.iWSize,
-		pDRMRec->GeomEPGDlg.iHSize);
-
+	/* recover window size and position */
+	CWinGeom s;
+	Settings.Get("EPG Dialog", s);
+	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
 
@@ -77,7 +75,7 @@ EPGDlg::EPGDlg(CDRMReceiver* pNDRMR, QWidget* parent,
     year->setMaxValue(3000);
 
 	/* show a label is EPG decoding is disabled */
-	if (pDRMRec->GetDataDecoder()->GetDecodeEPG() == TRUE)
+	if (DRMReceiver.GetDataDecoder()->GetDecodeEPG() == TRUE)
 		TextEPGDisabled->hide();
 	else
 		TextEPGDisabled->show();
@@ -128,9 +126,9 @@ void EPGDlg::OnTimer()
 void EPGDlg::showEvent(QShowEvent *) 
 {    
     // Use the currently receiving channel 
-    CParameter* pP = pDRMRec->GetParameters();
+    CParameter* pP = DRMReceiver.GetParameters();
     int sNo = pP->GetCurSelAudioService();
-    CParameter::CService& s = pDRMRec->GetParameters()->Service[sNo];
+    CService& s = DRMReceiver.GetParameters()->Service[sNo];
     QString label = s.strLabel.c_str();
     if ((s.DataParam.iUserAppIdent == CDataDecoder::AT_MOTEPG)
 		&& (label!=""))
@@ -166,13 +164,13 @@ void EPGDlg::hideEvent(QHideEvent*)
 	/* Deactivate real-time timer */
 	Timer.stop();
 
-	/* Set window geometry data in DRMReceiver module */
+	CWinGeom s;
 	QRect WinGeom = geometry();
-
-	pDRMRec->GeomEPGDlg.iXPos = WinGeom.x();
-	pDRMRec->GeomEPGDlg.iYPos = WinGeom.y();
-	pDRMRec->GeomEPGDlg.iHSize = WinGeom.height();
-	pDRMRec->GeomEPGDlg.iWSize = WinGeom.width();
+	s.iXPos = WinGeom.x();
+	s.iYPos = WinGeom.y();
+	s.iHSize = WinGeom.height();
+	s.iWSize = WinGeom.width();
+	Settings.Put("EPG Dialog", s);
 }
 
 void EPGDlg::previousDay()

@@ -29,9 +29,9 @@
 
 /* Implementation *************************************************************/
 
-MultSettingsDlg::MultSettingsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
+MultSettingsDlg::MultSettingsDlg(CSettings& NSettings, QWidget* parent,
 	const char* name, bool modal, WFlags f) :
-	CMultSettingsDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
+	CMultSettingsDlgBase(parent, name, modal, f), Settings(NSettings)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -53,10 +53,7 @@ MultSettingsDlg::~MultSettingsDlg()
 void MultSettingsDlg::hideEvent(QHideEvent*)
 {
 	/* save current settings */
-	if (CheckBoxAddRefresh->isChecked())
-		pDRMRec->bAddRefreshHeader = TRUE;
-	else
-		pDRMRec->bAddRefreshHeader = FALSE;
+	Settings.Put("Multimedia Dialog", "addrefresh", CheckBoxAddRefresh->isChecked());
 
 	QString strRefresh = EdtSecRefresh->text();
 	int iMOTRefresh = strRefresh.toUInt();
@@ -67,15 +64,15 @@ void MultSettingsDlg::hideEvent(QHideEvent*)
 	if (iMOTRefresh > MAX_MOT_BWS_REFRESH_TIME)
 		iMOTRefresh = MAX_MOT_BWS_REFRESH_TIME;
 
-	pDRMRec->iMOTBWSRefreshTime = iMOTRefresh;
+	Settings.Put("Multimedia Dialog", "motbwsrefresh", iMOTRefresh);
 }
 
 void MultSettingsDlg::showEvent(QShowEvent*)
 {
-	if (pDRMRec->bAddRefreshHeader == TRUE)
+	if (Settings.Get("Multimedia Dialog", "addrefresh", TRUE))
 		CheckBoxAddRefresh->setChecked(TRUE);
 
-	EdtSecRefresh->setText(QString().setNum(pDRMRec->iMOTBWSRefreshTime));
+	EdtSecRefresh->setText(QString().setNum(Settings.Get("Multimedia Dialog", "motbwsrefresh", 10)));
 }
 
 void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN bDeleteDirs = FALSE)

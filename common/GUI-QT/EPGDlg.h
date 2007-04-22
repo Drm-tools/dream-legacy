@@ -50,6 +50,7 @@
 
 #include "../DrmReceiver.h"
 #include "../datadecoding/epg/EPG.h"
+#include "../util/Settings.h"
 
 /* Definitions ****************************************************************/
 #define COL_NAME	1
@@ -71,7 +72,7 @@ class EPGDlg : public CEPGDlgbase
     
 public:
 
-	EPGDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+	EPGDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 		
 	virtual ~EPGDlg();
@@ -91,7 +92,8 @@ protected:
     QDate date;
     bool do_updates;
     EPG epg;
-	CDRMReceiver*	pDRMRec;
+	CDRMReceiver&	DRMReceiver;
+	CSettings&		Settings;
 	QTimer			Timer;
 
 public slots:

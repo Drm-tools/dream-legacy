@@ -40,6 +40,7 @@
 #include <qtextstream.h>
 #include <qcheckbox.h>
 #include <qthread.h>
+#include <qfiledialog.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/LiveScheduleDlgbase.h"
@@ -47,9 +48,9 @@
 # include "moc/LiveScheduleDlgbase.h"
 #endif
 #include "../DrmReceiver.h"
-#include "../util/Vector.h"
-#include <qfiledialog.h>
+#include "../util/Settings.h"
 #include "DialogUtil.h"
+#include <vector>
 
 /* Definitions ****************************************************************/
 /* Define the timer interval of updating the list view */
@@ -97,15 +98,15 @@ public:
 	virtual ~CDRMLiveSchedule() {}
 
 	enum StationState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
-	int GetStationNumber() {return StationsTable.Size();}
+	int GetStationNumber() {return StationsTable.size();}
 	CLiveScheduleItem& GetItem(const int iPos) {return StationsTable[iPos];}
 	StationState CheckState(const int iPos);
 
-	void LoadAFSInformations(const CParameter::CAltFreqSign AltFreqSign
-			, const CParameter::CAltFreqOtherServicesSign AltFreqOtherServicesSign);
+	void LoadAFSInformations(const CAltFreqSign AltFreqSign
+			, const CAltFreqOtherServicesSign AltFreqOtherServicesSign);
 
-	void DecodeTargets(const int iRegionID, const CVector<CParameter::CAltFreqRegion> vecAltFreqRegions
-		, QString& strRegions , _BOOLEAN& bIntoTargetArea);
+	void DecodeTargets(const int iRegionID, const vector<CAltFreqRegion> vecAltFreqRegions
+		, string& strRegions , _BOOLEAN& bIntoTargetArea);
 	string DecodeFrequency(const int iSystemID, const int iFreq);
 
 	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
@@ -119,7 +120,7 @@ public:
 protected:
 	_BOOLEAN IsActive(const int iPos, const time_t ltime);
 
-	CVector<CLiveScheduleItem>	StationsTable;
+	vector<CLiveScheduleItem>	StationsTable;
 
 	/* Minutes for stations preview in seconds if zero then no active */
 	int			iSecondsPreview;
@@ -151,11 +152,14 @@ class LiveScheduleDlg : public CLiveScheduleDlgBase
 
 public:
 
-	LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+	LiveScheduleDlg(CDRMReceiver&, CSettings&,
+		QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~LiveScheduleDlg();
 
 	void LoadSchedule();
+	void LoadSettings(const CSettings&);
+	void SaveSettings(CSettings&);
 
 	int				iCurrentSortColumn;
 	_BOOLEAN		bCurrentSortAscending;
@@ -166,11 +170,11 @@ protected:
 	void			SetUTCTimeLabel();
 	virtual void	showEvent(QShowEvent* pEvent);
 	virtual void	hideEvent(QHideEvent* pEvent);
-	void			SetCurrentSavePath(const QString strFileName);
 	QString			ExtractDaysFlagString(const string strDaysFlags);
 	QString			ExtractTime(const int iTimeStart, const int iDuration);
 
-	CDRMReceiver*				pDRMRec;
+	CDRMReceiver&				DRMReceiver;
+	CSettings&					Settings;
 
 	CDRMLiveSchedule			DRMSchedule;
 	QPixmap						BitmCubeGreen;
@@ -186,9 +190,9 @@ protected:
 	QPopupMenu*					pPreviewMenu;
 	QPopupMenu*					pFileMenu;
 
-	CVector<MyListLiveViewItem*>	vecpListItems;
+	vector<MyListLiveViewItem*>	vecpListItems;
 	QMutex						ListItemsMutex;
-	QString						strCurrentSavePath;
+	string						strCurrentSavePath;
 
 public slots:
 	void OnTimerList();

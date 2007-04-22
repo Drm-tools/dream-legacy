@@ -59,8 +59,8 @@
 #include "DialogUtil.h"
 #include "DRMPlot.h"
 #include "../GlobalDefinitions.h"
-#include "../util/Vector.h"
 #include "../DrmReceiver.h"
+#include "../util/Settings.h"
 #include "../tables/TableAMSS.h"
 
 
@@ -76,11 +76,12 @@ class CAMSSDlg : public CAMSSDlgBase
 	Q_OBJECT
 
 public:
-	CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0, const char* name = 0,
+	CAMSSDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, WFlags f = 0);
 
 protected:
-	CDRMReceiver*	pDRMRec;
+	CDRMReceiver&	DRMReceiver;
+	CSettings&		Settings;
 
 	QTimer			Timer;
 	QTimer			TimerPLLPhaseDial;
@@ -100,13 +101,14 @@ class AnalogDemDlg : public AnalogDemDlgBase
 	Q_OBJECT
 
 public:
-	AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+	AnalogDemDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
-	void UpdatePlotsStyle();
+	void 			UpdatePlotsStyle();
 
 protected:
-	CDRMReceiver*	pDRMRec;
+	CDRMReceiver&	DRMReceiver;
+	CSettings&		Settings;
 
 	QTimer			Timer;
 	QTimer			TimerPLLPhaseDial;
@@ -130,7 +132,7 @@ public slots:
 	void OnChartxAxisValSet(double dVal);
 	void OnSliderBWChange(int value);
 	void OnRadioNoiRed(int iID);
-	void OnNewAMAcquisition() {pDRMRec->SetReceiverMode(RM_AM);}
+	void OnNewAMAcquisition() {DRMReceiver.SetReceiverMode(RM_AM);}
 	void OnButtonWaterfall();
 	void OnButtonAMSS();
 	void OnSwitchToDRM();

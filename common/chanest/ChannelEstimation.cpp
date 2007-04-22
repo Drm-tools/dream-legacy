@@ -88,16 +88,16 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 #endif
 
 	/* Update the pilot memory for rpil tag of RSCI */
-	UpdateRSIPilotStore(ReceiverParam, pvecInputData, ReceiverParam.matiMapTab[iCurSymbIDTiInt],
-						   ReceiverParam.matcPilotCells[iCurSymbIDTiInt], iSymbolCounter);
+	UpdateRSIPilotStore(ReceiverParam, pvecInputData, ReceiverParam.CellMappingTable.matiMapTab[iCurSymbIDTiInt],
+						   ReceiverParam.CellMappingTable.matcPilotCells[iCurSymbIDTiInt], iSymbolCounter);
 
 
 	/* Get symbol-counter for next symbol. Use the count from the frame 
 	   synchronization (in OFDM.cpp). Call estimation routine */
 	const _REAL rSNRAftTiInt = 
 		pTimeInt->Estimate(pvecInputData, veccPilots, 
-						   ReceiverParam.matiMapTab[iCurSymbIDTiInt],
-						   ReceiverParam.matcPilotCells[iCurSymbIDTiInt],
+						   ReceiverParam.CellMappingTable.matiMapTab[iCurSymbIDTiInt],
+						   ReceiverParam.CellMappingTable.matcPilotCells[iCurSymbIDTiInt],
 						   /* The channel estimation is based on the pilots so
 						      it needs the SNR on the pilots. Do a correction */
 						   rSNREstimate * rSNRTotToPilCorrFact);
@@ -277,14 +277,14 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		{
 			/* Identify pilot positions. Use MODIFIED "iSymbolID" (See lines
 			   above) */
-			if (_IsScatPil(ReceiverParam.matiMapTab[iModSymNum][i]))
+			if (_IsScatPil(ReceiverParam.CellMappingTable.matiMapTab[iModSymNum][i]))
 			{
 				/* We assume that the channel estimation in "veccChanEst" is
 				   noise free (e.g., the wiener interpolation does noise
 				   reduction). Thus, we have an estimate of the received signal
 				   power \hat{r} = s * \hat{h}_{wiener} */
 				const _COMPLEX cModChanEst = veccChanEst[i] *
-					ReceiverParam.matcPilotCells[iModSymNum][i];
+					ReceiverParam.CellMappingTable.matcPilotCells[iModSymNum][i];
 
 
 				/* Calculate and average noise and signal estimates --------- */
@@ -321,7 +321,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 				if (iSNREstInitCnt < iNumSymPerFrame * iNumCarrier)
 				{
 					const int iCurCellFlag =
-						ReceiverParam.matiMapTab[iModSymNum][i];
+						ReceiverParam.CellMappingTable.matiMapTab[iModSymNum][i];
 
 					/* Initial signal estimate. Use channel estimation from all
 					   data and pilot cells. Apply averaging */
@@ -369,7 +369,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			for (i = 0; i < iNumCarrier; i++)
 			{
 				/* Only use FAC cells for this SNR estimation method */
-				if (_IsFAC(ReceiverParam.matiMapTab[iModSymNum][i]))
+				if (_IsFAC(ReceiverParam.CellMappingTable.matiMapTab[iModSymNum][i]))
 				{
 					/* Get tentative decision for this FAC QAM symbol. FAC is
 					   always 4-QAM. Calculate all distances to the four
@@ -405,7 +405,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	for (i = 0; i < iNumCarrier; i++)
 	{
 		/* Use MSC cells for this SNR estimation method */
-		if (_IsMSC(ReceiverParam.matiMapTab[iModSymNum][i]))
+		if (_IsMSC(ReceiverParam.CellMappingTable.matiMapTab[iModSymNum][i]))
 		{
 			CReal rCurErrPow = 0.0;
 
@@ -414,13 +414,13 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			   64 QAM */
 			switch (ReceiverParam.eMSCCodingScheme)
 			{
-			case CParameter::CS_3_SM:
-			case CParameter::CS_3_HMSYM:
-			case CParameter::CS_3_HMMIX:
+			case CS_3_SM:
+			case CS_3_HMSYM:
+			case CS_3_HMMIX:
 				rCurErrPow = SqMag(MinDist64QAM((*pvecOutputData)[i].cSig));
 				break;
 
-			case CParameter::CS_2_SM:
+			case CS_2_SM:
 				rCurErrPow = SqMag(MinDist16QAM((*pvecOutputData)[i].cSig));
 				break;
 
@@ -445,7 +445,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			rSignalEstWMMAcc += vecrSqMagChanEst[i];
 			iCountMERAcc ++;
 		}
-		else if (_IsFAC(ReceiverParam.matiMapTab[iModSymNum][i]))
+		else if (_IsFAC(ReceiverParam.CellMappingTable.matiMapTab[iModSymNum][i]))
 		{
 			/* Update accumulators for RSCI WMF */
 			CReal rCurErrPow = SqMag(MinDist4QAM((*pvecOutputData)[i].cSig));
@@ -594,23 +594,23 @@ void CChannelEstimation::CalculateRint(CParameter& ReceiverParam)
 	ReceiverParam.rICR = (rICRtmp > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rICRtmp) : (_REAL) 0.0);
 		
 	/* Interferer frequency */
-	ReceiverParam.rIntFreq = ((_REAL) iMaxIntCarrier + ReceiverParam.iCarrierKmin) /
-		ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+	ReceiverParam.rIntFreq = ((_REAL) iMaxIntCarrier + ReceiverParam.CellMappingTable.iCarrierKmin) /
+		ReceiverParam.CellMappingTable.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
 }
 
 void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 {
 	/* Get parameters from global struct */
-	iScatPilTimeInt = ReceiverParam.iScatPilTimeInt;
-	iScatPilFreqInt = ReceiverParam.iScatPilFreqInt;
-	iNumIntpFreqPil = ReceiverParam.iNumIntpFreqPil;
-	iNumCarrier = ReceiverParam.iNumCarrier;
-	iFFTSizeN = ReceiverParam.iFFTSizeN;
-	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
+	iScatPilTimeInt = ReceiverParam.CellMappingTable.iScatPilTimeInt;
+	iScatPilFreqInt = ReceiverParam.CellMappingTable.iScatPilFreqInt;
+	iNumIntpFreqPil = ReceiverParam.CellMappingTable.iNumIntpFreqPil;
+	iNumCarrier = ReceiverParam.CellMappingTable.iNumCarrier;
+	iFFTSizeN = ReceiverParam.CellMappingTable.iFFTSizeN;
+	iNumSymPerFrame = ReceiverParam.CellMappingTable.iNumSymPerFrame;
 
 	/* Length of guard-interval with respect to FFT-size! */
 	rGuardSizeFFT = (_REAL) iNumCarrier *
-		ReceiverParam.RatioTgTu.iEnum / ReceiverParam.RatioTgTu.iDenom;
+		ReceiverParam.CellMappingTable.RatioTgTu.iEnum / ReceiverParam.CellMappingTable.RatioTgTu.iDenom;
 
 	/* If robustness mode D is active, get DC position. This position cannot
 	   be "0" since in mode D no 5 kHz mode is defined (see DRM-standard). 
@@ -621,7 +621,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 		/* Identify DC carrier position */
 		for (int i = 0; i < iNumCarrier; i++)
 		{
-			if (_IsDC(ReceiverParam.matiMapTab[0][i]))
+			if (_IsDC(ReceiverParam.CellMappingTable.matiMapTab[0][i]))
 				iDCPos = i;
 		}
 	}
@@ -741,9 +741,9 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	   FAC method, the average signal power has to be considered. For the pilot
 	   based method, only the SNR on the pilots are evaluated. Therefore, to get
 	   the total SNR, a correction has to be applied */
-	rSNRFACSigCorrFact = ReceiverParam.rAvPowPerSymbol / CReal(iNumCarrier);
-	rSNRTotToPilCorrFact = ReceiverParam.rAvScatPilPow *
-		(_REAL) iNumCarrier / ReceiverParam.rAvPowPerSymbol;
+	rSNRFACSigCorrFact = ReceiverParam.CellMappingTable.rAvPowPerSymbol / CReal(iNumCarrier);
+	rSNRTotToPilCorrFact = ReceiverParam.CellMappingTable.rAvScatPilPow *
+		(_REAL) iNumCarrier / ReceiverParam.CellMappingTable.rAvPowPerSymbol;
 
 	/* Correction factor for transforming the estimated system SNR in the SNR
 	   where the noise bandwidth is according to the nominal DRM bandwidth */
@@ -780,19 +780,19 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 	/* Lambda for IIR filter */
 	rLamSNREstFast = IIR1Lam(TICONST_SNREST_FAST, (CReal) SOUNDCRD_SAMPLE_RATE /
-		ReceiverParam.iSymbolBlockSize);
+		ReceiverParam.CellMappingTable.iSymbolBlockSize);
 	rLamSNREstSlow = IIR1Lam(TICONST_SNREST_SLOW, (CReal) SOUNDCRD_SAMPLE_RATE /
-		ReceiverParam.iSymbolBlockSize);
+		ReceiverParam.CellMappingTable.iSymbolBlockSize);
 	rLamMSCSNREst = IIR1Lam(TICONST_SNREST_MSC, (CReal) SOUNDCRD_SAMPLE_RATE /
-		ReceiverParam.iSymbolBlockSize);
+		ReceiverParam.CellMappingTable.iSymbolBlockSize);
 
 	/* Init delay spread length estimation (index) */
 	rLenPDSEst = (_REAL) 0.0;
 
 	/* Init history for delay values */
 	/* Duration of OFDM symbol */
-	const _REAL rTs = (CReal) (ReceiverParam.iFFTSizeN +
-		ReceiverParam.iGuardSize) / SOUNDCRD_SAMPLE_RATE;
+	const _REAL rTs = (CReal) (ReceiverParam.CellMappingTable.iFFTSizeN +
+		ReceiverParam.CellMappingTable.iGuardSize) / SOUNDCRD_SAMPLE_RATE;
 
 	iLenDelayHist = (int) (LEN_HIST_DELAY_LOG_FILE_S / rTs);
 	vecrDelayHist.Init(iLenDelayHist, (CReal) 0.0);
@@ -848,8 +848,8 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 		   PDS ranges from the beginning of the guard-intervall to the end */
 		UpdateWienerFiltCoef(
 			pow((CReal) 10.0, INIT_VALUE_SNR_WIEN_FREQ_DB / 10),
-			(CReal) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom, (CReal) 0.0);
+			(CReal) ReceiverParam.CellMappingTable.RatioTgTu.iEnum /
+			ReceiverParam.CellMappingTable.RatioTgTu.iDenom, (CReal) 0.0);
 	}
 	else
 	{
@@ -857,8 +857,8 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 		   guard-interval length */
 		UpdateWienerFiltCoef(
 			pow((CReal) 10.0, ReceiverParam.GetSysSNRdBPilPos() / 10),
-			(CReal) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom, (CReal) 0.0);
+			(CReal) ReceiverParam.CellMappingTable.RatioTgTu.iEnum /
+			ReceiverParam.CellMappingTable.RatioTgTu.iDenom, (CReal) 0.0);
 	}
 
 
@@ -1298,9 +1298,9 @@ void CChannelEstimation::UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorE
 	/* Data is stored in the array with one row per pilot repetition, and in freq order in each row */
 	/* Each row has one element per pilot-bearing carrier */
 	/* This avoids having a jagged array with different lengths in different rows */
-	int iRow = iSymbolCounter / ReceiverParam.iScatPilTimeInt;
+	int iRow = iSymbolCounter / ReceiverParam.CellMappingTable.iScatPilTimeInt;
 
-	int iScatPilFreqInt = ReceiverParam.iScatPilFreqInt;
+	int iScatPilFreqInt = ReceiverParam.CellMappingTable.iScatPilFreqInt;
 
 
 	/* Find the first pilot */
@@ -1337,7 +1337,7 @@ void CChannelEstimation::UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorE
 	}
 
 	/* Is it the last symbol of the frame? If so, transfer to the CParam object for output via RSI */
-	if (iSymbolCounter == ReceiverParam.iNumSymPerFrame - 1)
+	if (iSymbolCounter == ReceiverParam.CellMappingTable.iNumSymPerFrame - 1)
 	{
 		/* copy into CParam object */
 		ReceiverParam.matcReceivedPilotValues.Init(iNumSymPerFrame / iScatPilTimeInt, iNumCarrier/iScatPilFreqInt + 1, 
@@ -1353,7 +1353,4 @@ void CChannelEstimation::UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorE
 				_COMPLEX(_REAL(0.0),_REAL(0.0)));
 
 	}
-
-
-
 }

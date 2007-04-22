@@ -61,11 +61,7 @@
 #include "MultColorLED.h"
 #include "../datadecoding/DABMOT.h"
 #include "DialogUtil.h"
-
-#ifdef HAVE_LIBFREEIMAGE
-# include <FreeImage.h>
-#endif
-
+#include "../util/Settings.h"
 
 /* Definitions ****************************************************************/
 /* Maximum number of levels. A maximum of 20 hierarchy levels is set
@@ -112,15 +108,19 @@ class MultimediaDlg : public MultimediaDlgBase
 	Q_OBJECT
 
 public:
-	MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+	MultimediaDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
 	virtual ~MultimediaDlg();
 
+	void LoadSettings(const CSettings&);
+	void SaveSettings(CSettings&);
+
 	void SetStatus(int MessID, int iMessPara);
 
 protected:
-	CDRMReceiver*			pDRMRec;
+	CDRMReceiver&			DRMReceiver;
+	CSettings&				Settings;
 
 	QTimer					Timer;
 	QMenuBar*				pMenu;

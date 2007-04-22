@@ -37,7 +37,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* OPH: update free-running symbol counter */
 	iFreeSymbolCounter++;
-	if (iFreeSymbolCounter >= ReceiverParam.iNumSymPerFrame)
+	if (iFreeSymbolCounter >= ReceiverParam.CellMappingTable.iNumSymPerFrame)
 	{
 		iFreeSymbolCounter = 0;
 	}
@@ -136,7 +136,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 {
 	/* Get parameters from info class */
-	iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
+	iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
 
 	/* Init temporary vector for filter input and output */
 	rvecInpTmp.Init(iSymbolBlockSize);

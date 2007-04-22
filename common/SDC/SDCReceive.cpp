@@ -218,7 +218,7 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
 									  CParameter& Parameter)
 {
-	CParameter::CMSCProtLev	MSCPrLe;
+	CMSCProtLev				MSCPrLe;
 	int						iLenPartA;
 	int						iLenPartB;
 
@@ -246,8 +246,8 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hierarchical data */
 		if ((i == 0) &&
-			((Parameter.eMSCCodingScheme == CParameter::CS_3_HMSYM) ||
-			(Parameter.eMSCCodingScheme == CParameter::CS_3_HMMIX)))
+			((Parameter.eMSCCodingScheme == CS_3_HMSYM) ||
+			(Parameter.eMSCCodingScheme == CS_3_HMMIX)))
 		{
 			/* Protection level for hierarchical */
 			MSCPrLe.iHierarch = (*pbiData).Separate(2);
@@ -336,18 +336,17 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 									  const _BOOLEAN bVersion)
 {
 	int			i;
-	_BOOLEAN	bSyncMultplxFlag = FALSE;
 	_BOOLEAN	bEnhanceFlag = FALSE;
 	_BOOLEAN	bServRestrFlag = FALSE;
-	_BOOLEAN	bRegionSchedFlag = FALSE;
-	int			iServRestr = 0;
+	int			iServRestr = 0x0f;
+	CAltFreq AltFreq;
 
 	/* Init number of frequency count */
 	int iNumFreqTmp = iLengthOfBody;
 
 	/* Init region ID and schedule ID with "not used" parameters */
-	int iRegionID = 0;
-	int iScheduleID = 0;
+	AltFreq.iRegionID = 0;
+	AltFreq.iScheduleID = 0;
 
 	/* Synchronous Multiplex flag: this flag indicates whether the multiplex is
 	   broadcast synchronously */
@@ -357,13 +356,13 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		/* Multiplex is not synchronous (different content and/or channel
 		   parameters and/or multiplex parameters and/or signal timing in target
 		   area) */
-		bSyncMultplxFlag = FALSE;
+		AltFreq.bIsSyncMultplx = FALSE;
 		break;
 
 	case 1: /* 1 */
 		/* Multiplex is synchronous (identical content and channel parameters
 		   and multiplex parameters and signal timing in target area) */
-		bSyncMultplxFlag = TRUE;
+		AltFreq.bIsSyncMultplx = TRUE;
 		break;
 	}
 
@@ -406,12 +405,12 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 	{
 	case 0: /* 0 */
 		/* No restriction */
-		bRegionSchedFlag = FALSE;
+		AltFreq.bRegionSchedFlag = FALSE;
 		break;
 
 	case 1: /* 1 */
 		/* Region and/or schedule applies to this list of frequencies */
-		bRegionSchedFlag = TRUE;
+		AltFreq.bRegionSchedFlag = TRUE;
 		break;
 	}
 
@@ -433,10 +432,14 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		/* Remove one byte from frequency count */
 		iNumFreqTmp--;
 	}
+	else
+	{
+		iServRestr = 0x0f; /* all services are included */
+	}
 
 	/* Region/Schedule field: this 8 bit field is only present if the
 	   Region/Schedule flag is set to 1 */
-	if (bRegionSchedFlag == TRUE)
+	if (AltFreq.bRegionSchedFlag == TRUE)
 	{
 		/* Region Id 4 bits. This field indicates whether the region is
 		   unspecified (value 0) or whether the alternative frequencies are
@@ -444,7 +447,7 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		   the Region Id (value 1 to 15). The region may be described by one or
 		   more "Alternative frequency signalling: Region definition data entity
 		   - type 7" with this Region Id */
-		iRegionID = (*pbiData).Separate(4);
+		AltFreq.iRegionID = (*pbiData).Separate(4);
  
 		/* Schedule Id 4 bits. This field indicates whether the schedule is
 		   unspecified (value 0) or whether the alternative frequencies are
@@ -452,7 +455,7 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		   (value 1 to 15). The schedule is described by one or more
 		   "Alternative frequency signalling: Schedule definition data entity
 		   - type 4" with this Schedule Id */
-		iScheduleID = (*pbiData).Separate(4);
+		AltFreq.iScheduleID = (*pbiData).Separate(4);
 
 		/* Remove one byte from frequency count */
 		iNumFreqTmp--;
@@ -469,7 +472,8 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 	   length field of the header and the value of the Service Restriction flag
 	   and the Region/Schedule flag */
 	const int iNumFreq = iNumFreqTmp / 2; /* 16 bits are read */
-	CVector<int> veciFrequencies(iNumFreq);
+
+	AltFreq.veciFrequencies.resize(iNumFreq);
 
 	for (i = 0; i < iNumFreq; i++)
 	{
@@ -480,7 +484,7 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 
 		/* Frequency value 15 bits. This field is coded as an unsigned integer
 		   and gives the frequency in kHz */
-		veciFrequencies[i] = (*pbiData).Separate(15);
+		AltFreq.veciFrequencies[i] = (*pbiData).Separate(15);
 	}
 
 	/* Now, set data in global struct */
@@ -495,43 +499,25 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 			Parameter.AltFreqSign.bVersionFlag = bVersion;
 		}
 
-		/* Create temporary object and reset for initialization */
-		CParameter::CAltFreqSign::CAltFreq AltFreq;
-		AltFreq.Reset();
-
 		/* Set some parameters */
-		AltFreq.bIsSyncMultplx = bSyncMultplxFlag;
-		AltFreq.iRegionID = iRegionID;
-		AltFreq.iScheduleID = iScheduleID;
-		AltFreq.bRegionSchedFlag = bRegionSchedFlag;
 
-		/* Set Service Restriction */
-		if (bServRestrFlag == TRUE)
+		/* Set Service Restriction
+		 * The first bit (msb) refers to Short Id 3,
+		 * while the last bit (lsb) refers to Short Id 0 of the tuned DRM multiplex
+		 * We made iServRestr valid whether the flag was there or not.
+		 */
+		for (i = 0; i < MAX_NUM_SERVICES; i++)
 		{
-			/* The first bit (msb) refers to Short Id 3, while the last bit
-			   (lsb) refers to Short Id 0 of the tuned DRM multiplex */
-			for (i = 0; i < MAX_NUM_SERVICES; i++)
-			{
-				/* Mask last bit (lsb) */
-				AltFreq.veciServRestrict[i] = iServRestr & 1;
+			/* Mask last bit (lsb) */
+			AltFreq.veciServRestrict[i] = iServRestr & 1;
 
-				/* Shift by one bit to get information for next service */
-				iServRestr >>= 1;
-			}
-		}
-		else
-		{
-			/* All services are supported */
-			AltFreq.veciServRestrict.Reset(1);
+			/* Shift by one bit to get information for next service */
+			iServRestr >>= 1;
 		}
 
-		/* Set frequencies */
-		for (i = 0; i < iNumFreq; i++)
-			AltFreq.veciFrequencies.Add(veciFrequencies[i]);
 
-		/* Now apply temporary object to global struct (first check if new
-		   object is not already there) */
-		int iCurNumAltFreq = Parameter.AltFreqSign.vecAltFreq.Size();
+		/* Now apply temporary object to global struct (first check if new object is not already there) */
+		int iCurNumAltFreq = Parameter.AltFreqSign.vecAltFreq.size();
 
 		_BOOLEAN bAltFreqIsAlreadyThere = FALSE;
 		for (i = 0; i < iCurNumAltFreq; i++)
@@ -541,7 +527,7 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		}
 
 		if (bAltFreqIsAlreadyThere == FALSE)
-			Parameter.AltFreqSign.vecAltFreq.Add(AltFreq);
+			Parameter.AltFreqSign.vecAltFreq.push_back(AltFreq);
 	}
 
 	return FALSE;
@@ -598,7 +584,7 @@ _BOOLEAN CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
 	else
 	{
 		/* Create temporary object and reset for initialization */
-		CParameter::CAltFreqSched AltFreqSched;
+		CAltFreqSched AltFreqSched;
 		AltFreqSched.Reset();
 
 		AltFreqSched.iScheduleID = iScheduleID;
@@ -608,8 +594,7 @@ _BOOLEAN CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
 
 		/* Now apply temporary object to global struct (first check if new
 		   object is not already there) */
-		int iCurNumAltFreqSched =
-			Parameter.AltFreqSign.vecAltFreqSchedules.Size();
+		int iCurNumAltFreqSched = Parameter.AltFreqSign.vecAltFreqSchedules.size();
 
 		_BOOLEAN bAltFreqSchedIsAlreadyThere = FALSE;
 		for (int i = 0; i < iCurNumAltFreqSched; i++)
@@ -619,7 +604,7 @@ _BOOLEAN CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
 		}
 
 		if (bAltFreqSchedIsAlreadyThere == FALSE)
-			Parameter.AltFreqSign.vecAltFreqSchedules.Add(AltFreqSched);
+			Parameter.AltFreqSign.vecAltFreqSchedules.push_back(AltFreqSched);
 
 		return FALSE;
 	}
@@ -638,7 +623,7 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 	const int iTempShortID = (*pbiData).Separate(2);
 
 	/* Load data parameters class with current parameters */
-	CParameter::CDataParam DataParam = Parameter.GetDataParam(iTempShortID);
+	CDataParam DataParam = Parameter.GetDataParam(iTempShortID);
 
 	/* Stream Id */
 	DataParam.iStreamID = (*pbiData).Separate(2);
@@ -647,25 +632,25 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 	switch ((*pbiData).Separate(1))
 	{
 	case 0: /* 0 */
-		DataParam.ePacketModInd = CParameter::PM_SYNCHRON_STR_MODE;
+		DataParam.ePacketModInd = CDataParam::PM_SYNCHRON_STR_MODE;
 
 		/* Descriptor (not used) */
 		(*pbiData).Separate(7);
 		break;
 
 	case 1: /* 1 */
-		DataParam.ePacketModInd = CParameter::PM_PACKET_MODE;
+		DataParam.ePacketModInd = CDataParam::PM_PACKET_MODE;
 
 		/* Descriptor */
 		/* Data unit indicator */
 		switch ((*pbiData).Separate(1))
 		{
 		case 0: /* 0 */
-			DataParam.eDataUnitInd = CParameter::DU_SINGLE_PACKETS;
+			DataParam.eDataUnitInd = CDataParam::DU_SINGLE_PACKETS;
 			break;
 
 		case 1: /* 1 */
-			DataParam.eDataUnitInd = CParameter::DU_DATA_UNITS;
+			DataParam.eDataUnitInd = CDataParam::DU_DATA_UNITS;
 			break;
 		}
 
@@ -676,15 +661,15 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 		switch ((*pbiData).Separate(4))
 		{
 		case 0: /* 0000 */
-			DataParam.eAppDomain = CParameter::AD_DRM_SPEC_APP;
+			DataParam.eAppDomain = CDataParam::AD_DRM_SPEC_APP;
 			break;
 
 		case 1: /* 0001 */
-			DataParam.eAppDomain = CParameter::AD_DAB_SPEC_APP;
+			DataParam.eAppDomain = CDataParam::AD_DAB_SPEC_APP;
 			break;
 
 		default: /* 2 - 15 reserved */
-			DataParam.eAppDomain = CParameter::AD_OTHER_SPEC_APP;
+			DataParam.eAppDomain = CDataParam::AD_OTHER_SPEC_APP;
 			break;
 		}
 
@@ -694,12 +679,12 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 	}
 
 	/* Application data */
-	if (DataParam.ePacketModInd == CParameter::PM_SYNCHRON_STR_MODE)
+	if (DataParam.ePacketModInd == CDataParam::PM_SYNCHRON_STR_MODE)
 	{
 		/* Not used */
 		(*pbiData).Separate(iLengthOfBody * 8 - 8);
 	}
-	else if (DataParam.eAppDomain == CParameter::AD_DAB_SPEC_APP)
+	else if (DataParam.eAppDomain == CDataParam::AD_DAB_SPEC_APP)
 	{
 		/* rfu */
 		(*pbiData).Separate(5);
@@ -730,7 +715,7 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 									  CParameter& Parameter,
 									  const _BOOLEAN bVersion)
 {
-	int i;
+	size_t i;
 
 	/* TODO version processing not implemented yet */
 	if(bVersion)
@@ -774,10 +759,9 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 	/* n CIRAF Zones: this field carries n CIRAF zones (n in the range 0 to 16).
 	   The number of CIRAF zones, n, is determined from the length field of the
 	   header - 4 */
-	CVector<int> veciCIRAFZones;
-	veciCIRAFZones.Init(0);
+	vector<int> veciCIRAFZones;
 	
-	for (i = 0; i < iLengthOfBody - 4; i++)
+	for (i = 0; i < size_t(iLengthOfBody - 4); i++)
 	{
 		/* Each CIRAF zone is coded as an 8 bit unsigned binary number in the
 		   range 1 to 85 */
@@ -786,7 +770,7 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 		if ((iCIRAFZone == 0) || (iCIRAFZone > 85))
 			return TRUE; /* Error */
 		else
-			veciCIRAFZones.Add(iCIRAFZone);
+			veciCIRAFZones.push_back(iCIRAFZone);
 
 /*
 	TODO: To check whether a certain longitude value is inside the specified
@@ -810,7 +794,7 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 	else
 	{
 		/* Create temporary object and reset for initialization */
-		CParameter::CAltFreqRegion AltFreqRegion;
+		CAltFreqRegion AltFreqRegion;
 		AltFreqRegion.Reset();
 
 		AltFreqRegion.iRegionID = iRegionID;
@@ -820,13 +804,12 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 		AltFreqRegion.iLongitudeEx = iLongitudeEx;
 
 		/* Set frequencies */
-		for (i = 0; i < veciCIRAFZones.Size(); i++)
-			AltFreqRegion.veciCIRAFZones.Add(veciCIRAFZones[i]);
+		for (i = 0; i < veciCIRAFZones.size(); i++)
+			AltFreqRegion.veciCIRAFZones.push_back(veciCIRAFZones[i]);
 
 		/* Now apply temporary object to global struct (first check if new
 		   object is not already there) */
-		int iCurNumAltFreqRegion =
-			Parameter.AltFreqSign.vecAltFreqRegions.Size();
+		size_t iCurNumAltFreqRegion = Parameter.AltFreqSign.vecAltFreqRegions.size();
 
 		_BOOLEAN bAltFreqRegionIsAlreadyThere = FALSE;
 		for (i = 0; i < iCurNumAltFreqRegion; i++)
@@ -836,7 +819,7 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 		}
 
 		if (bAltFreqRegionIsAlreadyThere == FALSE)
-			Parameter.AltFreqSign.vecAltFreqRegions.Add(AltFreqRegion);
+			Parameter.AltFreqSign.vecAltFreqRegions.push_back(AltFreqRegion);
 
 		return FALSE;
 	}
@@ -887,7 +870,7 @@ _BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 	const int iTempShortID = (*pbiData).Separate(2);
 
 	/* Load audio parameters class with current parameters */
-	CParameter::CAudioParam AudParam = Parameter.GetAudioParam(iTempShortID);
+	CAudioParam AudParam = Parameter.GetAudioParam(iTempShortID);
 
 	/* Stream Id */
 	AudParam.iStreamID = (*pbiData).Separate(2);
@@ -896,15 +879,15 @@ _BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 	switch ((*pbiData).Separate(2))
 	{
 	case 0: /* 00 */
-		AudParam.eAudioCoding = CParameter::AC_AAC;
+		AudParam.eAudioCoding = CAudioParam::AC_AAC;
 		break;
 
 	case 1: /* 01 */
-		AudParam.eAudioCoding = CParameter::AC_CELP;
+		AudParam.eAudioCoding = CAudioParam::AC_CELP;
 		break;
 
 	case 2: /* 10 */
-		AudParam.eAudioCoding = CParameter::AC_HVXC;
+		AudParam.eAudioCoding = CAudioParam::AC_HVXC;
 		break;
 
 	default: /* reserved */
@@ -916,31 +899,31 @@ _BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 	switch ((*pbiData).Separate(1))
 	{
 	case 0: /* 0 */
-		AudParam.eSBRFlag = CParameter::SB_NOT_USED;
+		AudParam.eSBRFlag = CAudioParam::SB_NOT_USED;
 		break;
 
 	case 1: /* 1 */
-		AudParam.eSBRFlag = CParameter::SB_USED;
+		AudParam.eSBRFlag = CAudioParam::SB_USED;
 		break;
 	}
 
 	/* Audio mode */
 	switch (AudParam.eAudioCoding)
 	{
-	case CParameter::AC_AAC:
+	case CAudioParam::AC_AAC:
 		/* Channel type */
 		switch ((*pbiData).Separate(2))
 		{
 		case 0: /* 00 */
-			AudParam.eAudioMode = CParameter::AM_MONO;
+			AudParam.eAudioMode = CAudioParam::AM_MONO;
 			break;
 
 		case 1: /* 01 */
-			AudParam.eAudioMode = CParameter::AM_P_STEREO;
+			AudParam.eAudioMode = CAudioParam::AM_P_STEREO;
 			break;
 
 		case 2: /* 10 */
-			AudParam.eAudioMode = CParameter::AM_STEREO;
+			AudParam.eAudioMode = CAudioParam::AM_STEREO;
 			break;
 
 		default: /* reserved */
@@ -949,7 +932,7 @@ _BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 		}
 		break;
 
-	case CParameter::AC_CELP:
+	case CAudioParam::AC_CELP:
 		/* rfa */
 		(*pbiData).Separate(1);
 
@@ -966,16 +949,16 @@ _BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 		}
 		break;
 
-	case CParameter::AC_HVXC:
+	case CAudioParam::AC_HVXC:
 		/* HVXC_rate */
 		switch ((*pbiData).Separate(1))
 		{
 		case 0: /* 0 */
-			AudParam.eHVXCRate = CParameter::HR_2_KBIT;
+			AudParam.eHVXCRate = CAudioParam::HR_2_KBIT;
 			break;
 
 		case 1: /* 1 */
-			AudParam.eHVXCRate = CParameter::HR_4_KBIT;
+			AudParam.eHVXCRate = CAudioParam::HR_4_KBIT;
 			break;
 		}
 
@@ -997,19 +980,19 @@ _BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 	switch ((*pbiData).Separate(3))
 	{
 	case 0: /* 000 */
-		AudParam.eAudioSamplRate = CParameter::AS_8_KHZ;
+		AudParam.eAudioSamplRate = CAudioParam::AS_8_KHZ;
 		break;
 
 	case 1: /* 001 */
-		AudParam.eAudioSamplRate = CParameter::AS_12KHZ;
+		AudParam.eAudioSamplRate = CAudioParam::AS_12KHZ;
 		break;
 
 	case 2: /* 010 */
-		AudParam.eAudioSamplRate = CParameter::AS_16KHZ;
+		AudParam.eAudioSamplRate = CAudioParam::AS_16KHZ;
 		break;
 
 	case 3: /* 011 */
-		AudParam.eAudioSamplRate = CParameter::AS_24KHZ;
+		AudParam.eAudioSamplRate = CAudioParam::AS_24KHZ;
 		break;
 
 	default: /* reserved */
@@ -1042,7 +1025,7 @@ _BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 	}
 
 	/* Coder field */
-	if (AudParam.eAudioCoding == CParameter::AC_CELP)
+	if (AudParam.eAudioCoding == CAudioParam::AC_CELP)
 	{
 		/* CELP index */
 		AudParam.iCELPIndex = (*pbiData).Separate(5);
@@ -1241,8 +1224,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 	}
 
 	/* Create temporary object and reset for initialization */
-	CParameter::CAltFreqOtherServicesSign::
-		CAltFreqOtherServices AltFreqOtherServices;
+	CAltFreqOtherServicesSign::CAltFreqOtherServices AltFreqOtherServices;
 
 	AltFreqOtherServices.Reset();
 
@@ -1263,7 +1245,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 	/* Now apply temporary object to global struct (first check if new
 	   object is not already there) */
 	const int iCurNumAltFreqOtherServices =
-		Parameter.AltFreqOtherServicesSign.vecAltFreqOtherServices.Size();
+		Parameter.AltFreqOtherServicesSign.vecAltFreqOtherServices.size();
 
 	_BOOLEAN bAltFreqIsAlreadyThere = FALSE;
 	for (i = 0; i < iCurNumAltFreqOtherServices; i++)
@@ -1277,8 +1259,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 
 	if (bAltFreqIsAlreadyThere == FALSE)
 	{
-		Parameter.AltFreqOtherServicesSign.vecAltFreqOtherServices.
-			Add(AltFreqOtherServices);
+		Parameter.AltFreqOtherServicesSign.vecAltFreqOtherServices.push_back(AltFreqOtherServices);
 	}
 	
 	return FALSE;

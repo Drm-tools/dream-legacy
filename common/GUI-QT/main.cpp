@@ -59,9 +59,10 @@
 \******************************************************************************/
 
 /* This pointer is only used for the post-event routine */
-QApplication*	pApp = NULL;
+QApplication *pApp = NULL;
 
-int main(int argc, char** argv)
+int
+main(int argc, char **argv)
 {
 	CDRMSimulation DRMSimulation;
 
@@ -70,121 +71,138 @@ int main(int argc, char** argv)
 	   activated, this function will immediately return */
 	DRMSimulation.SimScript();
 
-try
-{
-	/* Application object must be initialized before the DRMReceiver object
- 	* because of the QT functions used in the MDI module. TODO: better solution
- 	*/
-	QApplication app(argc, argv);
-
-	CDRMReceiver	DRMReceiver;
-
-	/* Parse arguments and load settings from init-file */
-	CSettings Settings(&DRMReceiver);
-	const _BOOLEAN bIsReceiver = Settings.Load(argc, argv);
-
-	/* Load and install multi-language support (if available) */
-	QTranslator translator(0);
-	if (translator.load("dreamtr"))
-		app.installTranslator(&translator);
-
-#ifdef _WIN32
-	if(DRMReceiver.GetEnableProcessPriority())
+	try
 	{
-		/* Set priority class for this application */
-		SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+		/* Application object must be initialized before the DRMReceiver object
+		 * because of the QT functions used in the MDI module. TODO: better solution
+		 */
+		QApplication app(argc, argv);
 
-		/* Low priority for GUI thread */
-		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
-	}
+		/* Parse arguments and load settings from init-file */
+		CSettings Settings;
+		Settings.Load(argc, argv);
+
+		/* Load and install multi-language support (if available) */
+		QTranslator translator(0);
+		if (translator.load("dreamtr"))
+			app.installTranslator(&translator);
+
+		string mode = Settings.Get("command", "mode", string("receive"));
+		cout << "mode:" << mode << endl;
+		if (mode == "receive")
+		{
+			CDRMReceiver DRMReceiver;
+#ifdef _WIN32
+			if (DRMReceiver.GetEnableProcessPriority())
+			{
+				/* Set priority class for this application */
+				SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+
+				/* Low priority for GUI thread */
+				SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+			}
 #endif
 
-	if (bIsReceiver == FALSE)
-	{
-		TransmDialog MainDlg(0, 0, FALSE, Qt::WStyle_MinMax);
+			/* First, initialize the working thread. This should be done in an extra
+			   routine since we cannot 100% assume that the working thread is
+			   ready before the GUI thread */
 
-		/* Set main window */
-		app.setMainWidget(&MainDlg);
-		pApp = &app; /* Needed for post-event routine */
+			DRMReceiver.LoadSettings(Settings);
 
-		/* Show dialog */
-		MainDlg.show();
-		app.exec();
-	}
-	else
-	{
-		/* First, initialize the working thread. This should be done in an extra
-		   routine since we cannot 100% assume that the working thread is
-		   ready before the GUI thread */
+			if (Settings.Get("AM Dialog", "visible", false))
+				DRMReceiver.SetReceiverMode(RM_AM);
+			else
+				DRMReceiver.SetReceiverMode(RM_DRM);
 
-		if(DRMReceiver.GeomAnalogDemDlg.bVisible == TRUE)
-			DRMReceiver.SetReceiverMode(RM_AM);
+			DRMReceiver.Init();
+
+			CGPSReceiver *pGPSReceiver = NULL;
+			if (DRMReceiver.GetParameters()->ReceptLog.GPSData.
+				GetGPSSource() != CGPSData::GPS_SOURCE_MANUAL_ENTRY)
+			{
+				pGPSReceiver =
+					new CGPSReceiver(DRMReceiver.GetParameters()->ReceptLog.
+									 GPSData);
+			}
+
+			FDRMDialog MainDlg(DRMReceiver, Settings, 0, 0, FALSE, Qt::WStyle_MinMax);
+
+			/* Start working thread */
+			DRMReceiver.start();
+
+			/* Set main window */
+			app.setMainWidget(&MainDlg);
+			pApp = &app;		/* Needed for post-event routine */
+
+			app.exec();
+
+			/* GUI has exited, stop everything else */
+			if (pGPSReceiver)
+				delete pGPSReceiver;
+
+			DRMReceiver.SaveSettings(Settings);
+		}
+		else if(mode == "transmit")
+		{
+			TransmDialog MainDlg(Settings, 0, 0, FALSE, Qt::WStyle_MinMax);
+
+			/* Set main window */
+			app.setMainWidget(&MainDlg);
+			pApp = &app;		/* Needed for post-event routine */
+
+			/* Show dialog */
+			MainDlg.show();
+			app.exec();
+		}
 		else
-			DRMReceiver.SetReceiverMode(RM_DRM);
-
-		DRMReceiver.Init();
-	
-		CGPSReceiver* pGPSReceiver=NULL;
-		if(DRMReceiver.GetParameters()->ReceptLog.GPSData.GetGPSSource() != CGPSData::GPS_SOURCE_MANUAL_ENTRY)
 		{
-			pGPSReceiver = new CGPSReceiver(DRMReceiver.GetParameters()->ReceptLog.GPSData);
+			QTextEdit help;
+			help.setTextFormat( Qt::PlainText );
+			help.setGeometry(200, 200, 480, 320);
+			help.append(Settings.UsageArguments(argv).c_str());
+			/* Set main window */
+			app.setMainWidget(&help);
+			help.show();
+			app.exec();
+			exit(0);
 		}
 
-		FDRMDialog		MainDlg(&DRMReceiver, 0, 0, FALSE, Qt::WStyle_MinMax);
-
-		/* Start working thread */
-		DRMReceiver.start();
-
-		/* Set main window */
-		app.setMainWidget(&MainDlg);
-		pApp = &app; /* Needed for post-event routine */
-
-		/* Working thread has been initialized so start the GUI! */
-		app.exec();
-
-		/* GUI has exited, stop everything else */
-
-		if(pGPSReceiver)
-		{
-			delete pGPSReceiver;
-		}
+		/* Save settings to init-file */
+		Settings.Save();
 	}
 
-	/* Save settings to init-file */
-	Settings.Save();
-}
-
-catch (CGenErr GenErr)
-{
-	ErrorMessage(GenErr.strError);
-}
-catch (string strError)
-{
-	ErrorMessage(strError);
-}
-catch (char* Error)
-{
-	ErrorMessage(Error);
-}
+	catch(CGenErr GenErr)
+	{
+		ErrorMessage(GenErr.strError);
+	}
+	catch(string strError)
+	{
+		ErrorMessage(strError);
+	}
+	catch(char *Error)
+	{
+		ErrorMessage(Error);
+	}
 
 	return 0;
 }
 
-
 /* Implementation of global functions *****************************************/
-void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam)
+void
+PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam)
 {
 	/* In case of simulation no events should be generated */
 	if (pApp != NULL)
 	{
-		DRMEvent* DRMEv = new DRMEvent(MessID, iMessageParam);
+		DRMEvent *DRMEv = new DRMEvent(MessID, iMessageParam);
 
 		/* Qt will delete the event object when done */
 		QThread::postEvent(pApp->mainWidget(), DRMEv);
 	}
 }
 
-void ErrorMessage(string strErrorString)
+void
+ErrorMessage(string strErrorString)
 {
 	/* Workaround for the QT problem */
 	string strError = "The following error occured:\n";
@@ -192,7 +210,8 @@ void ErrorMessage(string strErrorString)
 	strError += "\n\nThe application will exit now.";
 
 #ifdef _WIN32
-	MessageBox(NULL, strError.c_str(), "Dream", MB_SYSTEMMODAL | MB_OK | MB_ICONEXCLAMATION);
+	MessageBox(NULL, strError.c_str(), "Dream",
+			   MB_SYSTEMMODAL | MB_OK | MB_ICONEXCLAMATION);
 #else
 	perror(strError.c_str());
 #endif
@@ -211,47 +230,62 @@ void ErrorMessage(string strErrorString)
 /******************************************************************************\
 * No GUI                                                                       *
 \******************************************************************************/
-CDRMReceiver DRMReceiver; /* Must be a global object */
 
-int main(int argc, char** argv)
+int
+main(int argc, char **argv)
 {
-	CDRMTransmitter	DRMTransmitter;
-	CDRMSimulation	DRMSimulation;
+	try
+	{
+		CSettings Settings(&DRMReceiver);
+		Settings.Load(argc, argv);
+		if (Settings.Get("command", "isreceiver", TRUE))
+		{
+			CDRMSimulation DRMSimulation;
+			CDRMReceiver DRMReceiver;
 
-try
-{
-	CSettings Settings(&DRMReceiver);
-	const _BOOLEAN bIsReceiver = Settings.Load(argc, argv);
-	DRMSimulation.SimScript();
-
-	if (bIsReceiver == TRUE)
-		DRMReceiver.Start();
-	else
-		DRMTransmitter.Start();
-}
-
-catch (CGenErr GenErr)
-{
-	ErrorMessage(GenErr.strError);
-}
+			DRMSimulation.SimScript();
+			DRMReceiver.LoadSettings(Settings);
+			DRMReceiver.SetReceiverMode(RM_DRM);
+			DRMReceiver.Start();
+		}
+		else
+		{
+			CDRMTransmitter DRMTransmitter;
+			DRMTransmitter.Start();
+		}
+	}
+	catch(CGenErr GenErr)
+	{
+		ErrorMessage(GenErr.strError);
+	}
 
 	return 0;
 }
 
-void ErrorMessage(string strErrorString) {perror(strErrorString.c_str());}
-void PostWinMessage(const _MESSAGE_IDENT, const int) {}
+void
+ErrorMessage(string strErrorString)
+{
+	perror(strErrorString.c_str());
+}
+
+void
+PostWinMessage(const _MESSAGE_IDENT, const int)
+{
+}
 #endif /* USE_QT_GUI */
 
-
-void DebugError(const char* pchErDescr, const char* pchPar1Descr,
-				const double dPar1, const char* pchPar2Descr,
-				const double dPar2)
+void
+DebugError(const char *pchErDescr, const char *pchPar1Descr,
+		   const double dPar1, const char *pchPar2Descr, const double dPar2)
 {
-	FILE* pFile = fopen("test/DebugError.dat", "a");
-	fprintf(pFile, pchErDescr); fprintf(pFile, " ### ");
-	fprintf(pFile, pchPar1Descr); fprintf(pFile, ": ");
+	FILE *pFile = fopen("test/DebugError.dat", "a");
+	fprintf(pFile, pchErDescr);
+	fprintf(pFile, " ### ");
+	fprintf(pFile, pchPar1Descr);
+	fprintf(pFile, ": ");
 	fprintf(pFile, "%e ### ", dPar1);
-	fprintf(pFile, pchPar2Descr); fprintf(pFile, ": ");
+	fprintf(pFile, pchPar2Descr);
+	fprintf(pFile, ": ");
 	fprintf(pFile, "%e\n", dPar2);
 	fclose(pFile);
 	printf("\nDebug error! For more information see test/DebugError.dat\n");

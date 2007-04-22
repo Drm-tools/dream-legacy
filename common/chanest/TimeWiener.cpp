@@ -260,15 +260,15 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	CPilotModiClass::InitRot(ReceiverParam);
 
 	/* Set local parameters */
-	iNumCarrier = ReceiverParam.iNumCarrier;
-	iScatPilTimeInt = ReceiverParam.iScatPilTimeInt;
-	iScatPilFreqInt = ReceiverParam.iScatPilFreqInt;
-	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
-	const int iNumIntpFreqPil = ReceiverParam.iNumIntpFreqPil;
+	const CCellMappingTable& Param = ReceiverParam.CellMappingTable;
+	iNumCarrier = Param.iNumCarrier;
+	iScatPilTimeInt = Param.iScatPilTimeInt;
+	iScatPilFreqInt = Param.iScatPilFreqInt;
+	iNumSymPerFrame = Param.iNumSymPerFrame;
+	const int iNumIntpFreqPil = Param.iNumIntpFreqPil;
 
 	/* Generate filter phase table for Wiener filter */
-	GenFiltPhaseTable(ReceiverParam.matiMapTab, iNumCarrier, iNumSymPerFrame,
-		iScatPilTimeInt);
+	GenFiltPhaseTable(ReceiverParam.CellMappingTable.matiMapTab, iNumCarrier, iNumSymPerFrame, iScatPilTimeInt);
 
 	/* Init length of filter and maximum value of sigma (doppler) */
 	switch (ReceiverParam.GetWaveMode())
@@ -316,16 +316,14 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	iLenHistBuff = iSymDelyChanEst + 1;
 
 	/* Duration of useful part plus guard interval */
-	rTs = (_REAL) ReceiverParam.iSymbolBlockSize / SOUNDCRD_SAMPLE_RATE;
+	rTs = (_REAL) ReceiverParam.CellMappingTable.iSymbolBlockSize / SOUNDCRD_SAMPLE_RATE;
 
 	/* Total number of interpolated pilots in frequency direction. We have to
 	   consider the last pilot at the end ("+ 1") */
 	const int iTotNumPiFreqDir = iNumCarrier / iScatPilFreqInt + 1;
 
-	/* Allocate memory for Channel at pilot positions (matrix) and init with
-	   ones */
-	matcChanAtPilPos.Init(iLengthWiener, iTotNumPiFreqDir,
-		_COMPLEX((_REAL) 1.0, (_REAL) 0.0));
+	/* Allocate memory for Channel at pilot positions (matrix) and init with ones */
+	matcChanAtPilPos.Init(iLengthWiener, iTotNumPiFreqDir, _COMPLEX(1.0, 0.0));
 
 	/* Set number of taps for sigma estimation */
 	if (iLengthWiener < NUM_TAPS_USED4SIGMA_EST)
@@ -342,7 +340,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	   direction are "iScatPilTimeInt * iScatPilFreqInt" apart */
 	const int iNumPilOneOFDMSym = iNumIntpFreqPil / iScatPilTimeInt;
 	rLamTiCorrAv = IIR1Lam(TICONST_TI_CORREL_EST * iNumPilOneOFDMSym,
-		(CReal) SOUNDCRD_SAMPLE_RATE / ReceiverParam.iSymbolBlockSize);
+		(CReal) SOUNDCRD_SAMPLE_RATE / ReceiverParam.CellMappingTable.iSymbolBlockSize);
 
 	/* Init update counter for Wiener filter update. We immediatly use the
 	   filtered result although right at the beginning there is no averaging.
@@ -463,7 +461,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	return iLenHistBuff;
 }
 
-void CTimeWiener::GenFiltPhaseTable(CMatrix<int>& matiMapTab,
+void CTimeWiener::GenFiltPhaseTable(const CMatrix<int>& matiMapTab,
 									const int iNumCarrier,
 									const int iNumSymPerFrame,
 									const int iScatPilTimeInt)

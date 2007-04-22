@@ -283,8 +283,8 @@ CTagItemGeneratorSDCChanInf::GenTag(CParameter & Parameter)
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hierarchical data */
 		if ((i == 0) &&
-			((Parameter.eMSCCodingScheme == CParameter::CS_3_HMSYM) ||
-			 (Parameter.eMSCCodingScheme == CParameter::CS_3_HMMIX)))
+			((Parameter.eMSCCodingScheme == CS_3_HMSYM) ||
+			 (Parameter.eMSCCodingScheme == CS_3_HMMIX)))
 		{
 			/* Protection level for hierarchical */
 			Enqueue((uint32_t) Parameter.MSCPrLe.iHierarch, 2);
@@ -1199,14 +1199,15 @@ CTagItemGeneratorPilots::GetProfiles()
 void
 CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 {
+	const CCellMappingTable& Param = Parameter.CellMappingTable;
 	// Get parameters from parameter struct 
-	int iScatPilTimeInt = Parameter.iScatPilTimeInt;
-	int iScatPilFreqInt = Parameter.iScatPilFreqInt;
-	int iNumCarrier = Parameter.iNumCarrier;
-	int iNumSymPerFrame = Parameter.iNumSymPerFrame;
+	int iScatPilTimeInt = Param.iScatPilTimeInt;
+	int iScatPilFreqInt = Param.iScatPilFreqInt;
+	int iNumCarrier = Param.iNumCarrier;
+	int iNumSymPerFrame = Param.iNumSymPerFrame;
 	/* do we need these ? */
-	//int iNumIntpFreqPil = Parameter.iNumIntpFreqPil;
-	//int iFFTSizeN = Parameter.iFFTSizeN;
+	//int iNumIntpFreqPil = Param.iNumIntpFreqPil;
+	//int iFFTSizeN = Param.iFFTSizeN;
 
 	// calculate the spacing between scattered pilots in a given symbol
 	int iScatPilFreqSpacing = iScatPilFreqInt * iScatPilTimeInt;
@@ -1259,7 +1260,7 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 		// but that calculation would belong in the CellMappingTable class)
 		int iFirstPilotCarrier = 0;
 
-		while (!_IsScatPil(Parameter.matiMapTab[iSymbolNumber][iFirstPilotCarrier]))
+		while (!_IsScatPil(Param.matiMapTab[iSymbolNumber][iFirstPilotCarrier]))
 		{
 			iFirstPilotCarrier += iScatPilFreqInt;
 		}
@@ -1276,7 +1277,7 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 		{
 			iNumPilots++;
 			// Is it really a pilot? This will be false only in Mode D for the DC carrier 
-			if (_IsScatPil(Parameter.matiMapTab[iSymbolNumber][iCarrier]))
+			if (_IsScatPil(Param.matiMapTab[iSymbolNumber][iCarrier]))
 			{
 				_COMPLEX cPil = Parameter.matcReceivedPilotValues[iRow][i];
 				if (cPil.real() > rMax)
@@ -1338,13 +1339,13 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 	int iVal = 0;
 	switch (Parameter.Service[0].AudioParam.eAudioCoding)
 	{
-	case CParameter::AC_AAC:	// 00
+	case CAudioParam::AC_AAC:	// 00
 		iVal = 0;
 		break;
-	case CParameter::AC_CELP:	// 01
+	case CAudioParam::AC_CELP:	// 01
 		iVal = 1;
 		break;
-	case CParameter::AC_HVXC:	// 10
+	case CAudioParam::AC_HVXC:	// 10
 		iVal = 2;
 		break;
 	default:
@@ -1354,18 +1355,18 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 	Enqueue(iVal, 2);
 
 	// SBR flag
-	Enqueue(Parameter.Service[0].AudioParam.eSBRFlag == CParameter::SB_USED ? 1 : 0, 1);
+	Enqueue(Parameter.Service[0].AudioParam.eSBRFlag == CAudioParam::SB_USED ? 1 : 0, 1);
 
 	// Audio mode
 	switch (Parameter.Service[0].AudioParam.eAudioMode)
 	{
-	case CParameter::AM_MONO:
+	case CAudioParam::AM_MONO:
 		iVal = 0;
 		break;
-	case CParameter::AM_P_STEREO:
+	case CAudioParam::AM_P_STEREO:
 		iVal = 1;
 		break;
-	case CParameter::AM_STEREO:
+	case CAudioParam::AM_STEREO:
 		iVal = 2;
 		break;
 	default:
@@ -1376,16 +1377,16 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 	// Audio sampling rate
 	switch (Parameter.Service[0].AudioParam.eAudioSamplRate)
 	{
-	case CParameter::AS_8_KHZ:
+	case CAudioParam::AS_8_KHZ:
 		iVal = 0;
 		break;
-	case CParameter::AS_12KHZ:
+	case CAudioParam::AS_12KHZ:
 		iVal = 1;
 		break;
-	case CParameter::AS_16KHZ:
+	case CAudioParam::AS_16KHZ:
 		iVal = 2;
 		break;
-	case CParameter::AS_24KHZ:
+	case CAudioParam::AS_24KHZ:
 		iVal = 3;
 		break;
 	default:

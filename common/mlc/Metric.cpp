@@ -67,7 +67,7 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 	switch (eMapType)
 	{
-	case CParameter::CS_1_SM:
+	case CS_1_SM:
 		/**********************************************************************/
 		/* 4QAM	***************************************************************/
 		/**********************************************************************/
@@ -96,7 +96,7 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 		break;
 
-	case CParameter::CS_2_SM:
+	case CS_2_SM:
 		/**********************************************************************/
 		/* 16QAM **************************************************************/
 		/**********************************************************************/
@@ -264,7 +264,7 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 		break;
 
-	case CParameter::CS_3_SM:
+	case CS_3_SM:
 		/**********************************************************************/
 		/* 64QAM SM ***********************************************************/
 		/**********************************************************************/
@@ -625,7 +625,7 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 		break;
 
-	case CParameter::CS_3_HMSYM:
+	case CS_3_HMSYM:
 		/**********************************************************************/
 		/* 64QAM HMsym ********************************************************/
 		/**********************************************************************/
@@ -828,7 +828,7 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 		break;
 
-	case CParameter::CS_3_HMMIX:
+	case CS_3_HMMIX:
 		/**********************************************************************/
 		/* 64QAM HMmix ********************************************************/
 		/**********************************************************************/
@@ -1046,7 +1046,7 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 #ifdef USE_ERASURE_FOR_FASTER_ACQ
 	/* Take care of special case with "CS_3_HMMIX" */
-	if (eMapType != CParameter::CS_3_HMMIX)
+	if (eMapType != CS_3_HMMIX)
 	{
 		for (i = 0; i < iInputBlockSize; i++)
 		{
@@ -1075,7 +1075,7 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 #endif
 }
 
-void CMLCMetric::Init(int iNewInputBlockSize, CParameter::ECodScheme eNewCodingScheme)
+void CMLCMetric::Init(int iNewInputBlockSize, ECodScheme eNewCodingScheme)
 {
 	iInputBlockSize = iNewInputBlockSize;
 	eMapType = eNewCodingScheme;

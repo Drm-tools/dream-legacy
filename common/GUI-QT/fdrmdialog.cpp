@@ -30,22 +30,22 @@
 #include <iostream>
 
 /* Implementation *************************************************************/
-FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
-	bool modal, WFlags f) : FDRMDialogBase(parent, name, modal, f), pDRMRec(pNDRMR),
+FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
+	QWidget* parent, const char* name, bool modal, WFlags f)
+	: FDRMDialogBase(parent, name, modal, f),
+	DRMReceiver(NDRMR),
+	Settings(NSettings),
 	eReceiverMode(RM_NONE)
 {
+	/* recover window size and position */
+	CWinGeom s;
+	Settings.Get("DRM Dialog", s);
+	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+			setGeometry(WinGeom);
+
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
-
-	/* Get window geometry data from DRMReceiver module and apply it */
-	const QRect WinGeom(pDRMRec->GeomFdrmdialog.iXPos,
-		pDRMRec->GeomFdrmdialog.iYPos,
-		pDRMRec->GeomFdrmdialog.iWSize,
-		pDRMRec->GeomFdrmdialog.iHSize);
-
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-		setGeometry(WinGeom);
-
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
@@ -68,8 +68,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
-		new CSoundCardSelMenu(pDRMRec->GetSoundInInterface(), 
-		pDRMRec->GetSoundOutInterface(), this));
+		new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), 
+		DRMReceiver.GetSoundOutInterface(), this));
 
 	pSettingsMenu->insertItem(tr("&AM (analog)"), this,
 		SLOT(OnSwitchToAM()), CTRL+Key_A);
@@ -90,7 +90,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	pSettingsMenu->insertItem(tr("&Plot Style"), pPlotStyleMenu);
 
 	/* Set check */
-	pPlotStyleMenu->setItemChecked(pDRMRec->iMainPlotColorStyle, TRUE);
+	pPlotStyleMenu->setItemChecked(Settings.Get("DRM Dialog", "plotcolor", 0), TRUE);
 
 	/* multimedia settings */
 	pSettingsMenu->insertSeparator();
@@ -114,7 +114,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 	/* Digi controls */
 	/* Set display color */
-	SetDisplayColor(CRGBConversion::int2RGB(pDRMRec->iMainDisplayColor));
+	SetDisplayColor(CRGBConversion::int2RGB(Settings.Get("DRM Dialog", "colorscheme", 0xff0000)));
 
 	/* Reset text */
 	LabelBitrate->setText("");
@@ -134,53 +134,44 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
 
 	/* Stations window */
-	pStationsDlg = new StationsDlg(pDRMRec, this, "", FALSE,
-		Qt::WStyle_MinMax);
+	pStationsDlg = new StationsDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+	bStationsDlgWasVis = Settings.Get("Stations Dialog", "visible", FALSE);
 
 	SetDialogCaption(pStationsDlg, tr("Stations"));
 
-	bStationsDlgWasVis = pDRMRec->GeomStationsDlg.bVisible;
-
 	/* Live Schedule window */
-	pLiveScheduleDlg = new LiveScheduleDlg(pDRMRec, this, "", FALSE,
-		Qt::WStyle_MinMax);
+	pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+	bLiveSchedDlgWasVis = Settings.Get("Live Schedule Dialog", "visible", FALSE);
 
 	SetDialogCaption(pLiveScheduleDlg, tr("Live Schedule"));
 
-	bLiveSchedDlgWasVis = pDRMRec->GeomLiveScheduleDlg.bVisible;
-
 	/* Programme Guide Window */
-	pEPGDlg = new EPGDlg(pDRMRec, this, "", FALSE, Qt::WStyle_MinMax);
+	pEPGDlg = new EPGDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+	bEPGDlgWasVis = Settings.Get("EPG Dialog", "visible", FALSE);
 
 	SetDialogCaption(pEPGDlg, tr("Programme Guide"));
 
-	bEPGDlgWasVis = pDRMRec->GeomEPGDlg.bVisible;
 
 	/* Evaluation window */
-	pSysEvalDlg = new systemevalDlg(pDRMRec, this, "",
-		FALSE, Qt::WStyle_MinMax);
+	pSysEvalDlg = new systemevalDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+	bSysEvalDlgWasVis = Settings.Get("System Evaluation Dialog", "visible", FALSE);
 
 	SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
 
-	bSysEvalDlgWasVis = pDRMRec->GeomSystemEvalDlg.bVisible;
-
 	/* Multimedia window */
-	pMultiMediaDlg = new MultimediaDlg(pDRMRec, this, "", FALSE,
-		Qt::WStyle_MinMax);
+	pMultiMediaDlg = new MultimediaDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+	bMultMedDlgWasVis = Settings.Get("Multimedia Dialog", "visible", FALSE);
 
 	SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
 
-	bMultMedDlgWasVis = pDRMRec->GeomMultimediaDlg.bVisible;
-
 	/* Analog demodulation window */
-	pAnalogDemDlg = new AnalogDemDlg(pDRMRec, NULL, "Analog Demodulation",
-		FALSE, Qt::WStyle_MinMax);
+	pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", FALSE, Qt::WStyle_MinMax);
 
 	/* Enable multimedia */
-	pDRMRec->GetParameters()->EnableMultimedia(TRUE);
+	DRMReceiver.GetParameters()->EnableMultimedia(TRUE);
 
 	/* Init current selected service */
-	pDRMRec->GetParameters()->ResetCurSelAudDatServ();
+	DRMReceiver.GetParameters()->ResetCurSelAudDatServ();
 
 	iCurSelServiceGUI = 0;
 	iOldNoServicesGUI = 0;
@@ -253,14 +244,14 @@ void FDRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 
 void FDRMDialog::OnTimer()
 {
-	ERecMode eNewReceiverMode = pDRMRec->GetReceiverMode();
+	ERecMode eNewReceiverMode = DRMReceiver.GetReceiverMode();
 	switch(eNewReceiverMode)
 	{
 	case RM_DRM:
 		if(eReceiverMode != RM_DRM)
 			ChangeGUIModeToDRM();
 		{
-			CParameter& ReceiverParam = *(pDRMRec->GetParameters());
+			CParameter& ReceiverParam = *(DRMReceiver.GetParameters());
 
 			/* Input level meter */
 			ProgrInputLevel->setValue(ReceiverParam.GetIFSignalLevel());
@@ -270,7 +261,7 @@ void FDRMDialog::OnTimer()
 			SetStatus(CLED_FAC, ReceiverParam.ReceiveStatus.GetFACStatus());
 
 			/* Check if receiver does receive a signal */
-			if(pDRMRec->GetReceiverState() == AS_WITH_SIGNAL)
+			if(DRMReceiver.GetReceiverState() == AS_WITH_SIGNAL)
 				UpdateDisplay();
 			else
 				ClearDisplay();
@@ -293,7 +284,7 @@ void FDRMDialog::OnTimer()
 
 void FDRMDialog::UpdateDisplay()
 {
-	CParameter& ReceiverParam = *(pDRMRec->GetParameters());
+	CParameter& ReceiverParam = *(DRMReceiver.GetParameters());
 
 	/* Receiver does receive a DRM signal ------------------------------- */
 	/* First get current selected services */
@@ -304,7 +295,7 @@ void FDRMDialog::UpdateDisplay()
 
 	if (!ReceiverParam.Service[iCurSelAudioServ].IsActive() ||
 	    ReceiverParam.Service[iCurSelAudioServ].AudioParam.iStreamID == STREAM_ID_NOT_USED ||
-	    ReceiverParam.Service[iCurSelAudioServ].eAudDataFlag == CParameter::SF_DATA)
+	    ReceiverParam.Service[iCurSelAudioServ].eAudDataFlag == CService::SF_DATA)
 	{
 		int i = 0;
 		_BOOLEAN bStop = FALSE;
@@ -313,7 +304,7 @@ void FDRMDialog::UpdateDisplay()
 		{
 			if (ReceiverParam.Service[i].IsActive() &&
 			    ReceiverParam.Service[i].AudioParam.iStreamID != STREAM_ID_NOT_USED &&
-			    ReceiverParam.Service[i].eAudDataFlag == CParameter::SF_AUDIO)
+			    ReceiverParam.Service[i].eAudDataFlag == CService::SF_AUDIO)
 			{
 				iCurSelAudioServ = i;
 				bStop = TRUE;
@@ -327,7 +318,7 @@ void FDRMDialog::UpdateDisplay()
 
 	/* If selected service is audio and text message is true */
 	if ((ReceiverParam.Service[iCurSelAudioServ].
-		eAudDataFlag == CParameter::SF_AUDIO) &&
+		eAudDataFlag == CService::SF_AUDIO) &&
 		(ReceiverParam.Service[iCurSelAudioServ].
 		AudioParam.bTextflag == TRUE))
 	{
@@ -435,8 +426,8 @@ void FDRMDialog::UpdateDisplay()
 		LabelStereoMono->setText(GetTypeString(iCurSelAudioServ));
 
 		/* Language and program type labels (only for audio service) */
-		if (pDRMRec->GetParameters()->Service[iCurSelAudioServ].
-			eAudDataFlag == CParameter::SF_AUDIO)
+		if (DRMReceiver.GetParameters()->Service[iCurSelAudioServ].
+			eAudDataFlag == CService::SF_AUDIO)
 		{
 		/* SDC Language */
 		const string strLangCode = ReceiverParam.
@@ -514,7 +505,7 @@ void FDRMDialog::UpdateDisplay()
 		   service */
 		(ReceiverParam.Service[iCurSelAudioServ].IsActive() &&
 		(ReceiverParam.Service[iCurSelAudioServ].eAudDataFlag !=
-		CParameter::SF_DATA)))
+		CService::SF_DATA)))
 	{
 		/* Reset checks */
 		PushButtonService1->setOn(FALSE);
@@ -547,7 +538,7 @@ void FDRMDialog::UpdateDisplay()
 		}
 	}
 	else if (ReceiverParam.Service[iCurSelServiceGUI].
-		eAudDataFlag ==	CParameter::SF_DATA)
+		eAudDataFlag ==	CService::SF_DATA)
 	{
 		/* In case we only have data services, reset checks */
 		PushButtonService1->setOn(FALSE);
@@ -599,7 +590,7 @@ void FDRMDialog::UpdateDisplay()
 
 			/* Show, if a multimedia stream is connected to this service */
 			if ((ReceiverParam.Service[i].
-				eAudDataFlag == CParameter::SF_AUDIO) && 
+				eAudDataFlag == CService::SF_AUDIO) && 
 				(ReceiverParam.Service[i].
 				DataParam.iStreamID != STREAM_ID_NOT_USED))
 			{
@@ -640,12 +631,12 @@ void FDRMDialog::UpdateDisplay()
 	}
 
 	/* detect if AFS informations are available */
-	if ((ReceiverParam.AltFreqSign.vecAltFreq.Size() > 0)
-		|| (ReceiverParam.AltFreqOtherServicesSign.vecAltFreqOtherServices.Size() > 0))
+	if ((ReceiverParam.AltFreqSign.vecAltFreq.size() > 0)
+		|| (ReceiverParam.AltFreqOtherServicesSign.vecAltFreqOtherServices.size() > 0))
 	{
 		/* show AFS label */
 		if (ReceiverParam.Service[0].
-			eAudDataFlag == CParameter::SF_AUDIO)
+			eAudDataFlag == CService::SF_AUDIO)
 				m_StaticService[0] += tr(" + AFS");
 	}
 		
@@ -740,6 +731,8 @@ void FDRMDialog::ChangeGUIModeToAM()
 
 	pSysEvalDlg->StopLogTimers();
 
+	Timer.stop();
+
 	this->hide();
 
 	pAnalogDemDlg->show();
@@ -777,7 +770,7 @@ void FDRMDialog::OnSwitchToDRM()
 	bStationsDlgWasVis = pStationsDlg->isVisible();
 	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
 
-	pDRMRec->SetReceiverMode(RM_DRM);
+	DRMReceiver.SetReceiverMode(RM_DRM);
 	OnTimer();
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
@@ -786,7 +779,7 @@ void FDRMDialog::OnSwitchToAM()
 {
 	bStationsDlgWasVis = pStationsDlg->isVisible();
 	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
-	pDRMRec->SetReceiverMode(RM_AM);
+	DRMReceiver.SetReceiverMode(RM_AM);
 }
 
 void FDRMDialog::OnButtonService1()
@@ -852,19 +845,19 @@ void FDRMDialog::OnButtonService4()
 
 void FDRMDialog::SetService(int iNewServiceID)
 {
-	pDRMRec->GetParameters()->SetCurSelAudioService(iNewServiceID);
-	pDRMRec->GetParameters()->SetCurSelDataService(iNewServiceID);
+	DRMReceiver.GetParameters()->SetCurSelAudioService(iNewServiceID);
+	DRMReceiver.GetParameters()->SetCurSelDataService(iNewServiceID);
 	iCurSelServiceGUI = iNewServiceID;
 
 
 	/* Eventually activate multimedia window */
-	int iAppIdent = pDRMRec->GetParameters()->Service[iNewServiceID].
+	int iAppIdent = DRMReceiver.GetParameters()->Service[iNewServiceID].
 						DataParam.iUserAppIdent;
 
 	/* If service is only data service or has a multimedia content
 	   , activate multimedia window */
-	if ((pDRMRec->GetParameters()->Service[iNewServiceID].eAudDataFlag ==
-		CParameter::SF_DATA)
+	if ((DRMReceiver.GetParameters()->Service[iNewServiceID].eAudDataFlag ==
+		CService::SF_DATA)
 		|| (iAppIdent == AT_MOTSLISHOW)
 		|| (iAppIdent == AT_JOURNALINE)
 		|| (iAppIdent == AT_MOTBROADCASTWEBSITE))
@@ -875,7 +868,7 @@ void FDRMDialog::SetService(int iNewServiceID)
 
 void FDRMDialog::OnViewEvalDlg()
 {
-	if (pDRMRec->GetReceiverMode() == RM_DRM)
+	if (DRMReceiver.GetReceiverMode() == RM_DRM)
 	{
 		/* Show evaluation window in DRM mode */
 		pSysEvalDlg->show();
@@ -907,20 +900,21 @@ void FDRMDialog::OnViewLiveScheduleDlg()
 
 void FDRMDialog::OnViewMultSettingsDlg()
 {
+
 	/* Show multimedia settings window */
-	MultSettingsDlg* pMultSettingsDlg = new MultSettingsDlg(pDRMRec, this, "", TRUE,
-		Qt::WStyle_Dialog);
+	MultSettingsDlg* pMultSettingsDlg = new MultSettingsDlg(Settings, this, "", TRUE, Qt::WStyle_Dialog);
 
 	SetDialogCaption(pMultSettingsDlg, tr("Multimedia settings"));
 
 	pMultSettingsDlg->show();
+
 }
 
 void FDRMDialog::OnViewGeneralSettingsDlg()
 {
 	/* Show general settings window */
-	GeneralSettingsDlg* pGeneralSettingsDlg = new GeneralSettingsDlg(pDRMRec, this, "", TRUE,
-		Qt::WStyle_Dialog);
+	GeneralSettingsDlg* pGeneralSettingsDlg
+		= new GeneralSettingsDlg(&DRMReceiver, this, "", TRUE, Qt::WStyle_Dialog);
 
 	SetDialogCaption(pGeneralSettingsDlg, tr("General settings"));
 
@@ -935,20 +929,20 @@ void FDRMDialog::OnViewEPGDlg()
 
 void FDRMDialog::OnMenuSetDisplayColor()
 {
-    const QColor newColor = QColorDialog::getColor(
-		CRGBConversion::int2RGB(pDRMRec->iMainDisplayColor), this);
+    const QColor color = CRGBConversion::int2RGB(Settings.Get("DRM Dialog", "colorscheme", 0xff0000));
+    const QColor newColor = QColorDialog::getColor( color, this);
     if (newColor.isValid())
 	{
 		/* Store new color and update display */
 		SetDisplayColor(newColor);
-		pDRMRec->iMainDisplayColor = CRGBConversion::RGB2int(newColor);
+    	Settings.Put("DRM Dialog", "colorscheme", CRGBConversion::RGB2int(newColor));
 	}
 }
 
 void FDRMDialog::OnMenuPlotStyle(int value)
 {
 	/* Save new style in global variable */
-	pDRMRec->iMainPlotColorStyle = value;
+	Settings.Put("DRM Dialog", "plotcolor", value);
 
 	/* Set new plot style in other dialogs */
 	pSysEvalDlg->UpdatePlotsStyle();
@@ -980,13 +974,15 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	 */
 	if(eReceiverMode == RM_DRM)
 	{
-		pDRMRec->GeomStationsDlg.bVisible = pStationsDlg->isVisible();
-		pDRMRec->GeomLiveScheduleDlg.bVisible = pLiveScheduleDlg->isVisible();
-		/* first remember the state of the windows */
-		pDRMRec->GeomAnalogDemDlg.bVisible = FALSE;
-		pDRMRec->GeomSystemEvalDlg.bVisible = pSysEvalDlg->isVisible();
-		pDRMRec->GeomMultimediaDlg.bVisible = pMultiMediaDlg->isVisible();
-		pDRMRec->GeomEPGDlg.bVisible = pEPGDlg->isVisible();
+		Settings.Put("GUI", "mode", string("DRMRX"));
+		/* remember the state of the windows */
+		Settings.Put("DRM Dialog", "visible", TRUE);
+		Settings.Put("AM Dialog", "visible", FALSE);
+		Settings.Put("Stations Dialog", "visible", pStationsDlg->isVisible());
+		Settings.Put("Live Schedule Dialog", "visible", pLiveScheduleDlg->isVisible());
+		Settings.Put("System Evaluation Dialog", "visible", pSysEvalDlg->isVisible());
+		Settings.Put("Multimedia Dialog", "visible", pMultiMediaDlg->isVisible());
+		Settings.Put("EPG Dialog", "visible", pEPGDlg->isVisible());
 
 		/* stop any asynchronous GUI actions */
 		pSysEvalDlg->StopLogTimers();
@@ -1006,9 +1002,9 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 		* AnalogDemDlg to cover gps and anything else
 		* or possible have a new ALWAYS hidden main dialogue box
 		* that manages startup and close-down */
-		pDRMRec->Stop();
-		(void)pDRMRec->wait(5000);
-		if(!pDRMRec->finished())
+		DRMReceiver.Stop();
+		(void)DRMReceiver.wait(5000);
+		if(!DRMReceiver.finished())
 		{
 			QMessageBox::critical(this, "Dream", "Exit\n",
 				"Termination of working thread failed");
@@ -1016,36 +1012,32 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	}
 	else
 	{
-		pDRMRec->GeomStationsDlg.bVisible = pStationsDlg->isVisible();
+		Settings.Put("GUI", "mode", string("AMRX"));
+		Settings.Put("DRM Dialog", "visible", FALSE);
+		Settings.Put("AM Dialog", "visible", TRUE);
+		Settings.Put("Stations Dialog", "visible", pStationsDlg->isVisible());
 
 		if (pStationsDlg->isVisible())
 			pStationsDlg->hide();
 
-		pDRMRec->GeomLiveScheduleDlg.bVisible = pLiveScheduleDlg->isVisible();
+		Settings.Put("Live Schedule Dialog", "visible", pLiveScheduleDlg->isVisible());
 
 		if (pLiveScheduleDlg->isVisible())
 			pLiveScheduleDlg->hide();
 
 		/* we saved these when we were in DRM Mode */
-		pDRMRec->GeomSystemEvalDlg.bVisible = bSysEvalDlgWasVis;
-		pDRMRec->GeomMultimediaDlg.bVisible = bMultMedDlgWasVis;
-		pDRMRec->GeomEPGDlg.bVisible = bEPGDlgWasVis;
+		Settings.Put("System Evaluation Dialog", "visible", bSysEvalDlgWasVis);
+		Settings.Put("Multimedia Dialog", "visible", bMultMedDlgWasVis);
+		Settings.Put("EPG Dialog", "visible",  bEPGDlgWasVis);
 	}
 
-	/* this dialog is always responsible for storing its
-	 * own positions. Do it here rather than in the destructor
-	 * because we don't know exactly when the destructor will
-	 * be called
-	 */
-
-	/* Set window geometry data in DRMReceiver module */
+	CWinGeom s;
 	QRect WinGeom = geometry();
-
-	pDRMRec->GeomFdrmdialog.iXPos = WinGeom.x();
-	pDRMRec->GeomFdrmdialog.iYPos = WinGeom.y();
-	pDRMRec->GeomFdrmdialog.iHSize = WinGeom.height();
-	pDRMRec->GeomFdrmdialog.iWSize = WinGeom.width();
-
+	s.iXPos = WinGeom.x();
+	s.iYPos = WinGeom.y();
+	s.iHSize = WinGeom.height();
+	s.iWSize = WinGeom.width();
+	Settings.Put("DRM Dialog", s);
 
 	/* now let QT close us */
 	ce->accept();
@@ -1093,41 +1085,41 @@ QString FDRMDialog::GetCodecString(const int iServiceID)
 	QString strReturn;
 
 	/* First check if it is audio or data service */
-	if (pDRMRec->GetParameters()->Service[iServiceID].
-		eAudDataFlag == CParameter::SF_AUDIO)
+	if (DRMReceiver.GetParameters()->Service[iServiceID].
+		eAudDataFlag == CService::SF_AUDIO)
 	{
 		/* Audio service */
-		const CParameter::EAudSamRat eSamRate = pDRMRec->GetParameters()->
+		const CAudioParam::EAudSamRat eSamRate = DRMReceiver.GetParameters()->
 			Service[iServiceID].AudioParam.eAudioSamplRate;
 
 		/* Audio coding */
-		switch (pDRMRec->GetParameters()->Service[iServiceID].
+		switch (DRMReceiver.GetParameters()->Service[iServiceID].
 			AudioParam.eAudioCoding)
 		{
-		case CParameter::AC_AAC:
+		case CAudioParam::AC_AAC:
 			/* Only 12 and 24 kHz sample rates are supported for AAC encoding */
-			if (eSamRate == CParameter::AS_12KHZ)
+			if (eSamRate == CAudioParam::AS_12KHZ)
 				strReturn = "aac";
 			else
 				strReturn = "AAC";
 			break;
 
-		case CParameter::AC_CELP:
+		case CAudioParam::AC_CELP:
 			/* Only 8 and 16 kHz sample rates are supported for CELP encoding */
-			if (eSamRate == CParameter::AS_8_KHZ)
+			if (eSamRate == CAudioParam::AS_8_KHZ)
 				strReturn = "celp";
 			else
 				strReturn = "CELP";
 			break;
 
-		case CParameter::AC_HVXC:
+		case CAudioParam::AC_HVXC:
 			strReturn = "HVXC";
 			break;
 		}
 
 		/* SBR */
-		if (pDRMRec->GetParameters()->Service[iServiceID].
-			AudioParam.eSBRFlag == CParameter::SB_USED)
+		if (DRMReceiver.GetParameters()->Service[iServiceID].
+			AudioParam.eSBRFlag == CAudioParam::SB_USED)
 		{
 			strReturn += "+";
 		}
@@ -1146,23 +1138,23 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 	QString strReturn;
 
 	/* First check if it is audio or data service */
-	if (pDRMRec->GetParameters()->Service[iServiceID].
-		eAudDataFlag == CParameter::SF_AUDIO)
+	if (DRMReceiver.GetParameters()->Service[iServiceID].
+		eAudDataFlag == CService::SF_AUDIO)
 	{
 		/* Audio service */
 		/* Mono-Stereo */
-		switch (pDRMRec->GetParameters()->
+		switch (DRMReceiver.GetParameters()->
 			Service[iServiceID].AudioParam.eAudioMode)
 		{
-			case CParameter::AM_MONO:
+			case CAudioParam::AM_MONO:
 				strReturn = "Mono";
 				break;
 
-			case CParameter::AM_P_STEREO:
+			case CAudioParam::AM_P_STEREO:
 				strReturn = "P-Stereo";
 				break;
 
-			case CParameter::AM_STEREO:
+			case CAudioParam::AM_STEREO:
 				strReturn = "Stereo";
 				break;
 		}
@@ -1170,13 +1162,13 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 	else
 	{
 		/* Data service */
-		if (pDRMRec->GetParameters()->Service[iServiceID].DataParam.
-			ePacketModInd == CParameter::PM_PACKET_MODE)
+		if (DRMReceiver.GetParameters()->Service[iServiceID].DataParam.
+			ePacketModInd == CDataParam::PM_PACKET_MODE)
 		{
-			if (pDRMRec->GetParameters()->Service[iServiceID].DataParam.
-				eAppDomain == CParameter::AD_DAB_SPEC_APP)
+			if (DRMReceiver.GetParameters()->Service[iServiceID].DataParam.
+				eAppDomain == CDataParam::AD_DAB_SPEC_APP)
 			{
-				switch (pDRMRec->GetParameters()->Service[iServiceID].
+				switch (DRMReceiver.GetParameters()->Service[iServiceID].
 					DataParam.iUserAppIdent)
 				{
 				case 1:
@@ -1229,24 +1221,24 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 void FDRMDialog::SetDisplayColor(const QColor newColor)
 {
 	/* Collect pointer to the desired controls in a vector */
-	CVector<QWidget*> vecpWidgets(0);
-	vecpWidgets.Add(TextTextMessage);
-	vecpWidgets.Add(LabelBitrate);
-	vecpWidgets.Add(LabelCodec);
-	vecpWidgets.Add(LabelStereoMono);
-	vecpWidgets.Add(FrameAudioDataParams);
-	vecpWidgets.Add(LabelProgrType);
-	vecpWidgets.Add(LabelLanguage);
-	vecpWidgets.Add(LabelCountryCode);
-	vecpWidgets.Add(LabelServiceID);
-	vecpWidgets.Add(TextLabelInputLevel);
-	vecpWidgets.Add(ProgrInputLevel);
-	vecpWidgets.Add(CLED_FAC);
-	vecpWidgets.Add(CLED_SDC);
-	vecpWidgets.Add(CLED_MSC);
-	vecpWidgets.Add(FrameMainDisplay);
+	vector<QWidget*> vecpWidgets;
+	vecpWidgets.push_back(TextTextMessage);
+	vecpWidgets.push_back(LabelBitrate);
+	vecpWidgets.push_back(LabelCodec);
+	vecpWidgets.push_back(LabelStereoMono);
+	vecpWidgets.push_back(FrameAudioDataParams);
+	vecpWidgets.push_back(LabelProgrType);
+	vecpWidgets.push_back(LabelLanguage);
+	vecpWidgets.push_back(LabelCountryCode);
+	vecpWidgets.push_back(LabelServiceID);
+	vecpWidgets.push_back(TextLabelInputLevel);
+	vecpWidgets.push_back(ProgrInputLevel);
+	vecpWidgets.push_back(CLED_FAC);
+	vecpWidgets.push_back(CLED_SDC);
+	vecpWidgets.push_back(CLED_MSC);
+	vecpWidgets.push_back(FrameMainDisplay);
 
-	for (int i = 0; i < vecpWidgets.Size(); i++)
+	for (size_t i = 0; i < vecpWidgets.size(); i++)
 	{
 		/* Request old palette */
 		QPalette CurPal(vecpWidgets[i]->palette());

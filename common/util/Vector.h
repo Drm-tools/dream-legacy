@@ -419,7 +419,7 @@ public:
 	void Init(const int iNewRow, const int iNewColumn, const TData tIniVal);
 	void Reset(const TData tResetVal);
 
-	inline CVector<TData>& operator[](const int iPos) {
+	inline CVector<TData>& operator[](const int iPos) const {
 #ifdef _DEBUG_
 		if ((iPos < 0) || (iPos > iRow - 1))
 		{

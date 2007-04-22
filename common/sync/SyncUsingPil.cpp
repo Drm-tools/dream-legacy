@@ -33,7 +33,6 @@
 void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int i;
-
 	/**************************************************************************\
 	* Frame synchronization detection										   *
 	\**************************************************************************/
@@ -307,18 +306,18 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	CPilotModiClass::InitRot(ReceiverParam);
 
 	/* Init internal parameters from global struct */
-	iNumCarrier = ReceiverParam.iNumCarrier;
+	iNumCarrier = ReceiverParam.CellMappingTable.iNumCarrier;
 	eCurRobMode = ReceiverParam.GetWaveMode();
 
 	/* Check if symbol number per frame has changed. If yes, reset the
 	   symbol counter */
-	if (iNumSymPerFrame != ReceiverParam.iNumSymPerFrame)
+	if (iNumSymPerFrame != ReceiverParam.CellMappingTable.iNumSymPerFrame)
 	{
 		/* Init internal counter for symbol number */
 		iSymbCntFraSy = 0;
 
 		/* Refresh parameter */
-		iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
+		iNumSymPerFrame = ReceiverParam.CellMappingTable.iNumSymPerFrame;
 	}
 
 	/* Allocate memory for histories. Init history with small values, because
@@ -343,15 +342,14 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	for (i = 0; i < iNumCarrier - 1; i++)
 	{
 		/* Only successive pilots (in frequency direction) are used */
-		if (_IsPilot(ReceiverParam.matiMapTab[0][i]) &&
-			_IsPilot(ReceiverParam.matiMapTab[0][i + 1]))
+		if (_IsPilot(ReceiverParam.CellMappingTable.matiMapTab[0][i]) &&
+			_IsPilot(ReceiverParam.CellMappingTable.matiMapTab[0][i + 1]))
 		{
 			/* Store indices and complex numbers */
 			vecPilCorr[iNumPilPairs].iIdx1 = i;
 			vecPilCorr[iNumPilPairs].iIdx2 = i + 1;
-			vecPilCorr[iNumPilPairs].cPil1 = ReceiverParam.matcPilotCells[0][i];
-			vecPilCorr[iNumPilPairs].cPil2 =
-				ReceiverParam.matcPilotCells[0][i + 1];
+			vecPilCorr[iNumPilPairs].cPil1 = ReceiverParam.CellMappingTable.matcPilotCells[0][i];
+			vecPilCorr[iNumPilPairs].cPil2 = ReceiverParam.CellMappingTable.matcPilotCells[0][i + 1];
 
 			iNumPilPairs++;
 		}
@@ -360,7 +358,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	/* Calculate channel correlation in frequency direction. Use rectangular
 	   shaped PDS with the length of the guard-interval */
 	const CReal rArgSinc =
-		(CReal) ReceiverParam.iGuardSize / ReceiverParam.iFFTSizeN;
+		(CReal) ReceiverParam.CellMappingTable.iGuardSize / ReceiverParam.CellMappingTable.iFFTSizeN;
 	const CReal rArgExp = crPi * rArgSinc;
 
 	cR_HH = Sinc(rArgSinc) * CComplex(Cos(rArgExp), -Sin(rArgExp));
@@ -372,10 +370,10 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	int iAvPilPos = 0;
 	for (i = 0; i < iNumCarrier - 1; i++)
 	{
-		if (_IsFreqPil(ReceiverParam.matiMapTab[0][i]))
+		if (_IsFreqPil(ReceiverParam.CellMappingTable.matiMapTab[0][i]))
 		{
 			/* For average frequency pilot position to DC carrier */
-			iAvPilPos += i + ReceiverParam.iCarrierKmin;
+			iAvPilPos += i + ReceiverParam.CellMappingTable.iCarrierKmin;
 			
 			iPosFreqPil[iFreqPilCount] = i;
 			iFreqPilCount++;
@@ -385,7 +383,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	/* Average distance of the frequency pilots from the DC carrier. Needed for
 	   corrections for sample rate offset changes. Normalized to sample rate! */
 	rAvFreqPilDistToDC =
-		(CReal) iAvPilPos / NUM_FREQ_PILOTS / ReceiverParam.iFFTSizeN;
+		(CReal) iAvPilPos / NUM_FREQ_PILOTS / ReceiverParam.CellMappingTable.iFFTSizeN;
 
 	/* Init memory for "old" frequency pilots */
 	for (i = 0; i < NUM_FREQ_PILOTS; i++)
@@ -393,11 +391,11 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	
 	/* Nomalization constant for frequency offset estimation */
 	rNormConstFOE =
-		(CReal) 1.0 / ((CReal) 2.0 * crPi * ReceiverParam.iSymbolBlockSize);
+		(CReal) 1.0 / ((CReal) 2.0 * crPi * ReceiverParam.CellMappingTable.iSymbolBlockSize);
 
 	/* Init time constant for IIR filter for frequency offset estimation */
 	rLamFreqOff = IIR1Lam(TICONST_FREQ_OFF_EST, (CReal) SOUNDCRD_SAMPLE_RATE /
-		ReceiverParam.iSymbolBlockSize);
+		ReceiverParam.CellMappingTable.iSymbolBlockSize);
 
 	/* Init vector for averaging the frequency offset estimation */
 	cFreqOffVec = CComplex((CReal) 0.0, (CReal) 0.0);
@@ -416,7 +414,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 
 	/* Init time constant for IIR filter for sample rate offset estimation */
 	rLamSamRaOff = IIR1Lam(TICONST_SAMRATE_OFF_EST,
-		(CReal) SOUNDCRD_SAMPLE_RATE / ReceiverParam.iSymbolBlockSize);
+		(CReal) SOUNDCRD_SAMPLE_RATE / ReceiverParam.CellMappingTable.iSymbolBlockSize);
 #endif
 
 

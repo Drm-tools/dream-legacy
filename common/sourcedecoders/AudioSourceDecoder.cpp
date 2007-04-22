@@ -271,14 +271,14 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 			iTimeEachAudBloMS = 80;	/* ms */
 			iNumAACFrames = 5;
 			iNumHeaderBytes = 6;
-			TransmParam.Service[iCurSelServ].AudioParam.eAudioSamplRate = CParameter::AS_12KHZ;	/* Set parameter in global struct */
+			TransmParam.Service[iCurSelServ].AudioParam.eAudioSamplRate = CAudioParam::AS_12KHZ;	/* Set parameter in global struct */
 			break;
 
 		case 24000:
 			iTimeEachAudBloMS = 40;	/* ms */
 			iNumAACFrames = 10;
 			iNumHeaderBytes = 14;
-			TransmParam.Service[iCurSelServ].AudioParam.eAudioSamplRate = CParameter::AS_24KHZ;	/* Set parameter in global struct */
+			TransmParam.Service[iCurSelServ].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;	/* Set parameter in global struct */
 			break;
 		}
 
@@ -292,7 +292,7 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 
 		/* Set to mono */
 		TransmParam.Service[iCurSelServ].AudioParam.eAudioMode =
-			CParameter::AM_MONO;
+			CAudioParam::AM_MONO;
 
 		/* Open encoder instance */
 		if (hEncoder != NULL)
@@ -393,7 +393,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 		(Param.Stream[0].iLenPartA + Param.Stream[0].iLenPartB) * SIZEOF__BYTE;
 
 	/* Total number of bytes which can be used for data and audio */
-	const int iTotNumBytesForUsage = iTotNumBitsForUsage / SIZEOF__BYTE;
+	//const int iTotNumBytesForUsage = iTotNumBitsForUsage / SIZEOF__BYTE;
 
 	/* Audio service ---------------------------------------------------- */
 	bIsDataService = FALSE;
@@ -421,14 +421,14 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 		iTimeEachAudBloMS = 80;	/* ms */
 		iNumAACFrames = 5;
 		iNumHeaderBytes = 6;
-		Param.Service[0].AudioParam.eAudioSamplRate = CParameter::AS_12KHZ;	/* Set parameter in global struct */
+		Param.Service[0].AudioParam.eAudioSamplRate = CAudioParam::AS_12KHZ;	/* Set parameter in global struct */
 		break;
 
 	case 24000:
 		iTimeEachAudBloMS = 40;	/* ms */
 		iNumAACFrames = 10;
 		iNumHeaderBytes = 14;
-		Param.Service[0].AudioParam.eAudioSamplRate = CParameter::AS_24KHZ;	/* Set parameter in global struct */
+		Param.Service[0].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;	/* Set parameter in global struct */
 		break;
 	}
 
@@ -443,7 +443,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 
 	/* Set to mono */
 	Param.Service[0].AudioParam.eAudioMode =
-		CParameter::AM_MONO;
+		CAudioParam::AM_MONO;
 
 	/* Open encoder instance */
 	if (hEncoder != NULL)
@@ -587,7 +587,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	(*pvecInputData).ResetBitAccess();
 
 	/* Check which audio coding type is used */
-	if (eAudioCoding == CParameter::AC_AAC)
+	if (eAudioCoding == CAudioParam::AC_AAC)
 	{
 #ifdef USE_FAAD2_LIBRARY
 		/* AAC super-frame-header ------------------------------------------- */
@@ -651,7 +651,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 		}
 #endif
 	}
-	else if (eAudioCoding == CParameter::AC_CELP)
+	else if (eAudioCoding == CAudioParam::AC_CELP)
 	{
 		/* celp_super_frame(celp_table_ind) --------------------------------- */
 		/* Higher-protected part */
@@ -683,7 +683,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 
 	for (j = 0; j < iNumAudioFrames; j++)
 	{
-		if (eAudioCoding == CParameter::AC_AAC)
+		if (eAudioCoding == CAudioParam::AC_AAC)
 		{
 #ifdef USE_FAAD2_LIBRARY
 			if (bGoodValues == TRUE)
@@ -700,7 +700,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				string strAACTestFileName = "test/aac_";
 				if (ReceiverParam.
 					Service[ReceiverParam.GetCurSelAudioService()].AudioParam.
-					eAudioSamplRate == CParameter::AS_12KHZ)
+					eAudioSamplRate == CAudioParam::AS_12KHZ)
 				{
 					strAACTestFileName += "12kHz_";
 				}
@@ -711,22 +711,22 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 						Service[ReceiverParam.GetCurSelAudioService()].
 						AudioParam.eAudioMode)
 				{
-				case CParameter::AM_MONO:
+				case CAudioParam::AM_MONO:
 					strAACTestFileName += "mono";
 					break;
 
-				case CParameter::AM_P_STEREO:
+				case CAudioParam::AM_P_STEREO:
 					strAACTestFileName += "pstereo";
 					break;
 
-				case CParameter::AM_STEREO:
+				case CAudioParam::AM_STEREO:
 					strAACTestFileName += "stereo";
 					break;
 				}
 
 				if (ReceiverParam.
 					Service[ReceiverParam.GetCurSelAudioService()].AudioParam.
-					eSBRFlag == CParameter::SB_USED)
+					eSBRFlag == CAudioParam::SB_USED)
 				{
 					strAACTestFileName += "_sbr";
 				}
@@ -805,7 +805,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			}
 #endif
 		}
-		else if (eAudioCoding == CParameter::AC_CELP)
+		else if (eAudioCoding == CAudioParam::AC_CELP)
 		{
 			if (bCELPCRC == TRUE)
 			{
@@ -830,7 +830,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			char cDummy[200];
 			string strCELPTestFileName = "test/celp_";
 			if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
-				AudioParam.eAudioSamplRate == CParameter::AS_8_KHZ)
+				AudioParam.eAudioSamplRate == CAudioParam::AS_8_KHZ)
 			{
 				strCELPTestFileName += "8kHz_";
 				strCELPTestFileName +=
@@ -851,7 +851,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			strCELPTestFileName += "bps";
 
 			if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
-				AudioParam.eSBRFlag == CParameter::SB_USED)
+				AudioParam.eSBRFlag == CAudioParam::SB_USED)
 			{
 				strCELPTestFileName += "_sbr";
 			}
@@ -1077,8 +1077,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 
 		/* The requirement for this module is that the stream is used and the
 		   service is an audio service. Check it here */
-		if ((ReceiverParam.Service[iCurSelServ].
-			 eAudDataFlag != CParameter::SF_AUDIO) ||
+		if ((ReceiverParam.Service[iCurSelServ].  eAudDataFlag != CService::SF_AUDIO) ||
 			(iCurAudioStreamID == STREAM_ID_NOT_USED))
 		{
 			throw CInitErr(ET_ALL);
@@ -1116,11 +1115,11 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 		eAudioCoding =
 			ReceiverParam.Service[iCurSelServ].AudioParam.eAudioCoding;
 
-		if (eAudioCoding == CParameter::AC_AAC)
+		if (eAudioCoding == CAudioParam::AC_AAC)
 		{
 #ifdef USE_FAAD2_LIBRARY
 			/* Init for AAC decoding ---------------------------------------- */
-			int iAACSampleRate, iNumHeaderBytes, iDRMchanMode;
+			int iAACSampleRate, iNumHeaderBytes, iDRMchanMode = DRMCH_MONO;
 
 			/* Length of higher protected part of audio stream */
 			const int iLenAudHigh =
@@ -1129,13 +1128,13 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			/* Set number of AAC frames in a AAC super-frame */
 			switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioSamplRate)	/* Only 12 kHz and 24 kHz is allowed */
 			{
-			case CParameter::AS_12KHZ:
+			case CAudioParam::AS_12KHZ:
 				iNumAudioFrames = 5;
 				iNumHeaderBytes = 6;
 				iAACSampleRate = 12000;
 				break;
 
-			case CParameter::AS_24KHZ:
+			case CAudioParam::AS_24KHZ:
 				iNumAudioFrames = 10;
 				iNumHeaderBytes = 14;
 				iAACSampleRate = 24000;
@@ -1153,9 +1152,9 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			/* Number of channels for AAC: Mono, PStereo, Stereo */
 			switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioMode)
 			{
-			case CParameter::AM_MONO:
+			case CAudioParam::AM_MONO:
 				if (ReceiverParam.Service[iCurSelServ].AudioParam.
-					eSBRFlag == CParameter::SB_USED)
+					eSBRFlag == CAudioParam::SB_USED)
 				{
 					iDRMchanMode = DRMCH_SBR_MONO;
 				}
@@ -1163,14 +1162,14 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 					iDRMchanMode = DRMCH_MONO;
 				break;
 
-			case CParameter::AM_P_STEREO:
+			case CAudioParam::AM_P_STEREO:
 				/* Low-complexity only defined in SBR mode */
 				iDRMchanMode = DRMCH_SBR_PS_STEREO;
 				break;
 
-			case CParameter::AM_STEREO:
+			case CAudioParam::AM_STEREO:
 				if (ReceiverParam.Service[iCurSelServ].AudioParam.
-					eSBRFlag == CParameter::SB_USED)
+					eSBRFlag == CAudioParam::SB_USED)
 				{
 					iDRMchanMode = DRMCH_SBR_STEREO;
 				}
@@ -1184,7 +1183,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			/* In case of SBR, AAC sample rate is half the total sample rate.
 			   Length of output is doubled if SBR is used */
 			if (ReceiverParam.Service[iCurSelServ].AudioParam.
-				eSBRFlag == CParameter::SB_USED)
+				eSBRFlag == CAudioParam::SB_USED)
 			{
 				iAudioSampleRate = iAACSampleRate * 2;
 				iLenDecOutPerChan = AUD_DEC_TRANSFROM_LENGTH * 2;
@@ -1238,7 +1237,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			throw CInitErr(ET_AUDDECODER);
 #endif
 		}
-		else if (eAudioCoding == CParameter::AC_CELP)
+		else if (eAudioCoding == CAudioParam::AC_CELP)
 		{
 			/* Init for CELP decoding --------------------------------------- */
 			int iCurCelpIdx, iCelpFrameLength;
@@ -1246,7 +1245,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			/* Set number of AAC frames in a AAC super-frame */
 			switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioSamplRate)	/* Only 8000 and 16000 is allowed */
 			{
-			case CParameter::AS_8_KHZ:
+			case CAudioParam::AS_8_KHZ:
 				/* Check range */
 				iCurCelpIdx =
 					ReceiverParam.Service[iCurSelServ].AudioParam.iCELPIndex;
@@ -1271,7 +1270,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 				iAudioSampleRate = 8000;
 				break;
 
-			case CParameter::AS_16KHZ:
+			case CAudioParam::AS_16KHZ:
 				/* Check range */
 				iCurCelpIdx =
 					ReceiverParam.Service[iCurSelServ].AudioParam.iCELPIndex;

@@ -160,7 +160,7 @@ CDRMTransmitter::CDRMTransmitter() :
 	/* Either one audio or one data service can be chosen */
 	_BOOLEAN bIsAudio = TRUE;
 
-	CParameter::CService Service;
+	CService Service;
 
 	/* In the current version only one service and one stream is supported. The
 	   stream IDs must be 0 in both cases */
@@ -170,7 +170,7 @@ CDRMTransmitter::CDRMTransmitter() :
 		TransmParam.SetNumOfServices(1,0);
 		TransmParam.SetCurSelAudioService(0);
 
-		CParameter::CAudioParam AudioParam;
+		CAudioParam AudioParam;
 
 		AudioParam.iStreamID = 0;
 
@@ -179,7 +179,7 @@ CDRMTransmitter::CDRMTransmitter() :
 
 		TransmParam.SetAudioParam(0, AudioParam);
 
-		TransmParam.SetAudDataFlag(0,  CParameter::SF_AUDIO);
+		TransmParam.SetAudDataFlag(0,  CService::SF_AUDIO);
 
 		/* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
 		Service.iServiceDescr = 15; /* 15 -> other music */
@@ -192,16 +192,16 @@ CDRMTransmitter::CDRMTransmitter() :
 		TransmParam.SetNumOfServices(0,1);
 		TransmParam.SetCurSelDataService(0);
 
-		TransmParam.SetAudDataFlag(0,  CParameter::SF_DATA);
+		TransmParam.SetAudDataFlag(0,  CService::SF_DATA);
 
-		CParameter::CDataParam DataParam;
+		CDataParam DataParam;
 
 		DataParam.iStreamID = 0;
 
 		/* Init SlideShow application */
 		DataParam.iPacketLen = 45; /* TEST */
-		DataParam.eDataUnitInd = CParameter::DU_DATA_UNITS;
-		DataParam.eAppDomain = CParameter::AD_DAB_SPEC_APP;
+		DataParam.eDataUnitInd = CDataParam::DU_DATA_UNITS;
+		DataParam.eAppDomain = CDataParam::AD_DAB_SPEC_APP;
 		TransmParam.SetDataParam(0, DataParam);
 
 		/* The value 0 indicates that the application details are provided
@@ -230,12 +230,12 @@ CDRMTransmitter::CDRMTransmitter() :
 	   64-QAM standard mapping (SM): CS_3_SM,
 	   64-QAM symmetrical hierarchical mapping (HMsym): CS_3_HMSYM,
 	   64-QAM mixture of the previous two mappings (HMmix): CS_3_HMMIX */
-	TransmParam.eMSCCodingScheme = CParameter::CS_3_SM;
+	TransmParam.eMSCCodingScheme = CS_3_SM;
 
 	/* SDC modulation scheme. Available modes:
 	   4-QAM standard mapping (SM): CS_1_SM,
 	   16-QAM standard mapping (SM): CS_2_SM */
-	TransmParam.eSDCCodingScheme = CParameter::CS_2_SM;
+	TransmParam.eSDCCodingScheme = CS_2_SM;
 
 	/* Set desired intermedia frequency (IF) in Hertz */
 	SetCarOffset(12000.0); /* Default: "VIRTUAL_INTERMED_FREQ" */

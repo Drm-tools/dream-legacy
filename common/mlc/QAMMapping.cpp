@@ -48,7 +48,7 @@ void CQAMMapping::Map(CVector<_DECISION>& vecInputData1,
 
 	switch (eMapType)
 	{
-	case CParameter::CS_1_SM:
+	case CS_1_SM:
 		/* 4QAM ------------------------------------------------------------- */
 		/* Mapping according DRM-standard: 
 		   {i_0  q_0} = (y'_0  y'_1) = (y_0,0  y_0,1) */
@@ -62,7 +62,7 @@ void CQAMMapping::Map(CVector<_DECISION>& vecInputData1,
 		}
 		break;
 
-	case CParameter::CS_2_SM:
+	case CS_2_SM:
 		/* 16QAM ------------------------------------------------------------ */
 		/* Mapping according DRM-standard: 
 		   {i_0  i_1  q_0  q_1} = (y_0,0  y_1,0  y_0,1  y_1,1) */
@@ -87,7 +87,7 @@ void CQAMMapping::Map(CVector<_DECISION>& vecInputData1,
 		}
 		break;
 
-	case CParameter::CS_3_SM:
+	case CS_3_SM:
 		/* 64QAM SM --------------------------------------------------------- */
 		/* Mapping according DRM-standard: {i_0  i_1  i_2  q_0  q_1  q_2} = 
 		   (y_0,0  y_1,0  y_2,0  y_0,1  y_1,1  y_2,1) */
@@ -114,7 +114,7 @@ void CQAMMapping::Map(CVector<_DECISION>& vecInputData1,
 		}
 		break;
 
-	case CParameter::CS_3_HMSYM:
+	case CS_3_HMSYM:
 		/* 64QAM HMsym ------------------------------------------------------ */
 		/* Mapping according DRM-standard: {i_0  i_1  i_2  q_0  q_1  q_2} =
 		   (y_0,0  y_1,0  y_2,0  y_0,1  y_1,1  y_2,1) */
@@ -141,7 +141,7 @@ void CQAMMapping::Map(CVector<_DECISION>& vecInputData1,
 		}
 		break;
 
-	case CParameter::CS_3_HMMIX:
+	case CS_3_HMMIX:
 		/* 64QAM HMmix------------------------------------------------------- */
 		/* Mapping according DRM-standard: {i_0  i_1  i_2  q_0  q_1  q_2} = 
 		   (y_0,0Re  y_1,0Re  y_2,0Re  y_0,0Im  y_1,0Im  y_2,0Im) */
@@ -167,8 +167,7 @@ void CQAMMapping::Map(CVector<_DECISION>& vecInputData1,
 	}
 }
 
-void CQAMMapping::Init(int iNewOutputBlockSize,
-					   CParameter::ECodScheme eNewCodingScheme)
+void CQAMMapping::Init(int iNewOutputBlockSize, ECodScheme eNewCodingScheme)
 {
 	/* Set the two internal parameters */
 	iOutputBlockSize = iNewOutputBlockSize;

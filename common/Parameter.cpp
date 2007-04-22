@@ -10,18 +10,18 @@
  *
  ******************************************************************************
  *
- * This program is free software; you can redistribute it and/or modify it under
+ * This program is free software(), you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
+ * Foundation(), either version 2 of the License, or (at your option) any later
  * version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * ANY WARRANTY(), without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
+ * this program(), if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -29,20 +29,95 @@
 #include "Parameter.h"
 #include "DrmReceiver.h"
 #include "Version.h"
+#include <iomanip>
 
 void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam);
 
 /* Implementation *************************************************************/
 CParameter::CParameter(CDRMReceiver *pRx):
-		pDRMRec(pRx),
-		sReceiverID("                "),
-		Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES), iChanEstDelay(0),
-		bRunThread(FALSE), bUsingMultimedia(TRUE),
-		iCurSelAudioService(0), iCurSelDataService(0),
-		rSigStrengthCorrection(_REAL(0.0)),
-		eReceiverMode(RM_NONE), eAcquiState(AS_NO_SIGNAL),
-		vecbiAudioFrameStatus(),
-		vecrPSD(0)
+ pDRMRec(pRx),
+ eSymbolInterlMode(),
+ eMSCCodingScheme(),	
+ eSDCCodingScheme(),	
+ iNumAudioService(0),
+ iNumDataService(0),
+ iAMSSCarrierMode(0),
+ sReceiverID("                "),
+ sSerialNumber(),
+ sDataFilesDirectory(),
+ MSCPrLe(),
+ Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
+ iNumBitsHierarchFrameTotal(0),
+ iNumDecodedBitsMSC(0),
+ iNumSDCBitsPerSFrame(0),	
+ iNumAudioDecoderBits(0),	
+ iNumDataDecoderBits(0),	
+ iYear(0),
+ iMonth(0),
+ iDay(0),
+ iUTCHour(0),
+ iUTCMin(0),
+ iFrameIDTransm(0),
+ iFrameIDReceiv(0),
+ rFreqOffsetAcqui(0.0),
+ rFreqOffsetTrack(0.0),
+ rResampleOffset(0.0),
+ iTimingOffsTrack(0),
+ eReceiverMode(RM_NONE),
+ eAcquiState(AS_NO_SIGNAL),
+ vecbiAudioFrameStatus(0),
+ bMeasurePSD(),
+ vecrPSD(0),
+ matcReceivedPilotValues(),
+ RawSimDa(),
+ eSimType(),
+ iDRMChannelNum(0),
+ iSpecChDoppler(0),
+ rBitErrRate(0.0),
+ rSyncTestParam(0.0),		
+ rSINR(0.0),
+ iNumBitErrors(0),
+ iChanEstDelay(0),
+ iNumTaps(0),
+ iPathDelay(MAX_NUM_TAPS_DRM_CHAN),
+ rGainCorr(0.0),
+ iOffUsfExtr(0),
+ ReceiveStatus(),
+ FrontEndParameters(),
+ AltFreqSign(),
+ AltFreqOtherServicesSign(),
+ ReceptLog(),
+ rSNREstimate(0.0),
+ rMER(0.0),
+ rWMERMSC(0.0),
+ rWMERFAC(0.0),
+ rSigmaEstimate(0.0),
+ rMinDelay(0.0),
+ rMaxDelay(0.0),
+ bMeasureDelay(),
+ vecrRdel(0),
+ vecrRdelThresholds(0),
+ vecrRdelIntervals(0),
+ bMeasureDoppler(0),
+ rRdop(0.0),
+ bMeasureInterference(FALSE),
+ rIntFreq(0.0),
+ rINR(0.0),
+ rICR(0.0),
+ rMaxPSDwrtSig(0.0),
+ rMaxPSDFreq(0.0),
+ rSigStrengthCorrection(0.0),
+ bRunThread(FALSE),
+ bUsingMultimedia(FALSE),
+ CellMappingTable(),
+ rSysSimSNRdB(0.0),
+ iCurSelAudioService(0),
+ iCurSelDataService(0),
+ eRobustnessMode(RM_ROBUSTNESS_MODE_A),	
+ eSpectOccup(SO_0),
+ LastAudioService(),
+ LastDataService(),
+ Mutex()
 {
 	GenerateRandomSerialNumber();
 	if(pDRMRec)
@@ -51,6 +126,181 @@ CParameter::CParameter(CDRMReceiver *pRx):
 
 CParameter::~CParameter()
 {
+}
+
+CParameter::CParameter(const CParameter& p):
+ pDRMRec(p.pDRMRec),
+ eSymbolInterlMode(p.eSymbolInterlMode),
+ eMSCCodingScheme(p.eMSCCodingScheme),
+ eSDCCodingScheme(p.eSDCCodingScheme),
+ iNumAudioService(p.iNumAudioService),
+ iNumDataService(p.iNumDataService),
+ iAMSSCarrierMode(p.iAMSSCarrierMode),
+ sReceiverID(p.sReceiverID),
+ sSerialNumber(p.sSerialNumber),
+ sDataFilesDirectory(p.sDataFilesDirectory),
+ MSCPrLe(p.MSCPrLe),
+ Stream(p.Stream), Service(p.Service),
+ iNumBitsHierarchFrameTotal(p.iNumBitsHierarchFrameTotal),
+ iNumDecodedBitsMSC(p.iNumDecodedBitsMSC),
+ iNumSDCBitsPerSFrame(p.iNumSDCBitsPerSFrame),
+ iNumAudioDecoderBits(p.iNumAudioDecoderBits),
+ iNumDataDecoderBits(p.iNumDataDecoderBits),
+ iYear(p.iYear),
+ iMonth(p.iMonth),
+ iDay(p.iDay),
+ iUTCHour(p.iUTCHour),
+ iUTCMin(p.iUTCMin),
+ iFrameIDTransm(p.iFrameIDTransm),
+ iFrameIDReceiv(p.iFrameIDReceiv),
+ rFreqOffsetAcqui(p.rFreqOffsetAcqui),
+ rFreqOffsetTrack(p.rFreqOffsetTrack),
+ rResampleOffset(p.rResampleOffset),
+ iTimingOffsTrack(p.iTimingOffsTrack),
+ eReceiverMode(p.eReceiverMode),
+ eAcquiState(p.eAcquiState),
+ vecbiAudioFrameStatus(p.vecbiAudioFrameStatus),
+ bMeasurePSD(p.bMeasurePSD),
+ vecrPSD(p.vecrPSD),
+ matcReceivedPilotValues(p.matcReceivedPilotValues),
+ RawSimDa(p.RawSimDa),
+ eSimType(p.eSimType),
+ iDRMChannelNum(p.iDRMChannelNum),
+ iSpecChDoppler(p.iSpecChDoppler),
+ rBitErrRate(p.rBitErrRate),
+ rSyncTestParam	(p.rSyncTestParam),	
+ rSINR(p.rSINR),
+ iNumBitErrors(p.iNumBitErrors),
+ iChanEstDelay(p.iChanEstDelay),
+ iNumTaps(p.iNumTaps),
+ iPathDelay(p.iPathDelay),
+ rGainCorr(p.rGainCorr),
+ iOffUsfExtr(p.iOffUsfExtr),
+ ReceiveStatus(p.ReceiveStatus),
+ FrontEndParameters(p.FrontEndParameters),
+ AltFreqSign(p.AltFreqSign),
+ AltFreqOtherServicesSign(p.AltFreqOtherServicesSign),
+ ReceptLog(p.ReceptLog),
+ rSNREstimate(p.rSNREstimate),
+ rMER(p.rMER),
+ rWMERMSC(p.rWMERMSC),
+ rWMERFAC(p.rWMERFAC),
+ rSigmaEstimate(p.rSigmaEstimate),
+ rMinDelay(p.rMinDelay),
+ rMaxDelay(p.rMaxDelay),
+ bMeasureDelay(p.bMeasureDelay),
+ vecrRdel(p.vecrRdel),
+ vecrRdelThresholds(p.vecrRdelThresholds),
+ vecrRdelIntervals(p.vecrRdelIntervals),
+ bMeasureDoppler(p.bMeasureDoppler),
+ rRdop(p.rRdop),
+ bMeasureInterference(p.bMeasureInterference),
+ rIntFreq(p.rIntFreq),
+ rINR(p.rINR),
+ rICR(p.rICR),
+ rMaxPSDwrtSig(p.rMaxPSDwrtSig),
+ rMaxPSDFreq(p.rMaxPSDFreq),
+ rSigStrengthCorrection(p.rSigStrengthCorrection),
+ bRunThread(p.bRunThread),
+ bUsingMultimedia(p.bUsingMultimedia),
+ CellMappingTable(p.CellMappingTable),
+ rSysSimSNRdB(p.rSysSimSNRdB),
+ iCurSelAudioService(p.iCurSelAudioService),
+ iCurSelDataService(p.iCurSelDataService),
+ eRobustnessMode(p.eRobustnessMode),
+ eSpectOccup(p.eSpectOccup),
+ LastAudioService(p.LastAudioService),
+ LastDataService(p.LastDataService)
+ //, Mutex() // jfbc: I don't think this state should be copied
+{
+}
+
+CParameter& CParameter::operator=(const CParameter& p)
+{
+	pDRMRec = p.pDRMRec;
+	eSymbolInterlMode = p.eSymbolInterlMode;
+	eMSCCodingScheme = p.eMSCCodingScheme;
+	eSDCCodingScheme = p.eSDCCodingScheme;
+	iNumAudioService = p.iNumAudioService;
+	iNumDataService = p.iNumDataService;
+	iAMSSCarrierMode = p.iAMSSCarrierMode;
+	sReceiverID = p.sReceiverID;
+	sSerialNumber = p.sSerialNumber;
+	sDataFilesDirectory = p.sDataFilesDirectory;
+	MSCPrLe = p.MSCPrLe;
+	Stream = p.Stream;
+	Service = p.Service;
+	iNumBitsHierarchFrameTotal = p.iNumBitsHierarchFrameTotal;
+	iNumDecodedBitsMSC = p.iNumDecodedBitsMSC;
+	iNumSDCBitsPerSFrame = p.iNumSDCBitsPerSFrame;
+	iNumAudioDecoderBits = p.iNumAudioDecoderBits;
+	iNumDataDecoderBits = p.iNumDataDecoderBits;
+	iYear = p.iYear;
+	iMonth = p.iMonth;
+	iDay = p.iDay;
+	iUTCHour = p.iUTCHour;
+	iUTCMin = p.iUTCMin;
+	iFrameIDTransm = p.iFrameIDTransm;
+	iFrameIDReceiv = p.iFrameIDReceiv;
+	rFreqOffsetAcqui = p.rFreqOffsetAcqui;
+	rFreqOffsetTrack = p.rFreqOffsetTrack;
+	rResampleOffset = p.rResampleOffset;
+	iTimingOffsTrack = p.iTimingOffsTrack;
+	eReceiverMode = p.eReceiverMode;
+	eAcquiState = p.eAcquiState;
+	vecbiAudioFrameStatus = p.vecbiAudioFrameStatus;
+	bMeasurePSD = p.bMeasurePSD;
+	vecrPSD = p.vecrPSD;
+	matcReceivedPilotValues = p.matcReceivedPilotValues;
+	RawSimDa = p.RawSimDa;
+	eSimType = p.eSimType;
+	iDRMChannelNum = p.iDRMChannelNum;
+	iSpecChDoppler = p.iSpecChDoppler;
+	rBitErrRate = p.rBitErrRate;
+	rSyncTestParam	 = p.rSyncTestParam;	
+	rSINR = p.rSINR;
+	iNumBitErrors = p.iNumBitErrors;
+	iChanEstDelay = p.iChanEstDelay;
+	iNumTaps = p.iNumTaps;
+	iPathDelay = p.iPathDelay;
+	rGainCorr = p.rGainCorr;
+	iOffUsfExtr = p.iOffUsfExtr;
+	ReceiveStatus = p.ReceiveStatus;
+	FrontEndParameters = p.FrontEndParameters;
+	AltFreqSign = p.AltFreqSign;
+	AltFreqOtherServicesSign = p.AltFreqOtherServicesSign;
+	ReceptLog = p.ReceptLog;
+	rSNREstimate = p.rSNREstimate;
+	rMER = p.rMER;
+	rWMERMSC = p.rWMERMSC;
+	rWMERFAC = p.rWMERFAC;
+	rSigmaEstimate = p.rSigmaEstimate;
+	rMinDelay = p.rMinDelay;
+	rMaxDelay = p.rMaxDelay;
+	bMeasureDelay = p.bMeasureDelay;
+	vecrRdel = p.vecrRdel;
+	vecrRdelThresholds = p.vecrRdelThresholds;
+	vecrRdelIntervals = p.vecrRdelIntervals;
+	bMeasureDoppler = p.bMeasureDoppler;
+	rRdop = p.rRdop;
+	bMeasureInterference = p.bMeasureInterference;
+	rIntFreq = p.rIntFreq;
+	rINR = p.rINR;
+	rICR = p.rICR;
+	rMaxPSDwrtSig = p.rMaxPSDwrtSig;
+	rMaxPSDFreq = p.rMaxPSDFreq;
+	rSigStrengthCorrection = p.rSigStrengthCorrection;
+	bRunThread = p.bRunThread;
+	bUsingMultimedia = p.bUsingMultimedia;
+	CellMappingTable = p.CellMappingTable;
+	rSysSimSNRdB = p.rSysSimSNRdB;
+	iCurSelAudioService = p.iCurSelAudioService;
+	iCurSelDataService = p.iCurSelDataService;
+	eRobustnessMode = p.eRobustnessMode;
+	eSpectOccup = p.eSpectOccup;
+	LastAudioService = p.LastAudioService;
+	LastDataService = p.LastDataService;
+	return *this;
 }
 
 void CParameter::ResetServicesStreams()
@@ -73,31 +323,31 @@ void CParameter::ResetServicesStreams()
 		{
 			Service[i].AudioParam.strTextMessage = "";
 			Service[i].AudioParam.iStreamID = STREAM_ID_NOT_USED;
-			Service[i].AudioParam.eAudioCoding = AC_AAC;
-			Service[i].AudioParam.eSBRFlag = SB_NOT_USED;
-			Service[i].AudioParam.eAudioSamplRate = AS_24KHZ;
+			Service[i].AudioParam.eAudioCoding = CAudioParam::AC_AAC;
+			Service[i].AudioParam.eSBRFlag = CAudioParam::SB_NOT_USED;
+			Service[i].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;
 			Service[i].AudioParam.bTextflag = FALSE;
 			Service[i].AudioParam.bEnhanceFlag = FALSE;
-			Service[i].AudioParam.eAudioMode = AM_MONO;
+			Service[i].AudioParam.eAudioMode = CAudioParam::AM_MONO;
 			Service[i].AudioParam.iCELPIndex = 0;
 			Service[i].AudioParam.bCELPCRC = FALSE;
-			Service[i].AudioParam.eHVXCRate = HR_2_KBIT;
+			Service[i].AudioParam.eHVXCRate = CAudioParam::HR_2_KBIT;
 			Service[i].AudioParam.bHVXCCRC = FALSE;
 
 			Service[i].DataParam.iStreamID = STREAM_ID_NOT_USED;
-			Service[i].DataParam.ePacketModInd = PM_PACKET_MODE;
-			Service[i].DataParam.eDataUnitInd = DU_SINGLE_PACKETS;
+			Service[i].DataParam.ePacketModInd = CDataParam::PM_PACKET_MODE;
+			Service[i].DataParam.eDataUnitInd = CDataParam::DU_SINGLE_PACKETS;
 			Service[i].DataParam.iPacketID = 0;
 			Service[i].DataParam.iPacketLen = 0;
-			Service[i].DataParam.eAppDomain = AD_DRM_SPEC_APP;
+			Service[i].DataParam.eAppDomain = CDataParam::AD_DRM_SPEC_APP;
 			Service[i].DataParam.iUserAppIdent = 0;
 
 			Service[i].iServiceID = SERV_ID_NOT_USED;
-			Service[i].eCAIndication = CA_NOT_USED;
+			Service[i].eCAIndication = CService::CA_NOT_USED;
 			Service[i].iLanguage = 0;
 			Service[i].strCountryCode = "";
 			Service[i].strLanguageCode = "";
-			Service[i].eAudDataFlag = SF_AUDIO;
+			Service[i].eAudDataFlag = CService::SF_AUDIO;
 			Service[i].iServiceDescr = 0;
 			Service[i].strLabel = "";
 		}
@@ -107,20 +357,22 @@ void CParameter::ResetServicesStreams()
 			Stream[i].iLenPartA = 0;
 			Stream[i].iLenPartB = 0;
 		}
-	} else {
+	}
+	else
+	{
 
 		// Set up encoded AM audio parameters
 		Service[0].AudioParam.strTextMessage = "";
 		Service[0].AudioParam.iStreamID = 0;
-		Service[0].AudioParam.eAudioCoding = AC_AAC;
-		Service[0].AudioParam.eSBRFlag = SB_NOT_USED;
-		Service[0].AudioParam.eAudioSamplRate = AS_24KHZ;
+		Service[0].AudioParam.eAudioCoding = CAudioParam::AC_AAC;
+		Service[0].AudioParam.eSBRFlag = CAudioParam::SB_NOT_USED;
+		Service[0].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;
 		Service[0].AudioParam.bTextflag = FALSE;
 		Service[0].AudioParam.bEnhanceFlag = FALSE;
-		Service[0].AudioParam.eAudioMode = AM_MONO;
+		Service[0].AudioParam.eAudioMode = CAudioParam::AM_MONO;
 		Service[0].AudioParam.iCELPIndex = 0;
 		Service[0].AudioParam.bCELPCRC = FALSE;
-		Service[0].AudioParam.eHVXCRate = HR_2_KBIT;
+		Service[0].AudioParam.eHVXCRate = CAudioParam::HR_2_KBIT;
 		Service[0].AudioParam.bHVXCCRC = FALSE;
 
 		Stream[0].iLenPartA = 0;
@@ -194,7 +446,7 @@ _REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
 	int iLen = 0;
 
 	/* First, check if audio or data service and get lengths */
-	if (Service[iServiceID].eAudDataFlag == SF_AUDIO)
+	if (Service[iServiceID].eAudDataFlag == CService::SF_AUDIO)
 	{
 		/* Check if we want to get the data stream connected to an audio
 		   stream */
@@ -223,7 +475,7 @@ _REAL CParameter::PartABLenRatio(const int iServiceID)
 	int iLenB = 0;
 
 	/* Get the length of protection part A and B */
-	if (Service[iServiceID].eAudDataFlag == SF_AUDIO)
+	if (Service[iServiceID].eAudDataFlag == CService::SF_AUDIO)
 	{
 		/* Audio service */
 		if (Service[iServiceID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
@@ -256,7 +508,7 @@ void CParameter::InitCellMapTable(const ERobMode eNewWaveMode,
 	/* Set new values and make table */
 	eRobustnessMode = eNewWaveMode;
 	eSpectOccup = eNewSpecOcc;
-	MakeTable(eRobustnessMode, eSpectOccup);
+	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
 }
 
 _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
@@ -284,7 +536,7 @@ _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
 		eRobustnessMode = eNewWaveMode;
 
 		/* This parameter change provokes update of table */
-		MakeTable(eRobustnessMode, eSpectOccup);
+		CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
 
 		/* Set init flags */
 		if(pDRMRec) pDRMRec->InitsForWaveMode();
@@ -318,7 +570,7 @@ void CParameter::SetSpectrumOccup(ESpecOcc eNewSpecOcc)
 		eSpectOccup = eNewSpecOcc;
 
 		/* This parameter change provokes update of table */
-		MakeTable(eRobustnessMode, eSpectOccup);
+		CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
 
 		/* Set init flags */
 		if(pDRMRec) pDRMRec->InitsForSpectrumOccup();
@@ -453,7 +705,7 @@ void CParameter::SetAudioParam(const int iShortID, const CAudioParam& NewAudPara
 	}
 }
 
-CParameter::CAudioParam CParameter::GetAudioParam(const int iShortID)
+CAudioParam CParameter::GetAudioParam(const int iShortID)
 {
 	return Service[iShortID].AudioParam;
 }
@@ -472,7 +724,7 @@ void CParameter::SetDataParam(const int iShortID, const CDataParam& NewDataParam
 	}
 }
 
-CParameter::CDataParam CParameter::GetDataParam(const int iShortID)
+CDataParam CParameter::GetDataParam(const int iShortID)
 {
 	return Service[iShortID].DataParam;
 }
@@ -584,7 +836,7 @@ void CParameter::SetNumOfServices(const int iNNumAuSe, const int iNNumDaSe)
 	}
 }
 
-void CParameter::SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl)
+void CParameter::SetAudDataFlag(const int iServID, const CService::ETyOServ iNewADaFl)
 {
 	if (Service[iServID].eAudDataFlag != iNewADaFl)
 	{
@@ -640,7 +892,7 @@ void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
 
 
 /* Implementaions for simulation -------------------------------------------- */
-void CParameter::CRawSimData::Add(uint32_t iNewSRS) 
+void CRawSimData::Add(uint32_t iNewSRS) 
 {
 	/* Attention, function does not take care of overruns, data will be
 	   lost if added to a filled shift register! */
@@ -648,7 +900,7 @@ void CParameter::CRawSimData::Add(uint32_t iNewSRS)
 		veciShRegSt[iCurWritePos++] = iNewSRS;
 }
 
-uint32_t CParameter::CRawSimData::Get() 
+uint32_t CRawSimData::Get() 
 {
 	/* We always use the first value of the array for reading and do a
 	   shift of the other data by adding a arbitrary value (0) at the
@@ -668,7 +920,7 @@ _REAL CParameter::GetSysSNRdBPilPos() const
 	positions compared to the total SNR of the DRM signal.
 */
 	return (_REAL) 10.0 * log10(pow((_REAL) 10.0, rSysSimSNRdB / 10) /
-		rAvPowPerSymbol * rAvScatPilPow * (_REAL) iNumCarrier);
+		CellMappingTable.rAvPowPerSymbol * CellMappingTable.rAvScatPilPow * (_REAL) CellMappingTable.iNumCarrier);
 }
 
 _REAL CParameter::GetNominalSNRdB()
@@ -729,18 +981,42 @@ _REAL CParameter::GetSysToNomBWCorrFact()
 	_REAL rNomBW = GetNominalBandwidth();
 
 	/* Calculate system bandwidth (N / T_u) */
-	const _REAL rSysBW = (_REAL) iNumCarrier /
-		iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+	const _REAL rSysBW = (_REAL) CellMappingTable.iNumCarrier / CellMappingTable.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
 
 	return rSysBW / rNomBW;
 }
 
+
 /* Reception log implementation --------------------------------------------- */
-CParameter::CReceptLog::CReceptLog() : shortlog(), longlog(), iNumAACFrames(10),
-	iFrequency(0), bLogActivated(FALSE),
-	bLogEnabled(FALSE), bRxlEnabled(FALSE), bPositionEnabled(FALSE),
-	strAdditText(""), 
-	iSecDelLogStart(0)
+CReceptLog::CReceptLog() : 
+		GPSData(),
+		bValidSignalStrength(FALSE),
+		rSigStr(0.0),  
+		rIFSigStr(0.0),  
+	    shortlog(),
+	    longlog(),
+		iNumCRCOkFAC(0),
+		iNumCRCOkMSC(0),
+		iNumCRCOkMSCLong(0),
+		iNumCRCMSCLong(0),
+		iNumAACFrames(10),
+		bSyncOK(FALSE),
+		bFACOk(FALSE),
+		bMSCOk(FALSE),
+		bSyncOKValid(FALSE),
+		bFACOkValid(FALSE),
+		bMSCOkValid(FALSE),
+		iFrequency(0),
+		bLogActivated(FALSE),
+		bLogEnabled(FALSE),
+		bRxlEnabled(FALSE),
+		bPositionEnabled(FALSE),
+		strAdditText(),
+		iSecDelLogStart(0),
+		eCurRobMode(RM_NO_MODE_DETECTED),
+		eCurMSCScheme(CS_1_SM),
+		CurProtLev(),
+		Mutex()
 {
 	shortlog.setLog(this);
 	longlog.setLog(this);
@@ -748,7 +1024,75 @@ CParameter::CReceptLog::CReceptLog() : shortlog(), longlog(), iNumAACFrames(10),
 	longlog.reset();
 }
 
-void CParameter::CReceptLog::WriteParameters(CDRMReceiver* pDRMRec, _BOOLEAN bLong)
+CReceptLog::CReceptLog(const CReceptLog& l) : 
+		GPSData(l.GPSData),
+		bValidSignalStrength(),
+		rSigStr(l.rSigStr),
+		rIFSigStr(l.rIFSigStr),
+	    shortlog(l.shortlog),
+	    longlog(l.longlog),
+		iNumCRCOkFAC(l.iNumCRCOkFAC),
+		iNumCRCOkMSC(l.iNumCRCOkMSC),
+		iNumCRCOkMSCLong(l.iNumCRCOkMSCLong),
+		iNumCRCMSCLong(l.iNumCRCMSCLong),
+		iNumAACFrames(l.iNumAACFrames),
+		bSyncOK(l.bSyncOK),
+		bFACOk(l.bFACOk),
+		bMSCOk(l.bMSCOk),
+		bSyncOKValid(l.bSyncOKValid),
+		bFACOkValid(l.bFACOkValid),
+		bMSCOkValid(l.bMSCOkValid),
+		iFrequency(l.iFrequency),
+		bLogActivated(l.bLogActivated),
+		bLogEnabled(l.bLogEnabled),
+		bRxlEnabled(l.bRxlEnabled),
+		bPositionEnabled(l.bPositionEnabled),
+		strAdditText(l.strAdditText),
+		iSecDelLogStart(l.iSecDelLogStart),
+		eCurRobMode(l.eCurRobMode),
+		eCurMSCScheme(l.eCurMSCScheme),
+		CurProtLev(l.CurProtLev)
+		//,Mutex()
+{
+	shortlog.setLog(this);
+	longlog.setLog(this);
+}
+
+CReceptLog& CReceptLog::operator=(const CReceptLog& l)
+{
+	GPSData = l.GPSData;
+	bValidSignalStrength = l.bValidSignalStrength;
+	rSigStr = l.rSigStr;
+	rIFSigStr = l.rIFSigStr;
+    shortlog = l.shortlog;
+    longlog = l.longlog;
+	shortlog.setLog(this);
+	longlog.setLog(this);
+	iNumCRCOkFAC = l.iNumCRCOkFAC;
+	iNumCRCOkMSC = l.iNumCRCOkMSC;
+	iNumCRCOkMSCLong = l.iNumCRCOkMSCLong;
+	iNumCRCMSCLong = l.iNumCRCMSCLong;
+	iNumAACFrames = l.iNumAACFrames;
+	bSyncOK = l.bSyncOK;
+	bFACOk = l.bFACOk;
+	bMSCOk = l.bMSCOk;
+	bSyncOKValid = l.bSyncOKValid;
+	bFACOkValid = l.bFACOkValid;
+	bMSCOkValid = l.bMSCOkValid;
+	iFrequency = l.iFrequency;
+	bLogActivated = l.bLogActivated;
+	bLogEnabled = l.bLogEnabled;
+	bRxlEnabled = l.bRxlEnabled;
+	bPositionEnabled = l.bPositionEnabled;
+	strAdditText = l.strAdditText;
+	iSecDelLogStart = l.iSecDelLogStart;
+	eCurRobMode = l.eCurRobMode;
+	eCurMSCScheme = l.eCurMSCScheme;
+	CurProtLev = l.CurProtLev;
+	return *this;
+}
+
+void CReceptLog::WriteParameters(CDRMReceiver* pDRMRec, _BOOLEAN bLong)
 {
 	Mutex.Lock();
 	if(bLong)
@@ -758,17 +1102,17 @@ void CParameter::CReceptLog::WriteParameters(CDRMReceiver* pDRMRec, _BOOLEAN bLo
 	Mutex.Unlock();
 }
 
-void CParameter::CReceptLog::ResetTransParams()
+void CReceptLog::ResetTransParams()
 {
 	/* Reset transmission parameters */
-	eCurMSCScheme = CParameter::CS_3_SM;
+	eCurMSCScheme = CS_3_SM;
 	eCurRobMode = RM_NO_MODE_DETECTED;
 	CurProtLev.iPartA = 0;
 	CurProtLev.iPartB = 0;
 	CurProtLev.iHierarch = 0;
 }
 
-void CParameter::CReceptLog::SetSync(const _BOOLEAN bCRCOk)
+void CReceptLog::SetSync(const _BOOLEAN bCRCOk)
 {
 	if (bLogActivated == TRUE)
 	{
@@ -785,7 +1129,7 @@ void CParameter::CReceptLog::SetSync(const _BOOLEAN bCRCOk)
 	}
 }
 
-void CParameter::CReceptLog::SetFAC(const _BOOLEAN bCRCOk)
+void CReceptLog::SetFAC(const _BOOLEAN bCRCOk)
 {
 	if (bLogActivated == TRUE)
 	{
@@ -803,7 +1147,7 @@ void CParameter::CReceptLog::SetFAC(const _BOOLEAN bCRCOk)
 	}
 }
 
-void CParameter::CReceptLog::SetMSC(const _BOOLEAN bCRCOk)
+void CReceptLog::SetMSC(const _BOOLEAN bCRCOk)
 {
 	if (bLogActivated == TRUE)
 	{
@@ -827,7 +1171,7 @@ void CParameter::CReceptLog::SetMSC(const _BOOLEAN bCRCOk)
 	}
 }
 
-unsigned int CParameter::CReceptLog::ExtractMinutes(double dblDeg)
+unsigned int CReceptLog::ExtractMinutes(double dblDeg)
 {
 	unsigned int Degrees;
 
@@ -836,7 +1180,7 @@ unsigned int CParameter::CReceptLog::ExtractMinutes(double dblDeg)
 	return (unsigned int) (((floor((dblDeg - Degrees) * 1000000) / 1000000) + 0.00005) * 60.0);
 }
 
-void CParameter::CShortLog::SetSNR(const _REAL rNewCurSNR)
+void CShortLog::SetSNR(const _REAL rNewCurSNR)
 {
 	iNumSNR++;
 
@@ -850,7 +1194,7 @@ void CParameter::CShortLog::SetSNR(const _REAL rNewCurSNR)
 		rMinSNR = rNewCurSNR;
 }
 
-void CParameter::CShortLog::SetSignalStrength(const _REAL rNewCurSigStr)
+void CShortLog::SetSignalStrength(const _REAL rNewCurSigStr)
 {
 	iNumSigStr++;
 
@@ -864,12 +1208,12 @@ void CParameter::CShortLog::SetSignalStrength(const _REAL rNewCurSigStr)
 		rMinSigStr = rNewCurSigStr;
 }
 
-void CParameter::CLongLog::SetSNR(const _REAL rNewCurSNR)
+void CLongLog::SetSNR(const _REAL rNewCurSNR)
 {
 	rCurSNR = rNewCurSNR;
 }
 
-void CParameter::CLongLog::SetSignalStrength(const _REAL rNewCurSigStr)
+void CLongLog::SetSignalStrength(const _REAL rNewCurSigStr)
 {
 	rCurSigStr = rNewCurSigStr;
 }
@@ -883,7 +1227,7 @@ void CParameter::SetSNR(const _REAL rNewCurSNR)
 	Mutex.Unlock();
 }
 
-void CParameter::CReceptLog::SetNumAAC(const int iNewNum)
+void CReceptLog::SetNumAAC(const int iNewNum)
 {
 	if (iNumAACFrames != iNewNum)
 	{
@@ -895,7 +1239,7 @@ void CParameter::CReceptLog::SetNumAAC(const int iNewNum)
 	}
 }
 
-void CParameter::CLog::open(const char* filename, time_t now)
+void CLog::open(const char* filename, time_t now)
 {
 	pFile = fopen(filename, "a");
 	writeHeader(now);
@@ -903,7 +1247,7 @@ void CParameter::CLog::open(const char* filename, time_t now)
 	reset();
 }
 
-void CParameter::CLog::close()
+void CLog::close()
 {
 	if (pFile != NULL)
 	{
@@ -913,7 +1257,7 @@ void CParameter::CLog::close()
 	}
 }
 
-void CParameter::CReceptLog::StartLogging()
+void CReceptLog::StartLogging()
 {
 	time_t		ltime;
 
@@ -936,7 +1280,7 @@ void CParameter::CReceptLog::StartLogging()
 	Mutex.Unlock();
 }
 
-void CParameter::CReceptLog::StopLogging()
+void CReceptLog::StopLogging()
 {
 	bLogActivated = FALSE;
 	bLogEnabled = FALSE;
@@ -945,7 +1289,7 @@ void CParameter::CReceptLog::StopLogging()
 	longlog.close();
 }
 
-void CParameter::CShortLog::reset()
+void CShortLog::reset()
 {
 	pLog->iNumCRCOkFAC = 0;
 	pLog->iNumCRCOkMSC = 0;
@@ -961,7 +1305,7 @@ void CParameter::CShortLog::reset()
 	rMinSigStr = 1000; /* Init with high value */
 }
 
-void CParameter::CLongLog::reset()
+void CLongLog::reset()
 {
 	pLog->bSyncOK = TRUE;
 	pLog->bFACOk = TRUE;
@@ -979,7 +1323,7 @@ void CParameter::CLongLog::reset()
 	rCurSNR = (_REAL) 0.0;
 }
 
-void CParameter::CShortLog::writeHeader(time_t now)
+void CShortLog::writeHeader(time_t now)
 {
 	struct tm*	today;
 	today = gmtime(&now); /* Should be UTC time */
@@ -1045,7 +1389,7 @@ void CParameter::CShortLog::writeHeader(time_t now)
 	iTimeCntShort = 0;
 }
 
-void CParameter::CLongLog::writeHeader(time_t)
+void CLongLog::writeHeader(time_t)
 {
 	if (pFile != NULL)
 	{
@@ -1072,7 +1416,7 @@ void CParameter::CLongLog::writeHeader(time_t)
 	time(&TimeCntLong);
 }
 
-void CParameter::CShortLog::writeTrailer()
+void CShortLog::writeTrailer()
 {
 	if (rMaxSNR > rMinSNR)
 		fprintf(pFile, "\nSNR min: %4.1f, max: %4.1f\n", rMinSNR, rMaxSNR);
@@ -1092,12 +1436,12 @@ void CParameter::CShortLog::writeTrailer()
 	fprintf(pFile, "<<<<\n\n");
 }
 
-void CParameter::CLongLog::writeTrailer()
+void CLongLog::writeTrailer()
 {
 	fprintf(pFile, "\n\n");
 }
 
-void CParameter::CShortLog::writeParameters(CDRMReceiver* pDRMRec)
+void CShortLog::writeParameters(CDRMReceiver* pDRMRec)
 {
 	if (pLog->bLogActivated == FALSE)
 		return;
@@ -1144,7 +1488,7 @@ void CParameter::CShortLog::writeParameters(CDRMReceiver* pDRMRec)
 
 }
 
-void CParameter::CLongLog::writeParameters(CDRMReceiver* pDRMRec)
+void CLongLog::writeParameters(CDRMReceiver* pDRMRec)
 {
 	if (pLog->bLogActivated == FALSE)
 		return;
@@ -1207,23 +1551,23 @@ void CParameter::CLongLog::writeParameters(CDRMReceiver* pDRMRec)
 	int iCurMSCSc=-1;
 	switch (pLog->eCurMSCScheme)
 	{
-	case CParameter::CS_3_SM:
+	case CS_3_SM:
 		iCurMSCSc = 0;
 		break;
 
-	case CParameter::CS_3_HMMIX:
+	case CS_3_HMMIX:
 		iCurMSCSc = 1;
 		break;
 
-	case CParameter::CS_3_HMSYM:
+	case CS_3_HMSYM:
 		iCurMSCSc = 2;
 		break;
 
-	case CParameter::CS_2_SM:
+	case CS_2_SM:
 		iCurMSCSc = 3;
 		break;
 
-	case CParameter::CS_1_SM:/* TODO */
+	case CS_1_SM:/* TODO */
 		break;
 	}
 
@@ -1338,7 +1682,7 @@ _BOOLEAN CParameter::GetSignalStrength(_REAL &rOutSigStr)
 	return bValid;
 }
 
-void CParameter::CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)
+void CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)
 { 
 	FSyncOK = OK;
 	int colour=2;
@@ -1351,7 +1695,7 @@ void CParameter::CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)
 	PostWinMessage(MS_FRAME_SYNC,colour);
 }
 
-void CParameter::CReceiveStatus::SetTimeSyncStatus(const ETypeRxStatus OK)
+void CReceiveStatus::SetTimeSyncStatus(const ETypeRxStatus OK)
 { 
 	TSyncOK = OK;
 	int colour=2;
@@ -1364,7 +1708,7 @@ void CParameter::CReceiveStatus::SetTimeSyncStatus(const ETypeRxStatus OK)
 	PostWinMessage(MS_TIME_SYNC,colour);
 }
 
-void CParameter::CReceiveStatus::SetInterfaceStatus(const ETypeRxStatus OK)
+void CReceiveStatus::SetInterfaceStatus(const ETypeRxStatus OK)
 { 
 	InterfaceOK = OK;
 	int colour=2;
@@ -1377,7 +1721,7 @@ void CParameter::CReceiveStatus::SetInterfaceStatus(const ETypeRxStatus OK)
 	PostWinMessage(MS_IOINTERFACE,colour);
 }
 
-void CParameter::CReceiveStatus::SetFACStatus(const ETypeRxStatus OK)
+void CReceiveStatus::SetFACStatus(const ETypeRxStatus OK)
 { 
 	FACOK = OK;
 	int colour=2;
@@ -1390,7 +1734,7 @@ void CParameter::CReceiveStatus::SetFACStatus(const ETypeRxStatus OK)
 	PostWinMessage(MS_FAC_CRC,colour);
 }
 
-void CParameter::CReceiveStatus::SetSDCStatus(const ETypeRxStatus OK)
+void CReceiveStatus::SetSDCStatus(const ETypeRxStatus OK)
 { 
 	SDCOK = OK;
 	int colour=2;
@@ -1403,7 +1747,7 @@ void CParameter::CReceiveStatus::SetSDCStatus(const ETypeRxStatus OK)
 	PostWinMessage(MS_SDC_CRC,colour);
 }
 
-void CParameter::CReceiveStatus::SetAudioStatus(const ETypeRxStatus OK)
+void CReceiveStatus::SetAudioStatus(const ETypeRxStatus OK)
 { 
 	AudioOK = OK;
 	int colour=2;
@@ -1416,7 +1760,7 @@ void CParameter::CReceiveStatus::SetAudioStatus(const ETypeRxStatus OK)
 	PostWinMessage(MS_MSC_CRC,colour);
 }
 
-void CParameter::CReceiveStatus::SetMOTStatus(const ETypeRxStatus OK)
+void CReceiveStatus::SetMOTStatus(const ETypeRxStatus OK)
 {
 	MOTOK = OK;
 	int colour=2;
@@ -1429,39 +1773,76 @@ void CParameter::CReceiveStatus::SetMOTStatus(const ETypeRxStatus OK)
 	PostWinMessage(MS_MOT_OBJ_STAT,colour);
 }
 
-ETypeRxStatus CParameter::CReceiveStatus::GetFrameSyncStatus()
+ETypeRxStatus CReceiveStatus::GetFrameSyncStatus()
 {
 	return FSyncOK;
 }
 
-ETypeRxStatus CParameter::CReceiveStatus::GetTimeSyncStatus()
+ETypeRxStatus CReceiveStatus::GetTimeSyncStatus()
 {
 	return TSyncOK;
 }
 
-ETypeRxStatus CParameter::CReceiveStatus::GetInterfaceStatus()
+ETypeRxStatus CReceiveStatus::GetInterfaceStatus()
 {
 	return InterfaceOK;
 }
 
-ETypeRxStatus CParameter::CReceiveStatus::GetFACStatus()
+ETypeRxStatus CReceiveStatus::GetFACStatus()
 {
 	return FACOK;
 }
 
-ETypeRxStatus CParameter::CReceiveStatus::GetSDCStatus()
+ETypeRxStatus CReceiveStatus::GetSDCStatus()
 {
 	return SDCOK;
 }
 
-ETypeRxStatus CParameter::CReceiveStatus::GetAudioStatus()
+ETypeRxStatus CReceiveStatus::GetAudioStatus()
 {
 	return AudioOK;
 }
 
-ETypeRxStatus CParameter::CReceiveStatus::GetMOTStatus()
+ETypeRxStatus CReceiveStatus::GetMOTStatus()
 {
 	return MOTOK;
+}
+
+void CParameter::GenerateReceiverID()
+{
+	//Set receiver ID
+	string sVer;
+	unsigned int iImplementation = 0;;
+	unsigned int iMajor = 0;
+	unsigned int iMinor = 0;
+
+	sReceiverID = "drea";
+
+	sVer = dream_version;
+
+	size_t pos;
+
+	while((pos = sVer.find('.')) != string::npos)
+		sVer.replace(pos, 1, " ");
+	
+	if ((pos = sVer.find("cvs")) != string::npos)
+		sVer.replace(pos, 3, "   ");
+
+	stringstream ssVer(sVer);
+	ssVer >> iImplementation >> iMajor >> iMinor;
+
+	stringstream ssInfoVer;
+	ssInfoVer << setw(2) << setfill('0') << iImplementation << setw(2) << setfill('0') << iMajor << setw(2) << setfill('0') << iMinor;
+
+	sReceiverID += ssInfoVer.str();
+
+	while (sSerialNumber.length() < 6)
+			sSerialNumber += "_";
+	
+	if (sSerialNumber.length() > 6)
+		sSerialNumber.erase(6, pDRMRec->GetParameters()->sSerialNumber.length()-6);
+
+	sReceiverID += pDRMRec->GetParameters()->sSerialNumber;
 }
 
 void CParameter::GenerateRandomSerialNumber()

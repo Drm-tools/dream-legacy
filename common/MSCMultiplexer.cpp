@@ -132,8 +132,8 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 		}
 
 		/* Special case if hierarchical modulation is used */
-		if (((Param.eMSCCodingScheme == CParameter::CS_3_HMSYM) ||
-			(Param.eMSCCodingScheme == CParameter::CS_3_HMMIX)))
+		if (((Param.eMSCCodingScheme == CS_3_HMSYM) ||
+			(Param.eMSCCodingScheme == CS_3_HMMIX)))
 		{
 			if (iStreamID == 0)
 			{

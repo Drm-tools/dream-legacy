@@ -103,7 +103,7 @@ protected:
 							const int iDiff, const CReal rNewSNR,
 							const CReal rNewSigma, const CReal rTs,
 							const int iLength);
-	void GenFiltPhaseTable(CMatrix<int>& matiMapTab, const int iNumCarrier,
+	void GenFiltPhaseTable(const CMatrix<int>& matiMapTab, const int iNumCarrier,
 						   const int iNumSymPerFrame,
 						   const int iScatPilTimeInt);
 	_REAL UpdateFilterCoef(const _REAL rNewSNR, const _REAL rNewSigma);

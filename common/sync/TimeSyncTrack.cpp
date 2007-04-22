@@ -419,10 +419,10 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 
 void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 {
-	iNumCarrier = Parameter.iNumCarrier;
-	iScatPilFreqInt = Parameter.iScatPilFreqInt;
-	iNumIntpFreqPil = Parameter.iNumIntpFreqPil;
-	iDFTSize = Parameter.iFFTSizeN;
+	iNumCarrier = Parameter.CellMappingTable.iNumCarrier;
+	iScatPilFreqInt = Parameter.CellMappingTable.iScatPilFreqInt;
+	iNumIntpFreqPil = Parameter.CellMappingTable.iNumIntpFreqPil;
+	iDFTSize = Parameter.CellMappingTable.iFFTSizeN;
 
 	/* Timing correction history */
 	iSymDelay = iNewSymbDelay;
@@ -439,14 +439,14 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 
 	/* Lambda for IIR filter for averaging the PDS */
 	rLamAvPDS = IIR1Lam(TICONST_PDS_EST_TISYNC, (CReal) SOUNDCRD_SAMPLE_RATE /
-		Parameter.iSymbolBlockSize);
+		Parameter.CellMappingTable.iSymbolBlockSize);
 
 	/* Vector for rotated result */
 	vecrAvPoDeSpRot.Init(iNumIntpFreqPil);
 
 	/* Length of guard-interval with respect to FFT-size! */
 	rGuardSizeFFT = (CReal) iNumCarrier *
-		Parameter.RatioTgTu.iEnum / Parameter.RatioTgTu.iDenom;
+		Parameter.CellMappingTable.RatioTgTu.iEnum / Parameter.CellMappingTable.RatioTgTu.iDenom;
 
 	/* Get the hamming window taps. The window is to reduce the leakage effect
 	   of a DFT transformation */
@@ -499,11 +499,11 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	/* Calculate number of symbols for a given time span as defined for the
 	   length of the sample rate offset estimation history size */
 	iLenCorrectionHist = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
-		HIST_LEN_SAM_OFF_EST_TI_CORR / Parameter.iSymbolBlockSize);
+		HIST_LEN_SAM_OFF_EST_TI_CORR / Parameter.CellMappingTable.iSymbolBlockSize);
 
 	/* Init count for acquisition */
 	iResOffAcqCntMax = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
-		SAM_OFF_EST_TI_CORR_ACQ_LEN / Parameter.iSymbolBlockSize);
+		SAM_OFF_EST_TI_CORR_ACQ_LEN / Parameter.CellMappingTable.iSymbolBlockSize);
 
 	/* Init sample rate offset estimation acquisition count */
 	iResOffsetAcquCnt = iResOffAcqCntMax;
@@ -513,7 +513,7 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 
 	/* Symbol block size converted in domain of estimated PDS */
 	rSymBloSiIRDomain =
-		(CReal) Parameter.iSymbolBlockSize * iNumCarrier / iDFTSize;
+		(CReal) Parameter.CellMappingTable.iSymbolBlockSize * iNumCarrier / iDFTSize;
 
 	/* Init variable for storing the old difference of maximum position */
 	iOldNonZeroDiff = 0;
@@ -711,8 +711,8 @@ void CTimeSyncTrack::CalculateRdel(CParameter& Parameter)
 	{
 		CReal rInterval =
 			((_REAL) (vecrIntervalEnd[j] - vecrIntervalStart[j])) *
-			Parameter.iFFTSizeN / (SOUNDCRD_SAMPLE_RATE *
-			Parameter.iNumIntpFreqPil * Parameter.iScatPilFreqInt) * 1000;
+			Parameter.CellMappingTable.iFFTSizeN / (SOUNDCRD_SAMPLE_RATE *
+			Parameter.CellMappingTable.iNumIntpFreqPil * Parameter.CellMappingTable.iScatPilFreqInt) * 1000;
 
 		/* Clip the delay interval values for display purposes */
 		if (rInterval < (CReal) -9.9)
@@ -742,7 +742,7 @@ void CTimeSyncTrack::CalculateRdop(CParameter& Parameter)
 		rSumSqChan += SqMag(veccPilots[i]);
 	}
 
-	CReal rTs = (_REAL) Parameter.iSymbolBlockSize / SOUNDCRD_SAMPLE_RATE;
+	CReal rTs = (_REAL) Parameter.CellMappingTable.iSymbolBlockSize / SOUNDCRD_SAMPLE_RATE;
 
 	Parameter.rRdop = Sqrt(rSumSqDiff / rSumSqChan) / (crPi * rTs);
 }

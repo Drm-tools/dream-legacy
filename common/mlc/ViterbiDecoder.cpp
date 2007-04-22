@@ -486,8 +486,8 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 #endif
 }
 
-void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme,
-						   CParameter::EChanType eNewChannelType, int iN1,
+void CViterbiDecoder::Init(ECodScheme eNewCodingScheme,
+						   EChanType eNewChannelType, int iN1,
 						   int iN2, int iNewNumOutBitsPartA,
 						   int iNewNumOutBitsPartB, int iPunctPatPartA,
 						   int iPunctPatPartB, int iLevel)

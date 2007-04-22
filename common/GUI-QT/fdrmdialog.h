@@ -71,16 +71,14 @@ class FDRMDialog : public FDRMDialogBase
 	Q_OBJECT
 
 public:
-	FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent = 0, const char* name = 0,
+	FDRMDialog(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE,	WFlags f = 0);
 
 	virtual ~FDRMDialog();
 
-	void	ChangeGUIModeToDRM();
-	void	ChangeGUIModeToAM();
-
 protected:
-	CDRMReceiver*		pDRMRec;
+	CDRMReceiver&		DRMReceiver;
+	CSettings&			Settings;
 
 	systemevalDlg*		pSysEvalDlg;
 	MultimediaDlg*		pMultiMediaDlg;
@@ -117,6 +115,9 @@ protected:
 	QString			GetTypeString(const int iServiceID);
 
 	void			SetDisplayColor(const QColor newColor);
+
+	void			ChangeGUIModeToDRM();
+	void			ChangeGUIModeToAM();
 
 public slots:
 	void OnTimer();

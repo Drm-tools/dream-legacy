@@ -71,7 +71,7 @@ void CAMSSPhaseDemod::ProcessDataInternal(CParameter&)
 void CAMSSPhaseDemod::InitInternal(CParameter& ReceiverParam)
 {
 	/* Get parameters from info class */
-	iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
+	iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
 
 	/* Define block-sizes for input and output */
 	/* The output buffer is a cyclic buffer, we have to specify the total
@@ -263,7 +263,7 @@ void CAMSSExtractBits::ProcessDataInternal(CParameter& ReceiverParam)
 void CAMSSExtractBits::InitInternal(CParameter& ReceiverParam)
 {
 	/* Get parameters from info class */
-	iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
+	iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
 
 	/* Define block-sizes for input and output */
 	/* The output buffer is a cyclic buffer, we have to specify the total

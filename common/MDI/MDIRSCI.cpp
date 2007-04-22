@@ -408,25 +408,22 @@ _BOOLEAN CDownstreamDI::SetDestination(const string& str)
 {
 	/* allow multiple destinations, allow destinations to send cpro instructions back */
 
-	if (RSISubscribers.size() <= MAX_NUM_RSI_SUBSCRIBERS)
+	CRSISubscriberSocket* p = new CRSISubscriberSocket(NULL);
+	_BOOLEAN bAddressOK = p->SetDestination(str);
+	// If successful, set flag to enable MDI output
+	if (bAddressOK)
 	{
-		CRSISubscriberSocket* p = new CRSISubscriberSocket(NULL);
-		_BOOLEAN bAddressOK = p->SetDestination(str);
-		// If successful, set flag to enable MDI output
-		if (bAddressOK)
+		string a;
+		bMDIOutEnabled = TRUE;
+		if(p->GetDestination(a))
 		{
-			string a;
-			bMDIOutEnabled = TRUE;
-			if(p->GetDestination(a))
-			{
-				/* TODO incoporate port */
-				RSISubscribers[a] = p;
-			}
-			return TRUE;
+			/* TODO incoporate port */
+			RSISubscribers[a] = p;
 		}
-		else
-			delete p;
+		return TRUE;
 	}
+	else
+		delete p;
 	return FALSE;
 }
 

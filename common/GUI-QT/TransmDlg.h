@@ -60,6 +60,7 @@
 #include "DialogUtil.h"
 #include "../DrmTransmitter.h"
 #include "../Parameter.h"
+#include "../util/Settings.h"
 
 
 /* Classes ********************************************************************/
@@ -105,14 +106,15 @@ class TransmDialog : public TransmDlgBase
 	Q_OBJECT
 
 public:
-	TransmDialog(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-		WFlags f = 0);
+	TransmDialog(CSettings&,
+		QWidget* parent=0, const char* name=0, bool modal=FALSE, WFlags f=0);
 	virtual ~TransmDialog();
 
 protected:
 	void DisableAllControlsForSet();
 	void EnableAllControlsForSet();
 
+	CSettings&			Settings;
 	QMenuBar*			pMenu;
 	QPopupMenu*			pSettingsMenu;
 	QTimer				Timer;

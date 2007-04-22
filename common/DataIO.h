@@ -244,8 +244,8 @@ class CDataConvChanResam : public CReceiverModul<CChanSimDataMod, _REAL>
 protected:
 	virtual void InitInternal(CParameter& ReceiverParam)
 	{
-		iInputBlockSize = ReceiverParam.iSymbolBlockSize;
-		iOutputBlockSize = ReceiverParam.iSymbolBlockSize;
+		iInputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+		iOutputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
 	}
 	virtual void ProcessDataInternal(CParameter&)
 	{
@@ -260,9 +260,9 @@ class CSplit: public CReceiverModul<_REAL, _REAL>
 protected:
 	virtual void InitInternal(CParameter& ReceiverParam)
 	{
-		iInputBlockSize = ReceiverParam.iSymbolBlockSize;
-		iOutputBlockSize = ReceiverParam.iSymbolBlockSize;
-		iOutputBlockSize2 = ReceiverParam.iSymbolBlockSize;
+		iInputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+		iOutputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+		iOutputBlockSize2 = ReceiverParam.CellMappingTable.iSymbolBlockSize;
 	}
 	virtual void ProcessDataInternal(CParameter&)
 	{

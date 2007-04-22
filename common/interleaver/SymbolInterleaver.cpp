@@ -68,7 +68,7 @@ void CSymbInterleaver::InitInternal(CParameter& TransmParam)
 	int i;
 
 	/* Set internal parameters */
-	iN_MUX = TransmParam.iNumUsefMSCCellsPerFrame;
+	iN_MUX = TransmParam.CellMappingTable.iNumUsefMSCCellsPerFrame;
 
 	/* Allocate memory for table */
 	veciIntTable.Init(iN_MUX);
@@ -151,7 +151,7 @@ void CSymbDeinterleaver::InitInternal(CParameter& ReceiverParam)
 	int i;
 
 	/* Set internal parameters */
-	iN_MUX = ReceiverParam.iNumUsefMSCCellsPerFrame;
+	iN_MUX = ReceiverParam.CellMappingTable.iNumUsefMSCCellsPerFrame;
 
 	/* Allocate memory for table */
 	veciIntTable.Init(iN_MUX);

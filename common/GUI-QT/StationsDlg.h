@@ -57,6 +57,7 @@
 #endif
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
+#include "../util/Settings.h"
 
 
 /* Definitions ****************************************************************/
@@ -159,9 +160,9 @@ public:
 
 	void ReadStatTabFromFile(const ESchedMode eNewSchM);
 	ESchedMode GetSchedMode() {return eSchedMode;}
-	void SetSchedMode(const ESchedMode eNewSchM) {eSchedMode = eNewSchM; StationsTable.Init(0);};
+	void SetSchedMode(const ESchedMode eNewSchM) {eSchedMode = eNewSchM; StationsTable.clear();};
 
-	int GetStationNumber() {return StationsTable.Size();}
+	int GetStationNumber() {return StationsTable.size();}
 	CStationsItem& GetItem(const int iPos) {return StationsTable[iPos];}
 	StationState CheckState(const int iPos);
 
@@ -171,7 +172,7 @@ public:
 protected:
 	_BOOLEAN IsActive(const int iPos, const time_t ltime);
 
-	CVector<CStationsItem>	StationsTable;
+	vector<CStationsItem>	StationsTable;
 	ESchedMode				eSchedMode;
 
 	/* Minutes for stations preview in seconds if zero then no active */
@@ -201,12 +202,15 @@ class StationsDlg : public CStationsDlgBase
 
 public:
 
-	StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+	StationsDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~StationsDlg();
 
 	void LoadSchedule(CDRMSchedule::ESchedMode eNewSchM);
 	void SetCurrentSchedule(const CDRMSchedule::ESchedMode eNewSchM);
+
+	void LoadSettings(const CSettings&);
+	void SaveSettings(CSettings&);
 
 	int				iCurrentSortColumn;
 	_BOOLEAN		bCurrentSortAscending;
@@ -221,7 +225,8 @@ protected:
 	void			AddUpdateDateTime();
 	void			SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM);
 
-	CDRMReceiver*				pDRMRec;
+	CDRMReceiver&				DRMReceiver;
+	CSettings&					Settings;
 
 	CDRMSchedule				DRMSchedule;
 	QPixmap						BitmCubeGreen;
@@ -239,7 +244,7 @@ protected:
 	QPopupMenu*					pPreviewMenu;
 	QPopupMenu*					pUpdateMenu;
 
-	CVector<MyListViewItem*>	vecpListItems;
+	vector<MyListViewItem*>		vecpListItems;
 	QMutex						ListItemsMutex;
 
 	QPopupMenu*					pRemoteMenu;
@@ -254,7 +259,7 @@ protected:
 
 #ifdef HAVE_LIBHAMLIB
 	QPopupMenu*					pRemoteMenuOther;
-	CVector<rig_model_t>		veciModelID;
+	vector<rig_model_t>			veciModelID;
 #endif
 
 public slots:

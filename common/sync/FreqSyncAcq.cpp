@@ -42,10 +42,9 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 	//CReal		rLevDiff;
 	_BOOLEAN	bNoPeaksLeft;
 	CRealVector	vecrPSDPilPoin(3);
-
 	/* OPH: update free-running symbol counter */
 	iFreeSymbolCounter++;
-	if (iFreeSymbolCounter >= ReceiverParam.iNumSymPerFrame)
+	if (iFreeSymbolCounter >= ReceiverParam.CellMappingTable.iNumSymPerFrame)
 	{
 		iFreeSymbolCounter = 0;
 	}
@@ -326,7 +325,7 @@ fclose(pFile1);
 		if (bSyncInput == TRUE)
 		{
 			ReceiverParam.rFreqOffsetAcqui =
-				(_REAL) ReceiverParam.iIndexDCFreq / ReceiverParam.iFFTSizeN;
+				(_REAL) ReceiverParam.CellMappingTable.iIndexDCFreq / ReceiverParam.CellMappingTable.iFFTSizeN;
 		}
 
 		/* Use the same block size as input block size */
@@ -369,7 +368,7 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 {
 	/* Needed for calculating offset in Hertz in case of synchronized input
 	   (for simulation) */
-	iFFTSize = ReceiverParam.iFFTSizeN;
+	iFFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
 
 	/* We using parameters from robustness mode B as pattern for the desired
 	   frequency pilot positions */
@@ -452,24 +451,24 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	/* Frequency correction */
 	/* Start with phase null (arbitrary) */
 	cCurExp = (_REAL) 1.0;
-	rInternIFNorm = (_REAL) ReceiverParam.iIndexDCFreq / iFFTSize;
+	rInternIFNorm = (_REAL) ReceiverParam.CellMappingTable.iIndexDCFreq / iFFTSize;
 
 
 	/* Init bandpass filter object */
-	BPFilter.Init(ReceiverParam.iSymbolBlockSize, VIRTUAL_INTERMED_FREQ,
+	BPFilter.Init(ReceiverParam.CellMappingTable.iSymbolBlockSize, VIRTUAL_INTERMED_FREQ,
 		ReceiverParam.GetSpectrumOccup(), CDRMBandpassFilt::FT_RECEIVER);
 
 
 	/* Define block-sizes for input (The output block size is set inside
 	   the processing routine, therefore only a maximum block size is set
 	   here) */
-	iInputBlockSize = ReceiverParam.iSymbolBlockSize;
+	iInputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
 
 	/* We have to consider that the next module can take up to two symbols per
 	   step. This can be satisfied be multiplying with "3". We also want to ship
 	   the whole FFT buffer after finishing the frequency acquisition so that
 	   these samples can be reused for synchronization and do not get lost */
-	iMaxOutputBlockSize = 3 * ReceiverParam.iSymbolBlockSize + iHistBufSize;
+	iMaxOutputBlockSize = 3 * ReceiverParam.CellMappingTable.iSymbolBlockSize + iHistBufSize;
 
 	/* OPH: init free-running symbol counter */
 	iFreeSymbolCounter = 0;

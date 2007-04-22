@@ -111,19 +111,19 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	/* MSC mode */
 	switch (Parameter.eMSCCodingScheme)
 	{
-	case CParameter::CS_3_SM:
+	case CS_3_SM:
 		(*pbiFACData).Enqueue(0 /* 00 */, 2);
 		break;
 
-	case CParameter::CS_3_HMMIX:
+	case CS_3_HMMIX:
 		(*pbiFACData).Enqueue(1 /* 01 */, 2);
 		break;
 
-	case CParameter::CS_3_HMSYM:
+	case CS_3_HMSYM:
 		(*pbiFACData).Enqueue(2 /* 10 */, 2);
 		break;
 
-	case CParameter::CS_2_SM:
+	case CS_2_SM:
 		(*pbiFACData).Enqueue(3 /* 11 */, 2);
 		break;
 
@@ -134,11 +134,11 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	/* SDC mode */
 	switch (Parameter.eSDCCodingScheme)
 	{
-	case CParameter::CS_2_SM:
+	case CS_2_SM:
 		(*pbiFACData).Enqueue(0 /* 0 */, 1);
 		break;
 
-	case CParameter::CS_1_SM:
+	case CS_1_SM:
 		(*pbiFACData).Enqueue(1 /* 1 */, 1);
 		break;
 
@@ -176,11 +176,11 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	/* CA indication */
 	switch (Parameter.Service[iCurShortID].eCAIndication)
 	{
-	case CParameter::CA_NOT_USED:
+	case CService::CA_NOT_USED:
 		(*pbiFACData).Enqueue(0 /* 0 */, 1);
 		break;
 
-	case CParameter::CA_USED:
+	case CService::CA_USED:
 		(*pbiFACData).Enqueue(1 /* 1 */, 1);
 		break;
 	}
@@ -192,11 +192,11 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	/* Audio/Data flag */
 	switch (Parameter.Service[iCurShortID].eAudDataFlag)
 	{
-	case CParameter::SF_AUDIO:
+	case CService::SF_AUDIO:
 		(*pbiFACData).Enqueue(0 /* 0 */, 1);
 		break;
 
-	case CParameter::SF_DATA:
+	case CService::SF_DATA:
 		(*pbiFACData).Enqueue(1 /* 1 */, 1);
 	}
 	
@@ -241,7 +241,7 @@ void CFACTransmit::Init(CParameter& Parameter)
 	for (i = 0; i < iTotNumServices; i++)
 	{
 		if (Parameter.Service[veciActServ[i]].
-			eAudDataFlag ==	CParameter::SF_AUDIO)
+			eAudDataFlag ==	CService::SF_AUDIO)
 		{
 			veciAudioServ.Add(i);
 			iNumAudio++;
@@ -479,19 +479,19 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		switch ((*pbiFACData).Separate(2))
 		{
 		case 0: /* 00 */
-			Parameter.SetMSCCodingScheme(CParameter::CS_3_SM);
+			Parameter.SetMSCCodingScheme(CS_3_SM);
 			break;
 
 		case 1: /* 01 */
-			Parameter.SetMSCCodingScheme(CParameter::CS_3_HMMIX);
+			Parameter.SetMSCCodingScheme(CS_3_HMMIX);
 			break;
 
 		case 2: /* 10 */
-			Parameter.SetMSCCodingScheme(CParameter::CS_3_HMSYM);
+			Parameter.SetMSCCodingScheme(CS_3_HMSYM);
 			break;
 
 		case 3: /* 11 */
-			Parameter.SetMSCCodingScheme(CParameter::CS_2_SM);
+			Parameter.SetMSCCodingScheme(CS_2_SM);
 			break;
 		}
 
@@ -499,11 +499,11 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		switch ((*pbiFACData).Separate(1))
 		{
 		case 0: /* 0 */
-			Parameter.SetSDCCodingScheme(CParameter::CS_2_SM);
+			Parameter.SetSDCCodingScheme(CS_2_SM);
 			break;
 
 		case 1: /* 1 */
-			Parameter.SetSDCCodingScheme(CParameter::CS_1_SM);
+			Parameter.SetSDCCodingScheme(CS_1_SM);
 			break;
 		}
 			
@@ -538,12 +538,12 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		{
 		case 0: /* 0 */
 			Parameter.Service[iTempShortID].eCAIndication = 
-				CParameter::CA_NOT_USED;
+				CService::CA_NOT_USED;
 			break;
 
 		case 1: /* 1 */
 			Parameter.Service[iTempShortID].eCAIndication = 
-				CParameter::CA_USED;
+				CService::CA_USED;
 			break;
 		}
 
@@ -554,11 +554,11 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		switch ((*pbiFACData).Separate(1))
 		{
 		case 0: /* 0 */
-			Parameter.SetAudDataFlag(iTempShortID, CParameter::SF_AUDIO);
+			Parameter.SetAudDataFlag(iTempShortID, CService::SF_AUDIO);
 			break;
 
 		case 1: /* 1 */
-			Parameter.SetAudDataFlag(iTempShortID, CParameter::SF_DATA);
+			Parameter.SetAudDataFlag(iTempShortID, CService::SF_DATA);
 			break;
 		}
 

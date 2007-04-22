@@ -82,6 +82,8 @@
 
 
 /* Classes ********************************************************************/
+class CSettings;
+
 class CSplitFAC : public CSplitModul<_BINARY>
 {
 	void SetInputBlockSize(CParameter&)
@@ -130,6 +132,8 @@ public:
 	int						wait(int) { return 0;}
 	bool					finished() { return true; }
 #endif
+	void					LoadSettings(const CSettings&);
+	void					SaveSettings(CSettings&);
 	void					Init();
 	void					Start();
 	void					Stop();
@@ -427,105 +431,6 @@ public:
 #endif
 	_BOOLEAN				bReadFromFile;
 	time_t					time_keeper;
-
-/* _WIN32 check because in Visual c++ the GUI files are always compiled even
-   if USE_QT_GUI is set or not */
-#if defined(USE_QT_GUI) || defined(_WIN32)
-	/* DRMReceiver object serves as a storage a "exchange platform" for the
-	   window size and position parameters for init-file usage. This is not
-	   nice but it works for now. TODO: better solution */
-	class CWinGeom
-	{
-	public:
-		CWinGeom() : iXPos(0), iYPos(0), iHSize(0), iWSize(0),
-			bVisible(FALSE), iType(0) {}
-
-		int iXPos, iYPos;
-		int iHSize, iWSize;
-		_BOOLEAN bVisible;
-		int iType;
-	};
-
-	/* Main window */
-	CWinGeom GeomFdrmdialog;
-
-	/* System evaluation window */
-	CWinGeom GeomSystemEvalDlg;
-
-	/* Multimedia window */
-	CWinGeom GeomMultimediaDlg;
-
-	/* Stations dialog */
-	CWinGeom GeomStationsDlg;
-
-	/* Live schedule */
-	CWinGeom GeomLiveScheduleDlg;
-
-	/* Analog demodulation dialog */
-	CWinGeom GeomAnalogDemDlg;
-	
-
-	/* Analog demodulation dialog */
-	CWinGeom GeomAMSSDlg;
-
-	/* Chart windows */
-	CVector<CWinGeom> GeomChartWindows;
-
-	/* EPG Programme Guide */
-	CWinGeom GeomEPGDlg;
-
-	int			iMainPlotColorStyle;
-	int			iSecondsPreview;
-
-	/* Parameters for live schedule dialog */
-	int			iSecondsPreviewLiveSched;
-	_BOOLEAN	bShowAllStations;
-
-	/* Sort parameters for stations dialog */
-	class CSortParam
-	{
-	public:
-		CSortParam(const int iCol,const _BOOLEAN bAsc) :
-			iColumn(iCol), bAscending(bAsc) {}
-
-		int			iColumn;
-		_BOOLEAN	bAscending;
-	};
-
-	/* Analog sort parameter in stations dialog */	
-	CSortParam SortParamAnalog;
-
-	/* DRM sort parameter in stations dialog */
-	CSortParam SortParamDRM;
-
-	/* sort parameter in live schedule dialog */
-	CSortParam SortParamLiveSched;
-
-
-	int				iSysEvalDlgPlotType;
-	int				iMOTBWSRefreshTime;
-	_BOOLEAN		bAddRefreshHeader;
-	string			strStoragePathMMDlg;
-	string			strStoragePathLiveScheduleDlg;
-	int				iMainDisplayColor;
-
-	/* Font parameters for Multimedia Dlg */
-	class CFontParam
-	{
-	public:
-		CFontParam(const string strFontFamily, const int intFontPointSize,
-			const int intFontWeight , const _BOOLEAN bFontItalic) :
-			strFamily(strFontFamily), intPointSize(intFontPointSize),
-			intWeight(intFontWeight), bItalic(bFontItalic) {}
-
-		string		strFamily;
-		int			intPointSize;
-		int			intWeight;
-		_BOOLEAN	bItalic;
-	};
-
-	CFontParam		FontParamMMDlg;
-#endif
 
 };
 

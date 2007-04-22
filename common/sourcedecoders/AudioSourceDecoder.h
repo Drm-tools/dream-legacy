@@ -289,7 +289,7 @@ protected:
 	int					iLenDecOutPerChan;
 	int					iNumAudioFrames;
 
-	CParameter::EAudCod	eAudioCoding;
+	CAudioParam::EAudCod	eAudioCoding;
 
 
 #ifdef USE_FAAD2_LIBRARY /* AAC decoding */

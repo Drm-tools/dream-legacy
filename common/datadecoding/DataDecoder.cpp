@@ -471,7 +471,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 	   decoded */
 	if ((iCurDataStreamID != STREAM_ID_NOT_USED) &&
 		(ReceiverParam.Service[iCurSelDataServ].DataParam.
-		 ePacketModInd == CParameter::PM_PACKET_MODE))
+		 ePacketModInd == CDataParam::PM_PACKET_MODE))
 	{
 		/* Calculate total packet size. DRM standard: packet length: this
 		   field indicates the length in bytes of the data field of each
@@ -499,7 +499,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 
 			/* Only DAB application supported */
 			if (ReceiverParam.Service[iCurSelDataServ].DataParam.
-				eAppDomain == CParameter::AD_DAB_SPEC_APP)
+				eAppDomain == CDataParam::AD_DAB_SPEC_APP)
 			{
 				/* Get application identifier of current selected service, only
 				   used with DAB */
@@ -591,7 +591,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 	for (int i = 0; i < 3; i++)
 	{
 		if ((ReceiverParam.Service[i].DataParam.eAppDomain ==
-			 CParameter::AD_DAB_SPEC_APP)
+			 CDataParam::AD_DAB_SPEC_APP)
 			&& (ReceiverParam.Service[i].DataParam.iUserAppIdent == 7))
 		{
 			iEPGService = i;

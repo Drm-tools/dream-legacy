@@ -129,11 +129,11 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	int		iNumTapsTransmFilt;
 	CReal	rNormCurFreqOffset;
 */
-	const int iSymbolBlockSize = TransmParam.iSymbolBlockSize;
+	const int iSymbolBlockSize = TransmParam.CellMappingTable.iSymbolBlockSize;
 
 	/* Init vector for storing a complete DRM frame number of OFDM symbols */
 	iBlockCnt = 0;
-	iNumBlocks = TransmParam.iNumSymPerFrame;
+	iNumBlocks = TransmParam.CellMappingTable.iNumSymPerFrame;
 	iBigBlockSize = iSymbolBlockSize * 2 /* Stereo */ * iNumBlocks;
 
 	vecsDataOut.Init(iBigBlockSize);
@@ -172,7 +172,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	/* All robustness modes and spectrum occupancies should have the same output
 	   power. Calculate the normaization factor based on the average power of
 	   symbol (the number 3000 was obtained through output tests) */
-	rNormFactor = (CReal) 3000.0 / Sqrt(TransmParam.rAvPowPerSymbol);
+	rNormFactor = (CReal) 3000.0 / Sqrt(TransmParam.CellMappingTable.rAvPowPerSymbol);
 
 	/* Define block-size for input */
 	iInputBlockSize = iSymbolBlockSize;
@@ -195,7 +195,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 
 	/* OPH: update free-running symbol counter */
 	iFreeSymbolCounter++;
-	if (iFreeSymbolCounter >= Parameter.iNumSymPerFrame)
+	if (iFreeSymbolCounter >= Parameter.CellMappingTable.iNumSymPerFrame)
 	{
 		iFreeSymbolCounter = 0;
 		/* calculate the PSD once per frame for the RSI output */
@@ -334,10 +334,10 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 	if(pSound == NULL)
 		return;
 
-	pSound->Init(Parameter.iSymbolBlockSize * 2);
+	pSound->Init(Parameter.CellMappingTable.iSymbolBlockSize * 2);
 
 	/* Init buffer size for taking stereo input */
-	vecsSoundBuffer.Init(Parameter.iSymbolBlockSize * 2);
+	vecsSoundBuffer.Init(Parameter.CellMappingTable.iSymbolBlockSize * 2);
 
 	/* Init signal meter */
 	SignalLevelMeter.Init(0);
@@ -357,7 +357,7 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 	cExpStep = _COMPLEX(cos(rNormCurFreqOffsetIQ), sin(rNormCurFreqOffsetIQ));
 
 	/* Define output block-size */
-	iOutputBlockSize = Parameter.iSymbolBlockSize;
+	iOutputBlockSize = Parameter.CellMappingTable.iSymbolBlockSize;
 
 	/* OPH: init free-running symbol counter */
 	iFreeSymbolCounter = 0;
@@ -580,8 +580,8 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 	{
 		// Receiver is locked, so measure in the current DRM signal bandwidth Kmin to Kmax
 		_REAL rDCFrequency = ReceiverParam.GetDCFrequency();
-		rFreqKmin = rDCFrequency + _REAL(ReceiverParam.iCarrierKmin)/ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
-		rFreqKmax = rDCFrequency + _REAL(ReceiverParam.iCarrierKmax)/ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+		rFreqKmin = rDCFrequency + _REAL(ReceiverParam.CellMappingTable.iCarrierKmin)/ReceiverParam.CellMappingTable.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+		rFreqKmax = rDCFrequency + _REAL(ReceiverParam.CellMappingTable.iCarrierKmax)/ReceiverParam.CellMappingTable.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
 	}
 	else
 	{
@@ -593,12 +593,12 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 
 	_REAL rSigPower = CalcTotalPower(vecrPSD, FreqToBin(rFreqKmin), FreqToBin(rFreqKmax));
 
-	if (ReceiverParam.FrontEndParameters.eSMeterCorrectionType == CParameter::CFrontEndParameters::S_METER_CORRECTION_TYPE_AGC_ONLY)
+	if (ReceiverParam.FrontEndParameters.eSMeterCorrectionType == CFrontEndParameters::S_METER_CORRECTION_TYPE_AGC_ONLY)
 	{
 		/* Write it to the receiver params to help with calculating the signal strength */
 		rCorrection += _REAL(10.0) * log10(rSigPower);
 	}
-	else if (ReceiverParam.FrontEndParameters.eSMeterCorrectionType == CParameter::CFrontEndParameters::S_METER_CORRECTION_TYPE_AGC_RSSI)
+	else if (ReceiverParam.FrontEndParameters.eSMeterCorrectionType == CFrontEndParameters::S_METER_CORRECTION_TYPE_AGC_RSSI)
 	{
 		_REAL rSMeterBandwidth = ReceiverParam.FrontEndParameters.rSMeterBandwidth;
 

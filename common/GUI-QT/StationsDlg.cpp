@@ -62,7 +62,7 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 	SetSchedMode(eNewSchM);
 
 	/* Open file and init table for stations */
-	StationsTable.Init(0);
+	StationsTable.clear();
 
 	switch (eNewSchM)
 	{
@@ -170,7 +170,7 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 			StationsItem.SetDaysFlagString(strNewDaysFlags);
 
 			/* Add new item in table */
-			StationsTable.Add(StationsItem);
+			StationsTable.push_back(StationsItem);
 		}
 	} while (!((iFileStat == EOF) || (bReadOK == FALSE)));
 
@@ -331,22 +331,20 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 	}
 }
 
-StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
-	const char* name, bool modal, WFlags f) :
-	CStationsDlgBase(parent, name, modal, f), pDRMRec(pNDRMR),
+StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
+	QWidget* parent, const char* name, bool modal, WFlags f) :
+	CStationsDlgBase(parent, name, modal, f),
+	DRMReceiver(NDRMR),
+	Settings(NSettings),
 	bReInitOnFrequencyChange(FALSE), vecpListItems(0)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-	/* Get window geometry data from DRMReceiver module and apply it */
-	const QRect WinGeom(
-		pDRMRec->GeomStationsDlg.iXPos,
-		pDRMRec->GeomStationsDlg.iYPos,
-		pDRMRec->GeomStationsDlg.iWSize,
-		pDRMRec->GeomStationsDlg.iHSize
-	);
-
+	/* recover window size and position */
+	CWinGeom s;
+	Settings.Get("Stations Dialog", s);
+	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
 
@@ -366,7 +364,7 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	BitmCubePink.resize(iXSize, iYSize);
 	BitmCubePink.fill(QColor(255, 128, 128));
 
-	if (pDRMRec->SignalStrengthAvailable())
+	if (DRMReceiver.SignalStrengthAvailable())
 	{
 		/* Init progress bar for input s-meter */
 		ProgrSigStrength->setRange(S_METER_THERMO_MIN, S_METER_THERMO_MAX);
@@ -409,7 +407,7 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	/* Init with current setting in log file */
 	QwtCounterFrequency->
-		setValue(pDRMRec->GetParameters()->ReceptLog.GetFrequency());
+		setValue(DRMReceiver.GetParameters()->ReceptLog.GetFrequency());
 
 	/* Init UTC time shown with a label control */
 	SetUTCTimeLabel();
@@ -439,13 +437,13 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	pPreviewMenu->insertItem(tr("&30 minutes"), this,
 		SLOT(OnShowPreviewMenu(int)), 0, 3);
 
+		Settings.Put("Stations Dialog", "preview", NUM_SECONDS_PREV_5MIN);
 	/* Set stations preview */
 	/* Retrieve the setting saved into the .ini file */
-	switch (pDRMRec->iSecondsPreview)
+	switch (Settings.Get("Stations Dialog", "preview", 0))
 	{
 	case NUM_SECONDS_PREV_5MIN:
 		pPreviewMenu->setItemChecked(1, TRUE);
-		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
 		break;
 
 	case NUM_SECONDS_PREV_15MIN:
@@ -478,14 +476,14 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	CHECK_PTR(pRemoteMenuOther);
 
 	/* Init vector for storing the model IDs with zero length */
-	veciModelID.Init(0);
+	veciModelID.clear();
 
 	/* Add menu entry "none" */
 	pRemoteMenu->insertItem(tr("None"), this, SLOT(OnRemoteMenu(int)), 0, 0);
-	veciModelID.Add(0); /* ID 0 for "none" */
+	veciModelID.push_back(0); /* ID 0 for "none" */
 
 	/* Number of supported rigs */
-	const int iNumRigs = pDRMRec->GetHamlib()->GetNumHamModels();
+	const int iNumRigs = DRMReceiver.GetHamlib()->GetNumHamModels();
 
 	/* Add menu entries */
 	_BOOLEAN bCheckWasSet = FALSE;
@@ -493,11 +491,11 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	{
 		/* Get rig details */
 		const CHamlib::SDrRigCaps CurSDRiCa =
-			pDRMRec->GetHamlib()->GetHamModel(i);
+			DRMReceiver.GetHamlib()->GetHamModel(i);
 
 		/* Store model ID */
-		veciModelID.Add(CurSDRiCa.iModelID);
-		const int iCurModIDIdx = veciModelID.Size() - 1;
+		veciModelID.push_back(CurSDRiCa.iModelID);
+		const int iCurModIDIdx = veciModelID.size() - 1;
 
 		/* Create menu objects which belong to an action group. We hope that
 		   QT takes care of all the new objects and deletes them... */
@@ -523,7 +521,7 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		pMenu->insertItem(strMenuText, this, SLOT(OnRemoteMenu(int)), 0, iCurModIDIdx);
 
 		/* Check for checking */
-		if (pDRMRec->GetHamlib()->GetHamlibModelID() == CurSDRiCa.iModelID)
+		if (DRMReceiver.GetHamlib()->GetHamlibModelID() == CurSDRiCa.iModelID)
 		{
 			pMenu->setItemChecked(iCurModIDIdx, TRUE);
 			bCheckWasSet = TRUE;
@@ -556,19 +554,19 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	agCOMPortSel->addTo(pRemoteMenu);
 
 	/* Try to get the COM port number from the hamlib configure string */
-	if (pDRMRec->GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM1)
+	if (DRMReceiver.GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM1)
 		pacMenuCOM1->setOn(TRUE);
 
-	if (pDRMRec->GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM2)
+	if (DRMReceiver.GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM2)
 		pacMenuCOM2->setOn(TRUE);
 
-	if (pDRMRec->GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM3)
+	if (DRMReceiver.GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM3)
 		pacMenuCOM3->setOn(TRUE);
 
-	if (pDRMRec->GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM4)
+	if (DRMReceiver.GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM4)
 		pacMenuCOM4->setOn(TRUE);
 
-	if (pDRMRec->GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM5)
+	if (DRMReceiver.GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM5)
 		pacMenuCOM5->setOn(TRUE);
 
 
@@ -581,8 +579,8 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		this, SLOT(OnSMeterMenu(int)), 0);
 
 	/* S-meter settings */
-	pRemoteMenu->setItemChecked(iSMeterMenuID, pDRMRec->bEnableSMeter);
-	EnableSMeter(pDRMRec->bEnableSMeter);
+	pRemoteMenu->setItemChecked(iSMeterMenuID, DRMReceiver.bEnableSMeter);
+	EnableSMeter(DRMReceiver.bEnableSMeter);
 
 	/* Separator */
 	pRemoteMenu->insertSeparator();
@@ -593,7 +591,7 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	/* Set check */
 	pRemoteMenu->setItemChecked(iModRigMenuID,
-		pDRMRec->GetHamlib()->GetEnableModRigSettings());
+		DRMReceiver.GetHamlib()->GetEnableModRigSettings());
 #endif
 
 
@@ -686,7 +684,7 @@ void StationsDlg::OnShowStationsMenu(int iID)
 		/* Lock mutex for modifying the vecpListItems */
 		ListItemsMutex.lock();
 
-		vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
+		vecpListItems.resize(DRMSchedule.GetStationNumber(), NULL);
 
 		/* Unlock BEFORE calling the stations view update because in this function
 		   the mutex is locked, too! */
@@ -842,25 +840,27 @@ void StationsDlg::hideEvent(QHideEvent*)
 	/* Set window geometry data in DRMReceiver module */
 	QRect WinGeom = geometry();
 
-	pDRMRec->GeomStationsDlg.iXPos = WinGeom.x();
-	pDRMRec->GeomStationsDlg.iYPos = WinGeom.y();
-	pDRMRec->GeomStationsDlg.iHSize = WinGeom.height();
-	pDRMRec->GeomStationsDlg.iWSize = WinGeom.width();
+	CWinGeom c;
+	c.iXPos = WinGeom.x();
+	c.iYPos = WinGeom.y();
+	c.iHSize = WinGeom.height();
+	c.iWSize = WinGeom.width();
+	Settings.Put("Stations Dialog", c);
 
 	/* Store preview settings */
-	pDRMRec->iSecondsPreview = DRMSchedule.GetSecondsPreview();
+	Settings.Put("Stations Dialog", "preview", DRMSchedule.GetSecondsPreview());
 
 	/* Store sort settings */
 	switch (DRMSchedule.GetSchedMode())
 	{
 	case CDRMSchedule::SM_DRM:
-		pDRMRec->SortParamDRM.iColumn = iCurrentSortColumn;
-		pDRMRec->SortParamDRM.bAscending = bCurrentSortAscending;
+		Settings.Put("Stations Dialog", "sortcolumndrm", iCurrentSortColumn);
+		Settings.Put("Stations Dialog", "sortascendingdrm", bCurrentSortAscending);
 		break;
 
 	case CDRMSchedule::SM_ANALOG:
-		pDRMRec->SortParamAnalog.iColumn = iCurrentSortColumn;
-		pDRMRec->SortParamAnalog.bAscending = bCurrentSortAscending;
+		Settings.Put("Stations Dialog", "sortcolumnanalog", iCurrentSortColumn);
+		Settings.Put("Stations Dialog", "sortascendinganalog", bCurrentSortAscending);
 		break;
 	}
 }
@@ -903,9 +903,9 @@ void StationsDlg::showEvent(QShowEvent*)
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
 	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
 
-	EnableSMeter(pDRMRec->bEnableSMeter);
+	EnableSMeter(DRMReceiver.bEnableSMeter);
 	/* update window */
-	if (pDRMRec->bEnableSMeter)
+	if (DRMReceiver.bEnableSMeter)
 		OnTimerSMeter();
 
 	/* add last update information on menu item */
@@ -942,15 +942,13 @@ void StationsDlg::SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM)
 		switch (DRMSchedule.GetSchedMode())
 		{
 		case CDRMSchedule::SM_DRM:
-			pDRMRec->SortParamDRM.iColumn = iCurrentSortColumn;
-			pDRMRec->SortParamDRM.bAscending = bCurrentSortAscending;
-
+			Settings.Put("Stations Dialog", "sortcolumndrm", iCurrentSortColumn);
+			Settings.Put("Stations Dialog", "sortascendingdrm", bCurrentSortAscending);
 			break;
 
 		case CDRMSchedule::SM_ANALOG:
-			pDRMRec->SortParamAnalog.iColumn = iCurrentSortColumn;
-			pDRMRec->SortParamAnalog.bAscending = bCurrentSortAscending;
-
+			Settings.Put("Stations Dialog", "sortcolumnanalog", iCurrentSortColumn);
+			Settings.Put("Stations Dialog", "sortascendinganalog", bCurrentSortAscending);
 			break;
 		}
 	}
@@ -959,22 +957,16 @@ void StationsDlg::SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM)
 	switch (eNewSchM)
 	{
 	case CDRMSchedule::SM_DRM:
-		ListViewStations->setSorting(pDRMRec->SortParamDRM.iColumn,
-			pDRMRec->SortParamDRM.bAscending);
-
-		iCurrentSortColumn = pDRMRec->SortParamDRM.iColumn;
-		bCurrentSortAscending = pDRMRec->SortParamDRM.bAscending;
+		iCurrentSortColumn = Settings.Get("Stations Dialog", "sortcolumndrm", 0);
+		bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendingdrm", TRUE);
 		break;
 
 	case CDRMSchedule::SM_ANALOG:
-		ListViewStations->setSorting(pDRMRec->SortParamAnalog.iColumn,
-			pDRMRec->SortParamAnalog.bAscending);
-
-		iCurrentSortColumn = pDRMRec->SortParamAnalog.iColumn;
-		bCurrentSortAscending = pDRMRec->SortParamAnalog.bAscending;
-
+		iCurrentSortColumn = Settings.Get("Stations Dialog", "sortcolumnanalog", 0);
+		bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendinganalog", TRUE);
 		break;
 	}
+	ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
 }
 
 void StationsDlg::SetCurrentSchedule(const CDRMSchedule::ESchedMode eNewSchM)
@@ -995,7 +987,7 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 	/* Delete all old list view items (it is important that the vector
 	   "vecpListItems" was initialized to 0 at creation of the global object
 	   otherwise this may cause an segmentation fault) */
-	for (int i = 0; i < vecpListItems.Size(); i++)
+	for (size_t i = 0; i < vecpListItems.size(); i++)
 	{
 		if (vecpListItems[i] != NULL)
 			delete vecpListItems[i];
@@ -1005,7 +997,7 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 	DRMSchedule.ReadStatTabFromFile(eNewSchM);
 
 	/* Init vector for storing the pointer to the list view items */
-	vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
+	vecpListItems.resize(DRMSchedule.GetStationNumber(), NULL);
 
 	/* Unlock BEFORE calling the stations view update because in this function
 	   the mutex is locked, too! */
@@ -1142,7 +1134,7 @@ void StationsDlg::SetStationsView()
 void StationsDlg::OnFreqCntNewValue(double dVal)
 {
 	/* Set frequency to front-end */
-	pDRMRec->SetFrequency((int) dVal);
+	DRMReceiver.SetFrequency((int) dVal);
 }
 
 void StationsDlg::OnHeaderClicked(int c)
@@ -1170,7 +1162,7 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
 
 		/* If the mode has changed re-initialise the receiver */
-		ERecMode eCurrentMode = pDRMRec->GetReceiverMode();
+		ERecMode eCurrentMode = DRMReceiver.GetReceiverMode();
 
 		/* if "bReInitOnFrequencyChange" is not true, initiate a reinit when
 		 schedule mode is different from receiver mode */
@@ -1178,12 +1170,12 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		{
 		case CDRMSchedule::SM_DRM:
 			if ((eCurrentMode != RM_DRM) || bReInitOnFrequencyChange)
-				pDRMRec->SetReceiverMode(RM_DRM);
+				DRMReceiver.SetReceiverMode(RM_DRM);
 			break;
 
 		case CDRMSchedule::SM_ANALOG:
 			if ((eCurrentMode != RM_AM) || bReInitOnFrequencyChange)
-				pDRMRec->SetReceiverMode(RM_AM);
+				DRMReceiver.SetReceiverMode(RM_AM);
 			break;
 		}
 	}
@@ -1191,21 +1183,21 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 
 void StationsDlg::OnSMeterMenu(int iID)
 {
-	if (pDRMRec->SignalStrengthAvailable()==FALSE)
+	if (DRMReceiver.SignalStrengthAvailable()==FALSE)
 	   return;
 
 	if (pRemoteMenu->isItemChecked(iID))
 	{
 		pRemoteMenu->setItemChecked(iID, FALSE);
-		pDRMRec->bEnableSMeter = FALSE;
+		DRMReceiver.bEnableSMeter = FALSE;
 	}
 	else
 	{
 		pRemoteMenu->setItemChecked(iID, TRUE);
-		pDRMRec->bEnableSMeter = TRUE;
+		DRMReceiver.bEnableSMeter = TRUE;
 	}
 
-	EnableSMeter(pDRMRec->bEnableSMeter);
+	EnableSMeter(DRMReceiver.bEnableSMeter);
 }
 
 void StationsDlg::OnModRigMenu(int iID)
@@ -1214,12 +1206,12 @@ void StationsDlg::OnModRigMenu(int iID)
 	if (pRemoteMenu->isItemChecked(iID))
 	{
 		pRemoteMenu->setItemChecked(iID, FALSE);
-		pDRMRec->GetHamlib()->SetEnableModRigSettings(FALSE);
+		DRMReceiver.GetHamlib()->SetEnableModRigSettings(FALSE);
 	}
 	else
 	{
 		pRemoteMenu->setItemChecked(iID, TRUE);
-		pDRMRec->GetHamlib()->SetEnableModRigSettings(TRUE);
+		DRMReceiver.GetHamlib()->SetEnableModRigSettings(TRUE);
 	}
 #endif
 }
@@ -1228,21 +1220,21 @@ void StationsDlg::OnRemoteMenu(int iID)
 {
 #ifdef HAVE_LIBHAMLIB
 	/* Take care of check */
-	for (int i = 0; i < veciModelID.Size(); i++)
+	for (size_t i = 0; i < veciModelID.size(); i++)
 	{
 		/* We don't care here that not all IDs are in each menu. If there is a
 		   non-valid ID for the menu item, there is simply nothing done */
-		pRemoteMenu->setItemChecked(i, i == iID);
-		pRemoteMenuOther->setItemChecked(i, i == iID);
+		pRemoteMenu->setItemChecked(i, int(i) == iID);
+		pRemoteMenuOther->setItemChecked(i, int(i) == iID);
 	}
 
 	/* Set ID */
-	pDRMRec->GetHamlib()->SetHamlibModelID(veciModelID[iID]);
+	DRMReceiver.GetHamlib()->SetHamlibModelID(veciModelID[iID]);
 
 	/* If model is changed, update s-meter because new rig might have support
 	   for it. Only try to enable s-meter if it is not ID 0 ("none") */
 	if (iID != 0)
-		EnableSMeter(pDRMRec->bEnableSMeter);
+		EnableSMeter(DRMReceiver.bEnableSMeter);
 #endif
 }
 
@@ -1251,19 +1243,19 @@ void StationsDlg::OnComPortMenu(QAction* action)
 #ifdef HAVE_LIBHAMLIB
 	/* We cannot use the switch command for the non constant expressions here */
 	if (action == pacMenuCOM1)
-		pDRMRec->GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM1);
+		DRMReceiver.GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM1);
 
 	if (action == pacMenuCOM2)
-		pDRMRec->GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM2);
+		DRMReceiver.GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM2);
 
 	if (action == pacMenuCOM3)
-		pDRMRec->GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM3);
+		DRMReceiver.GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM3);
 
 	if (action == pacMenuCOM4)
-		pDRMRec->GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM4);
+		DRMReceiver.GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM4);
 
 	if (action == pacMenuCOM5)
-		pDRMRec->GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM5);
+		DRMReceiver.GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM5);
 #endif
 }
 
@@ -1271,7 +1263,7 @@ void StationsDlg::OnTimerSMeter()
 {
 	/* Get current s-meter value */
 	_REAL rCurSigStr;
-	_BOOLEAN bValid = pDRMRec->GetSignalStrength(rCurSigStr);
+	_BOOLEAN bValid = DRMReceiver.GetSignalStrength(rCurSigStr);
 
 	/* If a time-out happened, do not update s-meter anymore (disable it) */
 	if (bValid==FALSE)
@@ -1290,7 +1282,7 @@ void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
 {
 	/* Need both, GUI "enabled" and signal strength available before
 	   s-meter is used */
-	if ((bStatus == TRUE) && (pDRMRec->SignalStrengthAvailable()))
+	if ((bStatus == TRUE) && (DRMReceiver.SignalStrengthAvailable()))
 	{
 		/* Init progress bar for input s-meter */
 		ProgrSigStrength->setAlarmEnabled(TRUE);

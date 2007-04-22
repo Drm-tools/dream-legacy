@@ -58,11 +58,11 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	/* Data service */
 	Param.SetNumOfServices(0,1);
 
-	Param.SetAudDataFlag(0,  CParameter::SF_DATA);
+	Param.SetAudDataFlag(0,  CService::SF_DATA);
 
-	CParameter::CDataParam DataParam;
+	CDataParam DataParam;
 	DataParam.iStreamID = 0;
-	DataParam.ePacketModInd = CParameter::PM_SYNCHRON_STR_MODE;
+	DataParam.ePacketModInd = CDataParam::PM_SYNCHRON_STR_MODE;
 	Param.SetDataParam(0, DataParam);
 
 	//Param.SetCurSelDataService(1); /* Service ID must be set for activation */
@@ -96,8 +96,8 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	Param.MSCPrLe.iHierarch = 0;
 
 	Param.eSymbolInterlMode = CParameter::SI_SHORT;
-	Param.eMSCCodingScheme = CParameter::CS_3_SM;
-	Param.eSDCCodingScheme = CParameter::CS_2_SM;
+	Param.eMSCCodingScheme = CS_3_SM;
+	Param.eSDCCodingScheme = CS_2_SM;
 
 	/* DRM channel parameters */
 	Param.iDRMChannelNum = 1;

@@ -796,7 +796,7 @@ void CWriteIQFile::NewFrequency(CParameter &ReceiverParam)
 void CWriteIQFile::InitInternal(CParameter& ReceiverParam)
 {
 	/* Get parameters from info class */
-	const int iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
+	const int iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
 
 	iInputBlockSize = iSymbolBlockSize;
 

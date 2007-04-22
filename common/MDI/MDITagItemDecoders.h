@@ -130,7 +130,7 @@ public:
 		virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 		virtual string GetTagName(void);
 		CVector<_BINARY> vecbidata;
-		CParameter::CAudioParam AudioParams;
+		CAudioParam AudioParams;
 };
 
 #endif

@@ -49,11 +49,11 @@ public:
 			 CVector<_DECISION>& vecInputData5, 
 			 CVector<_DECISION>& vecInputData6,
 			 CVector<_COMPLEX>* pcOutputData);
-	void Init(int iNewOutputBlockSize, CParameter::ECodScheme eNewCodingScheme);
+	void Init(int iNewOutputBlockSize, ECodScheme eNewCodingScheme);
 
 protected:
 	int						iOutputBlockSize;
-	CParameter::ECodScheme	eMapType;
+	ECodScheme	eMapType;
 };
 
 

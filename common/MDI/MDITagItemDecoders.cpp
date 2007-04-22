@@ -265,36 +265,36 @@ void CTagItemDecoderAMAudio::DecodeTag(CVector<_BINARY>& vecbiTag, int iLen)
 	int iVal = vecbiTag.Separate(2);
 	switch (iVal)
 	{
-		case 0: AudioParams.eAudioCoding = CParameter::AC_AAC;
+		case 0: AudioParams.eAudioCoding = CAudioParam::AC_AAC;
 			break;
-		case 1: AudioParams.eAudioCoding = CParameter::AC_CELP; /* 01 */
+		case 1: AudioParams.eAudioCoding = CAudioParam::AC_CELP; /* 01 */
 			break;
-		case 2: AudioParams.eAudioCoding = CParameter::AC_HVXC; /* 10 */
+		case 2: AudioParams.eAudioCoding = CAudioParam::AC_HVXC; /* 10 */
 			break;
-		default: AudioParams.eAudioCoding = CParameter::AC_AAC;/* reserved */
+		default: AudioParams.eAudioCoding = CAudioParam::AC_AAC;/* reserved */
 	}
 
 	/* SBR flag */
 	iVal = vecbiTag.Separate(1);
-	AudioParams.eSBRFlag = (iVal == 1 ? CParameter::SB_USED : CParameter::SB_NOT_USED);
+	AudioParams.eSBRFlag = (iVal == 1 ? CAudioParam::SB_USED : CAudioParam::SB_NOT_USED);
 	/* Audio mode */
 	iVal = vecbiTag.Separate(2);
 	switch (iVal)
 	{
-		case 0: AudioParams.eAudioMode = CParameter::AM_MONO; break;
-		case 1: AudioParams.eAudioMode = CParameter::AM_P_STEREO; break;
-		case 2: AudioParams.eAudioMode = CParameter::AM_STEREO; break;
-		default: AudioParams.eAudioMode = CParameter::AM_MONO;
+		case 0: AudioParams.eAudioMode = CAudioParam::AM_MONO; break;
+		case 1: AudioParams.eAudioMode = CAudioParam::AM_P_STEREO; break;
+		case 2: AudioParams.eAudioMode = CAudioParam::AM_STEREO; break;
+		default: AudioParams.eAudioMode = CAudioParam::AM_MONO;
 	}
 	/* Audio sampling rate */
 	iVal = vecbiTag.Separate(3);
 	switch (iVal)
 	{
-		case 0: AudioParams.eAudioSamplRate = CParameter::AS_8_KHZ; break;
-		case 1: AudioParams.eAudioSamplRate = CParameter::AS_12KHZ; break;
-		case 2: AudioParams.eAudioSamplRate = CParameter::AS_16KHZ; break;
-		case 3: AudioParams.eAudioSamplRate = CParameter::AS_24KHZ; break;
-		default: AudioParams.eAudioSamplRate = CParameter::AS_24KHZ;
+		case 0: AudioParams.eAudioSamplRate = CAudioParam::AS_8_KHZ; break;
+		case 1: AudioParams.eAudioSamplRate = CAudioParam::AS_12KHZ; break;
+		case 2: AudioParams.eAudioSamplRate = CAudioParam::AS_16KHZ; break;
+		case 3: AudioParams.eAudioSamplRate = CAudioParam::AS_24KHZ; break;
+		default: AudioParams.eAudioSamplRate = CAudioParam::AS_24KHZ;
 	}
 	// coder field and some rfus (TODO: code the coder field correctly for all cases)
 	vecbiTag.Separate(8);

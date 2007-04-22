@@ -49,7 +49,6 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 	CComplexVector	cvecInpTmp;
 	CRealVector		rResMode(NUM_ROBUSTNESS_MODES);
 	int				iNewStIndCount = 0;
-
 	/* Max number of detected peaks ("5" for safety reasons. Could be "2") */
 	CVector<int>	iNewStartIndexField(5);
 
@@ -578,9 +577,9 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	int		iCorrBuffSize;
 
 	/* Get parameters from info class */
-	iGuardSize = ReceiverParam.iGuardSize;
-	iDFTSize = ReceiverParam.iFFTSizeN;
-	iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
+	iGuardSize = ReceiverParam.CellMappingTable.iGuardSize;
+	iDFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
+	iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
 
 	/* Decimated symbol block size */
 	iDecSymBS = iSymbolBlockSize / GRDCRR_DEC_FACT;

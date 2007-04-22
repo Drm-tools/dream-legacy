@@ -54,6 +54,7 @@
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
 #include "../DrmReceiver.h"
+#include "../util/Settings.h"
 
 
 /* Definitions ****************************************************************/
@@ -67,7 +68,7 @@ class systemevalDlg : public systemevalDlgBase
 	Q_OBJECT
 
 public:
-	systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+	systemevalDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
 	virtual ~systemevalDlg();
@@ -97,7 +98,8 @@ protected:
 		CDRMPlot::ECharType eCharTy;
 	};
 
-	CDRMReceiver*		pDRMRec;
+	CDRMReceiver&		DRMReceiver;
+	CSettings&			Settings;
 
 	QTimer				Timer;
 	QTimer				TimerLogFileLong;
@@ -114,7 +116,7 @@ protected:
 	QString				GetSpecOccStr();
 
 	QPopupMenu*			pListViewContextMenu;
-	CVector<CDRMPlot*>	vecpDRMPlots;
+	vector<CDRMPlot*>	vecpDRMPlots;
 
 public slots:
 	void OnTimer();

@@ -118,6 +118,9 @@ public:
 	CDRMPlot(QWidget *p = 0, const char *name = 0);
 	virtual ~CDRMPlot() {}
 
+	void LoadSettings(const CSettings&);
+	void SaveSettings(CSettings&);
+
 	/* This function has to be called before chart can be used! */
 	void SetRecObj(CDRMReceiver* pNDRMRec) {pDRMRec = pNDRMRec;}
 
@@ -150,10 +153,8 @@ public:
 					   CVector<_REAL>& vecrData2,
 					   CVector<_REAL>& vecrScale);
 	void SetFACConst(CVector<_COMPLEX>& veccData);
-	void SetSDCConst(CVector<_COMPLEX>& veccData,
-					 CParameter::ECodScheme eNewCoSc);
-	void SetMSCConst(CVector<_COMPLEX>& veccData,
-					 CParameter::ECodScheme eNewCoSc);
+	void SetSDCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc);
+	void SetMSCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc);
 	void SetAllConst(CVector<_COMPLEX>& veccMSC,
 					 CVector<_COMPLEX>& veccSDC,
 					 CVector<_COMPLEX>& veccFAC);
@@ -181,8 +182,8 @@ protected:
 	void SetupSNRSpectrum();
 	void SetupInpSpec();
 	void SetupFACConst();
-	void SetupSDCConst(const CParameter::ECodScheme eNewCoSc);
-	void SetupMSCConst(const CParameter::ECodScheme eNewCoSc);
+	void SetupSDCConst(const ECodScheme eNewCoSc);
+	void SetupMSCConst(const ECodScheme eNewCoSc);
 	void SetupAllConst();
 	void SetupInpPSD();
 	void SetupInpSpecWaterf();

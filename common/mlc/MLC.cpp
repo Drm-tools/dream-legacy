@@ -160,7 +160,7 @@ void CMLCEncoder::InitInternal(CParameter& TransmParam)
 	/* Bit interleaver */
 	/* First init all possible interleaver (According table "TableMLC.h" ->
 	   "Interleaver sequence") */
-	if (eCodingScheme == CParameter::CS_3_HMMIX)
+	if (eCodingScheme == CS_3_HMMIX)
 	{
 		BitInterleaver[0].Init(iN[0], iN[1], 13);
 		BitInterleaver[1].Init(iN[0], iN[1], 21);
@@ -358,14 +358,14 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 
 	/* Reasonable number of iterations depends on coding scheme. With a
 	   4-QAM no iteration is possible */
-	if (eCodingScheme == CParameter::CS_1_SM)
+	if (eCodingScheme == CS_1_SM)
 		iNumIterations = 0;
 	else
 		iNumIterations = iInitNumIterations;
 
 	/* Set this parameter to identify the last level of coder (important for
 	   very last loop */
-	if (eCodingScheme == CParameter::CS_3_HMMIX)
+	if (eCodingScheme == CS_3_HMMIX)
 		iIndexLastBranch = iLevels - 2;
 	else
 		iIndexLastBranch = iLevels - 1;
@@ -393,7 +393,7 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 	/* Bit interleaver */
 	/* First init all possible interleaver (According table "TableMLC.h" ->
 	   "Interleaver sequence") */
-	if (eCodingScheme == CParameter::CS_3_HMMIX)
+	if (eCodingScheme == CS_3_HMMIX)
 	{
 		BitDeinterleaver[0].Init(iN[0], iN[1], 13);
 		BitDeinterleaver[1].Init(iN[0], iN[1], 21);
@@ -464,8 +464,8 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 	switch (iNewChannelType)
 	{
 	/* FAC ********************************************************************/
-	case CParameter::CT_FAC:
-		eCodingScheme = CParameter::CS_1_SM;
+	case CT_FAC:
+		eCodingScheme = CS_1_SM;
 		iN_mux = NUM_FAC_CELLS;
 
 		iNumEncBits = NUM_FAC_CELLS * 2;
@@ -506,15 +506,15 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 
 
 	/* SDC ********************************************************************/
-	case CParameter::CT_SDC:
+	case CT_SDC:
 		eCodingScheme = Parameter.eSDCCodingScheme;
-		iN_mux = Parameter.iNumSDCCellsPerSFrame;
+		iN_mux = Parameter.CellMappingTable.iNumSDCCellsPerSFrame;
 
 		iNumEncBits = iN_mux * 2;
 
 		switch (eCodingScheme)
 		{
-		case CParameter::CS_1_SM:
+		case CS_1_SM:
 			iLevels = 1;
 
 			/* Code rates for prot.-Level A and B for each level */
@@ -553,7 +553,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			iL[2] = 0;
 			break;
 
-		case CParameter::CS_2_SM:
+		case CS_2_SM:
 			iLevels = 2;
 
 			/* Code rates for prot.-Level A and B for each level */
@@ -609,9 +609,9 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 
 
 	/* MSC ********************************************************************/
-	case CParameter::CT_MSC:
+	case CT_MSC:
 		eCodingScheme = Parameter.eMSCCodingScheme;
-		iN_mux = Parameter.iNumUsefMSCCellsPerFrame;
+		iN_mux = Parameter.CellMappingTable.iNumUsefMSCCellsPerFrame;
 
 		/* Data length for part A is the sum of all lengths of the streams */
 		iMSCDataLenPartA = Parameter.Stream[0].iLenPartA +
@@ -621,7 +621,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 
 		switch (eCodingScheme)
 		{
-		case CParameter::CS_2_SM:
+		case CS_2_SM:
 			iLevels = 2;
 
 			/* Code rates for prot.-Level A and B for each level */
@@ -700,7 +700,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			iL[2] = 0;
 			break;
 
-		case CParameter::CS_3_SM:
+		case CS_3_SM:
 			iLevels = 3;
 
 			/* Code rates for prot.-Level A and B for each level */
@@ -784,7 +784,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			iL[2] = 0;
 			break;
 
-		case CParameter::CS_3_HMSYM:
+		case CS_3_HMSYM:
 			iLevels = 3;
 	
 			/* Code rates for prot.-Level A and B for each level */
@@ -880,7 +880,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			iL[2] = iM[0][1];
 			break;
 
-		case CParameter::CS_3_HMMIX:
+		case CS_3_HMMIX:
 			iLevels = 6;
 
 			/* Code rates for prot.-Level A and B for each level */
