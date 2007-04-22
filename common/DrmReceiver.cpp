@@ -67,7 +67,7 @@ vecrDopplerHist(LEN_HIST_PLOT_SYNC_PARMS),
 vecrSNRHist(LEN_HIST_PLOT_SYNC_PARMS),
 veciCDAudHist(LEN_HIST_PLOT_SYNC_PARMS), iSymbolCount(0),
 rSumDopplerHist((_REAL) 0.0), rSumSNRHist((_REAL) 0.0), iCurrentCDAud(0),
-#ifdef USE_QT_GUI
+#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
 	RigPoll(),
 #endif
 	iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),

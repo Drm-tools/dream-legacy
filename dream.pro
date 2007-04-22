@@ -123,6 +123,7 @@ common/IQInputFilter.h   \
 common/matlib/Matlib.h   \
 common/matlib/MatlibSigProToolbox.h   \
 common/matlib/MatlibStdToolbox.h   \
+common/MDI/AFPacketGenerator.h   \
 common/MDI/MDIDecode.h   \
 common/MDI/MDIDefinitions.h   \
 common/MDI/MDIInBuffer.h   \
@@ -131,6 +132,7 @@ common/MDI/MDITagItemDecoders.h   \
 common/MDI/MDITagItems.h   \
 common/MDI/PacketInOut.h   \
 common/MDI/PacketSinkFile.h   \
+common/MDI/PacketSourceFile.h   \
 common/MDI/PacketSocketNull.h   \
 common/MDI/PacketSocketQT.h   \
 common/MDI/Pft.h   \
@@ -231,12 +233,14 @@ common/interleaver/SymbolInterleaver.cpp   \
 common/IQInputFilter.cpp   \
 common/matlib/MatlibSigProToolbox.cpp   \
 common/matlib/MatlibStdToolbox.cpp   \
+common/MDI/AFPacketGenerator.cpp   \
 common/MDI/MDIDecode.cpp   \
 common/MDI/MDIInBuffer.cpp   \
 common/MDI/MDIRSCI.cpp   \
 common/MDI/MDITagItemDecoders.cpp   \
 common/MDI/MDITagItems.cpp   \
 common/MDI/PacketSinkFile.cpp   \
+common/MDI/PacketSourceFile.cpp   \
 common/MDI/PacketSocketNull.cpp   \
 common/MDI/PacketSocketQT.cpp   \
 common/MDI/Pft.cpp   \
