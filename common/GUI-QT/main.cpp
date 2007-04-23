@@ -156,14 +156,18 @@ main(int argc, char **argv)
 		}
 		else
 		{
+# if QT_VERSION >= 0x030000
 			QTextEdit help;
 			help.setTextFormat( Qt::PlainText );
 			help.setGeometry(200, 200, 480, 320);
 			help.append(Settings.UsageArguments(argv).c_str());
-			/* Set main window */
+			// Set main window */
 			app.setMainWidget(&help);
 			help.show();
 			app.exec();
+#else
+			cout << Settings.UsageArguments(argv) << end;
+#endif
 			exit(0);
 		}
 

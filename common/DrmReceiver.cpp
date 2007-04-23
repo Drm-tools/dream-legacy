@@ -1696,7 +1696,8 @@ CDRMReceiver::SaveSettings(CSettings& s)
 
 #ifdef WIN32
 	/* Enable/Disable process priority flag */
-	s.Put("Receiver", "processpriority", bEnableProcessPriority);
+	/* TODO make a global to persist this */
+	//s.Put("Receiver", "processpriority", bEnableProcessPriority);
 #endif
 
 #ifdef HAVE_LIBHAMLIB

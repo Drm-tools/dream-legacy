@@ -58,7 +58,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	fontDefault = TextBrowser->font();
 
 	/* Retrieve the setting saved into the .ini file */
-	SetCurrentSavePath(Settings.Get("Multimedia Dialog", "storagepath"));
+	SetCurrentSavePath(Settings.Get("Multimedia Dialog", "storagepath").c_str());
 
 	/* Retrieve the font setting saved into the .ini file */
 	string strFontFamily = Settings.Get("Multimedia Dialog", "fontfamily");
