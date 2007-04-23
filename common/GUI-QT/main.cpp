@@ -87,13 +87,11 @@ main(int argc, char **argv)
 		if (translator.load("dreamtr"))
 			app.installTranslator(&translator);
 
-		string mode = Settings.Get("command", "mode", string("receive"));
-		cout << "mode:" << mode << endl;
-		if (mode == "receive")
-		{
-			CDRMReceiver DRMReceiver;
 #ifdef _WIN32
-			if (DRMReceiver.GetEnableProcessPriority())
+		/* works for both transmit and receive. GUI is low, working is normal.
+		 * the working thread does not need to know what the setting is.
+		 */
+			if (Settings.Get("GUI", "processpriority", TRUE));
 			{
 				/* Set priority class for this application */
 				SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
@@ -102,6 +100,12 @@ main(int argc, char **argv)
 				SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
 			}
 #endif
+
+		string mode = Settings.Get("command", "mode", string("receive"));
+		cout << "mode:" << mode << endl;
+		if (mode == "receive")
+		{
+			CDRMReceiver DRMReceiver;
 
 			/* First, initialize the working thread. This should be done in an extra
 			   routine since we cannot 100% assume that the working thread is
@@ -156,18 +160,7 @@ main(int argc, char **argv)
 		}
 		else
 		{
-# if QT_VERSION >= 0x030000
-			QTextEdit help;
-			help.setTextFormat( Qt::PlainText );
-			help.setGeometry(200, 200, 480, 320);
-			help.append(Settings.UsageArguments(argv).c_str());
-			// Set main window */
-			app.setMainWidget(&help);
-			help.show();
-			app.exec();
-#else
-			cout << Settings.UsageArguments(argv) << end;
-#endif
+			QMessageBox::information(0, "Dream", Settings.UsageArguments(argv).c_str());
 			exit(0);
 		}
 
@@ -214,7 +207,7 @@ ErrorMessage(string strErrorString)
 	strError += "\n\nThe application will exit now.";
 
 #ifdef _WIN32
-	MessageBox(NULL, strError.c_str(), "Dream",
+	MessageBoxA(NULL, strError.c_str(), "Dream",
 			   MB_SYSTEMMODAL | MB_OK | MB_ICONEXCLAMATION);
 #else
 	perror(strError.c_str());

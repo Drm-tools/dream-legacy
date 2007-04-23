@@ -48,6 +48,7 @@
 #else
 # include "GPSData.h"
 #endif
+#include <set>
 
 class CDRMReceiver;
 
@@ -1073,6 +1074,14 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		
 	};
 
+class CServiceInformation
+{
+public:
+	uint32_t		id;    /* this is the primary key but we keep it inside too for completeness */
+	set<string>		label; /* gathered from the SDC. Normally the label is static and is the station name, but
+							  it is officially dynamic so we collect all that we see. */
+};
+
 class CParameter
 {
   public:
@@ -1201,6 +1210,9 @@ class CParameter
 
 	vector<CStream> Stream;
 	vector<CService> Service;
+
+	/* information about services gathered from SDC, EPG and web schedules */
+	map<uint32_t,CServiceInformation> ServiceInformation;
 
 	/* These values are used to set input and output block sizes of some
 	   modules */

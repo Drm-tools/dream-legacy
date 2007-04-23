@@ -69,6 +69,11 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 		iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 	}
+	else
+	{
+		iOutputBlockSize = 0;
+		ReceiverParam.ReceiveStatus.SetFACStatus(NOT_PRESENT);
+	}
 
 	pvecOutputData2->Reset(0);
 	const int iLenBitsMDISDCdata = vecbiSDCData.Size();
@@ -92,10 +97,16 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 
 			iOutputBlockSize2 = iLenBitsMDISDCdata;
 		}
+		iFramesSinceSDC = 0;
 	}
 	else
 	{
 		pvecOutputData2->Reset(0);
+		iOutputBlockSize2 = 0;
+		if(iFramesSinceSDC>2)
+				ReceiverParam.ReceiveStatus.SetSDCStatus(NOT_PRESENT);
+		else
+			iFramesSinceSDC++;
     }
 
 	/* Get stream data from received RSCI / MDI packets */
@@ -174,4 +185,5 @@ void CDecodeRSIMDI::InitInternal(CParameter& ReceiverParam)
 			//veciMaxOutputBlockSize[i] = 16384;
 			veciOutputBlockSize[i] = streamlen*SIZEOF__BYTE;
 		}
+		iFramesSinceSDC = 3;
 }

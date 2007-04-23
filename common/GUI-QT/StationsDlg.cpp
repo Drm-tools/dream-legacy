@@ -579,8 +579,8 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		this, SLOT(OnSMeterMenu(int)), 0);
 
 	/* S-meter settings */
-	pRemoteMenu->setItemChecked(iSMeterMenuID, DRMReceiver.bEnableSMeter);
-	EnableSMeter(DRMReceiver.bEnableSMeter);
+	pRemoteMenu->setItemChecked(iSMeterMenuID, DRMReceiver.GetEnableSMeter());
+	EnableSMeter(DRMReceiver.GetEnableSMeter());
 
 	/* Separator */
 	pRemoteMenu->insertSeparator();
@@ -903,9 +903,9 @@ void StationsDlg::showEvent(QShowEvent*)
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
 	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
 
-	EnableSMeter(DRMReceiver.bEnableSMeter);
+	EnableSMeter(DRMReceiver.GetEnableSMeter());
 	/* update window */
-	if (DRMReceiver.bEnableSMeter)
+	if (DRMReceiver.GetEnableSMeter())
 		OnTimerSMeter();
 
 	/* add last update information on menu item */
@@ -1189,15 +1189,15 @@ void StationsDlg::OnSMeterMenu(int iID)
 	if (pRemoteMenu->isItemChecked(iID))
 	{
 		pRemoteMenu->setItemChecked(iID, FALSE);
-		DRMReceiver.bEnableSMeter = FALSE;
+		DRMReceiver.SetEnableSMeter(FALSE);
 	}
 	else
 	{
 		pRemoteMenu->setItemChecked(iID, TRUE);
-		DRMReceiver.bEnableSMeter = TRUE;
+		DRMReceiver.SetEnableSMeter(TRUE);
 	}
 
-	EnableSMeter(DRMReceiver.bEnableSMeter);
+	EnableSMeter(DRMReceiver.GetEnableSMeter());
 }
 
 void StationsDlg::OnModRigMenu(int iID)
@@ -1234,7 +1234,7 @@ void StationsDlg::OnRemoteMenu(int iID)
 	/* If model is changed, update s-meter because new rig might have support
 	   for it. Only try to enable s-meter if it is not ID 0 ("none") */
 	if (iID != 0)
-		EnableSMeter(DRMReceiver.bEnableSMeter);
+		EnableSMeter(DRMReceiver.GetEnableSMeter());
 #endif
 }
 

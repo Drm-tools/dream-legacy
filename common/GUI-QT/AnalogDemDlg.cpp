@@ -91,34 +91,6 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QToolTip::add(MainPlot,
 		tr("Click on the plot to set the demodulation frequency"));
 
-	/* Set current AM demodulation type */
-	DRMReceiver.GetAMDemod()->SetDemodType(DRMReceiver.AMDemodType);
-
-	/* Load user's saved filter bandwidth for the demodulation type. */
-	switch (DRMReceiver.GetAMDemod()->GetDemodType())
-	{
-	case CAMDemodulation::DT_AM:
-		DRMReceiver.GetAMDemod()->SetFilterBW(DRMReceiver.iBwAM);
-		break;
-
-	case CAMDemodulation::DT_LSB:
-		DRMReceiver.GetAMDemod()->SetFilterBW(DRMReceiver.iBwLSB);
-		break;
-
-	case CAMDemodulation::DT_USB:
-		DRMReceiver.GetAMDemod()->SetFilterBW(DRMReceiver.iBwUSB);
-		break;
-
-	case CAMDemodulation::DT_CW:
-		DRMReceiver.GetAMDemod()->SetFilterBW(DRMReceiver.iBwCW);
-		break;
-
-	case CAMDemodulation::DT_FM:
-		DRMReceiver.GetAMDemod()->SetFilterBW(DRMReceiver.iBwFM);
-		break;
-	}
-
-	/* Init slider control for bandwidth setting */
 	SliderBandwidth->setRange(0, SOUNDCRD_SAMPLE_RATE / 2);
 	SliderBandwidth->setTickmarks(QSlider::Both);
 	SliderBandwidth->setTickInterval(1000); /* Each kHz a tick */
@@ -401,31 +373,27 @@ void AnalogDemDlg::OnTimerPLLPhaseDial()
 
 void AnalogDemDlg::OnRadioDemodulation(int iID)
 {
+	/* DRMReceiver takes care of setting appropriate filter BW */
 	switch (iID)
 	{
 	case 0:
-		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
-		DRMReceiver.GetAMDemod()->SetFilterBW(DRMReceiver.iBwAM);
+		DRMReceiver.SetAMDemodType(CAMDemodulation::DT_AM);
 		break;
 
 	case 1:
-		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_LSB);
-		DRMReceiver.GetAMDemod()->SetFilterBW(DRMReceiver.iBwLSB);
+		DRMReceiver.SetAMDemodType(CAMDemodulation::DT_LSB);
 		break;
 
 	case 2:
-		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_USB);
-		DRMReceiver.GetAMDemod()->SetFilterBW(DRMReceiver.iBwUSB);
+		DRMReceiver.SetAMDemodType(CAMDemodulation::DT_USB);
 		break;
 
 	case 3:
-		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_CW);
-		DRMReceiver.GetAMDemod()->SetFilterBW(DRMReceiver.iBwCW);
+		DRMReceiver.SetAMDemodType(CAMDemodulation::DT_CW);
 		break;
 
 	case 4:
-		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_FM);
-		DRMReceiver.GetAMDemod()->SetFilterBW(DRMReceiver.iBwFM);
+		DRMReceiver.SetAMDemodType(CAMDemodulation::DT_FM);
 		break;
 	}
 
@@ -480,32 +448,8 @@ void AnalogDemDlg::OnRadioNoiRed(int iID)
 void AnalogDemDlg::OnSliderBWChange(int value)
 {
 	/* Set new filter in processing module */
-	DRMReceiver.GetAMDemod()->SetFilterBW(value);
+	DRMReceiver.SetAMFilterBW(value);
 	TextLabelBandWidth->setText(QString().setNum(value) + tr(" Hz"));
-
-	/* Store filter bandwidth for this demodulation type */
-	switch (DRMReceiver.GetAMDemod()->GetDemodType())
-	{
-	case CAMDemodulation::DT_AM:
-		DRMReceiver.iBwAM = value;
-		break;
-
-	case CAMDemodulation::DT_LSB:
-		DRMReceiver.iBwLSB = value;
-		break;
-
-	case CAMDemodulation::DT_USB:
-		DRMReceiver.iBwUSB = value;
-		break;
-
-	case CAMDemodulation::DT_CW:
-		DRMReceiver.iBwCW = value;
-		break;
-
-	case CAMDemodulation::DT_FM:
-		DRMReceiver.iBwFM = value;
-		break;
-	}
 
 	/* Update chart */
 	MainPlot->Update();

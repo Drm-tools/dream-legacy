@@ -143,47 +143,43 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 			switch ((*pbiData).Separate(4))
 			{
 			case 0: /* Type 0 */
-				bError = DataEntityType0(pbiData, iLengthOfBody, Parameter);
+				bError = DataEntityType0(pbiData, iLengthOfBody, Parameter, bVersionFlag);
 				break;
 
 			case 1: /* Type 1 */
-				bError = DataEntityType1(pbiData, iLengthOfBody, Parameter);
+				bError = DataEntityType1(pbiData, iLengthOfBody, Parameter, bVersionFlag);
 				break;
 
 			case 3: /* Type 3 */
-				bError = DataEntityType3(pbiData, iLengthOfBody, Parameter,
-					bVersionFlag);
+				bError = DataEntityType3(pbiData, iLengthOfBody, Parameter, bVersionFlag);
 				break;
 
 			case 4: /* Type 4 */
-				bError = DataEntityType4(pbiData, iLengthOfBody, Parameter,
-					bVersionFlag);
+				bError = DataEntityType4(pbiData, iLengthOfBody, Parameter, bVersionFlag);
 				break;
 
 			case 5: /* Type 5 */
-				bError = DataEntityType5(pbiData, iLengthOfBody, Parameter);
+				bError = DataEntityType5(pbiData, iLengthOfBody, Parameter, bVersionFlag);
 				break;
 
 			case 7: /* Type 7 */
-				bError = DataEntityType7(pbiData, iLengthOfBody, Parameter,
-					bVersionFlag);
+				bError = DataEntityType7(pbiData, iLengthOfBody, Parameter, bVersionFlag);
 				break;
 
 			case 8: /* Type 8 */
-				bError = DataEntityType8(pbiData, iLengthOfBody, Parameter);
+				bError = DataEntityType8(pbiData, iLengthOfBody, Parameter, bVersionFlag);
 				break;
 
 			case 9: /* Type 9 */
-				bError = DataEntityType9(pbiData, iLengthOfBody, Parameter);
+				bError = DataEntityType9(pbiData, iLengthOfBody, Parameter, bVersionFlag);
 				break;
 
 			case 11: /* Type 11 */
-				bError = DataEntityType11(pbiData, iLengthOfBody, Parameter,
-					bVersionFlag);
+				bError = DataEntityType11(pbiData, iLengthOfBody, Parameter, bVersionFlag);
 				break;
 
 			case 12: /* Type 12 */
-				bError = DataEntityType12(pbiData, iLengthOfBody, Parameter);
+				bError = DataEntityType12(pbiData, iLengthOfBody, Parameter, bVersionFlag);
 				break;
 
 			default:
@@ -216,7 +212,8 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
-									  CParameter& Parameter)
+									  CParameter& Parameter,
+									  const _BOOLEAN bVersion)
 {
 	CMSCProtLev				MSCPrLe;
 	int						iLenPartA;
@@ -291,7 +288,8 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 _BOOLEAN CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
-									  CParameter& Parameter)
+									  CParameter& Parameter,
+									  const _BOOLEAN bVersion)
 {
 	/* Short ID (the short ID is the index of the service-array) */
 	const int iTempShortID = (*pbiData).Separate(2);
@@ -303,22 +301,26 @@ _BOOLEAN CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
 
 
 	/* Get label string ----------------------------------------------------- */
+	string strLabel(iLengthOfBody, 0);
 	/* Check the following restriction to the length of label: "label: this is a
 	   variable length field of up to 64 bytes defining the label" */
 	if (iLengthOfBody <= 64)
 	{
-		/* Reset label string */
-		Parameter.Service[iTempShortID].strLabel = "";
 
 		/* Get all characters from SDC-stream */
 		for (int i = 0; i < iLengthOfBody; i++)
 		{
 			/* Get character */
-			const char cNewChar = char((*pbiData).Separate(8));
-
-			/* Append new character */
-			Parameter.Service[iTempShortID].strLabel.append(&cNewChar, 1);
+			strLabel[i] = char((*pbiData).Separate(8));
 		}
+
+		/* TODO only update the parameters if the version flag has changed */
+
+		/* store label string in the current service structure */
+		Parameter.Service[iTempShortID].strLabel = strLabel;
+		/* and keep it in the persistent service information store */
+		uint32_t sid = Parameter.Service[iTempShortID].iServiceID;
+		(void)Parameter.ServiceInformation[sid].label.insert(strLabel);
 
 		return FALSE;
 	}
@@ -617,7 +619,8 @@ _BOOLEAN CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
-									  CParameter& Parameter)
+									  CParameter& Parameter,
+									  const _BOOLEAN bVersion)
 {
 	/* Short ID (the short ID is the index of the service-array) */
 	const int iTempShortID = (*pbiData).Separate(2);
@@ -831,7 +834,8 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 _BOOLEAN CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
-									  CParameter& Parameter)
+									  CParameter& Parameter,
+									  const _BOOLEAN bVersion)
 {
 	/* Check length -> must be 3 bytes */
 	if (iLengthOfBody != 3)
@@ -857,7 +861,8 @@ _BOOLEAN CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 _BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
-									  CParameter& Parameter)
+									  CParameter& Parameter,
+									  const _BOOLEAN bVersion)
 {
 	/* Check length -> must be 2 bytes */
 	if (iLengthOfBody != 2)
@@ -1271,7 +1276,8 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 _BOOLEAN CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
 									   const int iLengthOfBody,
-									   CParameter& Parameter)
+									  CParameter& Parameter,
+									  const _BOOLEAN bVersion)
 {
 	int i;
 

@@ -1295,14 +1295,14 @@ void CShortLog::reset()
 	pLog->iNumCRCOkMSC = 0;
 
 	iNumSNR = 0;
-	rSumSNR = (_REAL) 0.0;
-	rMaxSNR = 0;
-	rMinSNR = 1000; /* Init with high value */
+	rSumSNR = 0.0;
+	rMaxSNR = 0.0;
+	rMinSNR = 1000.0; /* Init with high value */
 
 	iNumSigStr = 0;
-	rSumSigStr = (_REAL) 0.0;
-	rMaxSigStr = 0;
-	rMinSigStr = 1000; /* Init with high value */
+	rSumSigStr = 0.0;
+	rMaxSigStr = 0.;
+	rMinSigStr = 1000.; /* Init with high value */
 }
 
 void CLongLog::reset()
@@ -1418,14 +1418,14 @@ void CLongLog::writeHeader(time_t)
 
 void CShortLog::writeTrailer()
 {
-	if (rMaxSNR > rMinSNR)
+	if (rMaxSNR >= rMinSNR)
 		fprintf(pFile, "\nSNR min: %4.1f, max: %4.1f\n", rMinSNR, rMaxSNR);
 	else
 		fprintf(pFile, "\nSNR min: %4.1f, max: %4.1f\n", 0.0, 0.0);
 
 	if(pLog->bRxlEnabled)
 	{
-		if (rMaxSigStr > rMinSigStr)
+		if (rMaxSigStr >= rMinSigStr)
 			fprintf(pFile, "\nRXL min: %4.1f, max: %4.1f\n", rMinSigStr, rMaxSigStr);
 		else
 			fprintf(pFile, "\nRXL min: %4.1f, max: %4.1f\n", 0.0, 0.0);

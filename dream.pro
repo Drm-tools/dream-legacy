@@ -14,7 +14,6 @@ macx {
 	OBJECTS_DIR	= darwin
 	DEFINES		+= USE_PORTAUDIO 
 	DEFINES		+= HAVE_DFFTW_H HAVE_DRFFTW_H
-	INCLUDEPATH	+= darwin
 	INCLUDEPATH	+= /usr/local/include /opt/local/include
 	LIBS 		+= -L/usr/local/lib -L/opt/local/lib
 	LIBS 		+= -framework CoreAudio -framework AudioToolbox -framework AudioUnit
@@ -35,7 +34,6 @@ unix {
 	!macx {
 		DEFINES		+= HAVE_FFTW_H HAVE_RFFTW_H
 		MAKEFILE	= Makefile.qt
-		INCLUDEPATH	+= linux
 		LIBS 		+= -lfftw -lrfftw -lrt
 		OBJECTS_DIR	= linux
 		UI_DIR		= linux/moc

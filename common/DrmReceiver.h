@@ -145,7 +145,11 @@ public:
 	void					SetInitResOff(_REAL rNRO)
 								{rInitResampleOffset = rNRO;}
 
+	void					SetAMDemodType(CAMDemodulation::EDemodType);
+	void					SetAMFilterBW(int iBw);
 	void					SetAMDemodAcq(_REAL rNewNorCen);
+	void	 				SetEnableSMeter(_BOOLEAN bNew);
+	_BOOLEAN		 		GetEnableSMeter();
 	_BOOLEAN 				SetFrequency(int iNewFreqkHz);
 	int		 				GetFrequency() { return iFreqkHz; }
 
@@ -196,14 +200,6 @@ public:
 
 	void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 		{ChannelEstimation.GetSNRProfile(vecrData, vecrScale);}
-
-#ifdef _WIN32
-	void SetEnableProcessPriority(_BOOLEAN bValue)
-		{bProcessPriorityEnabled = bValue;}
-
-	_BOOLEAN GetEnableProcessPriority()
-		{return bProcessPriorityEnabled;}
-#endif
 
 	/* Get pointer to internal modules */
 	CSelectionInterface*	GetSoundInInterface() {return pSoundInInterface;}
@@ -415,20 +411,13 @@ protected:
 	} RigPoll;
 #endif
 
-public:
-	_BOOLEAN				bEnableSMeter;
-
-	/* Analog demodulation settings */
 	int						iBwAM;
 	int						iBwLSB;
 	int						iBwUSB;
 	int						iBwCW;
 	int						iBwFM;
-	CAMDemodulation::EDemodType	AMDemodType;
+	_BOOLEAN				bEnableSMeter;
 
-#ifdef _WIN32
-	_BOOLEAN				bProcessPriorityEnabled;
-#endif
 	_BOOLEAN				bReadFromFile;
 	time_t					time_keeper;
 

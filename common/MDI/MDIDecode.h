@@ -47,6 +47,7 @@ protected:
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 
 	CTagPacketDecoderMDI TagPacketDecoderMDI;
+	int iFramesSinceSDC;
 };
 
 #endif

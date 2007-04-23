@@ -47,7 +47,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="$(QTDIR)\include,../libs,../common/GUI-QT"
+				AdditionalIncludeDirectories="$(QTDIR)\include,../libs,../common/GUI-QT,./moc"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;QT_DLL;QT_THREAD_SUPPORT;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -143,7 +143,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(QTDIR)\include,../libs,../common/GUI-QT"
+				AdditionalIncludeDirectories="$(QTDIR)\include,../libs,../common/GUI-QT,./moc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;QT_DLL;QT_THREAD_SUPPORT;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"

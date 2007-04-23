@@ -71,10 +71,6 @@ rSumDopplerHist((_REAL) 0.0), rSumSNRHist((_REAL) 0.0), iCurrentCDAud(0),
 	RigPoll(),
 #endif
 	iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
-AMDemodType(CAMDemodulation::DT_AM),
-#ifdef _WIN32
-	bProcessPriorityEnabled(TRUE),
-#endif
 	bReadFromFile(FALSE), time_keeper(0)
 {
 	pReceiverParam = new CParameter(this);
@@ -96,7 +92,74 @@ CDRMReceiver::~CDRMReceiver()
 	delete pSoundOutInterface;
 }
 
+void
+CDRMReceiver::SetEnableSMeter(_BOOLEAN bNew)
+{
+	bEnableSMeter = bNew;
+}
 
+_BOOLEAN
+CDRMReceiver::GetEnableSMeter()
+{
+	return bEnableSMeter;
+}
+
+void
+CDRMReceiver::SetAMDemodType(CAMDemodulation::EDemodType eNew)
+{
+	AMDemodulation.SetDemodType(eNew);
+	switch (eNew)
+	{
+	case CAMDemodulation::DT_AM:
+		AMDemodulation.SetFilterBW(iBwAM);
+		break;
+
+	case CAMDemodulation::DT_LSB:
+		AMDemodulation.SetFilterBW(iBwLSB);
+		break;
+
+	case CAMDemodulation::DT_USB:
+		AMDemodulation.SetFilterBW(iBwUSB);
+		break;
+
+	case CAMDemodulation::DT_CW:
+		AMDemodulation.SetFilterBW(iBwCW);
+		break;
+
+	case CAMDemodulation::DT_FM:
+		AMDemodulation.SetFilterBW(iBwFM);
+		break;
+	}
+}
+
+void
+CDRMReceiver::SetAMFilterBW(int value)
+{
+	/* Store filter bandwidth for this demodulation type */
+	switch (AMDemodulation.GetDemodType())
+	{
+	case CAMDemodulation::DT_AM:
+		iBwAM = value;
+		break;
+
+	case CAMDemodulation::DT_LSB:
+		iBwLSB = value;
+		break;
+
+	case CAMDemodulation::DT_USB:
+		iBwUSB = value;
+		break;
+
+	case CAMDemodulation::DT_CW:
+		iBwCW = value;
+		break;
+
+	case CAMDemodulation::DT_FM:
+		iBwFM = value;
+		break;
+	}
+	AMDemodulation.SetFilterBW(value);
+}
 
 void
 CDRMReceiver::Run()
@@ -656,11 +719,9 @@ CDRMReceiver::InitReceiverMode()
 void
 CDRMReceiver::run()
 {
-	/* Set thread priority (the working thread should have a higher priority
-	   than tthe GUI) */
 #ifdef _WIN32
-	if (GetEnableProcessPriority())
-		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+	/* it doesn't matter what the GUI does, we want to be normal! */
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 #endif
 	try
 	{
@@ -1486,6 +1547,57 @@ CDRMReceiver::LoadSettings(const CSettings& s)
 		break;
 	}
 
+	/* AM Parameters */
+
+	/* AGC */
+	AMDemodulation.SetAGCType((CAGC::EType)s.Get("AM Demodulation", "agc", 0)); 
+
+	/* noise reduction */
+	AMDemodulation.SetNoiRedType((CAMDemodulation::ENoiRedType)s.Get("AM Demodulation", "noisered", 0));
+
+	/* pll enabled/disabled */
+	AMDemodulation.EnablePLL(s.Get("AM Demodulation", "enablepll", 0));
+
+	/* auto frequency acquisition */
+	AMDemodulation.EnableAutoFreqAcq(s.Get("AM Demodulation", "autofreqacq", 0));
+
+	/* demodulation */
+	CAMDemodulation::EDemodType DemodType
+		= (CAMDemodulation::EDemodType)s.Get("AM Demodulation", "demodulation", CAMDemodulation::DT_AM);
+
+	AMDemodulation.SetDemodType(DemodType);
+
+	iBwAM = s.Get("AM Demodulation", "filterbwam", 10000);
+	iBwUSB = s.Get("AM Demodulation", "filterbwusb", 5000);
+	iBwLSB = s.Get("AM Demodulation", "filterbwlsb", 5000);
+	iBwCW = s.Get("AM Demodulation", "filterbwcw", 150);
+	iBwFM = s.Get("AM Demodulation", "filterbwfm", 6000);
+
+	/* Load user's saved filter bandwidth for the demodulation type. */
+	switch (DemodType)
+	{
+	case CAMDemodulation::DT_AM:
+		AMDemodulation.SetFilterBW(iBwAM);
+		break;
+
+	case CAMDemodulation::DT_LSB:
+		AMDemodulation.SetFilterBW(iBwLSB);
+		break;
+
+	case CAMDemodulation::DT_USB:
+		AMDemodulation.SetFilterBW(iBwUSB);
+		break;
+
+	case CAMDemodulation::DT_CW:
+		AMDemodulation.SetFilterBW(iBwCW);
+		break;
+
+	case CAMDemodulation::DT_FM:
+		AMDemodulation.SetFilterBW(iBwFM);
+		break;
+	}
+
+	/* Init slider control for bandwidth setting */
 	/* upstream RSCI */
 	str = s.Get("command", "rsiin");
 	if(str != "")
@@ -1557,11 +1669,6 @@ CDRMReceiver::LoadSettings(const CSettings& s)
 	/* Wanted RF Frequency file */
 	SetFrequency(s.Get("Receiver", "frequency", 0));
 
-#ifdef WIN32
-	/* Enable/Disable process priority flag */
-	SetEnableProcessPriority(s.Get("Receiver", "processpriority", TRUE));
-#endif
-
 	/* Activate/Deactivate EPG decoding */
 	DataDecoder.SetDecodeEPG(s.Get("EPG", "decodeepg", TRUE));
 
@@ -1569,6 +1676,12 @@ CDRMReceiver::LoadSettings(const CSettings& s)
 	CReceptLog& ReceptLog = pReceiverParam->ReceptLog;
 	/* Start log file flag */
 	ReceptLog.SetLoggingEnabled(s.Get("Logfile", "enablelog", FALSE));
+
+    /* log file flag for storing signal strength in long log */
+	ReceptLog.SetRxlEnabled(s.Get("Logfile", "enablerxl", FALSE));
+
+	/* log file flag for storing lat/long in long log */
+	ReceptLog.SetPositionEnabled(s.Get("Logfile", "enablepositiondata", FALSE));
 
 	/* logging delay value */
 	ReceptLog.SetDelLogStart(s.Get("Logfile", "delay", 0));
@@ -1694,11 +1807,28 @@ CDRMReceiver::SaveSettings(CSettings& s)
 		s.Put("Logfile", "longitude", longitude);
 	}
 
-#ifdef WIN32
-	/* Enable/Disable process priority flag */
-	/* TODO make a global to persist this */
-	//s.Put("Receiver", "processpriority", bEnableProcessPriority);
-#endif
+	/* AM Parameters */
+
+	/* AGC */
+	s.Put("AM Demodulation", "agc", AMDemodulation.GetAGCType());
+
+	/* noise reduction */
+	s.Put("AM Demodulation", "noisered", AMDemodulation.GetNoiRedType());
+
+	/* pll enabled/disabled */
+	s.Put("AM Demodulation", "enablepll", AMDemodulation.PLLEnabled());
+
+	/* auto frequency acquisition */
+	s.Put("AM Demodulation", "autofreqacq", AMDemodulation.AutoFreqAcqEnabled());
+
+	/* demodulation */
+	s.Put("AM Demodulation", "demodulation", AMDemodulation.GetDemodType());
+
+	s.Put("AM Demodulation", "filterbwam", iBwAM);
+	s.Put("AM Demodulation", "filterbwusb", iBwUSB);
+	s.Put("AM Demodulation", "filterbwlsb", iBwLSB);
+	s.Put("AM Demodulation", "filterbwcw", iBwCW);
+	s.Put("AM Demodulation", "filterbwfm", iBwFM);
 
 #ifdef HAVE_LIBHAMLIB
 	/* Hamlib --------------------------------------------------------------- */
