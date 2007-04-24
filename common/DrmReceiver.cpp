@@ -1597,7 +1597,6 @@ CDRMReceiver::LoadSettings(const CSettings& s)
 		break;
 	}
 
-	/* Init slider control for bandwidth setting */
 	/* upstream RSCI */
 	str = s.Get("command", "rsiin");
 	if(str != "")

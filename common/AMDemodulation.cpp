@@ -31,6 +31,25 @@
 
 
 /* Implementation *************************************************************/
+
+CAMDemodulation::CAMDemodulation() : 
+	cvecBReal(), cvecBImag(), rvecZReal(), rvecZImag(),
+	cvecBAMAfterDem(), rvecZAMAfterDem(), rvecInpTmp(),
+	cvecHilbert(),
+	iHilFiltBlLen(0),
+	FftPlansHilFilt(),
+	rBPNormBW((CReal) 10000.0 / SOUNDCRD_SAMPLE_RATE),
+	rNormCurMixFreqOffs((CReal) 0.0),
+	rBPNormCentOffsTot(0.0),
+	rvecZAM(), rvecADC(), rvecBDC(), rvecZFM(), rvecAFM(), rvecBFM(),
+	iSymbolBlockSize(0),
+	bPLLIsEnabled(FALSE), bAutoFreqAcquIsEnabled(TRUE), eDemodType(DT_AM),
+	cOldVal(),
+	PLL(), Mixer(), FreqOffsAcq(), AGC(), NoiseReduction(), NoiRedType(NR_OFF)
+	iFreeSymbolCounter(),
+{
+}
+
 void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int i;
