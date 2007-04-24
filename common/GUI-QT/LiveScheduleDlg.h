@@ -42,11 +42,7 @@
 #include <qthread.h>
 #include <qfiledialog.h>
 
-#ifdef _WIN32
-# include "../../Windows/moc/LiveScheduleDlgbase.h"
-#else
-# include "moc/LiveScheduleDlgbase.h"
-#endif
+#include "LiveScheduleDlgbase.h"
 #include "../DrmReceiver.h"
 #include "../util/Settings.h"
 #include "DialogUtil.h"

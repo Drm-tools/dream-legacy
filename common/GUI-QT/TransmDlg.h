@@ -52,11 +52,9 @@
 #include <qwt/qwt_thermo.h>
 
 #ifdef _WIN32
-# include "../../Windows/moc/TransmDlgbase.h"
 # include "windows.h"
-#else
-# include "moc/TransmDlgbase.h"
 #endif
+#include "TransmDlgbase.h"
 #include "DialogUtil.h"
 #include "../DrmTransmitter.h"
 #include "../Parameter.h"

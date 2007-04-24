@@ -36,13 +36,7 @@
 #include "../datadecoding/epg/epgutil.h"
 #include "../util/Settings.h"
 #include "MultimediaDlg.h"
-
-#ifdef _WIN32
-# include "../../Windows/moc/MultSettingsDlgbase.h"
-#else
-# include "moc/MultSettingsDlgbase.h"
-#endif
-# include "../util/Settings.h"
+#include "MultSettingsDlgbase.h"
 
 /* Definitions ****************************************************************/
 

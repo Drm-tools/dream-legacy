@@ -50,17 +50,12 @@
 #include <qfont.h>
 #include <qstylesheet.h>
 
-#ifdef _WIN32
-# include "../../Windows/moc/MultimediaDlgbase.h"
-#else
-# include "moc/MultimediaDlgbase.h"
-#endif
-
+#include "MultimediaDlgbase.h"
+#include "MultColorLED.h"
+#include "DialogUtil.h"
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
-#include "MultColorLED.h"
 #include "../datadecoding/DABMOT.h"
-#include "DialogUtil.h"
 #include "../util/Settings.h"
 
 /* Definitions ****************************************************************/

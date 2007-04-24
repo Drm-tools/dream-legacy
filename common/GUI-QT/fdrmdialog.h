@@ -40,11 +40,7 @@
 #include <qpalette.h>
 #include <qcolordialog.h>
 
-#ifdef _WIN32
-# include "../../Windows/moc/fdrmdialogbase.h"
-#else
-# include "moc/fdrmdialogbase.h"
-#endif
+#include "fdrmdialogbase.h"
 #include "DialogUtil.h"
 #include "systemevalDlg.h"
 #include "MultimediaDlg.h"

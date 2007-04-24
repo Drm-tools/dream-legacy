@@ -44,11 +44,7 @@
 #include <qpixmap.h>
 #include <qwt/qwt_thermo.h>
 
-#ifdef _WIN32
-# include "../../Windows/moc/systemevalDlgbase.h"
-#else
-# include "moc/systemevalDlgbase.h"
-#endif
+#include "systemevalDlgbase.h"
 #include "DRMPlot.h"
 #include "MultColorLED.h"
 #include "../GlobalDefinitions.h"

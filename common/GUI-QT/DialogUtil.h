@@ -36,11 +36,7 @@
 #include <qlabel.h>
 #include <qwhatsthis.h>
 
-#ifdef _WIN32
-# include "../../Windows/moc/AboutDlgbase.h"
-#else
-# include "moc/AboutDlgbase.h"
-#endif
+#include "AboutDlgbase.h"
 #include "../DrmReceiver.h"
 
 #ifdef USE_QT_GUI

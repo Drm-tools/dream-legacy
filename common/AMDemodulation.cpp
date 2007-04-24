@@ -45,8 +45,8 @@ CAMDemodulation::CAMDemodulation() :
 	iSymbolBlockSize(0),
 	bPLLIsEnabled(FALSE), bAutoFreqAcquIsEnabled(TRUE), eDemodType(DT_AM),
 	cOldVal(),
-	PLL(), Mixer(), FreqOffsAcq(), AGC(), NoiseReduction(), NoiRedType(NR_OFF)
-	iFreeSymbolCounter(),
+	PLL(), Mixer(), FreqOffsAcq(), AGC(), NoiseReduction(), NoiRedType(NR_OFF),
+	iFreeSymbolCounter()
 {
 }
 

@@ -48,6 +48,7 @@
 #else
 # include "GPSData.h"
 #endif
+#include <map>
 #include <set>
 
 class CDRMReceiver;

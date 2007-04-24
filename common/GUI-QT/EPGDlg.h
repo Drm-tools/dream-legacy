@@ -30,11 +30,6 @@
 #ifndef _EPGDLG_H
 #define _EPGDLG_H
 
-#ifdef _WIN32
-# include "../../Windows/moc/EPGDlgbase.h"
-#else
-# include "moc/EPGDlgbase.h"
-#endif
 #include <qwidget.h>
 #include <qdatetime.h>
 #include <qpushbutton.h>
@@ -48,6 +43,7 @@
 #include <qtimer.h>
 #include <qpixmap.h>
 
+#include "EPGDlgbase.h"
 #include "../DrmReceiver.h"
 #include "../datadecoding/epg/EPG.h"
 #include "../util/Settings.h"

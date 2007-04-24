@@ -34,11 +34,7 @@
 #include "../DrmReceiver.h"
 #include "../util/Settings.h"
 
-#ifdef _WIN32
-# include "../../Windows/moc/GeneralSettingsDlgbase.h"
-#else
-# include "moc/GeneralSettingsDlgbase.h"
-#endif
+#include "GeneralSettingsDlgbase.h"
 
 /* Definitions ****************************************************************/
 

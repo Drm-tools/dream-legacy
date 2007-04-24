@@ -50,11 +50,7 @@
 #include <qwt/qwt_thermo.h>
 #include <qwt/qwt_counter.h>
 
-#ifdef _WIN32
-# include "../../Windows/moc/StationsDlgbase.h"
-#else
-# include "moc/StationsDlgbase.h"
-#endif
+#include "StationsDlgbase.h"
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 #include "../util/Settings.h"

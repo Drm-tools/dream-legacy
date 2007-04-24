@@ -49,13 +49,8 @@
 /* This include is for setting the progress bar style */
 #include <qmotifstyle.h>
 
-#ifdef _WIN32
-# include "../../Windows/moc/AnalogDemDlgbase.h"
-# include "../../Windows/moc/AMSSDlgbase.h"
-#else
-# include "moc/AnalogDemDlgbase.h"
-# include "moc/AMSSDlgbase.h"
-#endif
+#include "AnalogDemDlgbase.h"
+#include "AMSSDlgbase.h"
 #include "DialogUtil.h"
 #include "DRMPlot.h"
 #include "../GlobalDefinitions.h"
