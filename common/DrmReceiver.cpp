@@ -1617,8 +1617,8 @@ CDRMReceiver::LoadSettings(const CSettings& s)
 		if(str != "")
 		{
 			downstreamRSCI.SetDestination(str);
-			ss.str("rsioutprofile");
-			ss << i;
+			ss.str("");
+			ss << "rsioutprofile" << i;
 			str = s.Get("command", ss.str());
 			if(str != "")
 				downstreamRSCI.SetProfile(str[0]);
@@ -1741,8 +1741,8 @@ CDRMReceiver::LoadSettings(const CSettings& s)
 		// Pad to a minimum of 6 characters
 		while (sValue.length() < 6)
 			sValue += "_";
+		pReceiverParam->sSerialNumber = sValue;
 	}
-	pReceiverParam->sSerialNumber = sValue;
 		
 	pReceiverParam->GenerateReceiverID();
 
