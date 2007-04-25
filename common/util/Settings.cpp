@@ -375,7 +375,7 @@ CSettings::ParseArguments(int argc, char **argv)
 			for (int i = 0; i < rsioutnum; i++)
 			{
 				stringstream s;
-				s << "rsioutprofile" << rsioutnum;
+				s << "rsioutprofile" << i;
 				if(ini["command"].count(s.str()) == 0)
 					Put("command", s.str(), strArgument);
 			}
