@@ -52,7 +52,6 @@ extern "C"
 /* Implementation *************************************************************/
 void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 {
-	cout<<"ReadStatTabFromFile. mode ="<<eNewSchM<<endl;
 	const int	iMaxLenName = 256;
 	char		cName[iMaxLenName];
 	int			iFileStat;
@@ -78,11 +77,7 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 
 	/* Check if opening of file was successful */
 	if (pFile == 0)
-	{
-		cout<<"ReadStatTabFromFile couldn't open file"<<endl;
-
 		return;
-	}
 
 	fgets(cName, iMaxLenName, pFile); /* Remove "[DRMSchedule]" */
 	do
@@ -142,11 +137,8 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 		if (iFileStat != 1)
 			fscanf(pFile, "\n");
 		else
-		{
 			StationsItem.strName = cName;
 
-			cout<<"name="<<cName<<endl;
-		}
 		/* Language */
 		iFileStat = fscanf(pFile, "Language=%255[^\n|^\r]\n", cName);
 		if (iFileStat != 1)
@@ -183,7 +175,6 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 	} while (!((iFileStat == EOF) || (bReadOK == FALSE)));
 
 	fclose(pFile);
-	cout<<"ReadStatTabFromFile finished"<<endl;
 }
 
 CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
@@ -682,49 +673,32 @@ void StationsDlg::SetUTCTimeLabel()
 
 void StationsDlg::OnShowStationsMenu(int iID)
 {
-	//OPH was trying to fix this
 	/* Show only active stations if ID is 0, else show all */
 	if (iID == 0)
 	{
-		cout<<__FILE__<<":"<<__LINE__<<endl;
 		bShowAll = FALSE;
 
 		/* clear all and reload. If the list is too big this increase the performance */
 		ListViewStations->clear();
 	
-		cout<<__FILE__<<":"<<__LINE__<<endl;
 		/* Lock mutex for modifying the vecpListItems */
 		ListItemsMutex.lock();
 
-		cout<<__FILE__<<":"<<__LINE__<<" size = "<<vecpListItems.size()<<endl;
-		for (size_t i = 0; i < vecpListItems.size(); i++)
-		{
-			cout<<"item "<<i<<" pointer = "<<vecpListItems[i]<<endl;
-			if (vecpListItems[i] != NULL)
-				delete vecpListItems[i];
-		}
+		vecpListItems.assign(DRMSchedule.GetStationNumber(), (MyListViewItem*) NULL);
 
-		cout<<__FILE__<<":"<<__LINE__<<endl;
-		vecpListItems.assign(DRMSchedule.GetStationNumber(), NULL);
-
-		cout<<__FILE__<<":"<<__LINE__<<"item 3 = "<<vecpListItems[3]<<endl;
 		/* Unlock BEFORE calling the stations view update because in this function
 		   the mutex is locked, too! */
 		ListItemsMutex.unlock();
-		cout<<__FILE__<<":"<<__LINE__<<endl;
 	}
 	else
 		bShowAll = TRUE;
-	cout<<__FILE__<<":"<<__LINE__<<"size = "<<vecpListItems.size()<<endl;
 
 	/* Update list view */
 	SetStationsView();
-		cout<<__FILE__<<":"<<__LINE__<<endl;
 
 	/* Taking care of checks in the menu */
 	pViewMenu->setItemChecked(0, 0 == iID);
 	pViewMenu->setItemChecked(1, 1 == iID);
-		cout<<__FILE__<<":"<<__LINE__<<endl;
 }
 
 void StationsDlg::OnShowPreviewMenu(int iID)
@@ -940,10 +914,8 @@ void StationsDlg::showEvent(QShowEvent*)
 
 void StationsDlg::OnTimerList()
 {
-	cout<<"OnTimerList"<<endl;
 	/* Update list view */
 	SetStationsView();
-	cout<<"OnTimerList finished"<<endl;
 }
 
 QString MyListViewItem::key(int column, bool ascending) const
@@ -1007,8 +979,6 @@ void StationsDlg::SetCurrentSchedule(const CDRMSchedule::ESchedMode eNewSchM)
 
 void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 {
-	cout<<"LoadSchedule mode = "<<eNewSchM<<endl;
-
 	/* Lock mutex for modifying the vecpListItems */
 	ListItemsMutex.lock();
 
@@ -1017,7 +987,6 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 	/* Delete all old list view items (it is important that the vector
 	   "vecpListItems" was initialized to 0 at creation of the global object
 	   otherwise this may cause an segmentation fault) */
-	cout<<"before resize, size = "<<vecpListItems.size()<<endl;
 	for (size_t i = 0; i < vecpListItems.size(); i++)
 	{
 		if (vecpListItems[i] != NULL)
@@ -1026,64 +995,50 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 
 	/* Read initialization file */
 	DRMSchedule.ReadStatTabFromFile(eNewSchM);
-	/* Init vector for storing the pointer to the list view items */
-	cout<<"resizing to "<<DRMSchedule.GetStationNumber()<<endl;
-	// OPH change to line below seemed to fix it
-	vecpListItems.assign(DRMSchedule.GetStationNumber(), NULL);
-	cout<<"New size "<<vecpListItems.size()<<"pointer 3 = "<<vecpListItems[3]<<endl;
 
-cout<<"1"<<endl;
+	/* Init vector for storing the pointer to the list view items */
+	vecpListItems.assign(DRMSchedule.GetStationNumber(), (MyListViewItem*) NULL);
+
 	/* Unlock BEFORE calling the stations view update because in this function
 	   the mutex is locked, too! */
 	ListItemsMutex.unlock();
 
-cout<<"2"<<endl;
 	/* Update list view */
 	SetStationsView();
-cout<<"3"<<endl;
 
 	/* Add last update information on menu item if the dialog is visible */
 	if (this->isVisible())
 		AddUpdateDateTime();
-	cout<<"LoadSchedule done"<<endl;
 }
 
 void StationsDlg::SetStationsView()
 {
-cout<<"4"<<endl;
 	/* Stop the timer and disable the list */
 	TimerList.stop();
-cout<<"5"<<endl;
 
 	const _BOOLEAN bListFocus = ListViewStations->hasFocus();
-cout<<"6"<<endl;
 
 	ListViewStations->setUpdatesEnabled(FALSE);
 	ListViewStations->setEnabled(FALSE);
-cout<<"7"<<endl;
 
 	/* Set lock because of list view items. These items could be changed
 	   by another thread */
 	ListItemsMutex.lock();
-cout<<"8"<<endl;
 
 	const int iNumStations = DRMSchedule.GetStationNumber();
 	_BOOLEAN bListHastChanged = FALSE;
-cout<<"9, pointer 3 = "<<vecpListItems[3]<<endl;
 
 	/* Add new item for each station in list view */
 	for (int i = 0; i < iNumStations; i++)
 	{
 		CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
-cout<<__FILE__<<":"<<__LINE__<<" i="<<i<<" pointer="<<vecpListItems[i]<<endl;
+
 		if (!((bShowAll == FALSE) &&
 			(iState == CDRMSchedule::IS_INACTIVE)))
 		{
 			/* Only insert item if it is not already in the list */
-cout<<__FILE__<<":"<<__LINE__<<endl;
 			if (vecpListItems[i] == NULL)
 			{
-cout<<__FILE__<<":"<<__LINE__<<endl;
 				/* Get power of the station. We have to do a special treatment
 				   here, because we want to avoid having a "0" in the list when
 				   a "?" was in the schedule-ini-file */
@@ -1095,7 +1050,6 @@ cout<<__FILE__<<":"<<__LINE__<<endl;
 				else
 					strPower.setNum(rPower);
 
-cout<<__FILE__<<":"<<__LINE__<<endl;
 				/* Generate new list item with all necessary column entries */
 				vecpListItems[i] = new MyListViewItem(ListViewStations,
 					DRMSchedule.GetItem(i).strName.c_str()     /* name */,
@@ -1109,22 +1063,18 @@ cout<<__FILE__<<":"<<__LINE__<<endl;
 					DRMSchedule.GetItem(i).strSite.c_str()     /* site */,
 					DRMSchedule.GetItem(i).strLanguage.c_str() /* language */);
 
-cout<<__FILE__<<":"<<__LINE__<<endl;
 				/* Show list of days */
 				vecpListItems[i]->setText(8,
 					DRMSchedule.GetItem(i).strDaysShow.c_str());
-cout<<__FILE__<<":"<<__LINE__<<endl;
 
 				/* Insert this new item in list. The item object is destroyed by
 				   the list view control when this is destroyed */
 				ListViewStations->insertItem(vecpListItems[i]);
 
-cout<<__FILE__<<":"<<__LINE__<<endl;
 				/* Set flag for sorting the list */
 				bListHastChanged = TRUE;
 			}
 
-cout<<__FILE__<<":"<<__LINE__<<"iState is "<<iState<<endl;
 			/* Check, if station is currently transmitting. If yes, set
 			   special pixmap */
 			switch (iState)
@@ -1145,53 +1095,40 @@ cout<<__FILE__<<":"<<__LINE__<<"iState is "<<iState<<endl;
 					vecpListItems[i]->setPixmap(0, BitmCubeRed);
 					break;
 			}
-cout<<__FILE__<<":"<<__LINE__<<endl;
 		}
 		else
 		{
-cout<<__FILE__<<":"<<__LINE__<<endl;
 			/* Delete this item since it is not used anymore */
 			if (vecpListItems[i] != NULL)
 			{
 				/* If one deletes a item in QT list view, it is
 				   automaticall removed from the list and the list gets
 				   repainted */
-cout<<__FILE__<<":"<<__LINE__<<endl;
 				delete vecpListItems[i];
-cout<<__FILE__<<":"<<__LINE__<<endl;
 
 				/* Reset pointer so we can distinguish if it is used or not */
 				vecpListItems[i] = NULL;
 
-cout<<__FILE__<<":"<<__LINE__<<endl;
 				/* Set flag for sorting the list */
 				bListHastChanged = TRUE;
 			}
-cout<<__FILE__<<":"<<__LINE__<<endl;
 		}
 	}
-cout<<"10"<<endl;
 
 	/* Sort the list if items have changed */
 	if (bListHastChanged == TRUE)
 		ListViewStations->sort();
-cout<<"11"<<endl;
 
 	ListItemsMutex.unlock();
-cout<<"12"<<endl;
 	
 	/* Start the timer and enable the list */
 	ListViewStations->setUpdatesEnabled(TRUE);
 	ListViewStations->setEnabled(TRUE);
-cout<<"13"<<endl;
 
 	if (bListFocus == TRUE)
 		ListViewStations->setFocus();
-cout<<"14"<<endl;
 
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT);
-cout<<"15"<<endl;
-
 }
 
 void StationsDlg::OnFreqCntNewValue(double dVal)
@@ -1324,7 +1261,6 @@ void StationsDlg::OnComPortMenu(QAction* action)
 
 void StationsDlg::OnTimerSMeter()
 {
-	cout<<"ontimersmeter"<<endl;
 	/* Get current s-meter value */
 	_REAL rCurSigStr;
 	_BOOLEAN bValid = DRMReceiver.GetSignalStrength(rCurSigStr);
@@ -1340,7 +1276,6 @@ void StationsDlg::OnTimerSMeter()
 			EnableSMeter(TRUE);
 		ProgrSigStrength->setValue(rCurSigStr);
 	}
-	cout<<"ontimersmeter done"<<endl;
 }
 
 void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
