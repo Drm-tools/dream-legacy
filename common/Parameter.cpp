@@ -30,6 +30,7 @@
 #include "DrmReceiver.h"
 #include "Version.h"
 #include <iomanip>
+#include "util/LogPrint.h"
 
 void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam);
 
@@ -44,7 +45,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
  iAMSSCarrierMode(0),
  sReceiverID("                "),
  sSerialNumber(),
- sDataFilesDirectory(),
+ sDataFilesDirectory("./"),
  MSCPrLe(),
  Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
  iNumBitsHierarchFrameTotal(0),
@@ -123,6 +124,97 @@ CParameter::CParameter(CDRMReceiver *pRx):
 	if(pDRMRec)
 		eReceiverMode = pDRMRec->GetReceiverMode();
 }
+
+ CParameter::CParameter(CDRMReceiver *pRx, CParameter *pParameter):
+ pDRMRec(pRx),
+ eSymbolInterlMode(),
+ eMSCCodingScheme(),	
+ eSDCCodingScheme(),	
+ iNumAudioService(0),
+ iNumDataService(0),
+ iAMSSCarrierMode(0),
+ sReceiverID(pParameter->sReceiverID), // OPH
+ sSerialNumber(pParameter->sSerialNumber), // OPH
+ sDataFilesDirectory(pParameter->sDataFilesDirectory), // OPH
+ MSCPrLe(),
+ Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
+ iNumBitsHierarchFrameTotal(0),
+ iNumDecodedBitsMSC(0),
+ iNumSDCBitsPerSFrame(0),	
+ iNumAudioDecoderBits(0),	
+ iNumDataDecoderBits(0),	
+ iYear(pParameter->iYear), // OPH
+ iMonth(pParameter->iMonth), // OPH
+ iDay(pParameter->iDay), // OPH
+ iUTCHour(pParameter->iUTCHour), // OPH
+ iUTCMin(pParameter->iUTCMin), // OPH
+ iFrameIDTransm(0),
+ iFrameIDReceiv(0),
+ rFreqOffsetAcqui(0.0),
+ rFreqOffsetTrack(0.0),
+ rResampleOffset(0.0),
+ iTimingOffsTrack(0),
+ eReceiverMode(RM_NONE),
+ eAcquiState(AS_NO_SIGNAL),
+ vecbiAudioFrameStatus(0),
+ bMeasurePSD(pParameter->bMeasurePSD), // OPH
+ vecrPSD(0),
+ matcReceivedPilotValues(),
+ RawSimDa(),
+ eSimType(),
+ iDRMChannelNum(0),
+ iSpecChDoppler(0),
+ rBitErrRate(0.0),
+ rSyncTestParam(0.0),		
+ rSINR(0.0),
+ iNumBitErrors(0),
+ iChanEstDelay(0),
+ iNumTaps(0),
+ iPathDelay(MAX_NUM_TAPS_DRM_CHAN),
+ rGainCorr(0.0),
+ iOffUsfExtr(0),
+ ReceiveStatus(),
+ FrontEndParameters(pParameter->FrontEndParameters),  // OPH
+ AltFreqSign(),
+ AltFreqOtherServicesSign(),
+ ReceptLog(),
+ rSNREstimate(0.0),
+ rMER(0.0),
+ rWMERMSC(0.0),
+ rWMERFAC(0.0),
+ rSigmaEstimate(0.0),
+ rMinDelay(0.0),
+ rMaxDelay(0.0),
+ bMeasureDelay(pParameter->bMeasureDelay), // OPH
+ vecrRdel(0),
+ vecrRdelThresholds(0),
+ vecrRdelIntervals(0),
+ bMeasureDoppler(pParameter->bMeasureDoppler), // OPH
+ rRdop(0.0),
+ bMeasureInterference(pParameter->bMeasureInterference), // OPH
+ rIntFreq(0.0),
+ rINR(0.0),
+ rICR(0.0),
+ rMaxPSDwrtSig(0.0),
+ rMaxPSDFreq(0.0),
+ rSigStrengthCorrection(pParameter->rSigStrengthCorrection), // OPH
+ bRunThread(pParameter->bRunThread),  // OPH
+ bUsingMultimedia(pParameter->bUsingMultimedia), // OPH
+ CellMappingTable(),
+ rSysSimSNRdB(0.0),
+ iCurSelAudioService(0),
+ iCurSelDataService(0),
+ eRobustnessMode(RM_ROBUSTNESS_MODE_A),	
+ eSpectOccup(SO_0),
+ LastAudioService(),
+ LastDataService(),
+ Mutex()
+{
+	//GenerateRandomSerialNumber();  // OPH
+	if(pDRMRec)
+		eReceiverMode = pDRMRec->GetReceiverMode();
+}
+
 
 CParameter::~CParameter()
 {

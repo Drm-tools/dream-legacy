@@ -56,8 +56,8 @@ pReceiverParam(NULL), pDRMParam(NULL), pAMParam(NULL),
 RSIPacketBuf(),
 MSCDecBuf(MAX_NUM_STREAMS), MSCUseBuf(MAX_NUM_STREAMS),
 MSCSendBuf(MAX_NUM_STREAMS), iAcquRestartCnt(0),
-iAcquDetecCnt(0), iGoodSignCnt(0), eReceiverMode(RM_NONE),
-eNewReceiverMode(RM_NONE), iAudioStreamID(STREAM_ID_NOT_USED),
+iAcquDetecCnt(0), iGoodSignCnt(0), eReceiverMode(RM_DRM),
+eNewReceiverMode(RM_DRM), iAudioStreamID(STREAM_ID_NOT_USED),
 iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE),
 rInitResampleOffset((_REAL) 0.0),
 vecrFreqSyncValHist(LEN_HIST_PLOT_SYNC_PARMS),
@@ -71,8 +71,10 @@ rSumDopplerHist((_REAL) 0.0), rSumSNRHist((_REAL) 0.0), iCurrentCDAud(0),
 	RigPoll(),
 #endif
 	iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
-	bReadFromFile(FALSE), time_keeper(0)
+	bReadFromFile(FALSE), time_keeper(0),
+	iFreqkHz(0)
 {
+	CPrintfLogPrinter::Instantiate();
 	pReceiverParam = new CParameter(this);
 	downstreamRSCI.SetReceiver(this);
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
@@ -340,7 +342,7 @@ CDRMReceiver::Run()
 	}
 
 	/* Play and/or save the audio */
-	if (iAudioStreamID != STREAM_ID_NOT_USED)
+	if (iAudioStreamID != STREAM_ID_NOT_USED || eReceiverMode == RM_AM)
 	{
 		if (WriteData.WriteData(ReceiverParam, AudSoDecBuf))
 		{
@@ -461,6 +463,7 @@ CDRMReceiver::DecodeDRM(_BOOLEAN& bEnoughData, _BOOLEAN& bFrameToSend)
 void
 CDRMReceiver::UtilizeDRM(_BOOLEAN& bEnoughData)
 {
+
 	CParameter & ReceiverParam = *pReceiverParam;
 
 	if (UtilizeFACData.WriteData(ReceiverParam, FACUseBuf))
@@ -652,15 +655,20 @@ CDRMReceiver::InitReceiverMode()
 			if (pDRMParam == NULL)
 			{
 				/* DRM Mode was never invoked so we get to claim the default parameter instance */
-				pAMParam = pReceiverParam;
+				//pAMParam = pReceiverParam;
+				pAMParam = new CParameter(this, pReceiverParam);
+				delete pReceiverParam;
+				pReceiverParam = pAMParam;
 			}
 			else
 			{
 				/* change from DRM to AM Mode - we better have our own parameter instance */
-				pAMParam = new CParameter(this);
+				pAMParam = new CParameter(this, pDRMParam);
+				//*pAMParam = *pDRMParam;
+				//pAMParam->eReceiverMode = RM_AM;
 			}
-			/* copy some important state from the DRM parameters */
-			pAMParam->bRunThread = pReceiverParam->bRunThread;
+			/* copy some important state from the DRM parameters - OPH moved to constructor */
+			//pAMParam->bRunThread = pReceiverParam->bRunThread;
 		}
 		pReceiverParam = pAMParam;
 
@@ -690,10 +698,12 @@ CDRMReceiver::InitReceiverMode()
 			else
 			{
 				/* change from AM to DRM Mode - we better have our own parameter instance */
-				pDRMParam = new CParameter(this);
+				pDRMParam = new CParameter(this, pAMParam);
+				//*pDRMParam = *pAMParam;
+				//pAMParam->eReceiverMode = RM_DRM;
 			}
 			/* copy some important state from the AM parameters */
-			pDRMParam->bRunThread = pReceiverParam->bRunThread;
+			//pDRMParam->bRunThread = pReceiverParam->bRunThread;
 		}
 		pReceiverParam = pDRMParam;
 
@@ -800,7 +810,6 @@ CDRMReceiver::SetInStartMode()
 
 	/* Set the following parameters to zero states (initial states) --------- */
 	pReceiverParam->ResetServicesStreams();
-
 	pReceiverParam->ResetCurSelAudDatServ();
 
 	/* Protection levels */
@@ -918,25 +927,39 @@ CDRMReceiver::SetInTrackingModeDelayed()
 void
 CDRMReceiver::SetReadDRMFromFile(const string strNFN)
 {
-	delete pSoundInInterface;
-	CAudioFileIn *pf = new CAudioFileIn;
-	pf->SetFileName(strNFN);
-	pSoundInInterface = pf;
-	ReceiveData.SetSoundInterface(pSoundInInterface);	// needed ?
+	// Identify the type of file
+
 	string ext;
 	size_t p = strNFN.rfind('.');
 	if (p != string::npos)
 		ext = strNFN.substr(p + 1);
-	_BOOLEAN bIsIQ = FALSE;
-	if (ext.substr(0, 2) == "iq")
-		bIsIQ = TRUE;
-	if (ext.substr(0, 2) == "IQ")
-		bIsIQ = TRUE;
-	if (bIsIQ)
-		ReceiveData.SetInChanSel(CReceiveData::CS_IQ_POS_ZERO);
+
+	if (ext.substr(0,2) == "RS" || ext.substr(0,2) == "rs" || ext.substr(0,4) == "pcap")
+	{
+		// it's an RSI or MDI input file
+		GetRSIIn()->SetOrigin(strNFN);
+	}
 	else
-		ReceiveData.SetInChanSel(CReceiveData::CS_MIX_CHAN);
-	bReadFromFile = TRUE;
+	{
+		// It's an IQ or IF file
+	
+		delete pSoundInInterface;
+		CAudioFileIn *pf = new CAudioFileIn;
+		pf->SetFileName(strNFN);
+		pSoundInInterface = pf;
+		ReceiveData.SetSoundInterface(pSoundInInterface);	// needed ?
+
+		_BOOLEAN bIsIQ = FALSE;
+		if (ext.substr(0, 2) == "iq")
+			bIsIQ = TRUE;
+		if (ext.substr(0, 2) == "IQ")
+			bIsIQ = TRUE;
+		if (bIsIQ)
+			ReceiveData.SetInChanSel(CReceiveData::CS_IQ_POS_ZERO);
+		else
+			ReceiveData.SetInChanSel(CReceiveData::CS_MIX_CHAN);
+		bReadFromFile = TRUE;
+	}
 }
 
 void
@@ -1665,9 +1688,6 @@ CDRMReceiver::LoadSettings(const CSettings& s)
 	/* Number of iterations for MLC setting */
 	MSCMLCDecoder.SetNumIterations(s.Get("Receiver", "mlciter", 0));
 
-	/* Wanted RF Frequency file */
-	SetFrequency(s.Get("Receiver", "frequency", 0));
-
 	/* Activate/Deactivate EPG decoding */
 	DataDecoder.SetDecodeEPG(s.Get("EPG", "decodeepg", TRUE));
 
@@ -1700,21 +1720,34 @@ CDRMReceiver::LoadSettings(const CSettings& s)
 			ReceptLog.GPSData.SetPositionAvailable(FALSE);
 	}
 
+	string strMode = s.Get("GUI",	"mode");
+
+	if (strMode == "DRMRX")
+		SetReceiverMode(RM_DRM);
+	else if (strMode == "AMRX");
+		SetReceiverMode(RM_AM);
+	//else - leave it as initialised (ie. DRM)
+
 #ifdef HAVE_LIBHAMLIB
 	/* Hamlib --------------------------------------------------------------- */
-	/* Hamlib Model ID */
-	Hamlib.SetHamlibModelID(s.Get("Hamlib",	"hamlib-model", 0));
-
 	/* Hamlib configuration string */
 	Hamlib.SetHamlibConf(s.Get("Hamlib", "hamlib-config"));
 
-	/* Enable DRM modified receiver flag */
-	Hamlib.SetEnableModRigSettings(s.Get("Hamlib", "enmodrig", FALSE));
+	/* Hamlib Model ID */
+	Hamlib.SetHamlibModelID(s.Get("Hamlib",	"hamlib-model", 0));
 
 	/* Enable s-meter flag */
 	bEnableSMeter = s.Get("Hamlib", "ensmeter", FALSE);
-
+	
+	/* Enable DRM modified receiver flag */
+	Hamlib.SetEnableModRigSettings(s.Get("Hamlib", "enmodrig", FALSE));
+	
 #endif
+	
+	//andrewm - moved to _after_ hamlib initialisation
+		/* Wanted RF Frequency file */
+	SetFrequency(s.Get("Receiver", "frequency", 0));
+
 
 	/* Front-end - combine into Hamlib? */
 	CFrontEndParameters& FrontEndParameters = pReceiverParam->FrontEndParameters;

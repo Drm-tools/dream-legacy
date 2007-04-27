@@ -70,6 +70,8 @@ CTagPacketDecoderMDI::CTagPacketDecoderMDI()
 
 void CTagPacketDecoderMDI::DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, int iPayloadLen)
 {
+	// Initialise all the decoders: this will set them to "not ready"
+	InitTagItemDecoders();
 	// Set strx tags data to zero length in case they are not present
 	for(int i=0; i<MAX_NUM_STREAMS; i++)
 	{
@@ -78,6 +80,8 @@ void CTagPacketDecoderMDI::DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, int iPa
 	TagItemDecoderAMAudio.vecbidata.Init(0);
 	TagItemDecoderFAC.vecbidata.Init(0);
 	TagItemDecoderSDC.vecbidata.Init(0);
+
+	TagItemDecoderRobMod.Init();
 	// Call base class function to do the actual decoding
 	CTagPacketDecoder::DecodeTagPacket(vecbiPkt, iPayloadLen);
 }

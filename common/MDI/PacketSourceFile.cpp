@@ -64,6 +64,11 @@ typedef int SOCKET;
 #include <iostream>
 #include <errno.h>
 
+const int iMaxPacketSize = 4096;
+const int iAFHeaderLen = 10;
+const int iAFCRCLen = 2;
+
+
 CPacketSourceFile::CPacketSourceFile():pPacketSink(NULL), timeKeeper(), pf(NULL), bRaw(TRUE)
 {
 }
@@ -130,7 +135,7 @@ CPacketSourceFile::OnDataReceived ()
 	if(pf==NULL)
 		return;
 
-	vector < _BYTE > vecbydata (2048);
+	vector < _BYTE > vecbydata (iMaxPacketSize);
 	if(bRaw)
 	{
 		/* TODO read a raw or FF encapsulated file, but for raw we need to read enough
@@ -138,6 +143,50 @@ CPacketSourceFile::OnDataReceived ()
 		 * buffer
 		 */
 		vecbydata.resize(0);
+
+		//const int iAFHeaderLen = 10;
+
+		_BYTE header[iAFHeaderLen];
+		// get the sync bytes
+		fread(header, iAFHeaderLen, sizeof(_BYTE), (FILE *) pf);
+
+		if (header[0] != 'A' || header[1] != 'F') // Not an AF file - return. TODO: add PF and re-synch on AF bytes
+		{
+			fclose((FILE *) pf);
+			pf = 0;
+			return;
+		}
+
+		// get the length
+		int iAFPayloadLen = (header[2]<<24) + (header[3]<<16) + (header[4]<<8) + header[5];
+
+		if (iAFPayloadLen + iAFHeaderLen + iAFCRCLen> iMaxPacketSize)
+		{
+			// throw?
+			fclose((FILE *) pf);
+			pf = 0;
+			return;
+		}
+
+		// initialise the output vector
+		vecbydata.resize(iAFPayloadLen + iAFHeaderLen + iAFCRCLen);
+
+		int i;
+
+		// Copy header into output vector
+		for (i=0; i<iAFHeaderLen; i++)
+		{
+			vecbydata[i] = header[i];
+		}
+
+		// Copy payload into output vector
+		_BYTE data;
+		for (i=0; i<iAFPayloadLen + iAFCRCLen; i++)
+		{
+			fread(&data, 1, sizeof(_BYTE), (FILE *)pf);
+			vecbydata[iAFHeaderLen + i] = data;
+		}
+
 	}
 	else
 	{ 

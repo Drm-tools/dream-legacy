@@ -202,3 +202,12 @@ void CTagPacketDecoder::AddTagItemDecoder(CTagItemDecoder *pTagItemDecoder)
 {
 	vecpTagItemDecoders.Add(pTagItemDecoder);
 }
+
+void CTagPacketDecoder::InitTagItemDecoders(void)
+{
+	for (int i=0; i<vecpTagItemDecoders.Size(); i++)
+	{
+		vecpTagItemDecoders[i]->Init();
+	}
+
+}

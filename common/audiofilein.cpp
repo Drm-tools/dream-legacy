@@ -80,6 +80,9 @@ CAudioFileIn::SetFileName(const string& strFileName)
 void
 CAudioFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
+	if (pFileReceiver != NULL)
+		return;
+	
 	/* Check previously a file was being used */
 	Close();
 
@@ -140,7 +143,9 @@ CAudioFileIn::Read(CVector<short>& psData)
 	if(pacer) pacer->wait();
 
 	if (pFileReceiver == NULL)
+	{
 		return TRUE;
+	}
 
 	if(eFmt==fmt_txt)
 	{
@@ -197,6 +202,7 @@ CAudioFileIn::Read(CVector<short>& psData)
 		}
 	}
 	delete[] buffer;
+
 	return FALSE;
 }
 

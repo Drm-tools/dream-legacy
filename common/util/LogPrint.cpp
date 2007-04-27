@@ -6,8 +6,8 @@
  *	Oliver Haffenden
  *
  * Description:
-//This is a temporary implementation of the new log-printing
-//subsystem - essentially just a wrapper for printf.
+ * log-printing
+ * subsystem - essentially just a wrapper for printf.
  *
  ******************************************************************************
  *
@@ -176,3 +176,12 @@ void CNullLogPrinter::LogWarning(char *)
 void CNullLogPrinter::LogError(char *)
 {
 }
+
+CPrintfLogPrinter *CPrintfLogPrinter::mpInstance = 0;
+void CPrintfLogPrinter::Instantiate()
+{
+	if (!mpInstance)
+		mpInstance = new CPrintfLogPrinter;
+}
+
+CPrintfLogPrinter::CPrintfLogPrinter() {}

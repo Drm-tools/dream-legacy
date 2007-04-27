@@ -1088,6 +1088,7 @@ class CParameter
   public:
 	CParameter(CDRMReceiver *pRx);
 	CParameter(const CParameter& p);
+	CParameter(CDRMReceiver *pRx, CParameter *pParameter); // OPH - just copy some of the members
 	virtual ~CParameter();
 	CParameter& operator=(const CParameter& p);
 
