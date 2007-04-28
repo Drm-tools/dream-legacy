@@ -446,6 +446,7 @@ systemevalDlg::~systemevalDlg()
 		longLog.Stop();
 	Settings.Put("Logfile", "enablerxl", shortLog.GetRxlEnabled());
 	Settings.Put("Logfile", "enablepositiondata", shortLog.GetPositionEnabled());
+	Settings.Get("Logfile", "enablelog", bEnableLongLog);
 }
 
 void systemevalDlg::UpdateControls()
