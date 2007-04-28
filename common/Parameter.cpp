@@ -1192,6 +1192,10 @@ CMinMaxMean::addSample(_REAL r)
 	rCur = r;
 	rSum += r;
 	iNum++;
+	if(r>rMax)
+		rMax = r;
+	if(r<rMin)
+		rMin = r;
 }
 
 _REAL
