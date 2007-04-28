@@ -198,7 +198,7 @@ PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam)
 		DRMEvent *DRMEv = new DRMEvent(MessID, iMessageParam);
 
 		/* Qt will delete the event object when done */
-		QThread::postEvent(pApp->mainWidget(), DRMEv);
+		//QThread::postEvent(pApp->mainWidget(), DRMEv);
 	}
 }
 
