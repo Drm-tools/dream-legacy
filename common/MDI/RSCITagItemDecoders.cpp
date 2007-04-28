@@ -52,7 +52,7 @@ void CTagItemDecoderRdbv::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	if (iLen != 16)
 		return;
 	_REAL rSigStr = decodeDb(vecbiTag);
- 	 pParameter->SetSignalStrength(TRUE, rSigStr);
+ 	 pParameter->SigStrstat.addSample(rSigStr);
 	 /* this is the only signal strength we have so update the IF level too.
 	  * TODO scaling factor ? */
  	 pParameter->SetIFSignalLevel(rSigStr);
@@ -67,21 +67,21 @@ void CTagItemDecoderRsta::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
  	uint8_t sdc = (uint8_t)vecbiTag.Separate(8);
  	uint8_t audio = (uint8_t)vecbiTag.Separate(8);
  	if(sync==0)
-		pParameter->ReceiveStatus.SetTimeSyncStatus(RX_OK);
+		pParameter->ReceiveStatus.TSync.SetStatus(RX_OK);
 	else
-		pParameter->ReceiveStatus.SetTimeSyncStatus(CRC_ERROR);
+		pParameter->ReceiveStatus.TSync.SetStatus(CRC_ERROR);
  	if(fac==0)
-		pParameter->ReceiveStatus.SetFACStatus(RX_OK);
+		pParameter->ReceiveStatus.FAC.SetStatus(RX_OK);
 	else
-		pParameter->ReceiveStatus.SetFACStatus(CRC_ERROR);
+		pParameter->ReceiveStatus.FAC.SetStatus(CRC_ERROR);
  	if(sdc==0)
-		pParameter->ReceiveStatus.SetSDCStatus(RX_OK);
+		pParameter->ReceiveStatus.SDC.SetStatus(RX_OK);
 	else
-		pParameter->ReceiveStatus.SetSDCStatus(CRC_ERROR);
+		pParameter->ReceiveStatus.SDC.SetStatus(CRC_ERROR);
  	if(audio==0)
-		pParameter->ReceiveStatus.SetAudioStatus(RX_OK);
+		pParameter->ReceiveStatus.Audio.SetStatus(RX_OK);
 	else
-		pParameter->ReceiveStatus.SetAudioStatus(CRC_ERROR);
+		pParameter->ReceiveStatus.Audio.SetStatus(CRC_ERROR);
 }
 
 void CTagItemDecoderRwmf::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)

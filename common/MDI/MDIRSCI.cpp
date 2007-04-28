@@ -125,17 +125,16 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 	TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
 	TagItemGeneratorRxService.GenTag(TRUE, Parameter.GetCurSelAudioService());
 	TagItemGeneratorReceiverStatus.GenTag(Parameter);
-	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
+	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
 	TagItemGeneratorPilots.GenTag(Parameter);
 
 	/* Generate some other tags */
-	_REAL rSigStr = 0.0;
-	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
-	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
+	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
+	TagItemGeneratorSignalStrength.GenTag(TRUE, rSigStr + S9_DBUV);
 
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.ReceptLog.GPSData);	// rgps
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	// rgps
 	
 	GenDIPacket();
 }
@@ -173,13 +172,12 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 
 	/* Generate some other tags */
 	TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
-	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
+	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
-	_REAL rSigStr = 0.0;
-	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
-	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
+	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
+	TagItemGeneratorSignalStrength.GenTag(TRUE, rSigStr + S9_DBUV);
 
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.ReceptLog.GPSData);	/* rgps */
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
 
 	GenDIPacket();
 }
@@ -220,13 +218,12 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 
 	/* Generate some other tags */
 	TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
-	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
+	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
-	_REAL rSigStr = 0.0;
-	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
-	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
+	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
+	TagItemGeneratorSignalStrength.GenTag(TRUE, rSigStr + S9_DBUV);
 
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.ReceptLog.GPSData);	/* rgps */
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
 
 	GenDIPacket();
 }
@@ -458,7 +455,7 @@ string CDownstreamDI::GetRSIfilename(CParameter& Parameter)
 	time(&ltime);
 	struct tm* gmtCur = gmtime(&ltime);
 
-	iFrequency = Parameter.ReceptLog.GetFrequency(); // remember this for later
+	iFrequency = Parameter.GetFrequency(); // remember this for later
 
 	stringstream filename;
 	filename << Parameter.sDataFilesDirectory;
@@ -493,7 +490,7 @@ void CDownstreamDI::SetRSIRecording(CParameter& Parameter, const _BOOLEAN bOn, c
 void CDownstreamDI::NewFrequency(CParameter& Parameter)
 {
 	/* Has it really changed? */
-	int iNewFrequency = Parameter.ReceptLog.GetFrequency();
+	int iNewFrequency = Parameter.GetFrequency();
 
 	if (iNewFrequency != iFrequency)
 	{

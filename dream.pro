@@ -92,6 +92,7 @@ common/datadecoding/Journaline.h   \
 common/datadecoding/MOTSlideShow.h   \
 common/DataIO.h   \
 common/drmchannel/ChannelSimulation.h   \
+common/ReceptLog.h   \
 common/DrmReceiver.h   \
 common/DRMSignalIO.h   \
 common/DrmSimulation.h   \
@@ -203,6 +204,7 @@ common/datadecoding/Journaline.cpp   \
 common/datadecoding/MOTSlideShow.cpp   \
 common/DataIO.cpp   \
 common/drmchannel/ChannelSimulation.cpp   \
+common/ReceptLog.cpp   \
 common/DrmReceiver.cpp   \
 common/DRMSignalIO.cpp   \
 common/DrmSimulation.cpp   \

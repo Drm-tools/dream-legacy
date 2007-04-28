@@ -43,11 +43,7 @@
 #include "ofdmcellmapping/CellMappingTable.h"
 #include "matlib/Matlib.h"
 #include <time.h>
-#ifdef USE_QT_GUI
-# include "GPSReceiver.h"
-#else
-# include "GPSData.h"
-#endif
+#include "GPSData.h"
 #include <map>
 #include <set>
 
@@ -754,165 +750,6 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		_BOOLEAN bVersionFlag;
 	};
 
-	class CReceptLog; // forward
-
-	class CLog
-	{
-	public:
-		CLog():pLog(NULL),pFile(NULL) {}
-		virtual ~CLog() { close(); }
-		void open(const char* filename, const time_t now);
-		void setLog(CReceptLog* pl) { pLog = pl; }
-		void close();
-		virtual void writeParameters(CDRMReceiver*)=0;
-		virtual void writeHeader(time_t)=0;
-		virtual void writeTrailer()=0;
-		virtual void reset()=0;
-	protected:
-		CReceptLog* pLog;
-		FILE *pFile;
-	};
-
-	class CShortLog: public CLog
-	{
-	public:
-		virtual void writeParameters(CDRMReceiver*);
-		virtual void writeHeader(time_t);
-		virtual void writeTrailer();
-		virtual void reset();
-		void SetSNR(_REAL);
-		void SetSignalStrength(_REAL);
-	protected:
-		int iTimeCntShort;
-		int iNumSNR, iNumSigStr;
-		_REAL rSumSNR, rMaxSNR, rMinSNR;
-		_REAL rSumSigStr, rMaxSigStr, rMinSigStr;
-	};
-
-	class CLongLog: public CLog
-	{
-	public:
-		virtual void writeParameters(CDRMReceiver*);
-		virtual void writeHeader(time_t);
-		virtual void writeTrailer();
-		virtual void reset();
-		void SetSNR(_REAL);
-		void SetSignalStrength(_REAL);
-	protected:
-		time_t TimeCntLong;
-		_REAL rCurSNR;
-		_REAL rCurSigStr;
-	};
-
-	class CReceptLog
-	{
-	  public:
-
-	  	friend class CShortLog;
-	  	friend class CLongLog;
-
-		CReceptLog();
-		CReceptLog(const CReceptLog&);
-		virtual ~CReceptLog()
-		{
-			longlog.close();
-			shortlog.close();
-		}
-		CReceptLog& operator=(const CReceptLog&);
-
-		void StartLogging();
-		void StopLogging();
-		void WriteParameters(CDRMReceiver* pDRMRec, _BOOLEAN bLong);
-		void SetFAC(const _BOOLEAN bCRCOk);
-		void SetMSC(const _BOOLEAN bCRCOk);
-		void SetSync(const _BOOLEAN bCRCOk);
-		void SetNumAAC(const int iNewNum);
-
-		void SetLoggingEnabled(const _BOOLEAN bLog) { bLogEnabled = bLog; }
-		_BOOLEAN GetLoggingEnabled() { return bLogEnabled; }
-
-		void SetRxlEnabled(const _BOOLEAN b) { bRxlEnabled = b; }
-		_BOOLEAN GetRxlEnabled() { return bRxlEnabled; }
-
-		void SetPositionEnabled(const _BOOLEAN b) { bPositionEnabled = b; }
-		_BOOLEAN GetPositionEnabled() { return bPositionEnabled; }
-		unsigned int ExtractMinutes(double dblDeg);
-
-
-		_BOOLEAN GetLoggingActivated()
-		{
-			return bLogActivated;
-		}
-		void SetLogHeader(FILE * pFile, const _BOOLEAN bIsLong);
-		void SetFrequency(const int iNewFreq)
-		{
-			iFrequency = iNewFreq;
-		}
-		int GetFrequency()
-		{
-			return iFrequency;
-		}
-
-		void SetAdditText(const string strNewTxt)
-		{
-			strAdditText = strNewTxt;
-		}
-
-		void SetDelLogStart(const int iSecDel)
-		{
-			iSecDelLogStart = iSecDel;
-		}
-
-		int GetDelLogStart()
-		{
-			return iSecDelLogStart;
-		}
-
-		void ResetTransParams();
-
-		void SetMSCScheme(const ECodScheme eNewMCS)
-		{
-			eCurMSCScheme = eNewMCS;
-		}
-
-		void SetRobMode(const ERobMode eNewRM)
-		{
-			eCurRobMode = eNewRM;
-		}
-
-		void SetProtLev(const CMSCProtLev eNPL)
-		{
-			CurProtLev = eNPL;
-		}
-
-		CGPSData GPSData; /* TODO facade this ? */
-		_BOOLEAN bValidSignalStrength;
-		_REAL rSigStr;  
-		_REAL rIFSigStr;  
-	    CShortLog shortlog;
-	    CLongLog longlog;
-
-	  protected:
-		int iNumCRCOkFAC, iNumCRCOkMSC;
-		int iNumCRCOkMSCLong, iNumCRCMSCLong;
-		int iNumAACFrames;
-		_BOOLEAN bSyncOK, bFACOk, bMSCOk;
-		_BOOLEAN bSyncOKValid, bFACOkValid, bMSCOkValid;
-		int iFrequency;
-		_BOOLEAN bLogActivated;
-		_BOOLEAN bLogEnabled;
-		_BOOLEAN bRxlEnabled;
-		_BOOLEAN bPositionEnabled;
-		string strAdditText;
-		
-		int iSecDelLogStart;
-
-		ERobMode eCurRobMode;
-		ECodScheme eCurMSCScheme;
-		CMSCProtLev CurProtLev;
-		CMutex Mutex;
-	};
-
 	/* Class to store information about the last service selected ------------- */
 
 	class CLastService
@@ -951,54 +788,56 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		uint32_t iServiceID;
 	};
 
-	/* Class to keep track of status flags for RSCI rsta tag */
+	/* Classes to keep track of status flags for RSCI rsta tag and log file */
+	class CRxStatus
+	{
+	public:
+		CRxStatus(_MESSAGE_IDENT i):status(NOT_PRESENT),iNum(0),iNumOK(0),ident(i) {}
+		CRxStatus(const CRxStatus& s):status(s.status),iNum(s.iNum),iNumOK(s.iNumOK),ident(s.ident) {}
+		CRxStatus& operator=(const CRxStatus& s)
+			{ status = s.status; iNum = s.iNum; iNumOK = s.iNumOK; ident = s.ident; return *this;}
+		void SetStatus(const ETypeRxStatus);
+		ETypeRxStatus GetStatus() { return status; }
+		int GetCount() { return iNum; }
+		int GetOKCount() { return iNumOK; }
+		void ResetCounts() { iNum=0; iNumOK = 0; }
+	private:
+		ETypeRxStatus status;
+		int iNum, iNumOK;
+		_MESSAGE_IDENT ident;
+	};
+
 	class CReceiveStatus
 	{
 	  public:
-		CReceiveStatus():FSyncOK(NOT_PRESENT), TSyncOK(NOT_PRESENT),InterfaceOK(NOT_PRESENT),
-			FACOK(NOT_PRESENT), SDCOK(NOT_PRESENT), AudioOK(NOT_PRESENT),MOTOK(NOT_PRESENT)
+		CReceiveStatus():FSync(MS_FRAME_SYNC),TSync(MS_TIME_SYNC),Interface(MS_IOINTERFACE),
+		FAC(MS_FAC_CRC),SDC(MS_SDC_CRC),Audio(MS_MSC_CRC),MOT(MS_MOT_OBJ_STAT)
 		{
 		}
-		CReceiveStatus(const CReceiveStatus& s):FSyncOK(s.FSyncOK), TSyncOK(s.TSyncOK),
-			InterfaceOK(s.InterfaceOK), FACOK(s.FACOK), SDCOK(s.SDCOK),
-			AudioOK(s.AudioOK),MOTOK(s.MOTOK)
+		CReceiveStatus(const CReceiveStatus& s):FSync(s.FSync), TSync(s.TSync),
+			Interface(s.Interface), FAC(s.FAC), SDC(s.SDC),
+			Audio(s.Audio),MOT(s.MOT)
 		{
 		}
 		CReceiveStatus& operator=(const CReceiveStatus& s)
 		{
-			FSyncOK = s.FSyncOK;
-			TSyncOK = s.TSyncOK;
-			InterfaceOK = s.InterfaceOK;
-			FACOK = s.FACOK;
-			SDCOK = s.SDCOK;
-			AudioOK = s.AudioOK;
-			MOTOK = s.MOTOK;
+			FSync = s.FSync;
+			TSync = s.TSync;
+			Interface = s.Interface;
+			FAC = s.FAC;
+			SDC = s.SDC;
+			Audio = s.Audio;
+			MOT = s.MOT;
 			return *this;
 		}
 
-		void SetFrameSyncStatus(const ETypeRxStatus OK);
-		void SetTimeSyncStatus(const ETypeRxStatus OK);
-		void SetInterfaceStatus(const ETypeRxStatus OK);
-		void SetFACStatus(const ETypeRxStatus OK);
-		void SetSDCStatus(const ETypeRxStatus OK);
-		void SetAudioStatus(const ETypeRxStatus OK);
-		void SetMOTStatus(const ETypeRxStatus OK);
-
-		ETypeRxStatus GetFrameSyncStatus();
-		ETypeRxStatus GetTimeSyncStatus();
-		ETypeRxStatus GetInterfaceStatus();
-		ETypeRxStatus GetFACStatus();
-		ETypeRxStatus GetSDCStatus();
-		ETypeRxStatus GetAudioStatus();
-		ETypeRxStatus GetMOTStatus();
-	  private:
-		ETypeRxStatus FSyncOK;
-		ETypeRxStatus TSyncOK;
-		ETypeRxStatus InterfaceOK;
-		ETypeRxStatus FACOK;
-		ETypeRxStatus SDCOK;
-		ETypeRxStatus AudioOK;
-		ETypeRxStatus MOTOK;
+		CRxStatus FSync;
+		CRxStatus TSync;
+		CRxStatus Interface;
+		CRxStatus FAC;
+		CRxStatus SDC;
+		CRxStatus Audio;
+		CRxStatus MOT;
 	};
 
 
@@ -1083,6 +922,20 @@ public:
 							  it is officially dynamic so we collect all that we see. */
 };
 
+class CMinMaxMean
+{
+public:
+	CMinMaxMean();
+
+	void addSample(_REAL);
+	_REAL getCurrent();
+	_REAL getMean();
+	void getMinMax(_REAL&, _REAL&);
+protected:
+	_REAL rSum, rCur, rMin, rMax;
+	int iNum;
+};
+
 class CParameter
 {
   public:
@@ -1123,6 +976,9 @@ class CParameter
 
 	_BOOLEAN SetWaveMode(const ERobMode eNewWaveMode);
 	ERobMode GetWaveMode() const { return eRobustnessMode; }
+
+	void SetFrequency(int iNewFrequency) { iFrequency = iNewFrequency; }
+	int GetFrequency() { return iFrequency; }
 
 	void SetServiceParameters(int iShortID, const CService& newService);
 
@@ -1216,8 +1072,7 @@ class CParameter
 	/* information about services gathered from SDC, EPG and web schedules */
 	map<uint32_t,CServiceInformation> ServiceInformation;
 
-	/* These values are used to set input and output block sizes of some
-	   modules */
+	/* These values are used to set input and output block sizes of some modules */
 	int iNumBitsHierarchFrameTotal;
 	int iNumDecodedBitsMSC;
 	int iNumSDCBitsPerSFrame;	/* Number of SDC bits per super-frame */
@@ -1249,6 +1104,7 @@ class CParameter
 	ERecMode eReceiverMode;
 	EAcqStat GetReceiverState() { return eAcquiState; }
 	EAcqStat eAcquiState;
+	int iNumAudioFrames;
 
 	CVector <_BINARY> vecbiAudioFrameStatus;
 	_BOOLEAN bMeasurePSD;
@@ -1276,6 +1132,8 @@ class CParameter
 	_REAL rGainCorr;
 	int iOffUsfExtr;
 
+	void SetSNR(const _REAL);
+	_REAL GetSNR();
 	void SetNominalSNRdB(const _REAL rSNRdBNominal);
 	_REAL GetNominalSNRdB();
 	void SetSystemSNRdB(const _REAL rSNRdBSystem)
@@ -1292,7 +1150,6 @@ class CParameter
 	CFrontEndParameters FrontEndParameters;
 	CAltFreqSign AltFreqSign;
 	CAltFreqOtherServicesSign AltFreqOtherServicesSign;
-	CReceptLog ReceptLog;
 
 	void Lock()
 	{
@@ -1303,8 +1160,6 @@ class CParameter
 		Mutex.Unlock();
 	}
 	/* Channel Estimation */
-	void SetSNR(_REAL);
-	_REAL rSNREstimate;
 	_REAL rMER;
 	_REAL rWMERMSC;
 	_REAL rWMERFAC;
@@ -1329,11 +1184,11 @@ class CParameter
 	/* the signal level as measured at IF by dream */
 	void SetIFSignalLevel(_REAL);
 	_REAL GetIFSignalLevel();
-
+#if 0
 	/* the signal level as measured (at RF ?) by the front end */
 	void SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr);
 	_BOOLEAN GetSignalStrength(_REAL& rSigStr);
-
+#endif
 	_REAL rSigStrengthCorrection;
 
 	/* General -------------------------------------------------------------- */
@@ -1344,10 +1199,17 @@ class CParameter
 
 	CCellMappingTable CellMappingTable;
 
+	CGPSData GPSData;
+	CMinMaxMean SNRstat, SigStrstat;
+
 protected:
 
-
 	_REAL rSysSimSNRdB;
+
+	int iFrequency;
+	_BOOLEAN bValidSignalStrength;
+	_REAL rSigStr;  
+	_REAL rIFSigStr;  
 
 	/* Current selected audio service for processing */
 	int iCurSelAudioService;

@@ -225,7 +225,7 @@ public:
 #ifdef HAVE_LIBHAMLIB
 	CHamlib*				GetHamlib() {return &Hamlib;}
 #endif
-	_BOOLEAN				SignalStrengthAvailable() { return TRUE; }
+	_BOOLEAN				SignalStrengthAvailable() { return bSMeterAvail; }
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
 	CParameter*				GetParameters() {return pReceiverParam;}
@@ -409,6 +409,7 @@ protected:
 			CDRMReceiver* pDRMRec;
 			_BOOLEAN	bQuit;
 	} RigPoll;
+	friend class CRigPoll;
 #endif
 
 	int						iBwAM;
@@ -417,7 +418,7 @@ protected:
 	int						iBwCW;
 	int						iBwFM;
 	_BOOLEAN				bEnableSMeter;
-
+	_BOOLEAN				bSMeterAvail;
 	_BOOLEAN				bReadFromFile;
 	time_t					time_keeper;
 

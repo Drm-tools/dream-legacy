@@ -3,6 +3,7 @@ bin_PROGRAMS = drm
 
 drmwithoutqt_SOURCES = \
 	../common/Version.cpp \
+	../common/ReceptLog.cpp \
 	../common/GPSData.cpp \
 	../common/SimulationParameters.cpp \
 	../common/DRMSignalIO.cpp \
@@ -83,6 +84,7 @@ drmwithoutqt_SOURCES = \
 	../common/GUI-QT/main.cpp \
 	source/Pacer.cpp \
 	../common/Version.h \
+	../common/ReceptLog.h \
 	../common/GPSData.h \
 	../common/DRMSignalIO.h \
 	../common/DataIO.h \

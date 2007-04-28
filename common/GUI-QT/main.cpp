@@ -120,13 +120,17 @@ main(int argc, char **argv)
 
 			DRMReceiver.Init();
 
+			/* GPS */
 			CGPSReceiver *pGPSReceiver = NULL;
-			if (DRMReceiver.GetParameters()->ReceptLog.GPSData.
-				GetGPSSource() != CGPSData::GPS_SOURCE_MANUAL_ENTRY)
+			if (Settings.Get("GPS", "usegpsd", FALSE) == TRUE)
 			{
-				pGPSReceiver =
-					new CGPSReceiver(DRMReceiver.GetParameters()->ReceptLog.
-									 GPSData);
+					DRMReceiver.GetParameters()->GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
+					pGPSReceiver =
+						new CGPSReceiver(*DRMReceiver.GetParameters(), Settings);
+			}
+			else
+			{
+					DRMReceiver.GetParameters()->GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
 			}
 
 			FDRMDialog MainDlg(DRMReceiver, Settings, 0, 0, FALSE, Qt::WStyle_MinMax);

@@ -371,6 +371,28 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\common\ReceptLog.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\common\DrmReceiver.cpp"
 				>
 				<FileConfiguration
@@ -3219,6 +3241,10 @@
 			</File>
 			<File
 				RelativePath="..\common\DataIO.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\ReceptLog.h"
 				>
 			</File>
 			<File

@@ -209,9 +209,9 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 		/* Get data from sound interface. The read function must be a
 		   blocking function! */
 		if (pSound->Read(vecsSoundBuffer) == FALSE)
-			Parameter.ReceiveStatus.SetInterfaceStatus(RX_OK);
+			Parameter.ReceiveStatus.Interface.SetStatus(RX_OK);
 		else
-			Parameter.ReceiveStatus.SetInterfaceStatus(CRC_ERROR);
+			Parameter.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
 
 		/* Write data to output buffer. Do not set the switch command inside
 		   the for-loop for efficiency reasons */

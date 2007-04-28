@@ -140,9 +140,9 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Put data to sound card interface. Show sound card state on GUI */
 	if (pSound->Write(vecsTmpAudData) == FALSE)
-		ReceiverParam.ReceiveStatus.SetInterfaceStatus(RX_OK);
+		ReceiverParam.ReceiveStatus.Interface.SetStatus(RX_OK);
 	else
-		ReceiverParam.ReceiveStatus.SetInterfaceStatus(DATA_ERROR);
+		ReceiverParam.ReceiveStatus.Interface.SetStatus(DATA_ERROR);
 
 	/* Write data as wave in file */
 	if (bDoWriteWaveFile == TRUE)
@@ -646,13 +646,11 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 	if (bSyncInput == FALSE)
 	{
 		bCRCOk = FACReceive.FACParam(pvecInputData, ReceiverParam);
-		/* Set FAC status in log file */
-		ReceiverParam.ReceptLog.SetFAC(bCRCOk);
 		/* Set FAC status for RSCI & GUI */
 		if(bCRCOk)
-			ReceiverParam.ReceiveStatus.SetFACStatus(RX_OK);
+			ReceiverParam.ReceiveStatus.FAC.SetStatus(RX_OK);
         else
-			ReceiverParam.ReceiveStatus.SetFACStatus(CRC_ERROR);
+			ReceiverParam.ReceiveStatus.FAC.SetStatus(CRC_ERROR);
 	}
 
 	if ((bSyncInput == TRUE) || (bCRCOk == FALSE))
@@ -708,7 +706,7 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 	switch (SDCReceive.SDCParam(pvecInputData, ReceiverParam))
 	{
 	case CSDCReceive::SR_OK:
-		ReceiverParam.ReceiveStatus.SetSDCStatus(RX_OK);
+		ReceiverParam.ReceiveStatus.SDC.SetStatus(RX_OK);
 		bSDCOK = TRUE;
 		break;
 
@@ -722,12 +720,12 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 		   case that the parameters are not correct. In this case do not
 		   show a red light if SDC CRC was not ok */
 		if (bFirstBlock == FALSE)
-			ReceiverParam.ReceiveStatus.SetSDCStatus(CRC_ERROR);
+			ReceiverParam.ReceiveStatus.SDC.SetStatus(CRC_ERROR);
 		break;
 
 	case CSDCReceive::SR_BAD_DATA:
 		/* CRC was ok but data seems to be incorrect */
-		ReceiverParam.ReceiveStatus.SetSDCStatus(DATA_ERROR);
+		ReceiverParam.ReceiveStatus.SDC.SetStatus(DATA_ERROR);
 		break;
 	}
 
@@ -764,7 +762,7 @@ void CWriteIQFile::StartRecording(CParameter& ReceiverParam)
 
 void CWriteIQFile::OpenFile(CParameter& ReceiverParam)
 {
-	iFrequency = ReceiverParam.ReceptLog.GetFrequency();
+	iFrequency = ReceiverParam.GetFrequency();
 
 	/* Get current UTC time */
 	time_t ltime;
@@ -872,7 +870,7 @@ void CWriteIQFile::ProcessDataInternal(CParameter& ReceiverParam)
 		return;
 	}
 	// Has the frequency changed? If so, close any open file (a new one will be opened)
-	int iNewFrequency = ReceiverParam.ReceptLog.GetFrequency();
+	int iNewFrequency = ReceiverParam.GetFrequency();
 
 	if (iNewFrequency != iFrequency)
 	{

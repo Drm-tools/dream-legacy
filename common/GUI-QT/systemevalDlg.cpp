@@ -34,7 +34,11 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	systemevalDlgBase(parent, name, modal, f),
 	DRMReceiver(NDRMR),
 	Settings(NSettings),
-	vecpDRMPlots()
+	Timer(),
+	shortLog(*NDRMR.GetParameters()), longLog(*NDRMR.GetParameters()),
+	bEnableShortLog(FALSE), bEnableLongLog(FALSE),
+	TimerLogFileLong(), TimerLogFileShort(), TimerLogFileStart(),
+	iLogDelay(0), iCurFrequency(0)
 {
 	/* Get window geometry data and apply it */
 	CWinGeom s;
@@ -392,12 +396,56 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	StopLogTimers();
 
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+	/* Logfile -------------------------------------------------------------- */
+
+	/* Start log file flag */
+	bEnableLongLog = bEnableShortLog = Settings.Get("Logfile", "enablelog", FALSE);
+
+    /* log file flag for storing signal strength in long log */
+	shortLog.SetRxlEnabled(Settings.Get("Logfile", "enablerxl", FALSE));
+	longLog.SetRxlEnabled(Settings.Get("Logfile", "enablerxl", FALSE));
+
+	/* log file flag for storing lat/long in long log */
+	shortLog.SetPositionEnabled(Settings.Get("Logfile", "enablepositiondata", FALSE));
+	longLog.SetPositionEnabled(Settings.Get("Logfile", "enablepositiondata", FALSE));
+
+	/* logging delay value */
+	iLogDelay = Settings.Get("Logfile", "delay", 0);
+
 	/* Activate log file start if necessary. */
 	StartTimerLogFileStart();
+
+	/* GPS */
+	_REAL latitude, longitude;
+	/* Latitude string for log file */
+	latitude = Settings.Get("Logfile", "latitude", 1000.0);
+	/* Longitude string for log file */
+	longitude = Settings.Get("Logfile", "longitude", 1000.0);
+
+	Parameters.Lock();
+
+	if(-90.0 <= latitude && latitude <= 90.0 && -180.0 <= longitude  && longitude <= 180.0)
+	{
+		Parameters.GPSData.SetPositionAvailable(TRUE);
+		Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
+	}
+	else
+		Parameters.GPSData.SetPositionAvailable(FALSE);
+
+	Parameters.Unlock();
 }
 
 systemevalDlg::~systemevalDlg()
 {
+	if(DRMReceiver.GetWriteData()->GetIsWriteWaveFile())
+		DRMReceiver.GetWriteData()->StopWriteWaveFile();
+	if(longLog.GetLoggingActivated())
+		shortLog.Stop();
+	if(longLog.GetLoggingActivated())
+		longLog.Stop();
+	Settings.Put("Logfile", "enablerxl", shortLog.GetRxlEnabled());
+	Settings.Put("Logfile", "enablepositiondata", shortLog.GetPositionEnabled());
 }
 
 void systemevalDlg::UpdateControls()
@@ -472,13 +520,12 @@ void systemevalDlg::UpdateControls()
 	/* Update frequency edit control (frequency could be changed by
 	   schedule dialog */
 	QString strFreq = EdtFrequency->text();
-	const int iCurLogFreq =
-		DRMReceiver.GetParameters()->ReceptLog.GetFrequency();
+	const int iFrequency = DRMReceiver.GetFrequency();
 
-	if (iCurLogFreq != iCurFrequency)
+	if (iFrequency != iCurFrequency)
 	{
-		EdtFrequency->setText(QString().setNum(iCurLogFreq));
-		iCurFrequency = iCurLogFreq;
+		EdtFrequency->setText(QString().setNum(iFrequency));
+		iCurFrequency = iFrequency;
 	}
 }
 
@@ -560,6 +607,17 @@ void systemevalDlg::hideEvent(QHideEvent*)
 	 * TODO: better solution
 	 */
 	Settings.Put("System Evaluation Dialog", "sysevplottype", (int) MainPlot->GetChartType());
+
+	if(longLog.GetLoggingActivated())
+	{
+		TimerLogFileShort.stop();
+		shortLog.Stop();
+	}
+	if(longLog.GetLoggingActivated())
+	{
+		TimerLogFileLong.stop();
+		longLog.Stop();
+	}
 }
 
 void systemevalDlg::StopLogTimers()
@@ -667,23 +725,24 @@ void systemevalDlg::OnTimer()
 {
 	CParameter& ReceiverParam = *(DRMReceiver.GetParameters());
 
+	ReceiverParam.Lock();
+
 	if (this->isVisible())
 	{
-	SetStatus(LEDMSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
-    SetStatus(LEDSDC, ReceiverParam.ReceiveStatus.GetSDCStatus());
-    SetStatus(LEDFAC, ReceiverParam.ReceiveStatus.GetFACStatus());
-    SetStatus(LEDFrameSync, ReceiverParam.ReceiveStatus.GetFrameSyncStatus());
-    SetStatus(LEDTimeSync, ReceiverParam.ReceiveStatus.GetTimeSyncStatus());
-    SetStatus(LEDIOInterface, ReceiverParam.ReceiveStatus.GetInterfaceStatus());
+		SetStatus(LEDMSC, ReceiverParam.ReceiveStatus.Audio.GetStatus());
+    	SetStatus(LEDSDC, ReceiverParam.ReceiveStatus.SDC.GetStatus());
+    	SetStatus(LEDFAC, ReceiverParam.ReceiveStatus.FAC.GetStatus());
+    	SetStatus(LEDFrameSync, ReceiverParam.ReceiveStatus.FSync.GetStatus());
+    	SetStatus(LEDTimeSync, ReceiverParam.ReceiveStatus.TSync.GetStatus());
+    	SetStatus(LEDIOInterface, ReceiverParam.ReceiveStatus.Interface.GetStatus());
 
 	/* Show SNR if receiver is in tracking mode */
 	if (DRMReceiver.GetReceiverState() == AS_WITH_SIGNAL)
 	{
 		/* Get a consistant snapshot */
-		ReceiverParam.Lock();
 		
 		/* We only get SNR from a local DREAM Front-End */
-		_REAL rSNR = ReceiverParam.rSNREstimate;
+		_REAL rSNR = ReceiverParam.GetSNR();
 		if (rSNR >= 0.0)
 		{
 			/* SNR */
@@ -731,7 +790,6 @@ void systemevalDlg::OnTimer()
 			QString().setNum((int) (rCurSamROffs / SOUNDCRD_SAMPLE_RATE * 1e6))
 			+ " ppm)");
 
-		ReceiverParam.Unlock();
 	}
 	else
 	{
@@ -743,7 +801,7 @@ void systemevalDlg::OnTimer()
 
 #ifdef _DEBUG_
 	TextFreqOffset->setText("DC: " +
-		QString().setNum(DRMReceiver.GetParameters()->
+		QString().setNum(ReceiverParam.
 		GetDCFrequency(), 'f', 3) + " Hz ");
 
 	/* Metric values */
@@ -757,7 +815,7 @@ void systemevalDlg::OnTimer()
 #else
 	/* DC frequency */
 	ValueFreqOffset->setText(QString().setNum(
-		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
+		ReceiverParam.GetDCFrequency(), 'f', 2) + " Hz");
 #endif
 
 /* _WIN32 fix because in Visual c++ the GUI files are always compiled even
@@ -786,7 +844,7 @@ void systemevalDlg::OnTimer()
 
 
 	/* Interleaver Depth #################### */
-	switch (DRMReceiver.GetParameters()->eSymbolInterlMode)
+	switch (ReceiverParam.eSymbolInterlMode)
 	{
 	case CParameter::SI_LONG:
 		strFACInfo = tr("2 s (Long Interleaving)");
@@ -803,7 +861,7 @@ void systemevalDlg::OnTimer()
 
 	/* SDC, MSC mode #################### */
 	/* SDC */
-	switch (DRMReceiver.GetParameters()->eSDCCodingScheme)
+	switch (ReceiverParam.eSDCCodingScheme)
 	{
 	case CS_1_SM:
 		strFACInfo = "4-QAM / ";
@@ -818,7 +876,7 @@ void systemevalDlg::OnTimer()
 	}
 
 	/* MSC */
-	switch (DRMReceiver.GetParameters()->eMSCCodingScheme)
+	switch (ReceiverParam.eMSCCodingScheme)
 	{
 	case CS_2_SM:
 		strFACInfo += "SM 16-QAM";
@@ -845,9 +903,9 @@ void systemevalDlg::OnTimer()
 
 
 	/* Code rates #################### */
-	strFACInfo = QString().setNum(DRMReceiver.GetParameters()->MSCPrLe.iPartB);
+	strFACInfo = QString().setNum(ReceiverParam.MSCPrLe.iPartB);
 	strFACInfo += " / ";
-	strFACInfo += QString().setNum(DRMReceiver.GetParameters()->MSCPrLe.iPartA);
+	strFACInfo += QString().setNum(ReceiverParam.MSCPrLe.iPartA);
 
 	FACCodeRateL->setText(tr("Prot. Level (B / A):")); /* Label */
 	FACCodeRateV->setText(strFACInfo); /* Value */
@@ -855,20 +913,20 @@ void systemevalDlg::OnTimer()
 
 	/* Number of services #################### */
 	strFACInfo = tr("Audio: ");
-	strFACInfo += QString().setNum(DRMReceiver.GetParameters()->iNumAudioService);
+	strFACInfo += QString().setNum(ReceiverParam.iNumAudioService);
 	strFACInfo += tr(" / Data: ");
-	strFACInfo +=QString().setNum(DRMReceiver.GetParameters()->iNumDataService);
+	strFACInfo +=QString().setNum(ReceiverParam.iNumDataService);
 
 	FACNumServicesL->setText(tr("Number of Services:")); /* Label */
 	FACNumServicesV->setText(strFACInfo); /* Value */
 
 
 	/* Time, date #################### */
-	if ((DRMReceiver.GetParameters()->iUTCHour == 0) &&
-		(DRMReceiver.GetParameters()->iUTCMin == 0) &&
-		(DRMReceiver.GetParameters()->iDay == 0) &&
-		(DRMReceiver.GetParameters()->iMonth == 0) &&
-		(DRMReceiver.GetParameters()->iYear == 0))
+	if ((ReceiverParam.iUTCHour == 0) &&
+		(ReceiverParam.iUTCMin == 0) &&
+		(ReceiverParam.iDay == 0) &&
+		(ReceiverParam.iMonth == 0) &&
+		(ReceiverParam.iYear == 0))
 	{
 		/* No time service available */
 		strFACInfo = tr("Service not available");
@@ -878,17 +936,17 @@ void systemevalDlg::OnTimer()
 #ifdef GUI_QT_DATE_TIME_TYPE
 		/* QT type of displaying date and time */
 		QDateTime DateTime;
-		DateTime.setDate(QDate(DRMReceiver.GetParameters()->iYear,
-			DRMReceiver.GetParameters()->iMonth,
-			DRMReceiver.GetParameters()->iDay));
-		DateTime.setTime(QTime(DRMReceiver.GetParameters()->iUTCHour,
-			DRMReceiver.GetParameters()->iUTCMin));
+		DateTime.setDate(QDate(ReceiverParam.iYear,
+			ReceiverParam.iMonth,
+			ReceiverParam.iDay));
+		DateTime.setTime(QTime(ReceiverParam.iUTCHour,
+			ReceiverParam.iUTCMin));
 
 		strFACInfo = DateTime.toString();
 #else
 		/* Set time and date */
 		QString strMin;
-		const int iMin = DRMReceiver.GetParameters()->iUTCMin;
+		const int iMin = ReceiverParam.iUTCMin;
 
 		/* Add leading zero to number smaller than 10 */
 		if (iMin < 10)
@@ -900,12 +958,12 @@ void systemevalDlg::OnTimer()
 
 		strFACInfo =
 			/* Time */
-			QString().setNum(DRMReceiver.GetParameters()->iUTCHour) + ":" +
+			QString().setNum(ReceiverParam.iUTCHour) + ":" +
 			strMin + "  -  " +
 			/* Date */
-			QString().setNum(DRMReceiver.GetParameters()->iMonth) + "/" +
-			QString().setNum(DRMReceiver.GetParameters()->iDay) + "/" +
-			QString().setNum(DRMReceiver.GetParameters()->iYear);
+			QString().setNum(ReceiverParam.iMonth) + "/" +
+			QString().setNum(ReceiverParam.iDay) + "/" +
+			QString().setNum(ReceiverParam.iYear);
 #endif
 	}
 
@@ -914,7 +972,7 @@ void systemevalDlg::OnTimer()
 
 	//display GPS info
 
-	switch (ReceiverParam.ReceptLog.GPSData.GetStatus())
+	switch (ReceiverParam.GPSData.GetStatus())
 	{
 		case CGPSData::GPS_RX_NOT_CONNECTED:
 			LEDGPS->SetLight(2); // Red
@@ -930,17 +988,17 @@ void systemevalDlg::OnTimer()
 	}
 
 	QString qStrPosition;
-	if (ReceiverParam.ReceptLog.GPSData.GetPositionAvailable())
+	if (ReceiverParam.GPSData.GetPositionAvailable())
 	{
 		double latitude, longitude;
-		ReceiverParam.ReceptLog.GPSData.GetLatLongDegrees(latitude, longitude);
+		ReceiverParam.GPSData.GetLatLongDegrees(latitude, longitude);
 		qStrPosition = QString("Lat: %1\260  Long: %2\260").arg(latitude, 0, 'f', 4).arg(longitude,0, 'f',4);
 	}
 	else
 		qStrPosition = "Lat: ?  Long: ?";
 
-	if (ReceiverParam.ReceptLog.GPSData.GetAltitudeAvailable())
-		qStrPosition += QString("  Alt: %1 m").arg(ReceiverParam.ReceptLog.GPSData.GetAltitudeMetres(), 0, 'f', 0);
+	if (ReceiverParam.GPSData.GetAltitudeAvailable())
+		qStrPosition += QString("  Alt: %1 m").arg(ReceiverParam.GPSData.GetAltitudeMetres(), 0, 'f', 0);
 	else
 		qStrPosition += "  Alt: ?";
 
@@ -949,14 +1007,14 @@ void systemevalDlg::OnTimer()
 	QString qStrSpeedHeading;
 	qStrSpeedHeading = "Speed: ";
 
-	if (ReceiverParam.ReceptLog.GPSData.GetSpeedAvailable())
-		qStrSpeedHeading += QString("%1 m/s").arg(ReceiverParam.ReceptLog.GPSData.GetSpeedMetresPerSecond(), 0, 'f', 1);
+	if (ReceiverParam.GPSData.GetSpeedAvailable())
+		qStrSpeedHeading += QString("%1 m/s").arg(ReceiverParam.GPSData.GetSpeedMetresPerSecond(), 0, 'f', 1);
 	else
 		qStrSpeedHeading += "?";
 
 	qStrSpeedHeading += "  Heading: ";
-	if (ReceiverParam.ReceptLog.GPSData.GetHeadingAvailable())
-		qStrSpeedHeading += QString("%1\260").arg(ReceiverParam.ReceptLog.GPSData.GetHeadingDegrees());
+	if (ReceiverParam.GPSData.GetHeadingAvailable())
+		qStrSpeedHeading += QString("%1\260").arg(ReceiverParam.GPSData.GetHeadingDegrees());
 	else
 		qStrSpeedHeading += "?";
 
@@ -964,15 +1022,15 @@ void systemevalDlg::OnTimer()
 
 	QString qStrTime;
 
-	if (ReceiverParam.ReceptLog.GPSData.GetTimeAndDateAvailable())
+	if (ReceiverParam.GPSData.GetTimeAndDateAvailable())
 	{
-		qStrTime = QString("UTC: ") + ReceiverParam.ReceptLog.GPSData.GetTimeDate().c_str() + "  ";
+		qStrTime = QString("UTC: ") + ReceiverParam.GPSData.GetTimeDate().c_str() + "  ";
 	}
 	else
 		qStrTime = "UTC: ?  ";
 
-	if (ReceiverParam.ReceptLog.GPSData.GetSatellitesVisibleAvailable())
-		qStrTime += "Satellites: " + QString().setNum(ReceiverParam.ReceptLog.GPSData.GetSatellitesVisible());
+	if (ReceiverParam.GPSData.GetSatellitesVisibleAvailable())
+		qStrTime += "Satellites: " + QString().setNum(ReceiverParam.GPSData.GetSatellitesVisible());
 	else
 		qStrTime += "Satellites: ?";
 
@@ -981,6 +1039,7 @@ void systemevalDlg::OnTimer()
 	/* Update controls */
 	UpdateControls();
 	}
+	ReceiverParam.Unlock();
 }
 
 void systemevalDlg::OnRadioTimeLinear() 
@@ -1136,10 +1195,10 @@ void systemevalDlg::OnCheckSaveAudioWAV()
 
 void systemevalDlg::OnTimerLogFileStart()
 {
- 	CReceptLog& ReceptLog = DRMReceiver.GetParameters()->ReceptLog;
-
 	/* Start logging (if not already done) */
-	if ( ReceptLog.GetLoggingEnabled() && !ReceptLog.GetLoggingActivated())
+	if((bEnableShortLog && !longLog.GetLoggingActivated())
+	|| (bEnableLongLog && !longLog.GetLoggingActivated())
+	)
 	{
 		CheckBoxWriteLog->setChecked(TRUE);
 		OnCheckWriteLog();
@@ -1148,17 +1207,16 @@ void systemevalDlg::OnTimerLogFileStart()
 
 void systemevalDlg::StartTimerLogFileStart()
 {
-	/* Activate log file start if necessary.
-	   Timer is set to fire only once.
+	/* Activate log file start if necessary. Timer is set to fire only once.
 	   Relies on timer firing immediately if delay is zero.
 	 */
-	if (DRMReceiver.GetParameters()->ReceptLog.GetLoggingEnabled() == TRUE)
+	if (bEnableLongLog == TRUE)
 	{
 		/* One shot timer */
-		TimerLogFileStart.start(DRMReceiver.GetParameters()->
-			ReceptLog.GetDelLogStart() * 1000 /* ms */, TRUE);
+		TimerLogFileStart.start(longLog.GetDelLogStart() * 1000 /* ms */, TRUE);
 	}	
 }
+
 void systemevalDlg::OnCheckWriteLog()
 {
 	if (CheckBoxWriteLog->isChecked())
@@ -1170,62 +1228,25 @@ void systemevalDlg::OnCheckWriteLog()
 		/* Get frequency from front-end edit control */
 		QString strFreq = EdtFrequency->text();
 		iCurFrequency = strFreq.toUInt();
-		DRMReceiver.GetParameters()->ReceptLog.SetFrequency(iCurFrequency);
-
-		/* Set some other information obout this receiption */
-		QString strAddText = "";
-
-		/* Check if receiver does receive a DRM signal */
-		if ((DRMReceiver.GetReceiverState() == AS_WITH_SIGNAL) &&
-			(DRMReceiver.GetReceiverMode() == RM_DRM))
-		{
-			/* First get current selected audio service */
-			int iCurSelServ =
-				DRMReceiver.GetParameters()->GetCurSelAudioService();
-
-			/* Check whether service parameters were not transmitted yet */
-			if (DRMReceiver.GetParameters()->Service[iCurSelServ].IsActive())
-			{
-				strAddText = tr("Label            ");
-
-				/* Service label (UTF-8 encoded string -> convert) */
-				strAddText += QString().fromUtf8(QCString(
-					DRMReceiver.GetParameters()->Service[iCurSelServ].
-					strLabel.c_str()));
-
-				strAddText += tr("\nBitrate          ");
-
-				strAddText += QString().setNum(DRMReceiver.GetParameters()->
-					GetBitRateKbps(iCurSelServ, FALSE), 'f', 2) + " kbps";
-
-				strAddText += tr("\nMode             ") + GetRobModeStr();
-				strAddText += tr("\nBandwidth        ") + GetSpecOccStr();
-			}
-		}
-
-		/* Set additional text for log file. Conversion from QString to STL
-		   string is needed (done with .latin1() function of QT string) */
-		string strTemp = strAddText.latin1();
-		DRMReceiver.GetParameters()->ReceptLog.SetAdditText(strTemp);
-
-		/* Set current transmission parameters. TDOD: better solution */
-		DRMReceiver.GetParameters()->ReceptLog.
-			SetRobMode(DRMReceiver.GetParameters()->GetWaveMode());
-		DRMReceiver.GetParameters()->ReceptLog.
-			SetMSCScheme(DRMReceiver.GetParameters()->eMSCCodingScheme);
-		DRMReceiver.GetParameters()->ReceptLog.
-			SetProtLev(DRMReceiver.GetParameters()->MSCPrLe);
+		longLog.SetLogFrequency(iCurFrequency);
+		shortLog.SetLogFrequency(iCurFrequency);
 
 		/* Open log file */
-		DRMReceiver.GetParameters()->ReceptLog.StartLogging();
+		shortLog.Start("DreamLog.txt");
+		longLog.Start("DreamLogLong.csv");
+
+		/* and update immediately to get an initial sample (and the header) */
+		shortLog.Update();
+		longLog.Update();
 	}
 	else
 	{
 		/* Deactivate log file timer */
 		TimerLogFileShort.stop();
 		TimerLogFileLong.stop();
+		shortLog.Stop();
+		longLog.Stop();
 
-		DRMReceiver.GetParameters()->ReceptLog.StopLogging();
 	}
 
 	/* set the focus */
@@ -1236,17 +1257,17 @@ void systemevalDlg::OnCheckWriteLog()
 void systemevalDlg::OnTimerLogFileShort()
 {
 	/* Write new parameters in log file (short version) */
-	DRMReceiver.GetParameters()->ReceptLog.WriteParameters(&DRMReceiver, FALSE);
+	shortLog.Update();
 }
 
 void systemevalDlg::OnTimerLogFileLong()
 {
 	/* Write new parameters in log file (long version) */
-	DRMReceiver.GetParameters()->ReceptLog.WriteParameters(&DRMReceiver, TRUE);
+	longLog.Update();
 }
 
 QString	systemevalDlg::GetRobModeStr()
-{
+{		
 	switch (DRMReceiver.GetParameters()->GetWaveMode())
 	{
 	case RM_ROBUSTNESS_MODE_A:

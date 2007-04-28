@@ -50,6 +50,7 @@
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
 #include "../DrmReceiver.h"
+#include "../ReceptLog.h"
 #include "../util/Settings.h"
 
 
@@ -98,9 +99,17 @@ protected:
 	CSettings&			Settings;
 
 	QTimer				Timer;
+
+	/* logging */
+	CShortLog			shortLog;
+	CLongLog			longLog;
+	_BOOLEAN			bEnableShortLog;
+	_BOOLEAN			bEnableLongLog;
 	QTimer				TimerLogFileLong;
 	QTimer				TimerLogFileShort;
 	QTimer				TimerLogFileStart;
+	int					iLogDelay;
+
 	int					iCurFrequency;
     virtual void		showEvent(QShowEvent* pEvent);
 	virtual void		hideEvent(QHideEvent* pEvent);

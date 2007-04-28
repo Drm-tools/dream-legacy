@@ -41,9 +41,16 @@ using namespace std;
 
 const unsigned short CGPSReceiver::c_usReconnectIntervalSeconds = 30;
 
-CGPSReceiver::CGPSReceiver(CGPSData& data): m_GPSData(data),m_pSocket(NULL),m_iCounter(0)
+CGPSReceiver::CGPSReceiver(CParameter& p, CSettings& s):
+	Parameters(p),m_Settings(s),m_pSocket(NULL),m_iCounter(0)
 {	
     m_pTimer = new QTimer(this);
+
+	Parameters.Lock();
+	Parameters.GPSData.host = m_Settings.Get("GPS", "host", "localhost");
+	Parameters.GPSData.port = m_Settings.Get("GPS", "port", 2947);
+	Parameters.Unlock();
+
 	open();
 }
 
@@ -54,7 +61,11 @@ CGPSReceiver::~CGPSReceiver()
 
 void CGPSReceiver::open()
 {
-	m_GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
+	Parameters.Lock();
+	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
+	string host = Parameters.GPSData.host;
+	int port = Parameters.GPSData.port;
+	Parameters.Unlock();
 	if(m_pSocket == NULL)
 	{
 		m_pSocket = new QSocket();
@@ -64,14 +75,18 @@ void CGPSReceiver::open()
 		connect(m_pSocket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
 		connect(m_pSocket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
 	}
-	m_pSocket->connectToHost(m_GPSData.host.c_str(), m_GPSData.port);
+	m_pSocket->connectToHost(host.c_str(), port);
 }
 
 void CGPSReceiver::close()
 {
 	if(m_pSocket == NULL)
 		return;
-	m_GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
+
+	Parameters.Lock();
+	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
+	Parameters.Unlock();
+
 	m_pSocket->close();
 	disconnect(m_pSocket, SIGNAL(connected()), this, SLOT(slotConnected()));
 	disconnect(m_pSocket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
@@ -144,13 +159,14 @@ void CGPSReceiver::DecodeString(char Command, string Value)
 
 void CGPSReceiver::DecodeO(string Value)
 {	
+	Parameters.Lock();
 	if (Value[0] == '?')
 	{
-		m_GPSData.SetPositionAvailable(FALSE);
-		m_GPSData.SetAltitudeAvailable(FALSE);
-		m_GPSData.SetTimeAndDateAvailable(FALSE);
-		m_GPSData.SetHeadingAvailable(FALSE);
-		m_GPSData.SetSpeedAvailable(FALSE);
+		Parameters.GPSData.SetPositionAvailable(FALSE);
+		Parameters.GPSData.SetAltitudeAvailable(FALSE);
+		Parameters.GPSData.SetTimeAndDateAvailable(FALSE);
+		Parameters.GPSData.SetHeadingAvailable(FALSE);
+		Parameters.GPSData.SetSpeedAvailable(FALSE);
 		return;
 	}
 
@@ -165,54 +181,58 @@ void CGPSReceiver::DecodeO(string Value)
 	ssValue >> sErrorHoriz >> sErrorVert >> sHeading >> sSpeed >> sClimb >> sHeadingError;
 	ssValue >> sSpeedError >> sClimbError;
 
-	m_GPSData.SetLatLongDegrees(fLatitude, fLongitude);
-	m_GPSData.SetPositionAvailable(TRUE);
+	Parameters.GPSData.SetLatLongDegrees(fLatitude, fLongitude);
+	Parameters.GPSData.SetPositionAvailable(TRUE);
+	m_Settings.Put("Logfile", "latitude", fLatitude);
+	m_Settings.Put("Logfile", "longitude", fLongitude);
 
 	if (sTime.find('?') == string::npos)
 	{
 		stringstream ssTime(sTime);
 		unsigned long ulTime;
 		ssTime >> ulTime;
-		m_GPSData.SetTimeSecondsSince1970(ulTime);
-		m_GPSData.SetTimeAndDateAvailable(TRUE);
+		Parameters.GPSData.SetTimeSecondsSince1970(ulTime);
+		Parameters.GPSData.SetTimeAndDateAvailable(TRUE);
 	}
 	else
 	{
-		m_GPSData.SetTimeAndDateAvailable(FALSE);
+		Parameters.GPSData.SetTimeAndDateAvailable(FALSE);
 	}
 
 	if (sAltitude.find('?') == string::npos)	// if '?' not found..
 	{
-		m_GPSData.SetAltitudeAvailable(TRUE);
-		m_GPSData.SetAltitudeMetres(atof(sAltitude.c_str()));
+		Parameters.GPSData.SetAltitudeAvailable(TRUE);
+		Parameters.GPSData.SetAltitudeMetres(atof(sAltitude.c_str()));
 	}
 	else
-		m_GPSData.SetAltitudeAvailable(FALSE);
+		Parameters.GPSData.SetAltitudeAvailable(FALSE);
 
 	if (sHeading.find('?') == string::npos)
 	{
-		m_GPSData.SetHeadingAvailable(TRUE);
-		m_GPSData.SetHeadingDegrees((unsigned short) atof(sHeading.c_str()));
+		Parameters.GPSData.SetHeadingAvailable(TRUE);
+		Parameters.GPSData.SetHeadingDegrees((unsigned short) atof(sHeading.c_str()));
 	}
 	else
-		m_GPSData.SetHeadingAvailable(FALSE);
+		Parameters.GPSData.SetHeadingAvailable(FALSE);
 
 	if (sSpeed.find('?') == string::npos)
 	{
-		m_GPSData.SetSpeedAvailable(TRUE);
-		m_GPSData.SetSpeedMetresPerSecond(atof(sSpeed.c_str()));
+		Parameters.GPSData.SetSpeedAvailable(TRUE);
+		Parameters.GPSData.SetSpeedMetresPerSecond(atof(sSpeed.c_str()));
 	}
 	else
-		m_GPSData.SetSpeedAvailable(FALSE);
+		Parameters.GPSData.SetSpeedAvailable(FALSE);
 
+	Parameters.Unlock();
 }
 
 void CGPSReceiver::DecodeY(string Value)
 {
+	Parameters.Lock();
 	if (Value[0] == '?')
 	{
-		m_GPSData.SetSatellitesVisibleAvailable(FALSE);
-		m_GPSData.SetTimeAndDateAvailable(FALSE);
+		Parameters.GPSData.SetSatellitesVisibleAvailable(FALSE);
+		Parameters.GPSData.SetTimeAndDateAvailable(FALSE);
 		return;
 	}
 
@@ -222,10 +242,11 @@ void CGPSReceiver::DecodeY(string Value)
 
 	ssValue >> sTag >> sTimestamp >> usSatellites;
 
-	m_GPSData.SetSatellitesVisible(usSatellites);
-	m_GPSData.SetSatellitesVisibleAvailable(TRUE);
+	Parameters.GPSData.SetSatellitesVisible(usSatellites);
+	Parameters.GPSData.SetSatellitesVisibleAvailable(TRUE);
 
 	//todo - timestamp//
+	Parameters.Unlock();
 
 }
 
@@ -238,7 +259,9 @@ void CGPSReceiver::slotInit()
 void CGPSReceiver::slotConnected()
 {
 	m_iCounter = 0;
-	m_GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
+	Parameters.Lock();
+	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
+	Parameters.Unlock();
 	// clear current buffer
 	while(m_pSocket->canReadLine())
 		m_pSocket->readLine();
@@ -258,13 +281,19 @@ void CGPSReceiver::slotTimeout()
 		open();
 	}
 	else
-		m_GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
+	{
+		Parameters.Lock();
+		Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
+		Parameters.Unlock();
+	}
 }
 
 void CGPSReceiver::slotReadyRead()
 {
 	m_iCounter = c_usReconnectIntervalSeconds/5;
-	m_GPSData.SetStatus(CGPSData::GPS_RX_DATA_AVAILABLE);
+	Parameters.Lock();
+	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_DATA_AVAILABLE);
+	Parameters.Unlock();
 	while (m_pSocket->canReadLine())
 		DecodeGPSDReply((const char*) m_pSocket->readLine());
 	m_pTimer->start(5*1000, TRUE); // if no data in 30 seconds abort

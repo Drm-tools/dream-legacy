@@ -893,14 +893,10 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 		/* Postprocessing of audio blocks, status informations -------------- */
 		if (bCurBlockOK == FALSE)
 		{
-			/* Set AAC CRC result in log file */
-			ReceiverParam.ReceptLog.SetMSC(FALSE);
-
 			if (bAudioWasOK == TRUE)
 			{
 				/* Post message to show that CRC was wrong (yellow light) */
-				//PostWinMessage(MS_MSC_CRC, 1);
-				ReceiverParam.ReceiveStatus.SetAudioStatus(DATA_ERROR);
+				ReceiverParam.ReceiveStatus.Audio.SetStatus(DATA_ERROR);
 
 				/* Fade-out old block to avoid "clicks" in audio. We use linear
 				   fading which gives a log-fading impression */
@@ -939,7 +935,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			{
 				/* Post message to show that CRC was wrong (red light) */
 				//PostWinMessage(MS_MSC_CRC, 2);
-				ReceiverParam.ReceiveStatus.SetAudioStatus(CRC_ERROR);
+				ReceiverParam.ReceiveStatus.Audio.SetStatus(CRC_ERROR);
 
 				if (bUseReverbEffect == TRUE)
 				{
@@ -963,15 +959,12 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 		}
 		else
 		{
-			/* Set AAC CRC result in log file */
-			ReceiverParam.ReceptLog.SetMSC(TRUE);
-
 			/* Increment correctly decoded audio blocks counter */
 			iNumCorDecAudio++;
 
 			/* Post message to show that CRC was OK */
 			//PostWinMessage(MS_MSC_CRC, 0);
-			ReceiverParam.ReceiveStatus.SetAudioStatus(RX_OK);
+			ReceiverParam.ReceiveStatus.Audio.SetStatus(RX_OK);
 
 			if (bAudioWasOK == FALSE)
 			{
@@ -1338,8 +1331,8 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			throw CInitErr(ET_AUDDECODER);
 		}
 
-		/* Set number of AAC frames for log file */
-		ReceiverParam.ReceptLog.SetNumAAC(iNumAudioFrames);
+		/* Set number of Audio frames for log file */
+		ReceiverParam.iNumAudioFrames = iNumAudioFrames;
 
 		/* Since we do not correct for sample rate offsets here (yet), we do not
 		   have to consider larger buffers. An audio frame always corresponds

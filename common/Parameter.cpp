@@ -29,6 +29,7 @@
 #include "Parameter.h"
 #include "DrmReceiver.h"
 #include "Version.h"
+#include <limits>
 #include <iomanip>
 #include "util/LogPrint.h"
 
@@ -66,6 +67,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
  iTimingOffsTrack(0),
  eReceiverMode(RM_NONE),
  eAcquiState(AS_NO_SIGNAL),
+ iNumAudioFrames(0),
  vecbiAudioFrameStatus(0),
  bMeasurePSD(),
  vecrPSD(0),
@@ -87,8 +89,6 @@ CParameter::CParameter(CDRMReceiver *pRx):
  FrontEndParameters(),
  AltFreqSign(),
  AltFreqOtherServicesSign(),
- ReceptLog(),
- rSNREstimate(0.0),
  rMER(0.0),
  rWMERMSC(0.0),
  rWMERFAC(0.0),
@@ -111,7 +111,12 @@ CParameter::CParameter(CDRMReceiver *pRx):
  bRunThread(FALSE),
  bUsingMultimedia(FALSE),
  CellMappingTable(),
+ GPSData(),
  rSysSimSNRdB(0.0),
+ iFrequency(0),
+ bValidSignalStrength(FALSE),
+ rSigStr(0.0),
+ rIFSigStr(0.0),
  iCurSelAudioService(0),
  iCurSelDataService(0),
  eRobustnessMode(RM_ROBUSTNESS_MODE_A),	
@@ -177,8 +182,6 @@ CParameter::CParameter(CDRMReceiver *pRx):
  FrontEndParameters(pParameter->FrontEndParameters),  // OPH
  AltFreqSign(),
  AltFreqOtherServicesSign(),
- ReceptLog(),
- rSNREstimate(0.0),
  rMER(0.0),
  rWMERMSC(0.0),
  rWMERFAC(0.0),
@@ -251,6 +254,7 @@ CParameter::CParameter(const CParameter& p):
  iTimingOffsTrack(p.iTimingOffsTrack),
  eReceiverMode(p.eReceiverMode),
  eAcquiState(p.eAcquiState),
+ iNumAudioFrames(p.iNumAudioFrames),
  vecbiAudioFrameStatus(p.vecbiAudioFrameStatus),
  bMeasurePSD(p.bMeasurePSD),
  vecrPSD(p.vecrPSD),
@@ -272,8 +276,6 @@ CParameter::CParameter(const CParameter& p):
  FrontEndParameters(p.FrontEndParameters),
  AltFreqSign(p.AltFreqSign),
  AltFreqOtherServicesSign(p.AltFreqOtherServicesSign),
- ReceptLog(p.ReceptLog),
- rSNREstimate(p.rSNREstimate),
  rMER(p.rMER),
  rWMERMSC(p.rWMERMSC),
  rWMERFAC(p.rWMERFAC),
@@ -296,7 +298,12 @@ CParameter::CParameter(const CParameter& p):
  bRunThread(p.bRunThread),
  bUsingMultimedia(p.bUsingMultimedia),
  CellMappingTable(p.CellMappingTable),
+ GPSData(p.GPSData),
  rSysSimSNRdB(p.rSysSimSNRdB),
+ iFrequency(p.iFrequency),
+ bValidSignalStrength(p.bValidSignalStrength),
+ rSigStr(p.rSigStr),
+ rIFSigStr(p.rIFSigStr),
  iCurSelAudioService(p.iCurSelAudioService),
  iCurSelDataService(p.iCurSelDataService),
  eRobustnessMode(p.eRobustnessMode),
@@ -340,6 +347,7 @@ CParameter& CParameter::operator=(const CParameter& p)
 	iTimingOffsTrack = p.iTimingOffsTrack;
 	eReceiverMode = p.eReceiverMode;
 	eAcquiState = p.eAcquiState;
+	iNumAudioFrames = p.iNumAudioFrames;
 	vecbiAudioFrameStatus = p.vecbiAudioFrameStatus;
 	bMeasurePSD = p.bMeasurePSD;
 	vecrPSD = p.vecrPSD;
@@ -361,8 +369,6 @@ CParameter& CParameter::operator=(const CParameter& p)
 	FrontEndParameters = p.FrontEndParameters;
 	AltFreqSign = p.AltFreqSign;
 	AltFreqOtherServicesSign = p.AltFreqOtherServicesSign;
-	ReceptLog = p.ReceptLog;
-	rSNREstimate = p.rSNREstimate;
 	rMER = p.rMER;
 	rWMERMSC = p.rWMERMSC;
 	rWMERFAC = p.rWMERFAC;
@@ -385,7 +391,12 @@ CParameter& CParameter::operator=(const CParameter& p)
 	bRunThread = p.bRunThread;
 	bUsingMultimedia = p.bUsingMultimedia;
 	CellMappingTable = p.CellMappingTable;
+	GPSData = p.GPSData;
 	rSysSimSNRdB = p.rSysSimSNRdB;
+	iFrequency = p.iFrequency;
+	bValidSignalStrength = p.bValidSignalStrength;
+	rSigStr = p.rSigStr;
+	rIFSigStr = p.rIFSigStr;
 	iCurSelAudioService = p.iCurSelAudioService;
 	iCurSelDataService = p.iCurSelDataService;
 	eRobustnessMode = p.eRobustnessMode;
@@ -618,9 +629,6 @@ _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
 		eSpectOccup = SO_3;
 	}
 
-	/* Store new value in reception log */
-	ReceptLog.SetRobMode(eNewWaveMode);
-
 	/* Apply changes only if new paramter differs from old one */
 	if (eRobustnessMode != eNewWaveMode)
 	{
@@ -775,9 +783,6 @@ void CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe,
 	/* In case parameters have changed, set init flags */
 	if (bParamersHaveChanged == TRUE)
 		if(pDRMRec) pDRMRec->InitsForMSC();
-
-	/* Set new protection levels in reception log file */
-	ReceptLog.SetProtLev(MSCPrLe);
 }
 
 void CParameter::SetServiceParameters(int iShortID, const CService& newService)
@@ -841,9 +846,6 @@ void CParameter::SetMSCCodingScheme(const ECodScheme eNewScheme)
 		/* Set init flags */
 		if(pDRMRec) pDRMRec->InitsForMSCCodSche();
 	}
-
-	/* Set new coding scheme in reception log */
-	ReceptLog.SetMSCScheme(eNewScheme);
 }
 
 void CParameter::SetSDCCodingScheme(const ECodScheme eNewScheme)
@@ -1015,6 +1017,18 @@ _REAL CParameter::GetSysSNRdBPilPos() const
 		CellMappingTable.rAvPowPerSymbol * CellMappingTable.rAvScatPilPow * (_REAL) CellMappingTable.iNumCarrier);
 }
 
+void
+CParameter::SetSNR(const _REAL iNewSNR)
+{
+	SNRstat.addSample(iNewSNR);
+}
+
+_REAL
+CParameter::GetSNR()
+{
+	return SNRstat.getCurrent();
+}
+
 _REAL CParameter::GetNominalSNRdB()
 {
 	/* Convert SNR from system bandwidth to nominal bandwidth */
@@ -1079,704 +1093,22 @@ _REAL CParameter::GetSysToNomBWCorrFact()
 }
 
 
-/* Reception log implementation --------------------------------------------- */
-CReceptLog::CReceptLog() : 
-		GPSData(),
-		bValidSignalStrength(FALSE),
-		rSigStr(0.0),  
-		rIFSigStr(0.0),  
-	    shortlog(),
-	    longlog(),
-		iNumCRCOkFAC(0),
-		iNumCRCOkMSC(0),
-		iNumCRCOkMSCLong(0),
-		iNumCRCMSCLong(0),
-		iNumAACFrames(10),
-		bSyncOK(FALSE),
-		bFACOk(FALSE),
-		bMSCOk(FALSE),
-		bSyncOKValid(FALSE),
-		bFACOkValid(FALSE),
-		bMSCOkValid(FALSE),
-		iFrequency(0),
-		bLogActivated(FALSE),
-		bLogEnabled(FALSE),
-		bRxlEnabled(FALSE),
-		bPositionEnabled(FALSE),
-		strAdditText(),
-		iSecDelLogStart(0),
-		eCurRobMode(RM_NO_MODE_DETECTED),
-		eCurMSCScheme(CS_1_SM),
-		CurProtLev(),
-		Mutex()
-{
-	shortlog.setLog(this);
-	longlog.setLog(this);
-	shortlog.reset();
-	longlog.reset();
-}
-
-CReceptLog::CReceptLog(const CReceptLog& l) : 
-		GPSData(l.GPSData),
-		bValidSignalStrength(),
-		rSigStr(l.rSigStr),
-		rIFSigStr(l.rIFSigStr),
-	    shortlog(l.shortlog),
-	    longlog(l.longlog),
-		iNumCRCOkFAC(l.iNumCRCOkFAC),
-		iNumCRCOkMSC(l.iNumCRCOkMSC),
-		iNumCRCOkMSCLong(l.iNumCRCOkMSCLong),
-		iNumCRCMSCLong(l.iNumCRCMSCLong),
-		iNumAACFrames(l.iNumAACFrames),
-		bSyncOK(l.bSyncOK),
-		bFACOk(l.bFACOk),
-		bMSCOk(l.bMSCOk),
-		bSyncOKValid(l.bSyncOKValid),
-		bFACOkValid(l.bFACOkValid),
-		bMSCOkValid(l.bMSCOkValid),
-		iFrequency(l.iFrequency),
-		bLogActivated(l.bLogActivated),
-		bLogEnabled(l.bLogEnabled),
-		bRxlEnabled(l.bRxlEnabled),
-		bPositionEnabled(l.bPositionEnabled),
-		strAdditText(l.strAdditText),
-		iSecDelLogStart(l.iSecDelLogStart),
-		eCurRobMode(l.eCurRobMode),
-		eCurMSCScheme(l.eCurMSCScheme),
-		CurProtLev(l.CurProtLev)
-		//,Mutex()
-{
-	shortlog.setLog(this);
-	longlog.setLog(this);
-}
-
-CReceptLog& CReceptLog::operator=(const CReceptLog& l)
-{
-	GPSData = l.GPSData;
-	bValidSignalStrength = l.bValidSignalStrength;
-	rSigStr = l.rSigStr;
-	rIFSigStr = l.rIFSigStr;
-    shortlog = l.shortlog;
-    longlog = l.longlog;
-	shortlog.setLog(this);
-	longlog.setLog(this);
-	iNumCRCOkFAC = l.iNumCRCOkFAC;
-	iNumCRCOkMSC = l.iNumCRCOkMSC;
-	iNumCRCOkMSCLong = l.iNumCRCOkMSCLong;
-	iNumCRCMSCLong = l.iNumCRCMSCLong;
-	iNumAACFrames = l.iNumAACFrames;
-	bSyncOK = l.bSyncOK;
-	bFACOk = l.bFACOk;
-	bMSCOk = l.bMSCOk;
-	bSyncOKValid = l.bSyncOKValid;
-	bFACOkValid = l.bFACOkValid;
-	bMSCOkValid = l.bMSCOkValid;
-	iFrequency = l.iFrequency;
-	bLogActivated = l.bLogActivated;
-	bLogEnabled = l.bLogEnabled;
-	bRxlEnabled = l.bRxlEnabled;
-	bPositionEnabled = l.bPositionEnabled;
-	strAdditText = l.strAdditText;
-	iSecDelLogStart = l.iSecDelLogStart;
-	eCurRobMode = l.eCurRobMode;
-	eCurMSCScheme = l.eCurMSCScheme;
-	CurProtLev = l.CurProtLev;
-	return *this;
-}
-
-void CReceptLog::WriteParameters(CDRMReceiver* pDRMRec, _BOOLEAN bLong)
-{
-	Mutex.Lock();
-	if(bLong)
-		longlog.writeParameters(pDRMRec);
-	else
-		shortlog.writeParameters(pDRMRec);
-	Mutex.Unlock();
-}
-
-void CReceptLog::ResetTransParams()
-{
-	/* Reset transmission parameters */
-	eCurMSCScheme = CS_3_SM;
-	eCurRobMode = RM_NO_MODE_DETECTED;
-	CurProtLev.iPartA = 0;
-	CurProtLev.iPartB = 0;
-	CurProtLev.iHierarch = 0;
-}
-
-void CReceptLog::SetSync(const _BOOLEAN bCRCOk)
-{
-	if (bLogActivated == TRUE)
-	{
-		Mutex.Lock();
-
-		/* If one of the syncs were wrong in one second, set to false */
-		if (bCRCOk == FALSE)
-			bSyncOK = FALSE;
-
-		/* Validate sync flag */
-		bSyncOKValid = TRUE;
-
-		Mutex.Unlock();
-	}
-}
-
-void CReceptLog::SetFAC(const _BOOLEAN bCRCOk)
-{
-	if (bLogActivated == TRUE)
-	{
-		Mutex.Lock();
-
-		if (bCRCOk == TRUE)
-			iNumCRCOkFAC++;
-		else
-			bFACOk = FALSE;
-
-		/* Validate FAC flag */
-		bFACOkValid = TRUE;
-
-		Mutex.Unlock();
-	}
-}
-
-void CReceptLog::SetMSC(const _BOOLEAN bCRCOk)
-{
-	if (bLogActivated == TRUE)
-	{
-		Mutex.Lock();
-
-		/* Count for total number of MSC cells in a certain period of time */
-		iNumCRCMSCLong++;
-
-		if (bCRCOk == TRUE)
-		{
-			iNumCRCOkMSC++;
-			iNumCRCOkMSCLong++; /* Increase number of CRCs which are ok */
-		}
-		else
-			bMSCOk = FALSE;
-
-		/* Validate MSC flag */
-		bMSCOkValid = TRUE;
-
-		Mutex.Unlock();
-	}
-}
-
-unsigned int CReceptLog::ExtractMinutes(double dblDeg)
-{
-	unsigned int Degrees;
-
-	/* Extract degrees */
-	Degrees = (unsigned int) dblDeg;
-	return (unsigned int) (((floor((dblDeg - Degrees) * 1000000) / 1000000) + 0.00005) * 60.0);
-}
-
-void CShortLog::SetSNR(const _REAL rNewCurSNR)
-{
-	iNumSNR++;
-
-	/* Average SNR values */
-	rSumSNR += rNewCurSNR;
-
-	/* Set minimum and maximum of SNR */
-	if (rNewCurSNR > rMaxSNR)
-		rMaxSNR = rNewCurSNR;
-	if (rNewCurSNR < rMinSNR)
-		rMinSNR = rNewCurSNR;
-}
-
-void CShortLog::SetSignalStrength(const _REAL rNewCurSigStr)
-{
-	iNumSigStr++;
-
-	/* Average SigStr values */
-	rSumSigStr += rNewCurSigStr;
-
-	/* Set minimum and maximum of SigStr */
-	if (rNewCurSigStr > rMaxSigStr)
-		rMaxSigStr = rNewCurSigStr;
-	if (rNewCurSigStr < rMinSigStr)
-		rMinSigStr = rNewCurSigStr;
-}
-
-void CLongLog::SetSNR(const _REAL rNewCurSNR)
-{
-	rCurSNR = rNewCurSNR;
-}
-
-void CLongLog::SetSignalStrength(const _REAL rNewCurSigStr)
-{
-	rCurSigStr = rNewCurSigStr;
-}
-
-void CParameter::SetSNR(const _REAL rNewCurSNR)
-{
-	Mutex.Lock();
-	rSNREstimate = rNewCurSNR;
-	ReceptLog.shortlog.SetSNR(rNewCurSNR);
-	ReceptLog.longlog.SetSNR(rNewCurSNR);
-	Mutex.Unlock();
-}
-
-void CReceptLog::SetNumAAC(const int iNewNum)
-{
-	if (iNumAACFrames != iNewNum)
-	{
-		/* Set the number of AAC frames in one block */
-		iNumAACFrames = iNewNum;
-
-		longlog.reset();
-		shortlog.reset();
-	}
-}
-
-void CLog::open(const char* filename, time_t now)
-{
-	pFile = fopen(filename, "a");
-	writeHeader(now);
-	fflush(pFile);
-	reset();
-}
-
-void CLog::close()
-{
-	if (pFile != NULL)
-	{
-		writeTrailer();
-		fclose(pFile);
-		pFile=NULL;
-	}
-}
-
-void CReceptLog::StartLogging()
-{
-	time_t		ltime;
-
-	/* Get time and date */
-	time(&ltime);
-
-	bLogActivated = TRUE;
-	bLogEnabled = TRUE;
-
-	Mutex.Lock();
-
-	/* Init long and short version of log file. Open output file, write
-	   header and reset log file parameters */
-	/* Short */
-	shortlog.open("DreamLog.txt", ltime);
-
-	/* Long */
-	longlog.open("DreamLogLong.csv", ltime);
-
-	Mutex.Unlock();
-}
-
-void CReceptLog::StopLogging()
-{
-	bLogActivated = FALSE;
-	bLogEnabled = FALSE;
-	/* Close both types of log files */
-	shortlog.close();
-	longlog.close();
-}
-
-void CShortLog::reset()
-{
-	pLog->iNumCRCOkFAC = 0;
-	pLog->iNumCRCOkMSC = 0;
-
-	iNumSNR = 0;
-	rSumSNR = 0.0;
-	rMaxSNR = 0.0;
-	rMinSNR = 1000.0; /* Init with high value */
-
-	iNumSigStr = 0;
-	rSumSigStr = 0.0;
-	rMaxSigStr = 0.;
-	rMinSigStr = 1000.; /* Init with high value */
-}
-
-void CLongLog::reset()
-{
-	pLog->bSyncOK = TRUE;
-	pLog->bFACOk = TRUE;
-	pLog->bMSCOk = TRUE;
-
-	/* Invalidate flags for initialization */
-	pLog->bSyncOKValid = FALSE;
-	pLog->bFACOkValid = FALSE;
-	pLog->bMSCOkValid = FALSE;
-
-	/* Reset total number of checked CRCs and number of CRC ok */
-	pLog->iNumCRCMSCLong = 0;
-	pLog->iNumCRCOkMSCLong = 0;
-
-	rCurSNR = (_REAL) 0.0;
-}
-
-void CShortLog::writeHeader(time_t now)
-{
-	struct tm*	today;
-	today = gmtime(&now); /* Should be UTC time */
-
-	if (pFile != NULL)
-	{
-		/* Beginning of new table (similar to standard DRM log file) */
-		fprintf(pFile, "\n>>>>\nDream\nSoftware Version %s\n", dream_version);
-
-		fprintf(pFile, "Starttime (UTC)  %d-%02d-%02d %02d:%02d:%02d\n",
-			today->tm_year + 1900, today->tm_mon + 1, today->tm_mday,
-			today->tm_hour, today->tm_min, today->tm_sec);
-
-		fprintf(pFile, "Frequency        ");
-		if (pLog->iFrequency != 0)
-			fprintf(pFile, "%d kHz\n", pLog->iFrequency);
-		else
-			fprintf(pFile, "\n");
-			
-		if(pLog->GPSData.GetPositionAvailable())
-		{
-			double latitude, longitude;
-			pLog->GPSData.GetLatLongDegrees(latitude, longitude);
-
-			char c;
-			double val;
-			if(latitude<0.0)
-			{
-				c='S';
-				val = - latitude;
-			}
-			else
-			{
-				c='N';
-				val = latitude;
-			}
-			fprintf(pFile, "Latitude          %2d\xb0%02d'%c\n", int(val), pLog->ExtractMinutes(val), c);
-
-			if(longitude<0.0)
-			{
-				c='W';
-				val = - longitude;
-			}
-			else
-			{
-				c='E';
-				val = longitude;
-			}
-			fprintf(pFile, "Longitude        %3d\xb0%02d'%c\n", int(val), pLog->ExtractMinutes(val), c);
-		}
-
-		/* Write additional text */
-		if (pLog->strAdditText != "")
-			fprintf(pFile, "%s\n\n", pLog->strAdditText.c_str());
-		else
-			fprintf(pFile, "\n");
-
-		fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE");
-		if(pLog->bRxlEnabled)
-			fprintf(pFile, "      RXL\n");
-		fprintf(pFile, "\n");
-	}
-	iTimeCntShort = 0;
-}
-
-void CLongLog::writeHeader(time_t)
-{
-	if (pFile != NULL)
-	{
-#ifdef _DEBUG_
-		/* In case of debug mode, use more paramters */
-		fprintf(pFile, "FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    "
-			"SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY,  "
-			"DC-FREQ, SAMRATEOFFS\n");
-#else
-		/* The long version of log file has different header */
-		fprintf(pFile, "FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    "
-			"SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY");
-		if(pLog->bRxlEnabled)
-			fprintf(pFile, ",     RXL");
-		if(pLog->bPositionEnabled)
-			fprintf(pFile, ",     LATITUDE,    LONGITUDE");
-		fprintf(pFile, "\n");
-#endif
-	}
-
-	/* Init time with current time. The time function returns the number of
-	   seconds elapsed since midnight (00:00:00), January 1, 1970,
-	   coordinated universal time, according to the system clock */
-	time(&TimeCntLong);
-}
-
-void CShortLog::writeTrailer()
-{
-	if (rMaxSNR >= rMinSNR)
-		fprintf(pFile, "\nSNR min: %4.1f, max: %4.1f\n", rMinSNR, rMaxSNR);
-	else
-		fprintf(pFile, "\nSNR min: %4.1f, max: %4.1f\n", 0.0, 0.0);
-
-	if(pLog->bRxlEnabled)
-	{
-		if (rMaxSigStr >= rMinSigStr)
-			fprintf(pFile, "\nRXL min: %4.1f, max: %4.1f\n", rMinSigStr, rMaxSigStr);
-		else
-			fprintf(pFile, "\nRXL min: %4.1f, max: %4.1f\n", 0.0, 0.0);
-	}
-
-	/* Short log file ending */
-	fprintf(pFile, "\nCRC: \n");
-	fprintf(pFile, "<<<<\n\n");
-}
-
-void CLongLog::writeTrailer()
-{
-	fprintf(pFile, "\n\n");
-}
-
-void CShortLog::writeParameters(CDRMReceiver* pDRMRec)
-{
-	if (pLog->bLogActivated == FALSE)
-		return;
-
-	int iAverageSNR, iAverageSigStr, iTmpNumAAC;
-
-	/* Avoid division by zero */
-	if (iNumSNR > 0)
-		iAverageSNR = (int) Round(rSumSNR / iNumSNR);
-	else
-		iAverageSNR = 0;
-
-	/* Avoid division by zero */
-	if (iNumSigStr > 0)
-		iAverageSigStr = (int) Round(rSumSigStr / iNumSigStr);
-	else
-		iAverageSigStr = 0;
-
-	/* If no sync, do not print number of AAC frames. If the number
-	   of correct FAC CRCs is lower than 10%, we assume that
-	   receiver is not synchronized */
-	if (pLog->iNumCRCOkFAC < 15)
-		iTmpNumAAC = 0;
-	else
-		iTmpNumAAC = pLog->iNumAACFrames;
-
-	try
-	{
-		fprintf(pFile, "  %04d   %2d      %3d  %4d/%02d        0",
-		iTimeCntShort, iAverageSNR, pLog->iNumCRCOkFAC, pLog->iNumCRCOkMSC, iTmpNumAAC);
-		if(pLog->bRxlEnabled)
-			fprintf(pFile, "      %02d", iAverageSigStr);
-		fprintf(pFile, "\n");
-		fflush(pFile);
-	}
-	catch (...)
-	{
-		/* To prevent errors if user views the file during reception */
-	}
-
-	reset();
-
-	iTimeCntShort++;
-
-}
-
-void CLongLog::writeParameters(CDRMReceiver* pDRMRec)
-{
-	if (pLog->bLogActivated == FALSE)
-		return;
-
-	int	iSyncInd, iFACInd, iMSCInd;
-
-	if ((pLog->bSyncOK == TRUE) && (pLog->bSyncOKValid == TRUE))
-		iSyncInd = 1;
-	else
-		iSyncInd = 0;
-
-	if ((pLog->bFACOk == TRUE) && (pLog->bFACOkValid == TRUE))
-		iFACInd = 1;
-	else
-		iFACInd = 0;
-
-	if ((pLog->bMSCOk == TRUE) && (pLog->bMSCOkValid == TRUE))
-		iMSCInd = 1;
-	else
-		iMSCInd = 0;
-
-	struct tm* TimeNow = gmtime(&TimeCntLong); /* UTC */
-
-	/* Get parameters for delay and Doppler. In case the receiver is
-	   not synchronized, set parameters to zero */
-	_REAL rDelay = (_REAL) 0.0;
-	_REAL rDoppler = (_REAL) 0.0;
-	if(pDRMRec && pDRMRec->GetReceiverState() == AS_WITH_SIGNAL)
-	{
-		rDelay = pDRMRec->GetParameters()->rMinDelay;
-		rDoppler = pDRMRec->GetParameters()->rSigmaEstimate;
-	}
-
-	/* Get robustness mode string */
-	char chRobMode='X';
-	switch (pLog->eCurRobMode)
-	{
-	case RM_ROBUSTNESS_MODE_A:
-		chRobMode = 'A';
-		break;
-
-	case RM_ROBUSTNESS_MODE_B:
-		chRobMode = 'B';
-		break;
-
-	case RM_ROBUSTNESS_MODE_C:
-		chRobMode = 'C';
-		break;
-
-	case RM_ROBUSTNESS_MODE_D:
-		chRobMode = 'D';
-		break;
-
-	case RM_NO_MODE_DETECTED:
-		chRobMode = 'X';
-		break;
-	}
-
-	/* Get MSC scheme */
-	int iCurMSCSc=-1;
-	switch (pLog->eCurMSCScheme)
-	{
-	case CS_3_SM:
-		iCurMSCSc = 0;
-		break;
-
-	case CS_3_HMMIX:
-		iCurMSCSc = 1;
-		break;
-
-	case CS_3_HMSYM:
-		iCurMSCSc = 2;
-		break;
-
-	case CS_2_SM:
-		iCurMSCSc = 3;
-		break;
-
-	case CS_1_SM:/* TODO */
-		break;
-	}
-
-	/* Copy protection levels */
-	int iCurProtLevPartA = pLog->CurProtLev.iPartA;
-	int iCurProtLevPartB = pLog->CurProtLev.iPartB;
-	int iCurProtLevPartH = pLog->CurProtLev.iHierarch;
-
-	/* Only show mode if FAC CRC was ok */
-	if (iFACInd == 0)
-	{
-		chRobMode = 'X';
-		iCurMSCSc = 0;
-		iCurProtLevPartA = 0;
-		iCurProtLevPartB = 0;
-		iCurProtLevPartH = 0;
-	}
-
-	try
-	{
-#ifdef _DEBUG_
-		double dc=0.0, est=0.0;
-		if(pDRMRec)
-		{
-			dc = pDRMRec->GetParameters()->GetDCFrequency();
-			est = pDRMRec->GetParameters()->GetSampFreqEst();
-		}
-
-		/* Some more parameters in debug mode */
-		fprintf(pFile,
-			" %5d/%c%d%d%d%d        , %d-%02d-%02d, %02d:%02d:%02d.0, "
-			"%6.2f,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, "
-			"%5.2f, %8.2f,       %5.2f\n",
-			pLog->iFrequency,	chRobMode, iCurMSCSc, iCurProtLevPartA,
-			iCurProtLevPartB, iCurProtLevPartH,
-			TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
-			TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
-			TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
-			iNumCRCMSCLong, iNumCRCOkMSCLong, rDoppler, rDelay, dc, est
-			);
-#else
-		/* This data can be read by Microsoft Excel */
-		fprintf(pFile,
-			" %5d/%c%d%d%d%d        , %d-%02d-%02d, %02d:%02d:%02d.0, "
-			"%6.2f,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, %5.2f",
-			pLog->iFrequency,	chRobMode, iCurMSCSc, iCurProtLevPartA,
-			iCurProtLevPartB, iCurProtLevPartH,
-			TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
-			TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
-			TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
-			pLog->iNumCRCMSCLong, pLog->iNumCRCOkMSCLong,
-			rDoppler, rDelay);
-		if(pLog->bRxlEnabled)
-			fprintf(pFile, ",   %5.2f", rCurSigStr);
-		if(pLog->bPositionEnabled)
-		{
-			double latitude, longitude;
-			pLog->GPSData.GetLatLongDegrees(latitude, longitude);
-			fprintf(pFile, ",   %10.6f,   %10.6f", latitude, longitude);
-		}
-		fprintf(pFile, "\n");
-#endif
-		fflush(pFile);
-	}
-
-	catch (...)
-	{
-		/* To prevent errors if user views the file during reception */
-	}
-
-	reset();
-	/* This is a time_t type variable. It contains the number of
-	   seconds from a certain defined date. We simply increment
-	   this number for the next second instance */
-	TimeCntLong++;
-}
-
 void CParameter::SetIFSignalLevel(_REAL rNewSigStr)
 {
-	Mutex.Lock();
-	ReceptLog.rIFSigStr = rNewSigStr;
-	Mutex.Unlock();
+	rIFSigStr = rNewSigStr;
 }
 
 _REAL CParameter::GetIFSignalLevel()
 {
-	_REAL r;
-	Mutex.Lock();
-	r = ReceptLog.rIFSigStr;
-	Mutex.Unlock();
-	return r;
+	return rIFSigStr;
 }
 
-void CParameter::SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr)
+void CRxStatus::SetStatus(const ETypeRxStatus OK)
 {
-	Mutex.Lock();
-	ReceptLog.bValidSignalStrength = bValid;
-	ReceptLog.rSigStr = rNewSigStr;
-	ReceptLog.shortlog.SetSignalStrength(rNewSigStr);
-	ReceptLog.longlog.SetSignalStrength(rNewSigStr);
-	Mutex.Unlock();
-}
-
-_BOOLEAN CParameter::GetSignalStrength(_REAL &rOutSigStr)
-{
-	_BOOLEAN bValid;
-	Mutex.Lock();
-	bValid = ReceptLog.bValidSignalStrength;
-	if(bValid)
-		rOutSigStr = ReceptLog.rSigStr;
-	Mutex.Unlock();
-	return bValid;
-}
-
-void CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)
-{ 
-	FSyncOK = OK;
+	status = OK;
+	iNum++;
+	if(OK==RX_OK)
+		iNumOK++;
 	int colour=2;
 	switch(OK) {
 	case CRC_ERROR: colour=2; break;
@@ -1784,120 +1116,7 @@ void CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)
 	case RX_OK: colour=0; break;
 	case NOT_PRESENT:  break;
 	}
-	PostWinMessage(MS_FRAME_SYNC,colour);
-}
-
-void CReceiveStatus::SetTimeSyncStatus(const ETypeRxStatus OK)
-{ 
-	TSyncOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_TIME_SYNC,colour);
-}
-
-void CReceiveStatus::SetInterfaceStatus(const ETypeRxStatus OK)
-{ 
-	InterfaceOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_IOINTERFACE,colour);
-}
-
-void CReceiveStatus::SetFACStatus(const ETypeRxStatus OK)
-{ 
-	FACOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_FAC_CRC,colour);
-}
-
-void CReceiveStatus::SetSDCStatus(const ETypeRxStatus OK)
-{ 
-	SDCOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_SDC_CRC,colour);
-}
-
-void CReceiveStatus::SetAudioStatus(const ETypeRxStatus OK)
-{ 
-	AudioOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_MSC_CRC,colour);
-}
-
-void CReceiveStatus::SetMOTStatus(const ETypeRxStatus OK)
-{
-	MOTOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_MOT_OBJ_STAT,colour);
-}
-
-ETypeRxStatus CReceiveStatus::GetFrameSyncStatus()
-{
-	return FSyncOK;
-}
-
-ETypeRxStatus CReceiveStatus::GetTimeSyncStatus()
-{
-	return TSyncOK;
-}
-
-ETypeRxStatus CReceiveStatus::GetInterfaceStatus()
-{
-	return InterfaceOK;
-}
-
-ETypeRxStatus CReceiveStatus::GetFACStatus()
-{
-	return FACOK;
-}
-
-ETypeRxStatus CReceiveStatus::GetSDCStatus()
-{
-	return SDCOK;
-}
-
-ETypeRxStatus CReceiveStatus::GetAudioStatus()
-{
-	return AudioOK;
-}
-
-ETypeRxStatus CReceiveStatus::GetMOTStatus()
-{
-	return MOTOK;
+	PostWinMessage(ident,colour);
 }
 
 void CParameter::GenerateReceiverID()
@@ -1960,4 +1179,51 @@ void CParameter::GenerateRandomSerialNumber()
 	serialNumTemp[6] = '\0';
 
 	sSerialNumber = serialNumTemp;
+}
+
+CMinMaxMean::CMinMaxMean():rSum(0.0),rCur(0.0),
+rMin(numeric_limits<_REAL>::max()),rMax(numeric_limits<_REAL>::min()),iNum(0)
+{
+}
+
+void
+CMinMaxMean::addSample(_REAL r)
+{
+	rCur = r;
+	rSum += r;
+	iNum++;
+}
+
+_REAL
+CMinMaxMean::getCurrent()
+{
+	return rCur;
+}
+
+_REAL
+CMinMaxMean::getMean()
+{
+	_REAL rMean = 0.0;
+	if(iNum>0)
+		rMean = rSum / iNum;
+	rSum = 0.0;
+	iNum = 0;
+	return rMean;
+}
+
+void
+CMinMaxMean::getMinMax(_REAL& rMinOut, _REAL& rMaxOut)
+{
+	if(rMin <= rMax)
+	{
+		rMinOut = rMin;
+		rMaxOut = rMax;
+	}
+	else
+	{
+		rMinOut = 0.0;
+		rMaxOut = 0.0;
+	}
+	rMin = numeric_limits<_REAL>::max();
+	rMax = numeric_limits<_REAL>::min();
 }

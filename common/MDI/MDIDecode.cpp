@@ -44,11 +44,11 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 	CTagPacketDecoder::Error err = TagPacketDecoderMDI.DecodeAFPacket(*pvecInputData);
 	if(err == CTagPacketDecoder::E_OK)
 	{
-		ReceiverParam.ReceiveStatus.SetInterfaceStatus(RX_OK);
+		ReceiverParam.ReceiveStatus.Interface.SetStatus(RX_OK);
 	}
 	else
 	{
-		ReceiverParam.ReceiveStatus.SetInterfaceStatus(CRC_ERROR);
+		ReceiverParam.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
 		return;
 	}
 	if (TagPacketDecoderMDI.TagItemDecoderRobMod.IsReady())
@@ -73,7 +73,7 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 	else
 	{
 		iOutputBlockSize = 0;
-		ReceiverParam.ReceiveStatus.SetFACStatus(NOT_PRESENT);
+		ReceiverParam.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
 	}
 
 	pvecOutputData2->Reset(0);
@@ -106,8 +106,8 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 		pvecOutputData2->Reset(0);
 		iOutputBlockSize2 = 0;
 		if(iFramesSinceSDC>2)
-			ReceiverParam.ReceiveStatus.SetSDCStatus(NOT_PRESENT);
-		else		
+			ReceiverParam.ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
+		else
 			iFramesSinceSDC++;
    }
 

@@ -30,26 +30,6 @@
 #define _GPS_DATA_H
 
 #include "GlobalDefinitions.h"
-#ifdef USE_GUI_QT
-# if QT_VERSION >= 0x030000 	 
-#  include <qmutex.h>
-# else
-#  include <qthread.h>
-# endif
-#endif
-
-class CAutoMutex
-{
-public:
-#ifdef USE_GUI_QT
-	CAutoMutex(QMutex& Mutex) : m_Mutex(Mutex) { m_Mutex.lock(); }
-	~CAutoMutex() { m_Mutex.unlock(); }
-
-	QMutex& m_Mutex;
-#else
-	CAutoMutex(int) {}
-#endif
-};
 
 class CGPSData
 {
@@ -72,68 +52,74 @@ public:
 
 	/////////
 
-	EGPSSource GetGPSSource();
+	EGPSSource GetGPSSource() const;
 	void SetGPSSource(EGPSSource eNewSource);
 
 	/////////
 
 	void SetSatellitesVisibleAvailable(_BOOLEAN bNew);
-	_BOOLEAN GetSatellitesVisibleAvailable();
+	_BOOLEAN GetSatellitesVisibleAvailable() const;
 	
 	void SetSatellitesVisible(uint16_t usSatellitesVisible);
-	uint16_t GetSatellitesVisible();
+	uint16_t GetSatellitesVisible() const;
 	
 	/////////
 	
 	void SetPositionAvailable(_BOOLEAN bNew);
-	_BOOLEAN GetPositionAvailable();
+	_BOOLEAN GetPositionAvailable() const;
 	
 	void SetLatLongDegrees(double fLatitudeDegrees, double fLongitudeDegrees);
-	void GetLatLongDegrees(double& fLatitudeDegrees, double& fLongitudeDegrees);
+	void GetLatLongDegrees(double& fLatitudeDegrees, double& fLongitudeDegrees) const;
+
+	void GetLatLongDegrees(string& latitude, string& longitude) const;
+
+	unsigned int ExtractMinutes(double dblDeg) const;
+	void asDM(string& lat, string& lng) const;
+	void asDM(string& pos, double d, char n, char p) const;
 	
 	/////////
 
 	void SetSpeedAvailable(_BOOLEAN bNew);
-	_BOOLEAN GetSpeedAvailable();
+	_BOOLEAN GetSpeedAvailable() const;
 	
 	void SetSpeedMetresPerSecond(double fSpeedMetresPerSecond);
-	double GetSpeedMetresPerSecond();
+	double GetSpeedMetresPerSecond() const;
 
 	/////////
 
 	void SetHeadingAvailable(_BOOLEAN bNew);
-	_BOOLEAN GetHeadingAvailable();
+	_BOOLEAN GetHeadingAvailable() const;
 	
 	void SetHeadingDegrees(uint16_t usHeadingDegrees);
-	unsigned short GetHeadingDegrees();
+	unsigned short GetHeadingDegrees() const;
 
 	/////////
 
 	void SetTimeAndDateAvailable(_BOOLEAN bNew);
-	_BOOLEAN GetTimeAndDateAvailable();
+	_BOOLEAN GetTimeAndDateAvailable() const;
 	
 	void SetTimeSecondsSince1970(uint32_t ulTimeSecondsSince1970);
-	uint32_t GetTimeSecondsSince1970();
-	string GetTimeDate();
-	void GetTimeDate(uint32_t& year, uint8_t& month, uint8_t& day, uint8_t& hour, uint8_t& minute, uint8_t& second);
+	uint32_t GetTimeSecondsSince1970() const;
+	string GetTimeDate() const;
+	void GetTimeDate(uint32_t& year, uint8_t& month, uint8_t& day, uint8_t& hour, uint8_t& minute, uint8_t& second) const;
 
 	/////////
 
 	void SetAltitudeAvailable(_BOOLEAN bNew);
-	_BOOLEAN GetAltitudeAvailable();
+	_BOOLEAN GetAltitudeAvailable() const;
 	
 	void SetAltitudeMetres(double fAltitudeMetres);
-	double GetAltitudeMetres();
+	double GetAltitudeMetres() const;
 	
 	/////////
 
 	void SetFix(EFix Fix);
-	EFix GetFix();
+	EFix GetFix() const;
 
 	/////////
 
 	void SetStatus(EStatus eStatus);
-	EStatus GetStatus();
+	EStatus GetStatus() const;
 
 	string host;
 	uint16_t port;
@@ -157,12 +143,6 @@ private:
 
 	_BOOLEAN m_bAltitudeAvailable;
 	double m_fAltitudeMetres;
-
-#ifdef USE_GUI_QT
-	QMutex m_Mutex;
-#else
-	int m_Mutex;
-#endif
 
 	EFix	m_eFix;
 	EStatus m_eStatus;

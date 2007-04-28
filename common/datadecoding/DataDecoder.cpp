@@ -155,11 +155,15 @@ CDataEncoder::Init(CParameter & Param)
 // TODO we only use always the first service right now
 	const int iCurSelDataServ = 0;
 
+	Param.Lock();
+
 	iPacketLen =
 		Param.Service[iCurSelDataServ].DataParam.iPacketLen * SIZEOF__BYTE;
 	iTotalPacketSize = iPacketLen + 24 /* CRC + header = 24 bits */ ;
 
 	iPacketID = Param.Service[iCurSelDataServ].DataParam.iPacketID;
+
+	Param.Unlock();
 
 	/* Init DAB MOT encoder object */
 	MOTSlideShowEncoder.Init();
@@ -215,12 +219,12 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 		if (CRCObject.CheckCRC((*pvecInputData).Separate(16)) == TRUE)
 		{
 			veciCRCOk[j] = 1;	/* CRC ok */
-			ReceiverParam.ReceiveStatus.SetMOTStatus(RX_OK);
+			ReceiverParam.ReceiveStatus.MOT.SetStatus(RX_OK);
 		}
 		else
 		{
 			veciCRCOk[j] = 0;	/* CRC wrong */
-			ReceiverParam.ReceiveStatus.SetMOTStatus(CRC_ERROR);
+			ReceiverParam.ReceiveStatus.MOT.SetStatus(CRC_ERROR);
 		}
 	}
 

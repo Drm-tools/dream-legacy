@@ -409,8 +409,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				iAveCorr = 0;
 
 				/* GUI message that timing is ok */
-				ReceiverParam.ReceiveStatus.SetTimeSyncStatus(RX_OK);
-				ReceiverParam.ReceptLog.SetSync(TRUE);
+				ReceiverParam.ReceiveStatus.TSync.SetStatus(RX_OK);
 
 				/* Acquisition was successful, reset init flag (just in case it
 				   was not reset by the non-linear correction unit */
@@ -448,7 +447,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							(CReal) iAveCorr / (NUM_SYM_BEFORE_RESET + 1);
 
 						/* GUI message that timing was corrected (red light) */
-						ReceiverParam.ReceiveStatus.SetTimeSyncStatus(CRC_ERROR);
+						ReceiverParam.ReceiveStatus.TSync.SetStatus(CRC_ERROR);
 					}
 
 					/* Reset counters */
@@ -460,9 +459,8 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 					/* GUI message that timing is yet ok (yellow light). Do not
 					   show any light if init was done right before this */
 					if (bInitTimingAcqu == FALSE)
-						ReceiverParam.ReceiveStatus.SetTimeSyncStatus(DATA_ERROR);
+						ReceiverParam.ReceiveStatus.TSync.SetStatus(DATA_ERROR);
 				}
-				ReceiverParam.ReceptLog.SetSync(FALSE);
 			}
 
 #ifdef _DEBUG_
@@ -494,8 +492,7 @@ fflush(pFile);
 
 		/* Timing acquisition was successfully finished, show always green
 		   light */
-		ReceiverParam.ReceiveStatus.SetTimeSyncStatus(RX_OK);
-		ReceiverParam.ReceptLog.SetSync(TRUE);
+		ReceiverParam.ReceiveStatus.TSync.SetStatus(RX_OK);
 
 #ifdef _DEBUG_
 /* Save estimated positions of timing (tracking) */

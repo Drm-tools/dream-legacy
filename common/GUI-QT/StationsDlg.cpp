@@ -407,7 +407,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Init with current setting in log file */
 	QwtCounterFrequency->
-		setValue(DRMReceiver.GetParameters()->ReceptLog.GetFrequency());
+		setValue(DRMReceiver.GetParameters()->GetFrequency());
 
 	/* Init UTC time shown with a label control */
 	SetUTCTimeLabel();
@@ -1156,9 +1156,7 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		/* Third text of list view item is frequency -> text(2)
 		   Set value in frequency counter control QWT. Setting this parameter
 		   will emit a "value changed" signal which sets the new frequency.
-		   Therefore, here is no call to "SetFrequency()" needed. Also, the
-		   frequency is set in the log file, therefore here is no
-		   "ReceptLog.SetFrequency()" needed, too */
+		   Therefore, here is no call to "SetFrequency()" needed.*/
 		QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
 
 		/* If the mode has changed re-initialise the receiver */

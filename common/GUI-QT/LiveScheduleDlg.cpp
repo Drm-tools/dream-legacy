@@ -831,11 +831,10 @@ void
 LiveScheduleDlg::OnTimerList()
 {
 	/* Get current receiver latitude and longitude if defined */
-	if (DRMReceiver.GetParameters()->ReceptLog.GPSData.GetPositionAvailable())
+	if (DRMReceiver.GetParameters()->GPSData.GetPositionAvailable())
 	{
 		double latitude, longitude;
-		DRMReceiver.GetParameters()->ReceptLog.GPSData.
-			GetLatLongDegrees(latitude, longitude);
+		DRMReceiver.GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
 		DRMSchedule.SetReceiverCoordinates(latitude, longitude);
 	}
 

@@ -185,13 +185,13 @@ _BOOLEAN bAllCompiled = FALSE;
 			if(EdtLongitudeEW->text().upper().latin1()[0]=='W')
 				longitude = - longitude;
 
-			pDRMRec->GetParameters()->ReceptLog.GPSData.SetPositionAvailable(TRUE);
-			pDRMRec->GetParameters()->ReceptLog.GPSData.SetLatLongDegrees(latitude, longitude);
+			pDRMRec->GetParameters()->GPSData.SetPositionAvailable(TRUE);
+			pDRMRec->GetParameters()->GPSData.SetLatLongDegrees(latitude, longitude);
 
 		}
 		else
 		{
-			pDRMRec->GetParameters()->ReceptLog.GPSData.SetPositionAvailable(FALSE);
+			pDRMRec->GetParameters()->GPSData.SetPositionAvailable(FALSE);
 		}
 
 		accept(); /* If the values are valid close the dialog */
@@ -249,7 +249,7 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 		extract local latitude and longitude coordinates */
 
 	double latitude, longitude;
-	pDRMRec->GetParameters()->ReceptLog.GPSData.GetLatLongDegrees(latitude, longitude);
+	pDRMRec->GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
 
 	/* Extract latitude values */
 
@@ -273,7 +273,7 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 	EdtLatitudeDegrees->setText(sVal);
 
 	/* Extract minutes */
-	Minutes = pDRMRec->GetParameters()->ReceptLog.ExtractMinutes(latitude);
+	Minutes = pDRMRec->GetParameters()->GPSData.ExtractMinutes(latitude);
 	sVal = QString("%1").arg(Minutes);
 
 	EdtLatitudeMinutes->setText(sVal);
@@ -297,7 +297,7 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 
 	/* Extract degrees */
 
-	Minutes = pDRMRec->GetParameters()->ReceptLog.ExtractMinutes(longitude);
+	Minutes = pDRMRec->GetParameters()->GPSData.ExtractMinutes(longitude);
 
 	/* Longitude degrees max 3 digits */
 	sVal = QString("%1").arg(int(longitude));

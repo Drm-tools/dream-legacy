@@ -35,7 +35,6 @@
 #include "DrmReceiver.h"
 #include "util/Settings.h"
 
-#include "util/LogPrint.h"
 #include "sound.h"
 #include "audiofilein.h"
 
@@ -67,14 +66,14 @@ vecrDopplerHist(LEN_HIST_PLOT_SYNC_PARMS),
 vecrSNRHist(LEN_HIST_PLOT_SYNC_PARMS),
 veciCDAudHist(LEN_HIST_PLOT_SYNC_PARMS), iSymbolCount(0),
 rSumDopplerHist((_REAL) 0.0), rSumSNRHist((_REAL) 0.0), iCurrentCDAud(0),
+	iFreqkHz(0),
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
 	RigPoll(),
 #endif
 	iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
-	bReadFromFile(FALSE), time_keeper(0),
-	iFreqkHz(0)
+	bEnableSMeter(FALSE), bSMeterAvail(FALSE),
+	bReadFromFile(FALSE), time_keeper(0)
 {
-	CPrintfLogPrinter::Instantiate();
 	pReceiverParam = new CParameter(this);
 	downstreamRSCI.SetReceiver(this);
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
@@ -187,7 +186,10 @@ CDRMReceiver::Run()
 	else
 	{
 		if (RigPoll.running())
+		{
 			RigPoll.stop();
+			bSMeterAvail = FALSE;
+		}
 	}
 #endif
 
@@ -210,13 +212,13 @@ CDRMReceiver::Run()
 				time_t now = time(NULL);
 				if ((now - time_keeper) > 2)
 				{
-					ReceiverParam.ReceiveStatus.SetInterfaceStatus(NOT_PRESENT);
-					ReceiverParam.ReceiveStatus.SetTimeSyncStatus(NOT_PRESENT);
-					ReceiverParam.ReceiveStatus.SetFrameSyncStatus(NOT_PRESENT);
-					ReceiverParam.ReceiveStatus.SetFACStatus(NOT_PRESENT);
-					ReceiverParam.ReceiveStatus.SetSDCStatus(NOT_PRESENT);
-					ReceiverParam.ReceiveStatus.SetAudioStatus(NOT_PRESENT);
-					ReceiverParam.ReceiveStatus.SetMOTStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.Interface.SetStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.TSync.SetStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.FSync.SetStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
 				}
 			}
 		}
@@ -679,12 +681,12 @@ CDRMReceiver::InitReceiverMode()
 		UtilizeSDCData.GetSDCReceive()->SetSDCType(CSDCReceive::SDC_AMSS);
 
 		/* Set the receive status - this affects the RSI output */
-		pAMParam->ReceiveStatus.SetTimeSyncStatus(NOT_PRESENT);
-		pAMParam->ReceiveStatus.SetFrameSyncStatus(NOT_PRESENT);
-		pAMParam->ReceiveStatus.SetFACStatus(NOT_PRESENT);
-		pAMParam->ReceiveStatus.SetSDCStatus(NOT_PRESENT);
-		pAMParam->ReceiveStatus.SetAudioStatus(NOT_PRESENT);
-		pAMParam->ReceiveStatus.SetMOTStatus(NOT_PRESENT);
+		pAMParam->ReceiveStatus.TSync.SetStatus(NOT_PRESENT);
+		pAMParam->ReceiveStatus.FSync.SetStatus(NOT_PRESENT);
+		pAMParam->ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
+		pAMParam->ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
+		pAMParam->ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
+		pAMParam->ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
 		break;
 	case RM_DRM:
 		if (pDRMParam == NULL)
@@ -830,9 +832,6 @@ CDRMReceiver::SetInStartMode()
 	pReceiverParam->rFreqOffsetTrack = (_REAL) 0.0;
 	pReceiverParam->iTimingOffsTrack = 0;
 
-	/* Init reception log (log long) transmission parameters. TODO: better solution */
-	pReceiverParam->ReceptLog.ResetTransParams();
-
 	/* Initialization of the modules */
 	InitsForAllModules();
 
@@ -860,13 +859,13 @@ CDRMReceiver::SetInStartMode()
 	iDelayedTrackModeCnt = NUM_FAC_DEL_TRACK_SWITCH;
 
 	/* Reset GUI lights */
-	pReceiverParam->ReceiveStatus.SetInterfaceStatus(NOT_PRESENT);
-	pReceiverParam->ReceiveStatus.SetTimeSyncStatus(NOT_PRESENT);
-	pReceiverParam->ReceiveStatus.SetFrameSyncStatus(NOT_PRESENT);
-	pReceiverParam->ReceiveStatus.SetFACStatus(NOT_PRESENT);
-	pReceiverParam->ReceiveStatus.SetSDCStatus(NOT_PRESENT);
-	pReceiverParam->ReceiveStatus.SetAudioStatus(NOT_PRESENT);
-	pReceiverParam->ReceiveStatus.SetMOTStatus(NOT_PRESENT);
+	pReceiverParam->ReceiveStatus.Interface.SetStatus(NOT_PRESENT);
+	pReceiverParam->ReceiveStatus.TSync.SetStatus(NOT_PRESENT);
+	pReceiverParam->ReceiveStatus.FSync.SetStatus(NOT_PRESENT);
+	pReceiverParam->ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
+	pReceiverParam->ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
+	pReceiverParam->ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
+	pReceiverParam->ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
 
 	/* In case upstreamRSCI is enabled, go directly to tracking mode, do not activate the
 	   synchronization units */
@@ -1238,15 +1237,15 @@ CDRMReceiver::UpdateParamHistories()
 #ifdef USE_QT_GUI
 		MutexHist.lock();
 #endif
+		pReceiverParam->Lock();
 
 		/* Frequency offset tracking values */
-		vecrFreqSyncValHist.AddEnd(pReceiverParam->rFreqOffsetTrack *
-								   SOUNDCRD_SAMPLE_RATE);
+		vecrFreqSyncValHist.AddEnd(pReceiverParam->rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE);
 
 		/* Sample rate offset estimation */
 		vecrSamOffsValHist.AddEnd(pReceiverParam->rResampleOffset);
 		/* Signal to Noise ratio estimates */
-		rSumSNRHist += pReceiverParam->rSNREstimate;
+		rSumSNRHist += pReceiverParam->GetSNR();
 
 /* TODO - reconcile this with Ollies RSCI Doppler code in ChannelEstimation */
 		/* Average Doppler estimate */
@@ -1278,6 +1277,7 @@ CDRMReceiver::UpdateParamHistories()
 			rSumSNRHist = (_REAL) 0.0;
 		}
 
+		pReceiverParam->Unlock();
 #ifdef USE_QT_GUI
 		MutexHist.unlock();
 #endif
@@ -1398,7 +1398,7 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 		return TRUE;
 	iFreqkHz = iNewFreqkHz;
 
-	pReceiverParam->ReceptLog.SetFrequency(iNewFreqkHz);
+	pReceiverParam->SetFrequency(iNewFreqkHz);
 
 	if (upstreamRSCI.GetOutEnabled() == TRUE)
 	{
@@ -1421,15 +1421,6 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 	}
 }
 
-/* if we have QT, use a thread to poll the signal strength
- * otherwise do it when needed
- */
-
-_BOOLEAN CDRMReceiver::GetSignalStrength(_REAL & rSigStr)
-{
-	return pReceiverParam->GetSignalStrength(rSigStr);
-}
-
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
 void
 CDRMReceiver::CRigPoll::run()
@@ -1437,20 +1428,29 @@ CDRMReceiver::CRigPoll::run()
 	CHamlib & rig = *(pDRMRec->GetHamlib());
 	while (bQuit == FALSE)
 	{
-		_REAL
-			r;
+		_REAL r;
 		if (rig.GetSMeter(r) == CHamlib::SS_VALID)
 		{
 			// Apply any correction
 			r += pDRMRec->GetParameters()->rSigStrengthCorrection;
-			pDRMRec->GetParameters()->SetSignalStrength(TRUE, r);
+			pDRMRec->GetParameters()->SigStrstat.addSample(r);
+			pDRMRec->bSMeterAvail = TRUE;
 		}
 		else
-			pDRMRec->GetParameters()->SetSignalStrength(FALSE, 0.0);
+			pDRMRec->bSMeterAvail = FALSE;
 		msleep(400);
 	}
 }
 #endif
+
+_BOOLEAN
+CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
+{
+	if(bSMeterAvail == FALSE)
+		return FALSE;
+	rSigStr = pReceiverParam->SigStrstat.getCurrent();
+	return TRUE;
+}
 
 void
 CDRMReceiver::SetRSIRecording(const _BOOLEAN bOn, const char cPro)
@@ -1691,35 +1691,6 @@ CDRMReceiver::LoadSettings(const CSettings& s)
 	/* Activate/Deactivate EPG decoding */
 	DataDecoder.SetDecodeEPG(s.Get("EPG", "decodeepg", TRUE));
 
-	/* Logfile -------------------------------------------------------------- */
-	CReceptLog& ReceptLog = pReceiverParam->ReceptLog;
-	/* Start log file flag */
-	ReceptLog.SetLoggingEnabled(s.Get("Logfile", "enablelog", FALSE));
-
-    /* log file flag for storing signal strength in long log */
-	ReceptLog.SetRxlEnabled(s.Get("Logfile", "enablerxl", FALSE));
-
-	/* log file flag for storing lat/long in long log */
-	ReceptLog.SetPositionEnabled(s.Get("Logfile", "enablepositiondata", FALSE));
-
-	/* logging delay value */
-	ReceptLog.SetDelLogStart(s.Get("Logfile", "delay", 0));
-
-	{
-		_REAL latitude, longitude;
-		/* Latitude string for log file */
-		latitude = s.Get("Logfile", "latitude", 1000.0);
-	/* Longitude string for log file */
-		longitude = s.Get("Logfile", "longitude", 1000.0);
-		if(-90.0 <= latitude && latitude <= 90.0 && -180.0 <= longitude  && longitude <= 180.0)
-		{
-			ReceptLog.GPSData.SetPositionAvailable(TRUE);
-			ReceptLog.GPSData.SetLatLongDegrees(latitude, longitude);
-		}
-		else
-			ReceptLog.GPSData.SetPositionAvailable(FALSE);
-	}
-
 	string strMode = s.Get("GUI",	"mode");
 
 	if (strMode == "DRMRX")
@@ -1824,20 +1795,6 @@ CDRMReceiver::SaveSettings(CSettings& s)
 	/* Active/Deactivate EPG decoding */
 	s.Put("EPG", "decodeepg", DataDecoder.GetDecodeEPG());
 
-	/* Logfile -------------------------------------------------------------- */
-	/* log or nolog? */
-	s.Put("Logfile", "enablelog", pReceiverParam->ReceptLog.GetLoggingEnabled());
-
-	/* Start log file delayed */
-	s.Put("Logfile", "delay", pReceiverParam->ReceptLog.GetDelLogStart());
-
-	if(pReceiverParam->ReceptLog.GPSData.GetPositionAvailable())
-	{
-		double latitude, longitude;
-		pReceiverParam->ReceptLog.GPSData.GetLatLongDegrees(latitude, longitude);
-		s.Put("Logfile", "latitude", latitude);
-		s.Put("Logfile", "longitude", longitude);
-	}
 
 	/* AM Parameters */
 

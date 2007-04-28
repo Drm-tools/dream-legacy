@@ -228,7 +228,7 @@ void MultimediaDlg::OnTimer()
 	_BOOLEAN	bMainPage;
 	_BOOLEAN	bShowInfo = TRUE;
 
-	switch(DRMReceiver.GetParameters()->ReceiveStatus.GetMOTStatus())
+	switch(DRMReceiver.GetParameters()->ReceiveStatus.MOT.GetStatus())
 	{
 	case NOT_PRESENT:
 		LEDStatus->Reset(); /* GREY */

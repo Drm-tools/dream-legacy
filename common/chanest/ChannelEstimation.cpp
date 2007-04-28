@@ -457,7 +457,6 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* SNR and Doppler are updated every symbol.
 	 * TODO is this necessary ? */
 
-	/* set SNR in ReceiverParam (SetSNR does locking!) */
 	if (bSNRInitPhase == TRUE)
 	{
    		ReceiverParam.SetSNR(-1.0);
@@ -472,8 +471,6 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		else
    			ReceiverParam.SetSNR(0.0);
 	}
-
-	ReceiverParam.Lock();
 
 	/* Doppler estimation is only implemented in the
 	 * Wiener time interpolation module */
@@ -544,8 +541,6 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			CalculateRint(ReceiverParam);
 		}
 	}
-	ReceiverParam.Unlock();
-
 
 	/* Interferer consideration --------------------------------------------- */
 	if (bInterfConsid == TRUE)

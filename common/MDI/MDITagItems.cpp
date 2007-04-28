@@ -170,7 +170,7 @@ CTagItemGeneratorLoFrCnt::GetProfiles()
 void
 CTagItemGeneratorFAC::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &FACData)
 {
-	if (Parameter.ReceiveStatus.GetFACStatus() == FALSE)
+	if (Parameter.ReceiveStatus.FAC.GetStatus() == FALSE)
 	{
 		/* Empty tag if FAC is invalid */
 		PrepareTag(0);
@@ -206,7 +206,7 @@ CTagItemGeneratorFAC::GetProfiles()
 void
 CTagItemGeneratorSDC::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &SDCData)
 {
-	if (Parameter.ReceiveStatus.GetSDCStatus() == FALSE)
+	if (Parameter.ReceiveStatus.SDC.GetStatus() == FALSE)
 	{
 		PrepareTag(0);
 		SDCData.Clear();
@@ -726,10 +726,10 @@ void
 CTagItemGeneratorReceiverStatus::GenTag(CParameter & Parameter)
 {
 	PrepareTag(4 * SIZEOF__BYTE);
-	Enqueue(Parameter.ReceiveStatus.GetTimeSyncStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
-	Enqueue(Parameter.ReceiveStatus.GetFACStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
-	Enqueue(Parameter.ReceiveStatus.GetSDCStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
-	Enqueue(Parameter.ReceiveStatus.GetAudioStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
+	Enqueue(Parameter.ReceiveStatus.TSync.GetStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
+	Enqueue(Parameter.ReceiveStatus.FAC.GetStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
+	Enqueue(Parameter.ReceiveStatus.SDC.GetStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
+	Enqueue(Parameter.ReceiveStatus.Audio.GetStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
 }
 
 string
@@ -1224,7 +1224,7 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 	iTagLen += iNumSymPerFrame * 4 * SIZEOF__BYTE;	// 4 bytes at start of each symbol (spec typo?) 
 	iTagLen += iTotalNumPilots * 2 * 2 * SIZEOF__BYTE;	// 4 bytes per pilot value (2 byte re, 2 byte imag) 
 
-	//logStatus("rpil gentag: pilots %d tag length %d", iTotalNumPilots, iTagLen);
+	//log.GetStatus("rpil gentag: pilots %d tag length %d", iTotalNumPilots, iTagLen);
 
 	PrepareTag(iTagLen);
 
@@ -1240,11 +1240,13 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 		((iNumCarrier - 1) / iScatPilFreqInt + 1))
 	{
 		GenEmptyTag();
-		logStatus("Wrong size: %d x %d, expected %d x %d",
+#if 0
+		log.GetStatus("Wrong size: %d x %d, expected %d x %d",
 				  Parameter.matcReceivedPilotValues.NumRows(),
 				  Parameter.matcReceivedPilotValues.NumColumns(),
 				  iNumSymPerFrame / iScatPilTimeInt,
 				  ((iNumCarrier - 1) / iScatPilFreqInt + 1));
+#endif
 		return;
 	}
 
@@ -1295,7 +1297,6 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 		_REAL rExponent = Ceil(Log(rMax) / Log(_REAL(2.0)));
 		_REAL rScale = 32767 * pow(_REAL(2.0), -rExponent);
 
-		//logStatus("max=%f, exponent=%f, scale=%f", rMax, rExponent, rScale);
 		// Put to the tag 
 		Enqueue((uint32_t) iNumPilots, SIZEOF__BYTE);	// PN = number of pilots 
 		Enqueue((uint32_t) iFirstPilotCarrier, SIZEOF__BYTE);	// PO = pilot offset 
