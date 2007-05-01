@@ -117,6 +117,10 @@ void
 CSettings::Put(const string & section, const string & key, const _REAL value)
 {
 	stringstream s;
+	s << setiosflags(ios::left);
+	s << setw(11);
+	s << setiosflags(ios::fixed);
+	s << setprecision(7);
 	s << value;
 	PutIniSetting(section, key, s.str());
 }

@@ -447,9 +447,14 @@ systemevalDlg::~systemevalDlg()
 		shortLog.Stop();
 	if(longLog.GetLoggingActivated())
 		longLog.Stop();
+	
+	double latitude, longitude;
+	DRMReceiver.GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
 	Settings.Put("Logfile", "enablerxl", shortLog.GetRxlEnabled());
 	Settings.Put("Logfile", "enablepositiondata", shortLog.GetPositionEnabled());
 	Settings.Put("Logfile", "enablelog", bEnableLongLog);
+	Settings.Put("Logfile", "latitude", latitude);
+	Settings.Put("Logfile", "longitude", longitude);
 }
 
 void systemevalDlg::UpdateControls()

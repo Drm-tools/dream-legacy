@@ -1123,7 +1123,7 @@ CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CGPSData & GPSData)	// Long/Lat 
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
-			Enqueue((uint32_t) 0xff, 2 * SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xffff, 2 * SIZEOF__BYTE);
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 		}
 
