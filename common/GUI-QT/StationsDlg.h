@@ -213,6 +213,7 @@ public:
 
 protected:
 	void			SetStationsView();
+	void			ClearStationsView();
 	virtual void	showEvent(QShowEvent* pEvent);
 	void			hideEvent(QHideEvent* pEvent);
 	void			AddWhatsThisHelp();

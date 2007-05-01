@@ -102,6 +102,7 @@ void CDRMChannel::ProcessDataInternal(CParameter&)
 
 void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 {
+	ReceiverParam.Lock(); 
 	/* Set channel parameter according to selected channel number (table B.1) */
 	switch (ReceiverParam.iDRMChannelNum)
 	{
@@ -358,6 +359,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	/* Define block-sizes for input and output */
 	iInputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
 	iOutputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+	ReceiverParam.Unlock(); 
 }
 
 void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift,

@@ -125,16 +125,18 @@ void EPGDlg::OnTimer()
 
 void EPGDlg::showEvent(QShowEvent *) 
 {    
-    // Use the currently receiving channel 
-    CParameter* pP = DRMReceiver.GetParameters();
-    int sNo = pP->GetCurSelAudioService();
-    CService& s = DRMReceiver.GetParameters()->Service[sNo];
+    CParameter& Parameters = *DRMReceiver.GetParameters();
+	Parameters.Lock(); 
+
+    // Use the currently receiving channel  TODO use the scopeid
+    int sNo = Parameters.GetCurSelAudioService();
+    CService& s = Parameters.Service[sNo];
     QString label = s.strLabel.c_str();
-    if ((s.DataParam.iUserAppIdent == CDataDecoder::AT_MOTEPG)
-		&& (label!=""))
-    {
-	epg.addChannel(label, s.iServiceID);
-    }
+    if ((s.DataParam.iUserAppIdent == CDataDecoder::AT_MOTEPG) && (label!=""))
+		epg.addChannel(label, s.iServiceID);
+
+	Parameters.Unlock(); 
+
     // use the current date
     date = QDate::currentDate();
     // update the channels combobox from the epg

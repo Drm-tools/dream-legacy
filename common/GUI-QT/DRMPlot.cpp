@@ -84,7 +84,6 @@ void CDRMPlot::OnTimerChart()
 
 	bOnTimerCharMutexFlag = TRUE;
 
-
 	/* CHART ******************************************************************/
 	CVector<_REAL>		vecrData;
 	CVector<_REAL>		vecrData2;
@@ -95,6 +94,13 @@ void CDRMPlot::OnTimerChart()
 	_REAL				rPDSBegin, rPDSEnd;
 	_REAL				rFreqAcquVal;
 	_REAL				rCenterFreq, rBandwidth;
+
+	CParameter& Parameters = *pDRMRec->GetParameters();
+	Parameters.Lock(); 
+	_REAL rDCFrequency = Parameters.GetDCFrequency();
+	ECodScheme eSDCCodingScheme = Parameters.eSDCCodingScheme;
+	ECodScheme eMSCCodingScheme = Parameters.eMSCCodingScheme;
+	Parameters.Unlock(); 
 
 	switch (CurCharType)
 	{
@@ -111,8 +117,7 @@ void CDRMPlot::OnTimerChart()
 
 	case TRANSFERFUNCTION:
 		/* Get data from module */
-		pDRMRec->
-			GetTransferFunction(vecrData, vecrData2, vecrScale);
+		pDRMRec->GetTransferFunction(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
 		SetTranFct(vecrData, vecrData2, vecrScale);
@@ -139,8 +144,7 @@ void CDRMPlot::OnTimerChart()
 		pDRMRec->GetReceiver()->GetInputSpec(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
-		SetInpSpec(vecrData, vecrScale,
-			pDRMRec->GetParameters()->GetDCFrequency());
+		SetInpSpec(vecrData, vecrScale, rDCFrequency);
 		break;
 
 	case INP_SPEC_WATERF:
@@ -156,8 +160,7 @@ void CDRMPlot::OnTimerChart()
 		pDRMRec->GetReceiver()->GetInputPSD(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
-		SetInpPSD(vecrData, vecrScale,
-			pDRMRec->GetParameters()->GetDCFrequency());
+		SetInpPSD(vecrData, vecrScale, rDCFrequency);
 		break;
 
 	case INPUT_SIG_PSD_ANALOG:
@@ -181,12 +184,10 @@ void CDRMPlot::OnTimerChart()
 
 	case FREQ_SAM_OFFS_HIST:
 		/* Get data from module */
-		pDRMRec->GetFreqSamOffsHist(vecrData, vecrData2, vecrScale,
-			rFreqAcquVal);
+		pDRMRec->GetFreqSamOffsHist(vecrData, vecrData2, vecrScale, rFreqAcquVal);
 
 		/* Prepare graph and set data */
-		SetFreqSamOffsHist(vecrData, vecrData2, vecrScale,
-			rFreqAcquVal);
+		SetFreqSamOffsHist(vecrData, vecrData2, vecrScale, rFreqAcquVal);
 		break;
 
 	case DOPPLER_DELAY_HIST:
@@ -218,8 +219,7 @@ void CDRMPlot::OnTimerChart()
 		pDRMRec->GetSDCMLC()->GetVectorSpace(veccData1);
 
 		/* Prepare graph and set data */
-		SetSDCConst(veccData1, 
-			pDRMRec->GetParameters()->eSDCCodingScheme);
+		SetSDCConst(veccData1, eSDCCodingScheme);
 		break;
 
 	case MSC_CONSTELLATION:
@@ -227,8 +227,7 @@ void CDRMPlot::OnTimerChart()
 		pDRMRec->GetMSCMLC()->GetVectorSpace(veccData1);
 
 		/* Prepare graph and set data */
-		SetMSCConst(veccData1, 
-			pDRMRec->GetParameters()->eMSCCodingScheme);
+		SetMSCConst(veccData1, eMSCCodingScheme);
 		break;
 
 	case ALL_CONSTELLATION:

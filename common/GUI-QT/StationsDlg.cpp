@@ -405,9 +405,12 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button2, 10);
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button3, 100);
 
+	DRMReceiver.GetParameters()->Lock(); 
+
 	/* Init with current setting in log file */
-	QwtCounterFrequency->
-		setValue(DRMReceiver.GetParameters()->GetFrequency());
+	QwtCounterFrequency->setValue(DRMReceiver.GetParameters()->GetFrequency());
+
+	DRMReceiver.GetParameters()->Unlock(); 
 
 	/* Init UTC time shown with a label control */
 	SetUTCTimeLabel();
@@ -677,18 +680,8 @@ void StationsDlg::OnShowStationsMenu(int iID)
 	if (iID == 0)
 	{
 		bShowAll = FALSE;
-
 		/* clear all and reload. If the list is too big this increase the performance */
-		ListViewStations->clear();
-	
-		/* Lock mutex for modifying the vecpListItems */
-		ListItemsMutex.lock();
-
-		vecpListItems.assign(DRMSchedule.GetStationNumber(), (MyListViewItem*) NULL);
-
-		/* Unlock BEFORE calling the stations view update because in this function
-		   the mutex is locked, too! */
-		ListItemsMutex.unlock();
+		ClearStationsView();
 	}
 	else
 		bShowAll = TRUE;
@@ -979,29 +972,12 @@ void StationsDlg::SetCurrentSchedule(const CDRMSchedule::ESchedMode eNewSchM)
 
 void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 {
-	/* Lock mutex for modifying the vecpListItems */
-	ListItemsMutex.lock();
-
 	SetSortSettings(eNewSchM);
 
-	/* Delete all old list view items (it is important that the vector
-	   "vecpListItems" was initialized to 0 at creation of the global object
-	   otherwise this may cause an segmentation fault) */
-	for (size_t i = 0; i < vecpListItems.size(); i++)
-	{
-		if (vecpListItems[i] != NULL)
-			delete vecpListItems[i];
-	}
+	ClearStationsView();
 
 	/* Read initialization file */
 	DRMSchedule.ReadStatTabFromFile(eNewSchM);
-
-	/* Init vector for storing the pointer to the list view items */
-	vecpListItems.assign(DRMSchedule.GetStationNumber(), (MyListViewItem*) NULL);
-
-	/* Unlock BEFORE calling the stations view update because in this function
-	   the mutex is locked, too! */
-	ListItemsMutex.unlock();
 
 	/* Update list view */
 	SetStationsView();
@@ -1011,8 +987,27 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 		AddUpdateDateTime();
 }
 
+void StationsDlg::ClearStationsView()
+{
+	/* Delete all old list view items (it is important that the vector
+	   "vecpListItems" was initialized to 0 at creation of the global object
+	   otherwise this may cause an segmentation fault) */
+	ListItemsMutex.lock();
+	ListViewStations->clear();
+	/*
+	for (size_t i = 0; i < vecpListItems.size(); i++)
+	{
+		if (vecpListItems[i] != NULL)
+			delete vecpListItems[i];
+	}
+	*/
+	vecpListItems.clear();
+	ListItemsMutex.unlock();
+}
+
 void StationsDlg::SetStationsView()
 {
+	size_t i;
 	/* Stop the timer and disable the list */
 	TimerList.stop();
 
@@ -1025,11 +1020,22 @@ void StationsDlg::SetStationsView()
 	   by another thread */
 	ListItemsMutex.lock();
 
-	const int iNumStations = DRMSchedule.GetStationNumber();
+	const size_t iNumStations = DRMSchedule.GetStationNumber();
 	_BOOLEAN bListHastChanged = FALSE;
 
+	/* if the list got smaller, we need to free some memory */
+	for (i = iNumStations; i < vecpListItems.size(); i++)
+	{
+		if (vecpListItems[i] != NULL)
+			delete vecpListItems[i];
+	}
+	/* resize will leave all existing elements alone and add
+	 * nulls in case the list needed to get bigger
+	 */
+	vecpListItems.resize(iNumStations, (MyListViewItem*) NULL);
+
 	/* Add new item for each station in list view */
-	for (int i = 0; i < iNumStations; i++)
+	for (i = 0; i < iNumStations; i++)
 	{
 		CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
 

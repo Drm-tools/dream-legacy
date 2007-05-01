@@ -102,7 +102,7 @@ CShortLog::writeHeader()
 	ESpecOcc SpecOcc=SO_5;
 	_REAL bitrate = 0.0;
 
-	Parameters.Lock();
+	Parameters.Lock(); 
 
 	int iFrequency = Parameters.GetFrequency();
 	const CGPSData & GPSData = Parameters.GPSData;
@@ -121,7 +121,7 @@ CShortLog::writeHeader()
 		SpecOcc = Parameters.GetSpectrumOccup();
 	}
 
-	Parameters.Unlock();
+	Parameters.Unlock(); 
 
 	/* Beginning of new table (similar to standard DRM log file) */
 	File << endl << ">>>>" << endl << "Dream" << endl
@@ -197,31 +197,39 @@ MINUTE  SNR     SYNC    AUDIO     TYPE
 void
 CShortLog::writeParameters()
 {
-	Parameters.Lock();
+	Parameters.Lock(); 
 
 	int iAverageSNR = (int) Round(Parameters.SNRstat.getMean());
 	int iNumCRCOkFAC = Parameters.ReceiveStatus.FAC.GetOKCount();
 	int iNumCRCOkMSC = Parameters.ReceiveStatus.Audio.GetOKCount();
 
+	Parameters.ReceiveStatus.FAC.ResetCounts();
+	Parameters.ReceiveStatus.Audio.ResetCounts();
+
 	int iTmpNumAAC=0, iRXL=0;
 
-	/* If no sync, do not print number of AAC frames. If the number
-	   of correct FAC CRCs is lower than 10%, we assume that
-	   receiver is not synchronized */
+	/* If no sync, do not print number of AAC frames.
+	 * If the number of correct FAC CRCs is lower than 10%,
+	 * we assume that receiver is not synchronized */
 	if (iNumCRCOkFAC >= 15)
 		iTmpNumAAC = Parameters.iNumAudioFrames;
 
 	if (bRxlEnabled)
 		iRXL = (int)Round(Parameters.SigStrstat.getMean());
 
-	Parameters.Unlock();
+	Parameters.Unlock(); 
 
 	try
 	{
-		File << fixed << setw(6) << iCount << setw(5) << iAverageSNR << setw(8) << iNumCRCOkFAC
-			<< setw(5) << iNumCRCOkMSC << "/" << setw(2) << setfill('0') << iTmpNumAAC << setfill(' ') << "        0";
+		File << "  " << fixed << setw(4) << setfill('0') << iCount
+			<< setfill(' ') << setw(5) << iAverageSNR
+			<< setw(9) << iNumCRCOkFAC
+			<< setw(6) << iNumCRCOkMSC << "/" << setw(2) << setfill('0') << iTmpNumAAC
+			<< setfill(' ') << "        0";
 		if (bRxlEnabled)
-			File << "      " << iRXL;
+		{
+			File << setw(10) << setprecision(2) << iRXL;
+		}
 		File << endl;
 		File.flush();
 	}
@@ -239,19 +247,20 @@ CShortLog::writeTrailer()
 	_REAL rMaxSNR, rMinSNR;
 	_REAL rMaxSigStr, rMinSigStr;
 
-	Parameters.Lock();
-	Parameters.SNRstat.getMinMax(rMaxSNR, rMinSNR);
+	Parameters.Lock(); 
+	Parameters.SNRstat.getMinMax(rMinSNR, rMaxSNR);
 	if (bRxlEnabled)
 	{
-		Parameters.SigStrstat.getMinMax(rMaxSigStr, rMinSigStr);
+		Parameters.SigStrstat.getMinMax(rMinSigStr, rMaxSigStr);
 	}
-	Parameters.Unlock();
+	Parameters.Unlock(); 
 
-	File << "SNR min: " << rMinSNR << ", max: " << rMaxSNR << endl;
+	File << setprecision(1);
+	File << "SNR min: " << setw(4) << rMinSNR << ", max: " << setw(4) << rMaxSNR << endl;
 
 	if (bRxlEnabled)
 	{
-		File << "RXL min: " << rMinSigStr << ", max: " << rMaxSigStr << endl;
+		File << "RXL min: " << setw(4) << rMinSigStr << ", max: " << setw(4) << rMaxSigStr << endl;
 	}
 
 	/* Short log file ending */
@@ -279,7 +288,7 @@ void
 CLongLog::writeParameters()
 {
 
-	Parameters.Lock();
+	Parameters.Lock(); 
 
 	/* Get parameters for delay and Doppler. In case the receiver is
 	   not synchronized, set parameters to zero */
@@ -332,12 +341,11 @@ CLongLog::writeParameters()
 	_REAL rSNR = Parameters.SNRstat.getCurrent();
 	int iFrameSyncStatus = (Parameters.ReceiveStatus.FSync.GetStatus()==RX_OK)?1:0;
 	int iFACStatus = (Parameters.ReceiveStatus.FAC.GetStatus()==RX_OK)?1:0;
-	int iAudioStatus = (Parameters.ReceiveStatus.Audio.GetStatus()==RX_OK)?1:0;
-	int iNumCRCMSC = Parameters.ReceiveStatus.Audio.GetCount();
-	int iNumCRCOkMSC = Parameters.ReceiveStatus.Audio.GetOKCount();
+	int iAudioStatus = (Parameters.ReceiveStatus.LLAudio.GetStatus()==RX_OK)?1:0;
+	int iNumCRCMSC = Parameters.ReceiveStatus.LLAudio.GetCount();
+	int iNumCRCOkMSC = Parameters.ReceiveStatus.LLAudio.GetOKCount();
 
-	Parameters.ReceiveStatus.FSync.ResetCounts();
-	Parameters.ReceiveStatus.FAC.ResetCounts();
+	Parameters.ReceiveStatus.LLAudio.ResetCounts();
 
 	double latitude, longitude;
 	if (bPositionEnabled)
@@ -345,15 +353,8 @@ CLongLog::writeParameters()
 		Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
 	}
 
-	Parameters.Unlock();
+	Parameters.Unlock(); 
 
-	/* sample output
-	FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY
-	     0/X0000        , 2007-04-06, 15:29:03.0,...0.00,    0,   0,   0,     0,       0,    0.00,  0.00
-		 0/B0010        , 2007-04-28, 16:40:00.0,  21.41,    1,   1,   1,    30,      30,    0.62,  3.59
-
- 111/B/0       010,2007-04-28, 15:2:4      ,          20,    3,   3,   3,     201,      182       ,1.7     ,2.4,   0,0,0
-*/
 	try
 	{
 		File << fixed << setw(5) << iFrequency
@@ -372,9 +373,9 @@ CLongLog::writeParameters()
 
 #ifdef _DEBUG_
 		/* Some more parameters in debug mode */
-		Parameters.Lock();
+		Parameters.Lock(); 
 		File << Parameters.GetDCFrequency() << ',' << Parameters.GetSampFreqEst();
-		Parameters.Unlock();
+		Parameters.Unlock(); 
 #endif
 		File << endl;
 		File.flush();
@@ -385,6 +386,12 @@ CLongLog::writeParameters()
 		/* To prevent errors if user views the file during reception */
 	}
 
+}
+
+void
+CLongLog::writeTrailer()
+{
+	File << endl << endl;
 }
 
 void
@@ -399,12 +406,6 @@ CReceptLog::SetLogFrequency(int iNew)
 		}
 	}
 	iFrequency = iNew;
-}
-
-void
-CLongLog::writeTrailer()
-{
-	File << endl << endl;
 }
 
 string CReceptLog::strdate()

@@ -74,6 +74,7 @@ void COFDMModulation::ProcessDataInternal(CParameter&)
 
 void COFDMModulation::InitInternal(CParameter& TransmParam)
 {
+	TransmParam.Lock(); 
 	/* Get global parameters */
 	iDFTSize = TransmParam.CellMappingTable.iFFTSizeN;
 	iGuardSize = TransmParam.CellMappingTable.iGuardSize;
@@ -104,6 +105,7 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 	/* Define block-sizes for input and output */
 	iInputBlockSize = TransmParam.CellMappingTable.iNumCarrier;
 	iOutputBlockSize = TransmParam.CellMappingTable.iSymbolBlockSize;
+	TransmParam.Unlock(); 
 }
 
 
@@ -159,6 +161,7 @@ void COFDMDemodulation::ProcessDataInternal(CParameter&)
 
 void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 {
+	ReceiverParam.Lock(); 
 	iDFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
 	iGuardSize = ReceiverParam.CellMappingTable.iGuardSize;
 	iShiftedKmin = ReceiverParam.CellMappingTable.iShiftedKmin;
@@ -181,6 +184,7 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iDFTSize;
 	iOutputBlockSize = ReceiverParam.CellMappingTable.iNumCarrier;
+	ReceiverParam.Unlock(); 
 }
 
 void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
@@ -195,7 +199,7 @@ void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
 	if (iLenPowSpec != 0)
 	{
 		/* Lock resources */
-		Lock();
+		Lock(); 
 
 		/* Init the constants for scale and normalization */
 		const _REAL rNormData =
@@ -218,7 +222,7 @@ void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
 		}
 
 		/* Release resources */
-		Unlock();
+		Unlock(); 
 	}
 }
 
@@ -345,6 +349,7 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter&)
 
 void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 {
+	ReceiverParam.Lock(); 
 	/* Set internal parameters */
 	iDFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
 	iGuardSize = ReceiverParam.CellMappingTable.iGuardSize;
@@ -389,4 +394,5 @@ void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 	/* We need to store as many symbols in output buffer as long the channel
 	   estimation delay is */
 	iMaxOutputBlockSize2 = iNumCarrier * ReceiverParam.iChanEstDelay;
+	ReceiverParam.Unlock(); 
 }

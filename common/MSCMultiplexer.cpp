@@ -60,6 +60,7 @@ void CMSCDemultiplexer::ProcessDataInternal(CParameter&)
 
 void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 {
+	ReceiverParam.Lock(); 
  	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
  	{
 		StreamPos[i] = GetStreamPos(ReceiverParam, i);
@@ -67,6 +68,7 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 	}
 	/* Set input block size */
 	iInputBlockSize = ReceiverParam.iNumDecodedBitsMSC;
+	ReceiverParam.Unlock(); 
 }
 
 void CMSCDemultiplexer::ExtractData(CVectorEx<_BINARY>& vecIn,

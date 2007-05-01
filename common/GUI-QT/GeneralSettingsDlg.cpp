@@ -173,6 +173,9 @@ _BOOLEAN bAllCompiled = FALSE;
 	{
 		/* save current settings */
 
+		CParameter& Parameters = *pDRMRec->GetParameters();
+		Parameters.Lock(); 
+
 		if (!bAllEmpty)
 		{
 			double latitude, longitude;
@@ -185,14 +188,15 @@ _BOOLEAN bAllCompiled = FALSE;
 			if(EdtLongitudeEW->text().upper().latin1()[0]=='W')
 				longitude = - longitude;
 
-			pDRMRec->GetParameters()->GPSData.SetPositionAvailable(TRUE);
-			pDRMRec->GetParameters()->GPSData.SetLatLongDegrees(latitude, longitude);
+			Parameters.GPSData.SetPositionAvailable(TRUE);
+			Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
 
 		}
 		else
 		{
-			pDRMRec->GetParameters()->GPSData.SetPositionAvailable(FALSE);
+			Parameters.GPSData.SetPositionAvailable(FALSE);
 		}
+		Parameters.Unlock(); 
 
 		accept(); /* If the values are valid close the dialog */
 	}
@@ -249,7 +253,10 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 		extract local latitude and longitude coordinates */
 
 	double latitude, longitude;
-	pDRMRec->GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
+
+	CParameter& Parameters = *pDRMRec->GetParameters();
+	Parameters.Lock(); 
+	Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
 
 	/* Extract latitude values */
 
@@ -273,7 +280,7 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 	EdtLatitudeDegrees->setText(sVal);
 
 	/* Extract minutes */
-	Minutes = pDRMRec->GetParameters()->GPSData.ExtractMinutes(latitude);
+	Minutes = Parameters.GPSData.ExtractMinutes(latitude);
 	sVal = QString("%1").arg(Minutes);
 
 	EdtLatitudeMinutes->setText(sVal);
@@ -297,7 +304,7 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 
 	/* Extract degrees */
 
-	Minutes = pDRMRec->GetParameters()->GPSData.ExtractMinutes(longitude);
+	Minutes = Parameters.GPSData.ExtractMinutes(longitude);
 
 	/* Longitude degrees max 3 digits */
 	sVal = QString("%1").arg(int(longitude));
@@ -308,6 +315,8 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 	sVal = QString("%1").arg(Minutes);
 
 	EdtLongitudeMinutes->setText(sVal);
+
+	Parameters.Unlock(); 
 
 }
 

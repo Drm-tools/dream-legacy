@@ -31,9 +31,7 @@
 #include "Version.h"
 #include <limits>
 #include <iomanip>
-#include "util/LogPrint.h"
-
-void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam);
+//#include "util/LogPrint.h"
 
 /* Implementation *************************************************************/
 CParameter::CParameter(CDRMReceiver *pRx):
@@ -1109,14 +1107,6 @@ void CRxStatus::SetStatus(const ETypeRxStatus OK)
 	iNum++;
 	if(OK==RX_OK)
 		iNumOK++;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(ident,colour);
 }
 
 void CParameter::GenerateReceiverID()

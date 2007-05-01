@@ -256,13 +256,11 @@ void CModul<TInput, TOutput>::ProcessDataThreadSave(CParameter& Parameter)
 {
 	/* Get a lock for the resources */
 	Lock();
-	Parameter.Lock();
 
 	/* Call processing routine of derived modul */
 	ProcessDataInternal(Parameter);
 
 	/* Unlock resources */
-	Parameter.Unlock();
 	Unlock();
 }
 
@@ -271,7 +269,6 @@ void CModul<TInput, TOutput>::InitThreadSave(CParameter& Parameter)
 {
 	/* Get a lock for the resources */
 	Lock();
-	Parameter.Lock();
 
 	try
 	{
@@ -279,14 +276,12 @@ void CModul<TInput, TOutput>::InitThreadSave(CParameter& Parameter)
 		InitInternal(Parameter);
 
 		/* Unlock resources */
-		Parameter.Unlock();
 		Unlock();
 	}
 
 	catch (CGenErr)
 	{
 		/* Unlock resources */
-		Parameter.Unlock();
 		Unlock();
 
 		/* Throws the same error again which was send by the function */

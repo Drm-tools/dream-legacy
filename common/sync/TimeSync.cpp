@@ -142,7 +142,9 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Integrate the result for controling the frequency offset, normalize
 		   estimate */
+		ReceiverParam.Lock(); 
 		ReceiverParam.rFreqOffsetTrack -= rFreqOffsetEst * rNormConstFOE;
+		ReceiverParam.Unlock(); 
 #endif
 
 
@@ -373,6 +375,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 						bRobModAcqu = FALSE;
 
 						/* Set wave mode */
+						ReceiverParam.Lock(); 
 						if (ReceiverParam.
 							SetWaveMode(GetRModeFromInd(iDetectedRModeInd)) == TRUE)
 						{
@@ -381,6 +384,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							   valid anymore */
 							SetBufReset1();
 						}
+						ReceiverParam.Unlock(); 
 					}
 				}
 			}
@@ -409,7 +413,9 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				iAveCorr = 0;
 
 				/* GUI message that timing is ok */
+				ReceiverParam.Lock(); 
 				ReceiverParam.ReceiveStatus.TSync.SetStatus(RX_OK);
+				ReceiverParam.Unlock(); 
 
 				/* Acquisition was successful, reset init flag (just in case it
 				   was not reset by the non-linear correction unit */
@@ -447,7 +453,9 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							(CReal) iAveCorr / (NUM_SYM_BEFORE_RESET + 1);
 
 						/* GUI message that timing was corrected (red light) */
+						ReceiverParam.Lock(); 
 						ReceiverParam.ReceiveStatus.TSync.SetStatus(CRC_ERROR);
+						ReceiverParam.Unlock(); 
 					}
 
 					/* Reset counters */
@@ -459,7 +467,11 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 					/* GUI message that timing is yet ok (yellow light). Do not
 					   show any light if init was done right before this */
 					if (bInitTimingAcqu == FALSE)
+					{
+						ReceiverParam.Lock(); 
 						ReceiverParam.ReceiveStatus.TSync.SetStatus(DATA_ERROR);
+						ReceiverParam.Unlock(); 
+					}
 				}
 			}
 
@@ -476,6 +488,7 @@ fflush(pFile);
 	}
 	else
 	{
+		ReceiverParam.Lock(); 
 		/* Detect situation when acquisition was deactivated right now */
 		if (bAcqWasActive == TRUE)
 		{
@@ -493,6 +506,8 @@ fflush(pFile);
 		/* Timing acquisition was successfully finished, show always green
 		   light */
 		ReceiverParam.ReceiveStatus.TSync.SetStatus(RX_OK);
+
+		ReceiverParam.Unlock(); 
 
 #ifdef _DEBUG_
 /* Save estimated positions of timing (tracking) */
@@ -572,6 +587,8 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	int		iObservedFreqBin;
 	CReal	rArgTemp;
 	int		iCorrBuffSize;
+
+	ReceiverParam.Lock(); 
 
 	/* Get parameters from info class */
 	iGuardSize = ReceiverParam.CellMappingTable.iGuardSize;
@@ -748,6 +765,8 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iSymbolBlockSize; /* For the first loop */
 	iOutputBlockSize = iDFTSize;
+
+	ReceiverParam.Unlock(); 
 }
 
 void CTimeSync::StartAcquisition()

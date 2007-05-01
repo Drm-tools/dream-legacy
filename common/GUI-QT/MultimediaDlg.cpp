@@ -228,7 +228,9 @@ void MultimediaDlg::OnTimer()
 	_BOOLEAN	bMainPage;
 	_BOOLEAN	bShowInfo = TRUE;
 
-	switch(DRMReceiver.GetParameters()->ReceiveStatus.MOT.GetStatus())
+	CParameter& Parameters = *(DRMReceiver.GetParameters());
+	Parameters.Lock(); 
+	switch(Parameters.ReceiveStatus.MOT.GetStatus())
 	{
 	case NOT_PRESENT:
 		LEDStatus->Reset(); /* GREY */
@@ -246,6 +248,7 @@ void MultimediaDlg::OnTimer()
 		LEDStatus->SetLight(0); /* GREEN */
 		break;
 	}
+	Parameters.Unlock(); 
 
 	/* Check out which application is transmitted right now */
 	CDataDecoder::EAppType eNewAppType =
@@ -372,25 +375,25 @@ void MultimediaDlg::OnTimer()
 
 	if (bShowInfo == TRUE)
 	{
-		CParameter& ReceiverParam = *(DRMReceiver.GetParameters());
+		CParameter& Parameters = *(DRMReceiver.GetParameters());
+		Parameters.Lock(); 
 
 		/* Get current data service */
-		const int iCurSelDataServ = ReceiverParam.GetCurSelDataService();
+		const int iCurSelDataServ = Parameters.GetCurSelDataService();
 
-		if (ReceiverParam.Service[iCurSelDataServ].IsActive())
+		if (Parameters.Service[iCurSelDataServ].IsActive())
 		{
-			/* Do UTF-8 to string conversion with the label strings */
-			QString strLabel = QString().fromUtf8(QCString(ReceiverParam
-				.Service[iCurSelDataServ].strLabel.c_str())).stripWhiteSpace();
+			/* Do UTF-8 to QString (UNICODE) conversion with the label strings */
+			QString strLabel = QString().fromUtf8(QCString(
+				Parameters.Service[iCurSelDataServ].strLabel.c_str()
+				)).stripWhiteSpace();
 
-			const int iCurSelAudioServ = ReceiverParam.GetCurSelAudioService();
+			const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
 
 			/* Service ID (plot number in hexadecimal format) */
-			const long iDataServiceID = (long) ReceiverParam.
-				Service[iCurSelDataServ].iServiceID;
+			const long iDataServiceID = (long) Parameters.Service[iCurSelDataServ].iServiceID;
 
-			const long iAudioServiceID = (long) ReceiverParam.
-				Service[iCurSelAudioServ].iServiceID;
+			const long iAudioServiceID = (long) Parameters.Service[iCurSelAudioServ].iServiceID;
 
 			QString strServiceID = "";
 
@@ -408,6 +411,7 @@ void MultimediaDlg::OnTimer()
 			if (strLabel != "" || strServiceID != "")
 				strTitle += " [" + strLabel + strServiceID + "]";
 		}
+		Parameters.Unlock(); 
 	}
 	SetDialogCaption(this, strTitle);
 }

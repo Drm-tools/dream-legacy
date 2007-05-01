@@ -74,7 +74,6 @@ public:
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
 	void UpdatePlotsStyle();
 	void StopLogTimers();
-	void StartTimerLogFileStart();
 
 protected:
 	class CCharSelItem : public QListViewItem
@@ -101,13 +100,14 @@ protected:
 	QTimer				Timer;
 
 	/* logging */
+	QTimer				TimerLogFileLong;
+	QTimer				TimerLogFileShort;
+	QTimer				TimerLogFileStart;
+
 	CShortLog			shortLog;
 	CLongLog			longLog;
 	_BOOLEAN			bEnableShortLog;
 	_BOOLEAN			bEnableLongLog;
-	QTimer				TimerLogFileLong;
-	QTimer				TimerLogFileShort;
-	QTimer				TimerLogFileStart;
 	int					iLogDelay;
 
 	int					iCurFrequency;
@@ -125,9 +125,9 @@ protected:
 
 public slots:
 	void OnTimer();
-	void OnTimerLogFileLong();
-	void OnTimerLogFileShort();
 	void OnTimerLogFileStart();
+	void OnTimerLogFileShort();
+	void OnTimerLogFileLong();
 	void OnRadioTimeLinear();
 	void OnRadioTimeWiener();
 	void OnRadioFrequencyLinear();

@@ -1237,7 +1237,7 @@ CDRMReceiver::UpdateParamHistories()
 #ifdef USE_QT_GUI
 		MutexHist.lock();
 #endif
-		pReceiverParam->Lock();
+		pReceiverParam->Lock(); 
 
 		/* Frequency offset tracking values */
 		vecrFreqSyncValHist.AddEnd(pReceiverParam->rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE);
@@ -1277,7 +1277,7 @@ CDRMReceiver::UpdateParamHistories()
 			rSumSNRHist = (_REAL) 0.0;
 		}
 
-		pReceiverParam->Unlock();
+		pReceiverParam->Unlock(); 
 #ifdef USE_QT_GUI
 		MutexHist.unlock();
 #endif

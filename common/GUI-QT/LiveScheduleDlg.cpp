@@ -830,13 +830,17 @@ LiveScheduleDlg::OnShowPreviewMenu(int iID)
 void
 LiveScheduleDlg::OnTimerList()
 {
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+
+	Parameters.Lock(); 
 	/* Get current receiver latitude and longitude if defined */
-	if (DRMReceiver.GetParameters()->GPSData.GetPositionAvailable())
+	if (Parameters.GPSData.GetPositionAvailable())
 	{
 		double latitude, longitude;
-		DRMReceiver.GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
+		Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
 		DRMSchedule.SetReceiverCoordinates(latitude, longitude);
 	}
+	Parameters.Unlock(); 
 
 	/* Update schedule and list view */
 	LoadSchedule();
@@ -876,9 +880,12 @@ LiveScheduleDlg::LoadSchedule()
 	}
 	vecpListItems.clear();
 
-	DRMSchedule.LoadAFSInformations(DRMReceiver.GetParameters()->AltFreqSign,
-									DRMReceiver.GetParameters()->
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+	Parameters.Lock(); 
+	DRMSchedule.LoadAFSInformations(Parameters.AltFreqSign,
+									Parameters.
 									AltFreqOtherServicesSign);
+	Parameters.Unlock(); 
 
 	/* Init vector for storing the pointer to the list view items */
 	const int iNumStations = DRMSchedule.GetStationNumber();
@@ -902,23 +909,25 @@ LiveScheduleDlg::LoadSchedule()
 
 	if (iNumStations > 0)
 	{
+		Parameters.Lock(); 
 		/* Get current service */
 		const int iCurSelAudioServ =
-			DRMReceiver.GetParameters()->GetCurSelAudioService();
+			Parameters.GetCurSelAudioService();
 
-		if (DRMReceiver.GetParameters()->Service[iCurSelAudioServ].IsActive())
+		if (Parameters.Service[iCurSelAudioServ].IsActive())
 		{
 			/* Do UTF-8 to string conversion with the label strings */
 			QString strStationName =
 				QString().
 				fromUtf8(QCString
-						 (DRMReceiver.GetParameters()->
+						 (Parameters.
 						  Service[iCurSelAudioServ].strLabel.c_str()));
 
 			/* add station name on the title of the dialog */
 			if (strStationName != "")
 				strTitle += " [" + strStationName.stripWhiteSpace() + "]";
 		}
+		Parameters.Unlock(); 
 	}
 
 	SetDialogCaption(this, strTitle);
@@ -1107,12 +1116,17 @@ LiveScheduleDlg::OnSave()
 	QString strSchedule = "";
 	QString strValue = "";
 
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+
+	Parameters.Lock(); 
+
 	const int iCurSelAudioServ =
-		DRMReceiver.GetParameters()->GetCurSelAudioService();
+		Parameters.GetCurSelAudioService();
 	/* Do UTF-8 to QString (UNICODE) conversion with the station name strings */
 	QString strStationName =
-		QString().fromUtf8(DRMReceiver.GetParameters()->
-						   Service[iCurSelAudioServ].strLabel.c_str());
+		QString().fromUtf8(Parameters.Service[iCurSelAudioServ].strLabel.c_str());
+
+	Parameters.Unlock(); 
 
 	/* Lock mutex for use the vecpListItems */
 	ListItemsMutex.lock();

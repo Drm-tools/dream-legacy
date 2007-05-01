@@ -34,10 +34,9 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	systemevalDlgBase(parent, name, modal, f),
 	DRMReceiver(NDRMR),
 	Settings(NSettings),
-	Timer(),
+	Timer(), TimerLogFileLong(), TimerLogFileShort(), TimerLogFileStart(),
 	shortLog(*NDRMR.GetParameters()), longLog(*NDRMR.GetParameters()),
 	bEnableShortLog(FALSE), bEnableLongLog(FALSE),
-	TimerLogFileLong(), TimerLogFileShort(), TimerLogFileStart(),
 	iLogDelay(0), iCurFrequency(0)
 {
 	/* Get window geometry data and apply it */
@@ -396,7 +395,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	StopLogTimers();
 
-	CParameter& Parameters = *DRMReceiver.GetParameters();
 	/* Logfile -------------------------------------------------------------- */
 
 	/* Start log file flag */
@@ -414,7 +412,11 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	iLogDelay = Settings.Get("Logfile", "delay", 0);
 
 	/* Activate log file start if necessary. */
-	StartTimerLogFileStart();
+	if (bEnableLongLog == TRUE)
+	{
+		/* One shot timer */
+		TimerLogFileStart.start(iLogDelay * 1000 /* ms */, TRUE);
+	}	
 
 	/* GPS */
 	_REAL latitude, longitude;
@@ -423,7 +425,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Longitude string for log file */
 	longitude = Settings.Get("Logfile", "longitude", 1000.0);
 
-	Parameters.Lock();
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+	Parameters.Lock(); 
 
 	if(-90.0 <= latitude && latitude <= 90.0 && -180.0 <= longitude  && longitude <= 180.0)
 	{
@@ -433,7 +436,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	else
 		Parameters.GPSData.SetPositionAvailable(FALSE);
 
-	Parameters.Unlock();
+	Parameters.Unlock(); 
 }
 
 systemevalDlg::~systemevalDlg()
@@ -608,24 +611,6 @@ void systemevalDlg::hideEvent(QHideEvent*)
 	 * TODO: better solution
 	 */
 	Settings.Put("System Evaluation Dialog", "sysevplottype", (int) MainPlot->GetChartType());
-
-	if(longLog.GetLoggingActivated())
-	{
-		TimerLogFileShort.stop();
-		shortLog.Stop();
-	}
-	if(longLog.GetLoggingActivated())
-	{
-		TimerLogFileLong.stop();
-		longLog.Stop();
-	}
-}
-
-void systemevalDlg::StopLogTimers()
-{
-	TimerLogFileLong.stop();
-	TimerLogFileShort.stop();
-	TimerLogFileStart.stop();
 }
 
 void systemevalDlg::UpdatePlotsStyle()
@@ -726,7 +711,7 @@ void systemevalDlg::OnTimer()
 {
 	CParameter& ReceiverParam = *(DRMReceiver.GetParameters());
 
-	ReceiverParam.Lock();
+	ReceiverParam.Lock(); 
 
 	if (this->isVisible())
 	{
@@ -1040,7 +1025,7 @@ void systemevalDlg::OnTimer()
 	/* Update controls */
 	UpdateControls();
 	}
-	ReceiverParam.Unlock();
+	ReceiverParam.Unlock(); 
 }
 
 void systemevalDlg::OnRadioTimeLinear() 
@@ -1194,28 +1179,33 @@ void systemevalDlg::OnCheckSaveAudioWAV()
 		DRMReceiver.GetWriteData()->StopWriteWaveFile();
 }
 
+void systemevalDlg::StopLogTimers()
+{
+	TimerLogFileStart.stop();
+	TimerLogFileShort.stop();
+	TimerLogFileStart.stop();
+}
+
 void systemevalDlg::OnTimerLogFileStart()
 {
 	/* Start logging (if not already done) */
-	if((bEnableShortLog && !longLog.GetLoggingActivated())
-	|| (bEnableLongLog && !longLog.GetLoggingActivated())
-	)
+	if(!longLog.GetLoggingActivated() || !longLog.GetLoggingActivated())
 	{
 		CheckBoxWriteLog->setChecked(TRUE);
 		OnCheckWriteLog();
 	}
 }
 
-void systemevalDlg::StartTimerLogFileStart()
+void systemevalDlg::OnTimerLogFileShort()
 {
-	/* Activate log file start if necessary. Timer is set to fire only once.
-	   Relies on timer firing immediately if delay is zero.
-	 */
-	if (bEnableLongLog == TRUE)
-	{
-		/* One shot timer */
-		TimerLogFileStart.start(longLog.GetDelLogStart() * 1000 /* ms */, TRUE);
-	}	
+	/* Write new parameters in log file (short version) */
+	shortLog.Update();
+}
+
+void systemevalDlg::OnTimerLogFileLong()
+{
+	/* Write new parameters in log file (long version) */
+	longLog.Update();
 }
 
 void systemevalDlg::OnCheckWriteLog()
@@ -1239,6 +1229,7 @@ void systemevalDlg::OnCheckWriteLog()
 		/* and update immediately to get an initial sample (and the header) */
 		shortLog.Update();
 		longLog.Update();
+
 	}
 	else
 	{
@@ -1255,21 +1246,10 @@ void systemevalDlg::OnCheckWriteLog()
 		CheckBoxWriteLog->setFocus();
 }
 
-void systemevalDlg::OnTimerLogFileShort()
-{
-	/* Write new parameters in log file (short version) */
-	shortLog.Update();
-}
-
-void systemevalDlg::OnTimerLogFileLong()
-{
-	/* Write new parameters in log file (long version) */
-	longLog.Update();
-}
-
 QString	systemevalDlg::GetRobModeStr()
 {		
-	switch (DRMReceiver.GetParameters()->GetWaveMode())
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+	switch (Parameters.GetWaveMode())
 	{
 	case RM_ROBUSTNESS_MODE_A:
 		return "A";
@@ -1294,6 +1274,7 @@ QString	systemevalDlg::GetRobModeStr()
 
 QString	systemevalDlg::GetSpecOccStr()
 {
+	CParameter& Parameters = *DRMReceiver.GetParameters();
 	switch (DRMReceiver.GetParameters()->GetSpectrumOccup())
 	{
 	case SO_0:

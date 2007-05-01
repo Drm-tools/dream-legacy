@@ -55,11 +55,13 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	int i;
 
 	/* OPH: update free-running symbol counter */
+	ReceiverParam.Lock(); 
 	iFreeSymbolCounter++;
 	if (iFreeSymbolCounter >= ReceiverParam.CellMappingTable.iNumSymPerFrame)
 	{
 		iFreeSymbolCounter = 0;
 	}
+	ReceiverParam.Unlock(); 
 
 
 	/* Frequency offset estimation if requested */
@@ -155,7 +157,9 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 {
 	/* Get parameters from info class */
+	ReceiverParam.Lock(); 
 	iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+	ReceiverParam.Unlock(); 
 
 	/* Init temporary vector for filter input and output */
 	rvecInpTmp.Init(iSymbolBlockSize);
@@ -345,20 +349,20 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW,
 void CAMDemodulation::SetAcqFreq(const CReal rNewNormCenter)
 {
 	/* Lock resources */
-	Lock(); /* Lock start */
+	Lock(); 
 	{
 		if (bAutoFreqAcquIsEnabled == TRUE)
 			FreqOffsAcq.Start(rNewNormCenter);
 		else
 			SetNormCurMixFreqOffs(rNewNormCenter / 2);
 	}
-	Unlock(); /* Lock end */
+	Unlock(); 
 }
 
 void CAMDemodulation::SetDemodType(const EDemodType eNewType)
 {
 	/* Lock resources */
-	Lock(); /* Lock start */
+	Lock(); 
 	{
 		/* Set internal demodulation type flag */
 		eDemodType = eNewType;
@@ -366,34 +370,34 @@ void CAMDemodulation::SetDemodType(const EDemodType eNewType)
 		/* Init band-pass filter according to new demodulation method */
 		SetBPFilter(rBPNormBW, rNormCurMixFreqOffs, eDemodType);
 	}
-	Unlock(); /* Lock end */
+	Unlock(); 
 }
 
 void CAMDemodulation::SetFilterBW(const int iNewBW)
 {
 	/* Lock resources */
-	Lock(); /* Lock start */
+	Lock(); 
 	{
 		SetBPFilter((CReal) iNewBW / SOUNDCRD_SAMPLE_RATE, rNormCurMixFreqOffs,
 			eDemodType);
 	}
-	Unlock(); /* Lock end */
+	Unlock(); 
 }
 
 void CAMDemodulation::SetAGCType(const CAGC::EType eNewType)
 {
 	/* Lock resources */
-	Lock(); /* Lock start */
+	Lock(); 
 	{
 		AGC.SetType(eNewType);
 	}
-	Unlock(); /* Lock end */
+	Unlock(); 
 }
 
 void CAMDemodulation::SetNoiRedType(const ENoiRedType eNewType)
 {
 	/* Lock resources */
-	Lock(); /* Lock start */
+	Lock(); 
 	{
 		NoiRedType = eNewType;
 
@@ -415,7 +419,7 @@ void CAMDemodulation::SetNoiRedType(const ENoiRedType eNewType)
 				break;
 		}
 	}
-	Unlock(); /* Lock end */
+	Unlock(); 
 }
 
 _BOOLEAN CAMDemodulation::GetPLLPhase(CReal& rPhaseOut)
@@ -423,13 +427,13 @@ _BOOLEAN CAMDemodulation::GetPLLPhase(CReal& rPhaseOut)
 	_BOOLEAN bReturn;
 
 	/* Lock resources */
-	Lock(); /* Lock start */
+	Lock(); 
 	{
 		/* Phase is only valid if PLL is enabled. Return status */
 		rPhaseOut = PLL.GetCurPhase();
 		bReturn = bPLLIsEnabled;
 	}
-	Unlock(); /* Lock end */
+	Unlock(); 
 
 	return bReturn;
 }

@@ -42,6 +42,9 @@
 void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	CTagPacketDecoder::Error err = TagPacketDecoderMDI.DecodeAFPacket(*pvecInputData);
+
+	ReceiverParam.Lock(); 
+
 	if(err == CTagPacketDecoder::E_OK)
 	{
 		ReceiverParam.ReceiveStatus.Interface.SetStatus(RX_OK);
@@ -183,21 +186,27 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 	// TODO RSCI Data Items, MER, etc.
+
+	ReceiverParam.Unlock(); 
 }
 
 void CDecodeRSIMDI::InitInternal(CParameter& ReceiverParam)
 {
-		iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
-		//iOutputBlockSize2 = ReceiverParam.iNumSDCBitsPerSFrame;
-		iMaxOutputBlockSize2 = 1024;
-		size_t numstreams = ReceiverParam.Stream.size();
-		//vecpvecOutputData.resize(numstreams);
-		for(size_t i=0; i<numstreams; i++)
-		{
-			int streamlen = ReceiverParam.Stream[i].iLenPartA;
-			streamlen += ReceiverParam.Stream[i].iLenPartB;
-			//veciMaxOutputBlockSize[i] = 16384;
-			veciOutputBlockSize[i] = streamlen*SIZEOF__BYTE;
-		}
-		iFramesSinceSDC = 3;
+	ReceiverParam.Lock(); 
+
+	iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
+	//iOutputBlockSize2 = ReceiverParam.iNumSDCBitsPerSFrame;
+	iMaxOutputBlockSize2 = 1024;
+	size_t numstreams = ReceiverParam.Stream.size();
+	//vecpvecOutputData.resize(numstreams);
+	for(size_t i=0; i<numstreams; i++)
+	{
+		int streamlen = ReceiverParam.Stream[i].iLenPartA;
+		streamlen += ReceiverParam.Stream[i].iLenPartB;
+		//veciMaxOutputBlockSize[i] = 16384;
+		veciOutputBlockSize[i] = streamlen*SIZEOF__BYTE;
+	}
+	iFramesSinceSDC = 3;
+
+	ReceiverParam.Unlock(); 
 }

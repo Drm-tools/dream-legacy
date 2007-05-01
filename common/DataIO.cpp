@@ -138,11 +138,13 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 			vecsTmpAudData[i] = 0;
 	}
 
+	ReceiverParam.Lock(); 
 	/* Put data to sound card interface. Show sound card state on GUI */
 	if (pSound->Write(vecsTmpAudData) == FALSE)
 		ReceiverParam.ReceiveStatus.Interface.SetStatus(RX_OK);
 	else
 		ReceiverParam.ReceiveStatus.Interface.SetStatus(DATA_ERROR);
+	ReceiverParam.Unlock(); 
 
 	/* Write data as wave in file */
 	if (bDoWriteWaveFile == TRUE)
@@ -221,12 +223,12 @@ void CWriteData::StartWriteWaveFile(const string strFileName)
 
 void CWriteData::StopWriteWaveFile()
 {
-	Lock();
+	Lock(); 
 
 	WaveFileAudio.Close();
 	bDoWriteWaveFile = FALSE;
 
-	Unlock();
+	Unlock(); 
 }
 
 void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
@@ -246,7 +248,7 @@ void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
 		int i, j;
 
 		/* Lock resources */
-		Lock();
+		Lock(); 
 
 		/* Init vector storing the average spectrum with zeros */
 		CVector<_REAL> veccAvSpectrum(iLenPowSpec, (_REAL) 0.0);
@@ -296,7 +298,7 @@ void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
 		}
 
 		/* Release resources */
-		Unlock();
+		Unlock(); 
 	}
 }
 
@@ -646,7 +648,7 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 	if (bSyncInput == FALSE)
 	{
 		bCRCOk = FACReceive.FACParam(pvecInputData, ReceiverParam);
-		/* Set FAC status for RSCI & GUI */
+		/* Set FAC status for RSCI, log file & GUI */
 		if(bCRCOk)
 			ReceiverParam.ReceiveStatus.FAC.SetStatus(RX_OK);
         else

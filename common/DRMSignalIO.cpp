@@ -133,7 +133,10 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 	/* Init vector for storing a complete DRM frame number of OFDM symbols */
 	iBlockCnt = 0;
+	TransmParam.Lock(); 
 	iNumBlocks = TransmParam.CellMappingTable.iNumSymPerFrame;
+	ESpecOcc eSpecOcc = TransmParam.GetSpectrumOccup();
+	TransmParam.Unlock(); 
 	iBigBlockSize = iSymbolBlockSize * 2 /* Stereo */ * iNumBlocks;
 
 	vecsDataOut.Init(iBigBlockSize);
@@ -165,9 +168,8 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 
 	/* Init bandpass filter object */
-	BPFilter.Init(iSymbolBlockSize, rDefCarOffset,
-		TransmParam.GetSpectrumOccup(), CDRMBandpassFilt::FT_TRANSMITTER);
-
+	BPFilter.Init(iSymbolBlockSize, rDefCarOffset, eSpecOcc,
+					CDRMBandpassFilt::FT_TRANSMITTER);
 
 	/* All robustness modes and spectrum occupancies should have the same output
 	   power. Calculate the normaization factor based on the average power of
@@ -194,24 +196,33 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 	int i;
 
 	/* OPH: update free-running symbol counter */
+	Parameter.Lock(); 
+
 	iFreeSymbolCounter++;
 	if (iFreeSymbolCounter >= Parameter.CellMappingTable.iNumSymPerFrame)
 	{
 		iFreeSymbolCounter = 0;
 		/* calculate the PSD once per frame for the RSI output */
+
 		if(Parameter.bMeasurePSD)
 			PutPSD(Parameter);
+
 	}
+	Parameter.Unlock(); 
 
 	if(pSound == NULL)
 		return;
 
 		/* Get data from sound interface. The read function must be a
 		   blocking function! */
-		if (pSound->Read(vecsSoundBuffer) == FALSE)
-			Parameter.ReceiveStatus.Interface.SetStatus(RX_OK);
-		else
-			Parameter.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
+	_BOOLEAN bBad = pSound->Read(vecsSoundBuffer);
+
+	Parameter.Lock(); 
+	if (bBad == FALSE)
+		Parameter.ReceiveStatus.Interface.SetStatus(RX_OK);
+	else
+		Parameter.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
+	Parameter.Unlock(); 
 
 		/* Write data to output buffer. Do not set the switch command inside
 		   the for-loop for efficiency reasons */
@@ -322,7 +333,10 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 
 	/* Update level meter */
 	SignalLevelMeter.Update((*pvecOutputData));
+	Parameter.Lock(); 
 	Parameter.SetIFSignalLevel(SignalLevelMeter.Level());
+	Parameter.Unlock(); 
+
 }
 
 void CReceiveData::InitInternal(CParameter& Parameter)
@@ -334,7 +348,11 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 	if(pSound == NULL)
 		return;
 
-	pSound->Init(Parameter.CellMappingTable.iSymbolBlockSize * 2);
+	Parameter.Lock(); 
+	/* Define output block-size */
+	iOutputBlockSize = Parameter.CellMappingTable.iSymbolBlockSize;
+	Parameter.Unlock(); 
+	pSound->Init(iOutputBlockSize * 2);
 
 	/* Init buffer size for taking stereo input */
 	vecsSoundBuffer.Init(Parameter.CellMappingTable.iSymbolBlockSize * 2);
@@ -356,8 +374,6 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 
 	cExpStep = _COMPLEX(cos(rNormCurFreqOffsetIQ), sin(rNormCurFreqOffsetIQ));
 
-	/* Define output block-size */
-	iOutputBlockSize = Parameter.CellMappingTable.iSymbolBlockSize;
 
 	/* OPH: init free-running symbol counter */
 	iFreeSymbolCounter = 0;
@@ -407,7 +423,7 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 	vecrScale.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
 
 	/* Lock resources */
-	Lock();
+	Lock(); 
 
 	/* Init the constants for scale and normalization */
 	const _REAL rFactorScale =
@@ -440,7 +456,7 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 	}
 
 	/* Release resources */
-	Unlock();
+	Unlock(); 
 }
 
 void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
@@ -451,10 +467,10 @@ void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
 {
 
 	/* Lock resources */
-	Lock();
+	Lock(); 
 	CalculatePSD(vecrData, vecrScale, iLenPSDAvEachBlock,iNumAvBlocksPSD,iPSDOverlap);
 	/* Release resources */
-	Unlock();
+	Unlock(); 
 }
 
 void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,

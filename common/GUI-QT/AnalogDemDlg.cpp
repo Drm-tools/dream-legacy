@@ -751,24 +751,23 @@ void CAMSSDlg::OnTimer()
 {
 	int j;
 
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+	Parameters.Lock(); 
+
 	/* Show label if available */
-	if ((DRMReceiver.GetParameters()->Service[0].IsActive()) &&
-		(DRMReceiver.GetParameters()->Service[0].strLabel != ""))
+	if ((Parameters.Service[0].IsActive()) && (Parameters.Service[0].strLabel != ""))
 	{
 		/* Service label (UTF-8 encoded string -> convert) */
 		TextAMSSServiceLabel->setText(QString().fromUtf8(QCString(
-			DRMReceiver.GetParameters()->Service[0].
-			strLabel.c_str())));
+			Parameters.Service[0].strLabel.c_str())));
 	}
 	else
 		TextAMSSServiceLabel->setText(tr(""));
 
 	/* Country code */
-	const string strCntryCode = DRMReceiver.GetParameters()->
-		Service[0].strCountryCode; /* must be of 2 lowercase chars */
+	const string strCntryCode = Parameters.Service[0].strCountryCode; /* must be of 2 lowercase chars */
 
-	if ((DRMReceiver.GetParameters()->Service[0].IsActive()) &&
-	   (!strCntryCode.empty()) && (strCntryCode != "--"))
+	if ((Parameters.Service[0].IsActive()) && (!strCntryCode.empty()) && (strCntryCode != "--"))
 	{
 		TextAMSSCountryCode->
 			setText(QString(GetISOCountryName(strCntryCode).c_str()));
@@ -778,27 +777,25 @@ void CAMSSDlg::OnTimer()
 
 	/* SDC Language code */
 
-	if (DRMReceiver.GetParameters()->Service[0].IsActive())
+	if (Parameters.Service[0].IsActive())
 	{
-		const string strLangCode = DRMReceiver.GetParameters()->
-			Service[0].strLanguageCode; /* must be of 3 lowercase chars */
+		const string strLangCode = Parameters.Service[0].strLanguageCode; /* must be of 3 lowercase chars */
 
 		if ((!strLangCode.empty()) && (strLangCode != "---"))
 			 TextAMSSLanguage->
 				setText(QString(GetISOLanguageName(strLangCode).c_str()));
 		else
-			TextAMSSLanguage->setText(QString(strTableLanguageCode[DRMReceiver.
-				GetParameters()->Service[0].iLanguage].c_str()));
+			TextAMSSLanguage->setText(QString(strTableLanguageCode[Parameters.Service[0].iLanguage].c_str()));
 	}
 	else
 		TextAMSSLanguage->setText("");
 
 	/* Time, date */
-	if ((DRMReceiver.GetParameters()->iUTCHour == 0) &&
-		(DRMReceiver.GetParameters()->iUTCMin == 0) &&
-		(DRMReceiver.GetParameters()->iDay == 0) &&
-		(DRMReceiver.GetParameters()->iMonth == 0) &&
-		(DRMReceiver.GetParameters()->iYear == 0))
+	if ((Parameters.iUTCHour == 0) &&
+		(Parameters.iUTCMin == 0) &&
+		(Parameters.iDay == 0) &&
+		(Parameters.iMonth == 0) &&
+		(Parameters.iYear == 0))
 	{
 		/* No time service available */
 		TextAMSSTimeDate->setText("");
@@ -806,17 +803,14 @@ void CAMSSDlg::OnTimer()
 	else
 	{
 		QDateTime DateTime;
-		DateTime.setDate(QDate(DRMReceiver.GetParameters()->iYear,
-			DRMReceiver.GetParameters()->iMonth,
-			DRMReceiver.GetParameters()->iDay));
-		DateTime.setTime(QTime(DRMReceiver.GetParameters()->iUTCHour,
-			DRMReceiver.GetParameters()->iUTCMin));
+		DateTime.setDate(QDate(Parameters.iYear, Parameters.iMonth, Parameters.iDay));
+		DateTime.setTime(QTime(Parameters.iUTCHour, Parameters.iUTCMin));
 
 		TextAMSSTimeDate->setText(DateTime.toString());
 	}
 
 	/* Get number of alternative services */
-	const size_t iNumAltServices = DRMReceiver.GetParameters()->
+	const size_t iNumAltServices = Parameters.
 		AltFreqOtherServicesSign.vecAltFreqOtherServices.size();
 
 	if (iNumAltServices != 0)
@@ -831,8 +825,7 @@ void CAMSSDlg::OnTimer()
 
 		for (size_t i = 0; i < iNumAltServices; i++)
 		{
-			switch (DRMReceiver.GetParameters()->AltFreqOtherServicesSign.
-				vecAltFreqOtherServices[i].iSystemID)
+			switch (Parameters.AltFreqOtherServicesSign.vecAltFreqOtherServices[i].iSystemID)
 			{
 			case 0:
 				freqEntry = "DRM:";
@@ -857,11 +850,10 @@ void CAMSSDlg::OnTimer()
 				break;
 			}
 
-			const int iNumAltFreqs =
-				DRMReceiver.GetParameters()->AltFreqOtherServicesSign.
+			const int iNumAltFreqs = Parameters.AltFreqOtherServicesSign.
 				vecAltFreqOtherServices[i].veciFrequencies.Size();
 
-			const int iSystemID = DRMReceiver.GetParameters()->
+			const int iSystemID = Parameters.
 				AltFreqOtherServicesSign.vecAltFreqOtherServices[i].iSystemID;
 
 			switch (iSystemID)
@@ -873,7 +865,7 @@ void CAMSSDlg::OnTimer()
 				for (j = 0; j < iNumAltFreqs; j++)
 				{
 					freqEntry +=
-						QString().setNum((long) DRMReceiver.GetParameters()->
+						QString().setNum((long) Parameters.
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
 						veciFrequencies[j], 10);
 							
@@ -887,7 +879,7 @@ void CAMSSDlg::OnTimer()
 				{
 					freqEntry += " ID:";
 					freqEntry +=
-						QString().setNum((long) DRMReceiver.GetParameters()->
+						QString().setNum((long) Parameters.
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
 						iOtherServiceID, 16).upper();
 				}
@@ -913,7 +905,7 @@ void CAMSSDlg::OnTimer()
 				{
 					freqEntry += " ECC+PI:";
 					freqEntry +=
-						QString().setNum((long) DRMReceiver.GetParameters()->
+						QString().setNum((long) Parameters.
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
 						iOtherServiceID, 16).upper();
 				}
@@ -922,7 +914,7 @@ void CAMSSDlg::OnTimer()
 				{
 					freqEntry += " PI:";
 					freqEntry +=
-						QString().setNum((long) DRMReceiver.GetParameters()->
+						QString().setNum((long) Parameters.
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
 						iOtherServiceID, 16).upper();
 				}
@@ -948,7 +940,7 @@ void CAMSSDlg::OnTimer()
 				{
 					freqEntry += " ECC+PI:";
 					freqEntry +=
-						QString().setNum((long) DRMReceiver.GetParameters()->
+						QString().setNum((long) Parameters.
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
 						iOtherServiceID, 16).upper();
 				}
@@ -957,7 +949,7 @@ void CAMSSDlg::OnTimer()
 				{
 					freqEntry += " PI:";
 					freqEntry +=
-						QString().setNum((long) DRMReceiver.GetParameters()->
+						QString().setNum((long) Parameters.
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
 						iOtherServiceID, 16).upper();
 				}
@@ -968,7 +960,7 @@ void CAMSSDlg::OnTimer()
 				break;
 			}
 
-			if (DRMReceiver.GetParameters()->AltFreqOtherServicesSign.
+			if (Parameters.AltFreqOtherServicesSign.
 				vecAltFreqOtherServices[i].bSameService)
 			{
 				freqEntry += " (same service)";
@@ -1007,7 +999,7 @@ void CAMSSDlg::OnTimer()
 				GetParameters()->Service[0].iLanguage].c_str()));
 
 			TextAMSSServiceID->setText("ID:" + QString().setNum(
-				(long) DRMReceiver.GetParameters()->Service[0].iServiceID, 16).upper());
+				(long) Parameters.Service[0].iServiceID, 16).upper());
 
 			TextAMSSAMCarrierMode->setText(QString(strTableAMSSCarrierMode[DRMReceiver.
 				GetParameters()->iAMSSCarrierMode].c_str()));
@@ -1024,6 +1016,8 @@ void CAMSSDlg::OnTimer()
 
 	ProgressBarAMSS->setProgress(DRMReceiver.GetAMSSDecode()->
 		GetPercentageDataEntityGroupComplete());
+
+	Parameters.Unlock(); 
 }
 
 void CAMSSDlg::OnTimerPLLPhaseDial()

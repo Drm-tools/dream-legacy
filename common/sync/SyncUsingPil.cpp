@@ -33,6 +33,9 @@
 void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int i;
+
+	ReceiverParam.Lock(); 
+
 	/**************************************************************************\
 	* Frame synchronization detection										   *
 	\**************************************************************************/
@@ -295,12 +298,16 @@ fflush(pFile);
 		for (i = 0; i < iOutputBlockSize; i++)
 			(*pvecOutputData)[i] = (*pvecInputData)[i];
 	}
+
+	ReceiverParam.Unlock(); 
 }
 
 void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 {
 	int			i;
 	_COMPLEX	cPhaseCorTermDivi;
+
+	ReceiverParam.Lock(); 
 
 	/* Init base class for modifying the pilots (rotation) */
 	CPilotModiClass::InitRot(ReceiverParam);
@@ -421,6 +428,8 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iNumCarrier;
 	iMaxOutputBlockSize = iNumCarrier;
+
+	ReceiverParam.Unlock(); 
 }
 
 void CSyncUsingPil::StartAcquisition()

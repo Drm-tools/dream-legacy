@@ -143,7 +143,9 @@ void CMLCEncoder::InitInternal(CParameter& TransmParam)
 	int i;
 	int	iNumInBits;
 
+	TransmParam.Lock(); 
 	CalculateParam(TransmParam, eChannelType);
+	TransmParam.Unlock(); 
 	
 	iNumInBits = iL[0] + iL[1] + iL[2];
 
@@ -353,8 +355,11 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 {
 	int i;
 
+
 	/* First, calculate all necessary parameters for decoding process */
+	ReceiverParam.Lock(); 
 	CalculateParam(ReceiverParam, eChannelType);
+	ReceiverParam.Unlock(); 
 
 	/* Reasonable number of iterations depends on coding scheme. With a
 	   4-QAM no iteration is possible */
@@ -441,14 +446,14 @@ void CMLCDecoder::GetVectorSpace(CVector<_COMPLEX>& veccData)
 	if (iN_mux != 0)
 	{
 		/* Lock resources */
-		Lock();
+		Lock(); 
 
 		/* Copy vectors */
 		for (int i = 0; i < iN_mux; i++)
 			veccData[i] = vecSigSpacBuf[i];
 
 		/* Release resources */
-		Unlock();
+		Unlock(); 
 	}
 }
 

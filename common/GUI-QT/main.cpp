@@ -58,9 +58,6 @@
 * Using GUI with QT                                                            *
 \******************************************************************************/
 
-/* This pointer is only used for the post-event routine */
-QApplication *pApp = NULL;
-
 int
 main(int argc, char **argv)
 {
@@ -102,7 +99,6 @@ main(int argc, char **argv)
 #endif
 
 		string mode = Settings.Get("command", "mode", string("receive"));
-		cout << "mode:" << mode << endl;
 		if (mode == "receive")
 		{
 			CDRMReceiver DRMReceiver;
@@ -140,7 +136,6 @@ main(int argc, char **argv)
 
 			/* Set main window */
 			app.setMainWidget(&MainDlg);
-			pApp = &app;		/* Needed for post-event routine */
 
 			app.exec();
 
@@ -156,7 +151,6 @@ main(int argc, char **argv)
 
 			/* Set main window */
 			app.setMainWidget(&MainDlg);
-			pApp = &app;		/* Needed for post-event routine */
 
 			/* Show dialog */
 			MainDlg.show();
@@ -189,18 +183,6 @@ main(int argc, char **argv)
 }
 
 /* Implementation of global functions *****************************************/
-void
-PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam)
-{
-	/* In case of simulation no events should be generated */
-	if (pApp != NULL)
-	{
-		DRMEvent *DRMEv = new DRMEvent(MessID, iMessageParam);
-
-		/* Qt will delete the event object when done */
-		//QThread::postEvent(pApp->mainWidget(), DRMEv);
-	}
-}
 
 void
 ErrorMessage(string strErrorString)
@@ -267,11 +249,6 @@ void
 ErrorMessage(string strErrorString)
 {
 	perror(strErrorString.c_str());
-}
-
-void
-PostWinMessage(const _MESSAGE_IDENT, const int)
-{
 }
 #endif /* USE_QT_GUI */
 

@@ -71,7 +71,9 @@ void CAMSSPhaseDemod::ProcessDataInternal(CParameter&)
 void CAMSSPhaseDemod::InitInternal(CParameter& ReceiverParam)
 {
 	/* Get parameters from info class */
+	ReceiverParam.Lock(); 
 	iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+	ReceiverParam.Unlock(); 
 
 	/* Define block-sizes for input and output */
 	/* The output buffer is a cyclic buffer, we have to specify the total
@@ -179,13 +181,13 @@ _BOOLEAN CAMSSPhaseDemod::GetPLLPhase(CReal& rPhaseOut)
 	_BOOLEAN bReturn;
 
 	/* Lock resources */
-	Lock(); /* Lock start */
+	Lock(); 
 	{
 		/* Phase is only valid if PLL is enabled. Return status */
 		rPhaseOut = AMSSPLL.GetCurPhase();
 		bReturn = TRUE;
 	}
-	Unlock(); /* Lock end */
+	Unlock(); 
 
 	return bReturn;
 }
@@ -195,11 +197,11 @@ _BOOLEAN CAMSSPhaseDemod::GetPLLPhase(CReal& rPhaseOut)
 void CAMSSPhaseDemod::SetAcqFreq(const CReal rNewNormCenter)
 {
 	/* Lock resources */
-	Lock(); /* Lock start */
+	Lock(); 
 	{
 		FreqOffsAcq.Start(rNewNormCenter);
 	}
-	Unlock(); /* Lock end */
+	Unlock(); 
 }
 
 /* Implementation *************************************************************/
@@ -230,7 +232,9 @@ void CAMSSExtractBits::ProcessDataInternal(CParameter& ReceiverParam)
 	rvecInpTmpAbs = Abs(rvecInpTmp);
 
 	RecursiveFilter.Process(rvecInpTmpAbs);
+	ReceiverParam.Lock(); 
 	ReceiverParam.rResampleOffset = AMSS_RESAMPLER_LOOP_GAIN * ( (signed) (RecursiveFilter.GetPeakPos() - (AMSS_12kHz_SAMPLES_PER_BIT/2)) );
+	ReceiverParam.Unlock(); 
 
 	int iBitCount = 0;
  
@@ -263,7 +267,9 @@ void CAMSSExtractBits::ProcessDataInternal(CParameter& ReceiverParam)
 void CAMSSExtractBits::InitInternal(CParameter& ReceiverParam)
 {
 	/* Get parameters from info class */
+	ReceiverParam.Lock(); 
 	iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+	ReceiverParam.Unlock(); 
 
 	/* Define block-sizes for input and output */
 	/* The output buffer is a cyclic buffer, we have to specify the total
@@ -324,7 +330,9 @@ void CAMSSDecode::InitInternal(CParameter& ReceiverParam)
 
 	bVersionFlag = FALSE;
 
+	ReceiverParam.Lock(); 
 	ResetStatus(ReceiverParam);
+	ReceiverParam.Unlock(); 
 }
 
 void CAMSSDecode::ProcessDataInternal(CParameter& ReceiverParam)
@@ -332,6 +340,7 @@ void CAMSSDecode::ProcessDataInternal(CParameter& ReceiverParam)
 	int i = 0;
 	int j = 0;
 	/* Copy CVector data into bits*/;
+	ReceiverParam.Lock(); 
 	for (i = 0; i < iInputBlockSize; i++)
 	{
 		bAMSSBits[iIntakeBufferPos] = (*pvecInputData)[i];
@@ -361,6 +370,7 @@ void CAMSSDecode::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 	else
 		iOutputBlockSize = 0;
+	ReceiverParam.Unlock(); 
 }
 
 void CAMSSDecode::DecodeBlock1(CVector<_BINARY>& bBits, CParameter& ReceiverParam)

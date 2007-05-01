@@ -42,6 +42,9 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 	//CReal		rLevDiff;
 	_BOOLEAN	bNoPeaksLeft;
 	CRealVector	vecrPSDPilPoin(3);
+
+	ReceiverParam.Lock(); 
+
 	/* OPH: update free-running symbol counter */
 	iFreeSymbolCounter++;
 	if (iFreeSymbolCounter >= ReceiverParam.CellMappingTable.iNumSymPerFrame)
@@ -362,10 +365,12 @@ fclose(pFile1);
 			BPFilter.Process(*pvecOutputData);
 
 	}
+	ReceiverParam.Unlock(); 
 }
 
 void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 {
+	ReceiverParam.Lock(); 
 	/* Needed for calculating offset in Hertz in case of synchronized input
 	   (for simulation) */
 	iFFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
@@ -472,6 +477,8 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 
 	/* OPH: init free-running symbol counter */
 	iFreeSymbolCounter = 0;
+
+	ReceiverParam.Unlock(); 
 }
 
 void CFreqSyncAcq::SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize)

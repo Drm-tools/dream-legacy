@@ -627,7 +627,7 @@ CIniFile::GetIniSetting(const string& section,
 						 const string& key, const string& defaultval) const
 {
 	string result(defaultval);
-	const_cast<CMutex*>(&Mutex)->Lock();
+	const_cast<CMutex*>(&Mutex)->Lock(); 
 	INIFile::const_iterator iSection = ini.find(section);
 	if (iSection != ini.end())
 	{
@@ -635,20 +635,20 @@ CIniFile::GetIniSetting(const string& section,
 		if (apair != iSection->second.end())
 			result = apair->second;
 	}
-	const_cast<CMutex*>(&Mutex)->Unlock();
+	const_cast<CMutex*>(&Mutex)->Unlock(); 
 	return result;
 }
 
 void
 CIniFile::PutIniSetting(const string& section, const string& key, const string& value)
 {
-	Mutex.Lock();
+	Mutex.Lock(); 
 
 	/* null key is ok and empty value is ok but empty both is not useful */
 	if(key != "" || value != "")
 		ini[section][key]=value;
 
-	Mutex.Unlock();
+	Mutex.Unlock(); 
 }
 
 void

@@ -46,6 +46,7 @@
 #include "GPSData.h"
 #include <map>
 #include <set>
+#include <iostream>
 
 class CDRMReceiver;
 
@@ -792,10 +793,10 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 	class CRxStatus
 	{
 	public:
-		CRxStatus(_MESSAGE_IDENT i):status(NOT_PRESENT),iNum(0),iNumOK(0),ident(i) {}
-		CRxStatus(const CRxStatus& s):status(s.status),iNum(s.iNum),iNumOK(s.iNumOK),ident(s.ident) {}
+		CRxStatus():status(NOT_PRESENT),iNum(0),iNumOK(0) {}
+		CRxStatus(const CRxStatus& s):status(s.status),iNum(s.iNum),iNumOK(s.iNumOK) {}
 		CRxStatus& operator=(const CRxStatus& s)
-			{ status = s.status; iNum = s.iNum; iNumOK = s.iNumOK; ident = s.ident; return *this;}
+			{ status = s.status; iNum = s.iNum; iNumOK = s.iNumOK; return *this;}
 		void SetStatus(const ETypeRxStatus);
 		ETypeRxStatus GetStatus() { return status; }
 		int GetCount() { return iNum; }
@@ -804,19 +805,18 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 	private:
 		ETypeRxStatus status;
 		int iNum, iNumOK;
-		_MESSAGE_IDENT ident;
 	};
 
 	class CReceiveStatus
 	{
 	  public:
-		CReceiveStatus():FSync(MS_FRAME_SYNC),TSync(MS_TIME_SYNC),Interface(MS_IOINTERFACE),
-		FAC(MS_FAC_CRC),SDC(MS_SDC_CRC),Audio(MS_MSC_CRC),MOT(MS_MOT_OBJ_STAT)
+		CReceiveStatus():FSync(),TSync(),Interface(),
+		FAC(),SDC(),Audio(),LLAudio(),MOT()
 		{
 		}
 		CReceiveStatus(const CReceiveStatus& s):FSync(s.FSync), TSync(s.TSync),
 			Interface(s.Interface), FAC(s.FAC), SDC(s.SDC),
-			Audio(s.Audio),MOT(s.MOT)
+			Audio(s.Audio),LLAudio(s.LLAudio),MOT(s.MOT)
 		{
 		}
 		CReceiveStatus& operator=(const CReceiveStatus& s)
@@ -827,6 +827,7 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 			FAC = s.FAC;
 			SDC = s.SDC;
 			Audio = s.Audio;
+			LLAudio = s.LLAudio;
 			MOT = s.MOT;
 			return *this;
 		}
@@ -837,6 +838,7 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		CRxStatus FAC;
 		CRxStatus SDC;
 		CRxStatus Audio;
+		CRxStatus LLAudio;
 		CRxStatus MOT;
 	};
 

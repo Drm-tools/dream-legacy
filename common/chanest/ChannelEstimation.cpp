@@ -61,13 +61,13 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 	const int iSymbolCounter = (*pvecInputData).GetExData().iSymbolID;
 
+	ReceiverParam.Lock(); 
 
 	/* Time interpolation *****************************************************/
 #ifdef USE_DD_WIENER_FILT_TIME
 	/* For decision directed channel estimation, it is important to know the
 	   types of all cells, not only the pilot cells. Therefore, we have to take
 	   care of frame ID here, too */
-
 	if (iSymbolCounter == 0)
 	{
 		/* Frame ID of this FAC block stands for the new block. We need
@@ -111,6 +111,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		iOutputBlockSize = 0;
 
 		/* Do not continue */
+		ReceiverParam.Unlock();
 		return;
 	}
 	else
@@ -542,6 +543,8 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 	}
 
+	ReceiverParam.Unlock(); 
+
 	/* Interferer consideration --------------------------------------------- */
 	if (bInterfConsid == TRUE)
 	{
@@ -595,6 +598,7 @@ void CChannelEstimation::CalculateRint(CParameter& ReceiverParam)
 
 void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 {
+	ReceiverParam.Lock(); 
 	/* Get parameters from global struct */
 	iScatPilTimeInt = ReceiverParam.CellMappingTable.iScatPilTimeInt;
 	iScatPilFreqInt = ReceiverParam.CellMappingTable.iScatPilFreqInt;
@@ -867,6 +871,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 		_COMPLEX(_REAL(0.0),_REAL(0.0)));
 	iTimeDiffAccuRSI = 0;
 
+	ReceiverParam.Unlock(); 
 }
 
 CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
@@ -1061,7 +1066,7 @@ _REAL CChannelEstimation::GetMSCWMEREstdB()
 	_REAL rAvSigEstMSC = (_REAL) 0.0;
 
 	/* Lock resources */
-	Lock(); /* Lock start */
+	Lock(); 
 	{
 		/* Average results from all carriers */
 		for (int i = 0; i < iNumCarrier; i++)
@@ -1070,7 +1075,7 @@ _REAL CChannelEstimation::GetMSCWMEREstdB()
 			rAvSigEstMSC += vecrSigEstMSC[i];
 		}
 	}
-	Unlock(); /* Lock end */
+	Unlock(); 
 
 	/* Calculate final result (signal to noise ratio) and consider correction
 	   factor for average signal energy */
@@ -1104,7 +1109,7 @@ _REAL CChannelEstimation::GetDelay() const
 _REAL CChannelEstimation::GetMinDelay()
 {
 	/* Lock because of vector "vecrDelayHist" access */
-	//Lock();
+	//Lock(); 
 
 	/* Return minimum delay in history */
 	_REAL rMinDelay = 1000.0;
@@ -1114,7 +1119,7 @@ _REAL CChannelEstimation::GetMinDelay()
 			rMinDelay = vecrDelayHist[i];
 	}
 
-	//Unlock();
+	//Unlock(); 
 
 	/* Return delay in ms */
 	return rMinDelay * iFFTSizeN / 
@@ -1138,7 +1143,7 @@ void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 		_REAL rDiffPhase, rOldPhase;
 
 		/* Lock resources */
-		Lock();
+		Lock(); 
 
 		/* TODO - decide if this allows the if(i==0) test to be removed */
 		rOldPhase = Angle(veccChanEst[0]);
@@ -1186,7 +1191,7 @@ void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 		}
 
 		/* Release resources */
-		Unlock();
+		Unlock(); 
 	}
 }
 
@@ -1204,7 +1209,7 @@ void CChannelEstimation::GetSNRProfile(CVector<_REAL>& vecrData,
 	if (iNumCarrier != 0)
 	{
 		/* Lock resources */
-		Lock();
+		Lock(); 
 
 		/* We want to suppress the carriers on which no SNR measurement can be
 		   performed (DC carrier, frequency pilots carriers) */
@@ -1247,7 +1252,7 @@ void CChannelEstimation::GetSNRProfile(CVector<_REAL>& vecrData,
 		}
 
 		/* Release resources */
-		Unlock();
+		Unlock(); 
 	}
 }
 
@@ -1258,13 +1263,13 @@ void CChannelEstimation::GetAvPoDeSp(CVector<_REAL>& vecrData,
 									 _REAL& rPDSBegin, _REAL& rPDSEnd)
 {
 	/* Lock resources */
-	Lock();
+	Lock(); 
 
 	TimeSyncTrack.GetAvPoDeSp(vecrData, vecrScale, rLowerBound,
 		rHigherBound, rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
 
 	/* Release resources */
-	Unlock();
+	Unlock(); 
 }
 
 void CChannelEstimation::UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorEx<_COMPLEX>* pvecInputData,
