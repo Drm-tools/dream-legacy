@@ -460,7 +460,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 	if (bSNRInitPhase == TRUE)
 	{
-   		ReceiverParam.SetSNR(-1.0);
+   		ReceiverParam.SetSNR(0.0);
 	}
 	else
 	{

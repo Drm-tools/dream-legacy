@@ -1695,7 +1695,7 @@ CDRMReceiver::LoadSettings(const CSettings& s)
 
 	if (strMode == "DRMRX")
 		SetReceiverMode(RM_DRM);
-	else if (strMode == "AMRX");
+	else if (strMode == "AMRX")
 		SetReceiverMode(RM_AM);
 	//else - leave it as initialised (ie. DRM)
 
@@ -1764,7 +1764,13 @@ void
 CDRMReceiver::SaveSettings(CSettings& s)
 {
 
+	if(eReceiverMode == RM_AM)
+		s.Put("GUI", "mode", "AMRX");
+	else
+		s.Put("GUI", "mode", "DRMRX");
+
 	/* Receiver ------------------------------------------------------------- */
+
 	/* Flip spectrum flag */
 	s.Put("Receiver", "flipspectrum", ReceiveData.GetFlippedSpectrum());
 

@@ -44,7 +44,7 @@ GeneralSettingsDlg::GeneralSettingsDlg(CDRMReceiver& NDRMR, CSettings& NSettings
 
 	host = Settings.Get("GPS", "host", host);
 	port = Settings.Get("GPS", "port", port);
-	bUseGPS = Settings.Get("GPS", "usegps", bUseGPS);
+	bUseGPS = Settings.Get("GPS", "usegpsd", bUseGPS);
 
 	/* Set the validators fro the receiver coordinate */
 	EdtLatitudeDegrees->setValidator(new QIntValidator(0, 90, EdtLatitudeDegrees));

@@ -52,8 +52,10 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Init controls -------------------------------------------------------- */
 	/* Init main plot */
+	int iScheme = Settings.Get("System Evaluation Dialog", "colorscheme", 0);
+	Settings.Put("System Evaluation Dialog", "colorscheme", iScheme);
 	MainPlot->SetRecObj(&DRMReceiver);
-	MainPlot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "colorscheme", 0));
+	MainPlot->SetPlotStyle(iScheme);
 	MainPlot->setMargin(1);
 
 	/* Init slider control */
@@ -450,6 +452,7 @@ systemevalDlg::~systemevalDlg()
 	
 	double latitude, longitude;
 	DRMReceiver.GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
+	Settings.Put("Logfile", "delay", iLogDelay);
 	Settings.Put("Logfile", "enablerxl", shortLog.GetRxlEnabled());
 	Settings.Put("Logfile", "enablepositiondata", shortLog.GetPositionEnabled());
 	Settings.Put("Logfile", "enablelog", bEnableLongLog);
@@ -616,6 +619,7 @@ void systemevalDlg::hideEvent(QHideEvent*)
 	 * TODO: better solution
 	 */
 	Settings.Put("System Evaluation Dialog", "sysevplottype", (int) MainPlot->GetChartType());
+	Settings.Put("System Evaluation Dialog", "numchartwin", (int)vecpDRMPlots.size());
 }
 
 void systemevalDlg::UpdatePlotsStyle()
@@ -1279,7 +1283,6 @@ QString	systemevalDlg::GetRobModeStr()
 
 QString	systemevalDlg::GetSpecOccStr()
 {
-	CParameter& Parameters = *DRMReceiver.GetParameters();
 	switch (DRMReceiver.GetParameters()->GetSpectrumOccup())
 	{
 	case SO_0:

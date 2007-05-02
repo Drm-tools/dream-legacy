@@ -601,10 +601,8 @@ vecpListItems()
 		setGeometry(WinGeom);
 
 	/* Set sorting behaviour of the list */
-	iCurrentSortColumn =
-		Settings.Get("Live Schedule Dialog", "sortcolumn", 0);
-	bCurrentSortAscending =
-		Settings.Get("Live Schedule Dialog", "sortascending", TRUE);
+	iCurrentSortColumn = Settings.Get("Live Schedule Dialog", "sortcolumn", 0);
+	bCurrentSortAscending = Settings.Get("Live Schedule Dialog", "sortascending", TRUE);
 	ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
 
 	/* Define size of the bitmaps */
@@ -966,13 +964,11 @@ LiveScheduleDlg::hideEvent(QHideEvent *)
 	Settings.Put("Live Schedule Dialog", c);
 
 	/* Store preview settings */
-	Settings.Put("Live Schedule Dialog", "preview",
-				 DRMSchedule.GetSecondsPreview());
+	Settings.Put("Live Schedule Dialog", "preview", DRMSchedule.GetSecondsPreview());
 
 	/* Store sort settings */
-	Settings.Put("Live Schedule Dialog", "sortcolumndrm", iCurrentSortColumn);
-	Settings.Put("Live Schedule Dialog", "sortascendingdrm",
-				 bCurrentSortAscending);
+	Settings.Put("Live Schedule Dialog", "sortcolumn", iCurrentSortColumn);
+	Settings.Put("Live Schedule Dialog", "sortascending", bCurrentSortAscending);
 
 	/* Store preview settings */
 	Settings.Put("Live Schedule Dialog", "showall", bShowAll);
@@ -1209,8 +1205,8 @@ LiveScheduleDlg::AddWhatsThisHelp()
 	QWhatsThis::add(ListViewStations,
 					tr("<b>Live Schedule List:</b> In the live schedule list "
 					   "it's possible to view AFS (Alternative Frequency Signalling) "
-					   "informations trasmitted with the current DRM or AMSS signal.</b>"
-					   "It is possible to show only active stations by changing a "
+					   "information transmitted with the current DRM or AMSS signal.</b>"
+					   "It is possible to limit the view to active stations by changing a "
 					   "setting in the 'view' menu.<br>"
 					   "The color of the cube on the left of the "
 					   "frequency shows the current status of the transmission.<br>"
@@ -1219,11 +1215,10 @@ LiveScheduleDlg::AddWhatsThisHelp()
 					   "a pink cube shown that the transmission soon will be offline.<br>"
 					   "If the stations preview is active an orange box shows the stations "
 					   "that will be active.<br>"
-					   "A little green cube on the left of the target column show that the receiver"
-					   " coordinates (latitude and longitude) stored into Dream settings are into"
+					   "A little green cube on the left of the target column shows that the receiver"
+					   " coordinates (latitude and longitude) stored into Dream settings are within"
 					   " the target area of this transmission.<br>"
-					   "The list can be sorted by clicking on the headline of the "
-					   "column."));
+					   "The list can be sorted by clicking on the headline of the column."));
 
 	/* UTC time label */
 	QWhatsThis::add(TextLabelUTCTime,

@@ -95,7 +95,10 @@ main(int argc, char **argv)
 
 				/* Low priority for GUI thread */
 				SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+				Settings.Put("GUI", "processpriority", TRUE);
 			}
+			else
+				Settings.Put("GUI", "processpriority", FALSE);
 #endif
 
 		string mode = Settings.Get("command", "mode", string("receive"));
