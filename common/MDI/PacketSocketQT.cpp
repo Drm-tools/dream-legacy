@@ -106,6 +106,7 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 	   3:  <ip>:<ip>:<port>      send to port on m/c group via interface
 	 */
 	/* Init return flag and copy string in QT-String "QString" */
+	int ttl = 127;
 	_BOOLEAN bAddressOK = TRUE;
 	QStringList parts = QStringList::split(":", strNewAddr.c_str(), TRUE);
 	switch(parts.count())
@@ -113,11 +114,13 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 	case 1:
 		bAddressOK = HostAddrOut.setAddress("127.0.0.1");
 		iHostPortOut = parts[0].toUInt();
-		cout << "CPacketSocketQT::SetDestination(" << strNewAddr << ") " << HostAddrOut.toString() << " " << iHostPortOut << endl;
 		break;
 	case 2:
 		bAddressOK = HostAddrOut.setAddress(parts[0]);
 		iHostPortOut = parts[1].toUInt();
+    	if(setsockopt(SocketDevice.socket(), IPPROTO_IP, IP_TTL,
+				(char*)&ttl, sizeof(ttl))==SOCKET_ERROR)
+			bAddressOK = FALSE;
 		break;
 	case 3:
 		{
@@ -134,6 +137,9 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 			if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF,
 						(char *) &mc_if, sizeof(mc_if)) == SOCKET_ERROR)
 				bAddressOK = FALSE;
+    		if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL,
+						(char*) &ttl, sizeof(ttl)) == SOCKET_ERROR)
+				bAddressOK = FALSE;
 		}
 		break;
 	default:
@@ -141,6 +147,7 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 	}
 	return bAddressOK;
 }
+
 
 _BOOLEAN
 CPacketSocketQT::GetDestination(string & str)
