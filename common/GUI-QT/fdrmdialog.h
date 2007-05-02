@@ -82,6 +82,7 @@ protected:
 	LiveScheduleDlg*	pLiveScheduleDlg;
 	EPGDlg*				pEPGDlg;
 	AnalogDemDlg*		pAnalogDemDlg;
+	GeneralSettingsDlg* pGeneralSettingsDlg;
 	QMenuBar*			pMenu;
 	QPopupMenu*			pReceiverModeMenu;
 	QPopupMenu*			pSettingsMenu;

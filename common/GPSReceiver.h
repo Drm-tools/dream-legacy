@@ -62,6 +62,8 @@ protected:
 	QSocket*	m_pSocket;
 	QTimer*		m_pTimer;
 	int			m_iCounter;
+	string		m_sHost;
+	int			m_iPort;
 
 public slots:
 

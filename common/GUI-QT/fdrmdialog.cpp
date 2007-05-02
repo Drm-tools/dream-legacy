@@ -167,6 +167,10 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Analog demodulation window */
 	pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", FALSE, Qt::WStyle_MinMax);
 
+	/* general settings window */
+	pGeneralSettingsDlg = new GeneralSettingsDlg(DRMReceiver, Settings, this, "", TRUE, Qt::WStyle_Dialog);
+	SetDialogCaption(pGeneralSettingsDlg, tr("General settings"));
+
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 	Parameters.Lock(); 
 
@@ -924,12 +928,6 @@ void FDRMDialog::OnViewMultSettingsDlg()
 
 void FDRMDialog::OnViewGeneralSettingsDlg()
 {
-	/* Show general settings window */
-	GeneralSettingsDlg* pGeneralSettingsDlg
-		= new GeneralSettingsDlg(&DRMReceiver, this, "", TRUE, Qt::WStyle_Dialog);
-
-	SetDialogCaption(pGeneralSettingsDlg, tr("General settings"));
-
 	pGeneralSettingsDlg->show();
 }
 

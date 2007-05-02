@@ -26,13 +26,25 @@
 \******************************************************************************/
 
 #include "GeneralSettingsDlg.h"
+#include <qlineedit.h>
+#include <qpushbutton.h>
+#include <qwhatsthis.h>
+#include <qvalidator.h>
+#include <qmessagebox.h>
+#include <qcheckbox.h>
+
 
 /* Implementation *************************************************************/
 
-GeneralSettingsDlg::GeneralSettingsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
-	const char* name, bool modal, WFlags f) :
-	CGeneralSettingsDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
+GeneralSettingsDlg::GeneralSettingsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
+	QWidget* parent, const char* name, bool modal, WFlags f) :
+	CGeneralSettingsDlgBase(parent, name, modal, f), DRMRec(NDRMR),Settings(NSettings),
+	host("localhost"),port(2947),bUseGPS(FALSE)
 {
+
+	host = Settings.Get("GPS", "host", host);
+	port = Settings.Get("GPS", "port", port);
+	bUseGPS = Settings.Get("GPS", "usegps", bUseGPS);
 
 	/* Set the validators fro the receiver coordinate */
 	EdtLatitudeDegrees->setValidator(new QIntValidator(0, 90, EdtLatitudeDegrees));
@@ -51,12 +63,17 @@ GeneralSettingsDlg::GeneralSettingsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(EdtLongitudeEW, SIGNAL(textChanged( const QString &)), this
 		, SLOT(CheckEW(const QString&)));
 
+	connect(CheckBoxUseGPS, SIGNAL(clicked()), SLOT(OnCheckBoxUseGPS()) );
+
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 }
 
 GeneralSettingsDlg::~GeneralSettingsDlg()
 {
+	Settings.Put("GPS", "host", host);
+	Settings.Put("GPS", "port", port);
+	Settings.Put("GPS", "usegpsd", bUseGPS);
 }
 
 void GeneralSettingsDlg::hideEvent(QHideEvent*)
@@ -72,6 +89,9 @@ void GeneralSettingsDlg::showEvent(QShowEvent*)
 	EdtLatitudeDegrees->setText(""); 
 	EdtLatitudeMinutes->setText("");
 	EdtLatitudeNS->setText("");
+
+    LineEditGPSHost->setText(host.c_str());
+    LineEditGPSPort->setText(QString("%1").arg(port));
 
 	/* Extract the receiver coordinates setted */
 	ExtractReceiverCoordinates();
@@ -105,11 +125,16 @@ void GeneralSettingsDlg::CheckEW(const QString& NewText)
 
 }
 
+void GeneralSettingsDlg::OnCheckBoxUseGPS()
+{
+	bUseGPS = CheckBoxUseGPS->isChecked();
+}
+
 void GeneralSettingsDlg::ButtonOkClicked()
 {
-_BOOLEAN bOK = TRUE;
-_BOOLEAN bAllEmpty = TRUE;
-_BOOLEAN bAllCompiled = FALSE;
+	_BOOLEAN bOK = TRUE;
+	_BOOLEAN bAllEmpty = TRUE;
+	_BOOLEAN bAllCompiled = FALSE;
 
 	/* Check the values and close the dialog */
 
@@ -173,7 +198,7 @@ _BOOLEAN bAllCompiled = FALSE;
 	{
 		/* save current settings */
 
-		CParameter& Parameters = *pDRMRec->GetParameters();
+		CParameter& Parameters = *DRMRec.GetParameters();
 		Parameters.Lock(); 
 
 		if (!bAllEmpty)
@@ -197,6 +222,9 @@ _BOOLEAN bAllCompiled = FALSE;
 			Parameters.GPSData.SetPositionAvailable(FALSE);
 		}
 		Parameters.Unlock(); 
+
+    	host = LineEditGPSHost->text().latin1();
+    	port = LineEditGPSPort->text().toInt();
 
 		accept(); /* If the values are valid close the dialog */
 	}
@@ -254,7 +282,7 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 
 	double latitude, longitude;
 
-	CParameter& Parameters = *pDRMRec->GetParameters();
+	CParameter& Parameters = *DRMRec.GetParameters();
 	Parameters.Lock(); 
 	Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
 

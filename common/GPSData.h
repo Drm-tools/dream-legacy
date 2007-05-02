@@ -121,9 +121,6 @@ public:
 	void SetStatus(EStatus eStatus);
 	EStatus GetStatus() const;
 
-	string host;
-	uint16_t port;
-
 private:
 	_BOOLEAN m_bSatellitesVisibleAvailable;
 	uint16_t m_usSatellitesVisible;

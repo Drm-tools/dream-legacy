@@ -25,12 +25,6 @@
  *
 \******************************************************************************/
 
-#include <qlineedit.h>
-#include <qpushbutton.h>
-#include <qwhatsthis.h>
-#include <qvalidator.h>
-#include <qmessagebox.h>
-
 #include "../DrmReceiver.h"
 #include "../util/Settings.h"
 
@@ -45,7 +39,7 @@ class GeneralSettingsDlg : public CGeneralSettingsDlgBase
 
 public:
 
-	GeneralSettingsDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+	GeneralSettingsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~GeneralSettingsDlg();
 
@@ -59,10 +53,15 @@ protected:
 
 	void			AddWhatsThisHelp();
 
-	CDRMReceiver*	pDRMRec;
+	CDRMReceiver&	DRMRec;
+	CSettings&		Settings;
+	string			host;
+	int				port;
+	_BOOLEAN		bUseGPS;
 
 public slots:
 	void CheckSN(const QString& NewText);
 	void CheckEW(const QString& NewText);
 	void ButtonOkClicked();
+	void OnCheckBoxUseGPS();
 };

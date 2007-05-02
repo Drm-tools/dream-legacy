@@ -68,16 +68,16 @@ main(int argc, char **argv)
 	   activated, this function will immediately return */
 	DRMSimulation.SimScript();
 
+	CSettings Settings;
+	/* Parse arguments and load settings from init-file */
+	Settings.Load(argc, argv);
+
 	try
 	{
 		/* Application object must be initialized before the DRMReceiver object
 		 * because of the QT functions used in the MDI module. TODO: better solution
 		 */
 		QApplication app(argc, argv);
-
-		/* Parse arguments and load settings from init-file */
-		CSettings Settings;
-		Settings.Load(argc, argv);
 
 		/* Load and install multi-language support (if available) */
 		QTranslator translator(0);
@@ -161,9 +161,6 @@ main(int argc, char **argv)
 			QMessageBox::information(0, "Dream", Settings.UsageArguments(argv).c_str());
 			exit(0);
 		}
-
-		/* Save settings to init-file */
-		Settings.Save();
 	}
 
 	catch(CGenErr GenErr)
@@ -178,6 +175,9 @@ main(int argc, char **argv)
 	{
 		ErrorMessage(Error);
 	}
+
+	/* Save settings to init-file */
+	Settings.Save();
 
 	return 0;
 }

@@ -42,14 +42,13 @@ using namespace std;
 const unsigned short CGPSReceiver::c_usReconnectIntervalSeconds = 30;
 
 CGPSReceiver::CGPSReceiver(CParameter& p, CSettings& s):
-	Parameters(p),m_Settings(s),m_pSocket(NULL),m_iCounter(0)
+	Parameters(p),m_Settings(s),m_pSocket(NULL),m_iCounter(0),
+	m_sHost("localhost"),m_iPort(2947)
 {	
     m_pTimer = new QTimer(this);
 
-	Parameters.Lock(); 
-	Parameters.GPSData.host = m_Settings.Get("GPS", "host", "localhost");
-	Parameters.GPSData.port = m_Settings.Get("GPS", "port", 2947);
-	Parameters.Unlock(); 
+	m_sHost = m_Settings.Get("GPS", "host", m_sHost);
+	m_iPort = m_Settings.Get("GPS", "port", m_iPort);
 
 	open();
 }
@@ -63,8 +62,6 @@ void CGPSReceiver::open()
 {
 	Parameters.Lock(); 
 	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
-	string host = Parameters.GPSData.host;
-	int port = Parameters.GPSData.port;
 	Parameters.Unlock(); 
 	if(m_pSocket == NULL)
 	{
@@ -75,7 +72,7 @@ void CGPSReceiver::open()
 		connect(m_pSocket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
 		connect(m_pSocket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
 	}
-	m_pSocket->connectToHost(host.c_str(), port);
+	m_pSocket->connectToHost(m_sHost.c_str(), m_iPort);
 }
 
 void CGPSReceiver::close()
