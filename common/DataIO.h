@@ -309,6 +309,7 @@ protected:
 
 	int							iFrequency; // For use in generating filename
 	_BOOLEAN					bIsRecording;
+	_BOOLEAN					bChangeReceived;
 
 };
 

@@ -1173,13 +1173,17 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		switch (DRMSchedule.GetSchedMode())
 		{
 		case CDRMSchedule::SM_DRM:
-			if ((eCurrentMode != RM_DRM) || bReInitOnFrequencyChange)
+			if (eCurrentMode != RM_DRM) 
 				DRMReceiver.SetReceiverMode(RM_DRM);
+			if (bReInitOnFrequencyChange)
+				DRMReceiver.SetInStartMode();
 			break;
 
 		case CDRMSchedule::SM_ANALOG:
-			if ((eCurrentMode != RM_AM) || bReInitOnFrequencyChange)
+			if (eCurrentMode != RM_AM)
 				DRMReceiver.SetReceiverMode(RM_AM);
+			if (bReInitOnFrequencyChange)
+				DRMReceiver.SetInStartMode();
 			break;
 		}
 	}

@@ -784,6 +784,7 @@ void FDRMDialog::OnSwitchToDRM()
 	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
 
 	DRMReceiver.SetReceiverMode(RM_DRM);
+	DRMReceiver.SetInStartMode();  // This is needed to make "New DRM Acquisition" work because the Rx will ignore calls to SetReceiverMode if the mode is already set
 	OnTimer();
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }

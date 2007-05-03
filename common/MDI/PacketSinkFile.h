@@ -50,7 +50,7 @@ public:
 private:
 	FILE *pFile;
 	_BOOLEAN bIsRecording;
-	_BOOLEAN bReopenFile;
+	_BOOLEAN bChangeReceived;
 	string strFileName;
 };
 

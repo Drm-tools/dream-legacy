@@ -137,7 +137,7 @@ public:
 	_BOOLEAN SetDestination(const string& strArgument);
 	_BOOLEAN GetDestination(string& strArgument);
 
-	string GetRSIfilename(CParameter& Parameter);
+	string GetRSIfilename(CParameter& Parameter, const char cProfile);
 
 protected:
 	
@@ -197,7 +197,6 @@ protected:
 	CRSISubscriberFile*				pRSISubscriberFile;
 	CPacketSource*					source;
 	CPacketSink*					sink;
-	char							cProfile;
 	CSingleBuffer<_BINARY>			MDIInBuffer;
 
 };

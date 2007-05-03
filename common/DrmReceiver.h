@@ -140,7 +140,7 @@ public:
 	EAcqStat				GetReceiverState() {return pReceiverParam->eAcquiState;}
 	ERecMode				GetReceiverMode() {return eReceiverMode;}
 	void					SetReceiverMode(ERecMode eNewMode)
-								{eNewReceiverMode = eNewMode;}
+								{if (eReceiverMode!=eNewMode || eNewReceiverMode != RM_NONE) eNewReceiverMode = eNewMode;}
 
 	void					SetInitResOff(_REAL rNRO)
 								{rInitResampleOffset = rNRO;}

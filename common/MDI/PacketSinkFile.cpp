@@ -30,42 +30,42 @@
 #include "PacketSinkFile.h"
 
 CPacketSinkRawFile::CPacketSinkRawFile()
-: pFile(0), bIsRecording(0), bReopenFile(FALSE)
+: pFile(0), bIsRecording(0), bChangeReceived(FALSE)
 {
 }
 
 void CPacketSinkRawFile::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16_t)
 {
-       if (!bIsRecording) // not recording
-       {
-               if (pFile != 0) // close file if one is open
-               {
-                       fclose(pFile);
-                       pFile = 0;
-               }
-               return;
-       }
+	if (bChangeReceived) // something has changed, so close the file if it's open
+	{
+        if (pFile)
+        {
+			fclose(pFile);
+		}
+        pFile = 0;
+		bChangeReceived = FALSE;
+	}
 
-       if (bReopenFile) // file is open but we want to start a new one
-       {
-               bReopenFile = FALSE;
-               if (pFile)
-               {
-                       fclose(pFile);
-               }
-               pFile = 0;
-       }
+    if (!bIsRecording) // not recording
+    {
+            if (pFile != 0) // close file if one is open
+            {
+                    fclose(pFile);
+                    pFile = 0;
+            }
+            return;
+    }
 
-       if (!pFile) // either wasn't open, or we just closed it
-       {
-               pFile = fopen(strFileName.c_str(), "wb");
-               if (!pFile)
-             {
-                       // Failed to open
-                       bIsRecording = FALSE;
-                       return;
-               }
-       }
+    if (!pFile) // either wasn't open, or we just closed it
+    {
+            pFile = fopen(strFileName.c_str(), "wb");
+            if (!pFile)
+          {
+                    // Failed to open
+                    bIsRecording = FALSE;
+                    return;
+            }
+    }
 
 	_BYTE b;
 	for (size_t i = 0; i < vecbydata.size (); i++)
@@ -79,17 +79,18 @@ void CPacketSinkRawFile::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, ui
 _BOOLEAN CPacketSinkRawFile::SetDestination(const string& strFName)
 {
 	strFileName = strFName;
+	bChangeReceived = TRUE;
 	return TRUE;
 }
 
 void CPacketSinkRawFile::StartRecording()
 {
-	if (bIsRecording) // file already open: close it and open new file
-		bReopenFile = TRUE;
 	bIsRecording = TRUE;
+	bChangeReceived = TRUE;
 }
 
 void CPacketSinkRawFile::StopRecording()
 {
 	bIsRecording = FALSE;
+	bChangeReceived = TRUE;
 }

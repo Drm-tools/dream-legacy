@@ -240,9 +240,6 @@ void CDownstreamDI::GenDIPacket()
 	/* Reset the tag packet generator */
 	TagPacketGenerator.Reset();
 
-	/* Set the RSCI/MDI profile */
-	TagPacketGenerator.SetProfile(cProfile);
-
 	/* Increment MDI packet counter and generate counter tag */
 	TagItemGeneratorLoFrCnt.GenTag();
 
@@ -438,7 +435,6 @@ void CDownstreamDI::SetProfile(char c)
 		if(i->second->GetProfile() == 0)
 			i->second->SetProfile(c);
 	}
-	cProfile = c;
 }
 
 void CDownstreamDI::SetAFPktCRC(const _BOOLEAN bNAFPktCRC)
@@ -448,7 +444,7 @@ void CDownstreamDI::SetAFPktCRC(const _BOOLEAN bNAFPktCRC)
 			i->second->SetAFPktCRC(bNAFPktCRC);
 }
 
-string CDownstreamDI::GetRSIfilename(CParameter& Parameter)
+string CDownstreamDI::GetRSIfilename(CParameter& Parameter, const char cProfile)
 {
 	/* Get current UTC time */
 	time_t ltime;
@@ -474,7 +470,7 @@ void CDownstreamDI::SetRSIRecording(CParameter& Parameter, const _BOOLEAN bOn, c
 	{
 		pRSISubscriberFile->SetProfile(cPro);
 
-		pRSISubscriberFile->SetDestination(GetRSIfilename(Parameter));
+		pRSISubscriberFile->SetDestination(GetRSIfilename(Parameter, cPro));
 		pRSISubscriberFile->StartRecording();
 		bMDIOutEnabled = TRUE;
 		bIsRecording = TRUE;
@@ -497,7 +493,7 @@ void CDownstreamDI::NewFrequency(CParameter& Parameter)
 		if (bIsRecording)
 		{
 			pRSISubscriberFile->StopRecording();
-			pRSISubscriberFile->SetDestination(GetRSIfilename(Parameter));
+			pRSISubscriberFile->SetDestination(GetRSIfilename(Parameter, pRSISubscriberFile->GetProfile()));
 			pRSISubscriberFile->StartRecording();
 		}
 	}

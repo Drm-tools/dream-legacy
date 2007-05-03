@@ -164,7 +164,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
  vecrPSD(0),
  matcReceivedPilotValues(),
  RawSimDa(),
- eSimType(),
+ eSimType(pParameter->eSimType), //OPH: this fixes a problem where DRM performance is poor if Dream starts in AM mode
  iDRMChannelNum(0),
  iSpecChDoppler(0),
  rBitErrRate(0.0),
@@ -202,6 +202,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
  bRunThread(pParameter->bRunThread),  // OPH
  bUsingMultimedia(pParameter->bUsingMultimedia), // OPH
  CellMappingTable(),
+ GPSData(pParameter->GPSData),
  rSysSimSNRdB(0.0),
  iCurSelAudioService(0),
  iCurSelDataService(0),

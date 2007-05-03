@@ -127,7 +127,7 @@ public slots:
 	void OnChartxAxisValSet(double dVal);
 	void OnSliderBWChange(int value);
 	void OnRadioNoiRed(int iID);
-	void OnNewAMAcquisition() {DRMReceiver.SetReceiverMode(RM_AM);}
+	void OnNewAMAcquisition() {DRMReceiver.SetInStartMode();}
 	void OnButtonWaterfall();
 	void OnButtonAMSS();
 	void OnSwitchToDRM();

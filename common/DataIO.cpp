@@ -747,7 +747,7 @@ void CUtilizeSDCData::InitInternal(CParameter& ReceiverParam)
 
 /* CWriteIQFile : module for writing an IQ or IF file */
 
-CWriteIQFile::CWriteIQFile() : pFile(0), iFrequency(0), bIsRecording(FALSE)
+CWriteIQFile::CWriteIQFile() : pFile(0), iFrequency(0), bIsRecording(FALSE), bChangeReceived(FALSE)
 {
 }
 
@@ -760,6 +760,7 @@ CWriteIQFile::~CWriteIQFile()
 void CWriteIQFile::StartRecording(CParameter& ReceiverParam)
 {
 	bIsRecording = TRUE;
+	bChangeReceived = TRUE;
 }
 
 void CWriteIQFile::OpenFile(CParameter& ReceiverParam)
@@ -787,6 +788,7 @@ void CWriteIQFile::OpenFile(CParameter& ReceiverParam)
 void CWriteIQFile::StopRecording()
 {
 	bIsRecording = FALSE;
+	bChangeReceived = TRUE;
 }
 
 void CWriteIQFile::NewFrequency(CParameter &ReceiverParam)
@@ -861,6 +863,16 @@ void CWriteIQFile::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int i;
 
+    if (bChangeReceived) // file is open but we want to start a new one
+    {
+            bChangeReceived = FALSE;
+            if (pFile != NULL)
+            {
+				fclose(pFile);
+            }
+            pFile = 0;
+    }
+
 	// is recording switched on?
     if (!bIsRecording)
     {
@@ -871,6 +883,8 @@ void CWriteIQFile::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 		return;
 	}
+
+
 	// Has the frequency changed? If so, close any open file (a new one will be opened)
 	int iNewFrequency = ReceiverParam.GetFrequency();
 
