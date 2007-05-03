@@ -116,38 +116,42 @@ CPacketSocketQT::SendPacket (const vector < _BYTE > &vecbydata)
 _BOOLEAN
 CPacketSocketQT::SetNetwOutAddr (const string & strNewAddr)
 {
-	/* syntax
-	   1:  <ip>:<port>
-	   2:  <ip>:<ip>:<port>
-	 */
-	/* Init return flag and copy string in QT-String "QString" */
-	_BOOLEAN bAddressOK = FALSE;
-	QStringList parts = QStringList::split (":", strNewAddr.c_str (), TRUE);
-	switch (parts.count ())
-	{
-	case 2:
-		bAddressOK = HostAddrOut.setAddress (parts[0]);
-		iHostPortOut = parts[1].toInt ();
-		break;
-	case 3:
-		QHostAddress AddrInterface;
-		AddrInterface.setAddress (parts[0]);
-		bAddressOK = HostAddrOut.setAddress (parts[1]);
-		iHostPortOut = parts[2].toInt ();
-		const SOCKET s = SocketDevice.socket ();
+    /* syntax
+       1:  <ip>:<port>
+       2:  <ip>:<ip>:<port>
+     */
+    /* Init return flag and copy string in QT-String "QString" */
+    _BOOLEAN bAddressOK = FALSE;
+    int ttl=127;
+    QStringList parts = QStringList::split (":", strNewAddr.c_str (), TRUE);
+    switch (parts.count ())
+    {
+    case 2:
+        bAddressOK = HostAddrOut.setAddress (parts[0]);
+        iHostPortOut = parts[1].toInt ();
+        if(setsockopt(SocketDevice.socket(), IPPROTO_IP, IP_TTL,
+                (char*)&ttl, sizeof(ttl))==SOCKET_ERROR)
+        break;
+    case 3:
+        QHostAddress AddrInterface;
+        AddrInterface.setAddress (parts[0]);
+        bAddressOK = HostAddrOut.setAddress (parts[1]);
+        iHostPortOut = parts[2].toInt ();
+        const SOCKET s = SocketDevice.socket ();
 #if QT_VERSION < 0x030000
-		uint32_t mc_if = htonl (AddrInterface.ip4Addr ());
+        uint32_t mc_if = htonl (AddrInterface.ip4Addr ());
 #else
-		uint32_t mc_if = htonl (AddrInterface.toIPv4Address ());
+        uint32_t mc_if = htonl (AddrInterface.toIPv4Address ());
 #endif
-		if (setsockopt (s, IPPROTO_IP, IP_MULTICAST_IF,
-						(char *) &mc_if, sizeof (mc_if)) == SOCKET_ERROR)
-			bAddressOK = FALSE;
-		break;
-	}
-	return bAddressOK;
+        if (setsockopt (s, IPPROTO_IP, IP_MULTICAST_IF,
+                        (char *) &mc_if, sizeof (mc_if)) == SOCKET_ERROR)
+        if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL,
+                    (char*) &ttl, sizeof(ttl)) == SOCKET_ERROR)
+        bAddressOK = FALSE;
+        break;
+    }
+    return bAddressOK;
 }
-
 
 _BOOLEAN
 CPacketSocketQT::SetNetwInAddr (const string & strNewAddr)
