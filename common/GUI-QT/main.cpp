@@ -88,7 +88,7 @@ main(int argc, char **argv)
 		/* works for both transmit and receive. GUI is low, working is normal.
 		 * the working thread does not need to know what the setting is.
 		 */
-			if (Settings.Get("GUI", "processpriority", TRUE));
+			if (Settings.Get("GUI", "processpriority", TRUE))
 			{
 				/* Set priority class for this application */
 				SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
