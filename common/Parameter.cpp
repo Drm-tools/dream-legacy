@@ -71,7 +71,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
  vecrPSD(0),
  matcReceivedPilotValues(),
  RawSimDa(),
- eSimType(),
+ eSimType(ST_NONE),
  iDRMChannelNum(0),
  iSpecChDoppler(0),
  rBitErrRate(0.0),
@@ -117,8 +117,8 @@ CParameter::CParameter(CDRMReceiver *pRx):
  rIFSigStr(0.0),
  iCurSelAudioService(0),
  iCurSelDataService(0),
- eRobustnessMode(RM_ROBUSTNESS_MODE_A),	
- eSpectOccup(SO_0),
+ eRobustnessMode(RM_ROBUSTNESS_MODE_B),	
+ eSpectOccup(SO_3),
  LastAudioService(),
  LastDataService(),
  Mutex()
@@ -126,8 +126,10 @@ CParameter::CParameter(CDRMReceiver *pRx):
 	GenerateRandomSerialNumber();
 	if(pDRMRec)
 		eReceiverMode = pDRMRec->GetReceiverMode();
+	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
 }
 
+/*
  CParameter::CParameter(CDRMReceiver *pRx, CParameter *pParameter):
  pDRMRec(pRx),
  eSymbolInterlMode(),
@@ -216,7 +218,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
 	if(pDRMRec)
 		eReceiverMode = pDRMRec->GetReceiverMode();
 }
-
+*/
 
 CParameter::~CParameter()
 {
@@ -257,7 +259,8 @@ CParameter::CParameter(const CParameter& p):
  vecbiAudioFrameStatus(p.vecbiAudioFrameStatus),
  bMeasurePSD(p.bMeasurePSD),
  vecrPSD(p.vecrPSD),
- matcReceivedPilotValues(p.matcReceivedPilotValues),
+ //matcReceivedPilotValues(p.matcReceivedPilotValues),
+ matcReceivedPilotValues(), // OPH says copy constructor for CMatrix not safe yet
  RawSimDa(p.RawSimDa),
  eSimType(p.eSimType),
  iDRMChannelNum(p.iDRMChannelNum),
@@ -296,7 +299,7 @@ CParameter::CParameter(const CParameter& p):
  rSigStrengthCorrection(p.rSigStrengthCorrection),
  bRunThread(p.bRunThread),
  bUsingMultimedia(p.bUsingMultimedia),
- CellMappingTable(p.CellMappingTable),
+ CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
  GPSData(p.GPSData),
  rSysSimSNRdB(p.rSysSimSNRdB),
  iFrequency(p.iFrequency),
@@ -311,6 +314,8 @@ CParameter::CParameter(const CParameter& p):
  LastDataService(p.LastDataService)
  //, Mutex() // jfbc: I don't think this state should be copied
 {
+	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
+	matcReceivedPilotValues = p.matcReceivedPilotValues; // TODO 
 }
 
 CParameter& CParameter::operator=(const CParameter& p)
@@ -389,7 +394,7 @@ CParameter& CParameter::operator=(const CParameter& p)
 	rSigStrengthCorrection = p.rSigStrengthCorrection;
 	bRunThread = p.bRunThread;
 	bUsingMultimedia = p.bUsingMultimedia;
-	CellMappingTable = p.CellMappingTable;
+	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup); // don't copy CMatrix
 	GPSData = p.GPSData;
 	rSysSimSNRdB = p.rSysSimSNRdB;
 	iFrequency = p.iFrequency;

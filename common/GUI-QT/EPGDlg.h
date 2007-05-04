@@ -42,6 +42,7 @@
 #include <qlabel.h>
 #include <qtimer.h>
 #include <qpixmap.h>
+#include <map>
 
 #include "EPGDlgbase.h"
 #include "../DrmReceiver.h"
@@ -91,6 +92,7 @@ protected:
 	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
 	QTimer			Timer;
+	map<QString,uint32_t> sids;
 
 public slots:
     void nextDay();

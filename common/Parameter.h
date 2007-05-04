@@ -44,8 +44,8 @@
 #include "matlib/Matlib.h"
 #include <time.h>
 #include "GPSData.h"
+#include "ServiceInformation.h"
 #include <map>
-#include <set>
 #include <iostream>
 
 class CDRMReceiver;
@@ -916,13 +916,6 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		
 	};
 
-class CServiceInformation
-{
-public:
-	uint32_t		id;    /* this is the primary key but we keep it inside too for completeness */
-	set<string>		label; /* gathered from the SDC. Normally the label is static and is the station name, but
-							  it is officially dynamic so we collect all that we see. */
-};
 
 class CMinMaxMean
 {
@@ -941,11 +934,11 @@ protected:
 class CParameter
 {
   public:
-	CParameter(CDRMReceiver *pRx);
-	CParameter(const CParameter& p);
-	CParameter(CDRMReceiver *pRx, CParameter *pParameter); // OPH - just copy some of the members
+	CParameter(CDRMReceiver*);
+	CParameter(const CParameter&);
+	//CParameter(CDRMReceiver *pRx, CParameter *pParameter); // OPH - just copy some of the members
 	virtual ~CParameter();
-	CParameter& operator=(const CParameter& p);
+	CParameter& operator=(const CParameter&);
 
 	/* Enumerations --------------------------------------------------------- */
 	/* AS: AFS in SDC is valid or not */
@@ -968,7 +961,8 @@ class CParameter
 	void GetActiveServices(vector<int>& veciActServ);
 	void GetActiveStreams(vector<int>& veciActStr);
 	int GetNumActiveServices();
-	void InitCellMapTable(const ERobMode eNewWaveMode, const ESpecOcc eNewSpecOcc);
+	void InitCellMapTable(const ERobMode eNewWaveMode,
+						  const ESpecOcc eNewSpecOcc);
 
 	void SetNumDecodedBitsMSC(const int iNewNumDecodedBitsMSC);
 	void SetNumDecodedBitsSDC(const int iNewNumDecodedBitsSDC);
@@ -1031,7 +1025,7 @@ class CParameter
 	void SetAudDataFlag(const int iServID, const CService::ETyOServ iNewADaFl);
 	void SetServID(const int iServID, const uint32_t iNewServID);
 
-	CDRMReceiver * pDRMRec;
+	CDRMReceiver* pDRMRec;
 
 	/* Symbol interleaver mode (long or short interleaving) */
 	ESymIntMod eSymbolInterlMode;

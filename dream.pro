@@ -93,6 +93,7 @@ common/datadecoding/MOTSlideShow.h   \
 common/DataIO.h   \
 common/drmchannel/ChannelSimulation.h   \
 common/ReceptLog.h   \
+common/ServiceInformation.h   \
 common/DrmReceiver.h   \
 common/DRMSignalIO.h   \
 common/DrmSimulation.h   \
@@ -205,6 +206,7 @@ common/datadecoding/MOTSlideShow.cpp   \
 common/DataIO.cpp   \
 common/drmchannel/ChannelSimulation.cpp   \
 common/ReceptLog.cpp   \
+common/ServiceInformation.cpp   \
 common/DrmReceiver.cpp   \
 common/DRMSignalIO.cpp   \
 common/DrmSimulation.cpp   \

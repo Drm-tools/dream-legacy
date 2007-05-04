@@ -644,11 +644,7 @@ CDRMReceiver::Init()
 void
 CDRMReceiver::InitReceiverMode()
 {
-	eReceiverMode = eNewReceiverMode;
-	/* Reset new mode flag */
-	eNewReceiverMode = RM_NONE;
-
-	switch(eReceiverMode)
+	switch(eNewReceiverMode)
 	{
 	case RM_AM:
 		if (pAMParam == NULL)
@@ -657,21 +653,40 @@ CDRMReceiver::InitReceiverMode()
 			if (pDRMParam == NULL)
 			{
 				/* DRM Mode was never invoked so we get to claim the default parameter instance */
-				//pAMParam = pReceiverParam;
-				pAMParam = new CParameter(this, pReceiverParam);
-				delete pReceiverParam;
-				pReceiverParam = pAMParam;
+				pAMParam = pReceiverParam;
 			}
 			else
 			{
-				/* change from DRM to AM Mode - we better have our own parameter instance */
-				pAMParam = new CParameter(this, pDRMParam);
-				//*pAMParam = *pDRMParam;
-				//pAMParam->eReceiverMode = RM_AM;
+				/* change from DRM to AM Mode - we better have our own copy
+				 * but make sure we inherit the initial settings of the default
+				 */
+				pAMParam = new CParameter(*pDRMParam);
 			}
-			/* copy some important state from the DRM parameters - OPH moved to constructor */
-			//pAMParam->bRunThread = pReceiverParam->bRunThread;
 		}
+		else
+		{
+			/* we have been in AM mode before, and have our own parameters but
+			 * we might need some state from the DRM mode params
+			 */
+			switch(eReceiverMode)
+			{
+			case RM_AM:
+				/* AM to AM switch - re-acquisition requested - no special action */
+				break;
+			case RM_DRM:
+				/* DRM to AM switch - grab some common stuff */
+ 				pAMParam->rSigStrengthCorrection = pDRMParam->rSigStrengthCorrection;
+ 				pAMParam->bMeasurePSD = pDRMParam->bMeasurePSD;
+				pAMParam->bMeasureInterference = pDRMParam->bMeasureInterference;
+ 				pAMParam->FrontEndParameters = pDRMParam->FrontEndParameters;
+ 				pAMParam->GPSData = pDRMParam->GPSData;
+				break;
+			case RM_NONE:
+				/* Start from cold in AM mode - no special action */
+				break;
+			}
+		}
+		pAMParam->eReceiverMode = RM_AM;
 		pReceiverParam = pAMParam;
 
 		if (pReceiverParam == NULL)
@@ -699,14 +714,36 @@ CDRMReceiver::InitReceiverMode()
 			}
 			else
 			{
-				/* change from AM to DRM Mode - we better have our own parameter instance */
-				pDRMParam = new CParameter(this, pAMParam);
-				//*pDRMParam = *pAMParam;
-				//pAMParam->eReceiverMode = RM_DRM;
+				/* change from AM to DRM Mode - we better have our own copy
+				 * but make sure we inherit the initial settings of the default
+				 */
+				pDRMParam = new CParameter(*pAMParam);
 			}
-			/* copy some important state from the AM parameters */
-			//pDRMParam->bRunThread = pReceiverParam->bRunThread;
 		}
+		else
+		{
+			/* we have been in DRM mode before, and have our own parameters but
+			 * we might need some state from the AM mode params
+			 */
+			switch(eReceiverMode)
+			{
+			case RM_AM:
+				/* AM to DRM switch - grab some common stuff */
+ 				pDRMParam->rSigStrengthCorrection = pAMParam->rSigStrengthCorrection;
+ 				pDRMParam->bMeasurePSD = pAMParam->bMeasurePSD;
+				pDRMParam->bMeasureInterference = pAMParam->bMeasureInterference;
+ 				pDRMParam->FrontEndParameters = pAMParam->FrontEndParameters;
+ 				pDRMParam->GPSData = pAMParam->GPSData;
+				break;
+			case RM_DRM:
+				/* DRM to DRM switch - re-acquisition requested - no special action */
+				break;
+			case RM_NONE:
+				/* Start from cold in DRM mode - no special action */
+				break;
+			}
+		}
+		pDRMParam->eReceiverMode = RM_DRM;
 		pReceiverParam = pDRMParam;
 
 		if (pReceiverParam == NULL)
@@ -717,6 +754,10 @@ CDRMReceiver::InitReceiverMode()
 	case RM_NONE:
 		return;
 	}
+
+	eReceiverMode = eNewReceiverMode;
+	/* Reset new mode flag */
+	eNewReceiverMode = RM_NONE;
 
 	/* Init all modules */
 	SetInStartMode();
@@ -1295,6 +1336,13 @@ CDRMReceiver::GetFreqSamOffsHist(CVector < _REAL > &vecrFreqOffs,
 	vecrSamOffs.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 
+	pReceiverParam->Lock();
+	/* Duration of OFDM symbol */
+	const _REAL rTs = (CReal) (pReceiverParam->CellMappingTable.iFFTSizeN + pReceiverParam->CellMappingTable.iGuardSize) / SOUNDCRD_SAMPLE_RATE;
+	/* Value from frequency acquisition */
+	rFreqAquVal = pReceiverParam->rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
+	pReceiverParam->Unlock();
+
 	/* Lock resources */
 #ifdef USE_QT_GUI
 	MutexHist.lock();
@@ -1304,15 +1352,9 @@ CDRMReceiver::GetFreqSamOffsHist(CVector < _REAL > &vecrFreqOffs,
 	vecrFreqOffs = vecrFreqSyncValHist;
 	vecrSamOffs = vecrSamOffsValHist;
 
-	/* Duration of OFDM symbol */
-	const _REAL rTs = (CReal) (pReceiverParam->CellMappingTable.iFFTSizeN + pReceiverParam->CellMappingTable.iGuardSize) / SOUNDCRD_SAMPLE_RATE;
-
 	/* Calculate time scale */
 	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
 		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rTs;
-
-	/* Value from frequency acquisition */
-	rFreqAquVal = pReceiverParam->rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
 
 	/* Release resources */
 #ifdef USE_QT_GUI
@@ -1330,6 +1372,14 @@ CDRMReceiver::GetDopplerDelHist(CVector < _REAL > &vecrLenIR,
 	vecrDoppler.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 
+	/* Duration of DRM frame */
+	pReceiverParam->Lock();
+	const _REAL rDRMFrameDur = (CReal) (
+		pReceiverParam->CellMappingTable.iFFTSizeN
+		+ pReceiverParam->CellMappingTable.iGuardSize) /
+		SOUNDCRD_SAMPLE_RATE * pReceiverParam->CellMappingTable.iNumSymPerFrame;
+	pReceiverParam->Unlock();
+
 	/* Lock resources */
 #ifdef USE_QT_GUI
 	MutexHist.lock();
@@ -1338,10 +1388,6 @@ CDRMReceiver::GetDopplerDelHist(CVector < _REAL > &vecrLenIR,
 	/* Simply copy history buffers in output buffers */
 	vecrLenIR = vecrLenIRHist;
 	vecrDoppler = vecrDopplerHist;
-
-	/* Duration of DRM frame */
-	const _REAL rDRMFrameDur = (CReal) (pReceiverParam->CellMappingTable.iFFTSizeN + pReceiverParam->CellMappingTable.iGuardSize) /
-		SOUNDCRD_SAMPLE_RATE * pReceiverParam->CellMappingTable.iNumSymPerFrame;
 
 	/* Calculate time scale in minutes */
 	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
@@ -1363,6 +1409,12 @@ CDRMReceiver::GetSNRHist(CVector < _REAL > &vecrSNR,
 	vecrCDAud.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 
+	/* Duration of DRM frame */
+	pReceiverParam->Lock();
+	const _REAL rDRMFrameDur = (CReal) (pReceiverParam->CellMappingTable.iFFTSizeN + pReceiverParam->CellMappingTable.iGuardSize) /
+		SOUNDCRD_SAMPLE_RATE * pReceiverParam->CellMappingTable.iNumSymPerFrame;
+	pReceiverParam->Unlock();
+
 	/* Lock resources */
 #ifdef USE_QT_GUI
 	MutexHist.lock();
@@ -1370,10 +1422,6 @@ CDRMReceiver::GetSNRHist(CVector < _REAL > &vecrSNR,
 
 	/* Simply copy history buffer in output buffer */
 	vecrSNR = vecrSNRHist;
-
-	/* Duration of DRM frame */
-	const _REAL rDRMFrameDur = (CReal) (pReceiverParam->CellMappingTable.iFFTSizeN + pReceiverParam->CellMappingTable.iGuardSize) /
-		SOUNDCRD_SAMPLE_RATE * pReceiverParam->CellMappingTable.iNumSymPerFrame;
 
 	/* Calculate time scale. Copy correctly decoded audio blocks history (must
 	   be transformed from "int" to "real", therefore we need a for-loop */
@@ -1398,7 +1446,9 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 		return TRUE;
 	iFreqkHz = iNewFreqkHz;
 
+	pReceiverParam->Lock();
 	pReceiverParam->SetFrequency(iNewFreqkHz);
+	pReceiverParam->Unlock();
 
 	if (upstreamRSCI.GetOutEnabled() == TRUE)
 	{
@@ -1431,9 +1481,12 @@ CDRMReceiver::CRigPoll::run()
 		_REAL r;
 		if (rig.GetSMeter(r) == CHamlib::SS_VALID)
 		{
+			CParameter& Parameters = *pDRMRec->GetParameters();
+			Parameters.Lock();
 			// Apply any correction
-			r += pDRMRec->GetParameters()->rSigStrengthCorrection;
-			pDRMRec->GetParameters()->SigStrstat.addSample(r);
+			r += Parameters.rSigStrengthCorrection;
+			Parameters.SigStrstat.addSample(r);
+			Parameters.Unlock();
 			pDRMRec->bSMeterAvail = TRUE;
 		}
 		else
@@ -1448,7 +1501,10 @@ CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
 {
 	if(bSMeterAvail == FALSE)
 		return FALSE;
-	rSigStr = pReceiverParam->SigStrstat.getCurrent();
+	CParameter& Parameters = *pReceiverParam;
+	Parameters.Lock();
+	rSigStr = Parameters.SigStrstat.getCurrent();
+	Parameters.Unlock();
 	return TRUE;
 }
 
@@ -1477,6 +1533,7 @@ CDRMReceiver::saveSDCtoFile()
 	if(pFile == NULL)
 		pFile = fopen("test/altfreq.dat", "w");
 
+	ReceiverParam.Lock();
 	size_t inum = ReceiverParam.AltFreqSign.vecAltFreq.size();
 	for (size_t z = 0; z < inum; z++)
 	{
@@ -1493,6 +1550,7 @@ CDRMReceiver::saveSDCtoFile()
 					ReceiverParam.AltFreqSign.vecAltFreq[z].iRegionID,
 					ReceiverParam.AltFreqSign.vecAltFreq[z].iScheduleID);
 	}
+	ReceiverParam.Unlock();
 	fprintf(pFile, "\n");
 	fflush(pFile);
 }

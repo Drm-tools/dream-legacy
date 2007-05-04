@@ -31,22 +31,23 @@
 #include <qmap.h>
 #include <qstring.h>
 #include "../../GlobalDefinitions.h"
+#include "../../Parameter.h"
 #include "../DABMOT.h"
 #include "epgdec.h"
 
 class EPG
 {
   public:
-    EPG ();
+    EPG (CParameter&);
     virtual ~ EPG ()
     {
 	saveChannels (servicesFilename);
     }
 
-    void select (const QString & chan, const CDateAndTime & d);
+    void select (const uint32_t chan, const CDateAndTime & d);
     void loadChannels (const QString & fileName);
     void saveChannels (const QString & fileName);
-    void addChannel (const QString & label, uint32_t sid);
+    void addChannel (const string& label, uint32_t sid);
     void parseDoc (const QDomNode &);
     QString parseDuration (const QString & duration);
     QString parseStart (const QString & start);
@@ -67,10 +68,10 @@ class EPG
     };
 
     QMap < uint32_t, CProg > progs;
-    QMap < QString, uint32_t > sids;
     QMap < QString, QString > genres;
     QString dir, servicesFilename;
     CEPGDecoder basic, advanced;
+	CParameter& Parameters;
 private:
     static const struct gl { char *genre; char* desc; } genre_list[];
 };

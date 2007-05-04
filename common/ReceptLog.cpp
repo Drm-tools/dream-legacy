@@ -108,7 +108,7 @@ CShortLog::writeHeader()
 	const CGPSData & GPSData = Parameters.GPSData;
 	if (GPSData.GetPositionAvailable())
 	{
-		GPSData.GetLatLongDegrees(latitude, longitude);
+		GPSData.asDM(latitude, longitude);
 	}
 	int iCurSelServ = Parameters.GetCurSelAudioService();
 
@@ -184,15 +184,21 @@ CShortLog::writeHeader()
 		File << endl;
 	}
 
-	File << "MINUTE  SNR     SYNC    AUDIO     TYPE";
+	File << endl << "MINUTE  SNR     SYNC    AUDIO     TYPE";
 	if (bRxlEnabled)
 		File << "      RXL";
 	File << endl;
+
+	/* initialise the minute count */
+	iCount = 0;
 }
 
 /*
 MINUTE  SNR     SYNC    AUDIO     TYPE
   0000   21      148  1437/10        0
+  coordinates are again decimal, I think we agreed to degrees and minutes, if I start/ stop logfiles without restarting Dream each time, then the minutes in the log do not start at 0, see attachment.
+  Simone
+
 */
 void
 CShortLog::writeParameters()

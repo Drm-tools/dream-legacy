@@ -665,6 +665,10 @@ SOURCE=..\common\ReceptLog.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\ServiceInformation.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\DrmReceiver.cpp
 # End Source File
 # Begin Source File
@@ -1150,6 +1154,10 @@ SOURCE=..\common\DataIO.h
 # Begin Source File
 
 SOURCE=..\common\DrmReceiver.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\ServiceInformation.h
 # End Source File
 # Begin Source File
 

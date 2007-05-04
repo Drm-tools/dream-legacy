@@ -31,7 +31,7 @@
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, WFlags f)
-:CEPGDlgbase(parent, name, modal, f),epg(),DRMReceiver(NDRMR),Settings(NSettings)
+:CEPGDlgbase(parent, name, modal, f),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),Settings(NSettings),sids()
 {
 
 	/* recover window size and position */
@@ -127,28 +127,26 @@ void EPGDlg::showEvent(QShowEvent *)
 {    
     CParameter& Parameters = *DRMReceiver.GetParameters();
 	Parameters.Lock(); 
-
-    // Use the currently receiving channel  TODO use the scopeid
     int sNo = Parameters.GetCurSelAudioService();
-    CService& s = Parameters.Service[sNo];
-    QString label = s.strLabel.c_str();
-    if ((s.DataParam.iUserAppIdent == CDataDecoder::AT_MOTEPG) && (label!=""))
-		epg.addChannel(label, s.iServiceID);
-
-	Parameters.Unlock(); 
+    uint32_t sid = Parameters.Service[sNo].iServiceID;
 
     // use the current date
     date = QDate::currentDate();
     // update the channels combobox from the epg
     channel->clear();
     int n = -1;
-    for (QMap < QString, uint32_t >::Iterator i = epg.sids.begin(); 
-         i != epg.sids.end(); i++) {
-    	channel->insertItem(i.key());
-    	if (i.key() == label) {
+	sids.clear();
+    for (map < uint32_t, CServiceInformation >::const_iterator i = Parameters.ServiceInformation.begin(); 
+         i != Parameters.ServiceInformation.end(); i++) {
+		QString channel_label = i->second.label.begin()->c_str();
+		uint32_t channel_id = i->second.id;
+		sids[channel_label] = channel_id;
+    	channel->insertItem(channel_label);
+    	if (channel_id == sid) {
     	    n = channel->currentItem();
         }
     }
+	Parameters.Unlock(); 
     // update the current selection
     if (n >= 0) {
 	    channel->setCurrentItem(n);
@@ -230,15 +228,11 @@ void EPGDlg::select()
     basic->setText(tr("no basic profile data"));
     advanced->setText(tr("no advanced profile data"));
     QString chan = channel->currentText();
-    if(!epg.sids.contains(chan)) {
-	    (void) new QListViewItem(Data, tr("no data"));
-         return;
-    }
     CDateAndTime d;
     d.year = date.year();
     d.month = date.month();
     d.day = date.day();
-    epg.select(chan, d);
+    epg.select(sids[chan], d);
     if(epg.progs.count()==0) {
 	    (void) new QListViewItem(Data, tr("no data"));
 	    return;

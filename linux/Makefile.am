@@ -15,6 +15,7 @@ drmwithoutqt_SOURCES = \
 	../common/MSCMultiplexer.cpp \
 	../common/OFDM.cpp \
 	../common/Parameter.cpp \
+	../common/ServiceInformation.cpp \
 	../common/TextMessage.cpp \
 	../common/AMDemodulation.cpp \
 	../common/AMSSDemodulation.cpp \
@@ -96,6 +97,7 @@ drmwithoutqt_SOURCES = \
 	../common/MSCMultiplexer.h \
 	../common/OFDM.h \
 	../common/Parameter.h \
+	../common/ServiceInformation.h \
 	../common/TextMessage.h \
 	../common/AMDemodulation.h \
 	../common/AMSSDemodulation.h \

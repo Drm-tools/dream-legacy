@@ -1342,10 +1342,11 @@ void CChannelEstimation::UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorE
 		/* copy into CParam object */
 		ReceiverParam.matcReceivedPilotValues.Init(iNumSymPerFrame / iScatPilTimeInt, iNumCarrier/iScatPilFreqInt + 1, 
 				_COMPLEX(_REAL(0.0),_REAL(0.0)));
-		//ReceiverParam.matcReceivedPilotValues = matcRSIPilotStore; // No assignment operator specified so compiler provides shallow copy
-		// copy it a row at a time (vector provides an assignment operator)
+		ReceiverParam.matcReceivedPilotValues = matcRSIPilotStore; 
+		/* copy it a row at a time (vector provides an assignment operator)
 		for (i=0; i<iNumSymPerFrame / iScatPilTimeInt; i++)
 			ReceiverParam.matcReceivedPilotValues[i] = matcRSIPilotStore[i];
+		*/
 
 
 		/* clear the local copy */

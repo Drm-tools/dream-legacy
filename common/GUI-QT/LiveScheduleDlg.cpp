@@ -332,6 +332,7 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign AltFreqSign,
 	string strSystem;
 	string strRegions;
 	_BOOLEAN bIntoTargetArea;
+	uint32_t iServiceID;
 
 /* Init table for stations */
 	StationsTable.clear();
@@ -450,6 +451,8 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign AltFreqSign,
 		CAltFreqOtherServicesSign::CAltFreqOtherServices AltFreqOther =
 			AltFreqOtherServicesSign.vecAltFreqOtherServices[z];
 
+		iServiceID = AltFreqOther.iOtherServiceID;
+
 		if (AltFreqOther.iSystemID < 9)	/* Don't show DAB services */
 		{
 			/* TODO add DAB frequencies */
@@ -543,6 +546,9 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign AltFreqSign,
 								/* Add the system (transmission mode) */
 								LiveScheduleItem.strSystem = strSystem;
 
+								/* Add the service id of the other service */
+								LiveScheduleItem.iServiceID = iServiceID;
+
 								/* Add new item in table */
 								StationsTable.push_back(LiveScheduleItem);
 							}
@@ -573,6 +579,9 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign AltFreqSign,
 
 					/* Add the system (transmission mode) */
 					LiveScheduleItem.strSystem = strSystem;
+
+					/* Add the service id of the other service */
+					LiveScheduleItem.iServiceID = iServiceID;
 
 					/* Add new item in table */
 					StationsTable.push_back(LiveScheduleItem);
@@ -630,6 +639,7 @@ vecpListItems()
 
 	/* We assume that one column is already there */
 	ListViewStations->setColumnText(COL_FREQ, tr("Frequency [kHz/MHz]"));
+	ListViewStations->addColumn(tr("Station Name/Id"));
 	ListViewStations->addColumn(tr("System"));
 	ListViewStations->addColumn(tr("Time [UTC]"));
 	ListViewStations->addColumn(tr("Target"));
@@ -881,8 +891,7 @@ LiveScheduleDlg::LoadSchedule()
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 	Parameters.Lock(); 
 	DRMSchedule.LoadAFSInformations(Parameters.AltFreqSign,
-									Parameters.
-									AltFreqOtherServicesSign);
+									Parameters.AltFreqOtherServicesSign);
 	Parameters.Unlock(); 
 
 	/* Init vector for storing the pointer to the list view items */
@@ -982,6 +991,13 @@ LiveScheduleDlg::SetStationsView()
 {
 	/* Set lock because of list view items. These items could be changed
 	   by another thread */
+    CParameter& Parameters = *DRMReceiver.GetParameters();
+	Parameters.Lock(); 
+    int sNo = Parameters.GetCurSelAudioService();
+    uint32_t sid = Parameters.Service[sNo].iServiceID;
+    string thisServiceLabel = Parameters.Service[sNo].strLabel;
+	Parameters.Unlock(); 
+
 	ListItemsMutex.lock();
 
 	const int iNumStations = DRMSchedule.GetStationNumber();
@@ -998,36 +1014,29 @@ LiveScheduleDlg::SetStationsView()
 			if (vecpListItems[i] == NULL)
 			{
 				/* Generate new list item with all necessary column entries */
+				const CLiveScheduleItem& item = DRMSchedule.GetItem(i);
+				QString name = "";
+				if(item.iServiceID != 0)
+				{
+					Parameters.Lock(); 
+    				map <uint32_t,CServiceInformation>::const_iterator
+						si = Parameters.ServiceInformation.find(item.iServiceID); 
+					if(si != Parameters.ServiceInformation.end())
+						name = QString::fromUtf8(si->second.label.begin()->c_str());
+					else
+						name = QString("%1").arg(item.iServiceID,0,16);
+					Parameters.Unlock(); 
+				}
+				else
+					name = QString::fromUtf8(thisServiceLabel.c_str());
 				vecpListItems[i] = new MyListLiveViewItem(ListViewStations,
-														  QString(DRMSchedule.
-																  GetItem(i).
-																  strFreq.
-																  c_str())
-														  /* freq. */ ,
-														  QString(DRMSchedule.
-																  GetItem(i).
-																  strSystem.
-																  c_str())
-														  /* system */ ,
-														  ExtractTime
-														  (DRMSchedule.
-														   GetItem(i).
-														   iStartTime,
-														   DRMSchedule.
-														   GetItem(i).
-														   iDuration)
-														  /* time */ ,
-														  QString(DRMSchedule.
-																  GetItem(i).
-																  strTarget.
-																  c_str())
-														  /* target */ ,
-														  ExtractDaysFlagString
-														  (DRMSchedule.
-														   GetItem(i).
-														   strDaysFlags)
-														  /* Show list of days */
-														  );
+						QString(item.strFreq.c_str()) /* freq. */ ,
+						name /* station name or id or blank */ ,
+						QString(item.strSystem.c_str()) /* system */ ,
+						ExtractTime (item.iStartTime, item.iDuration) /* time */ ,
+						QString(item.strTarget.c_str()) /* target */ ,
+						ExtractDaysFlagString(item.strDaysFlags) /* Show list of days */
+				);
 
 				/* Set flag for sorting the list */
 				bListHastChanged = TRUE;

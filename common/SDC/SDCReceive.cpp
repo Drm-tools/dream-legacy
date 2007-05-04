@@ -321,6 +321,7 @@ _BOOLEAN CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
 		/* and keep it in the persistent service information store */
 		uint32_t sid = Parameter.Service[iTempShortID].iServiceID;
 		(void)Parameter.ServiceInformation[sid].label.insert(strLabel);
+		Parameter.ServiceInformation[sid].id = sid;
 
 		return FALSE;
 	}
