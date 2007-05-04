@@ -1227,9 +1227,9 @@ void systemevalDlg::OnCheckWriteLog()
 
 		/* Get frequency from front-end edit control */
 		QString strFreq = EdtFrequency->text();
-		iCurFrequency = strFreq.toUInt();
-		longLog.SetLogFrequency(iCurFrequency);
-		shortLog.SetLogFrequency(iCurFrequency);
+		int iFrequency = strFreq.toUInt();
+		longLog.SetLogFrequency(iFrequency);
+		shortLog.SetLogFrequency(iFrequency);
 
 		/* Open log file */
 		shortLog.Start("DreamLog.txt");
