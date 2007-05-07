@@ -38,6 +38,7 @@
 #include "Settings.h"
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include <iomanip>
 #include <limits>
 using namespace std;

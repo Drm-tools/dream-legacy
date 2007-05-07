@@ -230,7 +230,9 @@ CDRMReceiver::Run()
 		_BOOLEAN bValid;
 		_REAL r;
 		bValid = Hamlib.GetSMeter(r) == CHamlib::SS_VALID;
-		ReceiverParam.SetSignalStrength(bValid, r);
+		// Apply any correction
+		r += ReceiverParam.rSigStrengthCorrection;
+		ReceiverParam.SigStrstat.addSample(r);
 #endif
 		ReceiveData.ReadData(ReceiverParam, RecDataBuf);
 

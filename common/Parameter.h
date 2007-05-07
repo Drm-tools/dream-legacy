@@ -1180,11 +1180,6 @@ class CParameter
 	/* the signal level as measured at IF by dream */
 	void SetIFSignalLevel(_REAL);
 	_REAL GetIFSignalLevel();
-#if 0
-	/* the signal level as measured (at RF ?) by the front end */
-	void SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr);
-	_BOOLEAN GetSignalStrength(_REAL& rSigStr);
-#endif
 	_REAL rSigStrengthCorrection;
 
 	/* General -------------------------------------------------------------- */

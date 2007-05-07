@@ -146,7 +146,7 @@ CBitReassemblerN::copyin (CVector < _BYTE > &vecDataIn, size_t iSegNum)
     if (vecData.size() < iNewSize)
 		vecData.resize (iNewSize);
     for (size_t i = 0; i < iSize; i++)
-		vecData[offset + i] = vecDataIn.Separate (bPack?8:1);
+		vecData[offset + i] = _BYTE(vecDataIn.Separate (bPack?8:1));
 }
 
 void
@@ -155,7 +155,7 @@ CBitReassemblerN::cachelast (CVector < _BYTE > &vecDataIn, size_t iSegSize)
 	size_t iSize = size_t(iSegSize) * (bPack?1:8);
     vecLastSegment.resize (iSize);
     for (size_t i = 0; i < iSize; i++)
-		vecLastSegment[i] = vecDataIn.Separate (bPack?8:1);
+		vecLastSegment[i] = _BYTE(vecDataIn.Separate (bPack?8:1));
 }
 
 void

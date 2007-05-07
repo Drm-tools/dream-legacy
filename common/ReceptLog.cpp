@@ -104,7 +104,7 @@ CShortLog::writeHeader()
 
 	Parameters.Lock(); 
 
-	int iFrequency = Parameters.GetFrequency();
+	//int iFrequency = Parameters.GetFrequency();
 	const CGPSData & GPSData = Parameters.GPSData;
 	if (GPSData.GetPositionAvailable())
 	{
@@ -341,7 +341,7 @@ CLongLog::writeParameters()
 		}
 	}
 
-	int iFrequency = Parameters.GetFrequency();
+	//int iFrequency = Parameters.GetFrequency();
 	char cRobMode = GetRobModeStr();
 
 	_REAL rSNR = Parameters.SNRstat.getCurrent();

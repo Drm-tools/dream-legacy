@@ -213,7 +213,7 @@ struct eltab_t {
   size_t size;      
 };
 
-const static eltab_t element_tables[] = {
+static eltab_t element_tables[] = {
     { "", 0, 0 },
     { "", 0, 0 },
     { "epg", attribute_tags_epg, sizeof (attribute_tags_epg) / sizeof (dectab) },

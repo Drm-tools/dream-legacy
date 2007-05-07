@@ -47,12 +47,12 @@
 #ifdef USE_QT_GUI
 #  include "PacketSocketQT.h"
 #  include "PacketSourceFile.h"
+#  include <qhostaddress.h>
 #else
 # include "PacketSocketNull.h"
 #endif
 #include <sstream>
 #include <iomanip>
-#include <qhostaddress.h>
 
 /* Implementation *************************************************************/
 CDownstreamDI::CDownstreamDI() : iLogFraCnt(0),
@@ -508,8 +508,13 @@ void CDownstreamDI::NewFrequency(CParameter& Parameter)
 void CDownstreamDI::SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr, uint16_t port)
 {
 	stringstream key;
+	/* TODO - make sure this is consistent with RSISubscriber */
+#ifdef USE_QT_GUI
 	QHostAddress a(addr);
 	key << a.toString() << ":" << port;
+#else
+	key << addr << ":" << port;
+#endif
 	map<string,CRSISubscriber*>::iterator s = RSISubscribers.find(key.str());
 	if(s != RSISubscribers.end())
 		s->second->SendPacket(vecbydata);

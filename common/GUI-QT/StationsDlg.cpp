@@ -440,10 +440,9 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pPreviewMenu->insertItem(tr("&30 minutes"), this,
 		SLOT(OnShowPreviewMenu(int)), 0, 3);
 
-		Settings.Put("Stations Dialog", "preview", NUM_SECONDS_PREV_5MIN);
 	/* Set stations preview */
 	/* Retrieve the setting saved into the .ini file */
-	switch (Settings.Get("Stations Dialog", "preview", 0))
+	switch (Settings.Get("Stations Dialog", "preview", NUM_SECONDS_PREV_5MIN))
 	{
 	case NUM_SECONDS_PREV_5MIN:
 		pPreviewMenu->setItemChecked(1, TRUE);

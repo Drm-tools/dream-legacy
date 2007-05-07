@@ -118,7 +118,7 @@ void
 CGPSData::asDM(string& pos, double d, char n, char p) const
 {
 	stringstream s;
-	s << abs(int(d)) << '\xb0' << ((d < 0.0)?n:p) << "'" << ExtractMinutes(d);
+	s << abs(int(d)) << '\xb0' << ExtractMinutes(d) << "'" << ((d < 0.0)?n:p);
 	pos = s.str();
 }
 

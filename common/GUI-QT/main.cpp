@@ -222,7 +222,7 @@ main(int argc, char **argv)
 {
 	try
 	{
-		CSettings Settings(&DRMReceiver);
+		CSettings Settings;
 		Settings.Load(argc, argv);
 		if (Settings.Get("command", "isreceiver", TRUE))
 		{

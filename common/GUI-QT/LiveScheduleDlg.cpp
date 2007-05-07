@@ -994,7 +994,6 @@ LiveScheduleDlg::SetStationsView()
     CParameter& Parameters = *DRMReceiver.GetParameters();
 	Parameters.Lock(); 
     int sNo = Parameters.GetCurSelAudioService();
-    uint32_t sid = Parameters.Service[sNo].iServiceID;
     string thisServiceLabel = Parameters.Service[sNo].strLabel;
 	Parameters.Unlock(); 
 
@@ -1024,7 +1023,10 @@ LiveScheduleDlg::SetStationsView()
 					if(si != Parameters.ServiceInformation.end())
 						name = QString::fromUtf8(si->second.label.begin()->c_str());
 					else
-						name = QString("%1").arg(item.iServiceID,0,16);
+					{
+						ulong sid = item.iServiceID;
+						name = QString("(%1)").arg(sid, 0, 16);
+					}
 					Parameters.Unlock(); 
 				}
 				else
