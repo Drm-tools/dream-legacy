@@ -873,14 +873,15 @@ void FDRMDialog::SetService(int iNewServiceID)
 
 	/* If service is only data service or has a multimedia content
 	   , activate multimedia window */
-	if ((Parameters.Service[iNewServiceID].eAudDataFlag == CService::SF_DATA)
+	CService::ETyOServ eAudDataFlag = Parameters.Service[iNewServiceID].eAudDataFlag;
+	Parameters.Unlock(); 
+	if ((eAudDataFlag == CService::SF_DATA)
 		|| (iAppIdent == AT_MOTSLISHOW)
 		|| (iAppIdent == AT_JOURNALINE)
 		|| (iAppIdent == AT_MOTBROADCASTWEBSITE))
 	{
 		OnViewMultiMediaDlg();
 	}
-	Parameters.Unlock(); 
 }
 
 void FDRMDialog::OnViewEvalDlg()

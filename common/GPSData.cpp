@@ -111,7 +111,7 @@ void
 CGPSData::asDM(string& lat, string& lng) const
 {
 	asDM(lat, m_fLatitudeDegrees, 'S', 'N');
-	asDM(lng, m_fLongitudeDegrees, 'E', 'W');
+	asDM(lng, m_fLongitudeDegrees, 'W', 'E');
 }
 
 void
