@@ -56,7 +56,7 @@
 #define GUI_TIMER_UTC_TIME_LABEL		1000 /* ms (1 second) */
 
 #define COL_FREQ 0 /* frequency column */
-#define COL_TARGET 3 /* target column */
+#define COL_TARGET 4 /* target column */
 
 /* Time definitions for preview */
 #define NUM_SECONDS_PREV_5MIN			300

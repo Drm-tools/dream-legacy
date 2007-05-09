@@ -253,7 +253,7 @@ CDRMLiveSchedule::DecodeTargets(const int iRegionID,
 					if (iLongitudeMed >= 180)
 						iLongitudeMed = iLongitudeMed - 360;
 
-					ssRegions << "longitude " << abs(iLongitudeMed) << "\xb0 ";
+					ssRegions << " longitude " << abs(iLongitudeMed) << "\xb0 ";
 
 					if (iLongitudeMed < 0)
 						ssRegions << 'W';
@@ -261,7 +261,7 @@ CDRMLiveSchedule::DecodeTargets(const int iRegionID,
 						ssRegions << 'E';
 				}
 
-				/* check if receiver coordinates are into target area */
+				/* check if receiver coordinates are inside target area */
 				_BOOLEAN bLongitudeOK = ((iReceiverLongitude >= iLongitude)
 										 && (iReceiverLongitude <=
 											 (iLongitude + iLongitudeEx)))
@@ -385,8 +385,7 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign AltFreqSign,
 
 							/* Frequency */
 							LiveScheduleItem.strFreq =
-								DecodeFrequency(0,
-												AltFreq.veciFrequencies[j]);
+								DecodeFrequency(0, AltFreq.veciFrequencies[j]);
 
 							/* Set start time and duration */
 							LiveScheduleItem.iStartTime =
@@ -401,8 +400,7 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign AltFreqSign,
 							LiveScheduleItem.strTarget = strRegions;
 
 							/* Local receiver coordinates are into target area or not */
-							LiveScheduleItem.bInsideTargetArea =
-								bIntoTargetArea;
+							LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
 
 							/* Add the system (transmission mode) */
 							LiveScheduleItem.strSystem = "DRM";
@@ -540,8 +538,7 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign AltFreqSign,
 								LiveScheduleItem.strTarget = strRegions;
 
 								/* Local receiver coordinates are into target area or not */
-								LiveScheduleItem.bInsideTargetArea =
-									bIntoTargetArea;
+								LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
 
 								/* Add the system (transmission mode) */
 								LiveScheduleItem.strSystem = strSystem;

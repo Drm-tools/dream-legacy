@@ -212,11 +212,14 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 
 		/* "- 2": 16 bits for CRC at the end */
 		for (i = 0; i < iTotalPacketSize - 2; i++)
-			CRCObject.AddByte((_BYTE) (*pvecInputData).
-							  Separate(SIZEOF__BYTE));
+		{
+			_BYTE b =pvecInputData->Separate(SIZEOF__BYTE);
+			CRCObject.AddByte(b);
+		}
 
 		/* Store result in vector and show CRC in multimedia window */
-		if (CRCObject.CheckCRC((*pvecInputData).Separate(16)) == TRUE)
+		uint16_t crc = pvecInputData->Separate(16);
+		if (CRCObject.CheckCRC(crc) == TRUE)
 		{
 			veciCRCOk[j] = 1;	/* CRC ok */
 			ReceiverParam.ReceiveStatus.MOT.SetStatus(RX_OK);

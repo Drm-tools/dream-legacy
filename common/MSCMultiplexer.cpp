@@ -89,8 +89,8 @@ void CMSCDemultiplexer::ExtractData(CVectorEx<_BINARY>& vecIn,
 CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 															  const int iStreamID)
 {
-	int								i;
-	CVector<int>					veciActStreams;
+	size_t							i;
+	vector<int>						veciActStreams;
 	CMSCDemultiplexer::SStreamPos	StPos;
 
 	/* Init positions with zeros (needed if an error occurs) */
@@ -116,7 +116,7 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 		   must be shifted initially by all higher protected part lengths
 		   (iLenPartA of all streams are added) 6.2.3.1 */
 		StPos.iOffsetLow = 0;
-		for (i = 0; i < veciActStreams.Size(); i++)
+		for (i = 0; i < veciActStreams.size(); i++)
 		{
 			StPos.iOffsetLow +=
 				Param.Stream[veciActStreams[i]].iLenPartA * SIZEOF__BYTE;
@@ -124,7 +124,7 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 
 		/* Real start position of the streams */
 		StPos.iOffsetHigh = 0;
-		for (i = 0; i < veciActStreams.Size(); i++)
+		for (i = 0; i < veciActStreams.size(); i++)
 		{
 			if (veciActStreams[i] < iStreamID)
 			{
@@ -156,7 +156,6 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 					Param.Stream[0].iLenPartB * SIZEOF__BYTE;
 			}
 		}
-
 
 		/* Possibility check ------------------------------------------------ */
 		/* Test, if parameters have possible values */

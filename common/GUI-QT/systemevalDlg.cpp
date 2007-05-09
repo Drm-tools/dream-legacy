@@ -548,29 +548,27 @@ void systemevalDlg::showEvent(QShowEvent*)
 	for (size_t i = 0; i < iNumChartWin; i++)
 	{
 		stringstream s;
-		CWinGeom c;
 
+		/* create the section key for this window */
 		s << "Chart Window " << i;
-		Settings.Get(s.str(), c);
 
-		/* Convert int to enum type.
-		 * TODO: better solution for storing enum types in init file!
-		 */
-
+		/* get the chart type */
 		const CDRMPlot::ECharType eNewType = (CDRMPlot::ECharType) Settings.Get(s.str(), "type", 0);
 
-		/* Open new chart window */
+		/* get window geometry data */
+		CWinGeom c;
+		Settings.Get(s.str(), c);
+		const QRect WinGeom(c.iXPos, c.iYPos, c.iWSize, c.iHSize);
+
+		/* Open the new chart window */
 		CDRMPlot* pNewChartWin = OpenChartWin(eNewType);
+
+		/* and restore its geometry */
+		if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+			pNewChartWin->setGeometry(WinGeom);
 
 		/* Add window pointer in vector (needed for closing the windows) */
 		vecpDRMPlots.push_back(pNewChartWin);
-
-		/* Chart windows: get window geometry data from DRMReceiver module
-		   and apply it */
-		const QRect WinGeom(c.iXPos, c.iYPos, c.iWSize, c.iHSize);
-
-		if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-			pNewChartWin->setGeometry(WinGeom);
 	}
 
 	/* Update controls */
@@ -580,28 +578,35 @@ void systemevalDlg::showEvent(QShowEvent*)
 void systemevalDlg::hideEvent(QHideEvent*)
 {
 	/* Store size and position of all additional chart windows */
+	int iNumOpenCharts = 0;
 
 	for (size_t i = 0; i < vecpDRMPlots.size(); i++)
 	{
-		stringstream s;
-		CWinGeom c;
-		const QRect CWGeom = vecpDRMPlots[i]->geometry();
+		/* Check, if window wasn't closed by the user */
+		if (vecpDRMPlots[i]->isVisible())
+		{
+			stringstream s;
+			CWinGeom c;
+			const QRect CWGeom = vecpDRMPlots[i]->geometry();
 
-		/* Set parameters */
-		c.iXPos = CWGeom.x();
-		c.iYPos = CWGeom.y();
-		c.iHSize = CWGeom.height();
-		c.iWSize = CWGeom.width();
+			/* Set parameters */
+			c.iXPos = CWGeom.x();
+			c.iYPos = CWGeom.y();
+			c.iHSize = CWGeom.height();
+			c.iWSize = CWGeom.width();
 
-		s << "Chart Window " << i;
-		Settings.Put(s.str(), c);
-		Settings.Put(s.str(), "visible", vecpDRMPlots[i]->isVisible());
-		/* Convert plot type into an integer type. TODO: better solution */
-		Settings.Put(s.str(), "type", (int) vecpDRMPlots[i]->GetChartType());
+			s << "Chart Window " << iNumOpenCharts;
+			Settings.Put(s.str(), c);
+			/* Convert plot type into an integer type. TODO: better solution */
+			Settings.Put(s.str(), "type", (int) vecpDRMPlots[i]->GetChartType());
 
-		/* Close window afterwards */
-		vecpDRMPlots[i]->close();
+			/* Close window afterwards */
+			vecpDRMPlots[i]->close();
+
+			iNumOpenCharts++;
+		}
 	}
+	Settings.Put("System Evaluation Dialog", "numchartwin", iNumOpenCharts);
 
 	/* We do not need the pointers anymore, reset vector */
 	vecpDRMPlots.clear();
@@ -619,7 +624,6 @@ void systemevalDlg::hideEvent(QHideEvent*)
 	 * TODO: better solution
 	 */
 	Settings.Put("System Evaluation Dialog", "sysevplottype", (int) MainPlot->GetChartType());
-	Settings.Put("System Evaluation Dialog", "numchartwin", (int)vecpDRMPlots.size());
 }
 
 void systemevalDlg::UpdatePlotsStyle()
