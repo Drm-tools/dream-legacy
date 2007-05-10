@@ -47,6 +47,14 @@ CTagPacketDecoderMDI::CTagPacketDecoderMDI()
 ,	TagItemDecoderRxDemodMode()
 ,	TagItemDecoderAMAudio()
 
+,	TagItemDecoderRwmf(0)
+,	TagItemDecoderRwmm(0)
+,	TagItemDecoderRmer(0)
+,	TagItemDecoderRdbv(0)
+,	TagItemDecoderRpsd(0)
+,	TagItemDecoderRdop(0)
+,	TagItemDecoderRdel(0)
+
 {
 
 	// Add the tag item decoders to the base class list of decoders
@@ -66,6 +74,28 @@ CTagPacketDecoderMDI::CTagPacketDecoderMDI()
 	AddTagItemDecoder(&TagItemDecoderInfo);
 	AddTagItemDecoder(&TagItemDecoderRxDemodMode);
 	AddTagItemDecoder(&TagItemDecoderAMAudio);
+
+	// RSCI-specific
+	AddTagItemDecoder(&TagItemDecoderRmer);
+	AddTagItemDecoder(&TagItemDecoderRwmf);
+	AddTagItemDecoder(&TagItemDecoderRwmm);
+	AddTagItemDecoder(&TagItemDecoderRdbv);
+	AddTagItemDecoder(&TagItemDecoderRpsd);
+	AddTagItemDecoder(&TagItemDecoderRdop);
+	AddTagItemDecoder(&TagItemDecoderRdel);
+
+}
+
+void CTagPacketDecoderMDI::SetParameterPtr(CParameter *pP)
+{
+	// Pass this pointer to all of the tag item decoders that need it, i.e. the RSCI-specific ones
+	TagItemDecoderRmer.SetParameterPtr(pP);
+	TagItemDecoderRwmf.SetParameterPtr(pP);
+	TagItemDecoderRwmm.SetParameterPtr(pP);
+	TagItemDecoderRdbv.SetParameterPtr(pP);
+	TagItemDecoderRpsd.SetParameterPtr(pP);
+	TagItemDecoderRdop.SetParameterPtr(pP);
+	TagItemDecoderRdel.SetParameterPtr(pP);
 }
 
 void CTagPacketDecoderMDI::DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, int iPayloadLen)

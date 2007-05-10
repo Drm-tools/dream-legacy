@@ -1098,7 +1098,7 @@ class CParameter
 
 	ERecMode GetReceiverMode() { return eReceiverMode; }
 	ERecMode eReceiverMode;
-	EAcqStat GetReceiverState() { return eAcquiState; }
+	EAcqStat GetAcquiState() { return eAcquiState; }
 	EAcqStat eAcquiState;
 	int iNumAudioFrames;
 

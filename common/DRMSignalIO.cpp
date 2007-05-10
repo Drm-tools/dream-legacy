@@ -591,7 +591,7 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 
 	_REAL rIFCentreFrequency = ReceiverParam.FrontEndParameters.rIFCentreFreq;
 
-	if (ReceiverParam.GetReceiverState() == AS_WITH_SIGNAL && 
+	if (ReceiverParam.GetAcquiState() == AS_WITH_SIGNAL && 
 		ReceiverParam.FrontEndParameters.bAutoMeasurementBandwidth)
 	{
 		// Receiver is locked, so measure in the current DRM signal bandwidth Kmin to Kmax
@@ -654,7 +654,7 @@ void CReceiveData::CalculatePSDInterferenceTag(CParameter &ReceiverParam, CVecto
 	
 	ESpecOcc eSpecOcc = ReceiverParam.GetSpectrumOccup();
 
-	if (ReceiverParam.GetReceiverState() == AS_WITH_SIGNAL &&
+	if (ReceiverParam.GetAcquiState() == AS_WITH_SIGNAL &&
 		(eSpecOcc == SO_4 || eSpecOcc == SO_5) )
 	{
 		rFreqSearchMax = rIFCentreFrequency + _REAL(RNIP_SEARCH_RANGE_WIDE);

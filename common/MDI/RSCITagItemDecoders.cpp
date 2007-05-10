@@ -104,6 +104,45 @@ void CTagItemDecoderRmer::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		return;
  	 pParameter->rMER = decodeDb(vecbiTag);
 }
+
+void CTagItemDecoderRdop::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	if (iLen != 16)
+		return;
+ 	 pParameter->rRdop = decodeDb(vecbiTag);
+}
+
+void CTagItemDecoderRdel::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	int iNumEntries = iLen/(3*SIZEOF__BYTE);
+	pParameter->vecrRdelIntervals.Init(iNumEntries);
+	pParameter->vecrRdelThresholds.Init(iNumEntries);
+
+	for (int i=0; i<iNumEntries; i++)
+	{
+ 		pParameter->vecrRdelThresholds[i] = vecbiTag.Separate(SIZEOF__BYTE);
+		pParameter->vecrRdelIntervals[i] = decodeDb(vecbiTag);
+	}
+}
+
+void CTagItemDecoderRpsd::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	if (iLen != 680 && iLen !=1112)
+		return;
+
+	int iVectorLen = iLen/SIZEOF__BYTE;
+
+	pParameter->vecrPSD.Init(iVectorLen);
+
+	for (int i = 0; i < iVectorLen; i++)
+	{
+		pParameter->vecrPSD[i] = -(_REAL(vecbiTag.Separate(SIZEOF__BYTE))/_REAL(2.0));
+	}
+
+}
+
+
+
 /* RX_CTRL Items */
 
 void CTagItemDecoderCact::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
@@ -140,7 +179,6 @@ void CTagItemDecoderCdmo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	string s = "";
 	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 		s += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
-cout << "received cdmo " << s << endl;
 	if(s == "drm_")
 		pDRMReceiver->SetReceiverMode(RM_DRM);
 	if(s == "am__")

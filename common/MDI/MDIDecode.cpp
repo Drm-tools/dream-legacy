@@ -41,6 +41,9 @@
 
 void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 {
+	// pass receiver parameter structure to all the decoders that need it
+	TagPacketDecoderMDI.SetParameterPtr(&ReceiverParam);
+
 	CTagPacketDecoder::Error err = TagPacketDecoderMDI.DecodeAFPacket(*pvecInputData);
 
 	ReceiverParam.Lock(); 

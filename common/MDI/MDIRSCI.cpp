@@ -518,7 +518,6 @@ void CDownstreamDI::SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr, ui
 	map<string,CRSISubscriber*>::iterator s = RSISubscribers.find(key.str());
 	if(s != RSISubscribers.end())
 		s->second->SendPacket(vecbydata);
-	pRSISubscriberFile->SendPacket(vecbydata);
 }
 
 /******************************************************************************\

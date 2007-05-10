@@ -273,7 +273,7 @@ void FDRMDialog::OnTimer()
 			Parameters.Unlock(); 
 
 			/* Check if receiver does receive a signal */
-			if(DRMReceiver.GetReceiverState() == AS_WITH_SIGNAL)
+			if(DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
 				UpdateDisplay();
 			else
 				ClearDisplay();

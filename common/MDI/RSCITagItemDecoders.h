@@ -40,6 +40,7 @@ class CTagItemDecoderRSI : public CTagItemDecoder
 {
 public:
 	CTagItemDecoderRSI(CParameter* pP, const string& s) : pParameter(pP), tag(s) {}
+	void SetParameterPtr(CParameter *pP) {pParameter = pP;}
 	virtual string GetTagName() { return tag; }
 protected:
 		  
@@ -80,6 +81,27 @@ class CTagItemDecoderRmer : public CTagItemDecoderRSI
 {
 public:
 	CTagItemDecoderRmer(CParameter* pP) : CTagItemDecoderRSI(pP, "rmer") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
+
+class CTagItemDecoderRdel : public CTagItemDecoderRSI      
+{
+public:
+	CTagItemDecoderRdel(CParameter* pP) : CTagItemDecoderRSI(pP, "rdel") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
+
+class CTagItemDecoderRdop : public CTagItemDecoderRSI      
+{
+public:
+	CTagItemDecoderRdop(CParameter* pP) : CTagItemDecoderRSI(pP, "rdop") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
+
+class CTagItemDecoderRpsd : public CTagItemDecoderRSI
+{
+public:
+	CTagItemDecoderRpsd(CParameter* pP) : CTagItemDecoderRSI(pP, "rpsd") {}
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 };
 

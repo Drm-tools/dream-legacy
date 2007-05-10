@@ -665,6 +665,10 @@ SOURCE=..\common\ReceptLog.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\PlotManager.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\ServiceInformation.cpp
 # End Source File
 # Begin Source File
@@ -1162,6 +1166,10 @@ SOURCE=..\common\ServiceInformation.h
 # Begin Source File
 
 SOURCE=..\common\ReceptLog.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\PlotManager.h
 # End Source File
 # Begin Source File
 

@@ -56,6 +56,7 @@
 #include "AMDemodulation.h"
 #include "AMSSDemodulation.h"
 #include "soundinterface.h"
+#include "PlotManager.h"
 
 #ifdef USE_QT_GUI
 # include <qthread.h>
@@ -114,7 +115,6 @@ class CSplitAudio : public CSplitModul<_SAMPLE>
 		{this->iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE * (_REAL) 0.4 /* 400 ms */) * 2 /* stereo */;}
 };
 
-
 class CDRMReceiver
 #ifdef USE_QT_GUI
 	: public QThread
@@ -137,7 +137,7 @@ public:
 	void					Init();
 	void					Start();
 	void					Stop();
-	EAcqStat				GetReceiverState() {return pReceiverParam->eAcquiState;}
+	EAcqStat				GetAcquiState() {return pReceiverParam->eAcquiState;}
 	ERecMode				GetReceiverMode() {return eReceiverMode;}
 	void					SetReceiverMode(ERecMode eNewMode)
 								{if (eReceiverMode!=eNewMode || eNewReceiverMode != RM_NONE) eNewReceiverMode = eNewMode;}
@@ -187,20 +187,6 @@ public:
 	CTimeSyncTrack::ETypeTiSyncTrac GetTiSyncTracType()
 		{return ChannelEstimation.GetTimeSyncTrack()->GetTiSyncTracType();}
 
-	void GetTransferFunction(CVector<_REAL>& vecrData,
-		CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale)
-		{ChannelEstimation.GetTransferFunction(vecrData, vecrGrpDly, vecrScale);}
-
-	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
-					 _REAL& rLowerBound, _REAL& rHigherBound,
-					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
-					 _REAL& rPDSEnd)
-		{ChannelEstimation.GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
-		rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);}
-
-	void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
-		{ChannelEstimation.GetSNRProfile(vecrData, vecrScale);}
-
 	/* Get pointer to internal modules */
 	CSelectionInterface*	GetSoundInInterface() {return pSoundInInterface;}
 	CSelectionInterface*	GetSoundOutInterface() {return pSoundOutInterface;}
@@ -210,7 +196,7 @@ public:
 	CFACMLCDecoder*			GetFACMLC() {return &FACMLCDecoder;}
 	CSDCMLCDecoder*			GetSDCMLC() {return &SDCMLCDecoder;}
 	CMSCMLCDecoder*			GetMSCMLC() {return &MSCMLCDecoder;}
-	CReceiveData*			GetReceiver() {return &ReceiveData;}
+	CReceiveData*			GetReceiveData() {return &ReceiveData;}
 	COFDMDemodulation*		GetOFDMDemod() {return &OFDMDemodulation;}
 	CSyncUsingPil*			GetSyncUsPil() {return &SyncUsingPil;}
 	CWriteData*				GetWriteData() {return &WriteData;}
@@ -222,6 +208,7 @@ public:
 	CAudioSourceDecoder*	GetAudSorceDec() {return &AudioSourceDecoder;}
 	CUpstreamDI*			GetRSIIn() {return &upstreamRSCI;}
 	CDownstreamDI*			GetRSIOut() {return &downstreamRSCI;}
+	CChannelEstimation*		GetChannelEstimation() {return &ChannelEstimation;}
 #ifdef HAVE_LIBHAMLIB
 	CHamlib*				GetHamlib() {return &Hamlib;}
 #endif
@@ -229,6 +216,9 @@ public:
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
 	CParameter*				GetParameters() {return pReceiverParam;}
+
+	CPlotManager*			GetPlotManager() {return &PlotManager;}
+
 	void					SetInStartMode();
 	void					SetInTrackingMode();
 	void					SetInTrackingModeDelayed();
@@ -249,17 +239,6 @@ public:
 	void					InitsForMSCDemux();
 
 
-	/* Interfaces to internal parameters/vectors used for the plot */
-	void GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
-		CVector<_REAL>& vecrSamOffs, CVector<_REAL>& vecrScale,
-		_REAL& rFreqAquVal);
-
-	void GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
-		CVector<_REAL>& vecrDoppler, CVector<_REAL>& vecrScale);
-
-	void GetSNRHist(CVector<_REAL>& vecrSNR, CVector<_REAL>& vecrCDAud,
-		CVector<_REAL>& vecrScale);
-
 protected:
 	void					Run();
 	void					DemodulateDRM(_BOOLEAN&);
@@ -271,7 +250,6 @@ protected:
 	void					DetectAcquiFAC();
 	void					DetectAcquiSymbol();
 	void					InitReceiverMode();
-	void					UpdateParamHistories();
 	void					saveSDCtoFile();
 
 	/* Modules */
@@ -374,20 +352,6 @@ protected:
 	CHamlib					Hamlib;
 #endif
 
-	/* Storing parameters for plot */
-	CShiftRegister<_REAL>	vecrFreqSyncValHist;
-	CShiftRegister<_REAL>	vecrSamOffsValHist;
-	CShiftRegister<_REAL>	vecrLenIRHist;
-	CShiftRegister<_REAL>	vecrDopplerHist;
-	CShiftRegister<_REAL>	vecrSNRHist;
-	CShiftRegister<int>		veciCDAudHist;
-	int						iSymbolCount;
-	_REAL					rSumDopplerHist;
-	_REAL					rSumSNRHist;
-	int						iCurrentCDAud;
-#ifdef USE_QT_GUI
-	QMutex					MutexHist;
-#endif
 	CVectorEx<_BINARY>		vecbiMostRecentSDC;
 	int						iFreqkHz;
 
@@ -422,6 +386,7 @@ protected:
 	_BOOLEAN				bReadFromFile;
 	time_t					time_keeper;
 
+	CPlotManager PlotManager;
 };
 
 

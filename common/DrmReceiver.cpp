@@ -59,14 +59,7 @@ iAcquDetecCnt(0), iGoodSignCnt(0), eReceiverMode(RM_DRM),
 eNewReceiverMode(RM_DRM), iAudioStreamID(STREAM_ID_NOT_USED),
 iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE),
 rInitResampleOffset((_REAL) 0.0),
-vecrFreqSyncValHist(LEN_HIST_PLOT_SYNC_PARMS),
-vecrSamOffsValHist(LEN_HIST_PLOT_SYNC_PARMS),
-vecrLenIRHist(LEN_HIST_PLOT_SYNC_PARMS),
-vecrDopplerHist(LEN_HIST_PLOT_SYNC_PARMS),
-vecrSNRHist(LEN_HIST_PLOT_SYNC_PARMS),
-veciCDAudHist(LEN_HIST_PLOT_SYNC_PARMS), iSymbolCount(0),
-rSumDopplerHist((_REAL) 0.0), rSumSNRHist((_REAL) 0.0), iCurrentCDAud(0),
-	iFreqkHz(0),
+iFreqkHz(0),
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
 	RigPoll(),
 #endif
@@ -79,6 +72,7 @@ rSumDopplerHist((_REAL) 0.0), rSumSNRHist((_REAL) 0.0), iCurrentCDAud(0),
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
 	RigPoll.SetReceiver(this);
 #endif
+	PlotManager.SetReceiver(this);
 }
 
 CDRMReceiver::~CDRMReceiver()
@@ -205,6 +199,7 @@ CDRMReceiver::Run()
 			{
 				time_keeper = time(NULL);
 				DecodeRSIMDI.ProcessData(ReceiverParam, RSIPacketBuf, FACDecBuf, SDCDecBuf, MSCDecBuf);
+				PlotManager.UpdateParamHistoriesRSIIn();
 				bFrameToSend = TRUE;
 			}
 			else
@@ -412,7 +407,7 @@ CDRMReceiver::DemodulateDRM(_BOOLEAN& bEnoughData)
 		/* If this module has finished, all synchronization units
 		   have also finished their OFDM symbol based estimates.
 		   Update synchronization parameters histories */
-		UpdateParamHistories();
+		PlotManager.UpdateParamHistories(eReceiverState);
 	}
 
 	/* Demapping of the MSC, FAC, SDC and pilots off the carriers */
@@ -504,7 +499,7 @@ CDRMReceiver::UtilizeDRM(_BOOLEAN& bEnoughData)
 
 			/* Store the number of correctly decoded audio blocks for
 			 *                            the history */
-			iCurrentCDAud = AudioSourceDecoder.GetNumCorDecAudio();
+			PlotManager.SetCurrentCDAud(AudioSourceDecoder.GetNumCorDecAudio());
 		}
 	}
 }
@@ -1111,9 +1106,7 @@ CDRMReceiver::InitsForWaveMode()
 {
 	/* Reset averaging of the parameter histories (needed, e.g., because the
 	   number of OFDM symbols per DRM frame might have changed) */
-	iSymbolCount = 0;
-	rSumDopplerHist = (_REAL) 0.0;
-	rSumSNRHist = (_REAL) 0.0;
+	PlotManager.Init();
 
 	/* After a new robustness mode was detected, give the time synchronization
 	   a bit more time for its job */
@@ -1225,7 +1218,7 @@ CDRMReceiver::InitsForMSCDemux()
 	/* Reset value used for the history because if an audio service was selected
 	   but then only a data service is selected, the value would remain with the
 	   last state */
-	iCurrentCDAud = 0;
+	PlotManager.SetCurrentCDAud(0);
 }
 
 void
@@ -1263,184 +1256,6 @@ CDRMReceiver::InitsForDataParam()
 	DataDecoder.SetInitFlag();
 }
 
-/* Parameter histories for plot --------------------------------------------- */
-void
-CDRMReceiver::UpdateParamHistories()
-{
-
-	/* TODO: do not use the shift register class, build a new
-	   one which just increments a pointer in a buffer and put
-	   the new value at the position of the pointer instead of
-	   moving the total data all the time -> special care has
-	   to be taken when reading out the data */
-
-	/* Only update histories if the receiver is in tracking mode */
-	if (eReceiverState == RS_TRACKING)
-	{
-#ifdef USE_QT_GUI
-		MutexHist.lock();
-#endif
-		pReceiverParam->Lock(); 
-
-		/* Frequency offset tracking values */
-		vecrFreqSyncValHist.AddEnd(pReceiverParam->rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE);
-
-		/* Sample rate offset estimation */
-		vecrSamOffsValHist.AddEnd(pReceiverParam->rResampleOffset);
-		/* Signal to Noise ratio estimates */
-		rSumSNRHist += pReceiverParam->GetSNR();
-
-/* TODO - reconcile this with Ollies RSCI Doppler code in ChannelEstimation */
-		/* Average Doppler estimate */
-		rSumDopplerHist += pReceiverParam->rSigmaEstimate;
-
-		/* Only evaluate Doppler and delay once in one DRM frame */
-		iSymbolCount++;
-		if (iSymbolCount == pReceiverParam->CellMappingTable.iNumSymPerFrame)
-		{
-			/* Apply averaged values to the history vectors */
-			vecrLenIRHist.
-				AddEnd((pReceiverParam->rMinDelay +
-						pReceiverParam->rMaxDelay) / 2.0);
-
-			vecrSNRHist.AddEnd(rSumSNRHist / pReceiverParam->CellMappingTable.iNumSymPerFrame);
-
-			vecrDopplerHist.AddEnd(rSumDopplerHist /
-								   pReceiverParam->CellMappingTable.iNumSymPerFrame);
-
-			/* At the same time, add number of correctly decoded audio blocks.
-			   This number is updated once a DRM frame. Since the other
-			   parameters like SNR is also updated once a DRM frame, the two
-			   values are synchronized by one DRM frame */
-			veciCDAudHist.AddEnd(iCurrentCDAud);
-
-			/* Reset parameters used for averaging */
-			iSymbolCount = 0;
-			rSumDopplerHist = (_REAL) 0.0;
-			rSumSNRHist = (_REAL) 0.0;
-		}
-
-		pReceiverParam->Unlock(); 
-#ifdef USE_QT_GUI
-		MutexHist.unlock();
-#endif
-	}
-}
-
-void
-CDRMReceiver::GetFreqSamOffsHist(CVector < _REAL > &vecrFreqOffs,
-								 CVector < _REAL > &vecrSamOffs,
-								 CVector < _REAL > &vecrScale,
-								 _REAL & rFreqAquVal)
-{
-	/* Init output vectors */
-	vecrFreqOffs.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-	vecrSamOffs.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-
-	pReceiverParam->Lock();
-	/* Duration of OFDM symbol */
-	const _REAL rTs = (CReal) (pReceiverParam->CellMappingTable.iFFTSizeN + pReceiverParam->CellMappingTable.iGuardSize) / SOUNDCRD_SAMPLE_RATE;
-	/* Value from frequency acquisition */
-	rFreqAquVal = pReceiverParam->rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
-	pReceiverParam->Unlock();
-
-	/* Lock resources */
-#ifdef USE_QT_GUI
-	MutexHist.lock();
-#endif
-
-	/* Simply copy history buffers in output buffers */
-	vecrFreqOffs = vecrFreqSyncValHist;
-	vecrSamOffs = vecrSamOffsValHist;
-
-	/* Calculate time scale */
-	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
-		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rTs;
-
-	/* Release resources */
-#ifdef USE_QT_GUI
-	MutexHist.unlock();
-#endif
-}
-
-void
-CDRMReceiver::GetDopplerDelHist(CVector < _REAL > &vecrLenIR,
-								CVector < _REAL > &vecrDoppler,
-								CVector < _REAL > &vecrScale)
-{
-	/* Init output vectors */
-	vecrLenIR.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-	vecrDoppler.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-
-	/* Duration of DRM frame */
-	pReceiverParam->Lock();
-	const _REAL rDRMFrameDur = (CReal) (
-		pReceiverParam->CellMappingTable.iFFTSizeN
-		+ pReceiverParam->CellMappingTable.iGuardSize) /
-		SOUNDCRD_SAMPLE_RATE * pReceiverParam->CellMappingTable.iNumSymPerFrame;
-	pReceiverParam->Unlock();
-
-	/* Lock resources */
-#ifdef USE_QT_GUI
-	MutexHist.lock();
-#endif
-
-	/* Simply copy history buffers in output buffers */
-	vecrLenIR = vecrLenIRHist;
-	vecrDoppler = vecrDopplerHist;
-
-	/* Calculate time scale in minutes */
-	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
-		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rDRMFrameDur / 60;
-
-	/* Release resources */
-#ifdef USE_QT_GUI
-	MutexHist.unlock();
-#endif
-}
-
-void
-CDRMReceiver::GetSNRHist(CVector < _REAL > &vecrSNR,
-						 CVector < _REAL > &vecrCDAud,
-						 CVector < _REAL > &vecrScale)
-{
-	/* Init output vectors */
-	vecrSNR.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-	vecrCDAud.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-
-	/* Duration of DRM frame */
-	pReceiverParam->Lock();
-	const _REAL rDRMFrameDur = (CReal) (pReceiverParam->CellMappingTable.iFFTSizeN + pReceiverParam->CellMappingTable.iGuardSize) /
-		SOUNDCRD_SAMPLE_RATE * pReceiverParam->CellMappingTable.iNumSymPerFrame;
-	pReceiverParam->Unlock();
-
-	/* Lock resources */
-#ifdef USE_QT_GUI
-	MutexHist.lock();
-#endif
-
-	/* Simply copy history buffer in output buffer */
-	vecrSNR = vecrSNRHist;
-
-	/* Calculate time scale. Copy correctly decoded audio blocks history (must
-	   be transformed from "int" to "real", therefore we need a for-loop */
-	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
-	{
-		/* Scale in minutes */
-		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rDRMFrameDur / 60;
-
-		/* Correctly decoded audio blocks */
-		vecrCDAud[i] = (_REAL) veciCDAudHist[i];
-	}
-
-	/* Release resources */
-#ifdef USE_QT_GUI
-	MutexHist.unlock();
-#endif
-}
 
 _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 {

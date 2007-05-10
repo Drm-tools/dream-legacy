@@ -31,6 +31,7 @@
 
 #include "TagPacketDecoder.h"
 #include "MDITagItemDecoders.h"
+#include "RSCITagItemDecoders.h"
 
 class CTagPacketDecoderMDI : public CTagPacketDecoder
 {
@@ -38,10 +39,15 @@ public:
 	// constructor: adds all of the decoders in the vocabulary to the list
 	CTagPacketDecoderMDI();
 
+	// Set the pParameter pointer - RSCI tag item decoders will write to this directly
+	void SetParameterPtr(CParameter *pP);
+
 	// Overridden tag packet decoder function - clear the str tags before decoding
 	virtual void DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, int iPayloadLen);
 
 	// Decoders for each of the tag items in the vocabulary
+
+	//	MDI
 	CTagItemDecoderProTy		TagItemDecoderProTy;
 	CTagItemDecoderLoFrCnt		TagItemDecoderLoFrCnt;
 	CTagItemDecoderFAC			TagItemDecoderFAC;
@@ -52,6 +58,16 @@ public:
 	CTagItemDecoderInfo			TagItemDecoderInfo;
 	CTagItemDecoderRxDemodMode	TagItemDecoderRxDemodMode;
 	CTagItemDecoderAMAudio		TagItemDecoderAMAudio;
+
+	// RSCI-specific
+	CTagItemDecoderRmer			TagItemDecoderRmer;
+	CTagItemDecoderRwmf			TagItemDecoderRwmf;
+	CTagItemDecoderRwmm			TagItemDecoderRwmm;
+	CTagItemDecoderRdbv			TagItemDecoderRdbv;
+	CTagItemDecoderRpsd			TagItemDecoderRpsd;
+	CTagItemDecoderRdop			TagItemDecoderRdop;
+	CTagItemDecoderRdel			TagItemDecoderRdel;
+
 };
 
 #endif

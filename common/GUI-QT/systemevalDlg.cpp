@@ -216,7 +216,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	   initialization for the chart and chart selector */
 	if (DRMReceiver.GetRSIIn()->GetInEnabled() == TRUE)
 	{
-		ListViewCharSel->setEnabled(FALSE);
+		//ListViewCharSel->setEnabled(FALSE);
 		SliderNoOfIterations->setEnabled(FALSE);
 
 		ButtonGroupChanEstFreqInt->setEnabled(FALSE);
@@ -523,7 +523,7 @@ void systemevalDlg::UpdateControls()
 	CheckBoxModiMetric->setChecked(DRMReceiver.GetIntCons());
 	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
 	CheckBoxFlipSpec->
-		setChecked(DRMReceiver.GetReceiver()->GetFlippedSpectrum());
+		setChecked(DRMReceiver.GetReceiveData()->GetFlippedSpectrum());
 
 	CheckBoxSaveAudioWave->
 		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
@@ -736,7 +736,7 @@ void systemevalDlg::OnTimer()
     	SetStatus(LEDIOInterface, ReceiverParam.ReceiveStatus.Interface.GetStatus());
 
 	/* Show SNR if receiver is in tracking mode */
-	if (DRMReceiver.GetReceiverState() == AS_WITH_SIGNAL)
+	if (DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
 	{
 		/* Get a consistant snapshot */
 		
@@ -824,8 +824,13 @@ void systemevalDlg::OnTimer()
 	if (DRMReceiver.GetRSIIn()->GetInEnabled() == TRUE)
 	{
 		ValueSNR->setText("<b>---</b>");
-		ValueMERWMER->setText("<b>---</b>");
-		ValueWiener->setText("--- / ---");
+		if (ReceiverParam.vecrRdelThresholds.GetSize() > 0)
+			ValueWiener->setText(QString().setNum(ReceiverParam.rRdop, 'f', 2) + " Hz / "
+					+ QString().setNum(ReceiverParam.vecrRdelIntervals[0], 'f', 2) + " ms ("
+					+ QString().setNum(ReceiverParam.vecrRdelThresholds[0]) + "%)");
+		else
+			ValueWiener->setText(QString().setNum(ReceiverParam.rRdop, 'f', 2) + " Hz / ---");
+
 		ValueSampFreqOffset->setText("---");
 		ValueFreqOffset->setText("---");
 	}
@@ -1132,7 +1137,7 @@ void systemevalDlg::OnListViContMenu()
 void systemevalDlg::OnCheckFlipSpectrum()
 {
 	/* Set parameter in working thread module */
-	DRMReceiver.GetReceiver()->
+	DRMReceiver.GetReceiveData()->
 		SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
 }
 

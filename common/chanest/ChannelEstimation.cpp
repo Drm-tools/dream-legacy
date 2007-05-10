@@ -458,11 +458,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* SNR and Doppler are updated every symbol.
 	 * TODO is this necessary ? */
 
-	if (bSNRInitPhase == TRUE)
-	{
-   		ReceiverParam.SetSNR(0.0);
-	}
-	else
+	if (bSNRInitPhase == FALSE)
 	{
 		const _REAL rNomBWSNR = rSNREstimate * rSNRSysToNomBWCorrFact;
 

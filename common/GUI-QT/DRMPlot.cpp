@@ -106,7 +106,7 @@ void CDRMPlot::OnTimerChart()
 	{
 	case AVERAGED_IR:
 		/* Get data from module */
-		pDRMRec->
+		pDRMRec->GetPlotManager()->
 			GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
 			rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
 
@@ -117,7 +117,7 @@ void CDRMPlot::OnTimerChart()
 
 	case TRANSFERFUNCTION:
 		/* Get data from module */
-		pDRMRec->GetTransferFunction(vecrData, vecrData2, vecrScale);
+		pDRMRec->GetPlotManager()->GetTransferFunction(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
 		SetTranFct(vecrData, vecrData2, vecrScale);
@@ -133,7 +133,7 @@ void CDRMPlot::OnTimerChart()
 
 	case SNR_SPECTRUM:
 		/* Get data from module */
-		pDRMRec->GetSNRProfile(vecrData, vecrScale);
+		pDRMRec->GetPlotManager()->GetSNRProfile(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
 		SetSNRSpectrum(vecrData, vecrScale);
@@ -141,7 +141,7 @@ void CDRMPlot::OnTimerChart()
 
 	case INPUTSPECTRUM_NO_AV:
 		/* Get data from module */
-		pDRMRec->GetReceiver()->GetInputSpec(vecrData, vecrScale);
+		pDRMRec->GetReceiveData()->GetInputSpec(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
 		SetInpSpec(vecrData, vecrScale, rDCFrequency);
@@ -149,7 +149,7 @@ void CDRMPlot::OnTimerChart()
 
 	case INP_SPEC_WATERF:
 		/* Get data from module */
-		pDRMRec->GetReceiver()->GetInputSpec(vecrData, vecrScale);
+		pDRMRec->GetReceiveData()->GetInputSpec(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
 		SetInpSpecWaterf(vecrData, vecrScale);
@@ -157,7 +157,7 @@ void CDRMPlot::OnTimerChart()
 
 	case INPUT_SIG_PSD:
 		/* Get data from module */
-		pDRMRec->GetReceiver()->GetInputPSD(vecrData, vecrScale);
+		pDRMRec->GetPlotManager()->GetInputPSD(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
 		SetInpPSD(vecrData, vecrScale, rDCFrequency);
@@ -165,7 +165,7 @@ void CDRMPlot::OnTimerChart()
 
 	case INPUT_SIG_PSD_ANALOG:
 		/* Get data and parameters from modules */
-		pDRMRec->GetReceiver()->GetInputPSD(vecrData, vecrScale);
+		pDRMRec->GetReceiveData()->GetInputPSD(vecrData, vecrScale);
 		pDRMRec->GetAMDemod()->GetBWParameters(rCenterFreq, rBandwidth);
 
 		/* Prepare graph and set data */
@@ -184,7 +184,7 @@ void CDRMPlot::OnTimerChart()
 
 	case FREQ_SAM_OFFS_HIST:
 		/* Get data from module */
-		pDRMRec->GetFreqSamOffsHist(vecrData, vecrData2, vecrScale, rFreqAcquVal);
+		pDRMRec->GetPlotManager()->GetFreqSamOffsHist(vecrData, vecrData2, vecrScale, rFreqAcquVal);
 
 		/* Prepare graph and set data */
 		SetFreqSamOffsHist(vecrData, vecrData2, vecrScale, rFreqAcquVal);
@@ -192,7 +192,7 @@ void CDRMPlot::OnTimerChart()
 
 	case DOPPLER_DELAY_HIST:
 		/* Get data from module */
-		pDRMRec->GetDopplerDelHist(vecrData, vecrData2, vecrScale);
+		pDRMRec->GetPlotManager()->GetDopplerDelHist(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
 		SetDopplerDelayHist(vecrData, vecrData2, vecrScale);
@@ -200,7 +200,7 @@ void CDRMPlot::OnTimerChart()
 
 	case SNR_AUDIO_HIST:
 		/* Get data from module */
-		pDRMRec->GetSNRHist(vecrData, vecrData2, vecrScale);
+		pDRMRec->GetPlotManager()->GetSNRHist(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
 		SetSNRAudHist(vecrData, vecrData2, vecrScale);
