@@ -26,6 +26,9 @@
  *
 \******************************************************************************/
 
+#ifdef _WIN32
+# include <winsock2.h>
+#endif
 #include "DialogUtil.h"
 #include "../Version.h"
 #ifdef USE_ALSA

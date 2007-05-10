@@ -425,7 +425,7 @@ string CReceptLog::strdate()
 
 	s << setw(4) << setfill('0')
 		<< today->tm_year + 1900 << "-" << setw(2) << today->tm_mon + 1 << "-" << setw(2) << today->tm_mday
-		<< ", "
+		<< " "
 		<< setw(2) << today->tm_hour << ":" << setw(2) << today-> tm_min << ":" << setw(2) << today->tm_sec;
 	return s.str();
 }

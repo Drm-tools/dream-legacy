@@ -411,7 +411,7 @@ public:
 	CMatrix(const int iNewR, const int iNewC) {Init(iNewR, iNewC);}
 	CMatrix(const int iNewR, const int iNewC, const TData tInVa) 
 		{Init(iNewR, iNewC, tInVa);}
-	CMatrix(const CMatrix& m) {
+	CMatrix(const CMatrix& m): ppData(NULL) {
 		Init(m.iRow,m.iCol); 
 		for (int i=0; i<m.NumRows(); i++)
 			ppData[i] = m[i];
