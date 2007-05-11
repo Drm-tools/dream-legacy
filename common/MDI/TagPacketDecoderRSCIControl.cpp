@@ -41,11 +41,11 @@
 // constructor: adds all of the decoders in the vocabulary to the list
 CTagPacketDecoderRSCIControl::CTagPacketDecoderRSCIControl(void) 
 : pDRMReceiver(NULL)
-, TagItemDecoderCact(NULL)
-, TagItemDecoderCfre(NULL)
-, TagItemDecoderCdmo(NULL)
-, TagItemDecoderCrec(NULL)
-, TagItemDecoderCpro(NULL, NULL)
+, TagItemDecoderCact()
+, TagItemDecoderCfre()
+, TagItemDecoderCdmo()
+, TagItemDecoderCrec()
+, TagItemDecoderCpro()
 {
 	// Add each tag item decoder to the vocabulary
 	AddTagItemDecoder(&TagItemDecoderCact);

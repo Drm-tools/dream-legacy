@@ -413,6 +413,7 @@ _BOOLEAN CDownstreamDI::SetDestination(const string& str)
 		{
 			/* TODO incoporate port */
 			RSISubscribers[a] = p;
+			cout << "CDownstreamDI::SetDestination " << a << endl;
 		}
 		return TRUE;
 	}
@@ -515,9 +516,13 @@ void CDownstreamDI::SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr, ui
 #else
 	key << addr << ":" << port;
 #endif
+	cout << "CDownstreamDI::SendPacket " << key.str() << endl;
 	map<string,CRSISubscriber*>::iterator s = RSISubscribers.find(key.str());
 	if(s != RSISubscribers.end())
 		s->second->SendPacket(vecbydata);
+	/* use the File subscriber to handle RSCI commands
+	 * (it is the only one that has a non-null DrmReceiver pointer */
+	pRSISubscriberFile->SendPacket(vecbydata);
 }
 
 /******************************************************************************\

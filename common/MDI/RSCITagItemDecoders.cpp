@@ -152,6 +152,9 @@ void CTagItemDecoderCact::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 	const int iNewState = vecbiTag.Separate(8) - '0';
 
+	if (pDRMReceiver == NULL)
+		return;
+
 	// TODO pDRMReceiver->SetState(iNewState);
 	(void)iNewState;
 
@@ -179,6 +182,10 @@ void CTagItemDecoderCdmo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	string s = "";
 	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 		s += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
+
+	if (pDRMReceiver == NULL)
+		return;
+
 	if(s == "drm_")
 		pDRMReceiver->SetReceiverMode(RM_DRM);
 	if(s == "am__")
@@ -195,6 +202,9 @@ void CTagItemDecoderCrec::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		s += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
 	char c3 = (char) vecbiTag.Separate(SIZEOF__BYTE);
 	char c4 = (char) vecbiTag.Separate(SIZEOF__BYTE);
+
+	if (pDRMReceiver == NULL)
+		return;
 
 	if(s == "st")
 		pDRMReceiver->SetRSIRecording(c4=='1', c3);

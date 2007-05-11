@@ -130,6 +130,8 @@ _BOOLEAN CRSISubscriberSocket::SetOrigin(const string& str)
 
 CRSISubscriberFile::CRSISubscriberFile(): CRSISubscriber(&PacketSinkFile)
 {
+	/* override the subscriber back to NULL to prevent Cpro doing anything */
+	TagPacketDecoderRSCIControl.SetSubscriber(NULL);
 }
 
 _BOOLEAN CRSISubscriberFile::SetDestination(const string& strFName)

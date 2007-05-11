@@ -110,8 +110,7 @@ public:
 class CTagItemDecoderRCI : public CTagItemDecoder      
 {
 public:
-	CTagItemDecoderRCI(CDRMReceiver *pReceiver, const string& s) : 
-	pDRMReceiver(pReceiver),tag(s) {}
+	CTagItemDecoderRCI(const string& s) : pDRMReceiver(NULL),tag(s) {}
 	void SetReceiver(CDRMReceiver *pReceiver) {pDRMReceiver = pReceiver;}
 	virtual string GetTagName() { return tag; }
 protected:
@@ -122,40 +121,39 @@ protected:
 class CTagItemDecoderCact : public CTagItemDecoderRCI      
 {
 public:
-	CTagItemDecoderCact(CDRMReceiver *pReceiver) : CTagItemDecoderRCI(pReceiver, "cact") {}
+	CTagItemDecoderCact() : CTagItemDecoderRCI("cact") {}
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 };
 
 class CTagItemDecoderCfre : public CTagItemDecoderRCI      
 {
 public:
-	CTagItemDecoderCfre(CDRMReceiver *pReceiver) : CTagItemDecoderRCI(pReceiver, "cfre") {}
+	CTagItemDecoderCfre() : CTagItemDecoderRCI("cfre") {}
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 };
 
 class CTagItemDecoderCdmo : public CTagItemDecoderRCI      
 {
 public:
-	CTagItemDecoderCdmo(CDRMReceiver *pReceiver) : CTagItemDecoderRCI(pReceiver, "cdmo") {}
+	CTagItemDecoderCdmo() : CTagItemDecoderRCI("cdmo") {}
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 };
 
 class CTagItemDecoderCrec : public CTagItemDecoderRCI
 {
 public:
-	CTagItemDecoderCrec(CDRMReceiver *pReceiver) : CTagItemDecoderRCI(pReceiver, "crec") {}
+	CTagItemDecoderCrec() : CTagItemDecoderRCI("crec") {}
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 };
 
 class CTagItemDecoderCpro : public CTagItemDecoderRCI
 {
 public:
-	CTagItemDecoderCpro(CDRMReceiver *pReceiver, CRSISubscriber *pSubscriber) 
-		: CTagItemDecoderRCI(pReceiver, "crec"), pRSISubscriber(pSubscriber) {}
+	CTagItemDecoderCpro() : CTagItemDecoderRCI("crec"), pRSISubscriber(NULL) {}
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 	void SetSubscriber(CRSISubscriber *pSubscriber) {pRSISubscriber = pSubscriber;}
 private:
-	CRSISubscriber * pRSISubscriber;
+	CRSISubscriber* pRSISubscriber;
 };
 
 #endif

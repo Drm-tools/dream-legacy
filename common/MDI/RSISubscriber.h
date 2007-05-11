@@ -65,8 +65,8 @@ public:
 protected:
 	CPacketSink *pPacketSink;
 	char cProfile;
-private:
 	CTagPacketDecoderRSCIControl TagPacketDecoderRSCIControl;
+private:
 	CDRMReceiver *pDRMReceiver;
 	CAFPacketGenerator AFPacketGenerator;
 
