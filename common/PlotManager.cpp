@@ -34,14 +34,14 @@
 #include <iostream>
 
 CPlotManager::CPlotManager() : 
+	pReceiver(0),
 	vecrFreqSyncValHist(LEN_HIST_PLOT_SYNC_PARMS),
 	vecrSamOffsValHist(LEN_HIST_PLOT_SYNC_PARMS),
 	vecrLenIRHist(LEN_HIST_PLOT_SYNC_PARMS),
 	vecrDopplerHist(LEN_HIST_PLOT_SYNC_PARMS),
 	vecrSNRHist(LEN_HIST_PLOT_SYNC_PARMS),
 	veciCDAudHist(LEN_HIST_PLOT_SYNC_PARMS), iSymbolCount(0),
-	rSumDopplerHist((_REAL) 0.0), rSumSNRHist((_REAL) 0.0), iCurrentCDAud(0),
-	pReceiver(0)
+	rSumDopplerHist((_REAL) 0.0), rSumSNRHist((_REAL) 0.0), iCurrentCDAud(0)
 {
 }
 

@@ -1504,9 +1504,6 @@ CDRMReceiver::LoadSettings(const CSettings& s)
 		upstreamRSCI.SetDestination(str);
 
 	/* downstream RSCI */
-	str = s.Get("command", "rciin");
-	if(str != "")
-		downstreamRSCI.SetOrigin(str);
 	for(int i = 0; i<MAX_NUM_RSI_SUBSCRIBERS; i++)
 	{
 		stringstream ss;
@@ -1514,12 +1511,13 @@ CDRMReceiver::LoadSettings(const CSettings& s)
 		str = s.Get("command", ss.str());
 		if(str != "")
 		{
-			downstreamRSCI.SetDestination(str);
 			ss.str("");
 			ss << "rsioutprofile" << i;
-			str = s.Get("command", ss.str());
-			if(str != "")
-				downstreamRSCI.SetProfile(str[0]);
+			string profile = s.Get("command", ss.str(), string("A"));
+			ss.str("");
+			ss << "rciin" << i;
+			string origin = s.Get("command", ss.str());
+			downstreamRSCI.AddSubscriber(str, origin, profile[0]);
 		}
 	}
 	/* RSCI File Recording */

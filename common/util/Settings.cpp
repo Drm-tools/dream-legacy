@@ -162,6 +162,7 @@ CSettings::ParseArguments(int argc, char **argv)
 	_REAL rArgument;
 	string strArgument;
 	int rsioutnum = 0;
+	int rciinnum = 0;
 
 	/* QT docu: argv()[0] is the program name, argv()[1] is the first
 	   argument and argv()[argc()-1] is the last argument.
@@ -419,7 +420,10 @@ CSettings::ParseArguments(int argc, char **argv)
 		if (GetStringArgument(argc, argv, i, "--rciin", "--rciin",
 							  strArgument) == TRUE)
 		{
-			Put("command", "rciin", strArgument);
+			stringstream s;
+			s << "rciin" << rciinnum;
+			Put("command", s.str(), strArgument);
+			rciinnum++;
 			continue;
 		}
 

@@ -44,7 +44,7 @@
 #include "TagPacketDecoderRSCIControl.h"
 #include "TagPacketGenerator.h"
 #include "RSISubscriber.h"
-#include <map>
+#include <vector>
 
 #define MAX_NUM_RSI_SUBSCRIBERS 3
 
@@ -122,9 +122,11 @@ public:
 	void SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& CodedAudioData);
 
 	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC);
+
+	_BOOLEAN AddSubscriber(const string& dest, const string& origin, const char profile);
+
 	_BOOLEAN SetOrigin(const string& strAddr);
 	void SetRSIRecording(CParameter& Parameter, _BOOLEAN bOn, char cPro);
-	virtual void SetProfile(char c);
 	void NewFrequency(CParameter& Parameter); /* needs to be called in case a new RSCI file needs to be started */
 	
 	virtual _BOOLEAN GetOutEnabled() {return bMDIOutEnabled;} 
@@ -144,6 +146,7 @@ protected:
 	void ResetTags();
 
 	uint32_t					iLogFraCnt;
+	CDRMReceiver*				pDrmReceiver;
 
 	_BOOLEAN					bMDIOutEnabled;
 	_BOOLEAN					bMDIInEnabled;
@@ -193,7 +196,7 @@ protected:
 	/* TAG Packet generator */
 	CTagPacketGeneratorWithProfiles TagPacketGenerator;
 
-	map<string,CRSISubscriber *>	RSISubscribers;
+	vector< CRSISubscriber *>		RSISubscribers;
 	CRSISubscriberFile*				pRSISubscriberFile;
 	CPacketSource*					source;
 	CPacketSink*					sink;

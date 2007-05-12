@@ -55,7 +55,7 @@
 #include <iomanip>
 
 /* Implementation *************************************************************/
-CDownstreamDI::CDownstreamDI() : iLogFraCnt(0),
+CDownstreamDI::CDownstreamDI() : iLogFraCnt(0), pDrmReceiver(NULL),
 	bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE),bIsRecording(FALSE),
 	vecTagItemGeneratorStr(MAX_NUM_STREAMS), vecTagItemGeneratorRBP(MAX_NUM_STREAMS),
 	RSISubscribers(),pRSISubscriberFile(new CRSISubscriberFile)
@@ -75,16 +75,16 @@ CDownstreamDI::CDownstreamDI() : iLogFraCnt(0),
 	TagItemGeneratorProTyRSCI.GenTag();
 
 	/* Add the file subscriber to the list of subscribers */
-	RSISubscribers[""] = pRSISubscriberFile;
+	RSISubscribers.push_back(pRSISubscriberFile);
 
 }
 
 CDownstreamDI::~CDownstreamDI() 
 {
-	for(map<string,CRSISubscriber*>::iterator i = RSISubscribers.begin();
+	for(vector<CRSISubscriber*>::iterator i = RSISubscribers.begin();
 			i!=RSISubscribers.end(); i++)
 	{
-		delete i->second;
+		delete *i;
 	}
 }
 
@@ -230,8 +230,11 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 
 void CDownstreamDI::SetReceiver(CDRMReceiver *pReceiver)
 {
-	/* use the File subscriber to handle RSCI commands */
-	pRSISubscriberFile->SetReceiver(pReceiver);
+cout << "CDownstreamDI::SetReceiver" << endl;
+	pDrmReceiver = pReceiver;
+	for(vector<CRSISubscriber*>::iterator i = RSISubscribers.begin();
+			i!=RSISubscribers.end(); i++)
+			(*i)->SetReceiver(pReceiver);
 }
 
 /* Actual DRM DI protocol implementation *****************************************/
@@ -312,12 +315,12 @@ void CDownstreamDI::GenDIPacket()
 	/*return TagPacketGenerator.GenAFPacket(bUseAFCRC);*/
 
 	/* transmit a packet to each subscriber */
-	for(map<string,CRSISubscriber*>::iterator s = RSISubscribers.begin();
+	for(vector<CRSISubscriber*>::iterator s = RSISubscribers.begin();
 			s!=RSISubscribers.end(); s++)
 	{
 		// re-generate the profile tag for each subscriber
-		TagItemGeneratorProfile.GenTag(s->second->GetProfile());
-		s->second->TransmitPacket(&TagPacketGenerator);
+		TagItemGeneratorProfile.GenTag((*s)->GetProfile());
+		(*s)->TransmitPacket(&TagPacketGenerator);
 	}
 }
 
@@ -370,54 +373,35 @@ void CDownstreamDI::GetNextPacket(CSingleBuffer<_BINARY>&)
 	// TODO 
 }
 
-_BOOLEAN CDownstreamDI::SetOrigin(const string& strAddr)
+/* allow multiple destinations, allow destinations to send cpro instructions back */
+_BOOLEAN
+CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const char profile)
 {
-	/* only allow one listening address */
-	if(bMDIInEnabled == TRUE)
-		return FALSE;
-
-	if(source == NULL)
-	{
-#ifdef USE_QT_GUI
-		source = new CPacketSocketQT;
-#endif
-	}
-
-	if(source == NULL)
-		return FALSE;
-
+	CRSISubscriberSocket* subs = new CRSISubscriberSocket(NULL);
 	// Delegate to socket
-	_BOOLEAN bOK = source->SetOrigin(strAddr);
-
+	_BOOLEAN bOK = subs->SetDestination(dest);
+	bOK &= subs->SetOrigin(origin);
 	if (bOK)
 	{
-		source->SetPacketSink(this);
+		subs->SetProfile(profile);
+		subs->SetReceiver(pDrmReceiver);
 		bMDIInEnabled = TRUE;
+		bMDIOutEnabled = TRUE;
+		RSISubscribers.push_back(subs);
 		return TRUE;
 	}
+	else
+		delete subs;
+	return FALSE;
+}
+
+_BOOLEAN CDownstreamDI::SetOrigin(const string& strAddr)
+{
 	return FALSE;
 }
 
 _BOOLEAN CDownstreamDI::SetDestination(const string& str)
 {
-	/* allow multiple destinations, allow destinations to send cpro instructions back */
-
-	CRSISubscriberSocket* p = new CRSISubscriberSocket(NULL);
-	_BOOLEAN bAddressOK = p->SetDestination(str);
-	// If successful, set flag to enable MDI output
-	if (bAddressOK)
-	{
-		string a;
-		bMDIOutEnabled = TRUE;
-		if(p->GetDestination(a))
-		{
-			/* TODO incoporate port */
-			RSISubscribers[a] = p;
-		}
-		return TRUE;
-	}
-	else
-		delete p;
 	return FALSE;
 }
 
@@ -426,22 +410,11 @@ _BOOLEAN CDownstreamDI::GetDestination(string& str)
 	return FALSE; // makes no sense 
 }
 
-void CDownstreamDI::SetProfile(char c)
-{
-	/* set profile for all subscribers with no profile */
-	for(map<string,CRSISubscriber*>::iterator i = RSISubscribers.begin();
-			i!=RSISubscribers.end(); i++)
-	{
-		if(i->second->GetProfile() == 0)
-			i->second->SetProfile(c);
-	}
-}
-
 void CDownstreamDI::SetAFPktCRC(const _BOOLEAN bNAFPktCRC)
 {
-	for(map<string,CRSISubscriber*>::iterator i = RSISubscribers.begin();
+	for(vector<CRSISubscriber*>::iterator i = RSISubscribers.begin();
 			i!=RSISubscribers.end(); i++)
-			i->second->SetAFPktCRC(bNAFPktCRC);
+			(*i)->SetAFPktCRC(bNAFPktCRC);
 }
 
 string CDownstreamDI::GetRSIfilename(CParameter& Parameter, const char cProfile)
@@ -499,28 +472,9 @@ void CDownstreamDI::NewFrequency(CParameter& Parameter)
 	}
 }
 
-/* this gets called with incoming RSCI Control packets.
- * Send it on to the RSISubscriber. This probably doesn't have the receiver pointer
- * but it can use it to let the far end control the profile
- * so send it to the File subscriber as well which we know does have the pointer.
- */
-
 void CDownstreamDI::SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr, uint16_t port)
 {
-	stringstream key;
-	/* TODO - make sure this is consistent with RSISubscriber */
-#ifdef USE_QT_GUI
-	QHostAddress a(addr);
-	key << a.toString() << ":" << port;
-#else
-	key << addr << ":" << port;
-#endif
-	map<string,CRSISubscriber*>::iterator s = RSISubscribers.find(key.str());
-	if(s != RSISubscribers.end())
-		s->second->SendPacket(vecbydata);
-	/* use the File subscriber to handle RSCI commands
-	 * (it is the only one that has a non-null DrmReceiver pointer */
-	pRSISubscriberFile->SendPacket(vecbydata);
+	cerr << "this shouldn't get called CDownstreamDI::SendPacket" << endl;
 }
 
 /******************************************************************************\
