@@ -395,10 +395,10 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 	class CAltFreqSched
 	{
 	  public:
-		CAltFreqSched():iScheduleID(0),iDayCode(0),iStartTime(0),iDuration(0)
+		CAltFreqSched():iDayCode(0),iStartTime(0),iDuration(0)
 		{
 		}
-		CAltFreqSched(const CAltFreqSched& nAFS):iScheduleID(nAFS.iScheduleID),
+		CAltFreqSched(const CAltFreqSched& nAFS):
 			iDayCode(nAFS.iDayCode), iStartTime(nAFS.iStartTime),
 			iDuration(nAFS.iDuration)
 		{
@@ -406,7 +406,6 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 
 		CAltFreqSched& operator=(const CAltFreqSched& nAFS)
 		{
-			iScheduleID = nAFS.iScheduleID;
 			iDayCode = nAFS.iDayCode;
 			iStartTime = nAFS.iStartTime;
 			iDuration = nAFS.iDuration;
@@ -416,8 +415,6 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 
 		_BOOLEAN operator==(const CAltFreqSched& nAFS)
 		{
-			if (iScheduleID != nAFS.iScheduleID)
-				return FALSE;
 			if (iDayCode != nAFS.iDayCode)
 				return FALSE;
 			if (iStartTime != nAFS.iStartTime)
@@ -428,15 +425,8 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 			return TRUE;
 		}
 
-		void Reset()
-		{
-			iScheduleID = 0;
-			iDayCode = 0;
-			iStartTime = 0;
-			iDuration = 0;
-		}
+		_BOOLEAN IsActive(const time_t ltime);
 
-		int iScheduleID;
 		int iDayCode;
 		int iStartTime;
 		int iDuration;
@@ -446,12 +436,12 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 	class CAltFreqRegion
 	{
 	  public:
-		CAltFreqRegion():iRegionID(0), veciCIRAFZones(),
+		CAltFreqRegion():veciCIRAFZones(),
 			iLatitude(0), iLongitude(0),
 			iLatitudeEx(0), iLongitudeEx(0)
 		{
 		}
-		CAltFreqRegion(const CAltFreqRegion& nAFR):iRegionID(nAFR.iRegionID),
+		CAltFreqRegion(const CAltFreqRegion& nAFR):
 			veciCIRAFZones(nAFR.veciCIRAFZones),
 			iLatitude(nAFR.iLatitude),
 			iLongitude(nAFR.iLongitude),
@@ -461,8 +451,6 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 
 		CAltFreqRegion& operator=(const CAltFreqRegion& nAFR)
 		{
-			iRegionID = nAFR.iRegionID;
-
 			iLatitude = nAFR.iLatitude;
 			iLongitude = nAFR.iLongitude;
 			iLatitudeEx = nAFR.iLatitudeEx;
@@ -475,9 +463,6 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 
 		_BOOLEAN operator==(const CAltFreqRegion& nAFR)
 		{
-			if (iRegionID != nAFR.iRegionID)
-				return FALSE;
-
 			if (iLatitude != nAFR.iLatitude)
 				return FALSE;
 			if (iLongitude != nAFR.iLongitude)
@@ -499,17 +484,6 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 			return TRUE;
 		}
 
-		void Reset()
-		{
-			iRegionID = 0;
-			veciCIRAFZones.clear();
-			iLatitude = 0;
-			iLongitude = 0;
-			iLatitudeEx = 0;
-			iLongitudeEx = 0;
-		}
-
-		int iRegionID;
 		vector<int> veciCIRAFZones;
 		int iLatitude;
 		int iLongitude;
@@ -517,238 +491,233 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		int iLongitudeEx;
 	};
 
-		class CAltFreq
+	class CServiceDefinition
+	{
+ 	public:
+		CServiceDefinition():veciFrequencies(), iRegionID(0), iScheduleID(0),iSystemID(0)
 		{
-		  public:
-			CAltFreq():veciFrequencies(), veciServRestrict(4),
-				bIsSyncMultplx(FALSE), bRegionSchedFlag(FALSE),
-				iRegionID(0), iScheduleID(0)
-			{
-			}
-			CAltFreq(const CAltFreq& nAF):veciFrequencies(nAF.veciFrequencies),
-				veciServRestrict(nAF.veciServRestrict),
-				bIsSyncMultplx(nAF.bIsSyncMultplx),
-				bRegionSchedFlag(nAF.bRegionSchedFlag),
-				iRegionID(nAF.iRegionID), iScheduleID(nAF.iScheduleID)
-			{
-			}
+		}
 
-			CAltFreq& operator=(const CAltFreq& nAF)
-			{
-				veciFrequencies = nAF.veciFrequencies;
+		CServiceDefinition(const CServiceDefinition& nAF):
+			veciFrequencies(nAF.veciFrequencies),
+			iRegionID(nAF.iRegionID), iScheduleID(nAF.iScheduleID),
+			iSystemID(nAF.iSystemID)
+		{
+		}
 
-				veciServRestrict = nAF.veciServRestrict;
+		CServiceDefinition& operator=(const CServiceDefinition& nAF)
+		{
+			veciFrequencies = nAF.veciFrequencies;
+			iRegionID = nAF.iRegionID;
+			iScheduleID = nAF.iScheduleID;
+			iSystemID = nAF.iSystemID;
+			return *this;
+		}
 
-				bIsSyncMultplx = nAF.bIsSyncMultplx;
-				iRegionID = nAF.iRegionID;
-				iScheduleID = nAF.iScheduleID;
-				bRegionSchedFlag = nAF.bRegionSchedFlag;
-				return *this;
-			}
+		bool operator==(const CServiceDefinition& sd) const
+		{
+			size_t i;
 
-			_BOOLEAN operator==(const CAltFreq& nAF)
-			{
-				size_t i;
+			/* Vector sizes */
+			if (veciFrequencies.size() != sd.veciFrequencies.size())
+				return FALSE;
 
-				/* Vector sizes */
-				if (veciFrequencies.size() != nAF.veciFrequencies.size())
-					return FALSE;
-				if (veciServRestrict.size() != nAF.veciServRestrict.size())
+			/* Vector contents */
+			for (i = 0; i < veciFrequencies.size(); i++)
+				if (veciFrequencies[i] != sd.veciFrequencies[i])
 					return FALSE;
 
-				/* Vector contents */
-				for (i = 0; i < veciFrequencies.size(); i++)
-					if (veciFrequencies[i] != nAF.veciFrequencies[i])
-						return FALSE;
-				for (i = 0; i < veciServRestrict.size(); i++)
-					if (veciServRestrict[i] != nAF.veciServRestrict[i])
-						return FALSE;
+			if (iRegionID != sd.iRegionID)
+				return FALSE;
 
-				if (bIsSyncMultplx != nAF.bIsSyncMultplx)
+			if (iScheduleID != sd.iScheduleID)
+				return FALSE;
+
+			if (iSystemID != sd.iSystemID)
+				return FALSE;
+
+			return TRUE;
+		}
+		bool operator!=(const CServiceDefinition& sd) const { return !(*this==sd); }
+
+		string Frequency(size_t) const;
+		string FrequencyUnits() const;
+		string System() const;
+
+		vector<int> veciFrequencies;
+		int iRegionID;
+		int iScheduleID;
+		int iSystemID;
+	};
+
+	class CMultiplexDefinition: public CServiceDefinition
+	{
+ 	public:
+		CMultiplexDefinition():CServiceDefinition(), veciServRestrict(4), bIsSyncMultplx(FALSE)
+		{
+		}
+
+		CMultiplexDefinition(const CMultiplexDefinition& nAF):CServiceDefinition(nAF),
+			veciServRestrict(nAF.veciServRestrict),
+			bIsSyncMultplx(nAF.bIsSyncMultplx)
+		{
+		}
+
+		CMultiplexDefinition& operator=(const CMultiplexDefinition& nAF)
+		{
+			CServiceDefinition(*this) = nAF;
+			veciServRestrict = nAF.veciServRestrict;
+			bIsSyncMultplx = nAF.bIsSyncMultplx;
+			return *this;
+		}
+
+		bool operator==(const CMultiplexDefinition& md) const
+		{
+			if (CServiceDefinition(*this) != md)
+				return FALSE;
+
+			/* Vector sizes */
+			if (veciServRestrict.size() != md.veciServRestrict.size())
+				return FALSE;
+
+			/* Vector contents */
+			for (size_t i = 0; i < veciServRestrict.size(); i++)
+				if (veciServRestrict[i] != md.veciServRestrict[i])
 					return FALSE;
-				if (iRegionID != nAF.iRegionID)
-					return FALSE;
-				if (iScheduleID != nAF.iScheduleID)
-					return FALSE;
 
-				if (bRegionSchedFlag != nAF.bRegionSchedFlag)
-					return FALSE;
+			if (bIsSyncMultplx != md.bIsSyncMultplx)
+				return FALSE;
 
-				return TRUE;
-			}
+			return TRUE;
+		}
 
-			void Reset()
-			{
-				veciFrequencies.clear();
-				veciServRestrict.clear();
-				bIsSyncMultplx = FALSE;
-				bRegionSchedFlag = FALSE;
-				iRegionID = iScheduleID = 0;
-			}
+		vector<int> veciServRestrict;
+		_BOOLEAN bIsSyncMultplx;
+	};
 
-			vector<int> veciFrequencies;
-			vector<int> veciServRestrict;
-			_BOOLEAN bIsSyncMultplx;
-			_BOOLEAN bRegionSchedFlag;
-			int iRegionID;
-			int iScheduleID;
-		};
+	class COtherService: public CServiceDefinition
+	{
+	public:
+		COtherService(): CServiceDefinition(), bSameService(TRUE),
+			iShortID(0), iServiceID(0)
+		{
+		}
+
+		COtherService(const COtherService& nAF):
+			CServiceDefinition(nAF), bSameService(nAF.bSameService),
+			iShortID(nAF.iShortID), iServiceID(nAF.iServiceID)
+		{
+		}
+
+		COtherService& operator=(const COtherService& nAF)
+		{
+			CServiceDefinition(*this) = nAF;
+
+			bSameService = nAF.bSameService;
+			iShortID = nAF.iShortID;
+			iServiceID = nAF.iServiceID;
+
+			return *this;
+		}
+
+		bool operator==(const COtherService& nAF)
+		{
+			if (CServiceDefinition(*this) != nAF)
+				return FALSE;
+
+			if (bSameService != nAF.bSameService)
+				return FALSE;
+
+			if (iShortID != nAF.iShortID)
+				return FALSE;
+
+			if (iServiceID != nAF.iServiceID)
+				return FALSE;
+
+			return TRUE;
+		}
+
+		string ServiceID() const;
+
+		_BOOLEAN bSameService;
+		int iShortID;
+		uint32_t iServiceID;
+	};
+
 	/* Alternative frequency signalling class */
 	class CAltFreqSign
 	{
 	  public:
 
-		CAltFreqSign():vecAltFreqRegions(),vecAltFreqSchedules(),
-			vecAltFreq(),bVersionFlag(FALSE)
+		CAltFreqSign():vecRegions(16),vecSchedules(16),vecMultiplexes(),vecOtherServices(),
+			bRegionVersionFlag(FALSE),bScheduleVersionFlag(FALSE),
+			bMultiplexVersionFlag(FALSE),bOtherServicesVersionFlag(FALSE)
 		{
 		}
 
-		CAltFreqSign(const CAltFreqSign& a):vecAltFreqRegions(a.vecAltFreqRegions),
-			vecAltFreqSchedules(a.vecAltFreqSchedules), vecAltFreq(a.vecAltFreq),bVersionFlag(a.bVersionFlag)
+		CAltFreqSign(const CAltFreqSign& a):vecRegions(a.vecRegions),
+			vecSchedules(a.vecSchedules), vecMultiplexes(a.vecMultiplexes),
+			bRegionVersionFlag(a.bRegionVersionFlag),
+			bScheduleVersionFlag(a.bScheduleVersionFlag),
+			bMultiplexVersionFlag(a.bMultiplexVersionFlag),
+			bOtherServicesVersionFlag(a.bOtherServicesVersionFlag)
 		{
 		}
 
 		CAltFreqSign& operator=(const CAltFreqSign& a)
 		{
-			vecAltFreqRegions = a.vecAltFreqRegions;
-			vecAltFreqSchedules = a.vecAltFreqSchedules;
-			vecAltFreq =  a.vecAltFreq;
-			bVersionFlag = a.bVersionFlag;
+			vecRegions = a.vecRegions;
+			vecSchedules = a.vecSchedules;
+			vecMultiplexes = a.vecMultiplexes;
+			bRegionVersionFlag = a.bRegionVersionFlag;
+			bScheduleVersionFlag = a.bScheduleVersionFlag;
+			bMultiplexVersionFlag = a.bMultiplexVersionFlag;
+			bOtherServicesVersionFlag = a.bOtherServicesVersionFlag;
 			return *this;
+		}
+
+		void ResetRegions(_BOOLEAN b)
+		{
+			vecRegions.clear();
+			vecRegions.resize(16);
+			bRegionVersionFlag=b;
+		}
+
+		void ResetSchedules(_BOOLEAN b)
+		{
+			vecSchedules.clear();
+			vecSchedules.resize(16);
+			bScheduleVersionFlag=b;
+		}
+
+		void ResetMultiplexes(_BOOLEAN b)
+		{
+			vecMultiplexes.clear();
+			bMultiplexVersionFlag=b;
+		}
+
+		void ResetOtherServices(_BOOLEAN b)
+		{
+			vecOtherServices.clear();
+			bOtherServicesVersionFlag=b;
 		}
 
 		void Reset()
 		{
-			vecAltFreqRegions.clear();
-			vecAltFreqSchedules.clear();
-			vecAltFreq.clear();
-			bVersionFlag = FALSE;
+			ResetRegions(FALSE);
+			ResetSchedules(FALSE);
+			ResetMultiplexes(FALSE);
+			ResetOtherServices(FALSE);
 		}
 
-		vector < CAltFreqRegion > vecAltFreqRegions;
-		vector < CAltFreqSched > vecAltFreqSchedules;
-		vector < CAltFreq > vecAltFreq;
-		_BOOLEAN bVersionFlag;
-	};
-
-	/* Other Services alternative frequency signalling class */
-	class CAltFreqOtherServicesSign
-	{
-	  public:
-		class CAltFreqOtherServices
-		{
-		  public:
-			CAltFreqOtherServices()
-			{
-				Reset();
-			}
-			CAltFreqOtherServices(const CAltFreqOtherServices&
-								  nAF):veciFrequencies(nAF.veciFrequencies),
-				bShortIDAnnounceFlag(nAF.bShortIDAnnounceFlag),
-				iShortIDAnnounce(nAF.iShortIDAnnounce),
-				bRegionSchedFlag(nAF.bRegionSchedFlag),
-				bSameService(nAF.bSameService), iSystemID(nAF.iSystemID),
-				iRegionID(nAF.iRegionID), iScheduleID(nAF.iScheduleID),
-				iOtherServiceID(nAF.iOtherServiceID)
-			{
-			}
-
-			CAltFreqOtherServices& operator=(const CAltFreqOtherServices& nAF)
-			{
-				veciFrequencies = nAF.veciFrequencies;
-
-				bShortIDAnnounceFlag = nAF.bShortIDAnnounceFlag;
-				iShortIDAnnounce = nAF.iShortIDAnnounce;
-				bRegionSchedFlag = nAF.bRegionSchedFlag;
-				bSameService = nAF.bSameService;
-				iSystemID = nAF.iSystemID;
-				iRegionID = nAF.iRegionID;
-				iScheduleID = nAF.iScheduleID;
-				iOtherServiceID = nAF.iOtherServiceID;
-
-				return *this;
-			}
-
-			_BOOLEAN operator==(const CAltFreqOtherServices& nAF)
-			{
-				size_t i;
-
-				/* Vector sizes */
-				if (veciFrequencies.size() != nAF.veciFrequencies.size())
-					return FALSE;
-
-				/* Vector contents */
-				for (i = 0; i < veciFrequencies.size(); i++)
-					if (veciFrequencies[i] != nAF.veciFrequencies[i])
-						return FALSE;
-
-				if (bShortIDAnnounceFlag != nAF.bShortIDAnnounceFlag)
-					return FALSE;
-				if (iShortIDAnnounce != nAF.iShortIDAnnounce)
-					return FALSE;
-				if (bRegionSchedFlag != nAF.bRegionSchedFlag)
-					return FALSE;
-				if (bSameService != nAF.bSameService)
-					return FALSE;
-
-				if (iSystemID != nAF.iSystemID)
-					return FALSE;
-				if (iRegionID != nAF.iRegionID)
-					return FALSE;
-				if (iScheduleID != nAF.iScheduleID)
-					return FALSE;
-				if (iOtherServiceID != nAF.iOtherServiceID)
-					return FALSE;
-				return TRUE;
-			}
-
-			void Reset()
-			{
-				veciFrequencies.Init(0);
-				bShortIDAnnounceFlag = FALSE;
-				iShortIDAnnounce = 0;
-				bRegionSchedFlag = FALSE;
-				bSameService = TRUE;
-				iSystemID = 0;
-				iRegionID = iScheduleID = 0;
-				iOtherServiceID = 0;
-			}
-
-			CVector < int >veciFrequencies;
-			_BOOLEAN bShortIDAnnounceFlag;
-			int iShortIDAnnounce;
-			_BOOLEAN bRegionSchedFlag;
-			_BOOLEAN bSameService;
-			int iSystemID;
-			int iRegionID;
-			int iScheduleID;
-			unsigned long iOtherServiceID;
-		};
-
-		CAltFreqOtherServicesSign():vecAltFreqOtherServices(),bVersionFlag(FALSE)
-		{
-		}
-
-		CAltFreqOtherServicesSign(const CAltFreqOtherServicesSign& a):
-			vecAltFreqOtherServices(a.vecAltFreqOtherServices),bVersionFlag(a.bVersionFlag)
-		{
-		}
-
-		CAltFreqOtherServicesSign& operator=(const CAltFreqOtherServicesSign& a)
-		{
-			vecAltFreqOtherServices = a.vecAltFreqOtherServices;
-			bVersionFlag = a.bVersionFlag;
-			return *this;
-		}
-
-		void Reset()
-		{
-			vecAltFreqOtherServices.clear();
-			bVersionFlag = FALSE;
-		}
-
-		vector < CAltFreqOtherServices > vecAltFreqOtherServices;
-		_BOOLEAN bVersionFlag;
+		vector < vector<CAltFreqRegion> > vecRegions; // outer vector indexed by regionID
+		vector < vector<CAltFreqSched> > vecSchedules; // outer vector indexed by scheduleID
+		vector < CMultiplexDefinition > vecMultiplexes;
+		vector < COtherService > vecOtherServices;
+		_BOOLEAN bRegionVersionFlag;
+		_BOOLEAN bScheduleVersionFlag;
+		_BOOLEAN bMultiplexVersionFlag;
+		_BOOLEAN bOtherServicesVersionFlag;
 	};
 
 	/* Class to store information about the last service selected ------------- */
@@ -1145,7 +1114,6 @@ class CParameter
 	CReceiveStatus ReceiveStatus;
 	CFrontEndParameters FrontEndParameters;
 	CAltFreqSign AltFreqSign;
-	CAltFreqOtherServicesSign AltFreqOtherServicesSign;
 
 	void Lock()
 	{

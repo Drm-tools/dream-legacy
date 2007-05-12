@@ -29,21 +29,11 @@
 
 /* Implementation *************************************************************/
 
-string
-CDRMLiveSchedule::Binary2String(const int iVal)
-{
-	string s = "0000000";
-	for (int i = 0; i < 7; i++)
-	{
-		if ((1 << (6 - i)) & iVal)
-			s[i]++;
-	}
-	return s;
-}
-
 QString
-LiveScheduleDlg::ExtractTime(const int iTimeStart, const int iDuration)
+LiveScheduleDlg::ExtractTime(const CAltFreqSched& schedule)
 {
+	int iTimeStart = schedule.iStartTime;
+	int iDuration = schedule.iDuration;
 	string sStartHours = "";
 	string sStartMinutes = "";
 	string sStopHours = "";
@@ -115,9 +105,14 @@ LiveScheduleDlg::ExtractTime(const int iTimeStart, const int iDuration)
 }
 
 QString
-LiveScheduleDlg::ExtractDaysFlagString(const string strDaysFlags)
+LiveScheduleDlg::ExtractDaysFlagString(const int iDayCode)
 {
-	string strDaysShow = "";
+	string strDaysFlags = "0000000";
+	for (int i = 0; i < 7; i++)
+	{
+		if ((1 << (6 - i)) & iDayCode)
+			strDaysFlags[i]++;
+	}
 
 	/* Init days string vector */
 	const QString strDayDef[] = {
@@ -130,18 +125,19 @@ LiveScheduleDlg::ExtractDaysFlagString(const string strDaysFlags)
 		QObject::tr("Sun")
 	};
 
+	QString strDaysShow = "";
 	/* First test for day constellations which allow to apply special names */
 	/* 1111111 = Mon Tue Wed Thu Fri Sat Sun = 1234567 (1 = Monday, 7 = Sunday) */
 	if (strDaysFlags == "1111111")
-		strDaysShow = QObject::tr("daily").latin1();
+		strDaysShow = QObject::tr("daily");
 	else if (strDaysFlags == "1111100")
-		strDaysShow = QObject::tr("from Mon to Fri").latin1();
+		strDaysShow = QObject::tr("from Mon to Fri");
 	else if (strDaysFlags == "1111110")
-		strDaysShow = QObject::tr("from Mon to Sat").latin1();
+		strDaysShow = QObject::tr("from Mon to Sat");
 	else
 	{
 		/* No special name could be applied, just list all active days */
-		for (int i = 0; i < 7; i++)
+		for (size_t i = 0; i < 7; i++)
 		{
 			/* Check if day is active */
 			if (strDaysFlags[i] == CHR_ACTIVE_DAY_MARKER)
@@ -152,36 +148,11 @@ LiveScheduleDlg::ExtractDaysFlagString(const string strDaysFlags)
 					strDaysShow += ",";
 
 				/* Add current day */
-				strDaysShow += strDayDef[i].latin1();
+				strDaysShow += strDayDef[i];
 			}
 		}
 	}
-	return QString(strDaysShow.c_str());
-}
-
-QString
-CDRMLiveSchedule::ExtractFirstDigits(const QString s, const int iDigits)
-{
-	QString sVal;
-	QChar ch;
-	_BOOLEAN bStop;
-
-	sVal = "";
-	bStop = FALSE;
-
-	/* scan the string for extract the first n digits */
-	for (int i = 0; i <= iDigits - 1; i++)
-	{
-		if (bStop == FALSE)
-		{
-			ch = s.at(i);
-			if (ch.isDigit() == TRUE)
-				sVal = sVal + ch;
-			else
-				bStop = TRUE;
-		}
-	}
-	return sVal;
+	return strDaysShow;
 }
 
 void
@@ -192,9 +163,8 @@ CDRMLiveSchedule::SetReceiverCoordinates(double latitude, double longitude)
 }
 
 void
-CDRMLiveSchedule::DecodeTargets(const int iRegionID,
-								const vector < CAltFreqRegion >
-								vecAltFreqRegions, string & strRegions,
+CDRMLiveSchedule::DecodeTargets(const vector < CAltFreqRegion >
+								vecRegions, string & strRegions,
 								_BOOLEAN & bIntoTargetArea)
 {
 	int iCIRAF;
@@ -202,389 +172,149 @@ CDRMLiveSchedule::DecodeTargets(const int iRegionID,
 	int iReceiverLongitude = int (dReceiverLongitude);
 	stringstream ssRegions;
 
-	if (iRegionID > 0)
+	bIntoTargetArea = FALSE;
+
+	for(size_t i = 0; i < vecRegions.size(); i++)
 	{
-		size_t k = 0;
-		while (k < vecAltFreqRegions.size())
+		const int iLatitude = vecRegions[i].iLatitude;
+		const int iLongitude = vecRegions[i].iLongitude;
+
+		const int iLatitudeEx = vecRegions[i].iLatitudeEx;
+		const int iLongitudeEx = vecRegions[i].iLongitudeEx;
+
+		size_t iCIRAFSize = vecRegions[i].veciCIRAFZones.size();
+
+		if (iCIRAFSize > 0)
 		{
-			if (vecAltFreqRegions[k].iRegionID == iRegionID)
+			/* Targets */
+			for (size_t j = 0; j < iCIRAFSize; j++)
 			{
-				const int iLatitude = vecAltFreqRegions[k].iLatitude;
-				const int iLongitude = vecAltFreqRegions[k].iLongitude;
+				iCIRAF = vecRegions[i].veciCIRAFZones[j];
 
-				const int iLatitudeEx = vecAltFreqRegions[k].iLatitudeEx;
-				const int iLongitudeEx = vecAltFreqRegions[k].iLongitudeEx;
+				if (ssRegions.str() != "")
+					ssRegions << ", ";
 
-				size_t iCIRAFSize =
-					vecAltFreqRegions[k].veciCIRAFZones.size();
+				ssRegions << strTableCIRAFzones[iCIRAF];
+			}
+		}
+		else
+		{
+			/* if ciraf zones aren't defined show the latitude and
+			 * longitude of the centre of the target area */
 
-				if (iCIRAFSize > 0)
-				{
-					/* Targets */
-					for (size_t kk = 0; kk < iCIRAFSize; kk++)
-					{
-						iCIRAF = vecAltFreqRegions[k].veciCIRAFZones[kk];
+			if (ssRegions.str() != "")
+				ssRegions << ", ";
 
-						if (ssRegions.str() != "")
-							ssRegions << ", ";
+			int iLatitudeMed = (iLatitude + (iLatitudeEx / 2));
 
-						ssRegions << strTableCIRAFzones[iCIRAF];
-					}
-				}
-				else
-				{
-					/* if ciraf zones aren't defined show the latitude and
-					   longitude of the centre of the target area */
+			ssRegions << "latitude " << abs(iLatitudeMed) << "\xb0 ";
 
-					if (ssRegions.str() != "")
-						ssRegions << ", ";
+			if (iLatitudeMed < 0)
+				ssRegions << 'S';
+			else
+				ssRegions << 'N';
 
-					int iLatitudeMed = (iLatitude + (iLatitudeEx / 2));
+			int iLongitudeMed = (iLongitude + (iLongitudeEx / 2));
 
-					ssRegions << "latitude " << abs(iLatitudeMed) << "\xb0 ";
+			if (iLongitudeMed >= 180)
+				iLongitudeMed = iLongitudeMed - 360;
 
-					if (iLatitudeMed < 0)
-						ssRegions << 'S';
-					else
-						ssRegions << 'N';
+			ssRegions << " longitude " << abs(iLongitudeMed) << "\xb0 ";
 
-					int iLongitudeMed = (iLongitude + (iLongitudeEx / 2));
+			if (iLongitudeMed < 0)
+				ssRegions << 'W';
+			else
+				ssRegions << 'E';
 
-					if (iLongitudeMed >= 180)
-						iLongitudeMed = iLongitudeMed - 360;
-
-					ssRegions << " longitude " << abs(iLongitudeMed) << "\xb0 ";
-
-					if (iLongitudeMed < 0)
-						ssRegions << 'W';
-					else
-						ssRegions << 'E';
-				}
-
-				/* check if receiver coordinates are inside target area */
-				_BOOLEAN bLongitudeOK = ((iReceiverLongitude >= iLongitude)
+		}
+		/* check if receiver coordinates are inside target area
+		 * TODO check if inside CIRAF zones */
+		_BOOLEAN bLongitudeOK = ((iReceiverLongitude >= iLongitude)
 										 && (iReceiverLongitude <=
 											 (iLongitude + iLongitudeEx)))
 					|| (((iLongitude + iLongitudeEx) >= 180)
 						&& (iReceiverLongitude <=
 							(iLongitude + iLongitudeEx - 360)));
 
-				_BOOLEAN bLatitudeOK = ((iReceiverLatitude >= iLatitude)
+		_BOOLEAN bLatitudeOK = ((iReceiverLatitude >= iLatitude)
 										&& (iReceiverLatitude <=
 											(iLatitude + iLatitudeEx)));
 
-				bIntoTargetArea = bIntoTargetArea || (bLongitudeOK
-													  && bLatitudeOK);
-			}
-			k++;
-		}
+		bIntoTargetArea = bIntoTargetArea || (bLongitudeOK && bLatitudeOK);
 	}
 	strRegions = ssRegions.str();
 }
 
-string
-CDRMLiveSchedule::DecodeFrequency(const int iSystemID, const int iFreq)
+void
+CDRMLiveSchedule::LoadServiceDefinition(const CServiceDefinition& service,
+		const CAltFreqSign& AltFreqSign, const uint32_t iServiceID)
 {
-	switch (iSystemID)
+	string strRegions = "";
+	_BOOLEAN bIntoTargetArea = FALSE;
+
+	/* Region */
+	if (service.iRegionID != 0)
+		DecodeTargets(AltFreqSign.vecRegions[service.iRegionID], strRegions, bIntoTargetArea);
+
+	/* For all frequencies */
+	for (size_t j = 0; j < service.veciFrequencies.size(); j++)
 	{
-	case 0:
-	case 1:
-	case 2:
-		/* AM or DRM */
-		return QString().setNum(iFreq).latin1();
+		CLiveScheduleItem LiveScheduleItem;
 
-		break;
+		/* Frequency */
+		LiveScheduleItem.strFreq = service.Frequency(j);
 
-	case 3:
-	case 4:
-	case 5:
-		/* 'FM1 frequency' - 87.5 to 107.9 MHz (100 kHz steps) */
-		return QString().setNum((float) (87.5 + 0.1 * iFreq), 'f',
-								1).latin1();
+		/* Add the target */
+		LiveScheduleItem.strTarget = strRegions;
 
-		break;
+		/* Add the schedule if defined */
+		if (service.iScheduleID > 0)
+			LiveScheduleItem.vecSchedule = AltFreqSign.vecSchedules[service.iScheduleID];
 
-	case 6:
-	case 7:
-	case 8:
-		/* 'FM2 frequency'- 76.0 to 90.0 MHz (100 kHz steps) */
-		return QString().setNum((float) (76.0 + 0.1 * iFreq), 'f',
-								1).latin1();
+		/* Local receiver coordinates are into target area or not */
+		LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
 
-		break;
+		/* Add the system (transmission mode) */
+		LiveScheduleItem.strSystem = service.System();
 
-	default:
-		return "";
-		break;
+		/* Add the Service ID - 0 for DRM Muxes, ID of the Other Service if present */
+		LiveScheduleItem.iServiceID = iServiceID;
+
+		/* Add new item in table */
+		StationsTable.push_back(LiveScheduleItem);
 	}
 }
 
 void
-CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign AltFreqSign,
-									  const CAltFreqOtherServicesSign
-									  AltFreqOtherServicesSign)
+CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign& AltFreqSign)
 {
-	size_t iSize;
-	size_t z;
-	size_t k;
+	size_t i;
 
-	_BOOLEAN bFound;
-	string strSystem;
-	string strRegions;
-	_BOOLEAN bIntoTargetArea;
-	uint32_t iServiceID;
-
-/* Init table for stations */
+	/* Init table for stations */
 	StationsTable.clear();
 
-/* Add AFS informations DRM service */
+	/* Add AFS information for DRM multiplexes */
 
-	iSize = AltFreqSign.vecAltFreq.size();
-
-	for (z = 0; z < iSize; z++)
+	for (i = 0; i < AltFreqSign.vecMultiplexes.size(); i++)
 	{
-		CAltFreq AltFreq = AltFreqSign.vecAltFreq[z];
-
 		/* TODO multiplex and restrictions */
-		//AltFreq.bIsSyncMultplx;
+		//service.bIsSyncMultplx;
 
 		//for ( k = 0; k < 4; k++)
-		//  AltFreq.veciServRestrict[k];
+		//  service.veciServRestrict[k];
 
-		strRegions = "";
-		bIntoTargetArea = FALSE;
-
-		bFound = FALSE;
-
-		if (AltFreq.bRegionSchedFlag == TRUE)
-		{
-			DecodeTargets(AltFreq.iRegionID, AltFreqSign.vecAltFreqRegions,
-						  strRegions, bIntoTargetArea);
-
-			if (AltFreq.iScheduleID > 0)
-			{
-				k = 0;
-
-				while (k < AltFreqSign.vecAltFreqSchedules.size())
-				{
-					/* Schedules */
-					if (AltFreqSign.vecAltFreqSchedules[k].iScheduleID ==
-						AltFreq.iScheduleID)
-					{
-						bFound = TRUE;
-
-						string strDaysFlag =
-							Binary2String(AltFreqSign.vecAltFreqSchedules[k].
-										  iDayCode);
-
-						/* For all frequencies */
-						for (size_t j = 0; j < AltFreq.veciFrequencies.size();
-							 j++)
-						{
-							CLiveScheduleItem LiveScheduleItem;
-
-							/* Frequency */
-							LiveScheduleItem.strFreq =
-								DecodeFrequency(0, AltFreq.veciFrequencies[j]);
-
-							/* Set start time and duration */
-							LiveScheduleItem.iStartTime =
-								AltFreqSign.vecAltFreqSchedules[k].iStartTime;
-							LiveScheduleItem.iDuration =
-								AltFreqSign.vecAltFreqSchedules[k].iDuration;
-
-							/* Days flags */
-							LiveScheduleItem.strDaysFlags = strDaysFlag;
-
-							/* Add the target */
-							LiveScheduleItem.strTarget = strRegions;
-
-							/* Local receiver coordinates are into target area or not */
-							LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
-
-							/* Add the system (transmission mode) */
-							LiveScheduleItem.strSystem = "DRM";
-
-							/* Add new item in table */
-							StationsTable.push_back(LiveScheduleItem);
-						}
-					}
-					k++;
-				}
-			}
-		}
-
-		if ((bFound == FALSE) || (AltFreq.bRegionSchedFlag == FALSE))
-		{
-			/* For all frequencies */
-			for (size_t j = 0; j < AltFreq.veciFrequencies.size(); j++)
-			{
-				CLiveScheduleItem LiveScheduleItem;
-
-				/* Frequency */
-				LiveScheduleItem.strFreq =
-					DecodeFrequency(0, AltFreq.veciFrequencies[j]);
-
-				/* Add the target */
-				LiveScheduleItem.strTarget = strRegions;
-
-				/* Local receiver coordinates are into target area or not */
-				LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
-
-				/* Add the system (transmission mode) */
-				LiveScheduleItem.strSystem = "DRM";
-
-				/* Add new item in table */
-				StationsTable.push_back(LiveScheduleItem);
-			}
-		}
+		LoadServiceDefinition(AltFreqSign.vecMultiplexes[i], AltFreqSign);
 	}
 
-/* Other Services */
-
-	iSize = AltFreqOtherServicesSign.vecAltFreqOtherServices.size();
-
-	for (z = 0; z < iSize; z++)
+	/* Add AFS information for Other Services */
+	for (i = 0; i < AltFreqSign.vecOtherServices.size(); i++)
 	{
-		CAltFreqOtherServicesSign::CAltFreqOtherServices AltFreqOther =
-			AltFreqOtherServicesSign.vecAltFreqOtherServices[z];
+		COtherService OtherService = AltFreqSign.vecOtherServices[i];
 
-		iServiceID = AltFreqOther.iOtherServiceID;
+		/* TODO same service */
+		//OtherService.bSameService;
 
-		if (AltFreqOther.iSystemID < 9)	/* Don't show DAB services */
-		{
-			/* TODO add DAB frequencies */
-
-			/* TODO same service */
-			//AltFreqOther.bSameService;
-
-			switch (AltFreqOther.iSystemID)
-			{
-			case 0:
-				strSystem = "DRM";
-				break;
-
-			case 1:
-			case 2:
-				strSystem = "AM";
-				break;
-
-			case 3:
-			case 4:
-			case 5:
-			case 6:
-			case 7:
-			case 8:
-				strSystem = "FM";
-				break;
-
-			default:
-				strSystem = "";
-				break;
-			}
-
-			strRegions = "";
-			bIntoTargetArea = FALSE;
-
-			bFound = FALSE;
-
-			if (AltFreqOther.bRegionSchedFlag == TRUE)
-			{
-				DecodeTargets(AltFreqOther.iRegionID,
-							  AltFreqSign.vecAltFreqRegions, strRegions,
-							  bIntoTargetArea);
-
-				if (AltFreqOther.iScheduleID > 0)
-				{
-					k = 0;
-
-					while (k < AltFreqSign.vecAltFreqSchedules.size())
-					{
-						/* Schedules */
-						if (AltFreqSign.vecAltFreqSchedules[k].iScheduleID ==
-							AltFreqOther.iScheduleID)
-						{
-							bFound = TRUE;
-
-							string strDaysFlag =
-								Binary2String(AltFreqSign.
-											  vecAltFreqSchedules[k].
-											  iDayCode);
-
-							/* For all frequencies */
-							for (size_t j = 0;
-								 j < AltFreqOther.veciFrequencies.size(); j++)
-							{
-								CLiveScheduleItem LiveScheduleItem;
-
-								/* Frequency */
-								LiveScheduleItem.strFreq =
-									DecodeFrequency(AltFreqOther.iSystemID,
-													AltFreqOther.
-													veciFrequencies[j]);
-
-								/* Set start time and duration */
-								LiveScheduleItem.iStartTime =
-									AltFreqSign.vecAltFreqSchedules[k].
-									iStartTime;
-								LiveScheduleItem.iDuration =
-									AltFreqSign.vecAltFreqSchedules[k].
-									iDuration;
-
-								/* Days flags */
-								LiveScheduleItem.strDaysFlags = strDaysFlag;
-
-								/* Add the target */
-								LiveScheduleItem.strTarget = strRegions;
-
-								/* Local receiver coordinates are into target area or not */
-								LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
-
-								/* Add the system (transmission mode) */
-								LiveScheduleItem.strSystem = strSystem;
-
-								/* Add the service id of the other service */
-								LiveScheduleItem.iServiceID = iServiceID;
-
-								/* Add new item in table */
-								StationsTable.push_back(LiveScheduleItem);
-							}
-						}
-						k++;
-					}
-				}
-			}
-
-			if ((bFound == FALSE) || (AltFreqOther.bRegionSchedFlag == FALSE))
-			{
-				/* For all frequencies */
-				for (size_t j = 0; j < AltFreqOther.veciFrequencies.size();
-					 j++)
-				{
-					CLiveScheduleItem LiveScheduleItem;
-
-					/* Frequency */
-					LiveScheduleItem.strFreq =
-						DecodeFrequency(AltFreqOther.iSystemID,
-										AltFreqOther.veciFrequencies[j]);
-
-					/* Add the target */
-					LiveScheduleItem.strTarget = strRegions;
-
-					/* Local receiver coordinates are into target area or not */
-					LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
-
-					/* Add the system (transmission mode) */
-					LiveScheduleItem.strSystem = strSystem;
-
-					/* Add the service id of the other service */
-					LiveScheduleItem.iServiceID = iServiceID;
-
-					/* Add new item in table */
-					StationsTable.push_back(LiveScheduleItem);
-				}
-			}
-		}
+		LoadServiceDefinition(OtherService, AltFreqSign, OtherService.iServiceID);
 	}
 }
 
@@ -594,7 +324,9 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR, CSettings & NSettings,
 CLiveScheduleDlgBase(parent, name, modal, f),
 DRMReceiver(NDRMR),
 Settings(NSettings),
-vecpListItems()
+vecpListItems(),
+iColStationID(0),
+iWidthColStationID(0)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -636,7 +368,8 @@ vecpListItems()
 
 	/* We assume that one column is already there */
 	ListViewStations->setColumnText(COL_FREQ, tr("Frequency [kHz/MHz]"));
-	ListViewStations->addColumn(tr("Station Name/Id"));
+	iColStationID = ListViewStations->addColumn(tr("")); 
+	iWidthColStationID = this->fontMetrics().width(tr("Station Name/Id"));
 	ListViewStations->addColumn(tr("System"));
 	ListViewStations->addColumn(tr("Time [UTC]"));
 	ListViewStations->addColumn(tr("Target"));
@@ -756,7 +489,7 @@ LiveScheduleDlg::~LiveScheduleDlg()
 void
 LiveScheduleDlg::OnCheckFreeze()
 {
-	/* if CheckBoxFreeze is checked the schedule is freezed */
+	/* if CheckBoxFreeze is checked the schedule is frozen */
 	if (CheckBoxFreeze->isChecked())
 		TimerList.stop();
 	else
@@ -875,6 +608,9 @@ LiveScheduleDlg::LoadSchedule()
 	/* Lock mutex for modifying the vecpListItems */
 	ListItemsMutex.lock();
 
+	/* save the state of the station id column in case we want it later */
+	iWidthColStationID = ListViewStations->columnWidth(iColStationID);
+
 	/* Delete all old list view items (it is important that the vector
 	   "vecpListItems" was initialized to 0 at creation of the global object
 	   otherwise this may cause an segmentation fault) */
@@ -887,8 +623,7 @@ LiveScheduleDlg::LoadSchedule()
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 	Parameters.Lock(); 
-	DRMSchedule.LoadAFSInformations(Parameters.AltFreqSign,
-									Parameters.AltFreqOtherServicesSign);
+	DRMSchedule.LoadAFSInformations(Parameters.AltFreqSign);
 	Parameters.Unlock(); 
 
 	/* Init vector for storing the pointer to the list view items */
@@ -1000,6 +735,8 @@ LiveScheduleDlg::SetStationsView()
 
 	_BOOLEAN bListHastChanged = FALSE;
 
+	_BOOLEAN bHaveOtherServiceIDs = FALSE;
+
 	/* Add new item for each station in list view */
 	for (int i = 0; i < iNumStations; i++)
 	{
@@ -1012,8 +749,11 @@ LiveScheduleDlg::SetStationsView()
 				/* Generate new list item with all necessary column entries */
 				const CLiveScheduleItem& item = DRMSchedule.GetItem(i);
 				QString name = "";
+
 				if(item.iServiceID != 0)
 				{
+					bHaveOtherServiceIDs = TRUE;
+
 					Parameters.Lock(); 
     				map <uint32_t,CServiceInformation>::const_iterator
 						si = Parameters.ServiceInformation.find(item.iServiceID); 
@@ -1026,22 +766,29 @@ LiveScheduleDlg::SetStationsView()
 					}
 					Parameters.Unlock(); 
 				}
-				else
-					name = QString::fromUtf8(thisServiceLabel.c_str());
+
+				/* TODO handle frequencies with complex schedules */
+				QString strDays, strTime;
+				if(item.vecSchedule.size()>0)
+				{
+					strDays = ExtractDaysFlagString(item.vecSchedule[0].iDayCode);
+					strTime = ExtractTime(item.vecSchedule[0]);
+				}
+
 				vecpListItems[i] = new MyListLiveViewItem(ListViewStations,
 						QString(item.strFreq.c_str()) /* freq. */ ,
 						name /* station name or id or blank */ ,
 						QString(item.strSystem.c_str()) /* system */ ,
-						ExtractTime (item.iStartTime, item.iDuration) /* time */ ,
+						strTime,
 						QString(item.strTarget.c_str()) /* target */ ,
-						ExtractDaysFlagString(item.strDaysFlags) /* Show list of days */
+						strDays /* Show list of days */
 				);
 
 				/* Set flag for sorting the list */
 				bListHastChanged = TRUE;
 			}
 
-			/* If receiver coordinates are into target area add a little cube green */
+			/* If receiver coordinates are into target area add a little green cube */
 			if (DRMSchedule.GetItem(i).bInsideTargetArea == TRUE)
 				vecpListItems[i]->setPixmap(COL_TARGET, BitmCubeGreenLittle);
 
@@ -1085,8 +832,20 @@ LiveScheduleDlg::SetStationsView()
 		}
 	}
 
+
+	if(bHaveOtherServiceIDs)
+	{
+		ListViewStations->setColumnText(iColStationID, tr("Station Name/Id"));
+		ListViewStations->setColumnWidth(iColStationID, iWidthColStationID);
+	}
+	else
+	{
+		ListViewStations->setColumnText(iColStationID, "");
+		ListViewStations->setColumnWidth(iColStationID, 0);
+	}
+
 	/* Sort the list if items have changed */
-	if (bListHastChanged == TRUE)
+	if(bListHastChanged)
 		ListViewStations->sort();
 
 	ListItemsMutex.unlock();
@@ -1237,7 +996,7 @@ LiveScheduleDlg::AddWhatsThisHelp()
 	/* Check box freeze */
 	QWhatsThis::add(CheckBoxFreeze,
 					tr
-					("<b>Freeze:</b> If this check box is selectd the live schedule is freezed."));
+					("<b>Freeze:</b> If this check box is selected the live schedule is frozen."));
 }
 
 CDRMLiveSchedule::StationState CDRMLiveSchedule::CheckState(const int iPos)
@@ -1273,58 +1032,19 @@ CDRMLiveSchedule::StationState CDRMLiveSchedule::CheckState(const int iPos)
 _BOOLEAN
 CDRMLiveSchedule::IsActive(const int iPos, const time_t ltime)
 {
-	int iScheduleStart;
-	int iScheduleEnd;
-	int iWeekDay;
+	return StationsTable[iPos].IsActive(ltime);
+}
 
-/* See ETSI ES 201 980 v2.1.1 Annex O */
-
+_BOOLEAN
+CLiveScheduleItem::IsActive(const time_t ltime)
+{
 	/* Empty schedule is always active */
-	if (StationsTable[iPos].iDuration == 0)
-		return true;
+	if(vecSchedule.empty())
+		return TRUE;
 
-	/* Calculate time in UTC */
-	struct tm *gmtCur = gmtime(&ltime);
-
-	/* Check day
-	   tm_wday: day of week (0 - 6; Sunday = 0) 
-	   I must normalize so Monday = 0   */
-
-	if (gmtCur->tm_wday == 0)
-		iWeekDay = 6;
-	else
-		iWeekDay = gmtCur->tm_wday - 1;
-
-	/* iTimeWeek minutes since last Monday 00:00 in UTC */
-	/* the value is in the range 0 <= iTimeWeek < 60 * 24 * 7)   */
-
-	const int iTimeWeek =
-		(iWeekDay * 24 * 60) + (gmtCur->tm_hour * 60) + gmtCur->tm_min;
-
-	/* DaysFlag structure 1111111 = 1234567 (1 = Monday, 7 = Sunday) */
-	for (int i = 0; i < 7; i++)
-	{
-		/* Check if day is active */
-		if (StationsTable[iPos].strDaysFlags[i] == CHR_ACTIVE_DAY_MARKER)
-		{
-			/* Tuesday -> 1 * 24 * 60 = 1440 */
-			iScheduleStart = (i * 24 * 60) + StationsTable[iPos].iStartTime;
-			iScheduleEnd = iScheduleStart + StationsTable[iPos].iDuration;
-
-			/* the normal check (are we inside start and end?) */
-			if ((iTimeWeek >= iScheduleStart) && (iTimeWeek <= iScheduleEnd))
-				return true;
-
-			/* the wrap-around check */
-			const int iMinutesPerWeek = 7 * 24 * 60;
-
-			if (iScheduleEnd > iMinutesPerWeek)
-			{
-				/* our duration wraps into next Monday (or even later) */
-				if (iTimeWeek < (iScheduleEnd - iMinutesPerWeek))
-					return true;
-			}
-		}
-	}
-	return false;
+	for(size_t i=0; i<vecSchedule.size(); i++)
+		if(vecSchedule[i].IsActive(ltime))
+			return TRUE;
+		
+	return FALSE;
 }

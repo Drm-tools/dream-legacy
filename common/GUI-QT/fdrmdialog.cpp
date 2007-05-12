@@ -645,8 +645,7 @@ void FDRMDialog::UpdateDisplay()
 	}
 
 	/* detect if AFS informations are available */
-	if ((Parameters.AltFreqSign.vecAltFreq.size() > 0)
-		|| (Parameters.AltFreqOtherServicesSign.vecAltFreqOtherServices.size() > 0))
+	if ((Parameters.AltFreqSign.vecMultiplexes.size() > 0) || (Parameters.AltFreqSign.vecOtherServices.size() > 0))
 	{
 		/* show AFS label */
 		if (Parameters.Service[0].eAudDataFlag

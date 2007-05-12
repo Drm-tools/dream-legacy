@@ -30,6 +30,7 @@
 #include "DrmReceiver.h"
 #include "Version.h"
 #include <limits>
+#include <sstream>
 #include <iomanip>
 //#include "util/LogPrint.h"
 
@@ -86,7 +87,6 @@ CParameter::CParameter(CDRMReceiver *pRx):
  ReceiveStatus(),
  FrontEndParameters(),
  AltFreqSign(),
- AltFreqOtherServicesSign(),
  rMER(0.0),
  rWMERMSC(0.0),
  rWMERFAC(0.0),
@@ -128,97 +128,6 @@ CParameter::CParameter(CDRMReceiver *pRx):
 		eReceiverMode = pDRMRec->GetReceiverMode();
 	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
 }
-
-/*
- CParameter::CParameter(CDRMReceiver *pRx, CParameter *pParameter):
- pDRMRec(pRx),
- eSymbolInterlMode(),
- eMSCCodingScheme(),	
- eSDCCodingScheme(),	
- iNumAudioService(0),
- iNumDataService(0),
- iAMSSCarrierMode(0),
- sReceiverID(pParameter->sReceiverID), // OPH
- sSerialNumber(pParameter->sSerialNumber), // OPH
- sDataFilesDirectory(pParameter->sDataFilesDirectory), // OPH
- MSCPrLe(),
- Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
- iNumBitsHierarchFrameTotal(0),
- iNumDecodedBitsMSC(0),
- iNumSDCBitsPerSFrame(0),	
- iNumAudioDecoderBits(0),	
- iNumDataDecoderBits(0),	
- iYear(pParameter->iYear), // OPH
- iMonth(pParameter->iMonth), // OPH
- iDay(pParameter->iDay), // OPH
- iUTCHour(pParameter->iUTCHour), // OPH
- iUTCMin(pParameter->iUTCMin), // OPH
- iFrameIDTransm(0),
- iFrameIDReceiv(0),
- rFreqOffsetAcqui(0.0),
- rFreqOffsetTrack(0.0),
- rResampleOffset(0.0),
- iTimingOffsTrack(0),
- eReceiverMode(RM_NONE),
- eAcquiState(AS_NO_SIGNAL),
- vecbiAudioFrameStatus(0),
- bMeasurePSD(pParameter->bMeasurePSD), // OPH
- vecrPSD(0),
- matcReceivedPilotValues(),
- RawSimDa(),
- eSimType(pParameter->eSimType), //OPH: this fixes a problem where DRM performance is poor if Dream starts in AM mode
- iDRMChannelNum(0),
- iSpecChDoppler(0),
- rBitErrRate(0.0),
- rSyncTestParam(0.0),		
- rSINR(0.0),
- iNumBitErrors(0),
- iChanEstDelay(0),
- iNumTaps(0),
- iPathDelay(MAX_NUM_TAPS_DRM_CHAN),
- rGainCorr(0.0),
- iOffUsfExtr(0),
- ReceiveStatus(),
- FrontEndParameters(pParameter->FrontEndParameters),  // OPH
- AltFreqSign(),
- AltFreqOtherServicesSign(),
- rMER(0.0),
- rWMERMSC(0.0),
- rWMERFAC(0.0),
- rSigmaEstimate(0.0),
- rMinDelay(0.0),
- rMaxDelay(0.0),
- bMeasureDelay(pParameter->bMeasureDelay), // OPH
- vecrRdel(0),
- vecrRdelThresholds(0),
- vecrRdelIntervals(0),
- bMeasureDoppler(pParameter->bMeasureDoppler), // OPH
- rRdop(0.0),
- bMeasureInterference(pParameter->bMeasureInterference), // OPH
- rIntFreq(0.0),
- rINR(0.0),
- rICR(0.0),
- rMaxPSDwrtSig(0.0),
- rMaxPSDFreq(0.0),
- rSigStrengthCorrection(pParameter->rSigStrengthCorrection), // OPH
- bRunThread(pParameter->bRunThread),  // OPH
- bUsingMultimedia(pParameter->bUsingMultimedia), // OPH
- CellMappingTable(),
- GPSData(pParameter->GPSData),
- rSysSimSNRdB(0.0),
- iCurSelAudioService(0),
- iCurSelDataService(0),
- eRobustnessMode(RM_ROBUSTNESS_MODE_A),	
- eSpectOccup(SO_0),
- LastAudioService(),
- LastDataService(),
- Mutex()
-{
-	//GenerateRandomSerialNumber();  // OPH
-	if(pDRMRec)
-		eReceiverMode = pDRMRec->GetReceiverMode();
-}
-*/
 
 CParameter::~CParameter()
 {
@@ -277,7 +186,6 @@ CParameter::CParameter(const CParameter& p):
  ReceiveStatus(p.ReceiveStatus),
  FrontEndParameters(p.FrontEndParameters),
  AltFreqSign(p.AltFreqSign),
- AltFreqOtherServicesSign(p.AltFreqOtherServicesSign),
  rMER(p.rMER),
  rWMERMSC(p.rWMERMSC),
  rWMERFAC(p.rWMERFAC),
@@ -372,7 +280,6 @@ CParameter& CParameter::operator=(const CParameter& p)
 	ReceiveStatus = p.ReceiveStatus;
 	FrontEndParameters = p.FrontEndParameters;
 	AltFreqSign = p.AltFreqSign;
-	AltFreqOtherServicesSign = p.AltFreqOtherServicesSign;
 	rMER = p.rMER;
 	rWMERMSC = p.rWMERMSC;
 	rWMERFAC = p.rWMERFAC;
@@ -488,7 +395,6 @@ void CParameter::ResetServicesStreams()
 
 	/* Reset alternative frequencies */
 	AltFreqSign.Reset();
-	AltFreqOtherServicesSign.Reset();
 
 	/* Date, time */
 	iDay = 0;
@@ -1226,4 +1132,222 @@ CMinMaxMean::getMinMax(_REAL& rMinOut, _REAL& rMaxOut)
 	}
 	rMin = numeric_limits<_REAL>::max();
 	rMax = numeric_limits<_REAL>::min();
+}
+
+string CServiceDefinition::Frequency(size_t n) const
+{
+	if(n>=veciFrequencies.size())
+		return ""; // not in the list
+
+	stringstream ss;
+	int iFrequency = veciFrequencies[n];
+
+	switch (iSystemID)
+	{
+	case 0:
+	case 1:
+	case 2:
+		/* AM or DRM */
+		ss << iFrequency;
+		break;
+
+	case 3:
+	case 4:
+	case 5:
+		/* 'FM1 frequency' - 87.5 to 107.9 MHz (100 kHz steps) */
+		ss << 87.5 + 0.1 * float(iFrequency);
+		break;
+
+	case 6:
+	case 7:
+	case 8:
+		/* 'FM2 frequency'- 76.0 to 90.0 MHz (100 kHz steps) */
+		ss << 76.0 + 0.1 * float(iFrequency);
+		break;
+
+	case 9:
+	case 10:
+	case 11:
+		if(iFrequency<=11) {
+			int chan = iFrequency / 4;
+			char subchan = 'A' + iFrequency % 4;
+			ss << "Band I channel " << (chan+2) << subchan;
+		} else if(64<= iFrequency && iFrequency <=95) {
+			int chan = iFrequency / 4;
+			char subchan = 'A' + iFrequency % 4;
+			ss << "Band III channel " << (chan-11) << subchan;
+		} else if(96<= iFrequency && iFrequency <=101) {
+			int chan = iFrequency / 6;
+			char subchan = 'A' + iFrequency % 6;
+			ss << "Band III+ channel " << (chan-3) << subchan;
+		} else if(128<= iFrequency && iFrequency <=143) {
+			char chan = iFrequency - 128;
+			double m = 1452.96+1.712*double(chan);
+			ss << "European L-Band channel L" << ('A'+chan) << ", " << m << " MHz";
+		} else if(160<= iFrequency && iFrequency <=182) {
+			int chan = iFrequency - 159;
+            double m = 1451.072+1.744*double(chan);
+			ss << "Canadian L-Band channel " << chan << ", " << m << " MHz";
+		} else {
+			ss << "unknown channel " << iFrequency;
+		}
+		break;
+	default:
+		break;
+	}
+	return ss.str();
+}
+
+string CServiceDefinition::FrequencyUnits() const
+{
+	switch (iSystemID)
+	{
+	case 0:
+	case 1:
+	case 2:
+		return "kHz";
+		break;
+
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
+	case 8:
+		return "MHz";
+		break;
+
+	default:
+		return "";
+		break;
+	}
+}
+
+string CServiceDefinition::System() const
+{
+	switch (iSystemID)
+	{
+	case 0:
+		return "DRM";
+		break;
+
+	case 1:
+	case 2:
+		return "AM";
+		break;
+
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
+	case 8:
+		return "FM";
+		break;
+	case 9:
+	case 10:
+	case 11:
+		return "DAB";
+		break;
+
+	default:
+		return "";
+		break;
+	}
+}
+
+string COtherService::ServiceID() const
+{
+	stringstream ss;
+	switch (iSystemID)
+	{
+	case 0:
+	case 1:
+		ss << "ID:" << hex << setw(6) << iServiceID;
+		break;
+
+	case 3:
+	case 6:
+		ss << "ECC+PI:" << hex << setw(6) << iServiceID;
+		break;
+	case 4:
+	case 7:
+		ss << "PI:" << hex << setw(4) << iServiceID;
+		break;
+	case 9:
+		ss << "ECC+aud:" << hex << setw(6) << iServiceID;
+		break;
+	case 10:
+		ss << "AUDIO:" << hex << setw(4) << iServiceID;
+		break;
+	case 11:
+		ss << "DATA:" << hex << setw(8) << iServiceID;
+		break;
+		break;
+
+	default:
+		break;
+	}
+	return ss.str();
+}
+
+/* See ETSI ES 201 980 v2.1.1 Annex O */
+_BOOLEAN
+CAltFreqSched::IsActive(const time_t ltime)
+{
+	int iScheduleStart;
+	int iScheduleEnd;
+	int iWeekDay;
+
+	/* Empty schedule is always active */
+	if (iDuration == 0)
+		return true;
+
+	/* Calculate time in UTC */
+	struct tm *gmtCur = gmtime(&ltime);
+
+	/* Check day
+	   tm_wday: day of week (0 - 6; Sunday = 0) 
+	   I must normalize so Monday = 0   */
+
+	if (gmtCur->tm_wday == 0)
+		iWeekDay = 6;
+	else
+		iWeekDay = gmtCur->tm_wday - 1;
+
+	/* iTimeWeek minutes since last Monday 00:00 in UTC */
+	/* the value is in the range 0 <= iTimeWeek < 60 * 24 * 7)   */
+
+	const int iTimeWeek =
+		(iWeekDay * 24 * 60) + (gmtCur->tm_hour * 60) + gmtCur->tm_min;
+
+	/* Day Code: this field indicates which days the frequency schedule
+	 * (the following Start Time and Duration) applies to. 
+	 * The msb indicates Monday, the lsb Sunday. Between one and seven bits may be set to 1.
+	 */
+	for (int i = 0; i < 7; i++)
+	{
+		/* Check if day is active */
+		if ((1 << (6 - i)) & iDayCode)
+		{
+			/* Tuesday -> 1 * 24 * 60 = 1440 */
+			iScheduleStart = (i * 24 * 60) + iStartTime;
+			iScheduleEnd = iScheduleStart + iDuration;
+
+			/* the normal check (are we inside start and end?) */
+			if ((iTimeWeek >= iScheduleStart) && (iTimeWeek <= iScheduleEnd))
+				return true;
+
+			/* the wrap-around check */
+			const int iMinutesPerWeek = 7 * 24 * 60;
+
+			if (iScheduleEnd > iMinutesPerWeek)
+			{
+				/* our duration wraps into next Monday (or even later) */
+				if (iTimeWeek < (iScheduleEnd - iMinutesPerWeek))
+					return true;
+			}
+		}
+	}
+	return false;
 }

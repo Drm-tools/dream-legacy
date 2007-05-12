@@ -72,17 +72,17 @@
 class CLiveScheduleItem
 {
 public:
-	CLiveScheduleItem() : strFreq(""), strTarget(""),  strDaysFlags("0000000"),
-	iStartTime(0), iDuration(0), iServiceID(0), strSystem(""), bInsideTargetArea(FALSE) {}
+	CLiveScheduleItem() : strFreq(""), strTarget(""), iServiceID(0),
+	strSystem(""), bInsideTargetArea(FALSE) {}
+
+	_BOOLEAN IsActive(const time_t ltime);
 
 	string		strFreq;
 	string		strTarget;
-	string		strDaysFlags;
-	int			iStartTime;
-	int			iDuration;
 	uint32_t	iServiceID;
 	string		strSystem;
 	_BOOLEAN	bInsideTargetArea;
+	vector<CAltFreqSched> vecSchedule;
 };
 
 class CDRMLiveSchedule
@@ -99,20 +99,18 @@ public:
 	CLiveScheduleItem& GetItem(const int iPos) {return StationsTable[iPos];}
 	StationState CheckState(const int iPos);
 
-	void LoadAFSInformations(const CAltFreqSign AltFreqSign
-			, const CAltFreqOtherServicesSign AltFreqOtherServicesSign);
+	void LoadAFSInformations(const CAltFreqSign& AltFreqSign);
 
-	void DecodeTargets(const int iRegionID, const vector<CAltFreqRegion> vecAltFreqRegions
-		, string& strRegions , _BOOLEAN& bIntoTargetArea);
-	string DecodeFrequency(const int iSystemID, const int iFreq);
+	void LoadServiceDefinition(const CServiceDefinition& service,
+			const CAltFreqSign& AltFreqSign, const uint32_t iServiceID=0);
+
+	void DecodeTargets(const vector<CAltFreqRegion> vecAltFreqRegions,
+		string& strRegions , _BOOLEAN& bIntoTargetArea);
 
 	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
 	int GetSecondsPreview() {return iSecondsPreview;}
 
-	string Binary2String(const int iVal);
-
 	void SetReceiverCoordinates(double latitude, double longitude);
-	QString ExtractFirstDigits(const QString s, const int iDigits);
 
 protected:
 	_BOOLEAN IsActive(const int iPos, const time_t ltime);
@@ -130,8 +128,6 @@ protected:
 class MyListLiveViewItem : public QListViewItem
 {
 public:
-	/* If you want to add another columns, change also MAX_COLUMN_NUMBER in
-	   Settings.h! */
 	MyListLiveViewItem(QListView* parent, QString s1, QString s2 = QString::null,
 		QString s3 = QString::null, QString s4 = QString::null,
 		QString s5 = QString::null, QString s6 = QString::null,
@@ -167,8 +163,8 @@ protected:
 	void			SetUTCTimeLabel();
 	virtual void	showEvent(QShowEvent* pEvent);
 	virtual void	hideEvent(QHideEvent* pEvent);
-	QString			ExtractDaysFlagString(const string strDaysFlags);
-	QString			ExtractTime(const int iTimeStart, const int iDuration);
+	QString			ExtractDaysFlagString(const int iDayCode);
+	QString			ExtractTime(const CAltFreqSched& schedule);
 
 	CDRMReceiver&				DRMReceiver;
 	CSettings&					Settings;
@@ -190,6 +186,8 @@ protected:
 	vector<MyListLiveViewItem*>	vecpListItems;
 	QMutex						ListItemsMutex;
 	string						strCurrentSavePath;
+	int							iColStationID;
+	int							iWidthColStationID;
 
 public slots:
 	void OnTimerList();

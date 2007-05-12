@@ -1351,21 +1351,21 @@ CDRMReceiver::saveSDCtoFile()
 		pFile = fopen("test/altfreq.dat", "w");
 
 	ReceiverParam.Lock();
-	size_t inum = ReceiverParam.AltFreqSign.vecAltFreq.size();
+	size_t inum = ReceiverParam.AltFreqSign.vecMultiplexes.size();
 	for (size_t z = 0; z < inum; z++)
 	{
-		fprintf(pFile, "sync:%d sr:", ReceiverParam.AltFreqSign.vecAltFreq[z].bIsSyncMultplx);
+		fprintf(pFile, "sync:%d sr:", ReceiverParam.AltFreqSign.vecMultiplexes[z].bIsSyncMultplx);
 
 		for (int k = 0; k < 4; k++)
-				fprintf(pFile, "%d", ReceiverParam.AltFreqSign.vecAltFreq[z].  veciServRestrict[k]);
+				fprintf(pFile, "%d", ReceiverParam.AltFreqSign.vecMultiplexes[z].  veciServRestrict[k]);
 		fprintf(pFile, " fr:");
 
-		for (size_t kk = 0; kk < ReceiverParam.AltFreqSign.vecAltFreq[z].veciFrequencies.size(); kk++)
-			fprintf(pFile, "%d ", ReceiverParam.AltFreqSign.vecAltFreq[z].  veciFrequencies[kk]);
+		for (size_t kk = 0; kk < ReceiverParam.AltFreqSign.vecMultiplexes[z].veciFrequencies.size(); kk++)
+			fprintf(pFile, "%d ", ReceiverParam.AltFreqSign.vecMultiplexes[z].  veciFrequencies[kk]);
 
 		fprintf(pFile, " rID:%d sID:%d   /   ",
-					ReceiverParam.AltFreqSign.vecAltFreq[z].iRegionID,
-					ReceiverParam.AltFreqSign.vecAltFreq[z].iScheduleID);
+					ReceiverParam.AltFreqSign.vecMultiplexes[z].iRegionID,
+					ReceiverParam.AltFreqSign.vecMultiplexes[z].iScheduleID);
 	}
 	ReceiverParam.Unlock();
 	fprintf(pFile, "\n");

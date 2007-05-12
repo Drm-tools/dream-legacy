@@ -55,6 +55,7 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 	else
 	{
 		ReceiverParam.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
+		ReceiverParam.Unlock(); 
 		return;
 	}
 	if (TagPacketDecoderMDI.TagItemDecoderRobMod.IsReady())

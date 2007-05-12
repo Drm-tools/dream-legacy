@@ -399,7 +399,6 @@ void CAMSSDecode::DecodeBlock1(CVector<_BINARY>& bBits, CParameter& ReceiverPara
 	if (iServiceID != ReceiverParam.Service[0].iServiceID)
 	{
 		ReceiverParam.ResetServicesStreams();
-		ReceiverParam.AltFreqOtherServicesSign.Reset();
 	}
 
 	ReceiverParam.iAMSSCarrierMode = iAMSSCarrierMode;

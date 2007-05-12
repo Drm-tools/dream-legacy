@@ -705,7 +705,10 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 	_BOOLEAN bSDCOK = FALSE;
 
 	/* Decode SDC block and return CRC status */
-	switch (SDCReceive.SDCParam(pvecInputData, ReceiverParam))
+	CSDCReceive::ERetStatus eStatus = SDCReceive.SDCParam(pvecInputData, ReceiverParam);
+
+	ReceiverParam.Lock();
+	switch(eStatus)
 	{
 	case CSDCReceive::SR_OK:
 		ReceiverParam.ReceiveStatus.SDC.SetStatus(RX_OK);
@@ -730,6 +733,7 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 		ReceiverParam.ReceiveStatus.SDC.SetStatus(DATA_ERROR);
 		break;
 	}
+	ReceiverParam.Unlock();
 
 	/* Reset "first block" flag */
 	bFirstBlock = FALSE;

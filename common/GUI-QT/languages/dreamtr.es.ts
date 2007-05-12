@@ -1131,7 +1131,7 @@ Escoge el cuarto servicio</translation>
         <translation type='unfinished'>Programación en Directo</translation>
     </message>
     <message>
-        <source>&lt;b&gt;Freeze:&lt;/b&gt; If this check box is selectd the live schedule is freezed.</source>
+        <source>&lt;b&gt;Freeze:&lt;/b&gt; If this check box is selected the live schedule is frozen.</source>
         <translation type='unfinished'>&lt;b&gt;Parar:&lt;/b&gt; Al seleccionar esta opción, la programación en directo se detiene.</translation>
     </message>
     <message>

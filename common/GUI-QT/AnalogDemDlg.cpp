@@ -810,13 +810,11 @@ void CAMSSDlg::OnTimer()
 	}
 
 	/* Get number of alternative services */
-	const size_t iNumAltServices = Parameters.
-		AltFreqOtherServicesSign.vecAltFreqOtherServices.size();
+	const size_t iNumAltServices = Parameters.AltFreqSign.vecOtherServices.size();
 
 	if (iNumAltServices != 0)
 	{
-		ListBoxAMSSAFSList->
-			insertItem(QString().setNum((long) iNumAltServices), 10);
+		ListBoxAMSSAFSList->insertItem(QString().setNum((long) iNumAltServices), 10);
 
 		ListBoxAMSSAFSList->clear();
 		ListBoxAMSSAFSList->setEnabled(TRUE);
@@ -825,7 +823,7 @@ void CAMSSDlg::OnTimer()
 
 		for (size_t i = 0; i < iNumAltServices; i++)
 		{
-			switch (Parameters.AltFreqOtherServicesSign.vecAltFreqOtherServices[i].iSystemID)
+			switch (Parameters.AltFreqSign.vecOtherServices[i].iSystemID)
 			{
 			case 0:
 				freqEntry = "DRM:";
@@ -850,11 +848,9 @@ void CAMSSDlg::OnTimer()
 				break;
 			}
 
-			const int iNumAltFreqs = Parameters.AltFreqOtherServicesSign.
-				vecAltFreqOtherServices[i].veciFrequencies.Size();
+			const int iNumAltFreqs = Parameters.AltFreqSign.vecOtherServices[i].veciFrequencies.size();
 
-			const int iSystemID = Parameters.
-				AltFreqOtherServicesSign.vecAltFreqOtherServices[i].iSystemID;
+			const int iSystemID = Parameters.AltFreqSign.vecOtherServices[i].iSystemID;
 
 			switch (iSystemID)
 			{
@@ -866,7 +862,7 @@ void CAMSSDlg::OnTimer()
 				{
 					freqEntry +=
 						QString().setNum((long) Parameters.
-						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
+						AltFreqSign.vecOtherServices[i].
 						veciFrequencies[j], 10);
 							
 					if (j != iNumAltFreqs-1)
@@ -880,8 +876,8 @@ void CAMSSDlg::OnTimer()
 					freqEntry += " ID:";
 					freqEntry +=
 						QString().setNum((long) Parameters.
-						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
-						iOtherServiceID, 16).upper();
+						AltFreqSign.vecOtherServices[i].
+						iServiceID, 16).upper();
 				}
 				break;
 
@@ -893,8 +889,8 @@ void CAMSSDlg::OnTimer()
 				{
 					freqEntry +=
 						QString().setNum((float) (87.5 + 0.1 * DRMReceiver.
-						GetParameters()->AltFreqOtherServicesSign.
-						vecAltFreqOtherServices[i].veciFrequencies[j]), 'f', 1);
+						GetParameters()->AltFreqSign.
+						vecOtherServices[i].veciFrequencies[j]), 'f', 1);
 
 					if (j != iNumAltFreqs-1)
 						freqEntry += ",";
@@ -906,8 +902,8 @@ void CAMSSDlg::OnTimer()
 					freqEntry += " ECC+PI:";
 					freqEntry +=
 						QString().setNum((long) Parameters.
-						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
-						iOtherServiceID, 16).upper();
+						AltFreqSign.vecOtherServices[i].
+						iServiceID, 16).upper();
 				}
 
 				if (iSystemID == 4)
@@ -915,8 +911,8 @@ void CAMSSDlg::OnTimer()
 					freqEntry += " PI:";
 					freqEntry +=
 						QString().setNum((long) Parameters.
-						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
-						iOtherServiceID, 16).upper();
+						AltFreqSign.vecOtherServices[i].
+						iServiceID, 16).upper();
 				}
 				break;
 
@@ -928,8 +924,8 @@ void CAMSSDlg::OnTimer()
 				{
 					freqEntry +=
 						QString().setNum((float) (76.0 + 0.1 * DRMReceiver.
-						GetParameters()->AltFreqOtherServicesSign.
-						vecAltFreqOtherServices[i].veciFrequencies[j]), 'f', 1);
+						GetParameters()->AltFreqSign.
+						vecOtherServices[i].veciFrequencies[j]), 'f', 1);
 							
 					if (j != iNumAltFreqs-1)
 						freqEntry += ",";
@@ -941,8 +937,8 @@ void CAMSSDlg::OnTimer()
 					freqEntry += " ECC+PI:";
 					freqEntry +=
 						QString().setNum((long) Parameters.
-						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
-						iOtherServiceID, 16).upper();
+						AltFreqSign.vecOtherServices[i].
+						iServiceID, 16).upper();
 				}
 
 				if (iSystemID == 7)
@@ -950,8 +946,8 @@ void CAMSSDlg::OnTimer()
 					freqEntry += " PI:";
 					freqEntry +=
 						QString().setNum((long) Parameters.
-						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
-						iOtherServiceID, 16).upper();
+						AltFreqSign.vecOtherServices[i].
+						iServiceID, 16).upper();
 				}
 				break;
 
@@ -960,8 +956,8 @@ void CAMSSDlg::OnTimer()
 				break;
 			}
 
-			if (Parameters.AltFreqOtherServicesSign.
-				vecAltFreqOtherServices[i].bSameService)
+			if (Parameters.AltFreqSign.
+				vecOtherServices[i].bSameService)
 			{
 				freqEntry += " (same service)";
 			}

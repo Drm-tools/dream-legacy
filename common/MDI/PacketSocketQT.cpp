@@ -155,7 +155,6 @@ CPacketSocketQT::GetDestination(string & str)
 	stringstream s;
 	s << HostAddrOut.toString().latin1() << ":" << iHostPortOut;
 	str = s.str();
-	cout << "CPacketSocketQT::GetDestination(" << str << ")" << endl;
 	return TRUE;
 }
 
