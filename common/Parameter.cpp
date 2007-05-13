@@ -1259,6 +1259,7 @@ string CServiceDefinition::System() const
 string COtherService::ServiceID() const
 {
 	stringstream ss;
+	/*
 	switch (iSystemID)
 	{
 	case 0:
@@ -1288,6 +1289,7 @@ string COtherService::ServiceID() const
 	default:
 		break;
 	}
+	*/
 	return ss.str();
 }
 
