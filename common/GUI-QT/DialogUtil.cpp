@@ -147,7 +147,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
         "the MDI interface and added RSCI support. The EPG was implemented by "
         "<i>Julian Cable</i> and the Broadcast Website and AFS features as well as many "
         "other GUI improvements were implemented by <i>Andrea Russo</i>.<br>Right now "
-        "the code is mainly maintained by <i>Julian Cable</i> and <i>Andrea Russo</i>."
+        "the code is mainly maintained by <i>Julian Cable</i>."
         "<br><br><br>"
 		"<center><b>CREDITS</b></center><br>"
 		"We want to thank all the contributors to the Dream software (in "
