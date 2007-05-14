@@ -230,7 +230,6 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 
 void CDownstreamDI::SetReceiver(CDRMReceiver *pReceiver)
 {
-cout << "CDownstreamDI::SetReceiver" << endl;
 	pDrmReceiver = pReceiver;
 	for(vector<CRSISubscriber*>::iterator i = RSISubscribers.begin();
 			i!=RSISubscribers.end(); i++)
