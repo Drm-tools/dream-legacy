@@ -1561,10 +1561,13 @@ EPG::saveChannels (const QString & fileName)
 		QDomElement serviceID = doc.createElement ("serviceID");
 		serviceID.setAttribute ("id", QString::number (ulong (si.id), 16));
 		service.appendChild (serviceID);
-		QDomElement shortName = doc.createElement ("shortName");
-		QDomText text = doc.createTextNode (QString().fromUtf8(si.label.begin()->c_str()));
-		shortName.appendChild (text);
-		service.appendChild (shortName);
+		for(set<string>::const_iterator j = si.label.begin(); j != si.label.end(); j++)
+		{
+			QDomElement shortName = doc.createElement ("shortName");
+			QDomText text = doc.createTextNode (QString().fromUtf8(j->c_str()));
+			shortName.appendChild (text);
+			service.appendChild (shortName);
+		}
 		ensemble.appendChild (service);
 	}
 	QTextStream stream (&f);
