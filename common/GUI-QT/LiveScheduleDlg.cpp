@@ -258,30 +258,34 @@ CDRMLiveSchedule::LoadServiceDefinition(const CServiceDefinition& service,
 
 	/* For all frequencies */
 	for (size_t j = 0; j < service.veciFrequencies.size(); j++)
-	{
-		CLiveScheduleItem LiveScheduleItem;
+	{	
+		vector<CAltFreqSched> vecSchedules = AltFreqSign.vecSchedules[service.iScheduleID];
+		for (size_t k = 0; k < vecSchedules.size(); k++)
+		{
+			CLiveScheduleItem LiveScheduleItem;
 
-		/* Frequency */
-		LiveScheduleItem.strFreq = service.Frequency(j);
+			/* Frequency */
+			LiveScheduleItem.strFreq = service.Frequency(j);
 
-		/* Add the target */
-		LiveScheduleItem.strTarget = strRegions;
+			/* Add the target */
+			LiveScheduleItem.strTarget = strRegions;
 
-		/* Add the schedule if defined */
-		if (service.iScheduleID > 0)
-			LiveScheduleItem.vecSchedule = AltFreqSign.vecSchedules[service.iScheduleID];
+			/* Add the schedule if defined */
+			if (service.iScheduleID > 0)
+				LiveScheduleItem.Schedule = vecSchedules[k];
 
-		/* Local receiver coordinates are into target area or not */
-		LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
+			/* Local receiver coordinates are into target area or not */
+			LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
 
-		/* Add the system (transmission mode) */
-		LiveScheduleItem.strSystem = service.System();
+			/* Add the system (transmission mode) */
+			LiveScheduleItem.strSystem = service.System();
 
-		/* Add the Service ID - 0 for DRM Muxes, ID of the Other Service if present */
-		LiveScheduleItem.iServiceID = iServiceID;
+			/* Add the Service ID - 0 for DRM Muxes, ID of the Other Service if present */
+			LiveScheduleItem.iServiceID = iServiceID;
 
-		/* Add new item in table */
-		StationsTable.push_back(LiveScheduleItem);
+			/* Add new item in table */
+			StationsTable.push_back(LiveScheduleItem);
+		}
 	}
 }
 
@@ -767,21 +771,13 @@ LiveScheduleDlg::SetStationsView()
 					Parameters.Unlock(); 
 				}
 
-				/* TODO handle frequencies with complex schedules */
-				QString strDays, strTime;
-				if(item.vecSchedule.size()>0)
-				{
-					strDays = ExtractDaysFlagString(item.vecSchedule[0].iDayCode);
-					strTime = ExtractTime(item.vecSchedule[0]);
-				}
-
 				vecpListItems[i] = new MyListLiveViewItem(ListViewStations,
 						QString(item.strFreq.c_str()) /* freq. */ ,
 						name /* station name or id or blank */ ,
 						QString(item.strSystem.c_str()) /* system */ ,
-						strTime,
+						ExtractTime(item.Schedule) /* time */,
 						QString(item.strTarget.c_str()) /* target */ ,
-						strDays /* Show list of days */
+						ExtractDaysFlagString(item.Schedule.iDayCode) /* Show list of days */
 				);
 
 				/* Set flag for sorting the list */
@@ -1038,13 +1034,5 @@ CDRMLiveSchedule::IsActive(const int iPos, const time_t ltime)
 _BOOLEAN
 CLiveScheduleItem::IsActive(const time_t ltime)
 {
-	/* Empty schedule is always active */
-	if(vecSchedule.empty())
-		return TRUE;
-
-	for(size_t i=0; i<vecSchedule.size(); i++)
-		if(vecSchedule[i].IsActive(ltime))
-			return TRUE;
-		
-	return FALSE;
+	return Schedule.IsActive(ltime);
 }

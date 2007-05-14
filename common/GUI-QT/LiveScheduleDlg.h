@@ -82,7 +82,7 @@ public:
 	uint32_t	iServiceID;
 	string		strSystem;
 	_BOOLEAN	bInsideTargetArea;
-	vector<CAltFreqSched> vecSchedule;
+	CAltFreqSched Schedule;
 };
 
 class CDRMLiveSchedule
