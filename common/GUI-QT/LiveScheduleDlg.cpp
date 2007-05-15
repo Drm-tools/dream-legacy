@@ -259,8 +259,34 @@ CDRMLiveSchedule::LoadServiceDefinition(const CServiceDefinition& service,
 	/* For all frequencies */
 	for (size_t j = 0; j < service.veciFrequencies.size(); j++)
 	{	
-		vector<CAltFreqSched> vecSchedules = AltFreqSign.vecSchedules[service.iScheduleID];
-		for (size_t k = 0; k < vecSchedules.size(); k++)
+		if (service.iScheduleID > 0)
+		{
+			const vector<CAltFreqSched>& vecSchedules = AltFreqSign.vecSchedules[service.iScheduleID];
+			for (size_t k = 0; k < vecSchedules.size(); k++)
+			{
+				CLiveScheduleItem LiveScheduleItem;
+
+				/* Frequency */
+				LiveScheduleItem.strFreq = service.Frequency(j);
+
+				/* Add the target */
+				LiveScheduleItem.strTarget = strRegions;
+
+				/* Add the schedule */
+				LiveScheduleItem.Schedule = vecSchedules[k];
+
+				/* Local receiver coordinates are into target area or not */
+				LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
+
+				/* Add the system (transmission mode) */
+				LiveScheduleItem.strSystem = service.System();
+
+				/* Add the Service ID - 0 for DRM Muxes, ID of the Other Service if present */
+				LiveScheduleItem.iServiceID = iServiceID;
+
+			}
+		}
+		else
 		{
 			CLiveScheduleItem LiveScheduleItem;
 
@@ -269,10 +295,6 @@ CDRMLiveSchedule::LoadServiceDefinition(const CServiceDefinition& service,
 
 			/* Add the target */
 			LiveScheduleItem.strTarget = strRegions;
-
-			/* Add the schedule if defined */
-			if (service.iScheduleID > 0)
-				LiveScheduleItem.Schedule = vecSchedules[k];
 
 			/* Local receiver coordinates are into target area or not */
 			LiveScheduleItem.bInsideTargetArea = bIntoTargetArea;
