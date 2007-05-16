@@ -1162,6 +1162,9 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 		/* Remove four bytes from frequency count */
 		iNumFreqTmp -= 4;
 		break;
+
+	default:
+		OtherService.iServiceID = SERV_ID_NOT_USED;
 	}
 
 	/* n frequencies: this field carries n, variable length bit fields. n is in

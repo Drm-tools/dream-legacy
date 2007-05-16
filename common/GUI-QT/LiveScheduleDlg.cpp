@@ -268,7 +268,7 @@ CDRMLiveSchedule::LoadServiceDefinition(const CServiceDefinition& service,
 
 				/* Frequency */
 				LiveScheduleItem.strFreq = service.Frequency(j);
-cout << LiveScheduleItem.strFreq << endl;
+
 				/* Add the target */
 				LiveScheduleItem.strTarget = strRegions;
 
@@ -295,7 +295,6 @@ cout << LiveScheduleItem.strFreq << endl;
 			/* Frequency */
 			LiveScheduleItem.strFreq = service.Frequency(j);
 
-cout << LiveScheduleItem.strFreq << endl;
 			/* Add the target */
 			LiveScheduleItem.strTarget = strRegions;
 
@@ -323,8 +322,6 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign& AltFreqSign)
 	StationsTable.clear();
 
 	/* Add AFS information for DRM multiplexes */
-	cout << "Add AFS information for DRM multiplexes" << endl;
-
 	for (i = 0; i < AltFreqSign.vecMultiplexes.size(); i++)
 	{
 		/* TODO multiplex and restrictions */
@@ -337,7 +334,6 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign& AltFreqSign)
 	}
 
 	/* Add AFS information for Other Services */
-	cout << "Add AFS information for Other Services" << endl;
 	for (i = 0; i < AltFreqSign.vecOtherServices.size(); i++)
 	{
 		COtherService OtherService = AltFreqSign.vecOtherServices[i];
@@ -781,7 +777,7 @@ LiveScheduleDlg::SetStationsView()
 				const CLiveScheduleItem& item = DRMSchedule.GetItem(i);
 				QString name = "";
 
-				if(item.iServiceID != 0)
+				if(item.iServiceID != SERV_ID_NOT_USED)
 				{
 					bHaveOtherServiceIDs = TRUE;
 

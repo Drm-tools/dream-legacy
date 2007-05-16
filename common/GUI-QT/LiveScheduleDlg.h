@@ -72,7 +72,7 @@
 class CLiveScheduleItem
 {
 public:
-	CLiveScheduleItem() : strFreq(""), strTarget(""), iServiceID(0),
+	CLiveScheduleItem() : strFreq(""), strTarget(""), iServiceID(SERV_ID_NOT_USED),
 	strSystem(""), bInsideTargetArea(FALSE) {}
 
 	_BOOLEAN IsActive(const time_t ltime);
@@ -102,7 +102,7 @@ public:
 	void LoadAFSInformations(const CAltFreqSign& AltFreqSign);
 
 	void LoadServiceDefinition(const CServiceDefinition& service,
-			const CAltFreqSign& AltFreqSign, const uint32_t iServiceID=0);
+			const CAltFreqSign& AltFreqSign, const uint32_t iServiceID=SERV_ID_NOT_USED);
 
 	void DecodeTargets(const vector<CAltFreqRegion> vecAltFreqRegions,
 		string& strRegions , _BOOLEAN& bIntoTargetArea);
