@@ -146,9 +146,11 @@ CPacketSocketQT::SetNetwOutAddr (const string & strNewAddr)
 #endif
         if (setsockopt (s, IPPROTO_IP, IP_MULTICAST_IF,
                         (char *) &mc_if, sizeof (mc_if)) == SOCKET_ERROR)
+	        bAddressOK = FALSE;
+
         if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL,
                     (char*) &ttl, sizeof(ttl)) == SOCKET_ERROR)
-        bAddressOK = FALSE;
+      	  bAddressOK = FALSE;
         break;
     }
     return bAddressOK;
