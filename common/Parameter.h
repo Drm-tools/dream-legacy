@@ -599,7 +599,7 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 	{
 	public:
 		COtherService(): CServiceDefinition(), bSameService(TRUE),
-			iShortID(0), iServiceID(0)
+			iShortID(0), iServiceID(SERV_ID_NOT_USED)
 		{
 		}
 
@@ -966,8 +966,8 @@ class CParameter
 		return SOUNDCRD_SAMPLE_RATE * (rFreqOffsetAcqui + rFreqOffsetTrack);
 	}
 
-	_REAL GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData);
-	_REAL PartABLenRatio(const int iServiceID);
+	_REAL GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData);
+	_REAL PartABLenRatio(const int iShortID);
 
 	/* Parameters controlled by FAC ----------------------------------------- */
 	void SetInterleaverDepth(const ESymIntMod eNewDepth);
@@ -992,7 +992,7 @@ class CParameter
 	}
 
 	void SetAudDataFlag(const int iServID, const CService::ETyOServ iNewADaFl);
-	void SetServID(const int iServID, const uint32_t iNewServID);
+	void SetServiceID(const int iShortID, const uint32_t iNewServiceID);
 
 	CDRMReceiver* pDRMRec;
 

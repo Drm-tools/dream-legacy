@@ -268,7 +268,7 @@ CDRMLiveSchedule::LoadServiceDefinition(const CServiceDefinition& service,
 
 				/* Frequency */
 				LiveScheduleItem.strFreq = service.Frequency(j);
-
+cout << LiveScheduleItem.strFreq << endl;
 				/* Add the target */
 				LiveScheduleItem.strTarget = strRegions;
 
@@ -284,6 +284,8 @@ CDRMLiveSchedule::LoadServiceDefinition(const CServiceDefinition& service,
 				/* Add the Service ID - 0 for DRM Muxes, ID of the Other Service if present */
 				LiveScheduleItem.iServiceID = iServiceID;
 
+				/* Add new item in table */
+				StationsTable.push_back(LiveScheduleItem);
 			}
 		}
 		else
@@ -293,6 +295,7 @@ CDRMLiveSchedule::LoadServiceDefinition(const CServiceDefinition& service,
 			/* Frequency */
 			LiveScheduleItem.strFreq = service.Frequency(j);
 
+cout << LiveScheduleItem.strFreq << endl;
 			/* Add the target */
 			LiveScheduleItem.strTarget = strRegions;
 
@@ -320,6 +323,7 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign& AltFreqSign)
 	StationsTable.clear();
 
 	/* Add AFS information for DRM multiplexes */
+	cout << "Add AFS information for DRM multiplexes" << endl;
 
 	for (i = 0; i < AltFreqSign.vecMultiplexes.size(); i++)
 	{
@@ -333,6 +337,7 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign& AltFreqSign)
 	}
 
 	/* Add AFS information for Other Services */
+	cout << "Add AFS information for Other Services" << endl;
 	for (i = 0; i < AltFreqSign.vecOtherServices.size(); i++)
 	{
 		COtherService OtherService = AltFreqSign.vecOtherServices[i];

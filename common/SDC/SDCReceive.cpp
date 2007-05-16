@@ -321,10 +321,14 @@ _BOOLEAN CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
 		/* store label string in the current service structure */
 		Parameter.Lock();
 		Parameter.Service[iTempShortID].strLabel = strLabel;
-		/* and keep it in the persistent service information store */
+		/* and keep it in the persistent service information store.
+		 * But only if the FAC has already seen the sid. */
 		uint32_t sid = Parameter.Service[iTempShortID].iServiceID;
-		(void)Parameter.ServiceInformation[sid].label.insert(strLabel);
-		Parameter.ServiceInformation[sid].id = sid;
+		if(sid != SERV_ID_NOT_USED)
+		{
+			(void)Parameter.ServiceInformation[sid].label.insert(strLabel);
+			Parameter.ServiceInformation[sid].id = sid;
+		}
 		Parameter.Unlock();
 
 		return FALSE;

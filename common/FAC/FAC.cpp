@@ -410,6 +410,7 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		/* Reset separation function */
 		(*pbiFACData).ResetBitAccess();
 
+		Parameter.Lock();
 
 		/* Channel parameters ----------------------------------------------- */
 		/* Base/Enhancement flag (not used) */
@@ -531,7 +532,7 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		iTempShortID = (*pbiFACData).Separate(2);
 
 		/* Set service identifier */
-		Parameter.SetServID(iTempShortID, iTempServiceID);
+		Parameter.SetServiceID(iTempShortID, iTempServiceID);
 
 		/* CA indication */
 		switch ((*pbiFACData).Separate(1))
@@ -565,6 +566,8 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		/* Service descriptor */
 		Parameter.Service[iTempShortID].iServiceDescr = 
 			(*pbiFACData).Separate(5);
+
+		Parameter.Unlock();
 
 		/* Rfa */
 		/* Do not use Rfa */

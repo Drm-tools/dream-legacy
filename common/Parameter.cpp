@@ -453,28 +453,28 @@ void CParameter::GetActiveStreams(vector<int>& veciActStr)
 	}
 }
 
-_REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
+_REAL CParameter::GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData)
 {
 	/* Init lengths to zero in case the stream is not yet assigned */
 	int iLen = 0;
 
 	/* First, check if audio or data service and get lengths */
-	if (Service[iServiceID].eAudDataFlag == CService::SF_AUDIO)
+	if (Service[iShortID].eAudDataFlag == CService::SF_AUDIO)
 	{
 		/* Check if we want to get the data stream connected to an audio
 		   stream */
 		if (bAudData == TRUE)
 		{
-			iLen = GetStreamLen( Service[iServiceID].DataParam.iStreamID);
+			iLen = GetStreamLen( Service[iShortID].DataParam.iStreamID);
 		}
 		else
 		{
-			iLen = GetStreamLen( Service[iServiceID].AudioParam.iStreamID);
+			iLen = GetStreamLen( Service[iShortID].AudioParam.iStreamID);
 		}
 	}
 	else
 	{
-		iLen = GetStreamLen( Service[iServiceID].DataParam.iStreamID);
+		iLen = GetStreamLen( Service[iShortID].DataParam.iStreamID);
 	}
 
 	/* We have 3 frames with time duration of 1.2 seconds. Bit rate should be
@@ -482,28 +482,28 @@ _REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
 	return (_REAL) iLen * SIZEOF__BYTE * 3 / (_REAL) 1.2 / 1000;
 }
 
-_REAL CParameter::PartABLenRatio(const int iServiceID)
+_REAL CParameter::PartABLenRatio(const int iShortID)
 {
 	int iLenA = 0;
 	int iLenB = 0;
 
 	/* Get the length of protection part A and B */
-	if (Service[iServiceID].eAudDataFlag == CService::SF_AUDIO)
+	if (Service[iShortID].eAudDataFlag == CService::SF_AUDIO)
 	{
 		/* Audio service */
-		if (Service[iServiceID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
+		if (Service[iShortID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
 		{
-			iLenA = Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartA;
-			iLenB = Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartB;
+			iLenA = Stream[Service[iShortID].AudioParam.iStreamID].iLenPartA;
+			iLenB = Stream[Service[iShortID].AudioParam.iStreamID].iLenPartB;
 		}
 	}
 	else
 	{
 		/* Data service */
-		if (Service[iServiceID].DataParam.iStreamID != STREAM_ID_NOT_USED)
+		if (Service[iShortID].DataParam.iStreamID != STREAM_ID_NOT_USED)
 		{
-			iLenA = Stream[Service[iServiceID].DataParam.iStreamID].iLenPartA;
-			iLenB = Stream[Service[iServiceID].DataParam.iStreamID].iLenPartB;
+			iLenA = Stream[Service[iShortID].DataParam.iStreamID].iLenPartA;
+			iLenB = Stream[Service[iShortID].DataParam.iStreamID].iLenPartB;
 		}
 	}
 
@@ -851,14 +851,15 @@ void CParameter::SetAudDataFlag(const int iServID, const CService::ETyOServ iNew
 	}
 }
 
-void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
+void CParameter::SetServiceID(const int iShortID, const uint32_t iNewServiceID)
 {
-	if (Service[iServID].iServiceID != iNewServID)
+	if (Service[iShortID].iServiceID != iNewServiceID)
 	{
-		if ((iServID == 0) && (Service[0].iServiceID > 0))
+		/* JFBC - what is this for? */
+		if ((iShortID == 0) && (Service[0].iServiceID > 0))
 			ResetServicesStreams();
 
-		Service[iServID].iServiceID = iNewServID;
+		Service[iShortID].iServiceID = iNewServiceID;
 
 		/* Set init flags */
 		if(pDRMRec) pDRMRec->InitsForMSC();
@@ -867,9 +868,9 @@ void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
 		/* If the receiver has lost the sync automatically restore 
 			last current service selected */
 
-		if ((iServID > 0) && (iNewServID > 0))
+		if ((iShortID > 0) && (iNewServiceID > 0))
 		{
-			if (LastAudioService.iServiceID == iNewServID)
+			if(LastAudioService.iServiceID == iNewServiceID)
 			{
 				/* Restore last audio service selected */
 				iCurSelAudioService = LastAudioService.iService;
@@ -880,7 +881,7 @@ void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
 				if(pDRMRec) pDRMRec->InitsForAudParam();
 			}
 
-			if (LastDataService.iServiceID == iNewServID)
+			if (LastDataService.iServiceID == iNewServiceID)
 			{
 				/* Restore last data service selected */
 				iCurSelDataService = LastDataService.iService;

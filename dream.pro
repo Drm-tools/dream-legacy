@@ -13,31 +13,31 @@ macx {
 	CONFIG		+= portaudio
 	OBJECTS_DIR	= darwin
 	DEFINES		+= USE_PORTAUDIO 
+	INCLUDEPATH	+= darwin
 	INCLUDEPATH	+= /Developer/dream/include
 	LIBS 		+= -L/Developer/dream/lib
-	LIBS 		+= -framework CoreAudio -framework AudioToolbox -framework AudioUnit
-	LIBS 		+= -lrfftw -lfftw 
+	LIBS 		+= -framework CoreFoundation -framework CoreServices -framework CoreAudio -framework AudioToolbox -framework AudioUnit
 	UI_DIR		= darwin/moc
 	MOC_DIR		= darwin/moc
 }
 
 unix {
 	LIBS 		+= -lsndfile -lpcap
-	LIBS 		+= -lz -lqwt -lfhgjournaline -lfaac -lfaad
+	LIBS 		+= -lz -lqwt -lfhgjournaline -lfaac -lfaad -lrfftw -lfftw 
+	SOURCES		+= linux/source/Pacer.cpp
 	DEFINES		+= HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H 
 	DEFINES		+= HAVE_STRINGS_H HAVE_STRING_H STDC_HEADERS
 	DEFINES		+= HAVE_INTTYPES_H HAVE_STDINT_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H HAVE_UNISTD_H
 	DEFINES		+= HAVE_JOURNALINE HAVE_LIBFAAC HAVE_LIBFAAD HAVE_LIBPCAP HAVE_LIBSNDFILE HAVE_LIBZ
 	DEFINES		+= USE_FAAC_LIBRARY USE_FAAD2_LIBRARY USE_QT_GUI
-	SOURCES		+= linux/source/Pacer.cpp
+	DEFINES		+= HAVE_FFTW_H HAVE_RFFTW_H
 	!macx {
-		DEFINES		+= HAVE_FFTW_H HAVE_RFFTW_H
 		MAKEFILE	= Makefile.qt
-		LIBS 		+= -lfftw -lrfftw -lrt
+		INCLUDEPATH	+= linux
+		LIBS 		+= -lrt
 		OBJECTS_DIR	= linux
 		UI_DIR		= linux/moc
 		MOC_DIR		= linux/moc
-		SOURCES		+= common/sound/pa_ringbuffer.c
 	}
 }
 
