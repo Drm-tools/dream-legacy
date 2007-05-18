@@ -395,17 +395,17 @@ CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const cha
 	return FALSE;
 }
 
-_BOOLEAN CDownstreamDI::SetOrigin(const string& strAddr)
+_BOOLEAN CDownstreamDI::SetOrigin(const string&)
 {
 	return FALSE;
 }
 
-_BOOLEAN CDownstreamDI::SetDestination(const string& str)
+_BOOLEAN CDownstreamDI::SetDestination(const string&)
 {
 	return FALSE;
 }
 
-_BOOLEAN CDownstreamDI::GetDestination(string& str)
+_BOOLEAN CDownstreamDI::GetDestination(string&)
 {
 	return FALSE; // makes no sense 
 }
@@ -472,7 +472,7 @@ void CDownstreamDI::NewFrequency(CParameter& Parameter)
 	}
 }
 
-void CDownstreamDI::SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr, uint16_t port)
+void CDownstreamDI::SendPacket(const vector<_BYTE>&, uint32_t, uint16_t)
 {
 	cerr << "this shouldn't get called CDownstreamDI::SendPacket" << endl;
 }
