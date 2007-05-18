@@ -761,7 +761,7 @@ CWriteIQFile::~CWriteIQFile()
 		fclose(pFile);
 }
 
-void CWriteIQFile::StartRecording(CParameter& ReceiverParam)
+void CWriteIQFile::StartRecording(CParameter&)
 {
 	bIsRecording = TRUE;
 	bChangeReceived = TRUE;
@@ -795,7 +795,7 @@ void CWriteIQFile::StopRecording()
 	bChangeReceived = TRUE;
 }
 
-void CWriteIQFile::NewFrequency(CParameter &ReceiverParam)
+void CWriteIQFile::NewFrequency(CParameter &)
 {
 }
 

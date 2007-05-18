@@ -77,7 +77,7 @@ void CDRMPlot::OnTimerChart()
 {
 	/* In some cases, if the user moves the mouse very fast over the chart
 	   selection list view, this function is called by two different threads.
-	   Somehow, using QMtuex does not help. Therefore we introduce a flag for
+	   Somehow, using QMutex does not help. Therefore we introduce a flag for
 	   doing this job. This solution is a work-around. TODO: better solution */
 	if (bOnTimerCharMutexFlag == TRUE)
 		return;
@@ -102,12 +102,13 @@ void CDRMPlot::OnTimerChart()
 	ECodScheme eMSCCodingScheme = Parameters.eMSCCodingScheme;
 	Parameters.Unlock(); 
 
+	CPlotManager& PlotManager = *pDRMRec->GetPlotManager();
+
 	switch (CurCharType)
 	{
 	case AVERAGED_IR:
 		/* Get data from module */
-		pDRMRec->GetPlotManager()->
-			GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
+		PlotManager.GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
 			rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
 
 		/* Prepare graph and set data */
@@ -117,7 +118,7 @@ void CDRMPlot::OnTimerChart()
 
 	case TRANSFERFUNCTION:
 		/* Get data from module */
-		pDRMRec->GetPlotManager()->GetTransferFunction(vecrData, vecrData2, vecrScale);
+		PlotManager.GetTransferFunction(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
 		SetTranFct(vecrData, vecrData2, vecrScale);
@@ -133,7 +134,7 @@ void CDRMPlot::OnTimerChart()
 
 	case SNR_SPECTRUM:
 		/* Get data from module */
-		pDRMRec->GetPlotManager()->GetSNRProfile(vecrData, vecrScale);
+		PlotManager.GetSNRProfile(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
 		SetSNRSpectrum(vecrData, vecrScale);
@@ -157,7 +158,7 @@ void CDRMPlot::OnTimerChart()
 
 	case INPUT_SIG_PSD:
 		/* Get data from module */
-		pDRMRec->GetPlotManager()->GetInputPSD(vecrData, vecrScale);
+		PlotManager.GetInputPSD(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
 		SetInpPSD(vecrData, vecrScale, rDCFrequency);
@@ -184,7 +185,7 @@ void CDRMPlot::OnTimerChart()
 
 	case FREQ_SAM_OFFS_HIST:
 		/* Get data from module */
-		pDRMRec->GetPlotManager()->GetFreqSamOffsHist(vecrData, vecrData2, vecrScale, rFreqAcquVal);
+		PlotManager.GetFreqSamOffsHist(vecrData, vecrData2, vecrScale, rFreqAcquVal);
 
 		/* Prepare graph and set data */
 		SetFreqSamOffsHist(vecrData, vecrData2, vecrScale, rFreqAcquVal);
@@ -192,7 +193,7 @@ void CDRMPlot::OnTimerChart()
 
 	case DOPPLER_DELAY_HIST:
 		/* Get data from module */
-		pDRMRec->GetPlotManager()->GetDopplerDelHist(vecrData, vecrData2, vecrScale);
+		PlotManager.GetDopplerDelHist(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
 		SetDopplerDelayHist(vecrData, vecrData2, vecrScale);
@@ -200,7 +201,7 @@ void CDRMPlot::OnTimerChart()
 
 	case SNR_AUDIO_HIST:
 		/* Get data from module */
-		pDRMRec->GetPlotManager()->GetSNRHist(vecrData, vecrData2, vecrScale);
+		PlotManager.GetSNRHist(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
 		SetSNRAudHist(vecrData, vecrData2, vecrScale);

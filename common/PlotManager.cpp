@@ -68,36 +68,41 @@ CPlotManager::UpdateParamHistories(ERecState eReceiverState)
 	/* Only update histories if the receiver is in tracking mode */
 	if (eReceiverState == RS_TRACKING)
 	{
+		ReceiverParam.Lock(); 
+		_REAL rFreqOffsetTrack = ReceiverParam.rFreqOffsetTrack;
+		_REAL rResampleOffset = ReceiverParam.rResampleOffset;
+		_REAL rSNR = ReceiverParam.GetSNR();
+		_REAL rSigmaEstimate = ReceiverParam.rSigmaEstimate;
+		_REAL iNumSymPerFrame = ReceiverParam.CellMappingTable.iNumSymPerFrame;
+		_REAL rMeanDelay = (ReceiverParam.rMinDelay +	ReceiverParam.rMaxDelay) / 2.0;
+		ReceiverParam.Unlock();
+
 #ifdef USE_QT_GUI
 		MutexHist.lock();
 #endif
-		ReceiverParam.Lock(); 
 
 		/* Frequency offset tracking values */
-		vecrFreqSyncValHist.AddEnd(ReceiverParam.rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE);
+		vecrFreqSyncValHist.AddEnd(rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE);
 
 		/* Sample rate offset estimation */
-		vecrSamOffsValHist.AddEnd(ReceiverParam.rResampleOffset);
+		vecrSamOffsValHist.AddEnd(rResampleOffset);
 		/* Signal to Noise ratio estimates */
-		rSumSNRHist += ReceiverParam.GetSNR();
+		rSumSNRHist += rSNR;
 
 /* TODO - reconcile this with Ollies RSCI Doppler code in ChannelEstimation */
 		/* Average Doppler estimate */
-		rSumDopplerHist += ReceiverParam.rSigmaEstimate;
+		rSumDopplerHist += rSigmaEstimate;
 
 		/* Only evaluate Doppler and delay once in one DRM frame */
 		iSymbolCount++;
-		if (iSymbolCount == ReceiverParam.CellMappingTable.iNumSymPerFrame)
+		if (iSymbolCount == iNumSymPerFrame)
 		{
 			/* Apply averaged values to the history vectors */
-			vecrLenIRHist.
-				AddEnd((ReceiverParam.rMinDelay +
-						ReceiverParam.rMaxDelay) / 2.0);
+			vecrLenIRHist.AddEnd(rMeanDelay);
 
-			vecrSNRHist.AddEnd(rSumSNRHist / ReceiverParam.CellMappingTable.iNumSymPerFrame);
+			vecrSNRHist.AddEnd(rSumSNRHist / iNumSymPerFrame);
 
-			vecrDopplerHist.AddEnd(rSumDopplerHist /
-								   ReceiverParam.CellMappingTable.iNumSymPerFrame);
+			vecrDopplerHist.AddEnd(rSumDopplerHist / iNumSymPerFrame);
 
 			/* At the same time, add number of correctly decoded audio blocks.
 			   This number is updated once a DRM frame. Since the other
@@ -111,7 +116,6 @@ CPlotManager::UpdateParamHistories(ERecState eReceiverState)
 			rSumSNRHist = (_REAL) 0.0;
 		}
 
-		ReceiverParam.Unlock(); 
 #ifdef USE_QT_GUI
 		MutexHist.unlock();
 #endif
@@ -121,25 +125,26 @@ CPlotManager::UpdateParamHistories(ERecState eReceiverState)
 void
 CPlotManager::UpdateParamHistoriesRSIIn()
 {
+	/* This function is only called once per RSI frame, so process every time */
+
 	CParameter& ReceiverParam = *pReceiver->GetParameters();
+
+	ReceiverParam.Lock(); 
+	_REAL rDelay = _REAL(0.0);
+	if (ReceiverParam.vecrRdelIntervals.GetSize() > 0)
+		rDelay = ReceiverParam.vecrRdelIntervals[0];
+	_REAL rMER = ReceiverParam.rMER;
+	_REAL rRdop = ReceiverParam.rRdop;
+	ReceiverParam.Unlock(); 
 
 #ifdef USE_QT_GUI
 		MutexHist.lock();
 #endif
-	ReceiverParam.Lock(); 
 
-	/* This function is only called once per RSI frame, so process every time */
-		/* Apply averaged values to the history vectors */
-
-	_REAL rDelay = _REAL(0.0);
-	if (ReceiverParam.vecrRdelIntervals.GetSize() > 0)
-		rDelay = ReceiverParam.vecrRdelIntervals[0];
+	/* Apply averaged values to the history vectors */
 	vecrLenIRHist.AddEnd(rDelay);
-
-
-	vecrSNRHist.AddEnd(ReceiverParam.rMER);
-
-	vecrDopplerHist.AddEnd(ReceiverParam.rRdop);
+	vecrSNRHist.AddEnd(rMER);
+	vecrDopplerHist.AddEnd(rRdop);
 
 	/* At the same time, add number of correctly decoded audio blocks.
 	   This number is updated once a DRM frame. Since the other
@@ -151,7 +156,6 @@ CPlotManager::UpdateParamHistoriesRSIIn()
 	rSumDopplerHist = (_REAL) 0.0;
 	rSumSNRHist = (_REAL) 0.0;
 
-	ReceiverParam.Unlock(); 
 #ifdef USE_QT_GUI
 	MutexHist.unlock();
 #endif
@@ -164,6 +168,14 @@ CPlotManager::GetFreqSamOffsHist(CVector < _REAL > &vecrFreqOffs,
 								 _REAL & rFreqAquVal)
 {
 	CParameter& ReceiverParam = *pReceiver->GetParameters();
+
+	ReceiverParam.Lock(); 
+	/* Duration of OFDM symbol */
+	const _REAL rTs = (CReal) (ReceiverParam.CellMappingTable.iFFTSizeN + ReceiverParam.CellMappingTable.iGuardSize) / SOUNDCRD_SAMPLE_RATE;
+	/* Value from frequency acquisition */
+	rFreqAquVal = ReceiverParam.rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
+	ReceiverParam.Unlock(); 
+
 	/* Init output vectors */
 	vecrFreqOffs.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 	vecrSamOffs.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
@@ -178,15 +190,9 @@ CPlotManager::GetFreqSamOffsHist(CVector < _REAL > &vecrFreqOffs,
 	vecrFreqOffs = vecrFreqSyncValHist;
 	vecrSamOffs = vecrSamOffsValHist;
 
-	/* Duration of OFDM symbol */
-	const _REAL rTs = (CReal) (ReceiverParam.CellMappingTable.iFFTSizeN + ReceiverParam.CellMappingTable.iGuardSize) / SOUNDCRD_SAMPLE_RATE;
-
 	/* Calculate time scale */
 	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
 		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rTs;
-
-	/* Value from frequency acquisition */
-	rFreqAquVal = ReceiverParam.rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
 
 	/* Release resources */
 #ifdef USE_QT_GUI
@@ -206,6 +212,13 @@ CPlotManager::GetDopplerDelHist(CVector < _REAL > &vecrLenIR,
 	vecrDoppler.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 
+	ReceiverParam.Lock(); 
+	/* Duration of DRM frame */
+	const _REAL rDRMFrameDur = (CReal) (ReceiverParam.CellMappingTable.iFFTSizeN
+							+ ReceiverParam.CellMappingTable.iGuardSize) /
+		SOUNDCRD_SAMPLE_RATE * ReceiverParam.CellMappingTable.iNumSymPerFrame;
+	ReceiverParam.Unlock(); 
+
 	/* Lock resources */
 #ifdef USE_QT_GUI
 	MutexHist.lock();
@@ -215,10 +228,6 @@ CPlotManager::GetDopplerDelHist(CVector < _REAL > &vecrLenIR,
 	vecrLenIR = vecrLenIRHist;
 	vecrDoppler = vecrDopplerHist;
 
-	/* Duration of DRM frame */
-	const _REAL rDRMFrameDur = (CReal) (ReceiverParam.CellMappingTable.iFFTSizeN
-							+ ReceiverParam.CellMappingTable.iGuardSize) /
-		SOUNDCRD_SAMPLE_RATE * ReceiverParam.CellMappingTable.iNumSymPerFrame;
 
 	/* Calculate time scale in minutes */
 	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
@@ -236,6 +245,12 @@ CPlotManager::GetSNRHist(CVector < _REAL > &vecrSNR,
 						 CVector < _REAL > &vecrScale)
 {
 	CParameter& ReceiverParam = *pReceiver->GetParameters();
+	/* Duration of DRM frame */
+	ReceiverParam.Lock(); 
+	/* Duration of DRM frame */
+	const _REAL rDRMFrameDur = (CReal) (ReceiverParam.CellMappingTable.iFFTSizeN + ReceiverParam.CellMappingTable.iGuardSize) /
+		SOUNDCRD_SAMPLE_RATE * ReceiverParam.CellMappingTable.iNumSymPerFrame;
+	ReceiverParam.Unlock(); 
 
 	/* Init output vectors */
 	vecrSNR.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
@@ -249,10 +264,6 @@ CPlotManager::GetSNRHist(CVector < _REAL > &vecrSNR,
 
 	/* Simply copy history buffer in output buffer */
 	vecrSNR = vecrSNRHist;
-
-	/* Duration of DRM frame */
-	const _REAL rDRMFrameDur = (CReal) (ReceiverParam.CellMappingTable.iFFTSizeN + ReceiverParam.CellMappingTable.iGuardSize) /
-		SOUNDCRD_SAMPLE_RATE * ReceiverParam.CellMappingTable.iNumSymPerFrame;
 
 	/* Calculate time scale. Copy correctly decoded audio blocks history (must
 	   be transformed from "int" to "real", therefore we need a for-loop */
@@ -279,7 +290,10 @@ CPlotManager::GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 	if (pReceiver->GetRSIIn()->GetInEnabled())
 	{
 		// read it from the parameter structure
+		ReceiverParam.Lock(); 
 		CVector<_REAL>& vecrPSD = ReceiverParam.vecrPSD;
+		ReceiverParam.Unlock(); 
+
 		int iVectorLen = vecrPSD.Size();
 		vecrData.Init(iVectorLen);
 		vecrScale.Init(iVectorLen);
