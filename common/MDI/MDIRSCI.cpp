@@ -379,7 +379,8 @@ CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const cha
 	CRSISubscriberSocket* subs = new CRSISubscriberSocket(NULL);
 	// Delegate to socket
 	_BOOLEAN bOK = subs->SetDestination(dest);
-	bOK &= subs->SetOrigin(origin);
+	if (origin != "") // This is the new line !!!!!!
+		bOK &= subs->SetOrigin(origin);
 	if (bOK)
 	{
 		subs->SetProfile(profile);

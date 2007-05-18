@@ -61,6 +61,14 @@
 int
 main(int argc, char **argv)
 {
+	/* create app before running Settings.Load to consume platform/QT parameters */
+	QApplication app(argc, argv);
+
+	/* Load and install multi-language support (if available) */
+	QTranslator translator(0);
+	if (translator.load("dreamtr"))
+		app.installTranslator(&translator);
+
 	CDRMSimulation DRMSimulation;
 
 	/* Call simulation script. If simulation is activated, application is
@@ -74,15 +82,6 @@ main(int argc, char **argv)
 
 	try
 	{
-		/* Application object must be initialized before the DRMReceiver object
-		 * because of the QT functions used in the MDI module. TODO: better solution
-		 */
-		QApplication app(argc, argv);
-
-		/* Load and install multi-language support (if available) */
-		QTranslator translator(0);
-		if (translator.load("dreamtr"))
-			app.installTranslator(&translator);
 
 #ifdef _WIN32
 		/* works for both transmit and receive. GUI is low, working is normal.
