@@ -99,13 +99,14 @@ CPacketSourceFile::~CPacketSourceFile()
 	if(bRaw && pf)
 		fclose((FILE*)pf);
 	else if(pf)
+	{
 #ifdef HAVE_LIBPCAP
-		pcap_close((pcap_t*)pf)
+		pcap_close((pcap_t*)pf);
 #endif
 #ifdef HAVE_LIBWTAP
-		wtap_close((wtap*)pf)
+		wtap_close((wtap*)pf);
 #endif
-;
+	}
 }
 
 // Set the sink which will receive the packets
