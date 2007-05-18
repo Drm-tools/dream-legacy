@@ -31,9 +31,10 @@
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, WFlags f)
-:CEPGDlgbase(parent, name, modal, f),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),Settings(NSettings),sids()
+:CEPGDlgbase(parent, name, modal, f),BitmCubeGreen(),date(QDate::currentDate()),
+do_updates(false),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
+Settings(NSettings),Timer(),sids()
 {
-
 	/* recover window size and position */
 	CWinGeom s;
 	Settings.Get("EPG Dialog", s);
