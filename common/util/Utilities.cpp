@@ -27,13 +27,19 @@
 
 #include "Utilities.h"
 #include <sstream>
-#ifdef _WIN32
-# ifndef INITGUID
-#  define INITGUID 1
+#if defined(_WIN32)
+# ifdef HAVE_SETUPAPI
+#  ifndef INITGUID
+#   define INITGUID 1
+#  endif
+#  include <windows.h>
+#  include <ddk/ntddser.h>
+#  include <setupapi.h>
 # endif
-# include <windows.h>
-# include <ddk/ntddser.h>
-# include <setupapi.h>
+#elif defined(__APPLE__)
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOKit/IOKitLib.h>
+#include <IOKit/serial/IOSerialKeys.h>
 #endif
 
 /* Implementation *************************************************************/
@@ -536,6 +542,7 @@ CHamlib::GetPortList(map < string, string > &ports)
 	ports.clear();
 /* Config string for com-port selection is different in Windows and Linux */
 #ifdef _WIN32
+# ifdef HAVE_SETUPAPI
 	GUID guid = GUID_DEVINTERFACE_COMPORT;
 	HDEVINFO hDevInfoSet = SetupDiGetClassDevs(&guid, NULL, NULL,
 											   DIGCF_PRESENT |
@@ -577,7 +584,7 @@ CHamlib::GetPortList(map < string, string > &ports)
 
 		SetupDiDestroyDeviceInfoList(hDevInfoSet);
 	}
-
+# endif
 	if (ports.empty())
 	{
 		ports["COM1"] = "COM1";
@@ -586,7 +593,7 @@ CHamlib::GetPortList(map < string, string > &ports)
 		ports["COM4"] = "COM4 ";
 		ports["COM5"] = "COM5 ";
 	}
-#else
+#elif defined(__linux)
 	FILE *p =
 		popen("hal-find-by-capability --capability serial", "r");
 	_BOOLEAN bOK = FALSE;
@@ -620,6 +627,70 @@ CHamlib::GetPortList(map < string, string > &ports)
 		ports["ttyS1"] = "/dev/ttyS1";
 		ports["ttyUSB0"] = "/dev/ttyUSB0";
 	}
+#elif defined(__APPLE__)
+	io_iterator_t serialPortIterator;
+    kern_return_t			kernResult; 
+    CFMutableDictionaryRef	classesToMatch;
+
+    // Serial devices are instances of class IOSerialBSDClient
+    classesToMatch = IOServiceMatching(kIOSerialBSDServiceValue);
+    if (classesToMatch == NULL)
+    {
+        printf("IOServiceMatching returned a NULL dictionary.\n");
+    }
+    else
+	{
+        CFDictionarySetValue(classesToMatch,
+                             CFSTR(kIOSerialBSDTypeKey),
+                             CFSTR(kIOSerialBSDModemType));
+        
+	}
+    kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault, classesToMatch, &serialPortIterator);    
+    if (KERN_SUCCESS != kernResult)
+    {
+        printf("IOServiceGetMatchingServices returned %d\n", kernResult);
+    }
+        
+    io_object_t		modemService;
+    
+    // Iterate across all modems found. In this example, we bail after finding the first modem.
+    
+    while ((modemService = IOIteratorNext(serialPortIterator)))
+    {
+        CFStringRef	bsdPathAsCFString;
+
+		// Get the callout device's path (/dev/cu.xxxxx). The callout device should almost always be
+		// used: the dialin device (/dev/tty.xxxxx) would be used when monitoring a serial port for
+		// incoming calls, e.g. a fax listener.
+	
+		bsdPathAsCFString = CFStringRef(IORegistryEntryCreateCFProperty(modemService,
+                                                            CFSTR(kIOCalloutDeviceKey),
+                                                            kCFAllocatorDefault,
+                                                            0));
+        if (bsdPathAsCFString)
+        {
+            Boolean result;
+			char bsdPath[256];
+            
+            // Convert the path from a CFString to a C (NUL-terminated) string for use
+			// with the POSIX open() call.
+	    
+			result = CFStringGetCString(bsdPathAsCFString,
+                                        bsdPath,
+                                        sizeof(bsdPath), 
+                                        kCFStringEncodingUTF8);
+            CFRelease(bsdPathAsCFString);
+            
+            if (result)
+			{
+				ports[bsdPath] = bsdPath;
+            }
+        }
+
+        // Release the io_service_t now that we are done with it.
+	
+		(void) IOObjectRelease(modemService);
+    }
 #endif
 }
 

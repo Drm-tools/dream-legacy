@@ -236,14 +236,6 @@ protected:
 	T*		pData;
 };
 
-
-/* Help functions *************************************************************/
-template<class T> inline
-int Size(const CMatlibVector<T>& vecI) {return vecI.GetSize();}
-template<class T> inline
-int Length(const CMatlibVector<T>& vecI) {return vecI.GetSize();}
-
-
 /* operator* ---------------------------------------------------------------- */
 inline CMatlibVector<CComplex> // cv, cv
 	operator*(const CMatlibVector<CComplex>& cvA, const CMatlibVector<CComplex>& cvB)

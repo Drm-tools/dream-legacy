@@ -89,7 +89,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 			FirFiltDec(cvecB, cvecInpTmp, cvecZ, GRDCRR_DEC_FACT));
 
 		/* Get size of new output vector */
-		iDecInpuSize = Size(cvecOutTmp);
+		iDecInpuSize = cvecOutTmp.GetSize();
 
 		/* Copy data from Matlib vector in regular vector for storing in
 		   shift register

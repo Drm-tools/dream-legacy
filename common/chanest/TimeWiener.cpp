@@ -658,7 +658,7 @@ CReal CTimeWiener::ModLinRegr(const CComplexVector& veccCorrEst)
 	/* Modified linear regression to estimate the "sigma" of the Gaussian
 	   correlation function */
 	/* Get vector length */
-	const int iVecLen = Size(veccCorrEst);
+	const int iVecLen = veccCorrEst.GetSize();
 
 	/* Init vectors and variables */
 	CRealVector Tau(iVecLen);

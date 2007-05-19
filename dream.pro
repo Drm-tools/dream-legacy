@@ -58,7 +58,7 @@ win32 {
 
 hamlib {
 	DEFINES		+= HAVE_LIBHAMLIB HAVE_RIG_PARSE_MODE
-	LIBS 		+= -lhamlib
+	LIBS 		+= -lhamlib -framework IOKit
 }
 
 alsa {

@@ -73,7 +73,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libfaac.lib libhamlib.lib libfftw.lib libfaad.lib imm32.lib wsock32.lib winmm.lib $(QTDIR)\lib\qt-mt3.lib $(QTDIR)\lib\qtmain.lib libqwt.lib libfhgjournaline.lib shell32.lib user32.lib"
+				AdditionalDependencies="libfaac.lib libhamlib.lib libfftw.lib libfaad.lib imm32.lib wsock32.lib winmm.lib $(QTDIR)\lib\qt-mt3.lib $(QTDIR)\lib\qtmain.lib libqwt.lib libfhgjournaline.lib shell32.lib user32.lib setupapi.lib"
 				OutputFile="Release/Dream.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -170,7 +170,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libfaac.lib libhamlib.lib imm32.lib wsock32.lib winmm.lib $(QTDIR)\lib\qt-mt3.lib $(QTDIR)\lib\qtmain.lib libfftw.lib libfaad.lib libqwt.lib libfhgjournaline.lib shell32.lib user32.lib"
+				AdditionalDependencies="libfaac.lib libhamlib.lib imm32.lib wsock32.lib winmm.lib $(QTDIR)\lib\qt-mt3.lib $(QTDIR)\lib\qtmain.lib libfftw.lib libfaad.lib libqwt.lib libfhgjournaline.lib shell32.lib user32.lib setupapi.lib"
 				OutputFile="Debug/Dream.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
