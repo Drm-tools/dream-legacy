@@ -35,8 +35,10 @@
 #define UTILITIES_H__3B0BA660_CA63_4344_B3452345D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
+#include "Settings.h"
 #include "Vector.h"
 #include "../matlib/Matlib.h"
+#include <map>
 #include <iostream>
 
 #ifdef HAVE_LIBHAMLIB
@@ -46,24 +48,6 @@
 
 /* Definitions ****************************************************************/
 #define	METER_FLY_BACK					15
-
-#ifdef HAVE_LIBHAMLIB
-/* Config string for com-port selection is different in Windows and Linux */
-# ifdef _WIN32
-#  define HAMLIB_CONF_COM1				"rig_pathname=COM1"
-#  define HAMLIB_CONF_COM2				"rig_pathname=COM2"
-#  define HAMLIB_CONF_COM3				"rig_pathname=COM3"
-#  define HAMLIB_CONF_COM4				"rig_pathname=COM4"
-#  define HAMLIB_CONF_COM5				"rig_pathname=COM5"
-# else
-#  define HAMLIB_CONF_COM1				"rig_pathname=/dev/ttyS0"
-#  define HAMLIB_CONF_COM2				"rig_pathname=/dev/ttyS1"
-#  define HAMLIB_CONF_COM3				"rig_pathname=/dev/ttyS2"
-#  define HAMLIB_CONF_COM4				"rig_pathname=/dev/ttyS3"
-#  define HAMLIB_CONF_COM5				"rig_pathname=/dev/ttyUSB0"
-# endif
-#endif
-
 
 /* Classes ********************************************************************/
 /* Signal level meter ------------------------------------------------------- */
@@ -156,23 +140,21 @@ public:
 	CHamlib();
 	virtual ~CHamlib();
 
-	class SDrRigCaps
+	struct SDrRigCaps
 	{
-	public:
-		SDrRigCaps() : iModelID(0), strManufacturer(""), strModelName(""),
-			eRigStatus(RIG_STATUS_ALPHA), bIsSpecRig(FALSE) {}
-		SDrRigCaps(rig_model_t tNID, const char* strNMan, const char* strNModN,
-			rig_status_e eNSt, _BOOLEAN bNSRI) : iModelID(tNID),
-			strManufacturer(strNMan), strModelName(strNModN),
-			eRigStatus(eNSt), bIsSpecRig(bNSRI) {}
-		SDrRigCaps(const SDrRigCaps& nSDRC) : iModelID(nSDRC.iModelID),
+		SDrRigCaps() : strManufacturer(""), strModelName(""),
+			eRigStatus(RIG_STATUS_ALPHA),bIsSpecRig(FALSE) {}
+		SDrRigCaps(const string& strNMan, const string& strNModN, rig_status_e eNSt, _BOOLEAN bNsp) :
+			strManufacturer(strNMan), strModelName(strNModN), eRigStatus(eNSt),
+			bIsSpecRig(bNsp)
+			{}
+		SDrRigCaps(const SDrRigCaps& nSDRC) : 
 			strManufacturer(nSDRC.strManufacturer),
 			strModelName(nSDRC.strModelName),
 			eRigStatus(nSDRC.eRigStatus), bIsSpecRig(nSDRC.bIsSpecRig) {}
 
 		inline SDrRigCaps& operator=(const SDrRigCaps& cNew)
 		{
-			iModelID = cNew.iModelID;
 			strManufacturer = cNew.strManufacturer;
 			strModelName = cNew.strModelName;
 			eRigStatus = cNew.eRigStatus;
@@ -180,7 +162,6 @@ public:
 			return *this;
 		}
 
-		rig_model_t		iModelID;
 		string			strManufacturer;
 		string			strModelName;
 		rig_status_e	eRigStatus;
@@ -190,55 +171,66 @@ public:
 	_BOOLEAN		SetFrequency(const int iFreqkHz);
 	ESMeterState	GetSMeter(_REAL& rCurSigStr);
 
-	int				GetNumHamModels() {return veccapsHamlibModels.Size();}
-	SDrRigCaps		GetHamModel(const int iIdx)
-						{return veccapsHamlibModels[iIdx];}
+	/* backend selection */
+	void			GetRigList(map<rig_model_t,SDrRigCaps>&);
+	void			SetHamlibModelID(const rig_model_t model);
+	rig_model_t		GetHamlibModelID() const {return iHamlibModelID;}
 
-	void			SetHamlibModelID(const int iNewM);
-	int				GetHamlibModelID() const {return iHamlibModelID;}
-
-	void			SetHamlibConf(const string strNewC);
-	string			GetHamlibConf() const {return strHamlibConf;}
+	/* com port selection */
+	void			GetPortList(map<string,string>&);
+	void			SetPort(const string&);
+	string			GetPort() const;
 
 	void			SetEnableModRigSettings(const _BOOLEAN bNSM);
 	_BOOLEAN		GetEnableModRigSettings() const {return bModRigSettings;}
-	string			GetInfo() const { if(pRig) return rig_get_info(pRig); return ""; }
+	string			GetInfo() const;
+
+	void			RigSpecialParameters(rig_model_t id, const string& sSet, int iFrOff, const string& sModSet);
+	void			ConfigureRig(const string & strSet);
+	void			LoadSettings(CSettings& s);
+	void			SaveSettings(CSettings& s);
 
 protected:
 	class CSpecDRMRig
 	{
 	public:
-		CSpecDRMRig() : iModelID(0), strDRMSetMod(""), strDRMSetNoMod(""),
-			iFreqOffs(0) {}
+		CSpecDRMRig() : strDRMSetMod(""), strDRMSetNoMod(""), iFreqOffs(0) {}
 		CSpecDRMRig(const CSpecDRMRig& nSpec) :
-			iModelID(nSpec.iModelID), strDRMSetMod(nSpec.strDRMSetMod),
+			strDRMSetMod(nSpec.strDRMSetMod),
 			strDRMSetNoMod(nSpec.strDRMSetNoMod), iFreqOffs(nSpec.iFreqOffs) {}
-		CSpecDRMRig(rig_model_t newID, string sSet, int iNFrOff,
-			string sModSet) : iModelID(newID), strDRMSetMod(sModSet),
-			strDRMSetNoMod(sSet), iFreqOffs(iNFrOff) {}
+		CSpecDRMRig(string sSet, int iNFrOff, string sModSet) :
+			strDRMSetMod(sModSet), strDRMSetNoMod(sSet), iFreqOffs(iNFrOff) {}
 
-		rig_model_t	iModelID; /* Model ID for hamlib */
 		string		strDRMSetMod; /* Special DRM settings (modified) */
 		string		strDRMSetNoMod; /* Special DRM settings (not mod.) */
 		int			iFreqOffs; /* Frequency offset */
 	};
 
-	CVector<CSpecDRMRig>	vecSpecDRMRigs;
-	CVector<SDrRigCaps>		veccapsHamlibModels;
+	map<rig_model_t,CSpecDRMRig>	SpecDRMRigs;
+	map<rig_model_t,SDrRigCaps>		CapsHamlibModels;
 
-	void SortHamlibModelList(CVector<SDrRigCaps>& veccapsHamlMod);
 	void EnableSMeter(const _BOOLEAN bStatus);
 
-	static int			PrintHamlibModelList(const struct rig_caps* caps,
-											 void* data);
-	_BOOLEAN			CheckForSpecDRMFE(const rig_model_t iID, int& iIndex);
+	static int			PrintHamlibModelList(const struct rig_caps* caps, void* data);
+	void				SetRigModes();
+	void				SetRigLevels();
+	void				SetRigFuncs();
+	void				SetRigParams();
+	void				SetRigConfig();
 
 	RIG*				pRig;
 	_BOOLEAN			bSMeterIsSupported;
 	_BOOLEAN			bModRigSettings;
 	rig_model_t			iHamlibModelID;
 	string				strHamlibConf;
+	string				strSettings;
 	int					iFreqOffset;
+	map<string,string> modes;
+	map<string,string> levels;
+	map<string,string> functions;
+	map<string,string> parameters;
+	map<string,string> config;
+
 };
 #else
 struct CHamlib

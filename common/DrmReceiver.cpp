@@ -1373,7 +1373,7 @@ CDRMReceiver::saveSDCtoFile()
 }
 
 void
-CDRMReceiver::LoadSettings(const CSettings& s)
+CDRMReceiver::LoadSettings(CSettings& s)
 {
 	/* Receiver ------------------------------------------------------------- */
 	string str;
@@ -1574,17 +1574,10 @@ CDRMReceiver::LoadSettings(const CSettings& s)
 
 #ifdef HAVE_LIBHAMLIB
 	/* Hamlib --------------------------------------------------------------- */
-	/* Hamlib configuration string */
-	Hamlib.SetHamlibConf(s.Get("Hamlib", "hamlib-config"));
-
-	/* Hamlib Model ID */
-	Hamlib.SetHamlibModelID(s.Get("Hamlib",	"hamlib-model", 0));
+	Hamlib.LoadSettings(s);
 
 	/* Enable s-meter flag */
 	bEnableSMeter = s.Get("Hamlib", "ensmeter", FALSE);
-	
-	/* Enable DRM modified receiver flag */
-	Hamlib.SetEnableModRigSettings(s.Get("Hamlib", "enmodrig", FALSE));
 	
 #endif
 	
@@ -1700,18 +1693,10 @@ CDRMReceiver::SaveSettings(CSettings& s)
 
 #ifdef HAVE_LIBHAMLIB
 	/* Hamlib --------------------------------------------------------------- */
-	/* Hamlib Model ID */
-	s.Put("Hamlib", "hamlib-model", Hamlib.GetHamlibModelID());
-
-	/* Hamlib configuration string */
-	s.Put("Hamlib", "hamlib-config", Hamlib.GetHamlibConf());
-
-	/* Enable DRM modified receiver flag */
-	s.Put("Hamlib", "enmodrig", Hamlib.GetEnableModRigSettings());
+	Hamlib.SaveSettings(s);
 
 	/* Enable s-meter flag */
 	s.Put("Hamlib", "ensmeter", bEnableSMeter);
-
 #endif
 
 	/* Front-end - combine into Hamlib? */

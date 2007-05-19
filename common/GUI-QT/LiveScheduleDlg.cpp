@@ -34,28 +34,15 @@ LiveScheduleDlg::ExtractTime(const CAltFreqSched& schedule)
 {
 	int iTimeStart = schedule.iStartTime;
 	int iDuration = schedule.iDuration;
-	string sStartHours = "";
-	string sStartMinutes = "";
-	string sStopHours = "";
-	string sStopMinutes = "";
-	string sDays = "";
-	string sResult = "";
+	QString sDays = "";
+	QString sResult = "";
 
 	if ((iTimeStart == 0) && (iDuration == 0))
-		return "";
+		return sResult;
 
 	/* Start time */
 	int iStartMinutes = iTimeStart % 60;
 	int iStartHours = iTimeStart / 60;
-
-	if (iStartMinutes < 10)
-		sStartMinutes = "0";
-
-	if (iStartHours < 10)
-		sStartHours = "0";
-
-	sStartHours += QString::number(iStartHours).latin1();
-	sStartMinutes += QString::number(iStartMinutes).latin1();
 
 	/* Stop time */
 	_BOOLEAN bAllWeek24Hours = FALSE;
@@ -63,9 +50,6 @@ LiveScheduleDlg::ExtractTime(const CAltFreqSched& schedule)
 
 	int iStopMinutes = iTimeStop % 60;
 	int iStopHours = iTimeStop / 60;
-
-	if (iStopMinutes < 10)
-		sStopMinutes = "0";
 
 	if (iStopHours > 24)
 	{
@@ -78,30 +62,20 @@ LiveScheduleDlg::ExtractTime(const CAltFreqSched& schedule)
 		{
 			/* Add information about days duration */
 			if (iDays > 1)
-			{
-				sDays += " (";
-				sDays += QString::number(iDays).latin1();
-				sDays += " days)";
-			}
+				sDays.sprintf(" (%d days)", iDays);
 			iStopHours = iStopHours % 24;
 		}
 	}
-
-	if (iStopHours < 10)
-		sStopHours = "0";
-
-	sStopHours += QString::number(iStopHours).latin1();
-	sStopMinutes += QString::number(iStopMinutes).latin1();
 
 	if (bAllWeek24Hours == TRUE)
 		sResult = "24 hours, 7 days a week";
 	else
 	{
-		sResult = sStartHours + ":" + sStartMinutes
-			+ "-" + sStopHours + ":" + sStopMinutes + sDays;
+		sResult.sprintf("%02d:%02d-%02d:%02d", iStartHours, iStartMinutes, iStopHours, iStopMinutes);
+		sResult += sDays;
 	}
 
-	return QString(sResult.c_str());
+	return sResult;
 }
 
 QString

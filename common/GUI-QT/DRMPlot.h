@@ -43,8 +43,6 @@
 /* Definitions ****************************************************************/
 #define GUI_CONTROL_UPDATE_WATERFALL			100	/* Milliseconds */
 
-/* number of available color schemes for the plot */
-#define NUM_AVL_COLOR_SCHEMES_PLOT				3
 
 /* Define the plot color profiles */
 /* BLUEWHITE */
@@ -117,9 +115,6 @@ public:
 
 	CDRMPlot(QWidget *p = 0, const char *name = 0);
 	virtual ~CDRMPlot() {}
-
-	void LoadSettings(const CSettings&);
-	void SaveSettings(CSettings&);
 
 	/* This function has to be called before chart can be used! */
 	void SetRecObj(CDRMReceiver* pNDRMRec) {pDRMRec = pNDRMRec;}

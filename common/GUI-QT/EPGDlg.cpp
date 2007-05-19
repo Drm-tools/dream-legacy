@@ -75,7 +75,7 @@ Settings(NSettings),Timer(),sids()
     year->setMinValue(0000);
     year->setMaxValue(3000);
 
-	/* show a label is EPG decoding is disabled */
+	/* show a label if EPG decoding is disabled */
 	if (DRMReceiver.GetDataDecoder()->GetDecodeEPG() == TRUE)
 		TextEPGDisabled->hide();
 	else
@@ -90,7 +90,7 @@ void EPGDlg::OnTimer()
 {	
     if ((basic->text() == tr("no basic profile data"))
 		|| (advanced->text() == tr("no advanced profile data")))
-		/* not all informations are loaded */
+		/* not all information is loaded */
  		select();
 	else
 	{
@@ -139,7 +139,7 @@ void EPGDlg::showEvent(QShowEvent *)
 	sids.clear();
     for (map < uint32_t, CServiceInformation >::const_iterator i = Parameters.ServiceInformation.begin(); 
          i != Parameters.ServiceInformation.end(); i++) {
-		QString channel_label = i->second.label.begin()->c_str();
+		QString channel_label = QString().fromUtf8(i->second.label.begin()->c_str());
 		uint32_t channel_id = i->second.id;
 		sids[channel_label] = channel_id;
     	channel->insertItem(channel_label);

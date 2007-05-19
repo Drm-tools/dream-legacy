@@ -247,11 +247,7 @@ protected:
 	QPopupMenu*					pRemoteMenu;
 
 	/* Com port selection */
-	QAction*					pacMenuCOM1;
-	QAction*					pacMenuCOM2;
-	QAction*					pacMenuCOM3;
-	QAction*					pacMenuCOM4;
-	QAction*					pacMenuCOM5;
+	vector<QAction*>			pacMenuComPorts;
 	QActionGroup*				agCOMPortSel;
 
 #ifdef HAVE_LIBHAMLIB

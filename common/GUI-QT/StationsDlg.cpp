@@ -484,19 +484,21 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pRemoteMenu->insertItem(tr("None"), this, SLOT(OnRemoteMenu(int)), 0, 0);
 	veciModelID.push_back(0); /* ID 0 for "none" */
 
-	/* Number of supported rigs */
-	const int iNumRigs = DRMReceiver.GetHamlib()->GetNumHamModels();
+	CHamlib& Hamlib = *DRMReceiver.GetHamlib();
+
+	map<rig_model_t,CHamlib::SDrRigCaps> rigs;
+
+	Hamlib.GetRigList(rigs);
 
 	/* Add menu entries */
 	_BOOLEAN bCheckWasSet = FALSE;
-	for (int i = 0; i < iNumRigs; i++)
+	for (map<rig_model_t,CHamlib::SDrRigCaps>::iterator i=rigs.begin(); i!=rigs.end(); i++)
 	{
-		/* Get rig details */
-		const CHamlib::SDrRigCaps CurSDRiCa =
-			DRMReceiver.GetHamlib()->GetHamModel(i);
-
 		/* Store model ID */
-		veciModelID.push_back(CurSDRiCa.iModelID);
+		rig_model_t iModelID = i->first;
+		CHamlib::SDrRigCaps& rig = i->second;
+
+		veciModelID.push_back(iModelID);
 		const int iCurModIDIdx = veciModelID.size() - 1;
 
 		/* Create menu objects which belong to an action group. We hope that
@@ -504,11 +506,12 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 		/* Set menu string. Should look like: [ID] Manuf. Model */
 		QString strMenuText = 
-				"[" + QString().setNum(CurSDRiCa.iModelID) + "] " +
-				CurSDRiCa.strManufacturer.c_str() + " " +
-				CurSDRiCa.strModelName.c_str();
+				"[" + QString().setNum(iModelID) + "] " +
+				rig.strManufacturer.c_str() + " " +
+				rig.strModelName.c_str();
+
 		QPopupMenu*	pMenu;
-		if (CurSDRiCa.bIsSpecRig == TRUE)
+		if (rig.bIsSpecRig == TRUE)
 		{
 			/* Main rigs */
 			pMenu = pRemoteMenu;
@@ -518,12 +521,12 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 			/* "Other" menu */
 			pMenu = pRemoteMenuOther;
 			/* Set menu string. Should look like: [ID] Manuf. Model (status) */
-			strMenuText = strMenuText + " (" + rig_strstatus(CurSDRiCa.eRigStatus) + ")";
+			strMenuText = strMenuText + " (" + rig_strstatus(rig.eRigStatus) + ")";
 		}
 		pMenu->insertItem(strMenuText, this, SLOT(OnRemoteMenu(int)), 0, iCurModIDIdx);
 
 		/* Check for checking */
-		if (DRMReceiver.GetHamlib()->GetHamlibModelID() == CurSDRiCa.iModelID)
+		if (Hamlib.GetHamlibModelID() == iModelID)
 		{
 			pMenu->setItemChecked(iCurModIDIdx, TRUE);
 			bCheckWasSet = TRUE;
@@ -545,32 +548,18 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* COM port selection --------------------------------------------------- */
 	/* Toggle action for com port selection menu entries */
 	agCOMPortSel = new QActionGroup(this, "Com port", TRUE);
-
-	pacMenuCOM1 = new QAction("COM1", "COM1", 0, agCOMPortSel, 0, TRUE);
-	pacMenuCOM2 = new QAction("COM2", "COM2", 0, agCOMPortSel, 0, TRUE);
-	pacMenuCOM3 = new QAction("COM3", "COM3", 0, agCOMPortSel, 0, TRUE);
-	pacMenuCOM4 = new QAction("COM4", "COM4", 0, agCOMPortSel, 0, TRUE);
-	pacMenuCOM5 = new QAction("COM5", "COM5", 0, agCOMPortSel, 0, TRUE);
+	map<string,string> ports;
+	Hamlib.GetPortList(ports);
+	string strPort = Hamlib.GetPort();
+	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
+	{
+		QAction* pacMenu = new QAction(p->second.c_str(), p->first.c_str(), 0, agCOMPortSel, 0, TRUE);
+		if(strPort == p->second)
+			pacMenu->setOn(TRUE);
+	}
 
 	/* Add COM port selection menu group to remote menu */
 	agCOMPortSel->addTo(pRemoteMenu);
-
-	/* Try to get the COM port number from the hamlib configure string */
-	if (DRMReceiver.GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM1)
-		pacMenuCOM1->setOn(TRUE);
-
-	if (DRMReceiver.GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM2)
-		pacMenuCOM2->setOn(TRUE);
-
-	if (DRMReceiver.GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM3)
-		pacMenuCOM3->setOn(TRUE);
-
-	if (DRMReceiver.GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM4)
-		pacMenuCOM4->setOn(TRUE);
-
-	if (DRMReceiver.GetHamlib()->GetHamlibConf() == HAMLIB_CONF_COM5)
-		pacMenuCOM5->setOn(TRUE);
-
 
 	/* Other settings ------------------------------------------------------- */
 	/* Separator */
@@ -592,8 +581,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		"Modification"), this, SLOT(OnModRigMenu(int)), 0);
 
 	/* Set check */
-	pRemoteMenu->setItemChecked(iModRigMenuID,
-		DRMReceiver.GetHamlib()->GetEnableModRigSettings());
+	pRemoteMenu->setItemChecked(iModRigMenuID, Hamlib.GetEnableModRigSettings());
 #endif
 
 
@@ -1248,21 +1236,7 @@ void StationsDlg::OnRemoteMenu(int iID)
 void StationsDlg::OnComPortMenu(QAction* action)
 {
 #ifdef HAVE_LIBHAMLIB
-	/* We cannot use the switch command for the non constant expressions here */
-	if (action == pacMenuCOM1)
-		DRMReceiver.GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM1);
-
-	if (action == pacMenuCOM2)
-		DRMReceiver.GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM2);
-
-	if (action == pacMenuCOM3)
-		DRMReceiver.GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM3);
-
-	if (action == pacMenuCOM4)
-		DRMReceiver.GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM4);
-
-	if (action == pacMenuCOM5)
-		DRMReceiver.GetHamlib()->SetHamlibConf(HAMLIB_CONF_COM5);
+	DRMReceiver.GetHamlib()->SetPort(action->text());
 #endif
 }
 

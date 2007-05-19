@@ -132,7 +132,7 @@ public:
 	int						wait(int) { return 0;}
 	bool					finished() { return true; }
 #endif
-	void					LoadSettings(const CSettings&);
+	void					LoadSettings(CSettings&); // can write to settings to set defaults
 	void					SaveSettings(CSettings&);
 	void					Init();
 	void					Start();

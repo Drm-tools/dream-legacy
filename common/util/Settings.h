@@ -31,9 +31,6 @@
 
 #include "../GlobalDefinitions.h"
 #include "../GPSData.h"
-#ifdef USE_QT_GUI
-# include "../GUI-QT/DRMPlot.h"
-#endif
 #include <map>
 #include <string>
 
@@ -112,6 +109,9 @@
 
 /* Miximum number of seconds for MOT BWS refresh */
 #define MAX_MOT_BWS_REFRESH_TIME	1800
+
+/* number of available color schemes for the plot */
+#define NUM_AVL_COLOR_SCHEMES_PLOT				3
 
 /* Classes ********************************************************************/
 	/* Function declarations for stlini code written by Robert Kesterson */
