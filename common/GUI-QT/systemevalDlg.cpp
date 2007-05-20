@@ -1148,7 +1148,7 @@ void systemevalDlg::OnCheckRecFilter()
 		SetRecFilter(CheckBoxRecFilter->isChecked());
 
 	/* If filter status is changed, a new aquisition is necessary */
-	DRMReceiver.SetInStartMode();
+	DRMReceiver.RequestNewAcquisition();
 }
 
 void systemevalDlg::OnCheckModiMetric()

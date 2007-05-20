@@ -74,7 +74,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pSettingsMenu->insertItem(tr("&AM (analog)"), this,
 		SLOT(OnSwitchToAM()), CTRL+Key_A);
 	pSettingsMenu->insertItem(tr("New &DRM Acquisition"), this,
-		SLOT(OnSwitchToDRM()), CTRL+Key_D);
+		SLOT(OnNewDRMAcquisition()), CTRL+Key_D);
 	pSettingsMenu->insertSeparator();
 	pSettingsMenu->insertItem(tr("Set D&isplay Color..."), this,
 		SLOT(OnMenuSetDisplayColor()));
@@ -783,9 +783,12 @@ void FDRMDialog::OnSwitchToDRM()
 	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
 
 	DRMReceiver.SetReceiverMode(RM_DRM);
-	DRMReceiver.SetInStartMode();  // This is needed to make "New DRM Acquisition" work because the Rx will ignore calls to SetReceiverMode if the mode is already set
-	OnTimer();
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
+}
+
+void FDRMDialog::OnNewDRMAcquisition()
+{
+	DRMReceiver.RequestNewAcquisition();
 }
 
 void FDRMDialog::OnSwitchToAM()

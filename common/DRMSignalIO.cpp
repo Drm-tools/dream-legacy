@@ -355,7 +355,7 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 	pSound->Init(iOutputBlockSize * 2);
 
 	/* Init buffer size for taking stereo input */
-	vecsSoundBuffer.Init(Parameter.CellMappingTable.iSymbolBlockSize * 2);
+	vecsSoundBuffer.Init(iOutputBlockSize * 2);
 
 	/* Init signal meter */
 	SignalLevelMeter.Init(0);
@@ -532,8 +532,10 @@ void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
 	}
 }
 
-/* Calculate PSD and put it into the CParameter class */
-/* To be used by the rsi output */
+/* Calculate PSD and put it into the CParameter class.
+ * The data will be used by the rsi output.
+ * This function is called in a context where the ReceiverParam structure is Locked.
+ */
 void CReceiveData::PutPSD(CParameter &ReceiverParam)
 {
 	int i, j;
@@ -580,6 +582,9 @@ void CReceiveData::PutPSD(CParameter &ReceiverParam)
 
 }
 
+/*
+ * This function is called in a context where the ReceiverParam structure is Locked.
+ */
 void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD)
 {
 
@@ -628,7 +633,7 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 		rCorrection += _REAL(10.0) * log10(rSigPower/rPowerInSMeterBW);
 	} 
 
-	// Add on the calibration factor for the current mode
+	/* Add on the calibration factor for the current mode */
 	if (ReceiverParam.GetReceiverMode() == RM_DRM)
 		rCorrection += ReceiverParam.FrontEndParameters.rCalFactorDRM;
 	else if (ReceiverParam.GetReceiverMode() == RM_AM)		
@@ -637,10 +642,11 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 	ReceiverParam.rSigStrengthCorrection = rCorrection;
 
 	return;
-
 }
 
-
+/*
+ * This function is called in a context where the ReceiverParam structure is Locked.
+ */
 void CReceiveData::CalculatePSDInterferenceTag(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD)
 {
 

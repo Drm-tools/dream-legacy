@@ -137,14 +137,12 @@ public:
 	void					Init();
 	void					Start();
 	void					Stop();
+	void					RequestNewAcquisition() { bRestartFlag = TRUE; }
 	EAcqStat				GetAcquiState() {return pReceiverParam->eAcquiState;}
 	ERecMode				GetReceiverMode() {return eReceiverMode;}
-	void					SetReceiverMode(ERecMode eNewMode)
-								{if (eReceiverMode!=eNewMode || eNewReceiverMode != RM_NONE) eNewReceiverMode = eNewMode;}
-
+	void					SetReceiverMode(ERecMode eNewMode);
 	void					SetInitResOff(_REAL rNRO)
 								{rInitResampleOffset = rNRO;}
-
 	void					SetAMDemodType(CAMDemodulation::EDemodType);
 	void					SetAMFilterBW(int iBw);
 	void					SetAMDemodAcq(_REAL rNewNorCen);
@@ -152,9 +150,8 @@ public:
 	_BOOLEAN		 		GetEnableSMeter();
 	_BOOLEAN 				SetFrequency(int iNewFreqkHz);
 	int		 				GetFrequency() { return iFreqkHz; }
-
-	void SetRSIRecording(const _BOOLEAN bOn, const char cPro);
-	void SetIQRecording(const _BOOLEAN bOn);
+	void					SetIQRecording(_BOOLEAN);
+	void					SetRSIRecording(_BOOLEAN, const char);
 
 	/* Channel Estimation */
 	void SetFreqInt(CChannelEstimation::ETypeIntFreq eNewTy) 
@@ -219,14 +216,6 @@ public:
 
 	CPlotManager*			GetPlotManager() {return &PlotManager;}
 
-	void					SetInStartMode();
-	void					SetInTrackingMode();
-	void					SetInTrackingModeDelayed();
-
-	void					SetReadDRMFromFile(const string strNFN);
-
-	void					InitsForAllModules();
-
 	void					InitsForWaveMode();
 	void					InitsForSpectrumOccup();
 	void					InitsForNoDecBitsSDC();
@@ -238,8 +227,16 @@ public:
 	void					InitsForMSC();
 	void					InitsForMSCDemux();
 
-
 protected:
+
+	void					SetInStartMode();
+	void					SetInTrackingMode();
+	void					SetInTrackingModeDelayed();
+
+	void					SetReadDRMFromFile(const string strNFN);
+
+	void					InitsForAllModules();
+
 	void					Run();
 	void					DemodulateDRM(_BOOLEAN&);
 	void					DecodeDRM(_BOOLEAN&, _BOOLEAN&);
@@ -345,6 +342,7 @@ protected:
 
 
 	_BOOLEAN				bDoInitRun;
+	_BOOLEAN				bRestartFlag;
 
 	_REAL					rInitResampleOffset;
 

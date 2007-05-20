@@ -1402,6 +1402,8 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 
 	catch(CInitErr CurErr)
 	{
+		ReceiverParam.Unlock(); 
+
 		switch (CurErr.eErrType)
 		{
 		case ET_ALL:

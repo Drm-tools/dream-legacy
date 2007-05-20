@@ -227,8 +227,7 @@ CTagItemGeneratorSDC::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &
 	/* Length: "length SDC block" bytes. Our SDC data vector does not
 	   contain the 4 bits "Rfu" */
 	PrepareTag(iLenSDCDataBits + 4);
-	CVectorEx < _BINARY > *pvecbiSDCData =
-		SDCData.Get(Parameter.iNumSDCBitsPerSFrame);
+	CVectorEx < _BINARY > *pvecbiSDCData = SDCData.Get(Parameter.iNumSDCBitsPerSFrame);
 
 	/* Service Description Channel Block */
 	pvecbiSDCData->ResetBitAccess();
@@ -256,13 +255,13 @@ CTagItemGeneratorSDC::GetProfiles()
 void
 CTagItemGeneratorSDCChanInf::GenTag(CParameter & Parameter)
 {
-	CVector < int >veciActStreams;
+	vector < int >veciActStreams;
 
 	/* Get active streams */
 	Parameter.GetActiveStreams(veciActStreams);
 
 	/* Get number of active streams */
-	const int iNumActStreams = veciActStreams.Size();
+	const size_t iNumActStreams = veciActStreams.size();
 
 	/* Length: 1 + n * 3 bytes */
 	PrepareTag((1 + 3 * iNumActStreams) * SIZEOF__BYTE);
@@ -278,7 +277,7 @@ CTagItemGeneratorSDCChanInf::GenTag(CParameter & Parameter)
 	Enqueue((uint32_t) Parameter.MSCPrLe.iPartB, 2);
 
 	/* n + 1 stream description(s) */
-	for (int i = 0; i < iNumActStreams; i++)
+	for (size_t i = 0; i < iNumActStreams; i++)
 	{
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hierarchical data */
@@ -385,7 +384,7 @@ CTagItemGeneratorRINF::GetTagName()
 string
 CTagItemGeneratorRINF::GetProfiles()
 {
-	return "ABCDQM";
+	return "ABCDQ";
 }
 
 CTagItemGeneratorStr::CTagItemGeneratorStr():iStreamNumber(0)

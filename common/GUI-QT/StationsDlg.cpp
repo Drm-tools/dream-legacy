@@ -1127,6 +1127,7 @@ void StationsDlg::SetStationsView()
 void StationsDlg::OnFreqCntNewValue(double dVal)
 {
 	/* Set frequency to front-end */
+	cout << "StationsDlg::OnFreqCntNewValue(" << dVal << ")" << endl;
 	DRMReceiver.SetFrequency((int) dVal);
 }
 
@@ -1163,14 +1164,14 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 			if (eCurrentMode != RM_DRM) 
 				DRMReceiver.SetReceiverMode(RM_DRM);
 			if (bReInitOnFrequencyChange)
-				DRMReceiver.SetInStartMode();
+				DRMReceiver.RequestNewAcquisition();
 			break;
 
 		case CDRMSchedule::SM_ANALOG:
 			if (eCurrentMode != RM_AM)
 				DRMReceiver.SetReceiverMode(RM_AM);
 			if (bReInitOnFrequencyChange)
-				DRMReceiver.SetInStartMode();
+				DRMReceiver.RequestNewAcquisition();
 			break;
 		}
 	}

@@ -8,7 +8,7 @@
  * Description:
  *	DRM-receiver
  * The hand over of data is done via an intermediate-buffer. The calling
- * convention is always "input-buffer, output-buffer". Additional, the
+ * convention is always "input-buffer, output-buffer". Additionally, the
  * DRM-parameters are fed to the function.
  *
  * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
@@ -57,7 +57,7 @@ MSCDecBuf(MAX_NUM_STREAMS), MSCUseBuf(MAX_NUM_STREAMS),
 MSCSendBuf(MAX_NUM_STREAMS), iAcquRestartCnt(0),
 iAcquDetecCnt(0), iGoodSignCnt(0), eReceiverMode(RM_DRM),
 eNewReceiverMode(RM_DRM), iAudioStreamID(STREAM_ID_NOT_USED),
-iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE),
+iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE), bRestartFlag(FALSE),
 rInitResampleOffset((_REAL) 0.0),
 iFreqkHz(0),
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
@@ -85,6 +85,13 @@ CDRMReceiver::~CDRMReceiver()
 #endif
 	delete pSoundInInterface;
 	delete pSoundOutInterface;
+}
+
+void
+CDRMReceiver::SetReceiverMode(ERecMode eNewMode)
+{
+	if (eReceiverMode!=eNewMode || eNewReceiverMode != RM_NONE)
+		eNewReceiverMode = eNewMode;
 }
 
 void
@@ -186,6 +193,12 @@ CDRMReceiver::Run()
 		}
 	}
 #endif
+
+	if(bRestartFlag) /* new acquisition requested by GUI */
+	{
+		bRestartFlag = FALSE;
+		SetInStartMode();
+	}
 
 	/* Input - from upstream RSCI or input and demodulation from sound card / file */
 
@@ -374,7 +387,7 @@ CDRMReceiver::DemodulateDRM(_BOOLEAN& bEnoughData)
 		/* Use count of OFDM-symbols for detecting
 		 * aquisition state for acquisition detection
 		 * only if no signal was decoded before */
-		if (pReceiverParam->eAcquiState == AS_NO_SIGNAL)
+		if (ReceiverParam.eAcquiState == AS_NO_SIGNAL)
 		{
 			/* Increment symbol counter and check if bound is reached */
 			iAcquDetecCnt++;
@@ -462,7 +475,6 @@ CDRMReceiver::DecodeDRM(_BOOLEAN& bEnoughData, _BOOLEAN& bFrameToSend)
 void
 CDRMReceiver::UtilizeDRM(_BOOLEAN& bEnoughData)
 {
-
 	CParameter & ReceiverParam = *pReceiverParam;
 
 	if (UtilizeFACData.WriteData(ReceiverParam, FACUseBuf))
@@ -677,6 +689,9 @@ CDRMReceiver::InitReceiverMode()
 				pAMParam->bMeasureInterference = pDRMParam->bMeasureInterference;
  				pAMParam->FrontEndParameters = pDRMParam->FrontEndParameters;
  				pAMParam->GPSData = pDRMParam->GPSData;
+				pAMParam->sSerialNumber = pDRMParam->sSerialNumber;
+				pAMParam->sReceiverID  = pDRMParam->sReceiverID;
+				pAMParam->sDataFilesDirectory = pDRMParam->sDataFilesDirectory;
 				break;
 			case RM_NONE:
 				/* Start from cold in AM mode - no special action */
@@ -731,6 +746,9 @@ CDRMReceiver::InitReceiverMode()
 				pDRMParam->bMeasureInterference = pAMParam->bMeasureInterference;
  				pDRMParam->FrontEndParameters = pAMParam->FrontEndParameters;
  				pDRMParam->GPSData = pAMParam->GPSData;
+				pDRMParam->sSerialNumber = pAMParam->sSerialNumber;
+				pDRMParam->sReceiverID  = pAMParam->sReceiverID;
+				pDRMParam->sDataFilesDirectory = pAMParam->sDataFilesDirectory;
 				break;
 			case RM_DRM:
 				/* DRM to DRM switch - re-acquisition requested - no special action */
@@ -825,19 +843,22 @@ CDRMReceiver::SetAMDemodAcq(_REAL rNewNorCen)
 void
 CDRMReceiver::SetInStartMode()
 {
+	CParameter & ReceiverParam = *pReceiverParam;
+
 	iUnlockedCount = MAX_UNLOCKED_COUNT;
 
+	ReceiverParam.Lock();
 	/* Load start parameters for all modules */
 
 	/* Define with which parameters the receiver should try to decode the
 	   signal. If we are correct with our assumptions, the receiver does not
 	   need to reinitialize */
-	pReceiverParam->InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+	ReceiverParam.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 
 	/* Set initial MLC parameters */
-	pReceiverParam->SetInterleaverDepth(CParameter::SI_LONG);
-	pReceiverParam->SetMSCCodingScheme(CS_3_SM);
-	pReceiverParam->SetSDCCodingScheme(CS_2_SM);
+	ReceiverParam.SetInterleaverDepth(CParameter::SI_LONG);
+	ReceiverParam.SetMSCCodingScheme(CS_3_SM);
+	ReceiverParam.SetSDCCodingScheme(CS_2_SM);
 
 	/* Select the service we want to decode. Always zero, because we do not
 	   know how many services are transmitted in the signal we want to
@@ -849,26 +870,28 @@ CDRMReceiver::SetInStartMode()
 	 */
 
 	/* Set the following parameters to zero states (initial states) --------- */
-	pReceiverParam->ResetServicesStreams();
-	pReceiverParam->ResetCurSelAudDatServ();
+	ReceiverParam.ResetServicesStreams();
+	ReceiverParam.ResetCurSelAudDatServ();
 
 	/* Protection levels */
-	pReceiverParam->MSCPrLe.iPartA = 0;
-	pReceiverParam->MSCPrLe.iPartB = 1;
-	pReceiverParam->MSCPrLe.iHierarch = 0;
+	ReceiverParam.MSCPrLe.iPartA = 0;
+	ReceiverParam.MSCPrLe.iPartB = 1;
+	ReceiverParam.MSCPrLe.iHierarch = 0;
 
 	/* Number of audio and data services */
-	pReceiverParam->iNumAudioService = 0;
-	pReceiverParam->iNumDataService = 0;
+	ReceiverParam.iNumAudioService = 0;
+	ReceiverParam.iNumDataService = 0;
 
 	/* We start with FAC ID = 0 (arbitrary) */
-	pReceiverParam->iFrameIDReceiv = 0;
+	ReceiverParam.iFrameIDReceiv = 0;
 
 	/* Set synchronization parameters */
-	pReceiverParam->rResampleOffset = rInitResampleOffset;	/* Initial resample offset */
-	pReceiverParam->rFreqOffsetAcqui = (_REAL) 0.0;
-	pReceiverParam->rFreqOffsetTrack = (_REAL) 0.0;
-	pReceiverParam->iTimingOffsTrack = 0;
+	ReceiverParam.rResampleOffset = rInitResampleOffset;	/* Initial resample offset */
+	ReceiverParam.rFreqOffsetAcqui = (_REAL) 0.0;
+	ReceiverParam.rFreqOffsetTrack = (_REAL) 0.0;
+	ReceiverParam.iTimingOffsTrack = 0;
+
+	ReceiverParam.Unlock();
 
 	/* Initialization of the modules */
 	InitsForAllModules();
@@ -883,8 +906,9 @@ CDRMReceiver::SetInStartMode()
 	SyncUsingPil.StartAcquisition();
 	SyncUsingPil.StopTrackPil();
 
+	ReceiverParam.Lock();
 	/* Set flag that no signal is currently received */
-	pReceiverParam->eAcquiState = AS_NO_SIGNAL;
+	ReceiverParam.eAcquiState = AS_NO_SIGNAL;
 
 	/* Set flag for receiver state */
 	eReceiverState = RS_ACQUISITION;
@@ -897,13 +921,15 @@ CDRMReceiver::SetInStartMode()
 	iDelayedTrackModeCnt = NUM_FAC_DEL_TRACK_SWITCH;
 
 	/* Reset GUI lights */
-	pReceiverParam->ReceiveStatus.Interface.SetStatus(NOT_PRESENT);
-	pReceiverParam->ReceiveStatus.TSync.SetStatus(NOT_PRESENT);
-	pReceiverParam->ReceiveStatus.FSync.SetStatus(NOT_PRESENT);
-	pReceiverParam->ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
-	pReceiverParam->ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
-	pReceiverParam->ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
-	pReceiverParam->ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
+	ReceiverParam.ReceiveStatus.Interface.SetStatus(NOT_PRESENT);
+	ReceiverParam.ReceiveStatus.TSync.SetStatus(NOT_PRESENT);
+	ReceiverParam.ReceiveStatus.FSync.SetStatus(NOT_PRESENT);
+	ReceiverParam.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
+	ReceiverParam.ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
+	ReceiverParam.ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
+	ReceiverParam.ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
+
+	ReceiverParam.Unlock();
 
 	/* In case upstreamRSCI is enabled, go directly to tracking mode, do not activate the
 	   synchronization units */
@@ -923,7 +949,9 @@ CDRMReceiver::SetInStartMode()
 		TimeSync.SetSyncInput(TRUE);
 
 		/* Always tracking mode for upstreamRSCI */
-		pReceiverParam->eAcquiState = AS_WITH_SIGNAL;
+		ReceiverParam.Lock();
+		ReceiverParam.eAcquiState = AS_WITH_SIGNAL;
+		ReceiverParam.Unlock();
 
 		SetInTrackingMode();
 	}
@@ -1288,6 +1316,21 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 	}
 }
 
+void
+CDRMReceiver::SetIQRecording(_BOOLEAN bON)
+{
+	if(bON)
+		WriteIQFile.StartRecording(*pReceiverParam);
+	else
+		WriteIQFile.StopRecording();
+}
+
+void
+CDRMReceiver::SetRSIRecording(_BOOLEAN bOn, const char cProfile)
+{
+	downstreamRSCI.SetRSIRecording(*pReceiverParam, bOn, cProfile);
+}
+
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
 void
 CDRMReceiver::CRigPoll::run()
@@ -1325,21 +1368,6 @@ CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
 	return TRUE;
 }
 
-void
-CDRMReceiver::SetRSIRecording(const _BOOLEAN bOn, const char cPro)
-{
-	downstreamRSCI.SetRSIRecording(*pReceiverParam, bOn, cPro);
-}
-
-void
-CDRMReceiver::SetIQRecording(const _BOOLEAN bOn)
-{
-	if (bOn)
-		WriteIQFile.StartRecording(*pReceiverParam);
-	else
-		WriteIQFile.StopRecording();
-}
-
 /* TEST store information about alternative frequency transmitted in SDC */
 void
 CDRMReceiver::saveSDCtoFile()
@@ -1375,6 +1403,26 @@ CDRMReceiver::saveSDCtoFile()
 void
 CDRMReceiver::LoadSettings(CSettings& s)
 {
+	/* Serial Number */
+	string sValue = s.Get("Receiver", "serialnumber");
+	if (sValue != "")
+	{
+		// Pad to a minimum of 6 characters
+		while (sValue.length() < 6)
+			sValue += "_";
+		pReceiverParam->sSerialNumber = sValue;
+	}
+		
+	pReceiverParam->GenerateReceiverID();
+
+	/* Data files directory */
+	string sDataFilesDirectory = s.Get("Receiver", "datafilesdirectory", string("./"));
+	// add trailing slash if not there already
+	string::iterator p = sDataFilesDirectory.end();
+	if (p[-1] != '/' &&  p[-1] != '\\')
+		sDataFilesDirectory.insert(p, '/');
+
+	pReceiverParam->sDataFilesDirectory = sDataFilesDirectory;
 	/* Receiver ------------------------------------------------------------- */
 	string str;
 	int n;
@@ -1522,12 +1570,13 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	}
 	/* RSCI File Recording */
 	str = s.Get("command", "rsirecordprofile");
-	if(str != "")
-		SetRSIRecording(TRUE, str[0]);
+	string s2 = s.Get("command", "rsirecordtype");
+	if(str != "" || s2 != "")
+		downstreamRSCI.SetRSIRecording(*pReceiverParam, TRUE, str[0], s2);
 
 	/* IQ File Recording */
 	if(s.Get("command", "recordiq", false))
-		SetIQRecording(TRUE);
+		WriteIQFile.StartRecording(*pReceiverParam);
 
 	/* Mute audio flag */
 	WriteData.MuteAudio(s.Get("Receiver", "muteaudio", FALSE));
@@ -1604,26 +1653,6 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	FrontEndParameters.rIFCentreFreq = s.Get("FrontEnd", "ifcentrefrequency", SOUNDCRD_SAMPLE_RATE / 4);
 
-	/* Serial Number */
-	string sValue = s.Get("Receiver", "serialnumber");
-	if (sValue != "")
-	{
-		// Pad to a minimum of 6 characters
-		while (sValue.length() < 6)
-			sValue += "_";
-		pReceiverParam->sSerialNumber = sValue;
-	}
-		
-	pReceiverParam->GenerateReceiverID();
-
-	/* Data files directory */
-	string sDataFilesDirectory = s.Get("Receiver", "datafilesdirectory", string("./"));
-	// add trailing slash if not there already
-	string::iterator p = sDataFilesDirectory.end();
-	if (p[-1] != '/' &&  p[-1] != '\\')
-		sDataFilesDirectory.insert(p, '/');
-
-	pReceiverParam->sDataFilesDirectory = sDataFilesDirectory;
 }
 
 void

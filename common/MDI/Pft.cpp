@@ -34,11 +34,15 @@
 #include "../util/CRC.h"
 #include <iostream>
 
-CPft::CPft(int isrc, int idst) : iSource(isrc), iDest(idst), mapFragments()
+CPft::CPft(int isrc, int idst):
+iSource(isrc),
+iDest(idst),
+mapFragments()
 {
 }
 
-bool CPft::DecodePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut)
+bool CPft::DecodePFTPacket(const vector < _BYTE > &vecIn,
+						   vector < _BYTE > &vecOut)
 {
 	/* SYNC: two-byte ASCII representation of "PF" (2 bytes) */
 
@@ -51,70 +55,78 @@ bool CPft::DecodePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut)
 
 	iHeaderLen = 14;
 	iPseq = (uint16_t(vecIn[2]) << 8) + vecIn[3];
-	iFindex = (uint32_t(vecIn[4]) << 16) + (uint32_t(vecIn[5]) << 8) + vecIn[6];
-	iFcount = (uint32_t(vecIn[7]) << 16) + (uint32_t(vecIn[8]) << 8) + vecIn[9];
-	uint16_t n = (uint16_t(vecIn[10]) << 8) + vecIn[11];
-	iFEC = (n&0x8000)?1:0;
-	iAddr = (n&0x4000)?1:0;
-	iPlen = n&0x3FFF;
+	iFindex =
+		(uint32_t(vecIn[4]) << 16) + (uint32_t(vecIn[5]) << 8) + vecIn[6];
+	iFcount =
+		(uint32_t(vecIn[7]) << 16) + (uint32_t(vecIn[8]) << 8) + vecIn[9];
+	uint16_t
+		n = (uint16_t(vecIn[10]) << 8) + vecIn[11];
+	iFEC = (n & 0x8000) ? 1 : 0;
+	iAddr = (n & 0x4000) ? 1 : 0;
+	iPlen = n & 0x3FFF;
 
 	int iRSk, iRSz;
-	if(iFEC==1)
+	if (iFEC == 1)
 	{
 		iRSk = (int) vecIn[12];
 		iRSz = (int) vecIn[13];
-		iHeaderLen+=2;
+		iHeaderLen += 2;
 	}
 
-	int iPktSource=0, iPktDest=0;
-	if(iAddr==1)
+	int iPktSource = 0, iPktDest = 0;
+	if (iAddr == 1)
 	{
-		iPktSource = (uint16_t(vecIn[iHeaderLen-2]) << 8) + vecIn[iHeaderLen-1];
-		iPktDest = (uint16_t(vecIn[iHeaderLen]) << 8) + vecIn[iHeaderLen+1];
-		iHeaderLen+=4;
+		iPktSource = (uint16_t(vecIn[iHeaderLen - 2]) << 8) + vecIn[iHeaderLen - 1];
+		iPktDest = (uint16_t(vecIn[iHeaderLen]) << 8) + vecIn[iHeaderLen + 1];
+		iHeaderLen += 4;
 	}
 
-	const int iHCRC = (uint16_t(vecIn[iHeaderLen-2]) << 8) + vecIn[iHeaderLen-1];
+	const int
+		iHCRC =
+		(uint16_t(vecIn[iHeaderLen - 2]) << 8) + vecIn[iHeaderLen - 1];
 
 	/* CRC check ------------------------------------------------------------ */
 	CCRC CRCObject;
 	CRCObject.Reset(16);
 
 	int i;
-	for (i = 0; i < iHeaderLen-2; i++)
+	for (i = 0; i < iHeaderLen - 2; i++)
 		CRCObject.AddByte(vecIn[i]);
-	const _BOOLEAN bCRCOk = CRCObject.CheckCRC(iHCRC);
+	const _BOOLEAN
+		bCRCOk = CRCObject.CheckCRC(iHCRC);
 	if (!bCRCOk)
 	{
 		cerr << "PFT CRC Error" << endl;
 		return false;
 	}
 
-	if( (iSource!=-1) && (iSource!=iPktSource) )
+	if ((iSource != -1) && (iSource != iPktSource))
 		return false;
-	if( (iDest!=-1) && (iDest!=iPktDest) )
+	if ((iDest != -1) && (iDest != iPktDest))
 		return false;
 
-	vector<_BYTE> frag;
-	for(size_t j=iHeaderLen; j<vecIn.size(); j++)
+	vector < _BYTE > frag;
+	for (size_t j = iHeaderLen; j < vecIn.size(); j++)
 		frag.push_back(vecIn[j]);
-	if(iFEC==1)
+	if (iFEC == 1)
 		return DecodePFTPacketWithFEC(frag, vecOut);
 	else
 		return DecodeSimplePFTPacket(frag, vecOut);
 }
 
-bool CPft::DecodeSimplePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut)
+bool CPft::DecodeSimplePFTPacket(const vector < _BYTE > &vecIn,
+								 vector < _BYTE > &vecOut)
 {
-	if(iFcount==1)
+	if (iFcount == 1)
 	{
 		vecOut = vecIn;
 		return true;
 	}
 	/* CReassembler does not modify the input vector, but its derived classes using CVectors do. */
-	mapFragments[iPseq].AddSegment(const_cast<vector<_BYTE>&>(vecIn), iFindex, iFindex==(iFcount-1));
+	mapFragments[iPseq].AddSegment(const_cast < vector < _BYTE > &>(vecIn),
+								   iFindex, iFindex == (iFcount - 1));
 
-	if(mapFragments[iPseq].Ready())
+	if (mapFragments[iPseq].Ready())
 	{
 		vecOut = mapFragments[iPseq].vecData;
 		return true;
@@ -123,8 +135,68 @@ bool CPft::DecodeSimplePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecO
 	return false;
 }
 
-bool CPft::DecodePFTPacketWithFEC(const vector<_BYTE>&, vector<_BYTE>&)
+bool CPft::DecodePFTPacketWithFEC(const vector < _BYTE > &,
+								  vector < _BYTE > &)
 {
 	cerr << "sorry, PFT/FEC not implemented yet" << endl;
 	return false;
+}
+
+void
+CPft::MakePFTPackets(const vector < _BYTE > &vecbydata, vector < vector < _BYTE > >&packets,
+	uint16_t sequence_counter, size_t fragment_size)
+{
+	uint16_t num_packets, data_size = vecbydata.size();
+	size_t header_bytesize, payload_bytesize;
+	header_bytesize = 14;		// no addressing or FEC
+	if ((fragment_size > 0) && (fragment_size < (data_size + header_bytesize)))
+	{
+		payload_bytesize = fragment_size - header_bytesize;
+		num_packets = data_size / payload_bytesize;
+		if (num_packets * payload_bytesize < data_size)
+			num_packets++;
+		payload_bytesize = data_size / num_packets;
+		if (num_packets * payload_bytesize < data_size)
+			payload_bytesize++;
+	}
+	else
+	{
+		num_packets = 1;
+		payload_bytesize = data_size;
+	}
+	size_t bytes_remaining = data_size;
+	packets.clear();
+	packets.resize(num_packets);
+	vector<_BYTE>::const_iterator p = vecbydata.begin();
+	for (uint16_t n = 0; n < num_packets; n++)
+	{
+		if (bytes_remaining < payload_bytesize)
+			payload_bytesize = bytes_remaining;	// last packet
+
+		CCRC CRCObject;
+		CRCObject.Reset(16);
+
+		// write PFT Packet Header
+		uint8_t c;
+		c='P'; CRCObject.AddByte(c); packets[n].push_back(c);
+		c='F'; CRCObject.AddByte(c); packets[n].push_back(c);
+		c=sequence_counter >> 8; CRCObject.AddByte(c); packets[n].push_back(c);
+		c=sequence_counter & 0xff; CRCObject.AddByte(c); packets[n].push_back(c);
+		c=n >> 16; CRCObject.AddByte(c); packets[n].push_back(c);
+		c=(n >> 8) & 0xff; CRCObject.AddByte(c); packets[n].push_back(c);
+		c=n & 0xff; CRCObject.AddByte(c); packets[n].push_back(c);
+		c=num_packets >> 16; CRCObject.AddByte(c); packets[n].push_back(c);
+		c=(num_packets >> 8) & 0xff; CRCObject.AddByte(c); packets[n].push_back(c);
+		c=num_packets & 0xff; CRCObject.AddByte(c); packets[n].push_back(c);
+		c=payload_bytesize >> 8; CRCObject.AddByte(c); packets[n].push_back(c);
+		c=payload_bytesize & 0xff; CRCObject.AddByte(c); packets[n].push_back(c);
+		// CRC
+		uint16_t crc_val = uint16_t(CRCObject.GetCRC());
+		c=crc_val >> 8; CRCObject.AddByte(c); packets[n].push_back(c);
+		c=crc_val & 0xff; CRCObject.AddByte(c); packets[n].push_back(c);
+		// write PFT Packet Payload
+		packets[n].insert(packets[n].end(), p, p+payload_bytesize);
+		p += payload_bytesize;
+		bytes_remaining -= payload_bytesize;
+	}
 }

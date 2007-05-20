@@ -38,7 +38,7 @@
 
 class CPacketSink;
 class CDRMReceiver;
-class CTagPacketGeneratorWithProfiles;
+class CTagPacketGenerator;
 
 class CRSISubscriber : public CPacketSink
 {
@@ -54,7 +54,7 @@ public:
 	char GetProfile(void) const {return cProfile;}
 
 	/* Generate and send a packet */
-	void TransmitPacket(CTagPacketGeneratorWithProfiles *pGenerator);
+	void TransmitPacket(CTagPacketGenerator& Generator);
 
 	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC = bNAFPktCRC;}
 
@@ -71,6 +71,8 @@ private:
 	CAFPacketGenerator AFPacketGenerator;
 
 	_BOOLEAN bUseAFCRC;
+	_BOOLEAN bNeedPft;
+	uint16_t sequence_counter;
 };
 
 
@@ -103,7 +105,7 @@ public:
 
 	_BOOLEAN GetDestination(string& addr);
 private:
-	CPacketSinkRawFile PacketSinkFile;
+	CPacketSinkFile* pPacketSinkFile;
 };
 
 #endif

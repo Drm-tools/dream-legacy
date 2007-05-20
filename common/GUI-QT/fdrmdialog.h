@@ -129,6 +129,7 @@ public slots:
 	void OnViewEPGDlg();
 	void OnViewMultSettingsDlg();
 	void OnViewGeneralSettingsDlg();
+	void OnNewDRMAcquisition();
 	void OnSwitchToDRM();
 	void OnSwitchToAM();
 	void OnMenuSetDisplayColor();

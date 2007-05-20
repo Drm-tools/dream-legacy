@@ -75,16 +75,13 @@ public:
 	void InitInternal(CParameter& ReceiverParam);
 	void ProcessDataInternal(CParameter& ReceiverParam);
 
-	void TransmitPacket(CVector<_BINARY>& vecbidata);
-
 protected:
 
-	void						doSendPacket(const vector<_BYTE>& vecbydata);
 	string						strOrigin;
 	string						strDestination;
 	CMDIInBuffer	  			queue;
 	CPacketSource*				source;
-	CPacketSink*				sink;
+	CRSISubscriberSocket		sink; 
 	CPft						Pft;
 
 	_BOOLEAN					bUseAFCRC;
@@ -92,6 +89,7 @@ protected:
 	CSingleBuffer<_BINARY>		MDIInBuffer;
 	_BOOLEAN					bMDIOutEnabled;
 	_BOOLEAN					bMDIInEnabled;
+	_BOOLEAN					bNeedPft;
 
 	/* Tag Item Generators */
 
@@ -126,7 +124,7 @@ public:
 	_BOOLEAN AddSubscriber(const string& dest, const string& origin, const char profile);
 
 	_BOOLEAN SetOrigin(const string& strAddr);
-	void SetRSIRecording(CParameter& Parameter, _BOOLEAN bOn, char cPro);
+	void SetRSIRecording(CParameter& Parameter, _BOOLEAN bOn, char cPro, const string& type="");
 	void NewFrequency(CParameter& Parameter); /* needs to be called in case a new RSCI file needs to be started */
 	
 	virtual _BOOLEAN GetOutEnabled() {return bMDIOutEnabled;} 
@@ -150,8 +148,11 @@ protected:
 
 	_BOOLEAN					bMDIOutEnabled;
 	_BOOLEAN					bMDIInEnabled;
+	_BOOLEAN					bNeedPft;
+
 	_BOOLEAN					bIsRecording;
 	int							iFrequency;
+	string						strRecordType;
 
 
 	/* Generators for all of the MDI and RSCI tags */

@@ -417,8 +417,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		}
 
 		/* OPH: RSCI control in address */
-		if (GetStringArgument(argc, argv, i, "--rciin", "--rciin",
-							  strArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "--rciin", "--rciin", strArgument) == TRUE)
 		{
 			stringstream s;
 			s << "rciin" << rciinnum;
@@ -427,19 +426,24 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
-		if (GetStringArgument
-			(argc, argv, i, "--rsirecordprofile", "--rsirecordprofile",
-			 strArgument) == TRUE)
+		if (GetStringArgument (argc, argv, i,
+				"--rsirecordprofile", "--rsirecordprofile", strArgument) == TRUE)
 		{
 			Put("command", "rsirecordprofile", strArgument);
 			continue;
 		}
 
-		if (GetNumericArgument
-			(argc, argv, i, "--recordiq", "--recordiq", 0, 1,
-			 rArgument) == TRUE)
+		if (GetStringArgument (argc, argv, i,
+				"--rsirecordtype", "--rsirecordtype", strArgument) == TRUE)
 		{
-			Put("command", "rsirecordprofile", int (rArgument));
+			Put("command", "rsirecordtype", strArgument);
+			continue;
+		}
+
+		if (GetNumericArgument (argc, argv, i,
+				"--recordiq", "--recordiq", 0, 1, rArgument) == TRUE)
+		{
+			Put("command", "recordiq", int (rArgument));
 			continue;
 		}
 
@@ -534,6 +538,7 @@ CSettings::UsageArguments(char **argv)
 		"  --rciout <s>                RSCI Control output format IP#:port\n"
 		"  --rciin <s>                 RSCI Control input address number format [IP#:]port\n"
 		"  --rsirecordprofile <s>      RSCI recording profile: A|B|C|D|Q|M\n"
+		"  --rsirecordtype <s>         RSCI recording file type: raw|ff|pcap\n"
 		"  --recordiq <n>              enable/disable recording an I/Q file\n"
 		"  -I <n>, --snddevin <n>      set sound in device\n"
 		"  -O <n>, --snddevout <n>     set sound out device\n"

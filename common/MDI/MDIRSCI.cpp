@@ -57,6 +57,7 @@
 /* Implementation *************************************************************/
 CDownstreamDI::CDownstreamDI() : iLogFraCnt(0), pDrmReceiver(NULL),
 	bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE),bIsRecording(FALSE),
+	iFrequency(0), strRecordType(),
 	vecTagItemGeneratorStr(MAX_NUM_STREAMS), vecTagItemGeneratorRBP(MAX_NUM_STREAMS),
 	RSISubscribers(),pRSISubscriberFile(new CRSISubscriberFile)
 {
@@ -319,7 +320,7 @@ void CDownstreamDI::GenDIPacket()
 	{
 		// re-generate the profile tag for each subscriber
 		TagItemGeneratorProfile.GenTag((*s)->GetProfile());
-		(*s)->TransmitPacket(&TagPacketGenerator);
+		(*s)->TransmitPacket(TagPacketGenerator);
 	}
 }
 
@@ -437,13 +438,17 @@ string CDownstreamDI::GetRSIfilename(CParameter& Parameter, const char cProfile)
 	return filename.str();
 }
 
-void CDownstreamDI::SetRSIRecording(CParameter& Parameter, const _BOOLEAN bOn, char cPro)
+void CDownstreamDI::SetRSIRecording(CParameter& Parameter, const _BOOLEAN bOn, char cPro, const string& type)
 {
+	strRecordType = type;
 	if (bOn)
 	{
 		pRSISubscriberFile->SetProfile(cPro);
+		string fn = GetRSIfilename(Parameter, cPro);
+		if(strRecordType != "" && strRecordType != "raw")
+			fn += "." + strRecordType;
 
-		pRSISubscriberFile->SetDestination(GetRSIfilename(Parameter, cPro));
+		pRSISubscriberFile->SetDestination(fn);
 		pRSISubscriberFile->StartRecording();
 		bMDIOutEnabled = TRUE;
 		bIsRecording = TRUE;
@@ -466,7 +471,10 @@ void CDownstreamDI::NewFrequency(CParameter& Parameter)
 		if (bIsRecording)
 		{
 			pRSISubscriberFile->StopRecording();
-			pRSISubscriberFile->SetDestination(GetRSIfilename(Parameter, pRSISubscriberFile->GetProfile()));
+			string fn = GetRSIfilename(Parameter, pRSISubscriberFile->GetProfile());
+			if(strRecordType != "" && strRecordType != "raw")
+				fn += "." + strRecordType;
+			pRSISubscriberFile->SetDestination(fn);
 			pRSISubscriberFile->StartRecording();
 		}
 	}
@@ -480,7 +488,7 @@ void CDownstreamDI::SendPacket(const vector<_BYTE>&, uint32_t, uint16_t)
 /******************************************************************************\
 * DI receive status, send control                                             * 
 \******************************************************************************/
-CUpstreamDI::CUpstreamDI() : source(NULL), sink(NULL), bUseAFCRC(TRUE), bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE)
+CUpstreamDI::CUpstreamDI() : source(NULL), sink(), bUseAFCRC(TRUE), bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE)
 {
 	/* Init constant tag */
 	TagItemGeneratorProTyRSCI.GenTag();
@@ -490,8 +498,6 @@ CUpstreamDI::~CUpstreamDI()
 {
 	if(source)
 	{
-		if(sink && (void*)sink != (void*)source)
-			delete sink;
 		delete source;
 	}
 }
@@ -538,67 +544,37 @@ _BOOLEAN CUpstreamDI::SetOrigin(const string& str)
 
 _BOOLEAN CUpstreamDI::SetDestination(const string& str)
 {
-	strDestination = str;
-	if(sink==NULL)
-	{
-#ifdef USE_QT_GUI
-		sink = new CPacketSocketQT;
-#endif
-	}
 
-	if(sink==NULL)
-		return FALSE;
-
-	bMDIOutEnabled = sink->SetDestination(strDestination);
+	bMDIOutEnabled = sink.SetDestination(str);
 
 	return bMDIOutEnabled;
 }
 
 _BOOLEAN CUpstreamDI::GetDestination(string& str)
 {
-	if(sink)
-		return sink->GetDestination(str);
-	return FALSE;
-}
-
-void
-CUpstreamDI::doSendPacket(const vector<_BYTE>& vecbydata)
-{
-	if(bMDIOutEnabled)
-	{
-		sink->SendPacket(vecbydata);
-	}
+	return sink.GetDestination(str);
 }
 
 void CUpstreamDI::SetFrequency(int iNewFreqkHz)
 {
+	if(bMDIOutEnabled==FALSE)
+		return;
 	TagPacketGenerator.Reset();
 	TagItemGeneratorCfre.GenTag(iNewFreqkHz);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyRSCI);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorCfre);
-	CVector<_BYTE> packet = AFPacketGenerator.GenAFPacket(bUseAFCRC, &TagPacketGenerator);
-	doSendPacket(packet);
+	sink.TransmitPacket(TagPacketGenerator);
 }
 
 void CUpstreamDI::SetReceiverMode(ERecMode eNewMode)
 {
+	if(bMDIOutEnabled==FALSE)
+		return;
 	TagPacketGenerator.Reset();
 	TagItemGeneratorCdmo.GenTag(eNewMode);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyRSCI);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorCdmo);
-	CVector<_BYTE> packet = AFPacketGenerator.GenAFPacket(bUseAFCRC, &TagPacketGenerator);
-	doSendPacket(packet);
-}
-
-/* bits to bytes and send */
-
-void CUpstreamDI::TransmitPacket(CVector<_BINARY>& vecbidata)
-{
-	vector<_BYTE> packet;
-	vecbidata.ResetBitAccess();
-	for(size_t i=0; i<size_t(vecbidata.Size()/SIZEOF__BYTE); i++)
-		packet.push_back(_BYTE(vecbidata.Separate(SIZEOF__BYTE)));
-	doSendPacket(packet);
+	sink.TransmitPacket(TagPacketGenerator);
 }
 
 /* we only support one upstream RSCI source, so ignore the source address */

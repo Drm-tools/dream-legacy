@@ -41,6 +41,7 @@
 
 
 CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink), cProfile(0), pDRMReceiver(0), bUseAFCRC(TRUE)
+, bNeedPft(FALSE),sequence_counter(0)
 {
 	TagPacketDecoderRSCIControl.SetSubscriber(this);
 }
@@ -54,14 +55,27 @@ void CRSISubscriber::SetReceiver(CDRMReceiver *pReceiver)
 void CRSISubscriber::SetProfile(const char c)
 {
 	cProfile = c;
+	bNeedPft = FALSE;
 }
 
-void CRSISubscriber::TransmitPacket(CTagPacketGeneratorWithProfiles *pGenerator)
+void CRSISubscriber::TransmitPacket(CTagPacketGenerator& Generator)
 {
 	if (pPacketSink != 0)
 	{
-	 	pGenerator->SetProfile(cProfile);
-		pPacketSink->SendPacket(AFPacketGenerator.GenAFPacket(bUseAFCRC, pGenerator));
+		size_t fragment_size = 1470;
+	 	Generator.SetProfile(cProfile);
+		vector<_BYTE> packet = AFPacketGenerator.GenAFPacket(bUseAFCRC, Generator);
+		bNeedPft |= packet.size()>fragment_size;
+		if(bNeedPft)
+		{
+			vector< vector<_BYTE> > packets;
+			CPft::MakePFTPackets(packet, packets, sequence_counter, fragment_size);
+			sequence_counter++;
+			for(size_t i=0; i<packets.size(); i++)
+				pPacketSink->SendPacket(packets[i]);
+		}
+		else
+			pPacketSink->SendPacket(packet);
 	}
 }
 
@@ -100,6 +114,7 @@ CRSISubscriberSocket::~CRSISubscriberSocket()
 _BOOLEAN CRSISubscriberSocket::SetDestination(const string& str)
 {
 	strDestination = str;
+	//bNeedPft = FALSE;
 	if(pSocket)
 		return pSocket->SetDestination(str);
 	return FALSE;;
@@ -128,7 +143,7 @@ _BOOLEAN CRSISubscriberSocket::SetOrigin(const string& str)
 	return FALSE;
 }
 
-CRSISubscriberFile::CRSISubscriberFile(): CRSISubscriber(&PacketSinkFile)
+CRSISubscriberFile::CRSISubscriberFile(): CRSISubscriber(NULL), pPacketSinkFile(NULL)
 {
 	/* override the subscriber back to NULL to prevent Cpro doing anything */
 	TagPacketDecoderRSCIControl.SetSubscriber(NULL);
@@ -136,20 +151,46 @@ CRSISubscriberFile::CRSISubscriberFile(): CRSISubscriber(&PacketSinkFile)
 
 _BOOLEAN CRSISubscriberFile::SetDestination(const string& strFName)
 {
-	return PacketSinkFile.SetDestination(strFName);
+cout << "CRSISubscriberFile::SetDestination " << strFName << endl;
+	if(pPacketSink)
+	{
+		delete pPacketSink;
+		pPacketSink = NULL;
+		pPacketSinkFile = NULL;
+	}
+	string ext;
+	size_t p = strFName.rfind('.');
+	if (p != string::npos)
+		ext = strFName.substr(p + 1);
+	if (ext.substr(0,4) == "pcap")
+		pPacketSinkFile = new CPacketSinkPcapFile;
+	else if(ext.substr(0,2) == "ff")
+		pPacketSinkFile = new CPacketSinkFileFraming;
+	else
+		pPacketSinkFile = new CPacketSinkRawFile;
+	if(pPacketSinkFile)
+	{
+		pPacketSink = pPacketSinkFile;
+		return pPacketSinkFile->SetDestination(strFName);
+	}
+	return FALSE;
 }
 
 _BOOLEAN CRSISubscriberFile::GetDestination(string& strFName)
 {
-	return PacketSinkFile.GetDestination(strFName);
+	if(pPacketSinkFile)
+		return pPacketSinkFile->GetDestination(strFName);
+	return FALSE;
 }
 
 void CRSISubscriberFile::StartRecording()
 {
-	PacketSinkFile.StartRecording();
+	if(pPacketSinkFile)
+		pPacketSinkFile->StartRecording();
 }
 
 void CRSISubscriberFile::StopRecording()
 {
-	PacketSinkFile.StopRecording();
+	if(pPacketSinkFile)
+		pPacketSinkFile->StopRecording();
 }

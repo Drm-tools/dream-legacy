@@ -41,7 +41,7 @@
 #include "../util/LogPrint.h"
 // CAFPacketGenerator
 
-CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC, CTagPacketGenerator *pTagPacketGenerator)
+CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC, CTagPacketGenerator& TagPacketGenerator)
 {
 /*
 	The AF layer encapsulates a single TAG Packet. Mandatory TAG items:
@@ -51,7 +51,7 @@ CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC, CTagPac
 
 	/* Payload length in bytes */
 // TODO: check if padding bits are needed to get byte alignment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	int iPayloadLenBytes = pTagPacketGenerator->GetTagPacketLength();
+	int iPayloadLenBytes = TagPacketGenerator.GetTagPacketLength();
 		
 	/* 10 bytes AF header, 2 bytes CRC, payload */
 	const int iAFPktLenBits =
@@ -105,7 +105,7 @@ CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC, CTagPac
 
 // TODO: copy data byte wise -> check if possible to do that...
 
-	pTagPacketGenerator->PutTagPacketData(vecbiAFPkt);
+	TagPacketGenerator.PutTagPacketData(vecbiAFPkt);
 
 	/* CRC: CRC calculated as described in annex A if the CF field is 1,
 	   otherwise 0000_[16] */

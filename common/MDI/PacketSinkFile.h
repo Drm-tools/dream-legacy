@@ -35,11 +35,12 @@
 
 #include "PacketInOut.h"
 
-class CPacketSinkRawFile : public CPacketSink
+class CPacketSinkFile : public CPacketSink
 {
 public:
-	CPacketSinkRawFile();
-	virtual ~CPacketSinkRawFile() {}
+	CPacketSinkFile();
+	virtual ~CPacketSinkFile() {}
+
 	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
 	virtual _BOOLEAN SetDestination(const string& strFName);
@@ -47,11 +48,48 @@ public:
 	void StartRecording();
 	void StopRecording();
 
-private:
+protected:
+	virtual void open()=0;
+	virtual void close()=0;
+	virtual void write(const vector<_BYTE>& vecbydata)=0;
+
 	FILE *pFile;
 	_BOOLEAN bIsRecording;
 	_BOOLEAN bChangeReceived;
 	string strFileName;
+};
+
+class CPacketSinkRawFile : public CPacketSinkFile
+{
+public:
+	CPacketSinkRawFile();
+	virtual ~CPacketSinkRawFile();
+protected:
+	virtual void open();
+	virtual void close();
+	virtual void write(const vector<_BYTE>& vecbydata);
+};
+
+class CPacketSinkFileFraming : public CPacketSinkFile
+{
+public:
+	CPacketSinkFileFraming();
+	virtual ~CPacketSinkFileFraming();
+protected:
+	virtual void open();
+	virtual void close();
+	virtual void write(const vector<_BYTE>& vecbydata);
+};
+
+class CPacketSinkPcapFile : public CPacketSinkFile
+{
+public:
+	CPacketSinkPcapFile();
+	virtual ~CPacketSinkPcapFile();
+protected:
+	virtual void open();
+	virtual void close();
+	virtual void write(const vector<_BYTE>& vecbydata);
 };
 
 #endif
