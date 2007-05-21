@@ -1237,7 +1237,7 @@ void StationsDlg::OnRemoteMenu(int iID)
 void StationsDlg::OnComPortMenu(QAction* action)
 {
 #ifdef HAVE_LIBHAMLIB
-	DRMReceiver.GetHamlib()->SetComPort(action->text());
+	DRMReceiver.GetHamlib()->SetComPort(action->text().latin1());
 #endif
 }
 
