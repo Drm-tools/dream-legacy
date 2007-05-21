@@ -146,7 +146,7 @@ void
 CPft::MakePFTPackets(const vector < _BYTE > &vecbydata, vector < vector < _BYTE > >&packets,
 	uint16_t sequence_counter, size_t fragment_size)
 {
-	uint16_t num_packets, data_size = vecbydata.size();
+	uint32_t num_packets, data_size = vecbydata.size();
 	size_t header_bytesize, payload_bytesize;
 	header_bytesize = 14;		// no addressing or FEC
 	if ((fragment_size > 0) && (fragment_size < (data_size + header_bytesize)))
@@ -168,7 +168,7 @@ CPft::MakePFTPackets(const vector < _BYTE > &vecbydata, vector < vector < _BYTE 
 	packets.clear();
 	packets.resize(num_packets);
 	vector<_BYTE>::const_iterator p = vecbydata.begin();
-	for (uint16_t n = 0; n < num_packets; n++)
+	for (uint32_t n = 0; n < num_packets; n++)
 	{
 		if (bytes_remaining < payload_bytesize)
 			payload_bytesize = bytes_remaining;	// last packet

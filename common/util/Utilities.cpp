@@ -33,8 +33,11 @@
 #   define INITGUID 1
 #  endif
 #  include <windows.h>
-#  include <ddk/ntddser.h>
 #  include <setupapi.h>
+#  ifndef _MSC_VER
+    DEFINE_GUID(GUID_DEVINTERFACE_COMPORT, 0x86e0d1e0L, 0x8089, 
+    0x11d0, 0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73);
+#  endif
 # endif
 #elif defined(__APPLE__)
 #include <CoreFoundation/CoreFoundation.h>
@@ -695,14 +698,14 @@ CHamlib::GetPortList(map < string, string > &ports)
 }
 
 void
-CHamlib::SetPort(const string & port)
+CHamlib::SetComPort(const string & port)
 {
 	config["rig_pathname"] = port;
 	cout << port << endl;
 	SetHamlibModelID(iHamlibModelID);
 }
 
-string CHamlib::GetPort() const
+string CHamlib::GetComPort() const
 {
 	map < string, string >::const_iterator m = config.find("rig_pathname");
 	if (m == config.end())

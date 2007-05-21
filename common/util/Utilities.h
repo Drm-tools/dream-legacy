@@ -178,8 +178,8 @@ public:
 
 	/* com port selection */
 	void			GetPortList(map<string,string>&);
-	void			SetPort(const string&);
-	string			GetPort() const;
+	void			SetComPort(const string&);
+	string			GetComPort() const;
 
 	void			SetEnableModRigSettings(const _BOOLEAN bNSM);
 	_BOOLEAN		GetEnableModRigSettings() const {return bModRigSettings;}

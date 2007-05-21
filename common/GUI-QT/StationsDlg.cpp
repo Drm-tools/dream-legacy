@@ -550,7 +550,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	agCOMPortSel = new QActionGroup(this, "Com port", TRUE);
 	map<string,string> ports;
 	Hamlib.GetPortList(ports);
-	string strPort = Hamlib.GetPort();
+	string strPort = Hamlib.GetComPort();
 	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
 	{
 		QAction* pacMenu = new QAction(p->second.c_str(), p->first.c_str(), 0, agCOMPortSel, 0, TRUE);
@@ -1237,7 +1237,7 @@ void StationsDlg::OnRemoteMenu(int iID)
 void StationsDlg::OnComPortMenu(QAction* action)
 {
 #ifdef HAVE_LIBHAMLIB
-	DRMReceiver.GetHamlib()->SetPort(action->text());
+	DRMReceiver.GetHamlib()->SetComPort(action->text());
 #endif
 }
 
