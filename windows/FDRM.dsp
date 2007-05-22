@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 libfaac.lib libhamlib.lib FreeImage.lib libfftw.lib libfaad.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib wsock32.lib winspool.lib winmm.lib $(QTDIR)\lib\qt-mt230nc.lib $(QTDIR)\lib\qtmain.lib libqwt.lib libfhgjournaline.lib /nologo /subsystem:console /machine:I386 /nodefaultlib:"MSVCRTD" /out:"Release/Dream.exe" /libpath:"../libs"
+# ADD LINK32 libfaac.lib libhamlib.lib FreeImage.lib libfftw.lib libfaad.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib wsock32.lib winspool.lib winmm.lib $(QTDIR)\lib\qt-mt230nc.lib $(QTDIR)\lib\qtmain.lib libqwt.lib libfhgjournaline.lib setupapi.lib /nologo /subsystem:console /machine:I386 /nodefaultlib:"MSVCRTD" /out:"Release/Dream.exe" /libpath:"../libs"
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "FDRM - Win32 Debug"
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libfaac.lib libhamlib.lib FreeImage.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib wsock32.lib winspool.lib winmm.lib $(QTDIR)\lib\qt-mt230nc.lib $(QTDIR)\lib\qtmain.lib libfftw.lib libfaad.lib libqwt.lib libfhgjournaline.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/Dream.exe" /pdbtype:sept /libpath:"../libs"
+# ADD LINK32 libfaac.lib libhamlib.lib FreeImage.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib wsock32.lib winspool.lib winmm.lib $(QTDIR)\lib\qt-mt230nc.lib $(QTDIR)\lib\qtmain.lib libfftw.lib libfaad.lib libqwt.lib libfhgjournaline.lib setupapi.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/Dream.exe" /pdbtype:sept /libpath:"../libs"
 
 !ENDIF 
 
@@ -661,18 +661,6 @@ SOURCE=..\common\DataIO.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\ReceptLog.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\PlotManager.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\ServiceInformation.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\DrmReceiver.cpp
 # End Source File
 # Begin Source File
@@ -721,11 +709,23 @@ SOURCE=..\common\Parameter.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\PlotManager.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\ReceptLog.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\resample\Resample.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\common\resample\ResampleFilter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\ServiceInformation.cpp
 # End Source File
 # Begin Source File
 
@@ -1161,18 +1161,6 @@ SOURCE=..\common\DrmReceiver.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\ServiceInformation.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\ReceptLog.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\PlotManager.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\DRMSignalIO.h
 # End Source File
 # Begin Source File
@@ -1221,6 +1209,14 @@ SOURCE=..\common\Parameter.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\PlotManager.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\ReceptLog.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\resample\Resample.h
 # End Source File
 # Begin Source File
@@ -1230,6 +1226,10 @@ SOURCE=..\common\resample\ResampleFilter.h
 # Begin Source File
 
 SOURCE=..\common\selectioninterface.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\ServiceInformation.h
 # End Source File
 # Begin Source File
 
