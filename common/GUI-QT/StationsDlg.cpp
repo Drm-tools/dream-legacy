@@ -1127,7 +1127,6 @@ void StationsDlg::SetStationsView()
 void StationsDlg::OnFreqCntNewValue(double dVal)
 {
 	/* Set frequency to front-end */
-	cout << "StationsDlg::OnFreqCntNewValue(" << dVal << ")" << endl;
 	DRMReceiver.SetFrequency((int) dVal);
 }
 
