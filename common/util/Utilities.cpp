@@ -759,9 +759,9 @@ CHamlib::LoadSettings(CSettings & s)
 		if (strSettings != "" || iFreqOffset != 0)
 		{
 			if (bModRigSettings)
-				RigSpecialParameters(model, strSettings, iFreqOffset, "");
-			else
 				RigSpecialParameters(model, "", iFreqOffset, strSettings);
+			else
+				RigSpecialParameters(model, strSettings, iFreqOffset, "");
 		}
 
 		/* Hamlib Model ID */
