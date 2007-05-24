@@ -533,7 +533,7 @@ CSettings::UsageArguments(char **argv)
 		"  --mdiout <s>                MDI out address format [IP#:]IP#:port (for Content Server)\n"
 		"  --mdiin  <s>                MDI in address (for modulator) [[IP#:]IP:]port\n"
 		"  --rsioutprofile <s>         MDI/RSCI output profile: A|B|C|D|Q|M\n"
-		"  --rsiout <s>                MDI/RSCI output address format [IP#:]IP#:port\n"
+		"  --rsiout <s>                MDI/RSCI output address format [IP#:]IP#:port (prefix address with 'p' to enable the simple PFT)\n"
 		"  --rsiin <s>                 RSCI/MDI status input address format [[IP#:]IP#:]port\n"
 		"  --rciout <s>                RSCI Control output format IP#:port\n"
 		"  --rciin <s>                 RSCI Control input address number format [IP#:]port\n"

@@ -65,13 +65,13 @@ public:
 protected:
 	CPacketSink *pPacketSink;
 	char cProfile;
+	_BOOLEAN bNeedPft;
 	CTagPacketDecoderRSCIControl TagPacketDecoderRSCIControl;
 private:
 	CDRMReceiver *pDRMReceiver;
 	CAFPacketGenerator AFPacketGenerator;
 
 	_BOOLEAN bUseAFCRC;
-	_BOOLEAN bNeedPft;
 	uint16_t sequence_counter;
 };
 

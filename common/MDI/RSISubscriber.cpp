@@ -40,8 +40,8 @@
 #endif
 
 
-CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink), cProfile(0), pDRMReceiver(0), bUseAFCRC(TRUE)
-, bNeedPft(FALSE),sequence_counter(0)
+CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink),
+	cProfile(0), bNeedPft(FALSE), pDRMReceiver(0), bUseAFCRC(TRUE), sequence_counter(0)
 {
 	TagPacketDecoderRSCIControl.SetSubscriber(this);
 }
@@ -65,7 +65,7 @@ void CRSISubscriber::TransmitPacket(CTagPacketGenerator& Generator)
 		size_t fragment_size = 1470;
 	 	Generator.SetProfile(cProfile);
 		vector<_BYTE> packet = AFPacketGenerator.GenAFPacket(bUseAFCRC, Generator);
-		bNeedPft |= packet.size()>fragment_size;
+		//bNeedPft |= packet.size()>fragment_size;
 		if(bNeedPft)
 		{
 			vector< vector<_BYTE> > packets;
@@ -114,9 +114,15 @@ CRSISubscriberSocket::~CRSISubscriberSocket()
 _BOOLEAN CRSISubscriberSocket::SetDestination(const string& str)
 {
 	strDestination = str;
-	//bNeedPft = FALSE;
+	bNeedPft = FALSE;
+	char c = strDestination[0];
+	if(c == 'P' || c == 'p')
+	{
+		bNeedPft = TRUE;
+		strDestination.erase(0, 1);
+	}
 	if(pSocket)
-		return pSocket->SetDestination(str);
+		return pSocket->SetDestination(strDestination);
 	return FALSE;;
 }
 

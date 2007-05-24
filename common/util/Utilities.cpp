@@ -476,7 +476,7 @@ modes(), levels(), functions(), parameters(), config()
 //      "l_AGC=3"));
 	RigSpecialParameters(RIG_MODEL_AR7030, "m_AM=3,l_AGC=5",
 						 0 /* kHz frequency offset */ ,
-						 "m_AM=2,l_AGC=5");
+						 "m_AM=6,l_AGC=5");
 #endif
 
 #ifdef RIG_MODEL_ELEKTOR304
@@ -645,7 +645,7 @@ CHamlib::GetPortList(map < string, string > &ports)
 	{
         CFDictionarySetValue(classesToMatch,
                              CFSTR(kIOSerialBSDTypeKey),
-                             CFSTR(kIOSerialBSDModemType));
+                             CFSTR(kIOSerialBSDRS232Type));
         
 	}
     kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault, classesToMatch, &serialPortIterator);    
@@ -686,7 +686,14 @@ CHamlib::GetPortList(map < string, string > &ports)
             
             if (result)
 			{
-				ports[bsdPath] = bsdPath;
+				// make the name a bit more friendly for the menu
+				string s,t=bsdPath;
+				size_t p = t.find('.');
+				if(p<string::npos)
+					s = t.substr(p+1);
+				else
+					s = t;
+				ports[s] = bsdPath;
             }
         }
 

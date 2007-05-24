@@ -44,6 +44,7 @@ public:
 	virtual int			GetDev();
 
 	void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
+	void		ReInit();
 	_BOOLEAN	Read(CVector<short>& psData);
 	_BOOLEAN	Write(CVector<short>& psData);
 	void		Close();
@@ -58,8 +59,10 @@ protected:
 	vector<PaDeviceIndex> devices;
 	int dev;
 	bool is_capture,blocking,device_changed,xrun;
-	static int pa_count;
+	int framesPerBuffer;
 	char *ringBufferData;
+
+	static int pa_count;
 };
 
 class CPaIn: public CSoundInInterface

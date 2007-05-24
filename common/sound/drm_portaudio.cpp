@@ -66,11 +66,12 @@ playbackCallback(const void *inputBuffer, void *outputBuffer,
 	return 0;
 }
 
-int
-	CPaCommon::pa_count = 0;
+int CPaCommon::pa_count = 0;
 
-CPaCommon::CPaCommon(bool cap):ringBuffer(),xruns(0),stream(NULL), names(), devices(), dev(-1),
-is_capture(cap), blocking(true), device_changed(true), xrun(false), ringBufferData(NULL)
+CPaCommon::CPaCommon(bool cap):ringBuffer(),xruns(0),stream(NULL),
+			names(), devices(), dev(-1),
+			is_capture(cap), blocking(true), device_changed(true), xrun(false),
+			framesPerBuffer(0), ringBufferData(NULL)
 {
 	if (pa_count == 0)
 	{
@@ -133,7 +134,6 @@ CPaCommon::SetDev(int iNewDevice)
 {
 	if (dev != iNewDevice)
 	{
-		Close();
 		dev = iNewDevice;
 		device_changed = true;
 	}
@@ -152,8 +152,31 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	if (device_changed == false)
 		return;
 
-	Close();
+	unsigned long channels=2;
+
+	if(is_capture)
+		framesPerBuffer = iNewBufferSize / channels;
+	else
+		framesPerBuffer = 256;
  
+	blocking = bNewBlocking; /* TODO honour this */
+
+	ReInit();
+
+	const PaStreamInfo* info = Pa_GetStreamInfo( stream );
+	if(is_capture)
+		cout << "init capture " << iNewBufferSize << " latency " << info->inputLatency << endl;
+	else
+		cout << "init play " << iNewBufferSize << " latency " << info->outputLatency << endl;
+}
+
+void
+CPaCommon::ReInit()
+{
+	unsigned long channels=2;
+
+	Close();
+
 	PaStreamParameters pParameters;
 
 	memset(&pParameters, sizeof(pParameters), 0);
@@ -170,7 +193,7 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	}
 	else
 	{
-		cout << "opening " << devices[dev] << endl;
+		cout << "opening " << names[dev] << endl;
 		pParameters.device = devices[dev];
 	}
 
@@ -178,8 +201,6 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 		return;
 
 	double srate = 48000;
-	unsigned long channels=2;
-	unsigned long framesPerBuffer = iNewBufferSize / channels;
 	unsigned long minRingBufferSize;
 	int err;
 
@@ -228,12 +249,6 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 
 	device_changed = false;
 	xrun = false;
-
-	const PaStreamInfo* info = Pa_GetStreamInfo( stream );
-	if(is_capture)
-		cout << "init capture " << iNewBufferSize << " ringbuffer size " << n << " latency " << info->inputLatency << endl;
-	else
-		cout << "init play " << iNewBufferSize << " ringbuffer size " << n << " latency " << info->outputLatency << endl;
 }
 
 void
@@ -256,7 +271,7 @@ CPaCommon::Close()
 
 		if (ringBufferData)
 		{
-			delete[]ringBufferData;
+			delete[] ringBufferData;
 		}
 		ringBufferData = NULL;
 
@@ -267,6 +282,9 @@ CPaCommon::Close()
 _BOOLEAN
 CPaCommon::Read(CVector < short >&psData)
 {
+	if (device_changed)
+		ReInit();
+
 	if(stream==NULL)
 		return TRUE;
 
@@ -290,6 +308,9 @@ CPaCommon::Read(CVector < short >&psData)
 _BOOLEAN
 CPaCommon::Write(CVector < short >&psData)
 {
+	if (device_changed)
+		ReInit();
+
 	if(stream==NULL)
 		return TRUE;
 
