@@ -160,6 +160,7 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 		framesPerBuffer = 256;
  
 	blocking = bNewBlocking; /* TODO honour this */
+	iBufferSize = iNewBufferSize;
 
 	ReInit();
 
@@ -207,12 +208,12 @@ CPaCommon::ReInit()
 	if (is_capture)
 	{
 		pParameters.suggestedLatency = Pa_GetDeviceInfo(pParameters.device)->defaultLowInputLatency;
-		minRingBufferSize = 2*framesPerBuffer*channels*sizeof(short);
+		minRingBufferSize = 2*iBufferSize*sizeof(short);
 	}
 	else
 	{
 		pParameters.suggestedLatency = 0.8;
-		minRingBufferSize = 4*framesPerBuffer*channels*sizeof(short);
+		minRingBufferSize = 4*iBufferSize*sizeof(short);
 	}
 
 	/* See the specific host's API docs for info on using this field */

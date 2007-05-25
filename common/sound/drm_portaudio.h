@@ -60,6 +60,7 @@ protected:
 	int dev;
 	bool is_capture,blocking,device_changed,xrun;
 	int framesPerBuffer;
+	int iBufferSize;
 	char *ringBufferData;
 
 	static int pa_count;
