@@ -708,7 +708,6 @@ void
 CHamlib::SetComPort(const string & port)
 {
 	config["rig_pathname"] = port;
-	cout << port << endl;
 	SetHamlibModelID(iHamlibModelID);
 }
 

@@ -157,7 +157,6 @@ CRSISubscriberFile::CRSISubscriberFile(): CRSISubscriber(NULL), pPacketSinkFile(
 
 _BOOLEAN CRSISubscriberFile::SetDestination(const string& strFName)
 {
-cout << "CRSISubscriberFile::SetDestination " << strFName << endl;
 	if(pPacketSink)
 	{
 		delete pPacketSink;
