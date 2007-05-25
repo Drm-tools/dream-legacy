@@ -41,40 +41,12 @@
 #include "MultimediaDlg.h"
 
 /* Implementation *************************************************************/
-MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
+MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 	QWidget* parent, const char* name, bool modal, WFlags f)
 	: MultimediaDlgBase(parent, name, modal, f),
-	DRMReceiver(NDRMR), Settings(NSettings)
+	Parameters(*NDRMR.GetParameters()), DataDecoder(*NDRMR.GetDataDecoder()), 
+	strCurrentSavePath("."), strDirMOTCache("MOTCache")
 {
-	/* Get window geometry data and apply it */
-	CWinGeom s;
-	Settings.Get("Multimedia Dialog", s);
-	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
-
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-		setGeometry(WinGeom);
-
-	/* Store the default font */
-	fontDefault = TextBrowser->font();
-
-	/* Retrieve the setting saved into the .ini file */
-	SetCurrentSavePath(Settings.Get("Multimedia Dialog", "storagepath").c_str());
-
-	/* Retrieve the font setting saved into the .ini file */
-	string strFontFamily = Settings.Get("Multimedia Dialog", "fontfamily");
-	if (strFontFamily != "")
-	{
-		fontTextBrowser =
-			QFont(QString(strFontFamily.c_str()),
-			Settings.Get("Multimedia Dialog", "fontpointsize", 0),
-			Settings.Get("Multimedia Dialog", "fontweight", 0),
-			Settings.Get("Multimedia Dialog", "fontitalic", 0));
-	}
-	else
-	{
-		/* If not defined, retrieve the default font */
-		fontTextBrowser = fontDefault;
-	}
 
 	/* Add body's stylesheet */
 	QStyleSheetItem* styleBody =
@@ -111,9 +83,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		"</h2></td></tr></table>";
 
 	/* Inits for broadcast website application */
-	strDirMOTCache = MOT_BROADCAST_WEBSITE_PATH;
 	strBWSHomePage = "";
-
 
 	/* Set Menu ***************************************************************/
 	/* File menu ------------------------------------------------------------ */
@@ -143,7 +113,6 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Now tell the layout about the menu */
 	MultimediaDlgBaseLayout->setMenuBar(pMenu);
-
 	
 	/* Update time for color LED */
 	LEDStatus->SetUpdateTime(1000);
@@ -152,7 +121,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	ClearAllSlideShow();
 
 	/* Init container and GUI */
-	InitApplication(DRMReceiver.GetDataDecoder()->GetAppType());
+	InitApplication(DataDecoder.GetAppType());
 
 
 	/* Connect controls */
@@ -228,9 +197,10 @@ void MultimediaDlg::OnTimer()
 	_BOOLEAN	bMainPage;
 	_BOOLEAN	bShowInfo = TRUE;
 
-	CParameter& Parameters = *(DRMReceiver.GetParameters());
 	Parameters.Lock(); 
-	switch(Parameters.ReceiveStatus.MOT.GetStatus())
+	ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
+	Parameters.Unlock(); 
+	switch(status)
 	{
 	case NOT_PRESENT:
 		LEDStatus->Reset(); /* GREY */
@@ -248,11 +218,10 @@ void MultimediaDlg::OnTimer()
 		LEDStatus->SetLight(0); /* GREEN */
 		break;
 	}
-	Parameters.Unlock(); 
 
 	/* Check out which application is transmitted right now */
-	CDataDecoder::EAppType eNewAppType =
-		DRMReceiver.GetDataDecoder()->GetAppType();
+	
+	CDataDecoder::EAppType eNewAppType = DataDecoder.GetAppType();
 
 	if (eNewAppType != eAppType)
 		InitApplication(eNewAppType);
@@ -261,7 +230,7 @@ void MultimediaDlg::OnTimer()
 	{
 	case CDataDecoder::AT_MOTSLISHOW:
 		/* Poll the data decoder module for new picture */
-		if (DRMReceiver.GetDataDecoder()->GetMOTObject(NewObj, eAppType) == TRUE)
+		if (DataDecoder.GetMOTObject(NewObj, eAppType) == TRUE)
 		{
 			/* Store received picture */
 			iCurNumPict = vecRawImages.Size();
@@ -281,7 +250,7 @@ void MultimediaDlg::OnTimer()
 
 	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
 		/* Poll the data decoder module for new object */
-		if (DRMReceiver.GetDataDecoder()->GetMOTObject(NewObj, eAppType) == TRUE)
+		if (DataDecoder.GetMOTObject(NewObj, eAppType) == TRUE)
 		{
 			/* Store received MOT object on disk */
 			const QString strNewObjName = NewObj.strName.c_str();
@@ -295,9 +264,7 @@ void MultimediaDlg::OnTimer()
 				(strNewObjName.right(3) == ".gz");
 
 			/* Add an html header to refresh the page every n seconds */
-			if (Settings.Get("Multimedia Dialog", "addrefresh", TRUE) 
-					&& (NewObj.strFormat == "html")
-					&& (bZipped == FALSE))
+			if (bAddRefresh && (NewObj.strFormat == "html") && (bZipped == FALSE))
 				AddRefreshHeader(strFileName);
 
 			/* Check if is the main page */
@@ -308,7 +275,7 @@ void MultimediaDlg::OnTimer()
 				/* Get the current directory */
 				CMOTDirectory MOTDir;
 
-				if (DRMReceiver.GetDataDecoder()->GetMOTDirectory(MOTDir, eAppType) == TRUE)
+				if (DataDecoder.GetMOTDirectory(MOTDir, eAppType) == TRUE)
 				{
 					/* Checks if the DirectoryIndex has values */
 					if (MOTDir.DirectoryIndex.size() > 0)
@@ -375,43 +342,39 @@ void MultimediaDlg::OnTimer()
 
 	if (bShowInfo == TRUE)
 	{
-		CParameter& Parameters = *(DRMReceiver.GetParameters());
 		Parameters.Lock(); 
+		const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
+		const uint32_t iAudioServiceID = Parameters.Service[iCurSelAudioServ].iServiceID;
 
 		/* Get current data service */
 		const int iCurSelDataServ = Parameters.GetCurSelDataService();
+		CService service = Parameters.Service[iCurSelDataServ];
+		Parameters.Unlock(); 
 
-		if (Parameters.Service[iCurSelDataServ].IsActive())
+
+		if (service.IsActive())
 		{
 			/* Do UTF-8 to QString (UNICODE) conversion with the label strings */
-			QString strLabel = QString().fromUtf8(QCString(
-				Parameters.Service[iCurSelDataServ].strLabel.c_str()
-				)).stripWhiteSpace();
+			QString strLabel = QString().fromUtf8(service.strLabel.c_str()).stripWhiteSpace();
 
-			const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
 
 			/* Service ID (plot number in hexadecimal format) */
-			const long iDataServiceID = (long) Parameters.Service[iCurSelDataServ].iServiceID;
-
-			const long iAudioServiceID = (long) Parameters.Service[iCurSelAudioServ].iServiceID;
-
 			QString strServiceID = "";
 
 			/* show the ID only if differ from the audio service */
-			if ((iDataServiceID != 0) && (iDataServiceID != iAudioServiceID))
+			if ((service.iServiceID != 0) && (service.iServiceID != iAudioServiceID))
 			{
 				if (strLabel != "")
 					strLabel += " ";
 
 				strServiceID = "- ID:" +
-					QString().setNum(iDataServiceID, 16).upper();
+					QString().setNum(service.iServiceID, 16).upper();
 			}
 
 			/* add the description on the title of the dialog */
 			if (strLabel != "" || strServiceID != "")
 				strTitle += " [" + strLabel + strServiceID + "]";
 		}
-		Parameters.Unlock(); 
 	}
 	SetDialogCaption(this, strTitle);
 }
@@ -422,7 +385,7 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 {
 	/* Get news from actual Journaline decoder */
 	CNews News;
-	DRMReceiver.GetDataDecoder()->GetNews(iCurJourID, News);
+	DataDecoder.GetNews(iCurJourID, News);
 
 	/* Decode UTF-8 coding for title */
 	strTitle = QString().fromUtf8(QCString(News.sTitle.c_str()));
@@ -508,6 +471,75 @@ void MultimediaDlg::SetJournalineText()
 		pFileMenu->setItemEnabled(1, TRUE);
 }
 
+void MultimediaDlg::LoadSettings(const CSettings& Settings)
+{
+	/* Get window geometry data and apply it */
+	CWinGeom s;
+	Settings.Get("Multimedia Dialog", s);
+	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+
+	/* Store the default font */
+	fontDefault = TextBrowser->font();
+
+	/* Retrieve the setting saved into the .ini file */
+	string str = strDirMOTCache.latin1();
+	str = Settings.Get("Multimedia Dialog", "MOTCache", str);
+	strDirMOTCache = str.c_str();
+	str = strCurrentSavePath.latin1();
+	str = Settings.Get("Multimedia Dialog", "storagepath", str);
+	SetCurrentSavePath(str.c_str());
+
+	/* Retrieve the font setting saved into the .ini file */
+	string strFontFamily = Settings.Get("Multimedia Dialog", "fontfamily");
+	if (strFontFamily != "")
+	{
+		fontTextBrowser =
+			QFont(QString(strFontFamily.c_str()),
+			Settings.Get("Multimedia Dialog", "fontpointsize", 0),
+			Settings.Get("Multimedia Dialog", "fontweight", 0),
+			Settings.Get("Multimedia Dialog", "fontitalic", 0));
+	}
+	else
+	{
+		/* If not defined, retrieve the default font */
+		fontTextBrowser = fontDefault;
+	}
+
+	bAddRefresh = Settings.Get("Multimedia Dialog", "addrefresh", TRUE);
+	iRefresh = Settings.Get("Multimedia Dialog", "motbwsrefresh", 10);
+
+}
+
+void MultimediaDlg::SaveSettings(CSettings& Settings)
+{
+	/* Save window geometry data */
+	QRect WinGeom = geometry();
+
+	CWinGeom c;
+	c.iXPos = WinGeom.x();
+	c.iYPos = WinGeom.y();
+	c.iHSize = WinGeom.height();
+	c.iWSize = WinGeom.width();
+	Settings.Put("Multimedia Dialog", c);
+
+	/* Store save path */
+	string s = strCurrentSavePath.latin1();
+	Settings.Put("Multimedia Dialog","storagepath", s);
+	s = strDirMOTCache.latin1();
+	Settings.Put("Multimedia Dialog", "MOTCache", s);
+
+	/* Store current TextBrowser font */
+	Settings.Put("Multimedia Dialog","fontfamily", fontTextBrowser.family().latin1());
+	Settings.Put("Multimedia Dialog","fontpointsize", fontTextBrowser.pointSize());
+	Settings.Put("Multimedia Dialog","fontweight", fontTextBrowser.weight());
+	Settings.Put("Multimedia Dialog","fontitalic", fontTextBrowser.italic());
+	Settings.Put("Multimedia Dialog", "addrefresh", bAddRefresh);
+	Settings.Put("Multimedia Dialog", "motbwsrefresh", iRefresh);
+}
+
 void MultimediaDlg::showEvent(QShowEvent*)
 {
 	/* Update window */
@@ -522,24 +554,6 @@ void MultimediaDlg::hideEvent(QHideEvent*)
 	/* Deactivate real-time timer so that it does not get new pictures */
 	Timer.stop();
 
-	/* Set window geometry data in DRMReceiver module */
-	QRect WinGeom = geometry();
-
-	CWinGeom c;
-	c.iXPos = WinGeom.x();
-	c.iYPos = WinGeom.y();
-	c.iHSize = WinGeom.height();
-	c.iWSize = WinGeom.width();
-	Settings.Put("Multimedia Dialog", c);
-
-	/* Store save path */
-	Settings.Put("Multimedia Dialog","storagepath", strCurrentSavePath.latin1());
-
-	/* Store current TextBrowser font */
-	Settings.Put("Multimedia Dialog","fontfamily", fontTextBrowser.family().latin1());
-	Settings.Put("Multimedia Dialog","fontpointsize", fontTextBrowser.pointSize());
-	Settings.Put("Multimedia Dialog","fontweight", fontTextBrowser.weight());
-	Settings.Put("Multimedia Dialog","fontitalic", fontTextBrowser.italic());
 }
 
 void MultimediaDlg::SetStatus(int MessID, int iMessPara)
@@ -736,15 +750,9 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 
 void MultimediaDlg::SetCurrentSavePath(const QString strFileName)
 {
-	if (strFileName.right(1).latin1() != QString("/"))
-	{
-		strCurrentSavePath = QFileInfo(strFileName).dirPath();
-
-		if (strCurrentSavePath.right(1).latin1() != QString("/"))
-			strCurrentSavePath += "/";
-	}
-	else
-		strCurrentSavePath = strFileName;
+	strCurrentSavePath = QFileInfo(strFileName).dirPath();
+	if (strCurrentSavePath.right(1) == QString("/"))
+		strCurrentSavePath.truncate(strCurrentSavePath.length()-1);
 }
 
 void MultimediaDlg::OnSave()
@@ -777,7 +785,7 @@ void MultimediaDlg::OnSave()
 				strDefFileName += "." + strExt;
 
 		strFileName =
-			QFileDialog::getSaveFileName(strCurrentSavePath + strDefFileName,
+			QFileDialog::getSaveFileName(strCurrentSavePath + "/" + strDefFileName,
 			strFilter, this);
 
 		/* Check if user not hit the cancel button */
@@ -810,7 +818,7 @@ void MultimediaDlg::OnSave()
 				QDateTime().currentDateTime().toString() + "</i></font></p>"
 				"</body>\n</html>";
 
-			strFileName = QFileDialog::getSaveFileName(strCurrentSavePath +
+			strFileName = QFileDialog::getSaveFileName(strCurrentSavePath + "/" +
 				strTitle + ".html", "*.html", this);
 
 			if (!strFileName.isNull())
@@ -1050,7 +1058,7 @@ void MultimediaDlg::AddRefreshHeader(const QString& strFileName)
 	if (pFiBody != NULL)
 	{
 		fputs("<META http-equiv=\"REFRESH\" content=\""
-			+ QString::number(Settings.Get("Multimedia Dialog", "motbwsrefresh", 10))
+			+ QString::number(iRefresh)
 			+ "\">", pFiBody);
 
 		/* Close the file afterwards */

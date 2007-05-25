@@ -122,13 +122,13 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 void MultSettingsDlg::OnbuttonClearCacheMOT()
 {
 	/* delete all files and directories into the MOTBWS directory */
-	ClearCache(MOT_BROADCAST_WEBSITE_PATH,"", TRUE);
+	ClearCache(Settings.Get("Multimedia Dialog", "storagepath").c_str(), "", TRUE);
 }
 
 void MultSettingsDlg::OnbuttonClearCacheEPG()
 {
 	/* Delete all EPG files */
-	ClearCache(EPG_SAVE_PATH, "*.EHA;*.EHB");
+	ClearCache(Settings.Get("Receiver", "datafilesdirectory"), "*.EHA;*.EHB");
 }
 
 void MultSettingsDlg::AddWhatsThisHelp()

@@ -6,21 +6,21 @@
  *	Andrea Russo
  *
  * Description:
- *	
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -145,7 +145,7 @@ class LiveScheduleDlg : public CLiveScheduleDlgBase
 
 public:
 
-	LiveScheduleDlg(CDRMReceiver&, CSettings&,
+	LiveScheduleDlg(CDRMReceiver&,
 		QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~LiveScheduleDlg();
@@ -167,8 +167,6 @@ protected:
 	QString			ExtractTime(const CAltFreqSched& schedule);
 
 	CDRMReceiver&				DRMReceiver;
-	CSettings&					Settings;
-
 	CDRMLiveSchedule			DRMSchedule;
 	QPixmap						BitmCubeGreen;
 	QPixmap						BitmCubeGreenLittle;
@@ -185,7 +183,7 @@ protected:
 
 	vector<MyListLiveViewItem*>	vecpListItems;
 	QMutex						ListItemsMutex;
-	string						strCurrentSavePath;
+	QString						strCurrentSavePath;
 	int							iColStationID;
 	int							iWidthColStationID;
 

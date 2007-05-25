@@ -75,8 +75,8 @@ using namespace std; /* Because of the library: "complex" */
 //# define HAVE_LIBWTAP
 # undef HAVE_LIBWTAP
 
-//# define HAVE_LIBPCAP
-# undef HAVE_LIBPCAP
+# define HAVE_LIBPCAP
+//# undef HAVE_LIBPCAP
 
 # define HAVE_LIBHAMLIB
 //# undef HAVE_LIBHAMLIB

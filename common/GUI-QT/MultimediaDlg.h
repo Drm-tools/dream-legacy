@@ -63,10 +63,6 @@
    (including the Main Menu and the final Message Object) */
 #define MAX_NUM_LEV_JOURNALINE			20
 
-/* Directory in which broadcast web site content is stored */
-#define MOT_BROADCAST_WEBSITE_PATH		"MOTCache"
-
-
 /* Classes ********************************************************************/
 class CNewIDHistory
 {
@@ -103,7 +99,7 @@ class MultimediaDlg : public MultimediaDlgBase
 	Q_OBJECT
 
 public:
-	MultimediaDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+	MultimediaDlg(CDRMReceiver&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
 	virtual ~MultimediaDlg();
@@ -114,8 +110,9 @@ public:
 	void SetStatus(int MessID, int iMessPara);
 
 protected:
-	CDRMReceiver&			DRMReceiver;
-	CSettings&				Settings;
+
+	CParameter&				Parameters;
+	CDataDecoder&			DataDecoder;
 
 	QTimer					Timer;
 	QMenuBar*				pMenu;
@@ -134,6 +131,8 @@ protected:
 	QString					strBWSHomePage;
 	QFont					fontTextBrowser;
 	QFont					fontDefault;
+	_BOOLEAN				bAddRefresh;
+	int						iRefresh;
 
 	void SetSlideShowPicture();
 	void SetJournalineText();

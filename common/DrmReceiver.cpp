@@ -1416,13 +1416,15 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	pReceiverParam->GenerateReceiverID();
 
 	/* Data files directory */
-	string sDataFilesDirectory = s.Get("Receiver", "datafilesdirectory", string("./"));
-	// add trailing slash if not there already
-	string::iterator p = sDataFilesDirectory.end();
-	if (p[-1] != '/' &&  p[-1] != '\\')
-		sDataFilesDirectory.insert(p, '/');
+	string sDataFilesDirectory = s.Get(
+	   "Receiver", "datafilesdirectory", pReceiverParam->sDataFilesDirectory);
+	// remove trailing slash if there
+	size_t p = sDataFilesDirectory.find_last_not_of("/\\");
+	if(p != string::npos)
+		sDataFilesDirectory.erase(p+1);
 
 	pReceiverParam->sDataFilesDirectory = sDataFilesDirectory;
+	s.Put("Receiver", "datafilesdirectory", pReceiverParam->sDataFilesDirectory);
 	/* Receiver ------------------------------------------------------------- */
 	string str;
 	int n;

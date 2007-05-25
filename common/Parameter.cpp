@@ -45,7 +45,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
  iAMSSCarrierMode(0),
  sReceiverID("                "),
  sSerialNumber(),
- sDataFilesDirectory("./"),
+ sDataFilesDirectory("."),
  MSCPrLe(),
  Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
  iNumBitsHierarchFrameTotal(0),

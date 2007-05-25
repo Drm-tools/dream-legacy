@@ -1388,7 +1388,7 @@ EPG::EPG(CParameter& NParameters):Parameters(NParameters)
 		genres[genre_list[i].genre] = genre_list[i].desc;
 	}
 
-	dir = EPG_SAVE_PATH;
+	dir = Parameters.sDataFilesDirectory;
 	servicesFilename = dir + "/services.xml";
 	loadChannels (servicesFilename);
 	saveChannels (servicesFilename);

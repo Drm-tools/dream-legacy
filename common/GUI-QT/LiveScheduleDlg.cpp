@@ -6,7 +6,7 @@
  *	Andrea Russo
  *
  * Description:
- *	
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -232,7 +232,7 @@ CDRMLiveSchedule::LoadServiceDefinition(const CServiceDefinition& service,
 
 	/* For all frequencies */
 	for (size_t j = 0; j < service.veciFrequencies.size(); j++)
-	{	
+	{
 		if (service.iScheduleID > 0)
 		{
 			const vector<CAltFreqSched>& vecSchedules = AltFreqSign.vecSchedules[service.iScheduleID];
@@ -319,30 +319,18 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign& AltFreqSign)
 	}
 }
 
-LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR, CSettings & NSettings,
+LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
 								 QWidget * parent, const char *name,
 								 bool modal, WFlags f):
 CLiveScheduleDlgBase(parent, name, modal, f),
 DRMReceiver(NDRMR),
-Settings(NSettings),
 vecpListItems(),
+strCurrentSavePath("."),
 iColStationID(0),
 iWidthColStationID(0)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
-
-	/* recover window size and position */
-	CWinGeom s;
-	Settings.Get("Live Schedule Dialog", s);
-	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-		setGeometry(WinGeom);
-
-	/* Set sorting behaviour of the list */
-	iCurrentSortColumn = Settings.Get("Live Schedule Dialog", "sortcolumn", 0);
-	bCurrentSortAscending = Settings.Get("Live Schedule Dialog", "sortascending", TRUE);
-	ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
 
 	/* Define size of the bitmaps */
 	const int iXSize = 13;
@@ -369,7 +357,7 @@ iWidthColStationID(0)
 
 	/* We assume that one column is already there */
 	ListViewStations->setColumnText(COL_FREQ, tr("Frequency [kHz/MHz]"));
-	iColStationID = ListViewStations->addColumn(tr("")); 
+	iColStationID = ListViewStations->addColumn(tr(""));
 	iWidthColStationID = this->fontMetrics().width(tr("Station Name/Id"));
 	ListViewStations->addColumn(tr("System"));
 	ListViewStations->addColumn(tr("Time [UTC]"));
@@ -396,17 +384,6 @@ iWidthColStationID(0)
 	pViewMenu->insertItem(tr("Show &all stations"), this,
 						  SLOT(OnShowStationsMenu(int)), 0, 1);
 
-	/* Retrieve the setting saved into the .ini file */
-	strCurrentSavePath = Settings.Get("Live Schedule Dialog", "storagepath");
-
-	/* Set stations in list view which are active right now */
-	bShowAll = Settings.Get("Live Schedule Dialog", "showall", FALSE);
-
-	if (bShowAll)
-		pViewMenu->setItemChecked(1, TRUE);
-	else
-		pViewMenu->setItemChecked(0, TRUE);
-
 	/* Stations Preview menu ------------------------------------------------ */
 	pPreviewMenu = new QPopupMenu(this);
 	CHECK_PTR(pPreviewMenu);
@@ -418,31 +395,6 @@ iWidthColStationID(0)
 							 SLOT(OnShowPreviewMenu(int)), 0, 2);
 	pPreviewMenu->insertItem(tr("&30 minutes"), this,
 							 SLOT(OnShowPreviewMenu(int)), 0, 3);
-
-	/* Set stations preview */
-	/* Retrive the setting saved into the .ini file */
-	switch (Settings.Get("Live Schedule Dialog", "preview", 0))
-	{
-	case NUM_SECONDS_PREV_5MIN:
-		pPreviewMenu->setItemChecked(1, TRUE);
-		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
-		break;
-
-	case NUM_SECONDS_PREV_15MIN:
-		pPreviewMenu->setItemChecked(2, TRUE);
-		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
-		break;
-
-	case NUM_SECONDS_PREV_30MIN:
-		pPreviewMenu->setItemChecked(3, TRUE);
-		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
-		break;
-
-	default:					/* case 0, also takes care of out of value parameters */
-		pPreviewMenu->setItemChecked(0, TRUE);
-		DRMSchedule.SetSecondsPreview(0);
-		break;
-	}
 
 	pViewMenu->insertSeparator();
 	pViewMenu->insertItem(tr("Stations &preview"), pPreviewMenu);
@@ -485,6 +437,85 @@ iWidthColStationID(0)
 
 LiveScheduleDlg::~LiveScheduleDlg()
 {
+}
+void
+LiveScheduleDlg::LoadSettings(const CSettings& Settings)
+{
+	/* recover window size and position */
+	CWinGeom s;
+	Settings.Get("Live Schedule Dialog", s);
+	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+
+	/* Set sorting behaviour of the list */
+	iCurrentSortColumn = Settings.Get("Live Schedule Dialog", "sortcolumn", 0);
+	bCurrentSortAscending = Settings.Get("Live Schedule Dialog", "sortascending", TRUE);
+	ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
+	/* Retrieve the setting saved into the .ini file */
+	string str = strCurrentSavePath.latin1();
+	str = Settings.Get("Live Schedule Dialog", "storagepath", str);
+	strCurrentSavePath = str.c_str();
+
+	/* Set stations in list view which are active right now */
+	bShowAll = Settings.Get("Live Schedule Dialog", "showall", FALSE);
+
+	if (bShowAll)
+		pViewMenu->setItemChecked(1, TRUE);
+	else
+		pViewMenu->setItemChecked(0, TRUE);
+
+	/* Set stations preview */
+	switch (Settings.Get("Live Schedule Dialog", "preview", 0))
+	{
+	case NUM_SECONDS_PREV_5MIN:
+		pPreviewMenu->setItemChecked(1, TRUE);
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
+		break;
+
+	case NUM_SECONDS_PREV_15MIN:
+		pPreviewMenu->setItemChecked(2, TRUE);
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
+		break;
+
+	case NUM_SECONDS_PREV_30MIN:
+		pPreviewMenu->setItemChecked(3, TRUE);
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
+		break;
+
+	default:/* case 0, also takes care of out of value parameters */
+		pPreviewMenu->setItemChecked(0, TRUE);
+		DRMSchedule.SetSecondsPreview(0);
+		break;
+	}
+
+}
+
+void
+LiveScheduleDlg::SaveSettings(CSettings& Settings)
+{
+	/* save window geometry data */
+	QRect WinGeom = geometry();
+	CWinGeom c;
+	c.iXPos = WinGeom.x();
+	c.iYPos = WinGeom.y();
+	c.iHSize = WinGeom.height();
+	c.iWSize = WinGeom.width();
+	Settings.Put("Live Schedule Dialog", c);
+
+	/* Store preview settings */
+	Settings.Put("Live Schedule Dialog", "preview", DRMSchedule.GetSecondsPreview());
+
+	/* Store sort settings */
+	Settings.Put("Live Schedule Dialog", "sortcolumn", iCurrentSortColumn);
+	Settings.Put("Live Schedule Dialog", "sortascending", bCurrentSortAscending);
+
+	/* Store preview settings */
+	Settings.Put("Live Schedule Dialog", "showall", bShowAll);
+
+	/* Store save path */
+	string str = strCurrentSavePath.latin1();
+	Settings.Put("Live Schedule Dialog", "storagepath", str);
 }
 
 void
@@ -571,7 +602,7 @@ LiveScheduleDlg::OnTimerList()
 {
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 	/* Get current receiver latitude and longitude if defined */
 	if (Parameters.GPSData.GetPositionAvailable())
 	{
@@ -579,14 +610,14 @@ LiveScheduleDlg::OnTimerList()
 		Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
 		DRMSchedule.SetReceiverCoordinates(latitude, longitude);
 	}
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	/* Update schedule and list view */
 	LoadSchedule();
 }
 
 QString
-MyListLiveViewItem::key(int column, bool ascending) const 
+MyListLiveViewItem::key(int column, bool ascending) const
 {
 	/* Reimplement "key()" function to get correct sorting behaviour */
 	if (column == COL_FREQ)
@@ -623,9 +654,9 @@ LiveScheduleDlg::LoadSchedule()
 	vecpListItems.clear();
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 	DRMSchedule.LoadAFSInformations(Parameters.AltFreqSign);
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	/* Init vector for storing the pointer to the list view items */
 	const int iNumStations = DRMSchedule.GetStationNumber();
@@ -649,7 +680,7 @@ LiveScheduleDlg::LoadSchedule()
 
 	if (iNumStations > 0)
 	{
-		Parameters.Lock(); 
+		Parameters.Lock();
 		/* Get current service */
 		const int iCurSelAudioServ =
 			Parameters.GetCurSelAudioService();
@@ -667,7 +698,7 @@ LiveScheduleDlg::LoadSchedule()
 			if (strStationName != "")
 				strTitle += " [" + strStationName.stripWhiteSpace() + "]";
 		}
-		Parameters.Unlock(); 
+		Parameters.Unlock();
 	}
 
 	SetDialogCaption(this, strTitle);
@@ -696,27 +727,6 @@ LiveScheduleDlg::hideEvent(QHideEvent *)
 	TimerList.stop();
 	TimerUTCLabel.stop();
 
-	/* save window geometry data */
-	QRect WinGeom = geometry();
-	CWinGeom c;
-	c.iXPos = WinGeom.x();
-	c.iYPos = WinGeom.y();
-	c.iHSize = WinGeom.height();
-	c.iWSize = WinGeom.width();
-	Settings.Put("Live Schedule Dialog", c);
-
-	/* Store preview settings */
-	Settings.Put("Live Schedule Dialog", "preview", DRMSchedule.GetSecondsPreview());
-
-	/* Store sort settings */
-	Settings.Put("Live Schedule Dialog", "sortcolumn", iCurrentSortColumn);
-	Settings.Put("Live Schedule Dialog", "sortascending", bCurrentSortAscending);
-
-	/* Store preview settings */
-	Settings.Put("Live Schedule Dialog", "showall", bShowAll);
-
-	/* Store save path */
-	Settings.Put("Live Schedule Dialog", "storagepath", strCurrentSavePath);
 }
 
 void
@@ -725,10 +735,10 @@ LiveScheduleDlg::SetStationsView()
 	/* Set lock because of list view items. These items could be changed
 	   by another thread */
     CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
     int sNo = Parameters.GetCurSelAudioService();
     string thisServiceLabel = Parameters.Service[sNo].strLabel;
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	ListItemsMutex.lock();
 
@@ -755,9 +765,9 @@ LiveScheduleDlg::SetStationsView()
 				{
 					bHaveOtherServiceIDs = TRUE;
 
-					Parameters.Lock(); 
+					Parameters.Lock();
     				map <uint32_t,CServiceInformation>::const_iterator
-						si = Parameters.ServiceInformation.find(item.iServiceID); 
+						si = Parameters.ServiceInformation.find(item.iServiceID);
 					if(si != Parameters.ServiceInformation.end())
 						name = QString::fromUtf8(si->second.label.begin()->c_str());
 					else
@@ -765,7 +775,7 @@ LiveScheduleDlg::SetStationsView()
 						ulong sid = item.iServiceID;
 						name = QString("(%1)").arg(sid, 0, 16);
 					}
-					Parameters.Unlock(); 
+					Parameters.Unlock();
 				}
 
 				vecpListItems[i] = new MyListLiveViewItem(ListViewStations,
@@ -874,7 +884,7 @@ LiveScheduleDlg::OnSave()
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 
 	const int iCurSelAudioServ =
 		Parameters.GetCurSelAudioService();
@@ -882,7 +892,7 @@ LiveScheduleDlg::OnSave()
 	QString strStationName =
 		QString().fromUtf8(Parameters.Service[iCurSelAudioServ].strLabel.c_str());
 
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	/* Lock mutex for use the vecpListItems */
 	ListItemsMutex.lock();
@@ -933,9 +943,8 @@ LiveScheduleDlg::OnSave()
 			QDateTime().currentDateTime().toString() + "</i></font></p>"
 			"</body>\n</html>";
 
-		QString strPath =
-			QString(strCurrentSavePath.c_str()) + strStationName + "_" +
-			"LiveSchedule.html";
+		QString strPath = strCurrentSavePath + "/"
+				+ strStationName + "_" + "LiveSchedule.html";
 		strFileName = QFileDialog::getSaveFileName(strPath, "*.html", this);
 
 		if (!strFileName.isNull())

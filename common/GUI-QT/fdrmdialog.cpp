@@ -6,22 +6,22 @@
  *	Volker Fischer, Andrea Russo
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -68,7 +68,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
-		new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), 
+		new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(),
 		DRMReceiver.GetSoundOutInterface(), this));
 
 	pSettingsMenu->insertItem(tr("&AM (analog)"), this,
@@ -140,8 +140,9 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	SetDialogCaption(pStationsDlg, tr("Stations"));
 
 	/* Live Schedule window */
-	pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+	pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, this, "", FALSE, Qt::WStyle_MinMax);
 	bLiveSchedDlgWasVis = Settings.Get("Live Schedule Dialog", "visible", FALSE);
+	pLiveScheduleDlg->LoadSettings(Settings);
 
 	SetDialogCaption(pLiveScheduleDlg, tr("Live Schedule"));
 
@@ -159,10 +160,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
 
 	/* Multimedia window */
-	pMultiMediaDlg = new MultimediaDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+	pMultiMediaDlg = new MultimediaDlg(DRMReceiver, this, "", FALSE, Qt::WStyle_MinMax);
 	bMultMedDlgWasVis = Settings.Get("Multimedia Dialog", "visible", FALSE);
 
 	SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
+	pMultiMediaDlg->LoadSettings(Settings);
 
 	/* Analog demodulation window */
 	pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", FALSE, Qt::WStyle_MinMax);
@@ -172,7 +174,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	SetDialogCaption(pGeneralSettingsDlg, tr("General settings"));
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 
 	/* Enable multimedia */
 	Parameters.EnableMultimedia(TRUE);
@@ -180,7 +182,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Init current selected service */
 	Parameters.ResetCurSelAudDatServ();
 
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	iCurSelServiceGUI = 0;
 	iOldNoServicesGUI = 0;
@@ -261,16 +263,16 @@ void FDRMDialog::OnTimer()
 			ChangeGUIModeToDRM();
 		{
 			CParameter& Parameters = *DRMReceiver.GetParameters();
-			Parameters.Lock(); 
+			Parameters.Lock();
 
 			/* Input level meter */
 			ProgrInputLevel->setValue(Parameters.GetIFSignalLevel());
-	
+
 			SetStatus(CLED_MSC, Parameters.ReceiveStatus.Audio.GetStatus());
 			SetStatus(CLED_SDC, Parameters.ReceiveStatus.SDC.GetStatus());
 			SetStatus(CLED_FAC, Parameters.ReceiveStatus.FAC.GetStatus());
 
-			Parameters.Unlock(); 
+			Parameters.Unlock();
 
 			/* Check if receiver does receive a signal */
 			if(DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
@@ -298,7 +300,7 @@ void FDRMDialog::UpdateDisplay()
 {
 	CParameter& Parameters = *(DRMReceiver.GetParameters());
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 
 	/* Receiver does receive a DRM signal ------------------------------- */
 	/* First get current selected services */
@@ -339,9 +341,9 @@ void FDRMDialog::UpdateDisplay()
 		/* Activate text window */
 		TextTextMessage->setEnabled(TRUE);
 
-		/* Text message of current selected audio service 
+		/* Text message of current selected audio service
 		   (UTF-8 decoding) */
-		QCString utf8Message = 
+		QCString utf8Message =
 			Parameters.Service[iCurSelAudioServ]
 				.AudioParam.strTextMessage.c_str();
 		QString textMessage = QString().fromUtf8(utf8Message);
@@ -362,8 +364,8 @@ void FDRMDialog::UpdateDisplay()
 
 			case 0x0B:
 				/* End of a headline */
-				formattedMessage = "<b><u>" 
-                                    + formattedMessage 
+				formattedMessage = "<b><u>"
+                                    + formattedMessage
                                     + "</u></b></center><br><center>";
 				break;
 
@@ -604,7 +606,7 @@ void FDRMDialog::UpdateDisplay()
 
 			/* Show, if a multimedia stream is connected to this service */
 			if ((Parameters.Service[i].
-				eAudDataFlag == CService::SF_AUDIO) && 
+				eAudDataFlag == CService::SF_AUDIO) &&
 				(Parameters.Service[i].
 				DataParam.iStreamID != STREAM_ID_NOT_USED))
 			{
@@ -652,8 +654,8 @@ void FDRMDialog::UpdateDisplay()
 				== CService::SF_AUDIO) m_StaticService[0] += tr(" + AFS");
 	}
 
-	Parameters.Unlock(); 
-		
+	Parameters.Unlock();
+
 	/* Set texts */
 	TextMiniService1->setText(m_StaticService[0]);
 	TextMiniService2->setText(m_StaticService[1]);
@@ -863,7 +865,7 @@ void FDRMDialog::SetService(int iNewServiceID)
 {
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 
 	Parameters.SetCurSelAudioService(iNewServiceID);
 	Parameters.SetCurSelDataService(iNewServiceID);
@@ -876,7 +878,7 @@ void FDRMDialog::SetService(int iNewServiceID)
 	/* If service is only data service or has a multimedia content
 	   , activate multimedia window */
 	CService::ETyOServ eAudDataFlag = Parameters.Service[iNewServiceID].eAudDataFlag;
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 	if ((eAudDataFlag == CService::SF_DATA)
 		|| (iAppIdent == AT_MOTSLISHOW)
 		|| (iAppIdent == AT_JOURNALINE)
@@ -1012,7 +1014,7 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 		pAnalogDemDlg->hide();
 
 		/* request that the working thread stops
-		 * TODO move this to main and pass a close routine to here and 
+		 * TODO move this to main and pass a close routine to here and
 		* AnalogDemDlg to cover gps and anything else
 		* or possible have a new ALWAYS hidden main dialogue box
 		* that manages startup and close-down */
@@ -1044,6 +1046,9 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 		Settings.Put("Multimedia Dialog", "visible", bMultMedDlgWasVis);
 		Settings.Put("EPG Dialog", "visible",  bEPGDlgWasVis);
 	}
+
+	pMultiMediaDlg->SaveSettings(Settings);
+	pLiveScheduleDlg->SaveSettings(Settings);
 
 	CWinGeom s;
 	QRect WinGeom = geometry();
@@ -1209,7 +1214,7 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 				case 6:
 					strReturn = "TMC";
 					break;
-					
+
 				case AT_MOTEPG:
 					strReturn = "EPG - Electronic Programme Guide";
 					break;
@@ -1365,7 +1370,7 @@ void FDRMDialog::AddWhatsThisHelp()
 		"Audio services can have associated text messages, in addition to any data component. "
 		"If a Multimedia data service is selected, the Multimedia Dialog will automatically show up. "
 		"On the right of each service selection button a short description of the service is shown. "
-		"If an audio service has associated Multimedia data, \"+ MM\" is added to this text. " 
+		"If an audio service has associated Multimedia data, \"+ MM\" is added to this text. "
 		"If such a service is selected, opening the Multimedia Dialog will allow the data to be viewed "
 		"while the audio is still playing. If the data component of a service is not Multimedia, "
 		"but an EPG (Electronic Programme Guide) \"+ EPG\" is added to the description. "

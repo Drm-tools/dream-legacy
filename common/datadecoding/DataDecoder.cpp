@@ -433,7 +433,7 @@ CDataDecoder::DecodeEPG(const CParameter & ReceiverParam)
 			fileName = NewObj.strName;
 		}
 
-		string path = string(EPG_SAVE_PATH) + "/" + fileName;
+		string path = ReceiverParam.sDataFilesDirectory + "/" + fileName;
 		mkdirs(path);
 		FILE *f = fopen(path.c_str(), "wb");
 		if (f)
