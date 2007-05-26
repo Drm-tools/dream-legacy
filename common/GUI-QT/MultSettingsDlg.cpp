@@ -6,7 +6,7 @@
  *	Andrea Russo
  *
  * Description:
- *	
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -104,7 +104,7 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 				if(fi->fileName()!="." && fi->fileName()!="..")
 				{
 					ClearCache(fi->filePath(), sFilter, bDeleteDirs);
-				
+
 					/* Eventually delete the directory */
 					if (bDeleteDirs == TRUE)
 						dir.rmdir(fi->fileName());
@@ -114,7 +114,7 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 			{
 				/* Is a file so remove it */
 				dir.remove(fi->fileName());
-			}	
+			}
 		}
 	}
 }
@@ -128,7 +128,7 @@ void MultSettingsDlg::OnbuttonClearCacheMOT()
 void MultSettingsDlg::OnbuttonClearCacheEPG()
 {
 	/* Delete all EPG files */
-	ClearCache(Settings.Get("Receiver", "datafilesdirectory"), "*.EHA;*.EHB");
+	ClearCache(Settings.Get("Receiver", "datafilesdirectory").c_str(), "*.EHA;*.EHB");
 }
 
 void MultSettingsDlg::AddWhatsThisHelp()

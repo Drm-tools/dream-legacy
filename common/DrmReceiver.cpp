@@ -27,7 +27,7 @@
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -36,15 +36,15 @@
 #include "util/Settings.h"
 
 #include "sound.h"
+#include "sound/soundnull.h"
 #include "audiofilein.h"
 
 const int
 	CDRMReceiver::MAX_UNLOCKED_COUNT = 2;
 
-// TODO don't create a CSoundIn if its not going to be used. It helps for now because of SetDev in the GUI
 /* Implementation *************************************************************/
 CDRMReceiver::CDRMReceiver():
-pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
+pSoundInInterface(new CSoundInNull), pSoundOutInterface(new CSoundOut),
 ReceiveData(), WriteData(pSoundOutInterface),
 FreqSyncAcq(),
 ChannelEstimation(),
@@ -295,7 +295,7 @@ CDRMReceiver::Run()
 		/* Init flag */
 		bEnoughData = FALSE;
 
-		// Write output I/Q file 
+		// Write output I/Q file
 		if (WriteIQFile.WriteData(ReceiverParam, IQRecordDataBuf))
 		{
 			bEnoughData = TRUE;
@@ -817,8 +817,7 @@ CDRMReceiver::Start()
 	}
 	while (pReceiverParam->bRunThread);
 
-	if (upstreamRSCI.GetInEnabled() == FALSE)
-		pSoundInInterface->Close();
+	pSoundInInterface->Close();
 	pSoundOutInterface->Close();
 }
 
@@ -1007,7 +1006,7 @@ CDRMReceiver::SetReadDRMFromFile(const string strNFN)
 	else
 	{
 		// It's an IQ or IF file
-	
+
 		delete pSoundInInterface;
 		CAudioFileIn *pf = new CAudioFileIn;
 		pf->SetFileName(strNFN);
@@ -1412,7 +1411,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 			sValue += "_";
 		pReceiverParam->sSerialNumber = sValue;
 	}
-		
+
 	pReceiverParam->GenerateReceiverID();
 
 	/* Data files directory */
@@ -1425,13 +1424,20 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	pReceiverParam->sDataFilesDirectory = sDataFilesDirectory;
 	s.Put("Receiver", "datafilesdirectory", pReceiverParam->sDataFilesDirectory);
+
 	/* Receiver ------------------------------------------------------------- */
+
+	/* Sound In device */
+	pSoundInInterface->SetDev(s.Get("Receiver", "snddevin", 0));
+
+	/* Sound Out device */
+	pSoundOutInterface->SetDev(s.Get("Receiver", "snddevout", 0));
+
+	string strInFile;
 	string str;
 	int n;
 	/* input from file */
-	str = s.Get("command", "fileio");
-	if(str != "")
-		SetReadDRMFromFile(str);
+	strInFile = s.Get("command", "fileio");
 
 	/* Flip spectrum flag */
 	ReceiveData.SetFlippedSpectrum(s.Get("Receiver", "flipspectrum", FALSE));
@@ -1498,7 +1504,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	/* AM Parameters */
 
 	/* AGC */
-	AMDemodulation.SetAGCType((CAGC::EType)s.Get("AM Demodulation", "agc", 0)); 
+	AMDemodulation.SetAGCType((CAGC::EType)s.Get("AM Demodulation", "agc", 0));
 
 	/* noise reduction */
 	AMDemodulation.SetNoiRedType((CAMDemodulation::ENoiRedType)s.Get("AM Demodulation", "noisered", 0));
@@ -1547,8 +1553,27 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	/* upstream RSCI */
 	str = s.Get("command", "rsiin");
-	if(str != "")
+	if(str == "")
+	{
+        if(strInFile == "")
+        {
+            int iDev = pSoundInInterface->GetDev();
+            delete pSoundInInterface;
+            pSoundInInterface = new CSoundIn;
+            pSoundInInterface->SetDev(iDev);
+        }
+        else
+        {
+            SetReadDRMFromFile(strInFile);
+        }
+	}
+	else
+	{
+        if(strInFile != "")
+            throw "Can't specify both rsiin and fileio file";
 		upstreamRSCI.SetOrigin(str);
+	}
+
 	str = s.Get("command", "rciout");
 	if(str != "")
 		upstreamRSCI.SetDestination(str);
@@ -1603,12 +1628,6 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	/* Modified metrics flag */
 	ChannelEstimation.SetIntCons(s.Get("Receiver", "modmetric", FALSE));
 
-	/* Sound In device */
-	pSoundInInterface->SetDev(s.Get("Receiver", "snddevin", 0));
-
-	/* Sound Out device */
-	pSoundOutInterface->SetDev(s.Get("Receiver", "snddevout", 0));
-
 	/* Number of iterations for MLC setting */
 	MSCMLCDecoder.SetNumIterations(s.Get("Receiver", "mlciter", 0));
 
@@ -1629,9 +1648,9 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	/* Enable s-meter flag */
 	bEnableSMeter = s.Get("Hamlib", "ensmeter", FALSE);
-	
+
 #endif
-	
+
 	//andrewm - moved to _after_ hamlib initialisation
 		/* Wanted RF Frequency file */
 	SetFrequency(s.Get("Receiver", "frequency", 0));

@@ -44,7 +44,7 @@
 MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 	QWidget* parent, const char* name, bool modal, WFlags f)
 	: MultimediaDlgBase(parent, name, modal, f),
-	Parameters(*NDRMR.GetParameters()), DataDecoder(*NDRMR.GetDataDecoder()), 
+	Parameters(*NDRMR.GetParameters()), DataDecoder(*NDRMR.GetDataDecoder()),
 	strCurrentSavePath("."), strDirMOTCache("MOTCache")
 {
 
@@ -113,7 +113,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 
 	/* Now tell the layout about the menu */
 	MultimediaDlgBaseLayout->setMenuBar(pMenu);
-	
+
 	/* Update time for color LED */
 	LEDStatus->SetUpdateTime(1000);
 
@@ -197,9 +197,9 @@ void MultimediaDlg::OnTimer()
 	_BOOLEAN	bMainPage;
 	_BOOLEAN	bShowInfo = TRUE;
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 	ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 	switch(status)
 	{
 	case NOT_PRESENT:
@@ -220,7 +220,7 @@ void MultimediaDlg::OnTimer()
 	}
 
 	/* Check out which application is transmitted right now */
-	
+
 	CDataDecoder::EAppType eNewAppType = DataDecoder.GetAppType();
 
 	if (eNewAppType != eAppType)
@@ -342,14 +342,14 @@ void MultimediaDlg::OnTimer()
 
 	if (bShowInfo == TRUE)
 	{
-		Parameters.Lock(); 
+		Parameters.Lock();
 		const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
 		const uint32_t iAudioServiceID = Parameters.Service[iCurSelAudioServ].iServiceID;
 
 		/* Get current data service */
 		const int iCurSelDataServ = Parameters.GetCurSelDataService();
 		CService service = Parameters.Service[iCurSelDataServ];
-		Parameters.Unlock(); 
+		Parameters.Unlock();
 
 
 		if (service.IsActive())
@@ -368,7 +368,7 @@ void MultimediaDlg::OnTimer()
 					strLabel += " ";
 
 				strServiceID = "- ID:" +
-					QString().setNum(service.iServiceID, 16).upper();
+					QString().setNum(long(service.iServiceID), 16).upper();
 			}
 
 			/* add the description on the title of the dialog */
@@ -421,7 +421,7 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 		}
 		else
 		{
-			if (bHTMLExport == FALSE) 
+			if (bHTMLExport == FALSE)
 			{
 				QString strLinkStr = QString().setNum(News.vecItem[i].iLink);
 
@@ -653,7 +653,7 @@ void MultimediaDlg::SetSlideShowPicture()
 	if (NewImage.loadFromData(&imagedata[0], imagedata.size()))
 	{
 #if QT_VERSION >= 0x030000
-		/* The slideshow pictures are not 
+		/* The slideshow pictures are not
            updated correctly without this line: */
 		/* If the text is empty there is segmentation fault
 			 browsing the images */
@@ -837,7 +837,7 @@ void MultimediaDlg::OnSave()
 			}
 		}
 		break;
-	
+
 	default:
 		break;
 	}
@@ -874,7 +874,7 @@ void MultimediaDlg::OnSaveAll()
 
 			if ((strFileName.contains(".") == 0) && (strExt.length() > 0))
 				strFileName += "." + strExt;
-			
+
 			SaveMOTObject(o.Body.vecData, strFileName);
 		}
 	}
@@ -1011,7 +1011,7 @@ void MultimediaDlg::CreateDirectories(const QString& filename)
 /*
 	This function is for creating a complete directory structure to a given
 	file name. If there is a pathname like this:
-	/html/files/images/myimage.gif 
+	/html/files/images/myimage.gif
 	this function create all the folders into MOTCache:
 	/html
 	/html/files
@@ -1054,7 +1054,7 @@ void MultimediaDlg::AddRefreshHeader(const QString& strFileName)
 */
 	/* Open file for append (text mode) */
 	FILE* pFiBody = fopen(strFileName.latin1(), "at");
-	
+
 	if (pFiBody != NULL)
 	{
 		fputs("<META http-equiv=\"REFRESH\" content=\""
@@ -1071,13 +1071,13 @@ void MultimediaDlg::SaveMOTObject(const CVector<_BYTE>& vecbRawData,
 {
 	/* First, create directory for storing the file (if not exists) */
 	CreateDirectories(strFileName.latin1());
-	
+
 	/* Data size in bytes */
 	const int iSize = vecbRawData.Size();
 
 	/* Open file */
 	FILE* pFiBody = fopen(strFileName.latin1(), "wb");
-	
+
 	if (pFiBody != NULL)
 	{
 		/* Write data byte-wise */

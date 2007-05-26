@@ -1,4 +1,4 @@
-/******************************************************************************\ 
+/******************************************************************************\
  * British Broadcasting Corporation
  * Copyright (c) 2007
  *
@@ -88,6 +88,9 @@ CPaCommon::CPaCommon(bool cap):ringBuffer(),xruns(0),stream(NULL),
 CPaCommon::~CPaCommon()
 {
 	Close();
+    if (ringBufferData)
+        delete[] ringBufferData;
+
 	pa_count--;
 	if (pa_count == 0)
 	{
@@ -109,21 +112,15 @@ CPaCommon::Enumerate(vector < string > &choices)
 	for (int i = 0; i < numDevices; i++)
 	{
 		const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(i);
-		if (is_capture)
+		if (( is_capture && deviceInfo->maxInputChannels > 1)
+		|| ( (!is_capture) && deviceInfo->maxOutputChannels > 1))
 		{
-			if (deviceInfo->maxInputChannels > 1)
-			{
-				names.push_back(deviceInfo->name);
-				devices.push_back(i);
-			}
-		}
-		else
-		{
-			if (deviceInfo->maxOutputChannels > 1)
-			{
-				names.push_back(deviceInfo->name);
-				devices.push_back(i);
-			}
+		    const PaHostApiInfo* info = Pa_GetHostApiInfo(deviceInfo->hostApi);
+		    string api="- ";
+		    if(info)
+		        api = string(info->name)+":";
+            names.push_back(api+deviceInfo->name);
+            devices.push_back(i);
 		}
 	}
 	choices = names;
@@ -158,7 +155,7 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 		framesPerBuffer = iNewBufferSize / channels;
 	else
 		framesPerBuffer = 256;
- 
+
 	blocking = bNewBlocking; /* TODO honour this */
 	iBufferSize = iNewBufferSize;
 
@@ -174,8 +171,6 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 void
 CPaCommon::ReInit()
 {
-	unsigned long channels=2;
-
 	Close();
 
 	PaStreamParameters pParameters;
@@ -245,6 +240,8 @@ CPaCommon::ReInit()
 	while (n < minRingBufferSize)
 		n <<= 2;				/* smallest power of 2 >= requested */
 
+    if (ringBufferData)
+        delete[] ringBufferData;
 	ringBufferData = new char[n];
 	PaUtil_InitializeRingBuffer(&ringBuffer, n, ringBufferData);
 
@@ -257,7 +254,7 @@ CPaCommon::Close()
 {
 	if (stream)
 	{
-		int err = Pa_StopStream(stream);
+		int err = Pa_AbortStream(stream);
 		if (err != paNoError)
 		{
 			cout << "PortAudio error: " << Pa_GetErrorText(err) << endl;
@@ -268,14 +265,8 @@ CPaCommon::Close()
 		{
 			cout << "PortAudio error: " << Pa_GetErrorText(err) << endl;
 		}
+
 		stream = NULL;
-
-		if (ringBufferData)
-		{
-			delete[] ringBufferData;
-		}
-		ringBufferData = NULL;
-
 		device_changed = true;
 	}
 }
@@ -361,6 +352,7 @@ void
 CPaIn::Close()
 {
 	hw.Close();
+	cout << "capture close" << endl;
 }
 
 CPaOut::CPaOut():hw(false)
@@ -388,4 +380,5 @@ void
 CPaOut::Close()
 {
 	hw.Close();
+	cout << "play close" << endl;
 }
