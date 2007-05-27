@@ -6,22 +6,22 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -91,9 +91,9 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 		break;
 	}
 
-	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
+	/* Don't lock the Parameter object since the working thread is stopped */
 
-	Parameters.Lock(); 
+	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
 
 	/* Robustness mode */
 	switch (Parameters.GetWaveMode())
@@ -221,22 +221,24 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 
 	/* Service parameters --------------------------------------------------- */
 	/* Service label */
-	LineEditServiceLabel->setText(Parameters.Service[0].strLabel.c_str());
+	CService& Service = Parameters.Service[0];
+	QString label = QString::fromUtf8(Service.strLabel.c_str());
+	LineEditServiceLabel->setText(label);
 
 	/* Service ID */
-	LineEditServiceID->setText(QString().setNum((int) Parameters.Service[0].iServiceID));
+	LineEditServiceID->setText(QString().setNum((int) Service.iServiceID, 16));
 
 	/* Language */
 	for (i = 0; i < LEN_TABLE_LANGUAGE_CODE; i++)
 		ComboBoxLanguage->insertItem(strTableLanguageCode[i].c_str(), i);
 
-	ComboBoxLanguage->setCurrentItem(Parameters.Service[0].iLanguage);
+	ComboBoxLanguage->setCurrentItem(Service.iLanguage);
 
 	/* Program type */
 	for (i = 0; i < LEN_TABLE_PROG_TYPE_CODE; i++)
 		ComboBoxProgramType->insertItem(strTableProgTypCod[i].c_str(), i);
 
-	ComboBoxProgramType->setCurrentItem(Parameters.Service[0].iServiceDescr);
+	ComboBoxProgramType->setCurrentItem(Service.iServiceDescr);
 
 	/* Sound card IF */
 	LineEditSndCrdIF->setText(QString().number(
@@ -282,9 +284,8 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	MultiLineEditTextMessage->insertLine(vecstrTextMessage[1].c_str());
 
 	/* Now make sure that the text message flag is activated in global struct */
-	Parameters.Service[0].AudioParam.bTextflag = TRUE;
+	Service.AudioParam.bTextflag = TRUE;
 
-	Parameters.Unlock(); 
 
 	/* Enable all controls */
 	EnableAllControlsForSet();
@@ -295,7 +296,10 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
-		new CSoundCardSelMenu(TransThread.DRMTransmitter.GetSoundInInterface(), TransThread.DRMTransmitter.GetSoundOutInterface(), this));
+		new CSoundCardSelMenu(
+			TransThread.DRMTransmitter.GetSoundInInterface(),
+			TransThread.DRMTransmitter.GetSoundOutInterface(), this)
+	);
 
 	/* Main menu bar */
 	pMenu = new QMenuBar(this);
@@ -360,7 +364,7 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	connect(LineEditSndCrdIF, SIGNAL(textChanged(const QString&)),
 		this, SLOT(OnTextChangedSndCrdIF(const QString&)));
 
-	connect(&Timer, SIGNAL(timeout()), 
+	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
 
 
@@ -486,7 +490,7 @@ void TransmDialog::EnableTextMessage(const _BOOLEAN bFlag)
 {
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 
 	if (bFlag == TRUE)
 	{
@@ -511,7 +515,7 @@ void TransmDialog::EnableTextMessage(const _BOOLEAN bFlag)
 		Parameters.Service[0].AudioParam.bTextflag = FALSE;
 	}
 
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 void TransmDialog::OnToggleCheckBoxEnableAudio(bool bState)
@@ -542,7 +546,7 @@ void TransmDialog::EnableAudio(const _BOOLEAN bFlag)
 
 		CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
 
-		Parameters.Lock(); 
+		Parameters.Lock();
 
 		/* Only one audio service */
 		Parameters.iNumAudioService = 1;
@@ -558,7 +562,7 @@ void TransmDialog::EnableAudio(const _BOOLEAN bFlag)
 		Parameters.Service[0].iServiceDescr
 				= ComboBoxProgramType->currentItem();
 
-		Parameters.Unlock(); 
+		Parameters.Unlock();
 	}
 	else
 	{
@@ -597,7 +601,7 @@ void TransmDialog::EnableData(const _BOOLEAN bFlag)
 
 		CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
 
-		Parameters.Lock(); 
+		Parameters.Lock();
 
 		/* Only one data service */
 		Parameters.iNumAudioService = 0;
@@ -618,7 +622,7 @@ void TransmDialog::EnableData(const _BOOLEAN bFlag)
 		   solely by SDC data entity type 5 */
 		Parameters.Service[0].iServiceDescr = 0;
 
-		Parameters.Unlock(); 
+		Parameters.Unlock();
 	}
 	else
 	{
@@ -757,30 +761,38 @@ void TransmDialog::OnTextChangedServiceID(const QString& strID)
 {
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
 
-	Parameters.Lock(); 
+	if(strID.length()<6)
+        return;
 
-	/* Convert string to unsigned integer "toUInt()" */
-	Parameters.Service[0].iServiceID = strID.toUInt();
+	/* Convert hex string to unsigned integer "toUInt()" */
+	bool ok;
+	uint32_t iServiceID = strID.toUInt(&ok, 16);
+	if(ok == false)
+        return;
 
-	Parameters.Unlock(); 
+	Parameters.Lock();
+
+	Parameters.Service[0].iServiceID = iServiceID;
+
+	Parameters.Unlock();
 }
 
 void TransmDialog::OnTextChangedServiceLabel(const QString& strLabel)
 {
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 	/* Set additional text for log file. Conversion from QString to STL
 	   string is needed (done with .utf8() function of QT string) */
 	Parameters.Service[0].strLabel = strLabel.utf8();
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 void TransmDialog::OnComboBoxMSCInterleaverHighlighted(int iID)
 {
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 	switch (iID)
 	{
 	case 0:
@@ -791,14 +803,14 @@ void TransmDialog::OnComboBoxMSCInterleaverHighlighted(int iID)
 		Parameters.eSymbolInterlMode = CParameter::SI_SHORT;
 		break;
 	}
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 void TransmDialog::OnComboBoxMSCConstellationHighlighted(int iID)
 {
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 	switch (iID)
 	{
 	case 0:
@@ -817,7 +829,7 @@ void TransmDialog::OnComboBoxMSCConstellationHighlighted(int iID)
 		Parameters.eMSCCodingScheme = CS_3_HMMIX;
 		break;
 	}
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	/* Protection level must be re-adjusted when constelletion mode was
 	   changed */
@@ -827,15 +839,15 @@ void TransmDialog::OnComboBoxMSCConstellationHighlighted(int iID)
 void TransmDialog::OnComboBoxMSCProtLevHighlighted(int iID)
 {
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.MSCPrLe.iPartB = iID;
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 void TransmDialog::UpdateMSCProtLevCombo()
 {
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 	if (Parameters.eMSCCodingScheme == CS_2_SM)
 	{
 		/* Only two protection levels possible in 16 QAM mode */
@@ -856,13 +868,13 @@ void TransmDialog::UpdateMSCProtLevCombo()
 	/* Set protection level to 1 */
 	ComboBoxMSCProtLev->setCurrentItem(1);
 	Parameters.MSCPrLe.iPartB = 1;
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 void TransmDialog::OnComboBoxSDCConstellationHighlighted(int iID)
 {
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 	switch (iID)
 	{
 	case 0:
@@ -873,23 +885,23 @@ void TransmDialog::OnComboBoxSDCConstellationHighlighted(int iID)
 		Parameters.eSDCCodingScheme = CS_2_SM;
 		break;
 	}
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 void TransmDialog::OnComboBoxLanguageHighlighted(int iID)
 {
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.Service[0].iLanguage = iID;
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 void TransmDialog::OnComboBoxProgramTypeHighlighted(int iID)
 {
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.Service[0].iServiceDescr = iID;
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 void TransmDialog::OnRadioOutput(int iID)
@@ -1001,9 +1013,9 @@ void TransmDialog::OnRadioRobustnessMode(int iID)
 
 	/* Set new robustness mode. Spectrum occupancy is the same as before */
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.InitCellMapTable(eNewRobMode, Parameters.GetSpectrumOccup());
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 void TransmDialog::OnRadioBandwidth(int iID)
@@ -1039,12 +1051,12 @@ void TransmDialog::OnRadioBandwidth(int iID)
 
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 
 	/* Set new spectrum occupancy. Robustness mode is the same as before */
 	Parameters.InitCellMapTable(Parameters.GetWaveMode(), eNewSpecOcc);
 
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 void TransmDialog::DisableAllControlsForSet()
