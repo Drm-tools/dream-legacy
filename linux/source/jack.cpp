@@ -312,8 +312,8 @@ CSoundInJack::CSoundInJack():iBufferSize(0), bBlocking(TRUE), capture_data(), de
 }
 
 CSoundInJack::CSoundInJack(const CSoundInJack & e):
-iBufferSize(e.iBufferSize), bBlocking(e.bBlocking), capture_data(e.capture_data),
-dev(e.dev), ports(e.ports)
+iBufferSize(e.iBufferSize), bBlocking(e.bBlocking), device_changed(TRUE),
+capture_data(e.capture_data), dev(e.dev), ports(e.ports)
 {
 }
 
@@ -360,18 +360,21 @@ CSoundInJack::GetDev()
 }
 
 void
-CSoundInJack::SetDev(int iNewDev)
+CSoundInJack::SetDev(int iNewDevice)
 {
-	if(dev != iNewDev && dev != -1)
+	if (dev != iNewDevice)
 	{
-		Close();
+		dev = iNewDevice;
+		device_changed = true;
 	}
-	dev = iNewDev;
 }
 
 void
 CSoundInJack::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
+	if (device_changed == false)
+		return;
+
 	iBufferSize = iNewBufferSize;
 	bBlocking = bNewBlocking;
 
@@ -396,11 +399,15 @@ CSoundInJack::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	{
 		cout << "err " << err << " can't connect " << source.second << " to " << jack_port_name(capture_data.right) << endl;
 	}
+	device_changed = false;
 }
 
 _BOOLEAN
 CSoundInJack::Read(CVector<short>& psData)
 {
+	if (device_changed)
+		Init(iBufferSize, bBlocking);
+
 	size_t bytes = iBufferSize * sizeof(short);
 	timespec delay;
 	delay.tv_sec = 0;
@@ -434,12 +441,13 @@ CSoundInJack::Read(CVector<short>& psData)
 void
 CSoundInJack::Close()
 {
-cout << "CSoundInJack::Close" << endl;
 	jack_port_disconnect(data.client, capture_data.left);
 	jack_port_disconnect(data.client, capture_data.right);
+	device_changed = true;
 }
 
-CSoundOutJack::CSoundOutJack():iBufferSize(0), bBlocking(TRUE), play_data(), dev(-1), ports()
+CSoundOutJack::CSoundOutJack():iBufferSize(0), bBlocking(TRUE), device_changed(TRUE),
+play_data(), dev(-1), ports()
 {
 	if(data.client==NULL)
 		data.initialise();
@@ -517,18 +525,21 @@ CSoundOutJack::GetDev()
 }
 
 void
-CSoundOutJack::SetDev(int iNewDev)
+CSoundOutJack::SetDev(int iNewDevice)
 {
-	if(dev != iNewDev && dev != -1)
+	if (dev != iNewDevice)
 	{
-		Close();
+		dev = iNewDevice;
+		device_changed = true;
 	}
-	dev = iNewDev;
 }
 
 void
 CSoundOutJack::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
+	if (device_changed == false)
+		return;
+
 	iBufferSize = iNewBufferSize;
 	bBlocking = bNewBlocking;
 
@@ -551,11 +562,15 @@ CSoundOutJack::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	{
 		cout << "err " << err << " can't connect " << jack_port_name(play_data.right) << " to " << sink.second << endl;
 	}
+	device_changed = false;
 }
 
 _BOOLEAN
 CSoundOutJack::Write(CVector<short>& psData)
 {
+	if (device_changed)
+		Init(iBufferSize, bBlocking);
+
 	size_t bytes = psData.Size()*sizeof(short);
 	if (jack_ringbuffer_write (play_data.buff, (char *) &psData[0], bytes) < bytes)
 	{
@@ -570,4 +585,5 @@ CSoundOutJack::Close()
 {
 	jack_port_disconnect(data.client, play_data.left);
 	jack_port_disconnect(data.client, play_data.right);
+	device_changed = true;
 }

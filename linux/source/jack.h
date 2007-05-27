@@ -77,6 +77,7 @@ public:
 protected:
 	int iBufferSize;
 	_BOOLEAN bBlocking;
+	_BOOLEAN device_changed;
 	instance_data_t capture_data;
 	int dev;
 	CJackPorts ports;
@@ -99,6 +100,7 @@ public:
 protected:
 	int iBufferSize;
 	_BOOLEAN bBlocking;
+	_BOOLEAN device_changed;
 	instance_data_t play_data;
 	int dev;
 	CJackPorts ports;

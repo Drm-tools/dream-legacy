@@ -108,6 +108,7 @@ CPaCommon::Enumerate(vector < string > &choices)
 	int numDevices = Pa_GetDeviceCount();
 	if (numDevices < 0)
 		throw string("PortAudio error: ") + Pa_GetErrorText(numDevices);
+    PaHostApiIndex nApis = Pa_GetHostApiCount();
 
 	for (int i = 0; i < numDevices; i++)
 	{
@@ -115,10 +116,13 @@ CPaCommon::Enumerate(vector < string > &choices)
 		if (( is_capture && deviceInfo->maxInputChannels > 1)
 		|| ( (!is_capture) && deviceInfo->maxOutputChannels > 1))
 		{
-		    const PaHostApiInfo* info = Pa_GetHostApiInfo(deviceInfo->hostApi);
-		    string api=;
-		    if(info)
-		        api = string(info->name)+":";
+		    string api="";
+		    if(nApis>1)
+		    {
+		    	const PaHostApiInfo* info = Pa_GetHostApiInfo(deviceInfo->hostApi);
+		    	if(info)
+		        	api = string(info->name)+":";
+			}
             names.push_back(api+deviceInfo->name);
             devices.push_back(i);
 		}
