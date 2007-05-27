@@ -243,6 +243,13 @@ CPacketSourceFile::OnDataReceived ()
 		}
 #endif
 		/* 4n bytes IP header, 8 bytes UDP header */
+		uint8_t proto = pkt_data[link_len+9];
+		if(proto != 0x11) // UDP
+		{
+			/* not a UDP datagram, skip it and ask for another immediately */
+			QTimer::singleShot(1, this, SLOT(OnDataReceived()));
+			return;
+		}
 		int udp_ip_hdr_len = 4*(pkt_data[link_len] & 0x0f) + 8;
 		int ip_packet_len = ntohs(*(uint16_t*)&pkt_data[link_len+2]);
 		int data_len = ip_packet_len - udp_ip_hdr_len;
