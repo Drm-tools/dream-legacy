@@ -7,12 +7,12 @@
  *
  * Description:
  *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
- *	(MDI), Receiver Status and Control Interface (RSCI)  
+ *	(MDI), Receiver Status and Control Interface (RSCI)
  *  and Distribution and Communications Protocol (DCP) as described in
  *	ETSI TS 102 820,  ETSI TS 102 349 and ETSI TS 102 821 respectively.
  *
  *	This is a class derived from CTagPacketDecoder, specialised for the MDI application.
- *	
+ *
  *
  ******************************************************************************
  *
@@ -54,6 +54,7 @@ CTagPacketDecoderMDI::CTagPacketDecoderMDI()
 ,	TagItemDecoderRpsd(0)
 ,	TagItemDecoderRdop(0)
 ,	TagItemDecoderRdel(0)
+,	TagItemDecoderRgps(0)
 
 {
 
@@ -83,6 +84,7 @@ CTagPacketDecoderMDI::CTagPacketDecoderMDI()
 	AddTagItemDecoder(&TagItemDecoderRpsd);
 	AddTagItemDecoder(&TagItemDecoderRdop);
 	AddTagItemDecoder(&TagItemDecoderRdel);
+	AddTagItemDecoder(&TagItemDecoderRgps);
 
 }
 
@@ -96,6 +98,7 @@ void CTagPacketDecoderMDI::SetParameterPtr(CParameter *pP)
 	TagItemDecoderRpsd.SetParameterPtr(pP);
 	TagItemDecoderRdop.SetParameterPtr(pP);
 	TagItemDecoderRdel.SetParameterPtr(pP);
+	TagItemDecoderRgps.SetParameterPtr(pP);
 }
 
 void CTagPacketDecoderMDI::DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, int iPayloadLen)

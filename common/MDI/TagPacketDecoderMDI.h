@@ -67,6 +67,7 @@ public:
 	CTagItemDecoderRpsd			TagItemDecoderRpsd;
 	CTagItemDecoderRdop			TagItemDecoderRdop;
 	CTagItemDecoderRdel			TagItemDecoderRdel;
+	CTagItemDecoderRgps			TagItemDecoderRgps;
 
 };
 

@@ -7,7 +7,7 @@
  *
  * Description:
  *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
- *	(MDI), Receiver Status and Control Interface (RSCI)  
+ *	(MDI), Receiver Status and Control Interface (RSCI)
  *  and Distribution and Communications Protocol (DCP) as described in
  *	ETSI TS 102 820,  ETSI TS 102 349 and ETSI TS 102 821 respectively.
  *
@@ -37,6 +37,8 @@
 
 #include "RSCITagItemDecoders.h"
 #include "../DrmReceiver.h"
+#include <time.h>
+#include <stdlib.h>
 
 /* RX_STAT Items */
 
@@ -141,7 +143,125 @@ void CTagItemDecoderRpsd::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 }
 
+void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	if (iLen != 26 * SIZEOF__BYTE)
+		return;
 
+    CGPSData& GPSData = pParameter->GPSData;
+
+ 	uint16_t source = (uint16_t)vecbiTag.Separate(SIZEOF__BYTE);
+ 	switch(source)
+ 	{
+ 	    case 0:
+            GPSData.SetGPSSource(CGPSData::GPS_SOURCE_INVALID);
+            break;
+ 	    case 1:
+            GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
+            break;
+ 	    case 2:
+            GPSData.SetGPSSource(CGPSData::GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER);
+            break;
+ 	    case 3:
+            GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
+            break;
+ 	    case 0xff:
+            GPSData.SetGPSSource(CGPSData::GPS_SOURCE_NOT_AVAILABLE);
+            break;
+ 	    default:
+            cerr << "error decoding rgps" << endl;
+ 	}
+
+ 	uint16_t nSats = (uint16_t)vecbiTag.Separate(SIZEOF__BYTE);
+ 	if(nSats = 0xff)
+ 	{
+ 	    GPSData.SetSatellitesVisibleAvailable(FALSE);
+ 	}
+ 	else
+ 	{
+ 	    GPSData.SetSatellitesVisible(nSats);
+ 	    GPSData.SetSatellitesVisibleAvailable(TRUE);
+ 	}
+
+	int iLatitudeDegrees = int(vecbiTag.Separate(2 * SIZEOF__BYTE));
+    uint8_t uiLatitudeMinutes = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+	uint16_t uiLatitudeMinuteFractions = (uint16_t)vecbiTag.Separate(2 * SIZEOF__BYTE);
+	uint16_t iLongitudeDegrees = (uint16_t)vecbiTag.Separate(2 * SIZEOF__BYTE);
+    uint8_t uiLongitudeMinutes = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+	uint16_t uiLongitudeMinuteFractions = (uint16_t)vecbiTag.Separate(2 * SIZEOF__BYTE);
+
+    if(uiLatitudeMinutes == 0xff)
+    {
+        GPSData.SetPositionAvailable(FALSE);
+    }
+    else
+    {
+		double latitude, longitude;
+		latitude = double(iLatitudeDegrees)
+		 + (double(uiLatitudeMinutes) + double(uiLatitudeMinuteFractions)/65536.0)/60.0;
+		longitude = double(iLongitudeDegrees)
+		 + (double(uiLongitudeMinutes) + double(uiLongitudeMinuteFractions)/65536.0)/60.0;
+        GPSData.SetLatLongDegrees(latitude, longitude);
+        GPSData.SetPositionAvailable(TRUE);
+    }
+
+	uint16_t iAltitudeMetres = (uint16_t)vecbiTag.Separate(2 * SIZEOF__BYTE);
+    uint8_t uiAltitudeMetreFractions = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+    if(uiAltitudeMetreFractions == 0xff)
+    {
+        GPSData.SetAltitudeAvailable(FALSE);
+    }
+    else
+    {
+        GPSData.SetAltitudeMetres(iAltitudeMetres+uiAltitudeMetreFractions/256.0);
+        GPSData.SetAltitudeAvailable(TRUE);
+    }
+
+    struct tm tm;
+    tm.tm_hour = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+    tm.tm_min = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+    tm.tm_sec = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+    tm.tm_year = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+    tm.tm_mon = (uint16_t)vecbiTag.Separate(2*SIZEOF__BYTE)-1;
+    tm.tm_mday = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+
+    if(tm.tm_hour == 0xff)
+    {
+        GPSData.SetTimeAndDateAvailable(FALSE);
+    }
+    else
+    {
+        /*
+        _putenv("TZ=UTC");
+        _tzset();
+        */
+        time_t t = mktime(&tm);
+        GPSData.SetTimeSecondsSince1970(t);
+        GPSData.SetTimeAndDateAvailable(TRUE);
+    }
+
+    uint16_t speed = (uint16_t)vecbiTag.Separate(2*SIZEOF__BYTE);
+    if(speed == 0xff)
+    {
+        GPSData.SetSpeedAvailable(FALSE);
+    }
+    else
+    {
+        GPSData.SetSpeedMetresPerSecond(double(speed)/10.0);
+        GPSData.SetSpeedAvailable(TRUE);
+    }
+
+    uint16_t heading = (uint16_t)vecbiTag.Separate(2*SIZEOF__BYTE);
+    if(heading == 0xff)
+    {
+        GPSData.SetHeadingAvailable(FALSE);
+    }
+    else
+    {
+        GPSData.SetHeadingDegrees(heading);
+        GPSData.SetHeadingAvailable(TRUE);
+    }
+}
 
 /* RX_CTRL Items */
 
