@@ -262,7 +262,7 @@ CShortLog::writeTrailer()
 	Parameters.Unlock(); 
 
 	File << setprecision(1);
-	File << "SNR min: " << setw(4) << rMinSNR << ", max: " << setw(4) << rMaxSNR << endl;
+	File << endl << "SNR min: " << setw(4) << rMinSNR << ", max: " << setw(4) << rMaxSNR << endl;
 
 	if (bRxlEnabled)
 	{
