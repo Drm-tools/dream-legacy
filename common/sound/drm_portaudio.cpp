@@ -116,7 +116,7 @@ CPaCommon::Enumerate(vector < string > &choices)
 		|| ( (!is_capture) && deviceInfo->maxOutputChannels > 1))
 		{
 		    const PaHostApiInfo* info = Pa_GetHostApiInfo(deviceInfo->hostApi);
-		    string api="- ";
+		    string api=;
 		    if(info)
 		        api = string(info->name)+":";
             names.push_back(api+deviceInfo->name);
@@ -161,11 +161,25 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 
 	ReInit();
 
-	const PaStreamInfo* info = Pa_GetStreamInfo( stream );
-	if(is_capture)
-		cout << "init capture " << iNewBufferSize << " latency " << info->inputLatency << endl;
+	if(stream)
+	{
+		const PaStreamInfo* info = Pa_GetStreamInfo( stream );
+		if(is_capture)
+			cout << "init capture ";
+		else
+			cout << "init play ";
+		cout << iNewBufferSize;
+		if(info)
+			cout << " latency " << info->outputLatency;
+		else
+			cout << " can't read latency";
+		cout << endl;
+	}
 	else
-		cout << "init play " << iNewBufferSize << " latency " << info->outputLatency << endl;
+	{
+		cerr << "portaudio can't open stream" << endl;
+		//throw "portaudio open error";
+	}
 }
 
 void
