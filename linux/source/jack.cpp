@@ -298,14 +298,8 @@ CSoundInJack::CSoundInJack():iBufferSize(0), bBlocking(TRUE), capture_data(), de
 		throw "Jack: no more ports available";
 	}
 
-	/* fill the ringbuffer with silence to get us started while we wait for the receiver */
 	jack_ringbuffer_reset(capture_data.buff);
-	jack_ringbuffer_data_t wd[2];
-	jack_ringbuffer_get_write_vector(capture_data.buff, wd);
-	memset(wd[0].buf, 0, wd[0].len);
-	if(wd[1].len>0)
-		memset(wd[1].buf, 0, wd[1].len);
-	(void)jack_ringbuffer_write_advance(capture_data.buff, wd[0].len);
+
 	data.capture_data = &capture_data;
 
 	ports.load(data.client, JackPortIsOutput);
@@ -335,7 +329,6 @@ CSoundInJack & CSoundInJack::operator=(const CSoundInJack & e)
 
 CSoundInJack::~CSoundInJack()
 {
-cout << "CSoundInJack::~CSoundInJack" << endl;
 	Close();
 	if(data.client==NULL)
 		return;
@@ -406,7 +399,7 @@ CSoundInJack::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 }
 
 _BOOLEAN
-CSoundInJack::Read(CVector < short >&psData)
+CSoundInJack::Read(CVector<short>& psData)
 {
 	size_t bytes = iBufferSize * sizeof(short);
 	timespec delay;
@@ -418,7 +411,17 @@ CSoundInJack::Read(CVector < short >&psData)
 		nanosleep(&delay, NULL);
 	}
 	char *buffer = (char *) &psData[0];
-	size_t n = jack_ringbuffer_read(capture_data.buff, buffer, bytes);
+	//short buffer[16384];
+	size_t n = jack_ringbuffer_read(capture_data.buff, (char*)&buffer[0], bytes);
+	/*
+	short smax=-32767, smin=32767;
+	for(int i=0; i<iBufferSize; i++)
+	{
+		if(smax<buffer[i]) smax = buffer[i];
+		if(smin>buffer[i]) smin = buffer[i];
+	}
+	cout << iBufferSize << " " << setw(8) << smin << " " << setw(8) << smax << endl;
+	*/
 	if (n != bytes)
 	{
 		capture_data.underruns++;
@@ -551,7 +554,7 @@ CSoundOutJack::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 }
 
 _BOOLEAN
-CSoundOutJack::Write(CVector < short >&psData)
+CSoundOutJack::Write(CVector<short>& psData)
 {
 	size_t bytes = psData.Size()*sizeof(short);
 	if (jack_ringbuffer_write (play_data.buff, (char *) &psData[0], bytes) < bytes)
