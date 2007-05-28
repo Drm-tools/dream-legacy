@@ -6,7 +6,7 @@
  *	Oliver Haffenden, Julian Cable
  *
  * Description:
- *  
+ *
  * See PacketSinkFile.h
  *
  ******************************************************************************
@@ -28,6 +28,23 @@
 \******************************************************************************/
 
 #include "PacketSinkFile.h"
+
+/* include this here mostly for htonl */
+#ifdef _WIN32
+  /* Always include winsock2.h before windows.h */
+    /* winsock2.h is already included into libpcap */
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# include <windows.h>
+#else
+# include <netinet/in.h>
+# include <arpa/inet.h>
+/* Some defines needed for compatibility when using Linux, Darwin, ... */
+typedef int SOCKET;
+# define SOCKET_ERROR				(-1)
+# define INVALID_SOCKET				(-1)
+#endif
+
 #ifdef HAVE_LIBPCAP
 # include <pcap.h>
 #endif
@@ -127,35 +144,35 @@ CPacketSinkRawFile::write(const vector<_BYTE>& vecbydata)
 
 PFT Fragments or AF Packets may be stored in a file for offline distribution,
   archiving or any other purpose.  A standard mapping has been defined using
-   the Hierarchical TAG Item option available,  however other mappings may be 
-    (or this one extended) in the future.  The top level TAG Item has the TAG 
-    Name fio_ and is used to encapsulate a TAG packet,  one part of which is 
-    the AF Packet or PFT Fragment in an afpf TAG Item.  Additional TAG Items 
+   the Hierarchical TAG Item option available,  however other mappings may be
+    (or this one extended) in the future.  The top level TAG Item has the TAG
+    Name fio_ and is used to encapsulate a TAG packet,  one part of which is
+    the AF Packet or PFT Fragment in an afpf TAG Item.  Additional TAG Items
     have been defined to monitor the reception or control the replay of the packets.
-    
+
 B.3.1	File IO (fio_)
 The fio_ TAG Item is the highest layer TAG Item in the file TAG Item hierarchy.
- 
+
 Tag name: fio_
 Tag length: 8*n bits
-Tag Value: This TAG Item acts as a container for an afpf TAG Item.  A time TAG Item 
+Tag Value: This TAG Item acts as a container for an afpf TAG Item.  A time TAG Item
 may optionally be present.
 
 B.3.1.1	AF Packet / PFT Fragment (afpf)
 The afpf TAG Item contains an entire AF Packet or PFT Fragment as the TAG Value.
- 
+
 Figure 16: AF Packet or PFT Fragment
 
 B.3.1.2	Timestamp (time)
-The time TAG Item may occur in the payload of any fio_ TAG Item.  
-It may record the time of reception of the payload,  or it may indicate 
+The time TAG Item may occur in the payload of any fio_ TAG Item.
+It may record the time of reception of the payload,  or it may indicate
 the intended time of replay.  The time value given in the TI_SEC and TI_NSEC
  fields may be relative to the start of the file,  or any other reference desired.
- 
+
 Figure 17: File timestamp
 TI_SEC:  the number of whole SI seconds,  in the range 0-2^32-1)
 TI_NSEC:  the number of whole SI nanoseconds,  in the range 0-999 999 999.
-  Values outside of this range are not defined 
+  Values outside of this range are not defined
 */
 
 CPacketSinkFileFraming::CPacketSinkFileFraming():CPacketSinkFile() {}
@@ -181,24 +198,18 @@ CPacketSinkFileFraming::close()
 void
 CPacketSinkFileFraming::write(const vector<_BYTE>& vecbydata)
 {
-	vector<_BYTE> out;
-	size_t i;
-	uint32_t n = 4+4+vecbydata.size(); // afpf
+	uint32_t p, n;
+	n = 4+4+vecbydata.size(); // afpf
 	// Tag Item fio_
 	fwrite("fio_",4,1,pFile);
-	uint32_t* p = (uint32_t*)&n;
-	for(i=0; i<4; i++)
-	{
-		fwrite(&p[i],1,1,pFile);
-	}
+	p = htonl(8*n);
+    fwrite(&p,4,1,pFile);
 	// nested tag packets
 	// Tag Item afpf
 	fwrite("afpf",4,1,pFile);
 	n = vecbydata.size();
-	for(i=0; i<4; i++)
-	{
-		fwrite(&p[i],1,1,pFile);
-	}
+	p = htonl(8*n);
+    fwrite(&p,4,1,pFile);
 	fwrite(&vecbydata[0], 1, n, pFile);
 }
 
@@ -264,7 +275,7 @@ CPacketSinkPcapFile::write(const vector<_BYTE>& vecbydata)
     hdr.ts.tv_usec = 0; /* TODO more precise timestamps */
 	hdr.caplen = c;
 	hdr.len = c;
-    pcap_dump((u_char*)pFile, &hdr, (u_char*)&out[0]);    
+    pcap_dump((u_char*)pFile, &hdr, (u_char*)&out[0]);
     pcap_dump_flush((pcap_dumper_t *)pFile);
 #endif
 }

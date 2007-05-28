@@ -6,11 +6,11 @@
  *	Oliver Haffenden
  *
  * Description:
- *	
+ *
  *	This class represents a particular consumer of RSI information and supplier of
  *  RCI commands. There could be several of these. The profile is a property of the
  *  particular subscriber and different subscribers could have different profiles.
- *  
+ *
  *
  ******************************************************************************
  *
@@ -41,7 +41,8 @@
 
 
 CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink),
-	cProfile(0), bNeedPft(FALSE), pDRMReceiver(0), bUseAFCRC(TRUE), sequence_counter(0)
+	cProfile(0), bNeedPft(FALSE), fragment_size(0), pDRMReceiver(0),
+	bUseAFCRC(TRUE), sequence_counter(0)
 {
 	TagPacketDecoderRSCIControl.SetSubscriber(this);
 }
@@ -55,17 +56,25 @@ void CRSISubscriber::SetReceiver(CDRMReceiver *pReceiver)
 void CRSISubscriber::SetProfile(const char c)
 {
 	cProfile = c;
-	bNeedPft = FALSE;
+}
+
+void CRSISubscriber::SetPFTFragmentSize(const int iFrag)
+{
+    if(iFrag>0)
+    {
+        fragment_size = iFrag;
+        bNeedPft = TRUE;
+    }
+    else
+        bNeedPft = FALSE;
 }
 
 void CRSISubscriber::TransmitPacket(CTagPacketGenerator& Generator)
 {
 	if (pPacketSink != 0)
 	{
-		size_t fragment_size = 1470;
 	 	Generator.SetProfile(cProfile);
 		vector<_BYTE> packet = AFPacketGenerator.GenAFPacket(bUseAFCRC, Generator);
-		//bNeedPft |= packet.size()>fragment_size;
 		if(bNeedPft)
 		{
 			vector< vector<_BYTE> > packets;
@@ -113,17 +122,7 @@ CRSISubscriberSocket::~CRSISubscriberSocket()
 
 _BOOLEAN CRSISubscriberSocket::SetDestination(const string& str)
 {
-	strDestination = str;
-	bNeedPft = FALSE;
-	char c = strDestination[0];
-	if(c == 'P' || c == 'p')
-	{
-		bNeedPft = TRUE;
-		strDestination.erase(0, 1);
-	}
-	if(pSocket)
-		return pSocket->SetDestination(strDestination);
-	return FALSE;;
+    return pSocket->SetDestination(str);
 }
 
 _BOOLEAN CRSISubscriberSocket::GetDestination(string& str)
@@ -157,6 +156,7 @@ CRSISubscriberFile::CRSISubscriberFile(): CRSISubscriber(NULL), pPacketSinkFile(
 
 _BOOLEAN CRSISubscriberFile::SetDestination(const string& strFName)
 {
+    string dest = strFName;
 	if(pPacketSink)
 	{
 		delete pPacketSink;
@@ -167,16 +167,19 @@ _BOOLEAN CRSISubscriberFile::SetDestination(const string& strFName)
 	size_t p = strFName.rfind('.');
 	if (p != string::npos)
 		ext = strFName.substr(p + 1);
-	if (ext.substr(0,4) == "pcap")
+	if (ext == "pcap")
 		pPacketSinkFile = new CPacketSinkPcapFile;
-	else if(ext.substr(0,2) == "ff")
+	else if(ext == "ff")
+	{
 		pPacketSinkFile = new CPacketSinkFileFraming;
+		dest.erase(p);
+	}
 	else
 		pPacketSinkFile = new CPacketSinkRawFile;
 	if(pPacketSinkFile)
 	{
 		pPacketSink = pPacketSinkFile;
-		return pPacketSinkFile->SetDestination(strFName);
+		return pPacketSinkFile->SetDestination(dest);
 	}
 	return FALSE;
 }

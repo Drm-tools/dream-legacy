@@ -53,6 +53,8 @@ public:
 	void SetProfile(const char c);
 	char GetProfile(void) const {return cProfile;}
 
+	void SetPFTFragmentSize(const int iFrag=-1);
+
 	/* Generate and send a packet */
 	void TransmitPacket(CTagPacketGenerator& Generator);
 
@@ -66,6 +68,7 @@ protected:
 	CPacketSink *pPacketSink;
 	char cProfile;
 	_BOOLEAN bNeedPft;
+    size_t fragment_size;
 	CTagPacketDecoderRSCIControl TagPacketDecoderRSCIControl;
 private:
 	CDRMReceiver *pDRMReceiver;

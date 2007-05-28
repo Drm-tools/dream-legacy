@@ -7,14 +7,14 @@
  *
  * Description:
   *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
- *	(MDI), Receiver Status and Control Interface (RSCI)  
+ *	(MDI), Receiver Status and Control Interface (RSCI)
  *  and Distribution and Communications Protocol (DCP) as described in
  *	ETSI TS 102 820,  ETSI TS 102 349 and ETSI TS 102 821 respectively.
  *
  *  All modules that generate MDI information are given (normally at construction) a pointer to an MDI object.
  *  They call methods in this interface when they have MDI/RSCI data to impart.
  *
- *	Note that this previously needed QT, but now the QT socket is wrapped in an abstract class so 
+ *	Note that this previously needed QT, but now the QT socket is wrapped in an abstract class so
  *  this class can be compiled without QT. (A null socket is instantiated instead in this case, so
  *  nothing will actually happen.) This could be developed further by using a factory class to make
  *  the socket, in which case this class would only need to know about the abstract interface
@@ -80,7 +80,7 @@ CDownstreamDI::CDownstreamDI() : iLogFraCnt(0), pDrmReceiver(NULL),
 
 }
 
-CDownstreamDI::~CDownstreamDI() 
+CDownstreamDI::~CDownstreamDI()
 {
 	for(vector<CRSISubscriber*>::iterator i = RSISubscribers.begin();
 			i!=RSISubscribers.end(); i++)
@@ -136,7 +136,7 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 	TagItemGeneratorSignalStrength.GenTag(TRUE, rSigStr + S9_DBUV);
 
 	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	// rgps
-	
+
 	GenDIPacket();
 }
 
@@ -206,7 +206,7 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 
 	/* These will be set appropriately when the rx is put into AM mode */
 	/* We need to decide what "appropriate" settings are */
-	TagItemGeneratorReceiverStatus.GenTag(Parameter); 
+	TagItemGeneratorReceiverStatus.GenTag(Parameter);
 
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
 
@@ -342,7 +342,7 @@ void CDownstreamDI::ResetTags()
 	TagItemGeneratorPilots.Reset();
 
 	/* This group of tags might not be generated, so make an empty version in case */
-	
+
 	TagItemGeneratorSignalStrength.GenEmptyTag(); /* rdbv tag */
 	TagItemGeneratorRWMF.GenEmptyTag(); /* rwmf tag */
 	TagItemGeneratorRWMM.GenEmptyTag(); /* rwmm tag */
@@ -359,8 +359,8 @@ void CDownstreamDI::ResetTags()
 
 	for (int i = 0; i < MAX_NUM_STREAMS; i++)
 	{
-		vecTagItemGeneratorStr[i].Reset(); // strx tag 
-		vecTagItemGeneratorRBP[i].GenEmptyTag(); // make empty version of mandatory tag that isn't implemented 
+		vecTagItemGeneratorStr[i].Reset(); // strx tag
+		vecTagItemGeneratorRBP[i].GenEmptyTag(); // make empty version of mandatory tag that isn't implemented
 	}
 
 	TagItemGeneratorAMAudio.Reset(); // don't make the tag in DRM mode
@@ -370,20 +370,32 @@ void CDownstreamDI::ResetTags()
 
 void CDownstreamDI::GetNextPacket(CSingleBuffer<_BINARY>&)
 {
-	// TODO 
+	// TODO
 }
 
 /* allow multiple destinations, allow destinations to send cpro instructions back */
 _BOOLEAN
 CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const char profile)
 {
-	CRSISubscriberSocket* subs = new CRSISubscriberSocket(NULL);
+	// check PFT prefix on destination
+    string d=dest;
+    bool wantPft = false;
+	if(dest[0]=='P' || dest[0]=='p')
+	{
+	    wantPft = true;
+        d.erase(0, 1);
+        cout << d << endl;
+	}
+
 	// Delegate to socket
-	_BOOLEAN bOK = subs->SetDestination(dest);
-	if (origin != "") // This is the new line !!!!!!
+	CRSISubscriberSocket* subs = new CRSISubscriberSocket(NULL);
+	_BOOLEAN bOK = subs->SetDestination(d);
+	if (origin != "")
 		bOK &= subs->SetOrigin(origin);
 	if (bOK)
 	{
+        if(wantPft)
+            subs->SetPFTFragmentSize(800);
 		subs->SetProfile(profile);
 		subs->SetReceiver(pDrmReceiver);
 		bMDIInEnabled = TRUE;
@@ -408,7 +420,7 @@ _BOOLEAN CDownstreamDI::SetDestination(const string&)
 
 _BOOLEAN CDownstreamDI::GetDestination(string&)
 {
-	return FALSE; // makes no sense 
+	return FALSE; // makes no sense
 }
 
 void CDownstreamDI::SetAFPktCRC(const _BOOLEAN bNAFPktCRC)
@@ -486,7 +498,7 @@ void CDownstreamDI::SendPacket(const vector<_BYTE>&, uint32_t, uint16_t)
 }
 
 /******************************************************************************\
-* DI receive status, send control                                             * 
+* DI receive status, send control                                             *
 \******************************************************************************/
 CUpstreamDI::CUpstreamDI() : source(NULL), sink(), bUseAFCRC(TRUE), bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE)
 {

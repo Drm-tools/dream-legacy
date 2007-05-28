@@ -6,9 +6,9 @@
  *	Julian Cable, Oliver Haffenden
  *
  * Description:
- *  
+ *
  * see PacketSourceFile.h
- *	
+ *
  *
  ******************************************************************************
  *
@@ -138,13 +138,58 @@ CPacketSourceFile::OnDataReceived ()
 		 */
 		vecbydata.resize(0);
 
-		//const int iAFHeaderLen = 10;
+		char header[8];
 
-		_BYTE header[iAFHeaderLen];
 		// get the sync bytes
-		fread(header, iAFHeaderLen, sizeof(_BYTE), (FILE *) pf);
+		fread(header, 8, sizeof(_BYTE), (FILE *) pf);
+        size_t len2;
+		// guess file framing
+        size_t len = ntohl(*(uint32_t*)&header[4])/8;
+        header[4]=0;
+        if(strcmp("fio_", header)==0)
+        {
+            fread(header, sizeof(header), 1, (FILE *) pf);
+            len2 = ntohl(*(uint32_t*)&header[4])/8;
+            header[4]=0;
+            if(strcmp("time", header)==0)
+            {
+                if(len2 != 8)
+                {
+                    cout << "weird length in FF " << len2 << " expected 8" << endl;
+                    fclose((FILE *) pf);
+                    pf = 0;
+                    return;
+                }
+                len -= 16;
+                // read the time tag packet payload
+                fread(header, sizeof(header), 1, (FILE *) pf);
+                // read the next tag packet header
+                fread(header, sizeof(header), 1, (FILE *) pf);
+                len2 = ntohl(*(uint32_t*)&header[4])/8;
+                header[4]=0;
+            }
 
-		if (header[0] != 'A' || header[1] != 'F') // Not an AF file - return. TODO: add PF and re-synch on AF bytes
+            if(strcmp("afpf", header)==0)
+            {
+                // get the first 8 bytes of the payload
+                fread(header, sizeof(header), 1, (FILE *) pf);
+                len -= 8;
+                len -= len2;
+            }
+            else
+            {
+                cout << "bad tag packet in FF " << header << endl;
+                fclose((FILE *) pf);
+                pf = 0;
+                return;
+            }
+        }
+        else
+            len = 0;
+        // if we get here, either its not FF or we read the FF headers
+
+		// TODO: add PF and re-synch on AF bytes
+		if (header[0] != 'A' || header[1] != 'F') // Not an AF file - return.
 		{
 			fclose((FILE *) pf);
 			pf = 0;
@@ -152,9 +197,10 @@ CPacketSourceFile::OnDataReceived ()
 		}
 
 		// get the length
-		int iAFPayloadLen = (header[2]<<24) + (header[3]<<16) + (header[4]<<8) + header[5];
+		size_t iAFPayloadLen = ntohl(*(uint32_t*)&header[2]);
+		size_t iAFPacketLen = iAFPayloadLen + iAFHeaderLen + iAFCRCLen;
 
-		if (iAFPayloadLen + iAFHeaderLen + iAFCRCLen> iMaxPacketSize)
+		if (iAFPacketLen > iMaxPacketSize)
 		{
 			// throw?
 			fclose((FILE *) pf);
@@ -163,27 +209,37 @@ CPacketSourceFile::OnDataReceived ()
 		}
 
 		// initialise the output vector
-		vecbydata.resize(iAFPayloadLen + iAFHeaderLen + iAFCRCLen);
+		vecbydata.resize(iAFPacketLen);
 
-		int i;
+        size_t i;
 
 		// Copy header into output vector
-		for (i=0; i<iAFHeaderLen; i++)
+		for (i=0; i<sizeof(header); i++)
 		{
 			vecbydata[i] = header[i];
 		}
 
 		// Copy payload into output vector
 		_BYTE data;
-		for (i=0; i<iAFPayloadLen + iAFCRCLen; i++)
+		for (i=sizeof(header); i<iAFPacketLen; i++)
 		{
 			fread(&data, 1, sizeof(_BYTE), (FILE *)pf);
-			vecbydata[iAFHeaderLen + i] = data;
+			vecbydata[i] = data;
 		}
-
+        // skip any other nested tag packets (e.g. time)
+        while(len > 0)
+        {
+            fread(header, 8, sizeof(_BYTE), (FILE *) pf);
+            len2 = ntohl(*(uint32_t*)&header[4])/8;
+            header[4] = 0;
+            cout << "FF " << header << " " << len << " " << len2 << endl;
+            fseek((FILE*)pf, len2, SEEK_CUR);
+            if(len>len2+8)
+                len -= len2+8;
+        }
 	}
 	else
-	{ 
+	{
 #if defined(HAVE_LIBWTAP) || defined(HAVE_LIBPCAP)
 		int link_len = 0;
 		const _BYTE* pkt_data;
