@@ -103,6 +103,7 @@ void CGPSReceiver::DecodeGPSDReply(string Reply)
 
 	size_t GPSDPos=0;
 
+	Parameters.Lock(); 
 	while ((GPSDPos = TotalReply.find("GPSD",0)) != string::npos)
 	{
 		TotalReply=TotalReply.substr(GPSDPos+5,TotalReply.length()-(5+GPSDPos));
@@ -132,7 +133,7 @@ void CGPSReceiver::DecodeGPSDReply(string Reply)
 			}			
 		}
 	}
-
+	Parameters.Unlock(); 
 }
 
 //decode gpsd strings
@@ -156,7 +157,6 @@ void CGPSReceiver::DecodeString(char Command, string Value)
 
 void CGPSReceiver::DecodeO(string Value)
 {	
-	Parameters.Lock(); 
 	if (Value[0] == '?')
 	{
 		Parameters.GPSData.SetPositionAvailable(FALSE);
@@ -220,12 +220,10 @@ void CGPSReceiver::DecodeO(string Value)
 	else
 		Parameters.GPSData.SetSpeedAvailable(FALSE);
 
-	Parameters.Unlock(); 
 }
 
 void CGPSReceiver::DecodeY(string Value)
 {
-	Parameters.Lock(); 
 	if (Value[0] == '?')
 	{
 		Parameters.GPSData.SetSatellitesVisibleAvailable(FALSE);
@@ -243,7 +241,6 @@ void CGPSReceiver::DecodeY(string Value)
 	Parameters.GPSData.SetSatellitesVisibleAvailable(TRUE);
 
 	//todo - timestamp//
-	Parameters.Unlock(); 
 
 }
 

@@ -120,7 +120,9 @@ main(int argc, char **argv)
 
 			/* GPS */
 			CGPSReceiver *pGPSReceiver = NULL;
-			if (Settings.Get("GPS", "usegpsd", FALSE) == TRUE)
+			if (Settings.Get("GPS", "usegpsd", FALSE) == TRUE
+			&& DRMReceiver.GetRSIIn()->GetInEnabled() == FALSE // let gps data come from RSCI
+			)
 			{
 					DRMReceiver.GetParameters()->GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
 					pGPSReceiver =

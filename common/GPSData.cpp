@@ -28,6 +28,8 @@
 
 #include "GPSData.h"
 #include "time.h"
+#include <sstream>
+#include <iomanip>
 
 CGPSData::EGPSSource CGPSData::GetGPSSource() const
 {
@@ -283,13 +285,15 @@ string CGPSData::GetTimeDate() const
 		tt = time_t(m_ulTimeSecondsSince1970);
 	}
 	p_ts = gmtime(&tt);
-	stringstream
-		ss;
+	stringstream ss;
 	ss.width(2);
 	ss.fill('0');
-	ss << 1900 + p_ts->tm_year << "/" << 1 +
-		p_ts->tm_mon << "/" << p_ts->tm_mday;
-	ss << " " << p_ts->tm_hour << ":" << p_ts->tm_min << ":" << p_ts->tm_sec;
-
+	ss << 1900 + p_ts->tm_year << "/"
+	<< setw(2) << 1 + p_ts->tm_mon << "/"
+	<< setw(2) << p_ts->tm_mday
+	<< " "
+	<< setw(2) << p_ts->tm_hour << ":"
+	<< setw(2) << p_ts->tm_min << ":"
+	<< setw(2) << p_ts->tm_sec;
 	return ss.str();
 }

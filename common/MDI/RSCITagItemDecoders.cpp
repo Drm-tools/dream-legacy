@@ -173,7 +173,7 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
  	}
 
  	uint16_t nSats = (uint16_t)vecbiTag.Separate(SIZEOF__BYTE);
- 	if(nSats = 0xff)
+ 	if(nSats == 0xff)
  	{
  	    GPSData.SetSatellitesVisibleAvailable(FALSE);
  	}
@@ -218,12 +218,13 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
     }
 
     struct tm tm;
-    tm.tm_hour = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
-    tm.tm_min = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
-    tm.tm_sec = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
-    tm.tm_year = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
-    tm.tm_mon = (uint16_t)vecbiTag.Separate(2*SIZEOF__BYTE)-1;
-    tm.tm_mday = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+    tm.tm_hour = uint8_t(vecbiTag.Separate(SIZEOF__BYTE));
+    tm.tm_min = uint8_t(vecbiTag.Separate(SIZEOF__BYTE));
+    tm.tm_sec = uint8_t(vecbiTag.Separate(SIZEOF__BYTE));
+    uint16_t year = uint16_t(vecbiTag.Separate(2*SIZEOF__BYTE));
+    tm.tm_year = year - 1900;
+    tm.tm_mon = uint8_t(vecbiTag.Separate(SIZEOF__BYTE))-1;
+    tm.tm_mday = uint8_t(vecbiTag.Separate(SIZEOF__BYTE));
 
     if(tm.tm_hour == 0xff)
     {
@@ -231,10 +232,13 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
     }
     else
     {
-        /*
-        _putenv("TZ=UTC");
-        _tzset();
-        */
+#ifdef _WIN32
+        //_putenv("TZ=UTC");
+        //_tzset();
+#else
+        putenv("TZ=UTC");
+        tzset();
+#endif
         time_t t = mktime(&tm);
         GPSData.SetTimeSecondsSince1970(t);
         GPSData.SetTimeAndDateAvailable(TRUE);

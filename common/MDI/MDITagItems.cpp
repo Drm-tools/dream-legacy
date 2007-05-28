@@ -1112,8 +1112,8 @@ CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CGPSData & GPSData)	// Long/Lat 
 			Enqueue((uint32_t) hour, SIZEOF__BYTE);
 			Enqueue((uint32_t) minute, SIZEOF__BYTE);
 			Enqueue((uint32_t) second, SIZEOF__BYTE);
-			Enqueue(year, SIZEOF__BYTE);
-			Enqueue((uint32_t) month, 2 * SIZEOF__BYTE);
+			Enqueue(year, 2*SIZEOF__BYTE);
+			Enqueue((uint32_t) month, SIZEOF__BYTE);
 			Enqueue((uint32_t) day, SIZEOF__BYTE);
 		}
 		else
