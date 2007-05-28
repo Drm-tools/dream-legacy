@@ -132,12 +132,7 @@ CPacketSinkRawFile::close()
 void
 CPacketSinkRawFile::write(const vector<_BYTE>& vecbydata)
 {
-	_BYTE b;
-	for (size_t i = 0; i < vecbydata.size (); i++)
-	{
-		b = vecbydata[i];
-		fwrite(&b,1,1,pFile);
-	}
+	fwrite(&vecbydata[0],1,vecbydata.size(),pFile);
 }
 
 /* File: ETSI TS 102 821 V0.0.2f (2003-10)

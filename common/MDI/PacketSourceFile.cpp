@@ -132,19 +132,16 @@ CPacketSourceFile::OnDataReceived ()
 	vector < _BYTE > vecbydata (iMaxPacketSize);
 	if(bRaw)
 	{
-		/* TODO read a raw or FF encapsulated file, but for raw we need to read enough
-		 * of the DCP header to find a length, or read too much and get the sink to
-		 * buffer
-		 */
-		vecbydata.resize(0);
-
 		char header[8];
+        size_t len2;
+
+		vecbydata.resize(0); // in case we don't find anything
 
 		// get the sync bytes
-		fread(header, 8, sizeof(_BYTE), (FILE *) pf);
-        size_t len2;
+		fread(header, sizeof(header), 1, (FILE *) pf);
 		// guess file framing
         size_t len = ntohl(*(uint32_t*)&header[4])/8;
+		char c = header[4];
         header[4]=0;
         if(strcmp("fio_", header)==0)
         {
@@ -185,9 +182,11 @@ CPacketSourceFile::OnDataReceived ()
             }
         }
         else
+		{
             len = 0;
+        	header[4]=c;
+		}
         // if we get here, either its not FF or we read the FF headers
-
 		// TODO: add PF and re-synch on AF bytes
 		if (header[0] != 'A' || header[1] != 'F') // Not an AF file - return.
 		{
