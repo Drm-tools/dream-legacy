@@ -172,7 +172,7 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
             cerr << "error decoding rgps" << endl;
  	}
 
- 	uint16_t nSats = (uint16_t)vecbiTag.Separate(SIZEOF__BYTE);
+ 	uint8_t nSats = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
  	if(nSats == 0xff)
  	{
  	    GPSData.SetSatellitesVisibleAvailable(FALSE);
@@ -183,13 +183,15 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
  	    GPSData.SetSatellitesVisibleAvailable(TRUE);
  	}
 
-	int iLatitudeDegrees = int(vecbiTag.Separate(2 * SIZEOF__BYTE));
+    uint16_t val;
+    val = uint16_t(vecbiTag.Separate(2 * SIZEOF__BYTE));
+	int16_t iLatitudeDegrees = *(int16_t*)&val;
     uint8_t uiLatitudeMinutes = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
 	uint16_t uiLatitudeMinuteFractions = (uint16_t)vecbiTag.Separate(2 * SIZEOF__BYTE);
-	uint16_t iLongitudeDegrees = (uint16_t)vecbiTag.Separate(2 * SIZEOF__BYTE);
+    val = uint16_t(vecbiTag.Separate(2 * SIZEOF__BYTE));
+	int16_t iLongitudeDegrees = *(int16_t*)&val;
     uint8_t uiLongitudeMinutes = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
 	uint16_t uiLongitudeMinuteFractions = (uint16_t)vecbiTag.Separate(2 * SIZEOF__BYTE);
-
     if(uiLatitudeMinutes == 0xff)
     {
         GPSData.SetPositionAvailable(FALSE);
@@ -205,14 +207,15 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
         GPSData.SetPositionAvailable(TRUE);
     }
 
-	uint16_t iAltitudeMetres = (uint16_t)vecbiTag.Separate(2 * SIZEOF__BYTE);
+    val = uint16_t(vecbiTag.Separate(2 * SIZEOF__BYTE));
     uint8_t uiAltitudeMetreFractions = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
-    if(uiAltitudeMetreFractions == 0xff)
+    if(val == 0xffff)
     {
         GPSData.SetAltitudeAvailable(FALSE);
     }
     else
     {
+        uint16_t iAltitudeMetres = *(int16_t*)&val;
         GPSData.SetAltitudeMetres(iAltitudeMetres+uiAltitudeMetreFractions/256.0);
         GPSData.SetAltitudeAvailable(TRUE);
     }
@@ -232,20 +235,32 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
     }
     else
     {
+		string se;
+		char *e = getenv("TZ");
+		if(e)
+			se = e;
 #ifdef _WIN32
-        //_putenv("TZ=UTC");
-        //_tzset();
+        _putenv("TZ=UTC");
+        _tzset();
+        time_t t = mktime(&tm);
+		stringstream ss("TZ=");
+		ss << se;
+        _putenv(ss.str().c_str());
 #else
         putenv("TZ=UTC");
         tzset();
-#endif
         time_t t = mktime(&tm);
+		if(e)
+			setenv("TZ", se.c_str(), 1);
+		else
+			unsetenv("TZ");
+#endif
         GPSData.SetTimeSecondsSince1970(t);
         GPSData.SetTimeAndDateAvailable(TRUE);
     }
 
     uint16_t speed = (uint16_t)vecbiTag.Separate(2*SIZEOF__BYTE);
-    if(speed == 0xff)
+    if(speed == 0xffff)
     {
         GPSData.SetSpeedAvailable(FALSE);
     }
@@ -256,7 +271,7 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
     }
 
     uint16_t heading = (uint16_t)vecbiTag.Separate(2*SIZEOF__BYTE);
-    if(heading == 0xff)
+    if(heading == 0xffff)
     {
         GPSData.SetHeadingAvailable(FALSE);
     }

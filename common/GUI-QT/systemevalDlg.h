@@ -53,6 +53,7 @@
 #include "../ReceptLog.h"
 #include "../util/Settings.h"
 
+class CGPSReceiver;
 
 /* Definitions ****************************************************************/
 /* Define this macro if you prefer the QT-type of displaying date and time */
@@ -123,6 +124,8 @@ protected:
 	QPopupMenu*			pListViewContextMenu;
 	vector<CDRMPlot*>	vecpDRMPlots;
 
+	CGPSReceiver*		pGPSReceiver;
+
 public slots:
 	void OnTimer();
 	void OnTimerLogFileStart();
@@ -147,4 +150,6 @@ public slots:
 	void OnListViContMenu();
 	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt,
 		int iCol);
+	void EnableGPS();
+	void DisableGPS();
 };

@@ -36,15 +36,16 @@
 
 /* Implementation *************************************************************/
 
-GeneralSettingsDlg::GeneralSettingsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
+GeneralSettingsDlg::GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, WFlags f) :
-	CGeneralSettingsDlgBase(parent, name, modal, f), DRMRec(NDRMR),Settings(NSettings),
+	CGeneralSettingsDlgBase(parent, name, modal, f), Parameters(NParam),Settings(NSettings),
 	host("localhost"),port(2947),bUseGPS(FALSE)
 {
 
 	host = Settings.Get("GPS", "host", host);
 	port = Settings.Get("GPS", "port", port);
 	bUseGPS = Settings.Get("GPS", "usegpsd", bUseGPS);
+	CheckBoxUseGPS->setChecked(bUseGPS);
 
 	/* Set the validators fro the receiver coordinate */
 	EdtLatitudeDegrees->setValidator(new QIntValidator(0, 90, EdtLatitudeDegrees));
@@ -128,6 +129,10 @@ void GeneralSettingsDlg::CheckEW(const QString& NewText)
 void GeneralSettingsDlg::OnCheckBoxUseGPS()
 {
 	bUseGPS = CheckBoxUseGPS->isChecked();
+	if(bUseGPS)
+		emit StartGPS();
+	else
+		emit StopGPS();
 }
 
 void GeneralSettingsDlg::ButtonOkClicked()
@@ -198,7 +203,6 @@ void GeneralSettingsDlg::ButtonOkClicked()
 	{
 		/* save current settings */
 
-		CParameter& Parameters = *DRMRec.GetParameters();
 		Parameters.Lock(); 
 
 		if (!bAllEmpty)
@@ -282,7 +286,6 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 
 	double latitude, longitude;
 
-	CParameter& Parameters = *DRMRec.GetParameters();
 	Parameters.Lock(); 
 	Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
 

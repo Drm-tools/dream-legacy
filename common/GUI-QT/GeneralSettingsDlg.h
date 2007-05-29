@@ -25,7 +25,7 @@
  *
 \******************************************************************************/
 
-#include "../DrmReceiver.h"
+#include "../Parameter.h"
 #include "../util/Settings.h"
 
 #include "GeneralSettingsDlgbase.h"
@@ -39,7 +39,7 @@ class GeneralSettingsDlg : public CGeneralSettingsDlgBase
 
 public:
 
-	GeneralSettingsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent = 0,
+	GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~GeneralSettingsDlg();
 
@@ -53,11 +53,15 @@ protected:
 
 	void			AddWhatsThisHelp();
 
-	CDRMReceiver&	DRMRec;
+	CParameter&		Parameters;
 	CSettings&		Settings;
 	string			host;
 	int				port;
 	_BOOLEAN		bUseGPS;
+
+signals:
+	void StartGPS();
+	void StopGPS();
 
 public slots:
 	void CheckSN(const QString& NewText);

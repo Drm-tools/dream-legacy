@@ -48,7 +48,6 @@
 # include <qmessagebox.h>
 # include "fdrmdialog.h"
 # include "TransmDlg.h"
-# include "../GPSReceiver.h"
 #endif
 #include <iostream>
 
@@ -118,21 +117,6 @@ main(int argc, char **argv)
 
 			DRMReceiver.Init();
 
-			/* GPS */
-			CGPSReceiver *pGPSReceiver = NULL;
-			if (Settings.Get("GPS", "usegpsd", FALSE) == TRUE
-			&& DRMReceiver.GetRSIIn()->GetInEnabled() == FALSE // let gps data come from RSCI
-			)
-			{
-					DRMReceiver.GetParameters()->GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
-					pGPSReceiver =
-						new CGPSReceiver(*DRMReceiver.GetParameters(), Settings);
-			}
-			else
-			{
-					DRMReceiver.GetParameters()->GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
-			}
-
 			FDRMDialog MainDlg(DRMReceiver, Settings, 0, 0, FALSE, Qt::WStyle_MinMax);
 
 			/* Start working thread */
@@ -142,10 +126,6 @@ main(int argc, char **argv)
 			app.setMainWidget(&MainDlg);
 
 			app.exec();
-
-			/* GUI has exited, stop everything else */
-			if (pGPSReceiver)
-				delete pGPSReceiver;
 
 			DRMReceiver.SaveSettings(Settings);
 		}

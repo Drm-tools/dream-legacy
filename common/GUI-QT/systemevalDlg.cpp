@@ -27,6 +27,8 @@
 \******************************************************************************/
 
 #include "systemevalDlg.h"
+#include "../GPSReceiver.h"
+#include <qmessagebox.h>
 
 /* Implementation *************************************************************/
 systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
@@ -37,7 +39,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	Timer(), TimerLogFileLong(), TimerLogFileShort(), TimerLogFileStart(),
 	shortLog(*NDRMR.GetParameters()), longLog(*NDRMR.GetParameters()),
 	bEnableShortLog(FALSE), bEnableLongLog(FALSE),
-	iLogDelay(0), iCurFrequency(0)
+	iLogDelay(0), iCurFrequency(0), pGPSReceiver(NULL)
 {
 	/* Get window geometry data and apply it */
 	CWinGeom s;
@@ -437,8 +439,13 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	}
 	else
 		Parameters.GPSData.SetPositionAvailable(FALSE);
-
 	Parameters.Unlock(); 
+
+	if (Settings.Get("GPS", "usegpsd", FALSE) == TRUE)
+		EnableGPS();
+	else
+		DisableGPS();
+
 }
 
 systemevalDlg::~systemevalDlg()
@@ -458,6 +465,9 @@ systemevalDlg::~systemevalDlg()
 	Settings.Put("Logfile", "enablelog", bEnableLongLog);
 	Settings.Put("Logfile", "latitude", latitude);
 	Settings.Put("Logfile", "longitude", longitude);
+
+	if (pGPSReceiver)
+		delete pGPSReceiver;
 }
 
 void systemevalDlg::UpdateControls()
@@ -1750,4 +1760,33 @@ void systemevalDlg::AddWhatsThisHelp()
 	QWhatsThis::add(GroupBoxInterfRej, strInterfRej);
 	QWhatsThis::add(CheckBoxRecFilter, strInterfRej);
 	QWhatsThis::add(CheckBoxModiMetric, strInterfRej);
+}
+
+void systemevalDlg::EnableGPS()
+{
+	if(pGPSReceiver)
+		return;
+
+	// let gps data come from RSCI
+	if(DRMReceiver.GetRSIIn()->GetInEnabled())
+		return;
+
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+	Parameters.Lock(); 
+	Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
+	Parameters.Unlock(); 
+	pGPSReceiver = new CGPSReceiver(Parameters, Settings);
+}
+
+void systemevalDlg::DisableGPS()
+{
+	if(pGPSReceiver)
+	{
+		delete pGPSReceiver;
+		pGPSReceiver = NULL;
+	}
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+	Parameters.Lock(); 
+	Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
+	Parameters.Unlock(); 
 }

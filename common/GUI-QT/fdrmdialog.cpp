@@ -170,10 +170,10 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", FALSE, Qt::WStyle_MinMax);
 
 	/* general settings window */
-	pGeneralSettingsDlg = new GeneralSettingsDlg(DRMReceiver, Settings, this, "", TRUE, Qt::WStyle_Dialog);
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+	pGeneralSettingsDlg = new GeneralSettingsDlg(Parameters, Settings, this, "", TRUE, Qt::WStyle_Dialog);
 	SetDialogCaption(pGeneralSettingsDlg, tr("General settings"));
 
-	CParameter& Parameters = *DRMReceiver.GetParameters();
 	Parameters.Lock();
 
 	/* Enable multimedia */
@@ -218,6 +218,9 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
+
+	connect(pGeneralSettingsDlg, SIGNAL(StartGPS()), pSysEvalDlg, SLOT(EnableGPS()));
+	connect(pGeneralSettingsDlg, SIGNAL(StopGPS()), pSysEvalDlg, SLOT(DisableGPS()));
 
 	/* Disable text message label */
 	TextTextMessage->setText("");
