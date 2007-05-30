@@ -384,7 +384,6 @@ CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const cha
 	{
 	    wantPft = true;
         d.erase(0, 1);
-        cout << d << endl;
 	}
 
 	// Delegate to socket

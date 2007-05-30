@@ -47,9 +47,15 @@ public:
 	// Stop sending packets to the sink
 	virtual void ResetPacketSink(void);
 	virtual _BOOLEAN SetOrigin(const string& str);
+
 private:
+
+    void readRawOrFF(vector<_BYTE>& vecbydata, int& interval);
+    void readPcap(vector<_BYTE>& vecbydata, int& interval);
+
 	CPacketSink		*pPacketSink;
 	QTime			timeKeeper;
+	uint64_t		last_packet_time;
     void*			pf;
 	_BOOLEAN		bRaw;
 public slots:

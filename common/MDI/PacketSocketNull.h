@@ -6,7 +6,7 @@
  *	Volker Fischer, Oliver Haffenden
  *
  * Description: Null implementation of CPacketSocket. See PacketSocketNull.cpp
- *	
+ *
  *
  ******************************************************************************
  *
@@ -30,26 +30,6 @@
 #define PACKET_SOCKET_NULL_H_INCLUDED
 
 #include "PacketInOut.h"
-
-#ifdef HAVE_LIBPCAP
-# include <pcap.h>
-#endif
-#ifdef HAVE_LIBWTAP
-extern "C" {
-# include <wtap.h>
-}
-#endif
-
-#ifdef _WIN32
-    /* Always include winsock2.h before windows.h */
-	#ifndef HAVE_LIBPCAP
-    /* winsock2.h is already included into libpcap */
-	# include <winsock2.h>
-	# include <ws2tcpip.h>
-	#endif
-
-# include <windows.h>
-#endif
 
 class CPacketSocketNull : public CPacketSocket
 {
