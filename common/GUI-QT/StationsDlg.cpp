@@ -921,17 +921,44 @@ void StationsDlg::OnTimerList()
 QString MyListViewItem::key(int column, bool ascending) const
 {
 	/* Reimplement "key()" function to get correct sorting behaviour */
-	if ((column == 2) || (column == 4))
+
+	const float fFreq = text(COL_FREQ).toFloat();
+
+	/* Some columns are filled with numbers. Some items may have numbers
+	   after the comma, therefore multiply with 10000 (which moves the
+	   numbers in front of the comma). Afterwards append zeros at the
+	   beginning so that positive integer numbers are sorted correctly */
+
+	if (column == COL_FREQ)
 	{
-		/* These columns are filled with numbers. Some items may have numbers
-		   after the comma, therefore multiply with 10000 (which moves the
-		   numbers in front of the comma). Afterwards append zeros at the
-		   beginning so that positive integer numbers are sorted correctly */
 		return QString(QString().setNum((long int)
-			(text(column).toFloat() * 10000.0))).rightJustify(20, '0');
+			(fFreq * 10000.0))).rightJustify(20, '0');
 	}
     else
-		return QListViewItem::key(column, ascending);
+	{
+		/* sort the column and then sort for frequency */
+
+		QString sCol = "";
+
+		float d = 0.0;
+
+		if (!ascending)
+			d = 100000.0;
+		
+		const QString sFreq = QString(QString().setNum((long int)
+		((fFreq - d) * 10000.0))).rightJustify(20, '0');
+
+		if (column == COL_POWER)
+		{
+			/* is a numeric column */
+			sCol = QString(QString().setNum((long int)
+				(text(column).toFloat() * 10000.0))).rightJustify(20, '0');
+		}
+		else
+			sCol = text(column).lower(); /* is a text column */
+
+		return sCol + "|" + sFreq;
+	}
 }
 
 void StationsDlg::SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM)

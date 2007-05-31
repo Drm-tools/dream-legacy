@@ -799,6 +799,9 @@ void LiveScheduleDlg::OnTimerList()
 QString MyListLiveViewItem::key(int column, bool ascending) const
 {
 	/* Reimplement "key()" function to get correct sorting behaviour */
+
+	const float fFreq = text(COL_FREQ).toFloat();
+
 	if (column == COL_FREQ)
 	{
 		/* These columns are filled with numbers. Some items may have numbers
@@ -806,10 +809,23 @@ QString MyListLiveViewItem::key(int column, bool ascending) const
 		   numbers in front of the comma). Afterwards append zeros at the
 		   beginning so that positive integer numbers are sorted correctly */
 		return QString(QString().setNum((long int)
-			(text(column).toFloat() * 10000.0))).rightJustify(20, '0');
+			(fFreq * 10000.0))).rightJustify(20, '0');
 	}
     else
-		return QListViewItem::key(column, ascending);
+	{
+		/* is a text column */
+		/* sort the column and then sort for frequency */
+ 
+		float d = 0.0;
+
+		if (!ascending)
+			d = 100000.0;
+		
+		const QString sFreq = QString(QString().setNum((long int)
+		((fFreq - d) * 10000.0))).rightJustify(20, '0');
+
+		return text(column).lower() + "|" + sFreq;
+	}
 }
 
 void LiveScheduleDlg::LoadSchedule()
