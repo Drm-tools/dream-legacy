@@ -292,12 +292,12 @@ CPacketSourceFile::readPcap(vector<_BYTE>& vecbydata, int& interval)
         vecbydata[i] = pkt_data[link_len+udp_ip_hdr_len+i];
     if(last_packet_time == 0)
     {
-        last_packet_time = 1000ULL*uint64_t(packet_time.tv_sec);
-        last_packet_time += uint64_t(packet_time.tv_usec)/1000ULL;
+        last_packet_time = 1000*uint64_t(packet_time.tv_sec);
+        last_packet_time += uint64_t(packet_time.tv_usec)/1000;
     }
      uint64_t pt;
-    pt = 1000ULL*uint64_t(packet_time.tv_sec);
-    pt += uint64_t(packet_time.tv_usec)/1000ULL;
+    pt = 1000*uint64_t(packet_time.tv_sec);
+    pt += uint64_t(packet_time.tv_usec)/1000;
     interval = pt - last_packet_time;
     last_packet_time = pt;
 }
