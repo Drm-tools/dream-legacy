@@ -79,7 +79,7 @@
    www.drm-dx.de */
 #define DRM_SCHEDULE_UPDATE_FILE		"ftp://216.92.35.131/DRMSchedule.ini"
 
-#define COL_FREQ 2 /* frequency column */
+#define COL_FREQUENCY 2 /* frequency column */
 #define COL_POWER 4
 
 /* File handle type */

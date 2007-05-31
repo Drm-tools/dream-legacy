@@ -922,14 +922,14 @@ QString MyListViewItem::key(int column, bool ascending) const
 {
 	/* Reimplement "key()" function to get correct sorting behaviour */
 
-	const float fFreq = text(COL_FREQ).toFloat();
+	const float fFreq = text(COL_FREQUENCY).toFloat();
 
 	/* Some columns are filled with numbers. Some items may have numbers
 	   after the comma, therefore multiply with 10000 (which moves the
 	   numbers in front of the comma). Afterwards append zeros at the
 	   beginning so that positive integer numbers are sorted correctly */
 
-	if (column == COL_FREQ)
+	if (column == COL_FREQUENCY)
 	{
 		return QString(QString().setNum((long int)
 			(fFreq * 10000.0))).rightJustify(20, '0');
