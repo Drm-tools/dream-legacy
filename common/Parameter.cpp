@@ -389,6 +389,15 @@ void CParameter::ResetServicesStreams()
 		Service[0].AudioParam.eHVXCRate = CAudioParam::HR_2_KBIT;
 		Service[0].AudioParam.bHVXCCRC = FALSE;
 
+		Service[0].iServiceID = SERV_ID_NOT_USED;
+		Service[0].eCAIndication = CService::CA_NOT_USED;
+		Service[0].iLanguage = 0;
+		Service[0].strCountryCode = "";
+		Service[0].strLanguageCode = "";
+		Service[0].eAudDataFlag = CService::SF_AUDIO;
+		Service[0].iServiceDescr = 0;
+		Service[0].strLabel = "";
+
 		Stream[0].iLenPartA = 0;
 		Stream[0].iLenPartB = 1044;
 	}
