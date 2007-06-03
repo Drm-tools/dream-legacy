@@ -558,7 +558,7 @@ void CReceiveData::PutPSD(CParameter &ReceiverParam)
 	int iEndBin = 106;
 	int iVecSize = iEndBin - iStartBin + 1; //85
 
-	_REAL rIFCentreFrequency = ReceiverParam.FrontEndParameters.rIFCentreFreq;
+	//_REAL rIFCentreFrequency = ReceiverParam.FrontEndParameters.rIFCentreFreq;
 
 	ESpecOcc eSpecOcc = ReceiverParam.GetSpectrumOccup();
 	if (eSpecOcc == SO_4 || eSpecOcc == SO_5)

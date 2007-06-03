@@ -48,7 +48,7 @@ public:
 	void AddTagItem(CTagItemGenerator *pGenerator);
 	virtual void PutTagPacketData(CVector<_BINARY> &vecbiDestination); // Call this to write the tag packet (i.e. all the tag items) to the vector
 	virtual int GetTagPacketLength();
-	virtual void SetProfile(const char cProfile) {}
+	virtual void SetProfile(const char /*cProfile*/) {}
 protected:
 	vector<CTagItemGenerator *> vecTagItemGenerators;
 };

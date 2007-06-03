@@ -40,7 +40,7 @@
 class CFACTransmit
 {
 public:
-	CFACTransmit() {}
+	CFACTransmit():FACRepetitionCounter(0) {}
 	virtual ~CFACTransmit() {}
 
 	/* "pbiFACData" contains 72 bits */
@@ -51,6 +51,7 @@ protected:
 	CCRC CRCObject;
 	vector<int>	FACRepetition; /* See 6.3.6 */
 	size_t		FACNumRep;
+	size_t		FACRepetitionCounter;
 };
 
 class CFACReceive

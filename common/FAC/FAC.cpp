@@ -36,7 +36,6 @@
 void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 {
 	int			iCurShortID;
-	static int	FACRepetitionCounter = 0;
 
 	/* Reset enqueue function */
 	(*pbiFACData).ResetBitAccess();

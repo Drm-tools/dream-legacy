@@ -36,7 +36,7 @@
 static int
 captureCallback(const void *inputBuffer, void *outputBuffer,
 				unsigned long framesPerBuffer,
-				const PaStreamCallbackTimeInfo * timeInfo,
+				const PaStreamCallbackTimeInfo *,
 				PaStreamCallbackFlags statusFlags, void *userData)
 {
 	/* Cast data passed through stream to our structure. */
@@ -53,7 +53,7 @@ captureCallback(const void *inputBuffer, void *outputBuffer,
 static int
 playbackCallback(const void *inputBuffer, void *outputBuffer,
 				 unsigned long framesPerBuffer,
-				 const PaStreamCallbackTimeInfo * timeInfo,
+				 const PaStreamCallbackTimeInfo *,
 				 PaStreamCallbackFlags statusFlags, void *userData)
 {
 	CPaCommon *This = (CPaCommon *) userData;

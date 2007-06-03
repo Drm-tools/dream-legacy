@@ -36,8 +36,9 @@
 #include "../util/Vector.h"
 #include "DABMOT.h"
 #include "MOTSlideShow.h"
-#include "Journaline.h"
 
+class CJournaline;
+class CNews;
 
 /* Definitions ****************************************************************/
 /* Maximum number of packets per stream */
@@ -80,15 +81,9 @@ class CDataEncoder
 class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 {
   public:
-    CDataDecoder ():iServPacketID (0), DoNotProcessData (TRUE),
-	iOldJournalineServiceID (0), bDecodeEPG(TRUE)
-    {
-		for(int i=0; i<MAX_NUM_PACK_PER_STREAM; i++)
-			eAppType[i] = AT_NOT_SUP;
-    }
-    virtual ~ CDataDecoder ()
-    {
-    }
+    CDataDecoder ();
+    virtual ~CDataDecoder ();
+
     enum EAppType
     { AT_NOT_SUP, AT_MOTSLISHOW, AT_JOURNALINE,
 	AT_MOTBROADCASTWEBSITE, AT_MOTTPEG, AT_DGPS, AT_TMC, AT_MOTEPG,
@@ -135,7 +130,7 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     int iContInd[MAX_NUM_PACK_PER_STREAM];
     CDataUnit DataUnit[MAX_NUM_PACK_PER_STREAM];
     CMOTDABDec MOTObject[MAX_NUM_PACK_PER_STREAM];
-    CJournaline Journaline;
+    CJournaline& Journaline;
     uint32_t iOldJournalineServiceID;
 
     EAppType eAppType[MAX_NUM_PACK_PER_STREAM];

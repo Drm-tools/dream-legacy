@@ -63,6 +63,11 @@ main(int argc, char **argv)
 	/* create app before running Settings.Load to consume platform/QT parameters */
 	QApplication app(argc, argv);
 
+#if defined(__APPLE__) &&  QT_VERSION >= 0x030000
+	/* find plugins on MacOs when deployed in a bundle */
+	app.setLibraryPaths(app.applicationDirPath()+"../PlugIns");
+#endif
+
 	/* Load and install multi-language support (if available) */
 	QTranslator translator(0);
 	if (translator.load("dreamtr"))

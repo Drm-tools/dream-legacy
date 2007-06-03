@@ -28,6 +28,7 @@
 
 #include "DataDecoder.h"
 #include "./epg/epgutil.h"
+#include "Journaline.h"
 #include <iostream>
 
 /* Implementation *************************************************************/
@@ -183,6 +184,19 @@ CDataEncoder::Init(CParameter & Param)
 /******************************************************************************\
 * Decoder                                                                      *
 \******************************************************************************/
+CDataDecoder::CDataDecoder ():iServPacketID (0), DoNotProcessData (TRUE),
+	Journaline(*new CJournaline()),
+	iOldJournalineServiceID (0), bDecodeEPG(TRUE)
+{
+		for(size_t i=0; i<MAX_NUM_PACK_PER_STREAM; i++)
+			eAppType[i] = AT_NOT_SUP;
+}
+
+CDataDecoder::~CDataDecoder ()
+{
+	delete &Journaline;
+}
+	
 void
 CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 {

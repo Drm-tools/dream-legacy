@@ -39,6 +39,7 @@
 # include <FreeImage.h>
 #endif
 #include "MultimediaDlg.h"
+#include "../datadecoding/Journaline.h"
 
 /* Implementation *************************************************************/
 MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,

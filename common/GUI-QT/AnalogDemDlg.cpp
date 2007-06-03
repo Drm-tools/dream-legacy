@@ -713,9 +713,6 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(&TimerPLLPhaseDial, SIGNAL(timeout()),
 		this, SLOT(OnTimerPLLPhaseDial()));
 
-	/* Don't activate real-time timers - wait for show event */
-	//Timer.start(GUI_CONTROL_UPDATE_TIME);
-	//TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 	/* set the progress bar style */
 	ProgressBarAMSS->setStyle( new QMotifStyle() );
 

@@ -107,8 +107,8 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 
 // TODO: use sequence number somehow!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	const int iCurSeqNum = (int) vecbiAFPkt.Separate(16);
-	/*
-	iSeqNumber++;
+	(void)iCurSeqNum;
+	/*iSeqNumber++;
 	if (iSeqNumber > 0xFFFF)
 		iSeqNumber = 0;
 	*/
@@ -126,9 +126,11 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 
 	/* MAJ: major revision of the AF protocol in use (3 bits long) */
 	const int iMajRevAFProt = (int) vecbiAFPkt.Separate(3);
+	(void)iMajRevAFProt;
 
 	/* MIN: minor revision of the AF protocol in use (4 bits long) */
 	const int iMinRevAFProt = (int) vecbiAFPkt.Separate(4);
+	(void)iMinRevAFProt;
 
 // TODO: check if protocol versions match our version!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

@@ -38,8 +38,8 @@ public:
 	CSoundInNull():iDev(-1){}
 	virtual ~CSoundInNull() {}
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE) {}
-	virtual _BOOLEAN	Read(CVector<short>& psData) { return FALSE; }
+	virtual void		Init(int, _BOOLEAN) {}
+	virtual _BOOLEAN	Read(CVector<short>&) { return FALSE; }
 	virtual void		Enumerate(vector<string>&choices) { choices.push_back("(File or Network)"); }
 	virtual int			GetDev() { return iDev; }
 	virtual void		SetDev(int iNewDev) { iDev = iNewDev; }
@@ -54,8 +54,8 @@ public:
 	CSoundOutNull():iDev(-1){}
 	virtual ~CSoundOutNull(){}
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE) {}
-	virtual _BOOLEAN	Write(CVector<short>& psData) { return FALSE;}
+	virtual void		Init(int, _BOOLEAN) {}
+	virtual _BOOLEAN	Write(CVector<short>&) { return FALSE;}
 	virtual void		Enumerate(vector<string>& choices) {choices.push_back("(None)");}
 	virtual int			GetDev() { return iDev; }
 	virtual void		SetDev(int iNewDev) { iDev = iNewDev; }

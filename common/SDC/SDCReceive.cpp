@@ -215,7 +215,7 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
 									  CParameter& Parameter,
-									  const _BOOLEAN bVersion)
+									  const _BOOLEAN)
 {
 	CMSCProtLev				MSCPrLe;
 	int						iLenPartA;
@@ -626,7 +626,7 @@ _BOOLEAN CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
 _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
 									  CParameter& Parameter,
-									  const _BOOLEAN bVersion)
+									  const _BOOLEAN)
 {
 	/* Short ID (the short ID is the index of the service-array) */
 	const int iTempShortID = (*pbiData).Separate(2);
@@ -860,7 +860,7 @@ _BOOLEAN CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData,
 _BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
 									  CParameter& Parameter,
-									  const _BOOLEAN bVersion)
+									  const _BOOLEAN)
 {
 	/* Check length -> must be 2 bytes */
 	if (iLengthOfBody != 2)

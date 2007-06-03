@@ -264,8 +264,8 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 		else
 			lEncSamprate = 12000;
 
-		int iTimeEachAudBloMS;
-		int iNumHeaderBytes;
+		int iTimeEachAudBloMS = 40;
+		int iNumHeaderBytes = 14;
 
 		switch (lEncSamprate)
 		{
@@ -418,8 +418,8 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 	else
 		lEncSamprate = 12000;
 
-	int iTimeEachAudBloMS;
-	int iNumHeaderBytes;
+	int iTimeEachAudBloMS = 40;
+	int iNumHeaderBytes = 14;
 
 	switch (lEncSamprate)
 	{
