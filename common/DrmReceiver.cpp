@@ -1292,6 +1292,9 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 
 	pReceiverParam->Lock();
 	pReceiverParam->SetFrequency(iNewFreqkHz);
+	/* clear out AMSS data and re-initialise AMSS acquisition */
+	if(pReceiverParam->eReceiverMode == RM_AM)
+		pReceiverParam->ResetServicesStreams();
 	pReceiverParam->Unlock();
 
 	if (upstreamRSCI.GetOutEnabled() == TRUE)
