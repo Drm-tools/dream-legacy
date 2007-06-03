@@ -166,7 +166,7 @@ void AnalogDemDlg::showEvent(QShowEvent*)
 		AMSSDlg.show();
 	else
 		AMSSDlg.hide();
-	
+
 	UpdateControls();
 }
 
@@ -656,7 +656,7 @@ void AnalogDemDlg::AddWhatsThisHelp()
 /*
 	Added by Andrew Murphy, BBC Research & Development, 2005
 
-	Additional widgets have been added to display the AMSS service label, 
+	Additional widgets have been added to display the AMSS service label,
 	language etc. in in a similar style to that used for DRM reception.
 	A display has also been added to show the status of the AMSS decoding.
 	Everytime an AMSS CRC passes (for block or block 2) the 47 decoded
@@ -667,7 +667,7 @@ void AnalogDemDlg::AddWhatsThisHelp()
 	'#' indicates that a data entity gruop segment is yet to be received
 	whilst a 'c' or 'C' indicates a CRC pass for the block 2 carrying that
 	particular segment.
- 
+
 	Added phase offset display for AMSS demodulation loop.
 */
 CAMSSDlg::CAMSSDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
@@ -752,7 +752,7 @@ void CAMSSDlg::OnTimer()
 	int j;
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 
 	/* Show label if available */
 	if ((Parameters.Service[0].IsActive()) && (Parameters.Service[0].strLabel != ""))
@@ -864,7 +864,7 @@ void CAMSSDlg::OnTimer()
 						QString().setNum((long) Parameters.
 						AltFreqSign.vecOtherServices[i].
 						veciFrequencies[j], 10);
-							
+
 					if (j != iNumAltFreqs-1)
 						freqEntry += ",";
 				}
@@ -926,7 +926,7 @@ void CAMSSDlg::OnTimer()
 						QString().setNum((float) (76.0 + 0.1 * DRMReceiver.
 						GetParameters()->AltFreqSign.
 						vecOtherServices[i].veciFrequencies[j]), 'f', 1);
-							
+
 					if (j != iNumAltFreqs-1)
 						freqEntry += ",";
 				}
@@ -968,7 +968,7 @@ void CAMSSDlg::OnTimer()
 
 			ListBoxAMSSAFSList->insertItem(freqEntry, 0);
 		}
-	}	
+	}
 	else
 	{
 		ListBoxAMSSAFSList->clear();
@@ -978,11 +978,13 @@ void CAMSSDlg::OnTimer()
 	TextAMSSServiceID->setText("");
 	TextAMSSAMCarrierMode->setText("");
 
-	if (DRMReceiver.GetAMSSDecode()->GetLockStatus() == CAMSSDecode::NO_SYNC)
+	if (DRMReceiver.GetAMSSDecode()->GetLockStatus() == CAMSSDecode::NO_SYNC
+	|| Parameters.Service[0].iServiceID == SERV_ID_NOT_USED
+	)
 	{
 		TextAMSSInfo->setText(tr("No AMSS detected"));
 	}
-	else 
+	else
 	{
 		TextAMSSInfo->setText(tr("Awaiting AMSS data..."));
 
@@ -1013,7 +1015,7 @@ void CAMSSDlg::OnTimer()
 	ProgressBarAMSS->setProgress(DRMReceiver.GetAMSSDecode()->
 		GetPercentageDataEntityGroupComplete());
 
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 void CAMSSDlg::OnTimerPLLPhaseDial()
