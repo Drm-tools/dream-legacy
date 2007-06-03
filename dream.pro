@@ -16,9 +16,11 @@ macx {
 	INCLUDEPATH	+= darwin
 	INCLUDEPATH	+= /Developer/dream/include
 	LIBS 		+= -L/Developer/dream/lib
-	LIBS 		+= -framework CoreFoundation -framework CoreServices -framework CoreAudio -framework AudioToolbox -framework AudioUnit
+	LIBS 		+= -framework CoreFoundation -framework CoreServices
+	LIBS 		+= -framework CoreAudio -framework AudioToolbox -framework AudioUnit
 	UI_DIR		= darwin/moc
 	MOC_DIR		= darwin/moc
+	RC_FILE		= common/GUI-QT/res/macicons.icns
 }
 
 unix {
