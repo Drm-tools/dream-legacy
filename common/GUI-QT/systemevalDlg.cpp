@@ -395,8 +395,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(&TimerLogFileStart, SIGNAL(timeout()),
 		this, SLOT(OnTimerLogFileStart()));
 
-	/* Activate real-time timer */
-	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	StopLogTimers();
 
 	/* Logfile -------------------------------------------------------------- */
@@ -583,10 +581,16 @@ void systemevalDlg::showEvent(QShowEvent*)
 
 	/* Update controls */
 	UpdateControls();
+
+	/* Activate real-time timer */
+	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
 void systemevalDlg::hideEvent(QHideEvent*)
 {
+	/* Stop the real-time timer */
+	Timer.stop();
+
 	/* Store size and position of all additional chart windows */
 	int iNumOpenCharts = 0;
 
@@ -1211,7 +1215,7 @@ void systemevalDlg::StopLogTimers()
 {
 	TimerLogFileStart.stop();
 	TimerLogFileShort.stop();
-	TimerLogFileStart.stop();
+	TimerLogFileLong.stop();
 }
 
 void systemevalDlg::OnTimerLogFileStart()
@@ -1266,7 +1270,6 @@ void systemevalDlg::OnCheckWriteLog()
 		TimerLogFileLong.stop();
 		shortLog.Stop();
 		longLog.Stop();
-
 	}
 
 	/* set the focus */
