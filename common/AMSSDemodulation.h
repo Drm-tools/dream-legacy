@@ -62,8 +62,8 @@ public:
 	void Process(CComplexVector& veccIn, CRealVector& vecrOut);
 
 	void SetRefNormFreq(const CReal rNewNormFreq);
-	CReal GetCurPhase() {return rCurPhase;}
-	CReal GetCurNormFreqOffs()
+	CReal GetCurPhase() const {return rCurPhase;}
+	CReal GetCurNormFreqOffs() const
 		{return rNormCurFreqOffset + rNormCurFreqOffsetAdd;}
 
 protected:
@@ -207,13 +207,14 @@ public:
 	enum EAMSSBlockLockStat { NO_SYNC, RE_SYNC, DEF_SYNC, DEF_SYNC_BUT_DATA_CHANGED, POSSIBLE_LOSS_OF_SYNC };
 
 
-	EAMSSBlockLockStat GetLockStatus() { return eAMSSBlockLockStatus; }
-	int GetPercentageDataEntityGroupComplete() { return iPercentageDataEntityGroupComplete; }
-	char* GetDataEntityGroupStatus() { return cDataEntityGroupStatus; }
-	int GetCurrentBlock() { return iCurrentBlock; }
-	char* GetCurrentBlockBits() { return cCurrentBlockBits; }
+	EAMSSBlockLockStat GetLockStatus() const { return eAMSSBlockLockStatus; }
+	int GetPercentageDataEntityGroupComplete() const
+		{ return iPercentageDataEntityGroupComplete; }
+	char* GetDataEntityGroupStatus() const { return cDataEntityGroupStatus; }
+	int GetCurrentBlock() const { return iCurrentBlock; }
+	char* GetCurrentBlockBits() const { return cCurrentBlockBits; }
 
-	_BOOLEAN GetBlock1Status() { return blBlock1DataValid; }
+	_BOOLEAN GetBlock1Status() const { return blBlock1DataValid; }
 
 protected:
 	virtual void InitInternal(CParameter& ReceiverParam);

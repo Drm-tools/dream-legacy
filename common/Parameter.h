@@ -321,7 +321,7 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 			return *this;
 		}
 
-		_BOOLEAN IsActive()
+		_BOOLEAN IsActive() const
 		{
 			return iServiceID != SERV_ID_NOT_USED;
 		}
