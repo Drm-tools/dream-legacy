@@ -620,18 +620,30 @@ QString
 MyListLiveViewItem::key(int column, bool ascending) const
 {
 	/* Reimplement "key()" function to get correct sorting behaviour */
+
+	const float fFreq = text(column).toFloat();
+
 	if (column == COL_FREQ)
 	{
 		/* These columns are filled with numbers. Some items may have numbers
-		   after the comma, therefore multiply with 10000 (which moves the
+		   after the decimal, therefore multiply with 10000 (which moves the
 		   numbers in front of the comma). Afterwards append zeros at the
 		   beginning so that positive integer numbers are sorted correctly */
-		return QString(QString().setNum((long int)
-										(text(column).toFloat() *
-										 10000.0))).rightJustify(20, '0');
+		return QString().setNum(long(fFreq * 10000.0)).rightJustify(20, '0');
 	}
 	else
-		return QListViewItem::key(column, ascending);
+   {
+       /* is a text column */
+       /* sort the column and then sort for frequency */
+		float d = 0.0;
+
+		if (!ascending)
+			d = 100000.0;
+
+		const QString sFreq = QString().setNum(long((fFreq - d) * 10000.0)).rightJustify(20, '0');
+
+		return text(column).lower() + "|" + sFreq;
+   }
 }
 
 void
