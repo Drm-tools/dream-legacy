@@ -255,13 +255,13 @@ CTagItemGeneratorSDC::GetProfiles()
 void
 CTagItemGeneratorSDCChanInf::GenTag(CParameter & Parameter)
 {
-	vector < int >veciActStreams;
+	set<int> actStreams;
 
 	/* Get active streams */
-	Parameter.GetActiveStreams(veciActStreams);
+	Parameter.GetActiveStreams(actStreams);
 
 	/* Get number of active streams */
-	const size_t iNumActStreams = veciActStreams.size();
+	const size_t iNumActStreams = actStreams.size();
 
 	/* Length: 1 + n * 3 bytes */
 	PrepareTag((1 + 3 * iNumActStreams) * SIZEOF__BYTE);
@@ -277,11 +277,11 @@ CTagItemGeneratorSDCChanInf::GenTag(CParameter & Parameter)
 	Enqueue((uint32_t) Parameter.MSCPrLe.iPartB, 2);
 
 	/* n + 1 stream description(s) */
-	for (size_t i = 0; i < iNumActStreams; i++)
+	for (set<int>::iterator i = actStreams.begin(); i!=actStreams.end(); i++)
 	{
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hierarchical data */
-		if ((i == 0) &&
+		if ((*i == 0) &&
 			((Parameter.eMSCCodingScheme == CS_3_HMSYM) ||
 			 (Parameter.eMSCCodingScheme == CS_3_HMMIX)))
 		{
@@ -297,10 +297,10 @@ CTagItemGeneratorSDCChanInf::GenTag(CParameter & Parameter)
 		else
 		{
 			/* Data length for part A */
-			Enqueue((uint32_t) Parameter.Stream[veciActStreams[i]].iLenPartA, 12);
+			Enqueue((uint32_t) Parameter.Stream[*i].iLenPartA, 12);
 
 			/* Data length for part B */
-			Enqueue((uint32_t) Parameter.Stream[veciActStreams[i]].iLenPartB, 12);
+			Enqueue((uint32_t) Parameter.Stream[*i].iLenPartB, 12);
 		}
 	}
 }

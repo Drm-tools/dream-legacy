@@ -120,7 +120,9 @@ CDRMTransmitter::CDRMTransmitter() :
 	TransmParam(NULL),
 	pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
 	ReadData(pSoundInInterface), TransmitData(pSoundOutInterface),
-	rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
+	rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
+	// UEP only works with Dream receiver, FIXME! -> disabled for now
+	bUseUEP(FALSE)
 {
 	/* Init streams */
 	TransmParam.ResetServicesStreams();
@@ -240,10 +242,7 @@ CDRMTransmitter::CDRMTransmitter() :
 	/* Set desired intermedia frequency (IF) in Hertz */
 	SetCarOffset(12000.0); /* Default: "VIRTUAL_INTERMED_FREQ" */
 
-
-// UEP only works with Dream receiver, FIXME! -> disabled for now
-const _BOOLEAN bUEBIsUsed = FALSE; // TEST
-	if (bUEBIsUsed == TRUE)
+	if (bUseUEP == TRUE)
 	{
 		// TEST
 		TransmParam.SetStreamLen(0, 80, 0);

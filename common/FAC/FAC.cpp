@@ -218,28 +218,28 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 void CFACTransmit::Init(CParameter& Parameter)
 {
-	vector<int>	veciActServ;
+	set<int>	actServ;
 
 	/* Get active services */
-	Parameter.GetActiveServices(veciActServ);
-	const size_t iTotNumServices = veciActServ.size();
+	Parameter.GetActiveServices(actServ);
+	const size_t iTotNumServices = actServ.size();
 
 	/* Check how many audio and data services present */
-	vector<int>	veciAudioServ(0);
-	vector<int>	veciDataServ(0);
+	vector<int>	veciAudioServ;
+	vector<int>	veciDataServ;
 	size_t		iNumAudio = 0;
 	size_t		iNumData = 0;
 
-	for (size_t i = 0; i < iTotNumServices; i++)
+	for (set<int>::iterator i = actServ.begin(); i!=actServ.end(); i++)
 	{
-		if (Parameter.Service[veciActServ[i]].eAudDataFlag ==	CService::SF_AUDIO)
+		if (Parameter.Service[*i].eAudDataFlag == CService::SF_AUDIO)
 		{
-			veciAudioServ.push_back(i);
+			veciAudioServ.push_back(*i);
 			iNumAudio++;
 		}
 		else
 		{
-			veciDataServ.push_back(i);
+			veciDataServ.push_back(*i);
 			iNumData++;
 		}
 	}
@@ -252,10 +252,10 @@ void CFACTransmit::Init(CParameter& Parameter)
 	{
 		/* Init repetition vector */
 		FACNumRep = iTotNumServices;
-		FACRepetition.resize(FACNumRep);
+		FACRepetition.resize(0);
 
-		for (size_t i = 0; i < FACNumRep; i++)
-			FACRepetition[i] = veciActServ[i];
+		for (set<int>::iterator i = actServ.begin(); i!=actServ.end(); i++)
+			FACRepetition.push_back(*i);
 	}
 	else
 	{

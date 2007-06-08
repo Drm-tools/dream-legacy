@@ -347,37 +347,35 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 	class CStream
 	{
 	  public:
+
 		CStream():iLenPartA(0), iLenPartB(0)
 		{
 		}
 		CStream(const CStream& s):iLenPartA(s.iLenPartA), iLenPartB(s.iLenPartB)
 		{
 		}
-		CStream& operator!=(const CStream& Stream)
+		CStream& operator=(const CStream& Stream)
 		{
 			iLenPartA=Stream.iLenPartA; iLenPartB=Stream.iLenPartB;
 			return *this;
 		}
 
-		int iLenPartA;			/* Data length for part A */
-		int iLenPartB;			/* Data length for part B */
-
-		_BOOLEAN operator!=(const CStream Stream)
+		bool operator==(const CStream Stream)
 		{
 			if (iLenPartA != Stream.iLenPartA)
-				return TRUE;
+				return false;
 			if (iLenPartB != Stream.iLenPartB)
-				return TRUE;
-			return FALSE;
+				return false;
+			return true;
 		}
+
+		int iLenPartA;			/* Data length for part A */
+		int iLenPartB;			/* Data length for part B */
 	};
 
 	class CMSCProtLev
 	{
 	  public:
-		int iPartA;				/* MSC protection level for part A */
-		int iPartB;				/* MSC protection level for part B */
-		int iHierarch;			/* MSC protection level for hierachical frame */
 
 		CMSCProtLev():iPartA(0),iPartB(0),iHierarch(0) {}
 		CMSCProtLev(const CMSCProtLev& p):iPartA(p.iPartA),iPartB(p.iPartB),iHierarch(p.iHierarch) {}
@@ -388,6 +386,10 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 			iHierarch = NewMSCProtLev.iHierarch;
 			return *this;
 		}
+
+		int iPartA;				/* MSC protection level for part A */
+		int iPartB;				/* MSC protection level for part B */
+		int iHierarch;			/* MSC protection level for hierachical frame */
 	};
 
 	/* Alternative Frequency Signalling ************************************** */
@@ -927,9 +929,8 @@ class CParameter
 	void GenerateRandomSerialNumber();
 	void GenerateReceiverID();
 	void ResetServicesStreams();
-	void GetActiveServices(vector<int>& veciActServ);
-	void GetActiveStreams(vector<int>& veciActStr);
-	int GetNumActiveServices();
+	void GetActiveServices(set<int>& actServ);
+	void GetActiveStreams(set<int>& actStr);
 	void InitCellMapTable(const ERobMode eNewWaveMode,
 						  const ESpecOcc eNewSpecOcc);
 
@@ -985,13 +986,13 @@ class CParameter
 		return eSpectOccup;
 	}
 
-	void SetNumOfServices(const int iNNumAuSe, const int iNNumDaSe);
-	int GetTotNumServices()
+	void SetNumOfServices(const size_t iNNumAuSe, const size_t iNNumDaSe);
+	size_t GetTotNumServices()
 	{
 		return iNumAudioService + iNumDataService;
 	}
 
-	void SetAudDataFlag(const int iServID, const CService::ETyOServ iNewADaFl);
+	void SetAudDataFlag(const int iShortID, const CService::ETyOServ iNewADaFl);
 	void SetServiceID(const int iShortID, const uint32_t iNewServiceID);
 
 	CDRMReceiver* pDRMRec;

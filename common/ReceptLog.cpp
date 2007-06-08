@@ -3,7 +3,7 @@
  * Copyright (c) 2007
  *
  * Author(s):
- *	Volker Fischer, Andrew Murphy
+ *	Volker Fischer, Andrew Murphy, Julian Cable
  *
  * Description:
  *	see ReceptLog.h
@@ -251,7 +251,7 @@ CShortLog::writeTrailer()
 {
 
 	_REAL rMaxSNR, rMinSNR;
-	_REAL rMaxSigStr, rMinSigStr;
+	_REAL rMaxSigStr=0.0, rMinSigStr=0.0;
 
 	Parameters.Lock(); 
 	Parameters.SNRstat.getMinMax(rMinSNR, rMaxSNR);
@@ -353,7 +353,7 @@ CLongLog::writeParameters()
 
 	Parameters.ReceiveStatus.LLAudio.ResetCounts();
 
-	double latitude, longitude;
+	double latitude=0.0, longitude=0.0;
 	if (bPositionEnabled)
 	{
 		Parameters.GPSData.GetLatLongDegrees(latitude, longitude);

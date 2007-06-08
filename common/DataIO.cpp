@@ -241,65 +241,60 @@ void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
 	vecrData.Init(iLenPowSpec, (_REAL) 0.0);
 	vecrScale.Init(iLenPowSpec, (_REAL) 0.0);
 
-	/* Do copying of data only if vector is of non-zero length which means that
-	   the module was already initialized */
-	if (iLenPowSpec != 0)
+	int i;
+
+	/* Lock resources */
+	Lock(); 
+
+	/* Init vector storing the average spectrum with zeros */
+	CVector<_REAL> veccAvSpectrum(iLenPowSpec, (_REAL) 0.0);
+
+	int iCurPosInStream = 0;
+	for (i = 0; i < NUM_BLOCKS_AV_AUDIO_SPEC; i++)
 	{
-		int i, j;
+		int j;
 
-		/* Lock resources */
-		Lock(); 
-
-		/* Init vector storing the average spectrum with zeros */
-		CVector<_REAL> veccAvSpectrum(iLenPowSpec, (_REAL) 0.0);
-
-		int iCurPosInStream = 0;
-		for (j = 0; j < NUM_BLOCKS_AV_AUDIO_SPEC; j++)
+		/* Mix both channels */
+		for (j = 0; j < NUM_SMPLS_4_AUDIO_SPECTRUM; j++)
 		{
-			for (i = 0; i < NUM_SMPLS_4_AUDIO_SPECTRUM; i++)
-			{
-				/* Mix both channels */
-				veccFFTInput[i] =
-					((_REAL) vecsOutputData[(i + iCurPosInStream) * 2] +
-					vecsOutputData[(i + iCurPosInStream) * 2 + 1]) / 2;
-			}
-
-			/* Apply hamming window */
-			veccFFTInput *= vecrHammingWindow;
-
-			/* Calculate Fourier transformation to get the spectrum */
-			veccFFTOutput = Fft(veccFFTInput, FftPlan);
-
-			/* Average power (using power of this tap) */
-			for (i = 0; i < iLenPowSpec; i++)
-				veccAvSpectrum[i] += SqMag(veccFFTOutput[i]);
-
-			iCurPosInStream += NUM_SMPLS_4_AUDIO_SPECTRUM;
+			int jj =  2*(iCurPosInStream + j);
+			veccFFTInput[j] = _REAL(vecsOutputData[jj] + vecsOutputData[jj + 1]) / 2;
 		}
 
-		/* Calculate norm constand and scale factor */
-		const _REAL rNormData = (_REAL) NUM_SMPLS_4_AUDIO_SPECTRUM *
-			NUM_SMPLS_4_AUDIO_SPECTRUM * _MAXSHORT * _MAXSHORT *
-			NUM_BLOCKS_AV_AUDIO_SPEC;
-		const _REAL rFactorScale =
-			(_REAL) SOUNDCRD_SAMPLE_RATE / iLenPowSpec / 2000;
+		/* Apply hamming window */
+		veccFFTInput *= vecrHammingWindow;
 
-		/* Apply the normalization (due to the FFT) */
-		for (i = 0; i < iLenPowSpec; i++)
-		{
-			const _REAL rNormPowSpec = veccAvSpectrum[i] / rNormData;
+		/* Calculate Fourier transformation to get the spectrum */
+		veccFFTOutput = Fft(veccFFTInput, FftPlan);
 
-			if (rNormPowSpec > 0)
-				vecrData[i] = (_REAL) 10.0 * log10(rNormPowSpec);
-			else
-				vecrData[i] = RET_VAL_LOG_0;
+		/* Average power (using power of this tap) */
+		for (j = 0; j < iLenPowSpec; j++)
+			veccAvSpectrum[j] += SqMag(veccFFTOutput[j]);
 
-			vecrScale[i] = (_REAL) i * rFactorScale;
-		}
-
-		/* Release resources */
-		Unlock(); 
+		iCurPosInStream += NUM_SMPLS_4_AUDIO_SPECTRUM;
 	}
+
+	/* Calculate norm constant and scale factor */
+	const _REAL rNormData = (_REAL) NUM_SMPLS_4_AUDIO_SPECTRUM *
+		NUM_SMPLS_4_AUDIO_SPECTRUM * _MAXSHORT * _MAXSHORT *
+		NUM_BLOCKS_AV_AUDIO_SPEC;
+	const _REAL rFactorScale = (_REAL)SOUNDCRD_SAMPLE_RATE/iLenPowSpec/2000;
+
+	/* Apply the normalization (due to the FFT) */
+	for (i = 0; i < iLenPowSpec; i++)
+	{
+		const _REAL rNormPowSpec = veccAvSpectrum[i] / rNormData;
+
+		if (rNormPowSpec > 0)
+			vecrData[i] = (_REAL) 10.0 * log10(rNormPowSpec);
+		else
+			vecrData[i] = RET_VAL_LOG_0;
+
+		vecrScale[i] = (_REAL) i * rFactorScale;
+	}
+
+	/* Release resources */
+	Unlock(); 
 }
 
 

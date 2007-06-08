@@ -413,51 +413,37 @@ void CParameter::ResetServicesStreams()
 	iUTCMin = 0;
 }
 
-int CParameter::GetNumActiveServices()
-{
-	int iNumAcServ = 0;
-
-	for (int i = 0; i < MAX_NUM_SERVICES; i++)
-	{
-		if (Service[i].IsActive())
-			iNumAcServ++;
-	}
-
-	return iNumAcServ;
-}
-
-void CParameter::GetActiveServices(vector<int>& veciActServ)
+void CParameter::GetActiveServices(set<int>& actServ)
 {
 	/* Init return vector */
-	veciActServ.resize(0);
+	actServ.clear();
 
 	/* Get active services */
 	for (int i = 0; i < MAX_NUM_SERVICES; i++)
 	{
 		if (Service[i].IsActive())
-			/* A service is active, add ID to vector */
-			veciActServ.push_back(i);
+			/* A service is active, add ID to set */
+			actServ.insert(i);
 	}
 }
 
-void CParameter::GetActiveStreams(vector<int>& veciActStr)
+/* using a set ensures each stream appears only once */
+void CParameter::GetActiveStreams(set<int>& actStr)
 {
-	int				i;
-
-	veciActStr.resize(0);
+	actStr.clear();
 
 	/* Determine which streams are active */
-	for (i = 0; i < MAX_NUM_SERVICES; i++)
+	for (int i = 0; i < MAX_NUM_SERVICES; i++)
 	{
 		if (Service[i].IsActive())
 		{
 			/* Audio stream */
 			if (Service[i].AudioParam.iStreamID != STREAM_ID_NOT_USED)
-				veciActStr.push_back(Service[i].AudioParam.iStreamID);
+				actStr.insert(Service[i].AudioParam.iStreamID);
 
 			/* Data stream */
 			if (Service[i].DataParam.iStreamID != STREAM_ID_NOT_USED)
-				veciActStr.push_back(Service[i].DataParam.iStreamID);
+				actStr.insert(Service[i].DataParam.iStreamID);
 		}
 	}
 }
@@ -826,13 +812,16 @@ void CParameter::EnableMultimedia(const _BOOLEAN bFlag)
 	}
 }
 
-void CParameter::SetNumOfServices(const int iNNumAuSe, const int iNNumDaSe)
+void CParameter::SetNumOfServices(const size_t iNNumAuSe, const size_t iNNumDaSe)
 {
 	/* Check whether number of activated services is not greater than the
 	   number of services signalled by the FAC because it can happen that
 	   a false CRC check (it is only a 8 bit CRC) of the FAC block
 	   initializes a wrong service */
-	if (GetNumActiveServices() > iNNumAuSe + iNNumDaSe)
+	set<int> actServ;
+
+	GetActiveServices(actServ);
+	if (actServ.size() > iNNumAuSe + iNNumDaSe)
 	{
 		/* Reset services and streams and set flag for init modules */
 		ResetServicesStreams();
@@ -849,11 +838,11 @@ void CParameter::SetNumOfServices(const int iNNumAuSe, const int iNNumDaSe)
 	}
 }
 
-void CParameter::SetAudDataFlag(const int iServID, const CService::ETyOServ iNewADaFl)
+void CParameter::SetAudDataFlag(const int iShortID, const CService::ETyOServ iNewADaFl)
 {
-	if (Service[iServID].eAudDataFlag != iNewADaFl)
+	if (Service[iShortID].eAudDataFlag != iNewADaFl)
 	{
-		Service[iServID].eAudDataFlag = iNewADaFl;
+		Service[iShortID].eAudDataFlag = iNewADaFl;
 
 		/* Set init flags */
 		if(pDRMRec) pDRMRec->InitsForMSC();

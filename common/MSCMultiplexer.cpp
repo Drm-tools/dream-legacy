@@ -89,8 +89,6 @@ void CMSCDemultiplexer::ExtractData(CVectorEx<_BINARY>& vecIn,
 CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 															  const int iStreamID)
 {
-	size_t							i;
-	vector<int>						veciActStreams;
 	CMSCDemultiplexer::SStreamPos	StPos;
 
 	/* Init positions with zeros (needed if an error occurs) */
@@ -109,27 +107,28 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 
 		/* Byte-offset of higher and lower protected part of audio stream --- */
 		/* Get active streams */
-		Param.GetActiveStreams(veciActStreams);
+		set<int> actStreams;
+		Param.GetActiveStreams(actStreams);
 
 		/* Get start offset for lower protected parts in stream. Since lower
 		   protected part comes after the higher protected part, the offset
 		   must be shifted initially by all higher protected part lengths
 		   (iLenPartA of all streams are added) 6.2.3.1 */
 		StPos.iOffsetLow = 0;
-		for (i = 0; i < veciActStreams.size(); i++)
+		set<int>::iterator i;
+		for (i = actStreams.begin(); i!=actStreams.end(); i++)
 		{
-			StPos.iOffsetLow +=
-				Param.Stream[veciActStreams[i]].iLenPartA * SIZEOF__BYTE;
+			StPos.iOffsetLow += Param.Stream[*i].iLenPartA * SIZEOF__BYTE;
 		}
 
 		/* Real start position of the streams */
 		StPos.iOffsetHigh = 0;
-		for (i = 0; i < veciActStreams.size(); i++)
+		for (i = actStreams.begin(); i!=actStreams.end(); i++)
 		{
-			if (veciActStreams[i] < iStreamID)
+			if (*i < iStreamID)
 			{
-				StPos.iOffsetHigh += Param.Stream[i].iLenPartA * SIZEOF__BYTE;
-				StPos.iOffsetLow += Param.Stream[i].iLenPartB * SIZEOF__BYTE;
+				StPos.iOffsetHigh += Param.Stream[*i].iLenPartA * SIZEOF__BYTE;
+				StPos.iOffsetLow += Param.Stream[*i].iLenPartB * SIZEOF__BYTE;
 			}
 		}
 

@@ -272,6 +272,8 @@ CPacketSinkPcapFile::write(const vector<_BYTE>& vecbydata)
 	hdr.len = c;
     pcap_dump((u_char*)pFile, &hdr, (u_char*)&out[0]);
     pcap_dump_flush((pcap_dumper_t *)pFile);
+#else
+	(void)vecbydata;
 #endif
 }
 

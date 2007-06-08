@@ -635,9 +635,9 @@ void CDRMPlot::SetupAudioSpec()
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::yLeft, (double) -90.0, (double) -20.0);
-	double dBandwidth = (double) SOUNDCRD_SAMPLE_RATE / 2000;
-	if (SOUNDCRD_SAMPLE_RATE == 48000)
-		dBandwidth = (double) 20.0; /* Special value in case of 48 kHz */
+	double dBandwidth = (double) SOUNDCRD_SAMPLE_RATE / 2400; /* 20.0 for 48 kHz */
+	if (dBandwidth < 20.0)
+		dBandwidth = (double) 20.0;
 
 	setAxisScale(QwtPlot::xBottom, (double) 0.0, dBandwidth);
 
