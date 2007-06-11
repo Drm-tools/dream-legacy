@@ -64,6 +64,7 @@ class CReceptLog
 	static string strdate();
 
   protected:
+	virtual void init() = 0;
 	virtual void writeParameters() = 0;
 	virtual void writeHeader() = 0;
 	virtual void writeTrailer() = 0;
@@ -85,6 +86,7 @@ class CShortLog: public CReceptLog
   public:
 	CShortLog(CParameter& p):CReceptLog(p) {}
   protected:
+	virtual void init();
 	virtual void writeParameters();
 	virtual void writeHeader();
 	virtual void writeTrailer();
@@ -96,6 +98,7 @@ class CLongLog: public CReceptLog
   public:
 	CLongLog(CParameter& p):CReceptLog(p) {}
   protected:
+	virtual void init();
 	virtual void writeParameters();
 	virtual void writeHeader();
 	virtual void writeTrailer();

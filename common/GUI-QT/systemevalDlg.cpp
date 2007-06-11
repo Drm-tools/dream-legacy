@@ -1224,7 +1224,21 @@ void systemevalDlg::OnTimerLogFileStart()
 	if(!longLog.GetLoggingActivated() || !longLog.GetLoggingActivated())
 	{
 		CheckBoxWriteLog->setChecked(TRUE);
-		OnCheckWriteLog();
+
+		/* Activate log file timer for long and short log file */
+		TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
+		TimerLogFileLong.start(1000); /* Every second */
+
+		/* Get frequency from front-end edit control */
+		QString strFreq = EdtFrequency->text();
+		int iFrequency = strFreq.toUInt();
+		longLog.SetLogFrequency(iFrequency);
+		shortLog.SetLogFrequency(iFrequency);
+
+		/* Open log file */
+		shortLog.Start("DreamLog.txt");
+		longLog.Start("DreamLogLong.csv");
+
 	}
 }
 
@@ -1244,30 +1258,12 @@ void systemevalDlg::OnCheckWriteLog()
 {
 	if (CheckBoxWriteLog->isChecked())
 	{
-		/* Activate log file timer for long and short log file */
-		TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
-		TimerLogFileLong.start(1000); /* Every second */
-
-		/* Get frequency from front-end edit control */
-		QString strFreq = EdtFrequency->text();
-		int iFrequency = strFreq.toUInt();
-		longLog.SetLogFrequency(iFrequency);
-		shortLog.SetLogFrequency(iFrequency);
-
-		/* Open log file */
-		shortLog.Start("DreamLog.txt");
-		longLog.Start("DreamLogLong.csv");
-
-		/* and update immediately to get an initial sample (and the header) */
-		shortLog.Update();
-		longLog.Update();
-
+		TimerLogFileStart.start(1, TRUE);
 	}
 	else
 	{
 		/* Deactivate log file timer */
-		TimerLogFileShort.stop();
-		TimerLogFileLong.stop();
+		StopLogTimers();
 		shortLog.Stop();
 		longLog.Stop();
 	}

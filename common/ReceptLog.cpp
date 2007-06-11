@@ -40,6 +40,7 @@ CReceptLog::Start(const string & filename)
 	bHeaderWritten = FALSE;
 	if (File.is_open())
 		bLogActivated = TRUE;
+	init();
 }
 
 void
@@ -96,6 +97,17 @@ CReceptLog::GetRobModeStr()
 }
 
 void
+CShortLog::init()
+{
+	Parameters.Lock(); 
+	Parameters.ReceiveStatus.FAC.ResetCounts();
+	Parameters.ReceiveStatus.Audio.ResetCounts();
+	Parameters.Unlock(); 
+	/* initialise the minute count */
+	iCount = 0;
+}
+
+void
 CShortLog::writeHeader()
 {
 	string latitude, longitude, label, RobMode;
@@ -123,7 +135,10 @@ CShortLog::writeHeader()
 
 	Parameters.Unlock(); 
 
-	/* Beginning of new table (similar to standard DRM log file) */
+	if(!File.is_open())
+		return; /* allow updates when file closed */
+
+	/* Beginning of new table (similar to DW DRM log file) */
 	File << endl << ">>>>" << endl << "Dream" << endl
 		<< "Software Version " << dream_version << endl;
 
@@ -189,8 +204,6 @@ CShortLog::writeHeader()
 		File << "      RXL";
 	File << endl;
 
-	/* initialise the minute count */
-	iCount = 0;
 }
 
 /*
@@ -200,6 +213,7 @@ MINUTE  SNR     SYNC    AUDIO     TYPE
   Simone
 
 */
+
 void
 CShortLog::writeParameters()
 {
@@ -225,9 +239,14 @@ CShortLog::writeParameters()
 
 	Parameters.Unlock(); 
 
+	int count = iCount++;
+
+	if(!File.is_open())
+		return; /* allow updates when file closed */
+
 	try
 	{
-		File << "  " << fixed << setw(4) << setfill('0') << iCount
+		File << "  " << fixed << setw(4) << setfill('0') << count
 			<< setfill(' ') << setw(5) << iAverageSNR
 			<< setw(9) << iNumCRCOkFAC
 			<< setw(6) << iNumCRCOkMSC << "/" << setw(2) << setfill('0') << iTmpNumAAC
@@ -243,7 +262,6 @@ CShortLog::writeParameters()
 	{
 		/* To prevent errors if user views the file during reception */
 	}
-	iCount++;
 }
 
 void
@@ -261,6 +279,9 @@ CShortLog::writeTrailer()
 	}
 	Parameters.Unlock(); 
 
+	if(!File.is_open())
+		return; /* allow updates when file closed */
+
 	File << setprecision(1);
 	File << endl << "SNR min: " << setw(4) << rMinSNR << ", max: " << setw(4) << rMaxSNR << endl;
 
@@ -276,6 +297,8 @@ CShortLog::writeTrailer()
 void
 CLongLog::writeHeader()
 {
+	if(!File.is_open())
+		return; /* allow updates when file closed */
 
 	File <<
 		"FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY";
@@ -288,6 +311,14 @@ CLongLog::writeHeader()
 	File << ",    DC-FREQ, SAMRATEOFFS";
 #endif
 	File << endl;
+}
+
+void
+CLongLog::init()
+{
+	Parameters.Lock(); 
+	Parameters.ReceiveStatus.LLAudio.ResetCounts();
+	Parameters.Unlock(); 
 }
 
 void
@@ -361,6 +392,9 @@ CLongLog::writeParameters()
 
 	Parameters.Unlock(); 
 
+	if(!File.is_open())
+		return; /* allow updates when file closed */
+
 	try
 	{
 		File << fixed << setw(5) << iFrequency
@@ -397,6 +431,9 @@ CLongLog::writeParameters()
 void
 CLongLog::writeTrailer()
 {
+	if(!File.is_open())
+		return; /* allow updates when file closed */
+
 	File << endl << endl;
 }
 
