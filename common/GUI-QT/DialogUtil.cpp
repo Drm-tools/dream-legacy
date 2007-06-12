@@ -229,8 +229,12 @@ CSoundCardSelMenu::CSoundCardSelMenu(
 	iNumSoundInDev = vecSoundInNames.size();
 	for (i = 0; i < iNumSoundInDev; i++)
 	{
-		pSoundInMenu->insertItem(QString(vecSoundInNames[i].c_str()), this,
-			SLOT(OnSoundInDevice(int)), 0, i);
+		QString name(vecSoundInNames[i].c_str());
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
+		if(name.find("blaster", 0, FALSE)>=0)
+			name += " (has problems on some platforms)";
+#endif
+		pSoundInMenu->insertItem(name, this, SLOT(OnSoundInDevice(int)), 0, i);
 	}
 
 	pSoundOutIF->Enumerate(vecSoundOutNames);

@@ -1003,8 +1003,8 @@ class CParameter
 	ECodScheme eMSCCodingScheme;	/* MSC coding scheme */
 	ECodScheme eSDCCodingScheme;	/* SDC coding scheme */
 
-	int iNumAudioService;
-	int iNumDataService;
+	size_t iNumAudioService;
+	size_t iNumDataService;
 
 	/* AMSS */
 	int iAMSSCarrierMode;

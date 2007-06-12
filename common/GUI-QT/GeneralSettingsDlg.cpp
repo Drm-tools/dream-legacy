@@ -128,6 +128,9 @@ void GeneralSettingsDlg::CheckEW(const QString& NewText)
 
 void GeneralSettingsDlg::OnCheckBoxUseGPS()
 {
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
+	QMessageBox::information( this, "Dream", "Don't enable GPS unless you have gpsd running." );
+#endif
 	bUseGPS = CheckBoxUseGPS->isChecked();
 	if(bUseGPS)
 		emit StartGPS();
