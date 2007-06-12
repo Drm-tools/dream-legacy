@@ -74,13 +74,14 @@ void COFDMModulation::ProcessDataInternal(CParameter&)
 
 void COFDMModulation::InitInternal(CParameter& TransmParam)
 {
+	TransmParam.Lock(); 
 	/* Get global parameters */
-	iDFTSize = TransmParam.iFFTSizeN;
-	iGuardSize = TransmParam.iGuardSize;
-	iShiftedKmin = TransmParam.iShiftedKmin;
+	iDFTSize = TransmParam.CellMappingTable.iFFTSizeN;
+	iGuardSize = TransmParam.CellMappingTable.iGuardSize;
+	iShiftedKmin = TransmParam.CellMappingTable.iShiftedKmin;
 
 	/* Last index */
-	iEndIndex = TransmParam.iShiftedKmax + 1;
+	iEndIndex = TransmParam.CellMappingTable.iShiftedKmax + 1;
 
 	/* Normalized offset correction factor for IF shift. Subtract the
 	   default IF frequency ("VIRTUAL_INTERMED_FREQ") */
@@ -102,8 +103,9 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 	veccFFTOutput.Init(iDFTSize);
 
 	/* Define block-sizes for input and output */
-	iInputBlockSize = TransmParam.iNumCarrier;
-	iOutputBlockSize = TransmParam.iSymbolBlockSize;
+	iInputBlockSize = TransmParam.CellMappingTable.iNumCarrier;
+	iOutputBlockSize = TransmParam.CellMappingTable.iSymbolBlockSize;
+	TransmParam.Unlock(); 
 }
 
 
@@ -159,10 +161,11 @@ void COFDMDemodulation::ProcessDataInternal(CParameter&)
 
 void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 {
-	iDFTSize = ReceiverParam.iFFTSizeN;
-	iGuardSize = ReceiverParam.iGuardSize;
-	iShiftedKmin = ReceiverParam.iShiftedKmin;
-	iShiftedKmax = ReceiverParam.iShiftedKmax;
+	ReceiverParam.Lock(); 
+	iDFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
+	iGuardSize = ReceiverParam.CellMappingTable.iGuardSize;
+	iShiftedKmin = ReceiverParam.CellMappingTable.iShiftedKmin;
+	iShiftedKmax = ReceiverParam.CellMappingTable.iShiftedKmax;
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iDFTSize);
@@ -175,12 +178,13 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	iLenPowSpec = iDFTSize / 2;
 	vecrPowSpec.Init(iLenPowSpec, (_REAL) 0.0);
 	rLamPSD = IIR1Lam(TICONST_PSD_EST_OFDM, (CReal) SOUNDCRD_SAMPLE_RATE /
-		ReceiverParam.iSymbolBlockSize); /* Lambda for IIR filter */
+		ReceiverParam.CellMappingTable.iSymbolBlockSize); /* Lambda for IIR filter */
 
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iDFTSize;
-	iOutputBlockSize = ReceiverParam.iNumCarrier;
+	iOutputBlockSize = ReceiverParam.CellMappingTable.iNumCarrier;
+	ReceiverParam.Unlock(); 
 }
 
 void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
@@ -195,7 +199,7 @@ void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
 	if (iLenPowSpec != 0)
 	{
 		/* Lock resources */
-		Lock();
+		Lock(); 
 
 		/* Init the constants for scale and normalization */
 		const _REAL rNormData =
@@ -218,7 +222,7 @@ void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
 		}
 
 		/* Release resources */
-		Unlock();
+		Unlock(); 
 	}
 }
 
@@ -345,14 +349,15 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter&)
 
 void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 {
+	ReceiverParam.Lock(); 
 	/* Set internal parameters */
-	iDFTSize = ReceiverParam.iFFTSizeN;
-	iGuardSize = ReceiverParam.iGuardSize;
-	iNumCarrier = ReceiverParam.iNumCarrier;
-	iShiftedKmin = ReceiverParam.iShiftedKmin;
-	iShiftedKmax = ReceiverParam.iShiftedKmax;
-	iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
-	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
+	iDFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
+	iGuardSize = ReceiverParam.CellMappingTable.iGuardSize;
+	iNumCarrier = ReceiverParam.CellMappingTable.iNumCarrier;
+	iShiftedKmin = ReceiverParam.CellMappingTable.iShiftedKmin;
+	iShiftedKmax = ReceiverParam.CellMappingTable.iShiftedKmax;
+	iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+	iNumSymPerFrame = ReceiverParam.CellMappingTable.iNumSymPerFrame;
 
 	iNumTapsChan = ReceiverParam.iNumTaps;
 
@@ -389,4 +394,5 @@ void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 	/* We need to store as many symbols in output buffer as long the channel
 	   estimation delay is */
 	iMaxOutputBlockSize2 = iNumCarrier * ReceiverParam.iChanEstDelay;
+	ReceiverParam.Unlock(); 
 }

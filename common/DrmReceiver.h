@@ -56,6 +56,7 @@
 #include "AMDemodulation.h"
 #include "AMSSDemodulation.h"
 #include "soundinterface.h"
+#include "PlotManager.h"
 
 #ifdef USE_QT_GUI
 # include <qthread.h>
@@ -82,6 +83,8 @@
 
 
 /* Classes ********************************************************************/
+class CSettings;
+
 class CSplitFAC : public CSplitModul<_BINARY>
 {
 	void SetInputBlockSize(CParameter&)
@@ -106,6 +109,12 @@ protected:
 	int iStreamID;
 };
 
+class CSplitAudio : public CSplitModul<_SAMPLE>
+{
+	void SetInputBlockSize(CParameter&)
+		{this->iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE * (_REAL) 0.4 /* 400 ms */) * 2 /* stereo */;}
+};
+
 class CDRMReceiver
 #ifdef USE_QT_GUI
 	: public QThread
@@ -123,23 +132,26 @@ public:
 	int						wait(int) { return 0;}
 	bool					finished() { return true; }
 #endif
+	void					LoadSettings(CSettings&); // can write to settings to set defaults
+	void					SaveSettings(CSettings&);
 	void					Init();
 	void					Start();
 	void					Stop();
-	EAcqStat				GetReceiverState() {return eAcquiState;}
+	void					RequestNewAcquisition() { bRestartFlag = TRUE; }
+	EAcqStat				GetAcquiState() {return pReceiverParam->eAcquiState;}
 	ERecMode				GetReceiverMode() {return eReceiverMode;}
-	void					SetReceiverMode(ERecMode eNewMode)
-								{eNewReceiverMode = eNewMode;}
-
+	void					SetReceiverMode(ERecMode eNewMode);
 	void					SetInitResOff(_REAL rNRO)
 								{rInitResampleOffset = rNRO;}
-
+	void					SetAMDemodType(CAMDemodulation::EDemodType);
+	void					SetAMFilterBW(int iBw);
 	void					SetAMDemodAcq(_REAL rNewNorCen);
+	void	 				SetEnableSMeter(_BOOLEAN bNew);
+	_BOOLEAN		 		GetEnableSMeter();
 	_BOOLEAN 				SetFrequency(int iNewFreqkHz);
 	int		 				GetFrequency() { return iFreqkHz; }
-
-	void SetRSIRecording(const _BOOLEAN bOn, const char cPro);
-	void SetIQRecording(const _BOOLEAN bOn);
+	void					SetIQRecording(_BOOLEAN);
+	void					SetRSIRecording(_BOOLEAN, const char);
 
 	/* Channel Estimation */
 	void SetFreqInt(CChannelEstimation::ETypeIntFreq eNewTy) 
@@ -172,28 +184,6 @@ public:
 	CTimeSyncTrack::ETypeTiSyncTrac GetTiSyncTracType()
 		{return ChannelEstimation.GetTimeSyncTrack()->GetTiSyncTracType();}
 
-	void GetTransferFunction(CVector<_REAL>& vecrData,
-		CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale)
-		{ChannelEstimation.GetTransferFunction(vecrData, vecrGrpDly, vecrScale);}
-
-	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
-					 _REAL& rLowerBound, _REAL& rHigherBound,
-					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
-					 _REAL& rPDSEnd)
-		{ChannelEstimation.GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
-		rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);}
-
-	void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
-		{ChannelEstimation.GetSNRProfile(vecrData, vecrScale);}
-
-#ifdef _WIN32
-	void SetEnableProcessPriority(_BOOLEAN bValue)
-		{bProcessPriorityEnabled = bValue;}
-
-	_BOOLEAN GetEnableProcessPriority()
-		{return bProcessPriorityEnabled;}
-#endif
-
 	/* Get pointer to internal modules */
 	CSelectionInterface*	GetSoundInInterface() {return pSoundInInterface;}
 	CSelectionInterface*	GetSoundOutInterface() {return pSoundOutInterface;}
@@ -203,7 +193,7 @@ public:
 	CFACMLCDecoder*			GetFACMLC() {return &FACMLCDecoder;}
 	CSDCMLCDecoder*			GetSDCMLC() {return &SDCMLCDecoder;}
 	CMSCMLCDecoder*			GetMSCMLC() {return &MSCMLCDecoder;}
-	CReceiveData*			GetReceiver() {return &ReceiveData;}
+	CReceiveData*			GetReceiveData() {return &ReceiveData;}
 	COFDMDemodulation*		GetOFDMDemod() {return &OFDMDemodulation;}
 	CSyncUsingPil*			GetSyncUsPil() {return &SyncUsingPil;}
 	CWriteData*				GetWriteData() {return &WriteData;}
@@ -213,23 +203,18 @@ public:
 	CAMSSDecode*			GetAMSSDecode() {return &AMSSDecode;}
 	CFreqSyncAcq*			GetFreqSyncAcq() {return &FreqSyncAcq;}
 	CAudioSourceDecoder*	GetAudSorceDec() {return &AudioSourceDecoder;}
-	CRSIMDIInRCIOut*		GetRSIIn() {return &upstreamRSCI;}
-	CRSIMDIOutRCIIn*		GetRSIOut() {return &downstreamRSCI;}
+	CUpstreamDI*			GetRSIIn() {return &upstreamRSCI;}
+	CDownstreamDI*			GetRSIOut() {return &downstreamRSCI;}
+	CChannelEstimation*		GetChannelEstimation() {return &ChannelEstimation;}
 #ifdef HAVE_LIBHAMLIB
 	CHamlib*				GetHamlib() {return &Hamlib;}
 #endif
-	_BOOLEAN				SignalStrengthAvailable() { return TRUE; }
+	_BOOLEAN				SignalStrengthAvailable() { return bSMeterAvail; }
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
-	CParameter*				GetParameters() {return &ReceiverParam;}
-	void					StartParameters(CParameter& Param);
-	void					SetInStartMode();
-	void					SetInTrackingMode();
-	void					SetInTrackingModeDelayed();
+	CParameter*				GetParameters() {return pReceiverParam;}
 
-	void					SetReadDRMFromFile(const string strNFN);
-
-	void					InitsForAllModules();
+	CPlotManager*			GetPlotManager() {return &PlotManager;}
 
 	void					InitsForWaveMode();
 	void					InitsForSpectrumOccup();
@@ -242,24 +227,27 @@ public:
 	void					InitsForMSC();
 	void					InitsForMSCDemux();
 
-
-	/* Interfaces to internal parameters/vectors used for the plot */
-	void GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
-		CVector<_REAL>& vecrSamOffs, CVector<_REAL>& vecrScale,
-		_REAL& rFreqAquVal);
-
-	void GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
-		CVector<_REAL>& vecrDoppler, CVector<_REAL>& vecrScale);
-
-	void GetSNRHist(CVector<_REAL>& vecrSNR, CVector<_REAL>& vecrCDAud,
-		CVector<_REAL>& vecrScale);
-
 protected:
+
+	void					SetInStartMode();
+	void					SetInTrackingMode();
+	void					SetInTrackingModeDelayed();
+
+	void					SetReadDRMFromFile(const string strNFN);
+
+	void					InitsForAllModules();
+
 	void					Run();
+	void					DemodulateDRM(_BOOLEAN&);
+	void					DecodeDRM(_BOOLEAN&, _BOOLEAN&);
+	void					UtilizeDRM(_BOOLEAN&);
+	void					DemodulateAM(_BOOLEAN&);
+	void					DecodeAM(_BOOLEAN&);
+	void					UtilizeAM(_BOOLEAN&);
 	void					DetectAcquiFAC();
 	void					DetectAcquiSymbol();
 	void					InitReceiverMode();
-	void					UpdateParamHistories();
+	void					saveSDCtoFile();
 
 	/* Modules */
 	CSoundInInterface*		pSoundInInterface;
@@ -285,6 +273,8 @@ protected:
 	CSplit					Split;
 	CSplit					SplitForIQRecord;
 	CWriteIQFile			WriteIQFile;
+	CSplitAudio				SplitAudio;
+	CAudioSourceEncoderRx	AudioSourceEncoder; // For encoding the audio for RSI
 	CSplitFAC				SplitFAC;
 	CSplitSDC				SplitSDC;
 	CSplitMSC				SplitMSC[MAX_NUM_STREAMS];
@@ -293,12 +283,14 @@ protected:
 	CAMSSExtractBits		AMSSExtractBits;
 	CAMSSDecode				AMSSDecode;
 
-	CRSIMDIInRCIOut			upstreamRSCI;
+	CUpstreamDI				upstreamRSCI;
 	CDecodeRSIMDI			DecodeRSIMDI;
-	CRSIMDIOutRCIIn			downstreamRSCI;
+	CDownstreamDI			downstreamRSCI;
 
 	/* Parameters */
-	CParameter				ReceiverParam;
+	CParameter*				pReceiverParam;
+	CParameter*				pDRMParam;
+	CParameter*				pAMParam;
 
 	/* Buffers */
 	CSingleBuffer<_REAL>			AMDataBuf;
@@ -332,9 +324,11 @@ protected:
 	vector<CSingleBuffer<_BINARY> >	MSCDecBuf;
 	vector<CSingleBuffer<_BINARY> >	MSCUseBuf;
 	vector<CSingleBuffer<_BINARY> >	MSCSendBuf;
+	CSingleBuffer<_BINARY>			EncAMAudioBuf;
 	CCyclicBuffer<_SAMPLE>			AudSoDecBuf;
+	CCyclicBuffer<_SAMPLE>			AMAudioBuf;
+	CCyclicBuffer<_SAMPLE>			AMSoEncBuf; // For encoding
 
-	EAcqStat				eAcquiState;
 	int						iAcquRestartCnt;
 	int						iAcquDetecCnt;
 	int						iGoodSignCnt;
@@ -348,6 +342,7 @@ protected:
 
 
 	_BOOLEAN				bDoInitRun;
+	_BOOLEAN				bRestartFlag;
 
 	_REAL					rInitResampleOffset;
 
@@ -355,20 +350,6 @@ protected:
 	CHamlib					Hamlib;
 #endif
 
-	/* Storing parameters for plot */
-	CShiftRegister<_REAL>	vecrFreqSyncValHist;
-	CShiftRegister<_REAL>	vecrSamOffsValHist;
-	CShiftRegister<_REAL>	vecrLenIRHist;
-	CShiftRegister<_REAL>	vecrDopplerHist;
-	CShiftRegister<_REAL>	vecrSNRHist;
-	CShiftRegister<int>		veciCDAudHist;
-	int						iSymbolCount;
-	_REAL					rSumDopplerHist;
-	_REAL					rSumSNRHist;
-	int						iCurrentCDAud;
-#ifdef USE_QT_GUI
-	QMutex					MutexHist;
-#endif
 	CVectorEx<_BINARY>		vecbiMostRecentSDC;
 	int						iFreqkHz;
 
@@ -378,136 +359,32 @@ protected:
 	/* Counter for unlocked frames, to keep generating RSCI even when unlocked */
 	int						iUnlockedCount;
 
-#ifdef USE_QT_GUI
+#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
 	class CRigPoll : public QThread
 	{
 	public:
-		CRigPoll():pDrmRec(NULL),bQuit(FALSE){ }
+		CRigPoll():pDRMRec(NULL),bQuit(FALSE){ }
 		virtual void	run();
 		virtual void	stop(){bQuit=TRUE;}
-		void setReceiver(CDRMReceiver* pRx){pDrmRec=pRx;}
+		void 			SetReceiver(CDRMReceiver* prx) { pDRMRec = prx; }
 	protected:
-			CDRMReceiver* pDrmRec;
+			CDRMReceiver* pDRMRec;
 			_BOOLEAN	bQuit;
 	} RigPoll;
+	friend class CRigPoll;
 #endif
 
-public:
-	_BOOLEAN				bEnableSMeter;
-
-	/* Analog demodulation settings */
 	int						iBwAM;
 	int						iBwLSB;
 	int						iBwUSB;
 	int						iBwCW;
 	int						iBwFM;
-	CAMDemodulation::EDemodType	AMDemodType;
-
-#ifdef _WIN32
-	_BOOLEAN				bProcessPriorityEnabled;
-#endif
+	_BOOLEAN				bEnableSMeter;
+	_BOOLEAN				bSMeterAvail;
 	_BOOLEAN				bReadFromFile;
 	time_t					time_keeper;
 
-/* _WIN32 check because in Visual c++ the GUI files are always compiled even
-   if USE_QT_GUI is set or not */
-#if defined(USE_QT_GUI) || defined(_WIN32)
-	/* DRMReceiver object serves as a storage a "exchange platform" for the
-	   window size and position parameters for init-file usage. This is not
-	   nice but it works for now. TODO: better solution */
-	class CWinGeom
-	{
-	public:
-		CWinGeom() : iXPos(0), iYPos(0), iHSize(0), iWSize(0),
-			bVisible(FALSE), iType(0) {}
-
-		int iXPos, iYPos;
-		int iHSize, iWSize;
-		_BOOLEAN bVisible;
-		int iType;
-	};
-
-	/* Main window */
-	CWinGeom GeomFdrmdialog;
-
-	/* System evaluation window */
-	CWinGeom GeomSystemEvalDlg;
-
-	/* Multimedia window */
-	CWinGeom GeomMultimediaDlg;
-
-	/* Stations dialog */
-	CWinGeom GeomStationsDlg;
-
-	/* Live schedule */
-	CWinGeom GeomLiveScheduleDlg;
-
-	/* Analog demodulation dialog */
-	CWinGeom GeomAnalogDemDlg;
-	
-
-	/* Analog demodulation dialog */
-	CWinGeom GeomAMSSDlg;
-
-	/* Chart windows */
-	CVector<CWinGeom> GeomChartWindows;
-
-	/* EPG Programme Guide */
-	CWinGeom GeomEPGDlg;
-
-	int			iMainPlotColorStyle;
-	int			iSecondsPreview;
-
-	/* Parameters for live schedule dialog */
-	int			iSecondsPreviewLiveSched;
-	_BOOLEAN	bShowAllStations;
-
-	/* Sort parameters for stations dialog */
-	class CSortParam
-	{
-	public:
-		CSortParam(const int iCol,const _BOOLEAN bAsc) :
-			iColumn(iCol), bAscending(bAsc) {}
-
-		int			iColumn;
-		_BOOLEAN	bAscending;
-	};
-
-	/* Analog sort parameter in stations dialog */	
-	CSortParam SortParamAnalog;
-
-	/* DRM sort parameter in stations dialog */
-	CSortParam SortParamDRM;
-
-	/* sort parameter in live schedule dialog */
-	CSortParam SortParamLiveSched;
-
-
-	int				iSysEvalDlgPlotType;
-	int				iMOTBWSRefreshTime;
-	_BOOLEAN		bAddRefreshHeader;
-	string			strStoragePathMMDlg;
-	string			strStoragePathLiveScheduleDlg;
-	int				iMainDisplayColor;
-
-	/* Font parameters for Multimedia Dlg */
-	class CFontParam
-	{
-	public:
-		CFontParam(const string strFontFamily, const int intFontPointSize,
-			const int intFontWeight , const _BOOLEAN bFontItalic) :
-			strFamily(strFontFamily), intPointSize(intFontPointSize),
-			intWeight(intFontWeight), bItalic(bFontItalic) {}
-
-		string		strFamily;
-		int			intPointSize;
-		int			intWeight;
-		_BOOLEAN	bItalic;
-	};
-
-	CFontParam		FontParamMMDlg;
-#endif
-
+	CPlotManager PlotManager;
 };
 
 

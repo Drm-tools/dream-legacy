@@ -77,13 +77,12 @@ void CDRMPlot::OnTimerChart()
 {
 	/* In some cases, if the user moves the mouse very fast over the chart
 	   selection list view, this function is called by two different threads.
-	   Somehow, using QMtuex does not help. Therefore we introduce a flag for
+	   Somehow, using QMutex does not help. Therefore we introduce a flag for
 	   doing this job. This solution is a work-around. TODO: better solution */
 	if (bOnTimerCharMutexFlag == TRUE)
 		return;
 
 	bOnTimerCharMutexFlag = TRUE;
-
 
 	/* CHART ******************************************************************/
 	CVector<_REAL>		vecrData;
@@ -96,12 +95,20 @@ void CDRMPlot::OnTimerChart()
 	_REAL				rFreqAcquVal;
 	_REAL				rCenterFreq, rBandwidth;
 
+	CParameter& Parameters = *pDRMRec->GetParameters();
+	Parameters.Lock(); 
+	_REAL rDCFrequency = Parameters.GetDCFrequency();
+	ECodScheme eSDCCodingScheme = Parameters.eSDCCodingScheme;
+	ECodScheme eMSCCodingScheme = Parameters.eMSCCodingScheme;
+	Parameters.Unlock(); 
+
+	CPlotManager& PlotManager = *pDRMRec->GetPlotManager();
+
 	switch (CurCharType)
 	{
 	case AVERAGED_IR:
 		/* Get data from module */
-		pDRMRec->
-			GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
+		PlotManager.GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
 			rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
 
 		/* Prepare graph and set data */
@@ -111,8 +118,7 @@ void CDRMPlot::OnTimerChart()
 
 	case TRANSFERFUNCTION:
 		/* Get data from module */
-		pDRMRec->
-			GetTransferFunction(vecrData, vecrData2, vecrScale);
+		PlotManager.GetTransferFunction(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
 		SetTranFct(vecrData, vecrData2, vecrScale);
@@ -128,7 +134,7 @@ void CDRMPlot::OnTimerChart()
 
 	case SNR_SPECTRUM:
 		/* Get data from module */
-		pDRMRec->GetSNRProfile(vecrData, vecrScale);
+		PlotManager.GetSNRProfile(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
 		SetSNRSpectrum(vecrData, vecrScale);
@@ -136,16 +142,15 @@ void CDRMPlot::OnTimerChart()
 
 	case INPUTSPECTRUM_NO_AV:
 		/* Get data from module */
-		pDRMRec->GetReceiver()->GetInputSpec(vecrData, vecrScale);
+		pDRMRec->GetReceiveData()->GetInputSpec(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
-		SetInpSpec(vecrData, vecrScale,
-			pDRMRec->GetParameters()->GetDCFrequency());
+		SetInpSpec(vecrData, vecrScale, rDCFrequency);
 		break;
 
 	case INP_SPEC_WATERF:
 		/* Get data from module */
-		pDRMRec->GetReceiver()->GetInputSpec(vecrData, vecrScale);
+		pDRMRec->GetReceiveData()->GetInputSpec(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
 		SetInpSpecWaterf(vecrData, vecrScale);
@@ -153,16 +158,15 @@ void CDRMPlot::OnTimerChart()
 
 	case INPUT_SIG_PSD:
 		/* Get data from module */
-		pDRMRec->GetReceiver()->GetInputPSD(vecrData, vecrScale);
+		PlotManager.GetInputPSD(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
-		SetInpPSD(vecrData, vecrScale,
-			pDRMRec->GetParameters()->GetDCFrequency());
+		SetInpPSD(vecrData, vecrScale, rDCFrequency);
 		break;
 
 	case INPUT_SIG_PSD_ANALOG:
 		/* Get data and parameters from modules */
-		pDRMRec->GetReceiver()->GetInputPSD(vecrData, vecrScale);
+		pDRMRec->GetReceiveData()->GetInputPSD(vecrData, vecrScale);
 		pDRMRec->GetAMDemod()->GetBWParameters(rCenterFreq, rBandwidth);
 
 		/* Prepare graph and set data */
@@ -181,17 +185,15 @@ void CDRMPlot::OnTimerChart()
 
 	case FREQ_SAM_OFFS_HIST:
 		/* Get data from module */
-		pDRMRec->GetFreqSamOffsHist(vecrData, vecrData2, vecrScale,
-			rFreqAcquVal);
+		PlotManager.GetFreqSamOffsHist(vecrData, vecrData2, vecrScale, rFreqAcquVal);
 
 		/* Prepare graph and set data */
-		SetFreqSamOffsHist(vecrData, vecrData2, vecrScale,
-			rFreqAcquVal);
+		SetFreqSamOffsHist(vecrData, vecrData2, vecrScale, rFreqAcquVal);
 		break;
 
 	case DOPPLER_DELAY_HIST:
 		/* Get data from module */
-		pDRMRec->GetDopplerDelHist(vecrData, vecrData2, vecrScale);
+		PlotManager.GetDopplerDelHist(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
 		SetDopplerDelayHist(vecrData, vecrData2, vecrScale);
@@ -199,7 +201,7 @@ void CDRMPlot::OnTimerChart()
 
 	case SNR_AUDIO_HIST:
 		/* Get data from module */
-		pDRMRec->GetSNRHist(vecrData, vecrData2, vecrScale);
+		PlotManager.GetSNRHist(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
 		SetSNRAudHist(vecrData, vecrData2, vecrScale);
@@ -218,8 +220,7 @@ void CDRMPlot::OnTimerChart()
 		pDRMRec->GetSDCMLC()->GetVectorSpace(veccData1);
 
 		/* Prepare graph and set data */
-		SetSDCConst(veccData1, 
-			pDRMRec->GetParameters()->eSDCCodingScheme);
+		SetSDCConst(veccData1, eSDCCodingScheme);
 		break;
 
 	case MSC_CONSTELLATION:
@@ -227,8 +228,7 @@ void CDRMPlot::OnTimerChart()
 		pDRMRec->GetMSCMLC()->GetVectorSpace(veccData1);
 
 		/* Prepare graph and set data */
-		SetMSCConst(veccData1, 
-			pDRMRec->GetParameters()->eMSCCodingScheme);
+		SetMSCConst(veccData1, eMSCCodingScheme);
 		break;
 
 	case ALL_CONSTELLATION:
@@ -635,9 +635,9 @@ void CDRMPlot::SetupAudioSpec()
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::yLeft, (double) -90.0, (double) -20.0);
-	double dBandwidth = (double) SOUNDCRD_SAMPLE_RATE / 2000;
-	if (SOUNDCRD_SAMPLE_RATE == 48000)
-		dBandwidth = (double) 20.0; /* Special value in case of 48 kHz */
+	double dBandwidth = (double) SOUNDCRD_SAMPLE_RATE / 2400; /* 20.0 for 48 kHz */
+	if (dBandwidth < 20.0)
+		dBandwidth = (double) 20.0;
 
 	setAxisScale(QwtPlot::xBottom, (double) 0.0, dBandwidth);
 
@@ -1360,7 +1360,7 @@ void CDRMPlot::SetFACConst(CVector<_COMPLEX>& veccData)
 	replot();
 }
 
-void CDRMPlot::SetupSDCConst(const CParameter::ECodScheme eNewCoSc)
+void CDRMPlot::SetupSDCConst(const ECodScheme eNewCoSc)
 {
 	/* Init chart for SDC constellation */
 	setTitle(tr("SDC Constellation"));
@@ -1378,7 +1378,7 @@ void CDRMPlot::SetupSDCConst(const CParameter::ECodScheme eNewCoSc)
 
 	/* Insert grid */
 	clear();
-	if (eNewCoSc == CParameter::CS_1_SM)
+	if (eNewCoSc == CS_1_SM)
 		SetQAM4Grid();
 	else
 		SetQAM16Grid();
@@ -1390,8 +1390,7 @@ void CDRMPlot::SetupSDCConst(const CParameter::ECodScheme eNewCoSc)
 	MarkerSym1.setBrush(QBrush(MainPenColorConst));
 }
 
-void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData,
-						   CParameter::ECodScheme eNewCoSc)
+void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc)
 {
 	/* Always set up plot. TODO: only set up plot if constellation
 	   scheme has changed */
@@ -1403,7 +1402,7 @@ void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData,
 	replot();
 }
 
-void CDRMPlot::SetupMSCConst(const CParameter::ECodScheme eNewCoSc)
+void CDRMPlot::SetupMSCConst(const ECodScheme eNewCoSc)
 {
 	/* Init chart for MSC constellation */
 	setTitle(tr("MSC Constellation"));
@@ -1421,7 +1420,7 @@ void CDRMPlot::SetupMSCConst(const CParameter::ECodScheme eNewCoSc)
 
 	/* Insert grid */
 	clear();
-	if (eNewCoSc == CParameter::CS_2_SM)
+	if (eNewCoSc == CS_2_SM)
 		SetQAM16Grid();
 	else
 		SetQAM64Grid();
@@ -1433,8 +1432,7 @@ void CDRMPlot::SetupMSCConst(const CParameter::ECodScheme eNewCoSc)
 	MarkerSym1.setBrush(QBrush(MainPenColorConst));
 }
 
-void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData,
-						   CParameter::ECodScheme eNewCoSc)
+void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc)
 {
 	/* Always set up plot. TODO: only set up plot if constellation
 	   scheme has changed */

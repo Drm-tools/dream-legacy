@@ -38,6 +38,9 @@ public:
 	CPft(int isrc=-1, int idst=-1);
 
 	bool DecodePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut);
+	static void MakePFTPackets(const vector < _BYTE > &vecbydata,
+					 vector < vector < _BYTE > >&packets, 
+					uint16_t sequence_counter, size_t fragment_size);
 
 protected:
 

@@ -29,7 +29,8 @@
 #if !defined(_GPSRECEIVER_H_)
 #define _GPSRECEIVER_H_
 
-#include "GPSData.h"
+#include "Parameter.h"
+#include "util/Settings.h"
 #include <qsocket.h>
 #include <qthread.h>
 #if QT_VERSION >= 0x030000 	 
@@ -41,7 +42,7 @@ class CGPSReceiver : public QObject
 {
 	Q_OBJECT
 public:
-	CGPSReceiver(CGPSData&);
+	CGPSReceiver(CParameter&, CSettings&);
 	virtual ~CGPSReceiver();
 
 protected:
@@ -56,10 +57,13 @@ protected:
 	
 	static const unsigned short c_usReconnectIntervalSeconds;
 
-	CGPSData&	m_GPSData;
+	CParameter&	Parameters;
+	CSettings&	m_Settings;
 	QSocket*	m_pSocket;
 	QTimer*		m_pTimer;
 	int			m_iCounter;
+	string		m_sHost;
+	int			m_iPort;
 
 public slots:
 

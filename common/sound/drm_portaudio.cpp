@@ -1,4 +1,4 @@
-/******************************************************************************\ 
+/******************************************************************************\
  * British Broadcasting Corporation
  * Copyright (c) 2007
  *
@@ -36,7 +36,7 @@
 static int
 captureCallback(const void *inputBuffer, void *outputBuffer,
 				unsigned long framesPerBuffer,
-				const PaStreamCallbackTimeInfo * timeInfo,
+				const PaStreamCallbackTimeInfo *,
 				PaStreamCallbackFlags statusFlags, void *userData)
 {
 	/* Cast data passed through stream to our structure. */
@@ -53,7 +53,7 @@ captureCallback(const void *inputBuffer, void *outputBuffer,
 static int
 playbackCallback(const void *inputBuffer, void *outputBuffer,
 				 unsigned long framesPerBuffer,
-				 const PaStreamCallbackTimeInfo * timeInfo,
+				 const PaStreamCallbackTimeInfo *,
 				 PaStreamCallbackFlags statusFlags, void *userData)
 {
 	CPaCommon *This = (CPaCommon *) userData;
@@ -66,11 +66,12 @@ playbackCallback(const void *inputBuffer, void *outputBuffer,
 	return 0;
 }
 
-int
-	CPaCommon::pa_count = 0;
+int CPaCommon::pa_count = 0;
 
-CPaCommon::CPaCommon(bool cap):ringBuffer(),xruns(0),stream(NULL), names(), devices(), dev(-1),
-is_capture(cap), blocking(true), device_changed(true), xrun(false), ringBufferData(NULL)
+CPaCommon::CPaCommon(bool cap):ringBuffer(),xruns(0),stream(NULL),
+			names(), devices(), dev(-1),
+			is_capture(cap), blocking(true), device_changed(true), xrun(false),
+			framesPerBuffer(0), ringBufferData(NULL)
 {
 	if (pa_count == 0)
 	{
@@ -87,6 +88,9 @@ is_capture(cap), blocking(true), device_changed(true), xrun(false), ringBufferDa
 CPaCommon::~CPaCommon()
 {
 	Close();
+    if (ringBufferData)
+        delete[] ringBufferData;
+
 	pa_count--;
 	if (pa_count == 0)
 	{
@@ -104,25 +108,23 @@ CPaCommon::Enumerate(vector < string > &choices)
 	int numDevices = Pa_GetDeviceCount();
 	if (numDevices < 0)
 		throw string("PortAudio error: ") + Pa_GetErrorText(numDevices);
+    PaHostApiIndex nApis = Pa_GetHostApiCount();
 
 	for (int i = 0; i < numDevices; i++)
 	{
 		const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(i);
-		if (is_capture)
+		if (( is_capture && deviceInfo->maxInputChannels > 1)
+		|| ( (!is_capture) && deviceInfo->maxOutputChannels > 1))
 		{
-			if (deviceInfo->maxInputChannels > 1)
-			{
-				names.push_back(deviceInfo->name);
-				devices.push_back(i);
+		    string api="";
+		    if(nApis>1)
+		    {
+		    	const PaHostApiInfo* info = Pa_GetHostApiInfo(deviceInfo->hostApi);
+		    	if(info)
+		        	api = string(info->name)+":";
 			}
-		}
-		else
-		{
-			if (deviceInfo->maxOutputChannels > 1)
-			{
-				names.push_back(deviceInfo->name);
-				devices.push_back(i);
-			}
+            names.push_back(api+deviceInfo->name);
+            devices.push_back(i);
 		}
 	}
 	choices = names;
@@ -133,7 +135,6 @@ CPaCommon::SetDev(int iNewDevice)
 {
 	if (dev != iNewDevice)
 	{
-		Close();
 		dev = iNewDevice;
 		device_changed = true;
 	}
@@ -152,8 +153,44 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	if (device_changed == false)
 		return;
 
+	unsigned long channels=2;
+
+	if(is_capture)
+		framesPerBuffer = iNewBufferSize / channels;
+	else
+		framesPerBuffer = 256;
+
+	blocking = bNewBlocking; /* TODO honour this */
+	iBufferSize = iNewBufferSize;
+
+	ReInit();
+
+	if(stream)
+	{
+		const PaStreamInfo* info = Pa_GetStreamInfo( stream );
+		if(is_capture)
+			cout << "init capture ";
+		else
+			cout << "init play ";
+		cout << iNewBufferSize;
+		if(info)
+			cout << " latency " << info->outputLatency;
+		else
+			cout << " can't read latency";
+		cout << endl;
+	}
+	else
+	{
+		cerr << "portaudio can't open stream" << endl;
+		//throw "portaudio open error";
+	}
+}
+
+void
+CPaCommon::ReInit()
+{
 	Close();
- 
+
 	PaStreamParameters pParameters;
 
 	memset(&pParameters, sizeof(pParameters), 0);
@@ -170,7 +207,7 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	}
 	else
 	{
-		cout << "opening " << devices[dev] << endl;
+		cout << "opening " << names[dev] << endl;
 		pParameters.device = devices[dev];
 	}
 
@@ -178,20 +215,18 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 		return;
 
 	double srate = 48000;
-	unsigned long channels=2;
-	unsigned long framesPerBuffer = iNewBufferSize / channels;
 	unsigned long minRingBufferSize;
 	int err;
 
 	if (is_capture)
 	{
 		pParameters.suggestedLatency = Pa_GetDeviceInfo(pParameters.device)->defaultLowInputLatency;
-		minRingBufferSize = 2*framesPerBuffer*channels*sizeof(short);
+		minRingBufferSize = 2*iBufferSize*sizeof(short);
 	}
 	else
 	{
 		pParameters.suggestedLatency = 0.8;
-		minRingBufferSize = 4*framesPerBuffer*channels*sizeof(short);
+		minRingBufferSize = 4*iBufferSize*sizeof(short);
 	}
 
 	/* See the specific host's API docs for info on using this field */
@@ -223,17 +258,13 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	while (n < minRingBufferSize)
 		n <<= 2;				/* smallest power of 2 >= requested */
 
+    if (ringBufferData)
+        delete[] ringBufferData;
 	ringBufferData = new char[n];
 	PaUtil_InitializeRingBuffer(&ringBuffer, n, ringBufferData);
 
 	device_changed = false;
 	xrun = false;
-
-	const PaStreamInfo* info = Pa_GetStreamInfo( stream );
-	if(is_capture)
-		cout << "init capture " << iNewBufferSize << " ringbuffer size " << n << " latency " << info->inputLatency << endl;
-	else
-		cout << "init play " << iNewBufferSize << " ringbuffer size " << n << " latency " << info->outputLatency << endl;
 }
 
 void
@@ -241,7 +272,7 @@ CPaCommon::Close()
 {
 	if (stream)
 	{
-		int err = Pa_StopStream(stream);
+		int err = Pa_AbortStream(stream);
 		if (err != paNoError)
 		{
 			cout << "PortAudio error: " << Pa_GetErrorText(err) << endl;
@@ -252,14 +283,8 @@ CPaCommon::Close()
 		{
 			cout << "PortAudio error: " << Pa_GetErrorText(err) << endl;
 		}
+
 		stream = NULL;
-
-		if (ringBufferData)
-		{
-			delete[]ringBufferData;
-		}
-		ringBufferData = NULL;
-
 		device_changed = true;
 	}
 }
@@ -267,6 +292,9 @@ CPaCommon::Close()
 _BOOLEAN
 CPaCommon::Read(CVector < short >&psData)
 {
+	if (device_changed)
+		ReInit();
+
 	if(stream==NULL)
 		return TRUE;
 
@@ -290,6 +318,9 @@ CPaCommon::Read(CVector < short >&psData)
 _BOOLEAN
 CPaCommon::Write(CVector < short >&psData)
 {
+	if (device_changed)
+		ReInit();
+
 	if(stream==NULL)
 		return TRUE;
 
@@ -339,6 +370,7 @@ void
 CPaIn::Close()
 {
 	hw.Close();
+	cout << "capture close" << endl;
 }
 
 CPaOut::CPaOut():hw(false)
@@ -366,4 +398,5 @@ void
 CPaOut::Close()
 {
 	hw.Close();
+	cout << "play close" << endl;
 }

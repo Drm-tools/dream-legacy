@@ -32,9 +32,6 @@
 
 #include "../DABMOT.h"
 
-/* Path for Electronic Program Guide files -- forward slashes only please! */
-#define EPG_SAVE_PATH "epg"
-
 void mkdirs (const string & path);
 
 string epgFilename (const CDateAndTime & date,

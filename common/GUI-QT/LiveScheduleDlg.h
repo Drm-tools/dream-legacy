@@ -6,21 +6,21 @@
  *	Andrea Russo
  *
  * Description:
- *	
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -40,16 +40,13 @@
 #include <qtextstream.h>
 #include <qcheckbox.h>
 #include <qthread.h>
-
-#ifdef _WIN32
-# include "../../Windows/moc/LiveScheduleDlgbase.h"
-#else
-# include "moc/LiveScheduleDlgbase.h"
-#endif
-#include "../DrmReceiver.h"
-#include "../util/Vector.h"
 #include <qfiledialog.h>
+
+#include "LiveScheduleDlgbase.h"
+#include "../DrmReceiver.h"
+#include "../util/Settings.h"
 #include "DialogUtil.h"
+#include <vector>
 
 /* Definitions ****************************************************************/
 /* Define the timer interval of updating the list view */
@@ -59,7 +56,7 @@
 #define GUI_TIMER_UTC_TIME_LABEL		1000 /* ms (1 second) */
 
 #define COL_FREQ 0 /* frequency column */
-#define COL_TARGET 3 /* target column */
+#define COL_TARGET 4 /* target column */
 
 /* Time definitions for preview */
 #define NUM_SECONDS_PREV_5MIN			300
@@ -75,16 +72,17 @@
 class CLiveScheduleItem
 {
 public:
-	CLiveScheduleItem() : strFreq(""), strTarget(""),  strDaysFlags("0000000"),
-	iStartTime(0), iDuration(0), strSystem(""), bInsideTargetArea(FALSE) {}
+	CLiveScheduleItem() : strFreq(""), strTarget(""), iServiceID(SERV_ID_NOT_USED),
+	strSystem(""), bInsideTargetArea(FALSE) {}
+
+	_BOOLEAN IsActive(const time_t ltime);
 
 	string		strFreq;
 	string		strTarget;
-	string		strDaysFlags;
-	int			iStartTime;
-	int			iDuration;
+	uint32_t	iServiceID;
 	string		strSystem;
 	_BOOLEAN	bInsideTargetArea;
+	CAltFreqSched Schedule;
 };
 
 class CDRMLiveSchedule
@@ -97,29 +95,27 @@ public:
 	virtual ~CDRMLiveSchedule() {}
 
 	enum StationState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
-	int GetStationNumber() {return StationsTable.Size();}
+	int GetStationNumber() {return StationsTable.size();}
 	CLiveScheduleItem& GetItem(const int iPos) {return StationsTable[iPos];}
 	StationState CheckState(const int iPos);
 
-	void LoadAFSInformations(const CParameter::CAltFreqSign AltFreqSign
-			, const CParameter::CAltFreqOtherServicesSign AltFreqOtherServicesSign);
+	void LoadAFSInformations(const CAltFreqSign& AltFreqSign);
 
-	void DecodeTargets(const int iRegionID, const CVector<CParameter::CAltFreqRegion> vecAltFreqRegions
-		, QString& strRegions , _BOOLEAN& bIntoTargetArea);
-	string DecodeFrequency(const int iSystemID, const int iFreq);
+	void LoadServiceDefinition(const CServiceDefinition& service,
+			const CAltFreqSign& AltFreqSign, const uint32_t iServiceID=SERV_ID_NOT_USED);
+
+	void DecodeTargets(const vector<CAltFreqRegion> vecAltFreqRegions,
+		string& strRegions , _BOOLEAN& bIntoTargetArea);
 
 	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
 	int GetSecondsPreview() {return iSecondsPreview;}
 
-	string Binary2String(const int iVal);
-
 	void SetReceiverCoordinates(double latitude, double longitude);
-	QString ExtractFirstDigits(const QString s, const int iDigits);
 
 protected:
 	_BOOLEAN IsActive(const int iPos, const time_t ltime);
 
-	CVector<CLiveScheduleItem>	StationsTable;
+	vector<CLiveScheduleItem>	StationsTable;
 
 	/* Minutes for stations preview in seconds if zero then no active */
 	int			iSecondsPreview;
@@ -132,8 +128,6 @@ protected:
 class MyListLiveViewItem : public QListViewItem
 {
 public:
-	/* If you want to add another columns, change also MAX_COLUMN_NUMBER in
-	   Settings.h! */
 	MyListLiveViewItem(QListView* parent, QString s1, QString s2 = QString::null,
 		QString s3 = QString::null, QString s4 = QString::null,
 		QString s5 = QString::null, QString s6 = QString::null,
@@ -151,11 +145,14 @@ class LiveScheduleDlg : public CLiveScheduleDlgBase
 
 public:
 
-	LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+	LiveScheduleDlg(CDRMReceiver&,
+		QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~LiveScheduleDlg();
 
 	void LoadSchedule();
+	void LoadSettings(const CSettings&);
+	void SaveSettings(CSettings&);
 
 	int				iCurrentSortColumn;
 	_BOOLEAN		bCurrentSortAscending;
@@ -166,12 +163,10 @@ protected:
 	void			SetUTCTimeLabel();
 	virtual void	showEvent(QShowEvent* pEvent);
 	virtual void	hideEvent(QHideEvent* pEvent);
-	void			SetCurrentSavePath(const QString strFileName);
-	QString			ExtractDaysFlagString(const string strDaysFlags);
-	QString			ExtractTime(const int iTimeStart, const int iDuration);
+	QString			ExtractDaysFlagString(const int iDayCode);
+	QString			ExtractTime(const CAltFreqSched& schedule);
 
-	CDRMReceiver*				pDRMRec;
-
+	CDRMReceiver&				DRMReceiver;
 	CDRMLiveSchedule			DRMSchedule;
 	QPixmap						BitmCubeGreen;
 	QPixmap						BitmCubeGreenLittle;
@@ -186,9 +181,11 @@ protected:
 	QPopupMenu*					pPreviewMenu;
 	QPopupMenu*					pFileMenu;
 
-	CVector<MyListLiveViewItem*>	vecpListItems;
+	vector<MyListLiveViewItem*>	vecpListItems;
 	QMutex						ListItemsMutex;
 	QString						strCurrentSavePath;
+	int							iColStationID;
+	int							iWidthColStationID;
 
 public slots:
 	void OnTimerList();

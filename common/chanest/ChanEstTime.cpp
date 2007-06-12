@@ -34,10 +34,10 @@ void CPilotModiClass::InitRot(CParameter& Parameter)
 {
 	/* Inits for timing correction. We need FFT size and start carrier */
 	/* Pre calculate the argument of the exp function */
-	rArgMult = (_REAL) -2.0 * crPi / Parameter.iFFTSizeN;
+	rArgMult = (_REAL) -2.0 * crPi / Parameter.CellMappingTable.iFFTSizeN;
 	
 	/* Index of minimum useful carrier */
-	iKminAbs = Parameter.iShiftedKmin;
+	iKminAbs = Parameter.CellMappingTable.iShiftedKmin;
 }
 
 _COMPLEX CPilotModiClass::Rotate(const _COMPLEX cI, const int iCN, 

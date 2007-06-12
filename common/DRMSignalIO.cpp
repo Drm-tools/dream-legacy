@@ -129,11 +129,14 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	int		iNumTapsTransmFilt;
 	CReal	rNormCurFreqOffset;
 */
-	const int iSymbolBlockSize = TransmParam.iSymbolBlockSize;
+	const int iSymbolBlockSize = TransmParam.CellMappingTable.iSymbolBlockSize;
 
 	/* Init vector for storing a complete DRM frame number of OFDM symbols */
 	iBlockCnt = 0;
-	iNumBlocks = TransmParam.iNumSymPerFrame;
+	TransmParam.Lock(); 
+	iNumBlocks = TransmParam.CellMappingTable.iNumSymPerFrame;
+	ESpecOcc eSpecOcc = TransmParam.GetSpectrumOccup();
+	TransmParam.Unlock(); 
 	iBigBlockSize = iSymbolBlockSize * 2 /* Stereo */ * iNumBlocks;
 
 	vecsDataOut.Init(iBigBlockSize);
@@ -165,14 +168,13 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 
 	/* Init bandpass filter object */
-	BPFilter.Init(iSymbolBlockSize, rDefCarOffset,
-		TransmParam.GetSpectrumOccup(), CDRMBandpassFilt::FT_TRANSMITTER);
-
+	BPFilter.Init(iSymbolBlockSize, rDefCarOffset, eSpecOcc,
+					CDRMBandpassFilt::FT_TRANSMITTER);
 
 	/* All robustness modes and spectrum occupancies should have the same output
 	   power. Calculate the normaization factor based on the average power of
 	   symbol (the number 3000 was obtained through output tests) */
-	rNormFactor = (CReal) 3000.0 / Sqrt(TransmParam.rAvPowPerSymbol);
+	rNormFactor = (CReal) 3000.0 / Sqrt(TransmParam.CellMappingTable.rAvPowPerSymbol);
 
 	/* Define block-size for input */
 	iInputBlockSize = iSymbolBlockSize;
@@ -194,24 +196,33 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 	int i;
 
 	/* OPH: update free-running symbol counter */
+	Parameter.Lock(); 
+
 	iFreeSymbolCounter++;
-	if (iFreeSymbolCounter >= Parameter.iNumSymPerFrame)
+	if (iFreeSymbolCounter >= Parameter.CellMappingTable.iNumSymPerFrame)
 	{
 		iFreeSymbolCounter = 0;
 		/* calculate the PSD once per frame for the RSI output */
+
 		if(Parameter.bMeasurePSD)
 			PutPSD(Parameter);
+
 	}
+	Parameter.Unlock(); 
 
 	if(pSound == NULL)
 		return;
 
 		/* Get data from sound interface. The read function must be a
 		   blocking function! */
-		if (pSound->Read(vecsSoundBuffer) == FALSE)
-			Parameter.ReceiveStatus.SetInterfaceStatus(RX_OK);
-		else
-			Parameter.ReceiveStatus.SetInterfaceStatus(CRC_ERROR);
+	_BOOLEAN bBad = pSound->Read(vecsSoundBuffer);
+
+	Parameter.Lock(); 
+	if (bBad == FALSE)
+		Parameter.ReceiveStatus.Interface.SetStatus(RX_OK);
+	else
+		Parameter.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
+	Parameter.Unlock(); 
 
 		/* Write data to output buffer. Do not set the switch command inside
 		   the for-loop for efficiency reasons */
@@ -322,7 +333,10 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 
 	/* Update level meter */
 	SignalLevelMeter.Update((*pvecOutputData));
+	Parameter.Lock(); 
 	Parameter.SetIFSignalLevel(SignalLevelMeter.Level());
+	Parameter.Unlock(); 
+
 }
 
 void CReceiveData::InitInternal(CParameter& Parameter)
@@ -334,10 +348,14 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 	if(pSound == NULL)
 		return;
 
-	pSound->Init(Parameter.iSymbolBlockSize * 2);
+	Parameter.Lock(); 
+	/* Define output block-size */
+	iOutputBlockSize = Parameter.CellMappingTable.iSymbolBlockSize;
+	Parameter.Unlock(); 
+	pSound->Init(iOutputBlockSize * 2);
 
 	/* Init buffer size for taking stereo input */
-	vecsSoundBuffer.Init(Parameter.iSymbolBlockSize * 2);
+	vecsSoundBuffer.Init(iOutputBlockSize * 2);
 
 	/* Init signal meter */
 	SignalLevelMeter.Init(0);
@@ -356,8 +374,6 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 
 	cExpStep = _COMPLEX(cos(rNormCurFreqOffsetIQ), sin(rNormCurFreqOffsetIQ));
 
-	/* Define output block-size */
-	iOutputBlockSize = Parameter.iSymbolBlockSize;
 
 	/* OPH: init free-running symbol counter */
 	iFreeSymbolCounter = 0;
@@ -407,7 +423,7 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 	vecrScale.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
 
 	/* Lock resources */
-	Lock();
+	Lock(); 
 
 	/* Init the constants for scale and normalization */
 	const _REAL rFactorScale =
@@ -440,7 +456,7 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 	}
 
 	/* Release resources */
-	Unlock();
+	Unlock(); 
 }
 
 void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
@@ -451,10 +467,10 @@ void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
 {
 
 	/* Lock resources */
-	Lock();
+	Lock(); 
 	CalculatePSD(vecrData, vecrScale, iLenPSDAvEachBlock,iNumAvBlocksPSD,iPSDOverlap);
 	/* Release resources */
-	Unlock();
+	Unlock(); 
 }
 
 void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
@@ -516,8 +532,10 @@ void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
 	}
 }
 
-/* Calculate PSD and put it into the CParameter class */
-/* To be used by the rsi output */
+/* Calculate PSD and put it into the CParameter class.
+ * The data will be used by the rsi output.
+ * This function is called in a context where the ReceiverParam structure is Locked.
+ */
 void CReceiveData::PutPSD(CParameter &ReceiverParam)
 {
 	int i, j;
@@ -540,7 +558,7 @@ void CReceiveData::PutPSD(CParameter &ReceiverParam)
 	int iEndBin = 106;
 	int iVecSize = iEndBin - iStartBin + 1; //85
 
-	_REAL rIFCentreFrequency = ReceiverParam.FrontEndParameters.rIFCentreFreq;
+	//_REAL rIFCentreFrequency = ReceiverParam.FrontEndParameters.rIFCentreFreq;
 
 	ESpecOcc eSpecOcc = ReceiverParam.GetSpectrumOccup();
 	if (eSpecOcc == SO_4 || eSpecOcc == SO_5)
@@ -562,9 +580,11 @@ void CReceiveData::PutPSD(CParameter &ReceiverParam)
 
 	CalculatePSDInterferenceTag(ReceiverParam, vecrData);
 
-
 }
 
+/*
+ * This function is called in a context where the ReceiverParam structure is Locked.
+ */
 void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD)
 {
 
@@ -576,13 +596,13 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 
 	_REAL rIFCentreFrequency = ReceiverParam.FrontEndParameters.rIFCentreFreq;
 
-	if (ReceiverParam.GetReceiverState() == AS_WITH_SIGNAL && 
+	if (ReceiverParam.GetAcquiState() == AS_WITH_SIGNAL && 
 		ReceiverParam.FrontEndParameters.bAutoMeasurementBandwidth)
 	{
 		// Receiver is locked, so measure in the current DRM signal bandwidth Kmin to Kmax
 		_REAL rDCFrequency = ReceiverParam.GetDCFrequency();
-		rFreqKmin = rDCFrequency + _REAL(ReceiverParam.iCarrierKmin)/ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
-		rFreqKmax = rDCFrequency + _REAL(ReceiverParam.iCarrierKmax)/ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+		rFreqKmin = rDCFrequency + _REAL(ReceiverParam.CellMappingTable.iCarrierKmin)/ReceiverParam.CellMappingTable.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+		rFreqKmax = rDCFrequency + _REAL(ReceiverParam.CellMappingTable.iCarrierKmax)/ReceiverParam.CellMappingTable.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
 	}
 	else
 	{
@@ -594,12 +614,12 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 
 	_REAL rSigPower = CalcTotalPower(vecrPSD, FreqToBin(rFreqKmin), FreqToBin(rFreqKmax));
 
-	if (ReceiverParam.FrontEndParameters.eSMeterCorrectionType == CParameter::CFrontEndParameters::S_METER_CORRECTION_TYPE_AGC_ONLY)
+	if (ReceiverParam.FrontEndParameters.eSMeterCorrectionType == CFrontEndParameters::S_METER_CORRECTION_TYPE_AGC_ONLY)
 	{
 		/* Write it to the receiver params to help with calculating the signal strength */
 		rCorrection += _REAL(10.0) * log10(rSigPower);
 	}
-	else if (ReceiverParam.FrontEndParameters.eSMeterCorrectionType == CParameter::CFrontEndParameters::S_METER_CORRECTION_TYPE_AGC_RSSI)
+	else if (ReceiverParam.FrontEndParameters.eSMeterCorrectionType == CFrontEndParameters::S_METER_CORRECTION_TYPE_AGC_RSSI)
 	{
 		_REAL rSMeterBandwidth = ReceiverParam.FrontEndParameters.rSMeterBandwidth;
 
@@ -613,7 +633,7 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 		rCorrection += _REAL(10.0) * log10(rSigPower/rPowerInSMeterBW);
 	} 
 
-	// Add on the calibration factor for the current mode
+	/* Add on the calibration factor for the current mode */
 	if (ReceiverParam.GetReceiverMode() == RM_DRM)
 		rCorrection += ReceiverParam.FrontEndParameters.rCalFactorDRM;
 	else if (ReceiverParam.GetReceiverMode() == RM_AM)		
@@ -622,10 +642,11 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 	ReceiverParam.rSigStrengthCorrection = rCorrection;
 
 	return;
-
 }
 
-
+/*
+ * This function is called in a context where the ReceiverParam structure is Locked.
+ */
 void CReceiveData::CalculatePSDInterferenceTag(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD)
 {
 
@@ -639,7 +660,7 @@ void CReceiveData::CalculatePSDInterferenceTag(CParameter &ReceiverParam, CVecto
 	
 	ESpecOcc eSpecOcc = ReceiverParam.GetSpectrumOccup();
 
-	if (ReceiverParam.GetReceiverState() == AS_WITH_SIGNAL &&
+	if (ReceiverParam.GetAcquiState() == AS_WITH_SIGNAL &&
 		(eSpecOcc == SO_4 || eSpecOcc == SO_5) )
 	{
 		rFreqSearchMax = rIFCentreFrequency + _REAL(RNIP_SEARCH_RANGE_WIDE);

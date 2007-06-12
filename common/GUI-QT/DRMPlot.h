@@ -43,8 +43,6 @@
 /* Definitions ****************************************************************/
 #define GUI_CONTROL_UPDATE_WATERFALL			100	/* Milliseconds */
 
-/* number of available color schemes for the plot */
-#define NUM_AVL_COLOR_SCHEMES_PLOT				3
 
 /* Define the plot color profiles */
 /* BLUEWHITE */
@@ -150,10 +148,8 @@ public:
 					   CVector<_REAL>& vecrData2,
 					   CVector<_REAL>& vecrScale);
 	void SetFACConst(CVector<_COMPLEX>& veccData);
-	void SetSDCConst(CVector<_COMPLEX>& veccData,
-					 CParameter::ECodScheme eNewCoSc);
-	void SetMSCConst(CVector<_COMPLEX>& veccData,
-					 CParameter::ECodScheme eNewCoSc);
+	void SetSDCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc);
+	void SetMSCConst(CVector<_COMPLEX>& veccData, ECodScheme eNewCoSc);
 	void SetAllConst(CVector<_COMPLEX>& veccMSC,
 					 CVector<_COMPLEX>& veccSDC,
 					 CVector<_COMPLEX>& veccFAC);
@@ -181,8 +177,8 @@ protected:
 	void SetupSNRSpectrum();
 	void SetupInpSpec();
 	void SetupFACConst();
-	void SetupSDCConst(const CParameter::ECodScheme eNewCoSc);
-	void SetupMSCConst(const CParameter::ECodScheme eNewCoSc);
+	void SetupSDCConst(const ECodScheme eNewCoSc);
+	void SetupMSCConst(const ECodScheme eNewCoSc);
 	void SetupAllConst();
 	void SetupInpPSD();
 	void SetupInpSpecWaterf();

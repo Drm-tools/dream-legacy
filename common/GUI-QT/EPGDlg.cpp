@@ -29,17 +29,16 @@
 
 #include "EPGDlg.h"
 
-EPGDlg::EPGDlg(CDRMReceiver* pNDRMR, QWidget* parent,
+EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, WFlags f)
-:CEPGDlgbase(parent, name, modal, f),epg(),pDRMRec(pNDRMR)
+:CEPGDlgbase(parent, name, modal, f),BitmCubeGreen(),date(QDate::currentDate()),
+do_updates(false),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
+Settings(NSettings),Timer(),sids()
 {
-
-	/* Get window geometry data from DRMReceiver module and apply it */
-	const QRect WinGeom(pDRMRec->GeomEPGDlg.iXPos,
-		pDRMRec->GeomEPGDlg.iYPos,
-		pDRMRec->GeomEPGDlg.iWSize,
-		pDRMRec->GeomEPGDlg.iHSize);
-
+	/* recover window size and position */
+	CWinGeom s;
+	Settings.Get("EPG Dialog", s);
+	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
 
@@ -76,8 +75,8 @@ EPGDlg::EPGDlg(CDRMReceiver* pNDRMR, QWidget* parent,
     year->setMinValue(0000);
     year->setMaxValue(3000);
 
-	/* show a label is EPG decoding is disabled */
-	if (pDRMRec->GetDataDecoder()->GetDecodeEPG() == TRUE)
+	/* show a label if EPG decoding is disabled */
+	if (DRMReceiver.GetDataDecoder()->GetDecodeEPG() == TRUE)
 		TextEPGDisabled->hide();
 	else
 		TextEPGDisabled->show();
@@ -91,7 +90,7 @@ void EPGDlg::OnTimer()
 {	
     if ((basic->text() == tr("no basic profile data"))
 		|| (advanced->text() == tr("no advanced profile data")))
-		/* not all informations are loaded */
+		/* not all information is loaded */
  		select();
 	else
 	{
@@ -127,28 +126,28 @@ void EPGDlg::OnTimer()
 
 void EPGDlg::showEvent(QShowEvent *) 
 {    
-    // Use the currently receiving channel 
-    CParameter* pP = pDRMRec->GetParameters();
-    int sNo = pP->GetCurSelAudioService();
-    CParameter::CService& s = pDRMRec->GetParameters()->Service[sNo];
-    QString label = s.strLabel.c_str();
-    if ((s.DataParam.iUserAppIdent == CDataDecoder::AT_MOTEPG)
-		&& (label!=""))
-    {
-	epg.addChannel(label, s.iServiceID);
-    }
+    CParameter& Parameters = *DRMReceiver.GetParameters();
+	Parameters.Lock(); 
+    int sNo = Parameters.GetCurSelAudioService();
+    uint32_t sid = Parameters.Service[sNo].iServiceID;
+
     // use the current date
     date = QDate::currentDate();
     // update the channels combobox from the epg
     channel->clear();
     int n = -1;
-    for (QMap < QString, uint32_t >::Iterator i = epg.sids.begin(); 
-         i != epg.sids.end(); i++) {
-    	channel->insertItem(i.key());
-    	if (i.key() == label) {
+	sids.clear();
+    for (map < uint32_t, CServiceInformation >::const_iterator i = Parameters.ServiceInformation.begin(); 
+         i != Parameters.ServiceInformation.end(); i++) {
+		QString channel_label = QString().fromUtf8(i->second.label.begin()->c_str());
+		uint32_t channel_id = i->second.id;
+		sids[channel_label] = channel_id;
+    	channel->insertItem(channel_label);
+    	if (channel_id == sid) {
     	    n = channel->currentItem();
         }
     }
+	Parameters.Unlock(); 
     // update the current selection
     if (n >= 0) {
 	    channel->setCurrentItem(n);
@@ -166,13 +165,13 @@ void EPGDlg::hideEvent(QHideEvent*)
 	/* Deactivate real-time timer */
 	Timer.stop();
 
-	/* Set window geometry data in DRMReceiver module */
+	CWinGeom s;
 	QRect WinGeom = geometry();
-
-	pDRMRec->GeomEPGDlg.iXPos = WinGeom.x();
-	pDRMRec->GeomEPGDlg.iYPos = WinGeom.y();
-	pDRMRec->GeomEPGDlg.iHSize = WinGeom.height();
-	pDRMRec->GeomEPGDlg.iWSize = WinGeom.width();
+	s.iXPos = WinGeom.x();
+	s.iYPos = WinGeom.y();
+	s.iHSize = WinGeom.height();
+	s.iWSize = WinGeom.width();
+	Settings.Put("EPG Dialog", s);
 }
 
 void EPGDlg::previousDay()
@@ -230,15 +229,11 @@ void EPGDlg::select()
     basic->setText(tr("no basic profile data"));
     advanced->setText(tr("no advanced profile data"));
     QString chan = channel->currentText();
-    if(!epg.sids.contains(chan)) {
-	    (void) new QListViewItem(Data, tr("no data"));
-         return;
-    }
     CDateAndTime d;
     d.year = date.year();
     d.month = date.month();
     d.day = date.day();
-    epg.select(chan, d);
+    epg.select(sids[chan], d);
     if(epg.progs.count()==0) {
 	    (void) new QListViewItem(Data, tr("no data"));
 	    return;

@@ -104,9 +104,12 @@ public:
 	virtual void LogWarningSpecific(char *string);
 	virtual void LogErrorSpecific(char *string);
 
+	static void Instantiate();
 protected:
 	CPrintfLogPrinter();
+
 private:
+	static CPrintfLogPrinter *mpInstance;
 };
 
 class CNullLogPrinter : public CLogPrinter

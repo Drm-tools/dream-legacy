@@ -1,5 +1,5 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
+ * British Broadcasting Corporation
  * Copyright (c) 2007
  *
  * Author(s):
@@ -32,12 +32,7 @@
 
 #include "../GlobalDefinitions.h"
 
-#ifdef USE_QT_GUI
-#  include "MDIInBuffer.h"
-#  include "PacketSocketQT.h"
-#else
-# include "PacketSocketNull.h"
-#endif
+#include "MDIInBuffer.h"
 
 #include "../util/Modul.h"
 #include "../util/CRC.h"
@@ -49,45 +44,44 @@
 #include "TagPacketDecoderRSCIControl.h"
 #include "TagPacketGenerator.h"
 #include "RSISubscriber.h"
+#include <vector>
+
+#define MAX_NUM_RSI_SUBSCRIBERS 3
 
 /* Classes ********************************************************************/
-class CRSIMDIInRCIOut : public CReceiverModul<_BINARY, _BINARY>
-#ifdef USE_QT_GUI
-			, public CPacketSink
-#endif
+class CUpstreamDI : public CReceiverModul<_BINARY, _BINARY> , public CPacketSink
 {
 public:
-	CRSIMDIInRCIOut();
-	virtual ~CRSIMDIInRCIOut() {}
+	CUpstreamDI();
+	virtual ~CUpstreamDI();
 
 	/* CRSIMDIInInterface */
-	void SetInAddr(const string& strAddr);
+	_BOOLEAN SetOrigin(const string& strAddr);
 	_BOOLEAN GetInEnabled() {return bMDIInEnabled;}
 
 	/* CRCIOutInterface */
-	void SetOutAddr(const string& strArgument);
+	_BOOLEAN SetDestination(const string& strArgument);
 	_BOOLEAN GetOutEnabled() {return bMDIOutEnabled;}
 	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC=bNAFPktCRC;}
 	void SetFrequency(int iNewFreqkHz);
 	void SetReceiverMode(ERecMode eNewMode);
 
-#ifdef USE_QT_GUI
 	/* CPacketSink */
-	void SendPacket(const vector<_BYTE>& vecbydata);
-#endif
+	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
+
+	_BOOLEAN GetDestination(string& strArgument);
 
 	/* CReceiverModul */
 	void InitInternal(CParameter& ReceiverParam);
 	void ProcessDataInternal(CParameter& ReceiverParam);
 
-	void TransmitPacket(CVector<_BINARY>& vecbidata);
-
 protected:
 
-#ifdef USE_QT_GUI
+	string						strOrigin;
+	string						strDestination;
 	CMDIInBuffer	  			queue;
-	CPacketSocketQT				PacketSocket;
-#endif
+	CPacketSource*				source;
+	CRSISubscriberSocket		sink; 
 	CPft						Pft;
 
 	_BOOLEAN					bUseAFCRC;
@@ -95,6 +89,7 @@ protected:
 	CSingleBuffer<_BINARY>		MDIInBuffer;
 	_BOOLEAN					bMDIOutEnabled;
 	_BOOLEAN					bMDIInEnabled;
+	_BOOLEAN					bNeedPft;
 
 	/* Tag Item Generators */
 
@@ -104,17 +99,17 @@ protected:
 
 	/* TAG Packet generator */
 	CTagPacketGenerator TagPacketGenerator;
+	CAFPacketGenerator AFPacketGenerator;
 
 };
 
-class CRSIMDIOutRCIIn
+class CDownstreamDI: public CPacketSink
 {
 public:
-	CRSIMDIOutRCIIn();
-	virtual ~CRSIMDIOutRCIIn() {}
-	/* RSCI/MDI out */
+	CDownstreamDI();
+	virtual ~CDownstreamDI();
 
-	void GenMDIPacket();
+	void GenDIPacket();
 
 	void SendLockedFrame(CParameter& Parameter,
 						CSingleBuffer<_BINARY>& FACData,
@@ -122,13 +117,14 @@ public:
 						vector<CSingleBuffer<_BINARY> >& vecMSCData
 	);
 	void SendUnlockedFrame(CParameter& Parameter); /* called once per frame even if the Rx isn't synchronised */
-	void SendAMFrame(CParameter& Parameter);
+	void SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& CodedAudioData);
 
 	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC);
-	void SetOutAddr(const string& strArgument);
-	void SetInAddr(const string& strAddr);
-	void SetRSIRecording(CParameter& Parameter, const _BOOLEAN bOn, const char cPro);
-	virtual void SetProfile(const char c);
+
+	_BOOLEAN AddSubscriber(const string& dest, const string& origin, const char profile);
+
+	_BOOLEAN SetOrigin(const string& strAddr);
+	void SetRSIRecording(CParameter& Parameter, _BOOLEAN bOn, char cPro, const string& type="");
 	void NewFrequency(CParameter& Parameter); /* needs to be called in case a new RSCI file needs to be started */
 	
 	virtual _BOOLEAN GetOutEnabled() {return bMDIOutEnabled;} 
@@ -136,16 +132,28 @@ public:
 	void GetNextPacket(CSingleBuffer<_BINARY>&	buf);
 	void SetReceiver(CDRMReceiver *pReceiver);
 
+	/* CPacketSink */
+	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
+	_BOOLEAN SetDestination(const string& strArgument);
+	_BOOLEAN GetDestination(string& strArgument);
+
+	string GetRSIfilename(CParameter& Parameter, const char cProfile);
+
 protected:
 	
-	void SetEnableMDIOut(const _BOOLEAN bNEnMOut) {bMDIOutEnabled = bNEnMOut;}
-
 	void ResetTags();
 
 	uint32_t					iLogFraCnt;
+	CDRMReceiver*				pDrmReceiver;
 
 	_BOOLEAN					bMDIOutEnabled;
 	_BOOLEAN					bMDIInEnabled;
+	_BOOLEAN					bNeedPft;
+
+	_BOOLEAN					bIsRecording;
+	int							iFrequency;
+	string						strRecordType;
+
 
 	/* Generators for all of the MDI and RSCI tags */
 
@@ -181,6 +189,7 @@ protected:
 	CTagItemGeneratorPilots TagItemGeneratorPilots; /* rpil */
 
 	CVector<CTagItemGeneratorStr>	vecTagItemGeneratorStr; /* strx tag */
+	CTagItemGeneratorAMAudio TagItemGeneratorAMAudio; /* rama tag */
 
 	/* Mandatory tags but not implemented yet */
 	CVector<CTagItemGeneratorRBP>	vecTagItemGeneratorRBP;
@@ -188,19 +197,11 @@ protected:
 	/* TAG Packet generator */
 	CTagPacketGeneratorWithProfiles TagPacketGenerator;
 
-	CVector<CRSISubscriber *> vecRSISubscribers;
-
-	/* instantiate subscribers for the main I/O socket and for a file */
-	CRSISubscriberSocket RSISubscriberSocketMain;
-	CRSISubscriberFile RSISubscriberFile;
-
-
-	/* Special settings */
-	char						cProfile;
-
-
-
-	CSingleBuffer<_BINARY>		MDIInBuffer;
+	vector< CRSISubscriber *>		RSISubscribers;
+	CRSISubscriberFile*				pRSISubscriberFile;
+	CPacketSource*					source;
+	CPacketSink*					sink;
+	CSingleBuffer<_BINARY>			MDIInBuffer;
 
 };
 

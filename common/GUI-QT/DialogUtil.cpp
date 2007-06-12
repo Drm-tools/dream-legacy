@@ -26,6 +26,9 @@
  *
 \******************************************************************************/
 
+#ifdef _WIN32
+# include <winsock2.h>
+#endif
 #include "DialogUtil.h"
 #include "../Version.h"
 #ifdef USE_ALSA
@@ -39,6 +42,12 @@
 #endif
 #ifdef HAVE_LIBSNDFILE
 # include <sndfile.h>
+#endif
+#ifdef HAVE_LIBPCAP
+# include <pcap.h>
+#endif
+#ifdef HAVE_LIBWIRETAP
+# include <wtap.h>
 #endif
 
 /* Implementation *************************************************************/
@@ -137,8 +146,9 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
         "AMSS demodulator. <i>Oliver Haffenden</i> and <i>Julian Cable</i> (also <i>BBC</i>) rewrote "
         "the MDI interface and added RSCI support. The EPG was implemented by "
         "<i>Julian Cable</i> and the Broadcast Website and AFS features as well as many "
-        "other GUI improvements were implemented by <i>Andrea Russo</i>.<br>Right now "
-        "the code is mainly maintained by <i>Julian Cable</i>."
+        "other GUI improvements were implemented by <i>Andrea Russo</i>."
+		"<br>Right now the code is mainly maintained by <i>Julian Cable</i>."
+		"Quality Assurance and user testing is provided by <i>Simone St&ouml;ppler</i>"
         "<br><br><br>"
 		"<center><b>CREDITS</b></center><br>"
 		"We want to thank all the contributors to the Dream software (in "
@@ -219,8 +229,12 @@ CSoundCardSelMenu::CSoundCardSelMenu(
 	iNumSoundInDev = vecSoundInNames.size();
 	for (i = 0; i < iNumSoundInDev; i++)
 	{
-		pSoundInMenu->insertItem(QString(vecSoundInNames[i].c_str()), this,
-			SLOT(OnSoundInDevice(int)), 0, i);
+		QString name(vecSoundInNames[i].c_str());
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
+		if(name.find("blaster", 0, FALSE)>=0)
+			name += " (has problems on some platforms)";
+#endif
+		pSoundInMenu->insertItem(name, this, SLOT(OnSoundInDevice(int)), 0, i);
 	}
 
 	pSoundOutIF->Enumerate(vecSoundOutNames);

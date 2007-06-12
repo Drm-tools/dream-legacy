@@ -50,13 +50,13 @@ using namespace std; /* Because of the library: "complex" */
 
 #ifdef _WIN32 /* For Windows set flags here, otherwise it is set by configure */
 
-/* build using the real sound interface or a dummy */
-# define WITH_SOUND
-//# undef WITH_SOUND
-
 /* Define whether using GUI or non-GUI receiver */
 # define USE_QT_GUI
 //# undef USE_QT_GUI
+
+/* Define to get com port auto detection on Win2K and beyond */
+# define HAVE_SETUPAPI
+//# undef HAVE_SETUPAPI
 
 /* Define whether using libsndfile for audio file I/O */
 //# define HAVE_LIBSNDFILE
@@ -72,9 +72,6 @@ using namespace std; /* Because of the library: "complex" */
 # define HAVE_JOURNALINE
 //# undef HAVE_JOURNALINE
 
-//# define HAVE_LIBWTAP
-# undef HAVE_LIBWTAP
-
 //# define HAVE_LIBPCAP
 # undef HAVE_LIBPCAP
 
@@ -86,8 +83,7 @@ using namespace std; /* Because of the library: "complex" */
 
 /* set sensible defaults for QT2 or QT3 */
 # ifdef USE_QT_GUI
-# include <qglobal.h>
-#else
+#  include <qglobal.h>
 # endif
 
 # if defined(QT_VERSION) && QT_VERSION < 0x030000

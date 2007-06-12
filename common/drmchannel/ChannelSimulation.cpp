@@ -102,6 +102,7 @@ void CDRMChannel::ProcessDataInternal(CParameter&)
 
 void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 {
+	ReceiverParam.Lock(); 
 	/* Set channel parameter according to selected channel number (table B.1) */
 	switch (ReceiverParam.iDRMChannelNum)
 	{
@@ -331,17 +332,17 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 
 	/* Allocate memory for history, init vector with zeros. This history is used
 	   for generating path delays */
-	iLenHist = ReceiverParam.iSymbolBlockSize + iMaxDelay;
+	iLenHist = ReceiverParam.CellMappingTable.iSymbolBlockSize + iMaxDelay;
 	veccHistory.Init(iLenHist, _COMPLEX((_REAL) 0.0, (_REAL) 0.0));
 
 	/* Allocate memory for temporary output vector for complex values */
-	veccOutput.Init(ReceiverParam.iSymbolBlockSize);
+	veccOutput.Init(ReceiverParam.CellMappingTable.iSymbolBlockSize);
 
 
 	/* Calculate noise power factors for a given SNR ------------------------ */
 	/* Spectrum width (N / T_u) */
-	const _REAL rSpecOcc = (_REAL) ReceiverParam.iNumCarrier /
-		ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+	const _REAL rSpecOcc = (_REAL) ReceiverParam.CellMappingTable.iNumCarrier /
+		ReceiverParam.CellMappingTable.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
 
 	/* Bandwidth correction factor for noise (f_s / (2 * B))*/
 	const _REAL rBWFactor = (_REAL) SOUNDCRD_SAMPLE_RATE / 2 / rSpecOcc;
@@ -349,15 +350,16 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	/* Calculation of the gain factor for noise generator */
 	rNoisepwrFactor =
 		sqrt(pow((_REAL) 10.0, -ReceiverParam.GetSystemSNRdB() / 10) *
-		ReceiverParam.rAvPowPerSymbol * 2 * rBWFactor);
+		ReceiverParam.CellMappingTable.rAvPowPerSymbol * 2 * rBWFactor);
 
 
 	/* Set seed of random noise generator */
 	srand((unsigned) time(NULL));
 
 	/* Define block-sizes for input and output */
-	iInputBlockSize = ReceiverParam.iSymbolBlockSize;
-	iOutputBlockSize = ReceiverParam.iSymbolBlockSize;
+	iInputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+	iOutputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+	ReceiverParam.Unlock(); 
 }
 
 void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift,

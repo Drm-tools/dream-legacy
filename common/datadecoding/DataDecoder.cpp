@@ -28,6 +28,7 @@
 
 #include "DataDecoder.h"
 #include "./epg/epgutil.h"
+#include "Journaline.h"
 #include <iostream>
 
 /* Implementation *************************************************************/
@@ -155,11 +156,15 @@ CDataEncoder::Init(CParameter & Param)
 // TODO we only use always the first service right now
 	const int iCurSelDataServ = 0;
 
+	Param.Lock(); 
+
 	iPacketLen =
 		Param.Service[iCurSelDataServ].DataParam.iPacketLen * SIZEOF__BYTE;
 	iTotalPacketSize = iPacketLen + 24 /* CRC + header = 24 bits */ ;
 
 	iPacketID = Param.Service[iCurSelDataServ].DataParam.iPacketID;
+
+	Param.Unlock(); 
 
 	/* Init DAB MOT encoder object */
 	MOTSlideShowEncoder.Init();
@@ -179,6 +184,19 @@ CDataEncoder::Init(CParameter & Param)
 /******************************************************************************\
 * Decoder                                                                      *
 \******************************************************************************/
+CDataDecoder::CDataDecoder ():iServPacketID (0), DoNotProcessData (TRUE),
+	Journaline(*new CJournaline()),
+	iOldJournalineServiceID (0), bDecodeEPG(TRUE)
+{
+		for(size_t i=0; i<MAX_NUM_PACK_PER_STREAM; i++)
+			eAppType[i] = AT_NOT_SUP;
+}
+
+CDataDecoder::~CDataDecoder ()
+{
+	delete &Journaline;
+}
+	
 void
 CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 {
@@ -208,19 +226,22 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 
 		/* "- 2": 16 bits for CRC at the end */
 		for (i = 0; i < iTotalPacketSize - 2; i++)
-			CRCObject.AddByte((_BYTE) (*pvecInputData).
-							  Separate(SIZEOF__BYTE));
+		{
+			_BYTE b =pvecInputData->Separate(SIZEOF__BYTE);
+			CRCObject.AddByte(b);
+		}
 
 		/* Store result in vector and show CRC in multimedia window */
-		if (CRCObject.CheckCRC((*pvecInputData).Separate(16)) == TRUE)
+		uint16_t crc = pvecInputData->Separate(16);
+		if (CRCObject.CheckCRC(crc) == TRUE)
 		{
 			veciCRCOk[j] = 1;	/* CRC ok */
-			ReceiverParam.ReceiveStatus.SetMOTStatus(RX_OK);
+			ReceiverParam.ReceiveStatus.MOT.SetStatus(RX_OK);
 		}
 		else
 		{
 			veciCRCOk[j] = 0;	/* CRC wrong */
-			ReceiverParam.ReceiveStatus.SetMOTStatus(CRC_ERROR);
+			ReceiverParam.ReceiveStatus.MOT.SetStatus(CRC_ERROR);
 		}
 	}
 
@@ -426,7 +447,7 @@ CDataDecoder::DecodeEPG(const CParameter & ReceiverParam)
 			fileName = NewObj.strName;
 		}
 
-		string path = string(EPG_SAVE_PATH) + "/" + fileName;
+		string path = ReceiverParam.sDataFilesDirectory + "/epg/" + fileName;
 		mkdirs(path);
 		FILE *f = fopen(path.c_str(), "wb");
 		if (f)
@@ -471,7 +492,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 	   decoded */
 	if ((iCurDataStreamID != STREAM_ID_NOT_USED) &&
 		(ReceiverParam.Service[iCurSelDataServ].DataParam.
-		 ePacketModInd == CParameter::PM_PACKET_MODE))
+		 ePacketModInd == CDataParam::PM_PACKET_MODE))
 	{
 		/* Calculate total packet size. DRM standard: packet length: this
 		   field indicates the length in bytes of the data field of each
@@ -499,7 +520,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 
 			/* Only DAB application supported */
 			if (ReceiverParam.Service[iCurSelDataServ].DataParam.
-				eAppDomain == CParameter::AD_DAB_SPEC_APP)
+				eAppDomain == CDataParam::AD_DAB_SPEC_APP)
 			{
 				/* Get application identifier of current selected service, only
 				   used with DAB */
@@ -591,7 +612,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 	for (int i = 0; i < 3; i++)
 	{
 		if ((ReceiverParam.Service[i].DataParam.eAppDomain ==
-			 CParameter::AD_DAB_SPEC_APP)
+			 CDataParam::AD_DAB_SPEC_APP)
 			&& (ReceiverParam.Service[i].DataParam.iUserAppIdent == 7))
 		{
 			iEPGService = i;
@@ -607,7 +628,7 @@ _BOOLEAN
 	_BOOLEAN bReturn = FALSE;
 
 	/* Lock resources */
-	Lock();
+	Lock(); 
 
 	/* Check if data service is current MOT application */
 	if ((DoNotProcessData == FALSE)
@@ -618,7 +639,7 @@ _BOOLEAN
 		bReturn = TRUE;
 	}
 	/* Release resources */
-	Unlock();
+	Unlock(); 
 
 	return bReturn;
 }
@@ -630,7 +651,7 @@ _BOOLEAN
 	_BOOLEAN bReturn = FALSE;
 
 	/* Lock resources */
-	Lock();
+	Lock(); 
 
 	/* Check if data service is current MOT application */
 	if ((DoNotProcessData == FALSE)
@@ -640,7 +661,7 @@ _BOOLEAN
 		bReturn = TRUE;
 	}
 	/* Release resources */
-	Unlock();
+	Unlock(); 
 
 	return bReturn;
 }
@@ -649,7 +670,7 @@ void
 CDataDecoder::GetNews(const int iObjID, CNews & News)
 {
 	/* Lock resources */
-	Lock();
+	Lock(); 
 
 	/* Check if data service is Journaline application */
 	if ((DoNotProcessData == FALSE)
@@ -657,5 +678,5 @@ CDataDecoder::GetNews(const int iObjID, CNews & News)
 		Journaline.GetNews(iObjID, News);
 
 	/* Release resources */
-	Unlock();
+	Unlock(); 
 }

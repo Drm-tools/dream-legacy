@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Ollie Haffenden
  *
  ******************************************************************************
  *
@@ -130,15 +130,15 @@ const int iTableCELP16kHzUEPParams[LEN_CELP_16KHZ_UEP_PARAMS_TAB][8] = {
 
 
 /* Classes ********************************************************************/
-class CAudioSourceEncoder : public CTransmitterModul<_SAMPLE, _BINARY>
+class CAudioSourceEncoderImplementation
 {
 public:
-	CAudioSourceEncoder() : bUsingTextMessage(FALSE)
+	CAudioSourceEncoderImplementation() : bUsingTextMessage(FALSE)
 #ifdef USE_FAAC_LIBRARY
 		, hEncoder(NULL)
 #endif
 		{}
-	virtual ~CAudioSourceEncoder();
+	virtual ~CAudioSourceEncoderImplementation();
 
 	void SetTextMessage(const string& strText);
 	void ClearTextMessage();
@@ -178,8 +178,63 @@ protected:
 	CVector<_REAL>			vecTempResBufOut;
 #endif
 
-	virtual void InitInternal(CParameter& TransmParam);
-	virtual void ProcessDataInternal(CParameter& TransmParam);
+public:
+		virtual void InitInternalTx(CParameter &TransmParam, int &iInputBlockSize, int &iOutputBlockSize);
+		virtual void InitInternalRx(CParameter& Param, int &iInputBlockSize, int &iOutputBlockSize);
+		virtual void ProcessDataInternal(CVectorEx<_SAMPLE>* pvecInputData,
+						CVectorEx<_BINARY>* pvecOutputData, int &iInputBlockSize, int &iOutputBlockSize);
+};
+
+class CAudioSourceEncoderRx : public CReceiverModul<_SAMPLE, _BINARY>
+{
+public:
+	CAudioSourceEncoderRx() {}
+	virtual ~CAudioSourceEncoderRx() {}
+
+protected:
+	CAudioSourceEncoderImplementation AudioSourceEncoderImpl;
+
+	virtual void InitInternal(CParameter& Param)
+	{
+		AudioSourceEncoderImpl.InitInternalRx(Param, iInputBlockSize, iOutputBlockSize);
+	}
+
+	virtual void ProcessDataInternal(CParameter& )
+	{
+		AudioSourceEncoderImpl.ProcessDataInternal(pvecInputData, pvecOutputData, iInputBlockSize, iOutputBlockSize);
+	}
+};
+
+class CAudioSourceEncoder : public CTransmitterModul<_SAMPLE, _BINARY>
+{
+public:
+	CAudioSourceEncoder() {}
+	virtual ~CAudioSourceEncoder() {}
+
+	void SetTextMessage(const string& strText) {AudioSourceEncoderImpl.SetTextMessage(strText);}
+	void ClearTextMessage() {AudioSourceEncoderImpl.ClearTextMessage();}
+	
+	void SetPicFileName(const string& strFileName, const string& strFormat)
+			{AudioSourceEncoderImpl.SetPicFileName(strFileName, strFormat);}
+
+	void ClearPicFileNames() {AudioSourceEncoderImpl.ClearPicFileNames();}
+
+	_BOOLEAN GetTransStat(string& strCPi, _REAL& rCPe)
+			{return AudioSourceEncoderImpl.GetTransStat(strCPi, rCPe);}
+
+protected:
+	CAudioSourceEncoderImplementation AudioSourceEncoderImpl;
+
+	virtual void InitInternal(CParameter& TransmParam)
+	{
+		AudioSourceEncoderImpl.InitInternalTx(TransmParam, iInputBlockSize, iOutputBlockSize);
+	}
+	
+	virtual void ProcessDataInternal(CParameter& )
+	{
+		AudioSourceEncoderImpl.ProcessDataInternal(pvecInputData, pvecOutputData, iInputBlockSize, iOutputBlockSize);
+	}
+
 };
 
 class CAudioSourceDecoder : public CReceiverModul<_BINARY, _SAMPLE>
@@ -234,7 +289,7 @@ protected:
 	int					iLenDecOutPerChan;
 	int					iNumAudioFrames;
 
-	CParameter::EAudCod	eAudioCoding;
+	CAudioParam::EAudCod	eAudioCoding;
 
 
 #ifdef USE_FAAD2_LIBRARY /* AAC decoding */

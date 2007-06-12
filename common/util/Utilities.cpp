@@ -27,6 +27,23 @@
 
 #include "Utilities.h"
 #include <sstream>
+#if defined(_WIN32)
+# ifdef HAVE_SETUPAPI
+#  ifndef INITGUID
+#   define INITGUID 1
+#  endif
+#  include <windows.h>
+#  include <setupapi.h>
+#  if defined(_MSC_VER) && (_MSC_VER < 1400) || defined(__MINGW32__)
+    DEFINE_GUID(GUID_DEVINTERFACE_COMPORT, 0x86e0d1e0L, 0x8089, 
+    0x11d0, 0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73);
+#  endif
+# endif
+#elif defined(__APPLE__)
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOKit/IOKitLib.h>
+#include <IOKit/serial/IOSerialKeys.h>
+#endif
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -109,7 +126,7 @@ void
 CDRMBandpassFilt::Init(const int iNewBlockSize, const _REAL rOffsetHz,
 					   const ESpecOcc eSpecOcc, const EFiltType eNFiTy)
 {
-	CReal rMargin=0.0;
+	CReal rMargin = 0.0;
 
 	/* Set internal parameter */
 	iBlockSize = iNewBlockSize;
@@ -429,28 +446,27 @@ CReal CAudioReverb::ProcessSample(const CReal rLInput, const CReal rRInput)
 	This code is based on patches and example code from Tomi Manninen and
 	Stephane Fillod (developer of hamlib)
 */
-CHamlib::CHamlib():pRig(NULL), bSMeterIsSupported(FALSE),
-		bModRigSettings(FALSE), iHamlibModelID(0),
-		strHamlibConf(HAMLIB_CONF_COM1), iFreqOffset(0)
+CHamlib::CHamlib():SpecDRMRigs(), CapsHamlibModels(),
+pRig(NULL), bSMeterIsSupported(FALSE),
+bModRigSettings(FALSE), iHamlibModelID(0),
+strHamlibConf(""), strSettings(""), iFreqOffset(0),
+modes(), levels(), functions(), parameters(), config()
 {
-	/* Special DRM front-end list */
-	vecSpecDRMRigs.Init(0);
-
 #ifdef RIG_MODEL_DWT
 	/* Digital World Traveller */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_DWT, "", 0, ""));
+	RigSpecialParameters(RIG_MODEL_DWT, "", 0, "");
 #endif
 
 #ifdef RIG_MODEL_G303
 	/* Winradio G3 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G303,
-								   "l_ATT=0,l_AGC=3", 0, "l_ATT=0,l_AGC=3"));
+	RigSpecialParameters(RIG_MODEL_G303, "l_ATT=0,l_AGC=3", 0,
+						 "l_ATT=0,l_AGC=3");
 #endif
 
 #ifdef RIG_MODEL_G313
 	/* Winradio G313 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G313,
-								   "l_ATT=0,l_AGC=3", 0, "l_ATT=0,l_AGC=3"));
+	RigSpecialParameters(RIG_MODEL_G313, "l_ATT=0,l_AGC=3", 0,
+						 "l_ATT=0,l_AGC=3");
 #endif
 
 #ifdef RIG_MODEL_AR7030
@@ -458,51 +474,45 @@ CHamlib::CHamlib():pRig(NULL), bSMeterIsSupported(FALSE),
 //  vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_AR7030,
 //      "m_CW=9500,l_IF=-4200,l_AGC=3", 5 /* kHz frequency offset */,
 //      "l_AGC=3"));
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_AR7030,
-								   "m_AM=3,l_AGC=5",
-								   0 /* kHz frequency offset */ ,
-								   "m_AM=2,l_AGC=5"));
+	RigSpecialParameters(RIG_MODEL_AR7030, "m_AM=3,l_AGC=5",
+						 0 /* kHz frequency offset */ ,
+						 "m_AM=6,l_AGC=5");
 #endif
 
 #ifdef RIG_MODEL_ELEKTOR304
 	/* Elektor 3/04 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_ELEKTOR304, "", 0, ""));
+	RigSpecialParameters(RIG_MODEL_ELEKTOR304, "", 0, "");
 #endif
 
 #ifdef RIG_MODEL_NRD535
 	/* JRC NRD 535 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_NRD535,
-								   "l_CWPITCH=-5000,m_CW=12000,l_IF=-2000,l_AGC=3"
-								   /* AGC=slow */ ,
-								   3 /* kHz frequency offset */ ,
-								   "l_AGC=3"));
+	RigSpecialParameters(RIG_MODEL_NRD535,
+						 "l_CWPITCH=-5000,m_CW=12000,l_IF=-2000,l_AGC=3"
+						 /* AGC=slow */ ,
+						 3 /* kHz frequency offset */ ,
+						 "l_AGC=3");
 #endif
 
 #ifdef RIG_MODEL_RX320
 	/* TenTec RX320D */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX320,
-								   "l_AF=1,l_AGC=3,m_AM=6000", 0, "l_AGC=3"));
+	RigSpecialParameters(RIG_MODEL_RX320, "l_AF=1,l_AGC=3,m_AM=6000", 0,
+						 "l_AGC=3");
 #endif
 
 #ifdef RIG_MODEL_RX340
 	/* TenTec RX340D */
-	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX340,
-								   "l_AF=1,m_USB=16000,l_AGC=3,l_IF=2000",
-								   -12 /* kHz frequency offset */ ,
-								   "l_AGC=3"));
+	RigSpecialParameters(RIG_MODEL_RX340,
+						 "l_AF=1,m_USB=16000,l_AGC=3,l_IF=2000",
+						 -12 /* kHz frequency offset */ ,
+						 "l_AGC=3");
 #endif
 
 	/* Load all available front-end remotes in hamlib library */
 	rig_load_all_backends();
 
-	/* Get all models which are available. First, the vector for storing the
-	   data has to be initialized with zero length! A call-back function is
-	   called to return the different rigs */
-	veccapsHamlibModels.Init(0);
+	/* Get all models which are available.
+	 * A call-back function is called to return the different rigs */
 	rig_list_foreach(PrintHamlibModelList, this);
-
-	/* Sort list */
-	SortHamlibModelList(veccapsHamlibModels);
 }
 
 CHamlib::~CHamlib()
@@ -515,74 +525,297 @@ CHamlib::~CHamlib()
 	}
 }
 
+void
+CHamlib::RigSpecialParameters(rig_model_t id, const string & sSet, int iFrOff,
+							  const string & sModSet)
+{
+	CapsHamlibModels[id].bIsSpecRig = TRUE;
+	SpecDRMRigs[id] = CSpecDRMRig(sSet, iFrOff, sModSet);
+}
+
+void
+CHamlib::GetRigList(map < rig_model_t, SDrRigCaps > &rigs)
+{
+	rigs = CapsHamlibModels;
+}
+
+void
+CHamlib::GetPortList(map < string, string > &ports)
+{
+	ports.clear();
+/* Config string for com-port selection is different in Windows and Linux */
+#ifdef _WIN32
+# ifdef HAVE_SETUPAPI
+	GUID guid = GUID_DEVINTERFACE_COMPORT;
+	HDEVINFO hDevInfoSet = SetupDiGetClassDevs(&guid, NULL, NULL,
+											   DIGCF_PRESENT |
+											   DIGCF_DEVICEINTERFACE);
+	if (hDevInfoSet != INVALID_HANDLE_VALUE)
+	{
+		SP_DEVINFO_DATA devInfo;
+		devInfo.cbSize = sizeof(SP_DEVINFO_DATA);
+		for (int i = 0; SetupDiEnumDeviceInfo(hDevInfoSet, i, &devInfo); i++)
+		{
+			HKEY hDeviceKey =
+				SetupDiOpenDevRegKey(hDevInfoSet, &devInfo, DICS_FLAG_GLOBAL,
+									 0, DIREG_DEV, KEY_QUERY_VALUE);
+			if (hDeviceKey)
+			{
+				char szPortName[256];
+				DWORD dwSize = sizeof(szPortName);
+				DWORD dwType = 0;
+				if ((RegQueryValueExA
+					 (hDeviceKey, "PortName", NULL, &dwType,
+					  reinterpret_cast < LPBYTE > (szPortName),
+					  &dwSize) == ERROR_SUCCESS) && (dwType == REG_SZ))
+				{
+					char szFriendlyName[256];
+					DWORD dwSize = sizeof(szFriendlyName);
+					DWORD dwType = 0;
+					if (SetupDiGetDeviceRegistryPropertyA
+						(hDevInfoSet, &devInfo, SPDRP_DEVICEDESC, &dwType,
+						 reinterpret_cast < PBYTE > (szFriendlyName), dwSize,
+						 &dwSize) && (dwType == REG_SZ))
+						ports[string(szFriendlyName) + " " + szPortName] = szPortName;
+					else
+						ports[szPortName] = szPortName;
+				}
+
+				RegCloseKey(hDeviceKey);
+			}
+		}
+
+		SetupDiDestroyDeviceInfoList(hDevInfoSet);
+	}
+# endif
+	if (ports.empty())
+	{
+		ports["COM1"] = "COM1";
+		ports["COM2"] = "COM2";
+		ports["COM3"] = "COM3 ";
+		ports["COM4"] = "COM4 ";
+		ports["COM5"] = "COM5 ";
+	}
+#elif defined(__linux)
+	FILE *p =
+		popen("hal-find-by-capability --capability serial", "r");
+	_BOOLEAN bOK = FALSE;
+	while (!feof(p))
+	{
+		char buf[1024];
+		fgets(buf, sizeof(buf), p);
+		if (strlen(buf) > 0)
+		{
+			string s =
+				string("hal-get-property --key serial.device --udi ") +
+				buf;
+			FILE *p2 = popen(s.c_str(), "r");
+			fgets(buf, sizeof(buf), p2);
+			size_t n = strlen(buf);
+			if (n > 0)
+			{
+				if (buf[n - 1] == '\n')
+					buf[n - 1] = 0;
+				ports[buf] = buf;
+				bOK = TRUE;
+				buf[0] = 0;
+			}
+			pclose(p2);
+		}
+	}
+	pclose(p);
+	if (!bOK)
+	{
+		ports["ttyS0"] = "/dev/ttyS0";
+		ports["ttyS1"] = "/dev/ttyS1";
+		ports["ttyUSB0"] = "/dev/ttyUSB0";
+	}
+#elif defined(__APPLE__)
+	io_iterator_t serialPortIterator;
+    kern_return_t			kernResult; 
+    CFMutableDictionaryRef	classesToMatch;
+
+    // Serial devices are instances of class IOSerialBSDClient
+    classesToMatch = IOServiceMatching(kIOSerialBSDServiceValue);
+    if (classesToMatch == NULL)
+    {
+        printf("IOServiceMatching returned a NULL dictionary.\n");
+    }
+    else
+	{
+        CFDictionarySetValue(classesToMatch,
+                             CFSTR(kIOSerialBSDTypeKey),
+                             CFSTR(kIOSerialBSDRS232Type));
+        
+	}
+    kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault, classesToMatch, &serialPortIterator);    
+    if (KERN_SUCCESS != kernResult)
+    {
+        printf("IOServiceGetMatchingServices returned %d\n", kernResult);
+    }
+        
+    io_object_t		modemService;
+    
+    // Iterate across all modems found. In this example, we bail after finding the first modem.
+    
+    while ((modemService = IOIteratorNext(serialPortIterator)))
+    {
+        CFStringRef	bsdPathAsCFString;
+
+		// Get the callout device's path (/dev/cu.xxxxx). The callout device should almost always be
+		// used: the dialin device (/dev/tty.xxxxx) would be used when monitoring a serial port for
+		// incoming calls, e.g. a fax listener.
+	
+		bsdPathAsCFString = CFStringRef(IORegistryEntryCreateCFProperty(modemService,
+                                                            CFSTR(kIOCalloutDeviceKey),
+                                                            kCFAllocatorDefault,
+                                                            0));
+        if (bsdPathAsCFString)
+        {
+            Boolean result;
+			char bsdPath[256];
+            
+            // Convert the path from a CFString to a C (NUL-terminated) string for use
+			// with the POSIX open() call.
+	    
+			result = CFStringGetCString(bsdPathAsCFString,
+                                        bsdPath,
+                                        sizeof(bsdPath), 
+                                        kCFStringEncodingUTF8);
+            CFRelease(bsdPathAsCFString);
+            
+            if (result)
+			{
+				// make the name a bit more friendly for the menu
+				string s,t=bsdPath;
+				size_t p = t.find('.');
+				if(p<string::npos)
+					s = t.substr(p+1);
+				else
+					s = t;
+				ports[s] = bsdPath;
+            }
+        }
+
+        // Release the io_service_t now that we are done with it.
+	
+		(void) IOObjectRelease(modemService);
+    }
+#endif
+}
+
+void
+CHamlib::SetComPort(const string & port)
+{
+	config["rig_pathname"] = port;
+	SetHamlibModelID(iHamlibModelID);
+}
+
+string CHamlib::GetComPort() const
+{
+	map < string, string >::const_iterator m = config.find("rig_pathname");
+	if (m == config.end())
+		return "";
+	return m->second;
+}
+
 int
 CHamlib::PrintHamlibModelList(const struct rig_caps *caps, void *data)
 {
-	/* Access data members of class through pointer ((CHamlib*) data).
-	   Store new model in string vector. Use only relevant information */
-	int iIndex;
-	const _BOOLEAN bSpecRigIdx = ((CHamlib *) data)->
-		CheckForSpecDRMFE(caps->rig_model, iIndex);
+	/* Access data members of class through pointer ((CHamlib*) data) */
+	CHamlib & Hamlib = *((CHamlib *) data);
 
-	((CHamlib *) data)->veccapsHamlibModels.
-		Add(SDrRigCaps
-			(caps->rig_model, caps->mfg_name, caps->model_name, caps->status,
-			 bSpecRigIdx));
+	/* Store new model in class. Use only relevant information */
+	_BOOLEAN bIsSpec =
+		Hamlib.SpecDRMRigs.find(caps->rig_model) != Hamlib.SpecDRMRigs.end();
+
+	Hamlib.CapsHamlibModels[caps->rig_model] =
+		SDrRigCaps(caps->mfg_name, caps->model_name, caps->status, bIsSpec);
 
 	return 1;					/* !=0, we want them all! */
 }
 
-_BOOLEAN CHamlib::CheckForSpecDRMFE(const rig_model_t iID, int &iIndex)
+void
+CHamlib::LoadSettings(CSettings & s)
 {
-	_BOOLEAN
-		bIsSpecialDRMrig = FALSE;
-	const int
-		iVecSize = vecSpecDRMRigs.Size();
+	rig_model_t model = s.Get("Hamlib", "hamlib-model", 0);
 
-	/* Check for special DRM front-end */
-	for (int i = 0; i < iVecSize; i++)
+	if (model != 0)
 	{
-		if (vecSpecDRMRigs[i].iModelID == iID)
+		/* Hamlib configuration string */
+		string strHamlibConf = s.Get("Hamlib", "hamlib-config");
+		if (strHamlibConf != "")
 		{
-			bIsSpecialDRMrig = TRUE;
-			iIndex = i;
+			istringstream params(strHamlibConf);
+			while (!params.eof())
+			{
+				string name, value;
+				getline(params, name, '=');
+				getline(params, value, ',');
+				config[name] = value;
+			}
 		}
+
+		/* Enable DRM modified receiver flag */
+		bModRigSettings = s.Get("Hamlib", "enmodrig", FALSE);
+
+		strSettings = s.Get("Hamlib", "settings");
+		iFreqOffset = s.Get("Hamlib", "freqoffset", 0);
+
+		if (strSettings != "" || iFreqOffset != 0)
+		{
+			if (bModRigSettings)
+				RigSpecialParameters(model, "", iFreqOffset, strSettings);
+			else
+				RigSpecialParameters(model, strSettings, iFreqOffset, "");
+		}
+
+		/* Hamlib Model ID */
+		SetHamlibModelID(model);
 	}
 
-	return bIsSpecialDRMrig;
+	s.Put("Hamlib", "hamlib-model", model);
+	s.Put("Hamlib", "hamlib-config", strHamlibConf);
+	s.Put("Hamlib", "settings", strSettings);
+	s.Put("Hamlib", "freqoffset", iFreqOffset);
 }
 
 void
-CHamlib::SortHamlibModelList(CVector < SDrRigCaps > &veccapsHamlMod)
+CHamlib::SaveSettings(CSettings & s)
 {
-	/* Loop through the array one less than its total cell count */
-	const int iEnd = veccapsHamlMod.Size() - 1;
+	/* Hamlib Model ID */
+	s.Put("Hamlib", "hamlib-model", iHamlibModelID);
 
-	for (int i = 0; i < iEnd; i++)
+	/* Hamlib configuration string */
+	stringstream ss;
+	string sep = "";
+	for (map < string, string >::iterator i = config.begin();
+		 i != config.end(); i++)
 	{
-		for (int j = 0; j < iEnd; j++)
-		{
-			/* Compare the values and switch if necessary */
-			if (veccapsHamlMod[j].iModelID > veccapsHamlMod[j + 1].iModelID)
-			{
-				const SDrRigCaps instSwap = veccapsHamlMod[j];
-				veccapsHamlMod[j] = veccapsHamlMod[j + 1];
-				veccapsHamlMod[j + 1] = instSwap;
-			}
-		}
+		ss << sep << i->first << "=" << i->second;
+		sep = ",";
 	}
+
+	s.Put("Hamlib", "hamlib-config", ss.str());
+
+	/* Enable DRM modified receiver flag */
+	s.Put("Hamlib", "enmodrig", bModRigSettings);
+
+	s.Put("Hamlib", "settings", strSettings);
+
+	s.Put("Hamlib", "freqoffset", iFreqOffset);
 }
 
-_BOOLEAN CHamlib::SetFrequency(const int iFreqkHz)
+_BOOLEAN
+CHamlib::SetFrequency(const int iFreqkHz)
 {
-	_BOOLEAN
-		bSucceeded = FALSE;
+	_BOOLEAN bSucceeded = FALSE;
 
 	/* Check if rig was opend properly */
 	if (pRig != NULL)
 	{
 		/* Set frequency (consider frequency offset and conversion
-		   from kHz to Hz by "* 1000") */
+		   from kHz to Hz by " * 1000 ") */
 		if (rig_set_freq(pRig, RIG_VFO_CURR, (iFreqkHz + iFreqOffset) * 1000)
 			== RIG_OK)
 		{
@@ -595,12 +828,14 @@ _BOOLEAN CHamlib::SetFrequency(const int iFreqkHz)
 
 CHamlib::ESMeterState CHamlib::GetSMeter(_REAL & rCurSigStr)
 {
-	ESMeterState eRetVal = SS_NOTVALID;
+	ESMeterState
+		eRetVal = SS_NOTVALID;
 	rCurSigStr = (_REAL) 0.0;
 
 	if ((pRig != NULL) && (bSMeterIsSupported == TRUE))
 	{
-		value_t tVal;
+		value_t
+			tVal;
 		const int
 			iHamlibRetVal =
 			rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &tVal);
@@ -623,6 +858,144 @@ CHamlib::ESMeterState CHamlib::GetSMeter(_REAL & rCurSigStr)
 }
 
 void
+CHamlib::ConfigureRig(const string & strSet)
+{
+	/* Parse special settings */
+	istringstream params(strSet);
+	while (!params.eof())
+	{
+		string p, name, value;
+
+		getline(params, p, '_');
+		getline(params, name, '=');
+		getline(params, value, ',');
+		if (p == "" || p.length() != 1 || name == "" || value == "")
+		{
+			/* Malformatted config string */
+			rig_cleanup(pRig);
+			pRig = NULL;
+
+			throw CGenErr(string("Malformatted config string: ") + strSet);
+		}
+		switch (p[0])
+		{
+		case 'm':
+			modes[name] = value;
+			break;
+		case 'l':
+			levels[name] = value;
+			break;
+		case 'f':
+			functions[name] = value;
+			break;
+		case 'p':
+			parameters[name] = value;
+			break;
+		default:
+			cerr << "Rig unknown setting: " << p << "_" << name <<
+				"=" << value << endl;
+		}
+	}
+}
+
+void
+CHamlib::SetRigModes()
+{
+	for (map < string, string >::const_iterator i = modes.begin();
+		 i != modes.end(); i++)
+	{
+		rmode_t mode = rig_parse_mode(i->first.c_str());
+		if (mode != RIG_MODE_NONE)
+		{
+			int ret =
+				rig_set_mode(pRig, RIG_VFO_CURR, mode,
+							 atoi(i->second.c_str()));
+			if (ret != RIG_OK)
+				cerr << "Rig set mode failed: " << rigerror(ret) << endl;
+		}
+	}
+}
+
+void
+CHamlib::SetRigLevels()
+{
+	for (map < string, string >::const_iterator i = levels.begin();
+		 i != levels.end(); i++)
+	{
+		setting_t setting = rig_parse_level(i->first.c_str());
+		if (setting != RIG_LEVEL_NONE)
+		{
+			value_t val;
+			if (RIG_LEVEL_IS_FLOAT(setting))
+				val.f = atof(i->second.c_str());
+			else
+				val.i = atoi(i->second.c_str());
+
+			int ret = rig_set_level(pRig, RIG_VFO_CURR, setting, val);
+			if (ret != RIG_OK)
+				cerr << "Rig set level failed: " << rigerror(ret) << endl;
+		}
+	}
+}
+
+void
+CHamlib::SetRigFuncs()
+{
+	for (map < string, string >::const_iterator i = functions.begin();
+		 i != functions.end(); i++)
+	{
+		setting_t setting = rig_parse_func(i->first.c_str());
+		if (setting != RIG_FUNC_NONE)
+		{
+			int ret =
+				rig_set_func(pRig, RIG_VFO_CURR, setting,
+							 atoi(i->second.c_str()));
+			if (ret != RIG_OK)
+				cerr << "Rig set func failed: " << rigerror(ret) << endl;
+		}
+	}
+}
+
+void
+CHamlib::SetRigParams()
+{
+	for (map < string, string >::const_iterator i = parameters.begin();
+		 i != parameters.end(); i++)
+	{
+		setting_t setting = rig_parse_parm(i->first.c_str());
+		if (setting != RIG_PARM_NONE)
+		{
+			value_t val;
+			if (RIG_PARM_IS_FLOAT(setting))
+				val.f = atof(i->second.c_str());
+			else
+				val.i = atoi(i->second.c_str());
+			int ret = rig_set_parm(pRig, setting, val);
+			if (ret != RIG_OK)
+				cerr << "Rig set parm failed: " << rigerror(ret) << endl;
+		}
+	}
+}
+
+void
+CHamlib::SetRigConfig()
+{
+	for (map < string, string >::const_iterator i = config.begin();
+		 i != config.end(); i++)
+	{
+		int ret =
+			rig_set_conf(pRig, rig_token_lookup(pRig, i->first.c_str()),
+						 i->second.c_str());
+		if (ret != RIG_OK)
+		{
+			rig_cleanup(pRig);
+			pRig = NULL;
+			throw CGenErr("Rig set conf failed.");
+		}
+	}
+}
+
+void
 CHamlib::SetEnableModRigSettings(const _BOOLEAN bNSM)
 {
 	if (bModRigSettings != bNSM)
@@ -636,25 +1009,12 @@ CHamlib::SetEnableModRigSettings(const _BOOLEAN bNSM)
 }
 
 void
-CHamlib::SetHamlibConf(const string strNewC)
-{
-	if (strHamlibConf.compare(strNewC))
-	{
-		/* Set internal parameter */
-		strHamlibConf = strNewC;
-
-		/* Hamlib must be re-initialized with new parameter */
-		SetHamlibModelID(iHamlibModelID);
-	}
-}
-
-void
-CHamlib::SetHamlibModelID(const int iNewM)
+CHamlib::SetHamlibModelID(const rig_model_t model)
 {
 	int ret;
 
 	/* Set value for current selected model ID */
-	iHamlibModelID = (rig_model_t) iNewM;
+	iHamlibModelID = model;
 
 	/* Init frequency offset */
 	iFreqOffset = 0;
@@ -673,40 +1033,33 @@ CHamlib::SetHamlibModelID(const int iNewM)
 		if (iHamlibModelID == 0)
 			throw CGenErr("No rig model ID selected.");
 
+		/* Check for special DRM front-end selection */
+		map < rig_model_t, CSpecDRMRig >::const_iterator s =
+			SpecDRMRigs.find(iHamlibModelID);
+		if (s != SpecDRMRigs.end())
+		{
+			/* Get correct parameter string */
+			if (bModRigSettings == TRUE)
+				strSettings = s->second.strDRMSetMod;
+			else
+			{
+				strSettings = s->second.strDRMSetNoMod;
+
+				/* Additionally, set frequency offset for this special rig */
+				iFreqOffset = s->second.iFreqOffs;
+			}
+			if (strSettings != "")
+			{
+				ConfigureRig(strSettings);
+			}
+		}
+
 		/* Init rig */
 		pRig = rig_init(iHamlibModelID);
 		if (pRig == NULL)
 			throw CGenErr("Initialization of hamlib failed.");
 
-		/* Config setup */
-		if (strHamlibConf != "")
-		{
-			istringstream params(strHamlibConf);
-			while (!params.eof())
-			{
-				string name, value;
-				getline(params, name, '=');
-				getline(params, value, ',');
-				if (name == "" || value == "")
-				{
-					rig_cleanup(pRig);
-					pRig = NULL;
-
-					throw CGenErr(string("Malformatted config string: ") +
-								  strHamlibConf);
-				}
-				ret =
-					rig_set_conf(pRig, rig_token_lookup(pRig, name.c_str()),
-								 value.c_str());
-				if (ret != RIG_OK)
-				{
-					rig_cleanup(pRig);
-					pRig = NULL;
-
-					throw CGenErr("Rig set conf failed.");
-				}
-			}
-		}
+		SetRigConfig();
 
 		/* Open rig */
 		ret = rig_open(pRig);
@@ -722,111 +1075,10 @@ CHamlib::SetHamlibModelID(const int iNewM)
 		/* Ignore result, some rigs don't have support for this */
 		rig_set_powerstat(pRig, RIG_POWER_ON);
 
-		/* Check for special DRM front-end selection */
-		int iIndex;
-		if (CheckForSpecDRMFE(iHamlibModelID, iIndex) == TRUE)
-		{
-			/* Get correct parameter string */
-			string strSet;
-			if (bModRigSettings == TRUE)
-				strSet = vecSpecDRMRigs[iIndex].strDRMSetMod;
-			else
-			{
-				strSet = vecSpecDRMRigs[iIndex].strDRMSetNoMod;
-
-				/* Additionally, set frequency offset for this special rig */
-				iFreqOffset = vecSpecDRMRigs[iIndex].iFreqOffs;
-			}
-
-			if (strSet != "")
-			{
-				/* Parse special settings */
-				istringstream params(strSet);
-				while (!params.eof())
-				{
-					string p, name, value;
-					rmode_t mode;
-					setting_t setting;
-					value_t val;
-
-					getline(params, p, '_');
-					getline(params, name, '=');
-					getline(params, value, ',');
-					if (p == "" || p.length() != 1 || name == ""
-						|| value == "")
-					{
-						/* Malformatted config string */
-						rig_cleanup(pRig);
-						pRig = NULL;
-
-						throw CGenErr(string("Malformatted config string: ") +
-									  strSet);
-					}
-
-					switch (p[0])
-					{
-					case 'm':
-						mode = rig_parse_mode(name.c_str());
-						if (mode != RIG_MODE_NONE)
-						{
-							ret =
-								rig_set_mode(pRig, RIG_VFO_CURR, mode,
-											 atoi(value.c_str()));
-							if (ret != RIG_OK)
-								cerr << "Rig set mode failed: " <<
-									rigerror(ret) << endl;
-						}
-						break;
-					case 'l':
-						setting = rig_parse_level(name.c_str());
-						if (setting != RIG_LEVEL_NONE)
-						{
-							if (RIG_LEVEL_IS_FLOAT(setting))
-								val.f = atof(value.c_str());
-							else
-								val.i = atoi(value.c_str());
-
-							ret =
-								rig_set_level(pRig, RIG_VFO_CURR, setting,
-											  val);
-							if (ret != RIG_OK)
-								cerr << "Rig set level failed: " <<
-									rigerror(ret) << endl;
-						}
-						break;
-					case 'f':
-						setting = rig_parse_func(name.c_str());
-						if (setting != RIG_FUNC_NONE)
-						{
-							ret =
-								rig_set_func(pRig, RIG_VFO_CURR, setting,
-											 atoi(value.c_str()));
-							if (ret != RIG_OK)
-								cerr << "Rig set func failed: " <<
-									rigerror(ret) << endl;
-						}
-						break;
-					case 'p':
-						setting = rig_parse_parm(name.c_str());
-						if (setting != RIG_PARM_NONE)
-						{
-							if (RIG_PARM_IS_FLOAT(setting))
-								val.f = atof(value.c_str());
-							else
-								val.i = atoi(value.c_str());
-
-							ret = rig_set_parm(pRig, setting, val);
-							if (ret != RIG_OK)
-								cerr << "Rig set parm failed: " <<
-									rigerror(ret) << endl;
-						}
-					default:
-						cerr << "Rig unknown setting: " << p << "_" << name <<
-							"=" << value << endl;
-					}
-				}
-			}
-		}
+		SetRigModes();
+		SetRigLevels();
+		SetRigFuncs();
+		SetRigParams();
 
 		/* Check if s-meter capabilities are available */
 		if (pRig != NULL)

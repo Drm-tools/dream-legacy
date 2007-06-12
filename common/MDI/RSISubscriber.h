@@ -34,10 +34,11 @@
 #include "PacketInOut.h"
 #include "PacketSinkFile.h"
 #include "PacketInOut.h"
+#include "AFPacketGenerator.h"
 
 class CPacketSink;
 class CDRMReceiver;
-class CTagPacketGeneratorWithProfiles;
+class CTagPacketGenerator;
 
 class CRSISubscriber : public CPacketSink
 {
@@ -50,41 +51,49 @@ public:
 
 	/* Set the profile for this subscriber - could be different for different subscribers */
 	void SetProfile(const char c);
+	char GetProfile(void) const {return cProfile;}
+
+	void SetPFTFragmentSize(const int iFrag=-1);
 
 	/* Generate and send a packet */
-	void TransmitPacket(CTagPacketGeneratorWithProfiles *pGenerator);
+	void TransmitPacket(CTagPacketGenerator& Generator);
 
 	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC = bNAFPktCRC;}
 
 
 	/* from CPacketSink interface */
-		virtual void SendPacket(const vector<_BYTE>& vecbydata);
+	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
 protected:
 	CPacketSink *pPacketSink;
 	char cProfile;
-private:
+	_BOOLEAN bNeedPft;
+    size_t fragment_size;
 	CTagPacketDecoderRSCIControl TagPacketDecoderRSCIControl;
+private:
 	CDRMReceiver *pDRMReceiver;
+	CAFPacketGenerator AFPacketGenerator;
 
 	_BOOLEAN bUseAFCRC;
-
+	uint16_t sequence_counter;
 };
 
 
 class CRSISubscriberSocket : public CRSISubscriber
 {
 public:
-	CRSISubscriberSocket();
+	CRSISubscriberSocket(CPacketSink *pSink = NULL);
 	virtual ~CRSISubscriberSocket();
 
-	_BOOLEAN SetOutAddr(const string& strArgument);
-	_BOOLEAN SetInAddr(const string& strAddr);
-
+	_BOOLEAN SetOrigin(const string& str);
+	_BOOLEAN SetDestination(const string& str);
+	_BOOLEAN GetDestination(string& addr);
 
 private:
-	CPacketSocket&				PacketSocket;
-
+	CPacketSocket* pSocket;
+	string strDestination;
+	uint32_t uIf, uAddr;
+	uint16_t uPort;
 };
 
 
@@ -93,15 +102,13 @@ class CRSISubscriberFile : public CRSISubscriber
 public:
 	CRSISubscriberFile();
 
-	void StartRecording(CParameter &ReceiverParam);
+	_BOOLEAN SetDestination(const string& strFName);
+	void StartRecording();
 	void StopRecording();
-	/* this needs to be called when the frequency changes so the filename can be changed */
-	void NewFrequency(CParameter& ReceiverParam);
 
+	_BOOLEAN GetDestination(string& addr);
 private:
-	CPacketSinkRawFile PacketSinkFile;
-	_BOOLEAN bIsRecording;
-	int	iFrequency;
+	CPacketSinkFile* pPacketSinkFile;
 };
 
 #endif

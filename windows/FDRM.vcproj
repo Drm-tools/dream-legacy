@@ -47,7 +47,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="$(QTDIR)\include,../libs,../common/GUI-QT"
+				AdditionalIncludeDirectories="$(QTDIR)\include,../libs,../common/GUI-QT,./moc"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;QT_DLL;QT_THREAD_SUPPORT;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -56,7 +56,7 @@
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
-				WarningLevel="3"
+				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DisableSpecificWarnings="4521;4189;4505"
 			/>
@@ -73,7 +73,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libfaac.lib libhamlib.lib libfftw.lib libfaad.lib imm32.lib wsock32.lib winmm.lib $(QTDIR)\lib\qt-mt3.lib $(QTDIR)\lib\qtmain.lib libqwt.lib libfhgjournaline.lib shell32.lib user32.lib"
+				AdditionalDependencies="libfaac.lib libhamlib.lib libfftw.lib libfaad.lib imm32.lib wsock32.lib winmm.lib $(QTDIR)\lib\qt-mt3.lib $(QTDIR)\lib\qtmain.lib libqwt.lib libfhgjournaline.lib shell32.lib user32.lib setupapi.lib"
 				OutputFile="Release/Dream.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
@@ -143,7 +143,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="$(QTDIR)\include,../libs,../common/GUI-QT"
+				AdditionalIncludeDirectories="$(QTDIR)\include,../libs,../common/GUI-QT,./moc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;QT_DLL;QT_THREAD_SUPPORT;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -152,7 +152,7 @@
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
-				WarningLevel="3"
+				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
 				DisableSpecificWarnings="4521;4189;4505"
@@ -170,7 +170,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libfaac.lib libhamlib.lib imm32.lib wsock32.lib winmm.lib $(QTDIR)\lib\qt-mt3.lib $(QTDIR)\lib\qtmain.lib libfftw.lib libfaad.lib libqwt.lib libfhgjournaline.lib shell32.lib user32.lib"
+				AdditionalDependencies="libfaac.lib libhamlib.lib imm32.lib wsock32.lib winmm.lib $(QTDIR)\lib\qt-mt3.lib $(QTDIR)\lib\qtmain.lib libfftw.lib libfaad.lib libqwt.lib libfhgjournaline.lib shell32.lib user32.lib setupapi.lib"
 				OutputFile="Debug/Dream.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -240,6 +240,28 @@
 			</File>
 			<File
 				RelativePath="..\common\AMSSDemodulation.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\common\audiofilein.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -349,7 +371,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GPSData.cpp"
+				RelativePath="..\common\ReceptLog.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -371,7 +393,29 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GPSReceiver.cpp"
+				RelativePath="..\common\PlotManager.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\common\ServiceInformation.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -481,6 +525,50 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\common\GPSData.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\common\GPSReceiver.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\common\InputResample.cpp"
 				>
 				<FileConfiguration
@@ -530,6 +618,28 @@
 			</File>
 			<File
 				RelativePath="..\common\OFDM.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="Source\Pacer.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -622,50 +732,6 @@
 			</File>
 			<File
 				RelativePath="Source\Sound.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="Source\Pacer.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\common\audiofilein.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -1489,6 +1555,28 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="moc\moc_GPSReceiver.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
 						RelativePath="moc\moc_LiveScheduleDlg.cpp"
 						>
 						<FileConfiguration
@@ -1663,6 +1751,10 @@
 								PreprocessorDefinitions=""
 							/>
 						</FileConfiguration>
+					</File>
+					<File
+						RelativePath=".\moc\moc_PacketSourceFile.cpp"
+						>
 					</File>
 					<File
 						RelativePath="moc\moc_StationsDlg.cpp"
@@ -1886,28 +1978,6 @@
 					</File>
 					<File
 						RelativePath="moc\TransmDlgbase.cpp"
-						>
-						<FileConfiguration
-							Name="Release|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-						<FileConfiguration
-							Name="Debug|Win32"
-							>
-							<Tool
-								Name="VCCLCompilerTool"
-								AdditionalIncludeDirectories=""
-								PreprocessorDefinitions=""
-							/>
-						</FileConfiguration>
-					</File>
-					<File
-						RelativePath="moc\moc_GPSReceiver.cpp"
 						>
 						<FileConfiguration
 							Name="Release|Win32"
@@ -2842,8 +2912,48 @@
 				Name="Source MDI"
 				>
 				<File
+					RelativePath="..\common\MDI\AFPacketGenerator.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath="..\common\MDI\MDIDecode.cpp"
 					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\common\MDI\MDIInBuffer.cpp"
@@ -2961,6 +3071,28 @@
 				</File>
 				<File
 					RelativePath="..\common\MDI\PacketSocketQT.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\MDI\PacketSourceFile.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -3136,6 +3268,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\audiofilein.h"
+				>
+			</File>
+			<File
 				RelativePath="..\common\sourcedecoders\AudioSourceDecoder.h"
 				>
 			</File>
@@ -3152,11 +3288,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\GPSData.h"
+				RelativePath="..\common\ReceptLog.h"
 				>
 			</File>
 			<File
-				RelativePath="..\common\GPSReceiver.h"
+				RelativePath="..\common\PlotManger.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\ServiceInformation.h"
 				>
 			</File>
 			<File
@@ -3180,6 +3320,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\GPSData.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\GPSReceiver.h"
+				>
+			</File>
+			<File
 				RelativePath="..\common\InputResample.h"
 				>
 			</File>
@@ -3193,6 +3341,10 @@
 			</File>
 			<File
 				RelativePath="..\common\OFDM.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\util\Pacer.h"
 				>
 			</File>
 			<File
@@ -3212,19 +3364,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\soundinterface.h"
-				>
-			</File>
-			<File
 				RelativePath="..\common\sound.h"
-				>
-			</File>
-			<File
-				RelativePath="..\common\sound\soundnull.h"
-				>
-			</File>
-			<File
-				RelativePath="..\common\util\Pacer.h"
 				>
 			</File>
 			<File
@@ -3232,7 +3372,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\audiofilein.h"
+				RelativePath="..\common\soundinterface.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\sound\soundnull.h"
 				>
 			</File>
 			<File
@@ -3541,6 +3685,10 @@
 				Name="Header MDI"
 				>
 				<File
+					RelativePath="..\common\MDI\AFPacketGenerator.h"
+					>
+				</File>
+				<File
 					RelativePath="..\common\MDI\MDIDecode.h"
 					>
 				</File>
@@ -3578,6 +3726,10 @@
 				</File>
 				<File
 					RelativePath="..\common\MDI\PacketSocketQT.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\MDI\PacketSourceFile.h"
 					>
 				</File>
 				<File

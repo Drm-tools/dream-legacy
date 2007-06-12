@@ -13,16 +13,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -1379,7 +1379,7 @@ const
 	{0, 0},
 };
 
-EPG::EPG ()
+EPG::EPG(CParameter& NParameters):Parameters(NParameters)
 {
 	for (int i = 0; true; i++)
 	{
@@ -1388,37 +1388,29 @@ EPG::EPG ()
 		genres[genre_list[i].genre] = genre_list[i].desc;
 	}
 
-	dir = EPG_SAVE_PATH;
+	dir = (Parameters.sDataFilesDirectory + "/epg").c_str();
 	servicesFilename = dir + "/services.xml";
 	loadChannels (servicesFilename);
 	saveChannels (servicesFilename);
 }
 
 void
-EPG::addChannel (const QString & label, uint32_t sid)
+EPG::addChannel (const string& label, uint32_t sid)
 {
-	if (!sids.contains (label))
-	{
-		sids[label] = sid;
-		saveChannels (servicesFilename);
-	}
+	Parameters.ServiceInformation[sid].label.insert(label);
+	Parameters.ServiceInformation[sid].id = sid;
 }
 
 void
-EPG::select (const QString & chan, const CDateAndTime & d)
+EPG::select (const uint32_t chan, const CDateAndTime & d)
 {
-	if (!sids.contains (chan))
-	{
-		return;
-	}
-	uint32_t sid = sids[chan];
 	progs.clear ();
 	/* look for the basic profile */
 	QString fileName;
-	fileName = dir + "/" + QString (epgFilename (d, sid, 1, false).c_str ());
+	fileName = dir + "/" + QString (epgFilename (d, chan, 1, false).c_str ());
 	getFile (basic, fileName);
 	/* look for the advanced profile */
-	fileName = dir + "/" + QString (epgFilename (d, sid, 1, true).c_str ());
+	fileName = dir + "/" + QString (epgFilename (d, chan, 1, true).c_str ());
 	getFile (advanced, fileName);
 	if (progs.count () == 0)
 	{
@@ -1561,18 +1553,21 @@ EPG::saveChannels (const QString & fileName)
 	doc.appendChild (root);
 	QDomElement ensemble = doc.createElement ("ensemble");
 	root.appendChild (ensemble);
-	for (QMap < QString, uint32_t >::Iterator i = sids.begin ();
-		 i != sids.end (); i++)
+	for (map < uint32_t, CServiceInformation >::const_iterator i = Parameters.ServiceInformation.begin();
+		 i != Parameters.ServiceInformation.end(); i++)
 	{
+		const CServiceInformation& si = i->second;
 		QDomElement service = doc.createElement ("service");
 		QDomElement serviceID = doc.createElement ("serviceID");
-		serviceID.setAttribute ("id",
-								QString::number (ulong (i.data ()), 16));
+		serviceID.setAttribute ("id", QString::number (ulong (si.id), 16));
 		service.appendChild (serviceID);
-		QDomElement shortName = doc.createElement ("shortName");
-		QDomText text = doc.createTextNode (i.key ());
-		shortName.appendChild (text);
-		service.appendChild (shortName);
+		for(set<string>::const_iterator j = si.label.begin(); j != si.label.end(); j++)
+		{
+			QDomElement shortName = doc.createElement ("shortName");
+			QDomText text = doc.createTextNode (QString().fromUtf8(j->c_str()));
+			shortName.appendChild (text);
+			service.appendChild (shortName);
+		}
 		ensemble.appendChild (service);
 	}
 	QTextStream stream (&f);
@@ -1584,12 +1579,11 @@ EPG::saveChannels (const QString & fileName)
 void
 EPG::loadChannels (const QString & fileName)
 {
-	sids.clear ();
 	QDomDocument domTree;
 	QFile f (fileName);
 	if (!f.open (IO_ReadOnly))
 	{
-		sids.insert ("BBCWorld Service", 0xE1C238);
+		addChannel ("BBCWorld Service", 0xE1C238);
 		return;
 	}
 	if (!domTree.setContent (&f))
@@ -1605,14 +1599,15 @@ EPG::loadChannels (const QString & fileName)
 		if (n.nodeName () == "service")
 		{
 			QDomNode e = n.firstChild ();
-			QString name, sid;
+			string name;
+			QString sid;
 			while (!e.isNull ())
 			{
 				if (e.isElement ())
 				{
 					QDomElement s = e.toElement ();
 					if (s.tagName () == "shortName")
-						name = s.text ();
+						name = s.text().utf8();
 					if (s.tagName () == "serviceID")
 						sid = s.attribute ("id", "0");
 				}
@@ -1620,7 +1615,7 @@ EPG::loadChannels (const QString & fileName)
 			}
 			if (name != "")
 			{
-				sids.insert (name, sid.toUInt (NULL, 16));
+				addChannel (name, sid.toUInt (NULL, 16));
 			}
 		}
 		n = n.nextSibling ();

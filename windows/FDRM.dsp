@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /MD /GX /O2 /I "$(QTDIR)\include" /I "../libs" /I "../common/GUI-QT" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "QT_DLL" /D "QT_THREAD_SUPPORT" /D "FREEIMAGE_LIB" /YX /FD /c
+# ADD CPP /nologo /MD /GX /O2 /I "$(QTDIR)\include" /I "../libs" /I "../common/GUI-QT" /I "./moc" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "QT_DLL" /D "QT_THREAD_SUPPORT" /D "FREEIMAGE_LIB" /YX /FD /c
 # SUBTRACT CPP /Fr
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -54,8 +54,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 libfaac.lib libhamlib.lib FreeImage.lib libfftw.lib libfaad.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib wsock32.lib winspool.lib winmm.lib $(QTDIR)\lib\qt-mt230nc.lib $(QTDIR)\lib\qtmain.lib libqwt.lib libfhgjournaline.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib:"MSVCRTD" /out:"Release/Dream.exe" /libpath:"../libs"
-# SUBTRACT LINK32 /profile /debug /nodefaultlib
+# ADD LINK32 libfaac.lib libhamlib.lib FreeImage.lib libfftw.lib libfaad.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib wsock32.lib winspool.lib winmm.lib $(QTDIR)\lib\qt-mt230nc.lib $(QTDIR)\lib\qtmain.lib libqwt.lib libfhgjournaline.lib setupapi.lib /nologo /subsystem:console /machine:I386 /nodefaultlib:"MSVCRTD" /out:"Release/Dream.exe" /libpath:"../libs"
+# SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "FDRM - Win32 Debug"
 
@@ -71,7 +71,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /Gm /GX /ZI /Od /I "$(QTDIR)\include" /I "../libs" /I "../common/GUI-QT" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "QT_DLL" /D "QT_THREAD_SUPPORT" /D "FREEIMAGE_LIB" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /Gm /GX /ZI /Od /I "$(QTDIR)\include" /I "../libs" /I "../common/GUI-QT" /I "./moc" /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "QT_DLL" /D "QT_THREAD_SUPPORT" /D "FREEIMAGE_LIB" /YX /FD /GZ /c
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x407 /d "_DEBUG"
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libfaac.lib libhamlib.lib FreeImage.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib wsock32.lib winspool.lib winmm.lib $(QTDIR)\lib\qt-mt230nc.lib $(QTDIR)\lib\qtmain.lib libfftw.lib libfaad.lib libqwt.lib libfhgjournaline.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/Dream.exe" /pdbtype:sept /libpath:"../libs"
+# ADD LINK32 libfaac.lib libhamlib.lib FreeImage.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib wsock32.lib winspool.lib winmm.lib $(QTDIR)\lib\qt-mt230nc.lib $(QTDIR)\lib\qtmain.lib libfftw.lib libfaad.lib libqwt.lib libfhgjournaline.lib setupapi.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/Dream.exe" /pdbtype:sept /libpath:"../libs"
 
 !ENDIF 
 
@@ -120,15 +120,11 @@ SOURCE=.\moc\fdrmdialogbase.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\moc\LiveScheduleDlgbase.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\moc\MultSettingsDlgbase.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\moc\GeneralSettingsDlgbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\LiveScheduleDlgbase.cpp
 # End Source File
 # Begin Source File
 
@@ -172,27 +168,23 @@ SOURCE=.\moc\moc_fdrmdialogbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\moc_GeneralSettingsDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_GeneralSettingsDlgbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_GPSReceiver.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\moc_LiveScheduleDlg.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\moc\moc_LiveScheduleDlgbase.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\moc\moc_MultSettingsDlg.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\moc\moc_GeneralSettingsDlg.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\moc\moc_MultSettingsDlgbase.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\moc\moc_GeneralSettingsDlgbase.cpp
 # End Source File
 # Begin Source File
 
@@ -208,7 +200,19 @@ SOURCE=.\moc\moc_MultimediaDlgbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\moc_MultSettingsDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_MultSettingsDlgbase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\moc_PacketSocketQT.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_PacketSourceFile.cpp
 # End Source File
 # Begin Source File
 
@@ -240,6 +244,10 @@ SOURCE=.\moc\MultimediaDlgbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\MultSettingsDlgbase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\StationsDlgbase.cpp
 # End Source File
 # Begin Source File
@@ -249,10 +257,6 @@ SOURCE=.\moc\systemevalDlgbase.cpp
 # Begin Source File
 
 SOURCE=.\moc\TransmDlgbase.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\moc\moc_GPSReceiver.cpp
 # End Source File
 # End Group
 # Begin Source File
@@ -286,15 +290,11 @@ SOURCE="..\common\GUI-QT\fdrmdialog.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\common\GUI-QT\LiveScheduleDlg.cpp"
-# End Source File
-# Begin Source File
-
-SOURCE="..\common\GUI-QT\MultSettingsDlg.cpp"
-# End Source File
-# Begin Source File
-
 SOURCE="..\common\GUI-QT\GeneralSettingsDlg.cpp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\LiveScheduleDlg.cpp"
 # End Source File
 # Begin Source File
 
@@ -311,6 +311,10 @@ SOURCE="..\common\GUI-QT\MultColorLED.cpp"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\MultimediaDlg.cpp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\MultSettingsDlg.cpp"
 # End Source File
 # Begin Source File
 
@@ -392,11 +396,11 @@ SOURCE=..\common\mlc\ViterbiDecoder.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\common\tables\TableFAC.cpp
+SOURCE=..\common\tables\TableCarMap.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\tables\TableCarMap.cpp
+SOURCE=..\common\tables\TableFAC.cpp
 # End Source File
 # End Group
 # Begin Group "Source FAC"
@@ -540,15 +544,15 @@ SOURCE=..\common\util\LogPrint.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\util\Reassemble.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\util\Settings.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\common\util\Utilities.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\util\Reassemble.cpp
 # End Source File
 # End Group
 # Begin Group "Source MDI"
@@ -556,15 +560,19 @@ SOURCE=..\common\util\Reassemble.cpp
 # PROP Default_Filter ""
 # Begin Source File
 
+SOURCE=..\common\MDI\AFPacketGenerator.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\MDI\MDIDecode.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\MDI\MDIRSCI.cpp
+SOURCE=..\common\MDI\MDIInBuffer.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\MDI\MDIInBuffer.cpp
+SOURCE=..\common\MDI\MDIRSCI.cpp
 # End Source File
 # Begin Source File
 
@@ -576,11 +584,7 @@ SOURCE=..\common\MDI\MDITagItems.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\MDI\RCITagItems.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\MDI\TagPacketDecoderMDI.cpp
+SOURCE=..\common\MDI\PacketSinkFile.cpp
 # End Source File
 # Begin Source File
 
@@ -592,11 +596,15 @@ SOURCE=..\common\MDI\PacketSocketQT.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\MDI\PacketSinkFile.cpp
+SOURCE=..\common\MDI\PacketSourceFile.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\MDI\RSISubscriber.cpp
+SOURCE=..\common\MDI\Pft.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\RCITagItems.cpp
 # End Source File
 # Begin Source File
 
@@ -604,7 +612,15 @@ SOURCE=..\common\MDI\RSCITagItemDecoders.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\MDI\RSISubscriber.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\MDI\TagPacketDecoder.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\TagPacketDecoderMDI.cpp
 # End Source File
 # Begin Source File
 
@@ -614,10 +630,6 @@ SOURCE=..\common\MDI\TagPacketDecoderRSCIControl.cpp
 
 SOURCE=..\common\MDI\TagPacketGenerator.cpp
 # End Source File
-# Begin Source File
-
-SOURCE=..\common\MDI\Pft.cpp
-# End Source File
 # End Group
 # Begin Source File
 
@@ -626,6 +638,10 @@ SOURCE=..\common\AMDemodulation.cpp
 # Begin Source File
 
 SOURCE=..\common\AMSSDemodulation.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\audiofilein.cpp
 # End Source File
 # Begin Source File
 
@@ -641,19 +657,7 @@ SOURCE=..\common\drmchannel\ChannelSimulation.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\Version.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\DataIO.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\GPSData.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\GPSReceiver.cpp
 # End Source File
 # Begin Source File
 
@@ -673,7 +677,19 @@ SOURCE=..\common\DrmTransmitter.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\GPSData.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\GPSReceiver.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\InputResample.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\IQInputFilter.cpp
 # End Source File
 # Begin Source File
 
@@ -685,7 +701,19 @@ SOURCE=..\common\OFDM.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Source\Pacer.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\Parameter.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\PlotManager.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\ReceptLog.cpp
 # End Source File
 # Begin Source File
 
@@ -697,23 +725,15 @@ SOURCE=..\common\resample\ResampleFilter.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\ServiceInformation.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\SimulationParameters.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\IQInputFilter.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\Source\Sound.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\Source\Pacer.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\audiofilein.cpp
 # End Source File
 # Begin Source File
 
@@ -722,6 +742,10 @@ SOURCE=..\common\interleaver\SymbolInterleaver.cpp
 # Begin Source File
 
 SOURCE=..\common\TextMessage.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\Version.cpp
 # End Source File
 # End Group
 # Begin Group "Header-Dateien"
@@ -752,15 +776,11 @@ SOURCE="..\common\GUI-QT\fdrmdialog.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\common\GUI-QT\LiveScheduleDlg.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\common\GUI-QT\MultSettingsDlg.h"
-# End Source File
-# Begin Source File
-
 SOURCE="..\common\GUI-QT\GeneralSettingsDlg.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\LiveScheduleDlg.h"
 # End Source File
 # Begin Source File
 
@@ -769,6 +789,10 @@ SOURCE="..\common\GUI-QT\MultColorLED.h"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\MultimediaDlg.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\MultSettingsDlg.h"
 # End Source File
 # Begin Source File
 
@@ -1000,15 +1024,15 @@ SOURCE=..\common\util\Modul.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\util\Reassemble.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\util\Settings.h
 # End Source File
 # Begin Source File
 
 SOURCE=..\common\util\Utilities.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\util\Reassemble.h
 # End Source File
 # Begin Source File
 
@@ -1020,7 +1044,7 @@ SOURCE=..\common\util\Vector.h
 # PROP Default_Filter ""
 # Begin Source File
 
-SOURCE=..\common\MDI\MDIRSCI.h
+SOURCE=..\common\MDI\AFPacketGenerator.h
 # End Source File
 # Begin Source File
 
@@ -1036,6 +1060,10 @@ SOURCE=..\common\MDI\MDIInBuffer.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\MDI\MDIRSCI.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\MDI\MDITagItemDecoders.h
 # End Source File
 # Begin Source File
@@ -1044,15 +1072,11 @@ SOURCE=..\common\MDI\MDITagItems.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\MDI\RCITagItems.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\MDI\TagPacketDecoderMDI.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\MDI\PacketInOut.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\PacketSinkFile.h
 # End Source File
 # Begin Source File
 
@@ -1064,15 +1088,23 @@ SOURCE=..\common\MDI\PacketSocketQT.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\MDI\PacketSinkFile.h
+SOURCE=..\common\MDI\PacketSourceFile.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\MDI\RSISubscriber.h
+SOURCE=..\common\MDI\Pft.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\RCITagItems.h
 # End Source File
 # Begin Source File
 
 SOURCE=..\common\MDI\RSCITagItemDecoders.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\RSISubscriber.h
 # End Source File
 # Begin Source File
 
@@ -1084,15 +1116,15 @@ SOURCE=..\common\MDI\TagPacketDecoder.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\MDI\TagPacketDecoderMDI.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\MDI\TagPacketDecoderRSCIControl.h
 # End Source File
 # Begin Source File
 
 SOURCE=..\common\MDI\TagPacketGenerator.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\MDI\Pft.h
 # End Source File
 # End Group
 # Begin Source File
@@ -1102,6 +1134,10 @@ SOURCE=..\common\AMDemodulation.h
 # Begin Source File
 
 SOURCE=..\common\AMSSDemodulation.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\audiofilein.h
 # End Source File
 # Begin Source File
 
@@ -1121,14 +1157,6 @@ SOURCE=..\common\DataIO.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\GPSData.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\GPSReceiver.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\DrmReceiver.h
 # End Source File
 # Begin Source File
@@ -1145,11 +1173,15 @@ SOURCE=..\common\DrmTransmitter.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\Version.h
+SOURCE=..\common\GlobalDefinitions.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\GlobalDefinitions.h
+SOURCE=..\common\GPSData.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\GPSReceiver.h
 # End Source File
 # Begin Source File
 
@@ -1169,7 +1201,19 @@ SOURCE=..\common\OFDM.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\util\Pacer.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\Parameter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\PlotManager.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\ReceptLog.h
 # End Source File
 # Begin Source File
 
@@ -1185,11 +1229,7 @@ SOURCE=..\common\selectioninterface.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\util\Pacer.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\soundinterface.h
+SOURCE=..\common\ServiceInformation.h
 # End Source File
 # Begin Source File
 
@@ -1197,15 +1237,15 @@ SOURCE=..\common\sound.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\sound\soundnull.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\Source\Sound.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\audiofilein.h
+SOURCE=..\common\soundinterface.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\sound\soundnull.h
 # End Source File
 # Begin Source File
 
@@ -1214,6 +1254,10 @@ SOURCE=..\common\interleaver\SymbolInterleaver.h
 # Begin Source File
 
 SOURCE=..\common\TextMessage.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\Version.h
 # End Source File
 # End Group
 # Begin Group "Ressourcendateien"

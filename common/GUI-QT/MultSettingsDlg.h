@@ -36,12 +36,7 @@
 #include "../datadecoding/epg/epgutil.h"
 #include "../util/Settings.h"
 #include "MultimediaDlg.h"
-
-#ifdef _WIN32
-# include "../../Windows/moc/MultSettingsDlgbase.h"
-#else
-# include "moc/MultSettingsDlgbase.h"
-#endif
+#include "MultSettingsDlgbase.h"
 
 /* Definitions ****************************************************************/
 
@@ -52,7 +47,7 @@ class MultSettingsDlg : public CMultSettingsDlgBase
 
 public:
 
-	MultSettingsDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+	MultSettingsDlg(CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~MultSettingsDlg();
 
@@ -64,7 +59,7 @@ protected:
 
 	void			AddWhatsThisHelp();
 
-	CDRMReceiver*	pDRMRec;
+	CSettings&		Settings;
 
 public slots:
 	void OnbuttonClearCacheMOT();

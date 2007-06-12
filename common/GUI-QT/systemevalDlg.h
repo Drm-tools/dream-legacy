@@ -44,17 +44,16 @@
 #include <qpixmap.h>
 #include <qwt/qwt_thermo.h>
 
-#ifdef _WIN32
-# include "../../Windows/moc/systemevalDlgbase.h"
-#else
-# include "moc/systemevalDlgbase.h"
-#endif
+#include "systemevalDlgbase.h"
 #include "DRMPlot.h"
 #include "MultColorLED.h"
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
 #include "../DrmReceiver.h"
+#include "../ReceptLog.h"
+#include "../util/Settings.h"
 
+class CGPSReceiver;
 
 /* Definitions ****************************************************************/
 /* Define this macro if you prefer the QT-type of displaying date and time */
@@ -67,7 +66,7 @@ class systemevalDlg : public systemevalDlgBase
 	Q_OBJECT
 
 public:
-	systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+	systemevalDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
 	virtual ~systemevalDlg();
@@ -76,7 +75,6 @@ public:
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
 	void UpdatePlotsStyle();
 	void StopLogTimers();
-	void StartTimerLogFileStart();
 
 protected:
 	class CCharSelItem : public QListViewItem
@@ -97,12 +95,22 @@ protected:
 		CDRMPlot::ECharType eCharTy;
 	};
 
-	CDRMReceiver*		pDRMRec;
+	CDRMReceiver&		DRMReceiver;
+	CSettings&			Settings;
 
 	QTimer				Timer;
+
+	/* logging */
 	QTimer				TimerLogFileLong;
 	QTimer				TimerLogFileShort;
 	QTimer				TimerLogFileStart;
+
+	CShortLog			shortLog;
+	CLongLog			longLog;
+	_BOOLEAN			bEnableShortLog;
+	_BOOLEAN			bEnableLongLog;
+	int					iLogDelay;
+
 	int					iCurFrequency;
     virtual void		showEvent(QShowEvent* pEvent);
 	virtual void		hideEvent(QHideEvent* pEvent);
@@ -114,13 +122,15 @@ protected:
 	QString				GetSpecOccStr();
 
 	QPopupMenu*			pListViewContextMenu;
-	CVector<CDRMPlot*>	vecpDRMPlots;
+	vector<CDRMPlot*>	vecpDRMPlots;
+
+	CGPSReceiver*		pGPSReceiver;
 
 public slots:
 	void OnTimer();
-	void OnTimerLogFileLong();
-	void OnTimerLogFileShort();
 	void OnTimerLogFileStart();
+	void OnTimerLogFileShort();
+	void OnTimerLogFileLong();
 	void OnRadioTimeLinear();
 	void OnRadioTimeWiener();
 	void OnRadioFrequencyLinear();
@@ -140,4 +150,6 @@ public slots:
 	void OnListViContMenu();
 	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt,
 		int iCol);
+	void EnableGPS();
+	void DisableGPS();
 };

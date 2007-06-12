@@ -1,5 +1,5 @@
 /*
- * $Id: pa_ringbuffer.c,v 1.4 2007/04/14 18:32:43 dynclient Exp $
+ * $Id: pa_ringbuffer.c,v 1.5 2007/06/12 22:30:59 jcable Exp $
  * Portable Audio I/O Library
  * Ring Buffer utility.
  *

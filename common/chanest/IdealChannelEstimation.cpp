@@ -111,13 +111,13 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 	CPilotModiClass::InitRot(ReceiverParam);
 
 	/* Get local parameters */
-	iNumCarrier = ReceiverParam.iNumCarrier;
-	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
-	iDFTSize = ReceiverParam.iFFTSizeN;
+	iNumCarrier = ReceiverParam.CellMappingTable.iNumCarrier;
+	iNumSymPerFrame = ReceiverParam.CellMappingTable.iNumSymPerFrame;
+	iDFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
 
 	/* Parameters for debaring the DC carriers from evaluation. First check if
 	   we have only useful part on the right side of the DC carrier */
-	if (ReceiverParam.iCarrierKmin > 0)
+	if (ReceiverParam.CellMappingTable.iCarrierKmin > 0)
 	{
 		/* In this case, no DC carriers are in the useful spectrum */
 		iNumDCCarriers = 0;
@@ -128,12 +128,12 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 		if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_A)
 		{
 			iNumDCCarriers = 3;
-			iStartDCCar = abs(ReceiverParam.iCarrierKmin) - 1;
+			iStartDCCar = abs(ReceiverParam.CellMappingTable.iCarrierKmin) - 1;
 		}
 		else
 		{
 			iNumDCCarriers = 1;
-			iStartDCCar = abs(ReceiverParam.iCarrierKmin);
+			iStartDCCar = abs(ReceiverParam.CellMappingTable.iCarrierKmin);
 		}
 	}
 
@@ -145,7 +145,7 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 
 	/* Additional delay from long interleaving has to be considered */
 	if (ReceiverParam.GetInterleaverDepth() == CParameter::SI_LONG)
-		iStartCnt += ReceiverParam.iNumSymPerFrame * D_LENGTH_LONG_INTERL;
+		iStartCnt += ReceiverParam.CellMappingTable.iNumSymPerFrame * D_LENGTH_LONG_INTERL;
 
 
 	/* Allocate memory for intermedia results */

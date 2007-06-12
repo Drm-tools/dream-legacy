@@ -49,7 +49,7 @@ uint64_t CPacer::nstogo()
 	int r = clock_gettime(CLOCK_REALTIME, &now);
 #else
 	timeval t;
-	int r = gettimeofday(&t, NULL);
+	(void)gettimeofday(&t, NULL);
 	now.tv_sec = t.tv_sec;
 	now.tv_nsec = 1000*t.tv_usec;
 #endif

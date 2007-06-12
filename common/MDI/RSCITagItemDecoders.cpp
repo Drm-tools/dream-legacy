@@ -7,7 +7,7 @@
  *
  * Description:
  *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
- *	(MDI), Receiver Status and Control Interface (RSCI)  
+ *	(MDI), Receiver Status and Control Interface (RSCI)
  *  and Distribution and Communications Protocol (DCP) as described in
  *	ETSI TS 102 820,  ETSI TS 102 349 and ETSI TS 102 821 respectively.
  *
@@ -37,6 +37,8 @@
 
 #include "RSCITagItemDecoders.h"
 #include "../DrmReceiver.h"
+#include <time.h>
+#include <stdlib.h>
 
 /* RX_STAT Items */
 
@@ -52,7 +54,7 @@ void CTagItemDecoderRdbv::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	if (iLen != 16)
 		return;
 	_REAL rSigStr = decodeDb(vecbiTag);
- 	 pParameter->SetSignalStrength(TRUE, rSigStr);
+ 	 pParameter->SigStrstat.addSample(rSigStr);
 	 /* this is the only signal strength we have so update the IF level too.
 	  * TODO scaling factor ? */
  	 pParameter->SetIFSignalLevel(rSigStr);
@@ -67,21 +69,21 @@ void CTagItemDecoderRsta::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
  	uint8_t sdc = (uint8_t)vecbiTag.Separate(8);
  	uint8_t audio = (uint8_t)vecbiTag.Separate(8);
  	if(sync==0)
-		pParameter->ReceiveStatus.SetTimeSyncStatus(RX_OK);
+		pParameter->ReceiveStatus.TSync.SetStatus(RX_OK);
 	else
-		pParameter->ReceiveStatus.SetTimeSyncStatus(CRC_ERROR);
+		pParameter->ReceiveStatus.TSync.SetStatus(CRC_ERROR);
  	if(fac==0)
-		pParameter->ReceiveStatus.SetFACStatus(RX_OK);
+		pParameter->ReceiveStatus.FAC.SetStatus(RX_OK);
 	else
-		pParameter->ReceiveStatus.SetFACStatus(CRC_ERROR);
+		pParameter->ReceiveStatus.FAC.SetStatus(CRC_ERROR);
  	if(sdc==0)
-		pParameter->ReceiveStatus.SetSDCStatus(RX_OK);
+		pParameter->ReceiveStatus.SDC.SetStatus(RX_OK);
 	else
-		pParameter->ReceiveStatus.SetSDCStatus(CRC_ERROR);
+		pParameter->ReceiveStatus.SDC.SetStatus(CRC_ERROR);
  	if(audio==0)
-		pParameter->ReceiveStatus.SetAudioStatus(RX_OK);
+		pParameter->ReceiveStatus.Audio.SetStatus(RX_OK);
 	else
-		pParameter->ReceiveStatus.SetAudioStatus(CRC_ERROR);
+		pParameter->ReceiveStatus.Audio.SetStatus(CRC_ERROR);
 }
 
 void CTagItemDecoderRwmf::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
@@ -104,6 +106,182 @@ void CTagItemDecoderRmer::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		return;
  	 pParameter->rMER = decodeDb(vecbiTag);
 }
+
+void CTagItemDecoderRdop::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	if (iLen != 16)
+		return;
+ 	 pParameter->rRdop = decodeDb(vecbiTag);
+}
+
+void CTagItemDecoderRdel::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	int iNumEntries = iLen/(3*SIZEOF__BYTE);
+	pParameter->vecrRdelIntervals.Init(iNumEntries);
+	pParameter->vecrRdelThresholds.Init(iNumEntries);
+
+	for (int i=0; i<iNumEntries; i++)
+	{
+ 		pParameter->vecrRdelThresholds[i] = vecbiTag.Separate(SIZEOF__BYTE);
+		pParameter->vecrRdelIntervals[i] = decodeDb(vecbiTag);
+	}
+}
+
+void CTagItemDecoderRpsd::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	if (iLen != 680 && iLen !=1112)
+		return;
+
+	int iVectorLen = iLen/SIZEOF__BYTE;
+
+	pParameter->vecrPSD.Init(iVectorLen);
+
+	for (int i = 0; i < iVectorLen; i++)
+	{
+		pParameter->vecrPSD[i] = -(_REAL(vecbiTag.Separate(SIZEOF__BYTE))/_REAL(2.0));
+	}
+
+}
+
+void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	if (iLen != 26 * SIZEOF__BYTE)
+		return;
+
+    CGPSData& GPSData = pParameter->GPSData;
+
+ 	uint16_t source = (uint16_t)vecbiTag.Separate(SIZEOF__BYTE);
+ 	switch(source)
+ 	{
+ 	    case 0:
+            GPSData.SetGPSSource(CGPSData::GPS_SOURCE_INVALID);
+            break;
+ 	    case 1:
+            GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
+            break;
+ 	    case 2:
+            GPSData.SetGPSSource(CGPSData::GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER);
+            break;
+ 	    case 3:
+            GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
+            break;
+ 	    case 0xff:
+            GPSData.SetGPSSource(CGPSData::GPS_SOURCE_NOT_AVAILABLE);
+            break;
+ 	    default:
+            cerr << "error decoding rgps" << endl;
+ 	}
+
+ 	uint8_t nSats = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+ 	if(nSats == 0xff)
+ 	{
+ 	    GPSData.SetSatellitesVisibleAvailable(FALSE);
+ 	}
+ 	else
+ 	{
+ 	    GPSData.SetSatellitesVisible(nSats);
+ 	    GPSData.SetSatellitesVisibleAvailable(TRUE);
+ 	}
+
+    uint16_t val;
+    val = uint16_t(vecbiTag.Separate(2 * SIZEOF__BYTE));
+	int16_t iLatitudeDegrees = *(int16_t*)&val;
+    uint8_t uiLatitudeMinutes = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+	uint16_t uiLatitudeMinuteFractions = (uint16_t)vecbiTag.Separate(2 * SIZEOF__BYTE);
+    val = uint16_t(vecbiTag.Separate(2 * SIZEOF__BYTE));
+	int16_t iLongitudeDegrees = *(int16_t*)&val;
+    uint8_t uiLongitudeMinutes = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+	uint16_t uiLongitudeMinuteFractions = (uint16_t)vecbiTag.Separate(2 * SIZEOF__BYTE);
+    if(uiLatitudeMinutes == 0xff)
+    {
+        GPSData.SetPositionAvailable(FALSE);
+    }
+    else
+    {
+		double latitude, longitude;
+		latitude = double(iLatitudeDegrees)
+		 + (double(uiLatitudeMinutes) + double(uiLatitudeMinuteFractions)/65536.0)/60.0;
+		longitude = double(iLongitudeDegrees)
+		 + (double(uiLongitudeMinutes) + double(uiLongitudeMinuteFractions)/65536.0)/60.0;
+        GPSData.SetLatLongDegrees(latitude, longitude);
+        GPSData.SetPositionAvailable(TRUE);
+    }
+
+    val = uint16_t(vecbiTag.Separate(2 * SIZEOF__BYTE));
+    uint8_t uiAltitudeMetreFractions = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+    if(val == 0xffff)
+    {
+        GPSData.SetAltitudeAvailable(FALSE);
+    }
+    else
+    {
+        uint16_t iAltitudeMetres = *(int16_t*)&val;
+        GPSData.SetAltitudeMetres(iAltitudeMetres+uiAltitudeMetreFractions/256.0);
+        GPSData.SetAltitudeAvailable(TRUE);
+    }
+
+    struct tm tm;
+    tm.tm_hour = uint8_t(vecbiTag.Separate(SIZEOF__BYTE));
+    tm.tm_min = uint8_t(vecbiTag.Separate(SIZEOF__BYTE));
+    tm.tm_sec = uint8_t(vecbiTag.Separate(SIZEOF__BYTE));
+    uint16_t year = uint16_t(vecbiTag.Separate(2*SIZEOF__BYTE));
+    tm.tm_year = year - 1900;
+    tm.tm_mon = uint8_t(vecbiTag.Separate(SIZEOF__BYTE))-1;
+    tm.tm_mday = uint8_t(vecbiTag.Separate(SIZEOF__BYTE));
+
+    if(tm.tm_hour == 0xff)
+    {
+        GPSData.SetTimeAndDateAvailable(FALSE);
+    }
+    else
+    {
+		string se;
+		char *e = getenv("TZ");
+		if(e)
+			se = e;
+#ifdef _WIN32
+        _putenv("TZ=UTC");
+        _tzset();
+        time_t t = mktime(&tm);
+		stringstream ss("TZ=");
+		ss << se;
+        _putenv(ss.str().c_str());
+#else
+        putenv("TZ=UTC");
+        tzset();
+        time_t t = mktime(&tm);
+		if(e)
+			setenv("TZ", se.c_str(), 1);
+		else
+			unsetenv("TZ");
+#endif
+        GPSData.SetTimeSecondsSince1970(t);
+        GPSData.SetTimeAndDateAvailable(TRUE);
+    }
+
+    uint16_t speed = (uint16_t)vecbiTag.Separate(2*SIZEOF__BYTE);
+    if(speed == 0xffff)
+    {
+        GPSData.SetSpeedAvailable(FALSE);
+    }
+    else
+    {
+        GPSData.SetSpeedMetresPerSecond(double(speed)/10.0);
+        GPSData.SetSpeedAvailable(TRUE);
+    }
+
+    uint16_t heading = (uint16_t)vecbiTag.Separate(2*SIZEOF__BYTE);
+    if(heading == 0xffff)
+    {
+        GPSData.SetHeadingAvailable(FALSE);
+    }
+    else
+    {
+        GPSData.SetHeadingDegrees(heading);
+        GPSData.SetHeadingAvailable(TRUE);
+    }
+}
+
 /* RX_CTRL Items */
 
 void CTagItemDecoderCact::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
@@ -112,6 +290,9 @@ void CTagItemDecoderCact::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		return;
 
 	const int iNewState = vecbiTag.Separate(8) - '0';
+
+	if (pDRMReceiver == NULL)
+		return;
 
 	// TODO pDRMReceiver->SetState(iNewState);
 	(void)iNewState;
@@ -140,7 +321,10 @@ void CTagItemDecoderCdmo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	string s = "";
 	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 		s += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
-cout << "received cdmo " << s << endl;
+
+	if (pDRMReceiver == NULL)
+		return;
+
 	if(s == "drm_")
 		pDRMReceiver->SetReceiverMode(RM_DRM);
 	if(s == "am__")
@@ -157,6 +341,9 @@ void CTagItemDecoderCrec::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		s += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
 	char c3 = (char) vecbiTag.Separate(SIZEOF__BYTE);
 	char c4 = (char) vecbiTag.Separate(SIZEOF__BYTE);
+
+	if (pDRMReceiver == NULL)
+		return;
 
 	if(s == "st")
 		pDRMReceiver->SetRSIRecording(c4=='1', c3);

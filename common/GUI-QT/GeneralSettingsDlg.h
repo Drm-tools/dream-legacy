@@ -25,20 +25,10 @@
  *
 \******************************************************************************/
 
-#include <qlineedit.h>
-#include <qpushbutton.h>
-#include <qwhatsthis.h>
-#include <qvalidator.h>
-#include <qmessagebox.h>
-
-#include "../DrmReceiver.h"
+#include "../Parameter.h"
 #include "../util/Settings.h"
 
-#ifdef _WIN32
-# include "../../Windows/moc/GeneralSettingsDlgbase.h"
-#else
-# include "moc/GeneralSettingsDlgbase.h"
-#endif
+#include "GeneralSettingsDlgbase.h"
 
 /* Definitions ****************************************************************/
 
@@ -49,7 +39,7 @@ class GeneralSettingsDlg : public CGeneralSettingsDlgBase
 
 public:
 
-	GeneralSettingsDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+	GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~GeneralSettingsDlg();
 
@@ -63,10 +53,19 @@ protected:
 
 	void			AddWhatsThisHelp();
 
-	CDRMReceiver*	pDRMRec;
+	CParameter&		Parameters;
+	CSettings&		Settings;
+	string			host;
+	int				port;
+	_BOOLEAN		bUseGPS;
+
+signals:
+	void StartGPS();
+	void StopGPS();
 
 public slots:
 	void CheckSN(const QString& NewText);
 	void CheckEW(const QString& NewText);
 	void ButtonOkClicked();
+	void OnCheckBoxUseGPS();
 };

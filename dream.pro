@@ -1,6 +1,6 @@
 TEMPLATE	= app
 TARGET		= dream
-CONFIG		+= qt warn_on debug
+CONFIG		+= qt warn_on release
 VPATH		+= common/GUI-QT
 INCLUDEPATH	+= libs
 LIBS 		+= -Llibs
@@ -16,9 +16,11 @@ macx {
 	INCLUDEPATH	+= darwin
 	INCLUDEPATH	+= /Developer/dream/include
 	LIBS 		+= -L/Developer/dream/lib
-	LIBS 		+= -framework CoreFoundation -framework CoreServices -framework CoreAudio -framework AudioToolbox -framework AudioUnit
+	LIBS 		+= -framework CoreFoundation -framework CoreServices
+	LIBS 		+= -framework CoreAudio -framework AudioToolbox -framework AudioUnit
 	UI_DIR		= darwin/moc
 	MOC_DIR		= darwin/moc
+	RC_FILE		= common/GUI-QT/res/macicons.icns
 }
 
 unix {
@@ -58,7 +60,7 @@ win32 {
 
 hamlib {
 	DEFINES		+= HAVE_LIBHAMLIB HAVE_RIG_PARSE_MODE
-	LIBS 		+= -lhamlib
+	LIBS 		+= -lhamlib -framework IOKit
 }
 
 alsa {
@@ -91,6 +93,9 @@ common/datadecoding/Journaline.h   \
 common/datadecoding/MOTSlideShow.h   \
 common/DataIO.h   \
 common/drmchannel/ChannelSimulation.h   \
+common/ReceptLog.h   \
+common/PlotManager.h   \
+common/ServiceInformation.h   \
 common/DrmReceiver.h   \
 common/DRMSignalIO.h   \
 common/DrmSimulation.h   \
@@ -119,6 +124,7 @@ common/IQInputFilter.h   \
 common/matlib/Matlib.h   \
 common/matlib/MatlibSigProToolbox.h   \
 common/matlib/MatlibStdToolbox.h   \
+common/MDI/AFPacketGenerator.h   \
 common/MDI/MDIDecode.h   \
 common/MDI/MDIDefinitions.h   \
 common/MDI/MDIInBuffer.h   \
@@ -127,6 +133,7 @@ common/MDI/MDITagItemDecoders.h   \
 common/MDI/MDITagItems.h   \
 common/MDI/PacketInOut.h   \
 common/MDI/PacketSinkFile.h   \
+common/MDI/PacketSourceFile.h   \
 common/MDI/PacketSocketNull.h   \
 common/MDI/PacketSocketQT.h   \
 common/MDI/Pft.h   \
@@ -200,6 +207,9 @@ common/datadecoding/Journaline.cpp   \
 common/datadecoding/MOTSlideShow.cpp   \
 common/DataIO.cpp   \
 common/drmchannel/ChannelSimulation.cpp   \
+common/ReceptLog.cpp   \
+common/PlotManager.cpp   \
+common/ServiceInformation.cpp   \
 common/DrmReceiver.cpp   \
 common/DRMSignalIO.cpp   \
 common/DrmSimulation.cpp   \
@@ -227,12 +237,14 @@ common/interleaver/SymbolInterleaver.cpp   \
 common/IQInputFilter.cpp   \
 common/matlib/MatlibSigProToolbox.cpp   \
 common/matlib/MatlibStdToolbox.cpp   \
+common/MDI/AFPacketGenerator.cpp   \
 common/MDI/MDIDecode.cpp   \
 common/MDI/MDIInBuffer.cpp   \
 common/MDI/MDIRSCI.cpp   \
 common/MDI/MDITagItemDecoders.cpp   \
 common/MDI/MDITagItems.cpp   \
 common/MDI/PacketSinkFile.cpp   \
+common/MDI/PacketSourceFile.cpp   \
 common/MDI/PacketSocketNull.cpp   \
 common/MDI/PacketSocketQT.cpp   \
 common/MDI/Pft.cpp   \

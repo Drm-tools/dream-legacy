@@ -42,7 +42,9 @@ void CInputResample::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 	else
 	{
+		ReceiverParam.Lock(); 
 		_REAL rSamRateOffset = ReceiverParam.rResampleOffset;
+		ReceiverParam.Unlock(); 
 
 		/* Constrain the sample rate offset estimation to prevent from an
 		   output buffer overrun */
@@ -60,11 +62,12 @@ void CInputResample::ProcessDataInternal(CParameter& ReceiverParam)
 
 void CInputResample::InitInternal(CParameter& ReceiverParam)
 {
+	ReceiverParam.Lock(); 
 	/* Init resample object */
-	ResampleObj.Init(ReceiverParam.iSymbolBlockSize);
+	ResampleObj.Init(ReceiverParam.CellMappingTable.iSymbolBlockSize);
 
 	/* Define block-sizes for input and output */
-	iInputBlockSize = ReceiverParam.iSymbolBlockSize;
+	iInputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
 
 	/* With this parameter we define the maximum lenght of the output buffer
 	   Due to the constrained sample rate offset estimation the output
@@ -75,5 +78,6 @@ void CInputResample::InitInternal(CParameter& ReceiverParam)
 	   smaller than one symbol -> no data is read by the next unit, but
 	   after that the output block size is bigger than one symbol, therefore
 	   we have to allocate three symbols for output buffer */
-	iMaxOutputBlockSize = 3 * ReceiverParam.iSymbolBlockSize;
+	iMaxOutputBlockSize = 3 * ReceiverParam.CellMappingTable.iSymbolBlockSize;
+	ReceiverParam.Unlock(); 
 }

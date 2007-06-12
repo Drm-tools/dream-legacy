@@ -10,90 +10,400 @@
  *
  ******************************************************************************
  *
- * This program is free software; you can redistribute it and/or modify it under
+ * This program is free software(), you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
+ * Foundation(), either version 2 of the License, or (at your option) any later
  * version.
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * ANY WARRANTY(), without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
+ * this program(), if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
 
 #include "Parameter.h"
-#include "Version.h"
-
-void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam);
-
-// To be replaced by something nicer!!! TODO
 #include "DrmReceiver.h"
-extern CDRMReceiver	DRMReceiver;
-
+#include "Version.h"
+#include <limits>
+#include <sstream>
+#include <iomanip>
+//#include "util/LogPrint.h"
 
 /* Implementation *************************************************************/
+CParameter::CParameter(CDRMReceiver *pRx):
+ pDRMRec(pRx),
+ eSymbolInterlMode(),
+ eMSCCodingScheme(),	
+ eSDCCodingScheme(),	
+ iNumAudioService(0),
+ iNumDataService(0),
+ iAMSSCarrierMode(0),
+ sReceiverID("                "),
+ sSerialNumber(),
+ sDataFilesDirectory("."),
+ MSCPrLe(),
+ Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
+ iNumBitsHierarchFrameTotal(0),
+ iNumDecodedBitsMSC(0),
+ iNumSDCBitsPerSFrame(0),	
+ iNumAudioDecoderBits(0),	
+ iNumDataDecoderBits(0),	
+ iYear(0),
+ iMonth(0),
+ iDay(0),
+ iUTCHour(0),
+ iUTCMin(0),
+ iFrameIDTransm(0),
+ iFrameIDReceiv(0),
+ rFreqOffsetAcqui(0.0),
+ rFreqOffsetTrack(0.0),
+ rResampleOffset(0.0),
+ iTimingOffsTrack(0),
+ eReceiverMode(RM_NONE),
+ eAcquiState(AS_NO_SIGNAL),
+ iNumAudioFrames(0),
+ vecbiAudioFrameStatus(0),
+ bMeasurePSD(),
+ vecrPSD(0),
+ matcReceivedPilotValues(),
+ RawSimDa(),
+ eSimType(ST_NONE),
+ iDRMChannelNum(0),
+ iSpecChDoppler(0),
+ rBitErrRate(0.0),
+ rSyncTestParam(0.0),		
+ rSINR(0.0),
+ iNumBitErrors(0),
+ iChanEstDelay(0),
+ iNumTaps(0),
+ iPathDelay(MAX_NUM_TAPS_DRM_CHAN),
+ rGainCorr(0.0),
+ iOffUsfExtr(0),
+ ReceiveStatus(),
+ FrontEndParameters(),
+ AltFreqSign(),
+ rMER(0.0),
+ rWMERMSC(0.0),
+ rWMERFAC(0.0),
+ rSigmaEstimate(0.0),
+ rMinDelay(0.0),
+ rMaxDelay(0.0),
+ bMeasureDelay(),
+ vecrRdel(0),
+ vecrRdelThresholds(0),
+ vecrRdelIntervals(0),
+ bMeasureDoppler(0),
+ rRdop(0.0),
+ bMeasureInterference(FALSE),
+ rIntFreq(0.0),
+ rINR(0.0),
+ rICR(0.0),
+ rMaxPSDwrtSig(0.0),
+ rMaxPSDFreq(0.0),
+ rSigStrengthCorrection(0.0),
+ bRunThread(FALSE),
+ bUsingMultimedia(FALSE),
+ CellMappingTable(),
+ GPSData(),
+ rSysSimSNRdB(0.0),
+ iFrequency(0),
+ bValidSignalStrength(FALSE),
+ rSigStr(0.0),
+ rIFSigStr(0.0),
+ iCurSelAudioService(0),
+ iCurSelDataService(0),
+ eRobustnessMode(RM_ROBUSTNESS_MODE_B),	
+ eSpectOccup(SO_3),
+ LastAudioService(),
+ LastDataService(),
+ Mutex()
+{
+	GenerateRandomSerialNumber();
+	if(pDRMRec)
+		eReceiverMode = pDRMRec->GetReceiverMode();
+	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
+}
+
+CParameter::~CParameter()
+{
+}
+
+CParameter::CParameter(const CParameter& p):
+ pDRMRec(p.pDRMRec),
+ eSymbolInterlMode(p.eSymbolInterlMode),
+ eMSCCodingScheme(p.eMSCCodingScheme),
+ eSDCCodingScheme(p.eSDCCodingScheme),
+ iNumAudioService(p.iNumAudioService),
+ iNumDataService(p.iNumDataService),
+ iAMSSCarrierMode(p.iAMSSCarrierMode),
+ sReceiverID(p.sReceiverID),
+ sSerialNumber(p.sSerialNumber),
+ sDataFilesDirectory(p.sDataFilesDirectory),
+ MSCPrLe(p.MSCPrLe),
+ Stream(p.Stream), Service(p.Service),
+ iNumBitsHierarchFrameTotal(p.iNumBitsHierarchFrameTotal),
+ iNumDecodedBitsMSC(p.iNumDecodedBitsMSC),
+ iNumSDCBitsPerSFrame(p.iNumSDCBitsPerSFrame),
+ iNumAudioDecoderBits(p.iNumAudioDecoderBits),
+ iNumDataDecoderBits(p.iNumDataDecoderBits),
+ iYear(p.iYear),
+ iMonth(p.iMonth),
+ iDay(p.iDay),
+ iUTCHour(p.iUTCHour),
+ iUTCMin(p.iUTCMin),
+ iFrameIDTransm(p.iFrameIDTransm),
+ iFrameIDReceiv(p.iFrameIDReceiv),
+ rFreqOffsetAcqui(p.rFreqOffsetAcqui),
+ rFreqOffsetTrack(p.rFreqOffsetTrack),
+ rResampleOffset(p.rResampleOffset),
+ iTimingOffsTrack(p.iTimingOffsTrack),
+ eReceiverMode(p.eReceiverMode),
+ eAcquiState(p.eAcquiState),
+ iNumAudioFrames(p.iNumAudioFrames),
+ vecbiAudioFrameStatus(p.vecbiAudioFrameStatus),
+ bMeasurePSD(p.bMeasurePSD),
+ vecrPSD(p.vecrPSD),
+ //matcReceivedPilotValues(p.matcReceivedPilotValues),
+ matcReceivedPilotValues(), // OPH says copy constructor for CMatrix not safe yet
+ RawSimDa(p.RawSimDa),
+ eSimType(p.eSimType),
+ iDRMChannelNum(p.iDRMChannelNum),
+ iSpecChDoppler(p.iSpecChDoppler),
+ rBitErrRate(p.rBitErrRate),
+ rSyncTestParam	(p.rSyncTestParam),	
+ rSINR(p.rSINR),
+ iNumBitErrors(p.iNumBitErrors),
+ iChanEstDelay(p.iChanEstDelay),
+ iNumTaps(p.iNumTaps),
+ iPathDelay(p.iPathDelay),
+ rGainCorr(p.rGainCorr),
+ iOffUsfExtr(p.iOffUsfExtr),
+ ReceiveStatus(p.ReceiveStatus),
+ FrontEndParameters(p.FrontEndParameters),
+ AltFreqSign(p.AltFreqSign),
+ rMER(p.rMER),
+ rWMERMSC(p.rWMERMSC),
+ rWMERFAC(p.rWMERFAC),
+ rSigmaEstimate(p.rSigmaEstimate),
+ rMinDelay(p.rMinDelay),
+ rMaxDelay(p.rMaxDelay),
+ bMeasureDelay(p.bMeasureDelay),
+ vecrRdel(p.vecrRdel),
+ vecrRdelThresholds(p.vecrRdelThresholds),
+ vecrRdelIntervals(p.vecrRdelIntervals),
+ bMeasureDoppler(p.bMeasureDoppler),
+ rRdop(p.rRdop),
+ bMeasureInterference(p.bMeasureInterference),
+ rIntFreq(p.rIntFreq),
+ rINR(p.rINR),
+ rICR(p.rICR),
+ rMaxPSDwrtSig(p.rMaxPSDwrtSig),
+ rMaxPSDFreq(p.rMaxPSDFreq),
+ rSigStrengthCorrection(p.rSigStrengthCorrection),
+ bRunThread(p.bRunThread),
+ bUsingMultimedia(p.bUsingMultimedia),
+ CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
+ GPSData(p.GPSData),
+ rSysSimSNRdB(p.rSysSimSNRdB),
+ iFrequency(p.iFrequency),
+ bValidSignalStrength(p.bValidSignalStrength),
+ rSigStr(p.rSigStr),
+ rIFSigStr(p.rIFSigStr),
+ iCurSelAudioService(p.iCurSelAudioService),
+ iCurSelDataService(p.iCurSelDataService),
+ eRobustnessMode(p.eRobustnessMode),
+ eSpectOccup(p.eSpectOccup),
+ LastAudioService(p.LastAudioService),
+ LastDataService(p.LastDataService)
+ //, Mutex() // jfbc: I don't think this state should be copied
+{
+	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
+	matcReceivedPilotValues = p.matcReceivedPilotValues; // TODO 
+}
+
+CParameter& CParameter::operator=(const CParameter& p)
+{
+	pDRMRec = p.pDRMRec;
+	eSymbolInterlMode = p.eSymbolInterlMode;
+	eMSCCodingScheme = p.eMSCCodingScheme;
+	eSDCCodingScheme = p.eSDCCodingScheme;
+	iNumAudioService = p.iNumAudioService;
+	iNumDataService = p.iNumDataService;
+	iAMSSCarrierMode = p.iAMSSCarrierMode;
+	sReceiverID = p.sReceiverID;
+	sSerialNumber = p.sSerialNumber;
+	sDataFilesDirectory = p.sDataFilesDirectory;
+	MSCPrLe = p.MSCPrLe;
+	Stream = p.Stream;
+	Service = p.Service;
+	iNumBitsHierarchFrameTotal = p.iNumBitsHierarchFrameTotal;
+	iNumDecodedBitsMSC = p.iNumDecodedBitsMSC;
+	iNumSDCBitsPerSFrame = p.iNumSDCBitsPerSFrame;
+	iNumAudioDecoderBits = p.iNumAudioDecoderBits;
+	iNumDataDecoderBits = p.iNumDataDecoderBits;
+	iYear = p.iYear;
+	iMonth = p.iMonth;
+	iDay = p.iDay;
+	iUTCHour = p.iUTCHour;
+	iUTCMin = p.iUTCMin;
+	iFrameIDTransm = p.iFrameIDTransm;
+	iFrameIDReceiv = p.iFrameIDReceiv;
+	rFreqOffsetAcqui = p.rFreqOffsetAcqui;
+	rFreqOffsetTrack = p.rFreqOffsetTrack;
+	rResampleOffset = p.rResampleOffset;
+	iTimingOffsTrack = p.iTimingOffsTrack;
+	eReceiverMode = p.eReceiverMode;
+	eAcquiState = p.eAcquiState;
+	iNumAudioFrames = p.iNumAudioFrames;
+	vecbiAudioFrameStatus = p.vecbiAudioFrameStatus;
+	bMeasurePSD = p.bMeasurePSD;
+	vecrPSD = p.vecrPSD;
+	matcReceivedPilotValues = p.matcReceivedPilotValues;
+	RawSimDa = p.RawSimDa;
+	eSimType = p.eSimType;
+	iDRMChannelNum = p.iDRMChannelNum;
+	iSpecChDoppler = p.iSpecChDoppler;
+	rBitErrRate = p.rBitErrRate;
+	rSyncTestParam	 = p.rSyncTestParam;	
+	rSINR = p.rSINR;
+	iNumBitErrors = p.iNumBitErrors;
+	iChanEstDelay = p.iChanEstDelay;
+	iNumTaps = p.iNumTaps;
+	iPathDelay = p.iPathDelay;
+	rGainCorr = p.rGainCorr;
+	iOffUsfExtr = p.iOffUsfExtr;
+	ReceiveStatus = p.ReceiveStatus;
+	FrontEndParameters = p.FrontEndParameters;
+	AltFreqSign = p.AltFreqSign;
+	rMER = p.rMER;
+	rWMERMSC = p.rWMERMSC;
+	rWMERFAC = p.rWMERFAC;
+	rSigmaEstimate = p.rSigmaEstimate;
+	rMinDelay = p.rMinDelay;
+	rMaxDelay = p.rMaxDelay;
+	bMeasureDelay = p.bMeasureDelay;
+	vecrRdel = p.vecrRdel;
+	vecrRdelThresholds = p.vecrRdelThresholds;
+	vecrRdelIntervals = p.vecrRdelIntervals;
+	bMeasureDoppler = p.bMeasureDoppler;
+	rRdop = p.rRdop;
+	bMeasureInterference = p.bMeasureInterference;
+	rIntFreq = p.rIntFreq;
+	rINR = p.rINR;
+	rICR = p.rICR;
+	rMaxPSDwrtSig = p.rMaxPSDwrtSig;
+	rMaxPSDFreq = p.rMaxPSDFreq;
+	rSigStrengthCorrection = p.rSigStrengthCorrection;
+	bRunThread = p.bRunThread;
+	bUsingMultimedia = p.bUsingMultimedia;
+	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup); // don't copy CMatrix
+	GPSData = p.GPSData;
+	rSysSimSNRdB = p.rSysSimSNRdB;
+	iFrequency = p.iFrequency;
+	bValidSignalStrength = p.bValidSignalStrength;
+	rSigStr = p.rSigStr;
+	rIFSigStr = p.rIFSigStr;
+	iCurSelAudioService = p.iCurSelAudioService;
+	iCurSelDataService = p.iCurSelDataService;
+	eRobustnessMode = p.eRobustnessMode;
+	eSpectOccup = p.eSpectOccup;
+	LastAudioService = p.LastAudioService;
+	LastDataService = p.LastDataService;
+	return *this;
+}
+
 void CParameter::ResetServicesStreams()
 {
 	int i;
-
-	/* Store informations about last services selected
-		 this for select current service automatically after a resync */
-
-	if (iCurSelAudioService > 0)
-		LastAudioService.Save(iCurSelAudioService, Service[iCurSelAudioService].iServiceID);
-
-	if (iCurSelDataService > 0)
-		LastDataService.Save(iCurSelDataService, Service[iCurSelDataService].iServiceID);
-
-
-	/* Reset everything to possible start values */
-	for (i = 0; i < MAX_NUM_SERVICES; i++)
+	if(GetReceiverMode() == RM_DRM)
 	{
-		Service[i].AudioParam.strTextMessage = "";
-		Service[i].AudioParam.iStreamID = STREAM_ID_NOT_USED;
-		Service[i].AudioParam.eAudioCoding = AC_AAC;
-		Service[i].AudioParam.eSBRFlag = SB_NOT_USED;
-		Service[i].AudioParam.eAudioSamplRate = AS_24KHZ;
-		Service[i].AudioParam.bTextflag = FALSE;
-		Service[i].AudioParam.bEnhanceFlag = FALSE;
-		Service[i].AudioParam.eAudioMode = AM_MONO;
-		Service[i].AudioParam.iCELPIndex = 0;
-		Service[i].AudioParam.bCELPCRC = FALSE;
-		Service[i].AudioParam.eHVXCRate = HR_2_KBIT;
-		Service[i].AudioParam.bHVXCCRC = FALSE;
 
-		Service[i].DataParam.iStreamID = STREAM_ID_NOT_USED;
-		Service[i].DataParam.ePacketModInd = PM_PACKET_MODE;
-		Service[i].DataParam.eDataUnitInd = DU_SINGLE_PACKETS;
-		Service[i].DataParam.iPacketID = 0;
-		Service[i].DataParam.iPacketLen = 0;
-		Service[i].DataParam.eAppDomain = AD_DRM_SPEC_APP;
-		Service[i].DataParam.iUserAppIdent = 0;
+		/* Store informations about last services selected
+		 * this for select current service automatically after a resync */
 
-		Service[i].iServiceID = SERV_ID_NOT_USED;
-		Service[i].eCAIndication = CA_NOT_USED;
-		Service[i].iLanguage = 0;
-		Service[i].strCountryCode = "";
-		Service[i].strLanguageCode = "";
-		Service[i].eAudDataFlag = SF_AUDIO;
-		Service[i].iServiceDescr = 0;
-		Service[i].strLabel = "";
+		if (iCurSelAudioService > 0)
+			LastAudioService.Save(iCurSelAudioService, Service[iCurSelAudioService].iServiceID);
+
+		if (iCurSelDataService > 0)
+			LastDataService.Save(iCurSelDataService, Service[iCurSelDataService].iServiceID);
+
+		/* Reset everything to possible start values */
+		for (i = 0; i < MAX_NUM_SERVICES; i++)
+		{
+			Service[i].AudioParam.strTextMessage = "";
+			Service[i].AudioParam.iStreamID = STREAM_ID_NOT_USED;
+			Service[i].AudioParam.eAudioCoding = CAudioParam::AC_AAC;
+			Service[i].AudioParam.eSBRFlag = CAudioParam::SB_NOT_USED;
+			Service[i].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;
+			Service[i].AudioParam.bTextflag = FALSE;
+			Service[i].AudioParam.bEnhanceFlag = FALSE;
+			Service[i].AudioParam.eAudioMode = CAudioParam::AM_MONO;
+			Service[i].AudioParam.iCELPIndex = 0;
+			Service[i].AudioParam.bCELPCRC = FALSE;
+			Service[i].AudioParam.eHVXCRate = CAudioParam::HR_2_KBIT;
+			Service[i].AudioParam.bHVXCCRC = FALSE;
+
+			Service[i].DataParam.iStreamID = STREAM_ID_NOT_USED;
+			Service[i].DataParam.ePacketModInd = CDataParam::PM_PACKET_MODE;
+			Service[i].DataParam.eDataUnitInd = CDataParam::DU_SINGLE_PACKETS;
+			Service[i].DataParam.iPacketID = 0;
+			Service[i].DataParam.iPacketLen = 0;
+			Service[i].DataParam.eAppDomain = CDataParam::AD_DRM_SPEC_APP;
+			Service[i].DataParam.iUserAppIdent = 0;
+
+			Service[i].iServiceID = SERV_ID_NOT_USED;
+			Service[i].eCAIndication = CService::CA_NOT_USED;
+			Service[i].iLanguage = 0;
+			Service[i].strCountryCode = "";
+			Service[i].strLanguageCode = "";
+			Service[i].eAudDataFlag = CService::SF_AUDIO;
+			Service[i].iServiceDescr = 0;
+			Service[i].strLabel = "";
+		}
+
+		for (i = 0; i < MAX_NUM_STREAMS; i++)
+		{
+			Stream[i].iLenPartA = 0;
+			Stream[i].iLenPartB = 0;
+		}
 	}
-
-	for (i = 0; i < MAX_NUM_STREAMS; i++)
+	else
 	{
-		Stream[i].iLenPartA = 0;
-		Stream[i].iLenPartB = 0;
+
+		// Set up encoded AM audio parameters
+		Service[0].AudioParam.strTextMessage = "";
+		Service[0].AudioParam.iStreamID = 0;
+		Service[0].AudioParam.eAudioCoding = CAudioParam::AC_AAC;
+		Service[0].AudioParam.eSBRFlag = CAudioParam::SB_NOT_USED;
+		Service[0].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;
+		Service[0].AudioParam.bTextflag = FALSE;
+		Service[0].AudioParam.bEnhanceFlag = FALSE;
+		Service[0].AudioParam.eAudioMode = CAudioParam::AM_MONO;
+		Service[0].AudioParam.iCELPIndex = 0;
+		Service[0].AudioParam.bCELPCRC = FALSE;
+		Service[0].AudioParam.eHVXCRate = CAudioParam::HR_2_KBIT;
+		Service[0].AudioParam.bHVXCCRC = FALSE;
+
+		Service[0].iServiceID = SERV_ID_NOT_USED;
+		Service[0].eCAIndication = CService::CA_NOT_USED;
+		Service[0].iLanguage = 0;
+		Service[0].strCountryCode = "";
+		Service[0].strLanguageCode = "";
+		Service[0].eAudDataFlag = CService::SF_AUDIO;
+		Service[0].iServiceDescr = 0;
+		Service[0].strLabel = "";
+
+		Stream[0].iLenPartA = 0;
+		Stream[0].iLenPartB = 1044;
 	}
 
 	/* Reset alternative frequencies */
 	AltFreqSign.Reset();
-	AltFreqOtherServicesSign.Reset();
 
 	/* Date, time */
 	iDay = 0;
@@ -103,105 +413,63 @@ void CParameter::ResetServicesStreams()
 	iUTCMin = 0;
 }
 
-int CParameter::GetNumActiveServices()
+void CParameter::GetActiveServices(set<int>& actServ)
 {
-	int iNumAcServ = 0;
-
-	for (int i = 0; i < MAX_NUM_SERVICES; i++)
-	{
-		if (Service[i].IsActive())
-			iNumAcServ++;
-	}
-
-	return iNumAcServ;
-}
-
-void CParameter::GetActiveServices(CVector<int>& veciActServ)
-{
-	CVector<int> vecbServices(MAX_NUM_SERVICES, 0);
-
 	/* Init return vector */
-	veciActServ.Init(0);
+	actServ.clear();
 
 	/* Get active services */
-	int iNumServices = 0;
 	for (int i = 0; i < MAX_NUM_SERVICES; i++)
 	{
 		if (Service[i].IsActive())
-		{
-			/* A service is active, add ID to vector */
-			veciActServ.Add(i);
-			iNumServices++;
-		}
+			/* A service is active, add ID to set */
+			actServ.insert(i);
 	}
 }
 
-void CParameter::GetActiveStreams(CVector<int>& veciActStr)
+/* using a set ensures each stream appears only once */
+void CParameter::GetActiveStreams(set<int>& actStr)
 {
-	int				i;
-	int				iNumStreams;
-	CVector<int>	vecbStreams(MAX_NUM_STREAMS, 0);
+	actStr.clear();
 
 	/* Determine which streams are active */
-	for (i = 0; i < MAX_NUM_SERVICES; i++)
+	for (int i = 0; i < MAX_NUM_SERVICES; i++)
 	{
 		if (Service[i].IsActive())
 		{
 			/* Audio stream */
 			if (Service[i].AudioParam.iStreamID != STREAM_ID_NOT_USED)
-				vecbStreams[Service[i].AudioParam.iStreamID] = 1;
+				actStr.insert(Service[i].AudioParam.iStreamID);
 
 			/* Data stream */
 			if (Service[i].DataParam.iStreamID != STREAM_ID_NOT_USED)
-				vecbStreams[Service[i].DataParam.iStreamID] = 1;
-		}
-	}
-
-	/* Now, count streams */
-	iNumStreams = 0;
-	for (i = 0; i < MAX_NUM_STREAMS; i++)
-	{
-		if (vecbStreams[i] == 1)
-			iNumStreams++;
-	}
-
-	/* Now that we know how many streams are active, dimension vector */
-	veciActStr.Init(iNumStreams);
-
-	/* Store IDs of active streams */
-	iNumStreams = 0;
-	for (i = 0; i < MAX_NUM_STREAMS; i++)
-	{
-		if (vecbStreams[i] == 1)
-		{
-			veciActStr[iNumStreams] = i;
-			iNumStreams++;
+				actStr.insert(Service[i].DataParam.iStreamID);
 		}
 	}
 }
 
-_REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
+_REAL CParameter::GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData)
 {
 	/* Init lengths to zero in case the stream is not yet assigned */
 	int iLen = 0;
 
 	/* First, check if audio or data service and get lengths */
-	if (Service[iServiceID].eAudDataFlag == SF_AUDIO)
+	if (Service[iShortID].eAudDataFlag == CService::SF_AUDIO)
 	{
 		/* Check if we want to get the data stream connected to an audio
 		   stream */
 		if (bAudData == TRUE)
 		{
-			iLen = GetStreamLen( Service[iServiceID].DataParam.iStreamID);
+			iLen = GetStreamLen( Service[iShortID].DataParam.iStreamID);
 		}
 		else
 		{
-			iLen = GetStreamLen( Service[iServiceID].AudioParam.iStreamID);
+			iLen = GetStreamLen( Service[iShortID].AudioParam.iStreamID);
 		}
 	}
 	else
 	{
-		iLen = GetStreamLen( Service[iServiceID].DataParam.iStreamID);
+		iLen = GetStreamLen( Service[iShortID].DataParam.iStreamID);
 	}
 
 	/* We have 3 frames with time duration of 1.2 seconds. Bit rate should be
@@ -209,28 +477,28 @@ _REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
 	return (_REAL) iLen * SIZEOF__BYTE * 3 / (_REAL) 1.2 / 1000;
 }
 
-_REAL CParameter::PartABLenRatio(const int iServiceID)
+_REAL CParameter::PartABLenRatio(const int iShortID)
 {
 	int iLenA = 0;
 	int iLenB = 0;
 
 	/* Get the length of protection part A and B */
-	if (Service[iServiceID].eAudDataFlag == SF_AUDIO)
+	if (Service[iShortID].eAudDataFlag == CService::SF_AUDIO)
 	{
 		/* Audio service */
-		if (Service[iServiceID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
+		if (Service[iShortID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
 		{
-			iLenA = Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartA;
-			iLenB = Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartB;
+			iLenA = Stream[Service[iShortID].AudioParam.iStreamID].iLenPartA;
+			iLenB = Stream[Service[iShortID].AudioParam.iStreamID].iLenPartB;
 		}
 	}
 	else
 	{
 		/* Data service */
-		if (Service[iServiceID].DataParam.iStreamID != STREAM_ID_NOT_USED)
+		if (Service[iShortID].DataParam.iStreamID != STREAM_ID_NOT_USED)
 		{
-			iLenA = Stream[Service[iServiceID].DataParam.iStreamID].iLenPartA;
-			iLenB = Stream[Service[iServiceID].DataParam.iStreamID].iLenPartB;
+			iLenA = Stream[Service[iShortID].DataParam.iStreamID].iLenPartA;
+			iLenB = Stream[Service[iShortID].DataParam.iStreamID].iLenPartB;
 		}
 	}
 
@@ -248,7 +516,7 @@ void CParameter::InitCellMapTable(const ERobMode eNewWaveMode,
 	/* Set new values and make table */
 	eRobustnessMode = eNewWaveMode;
 	eSpectOccup = eNewSpecOcc;
-	MakeTable(eRobustnessMode, eSpectOccup);
+	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
 }
 
 _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
@@ -266,9 +534,6 @@ _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
 		eSpectOccup = SO_3;
 	}
 
-	/* Store new value in reception log */
-	ReceptLog.SetRobMode(eNewWaveMode);
-
 	/* Apply changes only if new paramter differs from old one */
 	if (eRobustnessMode != eNewWaveMode)
 	{
@@ -276,10 +541,10 @@ _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
 		eRobustnessMode = eNewWaveMode;
 
 		/* This parameter change provokes update of table */
-		MakeTable(eRobustnessMode, eSpectOccup);
+		CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
 
 		/* Set init flags */
-		DRMReceiver.InitsForWaveMode();
+		if(pDRMRec) pDRMRec->InitsForWaveMode();
 
 		/* Signal that parameter has changed */
 		return TRUE;
@@ -310,10 +575,10 @@ void CParameter::SetSpectrumOccup(ESpecOcc eNewSpecOcc)
 		eSpectOccup = eNewSpecOcc;
 
 		/* This parameter change provokes update of table */
-		MakeTable(eRobustnessMode, eSpectOccup);
+		CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
 
 		/* Set init flags */
-		DRMReceiver.InitsForSpectrumOccup();
+		if(pDRMRec) pDRMRec->InitsForSpectrumOccup();
 	}
 }
 
@@ -329,7 +594,7 @@ void CParameter::SetStreamLen(const int iStreamID, const int iNewLenPartA,
 		Stream[iStreamID].iLenPartB = iNewLenPartB;
 
 		/* Set init flags */
-		DRMReceiver.InitsForMSC();
+		if(pDRMRec) pDRMRec->InitsForMSC();
 	}
 }
 
@@ -349,7 +614,7 @@ void CParameter::SetNumDecodedBitsMSC(const int iNewNumDecodedBitsMSC)
 		iNumDecodedBitsMSC = iNewNumDecodedBitsMSC;
 
 		/* Set init flags */
-		DRMReceiver.InitsForMSCDemux();
+		if(pDRMRec) pDRMRec->InitsForMSCDemux();
 	}
 }
 
@@ -361,7 +626,7 @@ void CParameter::SetNumDecodedBitsSDC(const int iNewNumDecodedBitsSDC)
 		iNumSDCBitsPerSFrame = iNewNumDecodedBitsSDC;
 
 		/* Set init flags */
-		DRMReceiver.InitsForNoDecBitsSDC();
+		if(pDRMRec) pDRMRec->InitsForNoDecBitsSDC();
 	}
 }
 
@@ -373,7 +638,7 @@ void CParameter::SetNumBitsHieraFrTot(const int iNewNumBitsHieraFrTot)
 		iNumBitsHierarchFrameTotal = iNewNumBitsHieraFrTot;
 
 		/* Set init flags */
-		DRMReceiver.InitsForMSCDemux();
+		if(pDRMRec) pDRMRec->InitsForMSCDemux();
 	}
 }
 
@@ -422,14 +687,15 @@ void CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe,
 
 	/* In case parameters have changed, set init flags */
 	if (bParamersHaveChanged == TRUE)
-		DRMReceiver.InitsForMSC();
-
-	/* Set new protection levels in reception log file */
-	ReceptLog.SetProtLev(MSCPrLe);
+		if(pDRMRec) pDRMRec->InitsForMSC();
 }
 
-void CParameter::SetAudioParam(const int iShortID,
-							   const CAudioParam NewAudParam)
+void CParameter::SetServiceParameters(int iShortID, const CService& newService)
+{
+	Service[iShortID] = newService;
+}
+
+void CParameter::SetAudioParam(const int iShortID, const CAudioParam& NewAudParam)
 {
 	/* Apply changes only if parameters have changed */
 	if (Service[iShortID].AudioParam != NewAudParam)
@@ -437,20 +703,32 @@ void CParameter::SetAudioParam(const int iShortID,
 		Service[iShortID].AudioParam = NewAudParam;
 
 		/* Set init flags */
-		DRMReceiver.InitsForAudParam();
+		if(pDRMRec) pDRMRec->InitsForAudParam();
 	}
 }
 
-void CParameter::SetDataParam(const int iShortID, const CDataParam NewDataParam)
+CAudioParam CParameter::GetAudioParam(const int iShortID)
 {
+	return Service[iShortID].AudioParam;
+}
+
+void CParameter::SetDataParam(const int iShortID, const CDataParam& NewDataParam)
+{
+	CDataParam& DataParam = Service[iShortID].DataParam;
+
 	/* Apply changes only if parameters have changed */
-	if (Service[iShortID].DataParam != NewDataParam)
+	if (DataParam != NewDataParam)
 	{
-		Service[iShortID].DataParam = NewDataParam;
+		DataParam = NewDataParam;
 
 		/* Set init flags */
-		DRMReceiver.InitsForDataParam();
+		if(pDRMRec) pDRMRec->InitsForDataParam();
 	}
+}
+
+CDataParam CParameter::GetDataParam(const int iShortID)
+{
+	return Service[iShortID].DataParam;
 }
 
 void CParameter::SetInterleaverDepth(const ESymIntMod eNewDepth)
@@ -460,7 +738,7 @@ void CParameter::SetInterleaverDepth(const ESymIntMod eNewDepth)
 		eSymbolInterlMode = eNewDepth;
 
 		/* Set init flags */
-		DRMReceiver.InitsForInterlDepth();
+		if(pDRMRec) pDRMRec->InitsForInterlDepth();
 	}
 }
 
@@ -471,11 +749,8 @@ void CParameter::SetMSCCodingScheme(const ECodScheme eNewScheme)
 		eMSCCodingScheme = eNewScheme;
 
 		/* Set init flags */
-		DRMReceiver.InitsForMSCCodSche();
+		if(pDRMRec) pDRMRec->InitsForMSCCodSche();
 	}
-
-	/* Set new coding scheme in reception log */
-	ReceptLog.SetMSCScheme(eNewScheme);
 }
 
 void CParameter::SetSDCCodingScheme(const ECodScheme eNewScheme)
@@ -485,7 +760,7 @@ void CParameter::SetSDCCodingScheme(const ECodScheme eNewScheme)
 		eSDCCodingScheme = eNewScheme;
 
 		/* Set init flags */
-		DRMReceiver.InitsForSDCCodSche();
+		if(pDRMRec) pDRMRec->InitsForSDCCodSche();
 	}
 }
 
@@ -503,7 +778,7 @@ void CParameter::SetCurSelAudioService(const int iNewService)
 		LastAudioService.Reset();
 
 		/* Set init flags */
-		DRMReceiver.InitsForAudParam();
+		if(pDRMRec) pDRMRec->InitsForAudParam();
 	}
 }
 
@@ -522,7 +797,7 @@ void CParameter::SetCurSelDataService(const int iNewService)
 		LastDataService.Reset();
 
 		/* Set init flags */
-		DRMReceiver.InitsForDataParam();
+		if(pDRMRec) pDRMRec->InitsForDataParam();
 	}
 }
 
@@ -533,21 +808,24 @@ void CParameter::EnableMultimedia(const _BOOLEAN bFlag)
 		bUsingMultimedia = bFlag;
 
 		/* Set init flags */
-		DRMReceiver.InitsForMSCDemux();
+		if(pDRMRec) pDRMRec->InitsForMSCDemux();
 	}
 }
 
-void CParameter::SetNumOfServices(const int iNNumAuSe, const int iNNumDaSe)
+void CParameter::SetNumOfServices(const size_t iNNumAuSe, const size_t iNNumDaSe)
 {
 	/* Check whether number of activated services is not greater than the
 	   number of services signalled by the FAC because it can happen that
 	   a false CRC check (it is only a 8 bit CRC) of the FAC block
 	   initializes a wrong service */
-	if (GetNumActiveServices() > iNNumAuSe + iNNumDaSe)
+	set<int> actServ;
+
+	GetActiveServices(actServ);
+	if (actServ.size() > iNNumAuSe + iNNumDaSe)
 	{
 		/* Reset services and streams and set flag for init modules */
 		ResetServicesStreams();
-		DRMReceiver.InitsForMSCDemux();
+		if(pDRMRec) pDRMRec->InitsForMSCDemux();
 	}
 
 	if ((iNumAudioService != iNNumAuSe) || (iNumDataService != iNNumDaSe))
@@ -556,40 +834,41 @@ void CParameter::SetNumOfServices(const int iNNumAuSe, const int iNNumDaSe)
 		iNumDataService = iNNumDaSe;
 
 		/* Set init flags */
-		DRMReceiver.InitsForMSCDemux();
+		if(pDRMRec) pDRMRec->InitsForMSCDemux();
 	}
 }
 
-void CParameter::SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl)
+void CParameter::SetAudDataFlag(const int iShortID, const CService::ETyOServ iNewADaFl)
 {
-	if (Service[iServID].eAudDataFlag != iNewADaFl)
+	if (Service[iShortID].eAudDataFlag != iNewADaFl)
 	{
-		Service[iServID].eAudDataFlag = iNewADaFl;
+		Service[iShortID].eAudDataFlag = iNewADaFl;
 
 		/* Set init flags */
-		DRMReceiver.InitsForMSC();
+		if(pDRMRec) pDRMRec->InitsForMSC();
 	}
 }
 
-void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
+void CParameter::SetServiceID(const int iShortID, const uint32_t iNewServiceID)
 {
-	if (Service[iServID].iServiceID != iNewServID)
+	if (Service[iShortID].iServiceID != iNewServiceID)
 	{
-		if ((iServID == 0) && (Service[0].iServiceID > 0))
+		/* JFBC - what is this for? */
+		if ((iShortID == 0) && (Service[0].iServiceID > 0))
 			ResetServicesStreams();
 
-		Service[iServID].iServiceID = iNewServID;
+		Service[iShortID].iServiceID = iNewServiceID;
 
 		/* Set init flags */
-		DRMReceiver.InitsForMSC();
+		if(pDRMRec) pDRMRec->InitsForMSC();
 
 
 		/* If the receiver has lost the sync automatically restore 
 			last current service selected */
 
-		if ((iServID > 0) && (iNewServID > 0))
+		if ((iShortID > 0) && (iNewServiceID > 0))
 		{
-			if (LastAudioService.iServiceID == iNewServID)
+			if(LastAudioService.iServiceID == iNewServiceID)
 			{
 				/* Restore last audio service selected */
 				iCurSelAudioService = LastAudioService.iService;
@@ -597,10 +876,10 @@ void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
 				LastAudioService.Reset();
 
 				/* Set init flags */
-				DRMReceiver.InitsForAudParam();
+				if(pDRMRec) pDRMRec->InitsForAudParam();
 			}
 
-			if (LastDataService.iServiceID == iNewServID)
+			if (LastDataService.iServiceID == iNewServiceID)
 			{
 				/* Restore last data service selected */
 				iCurSelDataService = LastDataService.iService;
@@ -608,7 +887,7 @@ void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
 				LastDataService.Reset();
 
 				/* Set init flags */
-				DRMReceiver.InitsForDataParam();
+				if(pDRMRec) pDRMRec->InitsForDataParam();
 			}
 		}
 	}
@@ -616,7 +895,7 @@ void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
 
 
 /* Implementaions for simulation -------------------------------------------- */
-void CParameter::CRawSimData::Add(uint32_t iNewSRS) 
+void CRawSimData::Add(uint32_t iNewSRS) 
 {
 	/* Attention, function does not take care of overruns, data will be
 	   lost if added to a filled shift register! */
@@ -624,7 +903,7 @@ void CParameter::CRawSimData::Add(uint32_t iNewSRS)
 		veciShRegSt[iCurWritePos++] = iNewSRS;
 }
 
-uint32_t CParameter::CRawSimData::Get() 
+uint32_t CRawSimData::Get() 
 {
 	/* We always use the first value of the array for reading and do a
 	   shift of the other data by adding a arbitrary value (0) at the
@@ -644,7 +923,19 @@ _REAL CParameter::GetSysSNRdBPilPos() const
 	positions compared to the total SNR of the DRM signal.
 */
 	return (_REAL) 10.0 * log10(pow((_REAL) 10.0, rSysSimSNRdB / 10) /
-		rAvPowPerSymbol * rAvScatPilPow * (_REAL) iNumCarrier);
+		CellMappingTable.rAvPowPerSymbol * CellMappingTable.rAvScatPilPow * (_REAL) CellMappingTable.iNumCarrier);
+}
+
+void
+CParameter::SetSNR(const _REAL iNewSNR)
+{
+	SNRstat.addSample(iNewSNR);
+}
+
+_REAL
+CParameter::GetSNR()
+{
+	return SNRstat.getCurrent();
 }
 
 _REAL CParameter::GetNominalSNRdB()
@@ -705,744 +996,65 @@ _REAL CParameter::GetSysToNomBWCorrFact()
 	_REAL rNomBW = GetNominalBandwidth();
 
 	/* Calculate system bandwidth (N / T_u) */
-	const _REAL rSysBW = (_REAL) iNumCarrier /
-		iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+	const _REAL rSysBW = (_REAL) CellMappingTable.iNumCarrier / CellMappingTable.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
 
 	return rSysBW / rNomBW;
 }
 
-/* Reception log implementation --------------------------------------------- */
-CParameter::CReceptLog::CReceptLog() : shortlog(), longlog(), iNumAACFrames(10),
-	iFrequency(0), bLogActivated(FALSE),
-	bLogEnabled(FALSE), bRxlEnabled(FALSE), bPositionEnabled(FALSE),
-	strAdditText(""), 
-	iSecDelLogStart(0)
-{
-	shortlog.setLog(this);
-	longlog.setLog(this);
-	shortlog.reset();
-	longlog.reset();
-}
-
-void CParameter::CReceptLog::WriteParameters(_BOOLEAN bLong)
-{
-	Mutex.Lock();
-	if(bLong)
-		longlog.writeParameters();
-	else
-		shortlog.writeParameters();
-	Mutex.Unlock();
-}
-
-void CParameter::CReceptLog::ResetTransParams()
-{
-	/* Reset transmission parameters */
-	eCurMSCScheme = CParameter::CS_3_SM;
-	eCurRobMode = RM_NO_MODE_DETECTED;
-	CurProtLev.iPartA = 0;
-	CurProtLev.iPartB = 0;
-	CurProtLev.iHierarch = 0;
-}
-
-void CParameter::CReceptLog::SetSync(const _BOOLEAN bCRCOk)
-{
-	if (bLogActivated == TRUE)
-	{
-		Mutex.Lock();
-
-		/* If one of the syncs were wrong in one second, set to false */
-		if (bCRCOk == FALSE)
-			bSyncOK = FALSE;
-
-		/* Validate sync flag */
-		bSyncOKValid = TRUE;
-
-		Mutex.Unlock();
-	}
-}
-
-void CParameter::CReceptLog::SetFAC(const _BOOLEAN bCRCOk)
-{
-	if (bLogActivated == TRUE)
-	{
-		Mutex.Lock();
-
-		if (bCRCOk == TRUE)
-			iNumCRCOkFAC++;
-		else
-			bFACOk = FALSE;
-
-		/* Validate FAC flag */
-		bFACOkValid = TRUE;
-
-		Mutex.Unlock();
-	}
-}
-
-void CParameter::CReceptLog::SetMSC(const _BOOLEAN bCRCOk)
-{
-	if (bLogActivated == TRUE)
-	{
-		Mutex.Lock();
-
-		/* Count for total number of MSC cells in a certain period of time */
-		iNumCRCMSCLong++;
-
-		if (bCRCOk == TRUE)
-		{
-			iNumCRCOkMSC++;
-			iNumCRCOkMSCLong++; /* Increase number of CRCs which are ok */
-		}
-		else
-			bMSCOk = FALSE;
-
-		/* Validate MSC flag */
-		bMSCOkValid = TRUE;
-
-		Mutex.Unlock();
-	}
-}
-
-unsigned int CParameter::CReceptLog::ExtractMinutes(double dblDeg)
-{
-	unsigned int Degrees;
-
-	/* Extract degrees */
-	Degrees = (unsigned int) dblDeg;
-	return (unsigned int) (((floor((dblDeg - Degrees) * 1000000) / 1000000) + 0.00005) * 60.0);
-}
-
-void CParameter::CShortLog::SetSNR(const _REAL rNewCurSNR)
-{
-	iNumSNR++;
-
-	/* Average SNR values */
-	rSumSNR += rNewCurSNR;
-
-	/* Set minimum and maximum of SNR */
-	if (rNewCurSNR > rMaxSNR)
-		rMaxSNR = rNewCurSNR;
-	if (rNewCurSNR < rMinSNR)
-		rMinSNR = rNewCurSNR;
-}
-
-void CParameter::CShortLog::SetSignalStrength(const _REAL rNewCurSigStr)
-{
-	iNumSigStr++;
-
-	/* Average SigStr values */
-	rSumSigStr += rNewCurSigStr;
-
-	/* Set minimum and maximum of SigStr */
-	if (rNewCurSigStr > rMaxSigStr)
-		rMaxSigStr = rNewCurSigStr;
-	if (rNewCurSigStr < rMinSigStr)
-		rMinSigStr = rNewCurSigStr;
-}
-
-void CParameter::CLongLog::SetSNR(const _REAL rNewCurSNR)
-{
-	rCurSNR = rNewCurSNR;
-}
-
-void CParameter::CLongLog::SetSignalStrength(const _REAL rNewCurSigStr)
-{
-	rCurSigStr = rNewCurSigStr;
-}
-
-void CParameter::SetSNR(const _REAL rNewCurSNR)
-{
-	Mutex.Lock();
-	rSNREstimate = rNewCurSNR;
-	ReceptLog.shortlog.SetSNR(rNewCurSNR);
-	ReceptLog.longlog.SetSNR(rNewCurSNR);
-	Mutex.Unlock();
-}
-
-void CParameter::CReceptLog::SetNumAAC(const int iNewNum)
-{
-	if (iNumAACFrames != iNewNum)
-	{
-		/* Set the number of AAC frames in one block */
-		iNumAACFrames = iNewNum;
-
-		longlog.reset();
-		shortlog.reset();
-	}
-}
-
-void CParameter::CLog::open(const char* filename, time_t now)
-{
-	pFile = fopen(filename, "a");
-	writeHeader(now);
-	fflush(pFile);
-	reset();
-}
-
-void CParameter::CLog::close()
-{
-	if (pFile != NULL)
-	{
-		writeTrailer();
-		fclose(pFile);
-		pFile=NULL;
-	}
-}
-
-void CParameter::CReceptLog::StartLogging()
-{
-	time_t		ltime;
-
-	/* Get time and date */
-	time(&ltime);
-
-	bLogActivated = TRUE;
-	bLogEnabled = TRUE;
-
-	Mutex.Lock();
-
-	/* Init long and short version of log file. Open output file, write
-	   header and reset log file parameters */
-	/* Short */
-	shortlog.open("DreamLog.txt", ltime);
-
-	/* Long */
-	longlog.open("DreamLogLong.csv", ltime);
-
-	Mutex.Unlock();
-}
-
-void CParameter::CReceptLog::StopLogging()
-{
-	bLogActivated = FALSE;
-	bLogEnabled = FALSE;
-	/* Close both types of log files */
-	shortlog.close();
-	longlog.close();
-}
-
-void CParameter::CShortLog::reset()
-{
-	pLog->iNumCRCOkFAC = 0;
-	pLog->iNumCRCOkMSC = 0;
-
-	iNumSNR = 0;
-	rSumSNR = (_REAL) 0.0;
-	rMaxSNR = 0;
-	rMinSNR = 1000; /* Init with high value */
-
-	iNumSigStr = 0;
-	rSumSigStr = (_REAL) 0.0;
-	rMaxSigStr = 0;
-	rMinSigStr = 1000; /* Init with high value */
-}
-
-void CParameter::CLongLog::reset()
-{
-	pLog->bSyncOK = TRUE;
-	pLog->bFACOk = TRUE;
-	pLog->bMSCOk = TRUE;
-
-	/* Invalidate flags for initialization */
-	pLog->bSyncOKValid = FALSE;
-	pLog->bFACOkValid = FALSE;
-	pLog->bMSCOkValid = FALSE;
-
-	/* Reset total number of checked CRCs and number of CRC ok */
-	pLog->iNumCRCMSCLong = 0;
-	pLog->iNumCRCOkMSCLong = 0;
-
-	rCurSNR = (_REAL) 0.0;
-}
-
-void CParameter::CShortLog::writeHeader(time_t now)
-{
-	struct tm*	today;
-	today = gmtime(&now); /* Should be UTC time */
-
-	if (pFile != NULL)
-	{
-		/* Beginning of new table (similar to standard DRM log file) */
-		fprintf(pFile, "\n>>>>\nDream\nSoftware Version %s\n", dream_version);
-
-		fprintf(pFile, "Starttime (UTC)  %d-%02d-%02d %02d:%02d:%02d\n",
-			today->tm_year + 1900, today->tm_mon + 1, today->tm_mday,
-			today->tm_hour, today->tm_min, today->tm_sec);
-
-		fprintf(pFile, "Frequency        ");
-		if (pLog->iFrequency != 0)
-			fprintf(pFile, "%d kHz\n", pLog->iFrequency);
-		else
-			fprintf(pFile, "\n");
-			
-		if(pLog->GPSData.GetPositionAvailable())
-		{
-			double latitude, longitude;
-			pLog->GPSData.GetLatLongDegrees(latitude, longitude);
-
-			char c;
-			double val;
-			if(latitude<0.0)
-			{
-				c='S';
-				val = - latitude;
-			}
-			else
-			{
-				c='N';
-				val = latitude;
-			}
-			fprintf(pFile, "Latitude          %2d\xb0%02d'%c\n", int(val), pLog->ExtractMinutes(val), c);
-
-			if(longitude<0.0)
-			{
-				c='W';
-				val = - longitude;
-			}
-			else
-			{
-				c='E';
-				val = longitude;
-			}
-			fprintf(pFile, "Longitude        %3d\xb0%02d'%c\n", int(val), pLog->ExtractMinutes(val), c);
-		}
-
-		/* Write additional text */
-		if (pLog->strAdditText != "")
-			fprintf(pFile, "%s\n\n", pLog->strAdditText.c_str());
-		else
-			fprintf(pFile, "\n");
-
-		fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE");
-		if(pLog->bRxlEnabled)
-			fprintf(pFile, "      RXL\n");
-		fprintf(pFile, "\n");
-	}
-	iTimeCntShort = 0;
-}
-
-void CParameter::CLongLog::writeHeader(time_t)
-{
-	if (pFile != NULL)
-	{
-#ifdef _DEBUG_
-		/* In case of debug mode, use more paramters */
-		fprintf(pFile, "FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    "
-			"SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY,  "
-			"DC-FREQ, SAMRATEOFFS\n");
-#else
-		/* The long version of log file has different header */
-		fprintf(pFile, "FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    "
-			"SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY");
-		if(pLog->bRxlEnabled)
-			fprintf(pFile, ",     RXL");
-		if(pLog->bPositionEnabled)
-			fprintf(pFile, ",     LATITUDE,    LONGITUDE");
-		fprintf(pFile, "\n");
-#endif
-	}
-
-	/* Init time with current time. The time function returns the number of
-	   seconds elapsed since midnight (00:00:00), January 1, 1970,
-	   coordinated universal time, according to the system clock */
-	time(&TimeCntLong);
-}
-
-void CParameter::CShortLog::writeTrailer()
-{
-	if (rMaxSNR > rMinSNR)
-		fprintf(pFile, "\nSNR min: %4.1f, max: %4.1f\n", rMinSNR, rMaxSNR);
-	else
-		fprintf(pFile, "\nSNR min: %4.1f, max: %4.1f\n", 0.0, 0.0);
-
-	if(pLog->bRxlEnabled)
-	{
-		if (rMaxSigStr > rMinSigStr)
-			fprintf(pFile, "\nRXL min: %4.1f, max: %4.1f\n", rMinSigStr, rMaxSigStr);
-		else
-			fprintf(pFile, "\nRXL min: %4.1f, max: %4.1f\n", 0.0, 0.0);
-	}
-
-	/* Short log file ending */
-	fprintf(pFile, "\nCRC: \n");
-	fprintf(pFile, "<<<<\n\n");
-}
-
-void CParameter::CLongLog::writeTrailer()
-{
-	fprintf(pFile, "\n\n");
-}
-
-void CParameter::CShortLog::writeParameters()
-{
-	if (pLog->bLogActivated == FALSE)
-		return;
-
-	int iAverageSNR, iAverageSigStr, iTmpNumAAC;
-
-	/* Avoid division by zero */
-	if (iNumSNR > 0)
-		iAverageSNR = (int) Round(rSumSNR / iNumSNR);
-	else
-		iAverageSNR = 0;
-
-	/* Avoid division by zero */
-	if (iNumSigStr > 0)
-		iAverageSigStr = (int) Round(rSumSigStr / iNumSigStr);
-	else
-		iAverageSigStr = 0;
-
-	/* If no sync, do not print number of AAC frames. If the number
-	   of correct FAC CRCs is lower than 10%, we assume that
-	   receiver is not synchronized */
-	if (pLog->iNumCRCOkFAC < 15)
-		iTmpNumAAC = 0;
-	else
-		iTmpNumAAC = pLog->iNumAACFrames;
-
-	try
-	{
-		fprintf(pFile, "  %04d   %2d      %3d  %4d/%02d        0",
-		iTimeCntShort, iAverageSNR, pLog->iNumCRCOkFAC, pLog->iNumCRCOkMSC, iTmpNumAAC);
-		if(pLog->bRxlEnabled)
-			fprintf(pFile, "      %02d", iAverageSigStr);
-		fprintf(pFile, "\n");
-		fflush(pFile);
-	}
-	catch (...)
-	{
-		/* To prevent errors if user views the file during reception */
-	}
-
-	reset();
-
-	iTimeCntShort++;
-
-}
-
-void CParameter::CLongLog::writeParameters()
-{
-	if (pLog->bLogActivated == FALSE)
-		return;
-
-	int	iSyncInd, iFACInd, iMSCInd;
-
-	if ((pLog->bSyncOK == TRUE) && (pLog->bSyncOKValid == TRUE))
-		iSyncInd = 1;
-	else
-		iSyncInd = 0;
-
-	if ((pLog->bFACOk == TRUE) && (pLog->bFACOkValid == TRUE))
-		iFACInd = 1;
-	else
-		iFACInd = 0;
-
-	if ((pLog->bMSCOk == TRUE) && (pLog->bMSCOkValid == TRUE))
-		iMSCInd = 1;
-	else
-		iMSCInd = 0;
-
-	struct tm* TimeNow = gmtime(&TimeCntLong); /* UTC */
-
-	/* Get parameters for delay and Doppler. In case the receiver is
-	   not synchronized, set parameters to zero */
-	_REAL rDelay = (_REAL) 0.0;
-	_REAL rDoppler = (_REAL) 0.0;
-	if (DRMReceiver.GetReceiverState() == AS_WITH_SIGNAL)
-	{
-		rDelay = DRMReceiver.GetParameters()->rMinDelay;
-		rDoppler = DRMReceiver.GetParameters()->rSigmaEstimate;
-	}
-
-	/* Get robustness mode string */
-	char chRobMode='X';
-	switch (pLog->eCurRobMode)
-	{
-	case RM_ROBUSTNESS_MODE_A:
-		chRobMode = 'A';
-		break;
-
-	case RM_ROBUSTNESS_MODE_B:
-		chRobMode = 'B';
-		break;
-
-	case RM_ROBUSTNESS_MODE_C:
-		chRobMode = 'C';
-		break;
-
-	case RM_ROBUSTNESS_MODE_D:
-		chRobMode = 'D';
-		break;
-
-	case RM_NO_MODE_DETECTED:
-		chRobMode = 'X';
-		break;
-	}
-
-	/* Get MSC scheme */
-	int iCurMSCSc=-1;
-	switch (pLog->eCurMSCScheme)
-	{
-	case CParameter::CS_3_SM:
-		iCurMSCSc = 0;
-		break;
-
-	case CParameter::CS_3_HMMIX:
-		iCurMSCSc = 1;
-		break;
-
-	case CParameter::CS_3_HMSYM:
-		iCurMSCSc = 2;
-		break;
-
-	case CParameter::CS_2_SM:
-		iCurMSCSc = 3;
-		break;
-
-	case CParameter::CS_1_SM:/* TODO */
-		break;
-	}
-
-	/* Copy protection levels */
-	int iCurProtLevPartA = pLog->CurProtLev.iPartA;
-	int iCurProtLevPartB = pLog->CurProtLev.iPartB;
-	int iCurProtLevPartH = pLog->CurProtLev.iHierarch;
-
-	/* Only show mode if FAC CRC was ok */
-	if (iFACInd == 0)
-	{
-		chRobMode = 'X';
-		iCurMSCSc = 0;
-		iCurProtLevPartA = 0;
-		iCurProtLevPartB = 0;
-		iCurProtLevPartH = 0;
-	}
-
-	try
-	{
-#ifdef _DEBUG_
-		/* Some more parameters in debug mode */
-		fprintf(pFile,
-			" %5d/%c%d%d%d%d        , %d-%02d-%02d, %02d:%02d:%02d.0, "
-			"%6.2f,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, "
-			"%5.2f, %8.2f,       %5.2f\n",
-			pLog->iFrequency,	chRobMode, iCurMSCSc, iCurProtLevPartA,
-			iCurProtLevPartB, iCurProtLevPartH,
-			TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
-			TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
-			TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
-			iNumCRCMSCLong, iNumCRCOkMSCLong, rDoppler, rDelay,
-			pLog->DRMReceiver.GetParameters()->GetDCFrequency(),
-			pLog->DRMReceiver.GetParameters()->GetSampFreqEst()
-			);
-#else
-		/* This data can be read by Microsoft Excel */
-		fprintf(pFile,
-			" %5d/%c%d%d%d%d        , %d-%02d-%02d, %02d:%02d:%02d.0, "
-			"%6.2f,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, %5.2f",
-			pLog->iFrequency,	chRobMode, iCurMSCSc, iCurProtLevPartA,
-			iCurProtLevPartB, iCurProtLevPartH,
-			TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
-			TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
-			TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
-			pLog->iNumCRCMSCLong, pLog->iNumCRCOkMSCLong,
-			rDoppler, rDelay);
-		if(pLog->bRxlEnabled)
-			fprintf(pFile, ",   %5.2f", rCurSigStr);
-		if(pLog->bPositionEnabled)
-		{
-			double latitude, longitude;
-			pLog->GPSData.GetLatLongDegrees(latitude, longitude);
-			fprintf(pFile, ",   %10.6f,   %10.6f", latitude, longitude);
-		}
-		fprintf(pFile, "\n");
-#endif
-		fflush(pFile);
-	}
-
-	catch (...)
-	{
-		/* To prevent errors if user views the file during reception */
-	}
-
-	reset();
-	/* This is a time_t type variable. It contains the number of
-	   seconds from a certain defined date. We simply increment
-	   this number for the next second instance */
-	TimeCntLong++;
-}
-
-ERecMode CParameter::GetReceiverMode()
-{
- return DRMReceiver.GetReceiverMode();		 
-}
-
-EAcqStat CParameter::GetReceiverState()
-{
-	return DRMReceiver.GetReceiverState();
-}
 
 void CParameter::SetIFSignalLevel(_REAL rNewSigStr)
 {
-	Mutex.Lock();
-	ReceptLog.rIFSigStr = rNewSigStr;
-	Mutex.Unlock();
+	rIFSigStr = rNewSigStr;
 }
 
 _REAL CParameter::GetIFSignalLevel()
 {
-	_REAL r;
-	Mutex.Lock();
-	r = ReceptLog.rIFSigStr;
-	Mutex.Unlock();
-	return r;
+	return rIFSigStr;
 }
 
-void CParameter::SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr)
+void CRxStatus::SetStatus(const ETypeRxStatus OK)
 {
-	Mutex.Lock();
-	ReceptLog.bValidSignalStrength = bValid;
-	ReceptLog.rSigStr = rNewSigStr;
-	ReceptLog.shortlog.SetSignalStrength(rNewSigStr);
-	ReceptLog.longlog.SetSignalStrength(rNewSigStr);
-	Mutex.Unlock();
+	status = OK;
+	iNum++;
+	if(OK==RX_OK)
+		iNumOK++;
 }
 
-_BOOLEAN CParameter::GetSignalStrength(_REAL &rOutSigStr)
+void CParameter::GenerateReceiverID()
 {
-	_BOOLEAN bValid;
-	Mutex.Lock();
-	bValid = ReceptLog.bValidSignalStrength;
-	if(bValid)
-		rOutSigStr = ReceptLog.rSigStr;
-	Mutex.Unlock();
-	return bValid;
-}
+	//Set receiver ID
+	string sVer;
+	unsigned int iImplementation = 0;;
+	unsigned int iMajor = 0;
+	unsigned int iMinor = 0;
 
-void CParameter::CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)
-{ 
-	FSyncOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_FRAME_SYNC,colour);
-}
+	sReceiverID = "drea";
 
-void CParameter::CReceiveStatus::SetTimeSyncStatus(const ETypeRxStatus OK)
-{ 
-	TSyncOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_TIME_SYNC,colour);
-}
+	sVer = dream_version;
 
-void CParameter::CReceiveStatus::SetInterfaceStatus(const ETypeRxStatus OK)
-{ 
-	InterfaceOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_IOINTERFACE,colour);
-}
+	size_t pos;
 
-void CParameter::CReceiveStatus::SetFACStatus(const ETypeRxStatus OK)
-{ 
-	FACOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_FAC_CRC,colour);
-}
+	while((pos = sVer.find('.')) != string::npos)
+		sVer.replace(pos, 1, " ");
+	
+	if ((pos = sVer.find("cvs")) != string::npos)
+		sVer.replace(pos, 3, "   ");
 
-void CParameter::CReceiveStatus::SetSDCStatus(const ETypeRxStatus OK)
-{ 
-	SDCOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_SDC_CRC,colour);
-}
+	stringstream ssVer(sVer);
+	ssVer >> iImplementation >> iMajor >> iMinor;
 
-void CParameter::CReceiveStatus::SetAudioStatus(const ETypeRxStatus OK)
-{ 
-	AudioOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_MSC_CRC,colour);
-}
+	stringstream ssInfoVer;
+	ssInfoVer << setw(2) << setfill('0') << iImplementation << setw(2) << setfill('0') << iMajor << setw(2) << setfill('0') << iMinor;
 
-void CParameter::CReceiveStatus::SetMOTStatus(const ETypeRxStatus OK)
-{
-	MOTOK = OK;
-	int colour=2;
-	switch(OK) {
-	case CRC_ERROR: colour=2; break;
-	case DATA_ERROR: colour=1; break;
-	case RX_OK: colour=0; break;
-	case NOT_PRESENT:  break;
-	}
-	PostWinMessage(MS_MOT_OBJ_STAT,colour);
-}
+	sReceiverID += ssInfoVer.str();
 
-ETypeRxStatus CParameter::CReceiveStatus::GetFrameSyncStatus()
-{
-	return FSyncOK;
-}
+	while (sSerialNumber.length() < 6)
+			sSerialNumber += "_";
+	
+	if (sSerialNumber.length() > 6)
+		sSerialNumber.erase(6, pDRMRec->GetParameters()->sSerialNumber.length()-6);
 
-ETypeRxStatus CParameter::CReceiveStatus::GetTimeSyncStatus()
-{
-	return TSyncOK;
-}
-
-ETypeRxStatus CParameter::CReceiveStatus::GetInterfaceStatus()
-{
-	return InterfaceOK;
-}
-
-ETypeRxStatus CParameter::CReceiveStatus::GetFACStatus()
-{
-	return FACOK;
-}
-
-ETypeRxStatus CParameter::CReceiveStatus::GetSDCStatus()
-{
-	return SDCOK;
-}
-
-ETypeRxStatus CParameter::CReceiveStatus::GetAudioStatus()
-{
-	return AudioOK;
-}
-
-ETypeRxStatus CParameter::CReceiveStatus::GetMOTStatus()
-{
-	return MOTOK;
+	sReceiverID += pDRMRec->GetParameters()->sSerialNumber;
 }
 
 void CParameter::GenerateRandomSerialNumber()
@@ -1468,4 +1080,275 @@ void CParameter::GenerateRandomSerialNumber()
 	serialNumTemp[6] = '\0';
 
 	sSerialNumber = serialNumTemp;
+}
+
+CMinMaxMean::CMinMaxMean():rSum(0.0),rCur(0.0),
+rMin(numeric_limits<_REAL>::max()),rMax(numeric_limits<_REAL>::min()),iNum(0)
+{
+}
+
+void
+CMinMaxMean::addSample(_REAL r)
+{
+	rCur = r;
+	rSum += r;
+	iNum++;
+	if(r>rMax)
+		rMax = r;
+	if(r<rMin)
+		rMin = r;
+}
+
+_REAL
+CMinMaxMean::getCurrent()
+{
+	return rCur;
+}
+
+_REAL
+CMinMaxMean::getMean()
+{
+	_REAL rMean = 0.0;
+	if(iNum>0)
+		rMean = rSum / iNum;
+	rSum = 0.0;
+	iNum = 0;
+	return rMean;
+}
+
+void
+CMinMaxMean::getMinMax(_REAL& rMinOut, _REAL& rMaxOut)
+{
+	if(rMin <= rMax)
+	{
+		rMinOut = rMin;
+		rMaxOut = rMax;
+	}
+	else
+	{
+		rMinOut = 0.0;
+		rMaxOut = 0.0;
+	}
+	rMin = numeric_limits<_REAL>::max();
+	rMax = numeric_limits<_REAL>::min();
+}
+
+string CServiceDefinition::Frequency(size_t n) const
+{
+	if(n>=veciFrequencies.size())
+		return ""; // not in the list
+
+	stringstream ss;
+	int iFrequency = veciFrequencies[n];
+
+	switch (iSystemID)
+	{
+	case 0:
+	case 1:
+	case 2:
+		/* AM or DRM */
+		ss << iFrequency;
+		break;
+
+	case 3:
+	case 4:
+	case 5:
+		/* 'FM1 frequency' - 87.5 to 107.9 MHz (100 kHz steps) */
+		ss << 87.5 + 0.1 * float(iFrequency);
+		break;
+
+	case 6:
+	case 7:
+	case 8:
+		/* 'FM2 frequency'- 76.0 to 90.0 MHz (100 kHz steps) */
+		ss << 76.0 + 0.1 * float(iFrequency);
+		break;
+
+	case 9:
+	case 10:
+	case 11:
+		if(iFrequency<=11) {
+			int chan = iFrequency / 4;
+			char subchan = 'A' + iFrequency % 4;
+			ss << "Band I channel " << (chan+2) << subchan;
+		} else if(64<= iFrequency && iFrequency <=95) {
+			int chan = iFrequency / 4;
+			char subchan = 'A' + iFrequency % 4;
+			ss << "Band III channel " << (chan-11) << subchan;
+		} else if(96<= iFrequency && iFrequency <=101) {
+			int chan = iFrequency / 6;
+			char subchan = 'A' + iFrequency % 6;
+			ss << "Band III+ channel " << (chan-3) << subchan;
+		} else if(128<= iFrequency && iFrequency <=143) {
+			char chan = iFrequency - 128;
+			double m = 1452.96+1.712*double(chan);
+			ss << "European L-Band channel L" << ('A'+chan) << ", " << m << " MHz";
+		} else if(160<= iFrequency && iFrequency <=182) {
+			int chan = iFrequency - 159;
+            double m = 1451.072+1.744*double(chan);
+			ss << "Canadian L-Band channel " << chan << ", " << m << " MHz";
+		} else {
+			ss << "unknown channel " << iFrequency;
+		}
+		break;
+	default:
+		break;
+	}
+	return ss.str();
+}
+
+string CServiceDefinition::FrequencyUnits() const
+{
+	switch (iSystemID)
+	{
+	case 0:
+	case 1:
+	case 2:
+		return "kHz";
+		break;
+
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
+	case 8:
+		return "MHz";
+		break;
+
+	default:
+		return "";
+		break;
+	}
+}
+
+string CServiceDefinition::System() const
+{
+	switch (iSystemID)
+	{
+	case 0:
+		return "DRM";
+		break;
+
+	case 1:
+	case 2:
+		return "AM";
+		break;
+
+	case 3:
+	case 4:
+	case 5:
+	case 6:
+	case 7:
+	case 8:
+		return "FM";
+		break;
+	case 9:
+	case 10:
+	case 11:
+		return "DAB";
+		break;
+
+	default:
+		return "";
+		break;
+	}
+}
+
+string COtherService::ServiceID() const
+{
+	stringstream ss;
+	/*
+	switch (iSystemID)
+	{
+	case 0:
+	case 1:
+		ss << "ID:" << hex << setw(6) << iServiceID;
+		break;
+
+	case 3:
+	case 6:
+		ss << "ECC+PI:" << hex << setw(6) << iServiceID;
+		break;
+	case 4:
+	case 7:
+		ss << "PI:" << hex << setw(4) << iServiceID;
+		break;
+	case 9:
+		ss << "ECC+aud:" << hex << setw(6) << iServiceID;
+		break;
+	case 10:
+		ss << "AUDIO:" << hex << setw(4) << iServiceID;
+		break;
+	case 11:
+		ss << "DATA:" << hex << setw(8) << iServiceID;
+		break;
+		break;
+
+	default:
+		break;
+	}
+	*/
+	return ss.str();
+}
+
+/* See ETSI ES 201 980 v2.1.1 Annex O */
+_BOOLEAN
+CAltFreqSched::IsActive(const time_t ltime)
+{
+	int iScheduleStart;
+	int iScheduleEnd;
+	int iWeekDay;
+
+	/* Empty schedule is always active */
+	if (iDuration == 0)
+		return true;
+
+	/* Calculate time in UTC */
+	struct tm *gmtCur = gmtime(&ltime);
+
+	/* Check day
+	   tm_wday: day of week (0 - 6; Sunday = 0) 
+	   I must normalize so Monday = 0   */
+
+	if (gmtCur->tm_wday == 0)
+		iWeekDay = 6;
+	else
+		iWeekDay = gmtCur->tm_wday - 1;
+
+	/* iTimeWeek minutes since last Monday 00:00 in UTC */
+	/* the value is in the range 0 <= iTimeWeek < 60 * 24 * 7)   */
+
+	const int iTimeWeek =
+		(iWeekDay * 24 * 60) + (gmtCur->tm_hour * 60) + gmtCur->tm_min;
+
+	/* Day Code: this field indicates which days the frequency schedule
+	 * (the following Start Time and Duration) applies to. 
+	 * The msb indicates Monday, the lsb Sunday. Between one and seven bits may be set to 1.
+	 */
+	for (int i = 0; i < 7; i++)
+	{
+		/* Check if day is active */
+		if ((1 << (6 - i)) & iDayCode)
+		{
+			/* Tuesday -> 1 * 24 * 60 = 1440 */
+			iScheduleStart = (i * 24 * 60) + iStartTime;
+			iScheduleEnd = iScheduleStart + iDuration;
+
+			/* the normal check (are we inside start and end?) */
+			if ((iTimeWeek >= iScheduleStart) && (iTimeWeek <= iScheduleEnd))
+				return true;
+
+			/* the wrap-around check */
+			const int iMinutesPerWeek = 7 * 24 * 60;
+
+			if (iScheduleEnd > iMinutesPerWeek)
+			{
+				/* our duration wraps into next Monday (or even later) */
+				if (iTimeWeek < (iScheduleEnd - iMinutesPerWeek))
+					return true;
+			}
+		}
+	}
+	return false;
 }

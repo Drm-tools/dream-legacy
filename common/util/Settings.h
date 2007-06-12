@@ -30,14 +30,9 @@
 #define SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../DrmReceiver.h"
-#include "../DrmTransmitter.h"
-#ifdef USE_QT_GUI
-# include "../GUI-QT/DRMPlot.h"
-#endif
+#include "../GPSData.h"
 #include <map>
 #include <string>
-#include <fstream>
 
 
 /* Definitions ****************************************************************/
@@ -115,21 +110,70 @@
 /* Miximum number of seconds for MOT BWS refresh */
 #define MAX_MOT_BWS_REFRESH_TIME	1800
 
+/* number of available color schemes for the plot */
+#define NUM_AVL_COLOR_SCHEMES_PLOT				3
+
 /* Classes ********************************************************************/
-class CSettings
+	/* Function declarations for stlini code written by Robert Kesterson */
+	struct StlIniCompareStringNoCase 
+	{
+		bool operator()(const std::string& x, const std::string& y) const;
+	};
+	/* These typedefs just make the code a bit more readable */
+	typedef std::map<string, string, StlIniCompareStringNoCase > INISection;
+	typedef std::map<string, INISection , StlIniCompareStringNoCase > INIFile;
+
+	class CWinGeom
+	{
+	public:
+		CWinGeom() : iXPos(0), iYPos(0), iHSize(0), iWSize(0) {}
+
+		int iXPos, iYPos;
+		int iHSize, iWSize;
+	};
+
+class CIniFile
 {
 public:
-	CSettings(CDRMReceiver* pNDRMR) : pDRMRec(pNDRMR) {}
+	CIniFile() {}
+	virtual ~CIniFile() {}
+protected:
+	void SaveIni(const char* pszFilename);
+	void LoadIni(const char* pszFilename);
 
-	_BOOLEAN Load(int argc, char** argv);
+	string GetIniSetting(const string& strSection, const string& strKey,
+				const string& strDefaultVal = "") const;
+	void PutIniSetting(const string& strSection, const string& strKey="",
+				const string& strVal = "");
+	INIFile ini;
+	CMutex Mutex;
+};
+
+class CSettings: public CIniFile
+{
+public:
+	CSettings() {}
+	void Load(int argc, char** argv);
 	void Save();
+	void Clear();
+	string Get(const string& section, const string& key, const string& def="") const;
+	void Put(const string& section, const string& key, const string& value);
+	bool Get(const string& section, const string& key, const bool def) const;
+	void Put(const string& section, const string& key, const bool value)
+		{ Put(section, key, value?1:0); }
+	int Get(const string& section, const string& key, const int def) const;
+	void Put(const string& section, const string& key, const int value);
+	_REAL Get(const string& section, const string& key, const _REAL def) const;
+	void Put(const string& section, const string& key, const _REAL value);
+	void Get(const string& section, CWinGeom&) const;
+	void Put(const string& section, const CWinGeom&);
+
+	string UsageArguments(char** argv);
 
 protected:
-	void ReadIniFile();
-	void WriteIniFile();
 
-	_BOOLEAN ParseArguments(int argc, char** argv);
-	string UsageArguments(char** argv);
+
+	void ParseArguments(int argc, char** argv);
 	_BOOLEAN GetFlagArgument(int argc, char** argv, int& i, string strShortOpt,
 							 string strLongOpt);
 	_BOOLEAN GetNumericArgument(int argc, char** argv, int& i,
@@ -140,37 +184,6 @@ protected:
 							   string strShortOpt, string strLongOpt,
 							   string& strArg);
 
-	void GenerateReceiverID();
-
-	/* Function declarations for stlini code written by Robert Kesterson */
-	struct StlIniCompareStringNoCase 
-	{
-		bool operator()(const std::string& x, const std::string& y) const;
-	};
-
-	/* These typedefs just make the code a bit more readable */
-	typedef std::map<string, string, StlIniCompareStringNoCase > INISection;
-	typedef std::map<string, INISection , StlIniCompareStringNoCase > INIFile;
-
-	string GetIniSetting(INIFile& theINI, const char* pszSection,
-						 const char* pszKey, const char* pszDefaultVal = "");
-	void PutIniSetting(INIFile &theINI, const char *pszSection,
-					   const char* pszKey = NULL, const char* pszValue = "");
-	void SaveIni(INIFile& theINI, const char* pszFilename);
-	INIFile LoadIni(const char* pszFilename);
-
-
-	void SetNumericIniSet(INIFile& theINI, string strSection, string strKey,
-						  int iValue);
-	_BOOLEAN GetNumericIniSet(INIFile& theINI, string strSection, string strKey,
-							  int iRangeStart, int iRangeStop, int& iValue);
-	void SetFlagIniSet(INIFile& theINI, string strSection, string strKey,
-					   _BOOLEAN bValue);
-	_BOOLEAN GetFlagIniSet(INIFile& theINI, string strSection, string strKey,
-						   _BOOLEAN& bValue);
-
-	/* Pointer to the DRM receiver object needed for the various settings */
-	CDRMReceiver* pDRMRec;
 };
 
 #endif // !defined(SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_)

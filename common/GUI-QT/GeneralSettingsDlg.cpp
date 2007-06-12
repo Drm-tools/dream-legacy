@@ -26,13 +26,26 @@
 \******************************************************************************/
 
 #include "GeneralSettingsDlg.h"
+#include <qlineedit.h>
+#include <qpushbutton.h>
+#include <qwhatsthis.h>
+#include <qvalidator.h>
+#include <qmessagebox.h>
+#include <qcheckbox.h>
+
 
 /* Implementation *************************************************************/
 
-GeneralSettingsDlg::GeneralSettingsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
-	const char* name, bool modal, WFlags f) :
-	CGeneralSettingsDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
+GeneralSettingsDlg::GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings,
+	QWidget* parent, const char* name, bool modal, WFlags f) :
+	CGeneralSettingsDlgBase(parent, name, modal, f), Parameters(NParam),Settings(NSettings),
+	host("localhost"),port(2947),bUseGPS(FALSE)
 {
+
+	host = Settings.Get("GPS", "host", host);
+	port = Settings.Get("GPS", "port", port);
+	bUseGPS = Settings.Get("GPS", "usegpsd", bUseGPS);
+	CheckBoxUseGPS->setChecked(bUseGPS);
 
 	/* Set the validators fro the receiver coordinate */
 	EdtLatitudeDegrees->setValidator(new QIntValidator(0, 90, EdtLatitudeDegrees));
@@ -51,12 +64,17 @@ GeneralSettingsDlg::GeneralSettingsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(EdtLongitudeEW, SIGNAL(textChanged( const QString &)), this
 		, SLOT(CheckEW(const QString&)));
 
+	connect(CheckBoxUseGPS, SIGNAL(clicked()), SLOT(OnCheckBoxUseGPS()) );
+
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 }
 
 GeneralSettingsDlg::~GeneralSettingsDlg()
 {
+	Settings.Put("GPS", "host", host);
+	Settings.Put("GPS", "port", port);
+	Settings.Put("GPS", "usegpsd", bUseGPS);
 }
 
 void GeneralSettingsDlg::hideEvent(QHideEvent*)
@@ -72,6 +90,9 @@ void GeneralSettingsDlg::showEvent(QShowEvent*)
 	EdtLatitudeDegrees->setText(""); 
 	EdtLatitudeMinutes->setText("");
 	EdtLatitudeNS->setText("");
+
+    LineEditGPSHost->setText(host.c_str());
+    LineEditGPSPort->setText(QString("%1").arg(port));
 
 	/* Extract the receiver coordinates setted */
 	ExtractReceiverCoordinates();
@@ -105,11 +126,23 @@ void GeneralSettingsDlg::CheckEW(const QString& NewText)
 
 }
 
+void GeneralSettingsDlg::OnCheckBoxUseGPS()
+{
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
+	QMessageBox::information( this, "Dream", "Don't enable GPS unless you have gpsd running." );
+#endif
+	bUseGPS = CheckBoxUseGPS->isChecked();
+	if(bUseGPS)
+		emit StartGPS();
+	else
+		emit StopGPS();
+}
+
 void GeneralSettingsDlg::ButtonOkClicked()
 {
-_BOOLEAN bOK = TRUE;
-_BOOLEAN bAllEmpty = TRUE;
-_BOOLEAN bAllCompiled = FALSE;
+	_BOOLEAN bOK = TRUE;
+	_BOOLEAN bAllEmpty = TRUE;
+	_BOOLEAN bAllCompiled = FALSE;
 
 	/* Check the values and close the dialog */
 
@@ -173,6 +206,8 @@ _BOOLEAN bAllCompiled = FALSE;
 	{
 		/* save current settings */
 
+		Parameters.Lock(); 
+
 		if (!bAllEmpty)
 		{
 			double latitude, longitude;
@@ -185,14 +220,18 @@ _BOOLEAN bAllCompiled = FALSE;
 			if(EdtLongitudeEW->text().upper().latin1()[0]=='W')
 				longitude = - longitude;
 
-			pDRMRec->GetParameters()->ReceptLog.GPSData.SetPositionAvailable(TRUE);
-			pDRMRec->GetParameters()->ReceptLog.GPSData.SetLatLongDegrees(latitude, longitude);
+			Parameters.GPSData.SetPositionAvailable(TRUE);
+			Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
 
 		}
 		else
 		{
-			pDRMRec->GetParameters()->ReceptLog.GPSData.SetPositionAvailable(FALSE);
+			Parameters.GPSData.SetPositionAvailable(FALSE);
 		}
+		Parameters.Unlock(); 
+
+    	host = LineEditGPSHost->text().latin1();
+    	port = LineEditGPSPort->text().toInt();
 
 		accept(); /* If the values are valid close the dialog */
 	}
@@ -249,7 +288,9 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 		extract local latitude and longitude coordinates */
 
 	double latitude, longitude;
-	pDRMRec->GetParameters()->ReceptLog.GPSData.GetLatLongDegrees(latitude, longitude);
+
+	Parameters.Lock(); 
+	Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
 
 	/* Extract latitude values */
 
@@ -273,7 +314,7 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 	EdtLatitudeDegrees->setText(sVal);
 
 	/* Extract minutes */
-	Minutes = pDRMRec->GetParameters()->ReceptLog.ExtractMinutes(latitude);
+	Minutes = Parameters.GPSData.ExtractMinutes(latitude);
 	sVal = QString("%1").arg(Minutes);
 
 	EdtLatitudeMinutes->setText(sVal);
@@ -297,7 +338,7 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 
 	/* Extract degrees */
 
-	Minutes = pDRMRec->GetParameters()->ReceptLog.ExtractMinutes(longitude);
+	Minutes = Parameters.GPSData.ExtractMinutes(longitude);
 
 	/* Longitude degrees max 3 digits */
 	sVal = QString("%1").arg(int(longitude));
@@ -308,6 +349,8 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 	sVal = QString("%1").arg(Minutes);
 
 	EdtLongitudeMinutes->setText(sVal);
+
+	Parameters.Unlock(); 
 
 }
 

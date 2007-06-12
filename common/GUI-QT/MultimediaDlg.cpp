@@ -32,45 +32,22 @@
  *
 \******************************************************************************/
 
+#ifdef _WIN32
+# include <windows.h>
+#endif
+#ifdef HAVE_LIBFREEIMAGE
+# include <FreeImage.h>
+#endif
 #include "MultimediaDlg.h"
-
+#include "../datadecoding/Journaline.h"
 
 /* Implementation *************************************************************/
-MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
-	const char* name, bool modal, WFlags f) :
-	MultimediaDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
+MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
+	QWidget* parent, const char* name, bool modal, WFlags f)
+	: MultimediaDlgBase(parent, name, modal, f),
+	Parameters(*NDRMR.GetParameters()), DataDecoder(*NDRMR.GetDataDecoder()),
+	strCurrentSavePath("."), strDirMOTCache("MOTCache")
 {
-	/* Get window geometry data from DRMReceiver module and apply it */
-	const QRect WinGeom(
-		pDRMRec->GeomMultimediaDlg.iXPos,
-		pDRMRec->GeomMultimediaDlg.iYPos,
-		pDRMRec->GeomMultimediaDlg.iWSize,
-		pDRMRec->GeomMultimediaDlg.iHSize
-	);
-
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-		setGeometry(WinGeom);
-
-	/* Store the default font */
-	fontDefault = TextBrowser->font();
-
-	/* Retrieve the setting saved into the .ini file */
-	SetCurrentSavePath(pDRMRec->strStoragePathMMDlg.c_str());
-
-	/* Retrieve the font setting saved into the .ini file */
-	if (pDRMRec->FontParamMMDlg.strFamily != "")
-	{
-		fontTextBrowser =
-			QFont(QString(pDRMRec->FontParamMMDlg.strFamily.c_str()),
-			pDRMRec->FontParamMMDlg.intPointSize,
-			pDRMRec->FontParamMMDlg.intWeight,
-			pDRMRec->FontParamMMDlg.bItalic);
-	}
-	else
-	{
-		/* If not defined, retrieve the default font */
-		fontTextBrowser = fontDefault;
-	}
 
 	/* Add body's stylesheet */
 	QStyleSheetItem* styleBody =
@@ -107,9 +84,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		"</h2></td></tr></table>";
 
 	/* Inits for broadcast website application */
-	strDirMOTCache = MOT_BROADCAST_WEBSITE_PATH;
 	strBWSHomePage = "";
-
 
 	/* Set Menu ***************************************************************/
 	/* File menu ------------------------------------------------------------ */
@@ -140,7 +115,6 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Now tell the layout about the menu */
 	MultimediaDlgBaseLayout->setMenuBar(pMenu);
 
-	
 	/* Update time for color LED */
 	LEDStatus->SetUpdateTime(1000);
 
@@ -148,7 +122,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	ClearAllSlideShow();
 
 	/* Init container and GUI */
-	InitApplication(pDRMRec->GetDataDecoder()->GetAppType());
+	InitApplication(DataDecoder.GetAppType());
 
 
 	/* Connect controls */
@@ -224,7 +198,10 @@ void MultimediaDlg::OnTimer()
 	_BOOLEAN	bMainPage;
 	_BOOLEAN	bShowInfo = TRUE;
 
-	switch(pDRMRec->GetParameters()->ReceiveStatus.GetMOTStatus())
+	Parameters.Lock();
+	ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
+	Parameters.Unlock();
+	switch(status)
 	{
 	case NOT_PRESENT:
 		LEDStatus->Reset(); /* GREY */
@@ -244,8 +221,8 @@ void MultimediaDlg::OnTimer()
 	}
 
 	/* Check out which application is transmitted right now */
-	CDataDecoder::EAppType eNewAppType =
-		pDRMRec->GetDataDecoder()->GetAppType();
+
+	CDataDecoder::EAppType eNewAppType = DataDecoder.GetAppType();
 
 	if (eNewAppType != eAppType)
 		InitApplication(eNewAppType);
@@ -254,7 +231,7 @@ void MultimediaDlg::OnTimer()
 	{
 	case CDataDecoder::AT_MOTSLISHOW:
 		/* Poll the data decoder module for new picture */
-		if (pDRMRec->GetDataDecoder()->GetMOTObject(NewObj, eAppType) == TRUE)
+		if (DataDecoder.GetMOTObject(NewObj, eAppType) == TRUE)
 		{
 			/* Store received picture */
 			iCurNumPict = vecRawImages.Size();
@@ -274,7 +251,7 @@ void MultimediaDlg::OnTimer()
 
 	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
 		/* Poll the data decoder module for new object */
-		if (pDRMRec->GetDataDecoder()->GetMOTObject(NewObj, eAppType) == TRUE)
+		if (DataDecoder.GetMOTObject(NewObj, eAppType) == TRUE)
 		{
 			/* Store received MOT object on disk */
 			const QString strNewObjName = NewObj.strName.c_str();
@@ -287,10 +264,8 @@ void MultimediaDlg::OnTimer()
 			const _BOOLEAN bZipped =
 				(strNewObjName.right(3) == ".gz");
 
-			/* Add an html header for refresh the page every n seconds */
-			if ((pDRMRec->bAddRefreshHeader) 
-					&& (NewObj.strFormat == "html")
-					&& (bZipped == FALSE))
+			/* Add an html header to refresh the page every n seconds */
+			if (bAddRefresh && (NewObj.strFormat == "html") && (bZipped == FALSE))
 				AddRefreshHeader(strFileName);
 
 			/* Check if is the main page */
@@ -301,7 +276,7 @@ void MultimediaDlg::OnTimer()
 				/* Get the current directory */
 				CMOTDirectory MOTDir;
 
-				if (pDRMRec->GetDataDecoder()->GetMOTDirectory(MOTDir, eAppType) == TRUE)
+				if (DataDecoder.GetMOTDirectory(MOTDir, eAppType) == TRUE)
 				{
 					/* Checks if the DirectoryIndex has values */
 					if (MOTDir.DirectoryIndex.size() > 0)
@@ -368,36 +343,33 @@ void MultimediaDlg::OnTimer()
 
 	if (bShowInfo == TRUE)
 	{
-		CParameter& ReceiverParam = *(pDRMRec->GetParameters());
+		Parameters.Lock();
+		const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
+		const uint32_t iAudioServiceID = Parameters.Service[iCurSelAudioServ].iServiceID;
 
 		/* Get current data service */
-		const int iCurSelDataServ = ReceiverParam.GetCurSelDataService();
+		const int iCurSelDataServ = Parameters.GetCurSelDataService();
+		CService service = Parameters.Service[iCurSelDataServ];
+		Parameters.Unlock();
 
-		if (ReceiverParam.Service[iCurSelDataServ].IsActive())
+
+		if (service.IsActive())
 		{
-			/* Do UTF-8 to string conversion with the label strings */
-			QString strLabel = QString().fromUtf8(QCString(ReceiverParam
-				.Service[iCurSelDataServ].strLabel.c_str())).stripWhiteSpace();
+			/* Do UTF-8 to QString (UNICODE) conversion with the label strings */
+			QString strLabel = QString().fromUtf8(service.strLabel.c_str()).stripWhiteSpace();
 
-			const int iCurSelAudioServ = ReceiverParam.GetCurSelAudioService();
 
 			/* Service ID (plot number in hexadecimal format) */
-			const long iDataServiceID = (long) ReceiverParam.
-				Service[iCurSelDataServ].iServiceID;
-
-			const long iAudioServiceID = (long) ReceiverParam.
-				Service[iCurSelAudioServ].iServiceID;
-
 			QString strServiceID = "";
 
 			/* show the ID only if differ from the audio service */
-			if ((iDataServiceID != 0) && (iDataServiceID != iAudioServiceID))
+			if ((service.iServiceID != 0) && (service.iServiceID != iAudioServiceID))
 			{
 				if (strLabel != "")
 					strLabel += " ";
 
 				strServiceID = "- ID:" +
-					QString().setNum(iDataServiceID, 16).upper();
+					QString().setNum(long(service.iServiceID), 16).upper();
 			}
 
 			/* add the description on the title of the dialog */
@@ -414,7 +386,7 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 {
 	/* Get news from actual Journaline decoder */
 	CNews News;
-	pDRMRec->GetDataDecoder()->GetNews(iCurJourID, News);
+	DataDecoder.GetNews(iCurJourID, News);
 
 	/* Decode UTF-8 coding for title */
 	strTitle = QString().fromUtf8(QCString(News.sTitle.c_str()));
@@ -450,7 +422,7 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 		}
 		else
 		{
-			if (bHTMLExport == FALSE) 
+			if (bHTMLExport == FALSE)
 			{
 				QString strLinkStr = QString().setNum(News.vecItem[i].iLink);
 
@@ -500,6 +472,75 @@ void MultimediaDlg::SetJournalineText()
 		pFileMenu->setItemEnabled(1, TRUE);
 }
 
+void MultimediaDlg::LoadSettings(const CSettings& Settings)
+{
+	/* Get window geometry data and apply it */
+	CWinGeom s;
+	Settings.Get("Multimedia Dialog", s);
+	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+
+	/* Store the default font */
+	fontDefault = TextBrowser->font();
+
+	/* Retrieve the setting saved into the .ini file */
+	string str = strDirMOTCache.latin1();
+	str = Settings.Get("Multimedia Dialog", "MOTCache", str);
+	strDirMOTCache = str.c_str();
+	str = strCurrentSavePath.latin1();
+	str = Settings.Get("Multimedia Dialog", "storagepath", str);
+	SetCurrentSavePath(str.c_str());
+
+	/* Retrieve the font setting saved into the .ini file */
+	string strFontFamily = Settings.Get("Multimedia Dialog", "fontfamily");
+	if (strFontFamily != "")
+	{
+		fontTextBrowser =
+			QFont(QString(strFontFamily.c_str()),
+			Settings.Get("Multimedia Dialog", "fontpointsize", 0),
+			Settings.Get("Multimedia Dialog", "fontweight", 0),
+			Settings.Get("Multimedia Dialog", "fontitalic", 0));
+	}
+	else
+	{
+		/* If not defined, retrieve the default font */
+		fontTextBrowser = fontDefault;
+	}
+
+	bAddRefresh = Settings.Get("Multimedia Dialog", "addrefresh", TRUE);
+	iRefresh = Settings.Get("Multimedia Dialog", "motbwsrefresh", 10);
+
+}
+
+void MultimediaDlg::SaveSettings(CSettings& Settings)
+{
+	/* Save window geometry data */
+	QRect WinGeom = geometry();
+
+	CWinGeom c;
+	c.iXPos = WinGeom.x();
+	c.iYPos = WinGeom.y();
+	c.iHSize = WinGeom.height();
+	c.iWSize = WinGeom.width();
+	Settings.Put("Multimedia Dialog", c);
+
+	/* Store save path */
+	string s = strCurrentSavePath.latin1();
+	Settings.Put("Multimedia Dialog","storagepath", s);
+	s = strDirMOTCache.latin1();
+	Settings.Put("Multimedia Dialog", "MOTCache", s);
+
+	/* Store current TextBrowser font */
+	Settings.Put("Multimedia Dialog","fontfamily", fontTextBrowser.family().latin1());
+	Settings.Put("Multimedia Dialog","fontpointsize", fontTextBrowser.pointSize());
+	Settings.Put("Multimedia Dialog","fontweight", fontTextBrowser.weight());
+	Settings.Put("Multimedia Dialog","fontitalic", fontTextBrowser.italic());
+	Settings.Put("Multimedia Dialog", "addrefresh", bAddRefresh);
+	Settings.Put("Multimedia Dialog", "motbwsrefresh", iRefresh);
+}
+
 void MultimediaDlg::showEvent(QShowEvent*)
 {
 	/* Update window */
@@ -514,22 +555,6 @@ void MultimediaDlg::hideEvent(QHideEvent*)
 	/* Deactivate real-time timer so that it does not get new pictures */
 	Timer.stop();
 
-	/* Set window geometry data in DRMReceiver module */
-	QRect WinGeom = geometry();
-
-	pDRMRec->GeomMultimediaDlg.iXPos = WinGeom.x();
-	pDRMRec->GeomMultimediaDlg.iYPos = WinGeom.y();
-	pDRMRec->GeomMultimediaDlg.iHSize = WinGeom.height();
-	pDRMRec->GeomMultimediaDlg.iWSize = WinGeom.width();
-
-	/* Store save path */
-	pDRMRec->strStoragePathMMDlg = strCurrentSavePath.latin1();
-
-	/* Store current TextBrowser font */
-	pDRMRec->FontParamMMDlg.strFamily = fontTextBrowser.family().latin1();
-	pDRMRec->FontParamMMDlg.intPointSize = fontTextBrowser.pointSize();
-	pDRMRec->FontParamMMDlg.intWeight = fontTextBrowser.weight();
-	pDRMRec->FontParamMMDlg.bItalic = fontTextBrowser.italic();
 }
 
 void MultimediaDlg::SetStatus(int MessID, int iMessPara)
@@ -629,7 +654,7 @@ void MultimediaDlg::SetSlideShowPicture()
 	if (NewImage.loadFromData(&imagedata[0], imagedata.size()))
 	{
 #if QT_VERSION >= 0x030000
-		/* The slideshow pictures are not 
+		/* The slideshow pictures are not
            updated correctly without this line: */
 		/* If the text is empty there is segmentation fault
 			 browsing the images */
@@ -726,15 +751,9 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 
 void MultimediaDlg::SetCurrentSavePath(const QString strFileName)
 {
-	if (strFileName.right(1).latin1() != QString("/"))
-	{
-		strCurrentSavePath = QFileInfo(strFileName).dirPath();
-
-		if (strCurrentSavePath.right(1).latin1() != QString("/"))
-			strCurrentSavePath += "/";
-	}
-	else
-		strCurrentSavePath = strFileName;
+	strCurrentSavePath = QFileInfo(strFileName).dirPath();
+	if (strCurrentSavePath.right(1) == QString("/"))
+		strCurrentSavePath.truncate(strCurrentSavePath.length()-1);
 }
 
 void MultimediaDlg::OnSave()
@@ -767,7 +786,7 @@ void MultimediaDlg::OnSave()
 				strDefFileName += "." + strExt;
 
 		strFileName =
-			QFileDialog::getSaveFileName(strCurrentSavePath + strDefFileName,
+			QFileDialog::getSaveFileName(strCurrentSavePath + "/" + strDefFileName,
 			strFilter, this);
 
 		/* Check if user not hit the cancel button */
@@ -800,7 +819,7 @@ void MultimediaDlg::OnSave()
 				QDateTime().currentDateTime().toString() + "</i></font></p>"
 				"</body>\n</html>";
 
-			strFileName = QFileDialog::getSaveFileName(strCurrentSavePath +
+			strFileName = QFileDialog::getSaveFileName(strCurrentSavePath + "/" +
 				strTitle + ".html", "*.html", this);
 
 			if (!strFileName.isNull())
@@ -819,7 +838,7 @@ void MultimediaDlg::OnSave()
 			}
 		}
 		break;
-	
+
 	default:
 		break;
 	}
@@ -856,7 +875,7 @@ void MultimediaDlg::OnSaveAll()
 
 			if ((strFileName.contains(".") == 0) && (strExt.length() > 0))
 				strFileName += "." + strExt;
-			
+
 			SaveMOTObject(o.Body.vecData, strFileName);
 		}
 	}
@@ -993,7 +1012,7 @@ void MultimediaDlg::CreateDirectories(const QString& filename)
 /*
 	This function is for creating a complete directory structure to a given
 	file name. If there is a pathname like this:
-	/html/files/images/myimage.gif 
+	/html/files/images/myimage.gif
 	this function create all the folders into MOTCache:
 	/html
 	/html/files
@@ -1036,11 +1055,11 @@ void MultimediaDlg::AddRefreshHeader(const QString& strFileName)
 */
 	/* Open file for append (text mode) */
 	FILE* pFiBody = fopen(strFileName.latin1(), "at");
-	
+
 	if (pFiBody != NULL)
 	{
 		fputs("<META http-equiv=\"REFRESH\" content=\""
-			+ QString::number(pDRMRec->iMOTBWSRefreshTime)
+			+ QString::number(iRefresh)
 			+ "\">", pFiBody);
 
 		/* Close the file afterwards */
@@ -1053,13 +1072,13 @@ void MultimediaDlg::SaveMOTObject(const CVector<_BYTE>& vecbRawData,
 {
 	/* First, create directory for storing the file (if not exists) */
 	CreateDirectories(strFileName.latin1());
-	
+
 	/* Data size in bytes */
 	const int iSize = vecbRawData.Size();
 
 	/* Open file */
 	FILE* pFiBody = fopen(strFileName.latin1(), "wb");
-	
+
 	if (pFiBody != NULL)
 	{
 		/* Write data byte-wise */

@@ -52,13 +52,13 @@
 #include <qwt/qwt_thermo.h>
 
 #ifdef _WIN32
-# include "../../Windows/moc/TransmDlgbase.h"
-#else
-# include "moc/TransmDlgbase.h"
+# include "windows.h"
 #endif
+#include "TransmDlgbase.h"
 #include "DialogUtil.h"
 #include "../DrmTransmitter.h"
 #include "../Parameter.h"
+#include "../util/Settings.h"
 
 
 /* Classes ********************************************************************/
@@ -80,8 +80,8 @@ public:
 	{
 		/* Set thread priority (The working thread should have a higher priority
 		   than the GUI) */
-#if defined(USE_QT_GUI) && defined (_WIN32)
-		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+#ifdef _WIN32
+		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 #endif
 
 		try
@@ -104,14 +104,15 @@ class TransmDialog : public TransmDlgBase
 	Q_OBJECT
 
 public:
-	TransmDialog(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-		WFlags f = 0);
+	TransmDialog(CSettings&,
+		QWidget* parent=0, const char* name=0, bool modal=FALSE, WFlags f=0);
 	virtual ~TransmDialog();
 
 protected:
 	void DisableAllControlsForSet();
 	void EnableAllControlsForSet();
 
+	CSettings&			Settings;
 	QMenuBar*			pMenu;
 	QPopupMenu*			pSettingsMenu;
 	QTimer				Timer;

@@ -40,11 +40,7 @@
 #include <qpalette.h>
 #include <qcolordialog.h>
 
-#ifdef _WIN32
-# include "../../Windows/moc/fdrmdialogbase.h"
-#else
-# include "moc/fdrmdialogbase.h"
-#endif
+#include "fdrmdialogbase.h"
 #include "DialogUtil.h"
 #include "systemevalDlg.h"
 #include "MultimediaDlg.h"
@@ -71,16 +67,14 @@ class FDRMDialog : public FDRMDialogBase
 	Q_OBJECT
 
 public:
-	FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent = 0, const char* name = 0,
+	FDRMDialog(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE,	WFlags f = 0);
 
 	virtual ~FDRMDialog();
 
-	void	ChangeGUIModeToDRM();
-	void	ChangeGUIModeToAM();
-
 protected:
-	CDRMReceiver*		pDRMRec;
+	CDRMReceiver&		DRMReceiver;
+	CSettings&			Settings;
 
 	systemevalDlg*		pSysEvalDlg;
 	MultimediaDlg*		pMultiMediaDlg;
@@ -88,6 +82,7 @@ protected:
 	LiveScheduleDlg*	pLiveScheduleDlg;
 	EPGDlg*				pEPGDlg;
 	AnalogDemDlg*		pAnalogDemDlg;
+	GeneralSettingsDlg* pGeneralSettingsDlg;
 	QMenuBar*			pMenu;
 	QPopupMenu*			pReceiverModeMenu;
 	QPopupMenu*			pSettingsMenu;
@@ -118,6 +113,9 @@ protected:
 
 	void			SetDisplayColor(const QColor newColor);
 
+	void			ChangeGUIModeToDRM();
+	void			ChangeGUIModeToAM();
+
 public slots:
 	void OnTimer();
 	void OnButtonService1();
@@ -131,6 +129,7 @@ public slots:
 	void OnViewEPGDlg();
 	void OnViewMultSettingsDlg();
 	void OnViewGeneralSettingsDlg();
+	void OnNewDRMAcquisition();
 	void OnSwitchToDRM();
 	void OnSwitchToAM();
 	void OnMenuSetDisplayColor();

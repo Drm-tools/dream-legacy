@@ -30,8 +30,8 @@
 
 
 /* Implementation *************************************************************/
-CVector<int> CChannelCode::GenPuncPatTable(CParameter::ECodScheme eNewCodingScheme,
-										   CParameter::EChanType eNewChannelType,
+CVector<int> CChannelCode::GenPuncPatTable(ECodScheme eNewCodingScheme,
+										   EChanType eNewChannelType,
 										   int iN1, int iN2,
 										   int iNewNumOutBitsPartA,
 										   int iNewNumOutBitsPartB,
@@ -67,12 +67,12 @@ CVector<int> CChannelCode::GenPuncPatTable(CParameter::ECodScheme eNewCodingSche
 	   instead of only "N2" to calculate the tailbit pattern */
 	switch (eNewCodingScheme)
 	{
-	case CParameter::CS_3_HMMIX:
+	case CS_3_HMMIX:
 		iTailbitParamL0 = iN1 + iN2;
 		iTailbitParamL1 = iN2;
 		break;
 
-	case CParameter::CS_3_HMSYM:
+	case CS_3_HMSYM:
 		iTailbitParamL0 = 2 * (iN1 + iN2);
 		iTailbitParamL1 = 2 * iN2;
 		break;
@@ -137,7 +137,7 @@ CVector<int> CChannelCode::GenPuncPatTable(CParameter::ECodScheme eNewCodingSche
 		else
 		{
 			/* In case of FAC do not use special tailbit-pattern! */
-			if ((i < iNumOutBits) || (eNewChannelType == CParameter::CT_FAC))
+			if ((i < iNumOutBits) || (eNewChannelType == CT_FAC))
 			{
 				/* Puncturing patterns part B */
 				/* Reset counter when beginning of part B is reached */

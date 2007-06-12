@@ -54,6 +54,8 @@ protected:
 	int DecodeTag(CVector<_BINARY>& vecbiTag);
 
 	void AddTagItemDecoder(CTagItemDecoder *pTagItemDecoder);
+
+	void InitTagItemDecoders(void);
 private:
 	CVector<CTagItemDecoder *> vecpTagItemDecoders;
 };

@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -35,13 +35,10 @@
 \******************************************************************************/
 void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 {
-	uint32_t	iRfuDummy;
 	int			iCurShortID;
-	static int	FACRepetitionCounter = 0;
 
 	/* Reset enqueue function */
 	(*pbiFACData).ResetBitAccess();
-
 
 	/* Put FAC parameters on stream */
 	/* Channel parameters --------------------------------------------------- */
@@ -111,19 +108,19 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	/* MSC mode */
 	switch (Parameter.eMSCCodingScheme)
 	{
-	case CParameter::CS_3_SM:
+	case CS_3_SM:
 		(*pbiFACData).Enqueue(0 /* 00 */, 2);
 		break;
 
-	case CParameter::CS_3_HMMIX:
+	case CS_3_HMMIX:
 		(*pbiFACData).Enqueue(1 /* 01 */, 2);
 		break;
 
-	case CParameter::CS_3_HMSYM:
+	case CS_3_HMSYM:
 		(*pbiFACData).Enqueue(2 /* 10 */, 2);
 		break;
 
-	case CParameter::CS_2_SM:
+	case CS_2_SM:
 		(*pbiFACData).Enqueue(3 /* 11 */, 2);
 		break;
 
@@ -134,11 +131,11 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	/* SDC mode */
 	switch (Parameter.eSDCCodingScheme)
 	{
-	case CParameter::CS_2_SM:
+	case CS_2_SM:
 		(*pbiFACData).Enqueue(0 /* 0 */, 1);
 		break;
 
-	case CParameter::CS_1_SM:
+	case CS_1_SM:
 		(*pbiFACData).Enqueue(1 /* 1 */, 1);
 		break;
 
@@ -155,9 +152,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	(*pbiFACData).Enqueue((uint32_t) 0, 3);
 
 	/* rfu */
-	iRfuDummy = 0;
-	(*pbiFACData).Enqueue(iRfuDummy, 2);
-
+	(*pbiFACData).Enqueue((uint32_t) 0, 2);
 
 	/* Service parameters --------------------------------------------------- */
 	/* Transmit service-information of service signalled in the FAC-repetition
@@ -176,38 +171,36 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	/* CA indication */
 	switch (Parameter.Service[iCurShortID].eCAIndication)
 	{
-	case CParameter::CA_NOT_USED:
+	case CService::CA_NOT_USED:
 		(*pbiFACData).Enqueue(0 /* 0 */, 1);
 		break;
 
-	case CParameter::CA_USED:
+	case CService::CA_USED:
 		(*pbiFACData).Enqueue(1 /* 1 */, 1);
 		break;
 	}
 
 	/* Language */
-	(*pbiFACData).Enqueue( 
+	(*pbiFACData).Enqueue(
 		(uint32_t) Parameter.Service[iCurShortID].iLanguage, 4);
 
 	/* Audio/Data flag */
 	switch (Parameter.Service[iCurShortID].eAudDataFlag)
 	{
-	case CParameter::SF_AUDIO:
+	case CService::SF_AUDIO:
 		(*pbiFACData).Enqueue(0 /* 0 */, 1);
 		break;
 
-	case CParameter::SF_DATA:
+	case CService::SF_DATA:
 		(*pbiFACData).Enqueue(1 /* 1 */, 1);
 	}
-	
+
 	/* Service descriptor */
-	(*pbiFACData).Enqueue( 
+	(*pbiFACData).Enqueue(
 		(uint32_t) Parameter.Service[iCurShortID].iServiceDescr, 5);
 
 	/* Rfa */
-	iRfuDummy = 0;
-	(*pbiFACData).Enqueue(iRfuDummy, 7);
-
+	(*pbiFACData).Enqueue(uint32_t(0), 7);
 
 	/* CRC ------------------------------------------------------------------ */
 	/* Calculate the CRC and put at the end of the stream */
@@ -218,41 +211,38 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE - 1; i++)
 		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(SIZEOF__BYTE));
 
-	/* Now, pointer in "enqueue"-function is back at the same place, 
+	/* Now, pointer in "enqueue"-function is back at the same place,
 	   add CRC */
 	(*pbiFACData).Enqueue(CRCObject.GetCRC(), 8);
 }
 
 void CFACTransmit::Init(CParameter& Parameter)
 {
-	int				i;
-	CVector<int>	veciActServ;
+	set<int>	actServ;
 
 	/* Get active services */
-	Parameter.GetActiveServices(veciActServ);
-	const int iTotNumServices = veciActServ.Size();
+	Parameter.GetActiveServices(actServ);
+	const size_t iTotNumServices = actServ.size();
 
 	/* Check how many audio and data services present */
-	CVector<int>	veciAudioServ(0);
-	CVector<int>	veciDataServ(0);
-	int				iNumAudio = 0;
-	int				iNumData = 0;
+	vector<int>	veciAudioServ;
+	vector<int>	veciDataServ;
+	size_t		iNumAudio = 0;
+	size_t		iNumData = 0;
 
-	for (i = 0; i < iTotNumServices; i++)
+	for (set<int>::iterator i = actServ.begin(); i!=actServ.end(); i++)
 	{
-		if (Parameter.Service[veciActServ[i]].
-			eAudDataFlag ==	CParameter::SF_AUDIO)
+		if (Parameter.Service[*i].eAudDataFlag == CService::SF_AUDIO)
 		{
-			veciAudioServ.Add(i);
+			veciAudioServ.push_back(*i);
 			iNumAudio++;
 		}
 		else
 		{
-			veciDataServ.Add(i);
+			veciDataServ.push_back(*i);
 			iNumData++;
 		}
 	}
-
 
 	/* Now check special cases which are defined in 6.3.6-------------------- */
 	/* If we have only data or only audio services. When all services are of
@@ -260,12 +250,12 @@ void CFACTransmit::Init(CParameter& Parameter)
 	   signalled sequentially */
 	if ((iNumAudio == iTotNumServices) || (iNumData == iTotNumServices))
 	{
-		/* Init repetion vector */
+		/* Init repetition vector */
 		FACNumRep = iTotNumServices;
-		FACRepetition.Init(FACNumRep);
+		FACRepetition.resize(0);
 
-		for (i = 0; i < FACNumRep; i++)
-			FACRepetition[i] = veciActServ[i];
+		for (set<int>::iterator i = actServ.begin(); i!=actServ.end(); i++)
+			FACRepetition.push_back(*i);
 	}
 	else
 	{
@@ -277,7 +267,7 @@ void CFACTransmit::Init(CParameter& Parameter)
 			{
 				/* Init repetion vector */
 				FACNumRep = 5;
-				FACRepetition.Init(FACNumRep);
+				FACRepetition.resize(FACNumRep);
 
 				/* A1A1A1A1D1 */
 				FACRepetition[0] = veciAudioServ[0];
@@ -290,7 +280,7 @@ void CFACTransmit::Init(CParameter& Parameter)
 			{
 				/* Init repetion vector */
 				FACNumRep = 10;
-				FACRepetition.Init(FACNumRep);
+				FACRepetition.resize(FACNumRep);
 
 				/* A1A1A1A1D1A1A1A1A1D2 */
 				FACRepetition[0] = veciAudioServ[0];
@@ -308,7 +298,7 @@ void CFACTransmit::Init(CParameter& Parameter)
 			{
 				/* Init repetion vector */
 				FACNumRep = 15;
-				FACRepetition.Init(FACNumRep);
+				FACRepetition.resize(FACNumRep);
 
 				/* A1A1A1A1D1A1A1A1A1D2A1A1A1A1D3 */
 				FACRepetition[0] = veciAudioServ[0];
@@ -334,7 +324,7 @@ void CFACTransmit::Init(CParameter& Parameter)
 			{
 				/* Init repetion vector */
 				FACNumRep = 5;
-				FACRepetition.Init(FACNumRep);
+				FACRepetition.resize(FACNumRep);
 
 				/* A1A2A1A2D1 */
 				FACRepetition[0] = veciAudioServ[0];
@@ -347,7 +337,7 @@ void CFACTransmit::Init(CParameter& Parameter)
 			{
 				/* Init repetion vector */
 				FACNumRep = 10;
-				FACRepetition.Init(FACNumRep);
+				FACRepetition.resize(FACNumRep);
 
 				/* A1A2A1A2D1A1A2A1A2D2 */
 				FACRepetition[0] = veciAudioServ[0];
@@ -366,7 +356,7 @@ void CFACTransmit::Init(CParameter& Parameter)
 		{
 			/* Init repetion vector */
 			FACNumRep = 7;
-			FACRepetition.Init(FACNumRep);
+			FACRepetition.resize(FACNumRep);
 
 			/* A1A2A3A1A2A3D1 */
 			FACRepetition[0] = veciAudioServ[0];
@@ -384,13 +374,13 @@ void CFACTransmit::Init(CParameter& Parameter)
 /******************************************************************************\
 * CFACReceive																   *
 \******************************************************************************/
-_BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData, 
+_BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 							   CParameter& Parameter)
 {
-/* 
+/*
 	First get new data from incoming data stream, then check if the new
 	parameter differs from the old data stored in the receiver. If yes, init
-	the modules to the new parameter 
+	the modules to the new parameter
 */
 	uint32_t	iTempServiceID;
 	int			iTempShortID;
@@ -410,11 +400,12 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		/* Reset separation function */
 		(*pbiFACData).ResetBitAccess();
 
+		Parameter.Lock();
 
 		/* Channel parameters ----------------------------------------------- */
 		/* Base/Enhancement flag (not used) */
 		(*pbiFACData).Separate(1);
-		
+
 		/* Identity */
 		switch ((*pbiFACData).Separate(2))
 		{
@@ -479,19 +470,19 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		switch ((*pbiFACData).Separate(2))
 		{
 		case 0: /* 00 */
-			Parameter.SetMSCCodingScheme(CParameter::CS_3_SM);
+			Parameter.SetMSCCodingScheme(CS_3_SM);
 			break;
 
 		case 1: /* 01 */
-			Parameter.SetMSCCodingScheme(CParameter::CS_3_HMMIX);
+			Parameter.SetMSCCodingScheme(CS_3_HMMIX);
 			break;
 
 		case 2: /* 10 */
-			Parameter.SetMSCCodingScheme(CParameter::CS_3_HMSYM);
+			Parameter.SetMSCCodingScheme(CS_3_HMSYM);
 			break;
 
 		case 3: /* 11 */
-			Parameter.SetMSCCodingScheme(CParameter::CS_2_SM);
+			Parameter.SetMSCCodingScheme(CS_2_SM);
 			break;
 		}
 
@@ -499,14 +490,14 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		switch ((*pbiFACData).Separate(1))
 		{
 		case 0: /* 0 */
-			Parameter.SetSDCCodingScheme(CParameter::CS_2_SM);
+			Parameter.SetSDCCodingScheme(CS_2_SM);
 			break;
 
 		case 1: /* 1 */
-			Parameter.SetSDCCodingScheme(CParameter::CS_1_SM);
+			Parameter.SetSDCCodingScheme(CS_1_SM);
 			break;
 		}
-			
+
 		/* Number of services */
 		/* Search table for entry */
 		int iNumServTabEntry = (*pbiFACData).Separate(4);
@@ -531,19 +522,19 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		iTempShortID = (*pbiFACData).Separate(2);
 
 		/* Set service identifier */
-		Parameter.SetServID(iTempShortID, iTempServiceID);
+		Parameter.SetServiceID(iTempShortID, iTempServiceID);
 
 		/* CA indication */
 		switch ((*pbiFACData).Separate(1))
 		{
 		case 0: /* 0 */
-			Parameter.Service[iTempShortID].eCAIndication = 
-				CParameter::CA_NOT_USED;
+			Parameter.Service[iTempShortID].eCAIndication =
+				CService::CA_NOT_USED;
 			break;
 
 		case 1: /* 1 */
-			Parameter.Service[iTempShortID].eCAIndication = 
-				CParameter::CA_USED;
+			Parameter.Service[iTempShortID].eCAIndication =
+				CService::CA_USED;
 			break;
 		}
 
@@ -554,17 +545,19 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		switch ((*pbiFACData).Separate(1))
 		{
 		case 0: /* 0 */
-			Parameter.SetAudDataFlag(iTempShortID, CParameter::SF_AUDIO);
+			Parameter.SetAudDataFlag(iTempShortID, CService::SF_AUDIO);
 			break;
 
 		case 1: /* 1 */
-			Parameter.SetAudDataFlag(iTempShortID, CParameter::SF_DATA);
+			Parameter.SetAudDataFlag(iTempShortID, CService::SF_DATA);
 			break;
 		}
 
 		/* Service descriptor */
-		Parameter.Service[iTempShortID].iServiceDescr = 
+		Parameter.Service[iTempShortID].iServiceDescr =
 			(*pbiFACData).Separate(5);
+
+		Parameter.Unlock();
 
 		/* Rfa */
 		/* Do not use Rfa */

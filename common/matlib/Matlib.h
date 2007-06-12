@@ -173,9 +173,22 @@ public:
 
 	/* operator= */
 	inline CMatlibVector<T>&		operator=(const CMatlibVector<CReal>& vecI)
-		{_TESTSIZE(vecI.GetSize()); _VECOPCL(= vecI[i]);}
+	{
+		Init(vecI.GetSize());
+		for (int i = 0; i < iVectorLength; i++) 
+			operator[](i) = vecI[i]; 
+		
+		return *this;
+	}
+
 	inline CMatlibVector<CComplex>&	operator=(const CMatlibVector<CComplex>& vecI)
-		{_TESTSIZE(vecI.GetSize()); _VECOPCL(= vecI[i]);}
+	{
+		Init(vecI.GetSize());
+		for (int i = 0; i < iVectorLength; i++) 
+			operator[](i) = vecI[i]; 
+		
+		return *this;
+	}
 
 	/* operator*= */
 	inline CMatlibVector<T>&		operator*=(const CReal& rI)
@@ -222,14 +235,6 @@ protected:
 	int		iVectorLength;
 	T*		pData;
 };
-
-
-/* Help functions *************************************************************/
-template<class T> inline
-int Size(const CMatlibVector<T>& vecI) {return vecI.GetSize();}
-template<class T> inline
-int Length(const CMatlibVector<T>& vecI) {return vecI.GetSize();}
-
 
 /* operator* ---------------------------------------------------------------- */
 inline CMatlibVector<CComplex> // cv, cv

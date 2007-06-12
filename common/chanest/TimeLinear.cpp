@@ -122,20 +122,19 @@ int CTimeLinear::Init(CParameter& Parameter)
 	CPilotModiClass::InitRot(Parameter);
 
 	/* Get parameters from global struct */
-	iNumCarrier = Parameter.iNumCarrier;
-	iNumIntpFreqPil = Parameter.iNumIntpFreqPil;
-	iScatPilFreqInt = Parameter.iScatPilFreqInt;
+	iNumCarrier = Parameter.CellMappingTable.iNumCarrier;
+	iNumIntpFreqPil = Parameter.CellMappingTable.iNumIntpFreqPil;
+	iScatPilFreqInt = Parameter.CellMappingTable.iScatPilFreqInt;
 
 	/* Set length of history-buffer according to time-int-index */
-	iLenHistBuff = Parameter.iScatPilTimeInt + 1;
+	iLenHistBuff = Parameter.CellMappingTable.iScatPilTimeInt + 1;
 	
 	/* Init timing correction history with zeros */
 	iLenTiCorrHist = iLenHistBuff - 1;
 	vecTiCorrHist.Init(iLenTiCorrHist, 0);
 
 	/* Allocate memory for channel estimation history and init with ones */
-	matcChanEstHist.Init(iLenHistBuff, iNumIntpFreqPil, 
-		_COMPLEX((_REAL) 1.0, (_REAL) 0.0));
+	matcChanEstHist.Init(iLenHistBuff, iNumIntpFreqPil, _COMPLEX(1.0, 0.0));
 
 	/* Return delay of channel estimation in time direction */
 	return iLenHistBuff;

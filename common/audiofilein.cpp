@@ -54,7 +54,6 @@ CAudioFileIn::SetFileName(const string& strFileName)
 	size_t p = strInFileName.rfind('.');
 	if(p != string::npos)
 		ext = strInFileName.substr(p+1);
-	cout << "file type " << ext << endl;
 	if(ext == "txt") eFmt = fmt_txt;
 	if(ext == "TXT") eFmt = fmt_txt;
 	if(ext.substr(0,2) == "iq") eFmt = fmt_raw_stereo;
@@ -81,6 +80,9 @@ CAudioFileIn::SetFileName(const string& strFileName)
 void
 CAudioFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
+	if (pFileReceiver != NULL)
+		return;
+	
 	/* Check previously a file was being used */
 	Close();
 
@@ -141,7 +143,9 @@ CAudioFileIn::Read(CVector<short>& psData)
 	if(pacer) pacer->wait();
 
 	if (pFileReceiver == NULL)
+	{
 		return TRUE;
+	}
 
 	if(eFmt==fmt_txt)
 	{
@@ -198,6 +202,7 @@ CAudioFileIn::Read(CVector<short>& psData)
 		}
 	}
 	delete[] buffer;
+
 	return FALSE;
 }
 

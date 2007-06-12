@@ -79,7 +79,7 @@ public:
 
 protected:
 	_BOOLEAN DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-							 CParameter& Parameter);
+							 CParameter& Parameter, const _BOOLEAN bVersion);
 	_BOOLEAN DataEntityType1(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter);
 // ...
@@ -88,14 +88,14 @@ protected:
 	_BOOLEAN DataEntityType4(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter, const _BOOLEAN bVersion);
 	_BOOLEAN DataEntityType5(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-							 CParameter& Parameter);
+							 CParameter& Parameter, const _BOOLEAN bVersion);
 // ...
 	_BOOLEAN DataEntityType7(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter, const _BOOLEAN bVersion);
 	_BOOLEAN DataEntityType8(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter);
 	_BOOLEAN DataEntityType9(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-							 CParameter& Parameter);
+							 CParameter& Parameter, const _BOOLEAN bVersion);
 // ...
 	_BOOLEAN DataEntityType11(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter, const _BOOLEAN bVersion);

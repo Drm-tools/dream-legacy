@@ -67,8 +67,10 @@ void CSymbInterleaver::InitInternal(CParameter& TransmParam)
 {
 	int i;
 
+	TransmParam.Lock(); 
+
 	/* Set internal parameters */
-	iN_MUX = TransmParam.iNumUsefMSCCellsPerFrame;
+	iN_MUX = TransmParam.CellMappingTable.iNumUsefMSCCellsPerFrame;
 
 	/* Allocate memory for table */
 	veciIntTable.Init(iN_MUX);
@@ -104,6 +106,8 @@ void CSymbInterleaver::InitInternal(CParameter& TransmParam)
 	   (could be somewhere in the middle of the symbol), the output buffer must
 	   accept more cells than one logical MSC frame is long */
 	iMaxOutputBlockSize = 2 * iN_MUX;
+
+	TransmParam.Unlock(); 
 }
 
 
@@ -150,8 +154,10 @@ void CSymbDeinterleaver::InitInternal(CParameter& ReceiverParam)
 {
 	int i;
 
+	ReceiverParam.Lock(); 
+
 	/* Set internal parameters */
-	iN_MUX = ReceiverParam.iNumUsefMSCCellsPerFrame;
+	iN_MUX = ReceiverParam.CellMappingTable.iNumUsefMSCCellsPerFrame;
 
 	/* Allocate memory for table */
 	veciIntTable.Init(iN_MUX);
@@ -201,4 +207,6 @@ void CSymbDeinterleaver::InitInternal(CParameter& ReceiverParam)
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iN_MUX;
 	iMaxOutputBlockSize = iN_MUX;
+
+	ReceiverParam.Unlock(); 
 }

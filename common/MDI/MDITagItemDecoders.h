@@ -29,6 +29,8 @@
 #ifndef MDI_TAG_ITEM_DECODERS_H_INCLUDED
 #define MDI_TAG_ITEM_DECODERS_H_INCLUDED
 
+#include "../GlobalDefinitions.h"
+#include "../Parameter.h"
 #include "TagItemDecoder.h"
 
 class CTagItemDecoderProTy : public CTagItemDecoder
@@ -81,7 +83,7 @@ public:
 	virtual string GetTagName(void);
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 	CVector<_BINARY> vecbidata;
-	ERobMode					eRobMode;
+	ERobMode	eRobMode;
 };
 
 class CTagItemDecoderStr : public CTagItemDecoder       
@@ -110,6 +112,25 @@ public:
 	virtual string GetTagName(void);
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 	string strInfo;
+};
+
+class CTagItemDecoderRxDemodMode : public CTagItemDecoder
+{
+public:
+		CTagItemDecoderRxDemodMode() : eMode(RM_DRM){}
+		virtual string GetTagName(void);
+		virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+		ERecMode eMode;
+};
+
+class CTagItemDecoderAMAudio : public CTagItemDecoder
+{
+public:
+		CTagItemDecoderAMAudio() : vecbidata() {}
+		virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+		virtual string GetTagName(void);
+		CVector<_BINARY> vecbidata;
+		CAudioParam AudioParams;
 };
 
 #endif

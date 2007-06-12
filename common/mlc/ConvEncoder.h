@@ -46,8 +46,7 @@ public:
 	int		Encode(CVector<_DECISION>& vecInputData, 
 				   CVector<_DECISION>& vecOutputData);
 
-	void	Init(CParameter::ECodScheme eNewCodingScheme,
-				 CParameter::EChanType eNewChannelType,
+	void	Init(ECodScheme eNewCodingScheme, EChanType eNewChannelType,
 				 int iN1, int iN2, int iNewNumInBitsPartA,
 				 int iNewNumInBitsPartB, int iPunctPatPartA, int iPunctPatPartB,
 				 int iLevel);
@@ -58,7 +57,7 @@ protected:
 
 	CVector<int>			veciTablePuncPat;
 
-	CParameter::EChanType	eChannelType;
+	EChanType	eChannelType;
 
 #ifdef USE_MAX_LOG_MAP
 	CShiftRegister<_DECISION>	vecStateMem;

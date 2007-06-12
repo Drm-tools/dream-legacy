@@ -138,11 +138,13 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 			vecsTmpAudData[i] = 0;
 	}
 
+	ReceiverParam.Lock(); 
 	/* Put data to sound card interface. Show sound card state on GUI */
 	if (pSound->Write(vecsTmpAudData) == FALSE)
-		ReceiverParam.ReceiveStatus.SetInterfaceStatus(RX_OK);
+		ReceiverParam.ReceiveStatus.Interface.SetStatus(RX_OK);
 	else
-		ReceiverParam.ReceiveStatus.SetInterfaceStatus(DATA_ERROR);
+		ReceiverParam.ReceiveStatus.Interface.SetStatus(DATA_ERROR);
+	ReceiverParam.Unlock(); 
 
 	/* Write data as wave in file */
 	if (bDoWriteWaveFile == TRUE)
@@ -221,12 +223,12 @@ void CWriteData::StartWriteWaveFile(const string strFileName)
 
 void CWriteData::StopWriteWaveFile()
 {
-	Lock();
+	Lock(); 
 
 	WaveFileAudio.Close();
 	bDoWriteWaveFile = FALSE;
 
-	Unlock();
+	Unlock(); 
 }
 
 void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
@@ -239,65 +241,60 @@ void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
 	vecrData.Init(iLenPowSpec, (_REAL) 0.0);
 	vecrScale.Init(iLenPowSpec, (_REAL) 0.0);
 
-	/* Do copying of data only if vector is of non-zero length which means that
-	   the module was already initialized */
-	if (iLenPowSpec != 0)
+	int i;
+
+	/* Lock resources */
+	Lock(); 
+
+	/* Init vector storing the average spectrum with zeros */
+	CVector<_REAL> veccAvSpectrum(iLenPowSpec, (_REAL) 0.0);
+
+	int iCurPosInStream = 0;
+	for (i = 0; i < NUM_BLOCKS_AV_AUDIO_SPEC; i++)
 	{
-		int i, j;
+		int j;
 
-		/* Lock resources */
-		Lock();
-
-		/* Init vector storing the average spectrum with zeros */
-		CVector<_REAL> veccAvSpectrum(iLenPowSpec, (_REAL) 0.0);
-
-		int iCurPosInStream = 0;
-		for (j = 0; j < NUM_BLOCKS_AV_AUDIO_SPEC; j++)
+		/* Mix both channels */
+		for (j = 0; j < NUM_SMPLS_4_AUDIO_SPECTRUM; j++)
 		{
-			for (i = 0; i < NUM_SMPLS_4_AUDIO_SPECTRUM; i++)
-			{
-				/* Mix both channels */
-				veccFFTInput[i] =
-					((_REAL) vecsOutputData[(i + iCurPosInStream) * 2] +
-					vecsOutputData[(i + iCurPosInStream) * 2 + 1]) / 2;
-			}
-
-			/* Apply hamming window */
-			veccFFTInput *= vecrHammingWindow;
-
-			/* Calculate Fourier transformation to get the spectrum */
-			veccFFTOutput = Fft(veccFFTInput, FftPlan);
-
-			/* Average power (using power of this tap) */
-			for (i = 0; i < iLenPowSpec; i++)
-				veccAvSpectrum[i] += SqMag(veccFFTOutput[i]);
-
-			iCurPosInStream += NUM_SMPLS_4_AUDIO_SPECTRUM;
+			int jj =  2*(iCurPosInStream + j);
+			veccFFTInput[j] = _REAL(vecsOutputData[jj] + vecsOutputData[jj + 1]) / 2;
 		}
 
-		/* Calculate norm constand and scale factor */
-		const _REAL rNormData = (_REAL) NUM_SMPLS_4_AUDIO_SPECTRUM *
-			NUM_SMPLS_4_AUDIO_SPECTRUM * _MAXSHORT * _MAXSHORT *
-			NUM_BLOCKS_AV_AUDIO_SPEC;
-		const _REAL rFactorScale =
-			(_REAL) SOUNDCRD_SAMPLE_RATE / iLenPowSpec / 2000;
+		/* Apply hamming window */
+		veccFFTInput *= vecrHammingWindow;
 
-		/* Apply the normalization (due to the FFT) */
-		for (i = 0; i < iLenPowSpec; i++)
-		{
-			const _REAL rNormPowSpec = veccAvSpectrum[i] / rNormData;
+		/* Calculate Fourier transformation to get the spectrum */
+		veccFFTOutput = Fft(veccFFTInput, FftPlan);
 
-			if (rNormPowSpec > 0)
-				vecrData[i] = (_REAL) 10.0 * log10(rNormPowSpec);
-			else
-				vecrData[i] = RET_VAL_LOG_0;
+		/* Average power (using power of this tap) */
+		for (j = 0; j < iLenPowSpec; j++)
+			veccAvSpectrum[j] += SqMag(veccFFTOutput[j]);
 
-			vecrScale[i] = (_REAL) i * rFactorScale;
-		}
-
-		/* Release resources */
-		Unlock();
+		iCurPosInStream += NUM_SMPLS_4_AUDIO_SPECTRUM;
 	}
+
+	/* Calculate norm constant and scale factor */
+	const _REAL rNormData = (_REAL) NUM_SMPLS_4_AUDIO_SPECTRUM *
+		NUM_SMPLS_4_AUDIO_SPECTRUM * _MAXSHORT * _MAXSHORT *
+		NUM_BLOCKS_AV_AUDIO_SPEC;
+	const _REAL rFactorScale = (_REAL)SOUNDCRD_SAMPLE_RATE/iLenPowSpec/2000;
+
+	/* Apply the normalization (due to the FFT) */
+	for (i = 0; i < iLenPowSpec; i++)
+	{
+		const _REAL rNormPowSpec = veccAvSpectrum[i] / rNormData;
+
+		if (rNormPowSpec > 0)
+			vecrData[i] = (_REAL) 10.0 * log10(rNormPowSpec);
+		else
+			vecrData[i] = RET_VAL_LOG_0;
+
+		vecrScale[i] = (_REAL) i * rFactorScale;
+	}
+
+	/* Release resources */
+	Unlock(); 
 }
 
 
@@ -646,13 +643,11 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 	if (bSyncInput == FALSE)
 	{
 		bCRCOk = FACReceive.FACParam(pvecInputData, ReceiverParam);
-		/* Set FAC status in log file */
-		ReceiverParam.ReceptLog.SetFAC(bCRCOk);
-		/* Set FAC status for RSCI & GUI */
+		/* Set FAC status for RSCI, log file & GUI */
 		if(bCRCOk)
-			ReceiverParam.ReceiveStatus.SetFACStatus(RX_OK);
+			ReceiverParam.ReceiveStatus.FAC.SetStatus(RX_OK);
         else
-			ReceiverParam.ReceiveStatus.SetFACStatus(CRC_ERROR);
+			ReceiverParam.ReceiveStatus.FAC.SetStatus(CRC_ERROR);
 	}
 
 	if ((bSyncInput == TRUE) || (bCRCOk == FALSE))
@@ -705,10 +700,13 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 	_BOOLEAN bSDCOK = FALSE;
 
 	/* Decode SDC block and return CRC status */
-	switch (SDCReceive.SDCParam(pvecInputData, ReceiverParam))
+	CSDCReceive::ERetStatus eStatus = SDCReceive.SDCParam(pvecInputData, ReceiverParam);
+
+	ReceiverParam.Lock();
+	switch(eStatus)
 	{
 	case CSDCReceive::SR_OK:
-		ReceiverParam.ReceiveStatus.SetSDCStatus(RX_OK);
+		ReceiverParam.ReceiveStatus.SDC.SetStatus(RX_OK);
 		bSDCOK = TRUE;
 		break;
 
@@ -722,14 +720,15 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 		   case that the parameters are not correct. In this case do not
 		   show a red light if SDC CRC was not ok */
 		if (bFirstBlock == FALSE)
-			ReceiverParam.ReceiveStatus.SetSDCStatus(CRC_ERROR);
+			ReceiverParam.ReceiveStatus.SDC.SetStatus(CRC_ERROR);
 		break;
 
 	case CSDCReceive::SR_BAD_DATA:
 		/* CRC was ok but data seems to be incorrect */
-		ReceiverParam.ReceiveStatus.SetSDCStatus(DATA_ERROR);
+		ReceiverParam.ReceiveStatus.SDC.SetStatus(DATA_ERROR);
 		break;
 	}
+	ReceiverParam.Unlock();
 
 	/* Reset "first block" flag */
 	bFirstBlock = FALSE;
@@ -747,7 +746,7 @@ void CUtilizeSDCData::InitInternal(CParameter& ReceiverParam)
 
 /* CWriteIQFile : module for writing an IQ or IF file */
 
-CWriteIQFile::CWriteIQFile() : pFile(0), iFrequency(0), bIsRecording(FALSE)
+CWriteIQFile::CWriteIQFile() : pFile(0), iFrequency(0), bIsRecording(FALSE), bChangeReceived(FALSE)
 {
 }
 
@@ -757,14 +756,15 @@ CWriteIQFile::~CWriteIQFile()
 		fclose(pFile);
 }
 
-void CWriteIQFile::StartRecording(CParameter& ReceiverParam)
+void CWriteIQFile::StartRecording(CParameter&)
 {
 	bIsRecording = TRUE;
+	bChangeReceived = TRUE;
 }
 
 void CWriteIQFile::OpenFile(CParameter& ReceiverParam)
 {
-	iFrequency = ReceiverParam.ReceptLog.GetFrequency();
+	iFrequency = ReceiverParam.GetFrequency();
 
 	/* Get current UTC time */
 	time_t ltime;
@@ -772,7 +772,7 @@ void CWriteIQFile::OpenFile(CParameter& ReceiverParam)
 	struct tm* gmtCur = gmtime(&ltime);
 
 	stringstream filename;
-	filename << ReceiverParam.sDataFilesDirectory;
+	filename << ReceiverParam.sDataFilesDirectory << '/';
 	filename << ReceiverParam.sReceiverID << "_";
 	filename << setw(4) << setfill('0') << gmtCur->tm_year + 1900 << "-" << setw(2) << setfill('0')<< gmtCur->tm_mon + 1;
 	filename << "-" << setw(2) << setfill('0')<< gmtCur->tm_mday << "_";
@@ -787,16 +787,17 @@ void CWriteIQFile::OpenFile(CParameter& ReceiverParam)
 void CWriteIQFile::StopRecording()
 {
 	bIsRecording = FALSE;
+	bChangeReceived = TRUE;
 }
 
-void CWriteIQFile::NewFrequency(CParameter &ReceiverParam)
+void CWriteIQFile::NewFrequency(CParameter &)
 {
 }
 
 void CWriteIQFile::InitInternal(CParameter& ReceiverParam)
 {
 	/* Get parameters from info class */
-	const int iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
+	const int iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
 
 	iInputBlockSize = iSymbolBlockSize;
 
@@ -861,6 +862,16 @@ void CWriteIQFile::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int i;
 
+    if (bChangeReceived) // file is open but we want to start a new one
+    {
+            bChangeReceived = FALSE;
+            if (pFile != NULL)
+            {
+				fclose(pFile);
+            }
+            pFile = 0;
+    }
+
 	// is recording switched on?
     if (!bIsRecording)
     {
@@ -871,8 +882,10 @@ void CWriteIQFile::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 		return;
 	}
+
+
 	// Has the frequency changed? If so, close any open file (a new one will be opened)
-	int iNewFrequency = ReceiverParam.ReceptLog.GetFrequency();
+	int iNewFrequency = ReceiverParam.GetFrequency();
 
 	if (iNewFrequency != iFrequency)
 	{

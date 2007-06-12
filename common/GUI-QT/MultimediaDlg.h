@@ -50,31 +50,18 @@
 #include <qfont.h>
 #include <qstylesheet.h>
 
-#ifdef _WIN32
-# include "../../Windows/moc/MultimediaDlgbase.h"
-#else
-# include "moc/MultimediaDlgbase.h"
-#endif
-
+#include "MultimediaDlgbase.h"
+#include "MultColorLED.h"
+#include "DialogUtil.h"
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
-#include "MultColorLED.h"
 #include "../datadecoding/DABMOT.h"
-#include "DialogUtil.h"
-
-#ifdef HAVE_LIBFREEIMAGE
-# include <FreeImage.h>
-#endif
-
+#include "../util/Settings.h"
 
 /* Definitions ****************************************************************/
 /* Maximum number of levels. A maximum of 20 hierarchy levels is set
    (including the Main Menu and the final Message Object) */
 #define MAX_NUM_LEV_JOURNALINE			20
-
-/* Directory in which broadcast web site content is stored */
-#define MOT_BROADCAST_WEBSITE_PATH		"MOTCache"
-
 
 /* Classes ********************************************************************/
 class CNewIDHistory
@@ -112,15 +99,20 @@ class MultimediaDlg : public MultimediaDlgBase
 	Q_OBJECT
 
 public:
-	MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+	MultimediaDlg(CDRMReceiver&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
 	virtual ~MultimediaDlg();
 
+	void LoadSettings(const CSettings&);
+	void SaveSettings(CSettings&);
+
 	void SetStatus(int MessID, int iMessPara);
 
 protected:
-	CDRMReceiver*			pDRMRec;
+
+	CParameter&				Parameters;
+	CDataDecoder&			DataDecoder;
 
 	QTimer					Timer;
 	QMenuBar*				pMenu;
@@ -139,6 +131,8 @@ protected:
 	QString					strBWSHomePage;
 	QFont					fontTextBrowser;
 	QFont					fontDefault;
+	_BOOLEAN				bAddRefresh;
+	int						iRefresh;
 
 	void SetSlideShowPicture();
 	void SetJournalineText();

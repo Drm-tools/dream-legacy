@@ -6,7 +6,7 @@
  *	Andrea Russo
  *
  * Description:
- *	
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -29,9 +29,9 @@
 
 /* Implementation *************************************************************/
 
-MultSettingsDlg::MultSettingsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
+MultSettingsDlg::MultSettingsDlg(CSettings& NSettings, QWidget* parent,
 	const char* name, bool modal, WFlags f) :
-	CMultSettingsDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
+	CMultSettingsDlgBase(parent, name, modal, f), Settings(NSettings)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -53,10 +53,7 @@ MultSettingsDlg::~MultSettingsDlg()
 void MultSettingsDlg::hideEvent(QHideEvent*)
 {
 	/* save current settings */
-	if (CheckBoxAddRefresh->isChecked())
-		pDRMRec->bAddRefreshHeader = TRUE;
-	else
-		pDRMRec->bAddRefreshHeader = FALSE;
+	Settings.Put("Multimedia Dialog", "addrefresh", CheckBoxAddRefresh->isChecked());
 
 	QString strRefresh = EdtSecRefresh->text();
 	int iMOTRefresh = strRefresh.toUInt();
@@ -67,15 +64,15 @@ void MultSettingsDlg::hideEvent(QHideEvent*)
 	if (iMOTRefresh > MAX_MOT_BWS_REFRESH_TIME)
 		iMOTRefresh = MAX_MOT_BWS_REFRESH_TIME;
 
-	pDRMRec->iMOTBWSRefreshTime = iMOTRefresh;
+	Settings.Put("Multimedia Dialog", "motbwsrefresh", iMOTRefresh);
 }
 
 void MultSettingsDlg::showEvent(QShowEvent*)
 {
-	if (pDRMRec->bAddRefreshHeader == TRUE)
+	if (Settings.Get("Multimedia Dialog", "addrefresh", TRUE))
 		CheckBoxAddRefresh->setChecked(TRUE);
 
-	EdtSecRefresh->setText(QString().setNum(pDRMRec->iMOTBWSRefreshTime));
+	EdtSecRefresh->setText(QString().setNum(Settings.Get("Multimedia Dialog", "motbwsrefresh", 10)));
 }
 
 void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN bDeleteDirs = FALSE)
@@ -107,7 +104,7 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 				if(fi->fileName()!="." && fi->fileName()!="..")
 				{
 					ClearCache(fi->filePath(), sFilter, bDeleteDirs);
-				
+
 					/* Eventually delete the directory */
 					if (bDeleteDirs == TRUE)
 						dir.rmdir(fi->fileName());
@@ -117,7 +114,7 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 			{
 				/* Is a file so remove it */
 				dir.remove(fi->fileName());
-			}	
+			}
 		}
 	}
 }
@@ -125,13 +122,13 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 void MultSettingsDlg::OnbuttonClearCacheMOT()
 {
 	/* delete all files and directories into the MOTBWS directory */
-	ClearCache(MOT_BROADCAST_WEBSITE_PATH,"", TRUE);
+	ClearCache(Settings.Get("Multimedia Dialog", "storagepath").c_str(), "", TRUE);
 }
 
 void MultSettingsDlg::OnbuttonClearCacheEPG()
 {
 	/* Delete all EPG files */
-	ClearCache(EPG_SAVE_PATH, "*.EHA;*.EHB");
+	ClearCache(Settings.Get("Receiver", "datafilesdirectory").c_str(), "*.EHA;*.EHB");
 }
 
 void MultSettingsDlg::AddWhatsThisHelp()

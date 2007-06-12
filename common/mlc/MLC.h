@@ -46,7 +46,7 @@
 class CMLC
 {
 public:
-	CMLC() : iN_mux(0), eChannelType(CParameter::CT_MSC) {}
+	CMLC() : iN_mux(0), eChannelType(CT_MSC) {}
 	virtual ~CMLC() {}
 
 	void CalculateParam(CParameter& Parameter, int iNewChannelType);
@@ -67,8 +67,8 @@ protected:
 
 	int	iNumEncBits;
 
-	CParameter::EChanType	eChannelType;
-	CParameter::ECodScheme	eCodingScheme;
+	EChanType	eChannelType;
+	ECodScheme	eCodingScheme;
 };
 
 class CMLCEncoder : public CTransmitterModul<_BINARY, _COMPLEX>, 
@@ -146,7 +146,7 @@ protected:
 	virtual void InitInternal(CParameter& TransmParam)
 	{
 		/* Set corresponding type */
-		eChannelType = CParameter::CT_MSC;
+		eChannelType = CT_MSC;
 
 		/* Call init in encoder */
 		CMLCEncoder::InitInternal(TransmParam);
@@ -159,7 +159,7 @@ protected:
 	virtual void InitInternal(CParameter& TransmParam)
 	{
 		/* Set corresponding type */
-		eChannelType = CParameter::CT_SDC;
+		eChannelType = CT_SDC;
 
 		/* Call init in encoder */
 		CMLCEncoder::InitInternal(TransmParam);
@@ -172,7 +172,7 @@ protected:
 	virtual void InitInternal(CParameter& TransmParam)
 	{
 		/* Set corresponding type */
-		eChannelType = CParameter::CT_FAC;
+		eChannelType = CT_FAC;
 
 		/* Call init in encoder */
 		CMLCEncoder::InitInternal(TransmParam);
@@ -185,7 +185,7 @@ protected:
 	virtual void InitInternal(CParameter& ReceiverParam)
 	{
 		/* Set corresponding type */
-		eChannelType = CParameter::CT_MSC;
+		eChannelType = CT_MSC;
 
 		/* Call init in encoder */
 		CMLCDecoder::InitInternal(ReceiverParam);
@@ -198,7 +198,7 @@ protected:
 	virtual void InitInternal(CParameter& ReceiverParam)
 	{
 		/* Set corresponding type */
-		eChannelType = CParameter::CT_SDC;
+		eChannelType = CT_SDC;
 
 		/* Call init in encoder */
 		CMLCDecoder::InitInternal(ReceiverParam);
@@ -211,7 +211,7 @@ protected:
 	virtual void InitInternal(CParameter& ReceiverParam)
 	{
 		/* Set corresponding type */
-		eChannelType = CParameter::CT_FAC;
+		eChannelType = CT_FAC;
 
 		/* Call init in encoder */
 		CMLCDecoder::InitInternal(ReceiverParam);

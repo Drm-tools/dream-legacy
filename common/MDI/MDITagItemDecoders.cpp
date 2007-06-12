@@ -73,6 +73,8 @@ void CTagItemDecoderProTy::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	p.minor = (int) vecbiTag.Separate(16);
 	
 	protocols.push_back(p);
+
+	SetReady(TRUE);
 }
 
 string CTagItemDecoderLoFrCnt::GetTagName(void) {return "dlfc";}
@@ -84,6 +86,7 @@ void CTagItemDecoderLoFrCnt::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLe
 
 	dlfc = (uint32_t) vecbiTag.Separate(32);
 
+	SetReady(TRUE);
 }
 
 
@@ -104,6 +107,8 @@ void CTagItemDecoderFAC::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		vecbidata.
 			Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
+
+	SetReady(TRUE);
 }
 
 
@@ -127,6 +132,8 @@ void CTagItemDecoderSDC::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	   usually not a multiple of 8 */
 	for (int i = 0; i < iSDCDataSize; i++)
 		vecbidata.Enqueue(vecbiTag.Separate(1), 1);
+
+	SetReady(TRUE);
 }
 
 
@@ -160,6 +167,8 @@ void CTagItemDecoderRobMod::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen
 		eRobMode = RM_ROBUSTNESS_MODE_D;
 		break;
 	}
+
+	SetReady(TRUE);
 }
 
 
@@ -173,6 +182,7 @@ string CTagItemDecoderStr::GetTagName(void)
 	case 3: return "str3";
 	default: return "str?";
 	}
+	SetReady(TRUE);
 }
 
 void CTagItemDecoderStr::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
@@ -186,6 +196,7 @@ void CTagItemDecoderStr::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		vecbidata.
 			Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
+	SetReady(TRUE);
 }
 
 
@@ -194,6 +205,9 @@ string CTagItemDecoderSDCChanInf::GetTagName(void) {return "sdci";}
 
 void CTagItemDecoderSDCChanInf::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
+	if (iLen == 0)
+		return;
+
 	/* Get the number of streams */
 	const int iNumStreams = (iLen - 8) / 3 / SIZEOF__BYTE;
 
@@ -236,8 +250,76 @@ void CTagItemDecoderSDCChanInf::DecodeTag(CVector<_BINARY>& vecbiTag, const int 
 			vecbiTag.Separate(12);
 		}
 	}
+	SetReady(TRUE);
 }
 
+string CTagItemDecoderRxDemodMode::GetTagName(void) {return "rdmo";}
+
+void CTagItemDecoderRxDemodMode::DecodeTag(CVector<_BINARY>& vecbiTag, int iLen)
+{
+	string strMode = "";
+	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
+		strMode += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
+	if (strMode == "drm_")
+		eMode = RM_DRM;
+	else if (strMode == "am__")
+		eMode = RM_AM;
+	else
+		eMode = RM_AM;
+
+	SetReady(TRUE);
+}
+
+string CTagItemDecoderAMAudio::GetTagName(void) { return "rama";}
+
+void CTagItemDecoderAMAudio::DecodeTag(CVector<_BINARY>& vecbiTag, int iLen)
+{
+
+	/* Audio coding */
+	int iVal = vecbiTag.Separate(2);
+	switch (iVal)
+	{
+		case 0: AudioParams.eAudioCoding = CAudioParam::AC_AAC;
+			break;
+		case 1: AudioParams.eAudioCoding = CAudioParam::AC_CELP; /* 01 */
+			break;
+		case 2: AudioParams.eAudioCoding = CAudioParam::AC_HVXC; /* 10 */
+			break;
+		default: AudioParams.eAudioCoding = CAudioParam::AC_AAC;/* reserved */
+	}
+
+	/* SBR flag */
+	iVal = vecbiTag.Separate(1);
+	AudioParams.eSBRFlag = (iVal == 1 ? CAudioParam::SB_USED : CAudioParam::SB_NOT_USED);
+	/* Audio mode */
+	iVal = vecbiTag.Separate(2);
+	switch (iVal)
+	{
+		case 0: AudioParams.eAudioMode = CAudioParam::AM_MONO; break;
+		case 1: AudioParams.eAudioMode = CAudioParam::AM_P_STEREO; break;
+		case 2: AudioParams.eAudioMode = CAudioParam::AM_STEREO; break;
+		default: AudioParams.eAudioMode = CAudioParam::AM_MONO;
+	}
+	/* Audio sampling rate */
+	iVal = vecbiTag.Separate(3);
+	switch (iVal)
+	{
+		case 0: AudioParams.eAudioSamplRate = CAudioParam::AS_8_KHZ; break;
+		case 1: AudioParams.eAudioSamplRate = CAudioParam::AS_12KHZ; break;
+		case 2: AudioParams.eAudioSamplRate = CAudioParam::AS_16KHZ; break;
+		case 3: AudioParams.eAudioSamplRate = CAudioParam::AS_24KHZ; break;
+		default: AudioParams.eAudioSamplRate = CAudioParam::AS_24KHZ;
+	}
+	// coder field and some rfus (TODO: code the coder field correctly for all cases)
+	vecbiTag.Separate(8);
+	/* Copy stream data */
+	vecbidata.Init(iLen-16);
+	vecbidata.ResetBitAccess();
+	for (int i = 0; i < (iLen-16) / SIZEOF__BYTE; i++)
+		vecbidata.Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+
+	SetReady(TRUE);
+}
 
 string CTagItemDecoderInfo::GetTagName(void) {return "info";}
 
@@ -247,4 +329,6 @@ void CTagItemDecoderInfo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	strInfo = "";
 	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 		strInfo += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
+
+	SetReady(TRUE);
 }

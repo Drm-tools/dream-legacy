@@ -109,6 +109,7 @@ protected:
 	CTransmitData			TransmitData;
 
 	_REAL					rDefCarOffset;
+	_BOOLEAN				bUseUEP;
 };
 
 

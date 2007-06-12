@@ -28,8 +28,10 @@
 
 #include "GPSData.h"
 #include "time.h"
+#include <sstream>
+#include <iomanip>
 
-CGPSData::EGPSSource CGPSData::GetGPSSource()
+CGPSData::EGPSSource CGPSData::GetGPSSource() const
 {
 	return eGPSSource;
 }
@@ -43,190 +45,197 @@ CGPSData::SetGPSSource(EGPSSource eNewSource)
 void
 CGPSData::SetSatellitesVisibleAvailable(_BOOLEAN bNew)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_bSatellitesVisibleAvailable = bNew;
 }
 
-_BOOLEAN CGPSData::GetSatellitesVisibleAvailable()
+_BOOLEAN CGPSData::GetSatellitesVisibleAvailable() const
 {
-	CAutoMutex mutex(m_Mutex);
 	return m_bSatellitesVisibleAvailable;
 }
 
 void
 CGPSData::SetSatellitesVisible(uint16_t usSatellitesVisible)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_usSatellitesVisible = usSatellitesVisible;
 }
 
-uint16_t CGPSData::GetSatellitesVisible()
+uint16_t CGPSData::GetSatellitesVisible() const
 {
-	CAutoMutex mutex(m_Mutex);
 	return m_usSatellitesVisible;
 }
 
 void
 CGPSData::SetPositionAvailable(_BOOLEAN bNew)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_bPositionAvailable = bNew;
 }
 
-_BOOLEAN CGPSData::GetPositionAvailable()
+_BOOLEAN CGPSData::GetPositionAvailable() const
 {
-	CAutoMutex mutex(m_Mutex);
 	return m_bPositionAvailable;
 }
 
 void
 CGPSData::SetLatLongDegrees(double fLatitudeDegrees, double fLongitudeDegrees)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_fLatitudeDegrees = fLatitudeDegrees;
 	m_fLongitudeDegrees = fLongitudeDegrees;
 }
 
 void
-CGPSData::GetLatLongDegrees(double &fLatitudeDegrees, double &fLongitudeDegrees)
+CGPSData::GetLatLongDegrees(double &fLatitudeDegrees, double &fLongitudeDegrees) const
 {
-	CAutoMutex mutex(m_Mutex);
 	fLatitudeDegrees = m_fLatitudeDegrees;
 	fLongitudeDegrees = m_fLongitudeDegrees;
 }
 
 void
+CGPSData::GetLatLongDegrees(string& latitude, string& longitude) const
+{
+	stringstream s;
+	s << m_fLatitudeDegrees;
+	latitude = s.str();
+	s.str("");
+	s << m_fLongitudeDegrees;
+	longitude = s.str();
+}
+
+unsigned int CGPSData::ExtractMinutes(double dblDeg) const
+{
+	unsigned int Degrees;
+
+	/* Extract degrees */
+	Degrees = (unsigned int) dblDeg;
+	return (unsigned int) (((floor((dblDeg - Degrees) * 1000000) / 1000000) + 0.00005) * 60.0);
+}
+
+void
+CGPSData::asDM(string& lat, string& lng) const
+{
+	asDM(lat, m_fLatitudeDegrees, 'S', 'N');
+	asDM(lng, m_fLongitudeDegrees, 'W', 'E');
+}
+
+void
+CGPSData::asDM(string& pos, double d, char n, char p) const
+{
+	stringstream s;
+	s << abs(int(d)) << '\xb0' << ExtractMinutes(d) << "'" << ((d < 0.0)?n:p);
+	pos = s.str();
+}
+
+void
 CGPSData::SetSpeedAvailable(_BOOLEAN bNew)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_bSpeedAvailable = bNew;
 }
 
-_BOOLEAN CGPSData::GetSpeedAvailable()
+_BOOLEAN CGPSData::GetSpeedAvailable() const
 {
-	CAutoMutex mutex(m_Mutex);
 	return m_bSpeedAvailable;
 }
 
 void
 CGPSData::SetSpeedMetresPerSecond(double fSpeedMetresPerSecond)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_fSpeedMetresPerSecond = fSpeedMetresPerSecond;
 }
 
 double
-CGPSData::GetSpeedMetresPerSecond()
+CGPSData::GetSpeedMetresPerSecond() const
 {
-	CAutoMutex mutex(m_Mutex);
 	return m_fSpeedMetresPerSecond;
 }
 
 void
 CGPSData::SetHeadingAvailable(_BOOLEAN bNew)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_bHeadingAvailable = bNew;
 }
 
-_BOOLEAN CGPSData::GetHeadingAvailable()
+_BOOLEAN CGPSData::GetHeadingAvailable() const
 {
-	CAutoMutex mutex(m_Mutex);
 	return m_bHeadingAvailable;
 }
 
 void
 CGPSData::SetHeadingDegrees(uint16_t usHeadingDegrees)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_usHeadingDegrees = usHeadingDegrees;
 }
 
 unsigned short
-CGPSData::GetHeadingDegrees()
+CGPSData::GetHeadingDegrees() const
 {
-	CAutoMutex mutex(m_Mutex);
 	return m_usHeadingDegrees;
 }
 
 void
 CGPSData::SetTimeAndDateAvailable(_BOOLEAN bNew)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_bTimeAndDateAvailable = bNew;
 }
 
-_BOOLEAN CGPSData::GetTimeAndDateAvailable()
+_BOOLEAN CGPSData::GetTimeAndDateAvailable() const
 {
-	CAutoMutex mutex(m_Mutex);
 	return m_bTimeAndDateAvailable;
 }
 
 void
 CGPSData::SetTimeSecondsSince1970(uint32_t ulTimeSecondsSince1970)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_ulTimeSecondsSince1970 = ulTimeSecondsSince1970;
 }
 
-uint32_t CGPSData::GetTimeSecondsSince1970()
+uint32_t CGPSData::GetTimeSecondsSince1970() const
 {
-	CAutoMutex mutex(m_Mutex);
 	return m_ulTimeSecondsSince1970;
 }
 
 void
 CGPSData::SetAltitudeAvailable(_BOOLEAN bNew)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_bAltitudeAvailable = bNew;
 }
 
-_BOOLEAN CGPSData::GetAltitudeAvailable()
+_BOOLEAN CGPSData::GetAltitudeAvailable() const
 {
-	CAutoMutex mutex(m_Mutex);
 	return m_bAltitudeAvailable;
 }
 
 void
 CGPSData::SetAltitudeMetres(double fAltitudeMetres)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_fAltitudeMetres = fAltitudeMetres;
 }
 
 double
-CGPSData::GetAltitudeMetres()
+CGPSData::GetAltitudeMetres() const
 {
-	CAutoMutex mutex(m_Mutex);
 	return m_fAltitudeMetres;
 }
 
 void
 CGPSData::SetFix(CGPSData::EFix Fix)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_eFix = Fix;
 }
 
-CGPSData::EFix CGPSData::GetFix()
+CGPSData::EFix CGPSData::GetFix() const
 {
-	CAutoMutex mutex(m_Mutex);
 	return m_eFix;
 }
 
 void
 CGPSData::SetStatus(EStatus eStatus)
 {
-	CAutoMutex mutex(m_Mutex);
 	m_eStatus = eStatus;
 	if (m_eStatus != GPS_RX_DATA_AVAILABLE)
 		Reset();
 }
 
-CGPSData::EStatus CGPSData::GetStatus()
+CGPSData::EStatus CGPSData::GetStatus() const
 {
-	CAutoMutex mutex(m_Mutex);
 	return m_eStatus;
 }
 
@@ -252,12 +261,11 @@ CGPSData::Reset()
 
 void
 CGPSData::GetTimeDate(uint32_t & year, uint8_t & month, uint8_t & day,
-					  uint8_t & hour, uint8_t & minute, uint8_t & second)
+					  uint8_t & hour, uint8_t & minute, uint8_t & second) const
 {
 	struct tm *p_ts;
 	time_t tt;
 	{
-		CAutoMutex mutex(m_Mutex);
 		tt = time_t(m_ulTimeSecondsSince1970);
 	}
 	p_ts = gmtime(&tt);
@@ -269,22 +277,23 @@ CGPSData::GetTimeDate(uint32_t & year, uint8_t & month, uint8_t & day,
 	second = p_ts->tm_sec;
 }
 
-string CGPSData::GetTimeDate()
+string CGPSData::GetTimeDate() const
 {
 	struct tm * p_ts;
 	time_t tt;
 	{
-		CAutoMutex mutex(m_Mutex);
 		tt = time_t(m_ulTimeSecondsSince1970);
 	}
 	p_ts = gmtime(&tt);
-	stringstream
-		ss;
+	stringstream ss;
 	ss.width(2);
 	ss.fill('0');
-	ss << 1900 + p_ts->tm_year << "/" << 1 +
-		p_ts->tm_mon << "/" << p_ts->tm_mday;
-	ss << " " << p_ts->tm_hour << ":" << p_ts->tm_min << ":" << p_ts->tm_sec;
-
+	ss << 1900 + p_ts->tm_year << "/"
+	<< setw(2) << 1 + p_ts->tm_mon << "/"
+	<< setw(2) << p_ts->tm_mday
+	<< " "
+	<< setw(2) << p_ts->tm_hour << ":"
+	<< setw(2) << p_ts->tm_min << ":"
+	<< setw(2) << p_ts->tm_sec;
 	return ss.str();
 }

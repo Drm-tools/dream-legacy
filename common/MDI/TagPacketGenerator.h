@@ -42,19 +42,15 @@
 class CTagPacketGenerator
 {
 public:
-	CTagPacketGenerator(void); 
-	virtual ~CTagPacketGenerator(void){}
-	void Reset(void) {vecTagItemGenerators.clear();}
-	CVector<_BYTE> GenAFPacket(const _BOOLEAN bUseAFCRC);
+	CTagPacketGenerator(); 
+	virtual ~CTagPacketGenerator(){}
+	void Reset() {vecTagItemGenerators.clear();}
 	void AddTagItem(CTagItemGenerator *pGenerator);
 	virtual void PutTagPacketData(CVector<_BINARY> &vecbiDestination); // Call this to write the tag packet (i.e. all the tag items) to the vector
-	virtual int GetTagPacketLength(void);
+	virtual int GetTagPacketLength();
+	virtual void SetProfile(const char /*cProfile*/) {}
 protected:
-	CVector<_BYTE> PackBytes(CVector<_BINARY> &vecbiPacket);
 	vector<CTagItemGenerator *> vecTagItemGenerators;
-
-private:
-	int							iSeqNumber;
 };
 
 
@@ -63,11 +59,10 @@ class CTagPacketGeneratorWithProfiles : public CTagPacketGenerator
 public:
 	CTagPacketGeneratorWithProfiles(const char cProfile = '\0');
 	virtual ~CTagPacketGeneratorWithProfiles(){}
-	void SetProfile(const char cProfile);
-	//void AddTagItemIfInProfile(CTagItemGeneratorWithProfiles *pGenerator);
 	/* The following functions are overridden to check the profile for each tag item */
 	virtual void PutTagPacketData(CVector<_BINARY> &vecbiDestination); // Call this to write the tag packet (i.e. all the tag items) to the vector
 	virtual int GetTagPacketLength(void);
+	virtual void SetProfile(const char cProfile);
 private:
 	char cProfile;
 };

@@ -411,6 +411,11 @@ public:
 	CMatrix(const int iNewR, const int iNewC) {Init(iNewR, iNewC);}
 	CMatrix(const int iNewR, const int iNewC, const TData tInVa) 
 		{Init(iNewR, iNewC, tInVa);}
+	CMatrix(const CMatrix& m): ppData(NULL) {
+		Init(m.iRow,m.iCol); 
+		for (int i=0; i<m.NumRows(); i++)
+			ppData[i] = m[i];
+	}
 	virtual	~CMatrix();
 
 	void Init(const int iNewRow, const int iNewColumn);
@@ -419,7 +424,7 @@ public:
 	void Init(const int iNewRow, const int iNewColumn, const TData tIniVal);
 	void Reset(const TData tResetVal);
 
-	inline CVector<TData>& operator[](const int iPos) {
+	inline CVector<TData>& operator[](const int iPos) const {
 #ifdef _DEBUG_
 		if ((iPos < 0) || (iPos > iRow - 1))
 		{
@@ -428,6 +433,13 @@ public:
 		}
 #endif		
 		return ppData[iPos];}
+
+	inline CMatrix& operator=(const CMatrix& m) {
+		this->Init(m.NumRows(), m.NumColumns());
+		for (int i=0; i<m.NumRows(); i++)
+			this->ppData[i] = m[i];
+		return *this;
+	}
 
 #ifdef _DEBUG_
 	inline CVector<TData> operator[](const int iPos) const {
@@ -457,7 +469,7 @@ template<class TData> void CMatrix<TData>::Init(const int iNewRow,
 
 	if (iRow > 0)
 	{
-		/* Delete recources from previous init */
+		/* Delete resources from previous init */
 		if (ppData != NULL)
 			delete[] ppData;
 

@@ -1,6 +1,6 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2004
+ * British Broadcasting Corporation
+ * Copyright (c) 2007
  *
  * Author(s):
  *	Oliver Haffenden
@@ -11,11 +11,6 @@
  *  For the moment this will be a raw file but FF could be added as a decorator
  *  The writing can be stopped and started - if it is not currently writing,
  *  any packets it receives will be silently discarded
- *  
- *
- *  
- *  
- *  
  *
  ******************************************************************************
  *
@@ -40,19 +35,61 @@
 
 #include "PacketInOut.h"
 
-class CPacketSinkRawFile : public CPacketSink
+class CPacketSinkFile : public CPacketSink
+{
+public:
+	CPacketSinkFile();
+	virtual ~CPacketSinkFile() {}
+
+	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
+
+	virtual _BOOLEAN SetDestination(const string& strFName);
+	virtual _BOOLEAN GetDestination(string& strFName) { strFName = strFileName; return TRUE; }
+	void StartRecording();
+	void StopRecording();
+
+protected:
+	virtual void open()=0;
+	virtual void close()=0;
+	virtual void write(const vector<_BYTE>& vecbydata)=0;
+
+	FILE *pFile;
+	_BOOLEAN bIsRecording;
+	_BOOLEAN bChangeReceived;
+	string strFileName;
+};
+
+class CPacketSinkRawFile : public CPacketSinkFile
 {
 public:
 	CPacketSinkRawFile();
-	virtual void SendPacket(const vector<_BYTE>& vecbydata);
-	virtual ~CPacketSinkRawFile() {}
-
-	void StartRecording(const string strFileName);
-	void StopRecording();
-
-private:
-	FILE *pFile;
+	virtual ~CPacketSinkRawFile();
+protected:
+	virtual void open();
+	virtual void close();
+	virtual void write(const vector<_BYTE>& vecbydata);
 };
 
+class CPacketSinkFileFraming : public CPacketSinkFile
+{
+public:
+	CPacketSinkFileFraming();
+	virtual ~CPacketSinkFileFraming();
+protected:
+	virtual void open();
+	virtual void close();
+	virtual void write(const vector<_BYTE>& vecbydata);
+};
+
+class CPacketSinkPcapFile : public CPacketSinkFile
+{
+public:
+	CPacketSinkPcapFile();
+	virtual ~CPacketSinkPcapFile();
+protected:
+	virtual void open();
+	virtual void close();
+	virtual void write(const vector<_BYTE>& vecbydata);
+};
 
 #endif

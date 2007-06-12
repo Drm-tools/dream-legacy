@@ -60,6 +60,7 @@ void CMSCDemultiplexer::ProcessDataInternal(CParameter&)
 
 void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 {
+	ReceiverParam.Lock(); 
  	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
  	{
 		StreamPos[i] = GetStreamPos(ReceiverParam, i);
@@ -67,6 +68,7 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 	}
 	/* Set input block size */
 	iInputBlockSize = ReceiverParam.iNumDecodedBitsMSC;
+	ReceiverParam.Unlock(); 
 }
 
 void CMSCDemultiplexer::ExtractData(CVectorEx<_BINARY>& vecIn,
@@ -87,8 +89,6 @@ void CMSCDemultiplexer::ExtractData(CVectorEx<_BINARY>& vecIn,
 CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 															  const int iStreamID)
 {
-	int								i;
-	CVector<int>					veciActStreams;
 	CMSCDemultiplexer::SStreamPos	StPos;
 
 	/* Init positions with zeros (needed if an error occurs) */
@@ -107,33 +107,34 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 
 		/* Byte-offset of higher and lower protected part of audio stream --- */
 		/* Get active streams */
-		Param.GetActiveStreams(veciActStreams);
+		set<int> actStreams;
+		Param.GetActiveStreams(actStreams);
 
 		/* Get start offset for lower protected parts in stream. Since lower
 		   protected part comes after the higher protected part, the offset
 		   must be shifted initially by all higher protected part lengths
 		   (iLenPartA of all streams are added) 6.2.3.1 */
 		StPos.iOffsetLow = 0;
-		for (i = 0; i < veciActStreams.Size(); i++)
+		set<int>::iterator i;
+		for (i = actStreams.begin(); i!=actStreams.end(); i++)
 		{
-			StPos.iOffsetLow +=
-				Param.Stream[veciActStreams[i]].iLenPartA * SIZEOF__BYTE;
+			StPos.iOffsetLow += Param.Stream[*i].iLenPartA * SIZEOF__BYTE;
 		}
 
 		/* Real start position of the streams */
 		StPos.iOffsetHigh = 0;
-		for (i = 0; i < veciActStreams.Size(); i++)
+		for (i = actStreams.begin(); i!=actStreams.end(); i++)
 		{
-			if (veciActStreams[i] < iStreamID)
+			if (*i < iStreamID)
 			{
-				StPos.iOffsetHigh += Param.Stream[i].iLenPartA * SIZEOF__BYTE;
-				StPos.iOffsetLow += Param.Stream[i].iLenPartB * SIZEOF__BYTE;
+				StPos.iOffsetHigh += Param.Stream[*i].iLenPartA * SIZEOF__BYTE;
+				StPos.iOffsetLow += Param.Stream[*i].iLenPartB * SIZEOF__BYTE;
 			}
 		}
 
 		/* Special case if hierarchical modulation is used */
-		if (((Param.eMSCCodingScheme == CParameter::CS_3_HMSYM) ||
-			(Param.eMSCCodingScheme == CParameter::CS_3_HMMIX)))
+		if (((Param.eMSCCodingScheme == CS_3_HMSYM) ||
+			(Param.eMSCCodingScheme == CS_3_HMMIX)))
 		{
 			if (iStreamID == 0)
 			{
@@ -154,7 +155,6 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 					Param.Stream[0].iLenPartB * SIZEOF__BYTE;
 			}
 		}
-
 
 		/* Possibility check ------------------------------------------------ */
 		/* Test, if parameters have possible values */

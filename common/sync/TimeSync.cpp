@@ -49,7 +49,6 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 	CComplexVector	cvecInpTmp;
 	CRealVector		rResMode(NUM_ROBUSTNESS_MODES);
 	int				iNewStIndCount = 0;
-
 	/* Max number of detected peaks ("5" for safety reasons. Could be "2") */
 	CVector<int>	iNewStartIndexField(5);
 
@@ -90,7 +89,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 			FirFiltDec(cvecB, cvecInpTmp, cvecZ, GRDCRR_DEC_FACT));
 
 		/* Get size of new output vector */
-		iDecInpuSize = Size(cvecOutTmp);
+		iDecInpuSize = cvecOutTmp.GetSize();
 
 		/* Copy data from Matlib vector in regular vector for storing in
 		   shift register
@@ -143,7 +142,9 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Integrate the result for controling the frequency offset, normalize
 		   estimate */
+		ReceiverParam.Lock(); 
 		ReceiverParam.rFreqOffsetTrack -= rFreqOffsetEst * rNormConstFOE;
+		ReceiverParam.Unlock(); 
 #endif
 
 
@@ -374,6 +375,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 						bRobModAcqu = FALSE;
 
 						/* Set wave mode */
+						ReceiverParam.Lock(); 
 						if (ReceiverParam.
 							SetWaveMode(GetRModeFromInd(iDetectedRModeInd)) == TRUE)
 						{
@@ -382,6 +384,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							   valid anymore */
 							SetBufReset1();
 						}
+						ReceiverParam.Unlock(); 
 					}
 				}
 			}
@@ -410,8 +413,9 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				iAveCorr = 0;
 
 				/* GUI message that timing is ok */
-				ReceiverParam.ReceiveStatus.SetTimeSyncStatus(RX_OK);
-				ReceiverParam.ReceptLog.SetSync(TRUE);
+				ReceiverParam.Lock(); 
+				ReceiverParam.ReceiveStatus.TSync.SetStatus(RX_OK);
+				ReceiverParam.Unlock(); 
 
 				/* Acquisition was successful, reset init flag (just in case it
 				   was not reset by the non-linear correction unit */
@@ -449,7 +453,9 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							(CReal) iAveCorr / (NUM_SYM_BEFORE_RESET + 1);
 
 						/* GUI message that timing was corrected (red light) */
-						ReceiverParam.ReceiveStatus.SetTimeSyncStatus(CRC_ERROR);
+						ReceiverParam.Lock(); 
+						ReceiverParam.ReceiveStatus.TSync.SetStatus(CRC_ERROR);
+						ReceiverParam.Unlock(); 
 					}
 
 					/* Reset counters */
@@ -461,9 +467,12 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 					/* GUI message that timing is yet ok (yellow light). Do not
 					   show any light if init was done right before this */
 					if (bInitTimingAcqu == FALSE)
-						ReceiverParam.ReceiveStatus.SetTimeSyncStatus(DATA_ERROR);
+					{
+						ReceiverParam.Lock(); 
+						ReceiverParam.ReceiveStatus.TSync.SetStatus(DATA_ERROR);
+						ReceiverParam.Unlock(); 
+					}
 				}
-				ReceiverParam.ReceptLog.SetSync(FALSE);
 			}
 
 #ifdef _DEBUG_
@@ -479,6 +488,7 @@ fflush(pFile);
 	}
 	else
 	{
+		ReceiverParam.Lock(); 
 		/* Detect situation when acquisition was deactivated right now */
 		if (bAcqWasActive == TRUE)
 		{
@@ -495,8 +505,9 @@ fflush(pFile);
 
 		/* Timing acquisition was successfully finished, show always green
 		   light */
-		ReceiverParam.ReceiveStatus.SetTimeSyncStatus(RX_OK);
-		ReceiverParam.ReceptLog.SetSync(TRUE);
+		ReceiverParam.ReceiveStatus.TSync.SetStatus(RX_OK);
+
+		ReceiverParam.Unlock(); 
 
 #ifdef _DEBUG_
 /* Save estimated positions of timing (tracking) */
@@ -577,10 +588,12 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	CReal	rArgTemp;
 	int		iCorrBuffSize;
 
+	ReceiverParam.Lock(); 
+
 	/* Get parameters from info class */
-	iGuardSize = ReceiverParam.iGuardSize;
-	iDFTSize = ReceiverParam.iFFTSizeN;
-	iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
+	iGuardSize = ReceiverParam.CellMappingTable.iGuardSize;
+	iDFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
+	iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
 
 	/* Decimated symbol block size */
 	iDecSymBS = iSymbolBlockSize / GRDCRR_DEC_FACT;
@@ -752,6 +765,8 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iSymbolBlockSize; /* For the first loop */
 	iOutputBlockSize = iDFTSize;
+
+	ReceiverParam.Unlock(); 
 }
 
 void CTimeSync::StartAcquisition()
