@@ -37,9 +37,11 @@ void
 CReceptLog::Start(const string & filename)
 {
 	File.open(filename.c_str(), ios::app);
-	bHeaderWritten = FALSE;
 	if (File.is_open())
+	{
 		bLogActivated = TRUE;
+		writeHeader();
+	}
 	init();
 }
 
@@ -58,11 +60,6 @@ CReceptLog::Update()
 {
 	if (!bLogActivated)
 		return;
-	if (bHeaderWritten == FALSE)
-	{
-		writeHeader();
-		bHeaderWritten = TRUE;
-	}
 	writeParameters();
 }
 

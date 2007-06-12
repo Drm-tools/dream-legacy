@@ -35,8 +35,7 @@
 class CReceptLog
 {
   public:
-	CReceptLog(CParameter & p):Parameters(p), File(),
-		bHeaderWritten(FALSE), bLogActivated(FALSE),
+	CReceptLog(CParameter & p):Parameters(p), File(), bLogActivated(FALSE),
 		bRxlEnabled(FALSE), bPositionEnabled(FALSE),
 		iSecDelLogStart(0), iFrequency(0)
 	{
@@ -72,7 +71,6 @@ class CReceptLog
 
 	CParameter & Parameters;
 	ofstream File;
-	_BOOLEAN bHeaderWritten;
 	_BOOLEAN bLogActivated;
 	_BOOLEAN bLogEnabled;
 	_BOOLEAN bRxlEnabled;
