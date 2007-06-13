@@ -161,7 +161,7 @@ CShortLog::writeHeader()
 	{
 		/* Service label (UTF-8 encoded string -> convert ? TODO locale) */
 		File << "Label            " << label << endl;
-		File << "Bitrate          " << bitrate << " kbps" << endl;
+		File << "Bitrate          " << fixed << bitrate << " kbps" << endl;
 		File << "Mode             " << RobMode << endl;
 		File << "Bandwidth        ";
 		switch (SpecOcc)
@@ -279,7 +279,7 @@ CShortLog::writeTrailer()
 	if(!File.is_open())
 		return; /* allow updates when file closed */
 
-	File << setprecision(1);
+	File << fixed << setprecision(1);
 	File << endl << "SNR min: " << setw(4) << rMinSNR << ", max: " << setw(4) << rMaxSNR << endl;
 
 	if (bRxlEnabled)
