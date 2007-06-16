@@ -145,7 +145,7 @@ void CTagItemDecoderRpsd::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 void CTagItemDecoderRpir::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
-	const rOffset = _REAL(-60.0);
+	const _REAL rOffset = _REAL(-60.0);
 
 	if (iLen == 0)
 	{
