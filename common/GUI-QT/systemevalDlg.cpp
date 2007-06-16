@@ -749,6 +749,16 @@ void systemevalDlg::OnTimer()
     	SetStatus(LEDTimeSync, ReceiverParam.ReceiveStatus.TSync.GetStatus());
     	SetStatus(LEDIOInterface, ReceiverParam.ReceiveStatus.Interface.GetStatus());
 
+		if (ReceiverParam.pDRMRec->SignalStrengthAvailable())
+		{
+			_REAL rRF = ReceiverParam.SigStrstat.getCurrent() + S9_DBUV;
+			ValueRF->setText("<b>" + QString().setNum(rRF, 'f', 1) + " dBuV</b>");
+		}
+		else
+		{
+			ValueRF->setText("---");
+		}
+
 	/* Show SNR if receiver is in tracking mode */
 	if (DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
 	{
@@ -1010,7 +1020,7 @@ void systemevalDlg::OnTimer()
 	{
 		double latitude, longitude;
 		ReceiverParam.GPSData.GetLatLongDegrees(latitude, longitude);
-		qStrPosition = QString("Lat: %1\260  Long: %2\260").arg(latitude, 0, 'f', 4).arg(longitude,0, 'f',4);
+		qStrPosition = QString("Lat: %1\260  Long: %2\260").arg(latitude, 0, 'f', 6).arg(longitude,0, 'f',6);
 	}
 	else
 		qStrPosition = "Lat: ?  Long: ?";

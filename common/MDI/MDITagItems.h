@@ -334,6 +334,15 @@ protected:
 	virtual string GetProfiles(); // Return a string containing the set of profiles for this tag
 };
 
+class CTagItemGeneratorPowerImpulseResponse : public CTagItemGeneratorWithProfiles /* rpir */
+{
+public:
+	void GenTag(CParameter& Parameter);
+protected:
+	virtual string GetTagName();
+	virtual string GetProfiles(); // Return a string containing the set of profiles for this tag
+};
+
 
 class CTagItemGeneratorPilots : public CTagItemGeneratorWithProfiles /* rpil */
 {

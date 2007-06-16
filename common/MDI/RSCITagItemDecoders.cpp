@@ -143,6 +143,32 @@ void CTagItemDecoderRpsd::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 }
 
+void CTagItemDecoderRpir::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	const rOffset = _REAL(-60.0);
+
+	if (iLen == 0)
+	{
+		pParameter->vecrPIR.Init(0);
+		return;
+	}
+
+	int iVectorLen = iLen/SIZEOF__BYTE - 4; // 4 bytes for the scale start and end
+
+
+	pParameter->rPIRStart = _REAL(int16_t(vecbiTag.Separate(2 * SIZEOF__BYTE))) / _REAL(256.0);
+	pParameter->rPIREnd = _REAL(int16_t(vecbiTag.Separate(2 * SIZEOF__BYTE))) / _REAL(256.0);
+
+	pParameter->vecrPIR.Init(iVectorLen);
+
+	for (int i = 0; i < iVectorLen; i++)
+	{
+		pParameter->vecrPIR[i] = -(_REAL(vecbiTag.Separate(SIZEOF__BYTE))/_REAL(2.0)) - rOffset;
+	}
+
+}
+
+
 void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	if (iLen != 26 * SIZEOF__BYTE)
@@ -282,6 +308,26 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
     }
 }
 
+/*
+void CTagItemDecoderPilots::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	
+	int iNumSymbols = vecbiTag.Separate(8);
+	int iSymbolRepetition = vecbiTag.Separate(8);
+	vecbiTag.Separate(16);
+
+	for (int iSymbolNumber = 0; iSymbolNumber<iNumSymbols; iSymbolNumber++)
+	{
+		int iNumPilots = vecbiTag.Separate(8);
+		int iPilotOffset = vecbiTag.Separate(8);
+		int iBlockExponent = (int16_t) vecbiTag.Separate(16);
+		
+		//write to pParameter->matcReceivedPilotValues - but don't know what size to make it. Arghhh
+	}
+
+
+}*/
+
 /* RX_CTRL Items */
 
 void CTagItemDecoderCact::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
@@ -361,3 +407,4 @@ void CTagItemDecoderCpro::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		pRSISubscriber->SetProfile(c);
 }
 /* TODO: other control tag items */
+

@@ -160,8 +160,9 @@ CShortLog::writeHeader()
 	if (RobMode != "")
 	{
 		/* Service label (UTF-8 encoded string -> convert ? TODO locale) */
+		File << fixed << setprecision(2);
 		File << "Label            " << label << endl;
-		File << "Bitrate          " << bitrate << " kbps" << endl;
+		File << "Bitrate          " << setw(4) << bitrate << " kbps" << endl;
 		File << "Mode             " << RobMode << endl;
 		File << "Bandwidth        ";
 		switch (SpecOcc)
@@ -247,7 +248,7 @@ CShortLog::writeParameters()
 			<< setfill(' ') << setw(5) << iAverageSNR
 			<< setw(9) << iNumCRCOkFAC
 			<< setw(6) << iNumCRCOkMSC << "/" << setw(2) << setfill('0') << iTmpNumAAC
-			<< setfill(' ') << "        0";
+			<< setfill(' ') << "      0";
 		if (bRxlEnabled)
 		{
 			File << setw(10) << setprecision(2) << iRXL;
@@ -279,7 +280,7 @@ CShortLog::writeTrailer()
 	if(!File.is_open())
 		return; /* allow updates when file closed */
 
-	File << setprecision(1);
+	File << fixed << setprecision(1);
 	File << endl << "SNR min: " << setw(4) << rMinSNR << ", max: " << setw(4) << rMaxSNR << endl;
 
 	if (bRxlEnabled)

@@ -474,62 +474,65 @@ void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
 }
 
 void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
-							   CVector<_REAL>& vecrScale,
-							   const int iLenPSDAvEachBlock,
-							   const int iNumAvBlocksPSD,
-							   const int iPSDOverlap)
+                                                           CVector<_REAL>& vecrScale,
+                                                           const int iLenPSDAvEachBlock,
+                                                           const int iNumAvBlocksPSD,
+                                                           const int iPSDOverlap)
 {
-	/* Length of spectrum vector including Nyquist frequency */
-	const int iLenSpecWithNyFreq = iLenPSDAvEachBlock / 2 + 1;
+        /* Define a plan at the beginning. This should speed up the calls to fftw */
+        const CFftPlans FftPlans(iLenPSDAvEachBlock);
 
-	/* Init input and output vectors */
-	vecrData.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
-	vecrScale.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
+        /* Length of spectrum vector including Nyquist frequency */
+        const int iLenSpecWithNyFreq = iLenPSDAvEachBlock / 2 + 1;
 
-	/* Init the constants for scale and normalization */
-	const _REAL rFactorScale =
-		(_REAL) SOUNDCRD_SAMPLE_RATE / iLenSpecWithNyFreq / 2000;
+        /* Init input and output vectors */
+        vecrData.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
+        vecrScale.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
 
-	const _REAL rNormData = (_REAL) _MAXSHORT * _MAXSHORT *
-		iLenPSDAvEachBlock * iLenPSDAvEachBlock *
-		iNumAvBlocksPSD * _REAL(PSD_WINDOW_GAIN);
+        /* Init the constants for scale and normalization */
+        const _REAL rFactorScale =
+                (_REAL) SOUNDCRD_SAMPLE_RATE / iLenSpecWithNyFreq / 2000;
 
-	/* Init intermediate vectors */
-	CRealVector vecrAvSqMagSpect(iLenSpecWithNyFreq, (CReal) 0.0);
-	CRealVector vecrFFTInput(iLenPSDAvEachBlock);
+        const _REAL rNormData = (_REAL) _MAXSHORT * _MAXSHORT *
+                iLenPSDAvEachBlock * iLenPSDAvEachBlock *
+                iNumAvBlocksPSD * _REAL(PSD_WINDOW_GAIN);
 
-	/* Init Hamming window */
-	CRealVector vecrHammWin(Hamming(iLenPSDAvEachBlock));
+        /* Init intermediate vectors */
+        CRealVector vecrAvSqMagSpect(iLenSpecWithNyFreq, (CReal) 0.0);
+        CRealVector vecrFFTInput(iLenPSDAvEachBlock);
 
-	/* Calculate FFT of each small block and average results (estimation
-	   of PSD of input signal) */
+        /* Init Hamming window */
+        CRealVector vecrHammWin(Hamming(iLenPSDAvEachBlock));
 
-	int i;
-	for (i = 0; i < iNumAvBlocksPSD; i++)
-	{
-		/* Copy data from shift register in Matlib vector */
-		for (int j = 0; j < iLenPSDAvEachBlock; j++)
-			vecrFFTInput[j] = vecrInpData[j + i * (iLenPSDAvEachBlock - iPSDOverlap)];
+        /* Calculate FFT of each small block and average results (estimation
+           of PSD of input signal) */
 
-		/* Apply Hamming window */
-		vecrFFTInput *= vecrHammWin;
+        int i;
+        for (i = 0; i < iNumAvBlocksPSD; i++)
+        {
+                /* Copy data from shift register in Matlib vector */
+                for (int j = 0; j < iLenPSDAvEachBlock; j++)
+                        vecrFFTInput[j] = vecrInpData[j + i * (iLenPSDAvEachBlock - iPSDOverlap)];
 
-		/* Calculate squared magnitude of spectrum and average results */
-		vecrAvSqMagSpect += SqMag(rfft(vecrFFTInput));
-	}
+                /* Apply Hamming window */
+                vecrFFTInput *= vecrHammWin;
 
-	/* Log power spectrum data */
-	for (i = 0; i <iLenSpecWithNyFreq; i++)
-	{
-		const _REAL rNormSqMag = vecrAvSqMagSpect[i] / rNormData;
+                /* Calculate squared magnitude of spectrum and average results */
+                vecrAvSqMagSpect += SqMag(rfft(vecrFFTInput)); //, FftPlans));
+        }
 
-		if (rNormSqMag > 0)
-			vecrData[i] = (_REAL) 10.0 * log10(rNormSqMag);
-		else
-			vecrData[i] = RET_VAL_LOG_0;
+        /* Log power spectrum data */
+        for (i = 0; i <iLenSpecWithNyFreq; i++)
+        {
+                const _REAL rNormSqMag = vecrAvSqMagSpect[i] / rNormData;
 
-		vecrScale[i] = (_REAL) i * rFactorScale;
-	}
+                if (rNormSqMag > 0)
+                        vecrData[i] = (_REAL) 10.0 * log10(rNormSqMag);
+                else
+                        vecrData[i] = RET_VAL_LOG_0;
+
+                vecrScale[i] = (_REAL) i * rFactorScale;
+        }
 }
 
 /* Calculate PSD and put it into the CParameter class.

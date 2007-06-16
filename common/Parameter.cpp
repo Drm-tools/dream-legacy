@@ -70,6 +70,9 @@ CParameter::CParameter(CDRMReceiver *pRx):
  vecbiAudioFrameStatus(0),
  bMeasurePSD(),
  vecrPSD(0),
+ vecrPIR(0),
+ rPIRStart(_REAL(0.0)),
+ rPIREnd(_REAL(0.0)),
  matcReceivedPilotValues(),
  RawSimDa(),
  eSimType(ST_NONE),
@@ -168,6 +171,9 @@ CParameter::CParameter(const CParameter& p):
  vecbiAudioFrameStatus(p.vecbiAudioFrameStatus),
  bMeasurePSD(p.bMeasurePSD),
  vecrPSD(p.vecrPSD),
+ vecrPIR(p.vecrPIR),
+ rPIRStart(p.rPIRStart),
+ rPIREnd(p.rPIREnd),
  //matcReceivedPilotValues(p.matcReceivedPilotValues),
  matcReceivedPilotValues(), // OPH says copy constructor for CMatrix not safe yet
  RawSimDa(p.RawSimDa),
@@ -263,6 +269,9 @@ CParameter& CParameter::operator=(const CParameter& p)
 	vecbiAudioFrameStatus = p.vecbiAudioFrameStatus;
 	bMeasurePSD = p.bMeasurePSD;
 	vecrPSD = p.vecrPSD;
+	vecrPIR = p.vecrPIR;
+	rPIRStart = p.rPIRStart;
+	rPIREnd = p.rPIREnd;
 	matcReceivedPilotValues = p.matcReceivedPilotValues;
 	RawSimDa = p.RawSimDa;
 	eSimType = p.eSimType;

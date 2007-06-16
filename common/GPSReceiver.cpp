@@ -23,10 +23,9 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * this program; if not, write to the Free Software Foundation, Inc., 
- * 59 Temple Place, Suite 3c_usReconnectIntervalSeconds, Boston, MA 02111-1307 USA
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
-
 
 #include "GPSReceiver.h"
 
@@ -46,6 +45,7 @@ CGPSReceiver::CGPSReceiver(CParameter& p, CSettings& s):
 	m_sHost("localhost"),m_iPort(2947)
 {	
     m_pTimer = new QTimer(this);
+		m_pTimerDataTimeout = new QTimer(this);
 
 	m_sHost = m_Settings.Get("GPS", "host", m_sHost);
 	m_iPort = m_Settings.Get("GPS", "port", m_iPort);
@@ -68,10 +68,12 @@ void CGPSReceiver::open()
 		m_pSocket = new QSocket();
 		if(m_pSocket == NULL)
 			return;
+	
 		connect(m_pSocket, SIGNAL(connected()), this, SLOT(slotConnected()));
 		connect(m_pSocket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
 		connect(m_pSocket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
 	}
+	
 	m_pSocket->connectToHost(m_sHost.c_str(), m_iPort);
 }
 
@@ -246,7 +248,9 @@ void CGPSReceiver::DecodeY(string Value)
 
 void CGPSReceiver::slotInit()
 {
-	disconnect(m_pTimer);
+	close();
+	//disconnect(m_pTimer);
+	m_pTimer->stop();
 	open();
 }
 
@@ -261,16 +265,23 @@ void CGPSReceiver::slotConnected()
 		m_pSocket->readLine();
 
 	m_pSocket->writeBlock("W1\n",2);	// try to force gpsd into watcher mode
-	connect( m_pTimer, SIGNAL(timeout()), SLOT(slotTimeout()) );
-	m_pTimer->start(c_usReconnectIntervalSeconds*1000);
+
+	disconnect(m_pTimerDataTimeout, 0, 0, 0);	// disconnect everything connected from the timer
+	connect( m_pTimerDataTimeout, SIGNAL(timeout()), SLOT(slotTimeout()) );
+	m_pTimerDataTimeout->start(c_usReconnectIntervalSeconds*1000);
 }
 
 void CGPSReceiver::slotTimeout()
 {
 	m_iCounter--;
-	if(m_iCounter==0)
+
+	if(m_iCounter<=0)
 	{
-		disconnect(m_pTimer);
+		if (m_iCounter < 0) // to stop it wrapping round (eventually)
+			m_iCounter = 1;
+
+		m_pTimerDataTimeout->stop();
+		//disconnect(m_pTimerDataTimeout);
 		close();
 		open();
 	}
@@ -290,12 +301,13 @@ void CGPSReceiver::slotReadyRead()
 	Parameters.Unlock(); 
 	while (m_pSocket->canReadLine())
 		DecodeGPSDReply((const char*) m_pSocket->readLine());
-	m_pTimer->start(5*1000, TRUE); // if no data in 30 seconds abort
+	m_pTimerDataTimeout->start(5*1000); // if no data in 5 seconds signal GPS_RX_NO_DATA
 }
 
 void CGPSReceiver::slotSocketError(int)
 {
-	close();
+//	close()
+	disconnect(m_pTimer, 0, 0, 0);	// disconnect everything connected to the timer
 	connect( m_pTimer, SIGNAL(timeout()), SLOT(slotInit()) );
 	m_pTimer->start(c_usReconnectIntervalSeconds*1000, TRUE);
 }

@@ -61,6 +61,7 @@ protected:
 	CSettings&	m_Settings;
 	QSocket*	m_pSocket;
 	QTimer*		m_pTimer;
+	QTimer*		m_pTimerDataTimeout;
 	int			m_iCounter;
 	string		m_sHost;
 	int			m_iPort;

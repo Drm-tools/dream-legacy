@@ -52,6 +52,7 @@ CTagPacketDecoderMDI::CTagPacketDecoderMDI()
 ,	TagItemDecoderRwmm(0)
 ,	TagItemDecoderRdbv(0)
 ,	TagItemDecoderRpsd(0)
+,	TagItemDecoderRpir(0)
 ,	TagItemDecoderRdop(0)
 ,	TagItemDecoderRdel(0)
 ,	TagItemDecoderRgps(0)
@@ -82,6 +83,7 @@ CTagPacketDecoderMDI::CTagPacketDecoderMDI()
 	AddTagItemDecoder(&TagItemDecoderRwmm);
 	AddTagItemDecoder(&TagItemDecoderRdbv);
 	AddTagItemDecoder(&TagItemDecoderRpsd);
+	AddTagItemDecoder(&TagItemDecoderRpir);
 	AddTagItemDecoder(&TagItemDecoderRdop);
 	AddTagItemDecoder(&TagItemDecoderRdel);
 	AddTagItemDecoder(&TagItemDecoderRgps);
@@ -96,6 +98,7 @@ void CTagPacketDecoderMDI::SetParameterPtr(CParameter *pP)
 	TagItemDecoderRwmm.SetParameterPtr(pP);
 	TagItemDecoderRdbv.SetParameterPtr(pP);
 	TagItemDecoderRpsd.SetParameterPtr(pP);
+	TagItemDecoderRpir.SetParameterPtr(pP);
 	TagItemDecoderRdop.SetParameterPtr(pP);
 	TagItemDecoderRdel.SetParameterPtr(pP);
 	TagItemDecoderRgps.SetParameterPtr(pP);

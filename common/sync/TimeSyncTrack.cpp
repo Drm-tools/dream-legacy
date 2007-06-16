@@ -412,6 +412,18 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	rEstPDSBegin -= rPDSLenCorrection;
 	rEstPDSEnd -= rPDSLenCorrection;
 
+
+	/* write PIR estimate into parameter struct for RSI output - use the function provided for plotting */
+	CVector<_REAL> vecrScale;
+	_REAL rLowerBound=0, rHigherBound=0, rStartGuard=0, rEndGuard=0, rPDSBegin=0, rPDSEnd=0;
+
+	//Parameter.Lock();
+	GetAvPoDeSp(Parameter.vecrPIR, vecrScale, rLowerBound, rHigherBound, rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
+	Parameter.rPIRStart = vecrScale[0];
+	Parameter.rPIREnd = vecrScale[vecrScale.Size()-1];
+	//Parameter.Unlock();
+
+
 	/* Set return parameters */
 	rLenPDS = rEstPDSEnd - rEstPDSBegin;
 	rOffsPDS = rEstPDSBegin;

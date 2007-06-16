@@ -65,6 +65,7 @@ public:
 	CTagItemDecoderRwmm			TagItemDecoderRwmm;
 	CTagItemDecoderRdbv			TagItemDecoderRdbv;
 	CTagItemDecoderRpsd			TagItemDecoderRpsd;
+	CTagItemDecoderRpir			TagItemDecoderRpir;
 	CTagItemDecoderRdop			TagItemDecoderRdop;
 	CTagItemDecoderRdel			TagItemDecoderRdel;
 	CTagItemDecoderRgps			TagItemDecoderRgps;

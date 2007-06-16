@@ -177,7 +177,7 @@ void CSDCTransmit::DataEntityType0(CVector<_BINARY>& vecbiData,
 	/* Protection level for part B */
 	vecbiData.Enqueue((uint32_t) Parameter.MSCPrLe.iPartB, 2);
 
-	for (int i = 0; i < Parameter.GetTotNumServices(); i++)
+	for (size_t i = 0; i < Parameter.GetTotNumServices(); i++)
 	{
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hirarchical data */

@@ -129,11 +129,12 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
+	TagItemGeneratorPowerImpulseResponse.GenTag(Parameter);
 	TagItemGeneratorPilots.GenTag(Parameter);
 
 	/* Generate some other tags */
 	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
-	TagItemGeneratorSignalStrength.GenTag(TRUE, rSigStr + S9_DBUV);
+	TagItemGeneratorSignalStrength.GenTag(Parameter.pDRMRec->SignalStrengthAvailable(), rSigStr + S9_DBUV);
 
 	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	// rgps
 
@@ -167,6 +168,8 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
 
+	TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
+	
 	TagItemGeneratorPilots.GenEmptyTag();
 
 	TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
@@ -176,7 +179,7 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
 	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
-	TagItemGeneratorSignalStrength.GenTag(TRUE, rSigStr + S9_DBUV);
+	TagItemGeneratorSignalStrength.GenTag(Parameter.pDRMRec->SignalStrengthAvailable(), rSigStr + S9_DBUV);
 
 	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
 
@@ -210,6 +213,8 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
 
+	TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
+
 	TagItemGeneratorPilots.GenEmptyTag();
 
 	TagItemGeneratorRNIP.GenTag(TRUE, Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
@@ -222,7 +227,7 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
 	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
-	TagItemGeneratorSignalStrength.GenTag(TRUE, rSigStr + S9_DBUV);
+	TagItemGeneratorSignalStrength.GenTag(Parameter.pDRMRec->SignalStrengthAvailable(), rSigStr + S9_DBUV);
 
 	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
 
@@ -303,6 +308,7 @@ void CDownstreamDI::GenDIPacket()
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorReceiverStatus);
 
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorPowerSpectralDensity);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorPowerImpulseResponse);
 
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorPilots);
 
@@ -339,6 +345,8 @@ void CDownstreamDI::ResetTags()
 	TagItemGeneratorGPS.Reset();	/* rgps */
 
 	TagItemGeneratorPowerSpectralDensity.Reset();
+	TagItemGeneratorPowerImpulseResponse.Reset();
+
 	TagItemGeneratorPilots.Reset();
 
 	/* This group of tags might not be generated, so make an empty version in case */

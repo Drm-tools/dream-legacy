@@ -1074,9 +1074,14 @@ class CParameter
 
 	CVector <_BINARY> vecbiAudioFrameStatus;
 	_BOOLEAN bMeasurePSD;
+	_REAL rPIRStart;
+	_REAL rPIREnd;
 
-	/* vector to hold the PSD valued for the rpsd tag. */
+	/* vector to hold the PSD values for the rpsd tag. */
 	CVector <_REAL> vecrPSD;
+
+	// vector to hold impulse response values for (proposed) rpir tag
+	CVector <_REAL> vecrPIR;
 
 	CMatrix <_COMPLEX> matcReceivedPilotValues;
 

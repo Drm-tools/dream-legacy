@@ -1183,6 +1183,35 @@ CTagItemGeneratorPowerSpectralDensity::GetProfiles()
 	return "AD";
 }
 
+void
+CTagItemGeneratorPowerImpulseResponse::GenTag(CParameter & Parameter)
+{
+	const rOffset = _REAL(-60.0);
+	PrepareTag(Parameter.vecrPIR.Size() * SIZEOF__BYTE + 4 * SIZEOF__BYTE);
+
+	Enqueue(uint32_t(int(Parameter.rPIRStart * _REAL(256.0))), 2*SIZEOF__BYTE);
+	Enqueue(uint32_t(int(Parameter.rPIREnd * _REAL(256.0))), 2*SIZEOF__BYTE);
+
+	for (int i = 0; i < Parameter.vecrPIR.Size(); i++)
+	{
+		uint32_t p = uint8_t((Parameter.vecrPIR[i]+rOffset) * _REAL(-2.0));
+		Enqueue((uint32_t) p, SIZEOF__BYTE);
+	}
+
+}
+
+string
+CTagItemGeneratorPowerImpulseResponse::GetTagName()
+{
+	return "rpir";
+}
+
+string
+CTagItemGeneratorPowerImpulseResponse::GetProfiles()
+{
+	return "AD";
+}
+
 string
 CTagItemGeneratorPilots::GetTagName()
 {
