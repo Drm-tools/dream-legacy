@@ -85,6 +85,7 @@ drmwithoutqt_SOURCES = \
 	../common/tables/TableCarMap.cpp \
 	../common/GUI-QT/main.cpp \
 	source/Pacer.cpp \
+	source/shmsoundin.cpp source/pa_shm_ringbuffer.c \
 	../common/Version.h \
 	../common/ReceptLog.h \
 	../common/PlotManager.h \
@@ -178,7 +179,7 @@ drmwithoutqt_SOURCES = \
 	../common/soundinterface.h \
 	../common/soundnull.h \
 	../common/audiofilein.h \
-	source/sound.h
+	source/sound.h source/shmsoundin.h source/pa_shm_ringbuffer.h
 
 if USE_OSS
 drm_sound_SOURCES = \
@@ -266,7 +267,6 @@ drmqtonly_SOURCES = \
 	../common/datadecoding/epg/EPG.h
 
 drm_SOURCES = $(drmwithoutqt_SOURCES) $(drmqtonly_SOURCES) $(drm_sound_SOURCES)
-
 
 # these need to be generated before the rest can be compiled
 

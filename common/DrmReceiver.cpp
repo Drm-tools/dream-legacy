@@ -37,6 +37,9 @@
 
 #include "sound.h"
 #include "sound/soundnull.h"
+#ifdef __linux__
+# include "source/shmsoundin.h"
+#endif
 #include "audiofilein.h"
 
 const int
@@ -1011,7 +1014,6 @@ CDRMReceiver::SetReadDRMFromFile(const string strNFN)
 		CAudioFileIn *pf = new CAudioFileIn;
 		pf->SetFileName(strNFN);
 		pSoundInInterface = pf;
-		ReceiveData.SetSoundInterface(pSoundInInterface);	// needed ?
 
 		_BOOLEAN bIsIQ = FALSE;
 		if (ext.substr(0, 2) == "iq")
@@ -1562,13 +1564,38 @@ CDRMReceiver::LoadSettings(CSettings& s)
         {
             int iDev = pSoundInInterface->GetDev();
             delete pSoundInInterface;
+#ifdef __linux__
+			int model = s.Get("Hamlib", "hamlib-model", 0);
+			if(model==1509)
+			{
+            	CShmSoundIn* ShmSoundIn = new CShmSoundIn;
+            	pSoundInInterface = ShmSoundIn;
+            	pSoundInInterface->SetDev(0);
+				ShmSoundIn->SetShmPath("/dreamg313if");
+				ShmSoundIn->SetName("WinRadio G313");
+				ShmSoundIn->SetChannels(1);
+				string strHamlibConf = s.Get("Hamlib", "hamlib-config");
+				if(strHamlibConf=="")
+					strHamlibConf = "if_path=/dreamg313if";
+				else
+					strHamlibConf += ",if_path=/dreamg313if";
+				s.Put("Hamlib", "hamlib-config", strHamlibConf);
+			}
+			else
+			{
+            	pSoundInInterface = new CSoundIn;
+            	pSoundInInterface->SetDev(iDev);
+			}
+#else
             pSoundInInterface = new CSoundIn;
             pSoundInInterface->SetDev(iDev);
+#endif
         }
         else
         {
             SetReadDRMFromFile(strInFile);
         }
+		ReceiveData.SetSoundInterface(pSoundInInterface);
 	}
 	else
 	{
