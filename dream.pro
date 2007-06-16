@@ -45,13 +45,14 @@ unix {
 
 win32 {
 	TEMPLATE	= vcapp
-	OBJECTS_DIR	= windows
+	OBJECTS_DIR_RELEASE	= windows/Release
+	OBJECTS_DIR_DEBUG	= windows/Debug
 	UI_DIR		= windows/moc
 	MOC_DIR		= windows/moc
 # this next line could be cross platform if the windows library names do not start with lib
 	LIBS 		+= zdll.lib libqwt.lib libfhgjournaline.lib libfaac.lib libfaad.lib libhamlib.lib
-	LIBS		+= FFTW2dll.lib RFFTW2dll.lib
-	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:msvcrt.lib
+	LIBS		+= libfftw.lib setupapi.lib
+	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:"MSVCRTD, LIBCMT"
 	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
 	DEFINES		-= UNICODE
 	HEADERS		+= windows/Source/Sound.h windows/Source/SoundWin.h 
