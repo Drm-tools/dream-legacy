@@ -87,12 +87,12 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 // On Visual c++ 2005 Express Edition there is a segmentation fault if these macros are empty
 // TODO: FIX this with a better solution
 #ifdef _MSC_VER
-#define _TESTRNGR(POS) if (POS != POS) int idummy=0
-#define _TESTRNGW(POS) if (POS != POS) int idummy=0
-#define _TESTSIZE(INP) if (INP != INP) int idummy=0
-#define _TESTRNGRM(POS) if (POS != POS) int idummy=0
-#define _TESTRNGWM(POS) if (POS != POS) int idummy=0
-#define _TESTSIZEM(INP) if (INP != INP) int idummy=0
+#define _TESTRNGR(POS) if (POS != POS) {int idummy=0; (void)idummy;}
+#define _TESTRNGW(POS) if (POS != POS) {int idummy=0; (void)idummy;}
+#define _TESTSIZE(INP) if (INP != INP) {int idummy=0; (void)idummy;}
+#define _TESTRNGRM(POS) if (POS != POS) {int idummy=0; (void)idummy;}
+#define _TESTRNGWM(POS) if (POS != POS) {int idummy=0; (void)idummy;}
+#define _TESTSIZEM(INP) if (INP != INP) {int idummy=0; (void)idummy;}
 #else
 #define _TESTRNGR(POS)
 #define _TESTRNGW(POS)
