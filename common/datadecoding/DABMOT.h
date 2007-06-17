@@ -499,10 +499,14 @@ class CMOTObject:public CMOTObjectBase
 class CMOTDABEnc
 {
   public:
-    CMOTDABEnc ()
-    {
+	CMOTDABEnc(): MOTObject(), MOTObjSegments(),
+    iSegmCntHeader(0), iSegmCntBody(0), bCurSegHeader(FALSE),
+    iContIndexHeader(0), iContIndexBody(0), iTransportID(0),
+	bCRCUsed(TRUE), bSegFieldUsed(TRUE),
+	bUsAccFieldUsed(TRUE), bTransIDFieldUsed(TRUE)
+	{
     }
-    virtual ~ CMOTDABEnc ()
+    virtual ~CMOTDABEnc()
     {
     }
 
@@ -540,6 +544,13 @@ class CMOTDABEnc
     int iContIndexBody;
 
     int iTransportID;
+
+	/* Standard settings for this implementation */
+	_BOOLEAN bCRCUsed;
+	_BOOLEAN bSegFieldUsed;
+	_BOOLEAN bUsAccFieldUsed;
+	_BOOLEAN bTransIDFieldUsed;
+
 };
 
 /* Decoder ------------------------------------------------------------------ */

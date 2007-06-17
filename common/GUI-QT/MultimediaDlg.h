@@ -101,8 +101,10 @@ class MultimediaDlg : public MultimediaDlgBase
 public:
 	MultimediaDlg(CDRMReceiver&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
-
 	virtual ~MultimediaDlg();
+	/* dummy assignment operator to help MSVC8 */
+	MultimediaDlg& operator=(const MultimediaDlg&)
+	{ throw "should not happen"; return *this;}
 
 	void LoadSettings(const CSettings&);
 	void SaveSettings(CSettings&);

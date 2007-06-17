@@ -73,6 +73,9 @@ class CAMSSDlg : public CAMSSDlgBase
 public:
 	CAMSSDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, WFlags f = 0);
+	/* dummy assignment operator to help MSVC8 */
+	CAMSSDlg& operator=(const CAMSSDlg&)
+	{ throw "should not happen"; return *this;}
 
 protected:
 	CDRMReceiver&	DRMReceiver;
@@ -98,6 +101,9 @@ class AnalogDemDlg : public AnalogDemDlgBase
 public:
 	AnalogDemDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+	/* dummy assignment operator to help MSVC8 */
+	AnalogDemDlg& operator=(const AnalogDemDlg&)
+	{ throw "should not happen"; return *this;}
 
 	void 			UpdatePlotsStyle();
 

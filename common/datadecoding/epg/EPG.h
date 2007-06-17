@@ -43,6 +43,8 @@ class EPG
     {
 	saveChannels (servicesFilename);
     }
+	/* assignment operator to help MSVC8 */
+	EPG& operator=(const EPG&);
 
     void select (const uint32_t chan, const CDateAndTime & d);
     void loadChannels (const QString & fileName);

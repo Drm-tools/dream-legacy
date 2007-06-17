@@ -309,13 +309,6 @@ CMOTDABEnc::GenMOTObj(CVector < _BINARY > &vecbiData,
 	int i;
 	CCRC CRCObject;
 
-	/* Standard settings for this implementation */
-	const _BOOLEAN bCRCUsed = TRUE;	/* CRC */
-	const _BOOLEAN bSegFieldUsed = TRUE;	/* segment field */
-	const _BOOLEAN bUsAccFieldUsed = TRUE;	/* user access field */
-	const _BOOLEAN bTransIDFieldUsed = TRUE;	/* transport ID field */
-
-// TODO: Better solution!
 /* Total length of object in bits */
 	int iTotLenMOTObj = 16 /* group header */ ;
 	if (bSegFieldUsed == TRUE)

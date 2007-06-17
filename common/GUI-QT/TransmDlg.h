@@ -107,6 +107,9 @@ public:
 	TransmDialog(CSettings&,
 		QWidget* parent=0, const char* name=0, bool modal=FALSE, WFlags f=0);
 	virtual ~TransmDialog();
+	/* dummy assignment operator to help MSVC8 */
+	TransmDialog& operator=(const TransmDialog&)
+	{ throw "should not happen"; return *this;}
 
 protected:
 	void DisableAllControlsForSet();

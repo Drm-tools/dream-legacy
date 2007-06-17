@@ -83,6 +83,9 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
   public:
     CDataDecoder ();
     virtual ~CDataDecoder ();
+	/* dummy assignment operator to help MSVC8 */
+	CDataDecoder& operator=(const CDataDecoder&)
+	{ throw "should not happen"; return *this;}
 
     enum EAppType
     { AT_NOT_SUP, AT_MOTSLISHOW, AT_JOURNALINE,

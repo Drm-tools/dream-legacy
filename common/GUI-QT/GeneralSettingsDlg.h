@@ -42,6 +42,9 @@ public:
 	GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~GeneralSettingsDlg();
+	/* dummy assignment operator to help MSVC8 */
+	GeneralSettingsDlg& operator=(const GeneralSettingsDlg&)
+	{ throw "should not happen"; return *this;}
 
 protected:
 	virtual void	showEvent(QShowEvent* pEvent);

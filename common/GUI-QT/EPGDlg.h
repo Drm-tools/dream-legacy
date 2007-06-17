@@ -70,9 +70,11 @@ class EPGDlg : public CEPGDlgbase
 public:
 
 	EPGDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
-		
+		const char* name = 0, bool modal = FALSE, WFlags f = 0);	
 	virtual ~EPGDlg();
+	/* dummy assignment operator to help MSVC8 */
+	EPGDlg& operator=(const EPGDlg&)
+	{ throw "should not happen"; return *this;}
 
     void setDate();
     void select();

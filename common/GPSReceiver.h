@@ -44,6 +44,9 @@ class CGPSReceiver : public QObject
 public:
 	CGPSReceiver(CParameter&, CSettings&);
 	virtual ~CGPSReceiver();
+	/* dummy assignment operator to help MSVC8 */
+	CGPSReceiver& operator=(const CGPSReceiver&)
+	{ throw "should not happen"; return *this;}
 
 protected:
 

@@ -201,6 +201,9 @@ public:
 	StationsDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~StationsDlg();
+	/* dummy assignment operator to help MSVC8 */
+	StationsDlg& operator=(const StationsDlg&)
+	{ throw "should not happen"; return *this;}
 
 	void LoadSchedule(CDRMSchedule::ESchedMode eNewSchM);
 	void SetCurrentSchedule(const CDRMSchedule::ESchedMode eNewSchM);

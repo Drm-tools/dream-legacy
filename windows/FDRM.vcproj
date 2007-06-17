@@ -58,7 +58,6 @@
 				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
-				DisableSpecificWarnings="4521;4189;4505"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -371,72 +370,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\ReceptLog.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\common\PlotManager.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\common\ServiceInformation.cpp"
-				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						AdditionalIncludeDirectories=""
-						PreprocessorDefinitions=""
-					/>
-				</FileConfiguration>
-			</File>
-			<File
 				RelativePath="..\common\DrmReceiver.cpp"
 				>
 				<FileConfiguration
@@ -683,6 +616,50 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\common\PlotManager.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\common\ReceptLog.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\common\resample\Resample.cpp"
 				>
 				<FileConfiguration
@@ -707,6 +684,28 @@
 			<File
 				RelativePath="..\common\resample\ResampleFilter.cpp"
 				>
+			</File>
+			<File
+				RelativePath="..\common\ServiceInformation.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\common\SimulationParameters.cpp"
@@ -3288,18 +3287,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\ReceptLog.h"
-				>
-			</File>
-			<File
-				RelativePath="..\common\PlotManger.h"
-				>
-			</File>
-			<File
-				RelativePath="..\common\ServiceInformation.h"
-				>
-			</File>
-			<File
 				RelativePath="..\common\DrmReceiver.h"
 				>
 			</File>
@@ -3352,6 +3339,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\PlotManger.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\ReceptLog.h"
+				>
+			</File>
+			<File
 				RelativePath="..\common\resample\Resample.h"
 				>
 			</File>
@@ -3364,11 +3359,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\sound.h"
+				RelativePath="..\common\ServiceInformation.h"
 				>
 			</File>
 			<File
 				RelativePath="Source\Sound.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\sound.h"
 				>
 			</File>
 			<File

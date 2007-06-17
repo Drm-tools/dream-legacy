@@ -69,8 +69,10 @@ class FDRMDialog : public FDRMDialogBase
 public:
 	FDRMDialog(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE,	WFlags f = 0);
-
 	virtual ~FDRMDialog();
+	/* dummy assignment operator to help MSVC8 */
+	FDRMDialog& operator=(const FDRMDialog&)
+	{ throw "should not happen"; return *this;}
 
 protected:
 	CDRMReceiver&		DRMReceiver;

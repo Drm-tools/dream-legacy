@@ -1381,10 +1381,8 @@ const
 
 EPG::EPG(CParameter& NParameters):Parameters(NParameters)
 {
-	for (int i = 0; true; i++)
+	for (int i = 0; genre_list[i].genre; i++)
 	{
-		if (genre_list[i].genre == 0)
-			break;
 		genres[genre_list[i].genre] = genre_list[i].desc;
 	}
 
@@ -1392,6 +1390,17 @@ EPG::EPG(CParameter& NParameters):Parameters(NParameters)
 	servicesFilename = dir + "/services.xml";
 	loadChannels (servicesFilename);
 	saveChannels (servicesFilename);
+}
+
+EPG& EPG::operator=(const EPG& e)
+{
+	progs = e.progs;
+	genres = e.genres;
+	servicesFilename = e.servicesFilename;
+	basic = e.basic;
+	advanced = e.advanced;
+	Parameters = e.Parameters;
+	return *this;
 }
 
 void

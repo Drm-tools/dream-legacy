@@ -50,6 +50,9 @@ public:
 	MultSettingsDlg(CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~MultSettingsDlg();
+	/* dummy assignment operator to help MSVC8 */
+	MultSettingsDlg& operator=(const MultSettingsDlg&)
+	{ throw "should not happen"; return *this;}
 
 protected:
 	void ClearCache(QString sPath, QString sFilter, _BOOLEAN bDeleteDirs);
