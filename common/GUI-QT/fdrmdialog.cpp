@@ -26,8 +26,22 @@
  *
 \******************************************************************************/
 
-#include "fdrmdialog.h"
 #include <iostream>
+#include "fdrmdialog.h"
+#include "ReceiverSettingsDlg.h"
+#include <qlabel.h>
+#include <qpushbutton.h>
+#include <qtimer.h>
+#include <qstring.h>
+#include <qmenubar.h>
+#include <qpopupmenu.h>
+#include <qwt/qwt_thermo.h>
+#include <qevent.h>
+#include <qcstring.h>
+#include <qlayout.h>
+#include <qwhatsthis.h>
+#include <qpalette.h>
+#include <qcolordialog.h>
 
 /* Implementation *************************************************************/
 FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
@@ -97,8 +111,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pSettingsMenu->insertItem(tr("&Multimedia settings..."), this,
 		SLOT(OnViewMultSettingsDlg()));
 
-	pSettingsMenu->insertItem(tr("&General settings..."), this,
-		SLOT(OnViewGeneralSettingsDlg()));
+	pSettingsMenu->insertItem(tr("&Receiver settings..."), this,
+		SLOT(OnViewReceiverSettingsDlg()));
 
 	/* Main menu bar -------------------------------------------------------- */
 	pMenu = new QMenuBar(this);
@@ -171,8 +185,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* general settings window */
 	CParameter& Parameters = *DRMReceiver.GetParameters();
-	pGeneralSettingsDlg = new GeneralSettingsDlg(Parameters, Settings, this, "", TRUE, Qt::WStyle_Dialog);
-	SetDialogCaption(pGeneralSettingsDlg, tr("General settings"));
+	pReceiverSettingsDlg = new ReceiverSettingsDlg(DRMReceiver, Settings, this, "", TRUE, Qt::WStyle_Dialog);
+	SetDialogCaption(pReceiverSettingsDlg, tr("Receiver settings"));
 
 	Parameters.Lock();
 
@@ -219,8 +233,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
 
-	connect(pGeneralSettingsDlg, SIGNAL(StartGPS()), pSysEvalDlg, SLOT(EnableGPS()));
-	connect(pGeneralSettingsDlg, SIGNAL(StopGPS()), pSysEvalDlg, SLOT(DisableGPS()));
+	connect(pReceiverSettingsDlg, SIGNAL(StartStopLog(bool)), pSysEvalDlg, SLOT(EnableLog(bool)));
+	connect(pReceiverSettingsDlg, SIGNAL(StartStopGPS(bool)), pSysEvalDlg, SLOT(EnableGPS(bool)));
+	connect(pReceiverSettingsDlg, SIGNAL(SetLogStartDelay(long)), pSysEvalDlg, SLOT(LogStartDel(long)));
+	connect(pReceiverSettingsDlg, SIGNAL(LogPosition(bool)), pSysEvalDlg, SLOT(LogPosition(bool)));
+	connect(pReceiverSettingsDlg, SIGNAL(LogSigStr(bool)), pSysEvalDlg, SLOT(LogSigStr(bool)));
 
 	/* Disable text message label */
 	TextTextMessage->setText("");
@@ -935,9 +952,9 @@ void FDRMDialog::OnViewMultSettingsDlg()
 
 }
 
-void FDRMDialog::OnViewGeneralSettingsDlg()
+void FDRMDialog::OnViewReceiverSettingsDlg()
 {
-	pGeneralSettingsDlg->show();
+	pReceiverSettingsDlg->show();
 }
 
 void FDRMDialog::OnViewEPGDlg()

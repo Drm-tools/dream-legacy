@@ -26,20 +26,9 @@
  *
 \******************************************************************************/
 
-#include <qlabel.h>
-#include <qpushbutton.h>
-#include <qtimer.h>
-#include <qstring.h>
-#include <qmenubar.h>
-#include <qpopupmenu.h>
-#include <qwt/qwt_thermo.h>
-#include <qevent.h>
-#include <qcstring.h>
-#include <qlayout.h>
-#include <qwhatsthis.h>
-#include <qpalette.h>
-#include <qcolordialog.h>
 
+#include "../GlobalDefinitions.h"
+#include "../DrmReceiver.h"
 #include "fdrmdialogbase.h"
 #include "DialogUtil.h"
 #include "systemevalDlg.h"
@@ -49,9 +38,7 @@
 #include "EPGDlg.h"
 #include "AnalogDemDlg.h"
 #include "MultSettingsDlg.h"
-#include "GeneralSettingsDlg.h"
 #include "MultColorLED.h"
-#include "../DrmReceiver.h"
 #include "../util/Vector.h"
 
 
@@ -62,6 +49,8 @@
 #define AT_MOTEPG 	7
 
 /* Classes ********************************************************************/
+class ReceiverSettingsDlg;
+
 class FDRMDialog : public FDRMDialogBase
 {
 	Q_OBJECT
@@ -84,7 +73,7 @@ protected:
 	LiveScheduleDlg*	pLiveScheduleDlg;
 	EPGDlg*				pEPGDlg;
 	AnalogDemDlg*		pAnalogDemDlg;
-	GeneralSettingsDlg* pGeneralSettingsDlg;
+	ReceiverSettingsDlg* pReceiverSettingsDlg;
 	QMenuBar*			pMenu;
 	QPopupMenu*			pReceiverModeMenu;
 	QPopupMenu*			pSettingsMenu;
@@ -130,7 +119,7 @@ public slots:
 	void OnViewLiveScheduleDlg();
 	void OnViewEPGDlg();
 	void OnViewMultSettingsDlg();
-	void OnViewGeneralSettingsDlg();
+	void OnViewReceiverSettingsDlg();
 	void OnNewDRMAcquisition();
 	void OnSwitchToDRM();
 	void OnSwitchToAM();

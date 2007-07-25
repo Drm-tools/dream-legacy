@@ -41,7 +41,8 @@
 
 
 CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink),
-	cProfile(0), bNeedPft(FALSE), fragment_size(0), pDRMReceiver(0),
+	cProfile('0'), iSubsamplingFactor(1), iSubsamplingCounter(0), bNeedPft(FALSE), fragment_size(0), pDRMReceiver(0), 
+
 	bUseAFCRC(TRUE), sequence_counter(0)
 {
 	TagPacketDecoderRSCIControl.SetSubscriber(this);
@@ -55,7 +56,29 @@ void CRSISubscriber::SetReceiver(CDRMReceiver *pReceiver)
 
 void CRSISubscriber::SetProfile(const char c)
 {
-	cProfile = c;
+	cout <<"Changing profile to "<<c<<endl;
+	// special values from '1' to '9' refer to presets
+	if (c >= '1' && c <= '9')
+	{
+		cProfile = mapPresets[int(c - '0')].cProfile;
+		SetSubsamplingFactor(mapPresets[int(c - '0')].iSubsamplingFactor);
+		cout << "Preset selected: new profile="<<cProfile<<", subsampling="<<iSubsamplingFactor<<endl;
+	}
+	else
+	{
+		cProfile = c;
+	}
+}
+
+void CRSISubscriber::SetSubsamplingFactor(const int i)
+{
+	iSubsamplingFactor = i;
+}
+
+void CRSISubscriber::DefinePreset(const int iPresetNum, const int cPro, const int iFactor)
+{
+	cout<<"Defining preset "<<iPresetNum<<": profile="<<cPro<<", factor="<<iFactor<<endl;
+	mapPresets[iPresetNum] = CRSIPreset(cPro, iFactor);
 }
 
 void CRSISubscriber::SetPFTFragmentSize(const int iFrag)
@@ -71,6 +94,23 @@ void CRSISubscriber::SetPFTFragmentSize(const int iFrag)
 
 void CRSISubscriber::TransmitPacket(CTagPacketGenerator& Generator)
 {
+
+	// Don't do anything if this is one of the frames to discard in the subsampling
+	// This includes not incrementing the AF sequence number. 
+	// (The dlfc will increase though to show how many were discarded)
+	if (++iSubsamplingCounter < iSubsamplingFactor)
+	{
+		return;
+	}
+
+	iSubsamplingCounter = 0;
+
+	// Special profile '0' means no output packets will be generated
+	if (cProfile == '0')
+	{
+		return;
+	}
+
 	if (pPacketSink != 0)
 	{
 	 	Generator.SetProfile(cProfile);

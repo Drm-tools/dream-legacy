@@ -1407,6 +1407,7 @@ CDRMReceiver::saveSDCtoFile()
 void
 CDRMReceiver::LoadSettings(CSettings& s)
 {
+	int i;
 	/* Serial Number */
 	string sValue = s.Get("Receiver", "serialnumber");
 	if (sValue != "")
@@ -1609,7 +1610,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 		upstreamRSCI.SetDestination(str);
 
 	/* downstream RSCI */
-	for(int i = 0; i<MAX_NUM_RSI_SUBSCRIBERS; i++)
+	for(i = 0; i<MAX_NUM_RSI_SUBSCRIBERS; i++)
 	{
 		stringstream ss;
 		ss << "rsiout" << i;
@@ -1619,10 +1620,37 @@ CDRMReceiver::LoadSettings(CSettings& s)
 			ss.str("");
 			ss << "rsioutprofile" << i;
 			string profile = s.Get("command", ss.str(), string("A"));
+
+			// Check whether the profile has a subsampling ratio (e.g. --rsioutprofile A20)
+			int iSubsamplingFactor = 1;
+			if (profile.length() > 1)
+			{
+				iSubsamplingFactor = atoi(profile.substr(1).c_str());
+			}
+
+
 			ss.str("");
 			ss << "rciin" << i;
 			string origin = s.Get("command", ss.str());
-			downstreamRSCI.AddSubscriber(str, origin, profile[0]);
+			downstreamRSCI.AddSubscriber(str, origin, profile[0], iSubsamplingFactor);
+		}
+	}
+
+	for (i=1; i<=MAX_NUM_RSI_PRESETS; i++)
+	{
+		// define presets in same format as --rsioutprofile
+		stringstream ss;
+		ss << "rsioutpreset" << i;
+		str = s.Get("RSCI", ss.str());
+		if(str != "")
+		{
+			// Check whether the preset has a subsampling ratio (e.g. A20)
+			int iSubsamplingFactor = 1;
+			if (str.length() > 1)
+			{
+				iSubsamplingFactor = atoi(str.substr(1).c_str());
+			}
+			downstreamRSCI.DefineRSIPreset(i, str[0], iSubsamplingFactor);
 		}
 	}
 	/* RSCI File Recording */

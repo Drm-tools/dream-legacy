@@ -7,7 +7,7 @@ LIBS 		+= -Llibs
 FORMS		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui
 FORMS		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
 FORMS		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
-FORMS		+= GeneralSettingsDlgbase.ui MultSettingsDlgbase.ui AboutDlgbase.ui
+FORMS		+= MultSettingsDlgbase.ui AboutDlgbase.ui ReceiverSettingsDlgbase.ui
 
 macx {
 	CONFIG		+= portaudio

@@ -26,85 +26,25 @@
  *
 \******************************************************************************/
 
-
-#include <qpushbutton.h>
-#include <qstring.h>
-#include <qlabel.h>
-#include <qradiobutton.h>
-#include <qcheckbox.h>
-#include <qlineedit.h>
-#include <qtabwidget.h>
-#include <qcombobox.h>
-#include <qstring.h>
-#include <qbuttongroup.h>
-#include <qmultilineedit.h>
-#include <qlistview.h>
-#include <qfiledialog.h>
-#include <qfileinfo.h>
-#include <qstringlist.h>
-#include <qmenubar.h>
-#include <qpopupmenu.h>
-#include <qlayout.h>
-#include <qthread.h>
-#include <qtimer.h>
-#include <qwhatsthis.h>
-#include <qprogressbar.h>
-#include <qwt/qwt_thermo.h>
-
-#ifdef _WIN32
-# include "windows.h"
-#endif
+#include "../GlobalDefinitions.h"
 #include "TransmDlgbase.h"
-#include "DialogUtil.h"
-#include "../DrmTransmitter.h"
-#include "../Parameter.h"
-#include "../util/Settings.h"
-
+#include <vector>
+#include <qtimer.h>
 
 /* Classes ********************************************************************/
-/* Thread class for the transmitter */
-class CTransmitterThread : public QThread 
-{
-public:
-	void Stop()
-	{
-		/* Stop working thread and wait until it is ready for terminating. We
-		   set a time-out of 5 seconds */
-		DRMTransmitter.Stop();
-
-		if (wait(5000) == FALSE)
-			ErrorMessage("Termination of working thread failed.");
-	}
-
-	virtual void run()
-	{
-		/* Set thread priority (The working thread should have a higher priority
-		   than the GUI) */
-#ifdef _WIN32
-		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
-#endif
-
-		try
-		{
-			/* Call receiver main routine */
-			DRMTransmitter.Start();
-		}
-
-		catch (CGenErr GenErr)
-		{
-			ErrorMessage(GenErr.strError);
-		}
-	}
-
-	CDRMTransmitter	DRMTransmitter;
-};
+class CDRMTransmitter;
+class CSettings;
+class QMenuBar;
+class QPopupMenu;
 
 class TransmDialog : public TransmDlgBase
 {
 	Q_OBJECT
 
 public:
-	TransmDialog(CSettings&,
+	TransmDialog(
+		CDRMTransmitter& tx,
+		CSettings&,
 		QWidget* parent=0, const char* name=0, bool modal=FALSE, WFlags f=0);
 	virtual ~TransmDialog();
 	/* dummy assignment operator to help MSVC8 */
@@ -112,24 +52,28 @@ public:
 	{ throw "should not happen"; return *this;}
 
 protected:
-	void DisableAllControlsForSet();
-	void EnableAllControlsForSet();
+	struct ipIf			{string name; uint32_t addr;};
 
-	CSettings&			Settings;
-	QMenuBar*			pMenu;
-	QPopupMenu*			pSettingsMenu;
-	QTimer				Timer;
+	void				DisableAllControlsForSet();
+	void				EnableAllControlsForSet();
 
-	CTransmitterThread	TransThread; /* Working thread object */
-	_BOOLEAN			bIsStarted;
-	CVector<string>		vecstrTextMessage;
-	int					iIDCurrentText;
-	_BOOLEAN			GetMessageText(const int iID);
 	void				UpdateMSCProtLevCombo();
 	void				EnableTextMessage(const _BOOLEAN bFlag);
 	void				EnableAudio(const _BOOLEAN bFlag);
 	void				EnableData(const _BOOLEAN bFlag);
 	void				AddWhatsThisHelp();
+	void				GetNetworkInterfaces();
+
+	QMenuBar*			pMenu;
+	QPopupMenu*			pSettingsMenu;
+	QTimer				Timer;
+
+	CDRMTransmitter&	DRMTransmitter;
+	CSettings&			Settings;
+	_BOOLEAN			bIsStarted;
+	vector<string>		vecstrTextMessage;
+	size_t				iIDCurrentText;
+	vector<ipIf>vecIpIf;
 
 
 public slots:
@@ -138,9 +82,13 @@ public slots:
 	void OnButtonClearAllText();
 	void OnPushButtonAddFileName();
 	void OnButtonClearAllFileNames();
+	void OnPushButtonChooseOutputFileName();
+	void OnToggleCheckBoxEnableCOFDM(bool bState);
 	void OnToggleCheckBoxEnableData(bool bState);
 	void OnToggleCheckBoxEnableAudio(bool bState);
 	void OnToggleCheckBoxEnableTextMessage(bool bState);
+	void OnComboBoxAudioSourceHighlighted(int iID);
+	void OnComboBoxCOFDMDestHighlighted(int iID);
 	void OnComboBoxMSCInterleaverHighlighted(int iID);
 	void OnComboBoxMSCConstellationHighlighted(int iID);
 	void OnComboBoxSDCConstellationHighlighted(int iID);
@@ -154,6 +102,18 @@ public slots:
 	void OnTextChangedServiceLabel(const QString& strLabel);
 	void OnTextChangedServiceID(const QString& strID);
 	void OnTextChangedSndCrdIF(const QString& strIF);
+	void OnTextChangedOutputFileName(const QString& strFile);
+
+	void OnToggleCheckBoxMDIoutEnable(bool bState);
+	void OnTextChangedMDIoutPort(const QString& strLabel);
+	void OnTextChangedMDIoutDest(const QString& strLabel);
+	void OnComboBoxMDIoutInterfaceHighlighted(int iID);
+	void OnToggleCheckBoxMDIinEnable(bool bState);
+	void OnTextChangedMDIinPort(const QString& strLabel);
+	void OnTextChangedMDIinGroup(const QString& strLabel);
+	void OnToggleCheckBoxMDIinMcast(bool bState);
+	void OnComboBoxMDIinInterfaceHighlighted(int iID);
+
 	void OnTimer();
-	void OnHelpWhatsThis() {QWhatsThis::enterWhatsThisMode();}
+	void OnHelpWhatsThis();
 };

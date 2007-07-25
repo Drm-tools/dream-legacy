@@ -700,8 +700,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 			iExpWinLenShort - iOvlSamOneSideShort);
 
 		vecrExpWinLong = Hamming(iExpWinLenLong);
-		vecrDFTwindowInv = (CReal) 1.0 / vecrExpWinLong(iOvlSamOneSideLong + 1,
-			iExpWinLenLong - iOvlSamOneSideLong);
+		vecrDFTwindowInv = CReal(1.0) / vecrExpWinLong(iOvlSamOneSideLong + 1, iExpWinLenLong - iOvlSamOneSideLong);
 		break;
 
 	case DFT_WIN_HANN:

@@ -71,7 +71,7 @@ CTagItemGenerator::IsInProfile(char)
 string
 CTagItemGeneratorWithProfiles::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 void
@@ -133,7 +133,7 @@ CTagItemGeneratorProTyRSCI::GetTagName()
 string
 CTagItemGeneratorProTyRSCI::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 CTagItemGeneratorLoFrCnt::CTagItemGeneratorLoFrCnt():iLogFraCnt(0)
@@ -164,7 +164,7 @@ CTagItemGeneratorLoFrCnt::GetTagName()
 string
 CTagItemGeneratorLoFrCnt::GetProfiles()
 {
-	return "ABCDQM";
+	return "ABCDGQM";
 }
 
 void
@@ -200,7 +200,7 @@ CTagItemGeneratorFAC::GetTagName()
 string
 CTagItemGeneratorFAC::GetProfiles()
 {
-	return "ACDQM";
+	return "ACDGQM";
 }
 
 void
@@ -249,7 +249,7 @@ CTagItemGeneratorSDC::GetTagName()
 string
 CTagItemGeneratorSDC::GetProfiles()
 {
-	return "ACDM";
+	return "ACDGM";
 }
 
 void
@@ -356,7 +356,7 @@ CTagItemGeneratorRobMod::GetTagName()
 string
 CTagItemGeneratorRobMod::GetProfiles()
 {
-	return "ABCDQM";
+	return "ABCDGQM";
 }
 
 void
@@ -384,7 +384,7 @@ CTagItemGeneratorRINF::GetTagName()
 string
 CTagItemGeneratorRINF::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 CTagItemGeneratorStr::CTagItemGeneratorStr():iStreamNumber(0)
@@ -486,7 +486,7 @@ CTagItemGeneratorRWMF::GetTagName()
 string
 CTagItemGeneratorRWMF::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 string
@@ -498,7 +498,7 @@ CTagItemGeneratorRWMM::GetTagName()
 string
 CTagItemGeneratorRWMM::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 string
@@ -510,7 +510,7 @@ CTagItemGeneratorRMER::GetTagName()
 string
 CTagItemGeneratorRMER::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 string
@@ -522,7 +522,7 @@ CTagItemGeneratorRDOP::GetTagName()
 string
 CTagItemGeneratorRDOP::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 void
@@ -566,7 +566,7 @@ CTagItemGeneratorRDEL::GetTagName()
 string
 CTagItemGeneratorRDEL::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 void
@@ -609,7 +609,7 @@ CTagItemGeneratorRAFS::GetTagName()
 string
 CTagItemGeneratorRAFS::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 void
@@ -656,7 +656,7 @@ CTagItemGeneratorRINT::GetTagName()
 string
 CTagItemGeneratorRINT::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 void
@@ -692,7 +692,7 @@ CTagItemGeneratorRNIP::GetTagName()
 string
 CTagItemGeneratorRNIP::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 void
@@ -718,7 +718,7 @@ CTagItemGeneratorSignalStrength::GetTagName()
 string
 CTagItemGeneratorSignalStrength::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 void
@@ -740,7 +740,7 @@ CTagItemGeneratorReceiverStatus::GetTagName()
 string
 CTagItemGeneratorReceiverStatus::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 void
@@ -759,7 +759,7 @@ CTagItemGeneratorProfile::GetTagName()
 string
 CTagItemGeneratorProfile::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 void
@@ -799,7 +799,7 @@ CTagItemGeneratorRxDemodMode::GetTagName()
 string
 CTagItemGeneratorRxDemodMode::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 void
@@ -825,7 +825,7 @@ CTagItemGeneratorRxFrequency::GetTagName()
 string
 CTagItemGeneratorRxFrequency::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 void
@@ -844,7 +844,7 @@ CTagItemGeneratorRxActivated::GetTagName()
 string
 CTagItemGeneratorRxActivated::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 void
@@ -870,7 +870,7 @@ CTagItemGeneratorRxBandwidth::GetTagName()
 string
 CTagItemGeneratorRxBandwidth::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 void
@@ -896,7 +896,7 @@ CTagItemGeneratorRxService::GetTagName()
 string
 CTagItemGeneratorRxService::GetProfiles()
 {
-	return "ABCDQ";
+	return "ABCDGQ";
 }
 
 CTagItemGeneratorRBP::CTagItemGeneratorRBP()
@@ -935,7 +935,7 @@ CTagItemGeneratorRBP::GetTagName()
 string
 CTagItemGeneratorRBP::GetProfiles()
 {
-	return "ABCD";
+	return "ABCDG";
 }
 
 // Call this to write the binary data (header + payload) to the vector
@@ -1155,7 +1155,7 @@ CTagItemGeneratorGPS::GetTagName()
 string
 CTagItemGeneratorGPS::GetProfiles()
 {
-	return "AD";
+	return "ADG";
 }
 
 void
@@ -1180,7 +1180,7 @@ CTagItemGeneratorPowerSpectralDensity::GetTagName()
 string
 CTagItemGeneratorPowerSpectralDensity::GetProfiles()
 {
-	return "AD";
+	return "ADG";
 }
 
 void
@@ -1209,7 +1209,7 @@ CTagItemGeneratorPowerImpulseResponse::GetTagName()
 string
 CTagItemGeneratorPowerImpulseResponse::GetProfiles()
 {
-	return "AD";
+	return "ADG";
 }
 
 string

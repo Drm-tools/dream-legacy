@@ -87,6 +87,52 @@ void CTransmitData::ProcessDataInternal(CParameter&)
 			vecsDataOut[iCurIndex + 1] = sCurOutPhase;
 			break;
 		}
+		if (bUseSoundcard == FALSE)
+		{
+			/* Write data to file */
+#ifdef HAVE_LIBSNDFILE
+			if (eOutputFormat==OF_REAL_VAL)
+			{
+				(void)sf_writef_short(pFile, &vecsDataOut[iCurIndex], 1);
+			}
+			else
+			{
+				short buffer[2];
+				buffer[0] = vecsDataOut[iCurIndex];
+				buffer[1] = vecsDataOut[iCurIndex+1];
+				(void)sf_writef_short(pFile, buffer, 1);
+			}
+#else
+			switch(eOutFileMode)
+			{
+			case OFF_RAW:
+				if (eOutputFormat==OF_REAL_VAL)
+					fwrite((const void*) &vecsDataOut[iCurIndex], 2, 1, pFile);
+				else
+				{
+					short buffer[2];
+					buffer[0] = vecsDataOut[iCurIndex];
+					buffer[1] = vecsDataOut[iCurIndex+1];
+					fwrite((const void*) buffer, 2, 2, pFile);
+				}
+				break;
+			case OFF_TXT:
+				/* This can be read with Matlab "load" command */
+				if (eOutputFormat==OF_REAL_VAL)
+					fprintf(pFile, "%d\n", vecsDataOut[iCurIndex]);
+				else
+					fprintf(pFile, "%d\n %d\n", vecsDataOut[iCurIndex],
+						vecsDataOut[iCurIndex+1]);
+				break;
+			case OFF_WAV:
+				if (eOutputFormat==OF_REAL_VAL)
+					WaveFile.AddStereoSample(vecsDataOut[iCurIndex], 0);
+				else
+					WaveFile.AddStereoSample(vecsDataOut[iCurIndex],
+									vecsDataOut[iCurIndex+1]);
+			}
+#endif
+		}
 	}
 
 	iBlockCnt++;
@@ -101,78 +147,85 @@ void CTransmitData::ProcessDataInternal(CParameter&)
 		}
 		else
 		{
-			/* Write data to file */
-			for (i = 0; i < iBigBlockSize; i++)
+			if(eOutFileMode != OFF_WAV)
 			{
-#ifdef FILE_DRM_USING_RAW_DATA
-				const short sOut = vecsDataOut[i];
-
-				/* Write 2 bytes, 1 piece */
-				fwrite((const void*) &sOut, size_t(2), size_t(1),
-					pFileTransmitter);
+				/* Flush the file buffer */
+#ifdef HAVE_LIBSNDFILE
+				sf_write_sync(pFile);
 #else
-				/* This can be read with Matlab "load" command */
-				fprintf(pFileTransmitter, "%d\n", vecsDataOut[i]);
+				fflush(pFile);
 #endif
 			}
-
-			/* Flush the file buffer */
-			fflush(pFileTransmitter);
 		}
 	}
 }
 
 void CTransmitData::InitInternal(CParameter& TransmParam)
 {
-/*
-	float*	pCurFilt;
-	int		iNumTapsTransmFilt;
-	CReal	rNormCurFreqOffset;
-*/
 	const int iSymbolBlockSize = TransmParam.CellMappingTable.iSymbolBlockSize;
 
 	/* Init vector for storing a complete DRM frame number of OFDM symbols */
 	iBlockCnt = 0;
-	TransmParam.Lock(); 
 	iNumBlocks = TransmParam.CellMappingTable.iNumSymPerFrame;
-	ESpecOcc eSpecOcc = TransmParam.GetSpectrumOccup();
-	TransmParam.Unlock(); 
 	iBigBlockSize = iSymbolBlockSize * 2 /* Stereo */ * iNumBlocks;
+	rDefCarOffset = TransmParam.rCarOffset;
 
 	vecsDataOut.Init(iBigBlockSize);
-
-	if (pFileTransmitter != NULL)
-	{
-		fclose(pFileTransmitter);
-	}
 
 	if (bUseSoundcard == TRUE)
 	{
 		/* Init sound interface */
-		pSound->Init(iBigBlockSize, TRUE);
+		pSound->Init(iBigBlockSize);
 	}
 	else
 	{
-
 		/* Open file for writing data for transmitting */
-#ifdef FILE_DRM_USING_RAW_DATA
-		pFileTransmitter = fopen(strOutFileName.c_str(), "wb");
+#ifdef HAVE_LIBSNDFILE
+		SF_INFO sfinfo;
+		sfinfo.samplerate = 48000;
+		sfinfo.channels = (eOutputFormat==OF_REAL_VAL)?1:2;
+		switch(eOutFileMode)
+		{
+		case OFF_RAW:
+			sfinfo.format = SF_FORMAT_RAW | SF_FORMAT_PCM_16;
+			break;
+		case OFF_TXT:
+			sfinfo.format = SF_FORMAT_MAT4 | SF_FORMAT_PCM_16;
+			break;
+		case OFF_WAV:
+			sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
+			break;
+		}
+	    pFile = sf_open(strOutFileName.c_str(), SFM_WRITE, &sfinfo);		
 #else
-		pFileTransmitter = fopen(strOutFileName.c_str(), "w");
+		switch(eOutFileMode)
+		{
+		case OFF_RAW:
+			pFile = fopen(strFileName.c_str(), "wb");
+			/* Check for error */
+			if (pFile == NULL)
+				throw CGenErr("The file " + strFileName + " cannot be created.");
+			break;
+		case OFF_TXT:
+			pFile = fopen(strFileName.c_str(), "w");
+			/* Check for error */
+			if (pFile == NULL)
+				throw CGenErr("The file " + strFileName + " cannot be created.");
+			break;
+		case OFF_WAV:
+			WaveFile.Open(strFileName);
+		}
 #endif
-
-		/* Check for error */
-		if (pFileTransmitter == NULL)
-			throw CGenErr("The file " + strOutFileName + " cannot be created.");
 	}
 
 
 	/* Init bandpass filter object */
-	BPFilter.Init(iSymbolBlockSize, rDefCarOffset, eSpecOcc,
-					CDRMBandpassFilt::FT_TRANSMITTER);
+	BPFilter.Init(iSymbolBlockSize, rDefCarOffset,
+		TransmParam.GetSpectrumOccup(), CDRMBandpassFilt::FT_TRANSMITTER);
+
 
 	/* All robustness modes and spectrum occupancies should have the same output
-	   power. Calculate the normaization factor based on the average power of
+	   power. Calculate the normalisation factor based on the average power of
 	   symbol (the number 3000 was obtained through output tests) */
 	rNormFactor = (CReal) 3000.0 / Sqrt(TransmParam.CellMappingTable.rAvPowPerSymbol);
 
@@ -180,13 +233,33 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	iInputBlockSize = iSymbolBlockSize;
 }
 
-CTransmitData::~CTransmitData()
+void CTransmitData::Stop()
 {
-	/* Close file */
-	if (pFileTransmitter != NULL)
-		fclose(pFileTransmitter);
+	if (bUseSoundcard == TRUE)
+	{
+		/* Init sound interface */
+		pSound->Close();
+	}
+	else
+	{
+		/* Close file */
+#ifdef HAVE_LIBSNDFILE
+		if (pFile != NULL)
+			sf_close(pFile);
+#else
+		if(eOutFileMode==OFF_WAV)
+			WaveFile.Close();
+		else
+			if (pFile != NULL)
+				fclose(pFile);
+#endif
+	}
 }
 
+CTransmitData::~CTransmitData()
+{
+	Stop();
+}
 
 /******************************************************************************\
 * Receive data from the sound card                                             *

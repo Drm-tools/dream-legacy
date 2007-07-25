@@ -36,20 +36,15 @@
 #include <qsocketdevice.h>
 #include <qsocketnotifier.h>
 #include <qdatetime.h>
-#ifndef _WIN32
-# include <netinet/in.h>
-# include <arpa/inet.h>
-#endif
 
 #ifdef _WIN32
 /* Always include winsock2.h before windows.h */
 # include <winsock2.h>
 # include <ws2tcpip.h>
 # include <windows.h>
-#endif
-
-/* Some defines needed for compatibility when using Linux */
-#ifndef _WIN32
+#else
+# include <netinet/in.h>
+# include <arpa/inet.h>
 typedef int SOCKET;
 # define SOCKET_ERROR				(-1)
 # define INVALID_SOCKET				(-1)

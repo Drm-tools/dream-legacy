@@ -29,86 +29,74 @@
 #if !defined(DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
 #define DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
-#include <iostream>
-#include "util/Buffer.h"
+#include "util/Settings.h"
 #include "Parameter.h"
 #include "DataIO.h"
-#include "mlc/MLC.h"
-#include "interleaver/SymbolInterleaver.h"
-#include "ofdmcellmapping/OFDMCellMapping.h"
-#include "OFDM.h"
 #include "DRMSignalIO.h"
 #include "sourcedecoders/AudioSourceDecoder.h"
-#include "soundinterface.h"
 
 /* Classes ********************************************************************/
 class CDRMTransmitter
+#ifdef USE_QT_GUI
+	: public QThread
+#endif
 {
 public:
-	CDRMTransmitter();
-	virtual ~CDRMTransmitter() {}
+							CDRMTransmitter(CSettings& Settings);
+	virtual 				~CDRMTransmitter() {}
 
-	void Init();
-	void Start();
-	void Stop();
+#ifdef USE_QT_GUI
+	void					run() { Start(); } 
+#else
+	void					start() {}
+	int						wait(int) {return 1;}
+	bool					finished(){return true;}
+#endif
+	void					Start();
+	void					Stop();
 
-	/* Get pointer to internal modules */
-	CSoundInInterface*		GetSoundInInterface() {return pSoundInInterface;}
-	CSoundOutInterface*		GetSoundOutInterface() {return pSoundOutInterface;}
-	CAudioSourceEncoder*	GetAudSrcEnc() {return &AudioSourceEncoder;}
-	CTransmitData*			GetTransData() {return &TransmitData;}
-	CReadData*				GetReadData() {return &ReadData;}
+	void					SetEnableProcessPriority(_BOOLEAN bValue)
+								{bProcessPriorityEnabled = bValue;}
+	_BOOLEAN				GetEnableProcessPriority()
+								{return bProcessPriorityEnabled;}
 
-	CParameter*				GetParameters() {return &TransmParam;}
+	_REAL 					GetLevelMeter();
 
-	void SetCarOffset(const _REAL rNewCarOffset)
-	{
-		/* Has to be set in OFDM modulation and transmitter filter module */
-		OFDMModulation.SetCarOffset(rNewCarOffset);
-		TransmitData.SetCarOffset(rNewCarOffset);
-		rDefCarOffset = rNewCarOffset;
-	}
-	_REAL GetCarOffset() {return rDefCarOffset;}
+	/* Source Encoder Interface */
+	void					AddTextMessage(const string& strText);
+	void					ClearTextMessages();
+	void					AddPic(const string& strFileName, const string& strFormat);
+	void					ClearPics();
+	_BOOLEAN				GetTransStat(string& strCPi, _REAL& rCPe);
 
-protected:
-	void Run();
+	void					GetSoundInChoices(vector<string>&);
+	void					SetSoundInInterface(int);
+	void 					SetReadFromFile(const string& strNFN);
+
+	void					DisableCOFDM() { bCOFDMout = FALSE; }
+	void					GetSoundOutChoices(vector<string>&);
+	void					SetSoundOutInterface(int);
+	void					SetWriteToFile(const string& strNFN, const string& strType);
 
 	/* Parameters */
 	CParameter				TransmParam;
-	
-	/* Buffers */
-	CSingleBuffer<_SAMPLE>	DataBuf;
-	CSingleBuffer<_BINARY>	AudSrcBuf;
+	string					strMDIinAddr;
+	string					strMDIoutAddr;
 
-	CSingleBuffer<_COMPLEX>	MLCEncBuf;
-	CCyclicBuffer<_COMPLEX>	IntlBuf;
+protected:
 
-	CSingleBuffer<_BINARY>	GenFACDataBuf;
-	CCyclicBuffer<_COMPLEX>	FACMapBuf;
-
-	CSingleBuffer<_BINARY>	GenSDCDataBuf;
-	CCyclicBuffer<_COMPLEX>	SDCMapBuf;
-	
-	CSingleBuffer<_COMPLEX>	CarMapBuf;
-	CSingleBuffer<_COMPLEX>	OFDMModBuf;
-
-	CSoundInInterface*		pSoundInInterface;
-	CSoundOutInterface*		pSoundOutInterface;
-
-	/* Modules */
-	CReadData				ReadData;
+	_BOOLEAN				bProcessPriorityEnabled;
+	CReadData*				pReadData;
 	CAudioSourceEncoder		AudioSourceEncoder;
-	CMSCMLCEncoder			MSCMLCEncoder;
-	CSymbInterleaver		SymbInterleaver;
-	CGenerateFACData		GenerateFACData;
-	CFACMLCEncoder			FACMLCEncoder;
-	CGenerateSDCData		GenerateSDCData;
-	CSDCMLCEncoder			SDCMLCEncoder;
-	COFDMCellMapping		OFDMCellMapping;
-	COFDMModulation			OFDMModulation;
-	CTransmitData			TransmitData;
-
-	_REAL					rDefCarOffset;
+	string					strInputFileName;
+	string					strOutputFileName;
+	string					strOutputFileType;
+	vector<string>			vecstrTexts;
+	vector<string>			vecstrPics;
+	vector<string>			vecstrPicTypes;
+	int						iSoundInDev;
+	int						iSoundOutDev;
+	_BOOLEAN				bCOFDMout;
 	_BOOLEAN				bUseUEP;
 };
 

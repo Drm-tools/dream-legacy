@@ -139,7 +139,9 @@ CShortLog::writeHeader()
 	File << endl << ">>>>" << endl << "Dream" << endl
 		<< "Software Version " << dream_version << endl;
 
-	File << "Starttime (UTC)  " << strdate() << endl;
+	time_t now;
+	(void) time(&now);
+	File << "Starttime (UTC)  " << strdate(now) << " " << strtime(now) << endl;
 
 	File << "Frequency        ";
 	if (iFrequency != 0)
@@ -395,9 +397,11 @@ CLongLog::writeParameters()
 
 	try
 	{
+		time_t now;
+		(void) time(&now);
 		File << fixed << setw(5) << iFrequency
 			<< '/' << setw(1) << cRobMode << iCurMSCSc << iCurProtLevPartA << iCurProtLevPartB << iCurProtLevPartH
-			<< ",          " << strdate() << ".0"
+			<< ",          " << strdate(now) << ", " << strtime(now) << ".0"
 			<< ',' << setprecision(2) << setw(7) << rSNR
 			<< ",    " << iFrameSyncStatus << ",   " << iFACStatus << ",   " << iAudioStatus
 			<< "," << setw(6) << iNumCRCMSC << "," << setw(8) << iNumCRCOkMSC
@@ -449,18 +453,27 @@ CReceptLog::SetLogFrequency(int iNew)
 	iFrequency = iNew;
 }
 
-string CReceptLog::strdate()
+string CReceptLog::strdate(time_t t)
 {
-	time_t now;
 	struct tm * today;
-	(void) time(&now);
 	stringstream s;
 
-	today = gmtime(&now);		/* Always UTC */
+	today = gmtime(&t);		/* Always UTC */
 
-	s << setw(4) << setfill('0')
-		<< today->tm_year + 1900 << "-" << setw(2) << today->tm_mon + 1 << "-" << setw(2) << today->tm_mday
-		<< " "
-		<< setw(2) << today->tm_hour << ":" << setw(2) << today-> tm_min << ":" << setw(2) << today->tm_sec;
+	s << setfill('0')
+	  << setw(4) << today->tm_year + 1900 << "-"
+	  << setw(2) << today->tm_mon + 1 << "-" << setw(2) << today->tm_mday;
+	return s.str();
+}
+
+string CReceptLog::strtime(time_t t)
+{
+	struct tm * today;
+	stringstream s;
+
+	today = gmtime(&t);		/* Always UTC */
+
+	s << setfill('0')
+	  << setw(2) << today->tm_hour << ":" << setw(2) << today-> tm_min << ":" << setw(2) << today->tm_sec;
 	return s.str();
 }

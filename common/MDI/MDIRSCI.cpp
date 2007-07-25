@@ -383,7 +383,7 @@ void CDownstreamDI::GetNextPacket(CSingleBuffer<_BINARY>&)
 
 /* allow multiple destinations, allow destinations to send cpro instructions back */
 _BOOLEAN
-CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const char profile)
+CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const char profile, const int iSubsamplingFactor)
 {
 	// check PFT prefix on destination
     string d=dest;
@@ -404,6 +404,7 @@ CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const cha
         if(wantPft)
             subs->SetPFTFragmentSize(800);
 		subs->SetProfile(profile);
+		subs->SetSubsamplingFactor(iSubsamplingFactor);
 		subs->SetReceiver(pDrmReceiver);
 		bMDIInEnabled = TRUE;
 		bMDIOutEnabled = TRUE;
@@ -414,6 +415,17 @@ CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const cha
 		delete subs;
 	return FALSE;
 }
+
+void CDownstreamDI::DefineRSIPreset(const int iPresetNum, const int cPro, const int iFactor)
+{
+	// Pass on to each of the subscribers. Different subscribers could have different presets.
+	for(vector<CRSISubscriber*>::iterator s = RSISubscribers.begin();
+			s!=RSISubscribers.end(); s++)
+	{
+		(*s)->DefinePreset(iPresetNum, cPro, iFactor);
+	}
+}
+
 
 _BOOLEAN CDownstreamDI::SetOrigin(const string&)
 {

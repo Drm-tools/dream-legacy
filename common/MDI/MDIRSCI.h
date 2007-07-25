@@ -47,6 +47,7 @@
 #include <vector>
 
 #define MAX_NUM_RSI_SUBSCRIBERS 3
+#define MAX_NUM_RSI_PRESETS 9
 
 /* Classes ********************************************************************/
 class CUpstreamDI : public CReceiverModul<_BINARY, _BINARY> , public CPacketSink
@@ -121,7 +122,8 @@ public:
 
 	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC);
 
-	_BOOLEAN AddSubscriber(const string& dest, const string& origin, const char profile);
+	_BOOLEAN AddSubscriber(const string& dest, const string& origin, const char profile, const int iSubsamplingFactor=1);
+	void DefineRSIPreset(const int iPresetNum, const int cPro, const int iFactor);
 
 	_BOOLEAN SetOrigin(const string& strAddr);
 	void SetRSIRecording(CParameter& Parameter, _BOOLEAN bOn, char cPro, const string& type="");

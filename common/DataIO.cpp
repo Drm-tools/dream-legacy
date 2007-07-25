@@ -35,14 +35,78 @@
 * MSC data																	   *
 \******************************************************************************/
 /* Transmitter -------------------------------------------------------------- */
+void CReadData::Stop()
+{
+	if(bUseSoundcard)
+	{
+		pSound->Close();
+	}
+	else
+	{
+#ifdef HAVE_LIBSNDFILE
+		sf_close(pFile);
+#else
+		fclose(pFile);
+#endif
+	}
+}
+
 void CReadData::ProcessDataInternal(CParameter&)
 {
-	/* Get data from sound interface */
-	pSound->Read(vecsSoundBuffer);
+	if((bNewUseSoundcard==FALSE) && (bUseSoundcard==TRUE))
+	{
+		bUseSoundcard = FALSE;
+#ifdef HAVE_LIBSNDFILE
+		SF_INFO sfinfo;
+		memset(&sfinfo, 0, sizeof(SF_INFO));
+		pFile = sf_open(strInFileName.c_str(), SFM_READ, &sfinfo);
+		/* for now, we will insist on 48 kHz mono 16bit */
+		if(pFile == NULL
+		|| sfinfo.channels != 1
+		|| sfinfo.samplerate != 48000)
+		throw CGenErr(string("Sound File Open() failed for ") + strInFileName);
+#else
+		pFile = fopen(strInFileName.c_str(), "rb");
+		if(pFile == NULL)
+		throw CGenErr(string("Sound File Open() failed for ") + strInFileName);
+#endif
+	}
 
-	/* Write data to output buffer */
-	for (int i = 0; i < iOutputBlockSize; i++)
-		(*pvecOutputData)[i] = vecsSoundBuffer[i];
+	if(bUseSoundcard)
+	{
+		/* Get data from sound interface */
+		pSound->Read(vecsSoundBuffer);
+		/* Write data to output buffer */
+		for (int i = 0; i < iOutputBlockSize; i++)
+			(*pvecOutputData)[i] = vecsSoundBuffer[i];
+	}
+	else
+	{
+		/* Get data from WAV FILE */
+		_SAMPLE n;
+		for (int i = 0; i < iOutputBlockSize; i++)
+		{
+#ifdef HAVE_LIBSNDFILE
+			sf_count_t  c = sf_readf_short(pFile, &n, 1);
+			if(c==0) /* EOF - loop */
+			{
+				sf_close(pFile);
+				SF_INFO sfinfo;
+				memset(&sfinfo, 0, sizeof(SF_INFO));
+				pFile = sf_open(strInFileName.c_str(), SFM_READ, &sfinfo);
+				(void)sf_readf_short(pFile, &n, 1);
+			}
+#else
+			if(feof(pFile)) /* loop */
+			{
+			 	fclose(pFile);
+				pFile = fopen(strInFileName.c_str(), "rb");
+			}
+			fread(&n, sizeof(_SAMPLE), 1, pFile);
+#endif
+			(*pvecOutputData)[i] = n;
+		}
+	}
 
 	/* Update level meter */
 	SignalLevelMeter.Update((*pvecOutputData));
@@ -56,13 +120,12 @@ void CReadData::InitInternal(CParameter&)
 		(_REAL) 0.4 /* 400 ms */ * 2 /* stereo */);
 
 	/* Init sound interface and intermediate buffer */
-	pSound->Init(iOutputBlockSize, FALSE);
+	pSound->Init(iOutputBlockSize);
 	vecsSoundBuffer.Init(iOutputBlockSize);
 
 	/* Init level meter */
 	SignalLevelMeter.Init(0);
 }
-
 
 /* Receiver ----------------------------------------------------------------- */
 void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)

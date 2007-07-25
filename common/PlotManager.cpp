@@ -313,7 +313,7 @@ CPlotManager::GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 	}
 	else
 	{
-		pReceiver->GetReceiveData()->GetInputPSD(vecrData, vecrScale);
+		pReceiver->GetInputPSD(vecrData, vecrScale);
 	}
 }
 

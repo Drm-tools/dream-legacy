@@ -228,6 +228,10 @@ enum ERobMode {RM_ROBUSTNESS_MODE_A, RM_ROBUSTNESS_MODE_B,
 		RM_ROBUSTNESS_MODE_C, RM_ROBUSTNESS_MODE_D,
 		RM_NO_MODE_DETECTED}; /* RM: Robustness Mode */
 
+enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
+		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
+
+enum EFileOutFormat { OFF_RAW, OFF_TXT, OFF_WAV };
 
 /* Constants ---------------------------------------------------------------- */
 const _REAL crPi = ((_REAL) 3.14159265358979323846);

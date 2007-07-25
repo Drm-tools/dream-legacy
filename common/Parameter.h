@@ -1085,6 +1085,10 @@ class CParameter
 
 	CMatrix <_COMPLEX> matcReceivedPilotValues;
 
+	/* For Transmitter */
+	_REAL rCarOffset;
+	enum EOutFormat eOutputFormat;
+
 	/* Simulation ----------------------------------------------------------- */
 	CRawSimData RawSimDa;
 	ESimType eSimType;

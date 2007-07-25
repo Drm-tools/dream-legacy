@@ -307,9 +307,8 @@ void AnalogDemDlg::UpdateControls()
 		DRMReceiver.GetAMDemod()->GetFilterBW()) +	tr(" Hz"));
 
 	/* Update check boxes */
-	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
-	CheckBoxSaveAudioWave->
-		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
+	CheckBoxMuteAudio->setChecked(DRMReceiver.GetMuteAudio());
+	CheckBoxSaveAudioWave->setChecked(DRMReceiver.GetIsWriteWaveFile());
 
 	CheckBoxAutoFreqAcq->
 		setChecked(DRMReceiver.GetAMDemod()->AutoFreqAcqEnabled());
@@ -470,7 +469,7 @@ void AnalogDemDlg::OnCheckPLL()
 void AnalogDemDlg::OnCheckBoxMuteAudio()
 {
 	/* Set parameter in working thread module */
-	DRMReceiver.GetWriteData()->MuteAudio(CheckBoxMuteAudio->isChecked());
+	DRMReceiver.MuteAudio(CheckBoxMuteAudio->isChecked());
 }
 
 void AnalogDemDlg::OnCheckSaveAudioWAV()
@@ -488,8 +487,7 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
 		/* Check if user not hit the cancel button */
 		if (!strFileName.isNull())
 		{
-			DRMReceiver.GetWriteData()->
-				StartWriteWaveFile(strFileName.latin1());
+			DRMReceiver.StartWriteWaveFile(strFileName.latin1());
 		}
 		else
 		{
@@ -498,7 +496,7 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
 		}
 	}
 	else
-		DRMReceiver.GetWriteData()->StopWriteWaveFile();
+		DRMReceiver.StopWriteWaveFile();
 }
 
 void AnalogDemDlg::OnChartxAxisValSet(double dVal)

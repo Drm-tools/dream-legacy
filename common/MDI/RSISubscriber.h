@@ -40,6 +40,14 @@ class CPacketSink;
 class CDRMReceiver;
 class CTagPacketGenerator;
 
+class CRSIPreset
+{
+public:
+	CRSIPreset (const char c = '0', const int i = 1) {cProfile = c; iSubsamplingFactor = i;}
+	char	cProfile;
+	char	iSubsamplingFactor;
+};
+
 class CRSISubscriber : public CPacketSink
 {
 public:
@@ -52,6 +60,12 @@ public:
 	/* Set the profile for this subscriber - could be different for different subscribers */
 	void SetProfile(const char c);
 	char GetProfile(void) const {return cProfile;}
+
+	/* Each subscriber can also do subsampling, i.e. only transmit one in N frames. This sets the ratio */
+	void SetSubsamplingFactor(const int i);
+
+	/* Store a profile and subsampling factor in a preset 1-9 */
+	void DefinePreset(const int iPresetNum, const int cPro, const int iFactor);
 
 	void SetPFTFragmentSize(const int iFrag=-1);
 
@@ -67,15 +81,21 @@ public:
 protected:
 	CPacketSink *pPacketSink;
 	char cProfile;
+	int iSubsamplingFactor;
 	_BOOLEAN bNeedPft;
     size_t fragment_size;
+
 	CTagPacketDecoderRSCIControl TagPacketDecoderRSCIControl;
+
+	map<int, CRSIPreset> mapPresets;
+
 private:
 	CDRMReceiver *pDRMReceiver;
 	CAFPacketGenerator AFPacketGenerator;
 
 	_BOOLEAN bUseAFCRC;
 	uint16_t sequence_counter;
+	int iSubsamplingCounter;
 };
 
 

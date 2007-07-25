@@ -60,14 +60,15 @@ class CReceptLog
 
 	void SetLogFrequency(int iNew);
 
-	static string strdate();
-
   protected:
 	virtual void init() = 0;
 	virtual void writeParameters() = 0;
 	virtual void writeHeader() = 0;
 	virtual void writeTrailer() = 0;
 	char GetRobModeStr();
+
+	string strdate(time_t);
+	string strtime(time_t);
 
 	CParameter & Parameters;
 	ofstream File;

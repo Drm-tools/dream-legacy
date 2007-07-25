@@ -80,7 +80,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 				vecrFFTInput[i] = vecrFFTHistory[i + iStartIdx];
 
 			static CMatlibVector<CReal> vecRet;
-			vecRet.Init(vecrFFTInput.GetSize(), VTY_TEMP);
+			vecRet.Init(vecrFFTInput.GetSize());
 
 			for (int k = 0; k < vecrFFTInput.GetSize(); k++)
 				vecRet[k] = vecrFFTInput[k] * vecrHammingWin[k];
@@ -101,7 +101,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 			else
 			{
 				/* Get PSD estimate */
-				const CRealVector vecrPSD(vvrPSDMovAv.GetAverage());
+				CRealVector vecrPSD(vvrPSDMovAv.GetAverage());
 
 
 				/* -------------------------------------------------------------
@@ -136,7 +136,7 @@ const int iStartFilt = 0; // <- no offset right now
 				}
 
 				/* Average RL and LR filter outputs */
-				vecrFiltRes = (vecrFiltResLR + vecrFiltResRL) / 2;
+				vecrFiltRes = (vecrFiltResLR + vecrFiltResRL) / 2.0;
 
 #ifdef _DEBUG_
 #if 0

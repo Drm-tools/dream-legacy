@@ -184,19 +184,49 @@ public:
 	CTimeSyncTrack::ETypeTiSyncTrac GetTiSyncTracType()
 		{return ChannelEstimation.GetTimeSyncTrack()->GetTiSyncTracType();}
 
+	int GetInitNumIterations()
+		{ return MSCMLCDecoder.GetInitNumIterations(); }
+	void SetNumIterations(int value)
+		{ MSCMLCDecoder.SetNumIterations(value); }
+	
+	void SetRecFilter(_BOOLEAN bVal) { FreqSyncAcq.SetRecFilter(bVal); }
+
+	void SetFlippedSpectrum(_BOOLEAN bVal)
+		{ ReceiveData.SetFlippedSpectrum(bVal); }
+	void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+		{ ReceiveData.GetInputPSD(vecrData, vecrScale); }
+	void GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+		{ ReceiveData.GetInputSpec(vecrData, vecrScale); }
+	void GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+		{ WriteData.GetAudioSpec(vecrData, vecrScale); }
+
+	void GetFACVectorSpace(CVector<_COMPLEX>& vec)
+		{ FACMLCDecoder.GetVectorSpace(vec); }
+
+	void GetSDCVectorSpace(CVector<_COMPLEX>& vec)
+		{ SDCMLCDecoder.GetVectorSpace(vec); }
+
+	void GetMSCVectorSpace(CVector<_COMPLEX>& vec)
+		{ MSCMLCDecoder.GetVectorSpace(vec); }
+
+	void SetReverbEffect(_BOOLEAN bVal)
+		{ AudioSourceDecoder.SetReverbEffect(bVal); }
+
+	void MuteAudio(_BOOLEAN bVal) { WriteData.MuteAudio(bVal); }
+	_BOOLEAN GetMuteAudio() { return WriteData.GetMuteAudio(); }
+	void StartWriteWaveFile(const string& strFile)
+		{ WriteData.StartWriteWaveFile(strFile); }
+	void StopWriteWaveFile() { WriteData.StopWriteWaveFile(); }
+	_BOOLEAN GetIsWriteWaveFile() { return WriteData.GetIsWriteWaveFile(); }
+
 	/* Get pointer to internal modules */
 	CSelectionInterface*	GetSoundInInterface() {return pSoundInInterface;}
 	CSelectionInterface*	GetSoundOutInterface() {return pSoundOutInterface;}
 	CUtilizeFACData*		GetFAC() {return &UtilizeFACData;}
 	CUtilizeSDCData*		GetSDC() {return &UtilizeSDCData;}
 	CTimeSync*				GetTimeSync() {return &TimeSync;}
-	CFACMLCDecoder*			GetFACMLC() {return &FACMLCDecoder;}
-	CSDCMLCDecoder*			GetSDCMLC() {return &SDCMLCDecoder;}
-	CMSCMLCDecoder*			GetMSCMLC() {return &MSCMLCDecoder;}
-	CReceiveData*			GetReceiveData() {return &ReceiveData;}
 	COFDMDemodulation*		GetOFDMDemod() {return &OFDMDemodulation;}
 	CSyncUsingPil*			GetSyncUsPil() {return &SyncUsingPil;}
-	CWriteData*				GetWriteData() {return &WriteData;}
 	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
 	CAMDemodulation*		GetAMDemod() {return &AMDemodulation;}
 	CAMSSPhaseDemod*		GetAMSSPhaseDemod() {return &AMSSPhaseDemod;}

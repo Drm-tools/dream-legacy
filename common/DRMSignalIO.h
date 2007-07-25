@@ -36,6 +36,11 @@
 #include "IQInputFilter.h"
 #include "util/Modul.h"
 #include "util/Utilities.h"
+#ifdef HAVE_LIBSNDFILE
+# include <sndfile.h>
+#else
+# include "util/AudioFile.h"
+#endif
 
 /* Definitions ****************************************************************/
 /* Number of FFT blocks used for averaging. See next definition
@@ -78,7 +83,7 @@ public:
 	enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
 
-	CTransmitData(CSoundOutInterface* pNS) : pFileTransmitter(NULL), pSound(pNS), 
+	CTransmitData(CSoundOutInterface* pNS) : pSound(pNS), 
 		eOutputFormat(OF_REAL_VAL), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
 		strOutFileName("test/TransmittedData.txt"), bUseSoundcard(TRUE) {}
 	virtual ~CTransmitData();
@@ -89,14 +94,27 @@ public:
 	void SetCarOffset(const CReal rNewCarOffset)
 		{rDefCarOffset = rNewCarOffset;}
 
-	void SetWriteToFile(const string strNFN)
+	void SetWriteToFile(const string& strNFN, const string& strMode)
 	{
 		strOutFileName = strNFN;
 		bUseSoundcard = FALSE;
+		if(strMode=="txt")
+			eOutFileMode = OFF_TXT;
+		if(strMode=="raw")
+			eOutFileMode = OFF_RAW;
+		if(strMode=="wav")
+			eOutFileMode = OFF_WAV;
 	}
 
+	void Stop();
+
 protected:
-	FILE*				pFileTransmitter;
+#ifdef HAVE_LIBSNDFILE
+	SNDFILE*			pFile;
+#else
+	FILE*				pFile;
+	CWaveFile			WaveFile;
+#endif
 	CSoundOutInterface*	pSound;
 	CVector<short>		vecsDataOut;
 	int					iBlockCnt;
@@ -106,6 +124,7 @@ protected:
 	CDRMBandpassFilt	BPFilter;
 	CReal				rDefCarOffset;
 
+	EFileOutFormat 		eOutFileMode;
 	CReal				rNormFactor;
 
 	int					iBigBlockSize;

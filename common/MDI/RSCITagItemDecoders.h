@@ -172,7 +172,7 @@ public:
 class CTagItemDecoderCpro : public CTagItemDecoderRCI
 {
 public:
-	CTagItemDecoderCpro() : CTagItemDecoderRCI("crec"), pRSISubscriber(NULL) {}
+	CTagItemDecoderCpro() : CTagItemDecoderRCI("cpro"), pRSISubscriber(NULL) {}
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 	void SetSubscriber(CRSISubscriber *pSubscriber) {pRSISubscriber = pSubscriber;}
 private:

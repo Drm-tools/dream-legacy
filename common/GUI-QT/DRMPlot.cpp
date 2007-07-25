@@ -142,7 +142,7 @@ void CDRMPlot::OnTimerChart()
 
 	case INPUTSPECTRUM_NO_AV:
 		/* Get data from module */
-		pDRMRec->GetReceiveData()->GetInputSpec(vecrData, vecrScale);
+		pDRMRec->GetInputSpec(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
 		SetInpSpec(vecrData, vecrScale, rDCFrequency);
@@ -150,7 +150,7 @@ void CDRMPlot::OnTimerChart()
 
 	case INP_SPEC_WATERF:
 		/* Get data from module */
-		pDRMRec->GetReceiveData()->GetInputSpec(vecrData, vecrScale);
+		pDRMRec->GetInputSpec(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
 		SetInpSpecWaterf(vecrData, vecrScale);
@@ -166,7 +166,7 @@ void CDRMPlot::OnTimerChart()
 
 	case INPUT_SIG_PSD_ANALOG:
 		/* Get data and parameters from modules */
-		pDRMRec->GetReceiveData()->GetInputPSD(vecrData, vecrScale);
+		pDRMRec->GetInputPSD(vecrData, vecrScale);
 		pDRMRec->GetAMDemod()->GetBWParameters(rCenterFreq, rBandwidth);
 
 		/* Prepare graph and set data */
@@ -177,7 +177,7 @@ void CDRMPlot::OnTimerChart()
 
 	case AUDIO_SPECTRUM:
 		/* Get data from module */
-		pDRMRec->GetWriteData()->GetAudioSpec(vecrData, vecrScale);
+		pDRMRec->GetAudioSpec(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
 		SetAudioSpec(vecrData, vecrScale);
@@ -209,7 +209,7 @@ void CDRMPlot::OnTimerChart()
 
 	case FAC_CONSTELLATION:
 		/* Get data vector */
-		pDRMRec->GetFACMLC()->GetVectorSpace(veccData1);
+		pDRMRec->GetFACVectorSpace(veccData1);
 
 		/* Prepare graph and set data */
 		SetFACConst(veccData1);
@@ -217,7 +217,7 @@ void CDRMPlot::OnTimerChart()
 
 	case SDC_CONSTELLATION:
 		/* Get data vector */
-		pDRMRec->GetSDCMLC()->GetVectorSpace(veccData1);
+		pDRMRec->GetSDCVectorSpace(veccData1);
 
 		/* Prepare graph and set data */
 		SetSDCConst(veccData1, eSDCCodingScheme);
@@ -225,7 +225,7 @@ void CDRMPlot::OnTimerChart()
 
 	case MSC_CONSTELLATION:
 		/* Get data vector */
-		pDRMRec->GetMSCMLC()->GetVectorSpace(veccData1);
+		pDRMRec->GetMSCVectorSpace(veccData1);
 
 		/* Prepare graph and set data */
 		SetMSCConst(veccData1, eMSCCodingScheme);
@@ -233,9 +233,9 @@ void CDRMPlot::OnTimerChart()
 
 	case ALL_CONSTELLATION:
 		/* Get data vectors */
-		pDRMRec->GetMSCMLC()->GetVectorSpace(veccData1);
-		pDRMRec->GetSDCMLC()->GetVectorSpace(veccData2);
-		pDRMRec->GetFACMLC()->GetVectorSpace(veccData3);
+		pDRMRec->GetMSCVectorSpace(veccData1);
+		pDRMRec->GetSDCVectorSpace(veccData2);
+		pDRMRec->GetFACVectorSpace(veccData3);
 
 		/* Prepare graph and set data */
 		SetAllConst(veccData1, veccData2, veccData3);

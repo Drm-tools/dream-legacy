@@ -29,6 +29,7 @@
 #include "systemevalDlg.h"
 #include "../GPSReceiver.h"
 #include <qmessagebox.h>
+#include <qgroupbox.h>
 
 /* Implementation *************************************************************/
 systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
@@ -59,13 +60,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	MainPlot->SetRecObj(&DRMReceiver);
 	MainPlot->SetPlotStyle(iScheme);
 	MainPlot->setMargin(1);
-
-	/* Init slider control */
-	SliderNoOfIterations->setRange(0, 4);
-	SliderNoOfIterations->
-		setValue(DRMReceiver.GetMSCMLC()->GetInitNumIterations());
-	TextNumOfIterations->setText(tr("MLC: Number of Iterations: ") +
-		QString().setNum(DRMReceiver.GetMSCMLC()->GetInitNumIterations()));
 
 	/* Update times for color LEDs */
 	LEDFAC->SetUpdateTime(1500);
@@ -214,20 +208,14 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	ListViewCharSel->setColumnWidthMode(0, QListView::Maximum);
 
 
-	/* If MDI in is enabled, disable some of the controls and use different
+	/* If RSCI in is enabled, disable some of the controls and use different
 	   initialization for the chart and chart selector */
 	if (DRMReceiver.GetRSIIn()->GetInEnabled() == TRUE)
 	{
 		//ListViewCharSel->setEnabled(FALSE);
-		SliderNoOfIterations->setEnabled(FALSE);
 
-		ButtonGroupChanEstFreqInt->setEnabled(FALSE);
-		ButtonGroupChanEstTimeInt->setEnabled(FALSE);
-		ButtonGroupTimeSyncTrack->setEnabled(FALSE);
-		CheckBoxFlipSpec->setEnabled(FALSE);
 		EdtFrequency->setText("0");
 		EdtFrequency->setEnabled(FALSE);
-		GroupBoxInterfRej->setEnabled(FALSE);
 
 		/* Only audio spectrum makes sence for MDI in */
 		ListViewCharSel->setSelected(pListItAudSpec, TRUE);
@@ -339,26 +327,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 
 	/* Connect controls ----------------------------------------------------- */
-	connect(SliderNoOfIterations, SIGNAL(valueChanged(int)),
-		this, SLOT(OnSliderIterChange(int)));
 
-	/* Radio buttons */
-	connect(RadioButtonTiLinear, SIGNAL(clicked()),
-		this, SLOT(OnRadioTimeLinear()));
-	connect(RadioButtonTiWiener, SIGNAL(clicked()),
-		this, SLOT(OnRadioTimeWiener()));
-	connect(RadioButtonFreqLinear, SIGNAL(clicked()),
-		this, SLOT(OnRadioFrequencyLinear()));
-	connect(RadioButtonFreqDFT, SIGNAL(clicked()),
-		this, SLOT(OnRadioFrequencyDft()));
-	connect(RadioButtonFreqWiener, SIGNAL(clicked()),
-		this, SLOT(OnRadioFrequencyWiener()));
-	connect(RadioButtonTiSyncEnergy, SIGNAL(clicked()),
-		this, SLOT(OnRadioTiSyncEnergy()));
-	connect(RadioButtonTiSyncFirstPeak, SIGNAL(clicked()),
-		this, SLOT(OnRadioTiSyncFirstPeak()));
-
-	/* Char selector list view */
+	/* Chart selector list view */
 	connect(ListViewCharSel, SIGNAL(selectionChanged(QListViewItem*)),
 		this, SLOT(OnListSelChanged(QListViewItem*)));
 	connect(ListViewCharSel,
@@ -368,22 +338,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Buttons */
 	connect(buttonOk, SIGNAL(clicked()),
 		this, SLOT(accept()));
-
-	/* Check boxes */
-	connect(CheckBoxFlipSpec, SIGNAL(clicked()),
-		this, SLOT(OnCheckFlipSpectrum()));
-	connect(CheckBoxMuteAudio, SIGNAL(clicked()),
-		this, SLOT(OnCheckBoxMuteAudio()));
-	connect(CheckBoxWriteLog, SIGNAL(clicked()),
-		this, SLOT(OnCheckWriteLog()));
-	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()),
-		this, SLOT(OnCheckSaveAudioWAV()));
-	connect(CheckBoxRecFilter, SIGNAL(clicked()),
-		this, SLOT(OnCheckRecFilter()));
-	connect(CheckBoxModiMetric, SIGNAL(clicked()),
-		this, SLOT(OnCheckModiMetric()));
-	connect(CheckBoxReverb, SIGNAL(clicked()),
-		this, SLOT(OnCheckBoxReverb()));
 
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
@@ -397,28 +351,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	StopLogTimers();
 
-	/* Logfile -------------------------------------------------------------- */
-
-	/* Start log file flag */
-	bEnableLongLog = bEnableShortLog = Settings.Get("Logfile", "enablelog", FALSE);
-
-    /* log file flag for storing signal strength in long log */
-	shortLog.SetRxlEnabled(Settings.Get("Logfile", "enablerxl", FALSE));
-	longLog.SetRxlEnabled(Settings.Get("Logfile", "enablerxl", FALSE));
-
-	/* log file flag for storing lat/long in long log */
-	shortLog.SetPositionEnabled(Settings.Get("Logfile", "enablepositiondata", FALSE));
-	longLog.SetPositionEnabled(Settings.Get("Logfile", "enablepositiondata", FALSE));
-
-	/* logging delay value */
-	iLogDelay = Settings.Get("Logfile", "delay", 0);
-
-	/* Activate log file start if necessary. */
-	if (bEnableLongLog == TRUE)
-	{
-		/* One shot timer */
-		TimerLogFileStart.start(iLogDelay * 1000 /* ms */, TRUE);
-	}	
 
 	/* GPS */
 	_REAL latitude, longitude;
@@ -426,6 +358,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	latitude = Settings.Get("Logfile", "latitude", 1000.0);
 	/* Longitude string for log file */
 	longitude = Settings.Get("Logfile", "longitude", 1000.0);
+	FrameGPS->hide();
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 	Parameters.Lock(); 
@@ -439,28 +372,17 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		Parameters.GPSData.SetPositionAvailable(FALSE);
 	Parameters.Unlock(); 
 
-	if (Settings.Get("GPS", "usegpsd", FALSE) == TRUE)
-		EnableGPS();
-	else
-		DisableGPS();
-
 }
 
 systemevalDlg::~systemevalDlg()
 {
-	if(DRMReceiver.GetWriteData()->GetIsWriteWaveFile())
-		DRMReceiver.GetWriteData()->StopWriteWaveFile();
 	if(longLog.GetLoggingActivated())
 		shortLog.Stop();
 	if(longLog.GetLoggingActivated())
 		longLog.Stop();
-	
+
 	double latitude, longitude;
 	DRMReceiver.GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
-	Settings.Put("Logfile", "delay", iLogDelay);
-	Settings.Put("Logfile", "enablerxl", shortLog.GetRxlEnabled());
-	Settings.Put("Logfile", "enablepositiondata", shortLog.GetPositionEnabled());
-	Settings.Put("Logfile", "enablelog", bEnableLongLog);
 	Settings.Put("Logfile", "latitude", latitude);
 	Settings.Put("Logfile", "longitude", longitude);
 
@@ -470,73 +392,6 @@ systemevalDlg::~systemevalDlg()
 
 void systemevalDlg::UpdateControls()
 {
-	/* Slider for MLC number of iterations */
-	const int iNumIt = DRMReceiver.GetMSCMLC()->GetInitNumIterations();
-	if (SliderNoOfIterations->value() != iNumIt)
-	{
-		/* Update slider and label */
-		SliderNoOfIterations->setValue(iNumIt);
-		TextNumOfIterations->setText(tr("MLC: Number of Iterations: ") +
-			QString().setNum(iNumIt));
-	}
-
-	/* Update for channel estimation and time sync switches */
-	switch (DRMReceiver.GetTimeInt())
-	{
-	case CChannelEstimation::TLINEAR:
-		if (!RadioButtonTiLinear->isChecked())
-			RadioButtonTiLinear->setChecked(TRUE);
-		break;
-
-	case CChannelEstimation::TWIENER:
-		if (!RadioButtonTiWiener->isChecked())
-			RadioButtonTiWiener->setChecked(TRUE);
-		break;
-	}
-
-	switch (DRMReceiver.GetFreqInt())
-	{
-	case CChannelEstimation::FLINEAR:
-		if (!RadioButtonFreqLinear->isChecked())
-			RadioButtonFreqLinear->setChecked(TRUE);
-		break;
-
-	case CChannelEstimation::FDFTFILTER:
-		if (!RadioButtonFreqDFT->isChecked())
-			RadioButtonFreqDFT->setChecked(TRUE);
-		break;
-
-	case CChannelEstimation::FWIENER:
-		if (!RadioButtonFreqWiener->isChecked())
-			RadioButtonFreqWiener->setChecked(TRUE);
-		break;
-	}
-
-	switch (DRMReceiver.GetTiSyncTracType())
-	{
-	case CTimeSyncTrack::TSFIRSTPEAK:
-		if (!RadioButtonTiSyncFirstPeak->isChecked())
-			RadioButtonTiSyncFirstPeak->setChecked(TRUE);
-		break;
-
-	case CTimeSyncTrack::TSENERGY:
-		if (!RadioButtonTiSyncEnergy->isChecked())
-			RadioButtonTiSyncEnergy->setChecked(TRUE);
-		break;
-	}
-
-	/* Update settings checkbuttons */
-	CheckBoxReverb->setChecked(DRMReceiver.GetAudSorceDec()->GetReverbEffect());
-	CheckBoxRecFilter->setChecked(DRMReceiver.GetFreqSyncAcq()->GetRecFilter());
-	CheckBoxModiMetric->setChecked(DRMReceiver.GetIntCons());
-	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
-	CheckBoxFlipSpec->
-		setChecked(DRMReceiver.GetReceiveData()->GetFlippedSpectrum());
-
-	CheckBoxSaveAudioWave->
-		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
-
-
 	/* Update frequency edit control (frequency could be changed by
 	   schedule dialog */
 	QString strFreq = EdtFrequency->text();
@@ -1015,117 +870,50 @@ void systemevalDlg::OnTimer()
 			break;
 	}
 
-	QString qStrPosition;
 	if (ReceiverParam.GPSData.GetPositionAvailable())
 	{
 		double latitude, longitude;
 		ReceiverParam.GPSData.GetLatLongDegrees(latitude, longitude);
-		qStrPosition = QString("Lat: %1\260  Long: %2\260").arg(latitude, 0, 'f', 6).arg(longitude,0, 'f',6);
+		GPSLatV->setText(QString("%1\260").arg(latitude, 0, 'f', 6));
+		GPSLngV->setText(QString("%1\260").arg(longitude, 0, 'f', 6));
 	}
 	else
-		qStrPosition = "Lat: ?  Long: ?";
+	{
+		GPSLatV->setText("?");
+		GPSLngV->setText("?");
+	}
 
-	if (ReceiverParam.GPSData.GetAltitudeAvailable())
-		qStrPosition += QString("  Alt: %1 m").arg(ReceiverParam.GPSData.GetAltitudeMetres(), 0, 'f', 0);
-	else
-		qStrPosition += "  Alt: ?";
-
-	TextLabelGPSPosition->setText(qStrPosition);
-
-	QString qStrSpeedHeading;
-	qStrSpeedHeading = "Speed: ";
+	//if (ReceiverParam.GPSData.GetAltitudeAvailable())
+		//qStrPosition += QString("  Alt: %1 m").arg(ReceiverParam.GPSData.GetAltitudeMetres(), 0, 'f', 0);
 
 	if (ReceiverParam.GPSData.GetSpeedAvailable())
-		qStrSpeedHeading += QString("%1 m/s").arg(ReceiverParam.GPSData.GetSpeedMetresPerSecond(), 0, 'f', 1);
+		GPSSpeedV->setText(QString("%1 m/s").arg(ReceiverParam.GPSData.GetSpeedMetresPerSecond(), 0, 'f', 1));
 	else
-		qStrSpeedHeading += "?";
+		GPSSpeedV->setText("?");
 
-	qStrSpeedHeading += "  Heading: ";
 	if (ReceiverParam.GPSData.GetHeadingAvailable())
-		qStrSpeedHeading += QString("%1\260").arg(ReceiverParam.GPSData.GetHeadingDegrees());
+		GPSHeadingV->setText(QString("%1\260").arg(ReceiverParam.GPSData.GetHeadingDegrees()));
 	else
-		qStrSpeedHeading += "?";
-
-	TextLabelGPSSpeedHeading->setText(qStrSpeedHeading);
-
-	QString qStrTime;
+		GPSHeadingV->setText("?");
 
 	if (ReceiverParam.GPSData.GetTimeAndDateAvailable())
-	{
-		qStrTime = QString("UTC: ") + ReceiverParam.GPSData.GetTimeDate().c_str() + "  ";
-	}
+		GPSTimeDateV->setText(ReceiverParam.GPSData.GetTimeDate().c_str());
 	else
-		qStrTime = "UTC: ?  ";
+		GPSTimeDateV->setText("?");
 
+/*
 	if (ReceiverParam.GPSData.GetSatellitesVisibleAvailable())
 		qStrTime += "Satellites: " + QString().setNum(ReceiverParam.GPSData.GetSatellitesVisible());
 	else
 		qStrTime += "Satellites: ?";
 
 	TextLabelGPSTime->setText(qStrTime);
+*/
 
 	/* Update controls */
 	UpdateControls();
 	}
 	ReceiverParam.Unlock(); 
-}
-
-void systemevalDlg::OnRadioTimeLinear() 
-{
-	if (DRMReceiver.GetTimeInt() != CChannelEstimation::TLINEAR)
-		DRMReceiver.SetTimeInt(CChannelEstimation::TLINEAR);
-}
-
-void systemevalDlg::OnRadioTimeWiener() 
-{
-	if (DRMReceiver.GetTimeInt() != CChannelEstimation::TWIENER)
-		DRMReceiver.SetTimeInt(CChannelEstimation::TWIENER);
-}
-
-void systemevalDlg::OnRadioFrequencyLinear() 
-{
-	if (DRMReceiver.GetFreqInt() != CChannelEstimation::FLINEAR)
-		DRMReceiver.SetFreqInt(CChannelEstimation::FLINEAR);
-}
-
-void systemevalDlg::OnRadioFrequencyDft() 
-{
-	if (DRMReceiver.GetFreqInt() != CChannelEstimation::FDFTFILTER)
-		DRMReceiver.SetFreqInt(CChannelEstimation::FDFTFILTER);
-}
-
-void systemevalDlg::OnRadioFrequencyWiener() 
-{
-	if (DRMReceiver.GetFreqInt() != CChannelEstimation::FWIENER)
-		DRMReceiver.SetFreqInt(CChannelEstimation::FWIENER);
-}
-
-void systemevalDlg::OnRadioTiSyncFirstPeak() 
-{
-	if (DRMReceiver.GetTiSyncTracType() != 
-		CTimeSyncTrack::TSFIRSTPEAK)
-	{
-		DRMReceiver.SetTiSyncTracType(CTimeSyncTrack::TSFIRSTPEAK);
-	}
-}
-
-void systemevalDlg::OnRadioTiSyncEnergy() 
-{
-	if (DRMReceiver.GetTiSyncTracType() != 
-		CTimeSyncTrack::TSENERGY)
-	{
-		DRMReceiver.SetTiSyncTracType(CTimeSyncTrack::TSENERGY);
-	}
-}
-
-void systemevalDlg::OnSliderIterChange(int value)
-{
-	/* Set new value in working thread module */
-	DRMReceiver.GetMSCMLC()->SetNumIterations(value);
-
-	/* Show the new value in the label control */
-	TextNumOfIterations->setText(tr("MLC: Number of Iterations: ") +
-		QString().setNum(value));
 }
 
 void systemevalDlg::OnListSelChanged(QListViewItem* NewSelIt)
@@ -1158,69 +946,6 @@ void systemevalDlg::OnListViContMenu()
 	}
 }
 
-void systemevalDlg::OnCheckFlipSpectrum()
-{
-	/* Set parameter in working thread module */
-	DRMReceiver.GetReceiveData()->
-		SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
-}
-
-void systemevalDlg::OnCheckRecFilter()
-{
-	/* Set parameter in working thread module */
-	DRMReceiver.GetFreqSyncAcq()->
-		SetRecFilter(CheckBoxRecFilter->isChecked());
-
-	/* If filter status is changed, a new aquisition is necessary */
-	DRMReceiver.RequestNewAcquisition();
-}
-
-void systemevalDlg::OnCheckModiMetric()
-{
-	/* Set parameter in working thread module */
-	DRMReceiver.SetIntCons(CheckBoxModiMetric->isChecked());
-}
-
-void systemevalDlg::OnCheckBoxMuteAudio()
-{
-	/* Set parameter in working thread module */
-	DRMReceiver.GetWriteData()->MuteAudio(CheckBoxMuteAudio->isChecked());
-}
-
-void systemevalDlg::OnCheckBoxReverb()
-{
-	/* Set parameter in working thread module */
-	DRMReceiver.GetAudSorceDec()->SetReverbEffect(CheckBoxReverb->isChecked());
-}
-
-void systemevalDlg::OnCheckSaveAudioWAV()
-{
-/*
-	This code is copied in AnalogDemDlg.cpp. If you do changes here, you should
-	apply the changes in the other file, too
-*/
-	if (CheckBoxSaveAudioWave->isChecked() == TRUE)
-	{
-		/* Show "save file" dialog */
-		QString strFileName =
-			QFileDialog::getSaveFileName(tr("DreamOut.wav"), "*.wav", this);
-
-		/* Check if user not hit the cancel button */
-		if (!strFileName.isNull())
-		{
-			DRMReceiver.GetWriteData()->
-				StartWriteWaveFile(strFileName.latin1());
-		}
-		else
-		{
-			/* User hit the cancel button, uncheck the button */
-			CheckBoxSaveAudioWave->setChecked(FALSE);
-		}
-	}
-	else
-		DRMReceiver.GetWriteData()->StopWriteWaveFile();
-}
-
 void systemevalDlg::StopLogTimers()
 {
 	TimerLogFileStart.stop();
@@ -1233,8 +958,6 @@ void systemevalDlg::OnTimerLogFileStart()
 	/* Start logging (if not already done) */
 	if(!longLog.GetLoggingActivated() || !longLog.GetLoggingActivated())
 	{
-		CheckBoxWriteLog->setChecked(TRUE);
-
 		/* Activate log file timer for long and short log file */
 		TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
 		TimerLogFileLong.start(1000); /* Every second */
@@ -1262,25 +985,6 @@ void systemevalDlg::OnTimerLogFileLong()
 {
 	/* Write new parameters in log file (long version) */
 	longLog.Update();
-}
-
-void systemevalDlg::OnCheckWriteLog()
-{
-	if (CheckBoxWriteLog->isChecked())
-	{
-		TimerLogFileStart.start(1, TRUE);
-	}
-	else
-	{
-		/* Deactivate log file timer */
-		StopLogTimers();
-		shortLog.Stop();
-		longLog.Stop();
-	}
-
-	/* set the focus */
-	if (CheckBoxWriteLog->isEnabled() && !CheckBoxWriteLog->hasFocus())
-		CheckBoxWriteLog->setFocus();
 }
 
 QString	systemevalDlg::GetRobModeStr()
@@ -1472,122 +1176,11 @@ void systemevalDlg::AddWhatsThisHelp()
 	QWhatsThis::add(TextLabelLEDMSCCRC, strLEDMSCCRC);
 	QWhatsThis::add(LEDMSC, strLEDMSCCRC);
 
-	/* MLC, Number of Iterations */
-	const QString strNumOfIterations =
-		tr("<b>MLC, Number of Iterations:</b> In DRM, a "
-		"multilevel channel coder is used. With this code it is possible to "
-		"iterate the decoding process in the decoder to improve the decoding "
-		"result. The more iterations are used the better the result will be. "
-		"But switching to more iterations will increase the CPU load. "
-		"Simulations showed that the first iteration (number of "
-		"iterations = 1) gives the most improvement (approx. 1.5 dB at a "
-		"BER of 10-4 on a Gaussian channel, Mode A, 10 kHz bandwidth). The "
-		"improvement of the second iteration will be as small as 0.3 dB."
-		"<br>The recommended number of iterations given in the DRM "
-		"standard is one iteration (number of iterations = 1).");
-
-	QWhatsThis::add(TextNumOfIterations, strNumOfIterations);
-	QWhatsThis::add(SliderNoOfIterations, strNumOfIterations);
-
-	/* Flip Input Spectrum */
-	QWhatsThis::add(CheckBoxFlipSpec,
-		tr("<b>Flip Input Spectrum:</b> Checking this box "
-		"will flip or invert the input spectrum. This is necessary if the "
-		"mixer in the front-end uses the lower side band."));
-
-	/* Mute Audio */
-	QWhatsThis::add(CheckBoxMuteAudio,
-		tr("<b>Mute Audio:</b> The audio can be muted by "
-		"checking this box. The reaction of checking or unchecking this box "
-		"is delayed by approx. 1 second due to the audio buffers."));
-
-	/* Reverberation Effect */
-	QWhatsThis::add(CheckBoxReverb,
-		tr("<b>Reverberation Effect:</b> If this check box is checked, a "
-		"reverberation effect is applied each time an audio drop-out occurs. "
-		"With this effect it is possible to mask short drop-outs."));
-
-	/* Log File */
-	QWhatsThis::add(CheckBoxWriteLog,
-		tr("<b>Log File:</b> Checking this box brings the "
-		"Dream software to write a log file about the current reception. "
-		"Every minute the average SNR, number of correct decoded FAC and "
-		"number of correct decoded MSC blocks are logged including some "
-		"additional information, e.g. the station label and bit-rate. The "
-		"log mechanism works only for audio services using AAC source coding. "
-#ifdef _WIN32
-		"During the logging no Dream windows "
-		"should be moved or re-sized. This can lead to incorrect log files "
-		"(problem with QT timer implementation under Windows). This problem "
-		"does not exist in the Linux version of Dream."
-#endif
-		"<br>The log file will be "
-		"written in the directory were the Dream application was started and "
-		"the name of this file is always DreamLog.txt"));
-
 	/* Freq */
 	QWhatsThis::add(EdtFrequency,
 		tr("<b>Freq:</b> In this edit control, the current "
 		"selected frequency on the front-end can be specified. This frequency "
 		"will be written into the log file."));
-
-	/* Wiener */
-	const QString strWienerChanEst =
-		tr("<b>Channel Estimation Settings:</b> With these "
-		"settings, the channel estimation method in time and frequency "
-		"direction can be selected. The default values use the most powerful "
-		"algorithms. For more detailed information about the estimation "
-		"algorithms there are a lot of papers and books available.<br>"
-		"<b>Wiener:</b> Wiener interpolation method "
-		"uses estimation of the statistics of the channel to design an optimal "
-		"filter for noise reduction.");
-
-	QWhatsThis::add(RadioButtonFreqWiener, strWienerChanEst);
-	QWhatsThis::add(RadioButtonTiWiener, strWienerChanEst);
-
-	/* Linear */
-	const QString strLinearChanEst =
-		tr("<b>Channel Estimation Settings:</b> With these "
-		"settings, the channel estimation method in time and frequency "
-		"direction can be selected. The default values use the most powerful "
-		"algorithms. For more detailed information about the estimation "
-		"algorithms there are a lot of papers and books available.<br>"
-		"<b>Linear:</b> Simple linear interpolation "
-		"method to get the channel estimate. The real and imaginary parts "
-		"of the estimated channel at the pilot positions are linearly "
-		"interpolated. This algorithm causes the lowest CPU load but "
-		"performs much worse than the Wiener interpolation at low SNRs.");
-
-	QWhatsThis::add(RadioButtonFreqLinear, strLinearChanEst);
-	QWhatsThis::add(RadioButtonTiLinear, strLinearChanEst);
-
-	/* DFT Zero Pad */
-	QWhatsThis::add(RadioButtonFreqDFT,
-		tr("<b>Channel Estimation Settings:</b> With these "
-		"settings, the channel estimation method in time and frequency "
-		"direction can be selected. The default values use the most powerful "
-		"algorithms. For more detailed information about the estimation "
-		"algorithms there are a lot of papers and books available.<br>"
-		"<b>DFT Zero Pad:</b> Channel estimation method "
-		"for the frequency direction using Discrete Fourier Transformation "
-		"(DFT) to transform the channel estimation at the pilot positions to "
-		"the time domain. There, a zero padding is applied to get a higher "
-		"resolution in the frequency domain -> estimates at the data cells. "
-		"This algorithm is very speed efficient but has problems at the edges "
-		"of the OFDM spectrum due to the leakage effect."));
-
-	/* Guard Energy */
-	QWhatsThis::add(RadioButtonTiSyncEnergy,
-		tr("<b>Guard Energy:</b> Time synchronization "
-		"tracking algorithm utilizes the estimation of the impulse response. "
-		"This method tries to maximize the energy in the guard-interval to set "
-		"the correct timing."));
-
-	/* First Peak */
-	QWhatsThis::add(RadioButtonTiSyncFirstPeak,
-		tr("<b>First Peak:</b> This algorithms searches for "
-		"the first peak in the estimated impulse response and moves this peak "
-		"to the beginning of the guard-interval (timing tracking algorithm)."));
 
 	/* SNR */
 	const QString strSNREst =
@@ -1696,12 +1289,6 @@ void systemevalDlg::AddWhatsThisHelp()
 	QWhatsThis::add(FACTimeDateL, strTimeDate);
 	QWhatsThis::add(FACTimeDateV, strTimeDate);
 
-	/* Save audio as wave */
-	QWhatsThis::add(CheckBoxSaveAudioWave,
-		tr("<b>Save Audio as WAV:</b> Save the audio signal "
-		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
-		"box will let the user choose a file name for the recording."));
-
 #if QT_VERSION < 0x030000
 	/* if QWhatsThis is added don't work the right click popup (it used to work in QT2.3) */
 
@@ -1719,83 +1306,73 @@ void systemevalDlg::AddWhatsThisHelp()
 		"and click on the context menu item."));
 #endif
 
-	/* Interferer Rejection */
-	const QString strInterfRej =
-		tr("<b>Interferer Rejection:</b> There are two "
-		"algorithms available to reject interferers:<ul>"
-		"<li><b>Bandpass Filter (BP-Filter):</b>"
-		" The bandpass filter is designed to have the same bandwidth as "
-		"the DRM signal. If, e.g., a strong signal is close to the border "
-		"of the actual DRM signal, under some conditions this signal will "
-		"produce interference in the useful bandwidth of the DRM signal "
-		"although it is not on the same frequency as the DRM signal. "
-		"The reason for that behaviour lies in the way the OFDM "
-		"demodulation is done. Since OFDM demodulation is a block-wise "
-		"operation, a windowing has to be applied (which is rectangular "
-		"in case of OFDM). As a result, the spectrum of a signal is "
-		"convoluted with a Sinc function in the frequency domain. If a "
-		"sinusoidal signal close to the border of the DRM signal is "
-		"considered, its spectrum will not be a distinct peak but a "
-		"shifted Sinc function. So its spectrum is broadened caused by "
-		"the windowing. Thus, it will spread in the DRM spectrum and "
-		"act as an in-band interferer.<br>"
-		"There is a special case if the sinusoidal signal is in a "
-		"distance of a multiple of the carrier spacing of the DRM signal. "
-		"Since the Sinc function has zeros at certain positions it happens "
-		"that in this case the zeros are exactly at the sub-carrier "
-		"frequencies of the DRM signal. In this case, no interference takes "
-		"place. If the sinusoidal signal is in a distance of a multiple of "
-		"the carrier spacing plus half of the carrier spacing away from the "
-		"DRM signal, the interference reaches its maximum.<br>"
-		"As a result, if only one DRM signal is present in the 20 kHz "
-		"bandwidth, bandpass filtering has no effect. Also,  if the "
-		"interferer is far away from the DRM signal, filtering will not "
-		"give much improvement since the squared magnitude of the spectrum "
-		"of the Sinc function is approx -15 dB down at 1 1/2 carrier "
-		"spacing (approx 70 Hz with DRM mode B) and goes down to approx "
-		"-30 dB at 10 times the carrier spacing plus 1 / 2 of the carrier "
-		"spacing (approx 525 Hz with DRM mode B). The bandpass filter must "
-		"have very sharp edges otherwise the gain in performance will be "
-		"very small.</li>"
-		"<li><b>Modified Metrics:</b> Based on the "
-		"information from the SNR versus sub-carrier estimation, the metrics "
-		"for the Viterbi decoder can be modified so that sub-carriers with "
-		"high noise are attenuated and do not contribute too much to the "
-		"decoding result. That can improve reception under bad conditions but "
-		"may worsen the reception in situations where a lot of fading happens "
-		"and no interferer are present since the SNR estimation may be "
-		"not correct.</li></ul>");
-
-	QWhatsThis::add(GroupBoxInterfRej, strInterfRej);
-	QWhatsThis::add(CheckBoxRecFilter, strInterfRej);
-	QWhatsThis::add(CheckBoxModiMetric, strInterfRej);
 }
 
-void systemevalDlg::EnableGPS()
+void systemevalDlg::EnableLog(bool b)
 {
-	if(pGPSReceiver)
-		return;
+	if(b)
+	{
+		TimerLogFileStart.start(1, TRUE);
+		/* set the focus */
+		if (EdtFrequency->isEnabled() && !EdtFrequency->hasFocus())
+			EdtFrequency->setFocus();
+	}
+	else
+	{
+		/* Deactivate log file timer */
+		StopLogTimers();
+		shortLog.Stop();
+		longLog.Stop();
+	}
+}
 
+void systemevalDlg::LogStartDel(long iValue)
+{
+	iLogDelay = iValue;
+}
+
+void systemevalDlg::LogPosition(bool b)
+{
+	shortLog.SetPositionEnabled(b);
+	longLog.SetPositionEnabled(b);
+}
+
+void systemevalDlg::LogSigStr(bool b)
+{
+	shortLog.SetRxlEnabled(b);
+	longLog.SetRxlEnabled(b);
+}
+
+
+void systemevalDlg::EnableGPS(bool b)
+{
 	// let gps data come from RSCI
 	if(DRMReceiver.GetRSIIn()->GetInEnabled())
-		return;
-
-	CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock(); 
-	Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
-	Parameters.Unlock(); 
-	pGPSReceiver = new CGPSReceiver(Parameters, Settings);
-}
-
-void systemevalDlg::DisableGPS()
-{
-	if(pGPSReceiver)
 	{
-		delete pGPSReceiver;
-		pGPSReceiver = NULL;
+		FrameGPS->show();
+		return;
 	}
+
 	CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock(); 
-	Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
-	Parameters.Unlock(); 
+	if(b)
+	{
+		Parameters.Lock(); 
+		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
+		Parameters.Unlock(); 
+		FrameGPS->show();
+		if(pGPSReceiver == NULL)
+			pGPSReceiver = new CGPSReceiver(Parameters, Settings);
+	}
+	else
+	{
+		Parameters.Lock(); 
+		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
+		Parameters.Unlock(); 
+		FrameGPS->hide();
+		if(pGPSReceiver)
+		{
+			delete pGPSReceiver;
+			pGPSReceiver = NULL;
+		}
+	}
 }

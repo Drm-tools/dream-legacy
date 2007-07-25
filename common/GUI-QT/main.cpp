@@ -136,7 +136,8 @@ main(int argc, char **argv)
 		}
 		else if(mode == "transmit")
 		{
-			TransmDialog MainDlg(Settings, 0, 0, FALSE, Qt::WStyle_MinMax);
+			CDRMTransmitter DRMTransmitter(Settings);
+			TransmDialog MainDlg(DRMTransmitter, Settings, NULL, NULL, false, Qt::WStyle_MinMax);
 
 			/* Set main window */
 			app.setMainWidget(&MainDlg);
@@ -222,7 +223,7 @@ main(int argc, char **argv)
 		}
 		else
 		{
-			CDRMTransmitter DRMTransmitter;
+			CDRMTransmitter DRMTransmitter(Settings);
 			DRMTransmitter.Start();
 		}
 	}
