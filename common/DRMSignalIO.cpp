@@ -201,19 +201,19 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 		switch(eOutFileMode)
 		{
 		case OFF_RAW:
-			pFile = fopen(strFileName.c_str(), "wb");
+			pFile = fopen(strOutFileName.c_str(), "wb");
 			/* Check for error */
 			if (pFile == NULL)
-				throw CGenErr("The file " + strFileName + " cannot be created.");
+				throw CGenErr("The file " + strOutFileName + " cannot be created.");
 			break;
 		case OFF_TXT:
-			pFile = fopen(strFileName.c_str(), "w");
+			pFile = fopen(strOutFileName.c_str(), "w");
 			/* Check for error */
 			if (pFile == NULL)
-				throw CGenErr("The file " + strFileName + " cannot be created.");
+				throw CGenErr("The file " + strOutFileName + " cannot be created.");
 			break;
 		case OFF_WAV:
-			WaveFile.Open(strFileName);
+			WaveFile.Open(strOutFileName);
 		}
 #endif
 	}

@@ -44,7 +44,7 @@ rem .h --------------
 %qtdir%\bin\moc.exe ..\common\MDI\PacketSocketQT.h -o moc\moc_PacketSocketQT.cpp
 %qtdir%\bin\moc.exe ..\common\GPSReceiver.h -o moc\moc_GPSReceiver.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\MultSettingsDlg.h -o moc\moc_MultSettingsDlg.cpp
-%qtdir%\bin\moc.exe ..\common\GUI-QT\GeneralSettingsDlg.h -o moc\moc_GeneralSettingsDlg.cpp
+%qtdir%\bin\moc.exe ..\common\GUI-QT\ReceiverSettingsDlg.h -o moc\moc_ReceiverSettingsDlg.cpp
 
 rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -o moc\fdrmdialogbase.h  
@@ -91,8 +91,8 @@ rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\MultSettingsDlgbase.ui -i MultSettingsDlgbase.h -o moc\MultSettingsDlgbase.cpp  
 %qtdir%\bin\moc.exe moc\MultSettingsDlgbase.h -o moc\moc_MultSettingsDlgbase.cpp
 
-%qtdir%\bin\uic.exe ..\common\GUI-QT\GeneralSettingsDlgbase.ui -o moc\GeneralSettingsDlgbase.h  
-%qtdir%\bin\uic.exe ..\common\GUI-QT\GeneralSettingsDlgbase.ui -i GeneralSettingsDlgbase.h -o moc\GeneralSettingsDlgbase.cpp
-%qtdir%\bin\moc.exe moc\GeneralSettingsDlgbase.h -o moc\moc_GeneralSettingsDlgbase.cpp
+%qtdir%\bin\uic.exe ..\common\GUI-QT\ReceiverSettingsDlgbase.ui -o moc\ReceiverSettingsDlgbase.h  
+%qtdir%\bin\uic.exe ..\common\GUI-QT\ReceiverSettingsDlgbase.ui -i ReceiverSettingsDlgbase.h -o moc\ReceiverSettingsDlgbase.cpp
+%qtdir%\bin\moc.exe moc\ReceiverSettingsDlgbase.h -o moc\moc_ReceiverSettingsDlgbase.cpp
 
 pause

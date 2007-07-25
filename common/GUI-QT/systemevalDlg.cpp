@@ -1376,3 +1376,4 @@ void systemevalDlg::EnableGPS(bool b)
 		}
 	}
 }
+

@@ -120,7 +120,7 @@ SOURCE=.\moc\fdrmdialogbase.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\moc\GeneralSettingsDlgbase.cpp
+SOURCE=.\moc\ReceiverSettingsDlgbase.cpp
 # End Source File
 # Begin Source File
 
@@ -168,11 +168,11 @@ SOURCE=.\moc\moc_fdrmdialogbase.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\moc\moc_GeneralSettingsDlg.cpp
+SOURCE=.\moc\moc_ReceiverSettingsDlg.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\moc\moc_GeneralSettingsDlgbase.cpp
+SOURCE=.\moc\moc_ReceiverSettingsDlgbase.cpp
 # End Source File
 # Begin Source File
 
@@ -290,7 +290,7 @@ SOURCE="..\common\GUI-QT\fdrmdialog.cpp"
 # End Source File
 # Begin Source File
 
-SOURCE="..\common\GUI-QT\GeneralSettingsDlg.cpp"
+SOURCE="..\common\GUI-QT\ReceiverSettingsDlg.cpp"
 # End Source File
 # Begin Source File
 
@@ -776,7 +776,7 @@ SOURCE="..\common\GUI-QT\fdrmdialog.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\common\GUI-QT\GeneralSettingsDlg.h"
+SOURCE="..\common\GUI-QT\ReceiverSettingsDlg.h"
 # End Source File
 # Begin Source File
 

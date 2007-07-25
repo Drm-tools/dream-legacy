@@ -932,7 +932,7 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath="..\common\GUI-QT\GeneralSettingsDlg.cpp"
+					RelativePath="..\common\GUI-QT\ReceiverSettingsDlg.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -1247,7 +1247,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="moc\GeneralSettingsDlgbase.cpp"
+						RelativePath="moc\ReceiverSettingsDlgbase.cpp"
 						>
 						<FileConfiguration
 							Name="Release|Win32"
@@ -1511,7 +1511,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="moc\moc_GeneralSettingsDlg.cpp"
+						RelativePath="moc\moc_ReceiverSettingsDlg.cpp"
 						>
 						<FileConfiguration
 							Name="Release|Win32"
@@ -1533,7 +1533,7 @@
 						</FileConfiguration>
 					</File>
 					<File
-						RelativePath="moc\moc_GeneralSettingsDlgbase.cpp"
+						RelativePath="moc\moc_ReceiverSettingsDlgbase.cpp"
 						>
 						<FileConfiguration
 							Name="Release|Win32"
@@ -3415,7 +3415,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\common\GUI-QT\GeneralSettingsDlg.h"
+					RelativePath="..\common\GUI-QT\ReceiverSettingsDlg.h"
 					>
 				</File>
 				<File

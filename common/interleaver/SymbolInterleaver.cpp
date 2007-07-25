@@ -195,7 +195,7 @@ void CSymbDeinterleaver::InitInternal(CParameter& ReceiverParam)
 	{
 		/* Output right after the first block */
 		//iInitCnt = (int) Min(1, iD);
-		iInitCnt = min(1, iD);
+		iInitCnt = Min(1, iD);
 	}
 	else
 #endif

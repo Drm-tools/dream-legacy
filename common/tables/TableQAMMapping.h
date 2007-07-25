@@ -95,10 +95,10 @@ inline CComplex MinDist4QAM(const CComplex cI)
 	   2 possible constellation points for real and imaginary axis */
 	return CComplex(
 		/* Real axis minimum distance */
-	   min(Abs(rTableQAM4[0][0] - Real(cI)), Abs(rTableQAM4[1][0] - Real(cI)))
+	   Min(Abs(rTableQAM4[0][0] - Real(cI)), Abs(rTableQAM4[1][0] - Real(cI)))
 		,
 		/* Imaginary axis minimum distance */
-	   min(Abs(rTableQAM4[0][1] - Imag(cI)), Abs(rTableQAM4[1][1] - Imag(cI)))
+	   Min(Abs(rTableQAM4[0][1] - Imag(cI)), Abs(rTableQAM4[1][1] - Imag(cI)))
 		);
 }
 

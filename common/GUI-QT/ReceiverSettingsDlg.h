@@ -25,26 +25,24 @@
  *
 \******************************************************************************/
 
-#include "../Parameter.h"
 #include "../util/Settings.h"
 
-#include "GeneralSettingsDlgbase.h"
+#include "ReceiverSettingsDlgbase.h"
 
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
-class GeneralSettingsDlg : public CGeneralSettingsDlgBase
+class CDRMReceiver;
+
+class ReceiverSettingsDlg : public ReceiverSettingsDlgBase
 {
 	Q_OBJECT
 
 public:
 
-	GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings, QWidget* parent = 0,
+	ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
-	virtual ~GeneralSettingsDlg();
-	/* dummy assignment operator to help MSVC8 */
-	GeneralSettingsDlg& operator=(const GeneralSettingsDlg&)
-	{ throw "should not happen"; return *this;}
+	virtual ~ReceiverSettingsDlg();
 
 protected:
 	virtual void	showEvent(QShowEvent* pEvent);
@@ -56,19 +54,40 @@ protected:
 
 	void			AddWhatsThisHelp();
 
-	CParameter&		Parameters;
+	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
 	string			host;
 	int				port;
 	_BOOLEAN		bUseGPS;
 
 signals:
-	void StartGPS();
-	void StopGPS();
+	void StartStopLog(bool);
+	void LogPosition(bool);
+	void LogSigStr(bool);
+	void SetLogStartDelay(long);
+	void StartStopGPS(bool);
 
 public slots:
 	void CheckSN(const QString& NewText);
 	void CheckEW(const QString& NewText);
-	void ButtonOkClicked();
 	void OnCheckBoxUseGPS();
+	void OnRadioTimeLinear();
+	void OnRadioTimeWiener();
+	void OnRadioFrequencyLinear();
+	void OnRadioFrequencyDft();
+	void OnRadioFrequencyWiener();
+	void OnRadioTiSyncFirstPeak();
+	void OnRadioTiSyncEnergy();
+	void OnSliderIterChange(int value);
+	void OnSliderLogStartDelayChange(int value);
+	void ButtonOkClicked();
+	void OnCheckFlipSpectrum();
+	void OnCheckBoxMuteAudio();
+	void OnCheckBoxReverb();
+	void OnCheckWriteLog();
+    void OnCheckBoxLogLatLng();
+    void OnCheckBoxLogSigStr();
+	void OnCheckSaveAudioWAV();
+	void OnCheckRecFilter();
+	void OnCheckModiMetric();
 };

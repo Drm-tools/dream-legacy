@@ -2267,7 +2267,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit223]
-FileName=..\common\GUI-QT\GeneralSettingsDlg.h
+FileName=..\common\GUI-QT\ReceiverSettingsDlg.h
 CompileCpp=1
 Folder=GUI-QT/Headers
 Compile=1
@@ -2277,7 +2277,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit224]
-FileName=..\common\GUI-QT\GeneralSettingsDlg.cpp
+FileName=..\common\GUI-QT\ReceiverSettingsDlg.cpp
 CompileCpp=1
 Folder=GUI-QT/Sources
 Compile=1
@@ -2287,7 +2287,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit225]
-FileName=moc\moc_GeneralSettingsDlgbase.cpp
+FileName=moc\moc_ReceiverSettingsDlgbase.cpp
 CompileCpp=1
 Folder=GUI-QT/moc
 Compile=1
@@ -2297,7 +2297,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit226]
-FileName=moc\moc_GeneralSettingsDlg.cpp
+FileName=moc\moc_ReceiverSettingsDlg.cpp
 CompileCpp=1
 Folder=GUI-QT/moc
 Compile=1
@@ -2307,7 +2307,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit227]
-FileName=moc\GeneralSettingsDlgbase.h
+FileName=moc\ReceiverSettingsDlgbase.h
 CompileCpp=1
 Folder=GUI-QT/moc
 Compile=1
@@ -2317,7 +2317,7 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit228]
-FileName=moc\GeneralSettingsDlgbase.cpp
+FileName=moc\ReceiverSettingsDlgbase.cpp
 CompileCpp=1
 Folder=GUI-QT/moc
 Compile=1
