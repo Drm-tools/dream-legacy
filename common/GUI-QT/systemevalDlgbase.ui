@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>758</width>
-            <height>459</height>
+            <width>673</width>
+            <height>335</height>
         </rect>
     </property>
     <property stdset="1">
@@ -43,7 +43,7 @@
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout12</cstring>
+                <cstring>Layout13</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -894,7 +894,7 @@
                             <property stdset="1">
                                 <name>minimumSize</name>
                                 <size>
-                                    <width>100</width>
+                                    <width>120</width>
                                     <height>0</height>
                                 </size>
                             </property>
@@ -962,6 +962,10 @@
                     <property stdset="1">
                         <name>name</name>
                         <cstring>FrameGPS</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>enabled</name>
+                        <bool>true</bool>
                     </property>
                     <property stdset="1">
                         <name>frameShape</name>
