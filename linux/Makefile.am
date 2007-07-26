@@ -230,6 +230,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/ReceiverSettingsDlg.cpp \
 	../common/GUI-QT/EPGDlg.cpp \
 	../common/GUI-QT/AnalogDemDlg.cpp \
+	../common/GUI-QT/Loghelper.cpp \
 	../common/MDI/PacketSourceFile.cpp \
 	../common/MDI/PacketSocketQT.cpp \
 	../common/GUI-QT/fdrmdialogbase.ui \
@@ -258,6 +259,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/ReceiverSettingsDlg.h \
 	../common/GUI-QT/EPGDlg.h \
 	../common/GUI-QT/AnalogDemDlg.h \
+	../common/GUI-QT/Loghelper.h \
 	../common/MDI/PacketSourceFile.h \
 	../common/MDI/PacketSocketQT.h \
 	../common/MDI/PacketSinkFile.h \
@@ -286,6 +288,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp \
 	moc/moc_AMSSDlgbase.cpp moc/AMSSDlgbase.h moc/AMSSDlgbase.cpp \
+	moc/moc_Loghelper.cpp \
 	moc/moc_PacketSourceFile.cpp moc/moc_PacketSocketQT.cpp moc/moc_GPSReceiver.cpp
 
 # and should be cleaned by make clean
@@ -313,6 +316,9 @@ moc/moc_PacketSocketQT.cpp: ../common/MDI/PacketSocketQT.h
 
 moc/moc_GPSReceiver.cpp: ../common/GPSReceiver.h
 	$(MOC) ../common/GPSReceiver.h -o moc/moc_GPSReceiver.cpp
+
+moc/moc_Loghelper.cpp: ../common/GUI-QT/Loghelper.h
+	$(MOC) ../common/GUI-QT/Loghelper.h -o moc/moc_Loghelper.cpp
 
 moc/moc_AboutDlgbase.cpp: moc/AboutDlgbase.h
 	$(MOC) moc/AboutDlgbase.h -o moc/moc_AboutDlgbase.cpp
@@ -452,7 +458,6 @@ moc/AMSSDlgbase.h: ../common/GUI-QT/AMSSDlgbase.ui
 	
 moc/AMSSDlgbase.cpp: ../common/GUI-QT/AMSSDlgbase.ui moc/AMSSDlgbase.h
 	$(UIC) ../common/GUI-QT/AMSSDlgbase.ui -i moc/AMSSDlgbase.h -o moc/AMSSDlgbase.cpp		
-
 
 # QT translation file (added by Stephane Fillod 11/10/2004)
 

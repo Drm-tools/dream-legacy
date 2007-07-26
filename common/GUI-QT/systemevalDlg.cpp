@@ -35,12 +35,9 @@
 systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, WFlags f) :
 	systemevalDlgBase(parent, name, modal, f),
-	DRMReceiver(NDRMR),
-	Settings(NSettings),
-	Timer(), TimerLogFileLong(), TimerLogFileShort(), TimerLogFileStart(),
-	shortLog(*NDRMR.GetParameters()), longLog(*NDRMR.GetParameters()),
-	bEnableShortLog(FALSE), bEnableLongLog(FALSE),
-	iLogDelay(0), iCurFrequency(0), pGPSReceiver(NULL)
+	DRMReceiver(NDRMR), Settings(NSettings),
+	Timer(), pGPSReceiver(NULL),
+	iFrequencyChangePendingCount(1)
 {
 	/* Get window geometry data and apply it */
 	CWinGeom s;
@@ -68,13 +65,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	LEDFrameSync->SetUpdateTime(600);
 	LEDTimeSync->SetUpdateTime(600);
 	LEDIOInterface->SetUpdateTime(2000); /* extra long -> red light stays long */
-
-	/* Init parameter for frequency edit for log file */
-	iCurFrequency = 0;
-
-	/* Update controls */
-	UpdateControls();
-
 
 	/* Init chart selector list view ---------------------------------------- */
 	/* Get pixmaps from dummy list view entries which where inserted in the
@@ -342,52 +332,24 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
-	connect(&TimerLogFileLong, SIGNAL(timeout()),
-		this, SLOT(OnTimerLogFileLong()));
-	connect(&TimerLogFileShort, SIGNAL(timeout()),
-		this, SLOT(OnTimerLogFileShort()));
-	connect(&TimerLogFileStart, SIGNAL(timeout()),
-		this, SLOT(OnTimerLogFileStart()));
-
-	StopLogTimers();
-
 
 	/* GPS */
-	_REAL latitude, longitude;
-	/* Latitude string for log file */
-	latitude = Settings.Get("Logfile", "latitude", 1000.0);
-	/* Longitude string for log file */
-	longitude = Settings.Get("Logfile", "longitude", 1000.0);
 	FrameGPS->hide();
 
-	CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock(); 
-
-	if(-90.0 <= latitude && latitude <= 90.0 && -180.0 <= longitude  && longitude <= 180.0)
-	{
-		Parameters.GPSData.SetPositionAvailable(TRUE);
-		Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
-	}
-	else
-		Parameters.GPSData.SetPositionAvailable(FALSE);
-	Parameters.Unlock(); 
+	connect( EdtFrequency, SIGNAL(textChanged(const QString&)),
+		this, SLOT(OnLineEditFrequencyChanged(const QString&)) );
 
 }
 
 systemevalDlg::~systemevalDlg()
 {
-	if(longLog.GetLoggingActivated())
-		shortLog.Stop();
-	if(longLog.GetLoggingActivated())
-		longLog.Stop();
-
-	double latitude, longitude;
-	DRMReceiver.GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
-	Settings.Put("Logfile", "latitude", latitude);
-	Settings.Put("Logfile", "longitude", longitude);
-
 	if (pGPSReceiver)
 		delete pGPSReceiver;
+}
+
+void systemevalDlg::OnLineEditFrequencyChanged(const QString& str)
+{
+	iFrequencyChangePendingCount = 5;
 }
 
 void systemevalDlg::UpdateControls()
@@ -396,11 +358,10 @@ void systemevalDlg::UpdateControls()
 	   schedule dialog */
 	QString strFreq = EdtFrequency->text();
 	const int iFrequency = DRMReceiver.GetFrequency();
-
+	int iCurFrequency = strFreq.toInt();
 	if (iFrequency != iCurFrequency)
 	{
 		EdtFrequency->setText(QString().setNum(iFrequency));
-		iCurFrequency = iFrequency;
 	}
 }
 
@@ -697,9 +658,9 @@ void systemevalDlg::OnTimer()
 #endif
 
 /* _WIN32 fix because in Visual c++ the GUI files are always compiled even
-   if USE_QT_GUI is set or not (problem with MDI in DRMReceiver) */
+   if USE_QT_GUI is set or not (problem with RSCI in DRMReceiver?) */
 #ifdef USE_QT_GUI
-	/* If MDI in is enabled, do not show any synchronization parameter */
+	/* If RSCI in is enabled, do not show any synchronization parameter */
 	if (DRMReceiver.GetRSIIn()->GetInEnabled() == TRUE)
 	{
 		ValueSNR->setText("<b>---</b>");
@@ -910,9 +871,23 @@ void systemevalDlg::OnTimer()
 	TextLabelGPSTime->setText(qStrTime);
 */
 
-	/* Update controls */
-	UpdateControls();
 	}
+
+	/* having a count-down stops intermediate digits having an effect, mostly! */
+	if(iFrequencyChangePendingCount>0)
+	{
+		iFrequencyChangePendingCount--;
+		if(iFrequencyChangePendingCount==0)
+		{
+			int iFreq = EdtFrequency->text().toInt();
+			DRMReceiver.SetFrequency(iFreq);
+		}
+	}
+	else
+	{
+		UpdateControls();
+	}
+
 	ReceiverParam.Unlock(); 
 }
 
@@ -944,47 +919,6 @@ void systemevalDlg::OnListViContMenu()
 		   (needed for closing the windows) */
 		vecpDRMPlots.push_back(OpenChartWin(((CCharSelItem*) pCurSelLVItem)->GetCharType()));
 	}
-}
-
-void systemevalDlg::StopLogTimers()
-{
-	TimerLogFileStart.stop();
-	TimerLogFileShort.stop();
-	TimerLogFileLong.stop();
-}
-
-void systemevalDlg::OnTimerLogFileStart()
-{
-	/* Start logging (if not already done) */
-	if(!longLog.GetLoggingActivated() || !longLog.GetLoggingActivated())
-	{
-		/* Activate log file timer for long and short log file */
-		TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
-		TimerLogFileLong.start(1000); /* Every second */
-
-		/* Get frequency from front-end edit control */
-		QString strFreq = EdtFrequency->text();
-		int iFrequency = strFreq.toUInt();
-		longLog.SetLogFrequency(iFrequency);
-		shortLog.SetLogFrequency(iFrequency);
-
-		/* Open log file */
-		shortLog.Start("DreamLog.txt");
-		longLog.Start("DreamLogLong.csv");
-
-	}
-}
-
-void systemevalDlg::OnTimerLogFileShort()
-{
-	/* Write new parameters in log file (short version) */
-	shortLog.Update();
-}
-
-void systemevalDlg::OnTimerLogFileLong()
-{
-	/* Write new parameters in log file (long version) */
-	longLog.Update();
 }
 
 QString	systemevalDlg::GetRobModeStr()
@@ -1307,42 +1241,6 @@ void systemevalDlg::AddWhatsThisHelp()
 #endif
 
 }
-
-void systemevalDlg::EnableLog(bool b)
-{
-	if(b)
-	{
-		TimerLogFileStart.start(1, TRUE);
-		/* set the focus */
-		if (EdtFrequency->isEnabled() && !EdtFrequency->hasFocus())
-			EdtFrequency->setFocus();
-	}
-	else
-	{
-		/* Deactivate log file timer */
-		StopLogTimers();
-		shortLog.Stop();
-		longLog.Stop();
-	}
-}
-
-void systemevalDlg::LogStartDel(long iValue)
-{
-	iLogDelay = iValue;
-}
-
-void systemevalDlg::LogPosition(bool b)
-{
-	shortLog.SetPositionEnabled(b);
-	longLog.SetPositionEnabled(b);
-}
-
-void systemevalDlg::LogSigStr(bool b)
-{
-	shortLog.SetRxlEnabled(b);
-	longLog.SetRxlEnabled(b);
-}
-
 
 void systemevalDlg::EnableGPS(bool b)
 {

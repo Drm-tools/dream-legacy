@@ -557,7 +557,7 @@ void ReceiverSettingsDlg::OnCheckBoxLogSigStr()
 
 void ReceiverSettingsDlg::OnSliderLogStartDelayChange(int value)
 {
-	SetLogStartDelay(value);
+	emit SetLogStartDelay(value);
 }
 
 void ReceiverSettingsDlg::AddWhatsThisHelp()
@@ -629,12 +629,6 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		"<br>The log file will be "
 		"written in the directory were the Dream application was started and "
 		"the name of this file is always DreamLog.txt"));
-
-	/* Freq */
-	QWhatsThis::add(EdtFrequency,
-		tr("<b>Freq:</b> In this edit control, the current "
-		"selected frequency on the front-end can be specified. This frequency "
-		"will be written into the log file."));
 
 	/* Wiener */
 	const QString strWienerChanEst =

@@ -519,7 +519,7 @@
                                         </property>
                                         <property stdset="1">
                                             <name>text</name>
-                                            <string>TextNumOfIterations</string>
+                                            <string>Number Of Iterations</string>
                                         </property>
                                         <property stdset="1">
                                             <name>alignment</name>
@@ -670,56 +670,6 @@
                                 <name>text</name>
                                 <string>&amp;Log To File</string>
                             </property>
-                        </widget>
-                        <widget>
-                            <class>QLayoutWidget</class>
-                            <property stdset="1">
-                                <name>name</name>
-                                <cstring>Layout59</cstring>
-                            </property>
-                            <hbox>
-                                <property stdset="1">
-                                    <name>margin</name>
-                                    <number>0</number>
-                                </property>
-                                <property stdset="1">
-                                    <name>spacing</name>
-                                    <number>6</number>
-                                </property>
-                                <widget>
-                                    <class>QLabel</class>
-                                    <property stdset="1">
-                                        <name>name</name>
-                                        <cstring>TextLabel1</cstring>
-                                    </property>
-                                    <property stdset="1">
-                                        <name>text</name>
-                                        <string>Frequency:</string>
-                                    </property>
-                                </widget>
-                                <widget>
-                                    <class>QLineEdit</class>
-                                    <property stdset="1">
-                                        <name>name</name>
-                                        <cstring>EdtFrequency</cstring>
-                                    </property>
-                                </widget>
-                                <widget>
-                                    <class>QLabel</class>
-                                    <property stdset="1">
-                                        <name>name</name>
-                                        <cstring>TextLabel1</cstring>
-                                    </property>
-                                    <property stdset="1">
-                                        <name>text</name>
-                                        <string>kHz</string>
-                                    </property>
-                                    <property stdset="1">
-                                        <name>indent</name>
-                                        <number>1</number>
-                                    </property>
-                                </widget>
-                            </hbox>
                         </widget>
                         <widget>
                             <class>QCheckBox</class>

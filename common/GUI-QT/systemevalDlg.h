@@ -50,7 +50,6 @@
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
 #include "../DrmReceiver.h"
-#include "../ReceptLog.h"
 #include "../util/Settings.h"
 
 class CGPSReceiver;
@@ -100,18 +99,6 @@ protected:
 
 	QTimer				Timer;
 
-	/* logging */
-	QTimer				TimerLogFileLong;
-	QTimer				TimerLogFileShort;
-	QTimer				TimerLogFileStart;
-
-	CShortLog			shortLog;
-	CLongLog			longLog;
-	_BOOLEAN			bEnableShortLog;
-	_BOOLEAN			bEnableLongLog;
-	int					iLogDelay;
-
-	int					iCurFrequency;
     virtual void		showEvent(QShowEvent* pEvent);
 	virtual void		hideEvent(QHideEvent* pEvent);
 	void				UpdateControls();
@@ -126,18 +113,14 @@ protected:
 
 	CGPSReceiver*		pGPSReceiver;
 
+	int					iFrequencyChangePendingCount;
+
 public slots:
 	void OnTimer();
-	void OnTimerLogFileStart();
-	void OnTimerLogFileShort();
-	void OnTimerLogFileLong();
 	void OnListSelChanged(QListViewItem* NewSelIt);
 	void OnListViContMenu();
 	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt,
 		int iCol);
-	void EnableLog(bool);
-	void LogStartDel(long);
-	void LogPosition(bool);
-	void LogSigStr(bool);
+	void OnLineEditFrequencyChanged(const QString& str);
 	void EnableGPS(bool);
 };

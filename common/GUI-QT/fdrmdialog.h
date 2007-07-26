@@ -35,6 +35,7 @@
 #include "MultimediaDlg.h"
 #include "StationsDlg.h"
 #include "LiveScheduleDlg.h"
+#include "Loghelper.h"
 #include "EPGDlg.h"
 #include "AnalogDemDlg.h"
 #include "MultSettingsDlg.h"
@@ -74,6 +75,7 @@ protected:
 	EPGDlg*				pEPGDlg;
 	AnalogDemDlg*		pAnalogDemDlg;
 	ReceiverSettingsDlg* pReceiverSettingsDlg;
+	Loghelper			loghelper;
 	QMenuBar*			pMenu;
 	QPopupMenu*			pReceiverModeMenu;
 	QPopupMenu*			pSettingsMenu;

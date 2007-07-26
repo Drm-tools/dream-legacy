@@ -49,6 +49,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	: FDRMDialogBase(parent, name, modal, f),
 	DRMReceiver(NDRMR),
 	Settings(NSettings),
+	loghelper(NDRMR, NSettings),
 	eReceiverMode(RM_NONE)
 {
 	/* recover window size and position */
@@ -230,14 +231,16 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(pAnalogDemDlg, SIGNAL(Closed()),
 		this, SLOT(close()));
 
-	connect(&Timer, SIGNAL(timeout()),
-		this, SLOT(OnTimer()));
+	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
-	connect(pReceiverSettingsDlg, SIGNAL(StartStopLog(bool)), pSysEvalDlg, SLOT(EnableLog(bool)));
 	connect(pReceiverSettingsDlg, SIGNAL(StartStopGPS(bool)), pSysEvalDlg, SLOT(EnableGPS(bool)));
-	connect(pReceiverSettingsDlg, SIGNAL(SetLogStartDelay(long)), pSysEvalDlg, SLOT(LogStartDel(long)));
-	connect(pReceiverSettingsDlg, SIGNAL(LogPosition(bool)), pSysEvalDlg, SLOT(LogPosition(bool)));
-	connect(pReceiverSettingsDlg, SIGNAL(LogSigStr(bool)), pSysEvalDlg, SLOT(LogSigStr(bool)));
+
+	Loghelper *ploghelper = &loghelper;
+
+	connect(pReceiverSettingsDlg, SIGNAL(StartStopLog(bool)), ploghelper, SLOT(EnableLog(bool)));
+	connect(pReceiverSettingsDlg, SIGNAL(SetLogStartDelay(long)), ploghelper, SLOT(LogStartDel(long)));
+	connect(pReceiverSettingsDlg, SIGNAL(LogPosition(bool)), ploghelper, SLOT(LogPosition(bool)));
+	connect(pReceiverSettingsDlg, SIGNAL(LogSigStr(bool)), ploghelper, SLOT(LogSigStr(bool)));
 
 	/* Disable text message label */
 	TextTextMessage->setText("");
@@ -763,7 +766,7 @@ void FDRMDialog::ChangeGUIModeToAM()
 	pMultiMediaDlg->hide();
 	pEPGDlg->hide();
 
-	pSysEvalDlg->StopLogTimers();
+	loghelper.EnableLog(false);
 
 	Timer.stop();
 
@@ -1021,7 +1024,7 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 		Settings.Put("EPG Dialog", "visible", pEPGDlg->isVisible());
 
 		/* stop any asynchronous GUI actions */
-		pSysEvalDlg->StopLogTimers();
+		loghelper.EnableLog(false);
 		Timer.stop();
 
 		/* now close all the windows except the main window */

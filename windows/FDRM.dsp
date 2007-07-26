@@ -180,6 +180,10 @@ SOURCE=.\moc\moc_GPSReceiver.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\moc_Loghelper.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\moc_LiveScheduleDlg.cpp
 # End Source File
 # Begin Source File
@@ -685,6 +689,10 @@ SOURCE=..\common\GPSReceiver.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\GUI-QT\LogHelper.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\InputResample.cpp
 # End Source File
 # Begin Source File
@@ -1182,6 +1190,10 @@ SOURCE=..\common\GPSData.h
 # Begin Source File
 
 SOURCE=..\common\GPSReceiver.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\GUI-QT\LogHelper.h
 # End Source File
 # Begin Source File
 
