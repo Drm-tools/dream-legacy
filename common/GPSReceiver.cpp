@@ -182,8 +182,6 @@ void CGPSReceiver::DecodeO(string Value)
 
 	Parameters.GPSData.SetLatLongDegrees(fLatitude, fLongitude);
 	Parameters.GPSData.SetPositionAvailable(TRUE);
-	m_Settings.Put("Logfile", "latitude", fLatitude);
-	m_Settings.Put("Logfile", "longitude", fLongitude);
 
 	if (sTime.find('?') == string::npos)
 	{

@@ -58,12 +58,6 @@ Loghelper::~Loghelper()
 		shortLog.Stop();
 	if(longLog.GetLoggingActivated())
 		longLog.Stop();
-
-	double latitude, longitude;
-	DRMReceiver.GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
-	Settings.Put("Logfile", "latitude", latitude);
-	Settings.Put("Logfile", "longitude", longitude);
-
 }
 
 void Loghelper::OnTimerLogFileStart()
@@ -73,11 +67,13 @@ cout << "Loghelper::OnTimerLogFileStart" << endl;
 	if(!longLog.GetLoggingActivated())
 	{
 		TimerLogFileLong.start(1000); /* Every second */
+		shortLog.SetLogFrequency(DRMReceiver.GetFrequency());
 		longLog.Start("DreamLogLong.csv");
 	}
 	if(!shortLog.GetLoggingActivated())
 	{
 		TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
+		shortLog.SetLogFrequency(DRMReceiver.GetFrequency());
 		shortLog.Start("DreamLog.txt");
 	}
 }

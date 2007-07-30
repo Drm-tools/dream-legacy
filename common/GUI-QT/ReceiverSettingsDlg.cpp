@@ -125,14 +125,31 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	int iLogDelay = Settings.Get("Logfile", "delay", 0);
 	SliderLogStartDelay->setValue(iLogDelay);
 
+	if(bUseGPS==FALSE)
+	{
+		CParameter& Parameters = *DRMReceiver.GetParameters();
+		double latitude = Settings.Get("Logfile", "latitude", 0.0);
+		double longitude = Settings.Get("Logfile", "longitude", 0.0);
+		Parameters.GPSData.SetPositionAvailable(TRUE);
+		Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
+		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
+	}
 }
 
 ReceiverSettingsDlg::~ReceiverSettingsDlg()
 {
+	CParameter& Parameters = *DRMReceiver.GetParameters();
 	Settings.Put("Logfile", "delay", SliderLogStartDelay->value());
 	Settings.Put("Logfile", "enablerxl", CheckBoxLogSigStr->isChecked());
 	Settings.Put("Logfile", "enablepositiondata", CheckBoxLogLatLng->isChecked());
 	Settings.Put("Logfile", "enablelog", CheckBoxWriteLog->isChecked());
+	if (Parameters.GPSData.GetPositionAvailable())
+	{
+		double latitude, longitude;
+		Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
+		Settings.Put("Logfile", "latitude", latitude);
+		Settings.Put("Logfile", "longitude", longitude);
+	}
 	Settings.Put("GPS", "host", host);
 	Settings.Put("GPS", "port", port);
 	Settings.Put("GPS", "usegpsd", bUseGPS);
@@ -286,7 +303,6 @@ void ReceiverSettingsDlg::ButtonOkClicked()
 
 			Parameters.GPSData.SetPositionAvailable(TRUE);
 			Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
-
 		}
 		else
 		{
