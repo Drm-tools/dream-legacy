@@ -103,7 +103,6 @@ CGPSData::GetLatLongDegrees(string& latitude, string& longitude) const
 unsigned int CGPSData::ExtractMinutes(double dblDeg) const
 {
 	unsigned int Degrees;
-
 	/* Extract degrees */
 	Degrees = (unsigned int) dblDeg;
 	return (unsigned int) (((floor((dblDeg - Degrees) * 1000000) / 1000000) + 0.00005) * 60.0);

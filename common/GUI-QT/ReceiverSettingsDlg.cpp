@@ -71,8 +71,6 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	connect(SliderNoOfIterations, SIGNAL(valueChanged(int)),
 		this, SLOT(OnSliderIterChange(int)));
 
-	SliderNoOfIterations->setValue(DRMReceiver.GetInitNumIterations());
-
 	/* Radio buttons */
 	connect(RadioButtonTiLinear, SIGNAL(clicked()),
 		this, SLOT(OnRadioTimeLinear()));
@@ -94,12 +92,12 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	connect(CheckBoxFlipSpec, SIGNAL(clicked()), this, SLOT(OnCheckFlipSpectrum()));
 	connect(CheckBoxMuteAudio, SIGNAL(clicked()), this, SLOT(OnCheckBoxMuteAudio()));
 	connect(CheckBoxWriteLog, SIGNAL(clicked()), this, SLOT(OnCheckWriteLog()));
-	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWAV()));
 	connect(CheckBoxRecFilter, SIGNAL(clicked()), this, SLOT(OnCheckRecFilter()));
 	connect(CheckBoxModiMetric, SIGNAL(clicked()), this, SLOT(OnCheckModiMetric()));
 	connect(CheckBoxReverb, SIGNAL(clicked()), this, SLOT(OnCheckBoxReverb()));
 	connect(CheckBoxLogLatLng, SIGNAL(clicked()), this, SLOT(OnCheckBoxLogLatLng()));
 	connect(CheckBoxLogSigStr, SIGNAL(clicked()), this, SLOT(OnCheckBoxLogSigStr()));
+	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWAV()));
 
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -109,21 +107,6 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	port = Settings.Get("GPS", "port", port);
 	bUseGPS = Settings.Get("GPS", "usegpsd", bUseGPS);
 	CheckBoxUseGPS->setChecked(bUseGPS);
-
-	/* Logfile -------------------------------------------------------------- */
-
-	/* Start log file flag */
-	CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", FALSE));
-
-    /* log file flag for storing signal strength in long log */
-	CheckBoxLogSigStr->setChecked(Settings.Get("Logfile", "enablerxl", FALSE));
-
-	/* log file flag for storing lat/long in long log */
-	CheckBoxLogLatLng->setChecked(Settings.Get("Logfile", "enablepositiondata", FALSE));
-
-	/* logging delay value */
-	int iLogDelay = Settings.Get("Logfile", "delay", 0);
-	SliderLogStartDelay->setValue(iLogDelay);
 
 	if(bUseGPS==FALSE)
 	{
@@ -163,7 +146,35 @@ void ReceiverSettingsDlg::hideEvent(QHideEvent*)
 
 void ReceiverSettingsDlg::showEvent(QShowEvent*)
 {
-	/* Clear all fields */
+	/* Sync ----------------------------------------------------------------- */
+
+	/* Misc ----------------------------------------------------------------- */
+	CheckBoxRecFilter->setChecked(DRMReceiver.GetRecFilter());
+	CheckBoxModiMetric->setChecked(DRMReceiver.GetIntCons());
+	CheckBoxFlipSpec->setChecked(DRMReceiver.GetFlippedSpectrum());
+	SliderNoOfIterations->setValue(DRMReceiver.GetInitNumIterations());
+
+	/* Audio ---------------------------------------------------------------- */
+
+	CheckBoxMuteAudio->setChecked(DRMReceiver.GetMuteAudio());
+	CheckBoxReverb->setChecked(DRMReceiver.GetReverbEffect());
+	CheckBoxSaveAudioWave->setChecked(DRMReceiver.GetIsWriteWaveFile());
+
+	/* Logfile -------------------------------------------------------------- */
+
+	/* Start log file flag */
+	CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", FALSE));
+
+    /* log file flag for storing signal strength in long log */
+	CheckBoxLogSigStr->setChecked(Settings.Get("Logfile", "enablerxl", FALSE));
+
+	/* log file flag for storing lat/long in long log */
+	CheckBoxLogLatLng->setChecked(Settings.Get("Logfile", "enablepositiondata", FALSE));
+
+	/* logging delay value */
+	int iLogDelay = Settings.Get("Logfile", "delay", 0);
+	SliderLogStartDelay->setValue(iLogDelay);
+
 	EdtLongitudeDegrees->setText(""); 
 	EdtLongitudeMinutes->setText("");
 	EdtLongitudeEW->setText("");

@@ -67,8 +67,7 @@ iFreqkHz(0),
 	RigPoll(),
 #endif
 	iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
-	bEnableSMeter(FALSE), bSMeterAvail(FALSE),
-	bReadFromFile(FALSE), time_keeper(0)
+	bEnableSMeter(FALSE), bReadFromFile(FALSE), time_keeper(0)
 {
 	pReceiverParam = new CParameter(this);
 	downstreamRSCI.SetReceiver(this);
@@ -192,7 +191,6 @@ CDRMReceiver::Run()
 		if (RigPoll.running())
 		{
 			RigPoll.stop();
-			bSMeterAvail = FALSE;
 		}
 	}
 #endif
@@ -1351,10 +1349,14 @@ CDRMReceiver::CRigPoll::run()
 			r += Parameters.rSigStrengthCorrection;
 			Parameters.SigStrstat.addSample(r);
 			Parameters.Unlock();
-			pDRMRec->bSMeterAvail = TRUE;
 		}
 		else
-			pDRMRec->bSMeterAvail = FALSE;
+		{
+			CParameter& Parameters = *pDRMRec->GetParameters();
+			Parameters.Lock();
+			Parameters.SigStrstat.setInvalid();
+			Parameters.Unlock();
+		}
 		msleep(400);
 	}
 }
@@ -1363,13 +1365,16 @@ CDRMReceiver::CRigPoll::run()
 _BOOLEAN
 CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
 {
-	if(bSMeterAvail == FALSE)
-		return FALSE;
 	CParameter& Parameters = *pReceiverParam;
 	Parameters.Lock();
-	rSigStr = Parameters.SigStrstat.getCurrent();
+	if(Parameters.SigStrstat.isValid())
+	{
+		rSigStr = Parameters.SigStrstat.getCurrent();
+		Parameters.Unlock();
+		return TRUE;
+	}
 	Parameters.Unlock();
-	return TRUE;
+	return FALSE;
 }
 
 /* TEST store information about alternative frequency transmitted in SDC */
@@ -1430,6 +1435,11 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	pReceiverParam->sDataFilesDirectory = sDataFilesDirectory;
 	s.Put("Receiver", "datafilesdirectory", pReceiverParam->sDataFilesDirectory);
+
+	/* Sync */
+	SetFreqInt(CChannelEstimation::ETypeIntFreq(s.Get("Receiver", "frequencyinterpolation", 0)));
+	SetTimeInt(CChannelEstimation::ETypeIntTime(s.Get("Receiver", "timeinterpolation", 0)));
+	SetTiSyncTracType(CTimeSyncTrack::ETypeTiSyncTrac(s.Get("Receiver", "tracking", 0)));
 
 	/* Receiver ------------------------------------------------------------- */
 

@@ -897,6 +897,8 @@ public:
 	_REAL getCurrent();
 	_REAL getMean();
 	void getMinMax(_REAL&, _REAL&);
+	void setInvalid();
+	bool isValid();
 protected:
 	_REAL rSum, rCur, rMin, rMax;
 	int iNum;

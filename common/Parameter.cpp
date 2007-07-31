@@ -1096,6 +1096,16 @@ rMin(numeric_limits<_REAL>::max()),rMax(numeric_limits<_REAL>::min()),iNum(0)
 {
 }
 
+void CMinMaxMean::setInvalid()
+{
+	iNum = 0;
+}
+
+bool CMinMaxMean::isValid()
+{
+	return iNum>0;
+}
+
 void
 CMinMaxMean::addSample(_REAL r)
 {

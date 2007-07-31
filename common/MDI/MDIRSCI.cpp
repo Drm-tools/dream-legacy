@@ -133,8 +133,9 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 	TagItemGeneratorPilots.GenTag(Parameter);
 
 	/* Generate some other tags */
-	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
-	TagItemGeneratorSignalStrength.GenTag(Parameter.pDRMRec->SignalStrengthAvailable(), rSigStr + S9_DBUV);
+	_REAL rSigStr;
+	_BOOLEAN bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
+	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
 
 	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	// rgps
 
@@ -178,8 +179,9 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 	TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
-	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
-	TagItemGeneratorSignalStrength.GenTag(Parameter.pDRMRec->SignalStrengthAvailable(), rSigStr + S9_DBUV);
+	_REAL rSigStr;
+	_BOOLEAN bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
+	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
 
 	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
 
@@ -226,8 +228,9 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 	TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
-	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
-	TagItemGeneratorSignalStrength.GenTag(Parameter.pDRMRec->SignalStrengthAvailable(), rSigStr + S9_DBUV);
+	_REAL rSigStr;
+	_BOOLEAN bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
+	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
 
 	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
 

@@ -189,8 +189,10 @@ public:
 	void SetNumIterations(int value)
 		{ MSCMLCDecoder.SetNumIterations(value); }
 	
+	_BOOLEAN GetRecFilter() { return FreqSyncAcq.GetRecFilter(); }
 	void SetRecFilter(_BOOLEAN bVal) { FreqSyncAcq.SetRecFilter(bVal); }
 
+	_BOOLEAN GetFlippedSpectrum() { return ReceiveData.GetFlippedSpectrum(); }
 	void SetFlippedSpectrum(_BOOLEAN bVal)
 		{ ReceiveData.SetFlippedSpectrum(bVal); }
 	void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
@@ -209,6 +211,7 @@ public:
 	void GetMSCVectorSpace(CVector<_COMPLEX>& vec)
 		{ MSCMLCDecoder.GetVectorSpace(vec); }
 
+	_BOOLEAN GetReverbEffect() { return AudioSourceDecoder.GetReverbEffect(); }
 	void SetReverbEffect(_BOOLEAN bVal)
 		{ AudioSourceDecoder.SetReverbEffect(bVal); }
 
@@ -239,7 +242,6 @@ public:
 #ifdef HAVE_LIBHAMLIB
 	CHamlib*				GetHamlib() {return &Hamlib;}
 #endif
-	_BOOLEAN				SignalStrengthAvailable() { return bSMeterAvail; }
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
 	CParameter*				GetParameters() {return pReceiverParam;}
@@ -410,7 +412,6 @@ protected:
 	int						iBwCW;
 	int						iBwFM;
 	_BOOLEAN				bEnableSMeter;
-	_BOOLEAN				bSMeterAvail;
 	_BOOLEAN				bReadFromFile;
 	time_t					time_keeper;
 

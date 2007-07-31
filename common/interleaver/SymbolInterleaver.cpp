@@ -194,8 +194,7 @@ void CSymbDeinterleaver::InitInternal(CParameter& ReceiverParam)
 	if (ReceiverParam.eSimType == CParameter::ST_NONE)
 	{
 		/* Output right after the first block */
-		//iInitCnt = (int) Min(1, iD);
-		iInitCnt = Min(1, iD);
+		iInitCnt = (int) Min(1, iD);
 	}
 	else
 #endif

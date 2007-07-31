@@ -234,7 +234,7 @@ CShortLog::writeParameters()
 		iTmpNumAAC = Parameters.iNumAudioFrames;
 
 	if (bRxlEnabled)
-		iRXL = (int)Round(Parameters.SigStrstat.getMean());
+		iRXL = (int)Round(Parameters.SigStrstat.getMean()+S9_DBUV);
 
 	Parameters.Unlock(); 
 
@@ -275,6 +275,8 @@ CShortLog::writeTrailer()
 	if (bRxlEnabled)
 	{
 		Parameters.SigStrstat.getMinMax(rMinSigStr, rMaxSigStr);
+		rMinSigStr+=S9_DBUV;
+		rMaxSigStr+=S9_DBUV;
 	}
 	Parameters.Unlock(); 
 
@@ -406,7 +408,7 @@ CLongLog::writeParameters()
 			<< ',' << setprecision(2) << setw(8) << rDoppler << ',' << setw(6) << rDelay;
 
 		if (bRxlEnabled)
-			File << ',' << setprecision(2) << setw(8) << Parameters.SigStrstat.getCurrent();
+			File << ',' << setprecision(2) << setw(8) << Parameters.SigStrstat.getCurrent()+S9_DBUV;
 
 		if (bPositionEnabled)
 			File << ',' << setprecision(4) << setw(10) << latitude << ',' << setw(10) << longitude;

@@ -552,12 +552,18 @@ void systemevalDlg::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 
 void systemevalDlg::OnTimer()
 {
-	CParameter& ReceiverParam = *(DRMReceiver.GetParameters());
-
-	ReceiverParam.Lock(); 
-
 	if (this->isVisible())
 	{
+		_REAL rSigStr;
+		_BOOLEAN bValid = DRMReceiver.GetSignalStrength(rSigStr);
+		if (bValid)
+			ValueRF->setText("<b>" + QString().setNum(rSigStr+S9_DBUV, 'f', 1) + " dBuV</b>");
+		else
+			ValueRF->setText("---");
+
+		CParameter& ReceiverParam = *(DRMReceiver.GetParameters());
+		ReceiverParam.Lock(); 
+
 		SetStatus(LEDMSC, ReceiverParam.ReceiveStatus.Audio.GetStatus());
     	SetStatus(LEDSDC, ReceiverParam.ReceiveStatus.SDC.GetStatus());
     	SetStatus(LEDFAC, ReceiverParam.ReceiveStatus.FAC.GetStatus());
@@ -565,15 +571,6 @@ void systemevalDlg::OnTimer()
     	SetStatus(LEDTimeSync, ReceiverParam.ReceiveStatus.TSync.GetStatus());
     	SetStatus(LEDIOInterface, ReceiverParam.ReceiveStatus.Interface.GetStatus());
 
-		if (ReceiverParam.pDRMRec->SignalStrengthAvailable())
-		{
-			_REAL rRF = ReceiverParam.SigStrstat.getCurrent() + S9_DBUV;
-			ValueRF->setText("<b>" + QString().setNum(rRF, 'f', 1) + " dBuV</b>");
-		}
-		else
-		{
-			ValueRF->setText("---");
-		}
 
 	/* Show SNR if receiver is in tracking mode */
 	if (DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
@@ -871,6 +868,7 @@ void systemevalDlg::OnTimer()
 	TextLabelGPSTime->setText(qStrTime);
 */
 
+		ReceiverParam.Unlock(); 
 	}
 
 	/* having a count-down stops intermediate digits having an effect, mostly! */
@@ -887,8 +885,6 @@ void systemevalDlg::OnTimer()
 	{
 		UpdateControls();
 	}
-
-	ReceiverParam.Unlock(); 
 }
 
 void systemevalDlg::OnListSelChanged(QListViewItem* NewSelIt)
