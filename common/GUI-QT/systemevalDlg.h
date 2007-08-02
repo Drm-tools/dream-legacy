@@ -55,8 +55,6 @@
 class CGPSReceiver;
 
 /* Definitions ****************************************************************/
-/* Define this macro if you prefer the QT-type of displaying date and time */
-#define GUI_QT_DATE_TIME_TYPE
 
 
 /* Classes ********************************************************************/

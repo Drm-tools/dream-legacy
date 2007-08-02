@@ -621,6 +621,12 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
 		this, SLOT(OnFreqCntNewValue(double)));
+
+	ProgrSigStrength->setRange(S_METER_THERMO_MIN, S_METER_THERMO_MAX);
+	ProgrSigStrength->setOrientation(QwtThermo::Horizontal, QwtThermo::Top);
+	ProgrSigStrength->setAlarmLevel(S_METER_THERMO_ALARM);
+	ProgrSigStrength->setAlarmColor(QColor(255, 0, 0));
+	ProgrSigStrength->setScale(S_METER_THERMO_MIN, S_METER_THERMO_MAX, 10.0);
 }
 
 StationsDlg::~StationsDlg()
@@ -867,11 +873,6 @@ void StationsDlg::showEvent(QShowEvent*)
 	if(bSMeter)
 	{
 		/* Init progress bar for input s-meter */
-		ProgrSigStrength->setRange(S_METER_THERMO_MIN, S_METER_THERMO_MAX);
-		ProgrSigStrength->setOrientation(QwtThermo::Horizontal, QwtThermo::Top);
-		ProgrSigStrength->setAlarmLevel(S_METER_THERMO_ALARM);
-		ProgrSigStrength->setAlarmColor(QColor(255, 0, 0));
-		ProgrSigStrength->setScale(S_METER_THERMO_MIN, S_METER_THERMO_MAX, 10.0);
 		TimerSMeter.start(GUI_TIMER_S_METER);
 	}
 	else
@@ -1180,8 +1181,6 @@ void StationsDlg::OnSMeterMenu(int iID)
 		DRMReceiver.SetEnableSMeter(FALSE);
 		TimerSMeter.stop();
 		EnableSMeter(FALSE);
-		ProgrSigStrength->hide();
-		TextLabelSMeter->hide();
 	}
 	else
 	{
@@ -1261,6 +1260,8 @@ void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
 
 		ProgrSigStrength->setEnabled(TRUE);
 		TextLabelSMeter->setEnabled(TRUE);
+		ProgrSigStrength->show();
+		TextLabelSMeter->show();
 	}
 	else
 	{
@@ -1271,6 +1272,8 @@ void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
 
 		ProgrSigStrength->setEnabled(FALSE);
 		TextLabelSMeter->setEnabled(FALSE);
+		ProgrSigStrength->hide();
+		TextLabelSMeter->hide();
 	}
 }
 

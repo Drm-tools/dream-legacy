@@ -447,10 +447,14 @@ CReceptLog::SetLogFrequency(int iNew)
 		if(bLogActivated)
 		{
 			writeTrailer();
+			iFrequency = iNew;
 			writeHeader();
 		}
+		else
+		{
+			iFrequency = iNew;
+		}
 	}
-	iFrequency = iNew;
 }
 
 string CReceptLog::strdate(time_t t)

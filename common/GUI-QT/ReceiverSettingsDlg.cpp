@@ -147,6 +147,27 @@ void ReceiverSettingsDlg::hideEvent(QHideEvent*)
 void ReceiverSettingsDlg::showEvent(QShowEvent*)
 {
 	/* Sync ----------------------------------------------------------------- */
+	if (DRMReceiver.GetTimeInt() == CChannelEstimation::TWIENER)
+		RadioButtonTiWiener->setChecked(TRUE);
+	else
+		RadioButtonTiLinear->setChecked(TRUE);
+
+	switch(DRMReceiver.GetFreqInt())
+	{
+	case CChannelEstimation::FLINEAR:
+		RadioButtonFreqLinear->setChecked(TRUE);
+		break;
+	case CChannelEstimation::FDFTFILTER:
+		RadioButtonFreqDFT->setChecked(TRUE);
+		break;
+	case CChannelEstimation::FWIENER:
+		RadioButtonFreqWiener->setChecked(TRUE);
+	}
+
+	if (DRMReceiver.GetTiSyncTracType() == CTimeSyncTrack::TSFIRSTPEAK)
+		RadioButtonTiSyncFirstPeak->setChecked(TRUE);
+	else
+		RadioButtonTiSyncEnergy->setChecked(TRUE);
 
 	/* Misc ----------------------------------------------------------------- */
 	CheckBoxRecFilter->setChecked(DRMReceiver.GetRecFilter());

@@ -39,11 +39,16 @@
 # include "PacketSocketNull.h"
 #endif
 
-
 CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink),
-	cProfile('0'), iSubsamplingFactor(1), iSubsamplingCounter(0), bNeedPft(FALSE), fragment_size(0), pDRMReceiver(0), 
-
-	bUseAFCRC(TRUE), sequence_counter(0)
+	cProfile('0'), iSubsamplingFactor(1), bNeedPft(FALSE),
+	fragment_size(0),
+	TagPacketDecoderRSCIControl(),
+	mapPresets(),
+	pDRMReceiver(0), 
+	AFPacketGenerator(),
+	bUseAFCRC(TRUE),
+	sequence_counter(0),
+	iSubsamplingCounter(0)
 {
 	TagPacketDecoderRSCIControl.SetSubscriber(this);
 }

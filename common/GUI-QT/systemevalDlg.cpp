@@ -557,7 +557,7 @@ void systemevalDlg::OnTimer()
 		_REAL rSigStr;
 		_BOOLEAN bValid = DRMReceiver.GetSignalStrength(rSigStr);
 		if (bValid)
-			ValueRF->setText("<b>" + QString().setNum(rSigStr+S9_DBUV, 'f', 1) + " dBuV</b>");
+			ValueRF->setText(QString().setNum(rSigStr+S9_DBUV, 'f', 1) + " dBuV");
 		else
 			ValueRF->setText("---");
 
@@ -582,8 +582,7 @@ void systemevalDlg::OnTimer()
 		if (rSNR >= 0.0)
 		{
 			/* SNR */
-			ValueSNR->setText("<b>" +
-				QString().setNum(rSNR, 'f', 1) + " dB</b>");
+			ValueSNR->setText("<b>" + QString().setNum(rSNR, 'f', 1) + " dB</b>");
 		}
 		else
 		{
@@ -636,22 +635,16 @@ void systemevalDlg::OnTimer()
 	}
 
 #ifdef _DEBUG_
-	TextFreqOffset->setText("DC: " +
-		QString().setNum(ReceiverParam.
-		GetDCFrequency(), 'f', 3) + " Hz ");
+	TextFreqOffset->setText("DC: " + QString().setNum(ReceiverParam.  GetDCFrequency(), 'f', 3) + " Hz ");
 
 	/* Metric values */
-	ValueFreqOffset->setText(tr("Metrics [dB]: MSC: ") +
-		QString().setNum(
-		DRMReceiver.GetMSCMLC()->GetAccMetric(), 'f', 2) +	"\nSDC: " +
-		QString().setNum(
-		DRMReceiver.GetSDCMLC()->GetAccMetric(), 'f', 2) +	" / FAC: " +
-		QString().setNum(
-		DRMReceiver.GetFACMLC()->GetAccMetric(), 'f', 2));
+	ValueFreqOffset->setText(tr("Metrics [dB]: MSC: ")
+	+ QString().setNum(DRMReceiver.GetMSCMLC()->GetAccMetric(), 'f', 2)
+	+ "\nSDC: " + QString().setNum( DRMReceiver.GetSDCMLC()->GetAccMetric(), 'f', 2)
+	+ " / FAC: " + QString().setNum( DRMReceiver.GetFACMLC()->GetAccMetric(), 'f', 2));
 #else
 	/* DC frequency */
-	ValueFreqOffset->setText(QString().setNum(
-		ReceiverParam.GetDCFrequency(), 'f', 2) + " Hz");
+	ValueFreqOffset->setText(QString().setNum(ReceiverParam.GetDCFrequency(), 'f', 2)+" Hz");
 #endif
 
 /* _WIN32 fix because in Visual c++ the GUI files are always compiled even
@@ -774,7 +767,6 @@ void systemevalDlg::OnTimer()
 	}
 	else
 	{
-#ifdef GUI_QT_DATE_TIME_TYPE
 		/* QT type of displaying date and time */
 		QDateTime DateTime;
 		DateTime.setDate(QDate(ReceiverParam.iYear,
@@ -784,28 +776,6 @@ void systemevalDlg::OnTimer()
 			ReceiverParam.iUTCMin));
 
 		strFACInfo = DateTime.toString();
-#else
-		/* Set time and date */
-		QString strMin;
-		const int iMin = ReceiverParam.iUTCMin;
-
-		/* Add leading zero to number smaller than 10 */
-		if (iMin < 10)
-			strMin = "0";
-		else
-			strMin = "";
-
-		strMin += QString().setNum(iMin);
-
-		strFACInfo =
-			/* Time */
-			QString().setNum(ReceiverParam.iUTCHour) + ":" +
-			strMin + "  -  " +
-			/* Date */
-			QString().setNum(ReceiverParam.iMonth) + "/" +
-			QString().setNum(ReceiverParam.iDay) + "/" +
-			QString().setNum(ReceiverParam.iYear);
-#endif
 	}
 
 	FACTimeDateL->setText(tr("Received time - date:")); /* Label */

@@ -1437,8 +1437,8 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	s.Put("Receiver", "datafilesdirectory", pReceiverParam->sDataFilesDirectory);
 
 	/* Sync */
-	SetFreqInt(CChannelEstimation::ETypeIntFreq(s.Get("Receiver", "frequencyinterpolation", 0)));
-	SetTimeInt(CChannelEstimation::ETypeIntTime(s.Get("Receiver", "timeinterpolation", 0)));
+	SetFreqInt(CChannelEstimation::ETypeIntFreq(s.Get("Receiver", "frequencyinterpolation", int(CChannelEstimation::FWIENER))));
+	SetTimeInt(CChannelEstimation::ETypeIntTime(s.Get("Receiver", "timeinterpolation", int(CChannelEstimation::TWIENER))));
 	SetTiSyncTracType(CTimeSyncTrack::ETypeTiSyncTrac(s.Get("Receiver", "tracking", 0)));
 
 	/* Receiver ------------------------------------------------------------- */
@@ -1769,6 +1769,11 @@ CDRMReceiver::SaveSettings(CSettings& s)
 
 	/* Modified metrics flag */
 	s.Put("Receiver", "modmetric", ChannelEstimation.GetIntCons());
+
+	/* Sync */
+	s.Put("Receiver", "frequencyinterpolation", int(GetFreqInt()));
+	s.Put("Receiver", "timeinterpolation", int(GetTimeInt()));
+	s.Put("Receiver", "tracking", int(GetTiSyncTracType()));
 
 	/* Sound In device */
 	s.Put("Receiver", "snddevin", pSoundInInterface->GetDev());

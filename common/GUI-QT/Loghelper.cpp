@@ -62,7 +62,6 @@ Loghelper::~Loghelper()
 
 void Loghelper::OnTimerLogFileStart()
 {
-cout << "Loghelper::OnTimerLogFileStart" << endl;
 	/* Start logging (if not already done) */
 	if(!longLog.GetLoggingActivated())
 	{
@@ -80,23 +79,24 @@ cout << "Loghelper::OnTimerLogFileStart" << endl;
 
 void Loghelper::OnTimerLogFileShort()
 {
-cout << "Loghelper::OnTimerLogFileShort" << endl;
 	/* Write new parameters in log file (short version) */
-	shortLog.SetLogFrequency(DRMReceiver.GetFrequency());
 	shortLog.Update();
 }
 
 void Loghelper::OnTimerLogFileLong()
 {
-cout << "Loghelper::OnTimerLogFileLong" << endl;
 	/* Write new parameters in log file (long version) */
 	longLog.SetLogFrequency(DRMReceiver.GetFrequency());
 	longLog.Update();
+
+	/* this make sure re-tunings appear in the short log, even if they happen
+	 * more frequently than the short log timer
+	 */
+	shortLog.SetLogFrequency(DRMReceiver.GetFrequency());
 }
 
 void Loghelper::EnableLog(bool b)
 {
-cout << "Loghelper::EnableLog(" << b << ")" << endl;
 	if(b)
 	{
 		TimerLogFileStart.start(1000*iLogDelay, TRUE);
@@ -113,20 +113,17 @@ cout << "Loghelper::EnableLog(" << b << ")" << endl;
 
 void Loghelper::LogStartDel(long iValue)
 {
-cout << "Loghelper::LogStartDel(" << iValue << ")" << endl;
 	iLogDelay = iValue;
 }
 
 void Loghelper::LogPosition(bool b)
 {
-cout << "Loghelper::LogPosition" << endl;
 	shortLog.SetPositionEnabled(b);
 	longLog.SetPositionEnabled(b);
 }
 
 void Loghelper::LogSigStr(bool b)
 {
-cout << "Loghelper::LogSigStr" << endl;
 	shortLog.SetRxlEnabled(b);
 	longLog.SetRxlEnabled(b);
 }
