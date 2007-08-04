@@ -34,11 +34,8 @@
 class CGPSData
 {
 public:
-	CGPSData() 
-	{ 
-		Reset();
-	}
-	~CGPSData() {}
+	CGPSData();
+	~CGPSData();
 
 	enum EFix { MODE_NO_FIX, MODE_2D, MODE_3D };
 

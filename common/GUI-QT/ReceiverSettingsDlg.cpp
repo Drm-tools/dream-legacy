@@ -44,8 +44,7 @@
 
 ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, WFlags f) :
-	ReceiverSettingsDlgBase(parent, name, modal, f), DRMReceiver(NRx),Settings(NSettings),
-	host("localhost"),port(2947),bUseGPS(FALSE)
+	ReceiverSettingsDlgBase(parent, name, modal, f), DRMReceiver(NRx),Settings(NSettings)
 {
 
 	/* Set the validators fro the receiver coordinate */
@@ -102,40 +101,10 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-	/* GPS ------------------------------------------------------------------- */
-	host = Settings.Get("GPS", "host", host);
-	port = Settings.Get("GPS", "port", port);
-	bUseGPS = Settings.Get("GPS", "usegpsd", bUseGPS);
-	CheckBoxUseGPS->setChecked(bUseGPS);
-
-	if(bUseGPS==FALSE)
-	{
-		CParameter& Parameters = *DRMReceiver.GetParameters();
-		double latitude = Settings.Get("Logfile", "latitude", 0.0);
-		double longitude = Settings.Get("Logfile", "longitude", 0.0);
-		Parameters.GPSData.SetPositionAvailable(TRUE);
-		Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
-		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
-	}
 }
 
 ReceiverSettingsDlg::~ReceiverSettingsDlg()
 {
-	CParameter& Parameters = *DRMReceiver.GetParameters();
-	Settings.Put("Logfile", "delay", SliderLogStartDelay->value());
-	Settings.Put("Logfile", "enablerxl", CheckBoxLogSigStr->isChecked());
-	Settings.Put("Logfile", "enablepositiondata", CheckBoxLogLatLng->isChecked());
-	Settings.Put("Logfile", "enablelog", CheckBoxWriteLog->isChecked());
-	if (Parameters.GPSData.GetPositionAvailable())
-	{
-		double latitude, longitude;
-		Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
-		Settings.Put("Logfile", "latitude", latitude);
-		Settings.Put("Logfile", "longitude", longitude);
-	}
-	Settings.Put("GPS", "host", host);
-	Settings.Put("GPS", "port", port);
-	Settings.Put("GPS", "usegpsd", bUseGPS);
 	if(DRMReceiver.GetIsWriteWaveFile())
 		DRMReceiver.StopWriteWaveFile();
 }
@@ -203,11 +172,17 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	EdtLatitudeMinutes->setText("");
 	EdtLatitudeNS->setText("");
 
-    LineEditGPSHost->setText(host.c_str());
-    LineEditGPSPort->setText(QString("%1").arg(port));
-
 	/* Extract the receiver coordinates setted */
 	ExtractReceiverCoordinates();
+
+	/* GPS ------------------------------------------------------------------- */
+	CheckBoxUseGPS->setChecked(Settings.Get("GPS", "usegpsd", FALSE));
+
+	string host = Settings.Get("GPS", "host");
+    LineEditGPSHost->setText(host.c_str());
+
+	int port = Settings.Get("GPS", "port", 2947);
+    LineEditGPSPort->setText(QString("%1").arg(port));
 }
 
 void ReceiverSettingsDlg::CheckSN(const QString& NewText)
@@ -243,11 +218,11 @@ void ReceiverSettingsDlg::OnCheckBoxUseGPS()
 #if defined(_MSC_VER) && (_MSC_VER < 1400)
 	QMessageBox::information( this, "Dream", "Don't enable GPS unless you have gpsd running." );
 #endif
-	bUseGPS = CheckBoxUseGPS->isChecked();
-	if(bUseGPS)
-		emit StartStopGPS(true);
-	else
-		emit StartStopGPS(false);
+    string host = LineEditGPSHost->text().latin1();
+	Settings.Put("GPS", "host", host);
+	Settings.Put("GPS", "port", LineEditGPSPort->text().toInt());
+	emit StartStopGPS(CheckBoxUseGPS->isChecked());
+	Settings.Put("GPS", "usegpsd", CheckBoxUseGPS->isChecked());
 }
 
 void ReceiverSettingsDlg::ButtonOkClicked()
@@ -341,9 +316,6 @@ void ReceiverSettingsDlg::ButtonOkClicked()
 			Parameters.GPSData.SetPositionAvailable(FALSE);
 		}
 		Parameters.Unlock(); 
-
-    	host = LineEditGPSHost->text().latin1();
-    	port = LineEditGPSPort->text().toInt();
 
 		accept(); /* If the values are valid close the dialog */
 	}
@@ -587,25 +559,26 @@ void ReceiverSettingsDlg::OnCheckSaveAudioWAV()
 
 void ReceiverSettingsDlg::OnCheckWriteLog()
 {
-	if (CheckBoxWriteLog->isChecked())
-		emit StartStopLog(true);
-	else
-		emit StartStopLog(false);
+	emit StartStopLog(CheckBoxWriteLog->isChecked());
+	Settings.Put("Logfile", "enablelog", CheckBoxWriteLog->isChecked());
 }
 
 void ReceiverSettingsDlg::OnCheckBoxLogLatLng()
 {
 	emit LogPosition(CheckBoxLogLatLng->isChecked());
+	Settings.Put("Logfile", "enablepositiondata", CheckBoxLogLatLng->isChecked());
 }
 
 void ReceiverSettingsDlg::OnCheckBoxLogSigStr()
 {
 	emit LogSigStr(CheckBoxLogSigStr->isChecked());
+	Settings.Put("Logfile", "enablerxl", CheckBoxLogSigStr->isChecked());
 }
 
 void ReceiverSettingsDlg::OnSliderLogStartDelayChange(int value)
 {
 	emit SetLogStartDelay(value);
+	Settings.Put("Logfile", "delay", value);
 }
 
 void ReceiverSettingsDlg::AddWhatsThisHelp()

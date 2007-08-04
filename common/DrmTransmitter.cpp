@@ -36,6 +36,7 @@
 #include "OFDM.h"
 #include "DRMSignalIO.h"
 #include <iostream>
+#include "util/Settings.h"
 
 #include "sound.h"
 
@@ -66,7 +67,7 @@ protected:
 };
 
 /* Implementation *************************************************************/
-CDRMTransmitter::CDRMTransmitter(CSettings& Settings):
+CDRMTransmitter::CDRMTransmitter():
 	TransmParam(NULL),
 	strMDIinAddr(), strMDIoutAddr(),
 	pReadData(NULL), AudioSourceEncoder(), strInputFileName(),
@@ -87,115 +88,6 @@ CDRMTransmitter::CDRMTransmitter(CSettings& Settings):
 	TransmParam.iYear = 0;
 	TransmParam.iUTCHour = 0;
 	TransmParam.iUTCMin = 0;
-
-	/**************************************************************************/
-	/* Robustness mode and spectrum occupancy. Available transmission modes:
-	   RM_ROBUSTNESS_MODE_A: Gaussian channels, with minor fading,
-	   RM_ROBUSTNESS_MODE_B: Time and frequency selective channels, with longer
-	   delay spread,
-	   RM_ROBUSTNESS_MODE_C: As robustness mode B, but with higher Doppler
-	   spread,
-	   RM_ROBUSTNESS_MODE_D: As robustness mode B, but with severe delay and
-	   Doppler spread.
-	   Available bandwidths:
-	   SO_0: 4.5 kHz, SO_1: 5 kHz, SO_2: 9 kHz, SO_3: 10 kHz, SO_4: 18 kHz,
-	   SO_5: 20 kHz */
-	TransmParam.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
-
-	/* Protection levels for MSC. Depend on the modulation scheme. Look at
-	   TableMLC.h, iCodRateCombMSC16SM, iCodRateCombMSC64SM,
-	   iCodRateCombMSC64HMsym, iCodRateCombMSC64HMmix for available numbers */
-	TransmParam.MSCPrLe.iPartA = 0;
-	TransmParam.MSCPrLe.iPartB = 1;
-	TransmParam.MSCPrLe.iHierarch = 0;
-
-	/* Either one audio or one data service can be chosen */
-	_BOOLEAN bIsAudio = TRUE;
-
-	/* In the current version only one service and one stream is supported. The
-	   stream IDs must be 0 in both cases */
-	if (bIsAudio == TRUE)
-	{
-		/* Audio */
-		TransmParam.iNumAudioService = 1;
-		TransmParam.iNumDataService = 0;
-
-		TransmParam.Service[0].eAudDataFlag = CService::SF_AUDIO;
-		TransmParam.Service[0].AudioParam.iStreamID = 0;
-
-		/* Text message */
-		TransmParam.Service[0].AudioParam.bTextflag = TRUE;
-
-		/* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
-		TransmParam.Service[0].iServiceDescr = 15;	/* 15 -> other music */
-	}
-	else
-	{
-		/* Data */
-		TransmParam.iNumAudioService = 0;
-		TransmParam.iNumDataService = 1;
-
-		TransmParam.Service[0].eAudDataFlag = CService::SF_DATA;
-		TransmParam.Service[0].DataParam.iStreamID = 0;
-
-		/* Init SlideShow application */
-		TransmParam.Service[0].DataParam.iPacketLen = 45;	/* TEST */
-		TransmParam.Service[0].DataParam.eDataUnitInd =
-			CDataParam::DU_DATA_UNITS;
-		TransmParam.Service[0].DataParam.eAppDomain =
-			CDataParam::AD_DAB_SPEC_APP;
-
-		/* The value 0 indicates that the application details are provided
-		   solely by SDC data entity type 5 */
-		TransmParam.Service[0].iServiceDescr = 0;
-	}
-
-	/* Init service parameters, 24 bit unsigned integer number */
-	TransmParam.Service[0].iServiceID = 0;
-
-	/* Service label data. Up to 16 bytes defining the label using UTF-8
-	   coding */
-	TransmParam.Service[0].strLabel = "Dream Test";
-
-	/* Language (see TableFAC.h, "strTableLanguageCode[]") */
-	TransmParam.Service[0].iLanguage = 5;	/* 5 -> english */
-
-	/* Interleaver mode of MSC service. Long interleaving (2 s): SI_LONG,
-	   short interleaving (400 ms): SI_SHORT */
-	TransmParam.eSymbolInterlMode = CParameter::SI_LONG;
-
-	/* MSC modulation scheme. Available modes:
-	   16-QAM standard mapping (SM): CS_2_SM,
-	   64-QAM standard mapping (SM): CS_3_SM,
-	   64-QAM symmetrical hierarchical mapping (HMsym): CS_3_HMSYM,
-	   64-QAM mixture of the previous two mappings (HMmix): CS_3_HMMIX */
-	TransmParam.eMSCCodingScheme = CS_3_SM;
-
-	/* SDC modulation scheme. Available modes:
-	   4-QAM standard mapping (SM): CS_1_SM,
-	   16-QAM standard mapping (SM): CS_2_SM */
-	TransmParam.eSDCCodingScheme = CS_2_SM;
-
-	/* Set desired intermediate frequency (IF) in Hertz */
-	/* Set desired intermediate frequency (IF) in Hertz */
-	TransmParam.rCarOffset=12000.0;		/* Default: "VIRTUAL_INTERMED_FREQ" */
-
-	/* default output format - REAL */
-	TransmParam.eOutputFormat = OF_REAL_VAL;
-
-	if (bUseUEP == TRUE)
-	{
-		// TEST
-		TransmParam.SetStreamLen(0, 80, 0);
-	}
-	else
-	{
-		/* Length of part B is set automatically (equal error protection (EEP),
-		   if "= 0"). Sets the number of bytes, should not exceed total number
-		   of bytes available in MSC block */
-		TransmParam.SetStreamLen(0, 0, 0);
-	}
-	TransmParam.eOutputFormat = OF_REAL_VAL;
 }
 
 void
@@ -281,7 +173,6 @@ CDRMTransmitter::SetWriteToFile(const string & strNFN, const string & strType)
 {
 	strOutputFileName = strNFN;
 	strOutputFileType = strType;
-	cout << "CDRMTransmitter::SetWriteToFile(" << strOutputFileName << "," << strOutputFileType << ")" << endl;
 	bCOFDMout = TRUE;
 }
 
@@ -493,6 +384,7 @@ void CDRMTransmitter::Start()
 
 			if(bCOFDMout)
 			{
+cout << "Tx Modulation" << endl; cout.flush();
 				/* MLC-encoder */
 				MSCMLCEncoder.ProcessData(TransmParam, MSCBuf[0], MLCEncBuf);
 
@@ -536,4 +428,138 @@ void CDRMTransmitter::Start()
 		if(pSoundOutInterface)
 			delete pSoundOutInterface;
 	}
+}
+
+void
+CDRMTransmitter::LoadSettings(CSettings& s)
+{
+	/**************************************************************************/
+	/* Robustness mode and spectrum occupancy. Available transmission modes:
+	   RM_ROBUSTNESS_MODE_A: Gaussian channels, with minor fading,
+	   RM_ROBUSTNESS_MODE_B: Time and frequency selective channels, with longer
+	   delay spread,
+	   RM_ROBUSTNESS_MODE_C: As robustness mode B, but with higher Doppler
+	   spread,
+	   RM_ROBUSTNESS_MODE_D: As robustness mode B, but with severe delay and
+	   Doppler spread.
+	   Available bandwidths:
+	   SO_0: 4.5 kHz, SO_1: 5 kHz, SO_2: 9 kHz, SO_3: 10 kHz, SO_4: 18 kHz,
+	   SO_5: 20 kHz */
+	TransmParam.InitCellMapTable(
+		ERobMode(s.Get("Transmitter", "robm", RM_ROBUSTNESS_MODE_B)), 
+		ESpecOcc(s.Get("Transmitter", "spectrum_occupancy", SO_3))
+	);
+
+	/* Protection levels for MSC. Depend on the modulation scheme. Look at
+	   TableMLC.h, iCodRateCombMSC16SM, iCodRateCombMSC64SM,
+	   iCodRateCombMSC64HMsym, iCodRateCombMSC64HMmix for available numbers */
+	TransmParam.MSCPrLe.iPartA = s.Get("Transmitter", "PartAProt", 0);
+	TransmParam.MSCPrLe.iPartB = s.Get("Transmitter", "PartBProt", 1);
+	TransmParam.MSCPrLe.iHierarch = s.Get("Transmitter", "HierarchicalProt", 0);
+
+	/* Either one audio or one data service can be chosen */
+	_BOOLEAN bIsAudio = s.Get("Transmitter", "audioservice", 1);
+
+	/* In the current version only one service and one stream is supported. The
+	   stream IDs must be 0 in both cases */
+	if (bIsAudio == TRUE)
+	{
+		/* Audio */
+		TransmParam.iNumAudioService = 1;
+		TransmParam.iNumDataService = 0;
+
+		TransmParam.Service[0].eAudDataFlag = CService::SF_AUDIO;
+		TransmParam.Service[0].AudioParam.iStreamID = 0;
+
+		/* Text message */
+		TransmParam.Service[0].AudioParam.bTextflag = s.Get("Transmitter", "textmessages", 1);
+
+		/* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
+		TransmParam.Service[0].iServiceDescr = s.Get("Transmitter", "genre", 15); /* 15 -> other music */
+	}
+	else
+	{
+		/* Data */
+		TransmParam.iNumAudioService = 0;
+		TransmParam.iNumDataService = 1;
+
+		TransmParam.Service[0].eAudDataFlag = CService::SF_DATA;
+		TransmParam.Service[0].DataParam.iStreamID = 0;
+
+		/* Init SlideShow application */
+		TransmParam.Service[0].DataParam.iPacketLen = 45;	/* TEST */
+		TransmParam.Service[0].DataParam.eDataUnitInd = CDataParam::DU_DATA_UNITS;
+		TransmParam.Service[0].DataParam.eAppDomain = CDataParam::AD_DAB_SPEC_APP;
+
+		/* The value 0 indicates that the application details are provided
+		   solely by SDC data entity type 5 */
+		TransmParam.Service[0].iServiceDescr = 0;
+	}
+
+	/* Init service parameters, 24 bit unsigned integer number */
+	TransmParam.Service[0].iServiceID = s.Get("Transmitter", "sid", 0);
+
+	/* Service label data. Up to 16 bytes defining the label using UTF-8 coding */
+	TransmParam.Service[0].strLabel = s.Get("Transmitter", "label", string("Dream Test"));
+
+	/* Language (see TableFAC.h, "strTableLanguageCode[]") */
+	TransmParam.Service[0].iLanguage = s.Get("Transmitter", "language", 5);	/* 5 -> english */
+
+	/* Interleaver mode of MSC service. Long interleaving (2 s): SI_LONG,
+	   short interleaving (400 ms): SI_SHORT */
+	TransmParam.eSymbolInterlMode
+		= CParameter::ESymIntMod(s.Get("Transmitter", "interleaving", CParameter::SI_LONG));
+
+	/* MSC modulation scheme. Available modes:
+	   16-QAM standard mapping (SM): CS_2_SM,
+	   64-QAM standard mapping (SM): CS_3_SM,
+	   64-QAM symmetrical hierarchical mapping (HMsym): CS_3_HMSYM,
+	   64-QAM mixture of the previous two mappings (HMmix): CS_3_HMMIX */
+	TransmParam.eMSCCodingScheme = ECodScheme(s.Get("Transmitter", "mscmod", CS_3_SM));
+
+	/* SDC modulation scheme. Available modes:
+	   4-QAM standard mapping (SM): CS_1_SM,
+	   16-QAM standard mapping (SM): CS_2_SM */
+	TransmParam.eSDCCodingScheme = ECodScheme(s.Get("Transmitter", "mscmod", CS_2_SM));
+
+	/* Set desired intermediate frequency (IF) in Hertz */
+	/* Set desired intermediate frequency (IF) in Hertz */
+	TransmParam.rCarOffset = s.Get("Transmitter", "if", 12000.0);
+
+	/* default output format - REAL */
+	TransmParam.eOutputFormat = EOutFormat(s.Get("Transmitter", "output_format", OF_REAL_VAL));
+
+	if (bUseUEP == TRUE)
+	{
+		// TEST
+		TransmParam.SetStreamLen(0, 80, 0);
+	}
+	else
+	{
+		/* Length of part B is set automatically (equal error protection (EEP),
+		   if "= 0"). Sets the number of bytes, should not exceed total number
+		   of bytes available in MSC block */
+		TransmParam.SetStreamLen(0, 0, 0);
+	}
+}
+
+void
+CDRMTransmitter::SaveSettings(CSettings& s)
+{
+	s.Put("Transmitter", "robm", TransmParam.GetWaveMode());
+	s.Put("Transmitter", "spectrum_occupancy", TransmParam.GetSpectrumOccup());
+	s.Put("Transmitter", "PartAProt", TransmParam.MSCPrLe.iPartA);
+	s.Put("Transmitter", "PartBProt", TransmParam.MSCPrLe.iPartB);
+	s.Put("Transmitter", "HierarchicalProt", TransmParam.MSCPrLe.iHierarch);
+	s.Put("Transmitter", "audioservice", (TransmParam.Service[0].eAudDataFlag == CService::SF_AUDIO)?1:0);
+	s.Put("Transmitter", "textmessages", TransmParam.Service[0].AudioParam.bTextflag);
+	s.Put("Transmitter", "genre", TransmParam.Service[0].iServiceDescr);
+	s.Put("Transmitter", "sid", int(TransmParam.Service[0].iServiceID));
+	s.Put("Transmitter", "label", TransmParam.Service[0].strLabel);
+	s.Put("Transmitter", "language", TransmParam.Service[0].iLanguage);
+	s.Put("Transmitter", "interleaving", TransmParam.eSymbolInterlMode);
+	s.Put("Transmitter", "mscmod", TransmParam.eMSCCodingScheme);
+	s.Put("Transmitter", "mscmod", TransmParam.eSDCCodingScheme);
+	s.Put("Transmitter", "if", TransmParam.rCarOffset);
+	s.Put("Transmitter", "output_format", TransmParam.eOutputFormat);
 }

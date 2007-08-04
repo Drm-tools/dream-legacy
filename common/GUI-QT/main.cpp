@@ -138,7 +138,10 @@ main(int argc, char **argv)
 		}
 		else if(mode == "transmit")
 		{
-			CDRMTransmitter DRMTransmitter(Settings);
+			CDRMTransmitter DRMTransmitter;
+
+			DRMTransmitter.LoadSettings(Settings);
+
 			TransmDialog MainDlg(DRMTransmitter, Settings, NULL, NULL, false, Qt::WStyle_MinMax);
 
 			/* Set main window */
@@ -147,6 +150,8 @@ main(int argc, char **argv)
 			/* Show dialog */
 			MainDlg.show();
 			app.exec();
+
+			DRMTransmitter.SaveSettings(Settings);
 		}
 		else
 		{

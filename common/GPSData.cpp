@@ -31,6 +31,15 @@
 #include <sstream>
 #include <iomanip>
 
+CGPSData::CGPSData()
+{ 
+	Reset();
+}
+
+CGPSData::~CGPSData()
+{
+}
+
 CGPSData::EGPSSource CGPSData::GetGPSSource() const
 {
 	return eGPSSource;

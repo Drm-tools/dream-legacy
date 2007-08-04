@@ -56,9 +56,6 @@ protected:
 
 	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
-	string			host;
-	int				port;
-	_BOOLEAN		bUseGPS;
 
 signals:
 	void StartStopLog(bool);

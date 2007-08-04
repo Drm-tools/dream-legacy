@@ -29,21 +29,24 @@
 #if !defined(DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
 #define DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
-#include "util/Settings.h"
 #include "Parameter.h"
 #include "DataIO.h"
 #include "DRMSignalIO.h"
 #include "sourcedecoders/AudioSourceDecoder.h"
 
 /* Classes ********************************************************************/
+class CSettings;
+
 class CDRMTransmitter
 #ifdef USE_QT_GUI
 	: public QThread
 #endif
 {
 public:
-							CDRMTransmitter(CSettings& Settings);
+							CDRMTransmitter();
 	virtual 				~CDRMTransmitter() {}
+	void					LoadSettings(CSettings&); // can write to settings to set defaults
+	void					SaveSettings(CSettings&);
 
 #ifdef USE_QT_GUI
 	void					run() { Start(); }
