@@ -46,7 +46,7 @@ public:
 	virtual 				~CDRMTransmitter() {}
 
 #ifdef USE_QT_GUI
-	void					run() { Start(); } 
+	void					run() { Start(); }
 #else
 	void					start() {}
 	int						wait(int) {return 1;}
@@ -54,11 +54,6 @@ public:
 #endif
 	void					Start();
 	void					Stop();
-
-	void					SetEnableProcessPriority(_BOOLEAN bValue)
-								{bProcessPriorityEnabled = bValue;}
-	_BOOLEAN				GetEnableProcessPriority()
-								{return bProcessPriorityEnabled;}
 
 	_REAL 					GetLevelMeter();
 
@@ -85,7 +80,6 @@ public:
 
 protected:
 
-	_BOOLEAN				bProcessPriorityEnabled;
 	CReadData*				pReadData;
 	CAudioSourceEncoder		AudioSourceEncoder;
 	string					strInputFileName;

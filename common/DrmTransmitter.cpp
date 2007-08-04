@@ -68,7 +68,7 @@ protected:
 /* Implementation *************************************************************/
 CDRMTransmitter::CDRMTransmitter(CSettings& Settings):
 	TransmParam(NULL),
-	strMDIinAddr(), strMDIoutAddr(), bProcessPriorityEnabled(FALSE),
+	strMDIinAddr(), strMDIoutAddr(),
 	pReadData(NULL), AudioSourceEncoder(), strInputFileName(),
 	strOutputFileName(), strOutputFileType(),
 	vecstrTexts(), vecstrPics(), vecstrPicTypes(),
@@ -313,7 +313,7 @@ void CDRMTransmitter::Start()
 	CSingleBuffer<_BINARY>	SDCTxBuf;
 	CSingleBuffer<_BINARY>	SDCSendBuf;
 	CCyclicBuffer<_COMPLEX>	SDCMapBuf;
-	
+
 	CSingleBuffer<_COMPLEX>	CarMapBuf;
 	CSingleBuffer<_COMPLEX>	OFDMModBuf;
 
@@ -349,17 +349,10 @@ void CDRMTransmitter::Start()
 	}
 
 
-	/* Set thread priority (the working thread should have a higher priority than the GUI) */
-#ifdef _WIN32
-	if(GetEnableProcessPriority())
-		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
-#endif
-
 	/* Initialization of the modules
 	 * we have to do the MLC first because this initialises the MSC parameters.
 	 * TODO problem of initialising things from the MDI input !!!!!!!!!!
 	 */
-
 
 	if(bCOFDMout)
 	{

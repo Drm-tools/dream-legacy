@@ -294,16 +294,13 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
-#ifdef WIN32
 		/* Enable/Disable process priority flag */
 		if (GetNumericArgument
-			(argc, argv, i, "-P", "--processpriority", 0, 1,
-			 rArgument) == TRUE)
+			(argc, argv, i, "-P", "--processpriority", 0, 1, rArgument) == TRUE)
 		{
-			Put("command", "processpriority", (int) rArgument);
+			Put("GUI", "processpriority", (int) rArgument);
 			continue;
 		}
-#endif
 
 		/* enable/disable epg decoding ----------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-e", "--decodeepg", 0,
@@ -312,8 +309,6 @@ CSettings::ParseArguments(int argc, char **argv)
 			Put("EPG", "decodeepg", (int) rArgument);
 			continue;
 		}
-
-#ifdef USE_QT_GUI				/* QThread needed for log file timing */
 
 		/* log enable flag  ---------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-g", "--enablelog", 0, 1,
@@ -355,7 +350,6 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
-#endif
 		/* MDI out address -------------------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "--mdiout", "--mdiout",
 							  strArgument) == TRUE)
@@ -447,7 +441,6 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
-#ifdef HAVE_LIBHAMLIB
 		/* Hamlib config string --------------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "-C", "--hamlib-config",
 							  strArgument) == TRUE)
@@ -470,7 +463,6 @@ CSettings::ParseArguments(int argc, char **argv)
 			Put("Hamlib", "ensmeter", (int)rArgument);
 			continue;
 		}
-#endif
 
 		/* Help (usage) flag ------------------------------------------------ */
 		if ((!strcmp(argv[i], "--help")) ||
@@ -642,7 +634,7 @@ CIniFile::GetIniSetting(const string& section,
 						 const string& key, const string& defaultval) const
 {
 	string result(defaultval);
-	const_cast<CMutex*>(&Mutex)->Lock(); 
+	const_cast<CMutex*>(&Mutex)->Lock();
 	INIFile::const_iterator iSection = ini.find(section);
 	if (iSection != ini.end())
 	{
@@ -650,20 +642,20 @@ CIniFile::GetIniSetting(const string& section,
 		if (apair != iSection->second.end())
 			result = apair->second;
 	}
-	const_cast<CMutex*>(&Mutex)->Unlock(); 
+	const_cast<CMutex*>(&Mutex)->Unlock();
 	return result;
 }
 
 void
 CIniFile::PutIniSetting(const string& section, const string& key, const string& value)
 {
-	Mutex.Lock(); 
+	Mutex.Lock();
 
 	/* null key is ok and empty value is ok but empty both is not useful */
 	if(key != "" || value != "")
 		ini[section][key]=value;
 
-	Mutex.Unlock(); 
+	Mutex.Unlock();
 }
 
 void
