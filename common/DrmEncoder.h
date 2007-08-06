@@ -1,12 +1,12 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * British Broadcasting Corporation
+ * Copyright (c) 2007
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Julian Cable
  *
  * Description:
- *	See DrmTransmitter.cpp
+ *	See DrmEncoder.cpp
  *
  ******************************************************************************
  *
@@ -26,43 +26,37 @@
  *
 \******************************************************************************/
 
-#if !defined(DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
-#define DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
+#ifndef _DRMENCODER_H
+#define _DRMENCODER_H
 
-#include "Parameter.h"
-#include "DrmEncoder.h"
-#include "DrmModulator.h"
+#include "GlobalDefinitions.h"
+#include "DataIO.h"
+#include "util/Buffer.h"
+#include "sourcedecoders/AudioSourceDecoder.h"
 
 /* Classes ********************************************************************/
 class CSettings;
+class CParameter;
+class CReadData;
+class SoundInInterface;
 
-class CDRMTransmitter
-#ifdef USE_QT_GUI
-	: public QThread
-#endif
+class CDRMEncoder
 {
 public:
-	enum ETxOpMode { T_ENC, T_MOD, T_TX };
+							CDRMEncoder();
+	virtual 				~CDRMEncoder() {}
+	void					LoadSettings(CSettings&, CParameter&);
+	void					SaveSettings(CSettings&, CParameter&);
 
-							CDRMTransmitter();
-	virtual 				~CDRMTransmitter() {}
-	void					LoadSettings(CSettings&); // can write to settings to set defaults
-	void					SaveSettings(CSettings&);
-
-#ifdef USE_QT_GUI
-	void					run() { Start(); }
-#else
-	void					start() {}
-	int						wait(int) {return 1;}
-	bool					finished(){return true;}
-#endif
-	void					Start();
-	void					Stop();
-
-	void					SetOperatingMode(const ETxOpMode);
-	ETxOpMode				GetOperatingMode();
-
-	void					CalculateChannelCapacities(CParameter&);
+	void					Init(CParameter&,
+								CBuffer<_BINARY>& FACBuf, 
+								CBuffer<_BINARY>& SDCBuf, 
+								vector< CSingleBuffer<_BINARY> >& MSCBuf);
+	void					ProcessData(CParameter& Parameter, 
+								CBuffer<_BINARY>& FACBuf, 
+								CBuffer<_BINARY>& SDCBuf, 
+								vector< CSingleBuffer<_BINARY> >& MSCBuf);
+	void					Cleanup(CParameter&);
 
 	_REAL 					GetLevelMeter();
 
@@ -77,23 +71,24 @@ public:
 	void					SetSoundInInterface(int);
 	void 					SetReadFromFile(const string& strNFN);
 
-	void					DisableCOFDM() { bCOFDMout = FALSE; }
-	void					GetSoundOutChoices(vector<string>&);
-	void					SetSoundOutInterface(int);
-	void					SetWriteToFile(const string& strNFN, const string& strType);
-
-	/* Parameters */
-	CParameter				TransmParam;
-	string					strMDIinAddr;
-	string					strMDIoutAddr;
-
 protected:
 
-	ETxOpMode				eOpMode;
-	_BOOLEAN				bCOFDMout;
-	CDRMEncoder				Encoder;
-	CDRMModulator			Modulator;
+	/* Buffers */
+	CSingleBuffer<_SAMPLE>	DataBuf;
+
+	/* Modules */
+	CSoundInInterface*		pSoundInInterface;
+	CAudioSourceEncoder		AudioSourceEncoder;
+	CGenerateFACData		GenerateFACData;
+	CGenerateSDCData		GenerateSDCData;
+	CReadData*				pReadData;
+	string					strInputFileName;
+	vector<string>			vecstrTexts;
+	vector<string>			vecstrPics;
+	vector<string>			vecstrPicTypes;
+	int						iSoundInDev;
+	_BOOLEAN				bUseUEP;
 };
 
 
-#endif // !defined(DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
+#endif 

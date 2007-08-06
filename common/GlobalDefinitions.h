@@ -233,6 +233,11 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 
 enum EFileOutFormat { OFF_RAW, OFF_TXT, OFF_WAV };
 
+enum EStreamType { SF_AUDIO, SF_DATA };
+/* PM: Packet Mode */
+enum EPackMod { PM_SYNCHRON_STR_MODE, PM_PACKET_MODE };
+
+
 /* Constants ---------------------------------------------------------------- */
 const _REAL crPi = ((_REAL) 3.14159265358979323846);
 

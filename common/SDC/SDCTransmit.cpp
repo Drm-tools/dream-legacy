@@ -271,11 +271,11 @@ void CSDCTransmit::DataEntityType5(CVector<_BINARY>& vecbiData, int ServiceID,
 	/* Set total number of bits */
 	switch (Parameter.Service[ServiceID].DataParam.ePacketModInd)
 	{
-	case CDataParam::PM_SYNCHRON_STR_MODE:
+	case PM_SYNCHRON_STR_MODE:
 		iNumBitsTotal = 12 + 16 /* TEST */ /* + application data TODO! */;
 		break;
 
-	case CDataParam::PM_PACKET_MODE:
+	case PM_PACKET_MODE:
 		iNumBitsTotal = 20 + 16 /* TEST */ /* + application data TODO! */;
 		break;
 	}
@@ -306,14 +306,14 @@ void CSDCTransmit::DataEntityType5(CVector<_BINARY>& vecbiData, int ServiceID,
 	/* Packet mode indicator */
 	switch (Parameter.Service[ServiceID].DataParam.ePacketModInd)
 	{
-	case CDataParam::PM_SYNCHRON_STR_MODE:
+	case PM_SYNCHRON_STR_MODE:
 		vecbiData.Enqueue(0 /* 0 */, 1);
 
 		/* Descriptor */
 		vecbiData.Enqueue((uint32_t) 0, 7);
 		break;
 
-	case CDataParam::PM_PACKET_MODE:
+	case PM_PACKET_MODE:
 		vecbiData.Enqueue(1 /* 1 */, 1);
 
 		/* Descriptor */

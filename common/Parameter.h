@@ -202,9 +202,6 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 	{
 	  public:
 
-		/* PM: Packet Mode */
-		enum EPackMod { PM_SYNCHRON_STR_MODE, PM_PACKET_MODE };
-
 		/* DU: Data Unit */
 		enum EDatUnit { DU_SINGLE_PACKETS, DU_DATA_UNITS };
 
@@ -288,8 +285,6 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		/* CA: CA system */
 		enum ECACond { CA_USED, CA_NOT_USED };
 
-		/* SF: Service Flag */
-		enum ETyOServ { SF_AUDIO, SF_DATA };
 
 		CService():
 			iServiceID(SERV_ID_NOT_USED), eCAIndication(CA_NOT_USED),
@@ -329,7 +324,7 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		uint32_t iServiceID;
 		ECACond eCAIndication;
 		int iLanguage;
-		ETyOServ eAudDataFlag;
+		EStreamType eAudDataFlag;
 		int iServiceDescr;
 		string strCountryCode;
 		string strLanguageCode;
@@ -348,15 +343,19 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 	{
 	  public:
 
-		CStream():iLenPartA(0), iLenPartB(0)
+		CStream():iLenPartA(0), iLenPartB(0), eAudDataFlag(SF_AUDIO),
+		ePacketModInd(PM_PACKET_MODE), iPacketLen(0)
 		{
 		}
-		CStream(const CStream& s):iLenPartA(s.iLenPartA), iLenPartB(s.iLenPartB)
+		CStream(const CStream& s):iLenPartA(s.iLenPartA), iLenPartB(s.iLenPartB),
+			ePacketModInd(s.ePacketModInd), iPacketLen(s.iPacketLen)
 		{
 		}
 		CStream& operator=(const CStream& Stream)
 		{
 			iLenPartA=Stream.iLenPartA; iLenPartB=Stream.iLenPartB;
+			ePacketModInd=Stream.ePacketModInd;
+			iPacketLen=Stream.iPacketLen;
 			return *this;
 		}
 
@@ -371,6 +370,9 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 
 		int iLenPartA;			/* Data length for part A */
 		int iLenPartB;			/* Data length for part B */
+		EStreamType eAudDataFlag; /* stream is audio or data */
+		EPackMod ePacketModInd;	/* Packet mode indicator for data streams */
+		int iPacketLen;			/* Packet length for packet streams */
 	};
 
 	class CMSCProtLev
@@ -933,8 +935,6 @@ class CParameter
 	void ResetServicesStreams();
 	void GetActiveServices(set<int>& actServ);
 	void GetActiveStreams(set<int>& actStr);
-	void InitCellMapTable(const ERobMode eNewWaveMode,
-						  const ESpecOcc eNewSpecOcc);
 
 	void SetNumDecodedBitsMSC(const int iNewNumDecodedBitsMSC);
 	void SetNumDecodedBitsSDC(const int iNewNumDecodedBitsSDC);
@@ -994,7 +994,7 @@ class CParameter
 		return iNumAudioService + iNumDataService;
 	}
 
-	void SetAudDataFlag(const int iShortID, const CService::ETyOServ iNewADaFl);
+	void SetAudDataFlag(const int iShortID, const EStreamType iNewADaFl);
 	void SetServiceID(const int iShortID, const uint32_t iNewServiceID);
 
 	CDRMReceiver* pDRMRec;

@@ -358,7 +358,7 @@ void CParameter::ResetServicesStreams()
 			Service[i].AudioParam.bHVXCCRC = FALSE;
 
 			Service[i].DataParam.iStreamID = STREAM_ID_NOT_USED;
-			Service[i].DataParam.ePacketModInd = CDataParam::PM_PACKET_MODE;
+			Service[i].DataParam.ePacketModInd = PM_PACKET_MODE;
 			Service[i].DataParam.eDataUnitInd = CDataParam::DU_SINGLE_PACKETS;
 			Service[i].DataParam.iPacketID = 0;
 			Service[i].DataParam.iPacketLen = 0;
@@ -370,7 +370,7 @@ void CParameter::ResetServicesStreams()
 			Service[i].iLanguage = 0;
 			Service[i].strCountryCode = "";
 			Service[i].strLanguageCode = "";
-			Service[i].eAudDataFlag = CService::SF_AUDIO;
+			Service[i].eAudDataFlag = SF_AUDIO;
 			Service[i].iServiceDescr = 0;
 			Service[i].strLabel = "";
 		}
@@ -403,7 +403,7 @@ void CParameter::ResetServicesStreams()
 		Service[0].iLanguage = 0;
 		Service[0].strCountryCode = "";
 		Service[0].strLanguageCode = "";
-		Service[0].eAudDataFlag = CService::SF_AUDIO;
+		Service[0].eAudDataFlag = SF_AUDIO;
 		Service[0].iServiceDescr = 0;
 		Service[0].strLabel = "";
 
@@ -463,7 +463,7 @@ _REAL CParameter::GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData)
 	int iLen = 0;
 
 	/* First, check if audio or data service and get lengths */
-	if (Service[iShortID].eAudDataFlag == CService::SF_AUDIO)
+	if (Service[iShortID].eAudDataFlag == SF_AUDIO)
 	{
 		/* Check if we want to get the data stream connected to an audio
 		   stream */
@@ -492,7 +492,7 @@ _REAL CParameter::PartABLenRatio(const int iShortID)
 	int iLenB = 0;
 
 	/* Get the length of protection part A and B */
-	if (Service[iShortID].eAudDataFlag == CService::SF_AUDIO)
+	if (Service[iShortID].eAudDataFlag == SF_AUDIO)
 	{
 		/* Audio service */
 		if (Service[iShortID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
@@ -519,15 +519,6 @@ _REAL CParameter::PartABLenRatio(const int iShortID)
 		return (_REAL) 0.0;
 }
 
-void CParameter::InitCellMapTable(const ERobMode eNewWaveMode,
-								  const ESpecOcc eNewSpecOcc)
-{
-	/* Set new values and make table */
-	eRobustnessMode = eNewWaveMode;
-	eSpectOccup = eNewSpecOcc;
-	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
-}
-
 _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
 {
 	/* First check if spectrum occupancy and robustness mode pair is defined */
@@ -543,7 +534,7 @@ _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
 		eSpectOccup = SO_3;
 	}
 
-	/* Apply changes only if new paramter differs from old one */
+	/* Apply changes only if new parameter differs from old one */
 	if (eRobustnessMode != eNewWaveMode)
 	{
 		/* Set new value */
@@ -847,7 +838,7 @@ void CParameter::SetNumOfServices(const size_t iNNumAuSe, const size_t iNNumDaSe
 	}
 }
 
-void CParameter::SetAudDataFlag(const int iShortID, const CService::ETyOServ iNewADaFl)
+void CParameter::SetAudDataFlag(const int iShortID, const EStreamType iNewADaFl)
 {
 	if (Service[iShortID].eAudDataFlag != iNewADaFl)
 	{

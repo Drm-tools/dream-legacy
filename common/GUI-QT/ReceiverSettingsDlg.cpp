@@ -26,6 +26,7 @@
  *
 \******************************************************************************/
 
+#include <qlistview.h>
 #include <qfiledialog.h>
 #include <qlabel.h>
 #include <qlineedit.h>
@@ -38,6 +39,24 @@
 #include <qradiobutton.h>
 #include "ReceiverSettingsDlg.h"
 #include "../DrmReceiver.h"
+
+#if !defined(HAVE_RIG_PARSE_MODE) && defined(HAVE_LIBHAMLIB)
+extern "C"
+{
+	extern rmode_t parse_mode(const char *);
+	extern vfo_t parse_vfo(const char *);
+	extern setting_t parse_func(const char *);
+	extern setting_t parse_level(const char *);
+	extern setting_t parse_parm(const char *);
+	extern const char* strstatus(enum rig_status_e);
+}
+# define rig_parse_mode parse_mode
+# define rig_parse_vfo parse_vfo
+# define rig_parse_func parse_func
+# define rig_parse_level parse_level
+# define rig_parse_parm parse_parm
+# define rig_strstatus strstatus
+#endif
 
 
 /* Implementation *************************************************************/
@@ -97,6 +116,15 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	connect(CheckBoxLogLatLng, SIGNAL(clicked()), this, SLOT(OnCheckBoxLogLatLng()));
 	connect(CheckBoxLogSigStr, SIGNAL(clicked()), this, SLOT(OnCheckBoxLogSigStr()));
 	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWAV()));
+
+	connect(CheckBoxEnableRig, SIGNAL(toggled(bool)), this, SLOT(OnCheckEnableRigToggled(bool)));
+	connect(CheckBoxEnableSMeter, SIGNAL(toggled(bool)), this, SLOT(OnCheckEnableSMeterToggled(bool)));
+	connect(CheckBoxWithDRMMod, SIGNAL(toggled(bool)), this, SLOT(OnCheckWithDRMModToggled(bool)));
+
+	connect(ListViewRig, SIGNAL(selectionChanged(QListViewItem*)),
+		this, SLOT(OnRigSelected(QListViewItem*)));
+	connect(ListViewPort, SIGNAL(selectionChanged(QListViewItem*)),
+		this, SLOT(OnComPortSelected(QListViewItem*)));
 
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -183,6 +211,74 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 
 	int port = Settings.Get("GPS", "port", 2947);
     LineEditGPSPort->setText(QString("%1").arg(port));
+
+#ifdef HAVE_LIBHAMLIB
+	ListViewRig->setRootIsDecorated(true);
+	ListViewRig->setAllColumnsShowFocus(true);
+	ListViewRig->setColumnText(0, "Rig");
+	ListViewRig->addColumn("ID");
+	ListViewRig->addColumn("Status");
+	ListViewRig->clear();
+
+	CHamlib& Hamlib = *DRMReceiver.GetHamlib();
+
+	map<rig_model_t,CHamlib::SDrRigCaps> rigs;
+	map<string,QListViewItem*> models;
+
+	Hamlib.GetRigList(rigs);
+
+	CheckBoxEnableRig->setChecked(FALSE);
+	for (map<rig_model_t,CHamlib::SDrRigCaps>::iterator i=rigs.begin(); i!=rigs.end(); i++)
+	{
+		/* Store model ID */
+		QListViewItem* item;
+		rig_model_t iModelID = i->first;
+		if(iModelID != 0)
+		{
+			CHamlib::SDrRigCaps& rig = i->second;
+			map<string,QListViewItem*>::iterator i = models.find(rig.strManufacturer);
+			if(i==models.end())
+				models[rig.strManufacturer] = 
+					item = new QListViewItem(ListViewRig,rig.strManufacturer.c_str());
+			else
+				item = i->second;
+			item = new QListViewItem(
+				item,rig.strModelName.c_str(),
+				QString::number(iModelID),
+				rig_strstatus(rig.eRigStatus)
+			);
+
+			/* Check for checking */
+			if (Hamlib.GetHamlibModelID() == iModelID)
+			{
+				item->setSelected(TRUE);
+				ListViewRig->ensureItemVisible(item);
+				CheckBoxEnableRig->setChecked(TRUE);
+			}
+		}
+	}
+
+	/* COM port selection --------------------------------------------------- */
+	ListViewPort->setAllColumnsShowFocus(true);
+	ListViewPort->setColumnText(0, "Name");
+	ListViewPort->addColumn("Port");
+	ListViewPort->clear();
+	map<string,string> ports;
+	Hamlib.GetPortList(ports);
+	string strPort = Hamlib.GetComPort();
+	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
+	{
+		QListViewItem* item = new QListViewItem(ListViewPort, p->second.c_str(), p->first.c_str());
+		if(strPort == p->second)
+			item->setSelected(TRUE);
+	}
+
+	/* Enable s-meter */
+	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
+
+	/* Enable special settings for rigs */
+	CheckBoxWithDRMMod->setChecked(Hamlib.GetEnableModRigSettings());
+#endif
 }
 
 void ReceiverSettingsDlg::CheckSN(const QString& NewText)
@@ -579,6 +675,53 @@ void ReceiverSettingsDlg::OnSliderLogStartDelayChange(int value)
 {
 	emit SetLogStartDelay(value);
 	Settings.Put("Logfile", "delay", value);
+}
+
+void ReceiverSettingsDlg::OnCheckEnableRigToggled(bool on)
+{
+#ifdef HAVE_LIBHAMLIB
+	if(on)
+	{
+		QListViewItem* item = ListViewRig->selectedItem();
+		if(item)
+			OnRigSelected(item);
+	}
+	else
+	{
+		DRMReceiver.GetHamlib()->SetHamlibModelID(0);
+		ListViewRig->clearSelection();
+	}
+#endif
+}
+
+void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
+{
+	DRMReceiver.SetEnableSMeter(on);
+}
+
+void ReceiverSettingsDlg::OnCheckWithDRMModToggled(bool on)
+{
+#ifdef HAVE_LIBHAMLIB
+	DRMReceiver.GetHamlib()->SetEnableModRigSettings(on);
+#endif
+}
+
+void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
+{
+#ifdef HAVE_LIBHAMLIB
+	if(CheckBoxEnableRig->isChecked())
+	{
+		int iID = item->text(1).toInt();
+		DRMReceiver.GetHamlib()->SetHamlibModelID(iID);
+	}
+#endif
+}
+
+void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)
+{
+#ifdef HAVE_LIBHAMLIB
+	DRMReceiver.GetHamlib()->SetComPort(item->text(1).latin1());
+#endif
 }
 
 void ReceiverSettingsDlg::AddWhatsThisHelp()

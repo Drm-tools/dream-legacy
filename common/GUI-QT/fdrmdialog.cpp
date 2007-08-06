@@ -334,7 +334,7 @@ void FDRMDialog::UpdateDisplay()
 
 	if (!Parameters.Service[iCurSelAudioServ].IsActive() ||
 	    Parameters.Service[iCurSelAudioServ].AudioParam.iStreamID == STREAM_ID_NOT_USED ||
-	    Parameters.Service[iCurSelAudioServ].eAudDataFlag == CService::SF_DATA)
+	    Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
 	{
 		int i = 0;
 		_BOOLEAN bStop = FALSE;
@@ -343,7 +343,7 @@ void FDRMDialog::UpdateDisplay()
 		{
 			if (Parameters.Service[i].IsActive() &&
 			    Parameters.Service[i].AudioParam.iStreamID != STREAM_ID_NOT_USED &&
-			    Parameters.Service[i].eAudDataFlag == CService::SF_AUDIO)
+			    Parameters.Service[i].eAudDataFlag == SF_AUDIO)
 			{
 				iCurSelAudioServ = i;
 				bStop = TRUE;
@@ -357,7 +357,7 @@ void FDRMDialog::UpdateDisplay()
 
 	/* If selected service is audio and text message is true */
 	if ((Parameters.Service[iCurSelAudioServ].
-		eAudDataFlag == CService::SF_AUDIO) &&
+		eAudDataFlag == SF_AUDIO) &&
 		(Parameters.Service[iCurSelAudioServ].
 		AudioParam.bTextflag == TRUE))
 	{
@@ -466,7 +466,7 @@ void FDRMDialog::UpdateDisplay()
 
 		/* Language and program type labels (only for audio service) */
 		if (Parameters.Service[iCurSelAudioServ].
-			eAudDataFlag == CService::SF_AUDIO)
+			eAudDataFlag == SF_AUDIO)
 		{
 		/* SDC Language */
 		const string strLangCode = Parameters.
@@ -543,8 +543,7 @@ void FDRMDialog::UpdateDisplay()
 		/* Make sure current selected audio service is not a data only
 		   service */
 		(Parameters.Service[iCurSelAudioServ].IsActive() &&
-		(Parameters.Service[iCurSelAudioServ].eAudDataFlag !=
-		CService::SF_DATA)))
+		(Parameters.Service[iCurSelAudioServ].eAudDataFlag != SF_DATA)))
 	{
 		/* Reset checks */
 		PushButtonService1->setOn(FALSE);
@@ -576,8 +575,7 @@ void FDRMDialog::UpdateDisplay()
 			break;
 		}
 	}
-	else if (Parameters.Service[iCurSelServiceGUI].
-		eAudDataFlag ==	CService::SF_DATA)
+	else if (Parameters.Service[iCurSelServiceGUI].eAudDataFlag == SF_DATA)
 	{
 		/* In case we only have data services, reset checks */
 		PushButtonService1->setOn(FALSE);
@@ -628,10 +626,8 @@ void FDRMDialog::UpdateDisplay()
 			}
 
 			/* Show, if a multimedia stream is connected to this service */
-			if ((Parameters.Service[i].
-				eAudDataFlag == CService::SF_AUDIO) &&
-				(Parameters.Service[i].
-				DataParam.iStreamID != STREAM_ID_NOT_USED))
+			if ((Parameters.Service[i].eAudDataFlag ==SF_AUDIO) &&
+				(Parameters.Service[i].DataParam.iStreamID != STREAM_ID_NOT_USED))
 			{
 
 				if (Parameters.Service[i].
@@ -673,8 +669,7 @@ void FDRMDialog::UpdateDisplay()
 	if ((Parameters.AltFreqSign.vecMultiplexes.size() > 0) || (Parameters.AltFreqSign.vecOtherServices.size() > 0))
 	{
 		/* show AFS label */
-		if (Parameters.Service[0].eAudDataFlag
-				== CService::SF_AUDIO) m_StaticService[0] += tr(" + AFS");
+		if (Parameters.Service[0].eAudDataFlag == SF_AUDIO) m_StaticService[0] += tr(" + AFS");
 	}
 
 	Parameters.Unlock();
@@ -900,9 +895,9 @@ void FDRMDialog::SetService(int iNewServiceID)
 
 	/* If service is only data service or has a multimedia content
 	   , activate multimedia window */
-	CService::ETyOServ eAudDataFlag = Parameters.Service[iNewServiceID].eAudDataFlag;
+	EStreamType eAudDataFlag = Parameters.Service[iNewServiceID].eAudDataFlag;
 	Parameters.Unlock();
-	if ((eAudDataFlag == CService::SF_DATA)
+	if ((eAudDataFlag == SF_DATA)
 		|| (iAppIdent == AT_MOTSLISHOW)
 		|| (iAppIdent == AT_JOURNALINE)
 		|| (iAppIdent == AT_MOTBROADCASTWEBSITE))
@@ -1129,7 +1124,7 @@ QString FDRMDialog::GetCodecString(const int iServiceID)
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 
 	/* First check if it is audio or data service */
-	if (Parameters.Service[iServiceID].eAudDataFlag == CService::SF_AUDIO)
+	if (Parameters.Service[iServiceID].eAudDataFlag == SF_AUDIO)
 	{
 		/* Audio service */
 		const CAudioParam::EAudSamRat eSamRate = Parameters.
@@ -1183,8 +1178,7 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 
 	/* First check if it is audio or data service */
-	if (Parameters.Service[iServiceID].
-		eAudDataFlag == CService::SF_AUDIO)
+	if (Parameters.Service[iServiceID].eAudDataFlag == SF_AUDIO)
 	{
 		/* Audio service */
 		/* Mono-Stereo */
@@ -1208,7 +1202,7 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 	{
 		/* Data service */
 		if (Parameters.Service[iServiceID].DataParam.
-			ePacketModInd == CDataParam::PM_PACKET_MODE)
+			ePacketModInd == PM_PACKET_MODE)
 		{
 			if (Parameters.Service[iServiceID].DataParam.eAppDomain == CDataParam::AD_DAB_SPEC_APP)
 			{

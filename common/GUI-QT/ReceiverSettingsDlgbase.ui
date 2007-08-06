@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>287</width>
-            <height>316</height>
+            <width>314</width>
+            <height>323</height>
         </rect>
     </property>
     <property stdset="1">
@@ -110,7 +110,7 @@
                 <class>QWidget</class>
                 <property stdset="1">
                     <name>name</name>
-                    <cstring>tab</cstring>
+                    <cstring>sync</cstring>
                 </property>
                 <attribute>
                     <name>title</name>
@@ -374,7 +374,7 @@
                 <class>QWidget</class>
                 <property stdset="1">
                     <name>name</name>
-                    <cstring>tab</cstring>
+                    <cstring>misc</cstring>
                 </property>
                 <attribute>
                     <name>title</name>
@@ -576,7 +576,7 @@
                 <class>QWidget</class>
                 <property stdset="1">
                     <name>name</name>
-                    <cstring>tab</cstring>
+                    <cstring>audio</cstring>
                 </property>
                 <attribute>
                     <name>title</name>
@@ -630,7 +630,7 @@
                 <class>QWidget</class>
                 <property stdset="1">
                     <name>name</name>
-                    <cstring>tab</cstring>
+                    <cstring>logging</cstring>
                 </property>
                 <attribute>
                     <name>title</name>
@@ -822,7 +822,7 @@
                 <class>QWidget</class>
                 <property stdset="1">
                     <name>name</name>
-                    <cstring>tab</cstring>
+                    <cstring>gps</cstring>
                 </property>
                 <attribute>
                     <name>title</name>
@@ -1391,6 +1391,122 @@
                         </widget>
                     </grid>
                 </widget>
+            </widget>
+            <widget>
+                <class>QWidget</class>
+                <property stdset="1">
+                    <name>name</name>
+                    <cstring>Rig</cstring>
+                </property>
+                <attribute>
+                    <name>title</name>
+                    <string>Rig</string>
+                </attribute>
+                <grid>
+                    <property stdset="1">
+                        <name>margin</name>
+                        <number>11</number>
+                    </property>
+                    <property stdset="1">
+                        <name>spacing</name>
+                        <number>6</number>
+                    </property>
+                    <widget row="0"  column="1" >
+                        <class>QListView</class>
+                        <column>
+                            <property>
+                                <name>text</name>
+                                <string>Column 1</string>
+                            </property>
+                            <property>
+                                <name>clickable</name>
+                                <bool>true</bool>
+                            </property>
+                            <property>
+                                <name>resizeable</name>
+                                <bool>true</bool>
+                            </property>
+                        </column>
+                    <item>
+                        <property>
+                            <name>text</name>
+                            <string>New Item</string>
+                        </property>
+                        <property>
+                            <name>pixmap</name>
+                            <pixmap></pixmap>
+                        </property>
+                    </item>
+                        <property stdset="1">
+                            <name>name</name>
+                            <cstring>ListViewPort</cstring>
+                        </property>
+                    </widget>
+                    <widget row="2"  column="1" >
+                        <class>QCheckBox</class>
+                        <property stdset="1">
+                            <name>name</name>
+                            <cstring>CheckBoxWithDRMMod</cstring>
+                        </property>
+                        <property stdset="1">
+                            <name>text</name>
+                            <string>With DRM Modification</string>
+                        </property>
+                    </widget>
+                    <widget row="1"  column="1" >
+                        <class>QCheckBox</class>
+                        <property stdset="1">
+                            <name>name</name>
+                            <cstring>CheckBoxEnableSMeter</cstring>
+                        </property>
+                        <property stdset="1">
+                            <name>text</name>
+                            <string>Enable S-Meter</string>
+                        </property>
+                    </widget>
+                    <widget row="2"  column="0" >
+                        <class>QCheckBox</class>
+                        <property stdset="1">
+                            <name>name</name>
+                            <cstring>CheckBoxEnableRig</cstring>
+                        </property>
+                        <property stdset="1">
+                            <name>text</name>
+                            <string>Enable Rig</string>
+                        </property>
+                    </widget>
+                    <widget row="0"  column="0"  rowspan="2"  colspan="1" >
+                        <class>QListView</class>
+                        <column>
+                            <property>
+                                <name>text</name>
+                                <string>Column 1</string>
+                            </property>
+                            <property>
+                                <name>clickable</name>
+                                <bool>true</bool>
+                            </property>
+                            <property>
+                                <name>resizeable</name>
+                                <bool>true</bool>
+                            </property>
+                        </column>
+                    <item>
+                        <property>
+                            <name>text</name>
+                            <string>New Item</string>
+                        </property>
+                        <property>
+                            <name>pixmap</name>
+                            <pixmap></pixmap>
+                        </property>
+                    </item>
+                        <property stdset="1">
+                            <name>name</name>
+                            <cstring>ListViewRig</cstring>
+                        </property>
+                    </widget>
+                </grid>
             </widget>
         </widget>
     </grid>

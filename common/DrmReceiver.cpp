@@ -853,7 +853,8 @@ CDRMReceiver::SetInStartMode()
 	/* Define with which parameters the receiver should try to decode the
 	   signal. If we are correct with our assumptions, the receiver does not
 	   need to reinitialize */
-	ReceiverParam.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+	ReceiverParam.SetWaveMode(RM_ROBUSTNESS_MODE_B);
+	ReceiverParam.SetSpectrumOccup(SO_3);
 
 	/* Set initial MLC parameters */
 	ReceiverParam.SetInterleaverDepth(CParameter::SI_LONG);

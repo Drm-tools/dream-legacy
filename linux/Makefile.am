@@ -12,6 +12,8 @@ drmwithoutqt_SOURCES = \
 	../common/DrmReceiver.cpp \
 	../common/DrmSimulation.cpp \
 	../common/DrmTransmitter.cpp \
+	../common/DrmEncoder.cpp \
+	../common/DrmModulator.cpp \
 	../common/InputResample.cpp \
 	../common/MSCMultiplexer.cpp \
 	../common/OFDM.cpp \
@@ -95,6 +97,8 @@ drmwithoutqt_SOURCES = \
 	../common/DrmReceiver.h \
 	../common/DrmSimulation.h \
 	../common/DrmTransmitter.h \
+	../common/DrmEncoder.h \
+	../common/DrmModulator.h \
 	../common/GlobalDefinitions.h \
 	../common/InputResample.h \
 	../common/MSCMultiplexer.h \

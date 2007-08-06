@@ -87,4 +87,9 @@ public slots:
 	void OnCheckSaveAudioWAV();
 	void OnCheckRecFilter();
 	void OnCheckModiMetric();
+	void OnCheckEnableRigToggled(bool);
+	void OnCheckEnableSMeterToggled(bool);
+	void OnCheckWithDRMModToggled(bool);
+	void OnRigSelected(QListViewItem* item);
+	void OnComPortSelected(QListViewItem* item);
 };

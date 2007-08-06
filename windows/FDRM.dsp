@@ -677,6 +677,14 @@ SOURCE=..\common\DrmSimulation.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\DrmModulator.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\DrmEncoder.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\DrmTransmitter.cpp
 # End Source File
 # Begin Source File
@@ -1174,6 +1182,14 @@ SOURCE=..\common\DRMSignalIO.h
 # Begin Source File
 
 SOURCE=..\common\DrmSimulation.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\DrmModulator.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\DrmEncoder.h
 # End Source File
 # Begin Source File
 

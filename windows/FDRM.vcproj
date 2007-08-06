@@ -437,6 +437,50 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\common\DrmModulator.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\common\DrmEncoder.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\common\DrmTransmitter.cpp"
 				>
 				<FileConfiguration
@@ -3341,6 +3385,14 @@
 			</File>
 			<File
 				RelativePath="..\common\DrmSimulation.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\DrmModulator.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\DrmEncoder.h"
 				>
 			</File>
 			<File

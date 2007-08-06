@@ -58,11 +58,11 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	/* Data service */
 	Param.SetNumOfServices(0,1);
 
-	Param.SetAudDataFlag(0,  CService::SF_DATA);
+	Param.SetAudDataFlag(0,  SF_DATA);
 
 	CDataParam DataParam;
 	DataParam.iStreamID = 0;
-	DataParam.ePacketModInd = CDataParam::PM_SYNCHRON_STR_MODE;
+	DataParam.ePacketModInd = PM_SYNCHRON_STR_MODE;
 	Param.SetDataParam(0, DataParam);
 
 	//Param.SetCurSelDataService(1); /* Service ID must be set for activation */
@@ -89,7 +89,8 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	Param.rFreqOffsetTrack = (_REAL) 0.0;
 	Param.iTimingOffsTrack = 0;
 
-	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+	Param.SetWaveMode(RM_ROBUSTNESS_MODE_B);
+	Param.SetSpectrumOccup(SO_3);
 
 	Param.MSCPrLe.iPartA = 1;
 	Param.MSCPrLe.iPartB = 1;

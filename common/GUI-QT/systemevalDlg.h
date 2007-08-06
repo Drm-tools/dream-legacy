@@ -111,7 +111,10 @@ protected:
 
 	CGPSReceiver*		pGPSReceiver;
 
-	int					iFrequencyChangePendingCount;
+	int					iTunedFrequency;
+	_BOOLEAN			bFrequencyEditInProgress;
+	_BOOLEAN			bFrequencySetFromReceiver;
+	QTime				timeEditStarted;
 
 public slots:
 	void OnTimer();

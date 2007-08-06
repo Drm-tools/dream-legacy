@@ -187,11 +187,11 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	/* Audio/Data flag */
 	switch (Parameter.Service[iCurShortID].eAudDataFlag)
 	{
-	case CService::SF_AUDIO:
+	case SF_AUDIO:
 		(*pbiFACData).Enqueue(0 /* 0 */, 1);
 		break;
 
-	case CService::SF_DATA:
+	case SF_DATA:
 		(*pbiFACData).Enqueue(1 /* 1 */, 1);
 	}
 
@@ -232,7 +232,7 @@ void CFACTransmit::Init(CParameter& Parameter)
 
 	for (set<int>::iterator i = actServ.begin(); i!=actServ.end(); i++)
 	{
-		if (Parameter.Service[*i].eAudDataFlag == CService::SF_AUDIO)
+		if (Parameter.Service[*i].eAudDataFlag == SF_AUDIO)
 		{
 			veciAudioServ.push_back(*i);
 			iNumAudio++;
@@ -545,11 +545,11 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		switch ((*pbiFACData).Separate(1))
 		{
 		case 0: /* 0 */
-			Parameter.SetAudDataFlag(iTempShortID, CService::SF_AUDIO);
+			Parameter.SetAudDataFlag(iTempShortID, SF_AUDIO);
 			break;
 
 		case 1: /* 1 */
-			Parameter.SetAudDataFlag(iTempShortID, CService::SF_DATA);
+			Parameter.SetAudDataFlag(iTempShortID, SF_DATA);
 			break;
 		}
 

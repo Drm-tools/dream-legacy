@@ -37,7 +37,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	systemevalDlgBase(parent, name, modal, f),
 	DRMReceiver(NDRMR), Settings(NSettings),
 	Timer(), pGPSReceiver(NULL),
-	iFrequencyChangePendingCount(1)
+	iTunedFrequency(-1), bFrequencyEditInProgress(FALSE), bFrequencySetFromReceiver(FALSE),
+	timeEditStarted()
 {
 	/* Get window geometry data and apply it */
 	CWinGeom s;
@@ -367,19 +368,35 @@ systemevalDlg::~systemevalDlg()
 
 void systemevalDlg::OnLineEditFrequencyChanged(const QString& str)
 {
-	iFrequencyChangePendingCount = 5;
+	if(bFrequencySetFromReceiver)
+	{
+		bFrequencySetFromReceiver = FALSE;
+	}
+	else
+	{
+		timeEditStarted.start();
+		bFrequencyEditInProgress = TRUE;
+	}
 }
 
 void systemevalDlg::UpdateControls()
 {
-	/* Update frequency edit control (frequency could be changed by
-	   schedule dialog */
-	QString strFreq = EdtFrequency->text();
-	const int iFrequency = DRMReceiver.GetFrequency();
-	int iCurFrequency = strFreq.toInt();
-	if (iFrequency != iCurFrequency)
+	/* Update frequency edit control
+	 * frequency could be changed by schedule dialog
+	 * or RSCI
+	 */
+	int iFrequency = DRMReceiver.GetFrequency();
+	if(iFrequency != iTunedFrequency)
 	{
-		EdtFrequency->setText(QString().setNum(iFrequency));
+		iTunedFrequency = iFrequency;
+		EdtFrequency->setText(QString::number(iFrequency));
+		bFrequencySetFromReceiver = TRUE;
+	}
+	int iDisplayedFrequency = EdtFrequency->text().toInt();
+	if (iFrequency != iDisplayedFrequency)
+	{
+		if(timeEditStarted.elapsed()>2000)
+			DRMReceiver.SetFrequency(iDisplayedFrequency);
 	}
 }
 
@@ -859,20 +876,7 @@ void systemevalDlg::OnTimer()
 		Parameters.Unlock(); 
 	}
 
-	/* having a count-down stops intermediate digits having an effect, mostly! */
-	if(iFrequencyChangePendingCount>0)
-	{
-		iFrequencyChangePendingCount--;
-		if(iFrequencyChangePendingCount==0)
-		{
-			int iFreq = EdtFrequency->text().toInt();
-			DRMReceiver.SetFrequency(iFreq);
-		}
-	}
-	else
-	{
-		UpdateControls();
-	}
+	UpdateControls();
 }
 
 void systemevalDlg::OnListSelChanged(QListViewItem* NewSelIt)

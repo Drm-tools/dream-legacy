@@ -257,6 +257,8 @@ protected:
 	QPopupMenu*					pRemoteMenuOther;
 	vector<rig_model_t>			veciModelID;
 #endif
+	int					iTunedFrequency;
+	_BOOLEAN			bFrequencySetFromReceiver;
 
 public slots:
 	void OnRemoteMenu(int iID);

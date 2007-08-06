@@ -492,7 +492,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 	   decoded */
 	if ((iCurDataStreamID != STREAM_ID_NOT_USED) &&
 		(ReceiverParam.Service[iCurSelDataServ].DataParam.
-		 ePacketModInd == CDataParam::PM_PACKET_MODE))
+		 ePacketModInd == PM_PACKET_MODE))
 	{
 		/* Calculate total packet size. DRM standard: packet length: this
 		   field indicates the length in bytes of the data field of each

@@ -132,18 +132,21 @@ Param.iSpecChDoppler = 2; /* Hz (integer value!) */
 
 		if (Param.iDRMChannelNum < 3)
 		{
-			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_A, SO_2);
+			Param.SetWaveMode(RM_ROBUSTNESS_MODE_A);
+			Param.SetSpectrumOccup(SO_2);
 			Param.eSymbolInterlMode = CParameter::SI_SHORT;
 		}
 		else if ((Param.iDRMChannelNum == 8) || (Param.iDRMChannelNum == 10))
 		{
 			/* Special setting for channel 8 */
-			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_0);
+			Param.SetWaveMode(RM_ROBUSTNESS_MODE_B);
+			Param.SetSpectrumOccup(SO_0);
 			Param.eSymbolInterlMode = CParameter::SI_LONG;
 		}
 		else
 		{
-			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+			Param.SetWaveMode(RM_ROBUSTNESS_MODE_B);
+			Param.SetSpectrumOccup(SO_3);
 			Param.eSymbolInterlMode = CParameter::SI_LONG;
 		}
 

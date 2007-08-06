@@ -336,7 +336,8 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	CStationsDlgBase(parent, name, modal, f),
 	DRMReceiver(NDRMR),
 	Settings(NSettings),
-	bReInitOnFrequencyChange(FALSE), vecpListItems(0)
+	bReInitOnFrequencyChange(FALSE), vecpListItems(0),
+	iTunedFrequency(-1), bFrequencySetFromReceiver(FALSE)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -392,7 +393,9 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	DRMReceiver.GetParameters()->Lock(); 
 
 	/* Init with current setting in log file */
-	QwtCounterFrequency->setValue(DRMReceiver.GetParameters()->GetFrequency());
+	iTunedFrequency = DRMReceiver.GetParameters()->GetFrequency();
+	bFrequencySetFromReceiver = TRUE;
+	QwtCounterFrequency->setValue(iTunedFrequency);
 
 	DRMReceiver.GetParameters()->Unlock(); 
 
@@ -1124,7 +1127,21 @@ void StationsDlg::SetStationsView()
 void StationsDlg::OnFreqCntNewValue(double dVal)
 {
 	/* Set frequency to front-end */
-	DRMReceiver.SetFrequency((int) dVal);
+	if(bFrequencySetFromReceiver)
+	{
+		bFrequencySetFromReceiver = FALSE;
+	}
+	else
+	{
+		iTunedFrequency = (int) dVal;
+		DRMReceiver.SetFrequency(iTunedFrequency);
+	}
+	QListViewItem* item = ListViewStations->selectedItem();
+	if(item)
+	{
+		if(QString(item->text(2)).toInt() != (int) dVal)
+			ListViewStations->clearSelection();
+	}
 }
 
 void StationsDlg::OnHeaderClicked(int c)
@@ -1243,6 +1260,18 @@ void StationsDlg::OnComPortMenu(QAction* action)
 void StationsDlg::OnTimerSMeter()
 {
 	EnableSMeter(TRUE);
+
+	/* Update frequency edit control
+	 * frequency could be changed by evaluation dialog
+	 * or RSCI
+	 */
+	int iFrequency = DRMReceiver.GetFrequency();
+	if(iFrequency != iTunedFrequency)
+	{
+		iTunedFrequency = iFrequency;
+		QwtCounterFrequency->setValue(iFrequency);
+		bFrequencySetFromReceiver = TRUE;
+	}
 }
 
 void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)

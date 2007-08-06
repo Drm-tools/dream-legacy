@@ -63,6 +63,13 @@ protected:
 	void				EnableData(const _BOOLEAN bFlag);
 	void				AddWhatsThisHelp();
 	void				GetNetworkInterfaces();
+	void				ConfigureServices();
+	void				ConfigureDataService();
+	void				ConfigureAudioService();
+	void				ConfigureStreams();
+	void				ConfigureChannel();
+	void				ConfigureMDI();
+	void				ConfigureModulator();
 
 	QMenuBar*			pMenu;
 	QPopupMenu*			pSettingsMenu;
@@ -78,41 +85,26 @@ protected:
 
 public slots:
 	void OnButtonStartStop();
+	void OnButtonAddStream();
+	void OnButtonDeleteStream();
+	void OnToggleCheckBoxEnableTextMessage(bool bState);
 	void OnPushButtonAddText();
 	void OnButtonClearAllText();
 	void OnPushButtonAddFileName();
 	void OnButtonClearAllFileNames();
-	void OnPushButtonChooseOutputFileName();
-	void OnToggleCheckBoxEnableCOFDM(bool bState);
-	void OnToggleCheckBoxEnableData(bool bState);
-	void OnToggleCheckBoxEnableAudio(bool bState);
-	void OnToggleCheckBoxEnableTextMessage(bool bState);
-	void OnComboBoxAudioSourceHighlighted(int iID);
-	void OnComboBoxCOFDMDestHighlighted(int iID);
-	void OnComboBoxMSCInterleaverHighlighted(int iID);
-	void OnComboBoxMSCConstellationHighlighted(int iID);
-	void OnComboBoxSDCConstellationHighlighted(int iID);
-	void OnComboBoxLanguageHighlighted(int iID);
-	void OnComboBoxProgramTypeHighlighted(int iID);
 	void OnComboBoxTextMessageHighlighted(int iID);
-	void OnComboBoxMSCProtLevHighlighted(int iID);
-	void OnRadioRobustnessMode(int iID);
-	void OnRadioBandwidth(int iID);
-	void OnRadioOutput(int iID);
 	void OnTextChangedServiceLabel(const QString& strLabel);
 	void OnTextChangedServiceID(const QString& strID);
+	void OnComboBoxSDCConstellationActivated(int iID);
+	void OnComboBoxMSCInterleaverActivated(int iID);
+	void OnComboBoxMSCConstellationActivated(int iID);
+	void OnComboBoxMSCProtLevActivated(int iID);
+	void OnRadioBandwidth(int iID);
+	void OnRadioRobustnessMode(int iID);
 	void OnTextChangedSndCrdIF(const QString& strIF);
-	void OnTextChangedOutputFileName(const QString& strFile);
-
-	void OnToggleCheckBoxMDIoutEnable(bool bState);
-	void OnTextChangedMDIoutPort(const QString& strLabel);
-	void OnTextChangedMDIoutDest(const QString& strLabel);
-	void OnComboBoxMDIoutInterfaceHighlighted(int iID);
-	void OnToggleCheckBoxMDIinEnable(bool bState);
-	void OnTextChangedMDIinPort(const QString& strLabel);
-	void OnTextChangedMDIinGroup(const QString& strLabel);
-	void OnToggleCheckBoxMDIinMcast(bool bState);
-	void OnComboBoxMDIinInterfaceHighlighted(int iID);
+	void OnComboBoxCOFDMDestHighlighted(int iID);
+	void OnComboBoxAudioSourceHighlighted(int iID);
+	void OnRadioMode(int iID);
 
 	void OnTimer();
 	void OnHelpWhatsThis();

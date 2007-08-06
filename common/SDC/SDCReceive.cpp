@@ -643,14 +643,14 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 	switch ((*pbiData).Separate(1))
 	{
 	case 0: /* 0 */
-		DataParam.ePacketModInd = CDataParam::PM_SYNCHRON_STR_MODE;
+		DataParam.ePacketModInd = PM_SYNCHRON_STR_MODE;
 
 		/* Descriptor (not used) */
 		(*pbiData).Separate(7);
 		break;
 
 	case 1: /* 1 */
-		DataParam.ePacketModInd = CDataParam::PM_PACKET_MODE;
+		DataParam.ePacketModInd = PM_PACKET_MODE;
 
 		/* Descriptor */
 		/* Data unit indicator */
@@ -690,7 +690,7 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 	}
 
 	/* Application data */
-	if (DataParam.ePacketModInd == CDataParam::PM_SYNCHRON_STR_MODE)
+	if (DataParam.ePacketModInd == PM_SYNCHRON_STR_MODE)
 	{
 		/* Not used */
 		(*pbiData).Separate(iLengthOfBody * 8 - 8);

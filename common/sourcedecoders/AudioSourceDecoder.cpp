@@ -1096,7 +1096,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 
 		/* The requirement for this module is that the stream is used and the
 		   service is an audio service. Check it here */
-		if ((ReceiverParam.Service[iCurSelServ].  eAudDataFlag != CService::SF_AUDIO) ||
+		if ((ReceiverParam.Service[iCurSelServ].  eAudDataFlag != SF_AUDIO) ||
 			(iCurAudioStreamID == STREAM_ID_NOT_USED))
 		{
 			throw CInitErr(ET_ALL);
