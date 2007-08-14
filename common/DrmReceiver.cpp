@@ -1585,7 +1585,8 @@ CDRMReceiver::LoadSettings(CSettings& s)
             	pSoundInInterface->SetDev(0);
 				ShmSoundIn->SetShmPath("/dreamg313if");
 				ShmSoundIn->SetName("WinRadio G313");
-				ShmSoundIn->SetChannels(1);
+				ShmSoundIn->SetShmChannels(1);
+				ShmSoundIn->SetWantedChannels(2);
 				string strHamlibConf = s.Get("Hamlib", "hamlib-config");
 				if(strHamlibConf=="")
 					strHamlibConf = "if_path=/dreamg313if";

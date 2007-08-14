@@ -46,7 +46,8 @@ public:
 	virtual _BOOLEAN	Read(CVector<short>& psData);
 
 	void				SetShmPath(const string& p) { shm_path = p; }
-	void				SetChannels(int n) { channels = n; }
+	void				SetShmChannels(int n) { shmChannels = n; }
+	void				SetWantedChannels(int n) { wantedChannels = n; }
 	void				SetName(const string& n) { name = n; }
 
 protected:
@@ -56,7 +57,8 @@ protected:
 	void*	shm;
 	string	shm_path;
 	string	name;
-	int		channels;
+	int		shmChannels;
+	int		wantedChannels;
 };
 
 #endif

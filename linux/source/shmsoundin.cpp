@@ -37,7 +37,7 @@
 # include "shmsoundin.h"
 
 CShmSoundIn::CShmSoundIn():ringBuffer(NULL),
-		shmid(-1),shm(NULL),shm_path(),name("shm input"),channels(2)
+		shmid(-1),shm(NULL),shm_path(),name("shm input"),shmChannels(1),wantedChannels(2)
 {
 }
 
@@ -46,6 +46,9 @@ CShmSoundIn::~CShmSoundIn()
 	Close();
 }
 
+/* iNewBufferSize is the number of samples to read, e.g. stereo is
+ * 2 samples per frame
+ */
 void
 CShmSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
@@ -94,10 +97,19 @@ CShmSoundIn::Read(CVector<short>& psData)
 	if(ringBuffer==NULL)
 		return FALSE;
 
-	size_t samples = psData.Size();
-	size_t bytes = sizeof(short)*samples;
-	if(channels==1)
-		bytes = bytes/2;
+	size_t frames;
+	if(wantedChannels==2)
+		frames = psData.Size()/2;
+	else
+		frames = psData.Size();
+
+	size_t samples,bytes;
+	if(shmChannels==2)
+		samples = 2*frames;
+	else
+		samples = frames;
+	bytes = sizeof(short)*samples;
+
 	
 	while(PaUtil_GetShmRingBufferReadAvailable(ringBuffer)<int(bytes))
 	{
@@ -107,18 +119,25 @@ CShmSoundIn::Read(CVector<short>& psData)
 		nanosleep(&ts, NULL);
 	}
 
-	if(channels==2)
+	if(shmChannels==wantedChannels)
 	{
 		PaUtil_ReadShmRingBuffer(ringBuffer, &psData[0], bytes);
 	}
 	else
 	{
-		vector<short> buf(bytes);
+		short buf[samples];
 		PaUtil_ReadShmRingBuffer(ringBuffer, &buf[0], bytes);
-		for(size_t i=0; i<buf.size(); i++)
+		for(size_t i=0; i<frames; i++)
 		{
-			psData[2*i] = buf[i];
-			psData[2*i+1] = buf[i];
+			if(wantedChannels==2) /* mono to stereo */
+			{
+				psData[2*i] = buf[i]/2;
+				psData[2*i+1] = buf[i]/2;
+			}
+			else /* stereo to mono */
+			{
+				psData[i] = (buf[2*i] + buf[2*i+1])/2;
+			}
 		}
 	}
 	
