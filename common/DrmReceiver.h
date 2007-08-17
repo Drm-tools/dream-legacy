@@ -143,7 +143,7 @@ public:
 	void					SetReceiverMode(ERecMode eNewMode);
 	void					SetInitResOff(_REAL rNRO)
 								{rInitResampleOffset = rNRO;}
-	void					SetAMDemodType(CAMDemodulation::EDemodType);
+	void					SetAMDemodType(EDemodType);
 	void					SetAMFilterBW(int iBw);
 	void					SetAMDemodAcq(_REAL rNewNorCen);
 	void	 				SetEnableSMeter(_BOOLEAN bNew);
@@ -222,6 +222,9 @@ public:
 	void StopWriteWaveFile() { WriteData.StopWriteWaveFile(); }
 	_BOOLEAN GetIsWriteWaveFile() { return WriteData.GetIsWriteWaveFile(); }
 
+	void SetUseHWDemod(_BOOLEAN);
+	_BOOLEAN GetUseHWDemod();
+
 	/* Get pointer to internal modules */
 	CSelectionInterface*	GetSoundInInterface() {return pSoundInInterface;}
 	CSelectionInterface*	GetSoundOutInterface() {return pSoundOutInterface;}
@@ -241,6 +244,7 @@ public:
 	CChannelEstimation*		GetChannelEstimation() {return &ChannelEstimation;}
 #ifdef HAVE_LIBHAMLIB
 	CHamlib*				GetHamlib() {return &Hamlib;}
+	void					SetRigModel(int);
 #endif
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
@@ -285,6 +289,7 @@ protected:
 	CSoundInInterface*		pSoundInInterface;
 	CSoundOutInterface*		pSoundOutInterface;
 	CReceiveData			ReceiveData;
+	COnboardDecoder			OnboardDecoder;
 	CWriteData				WriteData;
 	CInputResample			InputResample;
 	CFreqSyncAcq			FreqSyncAcq;
@@ -410,9 +415,11 @@ protected:
 	int						iBwLSB;
 	int						iBwUSB;
 	int						iBwCW;
-	int						iBwFM;
+	int						iBwNBFM;
+	int						iBwWBFM;
 	_BOOLEAN				bEnableSMeter;
 	_BOOLEAN				bReadFromFile;
+	_BOOLEAN				bUseHWDemod;
 	time_t					time_keeper;
 
 	CPlotManager PlotManager;

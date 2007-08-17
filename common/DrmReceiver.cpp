@@ -66,8 +66,8 @@ iFreqkHz(0),
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
 	RigPoll(),
 #endif
-	iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
-	bEnableSMeter(FALSE), bReadFromFile(FALSE), time_keeper(0)
+	iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwNBFM(6000), iBwWBFM(6000),
+	bEnableSMeter(FALSE), bReadFromFile(FALSE), bUseHWDemod(FALSE), time_keeper(0)
 {
 	pReceiverParam = new CParameter(this);
 	downstreamRSCI.SetReceiver(this);
@@ -108,30 +108,55 @@ CDRMReceiver::GetEnableSMeter()
 	return bEnableSMeter;
 }
 
+void CDRMReceiver::SetUseHWDemod(_BOOLEAN bUse)
+{
+	bUseHWDemod = bUse;
+	if(bUseHWDemod)
+	{
+		OnboardDecoder.SetInitFlag();
+	}
+	else
+	{
+		AMDemodulation.SetInitFlag();
+		AMSSPhaseDemod.SetInitFlag();
+		InputResample.SetInitFlag();
+		AMSSExtractBits.SetInitFlag();
+		AMSSDecode.SetInitFlag();
+	}
+}
+
+_BOOLEAN CDRMReceiver::GetUseHWDemod()
+{
+	return bUseHWDemod;
+}
+
 void
-CDRMReceiver::SetAMDemodType(CAMDemodulation::EDemodType eNew)
+CDRMReceiver::SetAMDemodType(EDemodType eNew)
 {
 	AMDemodulation.SetDemodType(eNew);
 	switch (eNew)
 	{
-	case CAMDemodulation::DT_AM:
+	case DT_AM:
 		AMDemodulation.SetFilterBW(iBwAM);
 		break;
 
-	case CAMDemodulation::DT_LSB:
+	case DT_LSB:
 		AMDemodulation.SetFilterBW(iBwLSB);
 		break;
 
-	case CAMDemodulation::DT_USB:
+	case DT_USB:
 		AMDemodulation.SetFilterBW(iBwUSB);
 		break;
 
-	case CAMDemodulation::DT_CW:
+	case DT_CW:
 		AMDemodulation.SetFilterBW(iBwCW);
 		break;
 
-	case CAMDemodulation::DT_FM:
-		AMDemodulation.SetFilterBW(iBwFM);
+	case DT_NBFM:
+		AMDemodulation.SetFilterBW(iBwNBFM);
+
+	case DT_WBFM:
+		AMDemodulation.SetFilterBW(iBwWBFM);
 		break;
 	}
 }
@@ -142,24 +167,28 @@ CDRMReceiver::SetAMFilterBW(int value)
 	/* Store filter bandwidth for this demodulation type */
 	switch (AMDemodulation.GetDemodType())
 	{
-	case CAMDemodulation::DT_AM:
+	case DT_AM:
 		iBwAM = value;
 		break;
 
-	case CAMDemodulation::DT_LSB:
+	case DT_LSB:
 		iBwLSB = value;
 		break;
 
-	case CAMDemodulation::DT_USB:
+	case DT_USB:
 		iBwUSB = value;
 		break;
 
-	case CAMDemodulation::DT_CW:
+	case DT_CW:
 		iBwCW = value;
 		break;
 
-	case CAMDemodulation::DT_FM:
-		iBwFM = value;
+	case DT_NBFM:
+		iBwNBFM = value;
+		break;
+
+	case DT_WBFM:
+		iBwWBFM = value;
 		break;
 	}
 	AMDemodulation.SetFilterBW(value);
@@ -243,26 +272,35 @@ CDRMReceiver::Run()
 		r += ReceiverParam.rSigStrengthCorrection;
 		ReceiverParam.SigStrstat.addSample(r);
 #endif
-		ReceiveData.ReadData(ReceiverParam, RecDataBuf);
 
-		// Split samples, one output to the demodulation, another for IQ recording
-		if (SplitForIQRecord.ProcessData(ReceiverParam, RecDataBuf, DemodDataBuf, IQRecordDataBuf))
+		if(eReceiverMode==RM_AM && bUseHWDemod)
 		{
-			bEnoughData = TRUE;
+			OnboardDecoder.ReadData(ReceiverParam, AMAudioBuf);
+			cout << AMAudioBuf.GetFillLevel() << endl;
 		}
-
-		switch(eReceiverMode)
+		else
 		{
-		case RM_DRM:
-				DemodulateDRM(bEnoughData);
-				DecodeDRM(bEnoughData, bFrameToSend);
-				break;
-		case RM_AM:
-				DemodulateAM(bEnoughData);
-				DecodeAM(bEnoughData);
-				break;
-		case RM_NONE:
-				break;
+			ReceiveData.ReadData(ReceiverParam, RecDataBuf);
+
+			// Split samples, one output to the demodulation, another for IQ recording
+			if (SplitForIQRecord.ProcessData(ReceiverParam, RecDataBuf, DemodDataBuf, IQRecordDataBuf))
+			{
+				bEnoughData = TRUE;
+			}
+
+			switch(eReceiverMode)
+			{
+			case RM_DRM:
+					DemodulateDRM(bEnoughData);
+					DecodeDRM(bEnoughData, bFrameToSend);
+					break;
+			case RM_AM:
+					DemodulateAM(bEnoughData);
+					DecodeAM(bEnoughData);
+					break;
+			case RM_NONE:
+					break;
+			}
 		}
 	}
 
@@ -1081,6 +1119,7 @@ CDRMReceiver::InitsForAllModules()
 	SplitAudio.SetInitFlag();
 	AudioSourceEncoder.SetInitFlag();
 	AMDemodulation.SetInitFlag();
+	OnboardDecoder.SetInitFlag();
 
 	SplitForIQRecord.SetInitFlag();
 	WriteIQFile.SetInitFlag();
@@ -1147,6 +1186,7 @@ CDRMReceiver::InitsForWaveMode()
 	FreqSyncAcq.SetInitFlag();
 	Split.SetInitFlag();
 	AMDemodulation.SetInitFlag();
+	OnboardDecoder.SetInitFlag();
 	AudioSourceEncoder.SetInitFlag();
 
 	SplitForIQRecord.SetInitFlag();
@@ -1334,6 +1374,32 @@ CDRMReceiver::SetRSIRecording(_BOOLEAN bOn, const char cProfile)
 	downstreamRSCI.SetRSIRecording(*pReceiverParam, bOn, cProfile);
 }
 
+#ifdef HAVE_LIBHAMLIB
+void CDRMReceiver::SetRigModel(int iID)
+{
+# ifdef __linux__
+	CHamlib::SDrRigCaps caps;
+	Hamlib.GetRigCaps(iID, caps);
+	if(caps.bHamlibDoesAudio)
+	{
+		string shm_path = "/dreamg3xxif";
+    	CShmSoundIn* ShmSoundIn = new CShmSoundIn;
+		if(pSoundInInterface)
+			delete pSoundInInterface;
+		pSoundInInterface = ShmSoundIn;
+		pSoundInInterface->SetDev(0);
+		ShmSoundIn->SetShmPath(shm_path);
+		ShmSoundIn->SetName(caps.strModelName);
+		ShmSoundIn->SetShmChannels(1);
+		ShmSoundIn->SetWantedChannels(2);
+		Hamlib.config["if_path"] = shm_path;
+		ReceiveData.SetSoundInterface(pSoundInInterface);
+	}
+# endif
+	Hamlib.SetHamlibModelID(iID);
+}
+#endif
+
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
 void
 CDRMReceiver::CRigPoll::run()
@@ -1518,6 +1584,9 @@ CDRMReceiver::LoadSettings(CSettings& s)
 		break;
 	}
 
+	/* demodulation */
+	EDemodType DemodType = EDemodType(s.Get("Demodulator", "modulation", DT_AM));
+
 	/* AM Parameters */
 
 	/* AGC */
@@ -1532,39 +1601,42 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	/* auto frequency acquisition */
 	AMDemodulation.EnableAutoFreqAcq(s.Get("AM Demodulation", "autofreqacq", 0));
 
-	/* demodulation */
-	CAMDemodulation::EDemodType DemodType
-		= (CAMDemodulation::EDemodType)s.Get("AM Demodulation", "demodulation", CAMDemodulation::DT_AM);
-
 	AMDemodulation.SetDemodType(DemodType);
 
-	iBwAM = s.Get("AM Demodulation", "filterbwam", 10000);
-	iBwUSB = s.Get("AM Demodulation", "filterbwusb", 5000);
-	iBwLSB = s.Get("AM Demodulation", "filterbwlsb", 5000);
-	iBwCW = s.Get("AM Demodulation", "filterbwcw", 150);
-	iBwFM = s.Get("AM Demodulation", "filterbwfm", 6000);
+	iBwAM = s.Get("AM Demodulation", "filterbwam", iBwAM);
+	iBwUSB = s.Get("AM Demodulation", "filterbwusb", iBwUSB);
+	iBwLSB = s.Get("AM Demodulation", "filterbwlsb", iBwLSB);
+	iBwCW = s.Get("AM Demodulation", "filterbwcw", iBwCW);
+
+	/* FM Parameters */
+	iBwNBFM = s.Get("FM Demodulation", "nbfilterbw", iBwNBFM);
+	iBwWBFM = s.Get("FM Demodulation", "wbfilterbw", iBwWBFM);
 
 	/* Load user's saved filter bandwidth for the demodulation type. */
 	switch (DemodType)
 	{
-	case CAMDemodulation::DT_AM:
+	case DT_AM:
 		AMDemodulation.SetFilterBW(iBwAM);
 		break;
 
-	case CAMDemodulation::DT_LSB:
+	case DT_LSB:
 		AMDemodulation.SetFilterBW(iBwLSB);
 		break;
 
-	case CAMDemodulation::DT_USB:
+	case DT_USB:
 		AMDemodulation.SetFilterBW(iBwUSB);
 		break;
 
-	case CAMDemodulation::DT_CW:
+	case DT_CW:
 		AMDemodulation.SetFilterBW(iBwCW);
 		break;
 
-	case CAMDemodulation::DT_FM:
-		AMDemodulation.SetFilterBW(iBwFM);
+	case DT_NBFM:
+		AMDemodulation.SetFilterBW(iBwNBFM);
+		break;
+
+	case DT_WBFM:
+		AMDemodulation.SetFilterBW(iBwWBFM);
 		break;
 	}
 
@@ -1576,33 +1648,8 @@ CDRMReceiver::LoadSettings(CSettings& s)
         {
             int iDev = pSoundInInterface->GetDev();
             delete pSoundInInterface;
-#ifdef __linux__
-			int model = s.Get("Hamlib", "hamlib-model", 0);
-			if(model==1509)
-			{
-            	CShmSoundIn* ShmSoundIn = new CShmSoundIn;
-            	pSoundInInterface = ShmSoundIn;
-            	pSoundInInterface->SetDev(0);
-				ShmSoundIn->SetShmPath("/dreamg313if");
-				ShmSoundIn->SetName("WinRadio G313");
-				ShmSoundIn->SetShmChannels(1);
-				ShmSoundIn->SetWantedChannels(2);
-				string strHamlibConf = s.Get("Hamlib", "hamlib-config");
-				if(strHamlibConf=="")
-					strHamlibConf = "if_path=/dreamg313if";
-				else
-					strHamlibConf += ",if_path=/dreamg313if";
-				s.Put("Hamlib", "hamlib-config", strHamlibConf);
-			}
-			else
-			{
-            	pSoundInInterface = new CSoundIn;
-            	pSoundInInterface->SetDev(iDev);
-			}
-#else
             pSoundInInterface = new CSoundIn;
             pSoundInInterface->SetDev(iDev);
-#endif
         }
         else
         {
@@ -1715,6 +1762,9 @@ CDRMReceiver::LoadSettings(CSettings& s)
 #ifdef HAVE_LIBHAMLIB
 	/* Hamlib --------------------------------------------------------------- */
 	Hamlib.LoadSettings(s);
+	rig_model_t	id = Hamlib.GetHamlibModelID();
+	if(id != 0)
+		SetRigModel(id); // does the shared memory audio thing
 
 	/* Enable s-meter flag */
 	bEnableSMeter = s.Get("Hamlib", "ensmeter", FALSE);
@@ -1793,6 +1843,9 @@ CDRMReceiver::SaveSettings(CSettings& s)
 	s.Put("EPG", "decodeepg", DataDecoder.GetDecodeEPG());
 
 
+	/* demodulation */
+	s.Put("Demodulator", "modulation", AMDemodulation.GetDemodType());
+
 	/* AM Parameters */
 
 	/* AGC */
@@ -1807,14 +1860,15 @@ CDRMReceiver::SaveSettings(CSettings& s)
 	/* auto frequency acquisition */
 	s.Put("AM Demodulation", "autofreqacq", AMDemodulation.AutoFreqAcqEnabled());
 
-	/* demodulation */
-	s.Put("AM Demodulation", "demodulation", AMDemodulation.GetDemodType());
-
 	s.Put("AM Demodulation", "filterbwam", iBwAM);
 	s.Put("AM Demodulation", "filterbwusb", iBwUSB);
 	s.Put("AM Demodulation", "filterbwlsb", iBwLSB);
 	s.Put("AM Demodulation", "filterbwcw", iBwCW);
-	s.Put("AM Demodulation", "filterbwfm", iBwFM);
+
+	/* FM Parameters */
+
+	s.Put("FM Demodulation", "nbfilterbw", iBwNBFM);
+	s.Put("FM Demodulation", "wbfilterbw", iBwWBFM);
 
 #ifdef HAVE_LIBHAMLIB
 	/* Hamlib --------------------------------------------------------------- */

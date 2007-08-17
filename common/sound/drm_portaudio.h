@@ -43,16 +43,19 @@ public:
 	virtual void		SetDev(int iNewDevice);
 	virtual int			GetDev();
 
-	void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
+	void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
 	void		ReInit();
-	_BOOLEAN	Read(CVector<short>& psData);
-	_BOOLEAN	Write(CVector<short>& psData);
+	_BOOLEAN	Read(vector<_SAMPLE>& data);
+	_BOOLEAN	Write(vector<_SAMPLE>& data);
 	void		Close();
 
 	PaUtilRingBuffer ringBuffer;
 	int xruns;
 
 protected:
+
+	PaSampleFormat fmt(short) { return paInt16; }
+	PaSampleFormat fmt(float) { return paFloat32; }
 
 	PaStream *stream;
 	vector<string> names;
@@ -62,6 +65,7 @@ protected:
 	int framesPerBuffer;
 	int iBufferSize;
 	char *ringBufferData;
+	int channels;
 
 	static int pa_count;
 };
@@ -75,9 +79,9 @@ public:
 	virtual void		SetDev(int iNewDevice) { hw.SetDev(iNewDevice); }
 	virtual int			GetDev() { return hw.GetDev(); }
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
+	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
 	virtual void		Close();
-	virtual _BOOLEAN	Read(CVector<short>& psData);
+	virtual _BOOLEAN	Read(vector<_SAMPLE>& data);
 
 protected:
 
@@ -93,9 +97,9 @@ public:
 	virtual void		SetDev(int iNewDevice) { hw.SetDev(iNewDevice); }
 	virtual int			GetDev() { return hw.GetDev(); }
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
+	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
 	virtual void		Close();
-	virtual _BOOLEAN	Write(CVector<short>& psData);
+	virtual _BOOLEAN	Write(vector<_SAMPLE>& data);
 
 protected:
 

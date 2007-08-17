@@ -50,18 +50,22 @@ public:
 	virtual void				SetDev(int iNewDevice);
 	virtual int					GetDev();
 
-	void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
-	_BOOLEAN Write(CVector<short>& psData);
+	void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE, int iChannels=2);
+	_BOOLEAN Write(vector<short>& data);
+	_BOOLEAN Write(vector<float>& data);
+	_BOOLEAN Write(vector<double>& data);
 
 	void Close();
 	
 protected:
+	template<typename T> _BOOLEAN write(vector<T>& data);
+
 	void Init_HW();
-	int write_HW( _SAMPLE *playbuf, int size );
+	int write_HW( short *playbuf, int size );
 	void close_HW( void );
 	
 	int 	iBufferSize, iInBufferSize;
-	short int *tmpplaybuf;
+	short *tmpplaybuf;
 	_BOOLEAN	bBlockingPlay;
 	vector<string> devices;
 
@@ -73,7 +77,7 @@ protected:
 		CSoundBuf SoundBuf;
 		CSoundOut*	pSoundOut;
 	protected:
-		_SAMPLE	tmpplaybuf[NUM_OUT_CHANNELS * FRAGSIZE];
+		short tmpplaybuf[NUM_OUT_CHANNELS * FRAGSIZE];
 	} PlayThread;
 	
 	vector<string> names;

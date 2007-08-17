@@ -129,16 +129,81 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
+	setDefaults();
 }
 
 ReceiverSettingsDlg::~ReceiverSettingsDlg()
 {
+	double latitude, longitude;
+	DRMReceiver.GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
+	Settings.Put("Logfile", "latitude", latitude);
+	Settings.Put("Logfile", "longitude", longitude);
+
 	if(DRMReceiver.GetIsWriteWaveFile())
 		DRMReceiver.StopWriteWaveFile();
 }
 
 void ReceiverSettingsDlg::hideEvent(QHideEvent*)
 {
+}
+
+/* this sets default values into the dialog and ini file for
+ * items not covered in other places. It is currently called
+ * from the constructor and contains items which can only
+ * be modified in this dialog or on the command line.
+ * (lat/long is still looking for a good home)
+ */
+void ReceiverSettingsDlg::setDefaults()
+{
+	CParameter& Parameters = *(DRMReceiver.GetParameters());
+
+	/* these won't get into the ini file unless we use GPS or have this: */
+	double latitude = Settings.Get("Logfile", "latitude", 100.0);
+	double longitude = Settings.Get("Logfile", "longitude", 0.0);
+	if(latitude<=90.0)
+	{
+		Parameters.GPSData.SetPositionAvailable(TRUE);
+		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
+		Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
+	}
+	else
+	{
+		latitude = 0.0;
+		Parameters.GPSData.SetPositionAvailable(FALSE);
+	}
+
+	/* Start log file flag */
+	CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", FALSE));
+
+    /* log file flag for storing signal strength in long log */
+	CheckBoxLogSigStr->setChecked(Settings.Get("Logfile", "enablerxl", FALSE));
+
+	/* log file flag for storing lat/long in long log */
+	CheckBoxLogLatLng->setChecked(Settings.Get("Logfile", "enablepositiondata", FALSE));
+
+	/* logging delay value */
+	int iLogDelay = Settings.Get("Logfile", "delay", 0);
+	SliderLogStartDelay->setValue(iLogDelay);
+
+	/* GPS ------------------------------------------------------------------- */
+	string host = Settings.Get("GPS", "host", string("localhost"));
+    LineEditGPSHost->setText(host.c_str());
+
+	int port = Settings.Get("GPS", "port", 2947);
+    LineEditGPSPort->setText(QString("%1").arg(port));
+
+	CheckBoxUseGPS->setChecked(Settings.Get("GPS", "usegpsd", FALSE));
+
+	/* get the defaults into the ini file */
+	Settings.Put("Logfile", "latitude", latitude);
+	Settings.Put("Logfile", "longitude", longitude);
+	Settings.Put("Logfile", "enablelog", CheckBoxWriteLog->isChecked());
+	Settings.Put("Logfile", "enablerxl", CheckBoxLogSigStr->isChecked());
+	Settings.Put("Logfile", "enablepositiondata", CheckBoxLogLatLng->isChecked());
+	Settings.Put("Logfile", "delay", iLogDelay);
+	Settings.Put("GPS", "usegpsd", CheckBoxUseGPS->isChecked());
+	Settings.Put("GPS", "host", host);
+	Settings.Put("GPS", "port", port);
 }
 
 void ReceiverSettingsDlg::showEvent(QShowEvent*)
@@ -178,47 +243,20 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	CheckBoxReverb->setChecked(DRMReceiver.GetReverbEffect());
 	CheckBoxSaveAudioWave->setChecked(DRMReceiver.GetIsWriteWaveFile());
 
-	/* Logfile -------------------------------------------------------------- */
-
-	/* Start log file flag */
-	CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", FALSE));
-
-    /* log file flag for storing signal strength in long log */
-	CheckBoxLogSigStr->setChecked(Settings.Get("Logfile", "enablerxl", FALSE));
-
-	/* log file flag for storing lat/long in long log */
-	CheckBoxLogLatLng->setChecked(Settings.Get("Logfile", "enablepositiondata", FALSE));
-
-	/* logging delay value */
-	int iLogDelay = Settings.Get("Logfile", "delay", 0);
-	SliderLogStartDelay->setValue(iLogDelay);
-
-	EdtLongitudeDegrees->setText(""); 
-	EdtLongitudeMinutes->setText("");
-	EdtLongitudeEW->setText("");
-	EdtLatitudeDegrees->setText(""); 
-	EdtLatitudeMinutes->setText("");
-	EdtLatitudeNS->setText("");
-
-	/* Extract the receiver coordinates setted */
+	/* GPS */
 	ExtractReceiverCoordinates();
 
-	/* GPS ------------------------------------------------------------------- */
-	CheckBoxUseGPS->setChecked(Settings.Get("GPS", "usegpsd", FALSE));
-
-	string host = Settings.Get("GPS", "host");
-    LineEditGPSHost->setText(host.c_str());
-
-	int port = Settings.Get("GPS", "port", 2947);
-    LineEditGPSPort->setText(QString("%1").arg(port));
-
 #ifdef HAVE_LIBHAMLIB
+	/* Rig */
 	ListViewRig->setRootIsDecorated(true);
 	ListViewRig->setAllColumnsShowFocus(true);
 	ListViewRig->setColumnText(0, "Rig");
 	ListViewRig->addColumn("ID");
 	ListViewRig->addColumn("Status");
 	ListViewRig->clear();
+	QPixmap	BitmLittleGreenSquare;
+	BitmLittleGreenSquare.resize(5, 5);
+	BitmLittleGreenSquare.fill(QColor(0, 255, 0));
 
 	CHamlib& Hamlib = *DRMReceiver.GetHamlib();
 
@@ -255,6 +293,11 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 				ListViewRig->ensureItemVisible(item);
 				CheckBoxEnableRig->setChecked(TRUE);
 			}
+			if (rig.bIsSpecRig == TRUE)
+			{
+				item->setPixmap(0, BitmLittleGreenSquare);
+				item->parent()->setPixmap(0, BitmLittleGreenSquare);
+			}
 		}
 	}
 
@@ -288,7 +331,7 @@ void ReceiverSettingsDlg::CheckSN(const QString& NewText)
 	const QString sVal = NewText.upper();
 
 	if (sVal != "S" && sVal != "N" && sVal != "")
-		EdtLatitudeNS->setText("");
+		EdtLatitudeNS->setText("N");
 	else
 		if (sVal != NewText) /* if lowercase change to uppercase */
 			EdtLatitudeNS->setText(sVal);
@@ -302,7 +345,7 @@ void ReceiverSettingsDlg::CheckEW(const QString& NewText)
 	const QString sVal = NewText.upper();
 
 	if (sVal != "E" && sVal != "W" && sVal != "")
-		EdtLongitudeEW->setText("");
+		EdtLongitudeEW->setText("E");
 	else
 		if (sVal != NewText) /* if lowercase change to uppercase */
 			EdtLongitudeEW->setText(sVal);
@@ -314,150 +357,42 @@ void ReceiverSettingsDlg::OnCheckBoxUseGPS()
 #if defined(_MSC_VER) && (_MSC_VER < 1400)
 	QMessageBox::information( this, "Dream", "Don't enable GPS unless you have gpsd running." );
 #endif
-    string host = LineEditGPSHost->text().latin1();
-	Settings.Put("GPS", "host", host);
+	Settings.Put("GPS", "host", string(LineEditGPSHost->text().latin1()));
 	Settings.Put("GPS", "port", LineEditGPSPort->text().toInt());
-	emit StartStopGPS(CheckBoxUseGPS->isChecked());
 	Settings.Put("GPS", "usegpsd", CheckBoxUseGPS->isChecked());
+	emit StartStopGPS(CheckBoxUseGPS->isChecked());
 }
+
+/* when the dialog closes save the contents of any controls which don't have
+ * their own slot handlers
+ */
 
 void ReceiverSettingsDlg::ButtonOkClicked()
 {
-	_BOOLEAN bOK = TRUE;
-	_BOOLEAN bAllEmpty = TRUE;
-	_BOOLEAN bAllCompiled = FALSE;
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 
-	/* Check the values and close the dialog */
+	/* save current settings */
 
-	if (ValidInput(EdtLatitudeDegrees) == FALSE)
-	{
-		bOK = FALSE;
-		QMessageBox::information(this, "Dream",
-			tr("Latitude value must be in the range 0 to 90")
-			,QMessageBox::Ok);
-	}
-	else if (ValidInput(EdtLongitudeDegrees) == FALSE)
-	{
-		bOK = FALSE;
+	Parameters.Lock(); 
 
-		QMessageBox::information(this, "Dream",
-			tr("Longitude value must be in the range 0 to 180")
-			,QMessageBox::Ok);
-	}
-	else if (ValidInput(EdtLongitudeMinutes) == FALSE
-		|| ValidInput(EdtLatitudeMinutes) == FALSE)
-	{
-		bOK = FALSE;
+	double latitude, longitude;
 
-		QMessageBox::information(this, "Dream",
-			tr("Minutes value must be in the range 0 to 59")
-			,QMessageBox::Ok);
-	}
-	
-	if (bOK == TRUE)
-	{
-		/* Check if all coordinates are empty */
+	latitude = EdtLatitudeDegrees->text().toDouble() + EdtLatitudeMinutes->text().toDouble()/60.0;
+	if(EdtLatitudeNS->text().upper().latin1()[0]=='S')
+		latitude = - latitude;
 
-		bAllEmpty = (EdtLongitudeDegrees->text() 
-			+ EdtLongitudeMinutes->text()
-			+ EdtLongitudeEW->text()
-			+ EdtLatitudeDegrees->text() 
-			+ EdtLatitudeMinutes->text()
-			+ EdtLatitudeNS->text()
-			) == "";
+	longitude = EdtLongitudeDegrees->text().toDouble() + EdtLongitudeMinutes->text().toDouble()/60.0;
+	if(EdtLongitudeEW->text().upper().latin1()[0]=='W')
+		longitude = - longitude;
 
-		/* Check if all coordinates are compiled */
+	Parameters.GPSData.SetPositionAvailable(TRUE);
+	Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
+	Parameters.Unlock(); 
 
-		bAllCompiled = (EdtLongitudeDegrees->text() != "")
-			&& (EdtLongitudeMinutes->text() != "")
-			&& (EdtLongitudeEW->text() != "")
-			&& (EdtLatitudeDegrees->text() != "") 
-			&& (EdtLatitudeMinutes->text() != "")
-			&& (EdtLatitudeNS->text() != "");
+	Settings.Put("GPS", "host", string(LineEditGPSHost->text().latin1()));
+	Settings.Put("GPS", "port", LineEditGPSPort->text().toInt());
 
-		if (!bAllEmpty && !bAllCompiled)
-		{
-			bOK = FALSE;
-
-			QMessageBox::information(this, "Dream",
-				tr("Compile all fields on receiver coordinates")
-				,QMessageBox::Ok);
-		}
-	}
-
-	if (bOK == TRUE)
-	{
-		/* save current settings */
-
-		Parameters.Lock(); 
-
-		if (!bAllEmpty)
-		{
-			double latitude, longitude;
-
-			latitude = EdtLatitudeDegrees->text().toDouble() + EdtLatitudeMinutes->text().toDouble()/60.0;
-			if(EdtLatitudeNS->text().upper().latin1()[0]=='S')
-				latitude = - latitude;
-
-			longitude = EdtLongitudeDegrees->text().toDouble() + EdtLongitudeMinutes->text().toDouble()/60.0;
-			if(EdtLongitudeEW->text().upper().latin1()[0]=='W')
-				longitude = - longitude;
-
-			Parameters.GPSData.SetPositionAvailable(TRUE);
-			Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
-		}
-		else
-		{
-			Parameters.GPSData.SetPositionAvailable(FALSE);
-		}
-		Parameters.Unlock(); 
-
-		accept(); /* If the values are valid close the dialog */
-	}
-}
-
-_BOOLEAN ReceiverSettingsDlg::ValidInput(const QLineEdit* le)
-{
-QString sText;
-
-	/* Use the validator for check if the value is valid */
-
-	sText = le->text();
-
-	if (sText == "")
-		return TRUE;
-	else
-	{
-		int iPosCursor = 0;
-		return le->validator()->validate(sText,iPosCursor) == QValidator::Acceptable;
-	}
-}
-
-QString ReceiverSettingsDlg::ExtractDigits(const QString strStr, const int iStart
-	, const int iDigits)
-{
-QString sVal;
-QChar ch;
-_BOOLEAN bStop;
-
-	/* Extract the first iDigits from position iStart */
-
-	sVal = "";
-	bStop = FALSE;
-
-	for (int i = iStart - 1 ; i <= iStart + iDigits - 1; i++)
-	{
-		if (bStop == FALSE)
-		{
-			ch = strStr.at(i);
-			if (ch.isDigit() == TRUE)
-				sVal = sVal + ch;
-			else
-				bStop = TRUE;
-		}
-	}
-	return sVal;
+	accept(); /* close the dialog */
 }
 
 void ReceiverSettingsDlg::ExtractReceiverCoordinates()
@@ -688,7 +623,7 @@ void ReceiverSettingsDlg::OnCheckEnableRigToggled(bool on)
 	}
 	else
 	{
-		DRMReceiver.GetHamlib()->SetHamlibModelID(0);
+		DRMReceiver.SetRigModel(0);
 		ListViewRig->clearSelection();
 	}
 #endif
@@ -702,7 +637,10 @@ void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
 void ReceiverSettingsDlg::OnCheckWithDRMModToggled(bool on)
 {
 #ifdef HAVE_LIBHAMLIB
-	DRMReceiver.GetHamlib()->SetEnableModRigSettings(on);
+	if(CheckBoxEnableRig->isChecked())
+	{
+		DRMReceiver.GetHamlib()->SetEnableModRigSettings(on);
+	}
 #endif
 }
 
@@ -712,7 +650,14 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 	if(CheckBoxEnableRig->isChecked())
 	{
 		int iID = item->text(1).toInt();
-		DRMReceiver.GetHamlib()->SetHamlibModelID(iID);
+		DRMReceiver.SetRigModel(iID);
+		CHamlib& hamlib = *DRMReceiver.GetHamlib();
+		hamlib.iFreqOffset = LineEditRigFreqOff->text().toInt();
+		hamlib.SetEnableModRigSettings(CheckBoxWithDRMMod->isChecked());
+		QListViewItem* cp = ListViewPort->selectedItem();
+		if(cp)
+			hamlib.SetComPort(cp->text(1).latin1());
+		DRMReceiver.SetEnableSMeter(CheckBoxEnableSMeter->isChecked());
 	}
 #endif
 }
@@ -720,7 +665,46 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)
 {
 #ifdef HAVE_LIBHAMLIB
-	DRMReceiver.GetHamlib()->SetComPort(item->text(1).latin1());
+	if(CheckBoxEnableRig->isChecked())
+	{
+		DRMReceiver.GetHamlib()->SetComPort(item->text(1).latin1());
+	}
+#endif
+}
+
+void ReceiverSettingsDlg::OnConfigChanged(int row, int col)
+{
+#ifdef HAVE_LIBHAMLIB
+	if(CheckBoxEnableRig->isChecked())
+	{
+	/*
+		QListViewItemIterator it( ListViewRigConf );
+		for ( ; it.current(); ++it )
+		{
+			DRMReceiver.GetHamlib()->config[it.current()->text(0).latin1()] = it.current()->text(1).latin1();
+		}
+		*/
+	}
+#endif
+}
+
+void ReceiverSettingsDlg::OnRigOffsetChanged(QString text)
+{
+#ifdef HAVE_LIBHAMLIB
+	if(CheckBoxEnableRig->isChecked())
+	{
+		DRMReceiver.GetHamlib()->iFreqOffset = text.toInt();
+	}
+#endif
+}
+
+void ReceiverSettingsDlg::OnRigSettingsChanged(QString text)
+{
+#ifdef HAVE_LIBHAMLIB
+	if(CheckBoxEnableRig->isChecked())
+	{
+		DRMReceiver.GetHamlib()->strSettings = text.latin1();
+	}
 #endif
 }
 

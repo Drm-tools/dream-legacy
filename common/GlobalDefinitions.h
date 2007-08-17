@@ -231,6 +231,8 @@ enum ERobMode {RM_ROBUSTNESS_MODE_A, RM_ROBUSTNESS_MODE_B,
 enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
 
+enum EDemodType {DT_AM, DT_LSB, DT_USB, DT_CW, DT_NBFM, DT_WBFM};
+
 enum EFileOutFormat { OFF_RAW, OFF_TXT, OFF_WAV };
 
 enum EStreamType { SF_AUDIO, SF_DATA };
@@ -333,22 +335,6 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 				const double dPar2);
 
 void ErrorMessage(string strErrorString);
-
-
-/* Global functions ***********************************************************/
-/* Converting _REAL to _SAMPLE */
-inline _SAMPLE Real2Sample(const _REAL rInput)
-{
-	/* Lower bound */
-	if (rInput < -_MAXSHORT)
-		return -_MAXSHORT;
-
-	/* Upper bound */
-	if (rInput > _MAXSHORT)
-		return _MAXSHORT;
-
-	return (_SAMPLE) rInput;
-}
 
 
 #endif // !defined(DEF_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

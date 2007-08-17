@@ -73,7 +73,7 @@ protected:
 };
 #endif
 
-class CSoundBuf : public CCyclicBuffer<_SAMPLE> {
+class CSoundBuf : public CCyclicBuffer<short> {
 
 public:
 	CSoundBuf() : keep_running(TRUE)

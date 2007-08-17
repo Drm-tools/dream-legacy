@@ -118,7 +118,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		rvecInpTmp = Real(cvecHilbert) * (CReal) 2.0;
 		break;
 
-	case DT_FM:
+	case DT_NBFM:
 		/* Get phase of complex signal and apply differentiation */
 		for (i = 0; i < iInputBlockSize; i++)
 		{
@@ -134,6 +134,10 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Low-pass filter */
 		rvecInpTmp = Filter(rvecBFM, rvecAFM, rvecInpTmp, rvecZFM);
+		break;
+
+	case DT_WBFM:
+		break;
 	}
 
 
@@ -149,8 +153,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Write mono signal in both channels (left and right) */
 	for (i = 0; i < iSymbolBlockSize; i++)
 	{
-		(*pvecOutputData)[2 * i] = (*pvecOutputData)[2 * i + 1] =
-			Real2Sample(rvecInpTmp[i]);
+		(*pvecOutputData)[2 * i] = (*pvecOutputData)[2 * i + 1] = _SAMPLE(rvecInpTmp[i]);
 	}
 }
 
@@ -286,7 +289,7 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW,
 	switch (eDemodType)
 	{
 	case DT_AM:
-	case DT_FM:
+	case DT_NBFM:
 		/* No offset */
 		rBPNormFreqOffset = (CReal) 0.0;
 		break;
@@ -307,6 +310,8 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW,
 		/* Shift filter to the right side of the carrier according to the
 		   special CW demodulation shift */
 		rBPNormFreqOffset = FREQ_OFFS_CW_DEMOD / SOUNDCRD_SAMPLE_RATE;
+		break;
+	case DT_WBFM:
 		break;
 	}
 

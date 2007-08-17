@@ -238,7 +238,6 @@ public:
 	CAMDemodulation();
 	virtual ~CAMDemodulation() {}
 
-	enum EDemodType {DT_AM, DT_LSB, DT_USB, DT_CW, DT_FM};
 	enum ENoiRedType {NR_OFF, NR_LOW, NR_MEDIUM, NR_HIGH};
 
 	void SetAcqFreq(const CReal rNewNormCenter);

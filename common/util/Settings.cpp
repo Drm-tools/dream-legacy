@@ -41,7 +41,6 @@
 #include <iostream>
 #include <iomanip>
 #include <limits>
-using namespace std;
 
 /* Implementation *************************************************************/
 void
@@ -310,6 +309,7 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
+#ifdef USE_QT_GUI
 		/* log enable flag  ---------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-g", "--enablelog", 0, 1,
 							   rArgument) == TRUE)
@@ -325,7 +325,7 @@ CSettings::ParseArguments(int argc, char **argv)
 			Put("Logfile", "delay", (int) rArgument);
 			continue;
 		}
-
+#endif
 		/* Latitude string for log file ------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "-a", "--latitude", strArgument)
 			== TRUE)
@@ -342,6 +342,7 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
+#ifdef USE_QT_GUI
 		/* Color scheme main plot ------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-y", "--colorscheme", 0,
 							   MAX_COLOR_SCHEMES_VAL, rArgument) == TRUE)
@@ -349,6 +350,7 @@ CSettings::ParseArguments(int argc, char **argv)
 			Put("DRM Dialog", "colorscheme", (int) rArgument);
 			continue;
 		}
+#endif
 
 		/* MDI out address -------------------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "--mdiout", "--mdiout",

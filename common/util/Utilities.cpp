@@ -69,21 +69,20 @@ CSignalLevelMeter::Update(const _REAL rVal)
 }
 
 void
-CSignalLevelMeter::Update(const CVector < _REAL > vecrVal)
+CSignalLevelMeter::Update(const vector < _SAMPLE > vecsVal)
 {
-	/* Do the update for entire vector */
-	const int iVecSize = vecrVal.Size();
-	for (int i = 0; i < iVecSize; i++)
-		Update(vecrVal[i]);
+	/* Do the update for entire vector, convert to real */
+	for (int i = 0; i < vecsVal.size(); i++)
+		Update((_REAL) vecsVal[i]);
 }
 
 void
-CSignalLevelMeter::Update(const CVector < _SAMPLE > vecsVal)
+CSignalLevelMeter::Update(const CVector < _REAL > vecsVal)
 {
 	/* Do the update for entire vector, convert to real */
 	const int iVecSize = vecsVal.Size();
 	for (int i = 0; i < iVecSize; i++)
-		Update((_REAL) vecsVal[i]);
+		Update(vecsVal[i]);
 }
 
 _REAL CSignalLevelMeter::Level()
@@ -467,6 +466,19 @@ modes(), levels(), functions(), parameters(), config()
 	/* Winradio G313 */
 	RigSpecialParameters(RIG_MODEL_G313, "l_ATT=0,l_AGC=3", 0,
 						 "l_ATT=0,l_AGC=3");
+# ifdef __linux
+	CapsHamlibModels[RIG_MODEL_G313].bHamlibDoesAudio = TRUE;
+# endif
+#endif
+
+#ifdef RIG_MODEL_G315
+	/* Winradio G315 */
+	RigSpecialParameters(RIG_MODEL_G315, "l_ATT=0,l_AGC=3", 0,
+						 "l_ATT=0,l_AGC=3");
+# ifdef __linux
+	CapsHamlibModels[RIG_MODEL_G313].bHamlibDoesAudio = TRUE;
+# endif
+	CapsHamlibModels[RIG_MODEL_G313].bOnboardFMDemod = TRUE;
 #endif
 
 #ifdef RIG_MODEL_AR7030

@@ -31,6 +31,23 @@
 
 
 /* Implementation *************************************************************/
+#ifdef HAVE_LIBSNDFILE
+sf_count_t  sf_writef(SNDFILE *sndfile, short *ptr, sf_count_t frames)
+{
+	return sf_writef_short(sndfile, ptr, frames);
+}
+
+sf_count_t  sf_writef(SNDFILE *sndfile, float *ptr, sf_count_t frames)
+{
+	return sf_writef_float(sndfile, ptr, frames);
+}
+
+sf_count_t  sf_writef(SNDFILE *sndfile, double *ptr, sf_count_t frames)
+{
+	return sf_writef_double(sndfile, ptr, frames);
+}
+#endif
+
 /******************************************************************************\
 * Transmitter                                                                  *
 \******************************************************************************/
@@ -48,16 +65,16 @@ void CTransmitData::ProcessDataInternal(CParameter&)
 		const int iCurIndex = iBlockCnt * iNs2 + i;
 
 		/* Imaginary, real */
-		const short sCurOutReal =
-			(short) ((*pvecInputData)[i / 2].real() * rNormFactor);
-		const short sCurOutImag =
-			(short) ((*pvecInputData)[i / 2].imag() * rNormFactor);
+		const _SAMPLE sCurOutReal =
+			(_SAMPLE) ((*pvecInputData)[i / 2].real() * rNormFactor);
+		const _SAMPLE sCurOutImag =
+			(_SAMPLE) ((*pvecInputData)[i / 2].imag() * rNormFactor);
 
 		/* Envelope, phase */
-		const short sCurOutEnv =
-			(short) (Abs((*pvecInputData)[i / 2]) * (_REAL) 256.0);
-		const short sCurOutPhase = /* 2^15 / pi / 2 -> approx. 5000 */
-			(short) (Angle((*pvecInputData)[i / 2]) * (_REAL) 5000.0);
+		const _SAMPLE sCurOutEnv =
+			(_SAMPLE) (Abs((*pvecInputData)[i / 2]) * (_REAL) 256.0);
+		const _SAMPLE sCurOutPhase = /* 2^15 / pi / 2 -> approx. 5000 */
+			(_SAMPLE) (Angle((*pvecInputData)[i / 2]) * (_REAL) 5000.0);
 
 		switch (eOutputFormat)
 		{
@@ -93,43 +110,41 @@ void CTransmitData::ProcessDataInternal(CParameter&)
 #ifdef HAVE_LIBSNDFILE
 			if (eOutputFormat==OF_REAL_VAL)
 			{
-				(void)sf_writef_short(pFile, &vecsDataOut[iCurIndex], 1);
+				(void)sf_writef(pFile, &vecsDataOut[iCurIndex], 1);
 			}
 			else
 			{
-				short buffer[2];
+				_SAMPLE buffer[2];
 				buffer[0] = vecsDataOut[iCurIndex];
 				buffer[1] = vecsDataOut[iCurIndex+1];
-				(void)sf_writef_short(pFile, buffer, 1);
+				(void)sf_writef(pFile, buffer, 1);
 			}
 #else
+			short buffer[2];
+			buffer[0] = short(vecsDataOut[iCurIndex]);
+			buffer[1] = short(vecsDataOut[iCurIndex+1]);
 			switch(eOutFileMode)
 			{
 			case OFF_RAW:
 				if (eOutputFormat==OF_REAL_VAL)
-					fwrite((const void*) &vecsDataOut[iCurIndex], 2, 1, pFile);
+					fwrite((const void*) buffer, 2, 1, pFile);
 				else
 				{
-					short buffer[2];
-					buffer[0] = vecsDataOut[iCurIndex];
-					buffer[1] = vecsDataOut[iCurIndex+1];
 					fwrite((const void*) buffer, 2, 2, pFile);
 				}
 				break;
 			case OFF_TXT:
 				/* This can be read with Matlab "load" command */
 				if (eOutputFormat==OF_REAL_VAL)
-					fprintf(pFile, "%d\n", vecsDataOut[iCurIndex]);
+					fprintf(pFile, "%d\n", buffer[0]);
 				else
-					fprintf(pFile, "%d\n %d\n", vecsDataOut[iCurIndex],
-						vecsDataOut[iCurIndex+1]);
+					fprintf(pFile, "%d\n %d\n", buffer[0], buffer[1]);
 				break;
 			case OFF_WAV:
 				if (eOutputFormat==OF_REAL_VAL)
-					WaveFile.AddStereoSample(vecsDataOut[iCurIndex], 0);
+					WaveFile.AddStereoSample(buffer[0], 0);
 				else
-					WaveFile.AddStereoSample(vecsDataOut[iCurIndex],
-									vecsDataOut[iCurIndex+1]);
+					WaveFile.AddStereoSample(buffer[0], buffer[1]);
 			}
 #endif
 		}
@@ -170,7 +185,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	iBigBlockSize = iSymbolBlockSize * 2 /* Stereo */ * iNumBlocks;
 	rDefCarOffset = TransmParam.rCarOffset;
 
-	vecsDataOut.Init(iBigBlockSize);
+	vecsDataOut.resize(iBigBlockSize);
 
 	if (bUseSoundcard == TRUE)
 	{
@@ -318,7 +333,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 				const _REAL rLeftChan = vecsSoundBuffer[2 * i];
 				const _REAL rRightChan = vecsSoundBuffer[2 * i + 1];
 
-				(*pvecOutputData)[i] = (rLeftChan + rRightChan) / 2;
+				(*pvecOutputData)[i] = _REAL(rLeftChan + rRightChan) / 2.0;
 			}
 			break;
 
@@ -798,4 +813,41 @@ _REAL CReceiveData::CalcTotalPower(CVector<_REAL> &vecrData, int iStartBin, int 
 	}
 
 	return rSigPower;
+}
+
+/******************************************************************************\
+ *	Receive audio data decoded in hardware
+ *	currently only supports _SAMPLE stereo in to _REAL stereo out
+ *	and _SAMPLE mono in to _REAL mono out
+ *	TODO mono in to stereo out
+\******************************************************************************/
+void COnboardDecoder::ProcessDataInternal(CParameter& Parameter)
+{
+	if(pSound == NULL)
+		return;
+
+	vector<_SAMPLE> s(iOutputBlockSize);
+	_BOOLEAN bBad = pSound->Read(s);
+	for(int i=0; i<iOutputBlockSize; i++)
+		(*pvecOutputData)[i] = s[i];
+
+	Parameter.Lock(); 
+	if (bBad == FALSE)
+		Parameter.ReceiveStatus.Interface.SetStatus(RX_OK);
+	else
+		Parameter.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
+	Parameter.Unlock(); 
+}
+
+void COnboardDecoder::InitInternal(CParameter& Parameter)
+{
+	if(pSound == NULL)
+		return;
+
+	const int iNumInSamplesMono = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
+										 (_REAL) 0.05 /* 50 ms (arbitrary) */ );
+	iOutputBlockSize = 2*iNumInSamplesMono;
+	cout << "iOutputBlockSize " << iOutputBlockSize << endl;
+
+	pSound->Init(iOutputBlockSize);
 }

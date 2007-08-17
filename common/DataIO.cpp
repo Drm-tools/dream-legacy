@@ -34,79 +34,20 @@
 /******************************************************************************\
 * MSC data																	   *
 \******************************************************************************/
+
 /* Transmitter -------------------------------------------------------------- */
 void CReadData::Stop()
 {
-	if(bUseSoundcard)
-	{
-		pSound->Close();
-	}
-	else
-	{
-#ifdef HAVE_LIBSNDFILE
-		sf_close(pFile);
-#else
-		fclose(pFile);
-#endif
-	}
+	pSound->Close();
 }
 
 void CReadData::ProcessDataInternal(CParameter&)
 {
-	if((bNewUseSoundcard==FALSE) && (bUseSoundcard==TRUE))
-	{
-		bUseSoundcard = FALSE;
-#ifdef HAVE_LIBSNDFILE
-		SF_INFO sfinfo;
-		memset(&sfinfo, 0, sizeof(SF_INFO));
-		pFile = sf_open(strInFileName.c_str(), SFM_READ, &sfinfo);
-		/* for now, we will insist on 48 kHz mono 16bit */
-		if(pFile == NULL
-		|| sfinfo.channels != 1
-		|| sfinfo.samplerate != 48000)
-		throw CGenErr(string("Sound File Open() failed for ") + strInFileName);
-#else
-		pFile = fopen(strInFileName.c_str(), "rb");
-		if(pFile == NULL)
-		throw CGenErr(string("Sound File Open() failed for ") + strInFileName);
-#endif
-	}
-
-	if(bUseSoundcard)
-	{
-		/* Get data from sound interface */
-		pSound->Read(vecsSoundBuffer);
-		/* Write data to output buffer */
-		for (int i = 0; i < iOutputBlockSize; i++)
-			(*pvecOutputData)[i] = vecsSoundBuffer[i];
-	}
-	else
-	{
-		/* Get data from WAV FILE */
-		_SAMPLE n;
-		for (int i = 0; i < iOutputBlockSize; i++)
-		{
-#ifdef HAVE_LIBSNDFILE
-			sf_count_t  c = sf_readf_short(pFile, &n, 1);
-			if(c==0) /* EOF - loop */
-			{
-				sf_close(pFile);
-				SF_INFO sfinfo;
-				memset(&sfinfo, 0, sizeof(SF_INFO));
-				pFile = sf_open(strInFileName.c_str(), SFM_READ, &sfinfo);
-				(void)sf_readf_short(pFile, &n, 1);
-			}
-#else
-			if(feof(pFile)) /* loop */
-			{
-			 	fclose(pFile);
-				pFile = fopen(strInFileName.c_str(), "rb");
-			}
-			fread(&n, sizeof(_SAMPLE), 1, pFile);
-#endif
-			(*pvecOutputData)[i] = n;
-		}
-	}
+	/* Get data from sound interface */
+	pSound->Read(vecsSoundBuffer);
+	/* Write data to output buffer */
+	for (int i = 0; i < iOutputBlockSize; i++)
+		(*pvecOutputData)[i] = vecsSoundBuffer[i];
 
 	/* Update level meter */
 	SignalLevelMeter.Update((*pvecOutputData));
@@ -121,7 +62,7 @@ void CReadData::InitInternal(CParameter&)
 
 	/* Init sound interface and intermediate buffer */
 	pSound->Init(iOutputBlockSize);
-	vecsSoundBuffer.Init(iOutputBlockSize);
+	vecsSoundBuffer.resize(iOutputBlockSize);
 
 	/* Init level meter */
 	SignalLevelMeter.Init(0);
@@ -171,8 +112,7 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 			const _REAL rLeftChan = (*pvecInputData)[2 * i];
 			const _REAL rRightChan = (*pvecInputData)[2 * i + 1];
 
-			vecsTmpAudData[2 * i] =
-				Real2Sample((rLeftChan + rRightChan) * rMixNormConst);
+			vecsTmpAudData[2 * i] = _SAMPLE((rLeftChan + rRightChan) * rMixNormConst);
 
 			vecsTmpAudData[2 * i + 1] = 0; /* mute */
 		}
@@ -188,8 +128,7 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 			const _REAL rRightChan = (*pvecInputData)[2 * i + 1];
 
 			vecsTmpAudData[2 * i] = 0; /* mute */
-			vecsTmpAudData[2 * i + 1] =
-				Real2Sample((rLeftChan + rRightChan) * rMixNormConst);
+			vecsTmpAudData[2 * i + 1] = _SAMPLE((rLeftChan + rRightChan) * rMixNormConst);
 		}
 		break;
 	}
@@ -249,7 +188,7 @@ void CWriteData::InitInternal(CParameter&)
 	pSound->Init(iAudFrameSize * 2 /* stereo */, bSoundBlocking);
 
 	/* Init intermediate buffer needed for different channel selections */
-	vecsTmpAudData.Init(iAudFrameSize * 2 /* stereo */);
+	vecsTmpAudData.resize(iAudFrameSize * 2 /* stereo */);
 
 	/* Inits for audio spectrum plot */
 	vecrHammingWindow = Hamming(NUM_SMPLS_4_AUDIO_SPECTRUM);
@@ -982,14 +921,14 @@ void CWriteIQFile::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Write to the file */
 
-	_SAMPLE re, im;
+	short re, im;
 	_BYTE bytes[4];
 
 	CReal rScale = CReal(1.0);
 	for (i=0; i<iInputBlockSize; i++)
 	{
-		re = _SAMPLE(cvecHilbert[i].real() * rScale);
-		im = _SAMPLE(cvecHilbert[i].imag() * rScale);
+		re = short(cvecHilbert[i].real() * rScale);
+		im = short(cvecHilbert[i].imag() * rScale);
 		bytes[0] = _BYTE(re & 0xFF);
 		bytes[1] = _BYTE((re>>8) & 0xFF);
 		bytes[2] = _BYTE(im & 0xFF);

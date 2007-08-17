@@ -59,8 +59,8 @@ public:
 
 	void Init(_REAL rStartVal) {rCurLevel = Abs(rStartVal);}
 	void Update(const _REAL rVal);
+	void Update(const vector<_SAMPLE> vecrVal);
 	void Update(const CVector<_REAL> vecrVal);
-	void Update(const CVector<_SAMPLE> vecsVal);
 	_REAL Level();
 
 protected:
@@ -136,6 +136,7 @@ class CHamlib
 {
 public:
 	enum ESMeterState {SS_VALID, SS_NOTVALID, SS_TIMEOUT};
+	enum EMight { C_CAN, C_MUST, C_CANT };
 
 	CHamlib();
 	virtual ~CHamlib();
@@ -146,12 +147,14 @@ public:
 			eRigStatus(RIG_STATUS_ALPHA),bIsSpecRig(FALSE) {}
 		SDrRigCaps(const string& strNMan, const string& strNModN, rig_status_e eNSt, _BOOLEAN bNsp) :
 			strManufacturer(strNMan), strModelName(strNModN), eRigStatus(eNSt),
-			bIsSpecRig(bNsp)
+			bIsSpecRig(bNsp), bHamlibDoesAudio(FALSE), eOnboardFMDemod(C_CANT)
 			{}
 		SDrRigCaps(const SDrRigCaps& nSDRC) : 
 			strManufacturer(nSDRC.strManufacturer),
 			strModelName(nSDRC.strModelName),
-			eRigStatus(nSDRC.eRigStatus), bIsSpecRig(nSDRC.bIsSpecRig) {}
+			eRigStatus(nSDRC.eRigStatus), bIsSpecRig(nSDRC.bIsSpecRig),
+			bHamlibDoesAudio(nSDRC.bHamlibDoesAudio), eOnboardFMDemod(nSDRC.eOnboardFMDemod)
+			{}
 
 		inline SDrRigCaps& operator=(const SDrRigCaps& cNew)
 		{
@@ -159,6 +162,8 @@ public:
 			strModelName = cNew.strModelName;
 			eRigStatus = cNew.eRigStatus;
 			bIsSpecRig = cNew.bIsSpecRig;
+			bHamlibDoesAudio = cNew.bHamlibDoesAudio;
+			eOnboardFMDemod = cNew.eOnboardFMDemod;
 			return *this;
 		}
 
@@ -166,6 +171,8 @@ public:
 		string			strModelName;
 		rig_status_e	eRigStatus;
 		_BOOLEAN		bIsSpecRig;
+		_BOOLEAN		bHamlibDoesAudio;
+		EMight			eOnboardFMDemod;
 	};
 
 	_BOOLEAN		SetFrequency(const int iFreqkHz);
@@ -184,11 +191,16 @@ public:
 	void			SetEnableModRigSettings(const _BOOLEAN bNSM);
 	_BOOLEAN		GetEnableModRigSettings() const {return bModRigSettings;}
 	string			GetInfo() const;
+	void			GetRigCaps(rig_model_t id, SDrRigCaps& caps) { caps = CapsHamlibModels[id]; }
 
 	void			RigSpecialParameters(rig_model_t id, const string& sSet, int iFrOff, const string& sModSet);
 	void			ConfigureRig(const string & strSet);
 	void			LoadSettings(CSettings& s);
 	void			SaveSettings(CSettings& s);
+
+	string				strSettings;
+	int					iFreqOffset;
+	map<string,string> config;
 
 protected:
 	class CSpecDRMRig
@@ -223,13 +235,10 @@ protected:
 	_BOOLEAN			bModRigSettings;
 	rig_model_t			iHamlibModelID;
 	string				strHamlibConf;
-	string				strSettings;
-	int					iFreqOffset;
 	map<string,string> modes;
 	map<string,string> levels;
 	map<string,string> functions;
 	map<string,string> parameters;
-	map<string,string> config;
 
 };
 #else

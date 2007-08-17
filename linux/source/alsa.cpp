@@ -211,7 +211,8 @@ void CSoundIn::Init_HW(){
 
 }
 
-int CSoundIn::read_HW( void * recbuf, int size) {
+int CSoundIn::read_HW(short* recbuf, int size)
+{
 
 	int ret = snd_pcm_readi(handle, recbuf, size);
 
@@ -435,7 +436,7 @@ void CSoundOut::Init_HW()
 
 }
 
-int CSoundOut::write_HW( _SAMPLE *playbuf, int size )
+int CSoundOut::write_HW(short* playbuf, int size)
 {
 
 	int start = 0;

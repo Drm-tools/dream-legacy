@@ -41,11 +41,6 @@
 #include "util/AudioFile.h"
 #include "util/Utilities.h"
 #include "AMDemodulation.h" // For CMixer
-#ifdef HAVE_LIBSNDFILE
-# include <sndfile.h>
-#else
-# include "util/AudioFile.h"
-#endif
 
 /* Definitions ****************************************************************/
 /* In case of random-noise, define number of blocks */
@@ -75,30 +70,17 @@ class CReadData : public CTransmitterModul<_SAMPLE, _SAMPLE>
 {
 public:
 	CReadData(CSoundInInterface* pNS) : pSound(pNS),
-	vecsSoundBuffer(),SignalLevelMeter(),
-	bUseSoundcard(TRUE),bNewUseSoundcard(TRUE),
-	strInFileName(""),pFile(NULL)
+	vecsSoundBuffer(),SignalLevelMeter()
 	{}
 	virtual ~CReadData() {}
 
 	_REAL GetLevelMeter() {return SignalLevelMeter.Level();}
-	void SetReadFromFile(const string strNFN)
-		{bNewUseSoundcard = FALSE; strInFileName = strNFN;}
 	void Stop();
 
 protected:
 	CSoundInInterface*	pSound;
-	CVector<_SAMPLE>	vecsSoundBuffer;
+	vector<_SAMPLE>		vecsSoundBuffer;
 	CSignalLevelMeter	SignalLevelMeter;
-	_BOOLEAN			bUseSoundcard;
-	_BOOLEAN			bNewUseSoundcard;
-
-	string				strInFileName;
-#ifdef HAVE_LIBSNDFILE
-	SNDFILE*			pFile;
-#else
-	FILE*				pFile;
-#endif
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);
@@ -135,7 +117,7 @@ protected:
 	_BOOLEAN				bDoWriteWaveFile;
 	_BOOLEAN				bSoundBlocking;
 	_BOOLEAN				bNewSoundBlocking;
-	CVector<_SAMPLE>		vecsTmpAudData;
+	vector<_SAMPLE>			vecsTmpAudData;
 	EOutChanSel				eOutChanSel;
 	_REAL					rMixNormConst;
 
@@ -309,7 +291,6 @@ public:
 
 protected:
 	FILE *					pFile;
-	CVector<_SAMPLE>		vecsTmpAudData;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

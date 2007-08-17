@@ -42,7 +42,7 @@ captureCallback(const void *inputBuffer, void *outputBuffer,
 	/* Cast data passed through stream to our structure. */
 	CPaCommon *This = (CPaCommon *) userData;
 	(void) outputBuffer;		/* Prevent unused variable warning. */
-	long bytes = framesPerBuffer*2*sizeof(short);
+	long bytes = framesPerBuffer*2*sizeof(_SAMPLE);
 	long avail = PaUtil_GetRingBufferWriteAvailable(&This->ringBuffer);
 	PaUtil_WriteRingBuffer(&This->ringBuffer, inputBuffer, (avail<bytes)?avail:bytes);
 	if(statusFlags&paInputOverflow)
@@ -58,9 +58,15 @@ playbackCallback(const void *inputBuffer, void *outputBuffer,
 {
 	CPaCommon *This = (CPaCommon *) userData;
 	(void) inputBuffer;			/* Prevent unused variable warning. */
-	long bytes = framesPerBuffer*2*sizeof(short);
+	long bytes = framesPerBuffer*2*sizeof(_SAMPLE);
 	long avail = PaUtil_GetRingBufferReadAvailable(&This->ringBuffer);
 	PaUtil_ReadRingBuffer(&This->ringBuffer, outputBuffer, (avail<bytes)?avail:bytes);
+	if(sizeof(_SAMPLE)==4)
+	{
+		_SAMPLE* b = (_SAMPLE*) outputBuffer;
+		for(size_t i=0; i<framesPerBuffer; i++)
+			b[i] = b[i] / 32768.0;
+	}
 	if(statusFlags&paOutputUnderflow)
 		This->xruns++;
 	return 0;
@@ -71,7 +77,7 @@ int CPaCommon::pa_count = 0;
 CPaCommon::CPaCommon(bool cap):ringBuffer(),xruns(0),stream(NULL),
 			names(), devices(), dev(-1),
 			is_capture(cap), blocking(true), device_changed(true), xrun(false),
-			framesPerBuffer(0), ringBufferData(NULL)
+			framesPerBuffer(0), ringBufferData(NULL), channels(2)
 {
 	if (pa_count == 0)
 	{
@@ -148,12 +154,12 @@ CPaCommon::GetDev()
 
 /* buffer_size is in samples - frames would be better */
 void
-CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 {
 	if (device_changed == false)
 		return;
-
-	unsigned long channels=2;
+	
+	channels = iChannels;
 
 	if(is_capture)
 		framesPerBuffer = iNewBufferSize / channels;
@@ -194,9 +200,9 @@ CPaCommon::ReInit()
 	PaStreamParameters pParameters;
 
 	memset(&pParameters, sizeof(pParameters), 0);
-	pParameters.channelCount = 2;
+	pParameters.channelCount = channels;
 	pParameters.hostApiSpecificStreamInfo = NULL;
-	pParameters.sampleFormat = paInt16;
+	pParameters.sampleFormat = fmt(_SAMPLE(0));
 
 	if(dev < 0 || dev >= int(devices.size()))
 	{
@@ -221,12 +227,12 @@ CPaCommon::ReInit()
 	if (is_capture)
 	{
 		pParameters.suggestedLatency = Pa_GetDeviceInfo(pParameters.device)->defaultLowInputLatency;
-		minRingBufferSize = 2*iBufferSize*sizeof(short);
+		minRingBufferSize = 2*iBufferSize*sizeof(_SAMPLE);
 	}
 	else
 	{
 		pParameters.suggestedLatency = 0.8;
-		minRingBufferSize = 4*iBufferSize*sizeof(short);
+		minRingBufferSize = 4*iBufferSize*sizeof(_SAMPLE);
 	}
 
 	/* See the specific host's API docs for info on using this field */
@@ -290,7 +296,7 @@ CPaCommon::Close()
 }
 
 _BOOLEAN
-CPaCommon::Read(CVector < short >&psData)
+CPaCommon::Read(vector<_SAMPLE>& data)
 {
 	if (device_changed)
 		ReInit();
@@ -298,7 +304,7 @@ CPaCommon::Read(CVector < short >&psData)
 	if(stream==NULL)
 		return TRUE;
 
-	size_t bytes = psData.Size() * sizeof(short);
+	size_t bytes = data.size() * sizeof(_SAMPLE);
 
 	while(PaUtil_GetRingBufferReadAvailable(&ringBuffer)<int(bytes))
 	{
@@ -306,7 +312,7 @@ CPaCommon::Read(CVector < short >&psData)
 		Pa_Sleep(10);
 	}
 
-	PaUtil_ReadRingBuffer(&ringBuffer, &psData[0], bytes);
+	PaUtil_ReadRingBuffer(&ringBuffer, &data[0], bytes);
 	if(xruns==0)
 		return FALSE;
 	else
@@ -316,7 +322,7 @@ CPaCommon::Read(CVector < short >&psData)
 }
 
 _BOOLEAN
-CPaCommon::Write(CVector < short >&psData)
+CPaCommon::Write(vector<_SAMPLE>& data)
 {
 	if (device_changed)
 		ReInit();
@@ -324,13 +330,13 @@ CPaCommon::Write(CVector < short >&psData)
 	if(stream==NULL)
 		return TRUE;
 
-	size_t bytes = psData.Size() * sizeof(short);
+	size_t bytes = data.size() * sizeof(_SAMPLE);
 
 	//cout << "Write: got " << bytes << " can put " << PaUtil_GetRingBufferWriteAvailable(&ringBuffer) << endl;
 	if (PaUtil_GetRingBufferWriteAvailable(&ringBuffer) < int(bytes))
 		return FALSE;			/* TODO use newer data in preference to draining old */
 
-	PaUtil_WriteRingBuffer(&ringBuffer, &psData[0], bytes);
+	PaUtil_WriteRingBuffer(&ringBuffer, &data[0], bytes);
 	if(Pa_IsStreamStopped( stream ))
 	{
 		int err = Pa_StartStream(stream);
@@ -355,15 +361,15 @@ CPaIn::~CPaIn()
 }
 
 void
-CPaIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+CPaIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 {
-	hw.Init(iNewBufferSize, bNewBlocking);
+	hw.Init(iNewBufferSize, bNewBlocking, iChannels);
 }
 
 _BOOLEAN
-CPaIn::Read(CVector<short>& psData)
+CPaIn::Read(vector<_SAMPLE>& data)
 {
-	return hw.Read(psData);
+	return hw.Read(data);
 }
 
 void
@@ -383,15 +389,15 @@ CPaOut::~CPaOut()
 }
 
 void
-CPaOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+CPaOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 {
-	hw.Init(iNewBufferSize, bNewBlocking);
+	hw.Init(iNewBufferSize, bNewBlocking, iChannels);
 }
 
 _BOOLEAN
-CPaOut::Write(CVector<short>& psData)
+CPaOut::Write(vector<_SAMPLE>& data)
 {
-	return hw.Write(psData);
+	return hw.Write(data);
 }
 
 void

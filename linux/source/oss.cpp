@@ -225,8 +225,8 @@ void CSoundIn::Init_HW()
 		throw CGenErr("open of "+devname+" failed");
 }
 
-
-int CSoundIn::read_HW( void * recbuf, int size) {
+int CSoundIn::read_HW(short* recbuf, int size)
+{
 	
 	int ret = read(dev.fildes(), recbuf, size * NUM_IN_CHANNELS * BYTES_PER_SAMPLE );
 	if (ret < 0) {
@@ -276,7 +276,7 @@ void CSoundOut::Init_HW()
 	dev.open(devname, O_WRONLY );
 }
 
-int CSoundOut::write_HW( _SAMPLE *playbuf, int size )
+int CSoundOut::write_HW(short* playbuf, int size)
 {
 
 	int start = 0;

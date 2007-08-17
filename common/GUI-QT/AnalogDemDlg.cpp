@@ -142,6 +142,8 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		this, SLOT(OnCheckAutoFreqAcq()));
 	connect(CheckBoxPLL, SIGNAL(clicked()),
 		this, SLOT(OnCheckPLL()));
+	connect(CheckBoxOnBoardDemod, SIGNAL(clicked()),
+		this, SLOT(OnCheckOnBoardDemod()));
 
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
@@ -227,29 +229,34 @@ void AnalogDemDlg::UpdateControls()
 	/* Set demodulation type */
 	switch (DRMReceiver.GetAMDemod()->GetDemodType())
 	{
-	case CAMDemodulation::DT_AM:
+	case DT_AM:
 		if (!RadioButtonDemAM->isChecked())
 			RadioButtonDemAM->setChecked(TRUE);
 		break;
 
-	case CAMDemodulation::DT_LSB:
+	case DT_LSB:
 		if (!RadioButtonDemLSB->isChecked())
 			RadioButtonDemLSB->setChecked(TRUE);
 		break;
 
-	case CAMDemodulation::DT_USB:
+	case DT_USB:
 		if (!RadioButtonDemUSB->isChecked())
 			RadioButtonDemUSB->setChecked(TRUE);
 		break;
 
-	case CAMDemodulation::DT_CW:
+	case DT_CW:
 		if (!RadioButtonDemCW->isChecked())
 			RadioButtonDemCW->setChecked(TRUE);
 		break;
 
-	case CAMDemodulation::DT_FM:
-		if (!RadioButtonDemFM->isChecked())
-			RadioButtonDemFM->setChecked(TRUE);
+	case DT_NBFM:
+		if (!RadioButtonDemNBFM->isChecked())
+			RadioButtonDemNBFM->setChecked(TRUE);
+		break;
+
+	case DT_WBFM:
+		if (!RadioButtonDemWBFM->isChecked())
+			RadioButtonDemWBFM->setChecked(TRUE);
 		break;
 	}
 
@@ -316,6 +323,14 @@ void AnalogDemDlg::UpdateControls()
 	CheckBoxPLL->setChecked(DRMReceiver.GetAMDemod()->PLLEnabled());
 }
 
+void AnalogDemDlg::OnCheckOnBoardDemod()
+{
+	if (CheckBoxOnBoardDemod->isChecked() == TRUE)
+		DRMReceiver.SetUseHWDemod(TRUE);
+	else
+		DRMReceiver.SetUseHWDemod(FALSE);
+}
+
 void AnalogDemDlg::UpdatePlotsStyle()
 {
 	/* Update main plot window */
@@ -330,6 +345,9 @@ void AnalogDemDlg::OnSwitchToDRM()
 
 void AnalogDemDlg::OnTimer()
 {
+	EDemodType eMode;
+	CAMDemodulation& demod = *DRMReceiver.GetAMDemod();
+
 	switch(DRMReceiver.GetReceiverMode())
 	{
 	case RM_DRM:
@@ -338,8 +356,9 @@ void AnalogDemDlg::OnTimer()
 	case RM_AM:
 		/* Carrier frequency of AM signal */
 		TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
-		+ QString().setNum(DRMReceiver.GetAMDemod()->GetCurMixFreqOffs(), 'f', 2)
-		+ " Hz</b>");
+		+ QString().setNum(demod.GetCurMixFreqOffs(), 'f', 2) + " Hz</b>");
+		eMode = demod.GetDemodType();
+		/* TODO enable & disable the Onboard checkbox according to the rig caps */
 		break;
 	case RM_NONE:
 		break;
@@ -376,23 +395,27 @@ void AnalogDemDlg::OnRadioDemodulation(int iID)
 	switch (iID)
 	{
 	case 0:
-		DRMReceiver.SetAMDemodType(CAMDemodulation::DT_AM);
+		DRMReceiver.SetAMDemodType(DT_AM);
 		break;
 
 	case 1:
-		DRMReceiver.SetAMDemodType(CAMDemodulation::DT_LSB);
+		DRMReceiver.SetAMDemodType(DT_LSB);
 		break;
 
 	case 2:
-		DRMReceiver.SetAMDemodType(CAMDemodulation::DT_USB);
+		DRMReceiver.SetAMDemodType(DT_USB);
 		break;
 
 	case 3:
-		DRMReceiver.SetAMDemodType(CAMDemodulation::DT_CW);
+		DRMReceiver.SetAMDemodType(DT_CW);
 		break;
 
 	case 4:
-		DRMReceiver.SetAMDemodType(CAMDemodulation::DT_FM);
+		DRMReceiver.SetAMDemodType(DT_NBFM);
+		break;
+
+	case 5:
+		DRMReceiver.SetAMDemodType(DT_WBFM);
 		break;
 	}
 
@@ -600,7 +623,8 @@ void AnalogDemDlg::AddWhatsThisHelp()
 	QWhatsThis::add(RadioButtonDemLSB, strDemodType);
 	QWhatsThis::add(RadioButtonDemUSB, strDemodType);
 	QWhatsThis::add(RadioButtonDemCW, strDemodType);
-	QWhatsThis::add(RadioButtonDemFM, strDemodType);
+	QWhatsThis::add(RadioButtonDemNBFM, strDemodType);
+	QWhatsThis::add(RadioButtonDemWBFM, strDemodType);
 
 	/* Mute Audio (same as in systemevaldlg.cpp!) */
 	QWhatsThis::add(CheckBoxMuteAudio,
@@ -645,6 +669,12 @@ void AnalogDemDlg::AddWhatsThisHelp()
 
 	QWhatsThis::add(GroupBoxAutoFreqAcq, strAutoFreqAcqu);
 	QWhatsThis::add(CheckBoxAutoFreqAcq, strAutoFreqAcqu);
+
+	const QString strOnBoard =
+		tr("<b>On Board Demod:</b> When checked, the receiver will use a hardware demodulator."
+			" When clear the software demodulator will be used. Different H/W may not support"
+			" one or other of the options.");
+	QWhatsThis::add(CheckBoxOnBoardDemod, strOnBoard);
 }
 
 

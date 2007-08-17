@@ -340,24 +340,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect( EdtFrequency, SIGNAL(textChanged(const QString&)),
 		this, SLOT(OnLineEditFrequencyChanged(const QString&)) );
 
-	CParameter& Parameters = *(DRMReceiver.GetParameters());
-	/* these won't get into the ini file unless we use GPS or have this: */
-	double latitude = Settings.Get("Logfile", "latitude", 100.0);
-	if(latitude<=90.0)
-	{
-		Parameters.GPSData.SetPositionAvailable(TRUE);
-		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
-	}
-	double longitude = Settings.Get("Logfile", "longitude", 0.0);
-	_BOOLEAN bUseGPS = Settings.Get("GPS", "usegpsd", FALSE);
-	string host = Settings.Get("GPS", "host", string("localhost"));
-	int port = Settings.Get("GPS", "port", 2947);
-
-	Settings.Put("GPS", "usegpsd", bUseGPS);
-	Settings.Put("GPS", "host", host);
-	Settings.Put("GPS", "port", port);
-	Settings.Put("Logfile", "latitude", latitude);
-	Settings.Put("Logfile", "longitude", longitude);
 }
 
 systemevalDlg::~systemevalDlg()

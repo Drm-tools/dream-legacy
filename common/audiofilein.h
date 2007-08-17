@@ -44,8 +44,8 @@ public:
 	virtual int			GetDev() { return -1; }
 	virtual void		SetFileName(const string& strFileName);
 
-	virtual void 		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-	virtual _BOOLEAN 	Read(CVector<short>& psData);
+	virtual void 		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
+	virtual _BOOLEAN 	Read(vector<_SAMPLE>& data);
 	virtual void 		Close();
 
 protected:

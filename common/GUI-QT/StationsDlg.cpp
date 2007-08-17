@@ -1238,7 +1238,7 @@ void StationsDlg::OnRemoteMenu(int iID)
 	}
 
 	/* Set ID */
-	DRMReceiver.GetHamlib()->SetHamlibModelID(veciModelID[iID]);
+	DRMReceiver.SetRigModel(veciModelID[iID]);
 
 	/* If model is changed, update s-meter because new rig might have support
 	   for it. Only try to enable s-meter if it is not ID 0 ("none") */

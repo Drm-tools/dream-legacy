@@ -52,14 +52,18 @@ public:
 	virtual void				SetDev(int iNewDevice);
 	virtual int					GetDev();
 
-	void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-	_BOOLEAN Read(CVector<short>& psData);
+	void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
+	_BOOLEAN Read(vector<short>& data);
+	_BOOLEAN Read(vector<float>& data);
+	_BOOLEAN Read(vector<double>& data);
 	void Close();
 	
 protected:
+	template<typename T> _BOOLEAN read(vector<T>& data);
+
 	void Init_HW();
-	int read_HW( void * recbuf, int size);
-	void close_HW( void );
+	int read_HW( short * recbuf, int size);
+	void close_HW( );
 	
 	int 	iBufferSize, iInBufferSize;
 	short int *tmprecbuf;
@@ -74,7 +78,7 @@ protected:
 		CSoundBuf SoundBuf;
 		CSoundIn*	pSoundIn;
 	protected:
-		_SAMPLE	tmprecbuf[NUM_IN_CHANNELS * FRAGSIZE];
+		short tmprecbuf[NUM_IN_CHANNELS * FRAGSIZE];
 	} RecThread;
 	
 protected:

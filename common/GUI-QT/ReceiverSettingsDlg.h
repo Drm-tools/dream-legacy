@@ -3,7 +3,7 @@
  * Copyright (c) 2006
  *
  * Author(s):
- *	Andrea Russo
+ *	Julian Cable, Andrea Russo
  *
  * Description:
  *	
@@ -48,9 +48,9 @@ protected:
 	virtual void	showEvent(QShowEvent* pEvent);
 	virtual void	hideEvent(QHideEvent* pEvent);
 
-	_BOOLEAN 	ValidInput(const QLineEdit* le);
-	QString 	ExtractDigits(const QString strS, const int iStart, const int iDigits);
-	void		ExtractReceiverCoordinates();
+	_BOOLEAN 		ValidInput(const QLineEdit* le);
+	void			ExtractReceiverCoordinates();
+	void			setDefaults();
 
 	void			AddWhatsThisHelp();
 
@@ -92,4 +92,7 @@ public slots:
 	void OnCheckWithDRMModToggled(bool);
 	void OnRigSelected(QListViewItem* item);
 	void OnComPortSelected(QListViewItem* item);
+	void OnConfigChanged(int row, int col);
+	void OnRigOffsetChanged(QString text);
+	void OnRigSettingsChanged(QString text);
 };

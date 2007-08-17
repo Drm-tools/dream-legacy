@@ -116,7 +116,7 @@ protected:
 	CWaveFile			WaveFile;
 #endif
 	CSoundOutInterface*	pSound;
-	CVector<short>		vecsDataOut;
+	vector<_SAMPLE>	vecsDataOut;
 	int					iBlockCnt;
 	int					iNumBlocks;
 	EOutFormat			eOutputFormat;
@@ -201,5 +201,21 @@ protected:
 
 };
 
+class COnboardDecoder : public CReceiverModul<_SAMPLE,_SAMPLE>
+{
+public:
+
+	COnboardDecoder() : pSound(NULL) {}
+	virtual ~COnboardDecoder() {}
+
+	void SetSoundInterface(CSoundInInterface* pS) { pSound = pS;}
+
+protected:
+	
+	CSoundInInterface*		pSound;
+
+	virtual void InitInternal(CParameter& ReceiverParam);
+	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+};
 
 #endif // !defined(DRMSIGNALIO_H__3B0BA660_CA63_4344_B_23E7A0D31912__INCLUDED_)

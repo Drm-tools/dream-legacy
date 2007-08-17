@@ -227,11 +227,14 @@ main(int argc, char **argv)
 			DRMReceiver.LoadSettings(Settings);
 			DRMReceiver.SetReceiverMode(RM_DRM);
 			DRMReceiver.Start();
+			DRMReceiver.SaveSettings(Settings);
 		}
 		else
 		{
-			CDRMTransmitter DRMTransmitter(Settings);
+			CDRMTransmitter DRMTransmitter;
+			DRMTransmitter.LoadSettings(Settings);
 			DRMTransmitter.Start();
+			DRMTransmitter.SaveSettings(Settings);
 		}
 	}
 	catch(CGenErr GenErr)

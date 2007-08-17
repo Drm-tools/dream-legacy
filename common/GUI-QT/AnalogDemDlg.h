@@ -130,6 +130,7 @@ public slots:
 	void OnCheckSaveAudioWAV();
 	void OnCheckAutoFreqAcq();
 	void OnCheckPLL();
+	void OnCheckOnBoardDemod();
 	void OnChartxAxisValSet(double dVal);
 	void OnSliderBWChange(int value);
 	void OnRadioNoiRed(int iID);

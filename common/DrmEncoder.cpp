@@ -32,6 +32,7 @@
 #include "DrmEncoder.h"
 
 #include "sound.h"
+#include "audiofilein.h"
 
 /* Implementation *************************************************************/
 CDRMEncoder::CDRMEncoder():
@@ -107,21 +108,20 @@ void CDRMEncoder::Init(CParameter& Parameters,
 			vector< CSingleBuffer<_BINARY> >& MSCBuf)
 {
 
-	if(strInputFileName=="")
-	{
-		pSoundInInterface = new CSoundIn;
-		pReadData = new CReadData(pSoundInInterface);
-	}
-	else
-	{
-		pReadData = new CReadData(NULL);
-	}
-
 	GenerateFACData.Init(Parameters, FACBuf);
 	GenerateSDCData.Init(Parameters, SDCBuf);
 
-	if(strInputFileName != "")
-		pReadData->SetReadFromFile(strInputFileName);
+	if(strInputFileName=="")
+	{
+		pSoundInInterface = new CSoundIn;
+	}
+	else
+	{
+		CAudioFileIn *pf = new CAudioFileIn;
+		pf->SetFileName(strInputFileName);
+		pSoundInInterface = pf;
+	}
+	pReadData = new CReadData(pSoundInInterface);
 	pReadData->Init(Parameters, DataBuf);
 
 	AudioSourceEncoder.ClearTextMessage();
@@ -134,7 +134,6 @@ void CDRMEncoder::Init(CParameter& Parameters,
 		AudioSourceEncoder.SetPicFileName(vecstrPics[i], vecstrPicTypes[i]);
 
 	AudioSourceEncoder.Init(Parameters, MSCBuf[0]);
-
 }
 
 void

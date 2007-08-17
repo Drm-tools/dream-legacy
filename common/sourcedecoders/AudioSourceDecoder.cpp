@@ -66,8 +66,7 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
 			/* Convert _REAL type to _SAMPLE type, copy in smaller buffer */
 			for (unsigned long k = 0; k < lNumSampEncIn; k++)
 			{
-				vecsEncInData[k] =
-					Real2Sample(vecTempResBufOut[j * lNumSampEncIn + k]);
+				vecsEncInData[k] = _SAMPLE(vecTempResBufOut[j * lNumSampEncIn + k]);
 			}
 
 			/* Actual AAC encoding */
@@ -1034,8 +1033,8 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 		/* Conversion from _REAL to _SAMPLE with special function */
 		for (i = 0; i < iResOutBlockSize; i++)
 		{
-			(*pvecOutputData)[iOutputBlockSize + i * 2] = Real2Sample(vecTempResBufOutOldLeft[i]);	/* Left channel */
-			(*pvecOutputData)[iOutputBlockSize + i * 2 + 1] = Real2Sample(vecTempResBufOutOldRight[i]);	/* Right channel */
+			(*pvecOutputData)[iOutputBlockSize + i * 2] = _SAMPLE(vecTempResBufOutOldLeft[i]);	/* Left channel */
+			(*pvecOutputData)[iOutputBlockSize + i * 2 + 1] = _SAMPLE(vecTempResBufOutOldRight[i]);	/* Right channel */
 		}
 
 		/* Add new block to output block size ("* 2" for stereo output block) */

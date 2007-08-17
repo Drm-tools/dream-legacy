@@ -38,8 +38,8 @@ public:
 	virtual 			~CSoundInInterface() {}
 
 	/* sound card interface - used by ReadData */
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE)=0;
-	virtual _BOOLEAN	Read(CVector<short>& psData)=0;
+	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking=TRUE, int iChannels=2)=0;
+	virtual _BOOLEAN	Read(vector<_SAMPLE>& data)=0;
 	virtual void		Close()=0;
 
 };
@@ -50,8 +50,8 @@ public:
 	virtual 			~CSoundOutInterface() {}
 
 	/* sound card interface - used by WriteData */
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE)=0;
-	virtual _BOOLEAN	Write(CVector<short>& psData)=0;
+	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2)=0;
+	virtual _BOOLEAN	Write(vector<_SAMPLE>& data)=0;
 	virtual void		Close()=0;
 };
 

@@ -78,8 +78,11 @@ CAudioFileIn::SetFileName(const string& strFileName)
 }
 
 void
-CAudioFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+CAudioFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 {
+	if(iChannels != 2)
+		throw CGenErr("only stereo supported at the moment for file input, sorry.");
+
 	if (pFileReceiver != NULL)
 		return;
 	
@@ -110,7 +113,7 @@ CAudioFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 			iFileChannels = sfinfo.channels;
 			iFileSampleRate = sfinfo.samplerate;
 			int oversample_factor = SOUNDCRD_SAMPLE_RATE / iFileSampleRate;
-			/* we can only cope with inter submultiples */
+			/* we can only cope with integer submultiples */
 			if(SOUNDCRD_SAMPLE_RATE != oversample_factor*iFileSampleRate)
 				throw CGenErr("unsupported sample rate in input file");
 		}
@@ -136,9 +139,9 @@ CAudioFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 }
 
 _BOOLEAN
-CAudioFileIn::Read(CVector<short>& psData)
+CAudioFileIn::Read(vector<_SAMPLE>& data)
 {
-	int iFrames = psData.Size()/2;
+	int iFrames = data.size()/2;
 	int i;
 	if(pacer) pacer->wait();
 
@@ -157,8 +160,8 @@ CAudioFileIn::Read(CVector<short>& psData)
 				/* If end-of-file is reached, stop simulation */
 				return FALSE;
 			}
-			psData[2*i] = (short)tIn;
-			psData[2*i+1] = (short)tIn;
+			data[2*i] = _SAMPLE(tIn);
+			data[2*i+1] = _SAMPLE(tIn);
 		}
 		return FALSE;
 	}
@@ -185,8 +188,8 @@ CAudioFileIn::Read(CVector<short>& psData)
 		{
 			for (int j = 0; j < oversample_factor; j++)
 			{
-				psData[2*(i+j)] = buffer[2*i];
-				psData[2*(i+j)+1] = buffer[2*i+1];
+				data[2*(i+j)] = _SAMPLE(buffer[2*i]);
+				data[2*(i+j)+1] = _SAMPLE(buffer[2*i+1]);
 			}
 		}
 	}
@@ -196,8 +199,8 @@ CAudioFileIn::Read(CVector<short>& psData)
 		{
 			for (int j = 0; j < oversample_factor; j++)
 			{
-				psData[2*(i+j)] = buffer[i];
-				psData[2*(i+j)+1] = buffer[i];
+				data[2*(i+j)] = _SAMPLE(buffer[i]);
+				data[2*(i+j)+1] = _SAMPLE(buffer[i]);
 			}
 		}
 	}

@@ -69,7 +69,7 @@ CSoundIn::CRecThread::run()
 
 			// common code
 			if (size > 0) {
-				CVectorEx<_SAMPLE>*	ptarget;
+				CVectorEx<short>*	ptarget;
 
 				/* Copy data from temporary buffer in output buffer */
 				SoundBuf.lock();
@@ -94,7 +94,7 @@ CSoundIn::CRecThread::run()
 
 /* Wave in ********************************************************************/
 
-void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 {
 #ifdef USE_QT_GUI
 	qDebug("initrec %d", iNewBufferSize);
@@ -116,19 +116,34 @@ void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 		bChangDev = FALSE;
 	}
 
-	if ( RecThread.running() == FALSE ) {
+	if ( RecThread.running() == FALSE )
+	{
 		RecThread.SoundBuf.lock();
 		RecThread.SoundBuf.Init( SOUNDBUFLEN );
 		RecThread.SoundBuf.unlock();
 		RecThread.start();
 	}
-
 }
 
 
-_BOOLEAN CSoundIn::Read(CVector< _SAMPLE >& psData)
+_BOOLEAN CSoundIn::Read(vector<short>& data)
 {
-	CVectorEx<_SAMPLE>*	p;
+	return read(data);
+}
+
+_BOOLEAN CSoundIn::Read(vector<float>& data)
+{
+	return read(data);
+}
+
+_BOOLEAN CSoundIn::Read(vector<double>& data)
+{
+	return read(data);
+}
+
+template<typename T> _BOOLEAN CSoundIn::read(vector<T>& data)
+{
+	CVectorEx<short>*	p;
 
 	/* Check if device must be opened or reinitialized */
 	if (bChangDev == TRUE)
@@ -158,7 +173,7 @@ _BOOLEAN CSoundIn::Read(CVector< _SAMPLE >& psData)
 	
 	p = RecThread.SoundBuf.Get( iInBufferSize );
 	for (int i=0; i<iInBufferSize; i++)
-		psData[i] = (*p)[i];
+		data[i] = T((*p)[i]);
 	
 	RecThread.SoundBuf.unlock();
 
@@ -227,7 +242,7 @@ void CSoundOut::CPlayThread::run()
 
 			// enough data in the buffer
 
-			CVectorEx<_SAMPLE>*	p;
+			CVectorEx<short>*	p;
 			
 			SoundBuf.lock();
 			p = SoundBuf.Get( FRAGSIZE * NUM_OUT_CHANNELS );
@@ -256,7 +271,7 @@ void CSoundOut::CPlayThread::run()
 #endif
 }
 
-void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 {
 #ifdef USE_QT_GUI
 	qDebug("initplay %d", iNewBufferSize);
@@ -286,7 +301,23 @@ void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	}
 }
 
-_BOOLEAN CSoundOut::Write(CVector< _SAMPLE >& psData)
+_BOOLEAN CSoundOut::Write(vector<short>& data)
+{
+	return write(data);
+}
+
+_BOOLEAN CSoundOut::Write(vector<float>& data)
+{
+	return write(data);
+}
+
+_BOOLEAN CSoundOut::Write(vector<double>& data)
+{
+	return write(data);
+}
+
+template<typename T>
+_BOOLEAN CSoundOut::write(vector<T>& data)
 {
 	/* Check if device must be opened or reinitialized */
 	if (bChangDev == TRUE)
@@ -312,13 +343,13 @@ _BOOLEAN CSoundOut::Write(CVector< _SAMPLE >& psData)
 
 	if ( ( SOUNDBUFLEN - PlayThread.SoundBuf.GetFillLevel() ) > iBufferSize) {
 		 
-		CVectorEx<_SAMPLE>*	ptarget;
+		CVectorEx<short>*	ptarget;
 		 
 		 // data fits, so copy
 		 ptarget = PlayThread.SoundBuf.QueryWriteBuffer();
 		 for (int i=0; i < iBufferSize; i++)
 		 {
-		 	(*ptarget)[i] = psData[i];
+		 	(*ptarget)[i] = short(data[i]);
 		}
 
 		 PlayThread.SoundBuf.Put( iBufferSize );
