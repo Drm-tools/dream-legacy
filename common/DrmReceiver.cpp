@@ -276,7 +276,6 @@ CDRMReceiver::Run()
 		if(eReceiverMode==RM_AM && bUseHWDemod)
 		{
 			OnboardDecoder.ReadData(ReceiverParam, AMAudioBuf);
-			cout << AMAudioBuf.GetFillLevel() << endl;
 		}
 		else
 		{
@@ -1380,8 +1379,10 @@ void CDRMReceiver::SetRigModel(int iID)
 # ifdef __linux__
 	CHamlib::SDrRigCaps caps;
 	Hamlib.GetRigCaps(iID, caps);
-	if(caps.bHamlibDoesAudio)
+	//if(caps.bHamlibDoesAudio)
+	if(TRUE)
 	{
+			cout << "caps.bHamlibDoesAudio" << endl;
 		string shm_path = "/dreamg3xxif";
     	CShmSoundIn* ShmSoundIn = new CShmSoundIn;
 		if(pSoundInInterface)
@@ -1394,6 +1395,7 @@ void CDRMReceiver::SetRigModel(int iID)
 		ShmSoundIn->SetWantedChannels(2);
 		Hamlib.config["if_path"] = shm_path;
 		ReceiveData.SetSoundInterface(pSoundInInterface);
+		ReceiveData.SetInitFlag();
 	}
 # endif
 	Hamlib.SetHamlibModelID(iID);
