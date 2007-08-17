@@ -50,8 +50,8 @@ public:
 	CSoundIn();
 	virtual ~CSoundIn();
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking=TRUE, int iChannels=2)=0;
-	virtual _BOOLEAN	Read(vector<_SAMPLE>& data)=0;
+	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking=TRUE, int iChannels=2);
+	virtual _BOOLEAN	Read(vector<_SAMPLE>& data);
 	virtual void		Enumerate(vector<string>&);
 	virtual int			GetDev();
 	virtual void		SetDev(int iNewDev);
@@ -85,8 +85,8 @@ public:
 	CSoundOut();
 	virtual ~CSoundOut();
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking=FALSE, int iChannels=2)=0;
-	virtual _BOOLEAN	Write(vector<_SAMPLE>& data)=0;
+	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking=FALSE, int iChannels=2);
+	virtual _BOOLEAN	Write(vector<_SAMPLE>& data);
 	virtual void		Enumerate(vector<string>&);
 	virtual int			GetDev();
 	virtual void		SetDev(int iNewDev);
