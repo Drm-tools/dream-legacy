@@ -226,8 +226,10 @@ void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 
 void AnalogDemDlg::UpdateControls()
 {
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+
 	/* Set demodulation type */
-	switch (DRMReceiver.GetAMDemod()->GetDemodType())
+	switch (Parameters.eDemodType)
 	{
 	case DT_AM:
 		if (!RadioButtonDemAM->isChecked())
@@ -257,6 +259,9 @@ void AnalogDemDlg::UpdateControls()
 	case DT_WBFM:
 		if (!RadioButtonDemWBFM->isChecked())
 			RadioButtonDemWBFM->setChecked(TRUE);
+		break;
+
+	case DT_SIZE:
 		break;
 	}
 
@@ -345,6 +350,8 @@ void AnalogDemDlg::OnSwitchToDRM()
 
 void AnalogDemDlg::OnTimer()
 {
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+
 	EDemodType eMode;
 	CAMDemodulation& demod = *DRMReceiver.GetAMDemod();
 
@@ -357,7 +364,7 @@ void AnalogDemDlg::OnTimer()
 		/* Carrier frequency of AM signal */
 		TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
 		+ QString().setNum(demod.GetCurMixFreqOffs(), 'f', 2) + " Hz</b>");
-		eMode = demod.GetDemodType();
+		eMode = Parameters.eDemodType;
 		/* TODO enable & disable the Onboard checkbox according to the rig caps */
 		break;
 	case RM_NONE:

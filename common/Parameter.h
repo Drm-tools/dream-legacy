@@ -56,6 +56,9 @@ class CDRMReceiver;
 	/* CT: Channel Type */
 	enum EChanType { CT_MSC, CT_SDC, CT_FAC };
 
+	enum EDemodType {DT_AM, DT_LSB, DT_USB, DT_CW, DT_NBFM, DT_WBFM, DT_SIZE};
+
+
 enum ETypeIntFreq
 { FLINEAR, FDFTFILTER, FWIENER };
 enum ETypeIntTime
@@ -1172,6 +1175,10 @@ class CParameter
 
 	CGPSData GPSData;
 	CMinMaxMean SNRstat, SigStrstat;
+
+	_BOOLEAN				bUseHWDemod;
+	EDemodType				eDemodType;
+	int						iBw[DT_SIZE];
 
 protected:
 

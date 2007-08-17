@@ -476,9 +476,9 @@ modes(), levels(), functions(), parameters(), config()
 	RigSpecialParameters(RIG_MODEL_G315, "l_ATT=0,l_AGC=3", 0,
 						 "l_ATT=0,l_AGC=3");
 # ifdef __linux
-	CapsHamlibModels[RIG_MODEL_G313].bHamlibDoesAudio = TRUE;
+	CapsHamlibModels[RIG_MODEL_G315].bHamlibDoesAudio = TRUE;
 # endif
-	CapsHamlibModels[RIG_MODEL_G313].bOnboardFMDemod = TRUE;
+	CapsHamlibModels[RIG_MODEL_G315].eOnboardFMDemod = C_MUST;
 #endif
 
 #ifdef RIG_MODEL_AR7030

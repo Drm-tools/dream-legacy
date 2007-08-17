@@ -50,8 +50,8 @@ public:
 	CSoundIn();
 	virtual ~CSoundIn();
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-	virtual _BOOLEAN	Read(CVector<short>& psData);
+	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking=TRUE, int iChannels=2)=0;
+	virtual _BOOLEAN	Read(vector<_SAMPLE>& data)=0;
 	virtual void		Enumerate(vector<string>&);
 	virtual int			GetDev();
 	virtual void		SetDev(int iNewDev);
@@ -75,7 +75,7 @@ protected:
 	WAVEINCAPS		m_WaveInDevCaps;
 	HWAVEIN			m_WaveIn;
 	WAVEHDR			m_WaveInHeader[NUM_SOUND_BUFFERS_IN];
-	short*			psSoundcardBuffer[NUM_SOUND_BUFFERS_IN];
+	_SAMPLE*		psSoundcardBuffer[NUM_SOUND_BUFFERS_IN];
 
 };
 
@@ -85,8 +85,8 @@ public:
 	CSoundOut();
 	virtual ~CSoundOut();
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
-	virtual _BOOLEAN	Write(CVector<short>& psData);
+	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking=FALSE, int iChannels=2)=0;
+	virtual _BOOLEAN	Write(vector<_SAMPLE>& data)=0;
 	virtual void		Enumerate(vector<string>&);
 	virtual int			GetDev();
 	virtual void		SetDev(int iNewDev);
@@ -110,7 +110,7 @@ protected:
 	/* Wave out */
 	WAVEOUTCAPS		m_WaveOutDevCaps;
 	HWAVEOUT		m_WaveOut;
-	short*			psPlaybackBuffer[NUM_SOUND_BUFFERS_OUT];
+	_SAMPLE*		psPlaybackBuffer[NUM_SOUND_BUFFERS_OUT];
 	WAVEHDR			m_WaveOutHeader[NUM_SOUND_BUFFERS_OUT];
 };
 

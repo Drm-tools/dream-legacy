@@ -147,13 +147,15 @@ public:
 			eRigStatus(RIG_STATUS_ALPHA),bIsSpecRig(FALSE) {}
 		SDrRigCaps(const string& strNMan, const string& strNModN, rig_status_e eNSt, _BOOLEAN bNsp) :
 			strManufacturer(strNMan), strModelName(strNModN), eRigStatus(eNSt),
-			bIsSpecRig(bNsp), bHamlibDoesAudio(FALSE), eOnboardFMDemod(C_CANT)
+			bIsSpecRig(bNsp), bHamlibDoesAudio(FALSE),
+			eOnboardAMDemod(C_CAN), eOnboardFMDemod(C_CANT)
 			{}
 		SDrRigCaps(const SDrRigCaps& nSDRC) : 
 			strManufacturer(nSDRC.strManufacturer),
 			strModelName(nSDRC.strModelName),
 			eRigStatus(nSDRC.eRigStatus), bIsSpecRig(nSDRC.bIsSpecRig),
-			bHamlibDoesAudio(nSDRC.bHamlibDoesAudio), eOnboardFMDemod(nSDRC.eOnboardFMDemod)
+			bHamlibDoesAudio(nSDRC.bHamlibDoesAudio),
+			eOnboardAMDemod(nSDRC.eOnboardAMDemod), eOnboardFMDemod(nSDRC.eOnboardFMDemod)
 			{}
 
 		inline SDrRigCaps& operator=(const SDrRigCaps& cNew)
@@ -163,6 +165,7 @@ public:
 			eRigStatus = cNew.eRigStatus;
 			bIsSpecRig = cNew.bIsSpecRig;
 			bHamlibDoesAudio = cNew.bHamlibDoesAudio;
+			eOnboardAMDemod = cNew.eOnboardAMDemod;
 			eOnboardFMDemod = cNew.eOnboardFMDemod;
 			return *this;
 		}
@@ -172,6 +175,7 @@ public:
 		rig_status_e	eRigStatus;
 		_BOOLEAN		bIsSpecRig;
 		_BOOLEAN		bHamlibDoesAudio;
+		EMight			eOnboardAMDemod;
 		EMight			eOnboardFMDemod;
 	};
 

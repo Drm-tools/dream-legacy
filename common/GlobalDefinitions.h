@@ -231,8 +231,6 @@ enum ERobMode {RM_ROBUSTNESS_MODE_A, RM_ROBUSTNESS_MODE_B,
 enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
 
-enum EDemodType {DT_AM, DT_LSB, DT_USB, DT_CW, DT_NBFM, DT_WBFM};
-
 enum EFileOutFormat { OFF_RAW, OFF_TXT, OFF_WAV };
 
 enum EStreamType { SF_AUDIO, SF_DATA };

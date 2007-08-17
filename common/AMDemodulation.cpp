@@ -43,7 +43,7 @@ CAMDemodulation::CAMDemodulation() :
 	rBPNormCentOffsTot(0.0),
 	rvecZAM(), rvecADC(), rvecBDC(), rvecZFM(), rvecAFM(), rvecBFM(),
 	iSymbolBlockSize(0),
-	bPLLIsEnabled(FALSE), bAutoFreqAcquIsEnabled(TRUE), eDemodType(DT_AM),
+	bPLLIsEnabled(FALSE), bAutoFreqAcquIsEnabled(TRUE),
 	cOldVal(),
 	PLL(), Mixer(), FreqOffsAcq(), AGC(), NoiseReduction(), NoiRedType(NR_OFF),
 	iFreeSymbolCounter()
@@ -61,6 +61,14 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	{
 		iFreeSymbolCounter = 0;
 	}
+
+	/* this may not be needed or desirable TBTA */
+	if(ReceiverParam.eDemodType != eDemodType)
+	{
+		eDemodType = ReceiverParam.eDemodType;
+		SetBPFilter(rBPNormBW);
+	}
+
 	ReceiverParam.Unlock(); 
 
 
@@ -100,7 +108,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Analog demodulation -------------------------------------------------- */
 	/* Actual demodulation. Reuse temp buffer "rvecInpTmp" for output
 	   signal */
-	switch (eDemodType)
+	switch (ReceiverParam.eDemodType)
 	{
 	case DT_AM:
 		/* Use envelope of signal and apply low-pass filter */
@@ -137,6 +145,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		break;
 
 	case DT_WBFM:
+	case DT_SIZE:
 		break;
 	}
 
@@ -264,7 +273,7 @@ void CAMDemodulation::SetNormCurMixFreqOffs(const CReal rNewNormCurMixFreqOffs)
 		rNormCurMixFreqOffs = rNewNormCurMixFreqOffs;
 
 	/* Generate filter taps and set mixing frequency */
-	SetBPFilter(rBPNormBW, rNormCurMixFreqOffs, eDemodType);
+	SetBPFilter(rBPNormBW);
 	Mixer.SetMixFreq(rNormCurMixFreqOffs);
 
 	/* Tell the PLL object the new frequency (we do not care here if it is
@@ -272,11 +281,10 @@ void CAMDemodulation::SetNormCurMixFreqOffs(const CReal rNewNormCurMixFreqOffs)
 	PLL.SetRefNormFreq(rNormCurMixFreqOffs);
 }
 
-void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW,
-								  const CReal rNewNormFreqOffset,
-								  const EDemodType eDemodType)
+void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW)
 {
-	/* Set internal parameter */
+
+	/* Set internal parameters */
 	rBPNormBW = rNewBPNormBW;
 
 	/* Actual prototype filter design */
@@ -312,12 +320,13 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW,
 		rBPNormFreqOffset = FREQ_OFFS_CW_DEMOD / SOUNDCRD_SAMPLE_RATE;
 		break;
 	case DT_WBFM:
+	case DT_SIZE:
 		break;
 	}
 
 	/* Actual band-pass filter offset is the demodulation frequency plus the
 	   additional offset for the demodulation type */
-	rBPNormCentOffsTot = rNewNormFreqOffset + rBPNormFreqOffset;
+	rBPNormCentOffsTot = rNormCurMixFreqOffs + rBPNormFreqOffset;
 
 
 	/* Set filter coefficients ---------------------------------------------- */
@@ -364,27 +373,14 @@ void CAMDemodulation::SetAcqFreq(const CReal rNewNormCenter)
 	Unlock(); 
 }
 
-void CAMDemodulation::SetDemodType(const EDemodType eNewType)
+void CAMDemodulation::SetDemodTypeAndBPF(const EDemodType eNewType, const int iNewBW)
 {
 	/* Lock resources */
 	Lock(); 
 	{
-		/* Set internal demodulation type flag */
-		eDemodType = eNewType;
-
 		/* Init band-pass filter according to new demodulation method */
-		SetBPFilter(rBPNormBW, rNormCurMixFreqOffs, eDemodType);
-	}
-	Unlock(); 
-}
-
-void CAMDemodulation::SetFilterBW(const int iNewBW)
-{
-	/* Lock resources */
-	Lock(); 
-	{
-		SetBPFilter((CReal) iNewBW / SOUNDCRD_SAMPLE_RATE, rNormCurMixFreqOffs,
-			eDemodType);
+		eDemodType = eNewType;
+		SetBPFilter(rBPNormBW);
 	}
 	Unlock(); 
 }

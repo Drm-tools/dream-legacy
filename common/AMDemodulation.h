@@ -249,10 +249,7 @@ public:
 	void EnablePLL(const _BOOLEAN bNewEn) {bPLLIsEnabled = bNewEn;}
 	_BOOLEAN PLLEnabled() {return bPLLIsEnabled;}
 
-	void SetDemodType(const EDemodType eNewType);
-	EDemodType GetDemodType() {return eDemodType;}
-
-	void SetFilterBW(const int iNewBW);
+	void SetDemodTypeAndBPF(const EDemodType eNewType, const int iNewBW);
 	int GetFilterBW() {return (int) (rBPNormBW * SOUNDCRD_SAMPLE_RATE);}
 
 	void SetAGCType(const CAGC::EType eNewType);
@@ -272,8 +269,7 @@ public:
 
 
 protected:
-	void SetBPFilter(const CReal rNewBPNormBW, const CReal rNewNormFreqOffset,
-		const EDemodType eDemodType);
+	void SetBPFilter(const CReal rNewBPNormBW);
 	void SetNormCurMixFreqOffs(const CReal rNewNormCurMixFreqOffs);
 
 	CComplexVector				cvecBReal;
@@ -304,8 +300,6 @@ protected:
 	_BOOLEAN					bPLLIsEnabled;
 	_BOOLEAN					bAutoFreqAcquIsEnabled;
 
-	EDemodType					eDemodType;
-
 	CComplex					cOldVal;
 
 
@@ -316,6 +310,7 @@ protected:
 	CAGC						AGC;
 	CNoiseReduction				NoiseReduction;
 	ENoiRedType					NoiRedType;
+	EDemodType 					eDemodType;
 
 	/* OPH: counter to count symbols within a frame in order to generate */
 	/* RSCI output */

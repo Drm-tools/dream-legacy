@@ -95,7 +95,7 @@ CSoundIn::~CSoundIn()
 		CloseHandle(m_WaveEvent);
 }
 
-_BOOLEAN CSoundIn::Read(CVector<short>& psData)
+_BOOLEAN CSoundIn::Read(vector<_SAMPLE>& data)
 {
 	int			i;
 	_BOOLEAN	bError;
@@ -138,7 +138,7 @@ _BOOLEAN CSoundIn::Read(CVector<short>& psData)
 
 	/* Copy data from sound card in output buffer */
 	for (i = 0; i < iBufferSize; i++)
-		psData[i] = psSoundcardBuffer[iWhichBuffer][i];
+		data[i] = psSoundcardBuffer[iWhichBuffer][i];
 
 	/* Add the buffer so that it can be filled with new samples */
 	AddBuffer();
@@ -177,7 +177,7 @@ void CSoundIn::PrepareBuffer(int iBufNum)
 	waveInPrepareHeader(m_WaveIn, &m_WaveInHeader[iBufNum], sizeof(WAVEHDR));
 }
 
-void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int)
 {
 	/* Check if device must be opened or reinitialized */
 	if (bChangDev == TRUE)
@@ -212,7 +212,7 @@ void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 		if (psSoundcardBuffer[i] != NULL)
 			delete[] psSoundcardBuffer[i];
 
-		psSoundcardBuffer[i] = new short[iBufferSize];
+		psSoundcardBuffer[i] = new _SAMPLE[iBufferSize];
 
 
 		/* Send all buffers to driver for filling the queue ----------------- */
@@ -391,7 +391,7 @@ CSoundOut::~CSoundOut()
 		CloseHandle(m_WaveEvent);
 }
 
-_BOOLEAN CSoundOut::Write(CVector<short>& psData)
+_BOOLEAN CSoundOut::Write(vector<_SAMPLE>& data)
 {
 	int			i, j;
 	int			iCntPrepBuf;
@@ -462,7 +462,7 @@ _BOOLEAN CSoundOut::Write(CVector<short>& psData)
 
 	/* Copy stereo data from input in soundcard buffer */
 	for (i = 0; i < iBufferSize; i++)
-		psPlaybackBuffer[iIndexDoneBuf][i] = psData[i];
+		psPlaybackBuffer[iIndexDoneBuf][i] = data[i];
 
 	/* Now, send the current block */
 	AddBuffer(iIndexDoneBuf);
@@ -508,7 +508,7 @@ void CSoundOut::PrepareBuffer(int iBufNum)
 	waveOutPrepareHeader(m_WaveOut, &m_WaveOutHeader[iBufNum], sizeof(WAVEHDR));
 }
 
-void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int)
 {
 
 	int	i, j;
@@ -539,7 +539,7 @@ void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 		if (psPlaybackBuffer[j] != NULL)
 			delete[] psPlaybackBuffer[j];
 
-		psPlaybackBuffer[j] = new short[iBufferSize];
+		psPlaybackBuffer[j] = new _SAMPLE[iBufferSize];
 
 		/* Clear new buffer */
 		for (i = 0; i < iBufferSize; i++)

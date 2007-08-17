@@ -66,8 +66,7 @@ iFreqkHz(0),
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
 	RigPoll(),
 #endif
-	iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwNBFM(6000), iBwWBFM(6000),
-	bEnableSMeter(FALSE), bReadFromFile(FALSE), bUseHWDemod(FALSE), time_keeper(0)
+	bEnableSMeter(FALSE), bReadFromFile(FALSE), time_keeper(0)
 {
 	pReceiverParam = new CParameter(this);
 	downstreamRSCI.SetReceiver(this);
@@ -110,8 +109,9 @@ CDRMReceiver::GetEnableSMeter()
 
 void CDRMReceiver::SetUseHWDemod(_BOOLEAN bUse)
 {
-	bUseHWDemod = bUse;
-	if(bUseHWDemod)
+	CParameter & Parameters = *pReceiverParam;
+	Parameters.bUseHWDemod = bUse;
+	if(bUse)
 	{
 		OnboardDecoder.SetInitFlag();
 	}
@@ -127,71 +127,25 @@ void CDRMReceiver::SetUseHWDemod(_BOOLEAN bUse)
 
 _BOOLEAN CDRMReceiver::GetUseHWDemod()
 {
-	return bUseHWDemod;
+	return pReceiverParam->bUseHWDemod;
 }
 
 void
 CDRMReceiver::SetAMDemodType(EDemodType eNew)
 {
-	AMDemodulation.SetDemodType(eNew);
-	switch (eNew)
-	{
-	case DT_AM:
-		AMDemodulation.SetFilterBW(iBwAM);
-		break;
-
-	case DT_LSB:
-		AMDemodulation.SetFilterBW(iBwLSB);
-		break;
-
-	case DT_USB:
-		AMDemodulation.SetFilterBW(iBwUSB);
-		break;
-
-	case DT_CW:
-		AMDemodulation.SetFilterBW(iBwCW);
-		break;
-
-	case DT_NBFM:
-		AMDemodulation.SetFilterBW(iBwNBFM);
-
-	case DT_WBFM:
-		AMDemodulation.SetFilterBW(iBwWBFM);
-		break;
-	}
+	CParameter & Parameters = *pReceiverParam;
+	
+	Parameters.eDemodType = eNew;
+	AMDemodulation.SetDemodTypeAndBPF(Parameters.eDemodType, Parameters.iBw[eNew]);
 }
 
 void
 CDRMReceiver::SetAMFilterBW(int value)
 {
 	/* Store filter bandwidth for this demodulation type */
-	switch (AMDemodulation.GetDemodType())
-	{
-	case DT_AM:
-		iBwAM = value;
-		break;
-
-	case DT_LSB:
-		iBwLSB = value;
-		break;
-
-	case DT_USB:
-		iBwUSB = value;
-		break;
-
-	case DT_CW:
-		iBwCW = value;
-		break;
-
-	case DT_NBFM:
-		iBwNBFM = value;
-		break;
-
-	case DT_WBFM:
-		iBwWBFM = value;
-		break;
-	}
-	AMDemodulation.SetFilterBW(value);
+	CParameter & Parameters = *pReceiverParam;
+	Parameters.iBw[Parameters.eDemodType] = value;
+	AMDemodulation.SetDemodTypeAndBPF(Parameters.eDemodType, value);
 }
 
 void
@@ -273,7 +227,7 @@ CDRMReceiver::Run()
 		ReceiverParam.SigStrstat.addSample(r);
 #endif
 
-		if(eReceiverMode==RM_AM && bUseHWDemod)
+		if(eReceiverMode==RM_AM && ReceiverParam.bUseHWDemod)
 		{
 			OnboardDecoder.ReadData(ReceiverParam, AMAudioBuf);
 		}
@@ -1481,6 +1435,8 @@ CDRMReceiver::saveSDCtoFile()
 void
 CDRMReceiver::LoadSettings(CSettings& s)
 {
+	CParameter & Parameters = *pReceiverParam;
+
 	int i;
 	/* Serial Number */
 	string sValue = s.Get("Receiver", "serialnumber");
@@ -1489,21 +1445,21 @@ CDRMReceiver::LoadSettings(CSettings& s)
 		// Pad to a minimum of 6 characters
 		while (sValue.length() < 6)
 			sValue += "_";
-		pReceiverParam->sSerialNumber = sValue;
+		Parameters.sSerialNumber = sValue;
 	}
 
-	pReceiverParam->GenerateReceiverID();
+	Parameters.GenerateReceiverID();
 
 	/* Data files directory */
 	string sDataFilesDirectory = s.Get(
-	   "Receiver", "datafilesdirectory", pReceiverParam->sDataFilesDirectory);
+	   "Receiver", "datafilesdirectory", Parameters.sDataFilesDirectory);
 	// remove trailing slash if there
 	size_t p = sDataFilesDirectory.find_last_not_of("/\\");
 	if(p != string::npos)
 		sDataFilesDirectory.erase(p+1);
 
-	pReceiverParam->sDataFilesDirectory = sDataFilesDirectory;
-	s.Put("Receiver", "datafilesdirectory", pReceiverParam->sDataFilesDirectory);
+	Parameters.sDataFilesDirectory = sDataFilesDirectory;
+	s.Put("Receiver", "datafilesdirectory", Parameters.sDataFilesDirectory);
 
 	/* Sync */
 	SetFreqInt(CChannelEstimation::ETypeIntFreq(s.Get("Receiver", "frequencyinterpolation", int(CChannelEstimation::FWIENER))));
@@ -1587,7 +1543,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	}
 
 	/* demodulation */
-	EDemodType DemodType = EDemodType(s.Get("Demodulator", "modulation", DT_AM));
+	Parameters.eDemodType = EDemodType(s.Get("Demodulator", "modulation", DT_AM));
 
 	/* AM Parameters */
 
@@ -1603,44 +1559,17 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	/* auto frequency acquisition */
 	AMDemodulation.EnableAutoFreqAcq(s.Get("AM Demodulation", "autofreqacq", 0));
 
-	AMDemodulation.SetDemodType(DemodType);
-
-	iBwAM = s.Get("AM Demodulation", "filterbwam", iBwAM);
-	iBwUSB = s.Get("AM Demodulation", "filterbwusb", iBwUSB);
-	iBwLSB = s.Get("AM Demodulation", "filterbwlsb", iBwLSB);
-	iBwCW = s.Get("AM Demodulation", "filterbwcw", iBwCW);
+	Parameters.iBw[DT_AM] = s.Get("AM Demodulation", "filterbwam", 10000);
+	Parameters.iBw[DT_LSB] = s.Get("AM Demodulation", "filterbwlsb", 5000);
+	Parameters.iBw[DT_USB] = s.Get("AM Demodulation", "filterbwusb", 5000);
+	Parameters.iBw[DT_CW] = s.Get("AM Demodulation", "filterbwcw", 150);
 
 	/* FM Parameters */
-	iBwNBFM = s.Get("FM Demodulation", "nbfilterbw", iBwNBFM);
-	iBwWBFM = s.Get("FM Demodulation", "wbfilterbw", iBwWBFM);
+	Parameters.iBw[DT_NBFM] = s.Get("FM Demodulation", "nbfilterbw", 6000);
+	Parameters.iBw[DT_WBFM] = s.Get("FM Demodulation", "wbfilterbw", 80000);
 
 	/* Load user's saved filter bandwidth for the demodulation type. */
-	switch (DemodType)
-	{
-	case DT_AM:
-		AMDemodulation.SetFilterBW(iBwAM);
-		break;
-
-	case DT_LSB:
-		AMDemodulation.SetFilterBW(iBwLSB);
-		break;
-
-	case DT_USB:
-		AMDemodulation.SetFilterBW(iBwUSB);
-		break;
-
-	case DT_CW:
-		AMDemodulation.SetFilterBW(iBwCW);
-		break;
-
-	case DT_NBFM:
-		AMDemodulation.SetFilterBW(iBwNBFM);
-		break;
-
-	case DT_WBFM:
-		AMDemodulation.SetFilterBW(iBwWBFM);
-		break;
-	}
+	AMDemodulation.SetDemodTypeAndBPF(Parameters.eDemodType, Parameters.iBw[Parameters.eDemodType]);
 
 	/* upstream RSCI */
 	str = s.Get("command", "rsiin");
@@ -1779,7 +1708,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 
 	/* Front-end - combine into Hamlib? */
-	CFrontEndParameters& FrontEndParameters = pReceiverParam->FrontEndParameters;
+	CFrontEndParameters& FrontEndParameters = Parameters.FrontEndParameters;
 
 	FrontEndParameters.eSMeterCorrectionType =
 		CFrontEndParameters::ESMeterCorrectionType(s.Get("FrontEnd", "smetercorrectiontype", 0));
@@ -1801,6 +1730,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 void
 CDRMReceiver::SaveSettings(CSettings& s)
 {
+	CParameter & Parameters = *pReceiverParam;
 
 	if(eReceiverMode == RM_AM)
 		s.Put("GUI", "mode", "AMRX");
@@ -1846,7 +1776,7 @@ CDRMReceiver::SaveSettings(CSettings& s)
 
 
 	/* demodulation */
-	s.Put("Demodulator", "modulation", AMDemodulation.GetDemodType());
+	s.Put("Demodulator", "modulation", Parameters.eDemodType);
 
 	/* AM Parameters */
 
@@ -1862,15 +1792,15 @@ CDRMReceiver::SaveSettings(CSettings& s)
 	/* auto frequency acquisition */
 	s.Put("AM Demodulation", "autofreqacq", AMDemodulation.AutoFreqAcqEnabled());
 
-	s.Put("AM Demodulation", "filterbwam", iBwAM);
-	s.Put("AM Demodulation", "filterbwusb", iBwUSB);
-	s.Put("AM Demodulation", "filterbwlsb", iBwLSB);
-	s.Put("AM Demodulation", "filterbwcw", iBwCW);
+	s.Put("AM Demodulation", "filterbwam", Parameters.iBw[DT_AM]);
+	s.Put("AM Demodulation", "filterbwlsb", Parameters.iBw[DT_LSB]);
+	s.Put("AM Demodulation", "filterbwusb", Parameters.iBw[DT_USB]);
+	s.Put("AM Demodulation", "filterbwcw", Parameters.iBw[DT_CW]);
 
 	/* FM Parameters */
 
-	s.Put("FM Demodulation", "nbfilterbw", iBwNBFM);
-	s.Put("FM Demodulation", "wbfilterbw", iBwWBFM);
+	s.Put("FM Demodulation", "nbfilterbw", Parameters.iBw[DT_NBFM]);
+	s.Put("FM Demodulation", "wbfilterbw", Parameters.iBw[DT_WBFM]);
 
 #ifdef HAVE_LIBHAMLIB
 	/* Hamlib --------------------------------------------------------------- */
@@ -1881,23 +1811,23 @@ CDRMReceiver::SaveSettings(CSettings& s)
 #endif
 
 	/* Front-end - combine into Hamlib? */
-	s.Put("FrontEnd", "smetercorrectiontype", int(pReceiverParam->FrontEndParameters.eSMeterCorrectionType));
+	s.Put("FrontEnd", "smetercorrectiontype", int(Parameters.FrontEndParameters.eSMeterCorrectionType));
 
-	s.Put("FrontEnd", "smeterbandwidth", int(pReceiverParam->FrontEndParameters.rSMeterBandwidth));
+	s.Put("FrontEnd", "smeterbandwidth", int(Parameters.FrontEndParameters.rSMeterBandwidth));
 
-	s.Put("FrontEnd", "defaultmeasurementbandwidth", int(pReceiverParam->FrontEndParameters.rDefaultMeasurementBandwidth));
+	s.Put("FrontEnd", "defaultmeasurementbandwidth", int(Parameters.FrontEndParameters.rDefaultMeasurementBandwidth));
 
-	s.Put("FrontEnd", "automeasurementbandwidth", pReceiverParam->FrontEndParameters.bAutoMeasurementBandwidth);
+	s.Put("FrontEnd", "automeasurementbandwidth", Parameters.FrontEndParameters.bAutoMeasurementBandwidth);
 
-	s.Put("FrontEnd", "calfactordrm", int(pReceiverParam->FrontEndParameters.rCalFactorDRM));
+	s.Put("FrontEnd", "calfactordrm", int(Parameters.FrontEndParameters.rCalFactorDRM));
 
-	s.Put("FrontEnd", "calfactoram", int(pReceiverParam->FrontEndParameters.rCalFactorAM));
+	s.Put("FrontEnd", "calfactoram", int(Parameters.FrontEndParameters.rCalFactorAM));
 
-	s.Put("FrontEnd", "ifcentrefrequency", int(pReceiverParam->FrontEndParameters.rIFCentreFreq));
+	s.Put("FrontEnd", "ifcentrefrequency", int(Parameters.FrontEndParameters.rIFCentreFreq));
 
 	/* Serial Number */
-	s.Put("Receiver", "serialnumber", pReceiverParam->sSerialNumber);
+	s.Put("Receiver", "serialnumber", Parameters.sSerialNumber);
 
-	s.Put("Receiver", "datafilesdirectory", pReceiverParam->sDataFilesDirectory);
+	s.Put("Receiver", "datafilesdirectory", Parameters.sDataFilesDirectory);
 
 }

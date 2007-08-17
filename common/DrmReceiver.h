@@ -411,15 +411,8 @@ protected:
 	friend class CRigPoll;
 #endif
 
-	int						iBwAM;
-	int						iBwLSB;
-	int						iBwUSB;
-	int						iBwCW;
-	int						iBwNBFM;
-	int						iBwWBFM;
 	_BOOLEAN				bEnableSMeter;
 	_BOOLEAN				bReadFromFile;
-	_BOOLEAN				bUseHWDemod;
 	time_t					time_keeper;
 
 	CPlotManager PlotManager;
