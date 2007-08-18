@@ -30,13 +30,16 @@
 
 #include "AnalogDemDlg.h"
 #include <qmessagebox.h>
+#include "ReceiverSettingsDlg.h"
 
 
 /* Implementation *************************************************************/
 AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
+	ReceiverSettingsDlg& NReceiverSettingsDlg,
 	QWidget* parent, const char* name, bool modal, WFlags f):
 	AnalogDemDlgBase(parent, name, modal, f),
-	DRMReceiver(NDRMR), Settings(NSettings), AMSSDlg(NDRMR, Settings, parent, name, modal, f)
+	DRMReceiver(NDRMR), Settings(NSettings), pReceiverSettingsDlg(&NReceiverSettingsDlg),
+	AMSSDlg(NDRMR, Settings, parent, name, modal, f)
 {
 	CWinGeom s;
 	Settings.Get("AM Dialog", s);
@@ -67,7 +70,8 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		SLOT(OnSwitchToDRM()), CTRL+Key_D);
 	pSettingsMenu->insertItem(tr("New &AM Acquisition"), this,
 		SLOT(OnNewAMAcquisition()), CTRL+Key_A);
-
+	pSettingsMenu->insertItem(tr("&Receiver settings..."), this,
+		SLOT(OnViewReceiverSettingsDlg()));
 
 	/* Main menu bar -------------------------------------------------------- */
 	QMenuBar* pMenu = new QMenuBar(this);
@@ -152,6 +156,11 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		this, SLOT(OnTimerPLLPhaseDial()));
 
 	/* Don't activate real-time timers, wait for show event */
+}
+
+void AnalogDemDlg::OnViewReceiverSettingsDlg()
+{
+	pReceiverSettingsDlg->show();
 }
 
 void AnalogDemDlg::showEvent(QShowEvent*)
@@ -350,10 +359,8 @@ void AnalogDemDlg::OnSwitchToDRM()
 
 void AnalogDemDlg::OnTimer()
 {
-	CParameter& Parameters = *DRMReceiver.GetParameters();
-
-	EDemodType eMode;
 	CAMDemodulation& demod = *DRMReceiver.GetAMDemod();
+	int rig;
 
 	switch(DRMReceiver.GetReceiverMode())
 	{
@@ -364,8 +371,17 @@ void AnalogDemDlg::OnTimer()
 		/* Carrier frequency of AM signal */
 		TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
 		+ QString().setNum(demod.GetCurMixFreqOffs(), 'f', 2) + " Hz</b>");
-		eMode = Parameters.eDemodType;
-		/* TODO enable & disable the Onboard checkbox according to the rig caps */
+		rig = DRMReceiver.GetRigModel();
+		if(rig>0)
+		{
+			CParameter& Parameters = *DRMReceiver.GetParameters();
+			EDemodType eMode = Parameters.eDemodType;
+			/* TODO enable & disable the Onboard checkbox according to the rig caps */
+		}
+		else
+		{
+			CheckBoxOnBoardDemod->setEnabled(false);
+		}
 		break;
 	case RM_NONE:
 		break;

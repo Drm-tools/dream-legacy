@@ -112,7 +112,8 @@ CParameter::CParameter(CDRMReceiver *pRx):
  bRunThread(FALSE),
  bUsingMultimedia(FALSE),
  CellMappingTable(),
- GPSData(),
+ GPSData(), SNRstat(), SigStrstat(),
+ bUseHWDemod(FALSE), eDemodType(DT_AM), iBw(),
  rSysSimSNRdB(0.0),
  iFrequency(0),
  bValidSignalStrength(FALSE),
@@ -214,7 +215,8 @@ CParameter::CParameter(const CParameter& p):
  bRunThread(p.bRunThread),
  bUsingMultimedia(p.bUsingMultimedia),
  CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
- GPSData(p.GPSData),
+ GPSData(p.GPSData), SNRstat(p.SNRstat), SigStrstat(p.SigStrstat),
+ bUseHWDemod(p.bUseHWDemod), eDemodType(p.eDemodType),
  rSysSimSNRdB(p.rSysSimSNRdB),
  iFrequency(p.iFrequency),
  bValidSignalStrength(p.bValidSignalStrength),
@@ -230,6 +232,7 @@ CParameter::CParameter(const CParameter& p):
 {
 	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
 	matcReceivedPilotValues = p.matcReceivedPilotValues; // TODO 
+	for(size_t i=0; i<DT_SIZE; i++) iBw[i] = p.iBw[i];
 }
 
 CParameter& CParameter::operator=(const CParameter& p)
@@ -312,6 +315,11 @@ CParameter& CParameter::operator=(const CParameter& p)
 	bUsingMultimedia = p.bUsingMultimedia;
 	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup); // don't copy CMatrix
 	GPSData = p.GPSData;
+	SNRstat = p.SNRstat;
+	SigStrstat = p.SigStrstat;
+	bUseHWDemod = p.bUseHWDemod;
+	eDemodType = p.eDemodType;
+	for(size_t i=0; i<DT_SIZE; i++) iBw[i] = p.iBw[i];
 	rSysSimSNRdB = p.rSysSimSNRdB;
 	iFrequency = p.iFrequency;
 	bValidSignalStrength = p.bValidSignalStrength;

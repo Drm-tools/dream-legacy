@@ -62,28 +62,17 @@ iAcquDetecCnt(0), iGoodSignCnt(0), eReceiverMode(RM_DRM),
 eNewReceiverMode(RM_DRM), iAudioStreamID(STREAM_ID_NOT_USED),
 iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE), bRestartFlag(FALSE),
 rInitResampleOffset((_REAL) 0.0),
+pHamlib(NULL),
 iFreqkHz(0),
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-	RigPoll(),
-#endif
-	bEnableSMeter(FALSE), bReadFromFile(FALSE), time_keeper(0)
+bReadFromFile(FALSE), time_keeper(0)
 {
 	pReceiverParam = new CParameter(this);
 	downstreamRSCI.SetReceiver(this);
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-	RigPoll.SetReceiver(this);
-#endif
 	PlotManager.SetReceiver(this);
 }
 
 CDRMReceiver::~CDRMReceiver()
 {
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-	if (RigPoll.running())
-		RigPoll.stop();
-	if (RigPoll.wait(1000) == FALSE)
-		cout << "error terminating rig polling thread" << endl;
-#endif
 	delete pSoundInInterface;
 	delete pSoundOutInterface;
 }
@@ -98,13 +87,20 @@ CDRMReceiver::SetReceiverMode(ERecMode eNewMode)
 void
 CDRMReceiver::SetEnableSMeter(_BOOLEAN bNew)
 {
-	bEnableSMeter = bNew;
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		pHamlib->SetEnableSMeter(bNew);
+#endif
 }
 
 _BOOLEAN
 CDRMReceiver::GetEnableSMeter()
 {
-	return bEnableSMeter;
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		return pHamlib->GetEnableSMeter();
+#endif
+	return FALSE;
 }
 
 void CDRMReceiver::SetUseHWDemod(_BOOLEAN bUse)
@@ -162,22 +158,6 @@ CDRMReceiver::Run()
 
 	CParameter & ReceiverParam = *pReceiverParam;
 
-	/* Check for changes in front end selection */
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-	if (bEnableSMeter && upstreamRSCI.GetInEnabled() == FALSE)
-	{
-		if (RigPoll.running() == FALSE)
-			RigPoll.start();
-	}
-	else
-	{
-		if (RigPoll.running())
-		{
-			RigPoll.stop();
-		}
-	}
-#endif
-
 	if(bRestartFlag) /* new acquisition requested by GUI */
 	{
 		bRestartFlag = FALSE;
@@ -217,16 +197,6 @@ CDRMReceiver::Run()
 	}
 	else
 	{
-#if defined(HAVE_LIBHAMLIB) && !defined(USE_QT_GUI)
-		/* TODO - get the polling interval sensible */
-		_BOOLEAN bValid;
-		_REAL r;
-		bValid = Hamlib.GetSMeter(r) == CHamlib::SS_VALID;
-		// Apply any correction
-		r += ReceiverParam.rSigStrengthCorrection;
-		ReceiverParam.SigStrstat.addSample(r);
-#endif
-
 		if(eReceiverMode==RM_AM && ReceiverParam.bUseHWDemod)
 		{
 			OnboardDecoder.ReadData(ReceiverParam, AMAudioBuf);
@@ -1305,10 +1275,10 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 		WriteIQFile.NewFrequency(*pReceiverParam);
 
 #ifdef HAVE_LIBHAMLIB
-		return Hamlib.SetFrequency(iNewFreqkHz);
-#else
-		return TRUE;
+		if(pHamlib)
+			return pHamlib->SetFrequency(iNewFreqkHz);
 #endif
+		return TRUE;
 	}
 }
 
@@ -1327,63 +1297,131 @@ CDRMReceiver::SetRSIRecording(_BOOLEAN bOn, const char cProfile)
 	downstreamRSCI.SetRSIRecording(*pReceiverParam, bOn, cProfile);
 }
 
-#ifdef HAVE_LIBHAMLIB
-void CDRMReceiver::SetRigModel(int iID)
+void CDRMReceiver::UpdateSoundIn()
 {
+	if(pHamlib == NULL)
+		return;
+#ifdef HAVE_LIBHAMLIB
 # ifdef __linux__
-	CHamlib::SDrRigCaps caps;
-	Hamlib.GetRigCaps(iID, caps);
-	//if(caps.bHamlibDoesAudio)
-	if(TRUE)
+	rig_model_t	id = pHamlib->GetHamlibModelID();
+	CRigCaps caps;
+	pHamlib->GetRigCaps(id, caps);
+	cout << "caps.bHamlibDoesAudio " << caps.bHamlibDoesAudio << endl;
+	if(caps.bHamlibDoesAudio)
 	{
-			cout << "caps.bHamlibDoesAudio" << endl;
-		string shm_path = "/dreamg3xxif";
-    	CShmSoundIn* ShmSoundIn = new CShmSoundIn;
 		if(pSoundInInterface)
 			delete pSoundInInterface;
+		string shm_path = "/dreamg3xxif";
+    	CShmSoundIn* ShmSoundIn = new CShmSoundIn;
 		pSoundInInterface = ShmSoundIn;
 		pSoundInInterface->SetDev(0);
 		ShmSoundIn->SetShmPath(shm_path);
 		ShmSoundIn->SetName(caps.strModelName);
 		ShmSoundIn->SetShmChannels(1);
 		ShmSoundIn->SetWantedChannels(2);
-		Hamlib.config["if_path"] = shm_path;
-		ReceiveData.SetSoundInterface(pSoundInInterface);
-		ReceiveData.SetInitFlag();
+		pHamlib->config["if_path"] = shm_path;
 	}
-# endif
-	Hamlib.SetHamlibModelID(iID);
-}
-#endif
-
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-void
-CDRMReceiver::CRigPoll::run()
-{
-	CHamlib & rig = *(pDRMRec->GetHamlib());
-	while (bQuit == FALSE)
+	else
 	{
-		_REAL r;
-		if (rig.GetSMeter(r) == CHamlib::SS_VALID)
-		{
-			CParameter& Parameters = *pDRMRec->GetParameters();
-			Parameters.Lock();
-			// Apply any correction
-			r += Parameters.rSigStrengthCorrection;
-			Parameters.SigStrstat.addSample(r);
-			Parameters.Unlock();
-		}
-		else
-		{
-			CParameter& Parameters = *pDRMRec->GetParameters();
-			Parameters.Lock();
-			Parameters.SigStrstat.setInvalid();
-			Parameters.Unlock();
-		}
-		msleep(400);
+	/* TODO */
 	}
-}
+	ReceiveData.SetSoundInterface(pSoundInInterface);
+	ReceiveData.SetInitFlag();
+	OnboardDecoder.SetSoundInterface(pSoundInInterface);
+	OnboardDecoder.SetInitFlag();
+# endif
 #endif
+}
+
+void CDRMReceiver::SetHamlib(CHamlib* p)
+{
+	pHamlib = p;
+	UpdateSoundIn();
+}
+
+void CDRMReceiver::SetRigModel(int iID)
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		pHamlib->SetHamlibModelID(iID);
+#endif
+	UpdateSoundIn();
+}
+
+int CDRMReceiver::GetRigModel()
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		return pHamlib->GetHamlibModelID();
+#endif
+	return 0;
+}
+
+void CDRMReceiver::GetRigList(map<rig_model_t,CRigCaps>& rigs)
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		pHamlib->GetRigList(rigs);
+#endif
+}
+
+void CDRMReceiver::GetComPortList(map<string,string>& ports)
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		pHamlib->GetPortList(ports);
+#endif
+}
+
+string CDRMReceiver::GetRigComPort()
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		return pHamlib->GetComPort();
+#endif
+	return "";
+}
+
+_BOOLEAN CDRMReceiver::GetEnableModRigSettings()
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		return pHamlib->GetEnableModRigSettings();
+#endif
+	return FALSE;
+}
+
+void CDRMReceiver::SetEnableModRigSettings(_BOOLEAN bNew)
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		pHamlib->SetEnableModRigSettings(bNew);
+#endif
+}
+
+void CDRMReceiver::SetRigFreqOffset(int iVal)
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		pHamlib->iFreqOffset = iVal;
+#endif
+}
+
+void CDRMReceiver::SetRigComPort(const string& s)
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		pHamlib->SetComPort(s);
+#endif
+}
+
+void CDRMReceiver::SetRigSettings(const string& s)
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		pHamlib->strSettings = s;
+#endif
+}
 
 _BOOLEAN
 CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
@@ -1690,17 +1728,6 @@ CDRMReceiver::LoadSettings(CSettings& s)
 		SetReceiverMode(RM_AM);
 	//else - leave it as initialised (ie. DRM)
 
-#ifdef HAVE_LIBHAMLIB
-	/* Hamlib --------------------------------------------------------------- */
-	Hamlib.LoadSettings(s);
-	rig_model_t	id = Hamlib.GetHamlibModelID();
-	if(id != 0)
-		SetRigModel(id); // does the shared memory audio thing
-
-	/* Enable s-meter flag */
-	bEnableSMeter = s.Get("Hamlib", "ensmeter", FALSE);
-
-#endif
 
 	//andrewm - moved to _after_ hamlib initialisation
 		/* Wanted RF Frequency file */
@@ -1802,32 +1829,16 @@ CDRMReceiver::SaveSettings(CSettings& s)
 	s.Put("FM Demodulation", "nbfilterbw", Parameters.iBw[DT_NBFM]);
 	s.Put("FM Demodulation", "wbfilterbw", Parameters.iBw[DT_WBFM]);
 
-#ifdef HAVE_LIBHAMLIB
-	/* Hamlib --------------------------------------------------------------- */
-	Hamlib.SaveSettings(s);
-
-	/* Enable s-meter flag */
-	s.Put("Hamlib", "ensmeter", bEnableSMeter);
-#endif
-
 	/* Front-end - combine into Hamlib? */
 	s.Put("FrontEnd", "smetercorrectiontype", int(Parameters.FrontEndParameters.eSMeterCorrectionType));
-
 	s.Put("FrontEnd", "smeterbandwidth", int(Parameters.FrontEndParameters.rSMeterBandwidth));
-
 	s.Put("FrontEnd", "defaultmeasurementbandwidth", int(Parameters.FrontEndParameters.rDefaultMeasurementBandwidth));
-
 	s.Put("FrontEnd", "automeasurementbandwidth", Parameters.FrontEndParameters.bAutoMeasurementBandwidth);
-
 	s.Put("FrontEnd", "calfactordrm", int(Parameters.FrontEndParameters.rCalFactorDRM));
-
 	s.Put("FrontEnd", "calfactoram", int(Parameters.FrontEndParameters.rCalFactorAM));
-
 	s.Put("FrontEnd", "ifcentrefrequency", int(Parameters.FrontEndParameters.rIFCentreFreq));
 
 	/* Serial Number */
 	s.Put("Receiver", "serialnumber", Parameters.sSerialNumber);
-
 	s.Put("Receiver", "datafilesdirectory", Parameters.sDataFilesDirectory);
-
 }

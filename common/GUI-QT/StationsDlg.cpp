@@ -456,120 +456,6 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	SetStationsView();
 
-#ifdef HAVE_LIBHAMLIB
-	/* Remote menu  --------------------------------------------------------- */
-	pRemoteMenu = new QPopupMenu(this);
-	CHECK_PTR(pRemoteMenu);
-
-	pRemoteMenuOther = new QPopupMenu(this);
-	CHECK_PTR(pRemoteMenuOther);
-
-	/* Init vector for storing the model IDs with zero length */
-	veciModelID.clear();
-
-	/* Add menu entry "none" */
-	pRemoteMenu->insertItem(tr("None"), this, SLOT(OnRemoteMenu(int)), 0, 0);
-	veciModelID.push_back(0); /* ID 0 for "none" */
-
-	CHamlib& Hamlib = *DRMReceiver.GetHamlib();
-
-	map<rig_model_t,CHamlib::SDrRigCaps> rigs;
-
-	Hamlib.GetRigList(rigs);
-
-	/* Add menu entries */
-	_BOOLEAN bCheckWasSet = FALSE;
-	for (map<rig_model_t,CHamlib::SDrRigCaps>::iterator i=rigs.begin(); i!=rigs.end(); i++)
-	{
-		/* Store model ID */
-		rig_model_t iModelID = i->first;
-		CHamlib::SDrRigCaps& rig = i->second;
-
-		veciModelID.push_back(iModelID);
-		const int iCurModIDIdx = veciModelID.size() - 1;
-
-		/* Create menu objects which belong to an action group. We hope that
-		   QT takes care of all the new objects and deletes them... */
-
-		/* Set menu string. Should look like: [ID] Manuf. Model */
-		QString strMenuText = 
-				"[" + QString().setNum(iModelID) + "] " +
-				rig.strManufacturer.c_str() + " " +
-				rig.strModelName.c_str();
-
-		QPopupMenu*	pMenu;
-		if (rig.bIsSpecRig == TRUE)
-		{
-			/* Main rigs */
-			pMenu = pRemoteMenu;
-		}
-		else
-		{
-			/* "Other" menu */
-			pMenu = pRemoteMenuOther;
-			/* Set menu string. Should look like: [ID] Manuf. Model (status) */
-			strMenuText = strMenuText + " (" + rig_strstatus(rig.eRigStatus) + ")";
-		}
-		pMenu->insertItem(strMenuText, this, SLOT(OnRemoteMenu(int)), 0, iCurModIDIdx);
-
-		/* Check for checking */
-		if (Hamlib.GetHamlibModelID() == iModelID)
-		{
-			pMenu->setItemChecked(iCurModIDIdx, TRUE);
-			bCheckWasSet = TRUE;
-		}
-
-	}
-
-	/* Add "other" menu */
-	pRemoteMenu->insertItem(tr("Other"), pRemoteMenuOther);
-
-	/* If no rig was selected, set check to "none" */
-	if (bCheckWasSet == FALSE)
-		pRemoteMenu->setItemChecked(0, TRUE);
-
-	/* Separator */
-	pRemoteMenu->insertSeparator();
-
-
-	/* COM port selection --------------------------------------------------- */
-	/* Toggle action for com port selection menu entries */
-	agCOMPortSel = new QActionGroup(this, "Com port", TRUE);
-	map<string,string> ports;
-	Hamlib.GetPortList(ports);
-	string strPort = Hamlib.GetComPort();
-	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
-	{
-		QAction* pacMenu = new QAction(p->second.c_str(), p->first.c_str(), 0, agCOMPortSel, 0, TRUE);
-		if(strPort == p->second)
-			pacMenu->setOn(TRUE);
-	}
-
-	/* Add COM port selection menu group to remote menu */
-	agCOMPortSel->addTo(pRemoteMenu);
-
-	/* Other settings ------------------------------------------------------- */
-	/* Separator */
-	pRemoteMenu->insertSeparator();
-
-	/* Enable s-meter */
-	const int iSMeterMenuID = pRemoteMenu->insertItem(tr("Enable S-Meter"),
-		this, SLOT(OnSMeterMenu(int)), 0);
-	pRemoteMenu->setItemChecked(iSMeterMenuID, DRMReceiver.GetEnableSMeter());
-
-
-	/* Separator */
-	pRemoteMenu->insertSeparator();
-
-	/* Enable special settings for rigs */
-	const int iModRigMenuID = pRemoteMenu->insertItem(tr("With DRM "
-		"Modification"), this, SLOT(OnModRigMenu(int)), 0);
-
-	/* Set check */
-	pRemoteMenu->setItemChecked(iModRigMenuID, Hamlib.GetEnableModRigSettings());
-#endif
-
-
 	/* Update menu ---------------------------------------------------------- */
 	pUpdateMenu = new QPopupMenu(this);
 	CHECK_PTR(pUpdateMenu);
@@ -579,9 +465,6 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QMenuBar* pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
 	pMenu->insertItem(tr("&View"), pViewMenu);
-#ifdef HAVE_LIBHAMLIB
-	pMenu->insertItem(tr("&Remote"), pRemoteMenu);
-#endif
 	pMenu->insertItem(tr("&Update"), pUpdateMenu); /* String "Update" used below */
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
@@ -596,12 +479,6 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 
 	/* Connections ---------------------------------------------------------- */
-#ifdef HAVE_LIBHAMLIB
-	/* Action group */
-	connect(agCOMPortSel, SIGNAL(selected(QAction*)),
-		this, SLOT(OnComPortMenu(QAction*)));
-#endif
-
 	connect(&TimerList, SIGNAL(timeout()),
 		this, SLOT(OnTimerList()));
 	connect(&TimerUTCLabel, SIGNAL(timeout()),
@@ -871,20 +748,6 @@ void StationsDlg::showEvent(QShowEvent*)
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
 	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
 
-	/* S-meter settings */
-	_BOOLEAN bSMeter = DRMReceiver.GetEnableSMeter();
-	if(bSMeter)
-	{
-		/* Init progress bar for input s-meter */
-		TimerSMeter.start(GUI_TIMER_S_METER);
-	}
-	else
-	{
-		ProgrSigStrength->hide();
-		TextLabelSMeter->hide();
-	}
-	EnableSMeter(bSMeter);
-
 	/* add last update information on menu item */
 	AddUpdateDateTime();
 }
@@ -893,6 +756,14 @@ void StationsDlg::OnTimerList()
 {
 	/* Update list view */
 	SetStationsView();
+
+	/* S-meter settings */
+	_BOOLEAN bSMeter = DRMReceiver.GetEnableSMeter();
+	if(bSMeter)
+		TimerSMeter.start(GUI_TIMER_S_METER);
+	else
+		TimerSMeter.stop();
+	EnableSMeter(bSMeter);
 }
 
 QString MyListViewItem::key(int column, bool ascending) const
@@ -1188,73 +1059,6 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 			break;
 		}
 	}
-}
-
-void StationsDlg::OnSMeterMenu(int iID)
-{
-	if (pRemoteMenu->isItemChecked(iID))
-	{
-		pRemoteMenu->setItemChecked(iID, FALSE);
-		DRMReceiver.SetEnableSMeter(FALSE);
-		TimerSMeter.stop();
-		EnableSMeter(FALSE);
-	}
-	else
-	{
-		pRemoteMenu->setItemChecked(iID, TRUE);
-		DRMReceiver.SetEnableSMeter(TRUE);
-		TimerSMeter.start(GUI_TIMER_S_METER);
-		EnableSMeter(TRUE);
-	}
-
-}
-
-void StationsDlg::OnModRigMenu(int iID)
-{
-#ifdef HAVE_LIBHAMLIB
-	if (pRemoteMenu->isItemChecked(iID))
-	{
-		pRemoteMenu->setItemChecked(iID, FALSE);
-		DRMReceiver.GetHamlib()->SetEnableModRigSettings(FALSE);
-	}
-	else
-	{
-		pRemoteMenu->setItemChecked(iID, TRUE);
-		DRMReceiver.GetHamlib()->SetEnableModRigSettings(TRUE);
-	}
-#endif
-}
-
-void StationsDlg::OnRemoteMenu(int iID)
-{
-#ifdef HAVE_LIBHAMLIB
-	/* Take care of check */
-	for (size_t i = 0; i < veciModelID.size(); i++)
-	{
-		/* We don't care here that not all IDs are in each menu. If there is a
-		   non-valid ID for the menu item, there is simply nothing done */
-		pRemoteMenu->setItemChecked(i, int(i) == iID);
-		pRemoteMenuOther->setItemChecked(i, int(i) == iID);
-	}
-
-	/* Set ID */
-	DRMReceiver.SetRigModel(veciModelID[iID]);
-
-	/* If model is changed, update s-meter because new rig might have support
-	   for it. Only try to enable s-meter if it is not ID 0 ("none") */
-	if (iID != 0)
-	{
-		EnableSMeter(DRMReceiver.GetEnableSMeter());
-		TimerSMeter.start(GUI_TIMER_S_METER);
-	}
-#endif
-}
-
-void StationsDlg::OnComPortMenu(QAction* action)
-{
-#ifdef HAVE_LIBHAMLIB
-	DRMReceiver.GetHamlib()->SetComPort(action->text().latin1());
-#endif
 }
 
 void StationsDlg::OnTimerSMeter()

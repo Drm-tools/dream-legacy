@@ -26,6 +26,7 @@
 \******************************************************************************/
 
 #include "Utilities.h"
+#include "../Parameter.h"
 #include <sstream>
 #if defined(_WIN32)
 # ifdef HAVE_SETUPAPI
@@ -72,7 +73,7 @@ void
 CSignalLevelMeter::Update(const vector < _SAMPLE > vecsVal)
 {
 	/* Do the update for entire vector, convert to real */
-	for (int i = 0; i < vecsVal.size(); i++)
+	for (size_t i = 0; i < vecsVal.size(); i++)
 		Update((_REAL) vecsVal[i]);
 }
 
@@ -445,11 +446,11 @@ CReal CAudioReverb::ProcessSample(const CReal rLInput, const CReal rRInput)
 	This code is based on patches and example code from Tomi Manninen and
 	Stephane Fillod (developer of hamlib)
 */
-CHamlib::CHamlib():SpecDRMRigs(), CapsHamlibModels(),
-pRig(NULL), bSMeterIsSupported(FALSE),
-bModRigSettings(FALSE), iHamlibModelID(0),
-strHamlibConf(""), strSettings(""), iFreqOffset(0),
-modes(), levels(), functions(), parameters(), config()
+CHamlib::CHamlib(CParameter& p): strSettings(""), iFreqOffset(0), config(),
+Parameters(p), pRig(NULL),
+bSMeterIsSupported(FALSE), bEnableSMeter(FALSE), bModRigSettings(FALSE),
+iHamlibModelID(0), strHamlibConf(""), SpecDRMRigs(), CapsHamlibModels(),
+modes(), levels(), functions(), parameters()
 {
 #ifdef RIG_MODEL_DWT
 	/* Digital World Traveller */
@@ -546,7 +547,7 @@ CHamlib::RigSpecialParameters(rig_model_t id, const string & sSet, int iFrOff,
 }
 
 void
-CHamlib::GetRigList(map < rig_model_t, SDrRigCaps > &rigs)
+CHamlib::GetRigList(map < rig_model_t, CRigCaps > &rigs)
 {
 	rigs = CapsHamlibModels;
 }
@@ -742,7 +743,7 @@ CHamlib::PrintHamlibModelList(const struct rig_caps *caps, void *data)
 		Hamlib.SpecDRMRigs.find(caps->rig_model) != Hamlib.SpecDRMRigs.end();
 
 	Hamlib.CapsHamlibModels[caps->rig_model] =
-		SDrRigCaps(caps->mfg_name, caps->model_name, caps->status, bIsSpec);
+		CRigCaps(caps->mfg_name, caps->model_name, caps->status, bIsSpec);
 
 	return 1;					/* !=0, we want them all! */
 }
@@ -751,6 +752,7 @@ void
 CHamlib::LoadSettings(CSettings & s)
 {
 	rig_model_t model = s.Get("Hamlib", "hamlib-model", 0);
+	bEnableSMeter = s.Get("Hamlib", "ensmeter", FALSE);
 
 	if (model != 0)
 	{
@@ -790,6 +792,7 @@ CHamlib::LoadSettings(CSettings & s)
 	s.Put("Hamlib", "hamlib-config", strHamlibConf);
 	s.Put("Hamlib", "settings", strSettings);
 	s.Put("Hamlib", "freqoffset", iFreqOffset);
+	s.Put("Hamlib", "ensmeter", bEnableSMeter);
 }
 
 void
@@ -797,6 +800,7 @@ CHamlib::SaveSettings(CSettings & s)
 {
 	/* Hamlib Model ID */
 	s.Put("Hamlib", "hamlib-model", iHamlibModelID);
+	s.Put("Hamlib", "ensmeter", bEnableSMeter);
 
 	/* Hamlib configuration string */
 	stringstream ss;
@@ -838,35 +842,57 @@ CHamlib::SetFrequency(const int iFreqkHz)
 	return bSucceeded;
 }
 
-CHamlib::ESMeterState CHamlib::GetSMeter(_REAL & rCurSigStr)
+void CHamlib::SetEnableSMeter(const _BOOLEAN bStatus)
 {
-	ESMeterState
-		eRetVal = SS_NOTVALID;
-	rCurSigStr = (_REAL) 0.0;
-
-	if ((pRig != NULL) && (bSMeterIsSupported == TRUE))
+	if(bStatus)
 	{
-		value_t
-			tVal;
-		const int
-			iHamlibRetVal =
-			rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &tVal);
-
-		if (!iHamlibRetVal)
-		{
-			rCurSigStr = (_REAL) tVal.i;
-			eRetVal = SS_VALID;
-		}
-
-		/* If a time-out happened, do not update s-meter anymore (disable it) */
-		if (iHamlibRetVal == -RIG_ETIMEOUT)
-		{
-			bSMeterIsSupported = FALSE;
-			eRetVal = SS_TIMEOUT;
-		}
+#ifdef USE_QT_GUI
+		if(bEnableSMeter==FALSE)
+			this->start();
+#endif
+		bEnableSMeter = TRUE;
 	}
+	else
+	{
+		Parameters.Lock();
+		Parameters.SigStrstat.setInvalid();
+		Parameters.Unlock();
+		bEnableSMeter = FALSE;
+	}
+}
 
-	return eRetVal;
+_BOOLEAN CHamlib::GetEnableSMeter()
+{
+	return bEnableSMeter;
+}
+
+void CHamlib::run()
+{
+	while(bEnableSMeter)
+	{
+		if(bSMeterIsSupported && pRig)
+		{
+			value_t val;
+			switch(rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &val))
+			{
+			case 0:
+				Parameters.Lock();
+				// Apply any correction
+				Parameters.SigStrstat.addSample(val.f + Parameters.rSigStrengthCorrection);
+				Parameters.Unlock();
+				break;
+			case -RIG_ETIMEOUT:
+				/* If a time-out happened, do not update s-meter anymore (disable it) */
+				break;
+			}
+		}
+		else
+		{
+		}
+#ifdef USE_QT_GUI
+		msleep(400);
+#endif
+	}
 }
 
 void

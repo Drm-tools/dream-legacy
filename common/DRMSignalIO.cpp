@@ -847,7 +847,6 @@ void COnboardDecoder::InitInternal(CParameter& Parameter)
 	const int iNumInSamplesMono = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
 										 (_REAL) 0.05 /* 50 ms (arbitrary) */ );
 	iOutputBlockSize = 2*iNumInSamplesMono;
-	cout << "iOutputBlockSize " << iOutputBlockSize << endl;
 
 	pSound->Init(iOutputBlockSize);
 }

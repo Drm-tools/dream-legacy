@@ -253,18 +253,10 @@ protected:
 	vector<QAction*>			pacMenuComPorts;
 	QActionGroup*				agCOMPortSel;
 
-#ifdef HAVE_LIBHAMLIB
-	QPopupMenu*					pRemoteMenuOther;
-	vector<rig_model_t>			veciModelID;
-#endif
 	int					iTunedFrequency;
 	_BOOLEAN			bFrequencySetFromReceiver;
 
 public slots:
-	void OnRemoteMenu(int iID);
-	void OnComPortMenu(QAction* action);
-	void OnSMeterMenu(int iID);
-	void OnModRigMenu(int iID);
 	void OnTimerList();
 	void OnTimerUTCLabel() {SetUTCTimeLabel();}
 	void OnTimerSMeter();

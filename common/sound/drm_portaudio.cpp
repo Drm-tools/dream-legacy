@@ -65,7 +65,7 @@ playbackCallback(const void *inputBuffer, void *outputBuffer,
 	{
 		_SAMPLE* b = (_SAMPLE*) outputBuffer;
 		for(size_t i=0; i<framesPerBuffer; i++)
-			b[i] = b[i] / 32768.0;
+			b[i] = _SAMPLE(_REAL(b[i]) / 32768.0);
 	}
 	if(statusFlags&paOutputUnderflow)
 		This->xruns++;

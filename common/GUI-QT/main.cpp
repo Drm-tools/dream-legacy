@@ -117,6 +117,11 @@ main(int argc, char **argv)
 
 			DRMReceiver.LoadSettings(Settings);
 
+#ifdef HAVE_LIBHAMLIB
+			CHamlib Hamlib(*DRMReceiver.GetParameters());
+			Hamlib.LoadSettings(Settings);
+			DRMReceiver.SetHamlib(&Hamlib);
+#endif
 			if (Settings.Get("AM Dialog", "visible", false))
 				DRMReceiver.SetReceiverMode(RM_AM);
 			else
@@ -134,6 +139,12 @@ main(int argc, char **argv)
 
 			app.exec();
 
+#ifdef HAVE_LIBHAMLIB
+			Hamlib.SetEnableSMeter(FALSE);
+			if (Hamlib.wait(1000) == FALSE)
+				cout << "error terminating rig polling thread" << endl;
+			Hamlib.SaveSettings(Settings);
+#endif
 			DRMReceiver.SaveSettings(Settings);
 		}
 		else if(mode == "transmit")

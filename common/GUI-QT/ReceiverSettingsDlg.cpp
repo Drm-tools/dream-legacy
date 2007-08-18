@@ -258,22 +258,20 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	BitmLittleGreenSquare.resize(5, 5);
 	BitmLittleGreenSquare.fill(QColor(0, 255, 0));
 
-	CHamlib& Hamlib = *DRMReceiver.GetHamlib();
-
-	map<rig_model_t,CHamlib::SDrRigCaps> rigs;
+	map<rig_model_t, CRigCaps> rigs;
 	map<string,QListViewItem*> models;
 
-	Hamlib.GetRigList(rigs);
+	DRMReceiver.GetRigList(rigs);
 
 	CheckBoxEnableRig->setChecked(FALSE);
-	for (map<rig_model_t,CHamlib::SDrRigCaps>::iterator i=rigs.begin(); i!=rigs.end(); i++)
+	for (map<rig_model_t, CRigCaps>::iterator i=rigs.begin(); i!=rigs.end(); i++)
 	{
 		/* Store model ID */
 		QListViewItem* item;
 		rig_model_t iModelID = i->first;
 		if(iModelID != 0)
 		{
-			CHamlib::SDrRigCaps& rig = i->second;
+			CRigCaps& rig = i->second;
 			map<string,QListViewItem*>::iterator i = models.find(rig.strManufacturer);
 			if(i==models.end())
 				models[rig.strManufacturer] = 
@@ -287,7 +285,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 			);
 
 			/* Check for checking */
-			if (Hamlib.GetHamlibModelID() == iModelID)
+			if (DRMReceiver.GetRigModel() == iModelID)
 			{
 				item->setSelected(TRUE);
 				ListViewRig->ensureItemVisible(item);
@@ -307,8 +305,8 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	ListViewPort->addColumn("Port");
 	ListViewPort->clear();
 	map<string,string> ports;
-	Hamlib.GetPortList(ports);
-	string strPort = Hamlib.GetComPort();
+	DRMReceiver.GetComPortList(ports);
+	string strPort = DRMReceiver.GetRigComPort();
 	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
 	{
 		QListViewItem* item = new QListViewItem(ListViewPort, p->second.c_str(), p->first.c_str());
@@ -320,7 +318,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
 
 	/* Enable special settings for rigs */
-	CheckBoxWithDRMMod->setChecked(Hamlib.GetEnableModRigSettings());
+	CheckBoxWithDRMMod->setChecked(DRMReceiver.GetEnableModRigSettings());
 #endif
 }
 
@@ -614,7 +612,6 @@ void ReceiverSettingsDlg::OnSliderLogStartDelayChange(int value)
 
 void ReceiverSettingsDlg::OnCheckEnableRigToggled(bool on)
 {
-#ifdef HAVE_LIBHAMLIB
 	if(on)
 	{
 		QListViewItem* item = ListViewRig->selectedItem();
@@ -626,7 +623,6 @@ void ReceiverSettingsDlg::OnCheckEnableRigToggled(bool on)
 		DRMReceiver.SetRigModel(0);
 		ListViewRig->clearSelection();
 	}
-#endif
 }
 
 void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
@@ -636,45 +632,33 @@ void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
 
 void ReceiverSettingsDlg::OnCheckWithDRMModToggled(bool on)
 {
-#ifdef HAVE_LIBHAMLIB
 	if(CheckBoxEnableRig->isChecked())
-	{
-		DRMReceiver.GetHamlib()->SetEnableModRigSettings(on);
-	}
-#endif
+		DRMReceiver.SetEnableModRigSettings(on);
 }
 
 void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 {
-#ifdef HAVE_LIBHAMLIB
 	if(CheckBoxEnableRig->isChecked())
 	{
 		int iID = item->text(1).toInt();
 		DRMReceiver.SetRigModel(iID);
-		CHamlib& hamlib = *DRMReceiver.GetHamlib();
-		hamlib.iFreqOffset = LineEditRigFreqOff->text().toInt();
-		hamlib.SetEnableModRigSettings(CheckBoxWithDRMMod->isChecked());
+		DRMReceiver.SetRigFreqOffset(LineEditRigFreqOff->text().toInt());
+		DRMReceiver.SetEnableModRigSettings(CheckBoxWithDRMMod->isChecked());
 		QListViewItem* cp = ListViewPort->selectedItem();
 		if(cp)
-			hamlib.SetComPort(cp->text(1).latin1());
+			DRMReceiver.SetRigComPort(cp->text(1).latin1());
 		DRMReceiver.SetEnableSMeter(CheckBoxEnableSMeter->isChecked());
 	}
-#endif
 }
 
 void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)
 {
-#ifdef HAVE_LIBHAMLIB
 	if(CheckBoxEnableRig->isChecked())
-	{
-		DRMReceiver.GetHamlib()->SetComPort(item->text(1).latin1());
-	}
-#endif
+		DRMReceiver.SetRigComPort(item->text(1).latin1());
 }
 
 void ReceiverSettingsDlg::OnConfigChanged(int row, int col)
 {
-#ifdef HAVE_LIBHAMLIB
 	if(CheckBoxEnableRig->isChecked())
 	{
 	/*
@@ -685,27 +669,20 @@ void ReceiverSettingsDlg::OnConfigChanged(int row, int col)
 		}
 		*/
 	}
-#endif
 }
 
 void ReceiverSettingsDlg::OnRigOffsetChanged(QString text)
 {
-#ifdef HAVE_LIBHAMLIB
 	if(CheckBoxEnableRig->isChecked())
 	{
-		DRMReceiver.GetHamlib()->iFreqOffset = text.toInt();
+		DRMReceiver.SetRigFreqOffset(text.toInt());
 	}
-#endif
 }
 
 void ReceiverSettingsDlg::OnRigSettingsChanged(QString text)
 {
-#ifdef HAVE_LIBHAMLIB
 	if(CheckBoxEnableRig->isChecked())
-	{
-		DRMReceiver.GetHamlib()->strSettings = text.latin1();
-	}
-#endif
+		DRMReceiver.SetRigSettings(text.latin1());
 }
 
 void ReceiverSettingsDlg::AddWhatsThisHelp()

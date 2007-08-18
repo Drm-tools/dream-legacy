@@ -129,61 +129,86 @@ protected:
 	CReal		combCoefficient_[4];
 };
 
+enum ESMeterState {SS_VALID, SS_NOTVALID, SS_TIMEOUT};
+enum EMight { C_CAN, C_MUST, C_CANT };
 
+class CRigCaps
+{
+public:
+	CRigCaps() : strManufacturer(""), strModelName(""),
+	eRigStatus(RIG_STATUS_ALPHA),bIsSpecRig(FALSE),
+	bHamlibDoesAudio(FALSE),
+	eOnboardAMDemod(C_CAN), eOnboardFMDemod(C_CANT)
+	{}
+	CRigCaps(const string& strNMan, const string& strNModN, rig_status_e eNSt, _BOOLEAN bNsp) :
+	strManufacturer(strNMan), strModelName(strNModN), eRigStatus(eNSt),
+	bIsSpecRig(bNsp), bHamlibDoesAudio(FALSE),
+	eOnboardAMDemod(C_CAN), eOnboardFMDemod(C_CANT)
+	{}
+	CRigCaps(const CRigCaps& nSDRC) : 
+	strManufacturer(nSDRC.strManufacturer),
+	strModelName(nSDRC.strModelName),
+	eRigStatus(nSDRC.eRigStatus), bIsSpecRig(nSDRC.bIsSpecRig),
+	bHamlibDoesAudio(nSDRC.bHamlibDoesAudio),
+	eOnboardAMDemod(nSDRC.eOnboardAMDemod), eOnboardFMDemod(nSDRC.eOnboardFMDemod)
+	{}
+
+	CRigCaps& operator=(const CRigCaps& cNew)
+	{
+		strManufacturer = cNew.strManufacturer;
+		strModelName = cNew.strModelName;
+		eRigStatus = cNew.eRigStatus;
+		bIsSpecRig = cNew.bIsSpecRig;
+		bHamlibDoesAudio = cNew.bHamlibDoesAudio;
+		eOnboardAMDemod = cNew.eOnboardAMDemod;
+		eOnboardFMDemod = cNew.eOnboardFMDemod;
+		return *this;
+	}
+
+	string			strManufacturer;
+	string			strModelName;
+	rig_status_e	eRigStatus;
+	_BOOLEAN		bIsSpecRig;
+	_BOOLEAN		bHamlibDoesAudio;
+	EMight			eOnboardAMDemod;
+	EMight			eOnboardFMDemod;
+};
+
+class CSpecDRMRig
+{
+public:
+	CSpecDRMRig() : strDRMSetMod(""), strDRMSetNoMod(""), iFreqOffs(0) {}
+	CSpecDRMRig(const CSpecDRMRig& nSpec) :
+		strDRMSetMod(nSpec.strDRMSetMod),
+		strDRMSetNoMod(nSpec.strDRMSetNoMod), iFreqOffs(nSpec.iFreqOffs) {}
+	CSpecDRMRig(string sSet, int iNFrOff, string sModSet) :
+		strDRMSetMod(sModSet), strDRMSetNoMod(sSet), iFreqOffs(iNFrOff) {}
+
+	string		strDRMSetMod; /* Special DRM settings (modified) */
+	string		strDRMSetNoMod; /* Special DRM settings (not mod.) */
+	int			iFreqOffs; /* Frequency offset */
+};
+
+class CParameter;
 #ifdef HAVE_LIBHAMLIB
 /* Hamlib interface --------------------------------------------------------- */
 class CHamlib
+#ifdef USE_QT_GUI
+	: public QThread
+#endif
 {
 public:
-	enum ESMeterState {SS_VALID, SS_NOTVALID, SS_TIMEOUT};
-	enum EMight { C_CAN, C_MUST, C_CANT };
-
-	CHamlib();
+	CHamlib(CParameter& p);
 	virtual ~CHamlib();
 
-	struct SDrRigCaps
-	{
-		SDrRigCaps() : strManufacturer(""), strModelName(""),
-			eRigStatus(RIG_STATUS_ALPHA),bIsSpecRig(FALSE) {}
-		SDrRigCaps(const string& strNMan, const string& strNModN, rig_status_e eNSt, _BOOLEAN bNsp) :
-			strManufacturer(strNMan), strModelName(strNModN), eRigStatus(eNSt),
-			bIsSpecRig(bNsp), bHamlibDoesAudio(FALSE),
-			eOnboardAMDemod(C_CAN), eOnboardFMDemod(C_CANT)
-			{}
-		SDrRigCaps(const SDrRigCaps& nSDRC) : 
-			strManufacturer(nSDRC.strManufacturer),
-			strModelName(nSDRC.strModelName),
-			eRigStatus(nSDRC.eRigStatus), bIsSpecRig(nSDRC.bIsSpecRig),
-			bHamlibDoesAudio(nSDRC.bHamlibDoesAudio),
-			eOnboardAMDemod(nSDRC.eOnboardAMDemod), eOnboardFMDemod(nSDRC.eOnboardFMDemod)
-			{}
-
-		inline SDrRigCaps& operator=(const SDrRigCaps& cNew)
-		{
-			strManufacturer = cNew.strManufacturer;
-			strModelName = cNew.strModelName;
-			eRigStatus = cNew.eRigStatus;
-			bIsSpecRig = cNew.bIsSpecRig;
-			bHamlibDoesAudio = cNew.bHamlibDoesAudio;
-			eOnboardAMDemod = cNew.eOnboardAMDemod;
-			eOnboardFMDemod = cNew.eOnboardFMDemod;
-			return *this;
-		}
-
-		string			strManufacturer;
-		string			strModelName;
-		rig_status_e	eRigStatus;
-		_BOOLEAN		bIsSpecRig;
-		_BOOLEAN		bHamlibDoesAudio;
-		EMight			eOnboardAMDemod;
-		EMight			eOnboardFMDemod;
-	};
+	virtual void	run();
 
 	_BOOLEAN		SetFrequency(const int iFreqkHz);
-	ESMeterState	GetSMeter(_REAL& rCurSigStr);
+	void 			SetEnableSMeter(const _BOOLEAN bStatus);
+	_BOOLEAN		GetEnableSMeter();
 
 	/* backend selection */
-	void			GetRigList(map<rig_model_t,SDrRigCaps>&);
+	void			GetRigList(map<rig_model_t,CRigCaps>&);
 	void			SetHamlibModelID(const rig_model_t model);
 	rig_model_t		GetHamlibModelID() const {return iHamlibModelID;}
 
@@ -195,38 +220,18 @@ public:
 	void			SetEnableModRigSettings(const _BOOLEAN bNSM);
 	_BOOLEAN		GetEnableModRigSettings() const {return bModRigSettings;}
 	string			GetInfo() const;
-	void			GetRigCaps(rig_model_t id, SDrRigCaps& caps) { caps = CapsHamlibModels[id]; }
+	void			GetRigCaps(rig_model_t id, CRigCaps& caps) { caps = CapsHamlibModels[id]; }
 
 	void			RigSpecialParameters(rig_model_t id, const string& sSet, int iFrOff, const string& sModSet);
 	void			ConfigureRig(const string & strSet);
 	void			LoadSettings(CSettings& s);
 	void			SaveSettings(CSettings& s);
 
-	string				strSettings;
-	int					iFreqOffset;
+	string			strSettings;
+	int				iFreqOffset;
 	map<string,string> config;
 
 protected:
-	class CSpecDRMRig
-	{
-	public:
-		CSpecDRMRig() : strDRMSetMod(""), strDRMSetNoMod(""), iFreqOffs(0) {}
-		CSpecDRMRig(const CSpecDRMRig& nSpec) :
-			strDRMSetMod(nSpec.strDRMSetMod),
-			strDRMSetNoMod(nSpec.strDRMSetNoMod), iFreqOffs(nSpec.iFreqOffs) {}
-		CSpecDRMRig(string sSet, int iNFrOff, string sModSet) :
-			strDRMSetMod(sModSet), strDRMSetNoMod(sSet), iFreqOffs(iNFrOff) {}
-
-		string		strDRMSetMod; /* Special DRM settings (modified) */
-		string		strDRMSetNoMod; /* Special DRM settings (not mod.) */
-		int			iFreqOffs; /* Frequency offset */
-	};
-
-	map<rig_model_t,CSpecDRMRig>	SpecDRMRigs;
-	map<rig_model_t,SDrRigCaps>		CapsHamlibModels;
-
-	void EnableSMeter(const _BOOLEAN bStatus);
-
 	static int			PrintHamlibModelList(const struct rig_caps* caps, void* data);
 	void				SetRigModes();
 	void				SetRigLevels();
@@ -234,16 +239,19 @@ protected:
 	void				SetRigParams();
 	void				SetRigConfig();
 
+	CParameter&			Parameters;
 	RIG*				pRig;
 	_BOOLEAN			bSMeterIsSupported;
+	_BOOLEAN			bEnableSMeter;
 	_BOOLEAN			bModRigSettings;
 	rig_model_t			iHamlibModelID;
 	string				strHamlibConf;
+	map<rig_model_t,CSpecDRMRig>	SpecDRMRigs;
+	map<rig_model_t,CRigCaps>		CapsHamlibModels;
 	map<string,string> modes;
 	map<string,string> levels;
 	map<string,string> functions;
 	map<string,string> parameters;
-
 };
 #else
 struct CHamlib

@@ -54,8 +54,6 @@
 #include "DialogUtil.h"
 #include "DRMPlot.h"
 #include "../GlobalDefinitions.h"
-#include "../DrmReceiver.h"
-#include "../util/Settings.h"
 #include "../tables/TableAMSS.h"
 
 
@@ -65,6 +63,10 @@
 
 
 /* Classes ********************************************************************/
+class ReceiverSettingsDlg;
+class CDRMReceiver;
+class CSettings;
+
 /* AMSS dialog -------------------------------------------------------------- */
 class CAMSSDlg : public CAMSSDlgBase
 {
@@ -93,13 +95,14 @@ public slots:
 };
 
 
+
 /* Analog demodulation dialog ----------------------------------------------- */
 class AnalogDemDlg : public AnalogDemDlgBase
 {
 	Q_OBJECT
 
 public:
-	AnalogDemDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+	AnalogDemDlg(CDRMReceiver&, CSettings&, ReceiverSettingsDlg&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	/* dummy assignment operator to help MSVC8 */
 	AnalogDemDlg& operator=(const AnalogDemDlg&)
@@ -110,6 +113,7 @@ public:
 protected:
 	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
+	ReceiverSettingsDlg* pReceiverSettingsDlg;
 
 	QTimer			Timer;
 	QTimer			TimerPLLPhaseDial;
@@ -138,6 +142,7 @@ public slots:
 	void OnButtonWaterfall();
 	void OnButtonAMSS();
 	void OnSwitchToDRM();
+	void OnViewReceiverSettingsDlg();
 
 signals:
 	void SwitchToDRM();

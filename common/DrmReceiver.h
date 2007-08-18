@@ -84,6 +84,7 @@
 
 /* Classes ********************************************************************/
 class CSettings;
+class CHamlib;
 
 class CSplitFAC : public CSplitModul<_BINARY>
 {
@@ -152,6 +153,8 @@ public:
 	int		 				GetFrequency() { return iFreqkHz; }
 	void					SetIQRecording(_BOOLEAN);
 	void					SetRSIRecording(_BOOLEAN, const char);
+	void					SetHamlib(CHamlib*);
+	void					UpdateSoundIn();
 
 	/* Channel Estimation */
 	void SetFreqInt(CChannelEstimation::ETypeIntFreq eNewTy) 
@@ -242,10 +245,16 @@ public:
 	CUpstreamDI*			GetRSIIn() {return &upstreamRSCI;}
 	CDownstreamDI*			GetRSIOut() {return &downstreamRSCI;}
 	CChannelEstimation*		GetChannelEstimation() {return &ChannelEstimation;}
-#ifdef HAVE_LIBHAMLIB
-	CHamlib*				GetHamlib() {return &Hamlib;}
 	void					SetRigModel(int);
-#endif
+	int						GetRigModel();
+	void					GetRigList(map<int, CRigCaps>& rigs);
+	void					GetComPortList(map<string,string>& ports);
+	string					GetRigComPort();
+	_BOOLEAN				GetEnableModRigSettings();
+	void					SetEnableModRigSettings(_BOOLEAN);
+	void					SetRigFreqOffset(int);
+	void					SetRigComPort(const string&);
+	void					SetRigSettings(const string&);
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
 	CParameter*				GetParameters() {return pReceiverParam;}
@@ -383,9 +392,7 @@ protected:
 
 	_REAL					rInitResampleOffset;
 
-#ifdef HAVE_LIBHAMLIB
-	CHamlib					Hamlib;
-#endif
+	CHamlib*				pHamlib;
 
 	CVectorEx<_BINARY>		vecbiMostRecentSDC;
 	int						iFreqkHz;
@@ -395,28 +402,10 @@ protected:
 
 	/* Counter for unlocked frames, to keep generating RSCI even when unlocked */
 	int						iUnlockedCount;
-
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-	class CRigPoll : public QThread
-	{
-	public:
-		CRigPoll():pDRMRec(NULL),bQuit(FALSE){ }
-		virtual void	run();
-		virtual void	stop(){bQuit=TRUE;}
-		void 			SetReceiver(CDRMReceiver* prx) { pDRMRec = prx; }
-	protected:
-			CDRMReceiver* pDRMRec;
-			_BOOLEAN	bQuit;
-	} RigPoll;
-	friend class CRigPoll;
-#endif
-
-	_BOOLEAN				bEnableSMeter;
 	_BOOLEAN				bReadFromFile;
 	time_t					time_keeper;
 
 	CPlotManager PlotManager;
 };
-
 
 #endif // !defined(DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

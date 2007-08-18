@@ -181,13 +181,14 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
 	pMultiMediaDlg->LoadSettings(Settings);
 
-	/* Analog demodulation window */
-	pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", FALSE, Qt::WStyle_MinMax);
-
-	/* general settings window */
+	/* receiver settings window */
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 	pReceiverSettingsDlg = new ReceiverSettingsDlg(DRMReceiver, Settings, this, "", TRUE, Qt::WStyle_Dialog);
 	SetDialogCaption(pReceiverSettingsDlg, tr("Receiver settings"));
+
+	/* Analog demodulation window */
+	pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, *pReceiverSettingsDlg,
+						NULL, "Analog Demodulation", FALSE, Qt::WStyle_MinMax);
 
 	Parameters.Lock();
 
