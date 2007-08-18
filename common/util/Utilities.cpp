@@ -742,8 +742,16 @@ CHamlib::PrintHamlibModelList(const struct rig_caps *caps, void *data)
 	_BOOLEAN bIsSpec =
 		Hamlib.SpecDRMRigs.find(caps->rig_model) != Hamlib.SpecDRMRigs.end();
 
-	Hamlib.CapsHamlibModels[caps->rig_model] =
-		CRigCaps(caps->mfg_name, caps->model_name, caps->status, bIsSpec);
+	if(Hamlib.CapsHamlibModels.find(caps->rig_model) == Hamlib.CapsHamlibModels.end())
+		Hamlib.CapsHamlibModels[caps->rig_model] =
+			CRigCaps(caps->mfg_name, caps->model_name, caps->status, bIsSpec);
+	else
+	{
+		Hamlib.CapsHamlibModels[caps->rig_model].strManufacturer = caps->mfg_name;
+		Hamlib.CapsHamlibModels[caps->rig_model].strModelName = caps->model_name;
+		Hamlib.CapsHamlibModels[caps->rig_model].eRigStatus = caps->status;
+		Hamlib.CapsHamlibModels[caps->rig_model].bIsSpecRig = bIsSpec;
+	}
 
 	return 1;					/* !=0, we want them all! */
 }
