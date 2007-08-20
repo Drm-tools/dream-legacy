@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>354</width>
+            <width>350</width>
             <height>322</height>
         </rect>
     </property>
@@ -59,11 +59,11 @@
                         <name>name</name>
                         <cstring>Spacer10</cstring>
                     </property>
-                    <property stdset="1">
+                    <property>
                         <name>orientation</name>
                         <enum>Horizontal</enum>
                     </property>
-                    <property stdset="1">
+                    <property>
                         <name>sizeType</name>
                         <enum>Expanding</enum>
                     </property>
@@ -1033,11 +1033,11 @@
                                         <name>name</name>
                                         <cstring>Spacer10</cstring>
                                     </property>
-                                    <property stdset="1">
+                                    <property>
                                         <name>orientation</name>
                                         <enum>Horizontal</enum>
                                     </property>
-                                    <property stdset="1">
+                                    <property>
                                         <name>sizeType</name>
                                         <enum>Expanding</enum>
                                     </property>
@@ -1214,11 +1214,11 @@
                                         <name>name</name>
                                         <cstring>Spacer10_3</cstring>
                                     </property>
-                                    <property stdset="1">
+                                    <property>
                                         <name>orientation</name>
                                         <enum>Horizontal</enum>
                                     </property>
-                                    <property stdset="1">
+                                    <property>
                                         <name>sizeType</name>
                                         <enum>Expanding</enum>
                                     </property>
@@ -1307,11 +1307,11 @@
                                         <name>name</name>
                                         <cstring>Spacer6</cstring>
                                     </property>
-                                    <property stdset="1">
+                                    <property>
                                         <name>orientation</name>
                                         <enum>Horizontal</enum>
                                     </property>
-                                    <property stdset="1">
+                                    <property>
                                         <name>sizeType</name>
                                         <enum>Expanding</enum>
                                     </property>
@@ -1328,11 +1328,11 @@
                                         <name>name</name>
                                         <cstring>Spacer4</cstring>
                                     </property>
-                                    <property stdset="1">
+                                    <property>
                                         <name>orientation</name>
                                         <enum>Horizontal</enum>
                                     </property>
-                                    <property stdset="1">
+                                    <property>
                                         <name>sizeType</name>
                                         <enum>Expanding</enum>
                                     </property>
@@ -1349,11 +1349,11 @@
                                         <name>name</name>
                                         <cstring>Spacer5</cstring>
                                     </property>
-                                    <property stdset="1">
+                                    <property>
                                         <name>orientation</name>
                                         <enum>Horizontal</enum>
                                     </property>
-                                    <property stdset="1">
+                                    <property>
                                         <name>sizeType</name>
                                         <enum>Expanding</enum>
                                     </property>
@@ -1527,21 +1527,6 @@
                         <name>spacing</name>
                         <number>6</number>
                     </property>
-                    <widget row="0"  column="0"  rowspan="1"  colspan="2" >
-                        <class>QTable</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>TableRigConf</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>numRows</name>
-                            <number>3</number>
-                        </property>
-                        <property stdset="1">
-                            <name>numCols</name>
-                            <number>2</number>
-                        </property>
-                    </widget>
                     <widget row="1"  column="0" >
                         <class>QLabel</class>
                         <property stdset="1">
