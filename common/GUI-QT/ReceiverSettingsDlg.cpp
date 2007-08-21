@@ -654,7 +654,16 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)
 {
 	if(CheckBoxEnableRig->isChecked())
-		DRMReceiver.SetRigComPort(item->text(1).latin1());
+	{
+		string key = item->text(1).latin1();
+		map<string,string> ports;
+		DRMReceiver.GetComPortList(ports);
+		for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
+		{
+			if(p->first == key)
+				DRMReceiver.SetRigComPort(p->second);
+		}
+	}
 }
 
 void ReceiverSettingsDlg::OnConfigChanged(int row, int col)
