@@ -390,15 +390,6 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button2, 10);
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button3, 100);
 
-	DRMReceiver.GetParameters()->Lock(); 
-
-	/* Init with current setting in log file */
-	iTunedFrequency = DRMReceiver.GetParameters()->GetFrequency();
-	bFrequencySetFromReceiver = TRUE;
-	QwtCounterFrequency->setValue(iTunedFrequency);
-
-	DRMReceiver.GetParameters()->Unlock(); 
-
 	/* Init UTC time shown with a label control */
 	SetUTCTimeLabel();
 
@@ -716,6 +707,13 @@ void StationsDlg::hideEvent(QHideEvent*)
 
 void StationsDlg::showEvent(QShowEvent*)
 {
+		cout << "bFrequencySetFromReceiver " << bFrequencySetFromReceiver << endl;
+
+	/* Init with current setting in log file */
+	iTunedFrequency = DRMReceiver.GetFrequency();
+	bFrequencySetFromReceiver = TRUE;
+	QwtCounterFrequency->setValue(iTunedFrequency);
+
 	/* Load the schedule if necessary */
 	if (DRMSchedule.GetStationNumber() == 0)
 		LoadSchedule(DRMSchedule.GetSchedMode());
@@ -997,6 +995,7 @@ void StationsDlg::SetStationsView()
 
 void StationsDlg::OnFreqCntNewValue(double dVal)
 {
+		cout << "StationsDlg::OnFreqCntNewValue bFrequencySetFromReceiver " << bFrequencySetFromReceiver << endl;
 	/* Set frequency to front-end */
 	if(bFrequencySetFromReceiver)
 	{

@@ -64,7 +64,7 @@ iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE), bRestartFlag(FALSE),
 rInitResampleOffset((_REAL) 0.0),
 pHamlib(NULL),
 iFreqkHz(0),
-bReadFromFile(FALSE), time_keeper(0)
+time_keeper(0)
 {
 	pReceiverParam = new CParameter(this);
 	downstreamRSCI.SetReceiver(this);
@@ -984,8 +984,11 @@ CDRMReceiver::SetReadDRMFromFile(const string strNFN)
 			ReceiveData.SetInChanSel(CReceiveData::CS_IQ_POS_ZERO);
 		else
 			ReceiveData.SetInChanSel(CReceiveData::CS_MIX_CHAN);
-		bReadFromFile = TRUE;
 	}
+	ReceiveData.SetSoundInterface(pSoundInInterface);
+	ReceiveData.SetInitFlag();
+	OnboardDecoder.SetSoundInterface(pSoundInInterface);
+	OnboardDecoder.SetInitFlag();
 }
 
 void
@@ -1299,44 +1302,42 @@ CDRMReceiver::SetRSIRecording(_BOOLEAN bOn, const char cProfile)
 
 void CDRMReceiver::UpdateSoundIn()
 {
-	if(pHamlib == NULL)
-		return;
+	int iDev = pSoundInInterface->GetDev();
+	delete pSoundInInterface;
+	pSoundInInterface = NULL;
 #ifdef HAVE_LIBHAMLIB
 # ifdef __linux__
-	rig_model_t	id = pHamlib->GetHamlibModelID();
-	CRigCaps caps;
-	pHamlib->GetRigCaps(id, caps);
-	cout << "caps.bHamlibDoesAudio " << caps.bHamlibDoesAudio << endl;
-	if(caps.bHamlibDoesAudio)
+	if(pHamlib)
 	{
-		if(pSoundInInterface)
-			delete pSoundInInterface;
-		string shm_path = "/dreamg3xxif";
-    	CShmSoundIn* ShmSoundIn = new CShmSoundIn;
-		pSoundInInterface = ShmSoundIn;
-		pSoundInInterface->SetDev(0);
-		ShmSoundIn->SetShmPath(shm_path);
-		ShmSoundIn->SetName(caps.strModelName);
-		ShmSoundIn->SetShmChannels(1);
-		ShmSoundIn->SetWantedChannels(2);
-		pHamlib->config["if_path"] = shm_path;
+		CRigCaps caps;
+		rig_model_t	id = pHamlib->GetHamlibModelID();
+		pHamlib->GetRigCaps(id, caps);
+		if(caps.bHamlibDoesAudio)
+		{
+    		CShmSoundIn* ShmSoundIn = new CShmSoundIn;
+			string shm_path = pHamlib->config["if_path"];
+			ShmSoundIn->SetShmPath(shm_path);
+			ShmSoundIn->SetName(caps.strModelName);
+			ShmSoundIn->SetShmChannels(1);
+			ShmSoundIn->SetWantedChannels(2);
+			iDev = 0;
+			pSoundInInterface = ShmSoundIn;
+		}
 	}
-	else
-	{
-	/* TODO */
-	}
+# endif
+#endif
+	if(pSoundInInterface==NULL)
+		pSoundInInterface = new CSoundIn;
+	pSoundInInterface->SetDev(iDev);
 	ReceiveData.SetSoundInterface(pSoundInInterface);
 	ReceiveData.SetInitFlag();
 	OnboardDecoder.SetSoundInterface(pSoundInInterface);
 	OnboardDecoder.SetInitFlag();
-# endif
-#endif
 }
 
 void CDRMReceiver::SetHamlib(CHamlib* p)
 {
 	pHamlib = p;
-	UpdateSoundIn();
 }
 
 void CDRMReceiver::SetRigModel(int iID)
@@ -1609,22 +1610,15 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	/* Load user's saved filter bandwidth for the demodulation type. */
 	AMDemodulation.SetDemodTypeAndBPF(Parameters.eDemodType, Parameters.iBw[Parameters.eDemodType]);
 
+
 	/* upstream RSCI */
 	str = s.Get("command", "rsiin");
 	if(str == "")
 	{
-        if(strInFile == "")
-        {
-            int iDev = pSoundInInterface->GetDev();
-            delete pSoundInInterface;
-            pSoundInInterface = new CSoundIn;
-            pSoundInInterface->SetDev(iDev);
-        }
-        else
-        {
-            SetReadDRMFromFile(strInFile);
-        }
-		ReceiveData.SetSoundInterface(pSoundInInterface);
+		if(strInFile != "")
+			SetReadDRMFromFile(strInFile);
+		else
+			UpdateSoundIn();
 	}
 	else
 	{
@@ -1728,12 +1722,6 @@ CDRMReceiver::LoadSettings(CSettings& s)
 		SetReceiverMode(RM_AM);
 	//else - leave it as initialised (ie. DRM)
 
-
-	//andrewm - moved to _after_ hamlib initialisation
-		/* Wanted RF Frequency file */
-	SetFrequency(s.Get("Receiver", "frequency", 0));
-
-
 	/* Front-end - combine into Hamlib? */
 	CFrontEndParameters& FrontEndParameters = Parameters.FrontEndParameters;
 
@@ -1752,6 +1740,8 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	FrontEndParameters.rIFCentreFreq = s.Get("FrontEnd", "ifcentrefrequency", SOUNDCRD_SAMPLE_RATE / 4);
 
+	/* Wanted RF Frequency file */
+	SetFrequency(s.Get("Receiver", "frequency", 0));
 }
 
 void

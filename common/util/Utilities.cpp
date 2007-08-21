@@ -469,6 +469,7 @@ modes(), levels(), functions(), parameters()
 						 "l_ATT=0,l_AGC=3");
 # ifdef __linux
 	CapsHamlibModels[RIG_MODEL_G313].bHamlibDoesAudio = TRUE;
+	config["if_path"] = "/dreamg3xxif";
 # endif
 #endif
 
@@ -478,6 +479,7 @@ modes(), levels(), functions(), parameters()
 						 "l_ATT=0,l_AGC=3");
 # ifdef __linux
 	CapsHamlibModels[RIG_MODEL_G315].bHamlibDoesAudio = TRUE;
+	config["if_path"] = "/dreamg3xxif";
 # endif
 	CapsHamlibModels[RIG_MODEL_G315].eOnboardFMDemod = C_MUST;
 #endif

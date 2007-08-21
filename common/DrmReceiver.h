@@ -402,7 +402,6 @@ protected:
 
 	/* Counter for unlocked frames, to keep generating RSCI even when unlocked */
 	int						iUnlockedCount;
-	_BOOLEAN				bReadFromFile;
 	time_t					time_keeper;
 
 	CPlotManager PlotManager;

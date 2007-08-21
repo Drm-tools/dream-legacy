@@ -115,13 +115,17 @@ main(int argc, char **argv)
 			   routine since we cannot 100% assume that the working thread is
 			   ready before the GUI thread */
 
-			DRMReceiver.LoadSettings(Settings);
+			/* initialise Hamlib first, so that when the Receiver is initialised it can
+			 * tune the front end
+			 */
 
 #ifdef HAVE_LIBHAMLIB
 			CHamlib Hamlib(*DRMReceiver.GetParameters());
 			Hamlib.LoadSettings(Settings);
 			DRMReceiver.SetHamlib(&Hamlib);
 #endif
+			DRMReceiver.LoadSettings(Settings);
+
 			if (Settings.Get("AM Dialog", "visible", false))
 				DRMReceiver.SetReceiverMode(RM_AM);
 			else
