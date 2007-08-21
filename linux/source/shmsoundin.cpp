@@ -148,6 +148,8 @@ CShmSoundIn::Read(vector<_SAMPLE>& psData)
 void
 CShmSoundIn::Close()
 {
+	if(shmid == -1)
+		return;
 	struct stat s;
 	fstat(shmid, &s);
 	munmap(shm, s.st_size);

@@ -1344,9 +1344,15 @@ void CDRMReceiver::SetRigModel(int iID)
 {
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
-		pHamlib->SetHamlibModelID(iID);
+	{
+		rig_model_t	id = pHamlib->GetHamlibModelID();
+		if(id!=iID)
+		{
+			pHamlib->SetHamlibModelID(iID);
+			UpdateSoundIn();
+		}
+	}
 #endif
-	UpdateSoundIn();
 }
 
 int CDRMReceiver::GetRigModel()
