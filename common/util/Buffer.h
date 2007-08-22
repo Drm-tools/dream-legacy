@@ -267,13 +267,15 @@ template<class TData> void CCyclicBuffer<TData>::Put(const int iOfferedSize)
 	if ((iAvailSpace < 0) || ((iAvailSpace == 0) && (iBufferState == BS_EMPTY)))
 		iAvailSpace += this->iBufferSize;
 
-#ifdef _DEBUG_
 	if (iAvailSpace < iOfferedSize)
 	{
+		#ifdef _DEBUG_
 		DebugError("CyclicBuffer Put()", "Available space",
 			iAvailSpace, "Offered size", iOfferedSize);
+		#endif
+		/* Re-start the buffer pointers. Assume that the buffer itself is big enough. */
+		Clear();
 	}
-#endif
 
 
 	/* Put data ------------------------------------------------------------- */

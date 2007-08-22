@@ -380,7 +380,7 @@ void AnalogDemDlg::OnTimer()
 		}
 		else
 		{
-			CheckBoxOnBoardDemod->setEnabled(false);
+			//CheckBoxOnBoardDemod->setEnabled(false);
 		}
 		break;
 	case RM_NONE:

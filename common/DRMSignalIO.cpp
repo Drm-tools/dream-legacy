@@ -825,7 +825,6 @@ void COnboardDecoder::ProcessDataInternal(CParameter& Parameter)
 {
 	if(pSound == NULL)
 		return;
-
 	vector<_SAMPLE> s(iOutputBlockSize);
 	_BOOLEAN bBad = pSound->Read(s);
 	for(int i=0; i<iOutputBlockSize; i++)
@@ -847,6 +846,9 @@ void COnboardDecoder::InitInternal(CParameter& Parameter)
 	const int iNumInSamplesMono = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
 										 (_REAL) 0.05 /* 50 ms (arbitrary) */ );
 	iOutputBlockSize = 2*iNumInSamplesMono;
+
+	iMaxOutputBlockSize = 2 * (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
+										 (_REAL) 0.4 /* 400 ms (not-so-arbitrary) */ );
 
 	pSound->Init(iOutputBlockSize);
 }

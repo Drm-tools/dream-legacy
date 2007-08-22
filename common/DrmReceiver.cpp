@@ -118,6 +118,7 @@ void CDRMReceiver::SetUseHWDemod(_BOOLEAN bUse)
 		InputResample.SetInitFlag();
 		AMSSExtractBits.SetInitFlag();
 		AMSSDecode.SetInitFlag();
+		ReceiveData.SetInitFlag();
 	}
 }
 
@@ -130,7 +131,7 @@ void
 CDRMReceiver::SetAMDemodType(EDemodType eNew)
 {
 	CParameter & Parameters = *pReceiverParam;
-	
+
 	Parameters.eDemodType = eNew;
 	AMDemodulation.SetDemodTypeAndBPF(Parameters.eDemodType, Parameters.iBw[eNew]);
 }
@@ -1045,6 +1046,7 @@ CDRMReceiver::InitsForAllModules()
 	SplitAudio.SetInitFlag();
 	AudioSourceEncoder.SetInitFlag();
 	AMDemodulation.SetInitFlag();
+	OnboardDecoder.SetSoundInterface(pSoundInInterface);
 	OnboardDecoder.SetInitFlag();
 
 	SplitForIQRecord.SetInitFlag();
@@ -1112,6 +1114,7 @@ CDRMReceiver::InitsForWaveMode()
 	FreqSyncAcq.SetInitFlag();
 	Split.SetInitFlag();
 	AMDemodulation.SetInitFlag();
+	ReceiveData.SetSoundInterface(pSoundInInterface);
 	OnboardDecoder.SetInitFlag();
 	AudioSourceEncoder.SetInitFlag();
 
@@ -1349,7 +1352,8 @@ void CDRMReceiver::SetRigModel(int iID)
 		if(id!=iID)
 		{
 			pHamlib->SetHamlibModelID(iID);
-			UpdateSoundIn();
+		    if(iID!=0)
+                UpdateSoundIn();
 		}
 	}
 #endif

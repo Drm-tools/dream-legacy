@@ -131,6 +131,9 @@ CParameter::CParameter(CDRMReceiver *pRx):
 	if(pDRMRec)
 		eReceiverMode = pDRMRec->GetReceiverMode();
 	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
+
+	for (int i=0; i<DT_SIZE; i++)
+		iBw[i] = 10000; // ???
 }
 
 CParameter::~CParameter()
@@ -331,6 +334,7 @@ CParameter& CParameter::operator=(const CParameter& p)
 	eSpectOccup = p.eSpectOccup;
 	LastAudioService = p.LastAudioService;
 	LastDataService = p.LastDataService;
+
 	return *this;
 }
 
