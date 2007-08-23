@@ -234,7 +234,6 @@ void CDRMTransmitter::Start()
 		MDIIn.SetOrigin(strMDIinAddr);
 		MDIIn.SetInitFlag();
 		DecodeMDI.SetInitFlag();
-		//strMDIinAddr="";
 	}
 	else
 	{
@@ -246,7 +245,6 @@ void CDRMTransmitter::Start()
 		/* set the output address */
 		MDIOut.AddSubscriber(strMDIoutAddr, "", 'M');
 		//MDIOut.SetInitFlag();
-		//strMDIoutAddr="";
 	}
 
 	/* Set run flag */
@@ -254,17 +252,11 @@ void CDRMTransmitter::Start()
 
 	try
 	{
-/*
-	The hand over of data is done via an intermediate-buffer. The calling
-	convention is always "input-buffer, output-buffer". Additional, the
-	DRM-parameters are fed to the function
-*/
 		while (TransmParam.bRunThread)
 		{
 			if(MDIIn.GetInEnabled())
 			{
-				MDIPacketBuf.Init(16384);
-				//MDIPacketBuf.Clear();
+				MDIPacketBuf.Clear();
 				MDIIn.ReadData(TransmParam, MDIPacketBuf);
 				if(MDIPacketBuf.GetFillLevel()>0)
 				{

@@ -26,7 +26,8 @@ macx {
 unix {
 	LIBS 		+= -lsndfile -lpcap
 	LIBS 		+= -lz -lqwt -lfhgjournaline -lfaac -lfaad -lrfftw -lfftw 
-	SOURCES		+= linux/source/Pacer.cpp
+	SOURCES		+= linux/source/Pacer.cpp linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c
+	HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
 	DEFINES		+= HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H 
 	DEFINES		+= HAVE_STRINGS_H HAVE_STRING_H STDC_HEADERS
 	DEFINES		+= HAVE_INTTYPES_H HAVE_STDINT_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H HAVE_UNISTD_H
@@ -101,6 +102,8 @@ common/DrmReceiver.h   \
 common/DRMSignalIO.h   \
 common/DrmSimulation.h   \
 common/DrmTransmitter.h   \
+common/DrmEncoder.h   \
+common/DrmModulator.h   \
 common/FAC/FAC.h   \
 common/GlobalDefinitions.h   \
 common/GPSData.h   \
@@ -110,11 +113,12 @@ common/GUI-QT/DialogUtil.h   \
 common/GUI-QT/DRMPlot.h   \
 common/GUI-QT/EPGDlg.h   \
 common/GUI-QT/fdrmdialog.h   \
-common/GUI-QT/GeneralSettingsDlg.h   \
 common/GUI-QT/LiveScheduleDlg.h   \
 common/GUI-QT/MultColorLED.h   \
 common/GUI-QT/MultimediaDlg.h   \
 common/GUI-QT/MultSettingsDlg.h   \
+common/GUI-QT/ReceiverSettingsDlg.h \
+common/GUI-QT/Loghelper.h \
 common/GUI-QT/StationsDlg.h   \
 common/GUI-QT/systemevalDlg.h   \
 common/GUI-QT/TransmDlg.h   \
@@ -215,6 +219,8 @@ common/DrmReceiver.cpp   \
 common/DRMSignalIO.cpp   \
 common/DrmSimulation.cpp   \
 common/DrmTransmitter.cpp   \
+common/DrmEncoder.cpp   \
+common/DrmModulator.cpp   \
 common/FAC/FAC.cpp   \
 common/GPSData.cpp   \
 common/GPSReceiver.cpp   \
@@ -223,12 +229,13 @@ common/GUI-QT/DialogUtil.cpp   \
 common/GUI-QT/DRMPlot.cpp   \
 common/GUI-QT/EPGDlg.cpp   \
 common/GUI-QT/fdrmdialog.cpp   \
-common/GUI-QT/GeneralSettingsDlg.cpp   \
 common/GUI-QT/LiveScheduleDlg.cpp   \
 common/GUI-QT/main.cpp   \
 common/GUI-QT/MultColorLED.cpp   \
 common/GUI-QT/MultimediaDlg.cpp   \
 common/GUI-QT/MultSettingsDlg.cpp   \
+common/GUI-QT/ReceiverSettingsDlg.cpp \
+common/GUI-QT/Loghelper.cpp \
 common/GUI-QT/StationsDlg.cpp   \
 common/GUI-QT/systemevalDlg.cpp   \
 common/GUI-QT/TransmDlg.cpp   \

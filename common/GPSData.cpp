@@ -128,7 +128,13 @@ void
 CGPSData::asDM(string& pos, double d, char n, char p) const
 {
 	stringstream s;
-	s << abs(int(d)) << '\xb0' << ExtractMinutes(abs(d)) << "'" << ((d < 0.0)?n:p);
+	/* don't use abs, its seems to be int only on MSVC6 */
+	double pd;
+	if(d<0)
+		pd = 0.0 - d;
+	else
+		pd = d;
+	s << int(pd) << '\xb0' << ExtractMinutes(pd) << "'" << ((d < 0.0)?n:p);
 	pos = s.str();
 }
 

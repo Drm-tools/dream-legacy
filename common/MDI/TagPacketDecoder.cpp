@@ -112,7 +112,6 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	if (iSeqNumber > 0xFFFF)
 		iSeqNumber = 0;
 	*/
-
 	/* AR: AF protocol Revision -
 	   a field combining the CF, MAJ and MIN fields */
 	/* CF: CRC Flag, 0 if the CRC field is not used (CRC value shall be
