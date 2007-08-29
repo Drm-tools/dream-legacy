@@ -42,6 +42,10 @@ public:
 	CVector() : iBitArrayCounter(0), iVectorSize(0) {pData = this->begin();}
 	CVector(const int iNeSi) {Init(iNeSi);}
 	CVector(const int iNeSi, const TData tInVa) {Init(iNeSi, tInVa);}
+	CVector(const CVector<TData> &vecI, const int iStartIndex, const int iLength) : 
+		vector<TData>(vecI.pData+vecI.iBitArrayCounter, vecI.pData+(vecI.iBitArrayCounter+iLength)), 
+			iBitArrayCounter(0) 
+		{iVectorSize = this->size(); pData = this->begin();}
 	virtual	~CVector() {}
 
 	/* Copy constructor: The order of the initialization list must not be
@@ -109,6 +113,7 @@ public:
 	/* Bit operation functions */
 	void		Enqueue(uint32_t iInformation, const int iNumOfBits);
 	uint32_t	Separate(const int iNumOfBits);
+	CVector<TData> SeparateVector(const int iNumOfBits);
 	void		ResetBitAccess() {iBitArrayCounter = 0;}
 
 protected:
@@ -195,6 +200,21 @@ template<class TData> uint32_t CVector<TData>::Separate(const int iNumOfBits)
 	iBitArrayCounter += iNumOfBits;
 
 	return iInformation;
+}
+
+template<class TData> CVector<TData> CVector<TData>::SeparateVector(const int iNumOfBits)
+{
+	/* Read iNumOfBits bits, advancing the pointer, and return them in a new vector */
+	/* Check, if current position plus new bit-size is smaller than the maximum
+	   length of the bit vector. Error code: return an empty vector */
+	if (iNumOfBits == 0)
+		return CVector<TData>();
+	if (iBitArrayCounter + iNumOfBits > iVectorSize)
+		return CVector<TData>();
+
+	CVector<TData> v(*this, iBitArrayCounter, iNumOfBits);
+	iBitArrayCounter += iNumOfBits;
+	return v;
 }
 
 

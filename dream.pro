@@ -192,6 +192,7 @@ common/util/Pacer.h   \
 common/util/Reassemble.h   \
 common/util/Settings.h   \
 common/util/Utilities.h   \
+common/util/Hamlib.h   \
 common/util/Vector.h   \
 common/Version.h
 
@@ -297,4 +298,5 @@ common/util/LogPrint.cpp   \
 common/util/Reassemble.cpp   \
 common/util/Settings.cpp   \
 common/util/Utilities.cpp   \
+common/util/Hamlib.cpp   \
 common/Version.cpp

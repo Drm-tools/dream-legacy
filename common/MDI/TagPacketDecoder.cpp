@@ -97,7 +97,6 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 
 	/* LEN: length of the payload, in bytes (4 bytes long -> 32 bits) */
 	const int iPayLLen = (int) vecbiAFPkt.Separate(32);
-
 	/* SEQ: sequence number. Each AF Packet shall increment the sequence number
 	   by one for each packet sent, regardless of content. There shall be no
 	   requirement that the first packet received shall have a specific value.
@@ -173,24 +172,20 @@ int CTagPacketDecoder::DecodeTag(CVector<_BINARY>& vecbiTag)
 	/* Get tag data length (4 bytes = 32 bits) */
 	const int iLenDataBits = vecbiTag.Separate(32);
 
+	/* Read the TAG payload. Even if the payload is not the expected length the tag packet decoding won't get out of sync */
+	CVector<_BINARY> vecbiTagItemPayload = vecbiTag.SeparateVector(iLenDataBits);
+
 	/* Check the tag name against each tag decoder in the vector of tag decoders */
 	_BOOLEAN bTagWasDec = FALSE;
 	for (i=0; i<vecpTagItemDecoders.Size(); i++)
 	{
 		if (strTagName.compare(vecpTagItemDecoders[i]->GetTagName()) == 0) // it's this tag
 		{
-			vecpTagItemDecoders[i]->DecodeTag(vecbiTag, iLenDataBits);
+			vecpTagItemDecoders[i]->DecodeTag(vecbiTagItemPayload, iLenDataBits);
 			bTagWasDec = TRUE;
 		}
 	}
 
-	/* Take care of tags which are not supported */
-	if (bTagWasDec == FALSE)
-	{
-		/* Take bits from tag vector */
-		for (i = 0; i < iLenDataBits; i++)
-			vecbiTag.Separate(1);
-	}
 
 	/* Return number of consumed bytes. This number is the actual body plus two
 	   times for bytes for the header = 8 bytes */

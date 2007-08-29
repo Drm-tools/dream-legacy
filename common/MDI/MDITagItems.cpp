@@ -763,30 +763,40 @@ CTagItemGeneratorProfile::GetProfiles()
 }
 
 void
-CTagItemGeneratorRxDemodMode::GenTag(ERecMode eMode)	// rdmo
+CTagItemGeneratorRxDemodMode::GenTag(ERecMode eMode, EDemodType eType)	// rdmo
 {
 	PrepareTag(4 * SIZEOF__BYTE);
-	switch (eMode)
+	string s;
+	if (eMode==RM_DRM)
+		s="drm_";
+	else
 	{
-	case RM_DRM:
-		Enqueue((uint32_t) 'd', SIZEOF__BYTE);
-		Enqueue((uint32_t) 'r', SIZEOF__BYTE);
-		Enqueue((uint32_t) 'm', SIZEOF__BYTE);
-		Enqueue((uint32_t) '_', SIZEOF__BYTE);
-		break;
-	case RM_AM:
-		Enqueue((uint32_t) 'a', SIZEOF__BYTE);
-		Enqueue((uint32_t) 'm', SIZEOF__BYTE);
-		Enqueue((uint32_t) '_', SIZEOF__BYTE);
-		Enqueue((uint32_t) '_', SIZEOF__BYTE);
-		break;
-	default:
-		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
-		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
-		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
-		Enqueue((uint32_t) ' ', SIZEOF__BYTE);
-		break;
+		switch (eType)
+		{
+		case DT_AM:
+			s="am__";
+			break;
+		case DT_USB:
+			s="usb_";
+			break;
+		case DT_LSB:
+			s="lsb_";
+			break;
+		case DT_NBFM:
+			s="nbfm";
+			break;
+		case DT_WBFM:
+			s="wbfm";
+			break;
+		default:
+			s="    ";
+			break;
+		}
 	}
+
+	for (int i=0; i<4; i++)
+		Enqueue((uint32_t) s[i], SIZEOF__BYTE);
+
 
 }
 
@@ -1161,6 +1171,12 @@ CTagItemGeneratorGPS::GetProfiles()
 void
 CTagItemGeneratorPowerSpectralDensity::GenTag(CParameter & Parameter)
 {
+	if (Parameter.vecrPSD.Size() == 0)
+	{
+		GenEmptyTag();
+		return;
+	}
+
 	PrepareTag(Parameter.vecrPSD.Size() * SIZEOF__BYTE);
 
 	for (int i = 0; i < Parameter.vecrPSD.Size(); i++)
@@ -1221,7 +1237,7 @@ CTagItemGeneratorPilots::GetTagName()
 string
 CTagItemGeneratorPilots::GetProfiles()
 {
-	return "AD";
+	return "D";
 }
 
 void

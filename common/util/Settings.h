@@ -57,7 +57,7 @@
 #define MAX_FREQ_AQC_SE_WIN_CEN		(SOUNDCRD_SAMPLE_RATE / 2)
 
 /* Maximum carrier frequency  */
-# define MAX_RF_FREQ				30000 /* kHz */
+# define MAX_RF_FREQ				120000 /* kHz */
 
 #ifdef USE_QT_GUI
 /* Maximum minutes for delayed log file start */
@@ -168,10 +168,16 @@ public:
 	void Get(const string& section, CWinGeom&) const;
 	void Put(const string& section, const CWinGeom&);
 
+	void Get(const string& key, INISection& section) const
+	{
+		INIFile::const_iterator i = ini.find(key);
+		if(i!=ini.end())
+			section = i->second;
+	}
+
 	string UsageArguments(char** argv);
 
 protected:
-
 
 	void ParseArguments(int argc, char** argv);
 	_BOOLEAN GetFlagArgument(int argc, char** argv, int& i, string strShortOpt,

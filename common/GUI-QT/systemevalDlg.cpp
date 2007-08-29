@@ -30,6 +30,7 @@
 #include "../GPSReceiver.h"
 #include <qmessagebox.h>
 #include <qgroupbox.h>
+#include <qvalidator.h>
 
 /* Implementation *************************************************************/
 systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
@@ -37,8 +38,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	systemevalDlgBase(parent, name, modal, f),
 	DRMReceiver(NDRMR), Settings(NSettings),
 	Timer(), pGPSReceiver(NULL),
-	iTunedFrequency(-1), bFrequencyEditInProgress(FALSE), bFrequencySetFromReceiver(FALSE),
-	timeEditStarted()
+	iTunedFrequency(-1), bFrequencySetFromReceiver(FALSE)
 {
 	/* Get window geometry data and apply it */
 	CWinGeom s;
@@ -340,6 +340,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect( EdtFrequency, SIGNAL(textChanged(const QString&)),
 		this, SLOT(OnLineEditFrequencyChanged(const QString&)) );
 
+	EdtFrequency->setValidator(new QIntValidator(100, 120000, EdtFrequency));
 }
 
 systemevalDlg::~systemevalDlg()
@@ -356,8 +357,7 @@ void systemevalDlg::OnLineEditFrequencyChanged(const QString& str)
 	}
 	else
 	{
-		timeEditStarted.start();
-		bFrequencyEditInProgress = TRUE;
+		DRMReceiver.SetFrequency(str.toInt());
 	}
 }
 
@@ -373,12 +373,6 @@ void systemevalDlg::UpdateControls()
 		iTunedFrequency = iFrequency;
 		EdtFrequency->setText(QString::number(iFrequency));
 		bFrequencySetFromReceiver = TRUE;
-	}
-	int iDisplayedFrequency = EdtFrequency->text().toInt();
-	if (iFrequency != iDisplayedFrequency)
-	{
-		if(timeEditStarted.elapsed()>2000)
-			DRMReceiver.SetFrequency(iDisplayedFrequency);
 	}
 }
 

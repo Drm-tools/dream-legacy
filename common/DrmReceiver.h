@@ -38,7 +38,7 @@
 #include "MDI/MDIDecode.h"
 #include "Parameter.h"
 #include "util/Buffer.h"
-#include "util/Utilities.h"
+#include "util/Hamlib.h"
 #include "DataIO.h"
 #include "OFDM.h"
 #include "DRMSignalIO.h"
@@ -154,7 +154,9 @@ public:
 	void					SetIQRecording(_BOOLEAN);
 	void					SetRSIRecording(_BOOLEAN, const char);
 	void					SetHamlib(CHamlib*);
+
 	void					UpdateSoundIn();
+	void					SetReadPCMFromFile(const string strNFN);
 
 	/* Channel Estimation */
 	void SetFreqInt(CChannelEstimation::ETypeIntFreq eNewTy) 
@@ -254,7 +256,6 @@ public:
 	void					SetEnableModRigSettings(_BOOLEAN);
 	void					SetRigFreqOffset(int);
 	void					SetRigComPort(const string&);
-	void					SetRigSettings(const string&);
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
 	CParameter*				GetParameters() {return pReceiverParam;}
@@ -277,11 +278,7 @@ protected:
 	void					SetInStartMode();
 	void					SetInTrackingMode();
 	void					SetInTrackingModeDelayed();
-
-	void					SetReadDRMFromFile(const string strNFN);
-
 	void					InitsForAllModules();
-
 	void					Run();
 	void					DemodulateDRM(_BOOLEAN&);
 	void					DecodeDRM(_BOOLEAN&, _BOOLEAN&);
@@ -405,6 +402,10 @@ protected:
 	time_t					time_keeper;
 
 	CPlotManager PlotManager;
+	enum { SoundCard, Dummy, Shm, File }
+							pcmInput;
+	enum { onBoard, inSoftware }
+							demodulation;
 };
 
 #endif // !defined(DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

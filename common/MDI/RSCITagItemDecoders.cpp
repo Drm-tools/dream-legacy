@@ -51,7 +51,7 @@ _REAL CTagItemDecoderRSI::decodeDb(CVector<_BINARY>& vecbiTag)
 
 void CTagItemDecoderRdbv::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
-	if (iLen != 16)
+	if (iLen < 16)
 		return;
 	_REAL rSigStr = decodeDb(vecbiTag);
  	 pParameter->SigStrstat.addSample(rSigStr);
@@ -373,8 +373,23 @@ void CTagItemDecoderCdmo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 	if(s == "drm_")
 		pDRMReceiver->SetReceiverMode(RM_DRM);
-	if(s == "am__")
-		pDRMReceiver->SetReceiverMode(RM_AM);
+	else 
+	{
+		pDRMReceiver->SetReceiverMode(RM_AM); // AM means "analogue" not "amplitude"
+
+		if(s == "am__")
+			pDRMReceiver->GetParameters()->eDemodType = DT_AM;
+		else if (s == "lsb_")
+			pDRMReceiver->GetParameters()->eDemodType = DT_LSB;
+		else if (s == "usb_")
+			pDRMReceiver->GetParameters()->eDemodType = DT_USB;
+		else if (s == "wbfm")
+			pDRMReceiver->GetParameters()->eDemodType = DT_WBFM;
+		else if (s == "nbfm")
+			pDRMReceiver->GetParameters()->eDemodType = DT_NBFM;
+		// synchronous AM?
+	}
+
 }
 
 void CTagItemDecoderCrec::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)

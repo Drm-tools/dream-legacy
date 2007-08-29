@@ -64,7 +64,9 @@ iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE), bRestartFlag(FALSE),
 rInitResampleOffset((_REAL) 0.0),
 pHamlib(NULL),
 iFreqkHz(0),
-time_keeper(0)
+time_keeper(0),
+pcmInput(Dummy),
+demodulation(onBoard)
 {
 	pReceiverParam = new CParameter(this);
 	downstreamRSCI.SetReceiver(this);
@@ -655,6 +657,8 @@ CDRMReceiver::InitReceiverMode()
 				pAMParam->sSerialNumber = pDRMParam->sSerialNumber;
 				pAMParam->sReceiverID  = pDRMParam->sReceiverID;
 				pAMParam->sDataFilesDirectory = pDRMParam->sDataFilesDirectory;
+				pAMParam->SetFrequency(pDRMParam->GetFrequency());
+				pAMParam->bUseHWDemod = pDRMParam->bUseHWDemod;
 				break;
 			case RM_NONE:
 				/* Start from cold in AM mode - no special action */
@@ -712,6 +716,8 @@ CDRMReceiver::InitReceiverMode()
 				pDRMParam->sSerialNumber = pAMParam->sSerialNumber;
 				pDRMParam->sReceiverID  = pAMParam->sReceiverID;
 				pDRMParam->sDataFilesDirectory = pAMParam->sDataFilesDirectory;
+				pDRMParam->SetFrequency(pAMParam->GetFrequency());
+				pDRMParam->bUseHWDemod = pAMParam->bUseHWDemod;
 				break;
 			case RM_DRM:
 				/* DRM to DRM switch - re-acquisition requested - no special action */
@@ -950,46 +956,6 @@ CDRMReceiver::SetInTrackingModeDelayed()
 	   the channel estimation has initialized its estimation */
 	TimeSync.StopTimingAcqu();
 	ChannelEstimation.GetTimeSyncTrack()->StartTracking();
-}
-
-void
-CDRMReceiver::SetReadDRMFromFile(const string strNFN)
-{
-	// Identify the type of file
-
-	string ext;
-	size_t p = strNFN.rfind('.');
-	if (p != string::npos)
-		ext = strNFN.substr(p + 1);
-
-	if (ext.substr(0,2) == "RS" || ext.substr(0,2) == "rs" || ext.substr(0,4) == "pcap")
-	{
-		// it's an RSI or MDI input file
-		GetRSIIn()->SetOrigin(strNFN);
-	}
-	else
-	{
-		// It's an IQ or IF file
-
-		delete pSoundInInterface;
-		CAudioFileIn *pf = new CAudioFileIn;
-		pf->SetFileName(strNFN);
-		pSoundInInterface = pf;
-
-		_BOOLEAN bIsIQ = FALSE;
-		if (ext.substr(0, 2) == "iq")
-			bIsIQ = TRUE;
-		if (ext.substr(0, 2) == "IQ")
-			bIsIQ = TRUE;
-		if (bIsIQ)
-			ReceiveData.SetInChanSel(CReceiveData::CS_IQ_POS_ZERO);
-		else
-			ReceiveData.SetInChanSel(CReceiveData::CS_MIX_CHAN);
-	}
-	ReceiveData.SetSoundInterface(pSoundInInterface);
-	ReceiveData.SetInitFlag();
-	OnboardDecoder.SetSoundInterface(pSoundInInterface);
-	OnboardDecoder.SetInitFlag();
 }
 
 void
@@ -1303,11 +1269,38 @@ CDRMReceiver::SetRSIRecording(_BOOLEAN bOn, const char cProfile)
 	downstreamRSCI.SetRSIRecording(*pReceiverParam, bOn, cProfile);
 }
 
+void
+CDRMReceiver::SetReadPCMFromFile(const string strNFN)
+{
+	delete pSoundInInterface;
+	CAudioFileIn *pf = new CAudioFileIn;
+	pf->SetFileName(strNFN);
+	pSoundInInterface = pf;
+	pcmInput = File;
+
+	_BOOLEAN bIsIQ = FALSE;
+	string ext;
+	size_t p = strNFN.rfind('.');
+	if (p != string::npos)
+		ext = strNFN.substr(p + 1);
+	if (ext.substr(0, 2) == "iq")
+		bIsIQ = TRUE;
+	if (ext.substr(0, 2) == "IQ")
+		bIsIQ = TRUE;
+	if (bIsIQ)
+		ReceiveData.SetInChanSel(CReceiveData::CS_IQ_POS_ZERO);
+	else
+		ReceiveData.SetInChanSel(CReceiveData::CS_MIX_CHAN);
+	ReceiveData.SetSoundInterface(pSoundInInterface);
+	ReceiveData.SetInitFlag();
+	OnboardDecoder.SetSoundInterface(pSoundInInterface);
+	OnboardDecoder.SetInitFlag();
+}
+
 void CDRMReceiver::UpdateSoundIn()
 {
-	int iDev = pSoundInInterface->GetDev();
-	delete pSoundInInterface;
-	pSoundInInterface = NULL;
+	if(pcmInput == File)
+		return;
 #ifdef HAVE_LIBHAMLIB
 # ifdef __linux__
 	if(pHamlib)
@@ -1317,21 +1310,38 @@ void CDRMReceiver::UpdateSoundIn()
 		pHamlib->GetRigCaps(id, caps);
 		if(caps.bHamlibDoesAudio)
 		{
-    		CShmSoundIn* ShmSoundIn = new CShmSoundIn;
-			string shm_path = pHamlib->config["if_path"];
-			ShmSoundIn->SetShmPath(shm_path);
-			ShmSoundIn->SetName(caps.strModelName);
-			ShmSoundIn->SetShmChannels(1);
-			ShmSoundIn->SetWantedChannels(2);
-			iDev = 0;
-			pSoundInInterface = ShmSoundIn;
+			if(pcmInput != Shm)
+			{
+				delete pSoundInInterface;
+    			CShmSoundIn* ShmSoundIn = new CShmSoundIn;
+				string shm_path = pHamlib->GetConfig("if_path");
+				ShmSoundIn->SetShmPath(shm_path);
+				ShmSoundIn->SetName(caps.strModelName);
+				ShmSoundIn->SetShmChannels(1);
+				ShmSoundIn->SetWantedChannels(2);
+				pSoundInInterface = ShmSoundIn;
+				pcmInput = Shm;
+				pSoundInInterface->SetDev(0);
+			}
+		}
+		else
+		{
+			if(pcmInput == Shm)
+			{
+				pcmInput=Dummy;
+			}
 		}
 	}
 # endif
 #endif
-	if(pSoundInInterface==NULL)
+	if(pcmInput==Dummy)
+	{
+		int iDev = pSoundInInterface->GetDev();
+		delete pSoundInInterface;
 		pSoundInInterface = new CSoundIn;
-	pSoundInInterface->SetDev(iDev);
+		pcmInput = SoundCard;
+		pSoundInInterface->SetDev(iDev);
+	}
 	ReceiveData.SetSoundInterface(pSoundInInterface);
 	ReceiveData.SetInitFlag();
 	OnboardDecoder.SetSoundInterface(pSoundInInterface);
@@ -1426,14 +1436,6 @@ void CDRMReceiver::SetRigComPort(const string& s)
 #endif
 }
 
-void CDRMReceiver::SetRigSettings(const string& s)
-{
-#ifdef HAVE_LIBHAMLIB
-	if(pHamlib)
-		pHamlib->strSettings = s;
-#endif
-}
-
 _BOOLEAN
 CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
 {
@@ -1485,6 +1487,7 @@ void
 CDRMReceiver::LoadSettings(CSettings& s)
 {
 	CParameter & Parameters = *pReceiverParam;
+	size_t p;
 
 	int i;
 	/* Serial Number */
@@ -1503,7 +1506,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	string sDataFilesDirectory = s.Get(
 	   "Receiver", "datafilesdirectory", Parameters.sDataFilesDirectory);
 	// remove trailing slash if there
-	size_t p = sDataFilesDirectory.find_last_not_of("/\\");
+	p = sDataFilesDirectory.find_last_not_of("/\\");
 	if(p != string::npos)
 		sDataFilesDirectory.erase(p+1);
 
@@ -1525,9 +1528,28 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	string strInFile;
 	string str;
+	string strInFileExt;
 	int n;
+
 	/* input from file */
-	strInFile = s.Get("command", "fileio");
+	str = s.Get("command", "fileio");
+	p = str.rfind('.');
+	if (p != string::npos)
+		strInFileExt = strInFile.substr(p + 1);
+
+	if (strInFileExt.substr(0,2) == "RS" || strInFileExt.substr(0,2) == "rs" || strInFileExt == "pcap")
+	{
+		s.Put("command", "rsiin", str);
+	}
+	else
+	{
+		strInFile = str;
+	}
+
+	if(strInFile != "")
+		SetReadPCMFromFile(strInFile);
+	else
+		UpdateSoundIn();
 
 	/* Flip spectrum flag */
 	ReceiveData.SetFlippedSpectrum(s.Get("Receiver", "flipspectrum", FALSE));
@@ -1620,22 +1642,10 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	/* Load user's saved filter bandwidth for the demodulation type. */
 	AMDemodulation.SetDemodTypeAndBPF(Parameters.eDemodType, Parameters.iBw[Parameters.eDemodType]);
 
-
 	/* upstream RSCI */
 	str = s.Get("command", "rsiin");
-	if(str == "")
-	{
-		if(strInFile != "")
-			SetReadDRMFromFile(strInFile);
-		else
-			UpdateSoundIn();
-	}
-	else
-	{
-        if(strInFile != "")
-            throw "Can't specify both rsiin and fileio file";
-		upstreamRSCI.SetOrigin(str);
-	}
+	if(str != "")
+		upstreamRSCI.SetOrigin(str); // its a port
 
 	str = s.Get("command", "rciout");
 	if(str != "")

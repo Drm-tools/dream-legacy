@@ -558,6 +558,10 @@ SOURCE=..\common\util\Settings.cpp
 
 SOURCE=..\common\util\Utilities.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=..\common\util\Hamlib.cpp
+# End Source File
 # End Group
 # Begin Group "Source MDI"
 
@@ -1049,6 +1053,10 @@ SOURCE=..\common\util\Settings.h
 # Begin Source File
 
 SOURCE=..\common\util\Utilities.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\util\Hamlib.h
 # End Source File
 # Begin Source File
 

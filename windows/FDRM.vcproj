@@ -2995,6 +2995,28 @@
 						/>
 					</FileConfiguration>
 				</File>
+				<File
+					RelativePath="..\common\util\Hamlib.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
 			</Filter>
 			<Filter
 				Name="Source MDI"
@@ -3774,6 +3796,10 @@
 				</File>
 				<File
 					RelativePath="..\common\util\Utilities.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\util\Hamlib.h"
 					>
 				</File>
 				<File

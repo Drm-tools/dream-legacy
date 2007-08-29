@@ -41,6 +41,7 @@
 #include "../DrmTransmitter.h"
 #include "../DrmSimulation.h"
 #include "../util/Settings.h"
+#include "../util/Hamlib.h"
 
 #ifdef USE_QT_GUI
 # include <qapplication.h>
@@ -144,10 +145,12 @@ main(int argc, char **argv)
 			app.exec();
 
 #ifdef HAVE_LIBHAMLIB
+			bool bEnableSMeter = Hamlib.GetEnableSMeter();
 			Hamlib.SetEnableSMeter(FALSE);
 			if (Hamlib.wait(1000) == FALSE)
 				cout << "error terminating rig polling thread" << endl;
 			Hamlib.SaveSettings(Settings);
+			Settings.Put("Hamlib", "ensmeter", bEnableSMeter);
 #endif
 			DRMReceiver.SaveSettings(Settings);
 		}

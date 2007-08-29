@@ -7,6 +7,10 @@
  *
  * Description:
  * Settings for the receiver
+ * Perhaps this should be Receiver Controls rather than Settings
+ * since selections take effect immediately and there is no apply/cancel
+ * feature. This makes sense, since one wants enable/disable GPS, Rig, Smeter
+ * to be instant and mute/savetofile etc.
  *	
  ******************************************************************************
  *
@@ -37,7 +41,9 @@
 #include <qcheckbox.h>
 #include <qslider.h>
 #include <qradiobutton.h>
+#include "../GlobalDefinitions.h"
 #include "ReceiverSettingsDlg.h"
+#include "LatLongEditDlg.h"
 #include "../DrmReceiver.h"
 
 #if !defined(HAVE_RIG_PARSE_MODE) && defined(HAVE_LIBHAMLIB)
@@ -63,25 +69,17 @@ extern "C"
 
 ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, WFlags f) :
-	ReceiverSettingsDlgBase(parent, name, modal, f), DRMReceiver(NRx),Settings(NSettings)
+	ReceiverSettingsDlgBase(parent, name, modal, f), DRMReceiver(NRx),Settings(NSettings),
+	loading(true)
 {
-
-	/* Set the validators fro the receiver coordinate */
-	EdtLatitudeDegrees->setValidator(new QIntValidator(0, 90, EdtLatitudeDegrees));
-	EdtLongitudeDegrees->setValidator(new QIntValidator(0, 180, EdtLongitudeDegrees));
-
-	EdtLatitudeMinutes->setValidator(new QIntValidator(0, 59, EdtLatitudeMinutes));
-	EdtLongitudeMinutes->setValidator(new QIntValidator(0, 59, EdtLongitudeMinutes));
 
 	/* Connections */
 
 	connect(buttonOk, SIGNAL(clicked()), SLOT(ButtonOkClicked()) );
-
-	connect(EdtLatitudeNS, SIGNAL(textChanged( const QString &)), this
-		, SLOT(CheckSN(const QString&)));
-
-	connect(EdtLongitudeEW, SIGNAL(textChanged( const QString &)), this
-		, SLOT(CheckEW(const QString&)));
+	connect(PushButtonEditLatitude, SIGNAL(clicked()), SLOT(OnEditLatitude()) );
+	connect(PushButtonEditLongitude, SIGNAL(clicked()), SLOT(OnEditLongitude()) );
+	connect(LineEditLatitude, SIGNAL(textChanged(const QString&)), SLOT(OnChangedLatLong(const QString&)) );
+	connect(LineEditLongitude, SIGNAL(textChanged(const QString&)), SLOT(OnChangedLatLong(const QString&)) );
 
 	connect(SliderLogStartDelay, SIGNAL(valueChanged(int)),
 		this, SLOT(OnSliderLogStartDelayChange(int)));
@@ -208,6 +206,8 @@ void ReceiverSettingsDlg::setDefaults()
 
 void ReceiverSettingsDlg::showEvent(QShowEvent*)
 {
+	loading = true; // prevent exective actions during reading state
+	
 	/* Sync ----------------------------------------------------------------- */
 	if (DRMReceiver.GetTimeInt() == CChannelEstimation::TWIENER)
 		RadioButtonTiWiener->setChecked(TRUE);
@@ -259,7 +259,8 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	BitmLittleGreenSquare.fill(QColor(0, 255, 0));
 
 	map<rig_model_t, CRigCaps> rigs;
-	map<string,QListViewItem*> models;
+	map<string,QListViewItem*> manufacturers;
+	rig_model_t current = DRMReceiver.GetRigModel();
 
 	DRMReceiver.GetRigList(rigs);
 
@@ -267,35 +268,35 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	for (map<rig_model_t, CRigCaps>::iterator i=rigs.begin(); i!=rigs.end(); i++)
 	{
 		/* Store model ID */
-		QListViewItem* item;
+		QListViewItem* man, *model;
 		rig_model_t iModelID = i->first;
-		if(iModelID != 0)
-		{
-			CRigCaps& rig = i->second;
-			map<string,QListViewItem*>::iterator i = models.find(rig.strManufacturer);
-			if(i==models.end())
-				models[rig.strManufacturer] = 
-					item = new QListViewItem(ListViewRig,rig.strManufacturer.c_str());
-			else
-				item = i->second;
-			item = new QListViewItem(
-				item,rig.strModelName.c_str(),
-				QString::number(iModelID),
-				rig_strstatus(rig.eRigStatus)
-			);
+		CRigCaps& rig = i->second;
+		if(rig.strManufacturer=="")
+			continue;
+		map<string,QListViewItem*>::iterator mfr = manufacturers.find(rig.strManufacturer);
+		if(mfr==manufacturers.end())
+			manufacturers[rig.strManufacturer] = 
+				man = new QListViewItem(ListViewRig, rig.strManufacturer.c_str());
+		else
+			man = mfr->second;
+		model = new QListViewItem(
+			man,
+			rig.strModelName.c_str(),
+			QString::number(iModelID),
+			rig_strstatus(rig.eRigStatus)
+		);
 
-			/* Check for checking */
-			if (DRMReceiver.GetRigModel() == iModelID)
-			{
-				item->setSelected(TRUE);
-				ListViewRig->ensureItemVisible(item);
-				CheckBoxEnableRig->setChecked(TRUE);
-			}
-			if (rig.bIsSpecRig == TRUE)
-			{
-				item->setPixmap(0, BitmLittleGreenSquare);
-				item->parent()->setPixmap(0, BitmLittleGreenSquare);
-			}
+		/* Check for selected Rig */
+		if (current == iModelID)
+		{
+			model->setSelected(TRUE);
+			ListViewRig->ensureItemVisible(model);
+			CheckBoxEnableRig->setChecked(TRUE);
+		}
+		if (!rig.settings[DRM_MODIFIED].levels.empty())
+		{
+			model->setPixmap(0, BitmLittleGreenSquare);
+			man->setPixmap(0, BitmLittleGreenSquare);
 		}
 	}
 
@@ -320,34 +321,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	/* Enable special settings for rigs */
 	CheckBoxWithDRMMod->setChecked(DRMReceiver.GetEnableModRigSettings());
 #endif
-}
-
-void ReceiverSettingsDlg::CheckSN(const QString& NewText)
-{
-	/* Only S or N char are accepted */
-
-	const QString sVal = NewText.upper();
-
-	if (sVal != "S" && sVal != "N" && sVal != "")
-		EdtLatitudeNS->setText("N");
-	else
-		if (sVal != NewText) /* if lowercase change to uppercase */
-			EdtLatitudeNS->setText(sVal);
-
-}
-
-void ReceiverSettingsDlg::CheckEW(const QString& NewText)
-{
-	/* Only E or W char are accepted */
-
-	const QString sVal = NewText.upper();
-
-	if (sVal != "E" && sVal != "W" && sVal != "")
-		EdtLongitudeEW->setText("E");
-	else
-		if (sVal != NewText) /* if lowercase change to uppercase */
-			EdtLongitudeEW->setText(sVal);
-
+	loading = false; // loading completed
 }
 
 void ReceiverSettingsDlg::OnCheckBoxUseGPS()
@@ -361,32 +335,44 @@ void ReceiverSettingsDlg::OnCheckBoxUseGPS()
 	emit StartStopGPS(CheckBoxUseGPS->isChecked());
 }
 
+void ReceiverSettingsDlg::OnEditLatitude()
+{
+	LatLongEditDlg* edt = new LatLongEditDlg(LineEditLatitude, this);
+	edt->show();
+}
+
+void ReceiverSettingsDlg::OnEditLongitude()
+{
+	LatLongEditDlg* edt = new LatLongEditDlg(LineEditLongitude, this);
+	edt->show();
+}
+
+void ReceiverSettingsDlg::OnChangedLatLong(const QString&)
+{
+
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+	double latitude, longitude;
+
+	QStringList a = QStringList::split("'", LineEditLongitude->text());
+	QStringList b = QStringList::split(ring, a[0]);
+	longitude = (b[0].toDouble() + b[1].toDouble()/60.0)*((a[1]=="E")?1:-1);
+	a = QStringList::split("'", LineEditLatitude->text());
+	b = QStringList::split(ring, a[0]);
+	latitude = (b[0].toDouble() + b[1].toDouble()/60.0)*((a[1]=="N")?1:-1);
+
+	Parameters.Lock(); 
+	Parameters.GPSData.SetPositionAvailable(TRUE);
+	Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
+	Parameters.Unlock(); 
+}
+
 /* when the dialog closes save the contents of any controls which don't have
  * their own slot handlers
  */
 
 void ReceiverSettingsDlg::ButtonOkClicked()
 {
-	CParameter& Parameters = *DRMReceiver.GetParameters();
-
 	/* save current settings */
-
-	Parameters.Lock(); 
-
-	double latitude, longitude;
-
-	latitude = EdtLatitudeDegrees->text().toDouble() + EdtLatitudeMinutes->text().toDouble()/60.0;
-	if(EdtLatitudeNS->text().upper().latin1()[0]=='S')
-		latitude = - latitude;
-
-	longitude = EdtLongitudeDegrees->text().toDouble() + EdtLongitudeMinutes->text().toDouble()/60.0;
-	if(EdtLongitudeEW->text().upper().latin1()[0]=='W')
-		longitude = - longitude;
-
-	Parameters.GPSData.SetPositionAvailable(TRUE);
-	Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
-	Parameters.Unlock(); 
-
 	Settings.Put("GPS", "host", string(LineEditGPSHost->text().latin1()));
 	Settings.Put("GPS", "port", LineEditGPSPort->text().toInt());
 
@@ -401,70 +387,18 @@ void ReceiverSettingsDlg::ExtractReceiverCoordinates()
 	/* parse the latitude and longitude string stored into Dream settings to
 		extract local latitude and longitude coordinates */
 
-	double latitude, longitude;
+	string latitude, longitude;
 
 	Parameters.Lock(); 
-	Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
-
-	/* Extract latitude values */
-
-	if(latitude<0.0)
-	{
-		latitude = -latitude;
-		EdtLatitudeNS->setText("S");
-	}
-	else
-	{
-		EdtLatitudeNS->setText("N");
-	}
-
-	unsigned int Minutes;
-
-	/* Extract degrees */
-
-	/* Latitude degrees max 2 digits */
-	sVal = QString("%1").arg(int(latitude));
-
-	EdtLatitudeDegrees->setText(sVal);
-
-	/* Extract minutes */
-	Minutes = Parameters.GPSData.ExtractMinutes(latitude);
-	sVal = QString("%1").arg(Minutes);
-
-	EdtLatitudeMinutes->setText(sVal);
-
-	/* Extract longitude values */
-
-	if(longitude<0.0)
-	{
-		longitude = -longitude;
-		EdtLongitudeEW->setText("W");
-	}
-	else if(longitude>180.0)
-	{
-		longitude = 360.0-longitude;
-		EdtLongitudeEW->setText("E");
-	}
-	else
-	{
-		EdtLongitudeEW->setText("E");
-	}
-
-	/* Extract degrees */
-
-	Minutes = Parameters.GPSData.ExtractMinutes(longitude);
-
-	/* Longitude degrees max 3 digits */
-	sVal = QString("%1").arg(int(longitude));
-
-	EdtLongitudeDegrees->setText(sVal);
-
-	/* Extract minutes */
-	sVal = QString("%1").arg(Minutes);
-
-	EdtLongitudeMinutes->setText(sVal);
-
+	Parameters.GPSData.asDM(latitude, longitude);
 	Parameters.Unlock(); 
+
+	QString s;
+	s.setLatin1(longitude.c_str());
+	LineEditLongitude->setText(s);
+	s.setLatin1(latitude.c_str());
+	LineEditLatitude->setText(s);
+
 
 }
 
@@ -612,6 +546,8 @@ void ReceiverSettingsDlg::OnSliderLogStartDelayChange(int value)
 
 void ReceiverSettingsDlg::OnCheckEnableRigToggled(bool on)
 {
+	if(loading)
+		return;
 	if(on)
 	{
 		QListViewItem* item = ListViewRig->selectedItem();
@@ -627,17 +563,24 @@ void ReceiverSettingsDlg::OnCheckEnableRigToggled(bool on)
 
 void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
 {
-	DRMReceiver.SetEnableSMeter(on);
+	if(loading)
+		return;
+	if(CheckBoxEnableRig->isChecked())
+		DRMReceiver.SetEnableSMeter(on);
 }
 
 void ReceiverSettingsDlg::OnCheckWithDRMModToggled(bool on)
 {
+	if(loading)
+		return;
 	if(CheckBoxEnableRig->isChecked())
 		DRMReceiver.SetEnableModRigSettings(on);
 }
 
 void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 {
+	if(loading)
+		return;
 	if(CheckBoxEnableRig->isChecked())
 	{
 		int iID = item->text(1).toInt();
@@ -653,6 +596,8 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 
 void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)
 {
+	if(loading)
+		return;
 	if(CheckBoxEnableRig->isChecked())
 	{
 		string key = item->text(1).latin1();
@@ -690,8 +635,6 @@ void ReceiverSettingsDlg::OnRigOffsetChanged(QString text)
 
 void ReceiverSettingsDlg::OnRigSettingsChanged(QString text)
 {
-	if(CheckBoxEnableRig->isChecked())
-		DRMReceiver.SetRigSettings(text.latin1());
 }
 
 void ReceiverSettingsDlg::AddWhatsThisHelp()
@@ -704,12 +647,8 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		" are inside the target area of this transmission.<br>"
 		"Receiver coordinates are also saved into the Log file.");
 
-    QWhatsThis::add(EdtLatitudeDegrees, strGPS);
-    QWhatsThis::add(EdtLatitudeMinutes, strGPS);
-    QWhatsThis::add(EdtLatitudeNS, strGPS);
-    QWhatsThis::add(EdtLongitudeDegrees, strGPS);
-    QWhatsThis::add(EdtLongitudeMinutes, strGPS);
-    QWhatsThis::add(EdtLongitudeEW, strGPS);
+    QWhatsThis::add(LineEditLatitude, strGPS);
+    QWhatsThis::add(LineEditLongitude, strGPS);
 
 	/* MLC, Number of Iterations */
 	const QString strNumOfIterations =

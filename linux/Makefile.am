@@ -33,6 +33,7 @@ drmwithoutqt_SOURCES = \
 	../common/matlib/MatlibStdToolbox.cpp \
 	../common/util/CRC.cpp \
 	../common/util/Settings.cpp \
+	../common/util/Hamlib.cpp \
 	../common/util/Utilities.cpp \
 	../common/util/LogPrint.cpp \
 	../common/util/Reassemble.cpp \
@@ -123,6 +124,7 @@ drmwithoutqt_SOURCES = \
 	../common/util/CRC.h \
 	../common/util/AudioFile.h \
 	../common/util/Settings.h \
+	../common/util/Hamlib.h \
 	../common/util/Utilities.h \
 	../common/util/LogPrint.h \
 	../common/util/Reassemble.h \
@@ -232,6 +234,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/LiveScheduleDlg.cpp \
 	../common/GUI-QT/MultSettingsDlg.cpp \
 	../common/GUI-QT/ReceiverSettingsDlg.cpp \
+	../common/GUI-QT/LatLongEditDlg.cpp \
 	../common/GUI-QT/EPGDlg.cpp \
 	../common/GUI-QT/AnalogDemDlg.cpp \
 	../common/GUI-QT/Loghelper.cpp \
@@ -261,6 +264,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/LiveScheduleDlg.h \
 	../common/GUI-QT/MultSettingsDlg.h \
 	../common/GUI-QT/ReceiverSettingsDlg.h \
+	../common/GUI-QT/LatLongEditDlg.h \
 	../common/GUI-QT/EPGDlg.h \
 	../common/GUI-QT/AnalogDemDlg.h \
 	../common/GUI-QT/Loghelper.h \
@@ -288,6 +292,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_LiveScheduleDlg.cpp moc/moc_LiveScheduleDlgbase.cpp moc/LiveScheduleDlgbase.h moc/LiveScheduleDlgbase.cpp \
 	moc/moc_MultSettingsDlg.cpp moc/moc_MultSettingsDlgbase.cpp moc/MultSettingsDlgbase.h moc/MultSettingsDlgbase.cpp \
 	moc/moc_ReceiverSettingsDlg.cpp moc/moc_ReceiverSettingsDlgbase.cpp moc/ReceiverSettingsDlgbase.h moc/ReceiverSettingsDlgbase.cpp \
+	moc/moc_LatLongEditDlg.cpp moc/moc_LatLongEditDlgbase.cpp moc/LatLongEditDlgbase.h moc/LatLongEditDlgbase.cpp \
 	moc/moc_EPGDlg.cpp moc/moc_EPGDlgbase.cpp moc/EPGDlgbase.h moc/EPGDlgbase.cpp \
 	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp \
@@ -429,6 +434,18 @@ moc/ReceiverSettingsDlgbase.h: ../common/GUI-QT/ReceiverSettingsDlgbase.ui
 
 moc/ReceiverSettingsDlgbase.cpp: ../common/GUI-QT/ReceiverSettingsDlgbase.ui moc/ReceiverSettingsDlgbase.h
 	$(UIC) ../common/GUI-QT/ReceiverSettingsDlgbase.ui -i moc/ReceiverSettingsDlgbase.h -o moc/ReceiverSettingsDlgbase.cpp
+
+moc/moc_LatLongEditDlg.cpp: ../common/GUI-QT/LatLongEditDlg.h
+	$(MOC) ../common/GUI-QT/LatLongEditDlg.h -o moc/moc_LatLongEditDlg.cpp
+		
+moc/moc_LatLongEditDlgbase.cpp: moc/LatLongEditDlgbase.h
+	$(MOC) moc/LatLongEditDlgbase.h -o moc/moc_LatLongEditDlgbase.cpp
+	
+moc/LatLongEditDlgbase.h: ../common/GUI-QT/LatLongEditDlgbase.ui
+	$(UIC) ../common/GUI-QT/LatLongEditDlgbase.ui -o moc/LatLongEditDlgbase.h
+
+moc/LatLongEditDlgbase.cpp: ../common/GUI-QT/LatLongEditDlgbase.ui moc/LatLongEditDlgbase.h
+	$(UIC) ../common/GUI-QT/LatLongEditDlgbase.ui -i moc/LatLongEditDlgbase.h -o moc/LatLongEditDlgbase.cpp
 
 moc/moc_EPGDlg.cpp: ../common/GUI-QT/EPGDlg.h
 	$(MOC) ../common/GUI-QT/EPGDlg.h -o moc/moc_EPGDlg.cpp

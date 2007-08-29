@@ -835,6 +835,11 @@ void COnboardDecoder::ProcessDataInternal(CParameter& Parameter)
 		Parameter.ReceiveStatus.Interface.SetStatus(RX_OK);
 	else
 		Parameter.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
+
+	if (Parameter.bMeasurePSD)
+	{
+		Parameter.vecrPSD.Init(0);
+	}
 	Parameter.Unlock(); 
 }
 

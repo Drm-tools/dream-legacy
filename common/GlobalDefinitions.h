@@ -253,6 +253,7 @@ const _REAL crPi = ((_REAL) 3.14159265358979323846);
 #define FALSE							0
 
 
+
 /* Classes ********************************************************************/
 /* For metric */
 class CDistance
@@ -333,6 +334,10 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 				const double dPar2);
 
 void ErrorMessage(string strErrorString);
+
+# ifdef USE_QT_GUI
+const QChar ring = '\xb0';
+# endif
 
 
 #endif // !defined(DEF_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
