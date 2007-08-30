@@ -998,6 +998,28 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\common\GUI-QT\LatLongEditDlg.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath="..\common\GUI-QT\ReceiverSettingsDlg.cpp"
 					>
 					<FileConfiguration
@@ -1313,6 +1335,28 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="moc\LatLongEditDlgbase.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
 						RelativePath="moc\ReceiverSettingsDlgbase.cpp"
 						>
 						<FileConfiguration
@@ -1556,6 +1600,50 @@
 					</File>
 					<File
 						RelativePath="moc\moc_fdrmdialogbase.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="moc\moc_LatLongEditDlg.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="moc\moc_LatLongEditDlgbase.cpp"
 						>
 						<FileConfiguration
 							Name="Release|Win32"
@@ -3534,6 +3622,10 @@
 				</File>
 				<File
 					RelativePath="..\common\GUI-QT\fdrmdialog.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\GUI-QT\LatLongEditDlg.h"
 					>
 				</File>
 				<File

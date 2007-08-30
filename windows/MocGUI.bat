@@ -46,6 +46,7 @@ rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GPSReceiver.h -o moc\moc_GPSReceiver.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\MultSettingsDlg.h -o moc\moc_MultSettingsDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\ReceiverSettingsDlg.h -o moc\moc_ReceiverSettingsDlg.cpp
+%qtdir%\bin\moc.exe ..\common\GUI-QT\LatLongEditettingsDlg.h -o moc\moc_LatLongEditettingsDlg.cpp
 
 rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -o moc\fdrmdialogbase.h  
@@ -95,5 +96,9 @@ rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\ReceiverSettingsDlgbase.ui -o moc\ReceiverSettingsDlgbase.h  
 %qtdir%\bin\uic.exe ..\common\GUI-QT\ReceiverSettingsDlgbase.ui -i ReceiverSettingsDlgbase.h -o moc\ReceiverSettingsDlgbase.cpp
 %qtdir%\bin\moc.exe moc\ReceiverSettingsDlgbase.h -o moc\moc_ReceiverSettingsDlgbase.cpp
+
+%qtdir%\bin\uic.exe ..\common\GUI-QT\LatLongEditDlgbase.ui -o moc\LatLongEditDlgbase.h  
+%qtdir%\bin\uic.exe ..\common\GUI-QT\LatLongEditDlgbase.ui -i LatLongEditDlgbase.h -o moc\LatLongEditDlgbase.cpp
+%qtdir%\bin\moc.exe moc\LatLongEditDlgbase.h -o moc\moc_LatLongEditDlgbase.cpp
 
 pause

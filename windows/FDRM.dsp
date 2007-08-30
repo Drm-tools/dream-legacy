@@ -124,6 +124,10 @@ SOURCE=.\moc\ReceiverSettingsDlgbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\LatLongEditDlgbase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\LiveScheduleDlgbase.cpp
 # End Source File
 # Begin Source File
@@ -173,6 +177,14 @@ SOURCE=.\moc\moc_ReceiverSettingsDlg.cpp
 # Begin Source File
 
 SOURCE=.\moc\moc_ReceiverSettingsDlgbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_LatLongEditDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_LatLongEditDlgbase.cpp
 # End Source File
 # Begin Source File
 
@@ -291,6 +303,10 @@ SOURCE="..\common\GUI-QT\fdrmdialog.cpp"
 
 !ENDIF 
 
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\LatLongEditDlg.cpp"
 # End Source File
 # Begin Source File
 
@@ -793,6 +809,10 @@ SOURCE="..\common\GUI-QT\EPGDlg.h"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\fdrmdialog.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\LatLongEditDlg.h"
 # End Source File
 # Begin Source File
 
