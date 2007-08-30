@@ -139,9 +139,6 @@ protected:
 class CReceiveData : public CReceiverModul<_REAL, _REAL>
 {
 public:
-	enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
-		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO};
-
 	CReceiveData() : pSound(NULL),
 	vecrInpData(INPUT_DATA_VECTOR_SIZE, (_REAL) 0.0),
 	bFippedSpectrum(FALSE), eInChanSelection(CS_MIX_CHAN)

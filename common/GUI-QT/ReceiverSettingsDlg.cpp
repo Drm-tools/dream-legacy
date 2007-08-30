@@ -115,9 +115,7 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	connect(CheckBoxLogSigStr, SIGNAL(clicked()), this, SLOT(OnCheckBoxLogSigStr()));
 	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWAV()));
 
-	connect(CheckBoxEnableRig, SIGNAL(toggled(bool)), this, SLOT(OnCheckEnableRigToggled(bool)));
 	connect(CheckBoxEnableSMeter, SIGNAL(toggled(bool)), this, SLOT(OnCheckEnableSMeterToggled(bool)));
-	connect(CheckBoxWithDRMMod, SIGNAL(toggled(bool)), this, SLOT(OnCheckWithDRMModToggled(bool)));
 
 	connect(ListViewRig, SIGNAL(selectionChanged(QListViewItem*)),
 		this, SLOT(OnRigSelected(QListViewItem*)));
@@ -264,11 +262,11 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 
 	DRMReceiver.GetRigList(rigs);
 
-	CheckBoxEnableRig->setChecked(FALSE);
+	new QListViewItem(new QListViewItem(ListViewRig, "-None"), "None", "0", "");
 	for (map<rig_model_t, CRigCaps>::iterator i=rigs.begin(); i!=rigs.end(); i++)
 	{
 		/* Store model ID */
-		QListViewItem* man, *model;
+		QListViewItem* man, *model=NULL, *mod_model=NULL;
 		rig_model_t iModelID = i->first;
 		CRigCaps& rig = i->second;
 		if(rig.strManufacturer=="")
@@ -286,17 +284,31 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 			rig_strstatus(rig.eRigStatus)
 		);
 
+		if (!rig.settings[DRM_MODIFIED].levels.empty())
+		{
+			mod_model = new QListViewItem(
+				man,
+				(rig.strModelName+" (DRM)").c_str(),
+				QString::number(iModelID),
+				rig_strstatus(rig.eRigStatus)
+			);
+			mod_model->setPixmap(0, BitmLittleGreenSquare);
+			man->setPixmap(0, BitmLittleGreenSquare);
+		}
+
 		/* Check for selected Rig */
 		if (current == iModelID)
 		{
-			model->setSelected(TRUE);
-			ListViewRig->ensureItemVisible(model);
-			CheckBoxEnableRig->setChecked(TRUE);
-		}
-		if (!rig.settings[DRM_MODIFIED].levels.empty())
-		{
-			model->setPixmap(0, BitmLittleGreenSquare);
-			man->setPixmap(0, BitmLittleGreenSquare);
+			if(DRMReceiver.GetEnableModRigSettings())
+			{
+				mod_model->setSelected(TRUE);
+				ListViewRig->ensureItemVisible(mod_model);
+			}
+			else
+			{
+				model->setSelected(TRUE);
+				ListViewRig->ensureItemVisible(model);
+			}
 		}
 	}
 
@@ -319,7 +331,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
 
 	/* Enable special settings for rigs */
-	CheckBoxWithDRMMod->setChecked(DRMReceiver.GetEnableModRigSettings());
+	//CheckBoxWithDRMMod->setChecked(DRMReceiver.GetEnableModRigSettings());
 #endif
 	loading = false; // loading completed
 }
@@ -349,7 +361,6 @@ void ReceiverSettingsDlg::OnEditLongitude()
 
 void ReceiverSettingsDlg::OnChangedLatLong(const QString&)
 {
-
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 	double latitude, longitude;
 
@@ -398,8 +409,6 @@ void ReceiverSettingsDlg::ExtractReceiverCoordinates()
 	LineEditLongitude->setText(s);
 	s.setLatin1(latitude.c_str());
 	LineEditLatitude->setText(s);
-
-
 }
 
 void ReceiverSettingsDlg::OnRadioTimeLinear() 
@@ -544,53 +553,31 @@ void ReceiverSettingsDlg::OnSliderLogStartDelayChange(int value)
 	Settings.Put("Logfile", "delay", value);
 }
 
-void ReceiverSettingsDlg::OnCheckEnableRigToggled(bool on)
-{
-	if(loading)
-		return;
-	if(on)
-	{
-		QListViewItem* item = ListViewRig->selectedItem();
-		if(item)
-			OnRigSelected(item);
-	}
-	else
-	{
-		DRMReceiver.SetRigModel(0);
-		ListViewRig->clearSelection();
-	}
-}
-
 void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
 {
 	if(loading)
 		return;
-	if(CheckBoxEnableRig->isChecked())
-		DRMReceiver.SetEnableSMeter(on);
-}
-
-void ReceiverSettingsDlg::OnCheckWithDRMModToggled(bool on)
-{
-	if(loading)
-		return;
-	if(CheckBoxEnableRig->isChecked())
-		DRMReceiver.SetEnableModRigSettings(on);
+	DRMReceiver.SetEnableSMeter(on);
 }
 
 void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 {
 	if(loading)
 		return;
-	if(CheckBoxEnableRig->isChecked())
+	int iID = item->text(1).toInt();
+	if(iID==0)
 	{
-		int iID = item->text(1).toInt();
-		DRMReceiver.SetRigModel(iID);
+		DRMReceiver.SetRigModel(0);
+	}
+	else
+	{
 		DRMReceiver.SetRigFreqOffset(LineEditRigFreqOff->text().toInt());
-		DRMReceiver.SetEnableModRigSettings(CheckBoxWithDRMMod->isChecked());
+		DRMReceiver.SetEnableModRigSettings(item->pixmap(0)!=NULL);
 		QListViewItem* cp = ListViewPort->selectedItem();
 		if(cp)
 			DRMReceiver.SetRigComPort(cp->text(1).latin1());
 		DRMReceiver.SetEnableSMeter(CheckBoxEnableSMeter->isChecked());
+		DRMReceiver.SetRigModel(iID);
 	}
 }
 
@@ -598,23 +585,18 @@ void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)
 {
 	if(loading)
 		return;
-	if(CheckBoxEnableRig->isChecked())
+	string key = item->text(1).latin1();
+	map<string,string> ports;
+	DRMReceiver.GetComPortList(ports);
+	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
 	{
-		string key = item->text(1).latin1();
-		map<string,string> ports;
-		DRMReceiver.GetComPortList(ports);
-		for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
-		{
-			if(p->first == key)
-				DRMReceiver.SetRigComPort(p->second);
-		}
+		if(p->first == key)
+			DRMReceiver.SetRigComPort(p->second);
 	}
 }
 
 void ReceiverSettingsDlg::OnConfigChanged(int row, int col)
 {
-	if(CheckBoxEnableRig->isChecked())
-	{
 	/*
 		QListViewItemIterator it( ListViewRigConf );
 		for ( ; it.current(); ++it )
@@ -622,15 +604,11 @@ void ReceiverSettingsDlg::OnConfigChanged(int row, int col)
 			DRMReceiver.GetHamlib()->config[it.current()->text(0).latin1()] = it.current()->text(1).latin1();
 		}
 		*/
-	}
 }
 
 void ReceiverSettingsDlg::OnRigOffsetChanged(QString text)
 {
-	if(CheckBoxEnableRig->isChecked())
-	{
-		DRMReceiver.SetRigFreqOffset(text.toInt());
-	}
+	DRMReceiver.SetRigFreqOffset(text.toInt());
 }
 
 void ReceiverSettingsDlg::OnRigSettingsChanged(QString text)

@@ -447,7 +447,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		if (GetStringArgument(argc, argv, i, "-C", "--hamlib-config",
 							  strArgument) == TRUE)
 		{
-			Put("Hamlib", "hamlib-config", strArgument);
+			Put("command", "hamlib-config", strArgument);
 			continue;
 		}
 
@@ -455,7 +455,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		if (GetNumericArgument(argc, argv, i, "-M", "--hamlib-model", 0,
 							   MAX_ID_HAMLIB, rArgument) == TRUE)
 		{
-			Put("Hamlib", "hamlib-model", (int)rArgument);
+			Put("Hamlib", "model", (int)rArgument);
 			continue;
 		}
 

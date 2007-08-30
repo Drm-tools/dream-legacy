@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>390</width>
+            <width>386</width>
             <height>392</height>
         </rect>
     </property>
@@ -1138,17 +1138,6 @@
                             <cstring>ListViewPort</cstring>
                         </property>
                     </widget>
-                    <widget row="2"  column="1" >
-                        <class>QCheckBox</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>CheckBoxWithDRMMod</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>text</name>
-                            <string>With DRM Modification</string>
-                        </property>
-                    </widget>
                     <widget row="1"  column="1" >
                         <class>QCheckBox</class>
                         <property stdset="1">
@@ -1158,17 +1147,6 @@
                         <property stdset="1">
                             <name>text</name>
                             <string>Enable S-Meter</string>
-                        </property>
-                    </widget>
-                    <widget row="2"  column="0" >
-                        <class>QCheckBox</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>CheckBoxEnableRig</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>text</name>
-                            <string>Enable Rig</string>
                         </property>
                     </widget>
                     <widget row="0"  column="0"  rowspan="2"  colspan="1" >

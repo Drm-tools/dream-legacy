@@ -707,7 +707,6 @@ void StationsDlg::hideEvent(QHideEvent*)
 
 void StationsDlg::showEvent(QShowEvent*)
 {
-		cout << "bFrequencySetFromReceiver " << bFrequencySetFromReceiver << endl;
 
 	/* Init with current setting in log file */
 	iTunedFrequency = DRMReceiver.GetFrequency();
@@ -995,7 +994,6 @@ void StationsDlg::SetStationsView()
 
 void StationsDlg::OnFreqCntNewValue(double dVal)
 {
-		cout << "StationsDlg::OnFreqCntNewValue bFrequencySetFromReceiver " << bFrequencySetFromReceiver << endl;
 	/* Set frequency to front-end */
 	if(bFrequencySetFromReceiver)
 	{

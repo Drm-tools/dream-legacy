@@ -1288,9 +1288,9 @@ CDRMReceiver::SetReadPCMFromFile(const string strNFN)
 	if (ext.substr(0, 2) == "IQ")
 		bIsIQ = TRUE;
 	if (bIsIQ)
-		ReceiveData.SetInChanSel(CReceiveData::CS_IQ_POS_ZERO);
+		ReceiveData.SetInChanSel(CS_IQ_POS_ZERO);
 	else
-		ReceiveData.SetInChanSel(CReceiveData::CS_MIX_CHAN);
+		ReceiveData.SetInChanSel(CS_MIX_CHAN);
 	ReceiveData.SetSoundInterface(pSoundInInterface);
 	ReceiveData.SetInitFlag();
 	OnboardDecoder.SetSoundInterface(pSoundInInterface);
@@ -1558,31 +1558,31 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	switch (n)
 	{
 	case 0:
-		ReceiveData.SetInChanSel(CReceiveData::CS_LEFT_CHAN);
+		ReceiveData.SetInChanSel(CS_LEFT_CHAN);
 		break;
 
 	case 1:
-		ReceiveData.SetInChanSel(CReceiveData::CS_RIGHT_CHAN);
+		ReceiveData.SetInChanSel(CS_RIGHT_CHAN);
 		break;
 
 	case 2:
-		ReceiveData.SetInChanSel(CReceiveData::CS_MIX_CHAN);
+		ReceiveData.SetInChanSel(CS_MIX_CHAN);
 		break;
 
 	case 3:
-		ReceiveData.SetInChanSel(CReceiveData::CS_IQ_POS);
+		ReceiveData.SetInChanSel(CS_IQ_POS);
 		break;
 
 	case 4:
-		ReceiveData.SetInChanSel(CReceiveData::CS_IQ_NEG);
+		ReceiveData.SetInChanSel(CS_IQ_NEG);
 		break;
 
 	case 5:
-		ReceiveData.SetInChanSel(CReceiveData::CS_IQ_POS_ZERO);
+		ReceiveData.SetInChanSel(CS_IQ_POS_ZERO);
 		break;
 
 	case 6:
-		ReceiveData.SetInChanSel(CReceiveData::CS_IQ_NEG_ZERO);
+		ReceiveData.SetInChanSel(CS_IQ_NEG_ZERO);
 		break;
 	default:
 		break;

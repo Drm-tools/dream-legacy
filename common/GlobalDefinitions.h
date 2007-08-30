@@ -228,6 +228,9 @@ enum ERobMode {RM_ROBUSTNESS_MODE_A, RM_ROBUSTNESS_MODE_B,
 		RM_ROBUSTNESS_MODE_C, RM_ROBUSTNESS_MODE_D,
 		RM_NO_MODE_DETECTED}; /* RM: Robustness Mode */
 
+enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
+		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO};
+
 enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
 
