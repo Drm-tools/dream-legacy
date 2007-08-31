@@ -40,11 +40,6 @@
 #include <map>
 #include <iostream>
 
-#ifdef HAVE_LIBHAMLIB
-# include <hamlib/rig.h>
-#endif
-
-
 /* Definitions ****************************************************************/
 #define	METER_FLY_BACK					15
 

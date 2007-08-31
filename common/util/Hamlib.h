@@ -31,16 +31,14 @@
 #define _HAMLIB_H
 
 #include "../GlobalDefinitions.h"
-#include "Settings.h"
-#include "Vector.h"
 #include <map>
-#include <iostream>
 
 #ifdef HAVE_LIBHAMLIB
 # include <hamlib/rig.h>
 #endif
 
 class CParameter;
+class CSettings;
 
 enum ESMeterState {SS_VALID, SS_NOTVALID, SS_TIMEOUT};
 enum EMight { C_CAN, C_MUST, C_CANT };

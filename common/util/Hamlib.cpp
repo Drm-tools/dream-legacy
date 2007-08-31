@@ -27,7 +27,9 @@
 
 #include "Hamlib.h"
 #include "../Parameter.h"
+#include "Settings.h"
 #include <sstream>
+#include <iostream>
 #if defined(_WIN32)
 # ifdef HAVE_SETUPAPI
 #  ifndef INITGUID
