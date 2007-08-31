@@ -46,7 +46,7 @@ rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GPSReceiver.h -o moc\moc_GPSReceiver.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\MultSettingsDlg.h -o moc\moc_MultSettingsDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\ReceiverSettingsDlg.h -o moc\moc_ReceiverSettingsDlg.cpp
-%qtdir%\bin\moc.exe ..\common\GUI-QT\LatLongEditettingsDlg.h -o moc\moc_LatLongEditettingsDlg.cpp
+%qtdir%\bin\moc.exe ..\common\GUI-QT\LatLongEditDlg.h -o moc\moc_LatLongEditDlg.cpp
 
 rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -o moc\fdrmdialogbase.h  
