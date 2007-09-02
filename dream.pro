@@ -7,7 +7,8 @@ LIBS 		+= -Llibs
 FORMS		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui
 FORMS		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
 FORMS		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
-FORMS		+= MultSettingsDlgbase.ui AboutDlgbase.ui ReceiverSettingsDlgbase.ui
+FORMS		+= MultSettingsDlgbase.ui AboutDlgbase.ui
+FORMS		+= ReceiverSettingsDlgbase.ui LatLongEditDlgbase.ui
 
 macx {
 	CONFIG		+= portaudio
@@ -46,13 +47,18 @@ unix {
 
 win32 {
 	TEMPLATE	= vcapp
-	OBJECTS_DIR_RELEASE	= windows/Release
-	OBJECTS_DIR_DEBUG	= windows/Debug
+	debug {
+	OBJECTS_DIR	= windows/Debug
+	}
+	release {
+	OBJECTS_DIR	= windows/Release
+	}
 	UI_DIR		= windows/moc
 	MOC_DIR		= windows/moc
 # this next line could be cross platform if the windows library names do not start with lib
-	LIBS 		+= zdll.lib libqwt.lib libfhgjournaline.lib libfaac.lib libfaad.lib libhamlib.lib
-	LIBS		+= libfftw.lib setupapi.lib
+	LIBS 			+= zdll.lib libqwt.lib libfhgjournaline.lib 
+	LIBS			+= libfaac.lib libfaad.lib libhamlib.lib
+	LIBS			+= libfftw.lib setupapi.lib
 	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:"MSVCRTD, LIBCMT"
 	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
 	DEFINES		-= UNICODE
@@ -114,6 +120,7 @@ common/GUI-QT/DRMPlot.h   \
 common/GUI-QT/EPGDlg.h   \
 common/GUI-QT/fdrmdialog.h   \
 common/GUI-QT/LiveScheduleDlg.h   \
+common/GUI-QT/LatLongEditDlg.h \
 common/GUI-QT/MultColorLED.h   \
 common/GUI-QT/MultimediaDlg.h   \
 common/GUI-QT/MultSettingsDlg.h   \
@@ -232,6 +239,7 @@ common/GUI-QT/EPGDlg.cpp   \
 common/GUI-QT/fdrmdialog.cpp   \
 common/GUI-QT/LiveScheduleDlg.cpp   \
 common/GUI-QT/main.cpp   \
+common/GUI-QT/LatLongEditDlg.cpp \
 common/GUI-QT/MultColorLED.cpp   \
 common/GUI-QT/MultimediaDlg.cpp   \
 common/GUI-QT/MultSettingsDlg.cpp   \

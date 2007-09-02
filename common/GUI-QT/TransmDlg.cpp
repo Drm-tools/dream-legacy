@@ -58,6 +58,9 @@
 # include <windows.h>
 #else
 # include <sys/ioctl.h>
+# ifndef __linux__
+#  include <sys/socket.h>
+# endif
 # include <net/if.h>
 # include <netinet/in.h>
 # include <arpa/inet.h>
@@ -1148,22 +1151,25 @@ void TransmDialog::OnComboBoxTextMessageHighlighted(int iID)
 
 void TransmDialog::OnTextChangedServiceID(const QString& strID)
 {
+	(void)strID; // TODO
 }
 
 void TransmDialog::OnTextChangedServiceLabel(const QString& strLabel)
 {
+	(void)strLabel; // TODO
 }
 
 void TransmDialog::OnComboBoxMSCInterleaverActivated(int iID)
 {
+	(void)iID; // TODO
 }
 
-void TransmDialog::OnComboBoxSDCConstellationActivated(int iID)
+void TransmDialog::OnComboBoxSDCConstellationActivated(int)
 {
 	ConfigureChannel();
 }
 
-void TransmDialog::OnComboBoxMSCConstellationActivated(int iID)
+void TransmDialog::OnComboBoxMSCConstellationActivated(int)
 {
 	/* Protection level must be re-adjusted when
 	 * constellation mode was changed */
@@ -1171,7 +1177,7 @@ void TransmDialog::OnComboBoxMSCConstellationActivated(int iID)
 	ConfigureChannel();
 }
 
-void TransmDialog::OnComboBoxMSCProtLevActivated(int iID)
+void TransmDialog::OnComboBoxMSCProtLevActivated(int)
 {
 	ConfigureChannel();
 }
@@ -1213,9 +1219,10 @@ void TransmDialog::OnComboBoxCOFDMDestHighlighted(int iID)
 
 void TransmDialog::OnTextChangedSndCrdIF(const QString& strIF)
 {
+	(void)strIF; // TODO
 }
 
-void TransmDialog::OnRadioBandwidth(int iID)
+void TransmDialog::OnRadioBandwidth(int)
 {
 	ConfigureChannel();
 }

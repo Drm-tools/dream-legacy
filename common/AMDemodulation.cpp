@@ -380,7 +380,7 @@ void CAMDemodulation::SetDemodTypeAndBPF(const EDemodType eNewType, const int iN
 	{
 		/* Init band-pass filter according to new demodulation method */
 		eDemodType = eNewType;
-		SetBPFilter(rBPNormBW);
+		SetBPFilter(iNewBW);
 	}
 	Unlock(); 
 }

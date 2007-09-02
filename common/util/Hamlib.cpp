@@ -175,7 +175,7 @@ void
 CHamlib::GetPortList(map < string, string > &ports)
 {
 	ports.clear();
-/* Config string for com-port selection is different in Windows and Linux */
+/* Config string for com-port selection is different for each platform */
 #ifdef _WIN32
 # ifdef HAVE_SETUPAPI
 	GUID guid = GUID_DEVINTERFACE_COMPORT;
@@ -286,11 +286,11 @@ CHamlib::GetPortList(map < string, string > &ports)
         printf("IOServiceGetMatchingServices returned %d\n", kernResult);
     }
         
-    io_object_t		modemService;
+    io_object_t		comPort;
     
-    // Iterate across all modems found. In this example, we bail after finding the first modem.
+    // Iterate across all ports found.
     
-    while ((modemService = IOIteratorNext(serialPortIterator)))
+    while ((comPort = IOIteratorNext(serialPortIterator)))
     {
         CFStringRef	bsdPathAsCFString;
 
@@ -298,7 +298,7 @@ CHamlib::GetPortList(map < string, string > &ports)
 		// used: the dialin device (/dev/tty.xxxxx) would be used when monitoring a serial port for
 		// incoming calls, e.g. a fax listener.
 	
-		bsdPathAsCFString = CFStringRef(IORegistryEntryCreateCFProperty(modemService,
+		bsdPathAsCFString = CFStringRef(IORegistryEntryCreateCFProperty(comPort,
                                                             CFSTR(kIOCalloutDeviceKey),
                                                             kCFAllocatorDefault,
                                                             0));
@@ -331,7 +331,7 @@ CHamlib::GetPortList(map < string, string > &ports)
 
         // Release the io_service_t now that we are done with it.
 	
-		(void) IOObjectRelease(modemService);
+		(void) IOObjectRelease(comPort);
     }
 #endif
 }
@@ -374,6 +374,7 @@ int CHamlib::level(RIG* rig, const struct confparams *parm, rig_ptr_t data)
 {
 	CHamlib & Hamlib = *((CHamlib *) data);
 	cout << parm->name << endl;
+	(void)rig;
 	(void)Hamlib;
 	return 1;					/* !=0, we want them all! */
 }
@@ -382,6 +383,7 @@ int CHamlib::parm(RIG* rig, const struct confparams *parm, rig_ptr_t data)
 {
 	CHamlib & Hamlib = *((CHamlib *) data);
 	cout << parm->name << endl;
+	(void)rig;
 	(void)Hamlib;
 	return 1;					/* !=0, we want them all! */
 }

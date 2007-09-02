@@ -322,7 +322,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	string strPort = DRMReceiver.GetRigComPort();
 	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
 	{
-		QListViewItem* item = new QListViewItem(ListViewPort, p->second.c_str(), p->first.c_str());
+		QListViewItem* item = new QListViewItem(ListViewPort, p->first.c_str(), p->second.c_str());
 		if(strPort == p->second)
 			item->setSelected(TRUE);
 	}
@@ -604,6 +604,8 @@ void ReceiverSettingsDlg::OnConfigChanged(int row, int col)
 			DRMReceiver.GetHamlib()->config[it.current()->text(0).latin1()] = it.current()->text(1).latin1();
 		}
 		*/
+	(void)row;
+	(void)col; /* TODO */
 }
 
 void ReceiverSettingsDlg::OnRigOffsetChanged(QString text)

@@ -29,6 +29,10 @@
 #if !defined(DEF_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
 #define DEF_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
+#if defined(_MSC_VER) && (_MSC_VER >= 1400)
+# pragma warning( disable : 4996 4351 4521)
+#endif
+
 #include <complex>
 using namespace std; /* Because of the library: "complex" */
 #include <string>

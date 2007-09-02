@@ -843,7 +843,7 @@ void COnboardDecoder::ProcessDataInternal(CParameter& Parameter)
 	Parameter.Unlock(); 
 }
 
-void COnboardDecoder::InitInternal(CParameter& Parameter)
+void COnboardDecoder::InitInternal(CParameter&)
 {
 	if(pSound == NULL)
 		return;

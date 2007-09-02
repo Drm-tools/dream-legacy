@@ -417,6 +417,7 @@ CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx,
 	CReal		rE;
 	CReal		rQ;
 	int			i, j;
+
 	CRealVector vecraP(iLength);
 	CRealVector vecrA(iLength);
 
@@ -435,6 +436,7 @@ CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx,
 
 	/* Main loop ------------------------------------------------------------ */
 	// The order recurrence
+
 	for (j = 0; j < iLength - 1; j++)
 	{
 		const int iNextInd = j + 1;

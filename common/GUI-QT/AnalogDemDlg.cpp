@@ -374,8 +374,8 @@ void AnalogDemDlg::OnTimer()
 		rig = DRMReceiver.GetRigModel();
 		if(rig>0)
 		{
-			CParameter& Parameters = *DRMReceiver.GetParameters();
-			EDemodType eMode = Parameters.eDemodType;
+			//CParameter& Parameters = *DRMReceiver.GetParameters();
+			//EDemodType eMode = Parameters.eDemodType;
 			/* TODO enable & disable the Onboard checkbox according to the rig caps */
 		}
 		else
