@@ -363,9 +363,9 @@ TransmDialog::TransmDialog(CDRMTransmitter& tx, CSettings& NSettings,
 
 	/* Language */
 	for (i = 0; i < LEN_TABLE_LANGUAGE_CODE; i++)
-		ComboBoxLanguage->insertItem(strTableLanguageCode[i].c_str(), i);
+		ComboBoxFACLanguage->insertItem(strTableLanguageCode[i].c_str(), i);
 
-	ComboBoxLanguage->setCurrentItem(DRMTransmitter.
+	ComboBoxFACLanguage->setCurrentItem(DRMTransmitter.
 		TransmParam.Service[0].iLanguage);
 
 	/* Program type */
@@ -496,6 +496,13 @@ TransmDialog::TransmDialog(CDRMTransmitter& tx, CSettings& NSettings,
 	connect(ButtonDeleteStream, SIGNAL(clicked()),
 		this, SLOT(OnButtonDeleteStream()));
 
+	connect(PushButtonAddAudioService, SIGNAL(clicked()),
+		this, SLOT(OnButtonAddAudioService()));
+	connect(PushButtonAddDataService, SIGNAL(clicked()),
+		this, SLOT(OnButtonAddDataService()));
+	connect(PushButtonDeleteService, SIGNAL(clicked()),
+		this, SLOT(OnButtonDeleteService()));
+
 	/* Combo boxes */
 	connect(ComboBoxCOFDMdest, SIGNAL(activated(int)),
 		this, SLOT(OnComboBoxCOFDMDestHighlighted(int)));
@@ -511,6 +518,10 @@ TransmDialog::TransmDialog(CDRMTransmitter& tx, CSettings& NSettings,
 		this, SLOT(OnComboBoxMSCProtLevActivated(int)));
 	connect(ComboBoxSDCConstellation, SIGNAL(activated(int)),
 		this, SLOT(OnComboBoxSDCConstellationActivated(int)));
+	connect(ComboBoxStreamType, SIGNAL(highlighted(int)),
+		this, SLOT(OnComboBoxStreamTypeHighlighted(int)));
+	connect(ComboBoxPacketsPerFrame, SIGNAL(highlighted(const QString&)),
+		this, SLOT(OnComboBoxPacketsPerFrameHighlighted(const QString&)));
 
 	/* Button groups */
 	connect(ButtonGroupMode, SIGNAL(clicked(int)),
@@ -527,27 +538,35 @@ TransmDialog::TransmDialog(CDRMTransmitter& tx, CSettings& NSettings,
 		this, SLOT(OnTextChangedServiceID(const QString&)));
 	connect(LineEditSndCrdIF, SIGNAL(textChanged(const QString&)),
 		this, SLOT(OnTextChangedSndCrdIF(const QString&)));
+	connect(LineEditPacketLen, SIGNAL(textChanged(const QString&)),
+		this, SLOT(OnLineEditPacketLenChanged(const QString&)));
 
-	connect(&Timer, SIGNAL(timeout()), 
-		this, SLOT(OnTimer()));
+	connect(ListViewStreams, SIGNAL(selectionChanged(QListViewItem*)),
+		this, SLOT(OnStreamsListItemClicked(QListViewItem*)));
+	connect(ListViewServices, SIGNAL(selectionChanged(QListViewItem*)),
+		this, SLOT(OnServicesListItemClicked(QListViewItem*)));
+
+	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
 	ListViewStreams->clear();
-	if(DRMTransmitter.TransmParam.Service[0].eAudDataFlag == SF_AUDIO)
-		(void)new QListViewItem(ListViewStreams, "0","audio","-","-",
-		QString::number(DRMTransmitter.TransmParam.Stream[0].iLenPartA+DRMTransmitter.TransmParam.Stream[0].iLenPartB)
-		);
-	else
-		(void)new QListViewItem(ListViewStreams, "0","data packet","45","-",
-		QString::number(DRMTransmitter.TransmParam.Stream[0].iLenPartA+DRMTransmitter.TransmParam.Stream[0].iLenPartB)
-		);
 	ComboBoxStreamType->insertItem("audio");
 	ComboBoxStreamType->insertItem("data packet");
 	ComboBoxStreamType->insertItem("data stream");
+	ComboBoxStream->insertItem("0");
 	ComboBoxStream->insertItem("1");
 	ComboBoxStream->insertItem("2");
 	ComboBoxStream->insertItem("3");
 
 	ConfigureChannel();
+	ConfigureStreams();
+
+	ComboBoxStream->setCurrentItem(0);
+
+	ListViewServices->clear();
+	ComboBoxServiceID->insertItem("0");
+	ComboBoxServiceID->insertItem("1");
+	ComboBoxServiceID->insertItem("2");
+	ComboBoxServiceID->insertItem("3");
 
 	/* Set timer for real-time controls */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
@@ -636,6 +655,65 @@ TransmDialog::OnRadioMode(int)
 }
 
 void
+TransmDialog::OnLineEditPacketLenChanged(const QString& str)
+{
+	if(str=="-")
+		return;
+	size_t bits = 8*TextLabelMSCBytesAvailable->text().toInt();
+	size_t packet_len = str.toInt();
+	if(packet_len==0)
+		packet_len = 3;
+	size_t max_packets = bits/(8*packet_len);
+	ComboBoxPacketsPerFrame->clear();
+	for(size_t i=0; i<=max_packets; i++)
+		ComboBoxPacketsPerFrame->insertItem(QString::number(i));
+	if(max_packets>0)
+		ComboBoxPacketsPerFrame->setCurrentItem(1);
+	else
+		ComboBoxPacketsPerFrame->setCurrentItem(0);
+}
+
+void
+TransmDialog::OnComboBoxPacketsPerFrameHighlighted(const QString& str)
+{
+	if(ComboBoxPacketsPerFrame->currentText()=="-")
+		return;
+	size_t packet_len = LineEditPacketLen->text().toInt();
+	size_t packets = str.toInt();
+	LineEditBitsPerFrame->setText(QString::number(8*packets*packet_len));
+}
+
+void
+TransmDialog::OnComboBoxStreamTypeHighlighted(int item)
+{
+	size_t bits = 8*TextLabelMSCBytesAvailable->text().toInt();
+	switch(item)
+	{
+	case 0: // audio
+	case 2: // data_stream
+		LineEditPacketLen->setText("-");
+		LineEditPacketLen->setEnabled(false);
+		ComboBoxPacketsPerFrame->clear();
+		ComboBoxPacketsPerFrame->insertItem("-");
+		ComboBoxPacketsPerFrame->setEnabled(false);
+		ComboBoxPacketsPerFrame->setCurrentItem(0);
+		LineEditBitsPerFrame->setEnabled(true);
+		LineEditBitsPerFrame->setText(QString::number(bits));
+		break;
+	case 1: // data_packet
+		LineEditPacketLen->setText(QString::number(int(bits/8)));
+		LineEditPacketLen->setEnabled(true);
+		ComboBoxPacketsPerFrame->setEnabled(true);
+		LineEditBitsPerFrame->setEnabled(false);
+		break;
+	}
+}
+
+void TransmDialog::OnStreamsListItemClicked(QListViewItem* item)
+{
+}
+
+void
 TransmDialog::OnButtonAddStream()
 {
 	(void) new QListViewItem(ListViewStreams,
@@ -643,10 +721,15 @@ TransmDialog::OnButtonAddStream()
 		ComboBoxStreamType->currentText(),
 		LineEditPacketLen->text(),
 		ComboBoxPacketsPerFrame->currentText(),
-		LineEditBitsPerFrame->text()
+		LineEditBitsPerFrame->text(),
+		QString::number(LineEditBitsPerFrame->text().toInt()/8)
 	);
-	ComboBoxStream->removeItem(ComboBoxStream->currentItem());
+
 	ConfigureStreams();
+	
+	ComboBoxStream->removeItem(ComboBoxStream->currentItem());
+	ComboBoxStream->setCurrentItem(0);
+	ComboBoxStreamType->setCurrentItem(0);
 }
 
 void
@@ -655,9 +738,15 @@ TransmDialog::OnButtonDeleteStream()
 	QListViewItem* p = ListViewStreams->selectedItem();
 	if(p)
 	{
-		ComboBoxStream->insertItem(p->text(0));
+		QStringList s(p->text(0));
+		for(int i=0; i<ComboBoxStream->count(); i++)
+			s.append(ComboBoxStream->text(i));
+		s.sort();
+		ComboBoxStream->clear();
+		ComboBoxStream->insertStringList(s);
 		delete p;
 	}
+	ComboBoxStream->setCurrentItem(0);
 	ConfigureStreams();
 }
 
@@ -699,7 +788,7 @@ TransmDialog::ConfigureServices()
 {
 	DRMTransmitter.TransmParam.Service[0].iServiceID = LineEditServiceID->text().toUInt();
 	DRMTransmitter.TransmParam.Service[0].strLabel = LineEditServiceLabel->text().utf8();
-	DRMTransmitter.TransmParam.Service[0].iLanguage = ComboBoxLanguage->currentItem();
+	DRMTransmitter.TransmParam.Service[0].iLanguage = ComboBoxFACLanguage->currentItem();
 
 	ConfigureDataService();
 	ConfigureAudioService();
@@ -783,19 +872,35 @@ void
 TransmDialog::ConfigureStreams()
 {
 	int used = 0;
+	bool audio = false;
+	bool data = false;
+
 	QListViewItemIterator it( ListViewStreams );
+	
+	ComboBoxAudioStreamNo->clear();
+	ComboBoxDataStreamNo->clear();
+	ComboBoxDataPacketId->clear();
+
 	for ( ; it.current(); ++it )
 	{
 		int iID = it.current()->text(0).toUInt();
 		if(it.current()->text(1) == "audio")
+		{
 			DRMTransmitter.TransmParam.Stream[iID].eAudDataFlag=SF_AUDIO;
+			ComboBoxAudioStreamNo->insertItem(QString::number(iID));
+			audio = true;
+		}
 		else
 		{
 			DRMTransmitter.TransmParam.Stream[iID].eAudDataFlag=SF_DATA;
-			if(it.current()->text(1) == "data packet mode")
+			ComboBoxDataStreamNo->insertItem(QString::number(iID));
+			if(it.current()->text(1) == "data packet")
 			{
 				DRMTransmitter.TransmParam.Stream[iID].ePacketModInd=PM_PACKET_MODE;
 				DRMTransmitter.TransmParam.Stream[iID].iPacketLen = it.current()->text(2).toUInt();
+				data = true;
+				for(size_t i=0; i<4; i++)
+					ComboBoxDataPacketId->insertItem(QString::number(i));
 			}
 			else
 				DRMTransmitter.TransmParam.Stream[iID].ePacketModInd=PM_SYNCHRON_STR_MODE;
@@ -805,15 +910,10 @@ TransmDialog::ConfigureStreams()
 		DRMTransmitter.TransmParam.Stream[iID].iLenPartB = it.current()->text(4).toUInt();
 		used += DRMTransmitter.TransmParam.Stream[iID].iLenPartB;
 	}
-	TextLabelMSCBytesAvailable->setText(QString::number((DRMTransmitter.TransmParam.iNumDecodedBitsMSC - used)/8));
-/*
-	if(CheckBoxEnableAudio->isChecked())
-		DRMTransmitter.TransmParam.Service[0].AudioParam.iStreamID = 0;
-	else
-		DRMTransmitter.TransmParam.Service[0].DataParam.iStreamID = 0;
-		(void)new QListViewItem(ListViewStreams, "0","audio","-","-",
-		QString::number(DRMTransmitter.TransmParam.Stream[0].iLenPartA+DRMTransmitter.TransmParam.Stream[0].iLenPartB)
-*/
+	TextLabelMSCBytesAvailable->setText(QString::number((DRMTransmitter.TransmParam.iNumDecodedBitsMSC-used)/8));
+
+	EnableAudio(audio);
+	EnableData(data);
 }
 
 void
@@ -1030,7 +1130,6 @@ void TransmDialog::EnableData(const _BOOLEAN bFlag)
 		ListViewFileNames->setEnabled(TRUE);
 		PushButtonClearAllFileNames->setEnabled(TRUE);
 		PushButtonAddFile->setEnabled(TRUE);
-
 	}
 	else
 	{
@@ -1162,6 +1261,84 @@ void TransmDialog::OnTextChangedServiceLabel(const QString& strLabel)
 void TransmDialog::OnComboBoxMSCInterleaverActivated(int iID)
 {
 	(void)iID; // TODO
+}
+
+void TransmDialog::OnButtonAddAudioService()
+{
+	(void) new QListViewItem(ListViewServices, ComboBoxShortID->currentText(),
+		LineEditServiceLabel->text(),
+		LineEditServiceID->text(),
+		ComboBoxFACLanguage->currentText(),
+		LineEditSDCLanguage->text(),
+		LineEditCountry->text(),
+		ComboBoxProgramType->currentText(),
+		ComboBoxServiceStream->currentText()
+	);
+
+	ConfigureServices();
+	
+	ComboBoxShortID->removeItem(ComboBoxStream->currentItem());
+	ComboBoxShortID->setCurrentItem(0);
+}
+
+void TransmDialog::OnButtonAddDataService()
+{
+	QListViewItem* v = new QListViewItem(ListViewServices, ComboBoxShortID->currentText(),
+		LineEditServiceLabel->text(),
+		LineEditServiceID->text(),
+		ComboBoxFACLanguage->currentText(),
+		LineEditSDCLanguage->text(),
+		LineEditCountry->text(),
+		ComboBoxAppType->currentText(),
+		ComboBoxServiceStream->currentText()
+	);
+	v->setText(8, ComboBoxServicePacketID->currentText());
+
+	ConfigureServices();
+	
+	ComboBoxShortID->removeItem(ComboBoxStream->currentItem());
+	ComboBoxShortID->setCurrentItem(0);
+}
+
+void TransmDialog::OnButtonDeleteService()
+{
+	QListViewItem* p = ListViewServices->selectedItem();
+	if(p)
+	{
+		QStringList s(p->text(0));
+		for(int i=0; i<ComboBoxShortID->count(); i++)
+			s.append(ComboBoxShortID->text(i));
+		s.sort();
+		ComboBoxShortID->clear();
+		ComboBoxShortID->insertStringList(s);
+		delete p;
+	}
+	ComboBoxShortID->setCurrentItem(0);
+	ConfigureServices();
+}
+
+void TransmDialog::OnServicesListItemClicked(QListViewItem* item)
+{
+	const QString& packetID = item->text(8);
+	if(packetID=="")
+	{
+		ComboBoxProgramType->setCurrentText(item->text(6));
+		ComboBoxAppType->setCurrentText("");
+		ComboBoxServicePacketID->setCurrentText("");
+	}
+	else
+	{
+		ComboBoxProgramType->setCurrentText("");
+		ComboBoxAppType->setCurrentText(item->text(6));
+		ComboBoxServicePacketID->setCurrentText(packetID);
+	}
+	ComboBoxShortID->setCurrentText(item->text(0));
+	LineEditServiceLabel->setText(item->text(1));
+	LineEditServiceID->setText(item->text(2));
+	ComboBoxFACLanguage->setCurrentText(item->text(3));
+	LineEditSDCLanguage->setText(item->text(4));
+	LineEditCountry->setText(item->text(5));
+	ComboBoxServiceStream->setCurrentText(item->text(7));
 }
 
 void TransmDialog::OnComboBoxSDCConstellationActivated(int)

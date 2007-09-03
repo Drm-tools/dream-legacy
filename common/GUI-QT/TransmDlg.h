@@ -85,16 +85,12 @@ protected:
 
 public slots:
 	void OnButtonStartStop();
-	void OnButtonAddStream();
-	void OnButtonDeleteStream();
 	void OnToggleCheckBoxEnableTextMessage(bool bState);
 	void OnPushButtonAddText();
 	void OnButtonClearAllText();
 	void OnPushButtonAddFileName();
 	void OnButtonClearAllFileNames();
 	void OnComboBoxTextMessageHighlighted(int iID);
-	void OnTextChangedServiceLabel(const QString& strLabel);
-	void OnTextChangedServiceID(const QString& strID);
 	void OnComboBoxSDCConstellationActivated(int iID);
 	void OnComboBoxMSCInterleaverActivated(int iID);
 	void OnComboBoxMSCConstellationActivated(int iID);
@@ -105,6 +101,22 @@ public slots:
 	void OnComboBoxCOFDMDestHighlighted(int iID);
 	void OnComboBoxAudioSourceHighlighted(int iID);
 	void OnRadioMode(int iID);
+
+	/* streams */
+	void OnButtonAddStream();
+	void OnButtonDeleteStream();
+	void OnComboBoxStreamTypeHighlighted(int item);
+	void OnComboBoxPacketsPerFrameHighlighted(const QString& str);
+	void OnLineEditPacketLenChanged(const QString& str);
+	void OnStreamsListItemClicked(QListViewItem* item);
+
+	/* services */
+	void OnTextChangedServiceLabel(const QString& strLabel);
+	void OnTextChangedServiceID(const QString& strID);
+	void OnButtonAddAudioService();
+	void OnButtonAddDataService();
+	void OnButtonDeleteService();
+	void OnServicesListItemClicked(QListViewItem* item);
 
 	void OnTimer();
 	void OnHelpWhatsThis();
