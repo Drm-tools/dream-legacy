@@ -6,22 +6,22 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -412,7 +412,7 @@ TransmDialog::TransmDialog(CDRMTransmitter& tx, CSettings& NSettings,
 	CheckBoxSBR->setChecked(TRUE);
 	EnableAudio(TRUE);
 	EnableData(FALSE);
-	
+
 	/* Fill Audio source selection */
 	/* Get sound device names */
 	vecAudioSources.clear();
@@ -563,10 +563,10 @@ TransmDialog::TransmDialog(CDRMTransmitter& tx, CSettings& NSettings,
 	ComboBoxStream->setCurrentItem(0);
 
 	ListViewServices->clear();
-	ComboBoxServiceID->insertItem("0");
-	ComboBoxServiceID->insertItem("1");
-	ComboBoxServiceID->insertItem("2");
-	ComboBoxServiceID->insertItem("3");
+	ComboBoxShortID->insertItem("0");
+	ComboBoxShortID->insertItem("1");
+	ComboBoxShortID->insertItem("2");
+	ComboBoxShortID->insertItem("3");
 
 	/* Set timer for real-time controls */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
@@ -726,7 +726,7 @@ TransmDialog::OnButtonAddStream()
 	);
 
 	ConfigureStreams();
-	
+
 	ComboBoxStream->removeItem(ComboBoxStream->currentItem());
 	ComboBoxStream->setCurrentItem(0);
 	ComboBoxStreamType->setCurrentItem(0);
@@ -876,7 +876,7 @@ TransmDialog::ConfigureStreams()
 	bool data = false;
 
 	QListViewItemIterator it( ListViewStreams );
-	
+
 	ComboBoxAudioStreamNo->clear();
 	ComboBoxDataStreamNo->clear();
 	ComboBoxDataPacketId->clear();
@@ -991,7 +991,7 @@ TransmDialog::ConfigureChannel()
 		DRMTransmitter.TransmParam.SetWaveMode(RM_ROBUSTNESS_MODE_C);
 	if(RadioButtonRMD->isChecked())
 		DRMTransmitter.TransmParam.SetWaveMode(RM_ROBUSTNESS_MODE_D);
-	
+
 	DRMTransmitter.CalculateChannelCapacities(DRMTransmitter.TransmParam);
 
 	TextLabelMSCCapBits->setText(QString::number(DRMTransmitter.TransmParam.iNumDecodedBitsMSC));
@@ -1078,7 +1078,7 @@ void TransmDialog::OnComboBoxAudioSourceHighlighted(int iID)
 			QString::null, "Wave Files (*.wav)", this ) );
 		if ( s.isEmpty() )
 			return;
-		ComboBoxAudioSource->changeItem(s, iID);	
+		ComboBoxAudioSource->changeItem(s, iID);
 	}
 }
 
@@ -1276,7 +1276,7 @@ void TransmDialog::OnButtonAddAudioService()
 	);
 
 	ConfigureServices();
-	
+
 	ComboBoxShortID->removeItem(ComboBoxStream->currentItem());
 	ComboBoxShortID->setCurrentItem(0);
 }
@@ -1295,7 +1295,7 @@ void TransmDialog::OnButtonAddDataService()
 	v->setText(8, ComboBoxServicePacketID->currentText());
 
 	ConfigureServices();
-	
+
 	ComboBoxShortID->removeItem(ComboBoxStream->currentItem());
 	ComboBoxShortID->setCurrentItem(0);
 }
@@ -1390,7 +1390,7 @@ void TransmDialog::OnComboBoxCOFDMDestHighlighted(int iID)
 			"cofdm.wav", "Wave Files (*.wav)", this ) );
 		if ( s.isEmpty() )
 			return;
-		ComboBoxCOFDMdest->changeItem(s, iID);	
+		ComboBoxCOFDMdest->changeItem(s, iID);
 	}
 }
 
