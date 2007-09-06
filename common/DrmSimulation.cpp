@@ -61,9 +61,10 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	Param.SetAudDataFlag(0,  SF_DATA);
 
 	CDataParam DataParam;
-	DataParam.iStreamID = 0;
 	DataParam.ePacketModInd = PM_SYNCHRON_STR_MODE;
 	Param.SetDataParam(0, DataParam);
+
+	Param.Service[0].iDataStream = 0;
 
 	//Param.SetCurSelDataService(1); /* Service ID must be set for activation */
 	Param.SetCurSelDataService(0); /* Service ID must be set for activation */

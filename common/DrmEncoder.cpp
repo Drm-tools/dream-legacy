@@ -37,7 +37,7 @@
 /* Implementation *************************************************************/
 CDRMEncoder::CDRMEncoder():
 	DataBuf(), pSoundInInterface(NULL),
-	AudioSourceEncoder(), GenerateFACData(), GenerateSDCData(),
+	AudioSourceEncoder(), DataEncoder(), GenerateFACData(), GenerateSDCData(),
 	pReadData(NULL), strInputFileName(),
 	vecstrTexts(), vecstrPics(), vecstrPicTypes(),
 	iSoundInDev(-1), bUseUEP(FALSE)
@@ -90,10 +90,22 @@ CDRMEncoder::ClearPics()
 	vecstrPicTypes.clear();
 }
 
+void
+CDRMEncoder::GetTextMessages(vector<string>&)
+{
+}
+
+void
+CDRMEncoder::GetPics(map<string,string>& m)
+{
+	for(size_t i=0; i<vecstrPics.size(); i++)
+		m[vecstrPics[i]] = vecstrPicTypes[i];
+}
+
 _BOOLEAN
 CDRMEncoder::GetTransStat(string& strCPi, _REAL& rCPe)
 {
-	return AudioSourceEncoder.GetTransStat(strCPi, rCPe);
+	return DataEncoder.GetSliShowEnc()->GetTransStat(strCPi, rCPe);
 }
 
 void
@@ -128,12 +140,12 @@ void CDRMEncoder::Init(CParameter& Parameters,
 	size_t i;
 	for(i=0; i<vecstrTexts.size(); i++)
 		AudioSourceEncoder.SetTextMessage(vecstrTexts[i]);
-
-	AudioSourceEncoder.ClearPicFileNames();
-	for(i=0; i<vecstrPics.size(); i++)
-		AudioSourceEncoder.SetPicFileName(vecstrPics[i], vecstrPicTypes[i]);
-
 	AudioSourceEncoder.Init(Parameters, MSCBuf[0]);
+
+	DataEncoder.GetSliShowEnc()->ClearAllFileNames();
+	for(i=0; i<vecstrPics.size(); i++)
+		DataEncoder.GetSliShowEnc()->AddFileName(vecstrPics[i], vecstrPicTypes[i]);
+	DataEncoder.Init(Parameters);
 }
 
 void
@@ -148,6 +160,29 @@ CDRMEncoder::ProcessData(CParameter& Parameters,
 
 	/* Audio source encoder */
 	AudioSourceEncoder.ProcessData(Parameters, DataBuf, MSCBuf[0]);
+
+#if 0
+	if(false)
+	{
+		/* Write data packets in stream */
+		CVector < _BINARY > vecbiData;
+		const int iNumPack = iOutputBlockSize / iTotPacketSize;
+		int iPos = 0;
+
+		for (int j = 0; j < iNumPack; j++)
+		{
+			/* Get new packet */
+			DataEncoder.GeneratePacket(vecbiData);
+
+			/* Put it on stream */
+			for (i = 0; i < iTotPacketSize; i++)
+			{
+				(*pvecOutputData)[iPos] = vecbiData[i];
+				iPos++;
+			}
+		}
+	}
+#endif
 
 	/* FAC *********************************************************** */
 	GenerateFACData.ReadData(Parameters, FACBuf);
@@ -179,10 +214,10 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 		Parameters.iNumDataService = 0;
 
 		Parameters.Service[0].eAudDataFlag = SF_AUDIO;
-		Parameters.Service[0].AudioParam.iStreamID = 0;
+		Parameters.Service[0].iAudioStream = 0;
 
 		/* Text message */
-		Parameters.Service[0].AudioParam.bTextflag = s.Get("Encoder", "textmessages", 1);
+		Parameters.AudioParam[0].bTextflag = s.Get("Encoder", "textmessages", 1);
 
 		/* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
 		Parameters.Service[0].iServiceDescr = s.Get("Encoder", "genre", 15); /* 15 -> other music */
@@ -194,16 +229,17 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 		Parameters.iNumDataService = 1;
 
 		Parameters.Service[0].eAudDataFlag = SF_DATA;
-		Parameters.Service[0].DataParam.iStreamID = 0;
+		Parameters.Service[0].iDataStream = 0;
+		Parameters.Service[0].iPacketID = 0;
 
 		/* Init SlideShow application */
-		Parameters.Service[0].DataParam.iPacketLen = 45;	/* TEST */
-		Parameters.Service[0].DataParam.eDataUnitInd = CDataParam::DU_DATA_UNITS;
-		Parameters.Service[0].DataParam.eAppDomain = CDataParam::AD_DAB_SPEC_APP;
+		Parameters.DataParam[0][0].eDataUnitInd = CDataParam::DU_DATA_UNITS;
+		Parameters.DataParam[0][0].eAppDomain = CDataParam::AD_DAB_SPEC_APP;
 
 		/* The value 0 indicates that the application details are provided
 		   solely by SDC data entity type 5 */
 		Parameters.Service[0].iServiceDescr = 0;
+		Parameters.Stream[0].iPacketLen = 45;	/* TEST */
 	}
 
 	/* Init service parameters, 24 bit unsigned integer number */
@@ -275,7 +311,7 @@ void
 CDRMEncoder::SaveSettings(CSettings& s, CParameter& Parameters)
 {
 	s.Put("Encoder", "audioservice", (Parameters.Service[0].eAudDataFlag == SF_AUDIO)?1:0);
-	s.Put("Encoder", "textmessages", Parameters.Service[0].AudioParam.bTextflag);
+	s.Put("Encoder", "textmessages", Parameters.AudioParam[0].bTextflag);
 	s.Put("Encoder", "genre", Parameters.Service[0].iServiceDescr);
 	s.Put("Encoder", "sid", int(Parameters.Service[0].iServiceID));
 	s.Put("Encoder", "label", Parameters.Service[0].strLabel);

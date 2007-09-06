@@ -334,7 +334,7 @@ void FDRMDialog::UpdateDisplay()
 	   select the first audio service available */
 
 	if (!Parameters.Service[iCurSelAudioServ].IsActive() ||
-	    Parameters.Service[iCurSelAudioServ].AudioParam.iStreamID == STREAM_ID_NOT_USED ||
+	    Parameters.Service[iCurSelAudioServ].iAudioStream == STREAM_ID_NOT_USED ||
 	    Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
 	{
 		int i = 0;
@@ -343,7 +343,7 @@ void FDRMDialog::UpdateDisplay()
 		while ((bStop == FALSE) && (i < MAX_NUM_SERVICES))
 		{
 			if (Parameters.Service[i].IsActive() &&
-			    Parameters.Service[i].AudioParam.iStreamID != STREAM_ID_NOT_USED &&
+			    Parameters.Service[i].iAudioStream != STREAM_ID_NOT_USED &&
 			    Parameters.Service[i].eAudDataFlag == SF_AUDIO)
 			{
 				iCurSelAudioServ = i;
@@ -354,22 +354,17 @@ void FDRMDialog::UpdateDisplay()
 		}
 	}
 
-	//const int iCurSelDataServ = Parameters.GetCurSelDataService();
+	CAudioParam& audioParam = Parameters.AudioParam[Parameters.Service[iCurSelAudioServ].iAudioStream];
 
 	/* If selected service is audio and text message is true */
-	if ((Parameters.Service[iCurSelAudioServ].
-		eAudDataFlag == SF_AUDIO) &&
-		(Parameters.Service[iCurSelAudioServ].
-		AudioParam.bTextflag == TRUE))
+	if ((Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_AUDIO) && (audioParam.bTextflag == TRUE))
 	{
 		/* Activate text window */
 		TextTextMessage->setEnabled(TRUE);
 
 		/* Text message of current selected audio service
 		   (UTF-8 decoding) */
-		QCString utf8Message =
-			Parameters.Service[iCurSelAudioServ]
-				.AudioParam.strTextMessage.c_str();
+		QCString utf8Message = audioParam.strTextMessage.c_str();
 		QString textMessage = QString().fromUtf8(utf8Message);
 		QString formattedMessage = "";
 		for (size_t i = 0; i < textMessage.length(); i++)
@@ -628,11 +623,13 @@ void FDRMDialog::UpdateDisplay()
 
 			/* Show, if a multimedia stream is connected to this service */
 			if ((Parameters.Service[i].eAudDataFlag ==SF_AUDIO) &&
-				(Parameters.Service[i].DataParam.iStreamID != STREAM_ID_NOT_USED))
+				(Parameters.Service[i].iDataStream != STREAM_ID_NOT_USED))
 			{
+				int iStreamID = Parameters.Service[i].iDataStream;
+				int iPacketID = Parameters.Service[i].iPacketID;
+				CDataParam& dataParam = Parameters.DataParam[iStreamID][iPacketID];
 
-				if (Parameters.Service[i].
-					DataParam.iUserAppIdent == AT_MOTEPG)
+				if (dataParam.iUserAppIdent == AT_MOTEPG)
 				{
 					m_StaticService[i] += tr(" + EPG"); /* EPG service */
 				}
@@ -890,9 +887,12 @@ void FDRMDialog::SetService(int iNewServiceID)
 	Parameters.SetCurSelDataService(iNewServiceID);
 	iCurSelServiceGUI = iNewServiceID;
 
+	int iStreamID = Parameters.Service[iNewServiceID].iDataStream;
+	int iPacketID = Parameters.Service[iNewServiceID].iPacketID;
+	CDataParam& dataParam = Parameters.DataParam[iStreamID][iPacketID];
 
 	/* Eventually activate multimedia window */
-	int iAppIdent = Parameters.Service[iNewServiceID].DataParam.iUserAppIdent;
+	int iAppIdent = dataParam.iUserAppIdent;
 
 	/* If service is only data service or has a multimedia content
 	   , activate multimedia window */
@@ -1124,16 +1124,16 @@ QString FDRMDialog::GetCodecString(const int iServiceID)
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 
+	CAudioParam& audioParam = Parameters.AudioParam[Parameters.Service[iServiceID].iAudioStream];
+
 	/* First check if it is audio or data service */
 	if (Parameters.Service[iServiceID].eAudDataFlag == SF_AUDIO)
 	{
 		/* Audio service */
-		const CAudioParam::EAudSamRat eSamRate = Parameters.
-			Service[iServiceID].AudioParam.eAudioSamplRate;
+		const CAudioParam::EAudSamRat eSamRate = audioParam.eAudioSamplRate;
 
 		/* Audio coding */
-		switch (Parameters.Service[iServiceID].
-			AudioParam.eAudioCoding)
+		switch (audioParam.eAudioCoding)
 		{
 		case CAudioParam::AC_AAC:
 			/* Only 12 and 24 kHz sample rates are supported for AAC encoding */
@@ -1157,8 +1157,7 @@ QString FDRMDialog::GetCodecString(const int iServiceID)
 		}
 
 		/* SBR */
-		if (Parameters.Service[iServiceID].
-			AudioParam.eSBRFlag == CAudioParam::SB_USED)
+		if (audioParam.eSBRFlag == CAudioParam::SB_USED)
 		{
 			strReturn += "+";
 		}
@@ -1182,9 +1181,9 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 	if (Parameters.Service[iServiceID].eAudDataFlag == SF_AUDIO)
 	{
 		/* Audio service */
+		CAudioParam& audioParam = Parameters.AudioParam[Parameters.Service[iServiceID].iAudioStream];
 		/* Mono-Stereo */
-		switch (Parameters.
-			Service[iServiceID].AudioParam.eAudioMode)
+		switch (audioParam.eAudioMode)
 		{
 			case CAudioParam::AM_MONO:
 				strReturn = "Mono";
@@ -1202,12 +1201,14 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 	else
 	{
 		/* Data service */
-		if (Parameters.Service[iServiceID].DataParam.
-			ePacketModInd == PM_PACKET_MODE)
+		CDataParam& dataParam = Parameters.DataParam[
+				Parameters.Service[iServiceID].iDataStream]
+				[Parameters.Service[iServiceID].iPacketID];
+		if (dataParam.ePacketModInd == PM_PACKET_MODE)
 		{
-			if (Parameters.Service[iServiceID].DataParam.eAppDomain == CDataParam::AD_DAB_SPEC_APP)
+			if (dataParam.eAppDomain == CDataParam::AD_DAB_SPEC_APP)
 			{
-				switch (Parameters.Service[iServiceID].DataParam.iUserAppIdent)
+				switch (dataParam.iUserAppIdent)
 				{
 				case 1:
 					strReturn = "Dynamic labels";

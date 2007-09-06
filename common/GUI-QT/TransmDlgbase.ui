@@ -1829,92 +1829,7 @@
                         <name>spacing</name>
                         <number>6</number>
                     </property>
-                    <widget row="4"  column="8"  rowspan="1"  colspan="4" >
-                        <class>QGroupBox</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>GroupBox9</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>title</name>
-                            <string>Data Service</string>
-                        </property>
-                        <grid>
-                            <property stdset="1">
-                                <name>margin</name>
-                                <number>11</number>
-                            </property>
-                            <property stdset="1">
-                                <name>spacing</name>
-                                <number>6</number>
-                            </property>
-                            <widget row="0"  column="0" >
-                                <class>QLabel</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>TextLabel1_3</cstring>
-                                </property>
-                                <property stdset="1">
-                                    <name>text</name>
-                                    <string>Application Type</string>
-                                </property>
-                            </widget>
-                            <widget row="0"  column="1" >
-                                <class>QComboBox</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>ComboBoxAppType</cstring>
-                                </property>
-                            </widget>
-                        </grid>
-                    </widget>
-                    <widget row="4"  column="3"  rowspan="1"  colspan="5" >
-                        <class>QGroupBox</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>GroupBox8</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>title</name>
-                            <string>Audio Service</string>
-                        </property>
-                        <grid>
-                            <property stdset="1">
-                                <name>margin</name>
-                                <number>11</number>
-                            </property>
-                            <property stdset="1">
-                                <name>spacing</name>
-                                <number>6</number>
-                            </property>
-                            <widget row="0"  column="1" >
-                                <class>QComboBox</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>ComboBoxProgramType</cstring>
-                                </property>
-                                <property stdset="1">
-                                    <name>sizePolicy</name>
-                                    <sizepolicy>
-                                        <hsizetype>7</hsizetype>
-                                        <vsizetype>0</vsizetype>
-                                    </sizepolicy>
-                                </property>
-                            </widget>
-                            <widget row="0"  column="0" >
-                                <class>QLabel</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>TextLabelProgramType</cstring>
-                                </property>
-                                <property stdset="1">
-                                    <name>text</name>
-                                    <string>Program Type:</string>
-                                </property>
-                            </widget>
-                        </grid>
-                    </widget>
-                    <widget row="3"  column="10"  rowspan="1"  colspan="2" >
+                    <widget row="3"  column="10" >
                         <class>QLineEdit</class>
                         <property stdset="1">
                             <name>name</name>
@@ -1968,7 +1883,7 @@
                             <string>FAC Language</string>
                         </property>
                     </widget>
-                    <widget row="2"  column="8"  rowspan="1"  colspan="4" >
+                    <widget row="2"  column="8"  rowspan="1"  colspan="3" >
                         <class>QLineEdit</class>
                         <property stdset="1">
                             <name>name</name>
@@ -1982,43 +1897,7 @@
                             </sizepolicy>
                         </property>
                     </widget>
-                    <widget row="2"  column="6"  rowspan="1"  colspan="2" >
-                        <class>QLabel</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>TextLabelServiceLabel</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>text</name>
-                            <string>Label</string>
-                        </property>
-                    </widget>
-                    <widget row="2"  column="0"  rowspan="1"  colspan="3" >
-                        <class>QLabel</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>TextLabelServiceID</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>text</name>
-                            <string>Service ID</string>
-                        </property>
-                    </widget>
-                    <widget row="2"  column="3"  rowspan="1"  colspan="3" >
-                        <class>QLineEdit</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>LineEditServiceID</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>sizePolicy</name>
-                            <sizepolicy>
-                                <hsizetype>5</hsizetype>
-                                <vsizetype>0</vsizetype>
-                            </sizepolicy>
-                        </property>
-                    </widget>
-                    <widget row="1"  column="0"  rowspan="1"  colspan="12" >
+                    <widget row="1"  column="0"  rowspan="1"  colspan="11" >
                         <class>QListView</class>
                         <column>
                             <property>
@@ -2239,7 +2118,7 @@
                             </size>
                         </property>
                     </widget>
-                    <widget row="6"  column="10"  rowspan="1"  colspan="2" >
+                    <widget row="5"  column="10" >
                         <class>QPushButton</class>
                         <property stdset="1">
                             <name>name</name>
@@ -2250,103 +2129,7 @@
                             <string>Delete Selected</string>
                         </property>
                     </widget>
-                    <widget row="5"  column="11" >
-                        <class>QComboBox</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>ComboBoxServicePacketID</cstring>
-                        </property>
-                    </widget>
-                    <widget row="5"  column="9"  rowspan="1"  colspan="2" >
-                        <class>QLabel</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>TextLabelServicePacketID</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>text</name>
-                            <string>Packet ID</string>
-                        </property>
-                    </widget>
-                    <widget row="5"  column="0" >
-                        <class>QLabel</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>TextLabel1_4</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>text</name>
-                            <string>short ID</string>
-                        </property>
-                    </widget>
-                    <widget row="5"  column="1"  rowspan="1"  colspan="2" >
-                        <class>QComboBox</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>ComboBoxShortID</cstring>
-                        </property>
-                    </widget>
-                    <spacer row="5"  column="3"  rowspan="1"  colspan="2" >
-                        <property>
-                            <name>name</name>
-                            <cstring>Spacer14</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>orientation</name>
-                            <enum>Horizontal</enum>
-                        </property>
-                        <property stdset="1">
-                            <name>sizeType</name>
-                            <enum>Expanding</enum>
-                        </property>
-                        <property>
-                            <name>sizeHint</name>
-                            <size>
-                                <width>20</width>
-                                <height>20</height>
-                            </size>
-                        </property>
-                    </spacer>
-                    <widget row="5"  column="5"  rowspan="1"  colspan="2" >
-                        <class>QLabel</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>TextLabelServiceStream</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>text</name>
-                            <string>Stream</string>
-                        </property>
-                    </widget>
-                    <widget row="5"  column="7" >
-                        <class>QComboBox</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>ComboBoxServiceStream</cstring>
-                        </property>
-                    </widget>
-                    <spacer row="5"  column="8" >
-                        <property>
-                            <name>name</name>
-                            <cstring>Spacer15</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>orientation</name>
-                            <enum>Horizontal</enum>
-                        </property>
-                        <property stdset="1">
-                            <name>sizeType</name>
-                            <enum>Expanding</enum>
-                        </property>
-                        <property>
-                            <name>sizeHint</name>
-                            <size>
-                                <width>20</width>
-                                <height>20</height>
-                            </size>
-                        </property>
-                    </spacer>
-                    <widget row="6"  column="0"  rowspan="1"  colspan="2" >
+                    <widget row="5"  column="0"  rowspan="1"  colspan="2" >
                         <class>QPushButton</class>
                         <property stdset="1">
                             <name>name</name>
@@ -2357,7 +2140,7 @@
                             <string>Add Audio</string>
                         </property>
                     </widget>
-                    <widget row="6"  column="2"  rowspan="1"  colspan="2" >
+                    <widget row="5"  column="2"  rowspan="1"  colspan="2" >
                         <class>QPushButton</class>
                         <property stdset="1">
                             <name>name</name>
@@ -2368,7 +2151,7 @@
                             <string>Add Data</string>
                         </property>
                     </widget>
-                    <spacer row="6"  column="4"  rowspan="1"  colspan="6" >
+                    <spacer row="5"  column="4"  rowspan="1"  colspan="6" >
                         <property>
                             <name>name</name>
                             <cstring>Spacer13</cstring>
@@ -2399,6 +2182,199 @@
                             <name>text</name>
                             <string>Services</string>
                         </property>
+                    </widget>
+                    <widget row="2"  column="7" >
+                        <class>QLabel</class>
+                        <property stdset="1">
+                            <name>name</name>
+                            <cstring>TextLabelServiceLabel</cstring>
+                        </property>
+                        <property stdset="1">
+                            <name>text</name>
+                            <string>Label</string>
+                        </property>
+                    </widget>
+                    <widget row="2"  column="5"  rowspan="1"  colspan="2" >
+                        <class>QLineEdit</class>
+                        <property stdset="1">
+                            <name>name</name>
+                            <cstring>LineEditServiceID</cstring>
+                        </property>
+                        <property stdset="1">
+                            <name>sizePolicy</name>
+                            <sizepolicy>
+                                <hsizetype>5</hsizetype>
+                                <vsizetype>0</vsizetype>
+                            </sizepolicy>
+                        </property>
+                    </widget>
+                    <widget row="2"  column="3"  rowspan="1"  colspan="2" >
+                        <class>QLabel</class>
+                        <property stdset="1">
+                            <name>name</name>
+                            <cstring>TextLabelServiceID</cstring>
+                        </property>
+                        <property stdset="1">
+                            <name>text</name>
+                            <string>Service ID</string>
+                        </property>
+                    </widget>
+                    <widget row="2"  column="0" >
+                        <class>QLabel</class>
+                        <property stdset="1">
+                            <name>name</name>
+                            <cstring>TextLabel1_4</cstring>
+                        </property>
+                        <property stdset="1">
+                            <name>text</name>
+                            <string>Short ID</string>
+                        </property>
+                    </widget>
+                    <widget row="2"  column="1"  rowspan="1"  colspan="2" >
+                        <class>QComboBox</class>
+                        <property stdset="1">
+                            <name>name</name>
+                            <cstring>ComboBoxShortID</cstring>
+                        </property>
+                    </widget>
+                    <widget row="4"  column="0"  rowspan="1"  colspan="5" >
+                        <class>QGroupBox</class>
+                        <property stdset="1">
+                            <name>name</name>
+                            <cstring>GroupBox8</cstring>
+                        </property>
+                        <property stdset="1">
+                            <name>title</name>
+                            <string>Audio Service</string>
+                        </property>
+                        <grid>
+                            <property stdset="1">
+                                <name>margin</name>
+                                <number>11</number>
+                            </property>
+                            <property stdset="1">
+                                <name>spacing</name>
+                                <number>6</number>
+                            </property>
+                            <widget row="0"  column="1"  rowspan="1"  colspan="2" >
+                                <class>QComboBox</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>ComboBoxProgramType</cstring>
+                                </property>
+                                <property stdset="1">
+                                    <name>sizePolicy</name>
+                                    <sizepolicy>
+                                        <hsizetype>7</hsizetype>
+                                        <vsizetype>0</vsizetype>
+                                    </sizepolicy>
+                                </property>
+                            </widget>
+                            <widget row="0"  column="0" >
+                                <class>QLabel</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>TextLabelProgramType</cstring>
+                                </property>
+                                <property stdset="1">
+                                    <name>text</name>
+                                    <string>Program Type</string>
+                                </property>
+                            </widget>
+                            <widget row="1"  column="1" >
+                                <class>QLabel</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>TextLabelServiceStream</cstring>
+                                </property>
+                                <property stdset="1">
+                                    <name>text</name>
+                                    <string>Stream</string>
+                                </property>
+                            </widget>
+                            <widget row="1"  column="2" >
+                                <class>QComboBox</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>ComboBoxServiceAudioStream</cstring>
+                                </property>
+                            </widget>
+                        </grid>
+                    </widget>
+                    <widget row="4"  column="6"  rowspan="1"  colspan="5" >
+                        <class>QGroupBox</class>
+                        <property stdset="1">
+                            <name>name</name>
+                            <cstring>GroupBox9</cstring>
+                        </property>
+                        <property stdset="1">
+                            <name>title</name>
+                            <string>Data Service</string>
+                        </property>
+                        <grid>
+                            <property stdset="1">
+                                <name>margin</name>
+                                <number>11</number>
+                            </property>
+                            <property stdset="1">
+                                <name>spacing</name>
+                                <number>6</number>
+                            </property>
+                            <widget row="0"  column="0"  rowspan="1"  colspan="2" >
+                                <class>QLabel</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>TextLabel1_3</cstring>
+                                </property>
+                                <property stdset="1">
+                                    <name>text</name>
+                                    <string>Application Type</string>
+                                </property>
+                            </widget>
+                            <widget row="1"  column="3" >
+                                <class>QComboBox</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>ComboBoxServicePacketID</cstring>
+                                </property>
+                            </widget>
+                            <widget row="1"  column="2" >
+                                <class>QLabel</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>TextLabelServicePacketID</cstring>
+                                </property>
+                                <property stdset="1">
+                                    <name>text</name>
+                                    <string>Packet ID</string>
+                                </property>
+                            </widget>
+                            <widget row="0"  column="2"  rowspan="1"  colspan="2" >
+                                <class>QComboBox</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>ComboBoxAppType</cstring>
+                                </property>
+                            </widget>
+                            <widget row="1"  column="0" >
+                                <class>QLabel</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>TextLabel1_5</cstring>
+                                </property>
+                                <property stdset="1">
+                                    <name>text</name>
+                                    <string>Stream</string>
+                                </property>
+                            </widget>
+                            <widget row="1"  column="1" >
+                                <class>QComboBox</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>ComboBoxServiceDataStream</cstring>
+                                </property>
+                            </widget>
+                        </grid>
                     </widget>
                 </grid>
             </widget>

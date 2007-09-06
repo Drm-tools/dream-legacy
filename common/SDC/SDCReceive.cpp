@@ -630,6 +630,8 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 {
 	/* Short ID (the short ID is the index of the service-array) */
 	const int iTempShortID = (*pbiData).Separate(2);
+	int iPacketID=0;
+	int iPacketLen = 0;
 
 	/* Load data parameters class with current parameters */
 	Parameter.Lock();
@@ -637,7 +639,7 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 	Parameter.Unlock();
 
 	/* Stream Id */
-	DataParam.iStreamID = (*pbiData).Separate(2);
+	int iStreamID = (*pbiData).Separate(2);
 
 	/* Packet mode indicator */
 	switch ((*pbiData).Separate(1))
@@ -666,7 +668,7 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 		}
 
 		/* Packet Id */
-		DataParam.iPacketID = (*pbiData).Separate(2);
+		iPacketID = (*pbiData).Separate(2);
 
 		/* Application domain */
 		switch ((*pbiData).Separate(4))
@@ -685,7 +687,7 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 		}
 
 		/* Packet length */
-		DataParam.iPacketLen = (*pbiData).Separate(8);
+		iPacketLen = (*pbiData).Separate(8);
 		break;
 	}
 
@@ -714,6 +716,9 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 
 	/* Set new parameters in global struct */
 	Parameter.Lock();
+	Parameter.Service[iTempShortID].iDataStream = iStreamID;
+	Parameter.Service[iTempShortID].iPacketID = iPacketID;
+	Parameter.Stream[iStreamID].iPacketLen = iPacketLen; // TODO compare with current!
 	Parameter.SetDataParam(iTempShortID, DataParam);
 	Parameter.Unlock();
 
@@ -878,7 +883,7 @@ _BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 	Parameter.Unlock();
 
 	/* Stream Id */
-	AudParam.iStreamID = (*pbiData).Separate(2);
+	int iStreamID = (*pbiData).Separate(2);
 
 	/* Audio coding */
 	switch ((*pbiData).Separate(2))
@@ -1049,6 +1054,7 @@ _BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 	{
 		Parameter.Lock();
 		Parameter.SetAudioParam(iTempShortID, AudParam);
+		Parameter.Service[iTempShortID].iAudioStream = iStreamID;
 		Parameter.Unlock();
 		return FALSE;
 	}

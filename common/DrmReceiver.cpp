@@ -1198,10 +1198,9 @@ CDRMReceiver::InitsForAudParam()
 	DecodeRSIMDI.SetInitFlag();
 	MSCDemultiplexer.SetInitFlag();
 	int a = pReceiverParam->GetCurSelAudioService();
-	iAudioStreamID = pReceiverParam->GetAudioParam(a).iStreamID;
-	pReceiverParam->SetNumAudioDecoderBits(pReceiverParam->
-										   GetStreamLen(iAudioStreamID) *
-										   SIZEOF__BYTE);
+	iAudioStreamID = pReceiverParam->Service[a].iAudioStream;
+	int audiobits = pReceiverParam->GetStreamLen(iAudioStreamID) * SIZEOF__BYTE;
+	pReceiverParam->SetNumAudioDecoderBits(audiobits);
 	AudioSourceDecoder.SetInitFlag();
 }
 
@@ -1212,10 +1211,9 @@ CDRMReceiver::InitsForDataParam()
 	DecodeRSIMDI.SetInitFlag();
 	MSCDemultiplexer.SetInitFlag();
 	int d = pReceiverParam->GetCurSelDataService();
-	iDataStreamID = pReceiverParam->GetDataParam(d).iStreamID;
-	pReceiverParam->SetNumDataDecoderBits(pReceiverParam->
-										  GetStreamLen(iDataStreamID) *
-										  SIZEOF__BYTE);
+	iDataStreamID = pReceiverParam->Service[d].iDataStream;
+	int databits = pReceiverParam-> GetStreamLen(iDataStreamID) * SIZEOF__BYTE;
+	pReceiverParam->SetNumDataDecoderBits(databits);
 	DataDecoder.SetInitFlag();
 }
 

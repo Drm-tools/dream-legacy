@@ -171,14 +171,13 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 			/* Write the audio settings into the parameter object
 			 * CParameter takes care of keeping separate data for AM and DRM
 			 */
-			AudioParam.iStreamID = 0;
-
 			Parameters.SetAudioParam(0, AudioParam);
 			
 			Parameters.SetStreamLen(0, 0, iStreamLen/SIZEOF__BYTE);
 			Parameters.SetNumOfServices(1,0);
 			Parameters.SetCurSelAudioService(0);
 			Parameters.SetNumDecodedBitsMSC(iStreamLen); // is this necessary?
+			Parameters.Service[0].iAudioStream = 0;
 		//}
 
 		Parameters.Service[0].strLabel = "";

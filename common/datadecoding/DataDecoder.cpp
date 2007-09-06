@@ -158,11 +158,10 @@ CDataEncoder::Init(CParameter & Param)
 
 	Param.Lock(); 
 
-	iPacketLen =
-		Param.Service[iCurSelDataServ].DataParam.iPacketLen * SIZEOF__BYTE;
+	iPacketLen = Param.Stream[Param.Service[iCurSelDataServ].iDataStream].iPacketLen * SIZEOF__BYTE;
 	iTotalPacketSize = iPacketLen + 24 /* CRC + header = 24 bits */ ;
 
-	iPacketID = Param.Service[iCurSelDataServ].DataParam.iPacketID;
+	iPacketID = Param.Service[iCurSelDataServ].iPacketID;
 
 	Param.Unlock(); 
 
@@ -474,33 +473,31 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 	iCurSelDataServ = ReceiverParam.GetCurSelDataService();
 
 	/* Get current data stream ID */
-	iCurDataStreamID =
-		ReceiverParam.Service[iCurSelDataServ].DataParam.iStreamID;
+	iCurDataStreamID = ReceiverParam.Service[iCurSelDataServ].iDataStream;
 
 	/* Get number of total input bits (and bytes) for this module */
 	iTotalNumInputBits = ReceiverParam.iNumDataDecoderBits;
 	iTotalNumInputBytes = iTotalNumInputBits / SIZEOF__BYTE;
 
 	/* Get the packet ID of the selected service */
-	iServPacketID =
-		ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketID;
+	iServPacketID = ReceiverParam.Service[iCurSelDataServ].iPacketID;
 
 	/* Init application type (will be overwritten by correct type later */
 	eAppType[iServPacketID] = AT_NOT_SUP;
 
+	CDataParam& dataParam = ReceiverParam.DataParam[iCurDataStreamID][iServPacketID];
+
 	/* Check, if service is activated. Also, only packet services can be
 	   decoded */
 	if ((iCurDataStreamID != STREAM_ID_NOT_USED) &&
-		(ReceiverParam.Service[iCurSelDataServ].DataParam.
-		 ePacketModInd == PM_PACKET_MODE))
+		(dataParam.ePacketModInd == PM_PACKET_MODE))
 	{
 		/* Calculate total packet size. DRM standard: packet length: this
 		   field indicates the length in bytes of the data field of each
 		   packet specified as an unsigned binary number (the total packet
 		   length is three bytes longer as it includes the header and CRC
 		   fields) */
-		iTotalPacketSize =
-			ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketLen + 3;
+		iTotalPacketSize = ReceiverParam.Stream[iCurDataStreamID].iPacketLen + 3;
 
 		/* Check total packet size, could be wrong due to wrong SDC */
 		if ((iTotalPacketSize <= 0) ||
@@ -519,13 +516,11 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 			iNumDataPackets = iTotalNumInputBytes / iTotalPacketSize;
 
 			/* Only DAB application supported */
-			if (ReceiverParam.Service[iCurSelDataServ].DataParam.
-				eAppDomain == CDataParam::AD_DAB_SPEC_APP)
+			if (dataParam.eAppDomain == CDataParam::AD_DAB_SPEC_APP)
 			{
 				/* Get application identifier of current selected service, only
 				   used with DAB */
-				const int iDABUserAppIdent = ReceiverParam.
-					Service[iCurSelDataServ].DataParam.iUserAppIdent;
+				const int iDABUserAppIdent = dataParam.iUserAppIdent;
 
 				switch (iDABUserAppIdent)
 				{
@@ -609,14 +604,16 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 	iEPGPacketID = -1;
 
 	/* look for EPG */
-	for (int i = 0; i < 3; i++)
+	for (size_t i = 0; i < ReceiverParam.DataParam.size(); i++)
 	{
-		if ((ReceiverParam.Service[i].DataParam.eAppDomain ==
-			 CDataParam::AD_DAB_SPEC_APP)
-			&& (ReceiverParam.Service[i].DataParam.iUserAppIdent == 7))
+		for (size_t j = 0; j < ReceiverParam.DataParam[i].size(); j++)
 		{
-			iEPGService = i;
-			iEPGPacketID = ReceiverParam.Service[i].DataParam.iPacketID;
+			if ((ReceiverParam.DataParam[i][j].eAppDomain == CDataParam::AD_DAB_SPEC_APP)
+			&& (ReceiverParam.DataParam[i][j].iUserAppIdent == 7))
+			{
+				iEPGService = i;
+				iEPGPacketID = j;
+			}
 		}
 	}
 }

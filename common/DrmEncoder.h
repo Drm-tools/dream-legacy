@@ -33,6 +33,8 @@
 #include "DataIO.h"
 #include "util/Buffer.h"
 #include "sourcedecoders/AudioSourceDecoder.h"
+#include "datadecoding/DataDecoder.h"
+#include <map>
 
 /* Classes ********************************************************************/
 class CSettings;
@@ -63,14 +65,17 @@ public:
 	/* Source Encoder Interface */
 	void					AddTextMessage(const string& strText);
 	void					ClearTextMessages();
-	void					AddPic(const string& strFileName, const string& strFormat);
-	void					ClearPics();
-	_BOOLEAN				GetTransStat(string& strCPi, _REAL& rCPe);
+	void					GetTextMessages(vector<string>&);
+
 
 	void					GetSoundInChoices(vector<string>&);
 	void					SetSoundInInterface(int);
 	void 					SetReadFromFile(const string& strNFN);
 
+	void					AddPic(const string& strFileName, const string& strFormat);
+	void					ClearPics();
+	_BOOLEAN				GetTransStat(string& strCPi, _REAL& rCPe);
+	void					GetPics(map<string,string>&);
 protected:
 
 	/* Buffers */
@@ -79,6 +84,7 @@ protected:
 	/* Modules */
 	CSoundInInterface*		pSoundInInterface;
 	CAudioSourceEncoder		AudioSourceEncoder;
+	CDataEncoder			DataEncoder;
 	CGenerateFACData		GenerateFACData;
 	CGenerateSDCData		GenerateSDCData;
 	CReadData*				pReadData;

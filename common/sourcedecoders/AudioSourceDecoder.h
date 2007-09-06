@@ -143,19 +143,9 @@ public:
 	void SetTextMessage(const string& strText);
 	void ClearTextMessage();
 
-	void SetPicFileName(const string& strFileName, const string& strFormat)
-		{DataEncoder.GetSliShowEnc()->AddFileName(strFileName, strFormat);}
-	void ClearPicFileNames()
-		{DataEncoder.GetSliShowEnc()->ClearAllFileNames();}
-	_BOOLEAN GetTransStat(string& strCPi, _REAL& rCPe)
-		{return DataEncoder.GetSliShowEnc()->GetTransStat(strCPi, rCPe);}
-
 protected:
 	CTextMessageEncoder		TextMessage;
 	_BOOLEAN				bUsingTextMessage;
-	CDataEncoder			DataEncoder;
-	int						iTotPacketSize;
-	_BOOLEAN				bIsDataService;
 	int						iTotNumBitsForUsage;
 
 #ifdef USE_FAAC_LIBRARY
@@ -214,15 +204,8 @@ public:
 	void SetTextMessage(const string& strText) {AudioSourceEncoderImpl.SetTextMessage(strText);}
 	void ClearTextMessage() {AudioSourceEncoderImpl.ClearTextMessage();}
 	
-	void SetPicFileName(const string& strFileName, const string& strFormat)
-			{AudioSourceEncoderImpl.SetPicFileName(strFileName, strFormat);}
-
-	void ClearPicFileNames() {AudioSourceEncoderImpl.ClearPicFileNames();}
-
-	_BOOLEAN GetTransStat(string& strCPi, _REAL& rCPe)
-			{return AudioSourceEncoderImpl.GetTransStat(strCPi, rCPe);}
-
 protected:
+
 	CAudioSourceEncoderImplementation AudioSourceEncoderImpl;
 
 	virtual void InitInternal(CParameter& TransmParam)

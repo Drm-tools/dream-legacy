@@ -1382,7 +1382,7 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 
 	// Audio coding
 	int iVal = 0;
-	switch (Parameter.Service[0].AudioParam.eAudioCoding)
+	switch (Parameter.AudioParam[0].eAudioCoding)
 	{
 	case CAudioParam::AC_AAC:	// 00
 		iVal = 0;
@@ -1400,10 +1400,10 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 	Enqueue(iVal, 2);
 
 	// SBR flag
-	Enqueue(Parameter.Service[0].AudioParam.eSBRFlag == CAudioParam::SB_USED ? 1 : 0, 1);
+	Enqueue(Parameter.AudioParam[0].eSBRFlag == CAudioParam::SB_USED ? 1 : 0, 1);
 
 	// Audio mode
-	switch (Parameter.Service[0].AudioParam.eAudioMode)
+	switch (Parameter.AudioParam[0].eAudioMode)
 	{
 	case CAudioParam::AM_MONO:
 		iVal = 0;
@@ -1420,7 +1420,7 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 	Enqueue(iVal, 2);
 
 	// Audio sampling rate
-	switch (Parameter.Service[0].AudioParam.eAudioSamplRate)
+	switch (Parameter.AudioParam[0].eAudioSamplRate)
 	{
 	case CAudioParam::AS_8_KHZ:
 		iVal = 0;

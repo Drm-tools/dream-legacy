@@ -99,7 +99,7 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		/* AS: Audio Sampling rate */
 		enum EAudSamRat { AS_8_KHZ, AS_12KHZ, AS_16KHZ, AS_24KHZ };
 
-		CAudioParam(): strTextMessage(), iStreamID(STREAM_ID_NOT_USED),
+		CAudioParam(): strTextMessage(),
 			eAudioCoding(AC_AAC), eSBRFlag(SB_NOT_USED), eAudioSamplRate(AS_24KHZ),
 			bTextflag(FALSE), bEnhanceFlag(FALSE), eAudioMode(AM_MONO),
 			iCELPIndex(0), bCELPCRC(FALSE), eHVXCRate(HR_2_KBIT), bHVXCCRC(FALSE)
@@ -107,7 +107,6 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		}
 		CAudioParam(const CAudioParam& ap):
 			strTextMessage(ap.strTextMessage),
-			iStreamID(ap.iStreamID),
 			eAudioCoding(ap.eAudioCoding),
 			eSBRFlag(ap.eSBRFlag),
 			eAudioSamplRate(ap.eAudioSamplRate),
@@ -123,7 +122,6 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		CAudioParam& operator=(const CAudioParam& ap)
 		{
 			strTextMessage = ap.strTextMessage;
-			iStreamID = ap.iStreamID;
 			eAudioCoding = ap.eAudioCoding;
 			eSBRFlag = ap.eSBRFlag;
 			eAudioSamplRate = ap.eAudioSamplRate;
@@ -139,8 +137,6 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 
 		/* Text-message */
 		string strTextMessage;	/* Max length is (8 * 16 Bytes) */
-
-		int iStreamID;			/* Stream Id of the stream which carries the audio service */
 
 		EAudCod eAudioCoding;	/* This field indicated the source coding system */
 		ESBRFlag eSBRFlag;		/* SBR flag */
@@ -163,8 +159,6 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		/* This function is needed for detection changes in the class */
 		_BOOLEAN operator!=(const CAudioParam AudioParam)
 		{
-			if (iStreamID != AudioParam.iStreamID)
-				return TRUE;
 			if (eAudioCoding != AudioParam.eAudioCoding)
 				return TRUE;
 			if (eSBRFlag != AudioParam.eSBRFlag)
@@ -211,46 +205,33 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		/* AD: Application Domain */
 		enum EApplDomain { AD_DRM_SPEC_APP, AD_DAB_SPEC_APP, AD_OTHER_SPEC_APP };
 
-		int iStreamID;			/* Stream Id of the stream which carries the data service */
-
 		EPackMod ePacketModInd;	/* Packet mode indicator */
 
 		/* In case of packet mode ------------------------------------------- */
 		EDatUnit eDataUnitInd;	/* Data unit indicator */
-		int iPacketID;			/* Packet Id (2 bits) */
-		int iPacketLen;			/* Packet length */
 
 		// "DAB specified application" not yet implemented!!!
 		EApplDomain eAppDomain;	/* Application domain */
 		int iUserAppIdent;		/* User application identifier, only DAB */
 
 		CDataParam():
-			iStreamID(STREAM_ID_NOT_USED),
 			ePacketModInd(PM_PACKET_MODE),
 			eDataUnitInd(DU_DATA_UNITS),
-			iPacketID(0),
-			iPacketLen(0),
 			eAppDomain(AD_DAB_SPEC_APP),
 			iUserAppIdent(0)
 		{
 		}
 		CDataParam(const CDataParam& DataParam):
-			iStreamID(DataParam.iStreamID),
 			ePacketModInd(DataParam.ePacketModInd),
 			eDataUnitInd(DataParam.eDataUnitInd),
-			iPacketID(DataParam.iPacketID),
-			iPacketLen(DataParam.iPacketLen),
 			eAppDomain(DataParam.eAppDomain),
 			iUserAppIdent(DataParam.iUserAppIdent)
 		{
 		}
 		CDataParam& operator=(const CDataParam& DataParam)
 		{
-			iStreamID = DataParam.iStreamID;
 			ePacketModInd = DataParam.ePacketModInd;
 			eDataUnitInd = DataParam.eDataUnitInd;
-			iPacketID = DataParam.iPacketID;
-			iPacketLen = DataParam.iPacketLen;
 			eAppDomain = DataParam.eAppDomain;
 			iUserAppIdent = DataParam.iUserAppIdent;
 			return *this;
@@ -259,17 +240,11 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		/* This function is needed for detection changes in the class */
 		_BOOLEAN operator!=(const CDataParam DataParam)
 		{
-			if (iStreamID != DataParam.iStreamID)
-				return TRUE;
 			if (ePacketModInd != DataParam.ePacketModInd)
 				return TRUE;
 			if (DataParam.ePacketModInd == PM_PACKET_MODE)
 			{
 				if (eDataUnitInd != DataParam.eDataUnitInd)
-					return TRUE;
-				if (iPacketID != DataParam.iPacketID)
-					return TRUE;
-				if (iPacketLen != DataParam.iPacketLen)
 					return TRUE;
 				if (eAppDomain != DataParam.eAppDomain)
 					return TRUE;
@@ -293,7 +268,7 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 			iServiceID(SERV_ID_NOT_USED), eCAIndication(CA_NOT_USED),
 			iLanguage(0), eAudDataFlag(SF_AUDIO), iServiceDescr(0),
 			strCountryCode(), strLanguageCode(), strLabel(),
-			AudioParam(), DataParam()
+			iAudioStream(STREAM_ID_NOT_USED), iDataStream(STREAM_ID_NOT_USED), iPacketID(0)
 		{
 		}
 		CService(const CService& s):
@@ -301,7 +276,8 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 			iLanguage(s.iLanguage), eAudDataFlag(s.eAudDataFlag),
 			iServiceDescr(s.iServiceDescr), strCountryCode(s.strCountryCode),
 			strLanguageCode(s.strLanguageCode), strLabel(s.strLabel),
-			AudioParam(s.AudioParam), DataParam(s.DataParam)
+			iAudioStream(s.iAudioStream), iDataStream(s.iDataStream),
+			iPacketID(s.iPacketID)
 		{
 		}
 		CService& operator=(const CService& s)
@@ -314,8 +290,9 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 			strCountryCode = s.strCountryCode;
 			strLanguageCode = s.strLanguageCode;
 			strLabel = s.strLabel;
-			AudioParam = s.AudioParam;
-			DataParam = s.DataParam;
+			iAudioStream = s.iAudioStream;
+			iDataStream = s.iDataStream;
+			iPacketID = s.iPacketID;
 			return *this;
 		}
 
@@ -335,11 +312,12 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		/* Label of the service */
 		string strLabel;
 
-		/* Audio parameters */
-		CAudioParam AudioParam;
+		/* Audio Component */
+		int iAudioStream;
 
-		/* Data parameters */
-		CDataParam DataParam;
+		/* Data Component */
+		int iDataStream;
+		int iPacketID;
 	};
 
 	class CStream
@@ -1039,6 +1017,8 @@ class CParameter
 
 	vector<CStream> Stream;
 	vector<CService> Service;
+	vector<CAudioParam> AudioParam; /* index by streamID */
+	vector<vector<CDataParam> > DataParam; /* first index streamID, second index packetID */
 
 	/* information about services gathered from SDC, EPG and web schedules */
 	map<uint32_t,CServiceInformation> ServiceInformation;

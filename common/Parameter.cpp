@@ -356,26 +356,9 @@ void CParameter::ResetServicesStreams()
 		/* Reset everything to possible start values */
 		for (i = 0; i < MAX_NUM_SERVICES; i++)
 		{
-			Service[i].AudioParam.strTextMessage = "";
-			Service[i].AudioParam.iStreamID = STREAM_ID_NOT_USED;
-			Service[i].AudioParam.eAudioCoding = CAudioParam::AC_AAC;
-			Service[i].AudioParam.eSBRFlag = CAudioParam::SB_NOT_USED;
-			Service[i].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;
-			Service[i].AudioParam.bTextflag = FALSE;
-			Service[i].AudioParam.bEnhanceFlag = FALSE;
-			Service[i].AudioParam.eAudioMode = CAudioParam::AM_MONO;
-			Service[i].AudioParam.iCELPIndex = 0;
-			Service[i].AudioParam.bCELPCRC = FALSE;
-			Service[i].AudioParam.eHVXCRate = CAudioParam::HR_2_KBIT;
-			Service[i].AudioParam.bHVXCCRC = FALSE;
-
-			Service[i].DataParam.iStreamID = STREAM_ID_NOT_USED;
-			Service[i].DataParam.ePacketModInd = PM_PACKET_MODE;
-			Service[i].DataParam.eDataUnitInd = CDataParam::DU_SINGLE_PACKETS;
-			Service[i].DataParam.iPacketID = 0;
-			Service[i].DataParam.iPacketLen = 0;
-			Service[i].DataParam.eAppDomain = CDataParam::AD_DRM_SPEC_APP;
-			Service[i].DataParam.iUserAppIdent = 0;
+			Service[i].iAudioStream = STREAM_ID_NOT_USED;
+			Service[i].iDataStream = STREAM_ID_NOT_USED;
+			Service[i].iPacketID = 0;
 
 			Service[i].iServiceID = SERV_ID_NOT_USED;
 			Service[i].eCAIndication = CService::CA_NOT_USED;
@@ -386,29 +369,37 @@ void CParameter::ResetServicesStreams()
 			Service[i].iServiceDescr = 0;
 			Service[i].strLabel = "";
 		}
+		/* force constructors to run */
+		AudioParam.clear();
+		DataParam.clear();
+		/* allow index by streamID */
+		AudioParam.resize(MAX_NUM_STREAMS);
+		DataParam.resize(MAX_NUM_STREAMS);
 
 		for (i = 0; i < MAX_NUM_STREAMS; i++)
 		{
 			Stream[i].iLenPartA = 0;
 			Stream[i].iLenPartB = 0;
+			DataParam[i].resize(1);
 		}
 	}
 	else
 	{
 
 		// Set up encoded AM audio parameters
-		Service[0].AudioParam.strTextMessage = "";
-		Service[0].AudioParam.iStreamID = 0;
-		Service[0].AudioParam.eAudioCoding = CAudioParam::AC_AAC;
-		Service[0].AudioParam.eSBRFlag = CAudioParam::SB_NOT_USED;
-		Service[0].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;
-		Service[0].AudioParam.bTextflag = FALSE;
-		Service[0].AudioParam.bEnhanceFlag = FALSE;
-		Service[0].AudioParam.eAudioMode = CAudioParam::AM_MONO;
-		Service[0].AudioParam.iCELPIndex = 0;
-		Service[0].AudioParam.bCELPCRC = FALSE;
-		Service[0].AudioParam.eHVXCRate = CAudioParam::HR_2_KBIT;
-		Service[0].AudioParam.bHVXCCRC = FALSE;
+		AudioParam.resize(1);
+		DataParam.clear();
+		AudioParam[0].strTextMessage = "";
+		AudioParam[0].eAudioCoding = CAudioParam::AC_AAC;
+		AudioParam[0].eSBRFlag = CAudioParam::SB_NOT_USED;
+		AudioParam[0].eAudioSamplRate = CAudioParam::AS_24KHZ;
+		AudioParam[0].bTextflag = FALSE;
+		AudioParam[0].bEnhanceFlag = FALSE;
+		AudioParam[0].eAudioMode = CAudioParam::AM_MONO;
+		AudioParam[0].iCELPIndex = 0;
+		AudioParam[0].bCELPCRC = FALSE;
+		AudioParam[0].eHVXCRate = CAudioParam::HR_2_KBIT;
+		AudioParam[0].bHVXCCRC = FALSE;
 
 		Service[0].iServiceID = SERV_ID_NOT_USED;
 		Service[0].eCAIndication = CService::CA_NOT_USED;
@@ -459,12 +450,12 @@ void CParameter::GetActiveStreams(set<int>& actStr)
 		if (Service[i].IsActive())
 		{
 			/* Audio stream */
-			if (Service[i].AudioParam.iStreamID != STREAM_ID_NOT_USED)
-				actStr.insert(Service[i].AudioParam.iStreamID);
+			if (Service[i].iAudioStream != STREAM_ID_NOT_USED)
+				actStr.insert(Service[i].iAudioStream);
 
 			/* Data stream */
-			if (Service[i].DataParam.iStreamID != STREAM_ID_NOT_USED)
-				actStr.insert(Service[i].DataParam.iStreamID);
+			if (Service[i].iDataStream != STREAM_ID_NOT_USED)
+				actStr.insert(Service[i].iDataStream);
 		}
 	}
 }
@@ -481,16 +472,16 @@ _REAL CParameter::GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData)
 		   stream */
 		if (bAudData == TRUE)
 		{
-			iLen = GetStreamLen( Service[iShortID].DataParam.iStreamID);
+			iLen = GetStreamLen( Service[iShortID].iDataStream);
 		}
 		else
 		{
-			iLen = GetStreamLen( Service[iShortID].AudioParam.iStreamID);
+			iLen = GetStreamLen( Service[iShortID].iAudioStream);
 		}
 	}
 	else
 	{
-		iLen = GetStreamLen( Service[iShortID].DataParam.iStreamID);
+		iLen = GetStreamLen( Service[iShortID].iDataStream);
 	}
 
 	/* We have 3 frames with time duration of 1.2 seconds. Bit rate should be
@@ -507,19 +498,19 @@ _REAL CParameter::PartABLenRatio(const int iShortID)
 	if (Service[iShortID].eAudDataFlag == SF_AUDIO)
 	{
 		/* Audio service */
-		if (Service[iShortID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
+		if (Service[iShortID].iAudioStream != STREAM_ID_NOT_USED)
 		{
-			iLenA = Stream[Service[iShortID].AudioParam.iStreamID].iLenPartA;
-			iLenB = Stream[Service[iShortID].AudioParam.iStreamID].iLenPartB;
+			iLenA = Stream[Service[iShortID].iAudioStream].iLenPartA;
+			iLenB = Stream[Service[iShortID].iAudioStream].iLenPartB;
 		}
 	}
 	else
 	{
 		/* Data service */
-		if (Service[iShortID].DataParam.iStreamID != STREAM_ID_NOT_USED)
+		if (Service[iShortID].iDataStream != STREAM_ID_NOT_USED)
 		{
-			iLenA = Stream[Service[iShortID].DataParam.iStreamID].iLenPartA;
-			iLenB = Stream[Service[iShortID].DataParam.iStreamID].iLenPartB;
+			iLenA = Stream[Service[iShortID].iDataStream].iLenPartA;
+			iLenB = Stream[Service[iShortID].iDataStream].iLenPartB;
 		}
 	}
 
@@ -710,9 +701,18 @@ void CParameter::SetServiceParameters(int iShortID, const CService& newService)
 void CParameter::SetAudioParam(const int iShortID, const CAudioParam& NewAudParam)
 {
 	/* Apply changes only if parameters have changed */
-	if (Service[iShortID].AudioParam != NewAudParam)
+
+	int iStreamID = Service[iShortID].iAudioStream;
+
+	if(iStreamID == STREAM_ID_NOT_USED)
+		return;
+
+	if(AudioParam.size()<size_t(iStreamID+1))
+		AudioParam.resize(iStreamID+1);
+
+	if (AudioParam[iStreamID] != NewAudParam)
 	{
-		Service[iShortID].AudioParam = NewAudParam;
+		AudioParam[iStreamID] = NewAudParam;
 
 		/* Set init flags */
 		if(pDRMRec) pDRMRec->InitsForAudParam();
@@ -721,17 +721,30 @@ void CParameter::SetAudioParam(const int iShortID, const CAudioParam& NewAudPara
 
 CAudioParam CParameter::GetAudioParam(const int iShortID)
 {
-	return Service[iShortID].AudioParam;
+	if(Service[iShortID].iAudioStream != STREAM_ID_NOT_USED)
+		return AudioParam[Service[iShortID].iAudioStream];
+
+	CAudioParam default_param;
+	return default_param;
 }
 
 void CParameter::SetDataParam(const int iShortID, const CDataParam& NewDataParam)
 {
-	CDataParam& DataParam = Service[iShortID].DataParam;
+	size_t iStreamID = size_t(Service[iShortID].iDataStream);
+	size_t iPacketID = size_t(Service[iShortID].iPacketID);
+
+	if(DataParam.size()<(iStreamID+1))
+		DataParam.resize(iStreamID+1);
+
+	if(DataParam[iStreamID].size()<(iPacketID+1))
+		DataParam[iStreamID].resize(iPacketID+1);
+
+	CDataParam& OldDataParam = DataParam[iStreamID][iPacketID];
 
 	/* Apply changes only if parameters have changed */
-	if (DataParam != NewDataParam)
+	if (OldDataParam != NewDataParam)
 	{
-		DataParam = NewDataParam;
+		OldDataParam = NewDataParam;
 
 		/* Set init flags */
 		if(pDRMRec) pDRMRec->InitsForDataParam();
@@ -740,7 +753,14 @@ void CParameter::SetDataParam(const int iShortID, const CDataParam& NewDataParam
 
 CDataParam CParameter::GetDataParam(const int iShortID)
 {
-	return Service[iShortID].DataParam;
+	int iStreamID = Service[iShortID].iDataStream;
+	int iPacketID = Service[iShortID].iPacketID;
+
+	if(iStreamID != STREAM_ID_NOT_USED)
+		return DataParam[iStreamID][iPacketID];
+
+	CDataParam default_param;
+	return default_param;
 }
 
 void CParameter::SetInterleaverDepth(const ESymIntMod eNewDepth)
@@ -783,7 +803,7 @@ void CParameter::SetCurSelAudioService(const int iNewService)
 	   possible to select a "data-only" service and still listen to the audio of
 	   the last selected service */
 	if ((iCurSelAudioService != iNewService) &&
-		(Service[iNewService].AudioParam.iStreamID != STREAM_ID_NOT_USED))
+		(Service[iNewService].iAudioStream != STREAM_ID_NOT_USED))
 	{
 		iCurSelAudioService = iNewService;
 
@@ -802,7 +822,7 @@ void CParameter::SetCurSelDataService(const int iNewService)
 	   service to be able to decode data service and listen to audio at the
 	   same time */
 	if ((iCurSelDataService != iNewService) &&
-		(Service[iNewService].DataParam.iStreamID != STREAM_ID_NOT_USED))
+		(Service[iNewService].iDataStream != STREAM_ID_NOT_USED))
 	{
 		iCurSelDataService = iNewService;
 		
