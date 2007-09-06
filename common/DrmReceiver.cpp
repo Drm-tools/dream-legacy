@@ -1535,7 +1535,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	str = s.Get("command", "fileio");
 	p = str.rfind('.');
 	if (p != string::npos)
-		strInFileExt = strInFile.substr(p + 1);
+		strInFileExt = str.substr(p + 1);
 
 	if (strInFileExt.substr(0,2) == "RS" || strInFileExt.substr(0,2) == "rs" || strInFileExt == "pcap")
 	{
