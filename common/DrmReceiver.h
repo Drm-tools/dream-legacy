@@ -252,8 +252,6 @@ public:
 	void					GetRigList(map<int, CRigCaps>& rigs);
 	void					GetComPortList(map<string,string>& ports);
 	string					GetRigComPort();
-	_BOOLEAN				GetEnableModRigSettings();
-	void					SetEnableModRigSettings(_BOOLEAN);
 	void					SetRigFreqOffset(int);
 	void					SetRigComPort(const string&);
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
@@ -290,6 +288,7 @@ protected:
 	void					DetectAcquiSymbol();
 	void					InitReceiverMode();
 	void					saveSDCtoFile();
+	void					UpdateRigSettings();
 
 	/* Modules */
 	CSoundInInterface*		pSoundInInterface;

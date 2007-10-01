@@ -299,6 +299,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		/* Check for selected Rig */
 		if (current == iModelID)
 		{
+#if 0
 			if(DRMReceiver.GetEnableModRigSettings())
 			{
 				mod_model->setSelected(TRUE);
@@ -309,6 +310,10 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 				model->setSelected(TRUE);
 				ListViewRig->ensureItemVisible(model);
 			}
+#else
+			model->setSelected(TRUE);
+			ListViewRig->ensureItemVisible(model);
+#endif
 		}
 	}
 
@@ -572,7 +577,7 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 	else
 	{
 		DRMReceiver.SetRigFreqOffset(LineEditRigFreqOff->text().toInt());
-		DRMReceiver.SetEnableModRigSettings(item->pixmap(0)!=NULL);
+		//DRMReceiver.SetEnableModRigSettings(item->pixmap(0)!=NULL);
 		QListViewItem* cp = ListViewPort->selectedItem();
 		if(cp)
 			DRMReceiver.SetRigComPort(cp->text(1).latin1());

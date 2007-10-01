@@ -131,14 +131,16 @@ public:
 	void			GetRigList(map<rig_model_t,CRigCaps>&);
 	void			SetHamlibModelID(const rig_model_t model);
 	rig_model_t		GetHamlibModelID() const {return iHamlibModelID;}
+	void			SetRigMode(ERigMode eNMod);
+	ERigMode		GetRigMode() const {return eRigMode;}
+	void			SetEnableModRigSettings(const _BOOLEAN bNSM);
+	_BOOLEAN		GetEnableModRigSettings() { return bModRigSettings; }
 
 	/* com port selection */
 	void			GetPortList(map<string,string>&);
 	void			SetComPort(const string&);
 	string			GetComPort() const;
 
-	void			SetEnableModRigSettings(const _BOOLEAN bNSM);
-	_BOOLEAN		GetEnableModRigSettings() const {return bModRigSettings;}
 	string			GetInfo() const;
 	string			GetConfig(const string& key);
 	void			GetRigCaps(rig_model_t id, CRigCaps& caps) { caps = CapsHamlibModels[id]; }
@@ -166,6 +168,7 @@ protected:
 	_BOOLEAN			bEnableSMeter;
 	_BOOLEAN			bModRigSettings;
 	rig_model_t			iHamlibModelID;
+	ERigMode			eRigMode;
 	map<rig_model_t,CRigCaps>
 						CapsHamlibModels;
 };

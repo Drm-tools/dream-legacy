@@ -3,7 +3,7 @@
  * Copyright (c) 2007
  *
  * Author(s):
- *	Volker Fischer, Julian Cable
+ *	Volker Fischer, Julian Cable, Ollie Haffenden
  * 
  * Description:
  *
@@ -30,6 +30,7 @@
 #include "Settings.h"
 #include <sstream>
 #include <iostream>
+#include "../Parameter.h"
 #if defined(_WIN32)
 # ifdef HAVE_SETUPAPI
 #  ifndef INITGUID
@@ -49,10 +50,6 @@
 #endif
 
 /* Implementation *************************************************************/
-#ifdef HAVE_LIBHAMLIB
-/******************************************************************************\
-* Hamlib interface                                                             *
-\******************************************************************************/
 /*
 	This code is based on patches and example code from Tomi Manninen and
 	Stephane Fillod (developer of hamlib)
@@ -60,7 +57,7 @@
 CHamlib::CHamlib(CParameter& p): iFreqOffset(0),
 Parameters(p), pRig(NULL),
 bSMeterIsSupported(FALSE), bEnableSMeter(FALSE), bModRigSettings(FALSE),
-iHamlibModelID(0), CapsHamlibModels()
+iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels()
 {
 #ifdef RIG_MODEL_DUMMY
 	CapsHamlibModels[RIG_MODEL_DUMMY].settings[DRM].levels["ATT"].i=0;
@@ -71,7 +68,7 @@ iHamlibModelID(0), CapsHamlibModels()
 #endif
 
 #ifdef RIG_MODEL_G303
-	/* Winradio G3 */
+	/* Winradio G303 */
 	CapsHamlibModels[RIG_MODEL_G303].settings[DRM].levels["ATT"].i=0;
 	CapsHamlibModels[RIG_MODEL_G303].settings[DRM].levels["AGC"].i=3;
 	CapsHamlibModels[RIG_MODEL_G303].settings[DRM_MODIFIED].levels["ATT"].i=0;
@@ -229,6 +226,7 @@ CHamlib::GetPortList(map < string, string > &ports)
 		ports["COM5"] = "COM5 ";
 	}
 #elif defined(__linux)
+//TODO USE THE API, not a pipe
 	FILE *p =
 		popen("hal-find-by-capability --capability serial", "r");
 	_BOOLEAN bOK = FALSE;
@@ -400,6 +398,7 @@ void
 CHamlib::LoadSettings(CSettings & s)
 {
 	rig_model_t model = s.Get("Hamlib", "model", 0);
+	eRigMode = ERigMode(s.Get("Hamlib", "mode", 0));
 	bEnableSMeter = s.Get("Hamlib", "ensmeter", FALSE);
 	iFreqOffset = s.Get("Hamlib", "freqoffset", 0);
 	bModRigSettings = s.Get("Hamlib", "enmodrig", FALSE);
@@ -420,12 +419,15 @@ CHamlib::LoadSettings(CSettings & s)
 
 	if (model != 0)
 	{
-		CRigCaps& caps = CapsHamlibModels[iHamlibModelID];
+		CRigCaps& caps = CapsHamlibModels[model];
 		INISection sec;
 		s.Get("Hamlib-config", sec);
 		INISection::iterator i;
 		for(i=sec.begin(); i!=sec.end(); i++)
+		{
 			caps.config[i->first] = i->second;
+		}
+		cout<<"geloopen"<<endl;
 		for(size_t j=DRM; j<=WBFM; j++)
 		{
 			stringstream section;
@@ -433,7 +435,9 @@ CHamlib::LoadSettings(CSettings & s)
 			sec.clear();
 			s.Get(section.str()+"-modes", sec);
 			for(i=sec.begin(); i!=sec.end(); i++)
+			{
 				caps.settings[ERigMode(j)].modes[i->first] = atoi(i->second.c_str());
+			}
 			sec.clear();
 			s.Get(section.str()+"-levels", sec);
 			for(i=sec.begin(); i!=sec.end(); i++)
@@ -468,6 +472,7 @@ CHamlib::LoadSettings(CSettings & s)
 	}
 
 	s.Put("Hamlib", "model", model);
+	s.Put("Hamlib", "mode", eRigMode);
 	s.Put("Hamlib", "ensmeter", bEnableSMeter);
 	s.Put("Hamlib", "freqoffset", iFreqOffset);
 	s.Put("Hamlib", "enmodrig", bModRigSettings);
@@ -572,7 +577,7 @@ void CHamlib::run()
 		case 0:
 			Parameters.Lock();
 			// Apply any correction
-			Parameters.SigStrstat.addSample(val.f + Parameters.rSigStrengthCorrection);
+			Parameters.SigStrstat.addSample(_REAL(val.i) + Parameters.rSigStrengthCorrection);
 			Parameters.Unlock();
 			break;
 		case -RIG_ETIMEOUT:
@@ -589,9 +594,7 @@ void CHamlib::run()
 void
 CHamlib::SetRigModes()
 {
-	ERigMode em = bModRigSettings?DRM_MODIFIED:DRM;
-
-	const map<string,int>& modes = CapsHamlibModels[iHamlibModelID].settings[em].modes;
+	const map<string,int>& modes = CapsHamlibModels[iHamlibModelID].settings[eRigMode].modes;
 
 	for (map < string, int >::const_iterator i = modes.begin(); i != modes.end(); i++)
 	{
@@ -608,9 +611,7 @@ CHamlib::SetRigModes()
 void
 CHamlib::SetRigLevels()
 {
-	ERigMode em = bModRigSettings?DRM_MODIFIED:DRM;
-
-	const map<string,value_t>& levels = CapsHamlibModels[iHamlibModelID].settings[em].levels;
+	const map<string,value_t>& levels = CapsHamlibModels[iHamlibModelID].settings[eRigMode].levels;
 
 	for (map < string, value_t >::const_iterator i = levels.begin(); i != levels.end(); i++)
 	{
@@ -627,9 +628,7 @@ CHamlib::SetRigLevels()
 void
 CHamlib::SetRigFuncs()
 {
-	ERigMode em = bModRigSettings?DRM_MODIFIED:DRM;
-
-	const map<string,string>& functions = CapsHamlibModels[iHamlibModelID].settings[em].functions;
+	const map<string,string>& functions = CapsHamlibModels[iHamlibModelID].settings[eRigMode].functions;
 
 	for (map < string, string >::const_iterator i = functions.begin();
 		 i != functions.end(); i++)
@@ -649,9 +648,7 @@ CHamlib::SetRigFuncs()
 void
 CHamlib::SetRigParams()
 {
-	ERigMode em = bModRigSettings?DRM_MODIFIED:DRM;
-
-	const map<string,value_t>& parameters = CapsHamlibModels[iHamlibModelID].settings[em].parameters;
+	const map<string,value_t>& parameters = CapsHamlibModels[iHamlibModelID].settings[eRigMode].parameters;
 
 	for (map < string, value_t >::const_iterator i = parameters.begin(); i != parameters.end(); i++)
 	{
@@ -699,6 +696,13 @@ CHamlib::SetEnableModRigSettings(const _BOOLEAN bNSM)
 }
 
 void
+CHamlib::SetRigMode(ERigMode eNMod)
+{
+	eRigMode = eNMod;
+	SetHamlibModelID(iHamlibModelID);
+}
+
+void
 CHamlib::SetHamlibModelID(const rig_model_t model)
 {
 	int ret;
@@ -735,7 +739,6 @@ CHamlib::SetHamlibModelID(const rig_model_t model)
 		{
 			iFreqOffset = caps.iFreqOffs;
 		}
-
 		/* Init rig */
 		pRig = rig_init(iHamlibModelID);
 		if (pRig == NULL)
@@ -770,6 +773,7 @@ cout << "tokens:" << endl;
 		SetRigLevels();
 		SetRigFuncs();
 		SetRigParams();
+
 		/* Check if s-meter capabilities are available */
 		if (pRig != NULL)
 		{
@@ -791,4 +795,3 @@ cout << "tokens:" << endl;
 		bSMeterIsSupported = FALSE;
 	}
 }
-#endif

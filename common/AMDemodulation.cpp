@@ -185,7 +185,11 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 	/* Init frequency offset acquisition (start new acquisition) */
 	FreqOffsAcq.Init(iSymbolBlockSize);
-	FreqOffsAcq.Start((CReal) 0.0); /* Search entire bandwidth */
+
+	if (bAutoFreqAcquIsEnabled == TRUE)
+			FreqOffsAcq.Start((CReal) 0.0); /* Search entire bandwidth */
+	else
+			SetNormCurMixFreqOffs(ReceiverParam.FrontEndParameters.rIFCentreFreq / SOUNDCRD_SAMPLE_RATE);
 
 	/* Init AGC */
 	AGC.Init(iSymbolBlockSize);

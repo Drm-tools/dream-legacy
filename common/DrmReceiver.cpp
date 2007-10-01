@@ -84,6 +84,8 @@ CDRMReceiver::SetReceiverMode(ERecMode eNewMode)
 {
 	if (eReceiverMode!=eNewMode || eNewReceiverMode != RM_NONE)
 		eNewReceiverMode = eNewMode;
+
+
 }
 
 void
@@ -136,6 +138,7 @@ CDRMReceiver::SetAMDemodType(EDemodType eNew)
 
 	Parameters.eDemodType = eNew;
 	AMDemodulation.SetDemodTypeAndBPF(Parameters.eDemodType, Parameters.iBw[eNew]);
+	UpdateRigSettings();
 }
 
 void
@@ -750,6 +753,59 @@ CDRMReceiver::InitReceiverMode()
 	{
 		upstreamRSCI.SetReceiverMode(eReceiverMode);
 	}
+	UpdateRigSettings();
+}
+
+void
+CDRMReceiver::UpdateRigSettings()
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+	{
+		ERigMode eNewMode;
+		CRigCaps caps;
+		rig_model_t	id = pHamlib->GetHamlibModelID();
+		switch(eReceiverMode)
+		{
+		case RM_DRM:
+			if(pHamlib->GetEnableModRigSettings())
+				eNewMode = DRM_MODIFIED;
+			else
+				eNewMode = DRM;
+			break;
+		case RM_AM:
+			switch (pReceiverParam->eDemodType)
+			{
+			case DT_AM:
+				eNewMode = AM;
+				break;
+			case DT_LSB:
+				eNewMode = LSB;
+				break;
+			case DT_USB:
+				eNewMode = USB;
+				break;
+			case DT_CW:
+				eNewMode = CW;
+				break;
+			case DT_NBFM:
+				eNewMode = NBFM;
+				break;
+			case DT_WBFM:
+				eNewMode = WBFM;
+				break;
+			case DT_SIZE:
+				return;
+			}
+			break;
+		case RM_NONE:
+			return;
+		}
+		pHamlib->SetRigMode(eNewMode);
+		pHamlib->GetRigCaps(id, caps);
+		SetUseHWDemod(caps.settings[eNewMode].eOnboardDemod!=C_CANT);
+	}
+#endif
 }
 
 #ifdef USE_QT_GUI
@@ -1399,23 +1455,6 @@ string CDRMReceiver::GetRigComPort()
 		return pHamlib->GetComPort();
 #endif
 	return "";
-}
-
-_BOOLEAN CDRMReceiver::GetEnableModRigSettings()
-{
-#ifdef HAVE_LIBHAMLIB
-	if(pHamlib)
-		return pHamlib->GetEnableModRigSettings();
-#endif
-	return FALSE;
-}
-
-void CDRMReceiver::SetEnableModRigSettings(_BOOLEAN bNew)
-{
-#ifdef HAVE_LIBHAMLIB
-	if(pHamlib)
-		pHamlib->SetEnableModRigSettings(bNew);
-#endif
 }
 
 void CDRMReceiver::SetRigFreqOffset(int iVal)

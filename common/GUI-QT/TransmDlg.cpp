@@ -713,7 +713,7 @@ TransmDialog::GetServices()
 		{
 		(void) new QListViewItem(ListViewServices, QString::number(i),
 			Service[i].strLabel.c_str(),
-			QString::number(Service[i].iServiceID),
+			QString::number(ulong(Service[i].iServiceID)),
 			ComboBoxFACLanguage->text(Service[i].iLanguage),
 			Service[i].strLanguageCode.c_str(),
 			Service[i].strCountryCode.c_str(),
@@ -725,7 +725,7 @@ TransmDialog::GetServices()
 		{
 			QListViewItem* v = new QListViewItem(ListViewServices, QString::number(i),
 			Service[i].strLabel.c_str(),
-			QString::number(Service[i].iServiceID),
+			QString::number(ulong(Service[i].iServiceID)),
 			ComboBoxFACLanguage->text(Service[i].iLanguage),
 			Service[i].strLanguageCode.c_str(),
 			Service[i].strCountryCode.c_str(),
