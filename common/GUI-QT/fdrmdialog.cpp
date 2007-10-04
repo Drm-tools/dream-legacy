@@ -354,17 +354,21 @@ void FDRMDialog::UpdateDisplay()
 		}
 	}
 
-	CAudioParam& audioParam = Parameters.AudioParam[Parameters.Service[iCurSelAudioServ].iAudioStream];
+	int iAudioStream = Parameters.Service[iCurSelAudioServ].iAudioStream;
 
 	/* If selected service is audio and text message is true */
-	if ((Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_AUDIO) && (audioParam.bTextflag == TRUE))
+	if (
+		(Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_AUDIO)
+	&&	(iAudioStream != STREAM_ID_NOT_USED)
+	&&	(Parameters.AudioParam[iAudioStream].bTextflag == TRUE)
+	)
 	{
 		/* Activate text window */
 		TextTextMessage->setEnabled(TRUE);
 
 		/* Text message of current selected audio service
 		   (UTF-8 decoding) */
-		QCString utf8Message = audioParam.strTextMessage.c_str();
+		QCString utf8Message = Parameters.AudioParam[iAudioStream].strTextMessage.c_str();
 		QString textMessage = QString().fromUtf8(utf8Message);
 		QString formattedMessage = "";
 		for (size_t i = 0; i < textMessage.length(); i++)
@@ -461,8 +465,7 @@ void FDRMDialog::UpdateDisplay()
 		LabelStereoMono->setText(GetTypeString(iCurSelAudioServ));
 
 		/* Language and program type labels (only for audio service) */
-		if (Parameters.Service[iCurSelAudioServ].
-			eAudDataFlag == SF_AUDIO)
+		if (Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_AUDIO)
 		{
 		/* SDC Language */
 		const string strLangCode = Parameters.
@@ -514,7 +517,7 @@ void FDRMDialog::UpdateDisplay()
 		}
 		else
 			LabelCountryCode->setText("");
-		}
+	}
 	else
 	{
 		LabelServiceLabel->setText(tr("No Service"));
@@ -1120,16 +1123,25 @@ void FDRMDialog::customEvent(QCustomEvent* Event)
 
 QString FDRMDialog::GetCodecString(const int iServiceID)
 {
-	QString strReturn;
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 
-	CAudioParam& audioParam = Parameters.AudioParam[Parameters.Service[iServiceID].iAudioStream];
 
 	/* First check if it is audio or data service */
 	if (Parameters.Service[iServiceID].eAudDataFlag == SF_AUDIO)
 	{
 		/* Audio service */
+		int iAudioStream = Parameters.Service[iServiceID].iAudioStream;
+
+        if (iAudioStream == STREAM_ID_NOT_USED)
+        {
+           return QString("Waiting for stream info");
+        }
+
+		CAudioParam& audioParam = Parameters.AudioParam[iAudioStream];
+
+		QString strReturn;
+
 		const CAudioParam::EAudSamRat eSamRate = audioParam.eAudioSamplRate;
 
 		/* Audio coding */
@@ -1161,14 +1173,14 @@ QString FDRMDialog::GetCodecString(const int iServiceID)
 		{
 			strReturn += "+";
 		}
+
+		return strReturn;
 	}
 	else
 	{
 		/* Data service */
-		strReturn = "Data:";
+		return QString("Data");
 	}
-
-	return strReturn;
 }
 
 QString FDRMDialog::GetTypeString(const int iServiceID)
@@ -1176,10 +1188,14 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 	QString strReturn;
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
-
 	/* First check if it is audio or data service */
 	if (Parameters.Service[iServiceID].eAudDataFlag == SF_AUDIO)
 	{
+        if (Parameters.Service[iServiceID].iAudioStream == STREAM_ID_NOT_USED)
+        {
+           return QString("Waiting for stream info");
+        }
+
 		/* Audio service */
 		CAudioParam& audioParam = Parameters.AudioParam[Parameters.Service[iServiceID].iAudioStream];
 		/* Mono-Stereo */
@@ -1200,6 +1216,10 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 	}
 	else
 	{
+        if (Parameters.Service[iServiceID].iDataStream == STREAM_ID_NOT_USED)
+        {
+           return QString("Waiting for stream info");
+        }
 		/* Data service */
 		CDataParam& dataParam = Parameters.DataParam[
 				Parameters.Service[iServiceID].iDataStream]

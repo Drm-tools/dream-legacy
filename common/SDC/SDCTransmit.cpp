@@ -268,7 +268,11 @@ void CSDCTransmit::DataEntityType5(CVector<_BINARY>& vecbiData, int ShortID,
 {
 	int	iNumBitsTotal = 0;
 	int iStreamID = Parameter.Service[ShortID].iDataStream;
-	int iPacketID = Parameter.Service[ShortID].iDataStream;
+	int iPacketID = Parameter.Service[ShortID].iPacketID;
+
+	if(iStreamID == STREAM_ID_NOT_USED)
+		return;
+
 	CDataParam& dataParam = Parameter.DataParam[iStreamID][iPacketID];
 
 	/* Set total number of bits */
@@ -372,9 +376,14 @@ vecbiData.Enqueue((uint32_t) 2, 11);
 /******************************************************************************\
 * Data entity Type 9 (Audio information data entity)						   *
 \******************************************************************************/
-void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ServiceID,
+void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ShortID,
 								   CParameter& Parameter)
 {
+	int iAudioStream = Parameter.Service[ShortID].iAudioStream;
+
+	if(iAudioStream == STREAM_ID_NOT_USED)
+		return;
+
 	/* Set total number of bits */
 	const int iNumBitsTotal = 20;
 
@@ -395,12 +404,12 @@ void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ServiceID,
 
 	/* Actual body ---------------------------------------------------------- */
 	/* Short Id */
-	vecbiData.Enqueue((uint32_t) ServiceID, 2);
+	vecbiData.Enqueue((uint32_t) ShortID, 2);
 
 	/* Stream Id */
-	vecbiData.Enqueue((uint32_t) Parameter.Service[ServiceID].iAudioStream, 2);
+	vecbiData.Enqueue((uint32_t) iAudioStream, 2);
 
-	CAudioParam& audioParam = Parameter.AudioParam[Parameter.Service[ServiceID].iAudioStream];
+	CAudioParam& audioParam = Parameter.AudioParam[iAudioStream];
 	/* Audio coding */
 	switch (audioParam.eAudioCoding)
 	{

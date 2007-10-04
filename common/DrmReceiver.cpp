@@ -1255,8 +1255,11 @@ CDRMReceiver::InitsForAudParam()
 	MSCDemultiplexer.SetInitFlag();
 	int a = pReceiverParam->GetCurSelAudioService();
 	iAudioStreamID = pReceiverParam->Service[a].iAudioStream;
-	int audiobits = pReceiverParam->GetStreamLen(iAudioStreamID) * SIZEOF__BYTE;
-	pReceiverParam->SetNumAudioDecoderBits(audiobits);
+	if(iAudioStreamID != STREAM_ID_NOT_USED)
+	{
+		int audiobits = pReceiverParam->GetStreamLen(iAudioStreamID) * SIZEOF__BYTE;
+		pReceiverParam->SetNumAudioDecoderBits(audiobits);
+	}
 	AudioSourceDecoder.SetInitFlag();
 }
 
