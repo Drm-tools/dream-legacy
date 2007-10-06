@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 AC_INIT(common/GUI-QT/main.cpp)
 
-AM_INIT_AUTOMAKE(drm,1.10unstable-24)
+AM_INIT_AUTOMAKE(drm,1.10unstable-25)
 
 AM_CONFIG_HEADER(config.h)
 
@@ -206,6 +206,14 @@ PKG_CHECK_MODULES(libsndfile, sndfile,,enable_sndfile=no)
 if test "x$enable_sndfile" = xyes; then
 	AC_DEFINE(HAVE_LIBSNDFILE, 1, [Define if you have libsndfile])
 	LIBS="$LIBS $libsndfile_LIBS"
+fi
+
+dnl libhal (optional) -------------------------------------------------------
+PKG_CHECK_MODULES(hal, hal, enable_hal=yes, enable_hal=no)
+if test "x$enable_hal" = xyes; then
+	AC_DEFINE(HAVE_LIBHAL, 1, [Define if you have libhal])
+	CXXFLAGS="$CXXFLAGS $hal_CFLAGS"
+	LIBS="$LIBS $hal_LIBS"
 fi
 
 dnl PUT THIS AT THE END, because FhG Journaline library has undefined symbols

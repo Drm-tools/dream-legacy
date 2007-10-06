@@ -47,6 +47,10 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOKitLib.h>
 #include <IOKit/serial/IOSerialKeys.h>
+#elif defined(__linux)
+# ifdef HAVE_LIBHAL
+#  include <hal/libhal.h>
+# endif
 #endif
 
 /* Implementation *************************************************************/
@@ -226,10 +230,63 @@ CHamlib::GetPortList(map < string, string > &ports)
 		ports["COM5"] = "COM5 ";
 	}
 #elif defined(__linux)
-//TODO USE THE API, not a pipe
-	FILE *p =
-		popen("hal-find-by-capability --capability serial", "r");
 	_BOOLEAN bOK = FALSE;
+# ifdef HAVE_LIBHAL
+	int num_udis;
+	char **udis;
+	DBusError error;
+	LibHalContext *hal_ctx;
+
+	dbus_error_init (&error);
+ 	if ((hal_ctx = libhal_ctx_new ()) == NULL) {
+ 		LIBHAL_FREE_DBUS_ERROR (&error);
+ 		return ;
+ 	}
+ 	if (!libhal_ctx_set_dbus_connection (hal_ctx, dbus_bus_get (DBUS_BUS_SYSTEM, &error))) {
+		fprintf (stderr, "error: libhal_ctx_set_dbus_connection: %s: %s\n", error.name, error.message);
+		LIBHAL_FREE_DBUS_ERROR (&error);
+		return ;
+	}
+	if (!libhal_ctx_init (hal_ctx, &error)) {
+		if (dbus_error_is_set(&error)) {
+			fprintf (stderr, "error: libhal_ctx_init: %s: %s\n", error.name, error.message);
+			LIBHAL_FREE_DBUS_ERROR (&error);
+		}
+		fprintf (stderr, "Could not initialise connection to hald.\n"
+		"Normally this means the HAL daemon (hald) is not running or not ready.\n");
+		return ;
+ 	}
+ 
+	udis = libhal_find_device_by_capability (hal_ctx, "serial", &num_udis, &error);
+ 
+	if (dbus_error_is_set (&error)) {
+		fprintf (stderr, "error: %s: %s\n", error.name, error.message);
+		LIBHAL_FREE_DBUS_ERROR (&error);
+		return ;
+	}
+	for (int i = 0; i < num_udis; i++) {
+		/*
+  		linux.device_file = '/dev/ttyS0'  (string)
+  		info.product = '16550A-compatible COM port'  (string)
+  		serial.type = 'platform'  (string)
+  		serial.port = 0  (0x0)  (int)
+		*/
+		char *dev = libhal_device_get_property_string (hal_ctx, udis[i], "linux.device_file", &error);
+		char *prod = libhal_device_get_property_string (hal_ctx, udis[i], "info.product", &error);
+		char *type = libhal_device_get_property_string (hal_ctx, udis[i], "serial.type", &error);
+		int port = libhal_device_get_property_int(hal_ctx, udis[i], "serial.port", &error);
+		ostringstream s;
+		s << port << " - " << type << " [" << prod << "]";
+		ports[s.str()] = dev;
+		libhal_free_string (dev);
+		libhal_free_string (prod);
+		libhal_free_string (type);
+		bOK = TRUE;
+	}
+ 
+	libhal_free_string_array (udis);
+# else
+	FILE *p = popen("hal-find-by-capability --capability serial", "r");
 	while (!feof(p))
 	{
 		char buf[1024];
@@ -254,6 +311,7 @@ CHamlib::GetPortList(map < string, string > &ports)
 		}
 	}
 	pclose(p);
+# endif
 	if (!bOK)
 	{
 		ports["ttyS0"] = "/dev/ttyS0";
