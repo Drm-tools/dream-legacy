@@ -570,11 +570,9 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 	if(loading)
 		return;
 	int iID = item->text(1).toInt();
-	if(iID==0)
-	{
-		DRMReceiver.SetRigModel(0);
-	}
-	else
+	// have to set the model first, as CHamlib keeps per model information now.
+	DRMReceiver.SetRigModel(iID);
+	if(iID>0)
 	{
 		DRMReceiver.SetRigFreqOffset(LineEditRigFreqOff->text().toInt());
 		//DRMReceiver.SetEnableModRigSettings(item->pixmap(0)!=NULL);
@@ -582,7 +580,6 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 		if(cp)
 			DRMReceiver.SetRigComPort(cp->text(1).latin1());
 		DRMReceiver.SetEnableSMeter(CheckBoxEnableSMeter->isChecked());
-		DRMReceiver.SetRigModel(iID);
 	}
 }
 
