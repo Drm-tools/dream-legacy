@@ -89,6 +89,15 @@ CDRMReceiver::SetReceiverMode(ERecMode eNewMode)
 }
 
 void
+CDRMReceiver::StartSMeter()
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		pHamlib->start();
+#endif
+}
+
+void
 CDRMReceiver::SetEnableSMeter(_BOOLEAN bNew)
 {
 #ifdef HAVE_LIBHAMLIB
@@ -1385,6 +1394,8 @@ void CDRMReceiver::UpdateSoundIn()
 		{
 			if(pcmInput == Shm)
 			{
+				delete pSoundInInterface;
+				pSoundInInterface = new CSoundInNull;
 				pcmInput=Dummy;
 			}
 		}
@@ -1419,8 +1430,7 @@ void CDRMReceiver::SetRigModel(int iID)
 		if(id!=iID)
 		{
 			pHamlib->SetHamlibModelID(iID);
-		    if(iID!=0)
-                UpdateSoundIn();
+			UpdateSoundIn();
 		}
 	}
 #endif

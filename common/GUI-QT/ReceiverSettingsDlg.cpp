@@ -126,6 +126,12 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	AddWhatsThisHelp();
 
 	setDefaults();
+
+	/* SMeter thread must be started from GUI - do it here for now */
+	_BOOLEAN bSmeter = DRMReceiver.GetEnableSMeter();
+	if(bSmeter)
+		DRMReceiver.StartSMeter();
+
 }
 
 ReceiverSettingsDlg::~ReceiverSettingsDlg()
@@ -204,7 +210,7 @@ void ReceiverSettingsDlg::setDefaults()
 
 void ReceiverSettingsDlg::showEvent(QShowEvent*)
 {
-	loading = true; // prevent exective actions during reading state
+	loading = true; // prevent executive actions during reading state
 	
 	/* Sync ----------------------------------------------------------------- */
 	if (DRMReceiver.GetTimeInt() == CChannelEstimation::TWIENER)
@@ -332,7 +338,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 			item->setSelected(TRUE);
 	}
 
-	/* Enable s-meter */
+	/* is s-meter enabled ? */
 	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
 
 	/* Enable special settings for rigs */
@@ -563,6 +569,8 @@ void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
 	if(loading)
 		return;
 	DRMReceiver.SetEnableSMeter(on);
+	if(on)
+		DRMReceiver.StartSMeter();
 }
 
 void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)

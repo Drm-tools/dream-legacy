@@ -602,12 +602,13 @@ CHamlib::SetFrequency(const int iFreqkHz)
 
 void CHamlib::SetEnableSMeter(const _BOOLEAN bStatus)
 {
-cout << "CHamlib::SetEnableSMeter(" << bStatus << ")" << endl;
 	if(bStatus)
 	{
 #ifdef USE_QT_GUI
 		if(bEnableSMeter==FALSE)
-			start();
+		{
+			//start(); // don't do this except in GUI thread - see CReceiverSettings
+		}
 #endif
 		bEnableSMeter = TRUE;
 	}
