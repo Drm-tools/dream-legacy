@@ -113,7 +113,6 @@ CShortLog::writeHeader()
 
 	Parameters.Lock(); 
 
-	//int iFrequency = Parameters.GetFrequency();
 	const CGPSData & GPSData = Parameters.GPSData;
 	if (GPSData.GetPositionAvailable())
 	{
@@ -235,7 +234,7 @@ CShortLog::writeParameters()
 		iTmpNumAAC = Parameters.iNumAudioFrames;
 
 	if (bRxlEnabled)
-		iRXL = (int)Round(Parameters.SigStrstat.getMean());
+		iRXL = (int)Round(Parameters.SigStrstat.getMean()+S9_DBUV);
 
 	Parameters.Unlock(); 
 
@@ -276,6 +275,8 @@ CShortLog::writeTrailer()
 	if (bRxlEnabled)
 	{
 		Parameters.SigStrstat.getMinMax(rMinSigStr, rMaxSigStr);
+		rMinSigStr+=S9_DBUV;
+		rMaxSigStr+=S9_DBUV;
 	}
 	Parameters.Unlock(); 
 
@@ -372,7 +373,6 @@ CLongLog::writeParameters()
 		}
 	}
 
-	//int iFrequency = Parameters.GetFrequency();
 	char cRobMode = GetRobModeStr();
 
 	_REAL rSNR = Parameters.SNRstat.getCurrent();
@@ -399,16 +399,22 @@ CLongLog::writeParameters()
 	{
 		time_t now;
 		(void) time(&now);
-		File << fixed << setw(5) << iFrequency
-			<< '/' << setw(1) << cRobMode << iCurMSCSc << iCurProtLevPartA << iCurProtLevPartB << iCurProtLevPartH
-			<< ",          " << strdate(now) << ", " << strtime(now) << ".0"
-			<< ',' << setprecision(2) << setw(7) << rSNR
-			<< ",    " << iFrameSyncStatus << ",   " << iFACStatus << ",   " << iAudioStatus
-			<< "," << setw(6) << iNumCRCMSC << "," << setw(8) << iNumCRCOkMSC
-			<< ',' << setprecision(2) << setw(8) << rDoppler << ',' << setw(6) << rDelay;
+		File << fixed << setprecision(2)
+			<< setw(5) << iFrequency << '/' << setw(1) << cRobMode
+			<< iCurMSCSc << iCurProtLevPartA << iCurProtLevPartB << iCurProtLevPartH << "         ,"
+			<< " " << strdate(now) << ", "
+			<< strtime(now) << ".0" << ","
+			<< setw(7) << rSNR << ","
+			<< setw(5) << iFrameSyncStatus << ","
+			<< setw(4) << iFACStatus << ","
+			<< setw(4) << iAudioStatus << ","
+			<< setw(6) << iNumCRCMSC << ","
+			<< setw(8) << iNumCRCOkMSC << ","
+			<< "  " << setw(6) << rDoppler << ','
+			<< setw(6) << rDelay;
 
 		if (bRxlEnabled)
-			File << ',' << setprecision(2) << setw(8) << Parameters.SigStrstat.getCurrent();
+			File << ',' << setprecision(2) << setw(8) << Parameters.SigStrstat.getCurrent()+S9_DBUV;
 
 		if (bPositionEnabled)
 			File << ',' << setprecision(4) << setw(10) << latitude << ',' << setw(10) << longitude;
@@ -447,10 +453,14 @@ CReceptLog::SetLogFrequency(int iNew)
 		if(bLogActivated)
 		{
 			writeTrailer();
+			iFrequency = iNew;
 			writeHeader();
 		}
+		else
+		{
+			iFrequency = iNew;
+		}
 	}
-	iFrequency = iNew;
 }
 
 string CReceptLog::strdate(time_t t)
