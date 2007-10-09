@@ -252,6 +252,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 
 #ifdef HAVE_LIBHAMLIB
 	/* Rig */
+	ListViewRig->setSelectionMode(QListView::Single);
 	ListViewRig->setRootIsDecorated(true);
 	ListViewRig->setAllColumnsShowFocus(true);
 	ListViewRig->setColumnText(0, "Rig");
@@ -268,7 +269,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 
 	DRMReceiver.GetRigList(rigs);
 
-	new QListViewItem(new QListViewItem(ListViewRig, "-None"), "None", "0", "");
+	QListViewItem* selected_rig = new QListViewItem(new QListViewItem(ListViewRig, "[None]"), "None", "0", "");
 	for (map<rig_model_t, CRigCaps>::iterator i=rigs.begin(); i!=rigs.end(); i++)
 	{
 		/* Store model ID */
@@ -305,25 +306,14 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		/* Check for selected Rig */
 		if (current == iModelID)
 		{
-#if 0
-			if(DRMReceiver.GetEnableModRigSettings())
-			{
-				mod_model->setSelected(TRUE);
-				ListViewRig->ensureItemVisible(mod_model);
-			}
-			else
-			{
-				model->setSelected(TRUE);
-				ListViewRig->ensureItemVisible(model);
-			}
-#else
-			model->setSelected(TRUE);
-			ListViewRig->ensureItemVisible(model);
-#endif
+			selected_rig = model;
 		}
 	}
+	ListViewRig->ensureItemVisible(selected_rig);
+	ListViewRig->setSelected(selected_rig, true);
 
 	/* COM port selection --------------------------------------------------- */
+	ListViewPort->setSelectionMode(QListView::Single);
 	ListViewPort->setAllColumnsShowFocus(true);
 	ListViewPort->setColumnText(0, "Name");
 	ListViewPort->addColumn("Port");
@@ -331,12 +321,17 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	map<string,string> ports;
 	DRMReceiver.GetComPortList(ports);
 	string strPort = DRMReceiver.GetRigComPort();
+	QListViewItem* selected_port = new QListViewItem(ListViewPort, "None", "");
 	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
 	{
 		QListViewItem* item = new QListViewItem(ListViewPort, p->first.c_str(), p->second.c_str());
 		if(strPort == p->second)
-			item->setSelected(TRUE);
+		{
+			selected_port = item;
+		}
 	}
+	ListViewPort->ensureItemVisible(selected_port);
+	ListViewPort->setSelected(selected_port, true);
 
 	/* is s-meter enabled ? */
 	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
@@ -586,7 +581,10 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 		//DRMReceiver.SetEnableModRigSettings(item->pixmap(0)!=NULL);
 		QListViewItem* cp = ListViewPort->selectedItem();
 		if(cp)
-			DRMReceiver.SetRigComPort(cp->text(1).latin1());
+		{
+			string s = cp->text(1).latin1();
+			DRMReceiver.SetRigComPort(s);
+		}
 		DRMReceiver.SetEnableSMeter(CheckBoxEnableSMeter->isChecked());
 	}
 }
@@ -595,14 +593,8 @@ void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)
 {
 	if(loading)
 		return;
-	string key = item->text(1).latin1();
-	map<string,string> ports;
-	DRMReceiver.GetComPortList(ports);
-	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
-	{
-		if(p->first == key)
-			DRMReceiver.SetRigComPort(p->second);
-	}
+	string s = item->text(1).latin1();
+	DRMReceiver.SetRigComPort(s);
 }
 
 void ReceiverSettingsDlg::OnConfigChanged(int row, int col)

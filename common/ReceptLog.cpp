@@ -399,13 +399,19 @@ CLongLog::writeParameters()
 	{
 		time_t now;
 		(void) time(&now);
-		File << fixed << setw(5) << iFrequency
-			<< '/' << setw(1) << cRobMode << iCurMSCSc << iCurProtLevPartA << iCurProtLevPartB << iCurProtLevPartH
-			<< ",          " << strdate(now) << ", " << strtime(now) << ".0"
-			<< ',' << setprecision(2) << setw(7) << rSNR
-			<< ",    " << iFrameSyncStatus << ",   " << iFACStatus << ",   " << iAudioStatus
-			<< "," << setw(6) << iNumCRCMSC << "," << setw(8) << iNumCRCOkMSC
-			<< ',' << setprecision(2) << setw(8) << rDoppler << ',' << setw(6) << rDelay;
+		File << fixed << setprecision(2)
+			<< setw(5) << iFrequency << '/' << setw(1) << cRobMode
+			<< iCurMSCSc << iCurProtLevPartA << iCurProtLevPartB << iCurProtLevPartH << "         ,"
+			<< " " << strdate(now) << ", "
+			<< strtime(now) << ".0" << ","
+			<< setw(7) << rSNR << ","
+			<< setw(5) << iFrameSyncStatus << ","
+			<< setw(4) << iFACStatus << ","
+			<< setw(4) << iAudioStatus << ","
+			<< setw(6) << iNumCRCMSC << ","
+			<< setw(8) << iNumCRCOkMSC << ","
+			<< "  " << setw(6) << rDoppler << ','
+			<< setw(6) << rDelay;
 
 		if (bRxlEnabled)
 			File << ',' << setprecision(2) << setw(8) << Parameters.SigStrstat.getCurrent()+S9_DBUV;
