@@ -291,7 +291,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 			rig_strstatus(rig.eRigStatus)
 		);
 
-		if (!rig.settings[DRM_MODIFIED].levels.empty())
+		if (rig.bIsModifiedRig)
 		{
 			mod_model = new QListViewItem(
 				man,

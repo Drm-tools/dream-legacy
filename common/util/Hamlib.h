@@ -42,7 +42,7 @@ class CSettings;
 
 enum ESMeterState {SS_VALID, SS_NOTVALID, SS_TIMEOUT};
 enum EMight { C_CAN, C_MUST, C_CANT };
-enum ERigMode { DRM, DRM_MODIFIED, AM, USB, LSB, CW, NBFM, WBFM };
+enum ERigMode { DRM, AM, USB, LSB, CW, NBFM, WBFM };
 
 struct CRigModeSpecificSettings
 {
@@ -77,7 +77,7 @@ class CRigCaps
 {
 public:
 	CRigCaps() : strManufacturer(""), strModelName(""),
-	eRigStatus(RIG_STATUS_ALPHA),
+	eRigStatus(RIG_STATUS_ALPHA),bIsModifiedRig(false),
 	bHamlibDoesAudio(FALSE),
 	iFreqOffs(0),settings()
 	{}
@@ -85,6 +85,7 @@ public:
 	strManufacturer(nSDRC.strManufacturer),
 	strModelName(nSDRC.strModelName),
 	eRigStatus(nSDRC.eRigStatus), 
+	bIsModifiedRig(nSDRC.bIsModifiedRig),
 	bHamlibDoesAudio(nSDRC.bHamlibDoesAudio),
 	iFreqOffs(nSDRC.iFreqOffs),settings(nSDRC.settings)
 	{}
@@ -94,6 +95,7 @@ public:
 		strManufacturer = cNew.strManufacturer;
 		strModelName = cNew.strModelName;
 		eRigStatus = cNew.eRigStatus;
+		bIsModifiedRig = cNew.bIsModifiedRig;
 		bHamlibDoesAudio = cNew.bHamlibDoesAudio;
 		iFreqOffs = cNew.iFreqOffs;
 		settings = cNew.settings;
@@ -103,6 +105,7 @@ public:
 	string			strManufacturer;
 	string			strModelName;
 	rig_status_e	eRigStatus;
+	bool			bIsModifiedRig;
 	_BOOLEAN		bHamlibDoesAudio;
 	int				iFreqOffs; /* Frequency offset */
 	map<ERigMode,CRigModeSpecificSettings>
@@ -133,8 +136,6 @@ public:
 	rig_model_t		GetHamlibModelID() const {return iHamlibModelID;}
 	void			SetRigMode(ERigMode eNMod);
 	ERigMode		GetRigMode() const {return eRigMode;}
-	void			SetEnableModRigSettings(const _BOOLEAN bNSM);
-	_BOOLEAN		GetEnableModRigSettings() { return bModRigSettings; }
 
 	/* com port selection */
 	void			GetPortList(map<string,string>&);
@@ -166,7 +167,6 @@ protected:
 	RIG*				pRig;
 	_BOOLEAN			bSMeterIsSupported;
 	_BOOLEAN			bEnableSMeter;
-	_BOOLEAN			bModRigSettings;
 	rig_model_t			iHamlibModelID;
 	ERigMode			eRigMode;
 	map<rig_model_t,CRigCaps>

@@ -777,10 +777,7 @@ CDRMReceiver::UpdateRigSettings()
 		switch(eReceiverMode)
 		{
 		case RM_DRM:
-			if(pHamlib->GetEnableModRigSettings())
-				eNewMode = DRM_MODIFIED;
-			else
-				eNewMode = DRM;
+			eNewMode = DRM;
 			break;
 		case RM_AM:
 			switch (pReceiverParam->eDemodType)

@@ -60,31 +60,20 @@
 */
 CHamlib::CHamlib(CParameter& p): iFreqOffset(0),
 Parameters(p), pRig(NULL),
-bSMeterIsSupported(FALSE), bEnableSMeter(FALSE), bModRigSettings(FALSE),
+bSMeterIsSupported(FALSE), bEnableSMeter(FALSE),
 iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels()
 {
-#ifdef RIG_MODEL_DUMMY
-	CapsHamlibModels[RIG_MODEL_DUMMY].settings[DRM].levels["ATT"].i=0;
-	CapsHamlibModels[RIG_MODEL_DUMMY].settings[WBFM].levels["ATT"].i=5;
-	CapsHamlibModels[RIG_MODEL_DUMMY].settings[DRM_MODIFIED].modes["AM"]=6;
-	CapsHamlibModels[RIG_MODEL_DUMMY].settings[AM].parameters["BEEP"].i=6;
-	CapsHamlibModels[RIG_MODEL_DUMMY].settings[USB].functions["TUNER"]="hello";
-#endif
 
 #ifdef RIG_MODEL_G303
 	/* Winradio G303 */
 	CapsHamlibModels[RIG_MODEL_G303].settings[DRM].levels["ATT"].i=0;
 	CapsHamlibModels[RIG_MODEL_G303].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[RIG_MODEL_G303].settings[DRM_MODIFIED].levels["ATT"].i=0;
-	CapsHamlibModels[RIG_MODEL_G303].settings[DRM_MODIFIED].levels["AGC"].i=3;
 #endif
 
 #ifdef RIG_MODEL_G313
 	/* Winradio G313 */
 	CapsHamlibModels[RIG_MODEL_G313].settings[DRM].levels["ATT"].i=0;
 	CapsHamlibModels[RIG_MODEL_G313].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[RIG_MODEL_G313].settings[DRM_MODIFIED].levels["ATT"].i=0;
-	CapsHamlibModels[RIG_MODEL_G313].settings[DRM_MODIFIED].levels["AGC"].i=3;
 # ifdef __linux
 	CapsHamlibModels[RIG_MODEL_G313].config["if_path"]="/dreamg3xxif";
 	CapsHamlibModels[RIG_MODEL_G313].bHamlibDoesAudio = TRUE;
@@ -95,8 +84,6 @@ iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels()
 	/* Winradio G315 */
 	CapsHamlibModels[RIG_MODEL_G315].settings[DRM].levels["ATT"].i=0;
 	CapsHamlibModels[RIG_MODEL_G315].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[RIG_MODEL_G315].settings[DRM_MODIFIED].levels["ATT"].i=0;
-	CapsHamlibModels[RIG_MODEL_G315].settings[DRM_MODIFIED].levels["AGC"].i=3;
 # ifdef __linux
 	CapsHamlibModels[RIG_MODEL_G315].config["if_path"]="/dreamg3xxif";
 	CapsHamlibModels[RIG_MODEL_G315].bHamlibDoesAudio = TRUE;
@@ -108,8 +95,9 @@ iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels()
 	/* AOR 7030 */
 	CapsHamlibModels[RIG_MODEL_AR7030].settings[DRM].modes["AM"]=3;
 	CapsHamlibModels[RIG_MODEL_AR7030].settings[DRM].levels["AGC"].i=5;
-	CapsHamlibModels[RIG_MODEL_AR7030].settings[DRM_MODIFIED].modes["AM"]=6;
-	CapsHamlibModels[RIG_MODEL_AR7030].settings[DRM_MODIFIED].levels["AGC"].i=5;
+	CapsHamlibModels[-RIG_MODEL_AR7030].settings[DRM].modes["AM"]=6;
+	CapsHamlibModels[-RIG_MODEL_AR7030].settings[DRM].levels["AGC"].i=5;
+	CapsHamlibModels[-RIG_MODEL_AR7030].bIsModifiedRig = true;
 #endif
 
 #ifdef RIG_MODEL_NRD535
@@ -119,8 +107,9 @@ iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels()
 	CapsHamlibModels[RIG_MODEL_NRD535].settings[DRM].levels["CWPITCH"].i=-5000;
 	CapsHamlibModels[RIG_MODEL_NRD535].settings[DRM].levels["IF"].i=-2000;
 	CapsHamlibModels[RIG_MODEL_NRD535].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[RIG_MODEL_NRD535].settings[DRM_MODIFIED].levels["AGC"].i=3;
 	CapsHamlibModels[RIG_MODEL_NRD535].iFreqOffs = 3; /* kHz frequency offset */
+	CapsHamlibModels[-RIG_MODEL_NRD535].settings[DRM].levels["AGC"].i=3;
+	CapsHamlibModels[-RIG_MODEL_NRD535].bIsModifiedRig = true;
 #endif
 
 #ifdef RIG_MODEL_RX320
@@ -128,7 +117,8 @@ iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels()
 	CapsHamlibModels[RIG_MODEL_RX320].settings[DRM].modes["AM"]=6000;
 	CapsHamlibModels[RIG_MODEL_RX320].settings[DRM].levels["AF"].i=1;
 	CapsHamlibModels[RIG_MODEL_RX320].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[RIG_MODEL_RX320].settings[DRM_MODIFIED].levels["AGC"].i=3;
+	CapsHamlibModels[-RIG_MODEL_RX320].settings[DRM].levels["AGC"].i=3;
+	CapsHamlibModels[-RIG_MODEL_RX320].bIsModifiedRig = true;
 #endif
 
 #ifdef RIG_MODEL_RX340
@@ -137,8 +127,9 @@ iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels()
 	CapsHamlibModels[RIG_MODEL_RX340].settings[DRM].levels["IF"].i=2000;
 	CapsHamlibModels[RIG_MODEL_RX340].settings[DRM].levels["AF"].i=1;
 	CapsHamlibModels[RIG_MODEL_RX340].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[RIG_MODEL_RX340].settings[DRM_MODIFIED].levels["AGC"].i=3;
 	CapsHamlibModels[RIG_MODEL_RX340].iFreqOffs = -12;
+	CapsHamlibModels[-RIG_MODEL_RX340].settings[DRM].levels["AGC"].i=3;
+	CapsHamlibModels[-RIG_MODEL_RX340].bIsModifiedRig = true;
 #endif
 
 	/* Load all available front-end remotes in hamlib library */
@@ -459,7 +450,8 @@ CHamlib::LoadSettings(CSettings & s)
 	eRigMode = ERigMode(s.Get("Hamlib", "mode", 0));
 	bEnableSMeter = s.Get("Hamlib", "ensmeter", FALSE);
 	iFreqOffset = s.Get("Hamlib", "freqoffset", 0);
-	bModRigSettings = s.Get("Hamlib", "enmodrig", FALSE);
+	if(s.Get("Hamlib", "enmodrig", FALSE))
+		model = 0 - model;
 
 	/* extract config from -C command line arg */
 	string command_line_config = s.Get("command", "hamlib-config", string(""));
@@ -477,7 +469,7 @@ CHamlib::LoadSettings(CSettings & s)
 
 	if (model != 0)
 	{
-		CRigCaps& caps = CapsHamlibModels[model];
+		CRigCaps caps = CapsHamlibModels[model];
 		INISection sec;
 		s.Get("Hamlib-config", sec);
 		INISection::iterator i;
@@ -526,26 +518,27 @@ CHamlib::LoadSettings(CSettings & s)
 				= EInChanSel(s.Get(section.str(), "inchansel", int(CS_MIX_CHAN)));
 			caps.settings[ERigMode(j)].audioInput = EMight(s.Get(section.str(), "audioinput", -1));
 		}
+		CapsHamlibModels[model] = caps;
 		SetHamlibModelID(model);
 	}
 
-	s.Put("Hamlib", "model", model);
+	s.Put("Hamlib", "model", abs(model));
+	s.Put("Hamlib", "enmodrig", (model<0)?1:0);
 	s.Put("Hamlib", "mode", eRigMode);
 	s.Put("Hamlib", "ensmeter", bEnableSMeter);
 	s.Put("Hamlib", "freqoffset", iFreqOffset);
-	s.Put("Hamlib", "enmodrig", bModRigSettings);
 }
 
 void
 CHamlib::SaveSettings(CSettings & s)
 {
 	/* Hamlib Model ID */
-	s.Put("Hamlib", "model", iHamlibModelID);
+	s.Put("Hamlib", "model", abs(iHamlibModelID));
+	/* DRM modified receiver flag */
+	s.Put("Hamlib", "enmodrig", (iHamlibModelID<0)?1:0);
+
 	s.Put("Hamlib", "ensmeter", bEnableSMeter);
 
-	/* Enable DRM modified receiver flag */
-	s.Put("Hamlib", "enmodrig", bModRigSettings);
-	
 	const CRigCaps& caps = CapsHamlibModels[iHamlibModelID];
 
 	for(map<string,string>::const_iterator i=caps.config.begin(); i!=caps.config.end(); i++)
@@ -742,19 +735,6 @@ CHamlib::SetRigConfig()
 }
 
 void
-CHamlib::SetEnableModRigSettings(const _BOOLEAN bNSM)
-{
-	if (bModRigSettings != bNSM)
-	{
-		/* Set internal parameter */
-		bModRigSettings = bNSM;
-
-		/* Hamlib must be re-initialized with new parameter */
-		SetHamlibModelID(iHamlibModelID);
-	}
-}
-
-void
 CHamlib::SetRigMode(ERigMode eNMod)
 {
 	eRigMode = eNMod;
@@ -794,12 +774,12 @@ CHamlib::SetHamlibModelID(const rig_model_t model)
 		const CRigCaps& caps = m->second;
 
 		/* Check for special DRM front-end selection */
-		if (bModRigSettings)
+		if (caps.bIsModifiedRig)
 		{
 			iFreqOffset = caps.iFreqOffs;
 		}
-		/* Init rig */
-		pRig = rig_init(iHamlibModelID);
+		/* Init rig (negative rig numbers indicate modified rigs */
+		pRig = rig_init(abs(iHamlibModelID));
 		if (pRig == NULL)
 			throw CGenErr("Initialization of hamlib failed.");
 
