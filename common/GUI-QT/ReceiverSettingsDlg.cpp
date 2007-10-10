@@ -270,21 +270,24 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	DRMReceiver.GetRigList(rigs);
 
 	QListViewItem* selected_rig = new QListViewItem(new QListViewItem(ListViewRig, "[None]"), "None", "0", "");
-	for (map<rig_model_t, CRigCaps>::iterator i=rigs.begin(); i!=rigs.end(); i++)
+	for (map<rig_model_t, CRigCaps>::const_iterator i=rigs.begin(); i!=rigs.end(); i++)
 	{
 		/* Store model ID */
 		QListViewItem* man, *model=NULL, *mod_model=NULL;
 		rig_model_t iModelID = i->first;
-		CRigCaps& rig = i->second;
-		string manufacturer = rig.hamlib_caps.mfg_name;
-		if(manufacturer=="")
+		const CRigCaps& rig = i->second;
+		if(rig.hamlib_caps.mfg_name==NULL)
 			continue;
-		map<string,QListViewItem*>::iterator mfr = manufacturers.find(manufacturer);
+		string m = rig.hamlib_caps.mfg_name;
+		map<string,QListViewItem*>::const_iterator mfr = manufacturers.find(m);
 		if(mfr==manufacturers.end())
-			manufacturers[manufacturer] = 
-				man = new QListViewItem(ListViewRig, manufacturer.c_str());
+		{
+			manufacturers[m] = man = new QListViewItem(ListViewRig, m);
+		}
 		else
+		{
 			man = mfr->second;
+		}
 		model = new QListViewItem(
 			man,
 			rig.hamlib_caps.model_name,
@@ -582,26 +585,6 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 
 	if(iID == 0)
 		return;
-
-	/* copy current GUI settings to new model as CHamlib keeps per model settings */
-	CRigCaps caps;
-	DRMReceiver.GetRigCaps(iID, caps);
-	if(caps.hamlib_caps.port_type == RIG_PORT_SERIAL)
-	{
-		ListViewPort->setEnabled(true);
-		DRMReceiver.SetRigFreqOffset(LineEditRigFreqOff->text().toInt());
-		QListViewItem* cp = ListViewPort->selectedItem();
-		if(cp)
-		{
-			string s = cp->text(1).latin1();
-			DRMReceiver.SetRigComPort(s);
-		}
-	}
-	else
-	{
-		ListViewPort->setEnabled(true);
-	}
-	DRMReceiver.SetEnableSMeter(CheckBoxEnableSMeter->isChecked());
 }
 
 void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)

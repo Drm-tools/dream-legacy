@@ -392,12 +392,8 @@ CHamlib::SetComPort(const string & port)
 
 string CHamlib::GetComPort() const
 {
-	map < int, CRigCaps >::const_iterator m = CapsHamlibModels.find(iHamlibModelID);
-	if(m==CapsHamlibModels.end())
-		return "";
-
-	map < string, string >::const_iterator c = m->second.config.find("rig_pathname");
-	if (c == m->second.config.end())
+	map < string, string >::const_iterator c = RigCaps.config.find("rig_pathname");
+	if (c == RigCaps.config.end())
 		return "";
 
 	return c->second;
@@ -475,15 +471,14 @@ CHamlib::LoadSettings(CSettings & s)
 
 	if (model != 0)
 	{
-		CRigCaps caps = CapsHamlibModels[model];
+		RigCaps = CapsHamlibModels[model];
 		INISection sec;
 		s.Get("Hamlib-config", sec);
 		INISection::iterator i;
 		for(i=sec.begin(); i!=sec.end(); i++)
 		{
-			caps.config[i->first] = i->second;
+			RigCaps.config[i->first] = i->second;
 		}
-		cout<<"geloopen"<<endl;
 		for(size_t j=DRM; j<=WBFM; j++)
 		{
 			stringstream section;
@@ -492,7 +487,7 @@ CHamlib::LoadSettings(CSettings & s)
 			s.Get(section.str()+"-modes", sec);
 			for(i=sec.begin(); i!=sec.end(); i++)
 			{
-				caps.settings[ERigMode(j)].modes[i->first] = atoi(i->second.c_str());
+				RigCaps.settings[ERigMode(j)].modes[i->first] = atoi(i->second.c_str());
 			}
 			sec.clear();
 			s.Get(section.str()+"-levels", sec);
@@ -500,31 +495,30 @@ CHamlib::LoadSettings(CSettings & s)
 			{
 				setting_t setting = rig_parse_level(i->first.c_str());
 				if (RIG_LEVEL_IS_FLOAT(setting))
-					caps.settings[ERigMode(j)].levels[i->first].f = atof(i->second.c_str());
+					RigCaps.settings[ERigMode(j)].levels[i->first].f = atof(i->second.c_str());
 				else
-					caps.settings[ERigMode(j)].levels[i->first].i = atoi(i->second.c_str());
+					RigCaps.settings[ERigMode(j)].levels[i->first].i = atoi(i->second.c_str());
 			}
 			sec.clear();
 			s.Get(section.str()+"-functions", sec);
 			for(i=sec.begin(); i!=sec.end(); i++)
-				caps.settings[ERigMode(j)].functions[i->first] = i->second;
+				RigCaps.settings[ERigMode(j)].functions[i->first] = i->second;
 			sec.clear();
 			s.Get(section.str()+"-parameters", sec);
 			for(i=sec.begin(); i!=sec.end(); i++)
 			{
 				setting_t setting = rig_parse_parm(i->first.c_str());
 				if (RIG_LEVEL_IS_FLOAT(setting))
-					caps.settings[ERigMode(j)].levels[i->first].f = atof(i->second.c_str());
+					RigCaps.settings[ERigMode(j)].levels[i->first].f = atof(i->second.c_str());
 				else
-					caps.settings[ERigMode(j)].levels[i->first].i = atoi(i->second.c_str());
+					RigCaps.settings[ERigMode(j)].levels[i->first].i = atoi(i->second.c_str());
 			}
-			caps.settings[ERigMode(j)].eOnboardDemod
+			RigCaps.settings[ERigMode(j)].eOnboardDemod
 				= EMight(s.Get(section.str(), "onboarddemod", int(C_CAN)));
-			caps.settings[ERigMode(j)].eInChanSel
+			RigCaps.settings[ERigMode(j)].eInChanSel
 				= EInChanSel(s.Get(section.str(), "inchansel", int(CS_MIX_CHAN)));
-			caps.settings[ERigMode(j)].audioInput = EMight(s.Get(section.str(), "audioinput", -1));
+			RigCaps.settings[ERigMode(j)].audioInput = EMight(s.Get(section.str(), "audioinput", -1));
 		}
-		CapsHamlibModels[model] = caps;
 		SetHamlibModelID(model);
 	}
 
@@ -545,14 +539,13 @@ CHamlib::SaveSettings(CSettings & s)
 
 	s.Put("Hamlib", "ensmeter", bEnableSMeter);
 
-	const CRigCaps& caps = CapsHamlibModels[iHamlibModelID];
-
-	for(map<string,string>::const_iterator i=caps.config.begin(); i!=caps.config.end(); i++)
+	for(map<string,string>::const_iterator i=RigCaps.config.begin(); i!=RigCaps.config.end(); i++)
 	{
 		s.Put("Hamlib-config", i->first, i->second);
 	}
 
-	for(map<ERigMode,CRigModeSpecificSettings>::const_iterator j=caps.settings.begin(); j!=caps.settings.end(); j++)
+	for(map<ERigMode,CRigModeSpecificSettings>::const_iterator j=RigCaps.settings.begin();
+		j!=RigCaps.settings.end(); j++)
 	{
 		const CRigModeSpecificSettings& settings = j->second;
 		map<string,int>::const_iterator k;

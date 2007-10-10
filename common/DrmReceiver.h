@@ -251,11 +251,11 @@ public:
 	void					SetRigModel(int);
 	int						GetRigModel();
 	void					GetRigList(map<int, CRigCaps>& rigs);
-	void					GetRigCaps(rig_model_t id, CRigCaps& caps);
+	void					GetRigCaps(CRigCaps& caps);
 	void					GetComPortList(map<string,string>& ports);
 	string					GetRigComPort();
-	void					SetRigFreqOffset(int);
 	void					SetRigComPort(const string&);
+	void					SetRigFreqOffset(int);
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
 	CParameter*				GetParameters() {return pReceiverParam;}

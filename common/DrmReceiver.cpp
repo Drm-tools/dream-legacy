@@ -773,7 +773,6 @@ CDRMReceiver::UpdateRigSettings()
 	{
 		ERigMode eNewMode;
 		CRigCaps caps;
-		rig_model_t	id = pHamlib->GetHamlibModelID();
 		switch(eReceiverMode)
 		{
 		case RM_DRM:
@@ -808,7 +807,7 @@ CDRMReceiver::UpdateRigSettings()
 			return;
 		}
 		pHamlib->SetRigMode(eNewMode);
-		pHamlib->GetRigCaps(id, caps);
+		pHamlib->GetRigCaps(caps);
 		SetUseHWDemod(caps.settings[eNewMode].eOnboardDemod!=C_CANT);
 	}
 #endif
@@ -1369,8 +1368,7 @@ void CDRMReceiver::UpdateSoundIn()
 	if(pHamlib)
 	{
 		CRigCaps caps;
-		rig_model_t	id = pHamlib->GetHamlibModelID();
-		pHamlib->GetRigCaps(id, caps);
+		pHamlib->GetRigCaps(caps);
 		if(caps.bHamlibDoesAudio)
 		{
 			if(pcmInput != Shm)
@@ -1450,11 +1448,11 @@ void CDRMReceiver::GetRigList(map<rig_model_t,CRigCaps>& rigs)
 #endif
 }
 
-void CDRMReceiver::GetRigCaps(rig_model_t id, CRigCaps& caps)
+void CDRMReceiver::GetRigCaps(CRigCaps& caps)
 {
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
-		pHamlib->GetRigCaps(id, caps);
+		pHamlib->GetRigCaps(caps);
 #endif
 }
 

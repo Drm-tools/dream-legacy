@@ -137,7 +137,7 @@ public:
 
 	string			GetInfo() const;
 	string			GetConfig(const string& key);
-	void			GetRigCaps(rig_model_t id, CRigCaps& caps) { caps = CapsHamlibModels[id]; }
+	void			GetRigCaps(CRigCaps& caps) { caps = RigCaps; }
 
 	void			RigSpecialParameters(rig_model_t id, const string& sSet, int iFrOff, const string& sModSet);
 	void			LoadSettings(CSettings& s);
@@ -164,6 +164,7 @@ protected:
 	ERigMode			eRigMode;
 	map<rig_model_t,CRigCaps>
 						CapsHamlibModels;
+	CRigCaps			RigCaps;
 };
 #else
 struct CHamlib
