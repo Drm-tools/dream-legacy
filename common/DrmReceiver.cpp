@@ -1379,7 +1379,7 @@ void CDRMReceiver::UpdateSoundIn()
     			CShmSoundIn* ShmSoundIn = new CShmSoundIn;
 				string shm_path = pHamlib->GetConfig("if_path");
 				ShmSoundIn->SetShmPath(shm_path);
-				ShmSoundIn->SetName(caps.strModelName);
+				ShmSoundIn->SetName(caps.hamlib_caps.model_name);
 				ShmSoundIn->SetShmChannels(1);
 				ShmSoundIn->SetWantedChannels(2);
 				pSoundInInterface = ShmSoundIn;
@@ -1447,6 +1447,14 @@ void CDRMReceiver::GetRigList(map<rig_model_t,CRigCaps>& rigs)
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
 		pHamlib->GetRigList(rigs);
+#endif
+}
+
+void CDRMReceiver::GetRigCaps(rig_model_t id, CRigCaps& caps)
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		pHamlib->GetRigCaps(id, caps);
 #endif
 }
 

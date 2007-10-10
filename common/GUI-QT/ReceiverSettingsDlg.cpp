@@ -276,28 +276,30 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		QListViewItem* man, *model=NULL, *mod_model=NULL;
 		rig_model_t iModelID = i->first;
 		CRigCaps& rig = i->second;
-		if(rig.strManufacturer=="")
+		string manufacturer = rig.hamlib_caps.mfg_name;
+		if(manufacturer=="")
 			continue;
-		map<string,QListViewItem*>::iterator mfr = manufacturers.find(rig.strManufacturer);
+		map<string,QListViewItem*>::iterator mfr = manufacturers.find(manufacturer);
 		if(mfr==manufacturers.end())
-			manufacturers[rig.strManufacturer] = 
-				man = new QListViewItem(ListViewRig, rig.strManufacturer.c_str());
+			manufacturers[manufacturer] = 
+				man = new QListViewItem(ListViewRig, manufacturer.c_str());
 		else
 			man = mfr->second;
 		model = new QListViewItem(
 			man,
-			rig.strModelName.c_str(),
+			rig.hamlib_caps.model_name,
 			QString::number(iModelID),
-			rig_strstatus(rig.eRigStatus)
+			rig_strstatus(rig.hamlib_caps.status)
 		);
 
 		if (rig.bIsModifiedRig)
 		{
+			string model = rig.hamlib_caps.model_name;
 			mod_model = new QListViewItem(
 				man,
-				(rig.strModelName+" (DRM)").c_str(),
-				QString::number(iModelID),
-				rig_strstatus(rig.eRigStatus)
+				(model+" (DRM)").c_str(),
+				QString::number(-iModelID),
+				rig_strstatus(rig.hamlib_caps.status)
 			);
 			mod_model->setPixmap(0, BitmLittleGreenSquare);
 			man->setPixmap(0, BitmLittleGreenSquare);
@@ -309,8 +311,6 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 			selected_rig = model;
 		}
 	}
-	ListViewRig->ensureItemVisible(selected_rig);
-	ListViewRig->setSelected(selected_rig, true);
 
 	/* COM port selection --------------------------------------------------- */
 	ListViewPort->setSelectionMode(QListView::Single);
@@ -336,8 +336,9 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	/* is s-meter enabled ? */
 	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
 
-	/* Enable special settings for rigs */
-	//CheckBoxWithDRMMod->setChecked(DRMReceiver.GetEnableModRigSettings());
+	/* do this last so can update the com port, etc depending on rig type */
+	ListViewRig->ensureItemVisible(selected_rig);
+	ListViewRig->setSelected(selected_rig, true);
 #endif
 	loading = false; // loading completed
 }
@@ -573,20 +574,34 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 	if(loading)
 		return;
 	int iID = item->text(1).toInt();
-	// have to set the model first, as CHamlib keeps per model information now.
+
+	if(item->pixmap(0))
+		iID = -iID;
+
 	DRMReceiver.SetRigModel(iID);
-	if(iID>0)
+
+	if(iID == 0)
+		return;
+
+	/* copy current GUI settings to new model as CHamlib keeps per model settings */
+	CRigCaps caps;
+	DRMReceiver.GetRigCaps(iID, caps);
+	if(caps.hamlib_caps.port_type == RIG_PORT_SERIAL)
 	{
+		ListViewPort->setEnabled(true);
 		DRMReceiver.SetRigFreqOffset(LineEditRigFreqOff->text().toInt());
-		//DRMReceiver.SetEnableModRigSettings(item->pixmap(0)!=NULL);
 		QListViewItem* cp = ListViewPort->selectedItem();
 		if(cp)
 		{
 			string s = cp->text(1).latin1();
 			DRMReceiver.SetRigComPort(s);
 		}
-		DRMReceiver.SetEnableSMeter(CheckBoxEnableSMeter->isChecked());
 	}
+	else
+	{
+		ListViewPort->setEnabled(true);
+	}
+	DRMReceiver.SetEnableSMeter(CheckBoxEnableSMeter->isChecked());
 }
 
 void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)

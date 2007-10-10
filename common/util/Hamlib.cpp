@@ -408,11 +408,17 @@ CHamlib::PrintHamlibModelList(const struct rig_caps *caps, void *data)
 {
 	/* Access data members of class through pointer ((CHamlib*) data) */
 	CHamlib & Hamlib = *((CHamlib *) data);
+	rig_model_t model = caps->rig_model;
 
-	/* Store new model in class. Use only relevant information */
-	Hamlib.CapsHamlibModels[caps->rig_model].strManufacturer = caps->mfg_name;
-	Hamlib.CapsHamlibModels[caps->rig_model].strModelName = caps->model_name;
-	Hamlib.CapsHamlibModels[caps->rig_model].eRigStatus = caps->status;
+	/* Store new model in class. */
+	Hamlib.CapsHamlibModels[model].hamlib_caps = *caps;
+
+	/* modified rigs */
+	map < rig_model_t, CRigCaps >::iterator m = Hamlib.CapsHamlibModels.find(-model);
+	if (m != Hamlib.CapsHamlibModels.end())
+	{
+		m->second.hamlib_caps = *caps;
+	}
 
 	return 1;					/* !=0, we want them all! */
 }

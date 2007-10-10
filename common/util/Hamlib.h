@@ -76,15 +76,13 @@ struct CRigModeSpecificSettings
 class CRigCaps
 {
 public:
-	CRigCaps() : strManufacturer(""), strModelName(""),
-	eRigStatus(RIG_STATUS_ALPHA),bIsModifiedRig(false),
+	CRigCaps() : hamlib_caps(),
+	bIsModifiedRig(false),
 	bHamlibDoesAudio(FALSE),
 	iFreqOffs(0),settings()
 	{}
 	CRigCaps(const CRigCaps& nSDRC) : 
-	strManufacturer(nSDRC.strManufacturer),
-	strModelName(nSDRC.strModelName),
-	eRigStatus(nSDRC.eRigStatus), 
+	hamlib_caps(nSDRC.hamlib_caps), 
 	bIsModifiedRig(nSDRC.bIsModifiedRig),
 	bHamlibDoesAudio(nSDRC.bHamlibDoesAudio),
 	iFreqOffs(nSDRC.iFreqOffs),settings(nSDRC.settings)
@@ -92,9 +90,7 @@ public:
 
 	CRigCaps& operator=(const CRigCaps& cNew)
 	{
-		strManufacturer = cNew.strManufacturer;
-		strModelName = cNew.strModelName;
-		eRigStatus = cNew.eRigStatus;
+		hamlib_caps = cNew.hamlib_caps;
 		bIsModifiedRig = cNew.bIsModifiedRig;
 		bHamlibDoesAudio = cNew.bHamlibDoesAudio;
 		iFreqOffs = cNew.iFreqOffs;
@@ -102,14 +98,11 @@ public:
 		return *this;
 	}
 
-	string			strManufacturer;
-	string			strModelName;
-	rig_status_e	eRigStatus;
+	rig_caps		hamlib_caps;
 	bool			bIsModifiedRig;
 	_BOOLEAN		bHamlibDoesAudio;
 	int				iFreqOffs; /* Frequency offset */
-	map<ERigMode,CRigModeSpecificSettings>
-					settings;
+	map<ERigMode,CRigModeSpecificSettings> settings;
 	map<string,string> config;
 };
 
