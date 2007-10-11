@@ -147,7 +147,6 @@ public:
 	void					SetAMDemodType(EDemodType);
 	void					SetAMFilterBW(int iBw);
 	void					SetAMDemodAcq(_REAL rNewNorCen);
-	void	 				StartSMeter();
 	void	 				SetEnableSMeter(_BOOLEAN bNew);
 	_BOOLEAN		 		GetEnableSMeter();
 	_BOOLEAN 				SetFrequency(int iNewFreqkHz);

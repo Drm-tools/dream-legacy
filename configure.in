@@ -241,5 +241,6 @@ echo "	AAC encoding supported:				$enable_faac"
 echo "	pcap file format supported:			$enable_pcap"
 echo "	libsndfile supported:				$enable_sndfile"
 echo "	journaline supported:				$enable_journaline"
+echo "	HAL supported:						$enable_hal"
 echo
 echo

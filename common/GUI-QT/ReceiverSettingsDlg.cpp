@@ -127,11 +127,8 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 
 	setDefaults();
 
-	/* SMeter thread must be started from GUI - do it here for now */
-	_BOOLEAN bSmeter = DRMReceiver.GetEnableSMeter();
-	if(bSmeter)
-		DRMReceiver.StartSMeter();
-
+	/* SMeter thread must be started from GUI - initialise the rig from here */
+	DRMReceiver.SetRigModel(DRMReceiver.GetRigModel());
 }
 
 ReceiverSettingsDlg::~ReceiverSettingsDlg()
@@ -568,8 +565,6 @@ void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
 	if(loading)
 		return;
 	DRMReceiver.SetEnableSMeter(on);
-	if(on)
-		DRMReceiver.StartSMeter();
 }
 
 void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
@@ -581,10 +576,8 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 	if(item->pixmap(0))
 		iID = -iID;
 
+cout << "ReceiverSettingsDlg::OnRigSelected(" << iID << ")" << endl;
 	DRMReceiver.SetRigModel(iID);
-
-	if(iID == 0)
-		return;
 }
 
 void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)
@@ -592,6 +585,7 @@ void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)
 	if(loading)
 		return;
 	string s = item->text(1).latin1();
+cout << "ReceiverSettingsDlg::OnComPortSelected(" << s << ")" << endl;
 	DRMReceiver.SetRigComPort(s);
 }
 

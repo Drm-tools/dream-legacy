@@ -89,15 +89,6 @@ CDRMReceiver::SetReceiverMode(ERecMode eNewMode)
 }
 
 void
-CDRMReceiver::StartSMeter()
-{
-#ifdef HAVE_LIBHAMLIB
-	if(pHamlib)
-		pHamlib->start();
-#endif
-}
-
-void
 CDRMReceiver::SetEnableSMeter(_BOOLEAN bNew)
 {
 #ifdef HAVE_LIBHAMLIB
@@ -1477,7 +1468,7 @@ void CDRMReceiver::SetRigFreqOffset(int iVal)
 {
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
-		pHamlib->iFreqOffset = iVal;
+		pHamlib->SetFreqOffset(iVal);
 #endif
 }
 

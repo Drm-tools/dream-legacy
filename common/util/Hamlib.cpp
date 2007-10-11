@@ -58,9 +58,7 @@
 	This code is based on patches and example code from Tomi Manninen and
 	Stephane Fillod (developer of hamlib)
 */
-CHamlib::CHamlib(CParameter& p): iFreqOffset(0),
-Parameters(p), pRig(NULL),
-bSMeterIsSupported(FALSE), bEnableSMeter(FALSE),
+CHamlib::CHamlib(CParameter& p): Parameters(p), pRig(NULL), bEnableSMeter(FALSE),
 iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels()
 {
 
@@ -107,7 +105,7 @@ iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels()
 	CapsHamlibModels[RIG_MODEL_NRD535].settings[DRM].levels["CWPITCH"].i=-5000;
 	CapsHamlibModels[RIG_MODEL_NRD535].settings[DRM].levels["IF"].i=-2000;
 	CapsHamlibModels[RIG_MODEL_NRD535].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[RIG_MODEL_NRD535].iFreqOffs = 3; /* kHz frequency offset */
+	CapsHamlibModels[RIG_MODEL_NRD535].iFreqOffset = 3; /* kHz frequency offset */
 	CapsHamlibModels[-RIG_MODEL_NRD535].settings[DRM].levels["AGC"].i=3;
 	CapsHamlibModels[-RIG_MODEL_NRD535].bIsModifiedRig = true;
 #endif
@@ -127,7 +125,7 @@ iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels()
 	CapsHamlibModels[RIG_MODEL_RX340].settings[DRM].levels["IF"].i=2000;
 	CapsHamlibModels[RIG_MODEL_RX340].settings[DRM].levels["AF"].i=1;
 	CapsHamlibModels[RIG_MODEL_RX340].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[RIG_MODEL_RX340].iFreqOffs = -12;
+	CapsHamlibModels[RIG_MODEL_RX340].iFreqOffset = -12;
 	CapsHamlibModels[-RIG_MODEL_RX340].settings[DRM].levels["AGC"].i=3;
 	CapsHamlibModels[-RIG_MODEL_RX340].bIsModifiedRig = true;
 #endif
@@ -384,9 +382,17 @@ CHamlib::GetPortList(map < string, string > &ports)
 }
 
 void
+CHamlib::SetFreqOffset(const int iFreqOffset)
+{
+	CapsHamlibModels[iHamlibModelID].iFreqOffset = iFreqOffset;
+	RigCaps.iFreqOffset = iFreqOffset;
+}
+
+void
 CHamlib::SetComPort(const string & port)
 {
 	CapsHamlibModels[iHamlibModelID].config["rig_pathname"] = port;
+	RigCaps.config["rig_pathname"] = port;
 	SetHamlibModelID(iHamlibModelID);
 }
 
@@ -451,7 +457,6 @@ CHamlib::LoadSettings(CSettings & s)
 	rig_model_t model = s.Get("Hamlib", "model", 0);
 	eRigMode = ERigMode(s.Get("Hamlib", "mode", 0));
 	bEnableSMeter = s.Get("Hamlib", "ensmeter", FALSE);
-	iFreqOffset = s.Get("Hamlib", "freqoffset", 0);
 	if(s.Get("Hamlib", "enmodrig", FALSE))
 		model = 0 - model;
 
@@ -519,14 +524,21 @@ CHamlib::LoadSettings(CSettings & s)
 				= EInChanSel(s.Get(section.str(), "inchansel", int(CS_MIX_CHAN)));
 			RigCaps.settings[ERigMode(j)].audioInput = EMight(s.Get(section.str(), "audioinput", -1));
 		}
-		SetHamlibModelID(model);
 	}
+
+	RigCaps.iFreqOffset = s.Get("Hamlib", "freqoffset", RigCaps.iFreqOffset);
+
+	/* save the new working config into the `database` */
+	CapsHamlibModels[model] = RigCaps;
+
+	/* set the iHamlibModelID variable, but don't do anything!!!! */
+	iHamlibModelID = model;
 
 	s.Put("Hamlib", "model", abs(model));
 	s.Put("Hamlib", "enmodrig", (model<0)?1:0);
 	s.Put("Hamlib", "mode", eRigMode);
 	s.Put("Hamlib", "ensmeter", bEnableSMeter);
-	s.Put("Hamlib", "freqoffset", iFreqOffset);
+	s.Put("Hamlib", "freqoffset", RigCaps.iFreqOffset);
 }
 
 void
@@ -538,6 +550,8 @@ CHamlib::SaveSettings(CSettings & s)
 	s.Put("Hamlib", "enmodrig", (iHamlibModelID<0)?1:0);
 
 	s.Put("Hamlib", "ensmeter", bEnableSMeter);
+
+	s.Put("Hamlib", "freqoffset", RigCaps.iFreqOffset);
 
 	for(map<string,string>::const_iterator i=RigCaps.config.begin(); i!=RigCaps.config.end(); i++)
 	{
@@ -579,7 +593,6 @@ CHamlib::SaveSettings(CSettings & s)
 				s.Put(section.str()+"-parameters", v->first, v->second.i);
 		}
 	}
-	s.Put("Hamlib", "freqoffset", iFreqOffset);
 }
 
 _BOOLEAN
@@ -587,7 +600,7 @@ CHamlib::SetFrequency(const int iFreqkHz)
 {
 	/* Set frequency (consider frequency offset and conversion
 		   from kHz to Hz by " * 1000 ") */
-	if (pRig && rig_set_freq(pRig, RIG_VFO_CURR, (iFreqkHz + iFreqOffset) * 1000) == RIG_OK)
+	if (pRig && rig_set_freq(pRig, RIG_VFO_CURR, (iFreqkHz + RigCaps.iFreqOffset) * 1000) == RIG_OK)
 		return TRUE;
 	return FALSE;
 }
@@ -599,7 +612,7 @@ void CHamlib::SetEnableSMeter(const _BOOLEAN bStatus)
 #ifdef USE_QT_GUI
 		if(bEnableSMeter==FALSE)
 		{
-			//start(); // don't do this except in GUI thread - see CReceiverSettings
+			start(); // don't do this except in GUI thread - see CReceiverSettings
 		}
 #endif
 		bEnableSMeter = TRUE;
@@ -620,7 +633,7 @@ _BOOLEAN CHamlib::GetEnableSMeter()
 
 void CHamlib::run()
 {
-	while(bEnableSMeter && bSMeterIsSupported && pRig)
+	while(bEnableSMeter && RigCaps.bSMeterIsSupported && pRig)
 	{
 		value_t val;
 		switch(rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &val))
@@ -633,7 +646,7 @@ void CHamlib::run()
 			break;
 		case -RIG_ETIMEOUT:
 			/* If a time-out happened, do not update s-meter anymore (disable it) */
-			bSMeterIsSupported = FALSE;
+			RigCaps.bSMeterIsSupported = false;
 			break;
 		}
 #ifdef USE_QT_GUI
@@ -743,40 +756,36 @@ CHamlib::SetRigMode(ERigMode eNMod)
 void
 CHamlib::SetHamlibModelID(const rig_model_t model)
 {
-	int ret;
+	/* save current config for previous model */
+	CapsHamlibModels[iHamlibModelID] = RigCaps;
+
+	/* If rig was already open, close it first */
+	if (pRig != NULL)
+	{
+		/* Close everything */
+		rig_close(pRig);
+		rig_cleanup(pRig);
+		pRig = NULL;
+	}
 
 	/* Set value for current selected model ID */
 	iHamlibModelID = model;
 
-	/* Init frequency offset */
-	iFreqOffset = 0;
+	/* if no Rig is wanted we are done */
+	if (iHamlibModelID == 0)
+		return;
 
 	try
 	{
-		/* If rig was already open, close it first */
-		if (pRig != NULL)
-		{
-			/* Close everything */
-			rig_close(pRig);
-			rig_cleanup(pRig);
-			pRig = NULL;
-			bSMeterIsSupported = FALSE;
-		}
-
-		if (iHamlibModelID == 0)
-			throw CGenErr("No rig model ID selected.");
+		int ret;
 
 		map < rig_model_t, CRigCaps >::const_iterator m = CapsHamlibModels.find(iHamlibModelID);
 		if (m == CapsHamlibModels.end())
 			throw CGenErr("invalid rig model ID selected.");
 
-		const CRigCaps& caps = m->second;
+		/* fetch the config into the working config */
+		RigCaps = m->second;
 
-		/* Check for special DRM front-end selection */
-		if (caps.bIsModifiedRig)
-		{
-			iFreqOffset = caps.iFreqOffs;
-		}
 		/* Init rig (negative rig numbers indicate modified rigs */
 		pRig = rig_init(abs(iHamlibModelID));
 		if (pRig == NULL)
@@ -816,8 +825,8 @@ cout << "tokens:" << endl;
 		if (pRig != NULL)
 		{
 			/* Check if s-meter can be used. Disable GUI control if not */
-			bSMeterIsSupported = rig_has_get_level(pRig, RIG_LEVEL_STRENGTH);
-			if(bSMeterIsSupported && bEnableSMeter)
+			RigCaps.bSMeterIsSupported = rig_has_get_level(pRig, RIG_LEVEL_STRENGTH);
+			if(RigCaps.bSMeterIsSupported && bEnableSMeter)
 			{
 				bEnableSMeter = FALSE;
 				SetEnableSMeter(TRUE);
@@ -830,6 +839,6 @@ cout << "tokens:" << endl;
 		cerr << GenErr.strError << endl;
 
 		/* Disable s-meter */
-		bSMeterIsSupported = FALSE;
+		RigCaps.bSMeterIsSupported = FALSE;
 	}
 }

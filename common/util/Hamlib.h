@@ -78,14 +78,16 @@ class CRigCaps
 public:
 	CRigCaps() : hamlib_caps(),
 	bIsModifiedRig(false),
-	bHamlibDoesAudio(FALSE),
-	iFreqOffs(0),settings()
+	bHamlibDoesAudio(false),
+	bSMeterIsSupported(false),
+	iFreqOffset(0),settings()
 	{}
 	CRigCaps(const CRigCaps& nSDRC) : 
 	hamlib_caps(nSDRC.hamlib_caps), 
 	bIsModifiedRig(nSDRC.bIsModifiedRig),
 	bHamlibDoesAudio(nSDRC.bHamlibDoesAudio),
-	iFreqOffs(nSDRC.iFreqOffs),settings(nSDRC.settings)
+	bSMeterIsSupported(nSDRC.bSMeterIsSupported),
+	iFreqOffset(nSDRC.iFreqOffset),settings(nSDRC.settings)
 	{}
 
 	CRigCaps& operator=(const CRigCaps& cNew)
@@ -93,15 +95,17 @@ public:
 		hamlib_caps = cNew.hamlib_caps;
 		bIsModifiedRig = cNew.bIsModifiedRig;
 		bHamlibDoesAudio = cNew.bHamlibDoesAudio;
-		iFreqOffs = cNew.iFreqOffs;
+		bSMeterIsSupported = cNew.bSMeterIsSupported;
+		iFreqOffset = cNew.iFreqOffset;
 		settings = cNew.settings;
 		return *this;
 	}
 
 	rig_caps		hamlib_caps;
 	bool			bIsModifiedRig;
-	_BOOLEAN		bHamlibDoesAudio;
-	int				iFreqOffs; /* Frequency offset */
+	bool			bHamlibDoesAudio;
+	bool			bSMeterIsSupported;
+	int				iFreqOffset;
 	map<ERigMode,CRigModeSpecificSettings> settings;
 	map<string,string> config;
 };
@@ -119,6 +123,7 @@ public:
 
 	virtual void	run();
 
+	void			SetFreqOffset(const int iFreqOffset);
 	_BOOLEAN		SetFrequency(const int iFreqkHz);
 	void 			SetEnableSMeter(const _BOOLEAN bStatus);
 	_BOOLEAN		GetEnableSMeter();
@@ -143,8 +148,6 @@ public:
 	void			LoadSettings(CSettings& s);
 	void			SaveSettings(CSettings& s);
 
-	int				iFreqOffset;
-
 protected:
 	static int			PrintHamlibModelList(const struct rig_caps* caps, void* data);
 	static int			token(const struct confparams *, rig_ptr_t);
@@ -158,7 +161,6 @@ protected:
 
 	CParameter&			Parameters;
 	RIG*				pRig;
-	_BOOLEAN			bSMeterIsSupported;
 	_BOOLEAN			bEnableSMeter;
 	rig_model_t			iHamlibModelID;
 	ERigMode			eRigMode;
