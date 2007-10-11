@@ -759,6 +759,14 @@ CHamlib::SetHamlibModelID(const rig_model_t model)
 	/* save current config for previous model */
 	CapsHamlibModels[iHamlibModelID] = RigCaps;
 
+	/* stop the thread if its running */
+	bool bSMeterWasEnabled = bEnableSMeter;
+	if(bEnableSMeter)
+	{
+		SetEnableSMeter(FALSE);
+		if(wait(1000) == FALSE)
+			cout << "error terminating rig polling thread" << endl;
+	}
 	/* If rig was already open, close it first */
 	if (pRig != NULL)
 	{
@@ -826,9 +834,8 @@ cout << "tokens:" << endl;
 		{
 			/* Check if s-meter can be used. Disable GUI control if not */
 			RigCaps.bSMeterIsSupported = rig_has_get_level(pRig, RIG_LEVEL_STRENGTH);
-			if(RigCaps.bSMeterIsSupported && bEnableSMeter)
+			if(RigCaps.bSMeterIsSupported && bSMeterWasEnabled)
 			{
-				bEnableSMeter = FALSE;
 				SetEnableSMeter(TRUE);
 			}
 		}
