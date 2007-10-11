@@ -279,7 +279,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		map<string,QListViewItem*>::const_iterator mfr = manufacturers.find(m);
 		if(mfr==manufacturers.end())
 		{
-			manufacturers[m] = man = new QListViewItem(ListViewRig, m);
+			manufacturers[m] = man = new QListViewItem(ListViewRig, m.c_str());
 		}
 		else
 		{
