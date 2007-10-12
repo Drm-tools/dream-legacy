@@ -578,6 +578,10 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 
 cout << "ReceiverSettingsDlg::OnRigSelected(" << iID << ")" << endl;
 	DRMReceiver.SetRigModel(iID);
+	CRigCaps caps;
+	DRMReceiver.GetRigCaps(caps);
+	ListViewPort->setEnabled(caps.hamlib_caps.port_type == RIG_PORT_SERIAL);
+	//CheckBoxEnableSMeter->setEnabled(rig_has_get_level(pRig, RIG_LEVEL_STRENGTH));
 }
 
 void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)

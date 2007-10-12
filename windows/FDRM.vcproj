@@ -3550,7 +3550,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\PlotManger.h"
+				RelativePath="..\common\PlotManager.h"
 				>
 			</File>
 			<File
