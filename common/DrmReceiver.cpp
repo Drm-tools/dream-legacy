@@ -661,7 +661,7 @@ CDRMReceiver::InitReceiverMode()
 				pAMParam->sReceiverID  = pDRMParam->sReceiverID;
 				pAMParam->sDataFilesDirectory = pDRMParam->sDataFilesDirectory;
 				pAMParam->SetFrequency(pDRMParam->GetFrequency());
-				pAMParam->bUseHWDemod = pDRMParam->bUseHWDemod;
+				//pAMParam->bUseHWDemod = pDRMParam->bUseHWDemod;
 				break;
 			case RM_NONE:
 				/* Start from cold in AM mode - no special action */
@@ -720,7 +720,7 @@ CDRMReceiver::InitReceiverMode()
 				pDRMParam->sReceiverID  = pAMParam->sReceiverID;
 				pDRMParam->sDataFilesDirectory = pAMParam->sDataFilesDirectory;
 				pDRMParam->SetFrequency(pAMParam->GetFrequency());
-				pDRMParam->bUseHWDemod = pAMParam->bUseHWDemod;
+				//pDRMParam->bUseHWDemod = pAMParam->bUseHWDemod;
 				break;
 			case RM_DRM:
 				/* DRM to DRM switch - re-acquisition requested - no special action */
@@ -1661,6 +1661,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	Parameters.eDemodType = EDemodType(s.Get("Demodulator", "modulation", DT_AM));
 
 	/* AM Parameters */
+	Parameters.bUseHWDemod = s.Get("Demodulator", "usehw", 0);
 
 	/* AGC */
 	AMDemodulation.SetAGCType((CAGC::EType)s.Get("AM Demodulation", "agc", 0));
@@ -1858,6 +1859,7 @@ CDRMReceiver::SaveSettings(CSettings& s)
 
 	/* demodulation */
 	s.Put("Demodulator", "modulation", Parameters.eDemodType);
+	s.Put("Demodulator", "usehw", Parameters.bUseHWDemod);
 
 	/* AM Parameters */
 

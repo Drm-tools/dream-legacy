@@ -47,7 +47,7 @@ enum ERigMode { DRM, AM, USB, LSB, CW, NBFM, WBFM };
 struct CRigModeSpecificSettings
 {
 	CRigModeSpecificSettings():modes(),levels(),functions(),parameters(),
-	eOnboardDemod(C_CAN), eInChanSel(CS_MIX_CHAN), audioInput(-1)
+	eOnboardDemod(C_CANT), eInChanSel(CS_MIX_CHAN), audioInput(-1)
 	{}
 	CRigModeSpecificSettings(const CRigModeSpecificSettings& c):
 	modes(c.modes),levels(c.levels),functions(c.functions),parameters(c.parameters),
@@ -82,8 +82,8 @@ public:
 	bSMeterIsSupported(false),
 	iFreqOffset(0),settings()
 	{}
-	CRigCaps(const CRigCaps& nSDRC) : 
-	hamlib_caps(nSDRC.hamlib_caps), 
+	CRigCaps(const CRigCaps& nSDRC) :
+	hamlib_caps(nSDRC.hamlib_caps),
 	bIsModifiedRig(nSDRC.bIsModifiedRig),
 	bHamlibDoesAudio(nSDRC.bHamlibDoesAudio),
 	bSMeterIsSupported(nSDRC.bSMeterIsSupported),
@@ -175,4 +175,4 @@ struct CHamlib
 };
 #endif
 
-#endif 
+#endif

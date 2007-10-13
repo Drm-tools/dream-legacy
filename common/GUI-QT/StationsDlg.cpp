@@ -30,25 +30,6 @@
 
 #include "StationsDlg.h"
 
-#if !defined(HAVE_RIG_PARSE_MODE) && defined(HAVE_LIBHAMLIB)
-extern "C"
-{
-	extern rmode_t parse_mode(const char *);
-	extern vfo_t parse_vfo(const char *);
-	extern setting_t parse_func(const char *);
-	extern setting_t parse_level(const char *);
-	extern setting_t parse_parm(const char *);
-	extern const char* strstatus(enum rig_status_e);
-}
-# define rig_parse_mode parse_mode
-# define rig_parse_vfo parse_vfo
-# define rig_parse_func parse_func
-# define rig_parse_level parse_level
-# define rig_parse_parm parse_parm
-# define rig_strstatus strstatus
-#endif
-
-
 /* Implementation *************************************************************/
 void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 {
@@ -185,7 +166,7 @@ CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
 
 	if (IsActive(iPos, ltime) == TRUE)
 	{
-		/* Check if the station soon will be inactive */ 
+		/* Check if the station soon will be inactive */
 		if (IsActive(iPos, ltime + NUM_SECONDS_SOON_INACTIVE) == TRUE)
 			return IS_ACTIVE;
 		else
@@ -321,7 +302,7 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 			{
 				/* Set commas in between the days, to not set a comma at
 				   the beginning */
-				if (strDaysShow != "") 
+				if (strDaysShow != "")
 					strDaysShow += ",";
 
 				/* Add current day */
@@ -978,7 +959,7 @@ void StationsDlg::SetStationsView()
 		ListViewStations->sort();
 
 	ListItemsMutex.unlock();
-	
+
 	/* Start the timer and enable the list */
 	ListViewStations->setUpdatesEnabled(TRUE);
 	ListViewStations->setEnabled(TRUE);
@@ -1042,7 +1023,7 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		switch (DRMSchedule.GetSchedMode())
 		{
 		case CDRMSchedule::SM_DRM:
-			if (eCurrentMode != RM_DRM) 
+			if (eCurrentMode != RM_DRM)
 				DRMReceiver.SetReceiverMode(RM_DRM);
 			if (bReInitOnFrequencyChange)
 				DRMReceiver.RequestNewAcquisition();
@@ -1141,7 +1122,7 @@ void StationsDlg::AddWhatsThisHelp()
 	/* UTC time label */
 	QWhatsThis::add(TextLabelUTCTime,
 		tr("<b>UTC Time:</b> Shows the current Coordinated "
-		"Universal Time (UTC) which is also known as Greenwich Mean Time "
+		"Universal Time (UTC) which is nearly the same as Greenwich Mean Time "
 		"(GMT)."));
 
 #ifdef HAVE_LIBHAMLIB
