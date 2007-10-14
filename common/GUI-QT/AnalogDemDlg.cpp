@@ -38,7 +38,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	ReceiverSettingsDlg& NReceiverSettingsDlg,
 	QWidget* parent, const char* name, bool modal, WFlags f):
 	AnalogDemDlgBase(parent, name, modal, f),
-	DRMReceiver(NDRMR), Settings(NSettings), pReceiverSettingsDlg(&NReceiverSettingsDlg),
+	Receiver(NDRMR), Settings(NSettings), pReceiverSettingsDlg(&NReceiverSettingsDlg),
 	AMSSDlg(NDRMR, Settings, parent, name, modal, f)
 {
 	CWinGeom s;
@@ -65,7 +65,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QPopupMenu* pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
-		new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
+		new CSoundCardSelMenu(Receiver.GetSoundInInterface(), Receiver.GetSoundOutInterface(), this));
 	pSettingsMenu->insertItem(tr("&DRM (digital)"), this,
 		SLOT(OnSwitchToDRM()), CTRL+Key_D);
 	pSettingsMenu->insertItem(tr("New &AM Acquisition"), this,
@@ -86,7 +86,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 
 	/* Init main plot */
-	MainPlot->SetRecObj(&DRMReceiver);
+	MainPlot->SetRecObj(&Receiver);
 	MainPlot->SetPlotStyle(Settings.Get("DRM Dialog", "plotcolor", 0xff0000));
 	MainPlot->setMargin(1);
 	MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
@@ -223,9 +223,9 @@ void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 	Settings.Put("AM Dialog", s);
 
 	/* request that the working thread stops */
-	DRMReceiver.Stop();
-	(void)DRMReceiver.wait(5000);
-	if(!DRMReceiver.finished())
+	Receiver.Stop();
+	(void)Receiver.wait(5000);
+	if(!Receiver.finished())
 	{
 		QMessageBox::critical(this, "Dream", "Exit\n",
 				"Termination of working thread failed");
@@ -235,10 +235,10 @@ void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 
 void AnalogDemDlg::UpdateControls()
 {
-	CParameter& Parameters = *DRMReceiver.GetParameters();
+	CParameter& Parameters = *Receiver.GetParameters();
 
 	/* Set demodulation type */
-	switch (Parameters.eDemodType)
+	switch (Parameters.GetAnalogDemodType())
 	{
 	case DT_AM:
 		if (!RadioButtonDemAM->isChecked())
@@ -275,7 +275,7 @@ void AnalogDemDlg::UpdateControls()
 	}
 
 	/* Set AGC type */
-	switch (DRMReceiver.GetAMDemod()->GetAGCType())
+	switch (Receiver.GetAnalogAGCType())
 	{
 	case CAGC::AT_NO_AGC:
 		if (!RadioButtonAGCOff->isChecked())
@@ -299,7 +299,7 @@ void AnalogDemDlg::UpdateControls()
 	}
 
 	/* Set noise reduction type */
-	switch (DRMReceiver.GetAMDemod()->GetNoiRedType())
+	switch (Receiver.GetAnalogNoiseReductionType())
 	{
 	case CAMDemodulation::NR_OFF:
 		if (!RadioButtonNoiRedOff->isChecked())
@@ -323,26 +323,25 @@ void AnalogDemDlg::UpdateControls()
 	}
 
 	/* Set filter bandwidth */
-	SliderBandwidth->setValue(DRMReceiver.GetAMDemod()->GetFilterBW());
-	TextLabelBandWidth->setText(QString().setNum(
-		DRMReceiver.GetAMDemod()->GetFilterBW()) +	tr(" Hz"));
+	SliderBandwidth->setValue(Receiver.GetAnalogFilterBWHz());
+	TextLabelBandWidth->setText(QString().setNum(Receiver.GetAnalogFilterBWHz())+tr(" Hz"));
 
 	/* Update check boxes */
-	CheckBoxMuteAudio->setChecked(DRMReceiver.GetMuteAudio());
-	CheckBoxSaveAudioWave->setChecked(DRMReceiver.GetIsWriteWaveFile());
+	CheckBoxMuteAudio->setChecked(Receiver.GetMuteAudio());
+	CheckBoxSaveAudioWave->setChecked(Receiver.GetIsWriteWaveFile());
 
 	CheckBoxAutoFreqAcq->
-		setChecked(DRMReceiver.GetAMDemod()->AutoFreqAcqEnabled());
+		setChecked(Receiver.AnalogAutoFreqAcqEnabled());
 
-	CheckBoxPLL->setChecked(DRMReceiver.GetAMDemod()->PLLEnabled());
+	CheckBoxPLL->setChecked(Receiver.AnalogPLLEnabled());
 }
 
 void AnalogDemDlg::OnCheckOnBoardDemod()
 {
 	if (CheckBoxOnBoardDemod->isChecked() == TRUE)
-		DRMReceiver.SetUseHWDemod(TRUE);
+		Receiver.SetUseAnalogHWDemod(TRUE);
 	else
-		DRMReceiver.SetUseHWDemod(FALSE);
+		Receiver.SetUseAnalogHWDemod(FALSE);
 }
 
 void AnalogDemDlg::UpdatePlotsStyle()
@@ -359,10 +358,9 @@ void AnalogDemDlg::OnSwitchToDRM()
 
 void AnalogDemDlg::OnTimer()
 {
-	CAMDemodulation& demod = *DRMReceiver.GetAMDemod();
 	int rig;
 
-	switch(DRMReceiver.GetReceiverMode())
+	switch(Receiver.GetReceiverMode())
 	{
 	case RM_DRM:
 		OnSwitchToDRM();
@@ -370,12 +368,12 @@ void AnalogDemDlg::OnTimer()
 	case RM_AM:
 		/* Carrier frequency of AM signal */
 		TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
-		+ QString().setNum(demod.GetCurMixFreqOffs(), 'f', 2) + " Hz</b>");
-		rig = DRMReceiver.GetRigModel();
+		+ QString().setNum(Receiver.GetAnalogCurMixFreqOffs(), 'f', 2) + " Hz</b>");
+		rig = Receiver.GetRigModel();
 		if(rig>0)
 		{
 			CheckBoxOnBoardDemod->setEnabled(true);
-			CheckBoxOnBoardDemod->setChecked(DRMReceiver.GetUseHWDemod());
+			CheckBoxOnBoardDemod->setChecked(Receiver.GetUseAnalogHWDemod());
 			//EDemodType eMode = Parameters.eDemodType;
 			/* TODO enable & disable the Onboard checkbox according to the rig caps */
 		}
@@ -393,7 +391,7 @@ void AnalogDemDlg::OnTimerPLLPhaseDial()
 {
 	CReal rCurPLLPhase;
 
-	if (DRMReceiver.GetAMDemod()->GetPLLPhase(rCurPLLPhase) == TRUE)
+	if (Receiver.GetAnalogPLLPhase(rCurPLLPhase) == TRUE)
 	{
 		/* Set current PLL phase (convert radiant in degree) */
 		PhaseDial->setValue(rCurPLLPhase * (CReal) 360.0 / (2 * crPi));
@@ -415,31 +413,31 @@ void AnalogDemDlg::OnTimerPLLPhaseDial()
 
 void AnalogDemDlg::OnRadioDemodulation(int iID)
 {
-	/* DRMReceiver takes care of setting appropriate filter BW */
+	/* Receiver takes care of setting appropriate filter BW */
 	switch (iID)
 	{
 	case 0:
-		DRMReceiver.SetAMDemodType(DT_AM);
+		Receiver.SetAnalogDemodType(DT_AM);
 		break;
 
 	case 1:
-		DRMReceiver.SetAMDemodType(DT_LSB);
+		Receiver.SetAnalogDemodType(DT_LSB);
 		break;
 
 	case 2:
-		DRMReceiver.SetAMDemodType(DT_USB);
+		Receiver.SetAnalogDemodType(DT_USB);
 		break;
 
 	case 3:
-		DRMReceiver.SetAMDemodType(DT_CW);
+		Receiver.SetAnalogDemodType(DT_CW);
 		break;
 
 	case 4:
-		DRMReceiver.SetAMDemodType(DT_NBFM);
+		Receiver.SetAnalogDemodType(DT_NBFM);
 		break;
 
 	case 5:
-		DRMReceiver.SetAMDemodType(DT_WBFM);
+		Receiver.SetAnalogDemodType(DT_WBFM);
 		break;
 	}
 
@@ -452,19 +450,19 @@ void AnalogDemDlg::OnRadioAGC(int iID)
 	switch (iID)
 	{
 	case 0:
-		DRMReceiver.GetAMDemod()->SetAGCType(CAGC::AT_NO_AGC);
+		Receiver.SetAnalogAGCType(CAGC::AT_NO_AGC);
 		break;
 
 	case 1:
-		DRMReceiver.GetAMDemod()->SetAGCType(CAGC::AT_SLOW);
+		Receiver.SetAnalogAGCType(CAGC::AT_SLOW);
 		break;
 
 	case 2:
-		DRMReceiver.GetAMDemod()->SetAGCType(CAGC::AT_MEDIUM);
+		Receiver.SetAnalogAGCType(CAGC::AT_MEDIUM);
 		break;
 
 	case 3:
-		DRMReceiver.GetAMDemod()->SetAGCType(CAGC::AT_FAST);
+		Receiver.SetAnalogAGCType(CAGC::AT_FAST);
 		break;
 	}
 }
@@ -474,19 +472,19 @@ void AnalogDemDlg::OnRadioNoiRed(int iID)
 	switch (iID)
 	{
 	case 0:
-		DRMReceiver.GetAMDemod()->SetNoiRedType(CAMDemodulation::NR_OFF);
+		Receiver.SetAnalogNoiseReductionType(CAMDemodulation::NR_OFF);
 		break;
 
 	case 1:
-		DRMReceiver.GetAMDemod()->SetNoiRedType(CAMDemodulation::NR_LOW);
+		Receiver.SetAnalogNoiseReductionType(CAMDemodulation::NR_LOW);
 		break;
 
 	case 2:
-		DRMReceiver.GetAMDemod()->SetNoiRedType(CAMDemodulation::NR_MEDIUM);
+		Receiver.SetAnalogNoiseReductionType(CAMDemodulation::NR_MEDIUM);
 		break;
 
 	case 3:
-		DRMReceiver.GetAMDemod()->SetNoiRedType(CAMDemodulation::NR_HIGH);
+		Receiver.SetAnalogNoiseReductionType(CAMDemodulation::NR_HIGH);
 		break;
 	}
 }
@@ -494,7 +492,7 @@ void AnalogDemDlg::OnRadioNoiRed(int iID)
 void AnalogDemDlg::OnSliderBWChange(int value)
 {
 	/* Set new filter in processing module */
-	DRMReceiver.SetAMFilterBW(value);
+	Receiver.SetAnalogFilterBWHz(value);
 	TextLabelBandWidth->setText(QString().setNum(value) + tr(" Hz"));
 
 	/* Update chart */
@@ -504,19 +502,19 @@ void AnalogDemDlg::OnSliderBWChange(int value)
 void AnalogDemDlg::OnCheckAutoFreqAcq()
 {
 	/* Set parameter in working thread module */
-	DRMReceiver.GetAMDemod()->EnableAutoFreqAcq(CheckBoxAutoFreqAcq->isChecked());
+	Receiver.EnableAnalogAutoFreqAcq(CheckBoxAutoFreqAcq->isChecked());
 }
 
 void AnalogDemDlg::OnCheckPLL()
 {
 	/* Set parameter in working thread module */
-	DRMReceiver.GetAMDemod()->EnablePLL(CheckBoxPLL->isChecked());
+	Receiver.EnableAnalogPLL(CheckBoxPLL->isChecked());
 }
 
 void AnalogDemDlg::OnCheckBoxMuteAudio()
 {
 	/* Set parameter in working thread module */
-	DRMReceiver.MuteAudio(CheckBoxMuteAudio->isChecked());
+	Receiver.MuteAudio(CheckBoxMuteAudio->isChecked());
 }
 
 void AnalogDemDlg::OnCheckSaveAudioWAV()
@@ -534,7 +532,7 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
 		/* Check if user not hit the cancel button */
 		if (!strFileName.isNull())
 		{
-			DRMReceiver.StartWriteWaveFile(strFileName.latin1());
+			Receiver.StartWriteWaveFile(strFileName.latin1());
 		}
 		else
 		{
@@ -543,13 +541,13 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
 		}
 	}
 	else
-		DRMReceiver.StopWriteWaveFile();
+		Receiver.StopWriteWaveFile();
 }
 
 void AnalogDemDlg::OnChartxAxisValSet(double dVal)
 {
 	/* Set new frequency in receiver module */
-	DRMReceiver.SetAMDemodAcq(dVal);
+	Receiver.SetAnalogDemodAcq(dVal);
 
 	/* Update chart */
 	MainPlot->Update();
@@ -725,7 +723,7 @@ void AnalogDemDlg::AddWhatsThisHelp()
 CAMSSDlg::CAMSSDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, WFlags f) :
 	CAMSSDlgBase(parent, name, modal, f),
-	DRMReceiver(NDRMR),
+	Receiver(NDRMR),
 	Settings(NSettings)
 {
 	CWinGeom s;
@@ -800,7 +798,7 @@ void CAMSSDlg::OnTimer()
 {
 	int j;
 
-	CParameter& Parameters = *DRMReceiver.GetParameters();
+	CParameter& Parameters = *Receiver.GetParameters();
 	Parameters.Lock();
 
 	/* Show label if available */
@@ -937,7 +935,7 @@ void CAMSSDlg::OnTimer()
 				for (j = 0; j < iNumAltFreqs; j++)
 				{
 					freqEntry +=
-						QString().setNum((float) (87.5 + 0.1 * DRMReceiver.
+						QString().setNum((float) (87.5 + 0.1 * Receiver.
 						GetParameters()->AltFreqSign.
 						vecOtherServices[i].veciFrequencies[j]), 'f', 1);
 
@@ -972,7 +970,7 @@ void CAMSSDlg::OnTimer()
 				for (j = 0; j < iNumAltFreqs; j++)
 				{
 					freqEntry +=
-						QString().setNum((float) (76.0 + 0.1 * DRMReceiver.
+						QString().setNum((float) (76.0 + 0.1 * Receiver.
 						GetParameters()->AltFreqSign.
 						vecOtherServices[i].veciFrequencies[j]), 'f', 1);
 
@@ -1027,7 +1025,7 @@ void CAMSSDlg::OnTimer()
 	TextAMSSServiceID->setText("");
 	TextAMSSAMCarrierMode->setText("");
 
-	if (DRMReceiver.GetAMSSDecode()->GetLockStatus() == CAMSSDecode::NO_SYNC
+	if (Receiver.GetAMSSDecode()->GetLockStatus() == CAMSSDecode::NO_SYNC
 	|| Parameters.Service[0].iServiceID == SERV_ID_NOT_USED
 	)
 	{
@@ -1038,30 +1036,30 @@ void CAMSSDlg::OnTimer()
 		TextAMSSInfo->setText(tr("Awaiting AMSS data..."));
 
 		/* Display 'block 1' info */
-		if (DRMReceiver.GetAMSSDecode()->GetBlock1Status())
+		if (Receiver.GetAMSSDecode()->GetBlock1Status())
 		{
 			TextAMSSInfo->setText("");
 
-			TextAMSSLanguage->setText(QString(strTableLanguageCode[DRMReceiver.
+			TextAMSSLanguage->setText(QString(strTableLanguageCode[Receiver.
 				GetParameters()->Service[0].iLanguage].c_str()));
 
 			TextAMSSServiceID->setText("ID:" + QString().setNum(
 				(long) Parameters.Service[0].iServiceID, 16).upper());
 
-			TextAMSSAMCarrierMode->setText(QString(strTableAMSSCarrierMode[DRMReceiver.
+			TextAMSSAMCarrierMode->setText(QString(strTableAMSSCarrierMode[Receiver.
 				GetParameters()->iAMSSCarrierMode].c_str()));
 		}
 	}
 
-	TextDataEntityGroupStatus->setText(DRMReceiver.GetAMSSDecode()->
+	TextDataEntityGroupStatus->setText(Receiver.GetAMSSDecode()->
 		GetDataEntityGroupStatus());
 
-	TextCurrentBlock->setText(QString().setNum(DRMReceiver.GetAMSSDecode()->
+	TextCurrentBlock->setText(QString().setNum(Receiver.GetAMSSDecode()->
 		GetCurrentBlock(), 10));
 
-	TextBlockBits->setText(DRMReceiver.GetAMSSDecode()->GetCurrentBlockBits());
+	TextBlockBits->setText(Receiver.GetAMSSDecode()->GetCurrentBlockBits());
 
-	ProgressBarAMSS->setProgress(DRMReceiver.GetAMSSDecode()->
+	ProgressBarAMSS->setProgress(Receiver.GetAMSSDecode()->
 		GetPercentageDataEntityGroupComplete());
 
 	Parameters.Unlock();
@@ -1071,7 +1069,7 @@ void CAMSSDlg::OnTimerPLLPhaseDial()
 {
 	CReal rCurPLLPhase;
 
-	if (DRMReceiver.GetAMSSPhaseDemod()->GetPLLPhase(rCurPLLPhase) == TRUE)
+	if (Receiver.GetAMSSPhaseDemod()->GetPLLPhase(rCurPLLPhase) == TRUE)
 	{
 		/* Set current PLL phase (convert radiant in degree) */
 		PhaseDialAMSS->setValue(rCurPLLPhase * (CReal) 360.0 / (2 * crPi));

@@ -59,7 +59,7 @@ protected:
 
 /* Implementation *************************************************************/
 CDRMTransmitter::CDRMTransmitter():
-	TransmParam(NULL),
+	TransmParam(),
 	strMDIinAddr(), strMDIoutAddr(),
 	eOpMode(T_TX),
 	bCOFDMout(FALSE), Encoder(), Modulator()
@@ -303,7 +303,13 @@ void CDRMTransmitter::Start()
 void
 CDRMTransmitter::LoadSettings(CSettings& s)
 {
-	eOpMode = ETxOpMode(s.Get("Transmitter", "mode", int(T_TX)));
+	string mode = s.Get("GUI", "mode", string("DRMTX"));
+	if(mode == "DRMTX")
+		eOpMode = T_TX;
+	if(mode == "DRMENC")
+		eOpMode = T_ENC;
+	if(mode == "DRMMOD")
+		eOpMode = T_MOD;
 	Encoder.LoadSettings(s, TransmParam);
 	Modulator.LoadSettings(s, TransmParam);
 }
@@ -311,7 +317,18 @@ CDRMTransmitter::LoadSettings(CSettings& s)
 void
 CDRMTransmitter::SaveSettings(CSettings& s)
 {
-	s.Put("Transmitter", "mode", int(eOpMode));
+	switch(eOpMode)
+	{
+	case T_TX:
+		s.Put("GUI", "mode", string("DRMTX"));
+		break;
+	case T_ENC:
+		s.Put("GUI", "mode", string("DRMENC"));
+		break;
+	case T_MOD:
+		s.Put("GUI", "mode", string("DRMMOD"));
+		break;
+	}
 	Encoder.SaveSettings(s, TransmParam);
 	Modulator.SaveSettings(s, TransmParam);
 }

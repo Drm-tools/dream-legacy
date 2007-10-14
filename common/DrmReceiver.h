@@ -139,14 +139,36 @@ public:
 	void					Start();
 	void					Stop();
 	void					RequestNewAcquisition() { bRestartFlag = TRUE; }
-	EAcqStat				GetAcquiState() {return pReceiverParam->eAcquiState;}
+	EAcqStat				GetAcquiState() {return Parameters.eAcquiState;}
 	ERecMode				GetReceiverMode() {return eReceiverMode;}
 	void					SetReceiverMode(ERecMode eNewMode);
 	void					SetInitResOff(_REAL rNRO)
 								{rInitResampleOffset = rNRO;}
-	void					SetAMDemodType(EDemodType);
-	void					SetAMFilterBW(int iBw);
-	void					SetAMDemodAcq(_REAL rNewNorCen);
+
+	CReal					GetAnalogCurMixFreqOffs() const { return AMDemodulation.GetCurMixFreqOffs(); }
+	void					SetAnalogDemodType(EDemodType);
+	EDemodType				GetAnalogDemodType() { return AMDemodulation.GetDemodType(); }
+	int						GetAnalogFilterBWHz();
+	void					SetAnalogFilterBWHz(int);
+
+	void					SetAnalogDemodAcq(_REAL rNewNorCen);
+
+	void					EnableAnalogAutoFreqAcq(const _BOOLEAN bNewEn);
+	_BOOLEAN				AnalogAutoFreqAcqEnabled();
+
+	void					EnableAnalogPLL(const _BOOLEAN bNewEn);
+	_BOOLEAN				AnalogPLLEnabled();
+	_BOOLEAN				GetAnalogPLLPhase(CReal& rPhaseOut);
+
+	void					SetAnalogAGCType(const CAGC::EType eNewType);
+	CAGC::EType				GetAnalogAGCType();
+	void					SetAnalogNoiseReductionType(const CAMDemodulation::ENoiRedType eNewType);
+	CAMDemodulation::ENoiRedType GetAnalogNoiseReductionType();
+	void					GetAnalogBWParameters(CReal& rCenterFreq, CReal& rBW);
+
+	void					SetUseAnalogHWDemod(_BOOLEAN);
+	_BOOLEAN				GetUseAnalogHWDemod();
+
 	void	 				SetEnableSMeter(_BOOLEAN bNew);
 	_BOOLEAN		 		GetEnableSMeter();
 	_BOOLEAN 				SetFrequency(int iNewFreqkHz);
@@ -227,8 +249,6 @@ public:
 	void StopWriteWaveFile() { WriteData.StopWriteWaveFile(); }
 	_BOOLEAN GetIsWriteWaveFile() { return WriteData.GetIsWriteWaveFile(); }
 
-	void SetUseHWDemod(_BOOLEAN);
-	_BOOLEAN GetUseHWDemod();
 
 	/* Get pointer to internal modules */
 	CSelectionInterface*	GetSoundInInterface() {return pSoundInInterface;}
@@ -239,7 +259,6 @@ public:
 	COFDMDemodulation*		GetOFDMDemod() {return &OFDMDemodulation;}
 	CSyncUsingPil*			GetSyncUsPil() {return &SyncUsingPil;}
 	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
-	CAMDemodulation*		GetAMDemod() {return &AMDemodulation;}
 	CAMSSPhaseDemod*		GetAMSSPhaseDemod() {return &AMSSPhaseDemod;}
 	CAMSSDecode*			GetAMSSDecode() {return &AMSSDecode;}
 	CFreqSyncAcq*			GetFreqSyncAcq() {return &FreqSyncAcq;}
@@ -257,7 +276,7 @@ public:
 	void					SetRigFreqOffset(int);
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
-	CParameter*				GetParameters() {return pReceiverParam;}
+	CParameter*				GetParameters() {return &Parameters;}
 
 	CPlotManager*			GetPlotManager() {return &PlotManager;}
 
@@ -274,6 +293,7 @@ public:
 
 protected:
 
+	void					InitReceiverMode();
 	void					SetInStartMode();
 	void					SetInTrackingMode();
 	void					SetInTrackingModeDelayed();
@@ -287,7 +307,6 @@ protected:
 	void					UtilizeAM(_BOOLEAN&);
 	void					DetectAcquiFAC();
 	void					DetectAcquiSymbol();
-	void					InitReceiverMode();
 	void					saveSDCtoFile();
 	void					UpdateRigSettings();
 
@@ -331,9 +350,9 @@ protected:
 	CDownstreamDI			downstreamRSCI;
 
 	/* Parameters */
-	CParameter*				pReceiverParam;
-	CParameter*				pDRMParam;
-	CParameter*				pAMParam;
+	CParameter				DRMParameters;
+	CParameter				AMParameters;
+	CParameter&				Parameters;
 
 	/* Buffers */
 	CSingleBuffer<_REAL>			AMDataBuf;

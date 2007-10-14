@@ -890,7 +890,7 @@ protected:
 class CParameter
 {
   public:
-	CParameter(CDRMReceiver*);
+	CParameter();
 	CParameter(const CParameter&);
 	//CParameter(CDRMReceiver *pRx, CParameter *pParameter); // OPH - just copy some of the members
 	virtual ~CParameter();
@@ -911,6 +911,9 @@ class CParameter
 	};
 
 	/* Misc. Functions ------------------------------------------------------ */
+	void SetReceiver(CDRMReceiver* p);
+	ERecMode GetReceiverMode();
+	EDemodType GetAnalogDemodType();
 	void GenerateRandomSerialNumber();
 	void GenerateReceiverID();
 	void ResetServicesStreams();
@@ -1051,8 +1054,6 @@ class CParameter
 
 	int iTimingOffsTrack;
 
-	ERecMode GetReceiverMode() { return eReceiverMode; }
-	ERecMode eReceiverMode;
 	EAcqStat GetAcquiState() { return eAcquiState; }
 	EAcqStat eAcquiState;
 	int iNumAudioFrames;
@@ -1155,10 +1156,6 @@ class CParameter
 
 	CGPSData GPSData;
 	CMinMaxMean SNRstat, SigStrstat;
-
-	_BOOLEAN				bUseHWDemod;
-	EDemodType				eDemodType;
-	int						iBw[DT_SIZE];
 
 protected:
 

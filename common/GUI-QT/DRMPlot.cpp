@@ -167,11 +167,11 @@ void CDRMPlot::OnTimerChart()
 	case INPUT_SIG_PSD_ANALOG:
 		/* Get data and parameters from modules */
 		pDRMRec->GetInputPSD(vecrData, vecrScale);
-		pDRMRec->GetAMDemod()->GetBWParameters(rCenterFreq, rBandwidth);
+		pDRMRec->GetAnalogBWParameters(rCenterFreq, rBandwidth);
 
 		/* Prepare graph and set data */
 		SetInpPSD(vecrData, vecrScale,
-			pDRMRec->GetAMDemod()->GetCurMixFreqOffs(), rCenterFreq,
+			pDRMRec->GetAnalogCurMixFreqOffs(), rCenterFreq,
 			rBandwidth);
 		break;
 

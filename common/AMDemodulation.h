@@ -249,9 +249,6 @@ public:
 	void EnablePLL(const _BOOLEAN bNewEn) {bPLLIsEnabled = bNewEn;}
 	_BOOLEAN PLLEnabled() {return bPLLIsEnabled;}
 
-	void SetDemodTypeAndBPF(const EDemodType eNewType, const int iNewBW);
-	int GetFilterBW() {return (int) (rBPNormBW * SOUNDCRD_SAMPLE_RATE);}
-
 	void SetAGCType(const CAGC::EType eNewType);
 	CAGC::EType GetAGCType() {return AGC.GetType();}
 
@@ -267,6 +264,12 @@ public:
 
 	_BOOLEAN GetFrameBoundary() {return iFreeSymbolCounter==0;}
 
+	void SetFilterBWHz(const int iBw);
+	int GetFilterBWHz(const EDemodType eType);
+	int GetFilterBWHz();
+
+	void SetDemodType(EDemodType);
+	EDemodType GetDemodType() { return eDemodType; }
 
 protected:
 	void SetBPFilter(const CReal rNewBPNormBW);
@@ -284,6 +287,7 @@ protected:
 	int							iHilFiltBlLen;
 	CFftPlans					FftPlansHilFilt;
 
+	int							iFilterBWHz[DT_SIZE];
 	CReal						rBPNormBW;
 	CReal						rNormCurMixFreqOffs;
 	CReal						rBPNormCentOffsTot;

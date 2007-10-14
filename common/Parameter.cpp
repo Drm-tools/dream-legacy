@@ -35,8 +35,8 @@
 //#include "util/LogPrint.h"
 
 /* Implementation *************************************************************/
-CParameter::CParameter(CDRMReceiver *pRx):
- pDRMRec(pRx),
+CParameter::CParameter():
+ pDRMRec(NULL),
  eSymbolInterlMode(),
  eMSCCodingScheme(),	
  eSDCCodingScheme(),	
@@ -64,7 +64,6 @@ CParameter::CParameter(CDRMReceiver *pRx):
  rFreqOffsetTrack(0.0),
  rResampleOffset(0.0),
  iTimingOffsTrack(0),
- eReceiverMode(RM_NONE),
  eAcquiState(AS_NO_SIGNAL),
  iNumAudioFrames(0),
  vecbiAudioFrameStatus(0),
@@ -113,7 +112,6 @@ CParameter::CParameter(CDRMReceiver *pRx):
  bUsingMultimedia(FALSE),
  CellMappingTable(),
  GPSData(), SNRstat(), SigStrstat(),
- bUseHWDemod(FALSE), eDemodType(DT_AM), iBw(),
  rSysSimSNRdB(0.0),
  iFrequency(0),
  bValidSignalStrength(FALSE),
@@ -128,12 +126,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
  Mutex()
 {
 	GenerateRandomSerialNumber();
-	if(pDRMRec)
-		eReceiverMode = pDRMRec->GetReceiverMode();
 	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
-
-	for (int i=0; i<DT_SIZE; i++)
-		iBw[i] = 10000; // ???
 }
 
 CParameter::~CParameter()
@@ -169,7 +162,6 @@ CParameter::CParameter(const CParameter& p):
  rFreqOffsetTrack(p.rFreqOffsetTrack),
  rResampleOffset(p.rResampleOffset),
  iTimingOffsTrack(p.iTimingOffsTrack),
- eReceiverMode(p.eReceiverMode),
  eAcquiState(p.eAcquiState),
  iNumAudioFrames(p.iNumAudioFrames),
  vecbiAudioFrameStatus(p.vecbiAudioFrameStatus),
@@ -219,7 +211,6 @@ CParameter::CParameter(const CParameter& p):
  bUsingMultimedia(p.bUsingMultimedia),
  CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
  GPSData(p.GPSData), SNRstat(p.SNRstat), SigStrstat(p.SigStrstat),
- bUseHWDemod(p.bUseHWDemod), eDemodType(p.eDemodType),
  rSysSimSNRdB(p.rSysSimSNRdB),
  iFrequency(p.iFrequency),
  bValidSignalStrength(p.bValidSignalStrength),
@@ -235,7 +226,6 @@ CParameter::CParameter(const CParameter& p):
 {
 	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
 	matcReceivedPilotValues = p.matcReceivedPilotValues; // TODO 
-	for(size_t i=0; i<DT_SIZE; i++) iBw[i] = p.iBw[i];
 }
 
 CParameter& CParameter::operator=(const CParameter& p)
@@ -269,7 +259,6 @@ CParameter& CParameter::operator=(const CParameter& p)
 	rFreqOffsetTrack = p.rFreqOffsetTrack;
 	rResampleOffset = p.rResampleOffset;
 	iTimingOffsTrack = p.iTimingOffsTrack;
-	eReceiverMode = p.eReceiverMode;
 	eAcquiState = p.eAcquiState;
 	iNumAudioFrames = p.iNumAudioFrames;
 	vecbiAudioFrameStatus = p.vecbiAudioFrameStatus;
@@ -320,9 +309,6 @@ CParameter& CParameter::operator=(const CParameter& p)
 	GPSData = p.GPSData;
 	SNRstat = p.SNRstat;
 	SigStrstat = p.SigStrstat;
-	bUseHWDemod = p.bUseHWDemod;
-	eDemodType = p.eDemodType;
-	for(size_t i=0; i<DT_SIZE; i++) iBw[i] = p.iBw[i];
 	rSysSimSNRdB = p.rSysSimSNRdB;
 	iFrequency = p.iFrequency;
 	bValidSignalStrength = p.bValidSignalStrength;
@@ -336,6 +322,12 @@ CParameter& CParameter::operator=(const CParameter& p)
 	LastDataService = p.LastDataService;
 
 	return *this;
+}
+
+void
+CParameter::SetReceiver(CDRMReceiver* p)
+{
+	pDRMRec = p;
 }
 
 void CParameter::ResetServicesStreams()
@@ -1050,6 +1042,18 @@ void CRxStatus::SetStatus(const ETypeRxStatus OK)
 	iNum++;
 	if(OK==RX_OK)
 		iNumOK++;
+}
+
+ERecMode
+CParameter::GetReceiverMode()
+{
+	return (pDRMRec)?pDRMRec->GetReceiverMode():RM_DRM;
+}
+
+EDemodType
+CParameter::GetAnalogDemodType()
+{
+	return (pDRMRec)?pDRMRec->GetAnalogDemodType():DT_AM;
 }
 
 void CParameter::GenerateReceiverID()

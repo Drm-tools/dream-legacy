@@ -411,6 +411,7 @@ TransmDialog::TransmDialog(CDRMTransmitter& tx, CSettings& NSettings,
 	ComboBoxServicePacketID->insertItem("3");
 
 	GetFromTransmitter();
+	OnRadioMode(0);
 
 	/* Set timer for real-time controls */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
@@ -418,9 +419,17 @@ TransmDialog::TransmDialog(CDRMTransmitter& tx, CSettings& NSettings,
 
 TransmDialog::~TransmDialog()
 {
+}
+
+void
+TransmDialog::closeEvent(QCloseEvent* ce)
+{
 	/* Stop transmitter */
 	if (bIsStarted == TRUE)
 		DRMTransmitter.Stop();
+	else
+		SetTransmitter(); // so Transmitter save settings has the latest info
+	ce->accept();
 }
 
 void TransmDialog::OnTimer()
@@ -464,30 +473,29 @@ TransmDialog::GetFromTransmitter()
 	switch(DRMTransmitter.GetOperatingMode())
 	{
 	case CDRMTransmitter::T_ENC:
-		RadioButtonEncoder->setChecked(TRUE);
 		GetChannel();
 		GetStreams();
 		GetAudio();
 		GetData();
 		GetServices();
 		GetMDIOut();
+		RadioButtonEncoder->setChecked(TRUE);
 		break;
 	case CDRMTransmitter::T_MOD:
-		RadioButtonModulator->setChecked(TRUE);
 		GetMDIIn();
 		GetCOFDM();
+		RadioButtonModulator->setChecked(TRUE);
 		break;
 	case CDRMTransmitter::T_TX:
-		RadioButtonTransmitter->setChecked(TRUE);
 		GetChannel();
 		GetStreams();
 		GetAudio();
 		GetData();
 		GetServices();
 		GetCOFDM();
+		RadioButtonTransmitter->setChecked(TRUE);
 		break;
 	}
-	//OnRadioMode(0);
 }
 
 void
@@ -755,6 +763,7 @@ TransmDialog::SetTransmitter()
 {
 	DRMTransmitter.strMDIinAddr = "";
 	DRMTransmitter.strMDIoutAddr = "";
+	CDRMTransmitter::ETxOpMode eMod = CDRMTransmitter::T_TX;
 
 	if(RadioButtonTransmitter->isChecked() || RadioButtonEncoder->isChecked())
 	{
@@ -772,12 +781,15 @@ TransmDialog::SetTransmitter()
 	{
 		DRMTransmitter.DisableCOFDM();
 		SetMDIOut();
+		eMod = CDRMTransmitter::T_ENC;
 	}
 	if(RadioButtonModulator->isChecked())
 	{
 		// TODO disable encoder
 		SetMDIIn();
+		eMod = CDRMTransmitter::T_MOD;
 	}
+	DRMTransmitter.SetOperatingMode(eMod);
 }
 
 void

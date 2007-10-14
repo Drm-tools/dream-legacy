@@ -107,8 +107,9 @@ main(int argc, char **argv)
 			}
 #endif
 
-		string mode = Settings.Get("command", "mode", string("receive"));
-		if (mode == "receive")
+		string strMode = Settings.Get("GUI", "mode", string("DRMRX"));
+
+		if (strMode == "DRMRX" || strMode == "AMRX")
 		{
 			CDRMReceiver DRMReceiver;
 
@@ -126,11 +127,6 @@ main(int argc, char **argv)
 			DRMReceiver.SetHamlib(&Hamlib);
 #endif
 			DRMReceiver.LoadSettings(Settings);
-
-			if (Settings.Get("AM Dialog", "visible", false))
-				DRMReceiver.SetReceiverMode(RM_AM);
-			else
-				DRMReceiver.SetReceiverMode(RM_DRM);
 
 			DRMReceiver.Init();
 
@@ -154,7 +150,7 @@ main(int argc, char **argv)
 #endif
 			DRMReceiver.SaveSettings(Settings);
 		}
-		else if(mode == "transmit")
+		else
 		{
 			CDRMTransmitter DRMTransmitter;
 
@@ -170,11 +166,6 @@ main(int argc, char **argv)
 			app.exec();
 
 			DRMTransmitter.SaveSettings(Settings);
-		}
-		else
-		{
-			QMessageBox::information(0, "Dream", Settings.UsageArguments(argv).c_str());
-			exit(0);
 		}
 	}
 

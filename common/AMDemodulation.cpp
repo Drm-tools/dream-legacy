@@ -62,15 +62,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		iFreeSymbolCounter = 0;
 	}
 
-	/* this may not be needed or desirable TBTA */
-	if(ReceiverParam.eDemodType != eDemodType)
-	{
-		eDemodType = ReceiverParam.eDemodType;
-		SetBPFilter(rBPNormBW);
-	}
-
 	ReceiverParam.Unlock(); 
-
 
 	/* Frequency offset estimation if requested */
 	if (FreqOffsAcq.Run(*pvecInputData))
@@ -108,7 +100,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Analog demodulation -------------------------------------------------- */
 	/* Actual demodulation. Reuse temp buffer "rvecInpTmp" for output
 	   signal */
-	switch (ReceiverParam.eDemodType)
+	switch (eDemodType)
 	{
 	case DT_AM:
 		/* Use envelope of signal and apply low-pass filter */
@@ -364,6 +356,19 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW)
 
 
 /* Interface functions ------------------------------------------------------ */
+void
+CAMDemodulation::SetDemodType(const EDemodType eNewType)
+{
+	/* Lock resources */
+	Lock(); 
+	{
+		/* Init band-pass filter according to new demodulation method */
+		eDemodType = eNewType;
+		SetBPFilter(CReal(iFilterBWHz[eDemodType])/CReal(SOUNDCRD_SAMPLE_RATE));
+	}
+	Unlock(); 
+}
+
 void CAMDemodulation::SetAcqFreq(const CReal rNewNormCenter)
 {
 	/* Lock resources */
@@ -377,16 +382,28 @@ void CAMDemodulation::SetAcqFreq(const CReal rNewNormCenter)
 	Unlock(); 
 }
 
-void CAMDemodulation::SetDemodTypeAndBPF(const EDemodType eNewType, const int iNewBW)
+void
+CAMDemodulation::SetFilterBWHz(const int iBw)
 {
-	/* Lock resources */
 	Lock(); 
-	{
-		/* Init band-pass filter according to new demodulation method */
-		eDemodType = eNewType;
-		SetBPFilter(iNewBW);
-	}
+	iFilterBWHz[eDemodType] = iBw;
+	SetBPFilter(CReal(iBw)/CReal(SOUNDCRD_SAMPLE_RATE));
 	Unlock(); 
+}
+
+int
+CAMDemodulation::GetFilterBWHz()
+{
+	return GetFilterBWHz(eDemodType);
+}
+
+int
+CAMDemodulation::GetFilterBWHz(const EDemodType eType)
+{
+	Lock(); 
+	int v = iFilterBWHz[eType];
+	Unlock(); 
+	return v;
 }
 
 void CAMDemodulation::SetAGCType(const CAGC::EType eNewType)

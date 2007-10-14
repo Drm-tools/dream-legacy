@@ -80,7 +80,7 @@ public:
 	{ throw "should not happen"; return *this;}
 
 protected:
-	CDRMReceiver&	DRMReceiver;
+	CDRMReceiver&	Receiver;
 	CSettings&		Settings;
 
 	QTimer			Timer;
@@ -111,7 +111,7 @@ public:
 	void 			UpdatePlotsStyle();
 
 protected:
-	CDRMReceiver&	DRMReceiver;
+	CDRMReceiver&	Receiver;
 	CSettings&		Settings;
 	ReceiverSettingsDlg* pReceiverSettingsDlg;
 
@@ -138,7 +138,7 @@ public slots:
 	void OnChartxAxisValSet(double dVal);
 	void OnSliderBWChange(int value);
 	void OnRadioNoiRed(int iID);
-	void OnNewAMAcquisition() {DRMReceiver.RequestNewAcquisition();}
+	void OnNewAMAcquisition() {Receiver.RequestNewAcquisition();}
 	void OnButtonWaterfall();
 	void OnButtonAMSS();
 	void OnSwitchToDRM();

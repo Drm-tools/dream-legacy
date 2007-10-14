@@ -83,6 +83,8 @@ protected:
 	void				SetMDIOut();
 	void				GetMDIOut();
 
+	virtual void		closeEvent(QCloseEvent* ce);
+
 	QMenuBar*			pMenu;
 	QPopupMenu*			pSettingsMenu;
 	QTimer				Timer;

@@ -172,7 +172,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		if (GetFlagArgument(argc, argv, i, "-t", "--transmitter") == TRUE)
 		{
 			bIsReceiver = FALSE;
-			Put("command", "mode", string("transmit"));
+			Put("GUI", "mode", string("DRMTX"));
 			continue;
 		}
 
@@ -463,6 +463,14 @@ CSettings::ParseArguments(int argc, char **argv)
 		if (GetFlagArgument(argc, argv, i, "-T", "--ensmeter") == TRUE)
 		{
 			Put("Hamlib", "ensmeter", (int)rArgument);
+			continue;
+		}
+
+		/* allow -group:key <str> type arguments */
+		char g[200],k[200];
+		if(sscanf(argv[i], "-%[^:]:%s", g,k)==2)
+		{
+			Put(g, k, string(argv[++i]));
 			continue;
 		}
 
