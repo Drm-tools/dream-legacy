@@ -29,9 +29,9 @@
 \******************************************************************************/
 
 #include "StationsDlg.h"
+#include <qdatetime.h>
 #include <qftp.h>
 #include <qhttp.h>
-#include <qregexp.h>
 
 /* Implementation *************************************************************/
 void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
@@ -1168,8 +1168,8 @@ static struct { char *country; char *mark; char * bc; char *site;} stations[] = 
 	{ "MRA", "s", "", "Saipan (Agingan Point) 15N07-145E42" },
 	{ "KFBS", "", "Marpi", "Saipan 15N16-145E48" },
 	{ "MRC", "", "VoA/RL/RFE", "Briech 35N34-05W58" },
-	{ "RTM", "", "", "Tanger 35N48-05W55" },
-	{ "RTM", "n", "Medi-1", "Nador 35N03-02W55" },
+	{ "MRC", "t", "RTM", "Tanger 35N48-05W55" },
+	{ "MRC", "n", "Medi-1", "Nador 35N03-02W55" },
 	{ "NOR", "", "", "unknown Norway" },
 	{ "NOR", "k", "", "Kvitsoy 59N04-05E27" },
 	{ "NOR", "s", "", "Sveio 59N37-05E19" },
@@ -1194,6 +1194,7 @@ static struct { char *country; char *mark; char * bc; char *site;} stations[] = 
 	{ "RdP", "", "", "Sao Gabriel(Lisboa) 38N45-08W40" },
 	{ "PTR", "", "", "Roosevelt Roads 18N23-67W11" },
 	{ "ROU", "", "", "Tiganesti 44N42-26E06" },
+	{ "ROU", "t", "", "Tiganesti 44N42-26E06" },
 	{ "ROU", "g", "", "Galbeni 46N44-26E50" },
 	{ "ROU", "s", "", "Saftica 50kW" },
 	{ "RUS", "", "", "unknown Russia" },
@@ -1212,7 +1213,7 @@ static struct { char *country; char *mark; char * bc; char *site;} stations[] = 
 	{ "RUS", "ma", "", "Magadan" },
 	{ "RUS", "mu", "", "Murmansk 68N58-32E46" },
 	{ "RUS", "n", "", "Novosibirsk (Oyash) 55N31-83E45" },
-	{ "RUS", "#", "DW", "Novosibirsk City 55N04-82E58" },
+	{ "RUS", "n", "DW", "Novosibirsk City 55N04-82E58" },
 	{ "RUS", "p", "", "Petropavlovsk-Kamchatskij (Yelizovo) 52N59-158E39" },
 	{ "RUS", "s", "", "Samara (Zhygulevsk) 53N17-50E15" },
 	{ "RUS", "se", "", "Serpukhov [actually Noginsk but Noginsk closed with start of A03] 54N54-37E25" },
@@ -1236,11 +1237,13 @@ static struct { char *country; char *mark; char * bc; char *site;} stations[] = 
 	{ "THA", "", "RL/R.THA/VoA", "Udon Thani 17N25-102E48" },
 	{ "THA", "b", "", "Bangkok / Prathum Thani(1575, 4830, 6070, 7115) 13N47-100E30" },
 	{ "THA", "", "BBC", "Nakhon Sawan 15N49-100E04" },
+	{ "TJK", "", "", "Yangi Yul (Dushanbe) 38N29-68E48" },
 	{ "TJK", "y", "", "Yangi Yul (Dushanbe) 38N29-68E48" },
 	{ "TJK", "o", "", "Orzu 37N32-68E42" },
 	{ "TUN", "", "", "Sfax 34N48-10E53" },
 	{ "TUR", "", "", "Emirler 39N29-32E51" },
 	{ "TUR", "c", "", "Cakirlar 39N58-32E40" },
+	{ "TWN", "", "", "Huwei 23N43-120E25" },
 	{ "TWN", "h", "", "Huwei 23N43-120E25" },
 	{ "TWN", "k", "", "Kouhu 23N35-120E10" },
 	{ "TWN", "m", "", "Minhsiung 23N29-120E27" },
@@ -1252,6 +1255,7 @@ static struct { char *country; char *mark; char * bc; char *site;} stations[] = 
 	{ "UAE", "m", "", "Makta 24N21-54E34" },
 	{ "UAE", "", "UAE R Dubai", "Dubai 25N14-55E16" },
 	{ "UKR", "", "", "Kiev/Brovary 50N31-30E46" },
+	{ "UKR", "k", "", "Kiev/Brovary 50N31-30E46" },
 	{ "UKR", "L", "", "Lviv (Krasne) (Russian name Lvov) 49N51-24E40" },
 	{ "UKR", "m", "", "Mykolaiv (Kopani) (Russian name Nikolayev) 46N49-32E14" },
 	{ "UKR", "x", "", "Kharkiv (Taranivka) (Russian name Kharkov) 49N38-36E07" },
@@ -1265,26 +1269,26 @@ static struct { char *country; char *mark; char * bc; char *site;} stations[] = 
 	{ "USA", "k", "", "Key Saddlebunch, FL 24N34-81W45" },
 	{ "USA", "o", "", "Okeechobee, FL 27N28-80W56" },
 	{ "USA", "w", "", "via WWCR, Nashville" },
-	{ "USA", "KAIJ", "", "Dallas, TX 33N13-96W52" },
-	{ "USA", "KJES", "", "Vado, NM 32N08-106W35" },
-	{ "USA", "KTBN", "", "Salt Lake City, UT 40N39-112W03" },
-	{ "USA", "KVOH", "", "Los Angeles (Rancho Simi), CA 34N15-118W38" },
-	{ "USA", "WBCQ", "", "Monticello, ME 46N20-67W50" },
-	{ "USA", "WBOH", "", "Newport, NC 34N47-76W56" },
-	{ "USA", "WEWN", "", "Birmingham (Vandiver), AL 33N30-86W28" },
-	{ "USA", "WGTG", "", "McGaysville, GA 34N58-84W22" },
-	{ "USA", "WHRA", "", "Greenbush, ME 45N08-68W34" },
-	{ "USA", "WHRI", "", "Cypress Creek, SC 32N41-81W08" },
-	{ "USA", "WINB", "", "Red Lion (York), PA 39N54-76W35" },
-	{ "USA", "WJIE", "", "Millerstown, KY 37N26-86W02" },
-	{ "USA", "WMLK", "", "Bethel, PA 40N29-76W17" },
-	{ "USA", "WRMI", "", "Miami (Hialeah Gardens), FL 25N54-80W22" },
-	{ "USA", "WRNO", "", "New Orleans, LA 29N50-90W07" },
-	{ "USA", "WTJC", "", "Newport, NC 34N47-76W53" },
-	{ "USA", "WYFR", "", "Okeechobee, FL 27N28-80W56" },
-	{ "USA", "WWBS", "", "Macon, GA 32N50-83W38" },
-	{ "USA", "WWCR", "", "Nashville, TN 36N13-86W54" },
-	{ "USA", "WWRB", "", "Manchester / Morrison, TN 35N29-86W02" },
+	{ "USA", "", "KAIJ", "Dallas, TX 33N13-96W52" },
+	{ "USA", "", "KJES", "Vado, NM 32N08-106W35" },
+	{ "USA", "", "KTBN", "Salt Lake City, UT 40N39-112W03" },
+	{ "USA", "", "KVOH", "Los Angeles (Rancho Simi), CA 34N15-118W38" },
+	{ "USA", "", "WBCQ", "Monticello, ME 46N20-67W50" },
+	{ "USA", "", "WBOH", "Newport, NC 34N47-76W56" },
+	{ "USA", "", "WEWN", "Birmingham (Vandiver), AL 33N30-86W28" },
+	{ "USA", "", "WGTG", "McGaysville, GA 34N58-84W22" },
+	{ "USA", "", "WHRA", "Greenbush, ME 45N08-68W34" },
+	{ "USA", "", "WHRI", "Cypress Creek, SC 32N41-81W08" },
+	{ "USA", "", "WINB", "Red Lion (York), PA 39N54-76W35" },
+	{ "USA", "", "WJIE", "Millerstown, KY 37N26-86W02" },
+	{ "USA", "", "WMLK", "Bethel, PA 40N29-76W17" },
+	{ "USA", "", "WRMI", "Miami (Hialeah Gardens), FL 25N54-80W22" },
+	{ "USA", "", "WRNO", "New Orleans, LA 29N50-90W07" },
+	{ "USA", "", "WTJC", "Newport, NC 34N47-76W53" },
+	{ "USA", "", "WYFR", "Okeechobee, FL 27N28-80W56" },
+	{ "USA", "", "WWBS", "Macon, GA 32N50-83W38" },
+	{ "USA", "", "WWCR", "Nashville, TN 36N13-86W54" },
+	{ "USA", "", "WWRB", "Manchester / Morrison, TN 35N29-86W02" },
 	{ "UZB", "", "", "Tashkent 41N13-69E09" },
 	{ "VTN", "", "", "Sontay 21N12-105E22" },
 	{ "VTN", "d", "", "Daclac 12N41-108E31" },
@@ -1343,16 +1347,23 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 		map<string,string>::const_iterator m;
 
 		fgets(cRow, iMaxLenRow, pFile);
-		QStringList fields = QStringList::split(";", cRow, TRUE);
-		QStringList times = QStringList::split("-", fields[1]);
+		vector<string> fields;
+		stringstream ss(cRow);
+		do {
+			getline(ss, s, ';');
+			fields.push_back(s);
+		} while(!ss.eof());
 
-		StationsItem.iFreq = fields[0].toInt();
+		ss.str(fields[0]);
+		ss >> StationsItem.iFreq;
+
+		QStringList times = QStringList::split("-", fields[1]);
 		StationsItem.SetStartTimeNum(times[0].toInt());
 		StationsItem.SetStopTimeNum(times[1].toInt());
 
-		if(fields[2])
+		if(fields[2].length()>0)
 		{
-			stringstream ss(fields[2].latin1());
+			stringstream ss(fields[2]);
 			char c;
 			enum Days { Sunday=0, Monday=1, Tuesday=2, Wednesday=3,
 						Thursday=4, Friday=5, Saturday=6 };
@@ -1417,9 +1428,9 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 //0   ;1        ;2    ;3  ;4               ;5;6;7;8;9;10
 //1170;1600-1700;Mo-Fr;USA;Voice of America;E; ; ;0; ;
 		string homecountry;
-		if(fields.count()>3 && fields[3])
+		if(fields.size()>3)
 		{
-			homecountry = fields[3].latin1();
+			homecountry = fields[3];
 			m = c.find(homecountry);
 			if(m != c.end())
 				StationsItem.strCountry = m->second;
@@ -1427,19 +1438,19 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 				StationsItem.strCountry = homecountry;
 		}
 
-		if(fields.count()>4 && fields[4])
-			StationsItem.strName = fields[4].latin1();
+		if(fields.size()>4)
+			StationsItem.strName = fields[4];
 
-		if(fields.count()>5 && fields[5])
+		if(fields.size()>5)
 		{
-			m = l.find(fields[5].latin1());
+			m = l.find(fields[5]);
 			if(m != l.end())
 				StationsItem.strLanguage = m->second;
 		}
 
-		if(fields.count()>6 && fields[6])
+		if(fields.size()>6)
 		{
-			s = fields[6].latin1();
+			s = fields[6];
 			m = t.find(s);
 			if(m != t.end())
 			{
@@ -1456,29 +1467,43 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 		}
 		string country;
 		string stn;
-		if(fields.count()>7 && fields[7])
+		if(fields.size()>7)
 		{
-			s = fields[7].latin1();
-//static struct { char *country; char *mark; char * bc; char *site;} stations[] = {
+			s = fields[7];
 			if(s=="") // unknown or main Tx site of the home country
 			{
 				country = homecountry;
 			}
 			else
 			{
-				QRegExp r ("[/-]");
-				QStringList site = QStringList::split (r, s);
+				size_t i=0;
+				s += '-';
 				if(s[0]=='/') // transmitted from another country
+					i++;
+				string a,b;
+				while(s[i]!='-')
+					a += s[i++];
+				i++;
+				if(i<s.length())
+					while(s[i]!='-')
+						b += s[i++];
+				if(s[0]=='/')
 				{
-					if(site[0])
-						country = site[0].latin1();
-					if(site[1])
-						stn = site[1].latin1();
+					country = a;
+					stn = b;
 				}
 				else
 				{
-					if(site[0])
-						stn = site[0].latin1();
+					if(a.length()==3)
+					{
+						country = a;
+						stn = b;
+					}
+					else
+					{
+						country = homecountry;
+						stn = a;
+					}
 				}
 			}
 		}
@@ -1491,6 +1516,7 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 		if(txs==tx_sites.end())
 		{
 			StationsItem.strSite = s;
+			cout << "[" << s << "] [" << country << "] [" << stn << "]" << endl;
 		}
 		else
 		{
@@ -1963,7 +1989,26 @@ void StationsDlg::OnGetUpdate()
 			{
 				/* Try to download the current schedule. Copy the file to the
 		   		current working directory (which is "QDir().absFilePath(NULL)") */
-				UrlUpdateSchedule.copy(QString(AM_SCHEDULE_UPDATE_FILE).arg("a", "07"),
+				QDate d = QDate::currentDate();
+				int wk = d.weekNumber();
+				int yr = d.year();
+				QString y,w;
+				if(13 <= wk)
+				{
+					w = "b";
+					y = QString::number(yr-1);
+				}
+				else if(wk <= 43)
+				{
+					w = "a";
+					y = QString::number(yr);
+				}
+				else
+				{
+					w = "b";
+					y = QString::number(yr);
+				}
+				UrlUpdateSchedule.copy(QString(AM_SCHEDULE_UPDATE_FILE).arg(w, y.right(2)),
 					QString(QDir().absFilePath(NULL))+"/AMSchedule.ini", FALSE, FALSE);
 			}
 			break;

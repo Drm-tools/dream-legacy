@@ -126,9 +126,6 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	AddWhatsThisHelp();
 
 	setDefaults();
-
-	/* SMeter thread must be started from GUI - initialise the rig from here */
-	DRMReceiver.SetRigModel(DRMReceiver.GetRigModel());
 }
 
 ReceiverSettingsDlg::~ReceiverSettingsDlg()
