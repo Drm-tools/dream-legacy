@@ -86,6 +86,18 @@
 class CSettings;
 class CHamlib;
 
+class CRequestStateChange
+{
+public:
+	CRequestStateChange():pending(false),new_value(0) {}
+	void request(const int val) { pending=true; new_value=val; }
+	bool is_pending() { return pending; }
+	int value() { pending=false; return new_value; }
+protected:
+	bool pending;
+	int  new_value;
+};
+
 class CSplitFAC : public CSplitModul<_BINARY>
 {
 	void SetInputBlockSize(CParameter&)
@@ -294,6 +306,7 @@ public:
 protected:
 
 	void					InitReceiverMode();
+	void					SetRigModelWT(int);
 	void					SetInStartMode();
 	void					SetInTrackingMode();
 	void					SetInTrackingModeDelayed();
@@ -425,6 +438,7 @@ protected:
 							pcmInput;
 	enum { onBoard, inSoftware }
 							demodulation;
+	CRequestStateChange		rigmodelrequest;
 };
 
 #endif // !defined(DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

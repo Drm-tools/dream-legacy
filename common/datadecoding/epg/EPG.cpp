@@ -1647,10 +1647,7 @@ QString EPG::parseStart (const QString & start)
 
 QString EPG::parseDuration (const QString & duration)
 {
-	QRegExp
-	r ("[PTHMS]");
-	QStringList
-		dur = QStringList::split (r, duration);
-	return
-		QCString ("").sprintf ("%02u:%02u", dur[0].toInt (), dur[1].toInt ());
+	QRegExp r ("[PTHMS]");
+	QStringList dur = QStringList::split (r, duration);
+	return QCString ("").sprintf ("%02u:%02u", dur[0].toInt (), dur[1].toInt ());
 }

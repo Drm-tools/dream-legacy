@@ -66,7 +66,8 @@ pHamlib(NULL),
 iFreqkHz(0),
 time_keeper(0),
 pcmInput(Dummy),
-demodulation(inSoftware)
+demodulation(inSoftware),
+rigmodelrequest()
 {
 	AMParameters.SetReceiver(this);
 	DRMParameters.SetReceiver(this);
@@ -226,6 +227,9 @@ CDRMReceiver::Run()
 	 * is done in this (the working) thread to avoid problems with shared data */
 	if (eNewReceiverMode != RM_NONE)
 		InitReceiverMode();
+
+	if(rigmodelrequest.is_pending())
+		SetRigModelWT(rigmodelrequest.value());
 
 	if(bRestartFlag) /* new acquisition requested by GUI */
 	{
@@ -1413,6 +1417,11 @@ void CDRMReceiver::SetHamlib(CHamlib* p)
 }
 
 void CDRMReceiver::SetRigModel(int iID)
+{
+	rigmodelrequest.request(iID);
+}
+
+void CDRMReceiver::SetRigModelWT(int iID)
 {
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
