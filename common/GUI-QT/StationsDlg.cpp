@@ -31,7 +31,9 @@
 #include "StationsDlg.h"
 #include <qdatetime.h>
 #include <qftp.h>
-#include <qhttp.h>
+#if QT_VERSION >= 0x030000
+# include <qhttp.h>
+#endif
 
 /* Implementation *************************************************************/
 void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
@@ -1817,7 +1819,9 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Register the network protocols (ftp, http). Needed for the schedule download */
 	QNetworkProtocol::registerNetworkProtocol("ftp", new QNetworkProtocolFactory<QFtp>);
+#if QT_VERSION >= 0x030000
 	QNetworkProtocol::registerNetworkProtocol("http", new QNetworkProtocolFactory<QHttp>);
+#endif
 
 
 	/* Connections ---------------------------------------------------------- */
@@ -1980,6 +1984,27 @@ void StationsDlg::OnGetUpdate()
 			break;
 
 		case CDRMSchedule::SM_ANALOG:
+			QDate d = QDate::currentDate();
+			int wk = d.weekNumber();
+			int yr = d.year();
+			QString y,w;
+			if(13 <= wk)
+			{
+				w = "b";
+				y = QString::number(yr-1);
+			}
+			else if(wk <= 43)
+			{
+				w = "a";
+				y = QString::number(yr);
+			}
+			else
+			{
+				w = "b";
+				y = QString::number(yr);
+			}
+			QString path = QString(AM_SCHEDULE_UPDATE_FILE).arg(w, y.right(2));
+#if QT_VERSION >= 0x030000
 			if (QMessageBox::information(this, tr("Dream Schedule Update"),
 				tr("Dream tries to download the newest EIBI AM schedule.\n"
 				"  Your computer must be connected to the internet.\n\n"
@@ -1989,28 +2014,15 @@ void StationsDlg::OnGetUpdate()
 			{
 				/* Try to download the current schedule. Copy the file to the
 		   		current working directory (which is "QDir().absFilePath(NULL)") */
-				QDate d = QDate::currentDate();
-				int wk = d.weekNumber();
-				int yr = d.year();
-				QString y,w;
-				if(13 <= wk)
-				{
-					w = "b";
-					y = QString::number(yr-1);
-				}
-				else if(wk <= 43)
-				{
-					w = "a";
-					y = QString::number(yr);
-				}
-				else
-				{
-					w = "b";
-					y = QString::number(yr);
-				}
-				UrlUpdateSchedule.copy(QString(AM_SCHEDULE_UPDATE_FILE).arg(w, y.right(2)),
+				UrlUpdateSchedule.copy(path,
 					QString(QDir().absFilePath(NULL))+"/AMSchedule.ini", FALSE, FALSE);
 			}
+#else
+			QMessageBox::information(this, tr("Dream Schedule Update"),
+				tr("This version of Dream can't download the AM schedule.\n"
+				"Download the file and save as AMSchedule.ini.\n"
+				"The url for the file is ")+path); 
+#endif
 			break;
 	}
 
