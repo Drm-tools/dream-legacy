@@ -1359,7 +1359,7 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 		ss.str(fields[0]);
 		ss >> StationsItem.iFreq;
 
-		QStringList times = QStringList::split("-", fields[1]);
+		QStringList times = QStringList::split("-", fields[1].c_str());
 		StationsItem.SetStartTimeNum(times[0].toInt());
 		StationsItem.SetStopTimeNum(times[1].toInt());
 
@@ -1985,7 +1985,11 @@ void StationsDlg::OnGetUpdate()
 
 		case CDRMSchedule::SM_ANALOG:
 			QDate d = QDate::currentDate();
+#if QT_VERSION >= 0x030000
 			int wk = d.weekNumber();
+#else
+			int wk = d.dayOfYear()/7;
+#endif
 			int yr = d.year();
 			QString y,w;
 			if(13 <= wk)
@@ -2003,8 +2007,8 @@ void StationsDlg::OnGetUpdate()
 				w = "b";
 				y = QString::number(yr);
 			}
-			QString path = QString(AM_SCHEDULE_UPDATE_FILE).arg(w, y.right(2));
 #if QT_VERSION >= 0x030000
+			QString path = QString(AM_SCHEDULE_UPDATE_FILE).arg(w, y.right(2));
 			if (QMessageBox::information(this, tr("Dream Schedule Update"),
 				tr("Dream tries to download the newest EIBI AM schedule.\n"
 				"  Your computer must be connected to the internet.\n\n"
@@ -2018,6 +2022,7 @@ void StationsDlg::OnGetUpdate()
 					QString(QDir().absFilePath(NULL))+"/AMSchedule.ini", FALSE, FALSE);
 			}
 #else
+			QString path = QString(AM_SCHEDULE_UPDATE_FILE).arg(w).arg(y.right(2));
 			QMessageBox::information(this, tr("Dream Schedule Update"),
 				tr("This version of Dream can't download the AM schedule.\n"
 				"Download the file and save as AMSchedule.ini.\n"
