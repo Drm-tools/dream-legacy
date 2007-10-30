@@ -59,7 +59,7 @@
 	Stephane Fillod (developer of hamlib)
 */
 CHamlib::CHamlib(CParameter& p): Parameters(p), pRig(NULL), bEnableSMeter(FALSE),
-iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels()
+iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels(), iFrequencykHz(0)
 {
 
 #ifdef RIG_MODEL_G303
@@ -532,7 +532,9 @@ CHamlib::LoadSettings(CSettings & s)
 	CapsHamlibModels[model] = RigCaps;
 
 	/* set the iHamlibModelID variable, but don't do anything!!!! */
-	iHamlibModelID = model;
+	//iHamlibModelID = model;
+	SetHamlibModelID(model);
+
 
 	s.Put("Hamlib", "model", abs(model));
 	s.Put("Hamlib", "enmodrig", (model<0)?1:0);
@@ -598,8 +600,12 @@ CHamlib::SaveSettings(CSettings & s)
 _BOOLEAN
 CHamlib::SetFrequency(const int iFreqkHz)
 {
+    cout<<"set frequency called"<<endl;
 	/* Set frequency (consider frequency offset and conversion
 		   from kHz to Hz by " * 1000 ") */
+		   
+    iFrequencykHz = iFreqkHz;
+    
 	if (pRig && rig_set_freq(pRig, RIG_VFO_CURR, (iFreqkHz + RigCaps.iFreqOffset) * 1000) == RIG_OK)
 		return TRUE;
 	return FALSE;
@@ -607,6 +613,7 @@ CHamlib::SetFrequency(const int iFreqkHz)
 
 void CHamlib::SetEnableSMeter(const _BOOLEAN bStatus)
 {
+    cout<<"set enable smeter called"<<endl;
 	if(bStatus)
 	{
 #ifdef USE_QT_GUI
@@ -633,9 +640,11 @@ _BOOLEAN CHamlib::GetEnableSMeter()
 
 void CHamlib::run()
 {
+     cout<<"Entering CHamlib::run()"<<endl;
 	while(bEnableSMeter && RigCaps.bSMeterIsSupported && pRig)
 	{
 		value_t val;
+		cout<<"About to get rig level"<<endl;
 		switch(rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &val))
 		{
 		case 0:
@@ -653,6 +662,7 @@ void CHamlib::run()
 		msleep(400);
 #endif
 	}
+     cout<<"Leaving CHamlib::run()"<<endl;
 }
 
 void
@@ -749,6 +759,7 @@ CHamlib::SetRigConfig()
 void
 CHamlib::SetRigMode(ERigMode eNMod)
 {
+    cout<<"SetRigMode called with "<<eNMod<<endl;
 	eRigMode = eNMod;
 	SetHamlibModelID(iHamlibModelID);
 }
@@ -756,6 +767,7 @@ CHamlib::SetRigMode(ERigMode eNMod)
 void
 CHamlib::SetHamlibModelID(const rig_model_t model)
 {
+    cout<<"SetHamlibModelID called with "<<model<<endl;
 	/* save current config for previous model */
 	CapsHamlibModels[iHamlibModelID] = RigCaps;
 
@@ -828,6 +840,8 @@ cout << "tokens:" << endl;
 		SetRigLevels();
 		SetRigFuncs();
 		SetRigParams();
+		if (iFrequencykHz != 0)
+		   SetFrequency(iFrequencykHz);
 
 		/* Check if s-meter capabilities are available */
 		if (pRig != NULL)

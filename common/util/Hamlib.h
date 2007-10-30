@@ -167,6 +167,7 @@ protected:
 	map<rig_model_t,CRigCaps>
 						CapsHamlibModels;
 	CRigCaps			RigCaps;
+	int                 iFrequencykHz;
 };
 #else
 struct CHamlib

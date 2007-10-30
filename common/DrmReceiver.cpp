@@ -67,7 +67,7 @@ iFreqkHz(0),
 time_keeper(0),
 pcmInput(Dummy),
 demodulation(inSoftware),
-rigmodelrequest()
+rigmodelrequest(), bRigUpdateNeeded(FALSE)
 {
 	AMParameters.SetReceiver(this);
 	DRMParameters.SetReceiver(this);
@@ -127,7 +127,7 @@ void
 CDRMReceiver::SetAnalogDemodType(EDemodType eNew)
 {
 	AMDemodulation.SetDemodType(eNew);
-	UpdateRigSettings();
+	bRigUpdateNeeded = TRUE;
 }
 
 int
@@ -230,6 +230,10 @@ CDRMReceiver::Run()
 
 	if(rigmodelrequest.is_pending())
 		SetRigModelWT(rigmodelrequest.value());
+	if (bRigUpdateNeeded)
+	   UpdateRigSettings();
+
+     bRigUpdateNeeded=FALSE;
 
 	if(pcmInput==Dummy)
 		UpdateSoundIn();
@@ -533,6 +537,7 @@ CDRMReceiver::UtilizeDRM(_BOOLEAN& bEnoughData)
 			bEnoughData = TRUE;
 	}
 	/* Source decoding (audio) */
+	cout<<"iAudioStreamID="<<iAudioStreamID<<endl;
 	if (iAudioStreamID != STREAM_ID_NOT_USED)
 	{
 		if (AudioSourceDecoder.ProcessData(Parameters,
@@ -819,6 +824,7 @@ CDRMReceiver::UpdateRigSettings()
 		if(eMode != eNewMode)
 		{
 			CRigCaps caps;
+			cout<<"About to call setrigmode from updaterigsettings"<<endl;
 			pHamlib->SetRigMode(eNewMode);
 			pHamlib->GetRigCaps(caps);
 			if(caps.settings[eNewMode].eOnboardDemod==C_MUST)
@@ -1039,6 +1045,11 @@ CDRMReceiver::InitsForAllModules()
 		Parameters.bMeasureInterference = FALSE;
 		Parameters.bMeasurePSD = FALSE;
 	}
+
+	if (Parameters.FrontEndParameters.eSMeterCorrectionType != 
+                CFrontEndParameters::S_METER_CORRECTION_TYPE_CAL_FACTOR_ONLY)
+        Parameters.bMeasurePSD = TRUE;
+	
 
 	/* Set init flags */
 	SplitFAC.SetInitFlag();
@@ -1416,6 +1427,7 @@ void CDRMReceiver::SetHamlib(CHamlib* p)
 	pHamlib = p;
 	if(pHamlib)
 	{
+               cout<<"About to setrigmodel to "<<pHamlib->GetHamlibModelID()<<endl;
 		SetRigModel(pHamlib->GetHamlibModelID());
 	}
 #endif
@@ -1432,6 +1444,7 @@ void CDRMReceiver::SetRigModelWT(int iID)
 	if(pHamlib)
 	{
 		rig_model_t	id = pHamlib->GetHamlibModelID();
+               cout<<"setrigmodelwt requested "<<iID<<" current "<<id<<endl;
 		if(id!=iID)
 		{
 			if(pcmInput!=Dummy)

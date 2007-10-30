@@ -52,10 +52,12 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 	{
 	case SM_DRM:
 		pFile = fopen(DRMSCHEDULE_INI_FILE_NAME, "r");
+		cout<<"Opening "<<DRMSCHEDULE_INI_FILE_NAME<<endl;
 		break;
 
 	case SM_ANALOG:
 		pFile = fopen(AMSCHEDULE_INI_FILE_NAME, "r");
+		cout<<"Opening "<<AMSCHEDULE_INI_FILE_NAME<<endl;
 		break;
 	}
 
@@ -63,6 +65,7 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 	if (pFile == 0)
 		return;
 
+cout<<"pFile="<<pFile<<endl;
 	fgets(cName, iMaxLenName, pFile); /* Remove "[DRMSchedule]" */
 	if(cName[0] == '[')
 		ReadIniFile(pFile);
@@ -78,7 +81,7 @@ void CDRMSchedule::ReadIniFile(FILE* pFile)
 	int			iFileStat;
 	_BOOLEAN	bReadOK = TRUE;
 
-	fgets(cName, iMaxLenName, pFile); /* Remove "[DRMSchedule]" */
+	//fgets(cName, iMaxLenName, pFile); /* Remove "[DRMSchedule]" */
 	do
 	{
 		CStationsItem StationsItem;

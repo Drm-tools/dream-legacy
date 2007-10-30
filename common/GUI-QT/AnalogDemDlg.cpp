@@ -381,6 +381,7 @@ void AnalogDemDlg::OnTimer()
 		{
 			//CheckBoxOnBoardDemod->setEnabled(false);
 		}
+		UpdateControls();
 		break;
 	case RM_NONE:
 		break;
