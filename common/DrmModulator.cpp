@@ -100,7 +100,6 @@ void
 CDRMModulator::ProcessData(CParameter& Parameters,
 	CBuffer<_BINARY>& FACBuf, CBuffer<_BINARY>& SDCBuf, vector< CSingleBuffer<_BINARY> >& MSCBuf)
 {
-cout << "CDRMModulator::ProcessData" << endl;
 cout << "CDRMModulator::ProcessData FAC: " << FACBuf.GetFillLevel() << " SDC: " << SDCBuf.GetFillLevel() << " MSC: " << MSCBuf[0].GetFillLevel() << endl;
 
 	/* MLC-encoder */

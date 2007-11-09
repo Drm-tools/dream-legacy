@@ -6,28 +6,29 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
 
 #include "../GlobalDefinitions.h"
 #include "TransmDlgbase.h"
+#include "../util/Utilities.h"
 #include <vector>
 #include <qtimer.h>
 
@@ -52,7 +53,6 @@ public:
 	{ throw "should not happen"; return *this;}
 
 protected:
-	struct ipIf			{string name; uint32_t addr;};
 
 	void				DisableAllControlsForSet();
 	void				EnableAllControlsForSet();
@@ -62,7 +62,6 @@ protected:
 	void				EnableAudio(const _BOOLEAN bFlag);
 	void				EnableData(const _BOOLEAN bFlag);
 	void				AddWhatsThisHelp();
-	void				GetNetworkInterfaces();
 	void				choseComboBoxItem(QComboBox* box, const QString& text);
 	void				GetFromTransmitter();
 	void				SetTransmitter();
@@ -94,7 +93,7 @@ protected:
 	_BOOLEAN			bIsStarted;
 	vector<string>		vecstrTextMessage;
 	size_t				iIDCurrentText;
-	vector<ipIf>vecIpIf;
+	vector<CIpIf>vecIpIf;
 
 
 public slots:
@@ -127,10 +126,14 @@ public slots:
 	/* services */
 	void OnTextChangedServiceLabel(const QString& strLabel);
 	void OnTextChangedServiceID(const QString& strID);
-	void OnButtonAddAudioService();
-	void OnButtonAddDataService();
+	void OnButtonAddService();
 	void OnButtonDeleteService();
 	void OnServicesListItemClicked(QListViewItem* item);
+
+    /* MDI */
+	void OnButtonAddMDIDest();
+	void OnButtonAddMDIFileDest();
+	void OnButtonDeleteMDIDest();
 
 	void OnTimer();
 	void OnHelpWhatsThis();

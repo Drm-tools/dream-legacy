@@ -31,36 +31,10 @@
 #include "DrmTransmitter.h"
 #include "mlc/MLC.h"
 
-/* cloned from DrmReceiver - TODO better solution */
-
-class CSplitFAC : public CSplitModul<_BINARY>
-{
-	void SetInputBlockSize(CParameter&)
-		{this->iInputBlockSize = NUM_FAC_BITS_PER_BLOCK;}
-};
-
-class CSplitSDC : public CSplitModul<_BINARY>
-{
-	void SetInputBlockSize(CParameter& p)
-		{this->iInputBlockSize = p.iNumSDCBitsPerSFrame;}
-};
-
-class CSplitMSC : public CSplitModul<_BINARY>
-{
-public:
-	void SetStream(int iID) {iStreamID = iID;}
-
-protected:
-	void SetInputBlockSize(CParameter& p)
-		{this->iInputBlockSize = p.GetStreamLen(iStreamID) * SIZEOF__BYTE;}
-
-	int iStreamID;
-};
-
 /* Implementation *************************************************************/
 CDRMTransmitter::CDRMTransmitter():
 	TransmParam(),
-	strMDIinAddr(), strMDIoutAddr(),
+	strMDIinAddr(), MDIoutAddr(),
 	eOpMode(T_TX),
 	bCOFDMout(FALSE), Encoder(), Modulator()
 {
@@ -185,9 +159,6 @@ CDRMTransmitter::Stop()
 
 void CDRMTransmitter::Start()
 {
-	CSplitFAC				SplitFAC;
-	CSplitSDC				SplitSDC;
-	CSplitMSC				SplitMSC[MAX_NUM_STREAMS];
 	CUpstreamDI				MDIIn;
 	CDecodeRSIMDI			DecodeMDI;
 	CDownstreamDI			MDIOut;
@@ -204,11 +175,11 @@ void CDRMTransmitter::Start()
 	CSingleBuffer<_BINARY>	SDCTxBuf;
 	CSingleBuffer<_BINARY>	SDCSendBuf;
 
-	SplitFAC.SetInitFlag();
+	int sdc_counter = 0;
+
 	FACBuf.Clear();
 	FACTxBuf.Clear();
 	FACSendBuf.Clear();
-	SplitSDC.SetInitFlag();
 	SDCBuf.Clear();
 	SDCTxBuf.Clear();
 	SDCSendBuf.Clear();
@@ -216,8 +187,6 @@ void CDRMTransmitter::Start()
 	SDCBuf.Init(10000);
 	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
 	{
-		SplitMSC[i].SetStream(i);
-		SplitMSC[i].SetInitFlag();
 		MSCBuf[i].Clear();
 		MSCTxBuf[i].Clear();
 		MSCSendBuf[i].Clear();
@@ -240,16 +209,25 @@ void CDRMTransmitter::Start()
 		Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
 	}
 
-	if(strMDIoutAddr!="")
+	for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
 	{
 		/* set the output address */
-		MDIOut.AddSubscriber(strMDIoutAddr, "", 'M');
+		MDIOut.AddSubscriber(*s, "", 'M');
 		//MDIOut.SetInitFlag();
+	}
+
+	//if(MDIOut.GetOutEnabled())
+	{
+		TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
+		TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
 	}
 
 	/* Set run flag */
 	TransmParam.bRunThread = TRUE;
-
+    cout << "Tx: starting, in:" << (MDIIn.GetInEnabled()?"MDI":"Encoder")
+         << ", out: " << (MDIOut.GetOutEnabled()?"MDI":"")
+         << ", " << (bCOFDMout?"COFDM":"")
+         << endl; cout.flush();
 	try
 	{
 		while (TransmParam.bRunThread)
@@ -269,26 +247,26 @@ void CDRMTransmitter::Start()
 			}
 
 
-			if(bCOFDMout && MDIOut.GetOutEnabled())
-			{
-				SplitFAC.ProcessData(TransmParam, FACBuf, FACTxBuf, FACSendBuf);
-
-				if(SDCBuf.GetFillLevel()==TransmParam.iNumSDCBitsPerSFrame)
-					SplitSDC.ProcessData(TransmParam, SDCBuf, SDCTxBuf, SDCSendBuf);
-
-				for(size_t i=0; i<MAX_NUM_STREAMS; i++)
-					SplitMSC[i].ProcessData(TransmParam, MSCBuf[i], MSCTxBuf[i], MSCSendBuf[i]);
-
-				Modulator.ProcessData(TransmParam, FACTxBuf, SDCTxBuf, MSCTxBuf);
-
-				MDIOut.SendLockedFrame(TransmParam, FACSendBuf, SDCSendBuf, MSCSendBuf);
-			}
+			if(bCOFDMout)
+				Modulator.ProcessData(TransmParam, FACBuf, SDCBuf, MSCBuf);
 			else
 			{
-				if(bCOFDMout)
-					Modulator.ProcessData(TransmParam, FACBuf, SDCBuf, MSCBuf);
-				else
-					MDIOut.SendLockedFrame(TransmParam, FACBuf, SDCBuf, MSCBuf);
+				MDIOut.SendLockedFrame(TransmParam, FACBuf, SDCBuf, MSCBuf);
+				FACBuf.SetRequestFlag(TRUE);
+				switch(sdc_counter)
+				{
+				case 0:
+					SDCBuf.SetRequestFlag(TRUE);
+					sdc_counter = 1;
+					break;
+				case 1:
+					sdc_counter = 2;
+					break;
+				case 2:
+					sdc_counter = 0;
+				}
+				for(size_t i=0; i<MAX_NUM_STREAMS; i++)
+					MSCBuf[i].SetRequestFlag(TRUE);
 			}
 		}
 	}

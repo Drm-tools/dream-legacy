@@ -66,8 +66,6 @@ protected:
 	int iBufferSize;
 	char *ringBufferData;
 	int channels;
-
-	static int pa_count;
 };
 
 class CPaIn: public CSoundInInterface

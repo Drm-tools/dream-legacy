@@ -34,6 +34,7 @@
 #include "util/Buffer.h"
 #include "sourcedecoders/AudioSourceDecoder.h"
 #include "datadecoding/DataDecoder.h"
+#include "util/Utilities.h"
 #include <map>
 
 /* Classes ********************************************************************/
@@ -60,7 +61,7 @@ public:
 								vector< CSingleBuffer<_BINARY> >& MSCBuf);
 	void					Cleanup(CParameter&);
 
-	_REAL 					GetLevelMeter();
+	_REAL					GetLevelMeter() {return SignalLevelMeter.Level();}
 
 	/* Source Encoder Interface */
 	void					AddTextMessage(const string& strText);
@@ -94,6 +95,8 @@ protected:
 	vector<string>			vecstrPicTypes;
 	int						iSoundInDev;
 	_BOOLEAN				bUseUEP;
+
+	CSignalLevelMeter		SignalLevelMeter;
 };
 
 

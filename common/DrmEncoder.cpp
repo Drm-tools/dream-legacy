@@ -57,13 +57,6 @@ CDRMEncoder::SetSoundInInterface(int i)
 	iSoundInDev = i;
 }
 
-_REAL CDRMEncoder::GetLevelMeter()
-{
-	if(pReadData==NULL)
-		return 0.0;
-	return pReadData->GetLevelMeter();
-}
-
 void
 CDRMEncoder::AddTextMessage(const string& strText)
 {
@@ -119,13 +112,13 @@ void CDRMEncoder::Init(CParameter& Parameters,
 			CBuffer<_BINARY>& SDCBuf, 
 			vector< CSingleBuffer<_BINARY> >& MSCBuf)
 {
-
 	GenerateFACData.Init(Parameters, FACBuf);
 	GenerateSDCData.Init(Parameters, SDCBuf);
 
 	if(strInputFileName=="")
 	{
 		pSoundInInterface = new CSoundIn;
+		pSoundInInterface->SetDev(iSoundInDev);
 	}
 	else
 	{
@@ -146,6 +139,7 @@ void CDRMEncoder::Init(CParameter& Parameters,
 	for(i=0; i<vecstrPics.size(); i++)
 		DataEncoder.GetSliShowEnc()->AddFileName(vecstrPics[i], vecstrPicTypes[i]);
 	DataEncoder.Init(Parameters);
+	SignalLevelMeter.Init(0);
 }
 
 void
@@ -157,6 +151,8 @@ CDRMEncoder::ProcessData(CParameter& Parameters,
 	/* MSC *********************************************************** */
 	/* Read the source signal */
 	pReadData->ReadData(Parameters, DataBuf);
+
+	SignalLevelMeter.Update(*DataBuf.QueryWriteBuffer());
 
 	/* Audio source encoder */
 	AudioSourceEncoder.ProcessData(Parameters, DataBuf, MSCBuf[0]);
@@ -189,6 +185,7 @@ CDRMEncoder::ProcessData(CParameter& Parameters,
 
 	/* SDC *********************************************************** */
 	GenerateSDCData.ReadData(Parameters, SDCBuf);
+
 }
 
 void
@@ -203,6 +200,9 @@ void
 CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 {
 	/* Either one audio or one data service can be chosen */
+
+	Parameters.Service.resize(1);
+
 	_BOOLEAN bIsAudio = s.Get("Encoder", "audioservice", 1);
 
 	/* In the current version only one service and one stream is supported. The
@@ -239,7 +239,6 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 		/* The value 0 indicates that the application details are provided
 		   solely by SDC data entity type 5 */
 		Parameters.Service[0].iServiceDescr = 0;
-		Parameters.Stream[0].iPacketLen = 45;	/* TEST */
 	}
 
 	/* Init service parameters, 24 bit unsigned integer number */
@@ -248,21 +247,12 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 	/* Service label data. Up to 16 bytes defining the label using UTF-8 coding */
 	Parameters.Service[0].strLabel = s.Get("Encoder", "label", string("Dream Test"));
 
-	/* Language (see TableFAC.h, "strTableLanguageCode[]") */
+	/* FAC Language (see TableFAC.h, "strTableLanguageCode[]") */
 	Parameters.Service[0].iLanguage = s.Get("Encoder", "language", 5);	/* 5 -> english */
 
-	if (bUseUEP == TRUE)
-	{
-		// TEST
-		Parameters.SetStreamLen(0, 80, 0);
-	}
-	else
-	{
-		/* Length of part B is set automatically (equal error protection (EEP),
-		   if "= 0"). Sets the number of bytes, should not exceed total number
-		   of bytes available in MSC block */
-		Parameters.SetStreamLen(0, 0, 0);
-	}
+	/* SDC Language and Country */
+	Parameters.Service[0].strLanguageCode = s.Get("Encoder", "ISOlanguage", string("eng"));
+	Parameters.Service[0].strCountryCode = s.Get("Encoder", "ISOCountry", string("gb"));
 
 	/**************************************************************************/
 	/* Robustness mode and spectrum occupancy. Available transmission modes:
@@ -305,6 +295,22 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 
 	iSoundInDev = s.Get("Encoder", "snddevin", -1);
 	strInputFileName = s.Get("Encoder", "inputfile", string(""));
+
+	/* streams - do when know MSC Capacity */
+	Parameters.Stream.resize(1);
+	int iA = s.Get("Encoder", "s0PartALen", 0);
+	int iB = s.Get("Encoder", "s0PartBLen", -1);
+	Parameters.SetStreamLen(0, iA, iB);
+	if (bIsAudio == TRUE)
+	{
+		Parameters.Stream[0].eAudDataFlag = SF_AUDIO;
+	}
+	else
+	{
+		Parameters.Stream[0].eAudDataFlag = SF_DATA;
+		Parameters.Stream[0].ePacketModInd = PM_PACKET_MODE;
+		Parameters.Stream[0].iPacketLen = 45;	/* TEST */
+	}
 }
 
 void
@@ -316,6 +322,8 @@ CDRMEncoder::SaveSettings(CSettings& s, CParameter& Parameters)
 	s.Put("Encoder", "sid", int(Parameters.Service[0].iServiceID));
 	s.Put("Encoder", "label", Parameters.Service[0].strLabel);
 	s.Put("Encoder", "language", Parameters.Service[0].iLanguage);
+	s.Put("Encoder", "ISOlanguage", Parameters.Service[0].strLanguageCode);
+	s.Put("Encoder", "ISOCountry", Parameters.Service[0].strCountryCode);
 
 	s.Put("Encoder", "robm", Parameters.GetWaveMode());
 	s.Put("Encoder", "spectrum_occupancy", Parameters.GetSpectrumOccup());
@@ -327,4 +335,6 @@ CDRMEncoder::SaveSettings(CSettings& s, CParameter& Parameters)
 	s.Put("Encoder", "sdcmod", Parameters.eSDCCodingScheme);
 	s.Put("Encoder", "snddevin", iSoundInDev);
 	s.Put("Encoder", "inputfile", strInputFileName);
+	s.Put("Encoder", "s0PartALen", Parameters.Stream[0].iLenPartA);
+	s.Put("Encoder", "s0PartBLen", Parameters.Stream[0].iLenPartB);
 }

@@ -39,7 +39,6 @@
 #include "SDC/SDC.h"
 #include "TextMessage.h"
 #include "util/AudioFile.h"
-#include "util/Utilities.h"
 #include "AMDemodulation.h" // For CMixer
 
 /* Definitions ****************************************************************/
@@ -70,17 +69,15 @@ class CReadData : public CTransmitterModul<_SAMPLE, _SAMPLE>
 {
 public:
 	CReadData(CSoundInInterface* pNS) : pSound(pNS),
-	vecsSoundBuffer(),SignalLevelMeter()
+	vecsSoundBuffer()
 	{}
 	virtual ~CReadData() {}
 
-	_REAL GetLevelMeter() {return SignalLevelMeter.Level();}
 	void Stop();
 
 protected:
 	CSoundInInterface*	pSound;
 	vector<_SAMPLE>		vecsSoundBuffer;
-	CSignalLevelMeter	SignalLevelMeter;
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);

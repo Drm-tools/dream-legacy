@@ -72,23 +72,35 @@ playbackCallback(const void *inputBuffer, void *outputBuffer,
 	return 0;
 }
 
-int CPaCommon::pa_count = 0;
+struct CPa_Static
+{
+	CPa_Static()
+	{
+		int err = Pa_Initialize();
+		if (err != paNoError)
+			throw string("PortAudio error: ") + Pa_GetErrorText(err);
+    	nApis = Pa_GetHostApiCount();
+	}
+
+	~CPa_Static()
+	{
+		int err = Pa_Terminate();
+		if (err != paNoError)
+			throw string("PortAudio error: ") + Pa_GetErrorText(err);
+	}
+
+    PaHostApiIndex nApis;
+};
+
+static CPa_Static Pa_Static;
 
 CPaCommon::CPaCommon(bool cap):ringBuffer(),xruns(0),stream(NULL),
 			names(), devices(), dev(-1),
 			is_capture(cap), blocking(true), device_changed(true), xrun(false),
 			framesPerBuffer(0), ringBufferData(NULL), channels(2)
 {
-	if (pa_count == 0)
-	{
-		int
-			err = Pa_Initialize();
-		if (err != paNoError)
-			throw string("PortAudio error: ") + Pa_GetErrorText(err);
-	}
-	pa_count++;
-	vector < string > choices;
-	Enumerate(choices);
+	//vector < string > choices;
+	//Enumerate(choices);
 }
 
 CPaCommon::~CPaCommon()
@@ -96,14 +108,6 @@ CPaCommon::~CPaCommon()
 	Close();
     if (ringBufferData)
         delete[] ringBufferData;
-
-	pa_count--;
-	if (pa_count == 0)
-	{
-		int err = Pa_Terminate();
-		if (err != paNoError)
-			throw string("PortAudio error: ") + Pa_GetErrorText(err);
-	}
 }
 
 void
@@ -114,7 +118,6 @@ CPaCommon::Enumerate(vector < string > &choices)
 	int numDevices = Pa_GetDeviceCount();
 	if (numDevices < 0)
 		throw string("PortAudio error: ") + Pa_GetErrorText(numDevices);
-    PaHostApiIndex nApis = Pa_GetHostApiCount();
 
 	for (int i = 0; i < numDevices; i++)
 	{
@@ -123,7 +126,7 @@ CPaCommon::Enumerate(vector < string > &choices)
 		|| ( (!is_capture) && deviceInfo->maxOutputChannels > 1))
 		{
 		    string api="";
-		    if(nApis>1)
+		    if(Pa_Static.nApis>1)
 		    {
 		    	const PaHostApiInfo* info = Pa_GetHostApiInfo(deviceInfo->hostApi);
 		    	if(info)

@@ -44,6 +44,9 @@
 #define	METER_FLY_BACK					15
 
 /* Classes ********************************************************************/
+
+struct CIpIf	{string name; uint32_t addr;};
+
 /* Signal level meter ------------------------------------------------------- */
 class CSignalLevelMeter
 {
@@ -153,5 +156,7 @@ inline int Complement2toInt(const unsigned int iSize, CVector<_BINARY>* pbiData)
 
 	return iVal;
 }
+
+void GetNetworkInterfaces(vector<CIpIf>& vecIpIf);
 
 #endif // !defined(UTILITIES_H__3B0BA660_CA63_4344_B3452345D31912__INCLUDED_)

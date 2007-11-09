@@ -113,31 +113,34 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 	   with each AF packet */
 	TagItemGeneratorSDCChanInf.GenTag(Parameter);
 
-	TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
+    if(Parameter.pDRMRec)
+    {
+        TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
 
-	/* RSCI tags ------------------------------------------------------------ */
-	TagItemGeneratorRAFS.GenTag(Parameter);
-	TagItemGeneratorRWMF.GenTag(TRUE, Parameter.rWMERFAC); /* WMER for FAC */
-	TagItemGeneratorRWMM.GenTag(TRUE, Parameter.rWMERMSC); /* WMER for MSC */
-	TagItemGeneratorRMER.GenTag(TRUE, Parameter.rMER); /* MER for MSC */
-	TagItemGeneratorRDEL.GenTag(TRUE, Parameter.vecrRdelThresholds, Parameter.vecrRdelIntervals);
-	TagItemGeneratorRDOP.GenTag(TRUE, Parameter.rRdop);
-	TagItemGeneratorRINT.GenTag(TRUE,Parameter.rIntFreq, Parameter.rINR, Parameter.rICR);
-	TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
-	TagItemGeneratorRxService.GenTag(TRUE, Parameter.GetCurSelAudioService());
-	TagItemGeneratorReceiverStatus.GenTag(Parameter);
-	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
-	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
-	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
-	TagItemGeneratorPowerImpulseResponse.GenTag(Parameter);
-	TagItemGeneratorPilots.GenTag(Parameter);
+        /* RSCI tags ------------------------------------------------------------ */
+        TagItemGeneratorRAFS.GenTag(Parameter);
+        TagItemGeneratorRWMF.GenTag(TRUE, Parameter.rWMERFAC); /* WMER for FAC */
+        TagItemGeneratorRWMM.GenTag(TRUE, Parameter.rWMERMSC); /* WMER for MSC */
+        TagItemGeneratorRMER.GenTag(TRUE, Parameter.rMER); /* MER for MSC */
+        TagItemGeneratorRDEL.GenTag(TRUE, Parameter.vecrRdelThresholds, Parameter.vecrRdelIntervals);
+        TagItemGeneratorRDOP.GenTag(TRUE, Parameter.rRdop);
+        TagItemGeneratorRINT.GenTag(TRUE,Parameter.rIntFreq, Parameter.rINR, Parameter.rICR);
+        TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
+        TagItemGeneratorRxService.GenTag(TRUE, Parameter.GetCurSelAudioService());
+        TagItemGeneratorReceiverStatus.GenTag(Parameter);
+        TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
+        TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
+        TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
+        TagItemGeneratorPowerImpulseResponse.GenTag(Parameter);
+        TagItemGeneratorPilots.GenTag(Parameter);
 
-	/* Generate some other tags */
-	_REAL rSigStr;
-	_BOOLEAN bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
-	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
+        /* Generate some other tags */
+        _REAL rSigStr;
+        _BOOLEAN bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
+        TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
 
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	// rgps
+        TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	// rgps
+    }
 
 	GenDIPacket();
 }
@@ -161,29 +164,32 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 	/* mode is unknown - make empty robm tag */
 	TagItemGeneratorRobMod.GenEmptyTag();
 
-	TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode(), Parameter.GetAnalogDemodType());
+   if(Parameter.pDRMRec)
+   {
+        TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode(), Parameter.GetAnalogDemodType());
 
-	TagItemGeneratorSDCChanInf.GenEmptyTag();
+        TagItemGeneratorSDCChanInf.GenEmptyTag();
 
-	TagItemGeneratorReceiverStatus.GenTag(Parameter);
+        TagItemGeneratorReceiverStatus.GenTag(Parameter);
 
-	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
+        TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
 
-	TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
-	
-	TagItemGeneratorPilots.GenEmptyTag();
+        TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
 
-	TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
+        TagItemGeneratorPilots.GenEmptyTag();
 
-	/* Generate some other tags */
-	TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
-	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
-	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
-	_REAL rSigStr;
-	_BOOLEAN bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
-	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
+        TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
 
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
+        /* Generate some other tags */
+        TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
+        TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
+        TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
+        _REAL rSigStr;
+        _BOOLEAN bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
+        TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
+
+        TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
+   }
 
 	GenDIPacket();
 }
@@ -283,6 +289,7 @@ void CDownstreamDI::GenDIPacket()
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorFAC);
 
 	/* sdc_ tag */
+	//if (cProfile != 'M' || TagItemGeneratorSDC.GetTotalLength()>0)
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorSDC);
 
 	/* sdci tag */
@@ -396,26 +403,43 @@ CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const cha
 	    wantPft = true;
         d.erase(0, 1);
 	}
+    bool bOK = true;
+	CRSISubscriber* subs;
 
 	// Delegate to socket
-	CRSISubscriberSocket* subs = new CRSISubscriberSocket(NULL);
-	_BOOLEAN bOK = subs->SetDestination(d);
-	if (origin != "")
-		bOK &= subs->SetOrigin(origin);
-	if (bOK)
+	CRSISubscriberSocket* s = new CRSISubscriberSocket(NULL);
+	if(s->SetDestination(d))
 	{
+	    cout << "set socket dest " << d << " ok" << endl;
+        if (origin != "")
+            bOK = s->SetOrigin(origin);
         if(wantPft)
-            subs->SetPFTFragmentSize(800);
-		subs->SetProfile(profile);
-		subs->SetSubsamplingFactor(iSubsamplingFactor);
-		subs->SetReceiver(pDrmReceiver);
-		bMDIInEnabled = TRUE;
-		bMDIOutEnabled = TRUE;
-		RSISubscribers.push_back(subs);
-		return TRUE;
+            s->SetPFTFragmentSize(800);
+        subs = s;
 	}
-	else
-		delete subs;
+	else /* try a file */
+	{
+        delete s;
+        CRSISubscriberFile* f = new CRSISubscriberFile();
+		bOK = f->SetDestination(d);
+		if(bOK)
+            cout << "set file dest " << d << " ok" << endl;
+		f->StartRecording();
+		subs = f;
+	}
+    if (bOK)
+    {
+        subs->SetProfile(profile);
+        subs->SetSubsamplingFactor(iSubsamplingFactor);
+        subs->SetReceiver(pDrmReceiver);
+        bMDIOutEnabled = TRUE;
+        RSISubscribers.push_back(subs);
+        return TRUE;
+    }
+    else
+    {
+        delete subs;
+    }
 	return FALSE;
 }
 

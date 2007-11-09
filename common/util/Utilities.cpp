@@ -28,6 +28,28 @@
 #include "Utilities.h"
 #include <sstream>
 
+#ifdef _WIN32
+/* Always include winsock2.h before windows.h */
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# include <windows.h>
+#else
+# include <sys/ioctl.h>
+# ifndef __linux__
+#  include <sys/socket.h>
+# endif
+# include <net/if.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
+typedef int SOCKET;
+# define SOCKET_ERROR				(-1)
+# define INVALID_SOCKET				(-1)
+#endif
+
+#ifdef HAVE_LIBPCAP
+# include <pcap.h>
+#endif
+
 /* Implementation *************************************************************/
 /******************************************************************************\
 * Signal level meter                                                           *
@@ -419,3 +441,78 @@ CReal CAudioReverb::ProcessSample(const CReal rLInput, const CReal rRInput)
 
 	return temp3 + temp4 + temp5 + temp6;
 }
+
+#ifdef _WIN32
+
+void GetNetworkInterfaces(vector<CIpIf>& vecIpIf)
+{
+	vecIpIf.clear();
+	ipIf i;
+	i.name = "any";
+	i.addr = 0;
+	vecIpIf.push_back(i);
+#ifdef HAVE_LIBPCAP
+	pcap_if_t *alldevs;
+	pcap_if_t *d;
+	char errbuf[PCAP_ERRBUF_SIZE+1];
+	/* Retrieve the device list */
+	if(pcap_findalldevs(&alldevs, errbuf) == -1)
+	{
+		QMessageBox::critical(NULL, "Dream", "Exit\n", errbuf);
+		return;
+	}
+	for(d=alldevs;d;d=d->next)
+	{
+		pcap_addr_t *a=d->addresses;
+		i.addr = ntohl(((struct sockaddr_in *)a->addr)->sin_addr.s_addr);
+		i.name = d->name;
+		vecIpIf.push_back(i);
+	}
+
+	/* Free the device list */
+	pcap_freealldevs(alldevs);
+#endif
+}
+
+#else
+
+void GetNetworkInterfaces(vector<CIpIf>& vecIpIf)
+{
+	char buff[1024];
+	struct ifconf ifc;
+	struct ifreq *ifr;
+	int skfd;
+
+	CIpIf i;
+	i.name = "any";
+	i.addr = 0;
+
+	vecIpIf.clear();
+	vecIpIf.push_back(i);
+
+	skfd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (skfd < 0)
+	{
+		perror("socket");
+		return;
+	}
+
+	ifc.ifc_len = sizeof(buff);
+	ifc.ifc_buf = buff;
+	if (ioctl(skfd, SIOCGIFCONF, &ifc) < 0)
+	{
+		perror("ioctl(SIOCGIFCONF)");
+		return;
+	}
+
+	ifr = ifc.ifc_req;
+
+	for (size_t j = 0; j < ifc.ifc_len / sizeof(struct ifreq); j++)
+	{
+		CIpIf i;
+		i.addr = ntohl(((struct sockaddr_in *)&ifr[j].ifr_addr)->sin_addr.s_addr);
+		i.name = ifr[j].ifr_name;
+		vecIpIf.push_back(i);
+	}
+}
+#endif

@@ -63,6 +63,10 @@ protected:
 	void DataEntityType9(CVector<_BINARY>& vecbiData, int ServiceID,
 						 CParameter& Parameter);
 
+// ...
+	void DataEntityType12(CVector<_BINARY>& vecbiData, int ServiceID,
+						 CParameter& Parameter);
+
 	CCRC CRCObject;
 };
 

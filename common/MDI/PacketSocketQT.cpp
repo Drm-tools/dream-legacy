@@ -107,17 +107,20 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 	 */
 	/* Init return flag and copy string in QT-String "QString" */
 	int ttl = 127;
-	_BOOLEAN bAddressOK = TRUE;
+	bool bAddressOK = TRUE;
+	bool portOK;
 	QStringList parts = QStringList::split(":", strNewAddr.c_str(), TRUE);
 	switch(parts.count())
 	{
 	case 1:
 		bAddressOK = HostAddrOut.setAddress("127.0.0.1");
-		iHostPortOut = parts[0].toUInt();
+		iHostPortOut = parts[0].toUInt(&portOK);
+		bAddressOK &= portOK;
 		break;
 	case 2:
 		bAddressOK = HostAddrOut.setAddress(parts[0]);
-		iHostPortOut = parts[1].toUInt();
+		iHostPortOut = parts[1].toUInt(&portOK);
+		bAddressOK &= portOK;
     	if(setsockopt(SocketDevice.socket(), IPPROTO_IP, IP_TTL,
 				(char*)&ttl, sizeof(ttl))==SOCKET_ERROR)
 			bAddressOK = FALSE;
@@ -127,7 +130,8 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 			QHostAddress AddrInterface;
 			AddrInterface.setAddress(parts[0]);
 			bAddressOK = HostAddrOut.setAddress(parts[1]);
-			iHostPortOut = parts[2].toUInt();
+			iHostPortOut = parts[2].toUInt(&portOK);
+			bAddressOK &= portOK;
 			const SOCKET s = SocketDevice.socket();
 #if QT_VERSION < 0x030000
 			uint32_t mc_if = htonl(AddrInterface.ip4Addr());

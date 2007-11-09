@@ -85,7 +85,7 @@ public:
 	/* Parameters */
 	CParameter				TransmParam;
 	string					strMDIinAddr;
-	string					strMDIoutAddr;
+	vector<string>			MDIoutAddr;
 
 protected:
 

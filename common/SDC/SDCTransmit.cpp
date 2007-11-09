@@ -117,6 +117,20 @@ if (iNumUsedBits + iSize < iMaxNumBitsDataBlocks)
 			(*pbiData).Enqueue(vecbiData.Separate(1), 1);
 	}
 
+	/* Type 12 */
+	DataEntityType12(vecbiData, 0, Parameter);
+
+	// TODO: nicer solution
+	iSize = vecbiData.Size();
+	if (iNumUsedBits + iSize < iMaxNumBitsDataBlocks)
+	{
+		iNumUsedBits += iSize;
+
+		vecbiData.ResetBitAccess();
+		for (i = 0; i < iSize; i++)
+			(*pbiData).Enqueue(vecbiData.Separate(1), 1);
+	}
+
 
 	/* Zero-pad the unused bits in this SDC-block */
 	for (i = 0; i < iMaxNumBitsDataBlocks - iNumUsedBits; i++)
@@ -561,4 +575,55 @@ void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ShortID,
 	
 	/* rfa 1 bit */
 	vecbiData.Enqueue((uint32_t) 0, 1);
+}
+
+/******************************************************************************\
+* Data entity Type 12 (Language and Country info entity)						   *
+\******************************************************************************/
+void CSDCTransmit::DataEntityType12(CVector<_BINARY>& vecbiData, int ShortID,
+								   CParameter& Parameter)
+{
+	/* Set total number of bits */
+	const int iNumBitsTotal = 4 + 24 + 16;
+
+	/* Init return vector (storing this data block) */
+	vecbiData.Init(iNumBitsTotal + NUM_BITS_HEADER_SDC);
+	vecbiData.ResetBitAccess();
+
+	string strLanguageCode = Parameter.Service[ShortID].strLanguageCode;
+	string strCountryCode = Parameter.Service[ShortID].strCountryCode;
+
+	if(strLanguageCode == "")
+		strLanguageCode = "---";
+
+	if(strCountryCode == "")
+		strCountryCode = "--";
+
+	if(strLanguageCode == "---" && strCountryCode == "--")
+		return;
+
+	/* Length of the body, excluding the initial 4 bits ("- 4"), 
+	   measured in bytes ("/ 8") */
+	vecbiData.Enqueue((uint32_t) (iNumBitsTotal - 4) / 8, 7);
+
+	/* Version flag (not used in this implementation) */
+	vecbiData.Enqueue((uint32_t) 0, 1);
+
+	/* Data entity type */
+	vecbiData.Enqueue((uint32_t) 12, 4); /* Type 12 */
+
+	/* Actual body ---------------------------------------------------------- */
+	/* Short Id */
+	vecbiData.Enqueue((uint32_t) ShortID, 2);
+
+	/* 2 bits rfu */
+	vecbiData.Enqueue((uint32_t) 0, 2);
+
+	/* language code */
+	vecbiData.Enqueue((uint32_t) strLanguageCode[0], 8);
+	vecbiData.Enqueue((uint32_t) strLanguageCode[1], 8);
+	vecbiData.Enqueue((uint32_t) strLanguageCode[2], 8);
+	/* country code */
+	vecbiData.Enqueue((uint32_t) strCountryCode[0], 8);
+	vecbiData.Enqueue((uint32_t) strCountryCode[1], 8);
 }

@@ -191,22 +191,20 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 
 	TransmParam.Lock(); 
 
+	/* Get stream ID for audio service */
+	iCurStreamID = TransmParam.Service[iCurSelServ].iAudioStream;
+
 	/* Calculate number of input samples in mono. Audio block are always
 	   400 ms long */
 	const int iNumInSamplesMono = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
 										 (_REAL) 0.4 /* 400 ms */ );
 
 	/* Set the total available number of bits, byte aligned */
-	iTotNumBitsForUsage =
-		(TransmParam.iNumDecodedBitsMSC / SIZEOF__BYTE) * SIZEOF__BYTE;
+	iTotNumBitsForUsage = TransmParam.GetStreamLen(iCurStreamID) * SIZEOF__BYTE;
 
-	/* Total number of bytes which can be used for data and audio */
+	/* Total number of bytes which can be used for text and audio */
 	const int iTotNumBytesForUsage = iTotNumBitsForUsage / SIZEOF__BYTE;
 
-	/* Get stream ID for audio service */
-	iCurStreamID = TransmParam.Service[iCurSelServ].iAudioStream;
-
-#ifdef USE_FAAC_LIBRARY
 	/* Total frame size is input block size minus the bytes for the text
 	   message (if text message is used) */
 	int iTotAudFraSizeBits = iTotNumBitsForUsage;
@@ -214,30 +212,26 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 		iTotAudFraSizeBits -=
 			SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
 
+#ifdef USE_FAAC_LIBRARY
 	/* Set encoder sample rate. This parameter decides other parameters */
-	// TEST make threshold decision TODO: improvement
-	if (iTotAudFraSizeBits > 7000)	/* in bits! */
-		lEncSamprate = 24000;
-	else
-		lEncSamprate = 12000;
 
 	int iTimeEachAudBloMS = 40;
 	int iNumHeaderBytes = 14;
 
-	switch (lEncSamprate)
+	switch(TransmParam.AudioParam[iCurStreamID].eAudioSamplRate)
 	{
-	case 12000:
+	case CAudioParam::AS_12KHZ:
+		lEncSamprate = 12000;
 		iTimeEachAudBloMS = 80;	/* ms */
 		iNumAACFrames = 5;
 		iNumHeaderBytes = 6;
-		TransmParam.AudioParam[iCurStreamID].eAudioSamplRate = CAudioParam::AS_12KHZ;	/* Set parameter in global struct */
 		break;
 
-	case 24000:
+	case CAudioParam::AS_24KHZ:
+		lEncSamprate = 24000;
 		iTimeEachAudBloMS = 40;	/* ms */
 		iNumAACFrames = 10;
 		iNumHeaderBytes = 14;
-		TransmParam.AudioParam[iCurStreamID].eAudioSamplRate = CAudioParam::AS_24KHZ;	/* Set parameter in global struct */
 		break;
 	}
 
@@ -315,24 +309,8 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 		iNumHigherProtectedBytes = 0;
 #endif
 
-	/* Adjust part B length for SDC stream. Notice, that the
-	   "TransmParam.iNumDecodedBitsMSC" parameter depends on these settings.
-	   Thus, length part A and B have to be set before, preferably in the
-	   DRMTransmitter initialization */
-	if ((TransmParam.Stream[iCurStreamID].iLenPartA == 0) ||
-		(iTotNumBytesForUsage < TransmParam.Stream[iCurStreamID].iLenPartA))
-	{
-		/* Equal error protection was chosen or protection part A was chosen too
-		   high, set to equal error protection! */
-		TransmParam.Stream[iCurStreamID].iLenPartA = 0;
-		TransmParam.Stream[iCurStreamID].iLenPartB = iTotNumBytesForUsage;
-	}
-	else
-		TransmParam.Stream[iCurStreamID].iLenPartB = iTotNumBytesForUsage -
-			TransmParam.Stream[iCurStreamID].iLenPartA;
-
 	/* Define input and output block size */
-	iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
+	iOutputBlockSize = iTotNumBitsForUsage;
 	iInputBlockSize = iNumInSamplesMono * 2 /* stereo */ ;
 
 	TransmParam.Unlock(); 

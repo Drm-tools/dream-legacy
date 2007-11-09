@@ -410,7 +410,11 @@ CTagItemGeneratorStr::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &
 
 	CVectorEx < _BINARY > *pvecbiStrData = MSCData.Get(iLenStrData);
 	/* check we have data in the vector */
-	if (iLenStrData != pvecbiStrData->Size())
+	int size = pvecbiStrData->Size();
+
+	//cout << "str" << iStreamNumber << " " << iLenStrData << " " << size << endl;
+
+	if (iLenStrData != size)
 		return;
 
 	if (iStreamNumber >= MAX_NUM_STREAMS)
