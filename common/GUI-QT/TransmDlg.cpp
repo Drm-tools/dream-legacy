@@ -971,7 +971,7 @@ TransmDialog::GetMDIOut()
                 for(size_t j=0; j<vecIpIf.size(); j++)
                 {
                     if(parts[0].toUInt()==vecIpIf[j].addr)
-                        name = vecIpIf[j].name;
+                        name = vecIpIf[j].name.c_str();
                 }
                 (void)new QListViewItem(ListViewMDIOutputs, parts[2], parts[1], name);
             }
@@ -1028,7 +1028,7 @@ TransmDialog::SetMDIOut()
 		else if(iface=="any")
 			addr = dest+":"+port;
 		else
-			addr = QHostAddress(iface).toString()+":"+dest+":"+port;
+			addr = QHostAddress(iface.toUInt()).toString()+":"+dest+":"+port;
         DRMTransmitter.MDIoutAddr.push_back(string(addr.utf8()));
 	}
 }
