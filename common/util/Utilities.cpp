@@ -4,7 +4,7 @@
  *
  * Author(s):
  *	Volker Fischer
- * 
+ *
  * Description:
  *
  ******************************************************************************
@@ -447,7 +447,7 @@ CReal CAudioReverb::ProcessSample(const CReal rLInput, const CReal rRInput)
 void GetNetworkInterfaces(vector<CIpIf>& vecIpIf)
 {
 	vecIpIf.clear();
-	ipIf i;
+	CIpIf i;
 	i.name = "any";
 	i.addr = 0;
 	vecIpIf.push_back(i);
@@ -458,7 +458,7 @@ void GetNetworkInterfaces(vector<CIpIf>& vecIpIf)
 	/* Retrieve the device list */
 	if(pcap_findalldevs(&alldevs, errbuf) == -1)
 	{
-		QMessageBox::critical(NULL, "Dream", "Exit\n", errbuf);
+		cerr << "Can't get network interfaces: " << errbuf << endl;
 		return;
 	}
 	for(d=alldevs;d;d=d->next)
