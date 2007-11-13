@@ -128,12 +128,9 @@ AC_CHECK_HEADERS(dfftw.h fftw.h)
 AC_CHECK_HEADERS(drfftw.h rfftw.h)
 
 dnl QT --------------------------------------------------------------------------
-#PKG_CHECK_MODULES(qt, qt-mt, , enable_qt=no)
+PKG_CHECK_MODULES(qt, qt-mt, , enable_qt=no)
 if test "x$enable_qt" = "xyes"; then
-	#QTDIR=`$PKG_CONFIG --variable=exec_prefix qt-mt`
-	QTDIR=/usr/local/qt-2.3.2
-	qt_CFLAGS="-pipe -Wall -W -O2 -DQT_THREAD_SUPPORT -D_REENTRANT -I/usr/X11R6/include -I/usr/X11R6/include -I$QTDIR/include"
-	qt_LIBS="-L/usr/X11R6/lib -L$QTDIR/lib -L/usr/X11R6/lib -lXext -lX11 -lm -lICE -lSM -lqt-mt -lGLU -lGL -lXmu -lpthread"
+	QTDIR=`$PKG_CONFIG --variable=exec_prefix qt-mt`
 	AC_SUBST(QTDIR)
 	AC_PATH_PROG(MOC, moc,, $QTDIR/bin)
 	AC_PATH_PROG(UIC, uic,, $QTDIR/bin)
@@ -244,6 +241,6 @@ echo "	AAC encoding supported:				$enable_faac"
 echo "	pcap file format supported:			$enable_pcap"
 echo "	libsndfile supported:				$enable_sndfile"
 echo "	journaline supported:				$enable_journaline"
-echo "	HAL supported:						$enable_hal"
+echo "	HAL supported:					$enable_hal"
 echo
 echo

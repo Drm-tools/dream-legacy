@@ -536,8 +536,8 @@ CDRMReceiver::UtilizeDRM(_BOOLEAN& bEnoughData)
 		if (DataDecoder.WriteData(Parameters, MSCUseBuf[iDataStreamID]))
 			bEnoughData = TRUE;
 	}
+
 	/* Source decoding (audio) */
-	cout<<"iAudioStreamID="<<iAudioStreamID<<endl;
 	if (iAudioStreamID != STREAM_ID_NOT_USED)
 	{
 		if (AudioSourceDecoder.ProcessData(Parameters,
