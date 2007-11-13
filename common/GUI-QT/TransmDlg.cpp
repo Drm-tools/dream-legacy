@@ -703,7 +703,7 @@ TransmDialog::SetStreams()
         if(plen!="-")
             stream.iPacketLen = plen.toInt();
         stream.iLenPartA = 0; /* EEP only */
-        stream.iLenPartB = it.current()->text(4).toInt();
+        stream.iLenPartB = it.current()->text(5).toInt();
 	}
 }
 
@@ -833,7 +833,6 @@ TransmDialog::SetServices()
                 Service.iLanguage = i;
 		Service.strLanguageCode = sit.current()->text(4).utf8();
 		Service.strCountryCode = sit.current()->text(5).utf8();
-		cout << Service.iLanguage << " " << Service.strLanguageCode << " " << Service.strCountryCode << endl;
         QString type = sit.current()->text(6);
 		QString sA = sit.current()->text(7);
 		QString sD = sit.current()->text(8);
@@ -982,9 +981,12 @@ TransmDialog::GetMDIOut()
 void
 TransmDialog::OnButtonAddMDIDest()
 {
+	QString dest = LineEditMDIoutDest->text();
+	if(dest == "...")
+		dest = "";
     (void) new QListViewItem(ListViewMDIOutputs,
         LineEditMDIoutPort->text(),
-        LineEditMDIoutDest->text(),
+        dest,
         ComboBoxMDIoutInterface->currentText()
     );
 }
@@ -1026,9 +1028,17 @@ TransmDialog::SetMDIOut()
 		    addr = port;
 		}
 		else if(iface=="any")
+		{
 			addr = dest+":"+port;
+		}
 		else
-			addr = QHostAddress(iface.toUInt()).toString()+":"+dest+":"+port;
+		{
+			uint32_t iInterface;
+			for(size_t i=0; i<vecIpIf.size(); i++)
+				if(vecIpIf[i].name==iface)
+					iInterface = vecIpIf[i].addr;
+			addr = QHostAddress(iInterface).toString()+":"+dest+":"+port;
+		}
         DRMTransmitter.MDIoutAddr.push_back(string(addr.utf8()));
 	}
 }
