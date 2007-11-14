@@ -1035,7 +1035,7 @@ TransmDialog::SetMDIOut()
 		{
 			uint32_t iInterface;
 			for(size_t i=0; i<vecIpIf.size(); i++)
-				if(vecIpIf[i].name==iface)
+				if(vecIpIf[i].name.c_str()==iface)
 					iInterface = vecIpIf[i].addr;
 			addr = QHostAddress(iInterface).toString()+":"+dest+":"+port;
 		}
