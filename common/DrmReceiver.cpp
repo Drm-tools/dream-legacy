@@ -1571,7 +1571,7 @@ CDRMReceiver::saveSDCtoFile()
 void
 CDRMReceiver::LoadSettings(CSettings& s)
 {
-	string strMode = s.Get("GUI", "mode", string("DRMRX"));
+	string strMode = s.Get("0", "mode", string("DRMRX"));
 
 	if (strMode == "DRMRX")
 	{
@@ -1867,9 +1867,9 @@ void
 CDRMReceiver::SaveSettings(CSettings& s)
 {
 	if(eReceiverMode == RM_AM)
-		s.Put("GUI", "mode", string("AMRX"));
+		s.Put("0", "mode", string("AMRX"));
 	else
-		s.Put("GUI", "mode", string("DRMRX"));
+		s.Put("0", "mode", string("DRMRX"));
 
 	/* Receiver ------------------------------------------------------------- */
 

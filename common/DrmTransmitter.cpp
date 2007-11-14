@@ -281,7 +281,7 @@ void CDRMTransmitter::Start()
 void
 CDRMTransmitter::LoadSettings(CSettings& s)
 {
-	string mode = s.Get("GUI", "mode", string("DRMTX"));
+	string mode = s.Get("0", "mode", string("DRMTX"));
 	if(mode == "DRMTX")
 		eOpMode = T_TX;
 	if(mode == "DRMENC")
@@ -298,13 +298,13 @@ CDRMTransmitter::SaveSettings(CSettings& s)
 	switch(eOpMode)
 	{
 	case T_TX:
-		s.Put("GUI", "mode", string("DRMTX"));
+		s.Put("0", "mode", string("DRMTX"));
 		break;
 	case T_ENC:
-		s.Put("GUI", "mode", string("DRMENC"));
+		s.Put("0", "mode", string("DRMENC"));
 		break;
 	case T_MOD:
-		s.Put("GUI", "mode", string("DRMMOD"));
+		s.Put("0", "mode", string("DRMMOD"));
 		break;
 	}
 	Encoder.SaveSettings(s, TransmParam);

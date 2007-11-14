@@ -160,6 +160,7 @@ CSettings::ParseArguments(int argc, char **argv)
 	_BOOLEAN bIsReceiver = TRUE;
 	_REAL rArgument;
 	string strArgument;
+	int mdioutnum = 0;
 	int rsioutnum = 0;
 	int rciinnum = 0;
 
@@ -168,11 +169,18 @@ CSettings::ParseArguments(int argc, char **argv)
 	   Start with first argument, therefore "i = 1" */
 	for (int i = 1; i < argc; i++)
 	{
-		/* DRM transmitter mode flag ---------------------------------------- */
+		/* Mode ----------------------------------------------------------------- */
+		if (GetStringArgument(argc, argv, i, "--mode", "--mode", strArgument) == TRUE)
+		{
+			Put("0", "mode", strArgument);
+			continue;
+		}
+
+		/* old DRM transmitter mode flag ---------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-t", "--transmitter") == TRUE)
 		{
 			bIsReceiver = FALSE;
-			Put("GUI", "mode", string("DRMTX"));
+			Put("0", "mode", string("DRMTX"));
 			continue;
 		}
 
@@ -356,9 +364,10 @@ CSettings::ParseArguments(int argc, char **argv)
 		if (GetStringArgument(argc, argv, i, "--mdiout", "--mdiout",
 							  strArgument) == TRUE)
 		{
-			cerr <<
-				"content server mode not implemented yet, perhaps you wanted rsiout"
-				<< endl;
+			stringstream s;
+			s << "mdiout" << mdioutnum;
+			Put("transmitter", s.str(), strArgument);
+			mdioutnum++;
 			continue;
 		}
 
@@ -366,9 +375,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		if (GetStringArgument(argc, argv, i, "--mdiin", "--mdiin",
 							  strArgument) == TRUE)
 		{
-			cerr <<
-				"modulator mode not implemented yet, perhaps you wanted rsiin"
-				<< endl;
+			Put("transmitter", "mdiin", strArgument);
 			continue;
 		}
 
@@ -478,7 +485,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		if ((!strcmp(argv[i], "--help")) ||
 			(!strcmp(argv[i], "-h")) || (!strcmp(argv[i], "-?")))
 		{
-			Put("command", "mode", "help");
+			Put("command", "help", 1);
 			continue;
 		}
 
@@ -490,11 +497,8 @@ CSettings::ParseArguments(int argc, char **argv)
 		}
 
 		/* Unknown option --------------------------------------------------- */
-		cerr << argv[0] << ": ";
-		cerr << "Unknown option '" << argv[i] << "' -- use '--help' for help"
-			<< endl;
-
-		exit(1);
+		Put("command", "error", string(argv[i]));
+		Put("command", "help", 1);
 	}
 }
 
@@ -506,6 +510,7 @@ CSettings::UsageArguments(char **argv)
 	return
 		"Usage: " + string(argv[0]) + " [option] [argument]\n"
 		"Recognized options:\n"
+		"      --mode                  operating mode: DRMTX, DRMMOD, DRMENC, DRMRX, AMRX\n"
 		"  -t, --transmitter           DRM transmitter mode\n"
 		"  -p, --flipspectrum          flip input spectrum\n"
 		"  -i <n>, --mlciter <n>       number of MLC iterations (allowed range: 0...4 default: 1)\n"
@@ -552,10 +557,12 @@ CSettings::UsageArguments(char **argv)
 #ifdef WIN32
 		"  -P, --processpriority <n>   enable/disable high priority for working thread\n"
 #endif
+		" -group:item <s>             any config file parameter\n"
 		"  -h, -?, --help             this help text\n"
-		"Example: " + string(argv[0]) + " -p --sampleoff -0.23 -i 2 "
+		"\n"
+		"Example: " + string(argv[0]) + " -p --sampleoff -0.23 -i 2 -EPG:decodeepg 1"
 #ifdef USE_QT_GUI
-		"-r 6140 --rsiout 127.0.0.1:3002"
+		" -r 6140 --rsiout 127.0.0.1:3002"
 #endif
 		"\n";
 }

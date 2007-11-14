@@ -107,7 +107,22 @@ main(int argc, char **argv)
 			}
 #endif
 
-		string strMode = Settings.Get("GUI", "mode", string("DRMRX"));
+		string strMode = Settings.Get("0", "mode", string("DRMRX"));
+
+		bool bShowHelp = Settings.Get("command", "help", 0);
+		if(bShowHelp)
+		{
+			string strError = Settings.Get("command", "error", string(""));
+
+			string strHelp = Settings.UsageArguments(argv);
+			if(strError != "")
+			{
+				strHelp = strError + " is not a valid argument\n" + strHelp;
+			}
+
+			QMessageBox::information(0, "Dream", strHelp.c_str());
+			exit(0);
+		}
 
 		if (strMode == "DRMRX" || strMode == "AMRX")
 		{
@@ -150,7 +165,7 @@ main(int argc, char **argv)
 #endif
 			DRMReceiver.SaveSettings(Settings);
 		}
-		else
+		else if (strMode == "DRMTX" || strMode == "DRMENC" || strMode == "DRMMOD")
 		{
 			CDRMTransmitter DRMTransmitter;
 
@@ -166,6 +181,10 @@ main(int argc, char **argv)
 			app.exec();
 
 			DRMTransmitter.SaveSettings(Settings);
+		}
+		else
+		{
+			QMessageBox::information(0, "Dream", Settings.UsageArguments(argv).c_str());
 		}
 	}
 
