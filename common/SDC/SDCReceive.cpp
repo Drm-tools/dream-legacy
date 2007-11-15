@@ -1280,7 +1280,6 @@ _BOOLEAN CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
 		/* Append new character */
 		Parameter.Service[iShortID].strLanguageCode.append(&cNewChar, 1);
 	}
-cout << Parameter.Service[iShortID].strLanguageCode << endl;
 
 	/* Country code: this 16-bit field identifies the country of origin of the
 	   service (the site of the studio) according to ISO 3166 using two lower

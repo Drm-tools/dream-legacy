@@ -890,22 +890,23 @@ void FDRMDialog::SetService(int iNewServiceID)
 	Parameters.SetCurSelDataService(iNewServiceID);
 	iCurSelServiceGUI = iNewServiceID;
 
-	int iStreamID = Parameters.Service[iNewServiceID].iDataStream;
-	int iPacketID = Parameters.Service[iNewServiceID].iPacketID;
-	CDataParam& dataParam = Parameters.DataParam[iStreamID][iPacketID];
-
-	/* Eventually activate multimedia window */
-	int iAppIdent = dataParam.iUserAppIdent;
-
 	/* If service is only data service or has a multimedia content
 	   , activate multimedia window */
 	EStreamType eAudDataFlag = Parameters.Service[iNewServiceID].eAudDataFlag;
 	Parameters.Unlock();
-	if ((eAudDataFlag == SF_DATA)
-		|| (iAppIdent == AT_MOTSLISHOW)
-		|| (iAppIdent == AT_JOURNALINE)
-		|| (iAppIdent == AT_MOTBROADCASTWEBSITE))
+
+	if (eAudDataFlag == SF_DATA)
 	{
+		Parameters.Lock();
+		int iStreamID = Parameters.Service[iNewServiceID].iDataStream;
+		int iPacketID = Parameters.Service[iNewServiceID].iPacketID;
+		CDataParam& dataParam = Parameters.DataParam[iStreamID][iPacketID];
+		int iAppIdent = dataParam.iUserAppIdent;
+		Parameters.Unlock();
+
+		if(	   (iAppIdent == AT_MOTSLISHOW)
+			|| (iAppIdent == AT_JOURNALINE)
+			|| (iAppIdent == AT_MOTBROADCASTWEBSITE))
 		OnViewMultiMediaDlg();
 	}
 }
