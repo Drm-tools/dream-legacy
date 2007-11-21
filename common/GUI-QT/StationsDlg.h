@@ -167,6 +167,12 @@ public:
 
 	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
 	int GetSecondsPreview() {return iSecondsPreview;}
+	void UpdateStringListForFilter(const CStationsItem StationsItem);
+
+	QStringList			ListTargets;
+	QStringList			ListCountries;
+	QStringList			ListLanguages;
+
 
 protected:
 	_BOOLEAN IsActive(const int iPos, const time_t ltime);
@@ -210,6 +216,8 @@ public:
 
 	void LoadSchedule(CDRMSchedule::ESchedMode eNewSchM);
 	void SetCurrentSchedule(const CDRMSchedule::ESchedMode eNewSchM);
+	_BOOLEAN CheckFilter(const int iPos);
+
 
 	void LoadSettings(const CSettings&);
 	void SaveSettings(CSettings&);
@@ -270,4 +278,6 @@ public slots:
 	void OnGetUpdate();
 	void OnFreqCntNewValue(double dVal);
 	void OnHeaderClicked(int c);
+	void FilterChanged(const QString&);
+
 };

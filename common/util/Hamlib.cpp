@@ -119,6 +119,11 @@ iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels(), iFrequencykHz(0)
 	CapsHamlibModels[-RIG_MODEL_RX320].bIsModifiedRig = true;
 #endif
 
+#ifdef RIG_MODEL_ELEKTOR507
+    /* Elektor USB SDR 5/07 */
+	CapsHamlibModels[RIG_MODEL_ELEKTOR507].iFreqOffset = -12;
+#endif
+
 #ifdef RIG_MODEL_RX340
 	/* TenTec RX340D */
 	CapsHamlibModels[RIG_MODEL_RX340].settings[DRM].modes["USB"]=16000;
@@ -759,7 +764,7 @@ CHamlib::SetRigConfig()
 void
 CHamlib::SetRigMode(ERigMode eNMod)
 {
-    cout<<"SetRigMode called with "<<eNMod<<endl;
+    cout<<"SetRigMode called with "<<int(eNMod)<<endl;
 	eRigMode = eNMod;
 	SetHamlibModelID(iHamlibModelID);
 }
