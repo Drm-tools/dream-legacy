@@ -764,7 +764,7 @@ CHamlib::SetRigConfig()
 void
 CHamlib::SetRigMode(ERigMode eNMod)
 {
-    cout<<"SetRigMode called with "<<int(eNMod)<<endl;
+    cout<<"SetRigMode called with "<< int(eNMod) <<endl;
 	eRigMode = eNMod;
 	SetHamlibModelID(iHamlibModelID);
 }
@@ -781,8 +781,10 @@ CHamlib::SetHamlibModelID(const rig_model_t model)
 	if(bEnableSMeter)
 	{
 		SetEnableSMeter(FALSE);
+#ifdef USE_QT_GUI
 		if(wait(1000) == FALSE)
 			cout << "error terminating rig polling thread" << endl;
+#endif
 	}
 	/* If rig was already open, close it first */
 	if (pRig != NULL)

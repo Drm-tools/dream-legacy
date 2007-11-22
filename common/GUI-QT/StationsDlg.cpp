@@ -106,12 +106,10 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 	{
 	case SM_DRM:
 		pFile = fopen(DRMSCHEDULE_INI_FILE_NAME, "r");
-		cout<<"Opening "<<DRMSCHEDULE_INI_FILE_NAME<<endl;
 		break;
 
 	case SM_ANALOG:
 		pFile = fopen(AMSCHEDULE_INI_FILE_NAME, "r");
-		cout<<"Opening "<<AMSCHEDULE_INI_FILE_NAME<<endl;
 		break;
 	}
 
@@ -119,7 +117,6 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 	if (pFile == 0)
 		return;
 
-cout<<"pFile="<<pFile<<endl;
 	fgets(cName, iMaxLenName, pFile); /* Remove "[DRMSchedule]" */
 	if(cName[0] == '[')
 		ReadIniFile(pFile);
@@ -920,7 +917,7 @@ static struct { char *code; char *country; } countries[] = {
 	{ "SGA", "South Georgia Is." },
 	{ "SHN", "Saint Helena I." },
 	{ "SLM", "Solomon Is." },
-	{ "SLV", "EI Salvador" },
+	{ "SLV", "El Salvador" },
 	{ "SMA", "Samoa" },
 	{ "SMO", "Samoa" },
 	{ "SMR", "San Marino" },
@@ -1021,6 +1018,7 @@ static struct { char *country; char *mark; char * bc; char *site;} stations[] = 
 	{ "ALB", "", "CRI", "Cerrik 40N59'47-19E59'58 (1x100kW = 2x50kW)" },
 	{ "ALB", "", "R Tirana", "Shijiak 41N19'535-19E33'086 (1x100kW = 2x50kW)" },
 	{ "ALB", "", "MW", "Durres/Fllake 41N22'11-19E30'17 (500 kW)" },
+	{ "ALG", "", "", "Bouchaoui or Ouled Fayet" },
 	{ "ALS", "", "", "Anchor Point 59N45-151W44" },
 	{ "ARG", "", "", "General Pacheco 34S36-58W22" },
 	{ "ARM", "", "", "Gavar (formerly Kamo) 40N25-45E11" },
@@ -1122,6 +1120,7 @@ static struct { char *country; char *mark; char * bc; char *site;} stations[] = 
 	{ "EGY", "", "", "unknown Egypt" },
 	{ "EGY", "a", "", "Abis 31N10-30E05" },
 	{ "EGY", "z", "", "Abu Zaabal 30N16-31E22" },
+	{ "EQA", "", "", "Quito or Sucua or Loja or Macas" },
 	{ "ETH", "", "R.Ethiopia", "Geja Jewe 08N47-38E38" },
 	{ "F", "", "", "Issoudun 46N57-01E59" },
 	{ "F", "r", "", "Rennes 48N06-01W41" },
@@ -1140,16 +1139,17 @@ static struct { char *country; char *mark; char * bc; char *site;} stations[] = 
 	{ "GEO", "", "", "Dusheti 42N03-44E41" },
 	{ "GNE", "", "", "Bata 01N48-09E46" },
 	{ "GRC", "", "", "Avlis (38N23-23E36)" },
+	{ "GRC", "o", "", "Rhodes ?" },
 	{ "GUF", "", "", "Montsinery 04N54-52W36" },
 	{ "GUM", "", "AWR", "Agat, 13N20-144E39" },
-	{ "KTWR", "", "", "Agana 13N17-144E40" },
-	{ "AFRTS", "", "", "Barrigada 13N34-144E50" },
+	{ "GUM", "", "KTWR", "Agana 13N17-144E40" },
+	{ "GUM", "", "AFRTS", "Barrigada 13N34-144E50" },
 	{ "GUY", "", "", "Sparendaam 06N49-58W10" },
 	{ "HNG", "", "", "Jaszbereny 47N35-19E52" },
 	{ "HOL", "", "", "Flevo 52N21-05E27" },
 	{ "HRV", "", "", "Deanovec 45N41-16E27" },
 	{ "HWA", "", "", "Naalehu 19N02-155W40" },
-	{ "AFRTS", "", "", "Pearl Harbour 21N25-158W09" },
+	{ "HWA", "", "AFRTS", "Pearl Harbour 21N25-158W09" },
 	{ "I", "", "RAI, VoM", "Roma (Prato Smeraldo) 41N48-12E31" },
 	{ "IRRS", "", "", "unknown. Formerly Milano 45N27-09E11" },
 	{ "IND", "", "", "unknown India" },
@@ -1208,11 +1208,13 @@ static struct { char *country; char *mark; char * bc; char *site;} stations[] = 
 	{ "KGZ", "", "", "Bishkek 42N54-74E37" },
 	{ "KOR", "", "", "Kimjae 35N50-126E50" },
 	{ "KOR", "h", "", "Hwasung 37N13-126E47" },
+	{ "KRE", "", "", "Kanggye or Pyongyang or Kujang" },
 	{ "KRE", "k", "", "Kanggye 40N58-126E36" },
 	{ "KRE", "p", "", "Pyongyang 39N05-125E23" },
 	{ "KRE", "u", "", "Kujang 40N05-125E05" },
 	{ "KWT", "", "", "Sulaibiyah 29N10-47E45" },
 	{ "LAO", "", "", "Vientiane 17N58-102E33" },
+	{ "LBY", "", "", "Tripoli" },
 	{ "LTU", "", "", "Sitkunai 55N02-23E49 http" },
 	{ "LUX", "", "", "Junglinster 49N43-06E15" },
 	{ "LVA", "", "", "Ulbroka 56N56-24E17" },
@@ -1245,6 +1247,7 @@ static struct { char *country; char *mark; char * bc; char *site;} stations[] = 
 	{ "PAK", "r", "", "Rawalpindi 33N30-73E00 (10kW)" },
 	{ "PAL", "", "", "Medorn 07N22-134E28" },
 	{ "PHL", "", "RL/Voa", "Tinang 15N21-120E37" },
+	{ "PHL", "i", "", "Iba 15N20-119E58" },
 	{ "PHL", "x", "", "Tinang-2(portable) 15N21-120E38 (50kW)" },
 	{ "PHL", "#", "1143", "Poro 16N26-120E17" },
 	{ "FEBC", "", "", "Bocaue 14N48-120E55" },
@@ -1288,6 +1291,7 @@ static struct { char *country; char *mark; char * bc; char *site;} stations[] = 
 	{ "RRW", "", "", "Kigali 01S53-30E07 (4 x 250kW)" },
 	{ "S", "", "", "Hoerby 55N49-13E44" },
 	{ "SEY", "", "", "Mahe 04S36-55E28" },
+	{ "SLV", "", "", "S Salvador or Sonsonate" },
 	{ "SNG", "", "", "Kranji 01N25-103E44" },
 	{ "SRB", "s", "", "Stubline 44N34-20E09" },
 	{ "SRL", "", "SLBS", "Goderich 08N30-13W14" },
@@ -1405,23 +1409,30 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 
 	do {
 		CStationsItem StationsItem;
-		string s;
 		map<string,string>::const_iterator m;
 
 		fgets(cRow, iMaxLenRow, pFile);
 		vector<string> fields;
 		stringstream ss(cRow);
 		do {
+			string s;
 			getline(ss, s, ';');
 			fields.push_back(s);
 		} while(!ss.eof());
 
-		ss.str(fields[0]);
-		ss >> StationsItem.iFreq;
+		StationsItem.iFreq = atol(fields[0].c_str());
 
-		QStringList times = QStringList::split("-", fields[1].c_str());
-		StationsItem.SetStartTimeNum(times[0].toInt());
-		StationsItem.SetStopTimeNum(times[1].toInt());
+		if(fields[1] == "")
+		{
+			StationsItem.SetStartTimeNum(0);
+			StationsItem.SetStopTimeNum(2400);
+		}
+		else
+		{
+			QStringList times = QStringList::split("-", fields[1].c_str());
+			StationsItem.SetStartTimeNum(times[0].toInt());
+			StationsItem.SetStopTimeNum(times[1].toInt());
+		}
 
 		if(fields[2].length()>0)
 		{
@@ -1512,7 +1523,7 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 
 		if(fields.size()>6)
 		{
-			s = fields[6];
+			string s = fields[6];
 			m = t.find(s);
 			if(m != t.end())
 			{
@@ -1531,7 +1542,7 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 		string stn;
 		if(fields.size()>7)
 		{
-			s = fields[7];
+			string s  = StationsItem.strSite = fields[7];
 			if(s=="") // unknown or main Tx site of the home country
 			{
 				country = homecountry;
@@ -1577,8 +1588,7 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 		map<string,string>::const_iterator txs = tx_sites.find(stn);
 		if(txs==tx_sites.end())
 		{
-			StationsItem.strSite = s;
-			cout << "[" << s << "] [" << country << "] [" << stn << "]" << endl;
+			//cout << StationsItem.iFreq << " [" << StationsItem.strSite << "] [" << country << "] [" << stn << "]" << endl;
 		}
 		else
 		{
@@ -1588,6 +1598,10 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 		/* Add new item in table */
 		StationsTable.push_back(StationsItem);
 
+if(fields[5]=="TAG")
+{
+		//cout << " " << StationsItem.iStartHour << " " <<  StationsItem.iStartMinute << " " <<  StationsItem.iStopHour << " " <<  StationsItem.iStopMinute << " " <<  StationsItem.iFreq << " " <<  StationsItem.strName << " " <<  StationsItem.strTarget << " " <<  StationsItem.strLanguage << " " <<  StationsItem.strSite << " " <<  StationsItem.strCountry << " " <<  StationsItem.strDaysFlags << " " <<  StationsItem.strDaysShow << " " <<  StationsItem.rPower << " " << endl;
+}
 		UpdateStringListForFilter(StationsItem);
 
 	} while(!feof(pFile));
