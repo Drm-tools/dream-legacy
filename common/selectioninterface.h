@@ -39,7 +39,16 @@ public:
 	virtual void		Enumerate(vector<string>&)=0;
 	virtual int			GetDev()=0;
 	virtual void		SetDev(int iNewDev)=0;
-
+	virtual void		SetDev(const string& s)
+	{
+		vector<string> names;
+		Enumerate(names);
+		for(size_t i=0; i<names.size(); i++)
+		{
+			if(s == names[i])
+				SetDev(int(i));
+		}
+	}
 };
 
 #endif

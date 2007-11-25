@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "DRMSignalIO.h"
+#include "sound.h"
 #include <iostream>
 
 
@@ -51,6 +52,108 @@ sf_count_t  sf_writef(SNDFILE *sndfile, double *ptr, sf_count_t frames)
 /******************************************************************************\
 * Transmitter                                                                  *
 \******************************************************************************/
+void CTransmitData::SetOutputs(const vector<string>& o)
+{
+	vecOutputs = o;
+}
+
+void CTransmitData::GetOutputs(vector<string>& o)
+{
+	o = vecOutputs;
+}
+
+/* Open file for writing data for transmitting */
+void CTransmitData::openfile(const string& strOutFileName, EFileOutFormat eOutFileMode)
+{
+#ifdef HAVE_LIBSNDFILE
+		SF_INFO sfinfo;
+		sfinfo.samplerate = 48000;
+		sfinfo.channels = (eOutputFormat==OF_REAL_VAL)?1:2;
+		switch(eOutFileMode)
+		{
+		case OFF_RAW:
+			sfinfo.format = SF_FORMAT_RAW | SF_FORMAT_PCM_16;
+			break;
+		case OFF_TXT:
+			sfinfo.format = SF_FORMAT_MAT4 | SF_FORMAT_PCM_16;
+			break;
+		case OFF_WAV:
+			sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
+			break;
+		}
+	    vecFile.push_back(sf_open(strOutFileName.c_str(), SFM_WRITE, &sfinfo));
+#else
+		CWaveFile WaveFile;
+		FILE* pFile;
+		switch(eOutFileMode)
+		{
+		case OFF_RAW:
+			pFile = fopen(strOutFileName.c_str(), "wb");
+			/* Check for error */
+			if (pFile == NULL)
+				throw CGenErr("The file " + strOutFileName + " cannot be created.");
+			break;
+		case OFF_TXT:
+			pFile = fopen(strOutFileName.c_str(), "w");
+			/* Check for error */
+			if (pFile == NULL)
+				throw CGenErr("The file " + strOutFileName + " cannot be created.");
+			break;
+		case OFF_WAV:
+			WaveFile.Open(strOutFileName);
+		}
+	    vecFile.push_back(pFile);
+		vecWaveFile.push_back(WaveFile);
+#endif
+}
+
+void CTransmitData::writeToFile(int i, int iCurIndex)
+{
+#ifdef HAVE_LIBSNDFILE
+	SNDFILE* pFile = vecFile[i];
+	
+	if (eOutputFormat==OF_REAL_VAL)
+	{
+		(void)sf_writef(pFile, &vecsDataOut[iCurIndex], 1);
+	}
+	else
+	{
+		_SAMPLE buffer[2];
+		buffer[0] = vecsDataOut[iCurIndex];
+		buffer[1] = vecsDataOut[iCurIndex+1];
+		(void)sf_writef(pFile, buffer, 1);
+	}
+#else
+	FILE* pFile = vecFile[i];
+	short buffer[2];
+	buffer[0] = short(vecsDataOut[iCurIndex]);
+	buffer[1] = short(vecsDataOut[iCurIndex+1]);
+	switch(eOutFileMode)
+	{
+	case OFF_RAW:
+		if (eOutputFormat==OF_REAL_VAL)
+			fwrite((const void*) buffer, 2, 1, pFile);
+		else
+		{
+			fwrite((const void*) buffer, 2, 2, pFile);
+		}
+		break;
+	case OFF_TXT:
+		/* This can be read with Matlab "load" command */
+		if (eOutputFormat==OF_REAL_VAL)
+			fprintf(pFile, "%d\n", buffer[0]);
+		else
+			fprintf(pFile, "%d\n %d\n", buffer[0], buffer[1]);
+		break;
+	case OFF_WAV:
+		if (eOutputFormat==OF_REAL_VAL)
+			vecWaveFile[i].AddStereoSample(buffer[0], 0);
+		else
+			vecWaveFile[i].AddStereoSample(buffer[0], buffer[1]);
+	}
+#endif
+}
+
 void CTransmitData::ProcessDataInternal(CParameter&)
 {
 	int i;
@@ -104,73 +207,20 @@ void CTransmitData::ProcessDataInternal(CParameter&)
 			vecsDataOut[iCurIndex + 1] = sCurOutPhase;
 			break;
 		}
-		if (bUseSoundcard == FALSE)
-		{
-			/* Write data to file */
-#ifdef HAVE_LIBSNDFILE
-			if (eOutputFormat==OF_REAL_VAL)
-			{
-				(void)sf_writef(pFile, &vecsDataOut[iCurIndex], 1);
-			}
-			else
-			{
-				_SAMPLE buffer[2];
-				buffer[0] = vecsDataOut[iCurIndex];
-				buffer[1] = vecsDataOut[iCurIndex+1];
-				(void)sf_writef(pFile, buffer, 1);
-			}
-#else
-			short buffer[2];
-			buffer[0] = short(vecsDataOut[iCurIndex]);
-			buffer[1] = short(vecsDataOut[iCurIndex+1]);
-			switch(eOutFileMode)
-			{
-			case OFF_RAW:
-				if (eOutputFormat==OF_REAL_VAL)
-					fwrite((const void*) buffer, 2, 1, pFile);
-				else
-				{
-					fwrite((const void*) buffer, 2, 2, pFile);
-				}
-				break;
-			case OFF_TXT:
-				/* This can be read with Matlab "load" command */
-				if (eOutputFormat==OF_REAL_VAL)
-					fprintf(pFile, "%d\n", buffer[0]);
-				else
-					fprintf(pFile, "%d\n %d\n", buffer[0], buffer[1]);
-				break;
-			case OFF_WAV:
-				if (eOutputFormat==OF_REAL_VAL)
-					WaveFile.AddStereoSample(buffer[0], 0);
-				else
-					WaveFile.AddStereoSample(buffer[0], buffer[1]);
-			}
-#endif
-		}
+		for(size_t j=0; j<vecFile.size(); j++)
+			writeToFile(j, iCurIndex);
 	}
 
+		
 	iBlockCnt++;
 	if (iBlockCnt == iNumBlocks)
 	{
 		iBlockCnt = 0;
 
-		if (bUseSoundcard == TRUE)
+		for(size_t i=0; i<vecpSound.size(); i++)
 		{
 			/* Write data to sound card. Must be a blocking function */
-			pSound->Write(vecsDataOut);
-		}
-		else
-		{
-			if(eOutFileMode != OFF_WAV)
-			{
-				/* Flush the file buffer */
-#ifdef HAVE_LIBSNDFILE
-				sf_write_sync(pFile);
-#else
-				fflush(pFile);
-#endif
-			}
+			vecpSound[i]->Write(vecsDataOut);
 		}
 	}
 }
@@ -178,6 +228,7 @@ void CTransmitData::ProcessDataInternal(CParameter&)
 void CTransmitData::InitInternal(CParameter& TransmParam)
 {
 	const int iSymbolBlockSize = TransmParam.CellMappingTable.iSymbolBlockSize;
+	size_t i;
 
 	/* Init vector for storing a complete DRM frame number of OFDM symbols */
 	iBlockCnt = 0;
@@ -187,52 +238,40 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 	vecsDataOut.resize(iBigBlockSize);
 
-	if (bUseSoundcard == TRUE)
-	{
-		/* Init sound interface */
-		pSound->Init(iBigBlockSize);
-	}
-	else
-	{
-		/* Open file for writing data for transmitting */
-#ifdef HAVE_LIBSNDFILE
-		SF_INFO sfinfo;
-		sfinfo.samplerate = 48000;
-		sfinfo.channels = (eOutputFormat==OF_REAL_VAL)?1:2;
-		switch(eOutFileMode)
-		{
-		case OFF_RAW:
-			sfinfo.format = SF_FORMAT_RAW | SF_FORMAT_PCM_16;
-			break;
-		case OFF_TXT:
-			sfinfo.format = SF_FORMAT_MAT4 | SF_FORMAT_PCM_16;
-			break;
-		case OFF_WAV:
-			sfinfo.format = SF_FORMAT_WAV | SF_FORMAT_PCM_16;
-			break;
-		}
-	    pFile = sf_open(strOutFileName.c_str(), SFM_WRITE, &sfinfo);		
-#else
-		switch(eOutFileMode)
-		{
-		case OFF_RAW:
-			pFile = fopen(strOutFileName.c_str(), "wb");
-			/* Check for error */
-			if (pFile == NULL)
-				throw CGenErr("The file " + strOutFileName + " cannot be created.");
-			break;
-		case OFF_TXT:
-			pFile = fopen(strOutFileName.c_str(), "w");
-			/* Check for error */
-			if (pFile == NULL)
-				throw CGenErr("The file " + strOutFileName + " cannot be created.");
-			break;
-		case OFF_WAV:
-			WaveFile.Open(strOutFileName);
-		}
+	vecpSound.clear();
+	vecFile.clear();
+#ifndef HAVE_LIBSNDFILE
+	vecWaveFile.clear();	
 #endif
-	}
+	for(i=0; i<vecOutputs.size(); i++)
+	{
 
+		const string& s = vecOutputs[i];
+		string ext;
+		size_t p = s.rfind('.');
+		if (p != string::npos)
+			ext = s.substr(p + 1);
+		if(s=="wav")
+		{
+			openfile(s, OFF_WAV);
+		}
+		else if(s=="txt")
+		{
+			openfile(s, OFF_TXT);
+		}
+		else if(s=="raw")
+		{
+			openfile(s, OFF_RAW);
+		}
+		else
+		{
+			/* Init sound interface */
+			CSoundOutInterface* pSound = new CSoundOut;
+			pSound->SetDev(s);
+			pSound->Init(iBigBlockSize);
+			vecpSound.push_back(pSound);
+		}
+	}
 
 	/* Init bandpass filter object */
 	BPFilter.Init(iSymbolBlockSize, rDefCarOffset,
@@ -250,25 +289,31 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 void CTransmitData::Stop()
 {
-	if (bUseSoundcard == TRUE)
+	size_t i;
+	for(i=0; i<vecpSound.size(); i++)
 	{
-		/* Init sound interface */
-		pSound->Close();
+		if(vecpSound[i])
+		{
+			vecpSound[i]->Close();
+			delete vecpSound[i];
+		}
 	}
-	else
+	vecpSound.clear();
+	for(i=0; i<vecFile.size(); i++)
 	{
-		/* Close file */
+		if(vecFile[i])
+		{
 #ifdef HAVE_LIBSNDFILE
-		if (pFile != NULL)
-			sf_close(pFile);
+			sf_close(vecFile[i]);
 #else
-		if(eOutFileMode==OFF_WAV)
-			WaveFile.Close();
-		else
-			if (pFile != NULL)
-				fclose(pFile);
+			fclose(vecFile[i]);
 #endif
+		}
 	}
+	vecFile.clear();
+#ifndef HAVE_LIBSNDFILE
+	vecWaveFile.clear();	
+#endif
 }
 
 CTransmitData::~CTransmitData()

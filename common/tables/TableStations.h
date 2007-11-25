@@ -1,12 +1,10 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001-2006
+ * British Broadcasting Corporation
+ * Copyright (c) 2007
  *
  * Author(s):
- *	Andrea Russo, Julian Cable
+ *	Julian Cable
  *
- * Description:
- *	Dream program version number
  *
  ******************************************************************************
  *
@@ -25,6 +23,28 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
-#include "Version.h"
 
-char dream_version[] = "1.10unstable-38";
+#ifndef _TABLE_STATIONS_H
+#define _TABLE_STATIONS_H
+
+#include <string>
+#include <map>
+
+class CStationData
+{
+public:
+	CStationData();
+
+	std::string eibi_language(const std::string& code);
+	std::string itu_r_country(const std::string& code);
+	std::string eibi_target(const std::string& code);
+	std::string eibi_station(const std::string& country, const std::string& stn);
+
+private:
+	std::map<std::string,std::string> l;
+	std::map<std::string,std::string> c;
+	std::map<std::string,std::string> t;
+	std::map<std::string, std::map<std::string,std::string> > s;
+};
+
+#endif

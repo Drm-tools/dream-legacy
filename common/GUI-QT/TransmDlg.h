@@ -98,22 +98,31 @@ protected:
 
 public slots:
 	void OnButtonStartStop();
-	void OnToggleCheckBoxEnableTextMessage(bool bState);
-	void OnPushButtonAddText();
-	void OnButtonClearAllText();
-	void OnPushButtonAddFileName();
-	void OnButtonClearAllFileNames();
-	void OnComboBoxTextMessageHighlighted(int iID);
+	void OnTimer();
+	void OnHelpWhatsThis();
+
+	/* Channel */
 	void OnComboBoxSDCConstellationActivated(int iID);
 	void OnComboBoxMSCInterleaverActivated(int iID);
 	void OnComboBoxMSCConstellationActivated(int iID);
 	void OnComboBoxMSCProtLevActivated(int iID);
 	void OnRadioBandwidth(int iID);
 	void OnRadioRobustnessMode(int iID);
-	void OnTextChangedSndCrdIF(const QString& strIF);
-	void OnComboBoxCOFDMDestHighlighted(int iID);
-	void OnComboBoxAudioSourceHighlighted(int iID);
 	void OnRadioMode(int iID);
+
+	/* Audio */
+	void OnComboBoxAudioSourceHighlighted(int iID);
+	void OnComboBoxTextMessageHighlighted(int iID);
+	void OnToggleCheckBoxEnableTextMessage(bool bState);
+	void OnPushButtonAddText();
+	void OnButtonClearAllText();
+	void OnButtonAudioSourceFileBrowse();
+	void OnLineEditAudioSourceFileChanged(const QString& str);
+	void OnToggleCheckBoxAudioSourceIsFile(bool bState);
+
+	/* Data */
+	void OnPushButtonAddFileName();
+	void OnButtonClearAllFileNames();
 
 	/* streams */
 	void OnButtonAddStream();
@@ -130,11 +139,34 @@ public slots:
 	void OnButtonDeleteService();
 	void OnServicesListItemClicked(QListViewItem* item);
 
-    /* MDI */
+    /* MDI Input */
+	void OnLineEditMDIinPortChanged(const QString& str);
+	void OnToggleCheckBoxMDIinMcast(bool bState);
+	void OnLineEditMDIinGroupChanged(const QString& str);
+	void OnComboBoxMDIinInterfaceHighlighted(int iID);
+	void OnLineEditMDIInputFileChanged(const QString& str);
+	void OnButtonMDIInBrowse();
+	void OnToggleCheckBoxReadMDIFile(bool bState);
+
+    /* MDI Output */
 	void OnButtonAddMDIDest();
 	void OnButtonAddMDIFileDest();
-	void OnButtonDeleteMDIDest();
+	void OnButtonDeleteMDIOutput();
+	void OnButtonMDIOutBrowse();
+	void OnComboBoxMDIoutInterfaceHighlighted(int iID);
+	void OnLineEditMDIOutAddrChanged(const QString& str);
+	void OnLineEditMDIOutputFileChanged(const QString& str);
+	void OnLineEditMDIoutPortChanged(const QString& str);
+	void OnMDIOutListItemClicked(QListViewItem* item);
 
-	void OnTimer();
-	void OnHelpWhatsThis();
+    /* COFDM */
+	void OnComboBoxCOFDMDestHighlighted(int iID);
+	void OnTextChangedSndCrdIF(const QString& strIF);
+	void OnButtonCOFDMAddAudio();
+	void OnComboBoxCOFDMdestHighlighted(int iID);
+	void OnLineEditCOFDMOutputFileChanged(const QString& str);
+	void OnButtonCOFDMAddFile();
+	void OnButtonCOFDMDeleteSelected();
+	void OnButtonCOFDMBrowse();
+	void OnCOFDMOutListItemClicked(QListViewItem* item);
 };

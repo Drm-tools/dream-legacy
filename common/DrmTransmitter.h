@@ -75,22 +75,22 @@ public:
 
 	void					GetSoundInChoices(vector<string>&);
 	void					SetSoundInInterface(int);
+	int						GetSoundInInterface() { return Encoder.GetSoundInInterface(); }
 	void 					SetReadFromFile(const string& strNFN);
+	string					GetReadFromFile() { return Encoder.GetReadFromFile(); }
 
-	void					DisableCOFDM() { bCOFDMout = FALSE; }
+	void					DisableCOFDM() { COFDMOutputs.clear(); }
 	void					GetSoundOutChoices(vector<string>&);
-	void					SetSoundOutInterface(int);
-	void					SetWriteToFile(const string& strNFN, const string& strType);
 
 	/* Parameters */
 	CParameter				TransmParam;
 	string					strMDIinAddr;
 	vector<string>			MDIoutAddr;
+	vector<string>			COFDMOutputs;
 
 protected:
 
 	ETxOpMode				eOpMode;
-	_BOOLEAN				bCOFDMout;
 	CDRMEncoder				Encoder;
 	CDRMModulator			Modulator;
 };

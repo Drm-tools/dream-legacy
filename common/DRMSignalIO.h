@@ -83,9 +83,13 @@ public:
 	enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
 
-	CTransmitData(CSoundOutInterface* pNS) : pSound(pNS), 
-		eOutputFormat(OF_REAL_VAL), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
-		strOutFileName("test/TransmittedData.txt"), bUseSoundcard(TRUE) {}
+	CTransmitData() : vecFile(),
+#ifndef HAVE_LIBSNDFILE
+		vecWaveFile(),
+#endif
+		vecOutputs(),
+		eOutputFormat(OF_REAL_VAL), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
+		{}
 	virtual ~CTransmitData();
 
 	void SetIQOutput(const EOutFormat eFormat) {eOutputFormat = eFormat;}
@@ -94,29 +98,22 @@ public:
 	void SetCarOffset(const CReal rNewCarOffset)
 		{rDefCarOffset = rNewCarOffset;}
 
-	void SetWriteToFile(const string& strNFN, const string& strMode)
-	{
-		strOutFileName = strNFN;
-		bUseSoundcard = FALSE;
-		if(strMode=="txt")
-			eOutFileMode = OFF_TXT;
-		if(strMode=="raw")
-			eOutFileMode = OFF_RAW;
-		if(strMode=="wav")
-			eOutFileMode = OFF_WAV;
-	}
+	void	SetOutputs(const vector<string>& o);
+	void	GetOutputs(vector<string>& o);
 
 	void Stop();
 
 protected:
+
 #ifdef HAVE_LIBSNDFILE
-	SNDFILE*			pFile;
+	vector<SNDFILE*>	vecFile;
 #else
-	FILE*				pFile;
-	CWaveFile			WaveFile;
+	vector<FILE*>		vecFile;
+	vector<CWaveFile>	vecWaveFile;
 #endif
-	CSoundOutInterface*	pSound;
-	vector<_SAMPLE>	vecsDataOut;
+	vector<string>		vecOutputs;
+	vector<CSoundOutInterface*>	vecpSound;
+	vector<_SAMPLE>		vecsDataOut;
 	int					iBlockCnt;
 	int					iNumBlocks;
 	EOutFormat			eOutputFormat;
@@ -124,13 +121,12 @@ protected:
 	CDRMBandpassFilt	BPFilter;
 	CReal				rDefCarOffset;
 
-	EFileOutFormat 		eOutFileMode;
 	CReal				rNormFactor;
 
 	int					iBigBlockSize;
 
-	string				strOutFileName;
-	_BOOLEAN			bUseSoundcard;
+	void openfile(const string& strOutFileName, EFileOutFormat eOutFileMode);
+	void writeToFile(int, int);
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& Parameter);

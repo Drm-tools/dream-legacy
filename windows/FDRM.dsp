@@ -420,6 +420,10 @@ SOURCE=..\common\tables\TableCarMap.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\tables\TableStations.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\tables\TableFAC.cpp
 # End Source File
 # End Group
@@ -893,6 +897,10 @@ SOURCE=..\common\tables\TableAMSS.h
 # Begin Source File
 
 SOURCE=..\common\tables\TableCarMap.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\tables\TableStations.h
 # End Source File
 # Begin Source File
 

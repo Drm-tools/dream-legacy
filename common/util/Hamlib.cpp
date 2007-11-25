@@ -433,7 +433,6 @@ CHamlib::PrintHamlibModelList(const struct rig_caps *caps, void *data)
 int CHamlib::level(RIG* rig, const struct confparams *parm, rig_ptr_t data)
 {
 	CHamlib & Hamlib = *((CHamlib *) data);
-	cout << parm->name << endl;
 	(void)rig;
 	(void)Hamlib;
 	return 1;					/* !=0, we want them all! */
@@ -442,7 +441,6 @@ int CHamlib::level(RIG* rig, const struct confparams *parm, rig_ptr_t data)
 int CHamlib::parm(RIG* rig, const struct confparams *parm, rig_ptr_t data)
 {
 	CHamlib & Hamlib = *((CHamlib *) data);
-	cout << parm->name << endl;
 	(void)rig;
 	(void)Hamlib;
 	return 1;					/* !=0, we want them all! */
@@ -451,7 +449,6 @@ int CHamlib::parm(RIG* rig, const struct confparams *parm, rig_ptr_t data)
 int CHamlib::token(const struct confparams *parm, rig_ptr_t data)
 {
 	CHamlib & Hamlib = *((CHamlib *) data);
-	cout << parm->name << endl;
 	(void)Hamlib;
 	return 1;					/* !=0, we want them all! */
 }
@@ -605,20 +602,17 @@ CHamlib::SaveSettings(CSettings & s)
 _BOOLEAN
 CHamlib::SetFrequency(const int iFreqkHz)
 {
-    cout<<"set frequency called"<<endl;
-	/* Set frequency (consider frequency offset and conversion
-		   from kHz to Hz by " * 1000 ") */
-		   
     iFrequencykHz = iFreqkHz;
     
-	if (pRig && rig_set_freq(pRig, RIG_VFO_CURR, (iFreqkHz + RigCaps.iFreqOffset) * 1000) == RIG_OK)
+	int iFreqHz = (iFreqkHz + RigCaps.iFreqOffset) * 1000;
+	cout << "CHamlib::SetFrequency input: " << iFreqkHz << " offset: " << RigCaps.iFreqOffset << " Hz: " << iFreqHz << endl;
+	if (pRig && rig_set_freq(pRig, RIG_VFO_CURR, iFreqHz) == RIG_OK)
 		return TRUE;
 	return FALSE;
 }
 
 void CHamlib::SetEnableSMeter(const _BOOLEAN bStatus)
 {
-    cout<<"set enable smeter called"<<endl;
 	if(bStatus)
 	{
 #ifdef USE_QT_GUI
@@ -645,11 +639,9 @@ _BOOLEAN CHamlib::GetEnableSMeter()
 
 void CHamlib::run()
 {
-     cout<<"Entering CHamlib::run()"<<endl;
 	while(bEnableSMeter && RigCaps.bSMeterIsSupported && pRig)
 	{
 		value_t val;
-		cout<<"About to get rig level"<<endl;
 		switch(rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &val))
 		{
 		case 0:
@@ -667,7 +659,6 @@ void CHamlib::run()
 		msleep(400);
 #endif
 	}
-     cout<<"Leaving CHamlib::run()"<<endl;
 }
 
 void
@@ -764,7 +755,6 @@ CHamlib::SetRigConfig()
 void
 CHamlib::SetRigMode(ERigMode eNMod)
 {
-    cout<<"SetRigMode called with "<< int(eNMod) <<endl;
 	eRigMode = eNMod;
 	SetHamlibModelID(iHamlibModelID);
 }
@@ -772,7 +762,6 @@ CHamlib::SetRigMode(ERigMode eNMod)
 void
 CHamlib::SetHamlibModelID(const rig_model_t model)
 {
-    cout<<"SetHamlibModelID called with "<<model<<endl;
 	/* save current config for previous model */
 	CapsHamlibModels[iHamlibModelID] = RigCaps;
 
@@ -817,15 +806,6 @@ CHamlib::SetHamlibModelID(const rig_model_t model)
 		pRig = rig_init(abs(iHamlibModelID));
 		if (pRig == NULL)
 			throw CGenErr("Initialization of hamlib failed.");
-
-/*
-cout << "extra levels:" << endl;
-		rig_ext_level_foreach (pRig, level, this);
-cout << "extra parameters:" << endl;
-		rig_ext_parm_foreach(pRig, parm, this);
-cout << "tokens:" << endl;
-		rig_token_foreach (pRig, token, this);
-*/
 
 		SetRigConfig();
 

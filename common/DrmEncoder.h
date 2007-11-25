@@ -71,7 +71,9 @@ public:
 
 	void					GetSoundInChoices(vector<string>&);
 	void					SetSoundInInterface(int);
+	int						GetSoundInInterface() { return iSoundInDev; }
 	void 					SetReadFromFile(const string& strNFN);
+	string					GetReadFromFile() { return strInputFileName; }
 
 	void					AddPic(const string& strFileName, const string& strFormat);
 	void					ClearPics();

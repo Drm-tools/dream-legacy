@@ -35,11 +35,9 @@
 /* Implementation *************************************************************/
 CDRMModulator::CDRMModulator():
 	MLCEncBuf(), IntlBuf(),
-	FACMapBuf(), SDCMapBuf(), CarMapBuf(), OFDMModBuf(),
-	pSoundOutInterface(NULL), pTransmitData(NULL),
+	FACMapBuf(), SDCMapBuf(), CarMapBuf(), OFDMModBuf(), TransmitData(),
 	MSCMLCEncoder(), SymbInterleaver(), FACMLCEncoder(), SDCMLCEncoder(),
-	OFDMCellMapping(), OFDMModulation(),
-	strOutputFileName(), strOutputFileType(), iSoundOutDev(-1)
+	OFDMCellMapping(), OFDMModulation()
 {
 }
 
@@ -48,21 +46,6 @@ CDRMModulator::GetSoundOutChoices(vector<string>& v)
 {
 	CSoundOut s;
 	s.Enumerate(v);
-}
-
-void
-CDRMModulator::SetSoundOutInterface(int i)
-{
-	iSoundOutDev = i;
-	strOutputFileName = "";
-	strOutputFileType = "";
-}
-
-void
-CDRMModulator::SetWriteToFile(const string & strNFN, const string & strType)
-{
-	strOutputFileName = strNFN;
-	strOutputFileType = strType;
 }
 
 void
@@ -80,18 +63,7 @@ CDRMModulator::Init(CParameter& Parameters, CBuffer<_BINARY>& FACBuf,
 	FACMLCEncoder.Init(Parameters, FACMapBuf);
 	OFDMModulation.Init(Parameters, OFDMModBuf);
 
-	if(strOutputFileName=="")
-	{
-		pSoundOutInterface = new CSoundOut;
-		pTransmitData = new CTransmitData(pSoundOutInterface);
-	}
-	else
-	{
-		pTransmitData = new CTransmitData(NULL);
-		pTransmitData->SetWriteToFile(strOutputFileName, strOutputFileType);
-	}
-
-	pTransmitData->Init(Parameters);
+	TransmitData.Init(Parameters);
 }
 
 void
@@ -117,15 +89,12 @@ CDRMModulator::ProcessData(CParameter& Parameters,
 	OFDMModulation.ProcessData(Parameters, CarMapBuf, OFDMModBuf);
 
 	/* Transmit the signal *********************************************** */
-	pTransmitData->WriteData(Parameters, OFDMModBuf);
+	TransmitData.WriteData(Parameters, OFDMModBuf);
 }
 
 void
 CDRMModulator::Cleanup(CParameter&)
 {
-	delete pTransmitData;
-	if(pSoundOutInterface)
-		delete pSoundOutInterface;
 }
 
 void
@@ -138,9 +107,9 @@ CDRMModulator::LoadSettings(CSettings& s, CParameter& Parameters)
 	/* default output format - REAL */
 	Parameters.eOutputFormat = EOutFormat(s.Get("Modulator", "output_format", OF_REAL_VAL));
 
-	iSoundOutDev = s.Get("Modulator", "snddevout", -1);
-	strOutputFileName = s.Get("Modulator", "outputfile", string(""));
-	strOutputFileType = s.Get("Modulator", "outputfiletype", string(""));
+	//iSoundOutDev = s.Get("Modulator", "snddevout", -1);
+	//strOutputFileName = s.Get("Modulator", "outputfile", string(""));
+	//strOutputFileType = s.Get("Modulator", "outputfiletype", string(""));
 }
 
 void
@@ -148,7 +117,7 @@ CDRMModulator::SaveSettings(CSettings& s, CParameter& Parameters)
 {
 	s.Put("Modulator", "if", Parameters.rCarOffset);
 	s.Put("Modulator", "output_format", Parameters.eOutputFormat);
-	s.Put("Modulator", "snddevout", iSoundOutDev);
-	s.Put("Modulator", "outputfile", strOutputFileName);
-	s.Put("Modulator", "outputfiletype", strOutputFileType);
+	//s.Put("Modulator", "snddevout", iSoundOutDev);
+	//s.Put("Modulator", "outputfile", strOutputFileName);
+	//s.Put("Modulator", "outputfiletype", strOutputFileType);
 }

@@ -59,8 +59,8 @@ public:
 	void					Cleanup(CParameter&);
 
 	void					GetSoundOutChoices(vector<string>&);
-	void					SetSoundOutInterface(int);
-	void					SetWriteToFile(const string& strNFN, const string& strType);
+	void					SetOutputs(const vector<string>& o) { TransmitData.SetOutputs(o); }
+	void					GetOutputs(vector<string>& o) { TransmitData.GetOutputs(o); }
 
 protected:
 
@@ -72,17 +72,13 @@ protected:
 	CSingleBuffer<_COMPLEX>	OFDMModBuf;
 
 	/* Modules */
-	CSoundOutInterface*		pSoundOutInterface;
-	CTransmitData*			pTransmitData;
+	CTransmitData			TransmitData;
 	CMSCMLCEncoder			MSCMLCEncoder;
 	CSymbInterleaver		SymbInterleaver;
 	CFACMLCEncoder			FACMLCEncoder;
 	CSDCMLCEncoder			SDCMLCEncoder;
 	COFDMCellMapping		OFDMCellMapping;
 	COFDMModulation			OFDMModulation;
-	string					strOutputFileName;
-	string					strOutputFileType;
-	int						iSoundOutDev;
 };
 
 #endif 

@@ -2448,6 +2448,28 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\common\tables\TableStations.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath="..\common\tables\TableFAC.cpp"
 					>
 					<FileConfiguration
@@ -3706,6 +3728,10 @@
 				</File>
 				<File
 					RelativePath="..\common\tables\TableCarMap.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\tables\TableStations.h"
 					>
 				</File>
 				<File

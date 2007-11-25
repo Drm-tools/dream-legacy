@@ -34,9 +34,9 @@
 /* Implementation *************************************************************/
 CDRMTransmitter::CDRMTransmitter():
 	TransmParam(),
-	strMDIinAddr(), MDIoutAddr(),
+	strMDIinAddr(), MDIoutAddr(), COFDMOutputs(),
 	eOpMode(T_TX),
-	bCOFDMout(FALSE), Encoder(), Modulator()
+	Encoder(), Modulator()
 {
 	/* Init streams */
 	TransmParam.ResetServicesStreams();
@@ -95,14 +95,6 @@ SetSoundInInterface(int i)
 	Encoder.SetSoundInInterface(i);
 }
 
-void
-CDRMTransmitter::
-SetSoundOutInterface(int i)
-{
-	Modulator.SetSoundOutInterface(i);
-	bCOFDMout = TRUE;
-}
-
 _REAL CDRMTransmitter::GetLevelMeter()
 {
 	return Encoder.GetLevelMeter();
@@ -142,13 +134,6 @@ void
 CDRMTransmitter::SetReadFromFile(const string & strNFN)
 {
 	Encoder.SetReadFromFile(strNFN);
-}
-
-void
-CDRMTransmitter::SetWriteToFile(const string & strNFN, const string & strType)
-{
-	Modulator.SetWriteToFile(strNFN, strType);
-	bCOFDMout = TRUE;
 }
 
 void
@@ -193,8 +178,9 @@ void CDRMTransmitter::Start()
 		MSCBuf[i].Init(10000);
 	}
 
-	if(bCOFDMout)
+	if(COFDMOutputs.size()>0)
 	{
+		Modulator.SetOutputs(COFDMOutputs);
 		Modulator.Init(TransmParam, FACTxBuf, SDCTxBuf, MSCTxBuf);
 	}
 
@@ -226,7 +212,7 @@ void CDRMTransmitter::Start()
 	TransmParam.bRunThread = TRUE;
     cout << "Tx: starting, in:" << (MDIIn.GetInEnabled()?"MDI":"Encoder")
          << ", out: " << (MDIOut.GetOutEnabled()?"MDI":"")
-         << ", " << (bCOFDMout?"COFDM":"")
+         << ", " << ((COFDMOutputs.size()>0)?"COFDM":"")
          << endl; cout.flush();
 	try
 	{
@@ -247,7 +233,7 @@ void CDRMTransmitter::Start()
 			}
 
 
-			if(bCOFDMout)
+			if(COFDMOutputs.size()>0)
 				Modulator.ProcessData(TransmParam, FACBuf, SDCBuf, MSCBuf);
 			else
 			{
