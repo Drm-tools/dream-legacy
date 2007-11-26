@@ -126,7 +126,7 @@ protected:
 	int					iBigBlockSize;
 
 	void openfile(const string& strOutFileName, EFileOutFormat eOutFileMode);
-	void writeToFile(int, int);
+	void writeToFile(int, int, EFileOutFormat);
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& Parameter);

@@ -107,7 +107,7 @@ void CTransmitData::openfile(const string& strOutFileName, EFileOutFormat eOutFi
 #endif
 }
 
-void CTransmitData::writeToFile(int i, int iCurIndex)
+void CTransmitData::writeToFile(int i, int iCurIndex, EFileOutFormat eOutFileMode)
 {
 #ifdef HAVE_LIBSNDFILE
 	SNDFILE* pFile = vecFile[i];
