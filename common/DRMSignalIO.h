@@ -117,6 +117,7 @@ protected:
 	int					iBlockCnt;
 	int					iNumBlocks;
 	EOutFormat			eOutputFormat;
+	EFileOutFormat		eOutFileFormat;
 
 	CDRMBandpassFilt	BPFilter;
 	CReal				rDefCarOffset;
@@ -125,8 +126,8 @@ protected:
 
 	int					iBigBlockSize;
 
-	void openfile(const string& strOutFileName, EFileOutFormat eOutFileMode);
-	void writeToFile(int, int, EFileOutFormat);
+	void openfile(const string& strOutFileName);
+	void writeToFile(int, int);
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& Parameter);

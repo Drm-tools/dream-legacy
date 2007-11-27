@@ -63,13 +63,13 @@ void CTransmitData::GetOutputs(vector<string>& o)
 }
 
 /* Open file for writing data for transmitting */
-void CTransmitData::openfile(const string& strOutFileName, EFileOutFormat eOutFileMode)
+void CTransmitData::openfile(const string& strOutFileName)
 {
 #ifdef HAVE_LIBSNDFILE
 		SF_INFO sfinfo;
 		sfinfo.samplerate = 48000;
 		sfinfo.channels = (eOutputFormat==OF_REAL_VAL)?1:2;
-		switch(eOutFileMode)
+		switch(eOutFileFormat)
 		{
 		case OFF_RAW:
 			sfinfo.format = SF_FORMAT_RAW | SF_FORMAT_PCM_16;
@@ -85,7 +85,7 @@ void CTransmitData::openfile(const string& strOutFileName, EFileOutFormat eOutFi
 #else
 		CWaveFile WaveFile;
 		FILE* pFile;
-		switch(eOutFileMode)
+		switch(eOutFileFormat)
 		{
 		case OFF_RAW:
 			pFile = fopen(strOutFileName.c_str(), "wb");
@@ -107,7 +107,7 @@ void CTransmitData::openfile(const string& strOutFileName, EFileOutFormat eOutFi
 #endif
 }
 
-void CTransmitData::writeToFile(int i, int iCurIndex, EFileOutFormat eOutFileMode)
+void CTransmitData::writeToFile(int i, int iCurIndex)
 {
 #ifdef HAVE_LIBSNDFILE
 	SNDFILE* pFile = vecFile[i];
@@ -128,7 +128,7 @@ void CTransmitData::writeToFile(int i, int iCurIndex, EFileOutFormat eOutFileMod
 	short buffer[2];
 	buffer[0] = short(vecsDataOut[iCurIndex]);
 	buffer[1] = short(vecsDataOut[iCurIndex+1]);
-	switch(eOutFileMode)
+	switch(eOutFileFormat)
 	{
 	case OFF_RAW:
 		if (eOutputFormat==OF_REAL_VAL)
@@ -253,15 +253,18 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 			ext = s.substr(p + 1);
 		if(s=="wav")
 		{
-			openfile(s, OFF_WAV);
+			eOutFileFormat = OFF_WAV;
+			openfile(s);
 		}
 		else if(s=="txt")
 		{
-			openfile(s, OFF_TXT);
+			eOutFileFormat = OFF_TXT;
+			openfile(s);
 		}
 		else if(s=="raw")
 		{
-			openfile(s, OFF_RAW);
+			eOutFileFormat = OFF_RAW;
+			openfile(s);
 		}
 		else
 		{
