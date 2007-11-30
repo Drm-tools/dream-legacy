@@ -129,7 +129,9 @@ void
 CDRMReceiver::SetAnalogDemodType(EDemodType eNew)
 {
 	AMDemodulation.SetDemodType(eNew);
+#ifdef HAVE_LIBHAMLIB
 	bRigUpdateNeeded = TRUE;
+#endif
 }
 
 int
@@ -779,7 +781,9 @@ CDRMReceiver::InitReceiverMode()
 	{
 		upstreamRSCI.SetReceiverMode(eReceiverMode);
 	}
+#ifdef HAVE_LIBHAMLIB
 	UpdateRigSettings();
+#endif
 }
 
 #ifdef HAVE_LIBHAMLIB
