@@ -79,6 +79,7 @@ public:
 	virtual ~CSDCReceive() {}
 
 	ERetStatus SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
+	ERetStatus SDCIParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
 	void SetSDCType(ESDCType sdcType) { eSDCType = sdcType; }
 
 protected:

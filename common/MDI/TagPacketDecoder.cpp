@@ -172,6 +172,7 @@ int CTagPacketDecoder::DecodeTag(CVector<_BINARY>& vecbiTag)
 	/* Get tag data length (4 bytes = 32 bits) */
 	const int iLenDataBits = vecbiTag.Separate(32);
 
+cout << strTagName << endl;
 	/* Read the TAG payload. Even if the payload is not the expected length the tag packet decoding won't get out of sync */
 	CVector<_BINARY> vecbiTagItemPayload = vecbiTag.SeparateVector(iLenDataBits);
 

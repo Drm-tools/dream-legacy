@@ -86,7 +86,6 @@ portaudio {
 
 HEADERS		+= common/AMDemodulation.h   \
 common/AMSSDemodulation.h   \
-common/audiofilein.h   \
 common/chanest/ChanEstTime.h   \
 common/chanest/ChannelEstimation.h   \
 common/chanest/IdealChannelEstimation.h   \
@@ -177,6 +176,7 @@ common/selectioninterface.h   \
 common/soundinterface.h   \
 common/sound.h   \
 common/sound/soundnull.h   \
+common/sound/soundfile.h   \
 common/sourcedecoders/AudioSourceDecoder.h   \
 common/sync/FreqSyncAcq.h   \
 common/sync/SyncUsingPil.h   \
@@ -205,7 +205,6 @@ common/Version.h
 
 SOURCES		+= common/AMDemodulation.cpp   \
 common/AMSSDemodulation.cpp   \
-common/audiofilein.cpp   \
 common/chanest/ChanEstTime.cpp   \
 common/chanest/ChannelEstimation.cpp   \
 common/chanest/IdealChannelEstimation.cpp   \
@@ -292,6 +291,7 @@ common/resample/ResampleFilter.cpp   \
 common/SDC/SDCReceive.cpp   \
 common/SDC/SDCTransmit.cpp   \
 common/SimulationParameters.cpp   \
+common/sound/soundfile.cpp   \
 common/sourcedecoders/AudioSourceDecoder.cpp   \
 common/sync/FreqSyncAcq.cpp   \
 common/sync/SyncUsingPil.cpp   \

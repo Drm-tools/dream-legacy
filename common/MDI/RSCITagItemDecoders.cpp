@@ -273,7 +273,7 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		ss << se;
         _putenv(ss.str().c_str());
 #else
-        putenv("TZ=UTC");
+        putenv(const_cast<char*>("TZ=UTC"));
         tzset();
         time_t t = mktime(&tm);
 		if(e)

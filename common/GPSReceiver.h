@@ -26,17 +26,19 @@
  *
 \******************************************************************************/
 
-#if !defined(_GPSRECEIVER_H_)
+#ifndef _GPSRECEIVER_H_
 #define _GPSRECEIVER_H_
 
 #include "Parameter.h"
 #include "util/Settings.h"
-#include <qsocket.h>
-#include <qthread.h>
-#if QT_VERSION >= 0x030000 	 
-# include <qmutex.h>
+#ifdef HAVE_QT
+# include <qsocket.h>
+# include <qthread.h>
+# if QT_VERSION >= 0x030000 	 
+#  include <qmutex.h>
+# endif
+# include <qtimer.h>
 #endif
-#include <qtimer.h>
 
 class CGPSReceiver : public QObject
 {
@@ -63,8 +65,10 @@ protected:
 	CParameter&	Parameters;
 	CSettings&	m_Settings;
 	QSocket*	m_pSocket;
+#ifdef HAVE_QT
 	QTimer*		m_pTimer;
 	QTimer*		m_pTimerDataTimeout;
+#endif
 	int			m_iCounter;
 	string		m_sHost;
 	int			m_iPort;

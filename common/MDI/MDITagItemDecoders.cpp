@@ -208,47 +208,14 @@ void CTagItemDecoderSDCChanInf::DecodeTag(CVector<_BINARY>& vecbiTag, const int 
 	if (iLen == 0)
 		return;
 
-	/* Get the number of streams */
-	const int iNumStreams = (iLen - 8) / 3 / SIZEOF__BYTE;
-
-	/* Get protection levels */
-	/* Rfu */
-	vecbiTag.Separate(4);
-
-	/* Protection level for part A */ // TODO
-	vecbiTag.Separate(2);
-
-	/* Protection level for part B */ // TODO
-	vecbiTag.Separate(2);
-
-	/* Get stream parameters */
-
-	/* Determine if hierarchical modulation is used */ // TODO
-	_BOOLEAN bHierarchical = FALSE;
-
-	for (int i = 0; i < iNumStreams; i++)
+	/* Copy incoming data */
+	vecbidata.Init(iLen);
+	vecbidata.ResetBitAccess();
+cout << "CTagItemDecoderSDCChanInf::DecodeTag" << endl;
+	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 	{
-		/* In case of hirachical modulation stream 0 describes the protection
-		   level and length of hierarchical data */
-		if ((i == 0) && (bHierarchical == TRUE))
-		{
-			/* Protection level for hierarchical */ // TODO
-			vecbiTag.Separate(2);
-
-			/* rfu */
-			vecbiTag.Separate(10);
-
-			/* Data length for hierarchical */ // TODO
-			vecbiTag.Separate(12);
-		}
-		else
-		{
-			/* Data length for part A */ // TODO
-			vecbiTag.Separate(12);
-
-			/* Data length for part B */ // TODO
-			vecbiTag.Separate(12);
-		}
+		vecbidata.
+			Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 	SetReady(TRUE);
 }

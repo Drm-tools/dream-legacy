@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "DataIO.h"
+#include "sound/soundfile.h"
 #include <iomanip>
 #include <time.h>
 
@@ -155,11 +156,7 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 
 		if (bDoNotWrite == FALSE)
 		{
-			for (i = 0; i < iInputBlockSize; i += 2)
-			{
-				WaveFileAudio.AddStereoSample((*pvecInputData)[i] /* left */,
-					(*pvecInputData)[i + 1] /* right */);
-			}
+			pSoundFile->Write(*pvecInputData);
 		}
 	}
 
@@ -192,7 +189,7 @@ void CWriteData::InitInternal(CParameter&)
 	iInputBlockSize = iAudFrameSize * 2 /* stereo */;
 }
 
-CWriteData::CWriteData(CSoundOutInterface* pNS) : pSound(pNS), /* Sound interface */
+CWriteData::CWriteData(CSoundOutInterface* pNS) : pSound(pNS), pSoundFile(NULL),
 	bMuteAudio(FALSE), bDoWriteWaveFile(FALSE),
 	bSoundBlocking(FALSE), bNewSoundBlocking(FALSE),
 	eOutChanSel(CS_BOTH_BOTH), rMixNormConst(MIX_OUT_CHAN_NORM_CONST),
@@ -212,7 +209,9 @@ void CWriteData::StartWriteWaveFile(const string strFileName)
 	/* No Lock(), Unlock() needed here */
 	if (bDoWriteWaveFile == FALSE)
 	{
-		WaveFileAudio.Open(strFileName);
+		pSoundFile = new CSoundFileOut();
+		pSoundFile->SetDev(strFileName);
+		pSoundFile->Init(iInputBlockSize);
 		bDoWriteWaveFile = TRUE;
 	}
 }
@@ -221,7 +220,9 @@ void CWriteData::StopWriteWaveFile()
 {
 	Lock(); 
 
-	WaveFileAudio.Close();
+	pSoundFile->Close();
+	delete pSoundFile;
+	pSoundFile = NULL;
 	bDoWriteWaveFile = FALSE;
 
 	Unlock(); 

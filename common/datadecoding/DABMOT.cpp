@@ -1474,12 +1474,12 @@ CReassembler::uncompress()
 #endif
 }
 
-static char *txt[] = { "txt", "txt", "html", 0 };
-static char *img[] = { "gif", "jpeg", "bmp", "png", 0 };
-static char *audio[] = { "mpg", "mp2", "mp3", "mpg", "mp2", "mp3",
+static const char *txt[] = { "txt", "txt", "html", 0 };
+static const char *img[] = { "gif", "jpeg", "bmp", "png", 0 };
+static const char *audio[] = { "mpg", "mp2", "mp3", "mpg", "mp2", "mp3",
 	"pcm", "aiff", "atrac", "atrac2", "mp4", 0
 };
-static char *video[] = { "mpg", "mp2", "mp4", "h263", 0 };
+static const char *video[] = { "mpg", "mp2", "mp4", "h263", 0 };
 
 void
 CMOTObject::AddHeader(CVector < _BINARY > &vecbiHeader)

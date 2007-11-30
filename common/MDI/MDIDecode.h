@@ -3,7 +3,7 @@
  * Copyright (c) 2004
  *
  * Author(s):
- *	Volker Fischer, Oliver Haffenden
+ *	Volker Fischer, Oliver Haffenden, Julian Cable
  *
  * Description:
  *	see MDIInBuffer.cpp

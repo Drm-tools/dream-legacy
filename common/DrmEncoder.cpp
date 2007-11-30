@@ -32,7 +32,7 @@
 #include "DrmEncoder.h"
 
 #include "sound.h"
-#include "audiofilein.h"
+#include "sound/soundfile.h"
 
 /* Implementation *************************************************************/
 CDRMEncoder::CDRMEncoder():
@@ -122,7 +122,7 @@ void CDRMEncoder::Init(CParameter& Parameters,
 	}
 	else
 	{
-		CAudioFileIn *pf = new CAudioFileIn;
+		CSoundFileIn *pf = new CSoundFileIn;
 		pf->SetFileName(strInputFileName);
 		pSoundInInterface = pf;
 	}

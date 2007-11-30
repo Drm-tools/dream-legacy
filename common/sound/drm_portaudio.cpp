@@ -80,7 +80,10 @@ struct CPa_Static
 		if (err != paNoError)
 			throw string("PortAudio error: ") + Pa_GetErrorText(err);
     	nApis = Pa_GetHostApiCount();
+		enumerate();
 	}
+
+	void enumerate();
 
 	~CPa_Static()
 	{
@@ -90,7 +93,43 @@ struct CPa_Static
 	}
 
     PaHostApiIndex nApis;
+	vector<string> capture_names, play_names;
+	vector<PaDeviceIndex> capture_devices, play_devices;
 };
+
+void CPa_Static::enumerate()
+{
+	vector < string > tmp;
+	capture_names.clear();
+	play_names.clear();
+	capture_devices.clear();
+	play_devices.clear();
+	int numDevices = Pa_GetDeviceCount();
+	if (numDevices < 0)
+		throw string("PortAudio error: ") + Pa_GetErrorText(numDevices);
+
+	for (int i = 0; i < numDevices; i++)
+	{
+		const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(i);
+	    string api="";
+	    if(nApis>1)
+	    {
+	    	const PaHostApiInfo* info = Pa_GetHostApiInfo(deviceInfo->hostApi);
+	    	if(info)
+	        	api = string(info->name)+":";
+		}
+		if(deviceInfo->maxInputChannels > 1)
+		{
+           	capture_names.push_back(api+deviceInfo->name);
+           	capture_devices.push_back(i);
+		}
+		if(deviceInfo->maxInputChannels > 1)
+		{
+           	play_names.push_back(api+deviceInfo->name);
+           	play_devices.push_back(i);
+		}
+	}
+}
 
 static CPa_Static Pa_Static;
 
@@ -99,8 +138,6 @@ CPaCommon::CPaCommon(bool cap):ringBuffer(),xruns(0),stream(NULL),
 			is_capture(cap), blocking(true), device_changed(true), xrun(false),
 			framesPerBuffer(0), ringBufferData(NULL), channels(2)
 {
-	//vector < string > choices;
-	//Enumerate(choices);
 }
 
 CPaCommon::~CPaCommon()
@@ -113,30 +150,16 @@ CPaCommon::~CPaCommon()
 void
 CPaCommon::Enumerate(vector < string > &choices)
 {
-	vector < string > tmp;
-	names.clear();
-	int numDevices = Pa_GetDeviceCount();
-	if (numDevices < 0)
-		throw string("PortAudio error: ") + Pa_GetErrorText(numDevices);
-
-	for (int i = 0; i < numDevices; i++)
+	if(is_capture)
 	{
-		const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(i);
-		if (( is_capture && deviceInfo->maxInputChannels > 1)
-		|| ( (!is_capture) && deviceInfo->maxOutputChannels > 1))
-		{
-		    string api="";
-		    if(Pa_Static.nApis>1)
-		    {
-		    	const PaHostApiInfo* info = Pa_GetHostApiInfo(deviceInfo->hostApi);
-		    	if(info)
-		        	api = string(info->name)+":";
-			}
-            names.push_back(api+deviceInfo->name);
-            devices.push_back(i);
-		}
+		choices = names = Pa_Static.capture_names;
+		devices = Pa_Static.capture_devices;
 	}
-	choices = names;
+	else
+	{
+		choices = names = Pa_Static.play_names;
+		devices = Pa_Static.play_devices;
+	}
 }
 
 void

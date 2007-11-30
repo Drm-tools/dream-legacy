@@ -38,7 +38,6 @@
 #include "FAC/FAC.h"
 #include "SDC/SDC.h"
 #include "TextMessage.h"
-#include "util/AudioFile.h"
 #include "AMDemodulation.h" // For CMixer
 
 /* Definitions ****************************************************************/
@@ -109,8 +108,8 @@ public:
 
 protected:
 	CSoundOutInterface*		pSound;
+	CSoundOutInterface*		pSoundFile;
 	_BOOLEAN				bMuteAudio;
-	CWaveFile				WaveFileAudio;
 	_BOOLEAN				bDoWriteWaveFile;
 	_BOOLEAN				bSoundBlocking;
 	_BOOLEAN				bNewSoundBlocking;

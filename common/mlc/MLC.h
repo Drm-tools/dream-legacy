@@ -71,7 +71,7 @@ protected:
 	ECodScheme	eCodingScheme;
 };
 
-class CMLCEncoder : public CTransmitterModul<_BINARY, _COMPLEX>, 
+class CMLCEncoder : public CReceiverModul<_BINARY, _COMPLEX>, 
 					public CMLC
 {
 public:

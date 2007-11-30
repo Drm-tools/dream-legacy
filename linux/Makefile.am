@@ -23,6 +23,7 @@ drmwithoutqt_SOURCES = \
 	../common/AMDemodulation.cpp \
 	../common/AMSSDemodulation.cpp \
 	../common/audiofilein.cpp \
+	../common/sound/soundfile.cpp \
 	../common/datadecoding/DataDecoder.cpp \
 	../common/datadecoding/DABMOT.cpp \
 	../common/datadecoding/MOTSlideShow.cpp \
@@ -123,7 +124,6 @@ drmwithoutqt_SOURCES = \
 	../common/util/Vector.h \
 	../common/util/Buffer.h \
 	../common/util/CRC.h \
-	../common/util/AudioFile.h \
 	../common/util/Settings.h \
 	../common/util/Hamlib.h \
 	../common/util/Utilities.h \
@@ -187,6 +187,7 @@ drmwithoutqt_SOURCES = \
 	../common/soundinterface.h \
 	../common/soundnull.h \
 	../common/audiofilein.h \
+	../common/sound/soundfile.h \
 	source/sound.h source/shmsoundin.h source/pa_shm_ringbuffer.h
 
 if USE_OSS
@@ -221,10 +222,32 @@ drm_sound_SOURCES = \
 	../common/sound/pa_ringbuffer.h
 endif
 
-if USE_QT
-
+if HAVE_QT
 drmqtonly_SOURCES = \
 	../common/GPSReceiver.cpp \
+	../common/MDI/PacketSourceFile.cpp \
+	../common/MDI/PacketSocketQT.cpp \
+	../common/GPSReceiver.h \
+	../common/MDI/PacketSourceFile.h \
+	../common/MDI/PacketSocketQT.h \
+	../common/MDI/PacketSinkFile.h
+
+moc/moc_PacketSourceFile.cpp: ../common/MDI/PacketSourceFile.h
+	$(MOC) ../common/MDI/PacketSourceFile.h -o moc/moc_PacketSourceFile.cpp
+
+moc/moc_PacketSocketQT.cpp: ../common/MDI/PacketSocketQT.h
+	$(MOC) ../common/MDI/PacketSocketQT.h -o moc/moc_PacketSocketQT.cpp
+
+moc/moc_GPSReceiver.cpp: ../common/GPSReceiver.h
+	$(MOC) ../common/GPSReceiver.h -o moc/moc_GPSReceiver.cpp
+
+qt_BUILT_SOURCES=moc/moc_PacketSourceFile.cpp moc/moc_PacketSocketQT.cpp moc/moc_GPSReceiver.cpp
+
+endif
+
+if USE_QT
+
+drmqtgui_SOURCES = \
 	../common/GUI-QT/DialogUtil.cpp \
 	../common/GUI-QT/DRMPlot.cpp \
 	../common/GUI-QT/fdrmdialog.cpp \
@@ -240,8 +263,6 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/EPGDlg.cpp \
 	../common/GUI-QT/AnalogDemDlg.cpp \
 	../common/GUI-QT/Loghelper.cpp \
-	../common/MDI/PacketSourceFile.cpp \
-	../common/MDI/PacketSocketQT.cpp \
 	../common/GUI-QT/fdrmdialogbase.ui \
 	../common/GUI-QT/TransmDlgbase.ui \
 	../common/GUI-QT/AboutDlgbase.ui \
@@ -254,7 +275,6 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/EPGDlgbase.ui \
 	../common/GUI-QT/AnalogDemDlgbase.ui \
 	../common/GUI-QT/AMSSDlgbase.ui \
-	../common/GPSReceiver.h \
 	../common/GUI-QT/MultimediaDlg.h \
 	../common/GUI-QT/fdrmdialog.h \
 	../common/GUI-QT/TransmDlg.h \
@@ -270,19 +290,16 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/EPGDlg.h \
 	../common/GUI-QT/AnalogDemDlg.h \
 	../common/GUI-QT/Loghelper.h \
-	../common/MDI/PacketSourceFile.h \
-	../common/MDI/PacketSocketQT.h \
-	../common/MDI/PacketSinkFile.h \
 	../common/datadecoding/epg/epgdec.h \
 	../common/datadecoding/epg/epgdec.cpp \
 	../common/datadecoding/epg/EPG.cpp \
 	../common/datadecoding/epg/EPG.h
 
-drm_SOURCES = $(drmwithoutqt_SOURCES) $(drmqtonly_SOURCES) $(drm_sound_SOURCES)
+drm_SOURCES = $(drmwithoutqt_SOURCES) $(drmqtonly_SOURCES) $(drmqtgui_SOURCES) $(drm_sound_SOURCES)
 
 # these need to be generated before the rest can be compiled
 
-BUILT_SOURCES=moc/moc_MultColorLED.cpp \
+gui_BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_DRMPlot.cpp \
 	moc/moc_DialogUtil.cpp \
 	moc/moc_fdrmdialog.cpp moc/moc_fdrmdialogbase.cpp moc/fdrmdialogbase.h moc/fdrmdialogbase.cpp \
@@ -299,11 +316,11 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp \
 	moc/moc_AMSSDlgbase.cpp moc/AMSSDlgbase.h moc/AMSSDlgbase.cpp \
-	moc/moc_Loghelper.cpp \
-	moc/moc_PacketSourceFile.cpp moc/moc_PacketSocketQT.cpp moc/moc_GPSReceiver.cpp
+	moc/moc_Loghelper.cpp
 
 # and should be cleaned by make clean
 
+BUILT_SOURCES=$(qt_BUILT_SOURCES) $(gui_BUILT_SOURCES)
 CLEANFILES=$(BUILT_SOURCES)
 nodist_drm_SOURCES=$(BUILT_SOURCES)
 
@@ -318,15 +335,6 @@ moc/moc_DRMPlot.cpp: ../common/GUI-QT/DRMPlot.h
 
 moc/moc_DialogUtil.cpp: ../common/GUI-QT/DialogUtil.h
 	$(MOC) ../common/GUI-QT/DialogUtil.h -o moc/moc_DialogUtil.cpp
-
-moc/moc_PacketSourceFile.cpp: ../common/MDI/PacketSourceFile.h
-	$(MOC) ../common/MDI/PacketSourceFile.h -o moc/moc_PacketSourceFile.cpp
-
-moc/moc_PacketSocketQT.cpp: ../common/MDI/PacketSocketQT.h
-	$(MOC) ../common/MDI/PacketSocketQT.h -o moc/moc_PacketSocketQT.cpp
-
-moc/moc_GPSReceiver.cpp: ../common/GPSReceiver.h
-	$(MOC) ../common/GPSReceiver.h -o moc/moc_GPSReceiver.cpp
 
 moc/moc_Loghelper.cpp: ../common/GUI-QT/Loghelper.h
 	$(MOC) ../common/GUI-QT/Loghelper.h -o moc/moc_Loghelper.cpp
@@ -487,13 +495,13 @@ moc/AMSSDlgbase.cpp: ../common/GUI-QT/AMSSDlgbase.ui moc/AMSSDlgbase.h
 LUPDATE=lupdate
 LRELEASE=lrelease
 
-dreamtr.ts: $(drmqtonly_SOURCES)
-	$(LUPDATE) $(drmqtonly_SOURCES) -ts $@
+dreamtr.ts: $(drmqtgui_SOURCES)
+	$(LUPDATE) $(drmqtgui_SOURCES) -ts $@
 
-languages/%.ts: $(drmqtonly_SOURCES)
+languages/%.ts: $(drmqtgui_SOURCES)
 	mkdir -p languages
 	test -f $@ || cp -p ../common/GUI-QT/$@ languages/. || exit 0
-	$(LUPDATE) $(drmqtonly_SOURCES) -ts $@
+	$(LUPDATE) $(drmqtgui_SOURCES) -ts $@
 
 languages/%.qm: languages/%.ts
 	$(LRELEASE) $<
@@ -502,7 +510,14 @@ languages/%.qm: languages/%.ts
 	cp $< dreamtr.qm
 
 else
-drm_SOURCES = $(drmwithoutqt_SOURCES) $(drm_sound_SOURCES)
+drm_SOURCES = $(drmwithoutqt_SOURCES) $(drm_sound_SOURCES) $(drmqtonly_SOURCES)
+BUILT_SOURCES=$(qt_BUILT_SOURCES)
+CLEANFILES=$(BUILT_SOURCES)
+nodist_drm_SOURCES=$(BUILT_SOURCES)
+
+dist-hook:
+	mkdir $(distdir)/moc
+
 endif
 
 

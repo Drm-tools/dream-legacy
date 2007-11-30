@@ -29,7 +29,7 @@
 
 #include "GPSReceiver.h"
 
-#ifdef USE_QT_GUI
+#ifdef HAVE_QT
 # include <qsocket.h>
 # include <qsignal.h>
 #endif
@@ -44,8 +44,10 @@ CGPSReceiver::CGPSReceiver(CParameter& p, CSettings& s):
 	Parameters(p),m_Settings(s),m_pSocket(NULL),m_iCounter(0),
 	m_sHost("localhost"),m_iPort(2947)
 {	
+#ifdef HAVE_QT
     m_pTimer = new QTimer(this);
-		m_pTimerDataTimeout = new QTimer(this);
+	m_pTimerDataTimeout = new QTimer(this);
+#endif
 
 	m_sHost = m_Settings.Get("GPS", "host", m_sHost);
 	m_iPort = m_Settings.Get("GPS", "port", m_iPort);

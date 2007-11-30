@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include "MDIInBuffer.h"
-#ifdef USE_QT_GUI
+#ifdef HAVE_QT
 #include <qdatetime.h>
 #endif
 #include <iostream>
@@ -39,7 +39,7 @@
 void
 CMDIInBuffer::Put(const vector<_BYTE>& data)
 {
-#ifdef USE_QT_GUI
+#ifdef HAVE_QT
 	guard.lock();
 	buffer.push(data);
 	blocker.wakeOne();
@@ -56,7 +56,7 @@ CMDIInBuffer::Put(const vector<_BYTE>& data)
 void
 CMDIInBuffer::Get(vector<_BYTE>& data)
 {
-#ifdef USE_QT_GUI
+#ifdef HAVE_QT
 	guard.lock();
 	QTime t;
 	t.start();

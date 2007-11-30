@@ -36,11 +36,6 @@
 #include "IQInputFilter.h"
 #include "util/Modul.h"
 #include "util/Utilities.h"
-#ifdef HAVE_LIBSNDFILE
-# include <sndfile.h>
-#else
-# include "util/AudioFile.h"
-#endif
 
 /* Definitions ****************************************************************/
 /* Number of FFT blocks used for averaging. See next definition
@@ -77,17 +72,13 @@
 
 
 /* Classes ********************************************************************/
-class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
+class CTransmitData : public CReceiverModul<_COMPLEX, _COMPLEX>
 {
 public:
 	enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
 
-	CTransmitData() : vecFile(),
-#ifndef HAVE_LIBSNDFILE
-		vecWaveFile(),
-#endif
-		vecOutputs(),
+	CTransmitData() : vecOutputs(),
 		eOutputFormat(OF_REAL_VAL), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
 		{}
 	virtual ~CTransmitData();
@@ -105,12 +96,6 @@ public:
 
 protected:
 
-#ifdef HAVE_LIBSNDFILE
-	vector<SNDFILE*>	vecFile;
-#else
-	vector<FILE*>		vecFile;
-	vector<CWaveFile>	vecWaveFile;
-#endif
 	vector<string>		vecOutputs;
 	vector<CSoundOutInterface*>	vecpSound;
 	vector<_SAMPLE>		vecsDataOut;
@@ -125,9 +110,6 @@ protected:
 	CReal				rNormFactor;
 
 	int					iBigBlockSize;
-
-	void openfile(const string& strOutFileName);
-	void writeToFile(int, int);
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& Parameter);

@@ -44,7 +44,7 @@
 
 
 /* Classes ********************************************************************/
-class CSymbInterleaver : public CTransmitterModul<_COMPLEX, _COMPLEX>, 
+class CSymbInterleaver : public CReceiverModul<_COMPLEX, _COMPLEX>, 
 						 public CBlockInterleaver
 {
 public:

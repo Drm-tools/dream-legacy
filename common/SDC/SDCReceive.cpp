@@ -208,6 +208,18 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 	}
 }
 
+CSDCReceive::ERetStatus CSDCReceive::SDCIParam(CVector<_BINARY>* pbiData,
+											  CParameter& Parameter)
+{
+	int iLengthOfBody = ((*pbiData).Size()-8) / SIZEOF__BYTE;
+	(*pbiData).ResetBitAccess();
+	(void)(*pbiData).Separate(4);
+	if(DataEntityType0(pbiData, iLengthOfBody, Parameter, 0))
+		return SR_BAD_DATA;
+	else
+		return SR_OK;
+}
+
 
 /******************************************************************************\
 * Data entity Type 0 (Multiplex description data entity)					   *
@@ -228,7 +240,6 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 	/* Check number of streams for overflow */
 	if (iNumStreams > MAX_NUM_STREAMS)
 		return TRUE;
-
 	/* Get protection levels */
 	/* Protection level for part A */
 	MSCPrLe.iPartA = (*pbiData).Separate(2);

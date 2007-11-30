@@ -3,7 +3,7 @@
  * Copyright (c) 2004
  *
  * Author(s):
- *	Volker Fischer, Julian Cable
+ *	Volker Fischer, Oliver Haffenden, Julian Cable
  *
  * Description:
  *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
@@ -37,6 +37,7 @@
 \******************************************************************************/
 
 #include "MDIDecode.h"
+#include "../SDC/SDC.h"
 #include <iostream>
 
 void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
@@ -58,8 +59,10 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 		Parameters.Unlock(); 
 		return;
 	}
+
 	if (TagPacketDecoderMDI.TagItemDecoderRobMod.IsReady())
 		Parameters.SetWaveMode(TagPacketDecoderMDI.TagItemDecoderRobMod.eRobMode);
+
 	CVector<_BINARY>& vecbiFACData = TagPacketDecoderMDI.TagItemDecoderFAC.vecbidata;
 	CVector<_BINARY>& vecbiSDCData = TagPacketDecoderMDI.TagItemDecoderSDC.vecbidata;
 	pvecOutputData->Reset(0);
@@ -68,6 +71,15 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 		/* Copy incoming MDI FAC data */
 		pvecOutputData->ResetBitAccess();
 		vecbiFACData.ResetBitAccess();
+
+		if(pvecOutputData->Size() != 72)
+		{
+			cout << "FAC not initialised?" << endl;
+/*
+			Parameters.Unlock(); 
+			return;
+*/
+		}
 
 		/* FAC data is always 72 bits long which is 9 bytes, copy data
 		   byte-wise */
@@ -81,6 +93,16 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 	{
 		iOutputBlockSize = 0;
 		Parameters.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
+	}
+
+	if (TagPacketDecoderMDI.TagItemDecoderSDCChanInf.IsReady())
+	{
+		CVector<_BINARY>& vecbisdciData = TagPacketDecoderMDI.TagItemDecoderSDCChanInf.vecbidata;
+		// sdci not decoded later - will allow decoding/modulation before first SDC received
+		CSDCReceive sdci;
+		Parameters.Unlock(); 
+		sdci.SDCIParam(&vecbisdciData, Parameters);
+		Parameters.Lock(); 
 	}
 
 	pvecOutputData2->Reset(0);
@@ -105,11 +127,14 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 
 			iOutputBlockSize2 = iLenBitsMDISDCdata;
 		}
+		else
+		{
+			cout << "SDC not properly initialised ready for " << iLenSDCDataBits << " bits, got " << iLenBitsMDISDCdata << "bits" << endl;
+		}
 		iFramesSinceSDC = 0;
 	}
 	else
 	{
-
 		pvecOutputData2->Reset(0);
 		iOutputBlockSize2 = 0;
 		if(iFramesSinceSDC>2)
@@ -139,6 +164,10 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 					vecbiStr.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 			}
 			veciOutputBlockSize[i] = iStreamLen;
+		}
+		else
+		{
+			cout << "MSC str" << i << " not properly initialised can accept " << iLen << " got " << iStreamLen << endl;
 		}
     }
 
@@ -175,9 +204,9 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 			
 			Parameters.SetStreamLen(0, 0, iStreamLen/SIZEOF__BYTE);
 			Parameters.SetNumOfServices(1,0);
+			Parameters.Service[0].iAudioStream = 0;
 			Parameters.SetCurSelAudioService(0);
 			Parameters.SetNumDecodedBitsMSC(iStreamLen); // is this necessary?
-			Parameters.Service[0].iAudioStream = 0;
 		//}
 
 		Parameters.Service[0].strLabel = "";
@@ -197,19 +226,31 @@ void CDecodeRSIMDI::InitInternal(CParameter& Parameters)
 {
 	Parameters.Lock(); 
 
+	/* set sensible values if Parameters not properly initialised */
 	iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
-	//iOutputBlockSize2 = Parameters.iNumSDCBitsPerSFrame;
-	iMaxOutputBlockSize2 = 1024;
+	iOutputBlockSize2 = Parameters.iNumSDCBitsPerSFrame;
+	if(iOutputBlockSize2 == 0)
+		iMaxOutputBlockSize2 = 1024;
 	size_t numstreams = Parameters.Stream.size();
-	//vecpvecOutputData.resize(numstreams);
+	if(numstreams == 0)
+		numstreams = 4;
+	vecpvecOutputData.resize(numstreams);
 	for(size_t i=0; i<numstreams; i++)
 	{
 		int streamlen = Parameters.Stream[i].iLenPartA;
 		streamlen += Parameters.Stream[i].iLenPartB;
-		//veciMaxOutputBlockSize[i] = 16384;
+		if(streamlen == 0)
+			streamlen = 2048;
 		veciOutputBlockSize[i] = streamlen*SIZEOF__BYTE;
 	}
 	iFramesSinceSDC = 3;
 
 	Parameters.Unlock(); 
+	/*
+	cout << "iOutputBlockSize " << iOutputBlockSize << " iOutputBlockSize2 " << iOutputBlockSize2
+	<< " iMaxOutputBlockSize2 " << iMaxOutputBlockSize2 << endl;
+	for(size_t j=0; j<numstreams; j++)
+		cout << "veciOutputBlockSize[" << j << "] = " << veciOutputBlockSize[j] << endl;
+cout << "CDecodeRSIMDI::InitInternal done" << endl; cout.flush();
+	*/
 }

@@ -40,7 +40,7 @@
 #ifdef __linux__
 # include "source/shmsoundin.h"
 #endif
-#include "audiofilein.h"
+#include "sound/soundfile.h"
 
 const int
 	CDRMReceiver::MAX_UNLOCKED_COUNT = 2;
@@ -1350,7 +1350,7 @@ void
 CDRMReceiver::SetReadPCMFromFile(const string strNFN)
 {
 	delete pSoundInInterface;
-	CAudioFileIn *pf = new CAudioFileIn;
+	CSoundFileIn *pf = new CSoundFileIn;
 	pf->SetFileName(strNFN);
 	pSoundInInterface = pf;
 	pcmInput = File;

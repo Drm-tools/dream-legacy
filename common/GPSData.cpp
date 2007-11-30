@@ -134,7 +134,7 @@ CGPSData::asDM(string& pos, double d, char n, char p) const
 		pd = 0.0 - d;
 	else
 		pd = d;
-	s << int(pd) << '\xb0' << setw(2) << ExtractMinutes(pd) << "'" << ((d < 0.0)?n:p);
+	s << int(pd) << '\xb0' << setfill('0') << setw(2) << ExtractMinutes(pd) << "'" << ((d < 0.0)?n:p);
 	pos = s.str();
 }
 

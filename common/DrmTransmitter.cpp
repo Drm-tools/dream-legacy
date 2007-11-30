@@ -175,7 +175,7 @@ void CDRMTransmitter::Start()
 		MSCBuf[i].Clear();
 		MSCTxBuf[i].Clear();
 		MSCSendBuf[i].Clear();
-		MSCBuf[i].Init(10000);
+		MSCBuf[i].Init(SIZEOF__BYTE*1500);
 	}
 
 	if(COFDMOutputs.size()>0)
@@ -184,15 +184,17 @@ void CDRMTransmitter::Start()
 		Modulator.Init(TransmParam, FACTxBuf, SDCTxBuf, MSCTxBuf);
 	}
 
-	if(strMDIinAddr != "")
+	if(strMDIinAddr == "")
+	{
+		TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
+		TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
+		Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
+	}
+	else
 	{
 		MDIIn.SetOrigin(strMDIinAddr);
 		MDIIn.SetInitFlag();
 		DecodeMDI.SetInitFlag();
-	}
-	else
-	{
-		Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
 	}
 
 	for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
@@ -200,12 +202,6 @@ void CDRMTransmitter::Start()
 		/* set the output address */
 		MDIOut.AddSubscriber(*s, "", 'M');
 		//MDIOut.SetInitFlag();
-	}
-
-	//if(MDIOut.GetOutEnabled())
-	{
-		TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
-		TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
 	}
 
 	/* Set run flag */

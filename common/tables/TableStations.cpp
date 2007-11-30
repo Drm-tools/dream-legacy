@@ -28,7 +28,7 @@
 
 using namespace std;
 
-static struct { char *code; char *lang; } eibi_langs[] = {
+static struct { const char *code; const char *lang; } eibi_langs[] = {
 	{ "-TS", "Time Signal Station" },
 	{ "A", "Arabic" },
 	{ "AB", "Abkhaz" },
@@ -485,7 +485,7 @@ static struct { char *code; char *lang; } eibi_langs[] = {
 	{ 0, 0}
 	};
 
-static struct { char *code; char *country; } itu_r_countries[] = {
+static struct { const char *code; const char *country; } itu_r_countries[] = {
 	{ "ABW", "Aruba" },
 	{ "ADM", "Andaman & Nicobar Island" },
 	{ "AFG", "Afghanistan" },
@@ -774,7 +774,7 @@ static struct { char *code; char *country; } itu_r_countries[] = {
 	{ 0, 0}
 	};
 
-static struct { char *code; char *target; } eibi_targets[] = {
+static struct { const char *code; const char *target; } eibi_targets[] = {
 	{ "Af", "Africa" },
 	{ "Am", "America" },
 	{ "As", "Asia" },
@@ -810,7 +810,7 @@ static struct { char *code; char *target; } eibi_targets[] = {
 	 *  Should this station use a different transmitter site in certain cases, they are marked.
 	 *  No transmitter-site code is used when the transmitter site is not known.
 	 */
-static struct { char *country; char *mark; char * bc; char *site;} eibi_stations[] = {
+static struct { const char *country; const char *mark; const char * bc; const char *site;} eibi_stations[] = {
 	{ "AFS", "", "", "Meyerton 26S35-28E08" },
 	{ "AGL", "", "", "Mulenvos 08S53-13E20" },
 	{ "AIA", "", "", "The Valley 18N13-63W01" },
