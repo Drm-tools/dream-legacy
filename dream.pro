@@ -57,7 +57,7 @@ win32 {
 	MOC_DIR		= windows/moc
 # this next line could be cross platform if the windows library names do not start with lib
 	LIBS 			+= zdll.lib libqwt.lib libfhgjournaline.lib 
-	LIBS			+= libfaac.lib libfaad.lib libhamlib.lib
+	LIBS			+= libfaac.lib libfaad.lib
 	LIBS			+= libfftw.lib setupapi.lib
 	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:"MSVCRTD, LIBCMT"
 	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
@@ -68,7 +68,17 @@ win32 {
 
 hamlib {
 	DEFINES		+= HAVE_LIBHAMLIB HAVE_RIG_PARSE_MODE
-	LIBS 		+= -lhamlib -framework IOKit
+	HEADERS		+= common/util/Hamlib.h
+	SOURCES		+= common/util/Hamlib.cpp
+	unix {
+		LIBS 	+= -lhamlib
+	}
+	macx {
+		LIBS 	+= -framework IOKit
+	}
+	win32 {
+		LIBS	+= libhamlib.lib
+	}
 }
 
 alsa {
@@ -199,7 +209,6 @@ common/util/Pacer.h   \
 common/util/Reassemble.h   \
 common/util/Settings.h   \
 common/util/Utilities.h   \
-common/util/Hamlib.h   \
 common/util/Vector.h   \
 common/Version.h
 
@@ -306,5 +315,4 @@ common/util/LogPrint.cpp   \
 common/util/Reassemble.cpp   \
 common/util/Settings.cpp   \
 common/util/Utilities.cpp   \
-common/util/Hamlib.cpp   \
 common/Version.cpp
