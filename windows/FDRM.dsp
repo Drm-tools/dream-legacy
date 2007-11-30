@@ -560,6 +560,10 @@ SOURCE=..\common\datadecoding\MOTSlideShow.cpp
 # PROP Default_Filter ".c .cpp"
 # Begin Source File
 
+SOURCE=..\common\sound\soundfile.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\util\CRC.cpp
 # End Source File
 # Begin Source File
@@ -666,10 +670,6 @@ SOURCE=..\common\AMDemodulation.cpp
 # Begin Source File
 
 SOURCE=..\common\AMSSDemodulation.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\audiofilein.cpp
 # End Source File
 # Begin Source File
 
@@ -1189,10 +1189,6 @@ SOURCE=..\common\AMSSDemodulation.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\audiofilein.h
-# End Source File
-# Begin Source File
-
 SOURCE=..\common\sourcedecoders\AudioSourceDecoder.h
 # End Source File
 # Begin Source File
@@ -1306,6 +1302,10 @@ SOURCE=.\Source\Sound.h
 # Begin Source File
 
 SOURCE=..\common\soundinterface.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\sound\soundfile.h
 # End Source File
 # Begin Source File
 

@@ -261,7 +261,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\audiofilein.cpp"
+				RelativePath="..\common\sound\soundfile.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -3488,7 +3488,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\audiofilein.h"
+				RelativePath="..\common\sound\soundfile.h"
 				>
 			</File>
 			<File
