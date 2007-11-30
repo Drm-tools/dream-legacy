@@ -338,17 +338,17 @@ CSoundFileOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 		iBytesWritten = sizeof(CWaveHdr);
 		if(pFile)
 				fwrite((const void*) &WaveHeader, size_t(sizeof(CWaveHdr)), size_t(1), pFile);
-		fmt = F_WAV;
+		fmt = OFF_WAV;
 	}
 	else if(ext=="txt")
 	{
 		pFile = fopen(s.c_str(), "w");
-		fmt = F_TXT;
+		fmt = OFF_TXT;
 	}
 	else if(ext=="raw")
 	{
 		pFile = fopen(s.c_str(), "wb");
-		fmt = F_RAW;
+		fmt = OFF_RAW;
 	}
 	/* Check for error */
 	if (pFile == NULL)
@@ -394,13 +394,13 @@ CSoundFileOut::Write(vector<_SAMPLE>& data)
 			short n=0;
 			switch(fmt)
 			{
-			case F_RAW:
+			case OFF_RAW:
 				fwrite((const void*) &b, 2, 1, pFile);
 			break;
-			case F_TXT:
+			case OFF_TXT:
 				fprintf(pFile, "%d\n", b);
 			break;
-			case F_WAV:
+			case OFF_WAV:
 				iBytesWritten += 4;
 				fwrite((const void*) &b, size_t(2), size_t(1), pFile);
 				fwrite((const void*) &n, size_t(2), size_t(1), pFile);
@@ -410,10 +410,10 @@ CSoundFileOut::Write(vector<_SAMPLE>& data)
 	{
 		for(size_t i=0; i<data.size()/2; i++)
 		{
-			short b[2]; /* allows _SAMPLE to be redefined */
-			b[0]=int16_t(data[2*i]);
-			b[1]=int16_t(data[2*i]+1);
-			switch(eOutFileMode)
+			short buffer[2]; /* allows _SAMPLE to be redefined */
+			buffer[0]=int16_t(data[2*i]);
+			buffer[1]=int16_t(data[2*i]+1);
+			switch(fmt)
 			{
 			case OFF_RAW:
 				fwrite((const void*) buffer, 2, 2, pFile);
