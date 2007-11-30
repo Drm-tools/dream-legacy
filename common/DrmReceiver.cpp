@@ -66,8 +66,10 @@ pHamlib(NULL),
 iFreqkHz(0),
 time_keeper(0),
 pcmInput(Dummy),
-demodulation(inSoftware),
-rigmodelrequest(), bRigUpdateNeeded(FALSE)
+demodulation(inSoftware)
+#ifdef HAVE_LIBHAMLIB
+,rigmodelrequest(), bRigUpdateNeeded(FALSE)
+#endif
 {
 	AMParameters.SetReceiver(this);
 	DRMParameters.SetReceiver(this);
@@ -227,13 +229,14 @@ CDRMReceiver::Run()
 	 * is done in this (the working) thread to avoid problems with shared data */
 	if (eNewReceiverMode != RM_NONE)
 		InitReceiverMode();
-
+#ifdef HAVE_LIBHAMLIB
 	if(rigmodelrequest.is_pending())
 		SetRigModelWT(rigmodelrequest.value());
 	if (bRigUpdateNeeded)
 	   UpdateRigSettings();
 
      bRigUpdateNeeded=FALSE;
+#endif
 
 	if(pcmInput==Dummy)
 		UpdateSoundIn();
@@ -779,10 +782,10 @@ CDRMReceiver::InitReceiverMode()
 	UpdateRigSettings();
 }
 
+#ifdef HAVE_LIBHAMLIB
 void
 CDRMReceiver::UpdateRigSettings()
 {
-#ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
 	{
 		ERigMode eNewMode;
@@ -833,8 +836,8 @@ CDRMReceiver::UpdateRigSettings()
 				SetUseAnalogHWDemod(false);
 		}
 	}
-#endif
 }
+#endif
 
 #ifdef USE_QT_GUI
 void
@@ -1421,16 +1424,15 @@ void CDRMReceiver::UpdateSoundIn()
 	OnboardDecoder.SetInitFlag();
 }
 
+#ifdef HAVE_LIBHAMLIB
 void CDRMReceiver::SetHamlib(CHamlib* p)
 {
-#ifdef HAVE_LIBHAMLIB
 	pHamlib = p;
 	if(pHamlib)
 	{
                cout<<"About to setrigmodel to "<<pHamlib->GetHamlibModelID()<<endl;
 		SetRigModel(pHamlib->GetHamlibModelID());
 	}
-#endif
 }
 
 void CDRMReceiver::SetRigModel(int iID)
@@ -1440,7 +1442,6 @@ void CDRMReceiver::SetRigModel(int iID)
 
 void CDRMReceiver::SetRigModelWT(int iID)
 {
-#ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
 	{
 		rig_model_t	id = pHamlib->GetHamlibModelID();
@@ -1462,66 +1463,52 @@ void CDRMReceiver::SetRigModelWT(int iID)
 			SetFrequency(iFreqkHz);
 		}
 	}
-#endif
 }
 
 int CDRMReceiver::GetRigModel()
 {
-#ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
 		return pHamlib->GetHamlibModelID();
-#endif
 	return 0;
 }
 
 void CDRMReceiver::GetRigList(map<rig_model_t,CRigCaps>& rigs)
 {
-#ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
 		pHamlib->GetRigList(rigs);
-#endif
 }
 
 void CDRMReceiver::GetRigCaps(CRigCaps& caps)
 {
-#ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
 		pHamlib->GetRigCaps(caps);
-#endif
 }
 
 void CDRMReceiver::GetComPortList(map<string,string>& ports)
 {
-#ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
 		pHamlib->GetPortList(ports);
-#endif
 }
 
 string CDRMReceiver::GetRigComPort()
 {
-#ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
 		return pHamlib->GetComPort();
-#endif
 	return "";
 }
 
 void CDRMReceiver::SetRigFreqOffset(int iVal)
 {
-#ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
 		pHamlib->SetFreqOffset(iVal);
-#endif
 }
 
 void CDRMReceiver::SetRigComPort(const string& s)
 {
-#ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
 		pHamlib->SetComPort(s);
-#endif
 }
+#endif
 
 _BOOLEAN
 CDRMReceiver::GetSignalStrength(_REAL& rSigStr)

@@ -38,7 +38,9 @@
 #include "MDI/MDIDecode.h"
 #include "Parameter.h"
 #include "util/Buffer.h"
+#ifdef HAVE_LIBHAMLIB
 #include "util/Hamlib.h"
+#endif
 #include "DataIO.h"
 #include "OFDM.h"
 #include "DRMSignalIO.h"
@@ -278,6 +280,7 @@ public:
 	CUpstreamDI*			GetRSIIn() {return &upstreamRSCI;}
 	CDownstreamDI*			GetRSIOut() {return &downstreamRSCI;}
 	CChannelEstimation*		GetChannelEstimation() {return &ChannelEstimation;}
+#ifdef HAVE_LIBHAMLIB
 	void					SetRigModel(int);
 	int						GetRigModel();
 	void					GetRigList(map<int, CRigCaps>& rigs);
@@ -286,6 +289,7 @@ public:
 	string					GetRigComPort();
 	void					SetRigComPort(const string&);
 	void					SetRigFreqOffset(int);
+#endif
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
 	CParameter*				GetParameters() {return &Parameters;}
@@ -321,7 +325,9 @@ protected:
 	void					DetectAcquiFAC();
 	void					DetectAcquiSymbol();
 	void					saveSDCtoFile();
+#ifdef HAVE_LIBHAMLIB
 	void					UpdateRigSettings();
+#endif
 
 	/* Modules */
 	CSoundInInterface*		pSoundInInterface;
@@ -438,8 +444,10 @@ protected:
 							pcmInput;
 	enum { onBoard, inSoftware }
 							demodulation;
+#ifdef HAVE_LIBHAMLIB
 	CRequestStateChange		rigmodelrequest;
 	_BOOLEAN                bRigUpdateNeeded;
+#endif
 };
 
 #endif // !defined(DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

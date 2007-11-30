@@ -22,7 +22,6 @@ drmwithoutqt_SOURCES = \
 	../common/TextMessage.cpp \
 	../common/AMDemodulation.cpp \
 	../common/AMSSDemodulation.cpp \
-	../common/audiofilein.cpp \
 	../common/sound/soundfile.cpp \
 	../common/datadecoding/DataDecoder.cpp \
 	../common/datadecoding/DABMOT.cpp \
@@ -186,7 +185,6 @@ drmwithoutqt_SOURCES = \
 	../common/selectioninterface.h \
 	../common/soundinterface.h \
 	../common/soundnull.h \
-	../common/audiofilein.h \
 	../common/sound/soundfile.h \
 	source/sound.h source/shmsoundin.h source/pa_shm_ringbuffer.h
 
