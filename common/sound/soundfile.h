@@ -86,7 +86,7 @@ protected:
 #ifdef HAVE_LIBSNDFILE
 	SNDFILE*	pFile;
 #else
-	enum { WAV, TXT, RAW } fmt;
+	enum { F_WAV, F_TXT, F_RAW } fmt;
 	FILE*		pFile;
 	uint32_t	iBytesWritten;
 #endif
