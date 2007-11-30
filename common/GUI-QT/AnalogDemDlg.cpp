@@ -358,7 +358,7 @@ void AnalogDemDlg::OnSwitchToDRM()
 
 void AnalogDemDlg::OnTimer()
 {
-	int rig;
+	bool b;
 
 	switch(Receiver.GetReceiverMode())
 	{
@@ -369,11 +369,11 @@ void AnalogDemDlg::OnTimer()
 		/* Carrier frequency of AM signal */
 		TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
 		+ QString().setNum(Receiver.GetAnalogCurMixFreqOffs(), 'f', 2) + " Hz</b>");
-		rig = Receiver.GetRigModel();
-		if(rig>0)
+		b = Receiver.GetUseAnalogHWDemod();
+		if(b)
 		{
 			CheckBoxOnBoardDemod->setEnabled(true);
-			CheckBoxOnBoardDemod->setChecked(Receiver.GetUseAnalogHWDemod());
+			CheckBoxOnBoardDemod->setChecked(true);
 			//EDemodType eMode = Parameters.eDemodType;
 			/* TODO enable & disable the Onboard checkbox according to the rig caps */
 		}
