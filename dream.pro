@@ -199,6 +199,7 @@ common/tables/TableDRMGlobal.h   \
 common/tables/TableFAC.h   \
 common/tables/TableMLC.h   \
 common/tables/TableQAMMapping.h   \
+common/tables/TableStations.h   \
 common/TextMessage.h   \
 common/util/AudioFile.h   \
 common/util/Buffer.h   \
@@ -309,6 +310,7 @@ common/sync/TimeSyncFilter.cpp   \
 common/sync/TimeSyncTrack.cpp   \
 common/tables/TableCarMap.cpp   \
 common/tables/TableFAC.cpp   \
+common/tables/TableStations.cpp   \
 common/TextMessage.cpp   \
 common/util/CRC.cpp   \
 common/util/LogPrint.cpp   \

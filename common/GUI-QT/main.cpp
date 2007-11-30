@@ -41,8 +41,9 @@
 #include "../DrmTransmitter.h"
 #include "../DrmSimulation.h"
 #include "../util/Settings.h"
+#ifdef HAVE_LIBHAMLIB
 #include "../util/Hamlib.h"
-
+#endif
 #ifdef USE_QT_GUI
 # include <qapplication.h>
 # include <qthread.h>

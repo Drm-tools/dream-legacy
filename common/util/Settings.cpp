@@ -450,6 +450,7 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
+#ifdef HAVE_LIBHAMLIB
 		/* Hamlib config string --------------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "-C", "--hamlib-config",
 							  strArgument) == TRUE)
@@ -465,7 +466,7 @@ CSettings::ParseArguments(int argc, char **argv)
 			Put("Hamlib", "model", (int)rArgument);
 			continue;
 		}
-
+#endif
 		/* Enable s-meter flag ---------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-T", "--ensmeter") == TRUE)
 		{
