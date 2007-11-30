@@ -2,6 +2,7 @@ TEMPLATE	= app
 TARGET		= dream
 CONFIG		+= qt warn_on release
 VPATH		+= common/GUI-QT
+DEFINES		+= HAVE_QT 
 INCLUDEPATH	+= libs
 LIBS 		+= -Llibs
 FORMS		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui
