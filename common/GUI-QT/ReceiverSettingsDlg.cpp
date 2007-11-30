@@ -573,12 +573,13 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 	if(item->pixmap(0))
 		iID = -iID;
 
-cout << "ReceiverSettingsDlg::OnRigSelected(" << iID << ")" << endl;
+#ifdef HAVE_LIBHAMLIB
 	DRMReceiver.SetRigModel(iID);
 	CRigCaps caps;
 	DRMReceiver.GetRigCaps(caps);
 	ListViewPort->setEnabled(caps.hamlib_caps.port_type == RIG_PORT_SERIAL);
 	//CheckBoxEnableSMeter->setEnabled(rig_has_get_level(pRig, RIG_LEVEL_STRENGTH));
+#endif
 }
 
 void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)
@@ -586,8 +587,9 @@ void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)
 	if(loading)
 		return;
 	string s = item->text(1).latin1();
-cout << "ReceiverSettingsDlg::OnComPortSelected(" << s << ")" << endl;
+#ifdef HAVE_LIBHAMLIB
 	DRMReceiver.SetRigComPort(s);
+#endif
 }
 
 void ReceiverSettingsDlg::OnConfigChanged(int row, int col)
@@ -605,7 +607,9 @@ void ReceiverSettingsDlg::OnConfigChanged(int row, int col)
 
 void ReceiverSettingsDlg::OnRigOffsetChanged(QString text)
 {
+#ifdef HAVE_LIBHAMLIB
 	DRMReceiver.SetRigFreqOffset(text.toInt());
+#endif
 }
 
 void ReceiverSettingsDlg::OnRigSettingsChanged(QString text)
