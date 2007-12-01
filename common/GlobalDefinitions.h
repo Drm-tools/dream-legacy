@@ -285,8 +285,11 @@ public:
 
 /* Mutex object to access data safely from different threads */
 /* QT mutex */
-#ifdef USE_QT_GUI
-#include <qthread.h>
+#ifdef HAVE_QT
+# include <qthread.h>
+# if QT_VERSION >= 0x030000
+#  include <qmutex.h>
+# endif
 class CMutex
 {
 public:

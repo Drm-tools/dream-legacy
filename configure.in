@@ -137,16 +137,19 @@ if test "x$enable_qt" = "xyes"; then
 		QTDIR=`$PKG_CONFIG --variable=exec_prefix qt-mt`
 	else
 		qt_CFLAGS="-I$QTDIR/include -DQT_SHARED -DQT_TABLET_SUPPORT -DQT_THREAD_SUPPORT -D_REENTRANT"
-		qt_LIBS="-L$QTDIR/lib -lqt-mt -lpthread -lXext -lX11 -lm"
+		qt_LDFLAGS="-L$QTDIR/lib"
+		qt_LIBS="-lqt-mt -lpthread -lXext -lX11 -lm"
 	fi
 	AC_SUBST(QTDIR)
 	AC_PATH_PROG(MOC, moc,, $QTDIR/bin)
 	AC_PATH_PROG(UIC, uic,, $QTDIR/bin)
 	AM_CONDITIONAL(HAVE_QT, true)
-	CFLAGS="$CFLAGS $qt_CFLAGS"
-	CXXFLAGS="$CXXFLAGS $qt_CFLAGS"
-	LIBS="$LIBS $qt_LIBS"
 	AC_DEFINE(HAVE_QT, 1, [Define if you have the QT libraries])
+
+	CFLAGS="$qt_CFLAGS $CFLAGS"
+	CXXFLAGS="$qt_CFLAGS $CXXFLAGS"
+	LIBS="$qt_LIBS $LIBS"
+	LDFLAGS="$qt_LDFLAGS $LDFLAGS"
 
 	if test "x$enable_qtgui" = "xyes"; then
 		dnl qwt

@@ -35,13 +35,6 @@
 #include "GlobalDefinitions.h"
 #include "Parameter.h"
 
-#ifdef USE_QT_GUI
-# include <qthread.h>
-# if QT_VERSION >= 0x030000
-#  include <qmutex.h>
-# endif
-#endif
-
 /* Definitions ****************************************************************/
 
 /* Length of the history for synchronization parameters (used for the plot) */

@@ -75,5 +75,5 @@ class EPG
     CEPGDecoder basic, advanced;
 	CParameter& Parameters;
 private:
-    static const struct gl { char *genre; char* desc; } genre_list[];
+    static const struct gl { const char *genre; const char* desc; } genre_list[];
 };
