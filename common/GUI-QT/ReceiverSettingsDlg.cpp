@@ -34,6 +34,7 @@
 #include <qfiledialog.h>
 #include <qlabel.h>
 #include <qlineedit.h>
+#include <qcombobox.h>
 #include <qpushbutton.h>
 #include <qwhatsthis.h>
 #include <qvalidator.h>
@@ -43,7 +44,6 @@
 #include <qradiobutton.h>
 #include "../GlobalDefinitions.h"
 #include "ReceiverSettingsDlg.h"
-#include "LatLongEditDlg.h"
 #include "../DrmReceiver.h"
 
 #if !defined(HAVE_RIG_PARSE_MODE) && defined(HAVE_LIBHAMLIB)
@@ -76,10 +76,12 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	/* Connections */
 
 	connect(buttonOk, SIGNAL(clicked()), SLOT(ButtonOkClicked()) );
-	connect(PushButtonEditLatitude, SIGNAL(clicked()), SLOT(OnEditLatitude()) );
-	connect(PushButtonEditLongitude, SIGNAL(clicked()), SLOT(OnEditLongitude()) );
-	connect(LineEditLatitude, SIGNAL(textChanged(const QString&)), SLOT(OnChangedLatLong(const QString&)) );
-	connect(LineEditLongitude, SIGNAL(textChanged(const QString&)), SLOT(OnChangedLatLong(const QString&)) );
+	connect(LineEditLatDegrees, SIGNAL(textChanged(const QString&)), SLOT(OnLineEditLatDegChanged(const QString&)));
+	connect(LineEditLatMinutes, SIGNAL(textChanged(const QString&)), SLOT(OnLineEditLatMinChanged(const QString&)));
+	connect(ComboBoxNS, SIGNAL(highlighted(int)), SLOT(OnComboBoxNSHighlighted(int)) );
+	connect(LineEditLngDegrees, SIGNAL(textChanged(const QString&)), SLOT(OnLineEditLngDegChanged(const QString&)));
+	connect(LineEditLngMinutes, SIGNAL(textChanged(const QString&)), SLOT(OnLineEditLngMinChanged(const QString&)));
+	connect(ComboBoxEW, SIGNAL(highlighted(int)), SLOT(OnComboBoxEWHighlighted(int)) );
 
 	connect(SliderLogStartDelay, SIGNAL(valueChanged(int)),
 		this, SLOT(OnSliderLogStartDelayChange(int)));
@@ -282,6 +284,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		{
 			man = mfr->second;
 		}
+		cout << "U " << rig.hamlib_caps.model_name << endl;
 		model = new QListViewItem(
 			man,
 			rig.hamlib_caps.model_name,
@@ -292,6 +295,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		if (rig.bIsModifiedRig)
 		{
 			string model = rig.hamlib_caps.model_name;
+		cout << "M " << rig.hamlib_caps.model_name << endl;
 			mod_model = new QListViewItem(
 				man,
 				(model+" (DRM)").c_str(),
@@ -351,29 +355,48 @@ void ReceiverSettingsDlg::OnCheckBoxUseGPS()
 	emit StartStopGPS(CheckBoxUseGPS->isChecked());
 }
 
-void ReceiverSettingsDlg::OnEditLatitude()
+void ReceiverSettingsDlg::OnLineEditLatDegChanged(const QString&)
 {
-	LatLongEditDlg* edt = new LatLongEditDlg(LineEditLatitude, this);
-	edt->show();
+	SetLatLng();
 }
 
-void ReceiverSettingsDlg::OnEditLongitude()
+void ReceiverSettingsDlg::OnLineEditLatMinChanged(const QString&)
 {
-	LatLongEditDlg* edt = new LatLongEditDlg(LineEditLongitude, this);
-	edt->show();
+	SetLatLng();
 }
 
-void ReceiverSettingsDlg::OnChangedLatLong(const QString&)
+void ReceiverSettingsDlg::OnComboBoxNSHighlighted(int)
+{
+	SetLatLng();
+}
+
+void ReceiverSettingsDlg::OnLineEditLngDegChanged(const QString&)
+{
+	SetLatLng();
+}
+
+void ReceiverSettingsDlg::OnLineEditLngMinChanged(const QString&)
+{
+	SetLatLng();
+}
+
+void ReceiverSettingsDlg::OnComboBoxEWHighlighted(int)
+{
+	SetLatLng();
+}
+
+void ReceiverSettingsDlg::SetLatLng()
 {
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 	double latitude, longitude;
 
-	QStringList a = QStringList::split("'", LineEditLongitude->text());
-	QStringList b = QStringList::split(ring, a[0]);
-	longitude = (b[0].toDouble() + b[1].toDouble()/60.0)*((a[1]=="E")?1:-1);
-	a = QStringList::split("'", LineEditLatitude->text());
-	b = QStringList::split(ring, a[0]);
-	latitude = (b[0].toDouble() + b[1].toDouble()/60.0)*((a[1]=="N")?1:-1);
+	longitude = (LineEditLngDegrees->text().toDouble()
+				+ LineEditLngMinutes->text().toDouble()/60.0
+				)*((ComboBoxEW->currentText()=="E")?1:-1);
+
+	latitude = (LineEditLatDegrees->text().toDouble()
+				+ LineEditLatMinutes->text().toDouble()/60.0
+				)*((ComboBoxNS->currentText()=="N")?1:-1);
 
 	Parameters.Lock(); 
 	Parameters.GPSData.SetPositionAvailable(TRUE);
@@ -399,20 +422,34 @@ void ReceiverSettingsDlg::ExtractReceiverCoordinates()
 	QString sVal, sDir;
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 
-	/* parse the latitude and longitude string stored into Dream settings to
-		extract local latitude and longitude coordinates */
-
-	string latitude, longitude;
+	double latitude, longitude;
 
 	Parameters.Lock(); 
-	Parameters.GPSData.asDM(latitude, longitude);
+	Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
 	Parameters.Unlock(); 
 
-	QString s;
-	s.setLatin1(longitude.c_str());
-	LineEditLongitude->setText(s);
-	s.setLatin1(latitude.c_str());
-	LineEditLatitude->setText(s);
+	if(latitude<0.0)
+	{
+		latitude = 0.0 - latitude;
+		ComboBoxNS->setCurrentItem(1);
+	}
+	else
+	{
+		ComboBoxNS->setCurrentItem(0);
+	}
+	LineEditLatDegrees->setText(QString::number(int(latitude)));
+	LineEditLatMinutes->setText(QString::number(60.0*(latitude-int(latitude))));
+	if(longitude<0.0)
+	{
+		longitude = 0.0 - longitude;
+		ComboBoxEW->setCurrentItem(1);
+	}
+	else
+	{
+		ComboBoxEW->setCurrentItem(0);
+	}
+	LineEditLngDegrees->setText(QString::number(int(longitude)));
+	LineEditLngMinutes->setText(QString::number(60.0*(longitude-int(longitude))));
 }
 
 void ReceiverSettingsDlg::OnRadioTimeLinear() 
@@ -626,8 +663,10 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		" are inside the target area of this transmission.<br>"
 		"Receiver coordinates are also saved into the Log file.");
 
-    QWhatsThis::add(LineEditLatitude, strGPS);
-    QWhatsThis::add(LineEditLongitude, strGPS);
+    QWhatsThis::add(LineEditLatDegrees, strGPS);
+    QWhatsThis::add(LineEditLatMinutes, strGPS);
+    QWhatsThis::add(LineEditLngDegrees, strGPS);
+    QWhatsThis::add(LineEditLngMinutes, strGPS);
 
 	/* MLC, Number of Iterations */
 	const QString strNumOfIterations =

@@ -32,7 +32,6 @@
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
-class LatLongEditDlg;
 class CDRMReceiver;
 
 class ReceiverSettingsDlg : public ReceiverSettingsDlgBase
@@ -57,7 +56,6 @@ protected:
 
 	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
-	LatLongEditDlg* latlongeditdlg;
 	bool			loading;
 
 signals:
@@ -68,9 +66,13 @@ signals:
 	void StartStopGPS(bool);
 
 public slots:
-	void OnChangedLatLong(const QString&);
-	void OnEditLatitude();
-	void OnEditLongitude();
+	void OnLineEditLatDegChanged(const QString& str);
+	void OnLineEditLatMinChanged(const QString& str);
+	void OnComboBoxNSHighlighted(int iID);
+	void OnLineEditLngDegChanged(const QString& str);
+	void OnLineEditLngMinChanged(const QString& str);
+	void OnComboBoxEWHighlighted(int iID);
+	void SetLatLng();
 	void OnCheckBoxUseGPS();
 	void OnRadioTimeLinear();
 	void OnRadioTimeWiener();

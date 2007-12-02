@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>386</width>
+            <width>374</width>
             <height>392</height>
         </rect>
     </property>
@@ -870,18 +870,29 @@
                                 <name>spacing</name>
                                 <number>6</number>
                             </property>
-                            <widget row="1"  column="0" >
+                            <widget row="0"  column="1" >
                                 <class>QLabel</class>
                                 <property stdset="1">
                                     <name>name</name>
-                                    <cstring>TextLongitude</cstring>
+                                    <cstring>TextLabel1_3</cstring>
                                 </property>
                                 <property stdset="1">
                                     <name>text</name>
-                                    <string>Longitude</string>
+                                    <string>Degrees</string>
                                 </property>
                             </widget>
-                            <widget row="0"  column="0" >
+                            <widget row="0"  column="3"  rowspan="1"  colspan="2" >
+                                <class>QLabel</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>TextLabel2_3</cstring>
+                                </property>
+                                <property stdset="1">
+                                    <name>text</name>
+                                    <string>Minutes</string>
+                                </property>
+                            </widget>
+                            <widget row="1"  column="0" >
                                 <class>QLabel</class>
                                 <property stdset="1">
                                     <name>name</name>
@@ -892,48 +903,133 @@
                                     <string>Latitude   </string>
                                 </property>
                             </widget>
-                            <widget row="0"  column="1" >
+                            <widget row="2"  column="0" >
+                                <class>QLabel</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>TextLongitude</cstring>
+                                </property>
+                                <property stdset="1">
+                                    <name>text</name>
+                                    <string>Longitude</string>
+                                </property>
+                            </widget>
+                            <widget row="1"  column="4" >
+                                <class>QLabel</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>TextLabel4</cstring>
+                                </property>
+                                <property stdset="1">
+                                    <name>text</name>
+                                    <string>'</string>
+                                </property>
+                            </widget>
+                            <widget row="1"  column="5" >
+                                <class>QComboBox</class>
+                                <item>
+                                    <property>
+                                        <name>text</name>
+                                        <string>N</string>
+                                    </property>
+                                </item>
+                                <item>
+                                    <property>
+                                        <name>text</name>
+                                        <string>S</string>
+                                    </property>
+                                </item>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>ComboBoxNS</cstring>
+                                </property>
+                                <property stdset="1">
+                                    <name>maxCount</name>
+                                    <number>2</number>
+                                </property>
+                            </widget>
+                            <widget row="1"  column="3" >
                                 <class>QLineEdit</class>
                                 <property stdset="1">
                                     <name>name</name>
-                                    <cstring>LineEditLatitude</cstring>
+                                    <cstring>LineEditLatMinutes</cstring>
+                                </property>
+                            </widget>
+                            <widget row="1"  column="2" >
+                                <class>QLabel</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>TextLabel3</cstring>
                                 </property>
                                 <property stdset="1">
-                                    <name>enabled</name>
-                                    <bool>false</bool>
+                                    <name>text</name>
+                                    <string>°</string>
                                 </property>
                             </widget>
                             <widget row="1"  column="1" >
                                 <class>QLineEdit</class>
                                 <property stdset="1">
                                     <name>name</name>
-                                    <cstring>LineEditLongitude</cstring>
-                                </property>
-                                <property stdset="1">
-                                    <name>enabled</name>
-                                    <bool>false</bool>
+                                    <cstring>LineEditLatDegrees</cstring>
                                 </property>
                             </widget>
-                            <widget row="0"  column="2" >
-                                <class>QPushButton</class>
+                            <widget row="2"  column="3" >
+                                <class>QLineEdit</class>
                                 <property stdset="1">
                                     <name>name</name>
-                                    <cstring>PushButtonEditLatitude</cstring>
+                                    <cstring>LineEditLngMinutes</cstring>
+                                </property>
+                            </widget>
+                            <widget row="2"  column="1" >
+                                <class>QLineEdit</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>LineEditLngDegrees</cstring>
+                                </property>
+                            </widget>
+                            <widget row="2"  column="4" >
+                                <class>QLabel</class>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>TextLabel4_2</cstring>
                                 </property>
                                 <property stdset="1">
                                     <name>text</name>
-                                    <string>Edit</string>
+                                    <string>'</string>
                                 </property>
                             </widget>
-                            <widget row="1"  column="2" >
-                                <class>QPushButton</class>
+                            <widget row="2"  column="2" >
+                                <class>QLabel</class>
                                 <property stdset="1">
                                     <name>name</name>
-                                    <cstring>PushButtonEditLongitude</cstring>
+                                    <cstring>TextLabel3_2</cstring>
                                 </property>
                                 <property stdset="1">
                                     <name>text</name>
-                                    <string>Edit</string>
+                                    <string>°</string>
+                                </property>
+                            </widget>
+                            <widget row="2"  column="5" >
+                                <class>QComboBox</class>
+                                <item>
+                                    <property>
+                                        <name>text</name>
+                                        <string>E</string>
+                                    </property>
+                                </item>
+                                <item>
+                                    <property>
+                                        <name>text</name>
+                                        <string>W</string>
+                                    </property>
+                                </item>
+                                <property stdset="1">
+                                    <name>name</name>
+                                    <cstring>ComboBoxEW</cstring>
+                                </property>
+                                <property stdset="1">
+                                    <name>maxCount</name>
+                                    <number>2</number>
                                 </property>
                             </widget>
                         </grid>
@@ -1249,12 +1345,39 @@
     </image>
 </images>
 <tabstops>
+    <tabstop>LineEditLatDegrees</tabstop>
+    <tabstop>LineEditLatMinutes</tabstop>
+    <tabstop>ComboBoxNS</tabstop>
+    <tabstop>LineEditLngDegrees</tabstop>
+    <tabstop>LineEditLngMinutes</tabstop>
+    <tabstop>ComboBoxEW</tabstop>
+    <tabstop>CheckBoxUseGPS</tabstop>
+    <tabstop>LineEditGPSHost</tabstop>
+    <tabstop>LineEditGPSPort</tabstop>
     <tabstop>RadioButtonFreqWiener</tabstop>
     <tabstop>RadioButtonFreqLinear</tabstop>
     <tabstop>RadioButtonFreqDFT</tabstop>
     <tabstop>RadioButtonTiWiener</tabstop>
     <tabstop>RadioButtonTiLinear</tabstop>
+    <tabstop>RadioButtonTiSyncEnergy</tabstop>
+    <tabstop>RadioButtonTiSyncFirstPeak</tabstop>
     <tabstop>CheckBoxRecFilter</tabstop>
     <tabstop>CheckBoxModiMetric</tabstop>
+    <tabstop>CheckBoxFlipSpec</tabstop>
+    <tabstop>SliderNoOfIterations</tabstop>
+    <tabstop>ListViewRig</tabstop>
+    <tabstop>ListViewPort</tabstop>
+    <tabstop>CheckBoxEnableSMeter</tabstop>
+    <tabstop>buttonOk</tabstop>
+    <tabstop>TabWidget2</tabstop>
+    <tabstop>CheckBoxMuteAudio</tabstop>
+    <tabstop>CheckBoxSaveAudioWave</tabstop>
+    <tabstop>CheckBoxReverb</tabstop>
+    <tabstop>CheckBoxWriteLog</tabstop>
+    <tabstop>CheckBoxLogLatLng</tabstop>
+    <tabstop>CheckBoxLogSigStr</tabstop>
+    <tabstop>SliderLogStartDelay</tabstop>
+    <tabstop>LineEditRigSettings</tabstop>
+    <tabstop>LineEditRigFreqOff</tabstop>
 </tabstops>
 </UI>
