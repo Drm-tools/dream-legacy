@@ -30,12 +30,12 @@
 #ifndef _HAMLIB_H
 #define _HAMLIB_H
 
+#ifdef HAVE_LIBHAMLIB
+
 #include "../GlobalDefinitions.h"
 #include <map>
 
-#ifdef HAVE_LIBHAMLIB
-# include <hamlib/rig.h>
-#endif
+#include <hamlib/rig.h>
 
 class CParameter;
 class CSettings;
@@ -110,7 +110,6 @@ public:
 	map<string,string> config;
 };
 
-#ifdef HAVE_LIBHAMLIB
 /* Hamlib interface --------------------------------------------------------- */
 class CHamlib
 #ifdef USE_QT_GUI
@@ -169,11 +168,12 @@ protected:
 	CRigCaps			RigCaps;
 	int                 iFrequencykHz;
 };
-#else
+#  else
 struct CHamlib
 {
 	enum ESMeterState {SS_VALID, SS_NOTVALID, SS_TIMEOUT};
 };
-#endif
+
+# endif
 
 #endif

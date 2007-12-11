@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>374</width>
+            <width>370</width>
             <height>392</height>
         </rect>
     </property>
@@ -104,7 +104,7 @@
             <class>QTabWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>TabWidget2</cstring>
+                <cstring>TabWidget</cstring>
             </property>
             <widget>
                 <class>QWidget</class>
@@ -1369,7 +1369,7 @@
     <tabstop>ListViewPort</tabstop>
     <tabstop>CheckBoxEnableSMeter</tabstop>
     <tabstop>buttonOk</tabstop>
-    <tabstop>TabWidget2</tabstop>
+    <tabstop>TabWidget</tabstop>
     <tabstop>CheckBoxMuteAudio</tabstop>
     <tabstop>CheckBoxSaveAudioWave</tabstop>
     <tabstop>CheckBoxReverb</tabstop>

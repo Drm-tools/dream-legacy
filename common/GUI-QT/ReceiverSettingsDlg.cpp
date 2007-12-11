@@ -42,6 +42,7 @@
 #include <qcheckbox.h>
 #include <qslider.h>
 #include <qradiobutton.h>
+#include <qtabwidget.h>
 #include "../GlobalDefinitions.h"
 #include "ReceiverSettingsDlg.h"
 #include "../DrmReceiver.h"
@@ -72,6 +73,12 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	ReceiverSettingsDlgBase(parent, name, modal, f), DRMReceiver(NRx),Settings(NSettings),
 	loading(true)
 {
+
+	/* Tabs */
+#ifndef HAVE_LIBHAMLIB
+	TabWidget->removePage(Rig);
+	TabWidget->removePage(RigAdv);
+#endif
 
 	/* Connections */
 
@@ -294,18 +301,18 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 
 		if (rig.bIsModifiedRig)
 		{
-			string model = rig.hamlib_caps.model_name;
-		cout << "M " << rig.hamlib_caps.model_name << endl;
+			string model = string(rig.hamlib_caps.model_name)+" (DRM)";
+		cout << "M " << model<< endl;
 			mod_model = new QListViewItem(
 				man,
-				(model+" (DRM)").c_str(),
+				model.c_str(),
 				QString::number(-iModelID),
 				rig_strstatus(rig.hamlib_caps.status)
 			);
 			mod_model->setPixmap(0, BitmLittleGreenSquare);
 			man->setPixmap(0, BitmLittleGreenSquare);
 		}
-
+if(current<0) cout << "negative rig " << current << endl;
 		/* Check for selected Rig */
 		if (current == iModelID)
 		{

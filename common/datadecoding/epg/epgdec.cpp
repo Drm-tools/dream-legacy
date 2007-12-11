@@ -208,7 +208,7 @@ static dectab attribute_tags18[] = {
 };
 
 struct eltab_t {
-  char * element_name;
+  const char * element_name;
   dectab* tags;
   size_t size;      
 };

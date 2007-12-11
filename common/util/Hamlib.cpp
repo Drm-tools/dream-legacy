@@ -26,6 +26,7 @@
 \******************************************************************************/
 
 #include "Hamlib.h"
+#ifdef HAVE_LIBHAMLIB
 #include "../Parameter.h"
 #include "Settings.h"
 #include <sstream>
@@ -765,6 +766,9 @@ CHamlib::SetHamlibModelID(const rig_model_t model)
 	/* save current config for previous model */
 	CapsHamlibModels[iHamlibModelID] = RigCaps;
 
+	/* copy the com port setting across the change */
+	string comPort = RigCaps.config["rig_pathname"];
+
 	/* stop the thread if its running */
 	bool bSMeterWasEnabled = bEnableSMeter;
 	if(bEnableSMeter)
@@ -801,6 +805,9 @@ CHamlib::SetHamlibModelID(const rig_model_t model)
 
 		/* fetch the config into the working config */
 		RigCaps = m->second;
+
+		/* put the comPort setting back */
+		RigCaps.config["rig_pathname"] = comPort;
 
 		/* Init rig (negative rig numbers indicate modified rigs */
 		pRig = rig_init(abs(iHamlibModelID));
@@ -850,3 +857,4 @@ CHamlib::SetHamlibModelID(const rig_model_t model)
 		RigCaps.bSMeterIsSupported = FALSE;
 	}
 }
+#endif
