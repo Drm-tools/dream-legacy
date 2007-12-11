@@ -291,7 +291,6 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		{
 			man = mfr->second;
 		}
-		cout << "U " << rig.hamlib_caps.model_name << endl;
 		model = new QListViewItem(
 			man,
 			rig.hamlib_caps.model_name,
@@ -302,7 +301,6 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		if (rig.bIsModifiedRig)
 		{
 			string model = string(rig.hamlib_caps.model_name)+" (DRM)";
-		cout << "M " << model<< endl;
 			mod_model = new QListViewItem(
 				man,
 				model.c_str(),
@@ -312,7 +310,6 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 			mod_model->setPixmap(0, BitmLittleGreenSquare);
 			man->setPixmap(0, BitmLittleGreenSquare);
 		}
-if(current<0) cout << "negative rig " << current << endl;
 		/* Check for selected Rig */
 		if (current == iModelID)
 		{
