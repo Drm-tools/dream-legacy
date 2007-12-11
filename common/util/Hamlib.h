@@ -30,9 +30,10 @@
 #ifndef _HAMLIB_H
 #define _HAMLIB_H
 
+#include "../GlobalDefinitions.h"
+
 #ifdef HAVE_LIBHAMLIB
 
-#include "../GlobalDefinitions.h"
 #include <map>
 
 #include <hamlib/rig.h>
