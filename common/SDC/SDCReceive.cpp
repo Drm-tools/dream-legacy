@@ -251,10 +251,10 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 	_BOOLEAN bWithHierarch = FALSE;
 
 	Parameter.Lock();
-	/* Get stream parameters */
+	/* Set stream parameters */
 	for (int i = 0; i < iNumStreams; i++)
 	{
-		/* In case of hirachical modulation stream 0 describes the protection
+		/* In case of hierachical modulation stream 0 describes the protection
 		   level and length of hierarchical data */
 		if ((i == 0) &&
 			((Parameter.eMSCCodingScheme == CS_3_HMSYM) ||

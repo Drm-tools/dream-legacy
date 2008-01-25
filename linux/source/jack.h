@@ -68,8 +68,8 @@ public:
     CSoundInJack(const CSoundInJack& e);
     CSoundInJack& operator=(const CSoundInJack& e);
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-	virtual _BOOLEAN	Read(CVector<short>& psData);
+	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
+	virtual _BOOLEAN	Read(vector<short>& psData);
 	virtual void		Enumerate(vector<string>&);
 	virtual int			GetDev();
 	virtual void		SetDev(int iNewDev);
@@ -91,8 +91,8 @@ public:
     CSoundOutJack(const CSoundOutJack& e);
     CSoundOutJack& operator=(const CSoundOutJack& e);
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-	virtual _BOOLEAN	Write(CVector<short>& psData);
+	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
+	virtual _BOOLEAN	Write(vector<short>& psData);
 	virtual void		Enumerate(vector<string>&);
 	virtual int			GetDev();
 	virtual void		SetDev(int iNewDev);
@@ -104,6 +104,7 @@ protected:
 	instance_data_t play_data;
 	int dev;
 	CJackPorts ports;
+	int channels;
 };
 
 #endif 

@@ -63,6 +63,8 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 	if (TagPacketDecoderMDI.TagItemDecoderRobMod.IsReady())
 		Parameters.SetWaveMode(TagPacketDecoderMDI.TagItemDecoderRobMod.eRobMode);
 
+	Parameters.Unlock(); 
+
 	CVector<_BINARY>& vecbiFACData = TagPacketDecoderMDI.TagItemDecoderFAC.vecbidata;
 	CVector<_BINARY>& vecbiSDCData = TagPacketDecoderMDI.TagItemDecoderSDC.vecbidata;
 	pvecOutputData->Reset(0);
@@ -76,7 +78,6 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 		{
 			cout << "FAC not initialised?" << endl;
 /*
-			Parameters.Unlock(); 
 			return;
 */
 		}
@@ -92,7 +93,9 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 	else
 	{
 		iOutputBlockSize = 0;
+		Parameters.Lock();
 		Parameters.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
+		Parameters.Unlock();
 	}
 
 	if (TagPacketDecoderMDI.TagItemDecoderSDCChanInf.IsReady())
@@ -100,9 +103,7 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 		CVector<_BINARY>& vecbisdciData = TagPacketDecoderMDI.TagItemDecoderSDCChanInf.vecbidata;
 		// sdci not decoded later - will allow decoding/modulation before first SDC received
 		CSDCReceive sdci;
-		Parameters.Unlock(); 
 		sdci.SDCIParam(&vecbisdciData, Parameters);
-		Parameters.Lock(); 
 	}
 
 	pvecOutputData2->Reset(0);
@@ -138,7 +139,11 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 		pvecOutputData2->Reset(0);
 		iOutputBlockSize2 = 0;
 		if(iFramesSinceSDC>2)
+		{
+			Parameters.Lock();
 			Parameters.ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
+			Parameters.Unlock();
+		}
 		else
 			iFramesSinceSDC++;
    }
@@ -193,21 +198,20 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 			}
 			veciOutputBlockSize[0] = iStreamLen;
 		}
-		//if (iLen != 0)
-		//{
-			/* Get the audio parameters for decoding the coded AM */
-			CAudioParam AudioParam = TagPacketDecoderMDI.TagItemDecoderAMAudio.AudioParams;
-			/* Write the audio settings into the parameter object
-			 * CParameter takes care of keeping separate data for AM and DRM
-			 */
-			Parameters.SetAudioParam(0, AudioParam);
+
+		/* Get the audio parameters for decoding the coded AM */
+		CAudioParam AudioParam = TagPacketDecoderMDI.TagItemDecoderAMAudio.AudioParams;
+		/* Write the audio settings into the parameter object
+		 * CParameter takes care of keeping separate data for AM and DRM
+		 */
+		Parameters.Lock();
+		Parameters.SetAudioParam(0, AudioParam);
 			
-			Parameters.SetStreamLen(0, 0, iStreamLen/SIZEOF__BYTE);
-			Parameters.SetNumOfServices(1,0);
-			Parameters.Service[0].iAudioStream = 0;
-			Parameters.SetCurSelAudioService(0);
-			Parameters.SetNumDecodedBitsMSC(iStreamLen); // is this necessary?
-		//}
+		Parameters.SetStreamLen(0, 0, iStreamLen/SIZEOF__BYTE);
+		Parameters.SetNumOfServices(1,0);
+		Parameters.Service[0].iAudioStream = 0;
+		Parameters.SetCurSelAudioService(0);
+		Parameters.SetNumDecodedBitsMSC(iStreamLen); // is this necessary?
 
 		Parameters.Service[0].strLabel = "";
 		Parameters.Service[0].strCountryCode = "";
@@ -215,11 +219,12 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 		Parameters.Service[0].strLanguageCode = "";
 		Parameters.Service[0].iServiceDescr = 0;
 		Parameters.Service[0].iServiceID = 0;
+
+		Parameters.Unlock();
 	}
 
 	// TODO RSCI Data Items, MER, etc.
 
-	Parameters.Unlock(); 
 }
 
 void CDecodeRSIMDI::InitInternal(CParameter& Parameters)
@@ -246,11 +251,4 @@ void CDecodeRSIMDI::InitInternal(CParameter& Parameters)
 	iFramesSinceSDC = 3;
 
 	Parameters.Unlock(); 
-	/*
-	cout << "iOutputBlockSize " << iOutputBlockSize << " iOutputBlockSize2 " << iOutputBlockSize2
-	<< " iMaxOutputBlockSize2 " << iMaxOutputBlockSize2 << endl;
-	for(size_t j=0; j<numstreams; j++)
-		cout << "veciOutputBlockSize[" << j << "] = " << veciOutputBlockSize[j] << endl;
-cout << "CDecodeRSIMDI::InitInternal done" << endl; cout.flush();
-	*/
 }

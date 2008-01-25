@@ -112,7 +112,7 @@ AC_LANG_CPLUSPLUS
 dnl Checks for typedefs, structures, and compiler characteristics.
 
 dnl Checks for some external libraries that need to be installed
-LIBS="$LIBS -L$PWD/libs"
+LIBS="-L$PWD/libs $LIBS"
 CXXFLAGS="$CXXFLAGS -I$PWD/libs -I$PWD/linux/moc"
 CFLAGS="$CFLAGS -I$PWD/libs -I$PWD/linux/moc"
 

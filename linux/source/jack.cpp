@@ -370,7 +370,7 @@ CSoundInJack::SetDev(int iNewDevice)
 }
 
 void
-CSoundInJack::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+CSoundInJack::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 {
 	if (device_changed == false)
 		return;
@@ -403,7 +403,7 @@ CSoundInJack::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 }
 
 _BOOLEAN
-CSoundInJack::Read(CVector<short>& psData)
+CSoundInJack::Read(vector<short>& psData)
 {
 	if (device_changed)
 		Init(iBufferSize, bBlocking);
@@ -447,7 +447,7 @@ CSoundInJack::Close()
 }
 
 CSoundOutJack::CSoundOutJack():iBufferSize(0), bBlocking(TRUE), device_changed(TRUE),
-play_data(), dev(-1), ports()
+play_data(), dev(-1), ports(), channels(2)
 {
 	if(data.client==NULL)
 		data.initialise();
@@ -497,7 +497,7 @@ CSoundOutJack::~CSoundOutJack()
 }
 
 CSoundOutJack::CSoundOutJack(const CSoundOutJack & e):
-iBufferSize(e.iBufferSize), bBlocking(e.bBlocking),dev(e.dev)
+iBufferSize(e.iBufferSize), bBlocking(e.bBlocking),dev(e.dev),channels(e.channels)
 {
 }
 
@@ -508,6 +508,7 @@ CSoundOutJack & CSoundOutJack::operator=(const CSoundOutJack & e)
 	play_data = e.play_data;
 	dev = e.dev;
 	ports = e.ports;
+	channels = e.channels;
 	return *this;
 }
 
@@ -535,13 +536,14 @@ CSoundOutJack::SetDev(int iNewDevice)
 }
 
 void
-CSoundOutJack::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+CSoundOutJack::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 {
 	if (device_changed == false)
 		return;
 
 	iBufferSize = iNewBufferSize;
 	bBlocking = bNewBlocking;
+	channels = iChannels;
 
 	const char ** l = jack_port_get_connections(play_data.left);
 	const char ** r = jack_port_get_connections(play_data.right);
@@ -566,12 +568,12 @@ CSoundOutJack::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 }
 
 _BOOLEAN
-CSoundOutJack::Write(CVector<short>& psData)
+CSoundOutJack::Write(vector<short>& psData)
 {
 	if (device_changed)
-		Init(iBufferSize, bBlocking);
+		Init(iBufferSize, bBlocking, channels);
 
-	size_t bytes = psData.Size()*sizeof(short);
+	size_t bytes = psData.size()*sizeof(short);
 	if (jack_ringbuffer_write (play_data.buff, (char *) &psData[0], bytes) < bytes)
 	{
 		play_data.overruns++;

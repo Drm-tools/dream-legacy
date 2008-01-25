@@ -211,7 +211,6 @@ void CTagItemDecoderSDCChanInf::DecodeTag(CVector<_BINARY>& vecbiTag, const int 
 	/* Copy incoming data */
 	vecbidata.Init(iLen);
 	vecbidata.ResetBitAccess();
-cout << "CTagItemDecoderSDCChanInf::DecodeTag" << endl;
 	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 	{
 		vecbidata.

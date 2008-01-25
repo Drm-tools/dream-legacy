@@ -210,6 +210,12 @@ void CDRMTransmitter::Start()
          << ", out: " << (MDIOut.GetOutEnabled()?"MDI":"")
          << ", " << ((COFDMOutputs.size()>0)?"COFDM":"")
          << endl; cout.flush();
+
+	if(COFDMOutputs.size()>0 && MDIOut.GetOutEnabled())
+		return;
+
+	bool bInitMod = (COFDMOutputs.size()>0);
+
 	try
 	{
 		while (TransmParam.bRunThread)
@@ -221,17 +227,24 @@ void CDRMTransmitter::Start()
 				if(MDIPacketBuf.GetFillLevel()>0)
 				{
 					DecodeMDI.ProcessData(TransmParam, MDIPacketBuf, FACBuf, SDCBuf, MSCBuf);
+					if(bInitMod)
+					{
+						bInitMod = false;
+						Modulator.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
+					}
 				}
 			}
 			else
 			{
 				Encoder.ProcessData(TransmParam, FACBuf, SDCBuf, MSCBuf);
 			}
-
+cerr << "Tx " << FACBuf.GetFillLevel() << " " << SDCBuf.GetFillLevel() << " " << MSCBuf[0].GetFillLevel() << endl;
 
 			if(COFDMOutputs.size()>0)
 				Modulator.ProcessData(TransmParam, FACBuf, SDCBuf, MSCBuf);
-			else
+			// TODO split output buffers for MDI and COFDM
+
+         	if(MDIOut.GetOutEnabled())
 			{
 				MDIOut.SendLockedFrame(TransmParam, FACBuf, SDCBuf, MSCBuf);
 				FACBuf.SetRequestFlag(TRUE);
