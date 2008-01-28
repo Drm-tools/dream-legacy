@@ -241,6 +241,8 @@ if test "x$enable_journaline" = xyes; then
 	LIBS="$LIBS -lfhgjournaline"
 fi
 
+LIBS="-L$PWD/libs $LIBS"
+
 AC_CONFIG_FILES(Makefile linux/Makefile drm.spec)
 AC_OUTPUT
 echo

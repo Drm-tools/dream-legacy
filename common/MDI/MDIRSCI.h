@@ -138,15 +138,8 @@ public:
 						CSingleBuffer<_BINARY>& SDCData,
 						vector<CSingleBuffer<_BINARY> >& vecMSCData
 	);
-	void SendLockedFrame(CParameter& Parameter,
-						CVectorEx<_BINARY>* pvecFACData,
-						CVectorEx<_BINARY>* pvecSDCData,
-						vector<CVectorEx<_BINARY>* >& pvecMSCData
-	);
-	void SendLockedFrame(CParameter& Parameter,
-						CVectorEx<_BINARY>* pvecFACData,
-						CVectorEx<_BINARY>* pvecSDCData
-	);
+	void SendLockedFrame(CParameter& Parameter, vector<CInputStruct<_BINARY> >& inputs);
+	void SendLockedFrame(CParameter& Parameter);
 	void SendUnlockedFrame(CParameter& Parameter); /* called once per frame even if the Rx isn't synchronised */
 	void SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& CodedAudioData);
 

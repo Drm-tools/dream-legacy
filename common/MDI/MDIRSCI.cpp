@@ -99,6 +99,8 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 						vector<CSingleBuffer<_BINARY> >& vecMSCData
 )
 {
+	TagItemGeneratorFAC.GenTag(Parameter, FACData.Get(NUM_FAC_BITS_PER_BLOCK));
+	TagItemGeneratorSDC.GenTag(Parameter, SDCData.Get(Parameter.iNumSDCBitsPerSFrame));
 	for (size_t i = 0; i < MAX_NUM_STREAMS; i++)
 	{
 		const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(i);
@@ -107,32 +109,25 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 			vecTagItemGeneratorStr[i].GenTag(Parameter, 
 				vecMSCData[i].Get(SIZEOF__BYTE * Parameter.GetStreamLen(i)));
 	}
-	SendLockedFrame(Parameter,
-		FACData.Get(NUM_FAC_BITS_PER_BLOCK), SDCData.Get(Parameter.iNumSDCBitsPerSFrame));
+	SendLockedFrame(Parameter);
 }
 
-void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
-						CVectorEx<_BINARY>* pvecFACData,
-						CVectorEx<_BINARY>* pvecSDCData,
-						vector<CVectorEx<_BINARY>* >& pvecMSCData)
+void CDownstreamDI::SendLockedFrame(CParameter& Parameter, vector<CInputStruct<_BINARY> >& inputs)
 {
+	TagItemGeneratorFAC.GenTag(Parameter, inputs[0].pvecData);
+	TagItemGeneratorSDC.GenTag(Parameter, inputs[1].pvecData);
 	for (size_t i = 0; i < MAX_NUM_STREAMS; i++)
 	{
 		const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(i);
 		/* Only generate this tag if stream input data is not of zero length */
 		if (iLenStrData > 0)
-			vecTagItemGeneratorStr[i].GenTag(Parameter, pvecMSCData[i]);
+			vecTagItemGeneratorStr[i].GenTag(Parameter, inputs[2+i].pvecData);
 	}
-	SendLockedFrame(Parameter, pvecFACData, pvecSDCData);
+	SendLockedFrame(Parameter);
 }
 
-void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
-						CVectorEx<_BINARY>* pvecFACData,
-						CVectorEx<_BINARY>* pvecSDCData
-)
+void CDownstreamDI::SendLockedFrame(CParameter& Parameter)
 {
-	TagItemGeneratorFAC.GenTag(Parameter, pvecFACData);
-	TagItemGeneratorSDC.GenTag(Parameter, pvecSDCData);
 	TagItemGeneratorRobMod.GenTag(Parameter.GetWaveMode());
 	TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode(), Parameter.GetAnalogDemodType());
 
@@ -726,12 +721,19 @@ CMDIIn::ProcessDataInternal(CParameter& Parameter)
 void
 CMDIOut::InitInternal(CParameter& Parameter)
 {
+	iFrameCount = 0;
+	inputs[0].iBlockSize = NUM_FAC_BITS_PER_BLOCK;
+	inputs[1].iBlockSize = Parameter.iNumSDCBitsPerSFrame;
+	for (int i=0; i<MAX_NUM_STREAMS; i++)
+	{
+		inputs[2+i].iBlockSize = Parameter.GetStreamLen(i);
+	}
 }
 
 void
 CMDIOut::ProcessDataInternal(CParameter& Parameter)
 {
-	//SendLockedFrame(TransmParam, , SDCBuf, MSCBuf);
+	SendLockedFrame(Parameter, inputs);
 	switch(iFrameCount)
 	{
 	case 0:
