@@ -99,13 +99,40 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 						vector<CSingleBuffer<_BINARY> >& vecMSCData
 )
 {
-	TagItemGeneratorFAC.GenTag(Parameter, FACData);
-	TagItemGeneratorSDC.GenTag(Parameter, SDCData);
-	//for (size_t i = 0; i < vecMSCData.size(); i++)
 	for (size_t i = 0; i < MAX_NUM_STREAMS; i++)
 	{
-		vecTagItemGeneratorStr[i].GenTag(Parameter, vecMSCData[i]);
+		const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(i);
+		/* Only generate this tag if stream input data is not of zero length */
+		if (iLenStrData > 0)
+			vecTagItemGeneratorStr[i].GenTag(Parameter, 
+				vecMSCData[i].Get(SIZEOF__BYTE * Parameter.GetStreamLen(i)));
 	}
+	SendLockedFrame(Parameter,
+		FACData.Get(NUM_FAC_BITS_PER_BLOCK), SDCData.Get(Parameter.iNumSDCBitsPerSFrame));
+}
+
+void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
+						CVectorEx<_BINARY>* pvecFACData,
+						CVectorEx<_BINARY>* pvecSDCData,
+						vector<CVectorEx<_BINARY>* >& pvecMSCData)
+{
+	for (size_t i = 0; i < MAX_NUM_STREAMS; i++)
+	{
+		const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(i);
+		/* Only generate this tag if stream input data is not of zero length */
+		if (iLenStrData > 0)
+			vecTagItemGeneratorStr[i].GenTag(Parameter, pvecMSCData[i]);
+	}
+	SendLockedFrame(Parameter, pvecFACData, pvecSDCData);
+}
+
+void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
+						CVectorEx<_BINARY>* pvecFACData,
+						CVectorEx<_BINARY>* pvecSDCData
+)
+{
+	TagItemGeneratorFAC.GenTag(Parameter, pvecFACData);
+	TagItemGeneratorSDC.GenTag(Parameter, pvecSDCData);
 	TagItemGeneratorRobMod.GenTag(Parameter.GetWaveMode());
 	TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode(), Parameter.GetAnalogDemodType());
 
@@ -544,15 +571,13 @@ void CDownstreamDI::SendPacket(const vector<_BYTE>&, uint32_t, uint16_t)
 }
 
 /******************************************************************************\
-* DI receive status, send control                                             *
+* DI receive 
 \******************************************************************************/
-CUpstreamDI::CUpstreamDI() : source(NULL), sink(), bUseAFCRC(TRUE), bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE)
+CDIIn::CDIIn() : CPacketSink(), source(NULL), bDIInEnabled(FALSE)
 {
-	/* Init constant tag */
-	TagItemGeneratorProTyRSCI.GenTag();
 }
 
-CUpstreamDI::~CUpstreamDI()
+CDIIn::~CDIIn()
 {
 	if(source)
 	{
@@ -560,10 +585,10 @@ CUpstreamDI::~CUpstreamDI()
 	}
 }
 
-_BOOLEAN CUpstreamDI::SetOrigin(const string& str)
+_BOOLEAN CDIIn::SetOrigin(const string& str)
 {
 	/* only allow one listening address */
-	if(bMDIInEnabled == TRUE)
+	if(bDIInEnabled == TRUE)
 		return FALSE;
 
 	if(source)
@@ -594,17 +619,54 @@ _BOOLEAN CUpstreamDI::SetOrigin(const string& str)
 	if (bOK)
 	{
 		source->SetPacketSink(this);
-		bMDIInEnabled = TRUE;
+		bDIInEnabled = TRUE;
 		return TRUE;
 	}
 	return FALSE;
 }
 
+/* we only support one upstream DI source, so ignore the source address */
+void CDIIn::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16_t)
+{
+	if(vecbydata[0]=='P')
+	{
+		vector<_BYTE> vecOut;
+		if(Pft.DecodePFTPacket(vecbydata, vecOut))
+		{
+			queue.Put(vecOut);
+		}
+	}
+	else
+		queue.Put(vecbydata);
+}
+
+void CDIIn::ProcessData(CParameter& Parameter, CVectorEx<_BINARY>& vecOutputData, int& iOutputBlockSize)
+{
+	vector<_BYTE> vecbydata;
+	queue.Get(vecbydata);
+	iOutputBlockSize = vecbydata.size()*SIZEOF__BYTE;
+	vecOutputData.Init(iOutputBlockSize);
+	vecOutputData.ResetBitAccess();
+	for(size_t i=0; i<size_t(iOutputBlockSize/SIZEOF__BYTE); i++)
+		vecOutputData.Enqueue(vecbydata[i], SIZEOF__BYTE);
+}
+
+/******************************************************************************\
+* DI receive status, send control                                             *
+\******************************************************************************/
+CUpstreamDI::CUpstreamDI() : CDIIn(), sink(), bUseAFCRC(TRUE), bMDIOutEnabled(FALSE)
+{
+	/* Init constant tag */
+	TagItemGeneratorProTyRSCI.GenTag();
+}
+
+CUpstreamDI::~CUpstreamDI()
+{
+}
+
 _BOOLEAN CUpstreamDI::SetDestination(const string& str)
 {
-
 	bMDIOutEnabled = sink.SetDestination(str);
-
 	return bMDIOutEnabled;
 }
 
@@ -635,34 +697,53 @@ void CUpstreamDI::SetReceiverMode(ERecMode eNewMode)
 	sink.TransmitPacket(TagPacketGenerator);
 }
 
-/* we only support one upstream RSCI source, so ignore the source address */
-void CUpstreamDI::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16_t)
-{
-	if(vecbydata[0]=='P')
-	{
-		vector<_BYTE> vecOut;
-		if(Pft.DecodePFTPacket(vecbydata, vecOut))
-		{
-			queue.Put(vecOut);
-		}
-	}
-	else
-		queue.Put(vecbydata);
-}
-
-void CUpstreamDI::InitInternal(CParameter&)
+void
+CUpstreamDI::InitInternal(CParameter& Parameter)
 {
 	iInputBlockSize = 1; /* anything is enough but not zero */
 	iMaxOutputBlockSize = 2048*SIZEOF__BYTE; /* bigger than an ethernet packet */
 }
 
-void CUpstreamDI::ProcessDataInternal(CParameter&)
+void
+CUpstreamDI::ProcessDataInternal(CParameter& Parameter)
 {
-	vector<_BYTE> vecbydata;
-	queue.Get(vecbydata);
-	iOutputBlockSize = vecbydata.size()*SIZEOF__BYTE;
-	pvecOutputData->Init(iOutputBlockSize);
-	pvecOutputData->ResetBitAccess();
-	for(size_t i=0; i<size_t(iOutputBlockSize/SIZEOF__BYTE); i++)
-		pvecOutputData->Enqueue(vecbydata[i], SIZEOF__BYTE);
+	CDIIn::ProcessData(Parameter, *pvecOutputData, iOutputBlockSize);
+}
+
+void
+CMDIIn::InitInternal(CParameter& Parameter)
+{
+	inputs[0].iBlockSize = 1; /* anything is enough but not zero */
+	outputs[0].iMaxBlockSize = 2048*SIZEOF__BYTE; /* bigger than an ethernet packet */
+}
+
+void
+CMDIIn::ProcessDataInternal(CParameter& Parameter)
+{
+	CDIIn::ProcessData(Parameter, *outputs[0].pvecData, outputs[0].iBlockSize);
+}
+
+void
+CMDIOut::InitInternal(CParameter& Parameter)
+{
+}
+
+void
+CMDIOut::ProcessDataInternal(CParameter& Parameter)
+{
+	//SendLockedFrame(TransmParam, , SDCBuf, MSCBuf);
+	switch(iFrameCount)
+	{
+	case 0:
+		inputs[1].iBlockSize = Parameter.iNumSDCBitsPerSFrame;
+		iFrameCount = 1;
+		break;
+	case 1:
+		inputs[1].iBlockSize = 0;
+		iFrameCount = 2;
+		break;
+	case 2:
+		inputs[1].iBlockSize = 0;
+		iFrameCount = 0;
+	}
 }

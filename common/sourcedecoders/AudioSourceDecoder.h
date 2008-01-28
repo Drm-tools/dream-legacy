@@ -210,12 +210,13 @@ protected:
 
 	virtual void InitInternal(CParameter& TransmParam)
 	{
-		AudioSourceEncoderImpl.InitInternalTx(TransmParam, iInputBlockSize, iOutputBlockSize);
+		AudioSourceEncoderImpl.InitInternalTx(TransmParam, inputs[0].iBlockSize, outputs[0].iBlockSize);
 	}
 	
 	virtual void ProcessDataInternal(CParameter& )
 	{
-		AudioSourceEncoderImpl.ProcessDataInternal(pvecInputData, pvecOutputData, iInputBlockSize, iOutputBlockSize);
+		AudioSourceEncoderImpl.ProcessDataInternal(
+			inputs[0].pvecData, outputs[0].pvecData, inputs[0].iBlockSize, outputs[0].iBlockSize);
 	}
 
 };

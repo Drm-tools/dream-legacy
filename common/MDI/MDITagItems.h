@@ -102,7 +102,7 @@ protected:
 class CTagItemGeneratorFAC : public CTagItemGeneratorWithProfiles /* fac_ tag */
 {
 public:
-	void GenTag(CParameter& Parameter, CSingleBuffer<_BINARY>& FACData);
+	void GenTag(CParameter& Parameter,  CVectorEx < _BINARY > *pvecbiData);
 protected:
 	virtual string GetTagName();
 	virtual string GetProfiles(); // Return a string containing the set of profiles for this tag
@@ -111,7 +111,7 @@ protected:
 class CTagItemGeneratorSDC : public CTagItemGeneratorWithProfiles /* sdc_ tag */
 {
 public:
-	void GenTag(CParameter& Parameter, CSingleBuffer<_BINARY>& FACData);
+	void GenTag(CParameter& Parameter,  CVectorEx < _BINARY > *pvecbiData);
 protected:
 	virtual string GetTagName();
 	virtual string GetProfiles(); // Return a string containing the set of profiles for this tag
@@ -149,7 +149,7 @@ class CTagItemGeneratorStr : public CTagItemGeneratorWithProfiles /* strx tag */
 public:
 	CTagItemGeneratorStr();
 	void SetStreamNumber(int iStrNum);
-	void GenTag(CParameter& Parameter, CSingleBuffer<_BINARY>& FACData);
+	void GenTag(CParameter& Parameter,  CVectorEx < _BINARY > *pvecbiData);
 protected:
 	virtual string GetTagName();
 	virtual string GetProfiles(); // Return a string containing the set of profiles for this tag

@@ -47,20 +47,20 @@ void CReadData::ProcessDataInternal(CParameter&)
 	/* Get data from sound interface */
 	pSound->Read(vecsSoundBuffer);
 	/* Write data to output buffer */
-	for (int i = 0; i < iOutputBlockSize; i++)
-		(*pvecOutputData)[i] = vecsSoundBuffer[i];
+	for (int i = 0; i < outputs[0].iBlockSize; i++)
+		(*outputs[0].pvecData)[i] = vecsSoundBuffer[i];
 }
 
 void CReadData::InitInternal(CParameter&)
 {
 	/* Define block-size for output, an audio frame always corresponds
 	   to 400 ms. We use always stereo blocks */
-	iOutputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
+	outputs[0].iBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
 		(_REAL) 0.4 /* 400 ms */ * 2 /* stereo */);
 
 	/* Init sound interface and intermediate buffer */
-	pSound->Init(iOutputBlockSize);
-	vecsSoundBuffer.resize(iOutputBlockSize);
+	pSound->Init(outputs[0].iBlockSize);
+	vecsSoundBuffer.resize(outputs[0].iBlockSize);
 }
 
 /* Receiver ----------------------------------------------------------------- */
@@ -447,7 +447,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 	iShiftRegister = (uint32_t) (time(NULL) + rand());
 	TransmParam.RawSimDa.Add(iShiftRegister);
 
-	for (i = 0; i < iOutputBlockSize; i++)
+	for (i = 0; i < outputs[0].iBlockSize; i++)
 	{
 		/* Calculate new PRBS bit */
 		iTempShiftRegister1 = iShiftRegister;
@@ -462,14 +462,14 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 		iShiftRegister |= (biPRBSbit & 1);
 
 		/* Use PRBS output */
-		(*pvecOutputData)[i] = biPRBSbit;
+		(*outputs[0].pvecData)[i] = biPRBSbit;
 	}
 }
 
 void CGenSimData::InitInternal(CParameter& TransmParam)
 {
 	/* Define output block size */
-	iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
+	outputs[0].iBlockSize = TransmParam.iNumDecodedBitsMSC;
 
 	/* Minimum simulation time depends on the selected channel */
 	switch (TransmParam.iDRMChannelNum)
@@ -622,7 +622,7 @@ void CEvaSimData::InitInternal(CParameter& ReceiverParam)
 /* Transmitter */
 void CGenerateFACData::ProcessDataInternal(CParameter& TransmParam)
 {
-	FACTransmit.FACParam(pvecOutputData, TransmParam);
+	FACTransmit.FACParam(outputs[0].pvecData, TransmParam);
 }
 
 void CGenerateFACData::InitInternal(CParameter& TransmParam)
@@ -630,7 +630,7 @@ void CGenerateFACData::InitInternal(CParameter& TransmParam)
 	FACTransmit.Init(TransmParam);
 
 	/* Define block-size for output */
-	iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
+	outputs[0].iBlockSize = NUM_FAC_BITS_PER_BLOCK;
 }
 
 /* Receiver */
@@ -682,13 +682,13 @@ ReceiverParam.iFrameIDReceiv = NUM_FRAMES_IN_SUPERFRAME - 1;
 /* Transmitter */
 void CGenerateSDCData::ProcessDataInternal(CParameter& TransmParam)
 {
-	SDCTransmit.SDCParam(pvecOutputData, TransmParam);
+	SDCTransmit.SDCParam(outputs[0].pvecData, TransmParam);
 }
 
 void CGenerateSDCData::InitInternal(CParameter& TransmParam)
 {
 	/* Define block-size for output */
-	iOutputBlockSize = TransmParam.iNumSDCBitsPerSFrame;
+	outputs[0].iBlockSize = TransmParam.iNumSDCBitsPerSFrame;
 }
 
 /* Receiver */

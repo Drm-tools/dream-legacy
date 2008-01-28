@@ -34,8 +34,8 @@
 
 /* Implementation *************************************************************/
 CDRMModulator::CDRMModulator():
-	MLCEncBuf(), IntlBuf(),
-	FACMapBuf(), SDCMapBuf(), CarMapBuf(), OFDMModBuf(), TransmitData(),
+	MLCEncBuf(), MSC_FAC_SDC_MapBuf(3),
+	CarMapBuf(), OFDMModBuf(), TransmitData(),
 	MSCMLCEncoder(), SymbInterleaver(), FACMLCEncoder(), SDCMLCEncoder(),
 	OFDMCellMapping(), OFDMModulation()
 {
@@ -49,41 +49,50 @@ CDRMModulator::GetSoundOutChoices(vector<string>& v)
 }
 
 void
-CDRMModulator::Init(CParameter& Parameters, CBuffer<_BINARY>& FACBuf,
-	CBuffer<_BINARY>& SDCBuf, vector< CSingleBuffer<_BINARY> >& MSCBuf)
+CDRMModulator::Init(CParameter& Parameter)
 {
 	/* Defines number of cells, important! */
-	OFDMCellMapping.Init(Parameters, CarMapBuf);
+	OFDMCellMapping.Init(Parameter, CarMapBuf);
 
 	/* Defines number of SDC bits per super-frame */
-	SDCMLCEncoder.Init(Parameters, SDCMapBuf);
+	SDCMLCEncoder.Init(Parameter, MSC_FAC_SDC_MapBuf[2]);
 
-	MSCMLCEncoder.Init(Parameters, MLCEncBuf);
-	SymbInterleaver.Init(Parameters, IntlBuf);
-	FACMLCEncoder.Init(Parameters, FACMapBuf);
-	OFDMModulation.Init(Parameters, OFDMModBuf);
+	MSCMLCEncoder.Init(Parameter, MLCEncBuf);
+	SymbInterleaver.Init(Parameter, MSC_FAC_SDC_MapBuf[0]);
+	FACMLCEncoder.Init(Parameter, MSC_FAC_SDC_MapBuf[1]);
+	OFDMModulation.Init(Parameter, OFDMModBuf);
 
-	TransmitData.Init(Parameters);
+	TransmitData.Init(Parameter);
 }
 
 void
 CDRMModulator::ProcessData(CParameter& Parameters,
 	CBuffer<_BINARY>& FACBuf, CBuffer<_BINARY>& SDCBuf, vector< CSingleBuffer<_BINARY> >& MSCBuf)
 {
+	cerr << "MSC MLC Int SDC FAC Car FDM" << endl;
+	cerr <<  " "  << MSCBuf[0].GetRequestFlag();
+	cerr << "   " << MLCEncBuf.GetRequestFlag() ;
+	cerr << "   " << MSC_FAC_SDC_MapBuf[0].GetRequestFlag() ;
+	cerr << "   " << MSC_FAC_SDC_MapBuf[1].GetRequestFlag() ;
+	cerr << "   " << MSC_FAC_SDC_MapBuf[2].GetRequestFlag() ;
+	cerr << "   " << CarMapBuf.GetRequestFlag();
+	cerr << "   " << OFDMModBuf.GetRequestFlag();
+	cerr << endl;
 	/* MLC-encoder */
 	MSCMLCEncoder.ProcessData(Parameters, MSCBuf[0], MLCEncBuf);
 
 	/* Convolutional interleaver */
-	SymbInterleaver.ProcessData(Parameters, MLCEncBuf, IntlBuf);
+	SymbInterleaver.ProcessData(Parameters, MLCEncBuf, MSC_FAC_SDC_MapBuf[0]);
 
 	/* FAC *************************************************************** */
-	FACMLCEncoder.ProcessData(Parameters, FACBuf, FACMapBuf);
+	FACMLCEncoder.ProcessData(Parameters, FACBuf, MSC_FAC_SDC_MapBuf[1]);
 
 	/* SDC *************************************************************** */
-	SDCMLCEncoder.ProcessData(Parameters, SDCBuf, SDCMapBuf);
+	SDCMLCEncoder.ProcessData(Parameters, SDCBuf, MSC_FAC_SDC_MapBuf[2]);
 
 	/* Mapping of the MSC, FAC, SDC and pilots on the carriers *********** */
-	OFDMCellMapping.ProcessData(Parameters, IntlBuf, FACMapBuf, SDCMapBuf, CarMapBuf);
+	OFDMCellMapping.ProcessData(Parameters, MSC_FAC_SDC_MapBuf, CarMapBuf);
+	cerr << "CarMapBuf " << CarMapBuf.GetFillLevel() << endl;
 
 	/* OFDM-modulation *************************************************** */
 	OFDMModulation.ProcessData(Parameters, CarMapBuf, OFDMModBuf);
@@ -120,4 +129,16 @@ CDRMModulator::SaveSettings(CSettings& s, CParameter& Parameters)
 	//s.Put("Modulator", "snddevout", iSoundOutDev);
 	//s.Put("Modulator", "outputfile", strOutputFileName);
 	//s.Put("Modulator", "outputfiletype", strOutputFileType);
+}
+
+void
+CDRMModulator::SetOutputs(const vector<string>& o)
+{
+	TransmitData.SetOutputs(o);
+}
+
+void
+CDRMModulator::GetOutputs(vector<string>& o)
+{
+	TransmitData.GetOutputs(o);
 }

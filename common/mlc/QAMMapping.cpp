@@ -54,11 +54,13 @@ void CQAMMapping::Map(CVector<_DECISION>& vecInputData1,
 		   {i_0  q_0} = (y'_0  y'_1) = (y_0,0  y_0,1) */
 		for (i = 0; i < iOutputBlockSize; i++)
 		{
-			(*pcOutputData)[i] = _COMPLEX(
-				/* Odd entries (second column in "rTableQAM4") */
-				rTableQAM4[ExtractBit(vecInputData1[2 * i]) & 1][0],
-				/* Even entries in input-vector */
-				rTableQAM4[ExtractBit(vecInputData1[2 * i + 1]) & 1][1]);
+			/* Even entries in input-vector */
+			int rei = ExtractBit(vecInputData1[2 * i]) & 1;
+			_REAL re = rTableQAM4[rei][0];
+			/* Odd entries (second column in "rTableQAM4") */
+			int imi = ExtractBit(vecInputData1[2 * i + 1]) & 1;
+			_REAL im = rTableQAM4[imi][1];
+			(*pcOutputData)[i] = _COMPLEX( re, im );
 		}
 		break;
 

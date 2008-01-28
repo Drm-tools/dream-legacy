@@ -365,7 +365,7 @@ protected:
 	CAMSSDecode				AMSSDecode;
 
 	CUpstreamDI				upstreamRSCI;
-	CDecodeRSIMDI			DecodeRSIMDI;
+	CDecodeRSI				DecodeRSIMDI;
 	CDownstreamDI			downstreamRSCI;
 
 	/* Parameters */

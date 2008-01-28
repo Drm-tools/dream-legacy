@@ -34,8 +34,10 @@
 CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	rStartSNR(0.0), rEndSNR(0.0), rStepSNR(0.0),
 	Param(),
-	DataBuf(), MLCEncBuf(), IntlBuf(), GenFACDataBuf(), FACMapBuf(), GenSDCDataBuf(),
-	SDCMapBuf(), CarMapBuf(), OFDMModBuf(), OFDMDemodBufChan2(), ChanEstInBufSim(),
+	DataBuf(), MLCEncBuf(), MSC_FAC_SDC_MapBuf(),
+	//IntlBuf(), FACMapBuf(), SDCMapBuf(), 
+	GenFACDataBuf(), GenSDCDataBuf(),
+	CarMapBuf(), OFDMModBuf(), OFDMDemodBufChan2(), ChanEstInBufSim(),
 	ChanEstOutBufChan(),
 	RecDataBuf(), ChanResInBuf(), InpResBuf(), FreqSyncAcqBuf(), TimeSyncBuf(),
 	OFDMDemodBuf(), SyncUsingPilBuf(), ChanEstBuf(),
@@ -53,6 +55,7 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	/* Init streams */
 	Param.ResetServicesStreams();
 
+	MSC_FAC_SDC_MapBuf.resize(3); // MSC, FAC, SDC
 
 	/* Service parameters (only use service 0) ------------------------------- */
 	/* Data service */
@@ -133,22 +136,21 @@ void CDRMSimulation::Run()
 		MSCMLCEncoder.ProcessData(Param, DataBuf, MLCEncBuf);
 
 		/* Convolutional interleaver */
-		SymbInterleaver.ProcessData(Param, MLCEncBuf, IntlBuf);
+		SymbInterleaver.ProcessData(Param, MLCEncBuf, MSC_FAC_SDC_MapBuf[0]);
 
 
 		/* FAC -------------------------------------------------------------- */
 		GenerateFACData.ReadData(Param, GenFACDataBuf);
-		FACMLCEncoder.ProcessData(Param, GenFACDataBuf, FACMapBuf);
+		FACMLCEncoder.ProcessData(Param, GenFACDataBuf, MSC_FAC_SDC_MapBuf[1]);
 
 
 		/* SDC -------------------------------------------------------------- */
 		GenerateSDCData.ReadData(Param, GenSDCDataBuf);
-		SDCMLCEncoder.ProcessData(Param, GenSDCDataBuf, SDCMapBuf);
+		SDCMLCEncoder.ProcessData(Param, GenSDCDataBuf, MSC_FAC_SDC_MapBuf[2]);
 
 
 		/* Mapping of the MSC, FAC, SDC and pilots on the carriers */
-		OFDMCellMapping.ProcessData(Param, IntlBuf, FACMapBuf,
-			SDCMapBuf, CarMapBuf);
+		OFDMCellMapping.ProcessData(Param, MSC_FAC_SDC_MapBuf, CarMapBuf);
 
 		/* OFDM-modulation */
 		OFDMModulation.ProcessData(Param, CarMapBuf, OFDMModBuf);
@@ -244,12 +246,12 @@ void CDRMSimulation::Init()
 	OFDMCellMapping.Init(Param, CarMapBuf);
 
 	/* Defines number of SDC bits per super-frame */
-	SDCMLCEncoder.Init(Param, SDCMapBuf);
+	SDCMLCEncoder.Init(Param, MSC_FAC_SDC_MapBuf[2]);
 	
 	MSCMLCEncoder.Init(Param, MLCEncBuf);
-	SymbInterleaver.Init(Param, IntlBuf);
+	SymbInterleaver.Init(Param, MSC_FAC_SDC_MapBuf[0]);
 	GenerateFACData.Init(Param, GenFACDataBuf);
-	FACMLCEncoder.Init(Param, FACMapBuf);
+	FACMLCEncoder.Init(Param, MSC_FAC_SDC_MapBuf[1]);
 	GenerateSDCData.Init(Param, GenSDCDataBuf);
 	OFDMModulation.Init(Param, OFDMModBuf);
 	GenSimData.Init(Param, DataBuf);
@@ -313,11 +315,14 @@ void CDRMSimulation::Init()
 	   buffers from the last simulation (with, e.g., different SNR) */
 	DataBuf.Clear();
 	MLCEncBuf.Clear();
-	IntlBuf.Clear();
+	//IntlBuf.Clear();
+	//FACMapBuf.Clear();
+	//SDCMapBuf.Clear();
+	MSC_FAC_SDC_MapBuf[0].Clear();
+	MSC_FAC_SDC_MapBuf[1].Clear();
+	MSC_FAC_SDC_MapBuf[2].Clear();
 	GenFACDataBuf.Clear();
-	FACMapBuf.Clear();
 	GenSDCDataBuf.Clear();
-	SDCMapBuf.Clear();
 	CarMapBuf.Clear();
 	OFDMModBuf.Clear();
 	OFDMDemodBufChan2.Clear();

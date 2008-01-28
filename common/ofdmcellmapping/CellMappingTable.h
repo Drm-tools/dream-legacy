@@ -78,6 +78,8 @@ public:
 	virtual ~CCellMappingTable() {}
 
 	void MakeTable(ERobMode eNewRobustnessMode, ESpecOcc eNewSpectOccup);
+	void dump_carriers(const string& file);
+	void dump_pilots(const string& file);
 
 	struct CRatio {int iEnum; int iDenom;};
 
@@ -94,13 +96,13 @@ public:
 	int					iMaxNumMSCSym; /* Max number of MSC cells in a symbol */
 
 	/* Number of MSC cells in a symbol */
-	CVector<int>		veciNumMSCSym; 
+	vector<int>			veciNumMSCSym; 
 
 	/* Number of FAC cells in a symbol */
-	CVector<int>		veciNumFACSym; 
+	vector<int>			veciNumFACSym; 
 
 	/* Number of SDC cells in a symbol */
-	CVector<int>		veciNumSDCSym;
+	vector<int>			veciNumSDCSym;
 
 	int					iFFTSizeN; /* FFT size of the OFDM modulation */
 	int					iCarrierKmin; /* Carrier index of carrier with lowest frequency */

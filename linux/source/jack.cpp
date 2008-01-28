@@ -62,25 +62,21 @@ struct CJackCommon
 static CJackCommon data;
 
 static int
-capture_stereo(jack_nframes_t nframes, void *arg)
+capture_stereo(jack_nframes_t nframes, instance_data_t& cap_data)
 {
-	instance_data_t& data = *(instance_data_t *) arg;
-	if(arg==NULL)
-	{	
-		return 0;
-	}
-	if(data.left==NULL || data.right == NULL)
+	if(cap_data.left==NULL || cap_data.right == NULL)
 	{	
 		return 0;
 	}
 	jack_default_audio_sample_t *in[2];
-	in[0] = (jack_default_audio_sample_t *) jack_port_get_buffer(data.left, nframes);
-	in[1] = (jack_default_audio_sample_t *) jack_port_get_buffer(data.right, nframes);
+	in[0] = (jack_default_audio_sample_t *) jack_port_get_buffer(cap_data.left, nframes);
+	in[1] = (jack_default_audio_sample_t *) jack_port_get_buffer(cap_data.right, nframes);
 	if(in[0]==NULL || in[1]==NULL)
 	{	
 		return 0;
 	}
-	if(data.buff==NULL)
+	jack_ringbuffer_t* buff = cap_data.buff;
+	if(buff==NULL)
 	{
 		return 0;
 	}
@@ -91,8 +87,46 @@ capture_stereo(jack_nframes_t nframes, void *arg)
 		/* interleave samples for encoder */
 		for (int chn = 0; chn < 2; chn++)
 			sample[chn] = short (32768.0 * in[chn][i]);
-		if (jack_ringbuffer_write (data.buff, (char *) sample, bytes) < bytes)
-			data.overruns++;
+		if (jack_ringbuffer_write (buff, (char *) sample, bytes) < bytes)
+			cap_data.overruns++;
+	}
+	return 0;
+}
+
+static int
+play_stereo(jack_nframes_t nframes, instance_data_t& play_data)
+{
+	if(play_data.left==NULL || play_data.right == NULL)
+	{	
+		return 0;
+	}
+	jack_default_audio_sample_t *out[2];
+	char* t;
+	cerr << long(play_data.left);
+	t = (char*)jack_port_get_buffer(play_data.left, nframes);
+	cerr << t << endl;
+	out[0] = (jack_default_audio_sample_t *) t;
+	t = (char*)jack_port_get_buffer(play_data.right, nframes);
+	out[1] = (jack_default_audio_sample_t *) t;
+	if(out[0]==NULL || out[1]==NULL)
+	{
+		return 0;
+	}
+	jack_ringbuffer_t* buff = play_data.buff;
+	if(buff==NULL)
+	{
+		return 0;
+	}
+	for (jack_nframes_t i = 0; i < nframes; i++)
+	{
+		short buffer[2];
+		size_t bytes = sizeof(short)*2;
+		size_t n = jack_ringbuffer_read(buff, (char*)buffer, bytes);
+		if (n < bytes)
+			play_data.underruns++;
+		/* de-interleave samples from decoder */
+		for (int chn = 0; chn < 2; chn++)
+			out[chn][i] = jack_default_audio_sample_t(double(buffer[chn])/32768.0);
 	}
 	return 0;
 }
@@ -168,51 +202,20 @@ CJackPorts::load(jack_client_t * client, unsigned long flags)
 	}
 }
 
-static int
-play_stereo(jack_nframes_t nframes, void *arg)
-{
-	if(arg==NULL)
-	{	
-		return 0;
-	}
-	instance_data_t& data = *(instance_data_t *) arg;
-	if(data.left==NULL || data.right == NULL)
-	{	
-		return 0;
-	}
-	jack_default_audio_sample_t *out[2];
-	out[0] = (jack_default_audio_sample_t *) jack_port_get_buffer(data.left, nframes);
-	out[1] = (jack_default_audio_sample_t *) jack_port_get_buffer(data.right, nframes);
-	if(out[0]==NULL || out[1]==NULL)
-	{
-		return 0;
-	}
-	if(data.buff==NULL)
-	{
-		return 0;
-	}
-	for (jack_nframes_t i = 0; i < nframes; i++)
-	{
-		short buffer[2];
-		size_t bytes = sizeof(short)*2;
-		size_t n = jack_ringbuffer_read(data.buff, (char*)buffer, bytes);
-		if (n < bytes)
-			data.underruns++;
-		/* de-interleave samples from decoder */
-		for (int chn = 0; chn < 2; chn++)
-			out[chn][i] = jack_default_audio_sample_t(double(buffer[chn])/32768.0);
-	}
-	return 0;
-}
 
 static int
 process_callback(jack_nframes_t nframes, void *arg)
 {
 	CJackCommon *This = (CJackCommon *) arg;
+
+	if(This->is_active == false)
+		return 0;
+
 	if(This->capture_data)
-		capture_stereo(nframes, This->capture_data);
+		capture_stereo(nframes, *This->capture_data);
 	if(This->play_data)
-		play_stereo(nframes, This->play_data);
+		play_stereo(nframes, *This->play_data);
+
 	return 0;
 }
 
@@ -329,6 +332,7 @@ CSoundInJack & CSoundInJack::operator=(const CSoundInJack & e)
 
 CSoundInJack::~CSoundInJack()
 {
+cerr << "CSoundInJack::~CSoundInJack()" << endl;
 	Close();
 	if(data.client==NULL)
 		return;
@@ -482,6 +486,7 @@ play_data(), dev(-1), ports(), channels(2)
 
 CSoundOutJack::~CSoundOutJack()
 {
+cerr << "CSoundOutJack::~CSoundOutJack()" <<endl;
 	Close();
 	if (data.is_active && jack_deactivate(data.client))
 	{
@@ -489,11 +494,6 @@ CSoundOutJack::~CSoundOutJack()
 	}
 	data.is_active = false;
 	data.capture_data = NULL;
-	if (jack_activate(data.client))
-	{
-		throw "Jack: cannot activate client";
-	}
-	data.is_active = true;
 }
 
 CSoundOutJack::CSoundOutJack(const CSoundOutJack & e):

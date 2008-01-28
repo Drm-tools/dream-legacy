@@ -50,15 +50,45 @@
 #define MAX_NUM_RSI_PRESETS 9
 
 /* Classes ********************************************************************/
-class CUpstreamDI : public CReceiverModul<_BINARY, _BINARY> , public CPacketSink
+class CDIIn : public CPacketSink
+{
+public:
+	CDIIn();
+	virtual ~CDIIn();
+	_BOOLEAN SetOrigin(const string& strAddr);
+	_BOOLEAN GetInEnabled() {return bDIInEnabled;}
+	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
+	void ProcessData(CParameter& Parameter, CVectorEx<_BINARY>& vecOutputData, int& iOutputBlockSize);
+
+protected:
+
+	string						strOrigin;
+	CMDIInBuffer	  			queue;
+	CPacketSource*				source;
+	CPft						Pft;
+
+	_BOOLEAN					bDIInEnabled;
+};
+
+class CMDIIn :  public CTransmitterModul<_BINARY, _BINARY>, public CDIIn
+{
+public:
+	CMDIIn() : CTransmitterModul<_BINARY, _BINARY>(), CDIIn() {}
+	virtual ~CMDIIn() {}
+	void InitInternal(CParameter& Parameter);
+	void ProcessDataInternal(CParameter& Parameter);
+	virtual _BOOLEAN SetDestination(const string&) { return FALSE; }
+	virtual _BOOLEAN GetDestination(string&) { return FALSE; }
+};
+
+class CUpstreamDI : public CReceiverModul<_BINARY, _BINARY>, public CDIIn
 {
 public:
 	CUpstreamDI();
 	virtual ~CUpstreamDI();
 
 	/* CRSIMDIInInterface */
-	_BOOLEAN SetOrigin(const string& strAddr);
-	_BOOLEAN GetInEnabled() {return bMDIInEnabled;}
+	// inherited from CDIIn
 
 	/* CRCIOutInterface */
 	_BOOLEAN SetDestination(const string& strArgument);
@@ -67,29 +97,20 @@ public:
 	void SetFrequency(int iNewFreqkHz);
 	void SetReceiverMode(ERecMode eNewMode);
 
-	/* CPacketSink */
-	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
-
 	_BOOLEAN GetDestination(string& strArgument);
 
 	/* CReceiverModul */
-	void InitInternal(CParameter& ReceiverParam);
-	void ProcessDataInternal(CParameter& ReceiverParam);
+	void InitInternal(CParameter& Parameter);
+	void ProcessDataInternal(CParameter& Parameter);
 
 protected:
 
-	string						strOrigin;
 	string						strDestination;
-	CMDIInBuffer	  			queue;
-	CPacketSource*				source;
 	CRSISubscriberSocket		sink; 
-	CPft						Pft;
 
 	_BOOLEAN					bUseAFCRC;
 
-	CSingleBuffer<_BINARY>		MDIInBuffer;
 	_BOOLEAN					bMDIOutEnabled;
-	_BOOLEAN					bMDIInEnabled;
 	_BOOLEAN					bNeedPft;
 
 	/* Tag Item Generators */
@@ -116,6 +137,15 @@ public:
 						CSingleBuffer<_BINARY>& FACData,
 						CSingleBuffer<_BINARY>& SDCData,
 						vector<CSingleBuffer<_BINARY> >& vecMSCData
+	);
+	void SendLockedFrame(CParameter& Parameter,
+						CVectorEx<_BINARY>* pvecFACData,
+						CVectorEx<_BINARY>* pvecSDCData,
+						vector<CVectorEx<_BINARY>* >& pvecMSCData
+	);
+	void SendLockedFrame(CParameter& Parameter,
+						CVectorEx<_BINARY>* pvecFACData,
+						CVectorEx<_BINARY>* pvecSDCData
 	);
 	void SendUnlockedFrame(CParameter& Parameter); /* called once per frame even if the Rx isn't synchronised */
 	void SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& CodedAudioData);
@@ -206,6 +236,17 @@ protected:
 	CPacketSink*					sink;
 	CSingleBuffer<_BINARY>			MDIInBuffer;
 
+};
+
+class CMDIOut :  public CTransmitterModul<_BINARY, _BINARY>, public CDownstreamDI 
+{
+public:
+	CMDIOut() : CTransmitterModul<_BINARY, _BINARY>(), CDownstreamDI(), iFrameCount(0) {}
+	virtual ~CMDIOut() {}
+	void InitInternal(CParameter& Parameter);
+	void ProcessDataInternal(CParameter& Parameter);
+protected:
+	int iFrameCount;
 };
 
 #endif // !defined(MDI_H__3B0346264660_CA63_3452345DGERH31912__INCLUDED_)

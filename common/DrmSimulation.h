@@ -80,11 +80,14 @@ protected:
 	/* Transmitter buffers */
 	CSingleBuffer<_BINARY>				DataBuf;
 	CSingleBuffer<_COMPLEX>				MLCEncBuf;
-	CCyclicBuffer<_COMPLEX>				IntlBuf;
 	CSingleBuffer<_BINARY>				GenFACDataBuf;
-	CCyclicBuffer<_COMPLEX>				FACMapBuf;
+
+	//CCyclicBuffer<_COMPLEX>				IntlBuf;
+	//CCyclicBuffer<_COMPLEX>				FACMapBuf;
+	//CCyclicBuffer<_COMPLEX>				SDCMapBuf;
+	vector<CCyclicBuffer<_COMPLEX> >	MSC_FAC_SDC_MapBuf;
+
 	CSingleBuffer<_BINARY>				GenSDCDataBuf;
-	CCyclicBuffer<_COMPLEX>				SDCMapBuf;
 	CSingleBuffer<_COMPLEX>				CarMapBuf;
 	CSingleBuffer<_COMPLEX>				OFDMModBuf;
 

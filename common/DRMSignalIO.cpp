@@ -50,27 +50,27 @@ void CTransmitData::GetOutputs(vector<string>& o)
 void CTransmitData::ProcessDataInternal(CParameter&)
 {
 	int i;
-
+cerr << "CTransmitData::ProcessDataInternal" << endl;
 	/* Apply bandpass filter */
-	BPFilter.Process(*pvecInputData);
+	BPFilter.Process(*inputs[0].pvecData);
 
 	/* Convert vector type. Fill vector with symbols (collect them) */
-	const int iNs2 = iInputBlockSize * 2;
+	const int iNs2 = inputs[0].iBlockSize * 2;
 	for (i = 0; i < iNs2; i += 2)
 	{
 		const int iCurIndex = iBlockCnt * iNs2 + i;
 
 		/* Imaginary, real */
 		const _SAMPLE sCurOutReal =
-			(_SAMPLE) ((*pvecInputData)[i / 2].real() * rNormFactor);
+			(_SAMPLE) ((*inputs[0].pvecData)[i / 2].real() * rNormFactor);
 		const _SAMPLE sCurOutImag =
-			(_SAMPLE) ((*pvecInputData)[i / 2].imag() * rNormFactor);
+			(_SAMPLE) ((*inputs[0].pvecData)[i / 2].imag() * rNormFactor);
 
 		/* Envelope, phase */
 		const _SAMPLE sCurOutEnv =
-			(_SAMPLE) (Abs((*pvecInputData)[i / 2]) * (_REAL) 256.0);
+			(_SAMPLE) (Abs((*inputs[0].pvecData)[i / 2]) * (_REAL) 256.0);
 		const _SAMPLE sCurOutPhase = /* 2^15 / pi / 2 -> approx. 5000 */
-			(_SAMPLE) (Angle((*pvecInputData)[i / 2]) * (_REAL) 5000.0);
+			(_SAMPLE) (Angle((*inputs[0].pvecData)[i / 2]) * (_REAL) 5000.0);
 
 		switch (eOutputFormat)
 		{
@@ -106,7 +106,7 @@ void CTransmitData::ProcessDataInternal(CParameter&)
 	if (iBlockCnt == iNumBlocks)
 	{
 		iBlockCnt = 0;
-
+cerr << "tx got " << iNumBlocks << " to write" << endl;
 		for(size_t i=0; i<vecpSound.size(); i++)
 		{
 			/* Write data to sound card or file. */
@@ -138,15 +138,15 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 		size_t p = s.rfind('.');
 		if (p != string::npos)
 			ext = s.substr(p + 1);
-		if(s=="wav")
+		if(ext=="wav")
 		{
 			pSound = new CSoundFileOut;
 		}
-		else if(s=="txt")
+		else if(ext=="txt")
 		{
 			pSound = new CSoundFileOut;
 		}
-		else if(s=="raw")
+		else if(ext=="raw")
 		{
 			pSound = new CSoundFileOut;
 		}
@@ -171,7 +171,8 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	rNormFactor = (CReal) 3000.0 / Sqrt(TransmParam.CellMappingTable.rAvPowPerSymbol);
 
 	/* Define block-size for input */
-	iInputBlockSize = iSymbolBlockSize;
+	inputs[0].iBlockSize = iSymbolBlockSize;
+	cerr << "TransmitData " << inputs[0].iBlockSize << " " << iBigBlockSize << endl;
 }
 
 void CTransmitData::Stop()

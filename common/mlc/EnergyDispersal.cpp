@@ -34,7 +34,7 @@
 
 
 /* Implementation *************************************************************/
-void CEngergyDispersal::ProcessData(CVector<_BINARY>* pbiData)
+void CEnergyDispersal::ProcessData(CVectorEx<_BINARY>& pbiData)
 {
 	int			i;
 	uint32_t	iTempShiftRegister;
@@ -78,11 +78,11 @@ void CEngergyDispersal::ProcessData(CVector<_BINARY>* pbiData)
 		}
 
 		/* Apply PRBS to the data-stream */
-		(*pbiData)[i] ^= biPRBSbit;
+		pbiData[i] ^= biPRBSbit;
 	}
 }
 
-void CEngergyDispersal::Init(int iNewNumInBits, int iNewLengthVSPP)
+void CEnergyDispersal::Init(int iNewNumInBits, int iNewLengthVSPP)
 {
 	/* Set the internal parameters */
 	iNumInBits = iNewNumInBits;

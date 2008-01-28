@@ -35,19 +35,43 @@
 #include "MDIDefinitions.h"
 #include "TagPacketDecoderMDI.h"
 
-class CDecodeRSIMDI : public CReceiverModul<_BINARY, _BINARY>
+class CDecodeRSIMDI
 {
 public:
 	CDecodeRSIMDI():TagPacketDecoderMDI() {}
 	virtual ~CDecodeRSIMDI() {}
+	virtual void Init(CParameter& Parameters);
+	virtual void ProcessData(CParameter& Parameters,
+				vector<CInputStruct<_BINARY> >& inputs,
+				vector<COutputStruct<_BINARY> >& outputs);
 
 protected:
+	CTagPacketDecoderMDI TagPacketDecoderMDI;
+	int iFramesSinceSDC;
+};
 
+class CDecodeRSI : public CReceiverModul<_BINARY, _BINARY>
+{
+public:
+	CDecodeRSI():Decoder() {}
+	virtual ~CDecodeRSI() {}
+protected:
 	virtual void InitInternal(CParameter& Parameters);
 	virtual void ProcessDataInternal(CParameter& Parameters);
 
-	CTagPacketDecoderMDI TagPacketDecoderMDI;
-	int iFramesSinceSDC;
+	CDecodeRSIMDI Decoder;
+};
+
+class CDecodeMDI : public CTransmitterModul<_BINARY, _BINARY>
+{
+public:
+	CDecodeMDI():Decoder() {}
+	virtual ~CDecodeMDI() {}
+protected:
+	virtual void InitInternal(CParameter& Parameters);
+	virtual void ProcessDataInternal(CParameter& Parameters);
+
+	CDecodeRSIMDI Decoder;
 };
 
 #endif

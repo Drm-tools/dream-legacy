@@ -71,7 +71,7 @@ protected:
 	ECodScheme	eCodingScheme;
 };
 
-class CMLCEncoder : public CReceiverModul<_BINARY, _COMPLEX>, 
+class CMLCEncoder : public CTransmitterModul<_BINARY, _COMPLEX>, 
 					public CMLC
 {
 public:
@@ -83,7 +83,7 @@ protected:
 	/* Two different types of interleaver table */
 	CBitInterleaver		BitInterleaver[2];
 	CQAMMapping			QAMMapping;
-	CEngergyDispersal	EnergyDisp;
+	CEnergyDispersal	EnergyDisp;
 
 	/* Internal buffers */
 	CVector<_DECISION>	vecEncInBuffer[MC_MAX_NUM_LEVELS];
@@ -113,7 +113,7 @@ protected:
 	CBitDeinterleaver	BitDeinterleaver[2];
 	CBitInterleaver		BitInterleaver[2];
 	CConvEncoder		ConvEncoder[MC_MAX_NUM_LEVELS];
-	CEngergyDispersal	EnergyDisp;
+	CEnergyDispersal	EnergyDisp;
 
 	/* Internal buffers */
 	CVector<CDistance>	vecMetric;

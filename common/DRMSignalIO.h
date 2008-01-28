@@ -72,7 +72,7 @@
 
 
 /* Classes ********************************************************************/
-class CTransmitData : public CReceiverModul<_COMPLEX, _COMPLEX>
+class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
 	enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,

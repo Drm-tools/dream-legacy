@@ -35,7 +35,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "CellMappingTable.h"
-
+#include <iostream>
 
 /* Implementation *************************************************************/
 void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
@@ -58,7 +58,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	const int*		piTableFAC=NULL;
 	const int*		piTableTimePilots=NULL;
 	const int*		piTableFreqPilots=NULL;
-
+cerr << "cmt MakeTable " << int(eNewRobustnessMode) << " " << int(eNewSpectOccup) << endl;
 
 	/* Set Parameters and pointers to the tables ******************************/
 	switch (eNewSpectOccup)
@@ -232,7 +232,6 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	else
 		iNumIntpFreqPil = iNumCarrier;
 
-
 	/* Allocate memory for vectors and matrices ----------------------------- */
 	/* Allocate memory for mapping table (Matrix) */
 	matiMapTab.Init(iNumSymbolsPerSuperframe, iNumCarrier);
@@ -242,9 +241,9 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		_COMPLEX((_REAL) 0.0, (_REAL) 0.0));
 
 	/* Allocate memory for vectors with number of certain cells */
-	veciNumMSCSym.Init(iNumSymbolsPerSuperframe);
-	veciNumFACSym.Init(iNumSymbolsPerSuperframe);
-	veciNumSDCSym.Init(iNumSymbolsPerSuperframe);
+	veciNumMSCSym.resize(iNumSymbolsPerSuperframe);
+	veciNumFACSym.resize(iNumSymbolsPerSuperframe);
+	veciNumSDCSym.resize(iNumSymbolsPerSuperframe);
 
 
 	/* Build table ************************************************************/
@@ -536,7 +535,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 			}
 
 			/* Calculations for average power per symbol (needed for SNR
-			   estimation and simulation). DC carrier is zero (contributes not
+			   estimation and simulation). DC carrier is zero (does not contribute
 			   to the average power) */
 			if (!_IsDC(matiMapTab[iSym][iCar]))
 			{
@@ -580,6 +579,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		/* MSC */
 		if (iMaxNumMSCSym < veciNumMSCSym[iSym])
 			iMaxNumMSCSym = veciNumMSCSym[iSym];
+
 	}
 
 	/* Set number of useful MSC cells */
@@ -598,31 +598,21 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	rAvScatPilPow /= iScatPilotCellCnt;
 
 
-/* ########################################################################## */
-#ifdef _DEBUG_
-/* Save table in file */
-FILE* pFile = fopen("test/CarMapTable.dat", "w");
-
-/* Title */
-fprintf(pFile, "Robustness mode ");
-switch (eNewRobustnessMode)
-{
-case RM_ROBUSTNESS_MODE_A:
-	fprintf(pFile, "A");
-	break;
-case RM_ROBUSTNESS_MODE_B:
-	fprintf(pFile, "B");
-	break;
-case RM_ROBUSTNESS_MODE_C:
-	fprintf(pFile, "C");
-	break;
-case RM_ROBUSTNESS_MODE_D:
-	fprintf(pFile, "D");
-	break;
+//#ifdef _DEBUG_
+#if 1
+	FILE* pFile = fopen("test/CarMapTable.dat", "w");
+	fprintf(pFile, "Robustness mode %c / Spectrum occupancy %d\n\n", int(eNewRobustnessMode)+'A', iSpecOccArrayIndex);
+	fclose(pFile);
+	dump_carriers("test/CarMapTable.dat");
+	dump_pilots("test/PilotCells.dat");
+#endif
 }
-fprintf(pFile, " / Spectrum occupancy %d\n\n", iSpecOccArrayIndex);
 
-/* Actual table */
+/* Save table in file */
+void CCellMappingTable::dump_carriers(const string& file)
+{
+FILE* pFile = fopen(file.c_str(), "a");
+
 for (int i = 0; i < iNumSymbolsPerSuperframe; i++)
 {
 	for (int j = 0; j < iNumCarrier; j++)
@@ -672,11 +662,12 @@ for (int i = 0; i < iNumSymbolsPerSuperframe; i++)
 
 /* Legend */
 fprintf(pFile, "\n------------------>\n subcarrier index");
-fprintf(pFile, "\n\n\nLegend:\n\t: DC-carrier\n\t. MCS cells\n\tS SDC cells");
+fprintf(pFile, "\n\n\nLegend:\n\t: DC-carrier\n\t. MSC cells\n\tS SDC cells");
 fprintf(pFile, "\n\tX FAC cells\n\tT time pilots\n\tf frequency pilots");
 fprintf(pFile, "\n\t0 scattered pilots\n\t* boosted scattered pilots\n");
 
 fclose(pFile);
+}
 
 /* Save pilot values in file */
 /* Use following command to plot pilot complex values in Matlab:
@@ -686,18 +677,18 @@ fclose(pFile);
 (It plots the absolute of the pilots in the upper plot and angle in 
 the lower plot.)
 */
-pFile = fopen("test/PilotCells.dat", "w");
-for (int z = 0; z < iNumSymbolsPerSuperframe; z++)
+void CCellMappingTable::dump_pilots(const string& file)
 {
-	for (int v = 0; v < iNumCarrier; v++)
-		fprintf(pFile, "%e %e ", matcPilotCells[z][v].real(),
-			matcPilotCells[z][v].imag());
+	FILE* pFile = fopen(file.c_str(), "w");
+	for (int z = 0; z < iNumSymbolsPerSuperframe; z++)
+	{
+		for (int v = 0; v < iNumCarrier; v++)
+			fprintf(pFile, "%e %e ", matcPilotCells[z][v].real(),
+				matcPilotCells[z][v].imag());
 
-	fprintf(pFile, "\n");
-}
-fclose(pFile);
-#endif
-/* ########################################################################## */
+		fprintf(pFile, "\n");
+	}
+	fclose(pFile);
 }
 
 _COMPLEX CCellMappingTable::Polar2Cart(const _REAL rAbsolute,

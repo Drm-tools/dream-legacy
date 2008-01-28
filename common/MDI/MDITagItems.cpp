@@ -168,26 +168,24 @@ CTagItemGeneratorLoFrCnt::GetProfiles()
 }
 
 void
-CTagItemGeneratorFAC::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &FACData)
+CTagItemGeneratorFAC::GenTag(CParameter & Parameter, CVectorEx < _BINARY > *pvecbiData) 
 {
 	if (Parameter.ReceiveStatus.FAC.GetStatus() == FALSE)
 	{
 		/* Empty tag if FAC is invalid */
 		PrepareTag(0);
-		FACData.Clear();
 	}
 	else
 	{
 		/* Length: 9 bytes = 72 bits */
 		PrepareTag(NUM_FAC_BITS_PER_BLOCK);
-		CVectorEx < _BINARY > *pvecbiFACData = FACData.Get(NUM_FAC_BITS_PER_BLOCK);
 
 		/* Channel parameters, service parameters, CRC */
-		pvecbiFACData->ResetBitAccess();
+		pvecbiData->ResetBitAccess();
 
 		/* FAC data is always 72 bits long which is 9 bytes, copy data byte-wise */
 		for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE; i++)
-			Enqueue(pvecbiFACData->Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+			Enqueue(pvecbiData->Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 }
 
@@ -204,16 +202,15 @@ CTagItemGeneratorFAC::GetProfiles()
 }
 
 void
-CTagItemGeneratorSDC::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &SDCData)
+CTagItemGeneratorSDC::GenTag(CParameter & Parameter, CVectorEx < _BINARY > *pvecbiData)
 {
 	if (Parameter.ReceiveStatus.SDC.GetStatus() == FALSE)
 	{
 		PrepareTag(0);
-		SDCData.Clear();
 		return;
 	}
 
-	if (SDCData.GetFillLevel() < Parameter.iNumSDCBitsPerSFrame)
+	if (pvecbiData->Size() < Parameter.iNumSDCBitsPerSFrame)
 	{
 		PrepareTag(0);
 		return;
@@ -227,17 +224,17 @@ CTagItemGeneratorSDC::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &
 	/* Length: "length SDC block" bytes. Our SDC data vector does not
 	   contain the 4 bits "Rfu" */
 	PrepareTag(iLenSDCDataBits + 4);
-	CVectorEx < _BINARY > *pvecbiSDCData = SDCData.Get(Parameter.iNumSDCBitsPerSFrame);
+	//CVectorEx < _BINARY > *pvecbiSDCData = SDCData.Get(Parameter.iNumSDCBitsPerSFrame);
 
 	/* Service Description Channel Block */
-	pvecbiSDCData->ResetBitAccess();
+	pvecbiData->ResetBitAccess();
 
 	Enqueue((uint32_t) 0, 4);	/* Rfu */
 
 	/* We have to copy bits instead of bytes since the length of SDC data is
 	   usually not a multiple of 8 */
 	for (int i = 0; i < iLenSDCDataBits; i++)
-		Enqueue(pvecbiSDCData->Separate(1), 1);
+		Enqueue(pvecbiData->Separate(1), 1);
 }
 
 string
@@ -401,32 +398,24 @@ CTagItemGeneratorStr::SetStreamNumber(int iStrNum)
 }
 
 void
-CTagItemGeneratorStr::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &MSCData)
+CTagItemGeneratorStr::GenTag(CParameter & Parameter, CVectorEx < _BINARY > *pvecbiData)
 {
-	const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(iStreamNumber);
-	/* Only generate this tag if stream input data is not of zero length */
-	if (iLenStrData == 0)
-		return;
-
-	CVectorEx < _BINARY > *pvecbiStrData = MSCData.Get(iLenStrData);
-	/* check we have data in the vector */
-	int size = pvecbiStrData->Size();
-
-	//cout << "str" << iStreamNumber << " " << iLenStrData << " " << size << endl;
-
-	if (iLenStrData != size)
-		return;
-
 	if (iStreamNumber >= MAX_NUM_STREAMS)
+		return;
+
+	const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(iStreamNumber);
+
+	/* check we have data in the vector */
+	if (iLenStrData != pvecbiData->Size());
 		return;
 
 	PrepareTag(iLenStrData);
 
-	pvecbiStrData->ResetBitAccess();
+	pvecbiData->ResetBitAccess();
 	/* Data is always a multiple of 8 -> copy bytes */
 	for (int i = 0; i < iLenStrData / SIZEOF__BYTE; i++)
 	{
-		Enqueue(pvecbiStrData->Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+		Enqueue(pvecbiData->Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 }
 

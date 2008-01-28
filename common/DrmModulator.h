@@ -48,10 +48,7 @@ public:
 	virtual 				~CDRMModulator() {}
 	void					LoadSettings(CSettings&, CParameter&);
 	void					SaveSettings(CSettings&, CParameter&);
-	void					Init(CParameter&,
-								CBuffer<_BINARY>& FACBuf, 
-								CBuffer<_BINARY>& SDCBuf, 
-								vector< CSingleBuffer<_BINARY> >& MSCBuf);
+	void					Init(CParameter&);
 	void					ProcessData(CParameter& Parameter, 
 								CBuffer<_BINARY>& FACBuf, 
 								CBuffer<_BINARY>& SDCBuf, 
@@ -59,15 +56,13 @@ public:
 	void					Cleanup(CParameter&);
 
 	void					GetSoundOutChoices(vector<string>&);
-	void					SetOutputs(const vector<string>& o) { TransmitData.SetOutputs(o); }
-	void					GetOutputs(vector<string>& o) { TransmitData.GetOutputs(o); }
+	void					SetOutputs(const vector<string>& o);
+	void					GetOutputs(vector<string>& o);
 
 protected:
 
 	CSingleBuffer<_COMPLEX>	MLCEncBuf;
-	CCyclicBuffer<_COMPLEX>	IntlBuf;
-	CCyclicBuffer<_COMPLEX>	FACMapBuf;
-	CCyclicBuffer<_COMPLEX>	SDCMapBuf;
+	vector<CCyclicBuffer<_COMPLEX> >	MSC_FAC_SDC_MapBuf;
 	CSingleBuffer<_COMPLEX>	CarMapBuf;
 	CSingleBuffer<_COMPLEX>	OFDMModBuf;
 

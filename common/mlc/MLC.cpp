@@ -38,9 +38,11 @@ void CMLCEncoder::ProcessDataInternal(CParameter&)
 	int	i, j;
 	int iElementCounter;
 
+	CVectorEx<_BINARY>& vecInputData = *inputs[0].pvecData;
+
 	/* Energy dispersal ----------------------------------------------------- */
 	/* VSPP is treated as a separate part for energy dispersal */
-	EnergyDisp.ProcessData(pvecInputData);
+	EnergyDisp.ProcessData(vecInputData);
 
 
 	/* Partitioning of input-stream ----------------------------------------- */
@@ -56,7 +58,7 @@ void CMLCEncoder::ProcessDataInternal(CParameter&)
 			for (i = 0; i < iM[j][0]; i++)
 			{
 				vecEncInBuffer[j][i] =
-					BitToSoft((*pvecInputData)[iElementCounter]);
+					BitToSoft(vecInputData[iElementCounter]);
 
 				iElementCounter++;
 			}
@@ -69,7 +71,7 @@ void CMLCEncoder::ProcessDataInternal(CParameter&)
 			for (i = 0; i < iM[j][1]; i++)
 			{
 				vecEncInBuffer[j][iM[j][0] + i] =
-					BitToSoft((*pvecInputData)[iElementCounter]);
+					BitToSoft(vecInputData[iElementCounter]);
 
 				iElementCounter++;
 			}
@@ -84,7 +86,7 @@ void CMLCEncoder::ProcessDataInternal(CParameter&)
 		for (i = 0; i < iM[0][1]; i++)
 		{
 			vecEncInBuffer[0][i] =
-				BitToSoft((*pvecInputData)[iElementCounter]);
+				BitToSoft(vecInputData[iElementCounter]);
 
 			iElementCounter++;
 		}
@@ -97,7 +99,7 @@ void CMLCEncoder::ProcessDataInternal(CParameter&)
 			for (i = 0; i < iM[j][0]; i++)
 			{
 				vecEncInBuffer[j][i] =
-					BitToSoft((*pvecInputData)[iElementCounter]);
+					BitToSoft(vecInputData[iElementCounter]);
 
 				iElementCounter++;
 			}
@@ -110,7 +112,7 @@ void CMLCEncoder::ProcessDataInternal(CParameter&)
 			for (i = 0; i < iM[j][1]; i++)
 			{
 				vecEncInBuffer[j][iM[j][0] + i] =
-					BitToSoft((*pvecInputData)[iElementCounter]);
+					BitToSoft(vecInputData[iElementCounter]);
 
 				iElementCounter++;
 			}
@@ -135,7 +137,7 @@ void CMLCEncoder::ProcessDataInternal(CParameter&)
 				   vecEncOutBuffer[2],
 				   vecEncOutBuffer[3],
 				   vecEncOutBuffer[4],
-				   vecEncOutBuffer[5], pvecOutputData);
+				   vecEncOutBuffer[5], outputs[0].pvecData);
 }
 
 void CMLCEncoder::InitInternal(CParameter& TransmParam)
@@ -189,8 +191,8 @@ void CMLCEncoder::InitInternal(CParameter& TransmParam)
 	}
 
 	/* Define block-size for input and output */
-	iInputBlockSize = iNumInBits;
-	iOutputBlockSize = iN_mux;
+	inputs[0].iBlockSize = iNumInBits;
+	outputs[0].iBlockSize = iN_mux;
 }
 
 
@@ -348,7 +350,7 @@ fflush(pFile);
 
 	/* Energy dispersal ----------------------------------------------------- */
 	/* VSPP is treated as a separate part for energy dispersal (7.2.2) */
-	EnergyDisp.ProcessData(pvecOutputData);
+	EnergyDisp.ProcessData(*pvecOutputData);
 }
 
 void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
@@ -1005,7 +1007,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 		/* Set number of output bits for next module */
 		Parameter.SetNumDecodedBitsMSC(iL[0] + iL[1] + iL[2]);
 
-		/* Set total number of bits for hiearchical frame (needed for MSC
+		/* Set total number of bits for hierarchical frame (needed for MSC
 		   demultiplexer module) */
 		Parameter.SetNumBitsHieraFrTot(iL[2]);
 		break;

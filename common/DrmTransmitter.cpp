@@ -30,6 +30,9 @@
 #include "MDI/MDIDecode.h"
 #include "DrmTransmitter.h"
 #include "mlc/MLC.h"
+#include <queue>
+
+#define MIN_MDI_INPUT_BUFFERED_FRAMES 0
 
 /* Implementation *************************************************************/
 CDRMTransmitter::CDRMTransmitter():
@@ -144,44 +147,31 @@ CDRMTransmitter::Stop()
 
 void CDRMTransmitter::Start()
 {
-	CUpstreamDI				MDIIn;
-	CDecodeRSIMDI			DecodeMDI;
+	CMDIIn					MDIIn;
+	CDecodeMDI				DecodeMDI;
 	CDownstreamDI			MDIOut;
 
-	vector<CSingleBuffer<_BINARY> >	MSCBuf(MAX_NUM_STREAMS);
-	vector<CSingleBuffer<_BINARY> >	MSCTxBuf(MAX_NUM_STREAMS);
-	vector<CSingleBuffer<_BINARY> >	MSCSendBuf(MAX_NUM_STREAMS);
-	CSingleBuffer<_BINARY>			MDIPacketBuf;
-	CSingleBuffer<_BINARY>	FACBuf;
-	CSingleBuffer<_BINARY>	FACTxBuf;
-	CSingleBuffer<_BINARY>	FACSendBuf;
+	CSingleBuffer<_BINARY>	MDIPacketBuf;
 
-	CSingleBuffer<_BINARY>	SDCBuf;
-	CSingleBuffer<_BINARY>	SDCTxBuf;
-	CSingleBuffer<_BINARY>	SDCSendBuf;
+	CSingleBuffer<_BINARY>	FACBuf(72);
+	CSingleBuffer<_BINARY>	SDCBuf(10000);
+	vector<CSingleBuffer<_BINARY> >	MSCBuf(MAX_NUM_STREAMS);
+
+	queue< vector< CSingleBuffer<_BINARY> > > mdiQueue;
 
 	int sdc_counter = 0;
 
-	FACBuf.Clear();
-	FACTxBuf.Clear();
-	FACSendBuf.Clear();
-	SDCBuf.Clear();
-	SDCTxBuf.Clear();
-	SDCSendBuf.Clear();
-	FACBuf.Init(72);
-	SDCBuf.Init(10000);
 	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
 	{
-		MSCBuf[i].Clear();
-		MSCTxBuf[i].Clear();
-		MSCSendBuf[i].Clear();
 		MSCBuf[i].Init(SIZEOF__BYTE*1500);
 	}
+
+	bool bInitMod = false;
 
 	if(COFDMOutputs.size()>0)
 	{
 		Modulator.SetOutputs(COFDMOutputs);
-		Modulator.Init(TransmParam, FACTxBuf, SDCTxBuf, MSCTxBuf);
+		bInitMod = true;
 	}
 
 	if(strMDIinAddr == "")
@@ -189,12 +179,17 @@ void CDRMTransmitter::Start()
 		TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
 		TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
 		Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
+		if(COFDMOutputs.size()>0)
+		{
+			Modulator.Init(TransmParam);
+			bInitMod = false;
+		}
 	}
 	else
 	{
 		MDIIn.SetOrigin(strMDIinAddr);
-		MDIIn.SetInitFlag();
-		DecodeMDI.SetInitFlag();
+		MDIIn.Init(TransmParam, MDIPacketBuf);
+		DecodeMDI.Init(TransmParam);
 	}
 
 	for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
@@ -214,7 +209,12 @@ void CDRMTransmitter::Start()
 	if(COFDMOutputs.size()>0 && MDIOut.GetOutEnabled())
 		return;
 
-	bool bInitMod = (COFDMOutputs.size()>0);
+	vector<CSingleBuffer<_BINARY> >	MDIBuf(2+MAX_NUM_STREAMS);
+	for(i=0; i<MDIBuf.size(); i++)
+	{
+		MDIBuf[i].Init(SIZEOF__BYTE*1500);
+		MDIBuf[i].SetRequestFlag(TRUE);
+	}
 
 	try
 	{
@@ -223,22 +223,38 @@ void CDRMTransmitter::Start()
 			if(MDIIn.GetInEnabled())
 			{
 				MDIPacketBuf.Clear();
-				MDIIn.ReadData(TransmParam, MDIPacketBuf);
-				if(MDIPacketBuf.GetFillLevel()>0)
+				if(bInitMod)
 				{
-					DecodeMDI.ProcessData(TransmParam, MDIPacketBuf, FACBuf, SDCBuf, MSCBuf);
-					if(bInitMod)
+					MDIPacketBuf.SetRequestFlag(TRUE);
+					MDIIn.ReadData(TransmParam, MDIPacketBuf);
+					if(MDIPacketBuf.GetFillLevel()>0)
 					{
-						bInitMod = false;
-						Modulator.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
+						DecodeMDI.ProcessData(TransmParam, MDIPacketBuf, MDIBuf);
+						CFACReceive FACReceive;
+						_BOOLEAN bCRCOk = FACReceive.FACParam(MDIBuf[0].QueryWriteBuffer(), TransmParam);
+						if(bCRCOk)
+						{
+							cerr << "Got SDCI & FAC" << endl;
+							for(size_t i=2; i<MDIBuf.size(); i++)
+								MDIBuf[i].Init(TransmParam.GetStreamLen(i-2));
+							Modulator.Init(TransmParam);
+							bInitMod = false;
+							cerr << "Modulator initialised from MDI with MSC mode " << int(TransmParam.eMSCCodingScheme) << " SDC mode " << int(TransmParam.eSDCCodingScheme) << " robm " << int(TransmParam.GetWaveMode()) << " spectrum occupancy " << int(TransmParam.GetSpectrumOccup()) << endl;
+						}
+						else
+							cerr << "bad FAC CRC" << endl;
 					}
+				}
+				else
+				{
+					MDIIn.ReadData(TransmParam, MDIPacketBuf);
+					DecodeMDI.ProcessData(TransmParam, MDIPacketBuf, MDIBuf);
 				}
 			}
 			else
 			{
 				Encoder.ProcessData(TransmParam, FACBuf, SDCBuf, MSCBuf);
 			}
-cerr << "Tx " << FACBuf.GetFillLevel() << " " << SDCBuf.GetFillLevel() << " " << MSCBuf[0].GetFillLevel() << endl;
 
 			if(COFDMOutputs.size()>0)
 				Modulator.ProcessData(TransmParam, FACBuf, SDCBuf, MSCBuf);
@@ -260,8 +276,7 @@ cerr << "Tx " << FACBuf.GetFillLevel() << " " << SDCBuf.GetFillLevel() << " " <<
 				case 2:
 					sdc_counter = 0;
 				}
-				for(size_t i=0; i<MAX_NUM_STREAMS; i++)
-					MSCBuf[i].SetRequestFlag(TRUE);
+				MSCBuf[0].SetRequestFlag(TRUE);
 			}
 		}
 	}

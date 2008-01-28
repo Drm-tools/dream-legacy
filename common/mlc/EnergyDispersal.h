@@ -34,13 +34,13 @@
 
 
 /* Classes ********************************************************************/
-class CEngergyDispersal
+class CEnergyDispersal
 {
 public:
-	CEngergyDispersal() {}
-	virtual ~CEngergyDispersal() {}
+	CEnergyDispersal() {}
+	virtual ~CEnergyDispersal() {}
 
-	void ProcessData(CVector<_BINARY>* pbiData);		
+	void ProcessData(CVectorEx<_BINARY>& pbiData);		
 	void Init(int iNewNumInBits, int iNewLengthVSPP);
 
 protected:
