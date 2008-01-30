@@ -41,6 +41,7 @@ template<class T>
 struct CInputStruct
 {
 	CInputStruct(): pvecData(NULL), iBlockSize(0) {}
+	void clear() { pvecData = NULL; iBlockSize = 0; }
 	CVectorEx<T>*	pvecData;
 	/* Actual read (or written) size of the data */
 	int					iBlockSize;
@@ -50,15 +51,16 @@ template<class T>
 struct COutputStruct : public CInputStruct<T>
 {
 	COutputStruct(): CInputStruct<T>(), iMaxBlockSize(0) {}
+	void clear() { CInputStruct<T>::clear(); iMaxBlockSize = 0; }
 	template<typename T2>
-	void init(T2& OutputBuffer)
+	void init(T2 OutputBuffer)
 	{
 		if (this->iMaxBlockSize != 0)
-			OutputBuffer.Init(iMaxBlockSize);
+			OutputBuffer->Init(iMaxBlockSize);
 		else
 		{
 			if (this->iBlockSize != 0)
-				OutputBuffer.Init(this->iBlockSize);
+				OutputBuffer->Init(this->iBlockSize);
 		}
 	}
 	/* Max block-size is used to determine the required size of buffer */
@@ -66,70 +68,44 @@ struct COutputStruct : public CInputStruct<T>
 };
 
 /* CNewModul ------------------------------------------------------------------- */
-template< typename TInput, typename TOutput>
+template< typename TInput, typename TOutput, size_t iNumInputs=1, size_t iNumOutputs=1>
 class CNewModul  
 {
 public:
 	CNewModul();
 	virtual ~CNewModul() {}
 
-	virtual void Init(CParameter& Parameter);
-	virtual void Init(CParameter& Parameter, CBuffer<TOutput>& OutputBuffer);
-	virtual void Init(CParameter& Parameter, vector<CSingleBuffer<TOutput> >& vecOutputBuffer);
-	virtual void Init(CParameter& Parameter, vector<CCyclicBuffer<TOutput> >& vecOutputBuffer);
+	virtual void Init(CParameter& Parameter, CBuffer<TOutput>* OutputBuffer=NULL);
 
 protected:
 
 
-	vector<CInputStruct<TInput> >		inputs;
-	vector<COutputStruct<TOutput> >		outputs;
+	CInputStruct<TInput>		inputs[iNumInputs];
+	COutputStruct<TOutput>		outputs[iNumOutputs];
 
-	void						Lock() {Mutex.Lock();}
-	void						Unlock() {Mutex.Unlock();}
-
-	void						InitThreadSave(CParameter& Parameter);
+	void 						Init();
 	virtual void				InitInternal(CParameter& Parameter) = 0;
-	void						ProcessDataThreadSave(CParameter& Parameter);
 	virtual void				ProcessDataInternal(CParameter& Parameter) = 0;
 
-private:
-	CMutex						Mutex;
 };
 
-
 /* CTransmitterModul -------------------------------------------------------- */
-template<typename TInput, typename TOutput>
+template< typename TInput, typename TOutput, size_t iNumInputs=1, size_t iNumOutputs=1>
 class CTransmitterModul : public CNewModul<TInput, TOutput>
 {
 public:
 	CTransmitterModul();
 	virtual ~CTransmitterModul() {}
 	/* start of pipeline */
-	virtual void		ReadData(CParameter& Parameter, CBuffer<TOutput>& OutputBuffer);
+	virtual void		ReadData(CParameter& Parameter, CBuffer<TOutput>* OutputBuffer);
 	/* one - one processing */
 	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
-									CBuffer<TInput>& InputBuffer,
-									CBuffer<TOutput>& OutputBuffer);
-	/* de-multiplexing */
-	virtual void		ProcessData(CParameter& Parameter, 
-									CBuffer<TInput>& InputBuffer,
-									vector<CSingleBuffer<TOutput> >& vecOutputBuffer);
-	virtual void		ProcessData(CParameter& Parameter, 
-									CBuffer<TInput>& InputBuffer,
-									vector<CCyclicBuffer<TOutput> >& vecOutputBuffer);
-	/* multiplexing */
-	virtual void		ProcessData(CParameter& Parameter, 
-									vector<CSingleBuffer<TInput> >& vecInputBuffer, 
-									CBuffer<TOutput>& OutputBuffer);
-	virtual void		ProcessData(CParameter& Parameter, 
-									vector<CCyclicBuffer<TInput> >& vecInputBuffer, 
-									CBuffer<TOutput>& OutputBuffer);
+									CBuffer<TInput>* InputBuffer,
+									CBuffer<TOutput>* OutputBuffer);
 	/* end of pipeline */
-	virtual _BOOLEAN	WriteData(CParameter& Parameter, CBuffer<TInput>& InputBuffer);
-	virtual _BOOLEAN	WriteData(CParameter& Parameter, 
-									vector<CSingleBuffer<TInput> >& vecInputBuffer);
-	virtual _BOOLEAN	WriteData(CParameter& Parameter, 
-									vector<CCyclicBuffer<TInput> >& vecInputBuffer);
+	virtual _BOOLEAN	WriteData(CParameter& Parameter, CBuffer<TInput>* InputBuffer);
+protected:
+	int iConsumed[iNumInputs];
 };
 
 
@@ -137,129 +113,38 @@ public:
 /******************************************************************************\
 * CNewModul                                                                       *
 \******************************************************************************/
-template<class TInput, class TOutput>
-CNewModul<TInput, TOutput>::CNewModul(): inputs(), outputs(), Mutex()
+template< typename TInput, typename TOutput, size_t iNumInputs, size_t iNumOutputs>
+CNewModul<TInput, TOutput, iNumInputs, iNumOutputs>::CNewModul()
 {
+	Init();
 }
 
-template<class TInput, class TOutput>
-void CNewModul<TInput, TOutput>::ProcessDataThreadSave(CParameter& Parameter)
+template< typename TInput, typename TOutput, size_t iNumInputs, size_t iNumOutputs>
+void CNewModul<TInput, TOutput, iNumInputs, iNumOutputs>::Init()
 {
-	/* Get a lock for the resources */
-	Lock();
-
-	/* Call processing routine of derived module */
-	ProcessDataInternal(Parameter);
-
-	/* Unlock resources */
-	Unlock();
+	size_t i;
+	for(i=0; i<iNumInputs; i++)
+		inputs[i].clear();
+	for(i=0; i<iNumOutputs; i++)
+		outputs[i].clear();
 }
 
-template<class TInput, class TOutput>
-void CNewModul<TInput, TOutput>::InitThreadSave(CParameter& Parameter)
-{
-	/* Get a lock for the resources */
-	Lock();
-
-	try
-	{
-		/* Call init of derived module */
-		InitInternal(Parameter);
-
-		/* Unlock resources */
-		Unlock();
-	}
-
-	catch (CGenErr)
-	{
-		/* Unlock resources */
-		Unlock();
-
-		/* Throws the same error again which was send by the function */
-		throw;
-	}
-}
-
-template<class TInput, class TOutput>
-void CNewModul<TInput, TOutput>::Init(CParameter& Parameter)
-{
-	/* assume a one-one processing module */
-	inputs.clear();
-	inputs.resize(1);
-	outputs.clear();
-	outputs.resize(1);
-	/* Call init of derived module */
-	InitThreadSave(Parameter);
-}
-
-template<class TInput, class TOutput>
-void CNewModul<TInput, TOutput>::Init(CParameter& Parameter, 
-					CBuffer<TOutput>& OutputBuffer)
+template< typename TInput, typename TOutput, size_t iNumInputs, size_t iNumOutputs>
+void CNewModul<TInput, TOutput, iNumInputs, iNumOutputs>::
+Init(CParameter& Parameter, CBuffer<TOutput>* OutputBuffer)
 {
 	/* Init some internal variables */
 
-	/* assume this is not a multiplexing module */
-	inputs.clear();
-	inputs.resize(1);
-
-	outputs.clear();
-	outputs.resize(1);
+	Init();
 
 	/* Call init of derived module */
-	InitThreadSave(Parameter);
+	InitInternal(Parameter);
 
 	/* Init output transfer buffer */
-	outputs[0].init(OutputBuffer);
+	if(OutputBuffer)
+		for(size_t i=0; i<iNumOutputs; i++)
+			outputs[i].init(OutputBuffer);
 }
-
-template<class TInput, class TOutput>
-void CNewModul<TInput, TOutput>::Init(CParameter& Parameter, 
-					vector<CSingleBuffer<TOutput> >& vecOutputBuffer)
-{
-	size_t size = vecOutputBuffer.size();
-	size_t i=0;
-
-	/* Init some internal variables */
-
-	/* assume this is not a multiplexing module */
-	inputs.clear();
-	inputs.resize(1);
-
-	outputs.clear();
-	outputs.resize(size);
-
-	/* Call init of derived module */
-	InitThreadSave(Parameter);
-
-	/* Init output transfer buffer */
-	for(i=0; i<size; i++)
-		outputs[i].init(vecOutputBuffer[i]);
-}
-
-template<class TInput, class TOutput>
-void CNewModul<TInput, TOutput>::Init(CParameter& Parameter, 
-					vector<CCyclicBuffer<TOutput> >& vecOutputBuffer)
-{
-	size_t size = vecOutputBuffer.size();
-	size_t i=0;
-
-	/* Init some internal variables */
-
-	/* assume this is not a multiplexing module */
-	inputs.clear();
-	inputs.resize(1);
-
-	outputs.clear();
-	outputs.resize(size);
-
-	/* Call init of derived module */
-	InitThreadSave(Parameter);
-
-	/* Init output transfer buffer */
-	for(i=0; i<size; i++)
-		outputs[i].init(vecOutputBuffer[i]);
-}
-
 
 /******************************************************************************\
 * Transmitter module (CTransmitterModul)                                        *
@@ -276,256 +161,121 @@ bool checkInput(CBuffer<T>& Buffer, int wanted)
 	return true;
 }
 
-template<class TInput, class TOutput>
-CTransmitterModul<TInput, TOutput>::CTransmitterModul():
-CNewModul<TInput, TOutput>()
+template< typename TInput, typename TOutput, size_t iNumInputs, size_t iNumOutputs>
+CTransmitterModul<TInput, TOutput, iNumInputs, iNumOutputs>::
+CTransmitterModul(): CNewModul<TInput, TOutput>()
 {
 }
 
-template<class TInput, class TOutput>
-_BOOLEAN CTransmitterModul<TInput, TOutput>::
-	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
-				CBuffer<TOutput>& OutputBuffer)
+/* this handles multiplexing, 1-1 and demultiplexing
+ * but demultiplexing assumes that all outputs are ready for input
+ * at the same time and complete full blocks
+ */
+template< typename TInput, typename TOutput, size_t iNumInputs, size_t iNumOutputs>
+_BOOLEAN CTransmitterModul<TInput, TOutput, iNumInputs, iNumOutputs>::
+ProcessData(CParameter& Parameter, CBuffer<TInput>* InputBuffer,
+				CBuffer<TOutput>* OutputBuffer)
 {
 	/* OUTPUT-DRIVEN module implementation in the transmitter ---------------- */
+	bool bAllOutputsReady = true;
+	size_t i=0;
 
 	/* Look in output buffer if data is requested */
-	if (OutputBuffer.GetRequestFlag() == TRUE)
+	for(i=0; i<iNumOutputs; i++)
+		bAllOutputsReady &= (OutputBuffer[i].GetRequestFlag()==TRUE);
+
+	if (bAllOutputsReady)
 	{
-		/* Check, if enough input data is available */
-		if(!checkInput(InputBuffer, this->inputs[0].iBlockSize))
+		bool bAllInputsOK = true;
+		/* Check, if enough input data is available from all sources */
+
+		for(i=0; i<iNumInputs; i++)
+			bAllInputsOK &= checkInput(InputBuffer[i], this->inputs[i].iBlockSize);
+
+		if(bAllInputsOK == false)
 			return FALSE;
-		
-		/* Get vector from transfer-buffer */
-		this->inputs[0].pvecData = InputBuffer.Get(this->inputs[0].iBlockSize);
-
-		/* Query vector from output transfer-buffer for writing */
-		this->outputs[0].pvecData = OutputBuffer.QueryWriteBuffer();
-
-		/* Copy extended data from vectors */
-		this->outputs[0].pvecData->SetExData(this->inputs[0].pvecData->GetExData());
-
-		/* Call the underlying processing-routine */
-		this->ProcessDataInternal(Parameter);
-	
-		/* Write processed data from internal memory in transfer-buffer */
-		OutputBuffer.Put(this->inputs[0].iBlockSize);
-
-		/* Data was provided, clear data request */
-		OutputBuffer.SetRequestFlag(FALSE);
-	}
-
-	return TRUE;
-}
-
-/* multiplexing */
-template<class TInput, class TOutput>
-void CTransmitterModul<TInput, TOutput>::
-	ProcessData(CParameter& Parameter, 
-				vector<CSingleBuffer<TInput> >& vecInputBuffer,
-				CBuffer<TOutput>& OutputBuffer)
-{
-	/* OUTPUT-DRIVEN module implementation in the transmitter ---------------- */
-
-	/* Look in output buffer if data is requested */
-	if (OutputBuffer.GetRequestFlag() == TRUE)
-	{
-		bool bAllInputsOK = true;
-		size_t i=0;
-		/* Check, if enough input data is available from all sources */
-
-		size_t size = vecInputBuffer.size();
-
-		if(size != this->inputs.size())
-		{
-			throw CGenErr("bad module config");
-		}
-
-		for(i=0; i<size; i++)
-			bAllInputsOK &= checkInput(vecInputBuffer[i], this->inputs[i].iBlockSize);
-
-		if(bAllInputsOK == false)
-			return;
 	
 		/* Get vectors from transfer-buffers */
-		for(i=0; i<size; i++)
-			this->inputs[i].pvecData = vecInputBuffer[i].Get(this->inputs[i].iBlockSize);
-
-		/* Query vector from output transfer-buffer for writing */
-		this->outputs[0].pvecData = OutputBuffer.QueryWriteBuffer();
-
-		/* Call the underlying processing-routine */
-		this->ProcessDataInternal(Parameter);
-	
-		/* Write processed data from internal memory in transfer-buffer */
-		OutputBuffer.Put(this->outputs[0].iBlockSize);
-
-		/* Data was provided, clear data request */
-		OutputBuffer.SetRequestFlag(FALSE);
-	}
-}
-
-template<class TInput, class TOutput>
-void CTransmitterModul<TInput, TOutput>::
-	ProcessData(CParameter& Parameter, 
-				vector<CCyclicBuffer<TInput> >& vecInputBuffer,
-				CBuffer<TOutput>& OutputBuffer)
-{
-	/* OUTPUT-DRIVEN module implementation in the transmitter ---------------- */
-
-	/* Look in output buffer if data is requested */
-	if (OutputBuffer.GetRequestFlag() == TRUE)
-	{
-		bool bAllInputsOK = true;
-		size_t i=0;
-		/* Check, if enough input data is available from all sources */
-
-		size_t size = vecInputBuffer.size();
-
-		if(size != this->inputs.size())
+		for(i=0; i<iNumInputs; i++)
 		{
-			throw CGenErr("bad module config");
+			this->inputs[i].pvecData = InputBuffer[i].Get(this->inputs[i].iBlockSize);
+			this->iConsumed[i] = 0;
 		}
 
-		for(i=0; i<size; i++)
-			bAllInputsOK &= checkInput(vecInputBuffer[i], this->inputs[i].iBlockSize);
-
-		if(bAllInputsOK == false)
-			return;
-	
-		/* Get vectors from transfer-buffers */
-		for(i=0; i<size; i++)
-			this->inputs[i].pvecData = vecInputBuffer[i].Get(this->inputs[i].iBlockSize);
-
 		/* Query vector from output transfer-buffer for writing */
-		this->outputs[0].pvecData = OutputBuffer.QueryWriteBuffer();
+		this->outputs[0].pvecData = OutputBuffer[0].QueryWriteBuffer();
 
 		/* Call the underlying processing-routine */
 		this->ProcessDataInternal(Parameter);
+
+		/* consume additional data */
+		for(i=0; i<iNumInputs; i++)
+			(void)InputBuffer[i].Get(this->iConsumed[i]);
 	
 		/* Write processed data from internal memory in transfer-buffer */
-		OutputBuffer.Put(this->outputs[0].iBlockSize);
-
-		/* Data was provided, clear data request */
-		OutputBuffer.SetRequestFlag(FALSE);
+		for(i=0; i<iNumOutputs; i++)
+		{
+			OutputBuffer[i].Put(this->outputs[0].iBlockSize);
+			/* Data was provided, clear data request */
+			OutputBuffer[i].SetRequestFlag(FALSE);
+		}
+		return TRUE;
 	}
+	return FALSE;
 }
 
-/* TODO demultiplexing */
-template<class TInput, class TOutput>
-void  CTransmitterModul<TInput, TOutput>::
-ProcessData(CParameter& Parameter, 
-					CBuffer<TInput>& InputBuffer,
-					vector<CSingleBuffer<TOutput> >& vecOutputBuffer)
-{
-}
-
-/* TODO demultiplexing */
-template<class TInput, class TOutput>
-void  CTransmitterModul<TInput, TOutput>::
-ProcessData(CParameter& Parameter, 
-					CBuffer<TInput>& InputBuffer,
-					vector<CCyclicBuffer<TOutput> >& vecOutputBuffer)
-{
-}
-
-template<class TInput, class TOutput>
-void CTransmitterModul<TInput, TOutput>::
-	ReadData(CParameter& Parameter, CBuffer<TOutput>& OutputBuffer)
+template< typename TInput, typename TOutput, size_t iNumInputs, size_t iNumOutputs>
+void CTransmitterModul<TInput, TOutput, iNumInputs, iNumOutputs>::
+	ReadData(CParameter& Parameter, CBuffer<TOutput>* OutputBuffer)
 {
 	/* OUTPUT-DRIVEN module implementation in the transmitter ---------------- */
+	bool bAllOutputsReady = true;
+	size_t i=0;
+
 	/* Look in output buffer if data is requested */
-	if (OutputBuffer.GetRequestFlag() == TRUE)
+	for(i=0; i<iNumOutputs; i++)
+		bAllOutputsReady &= (OutputBuffer[i].GetRequestFlag()==TRUE);
+
+	if (bAllOutputsReady)
 	{
 
 		/* Read data and write it in the transfer-buffer.
-		   Query vector from output transfer-buffer for writing */
-		this->outputs[0].pvecData = OutputBuffer.QueryWriteBuffer();
+		 * Query vector from output transfer-buffer for writing */
+		for(i=0; i<iNumOutputs; i++)
+			this->outputs[i].pvecData = OutputBuffer[i].QueryWriteBuffer();
 
-		/* Call the underlying processing-routine */
+			/* Call the underlying processing-routine */
 		this->ProcessDataInternal(Parameter);
 		
-		/* Write processed data from internal memory in transfer-buffer */
-		OutputBuffer.Put(this->outputs[0].iBlockSize);
-
-		/* Data was provided, clear data request */
-		OutputBuffer.SetRequestFlag(FALSE);
-	}
-}
-
-template<class TInput, class TOutput>
-_BOOLEAN CTransmitterModul<TInput, TOutput>::
-	WriteData(CParameter& Parameter, CBuffer<TInput>& InputBuffer)
-{
-	/* OUTPUT-DRIVEN module implementation in the transmitter */
-
-	/* Check, if enough input data is available */
-	int iBlockSize = this->inputs[0].iBlockSize;
-	if (InputBuffer.GetFillLevel() < iBlockSize)
-	{
-		/* Set request flag */
-		InputBuffer.SetRequestFlag(TRUE);
-
-		return FALSE;
-	}
-
-	/* Get vector from transfer-buffer */
-	this->inputs[0].pvecData = InputBuffer.Get(iBlockSize);
-
-	/* Call the underlying processing-routine */
-	this->ProcessDataInternal(Parameter);
-
-	return TRUE;
-}
-
-template<class TInput, class TOutput>
-_BOOLEAN CTransmitterModul<TInput, TOutput>::
-	WriteData(CParameter& Parameter, vector<CSingleBuffer<TInput> >& vecInputBuffer)
-{
-	/* OUTPUT-DRIVEN module implementation in the transmitter */
-
-	bool bReady = true;
-	for(size_t i=0; i<this->inputs.size(); i++)
-	{
-		/* Check, if enough input data is available */
-		int iBlockSize = this->inputs[i].iBlockSize;
-		if (vecInputBuffer[i].GetFillLevel() < iBlockSize)
+		for(i=0; i<iNumOutputs; i++)
 		{
-			/* Set request flag */
-			vecInputBuffer[i].SetRequestFlag(TRUE);
-			bReady = false;
-			/* Get vector from transfer-buffer */
-			this->inputs[i].pvecData = vecInputBuffer[i].Get(iBlockSize);
+			/* Write processed data from internal memory in transfer-buffer */
+			OutputBuffer[i].Put(this->outputs[i].iBlockSize);
+
+			/* Data was provided, clear data request */
+			OutputBuffer[i].SetRequestFlag(FALSE);
 		}
 	}
-
-	if(!bReady)
-		return FALSE;
-
-	/* Call the underlying processing-routine */
-	this->ProcessDataInternal(Parameter);
-
-	return TRUE;
 }
 
-template<class TInput, class TOutput>
-_BOOLEAN CTransmitterModul<TInput, TOutput>::
-	WriteData(CParameter& Parameter, vector<CCyclicBuffer<TInput> >& vecInputBuffer)
+template< typename TInput, typename TOutput, size_t iNumInputs, size_t iNumOutputs>
+_BOOLEAN CTransmitterModul<TInput, TOutput, iNumInputs, iNumOutputs>::
+	WriteData(CParameter& Parameter, CBuffer<TInput>* InputBuffer)
 {
 	/* OUTPUT-DRIVEN module implementation in the transmitter */
 
 	bool bReady = true;
-	for(size_t i=0; i<this->inputs.size(); i++)
+	for(size_t i=0; i<iNumInputs; i++)
 	{
 		/* Check, if enough input data is available */
 		int iBlockSize = this->inputs[i].iBlockSize;
-		if (vecInputBuffer[i].GetFillLevel() < iBlockSize)
+		if (InputBuffer[i].GetFillLevel() < iBlockSize)
 		{
 			/* Set request flag */
-			vecInputBuffer[i].SetRequestFlag(TRUE);
+			InputBuffer[i].SetRequestFlag(TRUE);
 			bReady = false;
 			/* Get vector from transfer-buffer */
-			this->inputs[i].pvecData = vecInputBuffer[i].Get(iBlockSize);
+			this->inputs[i].pvecData = InputBuffer[i].Get(iBlockSize);
 		}
 	}
 
@@ -539,7 +289,7 @@ _BOOLEAN CTransmitterModul<TInput, TOutput>::
 }
 
 /* Classes ********************************************************************/
-/* CNewModul ------------------------------------------------------------------- */
+/* CModul ------------------------------------------------------------------- */
 template<class TInput, class TOutput>
 class CModul  
 {

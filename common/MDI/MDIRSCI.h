@@ -138,7 +138,7 @@ public:
 						CSingleBuffer<_BINARY>& SDCData,
 						vector<CSingleBuffer<_BINARY> >& vecMSCData
 	);
-	void SendLockedFrame(CParameter& Parameter, vector<CInputStruct<_BINARY> >& inputs);
+	void SendLockedFrame(CParameter& Parameter, CInputStruct<_BINARY>* inputs);
 	void SendLockedFrame(CParameter& Parameter);
 	void SendUnlockedFrame(CParameter& Parameter); /* called once per frame even if the Rx isn't synchronised */
 	void SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& CodedAudioData);
@@ -231,10 +231,13 @@ protected:
 
 };
 
-class CMDIOut :  public CTransmitterModul<_BINARY, _BINARY>, public CDownstreamDI 
+class CMDIOut:
+	public CTransmitterModul<_BINARY, _BINARY,2+MAX_NUM_STREAMS,1>,
+	public CDownstreamDI 
 {
 public:
-	CMDIOut() : CTransmitterModul<_BINARY, _BINARY>(), CDownstreamDI(), iFrameCount(0) {}
+	CMDIOut() : CTransmitterModul<_BINARY, _BINARY, 2+MAX_NUM_STREAMS,1>(),
+		CDownstreamDI(), iFrameCount(0) {}
 	virtual ~CMDIOut() {}
 	void InitInternal(CParameter& Parameter);
 	void ProcessDataInternal(CParameter& Parameter);

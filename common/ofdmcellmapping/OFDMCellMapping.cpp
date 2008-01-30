@@ -51,6 +51,8 @@ void COFDMCellMapping::ProcessDataInternal(CParameter& TransmParam)
 	CVectorEx<_COMPLEX>& vecFACData = *inputs[1].pvecData;
 	CVectorEx<_COMPLEX>& vecSDCData = *inputs[2].pvecData;
 
+cerr << "COFDMCellMapping::ProcessDataInternal " << iNumCarrier << " " << vecOutputData.Size() << endl;
+cerr << vecMSCData.Size() << " " << vecFACData.Size() << " " << vecSDCData.Size() << endl;
 	for (int iCar = 0; iCar < iNumCarrier; iCar++)
 	{
 		/* MSC */
@@ -68,7 +70,7 @@ void COFDMCellMapping::ProcessDataInternal(CParameter& TransmParam)
 				
 			iMSCCounter++;
 		}
-
+cerr << "MSC OK" << endl;
 		/* FAC */
 		if (_IsFAC(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
 		{
@@ -77,6 +79,7 @@ void COFDMCellMapping::ProcessDataInternal(CParameter& TransmParam)
 			iFACCounter++;
 		}
 
+cerr << "FAC OK" << endl;
 		/* SDC */
 		if (_IsSDC(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
 		{
@@ -85,13 +88,16 @@ void COFDMCellMapping::ProcessDataInternal(CParameter& TransmParam)
 			iSDCCounter++;
 		}
 
+cerr << "SDC OK" << endl;
 		/* Pilots */
 		if (_IsPilot(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
 			vecOutputData[iCar] = cmt.matcPilotCells[iSymbolCounterAbs][iCar];
 
+cerr << "Pilots OK" << endl;
 		/* DC carrier */
 		if (_IsDC(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
 			vecOutputData[iCar] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
+cerr << "DC Carrier OK" << endl;
 	}
 
 	/* Increase symbol-counter and wrap if needed */
@@ -155,6 +161,7 @@ void COFDMCellMapping::InitInternal(CParameter& TransmParam)
 	inputs[1].iBlockSize = cmt.veciNumFACSym[0];
 	inputs[2].iBlockSize = cmt.veciNumSDCSym[0];
 	outputs[0].iBlockSize = cmt.iNumCarrier; /* Output */
+	cerr << "COFDMCellMapping::InitInternal " << outputs[0].iBlockSize << endl;
 }
 
 

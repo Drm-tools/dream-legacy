@@ -57,6 +57,7 @@ protected:
 	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
 	bool			loading;
+	QListViewItem*  no_rig;
 
 signals:
 	void StartStopLog(bool);

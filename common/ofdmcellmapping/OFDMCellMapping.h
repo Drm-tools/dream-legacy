@@ -37,7 +37,7 @@
 
 
 /* Classes ********************************************************************/
-class COFDMCellMapping : public CTransmitterModul<_COMPLEX, _COMPLEX>
+class COFDMCellMapping : public CTransmitterModul<_COMPLEX, _COMPLEX,3,1>
 {
 public:
 	COFDMCellMapping() {}

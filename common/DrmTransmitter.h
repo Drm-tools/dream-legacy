@@ -90,9 +90,17 @@ public:
 
 protected:
 
+	void					SyncWithMDI(CParameter& TransmParam);
+
 	ETxOpMode				eOpMode;
 	CDRMEncoder				Encoder;
 	CDRMModulator			Modulator;
+	CMDIIn					MDIIn;
+	CDecodeMDI				DecodeMDI;
+	CMDIOut					MDIOut;
+
+	CSingleBuffer<_BINARY>	MDIPacketBuf;
+	CSingleBuffer<_BINARY>	MDIBuf[2+MAX_NUM_STREAMS];
 };
 
 

@@ -38,10 +38,11 @@
 class CMOTSlideShowEncoder
 {
   public:
-    CMOTSlideShowEncoder ():vecPicFileNames (0)
+    CMOTSlideShowEncoder ():MOTDAB(),vecPicFileNames(),
+    iPictureCnt(0), strCurObjName(""), Mutex()
     {
     }
-    virtual ~ CMOTSlideShowEncoder ()
+    virtual ~CMOTSlideShowEncoder()
     {
     }
 
@@ -54,7 +55,7 @@ class CMOTSlideShowEncoder
     {
 	vecPicFileNames.Init (0);
     }
-    _BOOLEAN GetTransStat (string & strCurPict, _REAL & rCurPerc) const;
+    _BOOLEAN GetTransStat (string & strCurPict, _REAL & rCurPerc);
 
   protected:
     struct SPicDescr
@@ -69,6 +70,8 @@ class CMOTSlideShowEncoder
     int iPictureCnt;
 
     string strCurObjName;
+
+	CMutex Mutex;
 };
 
 #endif // !defined(MOTSLIDESHOW_H__3B0UBVE98732KJVEW363LIHGEW982__INCLUDED_)

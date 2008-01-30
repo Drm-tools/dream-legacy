@@ -855,6 +855,7 @@ CHamlib::SetHamlibModelID(const rig_model_t model)
 
 		/* Disable s-meter */
 		RigCaps.bSMeterIsSupported = FALSE;
+		iHamlibModelID = 0;
 	}
 }
 #endif

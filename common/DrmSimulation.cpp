@@ -55,8 +55,6 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	/* Init streams */
 	Param.ResetServicesStreams();
 
-	MSC_FAC_SDC_MapBuf.resize(3); // MSC, FAC, SDC
-
 	/* Service parameters (only use service 0) ------------------------------- */
 	/* Data service */
 	Param.SetNumOfServices(0,1);
@@ -136,17 +134,17 @@ void CDRMSimulation::Run()
 		MSCMLCEncoder.ProcessData(Param, DataBuf, MLCEncBuf);
 
 		/* Convolutional interleaver */
-		SymbInterleaver.ProcessData(Param, MLCEncBuf, MSC_FAC_SDC_MapBuf[0]);
+		SymbInterleaver.ProcessData(Param, MLCEncBuf, &MSC_FAC_SDC_MapBuf[0]);
 
 
 		/* FAC -------------------------------------------------------------- */
 		GenerateFACData.ReadData(Param, GenFACDataBuf);
-		FACMLCEncoder.ProcessData(Param, GenFACDataBuf, MSC_FAC_SDC_MapBuf[1]);
+		FACMLCEncoder.ProcessData(Param, GenFACDataBuf, &MSC_FAC_SDC_MapBuf[1]);
 
 
 		/* SDC -------------------------------------------------------------- */
 		GenerateSDCData.ReadData(Param, GenSDCDataBuf);
-		SDCMLCEncoder.ProcessData(Param, GenSDCDataBuf, MSC_FAC_SDC_MapBuf[2]);
+		SDCMLCEncoder.ProcessData(Param, GenSDCDataBuf, &MSC_FAC_SDC_MapBuf[2]);
 
 
 		/* Mapping of the MSC, FAC, SDC and pilots on the carriers */
@@ -160,7 +158,7 @@ void CDRMSimulation::Run()
 		/**********************************************************************\
 		* Channel    														   *
 		\**********************************************************************/
-		DRMChannel.TransferData(Param, OFDMModBuf, RecDataBuf);
+		DRMChannel.TransferData(Param, OFDMModBuf[0], RecDataBuf[0]);
 
 
 
@@ -175,7 +173,7 @@ case CParameter::ST_SINR:
 		/* MSE of channel estimation, ideal channel estimation -------------- */
 		/* Special OFDM demodulation for channel estimation tests (with guard-
 		   interval removal) */
-		OFDMDemodSimulation.ProcessDataOut(Param, RecDataBuf,
+		OFDMDemodSimulation.ProcessDataOut(Param, RecDataBuf[0],
 			ChanEstInBufSim, OFDMDemodBufChan2);
 
 		/* Channel estimation and equalization */
@@ -192,7 +190,7 @@ default: /* Other types like ST_BITERROR or ST_SYNC_PARAM */
 		/* This module converts the "CChanSimDataMod" data type of "DRMChannel"
 		   to the "_REAL" data type, because a regular module can only have ONE
 		   type of input buffers */
-		DataConvChanResam.ProcessData(Param, RecDataBuf, ChanResInBuf);
+		DataConvChanResam.ProcessData(Param, RecDataBuf[0], ChanResInBuf);
 
 		/* Resample input DRM-stream */
 		InputResample.ProcessData(Param, ChanResInBuf, InpResBuf);
@@ -246,12 +244,12 @@ void CDRMSimulation::Init()
 	OFDMCellMapping.Init(Param, CarMapBuf);
 
 	/* Defines number of SDC bits per super-frame */
-	SDCMLCEncoder.Init(Param, MSC_FAC_SDC_MapBuf[2]);
+	SDCMLCEncoder.Init(Param, &MSC_FAC_SDC_MapBuf[2]);
 	
 	MSCMLCEncoder.Init(Param, MLCEncBuf);
-	SymbInterleaver.Init(Param, MSC_FAC_SDC_MapBuf[0]);
+	SymbInterleaver.Init(Param, &MSC_FAC_SDC_MapBuf[0]);
 	GenerateFACData.Init(Param, GenFACDataBuf);
-	FACMLCEncoder.Init(Param, MSC_FAC_SDC_MapBuf[1]);
+	FACMLCEncoder.Init(Param, &MSC_FAC_SDC_MapBuf[1]);
 	GenerateSDCData.Init(Param, GenSDCDataBuf);
 	OFDMModulation.Init(Param, OFDMModBuf);
 	GenSimData.Init(Param, DataBuf);
@@ -284,7 +282,7 @@ void CDRMSimulation::Init()
 	/* Init channel. The channel must be initialized before the modules
 	   "OFDMDemodSimulation" and "IdealChanEst" because they need iNumTaps and
 	   tap delays in global struct */
-	DRMChannel.Init(Param, RecDataBuf);
+	DRMChannel.Init(Param, RecDataBuf[0]);
 
 	/* Mode dependent initializations */
 	switch (Param.eSimType)
@@ -313,22 +311,22 @@ void CDRMSimulation::Init()
 	/* Clear all buffers ---------------------------------------------------- */
 	/* The buffers must be cleared in case there is some data left in the
 	   buffers from the last simulation (with, e.g., different SNR) */
-	DataBuf.Clear();
-	MLCEncBuf.Clear();
+	DataBuf[0].Clear();
+	MLCEncBuf[0].Clear();
 	//IntlBuf.Clear();
 	//FACMapBuf.Clear();
 	//SDCMapBuf.Clear();
 	MSC_FAC_SDC_MapBuf[0].Clear();
 	MSC_FAC_SDC_MapBuf[1].Clear();
 	MSC_FAC_SDC_MapBuf[2].Clear();
-	GenFACDataBuf.Clear();
-	GenSDCDataBuf.Clear();
-	CarMapBuf.Clear();
-	OFDMModBuf.Clear();
+	GenFACDataBuf[0].Clear();
+	GenSDCDataBuf[0].Clear();
+	CarMapBuf[0].Clear();
+	OFDMModBuf[0].Clear();
 	OFDMDemodBufChan2.Clear();
 	ChanEstInBufSim.Clear();
 	ChanEstOutBufChan.Clear();
-	RecDataBuf.Clear();
+	RecDataBuf[0].Clear();
 	ChanResInBuf.Clear();
 	InpResBuf.Clear();
 	FreqSyncAcqBuf.Clear();

@@ -78,24 +78,24 @@ protected:
 	/* If you want to add a new buffer, make sure that it is cleared in the
 	   "Init()" routine! */
 	/* Transmitter buffers */
-	CSingleBuffer<_BINARY>				DataBuf;
-	CSingleBuffer<_COMPLEX>				MLCEncBuf;
-	CSingleBuffer<_BINARY>				GenFACDataBuf;
+	CSingleBuffer<_BINARY>				DataBuf[1];
+	CSingleBuffer<_COMPLEX>				MLCEncBuf[1];
 
 	//CCyclicBuffer<_COMPLEX>				IntlBuf;
 	//CCyclicBuffer<_COMPLEX>				FACMapBuf;
 	//CCyclicBuffer<_COMPLEX>				SDCMapBuf;
-	vector<CCyclicBuffer<_COMPLEX> >	MSC_FAC_SDC_MapBuf;
+	CCyclicBuffer<_COMPLEX>				MSC_FAC_SDC_MapBuf[3];
 
-	CSingleBuffer<_BINARY>				GenSDCDataBuf;
-	CSingleBuffer<_COMPLEX>				CarMapBuf;
-	CSingleBuffer<_COMPLEX>				OFDMModBuf;
+	CSingleBuffer<_BINARY>				GenFACDataBuf[1];
+	CSingleBuffer<_BINARY>				GenSDCDataBuf[1];
+	CSingleBuffer<_COMPLEX>				CarMapBuf[1];
+	CSingleBuffer<_COMPLEX>				OFDMModBuf[1];
 
 	/* Simulation */
 	CCyclicBuffer<CChanSimDataDemod>	OFDMDemodBufChan2;
 	CSingleBuffer<_COMPLEX>				ChanEstInBufSim;
 	CSingleBuffer<CChanSimDataDemod>	ChanEstOutBufChan;
-	CSingleBuffer<CChanSimDataMod>		RecDataBuf;
+	CSingleBuffer<CChanSimDataMod>		RecDataBuf[1];
 	CSingleBuffer<_REAL>				ChanResInBuf;
 
 	/* Receiver buffers */

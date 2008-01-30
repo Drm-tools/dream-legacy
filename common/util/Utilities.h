@@ -61,7 +61,9 @@ public:
 	_REAL Level();
 
 protected:
+	void doUpdate(const _REAL rVal);
 	_REAL rCurLevel;
+	CMutex Mutex;
 };
 
 

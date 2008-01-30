@@ -39,7 +39,8 @@ CDRMTransmitter::CDRMTransmitter():
 	TransmParam(),
 	strMDIinAddr(), MDIoutAddr(), COFDMOutputs(),
 	eOpMode(T_TX),
-	Encoder(), Modulator()
+	Encoder(), Modulator(),
+	MDIIn(), DecodeMDI(), MDIOut()
 {
 	/* Init streams */
 	TransmParam.ResetServicesStreams();
@@ -58,7 +59,7 @@ CDRMTransmitter::CDRMTransmitter():
 void
 CDRMTransmitter::CalculateChannelCapacities(CParameter& Parameters)
 {
-	CSingleBuffer<_COMPLEX>	DummyBuf;
+	CSingleBuffer<_COMPLEX>	DummyBuf[1];
 	CMSCMLCEncoder			MSCMLCEncoder;
 	CSDCMLCEncoder			SDCMLCEncoder;
 	SDCMLCEncoder.Init(Parameters, DummyBuf);
@@ -147,56 +148,37 @@ CDRMTransmitter::Stop()
 
 void CDRMTransmitter::Start()
 {
-	CMDIIn					MDIIn;
-	CDecodeMDI				DecodeMDI;
-	CDownstreamDI			MDIOut;
 
-	CSingleBuffer<_BINARY>	MDIPacketBuf;
+	bool bInSync = true;
 
-	CSingleBuffer<_BINARY>	FACBuf(72);
-	CSingleBuffer<_BINARY>	SDCBuf(10000);
-	vector<CSingleBuffer<_BINARY> >	MSCBuf(MAX_NUM_STREAMS);
-
-	queue< vector< CSingleBuffer<_BINARY> > > mdiQueue;
-
-	int sdc_counter = 0;
-
-	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
+	switch(eOpMode)
 	{
-		MSCBuf[i].Init(SIZEOF__BYTE*1500);
-	}
-
-	bool bInitMod = false;
-
-	if(COFDMOutputs.size()>0)
-	{
-		Modulator.SetOutputs(COFDMOutputs);
-		bInitMod = true;
-	}
-
-	if(strMDIinAddr == "")
-	{
+	case T_TX:
 		TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
 		TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
-		Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
-		if(COFDMOutputs.size()>0)
+		Encoder.Init(TransmParam, MDIBuf);
+		Modulator.Init(TransmParam, COFDMOutputs);
+		break;
+	case T_ENC:
+		if(MDIoutAddr.size()==0)
+			throw CGenErr("Encoder with no outputs");
+		TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
+		TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
+		Encoder.Init(TransmParam, MDIBuf);
 		{
-			Modulator.Init(TransmParam);
-			bInitMod = false;
+			/* set the output address */
+			for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
+				MDIOut.AddSubscriber(*s, "", 'M');
 		}
-	}
-	else
-	{
-		MDIIn.SetOrigin(strMDIinAddr);
-		MDIIn.Init(TransmParam, MDIPacketBuf);
-		DecodeMDI.Init(TransmParam);
-	}
-
-	for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
-	{
-		/* set the output address */
-		MDIOut.AddSubscriber(*s, "", 'M');
-		//MDIOut.SetInitFlag();
+		break;
+	case T_MOD:
+		if(strMDIinAddr != "")
+		{
+			MDIIn.SetOrigin(strMDIinAddr);
+		}
+		else
+			throw CGenErr("Modulator with no input");
+		bInSync = false;
 	}
 
 	/* Set run flag */
@@ -206,77 +188,49 @@ void CDRMTransmitter::Start()
          << ", " << ((COFDMOutputs.size()>0)?"COFDM":"")
          << endl; cout.flush();
 
-	if(COFDMOutputs.size()>0 && MDIOut.GetOutEnabled())
-		return;
-
-	vector<CSingleBuffer<_BINARY> >	MDIBuf(2+MAX_NUM_STREAMS);
-	for(i=0; i<MDIBuf.size(); i++)
-	{
-		MDIBuf[i].Init(SIZEOF__BYTE*1500);
-		MDIBuf[i].SetRequestFlag(TRUE);
-	}
-
 	try
 	{
 		while (TransmParam.bRunThread)
 		{
-			if(MDIIn.GetInEnabled())
+			if(bInSync)
 			{
-				MDIPacketBuf.Clear();
-				if(bInitMod)
+				if(eOpMode == T_MOD)
 				{
-					MDIPacketBuf.SetRequestFlag(TRUE);
-					MDIIn.ReadData(TransmParam, MDIPacketBuf);
-					if(MDIPacketBuf.GetFillLevel()>0)
-					{
-						DecodeMDI.ProcessData(TransmParam, MDIPacketBuf, MDIBuf);
-						CFACReceive FACReceive;
-						_BOOLEAN bCRCOk = FACReceive.FACParam(MDIBuf[0].QueryWriteBuffer(), TransmParam);
-						if(bCRCOk)
-						{
-							cerr << "Got SDCI & FAC" << endl;
-							for(size_t i=2; i<MDIBuf.size(); i++)
-								MDIBuf[i].Init(TransmParam.GetStreamLen(i-2));
-							Modulator.Init(TransmParam);
-							bInitMod = false;
-							cerr << "Modulator initialised from MDI with MSC mode " << int(TransmParam.eMSCCodingScheme) << " SDC mode " << int(TransmParam.eSDCCodingScheme) << " robm " << int(TransmParam.GetWaveMode()) << " spectrum occupancy " << int(TransmParam.GetSpectrumOccup()) << endl;
-						}
-						else
-							cerr << "bad FAC CRC" << endl;
-					}
+					MDIPacketBuf.Clear();
+					MDIIn.ReadData(TransmParam, &MDIPacketBuf);
+					cerr << "MDIPacketBuf.GetFillLevel " << MDIPacketBuf.GetFillLevel() << endl;
+					DecodeMDI.ProcessData(TransmParam, &MDIPacketBuf, MDIBuf);
 				}
 				else
 				{
-					MDIIn.ReadData(TransmParam, MDIPacketBuf);
-					DecodeMDI.ProcessData(TransmParam, MDIPacketBuf, MDIBuf);
+					Encoder.ReadData(TransmParam, MDIBuf);
+				}
+
+				if(eOpMode == T_ENC)
+				{
+					MDIOut.WriteData(TransmParam, MDIBuf);
+				}
+				else
+				{
+					Modulator.WriteData(TransmParam, MDIBuf);
+					/* TODO - set bInSync false on error */
 				}
 			}
 			else
 			{
-				Encoder.ProcessData(TransmParam, FACBuf, SDCBuf, MSCBuf);
-			}
-
-			if(COFDMOutputs.size()>0)
-				Modulator.ProcessData(TransmParam, FACBuf, SDCBuf, MSCBuf);
-			// TODO split output buffers for MDI and COFDM
-
-         	if(MDIOut.GetOutEnabled())
-			{
-				MDIOut.SendLockedFrame(TransmParam, FACBuf, SDCBuf, MSCBuf);
-				FACBuf.SetRequestFlag(TRUE);
-				switch(sdc_counter)
-				{
-				case 0:
-					SDCBuf.SetRequestFlag(TRUE);
-					sdc_counter = 1;
+				SyncWithMDI(TransmParam);
+				if(TransmParam.bRunThread == FALSE)
 					break;
-				case 1:
-					sdc_counter = 2;
-					break;
-				case 2:
-					sdc_counter = 0;
-				}
-				MSCBuf[0].SetRequestFlag(TRUE);
+				cerr << "Got SDCI & FAC" << endl;
+				MDIIn.Init(TransmParam, &MDIPacketBuf);
+				DecodeMDI.Init(TransmParam, MDIBuf);
+				Modulator.Init(TransmParam, COFDMOutputs);
+				cerr << "Modulator initialised from MDI with"
+					<< " MSC mode " << int(TransmParam.eMSCCodingScheme)
+					<< " SDC mode " << int(TransmParam.eSDCCodingScheme)
+					<< " robm " << int(TransmParam.GetWaveMode())
+					<< " spectrum occupancy " << int(TransmParam.GetSpectrumOccup()) << endl;
+				bInSync = true;
 			}
 		}
 	}
@@ -284,8 +238,37 @@ void CDRMTransmitter::Start()
 	{
 		ErrorMessage(GenErr.strError);
 	}
-	Encoder.Cleanup(TransmParam);
-	Modulator.Cleanup(TransmParam);
+	if(eOpMode != T_ENC)
+		Modulator.Cleanup(TransmParam);
+	if(eOpMode != T_MOD)
+		Encoder.Cleanup(TransmParam);
+}
+
+void
+CDRMTransmitter::SyncWithMDI(CParameter& TransmParam)
+{
+	MDIIn.Init(TransmParam, &MDIPacketBuf);
+	DecodeMDI.Init(TransmParam, MDIBuf);
+	while (TransmParam.bRunThread)
+	{
+		MDIPacketBuf.SetRequestFlag(TRUE); // should we need this? TODO
+		MDIIn.ReadData(TransmParam, &MDIPacketBuf);
+		cerr << "MDIPacketBuf.Fill " << MDIPacketBuf.GetFillLevel() << endl;
+		MDIBuf[0].SetRequestFlag(TRUE); MDIBuf[1].SetRequestFlag(TRUE); MDIBuf[2].SetRequestFlag(TRUE);
+		DecodeMDI.ProcessData(TransmParam, &MDIPacketBuf, MDIBuf);
+		cerr << "MDIBuf Fill " << MDIBuf[0].GetFillLevel() << " " << MDIBuf[1].GetFillLevel() << " " << MDIBuf[2].GetFillLevel() << endl;
+		if(MDIBuf[0].GetFillLevel()>0)
+		{
+			CFACReceive FACReceive;
+			_BOOLEAN bCRCOk = FACReceive.FACParam(MDIBuf[0].QueryWriteBuffer(), TransmParam);
+			if(bCRCOk)
+			{
+				return;
+			}
+			else
+				cerr << "bad FAC CRC" << endl;
+		}
+	}
 }
 
 void

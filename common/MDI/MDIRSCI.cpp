@@ -112,10 +112,10 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 	SendLockedFrame(Parameter);
 }
 
-void CDownstreamDI::SendLockedFrame(CParameter& Parameter, vector<CInputStruct<_BINARY> >& inputs)
+void CDownstreamDI::SendLockedFrame(CParameter& Parameter, CInputStruct<_BINARY>* inputs)
 {
 	TagItemGeneratorFAC.GenTag(Parameter, inputs[0].pvecData);
-	TagItemGeneratorSDC.GenTag(Parameter, inputs[1].pvecData);
+	TagItemGeneratorSDC.GenTag(Parameter,  inputs[1].pvecData);
 	for (size_t i = 0; i < MAX_NUM_STREAMS; i++)
 	{
 		const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(i);
@@ -642,7 +642,7 @@ void CDIIn::ProcessData(CParameter& Parameter, CVectorEx<_BINARY>& vecOutputData
 	iOutputBlockSize = vecbydata.size()*SIZEOF__BYTE;
 	vecOutputData.Init(iOutputBlockSize);
 	vecOutputData.ResetBitAccess();
-	for(size_t i=0; i<size_t(iOutputBlockSize/SIZEOF__BYTE); i++)
+	for(size_t i=0; i<vecbydata.size(); i++)
 		vecOutputData.Enqueue(vecbydata[i], SIZEOF__BYTE);
 }
 

@@ -831,7 +831,6 @@ CDRMReceiver::UpdateRigSettings()
 		if(eMode != eNewMode)
 		{
 			CRigCaps caps;
-			cout<<"About to call setrigmode from updaterigsettings"<<endl;
 			pHamlib->SetRigMode(eNewMode);
 			pHamlib->GetRigCaps(caps);
 			if(caps.settings[eNewMode].eOnboardDemod==C_MUST)
@@ -1305,7 +1304,6 @@ CDRMReceiver::InitsForDataParam()
 
 _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 {
-cout << "CDRMReceiver::SetFrequency(" << iNewFreqkHz << ")" << endl;
 	if (iFreqkHz == iNewFreqkHz)
 		return TRUE;
 	iFreqkHz = iNewFreqkHz;
@@ -1434,7 +1432,6 @@ void CDRMReceiver::SetHamlib(CHamlib* p)
 	pHamlib = p;
 	if(pHamlib)
 	{
-               cout<<"About to setrigmodel to "<<pHamlib->GetHamlibModelID()<<endl;
 		SetRigModel(pHamlib->GetHamlibModelID());
 	}
 }
@@ -1449,7 +1446,6 @@ void CDRMReceiver::SetRigModelWT(int iID)
 	if(pHamlib)
 	{
 		rig_model_t	id = pHamlib->GetHamlibModelID();
-               cout<<"setrigmodelwt requested "<<iID<<" current "<<id<<endl;
 		if(id!=iID)
 		{
 			if(pcmInput!=Dummy)

@@ -71,14 +71,23 @@ extern "C"
 ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, WFlags f) :
 	ReceiverSettingsDlgBase(parent, name, modal, f), DRMReceiver(NRx),Settings(NSettings),
-	loading(true)
+	loading(true), no_rig(NULL)
 {
 
+	bool bEnableRig = true;
 	/* Tabs */
 #ifndef HAVE_LIBHAMLIB
-	TabWidget->removePage(Rig);
-	TabWidget->removePage(RigAdv);
+	bEnableRig = false;
 #endif
+
+	if(DRMReceiver.GetRSIIn()->GetInEnabled())
+		bEnableRig = false;
+
+	if(bEnableRig == false)
+	{
+		TabWidget->removePage(Rig);
+		TabWidget->removePage(RigAdv);
+	}
 
 	/* Connections */
 
@@ -272,11 +281,12 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 
 	DRMReceiver.GetRigList(rigs);
 
-	QListViewItem* selected_rig = new QListViewItem(new QListViewItem(ListViewRig, "[None]"), "None", "0", "");
+	no_rig = new QListViewItem(new QListViewItem(ListViewRig, "[None]"), "None", "0", "");
+	QListViewItem* selected_rig = no_rig;
 	for (map<rig_model_t, CRigCaps>::const_iterator i=rigs.begin(); i!=rigs.end(); i++)
 	{
 		/* Store model ID */
-		QListViewItem* man, *model=NULL, *mod_model=NULL;
+		QListViewItem* man, *model=NULL;
 		rig_model_t iModelID = i->first;
 		const CRigCaps& rig = i->second;
 		if(rig.hamlib_caps.mfg_name==NULL)
@@ -291,24 +301,26 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		{
 			man = mfr->second;
 		}
-		model = new QListViewItem(
-			man,
-			rig.hamlib_caps.model_name,
-			QString::number(iModelID),
-			rig_strstatus(rig.hamlib_caps.status)
-		);
 
 		if (rig.bIsModifiedRig)
 		{
-			string model = string(rig.hamlib_caps.model_name)+" (DRM)";
-			mod_model = new QListViewItem(
+			string model_name = string(rig.hamlib_caps.model_name)+" (DRM)";
+			model = new QListViewItem(
 				man,
-				model.c_str(),
-				QString::number(-iModelID),
+				model_name.c_str(),
+				QString::number(iModelID),
 				rig_strstatus(rig.hamlib_caps.status)
 			);
-			mod_model->setPixmap(0, BitmLittleGreenSquare);
+			model->setPixmap(0, BitmLittleGreenSquare);
 			man->setPixmap(0, BitmLittleGreenSquare);
+		}
+		else
+		{
+			model = new QListViewItem(
+				man, rig.hamlib_caps.model_name,
+				QString::number(iModelID),
+				rig_strstatus(rig.hamlib_caps.status)
+			);
 		}
 		/* Check for selected Rig */
 		if (current == iModelID)
@@ -320,13 +332,13 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	/* COM port selection --------------------------------------------------- */
 	ListViewPort->setSelectionMode(QListView::Single);
 	ListViewPort->setAllColumnsShowFocus(true);
-	ListViewPort->setColumnText(0, "Name");
-	ListViewPort->addColumn("Port");
+	ListViewPort->setColumnText(0, tr("Name"));
+	ListViewPort->addColumn(tr("Port"));
 	ListViewPort->clear();
 	map<string,string> ports;
 	DRMReceiver.GetComPortList(ports);
 	string strPort = DRMReceiver.GetRigComPort();
-	QListViewItem* selected_port = new QListViewItem(ListViewPort, "None", "");
+	QListViewItem* selected_port = new QListViewItem(ListViewPort, tr("None"), "");
 	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
 	{
 		QListViewItem* item = new QListViewItem(ListViewPort, p->first.c_str(), p->second.c_str());
@@ -340,6 +352,17 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 
 	/* is s-meter enabled ? */
 	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
+	if(selected_rig==0)
+	{
+		ListViewPort->setEnabled(0);
+	}
+	else
+	{
+		CRigCaps caps;
+		DRMReceiver.GetRigCaps(caps);
+		int port_type = caps.hamlib_caps.port_type;
+		ListViewPort->setEnabled(caps.hamlib_caps.port_type == RIG_PORT_SERIAL);
+	}
 
 	/* do this last so can update the com port, etc depending on rig type */
 	ListViewRig->ensureItemVisible(selected_rig);
@@ -351,7 +374,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 void ReceiverSettingsDlg::OnCheckBoxUseGPS()
 {
 #if defined(_MSC_VER) && (_MSC_VER < 1400)
-	QMessageBox::information( this, "Dream", "Don't enable GPS unless you have gpsd running." );
+	QMessageBox::information( this, "Dream", tr("Don't enable GPS unless you have gpsd running.") );
 #endif
 	Settings.Put("GPS", "host", string(LineEditGPSHost->text().latin1()));
 	Settings.Put("GPS", "port", LineEditGPSPort->text().toInt());
@@ -611,15 +634,32 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 		return;
 	int iID = item->text(1).toInt();
 
-	if(item->pixmap(0))
-		iID = -iID;
-
 #ifdef HAVE_LIBHAMLIB
 	DRMReceiver.SetRigModel(iID);
-	CRigCaps caps;
-	DRMReceiver.GetRigCaps(caps);
-	ListViewPort->setEnabled(caps.hamlib_caps.port_type == RIG_PORT_SERIAL);
-	//CheckBoxEnableSMeter->setEnabled(rig_has_get_level(pRig, RIG_LEVEL_STRENGTH));
+	rig_model_t current = DRMReceiver.GetRigModel();
+	if(current == iID)
+	{
+		if(iID==0)
+		{
+			ListViewPort->setEnabled(0);
+		}
+		else
+		{
+			CRigCaps caps;
+			DRMReceiver.GetRigCaps(caps);
+			int port_type = caps.hamlib_caps.port_type;
+			QMessageBox::information( this, "Dream", QString("port type %1").arg(port_type) );
+			ListViewPort->setEnabled(caps.hamlib_caps.port_type == RIG_PORT_SERIAL);
+			//CheckBoxEnableSMeter->setEnabled(rig_has_get_level(pRig, RIG_LEVEL_STRENGTH));
+		}
+	}
+	else
+	{
+		// could not select this rig
+		QMessageBox::information( this, "Dream", "failed to select rig" );
+		ListViewRig->ensureItemVisible(no_rig);
+		ListViewRig->setSelected(no_rig, true);
+	}
 #endif
 }
 

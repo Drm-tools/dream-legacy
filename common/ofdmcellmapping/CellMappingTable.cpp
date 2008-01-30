@@ -58,7 +58,6 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	const int*		piTableFAC=NULL;
 	const int*		piTableTimePilots=NULL;
 	const int*		piTableFreqPilots=NULL;
-cerr << "cmt MakeTable " << int(eNewRobustnessMode) << " " << int(eNewSpectOccup) << endl;
 
 	/* Set Parameters and pointers to the tables ******************************/
 	switch (eNewSpectOccup)

@@ -38,15 +38,15 @@
 class CDecodeRSIMDI
 {
 public:
-	CDecodeRSIMDI():TagPacketDecoderMDI() {}
+	CDecodeRSIMDI():TagPacketDecoder() {}
 	virtual ~CDecodeRSIMDI() {}
 	virtual void Init(CParameter& Parameters);
 	virtual void ProcessData(CParameter& Parameters,
-				vector<CInputStruct<_BINARY> >& inputs,
-				vector<COutputStruct<_BINARY> >& outputs);
+				CInputStruct<_BINARY>* inputs,
+				COutputStruct<_BINARY>* outputs);
 
 protected:
-	CTagPacketDecoderMDI TagPacketDecoderMDI;
+	CTagPacketDecoderMDI TagPacketDecoder;
 	int iFramesSinceSDC;
 };
 
@@ -62,7 +62,7 @@ protected:
 	CDecodeRSIMDI Decoder;
 };
 
-class CDecodeMDI : public CTransmitterModul<_BINARY, _BINARY>
+class CDecodeMDI : public CTransmitterModul<_BINARY, _BINARY,1,2+MAX_NUM_STREAMS>
 {
 public:
 	CDecodeMDI():Decoder() {}

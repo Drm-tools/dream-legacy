@@ -51,14 +51,8 @@ public:
 	void					LoadSettings(CSettings&, CParameter&);
 	void					SaveSettings(CSettings&, CParameter&);
 
-	void					Init(CParameter&,
-								CBuffer<_BINARY>& FACBuf, 
-								CBuffer<_BINARY>& SDCBuf, 
-								vector< CSingleBuffer<_BINARY> >& MSCBuf);
-	void					ProcessData(CParameter& Parameter, 
-								CBuffer<_BINARY>& FACBuf, 
-								CBuffer<_BINARY>& SDCBuf, 
-								vector< CSingleBuffer<_BINARY> >& MSCBuf);
+	void					Init(CParameter&, CBuffer<_BINARY>* Buf);
+	void					ReadData(CParameter& Parameter, CBuffer<_BINARY>* Buf);
 	void					Cleanup(CParameter&);
 
 	_REAL					GetLevelMeter() {return SignalLevelMeter.Level();}
@@ -82,7 +76,7 @@ public:
 protected:
 
 	/* Buffers */
-	CSingleBuffer<_SAMPLE>	DataBuf;
+	CSingleBuffer<_SAMPLE>	DataBuf[1];
 
 	/* Modules */
 	CSoundInInterface*		pSoundInInterface;

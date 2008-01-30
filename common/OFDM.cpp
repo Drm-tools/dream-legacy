@@ -41,27 +41,27 @@ void COFDMModulation::ProcessDataInternal(CParameter&)
 	/* Copy input vector in matlib vector and place bins at the correct
 	   position */
 	for (i = iShiftedKmin; i < iEndIndex; i++)
-		veccFFTInput[i] = (*pvecInputData)[i - iShiftedKmin];
+		veccFFTInput[i] = (*inputs[0].pvecData)[i - iShiftedKmin];
 
 	/* Calculate inverse fast Fourier transformation */
 	veccFFTOutput = Ifft(veccFFTInput, FftPlan);
 
 	/* Copy complex FFT output in output buffer and scale */
 	for (i = 0; i < iDFTSize; i++)
-		(*pvecOutputData)[i + iGuardSize] = veccFFTOutput[i] * (CReal) iDFTSize;
+		(*outputs[0].pvecData)[i + iGuardSize] = veccFFTOutput[i] * (CReal) iDFTSize;
 
 	/* Copy data from the end to the guard-interval (Add guard-interval) */
 	for (i = 0; i < iGuardSize; i++)
-		(*pvecOutputData)[i] = (*pvecOutputData)[iDFTSize + i];
+		(*outputs[0].pvecData)[i] = (*outputs[0].pvecData)[iDFTSize + i];
 
 
 	/* Shift spectrum to desired IF ----------------------------------------- */
 	/* Only apply shifting if phase is not zero */
 	if (cExpStep != _COMPLEX((_REAL) 1.0, (_REAL) 0.0))
 	{
-		for (i = 0; i < iOutputBlockSize; i++)
+		for (i = 0; i < outputs[0].iBlockSize; i++)
 		{
-			(*pvecOutputData)[i] = (*pvecOutputData)[i] * Conj(cCurExp);
+			(*outputs[0].pvecData)[i] = (*outputs[0].pvecData)[i] * Conj(cCurExp);
 			
 			/* Rotate exp-pointer on step further by complex multiplication
 			   with precalculated rotation vector cExpStep. This saves us from
@@ -103,8 +103,8 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 	veccFFTOutput.Init(iDFTSize);
 
 	/* Define block-sizes for input and output */
-	iInputBlockSize = TransmParam.CellMappingTable.iNumCarrier;
-	iOutputBlockSize = TransmParam.CellMappingTable.iSymbolBlockSize;
+	inputs[0].iBlockSize = TransmParam.CellMappingTable.iNumCarrier;
+	outputs[0].iBlockSize = TransmParam.CellMappingTable.iSymbolBlockSize;
 	TransmParam.Unlock(); 
 }
 

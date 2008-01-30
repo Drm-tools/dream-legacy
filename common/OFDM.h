@@ -40,7 +40,7 @@
 
 
 /* Classes ********************************************************************/
-class COFDMModulation : public CReceiverModul<_COMPLEX, _COMPLEX>
+class COFDMModulation : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
 	COFDMModulation() : rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ) {}

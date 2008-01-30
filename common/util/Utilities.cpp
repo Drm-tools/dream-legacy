@@ -55,7 +55,7 @@ typedef int SOCKET;
 * Signal level meter                                                           *
 \******************************************************************************/
 void
-CSignalLevelMeter::Update(const _REAL rVal)
+CSignalLevelMeter::doUpdate(const _REAL rVal)
 {
 	/* Search for maximum. Decrease this max with time */
 	/* Decrease max with time */
@@ -74,26 +74,40 @@ CSignalLevelMeter::Update(const _REAL rVal)
 }
 
 void
+CSignalLevelMeter::Update(const _REAL rVal)
+{
+	Mutex.Lock();
+	doUpdate(rVal);
+	Mutex.Unlock();
+}
+
+void
 CSignalLevelMeter::Update(const vector < _SAMPLE > vecsVal)
 {
+	Mutex.Lock();
 	/* Do the update for entire vector, convert to real */
 	for (size_t i = 0; i < vecsVal.size(); i++)
-		Update((_REAL) vecsVal[i]);
+		doUpdate((_REAL) vecsVal[i]);
+	Mutex.Unlock();
 }
 
 void
 CSignalLevelMeter::Update(const CVector < _REAL > vecsVal)
 {
+	Mutex.Lock();
 	/* Do the update for entire vector, convert to real */
 	const int iVecSize = vecsVal.Size();
 	for (int i = 0; i < iVecSize; i++)
-		Update(vecsVal[i]);
+		doUpdate(vecsVal[i]);
+	Mutex.Unlock();
 }
 
 _REAL CSignalLevelMeter::Level()
 {
+	Mutex.Lock();
 	const _REAL
 		rNormMicLevel = rCurLevel / _MAXSHORT;
+	Mutex.Unlock();
 
 	/* Logarithmic measure */
 	if (rNormMicLevel > 0)

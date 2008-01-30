@@ -341,6 +341,10 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		this, SLOT(OnLineEditFrequencyChanged(const QString&)) );
 
 	EdtFrequency->setValidator(new QIntValidator(100, 120000, EdtFrequency));
+
+	/* QT optimises out trying to send this from ReceiverSettings! */
+	if(Settings.Get("GPS", "usegpsd", FALSE))
+		EnableGPS(TRUE);
 }
 
 systemevalDlg::~systemevalDlg()
@@ -792,7 +796,7 @@ void systemevalDlg::OnTimer()
 	FACTimeDateL->setText(tr("Received time - date:")); /* Label */
 	FACTimeDateV->setText(strFACInfo); /* Value */
 
-	//display GPS info
+	/* display GPS info */
 
 	switch (Parameters.GPSData.GetStatus())
 	{
@@ -811,6 +815,9 @@ void systemevalDlg::OnTimer()
 
 	if (Parameters.GPSData.GetPositionAvailable())
 	{
+		// let gps data come from RSCI
+		if(FrameGPS->isVisible() == FALSE)
+			FrameGPS->show();
 		double latitude, longitude;
 		Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
 		GPSLatV->setText(QString("%1\260").arg(latitude, 0, 'f', 6));
@@ -1208,16 +1215,11 @@ void systemevalDlg::AddWhatsThisHelp()
 
 void systemevalDlg::EnableGPS(bool b)
 {
-	// let gps data come from RSCI
-	if(DRMReceiver.GetRSIIn()->GetInEnabled())
-	{
-		FrameGPS->show();
-		return;
-	}
-
+cerr << "systemevalDlg::EnableGPS " << endl;
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 	if(b)
 	{
+	cerr << "showing gps data from gpsd" <<endl;
 		Parameters.Lock(); 
 		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
 		Parameters.Unlock(); 

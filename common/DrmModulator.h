@@ -48,11 +48,8 @@ public:
 	virtual 				~CDRMModulator() {}
 	void					LoadSettings(CSettings&, CParameter&);
 	void					SaveSettings(CSettings&, CParameter&);
-	void					Init(CParameter&);
-	void					ProcessData(CParameter& Parameter, 
-								CBuffer<_BINARY>& FACBuf, 
-								CBuffer<_BINARY>& SDCBuf, 
-									vector< CSingleBuffer<_BINARY> >& vecOutputBuffer);
+	void					Init(CParameter& Parameter, const vector<string>& COFDMOutputs);
+	void					WriteData(CParameter& Parameter, CBuffer<_BINARY>* Buf);
 	void					Cleanup(CParameter&);
 
 	void					GetSoundOutChoices(vector<string>&);
@@ -62,9 +59,9 @@ public:
 protected:
 
 	CSingleBuffer<_COMPLEX>	MLCEncBuf;
-	vector<CCyclicBuffer<_COMPLEX> >	MSC_FAC_SDC_MapBuf;
 	CSingleBuffer<_COMPLEX>	CarMapBuf;
 	CSingleBuffer<_COMPLEX>	OFDMModBuf;
+	CCyclicBuffer<_COMPLEX>	MapBuf[3];
 
 	/* Modules */
 	CTransmitData			TransmitData;

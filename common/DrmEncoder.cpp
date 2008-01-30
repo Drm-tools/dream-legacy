@@ -107,13 +107,11 @@ CDRMEncoder::SetReadFromFile(const string & strNFN)
 	strInputFileName = strNFN;
 }
 
-void CDRMEncoder::Init(CParameter& Parameters,
-			CBuffer<_BINARY>& FACBuf, 
-			CBuffer<_BINARY>& SDCBuf, 
-			vector< CSingleBuffer<_BINARY> >& MSCBuf)
+void
+CDRMEncoder::Init(CParameter& Parameters, CBuffer<_BINARY>* Buf)
 {
-	GenerateFACData.Init(Parameters, FACBuf);
-	GenerateSDCData.Init(Parameters, SDCBuf);
+	GenerateFACData.Init(Parameters, &Buf[0]);
+	GenerateSDCData.Init(Parameters, &Buf[1]);
 
 	if(strInputFileName=="")
 	{
@@ -133,7 +131,7 @@ void CDRMEncoder::Init(CParameter& Parameters,
 	size_t i;
 	for(i=0; i<vecstrTexts.size(); i++)
 		AudioSourceEncoder.SetTextMessage(vecstrTexts[i]);
-	AudioSourceEncoder.Init(Parameters, MSCBuf[0]);
+	AudioSourceEncoder.Init(Parameters, &Buf[2]);
 
 	DataEncoder.GetSliShowEnc()->ClearAllFileNames();
 	for(i=0; i<vecstrPics.size(); i++)
@@ -142,49 +140,24 @@ void CDRMEncoder::Init(CParameter& Parameters,
 	SignalLevelMeter.Init(0);
 }
 
+// TODO Mutex on SignalLevelMeter and Transmission Status (Slide show pic)
 void
-CDRMEncoder::ProcessData(CParameter& Parameters,
-			CBuffer<_BINARY>& FACBuf, 
-			CBuffer<_BINARY>& SDCBuf, 
-			vector< CSingleBuffer<_BINARY> >& MSCBuf)
+CDRMEncoder::ReadData(CParameter& Parameters, CBuffer<_BINARY>* Buf)
 {
 	/* MSC *********************************************************** */
 	/* Read the source signal */
 	pReadData->ReadData(Parameters, DataBuf);
 
-	SignalLevelMeter.Update(*DataBuf.QueryWriteBuffer());
+	SignalLevelMeter.Update(*DataBuf[0].QueryWriteBuffer());
 
 	/* Audio source encoder */
-	AudioSourceEncoder.ProcessData(Parameters, DataBuf, MSCBuf[0]);
-
-#if 0
-	if(false)
-	{
-		/* Write data packets in stream */
-		CVector < _BINARY > vecbiData;
-		const int iNumPack = iOutputBlockSize / iTotPacketSize;
-		int iPos = 0;
-
-		for (int j = 0; j < iNumPack; j++)
-		{
-			/* Get new packet */
-			DataEncoder.GeneratePacket(vecbiData);
-
-			/* Put it on stream */
-			for (i = 0; i < iTotPacketSize; i++)
-			{
-				(*pvecOutputData)[iPos] = vecbiData[i];
-				iPos++;
-			}
-		}
-	}
-#endif
+	AudioSourceEncoder.ProcessData(Parameters, DataBuf, &Buf[2]);
 
 	/* FAC *********************************************************** */
-	GenerateFACData.ReadData(Parameters, FACBuf);
+	GenerateFACData.ReadData(Parameters, &Buf[0]);
 
 	/* SDC *********************************************************** */
-	GenerateSDCData.ReadData(Parameters, SDCBuf);
+	GenerateSDCData.ReadData(Parameters, &Buf[1]);
 
 }
 

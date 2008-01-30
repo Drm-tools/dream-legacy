@@ -137,12 +137,16 @@ main(int argc, char **argv)
 			 * tune the front end
 			 */
 
+			DRMReceiver.LoadSettings(Settings); /* might copy bare parameter to "rsiin" */
 #ifdef HAVE_LIBHAMLIB
 			CHamlib Hamlib(*DRMReceiver.GetParameters());
-			Hamlib.LoadSettings(Settings);
-			DRMReceiver.SetHamlib(&Hamlib);
+			string rsi = Settings.Get("command", "rsiin");
+			if(rsi == "") /* don't initialise hamlib if RSCI input is requested */
+			{
+				Hamlib.LoadSettings(Settings);
+				DRMReceiver.SetHamlib(&Hamlib);
+			}
 #endif
-			DRMReceiver.LoadSettings(Settings);
 
 			DRMReceiver.Init();
 
