@@ -240,6 +240,8 @@
 			<Option compilerVar="CPP" />
 		</Unit>
 		<Unit filename="..\common\sound\pa_ringbuffer.h" />
+		<Unit filename="..\common\sound\soundfile.cpp" />
+		<Unit filename="..\common\sound\soundfile.h" />
 		<Unit filename="..\common\sound\soundnull.h" />
 		<Unit filename="..\common\soundinterface.h" />
 		<Unit filename="..\common\sourcedecoders\AudioSourceDecoder.cpp" />
@@ -261,6 +263,8 @@
 		<Unit filename="..\common\tables\TableFAC.h" />
 		<Unit filename="..\common\tables\TableMLC.h" />
 		<Unit filename="..\common\tables\TableQAMMapping.h" />
+		<Unit filename="..\common\tables\TableStations.cpp" />
+		<Unit filename="..\common\tables\TableStations.h" />
 		<Unit filename="..\common\util\AudioFile.h" />
 		<Unit filename="..\common\util\Buffer.h" />
 		<Unit filename="..\common\util\CRC.cpp" />
