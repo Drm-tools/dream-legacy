@@ -106,7 +106,7 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 		const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(i);
 		/* Only generate this tag if stream input data is not of zero length */
 		if (iLenStrData > 0)
-			vecTagItemGeneratorStr[i].GenTag(Parameter, 
+			vecTagItemGeneratorStr[i].GenTag(Parameter,
 				vecMSCData[i].Get(SIZEOF__BYTE * Parameter.GetStreamLen(i)));
 	}
 	SendLockedFrame(Parameter);
@@ -566,7 +566,7 @@ void CDownstreamDI::SendPacket(const vector<_BYTE>&, uint32_t, uint16_t)
 }
 
 /******************************************************************************\
-* DI receive 
+* DI receive
 \******************************************************************************/
 CDIIn::CDIIn() : CPacketSink(), source(NULL), bDIInEnabled(FALSE)
 {
@@ -689,6 +689,17 @@ void CUpstreamDI::SetReceiverMode(ERecMode eNewMode)
 	TagItemGeneratorCdmo.GenTag(eNewMode);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyRSCI);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorCdmo);
+	sink.TransmitPacket(TagPacketGenerator);
+}
+
+void CUpstreamDI::SetService(int iServiceID)
+{
+	if(bMDIOutEnabled==FALSE)
+		return;
+	TagPacketGenerator.Reset();
+	TagItemGeneratorCser.GenTag(iServiceID);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyRSCI);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorCser);
 	sink.TransmitPacket(TagPacketGenerator);
 }
 

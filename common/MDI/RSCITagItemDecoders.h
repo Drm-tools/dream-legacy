@@ -169,6 +169,13 @@ public:
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 };
 
+class CTagItemDecoderCser : public CTagItemDecoderRCI
+{
+public:
+	CTagItemDecoderCser() : CTagItemDecoderRCI("cser") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
+
 class CTagItemDecoderCpro : public CTagItemDecoderRCI
 {
 public:

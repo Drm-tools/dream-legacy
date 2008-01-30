@@ -49,4 +49,13 @@ protected:
 	string GetProfiles(void) { return ""; }
 };
 
+class CTagItemGeneratorCser : public CTagItemGenerator /* cser tag */
+{
+public:
+	void GenTag(const int iServiceID);
+protected:
+	string GetTagName(void);
+	string GetProfiles(void) { return ""; }
+};
+
 #endif

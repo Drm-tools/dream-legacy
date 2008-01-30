@@ -56,6 +56,7 @@ private:
 	CTagItemDecoderCdmo			TagItemDecoderCdmo;
 	CTagItemDecoderCrec			TagItemDecoderCrec;
 	CTagItemDecoderCpro			TagItemDecoderCpro;
+	CTagItemDecoderCser			TagItemDecoderCser;
 	// TODO other RSCI control tag items
 };
 

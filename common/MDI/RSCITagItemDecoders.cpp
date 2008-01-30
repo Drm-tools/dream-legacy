@@ -311,7 +311,7 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 /*
 void CTagItemDecoderPilots::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
-	
+
 	int iNumSymbols = vecbiTag.Separate(8);
 	int iSymbolRepetition = vecbiTag.Separate(8);
 	vecbiTag.Separate(16);
@@ -321,7 +321,7 @@ void CTagItemDecoderPilots::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen
 		int iNumPilots = vecbiTag.Separate(8);
 		int iPilotOffset = vecbiTag.Separate(8);
 		int iBlockExponent = (int16_t) vecbiTag.Separate(16);
-		
+
 		//write to pParameter->matcReceivedPilotValues - but don't know what size to make it. Arghhh
 	}
 
@@ -373,7 +373,7 @@ void CTagItemDecoderCdmo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 	if(s == "drm_")
 		pDRMReceiver->SetReceiverMode(RM_DRM);
-	else 
+	else
 	{
 		pDRMReceiver->SetReceiverMode(RM_AM); // AM means "analogue" not "amplitude"
 
@@ -410,6 +410,23 @@ void CTagItemDecoderCrec::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		pDRMReceiver->SetRSIRecording(c4=='1', c3);
 	if(s == "iq")
 		pDRMReceiver->SetIQRecording(c4=='1');
+}
+
+void CTagItemDecoderCser::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	if (iLen != 8)
+		return;
+
+	int iNewServiceID = int(vecbiTag.Separate(SIZEOF__BYTE));
+
+    CParameter& Parameters = *pDRMReceiver->GetParameters();
+
+    Parameters.Lock();
+
+    Parameters.SetCurSelAudioService(iNewServiceID);
+    Parameters.SetCurSelDataService(iNewServiceID);
+
+    Parameters.Unlock();
 }
 
 void CTagItemDecoderCpro::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)

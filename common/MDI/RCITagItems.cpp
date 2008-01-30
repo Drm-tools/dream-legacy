@@ -78,3 +78,11 @@ void CTagItemGeneratorCdmo::GenTag(const ERecMode eMode) // cdmo
 }
 
 string CTagItemGeneratorCdmo::GetTagName(void) {return "cdmo";}
+
+void CTagItemGeneratorCser::GenTag(const int iServiceID) // cser
+{
+	PrepareTag(1*SIZEOF__BYTE);
+	Enqueue((uint8_t) iServiceID, SIZEOF__BYTE);
+}
+
+string CTagItemGeneratorCser::GetTagName(void) {return "cser";}

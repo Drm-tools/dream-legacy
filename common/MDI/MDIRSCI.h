@@ -96,6 +96,7 @@ public:
 	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC=bNAFPktCRC;}
 	void SetFrequency(int iNewFreqkHz);
 	void SetReceiverMode(ERecMode eNewMode);
+	void SetService(int iServiceID);
 
 	_BOOLEAN GetDestination(string& strArgument);
 
@@ -106,7 +107,7 @@ public:
 protected:
 
 	string						strDestination;
-	CRSISubscriberSocket		sink; 
+	CRSISubscriberSocket		sink;
 
 	_BOOLEAN					bUseAFCRC;
 
@@ -118,6 +119,7 @@ protected:
 	CTagItemGeneratorProTyRSCI TagItemGeneratorProTyRSCI; /* *ptr tag */
 	CTagItemGeneratorCfre TagItemGeneratorCfre;
 	CTagItemGeneratorCdmo TagItemGeneratorCdmo;
+	CTagItemGeneratorCser TagItemGeneratorCser;
 
 	/* TAG Packet generator */
 	CTagPacketGenerator TagPacketGenerator;
@@ -151,8 +153,8 @@ public:
 	_BOOLEAN SetOrigin(const string& strAddr);
 	void SetRSIRecording(CParameter& Parameter, _BOOLEAN bOn, char cPro, const string& type="");
 	void NewFrequency(CParameter& Parameter); /* needs to be called in case a new RSCI file needs to be started */
-	
-	virtual _BOOLEAN GetOutEnabled() {return bMDIOutEnabled;} 
+
+	virtual _BOOLEAN GetOutEnabled() {return bMDIOutEnabled;}
 	virtual _BOOLEAN GetInEnabled() {return bMDIInEnabled;}
 	void GetNextPacket(CSingleBuffer<_BINARY>&	buf);
 	void SetReceiver(CDRMReceiver *pReceiver);
@@ -165,7 +167,7 @@ public:
 	string GetRSIfilename(CParameter& Parameter, const char cProfile);
 
 protected:
-	
+
 	void ResetTags();
 
 	uint32_t					iLogFraCnt;
@@ -233,7 +235,7 @@ protected:
 
 class CMDIOut:
 	public CTransmitterModul<_BINARY, _BINARY,2+MAX_NUM_STREAMS,1>,
-	public CDownstreamDI 
+	public CDownstreamDI
 {
 public:
 	CMDIOut() : CTransmitterModul<_BINARY, _BINARY, 2+MAX_NUM_STREAMS,1>(),
