@@ -66,7 +66,7 @@ void Loghelper::OnTimerLogFileStart()
 	if(!longLog.GetLoggingActivated())
 	{
 		TimerLogFileLong.start(1000); /* Every second */
-		shortLog.SetLogFrequency(DRMReceiver.GetFrequency());
+		longLog.SetLogFrequency(DRMReceiver.GetFrequency());
 		longLog.Start("DreamLogLong.csv");
 	}
 	if(!shortLog.GetLoggingActivated())
