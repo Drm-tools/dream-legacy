@@ -597,13 +597,15 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	rAvScatPilPow /= iScatPilotCellCnt;
 
 
-//#ifdef _DEBUG_
-#if 1
+#ifdef _DEBUG_
 	FILE* pFile = fopen("test/CarMapTable.dat", "w");
-	fprintf(pFile, "Robustness mode %c / Spectrum occupancy %d\n\n", int(eNewRobustnessMode)+'A', iSpecOccArrayIndex);
-	fclose(pFile);
-	dump_carriers("test/CarMapTable.dat");
-	dump_pilots("test/PilotCells.dat");
+	if(pFile)
+	{
+		fprintf(pFile, "Robustness mode %c / Spectrum occupancy %d\n\n", int(eNewRobustnessMode)+'A', iSpecOccArrayIndex);
+		fclose(pFile);
+		dump_carriers("test/CarMapTable.dat");
+		dump_pilots("test/PilotCells.dat");
+	}
 #endif
 }
 
