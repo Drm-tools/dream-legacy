@@ -30,15 +30,12 @@
 #include "MDI/MDIDecode.h"
 #include "DrmTransmitter.h"
 #include "mlc/MLC.h"
-#include <queue>
-
-#define MIN_MDI_INPUT_BUFFERED_FRAMES 0
 
 /* Implementation *************************************************************/
 CDRMTransmitter::CDRMTransmitter():
-	TransmParam(),
-	strMDIinAddr(), MDIoutAddr(), COFDMOutputs(),
-	eOpMode(T_TX),
+	CDRMTransmitterInterface(),
+	TransmParam(), eOpMode(T_TX),
+	strMDIinAddr(), MDIoutAddr(),
 	Encoder(), Modulator(),
 	MDIIn(), DecodeMDI(), MDIOut()
 {
@@ -57,13 +54,13 @@ CDRMTransmitter::CDRMTransmitter():
 }
 
 void
-CDRMTransmitter::CalculateChannelCapacities(CParameter& Parameters)
+CDRMTransmitter::CalculateChannelCapacities()
 {
-	CSingleBuffer<_COMPLEX>	DummyBuf[1];
+	CSingleBuffer<_COMPLEX>	DummyBuf;
 	CMSCMLCEncoder			MSCMLCEncoder;
 	CSDCMLCEncoder			SDCMLCEncoder;
-	SDCMLCEncoder.Init(Parameters, DummyBuf);
-	MSCMLCEncoder.Init(Parameters, DummyBuf);
+	SDCMLCEncoder.Init(TransmParam, DummyBuf);
+	MSCMLCEncoder.Init(TransmParam, DummyBuf);
 }
 
 void
@@ -150,21 +147,24 @@ void CDRMTransmitter::Start()
 {
 
 	bool bInSync = true;
+	CSingleBuffer<_BINARY> MDIPacketBuf;
+	CSingleBuffer<_BINARY> FACBuf, SDCBuf;
+	vector<CSingleBuffer<_BINARY> > MSCBuf(MAX_NUM_STREAMS);
 
 	switch(eOpMode)
 	{
 	case T_TX:
 		TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
 		TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
-		Encoder.Init(TransmParam, MDIBuf);
-		Modulator.Init(TransmParam, COFDMOutputs);
+		Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
+		Modulator.Init(TransmParam);
 		break;
 	case T_ENC:
 		if(MDIoutAddr.size()==0)
 			throw CGenErr("Encoder with no outputs");
 		TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
 		TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
-		Encoder.Init(TransmParam, MDIBuf);
+		Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
 		{
 			/* set the output address */
 			for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
@@ -179,58 +179,81 @@ void CDRMTransmitter::Start()
 		else
 			throw CGenErr("Modulator with no input");
 		bInSync = false;
+		MDIIn.Init(TransmParam, MDIPacketBuf);
+		DecodeMDI.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
+
 	}
 
 	/* Set run flag */
 	TransmParam.bRunThread = TRUE;
     cout << "Tx: starting, in:" << (MDIIn.GetInEnabled()?"MDI":"Encoder")
-         << ", out: " << (MDIOut.GetOutEnabled()?"MDI":"")
-         << ", " << ((COFDMOutputs.size()>0)?"COFDM":"")
+         << ", out: " << (MDIOut.GetOutEnabled()?"MDI":"COFDM")
          << endl; cout.flush();
 
 	try
 	{
 		while (TransmParam.bRunThread)
 		{
-			if(bInSync)
+			if(eOpMode == T_MOD)
 			{
-				if(eOpMode == T_MOD)
+				if(bInSync==false)
 				{
-					MDIPacketBuf.Clear();
-					MDIIn.ReadData(TransmParam, &MDIPacketBuf);
-					cerr << "MDIPacketBuf.GetFillLevel " << MDIPacketBuf.GetFillLevel() << endl;
-					DecodeMDI.ProcessData(TransmParam, &MDIPacketBuf, MDIBuf);
+					FACBuf.SetRequestFlag(TRUE);
+					SDCBuf.SetRequestFlag(TRUE);
+					for(size_t i=0; i<MAX_NUM_STREAMS; i++)
+						MSCBuf[i].SetRequestFlag(TRUE);
+					MDIPacketBuf.SetRequestFlag(TRUE);
 				}
-				else
+				MDIPacketBuf.Clear();
+				MDIIn.ReadData(TransmParam, MDIPacketBuf);
+				if(MDIPacketBuf.GetFillLevel()>0)
 				{
-					Encoder.ReadData(TransmParam, MDIBuf);
+					//DecodeMDI.Expect(MDIPacketBuf.GetFillLevel());
+					DecodeMDI.ProcessData(TransmParam, MDIPacketBuf, FACBuf, SDCBuf, MSCBuf);
 				}
-
-				if(eOpMode == T_ENC)
+				if(bInSync==false && FACBuf.GetFillLevel()>0)
 				{
-					MDIOut.WriteData(TransmParam, MDIBuf);
-				}
-				else
-				{
-					Modulator.WriteData(TransmParam, MDIBuf);
-					/* TODO - set bInSync false on error */
+					CFACReceive FACReceive;
+					_BOOLEAN bCRCOk = FACReceive.FACParam(FACBuf.QueryWriteBuffer(), TransmParam);
+					if(bCRCOk)
+					{
+						cerr << "Got SDCI & FAC" << endl;
+						Modulator.Init(TransmParam);
+						cerr << "Modulator initialised from MDI with"
+							<< " MSC mode " << int(TransmParam.eMSCCodingScheme)
+							<< " SDC mode " << int(TransmParam.eSDCCodingScheme)
+							<< " robm " << int(TransmParam.GetWaveMode())
+							<< " spectrum occupancy " << int(TransmParam.GetSpectrumOccup()) << endl;
+						if(SDCBuf.GetFillLevel()>0)
+						{
+							bInSync = true;
+							cerr << "got SDC" << endl;
+						}
+						else
+						{
+							(void)FACBuf.Get(NUM_FAC_BITS_PER_BLOCK);
+							for(size_t i=0; i<MAX_NUM_STREAMS; i++)
+								(void)MSCBuf[i].Get(MSCBuf[i].GetFillLevel());
+						}
+					}
+					else
+						cerr << "bad FAC CRC" << endl;
 				}
 			}
 			else
 			{
-				SyncWithMDI(TransmParam);
-				if(TransmParam.bRunThread == FALSE)
-					break;
-				cerr << "Got SDCI & FAC" << endl;
-				MDIIn.Init(TransmParam, &MDIPacketBuf);
-				DecodeMDI.Init(TransmParam, MDIBuf);
-				Modulator.Init(TransmParam, COFDMOutputs);
-				cerr << "Modulator initialised from MDI with"
-					<< " MSC mode " << int(TransmParam.eMSCCodingScheme)
-					<< " SDC mode " << int(TransmParam.eSDCCodingScheme)
-					<< " robm " << int(TransmParam.GetWaveMode())
-					<< " spectrum occupancy " << int(TransmParam.GetSpectrumOccup()) << endl;
-				bInSync = true;
+				Encoder.ReadData(TransmParam, FACBuf, SDCBuf, MSCBuf);
+			}
+
+			if(eOpMode == T_ENC)
+			{
+				MDIOut.WriteData(TransmParam, FACBuf, SDCBuf, MSCBuf);
+			}
+			else
+			{
+				if(bInSync)
+					Modulator.WriteData(TransmParam, FACBuf, SDCBuf, MSCBuf);
+				/* TODO - set bInSync false on error */
 			}
 		}
 	}
@@ -245,36 +268,10 @@ void CDRMTransmitter::Start()
 }
 
 void
-CDRMTransmitter::SyncWithMDI(CParameter& TransmParam)
-{
-	MDIIn.Init(TransmParam, &MDIPacketBuf);
-	DecodeMDI.Init(TransmParam, MDIBuf);
-	while (TransmParam.bRunThread)
-	{
-		MDIPacketBuf.SetRequestFlag(TRUE); // should we need this? TODO
-		MDIIn.ReadData(TransmParam, &MDIPacketBuf);
-		cerr << "MDIPacketBuf.Fill " << MDIPacketBuf.GetFillLevel() << endl;
-		MDIBuf[0].SetRequestFlag(TRUE); MDIBuf[1].SetRequestFlag(TRUE); MDIBuf[2].SetRequestFlag(TRUE);
-		DecodeMDI.ProcessData(TransmParam, &MDIPacketBuf, MDIBuf);
-		cerr << "MDIBuf Fill " << MDIBuf[0].GetFillLevel() << " " << MDIBuf[1].GetFillLevel() << " " << MDIBuf[2].GetFillLevel() << endl;
-		if(MDIBuf[0].GetFillLevel()>0)
-		{
-			CFACReceive FACReceive;
-			_BOOLEAN bCRCOk = FACReceive.FACParam(MDIBuf[0].QueryWriteBuffer(), TransmParam);
-			if(bCRCOk)
-			{
-				return;
-			}
-			else
-				cerr << "bad FAC CRC" << endl;
-		}
-	}
-}
-
-void
 CDRMTransmitter::LoadSettings(CSettings& s)
 {
 	string mode = s.Get("0", "mode", string("DRMTX"));
+	strMDIinAddr = s.Get("Transmitter", "MDIin", string(""));
 	if(mode == "DRMTX")
 		eOpMode = T_TX;
 	if(mode == "DRMENC")
@@ -300,6 +297,7 @@ CDRMTransmitter::SaveSettings(CSettings& s)
 		s.Put("0", "mode", string("DRMMOD"));
 		break;
 	}
+	s.Put("Transmitter", "MDIin", strMDIinAddr);
 	Encoder.SaveSettings(s, TransmParam);
 	Modulator.SaveSettings(s, TransmParam);
 }

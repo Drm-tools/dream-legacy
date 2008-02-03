@@ -36,6 +36,7 @@
 #include "ofdmcellmapping/OFDMCellMapping.h"
 #include "OFDM.h"
 #include "DRMSignalIO.h"
+#include "util/TransmitterModul_impl.h"
 
 /* Classes ********************************************************************/
 class CSettings;
@@ -48,8 +49,10 @@ public:
 	virtual 				~CDRMModulator() {}
 	void					LoadSettings(CSettings&, CParameter&);
 	void					SaveSettings(CSettings&, CParameter&);
-	void					Init(CParameter& Parameter, const vector<string>& COFDMOutputs);
-	void					WriteData(CParameter& Parameter, CBuffer<_BINARY>* Buf);
+	void					Init(CParameter& Parameter);
+	void					WriteData(CParameter& Parameter, 
+								CBuffer<_BINARY>& FACBuf, CBuffer<_BINARY>& SDCBuf,
+								vector<CSingleBuffer<_BINARY> >& MSCBuf);
 	void					Cleanup(CParameter&);
 
 	void					GetSoundOutChoices(vector<string>&);
@@ -61,7 +64,9 @@ protected:
 	CSingleBuffer<_COMPLEX>	MLCEncBuf;
 	CSingleBuffer<_COMPLEX>	CarMapBuf;
 	CSingleBuffer<_COMPLEX>	OFDMModBuf;
-	CCyclicBuffer<_COMPLEX>	MapBuf[3];
+	CCyclicBuffer<_COMPLEX>	IntlBuf;
+	CCyclicBuffer<_COMPLEX>	FACMapBuf;
+	CCyclicBuffer<_COMPLEX>	SDCMapBuf;
 
 	/* Modules */
 	CTransmitData			TransmitData;

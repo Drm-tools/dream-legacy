@@ -108,10 +108,12 @@ CDRMEncoder::SetReadFromFile(const string & strNFN)
 }
 
 void
-CDRMEncoder::Init(CParameter& Parameters, CBuffer<_BINARY>* Buf)
+CDRMEncoder::Init(CParameter& Parameters,
+			CBuffer<_BINARY>& FACBuf, CBuffer<_BINARY>& SDCBuf,
+			vector<CSingleBuffer<_BINARY> >& MSCBuf)
 {
-	GenerateFACData.Init(Parameters, &Buf[0]);
-	GenerateSDCData.Init(Parameters, &Buf[1]);
+	GenerateFACData.Init(Parameters, FACBuf);
+	GenerateSDCData.Init(Parameters, SDCBuf);
 
 	if(strInputFileName=="")
 	{
@@ -127,11 +129,13 @@ CDRMEncoder::Init(CParameter& Parameters, CBuffer<_BINARY>* Buf)
 	pReadData = new CReadData(pSoundInInterface);
 	pReadData->Init(Parameters, DataBuf);
 
+	MSCBuf.clear(); MSCBuf.resize(1);
+
 	AudioSourceEncoder.ClearTextMessage();
 	size_t i;
 	for(i=0; i<vecstrTexts.size(); i++)
 		AudioSourceEncoder.SetTextMessage(vecstrTexts[i]);
-	AudioSourceEncoder.Init(Parameters, &Buf[2]);
+	AudioSourceEncoder.Init(Parameters, MSCBuf[0]);
 
 	DataEncoder.GetSliShowEnc()->ClearAllFileNames();
 	for(i=0; i<vecstrPics.size(); i++)
@@ -142,22 +146,24 @@ CDRMEncoder::Init(CParameter& Parameters, CBuffer<_BINARY>* Buf)
 
 // TODO Mutex on SignalLevelMeter and Transmission Status (Slide show pic)
 void
-CDRMEncoder::ReadData(CParameter& Parameters, CBuffer<_BINARY>* Buf)
+CDRMEncoder::ReadData(CParameter& Parameters,
+			CBuffer<_BINARY>& FACBuf, CBuffer<_BINARY>& SDCBuf,
+			vector<CSingleBuffer<_BINARY> >& MSCBuf)
 {
 	/* MSC *********************************************************** */
 	/* Read the source signal */
 	pReadData->ReadData(Parameters, DataBuf);
 
-	SignalLevelMeter.Update(*DataBuf[0].QueryWriteBuffer());
+	SignalLevelMeter.Update(*DataBuf.QueryWriteBuffer());
 
 	/* Audio source encoder */
-	AudioSourceEncoder.ProcessData(Parameters, DataBuf, &Buf[2]);
+	AudioSourceEncoder.ProcessData(Parameters, DataBuf, MSCBuf[0]);
 
 	/* FAC *********************************************************** */
-	GenerateFACData.ReadData(Parameters, &Buf[0]);
+	GenerateFACData.ReadData(Parameters, FACBuf);
 
 	/* SDC *********************************************************** */
-	GenerateSDCData.ReadData(Parameters, &Buf[1]);
+	GenerateSDCData.ReadData(Parameters, SDCBuf);
 
 }
 

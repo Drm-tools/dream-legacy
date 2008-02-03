@@ -32,37 +32,26 @@
 #include "Parameter.h"
 #include "DrmEncoder.h"
 #include "DrmModulator.h"
+#include "DrmTransmitterInterface.h"
 
 /* Classes ********************************************************************/
 class CSettings;
 
-class CDRMTransmitter
-#ifdef USE_QT_GUI
-	: public QThread
-#endif
+class CDRMTransmitter: public CDRMTransmitterInterface
 {
 public:
-	enum ETxOpMode { T_ENC, T_MOD, T_TX };
-
 							CDRMTransmitter();
 	virtual 				~CDRMTransmitter() {}
 	void					LoadSettings(CSettings&); // can write to settings to set defaults
 	void					SaveSettings(CSettings&);
 
-#ifdef USE_QT_GUI
-	void					run() { Start(); }
-#else
-	void					start() {}
-	int						wait(int) {return 1;}
-	bool					finished(){return true;}
-#endif
 	void					Start();
 	void					Stop();
 
 	void					SetOperatingMode(const ETxOpMode);
 	ETxOpMode				GetOperatingMode();
 
-	void					CalculateChannelCapacities(CParameter&);
+	void					CalculateChannelCapacities();
 
 	_REAL 					GetLevelMeter();
 
@@ -79,28 +68,30 @@ public:
 	void 					SetReadFromFile(const string& strNFN);
 	string					GetReadFromFile() { return Encoder.GetReadFromFile(); }
 
-	void					DisableCOFDM() { COFDMOutputs.clear(); }
 	void					GetSoundOutChoices(vector<string>&);
+	void					SetCOFDMOutputs(const vector<string>& o) { Modulator.SetOutputs(o); }
+	void					GetCOFDMOutputs(vector<string>& o) { Modulator.GetOutputs(o); }
 
-	/* Parameters */
-	CParameter				TransmParam;
-	string					strMDIinAddr;
-	vector<string>			MDIoutAddr;
-	vector<string>			COFDMOutputs;
+	void					SetMDIIn(const string& s) { strMDIinAddr = s; }
+	string					GetMDIIn() { return strMDIinAddr; }
+
+	void					SetMDIOut(const vector<string>& v) { MDIoutAddr = v; }
+	void					GetMDIIn(vector<string>& v) { v = MDIoutAddr; }
+
+	virtual CParameter*		GetParameters() { return &TransmParam; }
 
 protected:
 
-	void					SyncWithMDI(CParameter& TransmParam);
-
+	CParameter				TransmParam;
 	ETxOpMode				eOpMode;
+	string					strMDIinAddr;
+	vector<string>			MDIoutAddr;
+
 	CDRMEncoder				Encoder;
 	CDRMModulator			Modulator;
 	CMDIIn					MDIIn;
 	CDecodeMDI				DecodeMDI;
 	CMDIOut					MDIOut;
-
-	CSingleBuffer<_BINARY>	MDIPacketBuf;
-	CSingleBuffer<_BINARY>	MDIBuf[2+MAX_NUM_STREAMS];
 };
 
 
