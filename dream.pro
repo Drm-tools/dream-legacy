@@ -118,6 +118,7 @@ common/DrmReceiver.h   \
 common/DRMSignalIO.h   \
 common/DrmSimulation.h   \
 common/DrmTransmitter.h   \
+common/DrmTransmitterInterface.h   \
 common/DrmEncoder.h   \
 common/DrmModulator.h   \
 common/FAC/FAC.h   \
@@ -207,6 +208,12 @@ common/util/Buffer.h   \
 common/util/CRC.h   \
 common/util/LogPrint.h   \
 common/util/Modul.h   \
+common/util/ReceiverModul.h   \
+common/util/SimulationModul.h   \
+common/util/TransmitterModul.h   \
+common/util/ReceiverModul_impl.h   \
+common/util/SimulationModul_impl.h   \
+common/util/TransmitterModul_impl.h   \
 common/util/Pacer.h   \
 common/util/Reassemble.h   \
 common/util/Settings.h   \
