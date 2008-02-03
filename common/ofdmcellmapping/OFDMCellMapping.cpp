@@ -46,10 +46,10 @@ void COFDMCellMapping::ProcessDataInternal(CParameter& TransmParam)
 	int iMSCCounter = 0;
 	int iFACCounter = 0;
 	int iSDCCounter = 0;
-	CVectorEx<_COMPLEX>& vecOutputData = *outputs[0].pvecData;
-	CVectorEx<_COMPLEX>& vecMSCData = *inputs[0].pvecData;
-	CVectorEx<_COMPLEX>& vecFACData = *inputs[1].pvecData;
-	CVectorEx<_COMPLEX>& vecSDCData = *inputs[2].pvecData;
+	CVectorEx<_COMPLEX>& vecOutputData = *pvecOutputData;
+	CVectorEx<_COMPLEX>& vecMSCData = *pvecInputData;
+	CVectorEx<_COMPLEX>& vecFACData = *pvecInputData2;
+	CVectorEx<_COMPLEX>& vecSDCData = *pvecInputData3;
 
 cerr << "COFDMCellMapping::ProcessDataInternal " << iNumCarrier << " " << vecOutputData.Size() << endl;
 cerr << vecMSCData.Size() << " " << vecFACData.Size() << " " << vecSDCData.Size() << endl;
@@ -117,9 +117,9 @@ cerr << "DC Carrier OK" << endl;
 		TransmParam.iFrameIDTransm * iNumSymPerFrame + iSymbolCounter;
 
 	/* Set input block-sizes for next symbol */
-	inputs[0].iBlockSize = cmt.veciNumMSCSym[iSymbolCounterAbs];
-	inputs[1].iBlockSize = cmt.veciNumFACSym[iSymbolCounterAbs];
-	inputs[2].iBlockSize = cmt.veciNumSDCSym[iSymbolCounterAbs];
+	iInputBlockSize = cmt.veciNumMSCSym[iSymbolCounterAbs];
+	iInputBlockSize2 = cmt.veciNumFACSym[iSymbolCounterAbs];
+	iInputBlockSize3 = cmt.veciNumSDCSym[iSymbolCounterAbs];
 
 	cerr << "Symbol counters " << iSymbolCounterAbs << " " << iSymbolCounter;
 	cerr << " " << iDummyCellCounter << " " << iMSCCounter <<
@@ -157,11 +157,11 @@ void COFDMCellMapping::InitInternal(CParameter& TransmParam)
 	}
 
 	/* Define block-sizes for input and output of the module ---------------- */
-	inputs[0].iBlockSize = cmt.veciNumMSCSym[0];
-	inputs[1].iBlockSize = cmt.veciNumFACSym[0];
-	inputs[2].iBlockSize = cmt.veciNumSDCSym[0];
-	outputs[0].iBlockSize = cmt.iNumCarrier; /* Output */
-	cerr << "COFDMCellMapping::InitInternal " << outputs[0].iBlockSize << endl;
+	iInputBlockSize = cmt.veciNumMSCSym[0];
+	iInputBlockSize2 = cmt.veciNumFACSym[0];
+	iInputBlockSize3 = cmt.veciNumSDCSym[0];
+	iOutputBlockSize = cmt.iNumCarrier; /* Output */
+	cerr << "COFDMCellMapping::InitInternal " << iOutputBlockSize << endl;
 }
 
 

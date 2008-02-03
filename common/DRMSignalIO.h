@@ -29,12 +29,12 @@
 #if !defined(DRMSIGNALIO_H__3B0BA660_CA63_4344_B_23E7A0D31912__INCLUDED_)
 #define DRMSIGNALIO_H__3B0BA660_CA63_4344_B_23E7A0D31912__INCLUDED_
 
-#include "Parameter.h"
 #include "soundinterface.h"
 #include <math.h>
 #include "matlib/Matlib.h"
 #include "IQInputFilter.h"
-#include "util/Modul.h"
+#include "util/ReceiverModul.h"
+#include "util/TransmitterModul.h"
 #include "util/Utilities.h"
 
 /* Definitions ****************************************************************/

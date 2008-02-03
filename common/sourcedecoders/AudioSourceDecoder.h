@@ -27,8 +27,8 @@
 #define AUIDOSOURCEDECODER_H__3B0BA660_CABB2B_23E7A0D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../Parameter.h"
-#include "../util/Modul.h"
+#include "../util/ReceiverModul.h"
+#include "../util/TransmitterModul.h"
 #include "../util/CRC.h"
 #include "../TextMessage.h"
 #include "../resample/Resample.h"
@@ -210,13 +210,15 @@ protected:
 
 	virtual void InitInternal(CParameter& TransmParam)
 	{
-		AudioSourceEncoderImpl.InitInternalTx(TransmParam, inputs[0].iBlockSize, outputs[0].iBlockSize);
+		//AudioSourceEncoderImpl.InitInternalTx(TransmParam, inputs[0].iBlockSize, outputs[0].iBlockSize);
+		AudioSourceEncoderImpl.InitInternalTx(TransmParam, iInputBlockSize, iOutputBlockSize);
 	}
 	
 	virtual void ProcessDataInternal(CParameter& )
 	{
 		AudioSourceEncoderImpl.ProcessDataInternal(
-			inputs[0].pvecData, outputs[0].pvecData, inputs[0].iBlockSize, outputs[0].iBlockSize);
+			pvecInputData, pvecOutputData, iInputBlockSize, iOutputBlockSize);
+			//inputs[0].pvecData, outputs[0].pvecData, inputs[0].iBlockSize, outputs[0].iBlockSize);
 	}
 
 };

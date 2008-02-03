@@ -1072,6 +1072,30 @@ SOURCE=..\common\util\Modul.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\util\ReceiverModul.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\util\SimulationModul.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\util\TransmitterModul.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\util\ReceiverModul_impl.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\util\SimulationModul_impl.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\util\TransmitterModul_impl.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\util\Reassemble.h
 # End Source File
 # Begin Source File
@@ -1222,6 +1246,10 @@ SOURCE=..\common\DrmModulator.h
 # Begin Source File
 
 SOURCE=..\common\DrmEncoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\DrmTransmitterInterface.h
 # End Source File
 # Begin Source File
 

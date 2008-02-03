@@ -29,9 +29,7 @@
 #if !defined(AMDEMOD_H__3B0BEVJBN8LKH2934BGF4344_BB27912__INCLUDED_)
 #define AMDEMOD_H__3B0BEVJBN8LKH2934BGF4344_BB27912__INCLUDED_
 
-#include "Parameter.h"
-#include "util/Modul.h"
-#include "util/Vector.h"
+#include "util/ReceiverModul.h"
 #include "matlib/Matlib.h"
 #include "resample/Resample.h"
 

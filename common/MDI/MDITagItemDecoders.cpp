@@ -168,6 +168,7 @@ void CTagItemDecoderRobMod::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen
 		break;
 	}
 
+	//Parameters.SetWaveMode(eRobMode);
 	SetReady(TRUE);
 }
 
@@ -217,6 +218,10 @@ void CTagItemDecoderSDCChanInf::DecodeTag(CVector<_BINARY>& vecbiTag, const int 
 			Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 	SetReady(TRUE);
+	// sdci not decoded later - will allow decoding/modulation before first SDC received
+	//CSDCReceive sdci;
+	// no Parameters.Lock(); SDCIParam calls block decoder which locks
+	//sdci.SDCIParam(&vecbidata, Parameters);
 }
 
 string CTagItemDecoderRxDemodMode::GetTagName(void) {return "rdmo";}

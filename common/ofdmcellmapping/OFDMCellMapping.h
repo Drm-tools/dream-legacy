@@ -30,14 +30,15 @@
 #define OFDMCELLMAPPING_H__3B0BA660_CA63_4344_BB2BE7A0D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../Parameter.h"
-#include "../util/Modul.h"
+#include "../util/ReceiverModul.h"
+#include "../util/TransmitterModul.h"
 #include "../tables/TableCarMap.h"
 #include "../tables/TableFAC.h"
 
 
 /* Classes ********************************************************************/
-class COFDMCellMapping : public CTransmitterModul<_COMPLEX, _COMPLEX,3,1>
+//class COFDMCellMapping : public CTransmitterModul<_COMPLEX, _COMPLEX,3,1>
+class COFDMCellMapping : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
 	COFDMCellMapping() {}

@@ -34,7 +34,8 @@
 
 # include "soundinterface.h"
 #include "Parameter.h"
-#include "util/Modul.h"
+#include "util/ReceiverModul.h"
+#include "util/TransmitterModul.h"
 #include "FAC/FAC.h"
 #include "SDC/SDC.h"
 #include "TextMessage.h"

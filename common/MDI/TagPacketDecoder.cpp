@@ -98,7 +98,6 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	/* LEN: length of the payload, in bytes (4 bytes long -> 32 bits) */
 	const int iPayLLen = (int) vecbiAFPkt.Separate(32);
 
-cerr << "AF packet " << iLenAFPkt << " " << iPayLLen << endl;
 	/* SEQ: sequence number. Each AF Packet shall increment the sequence number
 	   by one for each packet sent, regardless of content. There shall be no
 	   requirement that the first packet received shall have a specific value.

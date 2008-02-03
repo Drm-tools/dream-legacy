@@ -33,7 +33,7 @@
 #define PLOT_MANAGER_H_INCLUDED
 
 #include "GlobalDefinitions.h"
-#include "Parameter.h"
+#include "util/Vector.h"
 
 /* Definitions ****************************************************************/
 
@@ -41,6 +41,7 @@
 #define LEN_HIST_PLOT_SYNC_PARMS		2250
 
 
+class CDRMReceiver;
 
 class CPlotManager
 {

@@ -29,8 +29,7 @@
 #if !defined(CHANEST_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
 #define CHANEST_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
-#include "../Parameter.h"
-#include "../util/Modul.h"
+#include "../util/ReceiverModul.h"
 #include "../ofdmcellmapping/OFDMCellMapping.h"
 #include "../ofdmcellmapping/CellMappingTable.h"
 #include "../tables/TableQAMMapping.h"

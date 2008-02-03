@@ -30,7 +30,7 @@
 #define DRMCHANNEL_H__3B0BA660_CA63_4344_BB2B_2OJVBEWJBWV_INCLUDED_
 
 #include "../Parameter.h"
-#include "../util/Modul.h"
+#include "../util/SimulationModul.h"
 #include <time.h>
 
 

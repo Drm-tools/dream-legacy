@@ -30,10 +30,8 @@
 #define DATADECODER_H__3B0BA660_CA3452363E7A0D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../Parameter.h"
-#include "../util/Modul.h"
+#include "../util/ReceiverModul.h"
 #include "../util/CRC.h"
-#include "../util/Vector.h"
 #include "DABMOT.h"
 #include "MOTSlideShow.h"
 

@@ -70,6 +70,7 @@
 		<Unit filename="..\common\DrmSimulation.h" />
 		<Unit filename="..\common\DrmTransmitter.cpp" />
 		<Unit filename="..\common\DrmTransmitter.h" />
+		<Unit filename="..\common\DrmTransmitterInterface.h" />
 		<Unit filename="..\common\FAC\FAC.cpp" />
 		<Unit filename="..\common\FAC\FAC.h" />
 		<Unit filename="..\common\GPSData.cpp" />
@@ -274,6 +275,12 @@
 		<Unit filename="..\common\util\LogPrint.cpp" />
 		<Unit filename="..\common\util\LogPrint.h" />
 		<Unit filename="..\common\util\Modul.h" />
+		<Unit filename="..\common\util\ReceiverModul.h" />
+		<Unit filename="..\common\util\SimulationModul.h" />
+		<Unit filename="..\common\util\TransmitterModul.h" />
+		<Unit filename="..\common\util\ReceiverModul_impl.h" />
+		<Unit filename="..\common\util\SimulationModul_impl.h" />
+		<Unit filename="..\common\util\TransmitterModul_impl.h" />
 		<Unit filename="..\common\util\Pacer.h" />
 		<Unit filename="..\common\util\Reassemble.cpp" />
 		<Unit filename="..\common\util\Reassemble.h" />

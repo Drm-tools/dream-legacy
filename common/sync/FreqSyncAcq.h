@@ -29,8 +29,7 @@
 #if !defined(FREQSYNC_H__3B0BA660EDOINBEROUEBGF4344_BB2B_23E7912__INCLUDED_)
 #define FREQSYNC_H__3B0BA660EDOINBEROUEBGF4344_BB2B_23E7912__INCLUDED_
 
-#include "../Parameter.h"
-#include "../util/Modul.h"
+#include "../util/ReceiverModul.h"
 #include "../matlib/Matlib.h"
 #include "../util/Utilities.h"
 

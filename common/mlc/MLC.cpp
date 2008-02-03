@@ -38,7 +38,7 @@ void CMLCEncoder::ProcessDataInternal(CParameter&)
 	int	i, j;
 	int iElementCounter;
 
-	CVectorEx<_BINARY>& vecInputData = *inputs[0].pvecData;
+	CVectorEx<_BINARY>& vecInputData = *pvecInputData;
 
 	/* Energy dispersal ----------------------------------------------------- */
 	/* VSPP is treated as a separate part for energy dispersal */
@@ -137,7 +137,7 @@ void CMLCEncoder::ProcessDataInternal(CParameter&)
 				   vecEncOutBuffer[2],
 				   vecEncOutBuffer[3],
 				   vecEncOutBuffer[4],
-				   vecEncOutBuffer[5], outputs[0].pvecData);
+				   vecEncOutBuffer[5], pvecOutputData);
 }
 
 void CMLCEncoder::InitInternal(CParameter& TransmParam)
@@ -191,8 +191,8 @@ void CMLCEncoder::InitInternal(CParameter& TransmParam)
 	}
 
 	/* Define block-size for input and output */
-	inputs[0].iBlockSize = iNumInBits;
-	outputs[0].iBlockSize = iN_mux;
+	iInputBlockSize = iNumInBits;
+	iOutputBlockSize = iN_mux;
 }
 
 

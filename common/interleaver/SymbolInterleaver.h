@@ -30,8 +30,8 @@
 #define CONVINTERLEAVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../Parameter.h"
-#include "../util/Modul.h"
+#include "../util/ReceiverModul.h"
+#include "../util/TransmitterModul.h"
 #include "BlockInterleaver.h"
 
 

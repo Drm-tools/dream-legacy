@@ -112,22 +112,26 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 	SendLockedFrame(Parameter);
 }
 
-void CDownstreamDI::SendLockedFrame(CParameter& Parameter, CInputStruct<_BINARY>* inputs)
+void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
+						CVectorEx<_BINARY>* pFACData,
+						CVectorEx<_BINARY>* pSDCData,
+						vector<CVectorEx<_BINARY>*>& vecMSCData
+)
 {
-	TagItemGeneratorFAC.GenTag(Parameter, inputs[0].pvecData);
-	TagItemGeneratorSDC.GenTag(Parameter,  inputs[1].pvecData);
+	TagItemGeneratorFAC.GenTag(Parameter, pFACData);
+	TagItemGeneratorSDC.GenTag(Parameter, pSDCData);
 	for (size_t i = 0; i < MAX_NUM_STREAMS; i++)
 	{
-		const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(i);
 		/* Only generate this tag if stream input data is not of zero length */
-		if (iLenStrData > 0)
-			vecTagItemGeneratorStr[i].GenTag(Parameter, inputs[2+i].pvecData);
+		if (vecMSCData[i]->Size() > 0)
+			vecTagItemGeneratorStr[i].GenTag(Parameter, vecMSCData[i]);
 	}
 	SendLockedFrame(Parameter);
 }
 
 void CDownstreamDI::SendLockedFrame(CParameter& Parameter)
 {
+
 	TagItemGeneratorRobMod.GenTag(Parameter.GetWaveMode());
 	TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode(), Parameter.GetAnalogDemodType());
 
@@ -719,44 +723,52 @@ CUpstreamDI::ProcessDataInternal(CParameter& Parameter)
 void
 CMDIIn::InitInternal(CParameter& Parameter)
 {
-	inputs[0].iBlockSize = 1; /* anything is enough but not zero */
-	outputs[0].iMaxBlockSize = 2048*SIZEOF__BYTE; /* bigger than an ethernet packet */
+	//outputs[0].iBlockSize = 1; /* packet */
+	iMaxOutputBlockSize = 1500*SIZEOF__BYTE; 
+	iOutputBlockSize = 0;
 }
 
 void
 CMDIIn::ProcessDataInternal(CParameter& Parameter)
 {
-	CDIIn::ProcessData(Parameter, *outputs[0].pvecData, outputs[0].iBlockSize);
+	size_t i;
+	vector<_BYTE> vecbydata;
+	queue.Get(vecbydata);
+	volatile size_t bits = vecbydata.size()*SIZEOF__BYTE;
+	iOutputBlockSize = bits;
+	(*pvecOutputData).Init(bits);
+	(*pvecOutputData).ResetBitAccess();
+	for(i=0; i<vecbydata.size(); i++)
+		(*pvecOutputData).Enqueue(vecbydata[i], SIZEOF__BYTE);
 }
 
 void
 CMDIOut::InitInternal(CParameter& Parameter)
 {
 	iFrameCount = 0;
-	inputs[0].iBlockSize = NUM_FAC_BITS_PER_BLOCK;
-	inputs[1].iBlockSize = Parameter.iNumSDCBitsPerSFrame;
-	for (int i=0; i<MAX_NUM_STREAMS; i++)
-	{
-		inputs[2+i].iBlockSize = Parameter.GetStreamLen(i);
-	}
+	iInputBlockSize = NUM_FAC_BITS_PER_BLOCK;
+	iInputBlockSize2 = Parameter.iNumSDCBitsPerSFrame;
+	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
+		veciInputBlockSize[i] = Parameter.GetStreamLen(i);
+		
 }
 
 void
 CMDIOut::ProcessDataInternal(CParameter& Parameter)
 {
-	SendLockedFrame(Parameter, inputs);
+	SendLockedFrame(Parameter, pvecInputData, pvecInputData2, vecpvecInputData);
 	switch(iFrameCount)
 	{
 	case 0:
-		inputs[1].iBlockSize = Parameter.iNumSDCBitsPerSFrame;
+		iInputBlockSize = Parameter.iNumSDCBitsPerSFrame;
 		iFrameCount = 1;
 		break;
 	case 1:
-		inputs[1].iBlockSize = 0;
+		iInputBlockSize = 0;
 		iFrameCount = 2;
 		break;
 	case 2:
-		inputs[1].iBlockSize = 0;
+		iInputBlockSize = 0;
 		iFrameCount = 0;
 	}
 }

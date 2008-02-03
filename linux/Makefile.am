@@ -99,6 +99,7 @@ drmwithoutqt_SOURCES = \
 	../common/DrmReceiver.h \
 	../common/DrmSimulation.h \
 	../common/DrmTransmitter.h \
+	../common/DrmTransmitterInterface.h \
 	../common/DrmEncoder.h \
 	../common/DrmModulator.h \
 	../common/GlobalDefinitions.h \
@@ -120,6 +121,12 @@ drmwithoutqt_SOURCES = \
 	../common/matlib/MatlibSigProToolbox.h \
 	../common/matlib/MatlibStdToolbox.h \
 	../common/util/Modul.h \
+	../common/util/ReceiverModul.h \
+	../common/util/SimulationModul.h \
+	../common/util/TransmitterModul.h \
+	../common/util/ReceiverModul_impl.h \
+	../common/util/SimulationModul_impl.h \
+	../common/util/TransmitterModul_impl.h \
 	../common/util/Vector.h \
 	../common/util/Buffer.h \
 	../common/util/CRC.h \

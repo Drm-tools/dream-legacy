@@ -76,7 +76,7 @@ public:
 	string					GetMDIIn() { return strMDIinAddr; }
 
 	void					SetMDIOut(const vector<string>& v) { MDIoutAddr = v; }
-	void					GetMDIIn(vector<string>& v) { v = MDIoutAddr; }
+	void					GetMDIOut(vector<string>& v) { v = MDIoutAddr; }
 
 	virtual CParameter*		GetParameters() { return &TransmParam; }
 

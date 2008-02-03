@@ -29,9 +29,7 @@
 #if !defined(_AMSSDEMODULATION_H_)
 #define _AMSSDEMODULATION_H_
 
-#include "Parameter.h"
-#include "util/Modul.h"
-#include "util/Vector.h"
+#include "util/ReceiverModul.h"
 #include "matlib/Matlib.h"
 #include "resample/Resample.h"
 

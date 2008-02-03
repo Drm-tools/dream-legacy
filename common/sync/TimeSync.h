@@ -29,9 +29,7 @@
 #if !defined(TIMESYNC_H__3B0BEVJBN872345NBEROUEBGF4344_BB27912__INCLUDED_)
 #define TIMESYNC_H__3B0BEVJBN872345NBEROUEBGF4344_BB27912__INCLUDED_
 
-#include "../Parameter.h"
-#include "../util/Modul.h"
-#include "../util/Vector.h"
+#include "../util/ReceiverModul.h"
 #include "../matlib/Matlib.h"
 #include "TimeSyncFilter.h"
 

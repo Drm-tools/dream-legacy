@@ -33,11 +33,9 @@
 #define DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
 #include "GlobalDefinitions.h"
-#include <iostream>
+#include "util/ReceiverModul_impl.h"
 #include "MDI/MDIRSCI.h" /* OPH: need this near the top so winsock2 is included before winsock */
 #include "MDI/MDIDecode.h"
-#include "Parameter.h"
-#include "util/Buffer.h"
 #ifdef HAVE_LIBHAMLIB
 #include "util/Hamlib.h"
 #endif

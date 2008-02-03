@@ -30,8 +30,8 @@
 #define MDIDECODE_H_INCLUDED
 
 #include "../GlobalDefinitions.h"
-#include "../Parameter.h"
-#include "../util/Modul.h"
+#include "../util/ReceiverModul.h"
+#include "../util/TransmitterModul.h"
 #include "MDIDefinitions.h"
 #include "TagPacketDecoderMDI.h"
 
@@ -42,8 +42,14 @@ public:
 	virtual ~CDecodeRSIMDI() {}
 	virtual void Init(CParameter& Parameters);
 	virtual void ProcessData(CParameter& Parameters,
-				CInputStruct<_BINARY>* inputs,
-				COutputStruct<_BINARY>* outputs);
+				CVectorEx<_BINARY>* vecInputData,
+				CVectorEx<_BINARY>* vecfac_Data,
+				CVectorEx<_BINARY>* vecsdc_Data,
+				vector<CVectorEx<_BINARY>* >& vecpvecData,
+				int& iOutputBlockSize,
+				int& iOutputBlockSize2,
+				vector<int>& veciOutputBlockSize
+				);
 
 protected:
 	CTagPacketDecoderMDI TagPacketDecoder;
@@ -62,11 +68,13 @@ protected:
 	CDecodeRSIMDI Decoder;
 };
 
-class CDecodeMDI : public CTransmitterModul<_BINARY, _BINARY,1,2+MAX_NUM_STREAMS>
+//class CDecodeMDI : public CTransmitterModul<_BINARY, _BINARY, 1, 2+MAX_NUM_STREAMS>
+class CDecodeMDI : public CTransmitterModul<_BINARY, _BINARY>
 {
 public:
 	CDecodeMDI():Decoder() {}
 	virtual ~CDecodeMDI() {}
+	void Expect(int);
 protected:
 	virtual void InitInternal(CParameter& Parameters);
 	virtual void ProcessDataInternal(CParameter& Parameters);

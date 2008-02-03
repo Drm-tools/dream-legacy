@@ -29,9 +29,7 @@
 #if !defined(SYNCUSINGPIL_H__3B0BA660_CA63_434OBUVEE7A0D31912__INCLUDED_)
 #define SYNCUSINGPIL_H__3B0BA660_CA63_434OBUVEE7A0D31912__INCLUDED_
 
-#include "../Parameter.h"
-#include "../util/Modul.h"
-#include "../util/Vector.h"
+#include "../util/ReceiverModul.h"
 #include "../chanest/ChanEstTime.h"
 
 

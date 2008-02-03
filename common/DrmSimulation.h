@@ -29,10 +29,9 @@
 #if !defined(DRMSIMULATION_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
 #define DRMSIMULATION_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
-#include <iostream>
-#include "GlobalDefinitions.h"
-#include "Parameter.h"
-#include "util/Buffer.h"
+#include "util/ReceiverModul_impl.h"
+#include "util/SimulationModul_impl.h"
+#include "util/TransmitterModul_impl.h"
 #include "DataIO.h"
 #include "OFDM.h"
 #include "DRMSignalIO.h"
@@ -78,24 +77,24 @@ protected:
 	/* If you want to add a new buffer, make sure that it is cleared in the
 	   "Init()" routine! */
 	/* Transmitter buffers */
-	CSingleBuffer<_BINARY>				DataBuf[1];
-	CSingleBuffer<_COMPLEX>				MLCEncBuf[1];
+	CSingleBuffer<_BINARY>				DataBuf;
+	CSingleBuffer<_COMPLEX>				MLCEncBuf;
 
-	//CCyclicBuffer<_COMPLEX>				IntlBuf;
-	//CCyclicBuffer<_COMPLEX>				FACMapBuf;
-	//CCyclicBuffer<_COMPLEX>				SDCMapBuf;
-	CCyclicBuffer<_COMPLEX>				MSC_FAC_SDC_MapBuf[3];
+	CCyclicBuffer<_COMPLEX>				IntlBuf;
+	CCyclicBuffer<_COMPLEX>				FACMapBuf;
+	CCyclicBuffer<_COMPLEX>				SDCMapBuf;
+	CBuffer<_COMPLEX>*					MSC_FAC_SDC_MapBuf[3];
 
-	CSingleBuffer<_BINARY>				GenFACDataBuf[1];
-	CSingleBuffer<_BINARY>				GenSDCDataBuf[1];
-	CSingleBuffer<_COMPLEX>				CarMapBuf[1];
-	CSingleBuffer<_COMPLEX>				OFDMModBuf[1];
+	CSingleBuffer<_BINARY>				GenFACDataBuf;
+	CSingleBuffer<_BINARY>				GenSDCDataBuf;
+	CSingleBuffer<_COMPLEX>				CarMapBuf;
+	CSingleBuffer<_COMPLEX>				OFDMModBuf;
 
 	/* Simulation */
 	CCyclicBuffer<CChanSimDataDemod>	OFDMDemodBufChan2;
 	CSingleBuffer<_COMPLEX>				ChanEstInBufSim;
 	CSingleBuffer<CChanSimDataDemod>	ChanEstOutBufChan;
-	CSingleBuffer<CChanSimDataMod>		RecDataBuf[1];
+	CSingleBuffer<CChanSimDataMod>		RecDataBuf;
 	CSingleBuffer<_REAL>				ChanResInBuf;
 
 	/* Receiver buffers */

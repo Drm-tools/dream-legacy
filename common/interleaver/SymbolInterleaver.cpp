@@ -44,14 +44,14 @@ void CSymbInterleaver::ProcessDataInternal(CParameter&)
 	int i, j;
 
 	/* Write data in interleaver-memory (always index "0") */
-	for (i = 0; i < inputs[0].iBlockSize; i++)
-		matcInterlMemory[veciCurIndex[0]][i] = (*inputs[0].pvecData)[i];
+	for (i = 0; i < iInputBlockSize; i++)
+		matcInterlMemory[veciCurIndex[0]][i] = (*pvecInputData)[i];
 
 	/* Interleave data according to the interleaver table. Use the
 	   the interleaver-blocks described in the DRM-standard 
 	   (Ro(i) = i (mod D)  -> "i % iD") */
-	for (i = 0; i < inputs[0].iBlockSize; i++)
-		(*inputs[0].pvecData)[i] = 
+	for (i = 0; i < iInputBlockSize; i++)
+		(*pvecInputData)[i] = 
 			matcInterlMemory[veciCurIndex[i % iD]][veciIntTable[i]];
 
 	/* Set new indices. Move blocks (virtually) forward */
@@ -100,13 +100,13 @@ void CSymbInterleaver::InitInternal(CParameter& TransmParam)
 		veciCurIndex[i] = i;
 
 	/* Define block-sizes for input and output */
-	inputs[0].iBlockSize = iN_MUX;
-	outputs[0].iBlockSize = iN_MUX;
+	iInputBlockSize = iN_MUX;
+	iOutputBlockSize = iN_MUX;
 
 	/* Since the MSC logical frames must not end at the end of one symbol
 	   (could be somewhere in the middle of the symbol), the output buffer must
 	   accept more cells than one logical MSC frame is long */
-	outputs[0].iMaxBlockSize = 2 * iN_MUX;
+	iMaxOutputBlockSize = 2 * iN_MUX;
 
 	TransmParam.Unlock(); 
 }

@@ -33,7 +33,7 @@
 #include <qtimer.h>
 
 /* Classes ********************************************************************/
-class CDRMTransmitter;
+class CDRMTransmitterInterface;
 class CSettings;
 class QMenuBar;
 class QPopupMenu;
@@ -44,7 +44,7 @@ class TransmDialog : public TransmDlgBase
 
 public:
 	TransmDialog(
-		CDRMTransmitter& tx,
+		CDRMTransmitterInterface& tx,
 		CSettings&,
 		QWidget* parent=0, const char* name=0, bool modal=FALSE, WFlags f=0);
 	virtual ~TransmDialog();
@@ -89,7 +89,7 @@ protected:
 	QPopupMenu*			pSettingsMenu;
 	QTimer				Timer;
 
-	CDRMTransmitter&	DRMTransmitter;
+	CDRMTransmitterInterface&	DRMTransmitter;
 	CSettings&			Settings;
 	_BOOLEAN			bIsStarted;
 	vector<string>		vecstrTextMessage;

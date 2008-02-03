@@ -3905,6 +3905,30 @@
 					>
 				</File>
 				<File
+					RelativePath="..\common\util\ReceiverModul.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\util\SimulationModul.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\util\TransmitterModul.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\util\ReceiverModul_impl.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\util\SimulationModul_impl.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\util\TransmitterModul_impl.h"
+					>
+				</File>
+				<File
 					RelativePath="..\common\util\Reassemble.h"
 					>
 				</File>

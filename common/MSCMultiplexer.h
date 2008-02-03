@@ -30,10 +30,7 @@
 #define MSCMUX_H__3B0BA660_JLBVEOUB239485BB2B_23E7A0D31912__INCLUDED_
 
 #include "GlobalDefinitions.h"
-#include "Parameter.h"
-#include "util/Buffer.h"
-#include "util/Modul.h"
-#include "util/Vector.h"
+#include "util/ReceiverModul.h"
 
 /* Classes ********************************************************************/
 class CMSCDemultiplexer : public CReceiverModul<_BINARY, _BINARY>

@@ -34,7 +34,8 @@
 
 #include "MDIInBuffer.h"
 
-#include "../util/Modul.h"
+#include "../util/ReceiverModul.h"
+#include "../util/TransmitterModul.h"
 #include "../util/CRC.h"
 #include "Pft.h"
 
@@ -44,7 +45,6 @@
 #include "TagPacketDecoderRSCIControl.h"
 #include "TagPacketGenerator.h"
 #include "RSISubscriber.h"
-#include <vector>
 
 #define MAX_NUM_RSI_SUBSCRIBERS 3
 #define MAX_NUM_RSI_PRESETS 9
@@ -70,10 +70,12 @@ protected:
 	_BOOLEAN					bDIInEnabled;
 };
 
-class CMDIIn :  public CTransmitterModul<_BINARY, _BINARY>, public CDIIn
+//class CMDIIn :  public CTransmitterModul<_BYTE, _BINARY, 0, 1>, public CDIIn
+class CMDIIn :  public CTransmitterModul<_BYTE, _BINARY>, public CDIIn
 {
 public:
-	CMDIIn() : CTransmitterModul<_BINARY, _BINARY>(), CDIIn() {}
+	//CMDIIn() : CTransmitterModul<_BYTE, _BINARY, 0, 1>(), CDIIn() {}
+	CMDIIn() : CTransmitterModul<_BYTE, _BINARY>(), CDIIn() {}
 	virtual ~CMDIIn() {}
 	void InitInternal(CParameter& Parameter);
 	void ProcessDataInternal(CParameter& Parameter);
@@ -140,7 +142,11 @@ public:
 						CSingleBuffer<_BINARY>& SDCData,
 						vector<CSingleBuffer<_BINARY> >& vecMSCData
 	);
-	void SendLockedFrame(CParameter& Parameter, CInputStruct<_BINARY>* inputs);
+	void SendLockedFrame(CParameter& Parameter,
+						CVectorEx<_BINARY>* pFACData,
+						CVectorEx<_BINARY>* pSDCData,
+						vector<CVectorEx<_BINARY>*>& vecMSCData
+	);
 	void SendLockedFrame(CParameter& Parameter);
 	void SendUnlockedFrame(CParameter& Parameter); /* called once per frame even if the Rx isn't synchronised */
 	void SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& CodedAudioData);
@@ -234,11 +240,13 @@ protected:
 };
 
 class CMDIOut:
-	public CTransmitterModul<_BINARY, _BINARY,2+MAX_NUM_STREAMS,1>,
+	//public CTransmitterModul<_BINARY, _BINARY,2+MAX_NUM_STREAMS,1>,
+	public CTransmitterModul<_BINARY, _BINARY>,
 	public CDownstreamDI
 {
 public:
-	CMDIOut() : CTransmitterModul<_BINARY, _BINARY, 2+MAX_NUM_STREAMS,1>(),
+	//CMDIOut() : CTransmitterModul<_BINARY, _BINARY, 2+MAX_NUM_STREAMS,1>(),
+	CMDIOut() : CTransmitterModul<_BINARY, _BINARY>(),
 		CDownstreamDI(), iFrameCount(0) {}
 	virtual ~CMDIOut() {}
 	void InitInternal(CParameter& Parameter);
