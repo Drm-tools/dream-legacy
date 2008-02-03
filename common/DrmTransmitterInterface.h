@@ -80,7 +80,7 @@ public:
 	virtual string			GetMDIIn()=0;
 
 	virtual void			SetMDIOut(const vector<string>& v)=0;
-	virtual void			GetMDIIn(vector<string>&)=0;
+	virtual void			GetMDIOut(vector<string>&)=0;
 
 	virtual CParameter*		GetParameters()=0;
 
