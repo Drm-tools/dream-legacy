@@ -39,7 +39,6 @@ void InitTransferBuffer(CBuffer<TData>& buffer, int max, int n)
 		buffer.Init(max);
 	else
 	{
-		//if (this->iOutputBlockSize != 0)
 		buffer.Init(n);
 	}
 }
@@ -172,8 +171,6 @@ void CTransmitterModul<TInput, TOutput>::
 		/* Data was provided, clear data request */
 		OutputBuffer.SetRequestFlag(FALSE);
 	}
-
-	return;
 }
 
 template<class TInput, class TOutput>
@@ -187,29 +184,31 @@ void CTransmitterModul<TInput, TOutput>::
 	/* Look in output buffer if data is requested */
 	if (OutputBuffer.GetRequestFlag() == TRUE)
 	{
+		bool bAllInputsReady = true;
+
 		/* Check, if enough input data is available from all sources */
 		if (InputBuffer.GetFillLevel() < this->iInputBlockSize)
 		{
 			/* Set request flag */
 			InputBuffer.SetRequestFlag(TRUE);
-
-			return;
+			bAllInputsReady = false;
 		}
 		if (InputBuffer2.GetFillLevel() < iInputBlockSize2)
 		{
 			/* Set request flag */
 			InputBuffer2.SetRequestFlag(TRUE);
-
-			return;
+			bAllInputsReady = false;
 		}
 		if (InputBuffer3.GetFillLevel() < iInputBlockSize3)
 		{
 			/* Set request flag */
 			InputBuffer3.SetRequestFlag(TRUE);
-
-			return;
+			bAllInputsReady = false;
 		}
 	
+		if(bAllInputsReady == false)
+			return;
+
 		/* Get vectors from transfer-buffers */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
 		pvecInputData2 = InputBuffer2.Get(iInputBlockSize2);
