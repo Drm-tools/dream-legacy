@@ -326,6 +326,7 @@ CDRMReceiver::Run()
 
 		for (i = 0; i < MSCDecBuf.size(); i++)
 		{
+			SplitMSC[i].SetInitFlag();
 			SplitMSC[i].ProcessData(Parameters, MSCDecBuf[i], MSCUseBuf[i], MSCSendBuf[i]);
 		}
 		break;

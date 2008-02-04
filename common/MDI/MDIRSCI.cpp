@@ -101,13 +101,17 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 {
 	TagItemGeneratorFAC.GenTag(Parameter, FACData.Get(NUM_FAC_BITS_PER_BLOCK));
 	TagItemGeneratorSDC.GenTag(Parameter, SDCData.Get(Parameter.iNumSDCBitsPerSFrame));
-	for (size_t i = 0; i < MAX_NUM_STREAMS; i++)
+	size_t n = MAX_NUM_STREAMS;
+	if(n > vecMSCData.size())
+		n = vecMSCData.size();
+
+	for (size_t i = 0; i < n; i++)
 	{
 		const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(i);
 		/* Only generate this tag if stream input data is not of zero length */
 		if (iLenStrData > 0)
-			vecTagItemGeneratorStr[i].GenTag(Parameter,
-				vecMSCData[i].Get(SIZEOF__BYTE * Parameter.GetStreamLen(i)));
+			vecTagItemGeneratorStr[i]
+				.GenTag(Parameter, vecMSCData[i].Get(iLenStrData));
 	}
 	SendLockedFrame(Parameter);
 }
@@ -120,10 +124,13 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 {
 	TagItemGeneratorFAC.GenTag(Parameter, pFACData);
 	TagItemGeneratorSDC.GenTag(Parameter, pSDCData);
-	for (size_t i = 0; i < MAX_NUM_STREAMS; i++)
+	size_t n = MAX_NUM_STREAMS;
+	if(n > vecMSCData.size())
+		n = vecMSCData.size();
+	for (size_t i = 0; i < n; i++)
 	{
 		/* Only generate this tag if stream input data is not of zero length */
-		if (vecMSCData[i]->Size() > 0)
+		if (vecMSCData[i] && vecMSCData[i]->Size() > 0)
 			vecTagItemGeneratorStr[i].GenTag(Parameter, vecMSCData[i]);
 	}
 	SendLockedFrame(Parameter);
@@ -748,9 +755,11 @@ CMDIOut::InitInternal(CParameter& Parameter)
 	iFrameCount = 0;
 	iInputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 	iInputBlockSize2 = Parameter.iNumSDCBitsPerSFrame;
+	veciInputBlockSize.resize(MAX_NUM_STREAMS);
 	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
 		veciInputBlockSize[i] = Parameter.GetStreamLen(i);
-		
+	vecpvecInputData.resize(MAX_NUM_STREAMS);
+
 }
 
 void

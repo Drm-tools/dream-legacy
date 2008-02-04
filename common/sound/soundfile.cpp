@@ -383,7 +383,6 @@ CSoundFileOut::Close()
 _BOOLEAN
 CSoundFileOut::Write(vector<_SAMPLE>& data)
 {
-cerr << "CSoundFileOut::Write " << data.size() << endl;
 	if (pFile == NULL)
 		return TRUE;
 #ifdef HAVE_LIBSNDFILE

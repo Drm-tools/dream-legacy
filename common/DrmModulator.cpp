@@ -27,10 +27,9 @@
 \******************************************************************************/
 
 #include "DrmModulator.h"
-#include <iostream>
 #include "util/Settings.h"
-
 #include "sound.h"
+#include <iostream>
 
 /* Implementation *************************************************************/
 CDRMModulator::CDRMModulator():
@@ -50,8 +49,31 @@ CDRMModulator::GetSoundOutChoices(vector<string>& v)
 }
 
 void
+CDRMModulator::SetOutputs(const vector<string>& o)
+{
+	if(o.size()>0)
+	{
+		TransmitData.SetOutputs(o);
+	}
+	else
+		throw CGenErr("Modulator with no outputs");
+}
+
+void
+CDRMModulator::GetOutputs(vector<string>& o)
+{
+	TransmitData.GetOutputs(o);
+}
+
+void
 CDRMModulator::Init(CParameter& Parameter)
 {
+	cerr << "Modulator initialised with"
+		<< " MSC mode " << int(Parameter.eMSCCodingScheme)
+		<< " SDC mode " << int(Parameter.eSDCCodingScheme)
+		<< " robm " << int(Parameter.GetWaveMode())
+		<< " spectrum occupancy " << int(Parameter.GetSpectrumOccup()) << endl;
+
 	/* Defines number of cells, important! */
 	OFDMCellMapping.Init(Parameter, CarMapBuf);
 
@@ -71,6 +93,7 @@ CDRMModulator::WriteData(CParameter& Parameters,
 				CBuffer<_BINARY>& FACBuf, CBuffer<_BINARY>& SDCBuf,
 				vector<CSingleBuffer<_BINARY> >& MSCBuf)
 {
+#if 0
 	cerr << "Fill: " << FACBuf.GetFillLevel() << " " << SDCBuf.GetFillLevel() << " " << MSCBuf[0].GetFillLevel() << endl;
 	cerr << "MSC MLC Int SDC FAC Car FDM" << endl;
 	cerr <<  " "  << MSCBuf[0].GetRequestFlag();
@@ -81,6 +104,7 @@ CDRMModulator::WriteData(CParameter& Parameters,
 	cerr << "   " << CarMapBuf.GetRequestFlag();
 	cerr << "   " << OFDMModBuf.GetRequestFlag();
 	cerr << endl;
+#endif
 	/* MLC-encoder */
 	MSCMLCEncoder.ProcessData(Parameters, MSCBuf[0], MLCEncBuf);
 
@@ -122,16 +146,10 @@ CDRMModulator::LoadSettings(CSettings& s, CParameter& Parameters)
 	stringstream ss(outputs);
 	vector<string> o;
 	string op;
-	cerr << "Load " << outputs << endl;
 	while(getline(ss, op, ','))
 	{
 		o.push_back(op);
 	}
-	/*
-	ss >> op;
-	if(op !="")
-		o.push_back(op);
-	*/
 	TransmitData.SetOutputs(o);
 }
 
@@ -150,21 +168,4 @@ CDRMModulator::SaveSettings(CSettings& s, CParameter& Parameters)
 		sep = ",";
 	}
 	s.Put("Modulator", "cofdm_outputs", outputs.str());
-}
-
-void
-CDRMModulator::SetOutputs(const vector<string>& o)
-{
-	if(o.size()>0)
-	{
-		TransmitData.SetOutputs(o);
-	}
-	else
-		throw CGenErr("Modulator with no outputs");
-}
-
-void
-CDRMModulator::GetOutputs(vector<string>& o)
-{
-	TransmitData.GetOutputs(o);
 }

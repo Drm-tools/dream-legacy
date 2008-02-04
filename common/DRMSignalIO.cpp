@@ -50,7 +50,7 @@ void CTransmitData::GetOutputs(vector<string>& o)
 void CTransmitData::ProcessDataInternal(CParameter&)
 {
 	int i;
-cerr << "CTransmitData::ProcessDataInternal" << endl;
+
 	/* Apply bandpass filter */
 	//BPFilter.Process(*pvecInputData);
 	BPFilter.Process(*pvecInputData);
@@ -107,7 +107,6 @@ cerr << "CTransmitData::ProcessDataInternal" << endl;
 	if (iBlockCnt == iNumBlocks)
 	{
 		iBlockCnt = 0;
-cerr << "tx got " << iNumBlocks << " to write" << endl;
 		for(size_t i=0; i<vecpSound.size(); i++)
 		{
 			/* Write data to sound card or file. */
@@ -173,7 +172,6 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 	/* Define block-size for input */
 	iInputBlockSize = iSymbolBlockSize;
-	cerr << "TransmitData " << iInputBlockSize << " " << iBigBlockSize << endl;
 }
 
 void CTransmitData::Stop()

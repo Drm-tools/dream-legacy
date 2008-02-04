@@ -403,11 +403,18 @@ CTagItemGeneratorStr::GenTag(CParameter & Parameter, CVectorEx < _BINARY > *pvec
 	if (iStreamNumber >= MAX_NUM_STREAMS)
 		return;
 
-	const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(iStreamNumber);
+	volatile int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(iStreamNumber);
+	volatile int iLenVec = pvecbiData->Size();
 
 	/* check we have data in the vector */
-	if (iLenStrData != pvecbiData->Size());
+	if(iLenStrData > iLenVec || iLenStrData == 0)
+	{
+		/* if there is an error, or the length is zero, send an empty tag
+		 * This is optimised out at the Tag Packet level but it makes sense
+		 * to always generate a tag in the tag item generator */
+		PrepareTag(0);
 		return;
+	}
 
 	PrepareTag(iLenStrData);
 

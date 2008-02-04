@@ -436,9 +436,9 @@ TransmDialog::~TransmDialog()
 void
 TransmDialog::closeEvent(QCloseEvent* ce)
 {
-	/* Stop transmitter */
+	/* Stop transmitter if needed */
 	if (bIsStarted == TRUE)
-		DRMTransmitter.Stop();
+		OnButtonStartStop();
 	else
 		SetTransmitter(); // so Transmitter save settings has the latest info
 	ce->accept();

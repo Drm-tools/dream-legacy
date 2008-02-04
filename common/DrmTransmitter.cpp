@@ -170,6 +170,7 @@ void CDRMTransmitter::Start()
 			for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
 				MDIOut.AddSubscriber(*s, "", 'M');
 		}
+		MDIOut.Init(TransmParam);
 		break;
 	case T_MOD:
 		if(strMDIinAddr != "")
@@ -219,18 +220,14 @@ void CDRMTransmitter::Start()
 					{
 						cerr << "Got SDCI & FAC" << endl;
 						Modulator.Init(TransmParam);
-						cerr << "Modulator initialised from MDI with"
-							<< " MSC mode " << int(TransmParam.eMSCCodingScheme)
-							<< " SDC mode " << int(TransmParam.eSDCCodingScheme)
-							<< " robm " << int(TransmParam.GetWaveMode())
-							<< " spectrum occupancy " << int(TransmParam.GetSpectrumOccup()) << endl;
 						if(SDCBuf.GetFillLevel()>0)
 						{
-							bInSync = true;
 							cerr << "got SDC" << endl;
+							bInSync = true;
 						}
 						else
 						{
+							/* consume the FAC & MSC and wait for an SDC frame */
 							(void)FACBuf.Get(NUM_FAC_BITS_PER_BLOCK);
 							for(size_t i=0; i<MAX_NUM_STREAMS; i++)
 								(void)MSCBuf[i].Get(MSCBuf[i].GetFillLevel());

@@ -322,7 +322,6 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 			/* Write processed data from internal memory in transfer-buffer */
 			OutputBuffer.Put(this->iOutputBlockSize);
 		}
-
 		if (bResetBuf2 == TRUE)
 		{
 			/* Reset flag and clear buffer */
@@ -332,7 +331,7 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 		else
 		{
 			/* Write processed data from internal memory in transfer-buffer */
-			OutputBuffer2.Put(iOutputBlockSize2);
+			OutputBuffer2.Put(this->iOutputBlockSize2);
 		}
 	}
 

@@ -51,8 +51,6 @@ void COFDMCellMapping::ProcessDataInternal(CParameter& TransmParam)
 	CVectorEx<_COMPLEX>& vecFACData = *pvecInputData2;
 	CVectorEx<_COMPLEX>& vecSDCData = *pvecInputData3;
 
-cerr << "COFDMCellMapping::ProcessDataInternal " << iNumCarrier << " " << vecOutputData.Size() << endl;
-cerr << vecMSCData.Size() << " " << vecFACData.Size() << " " << vecSDCData.Size() << endl;
 	for (int iCar = 0; iCar < iNumCarrier; iCar++)
 	{
 		/* MSC */
@@ -70,7 +68,6 @@ cerr << vecMSCData.Size() << " " << vecFACData.Size() << " " << vecSDCData.Size(
 				
 			iMSCCounter++;
 		}
-cerr << "MSC OK" << endl;
 		/* FAC */
 		if (_IsFAC(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
 		{
@@ -79,7 +76,6 @@ cerr << "MSC OK" << endl;
 			iFACCounter++;
 		}
 
-cerr << "FAC OK" << endl;
 		/* SDC */
 		if (_IsSDC(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
 		{
@@ -88,16 +84,13 @@ cerr << "FAC OK" << endl;
 			iSDCCounter++;
 		}
 
-cerr << "SDC OK" << endl;
 		/* Pilots */
 		if (_IsPilot(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
 			vecOutputData[iCar] = cmt.matcPilotCells[iSymbolCounterAbs][iCar];
 
-cerr << "Pilots OK" << endl;
 		/* DC carrier */
 		if (_IsDC(cmt.matiMapTab[iSymbolCounterAbs][iCar]))
 			vecOutputData[iCar] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
-cerr << "DC Carrier OK" << endl;
 	}
 
 	/* Increase symbol-counter and wrap if needed */
@@ -121,9 +114,6 @@ cerr << "DC Carrier OK" << endl;
 	iInputBlockSize2 = cmt.veciNumFACSym[iSymbolCounterAbs];
 	iInputBlockSize3 = cmt.veciNumSDCSym[iSymbolCounterAbs];
 
-	cerr << "Symbol counters " << iSymbolCounterAbs << " " << iSymbolCounter;
-	cerr << " " << iDummyCellCounter << " " << iMSCCounter <<
-	" " << iFACCounter << " "<< iSDCCounter << endl;
 }
 
 void COFDMCellMapping::InitInternal(CParameter& TransmParam)
@@ -161,7 +151,6 @@ void COFDMCellMapping::InitInternal(CParameter& TransmParam)
 	iInputBlockSize2 = cmt.veciNumFACSym[0];
 	iInputBlockSize3 = cmt.veciNumSDCSym[0];
 	iOutputBlockSize = cmt.iNumCarrier; /* Output */
-	cerr << "COFDMCellMapping::InitInternal " << iOutputBlockSize << endl;
 }
 
 

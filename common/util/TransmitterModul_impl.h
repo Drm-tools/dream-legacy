@@ -184,6 +184,7 @@ void CTransmitterModul<TInput, TOutput>::
 	/* Look in output buffer if data is requested */
 	if (OutputBuffer.GetRequestFlag() == TRUE)
 	{
+#if 0
 		bool bAllInputsReady = true;
 
 		/* Check, if enough input data is available from all sources */
@@ -205,10 +206,31 @@ void CTransmitterModul<TInput, TOutput>::
 			InputBuffer3.SetRequestFlag(TRUE);
 			bAllInputsReady = false;
 		}
-	
+
 		if(bAllInputsReady == false)
 			return;
+#else
+		bool bAnyInputReady = false;
 
+		/* Check, if enough input data is available from any source */
+		if (InputBuffer.GetFillLevel() < this->iInputBlockSize)
+			InputBuffer.SetRequestFlag(TRUE);
+		else
+			bAnyInputReady = true;
+
+		if (InputBuffer2.GetFillLevel() < iInputBlockSize2)
+			InputBuffer2.SetRequestFlag(TRUE);
+		else
+			bAnyInputReady = true;
+
+		if (InputBuffer3.GetFillLevel() < iInputBlockSize3)
+			InputBuffer3.SetRequestFlag(TRUE);
+		else
+			bAnyInputReady = true;
+
+		if(bAnyInputReady == false)
+			return;
+#endif
 		/* Get vectors from transfer-buffers */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
 		pvecInputData2 = InputBuffer2.Get(iInputBlockSize2);
