@@ -26,6 +26,7 @@
 \******************************************************************************/
 
 #include "../util/Settings.h"
+#include "qtimer.h"
 
 #include "ReceiverSettingsDlgbase.h"
 
@@ -58,6 +59,8 @@ protected:
 	CSettings&		Settings;
 	bool			loading;
 	QListViewItem*  no_rig;
+	QTimer			TimerRig;
+	int				iWantedrigModel;
 
 signals:
 	void StartStopLog(bool);
@@ -67,6 +70,7 @@ signals:
 	void StartStopGPS(bool);
 
 public slots:
+	void OnTimerRig();
 	void OnLineEditLatDegChanged(const QString& str);
 	void OnLineEditLatMinChanged(const QString& str);
 	void OnComboBoxNSHighlighted(int iID);

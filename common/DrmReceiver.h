@@ -287,6 +287,7 @@ public:
 	string					GetRigComPort();
 	void					SetRigComPort(const string&);
 	void					SetRigFreqOffset(int);
+	_BOOLEAN				GetRigChangeInProgress() { return rigmodelrequest.is_pending()?TRUE:FALSE; }
 #endif
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 

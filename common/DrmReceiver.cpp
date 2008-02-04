@@ -326,8 +326,11 @@ CDRMReceiver::Run()
 
 		for (i = 0; i < MSCDecBuf.size(); i++)
 		{
-			SplitMSC[i].SetInitFlag();
+			MSCUseBuf[i].Clear();
+			MSCSendBuf[i].Clear();
+			//if(i==0)cerr << MSCDecBuf[i].GetFillLevel() << endl;
 			SplitMSC[i].ProcessData(Parameters, MSCDecBuf[i], MSCUseBuf[i], MSCSendBuf[i]);
+			//if(i==0)cerr << MSCDecBuf[i].GetFillLevel() << " " << MSCUseBuf[i].GetFillLevel() << " " << MSCSendBuf[i].GetFillLevel() << endl;
 		}
 		break;
 	case RM_AM:
@@ -1469,7 +1472,9 @@ void CDRMReceiver::SetRigModelWT(int iID)
 int CDRMReceiver::GetRigModel()
 {
 	if(pHamlib)
+	{
 		return pHamlib->GetHamlibModelID();
+	}
 	return 0;
 }
 

@@ -71,7 +71,7 @@ extern "C"
 ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, WFlags f) :
 	ReceiverSettingsDlgBase(parent, name, modal, f), DRMReceiver(NRx),Settings(NSettings),
-	loading(true), no_rig(NULL)
+	loading(true), no_rig(NULL), TimerRig(), iWantedrigModel(0)
 {
 
 	bool bEnableRig = true;
@@ -139,6 +139,10 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 		this, SLOT(OnRigSelected(QListViewItem*)));
 	connect(ListViewPort, SIGNAL(selectionChanged(QListViewItem*)),
 		this, SLOT(OnComPortSelected(QListViewItem*)));
+
+	connect(&TimerRig, SIGNAL(timeout()), this, SLOT(OnTimerRig()));
+
+	TimerRig.stop();
 
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -301,7 +305,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		{
 			man = mfr->second;
 		}
-
+cerr << rig.hamlib_caps.model_name << endl;
 		if (rig.bIsModifiedRig)
 		{
 			string model_name = string(rig.hamlib_caps.model_name)+" (DRM)";
@@ -360,7 +364,6 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	{
 		CRigCaps caps;
 		DRMReceiver.GetRigCaps(caps);
-		int port_type = caps.hamlib_caps.port_type;
 		ListViewPort->setEnabled(caps.hamlib_caps.port_type == RIG_PORT_SERIAL);
 	}
 
@@ -632,14 +635,28 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 {
 	if(loading)
 		return;
-	int iID = item->text(1).toInt();
 
 #ifdef HAVE_LIBHAMLIB
-	DRMReceiver.SetRigModel(iID);
+	iWantedrigModel = item->text(1).toInt();
+
+	DRMReceiver.SetRigModel(iWantedrigModel);
+
+	TimerRig.start(500);
+#endif
+}
+
+void ReceiverSettingsDlg::OnTimerRig()
+{
+#ifdef HAVE_LIBHAMLIB
+	if(DRMReceiver.GetRigChangeInProgress())
+		return;
+
+	TimerRig.stop();
+
 	rig_model_t current = DRMReceiver.GetRigModel();
-	if(current == iID)
+	if(current == iWantedrigModel)
 	{
-		if(iID==0)
+		if(iWantedrigModel==0)
 		{
 			ListViewPort->setEnabled(0);
 		}
@@ -647,8 +664,8 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 		{
 			CRigCaps caps;
 			DRMReceiver.GetRigCaps(caps);
-			int port_type = caps.hamlib_caps.port_type;
-			QMessageBox::information( this, "Dream", QString("port type %1").arg(port_type) );
+			//int port_type = caps.hamlib_caps.port_type;
+			//QMessageBox::information( this, "Dream", QString("port type %1").arg(port_type) );
 			ListViewPort->setEnabled(caps.hamlib_caps.port_type == RIG_PORT_SERIAL);
 			//CheckBoxEnableSMeter->setEnabled(rig_has_get_level(pRig, RIG_LEVEL_STRENGTH));
 		}
