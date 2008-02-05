@@ -305,7 +305,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		{
 			man = mfr->second;
 		}
-cerr << rig.hamlib_caps.model_name << endl;
+
 		if (rig.bIsModifiedRig)
 		{
 			string model_name = string(rig.hamlib_caps.model_name)+" (DRM)";

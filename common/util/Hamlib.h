@@ -130,8 +130,9 @@ public:
 
 	/* backend selection */
 	void			GetRigList(map<rig_model_t,CRigCaps>&);
-	void			SetHamlibModelID(const rig_model_t model);
-	rig_model_t		GetHamlibModelID() const {return iHamlibModelID;}
+	void			SetRigModel(const rig_model_t model);
+	rig_model_t		GetRigModel() const {return iHamlibModelID;}
+	rig_model_t		GetWantedRigModel() const {return iWantedHamlibModelID;}
 	void			SetRigMode(ERigMode eNMod);
 	ERigMode		GetRigMode() const {return eRigMode;}
 
@@ -163,6 +164,7 @@ protected:
 	RIG*				pRig;
 	_BOOLEAN			bEnableSMeter;
 	rig_model_t			iHamlibModelID;
+	rig_model_t			iWantedHamlibModelID;
 	ERigMode			eRigMode;
 	map<rig_model_t,CRigCaps>
 						CapsHamlibModels;

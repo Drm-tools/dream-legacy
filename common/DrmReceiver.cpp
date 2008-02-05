@@ -233,7 +233,7 @@ CDRMReceiver::Run()
 		InitReceiverMode();
 #ifdef HAVE_LIBHAMLIB
 	if(rigmodelrequest.is_pending())
-		SetRigModelWT(rigmodelrequest.value());
+		doSetRigModel(rigmodelrequest.value());
 	if (bRigUpdateNeeded)
 	   UpdateRigSettings();
 
@@ -1311,9 +1311,14 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 	if (iFreqkHz == iNewFreqkHz)
 		return TRUE;
 	iFreqkHz = iNewFreqkHz;
+	return doSetFrequency();
+}
+
+_BOOLEAN CDRMReceiver::doSetFrequency()
+{
 
 	Parameters.Lock();
-	Parameters.SetFrequency(iNewFreqkHz);
+	Parameters.SetFrequency(iFreqkHz);
 	/* clear out AMSS data and re-initialise AMSS acquisition */
 	if(eReceiverMode == RM_AM)
 		Parameters.ResetServicesStreams();
@@ -1321,7 +1326,7 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 
 	if (upstreamRSCI.GetOutEnabled() == TRUE)
 	{
-		upstreamRSCI.SetFrequency(iNewFreqkHz);
+		upstreamRSCI.SetFrequency(iFreqkHz);
 		return TRUE;
 	}
 	else
@@ -1334,7 +1339,7 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 
 #ifdef HAVE_LIBHAMLIB
 		if(pHamlib)
-			return pHamlib->SetFrequency(iNewFreqkHz);
+			return pHamlib->SetFrequency(iFreqkHz);
 #endif
 		return TRUE;
 	}
@@ -1436,7 +1441,7 @@ void CDRMReceiver::SetHamlib(CHamlib* p)
 	pHamlib = p;
 	if(pHamlib)
 	{
-		SetRigModel(pHamlib->GetHamlibModelID());
+		SetRigModel(pHamlib->GetWantedRigModel());
 	}
 }
 
@@ -1445,35 +1450,31 @@ void CDRMReceiver::SetRigModel(int iID)
 	rigmodelrequest.request(iID);
 }
 
-void CDRMReceiver::SetRigModelWT(int iID)
+void CDRMReceiver::doSetRigModel(int iID)
 {
-	if(pHamlib)
+	if(pHamlib == NULL || iID == pHamlib->GetRigModel())
+		return;
+
+	if(pcmInput!=Dummy)
 	{
-		rig_model_t	id = pHamlib->GetHamlibModelID();
-		if(id!=iID)
+		CRigCaps caps;
+		pHamlib->GetRigCaps(caps);
+		if(caps.bHamlibDoesAudio) // next rig might want real sound!
 		{
-			if(pcmInput!=Dummy)
-			{
-				CRigCaps caps;
-				pHamlib->GetRigCaps(caps);
-				if(caps.bHamlibDoesAudio) // next rig might want real sound!
-				{
-					delete pSoundInInterface;
-					pSoundInInterface = new CSoundInNull;
-					pcmInput=Dummy;
-				}
-			}
-			pHamlib->SetHamlibModelID(iID);
-			SetFrequency(iFreqkHz);
+			delete pSoundInInterface;
+			pSoundInInterface = new CSoundInNull;
+			pcmInput=Dummy;
 		}
 	}
+	pHamlib->SetRigModel(iID);
+	(void)pHamlib->SetFrequency(iFreqkHz);
 }
 
 int CDRMReceiver::GetRigModel()
 {
 	if(pHamlib)
 	{
-		return pHamlib->GetHamlibModelID();
+		return pHamlib->GetRigModel();
 	}
 	return 0;
 }
@@ -1623,21 +1624,8 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	string strInFileExt;
 	int n;
 
-	/* input from file */
-	str = s.Get("command", "fileio");
-	p = str.rfind('.');
-	if (p != string::npos)
-		strInFileExt = str.substr(p + 1);
-
-	if (strInFileExt.substr(0,2) == "RS" || strInFileExt.substr(0,2) == "rs" || strInFileExt == "pcap")
-	{
-		s.Put("command", "rsiin", str);
-	}
-	else
-	{
-		strInFile = str;
-	}
-
+	/* input from file (code for bare rs, pcap files moved to CSettings) */
+	strInFile = s.Get("command", "fileio");
 	if(strInFile != "")
 		SetReadPCMFromFile(strInFile);
 
@@ -1853,7 +1841,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	FrontEndParameters.rIFCentreFreq = s.Get("FrontEnd", "ifcentrefrequency", SOUNDCRD_SAMPLE_RATE / 4);
 
 	/* Wanted RF Frequency */
-	SetFrequency(s.Get("Receiver", "frequency", 0));
+	iFreqkHz = s.Get("Receiver", "frequency", 0);
 }
 
 void

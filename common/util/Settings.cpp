@@ -452,6 +452,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 #ifdef HAVE_LIBHAMLIB
 		/* Hamlib config string --------------------------------------------- */
+		// command line only - will be converted and saved in Dream.ini by CHamlib
 		if (GetStringArgument(argc, argv, i, "-C", "--hamlib-config",
 							  strArgument) == TRUE)
 		{
@@ -493,10 +494,22 @@ CSettings::ParseArguments(int argc, char **argv)
 		/* not an option --------------------------------------------------- */
 		if(argv[i][0] != '-')
 		{
-			Put("command", "fileio", string(argv[i]));
+			strArgument = argv[i];
+			size_t p = strArgument.rfind('.');
+			if (p == string::npos)
+			{
+				Put("command", "fileio", strArgument);
+			}
+			else
+			{
+				string strInFileExt = strArgument.substr(p + 1);
+				if (strInFileExt.substr(0,2) == "RS" || strInFileExt.substr(0,2) == "rs" || strInFileExt == "pcap")
+					Put("command", "rsiin", strArgument);
+				else
+					Put("command", "fileio", strArgument);
+			}
 			continue;
 		}
-
 		/* Unknown option --------------------------------------------------- */
 		Put("command", "error", string(argv[i]));
 		Put("command", "help", 1);

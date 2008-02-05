@@ -309,7 +309,8 @@ public:
 protected:
 
 	void					InitReceiverMode();
-	void					SetRigModelWT(int);
+	_BOOLEAN				doSetFrequency();
+	void					doSetRigModel(int);
 	void					SetInStartMode();
 	void					SetInTrackingMode();
 	void					SetInTrackingModeDelayed();

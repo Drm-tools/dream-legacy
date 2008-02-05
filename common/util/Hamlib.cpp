@@ -60,7 +60,7 @@
 	Stephane Fillod (developer of hamlib)
 */
 CHamlib::CHamlib(CParameter& p): Parameters(p), pRig(NULL), bEnableSMeter(FALSE),
-iHamlibModelID(0), eRigMode(DRM), CapsHamlibModels(), iFrequencykHz(0)
+iHamlibModelID(0), iWantedHamlibModelID(0), eRigMode(DRM), CapsHamlibModels(), iFrequencykHz(0)
 {
 
 #ifdef RIG_MODEL_G303
@@ -399,7 +399,7 @@ CHamlib::SetComPort(const string & port)
 {
 	CapsHamlibModels[iHamlibModelID].config["rig_pathname"] = port;
 	RigCaps.config["rig_pathname"] = port;
-	SetHamlibModelID(iHamlibModelID);
+	SetRigModel(iHamlibModelID);
 }
 
 string CHamlib::GetComPort() const
@@ -534,10 +534,8 @@ CHamlib::LoadSettings(CSettings & s)
 	/* save the new working config into the `database` */
 	CapsHamlibModels[model] = RigCaps;
 
-	/* set the iHamlibModelID variable, but don't do anything!!!! */
-	//iHamlibModelID = model;
-	SetHamlibModelID(model);
-
+	/* set the iWantedHamlibModelID variable, but don't do anything!!!! */
+	iWantedHamlibModelID = model;
 
 	s.Put("Hamlib", "model", abs(model));
 	s.Put("Hamlib", "enmodrig", (model<0)?1:0);
@@ -757,11 +755,11 @@ void
 CHamlib::SetRigMode(ERigMode eNMod)
 {
 	eRigMode = eNMod;
-	SetHamlibModelID(iHamlibModelID);
+	SetRigModel(iHamlibModelID);
 }
 
 void
-CHamlib::SetHamlibModelID(const rig_model_t model)
+CHamlib::SetRigModel(const rig_model_t model)
 {
 	/* save current config for previous model */
 	CapsHamlibModels[iHamlibModelID] = RigCaps;
