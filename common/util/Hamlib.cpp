@@ -761,29 +761,36 @@ CHamlib::SetRigMode(ERigMode eNMod)
 void
 CHamlib::SetRigModel(const rig_model_t model)
 {
-	/* save current config for previous model */
-	CapsHamlibModels[iHamlibModelID] = RigCaps;
 
-	/* copy the com port setting across the change */
-	string comPort = RigCaps.config["rig_pathname"];
+	bool bSMeterWasEnabled = false;
+	string comPort = "";
 
-	/* stop the thread if its running */
-	bool bSMeterWasEnabled = bEnableSMeter;
-	if(bEnableSMeter)
+	if(iHamlibModelID !=0)
 	{
-		SetEnableSMeter(FALSE);
+		/* save current config for previous model */
+		CapsHamlibModels[iHamlibModelID] = RigCaps;
+
+		/* copy the com port setting across the change */
+		comPort = RigCaps.config["rig_pathname"];
+
+		/* stop the thread if its running */
+		bSMeterWasEnabled = bEnableSMeter;
+		if(bEnableSMeter)
+		{
+			SetEnableSMeter(FALSE);
 #ifdef USE_QT_GUI
-		if(wait(1000) == FALSE)
+			if(wait(1000) == FALSE)
 			cout << "error terminating rig polling thread" << endl;
 #endif
-	}
-	/* If rig was already open, close it first */
-	if (pRig != NULL)
-	{
-		/* Close everything */
-		rig_close(pRig);
-		rig_cleanup(pRig);
-		pRig = NULL;
+		}
+		/* If rig was already open, close it first */
+		if (pRig != NULL)
+		{
+			/* Close everything */
+			rig_close(pRig);
+			rig_cleanup(pRig);
+			pRig = NULL;
+		}
 	}
 
 	/* Set value for current selected model ID */
@@ -804,8 +811,11 @@ CHamlib::SetRigModel(const rig_model_t model)
 		/* fetch the config into the working config */
 		RigCaps = m->second;
 
-		/* put the comPort setting back */
-		RigCaps.config["rig_pathname"] = comPort;
+		if(comPort != "" && RigCaps.hamlib_caps.port_type == RIG_PORT_SERIAL)
+		{
+			/* put the comPort setting back */
+			RigCaps.config["rig_pathname"] = comPort;
+		}
 
 		/* Init rig (negative rig numbers indicate modified rigs */
 		pRig = rig_init(abs(iHamlibModelID));

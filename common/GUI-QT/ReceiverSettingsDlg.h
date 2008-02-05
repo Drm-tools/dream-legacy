@@ -52,6 +52,7 @@ protected:
 	_BOOLEAN 		ValidInput(const QLineEdit* le);
 	void			ExtractReceiverCoordinates();
 	void			setDefaults();
+	void 			checkRig(int);
 
 	void			AddWhatsThisHelp();
 
@@ -59,6 +60,7 @@ protected:
 	CSettings&		Settings;
 	bool			loading;
 	QListViewItem*  no_rig;
+	QListViewItem*	no_port;
 	QTimer			TimerRig;
 	int				iWantedrigModel;
 

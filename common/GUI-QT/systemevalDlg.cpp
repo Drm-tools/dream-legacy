@@ -334,17 +334,14 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
 
-	/* GPS */
-	FrameGPS->hide();
-
 	connect( EdtFrequency, SIGNAL(textChanged(const QString&)),
 		this, SLOT(OnLineEditFrequencyChanged(const QString&)) );
 
 	EdtFrequency->setValidator(new QIntValidator(100, 120000, EdtFrequency));
 
 	/* QT optimises out trying to send this from ReceiverSettings! */
-	if(Settings.Get("GPS", "usegpsd", FALSE))
-		EnableGPS(TRUE);
+	_BOOLEAN bGPS = Settings.Get("GPS", "usegpsd", FALSE);
+	EnableGPS(bGPS);
 }
 
 systemevalDlg::~systemevalDlg()
@@ -1215,12 +1212,10 @@ void systemevalDlg::AddWhatsThisHelp()
 
 void systemevalDlg::EnableGPS(bool b)
 {
-cerr << "systemevalDlg::EnableGPS " << endl;
 	CParameter& Parameters = *DRMReceiver.GetParameters();
+	Parameters.Lock(); 
 	if(b)
 	{
-	cerr << "showing gps data from gpsd" <<endl;
-		Parameters.Lock(); 
 		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
 		Parameters.Unlock(); 
 		FrameGPS->show();
@@ -1229,7 +1224,6 @@ cerr << "systemevalDlg::EnableGPS " << endl;
 	}
 	else
 	{
-		Parameters.Lock(); 
 		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
 		Parameters.Unlock(); 
 		FrameGPS->hide();

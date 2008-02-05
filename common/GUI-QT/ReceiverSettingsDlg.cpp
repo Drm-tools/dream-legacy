@@ -71,12 +71,27 @@ extern "C"
 ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, WFlags f) :
 	ReceiverSettingsDlgBase(parent, name, modal, f), DRMReceiver(NRx),Settings(NSettings),
-	loading(true), no_rig(NULL), TimerRig(), iWantedrigModel(0)
+	loading(true), no_rig(NULL), no_port(NULL), TimerRig(), iWantedrigModel(0)
 {
 
 	bool bEnableRig = true;
+#ifdef HAVE_LIBHAMLIB
+	/* Rig Selection */
+	ListViewRig->setSelectionMode(QListView::Single);
+	ListViewRig->setRootIsDecorated(true);
+	ListViewRig->setAllColumnsShowFocus(true);
+	ListViewRig->setColumnText(0, "Rig");
+	ListViewRig->addColumn("ID");
+	ListViewRig->addColumn("Status");
+	ListViewRig->clear();
+	/* COM port selection --------------------------------------------------- */
+	ListViewPort->setSelectionMode(QListView::Single);
+	ListViewPort->setAllColumnsShowFocus(true);
+	ListViewPort->setColumnText(0, tr("Name"));
+	ListViewPort->addColumn(tr("Port"));
+	ListViewPort->clear();
+#else
 	/* Tabs */
-#ifndef HAVE_LIBHAMLIB
 	bEnableRig = false;
 #endif
 
@@ -163,6 +178,10 @@ ReceiverSettingsDlg::~ReceiverSettingsDlg()
 
 void ReceiverSettingsDlg::hideEvent(QHideEvent*)
 {
+	ListViewRig->clear();
+	ListViewPort->clear();
+	no_rig = NULL;
+	no_port = NULL;
 }
 
 /* this sets default values into the dialog and ini file for
@@ -266,15 +285,8 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	/* GPS */
 	ExtractReceiverCoordinates();
 
-#ifdef HAVE_LIBHAMLIB
 	/* Rig */
-	ListViewRig->setSelectionMode(QListView::Single);
-	ListViewRig->setRootIsDecorated(true);
-	ListViewRig->setAllColumnsShowFocus(true);
-	ListViewRig->setColumnText(0, "Rig");
-	ListViewRig->addColumn("ID");
-	ListViewRig->addColumn("Status");
-	ListViewRig->clear();
+#ifdef HAVE_LIBHAMLIB
 	QPixmap	BitmLittleGreenSquare;
 	BitmLittleGreenSquare.resize(5, 5);
 	BitmLittleGreenSquare.fill(QColor(0, 255, 0));
@@ -295,6 +307,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		const CRigCaps& rig = i->second;
 		if(rig.hamlib_caps.mfg_name==NULL)
 			continue;
+
 		string m = rig.hamlib_caps.mfg_name;
 		map<string,QListViewItem*>::const_iterator mfr = manufacturers.find(m);
 		if(mfr==manufacturers.end())
@@ -334,38 +347,15 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	}
 
 	/* COM port selection --------------------------------------------------- */
-	ListViewPort->setSelectionMode(QListView::Single);
-	ListViewPort->setAllColumnsShowFocus(true);
-	ListViewPort->setColumnText(0, tr("Name"));
-	ListViewPort->addColumn(tr("Port"));
-	ListViewPort->clear();
+	no_port = new QListViewItem(ListViewPort, tr("None"), "");
 	map<string,string> ports;
 	DRMReceiver.GetComPortList(ports);
-	string strPort = DRMReceiver.GetRigComPort();
-	QListViewItem* selected_port = new QListViewItem(ListViewPort, tr("None"), "");
 	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
 	{
-		QListViewItem* item = new QListViewItem(ListViewPort, p->first.c_str(), p->second.c_str());
-		if(strPort == p->second)
-		{
-			selected_port = item;
-		}
+		(void)new QListViewItem(ListViewPort, p->first.c_str(), p->second.c_str());
 	}
-	ListViewPort->ensureItemVisible(selected_port);
-	ListViewPort->setSelected(selected_port, true);
 
-	/* is s-meter enabled ? */
-	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
-	if(selected_rig==0)
-	{
-		ListViewPort->setEnabled(0);
-	}
-	else
-	{
-		CRigCaps caps;
-		DRMReceiver.GetRigCaps(caps);
-		ListViewPort->setEnabled(caps.hamlib_caps.port_type == RIG_PORT_SERIAL);
-	}
+	checkRig(current);
 
 	/* do this last so can update the com port, etc depending on rig type */
 	ListViewRig->ensureItemVisible(selected_rig);
@@ -631,6 +621,43 @@ void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
 	DRMReceiver.SetEnableSMeter(on);
 }
 
+void ReceiverSettingsDlg::checkRig(int iID)
+{
+	/* is s-meter enabled ? */
+	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
+
+	if(iID == 0)
+	{
+		ListViewPort->setEnabled(false);
+		ListViewPort->clearSelection();
+		return;
+	}
+
+#ifdef HAVE_LIBHAMLIB
+	CRigCaps caps;
+	DRMReceiver.GetRigCaps(caps);
+	if(caps.hamlib_caps.port_type == RIG_PORT_SERIAL)
+	{
+		ListViewPort->setEnabled(true);
+		string strPort = DRMReceiver.GetRigComPort();
+		QListViewItem* selected_port = no_port;
+		QListViewItemIterator it( ListViewPort );
+		for ( ; it.current(); ++it )
+		{
+			if ( it.current()->text(1).latin1() == strPort.c_str() )
+				selected_port = it.current();
+		}
+		ListViewPort->ensureItemVisible(selected_port);
+		ListViewPort->setSelected(selected_port, true);
+	}
+	else
+	{
+		ListViewPort->setEnabled(false);
+		ListViewPort->clearSelection();
+	}
+#endif
+}
+
 void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 {
 	if(loading)
@@ -640,6 +667,7 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 	iWantedrigModel = item->text(1).toInt();
 
 	DRMReceiver.SetRigModel(iWantedrigModel);
+cerr << "SetRig " << iWantedrigModel << endl;
 
 	TimerRig.start(500);
 #endif
@@ -656,19 +684,7 @@ void ReceiverSettingsDlg::OnTimerRig()
 	rig_model_t current = DRMReceiver.GetRigModel();
 	if(current == iWantedrigModel)
 	{
-		if(iWantedrigModel==0)
-		{
-			ListViewPort->setEnabled(0);
-		}
-		else
-		{
-			CRigCaps caps;
-			DRMReceiver.GetRigCaps(caps);
-			//int port_type = caps.hamlib_caps.port_type;
-			//QMessageBox::information( this, "Dream", QString("port type %1").arg(port_type) );
-			ListViewPort->setEnabled(caps.hamlib_caps.port_type == RIG_PORT_SERIAL);
-			//CheckBoxEnableSMeter->setEnabled(rig_has_get_level(pRig, RIG_LEVEL_STRENGTH));
-		}
+		checkRig(current);
 	}
 	else
 	{
