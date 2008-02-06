@@ -133,17 +133,18 @@ main(int argc, char **argv)
 			   routine since we cannot 100% assume that the working thread is
 			   ready before the GUI thread */
 
+#ifdef HAVE_LIBHAMLIB
 			/* initialise Hamlib first, so that when the Receiver is initialised it can
 			 * tune the front end
 			 */
 
-#ifdef HAVE_LIBHAMLIB
-			CHamlib Hamlib(*DRMReceiver.GetParameters());
+			CHamlib* pHamlib = NULL;
 			string rsi = Settings.Get("command", "rsiin");
 			if(rsi == "") /* don't initialise hamlib if RSCI input is requested */
 			{
-				Hamlib.LoadSettings(Settings);
-				DRMReceiver.SetHamlib(&Hamlib);
+				pHamlib = new CHamlib(*DRMReceiver.GetParameters());
+				pHamlib->LoadSettings(Settings);
+				DRMReceiver.SetHamlib(pHamlib);
 			}
 #endif
 			DRMReceiver.LoadSettings(Settings);
@@ -161,12 +162,15 @@ main(int argc, char **argv)
 			app.exec();
 
 #ifdef HAVE_LIBHAMLIB
-			bool bEnableSMeter = Hamlib.GetEnableSMeter();
-			Hamlib.SetEnableSMeter(FALSE);
-			if (Hamlib.wait(1000) == FALSE)
-				cout << "error terminating rig polling thread" << endl;
-			Hamlib.SaveSettings(Settings);
-			Settings.Put("Hamlib", "ensmeter", bEnableSMeter);
+			if(pHamlib) /* don't initialise hamlib if RSCI input is requested */
+			{
+				bool bEnableSMeter = pHamlib->GetEnableSMeter();
+				pHamlib->SetEnableSMeter(FALSE);
+				if (pHamlib->wait(1000) == FALSE)
+					cout << "error terminating rig polling thread" << endl;
+				pHamlib->SaveSettings(Settings);
+				Settings.Put("Hamlib", "ensmeter", bEnableSMeter);
+			}
 #endif
 			DRMReceiver.SaveSettings(Settings);
 		}

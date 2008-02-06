@@ -26,6 +26,9 @@
  *
 \******************************************************************************/
 
+#ifndef _STATIONS_DLG_H
+#define _STATIONS_DLG_H
+
 #include <qheader.h>
 #include <qlistview.h>
 #include <qpixmap.h>
@@ -64,6 +67,11 @@
 
 /* Define the timer interval of updating s-meter */
 #define GUI_TIMER_S_METER				300 /* ms (0.3 seconds) */
+
+/* Define the timer interval of updating frequency */
+#define GUI_TIMER_UPDATE_FREQUENCY		500 /* ms (0.5 seconds) */
+#define GUI_TIMER_INTER_DIGIT			500 /* ms (0.5 seconds) */
+#define GUI_TIME_TO_TUNE				2000 /* ms (2 seconds) */
 
 /* s-meter thermo parameters */
 #define S_METER_THERMO_MIN				((_REAL) -60.0) /* dB */
@@ -248,6 +256,11 @@ protected:
 	QTimer						TimerList;
 	QTimer						TimerUTCLabel;
 	QTimer						TimerSMeter;
+	QTimer						TimerEditFrequency;
+	QTimer						TimerMonitorFrequency;
+	QTimer						TimerTuning;
+
+	_BOOLEAN					bTuningInProgress;
 	_BOOLEAN					bShowAll;
 	_BOOLEAN					bReInitOnFrequencyChange;
 	QUrlOperator				UrlUpdateSchedule;
@@ -258,19 +271,13 @@ protected:
 	vector<MyListViewItem*>		vecpListItems;
 	QMutex						ListItemsMutex;
 
-	QPopupMenu*					pRemoteMenu;
-
-	/* Com port selection */
-	vector<QAction*>			pacMenuComPorts;
-	QActionGroup*				agCOMPortSel;
-
-	int					iTunedFrequency;
-	_BOOLEAN			bFrequencySetFromReceiver;
-
 public slots:
 	void OnTimerList();
 	void OnTimerUTCLabel() {SetUTCTimeLabel();}
 	void OnTimerSMeter();
+	void OnTimerEditFrequency();
+	void OnTimerMonitorFrequency();
+	void OnTimerTuning();
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
 	void OnShowStationsMenu(int iID);
@@ -281,3 +288,5 @@ public slots:
 	void FilterChanged(const QString&);
 
 };
+
+#endif

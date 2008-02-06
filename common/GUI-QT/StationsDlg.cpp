@@ -591,10 +591,14 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, WFlags f) :
 	CStationsDlgBase(parent, name, modal, f),
-	DRMReceiver(NDRMR),
-	Settings(NSettings),
-	bReInitOnFrequencyChange(FALSE), vecpListItems(0),
-	iTunedFrequency(-1), bFrequencySetFromReceiver(FALSE)
+	DRMReceiver(NDRMR), Settings(NSettings), DRMSchedule(),
+	BitmCubeGreen(), BitmCubeYellow(), BitmCubeRed(), BitmCubeOrange(), BitmCubePink(),
+	TimerList(), TimerUTCLabel(), TimerSMeter(), TimerEditFrequency(), TimerMonitorFrequency(), TimerTuning(),
+	bTuningInProgress(FALSE), bShowAll(FALSE), bReInitOnFrequencyChange(FALSE),
+	UrlUpdateSchedule(),
+	pViewMenu(NULL), pPreviewMenu(NULL), pUpdateMenu(NULL),
+	vecpListItems(0),
+	ListItemsMutex()
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -729,16 +733,19 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 
 	/* Connections ---------------------------------------------------------- */
-	connect(&TimerList, SIGNAL(timeout()),
-		this, SLOT(OnTimerList()));
-	connect(&TimerUTCLabel, SIGNAL(timeout()),
-		this, SLOT(OnTimerUTCLabel()));
-	connect(&TimerSMeter, SIGNAL(timeout()),
-		this, SLOT(OnTimerSMeter()));
+	connect(&TimerList, SIGNAL(timeout()), this, SLOT(OnTimerList()));
+	connect(&TimerUTCLabel, SIGNAL(timeout()), this, SLOT(OnTimerUTCLabel()));
+	connect(&TimerSMeter, SIGNAL(timeout()), this, SLOT(OnTimerSMeter()));
+	connect(&TimerEditFrequency, SIGNAL(timeout()), this, SLOT(OnTimerEditFrequency()));
+	connect(&TimerMonitorFrequency, SIGNAL(timeout()), this, SLOT(OnTimerMonitorFrequency()));
+	connect(&TimerTuning, SIGNAL(timeout()), this, SLOT(OnTimerTuning()));
 
 	TimerList.stop();
 	TimerUTCLabel.stop();
 	TimerSMeter.stop();
+	TimerEditFrequency.stop();
+	TimerMonitorFrequency.stop();
+	TimerTuning.stop();
 
 	connect(ListViewStations, SIGNAL(selectionChanged(QListViewItem*)),
 		this, SLOT(OnListItemClicked(QListViewItem*)));
@@ -1039,14 +1046,7 @@ void StationsDlg::hideEvent(QHideEvent*)
 
 void StationsDlg::showEvent(QShowEvent*)
 {
-	int iDisplayedFrequency = int(QwtCounterFrequency->value());
-	iTunedFrequency = DRMReceiver.GetFrequency();
-	if(iDisplayedFrequency != iDisplayedFrequency)
-	{
-		/* Init with current setting in the receiver */
-		bFrequencySetFromReceiver = TRUE;
-		QwtCounterFrequency->setValue(iTunedFrequency);
-	}
+	QwtCounterFrequency->setValue(DRMReceiver.GetFrequency());
 
 	/* Load the schedule if necessary */
 	if (DRMSchedule.GetStationNumber() == 0)
@@ -1076,9 +1076,11 @@ void StationsDlg::showEvent(QShowEvent*)
 	OnTimerUTCLabel();
 	OnTimerList();
 
-	/* Activate real-time timer when window is shown */
+	/* Activate timers when window is shown */
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
 	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
+	TimerSMeter.start(GUI_TIMER_S_METER);
+	TimerMonitorFrequency.start(GUI_TIMER_UPDATE_FREQUENCY);
 
 	/* add last update information on menu item */
 	AddUpdateDateTime();
@@ -1088,14 +1090,6 @@ void StationsDlg::OnTimerList()
 {
 	/* Update list view */
 	SetStationsView();
-
-	/* S-meter settings */
-	_BOOLEAN bSMeter = DRMReceiver.GetEnableSMeter();
-	if(bSMeter)
-		TimerSMeter.start(GUI_TIMER_S_METER);
-	else
-		TimerSMeter.stop();
-	EnableSMeter(bSMeter);
 }
 
 QString MyListViewItem::key(int column, bool ascending) const
@@ -1346,21 +1340,52 @@ void StationsDlg::SetStationsView()
 
 void StationsDlg::OnFreqCntNewValue(double dVal)
 {
-	/* Set frequency to front-end */
-	if(bFrequencySetFromReceiver)
+	// wait an inter-digit timeout
+	TimerEditFrequency.start(GUI_TIMER_INTER_DIGIT, TRUE);
+	bTuningInProgress = TRUE;
+}
+
+void StationsDlg::OnTimerEditFrequency()
+{
+	// commit the frequency if different
+	int iTunedFrequency = DRMReceiver.GetFrequency();
+	int iDisplayedFreq = (int)QwtCounterFrequency->value();
+	if(iTunedFrequency != iDisplayedFreq)
 	{
-		bFrequencySetFromReceiver = FALSE;
+		DRMReceiver.SetFrequency(iDisplayedFreq);
+		bTuningInProgress = TRUE;
+		TimerTuning.start(GUI_TIME_TO_TUNE, TRUE);
 	}
-	else
-	{
-		iTunedFrequency = (int) dVal;
-		DRMReceiver.SetFrequency(iTunedFrequency);
-	}
+
 	QListViewItem* item = ListViewStations->selectedItem();
 	if(item)
 	{
-		if(QString(item->text(2)).toInt() != (int) dVal)
+		if(QString(item->text(2)).toInt() != iDisplayedFreq)
 			ListViewStations->clearSelection();
+	}
+}
+
+void StationsDlg::OnTimerTuning()
+{
+	bTuningInProgress = FALSE;
+}
+
+void StationsDlg::OnTimerMonitorFrequency()
+{
+	/* Update frequency edit control
+	 * frequency could be changed by evaluation dialog
+	 * or RSCI
+	 */
+	int iTunedFrequency = DRMReceiver.GetFrequency();
+	int iDisplayedFreq = (int)QwtCounterFrequency->value();
+	if(iTunedFrequency == iDisplayedFreq)
+	{
+		bTuningInProgress = FALSE;
+	}
+	else
+	{
+		if(bTuningInProgress == FALSE)
+			QwtCounterFrequency->setValue(iTunedFrequency);
 	}
 }
 
@@ -1412,19 +1437,8 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 
 void StationsDlg::OnTimerSMeter()
 {
-	EnableSMeter(TRUE);
-
-	/* Update frequency edit control
-	 * frequency could be changed by evaluation dialog
-	 * or RSCI
-	 */
-	int iFrequency = DRMReceiver.GetFrequency();
-	if(iFrequency != iTunedFrequency)
-	{
-		iTunedFrequency = iFrequency;
-		QwtCounterFrequency->setValue(iFrequency);
-		bFrequencySetFromReceiver = TRUE;
-	}
+	_BOOLEAN bSMeter = DRMReceiver.GetEnableSMeter();
+	EnableSMeter(bSMeter);
 }
 
 void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)

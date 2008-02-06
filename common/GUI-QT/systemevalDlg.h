@@ -96,6 +96,8 @@ protected:
 	CSettings&			Settings;
 
 	QTimer				Timer;
+	QTimer				TimerLineEditFrequency;
+	QTimer				TimerTuning;
 
     virtual void		showEvent(QShowEvent* pEvent);
 	virtual void		hideEvent(QHideEvent* pEvent);
@@ -111,11 +113,12 @@ protected:
 
 	CGPSReceiver*		pGPSReceiver;
 
-	int					iTunedFrequency;
-	_BOOLEAN			bFrequencySetFromReceiver;
+	_BOOLEAN			bTuningInProgress;
 
 public slots:
 	void OnTimer();
+	void OnTimerLineEditFrequency();
+	void OnTimerTuning();
 	void OnListSelChanged(QListViewItem* NewSelIt);
 	void OnListViContMenu();
 	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt,

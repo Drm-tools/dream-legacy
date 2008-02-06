@@ -37,8 +37,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, WFlags f) :
 	systemevalDlgBase(parent, name, modal, f),
 	DRMReceiver(NDRMR), Settings(NSettings),
-	Timer(), pGPSReceiver(NULL),
-	iTunedFrequency(-1), bFrequencySetFromReceiver(FALSE)
+	Timer(), TimerLineEditFrequency(), TimerTuning(),
+	pGPSReceiver(NULL), bTuningInProgress(FALSE)
 {
 	/* Get window geometry data and apply it */
 	CWinGeom s;
@@ -333,6 +333,10 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
+	connect(&TimerLineEditFrequency, SIGNAL(timeout()),
+		this, SLOT(OnTimerLineEditFrequency()));
+	connect(&TimerTuning, SIGNAL(timeout()),
+		this, SLOT(OnTimerTuning()));
 
 	connect( EdtFrequency, SIGNAL(textChanged(const QString&)),
 		this, SLOT(OnLineEditFrequencyChanged(const QString&)) );
@@ -352,14 +356,27 @@ systemevalDlg::~systemevalDlg()
 
 void systemevalDlg::OnLineEditFrequencyChanged(const QString& str)
 {
-	if(bFrequencySetFromReceiver)
+	// wait an inter-digit timeout
+	TimerLineEditFrequency.start(500, TRUE);
+	bTuningInProgress = TRUE;
+}
+
+void systemevalDlg::OnTimerLineEditFrequency()
+{
+	// commit the frequency if different
+	int iFreq = EdtFrequency->text().toInt();
+	int iFrequency = DRMReceiver.GetFrequency();
+	if(iFreq != iFrequency)
 	{
-		bFrequencySetFromReceiver = FALSE;
+		DRMReceiver.SetFrequency(iFreq);
+		bTuningInProgress = TRUE;
+		TimerTuning.start(2000, TRUE);
 	}
-	else
-	{
-		DRMReceiver.SetFrequency(str.toInt());
-	}
+}
+
+void systemevalDlg::OnTimerTuning()
+{
+	bTuningInProgress = FALSE;
 }
 
 void systemevalDlg::UpdateControls()
@@ -367,13 +384,18 @@ void systemevalDlg::UpdateControls()
 	/* Update frequency edit control
 	 * frequency could be changed by schedule dialog
 	 * or RSCI
+	 * Don't update if already correct - would create loops
 	 */
 	int iFrequency = DRMReceiver.GetFrequency();
-	if(iFrequency != iTunedFrequency)
+	int iFreq = EdtFrequency->text().toInt();
+	if(iFrequency != iFreq)
 	{
-		iTunedFrequency = iFrequency;
-		EdtFrequency->setText(QString::number(iFrequency));
-		bFrequencySetFromReceiver = TRUE;
+		if(bTuningInProgress == FALSE)
+			EdtFrequency->setText(QString::number(iFrequency));
+	}
+	else
+	{
+		bTuningInProgress = FALSE;
 	}
 }
 
