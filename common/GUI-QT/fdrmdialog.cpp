@@ -50,7 +50,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	DRMReceiver(NDRMR),
 	Settings(NSettings),
 	loghelper(NDRMR, NSettings),
-	eReceiverMode(RM_NONE)
+	eReceiverMode(NONE)
 {
 	/* recover window size and position */
 	CWinGeom s;
@@ -235,6 +235,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
 	connect(pReceiverSettingsDlg, SIGNAL(StartStopGPS(bool)), pSysEvalDlg, SLOT(EnableGPS(bool)));
+	connect(pReceiverSettingsDlg, SIGNAL(ShowHideGPS(bool)), pSysEvalDlg, SLOT(ShowGPS(bool)));
 
 	Loghelper *ploghelper = &loghelper;
 
@@ -279,11 +280,11 @@ void FDRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 
 void FDRMDialog::OnTimer()
 {
-	ERecMode eNewReceiverMode = DRMReceiver.GetReceiverMode();
+	EDemodulationType eNewReceiverMode = DRMReceiver.GetReceiverMode();
 	switch(eNewReceiverMode)
 	{
-	case RM_DRM:
-		if(eReceiverMode != RM_DRM)
+	case DRM:
+		if(eReceiverMode != DRM)
 			ChangeGUIModeToDRM();
 		{
 			CParameter& Parameters = *DRMReceiver.GetParameters();
@@ -305,17 +306,17 @@ void FDRMDialog::OnTimer()
 				ClearDisplay();
 		}
 		break;
-	case RM_AM:
+	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
 		/* stopping the timer is normally done by the hide signal, but at startup we
 		 * are already hidden and the hide signal doesn't hit the slot
 		 */
-		if(eReceiverMode != RM_AM)
+		if(eReceiverMode != AM) // AM means any analog mode
 		{
 			Timer.stop();
 			ChangeGUIModeToAM();
 		} /* otherwise we might still be changing to DRM from AM */
 		break;
-	case RM_NONE: // wait until working thread starts operating
+	case NONE: // wait until working thread starts operating
 		break;
 	}
 }
@@ -740,7 +741,7 @@ void FDRMDialog::ChangeGUIModeToDRM()
 	if (pStationsDlg->isVisible())
 		pStationsDlg->LoadSchedule(CDRMSchedule::SM_DRM);
 
-	eReceiverMode = RM_DRM;
+	eReceiverMode = DRM;
 }
 
 /* Main window is not needed, hide it.
@@ -751,7 +752,7 @@ void FDRMDialog::ChangeGUIModeToDRM()
 void FDRMDialog::ChangeGUIModeToAM()
 {
 	/* Store visibility state */
-	if (eReceiverMode != RM_NONE)
+	if (eReceiverMode != NONE)
 	{
 		bSysEvalDlgWasVis = pSysEvalDlg->isVisible();
 		bMultMedDlgWasVis = pMultiMediaDlg->isVisible();
@@ -768,6 +769,8 @@ void FDRMDialog::ChangeGUIModeToAM()
 
 	this->hide();
 
+	eReceiverMode = AM; // euphemism for NOT DRM
+
 	pAnalogDemDlg->show();
 
 	/* Set correct schedule */
@@ -782,7 +785,6 @@ void FDRMDialog::ChangeGUIModeToAM()
 	if (pStationsDlg->isVisible())
 		pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
 
-	eReceiverMode = RM_AM;
 }
 
 void FDRMDialog::showEvent(QShowEvent*)
@@ -803,7 +805,7 @@ void FDRMDialog::OnSwitchToDRM()
 	bStationsDlgWasVis = pStationsDlg->isVisible();
 	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
 
-	DRMReceiver.SetReceiverMode(RM_DRM);
+	DRMReceiver.SetReceiverMode(DRM);
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
@@ -816,7 +818,7 @@ void FDRMDialog::OnSwitchToAM()
 {
 	bStationsDlgWasVis = pStationsDlg->isVisible();
 	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
-	DRMReceiver.SetReceiverMode(RM_AM);
+	DRMReceiver.SetReceiverMode(AM); // User must then select if wants FM, etc.
 }
 
 void FDRMDialog::OnButtonService1()
@@ -913,7 +915,7 @@ void FDRMDialog::SetService(int iNewServiceID)
 
 void FDRMDialog::OnViewEvalDlg()
 {
-	if (DRMReceiver.GetReceiverMode() == RM_DRM)
+	if(DRMReceiver.GetReceiverMode() == DRM)
 	{
 		/* Show evaluation window in DRM mode */
 		pSysEvalDlg->show();
@@ -1011,7 +1013,7 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	 *  stayed open until the system is cleared down and then emitted
 	 *  our signal
 	 */
-	if(eReceiverMode == RM_DRM)
+	if(eReceiverMode == DRM)
 	{
 		Settings.Put("GUI", "mode", string("DRMRX"));
 		/* remember the state of the windows */

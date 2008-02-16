@@ -344,8 +344,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	EdtFrequency->setValidator(new QIntValidator(100, 120000, EdtFrequency));
 
 	/* QT optimises out trying to send this from ReceiverSettings! */
-	_BOOLEAN bGPS = Settings.Get("GPS", "usegpsd", FALSE);
-	EnableGPS(bGPS);
+	EnableGPS(Settings.Get("GPS", "usegpsd", FALSE));
+	ShowGPS(Settings.Get("GPS", "showgps", FALSE));
 }
 
 systemevalDlg::~systemevalDlg()
@@ -812,7 +812,7 @@ void systemevalDlg::OnTimer()
 		strFACInfo = DateTime.toString();
 	}
 
-	FACTimeDateL->setText(tr("Received time - date:")); /* Label */
+	FACTimeDateL->setText(tr("Time:")); /* Label */
 	FACTimeDateV->setText(strFACInfo); /* Value */
 
 	/* display GPS info */
@@ -834,9 +834,6 @@ void systemevalDlg::OnTimer()
 
 	if (Parameters.GPSData.GetPositionAvailable())
 	{
-		// let gps data come from RSCI
-		if(FrameGPS->isVisible() == FALSE)
-			FrameGPS->show();
 		double latitude, longitude;
 		Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
 		GPSLatV->setText(QString("%1\260").arg(latitude, 0, 'f', 6));
@@ -1240,7 +1237,6 @@ void systemevalDlg::EnableGPS(bool b)
 	{
 		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
 		Parameters.Unlock(); 
-		FrameGPS->show();
 		if(pGPSReceiver == NULL)
 			pGPSReceiver = new CGPSReceiver(Parameters, Settings);
 	}
@@ -1248,12 +1244,19 @@ void systemevalDlg::EnableGPS(bool b)
 	{
 		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
 		Parameters.Unlock(); 
-		FrameGPS->hide();
 		if(pGPSReceiver)
 		{
 			delete pGPSReceiver;
 			pGPSReceiver = NULL;
 		}
 	}
+}
+
+void systemevalDlg::ShowGPS(bool b)
+{
+	if(b)
+		FrameGPS->show();
+	else
+		FrameGPS->hide();
 }
 

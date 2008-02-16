@@ -89,7 +89,7 @@ protected:
 	_BOOLEAN		bLiveSchedDlgWasVis;
 	_BOOLEAN		bStationsDlgWasVis;
 	_BOOLEAN		bEPGDlgWasVis;
-	ERecMode		eReceiverMode;
+	EDemodulationType	eReceiverMode;
 
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
 	virtual void	customEvent(QCustomEvent* Event);

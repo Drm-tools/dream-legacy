@@ -97,7 +97,7 @@ public:
 	_BOOLEAN GetOutEnabled() {return bMDIOutEnabled;}
 	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC=bNAFPktCRC;}
 	void SetFrequency(int iNewFreqkHz);
-	void SetReceiverMode(ERecMode eNewMode);
+	void SetReceiverMode(EDemodulationType eNewMode);
 	void SetService(int iServiceID);
 
 	_BOOLEAN GetDestination(string& strArgument);

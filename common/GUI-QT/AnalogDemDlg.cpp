@@ -235,42 +235,40 @@ void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 
 void AnalogDemDlg::UpdateControls()
 {
-	CParameter& Parameters = *Receiver.GetParameters();
-
 	/* Set demodulation type */
-	switch (Parameters.GetAnalogDemodType())
+	switch (Receiver.GetReceiverMode())
 	{
-	case DT_AM:
+	case AM:
 		if (!RadioButtonDemAM->isChecked())
 			RadioButtonDemAM->setChecked(TRUE);
 		break;
 
-	case DT_LSB:
+	case LSB:
 		if (!RadioButtonDemLSB->isChecked())
 			RadioButtonDemLSB->setChecked(TRUE);
 		break;
 
-	case DT_USB:
+	case USB:
 		if (!RadioButtonDemUSB->isChecked())
 			RadioButtonDemUSB->setChecked(TRUE);
 		break;
 
-	case DT_CW:
+	case CW:
 		if (!RadioButtonDemCW->isChecked())
 			RadioButtonDemCW->setChecked(TRUE);
 		break;
 
-	case DT_NBFM:
+	case NBFM:
 		if (!RadioButtonDemNBFM->isChecked())
 			RadioButtonDemNBFM->setChecked(TRUE);
 		break;
 
-	case DT_WBFM:
+	case WBFM:
 		if (!RadioButtonDemWBFM->isChecked())
 			RadioButtonDemWBFM->setChecked(TRUE);
 		break;
 
-	case DT_SIZE:
+	case DRM: case NONE:
 		break;
 	}
 
@@ -362,10 +360,10 @@ void AnalogDemDlg::OnTimer()
 
 	switch(Receiver.GetReceiverMode())
 	{
-	case RM_DRM:
+	case DRM:
 		OnSwitchToDRM();
 		break;
-	case RM_AM:
+	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
 		/* Carrier frequency of AM signal */
 		TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
 		+ QString().setNum(Receiver.GetAnalogCurMixFreqOffs(), 'f', 2) + " Hz</b>");
@@ -383,7 +381,7 @@ void AnalogDemDlg::OnTimer()
 		}
 		UpdateControls();
 		break;
-	case RM_NONE:
+	case NONE:
 		break;
 	}
 }
@@ -418,27 +416,27 @@ void AnalogDemDlg::OnRadioDemodulation(int iID)
 	switch (iID)
 	{
 	case 0:
-		Receiver.SetAnalogDemodType(DT_AM);
+		Receiver.SetReceiverMode(AM);
 		break;
 
 	case 1:
-		Receiver.SetAnalogDemodType(DT_LSB);
+		Receiver.SetReceiverMode(LSB);
 		break;
 
 	case 2:
-		Receiver.SetAnalogDemodType(DT_USB);
+		Receiver.SetReceiverMode(USB);
 		break;
 
 	case 3:
-		Receiver.SetAnalogDemodType(DT_CW);
+		Receiver.SetReceiverMode(CW);
 		break;
 
 	case 4:
-		Receiver.SetAnalogDemodType(DT_NBFM);
+		Receiver.SetReceiverMode(NBFM);
 		break;
 
 	case 5:
-		Receiver.SetAnalogDemodType(DT_WBFM);
+		Receiver.SetReceiverMode(WBFM);
 		break;
 	}
 

@@ -59,82 +59,16 @@
 	This code is based on patches and example code from Tomi Manninen and
 	Stephane Fillod (developer of hamlib)
 */
-CHamlib::CHamlib(CParameter& p): Parameters(p), pRig(NULL), bEnableSMeter(FALSE),
-iHamlibModelID(0), iWantedHamlibModelID(0), eRigMode(DRM), CapsHamlibModels(), iFrequencykHz(0)
+CHamlib::CHamlib(CParameter& p): mutex(), Parameters(p), pRig(NULL),
+bSMeterWanted(FALSE), bEnableSMeter(FALSE),
+ModelID(), WantedModelID(), eRigMode(DRM), CapsHamlibModels(),
+iFrequencykHz(0), iFrequencyOffsetkHz(0)
 {
-
-#ifdef RIG_MODEL_G303
-	/* Winradio G303 */
-	CapsHamlibModels[RIG_MODEL_G303].settings[DRM].levels["ATT"].i=0;
-	CapsHamlibModels[RIG_MODEL_G303].settings[DRM].levels["AGC"].i=3;
-#endif
-
-#ifdef RIG_MODEL_G313
-	/* Winradio G313 */
-	CapsHamlibModels[RIG_MODEL_G313].settings[DRM].levels["ATT"].i=0;
-	CapsHamlibModels[RIG_MODEL_G313].settings[DRM].levels["AGC"].i=3;
-# ifdef __linux
-	CapsHamlibModels[RIG_MODEL_G313].config["if_path"]="/dreamg3xxif";
-	CapsHamlibModels[RIG_MODEL_G313].bHamlibDoesAudio = TRUE;
-# endif
-#endif
-
-#ifdef RIG_MODEL_G315
-	/* Winradio G315 */
-	CapsHamlibModels[RIG_MODEL_G315].settings[DRM].levels["ATT"].i=0;
-	CapsHamlibModels[RIG_MODEL_G315].settings[DRM].levels["AGC"].i=3;
-# ifdef __linux
-	CapsHamlibModels[RIG_MODEL_G315].config["if_path"]="/dreamg3xxif";
-	CapsHamlibModels[RIG_MODEL_G315].bHamlibDoesAudio = TRUE;
-# endif
-	CapsHamlibModels[RIG_MODEL_G315].settings[WBFM].eOnboardDemod = C_MUST;
-#endif
-
-#ifdef RIG_MODEL_AR7030
-	/* AOR 7030 */
-	CapsHamlibModels[RIG_MODEL_AR7030].settings[DRM].modes["AM"]=3;
-	CapsHamlibModels[RIG_MODEL_AR7030].settings[DRM].levels["AGC"].i=5;
-	CapsHamlibModels[-RIG_MODEL_AR7030].settings[DRM].modes["AM"]=6;
-	CapsHamlibModels[-RIG_MODEL_AR7030].settings[DRM].levels["AGC"].i=5;
-	CapsHamlibModels[-RIG_MODEL_AR7030].bIsModifiedRig = true;
-#endif
-
-#ifdef RIG_MODEL_NRD535
-	/* JRC NRD 535 */
-						 /* AGC=slow */
-	CapsHamlibModels[RIG_MODEL_NRD535].settings[DRM].modes["CW"]=12000;
-	CapsHamlibModels[RIG_MODEL_NRD535].settings[DRM].levels["CWPITCH"].i=-5000;
-	CapsHamlibModels[RIG_MODEL_NRD535].settings[DRM].levels["IF"].i=-2000;
-	CapsHamlibModels[RIG_MODEL_NRD535].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[RIG_MODEL_NRD535].iFreqOffset = 3; /* kHz frequency offset */
-	CapsHamlibModels[-RIG_MODEL_NRD535].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[-RIG_MODEL_NRD535].bIsModifiedRig = true;
-#endif
-
-#ifdef RIG_MODEL_RX320
-	/* TenTec RX320D */
-	CapsHamlibModels[RIG_MODEL_RX320].settings[DRM].modes["AM"]=6000;
-	CapsHamlibModels[RIG_MODEL_RX320].settings[DRM].levels["AF"].i=1;
-	CapsHamlibModels[RIG_MODEL_RX320].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[-RIG_MODEL_RX320].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[-RIG_MODEL_RX320].bIsModifiedRig = true;
-#endif
-
-#ifdef RIG_MODEL_ELEKTOR507
-    /* Elektor USB SDR 5/07 */
-	CapsHamlibModels[RIG_MODEL_ELEKTOR507].iFreqOffset = -12;
-#endif
-
-#ifdef RIG_MODEL_RX340
-	/* TenTec RX340D */
-	CapsHamlibModels[RIG_MODEL_RX340].settings[DRM].modes["USB"]=16000;
-	CapsHamlibModels[RIG_MODEL_RX340].settings[DRM].levels["IF"].i=2000;
-	CapsHamlibModels[RIG_MODEL_RX340].settings[DRM].levels["AF"].i=1;
-	CapsHamlibModels[RIG_MODEL_RX340].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[RIG_MODEL_RX340].iFreqOffset = -12;
-	CapsHamlibModels[-RIG_MODEL_RX340].settings[DRM].levels["AGC"].i=3;
-	CapsHamlibModels[-RIG_MODEL_RX340].bIsModifiedRig = true;
-#endif
+	for(size_t j=DRM; j<=WBFM; j++)
+	{
+		EDemodulationType e = EDemodulationType(j);
+		ModelID[e] = WantedModelID[e] = 0;
+	}
 
 	/* Load all available front-end remotes in hamlib library */
 	rig_load_all_backends();
@@ -149,26 +83,34 @@ CHamlib::~CHamlib()
 	if (pRig != NULL)
 	{
 		/* close everything */
-		rig_close(pRig);
-		rig_cleanup(pRig);
+		CloseRig();
 	}
 }
 
-string CHamlib::GetConfig(const string& key)
+int
+CHamlib::PrintHamlibModelList(const rig_caps *caps, void *data)
 {
-	if(iHamlibModelID==0)
-		return "";
-	return CapsHamlibModels[iHamlibModelID].config[key];
+	/* Access data members of class through pointer ((CHamlib*) data) */
+	CHamlib* This = (CHamlib *)data;
+
+	rig_model_t model = caps->rig_model;
+
+	/* Store new model in class. */
+	stringstream s;
+	s << caps->rig_model;
+	CRigCaps& r = This->CapsHamlibModels[model];
+	r.hamlib_caps = *caps;
+	return 1;					/* !=0, we want them all! */
 }
 
 void
-CHamlib::GetRigList(map < rig_model_t, CRigCaps > &rigs)
+CHamlib::GetRigList(CRigMap& rigs)
 {
 	rigs = CapsHamlibModels;
 }
 
 void
-CHamlib::GetPortList(map < string, string > &ports)
+CHamlib::GetPortList(map < string, string > &ports) const
 {
 	ports.clear();
 /* Config string for com-port selection is different for each platform */
@@ -388,47 +330,23 @@ CHamlib::GetPortList(map < string, string > &ports)
 }
 
 void
-CHamlib::SetFreqOffset(const int iFreqOffset)
-{
-	CapsHamlibModels[iHamlibModelID].iFreqOffset = iFreqOffset;
-	RigCaps.iFreqOffset = iFreqOffset;
-}
-
-void
 CHamlib::SetComPort(const string & port)
 {
-	CapsHamlibModels[iHamlibModelID].config["rig_pathname"] = port;
-	RigCaps.config["rig_pathname"] = port;
-	SetRigModel(iHamlibModelID);
+	rig_model_t model = ModelID[eRigMode];
+	if(model!=0)
+		CapsHamlibModels[model].set_config("rig_pathname", port);
+	SetRigModel(eRigMode, model); // close and re-open
 }
 
 string CHamlib::GetComPort() const
 {
-	map < string, string >::const_iterator c = RigCaps.config.find("rig_pathname");
-	if (c == RigCaps.config.end())
+	map<EDemodulationType,rig_model_t>::const_iterator e = ModelID.find(eRigMode);
+	if(e==ModelID.end())
 		return "";
-
-	return c->second;
-}
-
-int
-CHamlib::PrintHamlibModelList(const struct rig_caps *caps, void *data)
-{
-	/* Access data members of class through pointer ((CHamlib*) data) */
-	CHamlib & Hamlib = *((CHamlib *) data);
-	rig_model_t model = caps->rig_model;
-
-	/* Store new model in class. */
-	Hamlib.CapsHamlibModels[model].hamlib_caps = *caps;
-
-	/* modified rigs */
-	map < rig_model_t, CRigCaps >::iterator m = Hamlib.CapsHamlibModels.find(-model);
-	if (m != Hamlib.CapsHamlibModels.end())
-	{
-		m->second.hamlib_caps = *caps;
-	}
-
-	return 1;					/* !=0, we want them all! */
+	CRigMap::const_iterator m = CapsHamlibModels.find(e->second);
+	if(m==CapsHamlibModels.end())
+		return "";
+	return m->second.get_config("rig_pathname");
 }
 
 int CHamlib::level(RIG* rig, const struct confparams *parm, rig_ptr_t data)
@@ -454,146 +372,174 @@ int CHamlib::token(const struct confparams *parm, rig_ptr_t data)
 	return 1;					/* !=0, we want them all! */
 }
 
+static const char *enums[] = {"DRM", "AM", "USB", "LSB", "CW", "NBFM", "WBFM" };
+
 void
 CHamlib::LoadSettings(CSettings & s)
 {
-	rig_model_t model = s.Get("Hamlib", "model", 0);
-	eRigMode = ERigMode(s.Get("Hamlib", "mode", 0));
-	bEnableSMeter = s.Get("Hamlib", "ensmeter", FALSE);
-	if(s.Get("Hamlib", "enmodrig", FALSE))
-		model = 0 - model;
+	CRigCaps rigcaps;
+
+#ifdef RIG_MODEL_G303
+	/* Winradio G303 */
+	CapsHamlibModels[RIG_MODEL_G303].set_level(DRM, "ATT", "0");
+	CapsHamlibModels[RIG_MODEL_G303].set_level(DRM, "AGC", "3");
+#endif
+
+#ifdef RIG_MODEL_G313
+	/* Winradio G313 */
+	CapsHamlibModels[RIG_MODEL_G313].set_level(DRM, "ATT", "0");
+	CapsHamlibModels[RIG_MODEL_G313].set_level(DRM, "AGC", "3");
+# ifdef __linux
+	CapsHamlibModels[RIG_MODEL_G313].set_config("if_path", "/dreamg3xxif");
+	CapsHamlibModels[RIG_MODEL_G313].set_attribute(DRM, "audiotype", "shm");
+	CapsHamlibModels[RIG_MODEL_G313].set_attribute(AM, "audiotype", "shm");
+	CapsHamlibModels[RIG_MODEL_G313].set_attribute(USB, "audiotype", "shm");
+	CapsHamlibModels[RIG_MODEL_G313].set_attribute(LSB, "audiotype", "shm");
+	CapsHamlibModels[RIG_MODEL_G313].set_attribute(NBFM, "audiotype", "shm");
+	CapsHamlibModels[RIG_MODEL_G313].set_attribute(WBFM, "audiotype", "shm");
+# endif
+#endif
+
+#ifdef RIG_MODEL_G315
+	/* Winradio G315 */
+	CapsHamlibModels[RIG_MODEL_G315].set_level(DRM, "ATT", "0");
+	CapsHamlibModels[RIG_MODEL_G315].set_level(DRM, "AGC", "3");
+# ifdef __linux
+	CapsHamlibModels[RIG_MODEL_G315].set_config("if_path", "/dreamg3xxif");
+	CapsHamlibModels[RIG_MODEL_G315].set_attribute(DRM, "audiotype", "shm");
+	CapsHamlibModels[RIG_MODEL_G315].set_attribute(AM, "audiotype", "shm");
+	CapsHamlibModels[RIG_MODEL_G315].set_attribute(USB, "audiotype", "shm");
+	CapsHamlibModels[RIG_MODEL_G315].set_attribute(LSB, "audiotype", "shm");
+	CapsHamlibModels[RIG_MODEL_G315].set_attribute(NBFM, "audiotype", "shm");
+	CapsHamlibModels[RIG_MODEL_G315].set_attribute(WBFM, "audiotype", "shm");
+# endif
+	CapsHamlibModels[RIG_MODEL_G315].set_attribute(WBFM, "onboarddemod", "must");
+#endif
+
+#ifdef RIG_MODEL_AR7030
+	/* AOR 7030 */
+	CapsHamlibModels[RIG_MODEL_AR7030].set_mode(DRM, "AM", "6");
+	CapsHamlibModels[RIG_MODEL_AR7030].set_level(DRM, "AGC", "5");
+
+	CapsHamlibModels[-RIG_MODEL_AR7030] = CapsHamlibModels[RIG_MODEL_AR7030];
+	CapsHamlibModels[RIG_MODEL_AR7030].set_mode(DRM, "AM", "3");
+
+#endif
+
+#ifdef RIG_MODEL_NRD535
+	/* JRC NRD 535 */
+						 /* AGC=slow */
+	CapsHamlibModels[RIG_MODEL_NRD535].set_level(DRM, "AGC", "3");
+
+	CapsHamlibModels[-RIG_MODEL_NRD535] = CapsHamlibModels[RIG_MODEL_NRD535];
+
+	CapsHamlibModels[RIG_MODEL_NRD535].set_mode(DRM, "CW", "12000");
+	CapsHamlibModels[RIG_MODEL_NRD535].set_level(DRM, "CWPITCH", "-5000");
+	CapsHamlibModels[RIG_MODEL_NRD535].set_level(DRM, "IF", "-2000");
+	CapsHamlibModels[RIG_MODEL_NRD535].set_config("offset", "3"); /* kHz frequency offset */
+#endif
+
+#ifdef RIG_MODEL_RX320
+	/* TenTec RX320D */
+	CapsHamlibModels[RIG_MODEL_RX320].set_level(DRM, "AGC", "3");
+
+	CapsHamlibModels[-RIG_MODEL_RX320] = CapsHamlibModels[RIG_MODEL_RX320];
+
+	CapsHamlibModels[RIG_MODEL_RX320].set_mode(DRM, "AM", "6000");
+	CapsHamlibModels[RIG_MODEL_RX320].set_level(DRM, "AF", "1");
+
+#endif
+
+#ifdef RIG_MODEL_RX340
+	/* TenTec RX340D */
+	CapsHamlibModels[RIG_MODEL_RX340].set_level(DRM, "AGC", "3");
+
+	CapsHamlibModels[-RIG_MODEL_RX340] = CapsHamlibModels[RIG_MODEL_RX340];
+
+	CapsHamlibModels[RIG_MODEL_RX340].set_mode(DRM, "USB", "16000");
+	CapsHamlibModels[RIG_MODEL_RX340].set_level(DRM, "IF", "2000");
+	CapsHamlibModels[RIG_MODEL_RX340].set_level(DRM, "AF", "1");
+	CapsHamlibModels[RIG_MODEL_RX340].set_config("offset", "-12");
+
+#endif
+
+#ifdef RIG_MODEL_ELEKTOR507
+    /* Elektor USB SDR 5/07 */
+	CapsHamlibModels[RIG_MODEL_ELEKTOR507].set_config("offset", "-12");
+#endif
+
+	eRigMode = EDemodulationType(s.Get("Hamlib", "mode", 0));
+	bSMeterWanted = s.Get("Hamlib", "smeter", FALSE);
+
+	for(CRigMap::iterator r = CapsHamlibModels.begin(); r != CapsHamlibModels.end(); r++)
+	{
+		stringstream section;
+		rig_model_t model = r->first;
+		section << "Hamlib" << ((model<0)?"-Modified-":"-") << abs(model) << "-";
+		r->second.LoadSettings(s, section.str());
+	}
+
+	/* Hamlib Model ID */
+	for(size_t j=DRM; j<=WBFM; j++)
+	{
+		stringstream sec;
+		sec << "Hamlib-" << enums[j];
+		WantedModelID[EDemodulationType(j)] = s.Get(sec.str(), "model", 0);
+	}
+	/* Initial mode/band */
+	eRigMode = EDemodulationType(s.Get("Hamlib", "mode", int(DRM)));
+
+	rig_model_t model = WantedModelID[eRigMode];
 
 	/* extract config from -C command line arg */
 	string command_line_config = s.Get("command", "hamlib-config", string(""));
 	if(command_line_config!="")
 	{
 		istringstream params(command_line_config);
-		while (!params.eof())
+		string name, value;
+		while (getline(params, name, '='))
 		{
-			string name, value;
-			getline(params, name, '=');
 			getline(params, value, ',');
-			s.Put("Hamlib-config", name, value);
+			CapsHamlibModels[model].set_config(name, value);
+				// TODO support levels, params, etc.
 		}
 	}
-
-	if (model != 0)
-	{
-		RigCaps = CapsHamlibModels[model];
-		INISection sec;
-		s.Get("Hamlib-config", sec);
-		INISection::iterator i;
-		for(i=sec.begin(); i!=sec.end(); i++)
-		{
-			RigCaps.config[i->first] = i->second;
-		}
-		for(size_t j=DRM; j<=WBFM; j++)
-		{
-			stringstream section;
-			section << "Hamlib-" << j;
-			sec.clear();
-			s.Get(section.str()+"-modes", sec);
-			for(i=sec.begin(); i!=sec.end(); i++)
-			{
-				RigCaps.settings[ERigMode(j)].modes[i->first] = atoi(i->second.c_str());
-			}
-			sec.clear();
-			s.Get(section.str()+"-levels", sec);
-			for(i=sec.begin(); i!=sec.end(); i++)
-			{
-				setting_t setting = rig_parse_level(i->first.c_str());
-				if (RIG_LEVEL_IS_FLOAT(setting))
-					RigCaps.settings[ERigMode(j)].levels[i->first].f = atof(i->second.c_str());
-				else
-					RigCaps.settings[ERigMode(j)].levels[i->first].i = atoi(i->second.c_str());
-			}
-			sec.clear();
-			s.Get(section.str()+"-functions", sec);
-			for(i=sec.begin(); i!=sec.end(); i++)
-				RigCaps.settings[ERigMode(j)].functions[i->first] = i->second;
-			sec.clear();
-			s.Get(section.str()+"-parameters", sec);
-			for(i=sec.begin(); i!=sec.end(); i++)
-			{
-				setting_t setting = rig_parse_parm(i->first.c_str());
-				if (RIG_LEVEL_IS_FLOAT(setting))
-					RigCaps.settings[ERigMode(j)].levels[i->first].f = atof(i->second.c_str());
-				else
-					RigCaps.settings[ERigMode(j)].levels[i->first].i = atoi(i->second.c_str());
-			}
-			RigCaps.settings[ERigMode(j)].eOnboardDemod
-				= EMight(s.Get(section.str(), "onboarddemod", int(C_CAN)));
-			RigCaps.settings[ERigMode(j)].eInChanSel
-				= EInChanSel(s.Get(section.str(), "inchansel", int(CS_MIX_CHAN)));
-			RigCaps.settings[ERigMode(j)].audioInput = EMight(s.Get(section.str(), "audioinput", -1));
-		}
-	}
-
-	RigCaps.iFreqOffset = s.Get("Hamlib", "freqoffset", RigCaps.iFreqOffset);
-
-	/* save the new working config into the `database` */
-	CapsHamlibModels[model] = RigCaps;
-
-	/* set the iWantedHamlibModelID variable, but don't do anything!!!! */
-	iWantedHamlibModelID = model;
-
-	s.Put("Hamlib", "model", abs(model));
-	s.Put("Hamlib", "enmodrig", (model<0)?1:0);
-	s.Put("Hamlib", "mode", eRigMode);
-	s.Put("Hamlib", "ensmeter", bEnableSMeter);
-	s.Put("Hamlib", "freqoffset", RigCaps.iFreqOffset);
 }
 
 void
-CHamlib::SaveSettings(CSettings & s)
+CHamlib::SaveSettings(CSettings & s) const
 {
 	/* Hamlib Model ID */
-	s.Put("Hamlib", "model", abs(iHamlibModelID));
-	/* DRM modified receiver flag */
-	s.Put("Hamlib", "enmodrig", (iHamlibModelID<0)?1:0);
-
-	s.Put("Hamlib", "ensmeter", bEnableSMeter);
-
-	s.Put("Hamlib", "freqoffset", RigCaps.iFreqOffset);
-
-	for(map<string,string>::const_iterator i=RigCaps.config.begin(); i!=RigCaps.config.end(); i++)
+	for(size_t j=DRM; j<=WBFM; j++)
 	{
-		s.Put("Hamlib-config", i->first, i->second);
+		stringstream sec;
+		sec << "Hamlib-" << enums[j];
+		EDemodulationType e = EDemodulationType(j);
+
+		map<EDemodulationType,rig_model_t>::const_iterator m = ModelID.find(e);
+		if(m!=ModelID.end() && m->second != 0)
+		{
+			s.Put(sec.str(), "model", m->second);
+		}
+		else
+		{
+			map<EDemodulationType,rig_model_t>::const_iterator m = WantedModelID.find(e);
+			if(m!=WantedModelID.end() && m->second != 0)
+				s.Put(sec.str(), "model", m->second);
+		}
 	}
 
-	for(map<ERigMode,CRigModeSpecificSettings>::const_iterator j=RigCaps.settings.begin();
-		j!=RigCaps.settings.end(); j++)
+	s.Put("Hamlib", "smeter", bSMeterWanted);
+	s.Get("Hamlib", "mode", int(eRigMode));
+
+	for(CRigMap::const_iterator r = CapsHamlibModels.begin(); r != CapsHamlibModels.end(); r++)
 	{
-		const CRigModeSpecificSettings& settings = j->second;
-		map<string,int>::const_iterator k;
-		map<string,string>::const_iterator l;
-		map<string,value_t>::const_iterator v;
-
-		stringstream section;
-		section << "Hamlib-" << size_t(j->first);
-
-		for(k=settings.modes.begin(); k!=settings.modes.end(); k++)
-			s.Put(section.str()+"-modes", k->first, k->second);
-
-		for(v=settings.levels.begin(); v!=settings.levels.end(); v++)
+		if(r->first != 0)
 		{
-			setting_t setting = rig_parse_level(v->first.c_str());
-			if (RIG_LEVEL_IS_FLOAT(setting))
-				s.Put(section.str()+"-levels", v->first, v->second.f);
-			else
-				s.Put(section.str()+"-levels", v->first, v->second.i);
-		}
-
-		for(l=settings.functions.begin(); l!=settings.functions.end(); l++)
-			s.Put(section.str()+"-functions", l->first, l->second);
-
-		for(v=settings.parameters.begin(); v!=settings.parameters.end(); v++)
-		{
-			setting_t setting = rig_parse_parm(v->first.c_str());
-			if (RIG_PARM_IS_FLOAT(setting))
-				s.Put(section.str()+"-parameters", v->first, v->second.f);
-			else
-				s.Put(section.str()+"-parameters", v->first, v->second.i);
+			stringstream section;
+			rig_model_t model = r->first;
+			section << "Hamlib" << ((model<0)?"-Modified-":"-") << abs(model) << "-";
+			r->second.SaveSettings(s, section.str());
 		}
 	}
 }
@@ -603,8 +549,8 @@ CHamlib::SetFrequency(const int iFreqkHz)
 {
     iFrequencykHz = iFreqkHz;
     
-	int iFreqHz = (iFreqkHz + RigCaps.iFreqOffset) * 1000;
-	cout << "CHamlib::SetFrequency input: " << iFreqkHz << " offset: " << RigCaps.iFreqOffset << " Hz: " << iFreqHz << endl;
+	int iFreqHz = (iFreqkHz + iFrequencyOffsetkHz) * 1000;
+	cout << "CHamlib::SetFrequency input: " << iFreqkHz << " offset: " << iFrequencyOffsetkHz << " Hz: " << iFreqHz << endl;
 	if (pRig && rig_set_freq(pRig, RIG_VFO_CURR, iFreqHz) == RIG_OK)
 		return TRUE;
 	return FALSE;
@@ -612,6 +558,7 @@ CHamlib::SetFrequency(const int iFreqkHz)
 
 void CHamlib::SetEnableSMeter(const _BOOLEAN bStatus)
 {
+	bSMeterWanted = bStatus;
 	if(bStatus)
 	{
 #ifdef USE_QT_GUI
@@ -620,14 +567,10 @@ void CHamlib::SetEnableSMeter(const _BOOLEAN bStatus)
 			start(); // don't do this except in GUI thread - see CReceiverSettings
 		}
 #endif
-		bEnableSMeter = TRUE;
 	}
 	else
 	{
-		Parameters.Lock();
-		Parameters.SigStrstat.setInvalid();
-		Parameters.Unlock();
-		bEnableSMeter = FALSE;
+		StopSMeter();
 	}
 }
 
@@ -636,34 +579,289 @@ _BOOLEAN CHamlib::GetEnableSMeter()
 	return bEnableSMeter;
 }
 
+void CHamlib::StopSMeter()
+{
+	Parameters.Lock();
+	Parameters.SigStrstat.setInvalid();
+	Parameters.Unlock();
+	bEnableSMeter = FALSE;
+}
+
 void CHamlib::run()
 {
-	while(bEnableSMeter && RigCaps.bSMeterIsSupported && pRig)
+	bEnableSMeter = TRUE;
+	while(bEnableSMeter)
 	{
 		value_t val;
-		switch(rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &val))
+		int r = -1;
+		mutex.Lock();
+		if(pRig)
+			r = rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &val);
+		mutex.Unlock();
+		if(r == 0)
 		{
-		case 0:
 			Parameters.Lock();
 			// Apply any correction
 			Parameters.SigStrstat.addSample(_REAL(val.i) + Parameters.rSigStrengthCorrection);
 			Parameters.Unlock();
-			break;
-		case -RIG_ETIMEOUT:
-			/* If a time-out happened, do not update s-meter anymore (disable it) */
-			RigCaps.bSMeterIsSupported = false;
-			break;
-		}
 #ifdef USE_QT_GUI
-		msleep(400);
+			msleep(400);
 #endif
+		}
+		else
+		{
+			/* If a time-out happened, do not update s-meter anymore (disable it) */
+			bEnableSMeter = FALSE;
+		}
 	}
 }
 
 void
-CHamlib::SetRigModes()
+CHamlib::OpenRig()
 {
-	const map<string,int>& modes = RigCaps.settings[eRigMode].modes;
+	rig_model_t iRig = ModelID[eRigMode];
+	cerr << "CHamlib::OpenRig " << int(eRigMode) << " " << iRig << " " << abs(iRig) << endl;
+	/* Init rig (negative rig numbers indicate modified rigs */
+	pRig = rig_init(abs(iRig));
+	if (pRig == NULL)
+	{
+		cerr << "Initialization of hamlib failed." << endl;
+		return;
+	}
+
+	int ret = CapsHamlibModels[iRig].SetRigConfig(pRig);
+
+	if(ret != RIG_OK)
+	{
+		cerr << "setrigconfig failed" << endl;
+		return;
+	}
+
+	/* Open rig */
+	ret = rig_open(pRig);
+	if (ret != RIG_OK)
+	{
+		/* Fail! */
+		cerr << "rig_open failed" << endl;
+		CloseRig();
+	}
+}
+
+void
+CHamlib::CloseRig()
+{
+	if(bEnableSMeter)
+	{
+		bEnableSMeter = FALSE;
+#ifdef USE_QT_GUI
+		if(wait(1000) == FALSE)
+			cerr << "error terminating rig polling thread" << endl;
+#endif
+	}
+	/* If rig was already open, close it first */
+	if (pRig != NULL)
+	{
+		/* Close everything */
+		mutex.Lock();
+		rig_close(pRig);
+		rig_cleanup(pRig);
+		pRig = NULL;
+		mutex.Unlock();
+	}
+}
+
+void
+CHamlib::SetRigModelForAllModes(rig_model_t model)
+{
+	for(size_t j=DRM; j<=WBFM; j++)
+	{
+		WantedModelID[EDemodulationType(j)] = model;
+	}
+	SetRigModel(eRigMode,  WantedModelID[eRigMode]);
+}
+
+void
+CHamlib::SetRigModel(EDemodulationType eNewMode, rig_model_t model)
+{
+	// close the rig
+	rig_model_t old_model = ModelID[eRigMode];
+
+	if(old_model!=0)
+		CloseRig();
+
+	/* Set value for current selected model ID */
+	eRigMode = eNewMode;
+	ModelID[eRigMode] = model;
+
+	/* if no Rig is wanted we are done */
+	if(model == 0)
+		return;
+
+	CRigMap::iterator m = CapsHamlibModels.find(model);
+	if (m == CapsHamlibModels.end())
+	{
+		cerr << "invalid rig model ID selected: " << model;
+		return;
+	}
+
+	CRigCaps& RigCaps = CapsHamlibModels[ModelID[eRigMode]];
+
+	OpenRig();
+
+	if (pRig == NULL)
+	{
+		cerr << "Open Rig failed" << endl;
+		return;
+	}
+
+	/* Ignore result, some rigs don't have support for this */
+	rig_set_powerstat(pRig, RIG_POWER_ON);
+
+	RigCaps.SetRigModes(pRig, eRigMode);
+	RigCaps.SetRigLevels(pRig, eRigMode);
+	RigCaps.SetRigFuncs(pRig, eRigMode);
+	RigCaps.SetRigParams(pRig, eRigMode);
+
+	if(pRig==NULL)
+		return; // something went wrong
+
+	stringstream offset(RigCaps.get_config("offset"));
+	offset >> iFrequencyOffsetkHz;
+
+	if (iFrequencykHz != 0)
+		  SetFrequency(iFrequencykHz);
+
+	/* Check if s-meter capabilities are available */
+	if(bSMeterWanted && rig_has_get_level(pRig, RIG_LEVEL_STRENGTH))
+		SetEnableSMeter(TRUE);
+}
+
+int
+CRigCaps::mode(EDemodulationType m, const string& key) const
+{
+	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	if(s==settings.end())
+		return -1;
+	map<string,int>::const_iterator k = s->second.modes.find(key);
+	if(k==s->second.modes.end())
+		return -1;
+	return k->second;
+}
+
+void
+CRigCaps::get_level(EDemodulationType m, const string& key, int& val) const
+{
+	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	if(s==settings.end())
+		return;
+	map<string,value_t>::const_iterator k = s->second.levels.find(key);
+	if(k==s->second.levels.end())
+		return;
+	val = k->second.i;
+}
+
+void
+CRigCaps::get_level(EDemodulationType m, const string& key, float& val) const
+{
+	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	if(s==settings.end())
+		return;
+	map<string,value_t>::const_iterator k = s->second.levels.find(key);
+	if(k==s->second.levels.end())
+		return;
+	val = k->second.f;
+}
+
+string
+CRigCaps::function(EDemodulationType m, const string& key) const
+{
+	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	if(s==settings.end())
+		return "";
+	map<string,string>::const_iterator k = s->second.functions.find(key);
+	if(k==s->second.functions.end())
+		return "";
+	return k->second;
+}
+
+string
+CRigCaps::attribute(EDemodulationType m, const string& key) const
+{
+	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	if(s==settings.end())
+		return "";
+	map<string,string>::const_iterator k = s->second.attributes.find(key);
+	if(k==s->second.attributes.end())
+		return "";
+	return k->second;
+}
+
+void
+CRigCaps::get_parameter(EDemodulationType m, const string& key, int& val) const
+{
+	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	if(s==settings.end())
+		return;
+	map<string,value_t>::const_iterator k = s->second.parameters.find(key);
+	if(k==s->second.parameters.end())
+		return;
+	val = k->second.i;
+}
+
+void
+CRigCaps::get_parameter(EDemodulationType m, const string& key, float& val) const
+{
+	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	if(s==settings.end())
+		return;
+	map<string,value_t>::const_iterator k = s->second.parameters.find(key);
+	if(k==s->second.parameters.end())
+		return;
+	val = k->second.f;
+}
+
+void
+CRigCaps::set_mode(EDemodulationType m, const string& key, const string& val)
+{
+	settings[m].modes[key] = atoi(val.c_str());
+}
+
+void
+CRigCaps::set_level(EDemodulationType m, const string& key, const string& val)
+{
+	setting_t setting = rig_parse_level(key.c_str());
+	if (RIG_LEVEL_IS_FLOAT(setting))
+		settings[m].levels[key].f = atof(val.c_str());
+	else
+		settings[m].levels[key].i = atoi(val.c_str());
+}
+
+void
+CRigCaps::set_function(EDemodulationType m, const string& key, const string& val)
+{
+	settings[m].functions[key] = val;
+}
+
+void
+CRigCaps::set_attribute(EDemodulationType m, const string& key, const string& val)
+{
+	settings[m].attributes[key] = val;
+}
+
+void
+CRigCaps::set_parameter(EDemodulationType m, const string& key, const string& val)
+{
+	setting_t setting = rig_parse_parm(key.c_str());
+	if (RIG_LEVEL_IS_FLOAT(setting))
+		settings[m].parameters[key].f = atof(val.c_str());
+	else
+		settings[m].parameters[key].i = atoi(val.c_str());
+}
+
+void
+CRigCaps::SetRigModes(RIG* pRig, EDemodulationType eRigMode)
+{
+	const map<string,int>& modes = settings[eRigMode].modes;
 
 	for (map < string, int >::const_iterator i = modes.begin(); i != modes.end(); i++)
 	{
@@ -678,9 +876,9 @@ CHamlib::SetRigModes()
 }
 
 void
-CHamlib::SetRigLevels()
+CRigCaps::SetRigLevels(RIG* pRig, EDemodulationType eRigMode)
 {
-	const map<string,value_t>& levels = RigCaps.settings[eRigMode].levels;
+	const map<string,value_t>& levels = settings[eRigMode].levels;
 
 	for (map < string, value_t >::const_iterator i = levels.begin(); i != levels.end(); i++)
 	{
@@ -695,9 +893,9 @@ CHamlib::SetRigLevels()
 }
 
 void
-CHamlib::SetRigFuncs()
+CRigCaps::SetRigFuncs(RIG* pRig, EDemodulationType eRigMode)
 {
-	const map<string,string>& functions = RigCaps.settings[eRigMode].functions;
+	const map<string,string>& functions = settings[eRigMode].functions;
 
 	for (map < string, string >::const_iterator i = functions.begin();
 		 i != functions.end(); i++)
@@ -715,9 +913,9 @@ CHamlib::SetRigFuncs()
 }
 
 void
-CHamlib::SetRigParams()
+CRigCaps::SetRigParams(RIG* pRig, EDemodulationType eRigMode)
 {
-	const map<string,value_t>& parameters = RigCaps.settings[eRigMode].parameters;
+	const map<string,value_t>& parameters = settings[eRigMode].parameters;
 
 	for (map < string, value_t >::const_iterator i = parameters.begin(); i != parameters.end(); i++)
 	{
@@ -731,11 +929,9 @@ CHamlib::SetRigParams()
 	}
 }
 
-void
-CHamlib::SetRigConfig()
+int
+CRigCaps::SetRigConfig(RIG* pRig)
 {
-	const map<string,string>& config = RigCaps.config;
-
 	for (map < string, string >::const_iterator i = config.begin();
 		 i != config.end(); i++)
 	{
@@ -744,126 +940,91 @@ CHamlib::SetRigConfig()
 						 i->second.c_str());
 		if (ret != RIG_OK)
 		{
-			rig_cleanup(pRig);
-			pRig = NULL;
-			throw CGenErr(string("Rig set conf failed: ")+i->first+"="+i->second);
+			cerr << "Rig set conf failed: " << i->first << "=" << i->second;
+			return ret;
 		}
+	}
+	return RIG_OK;
+}
+
+void
+CRigCaps::LoadSettings(const CSettings& s, const string& secpref)
+{
+	INISection sec;
+	s.Get(secpref+"config", sec);
+	INISection::iterator i;
+	for(i=sec.begin(); i!=sec.end(); i++)
+		set_config(i->first, i->second);
+	for(size_t j=DRM; j<=WBFM; j++)
+	{
+		EDemodulationType m = EDemodulationType(j);
+		string section = secpref + string(enums[j]) + string("-");
+		sec.clear();
+		s.Get(section+"modes", sec);
+		for(i=sec.begin(); i!=sec.end(); i++)
+			set_mode(m, i->first, i->second);
+		sec.clear();
+		s.Get(section+"levels", sec);
+		for(i=sec.begin(); i!=sec.end(); i++)
+			set_level(m, i->first, i->second);
+		sec.clear();
+		s.Get(section+"functions", sec);
+		for(i=sec.begin(); i!=sec.end(); i++)
+			set_function(m, i->first, i->second);
+		sec.clear();
+		s.Get(section+"parameters", sec);
+		for(i=sec.begin(); i!=sec.end(); i++)
+			set_parameter(m, i->first, i->second);
+		s.Get(section+"attributes", sec);
+		for(i=sec.begin(); i!=sec.end(); i++)
+			set_attribute(m, i->first, i->second);
 	}
 }
 
 void
-CHamlib::SetRigMode(ERigMode eNMod)
+CRigCaps::SaveSettings(CSettings& s, const string& sec) const
 {
-	eRigMode = eNMod;
-	SetRigModel(iHamlibModelID);
+	for(map<string,string>::const_iterator i=config.begin(); i!=config.end(); i++)
+	{
+		s.Put(sec+"config", i->first, i->second);
+	}
+
+	for(map<EDemodulationType,CRigModeSpecificSettings>::const_iterator j=settings.begin();
+		j!=settings.end(); j++)
+	{
+		const CRigModeSpecificSettings& settings = j->second;
+		map<string,int>::const_iterator k;
+		map<string,string>::const_iterator l;
+		map<string,value_t>::const_iterator v;
+		string section = sec + string(enums[j->first]) + string("-");
+
+		for(k=settings.modes.begin(); k!=settings.modes.end(); k++)
+			s.Put(section+"modes", k->first, k->second);
+
+		for(v=settings.levels.begin(); v!=settings.levels.end(); v++)
+		{
+			setting_t setting = rig_parse_level(v->first.c_str());
+			if (RIG_LEVEL_IS_FLOAT(setting))
+				s.Put(section+"levels", v->first, v->second.f);
+			else
+				s.Put(section+"levels", v->first, v->second.i);
+		}
+
+		for(l=settings.functions.begin(); l!=settings.functions.end(); l++)
+			s.Put(section+"functions", l->first, l->second);
+
+		for(v=settings.parameters.begin(); v!=settings.parameters.end(); v++)
+		{
+			setting_t setting = rig_parse_parm(v->first.c_str());
+			if (RIG_PARM_IS_FLOAT(setting))
+				s.Put(section+"parameters", v->first, v->second.f);
+			else
+				s.Put(section+"parameters", v->first, v->second.i);
+		}
+
+		for(l=settings.attributes.begin(); l!=settings.attributes.end(); l++)
+			s.Put(section+"attributes", l->first, l->second);
+	}
 }
 
-void
-CHamlib::SetRigModel(const rig_model_t model)
-{
-
-	bool bSMeterWasEnabled = false;
-	string comPort = "";
-
-	if(iHamlibModelID !=0)
-	{
-		/* save current config for previous model */
-		CapsHamlibModels[iHamlibModelID] = RigCaps;
-
-		/* copy the com port setting across the change */
-		comPort = RigCaps.config["rig_pathname"];
-
-		/* stop the thread if its running */
-		bSMeterWasEnabled = bEnableSMeter;
-		if(bEnableSMeter)
-		{
-			SetEnableSMeter(FALSE);
-#ifdef USE_QT_GUI
-			if(wait(1000) == FALSE)
-			cout << "error terminating rig polling thread" << endl;
-#endif
-		}
-		/* If rig was already open, close it first */
-		if (pRig != NULL)
-		{
-			/* Close everything */
-			rig_close(pRig);
-			rig_cleanup(pRig);
-			pRig = NULL;
-		}
-	}
-
-	/* Set value for current selected model ID */
-	iHamlibModelID = model;
-
-	/* if no Rig is wanted we are done */
-	if (iHamlibModelID == 0)
-		return;
-
-	try
-	{
-		int ret;
-
-		map < rig_model_t, CRigCaps >::const_iterator m = CapsHamlibModels.find(iHamlibModelID);
-		if (m == CapsHamlibModels.end())
-			throw CGenErr("invalid rig model ID selected.");
-
-		/* fetch the config into the working config */
-		RigCaps = m->second;
-
-		if(comPort != "" && RigCaps.hamlib_caps.port_type == RIG_PORT_SERIAL)
-		{
-			/* put the comPort setting back */
-			RigCaps.config["rig_pathname"] = comPort;
-		}
-
-		/* Init rig (negative rig numbers indicate modified rigs */
-		pRig = rig_init(abs(iHamlibModelID));
-		if (pRig == NULL)
-			throw CGenErr("Initialization of hamlib failed.");
-
-		SetRigConfig();
-
-		/* Open rig */
-		ret = rig_open(pRig);
-		if (ret != RIG_OK)
-		{
-			/* Fail! */
-			rig_cleanup(pRig);
-			pRig = NULL;
-
-			throw CGenErr("Rig open failed.");
-		}
-
-		/* Ignore result, some rigs don't have support for this */
-		rig_set_powerstat(pRig, RIG_POWER_ON);
-
-		SetRigModes();
-		SetRigLevels();
-		SetRigFuncs();
-		SetRigParams();
-		if (iFrequencykHz != 0)
-		   SetFrequency(iFrequencykHz);
-
-		/* Check if s-meter capabilities are available */
-		if (pRig != NULL)
-		{
-			/* Check if s-meter can be used. Disable GUI control if not */
-			RigCaps.bSMeterIsSupported = rig_has_get_level(pRig, RIG_LEVEL_STRENGTH);
-			if(RigCaps.bSMeterIsSupported && bSMeterWasEnabled)
-			{
-				SetEnableSMeter(TRUE);
-			}
-		}
-	}
-	catch(CGenErr GenErr)
-	{
-		/* Print error message */
-		cerr << GenErr.strError << endl;
-
-		/* Disable s-meter */
-		RigCaps.bSMeterIsSupported = FALSE;
-		iHamlibModelID = 0;
-	}
-}
 #endif

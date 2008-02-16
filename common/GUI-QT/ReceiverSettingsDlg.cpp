@@ -42,10 +42,12 @@
 #include <qcheckbox.h>
 #include <qslider.h>
 #include <qradiobutton.h>
+#include <qbuttongroup.h>
 #include <qtabwidget.h>
-#include "../GlobalDefinitions.h"
 #include "ReceiverSettingsDlg.h"
+#include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
+#include "../util/Hamlib.h"
 
 #if !defined(HAVE_RIG_PARSE_MODE) && defined(HAVE_LIBHAMLIB)
 extern "C"
@@ -70,8 +72,9 @@ extern "C"
 
 ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, WFlags f) :
-	ReceiverSettingsDlgBase(parent, name, modal, f), DRMReceiver(NRx),Settings(NSettings),
-	loading(true), no_rig(NULL), no_port(NULL), TimerRig(), iWantedrigModel(0)
+	ReceiverSettingsDlgBase(parent, name, modal, f),
+	DRMReceiver(NRx), Settings(NSettings), loading(true),
+	no_rig(NULL), no_port(NULL), last_port(NULL), TimerRig(), iWantedrigModel(0)
 {
 
 	bool bEnableRig = true;
@@ -101,7 +104,6 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	if(bEnableRig == false)
 	{
 		TabWidget->removePage(Rig);
-		TabWidget->removePage(RigAdv);
 	}
 
 	/* Connections */
@@ -138,6 +140,7 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 
 	/* Check boxes */
 	connect(CheckBoxUseGPS, SIGNAL(clicked()), SLOT(OnCheckBoxUseGPS()) );
+	connect(CheckBoxDisplayGPS, SIGNAL(clicked()), SLOT(OnCheckBoxDisplayGPS()) );
 	connect(CheckBoxFlipSpec, SIGNAL(clicked()), this, SLOT(OnCheckFlipSpectrum()));
 	connect(CheckBoxMuteAudio, SIGNAL(clicked()), this, SLOT(OnCheckBoxMuteAudio()));
 	connect(CheckBoxWriteLog, SIGNAL(clicked()), this, SLOT(OnCheckWriteLog()));
@@ -162,6 +165,12 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
+	QButtonGroup* bg = new QButtonGroup(this);
+	bg->hide();
+	bg->insert(RadioButtonAll, 0);
+	bg->insert(RadioButtonPerMode, 1);
+
+
 	setDefaults();
 }
 
@@ -174,6 +183,8 @@ ReceiverSettingsDlg::~ReceiverSettingsDlg()
 
 	if(DRMReceiver.GetIsWriteWaveFile())
 		DRMReceiver.StopWriteWaveFile();
+
+	Settings.Put("Receiver", "rigpermode", RadioButtonPerMode->isChecked());
 }
 
 void ReceiverSettingsDlg::hideEvent(QHideEvent*)
@@ -182,6 +193,7 @@ void ReceiverSettingsDlg::hideEvent(QHideEvent*)
 	ListViewPort->clear();
 	no_rig = NULL;
 	no_port = NULL;
+	last_port = NULL;
 }
 
 /* this sets default values into the dialog and ini file for
@@ -230,6 +242,12 @@ void ReceiverSettingsDlg::setDefaults()
     LineEditGPSPort->setText(QString("%1").arg(port));
 
 	CheckBoxUseGPS->setChecked(Settings.Get("GPS", "usegpsd", FALSE));
+	CheckBoxDisplayGPS->setChecked(Settings.Get("GPS", "showgps", FALSE));
+
+	if(Settings.Get("Receiver", "rigpermode", FALSE))
+		RadioButtonPerMode->setChecked(TRUE);
+	else
+		RadioButtonAll->setChecked(TRUE);
 
 	/* get the defaults into the ini file */
 	Settings.Put("Logfile", "latitude", latitude);
@@ -239,6 +257,7 @@ void ReceiverSettingsDlg::setDefaults()
 	Settings.Put("Logfile", "enablepositiondata", CheckBoxLogLatLng->isChecked());
 	Settings.Put("Logfile", "delay", iLogDelay);
 	Settings.Put("GPS", "usegpsd", CheckBoxUseGPS->isChecked());
+	Settings.Put("GPS", "showgps", CheckBoxDisplayGPS->isChecked());
 	Settings.Put("GPS", "host", host);
 	Settings.Put("GPS", "port", port);
 }
@@ -291,13 +310,16 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	BitmLittleGreenSquare.resize(5, 5);
 	BitmLittleGreenSquare.fill(QColor(0, 255, 0));
 
+// TODO chose one rig for everything or a rig per band
 	map<rig_model_t, CRigCaps> rigs;
 	map<string,QListViewItem*> manufacturers;
 	rig_model_t current = DRMReceiver.GetRigModel();
 
+	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
+
 	DRMReceiver.GetRigList(rigs);
 
-	no_rig = new QListViewItem(new QListViewItem(ListViewRig, "[None]"), "None", "0", "");
+	no_rig = new QListViewItem(new QListViewItem(ListViewRig, tr("[None]")), tr("None"), "0", "");
 	QListViewItem* selected_rig = no_rig;
 	for (map<rig_model_t, CRigCaps>::const_iterator i=rigs.begin(); i!=rigs.end(); i++)
 	{
@@ -305,10 +327,11 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		QListViewItem* man, *model=NULL;
 		rig_model_t iModelID = i->first;
 		const CRigCaps& rig = i->second;
-		if(rig.hamlib_caps.mfg_name==NULL)
-			continue;
 
-		string m = rig.hamlib_caps.mfg_name;
+		string m;
+		if(rig.hamlib_caps.mfg_name == NULL)
+			continue;
+		m = rig.hamlib_caps.mfg_name;
 		map<string,QListViewItem*>::const_iterator mfr = manufacturers.find(m);
 		if(mfr==manufacturers.end())
 		{
@@ -319,7 +342,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 			man = mfr->second;
 		}
 
-		if (rig.bIsModifiedRig)
+		if(iModelID<0)
 		{
 			string model_name = string(rig.hamlib_caps.model_name)+" (DRM)";
 			model = new QListViewItem(
@@ -352,7 +375,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	DRMReceiver.GetComPortList(ports);
 	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
 	{
-		(void)new QListViewItem(ListViewPort, p->first.c_str(), p->second.c_str());
+		last_port = new QListViewItem(ListViewPort, p->first.c_str(), p->second.c_str());
 	}
 
 	checkRig(current);
@@ -373,6 +396,12 @@ void ReceiverSettingsDlg::OnCheckBoxUseGPS()
 	Settings.Put("GPS", "port", LineEditGPSPort->text().toInt());
 	Settings.Put("GPS", "usegpsd", CheckBoxUseGPS->isChecked());
 	emit StartStopGPS(CheckBoxUseGPS->isChecked());
+}
+
+void ReceiverSettingsDlg::OnCheckBoxDisplayGPS()
+{
+	Settings.Put("GPS", "showgps", CheckBoxDisplayGPS->isChecked());
+	emit ShowHideGPS(CheckBoxDisplayGPS->isChecked());
 }
 
 void ReceiverSettingsDlg::OnLineEditLatDegChanged(const QString&)
@@ -623,32 +652,35 @@ void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
 
 void ReceiverSettingsDlg::checkRig(int iID)
 {
+#ifdef HAVE_LIBHAMLIB
 	/* is s-meter enabled ? */
 	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
 
 	if(iID == 0)
 	{
-		ListViewPort->setEnabled(false);
+		ListViewPort->setEnabled(true);
 		ListViewPort->clearSelection();
 		return;
 	}
 
-#ifdef HAVE_LIBHAMLIB
 	CRigCaps caps;
-	DRMReceiver.GetRigCaps(caps);
+	DRMReceiver.GetRigCaps(iID, caps);
 	if(caps.hamlib_caps.port_type == RIG_PORT_SERIAL)
 	{
 		ListViewPort->setEnabled(true);
 		string strPort = DRMReceiver.GetRigComPort();
-		QListViewItem* selected_port = no_port;
-		QListViewItemIterator it( ListViewPort );
-		for ( ; it.current(); ++it )
+		if(strPort!="")
 		{
-			if ( it.current()->text(1).latin1() == strPort.c_str() )
-				selected_port = it.current();
+			last_port = no_port;
+			QListViewItemIterator it( ListViewPort );
+			for ( ; it.current(); ++it )
+			{
+				if ( it.current()->text(1).latin1() == strPort.c_str() )
+					last_port = it.current();
+			}
+			ListViewPort->ensureItemVisible(last_port);
+			ListViewPort->setSelected(last_port, true);
 		}
-		ListViewPort->ensureItemVisible(selected_port);
-		ListViewPort->setSelected(selected_port, true);
 	}
 	else
 	{
@@ -665,9 +697,42 @@ void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
 
 #ifdef HAVE_LIBHAMLIB
 	iWantedrigModel = item->text(1).toInt();
+	CRigCaps caps;
+	DRMReceiver.GetRigCaps(iWantedrigModel, caps);
+	if(caps.hamlib_caps.port_type == RIG_PORT_SERIAL)
+	{
+		ListViewPort->setEnabled(true);
+		if(last_port == NULL || last_port == no_port)
+			return;
+		/*
+		string strPort = DRMReceiver.GetRigComPort();
+		if(last_port == NULL || last_port == no_port)
+		{
+			last_port = ListViewPort->firstChild();
+		}
+		if(strPort=="")
+		{
+			DRMReceiver.SetRigComPort(last_port->text(1).latin1());
+		}
+		else
+		{
+			QListViewItemIterator it( ListViewPort );
+			for ( ; it.current(); ++it )
+			{
+				if ( it.current()->text(1).latin1() == strPort.c_str() )
+					last_port = it.current();
+			}
+		}
+		*/
+		DRMReceiver.SetRigComPort(last_port->text(1).latin1());
+		ListViewPort->ensureItemVisible(last_port);
+		ListViewPort->setSelected(last_port, true);
+	}
 
-	DRMReceiver.SetRigModel(iWantedrigModel);
-cerr << "SetRig " << iWantedrigModel << endl;
+	if(RadioButtonAll->isChecked())
+		DRMReceiver.SetRigModelForAllModes(iWantedrigModel);
+	else
+		DRMReceiver.SetRigModel(iWantedrigModel);
 
 	TimerRig.start(500);
 #endif
@@ -701,33 +766,10 @@ void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)
 	if(loading)
 		return;
 	string s = item->text(1).latin1();
+	last_port = item;
 #ifdef HAVE_LIBHAMLIB
 	DRMReceiver.SetRigComPort(s);
 #endif
-}
-
-void ReceiverSettingsDlg::OnConfigChanged(int row, int col)
-{
-	/*
-		QListViewItemIterator it( ListViewRigConf );
-		for ( ; it.current(); ++it )
-		{
-			DRMReceiver.GetHamlib()->config[it.current()->text(0).latin1()] = it.current()->text(1).latin1();
-		}
-		*/
-	(void)row;
-	(void)col; /* TODO */
-}
-
-void ReceiverSettingsDlg::OnRigOffsetChanged(QString text)
-{
-#ifdef HAVE_LIBHAMLIB
-	DRMReceiver.SetRigFreqOffset(text.toInt());
-#endif
-}
-
-void ReceiverSettingsDlg::OnRigSettingsChanged(QString text)
-{
 }
 
 void ReceiverSettingsDlg::AddWhatsThisHelp()

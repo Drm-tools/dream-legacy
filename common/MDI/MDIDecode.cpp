@@ -184,9 +184,10 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 		}
     }
 
-	if (TagPacketDecoder.TagItemDecoderRxDemodMode.IsReady() &&
-		TagPacketDecoder.TagItemDecoderAMAudio.IsReady() &&
-		TagPacketDecoder.TagItemDecoderRxDemodMode.eMode == RM_AM)
+	if (TagPacketDecoder.TagItemDecoderRxDemodMode.IsReady()
+		&& TagPacketDecoder.TagItemDecoderAMAudio.IsReady()
+		&& TagPacketDecoder.TagItemDecoderRxDemodMode.eMode != DRM
+		&& TagPacketDecoder.TagItemDecoderRxDemodMode.eMode != NONE)
 	{
 		CVector<_BINARY>& vecbiAMAudio = TagPacketDecoder.TagItemDecoderAMAudio.vecbidata;
 		CVector<_BINARY>* pvecOutputData = vecpvecOutputData[0];

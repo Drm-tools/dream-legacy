@@ -164,12 +164,10 @@ main(int argc, char **argv)
 #ifdef HAVE_LIBHAMLIB
 			if(pHamlib) /* don't initialise hamlib if RSCI input is requested */
 			{
-				bool bEnableSMeter = pHamlib->GetEnableSMeter();
-				pHamlib->SetEnableSMeter(FALSE);
+				pHamlib->StopSMeter();
 				if (pHamlib->wait(1000) == FALSE)
 					cout << "error terminating rig polling thread" << endl;
 				pHamlib->SaveSettings(Settings);
-				Settings.Put("Hamlib", "ensmeter", bEnableSMeter);
 			}
 #endif
 			DRMReceiver.SaveSettings(Settings);

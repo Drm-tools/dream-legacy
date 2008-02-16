@@ -56,9 +56,6 @@ class CDRMReceiver;
 	/* CT: Channel Type */
 	enum EChanType { CT_MSC, CT_SDC, CT_FAC };
 
-	enum EDemodType {DT_AM, DT_LSB, DT_USB, DT_CW, DT_NBFM, DT_WBFM, DT_SIZE};
-
-
 enum ETypeIntFreq
 { FLINEAR, FDFTFILTER, FWIENER };
 enum ETypeIntTime
@@ -68,9 +65,6 @@ enum ETypeSNREst
 enum ETypeRxStatus
 { NOT_PRESENT, CRC_ERROR, DATA_ERROR, RX_OK };
 	/* RM: Receiver mode (analog or digital demodulation) */
-
-enum ERecMode
-{ RM_DRM, RM_AM, RM_NONE };
 
 	/* Acquisition state of receiver */
 enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
@@ -910,8 +904,7 @@ class CParameter
 
 	/* Misc. Functions ------------------------------------------------------ */
 	void SetReceiver(CDRMReceiver* p);
-	ERecMode GetReceiverMode();
-	EDemodType GetAnalogDemodType();
+	EDemodulationType GetReceiverMode();
 	void GenerateRandomSerialNumber();
 	void GenerateReceiverID();
 	void ResetServicesStreams();

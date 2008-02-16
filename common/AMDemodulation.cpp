@@ -102,7 +102,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	   signal */
 	switch (eDemodType)
 	{
-	case DT_AM:
+	case AM:
 		/* Use envelope of signal and apply low-pass filter */
 		rvecInpTmp = FftFilt(cvecBAMAfterDem, Abs(cvecHilbert),
 			rvecZAMAfterDem, FftPlansHilFilt);
@@ -111,14 +111,14 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		rvecInpTmp = Filter(rvecBDC, rvecADC, rvecInpTmp, rvecZAM);
 		break;
 
-	case DT_LSB:
-	case DT_USB:
-	case DT_CW:
+	case LSB:
+	case USB:
+	case CW:
 		/* Make signal real and compensate for removed spectrum part */
 		rvecInpTmp = Real(cvecHilbert) * (CReal) 2.0;
 		break;
 
-	case DT_NBFM:
+	case NBFM:
 		/* Get phase of complex signal and apply differentiation */
 		for (i = 0; i < iInputBlockSize; i++)
 		{
@@ -136,8 +136,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		rvecInpTmp = Filter(rvecBFM, rvecAFM, rvecInpTmp, rvecZFM);
 		break;
 
-	case DT_WBFM:
-	case DT_SIZE:
+	case WBFM: case DRM: case NONE:
 		break;
 	}
 
@@ -260,7 +259,7 @@ void CAMDemodulation::SetNormCurMixFreqOffs(const CReal rNewNormCurMixFreqOffs)
 {
 	/* In case CW demodulation is used, set mixer frequency so that the center
 	   of the band-pass filter is at the selected frequency */
-	if (eDemodType == DT_CW)
+	if (eDemodType == CW)
 	{
 		rNormCurMixFreqOffs =
 			rNewNormCurMixFreqOffs - FREQ_OFFS_CW_DEMOD / SOUNDCRD_SAMPLE_RATE;
@@ -292,31 +291,30 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW)
 	const CReal rSSBMargin = SSB_DC_MARGIN_HZ / SOUNDCRD_SAMPLE_RATE;
 	switch (eDemodType)
 	{
-	case DT_AM:
-	case DT_NBFM:
+	case AM:
+	case NBFM:
 		/* No offset */
 		rBPNormFreqOffset = (CReal) 0.0;
 		break;
 
-	case DT_LSB:
+	case LSB:
 		/* Shift filter to the left side of the carrier. Add a small offset
 		  to the filter bandwidht because of the filter slope */
 		rBPNormFreqOffset = - rBPNormBW / 2 - rSSBMargin;
 		break;
 
-	case DT_USB:
+	case USB:
 		/* Shift filter to the right side of the carrier. Add a small offset
 		  to the filter bandwidht because of the filter slope */
 		rBPNormFreqOffset = rBPNormBW / 2 + rSSBMargin;
 		break;
 
-	case DT_CW:
+	case CW:
 		/* Shift filter to the right side of the carrier according to the
 		   special CW demodulation shift */
 		rBPNormFreqOffset = FREQ_OFFS_CW_DEMOD / SOUNDCRD_SAMPLE_RATE;
 		break;
-	case DT_WBFM:
-	case DT_SIZE:
+	case WBFM: case DRM: case NONE:
 		break;
 	}
 
@@ -357,7 +355,7 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW)
 
 /* Interface functions ------------------------------------------------------ */
 void
-CAMDemodulation::SetDemodType(const EDemodType eNewType)
+CAMDemodulation::SetDemodType(const EDemodulationType eNewType)
 {
 	/* Lock resources */
 	Lock(); 
@@ -398,7 +396,7 @@ CAMDemodulation::GetFilterBWHz()
 }
 
 int
-CAMDemodulation::GetFilterBWHz(const EDemodType eType)
+CAMDemodulation::GetFilterBWHz(const EDemodulationType eType)
 {
 	Lock(); 
 	int v = iFilterBWHz[eType];

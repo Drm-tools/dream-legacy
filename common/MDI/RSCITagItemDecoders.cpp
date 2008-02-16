@@ -372,23 +372,18 @@ void CTagItemDecoderCdmo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		return;
 
 	if(s == "drm_")
-		pDRMReceiver->SetReceiverMode(RM_DRM);
-	else
-	{
-		pDRMReceiver->SetReceiverMode(RM_AM); // AM means "analogue" not "amplitude"
-
-		if(s == "am__")
-			pDRMReceiver->SetAnalogDemodType(DT_AM);
-		else if (s == "lsb_")
-			pDRMReceiver->SetAnalogDemodType(DT_LSB);
-		else if (s == "usb_")
-			pDRMReceiver->SetAnalogDemodType(DT_USB);
-		else if (s == "wbfm")
-			pDRMReceiver->SetAnalogDemodType(DT_WBFM);
-		else if (s == "nbfm")
-			pDRMReceiver->SetAnalogDemodType(DT_NBFM);
+		pDRMReceiver->SetReceiverMode(DRM);
+	if(s == "am__")
+		pDRMReceiver->SetReceiverMode(AM);
+	else if (s == "lsb_")
+		pDRMReceiver->SetReceiverMode(LSB);
+	else if (s == "usb_")
+		pDRMReceiver->SetReceiverMode(USB);
+	else if (s == "wbfm")
+		pDRMReceiver->SetReceiverMode(WBFM);
+	else if (s == "nbfm")
+		pDRMReceiver->SetReceiverMode(NBFM);
 		// synchronous AM?
-	}
 
 }
 

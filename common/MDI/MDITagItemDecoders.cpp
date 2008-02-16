@@ -232,11 +232,19 @@ void CTagItemDecoderRxDemodMode::DecodeTag(CVector<_BINARY>& vecbiTag, int iLen)
 	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 		strMode += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
 	if (strMode == "drm_")
-		eMode = RM_DRM;
+		eMode = DRM;
 	else if (strMode == "am__")
-		eMode = RM_AM;
+		eMode = AM;
+	else if (strMode == "usb_")
+		eMode = USB;
+	else if (strMode == "lsb_")
+		eMode = LSB;
+	else if (strMode == "nbfm")
+		eMode = NBFM;
+	else if (strMode == "wbfm")
+		eMode = WBFM;
 	else
-		eMode = RM_AM;
+		eMode = AM;
 
 	SetReady(TRUE);
 }

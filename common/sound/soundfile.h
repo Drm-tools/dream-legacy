@@ -42,7 +42,7 @@ public:
 	CSoundFileIn();
 	virtual ~CSoundFileIn();
 
-	virtual void		Enumerate(vector<string>&) { }
+	virtual void		Enumerate(vector<string>&);
 	virtual void		SetDev(int) {}
 	virtual int			GetDev() { return -1; }
 	virtual void		SetFileName(const string& strFileName);

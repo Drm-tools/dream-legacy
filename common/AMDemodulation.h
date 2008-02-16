@@ -29,6 +29,7 @@
 #if !defined(AMDEMOD_H__3B0BEVJBN8LKH2934BGF4344_BB27912__INCLUDED_)
 #define AMDEMOD_H__3B0BEVJBN8LKH2934BGF4344_BB27912__INCLUDED_
 
+#include "GlobalDefinitions.h"
 #include "util/ReceiverModul.h"
 #include "matlib/Matlib.h"
 #include "resample/Resample.h"
@@ -263,11 +264,11 @@ public:
 	_BOOLEAN GetFrameBoundary() {return iFreeSymbolCounter==0;}
 
 	void SetFilterBWHz(const int iBw);
-	int GetFilterBWHz(const EDemodType eType);
+	int GetFilterBWHz(const EDemodulationType eType);
 	int GetFilterBWHz();
 
-	void SetDemodType(EDemodType);
-	EDemodType GetDemodType() { return eDemodType; }
+	void SetDemodType(EDemodulationType);
+	EDemodulationType GetDemodType() { return eDemodType; }
 
 protected:
 	void SetBPFilter(const CReal rNewBPNormBW);
@@ -285,7 +286,7 @@ protected:
 	int							iHilFiltBlLen;
 	CFftPlans					FftPlansHilFilt;
 
-	int							iFilterBWHz[DT_SIZE];
+	int							iFilterBWHz[NONE];
 	CReal						rBPNormBW;
 	CReal						rNormCurMixFreqOffs;
 	CReal						rBPNormCentOffsTot;
@@ -312,7 +313,7 @@ protected:
 	CAGC						AGC;
 	CNoiseReduction				NoiseReduction;
 	ENoiRedType					NoiRedType;
-	EDemodType 					eDemodType;
+	EDemodulationType 			eDemodType;
 
 	/* OPH: counter to count symbols within a frame in order to generate */
 	/* RSCI output */

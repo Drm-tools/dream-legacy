@@ -117,10 +117,10 @@ public:
 class CTagItemDecoderRxDemodMode : public CTagItemDecoder
 {
 public:
-		CTagItemDecoderRxDemodMode() : eMode(RM_DRM){}
+		CTagItemDecoderRxDemodMode() : eMode(DRM){}
 		virtual string GetTagName(void);
 		virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
-		ERecMode eMode;
+		EDemodulationType eMode;
 };
 
 class CTagItemDecoderAMAudio : public CTagItemDecoder

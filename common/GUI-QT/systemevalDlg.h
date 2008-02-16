@@ -125,4 +125,5 @@ public slots:
 		int iCol);
 	void OnLineEditFrequencyChanged(const QString& str);
 	void EnableGPS(bool);
+	void ShowGPS(bool);
 };

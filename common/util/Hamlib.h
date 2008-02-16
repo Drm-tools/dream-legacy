@@ -34,6 +34,7 @@
 
 #ifdef HAVE_LIBHAMLIB
 
+#include <string>
 #include <map>
 
 #include <hamlib/rig.h>
@@ -42,17 +43,15 @@ class CParameter;
 class CSettings;
 
 enum ESMeterState {SS_VALID, SS_NOTVALID, SS_TIMEOUT};
-enum EMight { C_CAN, C_MUST, C_CANT };
-enum ERigMode { DRM, AM, USB, LSB, CW, NBFM, WBFM };
 
 struct CRigModeSpecificSettings
 {
 	CRigModeSpecificSettings():modes(),levels(),functions(),parameters(),
-	eOnboardDemod(C_CANT), eInChanSel(CS_MIX_CHAN), audioInput(-1)
+	attributes()
 	{}
 	CRigModeSpecificSettings(const CRigModeSpecificSettings& c):
 	modes(c.modes),levels(c.levels),functions(c.functions),parameters(c.parameters),
-	eOnboardDemod(c.eOnboardDemod), eInChanSel(c.eInChanSel), audioInput(c.audioInput)
+	attributes(c.attributes)
 	{}
 	CRigModeSpecificSettings& operator=(const CRigModeSpecificSettings& c)
 	{
@@ -60,56 +59,63 @@ struct CRigModeSpecificSettings
 		levels = c.levels;
 		functions = c.functions;
 		parameters = c.parameters;
-		eOnboardDemod = c.eOnboardDemod;
-		eInChanSel = c.eInChanSel;
-		audioInput = c.audioInput;
+		attributes = c.attributes;
 		return *this;
 	}
 	map<string,int> modes;
 	map<string,value_t> levels;
 	map<string,string> functions;
 	map<string,value_t> parameters;
-	EMight			eOnboardDemod;
-	EInChanSel		eInChanSel;
-	int				audioInput;
+	map<string,string> attributes;
 };
 
 class CRigCaps
 {
 public:
-	CRigCaps() : hamlib_caps(),
-	bIsModifiedRig(false),
-	bHamlibDoesAudio(false),
-	bSMeterIsSupported(false),
-	iFreqOffset(0),settings()
-	{}
-	CRigCaps(const CRigCaps& nSDRC) :
-	hamlib_caps(nSDRC.hamlib_caps),
-	bIsModifiedRig(nSDRC.bIsModifiedRig),
-	bHamlibDoesAudio(nSDRC.bHamlibDoesAudio),
-	bSMeterIsSupported(nSDRC.bSMeterIsSupported),
-	iFreqOffset(nSDRC.iFreqOffset),settings(nSDRC.settings)
-	{}
 
-	CRigCaps& operator=(const CRigCaps& cNew)
+	CRigCaps() : settings(), config(), hamlib_caps()
+	{ }
+
+	string get_config(const string& key) const
 	{
-		hamlib_caps = cNew.hamlib_caps;
-		bIsModifiedRig = cNew.bIsModifiedRig;
-		bHamlibDoesAudio = cNew.bHamlibDoesAudio;
-		bSMeterIsSupported = cNew.bSMeterIsSupported;
-		iFreqOffset = cNew.iFreqOffset;
-		settings = cNew.settings;
-		return *this;
+		map<string,string>::const_iterator s = config.find(key);
+		if(s==config.end())
+			return string("");
+		return s->second;
 	}
+	void	set_config(const string& key, const string& val) { config[key] = val; }
+	int		mode(EDemodulationType m, const string& key) const;
+	void	get_level(EDemodulationType m, const string& key, int& val) const;
+	void	get_level(EDemodulationType m, const string& key, float& val) const;
+	string	function(EDemodulationType m, const string& key) const;
+	void	get_parameter(EDemodulationType m, const string& key, int& val) const;
+	void	get_parameter(EDemodulationType m, const string& key, float& val) const;
+	string	attribute(EDemodulationType m, const string& key) const;
 
-	rig_caps		hamlib_caps;
-	bool			bIsModifiedRig;
-	bool			bHamlibDoesAudio;
-	bool			bSMeterIsSupported;
-	int				iFreqOffset;
-	map<ERigMode,CRigModeSpecificSettings> settings;
+	void	set_mode(EDemodulationType m, const string& key, const string& val);
+	void	set_level(EDemodulationType m, const string& key, const string&al);
+	void	set_function(EDemodulationType m, const string& key, const string& val);
+	void	set_parameter(EDemodulationType m, const string& key, const string& val);
+	void	set_attribute(EDemodulationType m, const string& key, const string& val);
+
+	void	SetRigModes(RIG*, EDemodulationType);
+	void	SetRigLevels(RIG*, EDemodulationType);
+	void	SetRigFuncs(RIG*, EDemodulationType);
+	void	SetRigParams(RIG*, EDemodulationType);
+	int		SetRigConfig(RIG*);
+
+	void	LoadSettings(const CSettings&, const string& sec);
+	void	SaveSettings(CSettings&, const string& sec) const;
+
+protected:
+
+	map<EDemodulationType,CRigModeSpecificSettings> settings;
 	map<string,string> config;
+public:
+	rig_caps hamlib_caps;
 };
+
+typedef map<rig_model_t,CRigCaps> CRigMap;
 
 /* Hamlib interface --------------------------------------------------------- */
 class CHamlib
@@ -123,53 +129,75 @@ public:
 
 	virtual void	run();
 
-	void			SetFreqOffset(const int iFreqOffset);
 	_BOOLEAN		SetFrequency(const int iFreqkHz);
-	void 			SetEnableSMeter(const _BOOLEAN bStatus);
-	_BOOLEAN		GetEnableSMeter();
+	void 			SetEnableSMeter(const _BOOLEAN bStatus); // sets/clears wanted flag and starts/stops
+	_BOOLEAN		GetEnableSMeter(); // returns wanted flag
+	void 			StopSMeter(); // stops (clears run flag) but leaves wanted flag alone
 
 	/* backend selection */
-	void			GetRigList(map<rig_model_t,CRigCaps>&);
-	void			SetRigModel(const rig_model_t model);
-	rig_model_t		GetRigModel() const {return iHamlibModelID;}
-	rig_model_t		GetWantedRigModel() const {return iWantedHamlibModelID;}
-	void			SetRigMode(ERigMode eNMod);
-	ERigMode		GetRigMode() const {return eRigMode;}
+	void			GetRigList(CRigMap&);
+	void			SetRigModelForAllModes(rig_model_t model);
+	void			SetRigModel(EDemodulationType eNMod, rig_model_t model);
+	rig_model_t		GetRigModel() const
+					{
+						map<EDemodulationType,rig_model_t>::const_iterator e = ModelID.find(eRigMode);
+						if(e!=ModelID.end())
+							return e->second;
+						return 0;
+					}
+	rig_model_t		GetWantedRigModel() const { return GetWantedRigModel(eRigMode); }
+	rig_model_t		GetWantedRigModel(EDemodulationType mode) const
+					{
+						map<EDemodulationType,rig_model_t>::const_iterator e = WantedModelID.find(mode);
+						if(e!=WantedModelID.end())
+							return e->second;
+						return 0;
+					}
+	EDemodulationType		GetRigMode() const {return eRigMode;}
 
 	/* com port selection */
-	void			GetPortList(map<string,string>&);
+	void			GetPortList(map<string,string>&) const;
 	void			SetComPort(const string&);
 	string			GetComPort() const;
-
 	string			GetInfo() const;
-	string			GetConfig(const string& key);
-	void			GetRigCaps(CRigCaps& caps) { caps = RigCaps; }
-
-	void			RigSpecialParameters(rig_model_t id, const string& sSet, int iFrOff, const string& sModSet);
+	void			GetRigCaps(rig_model_t model, CRigCaps& caps) const
+					{
+						CRigMap::const_iterator r = CapsHamlibModels.find(model);
+						if(r!=CapsHamlibModels.end())
+							caps = r->second;
+					}
+	void			GetRigCaps(CRigCaps& caps) const
+					{
+						map<EDemodulationType,rig_model_t>::const_iterator e = ModelID.find(eRigMode);
+						if(e!=ModelID.end())
+							GetRigCaps(e->second, caps);
+					}
+	void			set_attribute(EDemodulationType m, const string& key, const string& val)
+					{
+						CapsHamlibModels[ModelID[m]].set_attribute(m, key, val);
+					}
 	void			LoadSettings(CSettings& s);
-	void			SaveSettings(CSettings& s);
+	void			SaveSettings(CSettings& s) const;
 
 protected:
-	static int			PrintHamlibModelList(const struct rig_caps* caps, void* data);
-	static int			token(const struct confparams *, rig_ptr_t);
-	static int			level(RIG*, const struct confparams *, rig_ptr_t);
-	static int			parm(RIG*, const struct confparams *, rig_ptr_t);
-	void				SetRigModes();
-	void				SetRigLevels();
-	void				SetRigFuncs();
-	void				SetRigParams();
-	void				SetRigConfig();
 
-	CParameter&			Parameters;
-	RIG*				pRig;
-	_BOOLEAN			bEnableSMeter;
-	rig_model_t			iHamlibModelID;
-	rig_model_t			iWantedHamlibModelID;
-	ERigMode			eRigMode;
-	map<rig_model_t,CRigCaps>
-						CapsHamlibModels;
-	CRigCaps			RigCaps;
-	int                 iFrequencykHz;
+	static int		PrintHamlibModelList(const rig_caps* caps, void* data);
+	static int		token(const struct confparams *, rig_ptr_t);
+	static int		level(RIG*, const struct confparams *, rig_ptr_t);
+	static int		parm(RIG*, const struct confparams *, rig_ptr_t);
+	void			OpenRig();
+	void			CloseRig();
+
+	CMutex			mutex;
+	CParameter&		Parameters;
+	RIG*			pRig;
+	_BOOLEAN		bSMeterWanted, bEnableSMeter;
+	map<EDemodulationType,rig_model_t>
+					ModelID, WantedModelID;
+	EDemodulationType		eRigMode;
+	CRigMap			 CapsHamlibModels;
+	int             iFrequencykHz;
+	int             iFrequencyOffsetkHz;
 };
 #  else
 struct CHamlib

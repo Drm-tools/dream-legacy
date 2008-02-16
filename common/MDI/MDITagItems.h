@@ -260,7 +260,7 @@ protected:
 class CTagItemGeneratorRxDemodMode : public CTagItemGeneratorWithProfiles /* rdmo */
 {
 public:
-	void GenTag(ERecMode eMode,  EDemodType eType); /* ERecMode defined in DRMReceiver.h but can't include it! */
+	void GenTag(EDemodulationType eMode);
 protected:
 	virtual string GetTagName();
 	virtual string GetProfiles(); // Return a string containing the set of profiles for this tag

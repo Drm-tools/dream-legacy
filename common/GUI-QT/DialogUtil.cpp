@@ -31,6 +31,9 @@
 #endif
 #include "DialogUtil.h"
 #include "../Version.h"
+#ifdef HAVE_LIBHAMLIB
+# include <../util/Hamlib.h>
+#endif
 #ifdef USE_ALSA
 # include <alsa/version.h>
 #endif

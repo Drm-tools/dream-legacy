@@ -471,7 +471,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		/* Enable s-meter flag ---------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-T", "--ensmeter") == TRUE)
 		{
-			Put("Hamlib", "ensmeter", (int)rArgument);
+			Put("Hamlib", "smeter", (int)rArgument);
 			continue;
 		}
 

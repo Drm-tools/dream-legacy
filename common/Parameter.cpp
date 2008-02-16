@@ -333,7 +333,7 @@ CParameter::SetReceiver(CDRMReceiver* p)
 void CParameter::ResetServicesStreams()
 {
 	int i;
-	if(GetReceiverMode() == RM_DRM)
+	if(GetReceiverMode() == DRM)
 	{
 
 		/* Store informations about last services selected
@@ -1044,16 +1044,10 @@ void CRxStatus::SetStatus(const ETypeRxStatus OK)
 		iNumOK++;
 }
 
-ERecMode
+EDemodulationType
 CParameter::GetReceiverMode()
 {
-	return (pDRMRec)?pDRMRec->GetReceiverMode():RM_DRM;
-}
-
-EDemodType
-CParameter::GetAnalogDemodType()
-{
-	return (pDRMRec)?pDRMRec->GetAnalogDemodType():DT_AM;
+	return (pDRMRec)?pDRMRec->GetReceiverMode():DRM;
 }
 
 void CParameter::GenerateReceiverID()

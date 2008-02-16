@@ -61,6 +61,7 @@ protected:
 	bool			loading;
 	QListViewItem*  no_rig;
 	QListViewItem*	no_port;
+	QListViewItem*	last_port;
 	QTimer			TimerRig;
 	int				iWantedrigModel;
 
@@ -70,6 +71,7 @@ signals:
 	void LogSigStr(bool);
 	void SetLogStartDelay(long);
 	void StartStopGPS(bool);
+	void ShowHideGPS(bool);
 
 public slots:
 	void OnTimerRig();
@@ -81,6 +83,7 @@ public slots:
 	void OnComboBoxEWHighlighted(int iID);
 	void SetLatLng();
 	void OnCheckBoxUseGPS();
+	void OnCheckBoxDisplayGPS();
 	void OnRadioTimeLinear();
 	void OnRadioTimeWiener();
 	void OnRadioFrequencyLinear();
@@ -103,7 +106,4 @@ public slots:
 	void OnCheckEnableSMeterToggled(bool);
 	void OnRigSelected(QListViewItem* item);
 	void OnComPortSelected(QListViewItem* item);
-	void OnConfigChanged(int row, int col);
-	void OnRigOffsetChanged(QString text);
-	void OnRigSettingsChanged(QString text);
 };

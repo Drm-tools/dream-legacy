@@ -763,41 +763,23 @@ CTagItemGeneratorProfile::GetProfiles()
 }
 
 void
-CTagItemGeneratorRxDemodMode::GenTag(ERecMode eMode, EDemodType eType)	// rdmo
+CTagItemGeneratorRxDemodMode::GenTag(EDemodulationType eMode)	// rdmo
 {
 	PrepareTag(4 * SIZEOF__BYTE);
 	string s;
-	if (eMode==RM_DRM)
-		s="drm_";
-	else
+	switch (eMode)
 	{
-		switch (eType)
-		{
-		case DT_AM:
-			s="am__";
-			break;
-		case DT_USB:
-			s="usb_";
-			break;
-		case DT_LSB:
-			s="lsb_";
-			break;
-		case DT_NBFM:
-			s="nbfm";
-			break;
-		case DT_WBFM:
-			s="wbfm";
-			break;
-		default:
-			s="    ";
-			break;
-		}
+	case DRM: s="drm_"; break;
+	case AM: s="am__"; break;
+	case USB: s="usb_"; break;
+	case LSB: s="lsb_"; break;
+	case NBFM: s="nbfm"; break;
+	case WBFM: s="wbfm"; break;
+	default: s="    "; break;
 	}
 
 	for (int i=0; i<4; i++)
 		Enqueue((uint32_t) s[i], SIZEOF__BYTE);
-
-
 }
 
 string

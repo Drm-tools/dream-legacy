@@ -36,9 +36,6 @@
 #include "util/ReceiverModul_impl.h"
 #include "MDI/MDIRSCI.h" /* OPH: need this near the top so winsock2 is included before winsock */
 #include "MDI/MDIDecode.h"
-#ifdef HAVE_LIBHAMLIB
-#include "util/Hamlib.h"
-#endif
 #include "DataIO.h"
 #include "OFDM.h"
 #include "DRMSignalIO.h"
@@ -85,17 +82,41 @@
 /* Classes ********************************************************************/
 class CSettings;
 class CHamlib;
+class CRigCaps;
 
-class CRequestStateChange
+enum EInpTy { SoundCard, Dummy, Shm, File };
+
+class CSoundInProxy : public CSelectionInterface
 {
 public:
-	CRequestStateChange():pending(false),new_value(0) {}
-	void request(const int val) { pending=true; new_value=val; }
-	bool is_pending() { return pending; }
-	int value() { pending=false; return new_value; }
+	CSoundInProxy();
+	virtual 			~CSoundInProxy();
+	virtual void		Enumerate(vector<string>&);
+	virtual int			GetDev();
+	virtual void		SetDev(int iNewDev);
+	void				SetMode(EDemodulationType);
+	void				SetHamlib(CHamlib*);
+	void				SetRigModelForAllModes(int);
+	void				SetRigModel(int);
+	void				SetReadPCMFromFile(const string strNFN);
+	void				Update();
+
 protected:
-	bool pending;
-	int  new_value;
+
+	EInpTy				pcmInput, pcmWantedInput;
+	int					iWantedSoundDev;
+	int					iWantedRig;
+	EDemodulationType	eWantedRigMode;
+	_BOOLEAN			bRigUpdateForAllModes;
+	string				filename;
+public:
+	CSoundInInterface*	pSoundInInterface;
+	_BOOLEAN			bRigUpdateNeeded;
+	CHamlib*			pHamlib;
+	CDRMReceiver*		pDrmRec;
+	CMutex				mutex;
+	EInChanSel			eWantedChanSel;
+	_BOOLEAN			bOnBoardDemod, bOnBoardDemodWanted;
 };
 
 class CSplitFAC : public CSplitModul<_BINARY>
@@ -152,14 +173,14 @@ public:
 	void					Stop();
 	void					RequestNewAcquisition() { bRestartFlag = TRUE; }
 	EAcqStat				GetAcquiState() {return Parameters.eAcquiState;}
-	ERecMode				GetReceiverMode() {return eReceiverMode;}
-	void					SetReceiverMode(ERecMode eNewMode);
+	EDemodulationType		GetReceiverMode() {return eReceiverMode;}
+	void					SetReceiverMode(EDemodulationType eNewMode);
 	void					SetInitResOff(_REAL rNRO)
 								{rInitResampleOffset = rNRO;}
 
 	CReal					GetAnalogCurMixFreqOffs() const { return AMDemodulation.GetCurMixFreqOffs(); }
-	void					SetAnalogDemodType(EDemodType);
-	EDemodType				GetAnalogDemodType() { return AMDemodulation.GetDemodType(); }
+	void					SetAnalogDemodType(EDemodulationType);
+	EDemodulationType		GetAnalogDemodType() { return AMDemodulation.GetDemodType(); }
 	int						GetAnalogFilterBWHz();
 	void					SetAnalogFilterBWHz(int);
 
@@ -189,7 +210,6 @@ public:
 	void					SetRSIRecording(_BOOLEAN, const char);
 	void					SetHamlib(CHamlib*);
 
-	void					UpdateSoundIn();
 	void					SetReadPCMFromFile(const string strNFN);
 
 	/* Channel Estimation */
@@ -263,7 +283,7 @@ public:
 
 
 	/* Get pointer to internal modules */
-	CSelectionInterface*	GetSoundInInterface() {return pSoundInInterface;}
+	CSelectionInterface*	GetSoundInInterface() {return &SoundInProxy;}
 	CSelectionInterface*	GetSoundOutInterface() {return pSoundOutInterface;}
 	CUtilizeFACData*		GetFAC() {return &UtilizeFACData;}
 	CUtilizeSDCData*		GetSDC() {return &UtilizeSDCData;}
@@ -278,17 +298,18 @@ public:
 	CUpstreamDI*			GetRSIIn() {return &upstreamRSCI;}
 	CDownstreamDI*			GetRSIOut() {return &downstreamRSCI;}
 	CChannelEstimation*		GetChannelEstimation() {return &ChannelEstimation;}
-#ifdef HAVE_LIBHAMLIB
+
+	void					SetRigModelForAllModes(int);
 	void					SetRigModel(int);
-	int						GetRigModel();
-	void					GetRigList(map<int, CRigCaps>& rigs);
-	void					GetRigCaps(CRigCaps& caps);
-	void					GetComPortList(map<string,string>& ports);
-	string					GetRigComPort();
+	int						GetRigModel() const;
+	void					GetRigList(map<int, CRigCaps>&) const;
+	void					GetRigCaps(CRigCaps&) const;
+	void					GetRigCaps(int, CRigCaps&) const;
+	void					GetComPortList(map<string,string>& ports) const;
+	string					GetRigComPort() const;
 	void					SetRigComPort(const string&);
-	void					SetRigFreqOffset(int);
-	_BOOLEAN				GetRigChangeInProgress() { return rigmodelrequest.is_pending()?TRUE:FALSE; }
-#endif
+	_BOOLEAN				GetRigChangeInProgress();
+
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
 	CParameter*				GetParameters() {return &Parameters;}
@@ -310,7 +331,6 @@ protected:
 
 	void					InitReceiverMode();
 	_BOOLEAN				doSetFrequency();
-	void					doSetRigModel(int);
 	void					SetInStartMode();
 	void					SetInTrackingMode();
 	void					SetInTrackingModeDelayed();
@@ -325,12 +345,9 @@ protected:
 	void					DetectAcquiFAC();
 	void					DetectAcquiSymbol();
 	void					saveSDCtoFile();
-#ifdef HAVE_LIBHAMLIB
-	void					UpdateRigSettings();
-#endif
 
 	/* Modules */
-	CSoundInInterface*		pSoundInInterface;
+	CSoundInProxy			SoundInProxy;
 	CSoundOutInterface*		pSoundOutInterface;
 	CReceiveData			ReceiveData;
 	COnboardDecoder			OnboardDecoder;
@@ -415,8 +432,8 @@ protected:
 	int						iGoodSignCnt;
 	int						iDelayedTrackModeCnt;
 	ERecState				eReceiverState;
-	ERecMode				eReceiverMode;
-	ERecMode				eNewReceiverMode;
+	EDemodulationType		eReceiverMode;
+	EDemodulationType		eNewReceiverMode;
 
 	int						iAudioStreamID;
 	int						iDataStreamID;
@@ -427,7 +444,6 @@ protected:
 
 	_REAL					rInitResampleOffset;
 
-	CHamlib*				pHamlib;
 
 	CVectorEx<_BINARY>		vecbiMostRecentSDC;
 	int						iFreqkHz;
@@ -440,14 +456,6 @@ protected:
 	time_t					time_keeper;
 
 	CPlotManager PlotManager;
-	enum { SoundCard, Dummy, Shm, File }
-							pcmInput;
-	enum { onBoard, inSoftware }
-							demodulation;
-#ifdef HAVE_LIBHAMLIB
-	CRequestStateChange		rigmodelrequest;
-	_BOOLEAN                bRigUpdateNeeded;
-#endif
 };
 
 #endif // !defined(DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

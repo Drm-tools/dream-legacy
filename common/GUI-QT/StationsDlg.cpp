@@ -1412,22 +1412,22 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
 
 		/* If the mode has changed re-initialise the receiver */
-		ERecMode eCurrentMode = DRMReceiver.GetReceiverMode();
+		EDemodulationType eCurrentMode = DRMReceiver.GetReceiverMode();
 
 		/* if "bReInitOnFrequencyChange" is not true, initiate a reinit when
 		 schedule mode is different from receiver mode */
 		switch (DRMSchedule.GetSchedMode())
 		{
 		case CDRMSchedule::SM_DRM:
-			if (eCurrentMode != RM_DRM)
-				DRMReceiver.SetReceiverMode(RM_DRM);
+			if (eCurrentMode != DRM)
+				DRMReceiver.SetReceiverMode(DRM);
 			if (bReInitOnFrequencyChange)
 				DRMReceiver.RequestNewAcquisition();
 			break;
 
 		case CDRMSchedule::SM_ANALOG:
-			if (eCurrentMode != RM_AM)
-				DRMReceiver.SetReceiverMode(RM_AM);
+			if (eCurrentMode != AM) // this is an AM schedule, we don't have an FM schedule yet!
+				DRMReceiver.SetReceiverMode(AM);
 			if (bReInitOnFrequencyChange)
 				DRMReceiver.RequestNewAcquisition();
 			break;

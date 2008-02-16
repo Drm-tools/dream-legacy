@@ -642,10 +642,17 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 	} 
 
 	/* Add on the calibration factor for the current mode */
-	if (ReceiverParam.GetReceiverMode() == RM_DRM)
+	switch(ReceiverParam.GetReceiverMode())
+	{
+	case DRM:
 		rCorrection += ReceiverParam.FrontEndParameters.rCalFactorDRM;
-	else if (ReceiverParam.GetReceiverMode() == RM_AM)		
+		break;
+	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
 		rCorrection += ReceiverParam.FrontEndParameters.rCalFactorAM;
+		break;
+	case NONE:
+		;
+	}
 
 	ReceiverParam.rSigStrengthCorrection = rCorrection;
 

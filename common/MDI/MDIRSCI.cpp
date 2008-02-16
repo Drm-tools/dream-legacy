@@ -140,7 +140,7 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter)
 {
 
 	TagItemGeneratorRobMod.GenTag(Parameter.GetWaveMode());
-	TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode(), Parameter.GetAnalogDemodType());
+	TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode());
 
 	/* SDC channel information tag must be created here because it must be sent
 	   with each AF packet */
@@ -199,7 +199,7 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 
    if(Parameter.pDRMRec)
    {
-        TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode(), Parameter.GetAnalogDemodType());
+        TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode());
 
         TagItemGeneratorSDCChanInf.GenEmptyTag();
 
@@ -244,7 +244,7 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 	TagItemGeneratorRobMod.GenEmptyTag();
 
 	/* demod mode */
-	TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode(), Parameter.GetAnalogDemodType());
+	TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode());
 
 	TagItemGeneratorSDCChanInf.GenEmptyTag();
 
@@ -692,7 +692,7 @@ void CUpstreamDI::SetFrequency(int iNewFreqkHz)
 	sink.TransmitPacket(TagPacketGenerator);
 }
 
-void CUpstreamDI::SetReceiverMode(ERecMode eNewMode)
+void CUpstreamDI::SetReceiverMode(EDemodulationType eNewMode)
 {
 	if(bMDIOutEnabled==FALSE)
 		return;
