@@ -36,27 +36,27 @@
 /******************************************************************************\
 * Bit interleaver															   *
 \******************************************************************************/
-void CBitInterleaver::Interleave(CVector<_BINARY>& InputData)
+void CBitInterleaver::Interleave(CVector<_DECISION>& InputData)
 {
 	int i;
 
 	/* Block 1 -------------------------------------------------------------- */
 	/* Interleave data according the interleaver table */
 	for (i = 0; i < ix_in1; i++)
-		vecbiInterlMemory1[i] = InputData[veciIntTable1[i]];
+		vecInterlMemory1[i] = InputData[veciIntTable1[i]];
 
 	/* Copy result in input-vector */
 	for (i = 0; i < ix_in1; i++)
-		InputData[i] = vecbiInterlMemory1[i];
+		InputData[i] = vecInterlMemory1[i];
 
 	/* Block 2 -------------------------------------------------------------- */
 	/* Interleave data according the interleaver table */
 	for (i = 0; i < ix_in2; i++)
-		vecbiInterlMemory2[i] = InputData[veciIntTable2[i] + ix_in1];
+		vecInterlMemory2[i] = InputData[veciIntTable2[i] + ix_in1];
 
 	/* Copy result in input-vector */
 	for (i = 0; i < ix_in2; i++)
-		InputData[i + ix_in1] = vecbiInterlMemory2[i];
+		InputData[i + ix_in1] = vecInterlMemory2[i];
 }
 
 void CBitInterleaver::Init(int iNewx_in1, int iNewx_in2, int it_0)
@@ -75,7 +75,7 @@ void CBitInterleaver::Init(int iNewx_in1, int iNewx_in2, int it_0)
 		MakeTable(veciIntTable1, ix_in1, it_0);
 	
 		/* Allocate memory for interleaver */
-		vecbiInterlMemory1.Init(ix_in1);
+		vecInterlMemory1.Init(ix_in1);
 	}
 	
 	/* Allocate memory for table */
@@ -85,7 +85,7 @@ void CBitInterleaver::Init(int iNewx_in1, int iNewx_in2, int it_0)
 	MakeTable(veciIntTable2, ix_in2, it_0);
 
 	/* Allocate memory for interleaver */
-	vecbiInterlMemory2.Init(ix_in2);
+	vecInterlMemory2.Init(ix_in2);
 }
 
 

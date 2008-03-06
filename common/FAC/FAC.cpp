@@ -35,36 +35,28 @@
 \******************************************************************************/
 void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 {
-	_UINT32BIT	iRfuDummy;
+	uint32_t	iRfuDummy;
 	int			iCurShortID;
-	static int	FACRepititionCounter = 0;
+	static int	FACRepetitionCounter = 0;
 
 	/* Reset enqueue function */
 	(*pbiFACData).ResetBitAccess();
 
+
 	/* Put FAC parameters on stream */
 	/* Channel parameters --------------------------------------------------- */
-	/* Base/Enhancement flag */
-	switch (Parameter.eBaseEnhFlag)
-	{
-	case CParameter::BE_BASE_LAYER:
-		(*pbiFACData).Enqueue(0 /* 0 */, 1);
-		break;
-
-	case CParameter::BE_ENHM_LAYER:
-		(*pbiFACData).Enqueue(1 /* 1 */, 1);
-		break;
-	}
+	/* Base/Enhancement flag, set it to base which is decodable by all DRM
+	   receivers */
+	(*pbiFACData).Enqueue(0 /* 0 */, 1);
 
 	/* Identity */
 	/* Manage index of FAC block in super-frame */
 	switch (Parameter.iFrameIDTransm)
 	{
 	case 0:
-		if (Parameter.eAFSFlag == CParameter::AS_VALID)
-			(*pbiFACData).Enqueue(0 /* 00 */, 2);
-		else
-			(*pbiFACData).Enqueue(3 /* 11 */, 2);
+		/* Assuming AFS is valid (AFS not used here), if AFS is not valid, the
+		   parameter must be 3 (11) */
+		(*pbiFACData).Enqueue(3 /* 11 */, 2);
 		break;
 
 	case 1:
@@ -134,6 +126,9 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	case CParameter::CS_2_SM:
 		(*pbiFACData).Enqueue(3 /* 11 */, 2);
 		break;
+
+	default:
+		break;
 	}
 
 	/* SDC mode */
@@ -146,34 +141,37 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	case CParameter::CS_1_SM:
 		(*pbiFACData).Enqueue(1 /* 1 */, 1);
 		break;
+
+	default:
+		break;
 	}
 
 	/* Number of services */
 	/* Use Table */
-	(*pbiFACData).Enqueue( 
-		iTableNoOfServices[Parameter.iNoAudioService][Parameter.iNoDataService],
-		4);
+	(*pbiFACData).Enqueue(iTableNumOfServices[Parameter.iNumAudioService]
+		[Parameter.iNumDataService], 4);
 
-	/* Reconfiguration index */
-	(*pbiFACData).Enqueue((_UINT32BIT) Parameter.iReConfigIndex, 3);
+	/* Reconfiguration index (not used) */
+	(*pbiFACData).Enqueue((uint32_t) 0, 3);
 
 	/* rfu */
 	iRfuDummy = 0;
 	(*pbiFACData).Enqueue(iRfuDummy, 2);
 
+
 	/* Service parameters --------------------------------------------------- */
-	/* Transmit service-information of service signalled in the FAC-repition
+	/* Transmit service-information of service signalled in the FAC-repetition
 	   array */
-	iCurShortID = Parameter.FACRepitition[FACRepititionCounter];
-	FACRepititionCounter++;
-	if (FACRepititionCounter == Parameter.FACNoRep)
-		FACRepititionCounter = 0;
+	iCurShortID = FACRepetition[FACRepetitionCounter];
+	FACRepetitionCounter++;
+	if (FACRepetitionCounter == FACNumRep)
+		FACRepetitionCounter = 0;
 
 	/* Service identifier */
 	(*pbiFACData).Enqueue(Parameter.Service[iCurShortID].iServiceID, 24);
 
 	/* Short ID */
-	(*pbiFACData).Enqueue((_UINT32BIT) iCurShortID, 2);
+	(*pbiFACData).Enqueue((uint32_t) iCurShortID, 2);
 
 	/* CA indication */
 	switch (Parameter.Service[iCurShortID].eCAIndication)
@@ -189,7 +187,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	/* Language */
 	(*pbiFACData).Enqueue( 
-		(_UINT32BIT) Parameter.Service[iCurShortID].iLanguage, 4);
+		(uint32_t) Parameter.Service[iCurShortID].iLanguage, 4);
 
 	/* Audio/Data flag */
 	switch (Parameter.Service[iCurShortID].eAudDataFlag)
@@ -204,11 +202,12 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	
 	/* Service descriptor */
 	(*pbiFACData).Enqueue( 
-		(_UINT32BIT) Parameter.Service[iCurShortID].iServiceDescr, 5);
+		(uint32_t) Parameter.Service[iCurShortID].iServiceDescr, 5);
 
 	/* Rfa */
 	iRfuDummy = 0;
 	(*pbiFACData).Enqueue(iRfuDummy, 7);
+
 
 	/* CRC ------------------------------------------------------------------ */
 	/* Calculate the CRC and put at the end of the stream */
@@ -216,12 +215,169 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	(*pbiFACData).ResetBitAccess();
 
-	for (int i = 0; i < NO_FAC_BITS_PER_BLOCK / SIZEOF__BYTE - 1; i++)
+	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE - 1; i++)
 		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(SIZEOF__BYTE));
 
 	/* Now, pointer in "enqueue"-function is back at the same place, 
 	   add CRC */
 	(*pbiFACData).Enqueue(CRCObject.GetCRC(), 8);
+}
+
+void CFACTransmit::Init(CParameter& Parameter)
+{
+	int				i;
+	CVector<int>	veciActServ;
+
+	/* Get active services */
+	Parameter.GetActiveServices(veciActServ);
+	const int iTotNumServices = veciActServ.Size();
+
+	/* Check how many audio and data services present */
+	CVector<int>	veciAudioServ(0);
+	CVector<int>	veciDataServ(0);
+	int				iNumAudio = 0;
+	int				iNumData = 0;
+
+	for (i = 0; i < iTotNumServices; i++)
+	{
+		if (Parameter.Service[veciActServ[i]].
+			eAudDataFlag ==	CParameter::SF_AUDIO)
+		{
+			veciAudioServ.Add(i);
+			iNumAudio++;
+		}
+		else
+		{
+			veciDataServ.Add(i);
+			iNumData++;
+		}
+	}
+
+
+	/* Now check special cases which are defined in 6.3.6-------------------- */
+	/* If we have only data or only audio services. When all services are of
+	   the same type (e.g. all audio or all data) then the services shall be
+	   signalled sequentially */
+	if ((iNumAudio == iTotNumServices) || (iNumData == iTotNumServices))
+	{
+		/* Init repetion vector */
+		FACNumRep = iTotNumServices;
+		FACRepetition.Init(FACNumRep);
+
+		for (i = 0; i < FACNumRep; i++)
+			FACRepetition[i] = veciActServ[i];
+	}
+	else
+	{
+		/* Special cases according to Table 60 (Service parameter repetition
+		   patterns for mixtures of audio and data services) */
+		if (iNumAudio == 1)
+		{
+			if (iNumData == 1)
+			{
+				/* Init repetion vector */
+				FACNumRep = 5;
+				FACRepetition.Init(FACNumRep);
+
+				/* A1A1A1A1D1 */
+				FACRepetition[0] = veciAudioServ[0];
+				FACRepetition[1] = veciAudioServ[0];
+				FACRepetition[2] = veciAudioServ[0];
+				FACRepetition[3] = veciAudioServ[0];
+				FACRepetition[4] = veciDataServ[0];
+			}
+			else if (iNumData == 2)
+			{
+				/* Init repetion vector */
+				FACNumRep = 10;
+				FACRepetition.Init(FACNumRep);
+
+				/* A1A1A1A1D1A1A1A1A1D2 */
+				FACRepetition[0] = veciAudioServ[0];
+				FACRepetition[1] = veciAudioServ[0];
+				FACRepetition[2] = veciAudioServ[0];
+				FACRepetition[3] = veciAudioServ[0];
+				FACRepetition[4] = veciDataServ[0];
+				FACRepetition[5] = veciAudioServ[0];
+				FACRepetition[6] = veciAudioServ[0];
+				FACRepetition[7] = veciAudioServ[0];
+				FACRepetition[8] = veciAudioServ[0];
+				FACRepetition[9] = veciDataServ[1];
+			}
+			else /* iNumData == 3 */
+			{
+				/* Init repetion vector */
+				FACNumRep = 15;
+				FACRepetition.Init(FACNumRep);
+
+				/* A1A1A1A1D1A1A1A1A1D2A1A1A1A1D3 */
+				FACRepetition[0] = veciAudioServ[0];
+				FACRepetition[1] = veciAudioServ[0];
+				FACRepetition[2] = veciAudioServ[0];
+				FACRepetition[3] = veciAudioServ[0];
+				FACRepetition[4] = veciDataServ[0];
+				FACRepetition[5] = veciAudioServ[0];
+				FACRepetition[6] = veciAudioServ[0];
+				FACRepetition[7] = veciAudioServ[0];
+				FACRepetition[8] = veciAudioServ[0];
+				FACRepetition[9] = veciDataServ[1];
+				FACRepetition[10] = veciAudioServ[0];
+				FACRepetition[11] = veciAudioServ[0];
+				FACRepetition[12] = veciAudioServ[0];
+				FACRepetition[13] = veciAudioServ[0];
+				FACRepetition[14] = veciDataServ[2];
+			}
+		}
+		else if (iNumAudio == 2)
+		{
+			if (iNumData == 1)
+			{
+				/* Init repetion vector */
+				FACNumRep = 5;
+				FACRepetition.Init(FACNumRep);
+
+				/* A1A2A1A2D1 */
+				FACRepetition[0] = veciAudioServ[0];
+				FACRepetition[1] = veciAudioServ[1];
+				FACRepetition[2] = veciAudioServ[0];
+				FACRepetition[3] = veciAudioServ[1];
+				FACRepetition[4] = veciDataServ[0];
+			}
+			else /* iNumData == 2 */
+			{
+				/* Init repetion vector */
+				FACNumRep = 10;
+				FACRepetition.Init(FACNumRep);
+
+				/* A1A2A1A2D1A1A2A1A2D2 */
+				FACRepetition[0] = veciAudioServ[0];
+				FACRepetition[1] = veciAudioServ[1];
+				FACRepetition[2] = veciAudioServ[0];
+				FACRepetition[3] = veciAudioServ[1];
+				FACRepetition[4] = veciDataServ[0];
+				FACRepetition[5] = veciAudioServ[0];
+				FACRepetition[6] = veciAudioServ[1];
+				FACRepetition[7] = veciAudioServ[0];
+				FACRepetition[8] = veciAudioServ[1];
+				FACRepetition[9] = veciDataServ[1];
+			}
+		}
+		else /* iNumAudio == 3 */
+		{
+			/* Init repetion vector */
+			FACNumRep = 7;
+			FACRepetition.Init(FACNumRep);
+
+			/* A1A2A3A1A2A3D1 */
+			FACRepetition[0] = veciAudioServ[0];
+			FACRepetition[1] = veciAudioServ[1];
+			FACRepetition[2] = veciAudioServ[2];
+			FACRepetition[3] = veciAudioServ[0];
+			FACRepetition[4] = veciAudioServ[1];
+			FACRepetition[5] = veciAudioServ[2];
+			FACRepetition[6] = veciDataServ[0];
+		}
+	}
 }
 
 
@@ -236,10 +392,8 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 	parameter differs from the old data stored in the receiver. If yes, init
 	the modules to the new parameter 
 */
-	CParameter::ETransLay	eNewTransBaEnData;
-	_UINT32BIT				CRC;
-	_UINT32BIT				iTempServiceID;
-	int						iTempShortID;
+	uint32_t	iTempServiceID;
+	int			iTempShortID;
 
 	/* CRC ------------------------------------------------------------------ */
 	/* Check the CRC of this data block */
@@ -247,12 +401,10 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 
 	(*pbiFACData).ResetBitAccess();
 
-	for (int i = 0; i < NO_FAC_BITS_PER_BLOCK / SIZEOF__BYTE - 1; i++)
+	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE - 1; i++)
 		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(SIZEOF__BYTE));
 
-	CRC = CRCObject.GetCRC();
-
-	if (CRC == (_BYTE) (*pbiFACData).Separate(SIZEOF__BYTE))
+	if (CRCObject.CheckCRC((*pbiFACData).Separate(8)) == TRUE)
 	{
 		/* CRC-check successful, extract data from FAC-stream */
 		/* Reset separation function */
@@ -260,26 +412,14 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 
 
 		/* Channel parameters ----------------------------------------------- */
-		/* Base/Enhancement flag */
-		switch ((*pbiFACData).Separate(1))
-		{
-		case 0: /* 0 */
-			eNewTransBaEnData = CParameter::BE_BASE_LAYER;		
-			break;
-	
-		case 1: /* 1 */
-			eNewTransBaEnData = CParameter::BE_ENHM_LAYER;		
-			break;
-		}
-		if (eNewTransBaEnData != Parameter.eBaseEnhFlag)
-			Parameter.eBaseEnhFlag = eNewTransBaEnData;
+		/* Base/Enhancement flag (not used) */
+		(*pbiFACData).Separate(1);
 		
 		/* Identity */
 		switch ((*pbiFACData).Separate(2))
 		{
 		case 0: /* 00 */
 			Parameter.iFrameIDReceiv = 0;
-			Parameter.eAFSFlag = CParameter::AS_VALID;
 			break;
 
 		case 1: /* 01 */
@@ -292,7 +432,6 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 
 		case 3: /* 11 */
 			Parameter.iFrameIDReceiv = 0;
-			Parameter.eAFSFlag = CParameter::AS_NOT_VALID;
 			break;
 		}
 
@@ -350,7 +489,7 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		case 2: /* 10 */
 			Parameter.SetMSCCodingScheme(CParameter::CS_3_HMSYM);
 			break;
-		
+
 		case 3: /* 11 */
 			Parameter.SetMSCCodingScheme(CParameter::CS_2_SM);
 			break;
@@ -370,25 +509,19 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 			
 		/* Number of services */
 		/* Search table for entry */
-		int iNoServTabEntry = (*pbiFACData).Separate(4);
+		int iNumServTabEntry = (*pbiFACData).Separate(4);
 		for (int i = 0; i < 5; i++)
-		{
 			for (int j = 0; j < 5; j++)
-			{
-				if (iNoServTabEntry == iTableNoOfServices[i][j])
-				{
-					Parameter.SetNoAudioServ(i);
-					Parameter.SetNoDataServ(j);
-				}
-			}
-		}
+				if (iNumServTabEntry == iTableNumOfServices[i][j])
+					Parameter.SetNumOfServices(i, j);
 
-		/* Reconfiguration index */
-		Parameter.iReConfigIndex = (*pbiFACData).Separate(3);
+		/* Reconfiguration index (not used, yet) */
+		(*pbiFACData).Separate(3);
 
 		/* rfu */
 		/* Do not use rfu */
 		(*pbiFACData).Separate(2);
+
 
 		/* Service parameters ----------------------------------------------- */
 		/* Service identifier */
@@ -437,17 +570,11 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		/* Do not use Rfa */
 		(*pbiFACData).Separate(7);
 
+		/* CRC is ok, return TRUE */
 		return TRUE;
 	}
 	else
 	{
-		/* If FAC CRC check failed we should increase the frame-counter 
-		   manually. If only FAC data was corrupted, the others can still
-		   decoder if they have the right frame number */
-		Parameter.iFrameIDReceiv++;
-		if (Parameter.iFrameIDReceiv == NO_FRAMES_IN_SUPERFRAME)
-			Parameter.iFrameIDReceiv = 0;
-
 		/* Data is corrupted, do not use it. Return failure as FALSE */
 		return FALSE;
 	}

@@ -31,7 +31,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 #include "../matlib/Matlib.h"
 
 
@@ -45,12 +45,12 @@ public:
 
 	void InitRot(CParameter& Parameter);
 
-protected:
+//protected:
 	_COMPLEX Rotate(const _COMPLEX cI, const int iCN, const int iTiDi) const;
 
 private:
-	int	iKminAbs;
-	int	iFFTSizeN;
+	int		iKminAbs;
+	_REAL	rArgMult;
 };
 
 
@@ -62,10 +62,10 @@ public:
 	CChanEstTime() {}
 	virtual ~CChanEstTime() {}
 
-	virtual void Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
+	virtual _REAL Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
 						  CComplexVector& veccOutputData, 
 						  CVector<int>& veciMapTab, 
-						  CVector<_COMPLEX>& veccPilotCells) = 0;
+						  CVector<_COMPLEX>& veccPilotCells, _REAL rSNR) = 0;
 
 	virtual int Init(CParameter& Parameter) = 0;
 };

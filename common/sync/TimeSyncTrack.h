@@ -1,6 +1,6 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2006
  *
  * Author(s):
  *	Volker Fischer
@@ -31,7 +31,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 #include "../matlib/Matlib.h"
 
 
@@ -42,71 +42,125 @@
 
 /* Weights for bound calculation. First parameter is for peak distance and 
    second for distance from minimum value */
-#define TETA1_DIST_FROM_MAX_DB				25
+#define TETA1_DIST_FROM_MAX_DB				20
 #define TETA2_DIST_FROM_MIN_DB				23
+#define TETA1_DIST_FROM_MAX_DB_RMD			20 /* Robustness mode D */
+#define TETA2_DIST_FROM_MIN_DB_RMD			15 /* Robustness mode D */
 
 /* Control parameters */
-#define CONT_PROP_IN_GUARD_INT				((_REAL) 0.2)
-#define CONT_PROP_BEFORE_GUARD_INT			((_REAL) 0.3)
+#define CONT_PROP_IN_GUARD_INT				((_REAL) 0.06)
+#define CONT_PROP_BEFORE_GUARD_INT			((_REAL) 0.08)
+#define CONT_PROP_ENERGY_METHOD				((_REAL) 0.02)
 
-/* Init wait for using information from channel estimation in time direction */
-#define INIT_CNT_BEF_CHAN_EST_USED			20 /* Symbols */
+/* Time constant for IIR averaging of PDS estimation */
+#define TICONST_PDS_EST_TISYNC				((CReal) 0.25) /* sec */
+
+/* Minimum statistic used for estimation of the noise variance where the samples
+   with the lowest energy are taken as an estimate for the noise. Since the
+   actual energy is most certainly higher than the minimum, we need to
+   overestimate the result. Specify the number of samples for minimum search
+   and the overestimation factor */
+#define NUM_SAM_IR_FOR_MIN_STAT				10
+#define OVER_EST_FACT_MIN_STAT				((CReal) 4.0)
+
+/* Parameter of controlling the closed loop for sample rate offset */
+#define CONTR_SAMP_OFF_INT_FTI				((_REAL) 0.001)
+
+/* Length of history for sample rate offset estimation using time corrections
+   in seconds */
+#define HIST_LEN_SAM_OFF_EST_TI_CORR		((CReal) 30.0) /* sec */
+
+/* Length of history used for sample rate offset acquisition estimate */
+#define SAM_OFF_EST_TI_CORR_ACQ_LEN			((CReal) 4.0) /* sec */
 
 
 /* Classes ********************************************************************/
 class CTimeSyncTrack
 {
 public:
-	CTimeSyncTrack() : bTracking(FALSE), bIsInInit(FALSE) {}
+	CTimeSyncTrack() : bTiSyncTracking(FALSE), 
+		bSamRaOffsAcqu(TRUE), TypeTiSyncTrac(TSENERGY) {}
 	virtual ~CTimeSyncTrack() {}
+
+	enum ETypeTiSyncTrac {TSENERGY, TSFIRSTPEAK};
 
 	void Init(CParameter& Parameter, int iNewSymbDelay);
 
-	void Process(CParameter& Parameter, CComplexVector& veccChanEst, int
-		iNewTiCorr);
+	void Process(CParameter& Parameter, CComplexVector& veccChanEst,
+				 int iNewTiCorr, _REAL& rLenPDS, _REAL& rOffsPDS);
 
 	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
 					 _REAL& rLowerBound, _REAL& rHigherBound,
-					 _REAL& rStartGuard, _REAL& rEndGuard);
+					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
+					 _REAL& rPDSEnd);
 
-	void StartTracking() {bTracking = TRUE;}
-	void StopTracking() {bTracking = FALSE;}
+	void StartTracking() {bTiSyncTracking = TRUE;}
+	void StopTracking() {bTiSyncTracking = FALSE;}
+
+	 /* SetInitFlag() is needed for this function. Is done in channel estimation
+	    module */
+	void StartSaRaOffAcq() {bSamRaOffsAcqu = TRUE;}
+
+	void SetTiSyncTracType(ETypeTiSyncTrac eNewTy);
+	ETypeTiSyncTrac GetTiSyncTracType() {return TypeTiSyncTrac;}
+ 
+	/* OPH: calculation of delay and doppler using RSCI method */
+	void CalculateRdel(CParameter& Parameter);
+	CRealVector& GetRdelThresholds() {return vecrRdelThresholds;}
+	void CalculateRdop(CParameter& Parameter);
+
 
 protected:
-	int					iFirstPathDelay;
+	CComplexVector			veccPilots;
+	int						iNumIntpFreqPil;
+	CFftPlans				FftPlan;
+	int						iScatPilFreqInt;
+	int						iNumCarrier;
+	CRealVector				vecrAvPoDeSp;
+	CReal					rLamAvPDS;
 
-	CComplexVector		veccPilots;
-	int					iNoIntpFreqPil;
-	CFftPlans			FftPlan;
-	int					iScatPilFreqInt;
-	int					iNoCarrier;
-	CRealVector			vecrAvPoDeSp;
-	CRealVector			vecrHammingWindow;
-	CReal				rConst1;
-	CReal				rConst2;
-	int					iStPoRot;
-	CRealVector			vecrAvPoDeSpRot;
-	int					iSymDelay;
-	CShiftRegister<int>	vecTiCorrHist;
-	CReal				rFracPartTiCor;
-	int					iTargetTimingPos;
+	CRealVector				vecrHammingWindow;
+	CReal					rConst1;
+	CReal					rConst2;
+	int						iStPoRot;
+	CRealVector				vecrAvPoDeSpRot;
+	int						iSymDelay;
+	CShiftRegister<int>		vecTiCorrHist;
+	CShiftRegister<int>		veciNewMeasHist;
+	
+	CReal					rFracPartTiCor;
+	int						iTargetTimingPos;
 
-	_BOOLEAN			bTracking;
+	_BOOLEAN				bTiSyncTracking;
+	_BOOLEAN				bSamRaOffsAcqu;
 
-	int					iControlDelay;
+	int						iDFTSize;
 
-	int					iDFTSize;
+	CReal					rBoundLower;
+	CReal					rBoundHigher;
+	CReal					rGuardSizeFFT;
 
-	_REAL				rBoundLower;
-	_REAL				rBoundHigher;
-	int					iGuardSizeFFT;
+	CReal					rEstPDSEnd; /* Estimated end of PSD */
+	CReal					rEstPDSBegin; /* Estimated beginning of PSD */
 
-	int					iInitCnt;
+	CReal					rFracPartContr;
 
-	_BOOLEAN			IsInInit() const {return bIsInInit;}
+	ETypeTiSyncTrac			TypeTiSyncTrac;
 
-private:
-	_BOOLEAN			bIsInInit;
+	CShiftRegister<int>		veciSRTiCorrHist;
+	int						iLenCorrectionHist;
+	long int				iIntegTiCorrections;
+	CReal					rSymBloSiIRDomain;
+	int						iResOffsetAcquCnt;
+	int						iResOffAcqCntMax;
+	int						iOldNonZeroDiff;
+
+	CReal GetSamOffHz(int iDiff, int iLen);
+
+	/* O. Haffenden variables for rdop and rdel calculation */
+	CComplexVector			veccOldImpulseResponse;
+	CRealVector				vecrRdelThresholds;
+	CRealVector				vecrRdelIntervals;
 };
 
 

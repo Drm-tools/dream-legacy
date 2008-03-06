@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Alexander Kurpiers, Volker Fischer
+ *	Alexander Kurpiers
  * 
  * Decription:
  * Linux sound interface
@@ -26,60 +26,35 @@
  *
 \******************************************************************************/
 
-#if !defined(AFX_SOUNDIN_H__9518A621345F78_11D3_8C0D_EEBF182CF549__INCLUDED_)
-#define AFX_SOUNDIN_H__9518A621345F78_11D3_8C0D_EEBF182CF549__INCLUDED_
+#ifndef _SOUND_H
+#define _SOUND_H
 
-#include "../../common/GlobalDefinitions.h"
-#include "../../common/Vector.h"
-
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/ioctl.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-
-/* Definitions ****************************************************************/
-#define	NO_IN_OUT_CHANNELS		2		/* Stereo recording (but we only
-										   use one channel for recording) */
-#define	BITS_PER_SAMPLE			16		/* Use all bits of the D/A-converter */
-#define BYTES_PER_SAMPLE		2		/* Number of bytes per sample */
-
-#define RECORDING_CHANNEL		1		/* 0: Left, 1: Right
-
-/* Set this number as high as we have to prebuffer symbols for one MSC block.
-   In case of robustness mode D we have 24 symbols */
-#define NO_SOUND_BUFFERS_IN		30		/* Number of sound card buffers */
-
-
-/* Classes ********************************************************************/
-class CSound
-{
-public:
-	CSound() {}
-	virtual ~CSound() {}
-#if WITH_SOUND
-	void InitRecording(int iNewBufferSize);
-	void InitPlayback(int iNewBufferSize);
-	void Read(CVector<short>& psData);
-	void Write(CVector<short>& psData);
-
-	void StopRecording();
-	
-protected:
-	int 	iBufferSize, iInBufferSize;
-	void InitIF( int &fdSound );
-	short int *tmpplaybuf, *tmprecbuf;
-#else
-	/* dummy definitions */
-	void InitRecording(int iNewBufferSize){}
-	void InitPlayback(int iNewBufferSize){}
-	void Read(CVector<short>& psData){}
-	void Write(CVector<short>& psData){}
-	void StopRecording(){}
+#ifdef USE_OSS
+# include "soundin.h"
+# include "soundout.h"
 #endif
-};
 
+#ifdef USE_ALSA
+# include "soundin.h"
+# include "soundout.h"
+#endif
 
-#endif // !defined(AFX_SOUNDIN_H__9518A621345F78_11D3_8C0D_EEBF182CF549__INCLUDED_)
+#ifdef USE_JACK
+# include "jack.h"
+typedef CSoundInJack CSoundIn;
+typedef CSoundOutJack CSoundOut;
+#endif
+
+#ifdef USE_PORTAUDIO
+# include "portaudio.h"
+typedef CPaIn CSoundIn;
+typedef CPaOut CSoundOut;
+#endif
+
+#if !defined(USE_OSS) && !defined(USE_ALSA) && !defined(USE_JACK) && !defined(USE_PORTAUDIO)
+# include "../../common/soundnull.h"
+typedef CSoundInNull CSoundIn;
+typedef CSoundOutNull CSoundOut;
+#endif
+
+#endif

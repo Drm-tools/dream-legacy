@@ -1,12 +1,15 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2005
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrew Murphy
  *
  * Description:
  *	See SDC.cpp
+ *
+ * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
+ *	- AMSS data entity groups (no AFS index), added eSDCType, data type 11
  *
  ******************************************************************************
  *
@@ -31,8 +34,13 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
-#include "../CRC.h"
-#include "../Vector.h"
+#include "../util/CRC.h"
+#include "../util/Vector.h"
+#include "../util/Utilities.h"
+
+/* Definitions ****************************************************************/
+/* Number of bits of header of SDC block */
+#define NUM_BITS_HEADER_SDC			12
 
 
 /* Classes ********************************************************************/
@@ -45,12 +53,15 @@ public:
 	void SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
 
 protected:
-	int DataEntityType0(CVector<_BINARY>* pbiData, CParameter& Parameter);
+	void DataEntityType0(CVector<_BINARY>& vecbiData, CParameter& Parameter);
+	void DataEntityType1(CVector<_BINARY>& vecbiData, int ServiceID,
+						 CParameter& Parameter);
 // ...
-	int DataEntityType5(CVector<_BINARY>* pbiData, int ServiceID, CParameter& Parameter);
+	void DataEntityType5(CVector<_BINARY>& vecbiData, int ServiceID,
+						 CParameter& Parameter);
 // ...
-	int DataEntityType9(CVector<_BINARY>* pbiData, int ServiceID, CParameter& Parameter);
-
+	void DataEntityType9(CVector<_BINARY>& vecbiData, int ServiceID,
+						 CParameter& Parameter);
 
 	CCRC CRCObject;
 };
@@ -58,22 +69,41 @@ protected:
 class CSDCReceive
 {
 public:
-	CSDCReceive() {}
+	enum ERetStatus {SR_OK, SR_BAD_CRC, SR_BAD_DATA};
+	enum ESDCType {SDC_DRM, SDC_AMSS};
+	CSDCReceive() : eSDCType(SDC_DRM) {}
 	virtual ~CSDCReceive() {}
 
-	_BOOLEAN SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
+	ERetStatus SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
+	void SetSDCType(ESDCType sdcType) { eSDCType = sdcType; }
 
 protected:
-	void DataEntityType0(CVector<_BINARY>* pbiData, int iLengthOfBody, CParameter& Parameter);
-	void DataEntityType1(CVector<_BINARY>* pbiData, int iLengthOfBody, CParameter& Parameter);
+	_BOOLEAN DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter);
+	_BOOLEAN DataEntityType1(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter);
 // ...
-	void DataEntityType5(CVector<_BINARY>* pbiData, int iLengthOfBody, CParameter& Parameter);
+	_BOOLEAN DataEntityType3(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const _BOOLEAN bVersion);
+	_BOOLEAN DataEntityType4(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const _BOOLEAN bVersion);
+	_BOOLEAN DataEntityType5(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter);
 // ...
-	void DataEntityType8(CVector<_BINARY>* pbiData, int iLengthOfBody, CParameter& Parameter);
-	void DataEntityType9(CVector<_BINARY>* pbiData, int iLengthOfBody, CParameter& Parameter);
+	_BOOLEAN DataEntityType7(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const _BOOLEAN bVersion);
+	_BOOLEAN DataEntityType8(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter);
+	_BOOLEAN DataEntityType9(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter);
+// ...
+	_BOOLEAN DataEntityType11(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const _BOOLEAN bVersion);
+	_BOOLEAN DataEntityType12(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter);
 
-
-	CCRC CRCObject;
+	CCRC		CRCObject;
+	ESDCType	eSDCType;
 };
 
 

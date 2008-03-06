@@ -29,13 +29,14 @@
 #if !defined(QAM_MAPPING_H__3B0_CA63_4344_BB2B_23E7912__INCLUDED_)
 #define QAM_MAPPING_H__3B0_CA63_4344_BB2B_23E7912__INCLUDED_
 
+#include "../matlib/Matlib.h"
 #include "../GlobalDefinitions.h"
 
 
 /* Definitions ****************************************************************/
 /* Input bits are collected in bytes separately for imaginary and real part. 
    The order is: [i_0, i_1, i_2] and [q_0, q_1, q_2] -> {i, q} 
-   All entries are normalized according DRM-standard */
+   All entries are normalized according to the DRM-standard */
 const _REAL rTableQAM64SM[8][2] = {
 	{ 1.0801234497f,  1.0801234497f},
 	{-0.1543033499f, -0.1543033499f},
@@ -80,6 +81,236 @@ const _REAL rTableQAM4[2][2] = {
 	{ 0.7071067811f,  0.7071067811f},
 	{-0.7071067811f, -0.7071067811f}
 };
+
+
+/* Global functions ***********************************************************/
+/*
+	----------------------------------------------------------------------------
+	Implementation of distance to nearest constellation point (symbol) for all
+	QAM types
+*/
+inline CComplex MinDist4QAM(const CComplex cI)
+{
+	/* Return vector pointing to nearest signal point of this constellation.
+	   2 possible constellation points for real and imaginary axis */
+	return CComplex(
+		/* Real axis minimum distance */
+		Min(Abs(rTableQAM4[0][0] - Real(cI)), Abs(rTableQAM4[1][0] - Real(cI))),
+		/* Imaginary axis minimum distance */
+		Min(Abs(rTableQAM4[0][1] - Imag(cI)), Abs(rTableQAM4[1][1] - Imag(cI))));
+}
+
+inline CComplex MinDist16QAM(const CComplex cI)
+{
+	/* Return vector pointing to nearest signal point of this constellation.
+	   4 possible constellation points for real and imaginary axis */
+	return CComplex(
+		/* Real axis minimum distance */
+		Min(Abs(rTableQAM16[0][0] - Real(cI)), Abs(rTableQAM16[1][0] - Real(cI)),
+			Abs(rTableQAM16[2][0] - Real(cI)), Abs(rTableQAM16[3][0] - Real(cI))),
+		/* Imaginary axis minimum distance */
+		Min(Abs(rTableQAM16[0][1] - Imag(cI)), Abs(rTableQAM16[1][1] - Imag(cI)),
+			Abs(rTableQAM16[2][1] - Imag(cI)), Abs(rTableQAM16[3][1] - Imag(cI))));
+}
+
+inline CComplex MinDist64QAM(const CComplex cI)
+{
+	/* Return vector pointing to nearest signal point of this constellation.
+	   8 possible constellation points for real and imaginary axis */
+	return CComplex(
+		/* Real axis minimum distance */
+		Min(Abs(rTableQAM64SM[0][0] - Real(cI)), Abs(rTableQAM64SM[1][0] - Real(cI)),
+			Abs(rTableQAM64SM[2][0] - Real(cI)), Abs(rTableQAM64SM[3][0] - Real(cI)),
+			Abs(rTableQAM64SM[4][0] - Real(cI)), Abs(rTableQAM64SM[5][0] - Real(cI)),
+			Abs(rTableQAM64SM[6][0] - Real(cI)), Abs(rTableQAM64SM[7][0] - Real(cI))),
+		/* Imaginary axis minimum distance */
+		Min(Abs(rTableQAM64SM[0][1] - Imag(cI)), Abs(rTableQAM64SM[1][1] - Imag(cI)),
+			Abs(rTableQAM64SM[2][1] - Imag(cI)), Abs(rTableQAM64SM[3][1] - Imag(cI)),
+			Abs(rTableQAM64SM[4][1] - Imag(cI)), Abs(rTableQAM64SM[5][1] - Imag(cI)),
+			Abs(rTableQAM64SM[6][1] - Imag(cI)), Abs(rTableQAM64SM[7][1] - Imag(cI))));
+}
+
+
+/*
+	----------------------------------------------------------------------------
+	Implementation of hard decision for all QAM types
+*/
+inline CComplex Dec4QAM(const CComplex cI)
+{
+	CReal rDecRe, rDecIm;
+
+	/* Real */
+	if (Abs(rTableQAM4[0][0] - Real(cI)) < Abs(rTableQAM4[1][0] - Real(cI)))
+		rDecRe = rTableQAM4[0][0];
+	else
+		rDecRe = rTableQAM4[1][0];
+
+	/* Imaginary */
+	if (Abs(rTableQAM4[0][1] - Imag(cI)) < Abs(rTableQAM4[1][1] - Imag(cI)))
+		rDecIm = rTableQAM4[0][1];
+	else
+		rDecIm = rTableQAM4[1][1];
+
+	return CComplex(rDecRe, rDecIm);
+}
+
+inline CComplex Dec16QAM(const CComplex cI)
+{
+	CReal rCurDist;
+
+	/* Real */
+	CReal rMinDist = Abs(rTableQAM16[0][0] - Real(cI));
+	CReal rDecRe = rTableQAM16[0][0];
+
+	rCurDist = Abs(rTableQAM16[1][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM16[1][0];
+	}
+
+	rCurDist = Abs(rTableQAM16[2][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM16[2][0];
+	}
+
+	rCurDist = Abs(rTableQAM16[3][0] - Real(cI));
+	if (rCurDist < rMinDist)
+		rDecRe = rTableQAM16[3][0];
+
+	/* Imaginary */
+	rMinDist = Abs(rTableQAM16[0][1] - Imag(cI));
+	CReal rDecIm = rTableQAM16[0][1];
+
+	rCurDist = Abs(rTableQAM16[1][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM16[1][1];
+	}
+
+	rCurDist = Abs(rTableQAM16[2][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM16[2][1];
+	}
+
+	rCurDist = Abs(rTableQAM16[3][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+		rDecIm = rTableQAM16[3][1];
+
+	return CComplex(rDecRe, rDecIm);
+}
+
+inline CComplex Dec64QAM(const CComplex cI)
+{
+	CReal rCurDist;
+
+	/* Real */
+	CReal rMinDist = Abs(rTableQAM64SM[0][0] - Real(cI));
+	CReal rDecRe = rTableQAM64SM[0][0];
+
+	rCurDist = Abs(rTableQAM64SM[1][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM64SM[1][0];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[2][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM64SM[2][0];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[3][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM64SM[3][0];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[4][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM64SM[4][0];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[5][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM64SM[5][0];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[6][0] - Real(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecRe = rTableQAM64SM[6][0];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[7][0] - Real(cI));
+	if (rCurDist < rMinDist)
+		rDecRe = rTableQAM64SM[7][0];
+
+	/* Imaginary */
+	rMinDist = Abs(rTableQAM64SM[0][1] - Imag(cI));
+	CReal rDecIm = rTableQAM64SM[0][1];
+
+	rCurDist = Abs(rTableQAM64SM[1][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM64SM[1][1];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[2][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM64SM[2][1];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[3][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM64SM[3][1];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[4][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM64SM[4][1];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[5][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM64SM[5][1];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[6][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+	{
+		rMinDist = rCurDist;
+		rDecIm = rTableQAM64SM[6][1];
+	}
+
+	rCurDist = Abs(rTableQAM64SM[7][1] - Imag(cI));
+	if (rCurDist < rMinDist)
+		rDecIm = rTableQAM64SM[7][1];
+
+	return CComplex(rDecRe, rDecIm);
+}
 
 
 #endif // !defined(QAM_MAPPING_H__3B0_CA63_4344_BB2B_23E7912__INCLUDED_)

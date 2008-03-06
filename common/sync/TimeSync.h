@@ -30,76 +30,140 @@
 #define TIMESYNC_H__3B0BEVJBN872345NBEROUEBGF4344_BB27912__INCLUDED_
 
 #include "../Parameter.h"
-#include "../Modul.h"
-#include "../Vector.h"
+#include "../util/Modul.h"
+#include "../util/Vector.h"
 #include "../matlib/Matlib.h"
+#include "TimeSyncFilter.h"
 
 
 /* Definitions ****************************************************************/
-#define STEP_SIZE_GUARD_CORR			40
-#define LAMBDA_LOW_PASS_START			((_REAL) 0.99)
+/* Use 5 or 10 kHz bandwidth for guard-interval correlation. 10 kHz bandwidth
+   should be chosen when time domain freuqency offset estimation is used */
+#define USE_10_KHZ_HILBFILT
+
+#define LAMBDA_LOW_PASS_START			((CReal) 0.99)
 #define TIMING_BOUND_ABS				150
 
 /* Non-linear correction of the timing if variation is too big */
-#define NO_SYM_BEFORE_RESET				5
+#define NUM_SYM_BEFORE_RESET			5
+
+/* Definitions for robustness mode detection */
+#define NUM_BLOCKS_FOR_RM_CORR			16
+#define THRESHOLD_RELI_MEASURE			((CReal) 8.0)
+
+/* The guard-interval correlation is only updated every "STEP_SIZE_GUARD_CORR"
+   samples to save computations */
+#define STEP_SIZE_GUARD_CORR			4
+
+/* "GRDCRR_DEC_FACT": Downsampling factor. We only use approx. 6 [12] kHz for
+   correlation, therefore we can use a decimation of 8 [4]
+   (i.e., 48 kHz / 8 [4] = 6 [12] kHz). Must be 8 [4] since all symbol and
+   guard-interval lengths at 48000 for all robustness modes are dividable
+   by 8 [4] */
+#ifdef USE_10_KHZ_HILBFILT
+# define GRDCRR_DEC_FACT				4
+# define NUM_TAPS_HILB_FILT				NUM_TAPS_HILB_FILT_10
+# define HILB_FILT_BNDWIDTH				HILB_FILT_BNDWIDTH_10
+#else
+# define GRDCRR_DEC_FACT				8
+# define NUM_TAPS_HILB_FILT				NUM_TAPS_HILB_FILT_5
+# define HILB_FILT_BNDWIDTH				HILB_FILT_BNDWIDTH_5
+#endif
+
+#ifdef USE_FRQOFFS_TRACK_GUARDCORR
+/* Time constant for IIR averaging of frequency offset estimation */
+# define TICONST_FREQ_OFF_EST_GUCORR	((CReal) 1.0) /* sec */
+#endif
 
 
 /* Classes ********************************************************************/
-class CTimeSync : public CReceiverModul<_REAL, _REAL>
+class CTimeSync : public CReceiverModul<_COMPLEX, _COMPLEX>
 {
 public:
-	CTimeSync() : iTimeSyncPos(0), bSyncInput(FALSE), bAquisition(FALSE),
-		bAcqWasActive(FALSE) {}
+	CTimeSync();
 	virtual ~CTimeSync() {}
 
 	/* To set the module up for synchronized DRM input data stream */
-	void SetSyncInput(_BOOLEAN bNewS) {bSyncInput = bNewS;}
+	void SetSyncInput(const _BOOLEAN bNewS) {bSyncInput = bNewS;}
 
 	void StartAcquisition();
-	void StopAcquisition() {bAquisition = FALSE;}
+	void StopTimingAcqu() {bTimingAcqu = FALSE;}
+	void StopRMDetAcqu() {bRobModAcqu = FALSE;}
 
 protected:
-	int						iCorrCounter;
-	int						iAveCorr;
-	int						iStepSizeGuardCorr;
+	int							iCorrCounter;
+	int							iAveCorr;
+	int							iStepSizeGuardCorr;
 
-	CShiftRegister<_REAL>	HistoryBuf;
-	CVector<_REAL>			vecrHistoryFilt;
-	CVector<_REAL>			pMovAvBuffer;
-	CShiftRegister<_REAL>	pMaxDetBuffer;
+	CShiftRegister<_COMPLEX>	HistoryBuf;
+	CShiftRegister<_COMPLEX>	HistoryBufCorr;
+	CShiftRegister<_REAL>		pMaxDetBuffer;
+	CRealVector					vecrHistoryFilt;
+	CMovingAv<CReal>			vecrGuardEnMovAv;
 
-	int						iMaxDetBufSize;
-	int						iCenterOfMaxDetBuf;
+	CRealVector					vecCorrAvBuf;
+	int							iCorrAvInd;
 
-	int						iMovAvBufSize;
-	int						iTotalBufferSize;
-	int						iSymbolBlockSize;
-	int						iGuardSize;
-	int						iTimeSyncPos;
-	int						iDFTSize;
-	_REAL					rStartIndex;
+	int							iMaxDetBufSize;
+	int							iCenterOfMaxDetBuf;
 
-	int						iPosInMovAvBuffer;
-	_REAL					rGuardEnergy;
+	int							iMovAvBufSize;
+	int							iTotalBufferSize;
+	int							iSymbolBlockSize;
+	int							iDecSymBS;
+	int							iGuardSize;
+	int							iTimeSyncPos;
+	int							iDFTSize;
+	CReal						rStartIndex;
 
-	int						iCenterOfBuf;
+	int							iCenterOfBuf;
 
-	/* Intermediate correlation results */
-	CVector<_REAL>			vecrIntermCorrRes;
-	CVector<_REAL>			vecrIntermPowRes;
-	int						iLengthIntermCRes;
-	int						iPosInIntermCResBuf;
-	int						iLengthOverlap;
+	_BOOLEAN					bSyncInput;
 
-	_REAL					rGuardCorr;
-	_REAL					rGuardPow;
-	_REAL					rGuardCorrBlock;
-	_REAL					rGuardPowBlock;
+	_BOOLEAN					bInitTimingAcqu;
+	_BOOLEAN					bTimingAcqu;
+	_BOOLEAN					bRobModAcqu;
+	_BOOLEAN					bAcqWasActive;
 
-	_BOOLEAN				bSyncInput;
+	int							iTiSyncInitCnt;
+	int							iRobModInitCnt;
 
-	_BOOLEAN				bAquisition;
-	_BOOLEAN				bAcqWasActive;
+	int							iSelectedMode;
+
+	CComplexVector				cvecZ;
+	CComplexVector				cvecB;
+	CVector<_COMPLEX>			cvecOutTmpInterm;
+
+	CReal						rLambdaCoAv;
+
+
+	/* Intermediate correlation results and robustness mode detection */
+	CComplexVector				veccIntermCorrRes[NUM_ROBUSTNESS_MODES];
+	CRealVector					vecrIntermPowRes[NUM_ROBUSTNESS_MODES];
+	CVector<int>				iLengthIntermCRes;
+	CVector<int>				iPosInIntermCResBuf;
+	CVector<int>				iLengthOverlap;
+	CVector<int>				iLenUsefPart;
+	CVector<int>				iLenGuardInt;
+
+	CComplexVector				cGuardCorr;
+	CComplexVector				cGuardCorrBlock;
+	CRealVector					rGuardPow;
+	CRealVector					rGuardPowBlock;
+
+	CRealVector					vecrRMCorrBuffer[NUM_ROBUSTNESS_MODES];
+	CRealVector					vecrCos[NUM_ROBUSTNESS_MODES];
+	int							iRMCorrBufSize;
+
+#ifdef USE_FRQOFFS_TRACK_GUARDCORR
+	CComplex					cFreqOffAv;
+	CReal						rLamFreqOff;
+	CReal						rNormConstFOE;
+#endif
+
+	int			GetIndFromRMode(ERobMode eNewMode);
+	ERobMode	GetRModeFromInd(int iNewInd);
+	void		SetFilterTaps(const CReal rNewOffsetNorm);
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

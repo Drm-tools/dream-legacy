@@ -43,30 +43,32 @@
 #define SOUNDCRD_SAMPLE_RATE			48000	// Hz
 
 /* DRM parameters */
-#define NO_FRAMES_IN_SUPERFRAME			3
+#define NUM_FRAMES_IN_SUPERFRAME		3
 
 #define RMA_FFT_SIZE_N					1152	// RMB: Robustness Mode A
-#define RMA_NO_SYM_PER_FRAME			15
+#define RMA_NUM_SYM_PER_FRAME			15
 #define RMA_ENUM_TG_TU					1
 #define RMA_DENOM_TG_TU					9
 
 #define RMB_FFT_SIZE_N					1024	// RMA: Robustness Mode B
-#define RMB_NO_SYM_PER_FRAME			15
+#define RMB_NUM_SYM_PER_FRAME			15
 #define RMB_ENUM_TG_TU					1
 #define RMB_DENOM_TG_TU					4
 
 #define RMC_FFT_SIZE_N					704		// RMC: Robustness Mode C
-#define RMC_NO_SYM_PER_FRAME			20
+#define RMC_NUM_SYM_PER_FRAME			20
 #define RMC_ENUM_TG_TU					4
 #define RMC_DENOM_TG_TU					11
 
 #define RMD_FFT_SIZE_N					448		// RMD: Robustness Mode D
-#define RMD_NO_SYM_PER_FRAME			24
+#define RMD_NUM_SYM_PER_FRAME			24
 #define RMD_ENUM_TG_TU					11
 #define RMD_DENOM_TG_TU					14
 
-#define MAX_NO_STREAMS					4
-#define MAX_NO_SERVICES					4
+#define MAX_NUM_STREAMS					4
+#define MAX_NUM_SERVICES				4
+
+#define NUM_ROBUSTNESS_MODES			4
 
 
 /* Service ID has 24 bits, define a number which cannot be an ID and fits into
@@ -75,14 +77,14 @@
 
 /* Define a stream ID which is not valid to show that this service is not
    attached to a stream */
-#define STREAM_ID_NOT_USED				(MAX_NO_STREAMS + 1)
+#define STREAM_ID_NOT_USED				(MAX_NUM_STREAMS + 1)
 
 
 /* Audio stream definitions ------------------------------------------------- */
 /* The text message (when present) shall occupy the last four bytes of the 
    lower protected part of each logical frame carrying an audio stream 
    (6.5.1) */
-#define NO_BYTES_TEXT_MESS_IN_AUD_STR	4
+#define NUM_BYTES_TEXT_MESS_IN_AUD_STR	4
 
 /* Transform length: the transform length is 960 to ensure that one 
    audio frame corresponds to 80 ms or 40 ms in time. This is required 
@@ -90,6 +92,9 @@
    combination of an integer number of audio frames to build an audio
    super frame of 400 ms duration */
 #define AUD_DEC_TRANSFROM_LENGTH		960
+
+/* Number of DRM frames per minute */
+#define NUM_DRM_FRAMES_PER_MIN			150
 
 
 #endif // !defined(TABLE_DRM_GLOB_H__3B0_CA63_4344_BB2B_23E7912__INCLUDED_)
