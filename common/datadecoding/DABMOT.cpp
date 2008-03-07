@@ -837,18 +837,22 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 					MOTmode = directoryMode;
 					//cout << "Reset " << MOTDirectory << endl;
 				}
+
+				/* The carousel is changing */
 				if (MOTDirectory.TransportID != TransportID)
 				{
-					/* The carousel is changing */
-					if (MOTDirectory.TransportID != TransportID)
-					{
-						/* we never got all the previous directory */
-						//cout << " we never got all the previous directory " << TransportID << ", " << MOTDirectory.  TransportID << endl;
-						MOTDirectory.Reset();
-						MOTDirectory.TransportID = TransportID;
-						MOTDirectoryEntity.Reset();
-						MOTDirComprEntity.Reset();
-					}
+					/* we never got all the previous directory */
+					//cout << " we never got all the previous directory " << TransportID << ", " << MOTDirectory.  TransportID << endl;
+					MOTDirectory.Reset();
+					MOTDirectory.TransportID = TransportID;
+					MOTDirectoryEntity.Reset();
+					MOTDirComprEntity.Reset();
+				}
+
+				if ((MOTDirectory.TransportID != TransportID) ||
+					((MOTDirectory.TransportID == TransportID)
+						&& (!MOTDirectoryEntity.Ready())))
+				{
 
 					/* Handle the new segment */
 
@@ -879,18 +883,21 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 					MOTDirectory.TransportID = -1;	/* forced reset */
 					MOTmode = directoryMode;
 				}
+
+				/* The carousel is changing */
 				if (MOTDirectory.TransportID != TransportID)
 				{
-					/* The carousel is changing */
-					if (MOTDirectory.TransportID != TransportID)
-					{
-						/* we never got all the previous directory */
-						MOTDirectory.Reset();
-						MOTDirectory.TransportID = TransportID;
-						MOTDirectoryEntity.Reset();
-						MOTDirComprEntity.Reset();
-					}
+					/* we never got all the previous directory */
+					MOTDirectory.Reset();
+					MOTDirectory.TransportID = TransportID;
+					MOTDirectoryEntity.Reset();
+					MOTDirComprEntity.Reset();
+				}
 
+				if ((MOTDirectory.TransportID != TransportID) ||
+					((MOTDirectory.TransportID == TransportID)
+						&& (!MOTDirComprEntity.Ready())))
+				{
 					/* Handle the new segment */
 
 					/* rely on the Add routine to check duplicates, set ready, etc. */
@@ -1553,7 +1560,7 @@ CMOTObject::AddHeader(CVector < _BINARY > &vecbiHeader)
 			strName = extractString(vecbiHeader, iDataFieldLen - 1);
 			break;
 		case 13:				/* UniqueBodyVersion */
-			iUniqueBodyVersion = (int) vecbiHeader.Separate(24);
+			iUniqueBodyVersion = (int) vecbiHeader.Separate(32);
 			break;
 		case 15:				/* Content Description */
 			iCharacterSetForDescription = vecbiHeader.Separate(4);
