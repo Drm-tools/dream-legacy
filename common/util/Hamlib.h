@@ -74,7 +74,9 @@ class CRigCaps
 public:
 
 	CRigCaps() : settings(), config(), hamlib_caps()
-	{ }
+	{ 
+		hamlib_caps.mfg_name = NULL;
+	}
 
 	string get_config(const string& key) const
 	{
