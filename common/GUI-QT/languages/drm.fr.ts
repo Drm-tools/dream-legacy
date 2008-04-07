@@ -1,4 +1,4 @@
-﻿<!DOCTYPE TS><TS>
+<!DOCTYPE TS><TS>
 <context>
     <name>AnalogDemDlg</name>
     <message>
@@ -289,11 +289,11 @@ Correction de Phase</translation>
     <name>CAboutDlg</name>
     <message>
         <source>is a software implementation of a Digital Radio Mondiale (DRM) receiver. With Dream, DRM broadcasts can be received with a modified analog receiver (SW, MW, LW) and a PC with a sound card.</source>
-        <translation>est une implémentation logicielle d'un récepteur de Digital Radio Mondiale (DRM). Avec Dream, les diffusions DRM peuvent être reçues avec un récepteur analogique modifié (SW, MW, LW) et un PC avec une carte son.</translation>
+        <translation>est une implémentation logicielle d&apos;un récepteur de Digital Radio Mondiale (DRM). Avec Dream, les diffusions DRM peuvent être reçues avec un récepteur analogique modifié (SW, MW, LW) et un PC avec une carte son.</translation>
     </message>
     <message>
         <source>Although this software is going to be distributed as free software under the terms of the GPL this does not mean that its use is free of rights of others. The use may infringe third party IP and thus may not be legal in some countries.</source>
-        <translation>Bien que ce logiciel soit distribué comme logiciel libre sous les termes de la GPL, cela ne signifie pas que son usage est libre de droits pour d'autres. L'utilisation peut enfreindre des IP tierces et ainsi être illégal dans certains pays.</translation>
+        <translation>Bien que ce logiciel soit distribué comme logiciel libre sous les termes de la GPL, cela ne signifie pas que son usage est libre de droits pour d&apos;autres. L&apos;utilisation peut enfreindre des IP tierces et ainsi être illégal dans certains pays.</translation>
     </message>
     <message>
         <source>This compilation of Dream uses the following libraries:</source>
@@ -305,11 +305,15 @@ Correction de Phase</translation>
     </message>
     <message>
         <source>Open-Source Software Implementation of a DRM-Receiver</source>
-        <translation>Implémentation en Logiciel Libre d'un Récepteur DRM</translation>
+        <translation>Implémentation en Logiciel Libre d&apos;un Récepteur DRM</translation>
     </message>
     <message>
         <source>Under the GNU General Public License (GPL)</source>
         <translation>Sous la GNU General Public License (GPL)</translation>
+    </message>
+    <message>
+        <source>We want to thank all the contributors to the Dream software (in alphabetical order):</source>
+        <translation>Nous voudrions remercier tous les contributeurs du logiciel Dream (par ordre alphabétique):</translation>
     </message>
 </context>
 <context>
@@ -345,11 +349,11 @@ Julian Cable, Andrew Murphy, Oliver Haffenden</translation>
     <name>CDRMPlot</name>
     <message>
         <source>Channel Impulse Response</source>
-        <translation>Réponse Impulsionelle du Cannal</translation>
+        <translation>Réponse Impulsionelle du Canal</translation>
     </message>
     <message>
         <source>Time [ms]</source>
-        <translation>Heure [ms]</translation>
+        <translation>Temps [ms]</translation>
     </message>
     <message>
         <source>IR [dB]</source>
@@ -381,7 +385,7 @@ Julian Cable, Andrew Murphy, Oliver Haffenden</translation>
     </message>
     <message>
         <source>Channel Transfer Function / Group Delay</source>
-        <translation>Fonction de Transfert Cannal / Délai Groupe</translation>
+        <translation>Fonction de Transfert Canal / Délai Groupe</translation>
     </message>
     <message>
         <source>Carrier Index</source>
@@ -417,7 +421,7 @@ Julian Cable, Andrew Murphy, Oliver Haffenden</translation>
     </message>
     <message>
         <source>Time [s]</source>
-        <translation>Heure [s]</translation>
+        <translation>Temps [s]</translation>
     </message>
     <message>
         <source>Sample Rate Offset [Hz]</source>
@@ -441,7 +445,7 @@ Julian Cable, Andrew Murphy, Oliver Haffenden</translation>
     </message>
     <message>
         <source>Time [min]</source>
-        <translation>Heure [min]</translation>
+        <translation>Temps [min]</translation>
     </message>
     <message>
         <source>Delay [ms]</source>
@@ -813,6 +817,22 @@ Julian Cable, Andrew Murphy, Oliver Haffenden</translation>
     <message>
         <source>&amp;Close</source>
         <translation>&amp;Fermer</translation>
+    </message>
+    <message>
+        <source>Filters</source>
+        <translation>Filtres</translation>
+    </message>
+    <message>
+        <source>Target</source>
+        <translation>Cible</translation>
+    </message>
+    <message>
+        <source>Country</source>
+        <translation>Pays</translation>
+    </message>
+    <message>
+        <source>Language</source>
+        <translation>Langue</translation>
     </message>
 </context>
 <context>
@@ -1603,7 +1623,7 @@ Institute for Communication Technology</translation>
     </message>
     <message>
         <source>Channel Parameters</source>
-        <translation>Paramètres Cannal</translation>
+        <translation>Paramètres Canal</translation>
     </message>
     <message>
         <source>Robustness Mode</source>
@@ -1790,7 +1810,7 @@ Institute for Communication Technology</translation>
     </message>
     <message>
         <source>Channel</source>
-        <translation>Cannal</translation>
+        <translation>Canal</translation>
     </message>
     <message>
         <source>Spectrum</source>
@@ -2038,7 +2058,43 @@ Institute for Communication Technology</translation>
     </message>
     <message>
         <source>DRM Mode / Bandwidth:</source>
-	<translation>Mode DRM / Bande passante:</translation>
+        <translation>Mode DRM / Bande passante:</translation>
+    </message>
+    <message>
+        <source>Lat: %1&#xb0;  Long: %2&#xb0;</source>
+        <translation>Lat: %1&#xb0;  Long: %2&#xb0;</translation>
+    </message>
+    <message>
+        <source>Lat: ?  Long: ?</source>
+        <translation>Lat: ?  Long: ?</translation>
+    </message>
+    <message>
+        <source>  Alt: %1 m</source>
+        <translation>  Alt: %1 m</translation>
+    </message>
+    <message>
+        <source>  Alt: ?</source>
+        <translation>  Alt: ?</translation>
+    </message>
+    <message>
+        <source>Speed: </source>
+        <translation>Vitesse: </translation>
+    </message>
+    <message>
+        <source>%1 m/s</source>
+        <translation>%1 m/s</translation>
+    </message>
+    <message>
+        <source>  Heading: </source>
+        <translation>  Direction: </translation>
+    </message>
+    <message>
+        <source>Satellites: </source>
+        <translation>Satellites: </translation>
+    </message>
+    <message>
+        <source>Satellites: ?</source>
+        <translation>Satellites: ?</translation>
     </message>
 </context>
 <context>
@@ -2061,7 +2117,7 @@ Institute for Communication Technology</translation>
     </message>
     <message>
         <source>Sample Frequency Offset:</source>
-        <translation>Corr. Fréquence Echantillonnage:</translation>
+        <translation>Corr. Fréq. Echantillonnage:</translation>
     </message>
     <message>
         <source>Doppler / Delay:</source>
@@ -2105,7 +2161,7 @@ Institute for Communication Technology</translation>
     </message>
     <message>
         <source>Time Sync Acq:</source>
-        <translation>Acq Sync Heure:</translation>
+        <translation>Acq Sync Temps:</translation>
     </message>
     <message>
         <source>I/O Interface:</source>
@@ -2161,7 +2217,7 @@ Institute for Communication Technology</translation>
     </message>
     <message>
         <source>Chart Selector</source>
-        <translation type="unfinished"></translation>
+        <translation>Sélecteur de Graph</translation>
     </message>
     <message>
         <source>D-Spectrum</source>
@@ -2237,7 +2293,7 @@ Institute for Communication Technology</translation>
     </message>
     <message>
         <source>Channel Estimation: Frequency Interpolation</source>
-        <translation>Estimation Cannal: Interpolation Fréquence</translation>
+        <translation>Estimation Canal: Interpolation Fréquence</translation>
     </message>
     <message>
         <source>Linear</source>
@@ -2249,7 +2305,7 @@ Institute for Communication Technology</translation>
     </message>
     <message>
         <source>Channel Estimation: Time Interpolation</source>
-        <translation>Estimation Cannal: Interpolation Temps</translation>
+        <translation>Estimation Canal: Interpolation Temps</translation>
     </message>
     <message>
         <source>Time Sync Tracking</source>

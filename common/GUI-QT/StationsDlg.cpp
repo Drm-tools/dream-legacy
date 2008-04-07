@@ -455,7 +455,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	ListViewStations->setColumnAlignment(4, Qt::AlignRight);
 
 	/* Set up frequency selector control (QWTCounter control) */
-	QwtCounterFrequency->setRange(0.0, 30000.0, 1.0);
+	QwtCounterFrequency->setRange(0.0, MAX_RF_FREQ, 1.0);
 	QwtCounterFrequency->setNumButtons(3); /* Three buttons on each side */
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button1, 1); /* Increment */
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button2, 10);
