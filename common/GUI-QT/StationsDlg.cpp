@@ -906,11 +906,11 @@ void StationsDlg::OnGetUpdate()
 #if QT_VERSION >= 0x030000
 			int wk = d.weekNumber();
 #else
-			int wk = d.dayOfYear()/7;
+			int wk = d.dayOfYear()/7+1;
 #endif
 			int yr = d.year();
 			QString y,w;
-			if(13 <= wk)
+			if(wk <= 13)
 			{
 				w = "b";
 				y = QString::number(yr-1);
