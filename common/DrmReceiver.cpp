@@ -187,7 +187,7 @@ CSoundInProxy::Update()
 				pHamlib->SetRigModelForAllModes(iWantedRig);
 			else
 				pHamlib->SetRigModel(eWantedRigMode, iWantedRig);
-			
+
 			if(new_caps.attribute(eWantedRigMode, "audiotype")=="shm")
 			{
 				pcmWantedInput = Shm;
@@ -216,9 +216,17 @@ CSoundInProxy::Update()
 				bOnBoardDemod = FALSE;
 			}
 		}
+		else
+		{
+            pcmWantedInput = SoundCard;
+		}
 		stringstream s;
 		s << iWantedSoundDev;
 		pHamlib->set_attribute(eMode, "snddevin", s.str());
+	}
+	else
+	{
+        pcmWantedInput = SoundCard;
 	}
 #endif
 	if(pcmInput!=pcmWantedInput)
@@ -1156,10 +1164,10 @@ CDRMReceiver::InitsForAllModules()
 		Parameters.bMeasurePSD = FALSE;
 	}
 
-	if (Parameters.FrontEndParameters.eSMeterCorrectionType != 
+	if (Parameters.FrontEndParameters.eSMeterCorrectionType !=
                 CFrontEndParameters::S_METER_CORRECTION_TYPE_CAL_FACTOR_ONLY)
         Parameters.bMeasurePSD = TRUE;
-	
+
 
 	/* Set init flags */
 	SplitFAC.SetInitFlag();
@@ -1507,7 +1515,7 @@ int CDRMReceiver::GetRigModel() const
 	return 0;
 }
 
-void CDRMReceiver::GetRigList(map<rig_model_t,CRigCaps>& rigs) const
+void CDRMReceiver::GetRigList(map<int,CRigCaps>& rigs) const
 {
 #ifdef HAVE_LIBHAMLIB
 	if(SoundInProxy.pHamlib)

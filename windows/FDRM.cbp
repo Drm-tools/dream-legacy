@@ -7,7 +7,7 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="default">
-				<Option output=".\Dream.exe" prefix_auto="1" extension_auto="1" />
+				<Option output=".\Dream" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".\mingw" />
 				<Option type="0" />
 				<Option compiler="gcc" />
@@ -26,12 +26,11 @@
 			<Add option="-D_WINDOWS" />
 			<Add option="-DNDEBUG" />
 			<Add option="-DWIN32" />
-			<Add directory="C:\qt-3-mingw\include" />
+			<Add directory="%QTDIR%\include" />
 			<Add directory="..\libs" />
 			<Add directory="..\libs\winpcap" />
 			<Add directory="..\common\GUI-QT" />
 			<Add directory=".\moc" />
-			<Add directory="D:\Dev-Cpp\include\qwt" />
 		</Compiler>
 		<Linker>
 			<Add option="-Wl,-enable-stdcall-fixup" />
@@ -50,7 +49,7 @@
 			<Add library="winmm" />
 			<Add library="setupapi" />
 			<Add directory="..\libs" />
-			<Add directory="C:\qt-3-mingw\lib" />
+			<Add directory="%QTDIR%\lib" />
 		</Linker>
 		<Unit filename="..\common\AMDemodulation.cpp" />
 		<Unit filename="..\common\AMDemodulation.h" />
@@ -173,7 +172,6 @@
 		<Unit filename="..\common\TextMessage.h" />
 		<Unit filename="..\common\Version.cpp" />
 		<Unit filename="..\common\Version.h" />
-		<Unit filename="..\common\audiofilein.cpp" />
 		<Unit filename="..\common\audiofilein.h" />
 		<Unit filename="..\common\chanest\ChanEstTime.cpp" />
 		<Unit filename="..\common\chanest\ChanEstTime.h" />
@@ -275,17 +273,17 @@
 		<Unit filename="..\common\util\LogPrint.cpp" />
 		<Unit filename="..\common\util\LogPrint.h" />
 		<Unit filename="..\common\util\Modul.h" />
-		<Unit filename="..\common\util\ReceiverModul.h" />
-		<Unit filename="..\common\util\SimulationModul.h" />
-		<Unit filename="..\common\util\TransmitterModul.h" />
-		<Unit filename="..\common\util\ReceiverModul_impl.h" />
-		<Unit filename="..\common\util\SimulationModul_impl.h" />
-		<Unit filename="..\common\util\TransmitterModul_impl.h" />
 		<Unit filename="..\common\util\Pacer.h" />
 		<Unit filename="..\common\util\Reassemble.cpp" />
 		<Unit filename="..\common\util\Reassemble.h" />
+		<Unit filename="..\common\util\ReceiverModul.h" />
+		<Unit filename="..\common\util\ReceiverModul_impl.h" />
 		<Unit filename="..\common\util\Settings.cpp" />
 		<Unit filename="..\common\util\Settings.h" />
+		<Unit filename="..\common\util\SimulationModul.h" />
+		<Unit filename="..\common\util\SimulationModul_impl.h" />
+		<Unit filename="..\common\util\TransmitterModul.h" />
+		<Unit filename="..\common\util\TransmitterModul_impl.h" />
 		<Unit filename="..\common\util\Utilities.cpp" />
 		<Unit filename="..\common\util\Utilities.h" />
 		<Unit filename="..\common\util\Vector.h" />
@@ -355,6 +353,8 @@
 		<Unit filename="resource.h" />
 		<Extensions>
 			<code_completion />
+			<debugger />
+			<envvars />
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

@@ -57,12 +57,15 @@ win32 {
 	UI_DIR		= windows/moc
 	MOC_DIR		= windows/moc
 # this next line could be cross platform if the windows library names do not start with lib
-	LIBS 			+= zdll.lib libqwt.lib libfhgjournaline.lib 
+	LIBS 			+= libsndfile-1.lib zdll.lib libqwt.lib libfhgjournaline.lib 
 	LIBS			+= libfaac.lib libfaad.lib
 	LIBS			+= libfftw.lib setupapi.lib
 	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:"MSVCRTD, LIBCMT"
 	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
 	DEFINES		-= UNICODE
+	DEFINES		+= HAVE_JOURNALINE HAVE_LIBFAAC HAVE_LIBFAAD HAVE_LIBSNDFILE HAVE_LIBZ
+	DEFINES		+= USE_FAAC_LIBRARY USE_FAAD2_LIBRARY USE_QT_GUI
+	DEFINES		+= HAVE_SETUPAPI
 	HEADERS		+= windows/Source/Sound.h windows/Source/SoundWin.h 
 	SOURCES		+= windows/Source/Pacer.cpp windows/Source/Sound.cpp
 }
@@ -118,7 +121,6 @@ common/DrmReceiver.h   \
 common/DRMSignalIO.h   \
 common/DrmSimulation.h   \
 common/DrmTransmitter.h   \
-common/DrmTransmitterInterface.h   \
 common/DrmEncoder.h   \
 common/DrmModulator.h   \
 common/FAC/FAC.h   \
@@ -208,12 +210,6 @@ common/util/Buffer.h   \
 common/util/CRC.h   \
 common/util/LogPrint.h   \
 common/util/Modul.h   \
-common/util/ReceiverModul.h   \
-common/util/SimulationModul.h   \
-common/util/TransmitterModul.h   \
-common/util/ReceiverModul_impl.h   \
-common/util/SimulationModul_impl.h   \
-common/util/TransmitterModul_impl.h   \
 common/util/Pacer.h   \
 common/util/Reassemble.h   \
 common/util/Settings.h   \

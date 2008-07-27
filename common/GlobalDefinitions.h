@@ -52,7 +52,8 @@ using namespace std; /* Because of the library: "complex" */
 #define _DEBUG_
 #undef _DEBUG_
 
-#ifdef _WIN32 /* For Windows set flags here, otherwise it is set by configure */
+#if (!defined(HAVE_CONFIG_H)) && (!defined(HAVE_QT))
+/* For Windows set flags here, otherwise it is set by configure */
 
 /* Define whether using GUI or non-GUI receiver */
 # define HAVE_QT
