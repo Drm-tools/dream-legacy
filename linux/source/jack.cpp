@@ -102,9 +102,9 @@ play_stereo(jack_nframes_t nframes, instance_data_t& play_data)
 	}
 	jack_default_audio_sample_t *out[2];
 	char* t;
-	cerr << long(play_data.left);
+	// cerr << long(play_data.left);
 	t = (char*)jack_port_get_buffer(play_data.left, nframes);
-	cerr << t << endl;
+	// cerr << t << endl;
 	out[0] = (jack_default_audio_sample_t *) t;
 	t = (char*)jack_port_get_buffer(play_data.right, nframes);
 	out[1] = (jack_default_audio_sample_t *) t;
@@ -236,8 +236,7 @@ void CJackCommon::initialise()
 	client = jack_client_open("dream", options, &status, server.c_str());
 	if (client == NULL)
 	{
-		cerr << "jack_client_open() failed, status = " << ((long unsigned)
-														   status) << endl;
+		// cerr << "jack_client_open() failed, status = " << ((long unsigned) status) << endl;
 		if (status & JackServerFailed)
 		{
 			throw "Unable to connect to Jack server";
@@ -332,7 +331,7 @@ CSoundInJack & CSoundInJack::operator=(const CSoundInJack & e)
 
 CSoundInJack::~CSoundInJack()
 {
-cerr << "CSoundInJack::~CSoundInJack()" << endl;
+	// cerr << "CSoundInJack::~CSoundInJack()" << endl;
 	Close();
 	if(data.client==NULL)
 		return;
@@ -436,7 +435,7 @@ CSoundInJack::Read(vector<short>& psData)
 	if (n != bytes)
 	{
 		capture_data.underruns++;
-		cerr << "jack read " << n << " wanted " << bytes << endl;
+		// cerr << "jack read " << n << " wanted " << bytes << endl;
 		return TRUE;
 	}
 	return FALSE;
@@ -486,7 +485,7 @@ play_data(), dev(-1), ports(), channels(2)
 
 CSoundOutJack::~CSoundOutJack()
 {
-cerr << "CSoundOutJack::~CSoundOutJack()" <<endl;
+	// cerr << "CSoundOutJack::~CSoundOutJack()" <<endl;
 	Close();
 	if (data.is_active && jack_deactivate(data.client))
 	{
