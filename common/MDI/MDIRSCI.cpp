@@ -100,7 +100,10 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 )
 {
 	TagItemGeneratorFAC.GenTag(Parameter, FACData.Get(NUM_FAC_BITS_PER_BLOCK));
-	TagItemGeneratorSDC.GenTag(Parameter, SDCData.Get(Parameter.iNumSDCBitsPerSFrame));
+	int iBits = Parameter.iNumSDCBitsPerSFrame;
+	if(iBits>SDCData.GetFillLevel())
+		iBits = 0;
+	TagItemGeneratorSDC.GenTag(Parameter, SDCData.Get(iBits));
 	size_t n = MAX_NUM_STREAMS;
 	if(n > vecMSCData.size())
 		n = vecMSCData.size();
