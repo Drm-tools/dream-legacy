@@ -382,7 +382,7 @@ const
 	{"3.1.9.8", "International"},
 	{"3.1.9.9", "National"},
 	{"3.10", "Archive"},
-	{"3.2", "ScrollUp"},
+	{"3.2", "Sports"},
 	{"3.2.1", "Athletics"},
 	{"3.2.1.1", "Field"},
 	{"3.2.1.2", "Track"},
