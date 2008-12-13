@@ -579,7 +579,7 @@ static void attribute(map<string,string>& out, _BYTE element_tag, tag_length_val
 		ptrdiff_t index = tlv.value[0];
 		ptrdiff_t num_vals = (tab.vals[0] - (const char*)0);
 #endif
-		if(index<num_vals && index>0)
+		if(index<=num_vals && index>0)
 			value = tab.vals[index];
 		else
 			value = "out of range";
