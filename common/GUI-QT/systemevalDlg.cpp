@@ -53,13 +53,13 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Init controls -------------------------------------------------------- */
 	/* Init main plot */
-	int iScheme = Settings.Get("System Evaluation Dialog", "colorscheme", 0);
-	Settings.Put("System Evaluation Dialog", "colorscheme", iScheme);
+	int iPlotStyle = Settings.Get("System Evaluation Dialog", "plotstyle", 0);
+	Settings.Put("System Evaluation Dialog", "plotstyle", iPlotStyle);
 	MainPlot->SetRecObj(&DRMReceiver);
-	MainPlot->SetPlotStyle(iScheme);
+	MainPlot->SetPlotStyle(iPlotStyle);
 	MainPlot->setMargin(1);
 
-	/* Update times for color LEDs */
+	/* Update times for colour LEDs */
 	LEDFAC->SetUpdateTime(1500);
 	LEDSDC->SetUpdateTime(1500);
 	LEDMSC->SetUpdateTime(600);
@@ -215,9 +215,9 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	}
 	else
 	{
-		int iSysEvalDlgPlotType = Settings.Get("System Evaluation Dialog", "sysevplottype", 0);
+		int iPlotType = Settings.Get("System Evaluation Dialog", "plottype", 0);
 		/* Set chart type */
-		switch (iSysEvalDlgPlotType)
+		switch (iPlotType)
 		{
 		case (int) CDRMPlot::POWER_SPEC_DENSITY:
 			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
@@ -487,18 +487,18 @@ void systemevalDlg::hideEvent(QHideEvent*)
 	/* Store current plot type. Convert plot type into an integer type.
 	 * TODO: better solution
 	 */
-	Settings.Put("System Evaluation Dialog", "sysevplottype", (int) MainPlot->GetChartType());
+	Settings.Put("System Evaluation Dialog", "plottype", (int) MainPlot->GetChartType());
 }
 
 void systemevalDlg::UpdatePlotsStyle()
 {
-	int iColor = Settings.Get("System Evaluation Dialog", "colorscheme", 0xff0000);
+	int iPlotStyle = Settings.Get("System Evaluation Dialog", "plotstyle", 0);
 	/* Update chart windows */
 	for (size_t i = 0; i < vecpDRMPlots.size(); i++)
-		vecpDRMPlots[i]->SetPlotStyle(iColor);
+		vecpDRMPlots[i]->SetPlotStyle(iPlotStyle);
 
 	/* Update main plot window */
-	MainPlot->SetPlotStyle(iColor);
+	MainPlot->SetPlotStyle(iPlotStyle);
 }
 
 CDRMPlot* systemevalDlg::OpenChartWin(const CDRMPlot::ECharType eNewType)
@@ -508,7 +508,7 @@ CDRMPlot* systemevalDlg::OpenChartWin(const CDRMPlot::ECharType eNewType)
 	pNewChartWin->setCaption(tr("Chart Window"));
 
 	/* Set color scheme */
-	pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "colorscheme", 0xff0000));
+	pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 
 	/* Set correct icon (use the same as this dialog) */
 	pNewChartWin->setIcon(*this->icon());
