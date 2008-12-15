@@ -13,21 +13,22 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
 
 #include "EPGDlg.h"
+#include <qregexp.h>
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, WFlags f)
@@ -87,7 +88,7 @@ EPGDlg::~EPGDlg()
 }
 
 void EPGDlg::OnTimer()
-{	
+{
     if ((basic->text() == tr("no basic profile data"))
 		|| (advanced->text() == tr("no advanced profile data")))
 		/* not all information is loaded */
@@ -124,10 +125,10 @@ void EPGDlg::OnTimer()
 	}
 }
 
-void EPGDlg::showEvent(QShowEvent *) 
-{    
+void EPGDlg::showEvent(QShowEvent *)
+{
     CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
     int sNo = Parameters.GetCurSelAudioService();
     uint32_t sid = Parameters.Service[sNo].iServiceID;
 
@@ -137,7 +138,7 @@ void EPGDlg::showEvent(QShowEvent *)
     channel->clear();
     int n = -1;
 	sids.clear();
-    for (map < uint32_t, CServiceInformation >::const_iterator i = Parameters.ServiceInformation.begin(); 
+    for (map < uint32_t, CServiceInformation >::const_iterator i = Parameters.ServiceInformation.begin();
          i != Parameters.ServiceInformation.end(); i++) {
 		QString channel_label = QString().fromUtf8(i->second.label.begin()->c_str());
 		uint32_t channel_id = i->second.id;
@@ -147,7 +148,7 @@ void EPGDlg::showEvent(QShowEvent *)
     	    n = channel->currentItem();
         }
     }
-	Parameters.Unlock(); 
+	Parameters.Unlock();
     // update the current selection
     if (n >= 0) {
 	    channel->setCurrentItem(n);
@@ -244,7 +245,7 @@ void EPGDlg::select()
 	 i != epg.progs.end(); i++)
 	{
 	    const EPG::CProg & p = i.data();
-	    QString name, genre;
+	    QString name, description, genre;
 		if(p.mainGenre.size()==0)
 			genre = "";
 		else
@@ -261,7 +262,10 @@ void EPGDlg::select()
 		name = "unknown " + p.mainGenre[0] + " programme";
 		else
           name = p.name;
-	    QListViewItem* CurrItem = new QListViewItem(Data, p.start, name, genre, p.description, p.duration);
+        description = p.description;
+        // collapse white space in description
+        description.replace(QRegExp("[\t\r\n ]+"), " ");
+	    QListViewItem* CurrItem = new QListViewItem(Data, p.start, name, genre, description, p.duration);
 
 		/* Get current UTC time */
 		time_t ltime;
