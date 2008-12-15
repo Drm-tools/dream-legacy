@@ -105,7 +105,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pSettingsMenu->insertItem(tr("&Plot Style"), pPlotStyleMenu);
 
 	/* Set check */
-	pPlotStyleMenu->setItemChecked(Settings.Get("DRM Dialog", "plotstyle", 0), TRUE);
+	pPlotStyleMenu->setItemChecked(Settings.Get("System Evaluation Dialog", "plotstyle", 0), TRUE);
 
 	/* multimedia settings */
 	pSettingsMenu->insertSeparator();
@@ -983,7 +983,7 @@ void FDRMDialog::OnMenuSetDisplayColor()
 void FDRMDialog::OnMenuPlotStyle(int value)
 {
 	/* Save new style in global variable */
-	Settings.Put("DRM Dialog", "plotstyle", value);
+	Settings.Put("System Evaluation Dialog", "plotstyle", value);
 
 	/* Set new plot style in other dialogs */
 	pSysEvalDlg->UpdatePlotsStyle();
