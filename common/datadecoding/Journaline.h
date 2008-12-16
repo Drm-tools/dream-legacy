@@ -32,15 +32,9 @@
 #include "../util/Vector.h"
 
 #ifdef HAVE_JOURNALINE
-# ifdef _WIN32
-#  include <NML.h>
-#  include <newssvcdec.h>
-#  include <dabdatagroupdecoder.h>
-# else
-#  include <journaline/NML.h>
-#  include <journaline/newssvcdec.h>
-#  include <journaline/dabdatagroupdecoder.h>
-# endif 
+# include "journaline/NML.h"
+# include "journaline/newssvcdec.h"
+# include "journaline/dabdatagroupdecoder.h"
 #endif
 
 
