@@ -63,14 +63,9 @@
 
 #include "dabdatagroupdecoder.h"
 #include "dabdgdec_impl.h"
-
-#ifdef FHG_USEFLATDIRSTRUCT
 #include "log.h"
 #include "crc_8_16.h"
-#else
-#include "../../log/log.h"
-#include "../../ipio/crc/crc_8_16.h"
-#endif
+
 extern int showDdDabDgDecInfo;
 extern int showDdDabDgDecErr;
 

@@ -59,12 +59,7 @@
 ***
 **/
 #include "newsobject.h"
-
-#ifdef FHG_USEFLATDIRSTRUCT
 #include "cpplog.h"
-#else
-#include "../../log/cpplog.h"
-#endif
 
 extern int showDdNewsSvcDecInfo;
 extern int showDdNewsSvcDecErr;

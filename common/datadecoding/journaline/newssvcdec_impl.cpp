@@ -85,17 +85,11 @@
 #pragma warning(default:4512)
 #endif
 
-#ifdef FHG_USEFLATDIRSTRUCT
 #include "dabdatagroupdecoder.h"
 #include "cpplog.h"
-#else
-#include "../dab_datagroup_decoder/dabdatagroupdecoder.h"
-#include "../../../cpplog/cpplog.h"
-#endif
-
 #include "newssvcdec_impl.h"
-using std::find;
 
+using std::find;
 
 #ifdef __cplusplus
 extern "C" {
