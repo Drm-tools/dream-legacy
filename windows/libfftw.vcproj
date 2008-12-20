@@ -77,12 +77,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;$(InputDir)..\libs&quot;&#x0D;&#x0A;copy &quot;$(InputDir)..\..\fftw-2.1.5\fftw\fftw.h&quot; &quot;$(InputDir)..\libs&quot;&#x0D;&#x0A;copy &quot;$(InputDir)..\..\fftw-2.1.5\rfftw\rfftw.h&quot; &quot;$(InputDir)..\libs&quot;"
+				CommandLine="copy &quot;$(TargetPath)&quot; &quot;$(InputDir)..\libs&quot;&#x0D;&#x0A;copy &quot;$(InputDir)..\..\fftw-2.1.5\fftw\fftw.h&quot; &quot;$(InputDir)..\libs&quot;&#x0D;&#x0A;copy &quot;$(InputDir)..\..\fftw-2.1.5\rfftw\rfftw.h&quot; &quot;$(InputDir)..\libs&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="Release"
+			OutputDirectory="..\libs"
 			IntermediateDirectory="Release"
 			ConfigurationType="4"
 			>
@@ -105,7 +105,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="&quot;..\..\fftw-2.1.5\fftw&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;"
-				RuntimeLibrary="2"
+				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
@@ -139,7 +139,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Install files for Dream"
-				CommandLine="copy &quot;$(TargetPath)&quot; &quot;$(InputDir)..\libs&quot;&#x0D;&#x0A;copy &quot;$(InputDir)..\..\fftw-2.1.5\fftw\fftw.h&quot; &quot;$(InputDir)..\libs&quot;&#x0D;&#x0A;copy &quot;$(InputDir)..\..\fftw-2.1.5\rfftw\rfftw.h&quot; &quot;$(InputDir)..\libs&quot;"
+				CommandLine="copy &quot;$(InputDir)..\..\fftw-2.1.5\fftw\fftw.h&quot; &quot;$(InputDir)..\libs&quot;&#x0D;&#x0A;copy &quot;$(InputDir)..\..\fftw-2.1.5\rfftw\rfftw.h&quot; &quot;$(InputDir)..\libs&quot;&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
