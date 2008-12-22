@@ -18,12 +18,14 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="Debug"
+			OutputDirectory="..\libs"
 			IntermediateDirectory="Debug"
 			ConfigurationType="4"
+			BuildLogFile="$(IntDir)\FaadBuildLog.htm"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
+				CommandLine="copy &quot;$(InputDir)..\..\faad2\include\neaacdec.h&quot; ..\libs&#x0D;&#x0A;copy  &quot;$(InputDir)faadconfig.h&quot; ..\..\..\faad2\config.h"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -79,13 +81,14 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="Release"
+			OutputDirectory="..\libs"
 			IntermediateDirectory="Release"
 			ConfigurationType="4"
+			BuildLogFile="$(IntDir)\FaadBuildLog.htm"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="copy &quot;$(InputDir)..\..\faad2\include\neaacdec.h&quot; ..\libs"
+				CommandLine="copy &quot;$(InputDir)..\..\faad2\include\neaacdec.h&quot; ..\libs&#x0D;&#x0A;copy &quot;$(InputDir)faadconfig.h&quot;  &quot;$(InputDir)..\..\faad2\config.h&quot;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -102,7 +105,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="..\libs"
-				PreprocessorDefinitions="HAVE_MEMORY_H;DRM;DRM_PS"
+				PreprocessorDefinitions="HAVE_CONFIG_H;DRM;DRM_PS"
 				RuntimeLibrary="0"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"

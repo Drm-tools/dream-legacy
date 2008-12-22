@@ -22,6 +22,7 @@
 			ConfigurationType="4"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
+			BuildLogFile="$(IntDir)\QwtBuildLog.htm"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -87,16 +88,17 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="mkdir ..\libs\qwt&#x0D;&#x0A;copy ..\..\qwt-4.2.0\include\* ..\libs\qwt"
+				CommandLine="mkdir ..\libs\qwt&#x0D;&#x0A;copy ..\..\qwt-4.2.0\include\* ..\libs\qwt&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="."
+			OutputDirectory="..\libs"
 			IntermediateDirectory="Debug\"
 			ConfigurationType="2"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
+			BuildLogFile="$(IntDir)\QwtBuildLog.htm"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
