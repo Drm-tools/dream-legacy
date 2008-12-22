@@ -538,6 +538,38 @@ SOURCE=..\common\datadecoding\epg\epgdec.cpp
 SOURCE=..\common\datadecoding\epg\epgutil.cpp
 # End Source File
 # End Group
+# Begin Group "journaline"
+
+# PROP Default_Filter ".c .cpp"
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\crc_8_16.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\dabdgdec_impl.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\log.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\newsobject.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\newssvcdec_impl.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\NML.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\Splitter.cpp
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\common\datadecoding\DABMOT.cpp
@@ -1028,6 +1060,50 @@ SOURCE=..\common\datadecoding\epg\epgdec.h
 # Begin Source File
 
 SOURCE=..\common\datadecoding\epg\epgutil.h
+# End Source File
+# End Group
+# Begin Group "Header journaline"
+
+# PROP Default_Filter ".h"
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\cpplog.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\crc_8_16.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\dabdatagroupdecoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\dabdgdec_impl.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\log.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\newsobject.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\newssvcdec.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\newssvcdec_impl.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\NML.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\journaline\Splitter.h
 # End Source File
 # End Group
 # Begin Source File
