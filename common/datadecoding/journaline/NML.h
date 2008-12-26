@@ -55,7 +55,7 @@
 /// @file       NML.h
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: NML.h,v 1.1 2008/12/15 22:53:02 jcable Exp $
+/// $Id: NML.h,v 1.2 2008/12/26 17:18:08 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///
@@ -105,6 +105,7 @@ class NMLEscapeCodeHandler
  public:
   virtual bool Convert(std::string & dest,
                        const std::string & src) const = 0;
+  virtual ~NMLEscapeCodeHandler() {}
 };
 
 

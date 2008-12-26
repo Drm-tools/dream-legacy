@@ -58,8 +58,12 @@
 ***
 ***
 **/
-#include <malloc.h>
-#include <memory.h>
+#ifdef _MSC_VER
+# include <malloc.h>
+# include <memory.h>
+#else
+# include <stdlib.h>
+#endif
 
 #include "dabdatagroupdecoder.h"
 #include "dabdgdec_impl.h"

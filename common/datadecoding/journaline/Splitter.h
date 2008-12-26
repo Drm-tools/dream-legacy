@@ -53,7 +53,7 @@
 /// @file       Splitter.h
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: Splitter.h,v 1.1 2008/12/15 22:53:02 jcable Exp $
+/// $Id: Splitter.h,v 1.2 2008/12/26 17:18:08 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///
@@ -91,11 +91,12 @@ class StringSplitter
  public:
   virtual bool Split(std::vector<std::string> & dest,
                      const std::string & src) const = 0;
+  virtual ~StringSplitter() {}
 };
 
 
 /// line splitter algorithm
-class Splitter
+class Splitter : public StringSplitter
 {
  public:
   Splitter();
@@ -103,7 +104,7 @@ class Splitter
 
   virtual bool SetLineBreakCharacter(char lbc);
   virtual bool Split(std::vector<std::string> & dest,
-                     const std::string & src);
+                     const std::string & src) const;
  private:
   char _LineBreak;
 };
