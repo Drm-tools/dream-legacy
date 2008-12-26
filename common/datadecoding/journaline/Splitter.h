@@ -53,7 +53,7 @@
 /// @file       Splitter.h
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: Splitter.h,v 1.2 2008/12/26 17:18:08 jcable Exp $
+/// $Id: Splitter.h,v 1.3 2008/12/26 20:04:53 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///
@@ -68,7 +68,7 @@
 #ifndef _SPLITTER_H_
 #define _SPLITTER_H_
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(push,3)
 #pragma warning(disable:4514)
 #pragma warning(disable:4786)
@@ -77,7 +77,7 @@
 #include <string>
 #include <vector>
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(pop)
 #pragma warning(disable:4786)
 #pragma warning(disable:4514)

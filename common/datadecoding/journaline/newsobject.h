@@ -60,13 +60,11 @@
 ***
 ***
 **/
-#ifdef WIN32
-#ifndef TIM_DEF
+#if defined(_MSC_VER) && (_MSC_VER==1200)
 typedef struct timeval {
 	long tv_sec;
 	long tv_usec;
 } timeval;
-#endif
 #else
 #include <sys/time.h>
 #endif

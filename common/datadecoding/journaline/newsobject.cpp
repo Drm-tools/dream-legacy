@@ -61,9 +61,6 @@
 #include "newsobject.h"
 #include "cpplog.h"
 
-extern int showDdNewsSvcDecInfo;
-extern int showDdNewsSvcDecErr;
-
 NewsObject::NewsObject(unsigned long len, const unsigned char *buf,
 	struct timeval *creation_time) :
 		d_creation_time(*creation_time),

@@ -60,7 +60,7 @@
 **/
 
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #define TIM_DEF
 #include <wtypes.h>
 #undef min
@@ -71,7 +71,7 @@
 #endif
 
 
-#if defined(WIN32) && (_MSC_VER==1200)
+#if defined(_MSC_VER) && (_MSC_VER==1200)
 // for Visual Studio 6.0, define min (algorithm) as _MIN
 #define min _MIN
 
@@ -81,7 +81,7 @@
 #include <algorithm>
 #include <time.h>
 
-#if defined(WIN32) && (_MSC_VER==1200)
+#if defined(_MSC_VER) && (_MSC_VER==1200)
 #pragma warning(default:4512)
 #endif
 
@@ -94,8 +94,8 @@ using std::find;
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern int showDdNewsSvcDecInfo;
-extern int showDdNewsSvcDecErr;
+int showDdNewsSvcDecInfo;
+int showDdNewsSvcDecErr;
 #ifdef __cplusplus
 }
 #endif

@@ -122,8 +122,8 @@ dnl librt ----------------------------------------------------------------------
 AC_CHECK_LIB(rt, clock_gettime)
 
 dnl fftw ------------------------------------------------------------------------
-AC_SEARCH_LIBS(fftw_create_plan, dfftw fftw, , exit 1)
-AC_SEARCH_LIBS(rfftw, drfftw rfftw, , exit 1)
+AC_SEARCH_LIBS([fftw_create_plan],[dfftw fftw], , exit 1)
+AC_SEARCH_LIBS([rfftw],[drfftw rfftw], , exit 1)
 AC_CHECK_HEADERS(dfftw.h fftw.h)
 AC_CHECK_HEADERS(drfftw.h rfftw.h)
 

@@ -27,10 +27,12 @@ drmwithoutqt_SOURCES = \
 	../common/datadecoding/Journaline.cpp \
 	../common/datadecoding/epg/epgutil.cpp \
     ../common/datadecoding/journaline/NML.cpp \
-	../common/datadecoding/journaline/dabdgdec_impl.c \
     ../common/datadecoding/journaline/Splitter.cpp \
-    ../common/datadecoding/journaline/newsobject.cpp \
     ../common/datadecoding/journaline/newssvcdec_impl.cpp \
+    ../common/datadecoding/journaline/newsobject.cpp \
+	../common/datadecoding/journaline/dabdgdec_impl.c \
+    ../common/datadecoding/journaline/crc_8_16.c \
+    ../common/datadecoding/journaline/log.c \
 	../common/FAC/FAC.cpp \
 	../common/matlib/MatlibSigProToolbox.cpp \
 	../common/matlib/MatlibStdToolbox.cpp \
@@ -115,14 +117,14 @@ drmwithoutqt_SOURCES = \
 	../common/datadecoding/epg/epgutil.h \
     ../common/datadecoding/journaline/NML.h \
     ../common/datadecoding/journaline/Splitter.h \
-    ../common/datadecoding/journaline/cpplog.h \
-    ../common/datadecoding/journaline/crc_8_16.h \
-    ../common/datadecoding/journaline/dabdatagroupdecoder.h \
-    ../common/datadecoding/journaline/dabdgdec_impl.h \
-    ../common/datadecoding/journaline/log.h \
     ../common/datadecoding/journaline/newsobject.h \
     ../common/datadecoding/journaline/newssvcdec.h \
     ../common/datadecoding/journaline/newssvcdec_impl.h \
+    ../common/datadecoding/journaline/dabdatagroupdecoder.h \
+    ../common/datadecoding/journaline/dabdgdec_impl.h \
+    ../common/datadecoding/journaline/crc_8_16.h \
+    ../common/datadecoding/journaline/log.h \
+    ../common/datadecoding/journaline/cpplog.h \
 	../common/FAC/FAC.h \
 	../common/matlib/Matlib.h \
 	../common/matlib/MatlibSigProToolbox.h \

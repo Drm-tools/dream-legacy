@@ -55,7 +55,7 @@
 /// @file       NML.cpp
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: NML.cpp,v 1.2 2008/12/17 10:16:06 jcable Exp $
+/// $Id: NML.cpp,v 1.3 2008/12/26 20:04:53 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///
@@ -71,8 +71,8 @@
 #include "Splitter.h"
 #include "cpplog.h"
 
-#ifdef WIN32
-#pragma warning (disable: 4786)
+#ifdef _MSC_VER
+# pragma warning (disable: 4786)
 #endif
 
 static int Inflate(unsigned char *dest,
