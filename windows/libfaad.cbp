@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="libfaad" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug Win32">
+				<Option output="..\libs\libfaadd" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Debug" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-W" />
+					<Add option="-g" />
+					<Add option="-O0" />
+					<Add option="-D_DEBUG" />
+				</Compiler>
+			</Target>
+			<Target title="Release Win32">
+				<Option output="..\libs\libfaad" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Release" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-W" />
+					<Add option="-DNDEBUG" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-DDRM" />
+			<Add option="-DDRM_PS" />
+			<Add option="-DHAVE_DLFCN_H" />
+			<Add option="-DHAVE_ERRNO_H" />
+			<Add option="-DHAVE_FLOAT_H" />
+			<Add option="-DHAVE_GETPWUID" />
+			<Add option="-DHAVE_INTTYPES_H" />
+			<Add option="-DHAVE_LIMITS_H" />
+			<Add option="-DHAVE_LRINTF" />
+			<Add option="-DHAVE_MEMCPY" />
+			<Add option="-DHAVE_MEMORY_H" />
+			<Add option="-DHAVE_STDINT_H" />
+			<Add option="-DHAVE_STDLIB_H" />
+			<Add option="-DHAVE_STRCHR" />
+			<Add option="-DHAVE_STRINGS_H" />
+			<Add option="-DHAVE_STRING_H" />
+			<Add option="-DHAVE_STRSEP" />
+			<Add option="-DHAVE_SYS_STAT_H" />
+			<Add option="-DHAVE_SYS_TIME_H" />
+			<Add option="-DHAVE_SYS_TYPES_H" />
+			<Add option="-DHAVE_UNISTD_H" />
+			<Add option="-DSTDC_HEADERS" />
+			<Add option="-DTIME_WITH_SYS_TIME" />
+			<Add option='-DVERSION=&quot;2.6.0cvs&quot;' />
+			<Add directory="..\..\faad2\include" />
+			<Add directory="..\..\faad2\libfaad" />
+		</Compiler>
+		<Unit filename="..\..\faad2\include\neaacdec.h" />
+		<Unit filename="..\..\faad2\libfaad\Tns.h" />
+		<Unit filename="..\..\faad2\libfaad\analysis.h" />
+		<Unit filename="..\..\faad2\libfaad\bits.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\bits.h" />
+		<Unit filename="..\..\faad2\libfaad\cfft.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\cfft.h" />
+		<Unit filename="..\..\faad2\libfaad\cfft_tab.h" />
+		<Unit filename="..\..\faad2\libfaad\codebook\hcb.h" />
+		<Unit filename="..\..\faad2\libfaad\codebook\hcb_1.h" />
+		<Unit filename="..\..\faad2\libfaad\codebook\hcb_10.h" />
+		<Unit filename="..\..\faad2\libfaad\codebook\hcb_11.h" />
+		<Unit filename="..\..\faad2\libfaad\codebook\hcb_2.h" />
+		<Unit filename="..\..\faad2\libfaad\codebook\hcb_3.h" />
+		<Unit filename="..\..\faad2\libfaad\codebook\hcb_4.h" />
+		<Unit filename="..\..\faad2\libfaad\codebook\hcb_5.h" />
+		<Unit filename="..\..\faad2\libfaad\codebook\hcb_6.h" />
+		<Unit filename="..\..\faad2\libfaad\codebook\hcb_7.h" />
+		<Unit filename="..\..\faad2\libfaad\codebook\hcb_8.h" />
+		<Unit filename="..\..\faad2\libfaad\codebook\hcb_9.h" />
+		<Unit filename="..\..\faad2\libfaad\codebook\hcb_sf.h" />
+		<Unit filename="..\..\faad2\libfaad\common.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\common.h" />
+		<Unit filename="..\..\faad2\libfaad\data.h" />
+		<Unit filename="..\..\faad2\libfaad\decoder.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\decoder.h" />
+		<Unit filename="..\..\faad2\libfaad\dither.h" />
+		<Unit filename="..\..\faad2\libfaad\drc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\drc.h" />
+		<Unit filename="..\..\faad2\libfaad\drm_dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\drm_dec.h" />
+		<Unit filename="..\..\faad2\libfaad\error.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\error.h" />
+		<Unit filename="..\..\faad2\libfaad\filtbank.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\filtbank.h" />
+		<Unit filename="..\..\faad2\libfaad\fixed.h" />
+		<Unit filename="..\..\faad2\libfaad\hcr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\huffman.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\huffman.h" />
+		<Unit filename="..\..\faad2\libfaad\ic_predict.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\ic_predict.h" />
+		<Unit filename="..\..\faad2\libfaad\iq_table.h" />
+		<Unit filename="..\..\faad2\libfaad\is.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\is.h" />
+		<Unit filename="..\..\faad2\libfaad\kbd_win.h" />
+		<Unit filename="..\..\faad2\libfaad\lt_predict.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\lt_predict.h" />
+		<Unit filename="..\..\faad2\libfaad\mdct.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\mdct.h" />
+		<Unit filename="..\..\faad2\libfaad\mp4.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\mp4.h" />
+		<Unit filename="..\..\faad2\libfaad\ms.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\ms.h" />
+		<Unit filename="..\..\faad2\libfaad\output.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\output.h" />
+		<Unit filename="..\..\faad2\libfaad\pns.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\pns.h" />
+		<Unit filename="..\..\faad2\libfaad\ps_dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\ps_dec.h" />
+		<Unit filename="..\..\faad2\libfaad\ps_syntax.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\ps_tables.h" />
+		<Unit filename="..\..\faad2\libfaad\pulse.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\pulse.h" />
+		<Unit filename="..\..\faad2\libfaad\rvlc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\rvlc.h" />
+		<Unit filename="..\..\faad2\libfaad\sbr_dct.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\sbr_dct.h" />
+		<Unit filename="..\..\faad2\libfaad\sbr_dec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\sbr_dec.h" />
+		<Unit filename="..\..\faad2\libfaad\sbr_e_nf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\sbr_e_nf.h" />
+		<Unit filename="..\..\faad2\libfaad\sbr_fbt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\sbr_fbt.h" />
+		<Unit filename="..\..\faad2\libfaad\sbr_hfadj.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\sbr_hfadj.h" />
+		<Unit filename="..\..\faad2\libfaad\sbr_hfgen.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\sbr_hfgen.h" />
+		<Unit filename="..\..\faad2\libfaad\sbr_huff.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\sbr_huff.h" />
+		<Unit filename="..\..\faad2\libfaad\sbr_noise.h" />
+		<Unit filename="..\..\faad2\libfaad\sbr_qmf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\sbr_qmf.h" />
+		<Unit filename="..\..\faad2\libfaad\sbr_qmf_c.h" />
+		<Unit filename="..\..\faad2\libfaad\sbr_syntax.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\sbr_syntax.h" />
+		<Unit filename="..\..\faad2\libfaad\sbr_tf_grid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\sbr_tf_grid.h" />
+		<Unit filename="..\..\faad2\libfaad\sine_win.h" />
+		<Unit filename="..\..\faad2\libfaad\specrec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\specrec.h" />
+		<Unit filename="..\..\faad2\libfaad\ssr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\ssr.h" />
+		<Unit filename="..\..\faad2\libfaad\ssr_fb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\ssr_fb.h" />
+		<Unit filename="..\..\faad2\libfaad\ssr_ipqf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\ssr_ipqf.h" />
+		<Unit filename="..\..\faad2\libfaad\ssr_win.h" />
+		<Unit filename="..\..\faad2\libfaad\structs.h" />
+		<Unit filename="..\..\faad2\libfaad\syntax.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\syntax.h" />
+		<Unit filename="..\..\faad2\libfaad\tns.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faad2\libfaad\tns.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+			<envvars />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

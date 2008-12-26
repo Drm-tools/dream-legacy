@@ -95,4 +95,3 @@ rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\GeneralSettingsDlgbase.ui -i GeneralSettingsDlgbase.h -o moc\GeneralSettingsDlgbase.cpp
 %qtdir%\bin\moc.exe moc\GeneralSettingsDlgbase.h -o moc\moc_GeneralSettingsDlgbase.cpp
 
-pause
