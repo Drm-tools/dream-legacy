@@ -50,14 +50,14 @@
 #ifndef __CPP_LOG__
 #define __CPP_LOG__
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(push,3)
 #pragma warning(disable:4514)
 #endif
 
 #include <iostream>
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(pop)
 #pragma warning(disable:4514)
 #endif

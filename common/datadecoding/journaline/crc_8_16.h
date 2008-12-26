@@ -56,7 +56,7 @@
  *
  * @file        crc_8_16.h
  *
- * $Id: crc_8_16.h,v 1.1.2.2 2008/12/19 15:18:58 jcable Exp $
+ * $Id: crc_8_16.h,v 1.1.2.3 2008/12/26 20:31:17 jcable Exp $
  *
  * Author:      Monica Redon Segrera and Nuria Llombart Juan
  *
@@ -70,8 +70,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <malloc.h>
-
 
 #ifdef __cplusplus
 extern "C"

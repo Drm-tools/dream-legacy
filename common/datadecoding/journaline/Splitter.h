@@ -53,7 +53,7 @@
 /// @file       Splitter.h
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: Splitter.h,v 1.1.2.2 2008/12/19 15:18:58 jcable Exp $
+/// $Id: Splitter.h,v 1.1.2.3 2008/12/26 20:31:17 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///
@@ -68,7 +68,7 @@
 #ifndef _SPLITTER_H_
 #define _SPLITTER_H_
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(push,3)
 #pragma warning(disable:4514)
 #pragma warning(disable:4786)
@@ -77,7 +77,7 @@
 #include <string>
 #include <vector>
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(pop)
 #pragma warning(disable:4786)
 #pragma warning(disable:4514)
@@ -91,11 +91,12 @@ class StringSplitter
  public:
   virtual bool Split(std::vector<std::string> & dest,
                      const std::string & src) const = 0;
+  virtual ~StringSplitter() {}
 };
 
 
 /// line splitter algorithm
-class Splitter
+class Splitter : public StringSplitter
 {
  public:
   Splitter();
@@ -103,7 +104,7 @@ class Splitter
 
   virtual bool SetLineBreakCharacter(char lbc);
   virtual bool Split(std::vector<std::string> & dest,
-                     const std::string & src);
+                     const std::string & src) const;
  private:
   char _LineBreak;
 };

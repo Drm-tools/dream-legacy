@@ -60,7 +60,7 @@
  * For 16 bit CRC calculations, the polynomial used is
  * \f$ x^{16}+x^{12}+x^5+1 \f$
  *
- * $Id: crc_8_16.c,v 1.1.2.2 2008/12/19 15:18:58 jcable Exp $
+ * $Id: crc_8_16.c,v 1.1.2.3 2008/12/26 20:31:17 jcable Exp $
  *
  * Author:      Monica Redon Segrera and Nuria Llombart Juan
  *

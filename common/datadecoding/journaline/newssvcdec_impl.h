@@ -64,7 +64,7 @@
 #include "newssvcdec.h"
 
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(push,3)
 #pragma warning(disable:4100)
 #pragma warning(disable:4514)
@@ -73,7 +73,7 @@
 #include <map>
 #include <list>
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(pop)
 #pragma warning(disable:4100)
 #endif
@@ -82,6 +82,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+extern int showDdNewsSvcDecInfo;
+extern int showDdNewsSvcDecErr;
 
 #define NEWS_SVC_MAGIC_ID	0x786245
 

@@ -58,20 +58,25 @@
 ***
 ***
 **/
-#include <malloc.h>
-#include <memory.h>
+#ifdef _MSC_VER
+# include <malloc.h>
+# include <memory.h>
+#else
+# include <stdlib.h>
+#endif
 
 #include "dabdatagroupdecoder.h"
 #include "dabdgdec_impl.h"
 #include "log.h"
 #include "crc_8_16.h"
 
-extern int showDdDabDgDecInfo;
-extern int showDdDabDgDecErr;
-
 #ifdef __cplusplus
 extern "C"
 #endif
+
+int showDdDabDgDecInfo;
+int showDdDabDgDecErr;
+
 DAB_DATAGROUP_DECODER_t DAB_DATAGROUP_DECODER_createDec(
 	DAB_DATAGROUP_DECODER_data *data,
 	void	*arg

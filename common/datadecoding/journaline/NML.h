@@ -55,7 +55,7 @@
 /// @file       NML.h
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: NML.h,v 1.1.2.2 2008/12/19 15:18:58 jcable Exp $
+/// $Id: NML.h,v 1.1.2.3 2008/12/26 20:31:17 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///
@@ -71,7 +71,7 @@
 #define _NML_H_
 
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(push,3)
 #pragma warning(disable:4018)
 #pragma warning(disable:4100)
@@ -83,7 +83,7 @@
 #include <vector>
 #include <ios>
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning(pop)
 #pragma warning(disable:4786)
 #pragma warning(disable:4514)
@@ -105,6 +105,7 @@ class NMLEscapeCodeHandler
  public:
   virtual bool Convert(std::string & dest,
                        const std::string & src) const = 0;
+  virtual ~NMLEscapeCodeHandler() {}
 };
 
 
