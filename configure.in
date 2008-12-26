@@ -36,8 +36,6 @@ AC_ARG_ENABLE( faad2,[  --enable-faad2     use faad2 library for decoding AAC au
 
 AC_ARG_ENABLE( faac,[  --enable-faac     use faac library for encoding AAC audio], enable_faac=$enableval, enable_faac=yes)
 
-AC_ARG_ENABLE( journaline,[  --enable-journaline     use journaline library], enable_journaline=$enableval, enable_journaline=yes)
-
 AC_ARG_ENABLE( hamlib,[  --enable-hamlib     use hamlib library], enable_hamlib=$enableval, enable_hamlib=yes)
 
 AC_ARG_ENABLE( pcap,[  --enable-pcap     use pcap library], enable_pcap=$enableval, enable_pcap=yes)
@@ -54,7 +52,6 @@ if test "$enable_simulation" = "yes"; then
 	enable_qt=no
 	enable_faad2=no
 	enable_faac=no
-	enable_journaline=no
 	enable_hamlib=no
 	enable_pcap=no
 	enable_sndfile=no
@@ -208,14 +205,6 @@ if test "x$enable_sndfile" = xyes; then
 	LIBS="$LIBS $libsndfile_LIBS"
 fi
 
-dnl PUT THIS AT THE END, because FhG Journaline library has undefined symbols
-dnl Journaline (optional) -------------------------------------------------------
-AC_CHECK_HEADERS(journaline/NML.h, , enable_journaline=no)
-if test "x$enable_journaline" = xyes; then
-	AC_DEFINE(HAVE_JOURNALINE, 1, [Define if you have libjournaline])
-	LIBS="$LIBS -lfhgjournaline"
-fi
-
 AC_CONFIG_FILES(Makefile linux/Makefile drm.spec)
 AC_OUTPUT
 echo
@@ -232,6 +221,5 @@ echo "	AAC decoding supported:				$enable_faad2"
 echo "	AAC encoding supported:				$enable_faac"
 echo "	pcap file format supported:			$enable_pcap"
 echo "	libsndfile supported:				$enable_sndfile"
-echo "	journaline supported:				$enable_journaline"
 echo
 echo
