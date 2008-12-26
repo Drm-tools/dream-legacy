@@ -31,17 +31,9 @@
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
 
-#ifdef HAVE_JOURNALINE
-# ifdef _WIN32
-#  include <NML.h>
-#  include <newssvcdec.h>
-#  include <dabdatagroupdecoder.h>
-# else
-#  include <journaline/NML.h>
-#  include <journaline/newssvcdec.h>
-#  include <journaline/dabdatagroupdecoder.h>
-# endif 
-#endif
+#include "journaline/NML.h"
+#include "journaline/newssvcdec.h"
+#include "journaline/dabdatagroupdecoder.h"
 
 
 /* Definitions ****************************************************************/
@@ -68,7 +60,6 @@ public:
 };
 
 
-#ifdef HAVE_JOURNALINE
 class CJournaline
 {
 public:
@@ -92,25 +83,5 @@ protected:
 		const unsigned long len, const unsigned char* buf, void* data)
 		{NEWS_SVC_DEC_putData(((CJournaline*) data)->newsdec, len, buf);}
 };
-#else
-/* No Journaline implementation if library is not installed */
-class CJournaline
-{
-public:
-	CJournaline() {}
-	virtual ~CJournaline() {}
-
-	void GetNews(int, CNews& News)
-	{
-		/* Show in GUI that Journaline decoder is not available */
-		News.sTitle = "Dream Decoder Message";
-		News.vecItem.Init(1);
-		News.vecItem[0].iLink = JOURNALINE_IS_NO_LINK;
-		News.vecItem[0].sText = "No Journaline decoder available.";
-	}
-	void AddDataUnit(CVector<_BINARY>&) {}
-	void Reset() {}
-};
-#endif
 
 #endif // !defined(JOURNALINE_H__3B0UBVE987346456363LIHGEW982__INCLUDED_)

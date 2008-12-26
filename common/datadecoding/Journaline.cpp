@@ -27,22 +27,7 @@
 
 #include "Journaline.h"
 
-
-#ifdef HAVE_JOURNALINE
 /* Implementation *************************************************************/
-/* Set these to 1 for more debug information. Needed by Journaline library */
-extern "C" {
-extern int showDdNewsSvcDecErr;
-extern int showDdNewsSvcDecInfo;
-extern int showDdDabDgDecErr;
-extern int showDdDabDgDecInfo;
-}
-
-
-int showDdNewsSvcDecErr = 0;
-int showDdNewsSvcDecInfo = 0;
-int showDdDabDgDecErr = 0;
-int showDdDabDgDecInfo = 0;
 
 CJournaline::CJournaline() : dgdec(NULL), newsdec(NULL)
 {
@@ -50,10 +35,6 @@ CJournaline::CJournaline() : dgdec(NULL), newsdec(NULL)
 	   pointer to the decoders must have a defined value (NULL) to avoid
 	   unpredictable behaviour in the "ResetOpenJournalineDecoder()" function */
 	ResetOpenJournalineDecoder();
-	showDdNewsSvcDecErr = 0;
-	showDdNewsSvcDecInfo = 0;
-	showDdDabDgDecErr = 0;
-	showDdDabDgDecInfo = 0;
 }
 
 CJournaline::~CJournaline()
@@ -175,4 +156,3 @@ void CJournaline::GetNews(const int iObjID, CNews& News)
 		delete nml;
 	}
 }
-#endif
