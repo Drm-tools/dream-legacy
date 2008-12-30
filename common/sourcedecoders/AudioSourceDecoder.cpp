@@ -558,7 +558,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	_BOOLEAN bGoodValues;
 
 #ifdef USE_FAAD2_LIBRARY
-	faacDecFrameInfo DecFrameInfo;
+	NeAACDecFrameInfo DecFrameInfo;
 	short *psDecOutSampleBuf;
 #endif
 
