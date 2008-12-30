@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="libfaac" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release Win32">
+				<Option output="..\libs\libfaac" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Release" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-W" />
+					<Add option="-DNDEBUG" />
+				</Compiler>
+			</Target>
+			<Target title="Debug Win32">
+				<Option output="..\libs\libfaacd" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option object_output="Debug" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Compiler>
+					<Add option="-DDEBUG" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-DDRM" />
+			<Add directory="..\..\faac\include" />
+			<Add directory="..\..\faac\libfaac" />
+		</Compiler>
+		<Unit filename="..\..\faac\include\faac.h" />
+		<Unit filename="..\..\faac\include\faaccfg.h" />
+		<Unit filename="..\..\faac\libfaac\aacquant.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\aacquant.h" />
+		<Unit filename="..\..\faac\libfaac\backpred.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\backpred.h" />
+		<Unit filename="..\..\faac\libfaac\bitstream.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\bitstream.h" />
+		<Unit filename="..\..\faac\libfaac\channels.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\channels.h" />
+		<Unit filename="..\..\faac\libfaac\coder.h" />
+		<Unit filename="..\..\faac\libfaac\fft.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\fft.h" />
+		<Unit filename="..\..\faac\libfaac\filtbank.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\filtbank.h" />
+		<Unit filename="..\..\faac\libfaac\frame.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\frame.h" />
+		<Unit filename="..\..\faac\libfaac\huffman.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\huffman.h" />
+		<Unit filename="..\..\faac\libfaac\hufftab.h" />
+		<Unit filename="..\..\faac\libfaac\kiss_fft\_kiss_fft_guts.h" />
+		<Unit filename="..\..\faac\libfaac\kiss_fft\kiss_fft.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\kiss_fft\kiss_fft.h" />
+		<Unit filename="..\..\faac\libfaac\kiss_fft\kiss_fftr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\kiss_fft\kiss_fftr.h" />
+		<Unit filename="..\..\faac\libfaac\ltp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\ltp.h" />
+		<Unit filename="..\..\faac\libfaac\midside.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\midside.h" />
+		<Unit filename="..\..\faac\libfaac\psych.h" />
+		<Unit filename="..\..\faac\libfaac\psychkni.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\tns.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\tns.h" />
+		<Unit filename="..\..\faac\libfaac\util.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\..\faac\libfaac\util.h" />
+		<Unit filename="..\..\faac\libfaac\version.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<VisualStudioToolFile
+	Name="QT Form"
+	Version="8.00"
+	>
+	<Rules>
+		<CustomBuildRule
+			Name="QT Form"
+			DisplayName="Uic"
+			CommandLine="$(QTDIR)\bin\uic.exe [inputs] -o moc\$(InputName).h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe [inputs] -i $(InputName).h -o moc\$(InputName).cpp"
+			Outputs="moc\$(InputName).h;moc\$(InputName).cpp"
+			AdditionalDependencies="$(QTDIR)\bin\uic.exe"
+			FileExtensions="*.ui"
+			ExecutionDescription="Uic&apos;ing $(InputName).ui..."
+			>
+			<Properties>
+			</Properties>
+		</CustomBuildRule>
+		<CustomBuildRule
+			Name="QT Moc"
+			DisplayName="Moc"
+			CommandLine="$(QTDIR)\bin\moc.exe [inputs] -o moc\moc_$(InputName).cpp"
+			Outputs="moc\moc_$(InputName).cpp"
+			AdditionalDependencies="$(QTDIR)\bin\moc.exe"
+			FileExtensions="*.h"
+			ExecutionDescription="Moc&apos;ing $(InputName).h..."
+			>
+			<Properties>
+			</Properties>
+		</CustomBuildRule>
+	</Rules>
+</VisualStudioToolFile>
