@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="..\..\faac\include"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;DRM"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;DRM;FAACAPI=_cdecl"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -50,6 +50,7 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
+				CompileAs="0"
 				DisableSpecificWarnings="4996"
 			/>
 			<Tool
@@ -63,6 +64,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				LinkLibraryDependencies="true"
+				OutputFile="$(OutDir)\$(ProjectName)d.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -78,7 +81,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy &quot;$(TargetPath)&quot; ..\libs&#x0D;&#x0A;copy &quot;$(InputDir)..\..\faac\include\faac.h&quot; ..\libs&#x0D;&#x0A;copy &quot;$(InputDir)..\..\faac\include\faaccfg.h&quot; ..\libs&#x0D;&#x0A;"
+				CommandLine="copy ..\..\faac\include\faac.h ..\libs&#x0D;&#x0A;copy ..\..\faac\include\faaccfg.h ..\libs&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -86,11 +89,11 @@
 			OutputDirectory="..\libs"
 			IntermediateDirectory="Release"
 			ConfigurationType="4"
+			WholeProgramOptimization="1"
 			BuildLogFile="$(IntDir)\FaacBuildLog.htm"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="copy &quot;$(InputDir)..\..\faac\include\faac.h&quot; ..\libs&#x0D;&#x0A;copy &quot;$(InputDir)..\..\faac\include\faaccfg.h&quot; ..\libs&#x0D;&#x0A;"
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
@@ -106,13 +109,22 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				Optimization="3"
+				EnableIntrinsicFunctions="true"
+				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="..\libs"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;DRM"
+				PreprocessorDefinitions="NDEBUG;_LIB;DRM;FAACAPI=_cdecl"
+				StringPooling="true"
+				MinimalRebuild="true"
+				SmallerTypeCheck="false"
 				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				EnableEnhancedInstructionSet="2"
 				UsePrecompiledHeader="0"
+				ProgramDataBaseFileName="$(IntDir)\faacvc90.pdb"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
-				DebugInformationFormat="3"
+				CompileAs="0"
 				DisableSpecificWarnings="4996"
 			/>
 			<Tool
@@ -126,6 +138,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				LinkLibraryDependencies="true"
+				AdditionalLibraryDirectories="$(OutDir)"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -141,7 +155,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine=""
+				CommandLine="copy ..\..\faac\include\faac.h ..\libs&#x0D;&#x0A;copy ..\..\faac\include\faaccfg.h ..\libs&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
