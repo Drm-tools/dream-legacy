@@ -13,16 +13,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -30,6 +30,7 @@
 #include <qdom.h>
 #include <qmap.h>
 #include <qstring.h>
+#include <qdatetime.h>
 #include "../../GlobalDefinitions.h"
 #include "../../Parameter.h"
 #include "../DABMOT.h"
@@ -51,25 +52,27 @@ class EPG
     void saveChannels (const QString & fileName);
     void addChannel (const string& label, uint32_t sid);
     void parseDoc (const QDomNode &);
-    QString parseDuration (const QString & duration);
-    QString parseStart (const QString & start);
     void getFile (CEPGDecoder & epg, const QString & fileName);
 
     class CProg
     {
       public:
 
-	  CProg(): start(""), duration(""), name(""), description("")
-			  , id(""), mainGenre(), secondaryGenre(), otherGenre()
+	  CProg(): time(""), duration(""), actualTime(""), actualDuration(""),
+                name(""), description(""),
+			  crid(""), shortId(0), mainGenre(), secondaryGenre(), otherGenre()
 		{}
-		  
-		QString start, duration;
+        void augment(const CProg&);
+
+		QString time, duration;
+		QString actualTime, actualDuration;
 		QString name, description;
-		QString id;
+		QString crid;
+		uint32_t shortId;
 		vector<QString> mainGenre, secondaryGenre, otherGenre;
     };
 
-    QMap < uint32_t, CProg > progs;
+    QMap < QDateTime, CProg > progs;
     QMap < QString, QString > genres;
     QString dir, servicesFilename;
     CEPGDecoder basic, advanced;

@@ -13,10 +13,10 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
+ * Foundation; either version 2 of the License, or (at your option) any later  
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
+ * This program is distributed in the hope that it will be useful, but WITHOUT  
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
@@ -1296,12 +1296,10 @@ EPG::parseDoc (const QDomNode & n)
 	{
 		if (l1.nodeName () == "programme")
 		{
-			QDomNode l2 = l1.firstChild ();
-			uint32_t shortId =
-				l1.toElement ().attribute ("shortId", "0").toInt ();
 			CProg p;
-			if (progs.contains (shortId))
-				p = progs[shortId];
+			QDomNode l2 = l1.firstChild ();
+			p.shortId =
+				l1.toElement ().attribute ("shortId", "0").toInt ();
 			while (!l2.isNull ())
 			{
 				if (l2.isElement ())
@@ -1317,21 +1315,10 @@ EPG::parseDoc (const QDomNode & n)
 								QDomElement e = l3.toElement ();
 								if (e.tagName () == "time")
 								{
-									QString start = e.attribute ("actualTime", "");
-									if (start != "")
-									{
-										p.start = parseStart (start);
-										p.duration = parseDuration (e.attribute ("actualDuration", ""));
-									}
-									else
-									{
-										start = e.attribute ("time", "");
-										if (start != "")
-										{
-											p.start = parseStart (start);
-											p.duration = parseDuration (e.attribute ("duration", ""));
-										}
-									}
+                                    p.actualTime = e.attribute ("actualTime", "");
+                                    p.actualDuration = e.attribute ("actualDuration", "");
+                                    p.time = e.attribute ("time", "");
+                                    p.duration = e.attribute ("duration", "");
 								}
 							}
 							l3 = l3.nextSibling ();
@@ -1374,10 +1361,44 @@ EPG::parseDoc (const QDomNode & n)
 				}
 				l2 = l2.nextSibling ();
 			}
-			progs[shortId] = p;
+			QString start;
+			if(p.time=="")
+                start = p.actualTime;
+            else
+                start = p.time;
+            QDateTime t = QDateTime::fromString(start, Qt::ISODate);
+            QMap<QDateTime,CProg>::const_iterator existing = progs.find(t);
+			if (existing != progs.end())
+			{
+			    p.augment(existing.data());
+			}
+            progs[t] = p;
 		}
 		l1 = l1.nextSibling ();
 	}
+}
+
+void EPG::CProg::augment(const CProg& p)
+{
+    if(time=="")
+        time = p.time;
+    if(actualTime=="")
+        actualTime = p.actualTime;
+    if(duration=="")
+        duration = p.duration;
+    if(actualDuration=="")
+        actualDuration = p.actualDuration;
+    if(crid=="")
+        crid = p.crid;
+    if(name=="")
+        name = p.name;
+    if(description=="")
+        description = p.description;
+    if(shortId==0 && p.shortId!=0)
+        shortId = p.shortId;
+		vector<QString> mainGenre, secondaryGenre, otherGenre;
+
+        // TODO genres, ...
 }
 
 /*
@@ -1468,25 +1489,4 @@ EPG::loadChannels (const QString & fileName)
 		}
 		n = n.nextSibling ();
 	}
-}
-
-QString EPG::parseStart (const QString & start)
-{
-	QStringList
-		d = QStringList::split ('+', start, true);
-	QStringList
-		t = QStringList::split ('T', d[0], true);
-	QStringList
-		hms = QStringList::split (':', t[1], true);
-	if (hms[2] == "00")
-		return hms[0] + ":" + hms[1];
-	else
-		return t[1];
-}
-
-QString EPG::parseDuration (const QString & duration)
-{
-	QRegExp r ("[PTHMS]");
-	QStringList dur = QStringList::split (r, duration);
-	return QCString ("").sprintf ("%02u:%02u", dur[0].toInt (), dur[1].toInt ());
 }

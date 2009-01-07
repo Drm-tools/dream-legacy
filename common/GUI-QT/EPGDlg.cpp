@@ -88,7 +88,7 @@ EPGDlg::~EPGDlg()
 }
 
 void EPGDlg::OnTimer()
-{	
+{
     if ((basic->text() == tr("no basic profile data"))
 		|| (advanced->text() == tr("no advanced profile data")))
 		/* not all information is loaded */
@@ -125,10 +125,10 @@ void EPGDlg::OnTimer()
 	}
 }
 
-void EPGDlg::showEvent(QShowEvent *) 
-{    
+void EPGDlg::showEvent(QShowEvent *)
+{
     CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
     int sNo = Parameters.GetCurSelAudioService();
     uint32_t sid = Parameters.Service[sNo].iServiceID;
 
@@ -138,7 +138,7 @@ void EPGDlg::showEvent(QShowEvent *)
     channel->clear();
     int n = -1;
 	sids.clear();
-    for (map < uint32_t, CServiceInformation >::const_iterator i = Parameters.ServiceInformation.begin(); 
+    for (map < uint32_t, CServiceInformation >::const_iterator i = Parameters.ServiceInformation.begin();
          i != Parameters.ServiceInformation.end(); i++) {
 		QString channel_label = QString().fromUtf8(i->second.label.begin()->c_str());
 		uint32_t channel_id = i->second.id;
@@ -148,7 +148,7 @@ void EPGDlg::showEvent(QShowEvent *)
     	    n = channel->currentItem();
         }
     }
-	Parameters.Unlock(); 
+	Parameters.Unlock();
     // update the current selection
     if (n >= 0) {
 	    channel->setCurrentItem(n);
@@ -220,6 +220,27 @@ void EPGDlg::setYear(int n)
     select();
 }
 
+static QString parseStart (const QString & start)
+{
+	QStringList
+		d = QStringList::split ('+', start, true);
+	QStringList
+		t = QStringList::split ('T', d[0], true);
+	QStringList
+		hms = QStringList::split (':', t[1], true);
+	if (hms[2] == "00")
+		return hms[0] + ":" + hms[1];
+	else
+		return t[1];
+}
+
+static QString parseDuration (const QString & duration)
+{
+	QRegExp r ("[PTHMS]");
+	QStringList dur = QStringList::split (r, duration);
+	return QCString ("").sprintf ("%02u:%02u", dur[0].toInt (), dur[1].toInt ());
+}
+
 void EPGDlg::select()
 {
 	QListViewItem* CurrActiveItem = NULL;
@@ -241,11 +262,21 @@ void EPGDlg::select()
     }
     Data->setSorting(COL_START);
 
-    for (QMap < uint32_t, EPG::CProg >::Iterator i = epg.progs.begin();
+    for (QMap < QDateTime, EPG::CProg >::Iterator i = epg.progs.begin();
 	 i != epg.progs.end(); i++)
 	{
 	    const EPG::CProg & p = i.data();
-	    QString name, description, genre;
+	    QString name, description, start, duration, genre;
+	    if(p.name=="" && p.mainGenre.size()>0)
+		name = "unknown " + p.mainGenre[0] + " programme";
+		else
+          name = p.name;
+        description = p.description;
+        // collapse white space in description
+        description.replace(QRegExp("[\t\r\n ]+"), " ");
+        // TODO - let user choose time or actualTime if available, or show as tooltip
+        start = parseStart(p.time);
+        duration = parseDuration(p.duration);
 		if(p.mainGenre.size()==0)
 			genre = "";
 		else
@@ -258,14 +289,7 @@ void EPGDlg::select()
 				}
 			}
 		}
-	    if(p.name=="" && p.mainGenre.size()>0)
-		name = "unknown " + p.mainGenre[0] + " programme";
-		else
-          name = p.name;
-		description = p.description;
-		// collapse white space in description
-		description.replace(QRegExp("[\t\r\n ]+"), " ");
-	    QListViewItem* CurrItem = new QListViewItem(Data, p.start, name, genre, description, p.duration);
+	    QListViewItem* CurrItem = new QListViewItem(Data, start, name, genre, description, duration);
 
 		/* Get current UTC time */
 		time_t ltime;
@@ -279,7 +303,7 @@ void EPGDlg::select()
 		{
 			/* Check, if the programme is now on line. If yes, set
 			special pixmap */
-			if (IsActive(p.start,p.duration,ltime))
+			if (IsActive(p.time,p.duration,ltime))
 			{
 				CurrItem->setPixmap(COL_START, BitmCubeGreen);
 				CurrActiveItem = CurrItem;
