@@ -1,6 +1,6 @@
 /******************************************************************************\
  * British Broadcasting Corporation
- * Copyright (c) 2006
+ * Copyright (c) 2006-2008
  *
  * Author(s):
  *	Julian Cable
@@ -195,9 +195,9 @@ const
     {"3.1.1.9", "Sports News"},
     {"3.1.1.10", "Cultural News"},
     {"3.1.1.10.1", "Arts News"},
-    {"3.1.1.10.2", "Entertainment  News"},
-    {"3.1.1.10.3", "Films in the News"},
-    {"3.1.1.10.4", "Music in the News"},
+    {"3.1.1.10.2", "Entertainment News"},
+    {"3.1.1.10.3", "Film News"},
+    {"3.1.1.10.4", "Music News"},
     {"3.1.1.10.5", "Radio in the News"},
     {"3.1.1.10.6", "TV in the News"},
     {"3.1.1.11", "Regional News"},
@@ -1221,8 +1221,10 @@ const
 
 EPG::EPG(CParameter& NParameters):Parameters(NParameters)
 {
-	for (int i = 0; genre_list[i].genre; i++)
+	for (int i = 0; true; i++)
 	{
+		if (genre_list[i].genre == 0)
+			break;
 		genres[genre_list[i].genre] = genre_list[i].desc;
 	}
 
@@ -1372,10 +1374,7 @@ EPG::parseDoc (const QDomNode & n)
 				}
 				l2 = l2.nextSibling ();
 			}
-			if (shortId != 0)
-			{
-				progs[shortId] = p;
-			}
+			progs[shortId] = p;
 		}
 		l1 = l1.nextSibling ();
 	}

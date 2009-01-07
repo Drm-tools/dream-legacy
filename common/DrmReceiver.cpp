@@ -1893,6 +1893,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	/* Wanted RF Frequency */
 	iFreqkHz = s.Get("Receiver", "frequency", 0);
+	doSetFrequency();
 }
 
 void

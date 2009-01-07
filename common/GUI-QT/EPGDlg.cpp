@@ -28,6 +28,7 @@
 \******************************************************************************/
 
 #include "EPGDlg.h"
+#include <qregexp.h>
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, WFlags f)
@@ -244,7 +245,7 @@ void EPGDlg::select()
 	 i != epg.progs.end(); i++)
 	{
 	    const EPG::CProg & p = i.data();
-	    QString name, genre;
+	    QString name, description, genre;
 		if(p.mainGenre.size()==0)
 			genre = "";
 		else
@@ -261,7 +262,10 @@ void EPGDlg::select()
 		name = "unknown " + p.mainGenre[0] + " programme";
 		else
           name = p.name;
-	    QListViewItem* CurrItem = new QListViewItem(Data, p.start, name, genre, p.description, p.duration);
+		description = p.description;
+		// collapse white space in description
+		description.replace(QRegExp("[\t\r\n ]+"), " ");
+	    QListViewItem* CurrItem = new QListViewItem(Data, p.start, name, genre, description, p.duration);
 
 		/* Get current UTC time */
 		time_t ltime;
