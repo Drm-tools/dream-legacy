@@ -2043,6 +2043,14 @@
 				</FileConfiguration>
 			</File>
 		</Filter>
+		<Filter
+			Name="Resources"
+			>
+			<File
+				RelativePath=".\dream.rc"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>
