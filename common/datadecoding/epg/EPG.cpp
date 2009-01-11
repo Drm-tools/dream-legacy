@@ -1366,8 +1366,13 @@ EPG::parseDoc (const QDomNode & n)
                 start = p.actualTime;
             else
                 start = p.time;
-            QDateTime t = QDateTime::fromString(start, Qt::ISODate);
-            QMap<QDateTime,CProg>::const_iterator existing = progs.find(t);
+			QRegExp q("[-T:+]");
+			QStringList sl = QStringList::split(q, start);
+			QDateTime t(
+				QDate(sl[0].toUInt(), sl[1].toUInt(), sl[2].toUInt()),
+				QTime(sl[3].toUInt(), sl[4].toUInt(), sl[5].toUInt())
+			);
+            QMap<QDateTime,CProg>::ConstIterator existing = progs.find(t);
 			if (existing != progs.end())
 			{
 			    p.augment(existing.data());
@@ -1396,9 +1401,14 @@ void EPG::CProg::augment(const CProg& p)
         description = p.description;
     if(shortId==0 && p.shortId!=0)
         shortId = p.shortId;
-		vector<QString> mainGenre, secondaryGenre, otherGenre;
-
-        // TODO genres, ...
+    // assume genres not in both files
+	size_t i;
+	for(i=0; i<p.mainGenre.size(); i++)
+		mainGenre.push_back(p.mainGenre[i]);
+	for(i=0; i<p.secondaryGenre.size(); i++)
+		secondaryGenre.push_back(p.secondaryGenre[i]);
+	for(i=0; i<p.otherGenre.size(); i++)
+		otherGenre.push_back(p.otherGenre[i]);
 }
 
 /*
