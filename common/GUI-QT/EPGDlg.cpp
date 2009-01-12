@@ -13,16 +13,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -89,19 +89,22 @@ EPGDlg::~EPGDlg()
 
 void EPGDlg::OnTimer()
 {
-    if ((basic->text() == tr("no basic profile data"))
-		|| (advanced->text() == tr("no advanced profile data")))
-		/* not all information is loaded */
- 		select();
-	else
-	{
-		/* Get current UTC time */
-		time_t ltime;
-		time(&ltime);
-		struct tm* gmtCur = gmtime(&ltime);
+    /* Get current UTC time */
+    time_t ltime;
+    time(&ltime);
+    struct tm* gmtCur = gmtime(&ltime);
 
-		/* today in UTC */
-		QDate todayUTC = QDate(gmtCur->tm_year + 1900, gmtCur->tm_mon + 1, gmtCur->tm_mday);
+    if(gmtCur->tm_sec==0) // minute boundary
+    {
+        /* today in UTC */
+        QDate todayUTC = QDate(gmtCur->tm_year + 1900, gmtCur->tm_mon + 1, gmtCur->tm_mday);
+
+        if ((basic->text() == tr("no basic profile data"))
+            || (advanced->text() == tr("no advanced profile data")))
+        {
+            /* not all information is loaded */
+            select();
+        }
 
 		if (date == todayUTC) /* if today */
 		{
@@ -119,6 +122,7 @@ void EPGDlg::OnTimer()
 				}
 				else
 					myItem->setPixmap(COL_START,QPixmap()); /* no pixmap */
+
 				myItem = myItem->nextSibling();
 			}
 		}
@@ -303,7 +307,7 @@ void EPGDlg::select()
 		{
 			/* Check, if the programme is now on line. If yes, set
 			special pixmap */
-			if (IsActive(p.time,p.duration,ltime))
+			if (IsActive(start,duration,ltime))
 			{
 				CurrItem->setPixmap(COL_START, BitmCubeGreen);
 				CurrActiveItem = CurrItem;
@@ -329,10 +333,8 @@ _BOOLEAN EPGDlg::IsActive(const QString start, const QString duration, const tim
 	/* extract hours and minutes from the strings hh:mm */
 	int iStartHour = start.left(2).toInt();
 	int iStartMinute = start.right(2).toInt();
-
 	int iDurationHour = duration.left(2).toInt();
 	int iDurationMinute = duration.right(2).toInt();
-
 	/* Calculate time in UTC */
 	struct tm* gmtCur = gmtime(&ltime);
 	const time_t lCurTime = mktime(gmtCur);

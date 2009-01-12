@@ -1372,6 +1372,16 @@ EPG::parseDoc (const QDomNode & n)
 				QDate(sl[0].toUInt(), sl[1].toUInt(), sl[2].toUInt()),
 				QTime(sl[3].toUInt(), sl[4].toUInt(), sl[5].toUInt())
 			);
+			// time zone offset
+			if(sl.count()==8)
+			{
+				int hh = sl[6].toInt();
+				int mm = sl[7].toInt();
+				int secs = 60*(60*hh+mm);
+				if(start[19]=='+') // + offset means UTC is earlier
+				secs = 0 - secs;
+				t = t.addSecs(secs);
+			}
             QMap<QDateTime,CProg>::ConstIterator existing = progs.find(t);
 			if (existing != progs.end())
 			{

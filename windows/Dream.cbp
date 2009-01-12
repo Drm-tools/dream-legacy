@@ -96,7 +96,6 @@
 		<Unit filename="..\common\GUI-QT\DialogUtil.h" />
 		<Unit filename="..\common\GUI-QT\EPGDlg.cpp" />
 		<Unit filename="..\common\GUI-QT\EPGDlg.h" />
-		<Unit filename="..\common\GUI-QT\GeneralSettingsDlg.h" />
 		<Unit filename="..\common\GUI-QT\LatLongEditDlg.cpp" />
 		<Unit filename="..\common\GUI-QT\LiveScheduleDlg.cpp" />
 		<Unit filename="..\common\GUI-QT\LiveScheduleDlg.h" />
