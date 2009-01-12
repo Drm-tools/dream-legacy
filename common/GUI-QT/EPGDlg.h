@@ -53,7 +53,7 @@
 #define COL_NAME	1
 
 /* Define the timer interval of updating */
-#define GUI_TIMER_EPG_UPDATE		60000 /* ms (1 minute) */
+#define GUI_TIMER_EPG_UPDATE		1000 /* ms (1 second) */
 
 /* list view columns */
 #define COL_START		0
