@@ -105,7 +105,6 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 	   3:  <ip>:<ip>:<port>      send to port on m/c group via interface
 	 */
 	/* Init return flag and copy string in QT-String "QString" */
-	cout << "CPacketSocketQT::SetDestination(" << strNewAddr << ")" << endl;
 	int ttl = 127;
 	bool bAddressOK = TRUE;
 	bool portOK;
@@ -174,7 +173,6 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 	   5:  :<group ip>:<port>
 	 */
 	int iPort=-1;
-	cout << "CPacketSocketQT::SetOrigin(" << strNewAddr << ")" << endl;
 	QHostAddress AddrGroup, AddrInterface;
 	QStringList parts = QStringList::split(":", strNewAddr.c_str(), TRUE);
 	bool ok=true;

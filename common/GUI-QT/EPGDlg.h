@@ -84,7 +84,7 @@ protected:
     virtual	void showEvent(QShowEvent *e);
 	virtual void hideEvent(QHideEvent* pEvent);
 
-	_BOOLEAN IsActive(const QString start, const QString duration, const time_t ltime);
+	_BOOLEAN IsActive(const QString& start, const QString& duration, const tm& now);
 
 	QPixmap			BitmCubeGreen;
 

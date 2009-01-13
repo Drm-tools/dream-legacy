@@ -92,12 +92,12 @@ void EPGDlg::OnTimer()
     /* Get current UTC time */
     time_t ltime;
     time(&ltime);
-    struct tm* gmtCur = gmtime(&ltime);
+    tm gmtCur = *gmtime(&ltime);
 
-    if(gmtCur->tm_sec==0) // minute boundary
+    if(gmtCur.tm_sec==0) // minute boundary
     {
         /* today in UTC */
-        QDate todayUTC = QDate(gmtCur->tm_year + 1900, gmtCur->tm_mon + 1, gmtCur->tm_mday);
+        QDate todayUTC = QDate(gmtCur.tm_year + 1900, gmtCur.tm_mon + 1, gmtCur.tm_mday);
 
         if ((basic->text() == tr("no basic profile data"))
             || (advanced->text() == tr("no advanced profile data")))
@@ -115,7 +115,7 @@ void EPGDlg::OnTimer()
 			{
 				/* Check, if the programme is now on line. If yes, set
 				special pixmap */
-				if (IsActive(myItem->text(COL_START),myItem->text(COL_DURATION),ltime))
+				if (IsActive(myItem->text(COL_START), myItem->text(COL_DURATION), gmtCur))
 				{
 					myItem->setPixmap(COL_START, BitmCubeGreen);
 					Data->ensureItemVisible(myItem);
@@ -224,27 +224,6 @@ void EPGDlg::setYear(int n)
     select();
 }
 
-static QString parseStart (const QString & start)
-{
-	QStringList
-		d = QStringList::split ('+', start, true);
-	QStringList
-		t = QStringList::split ('T', d[0], true);
-	QStringList
-		hms = QStringList::split (':', t[1], true);
-	if (hms[2] == "00")
-		return hms[0] + ":" + hms[1];
-	else
-		return t[1];
-}
-
-static QString parseDuration (const QString & duration)
-{
-	QRegExp r ("[PTHMS]");
-	QStringList dur = QStringList::split (r, duration);
-	return QCString ("").sprintf ("%02u:%02u", dur[0].toInt (), dur[1].toInt ());
-}
-
 void EPGDlg::select()
 {
 	QListViewItem* CurrActiveItem = NULL;
@@ -270,7 +249,7 @@ void EPGDlg::select()
 	 i != epg.progs.end(); i++)
 	{
 	    const EPG::CProg & p = i.data();
-	    QString name, description, start, duration, genre;
+	    QString name, description, genre;
 	    if(p.name=="" && p.mainGenre.size()>0)
 		name = "unknown " + p.mainGenre[0] + " programme";
 		else
@@ -279,8 +258,26 @@ void EPGDlg::select()
         // collapse white space in description
         description.replace(QRegExp("[\t\r\n ]+"), " ");
         // TODO - let user choose time or actualTime if available, or show as tooltip
-        start = parseStart(p.time);
-        duration = parseDuration(p.duration);
+        QDateTime start;
+        int duration;
+        if(p.actualTime.isValid())
+        {
+            start = p.actualTime;
+            duration = p.actualDuration;
+        }
+        else
+        {
+            start = p.time;
+            duration = p.duration;
+        }
+        QString s_start, s_duration;
+        {
+            char s[40];
+            sprintf(s, "%02d:%02d", start.time().hour(), start.time().minute());
+            s_start = s;
+            sprintf(s, "%02d:%02d", int(duration/60), duration%60);
+            s_duration = s;
+        }
 		if(p.mainGenre.size()==0)
 			genre = "";
 		else
@@ -293,21 +290,21 @@ void EPGDlg::select()
 				}
 			}
 		}
-	    QListViewItem* CurrItem = new QListViewItem(Data, start, name, genre, description, duration);
+	    QListViewItem* CurrItem = new QListViewItem(Data, s_start, name, genre, description, s_duration);
 
 		/* Get current UTC time */
 		time_t ltime;
 		time(&ltime);
-		struct tm* gmtCur = gmtime(&ltime);
+        tm gmtCur = *gmtime(&ltime);
 
 		/* today in UTC */
-		QDate todayUTC = QDate(gmtCur->tm_year + 1900, gmtCur->tm_mon + 1, gmtCur->tm_mday);
+		QDate todayUTC = QDate(gmtCur.tm_year + 1900, gmtCur.tm_mon + 1, gmtCur.tm_mday);
 
 		if (date == todayUTC) /* if today */
 		{
 			/* Check, if the programme is now on line. If yes, set
 			special pixmap */
-			if (IsActive(start,duration,ltime))
+			if (IsActive(s_start, s_duration, gmtCur))
 			{
 				CurrItem->setPixmap(COL_START, BitmCubeGreen);
 				CurrActiveItem = CurrItem;
@@ -328,30 +325,14 @@ void EPGDlg::select()
 		Data->ensureItemVisible(CurrActiveItem);
 }
 
-_BOOLEAN EPGDlg::IsActive(const QString start, const QString duration, const time_t ltime)
+_BOOLEAN EPGDlg::IsActive(const QString& start, const QString& duration, const tm& now)
 {
-	/* extract hours and minutes from the strings hh:mm */
-	int iStartHour = start.left(2).toInt();
-	int iStartMinute = start.right(2).toInt();
-	int iDurationHour = duration.left(2).toInt();
-	int iDurationMinute = duration.right(2).toInt();
-	/* Calculate time in UTC */
-	struct tm* gmtCur = gmtime(&ltime);
-	const time_t lCurTime = mktime(gmtCur);
-
-	/* Get start time */
-	struct tm* gmtStart = gmtime(&ltime);
-	gmtStart->tm_hour = iStartHour;
-	gmtStart->tm_min = iStartMinute;
-	const time_t lStartTime = mktime(gmtStart);
-
-	/* Get stop time */
-	struct tm* gmtStop = gmtime(&ltime);
-	gmtStop->tm_hour = iStartHour + iDurationHour;
-	gmtStop->tm_min = iStartMinute + iDurationMinute;
-	const time_t lStopTime = mktime(gmtStop);
-
-	if ((lCurTime >= lStartTime) && (lCurTime < lStopTime))
+    QStringList sl = QStringList::split(":", start);
+    QStringList dl = QStringList::split(":", duration);
+    int s = 60*sl[0].toInt()+sl[1].toInt();
+    int e = s + 60*dl[0].toInt()+dl[1].toInt();
+    int n = 60*now.tm_hour+now.tm_min;
+	if ((s <= n) && (n < e))
 		return TRUE;
 	else
 		return FALSE;

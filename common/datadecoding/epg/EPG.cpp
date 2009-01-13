@@ -1315,10 +1315,10 @@ EPG::parseDoc (const QDomNode & n)
 								QDomElement e = l3.toElement ();
 								if (e.tagName () == "time")
 								{
-                                    p.actualTime = e.attribute ("actualTime", "");
-                                    p.actualDuration = e.attribute ("actualDuration", "");
-                                    p.time = e.attribute ("time", "");
-                                    p.duration = e.attribute ("duration", "");
+                                    p.actualTime = parseTime(e.attribute ("actualTime", ""));
+                                    p.actualDuration = parseDuration(e.attribute ("actualDuration", ""));
+                                    p.time = parseTime(e.attribute ("time", ""));
+                                    p.duration = parseDuration(e.attribute ("duration", ""));
 								}
 							}
 							l3 = l3.nextSibling ();
@@ -1361,33 +1361,17 @@ EPG::parseDoc (const QDomNode & n)
 				}
 				l2 = l2.nextSibling ();
 			}
-			QString start;
-			if(p.time=="")
+			QDateTime start;
+			if(p.actualTime.isValid())
                 start = p.actualTime;
             else
                 start = p.time;
-			QRegExp q("[-T:+]");
-			QStringList sl = QStringList::split(q, start);
-			QDateTime t(
-				QDate(sl[0].toUInt(), sl[1].toUInt(), sl[2].toUInt()),
-				QTime(sl[3].toUInt(), sl[4].toUInt(), sl[5].toUInt())
-			);
-			// time zone offset
-			if(sl.count()==8)
-			{
-				int hh = sl[6].toInt();
-				int mm = sl[7].toInt();
-				int secs = 60*(60*hh+mm);
-				if(start[19]=='+') // + offset means UTC is earlier
-				secs = 0 - secs;
-				t = t.addSecs(secs);
-			}
-            QMap<QDateTime,CProg>::ConstIterator existing = progs.find(t);
+            QMap<QDateTime,CProg>::ConstIterator existing = progs.find(start);
 			if (existing != progs.end())
 			{
 			    p.augment(existing.data());
 			}
-            progs[t] = p;
+            progs[start] = p;
 		}
 		l1 = l1.nextSibling ();
 	}
@@ -1395,13 +1379,13 @@ EPG::parseDoc (const QDomNode & n)
 
 void EPG::CProg::augment(const CProg& p)
 {
-    if(time=="")
+    if(p.time.isValid())
         time = p.time;
-    if(actualTime=="")
+    if(p.actualTime.isValid())
         actualTime = p.actualTime;
-    if(duration=="")
+    if(p.duration>0)
         duration = p.duration;
-    if(actualDuration=="")
+    if(p.actualDuration>0)
         actualDuration = p.actualDuration;
     if(crid=="")
         crid = p.crid;
@@ -1509,4 +1493,36 @@ EPG::loadChannels (const QString & fileName)
 		}
 		n = n.nextSibling ();
 	}
+}
+
+QDateTime EPG::parseTime(const QString & time)
+{
+    if(time=="")
+        return QDateTime(); // invalid
+    QRegExp q("[-T:+]");
+    QStringList sl = QStringList::split(q, time);
+    QDateTime t(
+        QDate(sl[0].toUInt(), sl[1].toUInt(), sl[2].toUInt()),
+        QTime(sl[3].toUInt(), sl[4].toUInt(), sl[5].toUInt())
+    );
+    // time zone offset
+    if(sl.count()==8)
+    {
+        int hh = sl[6].toInt();
+        int mm = sl[7].toInt();
+        int secs = 60*(60*hh+mm);
+        if(time[19]=='+') // + offset means UTC is earlier
+            secs = 0 - secs;
+        t = t.addSecs(secs);
+    }
+    return t;
+}
+
+int EPG::parseDuration (const QString & duration)
+{
+    if(duration=="")
+        return 0; // invalid
+	QRegExp r ("[PTHMS]");
+	QStringList dur = QStringList::split (r, duration);
+	return 60*dur[0].toInt()+dur[1].toInt();
 }

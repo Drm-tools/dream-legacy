@@ -58,14 +58,14 @@ class EPG
     {
       public:
 
-	  CProg(): time(""), duration(""), actualTime(""), actualDuration(""),
+	  CProg(): time(), actualTime(), duration(0), actualDuration(0),
                 name(""), description(""),
 			  crid(""), shortId(0), mainGenre(), secondaryGenre(), otherGenre()
 		{}
         void augment(const CProg&);
 
-		QString time, duration;
-		QString actualTime, actualDuration;
+		QDateTime time, actualTime;
+		int duration, actualDuration;
 		QString name, description;
 		QString crid;
 		uint32_t shortId;
@@ -79,4 +79,6 @@ class EPG
 	CParameter& Parameters;
 private:
     static const struct gl { const char *genre; const char* desc; } genre_list[];
+    QDateTime parseTime(const QString & time);
+    int parseDuration (const QString & duration);
 };
