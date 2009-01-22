@@ -374,6 +374,11 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 					break;
 				case AT_MOTEPG:	/* EPG */
 					/* Packet unit decoding */
+					if(iEPGPacketID == -1)
+					{
+                        cerr << "data unit received but EPG packetId not set" << endl;
+                        iEPGPacketID = iPacketID;
+					}
 					MOTObject[iEPGPacketID].AddDataUnit(DataUnit[iPacketID].
 														vecbiData);
 					break;
