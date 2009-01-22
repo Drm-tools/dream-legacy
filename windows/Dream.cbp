@@ -22,8 +22,9 @@
 			<Target title="Win32 Debug">
 				<Option output="Dream" prefix_auto="1" extension_auto="1" />
 				<Option object_output="Debug" />
-				<Option type="0" />
+				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="D:\DKULTUR_EPG1.rsA" />
 				<Compiler>
 					<Add option="-W" />
 					<Add option="-g" />

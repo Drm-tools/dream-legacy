@@ -192,7 +192,7 @@ ErrorMessage(string strErrorString)
 // Does not work correctly. If it is called by a different thread, the
 // application hangs! FIXME
 	QMessageBox::critical(0, "Dream",
-		QString("The following error occured:<br><b>") + 
+		QString("The following error occured:<br><b>") +
 		QString(strErrorString.c_str()) +
 		"</b><br><br>The application will exit now.");
 */

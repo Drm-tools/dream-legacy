@@ -47,7 +47,7 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="..\libs;&quot;$(QTDIR)\include&quot;;moc\;&quot;..\common\GUI-QT&quot;;&quot;$(QTDIR)\mkspecs\win32-msvc.net&quot;"
-				PreprocessorDefinitions="QMAKESPEC=win32-msvc.net;QTDIR=K:\qt-3.3;QT_NO_DEBUG;NDEBUG;_WINDOWS;WIN32;QT_DLL;QT_THREAD_SUPPORT;FAACAPI=_cdecl"
+				PreprocessorDefinitions="QMAKESPEC=win32-msvc.net;QT_NO_DEBUG;NDEBUG;_WINDOWS;WIN32;QT_DLL;QT_THREAD_SUPPORT;FAACAPI=_cdecl"
 				GeneratePreprocessedFile="0"
 				StringPooling="true"
 				MinimalRebuild="false"

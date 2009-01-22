@@ -156,7 +156,7 @@ CDataEncoder::Init(CParameter & Param)
 // TODO we only use always the first service right now
 	const int iCurSelDataServ = 0;
 
-	Param.Lock(); 
+	Param.Lock();
 
 	iPacketLen =
 		Param.Service[iCurSelDataServ].DataParam.iPacketLen * SIZEOF__BYTE;
@@ -164,7 +164,7 @@ CDataEncoder::Init(CParameter & Param)
 
 	iPacketID = Param.Service[iCurSelDataServ].DataParam.iPacketID;
 
-	Param.Unlock(); 
+	Param.Unlock();
 
 	/* Init DAB MOT encoder object */
 	MOTSlideShowEncoder.Init();
@@ -196,7 +196,7 @@ CDataDecoder::~CDataDecoder ()
 {
 	delete &Journaline;
 }
-	
+
 void
 CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 {
@@ -375,7 +375,13 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 					break;
 				case AT_MOTEPG:	/* EPG */
 					/* Packet unit decoding */
-					MOTObject[iEPGPacketID].AddDataUnit(DataUnit[iPacketID].
+					//cout << iEPGPacketID << " " << iPacketID << endl; cout.flush();
+					if(iEPGPacketID == -1)
+					{
+                        cerr << "data unit received but EPG packetId not set" << endl;
+                        iEPGPacketID = iPacketID;
+					}
+                    MOTObject[iEPGPacketID].AddDataUnit(DataUnit[iPacketID].
 														vecbiData);
 					break;
 
@@ -628,7 +634,7 @@ _BOOLEAN
 	_BOOLEAN bReturn = FALSE;
 
 	/* Lock resources */
-	Lock(); 
+	Lock();
 
 	/* Check if data service is current MOT application */
 	if ((DoNotProcessData == FALSE)
@@ -639,7 +645,7 @@ _BOOLEAN
 		bReturn = TRUE;
 	}
 	/* Release resources */
-	Unlock(); 
+	Unlock();
 
 	return bReturn;
 }
@@ -651,7 +657,7 @@ _BOOLEAN
 	_BOOLEAN bReturn = FALSE;
 
 	/* Lock resources */
-	Lock(); 
+	Lock();
 
 	/* Check if data service is current MOT application */
 	if ((DoNotProcessData == FALSE)
@@ -661,7 +667,7 @@ _BOOLEAN
 		bReturn = TRUE;
 	}
 	/* Release resources */
-	Unlock(); 
+	Unlock();
 
 	return bReturn;
 }
@@ -670,7 +676,7 @@ void
 CDataDecoder::GetNews(const int iObjID, CNews & News)
 {
 	/* Lock resources */
-	Lock(); 
+	Lock();
 
 	/* Check if data service is Journaline application */
 	if ((DoNotProcessData == FALSE)
@@ -678,5 +684,5 @@ CDataDecoder::GetNews(const int iObjID, CNews & News)
 		Journaline.GetNews(iObjID, News);
 
 	/* Release resources */
-	Unlock(); 
+	Unlock();
 }

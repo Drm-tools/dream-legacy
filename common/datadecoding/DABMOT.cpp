@@ -479,7 +479,7 @@ CMOTDABEnc::GenMOTObj(CVector < _BINARY > &vecbiData,
 		for (i = 0; i < iTotLenMOTObj / SIZEOF__BYTE - 2 /* CRC */ ; i++)
 			CRCObject.AddByte((_BYTE) vecbiData.Separate(SIZEOF__BYTE));
 
-		/* Now, pointer in "enqueue"-function is back at the same place, 
+		/* Now, pointer in "enqueue"-function is back at the same place,
 		   add CRC */
 		vecbiData.Enqueue(CRCObject.GetCRC(), 16);
 	}
@@ -783,7 +783,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 				MOTmode = headerMode;
 
 				/* in theory, there can be only one header at a time, but
-				   lets be a bit more tolerant 
+				   lets be a bit more tolerant
 				 */
 				if (MOTHeaders.count(TransportID) == 0)
 				{
@@ -848,7 +848,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 				if (MOTDirectory.TransportID != TransportID)
 				{
 					/* we never got all the previous directory */
-					//cout << " we never got all the previous directory " << TransportID << ", " << MOTDirectory.  TransportID << endl;
+					cout << " we never got all the previous directory " << TransportID << ", " << MOTDirectory.  TransportID << endl;
 					MOTDirectory.Reset();
 					MOTDirectory.TransportID = TransportID;
 					MOTDirectoryEntity.Reset();
@@ -1183,7 +1183,7 @@ CReassembler::AddSegment(CVector < _BYTE > &vecDataIn,
 			/* three cases:
 			   1: single segment - easy! (actually degenerate with case 3)
 			   2: multi-segment and the last segment came first.
-			   3: normal - some segment, not the last, came first, 
+			   3: normal - some segment, not the last, came first,
 			   we know the segment size
 			 */
 			if (iSegNum == 0)
@@ -1277,6 +1277,19 @@ CMOTObjectBase::extractString(CVector < _BINARY > &vecbiData, int iLen) const
 	}
 	return strVar;
 }
+
+void
+CMOTDirectory::Reset ()
+{
+    CMOTObjectBase::Reset ();
+    bSortedHeaderInformation = FALSE;
+    DirectoryIndex.clear ();
+    bCompressionFlag = FALSE;
+    iCarouselPeriod = -1;
+    iNumberOfObjects = 0;
+    iSegmentSize = 0;
+}
+
 
 void
 CMOTDirectory::AddHeader(CVector < _BINARY > &vecbiHeader)
@@ -1671,7 +1684,10 @@ CMOTDirectory::dump(ostream & out)
 	out << " indices { ";
 	for (map < _BYTE, string >::iterator di = DirectoryIndex.begin();
 		 di != DirectoryIndex.end(); di++)
+    {
 		out << hex << di->first << dec << " => " << di->second;
+		out.flush();
+    }
 	out << " }";
 	out << " there are " << iNumberOfObjects << " objects {";
 	for (size_t i = 0; i < vecObjects.size(); i++)

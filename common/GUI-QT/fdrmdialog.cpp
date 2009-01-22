@@ -882,12 +882,21 @@ void FDRMDialog::SetService(int iNewServiceID)
 	   , activate multimedia window */
 	CService::ETyOServ eAudDataFlag = Parameters.Service[iNewServiceID].eAudDataFlag;
 	Parameters.Unlock();
-	if ((eAudDataFlag == CService::SF_DATA)
-		|| (iAppIdent == AT_MOTSLISHOW)
-		|| (iAppIdent == AT_JOURNALINE)
-		|| (iAppIdent == AT_MOTBROADCASTWEBSITE))
+	if (eAudDataFlag == CService::SF_DATA)
 	{
-		OnViewMultiMediaDlg();
+	    switch(iAppIdent)
+	    {
+		case AT_MOTEPG:
+		    OnViewEPGDlg();
+		    break;
+        case AT_MOTBROADCASTWEBSITE:
+        case AT_JOURNALINE:
+        case AT_MOTSLISHOW:
+            OnViewMultiMediaDlg();
+            break;
+        default:
+            QMessageBox::information(this, "Dream", tr("unsupported data application"));
+		}
 	}
 }
 

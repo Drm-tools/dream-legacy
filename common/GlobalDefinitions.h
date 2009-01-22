@@ -72,8 +72,8 @@ using namespace std; /* Because of the library: "complex" */
 # define HAVE_JOURNALINE
 //# undef HAVE_JOURNALINE
 
-//# define HAVE_LIBPCAP
-# undef HAVE_LIBPCAP
+# define HAVE_LIBPCAP
+//# undef HAVE_LIBPCAP
 
 # define HAVE_LIBHAMLIB
 //# undef HAVE_LIBHAMLIB
@@ -189,7 +189,7 @@ typedef unsigned long long uint64_t;
 #define _MAXREAL						((_REAL) 3.4e38) /* Max for float */
 
 #ifdef USE_ERASURE_FOR_FASTER_ACQ
-/* Use max-value for showing that this is an erasure */ 
+/* Use max-value for showing that this is an erasure */
 # define ERASURE_TAG_VALUE				_MAXREAL
 #endif
 
