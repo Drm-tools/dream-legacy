@@ -143,12 +143,30 @@ CDRMModulator::LoadSettings(CSettings& s, CParameter& Parameters)
 	Parameters.eOutputFormat = EOutFormat(s.Get("Modulator", "output_format", OF_REAL_VAL));
 
 	string outputs = s.Get("Modulator", "cofdm_outputs", string(""));
-	stringstream ss(outputs);
-	vector<string> o;
-	string op;
-	while(getline(ss, op, ','))
+    vector<string> o;
+	if(outputs != "")
 	{
-		o.push_back(op);
+        stringstream ss(outputs);
+        string op;
+        while(getline(ss, op, ','))
+        {
+            o.push_back(op);
+        }
+	}
+	else
+	{
+	    // set default to first sound card device
+        CSoundOut s;
+        s.Enumerate(o);
+        if(o.size()>0)
+        {
+            o.resize(1);
+        }
+        else
+        {
+            // set output to a file
+            o.push_back("DreamCOFDMOut.wav");
+        }
 	}
 	TransmitData.SetOutputs(o);
 }

@@ -62,6 +62,7 @@ public:
 	/* Source Encoder Interface */
 	virtual void			AddTextMessage(const string& strText)=0;
 	virtual void			ClearTextMessages()=0;
+	virtual void			GetTextMessages(vector<string>&)=0;
 	virtual void			AddPic(const string& strFileName, const string& strFormat)=0;
 	virtual void			ClearPics()=0;
 	virtual _BOOLEAN		GetTransStat(string& strCPi, _REAL& rCPe)=0;

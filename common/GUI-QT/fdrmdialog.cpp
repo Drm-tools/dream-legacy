@@ -906,10 +906,19 @@ void FDRMDialog::SetService(int iNewServiceID)
 		int iAppIdent = dataParam.iUserAppIdent;
 		Parameters.Unlock();
 
-		if(	   (iAppIdent == AT_MOTSLISHOW)
-			|| (iAppIdent == AT_JOURNALINE)
-			|| (iAppIdent == AT_MOTBROADCASTWEBSITE))
-		OnViewMultiMediaDlg();
+        switch(iAppIdent)
+        {
+            case AT_MOTEPG:
+                OnViewEPGDlg();
+                break;
+            case AT_MOTBROADCASTWEBSITE:
+            case AT_JOURNALINE:
+            case AT_MOTSLISHOW:
+                OnViewMultiMediaDlg();
+                break;
+            default:
+                QMessageBox::information(this, "Dream", tr("unsupported data application"));
+        }
 	}
 }
 

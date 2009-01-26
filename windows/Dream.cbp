@@ -7,7 +7,8 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Win32 Release">
-				<Option output="Dream" prefix_auto="1" extension_auto="1" />
+				<Option platforms="Windows;" />
+				<Option output="Dream.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="Release" />
 				<Option type="0" />
 				<Option compiler="gcc" />
@@ -22,8 +23,9 @@
 			<Target title="Win32 Debug">
 				<Option output="Dream" prefix_auto="1" extension_auto="1" />
 				<Option object_output="Debug" />
-				<Option type="0" />
+				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="-t" />
 				<Compiler>
 					<Add option="-W" />
 					<Add option="-g" />
@@ -47,6 +49,7 @@
 			<Add directory="moc" />
 			<Add directory="..\..\faac\include" />
 			<Add directory="..\..\faad2\include" />
+			<Add directory="..\libs\qwt" />
 		</Compiler>
 		<Linker>
 			<Add library="faac" />
@@ -82,6 +85,7 @@
 		<Unit filename="..\common\DrmSimulation.h" />
 		<Unit filename="..\common\DrmTransmitter.cpp" />
 		<Unit filename="..\common\DrmTransmitter.h" />
+		<Unit filename="..\common\DrmTransmitterInterface.h" />
 		<Unit filename="..\common\FAC\FAC.cpp" />
 		<Unit filename="..\common\FAC\FAC.h" />
 		<Unit filename="..\common\GPSData.cpp" />
@@ -314,6 +318,9 @@
 		<Unit filename="..\common\util\Utilities.cpp" />
 		<Unit filename="..\common\util\Utilities.h" />
 		<Unit filename="..\common\util\Vector.h" />
+		<Unit filename="Dream.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
 		<Unit filename="Source\Pacer.cpp" />
 		<Unit filename="Source\Sound.cpp" />
 		<Unit filename="Source\Sound.h" />

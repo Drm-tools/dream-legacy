@@ -64,13 +64,11 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 	TransmDlgBase(parent, name, modal, f),
 	pMenu(NULL), pSettingsMenu(NULL), Timer(),
 	DRMTransmitter(tx), Settings(NSettings),
-	bIsStarted(FALSE),
-	vecstrTextMessage(1) /* 1 for new text */, iIDCurrentText(0),
-	vecIpIf()
+	bIsStarted(FALSE),vecIpIf()
 {
 	int i;
 	size_t t;
-	vector<string> vecAudioSources;
+	vector<string> vecAudioDevices;
 
 	/* recover window size and position */
 	CWinGeom s;
@@ -83,11 +81,6 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
-
-	/* Set controls to custom behavior */
-	MultiLineEditTextMessage->setWordWrap(QMultiLineEdit::WidgetWidth);
-	MultiLineEditTextMessage->setEdited(FALSE);
-	ComboBoxTextMessage->insertItem(tr("new"), 0);
 
 	/* Init controls with default settings */
 	ButtonStartStop->setText(tr("&Start"));
@@ -154,11 +147,11 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 
 	/* Fill COFDM Dest selection */
 	/* Get sound device names */
-	vecAudioSources.clear();
-	DRMTransmitter.GetSoundOutChoices(vecAudioSources);
-	for (t = 0; t < vecAudioSources.size(); t++)
+	vecAudioDevices.clear();
+	DRMTransmitter.GetSoundOutChoices(vecAudioDevices);
+	for (t = 0; t < vecAudioDevices.size(); t++)
 	{
-		ComboBoxCOFDMdest->insertItem(QString(vecAudioSources[t].c_str()));
+		ComboBoxCOFDMdest->insertItem(QString(vecAudioDevices[t].c_str()));
 	}
 	ComboBoxCOFDMdest->setCurrentItem(0);
 	ListViewCOFDM->setAllColumnsShowFocus(true);
@@ -183,13 +176,16 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 
 	/* Fill Audio source selection */
 	/* Get sound device names */
-	vecAudioSources.clear();
-	DRMTransmitter.GetSoundInChoices(vecAudioSources);
-	for (t = 0; t < vecAudioSources.size(); t++)
+	vecAudioDevices.clear();
+	DRMTransmitter.GetSoundInChoices(vecAudioDevices);
+	for (t = 0; t < vecAudioDevices.size(); t++)
 	{
-		ComboBoxAudioSource->insertItem(QString(vecAudioSources[t].c_str()), t);
+		ComboBoxAudioSource->insertItem(QString(vecAudioDevices[t].c_str()), t);
 	}
 	ComboBoxAudioSource->setCurrentItem(0);
+
+	ListViewTextMessages->clear();
+	ListViewTextMessages->setAllColumnsShowFocus(true);
 
 	LineEditMDIinGroup->setEnabled(FALSE);
 #if QT_VERSION >= 0x030000
@@ -225,7 +221,9 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 
 	/* General */
 	connect(ButtonStartStop, SIGNAL(clicked()),
-		this, SLOT(OnButtonStartStop()));
+        this, SLOT(OnButtonStartStop()));
+	connect(buttonClose, SIGNAL(clicked()),
+        this, SLOT(OnButtonClose()));
 	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
 	/* channel */
@@ -256,13 +254,13 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 
 	connect(PushButtonAddText, SIGNAL(clicked()),
 		this, SLOT(OnPushButtonAddText()));
+	connect(PushButtonDeleteText, SIGNAL(clicked()),
+		this, SLOT(OnPushButtonDeleteText()));
 	connect(PushButtonClearAllText, SIGNAL(clicked()),
 		this, SLOT(OnButtonClearAllText()));
 	connect(CheckBoxEnableTextMessage, SIGNAL(toggled(bool)),
 		this, SLOT(OnToggleCheckBoxEnableTextMessage(bool)));
-	connect(ComboBoxTextMessage, SIGNAL(activated(int)),
-		this, SLOT(OnComboBoxTextMessageActivated(int)));
-	
+
 	/* Data */
 	connect(PushButtonAddFile, SIGNAL(clicked()),
 		this, SLOT(OnPushButtonAddFileName()));
@@ -359,66 +357,57 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 	ComboBoxStream->insertItem("2");
 	ComboBoxStream->insertItem("3");
 
-	ComboBoxStream->setCurrentItem(0);
-
 	ListViewServices->setAllColumnsShowFocus(true);
 	ListViewServices->clear();
 	ComboBoxShortID->insertItem("0");
 	ComboBoxShortID->insertItem("1");
 	ComboBoxShortID->insertItem("2");
 	ComboBoxShortID->insertItem("3");
-	ComboBoxShortID->setCurrentItem(0);
 
     ComboBoxServiceAudioStream->clear();
 	ComboBoxServiceAudioStream->insertItem("0");
 	ComboBoxServiceAudioStream->insertItem("1");
 	ComboBoxServiceAudioStream->insertItem("2");
 	ComboBoxServiceAudioStream->insertItem("3");
-	ComboBoxServiceAudioStream->setCurrentItem(0);
 
     ComboBoxServiceDataStream->clear();
 	ComboBoxServiceDataStream->insertItem("0");
 	ComboBoxServiceDataStream->insertItem("1");
 	ComboBoxServiceDataStream->insertItem("2");
 	ComboBoxServiceDataStream->insertItem("3");
-	ComboBoxServiceDataStream->setCurrentItem(0);
 
     ComboBoxServicePacketID->clear();
 	ComboBoxServicePacketID->insertItem("0");
 	ComboBoxServicePacketID->insertItem("1");
 	ComboBoxServicePacketID->insertItem("2");
 	ComboBoxServicePacketID->insertItem("3");
-	ComboBoxServicePacketID->setCurrentItem(0);
 
     ComboBoxAudioStreamNo->clear();
 	ComboBoxAudioStreamNo->insertItem("0");
 	ComboBoxAudioStreamNo->insertItem("1");
 	ComboBoxAudioStreamNo->insertItem("2");
 	ComboBoxAudioStreamNo->insertItem("3");
-	ComboBoxAudioStreamNo->setCurrentItem(0);
 
     ComboBoxDataStreamNo->clear();
 	ComboBoxDataStreamNo->insertItem("0");
 	ComboBoxDataStreamNo->insertItem("1");
 	ComboBoxDataStreamNo->insertItem("2");
 	ComboBoxDataStreamNo->insertItem("3");
-	ComboBoxDataStreamNo->setCurrentItem(0);
 
     ComboBoxDataPacketId->clear();
 	ComboBoxDataPacketId->insertItem("0");
 	ComboBoxDataPacketId->insertItem("1");
 	ComboBoxDataPacketId->insertItem("2");
 	ComboBoxDataPacketId->insertItem("3");
-	ComboBoxDataPacketId->setCurrentItem(0);
 
     ComboBoxAppType->clear();
-    ComboBoxAppType->insertItem("Normal");
-    ComboBoxAppType->insertItem("Engineering Test");
+    ComboBoxAppType->insertItem(tr("Normal"));
+    ComboBoxAppType->insertItem(tr("Engineering Test"));
 	for (t = 1; t < 31; t++)
 	{
-		ComboBoxAppType->insertItem(QString("Reserved (%1)").arg(t));
+	    QString reserved = QString(tr("Reserved"))+" (%1)";
+		ComboBoxAppType->insertItem(reserved.arg(t));
 	}
-	ComboBoxAppType->setCurrentItem(0);
 
 	GetFromTransmitter();
 	OnRadioMode(0);
@@ -442,6 +431,11 @@ TransmDialog::closeEvent(QCloseEvent* ce)
 	else
 		SetTransmitter(); // so Transmitter save settings has the latest info
 	ce->accept();
+}
+
+void TransmDialog::OnButtonClose()
+{
+    this->close(FALSE);
 }
 
 void TransmDialog::OnTimer()
@@ -487,8 +481,11 @@ TransmDialog::GetFromTransmitter()
 	case CDRMTransmitterInterface::T_ENC:
 		GetChannel();
 		GetStreams();
-		GetAudio();
-		GetData();
+		GetAudio(ComboBoxAudioStreamNo->currentItem());
+		GetData(
+            ComboBoxDataStreamNo->currentItem(),
+            ComboBoxDataPacketId->currentItem()
+        );
 		GetServices();
 		GetMDIOut();
 		RadioButtonEncoder->setChecked(TRUE);
@@ -501,8 +498,11 @@ TransmDialog::GetFromTransmitter()
 	case CDRMTransmitterInterface::T_TX:
 		GetChannel();
 		GetStreams();
-		GetAudio();
-		GetData();
+		GetAudio(ComboBoxAudioStreamNo->currentItem());
+		GetData(
+            ComboBoxDataStreamNo->currentItem(),
+            ComboBoxDataPacketId->currentItem()
+        );
 		GetServices();
 		GetCOFDM();
 		RadioButtonTransmitter->setChecked(TRUE);
@@ -716,15 +716,7 @@ TransmDialog::GetStreams()
 	for(size_t i=0; i<DRMTransmitter.GetParameters()->Stream.size(); i++)
 	{
 		const CStream& stream = DRMTransmitter.GetParameters()->Stream[i];
-		size_t bits;
-		if(stream.iLenPartB == -1)
-		{
-			bits = DRMTransmitter.GetParameters()->iNumDecodedBitsMSC;
-		}
-		else
-		{
-			bits = stream.iLenPartA+stream.iLenPartB;
-		}
+        int bytes = stream.iLenPartA+stream.iLenPartB;
 		ComboBoxStream->setCurrentItem(i);
 		if(stream.eAudDataFlag == SF_AUDIO)
 		{
@@ -732,6 +724,9 @@ TransmDialog::GetStreams()
 			LineEditPacketLen->setText("-");
 			ComboBoxPacketsPerFrame->clear();
 			ComboBoxPacketsPerFrame->insertItem("-");
+			// currently, only a single audio stream is supported.
+			// set the audio tab to this stream
+			ComboBoxAudioStreamNo->setCurrentItem(i);
 		}
 		else
 		{
@@ -740,7 +735,7 @@ TransmDialog::GetStreams()
 				ComboBoxStreamType->setCurrentItem(1);
 				LineEditPacketLen->setText(QString::number(stream.iPacketLen));
 				ComboBoxPacketsPerFrame->clear();
-				ComboBoxPacketsPerFrame->insertItem(QString::number(bits/8/stream.iPacketLen));
+				ComboBoxPacketsPerFrame->insertItem(QString::number(bytes/stream.iPacketLen));
 			}
 			else
 			{
@@ -749,8 +744,11 @@ TransmDialog::GetStreams()
 				ComboBoxPacketsPerFrame->clear();
 				ComboBoxPacketsPerFrame->insertItem("-");
 			}
+			// currently, only a single data stream is supported.
+			// set the data tab to this stream
+			ComboBoxDataStreamNo->setCurrentItem(i);
 		}
-		LineEditBitsPerFrame->setText(QString::number(bits));
+		LineEditBitsPerFrame->setText(QString::number(8*bytes));
 		OnButtonAddStream();
 	}
 }
@@ -784,47 +782,47 @@ TransmDialog::SetStreams()
 	    QString plen =  it.current()->text(2);
         if(plen!="-")
             stream.iPacketLen = plen.toInt();
-        stream.iLenPartA = 0; /* EEP only */
-        stream.iLenPartB = it.current()->text(5).toInt();
+        // TODO - check if its part a or part b !!!
+        // iLen in bytes = column 5, not bits
+        stream.iLenPartA = it.current()->text(5).toInt(); /* EEP only */
+        stream.iLenPartB = 0;
 	}
 }
 
 void
-TransmDialog::GetAudio()
+TransmDialog::GetAudio(int iStreamNo)
 {
-	for(size_t i=0; i<DRMTransmitter.GetParameters()->AudioParam.size(); i++)
-	{
-		string fn = DRMTransmitter.GetReadFromFile();
-		LineEditAudioSourceFile->setText(fn.c_str());
-		if(fn == "")
-		{
-			int iAudSrc = DRMTransmitter.GetSoundInInterface();
-			if(iAudSrc == -1 || iAudSrc>=ComboBoxAudioSource->count())
-				ComboBoxAudioSource->setCurrentItem(ComboBoxAudioSource->count()-1);
-			else
-				ComboBoxAudioSource->setCurrentItem(iAudSrc);
-		}
+    string fn = DRMTransmitter.GetReadFromFile();
+    LineEditAudioSourceFile->setText(fn.c_str());
+    if(fn == "")
+    {
+        int iAudSrc = DRMTransmitter.GetSoundInInterface();
+        if(iAudSrc == -1 || iAudSrc>=ComboBoxAudioSource->count())
+            ComboBoxAudioSource->setCurrentItem(ComboBoxAudioSource->count()-1);
+        else
+            ComboBoxAudioSource->setCurrentItem(iAudSrc);
+    }
 
-		if(DRMTransmitter.GetParameters()->AudioParam[i].bTextflag == TRUE)
-		{
-			/* Activate text message */
-			EnableTextMessage(TRUE);
-			CheckBoxEnableTextMessage->setChecked(TRUE);
-		}
-		else
-		{
-			EnableTextMessage(FALSE);
-			CheckBoxEnableTextMessage->setChecked(FALSE);
-		}
-	}
+    if(DRMTransmitter.GetParameters()->AudioParam[iStreamNo].bTextflag == TRUE)
+    {
+        /* Activate text message */
+        EnableTextMessage(TRUE);
+        CheckBoxEnableTextMessage->setChecked(TRUE);
+        vector<string> msg;
+        DRMTransmitter.GetTextMessages(msg);
+        for(size_t i=0; i<msg.size(); i++)
+            ListViewTextMessages->insertItem(new QListViewItem(ListViewFileNames, msg[i]));
+    }
+    else
+    {
+        EnableTextMessage(FALSE);
+        CheckBoxEnableTextMessage->setChecked(FALSE);
+    }
 }
 
 void
-TransmDialog::SetAudio()
+TransmDialog::SetAudio(int iStreamNo)
 {
-
-	int iStreamNo = ComboBoxAudioStreamNo->currentItem();
-
 	CAudioParam& AudioParam = DRMTransmitter.GetParameters()->AudioParam[iStreamNo];
 
 	if(CheckBoxAudioSourceIsFile->isChecked())
@@ -842,8 +840,11 @@ TransmDialog::SetAudio()
 	if(AudioParam.bTextflag)
 	{
 		DRMTransmitter.ClearTextMessages();
-		for (size_t i = 1; i < vecstrTextMessage.size(); i++)
-			DRMTransmitter.AddTextMessage(vecstrTextMessage[i]);
+        QListViewItemIterator it(ListViewTextMessages);
+        for (; it.current(); it++)
+        {
+			DRMTransmitter.AddTextMessage(it.current()->text(0));
+        }
 	}
 
 	/* TODO */
@@ -884,32 +885,28 @@ void TransmDialog::EnableTextMessage(const _BOOLEAN bFlag)
 	if (bFlag == TRUE)
 	{
 		/* Enable text message controls */
-		ComboBoxTextMessage->setEnabled(TRUE);
-		MultiLineEditTextMessage->setEnabled(TRUE);
 		PushButtonAddText->setEnabled(TRUE);
+		PushButtonDeleteText->setEnabled(TRUE);
 		PushButtonClearAllText->setEnabled(TRUE);
 	}
 	else
 	{
 		/* Disable text message controls */
-		ComboBoxTextMessage->setEnabled(FALSE);
-		MultiLineEditTextMessage->setEnabled(FALSE);
 		PushButtonAddText->setEnabled(FALSE);
+		PushButtonDeleteText->setEnabled(FALSE);
 		PushButtonClearAllText->setEnabled(FALSE);
 	}
 }
 
 void
-TransmDialog:: GetData()
+TransmDialog:: GetData(int iStreamNo, int iPacketId)
 {
+    // TODO
 }
 
 void
-TransmDialog::SetData()
+TransmDialog::SetData(int iStreamNo, int iPacketId)
 {
-	int iStreamNo = ComboBoxDataStreamNo->currentItem();
-    int iPacketId = ComboBoxDataPacketId->currentItem();
-
 	CDataParam& DataParam = DRMTransmitter.GetParameters()->DataParam[iStreamNo][iPacketId];
 
 	/* Init SlideShow application */
@@ -1025,8 +1022,11 @@ TransmDialog::SetTransmitter()
 	{
 		SetChannel();
 		SetStreams();
-		SetAudio();
-		SetData();
+		SetAudio(ComboBoxAudioStreamNo->currentItem());
+		SetData(
+            ComboBoxDataStreamNo->currentItem(),
+            ComboBoxDataPacketId->currentItem()
+        );
 		SetServices();
 	}
 	if(RadioButtonTransmitter->isChecked() || RadioButtonModulator->isChecked())
@@ -1435,28 +1435,28 @@ TransmDialog::OnRadioMode(int)
 
 	if(RadioButtonTransmitter->isChecked())
 	{
-		TabWidgetConfigure->addTab(Channel, "Channel");
-		TabWidgetConfigure->addTab(Streams, "Streams");
-		TabWidgetConfigure->addTab(Audio, "Audio");
-		TabWidgetConfigure->addTab(Data, "Data");
-		TabWidgetConfigure->addTab(Services, "Services");
-		TabWidgetConfigure->addTab(COFDM, "COFDM");
+		TabWidgetConfigure->addTab(Channel, tr("Channel"));
+		TabWidgetConfigure->addTab(Streams, tr("Streams"));
+		TabWidgetConfigure->addTab(Audio, tr("Audio"));
+		TabWidgetConfigure->addTab(Data, tr("Data"));
+		TabWidgetConfigure->addTab(Services, tr("Services"));
+		TabWidgetConfigure->addTab(COFDM, tr("COFDM"));
 		TabWidgetConfigure->showPage(Channel);
 	}
 	if(RadioButtonEncoder->isChecked())
 	{
-		TabWidgetConfigure->addTab(Channel, "Channel");
-		TabWidgetConfigure->addTab(Streams, "Streams");
-		TabWidgetConfigure->addTab(Audio, "Audio");
-		TabWidgetConfigure->addTab(Data, "Data");
-		TabWidgetConfigure->addTab(Services, "Services");
-		TabWidgetConfigure->addTab(MDIOut, "MDI Output");
+		TabWidgetConfigure->addTab(Channel, tr("Channel"));
+		TabWidgetConfigure->addTab(Streams, tr("Streams"));
+		TabWidgetConfigure->addTab(Audio, tr("Audio"));
+		TabWidgetConfigure->addTab(Data, tr("Data"));
+		TabWidgetConfigure->addTab(Services, tr("Services"));
+		TabWidgetConfigure->addTab(MDIOut, tr("MDI Output"));
 		TabWidgetConfigure->showPage(Channel);
 	}
 	if(RadioButtonModulator->isChecked())
 	{
-		TabWidgetConfigure->addTab(MDIIn, "MDI Input");
-		TabWidgetConfigure->addTab(COFDM, "COFDM");
+		TabWidgetConfigure->addTab(MDIIn, tr("MDI Input"));
+		TabWidgetConfigure->addTab(COFDM, tr("COFDM"));
 		TabWidgetConfigure->showPage(COFDM);
 	}
 }
@@ -1572,8 +1572,8 @@ void TransmDialog::OnButtonStartStop()
 		(void)DRMTransmitter.wait(5000);
 		if(!DRMTransmitter.finished())
 		{
-			QMessageBox::critical(this, "Dream", "Exit\n",
-				"Termination of working thread failed");
+			QMessageBox::critical(this, "Dream", tr("Exit"),
+				tr("Termination of working thread failed"));
 		}
 
 		ButtonStartStop->setText(tr("&Start"));
@@ -1626,64 +1626,21 @@ void TransmDialog::EnableData(const _BOOLEAN bFlag)
 
 void TransmDialog::OnPushButtonAddText()
 {
-	string str;
+	QString msg = LineEditTextMessage->text();
+	if(msg != "")
+		(void) new QListViewItem(ListViewTextMessages, msg);
+}
 
-	/* Check if text control is not empty */
-	if (MultiLineEditTextMessage->edited())
-	{
-		stringstream ss;
-
-		/* First line */
-		ss << MultiLineEditTextMessage->textLine(0).utf8();
-
-		/* Other lines */
-		const int iNumLines = MultiLineEditTextMessage->numLines();
-
-		for (int i = 1; i < iNumLines; i++)
-		{
-			/* Insert line break */
-			ss << endl;
-
-			/* Insert text of next line */
-			ss << MultiLineEditTextMessage->textLine(i).utf8();
-		}
-		str = ss.str();
-	}
-	else
-		return;
-
-	/* Check size of container. If not enough space, enlarge */
-	if (iIDCurrentText == vecstrTextMessage.size())
-			vecstrTextMessage.resize(iIDCurrentText+1);
-
-	if (iIDCurrentText == 0)
-	{
-		/* Add new message */
-		iIDCurrentText = vecstrTextMessage.size() - 1;
-		ComboBoxTextMessage->insertItem(QString().setNum(iIDCurrentText), iIDCurrentText);
-
-	}
-	vecstrTextMessage[iIDCurrentText] = str;
-
-	/* Clear added text */
-	MultiLineEditTextMessage->clear();
-	MultiLineEditTextMessage->setEdited(FALSE);
+void TransmDialog::OnPushButtonDeleteText()
+{
+	QListViewItem* p = ListViewTextMessages->selectedItem();
+	if(p)
+		delete p;
 }
 
 void TransmDialog::OnButtonClearAllText()
 {
-	/* Clear container */
-	vecstrTextMessage.clear();
-	vecstrTextMessage.resize(1);
-	iIDCurrentText = 0;
-
-	/* Clear combo box */
-	ComboBoxTextMessage->clear();
-	ComboBoxTextMessage->insertItem(tr("new"), 0);
-
-	/* Clear multi line edit */
-	MultiLineEditTextMessage->clear();
-	MultiLineEditTextMessage->setEdited(FALSE);
+    ListViewTextMessages->clear();
 }
 
 void TransmDialog::OnPushButtonAddFileName()
@@ -1715,21 +1672,6 @@ void TransmDialog::OnButtonClearAllFileNames()
 {
 	/* Clear list box for file names */
 	ListViewFileNames->clear();
-}
-
-void TransmDialog::OnComboBoxTextMessageActivated(int iID)
-{
-	iIDCurrentText = iID;
-
-	/* Set text control with selected message */
-	MultiLineEditTextMessage->clear();
-	MultiLineEditTextMessage->setEdited(FALSE);
-
-	if (iID != 0)
-	{
-		/* Write stored text in multi line edit control */
-		MultiLineEditTextMessage->insertLine(vecstrTextMessage[iID].c_str());
-	}
 }
 
 void TransmDialog::OnTextChangedServiceID(const QString& strID)

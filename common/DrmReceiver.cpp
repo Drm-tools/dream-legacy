@@ -106,6 +106,8 @@ CSoundInProxy::SetMode(EDemodulationType eNewMode)
 
 void CSoundInProxy::SetHamlib(CHamlib* p)
 {
+    if(pHamlib)
+        delete pHamlib;
 	pHamlib = p;
 	if(pHamlib)
 	{
@@ -134,6 +136,13 @@ CSoundInProxy::SetReadPCMFromFile(const string strNFN)
 	else
 		eWantedChanSel = CS_MIX_CHAN;
 	pcmWantedInput = File;
+}
+
+void CSoundInProxy::SetUsingDI(const string strSource)
+{
+    filename = strSource;
+    pcmInput = pcmWantedInput = RSCI;
+    SetHamlib(NULL);
 }
 
 void CSoundInProxy::SetRigModelForAllModes(int iID)
@@ -226,7 +235,8 @@ CSoundInProxy::Update()
 	}
 	else
 	{
-        pcmWantedInput = SoundCard;
+	    if(pcmWantedInput != RSCI)
+            pcmWantedInput = SoundCard;
 	}
 #endif
 	if(pcmInput!=pcmWantedInput)
@@ -1784,7 +1794,11 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	/* upstream RSCI */
 	str = s.Get("command", "rsiin");
 	if(str != "")
+	{
 		upstreamRSCI.SetOrigin(str); // its a port
+		// disable sound input
+		SoundInProxy.SetUsingDI(str);
+	}
 
 	str = s.Get("command", "rciout");
 	if(str != "")

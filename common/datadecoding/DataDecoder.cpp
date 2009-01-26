@@ -156,7 +156,7 @@ CDataEncoder::Init(CParameter & Param)
 // TODO we only use always the first service right now
 	const int iCurSelDataServ = 0;
 
-	Param.Lock(); 
+	Param.Lock();
 
 	iPacketLen = Param.Stream[Param.Service[iCurSelDataServ].iDataStream].iPacketLen * SIZEOF__BYTE;
 	iTotalPacketSize = iPacketLen + 24 /* CRC + header = 24 bits */ ;
@@ -195,7 +195,7 @@ CDataDecoder::~CDataDecoder ()
 {
 	delete &Journaline;
 }
-	
+
 void
 CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 {
@@ -630,7 +630,7 @@ _BOOLEAN
 	_BOOLEAN bReturn = FALSE;
 
 	/* Lock resources */
-	Lock(); 
+	Lock();
 
 	/* Check if data service is current MOT application */
 	if ((DoNotProcessData == FALSE)
@@ -641,7 +641,7 @@ _BOOLEAN
 		bReturn = TRUE;
 	}
 	/* Release resources */
-	Unlock(); 
+	Unlock();
 
 	return bReturn;
 }
@@ -653,7 +653,7 @@ _BOOLEAN
 	_BOOLEAN bReturn = FALSE;
 
 	/* Lock resources */
-	Lock(); 
+	Lock();
 
 	/* Check if data service is current MOT application */
 	if ((DoNotProcessData == FALSE)
@@ -663,7 +663,7 @@ _BOOLEAN
 		bReturn = TRUE;
 	}
 	/* Release resources */
-	Unlock(); 
+	Unlock();
 
 	return bReturn;
 }
@@ -672,7 +672,7 @@ void
 CDataDecoder::GetNews(const int iObjID, CNews & News)
 {
 	/* Lock resources */
-	Lock(); 
+	Lock();
 
 	/* Check if data service is Journaline application */
 	if ((DoNotProcessData == FALSE)
@@ -680,5 +680,5 @@ CDataDecoder::GetNews(const int iObjID, CNews & News)
 		Journaline.GetNews(iObjID, News);
 
 	/* Release resources */
-	Unlock(); 
+	Unlock();
 }

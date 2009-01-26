@@ -58,6 +58,8 @@ public:
 	/* Source Encoder Interface */
 	void					AddTextMessage(const string& strText);
 	void					ClearTextMessages();
+	void					GetTextMessages(vector<string>&);
+
 	void					AddPic(const string& strFileName, const string& strFormat);
 	void					ClearPics();
 	_BOOLEAN				GetTransStat(string& strCPi, _REAL& rCPe);

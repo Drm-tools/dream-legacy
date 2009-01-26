@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>571</width>
+            <width>551</width>
             <height>724</height>
         </rect>
     </property>
@@ -75,11 +75,11 @@
                         <name>name</name>
                         <cstring>Horizontal Spacing2</cstring>
                     </property>
-                    <property stdset="1">
+                    <property>
                         <name>orientation</name>
                         <enum>Horizontal</enum>
                     </property>
-                    <property stdset="1">
+                    <property>
                         <name>sizeType</name>
                         <enum>Expanding</enum>
                     </property>
@@ -95,7 +95,7 @@
                     <class>QPushButton</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>buttonOk</cstring>
+                        <cstring>buttonClose</cstring>
                     </property>
                     <property stdset="1">
                         <name>text</name>
@@ -381,7 +381,7 @@
                                     <name>text</name>
                                     <string>4,5 kHz</string>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>buttonGroupId</name>
                                     <number>0</number>
                                 </property>
@@ -396,7 +396,7 @@
                                     <name>text</name>
                                     <string>5 kHz</string>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>buttonGroupId</name>
                                     <number>1</number>
                                 </property>
@@ -411,7 +411,7 @@
                                     <name>text</name>
                                     <string>9 kHz</string>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>buttonGroupId</name>
                                     <number>2</number>
                                 </property>
@@ -426,7 +426,7 @@
                                     <name>text</name>
                                     <string>10 kHz</string>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>buttonGroupId</name>
                                     <number>3</number>
                                 </property>
@@ -441,7 +441,7 @@
                                     <name>text</name>
                                     <string>18 kHz</string>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>buttonGroupId</name>
                                     <number>4</number>
                                 </property>
@@ -456,7 +456,7 @@
                                     <name>text</name>
                                     <string>20 kHz</string>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>buttonGroupId</name>
                                     <number>5</number>
                                 </property>
@@ -535,7 +535,7 @@
                                     <name>text</name>
                                     <string>A</string>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>buttonGroupId</name>
                                     <number>0</number>
                                 </property>
@@ -550,7 +550,7 @@
                                     <name>text</name>
                                     <string>B</string>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>buttonGroupId</name>
                                     <number>1</number>
                                 </property>
@@ -565,7 +565,7 @@
                                     <name>text</name>
                                     <string>C</string>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>buttonGroupId</name>
                                     <number>2</number>
                                 </property>
@@ -580,7 +580,7 @@
                                     <name>text</name>
                                     <string>D</string>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>buttonGroupId</name>
                                     <number>3</number>
                                 </property>
@@ -809,11 +809,11 @@
                             <name>name</name>
                             <cstring>Spacer7</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Vertical</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -830,11 +830,11 @@
                             <name>name</name>
                             <cstring>Spacer8</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Vertical</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -916,11 +916,11 @@
                             <name>name</name>
                             <cstring>Spacer4</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -959,11 +959,11 @@
                             <name>name</name>
                             <cstring>Spacer5</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -1187,11 +1187,11 @@
                             <name>name</name>
                             <cstring>Spacer9</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Vertical</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -1215,435 +1215,444 @@
                     <name>title</name>
                     <string>Audio</string>
                 </attribute>
-                <grid>
+                <widget>
+                    <class>QLabel</class>
                     <property stdset="1">
-                        <name>margin</name>
-                        <number>11</number>
+                        <name>name</name>
+                        <cstring>TextLabel10</cstring>
                     </property>
                     <property stdset="1">
-                        <name>spacing</name>
-                        <number>6</number>
+                        <name>geometry</name>
+                        <rect>
+                            <x>11</x>
+                            <y>11</y>
+                            <width>432</width>
+                            <height>22</height>
+                        </rect>
                     </property>
-                    <widget row="0"  column="0" >
-                        <class>QLabel</class>
+                    <property stdset="1">
+                        <name>text</name>
+                        <string>Stream</string>
+                    </property>
+                </widget>
+                <widget>
+                    <class>QComboBox</class>
+                    <property stdset="1">
+                        <name>name</name>
+                        <cstring>ComboBoxAudioStreamNo</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>geometry</name>
+                        <rect>
+                            <x>449</x>
+                            <y>11</y>
+                            <width>64</width>
+                            <height>22</height>
+                        </rect>
+                    </property>
+                    <property stdset="1">
+                        <name>maximumSize</name>
+                        <size>
+                            <width>64</width>
+                            <height>32767</height>
+                        </size>
+                    </property>
+                </widget>
+                <spacer>
+                    <property>
+                        <name>name</name>
+                        <cstring>Spacer28_2</cstring>
+                    </property>
+                    <property>
+                        <name>orientation</name>
+                        <enum>Horizontal</enum>
+                    </property>
+                    <property>
+                        <name>sizeType</name>
+                        <enum>Expanding</enum>
+                    </property>
+                    <property>
+                        <name>sizeHint</name>
+                        <size>
+                            <width>20</width>
+                            <height>20</height>
+                        </size>
+                    </property>
+                </spacer>
+                <spacer>
+                    <property>
+                        <name>name</name>
+                        <cstring>Spacer32_3</cstring>
+                    </property>
+                    <property>
+                        <name>orientation</name>
+                        <enum>Horizontal</enum>
+                    </property>
+                    <property>
+                        <name>sizeType</name>
+                        <enum>Expanding</enum>
+                    </property>
+                    <property>
+                        <name>sizeHint</name>
+                        <size>
+                            <width>20</width>
+                            <height>20</height>
+                        </size>
+                    </property>
+                </spacer>
+                <spacer>
+                    <property>
+                        <name>name</name>
+                        <cstring>Spacer33</cstring>
+                    </property>
+                    <property>
+                        <name>orientation</name>
+                        <enum>Horizontal</enum>
+                    </property>
+                    <property>
+                        <name>sizeType</name>
+                        <enum>Expanding</enum>
+                    </property>
+                    <property>
+                        <name>sizeHint</name>
+                        <size>
+                            <width>20</width>
+                            <height>20</height>
+                        </size>
+                    </property>
+                </spacer>
+                <widget>
+                    <class>QGroupBox</class>
+                    <property stdset="1">
+                        <name>name</name>
+                        <cstring>GroupBoxAudioConfig</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>geometry</name>
+                        <rect>
+                            <x>11</x>
+                            <y>39</y>
+                            <width>500</width>
+                            <height>82</height>
+                        </rect>
+                    </property>
+                    <property stdset="1">
+                        <name>sizePolicy</name>
+                        <sizepolicy>
+                            <hsizetype>5</hsizetype>
+                            <vsizetype>3</vsizetype>
+                        </sizepolicy>
+                    </property>
+                    <property stdset="1">
+                        <name>title</name>
+                        <string>Audio</string>
+                    </property>
+                    <grid>
                         <property stdset="1">
-                            <name>name</name>
-                            <cstring>TextLabel10</cstring>
+                            <name>margin</name>
+                            <number>11</number>
                         </property>
                         <property stdset="1">
-                            <name>text</name>
-                            <string>Stream</string>
+                            <name>spacing</name>
+                            <number>6</number>
                         </property>
-                    </widget>
-                    <widget row="0"  column="1" >
-                        <class>QComboBox</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>ComboBoxAudioStreamNo</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>maximumSize</name>
-                            <size>
-                                <width>64</width>
-                                <height>32767</height>
-                            </size>
-                        </property>
-                    </widget>
-                    <spacer row="0"  column="2" >
-                        <property>
-                            <name>name</name>
-                            <cstring>Spacer28_2</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>orientation</name>
-                            <enum>Horizontal</enum>
-                        </property>
-                        <property stdset="1">
-                            <name>sizeType</name>
-                            <enum>Expanding</enum>
-                        </property>
-                        <property>
-                            <name>sizeHint</name>
-                            <size>
-                                <width>20</width>
-                                <height>20</height>
-                            </size>
-                        </property>
-                    </spacer>
-                    <spacer row="1"  column="2" >
-                        <property>
-                            <name>name</name>
-                            <cstring>Spacer32_3</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>orientation</name>
-                            <enum>Horizontal</enum>
-                        </property>
-                        <property stdset="1">
-                            <name>sizeType</name>
-                            <enum>Expanding</enum>
-                        </property>
-                        <property>
-                            <name>sizeHint</name>
-                            <size>
-                                <width>20</width>
-                                <height>20</height>
-                            </size>
-                        </property>
-                    </spacer>
-                    <spacer row="2"  column="2" >
-                        <property>
-                            <name>name</name>
-                            <cstring>Spacer33</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>orientation</name>
-                            <enum>Horizontal</enum>
-                        </property>
-                        <property stdset="1">
-                            <name>sizeType</name>
-                            <enum>Expanding</enum>
-                        </property>
-                        <property>
-                            <name>sizeHint</name>
-                            <size>
-                                <width>20</width>
-                                <height>20</height>
-                            </size>
-                        </property>
-                    </spacer>
-                    <widget row="1"  column="0"  rowspan="1"  colspan="2" >
-                        <class>QGroupBox</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>GroupBoxAudioConfig</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>sizePolicy</name>
-                            <sizepolicy>
-                                <hsizetype>5</hsizetype>
-                                <vsizetype>3</vsizetype>
-                            </sizepolicy>
-                        </property>
-                        <property stdset="1">
-                            <name>title</name>
-                            <string>Audio</string>
-                        </property>
-                        <grid>
+                        <widget row="0"  column="2" >
+                            <class>QCheckBox</class>
                             <property stdset="1">
-                                <name>margin</name>
-                                <number>11</number>
+                                <name>name</name>
+                                <cstring>CheckBoxSBR</cstring>
                             </property>
                             <property stdset="1">
-                                <name>spacing</name>
-                                <number>6</number>
+                                <name>text</name>
+                                <string>SBR</string>
                             </property>
-                            <widget row="0"  column="2" >
-                                <class>QCheckBox</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>CheckBoxSBR</cstring>
-                                </property>
-                                <property stdset="1">
+                        </widget>
+                        <widget row="0"  column="0" >
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>TextLabelCodec</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Codec</string>
+                            </property>
+                        </widget>
+                        <widget row="0"  column="1" >
+                            <class>QComboBox</class>
+                            <item>
+                                <property>
                                     <name>text</name>
-                                    <string>SBR</string>
+                                    <string>AAC</string>
                                 </property>
-                            </widget>
-                            <widget row="0"  column="0" >
-                                <class>QLabel</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>TextLabelCodec</cstring>
-                                </property>
-                                <property stdset="1">
+                            </item>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>ComboBoxCodec</cstring>
+                            </property>
+                        </widget>
+                        <widget row="0"  column="3" >
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>TextLabelAudioBitrate</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Bit rate</string>
+                            </property>
+                        </widget>
+                        <widget row="0"  column="5" >
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>TextLabel2</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Mode</string>
+                            </property>
+                        </widget>
+                        <widget row="0"  column="6"  rowspan="1"  colspan="2" >
+                            <class>QComboBox</class>
+                            <item>
+                                <property>
                                     <name>text</name>
-                                    <string>Codec</string>
+                                    <string>Mono</string>
                                 </property>
-                            </widget>
-                            <widget row="0"  column="1" >
-                                <class>QComboBox</class>
-                                <item>
-                                    <property>
-                                        <name>text</name>
-                                        <string>AAC</string>
-                                    </property>
-                                </item>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>ComboBoxCodec</cstring>
-                                </property>
-                            </widget>
-                            <widget row="0"  column="3" >
-                                <class>QLabel</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>TextLabelAudioBitrate</cstring>
-                                </property>
-                                <property stdset="1">
+                            </item>
+                            <item>
+                                <property>
                                     <name>text</name>
-                                    <string>Bit rate</string>
+                                    <string>LC Stereo</string>
                                 </property>
-                            </widget>
-                            <widget row="0"  column="5" >
-                                <class>QLabel</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>TextLabel2</cstring>
-                                </property>
-                                <property stdset="1">
+                            </item>
+                            <item>
+                                <property>
                                     <name>text</name>
-                                    <string>Mode</string>
+                                    <string>Parametric Stereo</string>
                                 </property>
-                            </widget>
-                            <widget row="0"  column="6"  rowspan="1"  colspan="2" >
-                                <class>QComboBox</class>
-                                <item>
-                                    <property>
-                                        <name>text</name>
-                                        <string>Mono</string>
-                                    </property>
-                                </item>
-                                <item>
-                                    <property>
-                                        <name>text</name>
-                                        <string>LC Stereo</string>
-                                    </property>
-                                </item>
-                                <item>
-                                    <property>
-                                        <name>text</name>
-                                        <string>Parametric Stereo</string>
-                                    </property>
-                                </item>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>ComboBoxAudioMode</cstring>
-                                </property>
-                                <property stdset="1">
-                                    <name>maximumSize</name>
-                                    <size>
-                                        <width>126</width>
-                                        <height>32767</height>
-                                    </size>
+                            </item>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>ComboBoxAudioMode</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>maximumSize</name>
+                                <size>
+                                    <width>126</width>
+                                    <height>32767</height>
+                                </size>
+                            </property>
+                            <property>
+                                <name>toolTip</name>
+                                <string>Mono/Stereo</string>
+                            </property>
+                        </widget>
+                        <widget row="0"  column="4" >
+                            <class>QComboBox</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>ComboBoxAudioBitrate</cstring>
+                            </property>
+                        </widget>
+                        <widget row="1"  column="7" >
+                            <class>QPushButton</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>PushButtonAudioSourceFileBrowse</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Browse</string>
+                            </property>
+                        </widget>
+                        <widget row="1"  column="6" >
+                            <class>QLineEdit</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>LineEditAudioSourceFile</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>maximumSize</name>
+                                <size>
+                                    <width>128</width>
+                                    <height>32767</height>
+                                </size>
+                            </property>
+                        </widget>
+                        <widget row="1"  column="4"  rowspan="1"  colspan="2" >
+                            <class>QCheckBox</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>CheckBoxAudioSourceIsFile</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Read From File</string>
+                            </property>
+                        </widget>
+                        <widget row="1"  column="1"  rowspan="1"  colspan="3" >
+                            <class>QComboBox</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>ComboBoxAudioSource</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>maximumSize</name>
+                                <size>
+                                    <width>128</width>
+                                    <height>32767</height>
+                                </size>
+                            </property>
+                        </widget>
+                        <widget row="1"  column="0" >
+                            <class>QLabel</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>TextLabelAudioSource</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Source</string>
+                            </property>
+                        </widget>
+                    </grid>
+                </widget>
+                <widget>
+                    <class>QGroupBox</class>
+                    <property stdset="1">
+                        <name>name</name>
+                        <cstring>GroupBoxTextMessage</cstring>
+                    </property>
+                    <property stdset="1">
+                        <name>geometry</name>
+                        <rect>
+                            <x>10</x>
+                            <y>130</y>
+                            <width>500</width>
+                            <height>186</height>
+                        </rect>
+                    </property>
+                    <property stdset="1">
+                        <name>sizePolicy</name>
+                        <sizepolicy>
+                            <hsizetype>5</hsizetype>
+                            <vsizetype>7</vsizetype>
+                        </sizepolicy>
+                    </property>
+                    <property stdset="1">
+                        <name>title</name>
+                        <string>Text Message</string>
+                    </property>
+                    <grid>
+                        <property stdset="1">
+                            <name>margin</name>
+                            <number>11</number>
+                        </property>
+                        <property stdset="1">
+                            <name>spacing</name>
+                            <number>6</number>
+                        </property>
+                        <widget row="0"  column="0" >
+                            <class>QCheckBox</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>CheckBoxEnableTextMessage</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>enabled</name>
+                                <bool>true</bool>
+                            </property>
+                            <property stdset="1">
+                                <name>sizePolicy</name>
+                                <sizepolicy>
+                                    <hsizetype>1</hsizetype>
+                                    <vsizetype>1</vsizetype>
+                                </sizepolicy>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Enable</string>
+                            </property>
+                            <property stdset="1">
+                                <name>checked</name>
+                                <bool>false</bool>
+                            </property>
+                        </widget>
+                        <widget row="1"  column="0"  rowspan="2"  colspan="1" >
+                            <class>QListView</class>
+                            <column>
+                                <property>
+                                    <name>text</name>
+                                    <string>Text</string>
                                 </property>
                                 <property>
-                                    <name>toolTip</name>
-                                    <string>Mono/Stereo</string>
-                                </property>
-                            </widget>
-                            <widget row="0"  column="4" >
-                                <class>QComboBox</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>ComboBoxAudioBitrate</cstring>
-                                </property>
-                            </widget>
-                            <widget row="1"  column="7" >
-                                <class>QPushButton</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>PushButtonAudioSourceFileBrowse</cstring>
-                                </property>
-                                <property stdset="1">
-                                    <name>text</name>
-                                    <string>Browse</string>
-                                </property>
-                            </widget>
-                            <widget row="1"  column="6" >
-                                <class>QLineEdit</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>LineEditAudioSourceFile</cstring>
-                                </property>
-                                <property stdset="1">
-                                    <name>maximumSize</name>
-                                    <size>
-                                        <width>128</width>
-                                        <height>32767</height>
-                                    </size>
-                                </property>
-                            </widget>
-                            <widget row="1"  column="4"  rowspan="1"  colspan="2" >
-                                <class>QCheckBox</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>CheckBoxAudioSourceIsFile</cstring>
-                                </property>
-                                <property stdset="1">
-                                    <name>text</name>
-                                    <string>Read From File</string>
-                                </property>
-                            </widget>
-                            <widget row="1"  column="1"  rowspan="1"  colspan="3" >
-                                <class>QComboBox</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>ComboBoxAudioSource</cstring>
-                                </property>
-                                <property stdset="1">
-                                    <name>maximumSize</name>
-                                    <size>
-                                        <width>128</width>
-                                        <height>32767</height>
-                                    </size>
-                                </property>
-                            </widget>
-                            <widget row="1"  column="0" >
-                                <class>QLabel</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>TextLabelAudioSource</cstring>
-                                </property>
-                                <property stdset="1">
-                                    <name>text</name>
-                                    <string>Source</string>
-                                </property>
-                            </widget>
-                        </grid>
-                    </widget>
-                    <widget row="2"  column="0" >
-                        <class>QGroupBox</class>
-                        <property stdset="1">
-                            <name>name</name>
-                            <cstring>GroupBoxTextMessage</cstring>
-                        </property>
-                        <property stdset="1">
-                            <name>title</name>
-                            <string>Text Message</string>
-                        </property>
-                        <grid>
-                            <property stdset="1">
-                                <name>margin</name>
-                                <number>11</number>
-                            </property>
-                            <property stdset="1">
-                                <name>spacing</name>
-                                <number>6</number>
-                            </property>
-                            <widget row="0"  column="0" >
-                                <class>QCheckBox</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>CheckBoxEnableTextMessage</cstring>
-                                </property>
-                                <property stdset="1">
-                                    <name>enabled</name>
+                                    <name>clickable</name>
                                     <bool>true</bool>
                                 </property>
-                                <property stdset="1">
-                                    <name>sizePolicy</name>
-                                    <sizepolicy>
-                                        <hsizetype>1</hsizetype>
-                                        <vsizetype>1</vsizetype>
-                                    </sizepolicy>
-                                </property>
-                                <property stdset="1">
-                                    <name>text</name>
-                                    <string>Enable</string>
-                                </property>
-                                <property stdset="1">
-                                    <name>checked</name>
+                                <property>
+                                    <name>resizeable</name>
                                     <bool>false</bool>
                                 </property>
-                            </widget>
-                            <widget row="3"  column="0" >
-                                <class>QLayoutWidget</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>Layout20_3_2</cstring>
-                                </property>
-                                <hbox>
-                                    <property stdset="1">
-                                        <name>margin</name>
-                                        <number>0</number>
-                                    </property>
-                                    <property stdset="1">
-                                        <name>spacing</name>
-                                        <number>6</number>
-                                    </property>
-                                    <widget>
-                                        <class>QPushButton</class>
-                                        <property stdset="1">
-                                            <name>name</name>
-                                            <cstring>PushButtonClearAllText</cstring>
-                                        </property>
-                                        <property stdset="1">
-                                            <name>text</name>
-                                            <string>&amp;Clear All</string>
-                                        </property>
-                                    </widget>
-                                    <spacer>
-                                        <property>
-                                            <name>name</name>
-                                            <cstring>Spacer2_3_2</cstring>
-                                        </property>
-                                        <property stdset="1">
-                                            <name>orientation</name>
-                                            <enum>Horizontal</enum>
-                                        </property>
-                                        <property stdset="1">
-                                            <name>sizeType</name>
-                                            <enum>Expanding</enum>
-                                        </property>
-                                        <property>
-                                            <name>sizeHint</name>
-                                            <size>
-                                                <width>20</width>
-                                                <height>20</height>
-                                            </size>
-                                        </property>
-                                    </spacer>
-                                    <widget>
-                                        <class>QPushButton</class>
-                                        <property stdset="1">
-                                            <name>name</name>
-                                            <cstring>PushButtonAddText</cstring>
-                                        </property>
-                                        <property stdset="1">
-                                            <name>text</name>
-                                            <string>&amp;Add / Modify</string>
-                                        </property>
-                                    </widget>
-                                </hbox>
-                            </widget>
-                            <widget row="1"  column="0" >
-                                <class>QComboBox</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>ComboBoxTextMessage</cstring>
-                                </property>
-                                <property stdset="1">
-                                    <name>sizePolicy</name>
-                                    <sizepolicy>
-                                        <hsizetype>1</hsizetype>
-                                        <vsizetype>1</vsizetype>
-                                    </sizepolicy>
-                                </property>
-                            </widget>
-                            <widget row="2"  column="0" >
-                                <class>QMultiLineEdit</class>
-                                <property stdset="1">
-                                    <name>name</name>
-                                    <cstring>MultiLineEditTextMessage</cstring>
-                                </property>
-                                <property stdset="1">
-                                    <name>sizePolicy</name>
-                                    <sizepolicy>
-                                        <hsizetype>1</hsizetype>
-                                        <vsizetype>0</vsizetype>
-                                    </sizepolicy>
-                                </property>
-                                <property stdset="1">
-                                    <name>maximumSize</name>
-                                    <size>
-                                        <width>32767</width>
-                                        <height>50</height>
-                                    </size>
-                                </property>
-                            </widget>
-                        </grid>
-                    </widget>
-                </grid>
+                            </column>
+                        <item>
+                            <property>
+                                <name>text</name>
+                                <string>New Item</string>
+                            </property>
+                            <property>
+                                <name>pixmap</name>
+                                <pixmap></pixmap>
+                            </property>
+                        </item>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>ListViewTextMessages</cstring>
+                            </property>
+                        </widget>
+                        <widget row="1"  column="1" >
+                            <class>QPushButton</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>PushButtonDeleteText</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>&amp;Delete</string>
+                            </property>
+                        </widget>
+                        <widget row="2"  column="1" >
+                            <class>QPushButton</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>PushButtonClearAllText</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>&amp;Clear All</string>
+                            </property>
+                        </widget>
+                        <widget row="3"  column="0" >
+                            <class>QLineEdit</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>LineEditTextMessage</cstring>
+                            </property>
+                        </widget>
+                        <widget row="3"  column="1" >
+                            <class>QPushButton</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>PushButtonAddText</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>&amp;Add</string>
+                            </property>
+                        </widget>
+                    </grid>
+                </widget>
             </widget>
             <widget>
                 <class>QWidget</class>
@@ -1813,11 +1822,11 @@
                             <name>name</name>
                             <cstring>Spacer12</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Vertical</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -1903,11 +1912,11 @@
                                     <name>name</name>
                                     <cstring>Spacer16</cstring>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>orientation</name>
                                     <enum>Horizontal</enum>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>sizeType</name>
                                     <enum>Expanding</enum>
                                 </property>
@@ -1963,11 +1972,11 @@
                                     <name>name</name>
                                     <cstring>Spacer14</cstring>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>orientation</name>
                                     <enum>Horizontal</enum>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>sizeType</name>
                                     <enum>Expanding</enum>
                                 </property>
@@ -2023,11 +2032,11 @@
                                     <name>name</name>
                                     <cstring>Spacer38</cstring>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>orientation</name>
                                     <enum>Horizontal</enum>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>sizeType</name>
                                     <enum>Expanding</enum>
                                 </property>
@@ -2077,11 +2086,11 @@
                                     <name>name</name>
                                     <cstring>Spacer15</cstring>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>orientation</name>
                                     <enum>Horizontal</enum>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>sizeType</name>
                                     <enum>Expanding</enum>
                                 </property>
@@ -2293,11 +2302,11 @@
                             <name>name</name>
                             <cstring>Spacer13</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -2325,11 +2334,11 @@
                             <name>name</name>
                             <cstring>Spacer40</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Vertical</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -2346,11 +2355,11 @@
                             <name>name</name>
                             <cstring>Spacer41</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Vertical</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -2610,11 +2619,11 @@
                             <name>name</name>
                             <cstring>Spacer34</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -2631,11 +2640,11 @@
                             <name>name</name>
                             <cstring>Spacer36</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -2652,11 +2661,11 @@
                             <name>name</name>
                             <cstring>Spacer35</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -2673,11 +2682,11 @@
                             <name>name</name>
                             <cstring>Spacer39</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -2823,11 +2832,11 @@
                             <name>name</name>
                             <cstring>Spacer39_2</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -2844,11 +2853,11 @@
                             <name>name</name>
                             <cstring>Spacer40_2</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -2865,11 +2874,11 @@
                             <name>name</name>
                             <cstring>Spacer41_3</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -2886,11 +2895,11 @@
                             <name>name</name>
                             <cstring>Spacer43</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -2943,11 +2952,11 @@
                             <name>name</name>
                             <cstring>Spacer42_2</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -2964,11 +2973,11 @@
                             <name>name</name>
                             <cstring>Spacer44</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -3111,11 +3120,11 @@
                                     <name>name</name>
                                     <cstring>Spacer23</cstring>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>orientation</name>
                                     <enum>Horizontal</enum>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>sizeType</name>
                                     <enum>Expanding</enum>
                                 </property>
@@ -3157,11 +3166,11 @@
                                     <name>name</name>
                                     <cstring>Spacer22_2</cstring>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>orientation</name>
                                     <enum>Horizontal</enum>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>sizeType</name>
                                     <enum>Expanding</enum>
                                 </property>
@@ -3275,11 +3284,11 @@
                                     <name>name</name>
                                     <cstring>Spacer21</cstring>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>orientation</name>
                                     <enum>Horizontal</enum>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>sizeType</name>
                                     <enum>Expanding</enum>
                                 </property>
@@ -3309,11 +3318,11 @@
                             <name>name</name>
                             <cstring>Spacer23_2</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Vertical</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -3484,11 +3493,11 @@
                             <name>name</name>
                             <cstring>Spacer41_2</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -3516,11 +3525,11 @@
                             <name>name</name>
                             <cstring>Spacer42</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -3548,11 +3557,11 @@
                             <name>name</name>
                             <cstring>Spacer36_2</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -3569,11 +3578,11 @@
                             <name>name</name>
                             <cstring>Spacer37</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -3590,11 +3599,11 @@
                             <name>name</name>
                             <cstring>Spacer38_2</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -3611,11 +3620,11 @@
                             <name>name</name>
                             <cstring>Spacer34_2</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -3632,11 +3641,11 @@
                             <name>name</name>
                             <cstring>Spacer28_3</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -3698,7 +3707,7 @@
                                     <name>text</name>
                                     <string>I / Q (neg)</string>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>buttonGroupId</name>
                                     <number>0</number>
                                 </property>
@@ -3720,7 +3729,7 @@
                                     <name>text</name>
                                     <string>I / Q (pos)</string>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>buttonGroupId</name>
                                     <number>2</number>
                                 </property>
@@ -3742,7 +3751,7 @@
                                     <name>text</name>
                                     <string>E / P</string>
                                 </property>
-                                <property stdset="1">
+                                <property>
                                     <name>buttonGroupId</name>
                                     <number>3</number>
                                 </property>
@@ -3772,11 +3781,11 @@
                             <name>name</name>
                             <cstring>Spacer35_2</cstring>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>orientation</name>
                             <enum>Horizontal</enum>
                         </property>
-                        <property stdset="1">
+                        <property>
                             <name>sizeType</name>
                             <enum>Expanding</enum>
                         </property>
@@ -3824,7 +3833,7 @@
 <customwidgets>
     <customwidget>
         <class>QwtThermo</class>
-        <header location="global">qwt/qwt_thermo.h</header>
+        <header location="global">qwt_thermo.h</header>
         <sizehint>
             <width>10</width>
             <height>40</height>
@@ -3840,23 +3849,15 @@
 <images>
     <image>
         <name>image0</name>
-        <data format="XPM.GZ" length="800">789c6dd1c94ec3301006e07b9e226a6e15826c7662210e7d00104724c4c1dbc4699b2e69ba22de1dcf2414a862e7e0ef4fbc8cf3300ddf5e9fc3e943b0eb6457eb503bd98653b36f9af3fbc7d367304978e89f5484c9e42e98dc873a7c59af2c8eb77e1ce58ca52551120b9695808c06e63d0d51302e689d3d51332132a442b29869c1901762c24ccf3331632038f244cc792c4ae481c879d27336301502b921963c131269899233a1902d92671c249d4a134591cb1c59234b2152452bef903ad3a5a1b94014da182ab0236a0d36462e90c6dad8d2c747a49556418a5c12fd6ba08de60301a8de35121248a1403644e63b55b4227228802aaa88d6773a862352a3ff75d37eb2482aad958cfe647efbcab90aacb966a69e2f7c5bbaa6364316d9d57ab3f5ad5e3436ea3309ce676ddb6e6b07b2cf5485d9ce75fb4355a93ed3aecf8ea7f3d2e9dbec72cd7ee7ceae73c7f6183bcbd899476b1bbd83ff77f5f5187c035969ca1a</data>
+        <data format="XPM.GZ" length="680">789c75d0cd4e84301007f03b4fd12c3762dc005b58627c048d4713e3a19dce948f0576613d18e3bbcbb4c5a8c1490ffdfd9b09c3ec13f1fcf420927d345fd5b50101b59a4462defafefde5f5fe23daa585584e968a747713ed6e0588c77140beabe51e1f32991e8119074a4fe3a8a4ac0ecc4b60e5a9993293c673f22cd2caf5f68e6a25064acf8159e4855192098eba949e35f30855a60d73644201dab899c911813ccf2bb164b64c839823316726126a72af4d20799e985452eed90596e47aada32bb7b73fb566b1d2005ac53f328364972234df99a99b76a9c676b509598cdda9574bd56d87b1cf14d9251b8641d59694cfb4e56cb4e7cb64adf619846c9e7463e1ff6cab77eb1b5bb36ccdbcf96f9b3bf8bdabcfbbe80b5552af0f</data>
     </image>
     <image>
         <name>image1</name>
-        <data format="XPM.GZ" length="14407">789ced9ad96fe3be11c7dff7af0876de16057fb66ea2e843eefbde9c451f4849dcdca77316fddf3b9aa16449961d27b67753342002e42389e4cc573343cad25f3fa60eb7d6a77efcf5edbea33aa7f1547ca2eea67e240f97972ffffcd73ffefded7bdb75a6bc60aaed8453cef7bf7dfbbedd998aa736aeafd20c042080e7fb4ec4bc401cf86e64881571e87b969f8823df972de2796259704aacfd50d264421327be926ec640e3fb2d3f913ef12fe2367240d7c7c4ae6f6448e79f89bda0c52c126219f852136f10ab20b06c8893209209f55fc93868055a92fd40f6066e90aa365d4fe3077ed852642fdc12cbd0551e9ddf25d6a1afc85eb1461c87a1627b0f894d2855444cfe84ed502b49e32d127b61aad8be556219398af5e6f369146ab2075e884d1469d6ef24e3c889b466fd48ffc88d12cdf6ed10fb51aad93eea1f8591d16cdf11b1948e66fbdac4a8be56c4fbc4a90c34dbb799b174a5d66cdf29b12f13cdfad1fd95913431ebe7102be5c46cef1271aafc98ec8356c6aaadc298ec018fd85532e6fb7b43ec2915b37dafc4818a63d24f9c114b6562b6ef9158eb761c131f1327da8de97e8b9f19ebb60e62b697f4d6bed609db774e2c759ab05ed3c449ec246c0fe91db7633f617db688dd180527de26f66399d0fc40f118cb3849383f2e88759c5a9e214e9256ca7aad13a78993b23d971927edc44bf9fe06c46e12a46cdf157190c894ed3b20466b98c535719c9894ed5d264ed3564af602dd0f3cdb6616b31923b929eb45faa74eeaa574bf81fa230529db4ff3a5612a0ddb4ff991aa541bce17cab71427341c8f77199bb6710cdbb747ec189719487fe33a81cbfe921ec6734297e3e5c2b274395e662d272ef90767cc6edb657bd72cbb1ed51fd8b61c786cdf9665e9b19e73ccc637146f40f9607cd778acd72bb3e7783cfe86e5c0e7fca47c378197fadcff91d9777cae37f796a380e77fb0ac02d6c79ec7c6f581e2c3848113f0fcd796c390fdf12dc721d74b8a6f1361c5e1f9af984327e4fb1f58f643b65f599611db3f6d398d588f16b39186e383e7939117b13dda72ccf51c8059b6b85ec3a66557b23f948f46c9c0d6df53cb29d75310cc59c6d37c2bcc461bcee79058ab50317b96535bff7699b5c3f50d22e2586b5b9ff699b30c26762c3bb6fecc59f6b9be00cf9764194b7cc49c38b63e7498b1f179aab7264d74c2fec5960de737b8cc985fdc5f5a46c18923cb9af30f383f52131be63bcba9e1fce3f14c965174fed2b26fd89f8e656558cf07cb86fb6f7726d7048cb74dd2d6f16b316eef7f9f32e3d1e277fa3f395d46d1e24f7b3f6e553ea245695e35a2dd4a68118b845a8cff8f3ede089abc4f8b77db960a237e8913712acec4b9b81097e24a5c8b1b712beec4bde888879ed6c1e37778fe06afbbc2eb2fb0df23f63fc1710c8e37c12819568b21677e12cfe245bc8a69312366c55c83afa3b6391c7706c77fc5799e71be312af2b616c578f37de659c0fbb52896d0be65b13201ef07b5159c731ae75e441b16fa2a313f9c2283b578436d8d917f8531fd7bfdefd7eed19633b18a567d3042fa6b31603c25d6f05eacfff62818aeada0654b68e1803afc1e2dfa8eb22136c5d644eac0f8db9cd8c69abb31bc1e4d5a34f64dc50ed6f4a6caffb95b07adde194e8dba168dbd76c54fb1f7c7bd1aa5eda107bb6fe951d5a2e7da27b18febfc9ff6645ced1abde959859bb568d0e1a036da01ee78d68a768855fb481cf75cb58e7199b507d1c2fbd1160eee08ba675de1095f04f8178aa8d16689d303286c1aff8b6b16f0d8b7f87f071248d10207f764f63c18dc99ed63553bc6ff9ac63ee8d5a3578b9a126b8df1b0dca7129da0d7c555f0cb1e9d13f97f0027f6dc299cc179d12e840f9795195cb8828bd21559bbee6a063776c463310bb7250b56696d7f2ced4c9ff03ef48b8fb52635722d6a11710c778da3f4d302700f58acb08516fba5ca4b6b0fdee9f39e76df55033af0d070c5393c42a7a6451b9f5f2a16c013c647ddaa8b6635d0bbe36a7474b5a8f48fc565f308152df0690a9e2bfb9afd1e2d8a9d20bcd07151f876863ebf16345df43c2d8ebdc20c2a305bf05c4d0bbe6787305fdd6fc2022ca26ddde8eee7c9037a5951b3570b1c6b6940ff428b3c6e60195672cff30c2db400616015b3e325cb10b884b53ce66d2478b04ebc9ed704d8b0576cdaf9246c558f94b430b04c47562b999269d6c13d79ae56abbf37b0040b752d4a632d60ddebaf448316d8ee8a687bac69a1f039aadb37b45e6d63f5ccadc973062cefc02ed6cb9fb057bf022b6d5d8b6e3dcea3538bdcaa99e2aadb81feac97a3aaa6c5cec09ecd5a3ce07ac2c716ab5ae46c5b60fd2e5534d8cf6b46e37debc05c513f548f16dd3b9eef2d8b8c80ae9d83a23c6b3bfdb480faea389c16798dace7c869c5b343ebd50caea5b6e1ca69eb474d852338c67ad1ad16e7b80657b5d0a5eb77cb5589ae32854fcb833d428ffbc5c55b4f5b8d5a40cb1e7bae69715c99b5ddb842e4cdd66bcc92e9c62b6b718135b33b763edf6671646f582dc4ca78b5c8d7b2ba1658d586d6827710e09463012be9344647738e1cf66a01ddac1983161fcb11b0b513566a71715ed1e2218f76f4b8b77568a5d92e543805aeb07e75dd1da885f77e2d06e4c8876a27cc57f3b5888b934adfa09af90d76ed36ac345793d5a27fedfcd09a5a54f6629f9dc7c556c553d1e06956510f310fa8cac266efaa82fbade6da391e2d7ad6d48fecb570e770834f0407e22c5fdd71df52cf91aa16dd0cb86635b04e66472eb046f0aa90ef40668bbd57771f7a3d7e2d9af65a1fda83f7b46e46346b51baefe7b89bf4b1e575f2cc6a73543a0fb8aade97ea683ec6f8b4e8b3071ffdd9ac64477f2d3ac5aa506eb350fc665854876ecb7725dbfc74361e2d063d9b8df4ccbe20d6a0520ffb69416ae8da13f92384a52b5cdc7f9755d2d8237f22d91f9b166f3cb30ff95bcebdd82e37489ade09e0513edbfc6b4a94fd968311a0300b1a7e4586108e71cd51584f25f11144d4788dbbb16397d4c7ffd99e9be2d84a6163ddbaa17ecbf9fa8defebb7dfaf7702751d3ef4aee81473f07fe55dd1163ead8df8aee80d3dfecfde210ea147d63ed7bbe5fcedf204de2df7e8d1ef5b873ff9cdc1705f1d3cbdadc3705a0c1521dd5927fd2dca07bf4619c6c74ff78d52f3574a671fff4a6978ef3ed1b76b63ff7aedbd7e7d7dd3381e2d3e972aa37bf1f50df424b598ac3293b4f5fb7ffefeedbfe715fe1d</data>
+        <data format="XPM.GZ" length="13958">789ced9a5973da4810c7dffd2928f75b6a6b121092506ded830f8c13db898fc447b6f64127606303066cc3d67ef76dcdf48c0e242c8388bdb54e57aafc934633d37f75f78c903e7ea85c1e1f553e7cdc188ded71d7adb81dfbbef2c19bdcde4efffceb8fbf3736ab5aad52372a9655a96dfeb6b17932aeb895affd3b3f04060850afe9d586cbd926d6897dceb6ae5b75ce0eb145ec86acd7744f30101b553aef71b60ddd12fd05c49660e8856c688aaf893d5be7ed1f049b55c1c0e76b3892598b58273e22b66c8f733b6453930c37c41e9ddfe3ec346ac4dbc48623c6f3886dc1ac1372a3aef891d827fecad9b56a8ee8ef80d820de0fd9aa5b367197d827fec4d9b57cd7e0fc4db05d23de213604c356c8b6ae7897d826668ac5fd7e22f689b9deb6a77822d8a9117f09d9d11d4330dc12db9e980fd7d3f11c9f782ad8d5886b21bb866b7aa2bfcfc40e31bfffaeef06c433c19ee69b9cf9789ee199c477c48e60e0fa7bbe64d6270efc80f3ae605f23e67af9a6e201b1497c48ec04a2bf21e74071953820d6430ecc5a5dab7236881b82a143ec6a163f5f17ac7d120c7792eb3c39e19eb84e3c246e106f13bb759bb32fb85e25ee13ebba68ff44ece9e2bc2358af12dbc496a1716e0b36aa86c3e76b11eba638df24f604339a6fa0911e236233e07a028fa720c0f6a2bf8660b34a7c46ac135f125b0d514f02624f303b15dc30a83e5d11fb546f2e045b35aa4703c5a2becc880daa471ab14ff5e3bb60dba07a70424cf90d63c14e8db8454cf90c0f825d8df2af4b6c52feec113bc453c11ee50b8c88657efc240e28de7704fb323fce8965fcfe2076888f05abfb63129bc44d6247dc2f46fe85ffc462b13e6350aead73aee56b51b6f7bf4e9972b4f895feaf4f9755b4786defcb5665192d62e3da2bcedb660e7399c7cdc5bf57ef6f054d5ea6c58be7e6b380b5598775d935bb613d76cbee589f0dd890ddb3111b67da08cf0db14d1fdbdee235376c82d777b09f00fb5b639414d5a2b0ef0fec913db1299bb1ad5c6f57b111f63bc3fe9f709c87e2da94a345cccfbc9102b6cd76707ebbacb906ef175913c79ce2d8db38874577a890228bb578466d0723ff6e2d777fb988b9c3f9ece1ac968c907c2d16f467b316de8bd92f8f8262d6c499ede00c17d4e1976891db8bc7f6d9e73713098b6d8433ede28c0beb91a5454ece3d624d7f6dff96b11ecebc901a692d32af6ab12fb8cebdb64fabd83d7ad07a4e8fa41619d17080ebfc6b7b5296f5d19bb9d5305b8b0c1d0e53bd1de28ea7a5ec08abf657dc09a55bcd302e7b3ca39a783f0ed8373c129d3d6627ec949de1ffefec47e69ccff1cc05bb44bbc2bf7ea66620fa1e72eab14f38836fb82793e7ab389f03ac6a13fc2babefc3793de6b598cb8bac78d8cda9449dc49ae2d2d1112a275bd4e89cc6ea4c5766a02266628463d6c0a37ac2ac483360d4df846d417c067bbca24f627efa781ff2e223952f492d521131c9e9254f0bc03d60a486d4e220d6a3587b2e535ea2811d53a38934d702db38b277a5c5811a45da23c6477a56f9d57e928c8e488bc4f56e2ce2f2b5c0a7297013fb9a83392d9481c78f7f57ded5c1065f791aa82b3575cc873638d051dc4d6921143e82ebd4582edcc4d6d156ae2763f43231cf0c2d5cf437fffa480b7964003d754c6668344600b7981d8f3c434cb853312f22e14469433501fae4f9807a3a8761f2484c8b80f16338423a53c6b827976a2dda0feec6d5105a24749d2db8364b8b70bd92d126334b8e60e37354d48ea202eeb126c86332672ec8d3118cd915c43354b6389dd3229aa98c4e47adfc33d56ab8d09f59dcf794168f0bafccd6628ceb89c8849ba4168a859d9116314fe141d58cacd19ad055f5e3724e8be88ecb9c883262a05a2d8af2d01ef3b480e5b4903552e6bd8c8b6ebc153c91df6d8c106917b27e24c78129ccb05ea86a817696d2c289b5a75581aa5268d5a25a40ae16cf3e6d656a015b341737a545623582edac154219ad2598254166cb545c60cd8cfa962bf7be3a725f382e9ae56a21d7b2b41690588f9ed182ef20e0211e0bd0475dda39397234af0544d5a9042d96cc118a3390abb98c8b44bd50997f861ecf19bf0b26d655528169b0c3af3b4daebb0bb588fc2eacc5821c594a0bb9c6ab7c955ad412d79e25333f635ee38c95a6b15e2df26b275b664d8d6ab6f45d6af139716dc69a8a3bae27b436eeb1421accaf2ab8e3ccae9de56831b7a62eb5d7da420db630c2aed5eaeeaa6a93ad85ca00dc6b7135b04e86470cac115709b53aea794ced43f19af2b5c8d86b2db5079fb72823b2b550f71dbd1d42134dd6c93a69338dceb30b5c5563cf2632564ad422670fbefab319c4c7ccd102f74eedc83be56507a27d4863eeacdc95dc8ba82b4d8bdc67b3159fd95ba948cad3225cc1ae924fe4f8fcb5173b7f8cbbd2984ad8baa99e481e4ad3e29967f682bfe584bfa7c6ad97f94ea04767b37f4df9c17fcb69b04bcc82eefc79d8831956ca4bac15e79ca7d0e226c61950df71f56fe9d8401d69aa19a66757e8b79cf7dff8de7ffb7d7f2790d661a97745ddffd4bba2fd55df153da3c7ffec1d62013d427b5bef96e5dbe535bc5b9ed3e32d7e7350ecab8352be39281c21d1a8ebfe1665c9af518af8f806bf51cafa4ae97af9af948a7bf786be5d2bfdebb597faf5fe4d63395abc2d5556f7e2fd1be8756ab15e65d639d7cd7f7edff81757458336</data>
     </image>
     <image>
         <name>image2</name>
-        <data format="XPM.GZ" length="646">789c6dd2c10ac2300c00d07bbf2234b7229d1ddec44f503c0ae2a154410f53d0ed20e2bf6bdb656dd6861dd23d9a66591b0587fd1654235ebded6f0edcd53e419d87ae7b1f4f9b8f906d0bfe012317426a70b07bdc2f3ec77f8ed6b89559061a0343d06a124cc105596482585094bc0ae599b04646c9018926491b2205e140c485cace25755c175d0a967b622ff900b8cc9c7d29af594ea722d589167f813aa852ba07d94b9dce296e883fe7bb163f23896753</data>
+        <data format="XPM.GZ" length="646">789c6dd2c10ac2300c00d07bbf2234b7229d1b8807f113148f82781855d0c314741e44fc776dbbacc9dab043ba47d32c6b6560bfdb80a9d4b36ffbab0377691f604eafae7b1f8eeb8fd24d03fe815acf94b6e0607bbf9d7d8eff1cdb855bd6f3404360085a8d8229a4a00826881945e1552867221a198403128d9236440a2281480a959d4aeab82c3617ccf7c45ef800a44c5c7ca9ac994fa720c589667f813a2852ba07eca54de76437c49ff35da91f3366675a</data>
     </image>
 </images>
-<connections>
-    <connection>
-        <sender>buttonOk</sender>
-        <signal>clicked()</signal>
-        <receiver>TransmDlgBase</receiver>
-        <slot>accept()</slot>
-    </connection>
-</connections>
 </UI>

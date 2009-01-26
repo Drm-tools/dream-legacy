@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include <iostream>
+#include <sstream>
 #include "util/Settings.h"
 #include "Parameter.h"
 #include "DrmEncoder.h"
@@ -70,6 +71,12 @@ CDRMEncoder::ClearTextMessages()
 }
 
 void
+CDRMEncoder::GetTextMessages(vector<string>& v)
+{
+    v = vecstrTexts;
+}
+
+void
 CDRMEncoder::AddPic(const string& strFileName, const string& strFormat)
 {
 	vecstrPics.push_back(strFileName);
@@ -81,11 +88,6 @@ CDRMEncoder::ClearPics()
 {
 	vecstrPics.clear();
 	vecstrPicTypes.clear();
-}
-
-void
-CDRMEncoder::GetTextMessages(vector<string>&)
-{
 }
 
 void
@@ -153,7 +155,6 @@ CDRMEncoder::ReadData(CParameter& Parameters,
 	/* MSC *********************************************************** */
 	/* Read the source signal */
 	pReadData->ReadData(Parameters, DataBuf);
-
 	SignalLevelMeter.Update(*DataBuf.QueryWriteBuffer());
 
 	/* Audio source encoder */
@@ -197,6 +198,19 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 
 		/* Text message */
 		Parameters.AudioParam[0].bTextflag = s.Get("Encoder", "textmessages", 1);
+		if(Parameters.AudioParam[0].bTextflag)
+		{
+            vecstrTexts.clear();
+            for(size_t i=0; i<100; i++)
+            {
+                stringstream ss;
+                ss << "textmessage" << i;
+                string msg = s.Get("Encoder", ss.str(), string("(end)"));
+                if(msg == "(end)")
+                    break;
+                vecstrTexts.push_back(msg);
+            }
+		}
 
 		/* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
 		Parameters.Service[0].iServiceDescr = s.Get("Encoder", "genre", 15); /* 15 -> other music */
@@ -276,20 +290,30 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 	strInputFileName = s.Get("Encoder", "inputfile", string(""));
 
 	/* streams - do when know MSC Capacity */
-	Parameters.Stream.resize(1);
-	int iA = s.Get("Encoder", "s0PartALen", 0);
-	int iB = s.Get("Encoder", "s0PartBLen", -1);
-	Parameters.SetStreamLen(0, iA, iB);
-	if (bIsAudio == TRUE)
-	{
-		Parameters.Stream[0].eAudDataFlag = SF_AUDIO;
-	}
-	else
-	{
-		Parameters.Stream[0].eAudDataFlag = SF_DATA;
-		Parameters.Stream[0].ePacketModInd = PM_PACKET_MODE;
-		Parameters.Stream[0].iPacketLen = 45;	/* TEST */
-	}
+	Parameters.Stream.clear();
+    for(size_t i=0; i<4; i++)
+    {
+        stringstream ss;
+        CStream stream;
+        ss << "s" << i << "PartALen";
+        stream.iLenPartA = s.Get("Encoder", ss.str(), -1);
+        ss.str("");
+        ss << "s" << i << "PartBLen";
+        stream.iLenPartB = s.Get("Encoder", ss.str(), -1);
+
+        if (bIsAudio == TRUE)
+        {
+            stream.eAudDataFlag = SF_AUDIO;
+        }
+        else
+        {
+            stream.eAudDataFlag = SF_DATA;
+            stream.ePacketModInd = PM_PACKET_MODE;
+            stream.iPacketLen = 45;	/* TEST */
+        }
+        if(stream.iLenPartA != -1)
+            Parameters.Stream.push_back(stream);
+    }
 }
 
 void
@@ -297,6 +321,13 @@ CDRMEncoder::SaveSettings(CSettings& s, CParameter& Parameters)
 {
 	s.Put("Encoder", "audioservice", (Parameters.Service[0].eAudDataFlag == SF_AUDIO)?1:0);
 	s.Put("Encoder", "textmessages", Parameters.AudioParam[0].bTextflag);
+	size_t i;
+	for(i=0; i<vecstrTexts.size(); i++)
+	{
+        stringstream ss;
+        ss << "textmessage" << i;
+        s.Put("Encoder", ss.str(), vecstrTexts[i]);
+	}
 	s.Put("Encoder", "genre", Parameters.Service[0].iServiceDescr);
 	s.Put("Encoder", "sid", int(Parameters.Service[0].iServiceID));
 	s.Put("Encoder", "label", Parameters.Service[0].strLabel);
@@ -314,6 +345,13 @@ CDRMEncoder::SaveSettings(CSettings& s, CParameter& Parameters)
 	s.Put("Encoder", "sdcmod", Parameters.eSDCCodingScheme);
 	s.Put("Encoder", "snddevin", iSoundInDev);
 	s.Put("Encoder", "inputfile", strInputFileName);
-	s.Put("Encoder", "s0PartALen", Parameters.Stream[0].iLenPartA);
-	s.Put("Encoder", "s0PartBLen", Parameters.Stream[0].iLenPartB);
+	for(i=0; i<Parameters.Stream.size(); i++)
+	{
+        stringstream ss;
+        ss << "s" << i << "PartALen";
+        s.Put("Encoder", ss.str(), Parameters.Stream[i].iLenPartA);
+        ss.str("");
+        ss << "s" << i << "PartBLen";
+        s.Put("Encoder", ss.str(), Parameters.Stream[0].iLenPartB);
+	}
 }

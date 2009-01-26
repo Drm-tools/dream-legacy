@@ -114,6 +114,13 @@ CDRMTransmitter::ClearTextMessages()
 }
 
 void
+CDRMTransmitter::GetTextMessages(vector<string>& v)
+{
+	Encoder.GetTextMessages(v);
+}
+
+
+void
 CDRMTransmitter::AddPic(const string& strFileName, const string& strFormat)
 {
 	Encoder.AddPic(strFileName, strFormat);
@@ -151,48 +158,48 @@ void CDRMTransmitter::Start()
 	CSingleBuffer<_BINARY> FACBuf, SDCBuf;
 	vector<CSingleBuffer<_BINARY> > MSCBuf(MAX_NUM_STREAMS);
 
-	switch(eOpMode)
-	{
-	case T_TX:
-		TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
-		TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
-		Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
-		Modulator.Init(TransmParam);
-		break;
-	case T_ENC:
-		if(MDIoutAddr.size()==0)
-			throw CGenErr("Encoder with no outputs");
-		TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
-		TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
-		Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
-		{
-			/* set the output address */
-			for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
-				MDIOut.AddSubscriber(*s, "", 'M');
-		}
-		MDIOut.Init(TransmParam);
-		break;
-	case T_MOD:
-		if(strMDIinAddr != "")
-		{
-			MDIIn.SetOrigin(strMDIinAddr);
-		}
-		else
-			throw CGenErr("Modulator with no input");
-		bInSync = false;
-		MDIIn.Init(TransmParam, MDIPacketBuf);
-		DecodeMDI.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
-
-	}
-
-	/* Set run flag */
-	TransmParam.bRunThread = TRUE;
-    cout << "Tx: starting, in:" << (MDIIn.GetInEnabled()?"MDI":"Encoder")
-         << ", out: " << (MDIOut.GetOutEnabled()?"MDI":"COFDM")
-         << endl; cout.flush();
-
 	try
 	{
+        switch(eOpMode)
+        {
+        case T_TX:
+            TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
+            TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
+            Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
+            Modulator.Init(TransmParam);
+            break;
+        case T_ENC:
+            if(MDIoutAddr.size()==0)
+                throw CGenErr("Encoder with no outputs");
+            TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
+            TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
+            Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
+            {
+                /* set the output address */
+                for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
+                    MDIOut.AddSubscriber(*s, "", 'M');
+            }
+            MDIOut.Init(TransmParam);
+            break;
+        case T_MOD:
+            if(strMDIinAddr != "")
+            {
+                MDIIn.SetOrigin(strMDIinAddr);
+            }
+            else
+                throw CGenErr("Modulator with no input");
+            bInSync = false;
+            MDIIn.Init(TransmParam, MDIPacketBuf);
+            DecodeMDI.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
+
+        }
+
+        /* Set run flag */
+        TransmParam.bRunThread = TRUE;
+        cout << "Tx: starting, in:" << (MDIIn.GetInEnabled()?"MDI":"Encoder")
+             << ", out: " << (MDIOut.GetOutEnabled()?"MDI":"COFDM")
+             << endl; cout.flush();
+
 		while (TransmParam.bRunThread)
 		{
 			if(eOpMode == T_MOD)

@@ -185,22 +185,41 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 												  int &iInputBlockSize,
 												  int &iOutputBlockSize)
 {
-	int iCurStreamID;
 
-	int iCurSelServ = 0;		// TEST
 
-	TransmParam.Lock(); 
+	TransmParam.Lock();
 
-	/* Get stream ID for audio service */
-	iCurStreamID = TransmParam.Service[iCurSelServ].iAudioStream;
+	int iCurStreamID = -1;
+
+	// find the first audio service and use its stream
+	for(size_t i=0; i<TransmParam.Service.size(); i++)
+	{
+	    if(TransmParam.Service[i].eAudDataFlag==SF_AUDIO)
+            iCurStreamID = TransmParam.Service[i].iAudioStream;
+	}
+
+
+	/* Set the total available number of bits, byte aligned */
+	iTotNumBitsForUsage = TransmParam.GetStreamLen(iCurStreamID) * SIZEOF__BYTE;
+
+	CAudioParam::EAudSamRat sampleRate = TransmParam.AudioParam[iCurStreamID].eAudioSamplRate;
+
+	if(TransmParam.AudioParam[iCurStreamID].eAudioMode != CAudioParam::AM_MONO)
+        throw CGenErr("Audio - can only do mono, but stereo selected");
+
+    int iLenPartA = TransmParam.Stream[iCurStreamID].iLenPartA;
+
+    if(iLenPartA == 0)
+        throw CGenErr("Audio - requested block length is zero");
+
+    bUsingTextMessage = TransmParam.AudioParam[iCurStreamID].bTextflag;
+
+	TransmParam.Unlock();
 
 	/* Calculate number of input samples in mono. Audio block are always
 	   400 ms long */
 	const int iNumInSamplesMono = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
 										 (_REAL) 0.4 /* 400 ms */ );
-
-	/* Set the total available number of bits, byte aligned */
-	iTotNumBitsForUsage = TransmParam.GetStreamLen(iCurStreamID) * SIZEOF__BYTE;
 
 	/* Total number of bytes which can be used for text and audio */
 	const int iTotNumBytesForUsage = iTotNumBitsForUsage / SIZEOF__BYTE;
@@ -218,7 +237,7 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 	int iTimeEachAudBloMS = 40;
 	int iNumHeaderBytes = 14;
 
-	switch(TransmParam.AudioParam[iCurStreamID].eAudioSamplRate)
+	switch(sampleRate)
 	{
 	case CAudioParam::AS_12KHZ:
 		lEncSamprate = 12000;
@@ -242,9 +261,6 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 	iAudioPayloadLen = iTotAudFraSizeBits / SIZEOF__BYTE - iNumHeaderBytes - iNumAACFrames /* for CRCs */ ;
 
 	const int iActEncOutBytes = (int) (iAudioPayloadLen / iNumAACFrames);
-
-	/* Set to mono */
-	TransmParam.AudioParam[iCurStreamID].eAudioMode = CAudioParam::AM_MONO;
 
 	/* Open encoder instance */
 	if (hEncoder != NULL)
@@ -300,10 +316,9 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 	}
 
 	/* Calculate number of bytes for higher protected blocks */
-	iNumHigherProtectedBytes =
-		(TransmParam.Stream[iCurStreamID].iLenPartA
-		 - iNumHeaderBytes -
-		 iNumAACFrames /* CRC bytes */ ) / iNumAACFrames;
+
+	iNumHigherProtectedBytes = (iLenPartA - iNumHeaderBytes - iNumAACFrames /* CRC bytes */ )
+                                / iNumAACFrames;
 
 	if (iNumHigherProtectedBytes < 0)
 		iNumHigherProtectedBytes = 0;
@@ -312,8 +327,6 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 	/* Define input and output block size */
 	iOutputBlockSize = iTotNumBitsForUsage;
 	iInputBlockSize = iNumInSamplesMono * 2 /* stereo */ ;
-
-	TransmParam.Unlock(); 
 }
 
 void
@@ -321,7 +334,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 												  int &iInputBlockSize,
 												  int &iOutputBlockSize)
 {
-	Param.Lock(); 
+	Param.Lock();
 
 	/* Calculate number of input samples in mono. Audio block are always 400 ms long */
 	const int iNumInSamplesMono = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
@@ -446,7 +459,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 	iOutputBlockSize = iTotNumBitsForUsage;
 	iInputBlockSize = iNumInSamplesMono * 2 /* stereo */ ;
 
-	Param.Unlock(); 
+	Param.Unlock();
 }
 
 void
@@ -454,9 +467,6 @@ CAudioSourceEncoderImplementation::SetTextMessage(const string & strText)
 {
 	/* Set text message in text message object */
 	TextMessage.SetMessage(strText);
-
-	/* Set text message flag */
-	bUsingTextMessage = TRUE;
 }
 
 void
@@ -464,9 +474,6 @@ CAudioSourceEncoderImplementation::ClearTextMessage()
 {
 	/* Clear all text segments */
 	TextMessage.ClearAllText();
-
-	/* Clear text message flag */
-	bUsingTextMessage = FALSE;
 }
 
 CAudioSourceEncoderImplementation::~CAudioSourceEncoderImplementation()
@@ -495,10 +502,10 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 
 	bGoodValues = FALSE;
 
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	ReceiverParam.vecbiAudioFrameStatus.Init(0);
 	ReceiverParam.vecbiAudioFrameStatus.ResetBitAccess();
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 
 	/* Check if something went wrong in the initialization routine */
 	if (DoNotProcessData == TRUE)
@@ -639,7 +646,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 #if 0
 // Store AAC-data in file
 				string strAACTestFileName = "test/aac_";
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 				if (ReceiverParam.
 					Service[ReceiverParam.GetCurSelAudioService()].AudioParam.
 					eAudioSamplRate == CAudioParam::AS_12KHZ)
@@ -672,7 +679,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				{
 					strAACTestFileName += "_sbr";
 				}
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 				strAACTestFileName += ".dat";
 				static FILE *pFile2 = fopen(strAACTestFileName.c_str(), "wb");
 				int iNewFrL = veciFrameLength[j] + 1;
@@ -690,9 +697,9 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 															 [j] + 1);
 
 				/* OPH: add frame status to vector for RSCI */
-				ReceiverParam.Lock(); 
+				ReceiverParam.Lock();
 				ReceiverParam.vecbiAudioFrameStatus.Add(DecFrameInfo.error == 0 ? 0 : 1);
-				ReceiverParam.Unlock(); 
+				ReceiverParam.Unlock();
 				if (DecFrameInfo.error != 0)
 				{
 					bCurBlockOK = FALSE;	/* Set error flag */
@@ -745,9 +752,9 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				/* DRM AAC header was wrong, set flag to "bad block" */
 				bCurBlockOK = FALSE;
 				/* OPH: update audio status vector for RSCI */
-				ReceiverParam.Lock(); 
+				ReceiverParam.Lock();
 				ReceiverParam.vecbiAudioFrameStatus.Add(1);
-				ReceiverParam.Unlock(); 
+				ReceiverParam.Unlock();
 			}
 #endif
 		}
@@ -768,15 +775,15 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				bCurBlockOK = TRUE;
 
 			/* OPH: update audio status vector for RSCI */
-			ReceiverParam.Lock(); 
+			ReceiverParam.Lock();
 			ReceiverParam.vecbiAudioFrameStatus.Add(bCurBlockOK == TRUE ? 0 : 1);
-			ReceiverParam.Unlock(); 
+			ReceiverParam.Unlock();
 
 #if 0
 // Store CELP-data in file
 			char cDummy[200];
 			string strCELPTestFileName = "test/celp_";
-			ReceiverParam.Lock(); 
+			ReceiverParam.Lock();
 			if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
 				AudioParam.eAudioSamplRate == CAudioParam::AS_8_KHZ)
 			{
@@ -804,7 +811,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				strCELPTestFileName += "_sbr";
 			}
 			strCELPTestFileName += ".dat";
-			ReceiverParam.Unlock(); 
+			ReceiverParam.Unlock();
 
 			static FILE *pFile2 = fopen(strCELPTestFileName.c_str(), "wb");
 			int iTotNumBits =
@@ -845,10 +852,10 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			if (bAudioWasOK == TRUE)
 			{
 				/* Post message to show that CRC was wrong (yellow light) */
-				ReceiverParam.Lock(); 
+				ReceiverParam.Lock();
 				ReceiverParam.ReceiveStatus.Audio.SetStatus(DATA_ERROR);
 				ReceiverParam.ReceiveStatus.LLAudio.SetStatus(DATA_ERROR);
-				ReceiverParam.Unlock(); 
+				ReceiverParam.Unlock();
 
 				/* Fade-out old block to avoid "clicks" in audio. We use linear
 				   fading which gives a log-fading impression */
@@ -885,10 +892,10 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			}
 			else
 			{
-				ReceiverParam.Lock(); 
+				ReceiverParam.Lock();
 				ReceiverParam.ReceiveStatus.Audio.SetStatus(CRC_ERROR);
 				ReceiverParam.ReceiveStatus.LLAudio.SetStatus(CRC_ERROR);
-				ReceiverParam.Unlock(); 
+				ReceiverParam.Unlock();
 
 				if (bUseReverbEffect == TRUE)
 				{
@@ -915,10 +922,10 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			/* Increment correctly decoded audio blocks counter */
 			iNumCorDecAudio++;
 
-			ReceiverParam.Lock(); 
+			ReceiverParam.Lock();
 			ReceiverParam.ReceiveStatus.Audio.SetStatus(RX_OK);
 			ReceiverParam.ReceiveStatus.LLAudio.SetStatus(RX_OK);
-			ReceiverParam.Unlock(); 
+			ReceiverParam.Unlock();
 
 			if (bAudioWasOK == FALSE)
 			{
@@ -1007,7 +1014,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 	try
 	{
 
-		ReceiverParam.Lock(); 
+		ReceiverParam.Lock();
 
 		/* Init counter for correctly decoded audio blocks */
 		iNumCorDecAudio = 0;
@@ -1314,12 +1321,12 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 		   Maybe TODO: sample rate correction to avoid audio dropouts */
 		iMaxOutputBlockSize = iMaxLenResamplerOutput;
 
-		ReceiverParam.Unlock(); 
+		ReceiverParam.Unlock();
 	}
 
 	catch(CInitErr CurErr)
 	{
-		ReceiverParam.Unlock(); 
+		ReceiverParam.Unlock();
 
 		switch (CurErr.eErrType)
 		{

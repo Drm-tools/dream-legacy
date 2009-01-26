@@ -10,7 +10,7 @@
  *
  * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
  *	- Additions to include AMSS demodulation
- * 
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -84,7 +84,7 @@ class CSettings;
 class CHamlib;
 class CRigCaps;
 
-enum EInpTy { SoundCard, Dummy, Shm, File };
+enum EInpTy { SoundCard, Dummy, Shm, File, RSCI };
 
 class CSoundInProxy : public CSelectionInterface
 {
@@ -99,6 +99,7 @@ public:
 	void				SetRigModelForAllModes(int);
 	void				SetRigModel(int);
 	void				SetReadPCMFromFile(const string strNFN);
+	void				SetUsingDI(const string strSource);
 	void				Update();
 
 protected:
@@ -213,19 +214,19 @@ public:
 	void					SetReadPCMFromFile(const string strNFN);
 
 	/* Channel Estimation */
-	void SetFreqInt(CChannelEstimation::ETypeIntFreq eNewTy) 
+	void SetFreqInt(CChannelEstimation::ETypeIntFreq eNewTy)
 		{ChannelEstimation.SetFreqInt(eNewTy);}
 
 	CChannelEstimation::ETypeIntFreq GetFreqInt()
 		{return ChannelEstimation.GetFreqInt();}
 
-	void SetTimeInt(CChannelEstimation::ETypeIntTime eNewTy) 
+	void SetTimeInt(CChannelEstimation::ETypeIntTime eNewTy)
 		{ChannelEstimation.SetTimeInt(eNewTy);}
 
-	CChannelEstimation::ETypeIntTime GetTimeInt() const 
+	CChannelEstimation::ETypeIntTime GetTimeInt() const
 		{return ChannelEstimation.GetTimeInt();}
 
-	void SetIntCons(const _BOOLEAN bNewIntCons) 
+	void SetIntCons(const _BOOLEAN bNewIntCons)
 		{ChannelEstimation.SetIntCons(bNewIntCons);}
 
 	_BOOLEAN GetIntCons()
@@ -234,7 +235,7 @@ public:
 	void SetSNREst(CChannelEstimation::ETypeSNREst eNewTy)
 		{ChannelEstimation.SetSNREst(eNewTy);}
 
-	CChannelEstimation::ETypeSNREst GetSNREst() 
+	CChannelEstimation::ETypeSNREst GetSNREst()
 		{return ChannelEstimation.GetSNREst();}
 
 	void SetTiSyncTracType(CTimeSyncTrack::ETypeTiSyncTrac eNewTy)
@@ -247,7 +248,7 @@ public:
 		{ return MSCMLCDecoder.GetInitNumIterations(); }
 	void SetNumIterations(int value)
 		{ MSCMLCDecoder.SetNumIterations(value); }
-	
+
 	_BOOLEAN GetRecFilter() { return FreqSyncAcq.GetRecFilter(); }
 	void SetRecFilter(_BOOLEAN bVal) { FreqSyncAcq.SetRecFilter(bVal); }
 

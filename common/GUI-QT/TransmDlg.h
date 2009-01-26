@@ -69,10 +69,10 @@ protected:
 	void				SetChannel();
 	void				GetStreams();
 	void				SetStreams();
-	void				GetAudio();
-	void				SetAudio();
-	void				GetData();
-	void				SetData();
+	void				GetAudio(int);
+	void				SetAudio(int);
+	void				GetData(int, int);
+	void				SetData(int, int);
 	void				GetServices();
 	void				SetServices();
 	void				GetCOFDM();
@@ -92,13 +92,12 @@ protected:
 	CDRMTransmitterInterface&	DRMTransmitter;
 	CSettings&			Settings;
 	_BOOLEAN			bIsStarted;
-	vector<string>		vecstrTextMessage;
-	size_t				iIDCurrentText;
 	vector<CIpIf>vecIpIf;
 
 
 public slots:
 	void OnButtonStartStop();
+	void OnButtonClose();
 	void OnTimer();
 	void OnHelpWhatsThis();
 
@@ -113,9 +112,9 @@ public slots:
 
 	/* Audio */
 	void OnComboBoxAudioSourceActivated(int iID);
-	void OnComboBoxTextMessageActivated(int iID);
 	void OnToggleCheckBoxEnableTextMessage(bool bState);
 	void OnPushButtonAddText();
+	void OnPushButtonDeleteText();
 	void OnButtonClearAllText();
 	void OnButtonAudioSourceFileBrowse();
 	void OnLineEditAudioSourceFileChanged(const QString& str);
