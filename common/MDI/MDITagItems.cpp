@@ -7,13 +7,13 @@
  *
  * Description:
  *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
- *	(MDI), Receiver Status and Control Interface (RSCI)  
+ *	(MDI), Receiver Status and Control Interface (RSCI)
  *  and Distribution and Communications Protocol (DCP) as described in
  *	ETSI TS 102 820,  ETSI TS 102 349 and ETSI TS 102 821 respectively.
  *
- *  This module derives, from the CTagItemGenerator base class, tag item generators 
+ *  This module derives, from the CTagItemGenerator base class, tag item generators
  *  specialised to generate each of the tag items defined in MDI and RSCI.
- *  . 
+ *  .
  *  An intermediate derived class, CTagItemGeneratorWithProfiles, is used as the
  *  base class for all these tag item generators. This takes care of the common
  *	task of checking whether a given tag is in a particular profile.
@@ -168,7 +168,7 @@ CTagItemGeneratorLoFrCnt::GetProfiles()
 }
 
 void
-CTagItemGeneratorFAC::GenTag(CParameter & Parameter, CVectorEx < _BINARY > *pvecbiData) 
+CTagItemGeneratorFAC::GenTag(CParameter & Parameter, CVectorEx < _BINARY > *pvecbiData)
 {
 	if (Parameter.ReceiveStatus.FAC.GetStatus() == FALSE)
 	{
@@ -537,9 +537,9 @@ CTagItemGeneratorRDEL::GenTag(_BOOLEAN bIsValid, const CRealVector & vecrThresho
 	else
 	{
 		/* Length: 3 bytes per value = 16 bits */
-		PrepareTag(24 * vecrThresholds.GetSize());
+		PrepareTag(24 * vecrThresholds.Size());
 
-		for (int i = 0; i < vecrThresholds.GetSize(); i++)
+		for (int i = 0; i < vecrThresholds.Size(); i++)
 		{
 			/* percentage for this window */
 			Enqueue((uint32_t) vecrThresholds[i], SIZEOF__BYTE);
@@ -1226,7 +1226,7 @@ void
 CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 {
 	const CCellMappingTable& Param = Parameter.CellMappingTable;
-	// Get parameters from parameter struct 
+	// Get parameters from parameter struct
 	int iScatPilTimeInt = Param.iScatPilTimeInt;
 	int iScatPilFreqInt = Param.iScatPilFreqInt;
 	int iNumCarrier = Param.iNumCarrier;
@@ -1238,26 +1238,26 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 	// calculate the spacing between scattered pilots in a given symbol
 	int iScatPilFreqSpacing = iScatPilFreqInt * iScatPilTimeInt;
 
-	// Calculate how long the tag will be and write the fields that apply to the whole frame 
+	// Calculate how long the tag will be and write the fields that apply to the whole frame
 
-	// Total number of pilots = number of pilot bearing carriers * number of pilot pattern repeats per frame 
-	// NB the DC carrier in mode D is INCLUDED in this calculation (and in the tag) 
+	// Total number of pilots = number of pilot bearing carriers * number of pilot pattern repeats per frame
+	// NB the DC carrier in mode D is INCLUDED in this calculation (and in the tag)
 	int iTotalNumPilots =
 		((iNumCarrier - 1) / iScatPilFreqInt +
 		 1) * iNumSymPerFrame / iScatPilTimeInt;
 
-	int iTagLen = 4 * SIZEOF__BYTE;	// first 4 bytes apply to the whole frame 
-	iTagLen += iNumSymPerFrame * 4 * SIZEOF__BYTE;	// 4 bytes at start of each symbol (spec typo?) 
-	iTagLen += iTotalNumPilots * 2 * 2 * SIZEOF__BYTE;	// 4 bytes per pilot value (2 byte re, 2 byte imag) 
+	int iTagLen = 4 * SIZEOF__BYTE;	// first 4 bytes apply to the whole frame
+	iTagLen += iNumSymPerFrame * 4 * SIZEOF__BYTE;	// 4 bytes at start of each symbol (spec typo?)
+	iTagLen += iTotalNumPilots * 2 * 2 * SIZEOF__BYTE;	// 4 bytes per pilot value (2 byte re, 2 byte imag)
 
 	//log.GetStatus("rpil gentag: pilots %d tag length %d", iTotalNumPilots, iTagLen);
 
 	PrepareTag(iTagLen);
 
-	// fields for the whole frame 
-	Enqueue((uint32_t) iNumSymPerFrame, SIZEOF__BYTE);	// SN = number of symbols 
-	Enqueue((uint32_t) iScatPilTimeInt, SIZEOF__BYTE);	// SR = symbol repetition 
-	Enqueue((uint32_t) 0, 2 * SIZEOF__BYTE);	// rfu 
+	// fields for the whole frame
+	Enqueue((uint32_t) iNumSymPerFrame, SIZEOF__BYTE);	// SN = number of symbols
+	Enqueue((uint32_t) iScatPilTimeInt, SIZEOF__BYTE);	// SR = symbol repetition
+	Enqueue((uint32_t) 0, 2 * SIZEOF__BYTE);	// rfu
 
 	// Check that the matrix has the expected dimensions (in case of a mode change)
 	if (Parameter.matcReceivedPilotValues.NumRows() !=
@@ -1276,11 +1276,11 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 		return;
 	}
 
-	// Now do each symbol in turn 
+	// Now do each symbol in turn
 	for (int iSymbolNumber = 0; iSymbolNumber < iNumSymPerFrame;
 		 iSymbolNumber++)
 	{
-		// Which row of the matrix? 
+		// Which row of the matrix?
 		int iRow = iSymbolNumber / iScatPilTimeInt;
 		int i, iCarrier;
 
@@ -1293,18 +1293,18 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 			iFirstPilotCarrier += iScatPilFreqInt;
 		}
 
-		// Find the biggest value we need to represent for this symbol 
+		// Find the biggest value we need to represent for this symbol
 
 		_REAL rMax = _REAL(0.0);
 		int iNumPilots = 0;
 
-		// Start from first pilot and step by the pilot spacing (iScatPilFreqInt*iScatPilTimeInt) 
+		// Start from first pilot and step by the pilot spacing (iScatPilFreqInt*iScatPilTimeInt)
 		for (i = iFirstPilotCarrier / iScatPilFreqInt, iCarrier =
 			 iFirstPilotCarrier; iCarrier < iNumCarrier;
 			 i += iScatPilTimeInt, iCarrier += iScatPilFreqSpacing)
 		{
 			iNumPilots++;
-			// Is it really a pilot? This will be false only in Mode D for the DC carrier 
+			// Is it really a pilot? This will be false only in Mode D for the DC carrier
 			if (_IsScatPil(Param.matiMapTab[iSymbolNumber][iCarrier]))
 			{
 				_COMPLEX cPil = Parameter.matcReceivedPilotValues[iRow][i];
@@ -1319,16 +1319,16 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 			}
 		}
 
-		// Calculate the exponent for the block 
+		// Calculate the exponent for the block
 		_REAL rExponent = Ceil(Log(rMax) / Log(_REAL(2.0)));
 		_REAL rScale = 32767 * pow(_REAL(2.0), -rExponent);
 
-		// Put to the tag 
-		Enqueue((uint32_t) iNumPilots, SIZEOF__BYTE);	// PN = number of pilots 
-		Enqueue((uint32_t) iFirstPilotCarrier, SIZEOF__BYTE);	// PO = pilot offset 
+		// Put to the tag
+		Enqueue((uint32_t) iNumPilots, SIZEOF__BYTE);	// PN = number of pilots
+		Enqueue((uint32_t) iFirstPilotCarrier, SIZEOF__BYTE);	// PO = pilot offset
 		Enqueue((uint32_t) rExponent, 2 * SIZEOF__BYTE);
 
-		// Step through the pilots again and write the values 
+		// Step through the pilots again and write the values
 		for (i = iFirstPilotCarrier / iScatPilFreqInt, iCarrier =
 			 iFirstPilotCarrier; iCarrier < iNumCarrier;
 			 i += iScatPilTimeInt, iCarrier += iScatPilFreqSpacing)

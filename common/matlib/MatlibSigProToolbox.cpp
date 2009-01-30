@@ -11,16 +11,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -84,7 +84,7 @@ CMatlibVector<CReal> Hamming(const int iLen)
 		for (i = 0; i < iHalf; i++)
 			vecTemp[i] = (CReal) i;
 
-		w = (CReal) 0.54 - (CReal) 0.46 * 
+		w = (CReal) 0.54 - (CReal) 0.46 *
 			Cos((CReal) 2.0 * crPi * vecTemp / (iLen - 1));
 
 		/* Make symmetric window */
@@ -101,7 +101,7 @@ CMatlibVector<CReal> Hamming(const int iLen)
 		for (i = 0; i < iHalf; i++)
 			vecTemp[i] = (CReal) i;
 
-		w = (CReal) 0.54 - (CReal) 0.46 * 
+		w = (CReal) 0.54 - (CReal) 0.46 *
 			Cos((CReal) 2.0 * crPi * vecTemp / (iLen - 1));
 
 		/* Make symmetric window */
@@ -232,9 +232,9 @@ CReal Besseli(const CReal rNu, const CReal rZ)
 CMatlibVector<CReal> Randn(const int iLen)
 {
 	/* Add some constant distributed random processes together */
-	_VECOP(CReal, iLen, 
-		(CReal) ((((CReal) 
-		rand() + rand() + rand() + rand() + rand() + rand() + rand()) 
+	_VECOP(CReal, iLen,
+		(CReal) ((((CReal)
+		rand() + rand() + rand() + rand() + rand() + rand() + rand())
 		/ RAND_MAX - 0.5) * /* sqrt(3) * 2 / sqrt(7) */ 1.3093));
 }
 
@@ -244,10 +244,10 @@ CMatlibVector<CReal> Filter(const CMatlibVector<CReal>& fvB,
 							CMatlibVector<CReal>& fvZ)
 {
 	int						m, n, iLenCoeff;
-	const int				iSizeA = fvA.GetSize();
-	const int				iSizeB = fvB.GetSize();
-	const int				iSizeX = fvX.GetSize();
-	const int				iSizeZ = fvZ.GetSize();
+	const int				iSizeA = fvA.Size();
+	const int				iSizeB = fvB.Size();
+	const int				iSizeX = fvX.Size();
+	const int				iSizeZ = fvZ.Size();
 	CMatlibVector<CReal>	fvY(iSizeX, VTY_TEMP);
 	CMatlibVector<CReal>	fvANew, fvBNew;
 
@@ -320,7 +320,7 @@ CMatlibVector<CReal> FirLP(const CReal rNormBW,
 /*
 	Lowpass filter design using windowing method
 */
-	const int				iLen = rvWin.GetSize();
+	const int				iLen = rvWin.Size();
 	const int				iHalfLen = (int) Floor((CReal) iLen / 2);
 	CMatlibVector<CReal>	fvRet(iLen, VTY_TEMP);
 
@@ -340,9 +340,9 @@ CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB,
 								   const int iDecFact)
 {
 	int			m, n, iCurPos;
-	const int	iSizeX = cvX.GetSize();
-	const int	iSizeZ = cvZ.GetSize();
-	const int	iSizeB = cvB.GetSize();
+	const int	iSizeX = cvX.Size();
+	const int	iSizeZ = cvZ.Size();
+	const int	iSizeB = cvB.Size();
 	const int	iSizeXNew = iSizeX + iSizeZ;
 	const int	iSizeFiltHist = iSizeB - 1;
 
@@ -360,13 +360,13 @@ CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB,
 	{
 		/* Calculate the number of output bits which can be generated from the
 		   provided input vector */
-		iDecSizeY = 
+		iDecSizeY =
 				(int) (((CReal) iSizeXNew - iSizeFiltHist - 1) / iDecFact + 1);
 
 		/* Since the input vector length must not be a multiple of "iDecFact",
 		   some input bits will be unused. To store this number, the size of
 		   the state vector "Z" is adapted */
-		iNewLenZ = iSizeFiltHist - 
+		iNewLenZ = iSizeFiltHist -
 			(iDecSizeY * iDecFact - (iSizeXNew - iSizeFiltHist));
 	}
 
@@ -397,18 +397,18 @@ CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB,
 CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx,
 							  const CMatlibVector<CReal>& vecrB)
 {
-/* 
+/*
 	The levinson recursion [S. Haykin]
 
 	This algorithm solves the following equations:
 	Rp ap = ep u1,
-	Rp Xp = b, where Rp is a Toepliz-matrix of vector prRx and b = prB 
+	Rp Xp = b, where Rp is a Toepliz-matrix of vector prRx and b = prB
 	is an arbitrary correlation-vector. The Result is ap = prA.
 
 	Parts of the following code are taken from Ptolemy
 	(http://ptolemy.eecs.berkeley.edu/)
 */
-	const int	iLength = vecrRx.GetSize();
+	const int	iLength = vecrRx.Size();
 	CRealVector vecrX(iLength, VTY_TEMP);
 
 	CReal		rGamma;
@@ -426,7 +426,7 @@ CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx,
 	vecrA[0] = (CReal) 1.0;
 	vecraP[0] = (CReal) 1.0;
 
-	// (b) 
+	// (b)
 	vecrX[0] = vecrB[0] / vecrRx[0];
 
 	// (c) Initial prediction error is simply the zero-lag of
@@ -443,7 +443,7 @@ CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx,
 
 		// (a) Compute the new gamma
 		rGamma = vecrRx[iNextInd];
-		for (i = 1; i < iNextInd; i++) 
+		for (i = 1; i < iNextInd; i++)
 			rGamma += vecrA[i] * vecrRx[iNextInd - i];
 
 		// (b), (d) Compute and output the reflection coefficient
@@ -451,7 +451,7 @@ CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx,
 		vecrA[j + 1] = rGammaCap = - rGamma / rE;
 
 		// (c)
-		for (i = 1; i < iNextInd; i++) 
+		for (i = 1; i < iNextInd; i++)
 			vecraP[i] = vecrA[i] + rGammaCap * vecrA[iNextInd - i];
 
 		// Swap a and aP for next order recurrence
@@ -463,14 +463,14 @@ CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx,
 
 		// (f)
 		rDelta = (CReal) 0.0;
-		for (i = 0; i < iNextInd; i++) 
+		for (i = 0; i < iNextInd; i++)
 			rDelta += vecrX[i] * vecrRx[iNextInd - i];
 
-		// (g), (i) 
+		// (g), (i)
 		vecrX[iNextInd] = rQ = (vecrB[iNextInd] - rDelta) / rE;
 
 		// (h)
-		for (i = 0; i < iNextInd; i++) 
+		for (i = 0; i < iNextInd; i++)
 			vecrX[i] = vecrX[i] + rQ * vecrA[iNextInd - i];
 	}
 
@@ -480,19 +480,19 @@ CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx,
 CMatlibVector<CComplex> Levinson(const CMatlibVector<CComplex>& veccRx,
 								 const CMatlibVector<CComplex>& veccB)
 {
-/* 
+/*
 	The levinson recursion [S. Haykin]
 	COMPLEX version!
 
 	This algorithm solves the following equations:
 	Rp ap = ep u1,
-	Rp Xp = b, where Rp is a Toepliz-matrix of vector prRx and b = prB 
+	Rp Xp = b, where Rp is a Toepliz-matrix of vector prRx and b = prB
 	is an arbitrary correlation-vector. The Result is ap = prA.
 
 	Parts of the following code are taken from Ptolemy
 	(http://ptolemy.eecs.berkeley.edu/)
 */
-	const int		iLength = veccRx.GetSize();
+	const int		iLength = veccRx.Size();
 	CComplexVector	veccX(iLength, VTY_TEMP);
 
 	CComplex		cGamma;
@@ -509,7 +509,7 @@ CMatlibVector<CComplex> Levinson(const CMatlibVector<CComplex>& veccRx,
 	veccA[0] = (CReal) 1.0;
 	veccaP[0] = (CReal) 1.0;
 
-	// (b) 
+	// (b)
 	veccX[0] = veccB[0] / veccRx[0];
 
 	// (c) Initial prediction error is simply the zero-lag of
@@ -525,7 +525,7 @@ CMatlibVector<CComplex> Levinson(const CMatlibVector<CComplex>& veccRx,
 
 		// (a) Compute the new gamma
 		cGamma = veccRx[iNextInd];
-		for (i = 1; i < iNextInd; i++) 
+		for (i = 1; i < iNextInd; i++)
 			cGamma += veccA[i] * veccRx[iNextInd - i];
 
 		// (b), (d) Compute and output the reflection coefficient
@@ -533,7 +533,7 @@ CMatlibVector<CComplex> Levinson(const CMatlibVector<CComplex>& veccRx,
 		veccA[iNextInd] = cGammaCap = - cGamma / rE;
 
 		// (c)
-		for (i = 1; i < iNextInd; i++) 
+		for (i = 1; i < iNextInd; i++)
 			veccaP[i] = veccA[i] + cGammaCap * Conj(veccA[iNextInd - i]);
 
 		// Swap a and aP for next order recurrence
@@ -545,14 +545,14 @@ CMatlibVector<CComplex> Levinson(const CMatlibVector<CComplex>& veccRx,
 
 		// (f)
 		cDelta = (CReal) 0.0;
-		for (i = 0; i < iNextInd; i++) 
+		for (i = 0; i < iNextInd; i++)
 			cDelta += veccX[i] * veccRx[iNextInd - i];
 
-		// (g), (i) 
+		// (g), (i)
 		veccX[iNextInd] = cQ = (veccB[iNextInd] - cDelta) / rE;
 
 		// (h)
-		for (i = 0; i < iNextInd; i++) 
+		for (i = 0; i < iNextInd; i++)
 			veccX[i] = veccX[i] + cQ * Conj(veccA[iNextInd - i]);
 	}
 

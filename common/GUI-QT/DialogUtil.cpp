@@ -6,22 +6,22 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -43,25 +43,21 @@
 #ifdef USE_PORTAUDIO
 # include <portaudio.h>
 #endif
-#ifdef HAVE_LIBSNDFILE
-# include <sndfile.h>
-#endif
 #ifdef HAVE_LIBPCAP
 # include <pcap.h>
 #endif
 #ifdef HAVE_LIBWIRETAP
 # include <wtap.h>
 #endif
+#include <sndfile.h>
 
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */
 CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 	: CAboutDlgBase(parent, name, modal, f)
 {
-#ifdef HAVE_LIBSNDFILE
 	char  sfversion [128] ;
 	sf_command (NULL, SFC_GET_LIB_VERSION, sfversion, sizeof (sfversion)) ;
-#endif
 	/* Set the text for the about dialog html text control */
 	TextViewCredits->setText(
 		"<p>" /* General description of Dream software */
@@ -93,6 +89,10 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"</b></p>"
 		"<ul>"
 		"<li><b>FFTW</b> <i>http://www.fftw.org</i></li>"
+		"<li><b>FhG IIS Journaline Decoder</b> <i>Features NewsService "
+		"Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
+		"Germany. For more information visit http://www.iis.fhg.de/dab</i></li>"
+		"<li><b>LIBSNDFILE</b> (" + QString(sfversion) + ") <i>http://www.mega-nerd.com/libsndfile</i></li>"
 #ifdef USE_FAAD2_LIBRARY
 		"<li><b>FAAD2</b> (" + QString(FAAD2_VERSION) + ") <i>AAC/HE-AAC/HE-AACv2/DRM decoder "
 		"(c) Ahead Software, www.nero.com (http://faac.sf.net)</i></li>"
@@ -108,11 +108,6 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 #ifdef HAVE_LIBHAMLIB
 		"<li><b>Hamlib</b> (" + QString(hamlib_version) + ") <i>http://hamlib.sourceforge.net</i></li>"
 #endif
-#ifdef HAVE_JOURNALINE
-		"<li><b>FhG IIS Journaline Decoder</b> <i>Features NewsService "
-		"Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
-		"Germany. For more information visit http://www.iis.fhg.de/dab</i></li>"
-#endif
 #ifdef HAVE_LIBFREEIMAGE
 		"<li><b>FreeImage</b> (" + QString(FreeImage_GetVersion()) + ") <i>This software uses the FreeImage open source "
 		"image library. See http://freeimage.sourceforge.net for details. "
@@ -122,9 +117,6 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"<li><b>LIBPCAP</b> (" + QString(pcap_lib_version()) + ") <i>http://www.tcpdump.org/ "
 		"This product includes software developed by the Computer Systems "
 		"Engineering Group at Lawrence Berkeley Laboratory.</i></li>"
-#endif
-#ifdef HAVE_LIBSNDFILE
-		"<li><b>LIBSNDFILE</b> (" + QString(sfversion) + ") <i>http://www.mega-nerd.com/libsndfile</i></li>"
 #endif
 #ifdef USE_OSS
 		"<li><b>OSS</b> (" + QString("Open Sound System version %1").arg(SOUND_VERSION, 0, 16) + ")</li>"
@@ -163,7 +155,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"<p>Fillod, Stephane</p>"
 		"<p>Fine, Mark J.</p>"
 		"<p>Manninen, Tomi</p>"
-		"<p>Moore, Josh</p>" 
+		"<p>Moore, Josh</p>"
 		"<p>Pascutto, Gian C.</p>"
 		"<p>Peca, Marek</p>"
 		"<p>Richard, Doyle</p>"

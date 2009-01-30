@@ -52,10 +52,10 @@ public:
 	void					LoadSettings(CSettings&, CParameter&);
 	void					SaveSettings(CSettings&, CParameter&);
 
-	void					Init(CParameter&, 
+	void					Init(CParameter&,
 								CBuffer<_BINARY>& FACBuf, CBuffer<_BINARY>& SDCBuf,
 								vector<CSingleBuffer<_BINARY> >& MSCBuf);
-	void					ReadData(CParameter& Parameter, 
+	void					ReadData(CParameter& Parameter,
 								CBuffer<_BINARY>& FACBuf, CBuffer<_BINARY>& SDCBuf,
 								vector<CSingleBuffer<_BINARY> >& MSCBuf);
 	void					Cleanup(CParameter&);
@@ -76,8 +76,8 @@ public:
 
 	void					AddPic(const string& strFileName, const string& strFormat);
 	void					ClearPics();
-	_BOOLEAN				GetTransStat(string& strCPi, _REAL& rCPe);
 	void					GetPics(map<string,string>&);
+	_BOOLEAN				GetTransStat(string& strCPi, _REAL& rCPe);
 protected:
 
 	/* Buffers */
@@ -101,4 +101,4 @@ protected:
 };
 
 
-#endif 
+#endif

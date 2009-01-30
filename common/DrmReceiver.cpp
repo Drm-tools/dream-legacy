@@ -136,6 +136,7 @@ CSoundInProxy::SetReadPCMFromFile(const string strNFN)
 	else
 		eWantedChanSel = CS_MIX_CHAN;
 	pcmWantedInput = File;
+	SetHamlib(NULL);
 }
 
 void CSoundInProxy::SetUsingDI(const string strSource)
@@ -235,7 +236,7 @@ CSoundInProxy::Update()
 	}
 	else
 	{
-	    if(pcmWantedInput != RSCI)
+	    if(pcmWantedInput != RSCI && pcmWantedInput != File)
             pcmWantedInput = SoundCard;
 	}
 #endif
@@ -1414,7 +1415,7 @@ CDRMReceiver::InitsForAudParam()
 	if(iAudioStreamID != STREAM_ID_NOT_USED)
 	{
 		int audiobits = Parameters.GetStreamLen(iAudioStreamID) * SIZEOF__BYTE;
-		Parameters.SetNumAudioDecoderBits(audiobits);
+		Parameters.iNumAudioDecoderBits = audiobits;
 	}
 	AudioSourceDecoder.SetInitFlag();
 }
@@ -1428,7 +1429,7 @@ CDRMReceiver::InitsForDataParam()
 	int d = Parameters.GetCurSelDataService();
 	iDataStreamID = Parameters.Service[d].iDataStream;
 	int databits = Parameters. GetStreamLen(iDataStreamID) * SIZEOF__BYTE;
-	Parameters.SetNumDataDecoderBits(databits);
+	Parameters.iNumDataDecoderBits = databits;
 	DataDecoder.SetInitFlag();
 }
 

@@ -64,19 +64,12 @@ using namespace std; /* Because of the library: "complex" */
 # define HAVE_SETUPAPI
 //# undef HAVE_SETUPAPI
 
-/* Define whether using libsndfile for audio file I/O */
-//# define HAVE_LIBSNDFILE
-# undef HAVE_LIBSNDFILE
-
 /* Activate or disable faad2 library (AAC decoding) */
 # define USE_FAAD2_LIBRARY
 //# undef USE_FAAD2_LIBRARY
 
 # define USE_FAAC_LIBRARY
 //# undef USE_FAAC_LIBRARY
-
-# define HAVE_JOURNALINE
-//# undef HAVE_JOURNALINE
 
 //# define HAVE_LIBPCAP
 # undef HAVE_LIBPCAP
@@ -195,7 +188,7 @@ typedef unsigned long long uint64_t;
 #define _MAXREAL						((_REAL) 3.4e38) /* Max for float */
 
 #ifdef USE_ERASURE_FOR_FASTER_ACQ
-/* Use max-value for showing that this is an erasure */ 
+/* Use max-value for showing that this is an erasure */
 # define ERASURE_TAG_VALUE				_MAXREAL
 #endif
 

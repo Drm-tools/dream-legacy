@@ -270,12 +270,11 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 			if ((*pbiData).Separate(10) != 0)
 				return TRUE;
 
+			/* Length of part A is zero with hierarchical modulation */
+            iLenPartA = 0;
+
 			/* Data length for hierarchical */
 			iLenPartB = (*pbiData).Separate(12);
-
-			/* Set new parameters in global struct. Length of part A is zero
-			   with hierarchical modulation */
-			Parameter.SetStreamLen(i, 0, iLenPartB);
 		}
 		else
 		{
@@ -284,10 +283,10 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 
 			/* Data length for part B */
 			iLenPartB = (*pbiData).Separate(12);
-
-			/* Set new parameters in global struct */
-			Parameter.SetStreamLen(i, iLenPartA, iLenPartB);
 		}
+
+        /* Set new parameters in global struct */
+        Parameter.SetStreamLen(i, iLenPartA, iLenPartB);
 	}
 
 	/* Set new parameters in global struct */
@@ -471,7 +470,7 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		   more "Alternative frequency signalling: Region definition data entity
 		   - type 7" with this Region Id */
 		AltFreq.iRegionID = (*pbiData).Separate(4);
- 
+
 		/* Schedule Id 4 bits. This field indicates whether the schedule is
 		   unspecified (value 0) or whether the alternative frequencies are
 		   valid just at certain times, in which case it carries the Schedule Id
@@ -1089,7 +1088,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 	/* Init number of frequency count */
 	int iNumFreqTmp = iLengthOfBody;
 
-	/* Short ID/Announcement flag: specifies 
+	/* Short ID/Announcement flag: specifies
 	 * whether this data entity is an AFS or an Announcement
 	 * type entity. We only support AFS
 	 */
@@ -1128,7 +1127,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 	}
 
 	/* RFA - 2 bits */
-	(*pbiData).Separate(2); 
+	(*pbiData).Separate(2);
 
 	/* Other system ID */
 	OtherService.iSystemID = (*pbiData).Separate(5);
@@ -1175,7 +1174,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 	case 11:
 		/* DAB (data service ID) */
 		OtherService.iServiceID = (*pbiData).Separate(32);
-		
+
 		/* Remove four bytes from frequency count */
 		iNumFreqTmp -= 4;
 		break;
@@ -1202,7 +1201,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 		   defined */
 		iFrequencyEntryLength = 1;
 	}
-	
+
 	/* Check for error (length of body must be so long to include Service
 	   Restriction field and Region/Schedule field, also check that
 	   remaining number of bytes is devisible by iFrequencyEntryLength since
@@ -1228,7 +1227,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 	}
 
 	if(iShortIDAnnounceFlag != 0)
-		return FALSE; // no error, but we don't support announcements 
+		return FALSE; // no error, but we don't support announcements
 
 	/* Now, set data in global struct */
 	Parameter.Lock();
@@ -1251,7 +1250,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 	if (bAltFreqIsAlreadyThere == FALSE)
 			Parameter.AltFreqSign.vecOtherServices.push_back(OtherService);
 	Parameter.Unlock();
-	
+
 	return FALSE;
 }
 

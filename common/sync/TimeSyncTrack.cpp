@@ -680,8 +680,8 @@ void CTimeSyncTrack::CalculateRdel(CParameter& Parameter)
 	/* Define the intervals in ascending order of threshold percentage */
 	CReal rTotEgy = Sum(vecrAvPoDeSpRot);
 
-	CReal rIntervalAccum= (CReal) 0.0; 
-	const int ciNumDelayIntervals = vecrRdelThresholds.GetSize();
+	CReal rIntervalAccum= (CReal) 0.0;
+	const int ciNumDelayIntervals = vecrRdelThresholds.Size();
 	CRealVector vecrIntervalStart, vecrIntervalEnd;
 	vecrRdelIntervals.Init(ciNumDelayIntervals);
 	vecrIntervalStart.Init(ciNumDelayIntervals);
@@ -748,7 +748,7 @@ void CTimeSyncTrack::CalculateRdop(CParameter& Parameter)
 	CReal rSumSqChan = (CReal) 0.0;
 
 	/* Now do the calculation */
-	for (int i = 0; i < veccPilots.GetSize(); i++)
+	for (int i = 0; i < veccPilots.Size(); i++)
 	{
 		rSumSqDiff += SqMag(veccPilots[i] - veccOldImpulseResponse[i]);
 		rSumSqChan += SqMag(veccPilots[i]);

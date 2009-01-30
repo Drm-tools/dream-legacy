@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -36,7 +36,7 @@
 
 /* Definitions ****************************************************************/
 /* The text message may comprise up to 8 segments ... The body shall contain
-   16 bytes of character data ... 
+   16 bytes of character data ...
    We add "+ 1" since the entry "0" is not used */
 #define MAX_NUM_SEG_TEXT_MESSAGE		(8 + 1)
 #define BYTES_PER_SEG_TEXT_MESS			16
@@ -56,9 +56,8 @@ public:
 	CVector<_BINARY>&	operator[](const int iI) {return vvbiSegment[iI];}
 
 	void				SetText(const string& strMessage, const _BINARY biToggleBit);
-	inline int			GetNumSeg() const {return iNumSeg;}
-	inline int			GetSegSize(const int iSegID) const
-							{return vvbiSegment[iSegID].Size() / SIZEOF__BYTE;}
+    int			        GetNumSeg() const {return iNumSeg;}
+	int			        GetSegSize(const int iSegID) const;
 
 protected:
 	CVector<CVector<_BINARY> >	vvbiSegment;

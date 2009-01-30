@@ -72,7 +72,13 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 
 /* Classes ********************************************************************/
 
-	class CAudioParam
+    class CDumpable
+    {
+    public:
+        virtual void dump(ostream&) const = 0;
+    };
+
+	class CAudioParam : public CDumpable
 	{
 	  public:
 
@@ -185,9 +191,10 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 			}
 			return FALSE;
 		}
+		void dump(ostream&) const;
 	};
 
-	class CDataParam
+	class CDataParam : public CDumpable
 	{
 	  public:
 
@@ -246,9 +253,10 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 			}
 			return FALSE;
 		}
+		void dump(ostream&) const;
 	};
 
-	class CService
+	class CService : public CDumpable
 	{
 	  public:
 
@@ -310,9 +318,10 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 		/* Data Component */
 		int iDataStream;
 		int iPacketID;
+		void dump(ostream&) const;
 	};
 
-	class CStream
+	class CStream : public CDumpable
 	{
 	  public:
 
@@ -348,9 +357,10 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 		EStreamType eAudDataFlag; /* stream is audio or data */
 		EPackMod ePacketModInd;	/* Packet mode indicator for data streams */
 		int iPacketLen;			/* Packet length for packet streams */
+		void dump(ostream&) const;
 	};
 
-	class CMSCProtLev
+	class CMSCProtLev : public CDumpable
 	{
 	  public:
 
@@ -367,11 +377,12 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 		int iPartA;				/* MSC protection level for part A */
 		int iPartB;				/* MSC protection level for part B */
 		int iHierarch;			/* MSC protection level for hierachical frame */
+		void dump(ostream&) const;
 	};
 
 	/* Alternative Frequency Signalling ************************************** */
 	/* Alternative frequency signalling Schedules informations class */
-	class CAltFreqSched
+	class CAltFreqSched : public CDumpable
 	{
 	  public:
 		CAltFreqSched():iDayCode(0),iStartTime(0),iDuration(0)
@@ -409,10 +420,11 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 		int iDayCode;
 		int iStartTime;
 		int iDuration;
+		void dump(ostream&) const;
 	};
 
 	/* Alternative frequency signalling Regions informations class */
-	class CAltFreqRegion
+	class CAltFreqRegion : public CDumpable
 	{
 	  public:
 		CAltFreqRegion():veciCIRAFZones(),
@@ -468,9 +480,10 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 		int iLongitude;
 		int iLatitudeEx;
 		int iLongitudeEx;
+		void dump(ostream&) const;
 	};
 
-	class CServiceDefinition
+	class CServiceDefinition : public CDumpable
 	{
  	public:
 		CServiceDefinition():veciFrequencies(), iRegionID(0), iScheduleID(0),iSystemID(0)
@@ -527,6 +540,7 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 		int iRegionID;
 		int iScheduleID;
 		int iSystemID;
+		void dump(ostream&) const;
 	};
 
 	class CMultiplexDefinition: public CServiceDefinition
@@ -572,6 +586,7 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 
 		vector<int> veciServRestrict;
 		_BOOLEAN bIsSyncMultplx;
+		void dump(ostream&) const;
 	};
 
 	class COtherService: public CServiceDefinition
@@ -621,10 +636,11 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 		_BOOLEAN bSameService;
 		int iShortID;
 		uint32_t iServiceID;
+		void dump(ostream&) const;
 	};
 
 	/* Alternative frequency signalling class */
-	class CAltFreqSign
+	class CAltFreqSign : public CDumpable
 	{
 	  public:
 
@@ -697,11 +713,12 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 		_BOOLEAN bScheduleVersionFlag;
 		_BOOLEAN bMultiplexVersionFlag;
 		_BOOLEAN bOtherServicesVersionFlag;
+		void dump(ostream&) const;
 	};
 
 	/* Class to store information about the last service selected ------------- */
 
-	class CLastService
+	class CLastService : public CDumpable
 	{
 	  public:
 		CLastService():iService(0), iServiceID(SERV_ID_NOT_USED)
@@ -735,10 +752,11 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 		/* store only fac parameters */
 		int iService;
 		uint32_t iServiceID;
+		void dump(ostream&) const;
 	};
 
 	/* Classes to keep track of status flags for RSCI rsta tag and log file */
-	class CRxStatus
+	class CRxStatus : public CDumpable
 	{
 	public:
 		CRxStatus():status(NOT_PRESENT),iNum(0),iNumOK(0) {}
@@ -750,12 +768,13 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 		int GetCount() { return iNum; }
 		int GetOKCount() { return iNumOK; }
 		void ResetCounts() { iNum=0; iNumOK = 0; }
+		void dump(ostream&) const;
 	private:
 		ETypeRxStatus status;
 		int iNum, iNumOK;
 	};
 
-	class CReceiveStatus
+	class CReceiveStatus : public CDumpable
 	{
 	  public:
 		CReceiveStatus():FSync(),TSync(),Interface(),
@@ -788,6 +807,7 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 		CRxStatus Audio;
 		CRxStatus LLAudio;
 		CRxStatus MOT;
+		void dump(ostream&) const;
 	};
 
 
@@ -823,7 +843,7 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 		int iCurWritePos;
 	};
 
-	class CFrontEndParameters
+	class CFrontEndParameters : public CDumpable
 	{
 	public:
 		enum ESMeterCorrectionType {S_METER_CORRECTION_TYPE_CAL_FACTOR_ONLY, S_METER_CORRECTION_TYPE_AGC_ONLY, S_METER_CORRECTION_TYPE_AGC_RSSI};
@@ -862,26 +882,28 @@ enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
 		_REAL rCalFactorDRM;
 		_REAL rIFCentreFreq;
 
+		void dump(ostream&) const;
 	};
 
 
-class CMinMaxMean
-{
-public:
-	CMinMaxMean();
+    class CMinMaxMean : public CDumpable
+    {
+    public:
+        CMinMaxMean();
 
-	void addSample(_REAL);
-	_REAL getCurrent();
-	_REAL getMean();
-	void getMinMax(_REAL&, _REAL&);
-	void setInvalid();
-	bool isValid();
-protected:
-	_REAL rSum, rCur, rMin, rMax;
-	int iNum;
-};
+        void addSample(_REAL);
+        _REAL getCurrent();
+        _REAL getMean();
+        void getMinMax(_REAL&, _REAL&);
+        void setInvalid();
+        bool isValid();
+        void dump(ostream&) const;
+    protected:
+        _REAL rSum, rCur, rMin, rMax;
+        int iNum;
+    };
 
-class CParameter
+class CParameter : public CDumpable
 {
   public:
 	CParameter();
@@ -916,8 +938,6 @@ class CParameter
 	void SetNumDecodedBitsMSC(const int iNewNumDecodedBitsMSC);
 	void SetNumDecodedBitsSDC(const int iNewNumDecodedBitsSDC);
 	void SetNumBitsHieraFrTot(const int iNewNumBitsHieraFrTot);
-	void SetNumAudioDecoderBits(const int iNewNumAudioDecoderBits);
-	void SetNumDataDecoderBits(const int iNewNumDataDecoderBits);
 
 	_BOOLEAN SetWaveMode(const ERobMode eNewWaveMode);
 	ERobMode GetWaveMode() const { return eRobustnessMode; }
@@ -1149,6 +1169,7 @@ class CParameter
 
 	CGPSData GPSData;
 	CMinMaxMean SNRstat, SigStrstat;
+    void dump(ostream&) const;
 
 protected:
 

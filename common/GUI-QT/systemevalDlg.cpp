@@ -107,7 +107,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pCurLiViIt = pCurLiViIt->firstChild();
 	const QPixmap pixFreqSamHist(*pCurLiViIt->pixmap(0));
 
-	/* Now clear the dummy list view items */	
+	/* Now clear the dummy list view items */
 	ListViewCharSel->clear();
 
 	/* No sorting of items */
@@ -135,7 +135,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		CDRMPlot::NONE_OLD, FALSE);
 	pSpectrumLiViIt->setPixmap(0, pixSpectrum);
 
- 
+
 	/* Inser actual items. The list is not sorted -> items which are inserted
 	   first show up at the end of the list */
 	/* Spectrum */
@@ -596,9 +596,13 @@ void systemevalDlg::OnTimer()
 			ValueRF->setText("---");
 
 		CParameter& Parameters = *(DRMReceiver.GetParameters());
-		Parameters.Lock(); 
+		Parameters.Lock();
 
-		SetStatus(LEDMSC, Parameters.ReceiveStatus.Audio.GetStatus());
+        int iCurSelAudioServ = Parameters.GetCurSelAudioService();
+        if(Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
+            SetStatus(LEDMSC, Parameters.ReceiveStatus.MOT.GetStatus());
+        else
+            SetStatus(LEDMSC, Parameters.ReceiveStatus.Audio.GetStatus());
     	SetStatus(LEDSDC, Parameters.ReceiveStatus.SDC.GetStatus());
     	SetStatus(LEDFAC, Parameters.ReceiveStatus.FAC.GetStatus());
     	SetStatus(LEDFrameSync, Parameters.ReceiveStatus.FSync.GetStatus());
@@ -610,7 +614,7 @@ void systemevalDlg::OnTimer()
 	if (DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
 	{
 		/* Get a consistant snapshot */
-		
+
 		/* We only get SNR from a local DREAM Front-End */
 		_REAL rSNR = Parameters.GetSNR();
 		if (rSNR >= 0.0)
@@ -688,7 +692,7 @@ void systemevalDlg::OnTimer()
 	if (DRMReceiver.GetRSIIn()->GetInEnabled() == TRUE)
 	{
 		ValueSNR->setText("<b>---</b>");
-		if (Parameters.vecrRdelThresholds.GetSize() > 0)
+		if (Parameters.vecrRdelThresholds.Size() > 0)
 			ValueWiener->setText(QString().setNum(Parameters.rRdop, 'f', 2) + " Hz / "
 					+ QString().setNum(Parameters.vecrRdelIntervals[0], 'f', 2) + " ms ("
 					+ QString().setNum(Parameters.vecrRdelThresholds[0]) + "%)");
@@ -872,7 +876,7 @@ void systemevalDlg::OnTimer()
 	TextLabelGPSTime->setText(qStrTime);
 */
 
-		Parameters.Unlock(); 
+		Parameters.Unlock();
 	}
 
 	UpdateControls();
@@ -909,7 +913,7 @@ void systemevalDlg::OnListViContMenu()
 }
 
 QString	systemevalDlg::GetRobModeStr()
-{		
+{
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 	switch (Parameters.GetWaveMode())
 	{
@@ -1232,18 +1236,18 @@ void systemevalDlg::AddWhatsThisHelp()
 void systemevalDlg::EnableGPS(bool b)
 {
 	CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 	if(b)
 	{
 		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
-		Parameters.Unlock(); 
+		Parameters.Unlock();
 		if(pGPSReceiver == NULL)
 			pGPSReceiver = new CGPSReceiver(Parameters, Settings);
 	}
 	else
 	{
 		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
-		Parameters.Unlock(); 
+		Parameters.Unlock();
 		if(pGPSReceiver)
 		{
 			delete pGPSReceiver;

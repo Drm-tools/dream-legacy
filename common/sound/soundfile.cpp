@@ -89,11 +89,10 @@ CSoundFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 
 	if (pFile != NULL)
 		return;
-	
+
 	/* Check previously a file was being used */
 	Close();
 
-#ifdef HAVE_LIBSNDFILE
 	SF_INFO sfinfo;
 	memset(&sfinfo, 0, sizeof(SF_INFO));
 	switch(eFmt)
@@ -123,12 +122,6 @@ CSoundFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 		}
 		break;
 	}
-#else
-	if(eFmt==fmt_txt)
-		pFile = fopen(strInFileName.c_str(), "r");
-	else
-		pFile = fopen(strInFileName.c_str(), "rb");
-#endif
 	/* Check for error */
 	if (pFile == NULL)
 	{
@@ -170,7 +163,6 @@ CSoundFileIn::Read(vector<_SAMPLE>& data)
 		return FALSE;
 	}
 	short *buffer = new short[iFileChannels*iFrames];
-#ifdef HAVE_LIBSNDFILE
 	sf_count_t c = sf_readf_short((SNDFILE*)pFile, buffer, iFrames);
 	if(c!=iFrames)
 	{
@@ -178,13 +170,6 @@ CSoundFileIn::Read(vector<_SAMPLE>& data)
 		sf_seek((SNDFILE*)pFile, 0, SEEK_SET);
 		c = sf_readf_short((SNDFILE*)pFile, buffer, iFrames);
 	}
-#else
-	if (fread(buffer, size_t(2), size_t(iFileChannels*iFrames), pFile) == size_t(0))
-	{
-		rewind(pFile);
-		fread(buffer, size_t(2), size_t(iFileChannels*iFrames), pFile);
-	}
-#endif
 	int oversample_factor = SOUNDCRD_SAMPLE_RATE / iFileSampleRate;
 	if(iFileChannels==2)
 	{
@@ -219,14 +204,10 @@ CSoundFileIn::Close()
 	/* Close file (if opened) */
 	if (pFile != NULL)
 	{
-#ifdef HAVE_LIBSNDFILE
 		if(eFmt==fmt_txt)
 			fclose(pFile);
 		else
 			sf_close((SNDFILE*)pFile);
-#else
-		fclose(pFile);
-#endif
 		pFile = NULL;
 	}
 	if(pacer)
@@ -251,8 +232,6 @@ struct CWaveHdr
 	uint32_t iDataLength; /* Length of data */
 };
 
-
-#ifdef HAVE_LIBSNDFILE
 sf_count_t  sf_writef(SNDFILE *sndfile, short *ptr, sf_count_t frames)
 {
 	return sf_writef_short(sndfile, ptr, frames);
@@ -267,7 +246,6 @@ sf_count_t  sf_writef(SNDFILE *sndfile, double *ptr, sf_count_t frames)
 {
 	return sf_writef_double(sndfile, ptr, frames);
 }
-#endif
 
 CSoundFileOut::CSoundFileOut()
 {
@@ -312,7 +290,6 @@ CSoundFileOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 	if (p != string::npos)
 		ext = s.substr(p + 1);
 	channels = iChannels;
-#ifdef HAVE_LIBSNDFILE
 	SF_INFO sfinfo;
 	sfinfo.samplerate = 48000;
 	sfinfo.channels = channels;
@@ -329,39 +306,6 @@ CSoundFileOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 		sfinfo.format = SF_FORMAT_RAW | SF_FORMAT_PCM_16;
 	}
 	pFile = sf_open(s.c_str(), SFM_WRITE, &sfinfo);
-#else
-	iBytesWritten = 0;
-	if(ext=="wav")
-	{
-		pFile = fopen(s.c_str(), "wb");
-		const CWaveHdr WaveHeader =
-		{
-			/* Use always stereo and PCM */
-			{'R', 'I', 'F', 'F'}, 0, {'W', 'A', 'V', 'E'},
-			{'f', 'm', 't', ' '}, 16, 1, 2, SOUNDCRD_SAMPLE_RATE,
-			SOUNDCRD_SAMPLE_RATE * 4 /* same as block align */,
-			4 /* block align */, 16,
-			{'d', 'a', 't', 'a'}, 0
-		};
-		iBytesWritten = sizeof(CWaveHdr);
-		if(pFile)
-				fwrite((const void*) &WaveHeader, size_t(sizeof(CWaveHdr)), size_t(1), pFile);
-		fmt = OFF_WAV;
-	}
-	else if(ext=="txt")
-	{
-		pFile = fopen(s.c_str(), "w");
-		fmt = OFF_TXT;
-	}
-	else if(ext=="raw")
-	{
-		pFile = fopen(s.c_str(), "wb");
-		fmt = OFF_RAW;
-	}
-	/* Check for error */
-	if (pFile == NULL)
-		throw CGenErr("The file " + s + " cannot be created.");
-#endif
 }
 
 void
@@ -369,21 +313,7 @@ CSoundFileOut::Close()
 {
 	if(pFile==NULL)
 		return;
-#ifdef HAVE_LIBSNDFILE
 	sf_close(pFile);
-#else
-	if (iBytesWritten>0)
-	{
-		const uint32_t iFileLength = iBytesWritten - 8;
-		fseek(pFile, 4 /* offset */, SEEK_SET /* origin */);
-		fwrite((const void*) &iFileLength, size_t(4), size_t(1), pFile);
-
-		const uint32_t iDataLength = iBytesWritten - sizeof(CWaveHdr);
-		fseek(pFile, 40 /* offset */, SEEK_SET /* origin */);
-		fwrite((const void*) &iDataLength, size_t(4), size_t(1), pFile);
-	}
-	fclose(pFile);
-#endif
 	pFile = NULL;
 }
 
@@ -392,51 +322,6 @@ CSoundFileOut::Write(vector<_SAMPLE>& data)
 {
 	if (pFile == NULL)
 		return TRUE;
-#ifdef HAVE_LIBSNDFILE
 	(void)sf_writef(pFile, &data[0], data.size()/channels);
-#else
-	if(channels==1)
-		for(size_t i=0; i<data.size(); i++)
-		{
-			short b=short(data[i]); /* allows _SAMPLE to be redefined */
-			short n=0;
-			switch(fmt)
-			{
-			case OFF_RAW:
-				fwrite((const void*) &b, 2, 1, pFile);
-			break;
-			case OFF_TXT:
-				fprintf(pFile, "%d\n", b);
-			break;
-			case OFF_WAV:
-				iBytesWritten += 4;
-				fwrite((const void*) &b, size_t(2), size_t(1), pFile);
-				fwrite((const void*) &n, size_t(2), size_t(1), pFile);
-		}
-	}
-	else
-	{
-		for(size_t i=0; i<data.size()/2; i++)
-		{
-			short buffer[2]; /* allows _SAMPLE to be redefined */
-			buffer[0]=int16_t(data[2*i]);
-			buffer[1]=int16_t(data[2*i]+1);
-			switch(fmt)
-			{
-			case OFF_RAW:
-				fwrite((const void*) buffer, 2, 2, pFile);
-			break;
-			case OFF_TXT:
-				/* This can be read with Matlab "load" command */
-				fprintf(pFile, "%d\n %d\n", buffer[0], buffer[1]);
-			break;
-			case OFF_WAV:
-				iBytesWritten += 2 * sizeof(int16_t);
-				fwrite((const void*) &buffer[0], sizeof(int16_t), size_t(1), pFile);
-				fwrite((const void*) &buffer[1], sizeof(int16_t), size_t(1), pFile);
-			}
-		}
-	}
-#endif
 	return FALSE;
 }

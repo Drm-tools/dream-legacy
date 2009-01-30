@@ -21,11 +21,11 @@
 				</Compiler>
 			</Target>
 			<Target title="Win32 Debug">
-				<Option output="Dream" prefix_auto="1" extension_auto="1" />
+				<Option output="Dreamd" prefix_auto="1" extension_auto="1" />
 				<Option object_output="Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-t" />
+				<Option parameters="--mode DRMRX --rsiin 9999" />
 				<Compiler>
 					<Add option="-W" />
 					<Add option="-g" />
@@ -64,6 +64,7 @@
 			<Add library="winmm" />
 			<Add library="setupapi" />
 			<Add library="wpcap" />
+			<Add library="..\libs\libsndfile-1.dll" />
 			<Add directory="$(QTDIR)\lib" />
 			<Add directory="..\libs" />
 		</Linker>

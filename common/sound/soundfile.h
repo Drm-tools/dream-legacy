@@ -30,9 +30,7 @@
 #define _SOUNDFILE_H
 
 #include "../soundinterface.h"
-#ifdef HAVE_LIBSNDFILE
-# include <sndfile.h>
-#endif
+#include <sndfile.h>
 #include "../util/Pacer.h"
 
 /* Classes ********************************************************************/
@@ -83,13 +81,7 @@ protected:
 	vector<string> files;
 	int channels,dev;
 	bool blocking,device_changed;
-#ifdef HAVE_LIBSNDFILE
 	SNDFILE*	pFile;
-#else
-	enum EFileOutFormat fmt;
-	FILE*		pFile;
-	uint32_t	iBytesWritten;
-#endif
 };
 
 #endif

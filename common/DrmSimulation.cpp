@@ -35,14 +35,14 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	rStartSNR(0.0), rEndSNR(0.0), rStepSNR(0.0),
 	Param(),
 	DataBuf(), MLCEncBuf(), MSC_FAC_SDC_MapBuf(),
-	//IntlBuf(), FACMapBuf(), SDCMapBuf(), 
+	//IntlBuf(), FACMapBuf(), SDCMapBuf(),
 	GenFACDataBuf(), GenSDCDataBuf(),
 	CarMapBuf(), OFDMModBuf(), OFDMDemodBufChan2(), ChanEstInBufSim(),
 	ChanEstOutBufChan(),
 	RecDataBuf(), ChanResInBuf(), InpResBuf(), FreqSyncAcqBuf(), TimeSyncBuf(),
 	OFDMDemodBuf(), SyncUsingPilBuf(), ChanEstBuf(),
 	MSCCarDemapBuf(), FACCarDemapBuf(), SDCCarDemapBuf(), DeintlBuf(),
-	FACDecBuf(), SDCDecBuf(), MSCMLCDecBuf(), GenSimData(),			
+	FACDecBuf(), SDCDecBuf(), MSCMLCDecBuf(), GenSimData(),
 	MSCMLCEncoder(), SymbInterleaver(), GenerateFACData(), FACMLCEncoder(),
 	GenerateSDCData(), SDCMLCEncoder(), OFDMCellMapping(), OFDMModulation(),
 	DRMChannel(), InputResample(), FreqSyncAcq(), TimeSync(), OFDMDemodulation(),
@@ -71,7 +71,8 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	Param.SetCurSelDataService(0); /* Service ID must be set for activation */
 
 	/* Stream */
-	Param.SetStreamLen(0, 0, 0); // EEP, if "= 0"
+    Param.Stream[0].iLenPartA = 0;
+    Param.Stream[0].iLenPartB = 0; // EEP, if "= 0"
 
 
 	/* Date, time */
@@ -248,7 +249,7 @@ void CDRMSimulation::Init()
 
 	/* Defines number of SDC bits per super-frame */
 	SDCMLCEncoder.Init(Param, SDCMapBuf);
-	
+
 	MSCMLCEncoder.Init(Param, MLCEncBuf);
 	SymbInterleaver.Init(Param, IntlBuf);
 	GenerateFACData.Init(Param, GenFACDataBuf);
@@ -267,8 +268,8 @@ void CDRMSimulation::Init()
 	/* Channel estimation init must be called before OFDMDemodSimulation
 	   module, because the delay is set here which the other modules use! */
 	ChannelEstimation.Init(Param, ChanEstBuf);
-	
-	OFDMCellDemapping.Init(Param, MSCCarDemapBuf, FACCarDemapBuf, 
+
+	OFDMCellDemapping.Init(Param, MSCCarDemapBuf, FACCarDemapBuf,
 		SDCCarDemapBuf);
 	FACMLCDecoder.Init(Param, FACDecBuf);
 	UtilizeFACData.Init(Param);

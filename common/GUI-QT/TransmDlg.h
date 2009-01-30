@@ -82,6 +82,7 @@ protected:
 	void				SetMDIOut();
 	void				GetMDIOut();
 	void				UpdateCapacities();
+    void                AddSlide(const QString& path);
 
 	virtual void		closeEvent(QCloseEvent* ce);
 

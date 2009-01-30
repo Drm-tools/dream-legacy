@@ -127,6 +127,10 @@ AC_SEARCH_LIBS([rfftw], [rfftw rfftw], , exit 1)
 AC_CHECK_HEADERS(dfftw.h fftw.h)
 AC_CHECK_HEADERS(drfftw.h rfftw.h)
 
+dnl libsndfile ------------------------------------------------------------------
+PKG_CHECK_MODULES(libsndfile, sndfile, , exit 1)
+LIBS="$LIBS $libsndfile_LIBS"
+
 dnl QT --------------------------------------------------------------------------
 if test "x$enable_qt" = "xyes"; then
 	if test "x$QTDIR" = "x"; then
@@ -215,14 +219,7 @@ dnl libpcap (optional) ---------------------------------------------------------
 AC_CHECK_HEADER(pcap.h, , enable_pcap=no)
 AC_CHECK_LIB(pcap,pcap_next_ex, , enable_pcap=no)
 
-dnl libsndfile (optional) -------------------------------------------------------
-PKG_CHECK_MODULES(libsndfile, sndfile,,enable_sndfile=no)
-if test "x$enable_sndfile" = xyes; then
-	AC_DEFINE(HAVE_LIBSNDFILE, 1, [Define if you have libsndfile])
-	LIBS="$LIBS $libsndfile_LIBS"
-fi
-
-dnl libhal (optional) -------------------------------------------------------
+dnl libhal (optional) -----------------------------------------------------------
 PKG_CHECK_MODULES(hal, hal, enable_hal=yes, enable_hal=no)
 if test "x$enable_hal" = xyes; then
 	AC_DEFINE(HAVE_LIBHAL, 1, [Define if you have libhal])

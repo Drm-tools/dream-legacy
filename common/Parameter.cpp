@@ -32,14 +32,15 @@
 #include <limits>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 //#include "util/LogPrint.h"
 
 /* Implementation *************************************************************/
 CParameter::CParameter():
  pDRMRec(NULL),
  eSymbolInterlMode(),
- eMSCCodingScheme(),	
- eSDCCodingScheme(),	
+ eMSCCodingScheme(),
+ eSDCCodingScheme(),
  iNumAudioService(0),
  iNumDataService(0),
  iAMSSCarrierMode(0),
@@ -50,9 +51,9 @@ CParameter::CParameter():
  Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
  iNumBitsHierarchFrameTotal(0),
  iNumDecodedBitsMSC(0),
- iNumSDCBitsPerSFrame(0),	
- iNumAudioDecoderBits(0),	
- iNumDataDecoderBits(0),	
+ iNumSDCBitsPerSFrame(0),
+ iNumAudioDecoderBits(0),
+ iNumDataDecoderBits(0),
  iYear(0),
  iMonth(0),
  iDay(0),
@@ -78,7 +79,7 @@ CParameter::CParameter():
  iDRMChannelNum(0),
  iSpecChDoppler(0),
  rBitErrRate(0.0),
- rSyncTestParam(0.0),		
+ rSyncTestParam(0.0),
  rSINR(0.0),
  iNumBitErrors(0),
  iChanEstDelay(0),
@@ -119,7 +120,7 @@ CParameter::CParameter():
  rIFSigStr(0.0),
  iCurSelAudioService(0),
  iCurSelDataService(0),
- eRobustnessMode(RM_ROBUSTNESS_MODE_B),	
+ eRobustnessMode(RM_ROBUSTNESS_MODE_B),
  eSpectOccup(SO_3),
  LastAudioService(),
  LastDataService(),
@@ -177,7 +178,7 @@ CParameter::CParameter(const CParameter& p):
  iDRMChannelNum(p.iDRMChannelNum),
  iSpecChDoppler(p.iSpecChDoppler),
  rBitErrRate(p.rBitErrRate),
- rSyncTestParam	(p.rSyncTestParam),	
+ rSyncTestParam	(p.rSyncTestParam),
  rSINR(p.rSINR),
  iNumBitErrors(p.iNumBitErrors),
  iChanEstDelay(p.iChanEstDelay),
@@ -225,7 +226,7 @@ CParameter::CParameter(const CParameter& p):
  //, Mutex() // jfbc: I don't think this state should be copied
 {
 	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
-	matcReceivedPilotValues = p.matcReceivedPilotValues; // TODO 
+	matcReceivedPilotValues = p.matcReceivedPilotValues; // TODO
 }
 
 CParameter& CParameter::operator=(const CParameter& p)
@@ -273,7 +274,7 @@ CParameter& CParameter::operator=(const CParameter& p)
 	iDRMChannelNum = p.iDRMChannelNum;
 	iSpecChDoppler = p.iSpecChDoppler;
 	rBitErrRate = p.rBitErrRate;
-	rSyncTestParam	 = p.rSyncTestParam;	
+	rSyncTestParam	 = p.rSyncTestParam;
 	rSINR = p.rSINR;
 	iNumBitErrors = p.iNumBitErrors;
 	iChanEstDelay = p.iChanEstDelay;
@@ -518,7 +519,7 @@ _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
 {
 	/* First check if spectrum occupancy and robustness mode pair is defined */
 	if ((
-		(eNewWaveMode == RM_ROBUSTNESS_MODE_C) || 
+		(eNewWaveMode == RM_ROBUSTNESS_MODE_C) ||
 		(eNewWaveMode == RM_ROBUSTNESS_MODE_D)
 		) && !(
 		(eSpectOccup == SO_3) ||
@@ -552,7 +553,7 @@ void CParameter::SetSpectrumOccup(ESpecOcc eNewSpecOcc)
 {
 	/* First check if spectrum occupancy and robustness mode pair is defined */
 	if ((
-		(eRobustnessMode == RM_ROBUSTNESS_MODE_C) || 
+		(eRobustnessMode == RM_ROBUSTNESS_MODE_C) ||
 		(eRobustnessMode == RM_ROBUSTNESS_MODE_D)
 		) && !(
 		(eNewSpecOcc == SO_3) ||
@@ -637,24 +638,6 @@ void CParameter::SetNumBitsHieraFrTot(const int iNewNumBitsHieraFrTot)
 	}
 }
 
-void CParameter::SetNumAudioDecoderBits(const int iNewNumAudioDecoderBits)
-{
-	/* Apply changes only if parameters have changed */
-	if (iNewNumAudioDecoderBits != iNumAudioDecoderBits)
-	{
-		iNumAudioDecoderBits = iNewNumAudioDecoderBits;
-	}
-}
-
-void CParameter::SetNumDataDecoderBits(const int iNewNumDataDecoderBits)
-{
-	/* Apply changes only if parameters have changed */
-	if (iNewNumDataDecoderBits != iNumDataDecoderBits)
-	{
-		iNumDataDecoderBits = iNewNumDataDecoderBits;
-	}
-}
-
 void CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe,
 							   const _BOOLEAN bWithHierarch)
 {
@@ -675,7 +658,7 @@ void CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe,
 		if (NewMSCPrLe.iHierarch != MSCPrLe.iHierarch)
 		{
 			MSCPrLe.iHierarch = NewMSCPrLe.iHierarch;
-		
+
 			bParamersHaveChanged = TRUE;
 		}
 	}
@@ -817,7 +800,7 @@ void CParameter::SetCurSelDataService(const int iNewService)
 		(Service[iNewService].iDataStream != STREAM_ID_NOT_USED))
 	{
 		iCurSelDataService = iNewService;
-		
+
 		LastDataService.Reset();
 
 		/* Set init flags */
@@ -887,7 +870,7 @@ void CParameter::SetServiceID(const int iShortID, const uint32_t iNewServiceID)
 		if(pDRMRec) pDRMRec->InitsForMSC();
 
 
-		/* If the receiver has lost the sync automatically restore 
+		/* If the receiver has lost the sync automatically restore
 			last current service selected */
 
 		if ((iShortID > 0) && (iNewServiceID > 0))
@@ -919,15 +902,15 @@ void CParameter::SetServiceID(const int iShortID, const uint32_t iNewServiceID)
 
 
 /* Implementaions for simulation -------------------------------------------- */
-void CRawSimData::Add(uint32_t iNewSRS) 
+void CRawSimData::Add(uint32_t iNewSRS)
 {
 	/* Attention, function does not take care of overruns, data will be
 	   lost if added to a filled shift register! */
-	if (iCurWritePos < ciMaxDelBlocks) 
+	if (iCurWritePos < ciMaxDelBlocks)
 		veciShRegSt[iCurWritePos++] = iNewSRS;
 }
 
-uint32_t CRawSimData::Get() 
+uint32_t CRawSimData::Get()
 {
 	/* We always use the first value of the array for reading and do a
 	   shift of the other data by adding a arbitrary value (0) at the
@@ -1066,7 +1049,7 @@ void CParameter::GenerateReceiverID()
 
 	while((pos = sVer.find('.')) != string::npos)
 		sVer.replace(pos, 1, " ");
-	
+
 	if ((pos = sVer.find("cvs")) != string::npos)
 		sVer.replace(pos, 3, "   ");
 
@@ -1080,7 +1063,7 @@ void CParameter::GenerateReceiverID()
 
 	while (sSerialNumber.length() < 6)
 			sSerialNumber += "_";
-	
+
 	if (sSerialNumber.length() > 6)
 		sSerialNumber.erase(6, pDRMRec->GetParameters()->sSerialNumber.length()-6);
 
@@ -1103,7 +1086,7 @@ void CParameter::GenerateRandomSerialNumber()
 	}
 
 	char serialNumTemp[7];
-			
+
 	for (size_t i=0; i < 6; i++)
 		serialNumTemp[i] = randomChars[(int) 35.0*rand()/RAND_MAX];
 
@@ -1348,7 +1331,7 @@ CAltFreqSched::IsActive(const time_t ltime)
 	struct tm *gmtCur = gmtime(&ltime);
 
 	/* Check day
-	   tm_wday: day of week (0 - 6; Sunday = 0) 
+	   tm_wday: day of week (0 - 6; Sunday = 0)
 	   I must normalize so Monday = 0   */
 
 	if (gmtCur->tm_wday == 0)
@@ -1363,7 +1346,7 @@ CAltFreqSched::IsActive(const time_t ltime)
 		(iWeekDay * 24 * 60) + (gmtCur->tm_hour * 60) + gmtCur->tm_min;
 
 	/* Day Code: this field indicates which days the frequency schedule
-	 * (the following Start Time and Duration) applies to. 
+	 * (the following Start Time and Duration) applies to.
 	 * The msb indicates Monday, the lsb Sunday. Between one and seven bits may be set to 1.
 	 */
 	for (int i = 0; i < 7; i++)
@@ -1391,4 +1374,338 @@ CAltFreqSched::IsActive(const time_t ltime)
 		}
 	}
 	return false;
+}
+
+ostream& operator<<(ostream& out, const CDumpable& d)
+{
+    d.dump(out);
+    return out;
+}
+
+template<typename T>
+void dump(ostream& out, T val)
+{
+    out << val;
+}
+
+template<typename T>
+void dump(ostream& out, const vector<T>& vec)
+{
+    string sep = "";
+    out << "[";
+    for (size_t i = 0; i < vec.size(); i++)
+    {
+        out << sep; ::dump(out, vec[i]);
+        sep = ", ";
+    }
+    out << "]";
+}
+
+//for_each(a.begin(); a.end(); dump);
+
+template<typename T>
+void dump(ostream& out, const CVector<T>& vec)
+{
+    out << "[ " << endl;
+    string sep = "";
+    for(int i=0; i<vec.Size(); i++)
+    {
+//        out << sep; ::dump(out, vec[i]); out << endl;
+        out << sep << vec[i] << endl;
+        sep = ", ";
+    }
+    out << "]" << endl;
+}
+
+template<typename T>
+void dump(ostream& out, const CMatlibVector<T>& vec)
+{
+    out << "[ " << endl;
+    string sep = "";
+    for(int i=0; i<vec.Size(); i++)
+    {
+        out << sep << vec[i] << endl;
+        sep = ", ";
+    }
+    out << "]" << endl;
+}
+
+void
+CAudioParam::dump(ostream& out) const
+{
+    out << "{ textmessage: '" << strTextMessage << "'," << endl;
+    out << "audioCoding: " << int(eAudioCoding) << "," << endl;
+    out << "SBRFlag: " << int(eSBRFlag) << "," << endl;
+    out << "SampleRate: " << int(eAudioSamplRate) << "," << endl;
+    out << "Textflag: " << int(bTextflag) << "," << endl;
+    out << "EnhanceFlag: " << int(bEnhanceFlag) << "," << endl;
+    out << "AudioMode: " << int(eAudioMode) << "," << endl;
+    out << "CELPIndex: " << int(iCELPIndex) << "," << endl;
+    out << "CELPCRC: " << int(bCELPCRC) << "," << endl;
+    out << "HVXCRate: " << int(eHVXCRate) << "," << endl;
+    out << "HVXCCRC: " << int(bHVXCCRC) << "}" << endl;
+}
+
+void
+CDataParam::dump(ostream& out) const
+{
+    out << "{ DataUnits: " << int(eDataUnitInd) << "," << endl;
+    out << "AppDomain: " << int(eAppDomain) << "," << endl;
+    out << "UserAppIdent: " << "0x" << hex << iUserAppIdent << dec << "}" << endl;
+}
+
+void
+CService::dump(ostream& out) const
+{
+    out << "{ ServiceID: " << iServiceID << "," << endl;
+    out << "CAIndication: " << int(eCAIndication) << "," << endl;
+    out << "Language: " << iLanguage << "," << endl;
+    out << "AudDataFlag: " << int(eAudDataFlag) << "," << endl;
+    out << "ServiceDescr: " << iServiceDescr << "," << endl;
+    out << "CountryCode: '" << strCountryCode << "'," << endl;
+    out << "LanguageCode: '" << strLanguageCode << "'," << endl;
+    out << "Label: '" << strLabel << "'," << endl;
+    out << "AudioStream: " << iAudioStream << "," << endl;
+    out << "DataStream: " << iDataStream << "," << endl;
+    out << "PacketID: " << iPacketID << "}" << endl;
+}
+
+void
+CStream::dump(ostream& out) const
+{
+    out << "{ iLenPartA: " << iLenPartA << "," << endl;
+    out << "iLenPartB: " << iLenPartB << "," << endl;
+    out << "AudDataFlag: " << int(eAudDataFlag) << "," << endl;
+    out << "PacketMode: " << int(ePacketModInd) << "," << endl;
+    out << "PacketLen: " << iPacketLen << "}" << endl;
+}
+
+void
+CMSCProtLev::dump(ostream& out) const
+{
+    out << "{ iPartA: " << iPartA << "," << endl;
+    out << "iPartB: " << iPartB << "," << endl;
+    out << "Hierarch: " << iHierarch << "}" << endl;
+}
+
+void
+CAltFreqSched::dump(ostream& out) const
+{
+    out << "{ iDayCode: " << iDayCode << "," << endl;
+    out << "StartTime: " << iStartTime << "," << endl;
+    out << "Duration: " << iDuration << "}" << endl;
+}
+
+void
+CAltFreqRegion::dump(ostream& out) const
+{
+    out << "{ CIRAFZones: "; ::dump(out, veciCIRAFZones); out << endl;
+    out << "Latitude: " << iLatitude << "," << endl;
+    out << "LatitudeEx: " << iLatitudeEx << "," << endl;
+    out << "LongitudeEx: " << iLongitudeEx << "}" << endl;
+}
+
+void
+CServiceDefinition::dump(ostream& out) const
+{
+    out << "{ Frequencies: "; ::dump(out, veciFrequencies); out << endl;
+    out << "RegionID: " << iRegionID << "," << endl;
+    out << "ScheduleID: " << iScheduleID << "," << endl;
+    out << "SystemID: " << iSystemID << "}" << endl;
+}
+
+void
+CMultiplexDefinition::dump(ostream& out) const
+{
+    out << "{ Frequencies: "; ::dump(out, veciFrequencies); out << endl;
+    out << "RegionID: " << iRegionID << "," << endl;
+    out << "ScheduleID: " << iScheduleID << "," << endl;
+    out << "SystemID: " << iSystemID << "," << endl;
+    out << "{ ServiceRestriction: "; ::dump(out, veciServRestrict); out << endl;
+    out << "IsSyncMultplx: " << bIsSyncMultplx << "}" << endl;
+}
+
+void
+COtherService::dump(ostream& out) const
+{
+    out << "{ Frequencies: "; ::dump(out, veciFrequencies); out << endl;
+    out << "RegionID: " << iRegionID << "," << endl;
+    out << "ScheduleID: " << iScheduleID << "," << endl;
+    out << "SystemID: " << iSystemID << "," << endl;
+    out << "SameService: " << bSameService << "," << endl;
+    out << "ShortID: " << iShortID << "," << endl;
+    out << "ServiceID: " << iServiceID << "}" << endl;
+}
+
+void
+CAltFreqSign::dump(ostream& out) const
+{
+    out << "{ Regions: "; ::dump(out, vecRegions); out << endl;
+    out << "Schedules: "; ::dump(out, vecSchedules); out << endl;
+    out << "Multiplexes: "; ::dump(out, vecMultiplexes); out << endl;
+    out << "OtherServices: "; ::dump(out, vecOtherServices); out << endl;
+    out << "RegionVersionFlag: " << bRegionVersionFlag << "," << endl;
+    out << "ScheduleVersionFlag: " << bScheduleVersionFlag << "," << endl;
+    out << "MultiplexVersionFlag: " << bMultiplexVersionFlag << "," << endl;
+    out << "OtherServicesVersionFlag: " << bOtherServicesVersionFlag << "}" << endl;
+}
+
+void
+CLastService::dump(ostream& out) const
+{
+    out << "{ Service: " << iService << ", ServiceID: " << iServiceID << "}" << endl;
+}
+
+void
+CRxStatus::dump(ostream& out) const
+{
+    out << "{ status: " << int(status) << ", Num: " << iNum << ", NumOK: " << iNumOK << "}" << endl;
+}
+
+void
+CReceiveStatus::dump(ostream& out) const
+{
+    out << "{ ";
+    out << "FSync: "; FSync.dump(out); out << ", ";
+    out << "TSync: "; TSync.dump(out); out << ", ";
+    out << "Interface: "; Interface.dump(out); out << ", ";
+    out << "FAC: "; FAC.dump(out); out << ", ";
+    out << "Audio "; Audio.dump(out); out << ", ";
+    out << "LLAudio: "; LLAudio.dump(out); out << ", ";
+    out << "MOT: "; MOT.dump(out);
+    out << "}" << endl;
+}
+
+void
+CFrontEndParameters::dump(ostream& out) const
+{
+    out << "{ SMeterCorrectionType: " << int(eSMeterCorrectionType) << "," << endl;
+    out << "SMeterBandwidth: " << rSMeterBandwidth << "," << endl;
+    out << "DefaultMeasurementBandwidth: " << rDefaultMeasurementBandwidth << "," << endl;
+    out << "AutoMeasurementBandwidth: " << bAutoMeasurementBandwidth << "," << endl;
+    out << "CalFactorAM: " << rCalFactorAM << "," << endl;
+    out << "CalFactorDRM: " << rCalFactorDRM << "," << endl;
+    out << "IFCentreFreq: " << rIFCentreFreq << "}" << endl;
+}
+
+void
+CMinMaxMean::dump(ostream& out) const
+{
+    out << "{ Sum: " <<  rSum << "," << endl;
+    out << "Cur: " << rCur << "," << endl;
+    out << "Min: " << rMin << "," << endl;
+    out << "Max " << rMax << "," << endl;
+    out << "Num: " << iNum << "}" << endl;
+}
+
+void
+CParameter::dump(ostream& out) const
+{
+    out << "{ " << endl;
+
+    out << "SymbolInterlMode: " <<  int(eSymbolInterlMode) << "," << endl;
+    out << "MSCCodingScheme: " <<  int(eMSCCodingScheme) << "," << endl;
+    out << "SDCCodingScheme: " <<  int(eSDCCodingScheme) << "," << endl;
+    out << "NumAudioService: " <<  iNumAudioService << "," << endl;
+    out << "NumDataService " <<  iNumDataService << "," << endl;
+    out << "AMSSCarrierMode: " <<  iAMSSCarrierMode << "," << endl;
+    out << "ReceiverID: '" <<  sReceiverID << "'," << endl;
+    out << "SerialNumber '" <<  sSerialNumber << "'," << endl;
+    out << "DataFilesDirectory: '" <<  sDataFilesDirectory << "'," << endl;
+    out << "MSCPrLe: "; MSCPrLe.dump(out); out << "," << endl;
+    out << "Stream: "; ::dump(out, Stream); out << "," << endl;
+    string sep="";
+    for(vector<CStream>::const_iterator i=Stream.begin();i!= Stream.end(); i++)
+    {
+        out << sep; i->dump(out); out << endl;
+        sep = " ";
+    }
+    out << "]" << endl;
+    out << "Service: "; ::dump(out, Service); out << "," << endl;
+    out << "AudioParam: "; ::dump(out, AudioParam); out << "," << endl;
+    out << "DataParam: "; ::dump(out, DataParam); out << "," << endl;
+    out << "ServiceInformation: {" << endl;
+    // TODO make CServiceInformation dumpable
+    sep = "";
+    for(map<uint32_t,CServiceInformation>::const_iterator i=ServiceInformation.begin();
+        i!= ServiceInformation.end(); i++)
+    {
+        out << i->first << ": {";
+        out << "id: " <<  i->second.id << "," << endl;
+        out << "label: [" << endl;
+        string sep2="";
+        for(set<string>::const_iterator j=i->second.label.begin();
+        j!=i->second.label.end(); j++)
+        {
+            out << sep2 << "'" << (*j) << "'";
+        }
+        out << "]}" << endl;
+        sep = ", ";
+    }
+    out << "}" << endl;
+    out << "NumBitsHierarchFrameTotal: " <<  iNumBitsHierarchFrameTotal << "," << endl;
+    out << "NumDecodedBitsMSC: " <<  iNumDecodedBitsMSC << "," << endl;
+    out << "NumSDCBitsPerSFrame: " <<  iNumSDCBitsPerSFrame << "," << endl;
+    out << "NumAudioDecoderBits: " <<  iNumAudioDecoderBits << "," << endl;
+    out << "NumDataDecoderBits: " <<  iNumDataDecoderBits << "," << endl;
+    out << "Year: " <<  iYear << "," << endl;
+    out << "Month: " <<  iMonth << "," << endl;
+    out << "Day: " <<  iDay << "," << endl;
+    out << "UTCHour: " <<  iUTCHour << "," << endl;
+    out << "UTCMin: " <<  iUTCMin << "," << endl;
+    out << "FrameIDTransm: " <<  iFrameIDTransm << "," << endl;
+    out << "FrameIDReceiv: " <<  iFrameIDReceiv << "," << endl;
+    out << "FreqOffsetAcqui: " <<  rFreqOffsetAcqui << "," << endl;
+    out << "FreqOffsetTrack: " <<  rFreqOffsetTrack << "," << endl;
+    out << "ResampleOffset: " <<  rResampleOffset << "," << endl;
+    out << "TimingOffsTrack: " <<  iTimingOffsTrack << "," << endl;
+    out << "AcquiState: " <<  eAcquiState << "," << endl;
+    out << "NumAudioFrames: " <<  iNumAudioFrames << "," << endl;
+    out << "AudioFrameStatus: "; ::dump(out, vecbiAudioFrameStatus); out << endl;
+    out << "MeasurePSD: " <<  bMeasurePSD << "," << endl;
+    out << "PIRStart: " <<  rPIRStart << "," << endl;
+    out << "PIREnd: " <<  rPIREnd << "," << endl;
+    out << "PSD: "; ::dump(out, vecrPSD); out << endl;
+    out << "PIR: "; ::dump(out, vecrPIR); out << endl;
+	//CMatrix <_COMPLEX> matcReceivedPilotValues;
+    out << "CarOffset: " <<  rCarOffset << "," << endl;
+    out << "OutputFormat: " <<  int(eOutputFormat) << "," << endl;
+    out << "ReceiveStatus: "; ReceiveStatus.dump(out); out << endl;
+    out << "FrontEndParameters: "; FrontEndParameters.dump(out); out << endl;
+    out << "AltFreqSign: "; AltFreqSign.dump(out); out << endl;
+    out << "MER: " <<  rMER << "," << endl;
+    out << "WMERMSC: " <<  rWMERMSC << "," << endl;
+    out << "WMERFAC: " <<  rWMERFAC << "," << endl;
+    out << "SigmaEstimate: " <<  rSigmaEstimate << "," << endl;
+    out << "MinDelay: " << rMinDelay << "," << endl;
+    out << "MaxDelay: " <<  rMaxDelay << "," << endl;
+    out << "MeasureDelay: " <<  bMeasureDelay << "," << endl;
+    out << "Rdel: "; ::dump(out, vecrRdel); out << endl;
+    out << "RdelThresholds: "; ::dump(out, vecrRdelThresholds); out << endl;
+    out << "RdelIntervals: "; ::dump(out, vecrRdelIntervals); out << endl;
+    out << "MeasureDoppler: " <<  bMeasureDoppler << "," << endl;
+    out << "Rdop: " <<  rRdop << "," << endl;
+    out << "MeasureInterference: " <<  bMeasureInterference << "," << endl;
+    out << "IntFreq: " <<  rIntFreq << "," << endl;
+    out << "INR: " <<  rINR << "," << endl;
+    out << "ICR: " <<  rICR << "," << endl;
+    out << "MaxPSDwrtSig: " <<  rMaxPSDwrtSig << "," << endl;
+    out << "MaxPSDFreq: " <<  rMaxPSDFreq << "," << endl;
+    out << "UsingMultimedia: " <<  bUsingMultimedia << "," << endl;
+	//CCellMappingTable CellMappingTable;
+	//CGPSData GPSData;
+    out << "SNRstat: " << SNRstat << endl;
+    out << "SigStrstat: " << SigStrstat << endl;
+    out << "SysSimSNRdB: " <<  rSysSimSNRdB << "," << endl;
+    out << "Frequency: " <<  iFrequency << "," << endl;
+    out << "ValidSignalStrength: " <<  bValidSignalStrength << "," << endl;
+    out << "SigStr: " <<  rSigStr << "," << endl;
+    out << "IFSigStr: " <<  rIFSigStr << "," << endl;
+    out << "CurSelAudioService: " <<  iCurSelAudioService << "," << endl;
+    out << "CurSelDataService: " <<  iCurSelDataService << "," << endl;
+    out << "RobustnessMode: " <<  int(eRobustnessMode) << "," << endl;
+    out << "SpectOccup: " <<  int(eSpectOccup) << "," << endl;
+    out << "LastAudioService: "; LastAudioService.dump(out); out << endl;
+    out << "LastDataService: "; LastDataService.dump(out); out << endl;
+    out << "}" << endl;
 }

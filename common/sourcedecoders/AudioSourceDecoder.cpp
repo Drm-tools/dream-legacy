@@ -198,7 +198,6 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
             iCurStreamID = TransmParam.Service[i].iAudioStream;
 	}
 
-
 	/* Set the total available number of bits, byte aligned */
 	iTotNumBitsForUsage = TransmParam.GetStreamLen(iCurStreamID) * SIZEOF__BYTE;
 
@@ -208,8 +207,9 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
         throw CGenErr("Audio - can only do mono, but stereo selected");
 
     int iLenPartA = TransmParam.Stream[iCurStreamID].iLenPartA;
+    int iLenPartB = TransmParam.Stream[iCurStreamID].iLenPartB;
 
-    if(iLenPartA == 0)
+    if(iLenPartB == 0)
         throw CGenErr("Audio - requested block length is zero");
 
     bUsingTextMessage = TransmParam.AudioParam[iCurStreamID].bTextflag;
@@ -228,10 +228,10 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 	   message (if text message is used) */
 	int iTotAudFraSizeBits = iTotNumBitsForUsage;
 	if (bUsingTextMessage == TRUE)
-		iTotAudFraSizeBits -=
-			SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
+	{
+		iTotAudFraSizeBits -= SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
+	}
 
-#ifdef USE_FAAC_LIBRARY
 	/* Set encoder sample rate. This parameter decides other parameters */
 
 	int iTimeEachAudBloMS = 40;
@@ -262,12 +262,6 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 
 	const int iActEncOutBytes = (int) (iAudioPayloadLen / iNumAACFrames);
 
-	/* Open encoder instance */
-	if (hEncoder != NULL)
-		faacEncClose(hEncoder);
-
-	hEncoder = faacEncOpen(lEncSamprate, 1 /* mono */ , &lNumSampEncIn, &lMaxBytesEncOut);
-
 	// TEST needed since 960 transform length is not yet implemented in faac!
 	int iBitRate;
 	if (lNumSampEncIn == 1024)
@@ -279,6 +273,12 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 		iBitRate = (int) (((_REAL) iActEncOutBytes * SIZEOF__BYTE) / iTimeEachAudBloMS * 1000);
 	}
 
+#ifdef USE_FAAC_LIBRARY
+	/* Open encoder instance */
+	if (hEncoder != NULL)
+		faacEncClose(hEncoder);
+
+	hEncoder = faacEncOpen(lEncSamprate, 1 /* mono */ , &lNumSampEncIn, &lMaxBytesEncOut);
 	/* Set encoder configuration */
 	CurEncFormat = faacEncGetCurrentConfiguration(hEncoder);
 	CurEncFormat->inputFormat = FAAC_INPUT_16BIT;
@@ -289,6 +289,7 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 	CurEncFormat->bitRate = iBitRate;
 	CurEncFormat->bandWidth = 0;	/* Let the encoder choose the bandwidth */
 	faacEncSetConfiguration(hEncoder, CurEncFormat);
+#endif
 
 	/* Init storage for actual data, CRCs and frame lengths */
 	audio_frame.Init(iNumAACFrames, lMaxBytesEncOut);
@@ -322,7 +323,6 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 
 	if (iNumHigherProtectedBytes < 0)
 		iNumHigherProtectedBytes = 0;
-#endif
 
 	/* Define input and output block size */
 	iOutputBlockSize = iTotNumBitsForUsage;
@@ -545,7 +545,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			/* Frame border in bytes (12 bits) */
 			const int iFrameBorder = (*pvecInputData).Separate(12);
 
-			/* The lenght is difference between borders */
+			/* The length is difference between borders */
 			veciFrameLength[i] = iFrameBorder - iPrevBorder;
 			iPrevBorder = iFrameBorder;
 		}

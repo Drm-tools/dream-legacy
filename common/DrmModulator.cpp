@@ -93,7 +93,7 @@ CDRMModulator::WriteData(CParameter& Parameters,
 				CBuffer<_BINARY>& FACBuf, CBuffer<_BINARY>& SDCBuf,
 				vector<CSingleBuffer<_BINARY> >& MSCBuf)
 {
-#if 0
+#if 1
 	cerr << "Fill: " << FACBuf.GetFillLevel() << " " << SDCBuf.GetFillLevel() << " " << MSCBuf[0].GetFillLevel() << endl;
 	cerr << "MSC MLC Int SDC FAC Car FDM" << endl;
 	cerr <<  " "  << MSCBuf[0].GetRequestFlag();

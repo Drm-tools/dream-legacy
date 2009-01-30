@@ -125,7 +125,7 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 	_BINARY	biLastFlag;
 	CCRC	CRCObject;
 
-	/* Get length of text message. 
+	/* Get length of text message.
 	   TODO: take care of multiple byte characters (UTF-8 coding)! */
 	int iLenBytesOfText = strMessage.length();
 
@@ -211,7 +211,7 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 			/* Rfa. The bit shall be set to zero until it is defined */
 			vvbiSegment[i].Enqueue((uint32_t) 0, 1);
 
-			/* SegNum: specify the sequence number of the current segment 
+			/* SegNum: specify the sequence number of the current segment
 			   minus 1. The value 0 is reserved for future use */
 			vvbiSegment[i].Enqueue((uint32_t) i, 3);
 		}
@@ -253,6 +253,12 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 	}
 }
 
+int CTextMessage::GetSegSize(const int iSegID) const
+{
+    if(iSegID>= vvbiSegment.Size())
+        return 0;
+    return vvbiSegment[iSegID].Size() / SIZEOF__BYTE;
+}
 
 /******************************************************************************\
 * Text message decoder (for receiver)                                          *
@@ -423,7 +429,7 @@ void CTextMessageDecoder::ReadHeader()
 		/* Field 2, Rfa */
 		biStreamBuffer.Separate(1);
 
-		/* SegNum: specify the sequence number of the current segment 
+		/* SegNum: specify the sequence number of the current segment
 		   minus 1. The value 0 is reserved for future use */
 		bySegmentID = (_BYTE) biStreamBuffer.Separate(3);
 
@@ -524,7 +530,7 @@ void CTextMessageDecoder::ClearText()
 	/* Reset segments */
 	ResetSegments();
 
-	/* Clear text */	
+	/* Clear text */
 	*pstrText = "";
 }
 

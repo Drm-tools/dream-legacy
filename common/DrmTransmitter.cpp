@@ -30,14 +30,15 @@
 #include "MDI/MDIDecode.h"
 #include "DrmTransmitter.h"
 #include "mlc/MLC.h"
+#include <sstream>
 
 /* Implementation *************************************************************/
 CDRMTransmitter::CDRMTransmitter():
-	CDRMTransmitterInterface(),
+    CDRMTransmitterInterface(),
 	TransmParam(), eOpMode(T_TX),
 	strMDIinAddr(), MDIoutAddr(),
 	Encoder(), Modulator(),
-	MDIIn(), DecodeMDI(), MDIOut()
+	MDIIn(), DecodeMDI(), MDIOut(*new CMDIOut())
 {
 	/* Init streams */
 	TransmParam.ResetServicesStreams();
@@ -132,6 +133,12 @@ CDRMTransmitter::ClearPics()
 	Encoder.ClearPics();
 }
 
+void
+CDRMTransmitter::GetPics(map<string,string>& m)
+{
+    Encoder.GetPics(m);
+}
+
 _BOOLEAN
 CDRMTransmitter::GetTransStat(string& strCPi, _REAL& rCPe)
 {
@@ -175,6 +182,11 @@ void CDRMTransmitter::Start()
             TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
             Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
             {
+                // delete the old MDIOut and get a new one so that we discard the
+                // old destinations
+                CMDIOut* old = &MDIOut;
+                delete old;
+                MDIOut = *new CMDIOut();
                 /* set the output address */
                 for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
                     MDIOut.AddSubscriber(*s, "", 'M');
@@ -237,7 +249,9 @@ void CDRMTransmitter::Start()
 							/* consume the FAC & MSC and wait for an SDC frame */
 							(void)FACBuf.Get(NUM_FAC_BITS_PER_BLOCK);
 							for(size_t i=0; i<MAX_NUM_STREAMS; i++)
+							{
 								(void)MSCBuf[i].Get(MSCBuf[i].GetFillLevel());
+                            }
 						}
 					}
 					else
@@ -276,6 +290,15 @@ CDRMTransmitter::LoadSettings(CSettings& s)
 {
 	string mode = s.Get("0", "mode", string("DRMTX"));
 	strMDIinAddr = s.Get("Transmitter", "MDIin", string(""));
+	for(size_t i=0; i<100; i++)
+	{
+	    stringstream ss;
+        ss << "MDIout" << i;
+        string addr = s.Get("Transmitter", ss.str(), string("[none]"));
+        if(addr == "[none]")
+            break;
+        MDIoutAddr.push_back(addr);
+	}
 	if(mode == "DRMTX")
 		eOpMode = T_TX;
 	if(mode == "DRMENC")
@@ -302,6 +325,12 @@ CDRMTransmitter::SaveSettings(CSettings& s)
 		break;
 	}
 	s.Put("Transmitter", "MDIin", strMDIinAddr);
+	for(size_t i=0; i<MDIoutAddr.size(); i++)
+	{
+	    stringstream ss;
+        ss << "MDIout" << i;
+        s.Put("Transmitter", ss.str(), MDIoutAddr[i]);
+	}
 	Encoder.SaveSettings(s, TransmParam);
 	Modulator.SaveSettings(s, TransmParam);
 }

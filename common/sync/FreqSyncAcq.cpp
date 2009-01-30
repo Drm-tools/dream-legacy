@@ -15,16 +15,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -43,7 +43,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 	_BOOLEAN	bNoPeaksLeft;
 	CRealVector	vecrPSDPilPoin(3);
 
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 
 	/* OPH: update free-running symbol counter */
 	iFreeSymbolCounter++;
@@ -80,9 +80,9 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 				vecrFFTInput[i] = vecrFFTHistory[i + iStartIdx];
 
 			static CMatlibVector<CReal> vecRet;
-			vecRet.Init(vecrFFTInput.GetSize());
+			vecRet.Init(vecrFFTInput.Size());
 
-			for (int k = 0; k < vecrFFTInput.GetSize(); k++)
+			for (int k = 0; k < vecrFFTInput.Size(); k++)
 				vecRet[k] = vecrFFTInput[k] * vecrHammingWin[k];
 
 			/* Calculate power spectrum (X = real(F)^2 + imag(F)^2) */
@@ -365,12 +365,12 @@ fclose(pFile1);
 			BPFilter.Process(*pvecOutputData);
 
 	}
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 }
 
 void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 {
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	/* Needed for calculating offset in Hertz in case of synchronized input
 	   (for simulation) */
 	iFFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
@@ -478,7 +478,7 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	/* OPH: init free-running symbol counter */
 	iFreeSymbolCounter = 0;
 
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 }
 
 void CFreqSyncAcq::SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize)

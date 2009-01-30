@@ -292,7 +292,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 		iLengthWiener = LEN_WIENER_FILT_TIME_RMD;
 		rSigmaMax = MAX_SIGMA_RMD;
 		break;
-	
+
 	default:
 		break;
 	}
@@ -417,7 +417,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	{
 		/* Get SNR on the pilot positions */
 		rSNR = pow((CReal) 10.0, ReceiverParam.GetSysSNRdBPilPos() / 10);
-	
+
 		/* Sigma from channel profiles */
 		switch (ReceiverParam.iDRMChannelNum)
 		{
@@ -658,7 +658,7 @@ CReal CTimeWiener::ModLinRegr(const CComplexVector& veccCorrEst)
 	/* Modified linear regression to estimate the "sigma" of the Gaussian
 	   correlation function */
 	/* Get vector length */
-	const int iVecLen = veccCorrEst.GetSize();
+	const int iVecLen = veccCorrEst.Size();
 
 	/* Init vectors and variables */
 	CRealVector Tau(iVecLen);

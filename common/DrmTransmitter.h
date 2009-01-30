@@ -62,6 +62,8 @@ public:
 
 	void					AddPic(const string& strFileName, const string& strFormat);
 	void					ClearPics();
+	void					GetPics(map<string,string>&);
+
 	_BOOLEAN				GetTransStat(string& strCPi, _REAL& rCPe);
 
 	void					GetSoundInChoices(vector<string>&);
@@ -93,7 +95,7 @@ protected:
 	CDRMModulator			Modulator;
 	CMDIIn					MDIIn;
 	CDecodeMDI				DecodeMDI;
-	CMDIOut					MDIOut;
+	CMDIOut&					MDIOut;
 };
 
 

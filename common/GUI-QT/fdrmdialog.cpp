@@ -42,6 +42,7 @@
 #include <qwhatsthis.h>
 #include <qpalette.h>
 #include <qcolordialog.h>
+#include <fstream>
 
 /* Implementation *************************************************************/
 FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
@@ -293,7 +294,11 @@ void FDRMDialog::OnTimer()
 			/* Input level meter */
 			ProgrInputLevel->setValue(Parameters.GetIFSignalLevel());
 
-			SetStatus(CLED_MSC, Parameters.ReceiveStatus.Audio.GetStatus());
+            int iCurSelAudioServ = Parameters.GetCurSelAudioService();
+            if(Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
+                SetStatus(CLED_MSC, Parameters.ReceiveStatus.MOT.GetStatus());
+            else
+                SetStatus(CLED_MSC, Parameters.ReceiveStatus.Audio.GetStatus());
 			SetStatus(CLED_SDC, Parameters.ReceiveStatus.SDC.GetStatus());
 			SetStatus(CLED_FAC, Parameters.ReceiveStatus.FAC.GetStatus());
 
@@ -319,6 +324,14 @@ void FDRMDialog::OnTimer()
 	case NONE: // wait until working thread starts operating
 		break;
 	}
+    time_t t = time(NULL);
+    if((t % 5) == 0)
+    {
+        ofstream f("p.txt", ios::app | ios::out);
+        f << "// Next Sample" << endl;
+        DRMReceiver.GetParameters()->dump(f);
+        f.close();
+    }
 }
 
 void FDRMDialog::UpdateDisplay()

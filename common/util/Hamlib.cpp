@@ -548,9 +548,9 @@ _BOOLEAN
 CHamlib::SetFrequency(const int iFreqkHz)
 {
     iFrequencykHz = iFreqkHz;
-    
+
 	int iFreqHz = (iFreqkHz + iFrequencyOffsetkHz) * 1000;
-	cout << "CHamlib::SetFrequency input: " << iFreqkHz << " offset: " << iFrequencyOffsetkHz << " Hz: " << iFreqHz << endl;
+	//cout << "CHamlib::SetFrequency input: " << iFreqkHz << " offset: " << iFrequencyOffsetkHz << " Hz: " << iFreqHz << endl;
 	if (pRig && rig_set_freq(pRig, RIG_VFO_CURR, iFreqHz) == RIG_OK)
 		return TRUE;
 	return FALSE;
