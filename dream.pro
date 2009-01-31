@@ -1,6 +1,6 @@
 TEMPLATE	= app
 TARGET		= dream
-CONFIG		+= qt warn_on release
+CONFIG		+= qt warn_on release thread
 VPATH		+= common/GUI-QT
 INCLUDEPATH	+= libs
 LIBS 		+= -Llibs
