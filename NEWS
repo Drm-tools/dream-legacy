@@ -1,4 +1,4 @@
-The Dream development team today releases Dream version 1.2.4.
+The Dream development team today releases Dream version 1.11.
 
 Dream is a DRM (Digital Radio Mondiale) software receiver and decoder. 
 It is a very complete receiver, featuring compliant decoding of HE AAC v2 
@@ -8,8 +8,34 @@ update of available stations from the web, among several other features.
 
 It also features a limited transmission mode, that uses the FAAC AAC encoder.
 
-Dream is multiplatform (GUI is done on Qt) and has already been tested on Win32 
-and Linux.
+Dream is multi-platform and has been tested on OSX, Win32 and Linux.
+
+Changes since version 1.10.9:
+
+  - Fix log file to add header when retuning
+  - Improvements to EPG Decoding
+
+Changes since version 1.6.25:
+
+  - Implementation of the ETSI Receiver Status and Control Interface (RSCI)
+  - Fully integrated ETSI compliant Journaline Decoding from Fraunhofer IIS
+  - Decoding and display of AM Signalling System (AMSS) data
+  - Filters added to Station Dialogue
+  - Signalstrength added to GUI and logfiles (RXL)
+  - Support of mobile logging via an interface to gpsd
+  - Support for building and running on OSX
+  - Support for Code::Blocks on Microsoft Windows
+  - Support for Visual Studio Express 2008 on Microsoft Windows
+  - Optional Support of libsndfile for reading different audio file formats
+  - Improvement to MOT decoding when directory is divided into more segments
+  
+Changes since version 1.2.4:
+
+  - Decoding and display of ETSI Electronic Programme Guide (EPG)
+  - Display of Alternative Frequency (AFS) data
+  - Support for receiving multicast MDI/RSCI for reception
+  - Optional support for reading pcap capture files for MDI/RSCI reception
+  - Support for Dev-C++/MinGW on Microsoft Windows
 
 Changes since version 1.2.2:
 
@@ -78,5 +104,4 @@ Changes since version 1.2.2:
   - added class for storing alternative frequencies transmitted in SDC type 3
   - store plot type selection for evaluation dialog
 
-The source files are available here:
-http://sourceforge.net/project/shownotes.php?release_id=335553
+The source files are available here: http://drm.sourceforge.net
