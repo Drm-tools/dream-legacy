@@ -226,6 +226,8 @@ common/datadecoding/journaline/dabdgdec_impl.c \
 common/datadecoding/journaline/Splitter.cpp \
 common/datadecoding/journaline/newsobject.cpp \
 common/datadecoding/journaline/newssvcdec_impl.cpp \
+common/datadecoding/journaline/crc_8_16.c \
+common/datadecoding/journaline/log.c \
 common/datadecoding/Journaline.cpp   \
 common/datadecoding/MOTSlideShow.cpp   \
 common/DataIO.cpp   \
