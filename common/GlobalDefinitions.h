@@ -69,9 +69,6 @@ using namespace std; /* Because of the library: "complex" */
 # define USE_FAAC_LIBRARY
 //# undef USE_FAAC_LIBRARY
 
-# define HAVE_JOURNALINE
-//# undef HAVE_JOURNALINE
-
 # define HAVE_LIBPCAP
 //# undef HAVE_LIBPCAP
 
@@ -97,6 +94,17 @@ using namespace std; /* Because of the library: "complex" */
 #  define HAVE_LIBZ 1
 //# undef HAVE_LIBZ
 # endif
+
+#elif defined(__APPLE__)
+
+# define USE_QT_GUI
+# define HAVE_LIBSNDFILE
+# define USE_FAAD2_LIBRARY
+# define USE_FAAC_LIBRARY
+# define HAVE_LIBPCAP
+# define HAVE_LIBHAMLIB
+# define HAVE_RIG_PARSE_MODE			1
+# define HAVE_LIBZ
 
 #endif
 
