@@ -6,22 +6,22 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -29,9 +29,13 @@
 #if !defined(DRMPLOT_H__FD6B2345234523453_804E1606C2AC__INCLUDED_)
 #define DRMPLOT_H__FD6B2345234523453_804E1606C2AC__INCLUDED_
 
-#include <qwt/qwt_plot.h>
-#include <qwt/qwt_plot_canvas.h>
-#include <qwt/qwt_scldraw.h>
+#include <qwt_plot.h>
+#include <qwt_plot_canvas.h>
+#include <qwt_scale_draw.h>
+#include <qwt_symbol.h>
+#include <qwt_plot_grid.h>
+#include <qwt_plot_curve.h>
+#include <qwt_plot_marker.h>
 #include <qpainter.h>
 #include <qtimer.h>
 #include <qwhatsthis.h>
@@ -123,9 +127,9 @@ public:
 	ECharType GetChartType() const {return CurCharType;}
 	void Update() {OnTimerChart();}
 
-	void SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
+	void SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 				 _REAL rLowerB, _REAL rHigherB,
-				 const _REAL rStartGuard, const _REAL rEndGuard, 
+				 const _REAL rStartGuard, const _REAL rEndGuard,
 				 const _REAL rBeginIR, const _REAL rEndIR);
 	void SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
 					CVector<_REAL>& vecrScale);
@@ -200,11 +204,12 @@ protected:
 
 	ECharType		CurCharType;
 	ECharType		InitCharType;
-	long			main1curve, main2curve;
-	long			curve1, curve2, curve3, curve4, curve5, curve6;
+	QwtPlotCurve	*main1curve, *main2curve;
+	QwtPlotCurve	*curve1, *curve2, *curve3, *curve4, *curve5, *curve6;
 	QwtSymbol		MarkerSym1, MarkerSym2, MarkerSym3;
+    QwtPlotGrid     *grid;
 
-	_BOOLEAN		bOnTimerCharMutexFlag;
+	bool		    bOnTimerCharMutexFlag;
 	QTimer			TimerChart;
 
 	CDRMReceiver*	pDRMRec;

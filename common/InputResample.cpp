@@ -32,7 +32,7 @@
 /* Implementation *************************************************************/
 void CInputResample::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	if (bSyncInput == TRUE)
+	if (bSyncInput == true)
 	{
 		/* Only copy input data to output buffer, do not resample data */
 		for (int i = 0; i < iInputBlockSize; i++)
@@ -42,9 +42,9 @@ void CInputResample::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 	else
 	{
-		ReceiverParam.Lock(); 
+		ReceiverParam.Lock();
 		_REAL rSamRateOffset = ReceiverParam.rResampleOffset;
-		ReceiverParam.Unlock(); 
+		ReceiverParam.Unlock();
 
 		/* Constrain the sample rate offset estimation to prevent from an
 		   output buffer overrun */
@@ -62,7 +62,7 @@ void CInputResample::ProcessDataInternal(CParameter& ReceiverParam)
 
 void CInputResample::InitInternal(CParameter& ReceiverParam)
 {
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	/* Init resample object */
 	ResampleObj.Init(ReceiverParam.CellMappingTable.iSymbolBlockSize);
 
@@ -73,11 +73,11 @@ void CInputResample::InitInternal(CParameter& ReceiverParam)
 	   Due to the constrained sample rate offset estimation the output
 	   buffer size is also constrained to a certain number of samples. The
 	   maximum possible number of samples defines the output buffer maximum
-	   memory allocation. 
+	   memory allocation.
 	   We have to consider the following case: The output block size is
 	   smaller than one symbol -> no data is read by the next unit, but
 	   after that the output block size is bigger than one symbol, therefore
 	   we have to allocate three symbols for output buffer */
 	iMaxOutputBlockSize = 3 * ReceiverParam.CellMappingTable.iSymbolBlockSize;
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 }

@@ -71,10 +71,10 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	CRCObject.Reset(16);
 
 	/* "- 2": 16 bits for CRC at the end */
-	for (i = 0; i < iLenAFPkt / SIZEOF__BYTE - 2; i++)
-		CRCObject.AddByte((_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE));
+	for (i = 0; i < iLenAFPkt / sizeof(_BINARY) - 2; i++)
+		CRCObject.AddByte((_BYTE) vecbiAFPkt.Separate(sizeof(_BINARY)));
 
-	const _BOOLEAN bCRCOk = CRCObject.CheckCRC(vecbiAFPkt.Separate(16));
+	const bool bCRCOk = CRCObject.CheckCRC(vecbiAFPkt.Separate(16));
 
 	/* Actual packet decoding ----------------------------------------------- */
 	vecbiAFPkt.ResetBitAccess();
@@ -83,8 +83,8 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	string strSyncASCII = "";
 	for (i = 0; i < 2; i++)
 	{
-		_BYTE by = (_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE);
-		//strSyncASCII += (_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE);
+		_BYTE by = (_BYTE) vecbiAFPkt.Separate(sizeof(_BINARY));
+		//strSyncASCII += (_BYTE) vecbiAFPkt.Separate(sizeof(_BINARY));
 		strSyncASCII += by;
 	}
 
@@ -138,7 +138,7 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	/* Protocol Type (PT): single byte encoding the protocol of the data carried
 	   in the payload. For TAG Packets, the value shall be the ASCII
 	   representation of "T" */
-	if ((_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE) != 'T')
+	if ((_BYTE) vecbiAFPkt.Separate(sizeof(_BINARY)) != 'T')
 	{
 		return E_PROTO;
 	}
@@ -170,7 +170,7 @@ int CTagPacketDecoder::DecodeTag(CVector<_BINARY>& vecbiTag)
 	/* Decode tag name (always four bytes long) */
 	string strTagName = "";
 	for (i = 0; i < 4; i++)
-		strTagName += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
+		strTagName += (_BYTE) vecbiTag.Separate(sizeof(_BINARY));
 	/* Get tag data length (4 bytes = 32 bits) */
 	const int iLenDataBits = vecbiTag.Separate(32);
 
@@ -178,20 +178,20 @@ int CTagPacketDecoder::DecodeTag(CVector<_BINARY>& vecbiTag)
 	CVector<_BINARY> vecbiTagItemPayload = vecbiTag.SeparateVector(iLenDataBits);
 
 	/* Check the tag name against each tag decoder in the vector of tag decoders */
-	_BOOLEAN bTagWasDec = FALSE;
+	bool bTagWasDec = false;
 	for (i=0; i<vecpTagItemDecoders.Size(); i++)
 	{
 		if (strTagName.compare(vecpTagItemDecoders[i]->GetTagName()) == 0) // it's this tag
 		{
 			vecpTagItemDecoders[i]->DecodeTag(vecbiTagItemPayload, iLenDataBits);
-			bTagWasDec = TRUE;
+			bTagWasDec = true;
 		}
 	}
 
 
 	/* Return number of consumed bytes. This number is the actual body plus two
 	   times for bytes for the header = 8 bytes */
-	return iLenDataBits / SIZEOF__BYTE + 8;
+	return iLenDataBits / sizeof(_BINARY) + 8;
 
 }
 

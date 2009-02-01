@@ -11,7 +11,7 @@
  * since selections take effect immediately and there is no apply/cancel
  * feature. This makes sense, since one wants enable/disable GPS, Rig, Smeter
  * to be instant and mute/savetofile etc.
- *	
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -71,7 +71,7 @@ extern "C"
 /* Implementation *************************************************************/
 
 ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings,
-	QWidget* parent, const char* name, bool modal, WFlags f) :
+	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	ReceiverSettingsDlgBase(parent, name, modal, f),
 	DRMReceiver(NRx), Settings(NSettings), loading(true),
 	no_rig(NULL), no_port(NULL), last_port(NULL), TimerRig(), iWantedrigModel(0)
@@ -211,24 +211,24 @@ void ReceiverSettingsDlg::setDefaults()
 	double longitude = Settings.Get("Logfile", "longitude", 0.0);
 	if(latitude<=90.0)
 	{
-		Parameters.GPSData.SetPositionAvailable(TRUE);
+		Parameters.GPSData.SetPositionAvailable(true);
 		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
 		Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
 	}
 	else
 	{
 		latitude = 0.0;
-		Parameters.GPSData.SetPositionAvailable(FALSE);
+		Parameters.GPSData.SetPositionAvailable(false);
 	}
 
 	/* Start log file flag */
-	CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", FALSE));
+	CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", false));
 
     /* log file flag for storing signal strength in long log */
-	CheckBoxLogSigStr->setChecked(Settings.Get("Logfile", "enablerxl", FALSE));
+	CheckBoxLogSigStr->setChecked(Settings.Get("Logfile", "enablerxl", false));
 
 	/* log file flag for storing lat/long in long log */
-	CheckBoxLogLatLng->setChecked(Settings.Get("Logfile", "enablepositiondata", FALSE));
+	CheckBoxLogLatLng->setChecked(Settings.Get("Logfile", "enablepositiondata", false));
 
 	/* logging delay value */
 	int iLogDelay = Settings.Get("Logfile", "delay", 0);
@@ -241,13 +241,13 @@ void ReceiverSettingsDlg::setDefaults()
 	int port = Settings.Get("GPS", "port", 2947);
     LineEditGPSPort->setText(QString("%1").arg(port));
 
-	CheckBoxUseGPS->setChecked(Settings.Get("GPS", "usegpsd", FALSE));
-	CheckBoxDisplayGPS->setChecked(Settings.Get("GPS", "showgps", FALSE));
+	CheckBoxUseGPS->setChecked(Settings.Get("GPS", "usegpsd", false));
+	CheckBoxDisplayGPS->setChecked(Settings.Get("GPS", "showgps", false));
 
-	if(Settings.Get("Receiver", "rigpermode", FALSE))
-		RadioButtonPerMode->setChecked(TRUE);
+	if(Settings.Get("Receiver", "rigpermode", false))
+		RadioButtonPerMode->setChecked(true);
 	else
-		RadioButtonAll->setChecked(TRUE);
+		RadioButtonAll->setChecked(true);
 
 	/* get the defaults into the ini file */
 	Settings.Put("Logfile", "latitude", latitude);
@@ -265,29 +265,29 @@ void ReceiverSettingsDlg::setDefaults()
 void ReceiverSettingsDlg::showEvent(QShowEvent*)
 {
 	loading = true; // prevent executive actions during reading state
-	
+
 	/* Sync ----------------------------------------------------------------- */
 	if (DRMReceiver.GetTimeInt() == CChannelEstimation::TWIENER)
-		RadioButtonTiWiener->setChecked(TRUE);
+		RadioButtonTiWiener->setChecked(true);
 	else
-		RadioButtonTiLinear->setChecked(TRUE);
+		RadioButtonTiLinear->setChecked(true);
 
 	switch(DRMReceiver.GetFreqInt())
 	{
 	case CChannelEstimation::FLINEAR:
-		RadioButtonFreqLinear->setChecked(TRUE);
+		RadioButtonFreqLinear->setChecked(true);
 		break;
 	case CChannelEstimation::FDFTFILTER:
-		RadioButtonFreqDFT->setChecked(TRUE);
+		RadioButtonFreqDFT->setChecked(true);
 		break;
 	case CChannelEstimation::FWIENER:
-		RadioButtonFreqWiener->setChecked(TRUE);
+		RadioButtonFreqWiener->setChecked(true);
 	}
 
 	if (DRMReceiver.GetTiSyncTracType() == CTimeSyncTrack::TSFIRSTPEAK)
-		RadioButtonTiSyncFirstPeak->setChecked(TRUE);
+		RadioButtonTiSyncFirstPeak->setChecked(true);
 	else
-		RadioButtonTiSyncEnergy->setChecked(TRUE);
+		RadioButtonTiSyncEnergy->setChecked(true);
 
 	/* Misc ----------------------------------------------------------------- */
 	CheckBoxRecFilter->setChecked(DRMReceiver.GetRecFilter());
@@ -389,9 +389,6 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 
 void ReceiverSettingsDlg::OnCheckBoxUseGPS()
 {
-#if defined(_MSC_VER) && (_MSC_VER < 1400)
-	QMessageBox::information( this, "Dream", tr("Don't enable GPS unless you have gpsd running.") );
-#endif
 	Settings.Put("GPS", "host", string(LineEditGPSHost->text().latin1()));
 	Settings.Put("GPS", "port", LineEditGPSPort->text().toInt());
 	Settings.Put("GPS", "usegpsd", CheckBoxUseGPS->isChecked());
@@ -447,10 +444,10 @@ void ReceiverSettingsDlg::SetLatLng()
 				+ LineEditLatMinutes->text().toDouble()/60.0
 				)*((ComboBoxNS->currentText()=="N")?1:-1);
 
-	Parameters.Lock(); 
-	Parameters.GPSData.SetPositionAvailable(TRUE);
+	Parameters.Lock();
+	Parameters.GPSData.SetPositionAvailable(true);
 	Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 /* when the dialog closes save the contents of any controls which don't have
@@ -473,9 +470,9 @@ void ReceiverSettingsDlg::ExtractReceiverCoordinates()
 
 	double latitude, longitude;
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	if(latitude<0.0)
 	{
@@ -501,48 +498,48 @@ void ReceiverSettingsDlg::ExtractReceiverCoordinates()
 	LineEditLngMinutes->setText(QString::number(60.0*(longitude-int(longitude))));
 }
 
-void ReceiverSettingsDlg::OnRadioTimeLinear() 
+void ReceiverSettingsDlg::OnRadioTimeLinear()
 {
 	if (DRMReceiver.GetTimeInt() != CChannelEstimation::TLINEAR)
 		DRMReceiver.SetTimeInt(CChannelEstimation::TLINEAR);
 }
 
-void ReceiverSettingsDlg::OnRadioTimeWiener() 
+void ReceiverSettingsDlg::OnRadioTimeWiener()
 {
 	if (DRMReceiver.GetTimeInt() != CChannelEstimation::TWIENER)
 		DRMReceiver.SetTimeInt(CChannelEstimation::TWIENER);
 }
 
-void ReceiverSettingsDlg::OnRadioFrequencyLinear() 
+void ReceiverSettingsDlg::OnRadioFrequencyLinear()
 {
 	if (DRMReceiver.GetFreqInt() != CChannelEstimation::FLINEAR)
 		DRMReceiver.SetFreqInt(CChannelEstimation::FLINEAR);
 }
 
-void ReceiverSettingsDlg::OnRadioFrequencyDft() 
+void ReceiverSettingsDlg::OnRadioFrequencyDft()
 {
 	if (DRMReceiver.GetFreqInt() != CChannelEstimation::FDFTFILTER)
 		DRMReceiver.SetFreqInt(CChannelEstimation::FDFTFILTER);
 }
 
-void ReceiverSettingsDlg::OnRadioFrequencyWiener() 
+void ReceiverSettingsDlg::OnRadioFrequencyWiener()
 {
 	if (DRMReceiver.GetFreqInt() != CChannelEstimation::FWIENER)
 		DRMReceiver.SetFreqInt(CChannelEstimation::FWIENER);
 }
 
-void ReceiverSettingsDlg::OnRadioTiSyncFirstPeak() 
+void ReceiverSettingsDlg::OnRadioTiSyncFirstPeak()
 {
-	if (DRMReceiver.GetTiSyncTracType() != 
+	if (DRMReceiver.GetTiSyncTracType() !=
 		CTimeSyncTrack::TSFIRSTPEAK)
 	{
 		DRMReceiver.SetTiSyncTracType(CTimeSyncTrack::TSFIRSTPEAK);
 	}
 }
 
-void ReceiverSettingsDlg::OnRadioTiSyncEnergy() 
+void ReceiverSettingsDlg::OnRadioTiSyncEnergy()
 {
-	if (DRMReceiver.GetTiSyncTracType() != 
+	if (DRMReceiver.GetTiSyncTracType() !=
 		CTimeSyncTrack::TSENERGY)
 	{
 		DRMReceiver.SetTiSyncTracType(CTimeSyncTrack::TSENERGY);
@@ -598,7 +595,7 @@ void ReceiverSettingsDlg::OnCheckSaveAudioWAV()
 	This code is copied in AnalogDemDlg.cpp. If you do changes here, you should
 	apply the changes in the other file, too
 */
-	if (CheckBoxSaveAudioWave->isChecked() == TRUE)
+	if (CheckBoxSaveAudioWave->isChecked() == true)
 	{
 		/* Show "save file" dialog */
 		QString strFileName =
@@ -612,7 +609,7 @@ void ReceiverSettingsDlg::OnCheckSaveAudioWAV()
 		else
 		{
 			/* User hit the cancel button, uncheck the button */
-			CheckBoxSaveAudioWave->setChecked(FALSE);
+			CheckBoxSaveAudioWave->setChecked(false);
 		}
 	}
 	else

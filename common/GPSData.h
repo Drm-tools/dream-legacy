@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -54,17 +54,17 @@ public:
 
 	/////////
 
-	void SetSatellitesVisibleAvailable(_BOOLEAN bNew);
-	_BOOLEAN GetSatellitesVisibleAvailable() const;
-	
+	void SetSatellitesVisibleAvailable(bool bNew);
+	bool GetSatellitesVisibleAvailable() const;
+
 	void SetSatellitesVisible(uint16_t usSatellitesVisible);
 	uint16_t GetSatellitesVisible() const;
-	
+
 	/////////
-	
-	void SetPositionAvailable(_BOOLEAN bNew);
-	_BOOLEAN GetPositionAvailable() const;
-	
+
+	void SetPositionAvailable(bool bNew);
+	bool GetPositionAvailable() const;
+
 	void SetLatLongDegrees(double fLatitudeDegrees, double fLongitudeDegrees);
 	void GetLatLongDegrees(double& fLatitudeDegrees, double& fLongitudeDegrees) const;
 
@@ -73,28 +73,28 @@ public:
 	unsigned int ExtractMinutes(double dblDeg) const;
 	void asDM(string& lat, string& lng) const;
 	void asDM(string& pos, double d, char n, char p) const;
-	
+
 	/////////
 
-	void SetSpeedAvailable(_BOOLEAN bNew);
-	_BOOLEAN GetSpeedAvailable() const;
-	
+	void SetSpeedAvailable(bool bNew);
+	bool GetSpeedAvailable() const;
+
 	void SetSpeedMetresPerSecond(double fSpeedMetresPerSecond);
 	double GetSpeedMetresPerSecond() const;
 
 	/////////
 
-	void SetHeadingAvailable(_BOOLEAN bNew);
-	_BOOLEAN GetHeadingAvailable() const;
-	
+	void SetHeadingAvailable(bool bNew);
+	bool GetHeadingAvailable() const;
+
 	void SetHeadingDegrees(uint16_t usHeadingDegrees);
 	unsigned short GetHeadingDegrees() const;
 
 	/////////
 
-	void SetTimeAndDateAvailable(_BOOLEAN bNew);
-	_BOOLEAN GetTimeAndDateAvailable() const;
-	
+	void SetTimeAndDateAvailable(bool bNew);
+	bool GetTimeAndDateAvailable() const;
+
 	void SetTimeSecondsSince1970(uint32_t ulTimeSecondsSince1970);
 	uint32_t GetTimeSecondsSince1970() const;
 	string GetTimeDate() const;
@@ -102,12 +102,12 @@ public:
 
 	/////////
 
-	void SetAltitudeAvailable(_BOOLEAN bNew);
-	_BOOLEAN GetAltitudeAvailable() const;
-	
+	void SetAltitudeAvailable(bool bNew);
+	bool GetAltitudeAvailable() const;
+
 	void SetAltitudeMetres(double fAltitudeMetres);
 	double GetAltitudeMetres() const;
-	
+
 	/////////
 
 	void SetFix(EFix Fix);
@@ -119,23 +119,23 @@ public:
 	EStatus GetStatus() const;
 
 private:
-	_BOOLEAN m_bSatellitesVisibleAvailable;
+	bool m_bSatellitesVisibleAvailable;
 	uint16_t m_usSatellitesVisible;
 
-	_BOOLEAN m_bPositionAvailable;
+	bool m_bPositionAvailable;
 	double	m_fLatitudeDegrees;
 	double	m_fLongitudeDegrees;
 
-	_BOOLEAN m_bSpeedAvailable;
+	bool m_bSpeedAvailable;
 	double	m_fSpeedMetresPerSecond;
 
-	_BOOLEAN m_bHeadingAvailable;
+	bool m_bHeadingAvailable;
 	uint16_t	m_usHeadingDegrees;
 
-	_BOOLEAN m_bTimeAndDateAvailable;
+	bool m_bTimeAndDateAvailable;
 	uint32_t m_ulTimeSecondsSince1970;
 
-	_BOOLEAN m_bAltitudeAvailable;
+	bool m_bAltitudeAvailable;
 	double m_fAltitudeMetres;
 
 	EFix	m_eFix;

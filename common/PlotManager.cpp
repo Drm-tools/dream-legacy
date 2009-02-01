@@ -55,9 +55,8 @@ void CPlotManager::Init()
 }
 
 void
-CPlotManager::UpdateParamHistories(ERecState eReceiverState)
+CPlotManager::UpdateParamHistories()
 {
-	CParameter& ReceiverParam = *pReceiver->GetParameters();
 
 	/* TODO: do not use the shift register class, build a new
 	   one which just increments a pointer in a buffer and put
@@ -65,61 +64,59 @@ CPlotManager::UpdateParamHistories(ERecState eReceiverState)
 	   moving the total data all the time -> special care has
 	   to be taken when reading out the data */
 
-	/* Only update histories if the receiver is in tracking mode */
-	if (eReceiverState == RS_TRACKING)
-	{
-		ReceiverParam.Lock();
-		_REAL rFreqOffsetTrack = ReceiverParam.rFreqOffsetTrack;
-		_REAL rResampleOffset = ReceiverParam.rResampleOffset;
-		_REAL rSNR = ReceiverParam.GetSNR();
-		_REAL rSigmaEstimate = ReceiverParam.rSigmaEstimate;
-		_REAL iNumSymPerFrame = ReceiverParam.CellMappingTable.iNumSymPerFrame;
-		_REAL rMeanDelay = (ReceiverParam.rMinDelay +	ReceiverParam.rMaxDelay) / 2.0;
-		ReceiverParam.Unlock();
+    CParameter& ReceiverParam = *pReceiver->GetParameters();
+
+    ReceiverParam.Lock();
+    _REAL rFreqOffsetTrack = ReceiverParam.rFreqOffsetTrack;
+    _REAL rResampleOffset = ReceiverParam.rResampleOffset;
+    _REAL rSNR = ReceiverParam.GetSNR();
+    _REAL rSigmaEstimate = ReceiverParam.rSigmaEstimate;
+    _REAL iNumSymPerFrame = ReceiverParam.CellMappingTable.iNumSymPerFrame;
+    _REAL rMeanDelay = (ReceiverParam.rMinDelay +	ReceiverParam.rMaxDelay) / 2.0;
+    ReceiverParam.Unlock();
 
 #ifdef USE_QT_GUI
-		MutexHist.lock();
+    MutexHist.lock();
 #endif
 
-		/* Frequency offset tracking values */
-		vecrFreqSyncValHist.AddEnd(rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE);
+    /* Frequency offset tracking values */
+    vecrFreqSyncValHist.AddEnd(rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE);
 
-		/* Sample rate offset estimation */
-		vecrSamOffsValHist.AddEnd(rResampleOffset);
-		/* Signal to Noise ratio estimates */
-		rSumSNRHist += rSNR;
+    /* Sample rate offset estimation */
+    vecrSamOffsValHist.AddEnd(rResampleOffset);
+    /* Signal to Noise ratio estimates */
+    rSumSNRHist += rSNR;
 
-/* TODO - reconcile this with Ollies RSCI Doppler code in ChannelEstimation */
-		/* Average Doppler estimate */
-		rSumDopplerHist += rSigmaEstimate;
+    /* TODO - reconcile this with Ollies RSCI Doppler code in ChannelEstimation */
+    /* Average Doppler estimate */
+    rSumDopplerHist += rSigmaEstimate;
 
-		/* Only evaluate Doppler and delay once in one DRM frame */
-		iSymbolCount++;
-		if (iSymbolCount == iNumSymPerFrame)
-		{
-			/* Apply averaged values to the history vectors */
-			vecrLenIRHist.AddEnd(rMeanDelay);
+    /* Only evaluate Doppler and delay once in one DRM frame */
+    iSymbolCount++;
+    if (iSymbolCount == iNumSymPerFrame)
+    {
+        /* Apply averaged values to the history vectors */
+        vecrLenIRHist.AddEnd(rMeanDelay);
 
-			vecrSNRHist.AddEnd(rSumSNRHist / iNumSymPerFrame);
+        vecrSNRHist.AddEnd(rSumSNRHist / iNumSymPerFrame);
 
-			vecrDopplerHist.AddEnd(rSumDopplerHist / iNumSymPerFrame);
+        vecrDopplerHist.AddEnd(rSumDopplerHist / iNumSymPerFrame);
 
-			/* At the same time, add number of correctly decoded audio blocks.
-			   This number is updated once a DRM frame. Since the other
-			   parameters like SNR is also updated once a DRM frame, the two
-			   values are synchronized by one DRM frame */
-			veciCDAudHist.AddEnd(iCurrentCDAud);
+        /* At the same time, add number of correctly decoded audio blocks.
+           This number is updated once a DRM frame. Since the other
+           parameters like SNR is also updated once a DRM frame, the two
+           values are synchronized by one DRM frame */
+        veciCDAudHist.AddEnd(iCurrentCDAud);
 
-			/* Reset parameters used for averaging */
-			iSymbolCount = 0;
-			rSumDopplerHist = (_REAL) 0.0;
-			rSumSNRHist = (_REAL) 0.0;
-		}
+        /* Reset parameters used for averaging */
+        iSymbolCount = 0;
+        rSumDopplerHist = (_REAL) 0.0;
+        rSumSNRHist = (_REAL) 0.0;
+    }
 
 #ifdef USE_QT_GUI
-		MutexHist.unlock();
+    MutexHist.unlock();
 #endif
-	}
 }
 
 void

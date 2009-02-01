@@ -39,7 +39,7 @@ CReceptLog::Start(const string & filename)
 	File.open(filename.c_str(), ios::app);
 	if (File.is_open())
 	{
-		bLogActivated = TRUE;
+		bLogActivated = true;
 		writeHeader();
 	}
 	init();
@@ -52,7 +52,7 @@ CReceptLog::Stop()
 		return;
 	writeTrailer();
 	File.close();
-	bLogActivated = FALSE;
+	bLogActivated = false;
 }
 
 void
@@ -96,10 +96,10 @@ CReceptLog::GetRobModeStr()
 void
 CShortLog::init()
 {
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.ReceiveStatus.FAC.ResetCounts();
 	Parameters.ReceiveStatus.Audio.ResetCounts();
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 	/* initialise the minute count */
 	iCount = 0;
 }
@@ -111,7 +111,7 @@ CShortLog::writeHeader()
 	ESpecOcc SpecOcc=SO_5;
 	_REAL bitrate = 0.0;
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 
 	const CGPSData & GPSData = Parameters.GPSData;
 	if (GPSData.GetPositionAvailable())
@@ -124,12 +124,12 @@ CShortLog::writeHeader()
 	{
 		/* Service label (UTF-8 encoded string -> convert ? TODO locale) */
 		label = Parameters.Service[iCurSelServ].strLabel;
-		bitrate = Parameters.GetBitRateKbps(iCurSelServ, FALSE);
+		bitrate = Parameters.GetBitRateKbps(iCurSelServ, false);
 		RobMode = GetRobModeStr();
 		SpecOcc = Parameters.GetSpectrumOccup();
 	}
 
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	if(!File.is_open())
 		return; /* allow updates when file closed */
@@ -216,7 +216,7 @@ MINUTE  SNR     SYNC    AUDIO     TYPE
 void
 CShortLog::writeParameters()
 {
-	Parameters.Lock(); 
+	Parameters.Lock();
 
 	int iAverageSNR = (int) Round(Parameters.SNRstat.getMean());
 	int iNumCRCOkFAC = Parameters.ReceiveStatus.FAC.GetOKCount();
@@ -234,9 +234,9 @@ CShortLog::writeParameters()
 		iTmpNumAAC = Parameters.iNumAudioFrames;
 
 	if (bRxlEnabled)
-		iRXL = (int)Round(Parameters.SigStrstat.getMean()+S9_DBUV);
+		iRXL = (int)Round(Parameters.SigStrstat.getMean());
 
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	int count = iCount++;
 
@@ -270,15 +270,13 @@ CShortLog::writeTrailer()
 	_REAL rMaxSNR, rMinSNR;
 	_REAL rMaxSigStr=0.0, rMinSigStr=0.0;
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.SNRstat.getMinMax(rMinSNR, rMaxSNR);
 	if (bRxlEnabled)
 	{
 		Parameters.SigStrstat.getMinMax(rMinSigStr, rMaxSigStr);
-		rMinSigStr+=S9_DBUV;
-		rMaxSigStr+=S9_DBUV;
 	}
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	if(!File.is_open())
 		return; /* allow updates when file closed */
@@ -317,16 +315,16 @@ CLongLog::writeHeader()
 void
 CLongLog::init()
 {
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.ReceiveStatus.LLAudio.ResetCounts();
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 void
 CLongLog::writeParameters()
 {
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 
 	/* Get parameters for delay and Doppler. In case the receiver is
 	   not synchronized, set parameters to zero */
@@ -390,7 +388,7 @@ CLongLog::writeParameters()
 		Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
 	}
 
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	if(!File.is_open())
 		return; /* allow updates when file closed */
@@ -414,16 +412,16 @@ CLongLog::writeParameters()
 			<< setw(6) << rDelay;
 
 		if (bRxlEnabled)
-			File << ',' << setprecision(2) << setw(8) << Parameters.SigStrstat.getCurrent()+S9_DBUV;
+			File << ',' << setprecision(2) << setw(8) << Parameters.SigStrstat.getCurrent();
 
 		if (bPositionEnabled)
 			File << ',' << setprecision(4) << setw(10) << latitude << ',' << setw(10) << longitude;
 
 #ifdef _DEBUG_
 		/* Some more parameters in debug mode */
-		Parameters.Lock(); 
+		Parameters.Lock();
 		File << Parameters.GetDCFrequency() << ',' << Parameters.GetSampFreqEst();
-		Parameters.Unlock(); 
+		Parameters.Unlock();
 #endif
 		File << endl;
 		File.flush();

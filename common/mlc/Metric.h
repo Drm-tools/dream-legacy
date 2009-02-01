@@ -6,22 +6,22 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -33,7 +33,8 @@
 #include "../tables/TableQAMMapping.h"
 #include "../util/Vector.h"
 #include "../Parameter.h"
-
+#include "../SigProc.h"
+#include "ChannelCode.h"
 
 /* Classes ********************************************************************/
 inline _REAL Metric(const _REAL rDist, const _REAL rChan)
@@ -55,15 +56,15 @@ public:
 	virtual ~CMLCMetric() {}
 
 	/* Return the number of used symbols for calculating one branch-metric */
-	void CalculateMetric(CVector<CEquSig>* pcInSymb, 
-					     CVector<CDistance>& vecMetric, 
-						 CVector<_DECISION>& vecSubsetDef1, 
+	void CalculateMetric(CVector<CEquSig>* pcInSymb,
+					     CVector<CDistance>& vecMetric,
+						 CVector<_DECISION>& vecSubsetDef1,
 						 CVector<_DECISION>& vecSubsetDef2,
-						 CVector<_DECISION>& vecSubsetDef3, 
+						 CVector<_DECISION>& vecSubsetDef3,
 						 CVector<_DECISION>& vecSubsetDef4,
 						 CVector<_DECISION>& vecSubsetDef5,
 						 CVector<_DECISION>& vecSubsetDef6,
-						 int iLevel, _BOOLEAN bIteration);
+						 int iLevel, bool bIteration);
 	void Init(int iNewInputBlockSize, ECodScheme eNewCodingScheme);
 
 protected:

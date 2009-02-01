@@ -54,7 +54,7 @@ void CTagItemDecoderRdbv::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	if (iLen < 16)
 		return;
 	_REAL rSigStr = decodeDb(vecbiTag);
- 	 pParameter->SigStrstat.addSample(rSigStr-S9_DBUV);
+ 	 pParameter->SigStrstat.addSample(rSigStr);
 	 /* this is the only signal strength we have so update the IF level too.
 	  * TODO scaling factor ? */
  	 pParameter->SetIFSignalLevel(rSigStr);
@@ -116,13 +116,13 @@ void CTagItemDecoderRdop::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 void CTagItemDecoderRdel::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
-	int iNumEntries = iLen/(3*SIZEOF__BYTE);
+	int iNumEntries = iLen/(3*sizeof(_BINARY));
 	pParameter->vecrRdelIntervals.Init(iNumEntries);
 	pParameter->vecrRdelThresholds.Init(iNumEntries);
 
 	for (int i=0; i<iNumEntries; i++)
 	{
- 		pParameter->vecrRdelThresholds[i] = vecbiTag.Separate(SIZEOF__BYTE);
+ 		pParameter->vecrRdelThresholds[i] = vecbiTag.Separate(sizeof(_BINARY));
 		pParameter->vecrRdelIntervals[i] = decodeDb(vecbiTag);
 	}
 }
@@ -132,13 +132,13 @@ void CTagItemDecoderRpsd::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	if (iLen != 680 && iLen !=1112)
 		return;
 
-	int iVectorLen = iLen/SIZEOF__BYTE;
+	int iVectorLen = iLen/sizeof(_BINARY);
 
 	pParameter->vecrPSD.Init(iVectorLen);
 
 	for (int i = 0; i < iVectorLen; i++)
 	{
-		pParameter->vecrPSD[i] = -(_REAL(vecbiTag.Separate(SIZEOF__BYTE))/_REAL(2.0));
+		pParameter->vecrPSD[i] = -(_REAL(vecbiTag.Separate(sizeof(_BINARY)))/_REAL(2.0));
 	}
 
 }
@@ -153,17 +153,17 @@ void CTagItemDecoderRpir::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		return;
 	}
 
-	int iVectorLen = iLen/SIZEOF__BYTE - 4; // 4 bytes for the scale start and end
+	int iVectorLen = iLen/sizeof(_BINARY) - 4; // 4 bytes for the scale start and end
 
 
-	pParameter->rPIRStart = _REAL(int16_t(vecbiTag.Separate(2 * SIZEOF__BYTE))) / _REAL(256.0);
-	pParameter->rPIREnd = _REAL(int16_t(vecbiTag.Separate(2 * SIZEOF__BYTE))) / _REAL(256.0);
+	pParameter->rPIRStart = _REAL(int16_t(vecbiTag.Separate(2 * sizeof(_BINARY)))) / _REAL(256.0);
+	pParameter->rPIREnd = _REAL(int16_t(vecbiTag.Separate(2 * sizeof(_BINARY)))) / _REAL(256.0);
 
 	pParameter->vecrPIR.Init(iVectorLen);
 
 	for (int i = 0; i < iVectorLen; i++)
 	{
-		pParameter->vecrPIR[i] = -(_REAL(vecbiTag.Separate(SIZEOF__BYTE))/_REAL(2.0)) - rOffset;
+		pParameter->vecrPIR[i] = -(_REAL(vecbiTag.Separate(sizeof(_BINARY)))/_REAL(2.0)) - rOffset;
 	}
 
 }
@@ -171,12 +171,12 @@ void CTagItemDecoderRpir::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
-	if (iLen != 26 * SIZEOF__BYTE)
+	if (iLen != 26 * sizeof(_BINARY))
 		return;
 
     CGPSData& GPSData = pParameter->GPSData;
 
- 	uint16_t source = (uint16_t)vecbiTag.Separate(SIZEOF__BYTE);
+ 	uint16_t source = (uint16_t)vecbiTag.Separate(sizeof(_BINARY));
  	switch(source)
  	{
  	    case 0:
@@ -198,29 +198,29 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
             cerr << "error decoding rgps" << endl;
  	}
 
- 	uint8_t nSats = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+ 	uint8_t nSats = (uint8_t)vecbiTag.Separate(sizeof(_BINARY));
  	if(nSats == 0xff)
  	{
- 	    GPSData.SetSatellitesVisibleAvailable(FALSE);
+ 	    GPSData.SetSatellitesVisibleAvailable(false);
  	}
  	else
  	{
  	    GPSData.SetSatellitesVisible(nSats);
- 	    GPSData.SetSatellitesVisibleAvailable(TRUE);
+ 	    GPSData.SetSatellitesVisibleAvailable(true);
  	}
 
     uint16_t val;
-    val = uint16_t(vecbiTag.Separate(2 * SIZEOF__BYTE));
+    val = uint16_t(vecbiTag.Separate(2 * sizeof(_BINARY)));
 	int16_t iLatitudeDegrees = *(int16_t*)&val;
-    uint8_t uiLatitudeMinutes = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
-	uint16_t uiLatitudeMinuteFractions = (uint16_t)vecbiTag.Separate(2 * SIZEOF__BYTE);
-    val = uint16_t(vecbiTag.Separate(2 * SIZEOF__BYTE));
+    uint8_t uiLatitudeMinutes = (uint8_t)vecbiTag.Separate(sizeof(_BINARY));
+	uint16_t uiLatitudeMinuteFractions = (uint16_t)vecbiTag.Separate(2 * sizeof(_BINARY));
+    val = uint16_t(vecbiTag.Separate(2 * sizeof(_BINARY)));
 	int16_t iLongitudeDegrees = *(int16_t*)&val;
-    uint8_t uiLongitudeMinutes = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
-	uint16_t uiLongitudeMinuteFractions = (uint16_t)vecbiTag.Separate(2 * SIZEOF__BYTE);
+    uint8_t uiLongitudeMinutes = (uint8_t)vecbiTag.Separate(sizeof(_BINARY));
+	uint16_t uiLongitudeMinuteFractions = (uint16_t)vecbiTag.Separate(2 * sizeof(_BINARY));
     if(uiLatitudeMinutes == 0xff)
     {
-        GPSData.SetPositionAvailable(FALSE);
+        GPSData.SetPositionAvailable(false);
     }
     else
     {
@@ -230,34 +230,34 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		longitude = double(iLongitudeDegrees)
 		 + (double(uiLongitudeMinutes) + double(uiLongitudeMinuteFractions)/65536.0)/60.0;
         GPSData.SetLatLongDegrees(latitude, longitude);
-        GPSData.SetPositionAvailable(TRUE);
+        GPSData.SetPositionAvailable(true);
     }
 
-    val = uint16_t(vecbiTag.Separate(2 * SIZEOF__BYTE));
-    uint8_t uiAltitudeMetreFractions = (uint8_t)vecbiTag.Separate(SIZEOF__BYTE);
+    val = uint16_t(vecbiTag.Separate(2 * sizeof(_BINARY)));
+    uint8_t uiAltitudeMetreFractions = (uint8_t)vecbiTag.Separate(sizeof(_BINARY));
     if(val == 0xffff)
     {
-        GPSData.SetAltitudeAvailable(FALSE);
+        GPSData.SetAltitudeAvailable(false);
     }
     else
     {
         uint16_t iAltitudeMetres = *(int16_t*)&val;
         GPSData.SetAltitudeMetres(iAltitudeMetres+uiAltitudeMetreFractions/256.0);
-        GPSData.SetAltitudeAvailable(TRUE);
+        GPSData.SetAltitudeAvailable(true);
     }
 
     struct tm tm;
-    tm.tm_hour = uint8_t(vecbiTag.Separate(SIZEOF__BYTE));
-    tm.tm_min = uint8_t(vecbiTag.Separate(SIZEOF__BYTE));
-    tm.tm_sec = uint8_t(vecbiTag.Separate(SIZEOF__BYTE));
-    uint16_t year = uint16_t(vecbiTag.Separate(2*SIZEOF__BYTE));
+    tm.tm_hour = uint8_t(vecbiTag.Separate(sizeof(_BINARY)));
+    tm.tm_min = uint8_t(vecbiTag.Separate(sizeof(_BINARY)));
+    tm.tm_sec = uint8_t(vecbiTag.Separate(sizeof(_BINARY)));
+    uint16_t year = uint16_t(vecbiTag.Separate(2*sizeof(_BINARY)));
     tm.tm_year = year - 1900;
-    tm.tm_mon = uint8_t(vecbiTag.Separate(SIZEOF__BYTE))-1;
-    tm.tm_mday = uint8_t(vecbiTag.Separate(SIZEOF__BYTE));
+    tm.tm_mon = uint8_t(vecbiTag.Separate(sizeof(_BINARY)))-1;
+    tm.tm_mday = uint8_t(vecbiTag.Separate(sizeof(_BINARY)));
 
     if(tm.tm_hour == 0xff)
     {
-        GPSData.SetTimeAndDateAvailable(FALSE);
+        GPSData.SetTimeAndDateAvailable(false);
     }
     else
     {
@@ -282,29 +282,29 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 			unsetenv("TZ");
 #endif
         GPSData.SetTimeSecondsSince1970(t);
-        GPSData.SetTimeAndDateAvailable(TRUE);
+        GPSData.SetTimeAndDateAvailable(true);
     }
 
-    uint16_t speed = (uint16_t)vecbiTag.Separate(2*SIZEOF__BYTE);
+    uint16_t speed = (uint16_t)vecbiTag.Separate(2*sizeof(_BINARY));
     if(speed == 0xffff)
     {
-        GPSData.SetSpeedAvailable(FALSE);
+        GPSData.SetSpeedAvailable(false);
     }
     else
     {
         GPSData.SetSpeedMetresPerSecond(double(speed)/10.0);
-        GPSData.SetSpeedAvailable(TRUE);
+        GPSData.SetSpeedAvailable(true);
     }
 
-    uint16_t heading = (uint16_t)vecbiTag.Separate(2*SIZEOF__BYTE);
+    uint16_t heading = (uint16_t)vecbiTag.Separate(2*sizeof(_BINARY));
     if(heading == 0xffff)
     {
-        GPSData.SetHeadingAvailable(FALSE);
+        GPSData.SetHeadingAvailable(false);
     }
     else
     {
         GPSData.SetHeadingDegrees(heading);
-        GPSData.SetHeadingAvailable(TRUE);
+        GPSData.SetHeadingAvailable(true);
     }
 }
 
@@ -365,8 +365,8 @@ void CTagItemDecoderCdmo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		return;
 
 	string s = "";
-	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
-		s += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
+	for (int i = 0; i < iLen / sizeof(_BINARY); i++)
+		s += (_BYTE) vecbiTag.Separate(sizeof(_BINARY));
 
 	if (pDRMReceiver == NULL)
 		return;
@@ -394,9 +394,9 @@ void CTagItemDecoderCrec::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 	string s = "";
 	for (int i = 0; i < 2; i++)
-		s += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
-	char c3 = (char) vecbiTag.Separate(SIZEOF__BYTE);
-	char c4 = (char) vecbiTag.Separate(SIZEOF__BYTE);
+		s += (_BYTE) vecbiTag.Separate(sizeof(_BINARY));
+	char c3 = (char) vecbiTag.Separate(sizeof(_BINARY));
+	char c4 = (char) vecbiTag.Separate(sizeof(_BINARY));
 
 	if (pDRMReceiver == NULL)
 		return;
@@ -412,7 +412,7 @@ void CTagItemDecoderCser::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	if (iLen != 8)
 		return;
 
-	int iNewServiceID = int(vecbiTag.Separate(SIZEOF__BYTE));
+	int iNewServiceID = int(vecbiTag.Separate(sizeof(_BINARY)));
 
     CParameter& Parameters = *pDRMReceiver->GetParameters();
 
@@ -429,7 +429,7 @@ void CTagItemDecoderCpro::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	if (iLen != 8)
 		return;
 
-	char c = char(vecbiTag.Separate(SIZEOF__BYTE));
+	char c = char(vecbiTag.Separate(sizeof(_BINARY)));
 	if (pRSISubscriber != NULL)
 		pRSISubscriber->SetProfile(c);
 }

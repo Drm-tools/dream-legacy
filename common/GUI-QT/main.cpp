@@ -65,7 +65,7 @@ main(int argc, char **argv)
 	/* create app before running Settings.Load to consume platform/QT parameters */
 	QApplication app(argc, argv);
 
-#if defined(__APPLE__) &&  QT_VERSION >= 0x030000
+#if defined(__APPLE__)
 	/* find plugins on MacOs when deployed in a bundle */
 	app.setLibraryPaths(app.applicationDirPath()+"../PlugIns");
 #endif
@@ -151,7 +151,7 @@ main(int argc, char **argv)
 
 			DRMReceiver.Init();
 
-			FDRMDialog MainDlg(DRMReceiver, Settings, 0, 0, FALSE, Qt::WStyle_MinMax);
+			FDRMDialog MainDlg(DRMReceiver, Settings, 0, 0, false, Qt::WStyle_MinMax);
 
 			/* Start working thread */
 			DRMReceiver.start();
@@ -165,7 +165,7 @@ main(int argc, char **argv)
 			if(pHamlib) /* don't initialise hamlib if RSCI input is requested */
 			{
 				pHamlib->StopSMeter();
-				if (pHamlib->wait(1000) == FALSE)
+				if (pHamlib->wait(1000) == false)
 					cout << "error terminating rig polling thread" << endl;
 				pHamlib->SaveSettings(Settings);
 			}
@@ -253,7 +253,7 @@ main(int argc, char **argv)
 	{
 		CSettings Settings;
 		Settings.Load(argc, argv);
-		if (Settings.Get("command", "isreceiver", TRUE))
+		if (Settings.Get("command", "isreceiver", true))
 		{
 			CDRMSimulation DRMSimulation;
 			CDRMReceiver DRMReceiver;

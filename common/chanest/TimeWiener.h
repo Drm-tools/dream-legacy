@@ -84,7 +84,7 @@
 class CTimeWiener : public CChanEstTime
 {
 public:
-	CTimeWiener() : bTracking(FALSE) {}
+	CTimeWiener() : bTracking(false) {}
 	virtual ~CTimeWiener() {}
 
 	virtual int Init(CParameter& ReceiverParam);
@@ -95,9 +95,9 @@ public:
 
 	_REAL GetSigma() {return rSigma * 2;}
 
-	void StartTracking() {bTracking = TRUE;}
-	void StopTracking() {bTracking = FALSE;}
-	
+	void StartTracking() {bTracking = true;}
+	void StopTracking() {bTracking = false;}
+
 protected:
 	CReal TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 							const int iDiff, const CReal rNewSNR,
@@ -115,10 +115,10 @@ protected:
 	class CDDPilIdx
 	{
 	public:
-		CDDPilIdx() : iIdx(0), bIsPilot(FALSE) {}
-		CDDPilIdx(int iNI, _BOOLEAN bNP) : iIdx(iNI), bIsPilot(bNP) {}
+		CDDPilIdx() : iIdx(0), bIsPilot(false) {}
+		CDDPilIdx(int iNI, bool bNP) : iIdx(iNI), bIsPilot(bNP) {}
 		int			iIdx;
-		_BOOLEAN	bIsPilot;
+		bool	bIsPilot;
 	};
 
 	CReal TimeOptimalFiltDD(CRealVector& vecrTaps, const int iTimeInt,
@@ -142,7 +142,7 @@ protected:
 	int					iLengthWiener;
 	int					iNumFiltPhasTi;
 	CRealMatrix			matrFiltTime;
-	
+
 	CMatrix<_COMPLEX>	matcChanAtPilPos;
 
 	CComplexVector		veccTiCorrEst;
@@ -167,7 +167,7 @@ protected:
 	_REAL				rAvSNR;
 	int					iAvSNRCnt;
 
-	_BOOLEAN			bTracking;
+	bool			bTracking;
 };
 
 

@@ -63,7 +63,6 @@ public:
 protected:
 	void doUpdate(const _REAL rVal);
 	_REAL rCurLevel;
-	CMutex Mutex;
 };
 
 
@@ -71,10 +70,9 @@ protected:
 class CDRMBandpassFilt
 {
 public:
-	enum EFiltType {FT_TRANSMITTER, FT_RECEIVER};
 
-	void Init(const int iNewBlockSize, const _REAL rOffsetHz,
-		const ESpecOcc eSpecOcc, const EFiltType eNFiTy);
+	void Init(int iNewBlockSize, _REAL rOffsetHz, CReal rSignalBW,
+                CReal rMargin);
 	void Process(CVector<_COMPLEX>& veccData);
 
 protected:
@@ -120,7 +118,7 @@ public:
 
 protected:
 	void setT60(const CReal rT60);
-	_BOOLEAN isPrime(const int number);
+	bool isPrime(const int number);
 
 	CFIFO<int>	allpassDelays_[3];
 	CFIFO<int>	combDelays_[4];
@@ -154,7 +152,7 @@ inline int Complement2toInt(const unsigned int iSize, CVector<_BINARY>* pbiData)
 		}
 
 		iVal = -1 * (iVal + 1);
-	}	
+	}
 
 	return iVal;
 }

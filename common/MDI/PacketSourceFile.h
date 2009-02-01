@@ -46,7 +46,7 @@ public:
 	virtual void SetPacketSink(CPacketSink *pSink);
 	// Stop sending packets to the sink
 	virtual void ResetPacketSink(void);
-	virtual _BOOLEAN SetOrigin(const string& str);
+	virtual bool SetOrigin(const string& str);
 
 private:
 
@@ -57,7 +57,7 @@ private:
 	QTime			timeKeeper;
 	uint64_t		last_packet_time;
     void*			pf;
-	_BOOLEAN		bRaw;
+	bool		bRaw;
 public slots:
 	void OnDataReceived();
 };

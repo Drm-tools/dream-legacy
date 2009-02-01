@@ -42,10 +42,10 @@ CReceiverModul<TInput, TOutput>::CReceiverModul()
 	iOutputBlockSize3 = 0;
 	pvecOutputData2 = NULL;
 	pvecOutputData3 = NULL;
-	bResetBuf = FALSE;
-	bResetBuf2 = FALSE;
-	bResetBuf3 = FALSE;
-	bDoInit = FALSE;
+	bResetBuf = false;
+	bResetBuf2 = false;
+	bResetBuf3 = false;
+	bDoInit = false;
 }
 
 template<class TInput, class TOutput> void
@@ -60,7 +60,7 @@ CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
 									  CBuffer<TOutput>& OutputBuffer)
 {
 	/* Init flag */
-	bResetBuf = FALSE;
+	bResetBuf = false;
 
 	/* Init base-class */
 	CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
@@ -74,8 +74,8 @@ CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
 	/* Init some internal variables */
 	iMaxOutputBlockSize2 = 0;
 	iOutputBlockSize2 = 0;
-	bResetBuf = FALSE;
-	bResetBuf2 = FALSE;
+	bResetBuf = false;
+	bResetBuf2 = false;
 
 	/* Init base-class */
 	CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
@@ -101,9 +101,9 @@ CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
 	iMaxOutputBlockSize3 = 0;
 	iOutputBlockSize2 = 0;
 	iOutputBlockSize3 = 0;
-	bResetBuf = FALSE;
-	bResetBuf2 = FALSE;
-	bResetBuf3 = FALSE;
+	bResetBuf = false;
+	bResetBuf2 = false;
+	bResetBuf3 = false;
 
 	/* Init base-class */
 	CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
@@ -144,12 +144,12 @@ CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
 	veciOutputBlockSize.resize(vecOutputBuffer.size());
     for(i=0; i<veciOutputBlockSize.size(); i++)
 		veciOutputBlockSize[i]=0;
-	bResetBuf = FALSE;
-	bResetBuf2 = FALSE;
-	bResetBuf3 = FALSE;
+	bResetBuf = false;
+	bResetBuf2 = false;
+	bResetBuf3 = false;
 	vecbResetBuf.resize(vecOutputBuffer.size());
     for(i=0; i<vecbResetBuf.size(); i++)
-		vecbResetBuf[i]=FALSE;
+		vecbResetBuf[i]=false;
 
 	/* Init base-class */
 	CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
@@ -189,7 +189,7 @@ CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
 		veciOutputBlockSize[i]=0;
 	vecbResetBuf.resize(vecOutputBuffer.size());
     for(i=0; i<vecbResetBuf.size(); i++)
-		vecbResetBuf[i]=FALSE;
+		vecbResetBuf[i]=false;
 
 	/* Init base-class */
 	CModul<TInput, TOutput>::Init(Parameter);
@@ -208,7 +208,7 @@ CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
 }
 
 template<class TInput, class TOutput>
-_BOOLEAN CReceiverModul<TInput, TOutput>::
+bool CReceiverModul<TInput, TOutput>::
 	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
 				CBuffer<TOutput>& OutputBuffer)
 {
@@ -216,13 +216,13 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 	   the processing routine. This is ensured by doing it here, where we
 	   have control of calling the processing routine. Therefore we
 	   introduced the flag */
-	if (bDoInit == TRUE)
+	if (bDoInit == true)
 	{
 		/* Call init routine */
 		Init(Parameter, OutputBuffer);
 
 		/* Reset init flag */
-		bDoInit = FALSE;
+		bDoInit = false;
 	}
 
 	/* Special case if input block size is zero */
@@ -230,21 +230,21 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 	{
 		InputBuffer.Clear();
 
-		return FALSE;
+		return false;
 	}
 
 	/* INPUT-DRIVEN modul implementation in the receiver -------------------- */
 	/* This flag shows, if enough data was in the input buffer for processing */
-	_BOOLEAN bEnoughData = FALSE;
+	bool bEnoughData = false;
 
 	/* Check if enough data is available in the input buffer for processing */
 	if (InputBuffer.GetFillLevel() >= this->iInputBlockSize)
 	{
-		bEnoughData = TRUE;
+		bEnoughData = true;
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Query vector from output transfer-buffer for writing */
 		this->pvecOutputData = OutputBuffer.QueryWriteBuffer();
 
@@ -254,12 +254,12 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Call the underlying processing-routine */
 		this->ProcessDataThreadSave(Parameter);
-	
+
 		/* Reset output-buffers if flag was set by processing routine */
-		if (bResetBuf == TRUE)
+		if (bResetBuf == true)
 		{
 			/* Reset flag and clear buffer */
-			bResetBuf = FALSE;
+			bResetBuf = false;
 			OutputBuffer.Clear();
 		}
 		else
@@ -273,7 +273,7 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 }
 
 template<class TInput, class TOutput>
-_BOOLEAN CReceiverModul<TInput, TOutput>::
+bool CReceiverModul<TInput, TOutput>::
 	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
 				CBuffer<TOutput>& OutputBuffer,
 				CBuffer<TOutput>& OutputBuffer2)
@@ -282,39 +282,39 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 	   the processing routine. This is ensured by doing it here, where we
 	   have control of calling the processing routine. Therefore we
 	   introduced the flag */
-	if (bDoInit == TRUE)
+	if (bDoInit == true)
 	{
 		/* Call init routine */
 		Init(Parameter, OutputBuffer, OutputBuffer2);
 
 		/* Reset init flag */
-		bDoInit = FALSE;
+		bDoInit = false;
 	}
 
 	/* This flag shows, if enough data was in the input buffer for processing */
-	_BOOLEAN bEnoughData = FALSE;
+	bool bEnoughData = false;
 
 	/* INPUT-DRIVEN modul implementation in the receiver -------------------- */
 	/* Check if enough data is available in the input buffer for processing */
 	if (InputBuffer.GetFillLevel() >= this->iInputBlockSize)
 	{
-		bEnoughData = TRUE;
+		bEnoughData = true;
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Query vector from output transfer-buffer for writing */
 		this->pvecOutputData = OutputBuffer.QueryWriteBuffer();
 		pvecOutputData2 = OutputBuffer2.QueryWriteBuffer();
-		
+
 		/* Call the underlying processing-routine */
 		this->ProcessDataThreadSave(Parameter);
-	
+
 		/* Reset output-buffers if flag was set by processing routine */
-		if (bResetBuf == TRUE)
+		if (bResetBuf == true)
 		{
 			/* Reset flag and clear buffer */
-			bResetBuf = FALSE;
+			bResetBuf = false;
 			OutputBuffer.Clear();
 		}
 		else
@@ -322,10 +322,10 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 			/* Write processed data from internal memory in transfer-buffer */
 			OutputBuffer.Put(this->iOutputBlockSize);
 		}
-		if (bResetBuf2 == TRUE)
+		if (bResetBuf2 == true)
 		{
 			/* Reset flag and clear buffer */
-			bResetBuf2 = FALSE;
+			bResetBuf2 = false;
 			OutputBuffer2.Clear();
 		}
 		else
@@ -339,7 +339,7 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 }
 
 template<class TInput, class TOutput>
-_BOOLEAN CReceiverModul<TInput, TOutput>::
+bool CReceiverModul<TInput, TOutput>::
 	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
 				CBuffer<TOutput>& OutputBuffer,
 				CBuffer<TOutput>& OutputBuffer2,
@@ -349,40 +349,40 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 	   the processing routine. This is ensured by doing it here, where we
 	   have control of calling the processing routine. Therefore we
 	   introduced the flag */
-	if (bDoInit == TRUE)
+	if (bDoInit == true)
 	{
 		/* Call init routine */
 		Init(Parameter, OutputBuffer, OutputBuffer2, OutputBuffer3);
 
 		/* Reset init flag */
-		bDoInit = FALSE;
+		bDoInit = false;
 	}
 
 	/* This flag shows, if enough data was in the input buffer for processing */
-	_BOOLEAN bEnoughData = FALSE;
+	bool bEnoughData = false;
 
 	/* INPUT-DRIVEN modul implementation in the receiver -------------------- */
 	/* Check if enough data is available in the input buffer for processing */
 	if (InputBuffer.GetFillLevel() >= this->iInputBlockSize)
 	{
-		bEnoughData = TRUE;
+		bEnoughData = true;
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Query vector from output transfer-buffer for writing */
 		this->pvecOutputData = OutputBuffer.QueryWriteBuffer();
 		pvecOutputData2 = OutputBuffer2.QueryWriteBuffer();
 		pvecOutputData3 = OutputBuffer3.QueryWriteBuffer();
-		
+
 		/* Call the underlying processing-routine */
 		this->ProcessDataThreadSave(Parameter);
-	
+
 		/* Reset output-buffers if flag was set by processing routine */
-		if (bResetBuf == TRUE)
+		if (bResetBuf == true)
 		{
 			/* Reset flag and clear buffer */
-			bResetBuf = FALSE;
+			bResetBuf = false;
 			OutputBuffer.Clear();
 		}
 		else
@@ -391,10 +391,10 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 			OutputBuffer.Put(this->iOutputBlockSize);
 		}
 
-		if (bResetBuf2 == TRUE)
+		if (bResetBuf2 == true)
 		{
 			/* Reset flag and clear buffer */
-			bResetBuf2 = FALSE;
+			bResetBuf2 = false;
 			OutputBuffer2.Clear();
 		}
 		else
@@ -403,10 +403,10 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 			OutputBuffer2.Put(iOutputBlockSize2);
 		}
 
-		if (bResetBuf3 == TRUE)
+		if (bResetBuf3 == true)
 		{
 			/* Reset flag and clear buffer */
-			bResetBuf3 = FALSE;
+			bResetBuf3 = false;
 			OutputBuffer3.Clear();
 		}
 		else
@@ -420,7 +420,7 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 }
 
 template<class TInput, class TOutput>
-_BOOLEAN CReceiverModul<TInput, TOutput>::
+bool CReceiverModul<TInput, TOutput>::
 	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
 				CBuffer<TOutput>& OutputBuffer,
 				CBuffer<TOutput>& OutputBuffer2,
@@ -430,28 +430,28 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 	   the processing routine. This is ensured by doing it here, where we
 	   have control of calling the processing routine. Therefore we
 	   introduced the flag */
-	if (bDoInit == TRUE)
+	if (bDoInit == true)
 	{
 		/* Call init routine */
 		Init(Parameter, OutputBuffer, OutputBuffer2, vecOutputBuffer);
 
 		/* Reset init flag */
-		bDoInit = FALSE;
+		bDoInit = false;
 	}
 
 	/* This flag shows, if enough data was in the input buffer for processing */
-	_BOOLEAN bEnoughData = FALSE;
+	bool bEnoughData = false;
 
 	/* INPUT-DRIVEN modul implementation in the receiver -------------------- */
 	/* Check if enough data is available in the input buffer for processing */
 	if (InputBuffer.GetFillLevel() >= this->iInputBlockSize)
 	{
 		size_t i;
-		bEnoughData = TRUE;
+		bEnoughData = true;
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Query vector from output transfer-buffer for writing */
 		this->pvecOutputData = OutputBuffer.QueryWriteBuffer();
 		pvecOutputData2 = OutputBuffer2.QueryWriteBuffer();
@@ -460,15 +460,15 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 		{
 			vecpvecOutputData[i] = vecOutputBuffer[i].QueryWriteBuffer();
 		}
-		
+
 		/* Call the underlying processing-routine */
 		this->ProcessDataThreadSave(Parameter);
-	
+
 		/* Reset output-buffers if flag was set by processing routine */
-		if (bResetBuf == TRUE)
+		if (bResetBuf == true)
 		{
 			/* Reset flag and clear buffer */
-			bResetBuf = FALSE;
+			bResetBuf = false;
 			OutputBuffer.Clear();
 		}
 		else
@@ -477,10 +477,10 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 			OutputBuffer.Put(this->iOutputBlockSize);
 		}
 
-		if (bResetBuf2 == TRUE)
+		if (bResetBuf2 == true)
 		{
 			/* Reset flag and clear buffer */
-			bResetBuf2 = FALSE;
+			bResetBuf2 = false;
 			OutputBuffer2.Clear();
 		}
 		else
@@ -491,10 +491,10 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		for(i=0; i<vecOutputBuffer.size(); i++)
 		{
-			if (vecbResetBuf[i] == TRUE)
+			if (vecbResetBuf[i] == true)
 			{
 				/* Reset flag and clear buffer */
-				vecbResetBuf[i] = FALSE;
+				vecbResetBuf[i] = false;
 				vecOutputBuffer[i].Clear();
 			}
 			else
@@ -509,7 +509,7 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 }
 
 template<class TInput, class TOutput>
-_BOOLEAN CReceiverModul<TInput, TOutput>::
+bool CReceiverModul<TInput, TOutput>::
 	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
 				vector< CSingleBuffer<TOutput> >& vecOutputBuffer)
 {
@@ -517,45 +517,45 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 	   the processing routine. This is ensured by doing it here, where we
 	   have control of calling the processing routine. Therefore we
 	   introduced the flag */
-	if (bDoInit == TRUE)
+	if (bDoInit == true)
 	{
 		/* Call init routine */
 		Init(Parameter, vecOutputBuffer);
 
 		/* Reset init flag */
-		bDoInit = FALSE;
+		bDoInit = false;
 	}
 
 	/* This flag shows, if enough data was in the input buffer for processing */
-	_BOOLEAN bEnoughData = FALSE;
+	bool bEnoughData = false;
 
 	/* INPUT-DRIVEN modul implementation in the receiver -------------------- */
 	/* Check if enough data is available in the input buffer for processing */
 	if (InputBuffer.GetFillLevel() >= this->iInputBlockSize)
 	{
 		size_t i;
-		bEnoughData = TRUE;
+		bEnoughData = true;
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Query vector from output transfer-buffer for writing */
 		vecpvecOutputData.resize(vecOutputBuffer.size());
 		for(i=0; i<vecOutputBuffer.size(); i++)
 		{
 			vecpvecOutputData[i] = vecOutputBuffer[i].QueryWriteBuffer();
 		}
-		
+
 		/* Call the underlying processing-routine */
 		this->ProcessDataThreadSave(Parameter);
-	
+
 		/* Reset output-buffers if flag was set by processing routine */
 		for(i=0; i<vecOutputBuffer.size(); i++)
 		{
-			if (vecbResetBuf[i] == TRUE)
+			if (vecbResetBuf[i] == true)
 			{
 				/* Reset flag and clear buffer */
-				vecbResetBuf[i] = FALSE;
+				vecbResetBuf[i] = false;
 				vecOutputBuffer[i].Clear();
 			}
 			else
@@ -577,13 +577,13 @@ void CReceiverModul<TInput, TOutput>::
 	   the processing routine. This is ensured by doing it here, where we
 	   have control of calling the processing routine. Therefore we
 	   introduced the flag */
-	if (bDoInit == TRUE)
+	if (bDoInit == true)
 	{
 		/* Call init routine */
 		Init(Parameter, OutputBuffer);
 
 		/* Reset init flag */
-		bDoInit = FALSE;
+		bDoInit = false;
 	}
 
 	/* INPUT-DRIVEN modul implementation in the receiver -------------------- */
@@ -594,10 +594,10 @@ void CReceiverModul<TInput, TOutput>::
 	this->ProcessDataThreadSave(Parameter);
 
 	/* Reset output-buffers if flag was set by processing routine */
-	if (bResetBuf == TRUE)
+	if (bResetBuf == true)
 	{
 		/* Reset flag and clear buffer */
-		bResetBuf = FALSE;
+		bResetBuf = false;
 		OutputBuffer.Clear();
 	}
 	else
@@ -608,41 +608,41 @@ void CReceiverModul<TInput, TOutput>::
 }
 
 template<class TInput, class TOutput>
-_BOOLEAN CReceiverModul<TInput, TOutput>::
+bool CReceiverModul<TInput, TOutput>::
 	WriteData(CParameter& Parameter, CBuffer<TInput>& InputBuffer)
 {
 	/* Check initialization flag. The initialization must be done OUTSIDE
 	   the processing routine. This is ensured by doing it here, where we
 	   have control of calling the processing routine. Therefore we
 	   introduced the flag */
-	if (bDoInit == TRUE)
+	if (bDoInit == true)
 	{
 		/* Call init routine */
 		Init(Parameter);
 
 		/* Reset init flag */
-		bDoInit = FALSE;
+		bDoInit = false;
 	}
 
 	/* Special case if input block size is zero and buffer, too */
 	if ((InputBuffer.GetFillLevel() == 0) && (this->iInputBlockSize == 0))
 	{
 		InputBuffer.Clear();
-		return FALSE;
+		return false;
 	}
 
 	/* INPUT-DRIVEN modul implementation in the receiver -------------------- */
 	/* This flag shows, if enough data was in the input buffer for processing */
-	_BOOLEAN bEnoughData = FALSE;
+	bool bEnoughData = false;
 
 	/* Check if enough data is available in the input buffer for processing */
 	if (InputBuffer.GetFillLevel() >= this->iInputBlockSize)
 	{
-		bEnoughData = TRUE;
+		bEnoughData = true;
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Call the underlying processing-routine */
 		this->ProcessDataThreadSave(Parameter);
 	}

@@ -93,7 +93,7 @@ void CSimulationModul<TInput, TOutput, TInOut2>::
 	if (InputBuffer.GetFillLevel() < this->iInputBlockSize)
 	{
 		/* Set request flag */
-		InputBuffer.SetRequestFlag(TRUE);
+		InputBuffer.SetRequestFlag(true);
 
 		return;
 	}
@@ -112,20 +112,20 @@ void CSimulationModul<TInput, TOutput, TInOut2>::
 }
 
 template<class TInput, class TOutput, class TInOut2>
-_BOOLEAN CSimulationModul<TInput, TOutput, TInOut2>::
+bool CSimulationModul<TInput, TOutput, TInOut2>::
 	ProcessDataIn(CParameter& Parameter,
 				  CBuffer<TInput>& InputBuffer,
 				  CBuffer<TInOut2>& InputBuffer2,
 				  CBuffer<TOutput>& OutputBuffer)
 {
 	/* This flag shows, if enough data was in the input buffer for processing */
-	_BOOLEAN bEnoughData = FALSE;
+	bool bEnoughData = false;
 
 	/* Check if enough data is available in the input buffer for processing */
 	if ((InputBuffer.GetFillLevel() >= this->iInputBlockSize) &&
 		(InputBuffer2.GetFillLevel() >= iInputBlockSize2))
 	{
-		bEnoughData = TRUE;
+		bEnoughData = true;
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
@@ -149,23 +149,23 @@ _BOOLEAN CSimulationModul<TInput, TOutput, TInOut2>::
 }
 
 template<class TInput, class TOutput, class TInOut2>
-_BOOLEAN CSimulationModul<TInput, TOutput, TInOut2>::
+bool CSimulationModul<TInput, TOutput, TInOut2>::
 	ProcessDataOut(CParameter& Parameter,
 				   CBuffer<TInput>& InputBuffer,
 				   CBuffer<TOutput>& OutputBuffer,
 				   CBuffer<TInOut2>& OutputBuffer2)
 {
 	/* This flag shows, if enough data was in the input buffer for processing */
-	_BOOLEAN bEnoughData = FALSE;
+	bool bEnoughData = false;
 
 	/* Check if enough data is available in the input buffer for processing */
 	if (InputBuffer.GetFillLevel() >= this->iInputBlockSize)
 	{
-		bEnoughData = TRUE;
+		bEnoughData = true;
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Query vector from output transfer-buffer for writing */
 		this->pvecOutputData = OutputBuffer.QueryWriteBuffer();
 		pvecOutputData2 = OutputBuffer2.QueryWriteBuffer();

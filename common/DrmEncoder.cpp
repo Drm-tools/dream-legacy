@@ -41,7 +41,7 @@ CDRMEncoder::CDRMEncoder():
 	AudioSourceEncoder(), DataEncoder(), GenerateFACData(), GenerateSDCData(),
 	pReadData(NULL), strInputFileName(),
 	vecstrTexts(), vecstrPics(), vecstrPicTypes(),
-	iSoundInDev(-1), bUseUEP(FALSE)
+	iSoundInDev(-1), bUseUEP(false)
 {
 }
 
@@ -97,7 +97,7 @@ CDRMEncoder::GetPics(map<string,string>& m)
 		m[vecstrPics[i]] = vecstrPicTypes[i];
 }
 
-_BOOLEAN
+bool
 CDRMEncoder::GetTransStat(string& strCPi, _REAL& rCPe)
 {
 	return DataEncoder.GetSliShowEnc()->GetTransStat(strCPi, rCPe);
@@ -183,11 +183,11 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 
 	Parameters.Service.resize(1);
 
-	_BOOLEAN bIsAudio = s.Get("Encoder", "audioservice", 1);
+	bool bIsAudio = s.Get("Encoder", "audioservice", 1);
 
 	/* In the current version only one service and one stream is supported. The
 	   stream IDs must be 0 in both cases */
-	if (bIsAudio == TRUE)
+	if (bIsAudio == true)
 	{
 		/* Audio */
 		Parameters.iNumAudioService = 1;
@@ -301,7 +301,7 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
         ss << "s" << i << "PartBLen";
         stream.iLenPartB = s.Get("Encoder", ss.str(), -1);
 
-        if (bIsAudio == TRUE)
+        if (bIsAudio == true)
         {
             stream.eAudDataFlag = SF_AUDIO;
         }

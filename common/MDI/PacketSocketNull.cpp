@@ -6,11 +6,11 @@
  *	Volker Fischer, Julian Cable, Oliver Haffenden
  *
  * Description:
- *  
+ *
  * This is a dummy implementation of the CPacketSocket interface to enable the CMDI
  * class to work even if no socket support is available. Packets are silently discarded
  * and there are never any incoming packets.
- *	
+ *
  *
  ******************************************************************************
  *
@@ -47,17 +47,17 @@ void CPacketSocketNull::SendPacket(const vector<_BYTE>&, uint32_t, uint16_t)
 {
 }
 
-_BOOLEAN CPacketSocketNull::SetOrigin(const string&)
+bool CPacketSocketNull::SetOrigin(const string&)
 {
-	return TRUE;
+	return true;
 }
 
-_BOOLEAN CPacketSocketNull::SetDestination(const string&)
+bool CPacketSocketNull::SetDestination(const string&)
 {
-	return TRUE;
+	return true;
 }
 
-_BOOLEAN CPacketSocketNull::GetDestination(string&)
+bool CPacketSocketNull::GetDestination(string&)
 {
-	return TRUE;
+	return true;
 }

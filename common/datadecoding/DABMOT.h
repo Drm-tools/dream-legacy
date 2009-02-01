@@ -135,36 +135,36 @@ class CSegmentTracker
 	return vecbHaveSegment.size ();
     }
 
-    _BOOLEAN Ready ()
+    bool Ready ()
     {
 	if (vecbHaveSegment.size () == 0)
-	    return FALSE;
+	    return false;
 	for (size_t i = 0; i < vecbHaveSegment.size (); i++)
 	  {
-	      if (vecbHaveSegment[i] == FALSE)
+	      if (vecbHaveSegment[i] == false)
 		{
-		    return FALSE;
+		    return false;
 		}
 	  }
-	return TRUE;
+	return true;
     }
 
     void AddSegment (int iSegNum)
     {
 	if ((iSegNum + 1) > int (vecbHaveSegment.size ()))
-	    vecbHaveSegment.resize (iSegNum + 1, FALSE);
-	vecbHaveSegment[iSegNum] = TRUE;
+	    vecbHaveSegment.resize (iSegNum + 1, false);
+	vecbHaveSegment[iSegNum] = true;
     }
 
-    _BOOLEAN HaveSegment (int iSegNum)
+    bool HaveSegment (int iSegNum)
     {
 	if (iSegNum < int (vecbHaveSegment.size ()))
 	    return vecbHaveSegment[iSegNum];
-	return FALSE;
+	return false;
     }
 
   protected:
-    vector < _BOOLEAN > vecbHaveSegment;
+    vector < bool > vecbHaveSegment;
 };
 
 class CReassembler
@@ -216,19 +216,19 @@ class CReassembler
 	iLastSegmentSize = -1;
 	iSegmentSize = 0;
 	Tracker.Reset ();
-	bReady = FALSE;
+	bReady = false;
     }
 
-    _BOOLEAN Ready ()
+    bool Ready ()
     {
 	return bReady;
     }
 
     void AddSegment (CVector < _BYTE > &vecDataIn,
-		     int iSegSize, int iSegNum, _BOOLEAN bLast = FALSE);
+		     int iSegSize, int iSegNum, bool bLast = false);
 
-    _BOOLEAN IsZipped () const;
-    _BOOLEAN uncompress();
+    bool IsZipped () const;
+    bool uncompress();
 
     CVector < _BYTE > vecData;
 
@@ -246,7 +246,7 @@ class CReassembler
     int iLastSegmentSize;
     size_t iSegmentSize;
     CSegmentTracker Tracker;
-    _BOOLEAN bReady;
+    bool bReady;
 };
 
 class CBitReassembler:public CReassembler
@@ -283,7 +283,7 @@ class CMOTObjectBase
     {
 		TransportID = -1;
 		ExpireTime.Reset ();
-		bPermitOutdatedVersions = FALSE;
+		bPermitOutdatedVersions = false;
     }
 
     void decodeExtHeader (_BYTE & bParamId,
@@ -294,7 +294,7 @@ class CMOTObjectBase
 
     TTransportID TransportID;
     CDateAndTime ExpireTime;
-    _BOOLEAN bPermitOutdatedVersions;
+    bool bPermitOutdatedVersions;
 
 };
 
@@ -340,9 +340,9 @@ class CMOTDirectory:public CMOTObjectBase
     virtual void Reset ()
     {
 		CMOTObjectBase::Reset ();
-		bSortedHeaderInformation = FALSE;
+		bSortedHeaderInformation = false;
 		DirectoryIndex.clear ();
-		bCompressionFlag = FALSE;
+		bCompressionFlag = false;
 		iCarouselPeriod = -1;
 		iNumberOfObjects = 0;
 		iSegmentSize = 0;
@@ -352,15 +352,15 @@ class CMOTDirectory:public CMOTObjectBase
     virtual void AddHeader (CVector < _BINARY > &vecbiHeader);
 
 	void dump(ostream&);
-  
+
     int iCarouselPeriod, iNumberOfObjects, iSegmentSize;
-    _BOOLEAN bCompressionFlag, bSortedHeaderInformation;
+    bool bCompressionFlag, bSortedHeaderInformation;
     map < _BYTE, string > DirectoryIndex;
     vector < TTransportID > vecObjects;
 };
 
 /* we define this to reduce the need for copy constructors and operator=
-   since CReassembler has a good set, the defaults will do for this, but not 
+   since CReassembler has a good set, the defaults will do for this, but not
    for classes with CVector members
 */
 
@@ -440,8 +440,8 @@ class CMOTObject:public CMOTObjectBase
     void Reset ()
     {
 	vecbRawData.Init (0);
-	bComplete = FALSE;
-	bHasHeader = FALSE;
+	bComplete = false;
+	bHasHeader = false;
 	Body.Reset ();
 	strFormat = "";
 	strName = "";
@@ -470,7 +470,7 @@ class CMOTObject:public CMOTObjectBase
     /* for encoding */
     CVector < _BYTE > vecbRawData;
 
-    _BOOLEAN bComplete, bHasHeader;
+    bool bComplete, bHasHeader;
     CByteReassembler Body;
     string strName;
     int iBodySize;
@@ -491,7 +491,7 @@ class CMOTObject:public CMOTObjectBase
     int iScopeId;
 
   protected:
-    _BOOLEAN bReady;
+    bool bReady;
 };
 
 
@@ -500,10 +500,10 @@ class CMOTDABEnc
 {
   public:
 	CMOTDABEnc(): MOTObject(), MOTObjSegments(),
-    iSegmCntHeader(0), iSegmCntBody(0), bCurSegHeader(FALSE),
+    iSegmCntHeader(0), iSegmCntBody(0), bCurSegHeader(false),
     iContIndexHeader(0), iContIndexBody(0), iTransportID(0),
-	bCRCUsed(TRUE), bSegFieldUsed(TRUE),
-	bUsAccFieldUsed(TRUE), bTransIDFieldUsed(TRUE)
+	bCRCUsed(true), bSegFieldUsed(true),
+	bUsAccFieldUsed(true), bTransIDFieldUsed(true)
 	{
     }
     virtual ~CMOTDABEnc()
@@ -511,7 +511,7 @@ class CMOTDABEnc
     }
 
     void Reset ();
-    _BOOLEAN GetDataGroup (CVector < _BINARY > &vecbiNewData);
+    bool GetDataGroup (CVector < _BINARY > &vecbiNewData);
     void SetMOTObject (CMOTObject & NewMOTObject);
     _REAL GetProgPerc () const;
 
@@ -529,16 +529,16 @@ class CMOTDABEnc
 			 const int iPartiSize);
 
     void GenMOTObj (CVector < _BINARY > &vecbiData,
-		    CVector < _BINARY > &vecbiSeg, const _BOOLEAN bHeader,
+		    CVector < _BINARY > &vecbiSeg, const bool bHeader,
 		    const int iSegNum, const int iTranspID,
-		    const _BOOLEAN bLastSeg);
+		    const bool bLastSeg);
 
     CMOTObject MOTObject;
     CMOTObjSegm MOTObjSegments;
 
     int iSegmCntHeader;
     int iSegmCntBody;
-    _BOOLEAN bCurSegHeader;
+    bool bCurSegHeader;
 
     int iContIndexHeader;
     int iContIndexBody;
@@ -546,10 +546,10 @@ class CMOTDABEnc
     int iTransportID;
 
 	/* Standard settings for this implementation */
-	_BOOLEAN bCRCUsed;
-	_BOOLEAN bSegFieldUsed;
-	_BOOLEAN bUsAccFieldUsed;
-	_BOOLEAN bTransIDFieldUsed;
+	bool bCRCUsed;
+	bool bSegFieldUsed;
+	bool bUsAccFieldUsed;
+	bool bTransIDFieldUsed;
 
 };
 
@@ -579,7 +579,7 @@ class CMOTDABDec
 	MOTDirectoryOut = MOTDirectory;
     }
 
-    _BOOLEAN NewObjectAvailable ();
+    bool NewObjectAvailable ();
 
     /* push from lower level */
     void AddDataUnit (CVector < _BINARY > &vecbiNewData);

@@ -59,11 +59,11 @@ const size_t iAFCRCLen = 2;
 
 CPacketSourceFile::CPacketSourceFile():pPacketSink(NULL),
 timeKeeper(), last_packet_time(0),
- pf(NULL), bRaw(TRUE)
+ pf(NULL), bRaw(true)
 {
 }
 
-_BOOLEAN
+bool
 CPacketSourceFile::SetOrigin(const string& str)
 {
 	if(str.rfind(".pcap") == str.length()-5)
@@ -72,7 +72,7 @@ CPacketSourceFile::SetOrigin(const string& str)
 		char errbuf[PCAP_ERRBUF_SIZE];
 		pf = pcap_open_offline(str.c_str(), errbuf);
 #endif
-		bRaw = FALSE;
+		bRaw = false;
 	}
 	else
 	{

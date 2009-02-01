@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -73,7 +73,7 @@ protected:
 class COFDMDemodulation : public CReceiverModul<_COMPLEX, _COMPLEX>
 {
 public:
-	/* bUseRecFilter shall be set the FALSE as default since in case of
+	/* bUseRecFilter shall be set the false as default since in case of
 	   BERIDEAL simulations, no filter shall be applied */
 	COFDMDemodulation() : iLenPowSpec(0) {}
 	virtual ~COFDMDemodulation() {}
@@ -102,7 +102,7 @@ protected:
 };
 
 class COFDMDemodSimulation :
-	public CSimulationModul<CChanSimDataMod, _COMPLEX, CChanSimDataDemod>
+	public CSimulationModul<CChanSimData<_REAL>, _COMPLEX, CChanSimData<_COMPLEX> >
 {
 public:
 	COFDMDemodSimulation() {}

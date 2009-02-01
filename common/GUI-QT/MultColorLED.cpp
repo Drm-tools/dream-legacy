@@ -7,22 +7,22 @@
  *
  * Description:
  *	Implements a multi-color LED
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -31,7 +31,7 @@
 
 
 /* Implementation *************************************************************/
-CMultColorLED::CMultColorLED(QWidget * parent, const char * name, WFlags f) : 
+CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) :
 	QLabel(parent, name, f)
 {
 	/* Define size of the bitmaps */
@@ -64,11 +64,11 @@ CMultColorLED::CMultColorLED(QWidget * parent, const char * name, WFlags f) :
 	iUpdateTime = DEFAULT_UPDATE_TIME;
 
 	/* Connect timer events to the desired slots */
-	connect(&TimerRedLight, SIGNAL(timeout()), 
+	connect(&TimerRedLight, SIGNAL(timeout()),
 		this, SLOT(OnTimerRedLight()));
-	connect(&TimerGreenLight, SIGNAL(timeout()), 
+	connect(&TimerGreenLight, SIGNAL(timeout()),
 		this, SLOT(OnTimerGreenLight()));
-	connect(&TimerYellowLight, SIGNAL(timeout()), 
+	connect(&TimerYellowLight, SIGNAL(timeout()),
 		this, SLOT(OnTimerYellowLight()));
 
 	TimerRedLight.stop();
@@ -76,21 +76,21 @@ CMultColorLED::CMultColorLED(QWidget * parent, const char * name, WFlags f) :
 	TimerYellowLight.stop();
 }
 
-void CMultColorLED::OnTimerRedLight() 
+void CMultColorLED::OnTimerRedLight()
 {
 	bFlagRedLi = false;
 
 	UpdateColor();
 }
 
-void CMultColorLED::OnTimerGreenLight() 
+void CMultColorLED::OnTimerGreenLight()
 {
 	bFlagGreenLi = false;
 
 	UpdateColor();
 }
 
-void CMultColorLED::OnTimerYellowLight() 
+void CMultColorLED::OnTimerYellowLight()
 {
 	bFlagYellowLi = false;
 

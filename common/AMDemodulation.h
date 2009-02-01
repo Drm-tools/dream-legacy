@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -40,7 +40,7 @@
    value is the range for short variables (16 bit) -> 32768 */
 #define DES_AV_AMPL_AM_SIGNAL				((CReal) 8000.0)
 
-/* Lower bound for estimated average amplitude. That is needed, since we 
+/* Lower bound for estimated average amplitude. That is needed, since we
    devide by this estimate so it must not be zero */
 #define LOWER_BOUND_AMP_LEVEL				((CReal) 10.0)
 
@@ -139,9 +139,9 @@ protected:
 class CFreqOffsAcq
 {
 public:
-	CFreqOffsAcq() : bAcquisition(FALSE), rCurNormFreqOffset((CReal) 0.0) {}
+	CFreqOffsAcq() : bAcquisition(false), rCurNormFreqOffset((CReal) 0.0) {}
 	void Init(const int iNewBlockSize);
-	_BOOLEAN Run(const CVector<_REAL>& vecrInpData);
+	bool Run(const CVector<_REAL>& vecrInpData);
 
 	void Start(const CReal rNewNormCenter);
 	CReal GetCurResult() {return rCurNormFreqOffset;}
@@ -157,7 +157,7 @@ protected:
 	CRealVector				vecrPSD;
 	int						iSearchWinStart;
 	int						iSearchWinEnd;
-	_BOOLEAN				bAcquisition;
+	bool				bAcquisition;
 
 	CReal					rNormCenter;
 	CReal					rCurNormFreqOffset;
@@ -241,12 +241,12 @@ public:
 
 	void SetAcqFreq(const CReal rNewNormCenter);
 
-	void EnableAutoFreqAcq(const _BOOLEAN bNewEn)
+	void EnableAutoFreqAcq(const bool bNewEn)
 		{bAutoFreqAcquIsEnabled = bNewEn;}
-	_BOOLEAN AutoFreqAcqEnabled() {return bAutoFreqAcquIsEnabled;}
+	bool AutoFreqAcqEnabled() {return bAutoFreqAcquIsEnabled;}
 
-	void EnablePLL(const _BOOLEAN bNewEn) {bPLLIsEnabled = bNewEn;}
-	_BOOLEAN PLLEnabled() {return bPLLIsEnabled;}
+	void EnablePLL(const bool bNewEn) {bPLLIsEnabled = bNewEn;}
+	bool PLLEnabled() {return bPLLIsEnabled;}
 
 	void SetAGCType(const CAGC::EType eNewType);
 	CAGC::EType GetAGCType() {return AGC.GetType();}
@@ -257,11 +257,11 @@ public:
 	void GetBWParameters(CReal& rCenterFreq, CReal& rBW)
 		{rCenterFreq = rBPNormCentOffsTot; rBW = rBPNormBW;}
 
-	_BOOLEAN GetPLLPhase(CReal& rPhaseOut);
+	bool GetPLLPhase(CReal& rPhaseOut);
 	CReal GetCurMixFreqOffs() const
 		{return rNormCurMixFreqOffs * SOUNDCRD_SAMPLE_RATE;}
 
-	_BOOLEAN GetFrameBoundary() {return iFreeSymbolCounter==0;}
+	bool GetFrameBoundary() {return iFreeSymbolCounter==0;}
 
 	void SetFilterBWHz(const int iBw);
 	int GetFilterBWHz(const EDemodulationType eType);
@@ -280,7 +280,7 @@ protected:
 	CRealVector					rvecZImag;
 	CComplexVector				cvecBAMAfterDem;
 	CRealVector					rvecZAMAfterDem;
-	
+
 	CRealVector					rvecInpTmp;
 	CComplexVector				cvecHilbert;
 	int							iHilFiltBlLen;
@@ -300,8 +300,8 @@ protected:
 
 	int							iSymbolBlockSize;
 
-	_BOOLEAN					bPLLIsEnabled;
-	_BOOLEAN					bAutoFreqAcquIsEnabled;
+	bool					bPLLIsEnabled;
+	bool					bAutoFreqAcquIsEnabled;
 
 	CComplex					cOldVal;
 

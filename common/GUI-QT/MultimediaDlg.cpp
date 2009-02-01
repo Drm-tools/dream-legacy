@@ -43,7 +43,7 @@
 
 /* Implementation *************************************************************/
 MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
-	QWidget* parent, const char* name, bool modal, WFlags f)
+	QWidget* parent, const char* name, bool modal, Qt::WFlags f)
 	: MultimediaDlgBase(parent, name, modal, f),
 	Parameters(*NDRMR.GetParameters()), DataDecoder(*NDRMR.GetDataDecoder()),
 	strCurrentSavePath("."), strDirMOTCache("MOTCache")
@@ -186,7 +186,7 @@ void MultimediaDlg::OnTextChanged()
 		SetJournalineText();
 
 		/* Enable back button */
-		PushButtonStepBack->setEnabled(TRUE);
+		PushButtonStepBack->setEnabled(true);
 	}
 }
 
@@ -195,8 +195,8 @@ void MultimediaDlg::OnTimer()
 	CMOTObject	NewObj;
 	QPixmap		NewImage;
 	int			iCurNumPict;
-	_BOOLEAN	bMainPage;
-	_BOOLEAN	bShowInfo = TRUE;
+	bool	bMainPage;
+	bool	bShowInfo = true;
 
 	Parameters.Lock();
 	ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
@@ -231,7 +231,7 @@ void MultimediaDlg::OnTimer()
 	{
 	case CDataDecoder::AT_MOTSLISHOW:
 		/* Poll the data decoder module for new picture */
-		if (DataDecoder.GetMOTObject(NewObj, eAppType) == TRUE)
+		if (DataDecoder.GetMOTObject(NewObj, eAppType) == true)
 		{
 			/* Store received picture */
 			iCurNumPict = vecRawImages.Size();
@@ -251,7 +251,7 @@ void MultimediaDlg::OnTimer()
 
 	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
 		/* Poll the data decoder module for new object */
-		if (DataDecoder.GetMOTObject(NewObj, eAppType) == TRUE)
+		if (DataDecoder.GetMOTObject(NewObj, eAppType) == true)
 		{
 			/* Store received MOT object on disk */
 			const QString strNewObjName = NewObj.strName.c_str();
@@ -261,22 +261,22 @@ void MultimediaDlg::OnTimer()
 			SaveMOTObject(NewObj.Body.vecData, strFileName);
 
 			/* Check if DABMOT could not unzip */
-			const _BOOLEAN bZipped =
+			const bool bZipped =
 				(strNewObjName.right(3) == ".gz");
 
 			/* Add an html header to refresh the page every n seconds */
-			if (bAddRefresh && (NewObj.strFormat == "html") && (bZipped == FALSE))
+			if (bAddRefresh && (NewObj.strFormat == "html") && (bZipped == false))
 				AddRefreshHeader(strFileName);
 
 			/* Check if is the main page */
-			bMainPage = FALSE;
+			bMainPage = false;
 
 			if (strNewObjName.contains('/') == 0) /* if has a path is not the main page */
 			{
 				/* Get the current directory */
 				CMOTDirectory MOTDir;
 
-				if (DataDecoder.GetMOTDirectory(MOTDir, eAppType) == TRUE)
+				if (DataDecoder.GetMOTDirectory(MOTDir, eAppType) == true)
 				{
 					/* Checks if the DirectoryIndex has values */
 					if (MOTDir.DirectoryIndex.size() > 0)
@@ -294,7 +294,7 @@ void MultimediaDlg::OnTimer()
 
 						if ((strIndexPage == strNewObjName) ||
 						    (strIndexPage + ".gz" == strNewObjName))
-							bMainPage = TRUE;
+							bMainPage = true;
 					}
 					else
 					{
@@ -304,10 +304,10 @@ void MultimediaDlg::OnTimer()
 				}
 			}
 
-			if (bMainPage == TRUE)
+			if (bMainPage == true)
 			{
 				/* The home page is available */
-				if (bZipped == FALSE)
+				if (bZipped == false)
 				{
 					/* Set new homepage file name and init dialog */
 					strBWSHomePage = strNewObjName;
@@ -334,14 +334,14 @@ void MultimediaDlg::OnTimer()
 		break;
 
 	default:
-		bShowInfo = FALSE;
+		bShowInfo = false;
 		break;
 	}
 
 	/* Add the service description into the dialog caption */
 	QString strTitle = tr("Multimedia");
 
-	if (bShowInfo == TRUE)
+	if (bShowInfo == true)
 	{
 		Parameters.Lock();
 		const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
@@ -381,7 +381,7 @@ void MultimediaDlg::OnTimer()
 }
 
 void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
-										  const _BOOLEAN bHTMLExport,
+										  const bool bHTMLExport,
 										  QString& strTitle, QString& strItems)
 {
 	/* Get news from actual Journaline decoder */
@@ -395,7 +395,7 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 	for (int i = 0; i < News.vecItem.Size(); i++)
 	{
 		QString strCurItem;
-		if (bHTMLExport == FALSE)
+		if (bHTMLExport == false)
 		{
 			/* Decode UTF-8 coding of this item text */
 			strCurItem = QString().fromUtf8(
@@ -422,7 +422,7 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 		}
 		else
 		{
-			if (bHTMLExport == FALSE)
+			if (bHTMLExport == false)
 			{
 				QString strLinkStr = QString().setNum(News.vecItem[i].iLink);
 
@@ -446,7 +446,7 @@ void MultimediaDlg::SetJournalineText()
 	/* Get title and body with html links */
 	QString strTitle("");
 	QString strItems("");
-	ExtractJournalineBody(iCurJourObjID, FALSE, strTitle, strItems);
+	ExtractJournalineBody(iCurJourObjID, false, strTitle, strItems);
 
 	/* Set html text. Standard design. The first character must be a "<". This
 	   is used to identify whether normal text is displayed or an ID was set */
@@ -467,9 +467,9 @@ void MultimediaDlg::SetJournalineText()
 
 	/* Enable / disable "save" menu item if title is present or not */
 	if (strTitle == "")
-		pFileMenu->setItemEnabled(1, FALSE);
+		pFileMenu->setItemEnabled(1, false);
 	else
-		pFileMenu->setItemEnabled(1, TRUE);
+		pFileMenu->setItemEnabled(1, true);
 }
 
 void MultimediaDlg::LoadSettings(const CSettings& Settings)
@@ -509,7 +509,7 @@ void MultimediaDlg::LoadSettings(const CSettings& Settings)
 		fontTextBrowser = fontDefault;
 	}
 
-	bAddRefresh = Settings.Get("Multimedia Dialog", "addrefresh", TRUE);
+	bAddRefresh = Settings.Get("Multimedia Dialog", "addrefresh", true);
 	iRefresh = Settings.Get("Multimedia Dialog", "motbwsrefresh", 10);
 
 }
@@ -557,19 +557,6 @@ void MultimediaDlg::hideEvent(QHideEvent*)
 
 }
 
-void MultimediaDlg::SetStatus(int MessID, int iMessPara)
-{
-	switch(MessID)
-	{
-	case MS_MOT_OBJ_STAT:
-		LEDStatus->SetLight(iMessPara);
-		break;
-	case MS_RESET_ALL:
-		LEDStatus->Reset();
-		break;
-	}
-}
-
 void MultimediaDlg::OnButtonStepBack()
 {
 	switch (eAppType)
@@ -585,7 +572,7 @@ void MultimediaDlg::OnButtonStepBack()
 
 		/* If root ID is reached, disable back button */
 		if (iCurJourObjID == 0)
-			PushButtonStepBack->setEnabled(FALSE);
+			PushButtonStepBack->setEnabled(false);
 
 		SetJournalineText();
 		break;
@@ -653,14 +640,12 @@ void MultimediaDlg::SetSlideShowPicture()
 	/* Load picture in QT format */
 	if (NewImage.loadFromData(&imagedata[0], imagedata.size()))
 	{
-#if QT_VERSION >= 0x030000
 		/* The slideshow pictures are not
            updated correctly without this line: */
 		/* If the text is empty there is segmentation fault
 			 browsing the images */
 
 		TextBrowser->setText("<br>");
-#endif
 
 		/* Set new picture in source factory and set it in text control */
 		QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
@@ -695,39 +680,39 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 	/* Set enable menu entry for saving a picture */
 	if (iCurImagePos < 0)
 	{
-		pFileMenu->setItemEnabled(0, FALSE);
-		pFileMenu->setItemEnabled(1, FALSE);
-		pFileMenu->setItemEnabled(2, FALSE);
+		pFileMenu->setItemEnabled(0, false);
+		pFileMenu->setItemEnabled(1, false);
+		pFileMenu->setItemEnabled(2, false);
 	}
 	else
 	{
-		pFileMenu->setItemEnabled(0, TRUE);
-		pFileMenu->setItemEnabled(1, TRUE);
-		pFileMenu->setItemEnabled(2, TRUE);
+		pFileMenu->setItemEnabled(0, true);
+		pFileMenu->setItemEnabled(1, true);
+		pFileMenu->setItemEnabled(2, true);
 	}
 
 	if (iCurImagePos <= 0)
 	{
 		/* We are already at the beginning */
-		PushButtonStepBack->setEnabled(FALSE);
-		PushButtonJumpBegin->setEnabled(FALSE);
+		PushButtonStepBack->setEnabled(false);
+		PushButtonJumpBegin->setEnabled(false);
 	}
 	else
 	{
-		PushButtonStepBack->setEnabled(TRUE);
-		PushButtonJumpBegin->setEnabled(TRUE);
+		PushButtonStepBack->setEnabled(true);
+		PushButtonJumpBegin->setEnabled(true);
 	}
 
 	if (iCurImagePos == GetIDLastPicture())
 	{
 		/* We are already at the end */
-		PushButtonStepForw->setEnabled(FALSE);
-		PushButtonJumpEnd->setEnabled(FALSE);
+		PushButtonStepForw->setEnabled(false);
+		PushButtonJumpEnd->setEnabled(false);
 	}
 	else
 	{
-		PushButtonStepForw->setEnabled(TRUE);
-		PushButtonJumpEnd->setEnabled(TRUE);
+		PushButtonStepForw->setEnabled(true);
+		PushButtonJumpEnd->setEnabled(true);
 	}
 
 	QString strTotImages = QString().setNum(GetIDLastPicture() + 1);
@@ -803,8 +788,8 @@ void MultimediaDlg::OnSave()
 			QString strTitle("");
 			QString strItems("");
 
-			/* TRUE = without html links */
-			ExtractJournalineBody(iCurJourObjID, TRUE, strTitle, strItems);
+			/* true = without html links */
+			ExtractJournalineBody(iCurJourObjID, true, strTitle, strItems);
 
 			/* Prepare HTML page for storing the content (header, body tags, etc) */
 			QString strJornalineText = "<html>\n<head>\n"
@@ -899,9 +884,9 @@ void MultimediaDlg::ClearAllSlideShow()
 void MultimediaDlg::InitNotSupported()
 {
 	/* Hide all controls, disable menu items */
-	pFileMenu->setItemEnabled(0, FALSE);
-	pFileMenu->setItemEnabled(1, FALSE);
-	pFileMenu->setItemEnabled(2, FALSE);
+	pFileMenu->setItemEnabled(0, false);
+	pFileMenu->setItemEnabled(1, false);
+	pFileMenu->setItemEnabled(2, false);
 	PushButtonStepForw->hide();
 	PushButtonJumpBegin->hide();
 	PushButtonJumpEnd->hide();
@@ -917,11 +902,11 @@ void MultimediaDlg::InitNotSupported()
 void MultimediaDlg::InitBroadcastWebSite()
 {
 	/* Hide all controls, disable menu items */
-	pFileMenu->setItemEnabled(0, FALSE);
-	pFileMenu->setItemEnabled(1, FALSE);
-	pFileMenu->setItemEnabled(2, FALSE);
+	pFileMenu->setItemEnabled(0, false);
+	pFileMenu->setItemEnabled(1, false);
+	pFileMenu->setItemEnabled(2, false);
 	PushButtonStepForw->show();
-	PushButtonStepForw->setEnabled(FALSE);
+	PushButtonStepForw->setEnabled(false);
 	PushButtonJumpBegin->hide();
 	PushButtonJumpEnd->hide();
 	LabelCurPicNum->hide();
@@ -931,7 +916,7 @@ void MultimediaDlg::InitBroadcastWebSite()
 	if (strBWSHomePage != "")
 	{
 		/* This is the button for opening the browser */
-		PushButtonStepForw->setEnabled(TRUE);
+		PushButtonStepForw->setEnabled(true);
 
 		/* Display text that index page was received an can be opened */
 		TextBrowser->setText("<center><h2>" + tr("MOT Broadcast Web Site")
@@ -980,11 +965,11 @@ void MultimediaDlg::InitMOTSlideShow()
 void MultimediaDlg::InitJournaline()
 {
 	/* Disable "clear all" menu item */
-	pFileMenu->setItemEnabled(0, FALSE);
+	pFileMenu->setItemEnabled(0, false);
 
 	/* Disable "save" menu items */
-	pFileMenu->setItemEnabled(1, FALSE);
-	pFileMenu->setItemEnabled(2, FALSE);
+	pFileMenu->setItemEnabled(1, false);
+	pFileMenu->setItemEnabled(2, false);
 
 	/* Only one back button is visible and enabled */
 	PushButtonStepForw->hide();
@@ -995,7 +980,7 @@ void MultimediaDlg::InitJournaline()
 	/* Show back button and disable it because we always start at the root
 	   object */
 	PushButtonStepBack->show();
-	PushButtonStepBack->setEnabled(FALSE);
+	PushButtonStepBack->setEnabled(false);
 
 	/* Init text browser window */
 	iCurJourObjID = 0;
@@ -1025,17 +1010,17 @@ void MultimediaDlg::CreateDirectories(const QString& filename)
 
 	while (uint(i) < filename.length())
 	{
-		_BOOLEAN bFound = FALSE;
+		bool bFound = false;
 
-		while ((uint(i) < filename.length()) && (bFound == FALSE))
+		while ((uint(i) < filename.length()) && (bFound == false))
 		{
 			if (filename[i] == '/')
-				bFound = TRUE;
+				bFound = true;
 			else
 				i++;
 		}
 
-		if (bFound == TRUE)
+		if (bFound == true)
 		{
 			/* create directory */
 			const QString sDirName = filename.left(i);
@@ -1093,9 +1078,9 @@ void MultimediaDlg::SaveMOTObject(const CVector<_BYTE>& vecbRawData,
 	}
 }
 
-_BOOLEAN MultimediaDlg::openBrowser(QWidget *widget, const QString &filename)
+bool MultimediaDlg::openBrowser(QWidget *widget, const QString &filename)
 {
-	_BOOLEAN bResult = FALSE;
+	bool bResult = false;
 
 #ifdef _WIN32
 	/* Running in an MS Windows environment */
@@ -1128,129 +1113,24 @@ _BOOLEAN MultimediaDlg::openBrowser(QWidget *widget, const QString &filename)
 	}
 
 	if ((WEXITSTATUS(retval) == 1) || (retval == 0))
-		bResult = TRUE;
+		bResult = true;
 #endif
 
 	return bResult;
 }
 
-void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
+void MultimediaDlg::JpgToPng(CMOTObject&) // TODO - remove
 {
-#if defined(HAVE_LIBFREEIMAGE) && (QT_VERSION < 0x030000)
-	/* This class is needed for FreeImage load and save from memory. This code
-	   is based on an example code shipped with FreeImage library */
-	class MemIO : public FreeImageIO
-	{
-	public :
-		/* Assign function pointers in constructor */
-		MemIO(CVector<_BYTE> vecNewData) : vecbyData(vecNewData), iPos(0)
-			{read_proc  = _ReadProc; write_proc = _WriteProc;
-			tell_proc = _TellProc; seek_proc = _SeekProc;}
-		CVector<_BYTE>& GetData() {return vecbyData;}
-		void Reset() {iPos = 0;}
-
-		static long DLL_CALLCONV _TellProc(fi_handle handle)
-			{return ((MemIO*) handle)->iPos;} /* Return current position */
-
-		static unsigned DLL_CALLCONV _ReadProc(void* buffer, unsigned size,
-			unsigned count, fi_handle handle)
-		{
-			MemIO* memIO = (MemIO*) handle;
-			_BYTE* tmpBuf = (_BYTE*) buffer;
-
-			/* Copy new data in internal storage vector. Write at current iPos
-			   and increment position. Check for out-of-range, too */
-			for (unsigned int c = 0; c < count; c++)
-			{
-				for (unsigned int i = 0; i < size; i++)
-				{
-					if (memIO->iPos < memIO->vecbyData.Size())
-						*tmpBuf++ = memIO->vecbyData[memIO->iPos++];
-				}
-			}
-
-			return count;
-		}
-
-		static unsigned DLL_CALLCONV _WriteProc(void* buffer, unsigned size,
-			unsigned count, fi_handle handle)
-		{
-			MemIO* memIO = (MemIO*) handle;
-			_BYTE* tmpBuf = (_BYTE*) buffer;
-
-			/* Make sure, enough space is available */
-			const long int iSpaceLeft =
-				memIO->vecbyData.Size() - (memIO->iPos + size * count);
-
-			if (iSpaceLeft < 0)
-				memIO->vecbyData.Enlarge(-iSpaceLeft);
-
-			/* Copy data */
-			for (unsigned int c = 0; c < count; c++)
-			{
-				for (unsigned int i = 0; i < size; i++)
-					memIO->vecbyData[memIO->iPos++] = *tmpBuf++;
-			}
-
-			return count;
-		}
-
-		static int DLL_CALLCONV _SeekProc(fi_handle handle, long offset,
-			int origin)
-		{
-			if (origin == SEEK_SET)
-				((MemIO*) handle)->iPos = offset; /* From beginning */
-			else
-				((MemIO*) handle)->iPos += offset; /* From current position */
-
-			return 0;
-		}
-
-	private:
-		CVector<_BYTE>	vecbyData;
-		long int		iPos;
-	};
-
-	/* Only jpeg images are converted here */
-	if (NewPic.strFormat.compare("jpeg") != 0)
-		return;
-
-	/* If we use freeimage as a static library, we need to initialize it
-	   first */
-	FreeImage_Initialise();
-
-	/* Put input data in a new IO object */
-	MemIO memIO(NewPic.Body.vecData);
-
-	/* Load data from memory */
-	FIBITMAP* fbmp =
-		FreeImage_LoadFromHandle(FIF_JPEG, &memIO, (fi_handle) &memIO);
-
-	/* After the reading functions, the IO must be reset for the writing */
-	memIO.Reset();
-
-	/* Actual conversion */
-	if (FreeImage_SaveToHandle(FIF_PNG, fbmp, &memIO, (fi_handle) &memIO))
-	{
-		/* Get converted data and set new format string */
-		NewPic.Body.vecData.Init(memIO.GetData().Size()); /* Size has certainly
-															changed */
-		NewPic.Body.vecData = memIO.GetData(); /* Actual copying */
-		NewPic.strFormat = "png"; /* New format string */
-	}
-#else
-	(void)NewPic; /* quiet compiler warning */
-#endif
 }
 
 void MultimediaDlg::OnSetFont()
 {
-	_BOOLEAN bok;
+	bool bok;
 
 	/* Open the font dialog */
 	QFont newFont = QFontDialog::getFont(&bok, fontTextBrowser, this);
 
-	if (bok == TRUE)
+	if (bok == true)
 	{
 		/* Store the current text and then reset it */
 		QString strOldText = TextBrowser->text();

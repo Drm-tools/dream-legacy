@@ -31,7 +31,7 @@
 #include <qregexp.h>
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
-               const char* name, bool modal, WFlags f)
+               const char* name, bool modal, Qt::WFlags f)
 :CEPGDlgbase(parent, name, modal, f),BitmCubeGreen(),date(QDate::currentDate()),
 do_updates(false),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
 Settings(NSettings),Timer(),sids()
@@ -77,7 +77,7 @@ Settings(NSettings),Timer(),sids()
     year->setMaxValue(3000);
 
 	/* show a label if EPG decoding is disabled */
-	if (DRMReceiver.GetDataDecoder()->GetDecodeEPG() == TRUE)
+	if (DRMReceiver.GetDataDecoder()->GetDecodeEPG() == true)
 		TextEPGDisabled->hide();
 	else
 		TextEPGDisabled->show();
@@ -325,7 +325,7 @@ void EPGDlg::select()
 		Data->ensureItemVisible(CurrActiveItem);
 }
 
-_BOOLEAN EPGDlg::IsActive(const QString& start, const QString& duration, const tm& now)
+bool EPGDlg::IsActive(const QString& start, const QString& duration, const tm& now)
 {
     QStringList sl = QStringList::split(":", start);
     QStringList dl = QStringList::split(":", duration);
@@ -333,7 +333,7 @@ _BOOLEAN EPGDlg::IsActive(const QString& start, const QString& duration, const t
     int e = s + 60*dl[0].toInt()+dl[1].toInt();
     int n = 60*now.tm_hour+now.tm_min;
 	if ((s <= n) && (n < e))
-		return TRUE;
+		return true;
 	else
-		return FALSE;
+		return false;
 }

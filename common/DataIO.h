@@ -36,6 +36,7 @@
 #include "Parameter.h"
 #include "util/ReceiverModul.h"
 #include "util/TransmitterModul.h"
+#include "util/SimulationModul.h"
 #include "FAC/FAC.h"
 #include "SDC/SDC.h"
 #include "TextMessage.h"
@@ -45,13 +46,13 @@
 /* In case of random-noise, define number of blocks */
 #define DEFAULT_NUM_SIM_BLOCKS		50
 
-/* Length of vector for audio spectrum. We use a power-of-two length to 
+/* Length of vector for audio spectrum. We use a power-of-two length to
    make the FFT work more efficient */
 #define NUM_SMPLS_4_AUDIO_SPECTRUM	256
 
 /* Time span used for averaging the audio spectrum. Shall be higher than the
    400 ms DRM audio block */
-#define TIME_AV_AUDIO_SPECT_MS		500 /* ms */		
+#define TIME_AV_AUDIO_SPECT_MS		500 /* ms */
 
 /* Number of blocks for averaging the audio spectrum */
 #define NUM_BLOCKS_AV_AUDIO_SPEC	Ceil(((_REAL) SOUNDCRD_SAMPLE_RATE * \
@@ -61,7 +62,6 @@
    overrun of the "short" variable can happen but signal has quite much lower
    power -> compromise */
 #define MIX_OUT_CHAN_NORM_CONST		((_REAL) 1.0 / sqrt((_REAL) 2.0))
-
 
 /* Classes ********************************************************************/
 /* MSC ---------------------------------------------------------------------- */
@@ -93,13 +93,13 @@ public:
 	virtual ~CWriteData() {}
 
 	void StartWriteWaveFile(const string strFileName);
-	_BOOLEAN GetIsWriteWaveFile() {return bDoWriteWaveFile;}
+	bool GetIsWriteWaveFile() {return bDoWriteWaveFile;}
 	void StopWriteWaveFile();
 
-	void MuteAudio(_BOOLEAN bNewMA) {bMuteAudio = bNewMA;}
-	_BOOLEAN GetMuteAudio() {return bMuteAudio;}
+	void MuteAudio(bool bNewMA) {bMuteAudio = bNewMA;}
+	bool GetMuteAudio() {return bMuteAudio;}
 
-	void SetSoundBlocking(const _BOOLEAN bNewBl)
+	void SetSoundBlocking(const bool bNewBl)
 		{bNewSoundBlocking = bNewBl; SetInitFlag();}
 
 	void GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
@@ -110,10 +110,10 @@ public:
 protected:
 	CSoundOutInterface*		pSound;
 	CSoundOutInterface*		pSoundFile;
-	_BOOLEAN				bMuteAudio;
-	_BOOLEAN				bDoWriteWaveFile;
-	_BOOLEAN				bSoundBlocking;
-	_BOOLEAN				bNewSoundBlocking;
+	bool				bMuteAudio;
+	bool				bDoWriteWaveFile;
+	bool				bSoundBlocking;
+	bool				bNewSoundBlocking;
 	vector<_SAMPLE>			vecsTmpAudData;
 	EOutChanSel				eOutChanSel;
 	_REAL					rMixNormConst;
@@ -186,18 +186,18 @@ class CUtilizeFACData : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
 	CUtilizeFACData() :
-		bSyncInput(FALSE), bCRCOk(FALSE) {}
+		bSyncInput(false), bCRCOk(false) {}
 	virtual ~CUtilizeFACData() {}
 
 	/* To set the module up for synchronized DRM input data stream */
-	void SetSyncInput(_BOOLEAN bNewS) {bSyncInput = bNewS;}
+	void SetSyncInput(bool bNewS) {bSyncInput = bNewS;}
 
-	_BOOLEAN GetCRCOk() const {return bCRCOk;}
+	bool GetCRCOk() const {return bCRCOk;}
 
 protected:
 	CFACReceive FACReceive;
-	_BOOLEAN	bSyncInput;
-	_BOOLEAN	bCRCOk;
+	bool	bSyncInput;
+	bool	bCRCOk;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
@@ -213,7 +213,7 @@ public:
 
 protected:
 	CSDCTransmit SDCTransmit;
-		
+
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);
 };
@@ -228,7 +228,7 @@ public:
 
 protected:
 	CSDCReceive SDCReceive;
-	_BOOLEAN	bFirstBlock;
+	bool	bFirstBlock;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
@@ -238,8 +238,9 @@ protected:
 /******************************************************************************\
 * Data type conversion classes needed for simulation and AMSS decoding         *
 \******************************************************************************/
+
 /* Conversion from channel output to resample module input */
-class CDataConvChanResam : public CReceiverModul<CChanSimDataMod, _REAL>
+class CDataConvChanResam : public CReceiverModul<CChanSimData<_REAL>, _REAL>
 {
 protected:
 	virtual void InitInternal(CParameter& ReceiverParam)
@@ -307,8 +308,8 @@ protected:
 	CMixer						Mixer;
 
 	int							iFrequency; // For use in generating filename
-	_BOOLEAN					bIsRecording;
-	_BOOLEAN					bChangeReceived;
+	bool					bIsRecording;
+	bool					bChangeReceived;
 
 };
 

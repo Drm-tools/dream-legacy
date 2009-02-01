@@ -32,7 +32,7 @@
 #include <iomanip>
 
 CGPSData::CGPSData()
-{ 
+{
 	Reset();
 }
 
@@ -52,12 +52,12 @@ CGPSData::SetGPSSource(EGPSSource eNewSource)
 }
 
 void
-CGPSData::SetSatellitesVisibleAvailable(_BOOLEAN bNew)
+CGPSData::SetSatellitesVisibleAvailable(bool bNew)
 {
 	m_bSatellitesVisibleAvailable = bNew;
 }
 
-_BOOLEAN CGPSData::GetSatellitesVisibleAvailable() const
+bool CGPSData::GetSatellitesVisibleAvailable() const
 {
 	return m_bSatellitesVisibleAvailable;
 }
@@ -74,12 +74,12 @@ uint16_t CGPSData::GetSatellitesVisible() const
 }
 
 void
-CGPSData::SetPositionAvailable(_BOOLEAN bNew)
+CGPSData::SetPositionAvailable(bool bNew)
 {
 	m_bPositionAvailable = bNew;
 }
 
-_BOOLEAN CGPSData::GetPositionAvailable() const
+bool CGPSData::GetPositionAvailable() const
 {
 	return m_bPositionAvailable;
 }
@@ -139,12 +139,12 @@ CGPSData::asDM(string& pos, double d, char n, char p) const
 }
 
 void
-CGPSData::SetSpeedAvailable(_BOOLEAN bNew)
+CGPSData::SetSpeedAvailable(bool bNew)
 {
 	m_bSpeedAvailable = bNew;
 }
 
-_BOOLEAN CGPSData::GetSpeedAvailable() const
+bool CGPSData::GetSpeedAvailable() const
 {
 	return m_bSpeedAvailable;
 }
@@ -162,12 +162,12 @@ CGPSData::GetSpeedMetresPerSecond() const
 }
 
 void
-CGPSData::SetHeadingAvailable(_BOOLEAN bNew)
+CGPSData::SetHeadingAvailable(bool bNew)
 {
 	m_bHeadingAvailable = bNew;
 }
 
-_BOOLEAN CGPSData::GetHeadingAvailable() const
+bool CGPSData::GetHeadingAvailable() const
 {
 	return m_bHeadingAvailable;
 }
@@ -185,12 +185,12 @@ CGPSData::GetHeadingDegrees() const
 }
 
 void
-CGPSData::SetTimeAndDateAvailable(_BOOLEAN bNew)
+CGPSData::SetTimeAndDateAvailable(bool bNew)
 {
 	m_bTimeAndDateAvailable = bNew;
 }
 
-_BOOLEAN CGPSData::GetTimeAndDateAvailable() const
+bool CGPSData::GetTimeAndDateAvailable() const
 {
 	return m_bTimeAndDateAvailable;
 }
@@ -207,12 +207,12 @@ uint32_t CGPSData::GetTimeSecondsSince1970() const
 }
 
 void
-CGPSData::SetAltitudeAvailable(_BOOLEAN bNew)
+CGPSData::SetAltitudeAvailable(bool bNew)
 {
 	m_bAltitudeAvailable = bNew;
 }
 
-_BOOLEAN CGPSData::GetAltitudeAvailable() const
+bool CGPSData::GetAltitudeAvailable() const
 {
 	return m_bAltitudeAvailable;
 }
@@ -256,20 +256,20 @@ CGPSData::EStatus CGPSData::GetStatus() const
 void
 CGPSData::Reset()
 {
-	m_bPositionAvailable = FALSE;
+	m_bPositionAvailable = false;
 	m_fLatitudeDegrees = 0;
 	m_fLongitudeDegrees = 0;
-	m_bSpeedAvailable = FALSE;
+	m_bSpeedAvailable = false;
 	m_fSpeedMetresPerSecond = 0;
-	m_bHeadingAvailable = FALSE;
+	m_bHeadingAvailable = false;
 	m_usHeadingDegrees = 0;
-	m_bTimeAndDateAvailable = FALSE;
+	m_bTimeAndDateAvailable = false;
 	m_ulTimeSecondsSince1970 = 0;
-	m_bAltitudeAvailable = FALSE;
+	m_bAltitudeAvailable = false;
 	m_fAltitudeMetres = 0;
 	m_eStatus = GPS_RX_NOT_CONNECTED;
 	m_eFix = MODE_NO_FIX;
-	m_bSatellitesVisibleAvailable = FALSE;
+	m_bSatellitesVisibleAvailable = false;
 	m_usSatellitesVisible = 0;
 }
 

@@ -6,22 +6,22 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -49,8 +49,8 @@
 #include <qlabel.h>
 #include <qfileinfo.h>
 #include <qdatetime.h>
-#include <qwt/qwt_thermo.h>
-#include <qwt/qwt_counter.h>
+#include <qwt_thermo.h>
+#include <qwt_counter.h>
 
 #include "StationsDlgbase.h"
 #include "../DrmReceiver.h"
@@ -183,7 +183,7 @@ public:
 
 
 protected:
-	_BOOLEAN IsActive(const int iPos, const time_t ltime);
+	bool IsActive(const int iPos, const time_t ltime);
 
 	vector<CStationsItem>	StationsTable;
 	ESchedMode				eSchedMode;
@@ -216,7 +216,7 @@ class StationsDlg : public CStationsDlgBase
 public:
 
 	StationsDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = false, Qt::WFlags f = 0);
 	virtual ~StationsDlg();
 	/* dummy assignment operator to help MSVC8 */
 	StationsDlg& operator=(const StationsDlg&)
@@ -224,14 +224,14 @@ public:
 
 	void LoadSchedule(CDRMSchedule::ESchedMode eNewSchM);
 	void SetCurrentSchedule(const CDRMSchedule::ESchedMode eNewSchM);
-	_BOOLEAN CheckFilter(const int iPos);
+	bool CheckFilter(const int iPos);
 
 
 	void LoadSettings(const CSettings&);
 	void SaveSettings(CSettings&);
 
 	int				iCurrentSortColumn;
-	_BOOLEAN		bCurrentSortAscending;
+	bool		bCurrentSortAscending;
 
 protected:
 	void			SetStationsView();
@@ -240,7 +240,7 @@ protected:
 	void			hideEvent(QHideEvent* pEvent);
 	void			AddWhatsThisHelp();
 	void			SetUTCTimeLabel();
-	void			EnableSMeter(const _BOOLEAN bStatus);
+	void			EnableSMeter(const bool bStatus);
 	void			AddUpdateDateTime();
 	void			SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM);
 
@@ -260,9 +260,9 @@ protected:
 	QTimer						TimerMonitorFrequency;
 	QTimer						TimerTuning;
 
-	_BOOLEAN					bTuningInProgress;
-	_BOOLEAN					bShowAll;
-	_BOOLEAN					bReInitOnFrequencyChange;
+	bool					bTuningInProgress;
+	bool					bShowAll;
+	bool					bReInitOnFrequencyChange;
 	QUrlOperator				UrlUpdateSchedule;
 	QPopupMenu*					pViewMenu;
 	QPopupMenu*					pPreviewMenu;

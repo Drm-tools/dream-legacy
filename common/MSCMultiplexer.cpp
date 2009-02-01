@@ -60,7 +60,7 @@ void CMSCDemultiplexer::ProcessDataInternal(CParameter&)
 
 void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 {
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
  	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
  	{
 		StreamPos[i] = GetStreamPos(ReceiverParam, i);
@@ -68,7 +68,7 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 	}
 	/* Set input block size */
 	iInputBlockSize = ReceiverParam.iNumDecodedBitsMSC;
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 }
 
 void CMSCDemultiplexer::ExtractData(CVectorEx<_BINARY>& vecIn,
@@ -101,8 +101,8 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 	{
 		/* Length of higher and lower protected part of audio stream (number
 		   of bits) */
-		StPos.iLenHigh = Param.Stream[iStreamID].iLenPartA * SIZEOF__BYTE;
-		StPos.iLenLow = Param.Stream[iStreamID].iLenPartB *	SIZEOF__BYTE;
+		StPos.iLenHigh = Param.Stream[iStreamID].iLenPartA * sizeof(_BINARY);
+		StPos.iLenLow = Param.Stream[iStreamID].iLenPartB *	sizeof(_BINARY);
 
 
 		/* Byte-offset of higher and lower protected part of audio stream --- */
@@ -118,7 +118,7 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 		set<int>::iterator i;
 		for (i = actStreams.begin(); i!=actStreams.end(); i++)
 		{
-			StPos.iOffsetLow += Param.Stream[*i].iLenPartA * SIZEOF__BYTE;
+			StPos.iOffsetLow += Param.Stream[*i].iLenPartA * sizeof(_BINARY);
 		}
 
 		/* Real start position of the streams */
@@ -127,8 +127,8 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 		{
 			if (*i < iStreamID)
 			{
-				StPos.iOffsetHigh += Param.Stream[*i].iLenPartA * SIZEOF__BYTE;
-				StPos.iOffsetLow += Param.Stream[*i].iLenPartB * SIZEOF__BYTE;
+				StPos.iOffsetHigh += Param.Stream[*i].iLenPartA * sizeof(_BINARY);
+				StPos.iOffsetLow += Param.Stream[*i].iLenPartB * sizeof(_BINARY);
 			}
 		}
 
@@ -152,7 +152,7 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 				StPos.iOffsetLow += Param.iNumBitsHierarchFrameTotal -
 					/* We have to subtract this because we added it in the
 					   for loop above which we do not need here */
-					Param.Stream[0].iLenPartB * SIZEOF__BYTE;
+					Param.Stream[0].iLenPartB * sizeof(_BINARY);
 			}
 		}
 

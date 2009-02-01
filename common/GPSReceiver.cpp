@@ -13,16 +13,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -43,7 +43,7 @@ const unsigned short CGPSReceiver::c_usReconnectIntervalSeconds = 30;
 CGPSReceiver::CGPSReceiver(CParameter& p, CSettings& s):
 	Parameters(p),m_Settings(s),m_pSocket(NULL),m_iCounter(0),
 	m_sHost("localhost"),m_iPort(2947)
-{	
+{
 #ifdef HAVE_QT
     m_pTimer = new QTimer(this);
 	m_pTimerDataTimeout = new QTimer(this);
@@ -62,20 +62,20 @@ CGPSReceiver::~CGPSReceiver()
 
 void CGPSReceiver::open()
 {
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 	if(m_pSocket == NULL)
 	{
 		m_pSocket = new QSocket();
 		if(m_pSocket == NULL)
 			return;
-	
+
 		connect(m_pSocket, SIGNAL(connected()), this, SLOT(slotConnected()));
 		connect(m_pSocket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
 		connect(m_pSocket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
 	}
-	
+
 	m_pSocket->connectToHost(m_sHost.c_str(), m_iPort);
 }
 
@@ -84,9 +84,9 @@ void CGPSReceiver::close()
 	if(m_pSocket == NULL)
 		return;
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	m_pSocket->close();
 	disconnect(m_pSocket, SIGNAL(connected()), this, SLOT(slotConnected()));
@@ -107,12 +107,12 @@ void CGPSReceiver::DecodeGPSDReply(string Reply)
 
 	size_t GPSDPos=0;
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 	while ((GPSDPos = TotalReply.find("GPSD",0)) != string::npos)
 	{
 		TotalReply=TotalReply.substr(GPSDPos+5,TotalReply.length()-(5+GPSDPos));
 
-		_BOOLEAN finished = FALSE;
+		bool finished = false;
 
 		while (!finished)		// while not all of message has been consumed
 		{
@@ -123,21 +123,21 @@ void CGPSReceiver::DecodeGPSDReply(string Reply)
 				{
 					char Command = (char) TotalReply[0];
 					string Value = TotalReply.substr(CurrentPos+2,i-CurrentPos);	// 2 to allow for equals sign
-					
+
 					DecodeString(Command,Value);
-					
+
 					CurrentPos = i;
 
 					if (TotalReply[i] == '\r' || TotalReply[i] == '\n')		// end of line
 					{
-						finished = TRUE;
+						finished = true;
 						break;
 					}
 				}
-			}			
+			}
 		}
 	}
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 //decode gpsd strings
@@ -160,14 +160,14 @@ void CGPSReceiver::DecodeString(char Command, string Value)
 }
 
 void CGPSReceiver::DecodeO(string Value)
-{	
+{
 	if (Value[0] == '?')
 	{
-		Parameters.GPSData.SetPositionAvailable(FALSE);
-		Parameters.GPSData.SetAltitudeAvailable(FALSE);
-		Parameters.GPSData.SetTimeAndDateAvailable(FALSE);
-		Parameters.GPSData.SetHeadingAvailable(FALSE);
-		Parameters.GPSData.SetSpeedAvailable(FALSE);
+		Parameters.GPSData.SetPositionAvailable(false);
+		Parameters.GPSData.SetAltitudeAvailable(false);
+		Parameters.GPSData.SetTimeAndDateAvailable(false);
+		Parameters.GPSData.SetHeadingAvailable(false);
+		Parameters.GPSData.SetSpeedAvailable(false);
 		return;
 	}
 
@@ -183,7 +183,7 @@ void CGPSReceiver::DecodeO(string Value)
 	ssValue >> sSpeedError >> sClimbError;
 
 	Parameters.GPSData.SetLatLongDegrees(fLatitude, fLongitude);
-	Parameters.GPSData.SetPositionAvailable(TRUE);
+	Parameters.GPSData.SetPositionAvailable(true);
 
 	if (sTime.find('?') == string::npos)
 	{
@@ -191,36 +191,36 @@ void CGPSReceiver::DecodeO(string Value)
 		unsigned long ulTime;
 		ssTime >> ulTime;
 		Parameters.GPSData.SetTimeSecondsSince1970(ulTime);
-		Parameters.GPSData.SetTimeAndDateAvailable(TRUE);
+		Parameters.GPSData.SetTimeAndDateAvailable(true);
 	}
 	else
 	{
-		Parameters.GPSData.SetTimeAndDateAvailable(FALSE);
+		Parameters.GPSData.SetTimeAndDateAvailable(false);
 	}
 
 	if (sAltitude.find('?') == string::npos)	// if '?' not found..
 	{
-		Parameters.GPSData.SetAltitudeAvailable(TRUE);
+		Parameters.GPSData.SetAltitudeAvailable(true);
 		Parameters.GPSData.SetAltitudeMetres(atof(sAltitude.c_str()));
 	}
 	else
-		Parameters.GPSData.SetAltitudeAvailable(FALSE);
+		Parameters.GPSData.SetAltitudeAvailable(false);
 
 	if (sHeading.find('?') == string::npos)
 	{
-		Parameters.GPSData.SetHeadingAvailable(TRUE);
+		Parameters.GPSData.SetHeadingAvailable(true);
 		Parameters.GPSData.SetHeadingDegrees((unsigned short) atof(sHeading.c_str()));
 	}
 	else
-		Parameters.GPSData.SetHeadingAvailable(FALSE);
+		Parameters.GPSData.SetHeadingAvailable(false);
 
 	if (sSpeed.find('?') == string::npos)
 	{
-		Parameters.GPSData.SetSpeedAvailable(TRUE);
+		Parameters.GPSData.SetSpeedAvailable(true);
 		Parameters.GPSData.SetSpeedMetresPerSecond(atof(sSpeed.c_str()));
 	}
 	else
-		Parameters.GPSData.SetSpeedAvailable(FALSE);
+		Parameters.GPSData.SetSpeedAvailable(false);
 
 }
 
@@ -228,8 +228,8 @@ void CGPSReceiver::DecodeY(string Value)
 {
 	if (Value[0] == '?')
 	{
-		Parameters.GPSData.SetSatellitesVisibleAvailable(FALSE);
-		Parameters.GPSData.SetTimeAndDateAvailable(FALSE);
+		Parameters.GPSData.SetSatellitesVisibleAvailable(false);
+		Parameters.GPSData.SetTimeAndDateAvailable(false);
 		return;
 	}
 
@@ -240,7 +240,7 @@ void CGPSReceiver::DecodeY(string Value)
 	ssValue >> sTag >> sTimestamp >> usSatellites;
 
 	Parameters.GPSData.SetSatellitesVisible(usSatellites);
-	Parameters.GPSData.SetSatellitesVisibleAvailable(TRUE);
+	Parameters.GPSData.SetSatellitesVisibleAvailable(true);
 
 	//todo - timestamp//
 
@@ -257,9 +257,9 @@ void CGPSReceiver::slotInit()
 void CGPSReceiver::slotConnected()
 {
 	m_iCounter = 0;
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 	// clear current buffer
 	while(m_pSocket->canReadLine())
 		m_pSocket->readLine();
@@ -287,18 +287,18 @@ void CGPSReceiver::slotTimeout()
 	}
 	else
 	{
-		Parameters.Lock(); 
+		Parameters.Lock();
 		Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
-		Parameters.Unlock(); 
+		Parameters.Unlock();
 	}
 }
 
 void CGPSReceiver::slotReadyRead()
 {
 	m_iCounter = c_usReconnectIntervalSeconds/5;
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_DATA_AVAILABLE);
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 	while (m_pSocket->canReadLine())
 		DecodeGPSDReply((const char*) m_pSocket->readLine());
 	m_pTimerDataTimeout->start(5*1000); // if no data in 5 seconds signal GPS_RX_NO_DATA
@@ -309,5 +309,5 @@ void CGPSReceiver::slotSocketError(int)
 //	close()
 	disconnect(m_pTimer, 0, 0, 0);	// disconnect everything connected to the timer
 	connect( m_pTimer, SIGNAL(timeout()), SLOT(slotInit()) );
-	m_pTimer->start(c_usReconnectIntervalSeconds*1000, TRUE);
+	m_pTimer->start(c_usReconnectIntervalSeconds*1000, true);
 }

@@ -29,6 +29,7 @@
 #define MOTSLIDESHOW_H__3B0UBVE98732KJVEW363LIHGEW982__INCLUDED_
 
 #include "../GlobalDefinitions.h"
+#include "../Parameter.h"
 #include "../util/Vector.h"
 #include "DABMOT.h"
 
@@ -55,7 +56,7 @@ class CMOTSlideShowEncoder
     {
 	vecPicFileNames.Init (0);
     }
-    _BOOLEAN GetTransStat (string & strCurPict, _REAL & rCurPerc);
+    bool GetTransStat (string & strCurPict, _REAL & rCurPerc);
 
   protected:
     struct SPicDescr

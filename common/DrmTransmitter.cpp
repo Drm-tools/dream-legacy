@@ -139,7 +139,7 @@ CDRMTransmitter::GetPics(map<string,string>& m)
     Encoder.GetPics(m);
 }
 
-_BOOLEAN
+bool
 CDRMTransmitter::GetTransStat(string& strCPi, _REAL& rCPe)
 {
 	return Encoder.GetTransStat(strCPi, rCPe);
@@ -154,7 +154,7 @@ CDRMTransmitter::SetReadFromFile(const string & strNFN)
 void
 CDRMTransmitter::Stop()
 {
-	TransmParam.bRunThread = FALSE;
+	TransmParam.bRunThread = false;
 }
 
 void CDRMTransmitter::Start()
@@ -207,7 +207,7 @@ void CDRMTransmitter::Start()
         }
 
         /* Set run flag */
-        TransmParam.bRunThread = TRUE;
+        TransmParam.bRunThread = true;
         cout << "Tx: starting, in:" << (MDIIn.GetInEnabled()?"MDI":"Encoder")
              << ", out: " << (MDIOut.GetOutEnabled()?"MDI":"COFDM")
              << endl; cout.flush();
@@ -218,11 +218,11 @@ void CDRMTransmitter::Start()
 			{
 				if(bInSync==false)
 				{
-					FACBuf.SetRequestFlag(TRUE);
-					SDCBuf.SetRequestFlag(TRUE);
+					FACBuf.SetRequestFlag(true);
+					SDCBuf.SetRequestFlag(true);
 					for(size_t i=0; i<MAX_NUM_STREAMS; i++)
-						MSCBuf[i].SetRequestFlag(TRUE);
-					MDIPacketBuf.SetRequestFlag(TRUE);
+						MSCBuf[i].SetRequestFlag(true);
+					MDIPacketBuf.SetRequestFlag(true);
 				}
 				MDIPacketBuf.Clear();
 				MDIIn.ReadData(TransmParam, MDIPacketBuf);
@@ -234,7 +234,7 @@ void CDRMTransmitter::Start()
 				if(bInSync==false && FACBuf.GetFillLevel()>0)
 				{
 					CFACReceive FACReceive;
-					_BOOLEAN bCRCOk = FACReceive.FACParam(FACBuf.QueryWriteBuffer(), TransmParam);
+					bool bCRCOk = FACReceive.FACParam(FACBuf.QueryWriteBuffer(), TransmParam);
 					if(bCRCOk)
 					{
 						cerr << "Got SDCI & FAC" << endl;

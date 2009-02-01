@@ -32,6 +32,23 @@
 
 #include "Modul.h"
 
+// FIXME something nicer than using "MAX_NUM_TAPS_DRM_CHAN"
+/* For simulation, data from channel simulation */
+#define MAX_NUM_TAPS_DRM_CHAN			4
+
+/* Path for simulation output and status files */
+#define SIM_OUT_FILES_PATH				"test/"
+
+template<class T> class CChanSimData
+{
+public:
+	T					tIn; /* Channel input data */
+	T					tOut; /* Output of the channel (with noise) */
+	T					tRef; /* Channel reference signal (without noise) */
+	_COMPLEX			veccTap[MAX_NUM_TAPS_DRM_CHAN]; /* Tap gains */
+	_COMPLEX			veccTapBackw[MAX_NUM_TAPS_DRM_CHAN];
+};
+
 template<class TInput, class TOutput, class TInOut2>
 class CSimulationModul : public CModul<TInput, TOutput>
 {
@@ -45,19 +62,19 @@ public:
 	virtual void		Init(CParameter& Parameter,
 							 CBuffer<TOutput>& OutputBuffer,
 							 CBuffer<TInOut2>& OutputBuffer2);
-	virtual void		TransferData(CParameter& Parameter, 
-									 CBuffer<TInput>& InputBuffer, 
+	virtual void		TransferData(CParameter& Parameter,
+									 CBuffer<TInput>& InputBuffer,
 									 CBuffer<TOutput>& OutputBuffer);
 
 
 // TEST "ProcessDataIn" "ProcessDataOut"
-	virtual _BOOLEAN	ProcessDataIn(CParameter& Parameter, 
+	virtual bool	ProcessDataIn(CParameter& Parameter,
 									  CBuffer<TInput>& InputBuffer,
 									  CBuffer<TInOut2>& InputBuffer2,
 									  CBuffer<TOutput>& OutputBuffer);
-	virtual _BOOLEAN	ProcessDataOut(CParameter& Parameter, 
+	virtual bool	ProcessDataOut(CParameter& Parameter,
 									   CBuffer<TInput>& InputBuffer,
-									   CBuffer<TOutput>& OutputBuffer, 
+									   CBuffer<TOutput>& OutputBuffer,
 									   CBuffer<TInOut2>& OutputBuffer2);
 
 

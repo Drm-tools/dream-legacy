@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -80,8 +80,8 @@ class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>
 public:
 	CChannelEstimation() : eDFTWindowingMethod(DFT_WIN_HAMM),
 	    TypeIntFreq(FWIENER), TypeIntTime(TWIENER),
-		TypeSNREst(SNR_FAC), iLenHistBuff(0), 
-		bInterfConsid(FALSE) {}
+		TypeSNREst(SNR_FAC), iLenHistBuff(0),
+		bInterfConsid(false) {}
 	virtual ~CChannelEstimation() {}
 
 	enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};
@@ -90,7 +90,7 @@ public:
 
 	void GetTransferFunction(CVector<_REAL>& vecrData,
 		CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale);
-	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
+	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 					 _REAL& rLowerBound, _REAL& rHigherBound,
 					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
 					 _REAL& rPDSEnd);
@@ -107,8 +107,8 @@ public:
 		SetInitFlag();}
 	ETypeIntTime GetTimeInt() const {return TypeIntTime;}
 
-	void SetIntCons(const _BOOLEAN bNewIntCons) {bInterfConsid = bNewIntCons;}
-	_BOOLEAN GetIntCons() {return bInterfConsid;}
+	void SetIntCons(const bool bNewIntCons) {bInterfConsid = bNewIntCons;}
+	bool GetIntCons() {return bInterfConsid;}
 
 
 	/* Which SNR estimation algorithm */
@@ -179,7 +179,7 @@ protected:
 	_REAL					rSNRFACSigCorrFact;
 	_REAL					rSNRTotToPilCorrFact;
 	_REAL					rSNRSysToNomBWCorrFact;
- 
+
 	/* OPH: Accumulators for calculating the RSCI MER, WMF, and WMM (these are averages, not filtered values) */
 	_REAL					rNoiseEstWMMAcc;
 	_REAL					rSignalEstWMMAcc;
@@ -188,7 +188,7 @@ protected:
 	_REAL					rNoiseEstMERAcc;
 	int						iCountMERAcc;
 
-	_BOOLEAN				bInterfConsid;
+	bool				bInterfConsid;
 
 	/* Needed for GetDelay() */
 	_REAL					rLenPDSEst;
@@ -201,7 +201,7 @@ protected:
 	int						iSNREstIniSigAvCnt;
 	int						iSNREstIniNoiseAvCnt;
 	int						iSNREstInitCnt;
-	_BOOLEAN				bSNRInitPhase;
+	bool				bSNRInitPhase;
 	_REAL CalAndBoundSNR(const _REAL rSignalEst, const _REAL rNoiseEst);
 
 	/* OPH: RSCI interference tag calculation */
@@ -216,7 +216,7 @@ protected:
 	void UpdateWienerFiltCoef(CReal rNewSNR, CReal rRatPDSLen,
 							  CReal rRatPDSOffs);
 
-	CComplexVector FreqOptimalFilter(int iFreqInt, int iDiff, CReal rSNR, 
+	CComplexVector FreqOptimalFilter(int iFreqInt, int iDiff, CReal rSNR,
 									 CReal rRatPDSLen, CReal rRatPDSOffs,
 									 int iLength);
 	CMatrix<_COMPLEX>		matcFiltFreq;

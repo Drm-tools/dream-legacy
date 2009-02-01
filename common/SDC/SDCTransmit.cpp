@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -32,16 +32,16 @@
 /* Implementation *************************************************************/
 void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 {
-/* 
-	Put SDC parameters on a stream 
+/*
+	Put SDC parameters on a stream
 */
 	int					i;
 	int					iSize;
 	CVector<_BINARY>	vecbiData;
 
-	/* Calculate length of data field in bytes 
+	/* Calculate length of data field in bytes
 	   (consistant to table 61 in (6.4.1)) */
-	const int iLengthDataFieldBytes = 
+	const int iLengthDataFieldBytes =
 		(int) ((_REAL) (Parameter.iNumSDCBitsPerSFrame - 20) / 8);
 
 	/* 20 bits from AFS index and CRC */
@@ -143,17 +143,17 @@ if (iNumUsedBits + iSize < iMaxNumBitsDataBlocks)
 
 	(*pbiData).ResetBitAccess();
 
-	/* Special treatment of SDC data stream: The CRC (Cyclic Redundancy 
-	Check) field shall contain a 16-bit CRC calculated over the AFS 
+	/* Special treatment of SDC data stream: The CRC (Cyclic Redundancy
+	Check) field shall contain a 16-bit CRC calculated over the AFS
 	index coded in an 8-bit field (4 msbs are 0) and the data field.
 	4 MSBs from AFS-index. Insert four "0" in the data-stream */
 	const _BYTE byFirstByte = (_BYTE) (*pbiData).Separate(4);
 	CRCObject.AddByte(byFirstByte);
 
-	for (i = 0; i < (iUsefulBitsSDC - 4) / SIZEOF__BYTE - 2; i++)
-		CRCObject.AddByte((_BYTE) (*pbiData).Separate(SIZEOF__BYTE));
+	for (i = 0; i < (iUsefulBitsSDC - 4) / sizeof(_BINARY) - 2; i++)
+		CRCObject.AddByte((_BYTE) (*pbiData).Separate(sizeof(_BINARY)));
 
-	/* Now, pointer in "enqueue"-function is back at the same place, 
+	/* Now, pointer in "enqueue"-function is back at the same place,
 	   add CRC */
 	(*pbiData).Enqueue(CRCObject.GetCRC(), 16);
 }
@@ -172,7 +172,7 @@ void CSDCTransmit::DataEntityType0(CVector<_BINARY>& vecbiData,
 	vecbiData.Init(iNumBitsTotal + NUM_BITS_HEADER_SDC);
 	vecbiData.ResetBitAccess();
 
-	/* Length of the body, excluding the initial 4 bits ("- 4"), 
+	/* Length of the body, excluding the initial 4 bits ("- 4"),
 	   measured in bytes ("/ 8") */
 	uint32_t iLengthInBytes = (iNumBitsTotal - 4) / 8;
 	vecbiData.Enqueue(iLengthInBytes, 7);
@@ -195,16 +195,16 @@ void CSDCTransmit::DataEntityType0(CVector<_BINARY>& vecbiData,
 	{
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hirarchical data */
-		if ((i == 0) && 
+		if ((i == 0) &&
 			((Parameter.eMSCCodingScheme == CS_3_HMSYM) ||
 			(Parameter.eMSCCodingScheme == CS_3_HMMIX)))
 		{
 			/* Protection level for hierarchical */
 			vecbiData.Enqueue((uint32_t) Parameter.MSCPrLe.iHierarch, 2);
-		
+
 			/* rfu */
 			vecbiData.Enqueue((uint32_t) 0, 10);
-	
+
 			/* Data length for hierarchical */
 			vecbiData.Enqueue((uint32_t) Parameter.Stream[i].iLenPartB, 12);
 		}
@@ -212,7 +212,7 @@ void CSDCTransmit::DataEntityType0(CVector<_BINARY>& vecbiData,
 		{
 			/* Data length for part A */
 			vecbiData.Enqueue((uint32_t) Parameter.Stream[i].iLenPartA, 12);
-		
+
 			/* Data length for part B */
 			vecbiData.Enqueue((uint32_t) Parameter.Stream[i].iLenPartB, 12);
 		}
@@ -245,7 +245,7 @@ void CSDCTransmit::DataEntityType1(CVector<_BINARY>& vecbiData, int ServiceID,
 
 
 	/**** Multiplex description data entity - type 1 ****/
-	/* Length of the body, excluding the initial 4 bits, 
+	/* Length of the body, excluding the initial 4 bits,
 	   measured in bytes -> only number bytes of label */
 	vecbiData.Enqueue((uint32_t) iLenLabel, 7);
 
@@ -305,7 +305,7 @@ void CSDCTransmit::DataEntityType5(CVector<_BINARY>& vecbiData, int ShortID,
 	vecbiData.Init(iNumBitsTotal + NUM_BITS_HEADER_SDC);
 	vecbiData.ResetBitAccess();
 
-	/* Length of the body, excluding the initial 4 bits ("- 4"), 
+	/* Length of the body, excluding the initial 4 bits ("- 4"),
 	   measured in bytes ("/ 8") */
 	vecbiData.Enqueue((uint32_t) (iNumBitsTotal - 4) / 8, 7);
 
@@ -367,7 +367,7 @@ void CSDCTransmit::DataEntityType5(CVector<_BINARY>& vecbiData, int ShortID,
 		}
 
 		/* Packet length */
-		vecbiData.Enqueue( 
+		vecbiData.Enqueue(
 			(uint32_t) Parameter.Stream[iStreamID].iPacketLen, 8);
 
 		break;
@@ -405,7 +405,7 @@ void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ShortID,
 	vecbiData.Init(iNumBitsTotal + NUM_BITS_HEADER_SDC);
 	vecbiData.ResetBitAccess();
 
-	/* Length of the body, excluding the initial 4 bits ("- 4"), 
+	/* Length of the body, excluding the initial 4 bits ("- 4"),
 	   measured in bytes ("/ 8") */
 	vecbiData.Enqueue((uint32_t) (iNumBitsTotal - 4) / 8, 7);
 
@@ -480,11 +480,11 @@ void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ShortID,
 		/* CELP_CRC */
 		switch (audioParam.bCELPCRC)
 		{
-		case FALSE:
+		case false:
 			vecbiData.Enqueue(0 /* 0 */, 1);
 			break;
 
-		case TRUE:
+		case true:
 			vecbiData.Enqueue(1 /* 1 */, 1);
 			break;
 		}
@@ -506,11 +506,11 @@ void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ShortID,
 		/* HVXC CRC */
 		switch (audioParam.bHVXCCRC)
 		{
-		case FALSE:
+		case false:
 			vecbiData.Enqueue(0 /* 0 */, 1);
 			break;
 
-		case TRUE:
+		case true:
 			vecbiData.Enqueue(1 /* 1 */, 1);
 			break;
 		}
@@ -540,11 +540,11 @@ void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ShortID,
 	/* Text flag */
 	switch (audioParam.bTextflag)
 	{
-	case FALSE:
+	case false:
 		vecbiData.Enqueue(0 /* 0 */, 1);
 		break;
 
-	case TRUE:
+	case true:
 		vecbiData.Enqueue(1 /* 1 */, 1);
 		break;
 	}
@@ -552,11 +552,11 @@ void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ShortID,
 	/* Enhancement flag */
 	switch (audioParam.bEnhanceFlag)
 	{
-	case FALSE:
+	case false:
 		vecbiData.Enqueue(0 /* 0 */, 1);
 		break;
 
-	case TRUE:
+	case true:
 		vecbiData.Enqueue(1 /* 1 */, 1);
 		break;
 	}
@@ -572,7 +572,7 @@ void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ShortID,
 		/* rfa 5 bit */
 		vecbiData.Enqueue((uint32_t) 0, 5);
 	}
-	
+
 	/* rfa 1 bit */
 	vecbiData.Enqueue((uint32_t) 0, 1);
 }
@@ -602,7 +602,7 @@ void CSDCTransmit::DataEntityType12(CVector<_BINARY>& vecbiData, int ShortID,
 	if(strLanguageCode == "---" && strCountryCode == "--")
 		return;
 
-	/* Length of the body, excluding the initial 4 bits ("- 4"), 
+	/* Length of the body, excluding the initial 4 bits ("- 4"),
 	   measured in bytes ("/ 8") */
 	vecbiData.Enqueue((uint32_t) (iNumBitsTotal - 4) / 8, 7);
 

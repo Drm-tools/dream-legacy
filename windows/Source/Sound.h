@@ -50,8 +50,8 @@ public:
 	CSoundIn();
 	virtual ~CSoundIn();
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking=TRUE, int iChannels=2);
-	virtual _BOOLEAN	Read(vector<_SAMPLE>& data);
+	virtual void		Init(int iNewBufferSize, bool bNewBlocking=true, int iChannels=2);
+	virtual bool	Read(vector<_SAMPLE>& data);
 	virtual void		Enumerate(vector<string>&);
 	virtual int			GetDev();
 	virtual void		SetDev(int iNewDev);
@@ -69,7 +69,7 @@ protected:
 	HANDLE			m_WaveEvent;
 	int				iBufferSize;
 	int				iWhichBuffer;
-	_BOOLEAN		bBlocking;
+	bool		bBlocking;
 
 	/* Wave in */
 	WAVEINCAPS		m_WaveInDevCaps;
@@ -85,8 +85,8 @@ public:
 	CSoundOut();
 	virtual ~CSoundOut();
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking=FALSE, int iChannels=2);
-	virtual _BOOLEAN	Write(vector<_SAMPLE>& data);
+	virtual void		Init(int iNewBufferSize, bool bNewBlocking=false, int iChannels=2);
+	virtual bool	Write(vector<_SAMPLE>& data);
 	virtual void		Enumerate(vector<string>&);
 	virtual int			GetDev();
 	virtual void		SetDev(int iNewDev);
@@ -105,7 +105,7 @@ protected:
 	HANDLE			m_WaveEvent;
 	int				iBufferSize;
 	int				iWhichBuffer;
-	_BOOLEAN		bBlocking;
+	bool		bBlocking;
 
 	/* Wave out */
 	WAVEOUTCAPS		m_WaveOutDevCaps;

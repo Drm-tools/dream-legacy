@@ -1,14 +1,14 @@
 
 #include "../../common/util/Pacer.h"
 
-  /* The FILETIME structure is a 64-bit value representing 
-   * the number of 100-nanosecond intervals since January 1, 1601. 
+  /* The FILETIME structure is a 64-bit value representing
+   * the number of 100-nanosecond intervals since January 1, 1601.
    */
 
 CPacer::CPacer(uint64_t ns)
 {
   FILETIME ft;
-  hTimer = CreateWaitableTimer(NULL, TRUE, TEXT("CPacerTimer"));
+  hTimer = CreateWaitableTimer(NULL, true, TEXT("CPacerTimer"));
   if(hTimer==NULL)
   {
 	throw "Create Timer failed ";

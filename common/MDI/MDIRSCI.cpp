@@ -56,7 +56,7 @@
 
 /* Implementation *************************************************************/
 CDownstreamDI::CDownstreamDI() : iLogFraCnt(0), pDrmReceiver(NULL),
-	bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE),bIsRecording(FALSE),
+	bMDIOutEnabled(false), bMDIInEnabled(false),bIsRecording(false),
 	iFrequency(0), strRecordType(),
 	vecTagItemGeneratorStr(MAX_NUM_STREAMS), vecTagItemGeneratorRBP(MAX_NUM_STREAMS),
 	RSISubscribers(),pRSISubscriberFile(new CRSISubscriberFile)
@@ -110,7 +110,7 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 
 	for (size_t i = 0; i < n; i++)
 	{
-		const int iLenStrData = SIZEOF__BYTE * Parameter.GetStreamLen(i);
+		const int iLenStrData = sizeof(_BINARY) * Parameter.GetStreamLen(i);
 		/* Only generate this tag if stream input data is not of zero length */
 		if (iLenStrData > 0)
 			vecTagItemGeneratorStr[i]
@@ -155,27 +155,27 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter)
 
         /* RSCI tags ------------------------------------------------------------ */
         TagItemGeneratorRAFS.GenTag(Parameter);
-        TagItemGeneratorRWMF.GenTag(TRUE, Parameter.rWMERFAC); /* WMER for FAC */
-        TagItemGeneratorRWMM.GenTag(TRUE, Parameter.rWMERMSC); /* WMER for MSC */
-        TagItemGeneratorRMER.GenTag(TRUE, Parameter.rMER); /* MER for MSC */
-        TagItemGeneratorRDEL.GenTag(TRUE, Parameter.vecrRdelThresholds, Parameter.vecrRdelIntervals);
-        TagItemGeneratorRDOP.GenTag(TRUE, Parameter.rRdop);
-        TagItemGeneratorRINT.GenTag(TRUE,Parameter.rIntFreq, Parameter.rINR, Parameter.rICR);
-        TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
-        TagItemGeneratorRxService.GenTag(TRUE, Parameter.GetCurSelAudioService());
+        TagItemGeneratorRWMF.GenTag(true, Parameter.rWMERFAC); /* WMER for FAC */
+        TagItemGeneratorRWMM.GenTag(true, Parameter.rWMERMSC); /* WMER for MSC */
+        TagItemGeneratorRMER.GenTag(true, Parameter.rMER); /* MER for MSC */
+        TagItemGeneratorRDEL.GenTag(true, Parameter.vecrRdelThresholds, Parameter.vecrRdelIntervals);
+        TagItemGeneratorRDOP.GenTag(true, Parameter.rRdop);
+        TagItemGeneratorRINT.GenTag(true,Parameter.rIntFreq, Parameter.rINR, Parameter.rICR);
+        TagItemGeneratorRNIP.GenTag(true,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
+        TagItemGeneratorRxService.GenTag(true, Parameter.GetCurSelAudioService());
         TagItemGeneratorReceiverStatus.GenTag(Parameter);
-        TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
-        TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
+        TagItemGeneratorRxFrequency.GenTag(true, Parameter.GetFrequency()); /* rfre */
+        TagItemGeneratorRxActivated.GenTag(true); /* ract */
         TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
         TagItemGeneratorPowerImpulseResponse.GenTag(Parameter);
         TagItemGeneratorPilots.GenTag(Parameter);
 
         /* Generate some other tags */
         _REAL rSigStr;
-        _BOOLEAN bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
-        TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
+        bool bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
+        TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr);
 
-        TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	// rgps
+        TagItemGeneratorGPS.GenTag(true, Parameter.GPSData);	// rgps
     }
 
 	GenDIPacket();
@@ -214,17 +214,17 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 
         TagItemGeneratorPilots.GenEmptyTag();
 
-        TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
+        TagItemGeneratorRNIP.GenTag(true,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
 
         /* Generate some other tags */
         TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
-        TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
-        TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
+        TagItemGeneratorRxFrequency.GenTag(true, Parameter.GetFrequency()); /* rfre */
+        TagItemGeneratorRxActivated.GenTag(true); /* ract */
         _REAL rSigStr;
-        _BOOLEAN bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
-        TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
+        bool bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
+        TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr);
 
-        TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
+        TagItemGeneratorGPS.GenTag(true, Parameter.GPSData);	/* rgps */
    }
 
 	GenDIPacket();
@@ -261,20 +261,20 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 
 	TagItemGeneratorPilots.GenEmptyTag();
 
-	TagItemGeneratorRNIP.GenTag(TRUE, Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
+	TagItemGeneratorRNIP.GenTag(true, Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
 
 	// Generate a rama tag with the encoded audio data
 	TagItemGeneratorAMAudio.GenTag(Parameter, CodedAudioData);
 
 	/* Generate some other tags */
 	TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
-	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.GetFrequency()); /* rfre */
-	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
+	TagItemGeneratorRxFrequency.GenTag(true, Parameter.GetFrequency()); /* rfre */
+	TagItemGeneratorRxActivated.GenTag(true); /* ract */
 	_REAL rSigStr;
-	_BOOLEAN bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
-	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
+	bool bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
+	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr);
 
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
+	TagItemGeneratorGPS.GenTag(true, Parameter.GPSData);	/* rgps */
 
 	GenDIPacket();
 }
@@ -428,7 +428,7 @@ void CDownstreamDI::GetNextPacket(CSingleBuffer<_BINARY>&)
 }
 
 /* allow multiple destinations, allow destinations to send cpro instructions back */
-_BOOLEAN
+bool
 CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const char profile, const int iSubsamplingFactor)
 {
 	// check PFT prefix on destination
@@ -468,15 +468,15 @@ CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const cha
         subs->SetProfile(profile);
         subs->SetSubsamplingFactor(iSubsamplingFactor);
         subs->SetReceiver(pDrmReceiver);
-        bMDIOutEnabled = TRUE;
+        bMDIOutEnabled = true;
         RSISubscribers.push_back(subs);
-        return TRUE;
+        return true;
     }
     else
     {
         delete subs;
     }
-	return FALSE;
+	return false;
 }
 
 void CDownstreamDI::DefineRSIPreset(const int iPresetNum, const int cPro, const int iFactor)
@@ -490,22 +490,22 @@ void CDownstreamDI::DefineRSIPreset(const int iPresetNum, const int cPro, const 
 }
 
 
-_BOOLEAN CDownstreamDI::SetOrigin(const string&)
+bool CDownstreamDI::SetOrigin(const string&)
 {
-	return FALSE;
+	return false;
 }
 
-_BOOLEAN CDownstreamDI::SetDestination(const string&)
+bool CDownstreamDI::SetDestination(const string&)
 {
-	return FALSE;
+	return false;
 }
 
-_BOOLEAN CDownstreamDI::GetDestination(string&)
+bool CDownstreamDI::GetDestination(string&)
 {
-	return FALSE; // makes no sense
+	return false; // makes no sense
 }
 
-void CDownstreamDI::SetAFPktCRC(const _BOOLEAN bNAFPktCRC)
+void CDownstreamDI::SetAFPktCRC(const bool bNAFPktCRC)
 {
 	for(vector<CRSISubscriber*>::iterator i = RSISubscribers.begin();
 			i!=RSISubscribers.end(); i++)
@@ -532,7 +532,7 @@ string CDownstreamDI::GetRSIfilename(CParameter& Parameter, const char cProfile)
 	return filename.str();
 }
 
-void CDownstreamDI::SetRSIRecording(CParameter& Parameter, const _BOOLEAN bOn, char cPro, const string& type)
+void CDownstreamDI::SetRSIRecording(CParameter& Parameter, const bool bOn, char cPro, const string& type)
 {
 	strRecordType = type;
 	if (bOn)
@@ -544,13 +544,13 @@ void CDownstreamDI::SetRSIRecording(CParameter& Parameter, const _BOOLEAN bOn, c
 
 		pRSISubscriberFile->SetDestination(fn);
 		pRSISubscriberFile->StartRecording();
-		bMDIOutEnabled = TRUE;
-		bIsRecording = TRUE;
+		bMDIOutEnabled = true;
+		bIsRecording = true;
 	}
 	else
 	{
 		pRSISubscriberFile->StopRecording();
-		bIsRecording = FALSE;
+		bIsRecording = false;
 	}
 }
 
@@ -582,7 +582,7 @@ void CDownstreamDI::SendPacket(const vector<_BYTE>&, uint32_t, uint16_t)
 /******************************************************************************\
 * DI receive
 \******************************************************************************/
-CDIIn::CDIIn() : CPacketSink(), source(NULL), bDIInEnabled(FALSE)
+CDIIn::CDIIn() : CPacketSink(), source(NULL), bDIInEnabled(false)
 {
 }
 
@@ -594,14 +594,14 @@ CDIIn::~CDIIn()
 	}
 }
 
-_BOOLEAN CDIIn::SetOrigin(const string& str)
+bool CDIIn::SetOrigin(const string& str)
 {
 	/* only allow one listening address */
-	if(bDIInEnabled == TRUE)
-		return FALSE;
+	if(bDIInEnabled == true)
+		return false;
 
 	if(source)
-		return FALSE;
+		return false;
 
 	strOrigin = str;
 
@@ -613,7 +613,7 @@ _BOOLEAN CDIIn::SetOrigin(const string& str)
 #endif
 
 	// Delegate to socket
-	_BOOLEAN bOK = source->SetOrigin(str);
+	bool bOK = source->SetOrigin(str);
 
 	if(!bOK)
 	{
@@ -628,10 +628,10 @@ _BOOLEAN CDIIn::SetOrigin(const string& str)
 	if (bOK)
 	{
 		source->SetPacketSink(this);
-		bDIInEnabled = TRUE;
-		return TRUE;
+		bDIInEnabled = true;
+		return true;
 	}
-	return FALSE;
+	return false;
 }
 
 /* we only support one upstream DI source, so ignore the source address */
@@ -653,17 +653,17 @@ void CDIIn::ProcessData(CParameter& Parameter, CVectorEx<_BINARY>& vecOutputData
 {
 	vector<_BYTE> vecbydata;
 	queue.Get(vecbydata);
-	iOutputBlockSize = vecbydata.size()*SIZEOF__BYTE;
+	iOutputBlockSize = vecbydata.size()*sizeof(_BINARY);
 	vecOutputData.Init(iOutputBlockSize);
 	vecOutputData.ResetBitAccess();
 	for(size_t i=0; i<vecbydata.size(); i++)
-		vecOutputData.Enqueue(vecbydata[i], SIZEOF__BYTE);
+		vecOutputData.Enqueue(vecbydata[i], sizeof(_BINARY));
 }
 
 /******************************************************************************\
 * DI receive status, send control                                             *
 \******************************************************************************/
-CUpstreamDI::CUpstreamDI() : CDIIn(), sink(), bUseAFCRC(TRUE), bMDIOutEnabled(FALSE)
+CUpstreamDI::CUpstreamDI() : CDIIn(), sink(), bUseAFCRC(true), bMDIOutEnabled(false)
 {
 	/* Init constant tag */
 	TagItemGeneratorProTyRSCI.GenTag();
@@ -673,20 +673,20 @@ CUpstreamDI::~CUpstreamDI()
 {
 }
 
-_BOOLEAN CUpstreamDI::SetDestination(const string& str)
+bool CUpstreamDI::SetDestination(const string& str)
 {
 	bMDIOutEnabled = sink.SetDestination(str);
 	return bMDIOutEnabled;
 }
 
-_BOOLEAN CUpstreamDI::GetDestination(string& str)
+bool CUpstreamDI::GetDestination(string& str)
 {
 	return sink.GetDestination(str);
 }
 
 void CUpstreamDI::SetFrequency(int iNewFreqkHz)
 {
-	if(bMDIOutEnabled==FALSE)
+	if(bMDIOutEnabled==false)
 		return;
 	TagPacketGenerator.Reset();
 	TagItemGeneratorCfre.GenTag(iNewFreqkHz);
@@ -697,7 +697,7 @@ void CUpstreamDI::SetFrequency(int iNewFreqkHz)
 
 void CUpstreamDI::SetReceiverMode(EDemodulationType eNewMode)
 {
-	if(bMDIOutEnabled==FALSE)
+	if(bMDIOutEnabled==false)
 		return;
 	TagPacketGenerator.Reset();
 	TagItemGeneratorCdmo.GenTag(eNewMode);
@@ -708,7 +708,7 @@ void CUpstreamDI::SetReceiverMode(EDemodulationType eNewMode)
 
 void CUpstreamDI::SetService(int iServiceID)
 {
-	if(bMDIOutEnabled==FALSE)
+	if(bMDIOutEnabled==false)
 		return;
 	TagPacketGenerator.Reset();
 	TagItemGeneratorCser.GenTag(iServiceID);
@@ -721,7 +721,7 @@ void
 CUpstreamDI::InitInternal(CParameter& Parameter)
 {
 	iInputBlockSize = 1; /* anything is enough but not zero */
-	iMaxOutputBlockSize = 2048*SIZEOF__BYTE; /* bigger than an ethernet packet */
+	iMaxOutputBlockSize = 2048*sizeof(_BINARY); /* bigger than an ethernet packet */
 }
 
 void
@@ -734,7 +734,7 @@ void
 CMDIIn::InitInternal(CParameter& Parameter)
 {
 	//outputs[0].iBlockSize = 1; /* packet */
-	iMaxOutputBlockSize = 1500*SIZEOF__BYTE; 
+	iMaxOutputBlockSize = 1500*sizeof(_BINARY);
 	iOutputBlockSize = 0;
 }
 
@@ -744,12 +744,12 @@ CMDIIn::ProcessDataInternal(CParameter& Parameter)
 	size_t i;
 	vector<_BYTE> vecbydata;
 	queue.Get(vecbydata);
-	volatile size_t bits = vecbydata.size()*SIZEOF__BYTE;
+	volatile size_t bits = vecbydata.size()*sizeof(_BINARY);
 	iOutputBlockSize = bits;
 	(*pvecOutputData).Init(bits);
 	(*pvecOutputData).ResetBitAccess();
 	for(i=0; i<vecbydata.size(); i++)
-		(*pvecOutputData).Enqueue(vecbydata[i], SIZEOF__BYTE);
+		(*pvecOutputData).Enqueue(vecbydata[i], sizeof(_BINARY));
 }
 
 void

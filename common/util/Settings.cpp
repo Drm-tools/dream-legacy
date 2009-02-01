@@ -157,7 +157,7 @@ CSettings::Put(const string& section, const CWinGeom& value)
 void
 CSettings::ParseArguments(int argc, char **argv)
 {
-	_BOOLEAN bIsReceiver = TRUE;
+	bool bIsReceiver = true;
 	_REAL rArgument;
 	string strArgument;
 	int mdioutnum = 0;
@@ -170,43 +170,43 @@ CSettings::ParseArguments(int argc, char **argv)
 	for (int i = 1; i < argc; i++)
 	{
 		/* Mode ----------------------------------------------------------------- */
-		if (GetStringArgument(argc, argv, i, "--mode", "--mode", strArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "--mode", "--mode", strArgument) == true)
 		{
 			Put("0", "mode", strArgument);
 			continue;
 		}
 
 		/* old DRM transmitter mode flag ---------------------------------------- */
-		if (GetFlagArgument(argc, argv, i, "-t", "--transmitter") == TRUE)
+		if (GetFlagArgument(argc, argv, i, "-t", "--transmitter") == true)
 		{
-			bIsReceiver = FALSE;
+			bIsReceiver = false;
 			Put("0", "mode", string("DRMTX"));
 			continue;
 		}
 
 		/* Flip spectrum flag ----------------------------------------------- */
-		if (GetFlagArgument(argc, argv, i, "-p", "--flipspectrum") == TRUE)
+		if (GetFlagArgument(argc, argv, i, "-p", "--flipspectrum") == true)
 		{
 			Put("Receiver", "flipspectrum", 1);
 			continue;
 		}
 
 		/* Mute audio flag -------------------------------------------------- */
-		if (GetFlagArgument(argc, argv, i, "-m", "--muteaudio") == TRUE)
+		if (GetFlagArgument(argc, argv, i, "-m", "--muteaudio") == true)
 		{
 			Put("Receiver", "muteaudio", 1);
 			continue;
 		}
 
 		/* Bandpass filter flag --------------------------------------------- */
-		if (GetFlagArgument(argc, argv, i, "-F", "--filter") == TRUE)
+		if (GetFlagArgument(argc, argv, i, "-F", "--filter") == true)
 		{
 			Put("Receiver", "filter", 1);
 			continue;
 		}
 
 		/* Modified metrics flag -------------------------------------------- */
-		if (GetFlagArgument(argc, argv, i, "-D", "--modmetric") == TRUE)
+		if (GetFlagArgument(argc, argv, i, "-D", "--modmetric") == true)
 		{
 			Put("Receiver", "modmetric", 1);
 			continue;
@@ -214,7 +214,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* Sound In device -------------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-I", "--snddevin", -1,
-							   MAX_NUM_SND_DEV, rArgument) == TRUE)
+							   MAX_NUM_SND_DEV, rArgument) == true)
 		{
 			Put("Receiver", "snddevin", int (rArgument));
 			continue;
@@ -222,7 +222,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* Sound Out device ------------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-O", "--snddevout", -1,
-							   MAX_NUM_SND_DEV, rArgument) == TRUE)
+							   MAX_NUM_SND_DEV, rArgument) == true)
 		{
 			Put("Receiver", "snddevout", int (rArgument));
 			continue;
@@ -230,7 +230,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* Do not use sound card, read from file ---------------------------- */
 		if (GetStringArgument(argc, argv, i, "-f", "--fileio",
-							  strArgument) == TRUE)
+							  strArgument) == true)
 		{
 			Put("command", "fileio", strArgument);
 			continue;
@@ -238,7 +238,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* Write output data to file as WAV --------------------------------- */
 		if (GetStringArgument(argc, argv, i, "-w", "--writewav",
-							  strArgument) == TRUE)
+							  strArgument) == true)
 		{
 			Put("command", "writewav", strArgument);
 			continue;
@@ -246,7 +246,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* Number of iterations for MLC setting ----------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-i", "--mlciter", 0,
-							   MAX_NUM_MLC_IT, rArgument) == TRUE)
+							   MAX_NUM_MLC_IT, rArgument) == true)
 		{
 			Put("Receiver", "mlciter", int (rArgument));
 			continue;
@@ -255,7 +255,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		/* Sample rate offset start value ----------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-s", "--sampleoff",
 							   MIN_SAM_OFFS_INI, MAX_SAM_OFFS_INI,
-							   rArgument) == TRUE)
+							   rArgument) == true)
 		{
 			Put("Receiver", "sampleoff", rArgument);
 			continue;
@@ -263,7 +263,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* Frequency acquisition search window size ------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-S", "--fracwinsize", 0,
-							   MAX_FREQ_AQC_SE_WIN_SI, rArgument) == TRUE)
+							   MAX_FREQ_AQC_SE_WIN_SI, rArgument) == true)
 		{
 			Put("command", "fracwinsize", rArgument);
 			continue;
@@ -271,7 +271,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* Frequency acquisition search window center ----------------------- */
 		if (GetNumericArgument(argc, argv, i, "-E", "--fracwincent", 0,
-							   MAX_FREQ_AQC_SE_WIN_CEN, rArgument) == TRUE)
+							   MAX_FREQ_AQC_SE_WIN_CEN, rArgument) == true)
 		{
 			Put("command", "fracwincent", rArgument);
 			continue;
@@ -279,7 +279,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* Input channel selection ------------------------------------------ */
 		if (GetNumericArgument(argc, argv, i, "-c", "--inchansel", 0,
-							   MAX_VAL_IN_CHAN_SEL, rArgument) == TRUE)
+							   MAX_VAL_IN_CHAN_SEL, rArgument) == true)
 		{
 			Put("command", "inchansel", (int) rArgument);
 			continue;
@@ -287,7 +287,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* Output channel selection ----------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-u", "--outchansel", 0,
-							   MAX_VAL_OUT_CHAN_SEL, rArgument) == TRUE)
+							   MAX_VAL_OUT_CHAN_SEL, rArgument) == true)
 		{
 			Put("command", "outchansel", (int) rArgument);
 			continue;
@@ -295,7 +295,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* Wanted RF Frequency   ------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-r", "--frequency", 0,
-							   MAX_RF_FREQ, rArgument) == TRUE)
+							   MAX_RF_FREQ, rArgument) == true)
 		{
 			Put("Receiver", "frequency", (int) rArgument);
 			continue;
@@ -303,7 +303,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* Enable/Disable process priority flag */
 		if (GetNumericArgument
-			(argc, argv, i, "-P", "--processpriority", 0, 1, rArgument) == TRUE)
+			(argc, argv, i, "-P", "--processpriority", 0, 1, rArgument) == true)
 		{
 			Put("GUI", "processpriority", (int) rArgument);
 			continue;
@@ -311,7 +311,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* enable/disable epg decoding ----------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-e", "--decodeepg", 0,
-							   1, rArgument) == TRUE)
+							   1, rArgument) == true)
 		{
 			Put("EPG", "decodeepg", (int) rArgument);
 			continue;
@@ -320,7 +320,7 @@ CSettings::ParseArguments(int argc, char **argv)
 #ifdef USE_QT_GUI
 		/* log enable flag  ---------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-g", "--enablelog", 0, 1,
-							   rArgument) == TRUE)
+							   rArgument) == true)
 		{
 			Put("Logfile", "enablelog", (int) rArgument);
 			continue;
@@ -328,7 +328,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* log file delay value  ---------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-l", "--logdelay", 0,
-							   MAX_SEC_LOG_FI_START, rArgument) == TRUE)
+							   MAX_SEC_LOG_FI_START, rArgument) == true)
 		{
 			Put("Logfile", "delay", (int) rArgument);
 			continue;
@@ -336,7 +336,7 @@ CSettings::ParseArguments(int argc, char **argv)
 #endif
 		/* Latitude string for log file ------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "-a", "--latitude", strArgument)
-			== TRUE)
+			== true)
 		{
 			Put("Logfile", "latitude", strArgument);
 			continue;
@@ -344,7 +344,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* Longitude string for log file ------------------------------------ */
 		if (GetStringArgument(argc, argv, i, "-o", "--longitude", strArgument)
-			== TRUE)
+			== true)
 		{
 			Put("Logfile", "longitude", strArgument);
 			continue;
@@ -353,7 +353,7 @@ CSettings::ParseArguments(int argc, char **argv)
 #ifdef USE_QT_GUI
 		/* Main plot colours ------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-y", "--sysevplotstyle", 0,
-							   MAX_COLOR_SCHEMES_VAL, rArgument) == TRUE)
+							   MAX_COLOR_SCHEMES_VAL, rArgument) == true)
 		{
 			Put("System Evaluation Dialog", "plotstyle", (int) rArgument);
 			continue;
@@ -362,7 +362,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* MDI out address -------------------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "--mdiout", "--mdiout",
-							  strArgument) == TRUE)
+							  strArgument) == true)
 		{
 			stringstream s;
 			s << "mdiout" << mdioutnum;
@@ -373,14 +373,14 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* MDI in address -------------------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "--mdiin", "--mdiin",
-							  strArgument) == TRUE)
+							  strArgument) == true)
 		{
 			Put("transmitter", "mdiin", strArgument);
 			continue;
 		}
 
 		/* RSCI status output profile */
-		if (GetStringArgument (argc, argv, i, "--rsioutprofile", "--rsioutprofile", strArgument) == TRUE)
+		if (GetStringArgument (argc, argv, i, "--rsioutprofile", "--rsioutprofile", strArgument) == true)
 		{
 			for (int i = 0; i < rsioutnum; i++)
 			{
@@ -394,7 +394,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* RSCI status out address -------------------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "--rsiout", "--rsiout",
-							  strArgument) == TRUE)
+							  strArgument) == true)
 		{
 			stringstream s;
 			s << "rsiout" << rsioutnum;
@@ -405,7 +405,7 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* RSCI status in address -------------------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "--rsiin", "--rsiin",
-							  strArgument) == TRUE)
+							  strArgument) == true)
 		{
 			Put("command", "rsiin", strArgument);
 			continue;
@@ -413,14 +413,14 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* RSCI control out address */
 		if (GetStringArgument(argc, argv, i, "--rciout", "--rciout",
-							  strArgument) == TRUE)
+							  strArgument) == true)
 		{
 			Put("command", "rciout", strArgument);
 			continue;
 		}
 
 		/* OPH: RSCI control in address */
-		if (GetStringArgument(argc, argv, i, "--rciin", "--rciin", strArgument) == TRUE)
+		if (GetStringArgument(argc, argv, i, "--rciin", "--rciin", strArgument) == true)
 		{
 			stringstream s;
 			s << "rciin" << rciinnum;
@@ -430,21 +430,21 @@ CSettings::ParseArguments(int argc, char **argv)
 		}
 
 		if (GetStringArgument (argc, argv, i,
-				"--rsirecordprofile", "--rsirecordprofile", strArgument) == TRUE)
+				"--rsirecordprofile", "--rsirecordprofile", strArgument) == true)
 		{
 			Put("command", "rsirecordprofile", strArgument);
 			continue;
 		}
 
 		if (GetStringArgument (argc, argv, i,
-				"--rsirecordtype", "--rsirecordtype", strArgument) == TRUE)
+				"--rsirecordtype", "--rsirecordtype", strArgument) == true)
 		{
 			Put("command", "rsirecordtype", strArgument);
 			continue;
 		}
 
 		if (GetNumericArgument (argc, argv, i,
-				"--recordiq", "--recordiq", 0, 1, rArgument) == TRUE)
+				"--recordiq", "--recordiq", 0, 1, rArgument) == true)
 		{
 			Put("command", "recordiq", int (rArgument));
 			continue;
@@ -454,7 +454,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		/* Hamlib config string --------------------------------------------- */
 		// command line only - will be converted and saved in Dream.ini by CHamlib
 		if (GetStringArgument(argc, argv, i, "-C", "--hamlib-config",
-							  strArgument) == TRUE)
+							  strArgument) == true)
 		{
 			Put("command", "hamlib-config", strArgument);
 			continue;
@@ -462,14 +462,14 @@ CSettings::ParseArguments(int argc, char **argv)
 
 		/* Hamlib Model ID -------------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-M", "--hamlib-model", 0,
-							   MAX_ID_HAMLIB, rArgument) == TRUE)
+							   MAX_ID_HAMLIB, rArgument) == true)
 		{
 			Put("Hamlib", "model", (int)rArgument);
 			continue;
 		}
 #endif
 		/* Enable s-meter flag ---------------------------------------------- */
-		if (GetFlagArgument(argc, argv, i, "-T", "--ensmeter") == TRUE)
+		if (GetFlagArgument(argc, argv, i, "-T", "--ensmeter") == true)
 		{
 			Put("Hamlib", "smeter", (int)rArgument);
 			continue;
@@ -581,17 +581,17 @@ CSettings::UsageArguments(char **argv)
 		"\n";
 }
 
-_BOOLEAN
+bool
 CSettings::GetFlagArgument(int, char **argv, int &i,
 						   string strShortOpt, string strLongOpt)
 {
 	if ((!strShortOpt.compare(argv[i])) || (!strLongOpt.compare(argv[i])))
-		return TRUE;
+		return true;
 	else
-		return FALSE;
+		return false;
 }
 
-_BOOLEAN
+bool
 CSettings::GetStringArgument(int argc, char **argv, int &i,
 							 string strShortOpt, string strLongOpt,
 							 string & strArg)
@@ -607,13 +607,13 @@ CSettings::GetStringArgument(int argc, char **argv, int &i,
 
 		strArg = argv[i];
 
-		return TRUE;
+		return true;
 	}
 	else
-		return FALSE;
+		return false;
 }
 
-_BOOLEAN
+bool
 CSettings::GetNumericArgument(int argc, char **argv, int &i,
 							  string strShortOpt, string strLongOpt,
 							  _REAL rRangeStart, _REAL rRangeStop,
@@ -639,10 +639,10 @@ CSettings::GetNumericArgument(int argc, char **argv, int &i,
 			exit(1);
 		}
 
-		return TRUE;
+		return true;
 	}
 	else
-		return FALSE;
+		return false;
 }
 
 /* INI File routines using the STL ********************************************/
@@ -665,7 +665,7 @@ CIniFile::GetIniSetting(const string& section,
 						 const string& key, const string& defaultval) const
 {
 	string result(defaultval);
-	const_cast<CMutex*>(&Mutex)->Lock();
+	//const_cast<CMutex*>(&Mutex)->Lock();
 	INIFile::const_iterator iSection = ini.find(section);
 	if (iSection != ini.end())
 	{
@@ -673,20 +673,20 @@ CIniFile::GetIniSetting(const string& section,
 		if (apair != iSection->second.end())
 			result = apair->second;
 	}
-	const_cast<CMutex*>(&Mutex)->Unlock();
+	//const_cast<CMutex*>(&Mutex)->Unlock();
 	return result;
 }
 
 void
 CIniFile::PutIniSetting(const string& section, const string& key, const string& value)
 {
-	Mutex.Lock();
+	//Mutex.Lock();
 
 	/* null key is ok and empty value is ok but empty both is not useful */
 	if(key != "" || value != "")
 		ini[section][key]=value;
 
-	Mutex.Unlock();
+	//Mutex.Unlock();
 }
 
 void
@@ -720,7 +720,7 @@ CIniFile::LoadIni(const char *filename)
 void
 CIniFile::SaveIni(const char *filename)
 {
-	_BOOLEAN bFirstSection = TRUE;	/* Init flag */
+	bool bFirstSection = true;	/* Init flag */
 
 	std::fstream file(filename, std::ios::out);
 	if (!file.good())
@@ -733,13 +733,13 @@ CIniFile::SaveIni(const char *filename)
 		{
 			if (section->first > "")
 			{
-				if (bFirstSection == TRUE)
+				if (bFirstSection == true)
 				{
 					/* Don't put a newline at the beginning of the first section */
 					file << "[" << section->first << "]" << std::endl;
 
 					/* Reset flag */
-					bFirstSection = FALSE;
+					bFirstSection = false;
 				}
 				else
 					file << std::endl << "[" << section-> first << "]" << std::endl;

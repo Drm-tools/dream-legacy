@@ -35,7 +35,7 @@
 #include <qstring.h>
 #include <qmenubar.h>
 #include <qpopupmenu.h>
-#include <qwt/qwt_thermo.h>
+#include <qwt_thermo.h>
 #include <qevent.h>
 #include <qcstring.h>
 #include <qlayout.h>
@@ -46,7 +46,7 @@
 
 /* Implementation *************************************************************/
 FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
-	QWidget* parent, const char* name, bool modal, WFlags f)
+	QWidget* parent, const char* name, bool modal, Qt::WFlags f)
 	: FDRMDialogBase(parent, name, modal, f),
 	DRMReceiver(NDRMR),
 	Settings(NSettings),
@@ -106,7 +106,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pSettingsMenu->insertItem(tr("&Plot Style"), pPlotStyleMenu);
 
 	/* Set check */
-	pPlotStyleMenu->setItemChecked(Settings.Get("System Evaluation Dialog", "plotstyle", 0), TRUE);
+	pPlotStyleMenu->setItemChecked(Settings.Get("System Evaluation Dialog", "plotstyle", 0), true);
 
 	/* multimedia settings */
 	pSettingsMenu->insertSeparator();
@@ -144,57 +144,57 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Init progress bar for input signal level */
 	ProgrInputLevel->setRange(-50.0, 0.0);
-	ProgrInputLevel->setOrientation(QwtThermo::Vertical, QwtThermo::Left);
+	ProgrInputLevel->setOrientation(Qt::Vertical, QwtThermo::LeftScale);
 	ProgrInputLevel->setFillColor(QColor(0, 190, 0));
 	ProgrInputLevel->setAlarmLevel(-12.5);
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
 
 	/* Stations window */
-	pStationsDlg = new StationsDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
-	bStationsDlgWasVis = Settings.Get("Stations Dialog", "visible", FALSE);
+	pStationsDlg = new StationsDlg(DRMReceiver, Settings, this, "", false, Qt::WStyle_MinMax);
+	bStationsDlgWasVis = Settings.Get("Stations Dialog", "visible", false);
 
 	SetDialogCaption(pStationsDlg, tr("Stations"));
 
 	/* Live Schedule window */
-	pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, this, "", FALSE, Qt::WStyle_MinMax);
-	bLiveSchedDlgWasVis = Settings.Get("Live Schedule Dialog", "visible", FALSE);
+	pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, this, "", false, Qt::WStyle_MinMax);
+	bLiveSchedDlgWasVis = Settings.Get("Live Schedule Dialog", "visible", false);
 	pLiveScheduleDlg->LoadSettings(Settings);
 
 	SetDialogCaption(pLiveScheduleDlg, tr("Live Schedule"));
 
 	/* Programme Guide Window */
-	pEPGDlg = new EPGDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
-	bEPGDlgWasVis = Settings.Get("EPG Dialog", "visible", FALSE);
+	pEPGDlg = new EPGDlg(DRMReceiver, Settings, this, "", false, Qt::WStyle_MinMax);
+	bEPGDlgWasVis = Settings.Get("EPG Dialog", "visible", false);
 
 	SetDialogCaption(pEPGDlg, tr("Programme Guide"));
 
 
 	/* Evaluation window */
-	pSysEvalDlg = new systemevalDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
-	bSysEvalDlgWasVis = Settings.Get("System Evaluation Dialog", "visible", FALSE);
+	pSysEvalDlg = new systemevalDlg(DRMReceiver, Settings, this, "", false, Qt::WStyle_MinMax);
+	bSysEvalDlgWasVis = Settings.Get("System Evaluation Dialog", "visible", false);
 
 	SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
 
 	/* Multimedia window */
-	pMultiMediaDlg = new MultimediaDlg(DRMReceiver, this, "", FALSE, Qt::WStyle_MinMax);
-	bMultMedDlgWasVis = Settings.Get("Multimedia Dialog", "visible", FALSE);
+	pMultiMediaDlg = new MultimediaDlg(DRMReceiver, this, "", false, Qt::WStyle_MinMax);
+	bMultMedDlgWasVis = Settings.Get("Multimedia Dialog", "visible", false);
 
 	SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
 	pMultiMediaDlg->LoadSettings(Settings);
 
 	/* receiver settings window */
 	CParameter& Parameters = *DRMReceiver.GetParameters();
-	pReceiverSettingsDlg = new ReceiverSettingsDlg(DRMReceiver, Settings, this, "", TRUE, Qt::WStyle_Dialog);
+	pReceiverSettingsDlg = new ReceiverSettingsDlg(DRMReceiver, Settings, this, "", true, Qt::WStyle_Dialog);
 	SetDialogCaption(pReceiverSettingsDlg, tr("Receiver settings"));
 
 	/* Analog demodulation window */
 	pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, *pReceiverSettingsDlg,
-						NULL, "Analog Demodulation", FALSE, Qt::WStyle_MinMax);
+						NULL, "Analog Demodulation", false, Qt::WStyle_MinMax);
 
 	Parameters.Lock();
 
 	/* Enable multimedia */
-	Parameters.EnableMultimedia(TRUE);
+	Parameters.EnableMultimedia(true);
 
 	/* Init current selected service */
 	Parameters.ResetCurSelAudDatServ();
@@ -204,11 +204,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	iCurSelServiceGUI = 0;
 	iOldNoServicesGUI = 0;
 
-	PushButtonService1->setOn(TRUE);
-	PushButtonService1->setEnabled(FALSE);
-	PushButtonService2->setEnabled(FALSE);
-	PushButtonService3->setEnabled(FALSE);
-	PushButtonService4->setEnabled(FALSE);
+	PushButtonService1->setOn(true);
+	PushButtonService1->setEnabled(false);
+	PushButtonService2->setEnabled(false);
+	PushButtonService3->setEnabled(false);
+	PushButtonService4->setEnabled(false);
 
 	/* Update times for color LEDs */
 	CLED_FAC->SetUpdateTime(1500);
@@ -247,7 +247,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Disable text message label */
 	TextTextMessage->setText("");
-	TextTextMessage->setEnabled(FALSE);
+	TextTextMessage->setEnabled(false);
 
 	/* Activate real-time timers */
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
@@ -352,16 +352,16 @@ void FDRMDialog::UpdateDisplay()
 	    Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
 	{
 		int i = 0;
-		_BOOLEAN bStop = FALSE;
+		bool bStop = false;
 
-		while ((bStop == FALSE) && (i < MAX_NUM_SERVICES))
+		while ((bStop == false) && (i < MAX_NUM_SERVICES))
 		{
 			if (Parameters.Service[i].IsActive() &&
 			    Parameters.Service[i].iAudioStream != STREAM_ID_NOT_USED &&
 			    Parameters.Service[i].eAudDataFlag == SF_AUDIO)
 			{
 				iCurSelAudioServ = i;
-				bStop = TRUE;
+				bStop = true;
 			}
 			else
 				i++;
@@ -374,11 +374,11 @@ void FDRMDialog::UpdateDisplay()
 	if (
 		(Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_AUDIO)
 	&&	(iAudioStream != STREAM_ID_NOT_USED)
-	&&	(Parameters.AudioParam[iAudioStream].bTextflag == TRUE)
+	&&	(Parameters.AudioParam[iAudioStream].bTextflag == true)
 	)
 	{
 		/* Activate text window */
-		TextTextMessage->setEnabled(TRUE);
+		TextTextMessage->setEnabled(true);
 
 		/* Text message of current selected audio service
 		   (UTF-8 decoding) */
@@ -424,7 +424,7 @@ void FDRMDialog::UpdateDisplay()
 	else
 	{
 		/* Deactivate text window */
-		TextTextMessage->setEnabled(FALSE);
+		TextTextMessage->setEnabled(false);
 
 		/* Clear Text */
 		TextTextMessage->setText("");
@@ -440,7 +440,7 @@ void FDRMDialog::UpdateDisplay()
 
 		/* Bit-rate */
 		QString strBitrate = QString().setNum(Parameters.
-			GetBitRateKbps(iCurSelAudioServ, FALSE), 'f', 2) +
+			GetBitRateKbps(iCurSelAudioServ, false), 'f', 2) +
 			tr(" kbps");
 
 		/* Equal or unequal error protection */
@@ -559,31 +559,31 @@ void FDRMDialog::UpdateDisplay()
 		(Parameters.Service[iCurSelAudioServ].eAudDataFlag != SF_DATA)))
 	{
 		/* Reset checks */
-		PushButtonService1->setOn(FALSE);
-		PushButtonService2->setOn(FALSE);
-		PushButtonService3->setOn(FALSE);
-		PushButtonService4->setOn(FALSE);
+		PushButtonService1->setOn(false);
+		PushButtonService2->setOn(false);
+		PushButtonService3->setOn(false);
+		PushButtonService4->setOn(false);
 
 		/* Set right flag */
 		switch (iCurSelAudioServ)
 		{
 		case 0:
-			PushButtonService1->setOn(TRUE);
+			PushButtonService1->setOn(true);
 			iCurSelServiceGUI = 0;
 			break;
 
 		case 1:
-			PushButtonService2->setOn(TRUE);
+			PushButtonService2->setOn(true);
 			iCurSelServiceGUI = 1;
 			break;
 
 		case 2:
-			PushButtonService3->setOn(TRUE);
+			PushButtonService3->setOn(true);
 			iCurSelServiceGUI = 2;
 			break;
 
 		case 3:
-			PushButtonService4->setOn(TRUE);
+			PushButtonService4->setOn(true);
 			iCurSelServiceGUI = 3;
 			break;
 		}
@@ -591,10 +591,10 @@ void FDRMDialog::UpdateDisplay()
 	else if (Parameters.Service[iCurSelServiceGUI].eAudDataFlag == SF_DATA)
 	{
 		/* In case we only have data services, reset checks */
-		PushButtonService1->setOn(FALSE);
-		PushButtonService2->setOn(FALSE);
-		PushButtonService3->setOn(FALSE);
-		PushButtonService4->setOn(FALSE);
+		PushButtonService1->setOn(false);
+		PushButtonService2->setOn(false);
+		PushButtonService3->setOn(false);
+		PushButtonService4->setOn(false);
 	}
 
 	/* Service selector ------------------------------------------------- */
@@ -606,10 +606,10 @@ void FDRMDialog::UpdateDisplay()
 	/* Reset all buttons only if number of services has changed */
 	if (iOldNoServicesGUI != iNumServices)
 	{
-		PushButtonService1->setEnabled(FALSE);
-		PushButtonService2->setEnabled(FALSE);
-		PushButtonService3->setEnabled(FALSE);
-		PushButtonService4->setEnabled(FALSE);
+		PushButtonService1->setEnabled(false);
+		PushButtonService2->setEnabled(false);
+		PushButtonService3->setEnabled(false);
+		PushButtonService4->setEnabled(false);
 	}
 	iOldNoServicesGUI = iNumServices;
 
@@ -630,7 +630,7 @@ void FDRMDialog::UpdateDisplay()
 
 			/* Bit-rate (only show if greater than 0) */
 			const _REAL rBitRate =
-				Parameters.GetBitRateKbps(i, FALSE);
+				Parameters.GetBitRateKbps(i, false);
 
 			if (rBitRate > (_REAL) 0.0)
 			{
@@ -655,26 +655,26 @@ void FDRMDialog::UpdateDisplay()
 
 				/* Bit-rate of connected data stream */
 				m_StaticService[i] += " (" + QString().setNum(
-				Parameters.GetBitRateKbps(i, TRUE), 'f', 2) +
+				Parameters.GetBitRateKbps(i, true), 'f', 2) +
 					" kbps)";
 			}
 
 			switch (i)
 			{
 			case 0:
-				PushButtonService1->setEnabled(TRUE);
+				PushButtonService1->setEnabled(true);
 				break;
 
 			case 1:
-				PushButtonService2->setEnabled(TRUE);
+				PushButtonService2->setEnabled(true);
 				break;
 
 			case 2:
-				PushButtonService3->setEnabled(TRUE);
+				PushButtonService3->setEnabled(true);
 				break;
 
 			case 3:
-				PushButtonService4->setEnabled(TRUE);
+				PushButtonService4->setEnabled(true);
 				break;
 			}
 		}
@@ -700,10 +700,10 @@ void FDRMDialog::ClearDisplay()
 {
 	/* No signal is currently received ---------------------------------- */
 	/* Disable service buttons and associated labels */
-	PushButtonService1->setEnabled(FALSE);
-	PushButtonService2->setEnabled(FALSE);
-	PushButtonService3->setEnabled(FALSE);
-	PushButtonService4->setEnabled(FALSE);
+	PushButtonService1->setEnabled(false);
+	PushButtonService2->setEnabled(false);
+	PushButtonService3->setEnabled(false);
+	PushButtonService4->setEnabled(false);
 	TextMiniService1->setText("");
 	TextMiniService2->setText("");
 	TextMiniService3->setText("");
@@ -719,7 +719,7 @@ void FDRMDialog::ClearDisplay()
 	LabelServiceID->setText("");
 
 	/* Hide text message label */
-	TextTextMessage->setEnabled(FALSE);
+	TextTextMessage->setEnabled(false);
 	TextTextMessage->setText("");
 
 	LabelServiceLabel->setText(tr("Scanning..."));
@@ -736,19 +736,19 @@ void FDRMDialog::ChangeGUIModeToDRM()
 	/* Set correct schedule */
 	pStationsDlg->SetCurrentSchedule(CDRMSchedule::SM_DRM);
 
-	if (bStationsDlgWasVis == TRUE)
+	if (bStationsDlgWasVis == true)
 		pStationsDlg->show();
 
-	if (bLiveSchedDlgWasVis == TRUE)
+	if (bLiveSchedDlgWasVis == true)
 		pLiveScheduleDlg->show();
 
-	if (bEPGDlgWasVis == TRUE)
+	if (bEPGDlgWasVis == true)
 		pEPGDlg->show();
 
-	if (bSysEvalDlgWasVis == TRUE)
+	if (bSysEvalDlgWasVis == true)
 		pSysEvalDlg->show();
 
-	if (bMultMedDlgWasVis == TRUE)
+	if (bMultMedDlgWasVis == true)
 		pMultiMediaDlg->show();
 
 	if (pStationsDlg->isVisible())
@@ -789,10 +789,10 @@ void FDRMDialog::ChangeGUIModeToAM()
 	/* Set correct schedule */
 	pStationsDlg->SetCurrentSchedule(CDRMSchedule::SM_ANALOG);
 
-	if (bStationsDlgWasVis == TRUE)
+	if (bStationsDlgWasVis == true)
 		pStationsDlg->show();
 
-	if (bLiveSchedDlgWasVis == TRUE)
+	if (bLiveSchedDlgWasVis == true)
 		pLiveScheduleDlg->show();
 
 	if (pStationsDlg->isVisible())
@@ -839,14 +839,14 @@ void FDRMDialog::OnButtonService1()
 	if (PushButtonService1->isOn())
 	{
 		/* Set all other buttons up */
-		if (PushButtonService2->isOn()) PushButtonService2->setOn(FALSE);
-		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
-		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
+		if (PushButtonService2->isOn()) PushButtonService2->setOn(false);
+		if (PushButtonService3->isOn()) PushButtonService3->setOn(false);
+		if (PushButtonService4->isOn()) PushButtonService4->setOn(false);
 
 		SetService(0);
 	}
 	else
-		PushButtonService1->setOn(TRUE);
+		PushButtonService1->setOn(true);
 }
 
 void FDRMDialog::OnButtonService2()
@@ -854,14 +854,14 @@ void FDRMDialog::OnButtonService2()
 	if (PushButtonService2->isOn())
 	{
 		/* Set all other buttons up */
-		if (PushButtonService1->isOn()) PushButtonService1->setOn(FALSE);
-		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
-		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
+		if (PushButtonService1->isOn()) PushButtonService1->setOn(false);
+		if (PushButtonService3->isOn()) PushButtonService3->setOn(false);
+		if (PushButtonService4->isOn()) PushButtonService4->setOn(false);
 
 		SetService(1);
 	}
 	else
-		PushButtonService2->setOn(TRUE);
+		PushButtonService2->setOn(true);
 
 }
 
@@ -870,14 +870,14 @@ void FDRMDialog::OnButtonService3()
 	if (PushButtonService3->isOn())
 	{
 		/* Set all other buttons up */
-		if (PushButtonService1->isOn()) PushButtonService1->setOn(FALSE);
-		if (PushButtonService2->isOn()) PushButtonService2->setOn(FALSE);
-		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
+		if (PushButtonService1->isOn()) PushButtonService1->setOn(false);
+		if (PushButtonService2->isOn()) PushButtonService2->setOn(false);
+		if (PushButtonService4->isOn()) PushButtonService4->setOn(false);
 
 		SetService(2);
 	}
 	else
-		PushButtonService3->setOn(TRUE);
+		PushButtonService3->setOn(true);
 }
 
 void FDRMDialog::OnButtonService4()
@@ -885,14 +885,14 @@ void FDRMDialog::OnButtonService4()
 	if (PushButtonService4->isOn())
 	{
 		/* Set all other buttons up */
-		if (PushButtonService1->isOn()) PushButtonService1->setOn(FALSE);
-		if (PushButtonService2->isOn()) PushButtonService2->setOn(FALSE);
-		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
+		if (PushButtonService1->isOn()) PushButtonService1->setOn(false);
+		if (PushButtonService2->isOn()) PushButtonService2->setOn(false);
+		if (PushButtonService3->isOn()) PushButtonService3->setOn(false);
 
 		SetService(3);
 	}
 	else
-		PushButtonService4->setOn(TRUE);
+		PushButtonService4->setOn(true);
 }
 
 void FDRMDialog::SetService(int iNewServiceID)
@@ -971,7 +971,7 @@ void FDRMDialog::OnViewMultSettingsDlg()
 {
 
 	/* Show multimedia settings window */
-	MultSettingsDlg* pMultSettingsDlg = new MultSettingsDlg(Settings, this, "", TRUE, Qt::WStyle_Dialog);
+	MultSettingsDlg* pMultSettingsDlg = new MultSettingsDlg(Settings, this, "", true, Qt::WStyle_Dialog);
 
 	SetDialogCaption(pMultSettingsDlg, tr("Multimedia settings"));
 
@@ -1039,8 +1039,8 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	{
 		Settings.Put("GUI", "mode", string("DRMRX"));
 		/* remember the state of the windows */
-		Settings.Put("DRM Dialog", "visible", TRUE);
-		Settings.Put("AM Dialog", "visible", FALSE);
+		Settings.Put("DRM Dialog", "visible", true);
+		Settings.Put("AM Dialog", "visible", false);
 		Settings.Put("Stations Dialog", "visible", pStationsDlg->isVisible());
 		Settings.Put("Live Schedule Dialog", "visible", pLiveScheduleDlg->isVisible());
 		Settings.Put("System Evaluation Dialog", "visible", pSysEvalDlg->isVisible());
@@ -1076,8 +1076,8 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	else
 	{
 		Settings.Put("GUI", "mode", string("AMRX"));
-		Settings.Put("DRM Dialog", "visible", FALSE);
-		Settings.Put("AM Dialog", "visible", TRUE);
+		Settings.Put("DRM Dialog", "visible", false);
+		Settings.Put("AM Dialog", "visible", true);
 		Settings.Put("Stations Dialog", "visible", pStationsDlg->isVisible());
 
 		if (pStationsDlg->isVisible())
@@ -1107,43 +1107,6 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 
 	/* now let QT close us */
 	ce->accept();
-}
-
-void FDRMDialog::customEvent(QCustomEvent* Event)
-{
-	if (Event->type() == QEvent::User + 11)
-	{
-		int iMessType = ((DRMEvent*) Event)->iMessType;
-		int iStatus = ((DRMEvent*) Event)->iStatus;
-
-		if (iMessType == MS_MOT_OBJ_STAT)
-			pMultiMediaDlg->SetStatus(iMessType, iStatus);
-		else
-		{
-			pSysEvalDlg->SetStatus(iMessType, iStatus);
-
-			switch(iMessType)
-			{
-			case MS_FAC_CRC:
-				CLED_FAC->SetLight(iStatus);
-				break;
-
-			case MS_SDC_CRC:
-				CLED_SDC->SetLight(iStatus);
-				break;
-
-			case MS_MSC_CRC:
-				CLED_MSC->SetLight(iStatus);
-				break;
-
-			case MS_RESET_ALL:
-				CLED_FAC->Reset();
-				CLED_SDC->Reset();
-				CLED_MSC->Reset();
-				break;
-			}
-		}
-	}
 }
 
 QString FDRMDialog::GetCodecString(const int iServiceID)

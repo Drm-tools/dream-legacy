@@ -6,22 +6,22 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -70,6 +70,14 @@
 #define _IsBoosPil(a)			((a) & CM_BOOSTED_PI)
 
 
+/* Enumerations ********************************************************************/
+
+enum ERobMode {RM_ROBUSTNESS_MODE_A, RM_ROBUSTNESS_MODE_B,
+		RM_ROBUSTNESS_MODE_C, RM_ROBUSTNESS_MODE_D,
+		RM_NO_MODE_DETECTED}; /* RM: Robustness Mode */
+
+enum ESpecOcc {SO_0, SO_1, SO_2, SO_3, SO_4, SO_5}; /* SO: Spectrum Occupancy */
+
 /* Classes ********************************************************************/
 class CCellMappingTable
 {
@@ -84,7 +92,7 @@ public:
 	struct CRatio {int iEnum; int iDenom;};
 
 	/* Mapping table and pilot cell matrix */
-	CMatrix<int>		matiMapTab; 
+	CMatrix<int>		matiMapTab;
 	CMatrix<_COMPLEX>	matcPilotCells;
 
 	int					iNumSymbolsPerSuperframe;
@@ -96,10 +104,10 @@ public:
 	int					iMaxNumMSCSym; /* Max number of MSC cells in a symbol */
 
 	/* Number of MSC cells in a symbol */
-	vector<int>			veciNumMSCSym; 
+	vector<int>			veciNumMSCSym;
 
 	/* Number of FAC cells in a symbol */
-	vector<int>			veciNumFACSym; 
+	vector<int>			veciNumFACSym;
 
 	/* Number of SDC cells in a symbol */
 	vector<int>			veciNumSDCSym;
@@ -125,7 +133,7 @@ public:
 protected:
 	/* Internal parameters for MakeTable function --------------------------- */
 	struct CScatPilots
-	{	
+	{
 		CScatPilots(): piConst(NULL), iColSizeWZ(0), piW(NULL), piZ(NULL),
 		iQ(0),piGainTable(NULL) {}
 

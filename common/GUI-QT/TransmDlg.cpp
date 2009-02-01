@@ -46,7 +46,7 @@
 #include <qpopupmenu.h>
 #include <qlayout.h>
 #include <qthread.h>
-#include <qwt/qwt_thermo.h>
+#include <qwt_thermo.h>
 #include <qwhatsthis.h>
 #include <qprogressbar.h>
 #include <qmessagebox.h>
@@ -60,12 +60,12 @@
 #include <fstream>
 
 TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
-	QWidget* parent, const char* name, bool modal, WFlags f
+	QWidget* parent, const char* name, bool modal, Qt::WFlags f
 	):
 	TransmDlgBase(parent, name, modal, f),
 	pMenu(NULL), pSettingsMenu(NULL), Timer(),
 	DRMTransmitter(tx), Settings(NSettings),
-	bIsStarted(FALSE),vecIpIf()
+	bIsStarted(false),vecIpIf()
 {
 	int i;
 	size_t t;
@@ -88,7 +88,7 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 
 	/* Init progress bar for input signal level */
 	ProgrInputLevel->setRange(-50.0, 0.0);
-	ProgrInputLevel->setOrientation(QwtThermo::Horizontal, QwtThermo::Bottom);
+	ProgrInputLevel->setOrientation(Qt::Horizontal, QwtThermo::BottomScale);
 	ProgrInputLevel->setFillColor(QColor(0, 190, 0));
 	ProgrInputLevel->setAlarmLevel(-5.0);
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
@@ -169,7 +169,7 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 	ListViewFileNames->addColumn("Full Path");
 
 	/* Set audio enable check box */
-	CheckBoxSBR->setChecked(TRUE);
+	CheckBoxSBR->setChecked(true);
 
 	/* enable services for initialization */
 	EnableAudio(true);
@@ -188,13 +188,11 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 	ListViewTextMessages->clear();
 	ListViewTextMessages->setAllColumnsShowFocus(true);
 
-	LineEditMDIinGroup->setEnabled(FALSE);
-#if QT_VERSION >= 0x030000
+	LineEditMDIinGroup->setEnabled(false);
 	LineEditMDIinGroup->setInputMask("000.000.000.000;_");
 	LineEditMDIOutAddr->setInputMask("000.000.000.000;_");
 	LineEditMDIinPort->setInputMask("00009;_");
 	LineEditMDIoutPort->setInputMask("00009;_");
-#endif
 
 	/* Enable all controls */
 	EnableAllControlsForSet();
@@ -213,10 +211,10 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 	TransmDlgBaseLayout->setMenuBar(pMenu);
 
 	/* NOT implemented yet */
-    ComboBoxCodec->setEnabled(FALSE);
-    ComboBoxAudioMode->setEnabled(FALSE);
-    ComboBoxAudioBitrate->setEnabled(FALSE);
-    CheckBoxSBR->setEnabled(FALSE);
+    ComboBoxCodec->setEnabled(false);
+    ComboBoxAudioMode->setEnabled(false);
+    ComboBoxAudioBitrate->setEnabled(false);
+    CheckBoxSBR->setEnabled(false);
 
 	/* Connections ---------------------------------------------------------- */
 
@@ -427,7 +425,7 @@ void
 TransmDialog::closeEvent(QCloseEvent* ce)
 {
 	/* Stop transmitter if needed */
-	if (bIsStarted == TRUE)
+	if (bIsStarted == true)
 		OnButtonStartStop();
 	else
 		SetTransmitter(); // so Transmitter save settings has the latest info
@@ -436,13 +434,13 @@ TransmDialog::closeEvent(QCloseEvent* ce)
 
 void TransmDialog::OnButtonClose()
 {
-    this->close(FALSE);
+    this->close(false);
 }
 
 void TransmDialog::OnTimer()
 {
 	/* Set value for input level meter (only in "start" mode) */
-	if (bIsStarted == TRUE)
+	if (bIsStarted == true)
 	{
 		ProgrInputLevel->
 			setValue(DRMTransmitter.GetLevelMeter());
@@ -455,8 +453,8 @@ void TransmDialog::OnTimer()
 		if (DRMTransmitter.GetTransStat(strCPictureName, rCPercent))
 		{
 			/* Enable controls */
-			ProgressBarCurPict->setEnabled(TRUE);
-			TextLabelCurPict->setEnabled(TRUE);
+			ProgressBarCurPict->setEnabled(true);
+			TextLabelCurPict->setEnabled(true);
 
 			/* We want to file name, not the complete path -> "QFileInfo" */
 			QFileInfo FileInfo(strCPictureName.c_str());
@@ -468,8 +466,8 @@ void TransmDialog::OnTimer()
 		else
 		{
 			/* Disable controls */
-			ProgressBarCurPict->setEnabled(FALSE);
-			TextLabelCurPict->setEnabled(FALSE);
+			ProgressBarCurPict->setEnabled(false);
+			TextLabelCurPict->setEnabled(false);
 		}
 		time_t t = time(NULL);
 		if((t % 5) == 0)
@@ -496,12 +494,12 @@ TransmDialog::GetFromTransmitter()
         );
 		GetServices();
 		GetMDIOut();
-		RadioButtonEncoder->setChecked(TRUE);
+		RadioButtonEncoder->setChecked(true);
 		break;
 	case CDRMTransmitterInterface::T_MOD:
 		GetMDIIn();
 		GetCOFDM();
-		RadioButtonModulator->setChecked(TRUE);
+		RadioButtonModulator->setChecked(true);
 		break;
 	case CDRMTransmitterInterface::T_TX:
 		GetChannel();
@@ -513,7 +511,7 @@ TransmDialog::GetFromTransmitter()
         );
 		GetServices();
 		GetCOFDM();
-		RadioButtonTransmitter->setChecked(TRUE);
+		RadioButtonTransmitter->setChecked(true);
 		break;
 	}
 }
@@ -525,19 +523,19 @@ TransmDialog::GetChannel()
 	switch (DRMTransmitter.GetParameters()->GetWaveMode())
 	{
 	case RM_ROBUSTNESS_MODE_A:
-		RadioButtonRMA->setChecked(TRUE);
+		RadioButtonRMA->setChecked(true);
 		break;
 
 	case RM_ROBUSTNESS_MODE_B:
-		RadioButtonRMB->setChecked(TRUE);
+		RadioButtonRMB->setChecked(true);
 		break;
 
 	case RM_ROBUSTNESS_MODE_C:
-		RadioButtonRMC->setChecked(TRUE);
+		RadioButtonRMC->setChecked(true);
 		break;
 
 	case RM_ROBUSTNESS_MODE_D:
-		RadioButtonRMD->setChecked(TRUE);
+		RadioButtonRMD->setChecked(true);
 		break;
 
 	case RM_NO_MODE_DETECTED:
@@ -548,27 +546,27 @@ TransmDialog::GetChannel()
 	switch (DRMTransmitter.GetParameters()->GetSpectrumOccup())
 	{
 	case SO_0:
-		RadioButtonBandwidth45->setChecked(TRUE);
+		RadioButtonBandwidth45->setChecked(true);
 		break;
 
 	case SO_1:
-		RadioButtonBandwidth5->setChecked(TRUE);
+		RadioButtonBandwidth5->setChecked(true);
 		break;
 
 	case SO_2:
-		RadioButtonBandwidth9->setChecked(TRUE);
+		RadioButtonBandwidth9->setChecked(true);
 		break;
 
 	case SO_3:
-		RadioButtonBandwidth10->setChecked(TRUE);
+		RadioButtonBandwidth10->setChecked(true);
 		break;
 
 	case SO_4:
-		RadioButtonBandwidth18->setChecked(TRUE);
+		RadioButtonBandwidth18->setChecked(true);
 		break;
 
 	case SO_5:
-		RadioButtonBandwidth20->setChecked(TRUE);
+		RadioButtonBandwidth20->setChecked(true);
 		break;
 	}
 
@@ -818,11 +816,11 @@ TransmDialog::GetAudio(int iStreamNo)
             ComboBoxAudioSource->setCurrentItem(iAudSrc);
     }
 
-    if(DRMTransmitter.GetParameters()->AudioParam[iStreamNo].bTextflag == TRUE)
+    if(DRMTransmitter.GetParameters()->AudioParam[iStreamNo].bTextflag == true)
     {
         /* Activate text message */
-        EnableTextMessage(TRUE);
-        CheckBoxEnableTextMessage->setChecked(TRUE);
+        EnableTextMessage(true);
+        CheckBoxEnableTextMessage->setChecked(true);
         vector<string> msg;
         DRMTransmitter.GetTextMessages(msg);
         for(size_t i=0; i<msg.size(); i++)
@@ -830,8 +828,8 @@ TransmDialog::GetAudio(int iStreamNo)
     }
     else
     {
-        EnableTextMessage(FALSE);
-        CheckBoxEnableTextMessage->setChecked(FALSE);
+        EnableTextMessage(false);
+        CheckBoxEnableTextMessage->setChecked(false);
     }
 }
 
@@ -895,21 +893,21 @@ void TransmDialog::OnToggleCheckBoxEnableTextMessage(bool bState)
 	EnableTextMessage(bState);
 }
 
-void TransmDialog::EnableTextMessage(const _BOOLEAN bFlag)
+void TransmDialog::EnableTextMessage(const bool bFlag)
 {
-	if (bFlag == TRUE)
+	if (bFlag == true)
 	{
 		/* Enable text message controls */
-		PushButtonAddText->setEnabled(TRUE);
-		PushButtonDeleteText->setEnabled(TRUE);
-		PushButtonClearAllText->setEnabled(TRUE);
+		PushButtonAddText->setEnabled(true);
+		PushButtonDeleteText->setEnabled(true);
+		PushButtonClearAllText->setEnabled(true);
 	}
 	else
 	{
 		/* Disable text message controls */
-		PushButtonAddText->setEnabled(FALSE);
-		PushButtonDeleteText->setEnabled(FALSE);
-		PushButtonClearAllText->setEnabled(FALSE);
+		PushButtonAddText->setEnabled(false);
+		PushButtonDeleteText->setEnabled(false);
+		PushButtonClearAllText->setEnabled(false);
 	}
 }
 
@@ -953,7 +951,7 @@ TransmDialog::SetData(int iStreamNo, int iPacketId)
 
 		/* Extract format string */
 		QFileInfo FileInfo(strFileName);
-		const QString strFormat = FileInfo.extension(FALSE);
+		const QString strFormat = FileInfo.extension(false);
 
 		DRMTransmitter.AddPic(strFileName.latin1(), strFormat.latin1());
 	}
@@ -1095,7 +1093,7 @@ TransmDialog::GetMDIIn()
 		CheckBoxReadMDIFile->setChecked(false);
 		LineEditMDIInputFile->setText("");
 
-		QStringList parts = QStringList::split(":", addr, TRUE);
+		QStringList parts = QStringList::split(":", addr, true);
 		switch(parts.count())
 		{
 		case 1:
@@ -1196,7 +1194,7 @@ TransmDialog::GetMDIOut()
     for(size_t i=0; i<MDIoutAddr.size(); i++)
     {
         QString addr = MDIoutAddr[i].c_str();
-        QStringList parts = QStringList::split(":", addr, TRUE);
+        QStringList parts = QStringList::split(":", addr, true);
         switch(parts.count())
         {
         case 0:
@@ -1336,19 +1334,19 @@ TransmDialog::GetCOFDM()
 	switch (DRMTransmitter.GetParameters()->eOutputFormat)
 	{
 	case OF_REAL_VAL:
-		RadioButtonOutReal->setChecked(TRUE);
+		RadioButtonOutReal->setChecked(true);
 		break;
 
 	case OF_IQ_POS:
-		RadioButtonOutIQPos->setChecked(TRUE);
+		RadioButtonOutIQPos->setChecked(true);
 		break;
 
 	case OF_IQ_NEG:
-		RadioButtonOutIQNeg->setChecked(TRUE);
+		RadioButtonOutIQNeg->setChecked(true);
 		break;
 
 	case OF_EP:
-		RadioButtonOutEP->setChecked(TRUE);
+		RadioButtonOutEP->setChecked(true);
 		break;
 	}
 	LineEditSndCrdIF->setText(QString::number(DRMTransmitter.GetParameters()->rCarOffset));
@@ -1593,7 +1591,7 @@ TransmDialog::OnButtonDeleteStream()
 
 void TransmDialog::OnButtonStartStop()
 {
-	if (bIsStarted == TRUE)
+	if (bIsStarted == true)
 	{
 		/* Stop transmitter */
 		DRMTransmitter.Stop();
@@ -1608,7 +1606,7 @@ void TransmDialog::OnButtonStartStop()
 
 		EnableAllControlsForSet();
 
-		bIsStarted = FALSE;
+		bIsStarted = false;
 	}
 	else
 	{
@@ -1616,39 +1614,39 @@ void TransmDialog::OnButtonStartStop()
 		DRMTransmitter.start();
 		ButtonStartStop->setText(tr("&Stop"));
 		DisableAllControlsForSet();
-		bIsStarted = TRUE;
+		bIsStarted = true;
 	}
 }
 
-void TransmDialog::EnableAudio(const _BOOLEAN bFlag)
+void TransmDialog::EnableAudio(const bool bFlag)
 {
-	if (bFlag == TRUE)
+	if (bFlag == true)
 	{
-		ComboBoxAudioSource->setEnabled(TRUE);
+		ComboBoxAudioSource->setEnabled(true);
 	}
 	else
 	{
 		/* Disable audio controls */
-		GroupBoxTextMessage->setEnabled(FALSE);
-		ComboBoxAudioSource->setEnabled(FALSE);
+		GroupBoxTextMessage->setEnabled(false);
+		ComboBoxAudioSource->setEnabled(false);
 	}
 }
 
-void TransmDialog::EnableData(const _BOOLEAN bFlag)
+void TransmDialog::EnableData(const bool bFlag)
 {
-	if (bFlag == TRUE)
+	if (bFlag == true)
 	{
 		/* Enable data controls */
-		ListViewFileNames->setEnabled(TRUE);
-		PushButtonClearAllFileNames->setEnabled(TRUE);
-		PushButtonAddFile->setEnabled(TRUE);
+		ListViewFileNames->setEnabled(true);
+		PushButtonClearAllFileNames->setEnabled(true);
+		PushButtonAddFile->setEnabled(true);
 	}
 	else
 	{
 		/* Disable data controls */
-		ListViewFileNames->setEnabled(FALSE);
-		PushButtonClearAllFileNames->setEnabled(FALSE);
-		PushButtonAddFile->setEnabled(FALSE);
+		ListViewFileNames->setEnabled(false);
+		PushButtonClearAllFileNames->setEnabled(false);
+		PushButtonAddFile->setEnabled(false);
 	}
 }
 
@@ -1853,48 +1851,48 @@ void TransmDialog::OnRadioRobustnessMode(int iID)
 	{
 	case 0:
 		/* All bandwidth modes are possible */
-		RadioButtonBandwidth45->setEnabled(TRUE);
-		RadioButtonBandwidth5->setEnabled(TRUE);
-		RadioButtonBandwidth9->setEnabled(TRUE);
-		RadioButtonBandwidth10->setEnabled(TRUE);
-		RadioButtonBandwidth18->setEnabled(TRUE);
-		RadioButtonBandwidth20->setEnabled(TRUE);
+		RadioButtonBandwidth45->setEnabled(true);
+		RadioButtonBandwidth5->setEnabled(true);
+		RadioButtonBandwidth9->setEnabled(true);
+		RadioButtonBandwidth10->setEnabled(true);
+		RadioButtonBandwidth18->setEnabled(true);
+		RadioButtonBandwidth20->setEnabled(true);
 		break;
 
 	case 1:
 		/* All bandwidth modes are possible */
-		RadioButtonBandwidth45->setEnabled(TRUE);
-		RadioButtonBandwidth5->setEnabled(TRUE);
-		RadioButtonBandwidth9->setEnabled(TRUE);
-		RadioButtonBandwidth10->setEnabled(TRUE);
-		RadioButtonBandwidth18->setEnabled(TRUE);
-		RadioButtonBandwidth20->setEnabled(TRUE);
+		RadioButtonBandwidth45->setEnabled(true);
+		RadioButtonBandwidth5->setEnabled(true);
+		RadioButtonBandwidth9->setEnabled(true);
+		RadioButtonBandwidth10->setEnabled(true);
+		RadioButtonBandwidth18->setEnabled(true);
+		RadioButtonBandwidth20->setEnabled(true);
 		break;
 
 	case 2:
 		/* Only 10 and 20 kHz possible in robustness mode C */
-		RadioButtonBandwidth45->setEnabled(FALSE);
-		RadioButtonBandwidth5->setEnabled(FALSE);
-		RadioButtonBandwidth9->setEnabled(FALSE);
-		RadioButtonBandwidth10->setEnabled(TRUE);
-		RadioButtonBandwidth18->setEnabled(FALSE);
-		RadioButtonBandwidth20->setEnabled(TRUE);
+		RadioButtonBandwidth45->setEnabled(false);
+		RadioButtonBandwidth5->setEnabled(false);
+		RadioButtonBandwidth9->setEnabled(false);
+		RadioButtonBandwidth10->setEnabled(true);
+		RadioButtonBandwidth18->setEnabled(false);
+		RadioButtonBandwidth20->setEnabled(true);
 
 		/* Set check on a default value to be sure we are "in range" */
-		RadioButtonBandwidth10->setChecked(TRUE);
+		RadioButtonBandwidth10->setChecked(true);
 		break;
 
 	case 3:
 		/* Only 10 and 20 kHz possible in robustness mode D */
-		RadioButtonBandwidth45->setEnabled(FALSE);
-		RadioButtonBandwidth5->setEnabled(FALSE);
-		RadioButtonBandwidth9->setEnabled(FALSE);
-		RadioButtonBandwidth10->setEnabled(TRUE);
-		RadioButtonBandwidth18->setEnabled(FALSE);
-		RadioButtonBandwidth20->setEnabled(TRUE);
+		RadioButtonBandwidth45->setEnabled(false);
+		RadioButtonBandwidth5->setEnabled(false);
+		RadioButtonBandwidth9->setEnabled(false);
+		RadioButtonBandwidth10->setEnabled(true);
+		RadioButtonBandwidth18->setEnabled(false);
+		RadioButtonBandwidth20->setEnabled(true);
 
 		/* Set check on a default value to be sure we are "in range" */
-		RadioButtonBandwidth10->setChecked(TRUE);
+		RadioButtonBandwidth10->setChecked(true);
 		break;
 	}
 	SetChannel();
@@ -1902,30 +1900,30 @@ void TransmDialog::OnRadioRobustnessMode(int iID)
 
 void TransmDialog::DisableAllControlsForSet()
 {
-	Channel->setEnabled(FALSE);
-	Streams->setEnabled(FALSE);
-	Audio->setEnabled(FALSE);
-	Data->setEnabled(FALSE);
-	Services->setEnabled(FALSE);
-	MDIOut->setEnabled(FALSE);
-	MDIIn->setEnabled(FALSE);
-	COFDM->setEnabled(FALSE);
+	Channel->setEnabled(false);
+	Streams->setEnabled(false);
+	Audio->setEnabled(false);
+	Data->setEnabled(false);
+	Services->setEnabled(false);
+	MDIOut->setEnabled(false);
+	MDIIn->setEnabled(false);
+	COFDM->setEnabled(false);
 
-	GroupInput->setEnabled(TRUE); /* For run-mode */
+	GroupInput->setEnabled(true); /* For run-mode */
 }
 
 void TransmDialog::EnableAllControlsForSet()
 {
-	Channel->setEnabled(TRUE);
-	Streams->setEnabled(TRUE);
-	Audio->setEnabled(TRUE);
-	Data->setEnabled(TRUE);
-	Services->setEnabled(TRUE);
-	MDIOut->setEnabled(TRUE);
-	MDIIn->setEnabled(TRUE);
-	COFDM->setEnabled(TRUE);
+	Channel->setEnabled(true);
+	Streams->setEnabled(true);
+	Audio->setEnabled(true);
+	Data->setEnabled(true);
+	Services->setEnabled(true);
+	MDIOut->setEnabled(true);
+	MDIIn->setEnabled(true);
+	COFDM->setEnabled(true);
 
-	GroupInput->setEnabled(FALSE); /* For run-mode */
+	GroupInput->setEnabled(false); /* For run-mode */
 
 	/* Reset status bars */
 	ProgrInputLevel->setValue(RET_VAL_LOG_0);

@@ -73,10 +73,10 @@ public:
 	// Send packet to the socket
 	void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
-	virtual _BOOLEAN SetDestination(const string& str);
-	virtual _BOOLEAN SetOrigin(const string& str);
+	virtual bool SetDestination(const string& str);
+	virtual bool SetOrigin(const string& str);
 
-	virtual _BOOLEAN GetDestination(string& str);
+	virtual bool GetDestination(string& str);
 
 private:
 	CPacketSink *pPacketSink;

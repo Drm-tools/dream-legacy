@@ -64,7 +64,7 @@ public:
 	void					ClearPics();
 	void					GetPics(map<string,string>&);
 
-	_BOOLEAN				GetTransStat(string& strCPi, _REAL& rCPe);
+	bool				GetTransStat(string& strCPi, _REAL& rCPe);
 
 	void					GetSoundInChoices(vector<string>&);
 	void					SetSoundInInterface(int);

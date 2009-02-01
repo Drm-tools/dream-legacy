@@ -6,22 +6,22 @@
  *	Volker Fischer, Robert Kesterson, Andrew Murphy
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -70,6 +70,11 @@
 # define MAX_COLOR_SCHEMES_VAL		(NUM_AVL_COLOR_SCHEMES_PLOT - 1)
 
 # define MAX_MDI_PORT_IN_NUM		65535
+
+# define GUI_CONTROL_UPDATE_TIME			500	/* Milliseconds */
+
+# define GUI_CONTROL_UPDATE_TIME_FAST	250	/* Milliseconds */
+
 #endif
 
 #ifdef HAVE_LIBHAMLIB
@@ -115,7 +120,7 @@
 
 /* Classes ********************************************************************/
 	/* Function declarations for stlini code written by Robert Kesterson */
-	struct StlIniCompareStringNoCase 
+	struct StlIniCompareStringNoCase
 	{
 		bool operator()(const std::string& x, const std::string& y) const;
 	};
@@ -146,7 +151,6 @@ protected:
 	void PutIniSetting(const string& strSection, const string& strKey="",
 				const string& strVal = "");
 	INIFile ini;
-	CMutex Mutex;
 };
 
 class CSettings: public CIniFile
@@ -180,13 +184,13 @@ public:
 protected:
 
 	void ParseArguments(int argc, char** argv);
-	_BOOLEAN GetFlagArgument(int argc, char** argv, int& i, string strShortOpt,
+	bool GetFlagArgument(int argc, char** argv, int& i, string strShortOpt,
 							 string strLongOpt);
-	_BOOLEAN GetNumericArgument(int argc, char** argv, int& i,
+	bool GetNumericArgument(int argc, char** argv, int& i,
 								string strShortOpt, string strLongOpt,
 								_REAL rRangeStart, _REAL rRangeStop,
 								_REAL& rValue);
-	_BOOLEAN GetStringArgument(int argc, char** argv, int& i,
+	bool GetStringArgument(int argc, char** argv, int& i,
 							   string strShortOpt, string strLongOpt,
 							   string& strArg);
 

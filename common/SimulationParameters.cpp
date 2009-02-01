@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -65,12 +65,12 @@ void CDRMSimulation::SimScript()
 			the actual synchronization code to make it work)
 	   ST_MSECHANEST: MSE versus carrier for channel estimation algorithms
 	   ST_BER_IDEALCHAN: BER assuming ideal channel estimation
-	
+
 	   Make sure the /drm/[linux, windows]/test directory exists since all the
 	   simulation results are stored there. Together with the actual simulation
-	   results, a file called x__SIMTIME.dat is also created and updated very 
-	   frequently, showing the remaining time. 
-	   By using the skript "plotsimres.m" in Matlab, a nice plot of the results 
+	   results, a file called x__SIMTIME.dat is also created and updated very
+	   frequently, showing the remaining time.
+	   By using the skript "plotsimres.m" in Matlab, a nice plot of the results
 	   is generated automatically (this script reads all available simulation
 	   results) */
 	Param.eSimType = CParameter::ST_BITERROR;
@@ -124,10 +124,10 @@ Param.iSpecChDoppler = 2; /* Hz (integer value!) */
 		/* Define which synchronization algorithms we want to use */
 		/* In case of bit error simulations, a synchronized DRM data stream is
 		   used. Set corresponding modules to synchronized mode */
-		InputResample.SetSyncInput(TRUE);
-		FreqSyncAcq.SetSyncInput(TRUE);
-		SyncUsingPil.SetSyncInput(TRUE);
-		TimeSync.SetSyncInput(TRUE);
+		InputResample.SetSyncInput(true);
+		FreqSyncAcq.SetSyncInput(true);
+		SyncUsingPil.SetSyncInput(true);
+		TimeSync.SetSyncInput(true);
 
 
 		if (Param.iDRMChannelNum < 3)
@@ -188,13 +188,13 @@ Param.iSpecChDoppler = 2; /* Hz (integer value!) */
 		   for __SIMTIME file name */
 		if (iSimTime != 0)
 		{
-			GenSimData.SetSimTime(iSimTime, 
-				SimFileName(Param, strSpecialRemark, TRUE));
+			GenSimData.SetSimTime(iSimTime,
+				SimFileName(Param, strSpecialRemark, true));
 		}
 		else
 		{
-			GenSimData.SetNumErrors(iSimNumErrors, 
-				SimFileName(Param, strSpecialRemark, TRUE));
+			GenSimData.SetNumErrors(iSimNumErrors,
+				SimFileName(Param, strSpecialRemark, true));
 		}
 
 		/* Set file name for simulation results output (in case of MSE, plot
@@ -259,9 +259,9 @@ Param.iSpecChDoppler = 2; /* Hz (integer value!) */
 }
 
 string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
-								   _BOOLEAN bWithSNR)
+								   bool bWithSNR)
 {
-/* 
+/*
 	File naming convention:
 	BER: Bit error rate simulation
 	MSE: MSE for channel estimation
@@ -436,7 +436,7 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
 		strFileName += "E"; /* E -> errors */
 		iCurNum = iSimNumErrors;
 	}
-	
+
 	if (iCurNum / 1000 > 0)
 	{
 		strMultPl = "K_";
@@ -455,7 +455,7 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
 
 
 	/* SNR range (optional) ------------------------------------------------- */
-	if (bWithSNR == TRUE)
+	if (bWithSNR == true)
 	{
 		strFileName += "SNR";
 		sprintf(chNumTmpLong, "%.1f-", rStartSNR);

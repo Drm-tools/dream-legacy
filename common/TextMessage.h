@@ -42,7 +42,7 @@
 #define BYTES_PER_SEG_TEXT_MESS			16
 
 #define TOT_NUM_BITS_PER_PIECE			((BYTES_PER_SEG_TEXT_MESS /* Max body */ \
-										+ 2 /* Header */ + 2 /* CRC */) * SIZEOF__BYTE)
+										+ 2 /* Header */ + 2 /* CRC */) * sizeof(_BINARY))
 
 
 /* Classes ********************************************************************/
@@ -89,11 +89,11 @@ protected:
 class CTextMessSegment
 {
 public:
-	CTextMessSegment() : byData(BYTES_PER_SEG_TEXT_MESS), bIsOK(FALSE),
+	CTextMessSegment() : byData(BYTES_PER_SEG_TEXT_MESS), bIsOK(false),
 		iNumBytes(0) {}
 
 	CVector<_BYTE>	byData;
-	_BOOLEAN		bIsOK;
+	bool		bIsOK;
 	int				iNumBytes;
 };
 

@@ -55,8 +55,8 @@ class CDIIn : public CPacketSink
 public:
 	CDIIn();
 	virtual ~CDIIn();
-	_BOOLEAN SetOrigin(const string& strAddr);
-	_BOOLEAN GetInEnabled() {return bDIInEnabled;}
+	bool SetOrigin(const string& strAddr);
+	bool GetInEnabled() {return bDIInEnabled;}
 	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 	void ProcessData(CParameter& Parameter, CVectorEx<_BINARY>& vecOutputData, int& iOutputBlockSize);
 
@@ -67,7 +67,7 @@ protected:
 	CPacketSource*				source;
 	CPft						Pft;
 
-	_BOOLEAN					bDIInEnabled;
+	bool					bDIInEnabled;
 };
 
 //class CMDIIn :  public CTransmitterModul<_BYTE, _BINARY, 0, 1>, public CDIIn
@@ -79,8 +79,8 @@ public:
 	virtual ~CMDIIn() {}
 	void InitInternal(CParameter& Parameter);
 	void ProcessDataInternal(CParameter& Parameter);
-	virtual _BOOLEAN SetDestination(const string&) { return FALSE; }
-	virtual _BOOLEAN GetDestination(string&) { return FALSE; }
+	virtual bool SetDestination(const string&) { return false; }
+	virtual bool GetDestination(string&) { return false; }
 };
 
 class CUpstreamDI : public CReceiverModul<_BINARY, _BINARY>, public CDIIn
@@ -93,14 +93,14 @@ public:
 	// inherited from CDIIn
 
 	/* CRCIOutInterface */
-	_BOOLEAN SetDestination(const string& strArgument);
-	_BOOLEAN GetOutEnabled() {return bMDIOutEnabled;}
-	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC=bNAFPktCRC;}
+	bool SetDestination(const string& strArgument);
+	bool GetOutEnabled() {return bMDIOutEnabled;}
+	void SetAFPktCRC(const bool bNAFPktCRC) {bUseAFCRC=bNAFPktCRC;}
 	void SetFrequency(int iNewFreqkHz);
 	void SetReceiverMode(EDemodulationType eNewMode);
 	void SetService(int iServiceID);
 
-	_BOOLEAN GetDestination(string& strArgument);
+	bool GetDestination(string& strArgument);
 
 	/* CReceiverModul */
 	void InitInternal(CParameter& Parameter);
@@ -111,10 +111,10 @@ protected:
 	string						strDestination;
 	CRSISubscriberSocket		sink;
 
-	_BOOLEAN					bUseAFCRC;
+	bool					bUseAFCRC;
 
-	_BOOLEAN					bMDIOutEnabled;
-	_BOOLEAN					bNeedPft;
+	bool					bMDIOutEnabled;
+	bool					bNeedPft;
 
 	/* Tag Item Generators */
 
@@ -151,24 +151,24 @@ public:
 	void SendUnlockedFrame(CParameter& Parameter); /* called once per frame even if the Rx isn't synchronised */
 	void SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& CodedAudioData);
 
-	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC);
+	void SetAFPktCRC(const bool bNAFPktCRC);
 
-	_BOOLEAN AddSubscriber(const string& dest, const string& origin, const char profile, const int iSubsamplingFactor=1);
+	bool AddSubscriber(const string& dest, const string& origin, const char profile, const int iSubsamplingFactor=1);
 	void DefineRSIPreset(const int iPresetNum, const int cPro, const int iFactor);
 
-	_BOOLEAN SetOrigin(const string& strAddr);
-	void SetRSIRecording(CParameter& Parameter, _BOOLEAN bOn, char cPro, const string& type="");
+	bool SetOrigin(const string& strAddr);
+	void SetRSIRecording(CParameter& Parameter, bool bOn, char cPro, const string& type="");
 	void NewFrequency(CParameter& Parameter); /* needs to be called in case a new RSCI file needs to be started */
 
-	virtual _BOOLEAN GetOutEnabled() {return bMDIOutEnabled;}
-	virtual _BOOLEAN GetInEnabled() {return bMDIInEnabled;}
+	virtual bool GetOutEnabled() {return bMDIOutEnabled;}
+	virtual bool GetInEnabled() {return bMDIInEnabled;}
 	void GetNextPacket(CSingleBuffer<_BINARY>&	buf);
 	void SetReceiver(CDRMReceiver *pReceiver);
 
 	/* CPacketSink */
 	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
-	_BOOLEAN SetDestination(const string& strArgument);
-	_BOOLEAN GetDestination(string& strArgument);
+	bool SetDestination(const string& strArgument);
+	bool GetDestination(string& strArgument);
 
 	string GetRSIfilename(CParameter& Parameter, const char cProfile);
 
@@ -179,11 +179,11 @@ protected:
 	uint32_t					iLogFraCnt;
 	CDRMReceiver*				pDrmReceiver;
 
-	_BOOLEAN					bMDIOutEnabled;
-	_BOOLEAN					bMDIInEnabled;
-	_BOOLEAN					bNeedPft;
+	bool					bMDIOutEnabled;
+	bool					bMDIInEnabled;
+	bool					bNeedPft;
 
-	_BOOLEAN					bIsRecording;
+	bool					bIsRecording;
 	int							iFrequency;
 	string						strRecordType;
 

@@ -120,7 +120,7 @@ void CDRMSimulation::Run()
 	Init();
 
 	/* Set run flag */
-	Param.bRunThread = TRUE;
+	Param.bRunThread = true;
 	MSC_FAC_SDC_MapBuf[0] = &IntlBuf;
 	MSC_FAC_SDC_MapBuf[1] = &FACMapBuf;
 	MSC_FAC_SDC_MapBuf[2] = &SDCMapBuf;
@@ -355,7 +355,7 @@ void CDRMSimulation::Init()
 
 	/* Disable FAC evaluation to make sure that no mistakenly correct CRC
 	   sets false parameters which can cause run-time errors */
-	UtilizeFACData.SetSyncInput(TRUE);
+	UtilizeFACData.SetSyncInput(true);
 
 	/* We have to first start aquisition and then stop it right after it to set
 	   internal parameters */

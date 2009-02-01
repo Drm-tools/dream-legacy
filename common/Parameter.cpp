@@ -102,20 +102,20 @@ CParameter::CParameter():
  vecrRdelIntervals(0),
  bMeasureDoppler(0),
  rRdop(0.0),
- bMeasureInterference(FALSE),
+ bMeasureInterference(false),
  rIntFreq(0.0),
  rINR(0.0),
  rICR(0.0),
  rMaxPSDwrtSig(0.0),
  rMaxPSDFreq(0.0),
  rSigStrengthCorrection(0.0),
- bRunThread(FALSE),
- bUsingMultimedia(FALSE),
+ bRunThread(false),
+ bUsingMultimedia(false),
  CellMappingTable(),
  GPSData(), SNRstat(), SigStrstat(),
  rSysSimSNRdB(0.0),
  iFrequency(0),
- bValidSignalStrength(FALSE),
+ bValidSignalStrength(false),
  rSigStr(0.0),
  rIFSigStr(0.0),
  iCurSelAudioService(0),
@@ -386,13 +386,13 @@ void CParameter::ResetServicesStreams()
 		AudioParam[0].eAudioCoding = CAudioParam::AC_AAC;
 		AudioParam[0].eSBRFlag = CAudioParam::SB_NOT_USED;
 		AudioParam[0].eAudioSamplRate = CAudioParam::AS_24KHZ;
-		AudioParam[0].bTextflag = FALSE;
-		AudioParam[0].bEnhanceFlag = FALSE;
+		AudioParam[0].bTextflag = false;
+		AudioParam[0].bEnhanceFlag = false;
 		AudioParam[0].eAudioMode = CAudioParam::AM_MONO;
 		AudioParam[0].iCELPIndex = 0;
-		AudioParam[0].bCELPCRC = FALSE;
+		AudioParam[0].bCELPCRC = false;
 		AudioParam[0].eHVXCRate = CAudioParam::HR_2_KBIT;
-		AudioParam[0].bHVXCCRC = FALSE;
+		AudioParam[0].bHVXCCRC = false;
 
 		Service[0].iServiceID = SERV_ID_NOT_USED;
 		Service[0].eCAIndication = CService::CA_NOT_USED;
@@ -453,7 +453,7 @@ void CParameter::GetActiveStreams(set<int>& actStr)
 	}
 }
 
-_REAL CParameter::GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData)
+_REAL CParameter::GetBitRateKbps(const int iShortID, const bool bAudData)
 {
 	/* Init lengths to zero in case the stream is not yet assigned */
 	int iLen = 0;
@@ -463,7 +463,7 @@ _REAL CParameter::GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData)
 	{
 		/* Check if we want to get the data stream connected to an audio
 		   stream */
-		if (bAudData == TRUE)
+		if (bAudData == true)
 		{
 			iLen = GetStreamLen( Service[iShortID].iDataStream);
 		}
@@ -479,7 +479,7 @@ _REAL CParameter::GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData)
 
 	/* We have 3 frames with time duration of 1.2 seconds. Bit rate should be
 	   returned in kbps (/ 1000) */
-	return (_REAL) iLen * SIZEOF__BYTE * 3 / (_REAL) 1.2 / 1000;
+	return (_REAL) iLen * sizeof(_BINARY) * 3 / (_REAL) 1.2 / 1000;
 }
 
 _REAL CParameter::PartABLenRatio(const int iShortID)
@@ -515,7 +515,7 @@ _REAL CParameter::PartABLenRatio(const int iShortID)
 		return (_REAL) 0.0;
 }
 
-_BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
+bool CParameter::SetWaveMode(const ERobMode eNewWaveMode)
 {
 	/* First check if spectrum occupancy and robustness mode pair is defined */
 	if ((
@@ -543,10 +543,10 @@ _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
 		if(pDRMRec) pDRMRec->InitsForWaveMode();
 
 		/* Signal that parameter has changed */
-		return TRUE;
+		return true;
 	}
 	else
-		return FALSE;
+		return false;
 }
 
 void CParameter::SetSpectrumOccup(ESpecOcc eNewSpecOcc)
@@ -639,9 +639,9 @@ void CParameter::SetNumBitsHieraFrTot(const int iNewNumBitsHieraFrTot)
 }
 
 void CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe,
-							   const _BOOLEAN bWithHierarch)
+							   const bool bWithHierarch)
 {
-	_BOOLEAN bParamersHaveChanged = FALSE;
+	bool bParamersHaveChanged = false;
 
 	if ((NewMSCPrLe.iPartA != MSCPrLe.iPartA) ||
 		(NewMSCPrLe.iPartB != MSCPrLe.iPartB))
@@ -649,22 +649,22 @@ void CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe,
 		MSCPrLe.iPartA = NewMSCPrLe.iPartA;
 		MSCPrLe.iPartB = NewMSCPrLe.iPartB;
 
-		bParamersHaveChanged = TRUE;
+		bParamersHaveChanged = true;
 	}
 
 	/* Apply changes only if parameters have changed */
-	if (bWithHierarch == TRUE)
+	if (bWithHierarch == true)
 	{
 		if (NewMSCPrLe.iHierarch != MSCPrLe.iHierarch)
 		{
 			MSCPrLe.iHierarch = NewMSCPrLe.iHierarch;
 
-			bParamersHaveChanged = TRUE;
+			bParamersHaveChanged = true;
 		}
 	}
 
 	/* In case parameters have changed, set init flags */
-	if (bParamersHaveChanged == TRUE)
+	if (bParamersHaveChanged == true)
 		if(pDRMRec) pDRMRec->InitsForMSC();
 }
 
@@ -808,7 +808,7 @@ void CParameter::SetCurSelDataService(const int iNewService)
 	}
 }
 
-void CParameter::EnableMultimedia(const _BOOLEAN bFlag)
+void CParameter::EnableMultimedia(const bool bFlag)
 {
 	if (bUsingMultimedia != bFlag)
 	{
@@ -1316,7 +1316,7 @@ string COtherService::ServiceID() const
 }
 
 /* See ETSI ES 201 980 v2.1.1 Annex O */
-_BOOLEAN
+bool
 CAltFreqSched::IsActive(const time_t ltime)
 {
 	int iScheduleStart;

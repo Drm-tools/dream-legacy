@@ -32,9 +32,7 @@
 #include "../tables/TableStations.h"
 #include <qdatetime.h>
 #include <qftp.h>
-#if QT_VERSION >= 0x030000
 # include <qhttp.h>
-#endif
 
 /* Implementation *************************************************************/
 void CDRMSchedule::UpdateStringListForFilter(const CStationsItem StationsItem)
@@ -65,28 +63,28 @@ void StationsDlg::FilterChanged(const QString&)
 	SetStationsView();
 }
 
-_BOOLEAN StationsDlg::CheckFilter(const int iPos)
+bool StationsDlg::CheckFilter(const int iPos)
 {
-_BOOLEAN bCheck = TRUE;
+bool bCheck = true;
 QString sFilter = "";
 
 	sFilter = ComboBoxFilterTarget->currentText();
 
-	if ((sFilter != "") && 
+	if ((sFilter != "") &&
 		(QString(DRMSchedule.GetItem(iPos).strTarget.c_str()) != sFilter))
-		bCheck = FALSE;
+		bCheck = false;
 
 	sFilter = ComboBoxFilterCountry->currentText();
 
-	if ((sFilter != "") && 
+	if ((sFilter != "") &&
 		(QString(DRMSchedule.GetItem(iPos).strCountry.c_str()) != sFilter))
-		bCheck = FALSE;
+		bCheck = false;
 
 	sFilter = ComboBoxFilterLanguage->currentText();
 
-	if ((sFilter != "") && 
+	if ((sFilter != "") &&
 		(QString(DRMSchedule.GetItem(iPos).strLanguage.c_str()) != sFilter))
-		bCheck = FALSE;
+		bCheck = false;
 
 return bCheck;
 }
@@ -131,7 +129,7 @@ void CDRMSchedule::ReadIniFile(FILE* pFile)
 	const int	iMaxLenName = 256;
 	char		cName[iMaxLenName];
 	int			iFileStat;
-	_BOOLEAN	bReadOK = TRUE;
+	bool	bReadOK = true;
 
 	//fgets(cName, iMaxLenName, pFile); /* Remove "[DRMSchedule]" */
 	do
@@ -144,7 +142,7 @@ void CDRMSchedule::ReadIniFile(FILE* pFile)
 			&iStartTime, &iStopTime);
 
 		if (iFileStat != 2)
-			bReadOK = FALSE;
+			bReadOK = false;
 		else
 		{
 			StationsItem.SetStartTimeNum(iStartTime);
@@ -170,7 +168,7 @@ void CDRMSchedule::ReadIniFile(FILE* pFile)
 		/* Frequency */
 		iFileStat = fscanf(pFile, "Frequency=%d\n", &StationsItem.iFreq);
 		if (iFileStat != 1)
-			bReadOK = FALSE;
+			bReadOK = false;
 
 		/* Target */
 		iFileStat = fscanf(pFile, "Target=%255[^\n|^\r]\n", cName);
@@ -217,7 +215,7 @@ void CDRMSchedule::ReadIniFile(FILE* pFile)
 		iFileStat = fscanf(pFile, "\n");
 
 		/* Check for error before applying data */
-		if (bReadOK == TRUE)
+		if (bReadOK == true)
 		{
 			/* Set "days flag string" and generate strings for displaying active
 			   days */
@@ -229,7 +227,7 @@ void CDRMSchedule::ReadIniFile(FILE* pFile)
 			UpdateStringListForFilter(StationsItem);
 		}
 
-	} while (!((iFileStat == EOF) || (bReadOK == FALSE)));
+	} while (!((iFileStat == EOF) || (bReadOK == false)));
 }
 
 void CDRMSchedule::ReadCSVFile(FILE* pFile)
@@ -440,10 +438,10 @@ CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
 	time_t ltime;
 	time(&ltime);
 
-	if (IsActive(iPos, ltime) == TRUE)
+	if (IsActive(iPos, ltime) == true)
 	{
 		/* Check if the station soon will be inactive */
-		if (IsActive(iPos, ltime + NUM_SECONDS_SOON_INACTIVE) == TRUE)
+		if (IsActive(iPos, ltime + NUM_SECONDS_SOON_INACTIVE) == true)
 			return IS_ACTIVE;
 		else
 			return IS_SOON_INACTIVE;
@@ -453,7 +451,7 @@ CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
 		/* Station is not active, check preview condition */
 		if (iSecondsPreview > 0)
 		{
-			if (IsActive(iPos, ltime + iSecondsPreview) == TRUE)
+			if (IsActive(iPos, ltime + iSecondsPreview) == true)
 				return IS_PREVIEW;
 			else
 				return IS_INACTIVE;
@@ -463,7 +461,7 @@ CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
 	}
 }
 
-_BOOLEAN CDRMSchedule::IsActive(const int iPos, const time_t ltime)
+bool CDRMSchedule::IsActive(const int iPos, const time_t ltime)
 {
 	/* Calculate time in UTC */
 	struct tm* gmtCur = gmtime(&ltime);
@@ -482,7 +480,7 @@ _BOOLEAN CDRMSchedule::IsActive(const int iPos, const time_t ltime)
 	const time_t lStartTime = mktime(gmtStart);
 
 	/* Check, if stop time is on next day */
-	_BOOLEAN bSecondDay = FALSE;
+	bool bSecondDay = false;
 	if (lStopTime < lStartTime)
 	{
 		/* Check, if we are at the first or the second day right now */
@@ -496,7 +494,7 @@ _BOOLEAN CDRMSchedule::IsActive(const int iPos, const time_t ltime)
 				gmtCur->tm_wday = 0;
 
 			/* Set flag */
-			bSecondDay = TRUE;
+			bSecondDay = true;
 		}
 	}
 
@@ -515,26 +513,26 @@ _BOOLEAN CDRMSchedule::IsActive(const int iPos, const time_t ltime)
 		if (lStopTime > lStartTime)
 		{
 			if ((lCurTime >= lStartTime) && (lCurTime < lStopTime))
-				return TRUE;
+				return true;
 		}
 		else
 		{
-			if (bSecondDay == FALSE)
+			if (bSecondDay == false)
 			{
 				/* First day. Only check if we are after start time */
 				if (lCurTime >= lStartTime)
-					return TRUE;
+					return true;
 			}
 			else
 			{
 				/* Second day. Only check if we are before stop time */
 				if (lCurTime < lStopTime)
-					return TRUE;
+					return true;
 			}
 		}
 	}
 
-	return FALSE;
+	return false;
 }
 
 void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
@@ -589,12 +587,12 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 }
 
 StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
-	QWidget* parent, const char* name, bool modal, WFlags f) :
+	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	CStationsDlgBase(parent, name, modal, f),
 	DRMReceiver(NDRMR), Settings(NSettings), DRMSchedule(),
 	BitmCubeGreen(), BitmCubeYellow(), BitmCubeRed(), BitmCubeOrange(), BitmCubePink(),
 	TimerList(), TimerUTCLabel(), TimerSMeter(), TimerEditFrequency(), TimerMonitorFrequency(), TimerTuning(),
-	bTuningInProgress(FALSE), bShowAll(FALSE), bReInitOnFrequencyChange(FALSE),
+	bTuningInProgress(false), bShowAll(false), bReInitOnFrequencyChange(false),
 	UrlUpdateSchedule(),
 	pViewMenu(NULL), pPreviewMenu(NULL), pUpdateMenu(NULL),
 	vecpListItems(0),
@@ -664,8 +662,8 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		SLOT(OnShowStationsMenu(int)), 0, 1);
 
 	/* Set stations in list view which are active right now */
-	bShowAll = FALSE;
-	pViewMenu->setItemChecked(0, TRUE);
+	bShowAll = false;
+	pViewMenu->setItemChecked(0, true);
 
 	/* Stations Preview menu ------------------------------------------------ */
 	pPreviewMenu = new QPopupMenu(this);
@@ -684,22 +682,22 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	switch (Settings.Get("Stations Dialog", "preview", NUM_SECONDS_PREV_5MIN))
 	{
 	case NUM_SECONDS_PREV_5MIN:
-		pPreviewMenu->setItemChecked(1, TRUE);
+		pPreviewMenu->setItemChecked(1, true);
 		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
 		break;
 
 	case NUM_SECONDS_PREV_15MIN:
-		pPreviewMenu->setItemChecked(2, TRUE);
+		pPreviewMenu->setItemChecked(2, true);
 		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
 		break;
 
 	case NUM_SECONDS_PREV_30MIN:
-		pPreviewMenu->setItemChecked(3, TRUE);
+		pPreviewMenu->setItemChecked(3, true);
 		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
 		break;
 
 	default: /* case 0, also takes care of out of value parameters */
-		pPreviewMenu->setItemChecked(0, TRUE);
+		pPreviewMenu->setItemChecked(0, true);
 		DRMSchedule.SetSecondsPreview(0);
 		break;
 	}
@@ -727,9 +725,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Register the network protocols (ftp, http). Needed for the schedule download */
 	QNetworkProtocol::registerNetworkProtocol("ftp", new QNetworkProtocolFactory<QFtp>);
-#if QT_VERSION >= 0x030000
 	QNetworkProtocol::registerNetworkProtocol("http", new QNetworkProtocolFactory<QHttp>);
-#endif
 
 
 	/* Connections ---------------------------------------------------------- */
@@ -767,7 +763,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		this, SLOT(FilterChanged(const QString&)));
 
 	ProgrSigStrength->setRange(S_METER_THERMO_MIN, S_METER_THERMO_MAX);
-	ProgrSigStrength->setOrientation(QwtThermo::Horizontal, QwtThermo::Top);
+	ProgrSigStrength->setOrientation(Qt::Horizontal, QwtThermo::TopScale);
 	ProgrSigStrength->setAlarmLevel(S_METER_THERMO_ALARM);
 	ProgrSigStrength->setAlarmColor(QColor(255, 0, 0));
 	ProgrSigStrength->setScale(S_METER_THERMO_MIN, S_METER_THERMO_MAX, 10.0);
@@ -798,12 +794,12 @@ void StationsDlg::OnShowStationsMenu(int iID)
 	/* Show only active stations if ID is 0, else show all */
 	if (iID == 0)
 	{
-		bShowAll = FALSE;
+		bShowAll = false;
 		/* clear all and reload. If the list is long this increases performance */
 		ClearStationsView();
 	}
 	else
-		bShowAll = TRUE;
+		bShowAll = true;
 
 	/* Update list view */
 	SetStationsView();
@@ -857,12 +853,12 @@ void StationsDlg::AddUpdateDateTime()
 	{
 		case CDRMSchedule::SM_DRM:
 			strFile = DRMSCHEDULE_INI_FILE_NAME;
-			pUpdateMenu->setItemEnabled(0, TRUE);
+			pUpdateMenu->setItemEnabled(0, true);
 			break;
 
 		case CDRMSchedule::SM_ANALOG:
 			strFile = AMSCHEDULE_INI_FILE_NAME;
-			pUpdateMenu->setItemEnabled(0, TRUE);
+			pUpdateMenu->setItemEnabled(0, true);
 			break;
 	}
 
@@ -903,11 +899,7 @@ void StationsDlg::OnGetUpdate()
 
 		case CDRMSchedule::SM_ANALOG:
 			QDate d = QDate::currentDate();
-#if QT_VERSION >= 0x030000
 			int wk = d.weekNumber();
-#else
-			int wk = d.dayOfYear()/7+1;
-#endif
 			int yr = d.year();
 			QString y,w;
 			if(wk <= 13)
@@ -925,7 +917,6 @@ void StationsDlg::OnGetUpdate()
 				w = "b";
 				y = QString::number(yr);
 			}
-#if QT_VERSION >= 0x030000
 			QString path = QString(AM_SCHEDULE_UPDATE_FILE).arg(w, y.right(2));
 			if (QMessageBox::information(this, tr("Dream Schedule Update"),
 				tr("Dream tries to download the newest EIBI AM schedule.\n"
@@ -937,15 +928,8 @@ void StationsDlg::OnGetUpdate()
 				/* Try to download the current schedule. Copy the file to the
 		   		current working directory (which is "QDir().absFilePath(NULL)") */
 				UrlUpdateSchedule.copy(path,
-					QString(QDir().absFilePath(NULL))+"/AMSchedule.ini", FALSE, FALSE);
+					QString(QDir().absFilePath(NULL))+"/AMSchedule.ini", false, false);
 			}
-#else
-			QString path = QString(AM_SCHEDULE_UPDATE_FILE).arg(w).arg(y.right(2));
-			QMessageBox::information(this, tr("Dream Schedule Update"),
-				tr("This version of Dream can't download the AM schedule.\n"
-				"Download the file and save as AMSchedule.ini.\n"
-				"The url for the file is ")+path); 
-#endif
 			break;
 	}
 
@@ -1014,7 +998,7 @@ void StationsDlg::hideEvent(QHideEvent*)
 	TimerList.stop();
 	TimerUTCLabel.stop();
 	TimerSMeter.stop();
-	EnableSMeter(FALSE);
+	EnableSMeter(false);
 
 	/* Set window geometry data in DRMReceiver module */
 	QRect WinGeom = geometry();
@@ -1132,12 +1116,12 @@ void StationsDlg::SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM)
 	{
 	case CDRMSchedule::SM_DRM:
 		iCurrentSortColumn = Settings.Get("Stations Dialog", "sortcolumndrm", 0);
-		bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendingdrm", TRUE);
+		bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendingdrm", true);
 		break;
 
 	case CDRMSchedule::SM_ANALOG:
 		iCurrentSortColumn = Settings.Get("Stations Dialog", "sortcolumnanalog", 0);
-		bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendinganalog", TRUE);
+		bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendinganalog", true);
 		break;
 	}
 	ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
@@ -1208,17 +1192,17 @@ void StationsDlg::SetStationsView()
 	/* Stop the timer and disable the list */
 	TimerList.stop();
 
-	const _BOOLEAN bListFocus = ListViewStations->hasFocus();
+	const bool bListFocus = ListViewStations->hasFocus();
 
-	ListViewStations->setUpdatesEnabled(FALSE);
-	ListViewStations->setEnabled(FALSE);
+	ListViewStations->setUpdatesEnabled(false);
+	ListViewStations->setEnabled(false);
 
 	/* Set lock because of list view items. These items could be changed
 	   by another thread */
 	ListItemsMutex.lock();
 
 	const size_t iNumStations = DRMSchedule.GetStationNumber();
-	_BOOLEAN bListHastChanged = FALSE;
+	bool bListHastChanged = false;
 
 	/* if the list got smaller, we need to free some memory */
 	for (i = iNumStations; i < vecpListItems.size(); i++)
@@ -1236,9 +1220,9 @@ void StationsDlg::SetStationsView()
 	{
 		CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
 
-		if (!(((bShowAll == FALSE) &&
+		if (!(((bShowAll == false) &&
 			(iState == CDRMSchedule::IS_INACTIVE))
-			|| (CheckFilter(i) == FALSE)))
+			|| (CheckFilter(i) == false)))
 		{
 			/* Only insert item if it is not already in the list */
 			if (vecpListItems[i] == NULL)
@@ -1276,7 +1260,7 @@ void StationsDlg::SetStationsView()
 				ListViewStations->insertItem(vecpListItems[i]);
 
 				/* Set flag for sorting the list */
-				bListHastChanged = TRUE;
+				bListHastChanged = true;
 			}
 
 			/* Check, if station is currently transmitting. If yes, set
@@ -1314,25 +1298,25 @@ void StationsDlg::SetStationsView()
 				vecpListItems[i] = NULL;
 
 				/* Set flag for sorting the list */
-				bListHastChanged = TRUE;
+				bListHastChanged = true;
 			}
 		}
 	}
 
 	/* Sort the list if items have changed */
-	if (bListHastChanged == TRUE)
+	if (bListHastChanged == true)
 		ListViewStations->sort();
 
 	ListItemsMutex.unlock();
 
 	/* Start the timer and enable the list */
-	ListViewStations->setUpdatesEnabled(TRUE);
-	ListViewStations->setEnabled(TRUE);
+	ListViewStations->setUpdatesEnabled(true);
+	ListViewStations->setEnabled(true);
 
 	/* to update the scrollbars */
 	ListViewStations->triggerUpdate();
 
-	if (bListFocus == TRUE)
+	if (bListFocus == true)
 		ListViewStations->setFocus();
 
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT);
@@ -1341,8 +1325,8 @@ void StationsDlg::SetStationsView()
 void StationsDlg::OnFreqCntNewValue(double dVal)
 {
 	// wait an inter-digit timeout
-	TimerEditFrequency.start(GUI_TIMER_INTER_DIGIT, TRUE);
-	bTuningInProgress = TRUE;
+	TimerEditFrequency.start(GUI_TIMER_INTER_DIGIT, true);
+	bTuningInProgress = true;
 }
 
 void StationsDlg::OnTimerEditFrequency()
@@ -1353,8 +1337,8 @@ void StationsDlg::OnTimerEditFrequency()
 	if(iTunedFrequency != iDisplayedFreq)
 	{
 		DRMReceiver.SetFrequency(iDisplayedFreq);
-		bTuningInProgress = TRUE;
-		TimerTuning.start(GUI_TIME_TO_TUNE, TRUE);
+		bTuningInProgress = true;
+		TimerTuning.start(GUI_TIME_TO_TUNE, true);
 	}
 
 	QListViewItem* item = ListViewStations->selectedItem();
@@ -1367,7 +1351,7 @@ void StationsDlg::OnTimerEditFrequency()
 
 void StationsDlg::OnTimerTuning()
 {
-	bTuningInProgress = FALSE;
+	bTuningInProgress = false;
 }
 
 void StationsDlg::OnTimerMonitorFrequency()
@@ -1380,11 +1364,11 @@ void StationsDlg::OnTimerMonitorFrequency()
 	int iDisplayedFreq = (int)QwtCounterFrequency->value();
 	if(iTunedFrequency == iDisplayedFreq)
 	{
-		bTuningInProgress = FALSE;
+		bTuningInProgress = false;
 	}
 	else
 	{
-		if(bTuningInProgress == FALSE)
+		if(bTuningInProgress == false)
 			QwtCounterFrequency->setValue(iTunedFrequency);
 	}
 }
@@ -1395,7 +1379,7 @@ void StationsDlg::OnHeaderClicked(int c)
 	if (iCurrentSortColumn == c)
 		bCurrentSortAscending = !bCurrentSortAscending;
 	else
-		bCurrentSortAscending = TRUE;
+		bCurrentSortAscending = true;
 
 	iCurrentSortColumn = c;
 }
@@ -1437,37 +1421,37 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 
 void StationsDlg::OnTimerSMeter()
 {
-	_BOOLEAN bSMeter = DRMReceiver.GetEnableSMeter();
+	bool bSMeter = DRMReceiver.GetEnableSMeter();
 	EnableSMeter(bSMeter);
 }
 
-void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
+void StationsDlg::EnableSMeter(const bool bStatus)
 {
 	/* Need both, GUI "enabled" and signal strength valid before s-meter is used */
 	_REAL rCurSigStr;
-	_BOOLEAN bValid = DRMReceiver.GetSignalStrength(rCurSigStr);
+	bool bValid = DRMReceiver.GetSignalStrength(rCurSigStr);
 
-	if((bStatus == TRUE) && (bValid == TRUE))
+	if((bStatus == true) && (bValid == true))
 	{
 		/* Init progress bar for input s-meter */
-		ProgrSigStrength->setAlarmEnabled(TRUE);
+		ProgrSigStrength->setAlarmEnabled(true);
 		ProgrSigStrength->setValue(rCurSigStr);
 		ProgrSigStrength->setFillColor(QColor(0, 190, 0));
 
-		ProgrSigStrength->setEnabled(TRUE);
-		TextLabelSMeter->setEnabled(TRUE);
+		ProgrSigStrength->setEnabled(true);
+		TextLabelSMeter->setEnabled(true);
 		ProgrSigStrength->show();
 		TextLabelSMeter->show();
 	}
 	else
 	{
 		/* Set s-meter control in "disabled" status */
-		ProgrSigStrength->setAlarmEnabled(FALSE);
+		ProgrSigStrength->setAlarmEnabled(false);
 		ProgrSigStrength->setValue(S_METER_THERMO_MAX);
 		ProgrSigStrength->setFillColor(palette().disabled().light());
 
-		ProgrSigStrength->setEnabled(FALSE);
-		TextLabelSMeter->setEnabled(FALSE);
+		ProgrSigStrength->setEnabled(false);
+		TextLabelSMeter->setEnabled(false);
 		ProgrSigStrength->hide();
 		TextLabelSMeter->hide();
 	}

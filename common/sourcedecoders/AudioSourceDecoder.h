@@ -9,16 +9,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -133,7 +133,7 @@ const int iTableCELP16kHzUEPParams[LEN_CELP_16KHZ_UEP_PARAMS_TAB][8] = {
 class CAudioSourceEncoderImplementation
 {
 public:
-	CAudioSourceEncoderImplementation() : bUsingTextMessage(FALSE)
+	CAudioSourceEncoderImplementation() : bUsingTextMessage(false)
 #ifdef USE_FAAC_LIBRARY
 		, hEncoder(NULL)
 #endif
@@ -145,7 +145,7 @@ public:
 
 protected:
 	CTextMessageEncoder		TextMessage;
-	_BOOLEAN				bUsingTextMessage;
+	bool				bUsingTextMessage;
 	int						iTotNumBitsForUsage;
 
 #ifdef USE_FAAC_LIBRARY
@@ -203,7 +203,7 @@ public:
 
 	void SetTextMessage(const string& strText) {AudioSourceEncoderImpl.SetTextMessage(strText);}
 	void ClearTextMessage() {AudioSourceEncoderImpl.ClearTextMessage();}
-	
+
 protected:
 
 	CAudioSourceEncoderImplementation AudioSourceEncoderImpl;
@@ -213,7 +213,7 @@ protected:
 		//AudioSourceEncoderImpl.InitInternalTx(TransmParam, inputs[0].iBlockSize, outputs[0].iBlockSize);
 		AudioSourceEncoderImpl.InitInternalTx(TransmParam, iInputBlockSize, iOutputBlockSize);
 	}
-	
+
 	virtual void ProcessDataInternal(CParameter& )
 	{
 		AudioSourceEncoderImpl.ProcessDataInternal(
@@ -231,12 +231,12 @@ public:
 	virtual ~CAudioSourceDecoder();
 
 	int GetNumCorDecAudio();
-	void SetReverbEffect(const _BOOLEAN bNER) {bUseReverbEffect = bNER;}
-	_BOOLEAN GetReverbEffect() {return bUseReverbEffect;}
+	void SetReverbEffect(const bool bNER) {bUseReverbEffect = bNER;}
+	bool GetReverbEffect() {return bUseReverbEffect;}
 
 protected:
 	enum EInitErr {ET_ALL, ET_AUDDECODER}; /* ET: Error type */
-	class CInitErr 
+	class CInitErr
 	{
 	public:
 		CInitErr(EInitErr eNewErrType) : eErrType(eNewErrType) {}
@@ -244,19 +244,19 @@ protected:
 	};
 
 	/* General */
-	_BOOLEAN			DoNotProcessData;
-	_BOOLEAN			DoNotProcessAudDecoder;
+	bool			DoNotProcessData;
+	bool			DoNotProcessAudDecoder;
 	int					iTotalFrameSize;
 	int					iNumCorDecAudio;
 
 	/* Text message */
-	_BOOLEAN			bTextMessageUsed;
+	bool			bTextMessageUsed;
 	CTextMessageDecoder	TextMessage;
 	CVector<_BINARY>	vecbiTextMessBuf;
 
 	/* Resampling */
 	int					iResOutBlockSize;
-	
+
 	CAudioResample		ResampleObjL;
 	CAudioResample		ResampleObjR;
 
@@ -268,8 +268,8 @@ protected:
 	CVector<_REAL>		vecTempResBufOutOldRight;
 
 	/* Drop-out masking (reverberation) */
-	_BOOLEAN			bAudioWasOK;
-	_BOOLEAN			bUseReverbEffect;
+	bool			bAudioWasOK;
+	bool			bUseReverbEffect;
 	CAudioReverb		AudioRev;
 
 	int					iLenDecOutPerChan;
@@ -302,7 +302,7 @@ protected:
 	int					iNumHigherProtectedBits;
 	int					iNumLowerProtectedBits;
 
-	_BOOLEAN			bCELPCRC;
+	bool			bCELPCRC;
 	CCRC				CELPCRCObject;
 
 #ifdef USE_CELP_DECODER

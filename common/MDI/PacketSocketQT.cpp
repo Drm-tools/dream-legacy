@@ -6,9 +6,9 @@
  *	Volker Fischer, Julian Cable, Oliver Haffenden
  *
  * Description:
- *  
+ *
  * This is an implementation of the CPacketSocket interface that wraps up a QT socket.
- *	
+ *
  *
  ******************************************************************************
  *
@@ -47,7 +47,7 @@ CPacketSocketQT::CPacketSocketQT():
 	/* Connect the "activated" signal */
 	QObject::connect(pSocketNotivRead, SIGNAL(activated(int)),
 					  this, SLOT(OnDataReceived()));
-					  
+
 	/* allow connection when others are listening */
 	SocketDevice.setAddressReusable(true);
 }
@@ -96,7 +96,7 @@ CPacketSocketQT::SendPacket(const vector < _BYTE > &vecbydata, uint32_t addr, ui
 	}
 }
 
-_BOOLEAN
+bool
 CPacketSocketQT::SetDestination(const string & strNewAddr)
 {
 	/* syntax
@@ -106,9 +106,9 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 	 */
 	/* Init return flag and copy string in QT-String "QString" */
 	int ttl = 127;
-	bool bAddressOK = TRUE;
+	bool bAddressOK = true;
 	bool portOK;
-	QStringList parts = QStringList::split(":", strNewAddr.c_str(), TRUE);
+	QStringList parts = QStringList::split(":", strNewAddr.c_str(), true);
 	switch(parts.count())
 	{
 	case 1:
@@ -122,7 +122,7 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 		bAddressOK &= portOK;
     	if(setsockopt(SocketDevice.socket(), IPPROTO_IP, IP_TTL,
 				(char*)&ttl, sizeof(ttl))==SOCKET_ERROR)
-			bAddressOK = FALSE;
+			bAddressOK = false;
 		break;
 	case 3:
 		{
@@ -132,37 +132,33 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 			iHostPortOut = parts[2].toUInt(&portOK);
 			bAddressOK &= portOK;
 			const SOCKET s = SocketDevice.socket();
-#if QT_VERSION < 0x030000
-			uint32_t mc_if = htonl(AddrInterface.ip4Addr());
-#else
 			uint32_t mc_if = htonl(AddrInterface.toIPv4Address());
-#endif
 			if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF,
 						(char *) &mc_if, sizeof(mc_if)) == SOCKET_ERROR)
-				bAddressOK = FALSE;
+				bAddressOK = false;
     		if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL,
 						(char*) &ttl, sizeof(ttl)) == SOCKET_ERROR)
-				bAddressOK = FALSE;
+				bAddressOK = false;
 		}
 		break;
 	default:
-		bAddressOK = FALSE;
+		bAddressOK = false;
 	}
 	return bAddressOK;
 }
 
 
-_BOOLEAN
+bool
 CPacketSocketQT::GetDestination(string & str)
 {
 	stringstream s;
 	s << HostAddrOut.toString().latin1() << ":" << iHostPortOut;
 	str = s.str();
-	return TRUE;
+	return true;
 }
 
 
-_BOOLEAN
+bool
 CPacketSocketQT::SetOrigin(const string & strNewAddr)
 {
 	/* syntax
@@ -174,7 +170,7 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 	 */
 	int iPort=-1;
 	QHostAddress AddrGroup, AddrInterface;
-	QStringList parts = QStringList::split(":", strNewAddr.c_str(), TRUE);
+	QStringList parts = QStringList::split(":", strNewAddr.c_str(), true);
 	bool ok=true;
 	switch(parts.count())
 	{
@@ -198,16 +194,13 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 
 	if(ok ==false)
 	{
-		return FALSE;
+		return false;
 	}
 
 	/* Multicast ? */
 
-#if QT_VERSION < 0x030000
-	uint32_t gp = AddrGroup.ip4Addr();
-#else
 	uint32_t gp = AddrGroup.toIPv4Address();
-#endif
+
 	if(gp == 0)
 	{
 		/* Initialize the listening socket. */
@@ -225,13 +218,9 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 			throw CGenErr("Can't bind to port to receive packets");
 		}
 
-#if QT_VERSION < 0x030000
-		mreq.imr_multiaddr.s_addr = htonl(AddrGroup.ip4Addr());
-		mreq.imr_interface.s_addr = htonl(AddrInterface.ip4Addr());
-#else
 		mreq.imr_multiaddr.s_addr = htonl(AddrGroup.toIPv4Address());
 		mreq.imr_interface.s_addr = htonl(AddrInterface.toIPv4Address());
-#endif
+
 		const SOCKET s = SocketDevice.socket();
 		int n = setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *) &mreq,
 							sizeof(mreq));
@@ -248,7 +237,7 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 		/* Initialize the listening socket. */
 		SocketDevice.bind(AddrGroup, iPort);
 	}
-	return TRUE;
+	return true;
 }
 
 void
@@ -265,11 +254,7 @@ CPacketSocketQT::OnDataReceived()
 		if(pPacketSink != NULL)
 		{
 			vecbydata.resize(iNumBytesRead);
-#if QT_VERSION < 0x030000
-			uint32_t addr = SocketDevice.peerAddress().ip4Addr();
-#else
 			uint32_t addr = SocketDevice.peerAddress().toIPv4Address();
-#endif
 			pPacketSink->SendPacket(vecbydata, addr, SocketDevice.peerPort());
 		}
 	}

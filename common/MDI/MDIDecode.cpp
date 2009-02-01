@@ -7,16 +7,16 @@
  *
  * Description:
  *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
- *	(MDI), Receiver Status and Control Interface (RSCI)  
+ *	(MDI), Receiver Status and Control Interface (RSCI)
  *  and Distribution and Communications Protocol (DCP) as described in
  *	ETSI TS 102 820,  ETSI TS 102 349 and ETSI TS 102 821 respectively.
  *
- *	This module implements a buffer for decoded Digital Radio Mondiale (DRM) 
+ *	This module implements a buffer for decoded Digital Radio Mondiale (DRM)
  *  Multiplex Distribution Interface (MDI) packets at the receiver input.
- *	
+ *
  *	see ETSI TS 102 820 and ETSI TS 102 821.
  *
- *	
+ *
  *
  ******************************************************************************
  *
@@ -55,7 +55,7 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 
 	CTagPacketDecoder::Error err = TagPacketDecoder.DecodeAFPacket(*pvecInputData);
 
-	Parameters.Lock(); 
+	Parameters.Lock();
 
 	if(err == CTagPacketDecoder::E_OK)
 	{
@@ -64,14 +64,14 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 	else
 	{
 		Parameters.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
-		Parameters.Unlock(); 
+		Parameters.Unlock();
 		return;
 	}
 
 	if (TagPacketDecoder.TagItemDecoderRobMod.IsReady())
 		Parameters.SetWaveMode(TagPacketDecoder.TagItemDecoderRobMod.eRobMode);
 
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	CVector<_BINARY>& vecbiFACData = TagPacketDecoder.TagItemDecoderFAC.vecbidata;
 	CVector<_BINARY>& vecbiSDCData = TagPacketDecoder.TagItemDecoderSDC.vecbidata;
@@ -92,9 +92,9 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 
 		/* FAC data is always 72 bits long which is 9 bytes, copy data
 		   byte-wise */
-		for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE; i++)
+		for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / sizeof(_BINARY); i++)
 		{
-			pvecOutputData->Enqueue(vecbiFACData.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+			pvecOutputData->Enqueue(vecbiFACData.Separate(sizeof(_BINARY)), sizeof(_BINARY));
 		}
 		iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 	}
@@ -171,10 +171,10 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 			pvecOutputData->ResetBitAccess();
 
 			/* Data is always a multiple of 8 -> copy bytes */
-			for (int j = 0; j < iStreamLen / SIZEOF__BYTE; j++)
+			for (int j = 0; j < iStreamLen / sizeof(_BINARY); j++)
 			{
 				pvecOutputData->Enqueue(
-					vecbiStr.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+					vecbiStr.Separate(sizeof(_BINARY)), sizeof(_BINARY));
 			}
 			veciOutputBlockSize[i] = iStreamLen;
 		}
@@ -200,10 +200,10 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 			vecbiAMAudio.ResetBitAccess();
 			pvecOutputData->ResetBitAccess();
 			// Data is always a multiple of 8 -> copy bytes
-			for (int j = 0; j < iStreamLen / SIZEOF__BYTE; j++)
+			for (int j = 0; j < iStreamLen / sizeof(_BINARY); j++)
 			{
 				pvecOutputData->Enqueue(
-				vecbiAMAudio.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
+				vecbiAMAudio.Separate(sizeof(_BINARY)), sizeof(_BINARY));
 			}
 			veciOutputBlockSize[0] = iStreamLen;
 		}
@@ -215,8 +215,8 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 		 */
 		Parameters.Lock();
 		Parameters.SetAudioParam(0, AudioParam);
-			
-		Parameters.SetStreamLen(0, 0, iStreamLen/SIZEOF__BYTE);
+
+		Parameters.SetStreamLen(0, 0, iStreamLen/sizeof(_BINARY));
 		Parameters.SetNumOfServices(1,0);
 		Parameters.Service[0].iAudioStream = 0;
 		Parameters.SetCurSelAudioService(0);
@@ -241,7 +241,7 @@ void CDecodeRSIMDI::Init(CParameter&)
 void CDecodeRSI::InitInternal(CParameter& Parameters)
 {
 	Decoder.Init(Parameters);
-	Parameters.Lock(); 
+	Parameters.Lock();
 
 	/* set sensible values if Parameters not properly initialised */
 	iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
@@ -258,10 +258,10 @@ void CDecodeRSI::InitInternal(CParameter& Parameters)
 		int streamlen = Parameters.GetStreamLen(i);
 		if(streamlen == 0)
 			streamlen = 2048;
-		veciOutputBlockSize[i] = streamlen*SIZEOF__BYTE;
+		veciOutputBlockSize[i] = streamlen*sizeof(_BINARY);
 	}
 
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }
 
 void CDecodeRSI::ProcessDataInternal(CParameter& Parameters)
@@ -278,14 +278,14 @@ void CDecodeMDI::InitInternal(CParameter& Parameters)
 	Decoder.Init(Parameters);
 	iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 	iOutputBlockSize2 = 0;
-	iMaxOutputBlockSize2 = 1500*SIZEOF__BYTE;
+	iMaxOutputBlockSize2 = 1500*sizeof(_BINARY);
 	veciOutputBlockSize.resize(MAX_NUM_STREAMS);
 	veciMaxOutputBlockSize.resize(MAX_NUM_STREAMS);
 	vecpvecOutputData.resize(MAX_NUM_STREAMS);
 	for(i=0; i<MAX_NUM_STREAMS; i++)
 	{
 		veciOutputBlockSize[i] = 0;
-		veciMaxOutputBlockSize[i] = 1500*SIZEOF__BYTE;
+		veciMaxOutputBlockSize[i] = 1500*sizeof(_BINARY);
 	}
 	iInputBlockSize = 1; // something
 }

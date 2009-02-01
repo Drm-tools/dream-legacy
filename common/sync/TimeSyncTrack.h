@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -40,7 +40,7 @@
    the fraction of the guard-interval */
 #define TARGET_TI_POS_FRAC_GUARD_INT		9
 
-/* Weights for bound calculation. First parameter is for peak distance and 
+/* Weights for bound calculation. First parameter is for peak distance and
    second for distance from minimum value */
 #define TETA1_DIST_FROM_MAX_DB				20
 #define TETA2_DIST_FROM_MIN_DB				23
@@ -78,8 +78,8 @@
 class CTimeSyncTrack
 {
 public:
-	CTimeSyncTrack() : bTiSyncTracking(FALSE), 
-		bSamRaOffsAcqu(TRUE), TypeTiSyncTrac(TSENERGY) {}
+	CTimeSyncTrack() : bTiSyncTracking(false),
+		bSamRaOffsAcqu(true), TypeTiSyncTrac(TSENERGY) {}
 	virtual ~CTimeSyncTrack() {}
 
 	enum ETypeTiSyncTrac {TSENERGY, TSFIRSTPEAK};
@@ -89,21 +89,21 @@ public:
 	void Process(CParameter& Parameter, CComplexVector& veccChanEst,
 				 int iNewTiCorr, _REAL& rLenPDS, _REAL& rOffsPDS);
 
-	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
+	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 					 _REAL& rLowerBound, _REAL& rHigherBound,
 					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
 					 _REAL& rPDSEnd);
 
-	void StartTracking() {bTiSyncTracking = TRUE;}
-	void StopTracking() {bTiSyncTracking = FALSE;}
+	void StartTracking() {bTiSyncTracking = true;}
+	void StopTracking() {bTiSyncTracking = false;}
 
 	 /* SetInitFlag() is needed for this function. Is done in channel estimation
 	    module */
-	void StartSaRaOffAcq() {bSamRaOffsAcqu = TRUE;}
+	void StartSaRaOffAcq() {bSamRaOffsAcqu = true;}
 
 	void SetTiSyncTracType(ETypeTiSyncTrac eNewTy);
 	ETypeTiSyncTrac GetTiSyncTracType() {return TypeTiSyncTrac;}
- 
+
 	/* OPH: calculation of delay and doppler using RSCI method */
 	void CalculateRdel(CParameter& Parameter);
 	CRealVector& GetRdelThresholds() {return vecrRdelThresholds;}
@@ -127,12 +127,12 @@ protected:
 	int						iSymDelay;
 	CShiftRegister<int>		vecTiCorrHist;
 	CShiftRegister<int>		veciNewMeasHist;
-	
+
 	CReal					rFracPartTiCor;
 	int						iTargetTimingPos;
 
-	_BOOLEAN				bTiSyncTracking;
-	_BOOLEAN				bSamRaOffsAcqu;
+	bool				bTiSyncTracking;
+	bool				bSamRaOffsAcqu;
 
 	int						iDFTSize;
 

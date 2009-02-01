@@ -15,16 +15,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -83,28 +83,28 @@ public:
 	void SetSDCType(ESDCType sdcType) { eSDCType = sdcType; }
 
 protected:
-	_BOOLEAN DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-							 CParameter& Parameter, const _BOOLEAN bVersion);
-	_BOOLEAN DataEntityType1(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+	bool DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const bool bVersion);
+	bool DataEntityType1(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter);
 // ...
-	_BOOLEAN DataEntityType3(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-							 CParameter& Parameter, const _BOOLEAN bVersion);
-	_BOOLEAN DataEntityType4(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-							 CParameter& Parameter, const _BOOLEAN bVersion);
-	_BOOLEAN DataEntityType5(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-							 CParameter& Parameter, const _BOOLEAN bVersion);
+	bool DataEntityType3(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const bool bVersion);
+	bool DataEntityType4(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const bool bVersion);
+	bool DataEntityType5(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const bool bVersion);
 // ...
-	_BOOLEAN DataEntityType7(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-							 CParameter& Parameter, const _BOOLEAN bVersion);
-	_BOOLEAN DataEntityType8(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+	bool DataEntityType7(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const bool bVersion);
+	bool DataEntityType8(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter);
-	_BOOLEAN DataEntityType9(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-							 CParameter& Parameter, const _BOOLEAN bVersion);
+	bool DataEntityType9(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const bool bVersion);
 // ...
-	_BOOLEAN DataEntityType11(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-							 CParameter& Parameter, const _BOOLEAN bVersion);
-	_BOOLEAN DataEntityType12(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+	bool DataEntityType11(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+							 CParameter& Parameter, const bool bVersion);
+	bool DataEntityType12(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter);
 
 	CCRC		CRCObject;

@@ -26,7 +26,7 @@
 \******************************************************************************/
 
 #include "MatlibSigProToolbox.h"
-
+#include <limits>
 
 /* Implementation *************************************************************/
 CMatlibVector<CReal> Hann(const int iLen)
@@ -573,7 +573,8 @@ CMatlibVector<CReal> DomEig(const CMatlibMatrix<CReal>& rmI,
 	/* Start value for eigenvector */
 	vecrV = Ones(iSize);
 	rLambda = rLambdaold = (CReal) 1.0;
-	rError = _MAXREAL;
+
+	rError = numeric_limits<CReal>::max();
 	int iItCnt = iMaxNumIt;
 
 	while ((iItCnt > 0) && (rError > rEpsilon))

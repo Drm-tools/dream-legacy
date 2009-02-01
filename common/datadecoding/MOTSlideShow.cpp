@@ -40,12 +40,12 @@ CMOTSlideShowEncoder::GetDataUnit (CVector < _BINARY > &vecbiNewData)
        completely transmitted, this functions returns true. In this case, put
        a new picture to the MOT encoder object */
 	Mutex.Lock();
-    if (MOTDAB.GetDataGroup (vecbiNewData) == TRUE)
+    if (MOTDAB.GetDataGroup (vecbiNewData) == true)
 		AddNextPicture ();
 	Mutex.Unlock();
 }
 
-_BOOLEAN
+bool
 CMOTSlideShowEncoder::GetTransStat (string & strCurPict, _REAL & rCurPerc)
 {
 /*
@@ -57,9 +57,9 @@ CMOTSlideShowEncoder::GetTransStat (string & strCurPict, _REAL & rCurPerc)
 	Mutex.Unlock();
 
     if (vecPicFileNames.Size () != 0)
-		return TRUE;
+		return true;
     else
-		return FALSE;
+		return false;
 }
 
 void
@@ -102,10 +102,10 @@ CMOTSlideShowEncoder::AddNextPicture ()
 		while (fread ((void *) &byIn, size_t (1), size_t (1), pFiBody)
 		       != size_t (0))
 		  {
-		      /* Add one byte = SIZEOF__BYTE bits */
-		      MOTPicture.vecbRawData.Enlarge (SIZEOF__BYTE);
+		      /* Add one byte = sizeof(_BINARY) bits */
+		      MOTPicture.vecbRawData.Enlarge (sizeof(_BINARY));
 		      MOTPicture.vecbRawData.Enqueue ((uint32_t) byIn,
-						      SIZEOF__BYTE);
+						      sizeof(_BINARY));
 		  }
 
 		/* Close the file afterwards */

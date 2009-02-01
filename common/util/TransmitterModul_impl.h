@@ -75,7 +75,7 @@ void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter)
 }
 
 template<class TInput, class TOutput>
-void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter, 
+void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter,
 											  CBuffer<TOutput>& OutputBuffer)
 {
 	/* Init some internal variables */
@@ -96,7 +96,7 @@ void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter,
 }
 
 template<class TInput, class TOutput>
-void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter, 
+void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter,
 	CBuffer<TOutput>& OutputBuffer,
 	CBuffer<TOutput>& OutputBuffer2,
 	vector< CSingleBuffer<TOutput> >& vecOutputBuffer)
@@ -141,13 +141,13 @@ void CTransmitterModul<TInput, TOutput>::
 {
 	/* OUTPUT-DRIVEN modul implementation in the transmitter ---------------- */
 	/* Look in output buffer if data is requested */
-	if (OutputBuffer.GetRequestFlag() == TRUE)
+	if (OutputBuffer.GetRequestFlag() == true)
 	{
 		/* Check, if enough input data is available */
 		if (InputBuffer.GetFillLevel() < this->iInputBlockSize)
 		{
 			/* Set request flag */
-			InputBuffer.SetRequestFlag(TRUE);
+			InputBuffer.SetRequestFlag(true);
 
 			return;
 		}
@@ -164,12 +164,12 @@ void CTransmitterModul<TInput, TOutput>::
 
 		/* Call the underlying processing-routine */
 		this->ProcessDataInternal(Parameter);
-	
+
 		/* Write processed data from internal memory in transfer-buffer */
 		OutputBuffer.Put(this->iOutputBlockSize);
 
 		/* Data was provided, clear data request */
-		OutputBuffer.SetRequestFlag(FALSE);
+		OutputBuffer.SetRequestFlag(false);
 	}
 }
 
@@ -182,7 +182,7 @@ void CTransmitterModul<TInput, TOutput>::
 {
 	/* OUTPUT-DRIVEN modul implementation in the transmitter ---------------- */
 	/* Look in output buffer if data is requested */
-	if (OutputBuffer.GetRequestFlag() == TRUE)
+	if (OutputBuffer.GetRequestFlag() == true)
 	{
 #if 0
 		bool bAllInputsReady = true;
@@ -191,19 +191,19 @@ void CTransmitterModul<TInput, TOutput>::
 		if (InputBuffer.GetFillLevel() < this->iInputBlockSize)
 		{
 			/* Set request flag */
-			InputBuffer.SetRequestFlag(TRUE);
+			InputBuffer.SetRequestFlag(true);
 			bAllInputsReady = false;
 		}
 		if (InputBuffer2.GetFillLevel() < iInputBlockSize2)
 		{
 			/* Set request flag */
-			InputBuffer2.SetRequestFlag(TRUE);
+			InputBuffer2.SetRequestFlag(true);
 			bAllInputsReady = false;
 		}
 		if (InputBuffer3.GetFillLevel() < iInputBlockSize3)
 		{
 			/* Set request flag */
-			InputBuffer3.SetRequestFlag(TRUE);
+			InputBuffer3.SetRequestFlag(true);
 			bAllInputsReady = false;
 		}
 
@@ -214,17 +214,17 @@ void CTransmitterModul<TInput, TOutput>::
 
 		/* Check, if enough input data is available from any source */
 		if (InputBuffer.GetFillLevel() < this->iInputBlockSize)
-			InputBuffer.SetRequestFlag(TRUE);
+			InputBuffer.SetRequestFlag(true);
 		else
 			bAnyInputReady = true;
 
 		if (InputBuffer2.GetFillLevel() < iInputBlockSize2)
-			InputBuffer2.SetRequestFlag(TRUE);
+			InputBuffer2.SetRequestFlag(true);
 		else
 			bAnyInputReady = true;
 
 		if (InputBuffer3.GetFillLevel() < iInputBlockSize3)
-			InputBuffer3.SetRequestFlag(TRUE);
+			InputBuffer3.SetRequestFlag(true);
 		else
 			bAnyInputReady = true;
 
@@ -241,18 +241,18 @@ void CTransmitterModul<TInput, TOutput>::
 
 		/* Call the underlying processing-routine */
 		this->ProcessDataInternal(Parameter);
-	
+
 		/* Write processed data from internal memory in transfer-buffer */
 		OutputBuffer.Put(this->iOutputBlockSize);
 
 		/* Data was provided, clear data request */
-		OutputBuffer.SetRequestFlag(FALSE);
+		OutputBuffer.SetRequestFlag(false);
 	}
 }
 
 template<class TInput, class TOutput>
 void CTransmitterModul<TInput, TOutput>::
-ProcessData(CParameter& Parameter, 
+ProcessData(CParameter& Parameter,
 									CBuffer<TInput>& InputBuffer,
 									CBuffer<TOutput>& OutputBuffer,
 									CBuffer<TOutput>& OutputBuffer2,
@@ -263,23 +263,23 @@ ProcessData(CParameter& Parameter,
 
 	size_t i=0;
 
-	_BOOLEAN bAllOutputsReady = TRUE;
+	bool bAllOutputsReady = true;
 
-	if (OutputBuffer.GetRequestFlag() == FALSE)
+	if (OutputBuffer.GetRequestFlag() == false)
 	{
-		bAllOutputsReady = FALSE;
+		bAllOutputsReady = false;
 	}
-		
-	if (OutputBuffer2.GetRequestFlag() == FALSE)
+
+	if (OutputBuffer2.GetRequestFlag() == false)
 	{
-		bAllOutputsReady = FALSE;
+		bAllOutputsReady = false;
 	}
 
 	for(i=0; i<vecOutputBuffer.size(); i++)
 	{
-		if (vecOutputBuffer[i].GetRequestFlag() == FALSE)
+		if (vecOutputBuffer[i].GetRequestFlag() == false)
 		{
-			bAllOutputsReady = FALSE;
+			bAllOutputsReady = false;
 		}
 	}
 
@@ -289,7 +289,7 @@ ProcessData(CParameter& Parameter,
 		if (InputBuffer.GetFillLevel() < this->iInputBlockSize)
 		{
 			/* Set request flag */
-			InputBuffer.SetRequestFlag(TRUE);
+			InputBuffer.SetRequestFlag(true);
 			return;
 		}
 
@@ -304,26 +304,26 @@ ProcessData(CParameter& Parameter,
 
 		/* Call the underlying processing-routine */
 		this->ProcessDataInternal(Parameter);
-	
+
 		/* Write processed data from internal memory in transfer-buffer */
 		OutputBuffer.Put(this->iOutputBlockSize);
 
 		/* Data was provided, clear data request */
-		OutputBuffer.SetRequestFlag(FALSE);
-	
+		OutputBuffer.SetRequestFlag(false);
+
 		/* Write processed data from internal memory in transfer-buffer */
 		OutputBuffer2.Put(this->iOutputBlockSize2);
 
 		/* Data was provided, clear data request */
-		OutputBuffer2.SetRequestFlag(FALSE);
-	
+		OutputBuffer2.SetRequestFlag(false);
+
 		for(i=0; i<vecOutputBuffer.size(); i++)
 		{
 			/* Write processed data from internal memory in transfer-buffer */
 			vecOutputBuffer[i].Put(this->veciOutputBlockSize[i]);
 
 			/* Data was provided, clear data request */
-			vecOutputBuffer[i].SetRequestFlag(FALSE);
+			vecOutputBuffer[i].SetRequestFlag(false);
 		}
 	}
 }
@@ -334,7 +334,7 @@ void CTransmitterModul<TInput, TOutput>::
 {
 	/* OUTPUT-DRIVEN modul implementation in the transmitter ---------------- */
 	/* Look in output buffer if data is requested */
-	if (OutputBuffer.GetRequestFlag() == TRUE)
+	if (OutputBuffer.GetRequestFlag() == true)
 	{
 		/* Read data and write it in the transfer-buffer.
 		   Query vector from output transfer-buffer for writing */
@@ -342,17 +342,17 @@ void CTransmitterModul<TInput, TOutput>::
 
 		/* Call the underlying processing-routine */
 		this->ProcessDataInternal(Parameter);
-		
+
 		/* Write processed data from internal memory in transfer-buffer */
 		OutputBuffer.Put(this->iOutputBlockSize);
 
 		/* Data was provided, clear data request */
-		OutputBuffer.SetRequestFlag(FALSE);
+		OutputBuffer.SetRequestFlag(false);
 	}
 }
 
 template<class TInput, class TOutput>
-_BOOLEAN CTransmitterModul<TInput, TOutput>::
+bool CTransmitterModul<TInput, TOutput>::
 	WriteData(CParameter& Parameter, CBuffer<TInput>& InputBuffer)
 {
 	/* OUTPUT-DRIVEN modul implementation in the transmitter */
@@ -360,9 +360,9 @@ _BOOLEAN CTransmitterModul<TInput, TOutput>::
 	if (InputBuffer.GetFillLevel() < this->iInputBlockSize)
 	{
 		/* Set request flag */
-		InputBuffer.SetRequestFlag(TRUE);
+		InputBuffer.SetRequestFlag(true);
 
-		return FALSE;
+		return false;
 	}
 
 	/* Get vector from transfer-buffer */
@@ -371,14 +371,14 @@ _BOOLEAN CTransmitterModul<TInput, TOutput>::
 	/* Call the underlying processing-routine */
 	this->ProcessDataInternal(Parameter);
 
-	return TRUE;
+	return true;
 }
 
 template<class TInput, class TOutput>
-_BOOLEAN CTransmitterModul<TInput, TOutput>::
-	WriteData(CParameter& Parameter, 
+bool CTransmitterModul<TInput, TOutput>::
+	WriteData(CParameter& Parameter,
 				CBuffer<TInput>& InputBuffer,
-				CBuffer<TInput>& InputBuffer2, 
+				CBuffer<TInput>& InputBuffer2,
 				vector<CSingleBuffer<TInput> >& vecInputBuffer)
 {
 	/* OUTPUT-DRIVEN modul implementation in the transmitter */
@@ -391,7 +391,7 @@ _BOOLEAN CTransmitterModul<TInput, TOutput>::
 	if (InputBuffer.GetFillLevel() < this->iInputBlockSize)
 	{
 		/* Set request flag */
-		InputBuffer.SetRequestFlag(TRUE);
+		InputBuffer.SetRequestFlag(true);
 
 		bAllInputsReady = false;
 
@@ -401,7 +401,7 @@ _BOOLEAN CTransmitterModul<TInput, TOutput>::
 	if (InputBuffer2.GetFillLevel() < this->iInputBlockSize2)
 	{
 		/* Set request flag */
-		InputBuffer2.SetRequestFlag(TRUE);
+		InputBuffer2.SetRequestFlag(true);
 
 		bAllInputsReady = false;
 
@@ -413,7 +413,7 @@ _BOOLEAN CTransmitterModul<TInput, TOutput>::
 		if (vecInputBuffer[i].GetFillLevel() < this->veciInputBlockSize[i])
 		{
 			/* Set request flag */
-			vecInputBuffer[i].SetRequestFlag(TRUE);
+			vecInputBuffer[i].SetRequestFlag(true);
 
 			bAllInputsReady = false;
 		}
@@ -421,7 +421,7 @@ _BOOLEAN CTransmitterModul<TInput, TOutput>::
 	}
 
 	if(bAllInputsReady == false)
-		return FALSE;
+		return false;
 
 	/* Get vector from transfer-buffer */
 	this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
@@ -432,7 +432,7 @@ _BOOLEAN CTransmitterModul<TInput, TOutput>::
 	/* Call the underlying processing-routine */
 	this->ProcessDataInternal(Parameter);
 
-	return TRUE;
+	return true;
 }
 
 #endif

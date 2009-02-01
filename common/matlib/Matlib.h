@@ -63,46 +63,24 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 
 
 /* In debug mode, test input parameters */
+
+template<typename T>
+inline void _TESTRNG(T POS, T limit)
+{
 #ifdef _DEBUG_
-#define _TESTRNGR(POS)		if ((POS >= iVectorLength) || (POS < 0)) \
-								DebugError("MatLibrRead", "POS", POS, \
-								"iVectorLength", iVectorLength)
-#define _TESTRNGW(POS)		if ((POS >= iVectorLength) || (POS < 0)) \
-								DebugError("MatLibrWrite", "POS", POS, \
-								"iVectorLength", iVectorLength)
-#define _TESTSIZE(INP)		if (INP != iVectorLength) \
-								DebugError("SizeCheck", "INP", INP, \
-								"iVectorLength", iVectorLength)
-#define _TESTRNGRM(POS)		if ((POS >= iRowSize) || (POS < 0)) \
-								DebugError("MatLibrReadMatrix", "POS", POS, \
-								"iRowSize", iRowSize)
-#define _TESTRNGWM(POS)		if ((POS >= iRowSize) || (POS < 0)) \
-								DebugError("MatLibrWriteMatrix", "POS", POS, \
-								"iRowSize", iRowSize)
-#define _TESTSIZEM(INP)		if (INP != iRowSize) \
-								DebugError("MatLibOperatorMatrix=()", "INP", INP, \
-								"iRowSize", iRowSize)
-#else
-
-// On Visual c++ 2005 Express Edition there is a segmentation fault if these macros are empty
-// TODO: FIX this with a better solution
-#ifdef _MSC_VER
-#define _TESTRNGR(POS) if (POS != POS) int idummy=0
-#define _TESTRNGW(POS) if (POS != POS) int idummy=0
-#define _TESTSIZE(INP) if (INP != INP) int idummy=0
-#define _TESTRNGRM(POS) if (POS != POS) int idummy=0
-#define _TESTRNGWM(POS) if (POS != POS) int idummy=0
-#define _TESTSIZEM(INP) if (INP != INP) int idummy=0
-#else
-#define _TESTRNGR(POS)
-#define _TESTRNGW(POS)
-#define _TESTSIZE(INP)
-#define _TESTRNGRM(POS)
-#define _TESTRNGWM(POS)
-#define _TESTSIZEM(INP)
+    if ((POS >= limit) || (POS < 0))
+        DebugError(__FUNCTION__, "POS", POS, "Len", limit);
 #endif
-#endif
+}
 
+template<typename T>
+inline void _TESTSIZE(T INP, T limit)
+{
+#ifdef _DEBUG_
+    if (INP != limit)
+        DebugError("SizeCheck", "INP", INP, "Len", limit);
+#endif
+}
 
 /* Classes ********************************************************************/
 /* Prototypes */
@@ -148,15 +126,15 @@ public:
 
 	/* Operator[] (Regular indices!!!) */
 	inline T& operator[](int const iPos) const
-		{_TESTRNGR(iPos); return pData[iPos];}
+		{_TESTRNG(iPos, iVectorLength); return pData[iPos];}
 	inline T& operator[](int const iPos)
-		{_TESTRNGW(iPos); return pData[iPos];} // For use as l value
+		{_TESTRNG(iPos, iVectorLength); return pData[iPos];} // For use as l value
 
 	/* Operator() */
 	inline T& operator()(int const iPos) const
-		{_TESTRNGR(iPos - 1); return pData[iPos - 1];}
+		{_TESTRNG(iPos - 1, iVectorLength); return pData[iPos - 1];}
 	inline T& operator()(int const iPos)
-		{_TESTRNGW(iPos - 1); return pData[iPos - 1];} // For use as l value
+		{_TESTRNG(iPos - 1, iVectorLength); return pData[iPos - 1];} // For use as l value
 
 	CMatlibVector<T> operator()(const int iFrom, const int iTo) const;
 	CMatlibVector<T> operator()(const int iFrom, const int iStep, const int iTo) const;
@@ -613,24 +591,24 @@ public:
 
 	/* Operator[] (Regular indices!!!) */
 	inline CMatlibVector<T>& operator[](int const iPos) const
-		{_TESTRNGRM(iPos); return ppData[iPos];}
+		{_TESTRNG(iPos, iRowSize); return ppData[iPos];}
 	inline CMatlibVector<T>& operator[](int const iPos)
-		{_TESTRNGWM(iPos); return ppData[iPos];} // For use as l value
+		{_TESTRNG(iPos, iRowSize); return ppData[iPos];} // For use as l value
 
 	/* Operator() */
 	inline CMatlibVector<T>& operator()(int const iPos) const
-		{_TESTRNGRM(iPos - 1); return ppData[iPos - 1];}
+		{_TESTRNG(iPos - 1, iRowSize); return ppData[iPos - 1];}
 	inline CMatlibVector<T>& operator()(int const iPos)
-		{_TESTRNGWM(iPos - 1); return ppData[iPos - 1];} // For use as l value
+		{_TESTRNG(iPos - 1, iRowSize); return ppData[iPos - 1];} // For use as l value
 
 	CMatlibMatrix<T> operator()(const int iRowFrom, const int iRowTo,
 		const int iColFrom, const int iColTo) const;
 
 	/* operator= */
 	inline CMatlibMatrix<T>& operator=(const CMatlibMatrix<CReal>& matI)
-		{_TESTSIZEM(matI.GetRowSize()); _MATOPCL(= matI[i]);}
+		{_TESTSIZE(matI.GetRowSize(), iRowSize); _MATOPCL(= matI[i]);}
 	inline CMatlibMatrix<CComplex>& operator=(const CMatlibMatrix<CComplex>& matI)
-		{_TESTSIZEM(matI.GetRowSize()); _MATOPCL(= matI[i]);}
+		{_TESTSIZE(matI.GetRowSize(), iRowSize); _MATOPCL(= matI[i]);}
 
 	/* operator+= */
 	inline CMatlibMatrix<T>& operator+=(const CMatlibMatrix<CReal>& matI)

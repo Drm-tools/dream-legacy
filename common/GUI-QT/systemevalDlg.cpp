@@ -34,11 +34,11 @@
 
 /* Implementation *************************************************************/
 systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
-	QWidget* parent, const char* name, bool modal, WFlags f) :
+	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	systemevalDlgBase(parent, name, modal, f),
 	DRMReceiver(NDRMR), Settings(NSettings),
 	Timer(), TimerLineEditFrequency(), TimerTuning(),
-	pGPSReceiver(NULL), bTuningInProgress(FALSE)
+	pGPSReceiver(NULL), bTuningInProgress(false)
 {
 	/* Get window geometry data and apply it */
 	CWinGeom s;
@@ -117,22 +117,22 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	   selectable */
 	CCharSelItem* pHistoryLiViIt =
 		new CCharSelItem(ListViewCharSel, tr("History"),
-		CDRMPlot::NONE_OLD, FALSE);
+		CDRMPlot::NONE_OLD, false);
 	pHistoryLiViIt->setPixmap(0, pixHistory);
 
 	CCharSelItem* pConstellationLiViIt =
 		new CCharSelItem(ListViewCharSel, tr("Constellation"),
-		CDRMPlot::NONE_OLD, FALSE);
+		CDRMPlot::NONE_OLD, false);
 	pConstellationLiViIt->setPixmap(0, pixConstellation);
 
 	CCharSelItem* pChannelLiViIt =
 		new CCharSelItem(ListViewCharSel, tr("Channel"),
-		CDRMPlot::NONE_OLD, FALSE);
+		CDRMPlot::NONE_OLD, false);
 	pChannelLiViIt->setPixmap(0, pixChannel);
 
 	CCharSelItem* pSpectrumLiViIt =
 		new CCharSelItem(ListViewCharSel, tr("Spectrum"),
-		CDRMPlot::NONE_OLD, FALSE);
+		CDRMPlot::NONE_OLD, false);
 	pSpectrumLiViIt->setPixmap(0, pixSpectrum);
 
 
@@ -201,16 +201,16 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* If RSCI in is enabled, disable some of the controls and use different
 	   initialization for the chart and chart selector */
-	if (DRMReceiver.GetRSIIn()->GetInEnabled() == TRUE)
+	if (DRMReceiver.GetRSIIn()->GetInEnabled() == true)
 	{
-		//ListViewCharSel->setEnabled(FALSE);
+		//ListViewCharSel->setEnabled(false);
 
 		EdtFrequency->setText("0");
-		EdtFrequency->setEnabled(FALSE);
+		EdtFrequency->setEnabled(false);
 
 		/* Only audio spectrum makes sence for MDI in */
-		ListViewCharSel->setSelected(pListItAudSpec, TRUE);
-		ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
+		ListViewCharSel->setSelected(pListItAudSpec, true);
+		ListViewCharSel->setOpen(pSpectrumLiViIt, true);
 		MainPlot->SetupChart(CDRMPlot::AUDIO_SPECTRUM);
 	}
 	else
@@ -220,92 +220,92 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		switch (iPlotType)
 		{
 		case (int) CDRMPlot::POWER_SPEC_DENSITY:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItPowSpecDens, TRUE);
+			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
+			ListViewCharSel->setSelected(pListItPowSpecDens, true);
 			MainPlot->SetupChart(CDRMPlot::POWER_SPEC_DENSITY);
 			break;
 
 		case (int) CDRMPlot::INPUTSPECTRUM_NO_AV:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItInpSpectrNoAv, TRUE);
+			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
+			ListViewCharSel->setSelected(pListItInpSpectrNoAv, true);
 			MainPlot->SetupChart(CDRMPlot::INPUTSPECTRUM_NO_AV);
 			break;
 
 		case (int) CDRMPlot::AUDIO_SPECTRUM:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItAudSpec, TRUE);
+			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
+			ListViewCharSel->setSelected(pListItAudSpec, true);
 			MainPlot->SetupChart(CDRMPlot::AUDIO_SPECTRUM);
 			break;
 
 		case (int) CDRMPlot::SNR_SPECTRUM:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItSNRSpec, TRUE);
+			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
+			ListViewCharSel->setSelected(pListItSNRSpec, true);
 			MainPlot->SetupChart(CDRMPlot::SNR_SPECTRUM);
 			break;
 
 		case (int) CDRMPlot::INP_SPEC_WATERF:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItInpSpecWater, TRUE);
+			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
+			ListViewCharSel->setSelected(pListItInpSpecWater, true);
 			MainPlot->SetupChart(CDRMPlot::INP_SPEC_WATERF);
 			break;
 
 		case (int) CDRMPlot::TRANSFERFUNCTION:
-			ListViewCharSel->setOpen(pChannelLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItChanTF, TRUE);
+			ListViewCharSel->setOpen(pChannelLiViIt, true);
+			ListViewCharSel->setSelected(pListItChanTF, true);
 			MainPlot->SetupChart(CDRMPlot::TRANSFERFUNCTION);
 			break;
 
 		case (int) CDRMPlot::AVERAGED_IR:
-			ListViewCharSel->setOpen(pChannelLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItChanIR, TRUE);
+			ListViewCharSel->setOpen(pChannelLiViIt, true);
+			ListViewCharSel->setSelected(pListItChanIR, true);
 			MainPlot->SetupChart(CDRMPlot::AVERAGED_IR);
 			break;
 
 		case (int) CDRMPlot::FAC_CONSTELLATION:
-			ListViewCharSel->setOpen(pConstellationLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItConstFAC, TRUE);
+			ListViewCharSel->setOpen(pConstellationLiViIt, true);
+			ListViewCharSel->setSelected(pListItConstFAC, true);
 			MainPlot->SetupChart(CDRMPlot::FAC_CONSTELLATION);
 			break;
 
 		case (int) CDRMPlot::SDC_CONSTELLATION:
-			ListViewCharSel->setOpen(pConstellationLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItConstSDC, TRUE);
+			ListViewCharSel->setOpen(pConstellationLiViIt, true);
+			ListViewCharSel->setSelected(pListItConstSDC, true);
 			MainPlot->SetupChart(CDRMPlot::SDC_CONSTELLATION);
 			break;
 
 		case (int) CDRMPlot::MSC_CONSTELLATION:
-			ListViewCharSel->setOpen(pConstellationLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItConstMSC, TRUE);
+			ListViewCharSel->setOpen(pConstellationLiViIt, true);
+			ListViewCharSel->setSelected(pListItConstMSC, true);
 			MainPlot->SetupChart(CDRMPlot::MSC_CONSTELLATION);
 			break;
 
 		case (int) CDRMPlot::ALL_CONSTELLATION:
-			ListViewCharSel->setOpen(pConstellationLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItConstAll, TRUE);
+			ListViewCharSel->setOpen(pConstellationLiViIt, true);
+			ListViewCharSel->setSelected(pListItConstAll, true);
 			MainPlot->SetupChart(CDRMPlot::ALL_CONSTELLATION);
 			break;
 
 		case (int) CDRMPlot::FREQ_SAM_OFFS_HIST:
-			ListViewCharSel->setOpen(pHistoryLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItHistFrSa, TRUE);
+			ListViewCharSel->setOpen(pHistoryLiViIt, true);
+			ListViewCharSel->setSelected(pListItHistFrSa, true);
 			MainPlot->SetupChart(CDRMPlot::FREQ_SAM_OFFS_HIST);
 			break;
 
 		case (int) CDRMPlot::DOPPLER_DELAY_HIST:
-			ListViewCharSel->setOpen(pHistoryLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItHistDeDo, TRUE);
+			ListViewCharSel->setOpen(pHistoryLiViIt, true);
+			ListViewCharSel->setSelected(pListItHistDeDo, true);
 			MainPlot->SetupChart(CDRMPlot::DOPPLER_DELAY_HIST);
 			break;
 
 		case (int) CDRMPlot::SNR_AUDIO_HIST:
-			ListViewCharSel->setOpen(pHistoryLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItHistSNRAu, TRUE);
+			ListViewCharSel->setOpen(pHistoryLiViIt, true);
+			ListViewCharSel->setSelected(pListItHistSNRAu, true);
 			MainPlot->SetupChart(CDRMPlot::SNR_AUDIO_HIST);
 			break;
 
 		default: /* INPUT_SIG_PSD, includes INPUT_SIG_PSD_ANALOG and NONE_OLD */
-			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItInpPSD, TRUE);
+			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
+			ListViewCharSel->setSelected(pListItInpPSD, true);
 			MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD);
 			break;
 		}
@@ -344,8 +344,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	EdtFrequency->setValidator(new QIntValidator(100, 120000, EdtFrequency));
 
 	/* QT optimises out trying to send this from ReceiverSettings! */
-	EnableGPS(Settings.Get("GPS", "usegpsd", FALSE));
-	ShowGPS(Settings.Get("GPS", "showgps", FALSE));
+	EnableGPS(Settings.Get("GPS", "usegpsd", false));
+	ShowGPS(Settings.Get("GPS", "showgps", false));
 }
 
 systemevalDlg::~systemevalDlg()
@@ -357,8 +357,8 @@ systemevalDlg::~systemevalDlg()
 void systemevalDlg::OnLineEditFrequencyChanged(const QString& str)
 {
 	// wait an inter-digit timeout
-	TimerLineEditFrequency.start(500, TRUE);
-	bTuningInProgress = TRUE;
+	TimerLineEditFrequency.start(500, true);
+	bTuningInProgress = true;
 }
 
 void systemevalDlg::OnTimerLineEditFrequency()
@@ -369,14 +369,14 @@ void systemevalDlg::OnTimerLineEditFrequency()
 	if(iFreq != iFrequency)
 	{
 		DRMReceiver.SetFrequency(iFreq);
-		bTuningInProgress = TRUE;
-		TimerTuning.start(2000, TRUE);
+		bTuningInProgress = true;
+		TimerTuning.start(2000, true);
 	}
 }
 
 void systemevalDlg::OnTimerTuning()
 {
-	bTuningInProgress = FALSE;
+	bTuningInProgress = false;
 }
 
 void systemevalDlg::UpdateControls()
@@ -390,12 +390,12 @@ void systemevalDlg::UpdateControls()
 	int iFreq = EdtFrequency->text().toInt();
 	if(iFrequency != iFreq)
 	{
-		if(bTuningInProgress == FALSE)
+		if(bTuningInProgress == false)
 			EdtFrequency->setText(QString::number(iFrequency));
 	}
 	else
 	{
-		bTuningInProgress = FALSE;
+		bTuningInProgress = false;
 	}
 }
 
@@ -523,45 +523,6 @@ CDRMPlot* systemevalDlg::OpenChartWin(const CDRMPlot::ECharType eNewType)
 	return pNewChartWin;
 }
 
-void systemevalDlg::SetStatus(int MessID, int iMessPara)
-{
-	switch(MessID)
-	{
-	case MS_FAC_CRC:
-		LEDFAC->SetLight(iMessPara);
-		break;
-
-	case MS_SDC_CRC:
-		LEDSDC->SetLight(iMessPara);
-		break;
-
-	case MS_MSC_CRC:
-		LEDMSC->SetLight(iMessPara);
-		break;
-
-	case MS_FRAME_SYNC:
-		LEDFrameSync->SetLight(iMessPara);
-		break;
-
-	case MS_TIME_SYNC:
-		LEDTimeSync->SetLight(iMessPara);
-		break;
-
-	case MS_IOINTERFACE:
-		LEDIOInterface->SetLight(iMessPara);
-		break;
-
-	case MS_RESET_ALL:
-		LEDFAC->Reset();
-		LEDSDC->Reset();
-		LEDMSC->Reset();
-		LEDFrameSync->Reset();
-		LEDTimeSync->Reset();
-		LEDIOInterface->Reset();
-		break;
-	}
-}
-
 void systemevalDlg::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 {
 	switch(state)
@@ -589,9 +550,9 @@ void systemevalDlg::OnTimer()
 	if (this->isVisible())
 	{
 		_REAL rSigStr;
-		_BOOLEAN bValid = DRMReceiver.GetSignalStrength(rSigStr);
+		bool bValid = DRMReceiver.GetSignalStrength(rSigStr);
 		if (bValid)
-			ValueRF->setText(QString().setNum(rSigStr+S9_DBUV, 'f', 1) + " dBuV");
+			ValueRF->setText(QString().setNum(rSigStr, 'f', 1) + " dBuV");
 		else
 			ValueRF->setText("---");
 
@@ -689,7 +650,7 @@ void systemevalDlg::OnTimer()
    if USE_QT_GUI is set or not (problem with RSCI in DRMReceiver?) */
 #ifdef USE_QT_GUI
 	/* If RSCI in is enabled, do not show any synchronization parameter */
-	if (DRMReceiver.GetRSIIn()->GetInEnabled() == TRUE)
+	if (DRMReceiver.GetRSIIn()->GetInEnabled() == true)
 	{
 		ValueSNR->setText("<b>---</b>");
 		if (Parameters.vecrRdelThresholds.Size() > 0)
@@ -1214,8 +1175,7 @@ void systemevalDlg::AddWhatsThisHelp()
 	QWhatsThis::add(FACTimeDateL, strTimeDate);
 	QWhatsThis::add(FACTimeDateV, strTimeDate);
 
-#if QT_VERSION < 0x030000
-	/* if QWhatsThis is added don't work the right click popup (it used to work in QT2.3) */
+	/* TODO - Test the right click popup */
 
 	/* Chart Selector */
 	QWhatsThis::add(ListViewCharSel,
@@ -1229,8 +1189,6 @@ void systemevalDlg::AddWhatsThisHelp()
 		"groups by using the left / right arrow keys.<br>A separate chart "
 		"window for a selected item can be opened by right click on the item "
 		"and click on the context menu item."));
-#endif
-
 }
 
 void systemevalDlg::EnableGPS(bool b)

@@ -52,13 +52,13 @@
 #define PSD_WINDOW_GAIN 0.39638
 
 /* Length of vector for input spectrum. We use approx. 0.2 sec
-   of sampled data for spectrum calculation, this is 2^13 = 8192 to 
+   of sampled data for spectrum calculation, this is 2^13 = 8192 to
    make the FFT work more efficient. Make sure that this number is not smaller
    than the symbol lenght in 48 khz domain of longest mode (which is mode A/B:
    1280) */
 #define NUM_SMPLS_4_INPUT_SPECTRUM (NUM_AV_BLOCKS_PSD * LEN_PSD_AV_EACH_BLOCK)
 
-/* The RSI output needs 400ms with a 50% overlap, so this needs more space 
+/* The RSI output needs 400ms with a 50% overlap, so this needs more space
    I think the RSCI spec is slightly wrong - using 150 windows consumes just over 400ms, 149 would be exact */
 #define INPUT_DATA_VECTOR_SIZE (NUM_AV_BLOCKS_PSD_RSI * (LEN_PSD_AV_EACH_BLOCK_RSI-PSD_OVERLAP_RSI)+PSD_OVERLAP_RSI)
 
@@ -69,6 +69,11 @@
 /* Use raw 16 bit data or in text form for file format for DRM data. Defining
    the following macro will enable the raw data option */
 #define FILE_DRM_USING_RAW_DATA
+
+enum EFileOutFormat { OFF_RAW, OFF_TXT, OFF_WAV };
+
+enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
+		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO};
 
 
 /* Classes ********************************************************************/
@@ -120,18 +125,18 @@ class CReceiveData : public CReceiverModul<_REAL, _REAL>
 public:
 	CReceiveData() : pSound(NULL),
 	vecrInpData(INPUT_DATA_VECTOR_SIZE, (_REAL) 0.0),
-	bFippedSpectrum(FALSE), eInChanSelection(CS_MIX_CHAN)
+	bFippedSpectrum(false), eInChanSelection(CS_MIX_CHAN)
 		 {}
 	virtual ~CReceiveData();
 
 	void GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-	void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 							   
+	void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 							   const int iLenPSDAvEachBlock = LEN_PSD_AV_EACH_BLOCK,
 							   const int iNumAvBlocksPSD = NUM_AV_BLOCKS_PSD,
 							   const int iPSDOverlap = 0);
 
-	void SetFlippedSpectrum(const _BOOLEAN bNewF) {bFippedSpectrum = bNewF;}
-	_BOOLEAN GetFlippedSpectrum() {return bFippedSpectrum;}
+	void SetFlippedSpectrum(const bool bNewF) {bFippedSpectrum = bNewF;}
+	bool GetFlippedSpectrum() {return bFippedSpectrum;}
 
 	void SetSoundInterface(CSoundInInterface* pS) { pSound = pS;}
 	void SetInChanSel(const EInChanSel eNS) {eInChanSelection = eNS;}
@@ -139,13 +144,13 @@ public:
 
 protected:
 	CSignalLevelMeter		SignalLevelMeter;
-	
+
 	CSoundInInterface*		pSound;
 	CVector<_SAMPLE>		vecsSoundBuffer;
 
 	CShiftRegister<_REAL>	vecrInpData;
 
-	_BOOLEAN				bFippedSpectrum;
+	bool				bFippedSpectrum;
 
 	EInChanSel				eInChanSelection;
 
@@ -164,7 +169,7 @@ protected:
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 
 	void PutPSD(CParameter& ReceiverParam);
-	void CalculatePSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 							   
+	void CalculatePSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 							   const int iLenPSDAvEachBlock = LEN_PSD_AV_EACH_BLOCK,
 							   const int iNumAvBlocksPSD = NUM_AV_BLOCKS_PSD,
 							   const int iPSDOverlap = 0);
@@ -187,7 +192,7 @@ public:
 	void SetSoundInterface(CSoundInInterface* pS) { pSound = pS;}
 
 protected:
-	
+
 	CSoundInInterface*		pSound;
 
 	virtual void InitInternal(CParameter& ReceiverParam);

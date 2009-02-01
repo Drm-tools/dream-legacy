@@ -53,7 +53,7 @@
 
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */
-CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
+CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f)
 	: CAboutDlgBase(parent, name, modal, f)
 {
 	char  sfversion [128] ;
@@ -225,10 +225,8 @@ CSoundCardSelMenu::CSoundCardSelMenu(
 	for (i = 0; i < iNumSoundInDev; i++)
 	{
 		QString name(vecSoundInNames[i].c_str());
-#if defined(_MSC_VER) && (_MSC_VER < 1400)
-		if(name.find("blaster", 0, FALSE)>=0)
+		if(name.find("blaster", 0, false)>=0)
 			name += " (has problems on some platforms)";
-#endif
 		pSoundInMenu->insertItem(name, this, SLOT(OnSoundInDevice(int)), 0, i);
 	}
 
@@ -250,8 +248,8 @@ CSoundCardSelMenu::CSoundCardSelMenu(
 	if ((iDefaultOutDev > iNumSoundOutDev) || (iDefaultOutDev < 0))
 		iDefaultOutDev = iNumSoundOutDev;
 
-	pSoundInMenu->setItemChecked(iDefaultInDev, TRUE);
-	pSoundOutMenu->setItemChecked(iDefaultOutDev, TRUE);
+	pSoundInMenu->setItemChecked(iDefaultInDev, true);
+	pSoundOutMenu->setItemChecked(iDefaultOutDev, true);
 
 	insertItem(tr("Sound &In"), pSoundInMenu);
 	insertItem(tr("Sound &Out"), pSoundOutMenu);

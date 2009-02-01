@@ -91,8 +91,8 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 	    AT_JAVA
     };
 
-    _BOOLEAN GetMOTObject (CMOTObject & NewPic, const EAppType eAppTypeReq);
-    _BOOLEAN GetMOTDirectory (CMOTDirectory & MOTDirectoryOut, const EAppType eAppTypeReq);
+    bool GetMOTObject (CMOTObject & NewPic, const EAppType eAppTypeReq);
+    bool GetMOTDirectory (CMOTDirectory & MOTDirectoryOut, const EAppType eAppTypeReq);
 
     void GetNews (const int iObjID, CNews & News);
     EAppType GetAppType ()
@@ -101,22 +101,22 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     }
 
 	/* Parameter for activate/deactivate EPG decoding */
-	void		SetDecodeEPG(const _BOOLEAN bDecEPG) {bDecodeEPG = bDecEPG;}
-	_BOOLEAN	GetDecodeEPG() {return bDecodeEPG;}
+	void		SetDecodeEPG(const bool bDecEPG) {bDecodeEPG = bDecEPG;}
+	bool	GetDecodeEPG() {return bDecodeEPG;}
 
   protected:
     class CDataUnit
     {
       public:
 	CVector < _BINARY > vecbiData;
-	_BOOLEAN bOK;
-	_BOOLEAN bReady;
+	bool bOK;
+	bool bReady;
 
 	void Reset ()
 	{
 	    vecbiData.Init (0);
-	    bOK = FALSE;
-	    bReady = FALSE;
+	    bOK = false;
+	    bReady = false;
 	}
     };
 
@@ -126,7 +126,7 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     int iServPacketID;
     CVector < int >veciCRCOk;
 
-    _BOOLEAN DoNotProcessData;
+    bool DoNotProcessData;
 
     int iContInd[MAX_NUM_PACK_PER_STREAM];
     CDataUnit DataUnit[MAX_NUM_PACK_PER_STREAM];
@@ -139,11 +139,11 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     virtual void InitInternal (CParameter & ReceiverParam);
     virtual void ProcessDataInternal (CParameter & ReceiverParam);
 
-	_BOOLEAN	bDecodeEPG; /* enable/disable epg decoding */
-    int iEPGService;                                                               
+	bool	bDecodeEPG; /* enable/disable epg decoding */
+    int iEPGService;
     int iEPGPacketID;
     void DecodeEPG(const CParameter& ReceiverParam);
-	
+
 };
 
 

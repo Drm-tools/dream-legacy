@@ -28,7 +28,7 @@
 \******************************************************************************/
 
 #include "OFDM.h"
-
+#include <limits>
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -62,7 +62,7 @@ void COFDMModulation::ProcessDataInternal(CParameter&)
 		for (i = 0; i < iOutputBlockSize; i++)
 		{
 			(*pvecOutputData)[i] = (*pvecOutputData)[i] * Conj(cCurExp);
-			
+
 			/* Rotate exp-pointer on step further by complex multiplication
 			   with precalculated rotation vector cExpStep. This saves us from
 			   calling sin() and cos() functions all the time (iterative
@@ -74,7 +74,7 @@ void COFDMModulation::ProcessDataInternal(CParameter&)
 
 void COFDMModulation::InitInternal(CParameter& TransmParam)
 {
-	TransmParam.Lock(); 
+	TransmParam.Lock();
 	/* Get global parameters */
 	iDFTSize = TransmParam.CellMappingTable.iFFTSizeN;
 	iGuardSize = TransmParam.CellMappingTable.iGuardSize;
@@ -105,7 +105,7 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 	/* Define block-sizes for input and output */
 	iInputBlockSize = TransmParam.CellMappingTable.iNumCarrier;
 	iOutputBlockSize = TransmParam.CellMappingTable.iSymbolBlockSize;
-	TransmParam.Unlock(); 
+	TransmParam.Unlock();
 }
 
 
@@ -161,7 +161,7 @@ void COFDMDemodulation::ProcessDataInternal(CParameter&)
 
 void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 {
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	iDFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
 	iGuardSize = ReceiverParam.CellMappingTable.iGuardSize;
 	iShiftedKmin = ReceiverParam.CellMappingTable.iShiftedKmin;
@@ -184,7 +184,7 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iDFTSize;
 	iOutputBlockSize = ReceiverParam.CellMappingTable.iNumCarrier;
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 }
 
 void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
@@ -199,11 +199,11 @@ void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
 	if (iLenPowSpec != 0)
 	{
 		/* Lock resources */
-		Lock(); 
+		Lock();
 
 		/* Init the constants for scale and normalization */
 		const _REAL rNormData =
-			(_REAL) iDFTSize * iDFTSize * _MAXSHORT * _MAXSHORT;
+			(_REAL) iDFTSize * iDFTSize * numeric_limits<_SAMPLE>::max() * numeric_limits<_SAMPLE>::max();
 
 		const _REAL rFactorScale =
 			(_REAL) SOUNDCRD_SAMPLE_RATE / iLenPowSpec / 2000;
@@ -222,7 +222,7 @@ void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
 		}
 
 		/* Release resources */
-		Unlock(); 
+		Unlock();
 	}
 }
 
@@ -343,13 +343,13 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter&)
 	(*pvecOutputData2).GetExData().iCurTimeCorr = 0;
 
 	/* Symbol ID index is always ok */
-	(*pvecOutputData).GetExData().bSymbolIDHasChanged = FALSE;
-	(*pvecOutputData2).GetExData().bSymbolIDHasChanged = FALSE;
+	(*pvecOutputData).GetExData().bSymbolIDHasChanged = false;
+	(*pvecOutputData2).GetExData().bSymbolIDHasChanged = false;
 }
 
 void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 {
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	/* Set internal parameters */
 	iDFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
 	iGuardSize = ReceiverParam.CellMappingTable.iGuardSize;
@@ -394,5 +394,5 @@ void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 	/* We need to store as many symbols in output buffer as long the channel
 	   estimation delay is */
 	iMaxOutputBlockSize2 = iNumCarrier * ReceiverParam.iChanEstDelay;
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 }

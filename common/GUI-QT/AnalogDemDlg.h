@@ -10,21 +10,21 @@
  *
  * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
  *	- Additional widgets for displaying AMSS information
- *	
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -40,8 +40,8 @@
 #include <qcheckbox.h>
 #include <qfiledialog.h>
 #include <qslider.h>
-#include <qwt/qwt_dial.h>
-#include <qwt/qwt_dial_needle.h>
+#include <qwt_dial.h>
+#include <qwt_dial_needle.h>
 #include <qlayout.h>
 #include <qprogressbar.h>
 #include <qcombobox.h>
@@ -74,7 +74,7 @@ class CAMSSDlg : public CAMSSDlgBase
 
 public:
 	CAMSSDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE, WFlags f = 0);
+		bool modal = false, Qt::WFlags f = 0);
 	/* dummy assignment operator to help MSVC8 */
 	CAMSSDlg& operator=(const CAMSSDlg&)
 	{ throw "should not happen"; return *this;}
@@ -103,7 +103,7 @@ class AnalogDemDlg : public AnalogDemDlgBase
 
 public:
 	AnalogDemDlg(CDRMReceiver&, CSettings&, ReceiverSettingsDlg&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = false, Qt::WFlags f = 0);
 	/* dummy assignment operator to help MSVC8 */
 	AnalogDemDlg& operator=(const AnalogDemDlg&)
 	{ throw "should not happen"; return *this;}

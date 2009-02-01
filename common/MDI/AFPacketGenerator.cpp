@@ -7,7 +7,7 @@
  *
  * Description:
  *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
- *	(MDI), Receiver Status and Control Interface (RSCI)  
+ *	(MDI), Receiver Status and Control Interface (RSCI)
  *  and Distribution and Communications Protocol (DCP) as described in
  *	ETSI TS 102 820,  ETSI TS 102 349 and ETSI TS 102 821 respectively.
  *
@@ -15,7 +15,7 @@
  *
  *  This class generates the AF packet header and CRC, and takes as an argument a TAG packet
  *  generator which generates the tag packet, i.e. the payload.
- *  
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -41,7 +41,7 @@
 #include "../util/LogPrint.h"
 // CAFPacketGenerator
 
-CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC, CTagPacketGenerator& TagPacketGenerator)
+CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const bool bUseAFCRC, CTagPacketGenerator& TagPacketGenerator)
 {
 /*
 	The AF layer encapsulates a single TAG Packet. Mandatory TAG items:
@@ -52,18 +52,18 @@ CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC, CTagPac
 	/* Payload length in bytes */
 // TODO: check if padding bits are needed to get byte alignment!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	int iPayloadLenBytes = TagPacketGenerator.GetTagPacketLength();
-		
+
 	/* 10 bytes AF header, 2 bytes CRC, payload */
 	const int iAFPktLenBits =
-		iPayloadLenBytes * SIZEOF__BYTE + 12 * SIZEOF__BYTE;
+		iPayloadLenBytes * sizeof(_BINARY) + 12 * sizeof(_BINARY);
 
 	/* Init vector length */
 	vecbiAFPkt.Init(iAFPktLenBits);
 	vecbiAFPkt.ResetBitAccess();
 
 	/* SYNC: two-byte ASCII representation of "AF" */
-	vecbiAFPkt.Enqueue((uint32_t) 'A', SIZEOF__BYTE);
-	vecbiAFPkt.Enqueue((uint32_t) 'F', SIZEOF__BYTE);
+	vecbiAFPkt.Enqueue((uint32_t) 'A', sizeof(_BINARY));
+	vecbiAFPkt.Enqueue((uint32_t) 'F', sizeof(_BINARY));
 
 	/* LEN: length of the payload, in bytes (4 bytes long -> 32 bits) */
 	vecbiAFPkt.Enqueue((uint32_t) iPayloadLenBytes, 32);
@@ -84,7 +84,7 @@ CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC, CTagPac
 	   a field combining the CF, MAJ and MIN fields */
 	/* CF: CRC Flag, 0 if the CRC field is not used (CRC value shall be
 	   0000_[16]) or 1 if the CRC field contains a valid CRC (1 bit long) */
-	if (bUseAFCRC == TRUE)
+	if (bUseAFCRC == true)
 		vecbiAFPkt.Enqueue((uint32_t) 1, 1);
 	else
 		vecbiAFPkt.Enqueue((uint32_t) 0, 1);
@@ -98,7 +98,7 @@ CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC, CTagPac
 	/* Protocol Type (PT): single byte encoding the protocol of the data carried
 	   in the payload. For TAG Packets, the value shall be the ASCII
 	   representation of "T" */
-	vecbiAFPkt.Enqueue((uint32_t) 'T', SIZEOF__BYTE);
+	vecbiAFPkt.Enqueue((uint32_t) 'T', sizeof(_BINARY));
 
 
 	/* Payload -------------------------------------------------------------- */
@@ -109,7 +109,7 @@ CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC, CTagPac
 
 	/* CRC: CRC calculated as described in annex A if the CF field is 1,
 	   otherwise 0000_[16] */
-	if (bUseAFCRC == TRUE)
+	if (bUseAFCRC == true)
 	{
 		CCRC CRCObject;
 
@@ -120,10 +120,10 @@ CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const _BOOLEAN bUseAFCRC, CTagPac
 		vecbiAFPkt.ResetBitAccess();
 
 		/* 2 bytes CRC -> "- 2" */
-		for (int i = 0; i < iAFPktLenBits / SIZEOF__BYTE - 2; i++)
-			CRCObject.AddByte((_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE));
+		for (int i = 0; i < iAFPktLenBits / sizeof(_BINARY) - 2; i++)
+			CRCObject.AddByte((_BYTE) vecbiAFPkt.Separate(sizeof(_BINARY)));
 
-		/* Now, pointer in "enqueue"-function is back at the same place, 
+		/* Now, pointer in "enqueue"-function is back at the same place,
 		   add CRC */
 		vecbiAFPkt.Enqueue(CRCObject.GetCRC(), 16);
 	}
@@ -139,11 +139,11 @@ CVector<_BYTE> CAFPacketGenerator::PackBytes(CVector<_BINARY> &vecbiPacket)
 	CVector<_BYTE> vecbyPacket;
 	vecbiPacket.ResetBitAccess();
 	size_t bits = vecbiPacket.Size();
-	size_t bytes = bits / SIZEOF__BYTE;
+	size_t bytes = bits / sizeof(_BINARY);
 	vecbyPacket.reserve(bytes);
 	for(size_t i=0; i<bytes; i++)
 	{
-	 	_BYTE byte = (_BYTE)vecbiPacket.Separate(SIZEOF__BYTE);
+	 	_BYTE byte = (_BYTE)vecbiPacket.Separate(sizeof(_BINARY));
 		vecbyPacket.push_back(byte);
 	}
 	return vecbyPacket;

@@ -31,6 +31,7 @@
 #define _HAMLIB_H
 
 #include "../GlobalDefinitions.h"
+#include "../Parameter.h"
 
 #ifdef HAVE_LIBHAMLIB
 
@@ -74,7 +75,7 @@ class CRigCaps
 public:
 
 	CRigCaps() : settings(), config(), hamlib_caps()
-	{ 
+	{
 		hamlib_caps.mfg_name = NULL;
 	}
 
@@ -131,9 +132,9 @@ public:
 
 	virtual void	run();
 
-	_BOOLEAN		SetFrequency(const int iFreqkHz);
-	void 			SetEnableSMeter(const _BOOLEAN bStatus); // sets/clears wanted flag and starts/stops
-	_BOOLEAN		GetEnableSMeter(); // returns wanted flag
+	bool		    SetFrequency(const int iFreqkHz);
+	void 			SetEnableSMeter(const bool bStatus); // sets/clears wanted flag and starts/stops
+	bool		    GetEnableSMeter(); // returns wanted flag
 	void 			StopSMeter(); // stops (clears run flag) but leaves wanted flag alone
 
 	/* backend selection */
@@ -193,7 +194,7 @@ protected:
 	CMutex			mutex;
 	CParameter&		Parameters;
 	RIG*			pRig;
-	_BOOLEAN		bSMeterWanted, bEnableSMeter;
+	bool		bSMeterWanted, bEnableSMeter;
 	map<EDemodulationType,rig_model_t>
 					ModelID, WantedModelID;
 	EDemodulationType		eRigMode;

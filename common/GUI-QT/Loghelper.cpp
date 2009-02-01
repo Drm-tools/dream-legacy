@@ -47,9 +47,9 @@ Loghelper::Loghelper(CDRMReceiver& NDRMR, CSettings& NSettings):
 	 * on startup)
 	 */
 	iLogDelay = Settings.Get("Logfile", "delay", 0);
-	LogSigStr(Settings.Get("Logfile", "enablerxl", FALSE));
-	LogPosition(Settings.Get("Logfile", "enablepositiondata", FALSE));
-	EnableLog(Settings.Get("Logfile", "enablelog", FALSE));
+	LogSigStr(Settings.Get("Logfile", "enablerxl", false));
+	LogPosition(Settings.Get("Logfile", "enablepositiondata", false));
+	EnableLog(Settings.Get("Logfile", "enablelog", false));
 }
 
 Loghelper::~Loghelper()
@@ -99,7 +99,7 @@ void Loghelper::EnableLog(bool b)
 {
 	if(b)
 	{
-		TimerLogFileStart.start(1000*iLogDelay, TRUE);
+		TimerLogFileStart.start(1000*iLogDelay, true);
 	}
 	else
 	{

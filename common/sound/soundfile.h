@@ -45,8 +45,8 @@ public:
 	virtual int			GetDev() { return -1; }
 	virtual void		SetFileName(const string& strFileName);
 
-	virtual void 		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
-	virtual _BOOLEAN 	Read(vector<_SAMPLE>& data);
+	virtual void 		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
+	virtual bool 	Read(vector<_SAMPLE>& data);
 	virtual void 		Close();
 
 protected:
@@ -71,9 +71,9 @@ public:
 	virtual void		SetDev(const string& s);
 	virtual int			GetDev() { return dev; }
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
+	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
 	virtual void		Close();
-	virtual _BOOLEAN	Write(vector<_SAMPLE>& data);
+	virtual bool	Write(vector<_SAMPLE>& data);
 	virtual void		SetFiles(const vector<string>& choices) { files = choices; }
 
 protected:

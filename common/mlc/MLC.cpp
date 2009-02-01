@@ -145,10 +145,10 @@ void CMLCEncoder::InitInternal(CParameter& TransmParam)
 	int i;
 	int	iNumInBits;
 
-	TransmParam.Lock(); 
+	TransmParam.Lock();
 	CalculateParam(TransmParam, eChannelType);
-	TransmParam.Unlock(); 
-	
+	TransmParam.Unlock();
+
 	iNumInBits = iL[0] + iL[1] + iL[2];
 
 
@@ -185,7 +185,7 @@ void CMLCEncoder::InitInternal(CParameter& TransmParam)
 		/* Buffers for each encoder on all different levels */
 		/* Add bits from higher protected and lower protected part */
 		vecEncInBuffer[i].Init(iM[i][0] + iM[i][1]);
-	
+
 		/* Encoder output buffers for all levels. Must have the same length */
 		vecEncOutBuffer[i].Init(iNumEncBits);
 	}
@@ -203,7 +203,7 @@ void CMLCDecoder::ProcessDataInternal(CParameter&)
 {
 	int			i, j, k;
 	int			iElementCounter;
-	_BOOLEAN	bIteration;
+	bool	bIteration;
 
 	/* Save input signal for signal constellation. We cannot use the copy
 	   operator of vector because the input vector is not of the same size as
@@ -234,9 +234,9 @@ fflush(pFile);
 		{
 			/* Metric ------------------------------------------------------- */
 			if (k > 0)
-				bIteration = TRUE;
+				bIteration = true;
 			else
-				bIteration = FALSE;
+				bIteration = false;
 
 			MLCMetric.CalculateMetric(pvecInputData, vecMetric,
 				vecSubsetDef[0], vecSubsetDef[1], vecSubsetDef[2],
@@ -359,9 +359,9 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 
 
 	/* First, calculate all necessary parameters for decoding process */
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	CalculateParam(ReceiverParam, eChannelType);
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 
 	/* Reasonable number of iterations depends on coding scheme. With a
 	   4-QAM no iteration is possible */
@@ -389,7 +389,7 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 
 	/* Viterby decoder */
 	for (i = 0; i < iLevels; i++)
-		ViterbiDecoder[i].Init(eCodingScheme, eChannelType, iN[0], iN[1], 
+		ViterbiDecoder[i].Init(eCodingScheme, eChannelType, iN[0], iN[1],
 			iM[i][0], iM[i][1], iCodeRate[i][0], iCodeRate[i][1], i);
 
 	/* Encoder */
@@ -414,7 +414,7 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 		BitInterleaver[0].Init(2 * iN[0], 2 * iN[1], 13);
 		BitInterleaver[1].Init(2 * iN[0], 2 * iN[1], 21);
 	}
-	
+
 	/* Metric */
 	MLCMetric.Init(iN_mux, eCodingScheme);
 
@@ -448,14 +448,14 @@ void CMLCDecoder::GetVectorSpace(CVector<_COMPLEX>& veccData)
 	if (iN_mux != 0)
 	{
 		/* Lock resources */
-		Lock(); 
+		Lock();
 
 		/* Copy vectors */
 		for (int i = 0; i < iN_mux; i++)
 			veccData[i] = vecSigSpacBuf[i];
 
 		/* Release resources */
-		Unlock(); 
+		Unlock();
 	}
 }
 
@@ -593,7 +593,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 					(int) ((_REAL) (2 * iN[1] - 12) /
 					iPuncturingPatterns[iCodRateCombSDC16SM[i]][1]);
 			}
-			
+
 
 			/* iL: Number of bits each protection level --------------------- */
 			/* Higher protected part */
@@ -687,7 +687,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 					Parameter.MSCPrLe.iPartA][i]][1]);
 
 				/* M_p,2 = RX_p * floor((2 * N_2 - 12) / RY_p) */
-				iM[i][1] = 
+				iM[i][1] =
 					iPuncturingPatterns[iCodRateCombMSC16SM[
 					Parameter.MSCPrLe.iPartB][i]][0] *
 					(int) ((_REAL) (2 * iN[1] - 12) /
@@ -771,7 +771,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 					Parameter.MSCPrLe.iPartA][i]][1]);
 
 				/* M_p,2 = RX_p * floor((2 * N_2 - 12) / RY_p) */
-				iM[i][1] = 
+				iM[i][1] =
 					iPuncturingPatterns[iCodRateCombMSC64SM[
 					Parameter.MSCPrLe.iPartB][i]][0] *
 					(int) ((_REAL) (2 * iN[1] - 12) /
@@ -793,7 +793,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 
 		case CS_3_HMSYM:
 			iLevels = 3;
-	
+
 			/* Code rates for prot.-Level A and B for each level */
 			/* VSPP (Hierachical) */
 			iCodeRate[0][0] = 0;
@@ -987,7 +987,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 					iPuncturingPatterns[iCodRateCombMSC64HMmix[
 					Parameter.MSCPrLe.iPartB][i]][1]);
 			}
-	
+
 
 			/* iL: Number of bits each protection level --------------------- */
 			/* Higher protected part */

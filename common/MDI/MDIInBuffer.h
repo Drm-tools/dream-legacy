@@ -31,11 +31,8 @@
 
 #include "../GlobalDefinitions.h"
 #ifdef HAVE_QT
-#if QT_VERSION < 0x030000
-#include <qthread.h>
-# else
-#include <qwaitcondition.h>
-# endif
+# include <qwaitcondition.h>
+# include <qmutex.h>
 #endif
 #include <vector>
 #include <queue>

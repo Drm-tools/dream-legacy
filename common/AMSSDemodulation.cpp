@@ -13,16 +13,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -58,12 +58,12 @@ void CAMSSPhaseDemod::ProcessDataInternal(CParameter&)
 
 	//Apply low-pass filter
 	rvecPhase = Filter(rvecB, rvecA, rvecPhase, rvecZPhase);
-	
+
 	for (i=0; i < iInputBlockSize; i++)
 	{
 		(*pvecOutputData)[i] = rvecPhase[i];
 	}
-	
+
 
 	iOutputBlockSize = iInputBlockSize;
 }
@@ -71,9 +71,9 @@ void CAMSSPhaseDemod::ProcessDataInternal(CParameter&)
 void CAMSSPhaseDemod::InitInternal(CParameter& ReceiverParam)
 {
 	/* Get parameters from info class */
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 
 	/* Define block-sizes for input and output */
 	/* The output buffer is a cyclic buffer, we have to specify the total
@@ -176,18 +176,18 @@ void CAMSSPhaseDemod::SetBPFilter(const CReal rNewBPNormBW,
 	cvecBImag = rfft(rvecBImag, FftPlansHilFilt);
 }
 
-_BOOLEAN CAMSSPhaseDemod::GetPLLPhase(CReal& rPhaseOut)
+bool CAMSSPhaseDemod::GetPLLPhase(CReal& rPhaseOut)
 {
-	_BOOLEAN bReturn;
+	bool bReturn;
 
 	/* Lock resources */
-	Lock(); 
+	Lock();
 	{
 		/* Phase is only valid if PLL is enabled. Return status */
 		rPhaseOut = AMSSPLL.GetCurPhase();
-		bReturn = TRUE;
+		bReturn = true;
 	}
-	Unlock(); 
+	Unlock();
 
 	return bReturn;
 }
@@ -197,11 +197,11 @@ _BOOLEAN CAMSSPhaseDemod::GetPLLPhase(CReal& rPhaseOut)
 void CAMSSPhaseDemod::SetAcqFreq(const CReal rNewNormCenter)
 {
 	/* Lock resources */
-	Lock(); 
+	Lock();
 	{
 		FreqOffsAcq.Start(rNewNormCenter);
 	}
-	Unlock(); 
+	Unlock();
 }
 
 /* Implementation *************************************************************/
@@ -226,30 +226,30 @@ void CAMSSExtractBits::ProcessDataInternal(CParameter& ReceiverParam)
 
 		rvecDiffStore[iDiffInSamplePos] = rvecInpTmp[i];
 
-		rvecInpTmp[i] = rvecInpTmp[i] - rvecDiffStore[iDiffStorePos];		
-	}		
+		rvecInpTmp[i] = rvecInpTmp[i] - rvecDiffStore[iDiffStorePos];
+	}
 
 	rvecInpTmpAbs = Abs(rvecInpTmp);
 
 	RecursiveFilter.Process(rvecInpTmpAbs);
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	ReceiverParam.rResampleOffset = AMSS_RESAMPLER_LOOP_GAIN * ( (signed) (RecursiveFilter.GetPeakPos() - (AMSS_12kHz_SAMPLES_PER_BIT/2)) );
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 
 	int iBitCount = 0;
- 
+
 	for (i = 0; i < iInputBlockSize/4; i++)
 	{
 		if (iBitSyncSampleCount == iBitSyncSliceOffset)
 		{
 			if (rvecInpTmp[i] < 0)
-				(*pvecOutputData)[iBitCount] = TRUE;
+				(*pvecOutputData)[iBitCount] = true;
 			else
-				(*pvecOutputData)[iBitCount] = FALSE;
+				(*pvecOutputData)[iBitCount] = false;
 
 			iBitCount++;
 		}
-		
+
 		if (iBitSyncSampleCount >= (AMSS_12kHz_SAMPLES_PER_BIT-1))
 		{
 			//printf("pos: %d\n", m_bit_sync_slice_offset);
@@ -267,9 +267,9 @@ void CAMSSExtractBits::ProcessDataInternal(CParameter& ReceiverParam)
 void CAMSSExtractBits::InitInternal(CParameter& ReceiverParam)
 {
 	/* Get parameters from info class */
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 
 	/* Define block-sizes for input and output */
 	/* The output buffer is a cyclic buffer, we have to specify the total
@@ -323,16 +323,16 @@ void CAMSSDecode::InitInternal(CParameter& ReceiverParam)
 
 	bBlock1Store.Init(AMSS_BLOCK_SIZE_BITS);
 	bBlock2Store.Init(AMSS_BLOCK_SIZE_BITS);
-	
+
 	bDataEntityGroup.Init(AMSS_MAX_DATA_ENTITY_GROUP_LENGTH, 0);
-	
+
 	blDataEntityGroupSegmentsReceived.Init(MAX_DATA_ENTITY_GROUP_SEGMENTS, 0);
 
-	bVersionFlag = FALSE;
+	bVersionFlag = false;
 
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	ResetStatus(ReceiverParam);
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 }
 
 void CAMSSDecode::ProcessDataInternal(CParameter& ReceiverParam)
@@ -340,7 +340,7 @@ void CAMSSDecode::ProcessDataInternal(CParameter& ReceiverParam)
 	int i = 0;
 	int j = 0;
 	/* Copy CVector data into bits*/;
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	for (i = 0; i < iInputBlockSize; i++)
 	{
 		bAMSSBits[iIntakeBufferPos] = (*pvecInputData)[i];
@@ -359,7 +359,7 @@ void CAMSSDecode::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 	}
 
-	
+
 	if (iPercentageDataEntityGroupComplete >= 100)
 	{
 		for (j=0; j < iTotalDataEntityGroupSegments * DATA_ENTITY_GROUP_SEGMENT_SIZE_BITS; j++)
@@ -370,12 +370,12 @@ void CAMSSDecode::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 	else
 		iOutputBlockSize = 0;
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 }
 
 void CAMSSDecode::DecodeBlock1(CVector<_BINARY>& bBits, CParameter& ReceiverParam)
 {
-	_BOOLEAN	bLocalVersionFlag;
+	bool	bLocalVersionFlag;
 	int			i;
 
 	uint32_t	iServiceID;
@@ -383,16 +383,16 @@ void CAMSSDecode::DecodeBlock1(CVector<_BINARY>& bBits, CParameter& ReceiverPara
 	int			iLanguage;
 
 	bBits.ResetBitAccess();
-	
+
 	/* Version flag */
 	if (bBits.Separate(1) == 0)
-		bLocalVersionFlag = FALSE;
+		bLocalVersionFlag = false;
 	else
-		bLocalVersionFlag = TRUE;
+		bLocalVersionFlag = true;
 
 	iAMSSCarrierMode = bBits.Separate(3);
 	iTotalDataEntityGroupSegments = bBits.Separate(4) + 1;
-	
+
 	iLanguage = bBits.Separate(4);
 	iServiceID = bBits.Separate(24);
 
@@ -416,7 +416,7 @@ void CAMSSDecode::DecodeBlock1(CVector<_BINARY>& bBits, CParameter& ReceiverPara
 				blDataEntityGroupSegmentsReceived[i] = 0;
 			}
 		}
-		
+
 		iPercentageDataEntityGroupComplete = 0;
 
 		for (i=0; i < MAX_DATA_ENTITY_GROUP_SEGMENTS; i++)
@@ -434,9 +434,9 @@ void CAMSSDecode::DecodeBlock1(CVector<_BINARY>& bBits, CParameter& ReceiverPara
 	}
 
 	if (blFirstEverBlock1)
-		blFirstEverBlock1 = FALSE;
+		blFirstEverBlock1 = false;
 
-	blBlock1DataValid = TRUE;
+	blBlock1DataValid = true;
 }
 
 void CAMSSDecode::DecodeBlock2(CVector<_BINARY>& bBits)
@@ -446,7 +446,7 @@ void CAMSSDecode::DecodeBlock2(CVector<_BINARY>& bBits)
 
 	bBits.ResetBitAccess();
 	iSegmentNumber = bBits.Separate(4);
-		
+
 	for (i=0; i < DATA_ENTITY_GROUP_SEGMENT_SIZE_BITS; i++)
 	{
 		bDataEntityGroup[i + (iSegmentNumber*DATA_ENTITY_GROUP_SEGMENT_SIZE_BITS)] = bBits[4+i];
@@ -466,7 +466,7 @@ void CAMSSDecode::DecodeBlock2(CVector<_BINARY>& bBits)
 		if (blDataEntityGroupSegmentsReceived[i])
 			iReceivedSegments++;
 	}
-	
+
 	if (iTotalDataEntityGroupSegments != 0)
 		iPercentageDataEntityGroupComplete = (int) (((float) iReceivedSegments/iTotalDataEntityGroupSegments) * 100.0);
 	else
@@ -481,12 +481,12 @@ int CAMSSDecode::DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam)
 	bBitsBlock1 = bBits;
 	bBitsBlock2 = bBits;
 
-	//Apply offset to both 
+	//Apply offset to both
 	ApplyOffsetWord(bBitsBlock1, bOffsetBlock1);
 	ApplyOffsetWord(bBitsBlock2, bOffsetBlock2);
 
-	_BOOLEAN bBlock1Test = CheckCRC(bBitsBlock1);
-	_BOOLEAN bBlock2Test = CheckCRC(bBitsBlock2);
+	bool bBlock1Test = CheckCRC(bBitsBlock1);
+	bool bBlock2Test = CheckCRC(bBitsBlock2);
 
 	if (bBlock1Test)
 		iCurrentBlock =  1;
@@ -503,7 +503,7 @@ int CAMSSDecode::DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam)
 	switch (eAMSSBlockLockStatus)
 	{
 		case NO_SYNC:
-			blBlock1DataValid = FALSE;
+			blBlock1DataValid = false;
 
 			if (bBlock1Test)
 			{
@@ -545,7 +545,7 @@ int CAMSSDecode::DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam)
 						bBlock1Store = bBits;
 
 						// not really sync'ed but still possible
-						eAMSSBlockLockStatus = RE_SYNC;		
+						eAMSSBlockLockStatus = RE_SYNC;
 					}
 
 					iBlock1FailCount = 0;
@@ -554,7 +554,7 @@ int CAMSSDecode::DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam)
 				{
 					//take local copy of the bits;
 					bBlock1Store = bBits;
-					
+
 					// might not be really sync'ed but still possible
 					eAMSSBlockLockStatus = RE_SYNC;
 				}
@@ -600,7 +600,7 @@ int CAMSSDecode::DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam)
 					{
 						// data could have changed, but get a couple just to be sure!
 						bBlock1Store = bBits;
-						eAMSSBlockLockStatus = DEF_SYNC_BUT_DATA_CHANGED;			
+						eAMSSBlockLockStatus = DEF_SYNC_BUT_DATA_CHANGED;
 					}
 
 					iBitsSinceLastBlock1Pass = 0;
@@ -646,17 +646,17 @@ int CAMSSDecode::DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam)
 						DecodeBlock1(bBits, ReceiverParam);
 
 						//last block 2 was from this new data entity group so decode that.
-						if (blStoredBlock2Valid == TRUE)
+						if (blStoredBlock2Valid == true)
 						{
 							DecodeBlock2(bBlock2Store);
-							blStoredBlock2Valid = FALSE;
+							blStoredBlock2Valid = false;
 						}
 					}
 					else
 					{
 						// data different again, go to RE_SYNC
 						bBlock1Store = bBits;
-						eAMSSBlockLockStatus = RE_SYNC;			
+						eAMSSBlockLockStatus = RE_SYNC;
 					}
 
 					iBitsSinceLastBlock1Pass = 0;
@@ -672,7 +672,7 @@ int CAMSSDecode::DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam)
 					DecodeBlock2(bBits);
 
 					//also store the block 2 - may belong to next data entity group
-					blStoredBlock2Valid = TRUE;
+					blStoredBlock2Valid = true;
 					bBlock2Store = bBits;
 
 					iBitsSinceLastBlock2Pass = 0;
@@ -699,7 +699,7 @@ int CAMSSDecode::DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam)
 			if (bBlock1Test)
 			{
 				// definitely a block 1
-				if (iBitsSinceLastBlock1Pass >= (AMSS_BLOCK_SIZE_BITS*2))	
+				if (iBitsSinceLastBlock1Pass >= (AMSS_BLOCK_SIZE_BITS*2))
 				{
 					if (bBlock1Store == bBits)		// data has definitely changed - go to def sync
 					{
@@ -709,7 +709,7 @@ int CAMSSDecode::DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam)
 					{
 						// data could have changed, but get a couple just to be sure!
 						bBlock1Store = bBits;
-						eAMSSBlockLockStatus = RE_SYNC;			
+						eAMSSBlockLockStatus = RE_SYNC;
 					}
 
 					iBitsSinceLastBlock1Pass = 0;
@@ -775,7 +775,7 @@ int CAMSSDecode::DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam)
 		return 0;
 }
 
-_BOOLEAN CAMSSDecode::CheckCRC(CVector<_BINARY>& bBits)
+bool CAMSSDecode::CheckCRC(CVector<_BINARY>& bBits)
 {
 	int i=0;
 	int j=0;
@@ -794,9 +794,9 @@ _BOOLEAN CAMSSDecode::CheckCRC(CVector<_BINARY>& bBits)
 	}
 
 	if (iCRCTrueBits == 0)
-		return TRUE;
+		return true;
 	else
-		return FALSE;
+		return false;
 }
 
 
@@ -818,7 +818,7 @@ void CRecursiveFilter::Process(CRealVector& vecrIn)
 		iCurPos++;
 
 		if (iCurPos >= AMSS_12kHz_SAMPLES_PER_BIT)
-			iCurPos = 0;	
+			iCurPos = 0;
 	}
 }
 
@@ -827,7 +827,7 @@ void CRecursiveFilter::Init(const int iNewBlockSize)
 	/* Set internal parameter */
 	vecrStore.Init(AMSS_12kHz_SAMPLES_PER_BIT);
 
-	iBlockSize = iNewBlockSize;	
+	iBlockSize = iNewBlockSize;
 }
 
 int CRecursiveFilter::GetPeakPos()
@@ -850,7 +850,7 @@ int CRecursiveFilter::GetPeakPos()
 _REAL CRecursiveFilter::GetPeakVal()
 {
 	rPeakVal = 0.0;
-	
+
 	for (int i=0; i < AMSS_12kHz_SAMPLES_PER_BIT; i++)
 	{
 		if (vecrStore[i] > rPeakVal)
@@ -864,18 +864,18 @@ void CAMSSDecode::ResetStatus(CParameter& ReceiverParam)
 {
 	int i;
 
-	blStoredBlock2Valid = FALSE;
-	blFirstEverBlock1 = TRUE;
-	
+	blStoredBlock2Valid = false;
+	blFirstEverBlock1 = true;
+
 	iTotalDataEntityGroupSegments = 0;
-	
+
 	iBitsSinceLastBlock1Pass = 0;
 	iBitsSinceLastBlock2Pass = 0;
 	iBlock1FailCount = 0;
 	iBlock2FailCount = 0;
 
-	blBlock1DataValid = FALSE;
-	
+	blBlock1DataValid = false;
+
 	iCurrentBlock = 0;
 
 	for (i=0; i < MAX_DATA_ENTITY_GROUP_SEGMENTS; i++)
@@ -885,12 +885,12 @@ void CAMSSDecode::ResetStatus(CParameter& ReceiverParam)
 
 	for (i=0; i < AMSS_BLOCK_SIZE_BITS; i++)
 		cCurrentBlockBits[i] = ' ';
-			
+
 	cCurrentBlockBits[AMSS_BLOCK_SIZE_BITS] = '\0';
 
 	iPercentageDataEntityGroupComplete = 0;
 
-	bDataEntityGroup.Reset(FALSE);
+	bDataEntityGroup.Reset(false);
 	blDataEntityGroupSegmentsReceived.Reset(0);
 
 	ReceiverParam.ResetServicesStreams();
@@ -898,7 +898,7 @@ void CAMSSDecode::ResetStatus(CParameter& ReceiverParam)
 
 
 /******************************************************************************\
-* AMSS Phase lock loop (PLL)                                                       
+* AMSS Phase lock loop (PLL)
 \******************************************************************************/
 void CAMSSPLL::Process(CComplexVector& veccIn, CRealVector& vecrOut)
 {
@@ -919,7 +919,7 @@ void CAMSSPLL::Process(CComplexVector& veccIn, CRealVector& vecrOut)
 	for (i=0; i < iBlockSize; i++)
 	{
 		rPhaseDiff = rvecPhaseTmp[i] - rPreviousPhaseSample;
-		
+
 		if (rPhaseDiff >= (crPi))
 			rPhaseOffset -=(2.0*crPi);
 		else if (rPhaseDiff < (-crPi))

@@ -49,7 +49,7 @@
 			<Add directory="moc" />
 			<Add directory="..\..\faac\include" />
 			<Add directory="..\..\faad2\include" />
-			<Add directory="..\libs\qwt" />
+			<Add directory="..\..\qwt-qt3\src" />
 		</Compiler>
 		<Linker>
 			<Add library="faac" />
@@ -66,6 +66,7 @@
 			<Add library="wpcap" />
 			<Add library="..\libs\libsndfile-1.dll" />
 			<Add directory="$(QTDIR)\lib" />
+			<Add directory="D:\dream\qwt-qt3\lib" />
 			<Add directory="..\libs" />
 		</Linker>
 		<Unit filename="..\common\AMDemodulation.cpp" />
@@ -112,6 +113,7 @@
 		<Unit filename="..\common\GUI-QT\MultimediaDlg.cpp" />
 		<Unit filename="..\common\GUI-QT\MultimediaDlg.h" />
 		<Unit filename="..\common\GUI-QT\ReceiverSettingsDlg.cpp" />
+		<Unit filename="..\common\GUI-QT\ReceiverSettingsDlg.h" />
 		<Unit filename="..\common\GUI-QT\StationsDlg.cpp" />
 		<Unit filename="..\common\GUI-QT\StationsDlg.h" />
 		<Unit filename="..\common\GUI-QT\TransmDlg.cpp" />

@@ -27,7 +27,11 @@
 
 #include "MatlibStdToolbox.h"
 #include <iostream>
+#include <limits>
 
+//	Notes: Instead of NaN we use _REAL::max. Infinite bounds are not allowed!
+
+const _REAL NaN = numeric_limits<_REAL>::max();
 
 /* Implementation *************************************************************/
 CReal Min(const CMatlibVector<CReal>& rvI)
@@ -281,7 +285,7 @@ printf("couldn't invert matrix, possibly singular.\n");
    Matlib internal calculations */
 CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 				   const CReal errorBound, CReal& integralBound,
-				   _BOOLEAN& integralError, const CReal ru)
+				   bool& integralError, const CReal ru)
 {
 /*
 	The following code (inclusive the actual Quad() function) is based on a
@@ -303,7 +307,7 @@ CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 	int			m1, jend, mstart, j;
 
 	if (integralError)
-		return _MAXREAL; /* NaN */
+		return NaN;
 
 	/* Integrate over [a,b]. Initialize */
 	const int max = 1024;
@@ -373,7 +377,7 @@ CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 			else
 			{
 				if (integralError)
-					return _MAXREAL; /* NaN */
+					return NaN;
 
 				/* Are we out of memory? */
 				if (m == j)
@@ -400,8 +404,8 @@ CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 					if (left >= right)
 					{
 						/* The error bound specified is too small! */
-						integralError = TRUE;
-						return _MAXREAL; /* NaN */
+						integralError = true;
+						return NaN;
 					}
 
 					m1 = m + step;
@@ -425,7 +429,7 @@ CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 	while (m != mstart);
 
 	if (integralError)
-		return _MAXREAL; /* NaN */
+		return NaN;
 	else
 		return value;
 }
@@ -447,7 +451,7 @@ CComplex Quad(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 	ru *= 2;
 
 	CReal integralBound = errorBound;
-	_BOOLEAN integralError = FALSE;
+	bool integralError = false;
 
 	/* Compute */
 	return _integral(f, a, b, errorBound, integralBound, integralError, ru);

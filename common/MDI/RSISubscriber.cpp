@@ -40,13 +40,13 @@
 #endif
 
 CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink),
-	cProfile('0'), iSubsamplingFactor(1), bNeedPft(FALSE),
+	cProfile('0'), iSubsamplingFactor(1), bNeedPft(false),
 	fragment_size(0),
 	TagPacketDecoderRSCIControl(),
 	mapPresets(),
-	pDRMReceiver(0), 
+	pDRMReceiver(0),
 	AFPacketGenerator(),
-	bUseAFCRC(TRUE),
+	bUseAFCRC(true),
 	sequence_counter(0),
 	iSubsamplingCounter(0)
 {
@@ -88,17 +88,17 @@ void CRSISubscriber::SetPFTFragmentSize(const int iFrag)
     if(iFrag>0)
     {
         fragment_size = iFrag;
-        bNeedPft = TRUE;
+        bNeedPft = true;
     }
     else
-        bNeedPft = FALSE;
+        bNeedPft = false;
 }
 
 void CRSISubscriber::TransmitPacket(CTagPacketGenerator& Generator)
 {
 
 	// Don't do anything if this is one of the frames to discard in the subsampling
-	// This includes not incrementing the AF sequence number. 
+	// This includes not incrementing the AF sequence number.
 	// (The dlfc will increase though to show how many were discarded)
 	if (++iSubsamplingCounter < iSubsamplingFactor)
 	{
@@ -135,10 +135,10 @@ void CRSISubscriber::TransmitPacket(CTagPacketGenerator& Generator)
 void CRSISubscriber::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16_t)
 {
 	CVectorEx<_BINARY> vecbidata;
-	vecbidata.Init(vecbydata.size()*SIZEOF__BYTE);
+	vecbidata.Init(vecbydata.size()*sizeof(_BINARY));
 	vecbidata.ResetBitAccess();
 	for(size_t i=0; i<vecbydata.size(); i++)
-		vecbidata.Enqueue(vecbydata[i], SIZEOF__BYTE);
+		vecbidata.Enqueue(vecbydata[i], sizeof(_BINARY));
 	CTagPacketDecoder::Error err = TagPacketDecoderRSCIControl.DecodeAFPacket(vecbidata);
 	if(err != CTagPacketDecoder::E_OK)
 		cerr << "bad RSCI Control Packet Received" << endl;
@@ -162,32 +162,32 @@ CRSISubscriberSocket::~CRSISubscriberSocket()
 	delete pSocket;
 }
 
-_BOOLEAN CRSISubscriberSocket::SetDestination(const string& str)
+bool CRSISubscriberSocket::SetDestination(const string& str)
 {
     return pSocket->SetDestination(str);
 }
 
-_BOOLEAN CRSISubscriberSocket::GetDestination(string& str)
+bool CRSISubscriberSocket::GetDestination(string& str)
 {
 	/* want the canonical version so incoming can match */
 	if(pSocket)
 		return pSocket->GetDestination(str);
-	return FALSE;
+	return false;
 }
 
-_BOOLEAN CRSISubscriberSocket::SetOrigin(const string& str)
+bool CRSISubscriberSocket::SetOrigin(const string& str)
 {
 	if(pSocket)
 	{
 		// Delegate to socket
-		_BOOLEAN bOK = pSocket->SetOrigin(str);
+		bool bOK = pSocket->SetOrigin(str);
 
 		if (bOK)
 			// Connect socket to the MDI decoder
 			pSocket->SetPacketSink(this);
 		return bOK;
 	}
-	return FALSE;
+	return false;
 }
 
 CRSISubscriberFile::CRSISubscriberFile(): CRSISubscriber(NULL), pPacketSinkFile(NULL)
@@ -196,7 +196,7 @@ CRSISubscriberFile::CRSISubscriberFile(): CRSISubscriber(NULL), pPacketSinkFile(
 	TagPacketDecoderRSCIControl.SetSubscriber(NULL);
 }
 
-_BOOLEAN CRSISubscriberFile::SetDestination(const string& strFName)
+bool CRSISubscriberFile::SetDestination(const string& strFName)
 {
     string dest = strFName;
 	if(pPacketSink)
@@ -223,14 +223,14 @@ _BOOLEAN CRSISubscriberFile::SetDestination(const string& strFName)
 		pPacketSink = pPacketSinkFile;
 		return pPacketSinkFile->SetDestination(dest);
 	}
-	return FALSE;
+	return false;
 }
 
-_BOOLEAN CRSISubscriberFile::GetDestination(string& strFName)
+bool CRSISubscriberFile::GetDestination(string& strFName)
 {
 	if(pPacketSinkFile)
 		return pPacketSinkFile->GetDestination(strFName);
-	return FALSE;
+	return false;
 }
 
 void CRSISubscriberFile::StartRecording()

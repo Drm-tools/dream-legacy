@@ -35,7 +35,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "CellMappingTable.h"
-#include <iostream>
+#include "../matlib/MatlibSigProToolbox.h"
 
 /* Implementation *************************************************************/
 void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
@@ -93,7 +93,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	case RM_ROBUSTNESS_MODE_A:
 		iCarrierKmin = iTableCarrierKmin[iSpecOccArrayIndex][0];
 		iCarrierKmax = iTableCarrierKmax[iSpecOccArrayIndex][0];
-		
+
 		iFFTSizeN = RMA_FFT_SIZE_N;
 		RatioTgTu.iEnum = RMA_ENUM_TG_TU;
 		RatioTgTu.iDenom = RMA_DENOM_TG_TU;
@@ -366,12 +366,12 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				/* Gain calculation and applying of complex value ----------- */
 				/* Test, if current carrier-index is one of the "boosted pilots"
 				   position */
-				_BOOLEAN bIsBoostedPilot = FALSE;
+				bool bIsBoostedPilot = false;
 				for (i = 0; i < NUM_BOOSTED_SCAT_PILOTS; i++)
 				{
 					/* In case of match set flag */
 					if (ScatPilots.piGainTable[i] == iCar)
-						bIsBoostedPilot = TRUE;
+						bIsBoostedPilot = true;
 				}
 
 				/* Boosted pilot: Gain = 2, Regular pilot: Gain = sqrt(2) */
@@ -437,7 +437,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 				/* Set complex value for this pilot */
 				/* Test for "special case" defined in drm-standard */
-				_BOOLEAN bIsFreqPilSpeciCase = FALSE;
+				bool bIsFreqPilSpeciCase = false;
 				if (eNewRobustnessMode == RM_ROBUSTNESS_MODE_D)
 				{
 					/* For robustness mode D, carriers 7 and 21 (Means: first
@@ -446,7 +446,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 					{
 						/* Test for odd values of "s" (iSym) */
 						if ((iFrameSym % 2) == 1)
-							bIsFreqPilSpeciCase = TRUE;
+							bIsFreqPilSpeciCase = true;
 					}
 				}
 
@@ -485,7 +485,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 			{
 				if ((iCar == -1) || (iCar == 1))
 					matiMapTab[iSym][iCarArrInd] = CM_DC;
-			} 
+			}
 		}
 	}
 
@@ -675,7 +675,7 @@ fclose(pFile);
 
 	clear all;close all;load PilotCells.dat;subplot(211),mesh(abs(complex(PilotCells(:,1:2:end), PilotCells(:,2:2:end))));subplot(212),mesh(angle(complex(PilotCells(:,1:2:end), PilotCells(:,2:2:end))))
 
-(It plots the absolute of the pilots in the upper plot and angle in 
+(It plots the absolute of the pilots in the upper plot and angle in
 the lower plot.)
 */
 void CCellMappingTable::dump_pilots(const string& file)

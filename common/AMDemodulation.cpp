@@ -6,33 +6,34 @@
  *	Volker Fischer
  *
  * Description:
- *	Implementation of an analog AM demodulation	
+ *	Implementation of an analog AM demodulation
  *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
 
 #include "AMDemodulation.h"
 #include "../util/ReceiverModul_impl.h"
+#include <limits>
 
 /* Implementation *************************************************************/
 
-CAMDemodulation::CAMDemodulation() : 
+CAMDemodulation::CAMDemodulation() :
 	cvecBReal(), cvecBImag(), rvecZReal(), rvecZImag(),
 	cvecBAMAfterDem(), rvecZAMAfterDem(), rvecInpTmp(),
 	cvecHilbert(),
@@ -43,7 +44,7 @@ CAMDemodulation::CAMDemodulation() :
 	rBPNormCentOffsTot(0.0),
 	rvecZAM(), rvecADC(), rvecBDC(), rvecZFM(), rvecAFM(), rvecBFM(),
 	iSymbolBlockSize(0),
-	bPLLIsEnabled(FALSE), bAutoFreqAcquIsEnabled(TRUE),
+	bPLLIsEnabled(false), bAutoFreqAcquIsEnabled(true),
 	cOldVal(),
 	PLL(), Mixer(), FreqOffsAcq(), AGC(), NoiseReduction(), NoiRedType(NR_OFF),
 	iFreeSymbolCounter()
@@ -55,14 +56,14 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	int i;
 
 	/* OPH: update free-running symbol counter */
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	iFreeSymbolCounter++;
 	if (iFreeSymbolCounter >= ReceiverParam.CellMappingTable.iNumSymPerFrame)
 	{
 		iFreeSymbolCounter = 0;
 	}
 
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 
 	/* Frequency offset estimation if requested */
 	if (FreqOffsAcq.Run(*pvecInputData))
@@ -84,7 +85,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 	/* Phase lock loop (PLL) ------------------------------------------------ */
-	if (bPLLIsEnabled == TRUE)
+	if (bPLLIsEnabled == true)
 	{
 		PLL.Process(rvecInpTmp);
 
@@ -126,7 +127,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 			   differentiation operation, get angle of complex signal and
 			   amplify result */
 			rvecInpTmp[i] = Angle(cvecHilbert[i] * Conj(cOldVal)) *
-				_MAXSHORT / ((CReal) 4.0 * crPi);
+				numeric_limits<_SAMPLE>::max() / ((CReal) 4.0 * crPi);
 
 			/* Store old value */
 			cOldVal = cvecHilbert[i];
@@ -160,9 +161,9 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 {
 	/* Get parameters from info class */
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 
 	/* Init temporary vector for filter input and output */
 	rvecInpTmp.Init(iSymbolBlockSize);
@@ -177,7 +178,7 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Init frequency offset acquisition (start new acquisition) */
 	FreqOffsAcq.Init(iSymbolBlockSize);
 
-	if (bAutoFreqAcquIsEnabled == TRUE)
+	if (bAutoFreqAcquIsEnabled == true)
 			FreqOffsAcq.Start((CReal) 0.0); /* Search entire bandwidth */
 	else
 			SetNormCurMixFreqOffs(ReceiverParam.FrontEndParameters.rIFCentreFreq / SOUNDCRD_SAMPLE_RATE);
@@ -349,7 +350,7 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW)
 	   pass design as for the bandpass filter) */
 	CRealVector rvecBAMAfterDem(2 * iHilFiltBlLen, (CReal) 0.0);
 	rvecBAMAfterDem.PutIn(1, iHilFiltBlLen, vecrFilter);
-	cvecBAMAfterDem = rfft(rvecBAMAfterDem, FftPlansHilFilt); 
+	cvecBAMAfterDem = rfft(rvecBAMAfterDem, FftPlansHilFilt);
 }
 
 
@@ -358,35 +359,35 @@ void
 CAMDemodulation::SetDemodType(const EDemodulationType eNewType)
 {
 	/* Lock resources */
-	Lock(); 
+	Lock();
 	{
 		/* Init band-pass filter according to new demodulation method */
 		eDemodType = eNewType;
 		SetBPFilter(CReal(iFilterBWHz[eDemodType])/CReal(SOUNDCRD_SAMPLE_RATE));
 	}
-	Unlock(); 
+	Unlock();
 }
 
 void CAMDemodulation::SetAcqFreq(const CReal rNewNormCenter)
 {
 	/* Lock resources */
-	Lock(); 
+	Lock();
 	{
-		if (bAutoFreqAcquIsEnabled == TRUE)
+		if (bAutoFreqAcquIsEnabled == true)
 			FreqOffsAcq.Start(rNewNormCenter);
 		else
 			SetNormCurMixFreqOffs(rNewNormCenter / 2);
 	}
-	Unlock(); 
+	Unlock();
 }
 
 void
 CAMDemodulation::SetFilterBWHz(const int iBw)
 {
-	Lock(); 
+	Lock();
 	iFilterBWHz[eDemodType] = iBw;
 	SetBPFilter(CReal(iBw)/CReal(SOUNDCRD_SAMPLE_RATE));
-	Unlock(); 
+	Unlock();
 }
 
 int
@@ -398,26 +399,26 @@ CAMDemodulation::GetFilterBWHz()
 int
 CAMDemodulation::GetFilterBWHz(const EDemodulationType eType)
 {
-	Lock(); 
+	Lock();
 	int v = iFilterBWHz[eType];
-	Unlock(); 
+	Unlock();
 	return v;
 }
 
 void CAMDemodulation::SetAGCType(const CAGC::EType eNewType)
 {
 	/* Lock resources */
-	Lock(); 
+	Lock();
 	{
 		AGC.SetType(eNewType);
 	}
-	Unlock(); 
+	Unlock();
 }
 
 void CAMDemodulation::SetNoiRedType(const ENoiRedType eNewType)
 {
 	/* Lock resources */
-	Lock(); 
+	Lock();
 	{
 		NoiRedType = eNewType;
 
@@ -439,21 +440,21 @@ void CAMDemodulation::SetNoiRedType(const ENoiRedType eNewType)
 				break;
 		}
 	}
-	Unlock(); 
+	Unlock();
 }
 
-_BOOLEAN CAMDemodulation::GetPLLPhase(CReal& rPhaseOut)
+bool CAMDemodulation::GetPLLPhase(CReal& rPhaseOut)
 {
-	_BOOLEAN bReturn;
+	bool bReturn;
 
 	/* Lock resources */
-	Lock(); 
+	Lock();
 	{
 		/* Phase is only valid if PLL is enabled. Return status */
 		rPhaseOut = PLL.GetCurPhase();
 		bReturn = bPLLIsEnabled;
 	}
-	Unlock(); 
+	Unlock();
 
 	return bReturn;
 }
@@ -628,13 +629,13 @@ void CAGC::SetType(const EType eNewType)
 /******************************************************************************\
 * Frequency offset acquisition                                                 *
 \******************************************************************************/
-_BOOLEAN CFreqOffsAcq::Run(const CVector<_REAL>& vecrInpData)
+bool CFreqOffsAcq::Run(const CVector<_REAL>& vecrInpData)
 {
 	/* Init return flag */
-	_BOOLEAN bNewAcqResAvailable = FALSE;
+	bool bNewAcqResAvailable = false;
 
 	/* Only do new acquisition if requested */
-	if (bAcquisition == TRUE)
+	if (bAcquisition == true)
 	{
 		/* Add new symbol in history (shift register) */
 		vecrFFTHistory.AddEnd(vecrInpData, iBlockSize);
@@ -665,8 +666,8 @@ _BOOLEAN CFreqOffsAcq::Run(const CVector<_REAL>& vecrInpData)
 
 			/* Reset acquisition flag and Set return flag to show that new
 			   result is available*/
-			bAcquisition = FALSE;
-			bNewAcqResAvailable = TRUE;
+			bAcquisition = false;
+			bNewAcqResAvailable = true;
 		}
 	}
 
@@ -721,7 +722,7 @@ void CFreqOffsAcq::Start(const CReal rNewNormCenter)
 	}
 
 	/* Set flag for aquisition */
-	bAcquisition = TRUE;
+	bAcquisition = true;
 	iAquisitionCounter = NUM_BLOCKS_CARR_ACQUISITION;
 }
 

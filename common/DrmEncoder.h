@@ -77,7 +77,7 @@ public:
 	void					AddPic(const string& strFileName, const string& strFormat);
 	void					ClearPics();
 	void					GetPics(map<string,string>&);
-	_BOOLEAN				GetTransStat(string& strCPi, _REAL& rCPe);
+	bool				GetTransStat(string& strCPi, _REAL& rCPe);
 protected:
 
 	/* Buffers */
@@ -95,7 +95,7 @@ protected:
 	vector<string>			vecstrPics;
 	vector<string>			vecstrPicTypes;
 	int						iSoundInDev;
-	_BOOLEAN				bUseUEP;
+	bool				bUseUEP;
 
 	CSignalLevelMeter		SignalLevelMeter;
 };

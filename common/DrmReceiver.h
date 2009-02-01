@@ -57,9 +57,7 @@
 
 #ifdef USE_QT_GUI
 # include <qthread.h>
-# if QT_VERSION >= 0x030000
-#  include <qmutex.h>
-# endif
+# include <qmutex.h>
 #endif
 
 /* Definitions ****************************************************************/
@@ -85,6 +83,7 @@ class CHamlib;
 class CRigCaps;
 
 enum EInpTy { SoundCard, Dummy, Shm, File, RSCI };
+enum ERecState {RS_TRACKING, RS_ACQUISITION};
 
 class CSoundInProxy : public CSelectionInterface
 {
@@ -108,16 +107,16 @@ protected:
 	int					iWantedSoundDev;
 	int					iWantedRig;
 	EDemodulationType	eWantedRigMode;
-	_BOOLEAN			bRigUpdateForAllModes;
+	bool			bRigUpdateForAllModes;
 	string				filename;
 public:
 	CSoundInInterface*	pSoundInInterface;
-	_BOOLEAN			bRigUpdateNeeded;
+	bool			bRigUpdateNeeded;
 	CHamlib*			pHamlib;
 	CDRMReceiver*		pDrmRec;
 	CMutex				mutex;
 	EInChanSel			eWantedChanSel;
-	_BOOLEAN			bOnBoardDemod, bOnBoardDemodWanted;
+	bool			bOnBoardDemod, bOnBoardDemodWanted;
 };
 
 class CSplitFAC : public CSplitModul<_BINARY>
@@ -139,7 +138,7 @@ public:
 
 protected:
 	void SetInputBlockSize(CParameter& p)
-		{this->iInputBlockSize = p.GetStreamLen(iStreamID) * SIZEOF__BYTE;}
+		{this->iInputBlockSize = p.GetStreamLen(iStreamID) * sizeof(_BINARY);}
 
 	int iStreamID;
 };
@@ -172,7 +171,7 @@ public:
 	void					Init();
 	void					Start();
 	void					Stop();
-	void					RequestNewAcquisition() { bRestartFlag = TRUE; }
+	void					RequestNewAcquisition() { bRestartFlag = true; }
 	EAcqStat				GetAcquiState() {return Parameters.eAcquiState;}
 	EDemodulationType		GetReceiverMode() {return eReceiverMode;}
 	void					SetReceiverMode(EDemodulationType eNewMode);
@@ -187,12 +186,12 @@ public:
 
 	void					SetAnalogDemodAcq(_REAL rNewNorCen);
 
-	void					EnableAnalogAutoFreqAcq(const _BOOLEAN bNewEn);
-	_BOOLEAN				AnalogAutoFreqAcqEnabled();
+	void					EnableAnalogAutoFreqAcq(const bool bNewEn);
+	bool				AnalogAutoFreqAcqEnabled();
 
-	void					EnableAnalogPLL(const _BOOLEAN bNewEn);
-	_BOOLEAN				AnalogPLLEnabled();
-	_BOOLEAN				GetAnalogPLLPhase(CReal& rPhaseOut);
+	void					EnableAnalogPLL(const bool bNewEn);
+	bool				AnalogPLLEnabled();
+	bool				GetAnalogPLLPhase(CReal& rPhaseOut);
 
 	void					SetAnalogAGCType(const CAGC::EType eNewType);
 	CAGC::EType				GetAnalogAGCType();
@@ -200,15 +199,15 @@ public:
 	CAMDemodulation::ENoiRedType GetAnalogNoiseReductionType();
 	void					GetAnalogBWParameters(CReal& rCenterFreq, CReal& rBW);
 
-	void					SetUseAnalogHWDemod(_BOOLEAN);
-	_BOOLEAN				GetUseAnalogHWDemod();
+	void					SetUseAnalogHWDemod(bool);
+	bool				GetUseAnalogHWDemod();
 
-	void	 				SetEnableSMeter(_BOOLEAN bNew);
-	_BOOLEAN		 		GetEnableSMeter();
-	_BOOLEAN 				SetFrequency(int iNewFreqkHz);
+	void	 				SetEnableSMeter(bool bNew);
+	bool		 		GetEnableSMeter();
+	bool 				SetFrequency(int iNewFreqkHz);
 	int		 				GetFrequency() { return iFreqkHz; }
-	void					SetIQRecording(_BOOLEAN);
-	void					SetRSIRecording(_BOOLEAN, const char);
+	void					SetIQRecording(bool);
+	void					SetRSIRecording(bool, const char);
 	void					SetHamlib(CHamlib*);
 
 	void					SetReadPCMFromFile(const string strNFN);
@@ -226,10 +225,10 @@ public:
 	CChannelEstimation::ETypeIntTime GetTimeInt() const
 		{return ChannelEstimation.GetTimeInt();}
 
-	void SetIntCons(const _BOOLEAN bNewIntCons)
+	void SetIntCons(const bool bNewIntCons)
 		{ChannelEstimation.SetIntCons(bNewIntCons);}
 
-	_BOOLEAN GetIntCons()
+	bool GetIntCons()
 		{return ChannelEstimation.GetIntCons();}
 
 	void SetSNREst(CChannelEstimation::ETypeSNREst eNewTy)
@@ -249,11 +248,11 @@ public:
 	void SetNumIterations(int value)
 		{ MSCMLCDecoder.SetNumIterations(value); }
 
-	_BOOLEAN GetRecFilter() { return FreqSyncAcq.GetRecFilter(); }
-	void SetRecFilter(_BOOLEAN bVal) { FreqSyncAcq.SetRecFilter(bVal); }
+	bool GetRecFilter() { return FreqSyncAcq.GetRecFilter(); }
+	void SetRecFilter(bool bVal) { FreqSyncAcq.SetRecFilter(bVal); }
 
-	_BOOLEAN GetFlippedSpectrum() { return ReceiveData.GetFlippedSpectrum(); }
-	void SetFlippedSpectrum(_BOOLEAN bVal)
+	bool GetFlippedSpectrum() { return ReceiveData.GetFlippedSpectrum(); }
+	void SetFlippedSpectrum(bool bVal)
 		{ ReceiveData.SetFlippedSpectrum(bVal); }
 	void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 		{ ReceiveData.GetInputPSD(vecrData, vecrScale); }
@@ -271,16 +270,16 @@ public:
 	void GetMSCVectorSpace(CVector<_COMPLEX>& vec)
 		{ MSCMLCDecoder.GetVectorSpace(vec); }
 
-	_BOOLEAN GetReverbEffect() { return AudioSourceDecoder.GetReverbEffect(); }
-	void SetReverbEffect(_BOOLEAN bVal)
+	bool GetReverbEffect() { return AudioSourceDecoder.GetReverbEffect(); }
+	void SetReverbEffect(bool bVal)
 		{ AudioSourceDecoder.SetReverbEffect(bVal); }
 
-	void MuteAudio(_BOOLEAN bVal) { WriteData.MuteAudio(bVal); }
-	_BOOLEAN GetMuteAudio() { return WriteData.GetMuteAudio(); }
+	void MuteAudio(bool bVal) { WriteData.MuteAudio(bVal); }
+	bool GetMuteAudio() { return WriteData.GetMuteAudio(); }
 	void StartWriteWaveFile(const string& strFile)
 		{ WriteData.StartWriteWaveFile(strFile); }
 	void StopWriteWaveFile() { WriteData.StopWriteWaveFile(); }
-	_BOOLEAN GetIsWriteWaveFile() { return WriteData.GetIsWriteWaveFile(); }
+	bool GetIsWriteWaveFile() { return WriteData.GetIsWriteWaveFile(); }
 
 
 	/* Get pointer to internal modules */
@@ -309,12 +308,9 @@ public:
 	void					GetComPortList(map<string,string>& ports) const;
 	string					GetRigComPort() const;
 	void					SetRigComPort(const string&);
-	_BOOLEAN				GetRigChangeInProgress();
-
-	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
-
+	bool				    GetRigChangeInProgress();
+	bool				    GetSignalStrength(_REAL& rSigStr);
 	CParameter*				GetParameters() {return &Parameters;}
-
 	CPlotManager*			GetPlotManager() {return &PlotManager;}
 
 	void					InitsForWaveMode();
@@ -331,18 +327,18 @@ public:
 protected:
 
 	void					InitReceiverMode();
-	_BOOLEAN				doSetFrequency();
+	bool				doSetFrequency();
 	void					SetInStartMode();
 	void					SetInTrackingMode();
 	void					SetInTrackingModeDelayed();
 	void					InitsForAllModules();
 	void					Run();
-	void					DemodulateDRM(_BOOLEAN&);
-	void					DecodeDRM(_BOOLEAN&, _BOOLEAN&);
-	void					UtilizeDRM(_BOOLEAN&);
-	void					DemodulateAM(_BOOLEAN&);
-	void					DecodeAM(_BOOLEAN&);
-	void					UtilizeAM(_BOOLEAN&);
+	void					DemodulateDRM(bool&);
+	void					DecodeDRM(bool&, bool&);
+	void					UtilizeDRM(bool&);
+	void					DemodulateAM(bool&);
+	void					DecodeAM(bool&);
+	void					UtilizeAM(bool&);
 	void					DetectAcquiFAC();
 	void					DetectAcquiSymbol();
 	void					saveSDCtoFile();
@@ -440,8 +436,8 @@ protected:
 	int						iDataStreamID;
 
 
-	_BOOLEAN				bDoInitRun;
-	_BOOLEAN				bRestartFlag;
+	bool				bDoInitRun;
+	bool				bRestartFlag;
 
 	_REAL					rInitResampleOffset;
 

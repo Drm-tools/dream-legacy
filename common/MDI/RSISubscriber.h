@@ -72,7 +72,7 @@ public:
 	/* Generate and send a packet */
 	void TransmitPacket(CTagPacketGenerator& Generator);
 
-	void SetAFPktCRC(const _BOOLEAN bNAFPktCRC) {bUseAFCRC = bNAFPktCRC;}
+	void SetAFPktCRC(const bool bNAFPktCRC) {bUseAFCRC = bNAFPktCRC;}
 
 
 	/* from CPacketSink interface */
@@ -82,7 +82,7 @@ protected:
 	CPacketSink *pPacketSink;
 	char cProfile;
 	int iSubsamplingFactor;
-	_BOOLEAN bNeedPft;
+	bool bNeedPft;
     size_t fragment_size;
 
 	CTagPacketDecoderRSCIControl TagPacketDecoderRSCIControl;
@@ -93,7 +93,7 @@ private:
 	CDRMReceiver *pDRMReceiver;
 	CAFPacketGenerator AFPacketGenerator;
 
-	_BOOLEAN bUseAFCRC;
+	bool bUseAFCRC;
 	uint16_t sequence_counter;
 	int iSubsamplingCounter;
 };
@@ -105,9 +105,9 @@ public:
 	CRSISubscriberSocket(CPacketSink *pSink = NULL);
 	virtual ~CRSISubscriberSocket();
 
-	_BOOLEAN SetOrigin(const string& str);
-	_BOOLEAN SetDestination(const string& str);
-	_BOOLEAN GetDestination(string& addr);
+	bool SetOrigin(const string& str);
+	bool SetDestination(const string& str);
+	bool GetDestination(string& addr);
 
 private:
 	CPacketSocket* pSocket;
@@ -122,11 +122,11 @@ class CRSISubscriberFile : public CRSISubscriber
 public:
 	CRSISubscriberFile();
 
-	_BOOLEAN SetDestination(const string& strFName);
+	bool SetDestination(const string& strFName);
 	void StartRecording();
 	void StopRecording();
 
-	_BOOLEAN GetDestination(string& addr);
+	bool GetDestination(string& addr);
 private:
 	CPacketSinkFile* pPacketSinkFile;
 };

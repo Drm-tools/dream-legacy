@@ -82,7 +82,7 @@ CSoundFileIn::SetFileName(const string& strFileName)
 }
 
 void
-CSoundFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
+CSoundFileIn::Init(int iNewBufferSize, bool bNewBlocking, int iChannels)
 {
 	if(iChannels != 2)
 		throw CGenErr("only stereo supported at the moment for file input, sorry.");
@@ -135,7 +135,7 @@ CSoundFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 	}
 }
 
-_BOOLEAN
+bool
 CSoundFileIn::Read(vector<_SAMPLE>& data)
 {
 	int iFrames = data.size()/2;
@@ -144,7 +144,7 @@ CSoundFileIn::Read(vector<_SAMPLE>& data)
 
 	if (pFile == NULL)
 	{
-		return TRUE;
+		return true;
 	}
 
 	if(eFmt==fmt_txt)
@@ -155,12 +155,12 @@ CSoundFileIn::Read(vector<_SAMPLE>& data)
 			if (fscanf(pFile , "%e\n", &tIn) == EOF)
 			{
 				/* If end-of-file is reached, stop simulation */
-				return FALSE;
+				return false;
 			}
 			data[2*i] = _SAMPLE(tIn);
 			data[2*i+1] = _SAMPLE(tIn);
 		}
-		return FALSE;
+		return false;
 	}
 	short *buffer = new short[iFileChannels*iFrames];
 	sf_count_t c = sf_readf_short((SNDFILE*)pFile, buffer, iFrames);
@@ -195,7 +195,7 @@ CSoundFileIn::Read(vector<_SAMPLE>& data)
 	}
 	delete[] buffer;
 
-	return FALSE;
+	return false;
 }
 
 void
@@ -282,7 +282,7 @@ CSoundFileOut::SetDev(const string& s)
 }
 
 void
-CSoundFileOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
+CSoundFileOut::Init(int iNewBufferSize, bool bNewBlocking, int iChannels)
 {
 	string s = files[dev];
 	string ext;
@@ -317,11 +317,11 @@ CSoundFileOut::Close()
 	pFile = NULL;
 }
 
-_BOOLEAN
+bool
 CSoundFileOut::Write(vector<_SAMPLE>& data)
 {
 	if (pFile == NULL)
-		return TRUE;
-	(void)sf_writef(pFile, &data[0], data.size()/channels);
-	return FALSE;
+		return true;
+	(void)sf_writef(pFile, (short int*)&data[0], data.size()/channels);
+	return false;
 }

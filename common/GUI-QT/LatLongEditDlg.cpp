@@ -7,7 +7,7 @@
  *
  * Description:
  * edit lat or long
- *	
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -38,10 +38,11 @@ using namespace std;
 #include "ReceiverSettingsDlg.h"
 
 /* Implementation *************************************************************/
+const QChar ring = '\xb0';
 
 LatLongEditDlg::LatLongEditDlg(
 	QLineEdit* s,
-		QWidget* parent, const char* name, bool modal, WFlags f) :
+		QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	LatLongEditDlgbase(parent, name, modal, f), d(s)
 {
 

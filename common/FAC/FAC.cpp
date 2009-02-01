@@ -208,8 +208,8 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	(*pbiFACData).ResetBitAccess();
 
-	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE - 1; i++)
-		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(SIZEOF__BYTE));
+	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / sizeof(_BINARY) - 1; i++)
+		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(sizeof(_BINARY)));
 
 	/* Now, pointer in "enqueue"-function is back at the same place,
 	   add CRC */
@@ -374,7 +374,7 @@ void CFACTransmit::Init(CParameter& Parameter)
 /******************************************************************************\
 * CFACReceive																   *
 \******************************************************************************/
-_BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
+bool CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 							   CParameter& Parameter)
 {
 /*
@@ -391,10 +391,10 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 
 	(*pbiFACData).ResetBitAccess();
 
-	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE - 1; i++)
-		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(SIZEOF__BYTE));
+	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / sizeof(_BINARY) - 1; i++)
+		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(sizeof(_BINARY)));
 
-	if (CRCObject.CheckCRC((*pbiFACData).Separate(8)) == TRUE)
+	if (CRCObject.CheckCRC((*pbiFACData).Separate(8)) == true)
 	{
 		/* CRC-check successful, extract data from FAC-stream */
 		/* Reset separation function */
@@ -563,12 +563,12 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		/* Do not use Rfa */
 		(*pbiFACData).Separate(7);
 
-		/* CRC is ok, return TRUE */
-		return TRUE;
+		/* CRC is ok, return true */
+		return true;
 	}
 	else
 	{
-		/* Data is corrupted, do not use it. Return failure as FALSE */
-		return FALSE;
+		/* Data is corrupted, do not use it. Return failure as false */
+		return false;
 	}
 }

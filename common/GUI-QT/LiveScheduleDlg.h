@@ -73,15 +73,15 @@ class CLiveScheduleItem
 {
 public:
 	CLiveScheduleItem() : strFreq(""), strTarget(""), iServiceID(SERV_ID_NOT_USED),
-	strSystem(""), bInsideTargetArea(FALSE) {}
+	strSystem(""), bInsideTargetArea(false) {}
 
-	_BOOLEAN IsActive(const time_t ltime);
+	bool IsActive(const time_t ltime);
 
 	string		strFreq;
 	string		strTarget;
 	uint32_t	iServiceID;
 	string		strSystem;
-	_BOOLEAN	bInsideTargetArea;
+	bool	bInsideTargetArea;
 	CAltFreqSched Schedule;
 };
 
@@ -105,7 +105,7 @@ public:
 			const CAltFreqSign& AltFreqSign, const uint32_t iServiceID=SERV_ID_NOT_USED);
 
 	void DecodeTargets(const vector<CAltFreqRegion> vecAltFreqRegions,
-		string& strRegions , _BOOLEAN& bIntoTargetArea);
+		string& strRegions , bool& bIntoTargetArea);
 
 	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
 	int GetSecondsPreview() {return iSecondsPreview;}
@@ -113,7 +113,7 @@ public:
 	void SetReceiverCoordinates(double latitude, double longitude);
 
 protected:
-	_BOOLEAN IsActive(const int iPos, const time_t ltime);
+	bool IsActive(const int iPos, const time_t ltime);
 
 	vector<CLiveScheduleItem>	StationsTable;
 
@@ -147,7 +147,7 @@ public:
 
 	LiveScheduleDlg(CDRMReceiver&,
 		QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = false, Qt::WFlags f = 0);
 	virtual ~LiveScheduleDlg();
 	/* dummy assignment operator to help MSVC8 */
 	LiveScheduleDlg& operator=(const LiveScheduleDlg&)
@@ -158,7 +158,7 @@ public:
 	void SaveSettings(CSettings&);
 
 	int				iCurrentSortColumn;
-	_BOOLEAN		bCurrentSortAscending;
+	bool		bCurrentSortAscending;
 
 protected:
 	void			SetStationsView();
@@ -179,7 +179,7 @@ protected:
 	QPixmap						BitmCubePink;
 	QTimer						TimerList;
 	QTimer						TimerUTCLabel;
-	_BOOLEAN					bShowAll;
+	bool					bShowAll;
 	QPopupMenu*					pViewMenu;
 	QPopupMenu*					pPreviewMenu;
 	QPopupMenu*					pFileMenu;

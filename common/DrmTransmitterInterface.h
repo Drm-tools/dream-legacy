@@ -66,7 +66,7 @@ public:
 	virtual void			AddPic(const string& strFileName, const string& strFormat)=0;
 	virtual void			ClearPics()=0;
 	virtual void			GetPics(map<string,string>&)=0;
-	virtual _BOOLEAN		GetTransStat(string& strCPi, _REAL& rCPe)=0;
+	virtual bool		GetTransStat(string& strCPi, _REAL& rCPe)=0;
 
 	virtual void			GetSoundInChoices(vector<string>&)=0;
 	virtual void			SetSoundInInterface(int)=0;

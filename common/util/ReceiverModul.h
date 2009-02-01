@@ -39,54 +39,54 @@ public:
 	CReceiverModul();
 	virtual ~CReceiverModul() {}
 
-	void				SetInitFlag() {bDoInit = TRUE;}
+	void				SetInitFlag() {bDoInit = true;}
 	virtual void		Init(CParameter& Parameter);
 	virtual void		Init(CParameter& Parameter,
 							 CBuffer<TOutput>& OutputBuffer);
-	virtual void		Init(CParameter& Parameter, 
+	virtual void		Init(CParameter& Parameter,
 							 CBuffer<TOutput>& OutputBuffer,
 							 CBuffer<TOutput>& OutputBuffer2);
-	virtual void		Init(CParameter& Parameter, 
+	virtual void		Init(CParameter& Parameter,
 							 CBuffer<TOutput>& OutputBuffer,
 							 CBuffer<TOutput>& OutputBuffer2,
 							 CBuffer<TOutput>& OutputBuffer3);
-	virtual void		Init(CParameter& Parameter, 
+	virtual void		Init(CParameter& Parameter,
 							 CBuffer<TOutput>& OutputBuffer,
 							 CBuffer<TOutput>& OutputBuffer2,
 							 vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
-	virtual void		Init(CParameter& Parameter, 
+	virtual void		Init(CParameter& Parameter,
 							 vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
-	virtual void		ReadData(CParameter& Parameter, 
+	virtual void		ReadData(CParameter& Parameter,
 								 CBuffer<TOutput>& OutputBuffer);
-	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
-									CBuffer<TInput>& InputBuffer, 
+	virtual bool	ProcessData(CParameter& Parameter,
+									CBuffer<TInput>& InputBuffer,
 									CBuffer<TOutput>& OutputBuffer);
-	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
+	virtual bool	ProcessData(CParameter& Parameter,
 									CBuffer<TInput>& InputBuffer,
-									CBuffer<TOutput>& OutputBuffer, 
+									CBuffer<TOutput>& OutputBuffer,
 									CBuffer<TOutput>& OutputBuffer2);
-	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
+	virtual bool	ProcessData(CParameter& Parameter,
 									CBuffer<TInput>& InputBuffer,
-									CBuffer<TOutput>& OutputBuffer, 
-									CBuffer<TOutput>& OutputBuffer2, 
+									CBuffer<TOutput>& OutputBuffer,
+									CBuffer<TOutput>& OutputBuffer2,
 									CBuffer<TOutput>& OutputBuffer3);
-	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
+	virtual bool	ProcessData(CParameter& Parameter,
 									CBuffer<TInput>& InputBuffer,
-									CBuffer<TOutput>& OutputBuffer, 
-									CBuffer<TOutput>& OutputBuffer2, 
+									CBuffer<TOutput>& OutputBuffer,
+									CBuffer<TOutput>& OutputBuffer2,
 									vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
-	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
+	virtual bool	ProcessData(CParameter& Parameter,
 									CBuffer<TInput>& InputBuffer,
 									vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
-	virtual _BOOLEAN	WriteData(CParameter& Parameter, 
+	virtual bool	WriteData(CParameter& Parameter,
 								  CBuffer<TInput>& InputBuffer);
 
 protected:
-	void SetBufReset1() {bResetBuf = TRUE;}
-	void SetBufReset2() {bResetBuf2 = TRUE;}
-	void SetBufReset3() {bResetBuf3 = TRUE;}
+	void SetBufReset1() {bResetBuf = true;}
+	void SetBufReset2() {bResetBuf2 = true;}
+	void SetBufReset3() {bResetBuf3 = true;}
 	void SetBufResetN() {for(size_t i=0; i<vecbResetBuf.size(); i++)
-     vecbResetBuf[i] = TRUE;}
+     vecbResetBuf[i] = true;}
 
 	/* Additional buffers if the derived class has multiple output streams */
 	CVectorEx<TOutput>*	pvecOutputData2;
@@ -104,13 +104,13 @@ protected:
 
 private:
 	/* Init flag */
-	_BOOLEAN			bDoInit;
+	bool			bDoInit;
 
 	/* Reset flags for output cyclic-buffers */
-	_BOOLEAN			bResetBuf;
-	_BOOLEAN			bResetBuf2;
-	_BOOLEAN			bResetBuf3;
-	vector<_BOOLEAN>	vecbResetBuf;
+	bool			bResetBuf;
+	bool			bResetBuf2;
+	bool			bResetBuf3;
+	vector<bool>	vecbResetBuf;
 };
 
 /* Take an input buffer and split it 2 ways */
@@ -139,4 +139,4 @@ protected:
 	}
 };
 
-#endif 
+#endif

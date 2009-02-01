@@ -41,32 +41,32 @@ public:
 	virtual ~CTransmitterModul() {}
 
 	virtual void		Init(CParameter& Parameter);
-	virtual void		Init(CParameter& Parameter, 
+	virtual void		Init(CParameter& Parameter,
 							 CBuffer<TOutput>& OutputBuffer);
-	virtual void		Init(CParameter& Parameter, 
+	virtual void		Init(CParameter& Parameter,
 							CBuffer<TOutput>& OutputBuffer,
 							CBuffer<TOutput>& OutputBuffer2,
 							vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
-	virtual void		ReadData(CParameter& Parameter, 
+	virtual void		ReadData(CParameter& Parameter,
 								 CBuffer<TOutput>& OutputBuffer);
-	virtual void		ProcessData(CParameter& Parameter, 
-									CBuffer<TInput>& InputBuffer, 
-									CBuffer<TOutput>& OutputBuffer);
-	virtual void		ProcessData(CParameter& Parameter, 
+	virtual void		ProcessData(CParameter& Parameter,
 									CBuffer<TInput>& InputBuffer,
-									CBuffer<TInput>& InputBuffer2, 
-									CBuffer<TInput>& InputBuffer3, 
 									CBuffer<TOutput>& OutputBuffer);
-	virtual void		ProcessData(CParameter& Parameter, 
+	virtual void		ProcessData(CParameter& Parameter,
+									CBuffer<TInput>& InputBuffer,
+									CBuffer<TInput>& InputBuffer2,
+									CBuffer<TInput>& InputBuffer3,
+									CBuffer<TOutput>& OutputBuffer);
+	virtual void		ProcessData(CParameter& Parameter,
 									CBuffer<TInput>& InputBuffer,
 									CBuffer<TOutput>& OutputBuffer,
 									CBuffer<TOutput>& OutputBuffer2,
 									vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
-	virtual _BOOLEAN	WriteData(CParameter& Parameter, 
+	virtual bool	WriteData(CParameter& Parameter,
 								  CBuffer<TInput>& InputBuffer);
-	virtual _BOOLEAN	WriteData(CParameter& Parameter, 
+	virtual bool	WriteData(CParameter& Parameter,
 								  CBuffer<TInput>& InputBuffer,
-								  CBuffer<TInput>& InputBuffer2, 
+								  CBuffer<TInput>& InputBuffer2,
 								  vector<CSingleBuffer<TInput> >& vecInputBuffer);
 
 protected:

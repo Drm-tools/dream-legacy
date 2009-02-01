@@ -55,7 +55,7 @@ CReassemblerN & CReassemblerN::operator= (const CReassemblerN & r)
 }
 
 void
-CReassemblerN::AddSegment (vector<_BYTE> &vecDataIn, int iSegNum, _BOOLEAN bLast)
+CReassemblerN::AddSegment (vector<_BYTE> &vecDataIn, int iSegNum, bool bLast)
 {
 	if (bLast)
 	{
@@ -66,7 +66,7 @@ CReassemblerN::AddSegment (vector<_BYTE> &vecDataIn, int iSegNum, _BOOLEAN bLast
 			/* three cases:
 			   1: single segment - easy! (actually degenerate with case 3)
 			   2: multi-segment and the last segment came first.
-			   3: normal - some segment, not the last, came first, 
+			   3: normal - some segment, not the last, came first,
 			   we know the segment size
 			 */
 			if (iSegNum == 0)
@@ -87,7 +87,7 @@ CReassemblerN::AddSegment (vector<_BYTE> &vecDataIn, int iSegNum, _BOOLEAN bLast
 	else
 	{
 		iSegmentSize = vecDataIn.size();
-		if (Tracker.HaveSegment (iSegNum) == FALSE)
+		if (Tracker.HaveSegment (iSegNum) == false)
 		{
 			copyin (vecDataIn, iSegNum);
 		}

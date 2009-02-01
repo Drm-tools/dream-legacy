@@ -60,7 +60,7 @@
 	Stephane Fillod (developer of hamlib)
 */
 CHamlib::CHamlib(CParameter& p): mutex(), Parameters(p), pRig(NULL),
-bSMeterWanted(FALSE), bEnableSMeter(FALSE),
+bSMeterWanted(false), bEnableSMeter(false),
 ModelID(), WantedModelID(), eRigMode(DRM), CapsHamlibModels(),
 iFrequencykHz(0), iFrequencyOffsetkHz(0)
 {
@@ -167,7 +167,7 @@ CHamlib::GetPortList(map < string, string > &ports) const
 		ports["COM5"] = "COM5 ";
 	}
 #elif defined(__linux)
-	_BOOLEAN bOK = FALSE;
+	bool bOK = false;
 # ifdef HAVE_LIBHAL
 	int num_udis;
 	char **udis;
@@ -218,7 +218,7 @@ CHamlib::GetPortList(map < string, string > &ports) const
 		libhal_free_string (dev);
 		libhal_free_string (prod);
 		libhal_free_string (type);
-		bOK = TRUE;
+		bOK = true;
 	}
 
 	libhal_free_string_array (udis);
@@ -241,7 +241,7 @@ CHamlib::GetPortList(map < string, string > &ports) const
 				if (buf[n - 1] == '\n')
 					buf[n - 1] = 0;
 				ports[buf] = buf;
-				bOK = TRUE;
+				bOK = true;
 				buf[0] = 0;
 			}
 			pclose(p2);
@@ -469,7 +469,7 @@ CHamlib::LoadSettings(CSettings & s)
 #endif
 
 	eRigMode = EDemodulationType(s.Get("Hamlib", "mode", 0));
-	bSMeterWanted = s.Get("Hamlib", "smeter", FALSE);
+	bSMeterWanted = s.Get("Hamlib", "smeter", false);
 
 	for(CRigMap::iterator r = CapsHamlibModels.begin(); r != CapsHamlibModels.end(); r++)
 	{
@@ -544,7 +544,7 @@ CHamlib::SaveSettings(CSettings & s) const
 	}
 }
 
-_BOOLEAN
+bool
 CHamlib::SetFrequency(const int iFreqkHz)
 {
     iFrequencykHz = iFreqkHz;
@@ -552,17 +552,17 @@ CHamlib::SetFrequency(const int iFreqkHz)
 	int iFreqHz = (iFreqkHz + iFrequencyOffsetkHz) * 1000;
 	//cout << "CHamlib::SetFrequency input: " << iFreqkHz << " offset: " << iFrequencyOffsetkHz << " Hz: " << iFreqHz << endl;
 	if (pRig && rig_set_freq(pRig, RIG_VFO_CURR, iFreqHz) == RIG_OK)
-		return TRUE;
-	return FALSE;
+		return true;
+	return false;
 }
 
-void CHamlib::SetEnableSMeter(const _BOOLEAN bStatus)
+void CHamlib::SetEnableSMeter(const bool bStatus)
 {
 	bSMeterWanted = bStatus;
 	if(bStatus)
 	{
 #ifdef USE_QT_GUI
-		if(bEnableSMeter==FALSE)
+		if(bEnableSMeter==false)
 		{
 			start(); // don't do this except in GUI thread - see CReceiverSettings
 		}
@@ -574,7 +574,7 @@ void CHamlib::SetEnableSMeter(const _BOOLEAN bStatus)
 	}
 }
 
-_BOOLEAN CHamlib::GetEnableSMeter()
+bool CHamlib::GetEnableSMeter()
 {
 	return bEnableSMeter;
 }
@@ -584,12 +584,12 @@ void CHamlib::StopSMeter()
 	Parameters.Lock();
 	Parameters.SigStrstat.setInvalid();
 	Parameters.Unlock();
-	bEnableSMeter = FALSE;
+	bEnableSMeter = false;
 }
 
 void CHamlib::run()
 {
-	bEnableSMeter = TRUE;
+	bEnableSMeter = true;
 	while(bEnableSMeter)
 	{
 		value_t val;
@@ -602,7 +602,8 @@ void CHamlib::run()
 		{
 			Parameters.Lock();
 			// Apply any correction
-			Parameters.SigStrstat.addSample(_REAL(val.i) + Parameters.rSigStrengthCorrection);
+            const _REAL S9_DBuV = 34.0; // S9 in dBuV for converting HamLib S-meter readings
+			Parameters.SigStrstat.addSample(_REAL(val.i) + S9_DBuV + Parameters.rSigStrengthCorrection);
 			Parameters.Unlock();
 #ifdef USE_QT_GUI
 			msleep(400);
@@ -611,7 +612,7 @@ void CHamlib::run()
 		else
 		{
 			/* If a time-out happened, do not update s-meter anymore (disable it) */
-			bEnableSMeter = FALSE;
+			bEnableSMeter = false;
 		}
 	}
 }
@@ -652,9 +653,9 @@ CHamlib::CloseRig()
 {
 	if(bEnableSMeter)
 	{
-		bEnableSMeter = FALSE;
+		bEnableSMeter = false;
 #ifdef USE_QT_GUI
-		if(wait(1000) == FALSE)
+		if(wait(1000) == false)
 			cerr << "error terminating rig polling thread" << endl;
 #endif
 	}
@@ -733,7 +734,7 @@ CHamlib::SetRigModel(EDemodulationType eNewMode, rig_model_t model)
 
 	/* Check if s-meter capabilities are available */
 	if(bSMeterWanted && rig_has_get_level(pRig, RIG_LEVEL_STRENGTH))
-		SetEnableSMeter(TRUE);
+		SetEnableSMeter(true);
 }
 
 int

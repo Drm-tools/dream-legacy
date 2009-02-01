@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -115,7 +115,7 @@ public:
 	virtual ~CAMSSPhaseDemod() { }
 
 	void SetAcqFreq(const CReal rNewNormCenter);
-	_BOOLEAN GetPLLPhase(CReal& rPhaseOut);
+	bool GetPLLPhase(CReal& rPhaseOut);
 
 protected:
 	virtual void InitInternal(CParameter& ReceiverParam);
@@ -130,7 +130,7 @@ protected:
 	CComplexVector				cvecBImag;
 	CRealVector					rvecZReal;
 	CRealVector					rvecZImag;
-	
+
 	CRealVector					rvecInpTmp;
 	CRealVector					rvecPhase;
 	CComplexVector				cvecHilbert;
@@ -161,7 +161,7 @@ protected:
 class CAMSSExtractBits : public CReceiverModul<_REAL, _BINARY>
 {
 public:
-	CAMSSExtractBits() 
+	CAMSSExtractBits()
 		{ iDiffStorePos = 0; iDiffInSamplePos = 0; iBitSyncSampleCount = 0; iBitSyncSliceOffset = 0;  }
 	virtual ~CAMSSExtractBits() { }
 protected:
@@ -192,11 +192,11 @@ public:
 	CAMSSDecode()
 	{
 		cDataEntityGroupStatus = new char[MAX_DATA_ENTITY_GROUP_SEGMENTS+1];
-		cCurrentBlockBits = new char[AMSS_BLOCK_SIZE_BITS+1]; 
+		cCurrentBlockBits = new char[AMSS_BLOCK_SIZE_BITS+1];
 	}
 
 	virtual ~CAMSSDecode()
-	{ 
+	{
 		delete[] cDataEntityGroupStatus;
 		delete[] cCurrentBlockBits;
 	}
@@ -212,7 +212,7 @@ public:
 	int GetCurrentBlock() const { return iCurrentBlock; }
 	char* GetCurrentBlockBits() const { return cCurrentBlockBits; }
 
-	_BOOLEAN GetBlock1Status() const { return blBlock1DataValid; }
+	bool GetBlock1Status() const { return blBlock1DataValid; }
 
 protected:
 	virtual void InitInternal(CParameter& ReceiverParam);
@@ -233,7 +233,7 @@ protected:
 	void			DecodeBlock2(CVector<_BINARY>& bBits);
 
 	void			ApplyOffsetWord(CVector<_BINARY>& bBlockBits, CVector<_BINARY>& offset);
-	_BOOLEAN		CheckCRC(CVector<_BINARY>& bBits);
+	bool		CheckCRC(CVector<_BINARY>& bBits);
 
 	void			ResetStatus(CParameter& ReveiverParam);
 
@@ -251,11 +251,11 @@ protected:
 	CVector<_BINARY>	bBlock1Store;
 	CVector<_BINARY>	bBlock2Store;
 
-	_BOOLEAN			blStoredBlock2Valid;
-	_BOOLEAN			bVersionFlag;
+	bool			blStoredBlock2Valid;
+	bool			bVersionFlag;
 
-	_BOOLEAN			blFirstEverBlock1;
-	
+	bool			blFirstEverBlock1;
+
 	CVector<_BINARY>	bDataEntityGroup;
 
 	int					iBitsSinceLastBlock1Pass;
@@ -263,7 +263,7 @@ protected:
 	int					iBlock1FailCount;
 	int					iBlock2FailCount;
 
-	_BOOLEAN			blBlock1DataValid;
+	bool			blBlock1DataValid;
 };
 
 

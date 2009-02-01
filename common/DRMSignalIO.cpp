@@ -30,7 +30,9 @@
 #include "sound.h"
 #include "sound/soundfile.h"
 #include <iostream>
+#include <limits>
 
+const _SAMPLE max_sample = numeric_limits<_SAMPLE>::max();
 
 /* Implementation *************************************************************/
 
@@ -162,8 +164,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 	/* Init bandpass filter object */
 	BPFilter.Init(iSymbolBlockSize, rDefCarOffset,
-		TransmParam.GetSpectrumOccup(), CDRMBandpassFilt::FT_TRANSMITTER);
-
+                    TransmParam.GetNominalBandwidth(), 300.0 /* Hz */);
 
 	/* All robustness modes and spectrum occupancies should have the same output
 	   power. Calculate the normalisation factor based on the average power of
@@ -201,7 +202,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 	int i;
 
 	/* OPH: update free-running symbol counter */
-	Parameter.Lock(); 
+	Parameter.Lock();
 
 	iFreeSymbolCounter++;
 	if (iFreeSymbolCounter >= Parameter.CellMappingTable.iNumSymPerFrame)
@@ -213,21 +214,21 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 			PutPSD(Parameter);
 
 	}
-	Parameter.Unlock(); 
+	Parameter.Unlock();
 
 	if(pSound == NULL)
 		return;
 
 		/* Get data from sound interface. The read function must be a
 		   blocking function! */
-	_BOOLEAN bBad = pSound->Read(vecsSoundBuffer);
+	bool bBad = pSound->Read(vecsSoundBuffer);
 
-	Parameter.Lock(); 
-	if (bBad == FALSE)
+	Parameter.Lock();
+	if (bBad == false)
 		Parameter.ReceiveStatus.Interface.SetStatus(RX_OK);
 	else
 		Parameter.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
-	Parameter.Unlock(); 
+	Parameter.Unlock();
 
 		/* Write data to output buffer. Do not set the switch command inside
 		   the for-loop for efficiency reasons */
@@ -313,22 +314,22 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 		}
 
 	/* Flip spectrum if necessary ------------------------------------------- */
-	if (bFippedSpectrum == TRUE)
+	if (bFippedSpectrum == true)
 	{
-		static _BOOLEAN bFlagInv = FALSE;
+		static bool bFlagInv = false;
 
 		for (i = 0; i < iOutputBlockSize; i++)
 		{
 			/* We flip the spectrum by using the mirror spectrum at the negative
 			   frequencys. If we shift by half of the sample frequency, we can
 			   do the shift without the need of a Hilbert transformation */
-			if (bFlagInv == FALSE)
+			if (bFlagInv == false)
 			{
 				(*pvecOutputData)[i] = -(*pvecOutputData)[i];
-				bFlagInv = TRUE;
+				bFlagInv = true;
 			}
 			else
-				bFlagInv = FALSE;
+				bFlagInv = false;
 		}
 	}
 
@@ -338,9 +339,9 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 
 	/* Update level meter */
 	SignalLevelMeter.Update((*pvecOutputData));
-	Parameter.Lock(); 
+	Parameter.Lock();
 	Parameter.SetIFSignalLevel(SignalLevelMeter.Level());
-	Parameter.Unlock(); 
+	Parameter.Unlock();
 
 }
 
@@ -353,10 +354,10 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 	if(pSound == NULL)
 		return;
 
-	Parameter.Lock(); 
+	Parameter.Lock();
 	/* Define output block-size */
 	iOutputBlockSize = Parameter.CellMappingTable.iSymbolBlockSize;
-	Parameter.Unlock(); 
+	Parameter.Unlock();
 	pSound->Init(iOutputBlockSize * 2);
 
 	/* Init buffer size for taking stereo input */
@@ -428,13 +429,13 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 	vecrScale.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
 
 	/* Lock resources */
-	Lock(); 
+	Lock();
 
 	/* Init the constants for scale and normalization */
 	const _REAL rFactorScale =
 		(_REAL) SOUNDCRD_SAMPLE_RATE / iLenSpecWithNyFreq / 2000;
 
-	const _REAL rNormData = (_REAL) _MAXSHORT * _MAXSHORT *
+	const _REAL rNormData = (_REAL) max_sample * max_sample *
 		NUM_SMPLS_4_INPUT_SPECTRUM * NUM_SMPLS_4_INPUT_SPECTRUM;
 
 	/* Copy data from shift register in Matlib vector */
@@ -461,7 +462,7 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 	}
 
 	/* Release resources */
-	Unlock(); 
+	Unlock();
 }
 
 void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
@@ -472,10 +473,10 @@ void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
 {
 
 	/* Lock resources */
-	Lock(); 
+	Lock();
 	CalculatePSD(vecrData, vecrScale, iLenPSDAvEachBlock,iNumAvBlocksPSD,iPSDOverlap);
 	/* Release resources */
-	Unlock(); 
+	Unlock();
 }
 
 void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
@@ -498,7 +499,7 @@ void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
         const _REAL rFactorScale =
                 (_REAL) SOUNDCRD_SAMPLE_RATE / iLenSpecWithNyFreq / 2000;
 
-        const _REAL rNormData = (_REAL) _MAXSHORT * _MAXSHORT *
+        const _REAL rNormData = (_REAL) max_sample * max_sample *
                 iLenPSDAvEachBlock * iLenPSDAvEachBlock *
                 iNumAvBlocksPSD * _REAL(PSD_WINDOW_GAIN);
 
@@ -599,12 +600,12 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 	_REAL rCorrection = _REAL(0.0);
 
 	/* Calculate signal power in measurement bandwidth */
-	
+
 	_REAL rFreqKmin, rFreqKmax;
 
 	_REAL rIFCentreFrequency = ReceiverParam.FrontEndParameters.rIFCentreFreq;
 
-	if (ReceiverParam.GetAcquiState() == AS_WITH_SIGNAL && 
+	if (ReceiverParam.GetAcquiState() == AS_WITH_SIGNAL &&
 		ReceiverParam.FrontEndParameters.bAutoMeasurementBandwidth)
 	{
 		// Receiver is locked, so measure in the current DRM signal bandwidth Kmin to Kmax
@@ -634,12 +635,12 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 		_REAL rFreqSMeterMin = _REAL(rIFCentreFrequency - rSMeterBandwidth / _REAL(2.0));
 		_REAL rFreqSMeterMax = _REAL(rIFCentreFrequency + rSMeterBandwidth / _REAL(2.0));
 
-		_REAL rPowerInSMeterBW = CalcTotalPower(vecrPSD, FreqToBin(rFreqSMeterMin), FreqToBin(rFreqSMeterMax)); 
+		_REAL rPowerInSMeterBW = CalcTotalPower(vecrPSD, FreqToBin(rFreqSMeterMin), FreqToBin(rFreqSMeterMax));
 
 		/* Write it to the receiver params to help with calculating the signal strength */
 
 		rCorrection += _REAL(10.0) * log10(rSigPower/rPowerInSMeterBW);
-	} 
+	}
 
 	/* Add on the calibration factor for the current mode */
 	switch(ReceiverParam.GetReceiverMode())
@@ -672,7 +673,7 @@ void CReceiveData::CalculatePSDInterferenceTag(CParameter &ReceiverParam, CVecto
 
 	_REAL rFreqSearchMin = rIFCentreFrequency - _REAL(RNIP_SEARCH_RANGE_NARROW);
 	_REAL rFreqSearchMax = rIFCentreFrequency + _REAL(RNIP_SEARCH_RANGE_NARROW);
-	
+
 	ESpecOcc eSpecOcc = ReceiverParam.GetSpectrumOccup();
 
 	if (ReceiverParam.GetAcquiState() == AS_WITH_SIGNAL &&
@@ -733,7 +734,7 @@ _REAL CReceiveData::CalcTotalPower(CVector<_REAL> &vecrData, int iStartBin, int 
 	{
 		_REAL rPSD = pow(_REAL(10.0), vecrData[i]/_REAL(10.0));
 		// The factor of 2 below is needed because half of the power is in the negative frequencies
-		rSigPower += rPSD * _REAL(2.0); 
+		rSigPower += rPSD * _REAL(2.0);
 	}
 
 	return rSigPower;
@@ -750,12 +751,12 @@ void COnboardDecoder::ProcessDataInternal(CParameter& Parameter)
 	if(pSound == NULL)
 		return;
 	vector<_SAMPLE> s(iOutputBlockSize);
-	_BOOLEAN bBad = pSound->Read(s);
+	bool bBad = pSound->Read(s);
 	for(int i=0; i<iOutputBlockSize; i++)
 		(*pvecOutputData)[i] = s[i];
 
-	Parameter.Lock(); 
-	if (bBad == FALSE)
+	Parameter.Lock();
+	if (bBad == false)
 		Parameter.ReceiveStatus.Interface.SetStatus(RX_OK);
 	else
 		Parameter.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
@@ -764,7 +765,7 @@ void COnboardDecoder::ProcessDataInternal(CParameter& Parameter)
 	{
 		Parameter.vecrPSD.Init(0);
 	}
-	Parameter.Unlock(); 
+	Parameter.Unlock();
 }
 
 void COnboardDecoder::InitInternal(CParameter&)

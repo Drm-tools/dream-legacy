@@ -63,7 +63,7 @@ public:
 protected:
 	void Run();
 	void Init();
-	string SimFileName(CParameter& Param, string strAddInf, _BOOLEAN bWithSNR);
+	string SimFileName(CParameter& Param, string strAddInf, bool bWithSNR);
 
 	int iSimTime;
 	int iSimNumErrors;
@@ -71,7 +71,7 @@ protected:
 
 	/* Parameters */
 	CParameter				Param;
-	
+
 
 	/* Buffers -------------------------------------------------------------- */
 	/* If you want to add a new buffer, make sure that it is cleared in the
@@ -91,10 +91,10 @@ protected:
 	CSingleBuffer<_COMPLEX>				OFDMModBuf;
 
 	/* Simulation */
-	CCyclicBuffer<CChanSimDataDemod>	OFDMDemodBufChan2;
+	CCyclicBuffer<CChanSimData<_COMPLEX> >	OFDMDemodBufChan2;
 	CSingleBuffer<_COMPLEX>				ChanEstInBufSim;
-	CSingleBuffer<CChanSimDataDemod>	ChanEstOutBufChan;
-	CSingleBuffer<CChanSimDataMod>		RecDataBuf;
+	CSingleBuffer<CChanSimData<_COMPLEX> >	ChanEstOutBufChan;
+	CSingleBuffer<CChanSimData<_REAL> >		RecDataBuf;
 	CSingleBuffer<_REAL>				ChanResInBuf;
 
 	/* Receiver buffers */
@@ -115,7 +115,7 @@ protected:
 
 	/* Modules -------------------------------------------------------------- */
 	/* Transmitter modules */
-	CGenSimData				GenSimData;			
+	CGenSimData				GenSimData;
 
 	CMSCMLCEncoder			MSCMLCEncoder;
 	CSymbInterleaver		SymbInterleaver;

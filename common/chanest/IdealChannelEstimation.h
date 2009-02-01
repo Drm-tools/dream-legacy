@@ -39,7 +39,7 @@
 
 /* Classes ********************************************************************/
 class CIdealChanEst :
-	public CSimulationModul<CEquSig, CEquSig, CChanSimDataDemod>, 
+	public CSimulationModul<CEquSig, CEquSig, CChanSimData<_COMPLEX> >,
 	public CPilotModiClass
 {
 public:

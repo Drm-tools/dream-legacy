@@ -6,22 +6,22 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -42,9 +42,9 @@ public:
 	CVector() : iBitArrayCounter(0), iVectorSize(0) {pData = this->begin();}
 	CVector(const int iNeSi) {Init(iNeSi);}
 	CVector(const int iNeSi, const TData tInVa) {Init(iNeSi, tInVa);}
-	CVector(const CVector<TData> &vecI, const int iStartIndex, const int iLength) : 
-		vector<TData>(vecI.pData+vecI.iBitArrayCounter, vecI.pData+(vecI.iBitArrayCounter+iLength)), 
-			iBitArrayCounter(0) 
+	CVector(const CVector<TData> &vecI, const int iStartIndex, const int iLength) :
+		vector<TData>(vecI.pData+vecI.iBitArrayCounter, vecI.pData+(vecI.iBitArrayCounter+iLength)),
+			iBitArrayCounter(0)
 		{iVectorSize = this->size(); pData = this->begin();}
 	virtual	~CVector() {}
 
@@ -76,7 +76,7 @@ public:
 			DebugError("Writing vector out of bounds", "Vector size",
 				iVectorSize, "New parameter", iPos);
 		}
-#endif		
+#endif
 		return pData[iPos];}
 
 	inline TData operator[](const int iPos) const {
@@ -135,7 +135,7 @@ template<class TData> void CVector<TData>::Init(const int iNewSize)
 	pData = this->begin();
 }
 
-template<class TData> void CVector<TData>::Init(const int iNewSize, 
+template<class TData> void CVector<TData>::Init(const int iNewSize,
 												const TData tIniVal)
 {
 	/* Call actual init routine */
@@ -399,7 +399,7 @@ public:
 	int			iSymbolID;
 
 	/* This flag indicates that the symbol ID has changed */
-	_BOOLEAN	bSymbolIDHasChanged;
+	bool	bSymbolIDHasChanged;
 
 	/* The channel estimation needs information about timing corrections,
 	   because it is using information from the symbol memory */
@@ -413,7 +413,7 @@ public:
 	virtual	~CVectorEx() {}
 
 	CExtendedVecData&	GetExData() {return ExtendedData;}
-	void				SetExData(CExtendedVecData& NewExData) 
+	void				SetExData(CExtendedVecData& NewExData)
 							{ExtendedData = NewExData;}
 
 protected:
@@ -429,10 +429,10 @@ template<class TData> class CMatrix
 public:
 	CMatrix() : ppData(NULL), iRow(0), iCol(0) {}
 	CMatrix(const int iNewR, const int iNewC) {Init(iNewR, iNewC);}
-	CMatrix(const int iNewR, const int iNewC, const TData tInVa) 
+	CMatrix(const int iNewR, const int iNewC, const TData tInVa)
 		{Init(iNewR, iNewC, tInVa);}
 	CMatrix(const CMatrix& m): ppData(NULL) {
-		Init(m.iRow,m.iCol); 
+		Init(m.iRow,m.iCol);
 		for (int i=0; i<m.NumRows(); i++)
 			ppData[i] = m[i];
 	}
@@ -451,7 +451,7 @@ public:
 			DebugError("Matrix: Writing vector out of bounds", "Row size",
 				iRow, "New parameter", iPos);
 		}
-#endif		
+#endif
 		return ppData[iPos];}
 
 	inline CMatrix& operator=(const CMatrix& m) {

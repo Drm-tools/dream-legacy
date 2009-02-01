@@ -46,7 +46,7 @@ public:
 	TransmDialog(
 		CDRMTransmitterInterface& tx,
 		CSettings&,
-		QWidget* parent=0, const char* name=0, bool modal=FALSE, WFlags f=0);
+		QWidget* parent=0, const char* name=0, bool modal=false, Qt::WFlags f=0);
 	virtual ~TransmDialog();
 	/* dummy assignment operator to help MSVC8 */
 	TransmDialog& operator=(const TransmDialog&)
@@ -58,9 +58,9 @@ protected:
 	void				EnableAllControlsForSet();
 
 	void				UpdateMSCProtLevCombo();
-	void				EnableTextMessage(const _BOOLEAN bFlag);
-	void				EnableAudio(const _BOOLEAN bFlag);
-	void				EnableData(const _BOOLEAN bFlag);
+	void				EnableTextMessage(const bool bFlag);
+	void				EnableAudio(const bool bFlag);
+	void				EnableData(const bool bFlag);
 	void				AddWhatsThisHelp();
 	void				choseComboBoxItem(QComboBox* box, const QString& text);
 	void				GetFromTransmitter();
@@ -92,7 +92,7 @@ protected:
 
 	CDRMTransmitterInterface&	DRMTransmitter;
 	CSettings&			Settings;
-	_BOOLEAN			bIsStarted;
+	bool			bIsStarted;
 	vector<CIpIf>vecIpIf;
 
 

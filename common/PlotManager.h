@@ -8,9 +8,9 @@
  * Description:
  *	See PlotManager.cpp
  *
- * 
- *	
- * 
+ *
+ *
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -34,6 +34,9 @@
 
 #include "GlobalDefinitions.h"
 #include "util/Vector.h"
+#ifdef USE_QT_GUI
+# include <qmutex.h>
+#endif
 
 /* Definitions ****************************************************************/
 
@@ -46,7 +49,7 @@ class CDRMReceiver;
 class CPlotManager
 {
 public:
-	
+
 	CPlotManager();
 
 	void SetReceiver(CDRMReceiver *pRx) {pReceiver = pRx;}
@@ -55,14 +58,14 @@ public:
 
 	void SetCurrentCDAud(int iN) {iCurrentCDAud = iN;}
 
-	void UpdateParamHistories(ERecState eReceiverState);
+	void UpdateParamHistories();
 
 	void UpdateParamHistoriesRSIIn();
 
 	void GetTransferFunction(CVector<_REAL>& vecrData,
 		CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale);
 
-	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
+	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 					 _REAL& rLowerBound, _REAL& rHigherBound,
 					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
 					 _REAL& rPDSEnd);

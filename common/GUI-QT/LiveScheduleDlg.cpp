@@ -45,7 +45,7 @@ LiveScheduleDlg::ExtractTime(const CAltFreqSched& schedule)
 	int iStartHours = iTimeStart / 60;
 
 	/* Stop time */
-	_BOOLEAN bAllWeek24Hours = FALSE;
+	bool bAllWeek24Hours = false;
 	const int iTimeStop = iTimeStart + iDuration;
 
 	int iStopMinutes = iTimeStop % 60;
@@ -57,7 +57,7 @@ LiveScheduleDlg::ExtractTime(const CAltFreqSched& schedule)
 
 		if (iDays == 7)
 			/* All the week */
-			bAllWeek24Hours = TRUE;
+			bAllWeek24Hours = true;
 		else
 		{
 			/* Add information about days duration */
@@ -67,7 +67,7 @@ LiveScheduleDlg::ExtractTime(const CAltFreqSched& schedule)
 		}
 	}
 
-	if (bAllWeek24Hours == TRUE)
+	if (bAllWeek24Hours == true)
 		sResult = "24 hours, 7 days a week";
 	else
 	{
@@ -139,14 +139,14 @@ CDRMLiveSchedule::SetReceiverCoordinates(double latitude, double longitude)
 void
 CDRMLiveSchedule::DecodeTargets(const vector < CAltFreqRegion >
 								vecRegions, string & strRegions,
-								_BOOLEAN & bIntoTargetArea)
+								bool & bIntoTargetArea)
 {
 	int iCIRAF;
 	int iReceiverLatitude = int (dReceiverLatitude);
 	int iReceiverLongitude = int (dReceiverLongitude);
 	stringstream ssRegions;
 
-	bIntoTargetArea = FALSE;
+	bIntoTargetArea = false;
 
 	for(size_t i = 0; i < vecRegions.size(); i++)
 	{
@@ -203,14 +203,14 @@ CDRMLiveSchedule::DecodeTargets(const vector < CAltFreqRegion >
 		}
 		/* check if receiver coordinates are inside target area
 		 * TODO check if inside CIRAF zones */
-		_BOOLEAN bLongitudeOK = ((iReceiverLongitude >= iLongitude)
+		bool bLongitudeOK = ((iReceiverLongitude >= iLongitude)
 										 && (iReceiverLongitude <=
 											 (iLongitude + iLongitudeEx)))
 					|| (((iLongitude + iLongitudeEx) >= 180)
 						&& (iReceiverLongitude <=
 							(iLongitude + iLongitudeEx - 360)));
 
-		_BOOLEAN bLatitudeOK = ((iReceiverLatitude >= iLatitude)
+		bool bLatitudeOK = ((iReceiverLatitude >= iLatitude)
 										&& (iReceiverLatitude <=
 											(iLatitude + iLatitudeEx)));
 
@@ -224,7 +224,7 @@ CDRMLiveSchedule::LoadServiceDefinition(const CServiceDefinition& service,
 		const CAltFreqSign& AltFreqSign, const uint32_t iServiceID)
 {
 	string strRegions = "";
-	_BOOLEAN bIntoTargetArea = FALSE;
+	bool bIntoTargetArea = false;
 
 	/* Region */
 	if (service.iRegionID != 0)
@@ -321,7 +321,7 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign& AltFreqSign)
 
 LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
 								 QWidget * parent, const char *name,
-								 bool modal, WFlags f):
+								 bool modal, Qt::WFlags f):
 CLiveScheduleDlgBase(parent, name, modal, f),
 DRMReceiver(NDRMR),
 vecpListItems(),
@@ -416,7 +416,7 @@ iWidthColStationID(0)
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* disable save menu */
-	pFileMenu->setItemEnabled(0, FALSE);
+	pFileMenu->setItemEnabled(0, false);
 
 	/* Now tell the layout about the menu */
 	CLiveScheduleDlgBaseLayout->setMenuBar(pMenu);
@@ -450,7 +450,7 @@ LiveScheduleDlg::LoadSettings(const CSettings& Settings)
 
 	/* Set sorting behaviour of the list */
 	iCurrentSortColumn = Settings.Get("Live Schedule Dialog", "sortcolumn", 0);
-	bCurrentSortAscending = Settings.Get("Live Schedule Dialog", "sortascending", TRUE);
+	bCurrentSortAscending = Settings.Get("Live Schedule Dialog", "sortascending", true);
 	ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
 	/* Retrieve the setting saved into the .ini file */
 	string str = strCurrentSavePath.latin1();
@@ -458,33 +458,33 @@ LiveScheduleDlg::LoadSettings(const CSettings& Settings)
 	strCurrentSavePath = str.c_str();
 
 	/* Set stations in list view which are active right now */
-	bShowAll = Settings.Get("Live Schedule Dialog", "showall", FALSE);
+	bShowAll = Settings.Get("Live Schedule Dialog", "showall", false);
 
 	if (bShowAll)
-		pViewMenu->setItemChecked(1, TRUE);
+		pViewMenu->setItemChecked(1, true);
 	else
-		pViewMenu->setItemChecked(0, TRUE);
+		pViewMenu->setItemChecked(0, true);
 
 	/* Set stations preview */
 	switch (Settings.Get("Live Schedule Dialog", "preview", 0))
 	{
 	case NUM_SECONDS_PREV_5MIN:
-		pPreviewMenu->setItemChecked(1, TRUE);
+		pPreviewMenu->setItemChecked(1, true);
 		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
 		break;
 
 	case NUM_SECONDS_PREV_15MIN:
-		pPreviewMenu->setItemChecked(2, TRUE);
+		pPreviewMenu->setItemChecked(2, true);
 		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
 		break;
 
 	case NUM_SECONDS_PREV_30MIN:
-		pPreviewMenu->setItemChecked(3, TRUE);
+		pPreviewMenu->setItemChecked(3, true);
 		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
 		break;
 
 	default:/* case 0, also takes care of out of value parameters */
-		pPreviewMenu->setItemChecked(0, TRUE);
+		pPreviewMenu->setItemChecked(0, true);
 		DRMSchedule.SetSecondsPreview(0);
 		break;
 	}
@@ -553,9 +553,9 @@ LiveScheduleDlg::OnShowStationsMenu(int iID)
 {
 	/* Show only active stations if ID is 0, else show all */
 	if (iID == 0)
-		bShowAll = FALSE;
+		bShowAll = false;
 	else
-		bShowAll = TRUE;
+		bShowAll = true;
 
 	/* Update list view */
 	SetStationsView();
@@ -677,9 +677,9 @@ LiveScheduleDlg::LoadSchedule()
 
 	/* Enable disable save menu item */
 	if (iNumStations > 0)
-		pFileMenu->setItemEnabled(0, TRUE);
+		pFileMenu->setItemEnabled(0, true);
 	else
-		pFileMenu->setItemEnabled(0, FALSE);
+		pFileMenu->setItemEnabled(0, false);
 
 	/* Unlock BEFORE calling the stations view update because in this function
 	   the mutex is locked, too! */
@@ -756,14 +756,14 @@ LiveScheduleDlg::SetStationsView()
 
 	const int iNumStations = DRMSchedule.GetStationNumber();
 
-	_BOOLEAN bListHastChanged = FALSE;
+	bool bListHastChanged = false;
 
-	_BOOLEAN bHaveOtherServiceIDs = FALSE;
+	bool bHaveOtherServiceIDs = false;
 
 	/* Add new item for each station in list view */
 	for (int i = 0; i < iNumStations; i++)
 	{
-		if (!((bShowAll == FALSE) &&
+		if (!((bShowAll == false) &&
 			  (DRMSchedule.CheckState(i) == CDRMLiveSchedule::IS_INACTIVE)))
 		{
 			/* Only insert item if it is not already in the list */
@@ -775,7 +775,7 @@ LiveScheduleDlg::SetStationsView()
 
 				if(item.iServiceID != SERV_ID_NOT_USED)
 				{
-					bHaveOtherServiceIDs = TRUE;
+					bHaveOtherServiceIDs = true;
 
 					Parameters.Lock();
     				map <uint32_t,CServiceInformation>::const_iterator
@@ -800,11 +800,11 @@ LiveScheduleDlg::SetStationsView()
 				);
 
 				/* Set flag for sorting the list */
-				bListHastChanged = TRUE;
+				bListHastChanged = true;
 			}
 
 			/* If receiver coordinates are into target area add a little green cube */
-			if (DRMSchedule.GetItem(i).bInsideTargetArea == TRUE)
+			if (DRMSchedule.GetItem(i).bInsideTargetArea == true)
 				vecpListItems[i]->setPixmap(COL_TARGET, BitmCubeGreenLittle);
 
 			/* Check, if station is currently transmitting. If yes, set
@@ -842,7 +842,7 @@ LiveScheduleDlg::SetStationsView()
 				vecpListItems[i] = NULL;
 
 				/* Set flag for sorting the list */
-				bListHastChanged = TRUE;
+				bListHastChanged = true;
 			}
 		}
 	}
@@ -873,7 +873,7 @@ LiveScheduleDlg::OnHeaderClicked(int c)
 	if (iCurrentSortColumn == c)
 		bCurrentSortAscending = !bCurrentSortAscending;
 	else
-		bCurrentSortAscending = TRUE;
+		bCurrentSortAscending = true;
 
 	iCurrentSortColumn = c;
 }
@@ -1020,10 +1020,10 @@ CDRMLiveSchedule::StationState CDRMLiveSchedule::CheckState(const int iPos)
 		ltime;
 	time(&ltime);
 
-	if (IsActive(iPos, ltime) == TRUE)
+	if (IsActive(iPos, ltime) == true)
 	{
 		/* Check if the station soon will be inactive */
-		if (IsActive(iPos, ltime + NUM_SECONDS_SOON_INACTIVE) == TRUE)
+		if (IsActive(iPos, ltime + NUM_SECONDS_SOON_INACTIVE) == true)
 			return IS_ACTIVE;
 		else
 			return IS_SOON_INACTIVE;
@@ -1033,7 +1033,7 @@ CDRMLiveSchedule::StationState CDRMLiveSchedule::CheckState(const int iPos)
 		/* Station is not active, check preview condition */
 		if (iSecondsPreview > 0)
 		{
-			if (IsActive(iPos, ltime + iSecondsPreview) == TRUE)
+			if (IsActive(iPos, ltime + iSecondsPreview) == true)
 				return IS_PREVIEW;
 			else
 				return IS_INACTIVE;
@@ -1043,13 +1043,13 @@ CDRMLiveSchedule::StationState CDRMLiveSchedule::CheckState(const int iPos)
 	}
 }
 
-_BOOLEAN
+bool
 CDRMLiveSchedule::IsActive(const int iPos, const time_t ltime)
 {
 	return StationsTable[iPos].IsActive(ltime);
 }
 
-_BOOLEAN
+bool
 CLiveScheduleItem::IsActive(const time_t ltime)
 {
 	return Schedule.IsActive(ltime);

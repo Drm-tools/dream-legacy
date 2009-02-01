@@ -6,14 +6,14 @@
  *	Volker Fischer, Julian Cable, Oliver Haffenden
  *
  * Description:
- *	Implements Digital Radio Mondiale (DRM) 
- *	(RCI), Receiver Status and Control Interface (RSCI)  
+ *	Implements Digital Radio Mondiale (DRM)
+ *	(RCI), Receiver Status and Control Interface (RSCI)
  *  and Distribution and Communications Protocol (DCP) as described in
  *	ETSI TS 102 349 and ETSI TS 102 821 respectively.
  *
- *  This module derives, from the CTagItemGenerator base class, tag item generators 
+ *  This module derives, from the CTagItemGenerator base class, tag item generators
  *  specialised to generate each of the tag items defined in RCI and RSCI.
- *  . 
+ *  .
  *  An intermediate derived class, CTagItemGeneratorWithProfiles, is used as the
  *  base class for all these tag item generators. This takes care of the common
  *	task of checking whether a given tag is in a particular profile.
@@ -53,7 +53,7 @@ string CTagItemGeneratorCfre::GetTagName(void) {return "cfre";}
 
 void CTagItemGeneratorCdmo::GenTag(const EDemodulationType eMode) // cdmo
 {
-	PrepareTag(4 * SIZEOF__BYTE);
+	PrepareTag(4 * sizeof(_BINARY));
 	string s;
 	switch (eMode)
 	{
@@ -67,15 +67,15 @@ void CTagItemGeneratorCdmo::GenTag(const EDemodulationType eMode) // cdmo
 	}
 
 	for (int i=0; i<4; i++)
-		Enqueue((uint32_t) s[i], SIZEOF__BYTE);
+		Enqueue((uint32_t) s[i], sizeof(_BINARY));
 }
 
 string CTagItemGeneratorCdmo::GetTagName(void) {return "cdmo";}
 
 void CTagItemGeneratorCser::GenTag(const int iServiceID) // cser
 {
-	PrepareTag(1*SIZEOF__BYTE);
-	Enqueue((uint8_t) iServiceID, SIZEOF__BYTE);
+	PrepareTag(1*sizeof(_BINARY));
+	Enqueue((uint8_t) iServiceID, sizeof(_BINARY));
 }
 
 string CTagItemGeneratorCser::GetTagName(void) {return "cser";}

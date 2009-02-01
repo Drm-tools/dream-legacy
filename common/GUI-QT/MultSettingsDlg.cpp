@@ -30,7 +30,7 @@
 /* Implementation *************************************************************/
 
 MultSettingsDlg::MultSettingsDlg(CSettings& NSettings, QWidget* parent,
-	const char* name, bool modal, WFlags f) :
+	const char* name, bool modal, Qt::WFlags f) :
 	CMultSettingsDlgBase(parent, name, modal, f), Settings(NSettings)
 {
 	/* Set help text for the controls */
@@ -69,13 +69,13 @@ void MultSettingsDlg::hideEvent(QHideEvent*)
 
 void MultSettingsDlg::showEvent(QShowEvent*)
 {
-	if (Settings.Get("Multimedia Dialog", "addrefresh", TRUE))
-		CheckBoxAddRefresh->setChecked(TRUE);
+	if (Settings.Get("Multimedia Dialog", "addrefresh", true))
+		CheckBoxAddRefresh->setChecked(true);
 
 	EdtSecRefresh->setText(QString().setNum(Settings.Get("Multimedia Dialog", "motbwsrefresh", 10)));
 }
 
-void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN bDeleteDirs = FALSE)
+void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", bool bDeleteDirs = false)
 {
 	/* Delete files into sPath directory with scan recursive */
 
@@ -106,7 +106,7 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 					ClearCache(fi->filePath(), sFilter, bDeleteDirs);
 
 					/* Eventually delete the directory */
-					if (bDeleteDirs == TRUE)
+					if (bDeleteDirs == true)
 						dir.rmdir(fi->fileName());
 				}
 			}
@@ -122,7 +122,7 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 void MultSettingsDlg::OnbuttonClearCacheMOT()
 {
 	/* delete all files and directories into the MOTBWS directory */
-	ClearCache(Settings.Get("Multimedia Dialog", "storagepath").c_str(), "", TRUE);
+	ClearCache(Settings.Get("Multimedia Dialog", "storagepath").c_str(), "", true);
 }
 
 void MultSettingsDlg::OnbuttonClearCacheEPG()

@@ -40,7 +40,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 	int			iNumDetPeaks;
 	//int			iDiffTemp;
 	//CReal		rLevDiff;
-	_BOOLEAN	bNoPeaksLeft;
+	bool	bNoPeaksLeft;
 	CRealVector	vecrPSDPilPoin(3);
 
 	ReceiverParam.Lock();
@@ -52,7 +52,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 		iFreeSymbolCounter = 0;
 	}
 
-	if (bAquisition == TRUE)
+	if (bAquisition == true)
 	{
 
 		/* Do not transfer any data to the next block if no frequency
@@ -227,13 +227,13 @@ fclose(pFile2);
 					/* First, get the first valid peak entry and init the
 					   maximum with this value. We also detect, if a peak is
 					   left */
-					bNoPeaksLeft = TRUE;
+					bNoPeaksLeft = true;
 					for (i = 0; i < iNumDetPeaks; i++)
 					{
 						if (vecbFlagVec[i] == 1)
 						{
 							/* At least one peak is left */
-							bNoPeaksLeft = FALSE;
+							bNoPeaksLeft = false;
 
 							/* Init max value */
 							iMaxIndex = veciPeakIndex[i];
@@ -241,7 +241,7 @@ fclose(pFile2);
 						}
 					}
 
-					if (bNoPeaksLeft == FALSE)
+					if (bNoPeaksLeft == false)
 					{
 						/* Actual maximum detection, take the remaining peak
 						   which has the highest value */
@@ -286,13 +286,13 @@ fclose(pFile1);
 							(_REAL) iMaxIndex / iFrAcFFTSize;
 
 						/* Reset acquisition flag */
-						bAquisition = FALSE;
+						bAquisition = false;
 
 
 						/* Send out the data stored for FFT calculation ----- */
 						/* This does not work for bandpass filter. TODO: make
 						   this possible for bandpass filter, too */
-						if (bUseRecFilter == FALSE)
+						if (bUseRecFilter == false)
 						{
 							iOutputBlockSize = iHistBufSize;
 
@@ -325,7 +325,7 @@ fclose(pFile1);
 		/* If synchronized DRM input stream is used, overwrite the detected
 		   frequency offest estimate by the desired frequency, because we know
 		   this value */
-		if (bSyncInput == TRUE)
+		if (bSyncInput == true)
 		{
 			ReceiverParam.rFreqOffsetAcqui =
 				(_REAL) ReceiverParam.CellMappingTable.iIndexDCFreq / ReceiverParam.CellMappingTable.iFFTSizeN;
@@ -361,7 +361,7 @@ fclose(pFile1);
 
 
 		/* Bandpass filter -------------------------------------------------- */
-		if (bUseRecFilter == TRUE)
+		if (bUseRecFilter == true)
 			BPFilter.Process(*pvecOutputData);
 
 	}
@@ -452,17 +452,10 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	/* Init moving average class for SqMag FFT results */
 	vvrPSDMovAv.InitVec(NUM_FFT_RES_AV_BLOCKS, iHalfBuffer);
 
-
 	/* Frequency correction */
 	/* Start with phase null (arbitrary) */
 	cCurExp = (_REAL) 1.0;
 	rInternIFNorm = (_REAL) ReceiverParam.CellMappingTable.iIndexDCFreq / iFFTSize;
-
-
-	/* Init bandpass filter object */
-	BPFilter.Init(ReceiverParam.CellMappingTable.iSymbolBlockSize, VIRTUAL_INTERMED_FREQ,
-		ReceiverParam.GetSpectrumOccup(), CDRMBandpassFilt::FT_RECEIVER);
-
 
 	/* Define block-sizes for input (The output block size is set inside
 	   the processing routine, therefore only a maximum block size is set
@@ -477,6 +470,22 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 
 	/* OPH: init free-running symbol counter */
 	iFreeSymbolCounter = 0;
+
+	/* Init bandpass filter object */
+	/* Negative margin for receiver filter for better interferer rejection */
+	CReal rMargin = -200.0 /* Hz */;
+    /* Choose correct filter for chosen DRM bandwidth. Also, adjust offset
+   frequency for different modes. E.g., 5 kHz mode is on the right side
+   of the DC frequency */
+	/* Band-pass filter bandwidth */
+	CReal rBPFiltBW = ((CReal) 10000.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
+
+	BPFilter.Init(
+        iInputBlockSize,
+        VIRTUAL_INTERMED_FREQ,
+        ReceiverParam.GetNominalBandwidth(),
+        rMargin
+    );
 
 	ReceiverParam.Unlock();
 }
@@ -494,7 +503,7 @@ void CFreqSyncAcq::SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize)
 void CFreqSyncAcq::StartAcquisition()
 {
 	/* Set flag so that the actual acquisition routine is entered */
-	bAquisition = TRUE;
+	bAquisition = true;
 
 	/* Reset (or init) counters */
 	iAquisitionCounter = NUM_BLOCKS_4_FREQ_ACQU;
