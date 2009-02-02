@@ -36,6 +36,193 @@
 //#include "util/LogPrint.h"
 
 /* Implementation *************************************************************/
+
+CAudioParam::CAudioParam(): CDumpable(),strTextMessage(),
+    eAudioCoding(AC_AAC), eSBRFlag(SB_NOT_USED), eAudioSamplRate(AS_24KHZ),
+    bTextflag(false), bEnhanceFlag(false), eAudioMode(AM_MONO),
+    iCELPIndex(0), bCELPCRC(false), eHVXCRate(HR_2_KBIT), bHVXCCRC(false)
+{
+}
+
+CAudioParam::CAudioParam(const CAudioParam& ap):
+    CDumpable(),
+    strTextMessage(ap.strTextMessage),
+    eAudioCoding(ap.eAudioCoding),
+    eSBRFlag(ap.eSBRFlag),
+    eAudioSamplRate(ap.eAudioSamplRate),
+    bTextflag(ap.bTextflag),
+    bEnhanceFlag(ap.bEnhanceFlag),
+    eAudioMode(ap.eAudioMode),
+    iCELPIndex(ap.iCELPIndex),
+    bCELPCRC(ap.bCELPCRC),
+    eHVXCRate(ap.eHVXCRate),
+    bHVXCCRC(ap.bHVXCCRC)
+{
+}
+
+CAudioParam& CAudioParam::operator=(const CAudioParam& ap)
+{
+    strTextMessage = ap.strTextMessage;
+    eAudioCoding = ap.eAudioCoding;
+    eSBRFlag = ap.eSBRFlag;
+    eAudioSamplRate = ap.eAudioSamplRate;
+    bTextflag =	ap.bTextflag;
+    bEnhanceFlag = ap.bEnhanceFlag;
+    eAudioMode = ap.eAudioMode;
+    iCELPIndex = ap.iCELPIndex;
+    bCELPCRC = ap.bCELPCRC;
+    eHVXCRate = ap.eHVXCRate;
+    bHVXCCRC = ap.bHVXCCRC;
+    return *this;
+}
+
+bool CAudioParam::operator!=(const CAudioParam& AudioParam)
+{
+    if (eAudioCoding != AudioParam.eAudioCoding)
+        return true;
+    if (eSBRFlag != AudioParam.eSBRFlag)
+        return true;
+    if (eAudioSamplRate != AudioParam.eAudioSamplRate)
+        return true;
+    if (bTextflag != AudioParam.bTextflag)
+        return true;
+    if (bEnhanceFlag != AudioParam.bEnhanceFlag)
+        return true;
+
+    switch (AudioParam.eAudioCoding)
+    {
+    case AC_AAC:
+        if (eAudioMode != AudioParam.eAudioMode)
+            return true;
+        break;
+
+    case AC_CELP:
+        if (bCELPCRC != AudioParam.bCELPCRC)
+            return true;
+        if (iCELPIndex != AudioParam.iCELPIndex)
+            return true;
+        break;
+
+    case AC_HVXC:
+        if (eHVXCRate != AudioParam.eHVXCRate)
+            return true;
+        if (bHVXCCRC != AudioParam.bHVXCCRC)
+            return true;
+        break;
+    }
+    return false;
+}
+
+CDataParam::CDataParam():
+    CDumpable(),
+    ePacketModInd(PM_PACKET_MODE),
+    eDataUnitInd(DU_DATA_UNITS),
+    eAppDomain(AD_DAB_SPEC_APP),
+    iUserAppIdent(0)
+{
+}
+
+CDataParam::CDataParam(const CDataParam& DataParam):
+    CDumpable(),
+    ePacketModInd(DataParam.ePacketModInd),
+    eDataUnitInd(DataParam.eDataUnitInd),
+    eAppDomain(DataParam.eAppDomain),
+    iUserAppIdent(DataParam.iUserAppIdent)
+{
+}
+
+CDataParam& CDataParam::operator=(const CDataParam& DataParam)
+{
+    ePacketModInd = DataParam.ePacketModInd;
+    eDataUnitInd = DataParam.eDataUnitInd;
+    eAppDomain = DataParam.eAppDomain;
+    iUserAppIdent = DataParam.iUserAppIdent;
+    return *this;
+}
+
+bool CDataParam::operator!=(const CDataParam& DataParam)
+{
+    if (ePacketModInd != DataParam.ePacketModInd)
+        return true;
+    if (DataParam.ePacketModInd == PM_PACKET_MODE)
+    {
+        if (eDataUnitInd != DataParam.eDataUnitInd)
+            return true;
+        if (eAppDomain != DataParam.eAppDomain)
+            return true;
+        if (DataParam.eAppDomain == AD_DAB_SPEC_APP)
+            if (iUserAppIdent != DataParam.iUserAppIdent)
+                return true;
+    }
+    return false;
+}
+
+CService::CService():
+    CDumpable(),
+    iServiceID(SERV_ID_NOT_USED), eCAIndication(CA_NOT_USED),
+    iLanguage(0), eAudDataFlag(SF_AUDIO), iServiceDescr(0),
+    strCountryCode(), strLanguageCode(), strLabel(),
+    iAudioStream(STREAM_ID_NOT_USED), iDataStream(STREAM_ID_NOT_USED), iPacketID(0)
+{
+}
+
+CService::CService(const CService& s):
+    CDumpable(),
+    iServiceID(s.iServiceID), eCAIndication(s.eCAIndication),
+    iLanguage(s.iLanguage), eAudDataFlag(s.eAudDataFlag),
+    iServiceDescr(s.iServiceDescr), strCountryCode(s.strCountryCode),
+    strLanguageCode(s.strLanguageCode), strLabel(s.strLabel),
+    iAudioStream(s.iAudioStream), iDataStream(s.iDataStream),
+    iPacketID(s.iPacketID)
+{
+}
+
+CService& CService::operator=(const CService& s)
+{
+    iServiceID = s.iServiceID;
+    eCAIndication = s.eCAIndication;
+    iLanguage = s.iLanguage;
+    eAudDataFlag = s.eAudDataFlag;
+    iServiceDescr = s.iServiceDescr;
+    strCountryCode = s.strCountryCode;
+    strLanguageCode = s.strLanguageCode;
+    strLabel = s.strLabel;
+    iAudioStream = s.iAudioStream;
+    iDataStream = s.iDataStream;
+    iPacketID = s.iPacketID;
+    return *this;
+}
+
+CStream::CStream():CDumpable(),iLenPartA(0), iLenPartB(0),
+eAudDataFlag(SF_AUDIO),ePacketModInd(PM_PACKET_MODE),iPacketLen(0)
+{
+}
+
+CStream::CStream(const CStream& s):
+CDumpable(),iLenPartA(s.iLenPartA), iLenPartB(s.iLenPartB),
+eAudDataFlag(s.eAudDataFlag),ePacketModInd(s.ePacketModInd),
+iPacketLen(s.iPacketLen)
+{
+}
+
+CStream& CStream::operator=(const CStream& Stream)
+{
+    iLenPartA=Stream.iLenPartA; iLenPartB=Stream.iLenPartB;
+    eAudDataFlag = Stream.eAudDataFlag;
+    ePacketModInd=Stream.ePacketModInd;
+    iPacketLen=Stream.iPacketLen;
+    return *this;
+}
+
+bool CStream::operator==(const CStream& Stream)
+{
+    if (iLenPartA != Stream.iLenPartA)
+        return false;
+    if (iLenPartB != Stream.iLenPartB)
+        return false;
+    return true;
+}
+
 CParameter::CParameter():
  pDRMRec(NULL),
  eSymbolInterlMode(),
@@ -135,7 +322,7 @@ CParameter::~CParameter()
 }
 
 CParameter::CParameter(const CParameter& p):
- pDRMRec(p.pDRMRec),
+ CDumpable(),pDRMRec(p.pDRMRec),
  eSymbolInterlMode(p.eSymbolInterlMode),
  eMSCCodingScheme(p.eMSCCodingScheme),
  eSDCCodingScheme(p.eSDCCodingScheme),
@@ -1095,7 +1282,7 @@ void CParameter::GenerateRandomSerialNumber()
 	sSerialNumber = serialNumTemp;
 }
 
-CMinMaxMean::CMinMaxMean():rSum(0.0),rCur(0.0),
+CMinMaxMean::CMinMaxMean():CDumpable(),rSum(0.0),rCur(0.0),
 rMin(numeric_limits<_REAL>::max()),rMax(numeric_limits<_REAL>::min()),iNum(0)
 {
 }

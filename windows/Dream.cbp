@@ -25,7 +25,6 @@
 				<Option object_output="Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode DRMRX --rsiin 9999" />
 				<Compiler>
 					<Add option="-W" />
 					<Add option="-g" />
@@ -182,6 +181,7 @@
 		<Unit filename="..\common\SDC\SDCTransmit.cpp" />
 		<Unit filename="..\common\ServiceInformation.cpp" />
 		<Unit filename="..\common\ServiceInformation.h" />
+		<Unit filename="..\common\SigProc.h" />
 		<Unit filename="..\common\SimulationParameters.cpp" />
 		<Unit filename="..\common\TextMessage.cpp" />
 		<Unit filename="..\common\TextMessage.h" />

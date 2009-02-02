@@ -107,6 +107,8 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
     {
     public:
         virtual void dump(ostream&) const = 0;
+        CDumpable() {}
+        virtual ~CDumpable() {}
     };
 
 	class CAudioParam : public CDumpable
@@ -128,41 +130,11 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		/* AS: Audio Sampling rate */
 		enum EAudSamRat { AS_8_KHZ, AS_12KHZ, AS_16KHZ, AS_24KHZ };
 
-		CAudioParam(): strTextMessage(),
-			eAudioCoding(AC_AAC), eSBRFlag(SB_NOT_USED), eAudioSamplRate(AS_24KHZ),
-			bTextflag(false), bEnhanceFlag(false), eAudioMode(AM_MONO),
-			iCELPIndex(0), bCELPCRC(false), eHVXCRate(HR_2_KBIT), bHVXCCRC(false)
-		{
-		}
-		CAudioParam(const CAudioParam& ap):
-			strTextMessage(ap.strTextMessage),
-			eAudioCoding(ap.eAudioCoding),
-			eSBRFlag(ap.eSBRFlag),
-			eAudioSamplRate(ap.eAudioSamplRate),
-			bTextflag(ap.bTextflag),
-			bEnhanceFlag(ap.bEnhanceFlag),
-			eAudioMode(ap.eAudioMode),
-			iCELPIndex(ap.iCELPIndex),
-			bCELPCRC(ap.bCELPCRC),
-			eHVXCRate(ap.eHVXCRate),
-			bHVXCCRC(ap.bHVXCCRC)
-		{
-		}
-		CAudioParam& operator=(const CAudioParam& ap)
-		{
-			strTextMessage = ap.strTextMessage;
-			eAudioCoding = ap.eAudioCoding;
-			eSBRFlag = ap.eSBRFlag;
-			eAudioSamplRate = ap.eAudioSamplRate;
-			bTextflag =	ap.bTextflag;
-			bEnhanceFlag = ap.bEnhanceFlag;
-			eAudioMode = ap.eAudioMode;
-			iCELPIndex = ap.iCELPIndex;
-			bCELPCRC = ap.bCELPCRC;
-			eHVXCRate = ap.eHVXCRate;
-			bHVXCCRC = ap.bHVXCCRC;
-			return *this;
-		}
+        CAudioParam();
+        CAudioParam(const CAudioParam&);
+        CAudioParam& operator=(const CAudioParam&);
+		bool operator!=(const CAudioParam&);
+		void dump(ostream&) const;
 
 		/* Text-message */
 		string strTextMessage;	/* Max length is (8 * 16 Bytes) */
@@ -184,45 +156,6 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		EHVXCRate eHVXCRate;	/* This field indicates the rate of the HVXC */
 		bool bHVXCCRC;		/* This field indicates whether the CRC is used or not */
 
-
-		/* This function is needed for detection changes in the class */
-		bool operator!=(const CAudioParam AudioParam)
-		{
-			if (eAudioCoding != AudioParam.eAudioCoding)
-				return true;
-			if (eSBRFlag != AudioParam.eSBRFlag)
-				return true;
-			if (eAudioSamplRate != AudioParam.eAudioSamplRate)
-				return true;
-			if (bTextflag != AudioParam.bTextflag)
-				return true;
-			if (bEnhanceFlag != AudioParam.bEnhanceFlag)
-				return true;
-
-			switch (AudioParam.eAudioCoding)
-			{
-			case AC_AAC:
-				if (eAudioMode != AudioParam.eAudioMode)
-					return true;
-				break;
-
-			case AC_CELP:
-				if (bCELPCRC != AudioParam.bCELPCRC)
-					return true;
-				if (iCELPIndex != AudioParam.iCELPIndex)
-					return true;
-				break;
-
-			case AC_HVXC:
-				if (eHVXCRate != AudioParam.eHVXCRate)
-					return true;
-				if (bHVXCCRC != AudioParam.bHVXCCRC)
-					return true;
-				break;
-			}
-			return false;
-		}
-		void dump(ostream&) const;
 	};
 
 	class CDataParam : public CDumpable
@@ -244,46 +177,10 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		EApplDomain eAppDomain;	/* Application domain */
 		int iUserAppIdent;		/* User application identifier, only DAB */
 
-		CDataParam():
-			ePacketModInd(PM_PACKET_MODE),
-			eDataUnitInd(DU_DATA_UNITS),
-			eAppDomain(AD_DAB_SPEC_APP),
-			iUserAppIdent(0)
-		{
-		}
-		CDataParam(const CDataParam& DataParam):
-			ePacketModInd(DataParam.ePacketModInd),
-			eDataUnitInd(DataParam.eDataUnitInd),
-			eAppDomain(DataParam.eAppDomain),
-			iUserAppIdent(DataParam.iUserAppIdent)
-		{
-		}
-		CDataParam& operator=(const CDataParam& DataParam)
-		{
-			ePacketModInd = DataParam.ePacketModInd;
-			eDataUnitInd = DataParam.eDataUnitInd;
-			eAppDomain = DataParam.eAppDomain;
-			iUserAppIdent = DataParam.iUserAppIdent;
-			return *this;
-		}
-
-		/* This function is needed for detection changes in the class */
-		bool operator!=(const CDataParam DataParam)
-		{
-			if (ePacketModInd != DataParam.ePacketModInd)
-				return true;
-			if (DataParam.ePacketModInd == PM_PACKET_MODE)
-			{
-				if (eDataUnitInd != DataParam.eDataUnitInd)
-					return true;
-				if (eAppDomain != DataParam.eAppDomain)
-					return true;
-				if (DataParam.eAppDomain == AD_DAB_SPEC_APP)
-					if (iUserAppIdent != DataParam.iUserAppIdent)
-						return true;
-			}
-			return false;
-		}
+		CDataParam();
+		CDataParam(const CDataParam&);
+        CDataParam& operator=(const CDataParam&);
+        bool operator!=(const CDataParam&);
 		void dump(ostream&) const;
 	};
 
@@ -295,42 +192,15 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		enum ECACond { CA_USED, CA_NOT_USED };
 
 
-		CService():
-			iServiceID(SERV_ID_NOT_USED), eCAIndication(CA_NOT_USED),
-			iLanguage(0), eAudDataFlag(SF_AUDIO), iServiceDescr(0),
-			strCountryCode(), strLanguageCode(), strLabel(),
-			iAudioStream(STREAM_ID_NOT_USED), iDataStream(STREAM_ID_NOT_USED), iPacketID(0)
-		{
-		}
-		CService(const CService& s):
-			iServiceID(s.iServiceID), eCAIndication(s.eCAIndication),
-			iLanguage(s.iLanguage), eAudDataFlag(s.eAudDataFlag),
-			iServiceDescr(s.iServiceDescr), strCountryCode(s.strCountryCode),
-			strLanguageCode(s.strLanguageCode), strLabel(s.strLabel),
-			iAudioStream(s.iAudioStream), iDataStream(s.iDataStream),
-			iPacketID(s.iPacketID)
-		{
-		}
-		CService& operator=(const CService& s)
-		{
-			iServiceID = s.iServiceID;
-			eCAIndication = s.eCAIndication;
-			iLanguage = s.iLanguage;
-			eAudDataFlag = s.eAudDataFlag;
-			iServiceDescr = s.iServiceDescr;
-			strCountryCode = s.strCountryCode;
-			strLanguageCode = s.strLanguageCode;
-			strLabel = s.strLabel;
-			iAudioStream = s.iAudioStream;
-			iDataStream = s.iDataStream;
-			iPacketID = s.iPacketID;
-			return *this;
-		}
+		CService();
+		CService(const CService& s);
+		CService& operator=(const CService& s);
 
 		bool IsActive() const
 		{
 			return iServiceID != SERV_ID_NOT_USED;
 		}
+		void dump(ostream&) const;
 
 		uint32_t iServiceID;
 		ECACond eCAIndication;
@@ -349,54 +219,32 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		/* Data Component */
 		int iDataStream;
 		int iPacketID;
-		void dump(ostream&) const;
 	};
 
 	class CStream : public CDumpable
 	{
 	  public:
 
-		CStream():iLenPartA(0), iLenPartB(0), eAudDataFlag(SF_AUDIO),
-		ePacketModInd(PM_PACKET_MODE), iPacketLen(0)
-		{
-		}
-		CStream(const CStream& s):iLenPartA(s.iLenPartA), iLenPartB(s.iLenPartB),
-            eAudDataFlag(s.eAudDataFlag),
-			ePacketModInd(s.ePacketModInd), iPacketLen(s.iPacketLen)
-		{
-		}
-		CStream& operator=(const CStream& Stream)
-		{
-			iLenPartA=Stream.iLenPartA; iLenPartB=Stream.iLenPartB;
-		    eAudDataFlag = Stream.eAudDataFlag;
-			ePacketModInd=Stream.ePacketModInd;
-			iPacketLen=Stream.iPacketLen;
-			return *this;
-		}
-
-		bool operator==(const CStream Stream)
-		{
-			if (iLenPartA != Stream.iLenPartA)
-				return false;
-			if (iLenPartB != Stream.iLenPartB)
-				return false;
-			return true;
-		}
+		CStream();
+		CStream(const CStream&);
+		CStream& operator=(const CStream&);
+		bool operator==(const CStream&);
+		void dump(ostream&) const;
 
 		int iLenPartA;			/* Data length for part A */
 		int iLenPartB;			/* Data length for part B */
 		EStreamType eAudDataFlag; /* stream is audio or data */
 		EPackMod ePacketModInd;	/* Packet mode indicator for data streams */
 		int iPacketLen;			/* Packet length for packet streams */
-		void dump(ostream&) const;
 	};
 
 	class CMSCProtLev : public CDumpable
 	{
 	  public:
 
-		CMSCProtLev():iPartA(0),iPartB(0),iHierarch(0) {}
-		CMSCProtLev(const CMSCProtLev& p):iPartA(p.iPartA),iPartB(p.iPartB),iHierarch(p.iHierarch) {}
+		CMSCProtLev():CDumpable(),iPartA(0),iPartB(0),iHierarch(0) {}
+		CMSCProtLev(const CMSCProtLev& p):
+		CDumpable(),iPartA(p.iPartA),iPartB(p.iPartB),iHierarch(p.iHierarch) {}
 		CMSCProtLev& operator=(const CMSCProtLev& NewMSCProtLev)
 		{
 			iPartA = NewMSCProtLev.iPartA;
@@ -416,10 +264,11 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 	class CAltFreqSched : public CDumpable
 	{
 	  public:
-		CAltFreqSched():iDayCode(0),iStartTime(0),iDuration(0)
+		CAltFreqSched():CDumpable(),iDayCode(0),iStartTime(0),iDuration(0)
 		{
 		}
 		CAltFreqSched(const CAltFreqSched& nAFS):
+            CDumpable(),
 			iDayCode(nAFS.iDayCode), iStartTime(nAFS.iStartTime),
 			iDuration(nAFS.iDuration)
 		{
@@ -458,12 +307,13 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 	class CAltFreqRegion : public CDumpable
 	{
 	  public:
-		CAltFreqRegion():veciCIRAFZones(),
+		CAltFreqRegion():CDumpable(),veciCIRAFZones(),
 			iLatitude(0), iLongitude(0),
 			iLatitudeEx(0), iLongitudeEx(0)
 		{
 		}
 		CAltFreqRegion(const CAltFreqRegion& nAFR):
+            CDumpable(),
 			veciCIRAFZones(nAFR.veciCIRAFZones),
 			iLatitude(nAFR.iLatitude),
 			iLongitude(nAFR.iLongitude),
@@ -517,12 +367,13 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 	class CServiceDefinition : public CDumpable
 	{
  	public:
-		CServiceDefinition():veciFrequencies(), iRegionID(0), iScheduleID(0),iSystemID(0)
+		CServiceDefinition():
+		CDumpable(),veciFrequencies(), iRegionID(0), iScheduleID(0),iSystemID(0)
 		{
 		}
 
 		CServiceDefinition(const CServiceDefinition& nAF):
-			veciFrequencies(nAF.veciFrequencies),
+			CDumpable(),veciFrequencies(nAF.veciFrequencies),
 			iRegionID(nAF.iRegionID), iScheduleID(nAF.iScheduleID),
 			iSystemID(nAF.iSystemID)
 		{
@@ -675,13 +526,16 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 	{
 	  public:
 
-		CAltFreqSign():vecRegions(16),vecSchedules(16),vecMultiplexes(),vecOtherServices(),
+		CAltFreqSign():
+            CDumpable(),
+            vecRegions(16),vecSchedules(16),vecMultiplexes(),vecOtherServices(),
 			bRegionVersionFlag(false),bScheduleVersionFlag(false),
 			bMultiplexVersionFlag(false),bOtherServicesVersionFlag(false)
 		{
 		}
 
-		CAltFreqSign(const CAltFreqSign& a):vecRegions(a.vecRegions),
+		CAltFreqSign(const CAltFreqSign& a):
+            CDumpable(),vecRegions(a.vecRegions),
 			vecSchedules(a.vecSchedules), vecMultiplexes(a.vecMultiplexes),
 			bRegionVersionFlag(a.bRegionVersionFlag),
 			bScheduleVersionFlag(a.bScheduleVersionFlag),
@@ -752,10 +606,11 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 	class CLastService : public CDumpable
 	{
 	  public:
-		CLastService():iService(0), iServiceID(SERV_ID_NOT_USED)
+		CLastService():CDumpable(),iService(0), iServiceID(SERV_ID_NOT_USED)
 		{
 		}
-		CLastService(const CLastService& l):iService(l.iService), iServiceID(l.iServiceID)
+		CLastService(const CLastService& l):
+		CDumpable(),iService(l.iService), iServiceID(l.iServiceID)
 		{
 		}
 		CLastService& operator=(const CLastService& l)
@@ -790,8 +645,9 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 	class CRxStatus : public CDumpable
 	{
 	public:
-		CRxStatus():status(NOT_PRESENT),iNum(0),iNumOK(0) {}
-		CRxStatus(const CRxStatus& s):status(s.status),iNum(s.iNum),iNumOK(s.iNumOK) {}
+		CRxStatus():CDumpable(),status(NOT_PRESENT),iNum(0),iNumOK(0) {}
+		CRxStatus(const CRxStatus& s):
+		CDumpable(),status(s.status),iNum(s.iNum),iNumOK(s.iNumOK) {}
 		CRxStatus& operator=(const CRxStatus& s)
 			{ status = s.status; iNum = s.iNum; iNumOK = s.iNumOK; return *this;}
 		void SetStatus(const ETypeRxStatus);
@@ -808,11 +664,12 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 	class CReceiveStatus : public CDumpable
 	{
 	  public:
-		CReceiveStatus():FSync(),TSync(),Interface(),
+		CReceiveStatus():CDumpable(),FSync(),TSync(),Interface(),
 		FAC(),SDC(),Audio(),LLAudio(),MOT()
 		{
 		}
-		CReceiveStatus(const CReceiveStatus& s):FSync(s.FSync), TSync(s.TSync),
+		CReceiveStatus(const CReceiveStatus& s):
+            CDumpable(),FSync(s.FSync), TSync(s.TSync),
 			Interface(s.Interface), FAC(s.FAC), SDC(s.SDC),
 			Audio(s.Audio),LLAudio(s.LLAudio),MOT(s.MOT)
 		{
@@ -881,11 +738,13 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 
 		// Constructor
 		CFrontEndParameters():
+            CDumpable(),
 			eSMeterCorrectionType(S_METER_CORRECTION_TYPE_CAL_FACTOR_ONLY), rSMeterBandwidth(10000.0),
 				rDefaultMeasurementBandwidth(10000.0), bAutoMeasurementBandwidth(true), rCalFactorAM(0.0),
 				rCalFactorDRM(0.0), rIFCentreFreq(12000.0)
 			{}
 		CFrontEndParameters(const CFrontEndParameters& p):
+            CDumpable(),
 			eSMeterCorrectionType(p.eSMeterCorrectionType), rSMeterBandwidth(p.rSMeterBandwidth),
 			rDefaultMeasurementBandwidth(p.rDefaultMeasurementBandwidth),
 			bAutoMeasurementBandwidth(p.bAutoMeasurementBandwidth),
