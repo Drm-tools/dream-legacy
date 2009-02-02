@@ -111,12 +111,14 @@ protected:
 	string				filename;
 public:
 	CSoundInInterface*	pSoundInInterface;
-	bool			bRigUpdateNeeded;
+	bool				bRigUpdateNeeded;
 	CHamlib*			pHamlib;
 	CDRMReceiver*		pDrmRec;
-	CMutex				mutex;
+#ifdef USE_QT_GUI
+	QMutex				mutex;
+#endif
 	EInChanSel			eWantedChanSel;
-	bool			bOnBoardDemod, bOnBoardDemodWanted;
+	bool				bOnBoardDemod, bOnBoardDemodWanted;
 };
 
 class CSplitFAC : public CSplitModul<_BINARY>
@@ -187,11 +189,11 @@ public:
 	void					SetAnalogDemodAcq(_REAL rNewNorCen);
 
 	void					EnableAnalogAutoFreqAcq(const bool bNewEn);
-	bool				AnalogAutoFreqAcqEnabled();
+	bool					AnalogAutoFreqAcqEnabled();
 
 	void					EnableAnalogPLL(const bool bNewEn);
-	bool				AnalogPLLEnabled();
-	bool				GetAnalogPLLPhase(CReal& rPhaseOut);
+	bool					AnalogPLLEnabled();
+	bool					GetAnalogPLLPhase(CReal& rPhaseOut);
 
 	void					SetAnalogAGCType(const CAGC::EType eNewType);
 	CAGC::EType				GetAnalogAGCType();
@@ -200,11 +202,11 @@ public:
 	void					GetAnalogBWParameters(CReal& rCenterFreq, CReal& rBW);
 
 	void					SetUseAnalogHWDemod(bool);
-	bool				GetUseAnalogHWDemod();
+	bool					GetUseAnalogHWDemod();
 
 	void	 				SetEnableSMeter(bool bNew);
-	bool		 		GetEnableSMeter();
-	bool 				SetFrequency(int iNewFreqkHz);
+	bool		 			GetEnableSMeter();
+	bool 					SetFrequency(int iNewFreqkHz);
 	int		 				GetFrequency() { return iFreqkHz; }
 	void					SetIQRecording(bool);
 	void					SetRSIRecording(bool, const char);
@@ -327,7 +329,7 @@ public:
 protected:
 
 	void					InitReceiverMode();
-	bool				doSetFrequency();
+	bool					doSetFrequency();
 	void					SetInStartMode();
 	void					SetInTrackingMode();
 	void					SetInTrackingModeDelayed();
@@ -436,8 +438,8 @@ protected:
 	int						iDataStreamID;
 
 
-	bool				bDoInitRun;
-	bool				bRestartFlag;
+	bool					bDoInitRun;
+	bool					bRestartFlag;
 
 	_REAL					rInitResampleOffset;
 

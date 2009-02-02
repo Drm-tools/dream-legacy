@@ -40,7 +40,7 @@ class CMOTSlideShowEncoder
 {
   public:
     CMOTSlideShowEncoder ():MOTDAB(),vecPicFileNames(),
-    iPictureCnt(0), strCurObjName(""), Mutex()
+    iPictureCnt(0), strCurObjName("")
     {
     }
     virtual ~CMOTSlideShowEncoder()
@@ -71,8 +71,6 @@ class CMOTSlideShowEncoder
     int iPictureCnt;
 
     string strCurObjName;
-
-	CMutex Mutex;
 };
 
 #endif // !defined(MOTSLIDESHOW_H__3B0UBVE98732KJVEW363LIHGEW982__INCLUDED_)

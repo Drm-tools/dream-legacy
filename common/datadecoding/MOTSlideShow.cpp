@@ -39,10 +39,8 @@ CMOTSlideShowEncoder::GetDataUnit (CVector < _BINARY > &vecbiNewData)
     /* Get new data group from MOT encoder. If the last MOT object was
        completely transmitted, this functions returns true. In this case, put
        a new picture to the MOT encoder object */
-	Mutex.Lock();
     if (MOTDAB.GetDataGroup (vecbiNewData) == true)
 		AddNextPicture ();
-	Mutex.Unlock();
 }
 
 bool
@@ -51,10 +49,8 @@ CMOTSlideShowEncoder::GetTransStat (string & strCurPict, _REAL & rCurPerc)
 /*
 	Name and current percentage of transmitted data of current picture.
 */
-	Mutex.Lock();
     strCurPict = strCurObjName;
     rCurPerc = MOTDAB.GetProgPerc ();
-	Mutex.Unlock();
 
     if (vecPicFileNames.Size () != 0)
 		return true;
