@@ -1000,10 +1000,10 @@ class CParameter : public CDumpable
 		Mutex.lock();
 #endif
 	}
-	void unlock()
+	void Unlock()
 	{
 #ifdef HAVE_QT
-		Mutex.Unlock();
+		Mutex.unlock();
 #endif
 	}
 	/* Channel Estimation */
