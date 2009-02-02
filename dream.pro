@@ -27,7 +27,7 @@ macx {
 
 unix {
 	LIBS 		+= -lsndfile -lpcap
-	LIBS 		+= -lz -lqwt -lfaac -lfaad -lrfftw -lfftw
+	LIBS 		+= -lz -lqwt-qt3 -lfaac -lfaad -lrfftw -lfftw
 	SOURCES		+= linux/source/Pacer.cpp linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c
 	HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
 	DEFINES		+= HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H
@@ -39,6 +39,7 @@ unix {
 	!macx {
 		MAKEFILE	= Makefile.qt
 		INCLUDEPATH	+= linux
+		INCLUDEPATH	+= /usr/include/qwt-qt3
 		LIBS 		+= -lrt
 		OBJECTS_DIR	= linux
 		UI_DIR		= linux/moc

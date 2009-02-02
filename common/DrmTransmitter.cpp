@@ -38,7 +38,7 @@ CDRMTransmitter::CDRMTransmitter():
 	TransmParam(), eOpMode(T_TX),
 	strMDIinAddr(), MDIoutAddr(),
 	Encoder(), Modulator(),
-	MDIIn(), DecodeMDI(), MDIOut(*new CMDIOut())
+	MDIIn(), DecodeMDI(), pMDIOut(new CMDIOut())
 {
 	/* Init streams */
 	TransmParam.ResetServicesStreams();
@@ -182,16 +182,16 @@ void CDRMTransmitter::Start()
             TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
             Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
             {
-                // delete the old MDIOut and get a new one so that we discard the
+                // delete the old pMDIOut and get a new one so that we discard the
                 // old destinations
-                CMDIOut* old = &MDIOut;
+                CMDIOut* old = pMDIOut;
                 delete old;
-                MDIOut = *new CMDIOut();
+                pMDIOut = new CMDIOut();
                 /* set the output address */
                 for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
-                    MDIOut.AddSubscriber(*s, "", 'M');
+                    pMDIOut->AddSubscriber(*s, "", 'M');
             }
-            MDIOut.Init(TransmParam);
+            pMDIOut->Init(TransmParam);
             break;
         case T_MOD:
             if(strMDIinAddr != "")
@@ -209,7 +209,7 @@ void CDRMTransmitter::Start()
         /* Set run flag */
         TransmParam.bRunThread = true;
         cout << "Tx: starting, in:" << (MDIIn.GetInEnabled()?"MDI":"Encoder")
-             << ", out: " << (MDIOut.GetOutEnabled()?"MDI":"COFDM")
+             << ", out: " << (pMDIOut->GetOutEnabled()?"MDI":"COFDM")
              << endl; cout.flush();
 
 		while (TransmParam.bRunThread)
@@ -265,7 +265,7 @@ void CDRMTransmitter::Start()
 
 			if(eOpMode == T_ENC)
 			{
-				MDIOut.WriteData(TransmParam, FACBuf, SDCBuf, MSCBuf);
+				pMDIOut->WriteData(TransmParam, FACBuf, SDCBuf, MSCBuf);
 			}
 			else
 			{

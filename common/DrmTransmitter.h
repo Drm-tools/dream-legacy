@@ -95,7 +95,7 @@ protected:
 	CDRMModulator			Modulator;
 	CMDIIn					MDIIn;
 	CDecodeMDI				DecodeMDI;
-	CMDIOut&					MDIOut;
+	CMDIOut*				pMDIOut;
 };
 
 
