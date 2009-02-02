@@ -32,6 +32,10 @@
 
 #include "Buffer.h"
 #include "../Parameter.h"
+#ifdef HAVE_QT
+# include <qthread.h>
+# include <qmutex.h>
+#endif
 
 
 /* Classes ********************************************************************/
@@ -60,6 +64,16 @@ protected:
 	virtual void		InitInternal(CParameter& Parameter) = 0;
 	void				ProcessDataThreadSave(CParameter& Parameter);
 	virtual void		ProcessDataInternal(CParameter& Parameter) = 0;
+
+#ifdef HAVE_QT
+	void				Lock() { mutex.lock(); }
+	void				Unlock() { mutex.unlock(); }
+private:
+	QMutex mutex;
+#else
+	void				Lock() { }
+	void				Unlock() { }
+#endif
 };
 
 /* Implementation *************************************************************/
