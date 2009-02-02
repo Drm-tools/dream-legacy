@@ -45,8 +45,8 @@ public:
 
 	void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
 	void		ReInit();
-	_BOOLEAN	Read(vector<_SAMPLE>& data);
-	_BOOLEAN	Write(vector<_SAMPLE>& data);
+	bool	Read(vector<_SAMPLE>& data);
+	bool	Write(vector<_SAMPLE>& data);
 	void		Close();
 
 	PaUtilRingBuffer ringBuffer;
@@ -77,9 +77,9 @@ public:
 	virtual void		SetDev(int iNewDevice) { hw.SetDev(iNewDevice); }
 	virtual int			GetDev() { return hw.GetDev(); }
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
+	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
 	virtual void		Close();
-	virtual _BOOLEAN	Read(vector<_SAMPLE>& data);
+	virtual bool	Read(vector<_SAMPLE>& data);
 
 protected:
 
@@ -95,9 +95,9 @@ public:
 	virtual void		SetDev(int iNewDevice) { hw.SetDev(iNewDevice); }
 	virtual int			GetDev() { return hw.GetDev(); }
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
+	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
 	virtual void		Close();
-	virtual _BOOLEAN	Write(vector<_SAMPLE>& data);
+	virtual bool	Write(vector<_SAMPLE>& data);
 
 protected:
 

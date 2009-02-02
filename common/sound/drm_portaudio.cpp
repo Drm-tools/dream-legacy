@@ -180,7 +180,7 @@ CPaCommon::GetDev()
 
 /* buffer_size is in samples - frames would be better */
 void
-CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
+CPaCommon::Init(int iNewBufferSize, bool bNewBlocking, int iChannels)
 {
 	if (device_changed == false)
 		return;
@@ -321,14 +321,14 @@ CPaCommon::Close()
 	}
 }
 
-_BOOLEAN
+bool
 CPaCommon::Read(vector<_SAMPLE>& data)
 {
 	if (device_changed)
 		ReInit();
 
 	if(stream==NULL)
-		return TRUE;
+		return true;
 
 	size_t bytes = data.size() * sizeof(_SAMPLE);
 
@@ -340,27 +340,27 @@ CPaCommon::Read(vector<_SAMPLE>& data)
 
 	PaUtil_ReadRingBuffer(&ringBuffer, &data[0], bytes);
 	if(xruns==0)
-		return FALSE;
+		return false;
 	else
 		cout << "overrun" << endl;
 	xruns = 0;
-	return TRUE;
+	return true;
 }
 
-_BOOLEAN
+bool
 CPaCommon::Write(vector<_SAMPLE>& data)
 {
 	if (device_changed)
 		ReInit();
 
 	if(stream==NULL)
-		return TRUE;
+		return true;
 
 	size_t bytes = data.size() * sizeof(_SAMPLE);
 
 	//cout << "Write: got " << bytes << " can put " << PaUtil_GetRingBufferWriteAvailable(&ringBuffer) << endl;
 	if (PaUtil_GetRingBufferWriteAvailable(&ringBuffer) < int(bytes))
-		return FALSE;			/* TODO use newer data in preference to draining old */
+		return false;			/* TODO use newer data in preference to draining old */
 
 	PaUtil_WriteRingBuffer(&ringBuffer, &data[0], bytes);
 	if(Pa_IsStreamStopped( stream ))
@@ -370,11 +370,11 @@ CPaCommon::Write(vector<_SAMPLE>& data)
 			throw string("PortAudio error: ") + Pa_GetErrorText(err);
 	}
 	if(xruns==0)
-		return FALSE;
+		return false;
 	else
 		cout << "underrun" << endl;
 	xruns = 0;
-	return TRUE;
+	return true;
 }
 
 CPaIn::CPaIn():hw(true)
@@ -387,12 +387,12 @@ CPaIn::~CPaIn()
 }
 
 void
-CPaIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
+CPaIn::Init(int iNewBufferSize, bool bNewBlocking, int iChannels)
 {
 	hw.Init(iNewBufferSize, bNewBlocking, iChannels);
 }
 
-_BOOLEAN
+bool
 CPaIn::Read(vector<_SAMPLE>& data)
 {
 	return hw.Read(data);
@@ -415,12 +415,12 @@ CPaOut::~CPaOut()
 }
 
 void
-CPaOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
+CPaOut::Init(int iNewBufferSize, bool bNewBlocking, int iChannels)
 {
 	hw.Init(iNewBufferSize, bNewBlocking, iChannels);
 }
 
-_BOOLEAN
+bool
 CPaOut::Write(vector<_SAMPLE>& data)
 {
 	return hw.Write(data);
