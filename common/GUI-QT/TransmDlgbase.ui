@@ -2953,7 +2953,7 @@
 <customwidgets>
     <customwidget>
         <class>QwtThermo</class>
-        <header location="global">D:/dream/qwt-qt3/src/qwt_thermo.h</header>
+        <header location="global">qwt_thermo.h</header>
         <sizehint>
             <width>10</width>
             <height>40</height>
@@ -3068,6 +3068,6 @@
 </tabstops>
 <layoutdefaults spacing="6" margin="11"/>
 <includehints>
-    <includehint>D:/dream/qwt-qt3/src/qwt_thermo.h</includehint>
+    <includehint>qwt_thermo.h</includehint>
 </includehints>
 </UI>
