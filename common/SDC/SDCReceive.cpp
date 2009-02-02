@@ -84,18 +84,18 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 
 	if (eSDCType == SDC_DRM)
 	{
-		/* "- 4": Four bits already used, "/ sizeof(_BINARY)": We add bytes, not
+		/* "- 4": Four bits already used, "/ BITS_BINARY": We add bytes, not
 		   bits, "- 2": 16 bits for CRC at the end */
-		iNumBytesForCRCCheck = (iUsefulBitsSDC - 4) / sizeof(_BINARY) - 2;
+		iNumBytesForCRCCheck = (iUsefulBitsSDC - 4) / BITS_BINARY - 2;
 	}
 	else
 	{
 		/* Consider 2 bytes for CRC ("- 2") */
-		iNumBytesForCRCCheck = iUsefulBitsSDC / sizeof(_BINARY) - 2;
+		iNumBytesForCRCCheck = iUsefulBitsSDC / BITS_BINARY - 2;
 	}
 
 	for (int i = 0; i < iNumBytesForCRCCheck; i++)
-		CRCObject.AddByte((_BYTE) (*pbiData).Separate(sizeof(_BINARY)));
+		CRCObject.AddByte((_BYTE) (*pbiData).Separate(BITS_BINARY));
 
 	if (CRCObject.CheckCRC((*pbiData).Separate(16)) == true)
 	{
@@ -211,7 +211,7 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 CSDCReceive::ERetStatus CSDCReceive::SDCIParam(CVector<_BINARY>* pbiData,
 											  CParameter& Parameter)
 {
-	int iLengthOfBody = ((*pbiData).Size()-8) / sizeof(_BINARY);
+	int iLengthOfBody = ((*pbiData).Size()-8) / BITS_BINARY;
 	(*pbiData).ResetBitAccess();
 	(void)(*pbiData).Separate(4);
 	if(DataEntityType0(pbiData, iLengthOfBody, Parameter, 0))

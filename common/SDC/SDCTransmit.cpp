@@ -150,8 +150,8 @@ if (iNumUsedBits + iSize < iMaxNumBitsDataBlocks)
 	const _BYTE byFirstByte = (_BYTE) (*pbiData).Separate(4);
 	CRCObject.AddByte(byFirstByte);
 
-	for (i = 0; i < (iUsefulBitsSDC - 4) / sizeof(_BINARY) - 2; i++)
-		CRCObject.AddByte((_BYTE) (*pbiData).Separate(sizeof(_BINARY)));
+	for (i = 0; i < (iUsefulBitsSDC - 4) / BITS_BINARY - 2; i++)
+		CRCObject.AddByte((_BYTE) (*pbiData).Separate(BITS_BINARY));
 
 	/* Now, pointer in "enqueue"-function is back at the same place,
 	   add CRC */

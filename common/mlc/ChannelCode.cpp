@@ -175,7 +175,7 @@ CVector<int> CChannelCode::GenPuncPatTable(ECodScheme eNewCodingScheme,
 CChannelCode::CChannelCode()
 {
 	/* Create table for parity bit */
-	for (int j = 0; j < 1 << sizeof(_BINARY); j++)
+	for (int j = 0; j < 1 << BITS_BINARY; j++)
 	{
 		/* XOR all bits in byResult.
 		   We observe always the LSB by masking using operator "& 1". To get

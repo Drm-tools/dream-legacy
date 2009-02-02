@@ -63,7 +63,7 @@ int CTagPacketGenerator::GetTagPacketLength()
 
 	for (size_t i=0; i<vecTagItemGenerators.size(); i++)
 	{
-		int n = vecTagItemGenerators[i]->GetTotalLength() / sizeof(_BINARY);
+		int n = vecTagItemGenerators[i]->GetTotalLength() / BITS_BINARY;
 		iPayloadLenBytes += n;
 	}
 	return iPayloadLenBytes;
@@ -103,7 +103,7 @@ int CTagPacketGeneratorWithProfiles::GetTagPacketLength()
 	{
 		if (vecTagItemGenerators[i]->IsInProfile(cProfile))
 		{
-			int n = vecTagItemGenerators[i]->GetTotalLength() / sizeof(_BINARY);
+			int n = vecTagItemGenerators[i]->GetTotalLength() / BITS_BINARY;
 			iPayloadLenBytes += n;
 		}
 	}

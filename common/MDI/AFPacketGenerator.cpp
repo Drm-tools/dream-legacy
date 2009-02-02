@@ -55,15 +55,15 @@ CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const bool bUseAFCRC, CTagPacketG
 
 	/* 10 bytes AF header, 2 bytes CRC, payload */
 	const int iAFPktLenBits =
-		iPayloadLenBytes * sizeof(_BINARY) + 12 * sizeof(_BINARY);
+		iPayloadLenBytes * BITS_BINARY + 12 * BITS_BINARY;
 
 	/* Init vector length */
 	vecbiAFPkt.Init(iAFPktLenBits);
 	vecbiAFPkt.ResetBitAccess();
 
 	/* SYNC: two-byte ASCII representation of "AF" */
-	vecbiAFPkt.Enqueue((uint32_t) 'A', sizeof(_BINARY));
-	vecbiAFPkt.Enqueue((uint32_t) 'F', sizeof(_BINARY));
+	vecbiAFPkt.Enqueue((uint32_t) 'A', BITS_BINARY);
+	vecbiAFPkt.Enqueue((uint32_t) 'F', BITS_BINARY);
 
 	/* LEN: length of the payload, in bytes (4 bytes long -> 32 bits) */
 	vecbiAFPkt.Enqueue((uint32_t) iPayloadLenBytes, 32);
@@ -98,7 +98,7 @@ CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const bool bUseAFCRC, CTagPacketG
 	/* Protocol Type (PT): single byte encoding the protocol of the data carried
 	   in the payload. For TAG Packets, the value shall be the ASCII
 	   representation of "T" */
-	vecbiAFPkt.Enqueue((uint32_t) 'T', sizeof(_BINARY));
+	vecbiAFPkt.Enqueue((uint32_t) 'T', BITS_BINARY);
 
 
 	/* Payload -------------------------------------------------------------- */
@@ -120,8 +120,8 @@ CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const bool bUseAFCRC, CTagPacketG
 		vecbiAFPkt.ResetBitAccess();
 
 		/* 2 bytes CRC -> "- 2" */
-		for (int i = 0; i < iAFPktLenBits / sizeof(_BINARY) - 2; i++)
-			CRCObject.AddByte((_BYTE) vecbiAFPkt.Separate(sizeof(_BINARY)));
+		for (int i = 0; i < iAFPktLenBits / BITS_BINARY - 2; i++)
+			CRCObject.AddByte((_BYTE) vecbiAFPkt.Separate(BITS_BINARY));
 
 		/* Now, pointer in "enqueue"-function is back at the same place,
 		   add CRC */
@@ -139,11 +139,11 @@ CVector<_BYTE> CAFPacketGenerator::PackBytes(CVector<_BINARY> &vecbiPacket)
 	CVector<_BYTE> vecbyPacket;
 	vecbiPacket.ResetBitAccess();
 	size_t bits = vecbiPacket.Size();
-	size_t bytes = bits / sizeof(_BINARY);
+	size_t bytes = bits / BITS_BINARY;
 	vecbyPacket.reserve(bytes);
 	for(size_t i=0; i<bytes; i++)
 	{
-	 	_BYTE byte = (_BYTE)vecbiPacket.Separate(sizeof(_BINARY));
+	 	_BYTE byte = (_BYTE)vecbiPacket.Separate(BITS_BINARY);
 		vecbyPacket.push_back(byte);
 	}
 	return vecbyPacket;

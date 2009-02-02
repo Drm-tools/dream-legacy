@@ -71,8 +71,8 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	CRCObject.Reset(16);
 
 	/* "- 2": 16 bits for CRC at the end */
-	for (i = 0; i < iLenAFPkt / sizeof(_BINARY) - 2; i++)
-		CRCObject.AddByte((_BYTE) vecbiAFPkt.Separate(sizeof(_BINARY)));
+	for (i = 0; i < iLenAFPkt / BITS_BINARY - 2; i++)
+		CRCObject.AddByte((_BYTE) vecbiAFPkt.Separate(BITS_BINARY));
 
 	const bool bCRCOk = CRCObject.CheckCRC(vecbiAFPkt.Separate(16));
 
@@ -83,8 +83,8 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	string strSyncASCII = "";
 	for (i = 0; i < 2; i++)
 	{
-		_BYTE by = (_BYTE) vecbiAFPkt.Separate(sizeof(_BINARY));
-		//strSyncASCII += (_BYTE) vecbiAFPkt.Separate(sizeof(_BINARY));
+		_BYTE by = (_BYTE) vecbiAFPkt.Separate(BITS_BINARY);
+		//strSyncASCII += (_BYTE) vecbiAFPkt.Separate(BITS_BINARY);
 		strSyncASCII += by;
 	}
 
@@ -138,7 +138,7 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	/* Protocol Type (PT): single byte encoding the protocol of the data carried
 	   in the payload. For TAG Packets, the value shall be the ASCII
 	   representation of "T" */
-	if ((_BYTE) vecbiAFPkt.Separate(sizeof(_BINARY)) != 'T')
+	if ((_BYTE) vecbiAFPkt.Separate(BITS_BINARY) != 'T')
 	{
 		return E_PROTO;
 	}
@@ -170,7 +170,7 @@ int CTagPacketDecoder::DecodeTag(CVector<_BINARY>& vecbiTag)
 	/* Decode tag name (always four bytes long) */
 	string strTagName = "";
 	for (i = 0; i < 4; i++)
-		strTagName += (_BYTE) vecbiTag.Separate(sizeof(_BINARY));
+		strTagName += (_BYTE) vecbiTag.Separate(BITS_BINARY);
 	/* Get tag data length (4 bytes = 32 bits) */
 	const int iLenDataBits = vecbiTag.Separate(32);
 
@@ -191,7 +191,7 @@ int CTagPacketDecoder::DecodeTag(CVector<_BINARY>& vecbiTag)
 
 	/* Return number of consumed bytes. This number is the actual body plus two
 	   times for bytes for the header = 8 bytes */
-	return iLenDataBits / sizeof(_BINARY) + 8;
+	return iLenDataBits / BITS_BINARY + 8;
 
 }
 

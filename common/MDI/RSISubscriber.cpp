@@ -135,10 +135,10 @@ void CRSISubscriber::TransmitPacket(CTagPacketGenerator& Generator)
 void CRSISubscriber::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16_t)
 {
 	CVectorEx<_BINARY> vecbidata;
-	vecbidata.Init(vecbydata.size()*sizeof(_BINARY));
+	vecbidata.Init(vecbydata.size()*BITS_BINARY);
 	vecbidata.ResetBitAccess();
 	for(size_t i=0; i<vecbydata.size(); i++)
-		vecbidata.Enqueue(vecbydata[i], sizeof(_BINARY));
+		vecbidata.Enqueue(vecbydata[i], BITS_BINARY);
 	CTagPacketDecoder::Error err = TagPacketDecoderRSCIControl.DecodeAFPacket(vecbidata);
 	if(err != CTagPacketDecoder::E_OK)
 		cerr << "bad RSCI Control Packet Received" << endl;

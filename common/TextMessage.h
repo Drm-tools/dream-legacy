@@ -42,7 +42,7 @@
 #define BYTES_PER_SEG_TEXT_MESS			16
 
 #define TOT_NUM_BITS_PER_PIECE			((BYTES_PER_SEG_TEXT_MESS /* Max body */ \
-										+ 2 /* Header */ + 2 /* CRC */) * sizeof(_BINARY))
+										+ 2 /* Header */ + 2 /* CRC */) * BITS_BINARY)
 
 
 /* Classes ********************************************************************/

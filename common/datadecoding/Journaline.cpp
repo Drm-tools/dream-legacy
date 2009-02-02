@@ -74,7 +74,7 @@ void CJournaline::ResetOpenJournalineDecoder()
 
 void CJournaline::AddDataUnit(CVector<_BINARY>& vecbiNewData)
 {
-	const int iSizeBytes = vecbiNewData.Size() / sizeof(_BINARY);
+	const int iSizeBytes = vecbiNewData.Size() / BITS_BINARY;
 
 	if (iSizeBytes > 0)
 	{
@@ -83,7 +83,7 @@ void CJournaline::AddDataUnit(CVector<_BINARY>& vecbiNewData)
 		vecbiNewData.ResetBitAccess();
 
 		for (int i = 0; i < iSizeBytes; i++)
-			vecbyData[i] = (_BYTE) vecbiNewData.Separate(sizeof(_BINARY));
+			vecbyData[i] = (_BYTE) vecbiNewData.Separate(BITS_BINARY);
 
 		/* Add new data unit to Journaline decoder library */
 		DAB_DATAGROUP_DECODER_putData(dgdec, iSizeBytes, &vecbyData[0]);

@@ -92,9 +92,9 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 
 		/* FAC data is always 72 bits long which is 9 bytes, copy data
 		   byte-wise */
-		for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / sizeof(_BINARY); i++)
+		for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / BITS_BINARY; i++)
 		{
-			pvecOutputData->Enqueue(vecbiFACData.Separate(sizeof(_BINARY)), sizeof(_BINARY));
+			pvecOutputData->Enqueue(vecbiFACData.Separate(BITS_BINARY), BITS_BINARY);
 		}
 		iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 	}
@@ -171,10 +171,10 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 			pvecOutputData->ResetBitAccess();
 
 			/* Data is always a multiple of 8 -> copy bytes */
-			for (int j = 0; j < iStreamLen / sizeof(_BINARY); j++)
+			for (int j = 0; j < iStreamLen / BITS_BINARY; j++)
 			{
 				pvecOutputData->Enqueue(
-					vecbiStr.Separate(sizeof(_BINARY)), sizeof(_BINARY));
+					vecbiStr.Separate(BITS_BINARY), BITS_BINARY);
 			}
 			veciOutputBlockSize[i] = iStreamLen;
 		}
@@ -200,10 +200,10 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 			vecbiAMAudio.ResetBitAccess();
 			pvecOutputData->ResetBitAccess();
 			// Data is always a multiple of 8 -> copy bytes
-			for (int j = 0; j < iStreamLen / sizeof(_BINARY); j++)
+			for (int j = 0; j < iStreamLen / BITS_BINARY; j++)
 			{
 				pvecOutputData->Enqueue(
-				vecbiAMAudio.Separate(sizeof(_BINARY)), sizeof(_BINARY));
+				vecbiAMAudio.Separate(BITS_BINARY), BITS_BINARY);
 			}
 			veciOutputBlockSize[0] = iStreamLen;
 		}
@@ -216,7 +216,7 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 		Parameters.Lock();
 		Parameters.SetAudioParam(0, AudioParam);
 
-		Parameters.SetStreamLen(0, 0, iStreamLen/sizeof(_BINARY));
+		Parameters.SetStreamLen(0, 0, iStreamLen/BITS_BINARY);
 		Parameters.SetNumOfServices(1,0);
 		Parameters.Service[0].iAudioStream = 0;
 		Parameters.SetCurSelAudioService(0);
@@ -258,7 +258,7 @@ void CDecodeRSI::InitInternal(CParameter& Parameters)
 		int streamlen = Parameters.GetStreamLen(i);
 		if(streamlen == 0)
 			streamlen = 2048;
-		veciOutputBlockSize[i] = streamlen*sizeof(_BINARY);
+		veciOutputBlockSize[i] = streamlen*BITS_BINARY;
 	}
 
 	Parameters.Unlock();
@@ -278,14 +278,14 @@ void CDecodeMDI::InitInternal(CParameter& Parameters)
 	Decoder.Init(Parameters);
 	iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 	iOutputBlockSize2 = 0;
-	iMaxOutputBlockSize2 = 1500*sizeof(_BINARY);
+	iMaxOutputBlockSize2 = 1500*BITS_BINARY;
 	veciOutputBlockSize.resize(MAX_NUM_STREAMS);
 	veciMaxOutputBlockSize.resize(MAX_NUM_STREAMS);
 	vecpvecOutputData.resize(MAX_NUM_STREAMS);
 	for(i=0; i<MAX_NUM_STREAMS; i++)
 	{
 		veciOutputBlockSize[i] = 0;
-		veciMaxOutputBlockSize[i] = 1500*sizeof(_BINARY);
+		veciMaxOutputBlockSize[i] = 1500*BITS_BINARY;
 	}
 	iInputBlockSize = 1; // something
 }

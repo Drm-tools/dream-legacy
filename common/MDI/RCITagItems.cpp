@@ -53,7 +53,7 @@ string CTagItemGeneratorCfre::GetTagName(void) {return "cfre";}
 
 void CTagItemGeneratorCdmo::GenTag(const EDemodulationType eMode) // cdmo
 {
-	PrepareTag(4 * sizeof(_BINARY));
+	PrepareTag(4 * BITS_BINARY);
 	string s;
 	switch (eMode)
 	{
@@ -67,15 +67,15 @@ void CTagItemGeneratorCdmo::GenTag(const EDemodulationType eMode) // cdmo
 	}
 
 	for (int i=0; i<4; i++)
-		Enqueue((uint32_t) s[i], sizeof(_BINARY));
+		Enqueue((uint32_t) s[i], BITS_BINARY);
 }
 
 string CTagItemGeneratorCdmo::GetTagName(void) {return "cdmo";}
 
 void CTagItemGeneratorCser::GenTag(const int iServiceID) // cser
 {
-	PrepareTag(1*sizeof(_BINARY));
-	Enqueue((uint8_t) iServiceID, sizeof(_BINARY));
+	PrepareTag(1*BITS_BINARY);
+	Enqueue((uint8_t) iServiceID, BITS_BINARY);
 }
 
 string CTagItemGeneratorCser::GetTagName(void) {return "cser";}

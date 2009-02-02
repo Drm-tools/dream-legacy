@@ -110,7 +110,7 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 
 	for (size_t i = 0; i < n; i++)
 	{
-		const int iLenStrData = sizeof(_BINARY) * Parameter.GetStreamLen(i);
+		const int iLenStrData = BITS_BINARY * Parameter.GetStreamLen(i);
 		/* Only generate this tag if stream input data is not of zero length */
 		if (iLenStrData > 0)
 			vecTagItemGeneratorStr[i]
@@ -653,11 +653,11 @@ void CDIIn::ProcessData(CParameter& Parameter, CVectorEx<_BINARY>& vecOutputData
 {
 	vector<_BYTE> vecbydata;
 	queue.Get(vecbydata);
-	iOutputBlockSize = vecbydata.size()*sizeof(_BINARY);
+	iOutputBlockSize = vecbydata.size()*BITS_BINARY;
 	vecOutputData.Init(iOutputBlockSize);
 	vecOutputData.ResetBitAccess();
 	for(size_t i=0; i<vecbydata.size(); i++)
-		vecOutputData.Enqueue(vecbydata[i], sizeof(_BINARY));
+		vecOutputData.Enqueue(vecbydata[i], BITS_BINARY);
 }
 
 /******************************************************************************\
@@ -721,7 +721,7 @@ void
 CUpstreamDI::InitInternal(CParameter& Parameter)
 {
 	iInputBlockSize = 1; /* anything is enough but not zero */
-	iMaxOutputBlockSize = 2048*sizeof(_BINARY); /* bigger than an ethernet packet */
+	iMaxOutputBlockSize = 2048*BITS_BINARY; /* bigger than an ethernet packet */
 }
 
 void
@@ -734,7 +734,7 @@ void
 CMDIIn::InitInternal(CParameter& Parameter)
 {
 	//outputs[0].iBlockSize = 1; /* packet */
-	iMaxOutputBlockSize = 1500*sizeof(_BINARY);
+	iMaxOutputBlockSize = 1500*BITS_BINARY;
 	iOutputBlockSize = 0;
 }
 
@@ -744,12 +744,12 @@ CMDIIn::ProcessDataInternal(CParameter& Parameter)
 	size_t i;
 	vector<_BYTE> vecbydata;
 	queue.Get(vecbydata);
-	volatile size_t bits = vecbydata.size()*sizeof(_BINARY);
+	volatile size_t bits = vecbydata.size()*BITS_BINARY;
 	iOutputBlockSize = bits;
 	(*pvecOutputData).Init(bits);
 	(*pvecOutputData).ResetBitAccess();
 	for(i=0; i<vecbydata.size(); i++)
-		(*pvecOutputData).Enqueue(vecbydata[i], sizeof(_BINARY));
+		(*pvecOutputData).Enqueue(vecbydata[i], BITS_BINARY);
 }
 
 void

@@ -98,10 +98,10 @@ CMOTSlideShowEncoder::AddNextPicture ()
 		while (fread ((void *) &byIn, size_t (1), size_t (1), pFiBody)
 		       != size_t (0))
 		  {
-		      /* Add one byte = sizeof(_BINARY) bits */
-		      MOTPicture.vecbRawData.Enlarge (sizeof(_BINARY));
+		      /* Add one byte = BITS_BINARY bits */
+		      MOTPicture.vecbRawData.Enlarge (BITS_BINARY);
 		      MOTPicture.vecbRawData.Enqueue ((uint32_t) byIn,
-						      sizeof(_BINARY));
+						      BITS_BINARY);
 		  }
 
 		/* Close the file afterwards */

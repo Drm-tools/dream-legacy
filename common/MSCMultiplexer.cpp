@@ -101,8 +101,8 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 	{
 		/* Length of higher and lower protected part of audio stream (number
 		   of bits) */
-		StPos.iLenHigh = Param.Stream[iStreamID].iLenPartA * sizeof(_BINARY);
-		StPos.iLenLow = Param.Stream[iStreamID].iLenPartB *	sizeof(_BINARY);
+		StPos.iLenHigh = Param.Stream[iStreamID].iLenPartA * BITS_BINARY;
+		StPos.iLenLow = Param.Stream[iStreamID].iLenPartB *	BITS_BINARY;
 
 
 		/* Byte-offset of higher and lower protected part of audio stream --- */
@@ -118,7 +118,7 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 		set<int>::iterator i;
 		for (i = actStreams.begin(); i!=actStreams.end(); i++)
 		{
-			StPos.iOffsetLow += Param.Stream[*i].iLenPartA * sizeof(_BINARY);
+			StPos.iOffsetLow += Param.Stream[*i].iLenPartA * BITS_BINARY;
 		}
 
 		/* Real start position of the streams */
@@ -127,8 +127,8 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 		{
 			if (*i < iStreamID)
 			{
-				StPos.iOffsetHigh += Param.Stream[*i].iLenPartA * sizeof(_BINARY);
-				StPos.iOffsetLow += Param.Stream[*i].iLenPartB * sizeof(_BINARY);
+				StPos.iOffsetHigh += Param.Stream[*i].iLenPartA * BITS_BINARY;
+				StPos.iOffsetLow += Param.Stream[*i].iLenPartB * BITS_BINARY;
 			}
 		}
 
@@ -152,7 +152,7 @@ CMSCDemultiplexer::SStreamPos CMSCDemultiplexer::GetStreamPos(CParameter& Param,
 				StPos.iOffsetLow += Param.iNumBitsHierarchFrameTotal -
 					/* We have to subtract this because we added it in the
 					   for loop above which we do not need here */
-					Param.Stream[0].iLenPartB * sizeof(_BINARY);
+					Param.Stream[0].iLenPartB * BITS_BINARY;
 			}
 		}
 

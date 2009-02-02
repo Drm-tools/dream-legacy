@@ -107,8 +107,8 @@ CDataEncoder::GeneratePacket(CVector < _BINARY > &vecbiPacket)
 		/* Padded packet. If the PPI is 1 then the first byte shall indicate
 		   the number of useful bytes that follow, and the data field is
 		   completed with padding bytes of value 0x00 */
-		vecbiPacket.Enqueue((uint32_t) (iRemainSize / sizeof(_BINARY)),
-							sizeof(_BINARY));
+		vecbiPacket.Enqueue((uint32_t) (iRemainSize / BITS_BINARY),
+							BITS_BINARY);
 
 		/* Data */
 		for (i = 0; i < iRemainSize; i++)
@@ -140,8 +140,8 @@ CDataEncoder::GeneratePacket(CVector < _BINARY > &vecbiPacket)
 	CRCObject.Reset(16);
 
 	/* "byLengthBody" was defined in the header */
-	for (i = 0; i < (iTotalPacketSize / sizeof(_BINARY) - 2); i++)
-		CRCObject.AddByte(_BYTE(vecbiPacket.Separate(sizeof(_BINARY))));
+	for (i = 0; i < (iTotalPacketSize / BITS_BINARY - 2); i++)
+		CRCObject.AddByte(_BYTE(vecbiPacket.Separate(BITS_BINARY)));
 
 	/* Now, pointer in "enqueue"-function is back at the same place, add CRC */
 	vecbiPacket.Enqueue(CRCObject.GetCRC(), 16);
@@ -158,7 +158,7 @@ CDataEncoder::Init(CParameter & Param)
 
 	Param.Lock();
 
-	iPacketLen = Param.Stream[Param.Service[iCurSelDataServ].iDataStream].iPacketLen * sizeof(_BINARY);
+	iPacketLen = Param.Stream[Param.Service[iCurSelDataServ].iDataStream].iPacketLen * BITS_BINARY;
 	iTotalPacketSize = iPacketLen + 24 /* CRC + header = 24 bits */ ;
 
 	iPacketID = Param.Service[iCurSelDataServ].iPacketID;
@@ -226,7 +226,7 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 		/* "- 2": 16 bits for CRC at the end */
 		for (i = 0; i < iTotalPacketSize - 2; i++)
 		{
-			_BYTE b =pvecInputData->Separate(sizeof(_BINARY));
+			_BYTE b =pvecInputData->Separate(BITS_BINARY);
 			CRCObject.AddByte(b);
 		}
 
@@ -300,8 +300,8 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				/* Padding is present: the first byte gives the number of
 				   useful data bytes in the data field. */
 				iNewPacketDataSize =
-					(int) (*pvecInputData).Separate(sizeof(_BINARY)) *
-					sizeof(_BINARY);
+					(int) (*pvecInputData).Separate(BITS_BINARY) *
+					BITS_BINARY;
 
 				if (iNewPacketDataSize > iMaxPacketDataSize)
 				{
@@ -319,7 +319,7 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 					   one byte which stored the size, the other byte is the
 					   header) */
 					iNumSkipBytes = iTotalPacketSize - 2 -
-						iNewPacketDataSize / sizeof(_BINARY);
+						iNewPacketDataSize / BITS_BINARY;
 				}
 
 				/* Packets with no useful data are permitted if no packet
@@ -355,7 +355,7 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 
 			/* Read bytes which are not used */
 			for (i = 0; i < iNumSkipBytes; i++)
-				(*pvecInputData).Separate(sizeof(_BINARY));
+				(*pvecInputData).Separate(BITS_BINARY);
 
 			/* Use data unit ------------------------------------------------ */
 			if (DataUnit[iPacketID].bReady == true)
@@ -406,7 +406,7 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 		{
 			/* Skip incorrect packet */
 			for (i = 0; i < iTotalPacketSize; i++)
-				(*pvecInputData).Separate(sizeof(_BINARY));
+				(*pvecInputData).Separate(BITS_BINARY);
 		}
 	}
 	if ((iEPGService >= 0) && (GetDecodeEPG() == true))	/* if EPG decoding is active */
@@ -482,7 +482,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 
 	/* Get number of total input bits (and bytes) for this module */
 	iTotalNumInputBits = ReceiverParam.iNumDataDecoderBits;
-	iTotalNumInputBytes = iTotalNumInputBits / sizeof(_BINARY);
+	iTotalNumInputBytes = iTotalNumInputBits / BITS_BINARY;
 
 	/* Get the packet ID of the selected service */
 	iServPacketID = ReceiverParam.Service[iCurSelDataServ].iPacketID;
@@ -515,7 +515,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 		{
 			/* Maximum number of bits for the data part in a packet
 			   ("- 3" because two bits for CRC and one for the header) */
-			iMaxPacketDataSize = (iTotalPacketSize - 3) * sizeof(_BINARY);
+			iMaxPacketDataSize = (iTotalPacketSize - 3) * BITS_BINARY;
 
 			/* Number of data packets in one data block */
 			iNumDataPackets = iTotalNumInputBytes / iTotalPacketSize;

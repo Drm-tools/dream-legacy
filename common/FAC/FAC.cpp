@@ -208,8 +208,8 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	(*pbiFACData).ResetBitAccess();
 
-	for (size_t i = 0; i < NUM_FAC_BITS_PER_BLOCK / sizeof(_BINARY) - 1; i++)
-		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(sizeof(_BINARY)));
+	for (size_t i = 0; i < NUM_FAC_BITS_PER_BLOCK / BITS_BINARY - 1; i++)
+		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(BITS_BINARY));
 
 	/* Now, pointer in "enqueue"-function is back at the same place,
 	   add CRC */
@@ -391,8 +391,8 @@ bool CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 
 	(*pbiFACData).ResetBitAccess();
 
-	for (size_t i = 0; i < NUM_FAC_BITS_PER_BLOCK / sizeof(_BINARY) - 1; i++)
-		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(sizeof(_BINARY)));
+	for (size_t i = 0; i < NUM_FAC_BITS_PER_BLOCK / BITS_BINARY - 1; i++)
+		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(BITS_BINARY));
 
 	if (CRCObject.CheckCRC((*pbiFACData).Separate(8)) == true)
 	{

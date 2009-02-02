@@ -1,6 +1,6 @@
 TEMPLATE	= app
 TARGET		= dream
-CONFIG		+= qt warn_on release
+CONFIG		+= qt warn_on release thread
 VPATH		+= common/GUI-QT
 DEFINES		+= HAVE_QT
 INCLUDEPATH	+= libs
@@ -93,6 +93,7 @@ alsa {
 	DEFINES		+= USE_ALSA
 	HEADERS		+= linux/source/soundcommon.h  linux/source/soundin.h  linux/source/soundout.h
 	SOURCES		+= linux/source/alsa.cpp linux/source/soundcommon.cpp
+	LIBS		+= -lasound
 }
 
 portaudio {

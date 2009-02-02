@@ -65,7 +65,7 @@ void CTagItemDecoderProTy::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	/* Decode protocol type (32 bits = 4 bytes) */
 	p.protocol = "";
 	for (int i = 0; i < 4 /* bytes */; i++)
-		p.protocol += (_BYTE) vecbiTag.Separate(sizeof(_BINARY));
+		p.protocol += (_BYTE) vecbiTag.Separate(BITS_BINARY);
 
 
 	/* Get major and minor revision of protocol */
@@ -102,10 +102,10 @@ void CTagItemDecoderFAC::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	vecbidata.Init(NUM_FAC_BITS_PER_BLOCK);
 	vecbidata.ResetBitAccess();
 
-	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / sizeof(_BINARY); i++)
+	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / BITS_BINARY; i++)
 	{
 		vecbidata.
-			Enqueue(vecbiTag.Separate(sizeof(_BINARY)), sizeof(_BINARY));
+			Enqueue(vecbiTag.Separate(BITS_BINARY), BITS_BINARY);
 	}
 
 	SetReady(true);
@@ -192,10 +192,10 @@ void CTagItemDecoderStr::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	vecbidata.Init(iLen);
 	vecbidata.ResetBitAccess();
 
-	for (int i = 0; i < iLen / sizeof(_BINARY); i++)
+	for (int i = 0; i < iLen / BITS_BINARY; i++)
 	{
 		vecbidata.
-			Enqueue(vecbiTag.Separate(sizeof(_BINARY)), sizeof(_BINARY));
+			Enqueue(vecbiTag.Separate(BITS_BINARY), BITS_BINARY);
 	}
 	SetReady(true);
 }
@@ -212,10 +212,10 @@ void CTagItemDecoderSDCChanInf::DecodeTag(CVector<_BINARY>& vecbiTag, const int 
 	/* Copy incoming data */
 	vecbidata.Init(iLen);
 	vecbidata.ResetBitAccess();
-	for (int i = 0; i < iLen / sizeof(_BINARY); i++)
+	for (int i = 0; i < iLen / BITS_BINARY; i++)
 	{
 		vecbidata.
-			Enqueue(vecbiTag.Separate(sizeof(_BINARY)), sizeof(_BINARY));
+			Enqueue(vecbiTag.Separate(BITS_BINARY), BITS_BINARY);
 	}
 	SetReady(true);
 	// sdci not decoded later - will allow decoding/modulation before first SDC received
@@ -229,8 +229,8 @@ string CTagItemDecoderRxDemodMode::GetTagName(void) {return "rdmo";}
 void CTagItemDecoderRxDemodMode::DecodeTag(CVector<_BINARY>& vecbiTag, int iLen)
 {
 	string strMode = "";
-	for (int i = 0; i < iLen / sizeof(_BINARY); i++)
-		strMode += (_BYTE) vecbiTag.Separate(sizeof(_BINARY));
+	for (int i = 0; i < iLen / BITS_BINARY; i++)
+		strMode += (_BYTE) vecbiTag.Separate(BITS_BINARY);
 	if (strMode == "drm_")
 		eMode = DRM;
 	else if (strMode == "am__")
@@ -294,8 +294,8 @@ void CTagItemDecoderAMAudio::DecodeTag(CVector<_BINARY>& vecbiTag, int iLen)
 	/* Copy stream data */
 	vecbidata.Init(iLen-16);
 	vecbidata.ResetBitAccess();
-	for (int i = 0; i < (iLen-16) / sizeof(_BINARY); i++)
-		vecbidata.Enqueue(vecbiTag.Separate(sizeof(_BINARY)), sizeof(_BINARY));
+	for (int i = 0; i < (iLen-16) / BITS_BINARY; i++)
+		vecbidata.Enqueue(vecbiTag.Separate(BITS_BINARY), BITS_BINARY);
 
 	SetReady(true);
 }
@@ -306,8 +306,8 @@ void CTagItemDecoderInfo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	/* Decode info string */
 	strInfo = "";
-	for (int i = 0; i < iLen / sizeof(_BINARY); i++)
-		strInfo += (_BYTE) vecbiTag.Separate(sizeof(_BINARY));
+	for (int i = 0; i < iLen / BITS_BINARY; i++)
+		strInfo += (_BYTE) vecbiTag.Separate(BITS_BINARY);
 
 	SetReady(true);
 }

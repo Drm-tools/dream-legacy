@@ -666,7 +666,7 @@ _REAL CParameter::GetBitRateKbps(const int iShortID, const bool bAudData)
 
 	/* We have 3 frames with time duration of 1.2 seconds. Bit rate should be
 	   returned in kbps (/ 1000) */
-	return (_REAL) iLen * sizeof(_BINARY) * 3 / (_REAL) 1.2 / 1000;
+	return (_REAL) iLen * BITS_BINARY * 3 / (_REAL) 1.2 / 1000;
 }
 
 _REAL CParameter::PartABLenRatio(const int iShortID)

@@ -42,16 +42,16 @@ void CTextMessageEncoder::Encode(CVector<_BINARY>& pData)
 	{
 		if (iByteCnt < CurTextMessage.GetSegSize(iSegCnt))
 		{
-			for (j = 0; j < sizeof(_BINARY); j++)
-				pData[i * sizeof(_BINARY) + j] =
+			for (j = 0; j < BITS_BINARY; j++)
+				pData[i * BITS_BINARY + j] =
 					(_BINARY) CurTextMessage[iSegCnt].Separate(1);
 		}
 		else
 		{
 			/* If the length of the last segment is not a multiple of four then
 			   the incomplete frame shall be padded with 0x00 bytes */
-			for (j = 0; j < sizeof(_BINARY); j++)
-				pData[i * sizeof(_BINARY) + j] = 0;
+			for (j = 0; j < BITS_BINARY; j++)
+				pData[i * BITS_BINARY + j] = 0;
 		}
 
 		iByteCnt++;
@@ -171,7 +171,7 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 
 		/* Generate "beginning of segment" identification by "all 0xFF" ----- */
 		for (j = 0; j < NUM_BYTES_TEXT_MESS_IN_AUD_STR; j++)
-			vvbiSegment[i].Enqueue((uint32_t) 0xFF, sizeof(_BINARY));
+			vvbiSegment[i].Enqueue((uint32_t) 0xFF, BITS_BINARY);
 
 
 		/* Header ----------------------------------------------------------- */
@@ -225,7 +225,7 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 		for (j = 0; j < iNumBodyBytes; j++)
 		{
 			vvbiSegment[i].Enqueue((uint32_t) strMessage.at(iPosInStr),
-				sizeof(_BINARY));
+				BITS_BINARY);
 
 			iPosInStr++;
 		}
@@ -234,14 +234,14 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 		/* CRC -------------------------------------------------------------- */
 		/* Reset bit access and skip segment beginning piece (all 0xFFs) */
 		vvbiSegment[i].ResetBitAccess();
-		vvbiSegment[i].Separate(sizeof(_BINARY) * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
+		vvbiSegment[i].Separate(BITS_BINARY * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
 
 		/* Calculate the CRC and put it at the end of the segment */
 		CRCObject.Reset(16);
 
 		/* "byLengthBody" was defined in the header */
 		for (j = 0; j < iNumBodyBytes + 2 /* Header */; j++)
-			CRCObject.AddByte((_BYTE) vvbiSegment[i].Separate(sizeof(_BINARY)));
+			CRCObject.AddByte((_BYTE) vvbiSegment[i].Separate(BITS_BINARY));
 
 		/* Now, pointer in "enqueue"-function is back at the same place,
 		   add CRC */
@@ -257,7 +257,7 @@ int CTextMessage::GetSegSize(const int iSegID) const
 {
     if(iSegID>= vvbiSegment.Size())
         return 0;
-    return vvbiSegment[iSegID].Size() / sizeof(_BINARY);
+    return vvbiSegment[iSegID].Size() / BITS_BINARY;
 }
 
 /******************************************************************************\
@@ -277,7 +277,7 @@ void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 	bBeginningFound = true;
 	for (i = 0; i < NUM_BYTES_TEXT_MESS_IN_AUD_STR; i++)
 	{
-		if (pData.Separate(sizeof(_BINARY)) != 0xFF)
+		if (pData.Separate(BITS_BINARY) != 0xFF)
 			bBeginningFound = false;
 	}
 
@@ -295,7 +295,7 @@ void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 
 		/* "byLengthBody" was defined in the header */
 		for (i = 0; i < byLengthBody + 2 /* Header */; i++)
-			CRCObject.AddByte(_BYTE(biStreamBuffer.Separate(sizeof(_BINARY))));
+			CRCObject.AddByte(_BYTE(biStreamBuffer.Separate(BITS_BINARY)));
 
 		if (CRCObject.CheckCRC(biStreamBuffer.Separate(16)) == true)
 		{
@@ -337,7 +337,7 @@ void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 					for (i = 0; i < byLengthBody; i++)
 					{
 						if (Segment[bySegmentID].byData[i] !=
-							biStreamBuffer.Separate(sizeof(_BINARY)))
+							biStreamBuffer.Separate(BITS_BINARY))
 						{
 							bIsSame = false;
 						}
@@ -357,7 +357,7 @@ void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 				for (i = 0; i < byLengthBody; i++)
 				{
 					Segment[bySegmentID].byData[i] =
-						_BINARY(biStreamBuffer.Separate(sizeof(_BINARY)));
+						_BINARY(biStreamBuffer.Separate(BITS_BINARY));
 				}
 
 				/* Set length of this segment and OK flag */
@@ -383,10 +383,10 @@ void CTextMessageDecoder::Decode(CVector<_BINARY>& pData)
 			/* Check, if number of bytes is not too big */
 			if (iBitCount < TOT_NUM_BITS_PER_PIECE)
 			{
-				for (j = 0; j < sizeof(_BINARY); j++)
-					biStreamBuffer[iBitCount + j] = pData[i * sizeof(_BINARY) + j];
+				for (j = 0; j < BITS_BINARY; j++)
+					biStreamBuffer[iBitCount + j] = pData[i * BITS_BINARY + j];
 
-				iBitCount += sizeof(_BINARY);
+				iBitCount += BITS_BINARY;
 			}
 		}
 	}

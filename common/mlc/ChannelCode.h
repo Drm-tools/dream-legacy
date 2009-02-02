@@ -83,7 +83,7 @@ public:
 
 
 private:
-	_BINARY vecbiParity[1 << sizeof(_BINARY)];
+	_BINARY vecbiParity[1 << BITS_BINARY];
 };
 
 

@@ -163,7 +163,7 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
 	{
 		/* Always four bytes for text message "piece" */
 		CVector < _BINARY >
-			vecbiTextMessBuf(sizeof(_BINARY) * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
+			vecbiTextMessBuf(BITS_BINARY * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
 
 		/* Get a "piece" */
 		TextMessage.Encode(vecbiTextMessBuf);
@@ -171,7 +171,7 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
 		/* Calculate start point for text message */
 		const int iByteStartTextMess =
 			iTotNumBitsForUsage -
-			sizeof(_BINARY) * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
+			BITS_BINARY * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
 
 		/* Add text message bytes to output stream */
 		for (i = iByteStartTextMess; i < iTotNumBitsForUsage; i++)
@@ -199,7 +199,7 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 	}
 
 	/* Set the total available number of bits, byte aligned */
-	iTotNumBitsForUsage = TransmParam.GetStreamLen(iCurStreamID) * sizeof(_BINARY);
+	iTotNumBitsForUsage = TransmParam.GetStreamLen(iCurStreamID) * BITS_BINARY;
 
 	CAudioParam::EAudSamRat sampleRate = TransmParam.AudioParam[iCurStreamID].eAudioSamplRate;
 
@@ -222,14 +222,14 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 										 (_REAL) 0.4 /* 400 ms */ );
 
 	/* Total number of bytes which can be used for text and audio */
-	const int iTotNumBytesForUsage = iTotNumBitsForUsage / sizeof(_BINARY);
+	const int iTotNumBytesForUsage = iTotNumBitsForUsage / BITS_BINARY;
 
 	/* Total frame size is input block size minus the bytes for the text
 	   message (if text message is used) */
 	int iTotAudFraSizeBits = iTotNumBitsForUsage;
 	if (bUsingTextMessage == true)
 	{
-		iTotAudFraSizeBits -= sizeof(_BINARY) * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
+		iTotAudFraSizeBits -= BITS_BINARY * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
 	}
 
 	/* Set encoder sample rate. This parameter decides other parameters */
@@ -258,7 +258,7 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 	   super frame (data_length_of_part_A + data_length_of_part_B)
 	   subtracting the audio super frame overhead (bytes used for the audio
 	   super frame header() and for the aac_crc_bits) (5.3.1.1, Table 5) */
-	iAudioPayloadLen = iTotAudFraSizeBits / sizeof(_BINARY) - iNumHeaderBytes - iNumAACFrames /* for CRCs */ ;
+	iAudioPayloadLen = iTotAudFraSizeBits / BITS_BINARY - iNumHeaderBytes - iNumAACFrames /* for CRCs */ ;
 
 	const int iActEncOutBytes = (int) (iAudioPayloadLen / iNumAACFrames);
 
@@ -266,11 +266,11 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 	int iBitRate;
 	if (lNumSampEncIn == 1024)
 	{
-		iBitRate = (int) (((_REAL) iActEncOutBytes * sizeof(_BINARY) * 960.0 / 1024.0) / iTimeEachAudBloMS * 1000);
+		iBitRate = (int) (((_REAL) iActEncOutBytes * BITS_BINARY * 960.0 / 1024.0) / iTimeEachAudBloMS * 1000);
 	}
 	else
 	{
-		iBitRate = (int) (((_REAL) iActEncOutBytes * sizeof(_BINARY)) / iTimeEachAudBloMS * 1000);
+		iBitRate = (int) (((_REAL) iActEncOutBytes * BITS_BINARY) / iTimeEachAudBloMS * 1000);
 	}
 
 #ifdef USE_FAAC_LIBRARY
@@ -342,10 +342,10 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 
 	/* Set the total available number of bits, byte aligned */
 	iTotNumBitsForUsage =
-		(Param.Stream[0].iLenPartA + Param.Stream[0].iLenPartB) * sizeof(_BINARY);
+		(Param.Stream[0].iLenPartA + Param.Stream[0].iLenPartB) * BITS_BINARY;
 
 	/* Total number of bytes which can be used for data and audio */
-	//const int iTotNumBytesForUsage = iTotNumBitsForUsage / sizeof(_BINARY);
+	//const int iTotNumBytesForUsage = iTotNumBitsForUsage / BITS_BINARY;
 
 	/* Audio service ---------------------------------------------------- */
 
@@ -354,7 +354,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 	   message (if text message is used) */
 	int iTotAudFraSizeBits = iTotNumBitsForUsage;
 	if (bUsingTextMessage == true)
-		iTotAudFraSizeBits -= sizeof(_BINARY) * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
+		iTotAudFraSizeBits -= BITS_BINARY * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
 
 	/* Set encoder sample rate. This parameter decides other parameters */
 	// TEST make threshold decision TODO: improvement
@@ -387,7 +387,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 	   super frame (data_length_of_part_A + data_length_of_part_B)
 	   subtracting the audio super frame overhead (bytes used for the audio
 	   super frame header() and for the aac_crc_bits) (5.3.1.1, Table 5) */
-	iAudioPayloadLen = iTotAudFraSizeBits / sizeof(_BINARY) -
+	iAudioPayloadLen = iTotAudFraSizeBits / BITS_BINARY -
 		iNumHeaderBytes - iNumAACFrames /* for CRCs */ ;
 
 	const int iActEncOutBytes = (int) (iAudioPayloadLen / iNumAACFrames);
@@ -406,12 +406,12 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 	int iBitRate;
 	if (lNumSampEncIn == 1024)
 	{
-		iBitRate = (int) (((_REAL) iActEncOutBytes * sizeof(_BINARY) * 960.0 /
+		iBitRate = (int) (((_REAL) iActEncOutBytes * BITS_BINARY * 960.0 /
 						   1024.0) / iTimeEachAudBloMS * 1000);
 	}
 	else
 	{
-		iBitRate = (int) (((_REAL) iActEncOutBytes * sizeof(_BINARY)) /
+		iBitRate = (int) (((_REAL) iActEncOutBytes * BITS_BINARY) /
 						  iTimeEachAudBloMS * 1000);
 	}
 
@@ -518,7 +518,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	if (bTextMessageUsed == true)
 	{
 		/* Decode last for bytes of input block for text message */
-		for (i = 0; i < sizeof(_BINARY) * NUM_BYTES_TEXT_MESS_IN_AUD_STR; i++)
+		for (i = 0; i < BITS_BINARY * NUM_BYTES_TEXT_MESS_IN_AUD_STR; i++)
 			vecbiTextMessBuf[i] = (*pvecInputData)[iTotalFrameSize + i];
 
 		TextMessage.Decode(vecbiTextMessBuf);
@@ -1053,10 +1053,10 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			/* Total frame size is input block size minus the bytes for the text
 			   message */
 			iTotalFrameSize = iInputBlockSize -
-				sizeof(_BINARY) * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
+				BITS_BINARY * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
 
 			/* Init vector for text message bytes */
-			vecbiTextMessBuf.Init(sizeof(_BINARY) * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
+			vecbiTextMessBuf.Init(BITS_BINARY * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
 			break;
 
 		case false:
@@ -1144,7 +1144,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			   subtracting the audio super frame overhead (bytes used for the
 			   audio super frame header() and for the aac_crc_bits)
 			   (5.3.1.1, Table 5) */
-			iAudioPayloadLen = iTotalFrameSize / sizeof(_BINARY) -
+			iAudioPayloadLen = iTotalFrameSize / BITS_BINARY -
 				iNumHeaderBytes - iNumAudioFrames;
 
 			/* Check iAudioPayloadLen value, only positive values make sense */
@@ -1249,7 +1249,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			const int iTotalNumCELPBits =
 				iNumHigherProtectedBits + iNumLowerProtectedBits;
 
-			if (iTotalNumCELPBits * sizeof(_BINARY) > iTotalFrameSize)
+			if (iTotalNumCELPBits * BITS_BINARY > iTotalFrameSize)
 				throw CInitErr(ET_AUDDECODER);
 
 			/* Calculate number of audio frames (one audio super frame is

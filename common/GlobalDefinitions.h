@@ -170,6 +170,7 @@ typedef	complex<_REAL>			_COMPLEX;
 typedef int16_t					_SAMPLE;
 typedef uint8_t					_BYTE;
 typedef uint8_t       			_BINARY;
+const int BITS_BINARY = 8;
 const _REAL RET_VAL_LOG_0 = -200.0; /* avoid infinity in the case: log10(0) */
 /* Classes ********************************************************************/
 

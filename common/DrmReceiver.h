@@ -140,7 +140,7 @@ public:
 
 protected:
 	void SetInputBlockSize(CParameter& p)
-		{this->iInputBlockSize = p.GetStreamLen(iStreamID) * sizeof(_BINARY);}
+		{this->iInputBlockSize = p.GetStreamLen(iStreamID) * BITS_BINARY;}
 
 	int iStreamID;
 };

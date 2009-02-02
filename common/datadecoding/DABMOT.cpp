@@ -73,7 +73,7 @@ CMOTDABEnc::SetMOTObject(CMOTObject & NewMOTObject)
 
 	/* Get some necessary parameters of object */
 	const int iPicSizeBits = NewMOTObject.vecbRawData.Size();
-	const int iPicSizeBytes = iPicSizeBits / sizeof(_BINARY);
+	const int iPicSizeBytes = iPicSizeBits / BITS_BINARY;
 	const string strFileName = NewMOTObject.strName;
 
 	/* File name size is restricted (in this implementation) to 128 (2^7) bytes.
@@ -135,7 +135,7 @@ CMOTDABEnc::SetMOTObject(CMOTObject & NewMOTObject)
 		2 /* VersionNumber */ ;
 
 	/* Allocate memory and reset bit access */
-	MOTObjectRaw.Header.Init(iHeaderSize * sizeof(_BINARY));
+	MOTObjectRaw.Header.Init(iHeaderSize * BITS_BINARY);
 	MOTObjectRaw.Header.ResetBitAccess();
 
 	/* BodySize: This 28-bit field, coded as an unsigned binary number,
@@ -253,7 +253,7 @@ CMOTDABEnc::PartitionUnits(CVector < _BINARY > &vecbiSource,
 	int iActSegSize;
 
 	/* Divide the generated units in partitions */
-	const int iSourceSize = vecbiSource.Size() / sizeof(_BINARY);
+	const int iSourceSize = vecbiSource.Size() / BITS_BINARY;
 	const int iNumSeg = (int) ceil((_REAL) iSourceSize / iPartiSize);	/* Bytes */
 	const int iSizeLastSeg = iSourceSize -
 		(int) floor((_REAL) iSourceSize / iPartiSize) * iPartiSize;
@@ -276,7 +276,7 @@ CMOTDABEnc::PartitionUnits(CVector < _BINARY > &vecbiSource,
 		/* Add segment data ------------------------------------------------- */
 		/* Header */
 		/* Allocate memory for body data and segment header bits (16) */
-		vecbiDest[i].Init(iActSegSize * sizeof(_BINARY) + 16);
+		vecbiDest[i].Init(iActSegSize * BITS_BINARY + 16);
 		vecbiDest[i].ResetBitAccess();
 
 		/* Segment header */
@@ -291,7 +291,7 @@ CMOTDABEnc::PartitionUnits(CVector < _BINARY > &vecbiSource,
 		vecbiDest[i].Enqueue((uint32_t) iActSegSize, 13);
 
 		/* Body */
-		for (j = 0; j < iActSegSize * sizeof(_BINARY); j++)
+		for (j = 0; j < iActSegSize * BITS_BINARY; j++)
 			vecbiDest[i].Enqueue(vecbiSource.Separate(1), 1);
 	}
 }
@@ -466,8 +466,8 @@ CMOTDABEnc::GenMOTObj(CVector < _BINARY > &vecbiData,
 		CRCObject.Reset(16);
 
 		/* "byLengthBody" was defined in the header */
-		for (i = 0; i < iTotLenMOTObj / sizeof(_BINARY) - 2 /* CRC */ ; i++)
-			CRCObject.AddByte((_BYTE) vecbiData.Separate(sizeof(_BINARY)));
+		for (i = 0; i < iTotLenMOTObj / BITS_BINARY - 2 /* CRC */ ; i++)
+			CRCObject.AddByte((_BYTE) vecbiData.Separate(BITS_BINARY));
 
 		/* Now, pointer in "enqueue"-function is back at the same place,
 		   add CRC */
@@ -657,8 +657,8 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 	CRCObject.Reset(16);
 
 	/* "- 2": 16 bits for CRC at the end */
-	for (size_t i = 0; i < size_t(iLenGroupDataField / sizeof(_BINARY)) - 2; i++)
-		CRCObject.AddByte((_BYTE) vecbiNewData.Separate(sizeof(_BINARY)));
+	for (size_t i = 0; i < size_t(iLenGroupDataField / BITS_BINARY) - 2; i++)
+		CRCObject.AddByte((_BYTE) vecbiNewData.Separate(BITS_BINARY));
 
 	bCRCOk = CRCObject.CheckCRC(vecbiNewData.Separate(16));
 
@@ -727,9 +727,9 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 		int iLenEndUserAddress;
 
 		if (biTransportIDFlag == 1)
-			iLenEndUserAddress = (iLenIndicat - 2) * sizeof(_BINARY);
+			iLenEndUserAddress = (iLenIndicat - 2) * BITS_BINARY;
 		else
-			iLenEndUserAddress = iLenIndicat * sizeof(_BINARY);
+			iLenEndUserAddress = iLenIndicat * BITS_BINARY;
 
 		vecbiNewData.Separate(iLenEndUserAddress);
 	}
@@ -816,7 +816,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 				else
 				{
 					/* discard the segment */
-					vecbiNewData.Separate(iSegmentSize * sizeof(_BINARY));
+					vecbiNewData.Separate(iSegmentSize * BITS_BINARY);
 				}
 
 				/* if the body just got complete we can see if its ready to deliver */
@@ -866,7 +866,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 				}
 				else
 				{
-					vecbiNewData.Separate(iSegmentSize * sizeof(_BINARY));
+					vecbiNewData.Separate(iSegmentSize * BITS_BINARY);
 				}
 			}					/* of DG type 6 */
 #if 0							//Commented until we can test it with a real compressed directory
@@ -931,7 +931,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 						MOTDirectoryData.vecData =
 							MOTDirComprEntity.vecData.
 							Separate(MOTDirComprEntity.vecData.Size() -
-									 (9 * sizeof(_BINARY)));
+									 (9 * BITS_BINARY));
 
 						if (bCompressionFlag
 							&& MOTDirectoryData.IsZipped()
@@ -951,13 +951,13 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 				}
 				else
 				{
-					vecbiNewData.Separate(iSegmentSize * sizeof(_BINARY));
+					vecbiNewData.Separate(iSegmentSize * BITS_BINARY);
 				}
 			}					/* of DG type 7 */
 #endif
 			else
 			{
-				vecbiNewData.Separate(iSegmentSize * sizeof(_BINARY));
+				vecbiNewData.Separate(iSegmentSize * BITS_BINARY);
 			}
 		}
 	}
@@ -1263,7 +1263,7 @@ CMOTObjectBase::extractString(CVector < _BINARY > &vecbiData, int iLen) const
 	string strVar;
 	for (size_t i = 0; i < size_t(iLen); i++)
 	{
-		strVar += (char) vecbiData.Separate(sizeof(_BINARY));
+		strVar += (char) vecbiData.Separate(BITS_BINARY);
 	}
 	return strVar;
 }
@@ -1318,7 +1318,7 @@ CMOTDirectory::AddHeader(CVector < _BINARY > &vecbiHeader)
 			bSortedHeaderInformation = true;
 			break;
 		case 1:				/* DefaultPermitOutdatedVersions */
-			iTmp = (int) vecbiHeader.Separate(iDataFieldLen * sizeof(_BINARY));
+			iTmp = (int) vecbiHeader.Separate(iDataFieldLen * BITS_BINARY);
 			if (iTmp == 0)
 				bPermitOutdatedVersions = false;
 			else
@@ -1338,14 +1338,14 @@ CMOTDirectory::AddHeader(CVector < _BINARY > &vecbiHeader)
 			break;
 		case 34:				/* DirectoryIndex */
 		{
-			_BYTE iProfile = (_BYTE) vecbiHeader.Separate(sizeof(_BINARY));
+			_BYTE iProfile = (_BYTE) vecbiHeader.Separate(BITS_BINARY);
 			DirectoryIndex[iProfile] =
 				extractString(vecbiHeader, iDataFieldLen - 1);
 		}
 			break;
 		default:
 			if (iDataFieldLen > 0)
-				vecbiHeader.Separate(iDataFieldLen * sizeof(_BINARY));
+				vecbiHeader.Separate(iDataFieldLen * BITS_BINARY);
 			break;
 		}
 	}
@@ -1511,7 +1511,7 @@ CMOTObject::AddHeader(CVector < _BINARY > &vecbiHeader)
 		switch (bParamId)
 		{
 		case 1:				/* PermitOutdatedVersions */
-			iTmp = (int) vecbiHeader.Separate(iDataFieldLen * sizeof(_BINARY));
+			iTmp = (int) vecbiHeader.Separate(iDataFieldLen * BITS_BINARY);
 			if (iTmp == 0)
 				bPermitOutdatedVersions = false;
 			else
@@ -1519,14 +1519,14 @@ CMOTObject::AddHeader(CVector < _BINARY > &vecbiHeader)
 			break;
 		case 5:				/* TriggerTime - OBSOLETE */
 			/* not decoded - skip */
-			(void) vecbiHeader.Separate(iDataFieldLen * sizeof(_BINARY));
+			(void) vecbiHeader.Separate(iDataFieldLen * BITS_BINARY);
 			break;
 		case 6:				/* Version - OBSOLETE */
-			iVersion = (int) vecbiHeader.Separate(sizeof(_BINARY));
+			iVersion = (int) vecbiHeader.Separate(BITS_BINARY);
 			break;
 		case 7:				/* RetransmissionDistance */
 			/* not decoded - skip */
-			(void) vecbiHeader.Separate(iDataFieldLen * sizeof(_BINARY));
+			(void) vecbiHeader.Separate(iDataFieldLen * BITS_BINARY);
 			break;
 		case 9:				/* Expiration */
 			if (iDataFieldLen == 1)
@@ -1542,11 +1542,11 @@ CMOTObject::AddHeader(CVector < _BINARY > &vecbiHeader)
 			break;
 		case 10:				/* Priority */
 			/* not decoded - skip */
-			(void) vecbiHeader.Separate(iDataFieldLen * sizeof(_BINARY));
+			(void) vecbiHeader.Separate(iDataFieldLen * BITS_BINARY);
 			break;
 		case 11:				/* Label */
 			/* not decoded - skip */
-			(void) vecbiHeader.Separate(iDataFieldLen * sizeof(_BINARY));
+			(void) vecbiHeader.Separate(iDataFieldLen * BITS_BINARY);
 			break;
 		case 12:				/* Content Name */
 			/* TODO - convert characters to UNICODE */
@@ -1572,23 +1572,23 @@ CMOTObject::AddHeader(CVector < _BINARY > &vecbiHeader)
 			break;
 		case 17:				/* Compression Type */
 			iCompressionType =
-				(int) vecbiHeader.Separate(iDataFieldLen * sizeof(_BINARY));
+				(int) vecbiHeader.Separate(iDataFieldLen * BITS_BINARY);
 			break;
 		case 0x21:				/* ProfileSubset */
 		{
 			vecbProfileSubset.clear();
 			for (size_t i = 0; i < size_t(iDataFieldLen); i++)
 				vecbProfileSubset.push_back((_BYTE) vecbiHeader.
-											Separate(sizeof(_BINARY)));
+											Separate(BITS_BINARY));
 		}
 			break;
 		case 0x23:				/* CAInfo */
 			/* not decoded - skip */
-			(void) vecbiHeader.Separate(iDataFieldLen * sizeof(_BINARY));
+			(void) vecbiHeader.Separate(iDataFieldLen * BITS_BINARY);
 			break;
 		case 0x24:				/* CAReplacementObject */
 			/* not decoded - skip */
-			(void) vecbiHeader.Separate(iDataFieldLen * sizeof(_BINARY));
+			(void) vecbiHeader.Separate(iDataFieldLen * BITS_BINARY);
 			break;
 		case 0x25:				/* ScopeStart */
 			ScopeStart.extract_absolute(vecbiHeader);
@@ -1597,12 +1597,12 @@ CMOTObject::AddHeader(CVector < _BINARY > &vecbiHeader)
 			ScopeEnd.extract_absolute(vecbiHeader);
 			break;
 		case 0x27:				/* ScopeId */
-			iScopeId = vecbiHeader.Separate(iDataFieldLen * sizeof(_BINARY));
+			iScopeId = vecbiHeader.Separate(iDataFieldLen * BITS_BINARY);
 			break;
 		default:
 			/* not decoded - skip */
 			if (iDataFieldLen > 0)
-				(void) vecbiHeader.Separate(iDataFieldLen * sizeof(_BINARY));
+				(void) vecbiHeader.Separate(iDataFieldLen * BITS_BINARY);
 			break;
 		}
 	}
