@@ -52,14 +52,14 @@ public:
 	virtual void				SetDev(int iNewDevice);
 	virtual int					GetDev();
 
-	void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
-	_BOOLEAN Read(vector<short>& data);
-	_BOOLEAN Read(vector<float>& data);
-	_BOOLEAN Read(vector<double>& data);
+	void Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
+	bool Read(vector<short>& data);
+	bool Read(vector<float>& data);
+	bool Read(vector<double>& data);
 	void Close();
 	
 protected:
-	template<typename T> _BOOLEAN read(vector<T>& data);
+	template<typename T> bool read(vector<T>& data);
 
 	void Init_HW();
 	int read_HW( short * recbuf, int size);
@@ -67,7 +67,7 @@ protected:
 	
 	int 	iBufferSize, iInBufferSize;
 	short int *tmprecbuf;
-	_BOOLEAN	bBlockingRec;
+	bool	bBlockingRec;
 	vector<string> devices;
 
 	class CRecThread : public CThread
@@ -83,7 +83,7 @@ protected:
 	
 protected:
 	vector<string> names;
-    _BOOLEAN bChangDev;
+    bool bChangDev;
 	int	iCurrentDevice;
 #ifdef USE_ALSA
 	snd_pcm_t *handle;

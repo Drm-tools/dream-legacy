@@ -41,8 +41,8 @@ public:
 	virtual void		Enumerate(vector<string>& choices);
 	virtual void		SetDev(int iNewDevice);
 	virtual int			GetDev();
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-	virtual _BOOLEAN	Read(CVector<short>& psData);
+	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true);
+	virtual bool	Read(CVector<short>& psData);
 	virtual void		Close();
 protected:
 	snd_pcm_t *handle;
@@ -60,8 +60,8 @@ public:
 	virtual void		Enumerate(vector<string>& choices);
 	virtual void		SetDev(int iNewDevice);
 	virtual int			GetDev();
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-	virtual _BOOLEAN	Write(CVector<short>& psData);
+	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true);
+	virtual bool	Write(CVector<short>& psData);
 	virtual void		Close();
 protected:
 	snd_pcm_t *handle;

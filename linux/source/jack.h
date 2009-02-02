@@ -68,16 +68,16 @@ public:
     CSoundInJack(const CSoundInJack& e);
     CSoundInJack& operator=(const CSoundInJack& e);
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
-	virtual _BOOLEAN	Read(vector<short>& psData);
+	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
+	virtual bool	Read(vector<short>& psData);
 	virtual void		Enumerate(vector<string>&);
 	virtual int			GetDev();
 	virtual void		SetDev(int iNewDev);
 	virtual void		Close();
 protected:
 	int iBufferSize;
-	_BOOLEAN bBlocking;
-	_BOOLEAN device_changed;
+	bool bBlocking;
+	bool device_changed;
 	instance_data_t capture_data;
 	int dev;
 	CJackPorts ports;
@@ -91,16 +91,16 @@ public:
     CSoundOutJack(const CSoundOutJack& e);
     CSoundOutJack& operator=(const CSoundOutJack& e);
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
-	virtual _BOOLEAN	Write(vector<short>& psData);
+	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
+	virtual bool	Write(vector<short>& psData);
 	virtual void		Enumerate(vector<string>&);
 	virtual int			GetDev();
 	virtual void		SetDev(int iNewDev);
 	virtual void		Close();
 protected:
 	int iBufferSize;
-	_BOOLEAN bBlocking;
-	_BOOLEAN device_changed;
+	bool bBlocking;
+	bool device_changed;
 	instance_data_t play_data;
 	int dev;
 	CJackPorts ports;

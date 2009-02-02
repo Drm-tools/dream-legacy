@@ -48,7 +48,7 @@ CSoundOut::CSoundOut():devices(),dev(),names(),iCurrentDevice(-1)
 	PlayThread.pSoundOut = this;
 	getdevices(names, devices, true);
 	/* Set flag to open devices */
-	bChangDev = TRUE;
+	bChangDev = true;
 }
 
 void CSoundOut::Init_HW()
@@ -158,7 +158,7 @@ void CSoundOut::close_HW( void )
 
 #include <alsa/asoundlib.h>
 
-CSoundOut::CSoundOut() : devices(), handle(NULL),names(),bChangDev(TRUE), iCurrentDevice(-1)
+CSoundOut::CSoundOut() : devices(), handle(NULL),names(),bChangDev(true), iCurrentDevice(-1)
 {
 	PlayThread.pSoundOut = this;
 	getdevices(names, devices, true);
@@ -426,7 +426,7 @@ void CSoundOut::CPlayThread::run()
 #endif
 }
 
-void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+void CSoundOut::Init(int iNewBufferSize, bool bNewBlocking)
 {
 #ifdef USE_QT_GUI
 	qDebug("initplay %d", iNewBufferSize);
@@ -439,16 +439,16 @@ void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	PlayThread.SoundBuf.unlock();
 
 	/* Check if device must be opened or reinitialized */
-	if (bChangDev == TRUE)
+	if (bChangDev == true)
 	{
 
 		Init_HW( );
 
 		/* Reset flag */
-		bChangDev = FALSE;
+		bChangDev = false;
 	}
 
-	if ( PlayThread.running() == FALSE ) {
+	if ( PlayThread.running() == false ) {
 		PlayThread.SoundBuf.lock();
 		PlayThread.SoundBuf.Init( SOUNDBUFLEN );
 		PlayThread.SoundBuf.unlock();
@@ -457,16 +457,16 @@ void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 }
 
 
-_BOOLEAN CSoundOut::Write(CVector< _SAMPLE >& psData)
+bool CSoundOut::Write(CVector< _SAMPLE >& psData)
 {
 	/* Check if device must be opened or reinitialized */
-	if (bChangDev == TRUE)
+	if (bChangDev == true)
 	{
 		/* Reinit sound interface */
 		Init(iBufferSize, bBlockingPlay);
 
 		/* Reset flag */
-		bChangDev = FALSE;
+		bChangDev = false;
 	}
 
 	if ( bBlockingPlay ) {
@@ -497,7 +497,7 @@ _BOOLEAN CSoundOut::Write(CVector< _SAMPLE >& psData)
 	
 	PlayThread.SoundBuf.unlock();
 
-	return FALSE;
+	return false;
 }
 
 void CSoundOut::Close()
@@ -508,14 +508,14 @@ void CSoundOut::Close()
 	
 	// stop the playback thread
 	if (PlayThread.running() ) {
-		PlayThread.SoundBuf.keep_running = FALSE;
+		PlayThread.SoundBuf.keep_running = false;
 		PlayThread.wait(1000);
 	}
 	
 	close_HW();	
 
 	/* Set flag to open devices the next time it is initialized */
-	bChangDev = TRUE;
+	bChangDev = true;
 }
 
 #else
@@ -528,7 +528,7 @@ void CSoundOut::SetDev(int iNewDevice)
 	if (iNewDevice != iCurrentDevice)
 	{
 		iCurrentDevice = iNewDevice;
-		bChangDev = TRUE;
+		bChangDev = true;
 	}
 }
 

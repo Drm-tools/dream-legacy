@@ -134,6 +134,7 @@ common/DrmTransmitter.h   \
 common/DrmEncoder.h   \
 common/DrmModulator.h   \
 common/FAC/FAC.h   \
+common/SigProc.h   \
 common/GlobalDefinitions.h   \
 common/GPSData.h   \
 common/GPSReceiver.h   \

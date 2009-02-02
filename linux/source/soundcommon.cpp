@@ -48,7 +48,7 @@ CSoundIn::CSoundIn():devices(),names(),iCurrentDevice(-1)
 	RecThread.pSoundIn = this;
 	getdevices(names, devices, false);
 	/* Set flag to open devices */
-	bChangDev = TRUE;
+	bChangDev = true;
 }
 
 void
@@ -94,7 +94,7 @@ CSoundIn::CRecThread::run()
 
 /* Wave in ********************************************************************/
 
-void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
+void CSoundIn::Init(int iNewBufferSize, bool bNewBlocking, int iChannels)
 {
 #ifdef USE_QT_GUI
 	qDebug("initrec %d", iNewBufferSize);
@@ -107,16 +107,16 @@ void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 	RecThread.SoundBuf.unlock();
 	
 	/* Check if device must be opened or reinitialized */
-	if (bChangDev == TRUE)
+	if (bChangDev == true)
 	{
 
 		Init_HW( );
 
 		/* Reset flag */
-		bChangDev = FALSE;
+		bChangDev = false;
 	}
 
-	if ( RecThread.running() == FALSE )
+	if ( RecThread.running() == false )
 	{
 		RecThread.SoundBuf.lock();
 		RecThread.SoundBuf.Init( SOUNDBUFLEN );
@@ -126,33 +126,33 @@ void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 }
 
 
-_BOOLEAN CSoundIn::Read(vector<short>& data)
+bool CSoundIn::Read(vector<short>& data)
 {
 	return read(data);
 }
 
-_BOOLEAN CSoundIn::Read(vector<float>& data)
+bool CSoundIn::Read(vector<float>& data)
 {
 	return read(data);
 }
 
-_BOOLEAN CSoundIn::Read(vector<double>& data)
+bool CSoundIn::Read(vector<double>& data)
 {
 	return read(data);
 }
 
-template<typename T> _BOOLEAN CSoundIn::read(vector<T>& data)
+template<typename T> bool CSoundIn::read(vector<T>& data)
 {
 	CVectorEx<short>*	p;
 
 	/* Check if device must be opened or reinitialized */
-	if (bChangDev == TRUE)
+	if (bChangDev == true)
 	{
 		/* Reinit sound interface */
 		Init(iBufferSize, bBlockingRec);
 
 		/* Reset flag */
-		bChangDev = FALSE;
+		bChangDev = false;
 	}
 
 	RecThread.SoundBuf.lock();	// we need exclusive access
@@ -177,7 +177,7 @@ template<typename T> _BOOLEAN CSoundIn::read(vector<T>& data)
 	
 	RecThread.SoundBuf.unlock();
 
-	return FALSE;
+	return false;
 }
 
 void CSoundIn::Close()
@@ -189,7 +189,7 @@ void CSoundIn::Close()
 	// stop the recording threads
 	
 	if (RecThread.running() ) {
-		RecThread.SoundBuf.keep_running = FALSE;
+		RecThread.SoundBuf.keep_running = false;
 		// wait 1sec max. for the threads to terminate
 		RecThread.wait(1000);
 	}
@@ -197,7 +197,7 @@ void CSoundIn::Close()
 	close_HW();
 
 	/* Set flag to open devices the next time it is initialized */
-	bChangDev = TRUE;
+	bChangDev = true;
 }
 
 void CSoundIn::SetDev(int iNewDevice)
@@ -206,7 +206,7 @@ void CSoundIn::SetDev(int iNewDevice)
 	if (iNewDevice != iCurrentDevice)
 	{
 		iCurrentDevice = iNewDevice;
-		bChangDev = TRUE;
+		bChangDev = true;
 	}
 }
 
@@ -226,7 +226,7 @@ CSoundOut::CSoundOut():devices(),names(),iCurrentDevice(-1)
 	PlayThread.pSoundOut = this;
 	getdevices(names, devices, true);
 	/* Set flag to open devices */
-	bChangDev = TRUE;
+	bChangDev = true;
 }
 
 void CSoundOut::CPlayThread::run()
@@ -271,7 +271,7 @@ void CSoundOut::CPlayThread::run()
 #endif
 }
 
-void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
+void CSoundOut::Init(int iNewBufferSize, bool bNewBlocking, int iChannels)
 {
 #ifdef USE_QT_GUI
 	qDebug("initplay %d", iNewBufferSize);
@@ -284,16 +284,16 @@ void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 	PlayThread.SoundBuf.unlock();
 
 	/* Check if device must be opened or reinitialized */
-	if (bChangDev == TRUE)
+	if (bChangDev == true)
 	{
 
 		Init_HW( );
 
 		/* Reset flag */
-		bChangDev = FALSE;
+		bChangDev = false;
 	}
 
-	if ( PlayThread.running() == FALSE ) {
+	if ( PlayThread.running() == false ) {
 		PlayThread.SoundBuf.lock();
 		PlayThread.SoundBuf.Init( SOUNDBUFLEN );
 		PlayThread.SoundBuf.unlock();
@@ -301,32 +301,32 @@ void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
 	}
 }
 
-_BOOLEAN CSoundOut::Write(vector<short>& data)
+bool CSoundOut::Write(vector<short>& data)
 {
 	return write(data);
 }
 
-_BOOLEAN CSoundOut::Write(vector<float>& data)
+bool CSoundOut::Write(vector<float>& data)
 {
 	return write(data);
 }
 
-_BOOLEAN CSoundOut::Write(vector<double>& data)
+bool CSoundOut::Write(vector<double>& data)
 {
 	return write(data);
 }
 
 template<typename T>
-_BOOLEAN CSoundOut::write(vector<T>& data)
+bool CSoundOut::write(vector<T>& data)
 {
 	/* Check if device must be opened or reinitialized */
-	if (bChangDev == TRUE)
+	if (bChangDev == true)
 	{
 		/* Reinit sound interface */
 		Init(iBufferSize, bBlockingPlay);
 
 		/* Reset flag */
-		bChangDev = FALSE;
+		bChangDev = false;
 	}
 
 	if ( bBlockingPlay ) {
@@ -357,7 +357,7 @@ _BOOLEAN CSoundOut::write(vector<T>& data)
 	
 	PlayThread.SoundBuf.unlock();
 
-	return FALSE;
+	return false;
 }
 
 void CSoundOut::Close()
@@ -368,14 +368,14 @@ void CSoundOut::Close()
 	
 	// stop the playback thread
 	if (PlayThread.running() ) {
-		PlayThread.SoundBuf.keep_running = FALSE;
+		PlayThread.SoundBuf.keep_running = false;
 		PlayThread.wait(1000);
 	}
 	
 	close_HW();	
 
 	/* Set flag to open devices the next time it is initialized */
-	bChangDev = TRUE;
+	bChangDev = true;
 }
 
 void CSoundOut::SetDev(int iNewDevice)
@@ -384,7 +384,7 @@ void CSoundOut::SetDev(int iNewDevice)
 	if (iNewDevice != iCurrentDevice)
 	{
 		iCurrentDevice = iNewDevice;
-		bChangDev = TRUE;
+		bChangDev = true;
 	}
 }
 

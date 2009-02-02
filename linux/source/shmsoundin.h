@@ -41,9 +41,9 @@ public:
 	virtual void		SetDev(int);
 	virtual int			GetDev();
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
+	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
 	virtual void		Close();
-	virtual _BOOLEAN	Read(vector<_SAMPLE>& psData);
+	virtual bool		Read(vector<_SAMPLE>& psData);
 
 	void				SetShmPath(const string& p) { shm_path = p; }
 	void				SetShmChannels(int n) { shmChannels = n; }

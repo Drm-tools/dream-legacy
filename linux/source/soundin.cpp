@@ -47,7 +47,7 @@ CSoundIn::CSoundIn():devices(),dev(),names(),iCurrentDevice(-1)
 	RecThread.pSoundIn = this;
 	getdevices(names, devices, false);
 	/* Set flag to open devices */
-	bChangDev = TRUE;
+	bChangDev = true;
 }
 
 void CSoundIn::Init_HW()
@@ -151,7 +151,7 @@ void CSoundIn::close_HW( void ) {
 #define ALSA_PCM_NEW_HW_PARAMS_API
 #define ALSA_PCM_NEW_SW_PARAMS_API
 
-CSoundIn::CSoundIn(): devices(), handle(NULL), names(),bChangDev(TRUE), iCurrentDevice(-1)
+CSoundIn::CSoundIn(): devices(), handle(NULL), names(),bChangDev(true), iCurrentDevice(-1)
 {
 	RecThread.pSoundIn = this;
 	getdevices(names, devices, false);
@@ -451,7 +451,7 @@ CSoundIn::CRecThread::run()
 
 /* Wave in ********************************************************************/
 
-void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+void CSoundIn::Init(int iNewBufferSize, bool bNewBlocking)
 {
 #ifdef USE_QT_GUI
 	qDebug("initrec %d", iNewBufferSize);
@@ -464,7 +464,7 @@ void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	RecThread.SoundBuf.unlock();
 	
 	/* Check if device must be opened or reinitialized */
-	if (bChangDev == TRUE)
+	if (bChangDev == true)
 	{
 
 		Init_HW( );
@@ -483,12 +483,12 @@ void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 }
 
 
-_BOOLEAN CSoundIn::Read(CVector< _SAMPLE >& psData)
+bool CSoundIn::Read(CVector< _SAMPLE >& psData)
 {
 	CVectorEx<_SAMPLE>*	p;
 
 	/* Check if device must be opened or reinitialized */
-	if (bChangDev == TRUE)
+	if (bChangDev == true)
 	{
 		/* Reinit sound interface */
 		Init(iBufferSize, bBlockingRec);
@@ -539,7 +539,7 @@ void CSoundIn::Close()
 	close_HW();
 
 	/* Set flag to open devices the next time it is initialized */
-	bChangDev = TRUE;
+	bChangDev = true;
 }
 
 #endif
@@ -550,7 +550,7 @@ void CSoundIn::SetDev(int iNewDevice)
 	if (iNewDevice != iCurrentDevice)
 	{
 		iCurrentDevice = iNewDevice;
-		bChangDev = TRUE;
+		bChangDev = true;
 	}
 }
 

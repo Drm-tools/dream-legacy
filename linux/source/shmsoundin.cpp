@@ -50,7 +50,7 @@ CShmSoundIn::~CShmSoundIn()
  * 2 samples per frame
  */
 void
-CShmSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking, int iChannels)
+CShmSoundIn::Init(int iNewBufferSize, bool bNewBlocking, int iChannels)
 {
 	shmid = shm_open(shm_path.c_str(), O_RDWR, 0666);
 	if(shmid == -1)
@@ -92,11 +92,11 @@ CShmSoundIn::GetDev()
 	return 0;
 }
 
-_BOOLEAN
+bool
 CShmSoundIn::Read(vector<_SAMPLE>& psData)
 {
 	if(ringBuffer==NULL)
-		return FALSE;
+		return false;
 
 	size_t frames;
 	if(wantedChannels==2)
@@ -142,7 +142,7 @@ CShmSoundIn::Read(vector<_SAMPLE>& psData)
 		}
 	}
 	
-	return TRUE;
+	return true;
 }
 
 void

@@ -50,15 +50,15 @@ public:
 	virtual void				SetDev(int iNewDevice);
 	virtual int					GetDev();
 
-	void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE, int iChannels=2);
-	_BOOLEAN Write(vector<short>& data);
-	_BOOLEAN Write(vector<float>& data);
-	_BOOLEAN Write(vector<double>& data);
+	void Init(int iNewBufferSize, bool bNewBlocking = false, int iChannels=2);
+	bool Write(vector<short>& data);
+	bool Write(vector<float>& data);
+	bool Write(vector<double>& data);
 
 	void Close();
 	
 protected:
-	template<typename T> _BOOLEAN write(vector<T>& data);
+	template<typename T> bool write(vector<T>& data);
 
 	void Init_HW();
 	int write_HW( short *playbuf, int size );
@@ -66,7 +66,7 @@ protected:
 	
 	int 	iBufferSize, iInBufferSize;
 	short *tmpplaybuf;
-	_BOOLEAN	bBlockingPlay;
+	bool	bBlockingPlay;
 	vector<string> devices;
 
 	class CPlayThread : public CThread
@@ -81,7 +81,7 @@ protected:
 	} PlayThread;
 	
 	vector<string> names;
-    _BOOLEAN bChangDev;
+    bool bChangDev;
 	int	iCurrentDevice;
 #ifdef USE_ALSA
 	snd_pcm_t *handle;
