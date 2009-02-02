@@ -43,7 +43,7 @@ public:
 	virtual void		SetDev(int iNewDevice);
 	virtual int			GetDev();
 
-	void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE, int iChannels=2);
+	void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
 	void		ReInit();
 	_BOOLEAN	Read(vector<_SAMPLE>& data);
 	_BOOLEAN	Write(vector<_SAMPLE>& data);

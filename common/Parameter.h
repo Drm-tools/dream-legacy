@@ -46,7 +46,10 @@
 #include "GPSData.h"
 #include "ServiceInformation.h"
 #include <map>
-#include <iostream>
+#ifdef HAVE_QT
+# include <qthread.h>
+# include <qmutex.h>
+#endif
 
 class CDRMReceiver;
 
@@ -79,29 +82,6 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
 
 /* Classes ********************************************************************/
-
-/* QT mutex */
-#ifdef HAVE_QT
-# include <qthread.h>
-# include <qmutex.h>
-    class CMutex
-    {
-    public:
-        void Lock() {Mutex.lock();}
-        void Unlock() {Mutex.unlock();}
-
-    protected:
-        QMutex Mutex;
-    };
-#else
-    /* No GUI and no threads, we do not need mutex in this case */
-    class CMutex
-    {
-    public:
-        void Lock() {}
-        void Unlock() {}
-    };
-#endif
 
     class CDumpable
     {
@@ -1016,11 +996,15 @@ class CParameter : public CDumpable
 
 	void Lock()
 	{
-		Mutex.Lock();
+#ifdef HAVE_QT
+		Mutex.lock();
+#endif
 	}
-	void Unlock()
+	void unlock()
 	{
+#ifdef HAVE_QT
 		Mutex.Unlock();
+#endif
 	}
 	/* Channel Estimation */
 	_REAL rMER;
