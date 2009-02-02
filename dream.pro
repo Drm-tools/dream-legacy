@@ -17,7 +17,9 @@ macx {
 	DEFINES		+= USE_PORTAUDIO
 	INCLUDEPATH	+= darwin
 	INCLUDEPATH	+= /Developer/dream/include
+	INCLUDEPATH	+= /Developer/qwt-5.1.1/include
 	LIBS 		+= -L/Developer/dream/lib
+	LIBS 		+= -L/Developer/qwt-5.1.1/lib
 	LIBS 		+= -framework CoreFoundation -framework CoreServices
 	LIBS 		+= -framework CoreAudio -framework AudioToolbox -framework AudioUnit
 	UI_DIR		= darwin/moc
@@ -246,6 +248,8 @@ common/datadecoding/journaline/dabdgdec_impl.c \
 common/datadecoding/journaline/Splitter.cpp \
 common/datadecoding/journaline/newsobject.cpp \
 common/datadecoding/journaline/newssvcdec_impl.cpp \
+common/datadecoding/journaline/crc_8_16.c \
+common/datadecoding/journaline/log.c \
 common/datadecoding/Journaline.cpp   \
 common/datadecoding/MOTSlideShow.cpp   \
 common/DataIO.cpp   \
