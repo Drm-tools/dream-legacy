@@ -50,22 +50,16 @@ protected:
 	CVectorEx<TInput>*	pvecInputData;
 	CVectorEx<TOutput>*	pvecOutputData;
 
-	/* Max block-size are used to determine the size of the requiered buffer */
+	/* Max block-size are used to determine the size of the required buffer */
 	int					iMaxOutputBlockSize;
 	/* Actual read (or written) size of the data */
 	int					iInputBlockSize;
 	int					iOutputBlockSize;
 
-	void				Lock() {Mutex.Lock();}
-	void				Unlock() {Mutex.Unlock();}
-
 	void				InitThreadSave(CParameter& Parameter);
 	virtual void		InitInternal(CParameter& Parameter) = 0;
 	void				ProcessDataThreadSave(CParameter& Parameter);
 	virtual void		ProcessDataInternal(CParameter& Parameter) = 0;
-
-private:
-	CMutex				Mutex;
 };
 
 /* Implementation *************************************************************/

@@ -594,10 +594,10 @@ void CHamlib::run()
 	{
 		value_t val;
 		int r = -1;
-		mutex.Lock();
+		mutex.lock();
 		if(pRig)
 			r = rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &val);
-		mutex.Unlock();
+		mutex.unlock();
 		if(r == 0)
 		{
 			Parameters.Lock();
@@ -663,11 +663,11 @@ CHamlib::CloseRig()
 	if (pRig != NULL)
 	{
 		/* Close everything */
-		mutex.Lock();
+		mutex.lock();
 		rig_close(pRig);
 		rig_cleanup(pRig);
 		pRig = NULL;
-		mutex.Unlock();
+		mutex.unlock();
 	}
 }
 

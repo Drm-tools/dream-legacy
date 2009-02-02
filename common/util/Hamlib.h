@@ -32,6 +32,10 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
+#ifdef HAVE_QT
+# include <qthread.h>
+# include <qmutex.h>
+#endif
 
 #ifdef HAVE_LIBHAMLIB
 
@@ -191,10 +195,12 @@ protected:
 	void			OpenRig();
 	void			CloseRig();
 
-	CMutex			mutex;
+#ifdef HAVE_QT
+	QMutex			mutex;
+#endif
 	CParameter&		Parameters;
 	RIG*			pRig;
-	bool		bSMeterWanted, bEnableSMeter;
+	bool			bSMeterWanted, bEnableSMeter;
 	map<EDemodulationType,rig_model_t>
 					ModelID, WantedModelID;
 	EDemodulationType		eRigMode;
