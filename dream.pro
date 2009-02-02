@@ -22,6 +22,7 @@ macx {
 	LIBS 		+= -L/Developer/qwt-5.1.1/lib
 	LIBS 		+= -framework CoreFoundation -framework CoreServices
 	LIBS 		+= -framework CoreAudio -framework AudioToolbox -framework AudioUnit
+	LIBS		+= -lqwt
 	UI_DIR		= darwin/moc
 	MOC_DIR		= darwin/moc
 	RC_FILE		= common/GUI-QT/res/macicons.icns
