@@ -167,7 +167,7 @@ typedef unsigned long long uint64_t;
 /* Define the application specific data-types ------------------------------- */
 typedef	double					_REAL;
 typedef	complex<_REAL>			_COMPLEX;
-typedef uint16_t				_SAMPLE;
+typedef int16_t					_SAMPLE;
 typedef uint8_t					_BYTE;
 typedef uint8_t       			_BINARY;
 const _REAL RET_VAL_LOG_0 = -200.0; /* avoid infinity in the case: log10(0) */

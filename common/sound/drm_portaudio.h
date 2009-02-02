@@ -54,7 +54,7 @@ public:
 
 protected:
 
-	PaSampleFormat fmt(short) { return paInt16; }
+	PaSampleFormat fmt(int16_t) { return paInt16; }
 	PaSampleFormat fmt(float) { return paFloat32; }
 
 	PaStream *stream;

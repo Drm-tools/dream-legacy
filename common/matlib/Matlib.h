@@ -64,23 +64,24 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 
 /* In debug mode, test input parameters */
 
+#ifdef _DEBUG_
 template<typename T>
 inline void _TESTRNG(T POS, T limit)
 {
-#ifdef _DEBUG_
     if ((POS >= limit) || (POS < 0))
         DebugError(__FUNCTION__, "POS", POS, "Len", limit);
-#endif
 }
 
 template<typename T>
 inline void _TESTSIZE(T INP, T limit)
 {
-#ifdef _DEBUG_
     if (INP != limit)
         DebugError("SizeCheck", "INP", INP, "Len", limit);
-#endif
 }
+#else
+template<typename T> inline void _TESTRNG(T, T) { }
+template<typename T> inline void _TESTSIZE(T, T) { }
+#endif
 
 /* Classes ********************************************************************/
 /* Prototypes */
