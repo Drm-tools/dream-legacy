@@ -33,6 +33,7 @@
 #include <qwt_plot_canvas.h>
 #include <qwt_scale_draw.h>
 #include <qwt_symbol.h>
+#include <qwt_text.h>
 #include <qwt_plot_grid.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_marker.h>
@@ -163,7 +164,7 @@ protected:
 	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
 				 CVector<_REAL>& vecrScale);
-	void SetData(CVector<_COMPLEX>& veccData);
+	void SetData(CVector<_COMPLEX>& veccData, const QwtSymbol& symbol);
 	void SetData(CVector<_COMPLEX>& veccMSCConst,
 				 CVector<_COMPLEX>& veccSDCConst,
 				 CVector<_COMPLEX>& veccFACConst);
@@ -186,6 +187,9 @@ protected:
 	void SetupAllConst();
 	void SetupInpPSD();
 	void SetupInpSpecWaterf();
+	void SpectrumPlotDefaults(const QString&, const QString&, uint);
+	void SetDCCarrier(double);
+    void SetupConstellationPlot(const QString& title, double limit);
 
 	void AddWhatsThisHelpChar(const ECharType NCharType);
     virtual void showEvent(QShowEvent* pEvent);
@@ -200,13 +204,17 @@ protected:
 	QColor			PassBandColorPlot;
 	QColor			BckgrdColorPlot;
 
+	/* Axis Titles */
+	QwtText         leftTitle, rightTitle, bottomTitle;
+
 	QSize			LastCanvasSize;
 
 	ECharType		CurCharType;
 	ECharType		InitCharType;
 	QwtPlotCurve	*main1curve, *main2curve;
+	QwtPlotCurve	*DCCarrierCurve, *BandwidthMarkerCurve;
 	QwtPlotCurve	*curve1, *curve2, *curve3, *curve4, *curve5, *curve6;
-	QwtSymbol		MarkerSym1, MarkerSym2, MarkerSym3;
+	QwtSymbol		MarkerSymFAC, MarkerSymSDC, MarkerSymMSC;
     QwtPlotGrid     *grid;
 
 	bool		    bOnTimerCharMutexFlag;
