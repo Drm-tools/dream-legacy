@@ -30,6 +30,7 @@
 #include <limits>
 #include <qpixmap.h>
 #include <qwt_scale_engine.h>
+#include <qwt_legend.h>
 
 /* Implementation *************************************************************/
 CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
@@ -46,6 +47,9 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 	setAxisFont(QwtPlot::xBottom, QFont("SansSerif", 8));
 	setAxisFont(QwtPlot::yLeft, QFont("SansSerif", 8));
 	setAxisFont(QwtPlot::yRight, QFont("SansSerif", 8));
+	QwtText title;
+	title.setFont(QFont("SansSerif", 8, QFont::Bold));
+	setTitle(title);
 
     /* axis titles */
     bottomTitle.setFont(QFont("SansSerif", 8));
@@ -86,6 +90,9 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 	MarkerSymFAC.setSize(4);
 	MarkerSymFAC.setPen(QPen(SpecLine2ColorPlot));
 	MarkerSymFAC.setBrush(QBrush(SpecLine2ColorPlot));
+
+    /* Legend */
+    insertLegend(new QwtLegend(), QwtPlot::RightLegend);
 
 	/* Connections */
 	// TODO use a QwtPlotPicker http://qwt.sourceforge.net/class_qwt_plot_picker.html
@@ -438,15 +445,6 @@ void CDRMPlot::SetData(CVector<_COMPLEX>& veccData, const QwtSymbol& symbol)
 	}
 }
 
-void CDRMPlot::SetData(CVector<_COMPLEX>& veccMSCConst,
-					   CVector<_COMPLEX>& veccSDCConst,
-					   CVector<_COMPLEX>& veccFACConst)
-{
-    SetData(veccMSCConst, MarkerSymMSC);
-    SetData(veccSDCConst, MarkerSymSDC);
-    SetData(veccFACConst, MarkerSymFAC);
-}
-
 void CDRMPlot::SetupAvIR()
 {
 	/* Init chart for averaged impulse response */
@@ -471,16 +469,23 @@ void CDRMPlot::SetupAvIR()
 	curve3->setPen(QPen(SpecLine1ColorPlot, 1, DotLine));
 	curve4->setPen(QPen(SpecLine1ColorPlot, 1, DotLine));
 
+	curve1->setItemAttribute(QwtPlotItem::Legend, false);
+	curve2->setItemAttribute(QwtPlotItem::Legend, false);
+	curve3->setItemAttribute(QwtPlotItem::Legend, false);
+	curve4->setItemAttribute(QwtPlotItem::Legend, false);
+
     curve1->attach(this);
     curve2->attach(this);
     curve3->attach(this);
     curve4->attach(this);
 
 	curve5 = new QwtPlotCurve(tr("Higher Bound"));
+	curve5->setItemAttribute(QwtPlotItem::Legend, false);
 #ifdef _DEBUG_
 	curve6 = new QwtPlotCurve(tr("Lower bound"));
 	curve5->setPen(QPen(SpecLine1ColorPlot));
 	curve6->setPen(QPen(SpecLine2ColorPlot));
+	curve6->setItemAttribute(QwtPlotItem::Legend, false);
     curve5->attach(this);
     curve6->attach(this);
 #else
@@ -493,6 +498,7 @@ void CDRMPlot::SetupAvIR()
 
 	/* Curve color */
 	main1curve->setPen(QPen(MainPenColorPlot, 2, SolidLine, RoundCap, RoundJoin));
+	main1curve->setItemAttribute(QwtPlotItem::Legend, false);
     main1curve->attach(this);
 }
 
@@ -592,12 +598,13 @@ void CDRMPlot::SetupTranFct()
 	/* Add curves */
 	clear();
 
+    /* TODO - check that its group delay that should be scaled to right axis!! */
 	main1curve = new QwtPlotCurve(tr("Transf. Fct."));
 	main1curve->setPen(QPen(MainPenColorPlot, 2, SolidLine, RoundCap, RoundJoin));
-	//, QwtPlot::xBottom, QwtPlot::yRight);
 
 	main2curve = new QwtPlotCurve(tr("Group Del."));
 	main2curve->setPen(QPen(SpecLine2ColorPlot, 1, SolidLine, RoundCap, RoundJoin));
+    main2curve->setYAxis(QwtPlot::yRight);
 
     main1curve->attach(this);
     main2curve->attach(this);
@@ -644,6 +651,8 @@ void CDRMPlot::SetupAudioSpec()
 	/* Add main curve */
 	clear();
 	main1curve = new QwtPlotCurve(tr("Audio Spectrum"));
+
+	main1curve->setItemAttribute(QwtPlotItem::Legend, false);
 
 	/* Curve color */
 	main1curve->setPen(QPen(MainPenColorPlot, 2, SolidLine, RoundCap, RoundJoin));
@@ -896,11 +905,13 @@ void CDRMPlot::SpectrumPlotDefaults(
 	/* Insert line for DC carrier */
 	DCCarrierCurve = new QwtPlotCurve(tr("DC carrier"));
 	DCCarrierCurve->setPen(QPen(SpecLine1ColorPlot, 1, DotLine));
+	DCCarrierCurve->setItemAttribute(QwtPlotItem::Legend, false);
 	DCCarrierCurve->attach(this);
 
 	/* Add main curve */
 	main1curve = new QwtPlotCurve(axistitle);
 	main1curve->setPen(QPen(MainPenColorPlot, penwidth, SolidLine, RoundCap, RoundJoin));
+	main1curve->setItemAttribute(QwtPlotItem::Legend, false);
 	main1curve->attach(this);
 }
 
@@ -962,6 +973,7 @@ void CDRMPlot::SetupSNRSpectrum()
 
 	/* Curve color */
 	main1curve->setPen(QPen(MainPenColorPlot, 2, SolidLine, RoundCap, RoundJoin));
+	main1curve->setItemAttribute(QwtPlotItem::Legend, false);
 
 	main1curve->attach(this);
 }
@@ -1041,6 +1053,7 @@ void CDRMPlot::SetupInpPSD()
 	/* Make sure that line is bigger than the current plots height. Do this by
 	   setting the width to a very large value. TODO: better solution */
 	BandwidthMarkerCurve->setPen(QPen(PassBandColorPlot, 10000));
+	BandwidthMarkerCurve->setItemAttribute(QwtPlotItem::Legend, false);
 	BandwidthMarkerCurve->attach(this);
 
     SpectrumPlotDefaults(tr("Input PSD"), tr("Input PSD"), 2);
@@ -1081,6 +1094,7 @@ void CDRMPlot::SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	replot();
 }
 
+/* TODO - this doesn't work */
 void CDRMPlot::SetupInpSpecWaterf()
 {
 	setTitle(tr("Waterfall Input Spectrum"));
@@ -1322,17 +1336,18 @@ void CDRMPlot::SetupAllConst()
 
 	/* Insert "dummy" curves for legend */
 	clear();
-	curve1 = new QwtPlotCurve(tr("MSC"));
+	/* TODO - this doesn't work */
+	curve1 = new QwtPlotCurve("MSC");
 	curve1->setSymbol(MarkerSymMSC);
 	curve1->setPen(QPen(Qt::NoPen));
 	curve1->attach(this);
 
-	curve2 = new QwtPlotCurve(tr("SDC"));
+	curve2 = new QwtPlotCurve("SDC");
 	curve2->setSymbol(MarkerSymSDC);
 	curve2->setPen(QPen(Qt::NoPen));
 	curve2->attach(this);
 
-	curve3 = new QwtPlotCurve(tr("FAC"));
+	curve3 = new QwtPlotCurve("FAC");
 	curve3->setSymbol(MarkerSymFAC);
 	curve3->setPen(QPen(Qt::NoPen));
 	curve3->attach(this);
@@ -1351,7 +1366,9 @@ void CDRMPlot::SetAllConst(CVector<_COMPLEX>& veccMSC,
 
     clear();
 
-	SetData(veccMSC, veccSDC, veccFAC);
+    SetData(veccMSC, MarkerSymMSC);
+    SetData(veccSDC, MarkerSymSDC);
+    SetData(veccFAC, MarkerSymFAC);
 
 	replot();
 }

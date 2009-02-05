@@ -12,7 +12,7 @@
 				<Option object_output="Release" />
 				<Option type="0" />
 				<Option compiler="gcc" />
-				<Option parameters="D:\hf_downlink.pcap" />
+				<Option parameters="--mode DRMRX D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />

@@ -165,9 +165,6 @@ protected:
 	void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
 				 CVector<_REAL>& vecrScale);
 	void SetData(CVector<_COMPLEX>& veccData, const QwtSymbol& symbol);
-	void SetData(CVector<_COMPLEX>& veccMSCConst,
-				 CVector<_COMPLEX>& veccSDCConst,
-				 CVector<_COMPLEX>& veccFACConst);
 	void SetQAM4Grid();
 	void SetQAM16Grid();
 	void SetQAM64Grid();

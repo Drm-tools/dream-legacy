@@ -88,8 +88,8 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Init main plot */
 	MainPlot->SetRecObj(&Receiver);
 	MainPlot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
-	MainPlot->setMargin(1);
 	MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
+	MainPlot->setMargin(1);
 
 	/* Add tool tip to show the user the possibility of choosing the AM IF */
 	QToolTip::add(MainPlot,
@@ -345,6 +345,7 @@ void AnalogDemDlg::OnCheckOnBoardDemod()
 void AnalogDemDlg::UpdatePlotsStyle()
 {
 	/* Update main plot window */
+
 	MainPlot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 }
 

@@ -55,6 +55,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Init main plot */
 	int iPlotStyle = Settings.Get("System Evaluation Dialog", "plotstyle", 0);
 	Settings.Put("System Evaluation Dialog", "plotstyle", iPlotStyle);
+
 	MainPlot->SetRecObj(&DRMReceiver);
 	MainPlot->SetPlotStyle(iPlotStyle);
 	MainPlot->setMargin(1);
@@ -215,100 +216,86 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	}
 	else
 	{
-		int iPlotType = Settings.Get("System Evaluation Dialog", "plottype", 0);
+		CDRMPlot::ECharType ePlotType = CDRMPlot::ECharType(Settings.Get("System Evaluation Dialog", "plottype", 0));
 		/* Set chart type */
-		switch (iPlotType)
+		switch (ePlotType)
 		{
-		case (int) CDRMPlot::POWER_SPEC_DENSITY:
+		case CDRMPlot::POWER_SPEC_DENSITY:
 			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
 			ListViewCharSel->setSelected(pListItPowSpecDens, true);
-			MainPlot->SetupChart(CDRMPlot::POWER_SPEC_DENSITY);
 			break;
 
-		case (int) CDRMPlot::INPUTSPECTRUM_NO_AV:
+		case CDRMPlot::INPUTSPECTRUM_NO_AV:
 			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
 			ListViewCharSel->setSelected(pListItInpSpectrNoAv, true);
-			MainPlot->SetupChart(CDRMPlot::INPUTSPECTRUM_NO_AV);
 			break;
 
-		case (int) CDRMPlot::AUDIO_SPECTRUM:
+		case CDRMPlot::AUDIO_SPECTRUM:
 			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
 			ListViewCharSel->setSelected(pListItAudSpec, true);
-			MainPlot->SetupChart(CDRMPlot::AUDIO_SPECTRUM);
 			break;
 
-		case (int) CDRMPlot::SNR_SPECTRUM:
+		case CDRMPlot::SNR_SPECTRUM:
 			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
 			ListViewCharSel->setSelected(pListItSNRSpec, true);
-			MainPlot->SetupChart(CDRMPlot::SNR_SPECTRUM);
 			break;
 
-		case (int) CDRMPlot::INP_SPEC_WATERF:
+		case CDRMPlot::INP_SPEC_WATERF:
 			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
 			ListViewCharSel->setSelected(pListItInpSpecWater, true);
-			MainPlot->SetupChart(CDRMPlot::INP_SPEC_WATERF);
 			break;
 
-		case (int) CDRMPlot::TRANSFERFUNCTION:
+		case CDRMPlot::TRANSFERFUNCTION:
 			ListViewCharSel->setOpen(pChannelLiViIt, true);
 			ListViewCharSel->setSelected(pListItChanTF, true);
-			MainPlot->SetupChart(CDRMPlot::TRANSFERFUNCTION);
 			break;
 
-		case (int) CDRMPlot::AVERAGED_IR:
+		case CDRMPlot::AVERAGED_IR:
 			ListViewCharSel->setOpen(pChannelLiViIt, true);
 			ListViewCharSel->setSelected(pListItChanIR, true);
-			MainPlot->SetupChart(CDRMPlot::AVERAGED_IR);
 			break;
 
-		case (int) CDRMPlot::FAC_CONSTELLATION:
+		case CDRMPlot::FAC_CONSTELLATION:
 			ListViewCharSel->setOpen(pConstellationLiViIt, true);
 			ListViewCharSel->setSelected(pListItConstFAC, true);
-			MainPlot->SetupChart(CDRMPlot::FAC_CONSTELLATION);
 			break;
 
-		case (int) CDRMPlot::SDC_CONSTELLATION:
+		case CDRMPlot::SDC_CONSTELLATION:
 			ListViewCharSel->setOpen(pConstellationLiViIt, true);
 			ListViewCharSel->setSelected(pListItConstSDC, true);
-			MainPlot->SetupChart(CDRMPlot::SDC_CONSTELLATION);
 			break;
 
-		case (int) CDRMPlot::MSC_CONSTELLATION:
+		case CDRMPlot::MSC_CONSTELLATION:
 			ListViewCharSel->setOpen(pConstellationLiViIt, true);
 			ListViewCharSel->setSelected(pListItConstMSC, true);
-			MainPlot->SetupChart(CDRMPlot::MSC_CONSTELLATION);
 			break;
 
-		case (int) CDRMPlot::ALL_CONSTELLATION:
+		case CDRMPlot::ALL_CONSTELLATION:
 			ListViewCharSel->setOpen(pConstellationLiViIt, true);
 			ListViewCharSel->setSelected(pListItConstAll, true);
-			MainPlot->SetupChart(CDRMPlot::ALL_CONSTELLATION);
 			break;
 
-		case (int) CDRMPlot::FREQ_SAM_OFFS_HIST:
+		case CDRMPlot::FREQ_SAM_OFFS_HIST:
 			ListViewCharSel->setOpen(pHistoryLiViIt, true);
 			ListViewCharSel->setSelected(pListItHistFrSa, true);
-			MainPlot->SetupChart(CDRMPlot::FREQ_SAM_OFFS_HIST);
 			break;
 
-		case (int) CDRMPlot::DOPPLER_DELAY_HIST:
+		case CDRMPlot::DOPPLER_DELAY_HIST:
 			ListViewCharSel->setOpen(pHistoryLiViIt, true);
 			ListViewCharSel->setSelected(pListItHistDeDo, true);
-			MainPlot->SetupChart(CDRMPlot::DOPPLER_DELAY_HIST);
 			break;
 
-		case (int) CDRMPlot::SNR_AUDIO_HIST:
+		case CDRMPlot::SNR_AUDIO_HIST:
 			ListViewCharSel->setOpen(pHistoryLiViIt, true);
 			ListViewCharSel->setSelected(pListItHistSNRAu, true);
-			MainPlot->SetupChart(CDRMPlot::SNR_AUDIO_HIST);
 			break;
 
 		default: /* INPUT_SIG_PSD, includes INPUT_SIG_PSD_ANALOG and NONE_OLD */
 			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
 			ListViewCharSel->setSelected(pListItInpPSD, true);
-			MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD);
 			break;
 		}
+        MainPlot->SetupChart(ePlotType);
 	}
 
 	/* Init context menu for list view */
@@ -487,7 +474,7 @@ void systemevalDlg::hideEvent(QHideEvent*)
 	/* Store current plot type. Convert plot type into an integer type.
 	 * TODO: better solution
 	 */
-	Settings.Put("System Evaluation Dialog", "plottype", (int) MainPlot->GetChartType());
+	Settings.Put("System Evaluation Dialog", "plottype", int(MainPlot->GetChartType()));
 }
 
 void systemevalDlg::UpdatePlotsStyle()
