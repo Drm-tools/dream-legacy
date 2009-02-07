@@ -71,6 +71,9 @@ CPacketSourceFile::SetOrigin(const string& str)
 #ifdef HAVE_LIBPCAP
 		char errbuf[PCAP_ERRBUF_SIZE];
 		pf = pcap_open_offline(str.c_str(), errbuf);
+#else
+        cerr << "sorry - pcap files not supported in this build" << endl;
+        pf = NULL;
 #endif
 		bRaw = false;
 	}

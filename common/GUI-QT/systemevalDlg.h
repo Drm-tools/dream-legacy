@@ -77,18 +77,18 @@ protected:
 	{
 	public:
 		CCharSelItem(QListView* parent, QString str1,
-			CDRMPlot::ECharType eNewCharTy, bool bSelble = true) :
+			CPlotManager::EPlotType eNewCharTy, bool bSelble = true) :
 			QListViewItem(parent, str1), eCharTy(eNewCharTy)
 			{setSelectable(bSelble);}
 		CCharSelItem(QListViewItem* parent, QString str1,
-			CDRMPlot::ECharType eNewCharTy, bool bSelble = true) :
+			CPlotManager::EPlotType eNewCharTy, bool bSelble = true) :
 			QListViewItem(parent, str1), eCharTy(eNewCharTy)
 			{setSelectable(bSelble);}
 
-		CDRMPlot::ECharType GetCharType() {return eCharTy;}
+		CPlotManager::EPlotType GetCharType() {return eCharTy;}
 
 	protected:
-		CDRMPlot::ECharType eCharTy;
+		CPlotManager::EPlotType eCharTy;
 	};
 
 	CDRMReceiver&		DRMReceiver;
@@ -102,7 +102,7 @@ protected:
 	virtual void		hideEvent(QHideEvent* pEvent);
 	void				UpdateControls();
 	void				AddWhatsThisHelp();
-	CDRMPlot*			OpenChartWin(const CDRMPlot::ECharType eNewType);
+	CDRMPlot*			OpenChartWin(const CPlotManager::EPlotType eNewType);
 
 	QString				GetRobModeStr();
 	QString				GetSpecOccStr();

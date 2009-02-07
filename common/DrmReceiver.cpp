@@ -1798,7 +1798,9 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	str = s.Get("command", "rsiin");
 	if(str != "")
 	{
-		upstreamRSCI.SetOrigin(str); // its a port
+		bool bOK = upstreamRSCI.SetOrigin(str); // its a port
+		if(!bOK)
+            throw CGenErr(string("can't open RSCI input ")+str);
 		// disable sound input
 		SoundInProxy.SetUsingDI(str);
 	}

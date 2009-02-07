@@ -32,10 +32,10 @@
 #if !defined(PLOT_MANAGER_H_INCLUDED)
 #define PLOT_MANAGER_H_INCLUDED
 
-#include "GlobalDefinitions.h"
-#include "util/Vector.h"
+#include "Parameter.h"
 #ifdef USE_QT_GUI
 # include <qmutex.h>
+//# include <qwt_plot.h>
 #endif
 
 /* Definitions ****************************************************************/
@@ -49,6 +49,27 @@ class CDRMReceiver;
 class CPlotManager
 {
 public:
+
+	enum EPlotType
+	{
+		INPUT_SIG_PSD = 0, /* default */
+		TRANSFERFUNCTION = 1,
+		FAC_CONSTELLATION = 2,
+		SDC_CONSTELLATION = 3,
+		MSC_CONSTELLATION = 4,
+		POWER_SPEC_DENSITY = 5,
+		INPUTSPECTRUM_NO_AV = 6,
+		AUDIO_SPECTRUM = 7,
+		FREQ_SAM_OFFS_HIST = 8,
+		DOPPLER_DELAY_HIST = 9,
+		ALL_CONSTELLATION = 10,
+		SNR_AUDIO_HIST = 11,
+		AVERAGED_IR = 12,
+		SNR_SPECTRUM = 13,
+		INPUT_SIG_PSD_ANALOG = 14,
+		INP_SPEC_WATERF = 15,
+		NONE_OLD = 16 /* None must always be the last element! (see settings) */
+	};
 
 	CPlotManager();
 
@@ -71,8 +92,17 @@ public:
 					 _REAL& rPDSEnd);
 
 	void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void  GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void   GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void  GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
-	void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void GetFACVectorSpace(CVector<_COMPLEX>&);
+	void GetSDCVectorSpace(CVector<_COMPLEX>&, ECodScheme&);
+	void GetMSCVectorSpace(CVector<_COMPLEX>&, ECodScheme&);
+
+	void GetAnalogBWParameters(CReal& rCenterFreq, CReal& rBW);
+    CReal GetAnalogCurMixFreqOffs() const;
 
 	/* Interfaces to internal parameters/vectors used for the plot */
 	void GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
@@ -85,7 +115,7 @@ public:
 	void GetSNRHist(CVector<_REAL>& vecrSNR, CVector<_REAL>& vecrCDAud,
 		CVector<_REAL>& vecrScale);
 
-
+    _REAL GetDCFrequency();
 
 
 private:

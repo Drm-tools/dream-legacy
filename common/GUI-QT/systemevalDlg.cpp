@@ -56,7 +56,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	int iPlotStyle = Settings.Get("System Evaluation Dialog", "plotstyle", 0);
 	Settings.Put("System Evaluation Dialog", "plotstyle", iPlotStyle);
 
-	MainPlot->SetRecObj(&DRMReceiver);
+	MainPlot->SetPlotManager(DRMReceiver.GetPlotManager());
 	MainPlot->SetPlotStyle(iPlotStyle);
 	MainPlot->setMargin(1);
 
@@ -118,22 +118,22 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	   selectable */
 	CCharSelItem* pHistoryLiViIt =
 		new CCharSelItem(ListViewCharSel, tr("History"),
-		CDRMPlot::NONE_OLD, false);
+		CPlotManager::NONE_OLD, false);
 	pHistoryLiViIt->setPixmap(0, pixHistory);
 
 	CCharSelItem* pConstellationLiViIt =
 		new CCharSelItem(ListViewCharSel, tr("Constellation"),
-		CDRMPlot::NONE_OLD, false);
+		CPlotManager::NONE_OLD, false);
 	pConstellationLiViIt->setPixmap(0, pixConstellation);
 
 	CCharSelItem* pChannelLiViIt =
 		new CCharSelItem(ListViewCharSel, tr("Channel"),
-		CDRMPlot::NONE_OLD, false);
+		CPlotManager::NONE_OLD, false);
 	pChannelLiViIt->setPixmap(0, pixChannel);
 
 	CCharSelItem* pSpectrumLiViIt =
 		new CCharSelItem(ListViewCharSel, tr("Spectrum"),
-		CDRMPlot::NONE_OLD, false);
+		CPlotManager::NONE_OLD, false);
 	pSpectrumLiViIt->setPixmap(0, pixSpectrum);
 
 
@@ -141,55 +141,55 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	   first show up at the end of the list */
 	/* Spectrum */
 	CCharSelItem* pListItSNRSpec = new CCharSelItem(pSpectrumLiViIt,
-		tr("SNR Spectrum"), CDRMPlot::SNR_SPECTRUM);
+		tr("SNR Spectrum"), CPlotManager::SNR_SPECTRUM);
 	pListItSNRSpec->setPixmap(0, pixSpectrSNR);
 	CCharSelItem* pListItAudSpec = new CCharSelItem(pSpectrumLiViIt,
-		tr("Audio Spectrum"), CDRMPlot::AUDIO_SPECTRUM);
+		tr("Audio Spectrum"), CPlotManager::AUDIO_SPECTRUM);
 	pListItAudSpec->setPixmap(0, pixSpectrAudio);
 	CCharSelItem* pListItPowSpecDens = new CCharSelItem(pSpectrumLiViIt,
-		tr("Shifted PSD"), CDRMPlot::POWER_SPEC_DENSITY);
+		tr("Shifted PSD"), CPlotManager::POWER_SPEC_DENSITY);
 	pListItPowSpecDens->setPixmap(0, pixSpectrShiftedPSD);
 	CCharSelItem* pListItInpSpecWater = new CCharSelItem(pSpectrumLiViIt,
-		tr("Waterfall Input Spectrum"), CDRMPlot::INP_SPEC_WATERF);
+		tr("Waterfall Input Spectrum"), CPlotManager::INP_SPEC_WATERF);
 	pListItInpSpecWater->setPixmap(0, pixSpectrWaterf);
 	CCharSelItem* pListItInpSpectrNoAv = new CCharSelItem(pSpectrumLiViIt,
-		tr("Input Spectrum"), CDRMPlot::INPUTSPECTRUM_NO_AV);
+		tr("Input Spectrum"), CPlotManager::INPUTSPECTRUM_NO_AV);
 	pListItInpSpectrNoAv->setPixmap(0, pixSpectrInpSpec);
 	CCharSelItem* pListItInpPSD = new CCharSelItem(pSpectrumLiViIt,
-		tr("Input PSD"), CDRMPlot::INPUT_SIG_PSD);
+		tr("Input PSD"), CPlotManager::INPUT_SIG_PSD);
 	pListItInpPSD->setPixmap(0, pixSpectrPSD);
 
 	/* Constellation */
 	CCharSelItem* pListItConstMSC = new CCharSelItem(pConstellationLiViIt,
-		tr("MSC"), CDRMPlot::MSC_CONSTELLATION);
+		tr("MSC"), CPlotManager::MSC_CONSTELLATION);
 	pListItConstMSC->setPixmap(0, pixMSC);
 	CCharSelItem* pListItConstSDC = new CCharSelItem(pConstellationLiViIt,
-		tr("SDC"), CDRMPlot::SDC_CONSTELLATION);
+		tr("SDC"), CPlotManager::SDC_CONSTELLATION);
 	pListItConstSDC->setPixmap(0, pixSDC);
 	CCharSelItem* pListItConstFAC = new CCharSelItem(pConstellationLiViIt,
-		tr("FAC"), CDRMPlot::FAC_CONSTELLATION);
+		tr("FAC"), CPlotManager::FAC_CONSTELLATION);
 	pListItConstFAC->setPixmap(0, pixFAC);
 	CCharSelItem* pListItConstAll = new CCharSelItem(pConstellationLiViIt,
-		tr("FAC / SDC / MSC"), CDRMPlot::ALL_CONSTELLATION);
+		tr("FAC / SDC / MSC"), CPlotManager::ALL_CONSTELLATION);
 	pListItConstAll->setPixmap(0, pixConstellation);
 
 	/* History */
 	CCharSelItem* pListItHistFrSa = new CCharSelItem(pHistoryLiViIt,
-		tr("Frequency / Sample Rate"), CDRMPlot::FREQ_SAM_OFFS_HIST);
+		tr("Frequency / Sample Rate"), CPlotManager::FREQ_SAM_OFFS_HIST);
 	pListItHistFrSa->setPixmap(0, pixFreqSamHist);
 	CCharSelItem* pListItHistDeDo = new CCharSelItem(pHistoryLiViIt,
-		tr("Delay / Doppler"), CDRMPlot::DOPPLER_DELAY_HIST);
+		tr("Delay / Doppler"), CPlotManager::DOPPLER_DELAY_HIST);
 	pListItHistDeDo->setPixmap(0, pixDelDoppHist);
 	CCharSelItem* pListItHistSNRAu = new CCharSelItem(pHistoryLiViIt,
-		tr("SNR / Audio"), CDRMPlot::SNR_AUDIO_HIST);
+		tr("SNR / Audio"), CPlotManager::SNR_AUDIO_HIST);
 	pListItHistSNRAu->setPixmap(0, pixSNRAudHist);
 
 	/* Channel */
 	CCharSelItem* pListItChanTF = new CCharSelItem(pChannelLiViIt,
-		tr("Transfer Function"), CDRMPlot::TRANSFERFUNCTION);
+		tr("Transfer Function"), CPlotManager::TRANSFERFUNCTION);
 	pListItChanTF->setPixmap(0, pixChannelTF);
 	CCharSelItem* pListItChanIR = new CCharSelItem(pChannelLiViIt,
-		tr("Impulse Response"), CDRMPlot::AVERAGED_IR);
+		tr("Impulse Response"), CPlotManager::AVERAGED_IR);
 	pListItChanIR->setPixmap(0, pixChannelIR);
 
 	/* Use this trick to update the automatic column width adjustment to the
@@ -209,83 +209,83 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		EdtFrequency->setText("0");
 		EdtFrequency->setEnabled(false);
 
-		/* Only audio spectrum makes sence for MDI in */
+		/* Only audio spectrum makes sense for MDI in */
 		ListViewCharSel->setSelected(pListItAudSpec, true);
 		ListViewCharSel->setOpen(pSpectrumLiViIt, true);
-		MainPlot->SetupChart(CDRMPlot::AUDIO_SPECTRUM);
+		MainPlot->SetupChart(CPlotManager::AUDIO_SPECTRUM);
 	}
 	else
 	{
-		CDRMPlot::ECharType ePlotType = CDRMPlot::ECharType(Settings.Get("System Evaluation Dialog", "plottype", 0));
+		CPlotManager::EPlotType ePlotType = CPlotManager::EPlotType(Settings.Get("System Evaluation Dialog", "plottype", 0));
 		/* Set chart type */
 		switch (ePlotType)
 		{
-		case CDRMPlot::POWER_SPEC_DENSITY:
+		case CPlotManager::POWER_SPEC_DENSITY:
 			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
 			ListViewCharSel->setSelected(pListItPowSpecDens, true);
 			break;
 
-		case CDRMPlot::INPUTSPECTRUM_NO_AV:
+		case CPlotManager::INPUTSPECTRUM_NO_AV:
 			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
 			ListViewCharSel->setSelected(pListItInpSpectrNoAv, true);
 			break;
 
-		case CDRMPlot::AUDIO_SPECTRUM:
+		case CPlotManager::AUDIO_SPECTRUM:
 			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
 			ListViewCharSel->setSelected(pListItAudSpec, true);
 			break;
 
-		case CDRMPlot::SNR_SPECTRUM:
+		case CPlotManager::SNR_SPECTRUM:
 			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
 			ListViewCharSel->setSelected(pListItSNRSpec, true);
 			break;
 
-		case CDRMPlot::INP_SPEC_WATERF:
+		case CPlotManager::INP_SPEC_WATERF:
 			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
 			ListViewCharSel->setSelected(pListItInpSpecWater, true);
 			break;
 
-		case CDRMPlot::TRANSFERFUNCTION:
+		case CPlotManager::TRANSFERFUNCTION:
 			ListViewCharSel->setOpen(pChannelLiViIt, true);
 			ListViewCharSel->setSelected(pListItChanTF, true);
 			break;
 
-		case CDRMPlot::AVERAGED_IR:
+		case CPlotManager::AVERAGED_IR:
 			ListViewCharSel->setOpen(pChannelLiViIt, true);
 			ListViewCharSel->setSelected(pListItChanIR, true);
 			break;
 
-		case CDRMPlot::FAC_CONSTELLATION:
+		case CPlotManager::FAC_CONSTELLATION:
 			ListViewCharSel->setOpen(pConstellationLiViIt, true);
 			ListViewCharSel->setSelected(pListItConstFAC, true);
 			break;
 
-		case CDRMPlot::SDC_CONSTELLATION:
+		case CPlotManager::SDC_CONSTELLATION:
 			ListViewCharSel->setOpen(pConstellationLiViIt, true);
 			ListViewCharSel->setSelected(pListItConstSDC, true);
 			break;
 
-		case CDRMPlot::MSC_CONSTELLATION:
+		case CPlotManager::MSC_CONSTELLATION:
 			ListViewCharSel->setOpen(pConstellationLiViIt, true);
 			ListViewCharSel->setSelected(pListItConstMSC, true);
 			break;
 
-		case CDRMPlot::ALL_CONSTELLATION:
+		case CPlotManager::ALL_CONSTELLATION:
 			ListViewCharSel->setOpen(pConstellationLiViIt, true);
 			ListViewCharSel->setSelected(pListItConstAll, true);
 			break;
 
-		case CDRMPlot::FREQ_SAM_OFFS_HIST:
+		case CPlotManager::FREQ_SAM_OFFS_HIST:
 			ListViewCharSel->setOpen(pHistoryLiViIt, true);
 			ListViewCharSel->setSelected(pListItHistFrSa, true);
 			break;
 
-		case CDRMPlot::DOPPLER_DELAY_HIST:
+		case CPlotManager::DOPPLER_DELAY_HIST:
 			ListViewCharSel->setOpen(pHistoryLiViIt, true);
 			ListViewCharSel->setSelected(pListItHistDeDo, true);
 			break;
 
-		case CDRMPlot::SNR_AUDIO_HIST:
+		case CPlotManager::SNR_AUDIO_HIST:
 			ListViewCharSel->setOpen(pHistoryLiViIt, true);
 			ListViewCharSel->setSelected(pListItHistSNRAu, true);
 			break;
@@ -398,7 +398,8 @@ void systemevalDlg::showEvent(QShowEvent*)
 		s << "Chart Window " << i;
 
 		/* get the chart type */
-		const CDRMPlot::ECharType eNewType = (CDRMPlot::ECharType) Settings.Get(s.str(), "type", 0);
+		const CPlotManager::EPlotType eNewType =
+            CPlotManager::EPlotType(Settings.Get(s.str(), "type", 0));
 
 		/* get window geometry data */
 		CWinGeom c;
@@ -488,7 +489,7 @@ void systemevalDlg::UpdatePlotsStyle()
 	MainPlot->SetPlotStyle(iPlotStyle);
 }
 
-CDRMPlot* systemevalDlg::OpenChartWin(const CDRMPlot::ECharType eNewType)
+CDRMPlot* systemevalDlg::OpenChartWin(const CPlotManager::EPlotType eNewType)
 {
 	/* Create new chart window */
 	CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
@@ -501,7 +502,7 @@ CDRMPlot* systemevalDlg::OpenChartWin(const CDRMPlot::ECharType eNewType)
 	pNewChartWin->setIcon(*this->icon());
 
 	/* Set receiver object and correct chart type */
-	pNewChartWin->SetRecObj(&DRMReceiver);
+	pNewChartWin->SetPlotManager(DRMReceiver.GetPlotManager());
 	pNewChartWin->SetupChart(eNewType);
 
 	/* Show new window */

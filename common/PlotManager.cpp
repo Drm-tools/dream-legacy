@@ -373,3 +373,49 @@ void CPlotManager::GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrS
 	pReceiver->GetChannelEstimation()->GetSNRProfile(vecrData, vecrScale);
 }
 
+void CPlotManager::GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+{
+    pReceiver->GetOFDMDemod()->GetPowDenSpec(vecrData, vecrScale);
+}
+
+void CPlotManager::GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+{
+    pReceiver->GetAudioSpec(vecrData, vecrScale);
+}
+
+void CPlotManager::GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+{
+    pReceiver->GetInputSpec(vecrData, vecrScale);
+}
+
+void CPlotManager::GetAnalogBWParameters(CReal& rCenterFreq, CReal& rBW)
+{
+    pReceiver->GetAnalogBWParameters(rCenterFreq, rBW);
+}
+
+CReal CPlotManager::GetAnalogCurMixFreqOffs() const
+{
+    return pReceiver->GetAnalogCurMixFreqOffs();
+}
+
+void CPlotManager::GetFACVectorSpace(CVector<_COMPLEX>& vec)
+{
+    pReceiver->GetFACVectorSpace(vec);
+}
+
+void CPlotManager::GetSDCVectorSpace(CVector<_COMPLEX>& vec, ECodScheme& eCS)
+{
+    pReceiver->GetSDCVectorSpace(vec);
+    eCS = pReceiver->GetParameters()->eSDCCodingScheme;
+}
+
+void CPlotManager::GetMSCVectorSpace(CVector<_COMPLEX>& vec, ECodScheme& eCS)
+{
+    pReceiver->GetMSCVectorSpace(vec);
+    eCS = pReceiver->GetParameters()->eMSCCodingScheme;
+}
+
+_REAL CPlotManager::GetDCFrequency()
+{
+    return pReceiver->GetParameters()->GetDCFrequency();
+}

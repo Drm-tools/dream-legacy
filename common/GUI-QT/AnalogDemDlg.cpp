@@ -86,9 +86,9 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 
 	/* Init main plot */
-	MainPlot->SetRecObj(&Receiver);
+	MainPlot->SetPlotManager(Receiver.GetPlotManager());
 	MainPlot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
-	MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
+	MainPlot->SetupChart(CPlotManager::INPUT_SIG_PSD_ANALOG);
 	MainPlot->setMargin(1);
 
 	/* Add tool tip to show the user the possibility of choosing the AM IF */
@@ -555,11 +555,11 @@ void AnalogDemDlg::OnChartxAxisValSet(double dVal)
 
 void AnalogDemDlg::OnButtonWaterfall()
 {
-	/* Toggle between normal spectrum plot and waterfall spectrum plot */
+	/* Toggle between normal spectrum plot and waterfall spectrum plots */
 	if (ButtonWaterfall->state() == QButton::On)
-		MainPlot->SetupChart(CDRMPlot::INP_SPEC_WATERF);
+		MainPlot->SetupChart(CPlotManager::INP_SPEC_WATERF);
 	else
-		MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
+		MainPlot->SetupChart(CPlotManager::INPUT_SIG_PSD_ANALOG);
 }
 
 void AnalogDemDlg::OnButtonAMSS()

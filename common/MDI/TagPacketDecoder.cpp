@@ -105,9 +105,9 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	   count, FFFE_[16], FFFF_[16], 0000_[16], 0001_[16], etc.
 	   (2 bytes long -> 16 bits) */
 
-// TODO: use sequence number somehow!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: use sequence number somehow!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	const int iCurSeqNum = (int) vecbiAFPkt.Separate(16);
-	cout << "AF " << iCurSeqNum << endl;
+	//cout << "AF " << iCurSeqNum << endl;
 	(void)iCurSeqNum;
 	/*iSeqNumber++;
 	if (iSeqNumber > 0xFFFF)

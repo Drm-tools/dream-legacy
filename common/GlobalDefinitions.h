@@ -71,8 +71,8 @@ using namespace std; /* Because of the library: "complex" */
 # define USE_FAAC_LIBRARY
 //# undef USE_FAAC_LIBRARY
 
-//# define HAVE_LIBPCAP
-# undef HAVE_LIBPCAP
+# define HAVE_LIBPCAP
+//# undef HAVE_LIBPCAP
 
 # define HAVE_LIBHAMLIB
 //# undef HAVE_LIBHAMLIB

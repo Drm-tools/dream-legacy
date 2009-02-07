@@ -107,7 +107,7 @@ protected:
 	int					iWantedSoundDev;
 	int					iWantedRig;
 	EDemodulationType	eWantedRigMode;
-	bool			bRigUpdateForAllModes;
+	bool			    bRigUpdateForAllModes;
 	string				filename;
 public:
 	CSoundInInterface*	pSoundInInterface;

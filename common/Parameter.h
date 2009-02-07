@@ -53,11 +53,11 @@
 
 class CDRMReceiver;
 
-	/* CS: Coding Scheme */
-	enum ECodScheme { CS_1_SM, CS_2_SM, CS_3_SM, CS_3_HMSYM, CS_3_HMMIX };
+/* CS: Coding Scheme */
+enum ECodScheme { CS_1_SM, CS_2_SM, CS_3_SM, CS_3_HMSYM, CS_3_HMMIX };
 
-	/* CT: Channel Type */
-	enum EChanType { CT_MSC, CT_SDC, CT_FAC };
+/* CT: Channel Type */
+enum EChanType { CT_MSC, CT_SDC, CT_FAC };
 
 enum ETypeIntFreq
 { FLINEAR, FDFTFILTER, FWIENER };

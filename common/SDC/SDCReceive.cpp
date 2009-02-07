@@ -371,6 +371,7 @@ bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 
 	/* Synchronous Multiplex flag: this flag indicates whether the multiplex is
 	   broadcast synchronously */
+	   //cerr << "Type 3 ";
 	switch ((*pbiData).Separate(1))
 	{
 	case 0: /* 0 */
@@ -378,12 +379,14 @@ bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		   parameters and/or multiplex parameters and/or signal timing in target
 		   area) */
 		AltFreq.bIsSyncMultplx = false;
+		//cerr << "Async ";
 		break;
 
 	case 1: /* 1 */
 		/* Multiplex is synchronous (identical content and channel parameters
 		   and multiplex parameters and signal timing in target area) */
 		AltFreq.bIsSyncMultplx = true;
+		//cerr << "Sync ";
 		break;
 	}
 
@@ -394,11 +397,13 @@ bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 	case 0: /* 0 */
 		/* Base layer */
 		bEnhanceFlag = false;
+		//cerr << "base layer ";
 		break;
 
 	case 1: /* 1 */
 		/* Enhancement layer */
 		bEnhanceFlag = true;
+		//cerr << "enhancement layer ";
 		break;
 	}
 
@@ -411,12 +416,14 @@ bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		/* All services in the tuned multiplex are available on the frequencies
 		   given */
 		bServRestrFlag = false;
+		//cerr << "with all services ";
 		break;
 
 	case 1: /* 1 */
 		/* A restricted set of services are available on the frequencies
 		   given */
 		bServRestrFlag = true;
+		//cerr << "with some services ";
 		break;
 	}
 
@@ -428,11 +435,13 @@ bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 	case 0: /* 0 */
 		/* No restriction */
 		bRegionSchedFlag = false;
+		//cerr << "to unspecified regions at unspecified times ";
 		break;
 
 	case 1: /* 1 */
 		/* Region and/or schedule applies to this list of frequencies */
 		bRegionSchedFlag = true;
+		//cerr << "to specified regions/times ";
 		break;
 	}
 
@@ -445,6 +454,7 @@ bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		   in the DRM multiplex on the alternative frequencies by setting the
 		   corresponding bit to 1 */
 		iServRestr = (*pbiData).Separate(4);
+		//cerr << "services " << hex << iServRestr << dec << " ";
 
 		/* rfa 4 bits. This field (if present) is reserved for future additions
 		   and shall be set to zero until it is defined */
@@ -470,6 +480,7 @@ bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		   more "Alternative frequency signalling: Region definition data entity
 		   - type 7" with this Region Id */
 		AltFreq.iRegionID = (*pbiData).Separate(4);
+		//cerr << "region " << AltFreq.iRegionID << " ";
 
 		/* Schedule Id 4 bits. This field indicates whether the schedule is
 		   unspecified (value 0) or whether the alternative frequencies are
@@ -478,6 +489,7 @@ bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		   "Alternative frequency signalling: Schedule definition data entity
 		   - type 4" with this Schedule Id */
 		AltFreq.iScheduleID = (*pbiData).Separate(4);
+		//cerr << "schedule " << AltFreq.iScheduleID << " ";
 
 		/* Remove one byte from frequency count */
 		iNumFreqTmp--;
@@ -485,9 +497,12 @@ bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 
 	/* Check for error (length of body must be so long to include Service
 	   Restriction field and Region/Schedule field, also check that
-	   remaining number of bytes is devidable by 2 since we read 16 bits) */
+	   remaining number of bytes is divisable by 2 since we read 16 bits) */
 	if ((iNumFreqTmp < 0) || (iNumFreqTmp % 2 != 0))
+	{
+	    //cerr << endl << "error in AFS" << endl;
 		return true;
+	}
 
 	/* n frequencies: this field carries n 16 bit fields. n is in the
 	   range 0 to 16. The number of frequencies, n, is determined from the
@@ -497,17 +512,23 @@ bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 
 	AltFreq.veciFrequencies.resize(iNumFreq);
 
+    //cerr << "frequencies ";
 	for (i = 0; i < iNumFreq; i++)
 	{
 		/* rfu 1 bit. This field is reserved for future use of the frequency
 		   value field and shall be set to zero until defined */
 		if ((*pbiData).Separate(1) != 0)
+		{
+            //cerr << endl << "error in AFS" << endl;
 			return true;
+		}
 
 		/* Frequency value 15 bits. This field is coded as an unsigned integer
 		   and gives the frequency in kHz */
 		AltFreq.veciFrequencies[i] = (*pbiData).Separate(15);
+		//cerr << AltFreq.veciFrequencies[i] << " ";
 	}
+	//cerr << endl;
 
 	/* Now, set data in global struct */
 	Parameter.Lock();
