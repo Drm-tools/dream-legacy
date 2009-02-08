@@ -881,8 +881,6 @@ CDRMReceiver::InitReceiverMode()
 			/* DRM to AM switch - grab some common stuff */
 			AMParameters.bRunThread = Parameters.bRunThread;
  			AMParameters.rSigStrengthCorrection = Parameters.rSigStrengthCorrection;
- 			AMParameters.bMeasurePSD = Parameters.bMeasurePSD;
-			AMParameters.bMeasureInterference = Parameters.bMeasureInterference;
  			AMParameters.FrontEndParameters = Parameters.FrontEndParameters;
  			AMParameters.GPSData = Parameters.GPSData;
 			AMParameters.sSerialNumber = Parameters.sSerialNumber;
@@ -919,8 +917,6 @@ CDRMReceiver::InitReceiverMode()
 		case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
 			/* AM to DRM switch - grab some common stuff */
  			DRMParameters.rSigStrengthCorrection = Parameters.rSigStrengthCorrection;
- 			DRMParameters.bMeasurePSD = Parameters.bMeasurePSD;
-			DRMParameters.bMeasureInterference = Parameters.bMeasureInterference;
  			DRMParameters.FrontEndParameters = Parameters.FrontEndParameters;
  			DRMParameters.GPSData = Parameters.GPSData;
 			DRMParameters.sSerialNumber = Parameters.sSerialNumber;
@@ -1162,26 +1158,13 @@ CDRMReceiver::SetInTrackingModeDelayed()
 void
 CDRMReceiver::InitsForAllModules()
 {
-	if (downstreamRSCI.GetOutEnabled())
-	{
-		Parameters.bMeasureDelay = true;
-		Parameters.bMeasureDoppler = true;
-		Parameters.bMeasureInterference = true;
-		Parameters.bMeasurePSD = true;
-	}
-	else
-	{
-		Parameters.bMeasureDelay = false;
-		Parameters.bMeasureDoppler = false;
-		Parameters.bMeasureInterference = false;
-		Parameters.bMeasurePSD = false;
-	}
+	Parameters.Measurements.SetRSCIDefaults(downstreamRSCI.GetOutEnabled());
 
+/*  TODO - why is this here and when would one unsubscribe ?
 	if (Parameters.FrontEndParameters.eSMeterCorrectionType !=
                 CFrontEndParameters::S_METER_CORRECTION_TYPE_CAL_FACTOR_ONLY)
-        Parameters.bMeasurePSD = true;
-
-
+        Parameters.Measurements.subscribe(CMeasurements::PSD);
+*/
 	/* Set init flags */
 	SplitFAC.SetInitFlag();
 	SplitSDC.SetInitFlag();
@@ -1581,9 +1564,9 @@ bool
 CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
 {
 	Parameters.Lock();
-	if(Parameters.SigStrstat.isValid())
+	if(Parameters.Measurements.SigStrstat.isValid())
 	{
-		rSigStr = Parameters.SigStrstat.getCurrent();
+		rSigStr = Parameters.Measurements.SigStrstat.getCurrent();
 		Parameters.Unlock();
 		return true;
 	}
@@ -1803,6 +1786,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
             throw CGenErr(string("can't open RSCI input ")+str);
 		// disable sound input
 		SoundInProxy.SetUsingDI(str);
+		Parameters.Measurements.bETSIPSD = true;
 	}
 
 	str = s.Get("command", "rciout");
@@ -1820,6 +1804,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 			ss.str("");
 			ss << "rsioutprofile" << i;
 			string profile = s.Get("command", ss.str(), string("A"));
+            Parameters.Measurements.bETSIPSD = true;
 
 			// Check whether the profile has a subsampling ratio (e.g. --rsioutprofile A20)
 			int iSubsamplingFactor = 1;
@@ -1827,7 +1812,6 @@ CDRMReceiver::LoadSettings(CSettings& s)
 			{
 				iSubsamplingFactor = atoi(profile.substr(1).c_str());
 			}
-
 
 			ss.str("");
 			ss << "rciin" << i;

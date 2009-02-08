@@ -54,7 +54,7 @@ void CTagItemDecoderRdbv::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	if (iLen < 16)
 		return;
 	_REAL rSigStr = decodeDb(vecbiTag);
- 	 pParameter->SigStrstat.addSample(rSigStr);
+ 	 pParameter->Measurements.SigStrstat.addSample(rSigStr);
 	 /* this is the only signal strength we have so update the IF level too.
 	  * TODO scaling factor ? */
  	 pParameter->SetIFSignalLevel(rSigStr);
@@ -90,40 +90,40 @@ void CTagItemDecoderRwmf::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	if (iLen != 16)
 		return;
- 	 pParameter->rWMERFAC = decodeDb(vecbiTag);
+ 	 pParameter->Measurements.rWMERFAC = decodeDb(vecbiTag);
 }
 
 void CTagItemDecoderRwmm::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	if (iLen != 16)
 		return;
- 	 pParameter->rWMERMSC = decodeDb(vecbiTag);
+ 	 pParameter->Measurements.rWMERMSC = decodeDb(vecbiTag);
 }
 
 void CTagItemDecoderRmer::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	if (iLen != 16)
 		return;
- 	 pParameter->rMER = decodeDb(vecbiTag);
+ 	 pParameter->Measurements.rMER = decodeDb(vecbiTag);
 }
 
 void CTagItemDecoderRdop::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	if (iLen != 16)
 		return;
- 	 pParameter->rRdop = decodeDb(vecbiTag);
+ 	 pParameter->Measurements.rRdop = decodeDb(vecbiTag);
 }
 
 void CTagItemDecoderRdel::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	int iNumEntries = iLen/(3*BITS_BINARY);
-	pParameter->vecrRdelIntervals.Init(iNumEntries);
-	pParameter->vecrRdelThresholds.Init(iNumEntries);
+	pParameter->Measurements.vecrRdelIntervals.resize(iNumEntries);
+	pParameter->Measurements.vecrRdelThresholds.resize(iNumEntries);
 
 	for (int i=0; i<iNumEntries; i++)
 	{
- 		pParameter->vecrRdelThresholds[i] = vecbiTag.Separate(BITS_BINARY);
-		pParameter->vecrRdelIntervals[i] = decodeDb(vecbiTag);
+ 		pParameter->Measurements.vecrRdelThresholds[i] = vecbiTag.Separate(BITS_BINARY);
+		pParameter->Measurements.vecrRdelIntervals[i] = decodeDb(vecbiTag);
 	}
 }
 
@@ -134,11 +134,11 @@ void CTagItemDecoderRpsd::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 	int iVectorLen = iLen/BITS_BINARY;
 
-	pParameter->vecrPSD.Init(iVectorLen);
+	pParameter->Measurements.vecrPSD.resize(iVectorLen);
 
 	for (int i = 0; i < iVectorLen; i++)
 	{
-		pParameter->vecrPSD[i] = -(_REAL(vecbiTag.Separate(BITS_BINARY))/_REAL(2.0));
+		pParameter->Measurements.vecrPSD[i] = -(_REAL(vecbiTag.Separate(BITS_BINARY))/_REAL(2.0));
 	}
 
 }
@@ -149,21 +149,21 @@ void CTagItemDecoderRpir::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 	if (iLen == 0)
 	{
-		pParameter->vecrPIR.Init(0);
+		pParameter->Measurements.vecrPIR.clear();
 		return;
 	}
 
 	int iVectorLen = iLen/BITS_BINARY - 4; // 4 bytes for the scale start and end
 
 
-	pParameter->rPIRStart = _REAL(int16_t(vecbiTag.Separate(2 * BITS_BINARY))) / _REAL(256.0);
-	pParameter->rPIREnd = _REAL(int16_t(vecbiTag.Separate(2 * BITS_BINARY))) / _REAL(256.0);
+	pParameter->Measurements.rPIRStart = _REAL(int16_t(vecbiTag.Separate(2 * BITS_BINARY))) / _REAL(256.0);
+	pParameter->Measurements.rPIREnd = _REAL(int16_t(vecbiTag.Separate(2 * BITS_BINARY))) / _REAL(256.0);
 
-	pParameter->vecrPIR.Init(iVectorLen);
+	pParameter->Measurements.vecrPIR.resize(iVectorLen);
 
 	for (int i = 0; i < iVectorLen; i++)
 	{
-		pParameter->vecrPIR[i] = -(_REAL(vecbiTag.Separate(BITS_BINARY))/_REAL(2.0)) - rOffset;
+		pParameter->Measurements.vecrPIR[i] = -(_REAL(vecbiTag.Separate(BITS_BINARY))/_REAL(2.0)) - rOffset;
 	}
 
 }

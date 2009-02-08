@@ -10,8 +10,9 @@
 				<Option platforms="Windows;" />
 				<Option output="Dream.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="Release" />
-				<Option type="0" />
+				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option use_console_runner="0" />
 				<Option parameters="--mode DRMRX D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
@@ -169,6 +170,8 @@
 		<Unit filename="..\common\MDI\TagPacketGenerator.h" />
 		<Unit filename="..\common\MSCMultiplexer.cpp" />
 		<Unit filename="..\common\MSCMultiplexer.h" />
+		<Unit filename="..\common\Measurements.cpp" />
+		<Unit filename="..\common\Measurements.h" />
 		<Unit filename="..\common\OFDM.cpp" />
 		<Unit filename="..\common\OFDM.h" />
 		<Unit filename="..\common\Parameter.cpp" />

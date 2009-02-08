@@ -231,15 +231,14 @@ void CWriteData::StopWriteWaveFile()
 	Unlock();
 }
 
-void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
-							  CVector<_REAL>& vecrScale)
+void CWriteData::GetAudioSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
 {
 	/* Real input signal -> symmetrical spectrum -> use only half of spectrum */
 	const int iLenPowSpec = NUM_SMPLS_4_AUDIO_SPECTRUM / 2;
 
 	/* Init output vectors */
-	vecrData.Init(iLenPowSpec, (_REAL) 0.0);
-	vecrScale.Init(iLenPowSpec, (_REAL) 0.0);
+	vecrData.resize(iLenPowSpec);
+	vecrScale.resize(iLenPowSpec);
 
 	int i;
 

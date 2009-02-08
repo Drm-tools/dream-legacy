@@ -1,4 +1,4 @@
-/******************************************************************************\
+/*****************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
  * Copyright (c) 2001-2007
  *
@@ -40,8 +40,8 @@
 #define PARAMETER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
 #include "GlobalDefinitions.h"
+#include "Measurements.h"
 #include "ofdmcellmapping/CellMappingTable.h"
-#include "matlib/Matlib.h"
 #include <time.h>
 #include "GPSData.h"
 #include "ServiceInformation.h"
@@ -50,8 +50,6 @@
 # include <qthread.h>
 # include <qmutex.h>
 #endif
-
-class CDRMReceiver;
 
 /* CS: Coding Scheme */
 enum ECodScheme { CS_1_SM, CS_2_SM, CS_3_SM, CS_3_HMSYM, CS_3_HMMIX };
@@ -82,14 +80,7 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
 
 /* Classes ********************************************************************/
-
-    class CDumpable
-    {
-    public:
-        virtual void dump(ostream&) const = 0;
-        CDumpable() {}
-        virtual ~CDumpable() {}
-    };
+    class CDRMReceiver; // forward
 
 	class CAudioParam : public CDumpable
 	{
@@ -755,37 +746,17 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		void dump(ostream&) const;
 	};
 
-
-    class CMinMaxMean : public CDumpable
-    {
-    public:
-        CMinMaxMean();
-
-        void addSample(_REAL);
-        _REAL getCurrent();
-        _REAL getMean();
-        void getMinMax(_REAL&, _REAL&);
-        void setInvalid();
-        bool isValid();
-        void dump(ostream&) const;
-    protected:
-        _REAL rSum, rCur, rMin, rMax;
-        int iNum;
-    };
-
 class CParameter : public CDumpable
 {
   public:
 	CParameter();
 	CParameter(const CParameter&);
-	//CParameter(CDRMReceiver *pRx, CParameter *pParameter); // OPH - just copy some of the members
 	virtual ~CParameter();
 	CParameter& operator=(const CParameter&);
 
 	/* Enumerations --------------------------------------------------------- */
 	/* AS: AFS in SDC is valid or not */
 	enum EAFSVali { AS_VALID, AS_NOT_VALID };
-
 
 	/* SI: Symbol Interleaver */
 	enum ESymIntMod { SI_LONG, SI_SHORT };
@@ -941,19 +912,6 @@ class CParameter : public CDumpable
 	EAcqStat eAcquiState;
 	int iNumAudioFrames;
 
-	CVector <_BINARY> vecbiAudioFrameStatus;
-	bool bMeasurePSD;
-	_REAL rPIRStart;
-	_REAL rPIREnd;
-
-	/* vector to hold the PSD values for the rpsd tag. */
-	CVector <_REAL> vecrPSD;
-
-	// vector to hold impulse response values for (proposed) rpir tag
-	CVector <_REAL> vecrPIR;
-
-	CMatrix <_COMPLEX> matcReceivedPilotValues;
-
 	/* For Transmitter */
 	_REAL rCarOffset;
 	enum EOutFormat eOutputFormat;
@@ -1006,34 +964,12 @@ class CParameter : public CDumpable
 		Mutex.unlock();
 #endif
 	}
-	/* Channel Estimation */
-	_REAL rMER;
-	_REAL rWMERMSC;
-	_REAL rWMERFAC;
-	_REAL rSigmaEstimate;
-	_REAL rMinDelay;
-	_REAL rMaxDelay;
-
-	bool bMeasureDelay;
-	CRealVector vecrRdel;
-	CRealVector vecrRdelThresholds;
-	CRealVector vecrRdelIntervals;
-	bool bMeasureDoppler;
-	_REAL rRdop;
-	/* interference (constellation-based measurement rnic)*/
-	bool bMeasureInterference;
-	_REAL rIntFreq, rINR, rICR;
-
-	/* peak of PSD - for PSD-based interference measurement rnip */
-	_REAL rMaxPSDwrtSig;
-	_REAL rMaxPSDFreq;
 
 	/* the signal level as measured at IF by dream */
 	void SetIFSignalLevel(_REAL);
 	_REAL GetIFSignalLevel();
 	_REAL rSigStrengthCorrection;
 
-	/* General -------------------------------------------------------------- */
 	_REAL GetNominalBandwidth();
 	_REAL GetSysToNomBWCorrFact();
 	bool bRunThread;
@@ -1042,7 +978,9 @@ class CParameter : public CDumpable
 	CCellMappingTable CellMappingTable;
 
 	CGPSData GPSData;
-	CMinMaxMean SNRstat, SigStrstat;
+
+	CMeasurements Measurements;
+
     void dump(ostream&) const;
 
 protected:
@@ -1050,9 +988,6 @@ protected:
 	_REAL rSysSimSNRdB;
 
 	int iFrequency;
-	bool bValidSignalStrength;
-	_REAL rSigStr;
-	_REAL rIFSigStr;
 
 	/* Current selected audio service for processing */
 	int iCurSelAudioService;

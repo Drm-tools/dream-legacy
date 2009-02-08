@@ -116,6 +116,12 @@ void CDRMPlot::OnTimerChart()
 
 	bOnTimerCharMutexFlag = true;
 
+	if (InitCharType != CurCharType)
+	{
+		pPlotManager->endPlot(InitCharType);
+		pPlotManager->startPlot(CurCharType);
+	}
+
 	switch (CurCharType)
 	{
 	case CPlotManager::AVERAGED_IR:
@@ -283,6 +289,7 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 
 	case 0: /* 0 is default */
 	default:
+
 		MainPenColorPlot = BLUEWHITE_MAIN_PEN_COLOR_PLOT;
 		MainPenColorConst = BLUEWHITE_MAIN_PEN_COLOR_CONSTELLATION;
 		BckgrdColorPlot = BLUEWHITE_BCKGRD_COLOR_PLOT;
@@ -427,7 +434,7 @@ void CDRMPlot::SetAvIR()
         main1curve->attach(this);
 	}
 
-	if (vecrScale.Size() != 0)
+	if (vecrScale.size() != 0)
 	{
 		/* Fixed scale */
 		const double cdAxMinLeft = (double) -20.0;
@@ -458,12 +465,12 @@ void CDRMPlot::SetAvIR()
 		curve4->setData(dX, dY, 2);
 
 		/* Data for the actual impulse response curve */
-		SetData(vecrData, vecrScale);
+		main1curve->setData(&vecrData[0], &vecrScale[0], vecrData.size());
 
 		/* Horizontal bounds ------------------------------------------------ */
 		/* These bounds show the peak detection bound from timing tracking */
 		dX[0] = vecrScale[0];
-		dX[1] = vecrScale[vecrScale.Size() - 1];
+		dX[1] = vecrScale[vecrScale.size() - 1];
 
 #ifdef _DEBUG_
 		/* Lower bound */
@@ -480,7 +487,7 @@ void CDRMPlot::SetAvIR()
 
 		/* Adjust scale for x-axis */
 		setAxisScale(QwtPlot::xBottom, (double) vecrScale[0],
-			(double) vecrScale[vecrScale.Size() - 1]);
+			(double) vecrScale[vecrScale.size() - 1]);
 
 		replot();
 	}
@@ -488,7 +495,6 @@ void CDRMPlot::SetAvIR()
 
 void CDRMPlot::SetTranFct()
 {
-    CVector<_REAL> vecrData,  vecrData2, vecrScale;
 
 	/* First check if plot must be set up */
 	if (InitCharType != CPlotManager::TRANSFERFUNCTION)
@@ -523,12 +529,14 @@ void CDRMPlot::SetTranFct()
         main2curve->attach(this);
 	}
 
-    pPlotManager->GetTransferFunction(vecrData, vecrData2, vecrScale);
+    vector<double> transferFunc, groupDelay, scale;
+    pPlotManager->GetTransferFunction(transferFunc, groupDelay, scale);
 
-	/* Fixed scale */
-	setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) vecrScale.Size());
+	setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) scale.size());
 
-	SetData(vecrData, vecrData2, vecrScale);
+	main1curve->setData(&scale[0], &transferFunc[0], scale.size());
+	main2curve->setData(&scale[0], &groupDelay[0], scale.size());
+
 	replot();
 }
 
@@ -765,7 +773,7 @@ void CDRMPlot::SetSNRAudHist()
 void CDRMPlot::SpectrumPlotDefaults(
     const QString& title, const QString& axistitle, uint penwidth)
 {
-	/* Init chart for power spectram density estimation */
+	/* Init chart for power spectral density estimation */
 	setTitle(title);
 	enableAxis(QwtPlot::yRight, false);
 	grid->enableX(true);
@@ -894,9 +902,11 @@ void CDRMPlot::SetSNRSpectrum()
 	replot();
 }
 
+#include <iostream>
+
 void CDRMPlot::SetInpSpec()
 {
-    CVector<_REAL> vecrData, vecrScale;
+    vector<_REAL> vecrData, vecrScale;
 
 	/* First check if plot must be set up */
 	if (InitCharType != CPlotManager::INPUTSPECTRUM_NO_AV)
@@ -906,17 +916,16 @@ void CDRMPlot::SetInpSpec()
         SpectrumPlotDefaults(tr("Input Spectrum"), tr("Input Spectrum"), 1);
 	}
 
-    pPlotManager->GetInputSpec(vecrData, vecrScale);
     SetDCCarrier(pPlotManager->GetDCFrequency());
-
-	/* Insert actual spectrum data */
-	SetData(vecrData, vecrScale);
+    pPlotManager->GetInputSpec(vecrData, vecrScale);
+    //cerr << vecrData.size() << endl;
+	main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
 	replot();
 }
 
 void CDRMPlot::SetInpPSD()
 {
-    CVector<_REAL> vecrData, vecrScale;
+    vector<_REAL> vecrData, vecrScale;
 
 	/* First check if plot must be set up. */
 	if (InitCharType != CPlotManager::INPUT_SIG_PSD)
@@ -927,7 +936,7 @@ void CDRMPlot::SetInpPSD()
 	}
     SetDCCarrier(pPlotManager->GetDCFrequency());
     pPlotManager->GetInputPSD(vecrData, vecrScale);
-	SetData(vecrData, vecrScale);
+	main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
 	replot();
 }
 
@@ -973,13 +982,12 @@ void CDRMPlot::SetInpPSDAnalog()
 
 	/* Insert actual spectrum data */
     SetDCCarrier(pPlotManager->GetAnalogCurMixFreqOffs());
-    CVector<_REAL> vecrData, vecrScale;
+    vector<_REAL> vecrData, vecrScale;
     pPlotManager->GetInputPSD(vecrData, vecrScale);
-	SetData(vecrData, vecrScale);
+	main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
 	replot();
 }
 
-#include <iostream>
 
 QwtRasterData *SpectrogramData::copy() const
 {
@@ -1017,21 +1025,8 @@ void SpectrogramData::setHeight(size_t h)
     setBoundingRect(QwtDoubleRect(0.0, 0.0, SOUNDCRD_SAMPLE_RATE / 2000, h));
 }
 
-// not needed
-void SpectrogramData::setScale(CVector<double>& xvals)
+void SpectrogramData::setData(vector<double>& row)
 {
-    scale.resize(xvals.Size());
-    for(int i=0; i<xvals.Size(); i++)
-    {
-        scale[i] = xvals[i];
-    }
-}
-
-void SpectrogramData::setData(CVector<double>& Row)
-{
-    vector<double> row(Row.Size());
-    for(int i=0; i<Row.Size(); i++)
-        row[i] = Row[i];
     data.push_front(row);
     if(data.size()>height)
         data.pop_back();
@@ -1039,7 +1034,7 @@ void SpectrogramData::setData(CVector<double>& Row)
 
 void CDRMPlot::SetInpSpecWaterf()
 {
-    CVector<_REAL> vecrData, vecrScale;
+    vector<_REAL> vecrData, vecrScale;
 
     pPlotManager->GetInputSpec(vecrData, vecrScale);
 
@@ -1069,7 +1064,6 @@ void CDRMPlot::SetInpSpecWaterf()
         spectrogram->attach(this);
         plotLayout()->setAlignCanvasToScales(true);
         spectrogramData.setHeight(CanvSize.height());
-        spectrogramData.setScale(vecrScale);
 	}
 
     spectrogramData.setData(vecrData);

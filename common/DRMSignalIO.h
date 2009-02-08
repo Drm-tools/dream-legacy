@@ -129,12 +129,6 @@ public:
 		 {}
 	virtual ~CReceiveData();
 
-	void GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-	void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-							   const int iLenPSDAvEachBlock = LEN_PSD_AV_EACH_BLOCK,
-							   const int iNumAvBlocksPSD = NUM_AV_BLOCKS_PSD,
-							   const int iPSDOverlap = 0);
-
 	void SetFlippedSpectrum(const bool bNewF) {bFippedSpectrum = bNewF;}
 	bool GetFlippedSpectrum() {return bFippedSpectrum;}
 
@@ -168,17 +162,18 @@ protected:
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 
-	void PutPSD(CParameter& ReceiverParam);
-	void CalculatePSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-							   const int iLenPSDAvEachBlock = LEN_PSD_AV_EACH_BLOCK,
-							   const int iNumAvBlocksPSD = NUM_AV_BLOCKS_PSD,
-							   const int iPSDOverlap = 0);
+	void PutInputSpec(CParameter&);
+	void PutPSD(CParameter&);
+	void CalculatePSD(vector<_REAL>& vecrData,
+           int iLenPSDAvEachBlock = LEN_PSD_AV_EACH_BLOCK,
+           int iNumAvBlocksPSD = NUM_AV_BLOCKS_PSD,
+           int iPSDOverlap = 0);
 
-	void CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD);
-	void CalculatePSDInterferenceTag(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD);
+	void CalculateSigStrengthCorrection(CParameter &ReceiverParam, const vector<_REAL> &vecrPSD);
+	void CalculatePSDInterferenceTag(CParameter &ReceiverParam, const vector<_REAL> &vecrPSD);
 
 	int FreqToBin(_REAL rFreq);
-	_REAL CalcTotalPower(CVector<_REAL> &vecrData, int iStartBin, int iEndBin);
+	_REAL CalcTotalPower(const vector<_REAL> &vecrData, int iStartBin, int iEndBin);
 
 };
 

@@ -254,13 +254,6 @@ CParameter::CParameter():
  iTimingOffsTrack(0),
  eAcquiState(AS_NO_SIGNAL),
  iNumAudioFrames(0),
- vecbiAudioFrameStatus(0),
- bMeasurePSD(),
- rPIRStart(_REAL(0.0)),
- rPIREnd(_REAL(0.0)),
- vecrPSD(0),
- vecrPIR(0),
- matcReceivedPilotValues(),
  RawSimDa(),
  eSimType(ST_NONE),
  iDRMChannelNum(0),
@@ -277,34 +270,12 @@ CParameter::CParameter():
  ReceiveStatus(),
  FrontEndParameters(),
  AltFreqSign(),
- rMER(0.0),
- rWMERMSC(0.0),
- rWMERFAC(0.0),
- rSigmaEstimate(0.0),
- rMinDelay(0.0),
- rMaxDelay(0.0),
- bMeasureDelay(),
- vecrRdel(0),
- vecrRdelThresholds(0),
- vecrRdelIntervals(0),
- bMeasureDoppler(0),
- rRdop(0.0),
- bMeasureInterference(false),
- rIntFreq(0.0),
- rINR(0.0),
- rICR(0.0),
- rMaxPSDwrtSig(0.0),
- rMaxPSDFreq(0.0),
- rSigStrengthCorrection(0.0),
  bRunThread(false),
  bUsingMultimedia(false),
  CellMappingTable(),
- GPSData(), SNRstat(), SigStrstat(),
+ GPSData(), Measurements(),
  rSysSimSNRdB(0.0),
  iFrequency(0),
- bValidSignalStrength(false),
- rSigStr(0.0),
- rIFSigStr(0.0),
  iCurSelAudioService(0),
  iCurSelDataService(0),
  eRobustnessMode(RM_ROBUSTNESS_MODE_B),
@@ -339,11 +310,8 @@ CParameter::CParameter(const CParameter& p):
  iNumSDCBitsPerSFrame(p.iNumSDCBitsPerSFrame),
  iNumAudioDecoderBits(p.iNumAudioDecoderBits),
  iNumDataDecoderBits(p.iNumDataDecoderBits),
- iYear(p.iYear),
- iMonth(p.iMonth),
- iDay(p.iDay),
- iUTCHour(p.iUTCHour),
- iUTCMin(p.iUTCMin),
+ iYear(p.iYear), iMonth(p.iMonth), iDay(p.iDay),
+ iUTCHour(p.iUTCHour), iUTCMin(p.iUTCMin),
  iFrameIDTransm(p.iFrameIDTransm),
  iFrameIDReceiv(p.iFrameIDReceiv),
  rFreqOffsetAcqui(p.rFreqOffsetAcqui),
@@ -352,14 +320,6 @@ CParameter::CParameter(const CParameter& p):
  iTimingOffsTrack(p.iTimingOffsTrack),
  eAcquiState(p.eAcquiState),
  iNumAudioFrames(p.iNumAudioFrames),
- vecbiAudioFrameStatus(p.vecbiAudioFrameStatus),
- bMeasurePSD(p.bMeasurePSD),
- rPIRStart(p.rPIRStart),
- rPIREnd(p.rPIREnd),
- vecrPSD(p.vecrPSD),
- vecrPIR(p.vecrPIR),
- //matcReceivedPilotValues(p.matcReceivedPilotValues),
- matcReceivedPilotValues(), // OPH says copy constructor for CMatrix not safe yet
  RawSimDa(p.RawSimDa),
  eSimType(p.eSimType),
  iDRMChannelNum(p.iDRMChannelNum),
@@ -376,34 +336,12 @@ CParameter::CParameter(const CParameter& p):
  ReceiveStatus(p.ReceiveStatus),
  FrontEndParameters(p.FrontEndParameters),
  AltFreqSign(p.AltFreqSign),
- rMER(p.rMER),
- rWMERMSC(p.rWMERMSC),
- rWMERFAC(p.rWMERFAC),
- rSigmaEstimate(p.rSigmaEstimate),
- rMinDelay(p.rMinDelay),
- rMaxDelay(p.rMaxDelay),
- bMeasureDelay(p.bMeasureDelay),
- vecrRdel(p.vecrRdel),
- vecrRdelThresholds(p.vecrRdelThresholds),
- vecrRdelIntervals(p.vecrRdelIntervals),
- bMeasureDoppler(p.bMeasureDoppler),
- rRdop(p.rRdop),
- bMeasureInterference(p.bMeasureInterference),
- rIntFreq(p.rIntFreq),
- rINR(p.rINR),
- rICR(p.rICR),
- rMaxPSDwrtSig(p.rMaxPSDwrtSig),
- rMaxPSDFreq(p.rMaxPSDFreq),
- rSigStrengthCorrection(p.rSigStrengthCorrection),
  bRunThread(p.bRunThread),
  bUsingMultimedia(p.bUsingMultimedia),
  CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
- GPSData(p.GPSData), SNRstat(p.SNRstat), SigStrstat(p.SigStrstat),
+ GPSData(p.GPSData), Measurements(p.Measurements),
  rSysSimSNRdB(p.rSysSimSNRdB),
  iFrequency(p.iFrequency),
- bValidSignalStrength(p.bValidSignalStrength),
- rSigStr(p.rSigStr),
- rIFSigStr(p.rIFSigStr),
  iCurSelAudioService(p.iCurSelAudioService),
  iCurSelDataService(p.iCurSelDataService),
  eRobustnessMode(p.eRobustnessMode),
@@ -413,7 +351,6 @@ CParameter::CParameter(const CParameter& p):
  //, Mutex() // jfbc: I don't think this state should be copied
 {
 	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
-	matcReceivedPilotValues = p.matcReceivedPilotValues; // TODO
 }
 
 CParameter& CParameter::operator=(const CParameter& p)
@@ -449,13 +386,6 @@ CParameter& CParameter::operator=(const CParameter& p)
 	iTimingOffsTrack = p.iTimingOffsTrack;
 	eAcquiState = p.eAcquiState;
 	iNumAudioFrames = p.iNumAudioFrames;
-	vecbiAudioFrameStatus = p.vecbiAudioFrameStatus;
-	bMeasurePSD = p.bMeasurePSD;
-	vecrPSD = p.vecrPSD;
-	vecrPIR = p.vecrPIR;
-	rPIRStart = p.rPIRStart;
-	rPIREnd = p.rPIREnd;
-	matcReceivedPilotValues = p.matcReceivedPilotValues;
 	RawSimDa = p.RawSimDa;
 	eSimType = p.eSimType;
 	iDRMChannelNum = p.iDRMChannelNum;
@@ -472,36 +402,13 @@ CParameter& CParameter::operator=(const CParameter& p)
 	ReceiveStatus = p.ReceiveStatus;
 	FrontEndParameters = p.FrontEndParameters;
 	AltFreqSign = p.AltFreqSign;
-	rMER = p.rMER;
-	rWMERMSC = p.rWMERMSC;
-	rWMERFAC = p.rWMERFAC;
-	rSigmaEstimate = p.rSigmaEstimate;
-	rMinDelay = p.rMinDelay;
-	rMaxDelay = p.rMaxDelay;
-	bMeasureDelay = p.bMeasureDelay;
-	vecrRdel = p.vecrRdel;
-	vecrRdelThresholds = p.vecrRdelThresholds;
-	vecrRdelIntervals = p.vecrRdelIntervals;
-	bMeasureDoppler = p.bMeasureDoppler;
-	rRdop = p.rRdop;
-	bMeasureInterference = p.bMeasureInterference;
-	rIntFreq = p.rIntFreq;
-	rINR = p.rINR;
-	rICR = p.rICR;
-	rMaxPSDwrtSig = p.rMaxPSDwrtSig;
-	rMaxPSDFreq = p.rMaxPSDFreq;
-	rSigStrengthCorrection = p.rSigStrengthCorrection;
 	bRunThread = p.bRunThread;
 	bUsingMultimedia = p.bUsingMultimedia;
 	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup); // don't copy CMatrix
 	GPSData = p.GPSData;
-	SNRstat = p.SNRstat;
-	SigStrstat = p.SigStrstat;
+	Measurements = p.Measurements;
 	rSysSimSNRdB = p.rSysSimSNRdB;
 	iFrequency = p.iFrequency;
-	bValidSignalStrength = p.bValidSignalStrength;
-	rSigStr = p.rSigStr;
-	rIFSigStr = p.rIFSigStr;
 	iCurSelAudioService = p.iCurSelAudioService;
 	iCurSelDataService = p.iCurSelDataService;
 	eRobustnessMode = p.eRobustnessMode;
@@ -1123,13 +1030,13 @@ _REAL CParameter::GetSysSNRdBPilPos() const
 void
 CParameter::SetSNR(const _REAL iNewSNR)
 {
-	SNRstat.addSample(iNewSNR);
+	Measurements.SNRstat.addSample(iNewSNR);
 }
 
 _REAL
 CParameter::GetSNR()
 {
-	return SNRstat.getCurrent();
+	return 	Measurements.SNRstat.getCurrent();
 }
 
 _REAL CParameter::GetNominalSNRdB()
@@ -1198,12 +1105,12 @@ _REAL CParameter::GetSysToNomBWCorrFact()
 
 void CParameter::SetIFSignalLevel(_REAL rNewSigStr)
 {
-	rIFSigStr = rNewSigStr;
+		Measurements.rIFSigStr = rNewSigStr;
 }
 
 _REAL CParameter::GetIFSignalLevel()
 {
-	return rIFSigStr;
+	return 	Measurements.rIFSigStr;
 }
 
 void CRxStatus::SetStatus(const ETypeRxStatus OK)
@@ -1848,46 +1755,16 @@ CParameter::dump(ostream& out) const
     out << "TimingOffsTrack: " <<  iTimingOffsTrack << "," << endl;
     out << "AcquiState: " <<  eAcquiState << "," << endl;
     out << "NumAudioFrames: " <<  iNumAudioFrames << "," << endl;
-    out << "AudioFrameStatus: "; ::dump(out, vecbiAudioFrameStatus); out << endl;
-    out << "MeasurePSD: " <<  bMeasurePSD << "," << endl;
-    out << "PIRStart: " <<  rPIRStart << "," << endl;
-    out << "PIREnd: " <<  rPIREnd << "," << endl;
-    out << "PSD: "; ::dump(out, vecrPSD); out << endl;
-    out << "PIR: "; ::dump(out, vecrPIR); out << endl;
-	//CMatrix <_COMPLEX> matcReceivedPilotValues;
     out << "CarOffset: " <<  rCarOffset << "," << endl;
     out << "OutputFormat: " <<  int(eOutputFormat) << "," << endl;
     out << "ReceiveStatus: "; ReceiveStatus.dump(out); out << endl;
     out << "FrontEndParameters: "; FrontEndParameters.dump(out); out << endl;
     out << "AltFreqSign: "; AltFreqSign.dump(out); out << endl;
-    out << "MER: " <<  rMER << "," << endl;
-    out << "WMERMSC: " <<  rWMERMSC << "," << endl;
-    out << "WMERFAC: " <<  rWMERFAC << "," << endl;
-    out << "SigmaEstimate: " <<  rSigmaEstimate << "," << endl;
-    out << "MinDelay: " << rMinDelay << "," << endl;
-    out << "MaxDelay: " <<  rMaxDelay << "," << endl;
-    out << "MeasureDelay: " <<  bMeasureDelay << "," << endl;
-    out << "Rdel: "; ::dump(out, vecrRdel); out << endl;
-    out << "RdelThresholds: "; ::dump(out, vecrRdelThresholds); out << endl;
-    out << "RdelIntervals: "; ::dump(out, vecrRdelIntervals); out << endl;
-    out << "MeasureDoppler: " <<  bMeasureDoppler << "," << endl;
-    out << "Rdop: " <<  rRdop << "," << endl;
-    out << "MeasureInterference: " <<  bMeasureInterference << "," << endl;
-    out << "IntFreq: " <<  rIntFreq << "," << endl;
-    out << "INR: " <<  rINR << "," << endl;
-    out << "ICR: " <<  rICR << "," << endl;
-    out << "MaxPSDwrtSig: " <<  rMaxPSDwrtSig << "," << endl;
-    out << "MaxPSDFreq: " <<  rMaxPSDFreq << "," << endl;
     out << "UsingMultimedia: " <<  bUsingMultimedia << "," << endl;
 	//CCellMappingTable CellMappingTable;
 	//CGPSData GPSData;
-    out << "SNRstat: " << SNRstat << endl;
-    out << "SigStrstat: " << SigStrstat << endl;
     out << "SysSimSNRdB: " <<  rSysSimSNRdB << "," << endl;
     out << "Frequency: " <<  iFrequency << "," << endl;
-    out << "ValidSignalStrength: " <<  bValidSignalStrength << "," << endl;
-    out << "SigStr: " <<  rSigStr << "," << endl;
-    out << "IFSigStr: " <<  rIFSigStr << "," << endl;
     out << "CurSelAudioService: " <<  iCurSelAudioService << "," << endl;
     out << "CurSelDataService: " <<  iCurSelDataService << "," << endl;
     out << "RobustnessMode: " <<  int(eRobustnessMode) << "," << endl;

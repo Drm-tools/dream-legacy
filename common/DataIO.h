@@ -102,7 +102,7 @@ public:
 	void SetSoundBlocking(const bool bNewBl)
 		{bNewSoundBlocking = bNewBl; SetInitFlag();}
 
-	void GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void GetAudioSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
 
 	void SetOutChanSel(const EOutChanSel eNS) {eOutChanSel = eNS;}
 	EOutChanSel GetOutChanSel() {return eOutChanSel;}

@@ -78,7 +78,7 @@ public:
 	COFDMDemodulation() : iLenPowSpec(0) {}
 	virtual ~COFDMDemodulation() {}
 
-	void GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void GetPowDenSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
 
 protected:
 	CFftPlans				FftPlan;

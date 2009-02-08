@@ -253,23 +253,19 @@ public:
 	bool GetRecFilter() { return FreqSyncAcq.GetRecFilter(); }
 	void SetRecFilter(bool bVal) { FreqSyncAcq.SetRecFilter(bVal); }
 
-	bool GetFlippedSpectrum() { return ReceiveData.GetFlippedSpectrum(); }
-	void SetFlippedSpectrum(bool bVal)
-		{ ReceiveData.SetFlippedSpectrum(bVal); }
-	void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
-		{ ReceiveData.GetInputPSD(vecrData, vecrScale); }
-	void GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
-		{ ReceiveData.GetInputSpec(vecrData, vecrScale); }
-	void GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+	void SetFlippedSpectrum(bool bNewF) {ReceiveData.SetFlippedSpectrum(bNewF);}
+	bool GetFlippedSpectrum() {return ReceiveData.GetFlippedSpectrum();}
+
+	void GetAudioSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
 		{ WriteData.GetAudioSpec(vecrData, vecrScale); }
 
-	void GetFACVectorSpace(CVector<_COMPLEX>& vec)
+	void GetFACVectorSpace(vector<_COMPLEX>& vec)
 		{ FACMLCDecoder.GetVectorSpace(vec); }
 
-	void GetSDCVectorSpace(CVector<_COMPLEX>& vec)
+	void GetSDCVectorSpace(vector<_COMPLEX>& vec)
 		{ SDCMLCDecoder.GetVectorSpace(vec); }
 
-	void GetMSCVectorSpace(CVector<_COMPLEX>& vec)
+	void GetMSCVectorSpace(vector<_COMPLEX>& vec)
 		{ MSCMLCDecoder.GetVectorSpace(vec); }
 
 	bool GetReverbEffect() { return AudioSourceDecoder.GetReverbEffect(); }

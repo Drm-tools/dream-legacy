@@ -218,7 +218,7 @@ CShortLog::writeParameters()
 {
 	Parameters.Lock();
 
-	int iAverageSNR = (int) Round(Parameters.SNRstat.getMean());
+	int iAverageSNR = (int) Round(Parameters.Measurements.SNRstat.getMean());
 	int iNumCRCOkFAC = Parameters.ReceiveStatus.FAC.GetOKCount();
 	int iNumCRCOkMSC = Parameters.ReceiveStatus.Audio.GetOKCount();
 
@@ -234,7 +234,7 @@ CShortLog::writeParameters()
 		iTmpNumAAC = Parameters.iNumAudioFrames;
 
 	if (bRxlEnabled)
-		iRXL = (int)Round(Parameters.SigStrstat.getMean());
+		iRXL = (int)Round(Parameters.Measurements.SigStrstat.getMean());
 
 	Parameters.Unlock();
 
@@ -271,10 +271,10 @@ CShortLog::writeTrailer()
 	_REAL rMaxSigStr=0.0, rMinSigStr=0.0;
 
 	Parameters.Lock();
-	Parameters.SNRstat.getMinMax(rMinSNR, rMaxSNR);
+	Parameters.Measurements.SNRstat.getMinMax(rMinSNR, rMaxSNR);
 	if (bRxlEnabled)
 	{
-		Parameters.SigStrstat.getMinMax(rMinSigStr, rMaxSigStr);
+		Parameters.Measurements.SigStrstat.getMinMax(rMinSigStr, rMaxSigStr);
 	}
 	Parameters.Unlock();
 
@@ -332,8 +332,8 @@ CLongLog::writeParameters()
 	_REAL rDoppler = (_REAL) 0.0;
 	if (Parameters.eAcquiState == AS_WITH_SIGNAL)
 	{
-		rDelay = Parameters.rMinDelay;
-		rDoppler = Parameters.rSigmaEstimate;
+		rDelay = Parameters.Measurements.rMinDelay;
+		rDoppler = Parameters.Measurements.rSigmaEstimate;
 	}
 
 	/* Only show mode if FAC CRC was ok */
@@ -373,7 +373,7 @@ CLongLog::writeParameters()
 
 	char cRobMode = GetRobModeStr();
 
-	_REAL rSNR = Parameters.SNRstat.getCurrent();
+	_REAL rSNR = Parameters.Measurements.SNRstat.getCurrent();
 	int iFrameSyncStatus = (Parameters.ReceiveStatus.FSync.GetStatus()==RX_OK)?1:0;
 	int iFACStatus = (Parameters.ReceiveStatus.FAC.GetStatus()==RX_OK)?1:0;
 	int iAudioStatus = (Parameters.ReceiveStatus.LLAudio.GetStatus()==RX_OK)?1:0;
@@ -412,7 +412,7 @@ CLongLog::writeParameters()
 			<< setw(6) << rDelay;
 
 		if (bRxlEnabled)
-			File << ',' << setprecision(2) << setw(8) << Parameters.SigStrstat.getCurrent();
+			File << ',' << setprecision(2) << setw(8) << Parameters.Measurements.SigStrstat.getCurrent();
 
 		if (bPositionEnabled)
 			File << ',' << setprecision(4) << setw(10) << latitude << ',' << setw(10) << longitude;

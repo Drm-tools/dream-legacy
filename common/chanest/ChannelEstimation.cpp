@@ -233,6 +233,13 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 
+    /* send data for plotting */
+    if(ReceiverParam.Measurements.wanted(CMeasurements::CHANNEL))
+    {
+        ReceiverParam.Measurements.veccChanEst.resize(veccChanEst.Size());
+        for(int i=0; i<veccChanEst.Size(); i++)
+            ReceiverParam.Measurements.veccChanEst[i] = veccChanEst[i];
+    }
 	/* Equalize the output vector ------------------------------------------- */
 	/* Calculate squared magnitude of channel estimation */
 	vecrSqMagChanEst = SqMag(veccChanEst);
@@ -472,9 +479,9 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Doppler estimation is only implemented in the
 	 * Wiener time interpolation module */
 	if (TypeIntTime == TWIENER)
-   		ReceiverParam.rSigmaEstimate = TimeWiener.GetSigma();
+   		ReceiverParam.Measurements.rSigmaEstimate = TimeWiener.GetSigma();
 	else
-   		ReceiverParam.rSigmaEstimate = -1.0;
+   		ReceiverParam.Measurements.rSigmaEstimate = -1.0;
 
 	/* After processing last symbol of the frame */
 	if (iModSymNum == iNumSymPerFrame - 1)
@@ -493,8 +500,8 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Return delay in ms */
 		_REAL rDelayScale = _REAL(iFFTSizeN) / _REAL(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil * iScatPilFreqInt) * 1000.0;
-		ReceiverParam.rMinDelay = rMinDelay * rDelayScale;
-		ReceiverParam.rMaxDelay = rMaxDelay * rDelayScale;
+		ReceiverParam.Measurements.rMinDelay = rMinDelay * rDelayScale;
+		ReceiverParam.Measurements.rMaxDelay = rMaxDelay * rDelayScale;
 
 		/* Calculate and generate RSCI measurement values */
 		/* rmer (MER for MSC) */
@@ -502,21 +509,21 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			CalAndBoundSNR(AV_DATA_CELLS_POWER, rNoiseEstMERAcc / iCountMERAcc);
 
 		/* Bound MER at 0 dB */
-		ReceiverParam.rMER = (rMER > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rMER) : (_REAL) 0.0);
+		ReceiverParam.Measurements.rMER = (rMER > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rMER) : (_REAL) 0.0);
 
 		/* rwmm (WMER for MSC)*/
 		CReal rWMM = AV_DATA_CELLS_POWER *
 			CalAndBoundSNR(rSignalEstWMMAcc, rNoiseEstWMMAcc);
 
 		/* Bound the MER at 0 dB */
-		ReceiverParam.rWMERMSC = (rWMM > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rWMM) : (_REAL) 0.0);
+		ReceiverParam.Measurements.rWMERMSC = (rWMM > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rWMM) : (_REAL) 0.0);
 
 		/* rwmf (WMER for FAC) */
 		CReal rWMF = AV_DATA_CELLS_POWER *
 			CalAndBoundSNR(rSignalEstWMFAcc, rNoiseEstWMFAcc);
 
 		/* Bound the MER at 0 dB */
-		ReceiverParam.rWMERFAC = (rWMF > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rWMF) : (_REAL) 0.0);
+		ReceiverParam.Measurements.rWMERFAC = (rWMF > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rWMF) : (_REAL) 0.0);
 
 		/* Reset all the accumulators and counters */
 		rNoiseEstMERAcc = (_REAL) 0.0;
@@ -526,13 +533,13 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		rSignalEstWMFAcc = (_REAL) 0.0;
 		rNoiseEstWMFAcc = (_REAL) 0.0;
 
-		if (ReceiverParam.bMeasureDelay)
+		if (ReceiverParam.Measurements.wanted(CMeasurements::DELAY))
     	    TimeSyncTrack.CalculateRdel(ReceiverParam);
 
-		if (ReceiverParam.bMeasureDoppler)
+		if (ReceiverParam.Measurements.wanted(CMeasurements::DOPPLER))
 			TimeSyncTrack.CalculateRdop(ReceiverParam);
 
-		if (ReceiverParam.bMeasureInterference)
+		if (ReceiverParam.Measurements.wanted(CMeasurements::INTERFERENCE))
 		{
 			/* Calculate interference tag */
 			CalculateRint(ReceiverParam);
@@ -578,17 +585,17 @@ void CChannelEstimation::CalculateRint(CParameter& ReceiverParam)
 
 	/* Interference to noise ratio */
 	_REAL rINRtmp = CalAndBoundSNR(rMaxNoiseEst, rSumNoiseEst / iNumCarrier);
-	ReceiverParam.rINR = (rINRtmp > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rINRtmp) : (_REAL) 0.0);
+	ReceiverParam.Measurements.rINR = (rINRtmp > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rINRtmp) : (_REAL) 0.0);
 
 	/* Interference to (single) carrier ratio */
 	_REAL rICRtmp = CalAndBoundSNR(rMaxNoiseEst,
 		AV_DATA_CELLS_POWER * rSumSigEst/iNumCarrier);
 
 
-	ReceiverParam.rICR = (rICRtmp > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rICRtmp) : (_REAL) 0.0);
+	ReceiverParam.Measurements.rICR = (rICRtmp > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rICRtmp) : (_REAL) 0.0);
 
 	/* Interferer frequency */
-	ReceiverParam.rIntFreq = ((_REAL) iMaxIntCarrier + ReceiverParam.CellMappingTable.iCarrierKmin) /
+	ReceiverParam.Measurements.rIntFreq = ((_REAL) iMaxIntCarrier + ReceiverParam.CellMappingTable.iCarrierKmin) /
 		ReceiverParam.CellMappingTable.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
 }
 
@@ -1122,82 +1129,13 @@ _REAL CChannelEstimation::GetMinDelay()
 }
 #endif
 
-void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
-											 CVector<_REAL>& vecrGrpDly,
-											 CVector<_REAL>& vecrScale)
-{
-	/* Init output vectors */
-	vecrData.Init(iNumCarrier, (_REAL) 0.0);
-	vecrGrpDly.Init(iNumCarrier, (_REAL) 0.0);
-	vecrScale.Init(iNumCarrier, (_REAL) 0.0);
-
-	/* Do copying of data only if vector is of non-zero length which means that
-	   the module was already initialized */
-	if (iNumCarrier != 0)
-	{
-		_REAL rDiffPhase, rOldPhase;
-
-		/* Lock resources */
-		Lock();
-
-		/* TODO - decide if this allows the if(i==0) test to be removed */
-		rOldPhase = Angle(veccChanEst[0]);
-
-		/* Init constants for normalization */
-		const _REAL rTu = (CReal) iFFTSizeN / SOUNDCRD_SAMPLE_RATE;
-		const _REAL rNormData = (_REAL) numeric_limits<_SAMPLE>::max() * numeric_limits<_SAMPLE>::max();
-
-		/* Copy data in output vector and set scale
-		   (carrier index as x-scale) */
-		for (int i = 0; i < iNumCarrier; i++)
-		{
-			/* Transfer function */
-			const _REAL rNormSqMagChanEst = SqMag(veccChanEst[i]) / rNormData;
-
-			if (rNormSqMagChanEst > 0)
-				vecrData[i] = (_REAL) 10.0 * Log10(rNormSqMagChanEst);
-			else
-				vecrData[i] = RET_VAL_LOG_0;
-
-			/* Group delay */
-			if (i == 0)
-			{
-				/* At position 0 we cannot calculate a derivation -> use
-				   the same value as position 0 */
-				rDiffPhase = Angle(veccChanEst[1]) - Angle(veccChanEst[0]);
-			}
-			else
-				rDiffPhase = Angle(veccChanEst[i]) - rOldPhase;
-
-			/* Take care of wrap around of angle() function */
-			if (rDiffPhase > WRAP_AROUND_BOUND_GRP_DLY)
-				rDiffPhase -= 2.0 * crPi;
-			if (rDiffPhase < -WRAP_AROUND_BOUND_GRP_DLY)
-				rDiffPhase += 2.0 * crPi;
-
-			/* Apply normalization */
-			vecrGrpDly[i] = rDiffPhase * rTu * 1000.0 /* ms */;
-
-			/* Store old phase */
-			rOldPhase = Angle(veccChanEst[i]);
-
-			/* Scale (carrier index) */
-			vecrScale[i] = i;
-		}
-
-		/* Release resources */
-		Unlock();
-	}
-}
-
-void CChannelEstimation::GetSNRProfile(CVector<_REAL>& vecrData,
-									   CVector<_REAL>& vecrScale)
+void CChannelEstimation::GetSNRProfile(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
 {
 	int i;
 
 	/* Init output vectors */
-	vecrData.Init(iNumCarrier, (_REAL) 0.0);
-	vecrScale.Init(iNumCarrier, (_REAL) 0.0);
+	vecrData.resize(iNumCarrier);
+	vecrScale.resize(iNumCarrier);
 
 	/* Do copying of data only if vector is of non-zero length which means that
 	   the module was already initialized */
@@ -1216,8 +1154,8 @@ void CChannelEstimation::GetSNRProfile(CVector<_REAL>& vecrData,
 		}
 
 		/* Init output vectors for new size */
-		vecrData.Init(iNewNumCar, (_REAL) 0.0);
-		vecrScale.Init(iNewNumCar, (_REAL) 0.0);
+		vecrData.resize(iNewNumCar);
+		vecrScale.resize(iNewNumCar);
 
 		/* Copy data in output vector and set scale
 		   (carrier index as x-scale) */
@@ -1249,22 +1187,6 @@ void CChannelEstimation::GetSNRProfile(CVector<_REAL>& vecrData,
 		/* Release resources */
 		Unlock();
 	}
-}
-
-void CChannelEstimation::GetAvPoDeSp(CVector<_REAL>& vecrData,
-									 CVector<_REAL>& vecrScale,
-									 _REAL& rLowerBound, _REAL& rHigherBound,
-									 _REAL& rStartGuard, _REAL& rEndGuard,
-									 _REAL& rPDSBegin, _REAL& rPDSEnd)
-{
-	/* Lock resources */
-	Lock();
-
-	TimeSyncTrack.GetAvPoDeSp(vecrData, vecrScale, rLowerBound,
-		rHigherBound, rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
-
-	/* Release resources */
-	Unlock();
 }
 
 void CChannelEstimation::UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorEx<_COMPLEX>* pvecInputData,
@@ -1335,13 +1257,14 @@ void CChannelEstimation::UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorE
 	if (iSymbolCounter == ReceiverParam.CellMappingTable.iNumSymPerFrame - 1)
 	{
 		/* copy into CParam object */
-		ReceiverParam.matcReceivedPilotValues.Init(iNumSymPerFrame / iScatPilTimeInt, iNumCarrier/iScatPilFreqInt + 1,
-				_COMPLEX(_REAL(0.0),_REAL(0.0)));
-		ReceiverParam.matcReceivedPilotValues = matcRSIPilotStore;
-		/* copy it a row at a time (vector provides an assignment operator)
+		ReceiverParam.Measurements.matcReceivedPilotValues.resize(0);
+		ReceiverParam.Measurements.matcReceivedPilotValues.resize(
+            iNumSymPerFrame / iScatPilTimeInt,
+            vector<_COMPLEX>(iNumCarrier/iScatPilFreqInt + 1)
+		);
+		// copy it a row at a time (vector provides an assignment operator)
 		for (i=0; i<iNumSymPerFrame / iScatPilTimeInt; i++)
-			ReceiverParam.matcReceivedPilotValues[i] = matcRSIPilotStore[i];
-		*/
+			ReceiverParam.Measurements.matcReceivedPilotValues[i] = matcRSIPilotStore[i];
 
 
 		/* clear the local copy */

@@ -503,8 +503,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	bGoodValues = false;
 
 	ReceiverParam.Lock();
-	ReceiverParam.vecbiAudioFrameStatus.Init(0);
-	ReceiverParam.vecbiAudioFrameStatus.ResetBitAccess();
+	ReceiverParam.Measurements.vecAudioFrameStatus.clear();
 	ReceiverParam.Unlock();
 
 	/* Check if something went wrong in the initialization routine */
@@ -698,7 +697,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 
 				/* OPH: add frame status to vector for RSCI */
 				ReceiverParam.Lock();
-				ReceiverParam.vecbiAudioFrameStatus.Add(DecFrameInfo.error == 0 ? 0 : 1);
+				ReceiverParam.Measurements.vecAudioFrameStatus.push_back(DecFrameInfo.error != 0);
 				ReceiverParam.Unlock();
 				if (DecFrameInfo.error != 0)
 				{
@@ -753,7 +752,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				bCurBlockOK = false;
 				/* OPH: update audio status vector for RSCI */
 				ReceiverParam.Lock();
-				ReceiverParam.vecbiAudioFrameStatus.Add(1);
+				ReceiverParam.Measurements.vecAudioFrameStatus.push_back(true);
 				ReceiverParam.Unlock();
 			}
 #endif
@@ -776,7 +775,8 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 
 			/* OPH: update audio status vector for RSCI */
 			ReceiverParam.Lock();
-			ReceiverParam.vecbiAudioFrameStatus.Add(bCurBlockOK == true ? 0 : 1);
+			// TODO check logic
+			ReceiverParam.Measurements.vecAudioFrameStatus.push_back(bCurBlockOK);
 			ReceiverParam.Unlock();
 
 #if 0

@@ -155,13 +155,17 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter)
 
         /* RSCI tags ------------------------------------------------------------ */
         TagItemGeneratorRAFS.GenTag(Parameter);
-        TagItemGeneratorRWMF.GenTag(true, Parameter.rWMERFAC); /* WMER for FAC */
-        TagItemGeneratorRWMM.GenTag(true, Parameter.rWMERMSC); /* WMER for MSC */
-        TagItemGeneratorRMER.GenTag(true, Parameter.rMER); /* MER for MSC */
-        TagItemGeneratorRDEL.GenTag(true, Parameter.vecrRdelThresholds, Parameter.vecrRdelIntervals);
-        TagItemGeneratorRDOP.GenTag(true, Parameter.rRdop);
-        TagItemGeneratorRINT.GenTag(true,Parameter.rIntFreq, Parameter.rINR, Parameter.rICR);
-        TagItemGeneratorRNIP.GenTag(true,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
+        TagItemGeneratorRWMF.GenTag(true, Parameter.Measurements.rWMERFAC); /* WMER for FAC */
+        TagItemGeneratorRWMM.GenTag(true, Parameter.Measurements.rWMERMSC); /* WMER for MSC */
+        TagItemGeneratorRMER.GenTag(true, Parameter.Measurements.rMER); /* MER for MSC */
+        TagItemGeneratorRDEL.GenTag(true,
+            Parameter.Measurements.vecrRdelThresholds, Parameter.Measurements.vecrRdelIntervals);
+        TagItemGeneratorRDOP.GenTag(true, Parameter.Measurements.rRdop);
+        TagItemGeneratorRINT.GenTag(true,
+            Parameter.Measurements.rIntFreq, Parameter.Measurements.rINR, Parameter.Measurements.rICR);
+        TagItemGeneratorRNIP.GenTag(true,
+            Parameter.Measurements.rMaxPSDFreq, Parameter.Measurements.rMaxPSDwrtSig
+        );
         TagItemGeneratorRxService.GenTag(true, Parameter.GetCurSelAudioService());
         TagItemGeneratorReceiverStatus.GenTag(Parameter);
         TagItemGeneratorRxFrequency.GenTag(true, Parameter.GetFrequency()); /* rfre */
@@ -214,7 +218,10 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 
         TagItemGeneratorPilots.GenEmptyTag();
 
-        TagItemGeneratorRNIP.GenTag(true,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
+        TagItemGeneratorRNIP.GenTag(true,
+            Parameter.Measurements.rMaxPSDFreq,
+            Parameter.Measurements.rMaxPSDwrtSig
+        );
 
         /* Generate some other tags */
         TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
@@ -261,7 +268,10 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 
 	TagItemGeneratorPilots.GenEmptyTag();
 
-	TagItemGeneratorRNIP.GenTag(true, Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
+	TagItemGeneratorRNIP.GenTag(true,
+        Parameter.Measurements.rMaxPSDFreq,
+        Parameter.Measurements.rMaxPSDwrtSig
+    );
 
 	// Generate a rama tag with the encoded audio data
 	TagItemGeneratorAMAudio.GenTag(Parameter, CodedAudioData);

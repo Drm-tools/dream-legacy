@@ -89,11 +89,6 @@ public:
 	void Process(CParameter& Parameter, CComplexVector& veccChanEst,
 				 int iNewTiCorr, _REAL& rLenPDS, _REAL& rOffsPDS);
 
-	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-					 _REAL& rLowerBound, _REAL& rHigherBound,
-					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
-					 _REAL& rPDSEnd);
-
 	void StartTracking() {bTiSyncTracking = true;}
 	void StopTracking() {bTiSyncTracking = false;}
 
@@ -104,13 +99,16 @@ public:
 	void SetTiSyncTracType(ETypeTiSyncTrac eNewTy);
 	ETypeTiSyncTrac GetTiSyncTracType() {return TypeTiSyncTrac;}
 
-	/* OPH: calculation of delay and doppler using RSCI method */
-	void CalculateRdel(CParameter& Parameter);
-	CRealVector& GetRdelThresholds() {return vecrRdelThresholds;}
-	void CalculateRdop(CParameter& Parameter);
-
+	void CalculateRdel(CParameter&);
+	void CalculateRdop(CParameter&);
 
 protected:
+
+	/* OPH: calculation of delay and doppler using RSCI method */
+    void PutRdelThresholds(CParameter&);
+    void PutAvPoDeSp(CParameter&);
+	CReal GetSamOffHz(int iDiff, int iLen);
+
 	CComplexVector			veccPilots;
 	int						iNumIntpFreqPil;
 	CFftPlans				FftPlan;
@@ -131,8 +129,8 @@ protected:
 	CReal					rFracPartTiCor;
 	int						iTargetTimingPos;
 
-	bool				bTiSyncTracking;
-	bool				bSamRaOffsAcqu;
+	bool				    bTiSyncTracking;
+	bool				    bSamRaOffsAcqu;
 
 	int						iDFTSize;
 
@@ -155,13 +153,10 @@ protected:
 	int						iResOffAcqCntMax;
 	int						iOldNonZeroDiff;
 
-	CReal GetSamOffHz(int iDiff, int iLen);
-
 	/* O. Haffenden variables for rdop and rdel calculation */
 	CComplexVector			veccOldImpulseResponse;
 	CRealVector				vecrRdelThresholds;
 	CRealVector				vecrRdelIntervals;
 };
-
 
 #endif // !defined(TIMESYNCTRACK_H__3B0BA6346234634554344_BBE7A0D31912__INCLUDED_)

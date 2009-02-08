@@ -107,8 +107,7 @@ public:
 
     virtual double value(double x, double y) const;
     void setHeight(size_t h);
-    void setScale(CVector<double>& xvals);
-    void setData(CVector<double>& row);
+    void setData(vector<double>& row);
 
 protected:
     deque<vector<double> > data;

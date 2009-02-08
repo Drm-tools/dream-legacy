@@ -535,91 +535,100 @@ void systemevalDlg::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 
 void systemevalDlg::OnTimer()
 {
-	if (this->isVisible())
-	{
-		_REAL rSigStr;
-		bool bValid = DRMReceiver.GetSignalStrength(rSigStr);
-		if (bValid)
-			ValueRF->setText(QString().setNum(rSigStr, 'f', 1) + " dBuV");
-		else
-			ValueRF->setText("---");
+	if (this->isVisible() == false)
+        return;
 
-		CParameter& Parameters = *(DRMReceiver.GetParameters());
-		Parameters.Lock();
+    _REAL rSigStr;
+    bool bValid = DRMReceiver.GetSignalStrength(rSigStr);
+    if (bValid)
+        ValueRF->setText(QString().setNum(rSigStr, 'f', 1) + " dBuV");
+    else
+        ValueRF->setText("---");
 
-        int iCurSelAudioServ = Parameters.GetCurSelAudioService();
-        if(Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
-            SetStatus(LEDMSC, Parameters.ReceiveStatus.MOT.GetStatus());
+    CParameter& Parameters = *(DRMReceiver.GetParameters());
+    Parameters.Lock();
+
+    int iCurSelAudioServ = Parameters.GetCurSelAudioService();
+    if(Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
+        SetStatus(LEDMSC, Parameters.ReceiveStatus.MOT.GetStatus());
+    else
+        SetStatus(LEDMSC, Parameters.ReceiveStatus.Audio.GetStatus());
+    SetStatus(LEDSDC, Parameters.ReceiveStatus.SDC.GetStatus());
+    SetStatus(LEDFAC, Parameters.ReceiveStatus.FAC.GetStatus());
+    SetStatus(LEDFrameSync, Parameters.ReceiveStatus.FSync.GetStatus());
+    SetStatus(LEDTimeSync, Parameters.ReceiveStatus.TSync.GetStatus());
+    SetStatus(LEDIOInterface, Parameters.ReceiveStatus.Interface.GetStatus());
+
+    /* Show SNR if receiver is in tracking mode */
+    if (DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
+    {
+        /* Get a consistant snapshot */
+
+        /* We only get SNR from a local DREAM Front-End */
+        _REAL rSNR = Parameters.GetSNR();
+        if (rSNR >= 0.0)
+        {
+            /* SNR */
+            ValueSNR->setText("<b>" + QString().setNum(rSNR, 'f', 1) + " dB</b>");
+        }
         else
-            SetStatus(LEDMSC, Parameters.ReceiveStatus.Audio.GetStatus());
-    	SetStatus(LEDSDC, Parameters.ReceiveStatus.SDC.GetStatus());
-    	SetStatus(LEDFAC, Parameters.ReceiveStatus.FAC.GetStatus());
-    	SetStatus(LEDFrameSync, Parameters.ReceiveStatus.FSync.GetStatus());
-    	SetStatus(LEDTimeSync, Parameters.ReceiveStatus.TSync.GetStatus());
-    	SetStatus(LEDIOInterface, Parameters.ReceiveStatus.Interface.GetStatus());
+        {
+            ValueSNR->setText("<b>---</b>");
+        }
 
-
-	/* Show SNR if receiver is in tracking mode */
-	if (DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
-	{
-		/* Get a consistant snapshot */
-
-		/* We only get SNR from a local DREAM Front-End */
-		_REAL rSNR = Parameters.GetSNR();
-		if (rSNR >= 0.0)
-		{
-			/* SNR */
-			ValueSNR->setText("<b>" + QString().setNum(rSNR, 'f', 1) + " dB</b>");
-		}
-		else
-		{
-			ValueSNR->setText("<b>---</b>");
-		}
-		/* We get MER from a local DREAM Front-End or an RSCI input but not an MDI input */
-		_REAL rMER = Parameters.rMER;
-		if (rMER >= 0.0 )
-		{
-			ValueMERWMER->setText(QString().
-				setNum(Parameters.rWMERMSC, 'f', 1) + " dB / "
+        /* We get MER from a local DREAM Front-End or an RSCI input but not an MDI input */
+        _REAL rMER = Parameters.Measurements.rMER;
+        if (rMER >= 0.0 )
+        {
+            ValueMERWMER->setText(QString().
+                setNum(Parameters.Measurements.rWMERMSC, 'f', 1) + " dB / "
                 + QString().setNum(rMER, 'f', 1) + " dB");
-		}
-		else
-		{
-			ValueMERWMER->setText("<b>---</b>");
-		}
+        }
+        else
+        {
+            ValueMERWMER->setText("<b>---</b>");
+        }
 
-		/* Doppler estimation (assuming Gaussian doppler spectrum) */
-		if (Parameters.rSigmaEstimate >= 0.0)
-		{
-			/* Plot delay and Doppler values */
-			ValueWiener->setText(
-				QString().setNum(Parameters.rSigmaEstimate, 'f', 2) + " Hz / "
-				+ QString().setNum(Parameters.rMinDelay, 'f', 2) + " ms");
-		}
-		else
-		{
-			/* Plot only delay, Doppler not available */
-			ValueWiener->setText("--- / "
-            + QString().setNum(Parameters.rMinDelay, 'f', 2) + " ms");
-		}
+        /* Doppler estimation (assuming Gaussian doppler spectrum) */
+        QString doppler = "---";
+        QString delay = "---";
+        if(Parameters.Measurements.rRdop >= 0.0)
+        {
+            /* RSCI - have delay value */
+            doppler = QString().setNum(Parameters.Measurements.rRdop, 'f', 2) + " Hz";
+            if(Parameters.Measurements.vecrRdelIntervals.size()>0)
+                delay = QString().setNum(Parameters.Measurements.vecrRdelIntervals[0], 'f', 2) + " ms";
+        }
+        else if (Parameters.Measurements.rSigmaEstimate >= 0.0)
+        {
+            /* have delay and Doppler values */
+            doppler = QString().setNum(Parameters.Measurements.rSigmaEstimate, 'f', 2) + " Hz";
+            delay = QString().setNum(Parameters.Measurements.rMinDelay, 'f', 2) + " ms";
+        }
+        else
+        {
+            /* only have delay, Doppler not available */
+            delay = QString().setNum(Parameters.Measurements.rMinDelay, 'f', 2) + " ms";
+        }
+        ValueWiener->setText(doppler+" / "+delay);
 
-		/* Sample frequency offset estimation */
-		const _REAL rCurSamROffs = Parameters.rResampleOffset;
+        /* Sample frequency offset estimation */
+        const _REAL rCurSamROffs = Parameters.rResampleOffset;
 
-		/* Display value in [Hz] and [ppm] (parts per million) */
-		ValueSampFreqOffset->setText(
-			QString().setNum(rCurSamROffs, 'f', 2) + " Hz (" +
-			QString().setNum((int) (rCurSamROffs / SOUNDCRD_SAMPLE_RATE * 1e6))
-			+ " ppm)");
+        /* Display value in [Hz] and [ppm] (parts per million) */
+        ValueSampFreqOffset->setText(
+            QString().setNum(rCurSamROffs, 'f', 2) + " Hz (" +
+            QString().setNum((int) (rCurSamROffs / SOUNDCRD_SAMPLE_RATE * 1e6))
+            + " ppm)");
 
-	}
-	else
-	{
-		ValueSNR->setText("<b>---</b>");
-		ValueMERWMER->setText("<b>---</b>");
-		ValueWiener->setText("--- / ---");
-		ValueSampFreqOffset->setText("---");
-	}
+    }
+    else
+    {
+        ValueSNR->setText("<b>---</b>");
+        ValueMERWMER->setText("<b>---</b>");
+        ValueWiener->setText("--- / ---");
+        ValueSampFreqOffset->setText("---");
+    }
 
 #ifdef _DEBUG_
 	TextFreqOffset->setText("DC: " + QString().setNum(Parameters.  GetDCFrequency(), 'f', 3) + " Hz ");
@@ -633,26 +642,6 @@ void systemevalDlg::OnTimer()
 	/* DC frequency */
 	ValueFreqOffset->setText(QString().setNum(Parameters.GetDCFrequency(), 'f', 2)+" Hz");
 #endif
-
-/* _WIN32 fix because in Visual c++ the GUI files are always compiled even
-   if USE_QT_GUI is set or not (problem with RSCI in DRMReceiver?) */
-#ifdef USE_QT_GUI
-	/* If RSCI in is enabled, do not show any synchronization parameter */
-	if (DRMReceiver.GetRSIIn()->GetInEnabled() == true)
-	{
-		ValueSNR->setText("<b>---</b>");
-		if (Parameters.vecrRdelThresholds.Size() > 0)
-			ValueWiener->setText(QString().setNum(Parameters.rRdop, 'f', 2) + " Hz / "
-					+ QString().setNum(Parameters.vecrRdelIntervals[0], 'f', 2) + " ms ("
-					+ QString().setNum(Parameters.vecrRdelThresholds[0]) + "%)");
-		else
-			ValueWiener->setText(QString().setNum(Parameters.rRdop, 'f', 2) + " Hz / ---");
-
-		ValueSampFreqOffset->setText("---");
-		ValueFreqOffset->setText("---");
-	}
-#endif
-
 
 	/* FAC info static ------------------------------------------------------ */
 	QString strFACInfo;
@@ -825,8 +814,7 @@ void systemevalDlg::OnTimer()
 	TextLabelGPSTime->setText(qStrTime);
 */
 
-		Parameters.Unlock();
-	}
+    Parameters.Unlock();
 
 	UpdateControls();
 }

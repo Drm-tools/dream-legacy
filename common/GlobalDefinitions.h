@@ -181,9 +181,15 @@ public:
 	string strError;
 };
 
+class CDumpable
+{
+public:
+    virtual void dump(ostream&) const = 0;
+    CDumpable() {}
+    virtual ~CDumpable() {}
+};
+
 /* Prototypes for global functions ********************************************/
-/* Posting a window message */
-//void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam = 0);
 
 /* Debug error handling */
 void DebugError(const char* pchErDescr, const char* pchPar1Descr,

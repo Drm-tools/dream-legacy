@@ -201,20 +201,26 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 {
 	int i;
 
-	/* OPH: update free-running symbol counter */
 	Parameter.Lock();
+	int iNumSymPerFrame = Parameter.CellMappingTable.iNumSymPerFrame;
+	bool bMeasurePSD = Parameter.Measurements.wanted(CMeasurements::PSD);
+	bool bMeasureInputSpectrum = Parameter.Measurements.wanted(CMeasurements::INPUT_SPECTRUM);
+	Parameter.Unlock();
 
+	/* OPH: update free-running symbol counter */
 	iFreeSymbolCounter++;
-	if (iFreeSymbolCounter >= Parameter.CellMappingTable.iNumSymPerFrame)
+	if (iFreeSymbolCounter >= iNumSymPerFrame)
 	{
 		iFreeSymbolCounter = 0;
-		/* calculate the PSD once per frame for the RSI output */
 
-		if(Parameter.bMeasurePSD)
+		/* calculate the PSD once per frame for the RSI output and/or charts */
+		if(bMeasurePSD)
 			PutPSD(Parameter);
 
+		/* calculate the InputSpectrum once per frame for the charts */
+        if(bMeasureInputSpectrum)
+            PutInputSpec(Parameter);
 	}
-	Parameter.Unlock();
 
 	if(pSound == NULL)
 		return;
@@ -416,74 +422,8 @@ CReceiveData::~CReceiveData()
 {
 }
 
-void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
-								CVector<_REAL>& vecrScale)
-{
-	int i;
-
-	/* Length of spectrum vector including Nyquist frequency */
-	const int iLenSpecWithNyFreq = NUM_SMPLS_4_INPUT_SPECTRUM / 2 + 1;
-
-	/* Init input and output vectors */
-	vecrData.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
-	vecrScale.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
-
-	/* Lock resources */
-	Lock();
-
-	/* Init the constants for scale and normalization */
-	const _REAL rFactorScale =
-		(_REAL) SOUNDCRD_SAMPLE_RATE / iLenSpecWithNyFreq / 2000;
-
-	const _REAL rNormData = (_REAL) max_sample * max_sample *
-		NUM_SMPLS_4_INPUT_SPECTRUM * NUM_SMPLS_4_INPUT_SPECTRUM;
-
-	/* Copy data from shift register in Matlib vector */
-	CRealVector vecrFFTInput(NUM_SMPLS_4_INPUT_SPECTRUM);
-	for (i = 0; i < NUM_SMPLS_4_INPUT_SPECTRUM; i++)
-		vecrFFTInput[i] = vecrInpData[i];
-
-	/* Get squared magnitude of spectrum */
-	CRealVector vecrSqMagSpect(iLenSpecWithNyFreq);
-	vecrSqMagSpect =
-		SqMag(rfft(vecrFFTInput * Hann(NUM_SMPLS_4_INPUT_SPECTRUM)));
-
-	/* Log power spectrum data */
-	for (i = 0; i < iLenSpecWithNyFreq; i++)
-	{
-		const _REAL rNormSqMag = vecrSqMagSpect[i] / rNormData;
-
-		if (rNormSqMag > 0)
-			vecrData[i] = (_REAL) 10.0 * log10(rNormSqMag);
-		else
-			vecrData[i] = RET_VAL_LOG_0;
-
-		vecrScale[i] = (_REAL) i * rFactorScale;
-	}
-
-	/* Release resources */
-	Unlock();
-}
-
-void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
-							   CVector<_REAL>& vecrScale,
-							   const int iLenPSDAvEachBlock,
-							   const int iNumAvBlocksPSD,
-							   const int iPSDOverlap)
-{
-
-	/* Lock resources */
-	Lock();
-	CalculatePSD(vecrData, vecrScale, iLenPSDAvEachBlock,iNumAvBlocksPSD,iPSDOverlap);
-	/* Release resources */
-	Unlock();
-}
-
-void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
-                                                           CVector<_REAL>& vecrScale,
-                                                           const int iLenPSDAvEachBlock,
-                                                           const int iNumAvBlocksPSD,
-                                                           const int iPSDOverlap)
+void CReceiveData::CalculatePSD(vector<_REAL>& vecrData,
+    int iLenPSDAvEachBlock, int iNumAvBlocksPSD, int iPSDOverlap)
 {
         /* Define a plan at the beginning. This should speed up the calls to fftw */
         const CFftPlans FftPlans(iLenPSDAvEachBlock);
@@ -492,12 +432,10 @@ void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
         const int iLenSpecWithNyFreq = iLenPSDAvEachBlock / 2 + 1;
 
         /* Init input and output vectors */
-        vecrData.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
-        vecrScale.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
+        vecrData.resize(iLenSpecWithNyFreq);
 
         /* Init the constants for scale and normalization */
-        const _REAL rFactorScale =
-                (_REAL) SOUNDCRD_SAMPLE_RATE / iLenSpecWithNyFreq / 2000;
+       //_REAL rFactorScale = _REAL(SOUNDCRD_SAMPLE_RATE) / _REAL(iLenSpecWithNyFreq) / 2000.0;
 
         const _REAL rNormData = (_REAL) max_sample * max_sample *
                 iLenPSDAvEachBlock * iLenPSDAvEachBlock *
@@ -537,64 +475,115 @@ void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
                 else
                         vecrData[i] = RET_VAL_LOG_0;
 
-                vecrScale[i] = (_REAL) i * rFactorScale;
+                //vecrScale[i] = (_REAL) i * rFactorScale;
         }
 }
 
 /* Calculate PSD and put it into the CParameter class.
- * The data will be used by the rsi output.
- * This function is called in a context where the ReceiverParam structure is Locked.
+ * The data will be used by the chart plotter and rsi output.
  */
 void CReceiveData::PutPSD(CParameter &ReceiverParam)
 {
 	int i, j;
 
-	CVector<_REAL>		vecrData;
-	CVector<_REAL>		vecrScale;
+	vector<_REAL> vecrData;
 
-	CalculatePSD(vecrData, vecrScale, LEN_PSD_AV_EACH_BLOCK_RSI, NUM_AV_BLOCKS_PSD_RSI, PSD_OVERLAP_RSI);
+	int iStartBin, iEndBin, iVecSize, iStartIndex;
 
-	/* Data required for rpsd tag */
-	/* extract the values from -8kHz to +8kHz/18kHz relative to 12kHz, i.e. 4kHz to 20kHz */
-	/*const int startBin = 4000.0 * LEN_PSD_AV_EACH_BLOCK_RSI /SOUNDCRD_SAMPLE_RATE;
-	const int endBin = 20000.0 * LEN_PSD_AV_EACH_BLOCK_RSI /SOUNDCRD_SAMPLE_RATE;*/
-	/* The above calculation doesn't round in the way FhG expect. Probably better to specify directly */
-
-	/* For 20k mode, we need -8/+18, which is more than the Nyquist rate of 24kHz. */
-	/* Assume nominal freq = 7kHz (i.e. 2k to 22k) and pad with zeroes (roughly 1kHz each side) */
-
-	int iStartBin = 22;
-	int iEndBin = 106;
-	int iVecSize = iEndBin - iStartBin + 1; //85
-
-	//_REAL rIFCentreFrequency = ReceiverParam.FrontEndParameters.rIFCentreFreq;
-
-	ESpecOcc eSpecOcc = ReceiverParam.GetSpectrumOccup();
-	if (eSpecOcc == SO_4 || eSpecOcc == SO_5)
+	if(ReceiverParam.Measurements.bETSIPSD)
 	{
-		iStartBin = 0;
-		iEndBin = 127;
-		iVecSize = 139;
-	}
-	/* Line up the the middle of the vector with the quarter-Nyquist bin of FFT */
-	int iStartIndex = iStartBin - (LEN_PSD_AV_EACH_BLOCK_RSI/4) + (iVecSize-1)/2;
+        CalculatePSD(vecrData, LEN_PSD_AV_EACH_BLOCK_RSI, NUM_AV_BLOCKS_PSD_RSI, PSD_OVERLAP_RSI);
 
+        /* Data required for rpsd tag */
+        /* extract the values from -8kHz to +8kHz/18kHz relative to 12kHz, i.e. 4kHz to 20kHz */
+        /*const int startBin = 4000.0 * LEN_PSD_AV_EACH_BLOCK_RSI /SOUNDCRD_SAMPLE_RATE;
+        const int endBin = 20000.0 * LEN_PSD_AV_EACH_BLOCK_RSI /SOUNDCRD_SAMPLE_RATE;*/
+        /* The above calculation doesn't round in the way FhG expect. Probably better to specify directly */
+
+        /* For 20k mode, we need -8/+18, which is more than the Nyquist rate of 24kHz. */
+        /* Assume nominal freq = 7kHz (i.e. 2k to 22k) and pad with zeroes (roughly 1kHz each side) */
+
+        //_REAL rIFCentreFrequency = ReceiverParam.FrontEndParameters.rIFCentreFreq;
+
+        ESpecOcc eSpecOcc = ReceiverParam.GetSpectrumOccup();
+        if (eSpecOcc == SO_4 || eSpecOcc == SO_5)
+        {
+            iStartBin = 0;
+            iEndBin = 127;
+            iVecSize = 139;
+        }
+        else
+        {
+            iStartBin = 22;
+            iEndBin = 106;
+            iVecSize = iEndBin - iStartBin + 1; //85
+        }
+        /* Line up the the middle of the vector with the quarter-Nyquist bin of FFT */
+        iStartIndex = iStartBin - (LEN_PSD_AV_EACH_BLOCK_RSI/4) + (iVecSize-1)/2;
+	}
+	else
+	{
+	    // traditional dream values for plot in System Evaluation Dialog
+        CalculatePSD(vecrData, LEN_PSD_AV_EACH_BLOCK, NUM_AV_BLOCKS_PSD, 0);
+        iVecSize = vecrData.size();
+        iStartIndex = iStartBin = 0;
+        iEndBin = iVecSize-1;
+	}
+
+    ReceiverParam.Lock();
 	/* Fill with zeros to start with */
-	ReceiverParam.vecrPSD.Init(iVecSize, (_REAL) 0.0);
+	ReceiverParam.Measurements.vecrPSD.resize(iVecSize);
 
 	for (i=iStartIndex, j=iStartBin; j<=iEndBin; i++,j++)
-		ReceiverParam.vecrPSD[i] = vecrData[j];
+		ReceiverParam.Measurements.vecrPSD[i] = vecrData[j];
 
 	CalculateSigStrengthCorrection(ReceiverParam, vecrData);
 
 	CalculatePSDInterferenceTag(ReceiverParam, vecrData);
+    ReceiverParam.Unlock();
 
 }
+
+/* Calculate input spectum (no averaging) and put it into the CParameter class.
+ */
+void CReceiveData::PutInputSpec(CParameter &ReceiverParam)
+{
+	/* Length of spectrum vector including Nyquist frequency */
+	const int iLenSpecWithNyFreq = NUM_SMPLS_4_INPUT_SPECTRUM / 2 + 1;
+
+	const _REAL rNormData = (_REAL) max_sample * max_sample *
+		NUM_SMPLS_4_INPUT_SPECTRUM * NUM_SMPLS_4_INPUT_SPECTRUM;
+
+	/* Copy data from shift register in Matlib vector */
+	CRealVector vecrFFTInput(NUM_SMPLS_4_INPUT_SPECTRUM);
+	for (int i = 0; i < NUM_SMPLS_4_INPUT_SPECTRUM; i++)
+		vecrFFTInput[i] = vecrInpData[i];
+
+	/* Get squared magnitude of spectrum */
+	CRealVector vecrSqMagSpect(iLenSpecWithNyFreq);
+	vecrSqMagSpect =
+		SqMag(rfft(vecrFFTInput * Hann(NUM_SMPLS_4_INPUT_SPECTRUM)));
+
+    ReceiverParam.Lock();
+	/* Log power spectrum data */
+	ReceiverParam.Measurements.vecrInpSpec.resize(iLenSpecWithNyFreq);
+	for (int i = 0; i < iLenSpecWithNyFreq; i++)
+	{
+		const _REAL rNormSqMag = vecrSqMagSpect[i] / rNormData;
+		if (rNormSqMag > 0)
+			ReceiverParam.Measurements.vecrInpSpec[i] = (_REAL) 10.0 * log10(rNormSqMag);
+		else
+			ReceiverParam.Measurements.vecrInpSpec[i] = RET_VAL_LOG_0;
+	}
+    ReceiverParam.Unlock();
+}
+
 
 /*
  * This function is called in a context where the ReceiverParam structure is Locked.
  */
-void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD)
+void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam,
+    const vector<_REAL>& vecrPSD)
 {
 
 	_REAL rCorrection = _REAL(0.0);
@@ -663,7 +652,8 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVe
 /*
  * This function is called in a context where the ReceiverParam structure is Locked.
  */
-void CReceiveData::CalculatePSDInterferenceTag(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD)
+void CReceiveData::CalculatePSDInterferenceTag(CParameter &ReceiverParam,
+    const vector<_REAL> &vecrPSD)
 {
 
 	/* Interference tag (rnip) */
@@ -710,10 +700,10 @@ void CReceiveData::CalculatePSDInterferenceTag(CParameter &ReceiverParam, CVecto
 		CalcTotalPower(vecrPSD, iExcludeEndBin+1, iSearchEndBin);
 
 	/* interferer level wrt signal power */
-	ReceiverParam.rMaxPSDwrtSig = _REAL(10.0) * log10(rMaxPSD / rSigPowerExcludingInterferer);
+	ReceiverParam.Measurements.rMaxPSDwrtSig = _REAL(10.0) * log10(rMaxPSD / rSigPowerExcludingInterferer);
 
 	/* interferer frequency */
-	ReceiverParam.rMaxPSDFreq = _REAL(iMaxPSDBin) * _REAL(SOUNDCRD_SAMPLE_RATE) / _REAL(LEN_PSD_AV_EACH_BLOCK_RSI) - rIFCentreFrequency;
+	ReceiverParam.Measurements.rMaxPSDFreq = _REAL(iMaxPSDBin) * _REAL(SOUNDCRD_SAMPLE_RATE) / _REAL(LEN_PSD_AV_EACH_BLOCK_RSI) - rIFCentreFrequency;
 
 }
 
@@ -723,7 +713,7 @@ int CReceiveData::FreqToBin(_REAL rFreq)
 	return int(rFreq/SOUNDCRD_SAMPLE_RATE * LEN_PSD_AV_EACH_BLOCK_RSI);
 }
 
-_REAL CReceiveData::CalcTotalPower(CVector<_REAL> &vecrData, int iStartBin, int iEndBin)
+_REAL CReceiveData::CalcTotalPower(const vector<_REAL> &vecrData, int iStartBin, int iEndBin)
 {
 	if (iStartBin < 0) iStartBin = 0;
 	if (iEndBin > LEN_PSD_AV_EACH_BLOCK_RSI/2)
@@ -760,11 +750,6 @@ void COnboardDecoder::ProcessDataInternal(CParameter& Parameter)
 		Parameter.ReceiveStatus.Interface.SetStatus(RX_OK);
 	else
 		Parameter.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
-
-	if (Parameter.bMeasurePSD)
-	{
-		Parameter.vecrPSD.Init(0);
-	}
 	Parameter.Unlock();
 }
 

@@ -31,6 +31,8 @@
 
 #include "PlotManager.h"
 #include "DrmReceiver.h"
+#include <algorithm>
+#include <functional>
 #include <iostream>
 
 CPlotManager::CPlotManager() :
@@ -45,7 +47,123 @@ CPlotManager::CPlotManager() :
 {
 }
 
-/* Parameter histories for plot --------------------------------------------- */
+void CPlotManager::startPlot(EPlotType e)
+{
+    CParameter& Parameters = *pReceiver->GetParameters();
+	switch (e)
+	{
+	case AVERAGED_IR:
+        //Parameters.Measurements.subscribe(CMeasurements::);
+		break;
+	case TRANSFERFUNCTION:
+        Parameters.Measurements.subscribe(CMeasurements::CHANNEL);
+		break;
+	case POWER_SPEC_DENSITY:
+        //Parameters.Measurements.subscribe();
+		break;
+	case SNR_SPECTRUM:
+        //Parameters.Measurements.subscribe();
+		break;
+	case INPUTSPECTRUM_NO_AV:
+        Parameters.Measurements.subscribe(CMeasurements::INPUT_SPECTRUM);
+		break;
+	case INP_SPEC_WATERF:
+        Parameters.Measurements.subscribe(CMeasurements::INPUT_SPECTRUM);
+		break;
+	case INPUT_SIG_PSD:
+        Parameters.Measurements.subscribe(CMeasurements::PSD);
+		break;
+	case INPUT_SIG_PSD_ANALOG:
+        Parameters.Measurements.subscribe(CMeasurements::INPUT_SPECTRUM);
+		break;
+	case AUDIO_SPECTRUM:
+        //Parameters.Measurements.subscribe();
+		break;
+	case FREQ_SAM_OFFS_HIST:
+        //Parameters.Measurements.subscribe();
+		break;
+	case DOPPLER_DELAY_HIST:
+        Parameters.Measurements.subscribe(CMeasurements::DELAY);
+        Parameters.Measurements.subscribe(CMeasurements::DOPPLER);
+		break;
+	case SNR_AUDIO_HIST:
+        //Parameters.Measurements.subscribe();
+		break;
+	case FAC_CONSTELLATION:
+        //Parameters.Measurements.subscribe();
+		break;
+	case SDC_CONSTELLATION:
+        //Parameters.Measurements.subscribe();
+		break;
+	case MSC_CONSTELLATION:
+        //Parameters.Measurements.subscribe();
+		break;
+	case ALL_CONSTELLATION:
+        //Parameters.Measurements.subscribe();
+		break;
+	case NONE_OLD:
+		break;
+	}
+}
+
+void CPlotManager::endPlot(EPlotType e)
+{
+    CParameter& Parameters = *pReceiver->GetParameters();
+	switch (e)
+	{
+	case AVERAGED_IR:
+        //Parameters.Measurements.subscribe(CMeasurements::);
+		break;
+	case TRANSFERFUNCTION:
+        Parameters.Measurements.subscribe(CMeasurements::CHANNEL);
+		break;
+	case POWER_SPEC_DENSITY:
+        //Parameters.Measurements.subscribe();
+		break;
+	case SNR_SPECTRUM:
+        //Parameters.Measurements.subscribe();
+		break;
+	case INPUTSPECTRUM_NO_AV:
+        Parameters.Measurements.subscribe(CMeasurements::INPUT_SPECTRUM);
+		break;
+	case INP_SPEC_WATERF:
+        Parameters.Measurements.subscribe(CMeasurements::INPUT_SPECTRUM);
+		break;
+	case INPUT_SIG_PSD:
+        Parameters.Measurements.subscribe(CMeasurements::PSD);
+		break;
+	case INPUT_SIG_PSD_ANALOG:
+        Parameters.Measurements.subscribe(CMeasurements::INPUT_SPECTRUM);
+		break;
+	case AUDIO_SPECTRUM:
+        //Parameters.Measurements.subscribe();
+		break;
+	case FREQ_SAM_OFFS_HIST:
+        //Parameters.Measurements.subscribe();
+		break;
+	case DOPPLER_DELAY_HIST:
+        Parameters.Measurements.subscribe(CMeasurements::DELAY);
+        Parameters.Measurements.subscribe(CMeasurements::DOPPLER);
+		break;
+	case SNR_AUDIO_HIST:
+        //Parameters.Measurements.subscribe();
+		break;
+	case FAC_CONSTELLATION:
+        //Parameters.Measurements.subscribe();
+		break;
+	case SDC_CONSTELLATION:
+        //Parameters.Measurements.subscribe();
+		break;
+	case MSC_CONSTELLATION:
+        //Parameters.Measurements.subscribe();
+		break;
+	case ALL_CONSTELLATION:
+        //Parameters.Measurements.subscribe();
+		break;
+	case NONE_OLD:
+		break;
+	}
+}
 
 void CPlotManager::Init()
 {
@@ -53,6 +171,27 @@ void CPlotManager::Init()
 	rSumDopplerHist = (_REAL) 0.0;
 	rSumSNRHist = (_REAL) 0.0;
 }
+
+// ====== Generators for scale (X data) ============================
+class iotaGen
+{
+public:
+  iotaGen (int start = 0) : current(start) { }
+  int operator() () { return current++; }
+private:
+  int current;
+};
+
+class scaleGen
+{
+public:
+  scaleGen(double step = 1.0, double start=0.0):
+    current(start), interval(step) {}
+  double operator() () { return current+=interval; }
+private:
+  double current;
+  double interval;
+};
 
 void
 CPlotManager::UpdateParamHistories()
@@ -64,26 +203,26 @@ CPlotManager::UpdateParamHistories()
 	   moving the total data all the time -> special care has
 	   to be taken when reading out the data */
 
-    CParameter& ReceiverParam = *pReceiver->GetParameters();
+    CParameter& Parameters = *pReceiver->GetParameters();
 
-    ReceiverParam.Lock();
-    _REAL rFreqOffsetTrack = ReceiverParam.rFreqOffsetTrack;
-    _REAL rResampleOffset = ReceiverParam.rResampleOffset;
-    _REAL rSNR = ReceiverParam.GetSNR();
-    _REAL rSigmaEstimate = ReceiverParam.rSigmaEstimate;
-    _REAL iNumSymPerFrame = ReceiverParam.CellMappingTable.iNumSymPerFrame;
-    _REAL rMeanDelay = (ReceiverParam.rMinDelay +	ReceiverParam.rMaxDelay) / 2.0;
-    ReceiverParam.Unlock();
+    Parameters.Lock();
+    _REAL rFreqOffsetTrack = Parameters.rFreqOffsetTrack;
+    _REAL rResampleOffset = Parameters.rResampleOffset;
+    _REAL rSNR = Parameters.GetSNR();
+    _REAL rSigmaEstimate = Parameters.Measurements.rSigmaEstimate;
+    _REAL iNumSymPerFrame = Parameters.CellMappingTable.iNumSymPerFrame;
+    _REAL rMeanDelay = (Parameters.Measurements.rMinDelay + Parameters.Measurements.rMaxDelay) / 2.0;
+    Parameters.Unlock();
 
 #ifdef USE_QT_GUI
     MutexHist.lock();
 #endif
 
     /* Frequency offset tracking values */
-    vecrFreqSyncValHist.AddEnd(rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE);
+    vecrFreqSyncValHist.push_front(rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE);
 
     /* Sample rate offset estimation */
-    vecrSamOffsValHist.AddEnd(rResampleOffset);
+    vecrSamOffsValHist.push_front(rResampleOffset);
     /* Signal to Noise ratio estimates */
     rSumSNRHist += rSNR;
 
@@ -96,17 +235,17 @@ CPlotManager::UpdateParamHistories()
     if (iSymbolCount == iNumSymPerFrame)
     {
         /* Apply averaged values to the history vectors */
-        vecrLenIRHist.AddEnd(rMeanDelay);
+        vecrLenIRHist.push_front(rMeanDelay);
 
-        vecrSNRHist.AddEnd(rSumSNRHist / iNumSymPerFrame);
+        vecrSNRHist.push_front(rSumSNRHist / iNumSymPerFrame);
 
-        vecrDopplerHist.AddEnd(rSumDopplerHist / iNumSymPerFrame);
+        vecrDopplerHist.push_front(rSumDopplerHist / iNumSymPerFrame);
 
         /* At the same time, add number of correctly decoded audio blocks.
            This number is updated once a DRM frame. Since the other
            parameters like SNR is also updated once a DRM frame, the two
            values are synchronized by one DRM frame */
-        veciCDAudHist.AddEnd(iCurrentCDAud);
+        veciCDAudHist.push_front(iCurrentCDAud);
 
         /* Reset parameters used for averaging */
         iSymbolCount = 0;
@@ -124,30 +263,30 @@ CPlotManager::UpdateParamHistoriesRSIIn()
 {
 	/* This function is only called once per RSI frame, so process every time */
 
-	CParameter& ReceiverParam = *pReceiver->GetParameters();
+	CParameter& Parameters = *pReceiver->GetParameters();
 
-	ReceiverParam.Lock();
+	Parameters.Lock();
 	_REAL rDelay = _REAL(0.0);
-	if (ReceiverParam.vecrRdelIntervals.Size() > 0)
-		rDelay = ReceiverParam.vecrRdelIntervals[0];
-	_REAL rMER = ReceiverParam.rMER;
-	_REAL rRdop = ReceiverParam.rRdop;
-	ReceiverParam.Unlock();
+	if (Parameters.Measurements.vecrRdelIntervals.size() > 0)
+		rDelay = Parameters.Measurements.vecrRdelIntervals[0];
+	_REAL rMER = Parameters.Measurements.rMER;
+	_REAL rRdop = Parameters.Measurements.rRdop;
+	Parameters.Unlock();
 
 #ifdef USE_QT_GUI
 		MutexHist.lock();
 #endif
 
 	/* Apply averaged values to the history vectors */
-	vecrLenIRHist.AddEnd(rDelay);
-	vecrSNRHist.AddEnd(rMER);
-	vecrDopplerHist.AddEnd(rRdop);
+	vecrLenIRHist.push_front(rDelay);
+	vecrSNRHist.push_front(rMER);
+	vecrDopplerHist.push_front(rRdop);
 
 	/* At the same time, add number of correctly decoded audio blocks.
 	   This number is updated once a DRM frame. Since the other
 	   parameters like SNR is also updated once a DRM frame, the two
 	   values are synchronized by one DRM frame */
-	veciCDAudHist.AddEnd(iCurrentCDAud);
+	veciCDAudHist.push_front(iCurrentCDAud);
 	/* Reset parameters used for averaging */
 	iSymbolCount = 0;
 	rSumDopplerHist = (_REAL) 0.0;
@@ -159,10 +298,10 @@ CPlotManager::UpdateParamHistoriesRSIIn()
 }
 
 void
-CPlotManager::GetFreqSamOffsHist(CVector < _REAL > &vecrFreqOffs,
-								 CVector < _REAL > &vecrSamOffs,
-								 CVector < _REAL > &vecrScale,
-								 _REAL & rFreqAquVal)
+CPlotManager::GetFreqSamOffsHist(vector<_REAL>& vecrFreqOffs,
+								 vector<_REAL>& vecrSamOffs,
+								 vector<_REAL>& vecrScale,
+								 _REAL& rFreqAquVal)
 {
 	CParameter& ReceiverParam = *pReceiver->GetParameters();
 
@@ -174,9 +313,9 @@ CPlotManager::GetFreqSamOffsHist(CVector < _REAL > &vecrFreqOffs,
 	ReceiverParam.Unlock();
 
 	/* Init output vectors */
-	vecrFreqOffs.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-	vecrSamOffs.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
+	vecrFreqOffs.resize(LEN_HIST_PLOT_SYNC_PARMS);
+	vecrSamOffs.resize(LEN_HIST_PLOT_SYNC_PARMS);
+	vecrScale.resize(LEN_HIST_PLOT_SYNC_PARMS);
 
 	/* Lock resources */
 #ifdef USE_QT_GUI
@@ -184,8 +323,8 @@ CPlotManager::GetFreqSamOffsHist(CVector < _REAL > &vecrFreqOffs,
 #endif
 
 	/* Simply copy history buffers in output buffers */
-	vecrFreqOffs = vecrFreqSyncValHist;
-	vecrSamOffs = vecrSamOffsValHist;
+	vecrFreqOffs.assign(vecrFreqSyncValHist.begin(), vecrFreqSyncValHist.end());
+	vecrSamOffs.assign(vecrSamOffsValHist.begin(), vecrSamOffsValHist.end());
 
 	/* Calculate time scale */
 	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
@@ -198,16 +337,16 @@ CPlotManager::GetFreqSamOffsHist(CVector < _REAL > &vecrFreqOffs,
 }
 
 void
-CPlotManager::GetDopplerDelHist(CVector < _REAL > &vecrLenIR,
-								CVector < _REAL > &vecrDoppler,
-								CVector < _REAL > &vecrScale)
+CPlotManager::GetDopplerDelHist(vector<_REAL>& vecrLenIR,
+								vector<_REAL>& vecrDoppler,
+								vector<_REAL>& vecrScale)
 {
 	CParameter& ReceiverParam = *pReceiver->GetParameters();
 
 	/* Init output vectors */
-	vecrLenIR.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-	vecrDoppler.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
+	vecrLenIR.resize(LEN_HIST_PLOT_SYNC_PARMS);
+	vecrDoppler.resize(LEN_HIST_PLOT_SYNC_PARMS);
+	vecrScale.resize(LEN_HIST_PLOT_SYNC_PARMS);
 
 	ReceiverParam.Lock();
 	/* Duration of DRM frame */
@@ -222,8 +361,8 @@ CPlotManager::GetDopplerDelHist(CVector < _REAL > &vecrLenIR,
 #endif
 
 	/* Simply copy history buffers in output buffers */
-	vecrLenIR = vecrLenIRHist;
-	vecrDoppler = vecrDopplerHist;
+	vecrLenIR.assign(vecrLenIRHist.begin(), vecrLenIRHist.end());
+	vecrDoppler.assign(vecrDopplerHist.begin(), vecrDopplerHist.end());
 
 
 	/* Calculate time scale in minutes */
@@ -237,9 +376,9 @@ CPlotManager::GetDopplerDelHist(CVector < _REAL > &vecrLenIR,
 }
 
 void
-CPlotManager::GetSNRHist(CVector < _REAL > &vecrSNR,
-						 CVector < _REAL > &vecrCDAud,
-						 CVector < _REAL > &vecrScale)
+CPlotManager::GetSNRHist(vector < _REAL > &vecrSNR,
+						 vector < _REAL > &vecrCDAud,
+						 vector < _REAL > &vecrScale)
 {
 	CParameter& ReceiverParam = *pReceiver->GetParameters();
 	/* Duration of DRM frame */
@@ -250,9 +389,9 @@ CPlotManager::GetSNRHist(CVector < _REAL > &vecrSNR,
 	ReceiverParam.Unlock();
 
 	/* Init output vectors */
-	vecrSNR.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-	vecrCDAud.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
-	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
+	vecrSNR.resize(LEN_HIST_PLOT_SYNC_PARMS);
+	vecrCDAud.resize(LEN_HIST_PLOT_SYNC_PARMS);
+	vecrScale.resize(LEN_HIST_PLOT_SYNC_PARMS);
 
 	/* Lock resources */
 #ifdef USE_QT_GUI
@@ -260,7 +399,7 @@ CPlotManager::GetSNRHist(CVector < _REAL > &vecrSNR,
 #endif
 
 	/* Simply copy history buffer in output buffer */
-	vecrSNR = vecrSNRHist;
+	vecrSNR.assign(vecrSNRHist.begin(), vecrSNRHist.end());
 
 	/* Calculate time scale. Copy correctly decoded audio blocks history (must
 	   be transformed from "int" to "real", therefore we need a for-loop */
@@ -280,112 +419,175 @@ CPlotManager::GetSNRHist(CVector < _REAL > &vecrSNR,
 }
 
 void
-CPlotManager::GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+CPlotManager::GetInputPSD(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
 {
-	CParameter& ReceiverParam = *pReceiver->GetParameters();
+	CParameter& Parameters = *pReceiver->GetParameters();
+    // read it from the parameter structure
+    Parameters.Lock();
+    vecrData = Parameters.Measurements.vecrPSD;
+    bool etsi = Parameters.Measurements.bETSIPSD;
+    Parameters.Unlock();
 
-	if (pReceiver->GetRSIIn()->GetInEnabled())
-	{
-		// read it from the parameter structure
-		ReceiverParam.Lock();
-		CVector<_REAL>& vecrPSD = ReceiverParam.vecrPSD;
-		ReceiverParam.Unlock();
+    int iVectorLen = vecrData.size();
+    vecrScale.resize(iVectorLen);
 
-		int iVectorLen = vecrPSD.Size();
-		vecrData.Init(iVectorLen);
-		vecrScale.Init(iVectorLen);
+    if(etsi) // if the RSI output is turned on we display that version
+    {
+        // starting frequency and frequency step as defined in TS 102 349
+        // plot expects the scale values in kHz
+        _REAL f = _REAL(-7.875) + VIRTUAL_INTERMED_FREQ/_REAL(1000.0);
+        const _REAL fstep =_REAL(0.1875);
 
-		// starting frequency and frequency step as defined in TS 102 349
-		// plot expects the scale values in kHz
-		_REAL f = _REAL(-7.875) + VIRTUAL_INTERMED_FREQ/_REAL(1000.0);
-		const _REAL fstep =_REAL(0.1875);
-
-		for (int i=0; i<iVectorLen; i++)
-		{
-			vecrData[i] = vecrPSD[i];
-			vecrScale[i] = f;
-			f += fstep;
-		}
-
-	}
-	else
-	{
-		pReceiver->GetInputPSD(vecrData, vecrScale);
-	}
+        generate(vecrScale.begin(), vecrScale.end(), scaleGen(fstep, f));
+    }
+    else // Traditional Dream values
+    {
+        _REAL rFactorScale = _REAL(SOUNDCRD_SAMPLE_RATE) / _REAL(iVectorLen) / 2000.0;
+        generate(vecrScale.begin(), vecrScale.end(), scaleGen(rFactorScale));
+    }
 }
 
-void CPlotManager::GetTransferFunction(CVector<_REAL>& vecrData,
-		CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale)
+class TransferFunction : unary_function<CComplex,double>
 {
-	pReceiver->GetChannelEstimation()->GetTransferFunction(vecrData, vecrGrpDly, vecrScale);
+public:
+    double operator() (CComplex) const;
+};
+
+double TransferFunction::operator()(CComplex val) const
+{
+    const _REAL rNormData = (_REAL) numeric_limits<_SAMPLE>::max() * numeric_limits<_SAMPLE>::max();
+    const _REAL rNormSqMagChanEst = SqMag(val) / rNormData;
+
+    if (rNormSqMagChanEst > 0)
+        return (_REAL) 10.0 * Log10(rNormSqMagChanEst);
+    else
+        return RET_VAL_LOG_0;
 }
 
-
-void CPlotManager::GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-					 _REAL& rLowerBound, _REAL& rHigherBound,
-					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
-					 _REAL& rPDSEnd)
+class GroupDelay : unary_function<CComplex,double>
 {
-	CParameter& ReceiverParam = *pReceiver->GetParameters();
+public:
+    GroupDelay(CComplex init, CReal tu):rOldPhase(Angle(init)),rTu(tu){}
+    double operator() (CComplex);
+private:
+    CReal rOldPhase;
+    CReal rTu;
+};
 
-	if (pReceiver->GetRSIIn()->GetInEnabled())
-	{
-		// read it from the parameter structure
-		ReceiverParam.Lock();
-		CVector<_REAL>& vecrPIR = ReceiverParam.vecrPIR;
-		_REAL rPIRStart = ReceiverParam.rPIRStart;
-		_REAL rPIREnd = ReceiverParam.rPIREnd;
-		ReceiverParam.Unlock();
+double GroupDelay::operator()(CComplex val)
+{
+    CReal rCurphase = Angle(val);
+    CReal rDiffPhase = rCurphase - rOldPhase;
 
-		int iVectorLen = vecrPIR.Size();
-		vecrData.Init(iVectorLen);
-		vecrScale.Init(iVectorLen);
+    /* Store phase */
+    rOldPhase = rCurphase;
 
-		// starting frequency and frequency step as defined in TS 102 349
-		// plot expects the scale values in kHz
-		_REAL t = rPIRStart;
-		const _REAL tstep = (rPIREnd-rPIRStart)/(_REAL(iVectorLen)-1);
+    /* Take care of wrap around of angle() function */
+    if (rDiffPhase > WRAP_AROUND_BOUND_GRP_DLY)
+        rDiffPhase -= 2.0 * crPi;
+    if (rDiffPhase < -WRAP_AROUND_BOUND_GRP_DLY)
+        rDiffPhase += 2.0 * crPi;
 
-		for (int i=0; i<iVectorLen; i++)
-		{
-			vecrData[i] = vecrPIR[i];
-			vecrScale[i] = t;
-			t += tstep;
-		}
-
-		rLowerBound = _REAL(0);
-		rHigherBound = _REAL(0);
-		rStartGuard = _REAL(0);
-		rEndGuard = _REAL(0);
-		rPDSBegin = _REAL(0);
-		rPDSEnd = _REAL(0);
-
-	}
-	else
-	{
-		pReceiver->GetChannelEstimation()->GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
-			rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
-	}
+    /* Apply normalization */
+    return rDiffPhase * rTu * 1000.0 /* ms */;
 }
 
-void CPlotManager::GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+void CPlotManager::GetTransferFunction(vector<double>& transferFunc,
+    vector<double>& groupDelay, vector<double>& scale)
+{
+    int iNumCarrier, iFFTSizeN=0;
+	vector<CComplex> veccChanEst;
+
+    CParameter& Parameters = *pReceiver->GetParameters();
+    Parameters.Lock();
+    if(Parameters.Measurements.veccChanEst.size()>0)
+    {
+        veccChanEst = Parameters.Measurements.veccChanEst;
+        iFFTSizeN = Parameters.CellMappingTable.iFFTSizeN;
+    }
+    Parameters.Unlock();
+
+    iNumCarrier = veccChanEst.size();
+    if(iNumCarrier==0)
+        return; // not running yet
+
+	scale.resize(iNumCarrier);
+    generate(scale.begin(), scale.end(), iotaGen());
+
+    transferFunc.resize(iNumCarrier);
+    transform(
+        veccChanEst.begin(), veccChanEst.end(),
+        transferFunc.begin(),
+        TransferFunction()
+    );
+
+	groupDelay.resize(iNumCarrier);
+    transform(veccChanEst.begin(), veccChanEst.end(),
+        groupDelay.begin(),
+        GroupDelay(veccChanEst[0], CReal(iFFTSizeN) / CReal(SOUNDCRD_SAMPLE_RATE))
+    );
+}
+
+void CPlotManager::GetAvPoDeSp(vector<_REAL>& vecrData, vector<_REAL>& vecrScale,
+	        _REAL& rLowerB, _REAL& rHigherB, _REAL& rStartGuard, _REAL& rEndGuard,
+	        _REAL& rBeginIR, _REAL& rEndIR)
+{
+	CParameter& Parameters = *pReceiver->GetParameters();
+
+    // read it from the parameter structure
+    Parameters.Lock();
+    vector<_REAL> vecrPIR = Parameters.Measurements.vecrPIR;
+    _REAL rPIRStart = Parameters.Measurements.rPIRStart;
+    _REAL rPIREnd = Parameters.Measurements.rPIREnd;
+    rLowerB = Parameters.Measurements.rLowerBound;
+    rHigherB = Parameters.Measurements.rHigherBound;
+    rStartGuard = Parameters.Measurements.rStartGuard;
+    rEndGuard = Parameters.Measurements.rEndGuard;
+    rBeginIR = Parameters.Measurements.rPDSBegin;
+    rEndIR = Parameters.Measurements.rPDSEnd;
+    Parameters.Unlock();
+
+    int iVectorLen = vecrPIR.size();
+    vecrData.resize(iVectorLen);
+    vecrScale.resize(iVectorLen);
+
+    // starting frequency and frequency step as defined in TS 102 349
+    // plot expects the scale values in kHz
+    _REAL t = rPIRStart;
+    const _REAL tstep = (rPIREnd-rPIRStart)/(_REAL(iVectorLen)-1);
+
+    for (int i=0; i<iVectorLen; i++)
+    {
+        vecrData[i] = vecrPIR[i];
+        vecrScale[i] = t;
+        t += tstep;
+    }
+}
+
+void CPlotManager::GetSNRProfile(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
 {
 	pReceiver->GetChannelEstimation()->GetSNRProfile(vecrData, vecrScale);
 }
 
-void CPlotManager::GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+void CPlotManager::GetPowDenSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
 {
     pReceiver->GetOFDMDemod()->GetPowDenSpec(vecrData, vecrScale);
 }
 
-void CPlotManager::GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+void CPlotManager::GetAudioSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
 {
     pReceiver->GetAudioSpec(vecrData, vecrScale);
 }
 
-void CPlotManager::GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+void CPlotManager::GetInputSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
 {
-    pReceiver->GetInputSpec(vecrData, vecrScale);
+    CParameter& Parameters = *pReceiver->GetParameters();
+    Parameters.Lock();
+    vecrData = Parameters.Measurements.vecrInpSpec;
+    Parameters.Unlock();
+	vecrScale.resize(vecrData.size());
+    _REAL rFactorScale = _REAL(SOUNDCRD_SAMPLE_RATE) / _REAL(vecrData.size()) / 2000.0;
+    generate(vecrScale.begin(), vecrScale.end(), scaleGen(rFactorScale));
 }
 
 void CPlotManager::GetAnalogBWParameters(CReal& rCenterFreq, CReal& rBW)
@@ -398,18 +600,18 @@ CReal CPlotManager::GetAnalogCurMixFreqOffs() const
     return pReceiver->GetAnalogCurMixFreqOffs();
 }
 
-void CPlotManager::GetFACVectorSpace(CVector<_COMPLEX>& vec)
+void CPlotManager::GetFACVectorSpace(vector<_COMPLEX>& vec)
 {
     pReceiver->GetFACVectorSpace(vec);
 }
 
-void CPlotManager::GetSDCVectorSpace(CVector<_COMPLEX>& vec, ECodScheme& eCS)
+void CPlotManager::GetSDCVectorSpace(vector<_COMPLEX>& vec, ECodScheme& eCS)
 {
     pReceiver->GetSDCVectorSpace(vec);
     eCS = pReceiver->GetParameters()->eSDCCodingScheme;
 }
 
-void CPlotManager::GetMSCVectorSpace(CVector<_COMPLEX>& vec, ECodScheme& eCS)
+void CPlotManager::GetMSCVectorSpace(vector<_COMPLEX>& vec, ECodScheme& eCS)
 {
     pReceiver->GetMSCVectorSpace(vec);
     eCS = pReceiver->GetParameters()->eMSCCodingScheme;

@@ -88,13 +88,7 @@ public:
 	enum ETypeIntTime {TLINEAR, TWIENER};
 	enum ETypeSNREst {SNR_FAC, SNR_PIL};
 
-	void GetTransferFunction(CVector<_REAL>& vecrData,
-		CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale);
-	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-					 _REAL& rLowerBound, _REAL& rHigherBound,
-					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
-					 _REAL& rPDSEnd);
-	void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void GetSNRProfile(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
 
 	CTimeLinear* GetTimeLinear() {return &TimeLinear;}
 	CTimeWiener* GetTimeWiener() {return &TimeWiener;}

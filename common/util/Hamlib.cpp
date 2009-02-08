@@ -582,7 +582,7 @@ bool CHamlib::GetEnableSMeter()
 void CHamlib::StopSMeter()
 {
 	Parameters.Lock();
-	Parameters.SigStrstat.setInvalid();
+	Parameters.Measurements.SigStrstat.setInvalid();
 	Parameters.Unlock();
 	bEnableSMeter = false;
 }
@@ -603,7 +603,7 @@ void CHamlib::run()
 			Parameters.Lock();
 			// Apply any correction
             const _REAL S9_DBuV = 34.0; // S9 in dBuV for converting HamLib S-meter readings
-			Parameters.SigStrstat.addSample(_REAL(val.i) + S9_DBuV + Parameters.rSigStrengthCorrection);
+			Parameters.Measurements.SigStrstat.addSample(_REAL(val.i) + S9_DBuV + Parameters.rSigStrengthCorrection);
 			Parameters.Unlock();
 #ifdef USE_QT_GUI
 			msleep(400);

@@ -438,10 +438,10 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 	iOutputBlockSize = iNumOutBits;
 }
 
-void CMLCDecoder::GetVectorSpace(CVector<_COMPLEX>& veccData)
+void CMLCDecoder::GetVectorSpace(vector<_COMPLEX>& veccData)
 {
 	/* Init output vectors */
-	veccData.Init(iN_mux);
+	veccData.resize(iN_mux);
 
 	/* Do copying of data only if vector is of non-zero length which means that
 	   the module was already initialized */

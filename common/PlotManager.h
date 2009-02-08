@@ -35,8 +35,8 @@
 #include "Parameter.h"
 #ifdef USE_QT_GUI
 # include <qmutex.h>
-//# include <qwt_plot.h>
 #endif
+#include <deque>
 
 /* Definitions ****************************************************************/
 
@@ -77,43 +77,43 @@ public:
 
 	void Init();
 
+    void startPlot(EPlotType);
+    void endPlot(EPlotType);
+
 	void SetCurrentCDAud(int iN) {iCurrentCDAud = iN;}
 
 	void UpdateParamHistories();
 
 	void UpdateParamHistoriesRSIIn();
 
-	void GetTransferFunction(CVector<_REAL>& vecrData,
-		CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale);
+    void GetTransferFunction(vector<double>& transferFunc,
+        vector<double>& groupDelay, vector<double>& scale);
+	void GetInputPSD(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
+	void GetInputSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
+	void GetAvPoDeSp(vector<_REAL>& vecrData, vector<_REAL>& vecrScale,
+	        _REAL& rLowerB, _REAL& rHigherB, _REAL& rStartGuard, _REAL& rEndGuard,
+	        _REAL& rBeginIR, _REAL& rEndIR);
+	void GetSNRProfile(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
+	void GetPowDenSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
+	void GetAudioSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
 
-	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-					 _REAL& rLowerBound, _REAL& rHigherBound,
-					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
-					 _REAL& rPDSEnd);
-
-	void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-	void GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-	void  GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-	void   GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-	void  GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-
-	void GetFACVectorSpace(CVector<_COMPLEX>&);
-	void GetSDCVectorSpace(CVector<_COMPLEX>&, ECodScheme&);
-	void GetMSCVectorSpace(CVector<_COMPLEX>&, ECodScheme&);
+	void GetFACVectorSpace(vector<_COMPLEX>&);
+	void GetSDCVectorSpace(vector<_COMPLEX>&, ECodScheme&);
+	void GetMSCVectorSpace(vector<_COMPLEX>&, ECodScheme&);
 
 	void GetAnalogBWParameters(CReal& rCenterFreq, CReal& rBW);
     CReal GetAnalogCurMixFreqOffs() const;
 
 	/* Interfaces to internal parameters/vectors used for the plot */
-	void GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
-		CVector<_REAL>& vecrSamOffs, CVector<_REAL>& vecrScale,
+	void GetFreqSamOffsHist(vector<_REAL>& vecrFreqOffs,
+		vector<_REAL>& vecrSamOffs, vector<_REAL>& vecrScale,
 		_REAL& rFreqAquVal);
 
-	void GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
-		CVector<_REAL>& vecrDoppler, CVector<_REAL>& vecrScale);
+	void GetDopplerDelHist(vector<_REAL>& vecrLenIR,
+		vector<_REAL>& vecrDoppler, vector<_REAL>& vecrScale);
 
-	void GetSNRHist(CVector<_REAL>& vecrSNR, CVector<_REAL>& vecrCDAud,
-		CVector<_REAL>& vecrScale);
+	void GetSNRHist(vector<_REAL>& vecrSNR, vector<_REAL>& vecrCDAud,
+		vector<_REAL>& vecrScale);
 
     _REAL GetDCFrequency();
 
@@ -121,12 +121,12 @@ public:
 private:
 	CDRMReceiver			*pReceiver;
 	/* Storing parameters for plot */
-	CShiftRegister<_REAL>	vecrFreqSyncValHist;
-	CShiftRegister<_REAL>	vecrSamOffsValHist;
-	CShiftRegister<_REAL>	vecrLenIRHist;
-	CShiftRegister<_REAL>	vecrDopplerHist;
-	CShiftRegister<_REAL>	vecrSNRHist;
-	CShiftRegister<int>		veciCDAudHist;
+	deque<_REAL>	vecrFreqSyncValHist;
+	deque<_REAL>	vecrSamOffsValHist;
+	deque<_REAL>	vecrLenIRHist;
+	deque<_REAL>	vecrDopplerHist;
+	deque<_REAL>	vecrSNRHist;
+	deque<int>		veciCDAudHist;
 	int						iSymbolCount;
 	_REAL					rSumDopplerHist;
 	_REAL					rSumSNRHist;

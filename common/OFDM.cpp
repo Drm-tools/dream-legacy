@@ -187,12 +187,11 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	ReceiverParam.Unlock();
 }
 
-void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
-									  CVector<_REAL>& vecrScale)
+void COFDMDemodulation::GetPowDenSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
 {
 	/* Init output vectors */
-	vecrData.Init(iLenPowSpec, (_REAL) 0.0);
-	vecrScale.Init(iLenPowSpec, (_REAL) 0.0);
+	vecrData.resize(iLenPowSpec);
+	vecrScale.resize(iLenPowSpec);
 
 	/* Do copying of data only if vector is of non-zero length which means that
 	   the module was already initialized */
