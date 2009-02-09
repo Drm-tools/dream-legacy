@@ -90,28 +90,28 @@ void CTagItemDecoderRwmf::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	if (iLen != 16)
 		return;
- 	 pParameter->Measurements.rWMERFAC = decodeDb(vecbiTag);
+ 	 pParameter->Measurements.WMERFAC.set(decodeDb(vecbiTag));
 }
 
 void CTagItemDecoderRwmm::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	if (iLen != 16)
 		return;
- 	 pParameter->Measurements.rWMERMSC = decodeDb(vecbiTag);
+ 	 pParameter->Measurements.WMERMSC.set(decodeDb(vecbiTag));
 }
 
 void CTagItemDecoderRmer::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	if (iLen != 16)
 		return;
- 	 pParameter->Measurements.rMER = decodeDb(vecbiTag);
+ 	 pParameter->Measurements.MER.set(decodeDb(vecbiTag));
 }
 
 void CTagItemDecoderRdop::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	if (iLen != 16)
 		return;
- 	 pParameter->Measurements.rRdop = decodeDb(vecbiTag);
+ 	 pParameter->Measurements.rRdop = (decodeDb(vecbiTag));
 }
 
 void CTagItemDecoderRdel::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
@@ -134,13 +134,12 @@ void CTagItemDecoderRpsd::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 	int iVectorLen = iLen/BITS_BINARY;
 
-	pParameter->Measurements.vecrPSD.resize(iVectorLen);
-
+	vector<_REAL> psd(iVectorLen);
 	for (int i = 0; i < iVectorLen; i++)
 	{
-		pParameter->Measurements.vecrPSD[i] = -(_REAL(vecbiTag.Separate(BITS_BINARY))/_REAL(2.0));
+		psd[i] = -(_REAL(vecbiTag.Separate(BITS_BINARY))/_REAL(2.0));
 	}
-
+    pParameter->Measurements.PSD.set(psd);
 }
 
 void CTagItemDecoderRpir::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)

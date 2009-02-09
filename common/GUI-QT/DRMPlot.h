@@ -150,10 +150,7 @@ protected:
 	void SetSDCConst();
 	void SetMSCConst();
 	void SetAllConst();
-	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-	void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
-				 CVector<_REAL>& vecrScale);
-    void SetData(QwtPlotCurve* curve, CVector<_COMPLEX>& veccData);
+    void SetData(QwtPlotCurve* curve, vector<_COMPLEX>& veccData);
 
 	void SpectrumPlotDefaults(const QString&, const QString&, uint);
 	void SetDCCarrier(double);

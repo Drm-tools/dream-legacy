@@ -56,7 +56,7 @@ void CPlotManager::startPlot(EPlotType e)
         //Parameters.Measurements.subscribe(CMeasurements::);
 		break;
 	case TRANSFERFUNCTION:
-        Parameters.Measurements.subscribe(CMeasurements::CHANNEL);
+        Parameters.Measurements.ChannelEstimate.subscribe();
 		break;
 	case POWER_SPEC_DENSITY:
         //Parameters.Measurements.subscribe();
@@ -65,16 +65,16 @@ void CPlotManager::startPlot(EPlotType e)
         //Parameters.Measurements.subscribe();
 		break;
 	case INPUTSPECTRUM_NO_AV:
-        Parameters.Measurements.subscribe(CMeasurements::INPUT_SPECTRUM);
+        Parameters.Measurements.inputSpectrum.subscribe();
 		break;
 	case INP_SPEC_WATERF:
-        Parameters.Measurements.subscribe(CMeasurements::INPUT_SPECTRUM);
+        Parameters.Measurements.inputSpectrum.subscribe();
 		break;
 	case INPUT_SIG_PSD:
-        Parameters.Measurements.subscribe(CMeasurements::PSD);
+        Parameters.Measurements.PSD.subscribe();
 		break;
 	case INPUT_SIG_PSD_ANALOG:
-        Parameters.Measurements.subscribe(CMeasurements::INPUT_SPECTRUM);
+        Parameters.Measurements.inputSpectrum.subscribe();
 		break;
 	case AUDIO_SPECTRUM:
         //Parameters.Measurements.subscribe();
@@ -83,8 +83,7 @@ void CPlotManager::startPlot(EPlotType e)
         //Parameters.Measurements.subscribe();
 		break;
 	case DOPPLER_DELAY_HIST:
-        Parameters.Measurements.subscribe(CMeasurements::DELAY);
-        Parameters.Measurements.subscribe(CMeasurements::DOPPLER);
+        Parameters.Measurements.Doppler.subscribe();
 		break;
 	case SNR_AUDIO_HIST:
         //Parameters.Measurements.subscribe();
@@ -115,7 +114,7 @@ void CPlotManager::endPlot(EPlotType e)
         //Parameters.Measurements.subscribe(CMeasurements::);
 		break;
 	case TRANSFERFUNCTION:
-        Parameters.Measurements.subscribe(CMeasurements::CHANNEL);
+        Parameters.Measurements.ChannelEstimate.unsubscribe();
 		break;
 	case POWER_SPEC_DENSITY:
         //Parameters.Measurements.subscribe();
@@ -124,16 +123,16 @@ void CPlotManager::endPlot(EPlotType e)
         //Parameters.Measurements.subscribe();
 		break;
 	case INPUTSPECTRUM_NO_AV:
-        Parameters.Measurements.subscribe(CMeasurements::INPUT_SPECTRUM);
+        Parameters.Measurements.inputSpectrum.unsubscribe();
 		break;
 	case INP_SPEC_WATERF:
-        Parameters.Measurements.subscribe(CMeasurements::INPUT_SPECTRUM);
+        Parameters.Measurements.inputSpectrum.unsubscribe();
 		break;
 	case INPUT_SIG_PSD:
-        Parameters.Measurements.subscribe(CMeasurements::PSD);
+        Parameters.Measurements.PSD.subscribe();
 		break;
 	case INPUT_SIG_PSD_ANALOG:
-        Parameters.Measurements.subscribe(CMeasurements::INPUT_SPECTRUM);
+        Parameters.Measurements.inputSpectrum.unsubscribe();
 		break;
 	case AUDIO_SPECTRUM:
         //Parameters.Measurements.subscribe();
@@ -142,8 +141,7 @@ void CPlotManager::endPlot(EPlotType e)
         //Parameters.Measurements.subscribe();
 		break;
 	case DOPPLER_DELAY_HIST:
-        Parameters.Measurements.subscribe(CMeasurements::DELAY);
-        Parameters.Measurements.subscribe(CMeasurements::DOPPLER);
+        Parameters.Measurements.Doppler.unsubscribe();
 		break;
 	case SNR_AUDIO_HIST:
         //Parameters.Measurements.subscribe();
@@ -196,22 +194,18 @@ private:
 void
 CPlotManager::UpdateParamHistories()
 {
-
-	/* TODO: do not use the shift register class, build a new
-	   one which just increments a pointer in a buffer and put
-	   the new value at the position of the pointer instead of
-	   moving the total data all the time -> special care has
-	   to be taken when reading out the data */
-
     CParameter& Parameters = *pReceiver->GetParameters();
 
     Parameters.Lock();
     _REAL rFreqOffsetTrack = Parameters.rFreqOffsetTrack;
     _REAL rResampleOffset = Parameters.rResampleOffset;
     _REAL rSNR = Parameters.GetSNR();
-    _REAL rSigmaEstimate = Parameters.Measurements.rSigmaEstimate;
+    _REAL rSigmaEstimate;
+    Parameters.Measurements.Doppler.get(rSigmaEstimate);
     _REAL iNumSymPerFrame = Parameters.CellMappingTable.iNumSymPerFrame;
-    _REAL rMeanDelay = (Parameters.Measurements.rMinDelay + Parameters.Measurements.rMaxDelay) / 2.0;
+    pair<_REAL,_REAL> delay;
+    Parameters.Measurements.Delay.get(delay);
+    _REAL rMeanDelay = (delay.first + delay.second) / 2.0;
     Parameters.Unlock();
 
 #ifdef USE_QT_GUI
@@ -269,7 +263,8 @@ CPlotManager::UpdateParamHistoriesRSIIn()
 	_REAL rDelay = _REAL(0.0);
 	if (Parameters.Measurements.vecrRdelIntervals.size() > 0)
 		rDelay = Parameters.Measurements.vecrRdelIntervals[0];
-	_REAL rMER = Parameters.Measurements.rMER;
+	_REAL rMER;
+	Parameters.Measurements.MER.get(rMER);
 	_REAL rRdop = Parameters.Measurements.rRdop;
 	Parameters.Unlock();
 
@@ -424,9 +419,12 @@ CPlotManager::GetInputPSD(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
 	CParameter& Parameters = *pReceiver->GetParameters();
     // read it from the parameter structure
     Parameters.Lock();
-    vecrData = Parameters.Measurements.vecrPSD;
+    bool psdOk = Parameters.Measurements.PSD.get(vecrData);
     bool etsi = Parameters.Measurements.bETSIPSD;
     Parameters.Unlock();
+
+    if(psdOk==false)
+        return;
 
     int iVectorLen = vecrData.size();
     vecrScale.resize(iVectorLen);
@@ -496,21 +494,18 @@ void CPlotManager::GetTransferFunction(vector<double>& transferFunc,
     vector<double>& groupDelay, vector<double>& scale)
 {
     int iNumCarrier, iFFTSizeN=0;
-	vector<CComplex> veccChanEst;
+	vector<_COMPLEX> veccChanEst;
 
     CParameter& Parameters = *pReceiver->GetParameters();
     Parameters.Lock();
-    if(Parameters.Measurements.veccChanEst.size()>0)
-    {
-        veccChanEst = Parameters.Measurements.veccChanEst;
-        iFFTSizeN = Parameters.CellMappingTable.iFFTSizeN;
-    }
+    bool b = Parameters.Measurements.ChannelEstimate.get(veccChanEst);
+    iFFTSizeN = Parameters.CellMappingTable.iFFTSizeN;
     Parameters.Unlock();
 
-    iNumCarrier = veccChanEst.size();
-    if(iNumCarrier==0)
+    if(b==false || veccChanEst.size()==0)
         return; // not running yet
 
+    iNumCarrier = veccChanEst.size();
 	scale.resize(iNumCarrier);
     generate(scale.begin(), scale.end(), iotaGen());
 
@@ -583,7 +578,7 @@ void CPlotManager::GetInputSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScal
 {
     CParameter& Parameters = *pReceiver->GetParameters();
     Parameters.Lock();
-    vecrData = Parameters.Measurements.vecrInpSpec;
+    Parameters.Measurements.inputSpectrum.get(vecrData);
     Parameters.Unlock();
 	vecrScale.resize(vecrData.size());
     _REAL rFactorScale = _REAL(SOUNDCRD_SAMPLE_RATE) / _REAL(vecrData.size()) / 2000.0;

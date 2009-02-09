@@ -101,8 +101,8 @@ public:
 	void GetSDCVectorSpace(vector<_COMPLEX>&, ECodScheme&);
 	void GetMSCVectorSpace(vector<_COMPLEX>&, ECodScheme&);
 
-	void GetAnalogBWParameters(CReal& rCenterFreq, CReal& rBW);
-    CReal GetAnalogCurMixFreqOffs() const;
+	void GetAnalogBWParameters(_REAL& rCenterFreq, _REAL& rBW);
+    _REAL GetAnalogCurMixFreqOffs() const;
 
 	/* Interfaces to internal parameters/vectors used for the plot */
 	void GetFreqSamOffsHist(vector<_REAL>& vecrFreqOffs,

@@ -215,7 +215,7 @@ protected:
 class CTagItemGeneratorRINT : public CTagItemGeneratorWithProfiles /* rnic tag */
 {
 public:
-	void GenTag(bool bIsValid, CReal rIntFreq, CReal rINR, CReal rICR);
+	void GenTag(bool bIsValid, _REAL rIntFreq, _REAL rINR, _REAL rICR);
 protected:
 	virtual string GetTagName();
 	virtual string GetProfiles(); // Return a string containing the set of profiles for this tag
@@ -224,7 +224,7 @@ protected:
 class CTagItemGeneratorRNIP : public CTagItemGeneratorWithProfiles /* rnic tag */
 {
 public:
-	void GenTag(bool bIsValid, CReal rIntFreq, CReal rISR);
+	void GenTag(bool bIsValid, _REAL rIntFreq, _REAL rISR);
 protected:
 	virtual string GetTagName();
 	virtual string GetProfiles(); // Return a string containing the set of profiles for this tag

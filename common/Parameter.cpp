@@ -1105,12 +1105,14 @@ _REAL CParameter::GetSysToNomBWCorrFact()
 
 void CParameter::SetIFSignalLevel(_REAL rNewSigStr)
 {
-		Measurements.rIFSigStr = rNewSigStr;
+		Measurements.IFSigStr.set(rNewSigStr);
 }
 
 _REAL CParameter::GetIFSignalLevel()
 {
-	return 	Measurements.rIFSigStr;
+	_REAL val=0.0;
+	(void)Measurements.IFSigStr.get(val);
+	return val;
 }
 
 void CRxStatus::SetStatus(const ETypeRxStatus OK)
@@ -1187,67 +1189,6 @@ void CParameter::GenerateRandomSerialNumber()
 	serialNumTemp[6] = '\0';
 
 	sSerialNumber = serialNumTemp;
-}
-
-CMinMaxMean::CMinMaxMean():CDumpable(),rSum(0.0),rCur(0.0),
-rMin(numeric_limits<_REAL>::max()),rMax(numeric_limits<_REAL>::min()),iNum(0)
-{
-}
-
-void CMinMaxMean::setInvalid()
-{
-	iNum = 0;
-}
-
-bool CMinMaxMean::isValid()
-{
-	return iNum>0;
-}
-
-void
-CMinMaxMean::addSample(_REAL r)
-{
-	rCur = r;
-	rSum += r;
-	iNum++;
-	if(r>rMax)
-		rMax = r;
-	if(r<rMin)
-		rMin = r;
-}
-
-_REAL
-CMinMaxMean::getCurrent()
-{
-	return rCur;
-}
-
-_REAL
-CMinMaxMean::getMean()
-{
-	_REAL rMean = 0.0;
-	if(iNum>0)
-		rMean = rSum / iNum;
-	rSum = 0.0;
-	iNum = 0;
-	return rMean;
-}
-
-void
-CMinMaxMean::getMinMax(_REAL& rMinOut, _REAL& rMaxOut)
-{
-	if(rMin <= rMax)
-	{
-		rMinOut = rMin;
-		rMaxOut = rMax;
-	}
-	else
-	{
-		rMinOut = 0.0;
-		rMaxOut = 0.0;
-	}
-	rMin = numeric_limits<_REAL>::max();
-	rMax = numeric_limits<_REAL>::min();
 }
 
 string CServiceDefinition::Frequency(size_t n) const
@@ -1680,16 +1621,6 @@ CFrontEndParameters::dump(ostream& out) const
     out << "CalFactorAM: " << rCalFactorAM << "," << endl;
     out << "CalFactorDRM: " << rCalFactorDRM << "," << endl;
     out << "IFCentreFreq: " << rIFCentreFreq << "}" << endl;
-}
-
-void
-CMinMaxMean::dump(ostream& out) const
-{
-    out << "{ Sum: " <<  rSum << "," << endl;
-    out << "Cur: " << rCur << "," << endl;
-    out << "Min: " << rMin << "," << endl;
-    out << "Max " << rMax << "," << endl;
-    out << "Num: " << iNum << "}" << endl;
 }
 
 void

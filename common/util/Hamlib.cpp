@@ -582,7 +582,7 @@ bool CHamlib::GetEnableSMeter()
 void CHamlib::StopSMeter()
 {
 	Parameters.Lock();
-	Parameters.Measurements.SigStrstat.setInvalid();
+	Parameters.Measurements.SigStrstat.invalidate();
 	Parameters.Unlock();
 	bEnableSMeter = false;
 }

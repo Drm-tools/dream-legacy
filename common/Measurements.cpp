@@ -30,36 +30,18 @@
 
 CMeasurements::CMeasurements():
     SNRstat(), SigStrstat(),
-    rMER(0.0),rWMERMSC(0.0),rWMERFAC(0.0),
-    rSigmaEstimate(0.0),rMinDelay(0.0),rMaxDelay(0.0),
+    MER(),WMERMSC(),WMERFAC(),
+    Doppler(),Delay(),
     rRdop(0.0),vecrRdel(),vecrRdelThresholds(),vecrRdelIntervals(),
-    rIntFreq(0.0),rINR(0.0),rICR(0.0),
+    interference(),
     rMaxPSDwrtSig(0.0), rMaxPSDFreq(0.0),
-    bETSIPSD(false),vecrPSD(),vecrInpSpec(),
-    rSigStr(0.0),rIFSigStr(0.0),
-    veccChanEst(),vecAudioFrameStatus(),
+    bETSIPSD(false),PSD(),inputSpectrum(),
+    SigStr(),IFSigStr(),
+    ChannelEstimate(), audioFrameStatus(),
     rPIRStart(0.0),rPIREnd(0.0),vecrPIR(),
-    matcReceivedPilotValues(),
+    Pilots(),
     rStartGuard(0.0), rEndGuard(0.0), rLowerBound(0.0), rHigherBound(0.0),
     rPDSBegin(0.0), rPDSEnd(0.0)
 {
-    for(int i=0; i<MAX_MEASUREMENT_TYPE; i++) Subscriptions[i]=0;
 }
 
-void CMeasurements::SetRSCIDefaults(bool enabled)
-{
-    if(enabled)
-    {
-        subscribe(DELAY);
-        subscribe(DOPPLER);
-        subscribe(INTERFERENCE);
-        subscribe(PSD);
-    }
-    else
-    {
-        unsubscribe(DELAY);
-        unsubscribe(DOPPLER);
-        unsubscribe(INTERFERENCE);
-        unsubscribe(PSD);
-    }
-}

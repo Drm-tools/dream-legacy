@@ -234,11 +234,11 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 
     /* send data for plotting */
-    if(ReceiverParam.Measurements.wanted(CMeasurements::CHANNEL))
+    if(ReceiverParam.Measurements.ChannelEstimate.wanted())
     {
-        ReceiverParam.Measurements.veccChanEst.resize(veccChanEst.Size());
-        for(int i=0; i<veccChanEst.Size(); i++)
-            ReceiverParam.Measurements.veccChanEst[i] = veccChanEst[i];
+        vector<_COMPLEX> v(veccChanEst.Size());
+        for(int i=0; i<veccChanEst.Size(); i++) v[i] = veccChanEst[i];
+        ReceiverParam.Measurements.ChannelEstimate.set(v);
     }
 	/* Equalize the output vector ------------------------------------------- */
 	/* Calculate squared magnitude of channel estimation */
@@ -479,9 +479,9 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Doppler estimation is only implemented in the
 	 * Wiener time interpolation module */
 	if (TypeIntTime == TWIENER)
-   		ReceiverParam.Measurements.rSigmaEstimate = TimeWiener.GetSigma();
+   		ReceiverParam.Measurements.Doppler.set(TimeWiener.GetSigma());
 	else
-   		ReceiverParam.Measurements.rSigmaEstimate = -1.0;
+   		ReceiverParam.Measurements.Doppler.invalidate();
 
 	/* After processing last symbol of the frame */
 	if (iModSymNum == iNumSymPerFrame - 1)
@@ -500,30 +500,26 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Return delay in ms */
 		_REAL rDelayScale = _REAL(iFFTSizeN) / _REAL(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil * iScatPilFreqInt) * 1000.0;
-		ReceiverParam.Measurements.rMinDelay = rMinDelay * rDelayScale;
-		ReceiverParam.Measurements.rMaxDelay = rMaxDelay * rDelayScale;
+		ReceiverParam.Measurements.Delay.set(pair<_REAL,_REAL>(rMinDelay * rDelayScale, rMaxDelay * rDelayScale));
 
 		/* Calculate and generate RSCI measurement values */
 		/* rmer (MER for MSC) */
-		CReal rMER =
-			CalAndBoundSNR(AV_DATA_CELLS_POWER, rNoiseEstMERAcc / iCountMERAcc);
+		CReal rMER = CalAndBoundSNR(AV_DATA_CELLS_POWER, rNoiseEstMERAcc / iCountMERAcc);
 
 		/* Bound MER at 0 dB */
-		ReceiverParam.Measurements.rMER = (rMER > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rMER) : (_REAL) 0.0);
+		ReceiverParam.Measurements.MER.set((rMER > 1.0) ? (10.0 * log10(rMER)) : 0.0);
 
 		/* rwmm (WMER for MSC)*/
-		CReal rWMM = AV_DATA_CELLS_POWER *
-			CalAndBoundSNR(rSignalEstWMMAcc, rNoiseEstWMMAcc);
+		CReal rWMM = AV_DATA_CELLS_POWER * CalAndBoundSNR(rSignalEstWMMAcc, rNoiseEstWMMAcc);
 
 		/* Bound the MER at 0 dB */
-		ReceiverParam.Measurements.rWMERMSC = (rWMM > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rWMM) : (_REAL) 0.0);
+		ReceiverParam.Measurements.WMERMSC.set((rWMM > 1.0) ? (10.0 * log10(rWMM)) : 0.0);
 
 		/* rwmf (WMER for FAC) */
-		CReal rWMF = AV_DATA_CELLS_POWER *
-			CalAndBoundSNR(rSignalEstWMFAcc, rNoiseEstWMFAcc);
+		CReal rWMF = AV_DATA_CELLS_POWER * CalAndBoundSNR(rSignalEstWMFAcc, rNoiseEstWMFAcc);
 
 		/* Bound the MER at 0 dB */
-		ReceiverParam.Measurements.rWMERFAC = (rWMF > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rWMF) : (_REAL) 0.0);
+		ReceiverParam.Measurements.WMERFAC.set((rWMF > 1.0 )? 10.0 * log10(rWMF) : 0.0);
 
 		/* Reset all the accumulators and counters */
 		rNoiseEstMERAcc = (_REAL) 0.0;
@@ -533,13 +529,13 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		rSignalEstWMFAcc = (_REAL) 0.0;
 		rNoiseEstWMFAcc = (_REAL) 0.0;
 
-		if (ReceiverParam.Measurements.wanted(CMeasurements::DELAY))
+		if (ReceiverParam.Measurements.Delay.wanted())
     	    TimeSyncTrack.CalculateRdel(ReceiverParam);
 
-		if (ReceiverParam.Measurements.wanted(CMeasurements::DOPPLER))
+		if (ReceiverParam.Measurements.Doppler.wanted())
 			TimeSyncTrack.CalculateRdop(ReceiverParam);
 
-		if (ReceiverParam.Measurements.wanted(CMeasurements::INTERFERENCE))
+		// TODO if (ReceiverParam.Measurements.interference.wanted())
 		{
 			/* Calculate interference tag */
 			CalculateRint(ReceiverParam);
@@ -584,19 +580,21 @@ void CChannelEstimation::CalculateRint(CParameter& ReceiverParam)
 	}
 
 	/* Interference to noise ratio */
+	CMeasurements::CInterferer intf;
 	_REAL rINRtmp = CalAndBoundSNR(rMaxNoiseEst, rSumNoiseEst / iNumCarrier);
-	ReceiverParam.Measurements.rINR = (rINRtmp > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rINRtmp) : (_REAL) 0.0);
+	intf.rINR = (rINRtmp > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rINRtmp) : (_REAL) 0.0);
 
 	/* Interference to (single) carrier ratio */
-	_REAL rICRtmp = CalAndBoundSNR(rMaxNoiseEst,
-		AV_DATA_CELLS_POWER * rSumSigEst/iNumCarrier);
+	_REAL rICRtmp = CalAndBoundSNR(rMaxNoiseEst, AV_DATA_CELLS_POWER * rSumSigEst/iNumCarrier);
 
 
-	ReceiverParam.Measurements.rICR = (rICRtmp > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rICRtmp) : (_REAL) 0.0);
+	intf.rICR = (rICRtmp > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rICRtmp) : (_REAL) 0.0);
 
 	/* Interferer frequency */
-	ReceiverParam.Measurements.rIntFreq = ((_REAL) iMaxIntCarrier + ReceiverParam.CellMappingTable.iCarrierKmin) /
+	intf.rIntFreq = (_REAL(iMaxIntCarrier) + ReceiverParam.CellMappingTable.iCarrierKmin) /
 		ReceiverParam.CellMappingTable.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+
+    ReceiverParam.Measurements.interference.set(intf);
 }
 
 void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
@@ -1257,15 +1255,14 @@ void CChannelEstimation::UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorE
 	if (iSymbolCounter == ReceiverParam.CellMappingTable.iNumSymPerFrame - 1)
 	{
 		/* copy into CParam object */
-		ReceiverParam.Measurements.matcReceivedPilotValues.resize(0);
-		ReceiverParam.Measurements.matcReceivedPilotValues.resize(
+		vector<vector<_COMPLEX> > pilots(
             iNumSymPerFrame / iScatPilTimeInt,
             vector<_COMPLEX>(iNumCarrier/iScatPilFreqInt + 1)
 		);
 		// copy it a row at a time (vector provides an assignment operator)
 		for (i=0; i<iNumSymPerFrame / iScatPilTimeInt; i++)
-			ReceiverParam.Measurements.matcReceivedPilotValues[i] = matcRSIPilotStore[i];
-
+			pilots[i] = matcRSIPilotStore[i];
+        ReceiverParam.Measurements.Pilots.set(pilots);
 
 		/* clear the local copy */
 		matcRSIPilotStore.Init(iNumSymPerFrame / iScatPilTimeInt, iNumCarrier/iScatPilFreqInt + 1,

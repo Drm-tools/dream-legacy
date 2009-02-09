@@ -151,18 +151,25 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter)
 
     if(Parameter.pDRMRec)
     {
+        bool bValid;
+        _REAL rVal;
+
         TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
 
         /* RSCI tags ------------------------------------------------------------ */
         TagItemGeneratorRAFS.GenTag(Parameter);
-        TagItemGeneratorRWMF.GenTag(true, Parameter.Measurements.rWMERFAC); /* WMER for FAC */
-        TagItemGeneratorRWMM.GenTag(true, Parameter.Measurements.rWMERMSC); /* WMER for MSC */
-        TagItemGeneratorRMER.GenTag(true, Parameter.Measurements.rMER); /* MER for MSC */
+        bValid = Parameter.Measurements.WMERFAC.get(rVal);
+        TagItemGeneratorRWMF.GenTag(bValid, rVal); /* WMER for FAC */
+        bValid = Parameter.Measurements.WMERMSC.get(rVal);
+        TagItemGeneratorRWMM.GenTag(bValid, rVal); /* WMER for MSC */
+        bValid = Parameter.Measurements.MER.get(rVal);
+        TagItemGeneratorRMER.GenTag(bValid, rVal); /* MER for MSC */
         TagItemGeneratorRDEL.GenTag(true,
             Parameter.Measurements.vecrRdelThresholds, Parameter.Measurements.vecrRdelIntervals);
         TagItemGeneratorRDOP.GenTag(true, Parameter.Measurements.rRdop);
-        TagItemGeneratorRINT.GenTag(true,
-            Parameter.Measurements.rIntFreq, Parameter.Measurements.rINR, Parameter.Measurements.rICR);
+        CMeasurements::CInterferer intf;
+        bValid = Parameter.Measurements.interference.get(intf);
+        TagItemGeneratorRINT.GenTag(bValid, intf.rIntFreq, intf.rINR, intf.rICR);
         TagItemGeneratorRNIP.GenTag(true,
             Parameter.Measurements.rMaxPSDFreq, Parameter.Measurements.rMaxPSDwrtSig
         );
@@ -175,9 +182,8 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter)
         TagItemGeneratorPilots.GenTag(Parameter);
 
         /* Generate some other tags */
-        _REAL rSigStr;
-        bool bValid = Parameter.pDRMRec->GetSignalStrength(rSigStr);
-        TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr);
+        bValid = Parameter.Measurements.SigStr.get(rVal);
+        TagItemGeneratorSignalStrength.GenTag(bValid, rVal);
 
         TagItemGeneratorGPS.GenTag(true, Parameter.GPSData);	// rgps
     }

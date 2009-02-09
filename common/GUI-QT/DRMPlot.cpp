@@ -34,11 +34,12 @@
 #include <qwt_legend.h>
 #include <qwt_color_map.h>
 #include <qwt_plot_layout.h>
+#include <iostream>
 
 /* Implementation *************************************************************/
 CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 	QwtPlot (p, name), CurCharType(CPlotManager::NONE_OLD), InitCharType(CPlotManager::NONE_OLD),
-	bOnTimerCharMutexFlag(false), pPlotManager(NULL)
+	bOnTimerCharMutexFlag(false), pPlotManager(NULL),spectrogram(NULL)
 {
 	/* Grid defaults */
 	grid = new QwtPlotGrid();
@@ -200,6 +201,13 @@ void CDRMPlot::SetupChart(const CPlotManager::EPlotType eNewType)
 {
 	if (eNewType != CPlotManager::NONE_OLD)
 	{
+	    if(eNewType != CPlotManager::INP_SPEC_WATERF)
+	    {
+	        if(spectrogram)
+                spectrogram->detach();
+            spectrogram = NULL;
+	    }
+
 		/* Set internal variable */
 		CurCharType = eNewType;
 
@@ -309,68 +317,23 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 	InitCharType = CPlotManager::NONE_OLD;
 }
 
-void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+void CDRMPlot::SetData(QwtPlotCurve* curve, vector<_COMPLEX>& veccData)
 {
-	double* pdData = new double[vecrData.Size()];
-	double* pdScale = new double[vecrScale.Size()];
-
-	/* Copy data from vectors in temporary arrays */
-	const int iScaleSize = vecrScale.Size();
-	for (int i = 0; i < iScaleSize; i++)
-	{
-		pdData[i] = vecrData[i];
-		pdScale[i] = vecrScale[i];
-	}
-
-	main1curve->setData(pdScale, pdData, vecrData.Size());
-
-	delete[] pdData;
-	delete[] pdScale;
-}
-
-void CDRMPlot::SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
-					   CVector<_REAL>& vecrScale)
-{
-	double* pdData1 = new double[vecrData1.Size()];
-	double* pdData2 = new double[vecrData2.Size()];
-	double* pdScale = new double[vecrScale.Size()];
-
-	/* Copy data from vectors in temporary arrays */
-	const int iScaleSize = vecrScale.Size();
-	for (int i = 0; i < iScaleSize; i++)
-	{
-		pdData1[i] = vecrData1[i];
-		pdData2[i] = vecrData2[i];
-		pdScale[i] = vecrScale[i];
-	}
-
-	main1curve->setData(pdScale, pdData1, vecrData1.Size());
-	main2curve->setData(pdScale, pdData2, vecrData2.Size());
-
-	delete[] pdData1;
-	delete[] pdData2;
-	delete[] pdScale;
-}
-
-void CDRMPlot::SetData(QwtPlotCurve* curve, CVector<_COMPLEX>& veccData)
-{
-	const int iPoints = veccData.Size();
+	const int iPoints = veccData.size();
 	/* Copy data from vector into a temporary array */
-	double* pdX = new double[iPoints];
-	double* pdY = new double[iPoints];
+	double pdX[iPoints];
+	double pdY[iPoints];
 	for (int i = 0; i < iPoints; i++)
 	{
 		pdX[i] = veccData[i].real();
 		pdY[i] = veccData[i].imag();
 	}
 	curve->setData(pdX, pdY, iPoints);
-	delete[] pdX;
-	delete[] pdY;
 }
 
 void CDRMPlot::SetAvIR()
 {
-    CVector<_REAL> vecrData, vecrScale;
+    vector<_REAL> vecrData, vecrScale;
     _REAL rLowerB, rHigherB, rStartGuard, rEndGuard, rBeginIR, rEndIR;
 
     /* Get data from module */
@@ -378,7 +341,7 @@ void CDRMPlot::SetAvIR()
         rLowerB, rHigherB, rStartGuard, rEndGuard, rBeginIR, rEndIR);
 
 	/* First check if plot must be set up */
-	if (InitCharType != CPlotManager::AVERAGED_IR || vecrScale.Size()==0)
+	if (InitCharType != CPlotManager::AVERAGED_IR || vecrScale.size()==0)
 	{
 		InitCharType = CPlotManager::AVERAGED_IR;
         setTitle(tr("Channel Impulse Response"));
@@ -481,7 +444,7 @@ void CDRMPlot::SetAvIR()
 		dY[0] = dY[1] = rHigherB;
 #else
 		/* Only include highest bound */
-		dY[0] = dY[1] = Max(rHigherB, rLowerB);
+		dY[0] = dY[1] = max(rHigherB, rLowerB);
 #endif
 		curve5->setData(dX, dY, 2);
 
@@ -542,7 +505,7 @@ void CDRMPlot::SetTranFct()
 
 void CDRMPlot::SetAudioSpec()
 {
-    CVector<_REAL> vecrData, vecrScale;
+    vector<_REAL> vecrData, vecrScale;
 
 	/* First check if plot must be set up */
 	if (InitCharType != CPlotManager::AUDIO_SPECTRUM)
@@ -575,13 +538,13 @@ void CDRMPlot::SetAudioSpec()
 	}
 		/* Get data from module */
     pPlotManager->GetAudioSpec(vecrData, vecrScale);
-	SetData(vecrData, vecrScale);
+	main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
 	replot();
 }
 
 void CDRMPlot::SetFreqSamOffsHist()
 {
-    CVector<_REAL> vecrData, vecrData2, vecrScale;
+    vector<_REAL> vecrData, vecrData2, vecrScale;
     _REAL rFreqOffAcquVal;
 
 	/* First check if plot must be set up */
@@ -628,7 +591,7 @@ void CDRMPlot::SetFreqSamOffsHist()
 	_REAL MaxSam = - numeric_limits<_REAL>::max();
 	_REAL MinSam = numeric_limits<_REAL>::max();
 
-	const int iSize = vecrScale.Size();
+	const int iSize = vecrScale.size();
 	for (int i = 0; i < iSize; i++)
 	{
 		if (vecrData[i] > MaxFreq)
@@ -645,19 +608,20 @@ void CDRMPlot::SetFreqSamOffsHist()
 	}
 
 	/* Apply scale to plot */
-	setAxisScale(QwtPlot::yLeft, (double) Floor(MinFreq / rMinScaleRange),
-		(double) Ceil(MaxFreq / rMinScaleRange));
-	setAxisScale(QwtPlot::yRight, (double) Floor(MinSam / rMinScaleRange),
-		(double) Ceil(MaxSam / rMinScaleRange));
+	setAxisScale(QwtPlot::yLeft, (double) floor(MinFreq / rMinScaleRange),
+		(double) ceil(MaxFreq / rMinScaleRange));
+	setAxisScale(QwtPlot::yRight, (double) floor(MinSam / rMinScaleRange),
+		(double) ceil(MaxSam / rMinScaleRange));
 	setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
 
-	SetData(vecrData, vecrData2, vecrScale);
+	main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
+	main2curve->setData(&vecrScale[0], &vecrData2[0], vecrData.size());
 	replot();
 }
 
 void CDRMPlot::SetDopplerDelayHist()
 {
-    CVector<_REAL> vecrData, vecrData2, vecrScale;
+    vector<_REAL> vecrData, vecrData2, vecrScale;
 
 	/* First check if plot must be set up */
 	if (InitCharType != CPlotManager::DOPPLER_DELAY_HIST)
@@ -692,13 +656,14 @@ void CDRMPlot::SetDopplerDelayHist()
 	}
 	pPlotManager->GetDopplerDelHist(vecrData, vecrData2, vecrScale);
 	setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
-	SetData(vecrData, vecrData2, vecrScale);
+	main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
+	main2curve->setData(&vecrScale[0], &vecrData2[0], vecrData.size());
 	replot();
 }
 
 void CDRMPlot::SetSNRAudHist()
 {
-    CVector<_REAL> vecrData, vecrData2, vecrScale;
+    vector<_REAL> vecrData, vecrData2, vecrScale;
 
 	/* First check if plot must be set up */
 	if (InitCharType != CPlotManager::SNR_AUDIO_HIST)
@@ -738,7 +703,7 @@ void CDRMPlot::SetSNRAudHist()
 	/* Get maximum value */
 	_REAL MaxSNR = numeric_limits<_REAL>::min();
 
-	const int iSize = vecrScale.Size();
+	const int iSize = vecrScale.size();
 	for (int i = 0; i < iSize; i++)
 	{
 		if (vecrData[i] > MaxSNR)
@@ -746,8 +711,7 @@ void CDRMPlot::SetSNRAudHist()
 	}
 
 	/* Quantize scale to a multiple of "iMaxDisToMax" */
-	double dMaxYScaleSNR =
-		(double) (Ceil(MaxSNR / iMaxDisToMax) * iMaxDisToMax);
+	double dMaxYScaleSNR = ceil(MaxSNR / _REAL(iMaxDisToMax)) * _REAL(iMaxDisToMax);
 
 	/* Bound at the minimum allowed value */
 	if (dMaxYScaleSNR < (double) iMinValueSNRYScale)
@@ -766,7 +730,8 @@ void CDRMPlot::SetSNRAudHist()
 	setAxisScale(QwtPlot::yRight, (double) 0.0, dMaxYScaleAudio);
 	setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
 
-	SetData(vecrData, vecrData2, vecrScale);
+	main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
+	main2curve->setData(&vecrScale[0], &vecrData2[0], vecrData.size());
 	replot();
 }
 
@@ -781,7 +746,6 @@ void CDRMPlot::SpectrumPlotDefaults(
 	setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
 	enableAxis(QwtPlot::yLeft, true);
 	setAxisTitle(QwtPlot::yLeft, axistitle+" [dB]");
-    //setAxisLabelRotation(QwtPlot::yLeft, 90.0);
 	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Fixed scale */
@@ -818,7 +782,7 @@ void CDRMPlot::SetDCCarrier(double dVal)
 
 void CDRMPlot::SetPSD()
 {
-    CVector<_REAL> vecrData, vecrScale;
+    vector<_REAL> vecrData, vecrScale;
 
 	/* First check if plot must be set up */
 	if (InitCharType != CPlotManager::POWER_SPEC_DENSITY)
@@ -836,13 +800,13 @@ void CDRMPlot::SetPSD()
 	}
 
     pPlotManager->GetPowDenSpec(vecrData, vecrScale);
-	SetData(vecrData, vecrScale);
+	main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
 	replot();
 }
 
 void CDRMPlot::SetSNRSpectrum()
 {
-    CVector<_REAL> vecrData, vecrScale;
+    vector<_REAL> vecrData, vecrScale;
 
 	/* First check if plot must be set up */
 	if (InitCharType != CPlotManager::SNR_SPECTRUM)
@@ -871,10 +835,10 @@ void CDRMPlot::SetSNRSpectrum()
     /* Get data from module */
     pPlotManager->GetSNRProfile(vecrData, vecrScale);
 
-	const int iSize = vecrScale.Size();
+	const int iSize = vecrScale.size();
 
 	/* Fixed scale for x-axis */
-	setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) iSize);
+	setAxisScale(QwtPlot::xBottom, 0.0, double(iSize));
 
 	/* Fixed / variable scale (if SNR is in range, use fixed scale otherwise
 	   enlarge scale) */
@@ -890,7 +854,7 @@ void CDRMPlot::SetSNRSpectrum()
 
 	if (rMaxSNR > dMaxScaleYAxis)
 	{
-		const double rEnlareStep = (double) 10.0; /* dB */
+		const double rEnlareStep = 10.0; /* dB */
 		dMaxScaleYAxis = ceil(rMaxSNR / rEnlareStep) * rEnlareStep;
 	}
 
@@ -898,11 +862,10 @@ void CDRMPlot::SetSNRSpectrum()
 	setAxisScale(QwtPlot::yLeft, MIN_VAL_SNR_SPEC_Y_AXIS_DB, dMaxScaleYAxis);
 
 	/* Set actual data */
-	SetData(vecrData, vecrScale);
+	main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
 	replot();
 }
 
-#include <iostream>
 
 void CDRMPlot::SetInpSpec()
 {
@@ -1098,7 +1061,7 @@ QwtPlotCurve* CDRMPlot::ScatterCurve(const QString& title, const QwtSymbol& s)
 
 void CDRMPlot::SetFACConst()
 {
-    CVector<_COMPLEX> veccData;
+    vector<_COMPLEX> veccData;
 
 	/* First check if plot must be set up */
 	if (InitCharType != CPlotManager::FAC_CONSTELLATION)
@@ -1115,7 +1078,7 @@ void CDRMPlot::SetFACConst()
 
 void CDRMPlot::SetSDCConst()
 {
-    CVector<_COMPLEX> veccData;
+    vector<_COMPLEX> veccData;
     ECodScheme eNewCoSc;
 
 	pPlotManager->GetSDCVectorSpace(veccData, eNewCoSc);
@@ -1138,7 +1101,7 @@ void CDRMPlot::SetSDCConst()
 
 void CDRMPlot::SetMSCConst()
 {
-    CVector<_COMPLEX> veccData;
+    vector<_COMPLEX> veccData;
     ECodScheme eNewCoSc;
 
 	pPlotManager->GetMSCVectorSpace(veccData, eNewCoSc);
@@ -1162,7 +1125,7 @@ void CDRMPlot::SetMSCConst()
 
 void CDRMPlot::SetAllConst()
 {
-    CVector<_COMPLEX> veccMSC, veccSDC, veccFAC;
+    vector<_COMPLEX> veccMSC, veccSDC, veccFAC;
     ECodScheme eNewSDCCoSc, eNewMSCCoSc;
 
     pPlotManager->GetFACVectorSpace(veccFAC);

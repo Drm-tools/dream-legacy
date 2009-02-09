@@ -577,17 +577,17 @@ void systemevalDlg::OnTimer()
         }
 
         /* We get MER from a local DREAM Front-End or an RSCI input but not an MDI input */
-        _REAL rMER = Parameters.Measurements.rMER;
-        if (rMER >= 0.0 )
+        _REAL rMER, rWMERMSC;
+        QString sMER="---", sWMERMSC="---";
+        if (Parameters.Measurements.WMERMSC.get(rWMERMSC))
         {
-            ValueMERWMER->setText(QString().
-                setNum(Parameters.Measurements.rWMERMSC, 'f', 1) + " dB / "
-                + QString().setNum(rMER, 'f', 1) + " dB");
+            sWMERMSC = QString().setNum(rWMERMSC, 'f', 1) + " dB";
         }
-        else
+        if (Parameters.Measurements.MER.get(rMER))
         {
-            ValueMERWMER->setText("<b>---</b>");
+            sMER = QString().setNum(rMER, 'f', 1) + " dB";
         }
+        ValueMERWMER->setText("<b>"+sWMERMSC+" / "+sMER+"</b>");
 
         /* Doppler estimation (assuming Gaussian doppler spectrum) */
         QString doppler = "---";
@@ -599,16 +599,18 @@ void systemevalDlg::OnTimer()
             if(Parameters.Measurements.vecrRdelIntervals.size()>0)
                 delay = QString().setNum(Parameters.Measurements.vecrRdelIntervals[0], 'f', 2) + " ms";
         }
-        else if (Parameters.Measurements.rSigmaEstimate >= 0.0)
-        {
-            /* have delay and Doppler values */
-            doppler = QString().setNum(Parameters.Measurements.rSigmaEstimate, 'f', 2) + " Hz";
-            delay = QString().setNum(Parameters.Measurements.rMinDelay, 'f', 2) + " ms";
-        }
         else
         {
-            /* only have delay, Doppler not available */
-            delay = QString().setNum(Parameters.Measurements.rMinDelay, 'f', 2) + " ms";
+            _REAL rSigmaEstimate;
+            if (Parameters.Measurements.Doppler.get(rSigmaEstimate))
+            {
+                doppler = QString().setNum(rSigmaEstimate, 'f', 2) + " Hz";
+            }
+            pair<_REAL,_REAL> pDel;
+            if (Parameters.Measurements.Delay.get(pDel))
+            {
+                delay = QString().setNum(pDel.first, 'f', 2) + " ms";
+            }
         }
         ValueWiener->setText(doppler+" / "+delay);
 

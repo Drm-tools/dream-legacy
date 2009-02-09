@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include "ChannelSimulation.h"
-
+#include "../matlib/Matlib.h"
 
 /* Implementation *************************************************************/
 void CDRMChannel::ProcessDataInternal(CParameter&)
@@ -102,7 +102,7 @@ void CDRMChannel::ProcessDataInternal(CParameter&)
 
 void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 {
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 	/* Set channel parameter according to selected channel number (table B.1) */
 	switch (ReceiverParam.iDRMChannelNum)
 	{
@@ -170,7 +170,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 					/* Fshift: */	(_REAL) 0.0,
 					/* Fd: */		(_REAL) 1.0);
 		break;
-		
+
 	case 5:
 		/* Channel no 5 */
 		iNumTaps = 2;
@@ -185,7 +185,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 					/* Fshift: */	(_REAL) 0.0,
 					/* Fd: */		(_REAL) 2.0);
 		break;
-		
+
 	case 6:
 		/* Channel #6 */
 		iNumTaps = 4;
@@ -359,7 +359,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	/* Define block-sizes for input and output */
 	iInputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
 	iOutputBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 }
 
 void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift,
@@ -393,7 +393,7 @@ void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift,
 			interpol = 0;
 			polyinterpol = 2;
 			phase = 0;
-		} 
+		}
 		else
 		{
 			if (s > 0.0084)
@@ -401,7 +401,7 @@ void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift,
 				interpol = 0;
 				polyinterpol = 4;
 				phase = 0;
-			} 
+			}
 			else
 			{
 				if (s > 0.0042)
@@ -409,7 +409,7 @@ void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift,
 					interpol = 0;
 					polyinterpol = 8;
 					phase = 0;
-				} 
+				}
 				else
 				{
 					interpol = (int) (0.0042 / s + 1);
@@ -459,7 +459,7 @@ _COMPLEX CTapgain::Update()
 
 	/* Over_cnt is always zero if no interpolation is used */
 	if (!over_cnt)
-	{	
+	{
 		lastI = nextI;
 		lastQ = nextQ;
 
@@ -557,7 +557,7 @@ _REAL CChannelSim::randn() const
 	const _REAL rFactor = (_REAL) sqrt((_REAL) 12.0 / iNoRand) / RAND_MAX;
 	const int iRandMaxHalf = RAND_MAX / 2;
 
-	/* Add some constant distributed random processes to get Gaussian 
+	/* Add some constant distributed random processes to get Gaussian
 	   distribution */
 	_REAL rNoise = 0;
 	for (int i = 0; i < iNoRand; i++)

@@ -218,7 +218,7 @@ CShortLog::writeParameters()
 {
 	Parameters.Lock();
 
-	int iAverageSNR = (int) Round(Parameters.Measurements.SNRstat.getMean());
+	int iAverageSNR = (int) round(Parameters.Measurements.SNRstat.getMean());
 	int iNumCRCOkFAC = Parameters.ReceiveStatus.FAC.GetOKCount();
 	int iNumCRCOkMSC = Parameters.ReceiveStatus.Audio.GetOKCount();
 
@@ -234,7 +234,7 @@ CShortLog::writeParameters()
 		iTmpNumAAC = Parameters.iNumAudioFrames;
 
 	if (bRxlEnabled)
-		iRXL = (int)Round(Parameters.Measurements.SigStrstat.getMean());
+		iRXL = (int)round(Parameters.Measurements.SigStrstat.getMean());
 
 	Parameters.Unlock();
 
@@ -330,11 +330,10 @@ CLongLog::writeParameters()
 	   not synchronized, set parameters to zero */
 	_REAL rDelay = (_REAL) 0.0;
 	_REAL rDoppler = (_REAL) 0.0;
-	if (Parameters.eAcquiState == AS_WITH_SIGNAL)
-	{
-		rDelay = Parameters.Measurements.rMinDelay;
-		rDoppler = Parameters.Measurements.rSigmaEstimate;
-	}
+	pair<_REAL,_REAL> p;
+	Parameters.Measurements.Doppler.get(rDoppler);
+    if(Parameters.Measurements.Delay.get(p))
+        rDelay = p.first;
 
 	/* Only show mode if FAC CRC was ok */
 	int iCurProtLevPartA = 0;

@@ -1158,7 +1158,7 @@ CDRMReceiver::SetInTrackingModeDelayed()
 void
 CDRMReceiver::InitsForAllModules()
 {
-	Parameters.Measurements.SetRSCIDefaults(downstreamRSCI.GetOutEnabled());
+	//Parameters.Measurements.SetRSCIDefaults(downstreamRSCI.GetOutEnabled());
 
 /*  TODO - why is this here and when would one unsubscribe ?
 	if (Parameters.FrontEndParameters.eSMeterCorrectionType !=
@@ -1564,14 +1564,9 @@ bool
 CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
 {
 	Parameters.Lock();
-	if(Parameters.Measurements.SigStrstat.isValid())
-	{
-		rSigStr = Parameters.Measurements.SigStrstat.getCurrent();
-		Parameters.Unlock();
-		return true;
-	}
+	bool b = Parameters.Measurements.SigStrstat.getCurrent(rSigStr);
 	Parameters.Unlock();
-	return false;
+	return b;
 }
 
 /* TEST store information about alternative frequency transmitted in SDC */

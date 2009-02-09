@@ -203,8 +203,8 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 
 	Parameter.Lock();
 	int iNumSymPerFrame = Parameter.CellMappingTable.iNumSymPerFrame;
-	bool bMeasurePSD = Parameter.Measurements.wanted(CMeasurements::PSD);
-	bool bMeasureInputSpectrum = Parameter.Measurements.wanted(CMeasurements::INPUT_SPECTRUM);
+	bool bMeasurePSD = Parameter.Measurements.PSD.wanted();
+	bool bMeasureInputSpectrum = Parameter.Measurements.inputSpectrum.wanted();
 	Parameter.Unlock();
 
 	/* OPH: update free-running symbol counter */
@@ -530,15 +530,14 @@ void CReceiveData::PutPSD(CParameter &ReceiverParam)
         iEndBin = iVecSize-1;
 	}
 
-    ReceiverParam.Lock();
-	/* Fill with zeros to start with */
-	ReceiverParam.Measurements.vecrPSD.resize(iVecSize);
-
+    // TODO - see if we actually ever need this complicated loop
+	vector<_REAL> psd(iVecSize);
 	for (i=iStartIndex, j=iStartBin; j<=iEndBin; i++,j++)
-		ReceiverParam.Measurements.vecrPSD[i] = vecrData[j];
+		psd[i] = vecrData[j];
 
+    ReceiverParam.Lock();
+    ReceiverParam.Measurements.PSD.set(psd);
 	CalculateSigStrengthCorrection(ReceiverParam, vecrData);
-
 	CalculatePSDInterferenceTag(ReceiverParam, vecrData);
     ReceiverParam.Unlock();
 
@@ -564,17 +563,19 @@ void CReceiveData::PutInputSpec(CParameter &ReceiverParam)
 	vecrSqMagSpect =
 		SqMag(rfft(vecrFFTInput * Hann(NUM_SMPLS_4_INPUT_SPECTRUM)));
 
-    ReceiverParam.Lock();
 	/* Log power spectrum data */
-	ReceiverParam.Measurements.vecrInpSpec.resize(iLenSpecWithNyFreq);
+    vector<_REAL> spec(iLenSpecWithNyFreq);
 	for (int i = 0; i < iLenSpecWithNyFreq; i++)
 	{
 		const _REAL rNormSqMag = vecrSqMagSpect[i] / rNormData;
 		if (rNormSqMag > 0)
-			ReceiverParam.Measurements.vecrInpSpec[i] = (_REAL) 10.0 * log10(rNormSqMag);
+			spec[i] = (_REAL) 10.0 * log10(rNormSqMag);
 		else
-			ReceiverParam.Measurements.vecrInpSpec[i] = RET_VAL_LOG_0;
+			spec[i] = RET_VAL_LOG_0;
 	}
+
+    ReceiverParam.Lock();
+	ReceiverParam.Measurements.inputSpectrum.set(spec);
     ReceiverParam.Unlock();
 }
 

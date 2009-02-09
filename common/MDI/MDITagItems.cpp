@@ -573,7 +573,11 @@ CTagItemGeneratorRDEL::GetProfiles()
 void
 CTagItemGeneratorRAFS::GenTag(CParameter & Parameter)
 {
-	const int iNumUnits = Parameter.Measurements.vecAudioFrameStatus.size();
+    vector<bool> audioFrameStatus;
+
+	Parameter.Measurements.audioFrameStatus.get(audioFrameStatus);
+
+	const int iNumUnits = audioFrameStatus.size();
 
 	if (iNumUnits == 0)
 	{
@@ -585,16 +589,13 @@ CTagItemGeneratorRAFS::GenTag(CParameter & Parameter)
 		/* Header - length is always 48 */
 		PrepareTag(48);
 
-		/* data */
-		Parameter.Measurements.vecAudioFrameStatus;
-
 		/* number of units: 8 bits */
 		Enqueue(iNumUnits, 8);
 
 		/* status for each unit */
 		for (int i = 0; i < iNumUnits; i++)
 		{
-			Enqueue(Parameter.Measurements.vecAudioFrameStatus[i]?1:0, 1);
+			Enqueue(audioFrameStatus[i]?1:0, 1);
 		}
 		/* pad the rest with zeros */
 		Enqueue(0, 40 - iNumUnits);
@@ -614,7 +615,7 @@ CTagItemGeneratorRAFS::GetProfiles()
 }
 
 void
-CTagItemGeneratorRINT::GenTag(bool bIsValid, CReal rIntFreq, CReal rINR, CReal rICR)
+CTagItemGeneratorRINT::GenTag(bool bIsValid, _REAL rIntFreq, _REAL rINR, _REAL rICR)
 {
 
 	/* Use Bint (BBC proprietary tag name) until tag is accepted by SE group */
@@ -661,7 +662,7 @@ CTagItemGeneratorRINT::GetProfiles()
 }
 
 void
-CTagItemGeneratorRNIP::GenTag(bool bIsValid, CReal rIntFreq, CReal rISR)
+CTagItemGeneratorRNIP::GenTag(bool bIsValid, _REAL rIntFreq, _REAL rISR)
 {
 
 	/* If no value is available, set tag length to zero */
@@ -1154,20 +1155,20 @@ CTagItemGeneratorGPS::GetProfiles()
 void
 CTagItemGeneratorPowerSpectralDensity::GenTag(CParameter & Parameter)
 {
-	if (Parameter.Measurements.vecrPSD.size() == 0)
+    vector<_REAL> psd;
+	if (Parameter.Measurements.PSD.get(psd) == false)
 	{
 		GenEmptyTag();
 		return;
 	}
 
-	PrepareTag(Parameter.Measurements.vecrPSD.size() * BITS_BINARY);
+	PrepareTag(psd.size() * BITS_BINARY);
 
-	for (int i = 0; i < Parameter.Measurements.vecrPSD.size(); i++)
+	for (int i = 0; i < psd.size(); i++)
 	{
-		uint32_t p = uint8_t(Parameter.Measurements.vecrPSD[i] * _REAL(-2.0));
-		Enqueue((uint32_t) p, BITS_BINARY);
+		uint32_t p = uint8_t(psd[i] * _REAL(-2.0));
+		Enqueue(uint32_t(p), BITS_BINARY);
 	}
-
 }
 
 string
@@ -1261,16 +1262,20 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 	Enqueue((uint32_t) 0, 2 * BITS_BINARY);	// rfu
 
 	// Check that the matrix has the expected dimensions (in case of a mode change)
-	if (Parameter.Measurements.matcReceivedPilotValues.size() !=
-		iNumSymPerFrame / iScatPilTimeInt
-		|| Parameter.Measurements.matcReceivedPilotValues[0].size() !=
-		((iNumCarrier - 1) / iScatPilFreqInt + 1))
+	vector<vector<_COMPLEX> > pilots;
+	if(Parameter.Measurements.Pilots.get(pilots)==false)
+	{
+		GenEmptyTag();
+        return;
+	}
+	if (pilots.size() != iNumSymPerFrame / iScatPilTimeInt
+		|| pilots[0].size() != ((iNumCarrier - 1) / iScatPilFreqInt + 1))
 	{
 		GenEmptyTag();
 #if 0
 		log.GetStatus("Wrong size: %d x %d, expected %d x %d",
-				  Parameter.Measurements.matcReceivedPilotValues.NumRows(),
-				  Parameter.Measurements.matcReceivedPilotValues.NumColumns(),
+				  pilots.size(),
+				  pilots[0].size(),
 				  iNumSymPerFrame / iScatPilTimeInt,
 				  ((iNumCarrier - 1) / iScatPilFreqInt + 1));
 #endif
@@ -1308,7 +1313,7 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 			// Is it really a pilot? This will be false only in Mode D for the DC carrier
 			if (_IsScatPil(Param.matiMapTab[iSymbolNumber][iCarrier]))
 			{
-				_COMPLEX cPil = Parameter.Measurements.matcReceivedPilotValues[iRow][i];
+				_COMPLEX cPil = pilots[iRow][i];
 				if (cPil.real() > rMax)
 					rMax = cPil.real();
 				if (-cPil.real() > rMax)
@@ -1321,7 +1326,7 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 		}
 
 		// Calculate the exponent for the block
-		_REAL rExponent = Ceil(Log(rMax) / Log(_REAL(2.0)));
+		_REAL rExponent = ceil(log(rMax) / log(2.0));
 		_REAL rScale = 32767 * pow(_REAL(2.0), -rExponent);
 
 		// Put to the tag
@@ -1334,12 +1339,8 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 			 iFirstPilotCarrier; iCarrier < iNumCarrier;
 			 i += iScatPilTimeInt, iCarrier += iScatPilFreqSpacing)
 		{
-			Enqueue((uint32_t)
-					(Parameter.Measurements.matcReceivedPilotValues[iRow][i].real() *
-					 rScale), 2 * BITS_BINARY);
-			Enqueue((uint32_t)
-					(Parameter.Measurements.matcReceivedPilotValues[iRow][i].imag() *
-					 rScale), 2 * BITS_BINARY);
+			Enqueue(uint32_t(pilots[iRow][i].real()*rScale), 2 * BITS_BINARY);
+			Enqueue(uint32_t(pilots[iRow][i].imag()*rScale), 2 * BITS_BINARY);
 		}
 	}	// next symbol
 }
