@@ -182,12 +182,11 @@ protected:
 	_REAL					rNoiseEstMERAcc;
 	int						iCountMERAcc;
 
-	bool				bInterfConsid;
+	bool				    bInterfConsid;
 
-	/* Needed for GetDelay() */
-	_REAL					rLenPDSEst;
-	CShiftRegister<CReal>	vecrDelayHist;
-	int						iLenDelayHist;
+	_REAL                   rMinDelay, rMaxDelay;
+	_REAL                   rSumDopplerHist;
+	_REAL                   rSumSNRHist;
 
 	int						iStartZeroPadding;
 

@@ -526,8 +526,7 @@ CTagItemGeneratorRDOP::GetProfiles()
 }
 
 void
-CTagItemGeneratorRDEL::GenTag(bool bIsValid,
-    const vector<_REAL>& vecrThresholds, const vector<_REAL> & vecrIntervals)
+CTagItemGeneratorRDEL::GenTag(bool bIsValid, const vector<CMeasurements::CRdel>& rdel)
 {
 	/* If no value is available, set tag length to zero */
 	if (bIsValid == false)
@@ -538,17 +537,17 @@ CTagItemGeneratorRDEL::GenTag(bool bIsValid,
 	else
 	{
 		/* Length: 3 bytes per value = 16 bits */
-		PrepareTag(24 * vecrThresholds.size());
+		PrepareTag(24 * rdel.size());
 
-		for (int i = 0; i < vecrThresholds.size(); i++)
+		for (int i = 0; i < rdel.size(); i++)
 		{
 			/* percentage for this window */
-			Enqueue((uint32_t) vecrThresholds[i], BITS_BINARY);
+			Enqueue((uint32_t) rdel[i].threshold, BITS_BINARY);
 			/* Set value: the format of this single value is (Byte1 + Byte2 / 256)
 			   = (Byte1.Byte2) in [dB] with: Byte1 is an 8-bit signed integer value;
 			   and Byte2 is an 8-bit unsigned integer value */
 			/* Integer part */
-			_REAL rDelay = vecrIntervals[i];
+			_REAL rDelay = rdel[i].interval;
 			Enqueue((uint32_t) rDelay, BITS_BINARY);
 
 			/* Fractional part */
@@ -1187,15 +1186,18 @@ void
 CTagItemGeneratorPowerImpulseResponse::GenTag(CParameter & Parameter)
 {
 	const _REAL rOffset = _REAL(-60.0);
-	PrepareTag(Parameter.Measurements.vecrPIR.size() * BITS_BINARY + 4 * BITS_BINARY);
+	CMeasurements::CPIR pir;
+	(void)Parameter.Measurements.PIR.get(pir);
+	PrepareTag(pir.data.size() * BITS_BINARY + 4 * BITS_BINARY);
 
-	Enqueue(uint32_t(int(Parameter.Measurements.rPIRStart * _REAL(256.0))), 2*BITS_BINARY);
-	Enqueue(uint32_t(int(Parameter.Measurements.rPIREnd * _REAL(256.0))), 2*BITS_BINARY);
+    _REAL end = pir.rStart + pir.rStep * pir.data.size();
+	Enqueue(uint32_t(int(pir.rStart * _REAL(256.0))), 2*BITS_BINARY);
+	Enqueue(uint32_t(int(end * _REAL(256.0))), 2*BITS_BINARY);
 
-	for (int i = 0; i < Parameter.Measurements.vecrPIR.size(); i++)
+	for (int i = 0; i < pir.data.size(); i++)
 	{
-		uint32_t p = uint8_t((Parameter.Measurements.vecrPIR[i]+rOffset) * _REAL(-2.0));
-		Enqueue((uint32_t) p, BITS_BINARY);
+		uint32_t p = uint8_t((pir.data[i]+rOffset) * _REAL(-2.0));
+		Enqueue(p, BITS_BINARY);
 	}
 
 }

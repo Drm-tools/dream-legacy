@@ -330,10 +330,8 @@ CLongLog::writeParameters()
 	   not synchronized, set parameters to zero */
 	_REAL rDelay = (_REAL) 0.0;
 	_REAL rDoppler = (_REAL) 0.0;
-	pair<_REAL,_REAL> p;
-	Parameters.Measurements.Doppler.get(rDoppler);
-    if(Parameters.Measurements.Delay.get(p))
-        rDelay = p.first;
+	(void)Parameters.Measurements.Doppler.get(rDoppler);
+    (void)Parameters.Measurements.Delay.get(rDelay);
 
 	/* Only show mode if FAC CRC was ok */
 	int iCurProtLevPartA = 0;

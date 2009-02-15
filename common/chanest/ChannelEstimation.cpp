@@ -125,13 +125,16 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* -------------------------------------------------------------------------
 	   Use time-interpolated channel estimate for timing synchronization
 	   tracking */
+    _REAL rLenPDSEst;
 	TimeSyncTrack.Process(ReceiverParam, veccPilots,
 		(*pvecInputData).GetExData().iCurTimeCorr, rLenPDSEst /* out */,
 		rOffsPDSEst /* out */);
 
 	/* Store current delay in history */
-	vecrDelayHist.AddEnd(rLenPDSEst);
-
+    if (rMinDelay > rLenPDSEst)
+        rMinDelay = rLenPDSEst;
+    if(rMaxDelay < rLenPDSEst)
+        rMaxDelay = rLenPDSEst;
 
 	/* Frequency-interploation ************************************************/
 	switch (TypeIntFreq)
@@ -469,38 +472,55 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	{
 		const _REAL rNomBWSNR = rSNREstimate * rSNRSysToNomBWCorrFact;
 
+		_REAL rSNR;
+
 		/* Bound the SNR at 0 dB */
 		if (rNomBWSNR > 1.0 )
-   			ReceiverParam.SetSNR(10.0 * log10(rNomBWSNR));
+   			 rSNR = 10.0 * log10(rNomBWSNR);
 		else
-   			ReceiverParam.SetSNR(0.0);
+   			 rSNR = 0.0;
+
+        rSumSNRHist += rSNR;
+
+        ReceiverParam.SetSNR(rSNR);
 	}
 
 	/* Doppler estimation is only implemented in the
 	 * Wiener time interpolation module */
 	if (TypeIntTime == TWIENER)
-   		ReceiverParam.Measurements.Doppler.set(TimeWiener.GetSigma());
+	{
+	    _REAL rDoppler = TimeWiener.GetSigma();
+	    rSumDopplerHist += rDoppler;
+	}
 	else
+	{
    		ReceiverParam.Measurements.Doppler.invalidate();
+    }
 
 	/* After processing last symbol of the frame */
 	if (iModSymNum == iNumSymPerFrame - 1)
 	{
 
-		/* set minimum and maximum delay from history */
-		_REAL rMinDelay = 1000.0;
-		_REAL rMaxDelay = 0.0;
-		for (int i = 0; i < iLenDelayHist; i++)
-		{
-			if (rMinDelay > vecrDelayHist[i])
-				rMinDelay = vecrDelayHist[i];
-			if(rMaxDelay < vecrDelayHist[i])
-				rMaxDelay = vecrDelayHist[i];
-		}
+		/* calculate mean delay for frame */
 
-		/* Return delay in ms */
-		_REAL rDelayScale = _REAL(iFFTSizeN) / _REAL(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil * iScatPilFreqInt) * 1000.0;
-		ReceiverParam.Measurements.Delay.set(pair<_REAL,_REAL>(rMinDelay * rDelayScale, rMaxDelay * rDelayScale));
+        /* Duration of OFDM symbol */
+        const _REAL rTs = _REAL(ReceiverParam.CellMappingTable.iFFTSizeN +
+            ReceiverParam.CellMappingTable.iGuardSize) / SOUNDCRD_SAMPLE_RATE;
+
+		_REAL rMeanDelay = (rMinDelay+rMaxDelay)/2.0 * rTs;
+
+		ReceiverParam.Measurements.Delay.set(rMeanDelay);
+
+		rMinDelay = 1000.0;
+		rMaxDelay = 0.0;
+
+        ReceiverParam.Measurements.SNRHist.set(rSumSNRHist / iNumSymPerFrame);
+
+        rSumSNRHist = 0.0;
+
+        ReceiverParam.Measurements.Doppler.set(rSumDopplerHist / iNumSymPerFrame);
+
+        rSumDopplerHist = 0.0;
 
 		/* Calculate and generate RSCI measurement values */
 		/* rmer (MER for MSC) */
@@ -529,17 +549,22 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		rSignalEstWMFAcc = (_REAL) 0.0;
 		rNoiseEstWMFAcc = (_REAL) 0.0;
 
-		if (ReceiverParam.Measurements.Delay.wanted())
+		if (ReceiverParam.Measurements.Rdel.wanted())
     	    TimeSyncTrack.CalculateRdel(ReceiverParam);
 
 		if (ReceiverParam.Measurements.Doppler.wanted())
 			TimeSyncTrack.CalculateRdop(ReceiverParam);
 
-		// TODO if (ReceiverParam.Measurements.interference.wanted())
+		if (ReceiverParam.Measurements.PIR.wanted())
+			TimeSyncTrack.CalculateAvPoDeSp(ReceiverParam);
+
+		if (ReceiverParam.Measurements.interference.wanted())
 		{
 			/* Calculate interference tag */
 			CalculateRint(ReceiverParam);
 		}
+		// TODO - better place for this ?
+        ReceiverParam.Measurements.SamOffsValHist.set(ReceiverParam.rResampleOffset);
 	}
 
 	ReceiverParam.Unlock();
@@ -785,18 +810,6 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	rLamMSCSNREst = IIR1Lam(TICONST_SNREST_MSC, (CReal) SOUNDCRD_SAMPLE_RATE /
 		ReceiverParam.CellMappingTable.iSymbolBlockSize);
 
-	/* Init delay spread length estimation (index) */
-	rLenPDSEst = (_REAL) 0.0;
-
-	/* Init history for delay values */
-	/* Duration of OFDM symbol */
-	const _REAL rTs = (CReal) (ReceiverParam.CellMappingTable.iFFTSizeN +
-		ReceiverParam.CellMappingTable.iGuardSize) / SOUNDCRD_SAMPLE_RATE;
-
-	iLenDelayHist = (int) (LEN_HIST_DELAY_LOG_FILE_S / rTs);
-	vecrDelayHist.Init(iLenDelayHist, (CReal) 0.0);
-
-
 	/* Inits for Wiener interpolation in frequency direction ---------------- */
 	/* Length of wiener filter */
 	switch (ReceiverParam.GetWaveMode())
@@ -871,7 +884,17 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 		_COMPLEX(_REAL(0.0),_REAL(0.0)));
 	iTimeDiffAccuRSI = 0;
 
+    // clear measurements
+    ReceiverParam.Measurements.Delay.invalidate();
+    ReceiverParam.Measurements.Doppler.invalidate();
+
 	ReceiverParam.Unlock();
+
+    /* set minimum and maximum delay, etc. */
+    rMinDelay = 1000.0;
+    rMaxDelay = 0.0;
+    rSumDopplerHist = 0.0;
+    rSumSNRHist = 0.0;
 }
 
 CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
@@ -1108,17 +1131,19 @@ _REAL CChannelEstimation::GetDelay() const
 
 _REAL CChannelEstimation::GetMinDelay()
 {
+
 	/* Lock because of vector "vecrDelayHist" access */
 	//Lock();
 
 	/* Return minimum delay in history */
+	/*
 	_REAL rMinDelay = 1000.0;
 	for (int i = 0; i < iLenDelayHist; i++)
 	{
 		if (rMinDelay > vecrDelayHist[i])
 			rMinDelay = vecrDelayHist[i];
 	}
-
+    */
 	//Unlock();
 
 	/* Return delay in ms */

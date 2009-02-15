@@ -80,19 +80,10 @@ public:
     void startPlot(EPlotType);
     void endPlot(EPlotType);
 
-	void SetCurrentCDAud(int iN) {iCurrentCDAud = iN;}
-
-	void UpdateParamHistories();
-
-	void UpdateParamHistoriesRSIIn();
-
-    void GetTransferFunction(vector<double>& transferFunc,
-        vector<double>& groupDelay, vector<double>& scale);
-	void GetInputPSD(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
-	void GetInputSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
-	void GetAvPoDeSp(vector<_REAL>& vecrData, vector<_REAL>& vecrScale,
-	        _REAL& rLowerB, _REAL& rHigherB, _REAL& rStartGuard, _REAL& rEndGuard,
-	        _REAL& rBeginIR, _REAL& rEndIR);
+    void GetTransferFunction(vector<double>& transferFunc, vector<double>& groupDelay);
+	void GetInputPSD(vector<_REAL>& vecrData, _REAL& rStart, _REAL& rStep);
+	void GetInputSpectrum(vector<_REAL>& vecrData, _REAL& rStart, _REAL& rStep);
+	bool GetAvPoDeSp(CMeasurements::CPIR&);
 	void GetSNRProfile(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
 	void GetPowDenSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
 	void GetAudioSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
@@ -106,31 +97,19 @@ public:
 
 	/* Interfaces to internal parameters/vectors used for the plot */
 	void GetFreqSamOffsHist(vector<_REAL>& vecrFreqOffs,
-		vector<_REAL>& vecrSamOffs, vector<_REAL>& vecrScale,
-		_REAL& rFreqAquVal);
+		vector<_REAL>& vecrSamOffs, _REAL& rFreqAquVal);
 
-	void GetDopplerDelHist(vector<_REAL>& vecrLenIR,
-		vector<_REAL>& vecrDoppler, vector<_REAL>& vecrScale);
+	void GetDopplerDelHist(vector<_REAL>& vecrLenIR, vector<_REAL>& vecrDoppler);
 
-	void GetSNRHist(vector<_REAL>& vecrSNR, vector<_REAL>& vecrCDAud,
-		vector<_REAL>& vecrScale);
+	void GetSNRHist(vector<_REAL>& vecrSNR, vector<_REAL>& vecrCDAud);
 
     _REAL GetDCFrequency();
+    _REAL GetSymbolDuration();
+    _REAL GetFrameDuration();
 
 
 private:
 	CDRMReceiver			*pReceiver;
-	/* Storing parameters for plot */
-	deque<_REAL>	vecrFreqSyncValHist;
-	deque<_REAL>	vecrSamOffsValHist;
-	deque<_REAL>	vecrLenIRHist;
-	deque<_REAL>	vecrDopplerHist;
-	deque<_REAL>	vecrSNRHist;
-	deque<int>		veciCDAudHist;
-	int						iSymbolCount;
-	_REAL					rSumDopplerHist;
-	_REAL					rSumSNRHist;
-	int						iCurrentCDAud;
 #ifdef USE_QT_GUI
 	QMutex					MutexHist;
 #endif

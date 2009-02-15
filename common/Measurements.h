@@ -59,7 +59,6 @@ public:
     CPointMeasure():CMeasure(),value(){}
     virtual ~CPointMeasure(){}
     void set(const T& v) { value = v; validdata=true; }
-    T get() const { return value; }
     bool get(T& v) const
     {
         if(valid())
@@ -77,18 +76,30 @@ template<typename T>
 class CTimeSeries : public CMeasure
 {
 public:
-    CTimeSeries():CMeasure(),history(),max(0),interval(0.0){}
-    void configure(size_t m, _REAL d) { max=m; interval=d;}
-    virtual void reset() { CMeasure::reset(); history.clear(); max=0;interval=0.0;}
+    CTimeSeries():CMeasure(),history(),step(numeric_limits<T>::min()),
+    max(numeric_limits<size_t>::max()){}
+    void configure(size_t _max, _REAL _step)
+    {
+        max=_max; step=_step;
+    }
+    virtual void reset() { CMeasure::reset(); history.clear();}
+    _REAL interval() { return step; }
     void set(const T& v)
     {
-        history.push_front(v);
+        history.push_back(v);
         if(history.size()>max)
-            history.pop_back();
+            history.pop_front();
         validdata=true;
     }
-    T get_newest() const { return history.front();}
-    T get_oldest() const { return history.back();}
+    bool get(T& v) const
+    {
+        if(valid())
+        {
+            v=history.back();
+            return true;
+        }
+        return false;
+    }
     bool get(vector<T>& v)
     {
         if(valid())
@@ -101,8 +112,8 @@ public:
     }
 protected:
     deque<T> history;
+    _REAL step;
     size_t max;
-    _REAL interval;
 };
 
 template<typename T>
@@ -137,13 +148,13 @@ public:
 	CPointMeasure<_REAL> WMERFAC;
 
     /* Doppler */
-    CPointMeasure<_REAL> Doppler;
-    CPointMeasure<pair<_REAL,_REAL> > Delay;
+    CTimeSeries<_REAL> Doppler; // Dream calculation
+	CPointMeasure<_REAL> Rdop;    // RSCI calculation
 
-	_REAL rRdop;
-	vector<_REAL> vecrRdel;
-	vector<_REAL> vecrRdelThresholds;
-	vector<_REAL> vecrRdelIntervals;
+    CTimeSeries<_REAL> Delay; // Dream calculation
+    struct CRdel { _REAL threshold, interval; };
+	CPointMeasure<vector<CRdel> > Rdel; // RSCI calculation
+
 	/* interference (constellation-based measurement rnic)*/
 	struct CInterferer { _REAL rIntFreq, rINR, rICR; };
 	CPointMeasure<CInterferer> interference;
@@ -163,13 +174,27 @@ public:
 
 	CTimeSeries<bool> audioFrameStatus;
 
-	_REAL rPIRStart, rPIREnd;
-	// vector to hold impulse response values for (proposed) rpir tag
-	vector <_REAL> vecrPIR;
+    struct CPIR
+    {
+        vector <_REAL> data;
+        _REAL rStart, rStep;
+        _REAL rStartGuard, rEndGuard, rLowerBound, rHigherBound, rPDSBegin, rPDSEnd;
+    };
+
+    CPointMeasure<CPIR> PIR;
+
 	CPointMeasure<vector<vector<_COMPLEX> > > Pilots;
 
-    _REAL rStartGuard, rEndGuard, rLowerBound, rHigherBound, rPDSBegin, rPDSEnd;
-
+	CTimeSeries<_REAL>	FreqSyncValHist;
+	CTimeSeries<_REAL>	SamOffsValHist;
+	CTimeSeries<_REAL>	SNRHist;
+	CTimeSeries<int>	CDAudHist;
+/*
+	int						iSymbolCount;
+	_REAL					rSumDopplerHist;
+	_REAL					rSumSNRHist;
+	int						iCurrentCDAud;
+*/
 protected:
 
 };

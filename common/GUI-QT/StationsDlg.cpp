@@ -1428,14 +1428,16 @@ void StationsDlg::OnTimerSMeter()
 void StationsDlg::EnableSMeter(const bool bStatus)
 {
 	/* Need both, GUI "enabled" and signal strength valid before s-meter is used */
-	_REAL rCurSigStr;
-	bool bValid = DRMReceiver.GetSignalStrength(rCurSigStr);
+	_REAL rSigStr;
+	DRMReceiver.GetParameters()->Lock();
+	bool bValid = DRMReceiver.GetParameters()->Measurements.SigStrstat.getCurrent(rSigStr);
+	DRMReceiver.GetParameters()->Unlock();
 
 	if((bStatus == true) && (bValid == true))
 	{
 		/* Init progress bar for input s-meter */
 		ProgrSigStrength->setAlarmEnabled(true);
-		ProgrSigStrength->setValue(rCurSigStr);
+		ProgrSigStrength->setValue(rSigStr);
 		ProgrSigStrength->setFillColor(QColor(0, 190, 0));
 
 		ProgrSigStrength->setEnabled(true);

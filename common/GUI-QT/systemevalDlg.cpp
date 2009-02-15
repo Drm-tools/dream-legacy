@@ -200,103 +200,93 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	ListViewCharSel->setColumnWidthMode(0, QListView::Maximum);
 
 
-	/* If RSCI in is enabled, disable some of the controls and use different
-	   initialization for the chart and chart selector */
+	/* If RSCI in is enabled, disable retuning */
 	if (DRMReceiver.GetRSIIn()->GetInEnabled() == true)
 	{
-		//ListViewCharSel->setEnabled(false);
-
 		EdtFrequency->setText("0");
 		EdtFrequency->setEnabled(false);
-
-		/* Only audio spectrum makes sense for MDI in */
-		ListViewCharSel->setSelected(pListItAudSpec, true);
-		ListViewCharSel->setOpen(pSpectrumLiViIt, true);
-		MainPlot->SetupChart(CPlotManager::AUDIO_SPECTRUM);
 	}
-	else
-	{
-		CPlotManager::EPlotType ePlotType = CPlotManager::EPlotType(Settings.Get("System Evaluation Dialog", "plottype", 0));
-		/* Set chart type */
-		switch (ePlotType)
-		{
-		case CPlotManager::POWER_SPEC_DENSITY:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
-			ListViewCharSel->setSelected(pListItPowSpecDens, true);
-			break;
 
-		case CPlotManager::INPUTSPECTRUM_NO_AV:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
-			ListViewCharSel->setSelected(pListItInpSpectrNoAv, true);
-			break;
+    CPlotManager::EPlotType ePlotType = CPlotManager::EPlotType(Settings.Get("System Evaluation Dialog", "plottype", 0));
+    /* Set chart type */
+    switch (ePlotType)
+    {
+    case CPlotManager::POWER_SPEC_DENSITY:
+        ListViewCharSel->setOpen(pSpectrumLiViIt, true);
+        ListViewCharSel->setSelected(pListItPowSpecDens, true);
+        break;
 
-		case CPlotManager::AUDIO_SPECTRUM:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
-			ListViewCharSel->setSelected(pListItAudSpec, true);
-			break;
+    case CPlotManager::INPUTSPECTRUM_NO_AV:
+        ListViewCharSel->setOpen(pSpectrumLiViIt, true);
+        ListViewCharSel->setSelected(pListItInpSpectrNoAv, true);
+        break;
 
-		case CPlotManager::SNR_SPECTRUM:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
-			ListViewCharSel->setSelected(pListItSNRSpec, true);
-			break;
+    case CPlotManager::AUDIO_SPECTRUM:
+        ListViewCharSel->setOpen(pSpectrumLiViIt, true);
+        ListViewCharSel->setSelected(pListItAudSpec, true);
+        break;
 
-		case CPlotManager::INP_SPEC_WATERF:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
-			ListViewCharSel->setSelected(pListItInpSpecWater, true);
-			break;
+    case CPlotManager::SNR_SPECTRUM:
+        ListViewCharSel->setOpen(pSpectrumLiViIt, true);
+        ListViewCharSel->setSelected(pListItSNRSpec, true);
+        break;
 
-		case CPlotManager::TRANSFERFUNCTION:
-			ListViewCharSel->setOpen(pChannelLiViIt, true);
-			ListViewCharSel->setSelected(pListItChanTF, true);
-			break;
+    case CPlotManager::INP_SPEC_WATERF:
+        ListViewCharSel->setOpen(pSpectrumLiViIt, true);
+        ListViewCharSel->setSelected(pListItInpSpecWater, true);
+        break;
 
-		case CPlotManager::AVERAGED_IR:
-			ListViewCharSel->setOpen(pChannelLiViIt, true);
-			ListViewCharSel->setSelected(pListItChanIR, true);
-			break;
+    case CPlotManager::TRANSFERFUNCTION:
+        ListViewCharSel->setOpen(pChannelLiViIt, true);
+        ListViewCharSel->setSelected(pListItChanTF, true);
+        break;
 
-		case CPlotManager::FAC_CONSTELLATION:
-			ListViewCharSel->setOpen(pConstellationLiViIt, true);
-			ListViewCharSel->setSelected(pListItConstFAC, true);
-			break;
+    case CPlotManager::AVERAGED_IR:
+        ListViewCharSel->setOpen(pChannelLiViIt, true);
+        ListViewCharSel->setSelected(pListItChanIR, true);
+        break;
 
-		case CPlotManager::SDC_CONSTELLATION:
-			ListViewCharSel->setOpen(pConstellationLiViIt, true);
-			ListViewCharSel->setSelected(pListItConstSDC, true);
-			break;
+    case CPlotManager::FAC_CONSTELLATION:
+        ListViewCharSel->setOpen(pConstellationLiViIt, true);
+        ListViewCharSel->setSelected(pListItConstFAC, true);
+        break;
 
-		case CPlotManager::MSC_CONSTELLATION:
-			ListViewCharSel->setOpen(pConstellationLiViIt, true);
-			ListViewCharSel->setSelected(pListItConstMSC, true);
-			break;
+    case CPlotManager::SDC_CONSTELLATION:
+        ListViewCharSel->setOpen(pConstellationLiViIt, true);
+        ListViewCharSel->setSelected(pListItConstSDC, true);
+        break;
 
-		case CPlotManager::ALL_CONSTELLATION:
-			ListViewCharSel->setOpen(pConstellationLiViIt, true);
-			ListViewCharSel->setSelected(pListItConstAll, true);
-			break;
+    case CPlotManager::MSC_CONSTELLATION:
+        ListViewCharSel->setOpen(pConstellationLiViIt, true);
+        ListViewCharSel->setSelected(pListItConstMSC, true);
+        break;
 
-		case CPlotManager::FREQ_SAM_OFFS_HIST:
-			ListViewCharSel->setOpen(pHistoryLiViIt, true);
-			ListViewCharSel->setSelected(pListItHistFrSa, true);
-			break;
+    case CPlotManager::ALL_CONSTELLATION:
+        ListViewCharSel->setOpen(pConstellationLiViIt, true);
+        ListViewCharSel->setSelected(pListItConstAll, true);
+        break;
 
-		case CPlotManager::DOPPLER_DELAY_HIST:
-			ListViewCharSel->setOpen(pHistoryLiViIt, true);
-			ListViewCharSel->setSelected(pListItHistDeDo, true);
-			break;
+    case CPlotManager::FREQ_SAM_OFFS_HIST:
+        ListViewCharSel->setOpen(pHistoryLiViIt, true);
+        ListViewCharSel->setSelected(pListItHistFrSa, true);
+        break;
 
-		case CPlotManager::SNR_AUDIO_HIST:
-			ListViewCharSel->setOpen(pHistoryLiViIt, true);
-			ListViewCharSel->setSelected(pListItHistSNRAu, true);
-			break;
+    case CPlotManager::DOPPLER_DELAY_HIST:
+        ListViewCharSel->setOpen(pHistoryLiViIt, true);
+        ListViewCharSel->setSelected(pListItHistDeDo, true);
+        break;
 
-		default: /* INPUT_SIG_PSD, includes INPUT_SIG_PSD_ANALOG and NONE_OLD */
-			ListViewCharSel->setOpen(pSpectrumLiViIt, true);
-			ListViewCharSel->setSelected(pListItInpPSD, true);
-			break;
-		}
-        MainPlot->SetupChart(ePlotType);
-	}
+    case CPlotManager::SNR_AUDIO_HIST:
+        ListViewCharSel->setOpen(pHistoryLiViIt, true);
+        ListViewCharSel->setSelected(pListItHistSNRAu, true);
+        break;
+
+    default: /* INPUT_SIG_PSD, includes INPUT_SIG_PSD_ANALOG and NONE_OLD */
+        ListViewCharSel->setOpen(pSpectrumLiViIt, true);
+        ListViewCharSel->setSelected(pListItInpPSD, true);
+        break;
+    }
+    MainPlot->SetupChart(ePlotType);
 
 	/* Init context menu for list view */
 	pListViewContextMenu = new QPopupMenu(this, tr("ListView context menu"));
@@ -422,10 +412,18 @@ void systemevalDlg::showEvent(QShowEvent*)
 
 	/* Activate real-time timer */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
+
+    DRMReceiver.GetParameters()->Measurements.Rdop.subscribe();
+    DRMReceiver.GetParameters()->Measurements.Rdel.subscribe();
+    DRMReceiver.GetParameters()->Measurements.Delay.subscribe();
+    DRMReceiver.GetParameters()->Measurements.Doppler.subscribe();
 }
 
 void systemevalDlg::hideEvent(QHideEvent*)
 {
+    DRMReceiver.GetParameters()->Measurements.Doppler.unsubscribe();
+    DRMReceiver.GetParameters()->Measurements.Delay.unsubscribe();
+
 	/* Stop the real-time timer */
 	Timer.stop();
 
@@ -538,15 +536,16 @@ void systemevalDlg::OnTimer()
 	if (this->isVisible() == false)
         return;
 
-    _REAL rSigStr;
-    bool bValid = DRMReceiver.GetSignalStrength(rSigStr);
+    CParameter& Parameters = *(DRMReceiver.GetParameters());
+
+    _REAL rSigStr=0.0;
+	Parameters.Lock();
+
+	bool bValid = Parameters.Measurements.SigStrstat.getCurrent(rSigStr);
     if (bValid)
         ValueRF->setText(QString().setNum(rSigStr, 'f', 1) + " dBuV");
     else
         ValueRF->setText("---");
-
-    CParameter& Parameters = *(DRMReceiver.GetParameters());
-    Parameters.Lock();
 
     int iCurSelAudioServ = Parameters.GetCurSelAudioService();
     if(Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
@@ -577,7 +576,7 @@ void systemevalDlg::OnTimer()
         }
 
         /* We get MER from a local DREAM Front-End or an RSCI input but not an MDI input */
-        _REAL rMER, rWMERMSC;
+        _REAL rMER=0.0, rWMERMSC=0.0;
         QString sMER="---", sWMERMSC="---";
         if (Parameters.Measurements.WMERMSC.get(rWMERMSC))
         {
@@ -590,29 +589,36 @@ void systemevalDlg::OnTimer()
         ValueMERWMER->setText("<b>"+sWMERMSC+" / "+sMER+"</b>");
 
         /* Doppler estimation (assuming Gaussian doppler spectrum) */
-        QString doppler = "---";
-        QString delay = "---";
-        if(Parameters.Measurements.rRdop >= 0.0)
+        QString sdoppler = "";
+        QString sdelay = "";
+        _REAL rVal;
+        vector<_REAL> vecrVal;
+        vector<CMeasurements::CRdel> rdel;
+        if(Parameters.Measurements.Rdop.get(rVal))
         {
-            /* RSCI - have delay value */
-            doppler = QString().setNum(Parameters.Measurements.rRdop, 'f', 2) + " Hz";
-            if(Parameters.Measurements.vecrRdelIntervals.size()>0)
-                delay = QString().setNum(Parameters.Measurements.vecrRdelIntervals[0], 'f', 2) + " ms";
+            sdoppler += QString().setNum(rVal, 'f', 2) + " ";
         }
+        if(Parameters.Measurements.Doppler.get(rVal))
+        {
+            sdoppler += QString().setNum(rVal, 'f', 2) + " ";
+        }
+        if(Parameters.Measurements.Rdel.get(rdel))
+        {
+            sdelay += QString().setNum(rdel[0].interval, 'f', 2) + " ";
+        }
+        if (Parameters.Measurements.Delay.get(rVal))
+        {
+            sdelay += QString().setNum(rVal, 'f', 2) + " ";
+        }
+        if(sdoppler=="")
+            sdoppler = "---";
         else
-        {
-            _REAL rSigmaEstimate;
-            if (Parameters.Measurements.Doppler.get(rSigmaEstimate))
-            {
-                doppler = QString().setNum(rSigmaEstimate, 'f', 2) + " Hz";
-            }
-            pair<_REAL,_REAL> pDel;
-            if (Parameters.Measurements.Delay.get(pDel))
-            {
-                delay = QString().setNum(pDel.first, 'f', 2) + " ms";
-            }
-        }
-        ValueWiener->setText(doppler+" / "+delay);
+            sdoppler += "Hz";
+        if(sdelay=="")
+            sdelay = "---";
+        else
+            sdelay += "ms";
+        ValueWiener->setText(sdoppler+" / "+sdelay);
 
         /* Sample frequency offset estimation */
         const _REAL rCurSamROffs = Parameters.rResampleOffset;

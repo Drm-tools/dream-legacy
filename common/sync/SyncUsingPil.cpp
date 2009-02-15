@@ -281,7 +281,9 @@ fflush(pFile);
 	/* If synchronized DRM input stream is used, overwrite the detected
 	   frequency offest estimate by "0", because we know this value */
 	if (bSyncInput == true)
+	{
 		ReceiverParam.rFreqOffsetTrack = (CReal) 0.0;
+	}
 
 	/* Do not ship data before first frame synchronization was done. The flag
 	   "bAquisition" must not be set to false since in that case we would run

@@ -645,7 +645,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 #if 0
 // Store AAC-data in file
 				string strAACTestFileName = "test/aac_";
-	ReceiverParam.Lock();
+                ReceiverParam.Lock();
 				if (ReceiverParam.
 					Service[ReceiverParam.GetCurSelAudioService()].AudioParam.
 					eAudioSamplRate == CAudioParam::AS_12KHZ)
@@ -678,7 +678,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				{
 					strAACTestFileName += "_sbr";
 				}
-	ReceiverParam.Unlock();
+                ReceiverParam.Unlock();
 				strAACTestFileName += ".dat";
 				static FILE *pFile2 = fopen(strAACTestFileName.c_str(), "wb");
 				int iNewFrL = veciFrameLength[j] + 1;

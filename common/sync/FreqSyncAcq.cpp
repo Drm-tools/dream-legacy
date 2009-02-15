@@ -30,7 +30,14 @@
 \******************************************************************************/
 
 #include "FreqSyncAcq.h"
+    /* TODO - reconcile this with Ollies RSCI Doppler code in ChannelEstimation */
 
+
+
+        /* Reset parameters used for averaging */
+        //iSymbolCount = 0;
+        //rSumDopplerHist = (_REAL) 0.0;
+        //rSumSNRHist = (_REAL) 0.0;
 /* Implementation *************************************************************/
 void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 {
@@ -45,11 +52,16 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 
 	ReceiverParam.Lock();
 
+    int iNumSymPerFrame = ReceiverParam.CellMappingTable.iNumSymPerFrame;
+
 	/* OPH: update free-running symbol counter */
 	iFreeSymbolCounter++;
-	if (iFreeSymbolCounter >= ReceiverParam.CellMappingTable.iNumSymPerFrame)
+	if (iFreeSymbolCounter >= iNumSymPerFrame)
 	{
 		iFreeSymbolCounter = 0;
+        ReceiverParam.Measurements.FreqSyncValHist.set(
+            ReceiverParam.rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE
+        );
 	}
 
 	if (bAquisition == true)

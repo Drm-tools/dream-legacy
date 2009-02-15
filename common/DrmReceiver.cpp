@@ -425,7 +425,6 @@ CDRMReceiver::Run()
 			{
 				time_keeper = time(NULL);
 				DecodeRSIMDI.ProcessData(Parameters, RSIPacketBuf, FACDecBuf, SDCDecBuf, MSCDecBuf);
-				PlotManager.UpdateParamHistoriesRSIIn();
 				bFrameToSend = true;
 			}
 			else
@@ -492,9 +491,7 @@ CDRMReceiver::Run()
 		{
 			MSCUseBuf[i].Clear();
 			MSCSendBuf[i].Clear();
-			//if(i==0)cerr << MSCDecBuf[i].GetFillLevel() << endl;
 			SplitMSC[i].ProcessData(Parameters, MSCDecBuf[i], MSCUseBuf[i], MSCSendBuf[i]);
-			//if(i==0)cerr << MSCDecBuf[i].GetFillLevel() << " " << MSCUseBuf[i].GetFillLevel() << " " << MSCSendBuf[i].GetFillLevel() << endl;
 		}
 		break;
 	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
@@ -629,13 +626,6 @@ CDRMReceiver::DemodulateDRM(bool& bEnoughData)
 		ProcessData(Parameters, SyncUsingPilBuf, ChanEstBuf))
 	{
 		bEnoughData = true;
-
-		/* If this module has finished, all synchronization units
-		   have also finished their OFDM symbol based estimates.
-		   Update synchronization parameters histories */
-            /* Only update histories if the receiver is in tracking mode */
-        if (eReceiverState == RS_TRACKING)
-            PlotManager.UpdateParamHistories();
 	}
 
 	/* Demapping of the MSC, FAC, SDC and pilots off the carriers */
@@ -723,7 +713,9 @@ CDRMReceiver::UtilizeDRM(bool& bEnoughData)
 
 			/* Store the number of correctly decoded audio blocks for
 			 *                            the history */
-			PlotManager.SetCurrentCDAud(AudioSourceDecoder.GetNumCorDecAudio());
+			 // TODO - move to AudioSourceDecoder ?
+			 int n = AudioSourceDecoder.GetNumCorDecAudio();
+            Parameters.Measurements.CDAudHist.set(n);
 		}
 	}
 }
@@ -1379,7 +1371,10 @@ CDRMReceiver::InitsForMSCDemux()
 	/* Reset value used for the history because if an audio service was selected
 	   but then only a data service is selected, the value would remain with the
 	   last state */
-	PlotManager.SetCurrentCDAud(0);
+    Parameters.Measurements.CDAudHist.reset();
+    // TODO - here or in plotmanager ?
+    Parameters.Measurements.CDAudHist.configure(LEN_HIST_PLOT_SYNC_PARMS, 0);
+
 }
 
 void
@@ -1558,15 +1553,6 @@ void CDRMReceiver::SetRigComPort(const string& s)
 	if(SoundInProxy.pHamlib)
 		SoundInProxy.pHamlib->SetComPort(s);
 #endif
-}
-
-bool
-CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
-{
-	Parameters.Lock();
-	bool b = Parameters.Measurements.SigStrstat.getCurrent(rSigStr);
-	Parameters.Unlock();
-	return b;
 }
 
 /* TEST store information about alternative frequency transmitted in SDC */

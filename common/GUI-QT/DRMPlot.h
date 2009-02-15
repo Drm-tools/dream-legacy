@@ -183,7 +183,7 @@ protected:
 	QwtPlotCurve	*DCCarrierCurve, *BandwidthMarkerCurve;
 	QwtPlotCurve	*curve1, *curve2, *curve3, *curve4, *curve5, *curve6;
 	QwtSymbol		MarkerSymFAC, MarkerSymSDC, MarkerSymMSC;
-    QwtPlotGrid     *grid;
+    QwtPlotGrid     grid;
     QwtPlotSpectrogram* spectrogram;
     SpectrogramData spectrogramData;
 

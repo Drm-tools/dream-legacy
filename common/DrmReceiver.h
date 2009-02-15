@@ -307,7 +307,6 @@ public:
 	string					GetRigComPort() const;
 	void					SetRigComPort(const string&);
 	bool				    GetRigChangeInProgress();
-	bool				    GetSignalStrength(_REAL& rSigStr);
 	CParameter*				GetParameters() {return &Parameters;}
 	CPlotManager*			GetPlotManager() {return &PlotManager;}
 

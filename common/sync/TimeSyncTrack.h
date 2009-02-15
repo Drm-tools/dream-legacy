@@ -101,6 +101,7 @@ public:
 
 	void CalculateRdel(CParameter&);
 	void CalculateRdop(CParameter&);
+    void CalculateAvPoDeSp(CParameter&);
 
 protected:
 

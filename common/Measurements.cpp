@@ -32,16 +32,15 @@ CMeasurements::CMeasurements():
     SNRstat(), SigStrstat(),
     MER(),WMERMSC(),WMERFAC(),
     Doppler(),Delay(),
-    rRdop(0.0),vecrRdel(),vecrRdelThresholds(),vecrRdelIntervals(),
+    Rdop(),Rdel(),
     interference(),
     rMaxPSDwrtSig(0.0), rMaxPSDFreq(0.0),
     bETSIPSD(false),PSD(),inputSpectrum(),
     SigStr(),IFSigStr(),
     ChannelEstimate(), audioFrameStatus(),
-    rPIRStart(0.0),rPIREnd(0.0),vecrPIR(),
-    Pilots(),
-    rStartGuard(0.0), rEndGuard(0.0), rLowerBound(0.0), rHigherBound(0.0),
-    rPDSBegin(0.0), rPDSEnd(0.0)
+    PIR(), Pilots(),
+    FreqSyncValHist(), SamOffsValHist(),
+    SNRHist(), CDAudHist()
 {
 }
 

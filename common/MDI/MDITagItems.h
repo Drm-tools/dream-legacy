@@ -197,7 +197,7 @@ protected:
 class CTagItemGeneratorRDEL : public CTagItemGeneratorWithProfiles /* RDEL tag */
 {
 public:
-	void GenTag(bool bIsValid, const vector<_REAL>& vecrThresholds, const vector<_REAL>& vecrIntervals);
+	void GenTag(bool bIsValid, const vector<CMeasurements::CRdel>&);
 protected:
 	virtual string GetTagName();
 	virtual string GetProfiles(); // Return a string containing the set of profiles for this tag
