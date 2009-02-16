@@ -33,7 +33,7 @@
 #include "util/ReceiverModul.h"
 #include "util/SimulationModul.h"
 #include "util/TransmitterModul.h"
-#include "../matlib/Matlib.h"
+#include "matlib/Matlib.h"
 
 
 /* Definitions ****************************************************************/

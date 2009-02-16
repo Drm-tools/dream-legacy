@@ -35,19 +35,23 @@
 #include <qradiobutton.h>
 #include <qcheckbox.h>
 #include <qtooltip.h>
-#include <qbuttongroup.h>
+#include <q3buttongroup.h>
 #include <qpushbutton.h>
 #include <qcheckbox.h>
-#include <qfiledialog.h>
+#include <q3filedialog.h>
 #include <qslider.h>
 #include <qwt_dial.h>
 #include <qwt_dial_needle.h>
 #include <qlayout.h>
-#include <qprogressbar.h>
+#include <q3progressbar.h>
 #include <qcombobox.h>
-#include <qlistbox.h>
+#include <q3listbox.h>
 /* This include is for setting the progress bar style */
 #include <qmotifstyle.h>
+//Added by qt3to4:
+#include <QShowEvent>
+#include <QHideEvent>
+#include <QCloseEvent>
 
 #include "AnalogDemDlgbase.h"
 #include "AMSSDlgbase.h"

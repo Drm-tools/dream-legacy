@@ -28,6 +28,9 @@
 \******************************************************************************/
 
 #include "MultColorLED.h"
+//Added by qt3to4:
+#include <Q3Frame>
+#include <QLabel>
 
 
 /* Implementation *************************************************************/
@@ -49,8 +52,8 @@ CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) 
 	BitmCubeYellow.fill(QColor(255, 255, 0));
 
 	/* Set modified style */
-	setFrameShape(QFrame::Panel);
-	setFrameShadow(QFrame::Sunken);
+	setFrameShape(Q3Frame::Panel);
+	setFrameShadow(Q3Frame::Sunken);
 	setIndent(0);
 
 	/* Init color flags */

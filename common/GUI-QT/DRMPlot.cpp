@@ -36,6 +36,11 @@
 #include <qwt_legend.h>
 #include <qwt_color_map.h>
 #include <qwt_plot_layout.h>
+//Added by qt3to4:
+#include <Q3Frame>
+#include <QHideEvent>
+#include <QMouseEvent>
+#include <QShowEvent>
 #include <iostream>
 
 /* Implementation *************************************************************/
@@ -51,7 +56,7 @@ private:
 };
 
 CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
-	QwtPlot (p, name), CurCharType(CPlotManager::NONE_OLD), InitCharType(CPlotManager::NONE_OLD),
+	QwtPlot (p), CurCharType(CPlotManager::NONE_OLD), InitCharType(CPlotManager::NONE_OLD),
 	bOnTimerCharMutexFlag(false), grid(),pPlotManager(NULL),spectrogram(NULL)
 {
 	/* Grid defaults */
@@ -79,7 +84,7 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
     setAxisTitle(QwtPlot::yRight, rightTitle);
 
 	/* Global frame */
-	setFrameStyle(QFrame::Panel|QFrame::Sunken);
+	setFrameStyle(Q3Frame::Panel|Q3Frame::Sunken);
 	setLineWidth(2);
 	setMargin(10);
 
@@ -327,8 +332,8 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 	}
 
 	/* Apply colors */
-	grid.setMajPen(QPen(MainGridColorPlot, 0, DotLine));
-	grid.setMinPen(QPen(MainGridColorPlot, 0, DotLine));
+	grid.setMajPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
+	grid.setMinPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
 	setCanvasBackground(BckgrdColorPlot);
 
 	/* Make sure that plot are being initialized again */
@@ -374,7 +379,7 @@ void CDRMPlot::SetAvIR()
         setAxisTitle(QwtPlot::yLeft, tr("IR [dB]"));
 		setAxisScale(QwtPlot::yLeft, -20.0, 40.0);
 
-        canvas()->setBackgroundMode(QWidget::PaletteBackground);
+        canvas()->setBackgroundMode(Qt::PaletteBackground);
 
         /* Insert curves */
         clear();
@@ -382,10 +387,10 @@ void CDRMPlot::SetAvIR()
         curve2 = new QwtPlotCurve(tr("Guard-interval end"));
         curve3 = new QwtPlotCurve(tr("Estimated begin of impulse response"));
         curve4 = new QwtPlotCurve(tr("Estimated end of impulse response"));
-        curve1->setPen(QPen(SpecLine1ColorPlot, 1, DotLine));
-        curve2->setPen(QPen(SpecLine1ColorPlot, 1, DotLine));
-        curve3->setPen(QPen(SpecLine1ColorPlot, 1, DotLine));
-        curve4->setPen(QPen(SpecLine1ColorPlot, 1, DotLine));
+        curve1->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
+        curve2->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
+        curve3->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
+        curve4->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
 
         curve1->setItemAttribute(QwtPlotItem::Legend, false);
         curve2->setItemAttribute(QwtPlotItem::Legend, false);
@@ -407,7 +412,7 @@ void CDRMPlot::SetAvIR()
         curve5->attach(this);
         curve6->attach(this);
 #else
-        curve5->setPen(QPen(SpecLine1ColorPlot, 1, DotLine));
+        curve5->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
         curve5->attach(this);
 #endif
 
@@ -415,7 +420,7 @@ void CDRMPlot::SetAvIR()
         main1curve = new QwtPlotCurve(tr("Channel Impulse Response"));
 
         /* Curve color */
-        main1curve->setPen(QPen(MainPenColorPlot, 2, SolidLine, RoundCap, RoundJoin));
+        main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         main1curve->setItemAttribute(QwtPlotItem::Legend, false);
         main1curve->attach(this);
 	}
@@ -489,7 +494,7 @@ void CDRMPlot::SetTranFct()
         grid.enableX(true);
         grid.enableY(true);
         setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
-        canvas()->setBackgroundMode(QWidget::PaletteBackground);
+        canvas()->setBackgroundMode(Qt::PaletteBackground);
 
         enableAxis(QwtPlot::yLeft, true);
         setAxisTitle(QwtPlot::yLeft, tr("TF [dB]"));
@@ -504,10 +509,10 @@ void CDRMPlot::SetTranFct()
 
         /* TODO - check that its group delay that should be scaled to right axis!! */
         main1curve = new QwtPlotCurve(tr("Transf. Fct."));
-        main1curve->setPen(QPen(MainPenColorPlot, 2, SolidLine, RoundCap, RoundJoin));
+        main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 
         main2curve = new QwtPlotCurve(tr("Group Del."));
-        main2curve->setPen(QPen(SpecLine2ColorPlot, 1, SolidLine, RoundCap, RoundJoin));
+        main2curve->setPen(QPen(SpecLine2ColorPlot, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         main2curve->setYAxis(QwtPlot::yRight);
 
         main1curve->attach(this);
@@ -543,7 +548,7 @@ void CDRMPlot::SetAudioSpec()
         setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
         enableAxis(QwtPlot::yLeft, true);
         setAxisTitle(QwtPlot::yLeft, "AS [dB]");
-        canvas()->setBackgroundMode(QWidget::PaletteBackground);
+        canvas()->setBackgroundMode(Qt::PaletteBackground);
 
         /* Fixed scale */
         setAxisScale(QwtPlot::yLeft, (double) -90.0, (double) -20.0);
@@ -558,7 +563,7 @@ void CDRMPlot::SetAudioSpec()
         main1curve = new QwtPlotCurve(tr("Audio Spectrum"));
         main1curve->setItemAttribute(QwtPlotItem::Legend, false);
         /* Curve color */
-        main1curve->setPen(QPen(MainPenColorPlot, 2, SolidLine, RoundCap, RoundJoin));
+        main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         main1curve->attach(this);
 	}
 		/* Get data from module */
@@ -598,7 +603,7 @@ void CDRMPlot::SetFreqSamOffsHist()
         setAxisTitle(QwtPlot::xBottom, tr("Time [s]"));
         enableAxis(QwtPlot::yLeft, true);
         setAxisTitle(QwtPlot::yRight, tr("Sample Rate Offset [Hz]"));
-        canvas()->setBackgroundMode(QWidget::PaletteBackground);
+        canvas()->setBackgroundMode(Qt::PaletteBackground);
         enableAxis(QwtPlot::yLeft, true);
 
         /* Add main curves */
@@ -608,8 +613,8 @@ void CDRMPlot::SetFreqSamOffsHist()
         main2curve->setYAxis(QwtPlot::yRight);
 
         /* Curve colors */
-        main1curve->setPen(QPen(MainPenColorPlot, 2, SolidLine, RoundCap, RoundJoin));
-        main2curve->setPen(QPen(SpecLine2ColorPlot, 1, SolidLine, RoundCap, RoundJoin));
+        main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        main2curve->setPen(QPen(SpecLine2ColorPlot, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 
         main1curve->attach(this);
         main2curve->attach(this);
@@ -683,7 +688,7 @@ void CDRMPlot::SetDopplerDelayHist()
         enableAxis(QwtPlot::yLeft, true);
         setAxisTitle(QwtPlot::yLeft, tr("Delay [ms]"));
         setAxisTitle(QwtPlot::yRight, tr("Doppler [Hz]"));
-        canvas()->setBackgroundMode(QWidget::PaletteBackground);
+        canvas()->setBackgroundMode(Qt::PaletteBackground);
 
         /* Fixed scale */
         setAxisScale(QwtPlot::yLeft, (double) 0.0, (double) 10.0);
@@ -696,8 +701,8 @@ void CDRMPlot::SetDopplerDelayHist()
         main2curve->setYAxis(QwtPlot::yRight);
 
         /* Curve colors */
-        main1curve->setPen(QPen(MainPenColorPlot, 2, SolidLine, RoundCap, RoundJoin));
-        main2curve->setPen(QPen(SpecLine2ColorPlot, 1, SolidLine, RoundCap, RoundJoin));
+        main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        main2curve->setPen(QPen(SpecLine2ColorPlot, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 
         main1curve->attach(this);
         main2curve->attach(this);
@@ -734,7 +739,7 @@ void CDRMPlot::SetSNRAudHist()
         enableAxis(QwtPlot::yLeft, true);
         setAxisTitle(QwtPlot::yLeft, tr("SNR [dB]"));
         setAxisTitle(QwtPlot::yRight, tr("Corr. Dec. Audio / DRM-Frame"));
-        canvas()->setBackgroundMode(QWidget::PaletteBackground);
+        canvas()->setBackgroundMode(Qt::PaletteBackground);
 
         /* Add main curves */
         clear();
@@ -743,8 +748,8 @@ void CDRMPlot::SetSNRAudHist()
         main2curve->setYAxis(QwtPlot::yRight);
 
         /* Curve colors */
-        main1curve->setPen(QPen(MainPenColorPlot, 2, SolidLine, RoundCap, RoundJoin));
-        main2curve->setPen(QPen(SpecLine2ColorPlot, 1, SolidLine, RoundCap, RoundJoin));
+        main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        main2curve->setPen(QPen(SpecLine2ColorPlot, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 
         main1curve->attach(this);
         main2curve->attach(this);
@@ -817,7 +822,7 @@ void CDRMPlot::SpectrumPlotDefaults(
 	setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
 	enableAxis(QwtPlot::yLeft, true);
 	setAxisTitle(QwtPlot::yLeft, axistitle+" [dB]");
-	canvas()->setBackgroundMode(QWidget::PaletteBackground);
+	canvas()->setBackgroundMode(Qt::PaletteBackground);
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::xBottom,
@@ -828,13 +833,13 @@ void CDRMPlot::SpectrumPlotDefaults(
 
 	/* Insert line for DC carrier */
 	DCCarrierCurve = new QwtPlotCurve(tr("DC carrier"));
-	DCCarrierCurve->setPen(QPen(SpecLine1ColorPlot, 1, DotLine));
+	DCCarrierCurve->setPen(QPen(SpecLine1ColorPlot, 1, Qt::DotLine));
 	DCCarrierCurve->setItemAttribute(QwtPlotItem::Legend, false);
 	DCCarrierCurve->attach(this);
 
 	/* Add main curve */
 	main1curve = new QwtPlotCurve(axistitle);
-	main1curve->setPen(QPen(MainPenColorPlot, penwidth, SolidLine, RoundCap, RoundJoin));
+	main1curve->setPen(QPen(MainPenColorPlot, penwidth, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
 	main1curve->setItemAttribute(QwtPlotItem::Legend, false);
 	main1curve->attach(this);
 }
@@ -890,14 +895,14 @@ void CDRMPlot::SetSNRSpectrum()
         setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
         enableAxis(QwtPlot::yLeft, true);
         setAxisTitle(QwtPlot::yLeft, tr("WMER [dB]"));
-        canvas()->setBackgroundMode(QWidget::PaletteBackground);
+        canvas()->setBackgroundMode(Qt::PaletteBackground);
 
         /* Add main curve */
         clear();
         main1curve = new QwtPlotCurve(tr("SNR Spectrum"));
 
         /* Curve color */
-        main1curve->setPen(QPen(MainPenColorPlot, 2, SolidLine, RoundCap, RoundJoin));
+        main1curve->setPen(QPen(MainPenColorPlot, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
         main1curve->setItemAttribute(QwtPlotItem::Legend, false);
 
         main1curve->attach(this);
@@ -1129,7 +1134,7 @@ void CDRMPlot::ConstellationPlotDefaults(const QString& title, double limit, int
 	setAxisTitle(QwtPlot::xBottom, tr("Real"));
 	enableAxis(QwtPlot::yLeft, true);
 	setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
-	canvas()->setBackgroundMode(QWidget::PaletteBackground);
+	canvas()->setBackgroundMode(Qt::PaletteBackground);
 	double step = limit/n;
 	setAxisScale(QwtPlot::xBottom, -limit, limit, step);
 	setAxisScale(QwtPlot::yLeft, -limit, limit, step);
@@ -1412,5 +1417,5 @@ void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
 	}
 
 	/* Main plot */
-	QWhatsThis::add(this, strCurPlotHelp);
+	Q3WhatsThis::add(this, strCurPlotHelp);
 }

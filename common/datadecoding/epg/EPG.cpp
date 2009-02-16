@@ -13,10 +13,10 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later  
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT  
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
@@ -30,7 +30,8 @@
 #include "EPG.h"
 #include "epgutil.h"
 #include <qfile.h>
-#include <qtextstream.h>
+#include <q3textstream.h>
+#include <QStringList>
 #include <qregexp.h>
 #include <iostream>
 
@@ -1274,7 +1275,7 @@ EPG::getFile (CEPGDecoder & epg, const QString & fileName)
 {
 	epg.doc.setContent (QString (""));
 	QFile file (fileName);
-	if (!file.open (IO_ReadOnly))
+	if (!file.open (QIODevice::ReadOnly))
 	{
 		return;
 	}
@@ -1417,7 +1418,7 @@ void
 EPG::saveChannels (const QString & fileName)
 {
 	QFile f (fileName);
-	if (!f.open (IO_WriteOnly))
+	if (!f.open (QIODevice::WriteOnly))
 	{
 		return;
 	}
@@ -1443,7 +1444,7 @@ EPG::saveChannels (const QString & fileName)
 		}
 		ensemble.appendChild (service);
 	}
-	QTextStream stream (&f);
+	Q3TextStream stream (&f);
 	stream << doc.toString ();
 	f.close ();
 
@@ -1454,7 +1455,7 @@ EPG::loadChannels (const QString & fileName)
 {
 	QDomDocument domTree;
 	QFile f (fileName);
-	if (!f.open (IO_ReadOnly))
+	if (!f.open (QIODevice::ReadOnly))
 	{
 		addChannel ("BBCWorld Service", 0xE1C238);
 		return;
@@ -1480,7 +1481,7 @@ EPG::loadChannels (const QString & fileName)
 				{
 					QDomElement s = e.toElement ();
 					if (s.tagName () == "shortName")
-						name = s.text().utf8();
+						name = s.text().utf8().constData();
 					if (s.tagName () == "serviceID")
 						sid = s.attribute ("id", "0");
 				}

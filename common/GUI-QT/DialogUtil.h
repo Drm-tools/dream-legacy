@@ -30,11 +30,13 @@
 #define DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_
 
 #include <qmenubar.h>
-#include <qpopupmenu.h>
+#include <q3popupmenu.h>
 #include <qevent.h>
-#include <qtextview.h>
+#include <q3textview.h>
 #include <qlabel.h>
-#include <qwhatsthis.h>
+#include <q3whatsthis.h>
+//Added by qt3to4:
+#include <QCustomEvent>
 
 #include "AboutDlgbase.h"
 #include "../DrmReceiver.h"
@@ -80,7 +82,7 @@ public:
 
 
 /* Help menu ---------------------------------------------------------------- */
-class CDreamHelpMenu : public QPopupMenu
+class CDreamHelpMenu : public Q3PopupMenu
 {
 	Q_OBJECT
 
@@ -91,13 +93,13 @@ protected:
 	CAboutDlg AboutDlg;
 
 public slots:
-	void OnHelpWhatsThis() {QWhatsThis::enterWhatsThisMode();}
+	void OnHelpWhatsThis() {Q3WhatsThis::enterWhatsThisMode();}
 	void OnHelpAbout() {AboutDlg.exec();}
 };
 
 
 /* Sound card selection menu ------------------------------------------------ */
-class CSoundCardSelMenu : public QPopupMenu
+class CSoundCardSelMenu : public Q3PopupMenu
 {
 	Q_OBJECT
 
@@ -112,8 +114,8 @@ protected:
 	vector<string>			vecSoundOutNames;
 	int						iNumSoundInDev;
 	int						iNumSoundOutDev;
-	QPopupMenu*				pSoundInMenu;
-	QPopupMenu*				pSoundOutMenu;
+	Q3PopupMenu*				pSoundInMenu;
+	Q3PopupMenu*				pSoundOutMenu;
 
 public slots:
 	void OnSoundInDevice(int id);

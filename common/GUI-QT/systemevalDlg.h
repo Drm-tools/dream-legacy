@@ -36,13 +36,16 @@
 #include <qdatetime.h>
 #include <qlineedit.h>
 #include <qtooltip.h>
-#include <qfiledialog.h>
-#include <qwhatsthis.h>
-#include <qlistview.h>
-#include <qbuttongroup.h>
-#include <qpopupmenu.h>
+#include <q3filedialog.h>
+#include <q3whatsthis.h>
+#include <q3listview.h>
+#include <q3buttongroup.h>
+#include <q3popupmenu.h>
 #include <qpixmap.h>
 #include <qwt_thermo.h>
+//Added by qt3to4:
+#include <QShowEvent>
+#include <QHideEvent>
 
 #include "systemevalDlgbase.h"
 #include "DRMPlot.h"
@@ -73,16 +76,16 @@ public:
 	void StopLogTimers();
 
 protected:
-	class CCharSelItem : public QListViewItem
+	class CCharSelItem : public Q3ListViewItem
 	{
 	public:
-		CCharSelItem(QListView* parent, QString str1,
+		CCharSelItem(Q3ListView* parent, QString str1,
 			CPlotManager::EPlotType eNewCharTy, bool bSelble = true) :
-			QListViewItem(parent, str1), eCharTy(eNewCharTy)
+			Q3ListViewItem(parent, str1), eCharTy(eNewCharTy)
 			{setSelectable(bSelble);}
-		CCharSelItem(QListViewItem* parent, QString str1,
+		CCharSelItem(Q3ListViewItem* parent, QString str1,
 			CPlotManager::EPlotType eNewCharTy, bool bSelble = true) :
-			QListViewItem(parent, str1), eCharTy(eNewCharTy)
+			Q3ListViewItem(parent, str1), eCharTy(eNewCharTy)
 			{setSelectable(bSelble);}
 
 		CPlotManager::EPlotType GetCharType() {return eCharTy;}
@@ -107,7 +110,7 @@ protected:
 	QString				GetRobModeStr();
 	QString				GetSpecOccStr();
 
-	QPopupMenu*			pListViewContextMenu;
+	Q3PopupMenu*			pListViewContextMenu;
 	vector<CDRMPlot*>	vecpDRMPlots;
 
 	CGPSReceiver*		pGPSReceiver;
@@ -118,9 +121,9 @@ public slots:
 	void OnTimer();
 	void OnTimerLineEditFrequency();
 	void OnTimerTuning();
-	void OnListSelChanged(QListViewItem* NewSelIt);
+	void OnListSelChanged(Q3ListViewItem* NewSelIt);
 	void OnListViContMenu();
-	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt,
+	void OnListRightButClicked(Q3ListViewItem* NewSelIt, const QPoint& iPnt,
 		int iCol);
 	void OnLineEditFrequencyChanged(const QString& str);
 	void EnableGPS(bool);

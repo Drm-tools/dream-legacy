@@ -29,28 +29,31 @@
 #ifndef _STATIONS_DLG_H
 #define _STATIONS_DLG_H
 
-#include <qheader.h>
-#include <qlistview.h>
+#include <q3header.h>
+#include <q3listview.h>
 #include <qpixmap.h>
-#include <qbuttongroup.h>
+#include <q3buttongroup.h>
 #include <qradiobutton.h>
 #include <qtimer.h>
 #include <qmessagebox.h>
 #include <qcombobox.h>
-#include <qurloperator.h>
-#include <qnetworkprotocol.h>
+#include <q3urloperator.h>
+#include <q3networkprotocol.h>
 #include <qdir.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
+#include <q3popupmenu.h>
 #include <qlayout.h>
 #include <qthread.h>
 #include <qaction.h>
-#include <qwhatsthis.h>
+#include <q3whatsthis.h>
 #include <qlabel.h>
 #include <qfileinfo.h>
 #include <qdatetime.h>
 #include <qwt_thermo.h>
 #include <qwt_counter.h>
+//Added by qt3to4:
+#include <QShowEvent>
+#include <QHideEvent>
 
 #include "StationsDlgbase.h"
 #include "../DrmReceiver.h"
@@ -86,7 +89,7 @@
 
 /* File handle type */
 #ifdef _WIN32
-# define FILE_HANDLE					HANDLE
+# define FILE_HANDLE					Qt::HANDLE
 #else
 # define FILE_HANDLE					int
 #endif
@@ -193,16 +196,16 @@ protected:
 };
 
 
-class MyListViewItem : public QListViewItem
+class MyListViewItem : public Q3ListViewItem
 {
 public:
 	/* If you want to add another columns, change also MAX_COLUMN_NUMBER in
 	   Settings.h! */
-	MyListViewItem(QListView* parent, QString s1, QString s2 = QString::null,
+	MyListViewItem(Q3ListView* parent, QString s1, QString s2 = QString::null,
 		QString s3 = QString::null, QString s4 = QString::null,
 		QString s5 = QString::null, QString s6 = QString::null,
 		QString s7 = QString::null, QString s8 = QString::null) :
-		QListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
+		Q3ListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
 
 	/* Custom "key()" function for correct sorting behaviour */
 	virtual QString key(int column, bool ascending) const;
@@ -263,10 +266,10 @@ protected:
 	bool					bTuningInProgress;
 	bool					bShowAll;
 	bool					bReInitOnFrequencyChange;
-	QUrlOperator				UrlUpdateSchedule;
-	QPopupMenu*					pViewMenu;
-	QPopupMenu*					pPreviewMenu;
-	QPopupMenu*					pUpdateMenu;
+	Q3UrlOperator				UrlUpdateSchedule;
+	Q3PopupMenu*					pViewMenu;
+	Q3PopupMenu*					pPreviewMenu;
+	Q3PopupMenu*					pUpdateMenu;
 
 	vector<MyListViewItem*>		vecpListItems;
 	QMutex						ListItemsMutex;
@@ -278,8 +281,8 @@ public slots:
 	void OnTimerEditFrequency();
 	void OnTimerMonitorFrequency();
 	void OnTimerTuning();
-	void OnListItemClicked(QListViewItem* item);
-	void OnUrlFinished(QNetworkOperation* pNetwOp);
+	void OnListItemClicked(Q3ListViewItem* item);
+	void OnUrlFinished(Q3NetworkOperation* pNetwOp);
 	void OnShowStationsMenu(int iID);
 	void OnShowPreviewMenu(int iID);
 	void OnGetUpdate();

@@ -26,6 +26,9 @@
 \******************************************************************************/
 
 #include "MultSettingsDlg.h"
+//Added by qt3to4:
+#include <QShowEvent>
+#include <QHideEvent>
 
 /* Implementation *************************************************************/
 
@@ -92,11 +95,10 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", bool bDele
 
 		dir.setSorting( QDir::DirsFirst );
 
-		const QFileInfoList *list = dir.entryInfoList();
-		QFileInfoListIterator it( *list ); /* create list iterator */
-
-		for(QFileInfo *fi; (fi=it.current()); ++it )
+		QList<QFileInfo> list = dir.entryInfoList();
+		for (int i = 0; i < list.size(); ++i)
 		{
+			const QFileInfo *fi = &list.at(i);
 			/* for each file/dir */
 			/* if directory...=> scan recursive */
 			if (fi->isDir())

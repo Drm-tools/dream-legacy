@@ -65,7 +65,7 @@ protected:
 	/* Wave in */
 	WAVEINCAPS		m_WaveInDevCaps;
 	HWAVEIN			m_WaveIn;
-	HANDLE			m_WaveInEvent;
+	Qt::HANDLE			m_WaveInEvent;
 	WAVEHDR			m_WaveInHeader[NUM_SOUND_BUFFERS_IN];
 	int				iBufferSizeIn;
 	int				iWhichBufferIn;
@@ -101,7 +101,7 @@ protected:
 	HWAVEOUT		m_WaveOut;
 	short*			psPlaybackBuffer[NUM_SOUND_BUFFERS_OUT];
 	WAVEHDR			m_WaveOutHeader[NUM_SOUND_BUFFERS_OUT];
-	HANDLE			m_WaveOutEvent;
+	Qt::HANDLE			m_WaveOutEvent;
 	_BOOLEAN		bBlocking;
 };
 

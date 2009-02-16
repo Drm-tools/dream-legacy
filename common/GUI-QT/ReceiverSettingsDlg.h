@@ -27,6 +27,9 @@
 
 #include "../util/Settings.h"
 #include "qtimer.h"
+//Added by qt3to4:
+#include <QShowEvent>
+#include <QHideEvent>
 
 #include "ReceiverSettingsDlgbase.h"
 
@@ -42,7 +45,7 @@ class ReceiverSettingsDlg : public ReceiverSettingsDlgBase
 public:
 
 	ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~ReceiverSettingsDlg();
 
 protected:
@@ -59,9 +62,9 @@ protected:
 	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
 	bool			loading;
-	QListViewItem*  no_rig;
-	QListViewItem*	no_port;
-	QListViewItem*	last_port;
+	Q3ListViewItem*  no_rig;
+	Q3ListViewItem*	no_port;
+	Q3ListViewItem*	last_port;
 	QTimer			TimerRig;
 	int				iWantedrigModel;
 
@@ -104,6 +107,6 @@ public slots:
 	void OnCheckRecFilter();
 	void OnCheckModiMetric();
 	void OnCheckEnableSMeterToggled(bool);
-	void OnRigSelected(QListViewItem* item);
-	void OnComPortSelected(QListViewItem* item);
+	void OnRigSelected(Q3ListViewItem* item);
+	void OnComPortSelected(Q3ListViewItem* item);
 };

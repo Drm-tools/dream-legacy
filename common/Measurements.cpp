@@ -31,8 +31,7 @@
 CMeasurements::CMeasurements():
     SNRstat(), SigStrstat(),
     MER(),WMERMSC(),WMERFAC(),
-    Doppler(),Delay(),
-    Rdop(),Rdel(),
+    Doppler(),Rdop(),Delay(),Rdel(),
     interference(),
     rMaxPSDwrtSig(0.0), rMaxPSDFreq(0.0),
     bETSIPSD(false),PSD(),inputSpectrum(),

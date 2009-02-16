@@ -30,8 +30,8 @@
 #include "GPSReceiver.h"
 
 #ifdef HAVE_QT
-# include <qsocket.h>
-# include <qsignal.h>
+# include <q3socket.h>
+# include <q3signal.h>
 #endif
 
 #include <sstream>
@@ -67,7 +67,7 @@ void CGPSReceiver::open()
 	Parameters.Unlock();
 	if(m_pSocket == NULL)
 	{
-		m_pSocket = new QSocket();
+		m_pSocket = new Q3Socket();
 		if(m_pSocket == NULL)
 			return;
 

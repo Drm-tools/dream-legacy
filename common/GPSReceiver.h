@@ -32,7 +32,7 @@
 #include "Parameter.h"
 #include "util/Settings.h"
 #ifdef HAVE_QT
-# include <qsocket.h>
+# include <q3socket.h>
 # include <qthread.h>
 # include <qmutex.h>
 # include <qtimer.h>
@@ -62,7 +62,7 @@ protected:
 
 	CParameter&	Parameters;
 	CSettings&	m_Settings;
-	QSocket*	m_pSocket;
+	Q3Socket*	m_pSocket;
 #ifdef HAVE_QT
 	QTimer*		m_pTimer;
 	QTimer*		m_pTimerDataTimeout;

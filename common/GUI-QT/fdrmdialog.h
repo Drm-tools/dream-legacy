@@ -41,6 +41,11 @@
 #include "MultSettingsDlg.h"
 #include "MultColorLED.h"
 #include "../util/Vector.h"
+//Added by qt3to4:
+#include <QShowEvent>
+#include <QHideEvent>
+#include <Q3PopupMenu>
+#include <QCloseEvent>
 
 
 /* Define for application types */
@@ -77,9 +82,9 @@ protected:
 	ReceiverSettingsDlg* pReceiverSettingsDlg;
 	Loghelper			loghelper;
 	QMenuBar*			pMenu;
-	QPopupMenu*			pReceiverModeMenu;
-	QPopupMenu*			pSettingsMenu;
-	QPopupMenu*			pPlotStyleMenu;
+	Q3PopupMenu*			pReceiverModeMenu;
+	Q3PopupMenu*			pSettingsMenu;
+	Q3PopupMenu*			pPlotStyleMenu;
 	int					iCurSelServiceGUI;
 	int					iOldNoServicesGUI;
 	QTimer				Timer;

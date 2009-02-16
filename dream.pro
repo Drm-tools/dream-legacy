@@ -1,15 +1,22 @@
 TEMPLATE	= app
 TARGET		= dream
+QT          += qt3support
 CONFIG		+= qt warn_on release thread
-VPATH		+= common/GUI-QT
 DEFINES		+= HAVE_QT
 INCLUDEPATH	+= libs
+INCLUDEPATH	+= common/GUI-QT
+VPATH		+= common/GUI-QT
 LIBS 		+= -Llibs
-FORMS		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui
-FORMS		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
-FORMS		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
-FORMS		+= MultSettingsDlgbase.ui AboutDlgbase.ui
-FORMS		+= ReceiverSettingsDlgbase.ui LatLongEditDlgbase.ui
+#The following line was changed from FORMS to FORMS3 by qt3to4
+FORMS3		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui
+#The following line was changed from FORMS to FORMS3 by qt3to4
+FORMS3		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
+#The following line was changed from FORMS to FORMS3 by qt3to4
+FORMS3		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
+#The following line was changed from FORMS to FORMS3 by qt3to4
+FORMS3		+= MultSettingsDlgbase.ui AboutDlgbase.ui
+#The following line was changed from FORMS to FORMS3 by qt3to4
+FORMS3		+= ReceiverSettingsDlgbase.ui LatLongEditDlgbase.ui
 
 macx {
 	CONFIG		+= portaudio
@@ -51,7 +58,7 @@ unix {
 }
 
 win32 {
-	TEMPLATE	= vcapp
+#	TEMPLATE	= vcapp
 	debug {
 	OBJECTS_DIR	= windows/Debug
 	}
@@ -60,13 +67,21 @@ win32 {
 	}
 	UI_DIR		= windows/moc
 	MOC_DIR		= windows/moc
-# this next line could be cross platform if the windows library names do not start with lib
-	LIBS 			+= libsndfile-1.lib zdll.lib libqwt.lib
-	LIBS			+= libfaac.lib libfaad.lib
-	LIBS			+= libfftw.lib setupapi.lib
-	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:"MSVCRTD, LIBCMT"
-	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
-	DEFINES		-= UNICODE
+    g++ {
+        LIBS 		+= -lsndfile-1 -lwpcap -lstdc++
+        LIBS 		+= -lz -lfaac -lfaad -lrfftw -lfftw -lqwt5 -lsetupapi -lwinmm -lws2_32
+        DEFINES		+= HAVE_STDINT_H HAVE_STDLIB_H __INTERLOCKED_DECLARED
+        INCLUDEPATH += ../qwt-qt4/include
+        LIBS        += -L../qwt-qt4/lib
+    }
+    msvc {
+        LIBS 			+= libsndfile-1.lib zdll.lib libqwt.lib
+        LIBS			+= libfaac.lib libfaad.lib
+        LIBS			+= libfftw.lib setupapi.lib ws2_32.lib winmm.lib
+        QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:"MSVCRTD, LIBCMT"
+        QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
+    }
+    DEFINES		-= UNICODE
 	DEFINES		+= HAVE_LIBFAAC HAVE_LIBFAAD HAVE_LIBZ
 	DEFINES		+= USE_FAAC_LIBRARY USE_FAAD2_LIBRARY USE_QT_GUI
 	DEFINES		+= HAVE_SETUPAPI
@@ -103,7 +118,8 @@ portaudio {
 	LIBS 		+= -lportaudio
 }
 
-HEADERS		+= common/AMDemodulation.h   \
+HEADERS		+= common/Measurements.h \
+common/AMDemodulation.h   \
 common/AMSSDemodulation.h   \
 common/chanest/ChanEstTime.h   \
 common/chanest/ChannelEstimation.h   \
@@ -233,7 +249,8 @@ common/util/Utilities.h   \
 common/util/Vector.h   \
 common/Version.h
 
-SOURCES		+= common/AMDemodulation.cpp   \
+SOURCES		+= common/Measurements.cpp \
+common/AMDemodulation.cpp   \
 common/AMSSDemodulation.cpp   \
 common/chanest/ChanEstTime.cpp   \
 common/chanest/ChannelEstimation.cpp   \
@@ -345,3 +362,8 @@ common/util/Reassemble.cpp   \
 common/util/Settings.cpp   \
 common/util/Utilities.cpp   \
 common/Version.cpp
+#The following line was inserted by qt3to4
+QT += network xml
+#The following line was inserted by qt3to4
+CONFIG += uic3
+

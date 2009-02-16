@@ -40,6 +40,13 @@
 #endif
 #include "MultimediaDlg.h"
 #include "../datadecoding/Journaline.h"
+//Added by qt3to4:
+#include <Q3TextStream>
+#include <Q3CString>
+#include <QPixmap>
+#include <QHideEvent>
+#include <Q3PopupMenu>
+#include <QShowEvent>
 
 /* Implementation *************************************************************/
 MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
@@ -50,8 +57,8 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 {
 
 	/* Add body's stylesheet */
-	QStyleSheetItem* styleBody =
-		new QStyleSheetItem(TextBrowser->styleSheet(), "stylebody");
+	Q3StyleSheetItem* styleBody =
+		new Q3StyleSheetItem(TextBrowser->styleSheet(), "stylebody");
 
 	styleBody->setFontFamily(fontTextBrowser.family());
 	styleBody->setFontSize(fontTextBrowser.pointSize());
@@ -64,9 +71,9 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 	PixmapLogoJournaline->hide();
 
 	/* Set pictures in source factory */
-	QMimeSourceFactory::defaultFactory()->setImage("PixmapFhGIIS",
+	Q3MimeSourceFactory::defaultFactory()->setImage("PixmapFhGIIS",
 		PixmapFhGIIS->pixmap()->convertToImage());
-	QMimeSourceFactory::defaultFactory()->setImage("PixmapLogoJournaline",
+	Q3MimeSourceFactory::defaultFactory()->setImage("PixmapLogoJournaline",
 		PixmapLogoJournaline->pixmap()->convertToImage());
 
 	/* Set FhG IIS text */
@@ -88,32 +95,32 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 
 	/* Set Menu ***************************************************************/
 	/* File menu ------------------------------------------------------------ */
-	pFileMenu = new QPopupMenu(this);
-	CHECK_PTR(pFileMenu);
+	pFileMenu = new Q3PopupMenu(this);
+	Q_CHECK_PTR(pFileMenu);
 	pFileMenu->insertItem(tr("C&lear all"), this, SLOT(OnClearAll()),
-		CTRL+Key_X, 0);
+		Qt::CTRL+Qt::Key_X, 0);
 	pFileMenu->insertSeparator();
-	pFileMenu->insertItem(tr("&Save..."), this, SLOT(OnSave()), CTRL+Key_S, 1);
+	pFileMenu->insertItem(tr("&Save..."), this, SLOT(OnSave()), Qt::CTRL+Qt::Key_S, 1);
 	pFileMenu->insertItem(tr("Save &all..."), this, SLOT(OnSaveAll()),
-		CTRL+Key_A, 2);
+		Qt::CTRL+Qt::Key_A, 2);
 	pFileMenu->insertSeparator();
 	pFileMenu->insertItem(tr("&Close"), this, SLOT(close()), 0, 3);
 
 
 	/* Settings menu  ------------------------------------------------------- */
-	QPopupMenu* pSettingsMenu = new QPopupMenu(this);
-	CHECK_PTR(pSettingsMenu);
+	Q3PopupMenu* pSettingsMenu = new Q3PopupMenu(this);
+	Q_CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("Set &Font..."), this, SLOT(OnSetFont()));
 
 
 	/* Main menu bar -------------------------------------------------------- */
 	pMenu = new QMenuBar(this);
-	CHECK_PTR(pMenu);
+	Q_CHECK_PTR(pMenu);
 	pMenu->insertItem(tr("&File"), pFileMenu);
 	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
 
 	/* Now tell the layout about the menu */
-	MultimediaDlgBaseLayout->setMenuBar(pMenu);
+	vboxLayout->setMenuBar(pMenu);
 
 	/* Update time for color LED */
 	LEDStatus->SetUpdateTime(1000);
@@ -389,7 +396,7 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 	DataDecoder.GetNews(iCurJourID, News);
 
 	/* Decode UTF-8 coding for title */
-	strTitle = QString().fromUtf8(QCString(News.sTitle.c_str()));
+	strTitle = QString().fromUtf8(Q3CString(News.sTitle.c_str()));
 
 	strItems = "";
 	for (int i = 0; i < News.vecItem.Size(); i++)
@@ -399,7 +406,7 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 		{
 			/* Decode UTF-8 coding of this item text */
 			strCurItem = QString().fromUtf8(
-				QCString(News.vecItem[i].sText.c_str()));
+				Q3CString(News.vecItem[i].sText.c_str()));
 		}
 		else
 		{
@@ -432,7 +439,7 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 					QString("</a></li>");
 
 				/* Store link location in factory (stores ID) */
-				QMimeSourceFactory::defaultFactory()->
+				Q3MimeSourceFactory::defaultFactory()->
 					setText(strLinkStr, strLinkStr);
 			}
 			else
@@ -648,7 +655,7 @@ void MultimediaDlg::SetSlideShowPicture()
 		TextBrowser->setText("<br>");
 
 		/* Set new picture in source factory and set it in text control */
-		QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
+		Q3MimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
 			NewImage.convertToImage());
 
 		TextBrowser->setText("<center><img source=\"MOTSlideShowimage\">"
@@ -771,7 +778,7 @@ void MultimediaDlg::OnSave()
 				strDefFileName += "." + strExt;
 
 		strFileName =
-			QFileDialog::getSaveFileName(strCurrentSavePath + "/" + strDefFileName,
+			Q3FileDialog::getSaveFileName(strCurrentSavePath + "/" + strDefFileName,
 			strFilter, this);
 
 		/* Check if user not hit the cancel button */
@@ -804,7 +811,7 @@ void MultimediaDlg::OnSave()
 				QDateTime().currentDateTime().toString() + "</i></font></p>"
 				"</body>\n</html>";
 
-			strFileName = QFileDialog::getSaveFileName(strCurrentSavePath + "/" +
+			strFileName = Q3FileDialog::getSaveFileName(strCurrentSavePath + "/" +
 				strTitle + ".html", "*.html", this);
 
 			if (!strFileName.isNull())
@@ -814,9 +821,9 @@ void MultimediaDlg::OnSave()
 				/* Save Journaline page as a text stream */
 				QFile FileObj(strFileName);
 
-				if (FileObj.open(IO_WriteOnly))
+				if (FileObj.open(QIODevice::WriteOnly))
 				{
-					QTextStream TextStream(&FileObj);
+					Q3TextStream TextStream(&FileObj);
 					TextStream << strJornalineText; /* Actual writing */
 					FileObj.close();
 				}
@@ -833,7 +840,7 @@ void MultimediaDlg::OnSaveAll()
 {
 	/* Let the user choose a directory */
 	QString strDirName =
-		QFileDialog::getExistingDirectory(NULL, this);
+		Q3FileDialog::getExistingDirectory(NULL, this);
 
 	if (!strDirName.isNull())
 	{
@@ -1140,7 +1147,7 @@ void MultimediaDlg::OnSetFont()
 		fontTextBrowser = newFont;
 
 		/* Change the body stylesheet */
-		QStyleSheetItem* styleBody =
+		Q3StyleSheetItem* styleBody =
 			TextBrowser->styleSheet()->item("stylebody");
 
 		styleBody->setFontFamily(fontTextBrowser.family());

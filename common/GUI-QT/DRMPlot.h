@@ -40,7 +40,11 @@
 #include <qwt_plot_spectrogram.h>
 #include <qpainter.h>
 #include <qtimer.h>
-#include <qwhatsthis.h>
+#include <q3whatsthis.h>
+//Added by qt3to4:
+#include <QShowEvent>
+#include <QMouseEvent>
+#include <QHideEvent>
 #include "../PlotManager.h"
 #include <deque>
 
@@ -50,30 +54,30 @@
 
 /* Define the plot color profiles */
 /* BLUEWHITE */
-#define BLUEWHITE_MAIN_PEN_COLOR_PLOT			blue
-#define BLUEWHITE_MAIN_PEN_COLOR_CONSTELLATION	blue
-#define BLUEWHITE_BCKGRD_COLOR_PLOT				white
-#define BLUEWHITE_MAIN_GRID_COLOR_PLOT			gray
-#define BLUEWHITE_SPEC_LINE1_COLOR_PLOT			red
-#define BLUEWHITE_SPEC_LINE2_COLOR_PLOT			black
+#define BLUEWHITE_MAIN_PEN_COLOR_PLOT			Qt::blue
+#define BLUEWHITE_MAIN_PEN_COLOR_CONSTELLATION	Qt::blue
+#define BLUEWHITE_BCKGRD_COLOR_PLOT				Qt::white
+#define BLUEWHITE_MAIN_GRID_COLOR_PLOT			Qt::gray
+#define BLUEWHITE_SPEC_LINE1_COLOR_PLOT			Qt::red
+#define BLUEWHITE_SPEC_LINE2_COLOR_PLOT			Qt::black
 #define BLUEWHITE_PASS_BAND_COLOR_PLOT			QColor(192, 192, 255)
 
 /* GREENBLACK */
-#define GREENBLACK_MAIN_PEN_COLOR_PLOT			green
-#define GREENBLACK_MAIN_PEN_COLOR_CONSTELLATION	red
-#define GREENBLACK_BCKGRD_COLOR_PLOT			black
+#define GREENBLACK_MAIN_PEN_COLOR_PLOT			Qt::green
+#define GREENBLACK_MAIN_PEN_COLOR_CONSTELLATION	Qt::red
+#define GREENBLACK_BCKGRD_COLOR_PLOT			Qt::black
 #define GREENBLACK_MAIN_GRID_COLOR_PLOT			QColor(128, 0, 0)
-#define GREENBLACK_SPEC_LINE1_COLOR_PLOT		yellow
-#define GREENBLACK_SPEC_LINE2_COLOR_PLOT		blue
+#define GREENBLACK_SPEC_LINE1_COLOR_PLOT		Qt::yellow
+#define GREENBLACK_SPEC_LINE2_COLOR_PLOT		Qt::blue
 #define GREENBLACK_PASS_BAND_COLOR_PLOT			QColor(0, 96, 0)
 
 /* BLACKGREY */
-#define BLACKGREY_MAIN_PEN_COLOR_PLOT			black
-#define BLACKGREY_MAIN_PEN_COLOR_CONSTELLATION	green
-#define BLACKGREY_BCKGRD_COLOR_PLOT				gray
-#define BLACKGREY_MAIN_GRID_COLOR_PLOT			white
-#define BLACKGREY_SPEC_LINE1_COLOR_PLOT			blue
-#define BLACKGREY_SPEC_LINE2_COLOR_PLOT			yellow
+#define BLACKGREY_MAIN_PEN_COLOR_PLOT			Qt::black
+#define BLACKGREY_MAIN_PEN_COLOR_CONSTELLATION	Qt::green
+#define BLACKGREY_BCKGRD_COLOR_PLOT				Qt::gray
+#define BLACKGREY_MAIN_GRID_COLOR_PLOT			Qt::white
+#define BLACKGREY_SPEC_LINE1_COLOR_PLOT			Qt::blue
+#define BLACKGREY_SPEC_LINE2_COLOR_PLOT			Qt::yellow
 #define BLACKGREY_PASS_BAND_COLOR_PLOT			QColor(128, 128, 128)
 
 

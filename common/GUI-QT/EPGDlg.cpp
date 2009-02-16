@@ -29,6 +29,10 @@
 
 #include "EPGDlg.h"
 #include <qregexp.h>
+//Added by qt3to4:
+#include <QShowEvent>
+#include <QPixmap>
+#include <QHideEvent>
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, Qt::WFlags f)
@@ -44,7 +48,7 @@ Settings(NSettings),Timer(),sids()
 		setGeometry(WinGeom);
 
 	/* auto resize of the programme name column */
-	Data->setColumnWidthMode(COL_NAME, QListView::Maximum);
+	Data->setColumnWidthMode(COL_NAME, Q3ListView::Maximum);
 
 	/* Define size of the bitmaps */
 	const int iXSize = 8;
@@ -109,7 +113,7 @@ void EPGDlg::OnTimer()
 		if (date == todayUTC) /* if today */
 		{
 			/* Extract values from the list */
-			QListViewItem * myItem = Data->firstChild();
+			Q3ListViewItem * myItem = Data->firstChild();
 
 			while( myItem )
 			{
@@ -226,7 +230,7 @@ void EPGDlg::setYear(int n)
 
 void EPGDlg::select()
 {
-	QListViewItem* CurrActiveItem = NULL;
+	Q3ListViewItem* CurrActiveItem = NULL;
 
     if (!do_updates)
 	    return;
@@ -240,7 +244,7 @@ void EPGDlg::select()
     d.day = date.day();
     epg.select(sids[chan], d);
     if(epg.progs.count()==0) {
-	    (void) new QListViewItem(Data, tr("no data"));
+	    (void) new Q3ListViewItem(Data, tr("no data"));
 	    return;
     }
     Data->setSorting(COL_START);
@@ -290,7 +294,7 @@ void EPGDlg::select()
 				}
 			}
 		}
-	    QListViewItem* CurrItem = new QListViewItem(Data, s_start, name, genre, description, s_duration);
+	    Q3ListViewItem* CurrItem = new Q3ListViewItem(Data, s_start, name, genre, description, s_duration);
 
 		/* Get current UTC time */
 		time_t ltime;

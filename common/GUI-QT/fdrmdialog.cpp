@@ -34,14 +34,18 @@
 #include <qtimer.h>
 #include <qstring.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
+#include <q3popupmenu.h>
 #include <qwt_thermo.h>
 #include <qevent.h>
-#include <qcstring.h>
+#include <q3cstring.h>
 #include <qlayout.h>
-#include <qwhatsthis.h>
+#include <q3whatsthis.h>
 #include <qpalette.h>
 #include <qcolordialog.h>
+//Added by qt3to4:
+#include <QHideEvent>
+#include <QShowEvent>
+#include <QCloseEvent>
 #include <fstream>
 
 /* Implementation *************************************************************/
@@ -65,38 +69,38 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
-	QPopupMenu* EvalWinMenu = new QPopupMenu(this);
-	CHECK_PTR(EvalWinMenu);
+	Q3PopupMenu* EvalWinMenu = new Q3PopupMenu(this);
+	Q_CHECK_PTR(EvalWinMenu);
 	EvalWinMenu->insertItem(tr("&Evaluation Dialog..."), this,
-		SLOT(OnViewEvalDlg()), CTRL+Key_E, 0);
+		SLOT(OnViewEvalDlg()), Qt::CTRL+Qt::Key_E, 0);
 	EvalWinMenu->insertItem(tr("M&ultimedia Dialog..."), this,
-		SLOT(OnViewMultiMediaDlg()), CTRL+Key_U, 1);
+		SLOT(OnViewMultiMediaDlg()), Qt::CTRL+Qt::Key_U, 1);
 	EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
-		SLOT(OnViewStationsDlg()), CTRL+Key_T, 2);
+		SLOT(OnViewStationsDlg()), Qt::CTRL+Qt::Key_T, 2);
 	EvalWinMenu->insertItem(tr("&Live Schedule Dialog..."), this,
-		SLOT(OnViewLiveScheduleDlg()), CTRL+Key_L, 3);
+		SLOT(OnViewLiveScheduleDlg()), Qt::CTRL+Qt::Key_L, 3);
 	EvalWinMenu->insertItem(tr("&Programme Guide..."), this,
-		SLOT(OnViewEPGDlg()), CTRL+Key_P, 4);
+		SLOT(OnViewEPGDlg()), Qt::CTRL+Qt::Key_P, 4);
 	EvalWinMenu->insertSeparator();
-	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q, 5);
+	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), Qt::CTRL+Qt::Key_Q, 5);
 
 	/* Settings menu  ------------------------------------------------------- */
-	pSettingsMenu = new QPopupMenu(this);
-	CHECK_PTR(pSettingsMenu);
+	pSettingsMenu = new Q3PopupMenu(this);
+	Q_CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
 		new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(),
 		DRMReceiver.GetSoundOutInterface(), this));
 
 	pSettingsMenu->insertItem(tr("&AM (analog)"), this,
-		SLOT(OnSwitchToAM()), CTRL+Key_A);
+		SLOT(OnSwitchToAM()), Qt::CTRL+Qt::Key_A);
 	pSettingsMenu->insertItem(tr("New &DRM Acquisition"), this,
-		SLOT(OnNewDRMAcquisition()), CTRL+Key_D);
+		SLOT(OnNewDRMAcquisition()), Qt::CTRL+Qt::Key_D);
 	pSettingsMenu->insertSeparator();
 	pSettingsMenu->insertItem(tr("Set D&isplay Color..."), this,
 		SLOT(OnMenuSetDisplayColor()));
 
 	/* Plot style settings */
-	pPlotStyleMenu = new QPopupMenu(this);
+	pPlotStyleMenu = new Q3PopupMenu(this);
 	pPlotStyleMenu->insertItem(tr("&Blue / White"), this,
 		SLOT(OnMenuPlotStyle(int)), 0, 0);
 	pPlotStyleMenu->insertItem(tr("&Green / Black"), this,
@@ -118,15 +122,14 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Main menu bar -------------------------------------------------------- */
 	pMenu = new QMenuBar(this);
-	CHECK_PTR(pMenu);
+	Q_CHECK_PTR(pMenu);
 	pMenu->insertItem(tr("&View"), EvalWinMenu);
 	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
 	pMenu->insertItem(tr("&?"), new CDreamHelpMenu(this));
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
-	FDRMDialogBaseLayout->setMenuBar(pMenu);
-
+	vboxLayout->setMenuBar(pMenu);
 
 	/* Digi controls */
 	/* Set display color */
@@ -184,7 +187,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* receiver settings window */
 	CParameter& Parameters = *DRMReceiver.GetParameters();
-	pReceiverSettingsDlg = new ReceiverSettingsDlg(DRMReceiver, Settings, this, "", true, Qt::WStyle_Dialog);
+	pReceiverSettingsDlg = new ReceiverSettingsDlg(DRMReceiver, Settings, this, "", true, Qt::WType_Dialog);
 	SetDialogCaption(pReceiverSettingsDlg, tr("Receiver settings"));
 
 	/* Analog demodulation window */
@@ -382,7 +385,7 @@ void FDRMDialog::UpdateDisplay()
 
 		/* Text message of current selected audio service
 		   (UTF-8 decoding) */
-		QCString utf8Message = Parameters.AudioParam[iAudioStream].strTextMessage.c_str();
+		Q3CString utf8Message = Parameters.AudioParam[iAudioStream].strTextMessage.c_str();
 		QString textMessage = QString().fromUtf8(utf8Message);
 		QString formattedMessage = "";
 		for (size_t i = 0; i < textMessage.length(); i++)
@@ -434,7 +437,7 @@ void FDRMDialog::UpdateDisplay()
 	if (Parameters.Service[iCurSelAudioServ].IsActive())
 	{
 		/* Service label (UTF-8 encoded string -> convert) */
-		LabelServiceLabel->setText(QString().fromUtf8(QCString(
+		LabelServiceLabel->setText(QString().fromUtf8(Q3CString(
 			Parameters.Service[iCurSelAudioServ].
 			strLabel.c_str())));
 
@@ -620,7 +623,7 @@ void FDRMDialog::UpdateDisplay()
 		{
 			/* Do UTF-8 to string conversion with the label strings */
 			QString strLabel = QString().fromUtf8(
-			QCString(Parameters.Service[i].strLabel.c_str()));
+			Q3CString(Parameters.Service[i].strLabel.c_str()));
 
 			/* Label for service selection button (service label, codec
 			   and Mono / Stereo information) */
@@ -1067,7 +1070,7 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 		* that manages startup and close-down */
 		DRMReceiver.Stop();
 		(void)DRMReceiver.wait(5000);
-		if(!DRMReceiver.finished())
+		if(!DRMReceiver.isFinished())
 		{
 			QMessageBox::critical(this, "Dream", "Exit\n",
 				"Termination of working thread failed");
@@ -1307,14 +1310,14 @@ void FDRMDialog::SetDisplayColor(const QColor newColor)
 		   black color of the text */
 		if (vecpWidgets[i] == TextTextMessage)
 		{
-			CurPal.setColor(QPalette::Active, QColorGroup::Text, black);
-			CurPal.setColor(QPalette::Active, QColorGroup::Foreground, black);
-			CurPal.setColor(QPalette::Inactive, QColorGroup::Text, black);
-			CurPal.setColor(QPalette::Inactive, QColorGroup::Foreground, black);
+			CurPal.setColor(QPalette::Active, QColorGroup::Text, Qt::black);
+			CurPal.setColor(QPalette::Active, QColorGroup::Foreground, Qt::black);
+			CurPal.setColor(QPalette::Inactive, QColorGroup::Text, Qt::black);
+			CurPal.setColor(QPalette::Inactive, QColorGroup::Foreground, Qt::black);
 
 			/* We need to specify special color for disabled */
-			CurPal.setColor(QPalette::Disabled, QColorGroup::Light, black);
-			CurPal.setColor(QPalette::Disabled, QColorGroup::Dark, black);
+			CurPal.setColor(QPalette::Disabled, QColorGroup::Light, Qt::black);
+			CurPal.setColor(QPalette::Disabled, QColorGroup::Dark, Qt::black);
 		}
 
 		/* Set new palette */
@@ -1328,7 +1331,7 @@ void FDRMDialog::AddWhatsThisHelp()
 	This text was taken from the only documentation of Dream software
 */
 	/* Text Message */
-	QWhatsThis::add(TextTextMessage,
+	Q3WhatsThis::add(TextTextMessage,
 		tr("<b>Text Message:</b> On the top right the text "
 		"message label is shown. This label only appears when an actual text "
 		"message is transmitted. If the current service does not transmit a "
@@ -1343,8 +1346,8 @@ void FDRMDialog::AddWhatsThisHelp()
 		"performance. Too low levels should be avoided too, since in this case "
 		"the Signal-to-Noise Ratio (SNR) degrades.");
 
-	QWhatsThis::add(TextLabelInputLevel, strInputLevel);
-	QWhatsThis::add(ProgrInputLevel, strInputLevel);
+	Q3WhatsThis::add(TextLabelInputLevel, strInputLevel);
+	Q3WhatsThis::add(ProgrInputLevel, strInputLevel);
 
 	/* Status LEDs */
 	const QString strStatusLEDS =
@@ -1352,9 +1355,9 @@ void FDRMDialog::AddWhatsThisHelp()
 		"the current CRC status of the three logical channels of a DRM stream. "
 		"These LEDs are the same as the top LEDs on the Evaluation Dialog.");
 
-	QWhatsThis::add(CLED_MSC, strStatusLEDS);
-	QWhatsThis::add(CLED_SDC, strStatusLEDS);
-	QWhatsThis::add(CLED_FAC, strStatusLEDS);
+	Q3WhatsThis::add(CLED_MSC, strStatusLEDS);
+	Q3WhatsThis::add(CLED_SDC, strStatusLEDS);
+	Q3WhatsThis::add(CLED_FAC, strStatusLEDS);
 
 	/* Station Label and Info Display */
 	const QString strStationLabelOther =
@@ -1379,15 +1382,15 @@ void FDRMDialog::AddWhatsThisHelp()
 		"transmitted in a different logical channel of a DRM stream. On the "
 		"right, the ID number connected with this service is shown.");
 
-	QWhatsThis::add(LabelBitrate, strStationLabelOther);
-	QWhatsThis::add(LabelCodec, strStationLabelOther);
-	QWhatsThis::add(LabelStereoMono, strStationLabelOther);
-	QWhatsThis::add(LabelServiceLabel, strStationLabelOther);
-	QWhatsThis::add(LabelProgrType, strStationLabelOther);
-	QWhatsThis::add(LabelServiceID, strStationLabelOther);
-	QWhatsThis::add(LabelLanguage, strStationLabelOther);
-	QWhatsThis::add(LabelCountryCode, strStationLabelOther);
-	QWhatsThis::add(FrameAudioDataParams, strStationLabelOther);
+	Q3WhatsThis::add(LabelBitrate, strStationLabelOther);
+	Q3WhatsThis::add(LabelCodec, strStationLabelOther);
+	Q3WhatsThis::add(LabelStereoMono, strStationLabelOther);
+	Q3WhatsThis::add(LabelServiceLabel, strStationLabelOther);
+	Q3WhatsThis::add(LabelProgrType, strStationLabelOther);
+	Q3WhatsThis::add(LabelServiceID, strStationLabelOther);
+	Q3WhatsThis::add(LabelLanguage, strStationLabelOther);
+	Q3WhatsThis::add(LabelCountryCode, strStationLabelOther);
+	Q3WhatsThis::add(FrameAudioDataParams, strStationLabelOther);
 
 	/* Service Selectors */
 	const QString strServiceSel =
@@ -1407,12 +1410,12 @@ void FDRMDialog::AddWhatsThisHelp()
 		"In this case the alternative frequencies can be viewed by opening the Live Schedule Dialog."
 	);
 
-	QWhatsThis::add(PushButtonService1, strServiceSel);
-	QWhatsThis::add(PushButtonService2, strServiceSel);
-	QWhatsThis::add(PushButtonService3, strServiceSel);
-	QWhatsThis::add(PushButtonService4, strServiceSel);
-	QWhatsThis::add(TextMiniService1, strServiceSel);
-	QWhatsThis::add(TextMiniService2, strServiceSel);
-	QWhatsThis::add(TextMiniService3, strServiceSel);
-	QWhatsThis::add(TextMiniService4, strServiceSel);
+	Q3WhatsThis::add(PushButtonService1, strServiceSel);
+	Q3WhatsThis::add(PushButtonService2, strServiceSel);
+	Q3WhatsThis::add(PushButtonService3, strServiceSel);
+	Q3WhatsThis::add(PushButtonService4, strServiceSel);
+	Q3WhatsThis::add(TextMiniService1, strServiceSel);
+	Q3WhatsThis::add(TextMiniService2, strServiceSel);
+	Q3WhatsThis::add(TextMiniService3, strServiceSel);
+	Q3WhatsThis::add(TextMiniService4, strServiceSel);
 }

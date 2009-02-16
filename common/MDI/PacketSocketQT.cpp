@@ -37,7 +37,7 @@
 
 CPacketSocketQT::CPacketSocketQT():
 	pPacketSink(NULL), HostAddrOut(), iHostPortOut(-1),
-	SocketDevice(QSocketDevice:: Datagram /* UDP */ ),
+	SocketDevice(Q3SocketDevice:: Datagram /* UDP */ ),
 	pSocketNotivRead(NULL)
 {
 	/* Generate the socket notifier and connect the signal */
@@ -90,8 +90,8 @@ CPacketSocketQT::SendPacket(const vector < _BYTE > &vecbydata, uint32_t addr, ui
 	   is listening, or the interface is down, there is no route */
 	if(bytes_written == -1)
 	{
-		QSocketDevice::Error x = SocketDevice.error();
-		if(x != QSocketDevice::NetworkFailure)
+		Q3SocketDevice::Error x = SocketDevice.error();
+		if(x != Q3SocketDevice::NetworkFailure)
 			qDebug("error sending packet");
 	}
 }

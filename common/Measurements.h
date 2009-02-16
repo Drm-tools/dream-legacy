@@ -235,8 +235,11 @@ T CMinMaxMean<T>::getCurrent() const
 }
 
 template<typename T>
-bool CMinMaxMean<T>::getCurrent(T&) const
+bool CMinMaxMean<T>::getCurrent(T& val) const
 {
+    if(validdata)
+        val = cur;
+    return validdata;
 }
 
 template<typename T>

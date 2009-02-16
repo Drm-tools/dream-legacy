@@ -27,6 +27,8 @@
 
 #include "LatLongEditDlgbase.h"
 #include <qlineedit.h>
+//Added by qt3to4:
+#include <QShowEvent>
 
 /* Definitions ****************************************************************/
 
@@ -38,7 +40,7 @@ class LatLongEditDlg : public LatLongEditDlgbase
 public:
 
 	LatLongEditDlg(QLineEdit* s,
-		QWidget* parent = 0, const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		QWidget* parent = 0, const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~LatLongEditDlg();
 
 protected:

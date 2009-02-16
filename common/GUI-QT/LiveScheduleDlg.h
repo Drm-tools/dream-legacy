@@ -25,22 +25,25 @@
  *
 \******************************************************************************/
 
-#include <qheader.h>
-#include <qlistview.h>
+#include <q3header.h>
+#include <q3listview.h>
 #include <qpixmap.h>
 #include <qradiobutton.h>
 #include <qtimer.h>
 #include <qmessagebox.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
+#include <q3popupmenu.h>
 #include <qlayout.h>
-#include <qwhatsthis.h>
+#include <q3whatsthis.h>
 #include <qlabel.h>
-#include <qfiledialog.h>
-#include <qtextstream.h>
+#include <q3filedialog.h>
+#include <q3textstream.h>
 #include <qcheckbox.h>
 #include <qthread.h>
-#include <qfiledialog.h>
+#include <q3filedialog.h>
+//Added by qt3to4:
+#include <QShowEvent>
+#include <QHideEvent>
 
 #include "LiveScheduleDlgbase.h"
 #include "../DrmReceiver.h"
@@ -125,14 +128,14 @@ protected:
 	double		dReceiverLongitude;
 };
 
-class MyListLiveViewItem : public QListViewItem
+class MyListLiveViewItem : public Q3ListViewItem
 {
 public:
-	MyListLiveViewItem(QListView* parent, QString s1, QString s2 = QString::null,
+	MyListLiveViewItem(Q3ListView* parent, QString s1, QString s2 = QString::null,
 		QString s3 = QString::null, QString s4 = QString::null,
 		QString s5 = QString::null, QString s6 = QString::null,
 		QString s7 = QString::null, QString s8 = QString::null) :
-		QListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
+		Q3ListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
 
 	/* Custom "key()" function for correct sorting behaviour */
 	virtual QString key(int column, bool ascending) const;
@@ -180,9 +183,9 @@ protected:
 	QTimer						TimerList;
 	QTimer						TimerUTCLabel;
 	bool					bShowAll;
-	QPopupMenu*					pViewMenu;
-	QPopupMenu*					pPreviewMenu;
-	QPopupMenu*					pFileMenu;
+	Q3PopupMenu*					pViewMenu;
+	Q3PopupMenu*					pPreviewMenu;
+	Q3PopupMenu*					pFileMenu;
 
 	vector<MyListLiveViewItem*>	vecpListItems;
 	QMutex						ListItemsMutex;

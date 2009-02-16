@@ -27,12 +27,14 @@
 \******************************************************************************/
 
 #include <iostream>
+//Added by qt3to4:
+#include <QShowEvent>
 using namespace std;
 #include <qstringlist.h>
 #include <qlabel.h>
 #include <qcombobox.h>
 #include <qpushbutton.h>
-#include <qwhatsthis.h>
+#include <q3whatsthis.h>
 #include <qvalidator.h>
 #include "LatLongEditDlg.h"
 #include "ReceiverSettingsDlg.h"
@@ -110,7 +112,7 @@ void LatLongEditDlg::AddWhatsThisHelp()
 		" are inside the target area of this transmission.<br>"
 		"Receiver coordinates are also saved into the Log file.");
 
-    QWhatsThis::add(LineEditDegrees, strGPS);
-    QWhatsThis::add(LineEditMinutes, strGPS);
-    QWhatsThis::add(ComboBoxNSEW, strGPS);
+    Q3WhatsThis::add(LineEditDegrees, strGPS);
+    Q3WhatsThis::add(LineEditMinutes, strGPS);
+    Q3WhatsThis::add(ComboBoxNSEW, strGPS);
 }

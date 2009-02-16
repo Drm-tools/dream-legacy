@@ -29,26 +29,29 @@
 #ifndef _MULTIMEDIADLG_H
 #define _MULTIMEDIADLG_H
 
-#include <qtextbrowser.h>
+#include <q3textbrowser.h>
 #include <qmime.h>
 #include <qimage.h>
 #include <qtimer.h>
 #include <qpushbutton.h>
 #include <qlabel.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
+#include <q3popupmenu.h>
 #include <qlayout.h>
-#include <qfiledialog.h>
+#include <q3filedialog.h>
 #include <qdatetime.h>
 #include <qregexp.h>
 #include <qtooltip.h>
-#include <qtextstream.h>
+#include <q3textstream.h>
 #include <qfileinfo.h>
 #include <qdir.h>
 #include <qmessagebox.h>
 #include <qfontdialog.h>
 #include <qfont.h>
-#include <qstylesheet.h>
+#include <q3stylesheet.h>
+//Added by qt3to4:
+#include <QShowEvent>
+#include <QHideEvent>
 
 #include "MultimediaDlgbase.h"
 #include "MultColorLED.h"
@@ -116,7 +119,7 @@ protected:
 
 	QTimer					Timer;
 	QMenuBar*				pMenu;
-	QPopupMenu*				pFileMenu;
+	Q3PopupMenu*				pFileMenu;
 	virtual void			showEvent(QShowEvent* pEvent);
 	virtual void			hideEvent(QHideEvent* pEvent);
 	CVector<CMOTObject>		vecRawImages;

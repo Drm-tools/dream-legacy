@@ -6,7 +6,7 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
@@ -101,7 +101,7 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 	/* Set symbol number for output vector */
-	(*pvecOutputData).GetExData().iSymbolID = 
+	(*pvecOutputData).GetExData().iSymbolID =
 		(*pvecInputData).GetExData().iSymbolID;
 }
 

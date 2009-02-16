@@ -31,12 +31,15 @@
 #include "../util/Utilities.h"
 #include <vector>
 #include <qtimer.h>
+//Added by qt3to4:
+#include <QCloseEvent>
+#include <Q3PopupMenu>
 
 /* Classes ********************************************************************/
 class CDRMTransmitterInterface;
 class CSettings;
 class QMenuBar;
-class QPopupMenu;
+class Q3PopupMenu;
 
 class TransmDialog : public TransmDlgBase
 {
@@ -87,7 +90,7 @@ protected:
 	virtual void		closeEvent(QCloseEvent* ce);
 
 	QMenuBar*			pMenu;
-	QPopupMenu*			pSettingsMenu;
+	Q3PopupMenu*			pSettingsMenu;
 	QTimer				Timer;
 
 	CDRMTransmitterInterface&	DRMTransmitter;
@@ -131,14 +134,14 @@ public slots:
 	void OnComboBoxStreamTypeActivated(int item);
 	void OnComboBoxPacketsPerFrameActivated(const QString& str);
 	void OnLineEditPacketLenChanged(const QString& str);
-	void OnStreamsListItemClicked(QListViewItem* item);
+	void OnStreamsListItemClicked(Q3ListViewItem* item);
 
 	/* services */
 	void OnTextChangedServiceLabel(const QString& strLabel);
 	void OnTextChangedServiceID(const QString& strID);
 	void OnButtonAddService();
 	void OnButtonDeleteService();
-	void OnServicesListItemClicked(QListViewItem* item);
+	void OnServicesListItemClicked(Q3ListViewItem* item);
 
     /* MDI Input */
 	void OnLineEditMDIinPortChanged(const QString& str);
@@ -158,7 +161,7 @@ public slots:
 	void OnLineEditMDIOutAddrChanged(const QString& str);
 	void OnLineEditMDIOutputFileChanged(const QString& str);
 	void OnLineEditMDIoutPortChanged(const QString& str);
-	void OnMDIOutListItemClicked(QListViewItem* item);
+	void OnMDIOutListItemClicked(Q3ListViewItem* item);
 
     /* COFDM */
 	void OnComboBoxCOFDMDestActivated(int iID);
@@ -169,5 +172,5 @@ public slots:
 	void OnButtonCOFDMAddFile();
 	void OnButtonCOFDMDeleteSelected();
 	void OnButtonCOFDMBrowse();
-	void OnCOFDMOutListItemClicked(QListViewItem* item);
+	void OnCOFDMOutListItemClicked(Q3ListViewItem* item);
 };

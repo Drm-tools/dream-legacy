@@ -48,6 +48,8 @@
 # include <qapplication.h>
 # include <qthread.h>
 # include <qmessagebox.h>
+//Added by qt3to4:
+#include <QTranslator>
 # include "fdrmdialog.h"
 # include "TransmDlg.h"
 #endif

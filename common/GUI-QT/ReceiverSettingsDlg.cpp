@@ -30,20 +30,24 @@
  *
 \******************************************************************************/
 
-#include <qlistview.h>
-#include <qfiledialog.h>
+#include <q3listview.h>
+#include <q3filedialog.h>
 #include <qlabel.h>
 #include <qlineedit.h>
 #include <qcombobox.h>
 #include <qpushbutton.h>
-#include <qwhatsthis.h>
+#include <q3whatsthis.h>
 #include <qvalidator.h>
 #include <qmessagebox.h>
 #include <qcheckbox.h>
 #include <qslider.h>
 #include <qradiobutton.h>
-#include <qbuttongroup.h>
+#include <q3buttongroup.h>
 #include <qtabwidget.h>
+//Added by qt3to4:
+#include <QPixmap>
+#include <QHideEvent>
+#include <QShowEvent>
 #include "ReceiverSettingsDlg.h"
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
@@ -80,7 +84,7 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	bool bEnableRig = true;
 #ifdef HAVE_LIBHAMLIB
 	/* Rig Selection */
-	ListViewRig->setSelectionMode(QListView::Single);
+	ListViewRig->setSelectionMode(Q3ListView::Single);
 	ListViewRig->setRootIsDecorated(true);
 	ListViewRig->setAllColumnsShowFocus(true);
 	ListViewRig->setColumnText(0, "Rig");
@@ -88,7 +92,7 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	ListViewRig->addColumn("Status");
 	ListViewRig->clear();
 	/* COM port selection --------------------------------------------------- */
-	ListViewPort->setSelectionMode(QListView::Single);
+	ListViewPort->setSelectionMode(Q3ListView::Single);
 	ListViewPort->setAllColumnsShowFocus(true);
 	ListViewPort->setColumnText(0, tr("Name"));
 	ListViewPort->addColumn(tr("Port"));
@@ -153,10 +157,10 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 
 	connect(CheckBoxEnableSMeter, SIGNAL(toggled(bool)), this, SLOT(OnCheckEnableSMeterToggled(bool)));
 
-	connect(ListViewRig, SIGNAL(selectionChanged(QListViewItem*)),
-		this, SLOT(OnRigSelected(QListViewItem*)));
-	connect(ListViewPort, SIGNAL(selectionChanged(QListViewItem*)),
-		this, SLOT(OnComPortSelected(QListViewItem*)));
+	connect(ListViewRig, SIGNAL(selectionChanged(Q3ListViewItem*)),
+		this, SLOT(OnRigSelected(Q3ListViewItem*)));
+	connect(ListViewPort, SIGNAL(selectionChanged(Q3ListViewItem*)),
+		this, SLOT(OnComPortSelected(Q3ListViewItem*)));
 
 	connect(&TimerRig, SIGNAL(timeout()), this, SLOT(OnTimerRig()));
 
@@ -165,7 +169,7 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-	QButtonGroup* bg = new QButtonGroup(this);
+	Q3ButtonGroup* bg = new Q3ButtonGroup(this);
 	bg->hide();
 	bg->insert(RadioButtonAll, 0);
 	bg->insert(RadioButtonPerMode, 1);
@@ -312,19 +316,19 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 
 // TODO chose one rig for everything or a rig per band
 	map<rig_model_t, CRigCaps> rigs;
-	map<string,QListViewItem*> manufacturers;
+	map<string,Q3ListViewItem*> manufacturers;
 	rig_model_t current = DRMReceiver.GetRigModel();
 
 	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
 
 	DRMReceiver.GetRigList(rigs);
 
-	no_rig = new QListViewItem(new QListViewItem(ListViewRig, tr("[None]")), tr("None"), "0", "");
-	QListViewItem* selected_rig = no_rig;
+	no_rig = new Q3ListViewItem(new Q3ListViewItem(ListViewRig, tr("[None]")), tr("None"), "0", "");
+	Q3ListViewItem* selected_rig = no_rig;
 	for (map<rig_model_t, CRigCaps>::const_iterator i=rigs.begin(); i!=rigs.end(); i++)
 	{
 		/* Store model ID */
-		QListViewItem* man, *model=NULL;
+		Q3ListViewItem* man, *model=NULL;
 		rig_model_t iModelID = i->first;
 		const CRigCaps& rig = i->second;
 
@@ -332,10 +336,10 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		if(rig.hamlib_caps.mfg_name == NULL)
 			continue;
 		m = rig.hamlib_caps.mfg_name;
-		map<string,QListViewItem*>::const_iterator mfr = manufacturers.find(m);
+		map<string,Q3ListViewItem*>::const_iterator mfr = manufacturers.find(m);
 		if(mfr==manufacturers.end())
 		{
-			manufacturers[m] = man = new QListViewItem(ListViewRig, m.c_str());
+			manufacturers[m] = man = new Q3ListViewItem(ListViewRig, m.c_str());
 		}
 		else
 		{
@@ -345,7 +349,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		if(iModelID<0)
 		{
 			string model_name = string(rig.hamlib_caps.model_name)+" (DRM)";
-			model = new QListViewItem(
+			model = new Q3ListViewItem(
 				man,
 				model_name.c_str(),
 				QString::number(iModelID),
@@ -356,7 +360,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		}
 		else
 		{
-			model = new QListViewItem(
+			model = new Q3ListViewItem(
 				man, rig.hamlib_caps.model_name,
 				QString::number(iModelID),
 				rig_strstatus(rig.hamlib_caps.status)
@@ -370,12 +374,12 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	}
 
 	/* COM port selection --------------------------------------------------- */
-	no_port = new QListViewItem(ListViewPort, tr("None"), "");
+	no_port = new Q3ListViewItem(ListViewPort, tr("None"), "");
 	map<string,string> ports;
 	DRMReceiver.GetComPortList(ports);
 	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
 	{
-		last_port = new QListViewItem(ListViewPort, p->first.c_str(), p->second.c_str());
+		last_port = new Q3ListViewItem(ListViewPort, p->first.c_str(), p->second.c_str());
 	}
 
 	checkRig(current);
@@ -599,7 +603,7 @@ void ReceiverSettingsDlg::OnCheckSaveAudioWAV()
 	{
 		/* Show "save file" dialog */
 		QString strFileName =
-			QFileDialog::getSaveFileName(tr("DreamOut.wav"), "*.wav", this);
+			Q3FileDialog::getSaveFileName(tr("DreamOut.wav"), "*.wav", this);
 
 		/* Check if user not hit the cancel button */
 		if (!strFileName.isNull())
@@ -669,7 +673,7 @@ void ReceiverSettingsDlg::checkRig(int iID)
 		if(strPort!="")
 		{
 			last_port = no_port;
-			QListViewItemIterator it( ListViewPort );
+			Q3ListViewItemIterator it( ListViewPort );
 			for ( ; it.current(); ++it )
 			{
 				if ( it.current()->text(1).latin1() == strPort.c_str() )
@@ -687,7 +691,7 @@ void ReceiverSettingsDlg::checkRig(int iID)
 #endif
 }
 
-void ReceiverSettingsDlg::OnRigSelected(QListViewItem* item)
+void ReceiverSettingsDlg::OnRigSelected(Q3ListViewItem* item)
 {
 	if(loading)
 		return;
@@ -758,7 +762,7 @@ void ReceiverSettingsDlg::OnTimerRig()
 #endif
 }
 
-void ReceiverSettingsDlg::OnComPortSelected(QListViewItem* item)
+void ReceiverSettingsDlg::OnComPortSelected(Q3ListViewItem* item)
 {
 	if(loading)
 		return;
@@ -779,10 +783,10 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		" are inside the target area of this transmission.<br>"
 		"Receiver coordinates are also saved into the Log file.");
 
-    QWhatsThis::add(LineEditLatDegrees, strGPS);
-    QWhatsThis::add(LineEditLatMinutes, strGPS);
-    QWhatsThis::add(LineEditLngDegrees, strGPS);
-    QWhatsThis::add(LineEditLngMinutes, strGPS);
+    Q3WhatsThis::add(LineEditLatDegrees, strGPS);
+    Q3WhatsThis::add(LineEditLatMinutes, strGPS);
+    Q3WhatsThis::add(LineEditLngDegrees, strGPS);
+    Q3WhatsThis::add(LineEditLngMinutes, strGPS);
 
 	/* MLC, Number of Iterations */
 	const QString strNumOfIterations =
@@ -798,29 +802,29 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		"<br>The recommended number of iterations given in the DRM "
 		"standard is one iteration (number of iterations = 1).");
 
-	QWhatsThis::add(TextNumOfIterations, strNumOfIterations);
-	QWhatsThis::add(SliderNoOfIterations, strNumOfIterations);
+	Q3WhatsThis::add(TextNumOfIterations, strNumOfIterations);
+	Q3WhatsThis::add(SliderNoOfIterations, strNumOfIterations);
 
 	/* Flip Input Spectrum */
-	QWhatsThis::add(CheckBoxFlipSpec,
+	Q3WhatsThis::add(CheckBoxFlipSpec,
 		tr("<b>Flip Input Spectrum:</b> Checking this box "
 		"will flip or invert the input spectrum. This is necessary if the "
 		"mixer in the front-end uses the lower side band."));
 
 	/* Mute Audio */
-	QWhatsThis::add(CheckBoxMuteAudio,
+	Q3WhatsThis::add(CheckBoxMuteAudio,
 		tr("<b>Mute Audio:</b> The audio can be muted by "
 		"checking this box. The reaction of checking or unchecking this box "
 		"is delayed by approx. 1 second due to the audio buffers."));
 
 	/* Reverberation Effect */
-	QWhatsThis::add(CheckBoxReverb,
+	Q3WhatsThis::add(CheckBoxReverb,
 		tr("<b>Reverberation Effect:</b> If this check box is checked, a "
 		"reverberation effect is applied each time an audio drop-out occurs. "
 		"With this effect it is possible to mask short drop-outs."));
 
 	/* Log File */
-	QWhatsThis::add(CheckBoxWriteLog,
+	Q3WhatsThis::add(CheckBoxWriteLog,
 		tr("<b>Log File:</b> Checking this box brings the "
 		"Dream software to write a log file about the current reception. "
 		"Every minute the average SNR, number of correct decoded FAC and "
@@ -848,8 +852,8 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		"uses estimation of the statistics of the channel to design an optimal "
 		"filter for noise reduction.");
 
-	QWhatsThis::add(RadioButtonFreqWiener, strWienerChanEst);
-	QWhatsThis::add(RadioButtonTiWiener, strWienerChanEst);
+	Q3WhatsThis::add(RadioButtonFreqWiener, strWienerChanEst);
+	Q3WhatsThis::add(RadioButtonTiWiener, strWienerChanEst);
 
 	/* Linear */
 	const QString strLinearChanEst =
@@ -864,11 +868,11 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		"interpolated. This algorithm causes the lowest CPU load but "
 		"performs much worse than the Wiener interpolation at low SNRs.");
 
-	QWhatsThis::add(RadioButtonFreqLinear, strLinearChanEst);
-	QWhatsThis::add(RadioButtonTiLinear, strLinearChanEst);
+	Q3WhatsThis::add(RadioButtonFreqLinear, strLinearChanEst);
+	Q3WhatsThis::add(RadioButtonTiLinear, strLinearChanEst);
 
 	/* DFT Zero Pad */
-	QWhatsThis::add(RadioButtonFreqDFT,
+	Q3WhatsThis::add(RadioButtonFreqDFT,
 		tr("<b>Channel Estimation Settings:</b> With these "
 		"settings, the channel estimation method in time and frequency "
 		"direction can be selected. The default values use the most powerful "
@@ -883,20 +887,20 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		"of the OFDM spectrum due to the leakage effect."));
 
 	/* Guard Energy */
-	QWhatsThis::add(RadioButtonTiSyncEnergy,
+	Q3WhatsThis::add(RadioButtonTiSyncEnergy,
 		tr("<b>Guard Energy:</b> Time synchronization "
 		"tracking algorithm utilizes the estimation of the impulse response. "
 		"This method tries to maximize the energy in the guard-interval to set "
 		"the correct timing."));
 
 	/* First Peak */
-	QWhatsThis::add(RadioButtonTiSyncFirstPeak,
+	Q3WhatsThis::add(RadioButtonTiSyncFirstPeak,
 		tr("<b>First Peak:</b> This algorithms searches for "
 		"the first peak in the estimated impulse response and moves this peak "
 		"to the beginning of the guard-interval (timing tracking algorithm)."));
 
 	/* Save audio as wave */
-	QWhatsThis::add(CheckBoxSaveAudioWave,
+	Q3WhatsThis::add(CheckBoxSaveAudioWave,
 		tr("<b>Save Audio as WAV:</b> Save the audio signal "
 		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
 		"box will let the user choose a file name for the recording."));
@@ -948,6 +952,6 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		"and no interferer are present since the SNR estimation may be "
 		"not correct.</li></ul>");
 
-	QWhatsThis::add(CheckBoxRecFilter, strInterfRej);
-	QWhatsThis::add(CheckBoxModiMetric, strInterfRej);
+	Q3WhatsThis::add(CheckBoxRecFilter, strInterfRej);
+	Q3WhatsThis::add(CheckBoxModiMetric, strInterfRej);
 }

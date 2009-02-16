@@ -9,6 +9,7 @@
 # endif
 # define _WIN32_WINNT 0x0400
 # include <windows.h>
+# include <qnamespace.h>
 #endif
 
 class CPacer
@@ -22,7 +23,7 @@ protected:
 	uint64_t timekeeper;
 	uint64_t interval;
 #ifdef _WIN32
-	HANDLE hTimer;
+	Qt::HANDLE hTimer;
 #endif
 };
 #endif

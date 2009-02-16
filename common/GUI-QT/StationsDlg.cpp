@@ -31,8 +31,12 @@
 #include "StationsDlg.h"
 #include "../tables/TableStations.h"
 #include <qdatetime.h>
-#include <qftp.h>
-# include <qhttp.h>
+#include <q3ftp.h>
+# include <q3http.h>
+//Added by qt3to4:
+#include <QHideEvent>
+#include <Q3PopupMenu>
+#include <QShowEvent>
 
 /* Implementation *************************************************************/
 void CDRMSchedule::UpdateStringListForFilter(const CStationsItem StationsItem)
@@ -654,8 +658,8 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
-	pViewMenu = new QPopupMenu(this);
-	CHECK_PTR(pViewMenu);
+	pViewMenu = new Q3PopupMenu(this);
+	Q_CHECK_PTR(pViewMenu);
 	pViewMenu->insertItem(tr("Show &only active stations"), this,
 		SLOT(OnShowStationsMenu(int)), 0, 0);
 	pViewMenu->insertItem(tr("Show &all stations"), this,
@@ -666,8 +670,8 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pViewMenu->setItemChecked(0, true);
 
 	/* Stations Preview menu ------------------------------------------------ */
-	pPreviewMenu = new QPopupMenu(this);
-	CHECK_PTR(pPreviewMenu);
+	pPreviewMenu = new Q3PopupMenu(this);
+	Q_CHECK_PTR(pPreviewMenu);
 	pPreviewMenu->insertItem(tr("&Disabled"), this,
 		SLOT(OnShowPreviewMenu(int)), 0, 0);
 	pPreviewMenu->insertItem(tr("&5 minutes"), this,
@@ -708,24 +712,23 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	SetStationsView();
 
 	/* Update menu ---------------------------------------------------------- */
-	pUpdateMenu = new QPopupMenu(this);
-	CHECK_PTR(pUpdateMenu);
+	pUpdateMenu = new Q3PopupMenu(this);
+	Q_CHECK_PTR(pUpdateMenu);
 	pUpdateMenu->insertItem(tr("&Get Update..."), this, SLOT(OnGetUpdate()), 0, 0);
 
 	/* Main menu bar -------------------------------------------------------- */
 	QMenuBar* pMenu = new QMenuBar(this);
-	CHECK_PTR(pMenu);
+	Q_CHECK_PTR(pMenu);
 	pMenu->insertItem(tr("&View"), pViewMenu);
 	pMenu->insertItem(tr("&Update"), pUpdateMenu); /* String "Update" used below */
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
-	CStationsDlgBaseLayout->setMenuBar(pMenu);
-
+	gridLayout->setMenuBar(pMenu);
 
 	/* Register the network protocols (ftp, http). Needed for the schedule download */
-	QNetworkProtocol::registerNetworkProtocol("ftp", new QNetworkProtocolFactory<QFtp>);
-	QNetworkProtocol::registerNetworkProtocol("http", new QNetworkProtocolFactory<QHttp>);
+	Q3NetworkProtocol::registerNetworkProtocol("ftp", new Q3NetworkProtocolFactory<Q3Ftp>);
+	Q3NetworkProtocol::registerNetworkProtocol("http", new Q3NetworkProtocolFactory<Q3Http>);
 
 
 	/* Connections ---------------------------------------------------------- */
@@ -743,14 +746,14 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	TimerMonitorFrequency.stop();
 	TimerTuning.stop();
 
-	connect(ListViewStations, SIGNAL(selectionChanged(QListViewItem*)),
-		this, SLOT(OnListItemClicked(QListViewItem*)));
+	connect(ListViewStations, SIGNAL(selectionChanged(Q3ListViewItem*)),
+		this, SLOT(OnListItemClicked(Q3ListViewItem*)));
 
 	connect(ListViewStations->header(), SIGNAL(clicked(int)),
 		this, SLOT(OnHeaderClicked(int)));
 
-	connect(&UrlUpdateSchedule, SIGNAL(finished(QNetworkOperation*)),
-		this, SLOT(OnUrlFinished(QNetworkOperation*)));
+	connect(&UrlUpdateSchedule, SIGNAL(finished(Q3NetworkOperation*)),
+		this, SLOT(OnUrlFinished(Q3NetworkOperation*)));
 
 	connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
 		this, SLOT(OnFreqCntNewValue(double)));
@@ -874,7 +877,7 @@ void StationsDlg::AddUpdateDateTime()
 			+ f.lastModified().date().toString() + ")";
 	}
 
-	pUpdateMenu->changeItem(tr("&Get Update") + s + "...", 0);
+	pUpdateMenu->changeItem(0, tr("&Get Update") + s + "...");
 }
 
 void StationsDlg::OnGetUpdate()
@@ -935,12 +938,12 @@ void StationsDlg::OnGetUpdate()
 
 }
 
-void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
+void StationsDlg::OnUrlFinished(Q3NetworkOperation* pNetwOp)
 {
 	/* Check that pointer points to valid object */
 	if (pNetwOp)
 	{
-		if (pNetwOp->state() == QNetworkProtocol::StFailed)
+		if (pNetwOp->state() == Q3NetworkProtocol::StFailed)
 		{
 			/* Something went wrong -> stop all network operations */
 			UrlUpdateSchedule.stop();
@@ -969,9 +972,9 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 		}
 
 		/* We are interested in the state of the final put function */
-		if (pNetwOp->operation() == QNetworkProtocol::OpPut)
+		if (pNetwOp->operation() == Q3NetworkProtocol::OpPut)
 		{
-			if (pNetwOp->state() == QNetworkProtocol::StDone)
+			if (pNetwOp->state() == Q3NetworkProtocol::StDone)
 			{
 				/* Notify the user that update was successful */
 #ifdef _WIN32
@@ -1089,7 +1092,7 @@ QString MyListViewItem::key(int column, bool ascending) const
 			(text(column).toFloat() * 10000.0))).rightJustify(20, '0');
 	}
     else
-		return QListViewItem::key(column, ascending);
+		return Q3ListViewItem::key(column, ascending);
 }
 
 void StationsDlg::SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM)
@@ -1341,7 +1344,7 @@ void StationsDlg::OnTimerEditFrequency()
 		TimerTuning.start(GUI_TIME_TO_TUNE, true);
 	}
 
-	QListViewItem* item = ListViewStations->selectedItem();
+	Q3ListViewItem* item = ListViewStations->selectedItem();
 	if(item)
 	{
 		if(QString(item->text(2)).toInt() != iDisplayedFreq)
@@ -1384,7 +1387,7 @@ void StationsDlg::OnHeaderClicked(int c)
 	iCurrentSortColumn = c;
 }
 
-void StationsDlg::OnListItemClicked(QListViewItem* item)
+void StationsDlg::OnListItemClicked(Q3ListViewItem* item)
 {
 	/* Check that it is a valid item (!= 0) */
 	if (item)
@@ -1462,7 +1465,7 @@ void StationsDlg::EnableSMeter(const bool bStatus)
 void StationsDlg::AddWhatsThisHelp()
 {
 	/* Stations List */
-	QWhatsThis::add(ListViewStations,
+	Q3WhatsThis::add(ListViewStations,
 		tr("<b>Stations List:</b> In the stations list "
 		"view all DRM stations which are stored in the DRMSchedule.ini file "
 		"are shown. It is possible to show only active stations by changing a "
@@ -1482,7 +1485,7 @@ void StationsDlg::AddWhatsThisHelp()
 		"is automatically updated."));
 
 	/* Frequency Counter */
-	QWhatsThis::add(QwtCounterFrequency,
+	Q3WhatsThis::add(QwtCounterFrequency,
 		tr("<b>Frequency Counter:</b> The current frequency "
 		"value can be changed by using this counter. The tuning steps are "
 		"100 kHz for the  buttons with three arrows, 10 kHz for the "
@@ -1491,7 +1494,7 @@ void StationsDlg::AddWhatsThisHelp()
 		"increased / decreased automatically."));
 
 	/* UTC time label */
-	QWhatsThis::add(TextLabelUTCTime,
+	Q3WhatsThis::add(TextLabelUTCTime,
 		tr("<b>UTC Time:</b> Shows the current Coordinated "
 		"Universal Time (UTC) which is nearly the same as Greenwich Mean Time "
 		"(GMT)."));
@@ -1504,7 +1507,7 @@ void StationsDlg::AddWhatsThisHelp()
 		"front-ends controlled by hamlib support this feature. If the s-meter "
 		"is not available, the controls are disabled.");
 
-	QWhatsThis::add(TextLabelSMeter, strSMeter);
-	QWhatsThis::add(ProgrSigStrength, strSMeter);
+	Q3WhatsThis::add(TextLabelSMeter, strSMeter);
+	Q3WhatsThis::add(ProgrSigStrength, strSMeter);
 #endif
 }

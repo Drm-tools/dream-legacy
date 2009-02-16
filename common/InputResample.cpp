@@ -28,7 +28,6 @@
 
 #include "InputResample.h"
 
-
 /* Implementation *************************************************************/
 void CInputResample::ProcessDataInternal(CParameter& ReceiverParam)
 {

@@ -12,7 +12,6 @@
 				<Option object_output="Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option use_console_runner="0" />
 				<Option parameters="--mode DRMRX D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
@@ -36,21 +35,30 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-DQT_DLL" />
-			<Add option="-DQT_THREAD_SUPPORT" />
-			<Add option="-DQT_ACCESSIBILITY_SUPPORT" />
-			<Add option="-DQT_TABLET_SUPPORT" />
-			<Add option="-DQT_NO_DEBUG" />
+			<Add option="-D__INTERLOCKED_DECLARED" />
 			<Add option="-DHAVE_STDINT_H" />
 			<Add option="-D_WINDOWS" />
 			<Add option="-DWIN32" />
+			<Add option="-DQT_THREAD_SUPPORT" />
+			<Add option="-DQT_DLL" />
+			<Add option="-DQT_QT3SUPPORT_LIB" />
+			<Add option="-DQT3_SUPPORT" />
+			<Add option="-DQT_XML_LIB" />
+			<Add option="-DQT_GUI_LIB" />
+			<Add option="-DQT_NETWORK_LIB" />
+			<Add option="-DQT_CORE_LIB" />
 			<Add directory="$(QTDIR)\include" />
+			<Add directory="$(QTDIR)\include\QtCore" />
 			<Add directory="..\libs" />
 			<Add directory="..\common\GUI-QT" />
 			<Add directory="moc" />
 			<Add directory="..\..\faac\include" />
 			<Add directory="..\..\faad2\include" />
-			<Add directory="..\..\qwt-qt3\src" />
+			<Add directory="..\..\qwt-qt4\src" />
+			<Add directory="$(QTDIR)\include\QtNetwork" />
+			<Add directory="$(QTDIR)\include\QtGUI" />
+			<Add directory="$(QTDIR)\include\Qt3Support" />
+			<Add directory="$(QTDIR)\include\QtXML" />
 		</Compiler>
 		<Linker>
 			<Add library="faac" />
@@ -58,16 +66,20 @@
 			<Add library="hamlib" />
 			<Add library="fftw" />
 			<Add library="rfftw" />
-			<Add library="qwt" />
-			<Add library="qt-mt" />
+			<Add library="qwt5" />
 			<Add library="z" />
 			<Add library="wsock32" />
 			<Add library="winmm" />
 			<Add library="setupapi" />
 			<Add library="wpcap" />
-			<Add library="..\libs\libsndfile-1.dll" />
+			<Add library="..\..\..\bin\libsndfile-1.dll" />
+			<Add library="Qt3Support4" />
+			<Add library="QtCore4" />
+			<Add library="QtNetwork4" />
+			<Add library="QtGUI4" />
+			<Add library="QtXML4" />
 			<Add directory="$(QTDIR)\lib" />
-			<Add directory="D:\dream\qwt-qt3\lib" />
+			<Add directory="D:\dream\qwt-qt4\lib" />
 			<Add directory="..\libs" />
 		</Linker>
 		<Unit filename="..\common\AMDemodulation.cpp" />

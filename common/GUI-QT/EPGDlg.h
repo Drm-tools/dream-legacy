@@ -37,11 +37,14 @@
 #include <qcombobox.h>
 #include <qstringlist.h>
 #include <qmessagebox.h>
-#include <qtextbrowser.h>
-#include <qlistview.h>
+#include <q3textbrowser.h>
+#include <q3listview.h>
 #include <qlabel.h>
 #include <qtimer.h>
 #include <qpixmap.h>
+//Added by qt3to4:
+#include <QShowEvent>
+#include <QHideEvent>
 #include <map>
 
 #include "EPGDlgbase.h"

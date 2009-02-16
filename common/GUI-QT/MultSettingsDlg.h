@@ -30,7 +30,10 @@
 #include <qdir.h>
 #include <qpushbutton.h>
 #include <qvalidator.h>
-#include <qwhatsthis.h>
+#include <q3whatsthis.h>
+//Added by qt3to4:
+#include <QShowEvent>
+#include <QHideEvent>
 
 #include "../DrmReceiver.h"
 #include "../datadecoding/epg/epgutil.h"

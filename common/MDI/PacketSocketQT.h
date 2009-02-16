@@ -33,7 +33,7 @@
 #include "../util/Vector.h"
 #include "../util/Buffer.h"
 
-#include <qsocketdevice.h>
+#include <q3socketdevice.h>
 #include <qsocketnotifier.h>
 #include <qdatetime.h>
 
@@ -84,7 +84,7 @@ private:
 	QHostAddress				HostAddrOut;
 	int							iHostPortOut;
 
-	QSocketDevice				SocketDevice;
+	Q3SocketDevice				SocketDevice;
 	QSocketNotifier*			pSocketNotivRead;
 
 public slots:

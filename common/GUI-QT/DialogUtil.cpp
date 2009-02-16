@@ -50,6 +50,8 @@
 # include <wtap.h>
 #endif
 #include <sndfile.h>
+//Added by qt3to4:
+#include <Q3PopupMenu>
 
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */
@@ -198,11 +200,11 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
 
 
 /* Help menu ---------------------------------------------------------------- */
-CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QPopupMenu(parent)
+CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : Q3PopupMenu(parent)
 {
 	/* Standard help menu consists of about and what's this help */
 	insertItem(tr("What's &This"), this ,
-		SLOT(OnHelpWhatsThis()), SHIFT+Key_F1);
+		SLOT(OnHelpWhatsThis()), Qt::SHIFT+Qt::Key_F1);
 	insertSeparator();
 	insertItem(tr("&About..."), this, SLOT(OnHelpAbout()));
 }
@@ -211,12 +213,12 @@ CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QPopupMenu(parent)
 /* Sound card selection menu ------------------------------------------------ */
 CSoundCardSelMenu::CSoundCardSelMenu(
 	CSelectionInterface* pNSIn, CSelectionInterface* pNSOut, QWidget* parent) :
-	QPopupMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
+	Q3PopupMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
 {
-	pSoundInMenu = new QPopupMenu(parent);
-	CHECK_PTR(pSoundInMenu);
-	pSoundOutMenu = new QPopupMenu(parent);
-	CHECK_PTR(pSoundOutMenu);
+	pSoundInMenu = new Q3PopupMenu(parent);
+	Q_CHECK_PTR(pSoundInMenu);
+	pSoundOutMenu = new Q3PopupMenu(parent);
+	Q_CHECK_PTR(pSoundOutMenu);
 	int i;
 
 	/* Get sound device names */
