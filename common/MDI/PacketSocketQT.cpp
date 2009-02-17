@@ -211,7 +211,7 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 		struct ip_mreq mreq;
 
 		/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
-		bool ok = SocketDevice.bind(QHostAddress(UINT32(0)), iPort);
+		bool ok = SocketDevice.bind(QHostAddress(Q_UINT32(0)), iPort);
 		if(ok == false)
 		{
 			//QSocketDevice::Error x = SocketDevice.error();
