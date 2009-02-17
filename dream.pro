@@ -7,8 +7,11 @@ INCLUDEPATH	+= libs
 INCLUDEPATH	+= common/GUI-QT
 VPATH		+= common/GUI-QT
 LIBS 		+= -Llibs
+DEFINES		+= HAVE_LIBFAAC HAVE_LIBFAAD HAVE_LIBPCAP HAVE_LIBZ HAVE_FFTW_H
+DEFINES		+= USE_FAAC_LIBRARY USE_FAAD2_LIBRARY USE_QT_GUI
 #The following line was changed from FORMS to FORMS3 by qt3to4
-FORMS3		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui
+FORMS		+= TransmDlgbase4.ui
+FORMS3      += fdrmdialogbase.ui AnalogDemDlgbase.ui
 #The following line was changed from FORMS to FORMS3 by qt3to4
 FORMS3		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
 #The following line was changed from FORMS to FORMS3 by qt3to4
@@ -29,37 +32,32 @@ macx {
 	LIBS 		+= -L/Developer/qwt-5.1.1/lib
 	LIBS 		+= -framework CoreFoundation -framework CoreServices
 	LIBS 		+= -framework CoreAudio -framework AudioToolbox -framework AudioUnit
-	LIBS		+= -lqwt
 	UI_DIR		= darwin/moc
 	MOC_DIR		= darwin/moc
 	RC_FILE		= common/GUI-QT/res/macicons.icns
 }
 
 unix {
-	INCLUDEPATH	+= /usr/include/qwt-qt4
-	LIBS 		+= -lsndfile -lpcap
-	LIBS 		+= -lz -lfaac -lfaad -lrfftw -lfftw
-	SOURCES		+= linux/source/Pacer.cpp linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c
-	HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
+	LIBS 		+= -lsndfile -lpcap -lz -lfaac -lfaad -lrfftw -lfftw -lqwt
+    DEFINES		+= HAVE_RFFTW_H HAVE_LIBPCAP
 	DEFINES		+= HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H
 	DEFINES		+= HAVE_STRINGS_H HAVE_STRING_H STDC_HEADERS
 	DEFINES		+= HAVE_INTTYPES_H HAVE_STDINT_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H HAVE_UNISTD_H
-	DEFINES		+= HAVE_LIBFAAC HAVE_LIBFAAD HAVE_LIBPCAP HAVE_LIBZ
-	DEFINES		+= USE_FAAC_LIBRARY USE_FAAD2_LIBRARY USE_QT_GUI
-	DEFINES		+= HAVE_FFTW_H HAVE_RFFTW_H
 	!macx {
 		MAKEFILE	= Makefile.qt
+        INCLUDEPATH	+= /usr/include/qwt-qt4
 		INCLUDEPATH	+= linux
-		INCLUDEPATH	+= /usr/include/qwt-qt3
-		LIBS 		+= -lrt -lqwt-qt3
+		LIBS 		+= -lrt
 		OBJECTS_DIR	= linux
 		UI_DIR		= linux/moc
 		MOC_DIR		= linux/moc
+        SOURCES		+= linux/source/Pacer.cpp linux/source/shmsoundin.cpp
+        SOURCES     += linux/source/pa_shm_ringbuffer.c
+        HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
 	}
 }
 
 win32 {
-#	TEMPLATE	= vcapp
 	debug {
 	OBJECTS_DIR	= windows/Debug
 	}
@@ -68,23 +66,23 @@ win32 {
 	}
 	UI_DIR		= windows/moc
 	MOC_DIR		= windows/moc
-    g++ {
-        LIBS 		+= -lsndfile-1 -lwpcap -lstdc++
-        LIBS 		+= -lz -lfaac -lfaad -lrfftw -lfftw -lqwt5 -lsetupapi -lwinmm -lws2_32
-        DEFINES		+= HAVE_STDINT_H HAVE_STDLIB_H __INTERLOCKED_DECLARED
+    win32-g++ {
+        DEFINES		+= HAVE_STDINT_H HAVE_STDLIB_H __INTERLOCKED_DECLARED HAVE_LIBPCAP
         INCLUDEPATH += ../qwt-qt4/include
         LIBS        += -L../qwt-qt4/lib
+        LIBS 		+= -lsndfile -lz -lfaac -lfaad -lrfftw -lfftw -lqwt5
+        LIBS        += -lwpcap -lstdc++
+        LIBS 		+= -lsetupapi -lwinmm -lws2_32
     }
-    msvc {
-        LIBS 			+= libsndfile-1.lib zdll.lib libqwt.lib
-        LIBS			+= libfaac.lib libfaad.lib
-        LIBS			+= libfftw.lib setupapi.lib ws2_32.lib winmm.lib
+    else {
+        TEMPLATE	= vcapp
+        LIBS 		+= libsndfile-1.lib zdll.lib libqwt.lib
+        LIBS		+= libfaac.lib libfaad.lib
+        LIBS		+= libfftw.lib setupapi.lib ws2_32.lib winmm.lib
         QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:"MSVCRTD, LIBCMT"
         QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
     }
     DEFINES		-= UNICODE
-	DEFINES		+= HAVE_LIBFAAC HAVE_LIBFAAD HAVE_LIBZ
-	DEFINES		+= USE_FAAC_LIBRARY USE_FAAD2_LIBRARY USE_QT_GUI
 	DEFINES		+= HAVE_SETUPAPI
 	HEADERS		+= windows/Source/Sound.h windows/Source/SoundWin.h
 	SOURCES		+= windows/Source/Pacer.cpp windows/Source/Sound.cpp
@@ -101,8 +99,12 @@ hamlib {
 		LIBS 	+= -framework IOKit
 	}
 	win32 {
-		LIBS	+= libhamlib.lib
-	}
+        win32-g++ {
+            LIBS 	+= -lhamlib
+        } else {
+            LIBS	+= libhamlib.lib
+        }
+    }
 }
 
 alsa {
