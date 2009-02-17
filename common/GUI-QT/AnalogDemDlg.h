@@ -53,13 +53,14 @@
 #include <QHideEvent>
 #include <QCloseEvent>
 
-#include "AnalogDemDlgbase.h"
-#include "AMSSDlgbase.h"
 #include "DialogUtil.h"
 #include "DRMPlot.h"
 #include "../GlobalDefinitions.h"
 #include "../tables/TableAMSS.h"
 
+using namespace Qt; // TODO remove this ?
+#include "AnalogDemDlgbase.h"
+#include "AMSSDlgbase.h"
 
 /* Definitions ****************************************************************/
 /* Update time of PLL phase dial control */

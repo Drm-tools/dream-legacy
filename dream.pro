@@ -36,6 +36,7 @@ macx {
 }
 
 unix {
+	INCLUDEPATH	+= /usr/include/qwt-qt4
 	LIBS 		+= -lsndfile -lpcap
 	LIBS 		+= -lz -lfaac -lfaad -lrfftw -lfftw
 	SOURCES		+= linux/source/Pacer.cpp linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c
@@ -242,6 +243,12 @@ common/util/Buffer.h   \
 common/util/CRC.h   \
 common/util/LogPrint.h   \
 common/util/Modul.h   \
+common/util/ReceiverModul.h  \
+common/util/ReceiverModul_impl.h  \
+common/util/SimulationModul.h  \
+common/util/SimulationModul_impl.h  \
+common/util/TransmitterModul.h  \
+common/util/TransmitterModul_impl.h  \
 common/util/Pacer.h   \
 common/util/Reassemble.h   \
 common/util/Settings.h   \

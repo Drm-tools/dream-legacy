@@ -200,7 +200,7 @@ protected:
 };
 
 template<typename T>
-CMinMaxMean<T>::CMinMaxMean():CMeasure(),CDumpable(),sum(0),cur(),
+CMinMaxMean<T>::CMinMaxMean():CDumpable(),CMeasure(),sum(0),cur(),
 min(numeric_limits<T>::max()),max(numeric_limits<T>::min()),num(0)
 {
 }

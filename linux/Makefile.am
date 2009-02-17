@@ -3,6 +3,7 @@ bin_PROGRAMS = drm
 
 drmwithoutqt_SOURCES = \
 	../common/Version.cpp \
+	../common/Measurements.cpp \
 	../common/PlotManager.cpp \
 	../common/ReceptLog.cpp \
 	../common/GPSData.cpp \
@@ -99,6 +100,7 @@ drmwithoutqt_SOURCES = \
 	source/shmsoundin.cpp source/pa_shm_ringbuffer.c \
 	../common/Version.h \
 	../common/ReceptLog.h \
+	../common/Measurements.h \
 	../common/PlotManager.h \
 	../common/GPSData.h \
 	../common/DRMSignalIO.h \

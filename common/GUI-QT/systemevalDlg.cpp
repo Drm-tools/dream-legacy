@@ -502,7 +502,7 @@ CDRMPlot* systemevalDlg::OpenChartWin(const CPlotManager::EPlotType eNewType)
 	pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 
 	/* Set correct icon (use the same as this dialog) */
-	pNewChartWin->setIcon(*this->icon());
+	pNewChartWin->setIcon(*QWidget::icon());
 
 	/* Set receiver object and correct chart type */
 	pNewChartWin->SetPlotManager(DRMReceiver.GetPlotManager());
