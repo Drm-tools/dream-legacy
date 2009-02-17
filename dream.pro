@@ -10,8 +10,9 @@ LIBS 		+= -Llibs
 DEFINES		+= HAVE_LIBFAAC HAVE_LIBFAAD HAVE_LIBPCAP HAVE_LIBZ HAVE_FFTW_H
 DEFINES		+= USE_FAAC_LIBRARY USE_FAAD2_LIBRARY USE_QT_GUI
 #The following line was changed from FORMS to FORMS3 by qt3to4
-FORMS		+= TransmDlgbase4.ui
-FORMS3      += fdrmdialogbase.ui AnalogDemDlgbase.ui
+FORMS3		+= TransmDlgbase.ui
+FORMS       += DRMDialog.ui
+FORMS3		+= AnalogDemDlgbase.ui
 #The following line was changed from FORMS to FORMS3 by qt3to4
 FORMS3		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
 #The following line was changed from FORMS to FORMS3 by qt3to4
@@ -38,7 +39,7 @@ macx {
 }
 
 unix {
-	LIBS 		+= -lsndfile -lpcap -lz -lfaac -lfaad -lrfftw -lfftw -lqwt
+	LIBS 		+= -lsndfile -lpcap -lz -lfaac -lfaad -lrfftw -lfftw
     DEFINES		+= HAVE_RFFTW_H HAVE_LIBPCAP
 	DEFINES		+= HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H
 	DEFINES		+= HAVE_STRINGS_H HAVE_STRING_H STDC_HEADERS
@@ -47,7 +48,7 @@ unix {
 		MAKEFILE	= Makefile.qt
         INCLUDEPATH	+= /usr/include/qwt-qt4
 		INCLUDEPATH	+= linux
-		LIBS 		+= -lrt
+		LIBS 		+= -lrt -lqwt-qt4
 		OBJECTS_DIR	= linux
 		UI_DIR		= linux/moc
 		MOC_DIR		= linux/moc
@@ -117,7 +118,7 @@ alsa {
 portaudio {
 	DEFINES		+= USE_PORTAUDIO
 	HEADERS		+= common/sound/pa_ringbuffer.h common/sound/drm_portaudio.h
-	SOURCES		+= common/sound/drm_portaudio.cpp
+	SOURCES		+= common/sound/drm_portaudio.cpp common/sound/pa_ringbuffer.c
 	LIBS 		+= -lportaudio
 }
 
@@ -166,7 +167,7 @@ common/GUI-QT/AnalogDemDlg.h   \
 common/GUI-QT/DialogUtil.h   \
 common/GUI-QT/DRMPlot.h   \
 common/GUI-QT/EPGDlg.h   \
-common/GUI-QT/fdrmdialog.h   \
+common/GUI-QT/DRMDialog.h   \
 common/GUI-QT/LiveScheduleDlg.h   \
 common/GUI-QT/LatLongEditDlg.h \
 common/GUI-QT/MultColorLED.h   \
@@ -298,7 +299,7 @@ common/GUI-QT/AnalogDemDlg.cpp   \
 common/GUI-QT/DialogUtil.cpp   \
 common/GUI-QT/DRMPlot.cpp   \
 common/GUI-QT/EPGDlg.cpp   \
-common/GUI-QT/fdrmdialog.cpp   \
+common/GUI-QT/DRMDialog.cpp   \
 common/GUI-QT/LiveScheduleDlg.cpp   \
 common/GUI-QT/main.cpp   \
 common/GUI-QT/LatLongEditDlg.cpp \

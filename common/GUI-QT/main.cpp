@@ -50,7 +50,7 @@
 # include <qmessagebox.h>
 //Added by qt3to4:
 #include <QTranslator>
-# include "fdrmdialog.h"
+# include "DRMDialog.h"
 # include "TransmDlg.h"
 #endif
 #include <iostream>
@@ -153,7 +153,7 @@ main(int argc, char **argv)
 
 			DRMReceiver.Init();
 
-			FDRMDialog MainDlg(DRMReceiver, Settings, 0, 0, false, Qt::WStyle_MinMax);
+			DRMDialog MainDlg(DRMReceiver, Settings, 0, 0, false, Qt::WStyle_MinMax);
 
 			/* Start working thread */
 			DRMReceiver.start();

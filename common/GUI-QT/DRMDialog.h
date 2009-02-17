@@ -27,9 +27,10 @@
 \******************************************************************************/
 
 
+#include <QDialog>
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
-#include "fdrmdialogbase.h"
+#include "ui_DRMDialog.h"
 #include "DialogUtil.h"
 #include "systemevalDlg.h"
 #include "MultimediaDlg.h"
@@ -57,16 +58,16 @@
 /* Classes ********************************************************************/
 class ReceiverSettingsDlg;
 
-class FDRMDialog : public FDRMDialogBase
+class DRMDialog : public QDialog, public Ui_DRMDialog
 {
 	Q_OBJECT
 
 public:
-	FDRMDialog(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
+	DRMDialog(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
 		bool modal = false,	Qt::WFlags f = 0);
-	virtual ~FDRMDialog();
+	virtual ~DRMDialog();
 	/* dummy assignment operator to help MSVC8 */
-	FDRMDialog& operator=(const FDRMDialog&)
+	DRMDialog& operator=(const DRMDialog&)
 	{ throw "should not happen"; return *this;}
 
 protected:

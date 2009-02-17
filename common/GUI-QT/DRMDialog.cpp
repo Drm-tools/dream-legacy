@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include <iostream>
-#include "fdrmdialog.h"
+#include "DRMDialog.h"
 #include "ReceiverSettingsDlg.h"
 #include <qlabel.h>
 #include <qpushbutton.h>
@@ -49,14 +49,15 @@
 #include <fstream>
 
 /* Implementation *************************************************************/
-FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
+DRMDialog::DRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f)
-	: FDRMDialogBase(parent, name, modal, f),
+	: QDialog(parent,name,modal,f), Ui_DRMDialog(),
 	DRMReceiver(NDRMR),
 	Settings(NSettings),
 	loghelper(NDRMR, NSettings),
 	eReceiverMode(NONE)
 {
+	setupUi(this);
 	/* recover window size and position */
 	CWinGeom s;
 	Settings.Get("DRM Dialog", s);
@@ -256,11 +257,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
-FDRMDialog::~FDRMDialog()
+DRMDialog::~DRMDialog()
 {
 }
 
-void FDRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
+void DRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 {
 	switch(state)
 	{
@@ -282,7 +283,7 @@ void FDRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 	}
 }
 
-void FDRMDialog::OnTimer()
+void DRMDialog::OnTimer()
 {
 	EDemodulationType eNewReceiverMode = DRMReceiver.GetReceiverMode();
 	switch(eNewReceiverMode)
@@ -337,7 +338,7 @@ void FDRMDialog::OnTimer()
     }
 }
 
-void FDRMDialog::UpdateDisplay()
+void DRMDialog::UpdateDisplay()
 {
 	CParameter& Parameters = *(DRMReceiver.GetParameters());
 
@@ -699,7 +700,7 @@ void FDRMDialog::UpdateDisplay()
 	TextMiniService4->setText(m_StaticService[3]);
 }
 
-void FDRMDialog::ClearDisplay()
+void DRMDialog::ClearDisplay()
 {
 	/* No signal is currently received ---------------------------------- */
 	/* Disable service buttons and associated labels */
@@ -732,7 +733,7 @@ void FDRMDialog::ClearDisplay()
  * so no conditionals are needed in this routine
  */
 
-void FDRMDialog::ChangeGUIModeToDRM()
+void DRMDialog::ChangeGUIModeToDRM()
 {
 	show();
 
@@ -765,7 +766,7 @@ void FDRMDialog::ChangeGUIModeToDRM()
  * Make sure analog demodulation dialog is visible
  */
 
-void FDRMDialog::ChangeGUIModeToAM()
+void DRMDialog::ChangeGUIModeToAM()
 {
 	/* Store visibility state */
 	if (eReceiverMode != NONE)
@@ -803,20 +804,20 @@ void FDRMDialog::ChangeGUIModeToAM()
 
 }
 
-void FDRMDialog::showEvent(QShowEvent*)
+void DRMDialog::showEvent(QShowEvent*)
 {
 	/* Set timer for real-time controls */
 	OnTimer();
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
-void FDRMDialog::hideEvent(QHideEvent*)
+void DRMDialog::hideEvent(QHideEvent*)
 {
 	/* Deactivate real-time timer */
 	Timer.stop();
 }
 
-void FDRMDialog::OnSwitchToDRM()
+void DRMDialog::OnSwitchToDRM()
 {
 	bStationsDlgWasVis = pStationsDlg->isVisible();
 	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
@@ -825,19 +826,19 @@ void FDRMDialog::OnSwitchToDRM()
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
-void FDRMDialog::OnNewDRMAcquisition()
+void DRMDialog::OnNewDRMAcquisition()
 {
 	DRMReceiver.RequestNewAcquisition();
 }
 
-void FDRMDialog::OnSwitchToAM()
+void DRMDialog::OnSwitchToAM()
 {
 	bStationsDlgWasVis = pStationsDlg->isVisible();
 	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
 	DRMReceiver.SetReceiverMode(AM); // User must then select if wants FM, etc.
 }
 
-void FDRMDialog::OnButtonService1()
+void DRMDialog::OnButtonService1()
 {
 	if (PushButtonService1->isOn())
 	{
@@ -852,7 +853,7 @@ void FDRMDialog::OnButtonService1()
 		PushButtonService1->setOn(true);
 }
 
-void FDRMDialog::OnButtonService2()
+void DRMDialog::OnButtonService2()
 {
 	if (PushButtonService2->isOn())
 	{
@@ -868,7 +869,7 @@ void FDRMDialog::OnButtonService2()
 
 }
 
-void FDRMDialog::OnButtonService3()
+void DRMDialog::OnButtonService3()
 {
 	if (PushButtonService3->isOn())
 	{
@@ -883,7 +884,7 @@ void FDRMDialog::OnButtonService3()
 		PushButtonService3->setOn(true);
 }
 
-void FDRMDialog::OnButtonService4()
+void DRMDialog::OnButtonService4()
 {
 	if (PushButtonService4->isOn())
 	{
@@ -898,7 +899,7 @@ void FDRMDialog::OnButtonService4()
 		PushButtonService4->setOn(true);
 }
 
-void FDRMDialog::SetService(int iNewServiceID)
+void DRMDialog::SetService(int iNewServiceID)
 {
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 
@@ -938,7 +939,7 @@ void FDRMDialog::SetService(int iNewServiceID)
 	}
 }
 
-void FDRMDialog::OnViewEvalDlg()
+void DRMDialog::OnViewEvalDlg()
 {
 	if(DRMReceiver.GetReceiverMode() == DRM)
 	{
@@ -952,25 +953,25 @@ void FDRMDialog::OnViewEvalDlg()
 	}
 }
 
-void FDRMDialog::OnViewMultiMediaDlg()
+void DRMDialog::OnViewMultiMediaDlg()
 {
 	/* Show Multimedia window */
 	pMultiMediaDlg->show();
 }
 
-void FDRMDialog::OnViewStationsDlg()
+void DRMDialog::OnViewStationsDlg()
 {
 	/* Show stations window */
 	pStationsDlg->show();
 }
 
-void FDRMDialog::OnViewLiveScheduleDlg()
+void DRMDialog::OnViewLiveScheduleDlg()
 {
 	/* Show live schedule window */
 	pLiveScheduleDlg->show();
 }
 
-void FDRMDialog::OnViewMultSettingsDlg()
+void DRMDialog::OnViewMultSettingsDlg()
 {
 
 	/* Show multimedia settings window */
@@ -982,18 +983,18 @@ void FDRMDialog::OnViewMultSettingsDlg()
 
 }
 
-void FDRMDialog::OnViewReceiverSettingsDlg()
+void DRMDialog::OnViewReceiverSettingsDlg()
 {
 	pReceiverSettingsDlg->show();
 }
 
-void FDRMDialog::OnViewEPGDlg()
+void DRMDialog::OnViewEPGDlg()
 {
 	/* Show programme guide window */
 	pEPGDlg->show();
 }
 
-void FDRMDialog::OnMenuSetDisplayColor()
+void DRMDialog::OnMenuSetDisplayColor()
 {
     const QColor color = CRGBConversion::int2RGB(Settings.Get("DRM Dialog", "colorscheme", 0xff0000));
     const QColor newColor = QColorDialog::getColor( color, this);
@@ -1005,7 +1006,7 @@ void FDRMDialog::OnMenuSetDisplayColor()
 	}
 }
 
-void FDRMDialog::OnMenuPlotStyle(int value)
+void DRMDialog::OnMenuPlotStyle(int value)
 {
 	/* Save new style in global variable */
 	Settings.Put("System Evaluation Dialog", "plotstyle", value);
@@ -1019,7 +1020,7 @@ void FDRMDialog::OnMenuPlotStyle(int value)
 		pPlotStyleMenu->setItemChecked(i, i == value);
 }
 
-void FDRMDialog::closeEvent(QCloseEvent* ce)
+void DRMDialog::closeEvent(QCloseEvent* ce)
 {
 	/* the close event has been actioned and we want to shut
 	 * down, but the main window should be the last thing to
@@ -1112,7 +1113,7 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	ce->accept();
 }
 
-QString FDRMDialog::GetCodecString(const int iServiceID)
+QString DRMDialog::GetCodecString(const int iServiceID)
 {
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
@@ -1174,7 +1175,7 @@ QString FDRMDialog::GetCodecString(const int iServiceID)
 	}
 }
 
-QString FDRMDialog::GetTypeString(const int iServiceID)
+QString DRMDialog::GetTypeString(const int iServiceID)
 {
 	QString strReturn;
 
@@ -1268,7 +1269,7 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 	return strReturn;
 }
 
-void FDRMDialog::SetDisplayColor(const QColor newColor)
+void DRMDialog::SetDisplayColor(const QColor newColor)
 {
 	/* Collect pointer to the desired controls in a vector */
 	vector<QWidget*> vecpWidgets;
@@ -1325,7 +1326,7 @@ void FDRMDialog::SetDisplayColor(const QColor newColor)
 	}
 }
 
-void FDRMDialog::AddWhatsThisHelp()
+void DRMDialog::AddWhatsThisHelp()
 {
 /*
 	This text was taken from the only documentation of Dream software
