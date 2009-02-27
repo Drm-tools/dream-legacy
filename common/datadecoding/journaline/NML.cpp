@@ -1,50 +1,50 @@
-/* 
+/*
  *
  * This file is part of the 'NewsService Journaline(R) Decoder'
- * 
+ *
  * Copyright (c) 2003, 2004 by Fraunhofer IIS, Erlangen, Germany
- * 
+ *
  * --------------------------------------------------------------------
- * 
+ *
  * For NON-COMMERCIAL USE,
  * the 'NewsService Journaline(R) Decoder' is free software;
  * you can redistribute it and/or modify it under the terms of
  * the GNU General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * The 'NewsService Journaline(R) Decoder' is distributed in the hope
  * that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with the 'NewsService Journaline(R) Decoder';
  * if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
- * 
+ *
+ *
  * If you use this software in a project with user interaction, please
  * provide the following text to the user in an appropriate place:
  * "Features NewsService Journaline(R) decoder technology by
  * Fraunhofer IIS, Erlangen, Germany.
  * For more information visit http://www.iis.fhg.de/dab"
- * 
+ *
  * --------------------------------------------------------------------
- * 
+ *
  * To use the 'NewsService Journaline(R) Decoder' software for
  * COMMERCIAL purposes, please contact Fraunhofer IIS for a
  * commercial license (see below for contact information)!
- * 
+ *
  * --------------------------------------------------------------------
- * 
+ *
  * Contact:
  *   Fraunhofer IIS, Department 'Broadcast Applications'
  *   Am Wolfsmantel 33, 91058 Erlangen, Germany
  *   http://www.iis.fraunhofer.de/dab
  *   mailto:bc-info@iis.fraunhofer.de
- * 
+ *
  */
 
 //////////////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@
 /// @file       NML.cpp
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: NML.cpp,v 1.2.2.3 2008/12/26 20:31:17 jcable Exp $
+/// $Id: NML.cpp,v 1.2.2.4 2009/02/27 07:02:54 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///
@@ -254,7 +254,7 @@ std::string NML::Dump(void) const
   return s;
 }
 
-//ignore datasections and return a new char pointer pointing to 
+//ignore datasections and return a new char pointer pointing to
 //a buffer without datasections and will manipulate p and plen accordingly
 //reslen is an out parameter returning the size of the buffer
 //returns a newly created buffer containing pure nml data on success
@@ -287,7 +287,7 @@ unsigned char* NMLFactory::getNextSection( const unsigned char*& p, unsigned sho
 			// we can safely skip the datasection now
 			i += 2 + dslen;
 		}
-		
+
 		if( !(p[i] & 0xF0) ) // any jml code
 		{
 			// we can quit the loop here since we reached
@@ -388,7 +388,7 @@ NML* NMLFactory::CreateNML( const NML::RawNewsObject_t& rno, const NMLEscapeCode
 		memcpy( uncompressed.nml, rno.nml, NML::NML_NR_OF_HEADER_BYTES + rno.extended_header_len );
 		unsigned long ulen = 4092;
 		int rv = Inflate( uncompressed.nml + NML::NML_NR_OF_HEADER_BYTES + rno.extended_header_len, &ulen, p, len );
-		
+
 		if( !rv )
 		{
 			sprintf( error, "Error: could not uncompress NML body (%d)", rv );
@@ -425,7 +425,7 @@ NML* NMLFactory::CreateNML( const NML::RawNewsObject_t& rno, const NMLEscapeCode
 		uncompressed.nml_len = rno.nml_len;
 		memcpy( uncompressed.nml, rno.nml, rno.nml_len );
 	}
-	
+
 	// check for title section
 	if( *p != 0x01 )
 	{
@@ -453,7 +453,7 @@ NML* NMLFactory::CreateNML( const NML::RawNewsObject_t& rno, const NMLEscapeCode
 
 	n->_news.item.clear();
 
-	// title object only needs title.. 
+	// title object only needs title..
 	if( n->_news.object_type == NML::TITLE )
 		return n;
 
@@ -528,7 +528,7 @@ NML* NMLFactory::CreateNML( const NML::RawNewsObject_t& rno, const NMLEscapeCode
 				n->SetErrorDump( n->_news.object_id, uncompressed, error );
 				return n;
 			}
-			bool newRow = (*p == 0x04);
+			//bool newRow = (*p == 0x04);
 			len--;
 			p++;
 
@@ -723,7 +723,7 @@ int Inflate(unsigned char *dest,
   int err;
   stream.next_in = const_cast<Bytef*>(source);
   stream.avail_in = static_cast<uInt>(sourceLen);
-  if (static_cast<uLong>(stream.avail_in) != sourceLen) 
+  if (static_cast<uLong>(stream.avail_in) != sourceLen)
   {
     log_err << "avail_in=" << static_cast<uLong>(stream.avail_in)
             << "!= sourceLen=" << sourceLen
@@ -747,7 +747,7 @@ int Inflate(unsigned char *dest,
   err = inflateInit2(&stream, -15);
   if (err != Z_OK)
   {
-    log_err << "inflateInit2 failed with " << err 
+    log_err << "inflateInit2 failed with " << err
             << endmsg;
     return 0;
   }
@@ -797,7 +797,7 @@ bool RemoveNMLEscapeSequences::Convert(std::string & dest,
                                        const std::string & src) const
 {
   dest = "";
-  
+
   for (unsigned int i=0; i<src.length(); i++)
   {
     switch(src[i])
@@ -847,7 +847,7 @@ bool NMLEscapeSequences2HTML::Convert(std::string & dest,
                                       const std::string & src) const
 {
   dest = "";
-  
+
   for (unsigned int i=0; i<src.length(); i++)
   {
     switch(src[i])

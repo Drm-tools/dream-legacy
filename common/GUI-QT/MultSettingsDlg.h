@@ -39,12 +39,12 @@
 #include "../datadecoding/epg/epgutil.h"
 #include "../util/Settings.h"
 #include "MultimediaDlg.h"
-#include "MultSettingsDlgbase.h"
+#include "ui_MultSettingsDlg.h"
 
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
-class MultSettingsDlg : public CMultSettingsDlgBase
+class MultSettingsDlg : public QDialog, public Ui_MultSettingsDlg
 {
 	Q_OBJECT
 

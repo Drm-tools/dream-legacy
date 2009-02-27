@@ -29,25 +29,36 @@
 \******************************************************************************/
 
 #include "AnalogDemDlg.h"
-#include <qmessagebox.h>
-//Added by qt3to4:
-#include <Q3CString>
+#include <QMessagebox>
 #include <QHideEvent>
 #include <Q3PopupMenu>
 #include <QShowEvent>
 #include <QCloseEvent>
 #include <QDateTime>
-#include "ReceiverSettingsDlg.h"
+#include <QToolTip>
+#include <QFileDialog>
+#include <QMotifStyle>
+#include <QStringListModel>
+#include <qwt_dial_needle.h>
 
+# include "ReceiverSettingsDlg.h"
+# include "DRMPlot.h"
+
+// TODO Make Plot work
+// TODO Rename
+// TODO improve layout (simplify?)
 
 /* Implementation *************************************************************/
 AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	ReceiverSettingsDlg& NReceiverSettingsDlg,
-	QWidget* parent, const char* name, bool modal, Qt::WFlags f):
-	AnalogDemDlgBase(parent, name, modal, f),
-	Receiver(NDRMR), Settings(NSettings), pReceiverSettingsDlg(&NReceiverSettingsDlg),
-	AMSSDlg(NDRMR, Settings, parent, name, modal, f)
+	QWidget* parent, const char* name, Qt::WFlags f):
+    QMainWindow(parent, name, f), Ui_AnalogMainWindow(),
+	Receiver(NDRMR), Settings(NSettings),
+	pReceiverSettingsDlg(&NReceiverSettingsDlg),
+	plot(NULL),
+	AMSSDlg(NDRMR, Settings, parent, name, false, f)
 {
+    setupUi(this);
 	CWinGeom s;
 	Settings.Get("AM Dialog", s);
 	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
@@ -88,18 +99,15 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pMenu->insertItem(tr("&?"), new CDreamHelpMenu(this));
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
-	/* Now tell the layout about the menu */
-	vboxLayout->setMenuBar(pMenu);
+	/* Now tell the Window about the menu */
+	setMenuBar(pMenu);
 
 	/* Init main plot */
-	MainPlot->SetPlotManager(Receiver.GetPlotManager());
-	MainPlot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
-	MainPlot->SetupChart(CPlotManager::INPUT_SIG_PSD_ANALOG);
-	MainPlot->setMargin(1);
-
-	/* Add tool tip to show the user the possibility of choosing the AM IF */
-	QToolTip::add(MainPlot,
-		tr("Click on the plot to set the demodulation frequency"));
+    plot = new CDRMPlot(SpectrumPlot);
+	plot->SetPlotManager(Receiver.GetPlotManager());
+	plot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
+	plot->SetupChart(CPlotManager::INPUT_SIG_PSD_ANALOG);
+	connect(plot, SIGNAL(xAxisValSet(double)), this, SLOT(OnChartxAxisValSet(double)));
 
 	SliderBandwidth->setRange(0, SOUNDCRD_SAMPLE_RATE / 2);
 	SliderBandwidth->setTickmarks(QSlider::TicksBothSides);
@@ -128,8 +136,6 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		this, SLOT(OnButtonAMSS()));
 	connect(ButtonWaterfall, SIGNAL(clicked()),
 		this, SLOT(OnButtonWaterfall()));
-	connect(MainPlot, SIGNAL(xAxisValSet(double)),
-		this, SLOT(OnChartxAxisValSet(double)));
 
 	/* Button groups */
 	connect(ButtonGroupDemodulation, SIGNAL(clicked(int)),
@@ -144,16 +150,13 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		this, SLOT(OnSliderBWChange(int)));
 
 	/* Check boxes */
-	connect(CheckBoxMuteAudio, SIGNAL(clicked()),
-		this, SLOT(OnCheckBoxMuteAudio()));
-	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()),
-		this, SLOT(OnCheckSaveAudioWAV()));
-	connect(CheckBoxAutoFreqAcq, SIGNAL(clicked()),
-		this, SLOT(OnCheckAutoFreqAcq()));
-	connect(CheckBoxPLL, SIGNAL(clicked()),
-		this, SLOT(OnCheckPLL()));
-	connect(CheckBoxOnBoardDemod, SIGNAL(clicked()),
-		this, SLOT(OnCheckOnBoardDemod()));
+	connect(CheckBoxMuteAudio, SIGNAL(clicked()), this, SLOT(OnCheckBoxMuteAudio()));
+	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWAV()));
+	connect(CheckBoxAutoFreqAcq, SIGNAL(clicked()), this, SLOT(OnCheckAutoFreqAcq()));
+	connect(CheckBoxOnBoardDemod, SIGNAL(clicked()), this, SLOT(OnCheckOnBoardDemod()));
+
+
+	connect(PLLButton, SIGNAL(clicked ()), this, SLOT(OnCheckPLL()));
 
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
@@ -161,7 +164,11 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(&TimerPLLPhaseDial, SIGNAL(timeout()),
 		this, SLOT(OnTimerPLLPhaseDial()));
 
+
 	/* Don't activate real-time timers, wait for show event */
+    Timer.stop();
+    TimerPLLPhaseDial.stop();
+    plot->stop();
 }
 
 void AnalogDemDlg::OnViewReceiverSettingsDlg()
@@ -184,6 +191,8 @@ void AnalogDemDlg::showEvent(QShowEvent*)
 	else
 		AMSSDlg.hide();
 
+    plot->start();
+
 	UpdateControls();
 }
 
@@ -196,6 +205,8 @@ void AnalogDemDlg::hideEvent(QHideEvent*)
 	/* Close AMSS window */
 	Settings.Put("AMSS Dialog", "visible", AMSSDlg.isVisible());
 	AMSSDlg.hide();
+
+    plot->stop();
 
 	/* Save window geometry data */
 	CWinGeom s;
@@ -337,7 +348,7 @@ void AnalogDemDlg::UpdateControls()
 	CheckBoxAutoFreqAcq->
 		setChecked(Receiver.AnalogAutoFreqAcqEnabled());
 
-	CheckBoxPLL->setChecked(Receiver.AnalogPLLEnabled());
+    PhaseDial->setEnabled(Receiver.AnalogPLLEnabled());
 }
 
 void AnalogDemDlg::OnCheckOnBoardDemod()
@@ -348,11 +359,10 @@ void AnalogDemDlg::OnCheckOnBoardDemod()
 		Receiver.SetUseAnalogHWDemod(false);
 }
 
-void AnalogDemDlg::UpdatePlotsStyle()
+void AnalogDemDlg::UpdatePlotStyle()
 {
 	/* Update main plot window */
-
-	MainPlot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
+	plot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 }
 
 void AnalogDemDlg::OnSwitchToDRM()
@@ -401,19 +411,13 @@ void AnalogDemDlg::OnTimerPLLPhaseDial()
 	{
 		/* Set current PLL phase (convert radiant in degree) */
 		PhaseDial->setValue(rCurPLLPhase * (CReal) 360.0 / (2 * crPi));
-
-		/* Check if control is enabled */
-		if (!PhaseDial->isEnabled())
-			PhaseDial->setEnabled(true);
+        PhaseDial->setEnabled(true);
 	}
 	else
 	{
 		/* Reset dial */
 		PhaseDial->setValue((CReal) 0.0);
-
-		/* Check if control is disabled */
-		if (PhaseDial->isEnabled())
-			PhaseDial->setEnabled(false);
+        PhaseDial->setEnabled(false);
 	}
 }
 
@@ -500,9 +504,6 @@ void AnalogDemDlg::OnSliderBWChange(int value)
 	/* Set new filter in processing module */
 	Receiver.SetAnalogFilterBWHz(value);
 	TextLabelBandWidth->setText(QString().setNum(value) + tr(" Hz"));
-
-	/* Update chart */
-	MainPlot->Update();
 }
 
 void AnalogDemDlg::OnCheckAutoFreqAcq()
@@ -514,7 +515,7 @@ void AnalogDemDlg::OnCheckAutoFreqAcq()
 void AnalogDemDlg::OnCheckPLL()
 {
 	/* Set parameter in working thread module */
-	Receiver.EnableAnalogPLL(CheckBoxPLL->isChecked());
+	Receiver.EnableAnalogPLL(PLLButton->isChecked());
 }
 
 void AnalogDemDlg::OnCheckBoxMuteAudio()
@@ -526,14 +527,14 @@ void AnalogDemDlg::OnCheckBoxMuteAudio()
 void AnalogDemDlg::OnCheckSaveAudioWAV()
 {
 /*
-	This code is copied in systemevalDlg.cpp. If you do changes here, you should
+	This code is copied in SystemEvalDlg.cpp. If you do changes here, you should
 	apply the changes in the other file, too
 */
 	if (CheckBoxSaveAudioWave->isChecked() == true)
 	{
 		/* Show "save file" dialog */
 		QString strFileName =
-			Q3FileDialog::getSaveFileName("DreamOut.wav", "*.wav", this);
+			QFileDialog::getSaveFileName("DreamOut.wav", "*.wav", this);
 
 		/* Check if user not hit the cancel button */
 		if (!strFileName.isNull())
@@ -554,18 +555,15 @@ void AnalogDemDlg::OnChartxAxisValSet(double dVal)
 {
 	/* Set new frequency in receiver module */
 	Receiver.SetAnalogDemodAcq(dVal);
-
-	/* Update chart */
-	MainPlot->Update();
 }
 
 void AnalogDemDlg::OnButtonWaterfall()
 {
 	/* Toggle between normal spectrum plot and waterfall spectrum plots */
-	if (ButtonWaterfall->isDown())
-		MainPlot->SetupChart(CPlotManager::INP_SPEC_WATERF);
+	if (ButtonWaterfall->isChecked())
+		plot->SetupChart(CPlotManager::INP_SPEC_WATERF);
 	else
-		MainPlot->SetupChart(CPlotManager::INPUT_SIG_PSD_ANALOG);
+		plot->SetupChart(CPlotManager::INPUT_SIG_PSD_ANALOG);
 }
 
 void AnalogDemDlg::OnButtonAMSS()
@@ -589,11 +587,11 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"reduction, a compromise between distortion of the useful signal "
 		"and actual noise reduction can be made.");
 
-	Q3WhatsThis::add(ButtonGroupNoiseReduction, strNoiseReduction);
-	Q3WhatsThis::add(RadioButtonNoiRedOff, strNoiseReduction);
-	Q3WhatsThis::add(RadioButtonNoiRedLow, strNoiseReduction);
-	Q3WhatsThis::add(RadioButtonNoiRedMed, strNoiseReduction);
-	Q3WhatsThis::add(RadioButtonNoiRedHigh, strNoiseReduction);
+	ButtonGroupNoiseReduction->setWhatsThis(strNoiseReduction);
+	RadioButtonNoiRedOff->setWhatsThis(strNoiseReduction);
+	RadioButtonNoiRedLow->setWhatsThis(strNoiseReduction);
+	RadioButtonNoiRedMed->setWhatsThis(strNoiseReduction);
+	RadioButtonNoiRedHigh->setWhatsThis(strNoiseReduction);
 
 	/* Automatic Gain Control */
 	const QString strAGC =
@@ -602,11 +600,11 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"for that, an automatic gain control can be applied. The AGC has "
 		"four settings: Off, Slow, Medium and Fast.");
 
-	Q3WhatsThis::add(ButtonGroupAGC, strAGC);
-	Q3WhatsThis::add(RadioButtonAGCOff, strAGC);
-	Q3WhatsThis::add(RadioButtonAGCSlow, strAGC);
-	Q3WhatsThis::add(RadioButtonAGCMed, strAGC);
-	Q3WhatsThis::add(RadioButtonAGCFast, strAGC);
+	ButtonGroupAGC->setWhatsThis(strAGC);
+	RadioButtonAGCOff->setWhatsThis(strAGC);
+	RadioButtonAGCSlow->setWhatsThis(strAGC);
+	RadioButtonAGCMed->setWhatsThis(strAGC);
+	RadioButtonAGCFast->setWhatsThis(strAGC);
 
 	/* Filter Bandwidth */
 	const QString strFilterBW =
@@ -618,9 +616,9 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"<br>The current filter bandwidth is indicated in the spectrum plot "
 		"by a selection bar.");
 
-	Q3WhatsThis::add(ButtonGroupBW, strFilterBW);
-	Q3WhatsThis::add(TextLabelBandWidth, strFilterBW);
-	Q3WhatsThis::add(SliderBandwidth, strFilterBW);
+	ButtonGroupBW->setWhatsThis(strFilterBW);
+	TextLabelBandWidth->setWhatsThis(strFilterBW);
+	SliderBandwidth->setWhatsThis(strFilterBW);
 
 	/* Demodulation type */
 	const QString strDemodType =
@@ -646,28 +644,28 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"<li><b>FM:</b> This is a narrow band frequency demodulation.</li>"
 		"</ul>");
 
-	Q3WhatsThis::add(ButtonGroupDemodulation, strDemodType);
-	Q3WhatsThis::add(RadioButtonDemAM, strDemodType);
-	Q3WhatsThis::add(RadioButtonDemLSB, strDemodType);
-	Q3WhatsThis::add(RadioButtonDemUSB, strDemodType);
-	Q3WhatsThis::add(RadioButtonDemCW, strDemodType);
-	Q3WhatsThis::add(RadioButtonDemNBFM, strDemodType);
-	Q3WhatsThis::add(RadioButtonDemWBFM, strDemodType);
+	ButtonGroupDemodulation->setWhatsThis(strDemodType);
+	RadioButtonDemAM->setWhatsThis(strDemodType);
+	RadioButtonDemLSB->setWhatsThis(strDemodType);
+	RadioButtonDemUSB->setWhatsThis(strDemodType);
+	RadioButtonDemCW->setWhatsThis(strDemodType);
+	RadioButtonDemNBFM->setWhatsThis(strDemodType);
+	RadioButtonDemWBFM->setWhatsThis(strDemodType);
 
 	/* Mute Audio (same as in systemevaldlg.cpp!) */
-	Q3WhatsThis::add(CheckBoxMuteAudio,
+	CheckBoxMuteAudio->setWhatsThis(
 		tr("<b>Mute Audio:</b> The audio can be muted by "
 		"checking this box. The reaction of checking or unchecking this box "
 		"is delayed by approx. 1 second due to the audio buffers."));
 
 	/* Save audio as wave (same as in systemevaldlg.cpp!) */
-	Q3WhatsThis::add(CheckBoxSaveAudioWave,
+	CheckBoxSaveAudioWave->setWhatsThis(
 		tr("<b>Save Audio as WAV:</b> Save the audio signal "
 		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
 		"box will let the user choose a file name for the recording."));
 
 	/* Carrier Frequency */
-	Q3WhatsThis::add(TextFreqOffset,
+	TextFreqOffset->setWhatsThis(
 		tr("<b>Carrier Frequency:</b> The (estimated) carrier frequency of the "
 		"analog signal is shown. (The estimation of this parameter can be done "
 		"by the Autom Frequency Acquisition which uses the estimated PSD of "
@@ -683,26 +681,24 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"out of lock. To get the PLL locked, the frequency offset to "
 		"the true carrier frequency must not exceed a few Hz.");
 
-	Q3WhatsThis::add(GroupBoxPLL, strPLL);
-	Q3WhatsThis::add(CheckBoxPLL, strPLL);
-	Q3WhatsThis::add(PhaseDial, strPLL);
-	Q3WhatsThis::add(TextLabelPhaseOffset, strPLL);
+	PhaseDial->setWhatsThis(strPLL);
+	PLLButton->setWhatsThis(strPLL);
 
 	/* Auto frequency acquisition */
 	const QString strAutoFreqAcqu =
 		tr("<b>Auto Frequency Acquisition:</b> Clicking on the "
 		"input spectrum plot changes the mixing frequency for demodulation. "
 		"If the Auto Frequency Acquisition is enabled, the largest peak "
-		"near the curser is selected.");
+		"near the cursor is selected.");
 
-	Q3WhatsThis::add(GroupBoxAutoFreqAcq, strAutoFreqAcqu);
-	Q3WhatsThis::add(CheckBoxAutoFreqAcq, strAutoFreqAcqu);
+	GroupBoxAutoFreqAcq->setWhatsThis(strAutoFreqAcqu);
+	CheckBoxAutoFreqAcq->setWhatsThis(strAutoFreqAcqu);
 
 	const QString strOnBoard =
 		tr("<b>On Board Demod:</b> When checked, the receiver will use a hardware demodulator."
 			" When clear the software demodulator will be used. Different H/W may not support"
 			" one or other of the options.");
-	Q3WhatsThis::add(CheckBoxOnBoardDemod, strOnBoard);
+	CheckBoxOnBoardDemod->setWhatsThis(strOnBoard);
 }
 
 
@@ -728,10 +724,10 @@ void AnalogDemDlg::AddWhatsThisHelp()
 */
 CAMSSDlg::CAMSSDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
-	CAMSSDlgBase(parent, name, modal, f),
-	Receiver(NDRMR),
+	QDialog(parent, name, modal, f), Ui_AMSSDlg(), Receiver(NDRMR),
 	Settings(NSettings)
 {
+    setupUi(this);
 	CWinGeom s;
 	Settings.Get("AMSS Dialog", s);
 	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
@@ -759,7 +755,7 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	TextAMSSAMCarrierMode->setText("");
 	TextAMSSInfo->setText("");
 
-	ListBoxAMSSAFSList->setEnabled(false);
+	ListWidgetAMSSAFSList->setEnabled(false);
 
 
 	/* Connect controls ----------------------------------------------------- */
@@ -811,8 +807,8 @@ void CAMSSDlg::OnTimer()
 	if ((Parameters.Service[0].IsActive()) && (Parameters.Service[0].strLabel != ""))
 	{
 		/* Service label (UTF-8 encoded string -> convert) */
-		TextAMSSServiceLabel->setText(QString().fromUtf8(Q3CString(
-			Parameters.Service[0].strLabel.c_str())));
+		TextAMSSServiceLabel->setText(QString().fromUtf8(
+            Parameters.Service[0].strLabel.c_str()));
 	}
 	else
 		TextAMSSServiceLabel->setText(tr(""));
@@ -867,10 +863,10 @@ void CAMSSDlg::OnTimer()
 
 	if (iNumAltServices != 0)
 	{
-		ListBoxAMSSAFSList->insertItem(QString().setNum((long) iNumAltServices), 10);
+		ListWidgetAMSSAFSList->insertItem(10, QString().setNum((long) iNumAltServices));
 
-		ListBoxAMSSAFSList->clear();
-		ListBoxAMSSAFSList->setEnabled(true);
+		ListWidgetAMSSAFSList->clear();
+		ListWidgetAMSSAFSList->setEnabled(true);
 
 		QString freqEntry;
 
@@ -1019,13 +1015,13 @@ void CAMSSDlg::OnTimer()
 				freqEntry += " (alt service)";
 			}
 
-			ListBoxAMSSAFSList->insertItem(freqEntry, 0);
+			ListWidgetAMSSAFSList->insertItem(0, freqEntry);
 		}
 	}
 	else
 	{
-		ListBoxAMSSAFSList->clear();
-		ListBoxAMSSAFSList->setEnabled(false);
+		ListWidgetAMSSAFSList->clear();
+		ListWidgetAMSSAFSList->setEnabled(false);
 	}
 
 	TextAMSSServiceID->setText("");
@@ -1065,7 +1061,7 @@ void CAMSSDlg::OnTimer()
 
 	TextBlockBits->setText(Receiver.GetAMSSDecode()->GetCurrentBlockBits());
 
-	ProgressBarAMSS->setProgress(Receiver.GetAMSSDecode()->
+	ProgressBarAMSS->setValue(Receiver.GetAMSSDecode()->
 		GetPercentageDataEntityGroupComplete());
 
 	Parameters.Unlock();

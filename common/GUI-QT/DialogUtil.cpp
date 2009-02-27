@@ -50,14 +50,16 @@
 # include <wtap.h>
 #endif
 #include <sndfile.h>
-//Added by qt3to4:
 #include <Q3PopupMenu>
 
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */
 CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f)
-	: CAboutDlgBase(parent, name, modal, f)
+	: QDialog(parent, name, modal, f), Ui_AboutDlg()
 {
+    setupUi(this);
+    connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
+
 	char  sfversion [128] ;
 	sf_command (NULL, SFC_GET_LIB_VERSION, sfversion, sizeof (sfversion)) ;
 	/* Set the text for the about dialog html text control */
@@ -95,11 +97,11 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
 		"Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
 		"Germany. For more information visit http://www.iis.fhg.de/dab</i></li>"
 		"<li><b>LIBSNDFILE</b> (" + QString(sfversion) + ") <i>http://www.mega-nerd.com/libsndfile</i></li>"
-#ifdef USE_FAAD2_LIBRARY
+#ifdef HAVE_LIBFAAD
 		"<li><b>FAAD2</b> (" + QString(FAAD2_VERSION) + ") <i>AAC/HE-AAC/HE-AACv2/DRM decoder "
 		"(c) Ahead Software, www.nero.com (http://faac.sf.net)</i></li>"
 #endif
-#ifdef USE_FAAC_LIBRARY
+#ifdef HAVE_LIBFAAC
 		"<li><b>FAAC</b> <i>http://faac.sourceforge.net</i></li>"
 #endif
 #ifdef USE_QT_GUI /* QWT */
@@ -109,11 +111,6 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
 #endif
 #ifdef HAVE_LIBHAMLIB
 		"<li><b>Hamlib</b> (" + QString(hamlib_version) + ") <i>http://hamlib.sourceforge.net</i></li>"
-#endif
-#ifdef HAVE_LIBFREEIMAGE
-		"<li><b>FreeImage</b> (" + QString(FreeImage_GetVersion()) + ") <i>This software uses the FreeImage open source "
-		"image library. See http://freeimage.sourceforge.net for details. "
-		"FreeImage is used under the GNU GPL.</i></li>"
 #endif
 #ifdef HAVE_LIBPCAP
 		"<li><b>LIBPCAP</b> (" + QString(pcap_lib_version()) + ") <i>http://www.tcpdump.org/ "

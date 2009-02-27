@@ -30,21 +30,19 @@
  *
 \******************************************************************************/
 
-#include <q3listview.h>
-#include <q3filedialog.h>
-#include <qlabel.h>
-#include <qlineedit.h>
-#include <qcombobox.h>
-#include <qpushbutton.h>
-#include <q3whatsthis.h>
-#include <qvalidator.h>
-#include <qmessagebox.h>
-#include <qcheckbox.h>
-#include <qslider.h>
-#include <qradiobutton.h>
-#include <q3buttongroup.h>
-#include <qtabwidget.h>
-//Added by qt3to4:
+#include <q3listview>
+#include <QFiledialog>
+#include <QLabel>
+#include <QLineedit>
+#include <QCombobox>
+#include <QPushbutton>
+#include <QValidator>
+#include <QMessagebox>
+#include <QCheckbox>
+#include <QSlider>
+#include <QRadiobutton>
+#include <q3buttongroup>
+#include <QTabwidget>
 #include <QPixmap>
 #include <QHideEvent>
 #include <QShowEvent>
@@ -53,33 +51,15 @@
 #include "../DrmReceiver.h"
 #include "../util/Hamlib.h"
 
-#if !defined(HAVE_RIG_PARSE_MODE) && defined(HAVE_LIBHAMLIB)
-extern "C"
-{
-	extern rmode_t parse_mode(const char *);
-	extern vfo_t parse_vfo(const char *);
-	extern setting_t parse_func(const char *);
-	extern setting_t parse_level(const char *);
-	extern setting_t parse_parm(const char *);
-	extern const char* strstatus(enum rig_status_e);
-}
-# define rig_parse_mode parse_mode
-# define rig_parse_vfo parse_vfo
-# define rig_parse_func parse_func
-# define rig_parse_level parse_level
-# define rig_parse_parm parse_parm
-# define rig_strstatus strstatus
-#endif
-
-
 /* Implementation *************************************************************/
 
 ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
-	ReceiverSettingsDlgBase(parent, name, modal, f),
+	QDialog(parent, name, modal, f), Ui_ReceiverSettingsDlg(),
 	DRMReceiver(NRx), Settings(NSettings), loading(true),
 	no_rig(NULL), no_port(NULL), last_port(NULL), TimerRig(), iWantedrigModel(0)
 {
+    setupUi(this);
 
 	bool bEnableRig = true;
 #ifdef HAVE_LIBHAMLIB
@@ -603,7 +583,7 @@ void ReceiverSettingsDlg::OnCheckSaveAudioWAV()
 	{
 		/* Show "save file" dialog */
 		QString strFileName =
-			Q3FileDialog::getSaveFileName(tr("DreamOut.wav"), "*.wav", this);
+			QFileDialog::getSaveFileName(tr("DreamOut.wav"), "*.wav", this);
 
 		/* Check if user not hit the cancel button */
 		if (!strFileName.isNull())
@@ -783,10 +763,10 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		" are inside the target area of this transmission.<br>"
 		"Receiver coordinates are also saved into the Log file.");
 
-    Q3WhatsThis::add(LineEditLatDegrees, strGPS);
-    Q3WhatsThis::add(LineEditLatMinutes, strGPS);
-    Q3WhatsThis::add(LineEditLngDegrees, strGPS);
-    Q3WhatsThis::add(LineEditLngMinutes, strGPS);
+    LineEditLatDegrees->setWhatsThis( strGPS);
+    LineEditLatMinutes->setWhatsThis( strGPS);
+    LineEditLngDegrees->setWhatsThis( strGPS);
+    LineEditLngMinutes->setWhatsThis( strGPS);
 
 	/* MLC, Number of Iterations */
 	const QString strNumOfIterations =
@@ -802,29 +782,29 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		"<br>The recommended number of iterations given in the DRM "
 		"standard is one iteration (number of iterations = 1).");
 
-	Q3WhatsThis::add(TextNumOfIterations, strNumOfIterations);
-	Q3WhatsThis::add(SliderNoOfIterations, strNumOfIterations);
+	TextNumOfIterations->setWhatsThis( strNumOfIterations);
+	SliderNoOfIterations->setWhatsThis( strNumOfIterations);
 
 	/* Flip Input Spectrum */
-	Q3WhatsThis::add(CheckBoxFlipSpec,
+	CheckBoxFlipSpec->setWhatsThis(
 		tr("<b>Flip Input Spectrum:</b> Checking this box "
 		"will flip or invert the input spectrum. This is necessary if the "
 		"mixer in the front-end uses the lower side band."));
 
 	/* Mute Audio */
-	Q3WhatsThis::add(CheckBoxMuteAudio,
+	CheckBoxMuteAudio->setWhatsThis(
 		tr("<b>Mute Audio:</b> The audio can be muted by "
 		"checking this box. The reaction of checking or unchecking this box "
 		"is delayed by approx. 1 second due to the audio buffers."));
 
 	/* Reverberation Effect */
-	Q3WhatsThis::add(CheckBoxReverb,
+	CheckBoxReverb->setWhatsThis(
 		tr("<b>Reverberation Effect:</b> If this check box is checked, a "
 		"reverberation effect is applied each time an audio drop-out occurs. "
 		"With this effect it is possible to mask short drop-outs."));
 
 	/* Log File */
-	Q3WhatsThis::add(CheckBoxWriteLog,
+	CheckBoxWriteLog->setWhatsThis(
 		tr("<b>Log File:</b> Checking this box brings the "
 		"Dream software to write a log file about the current reception. "
 		"Every minute the average SNR, number of correct decoded FAC and "
@@ -852,8 +832,8 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		"uses estimation of the statistics of the channel to design an optimal "
 		"filter for noise reduction.");
 
-	Q3WhatsThis::add(RadioButtonFreqWiener, strWienerChanEst);
-	Q3WhatsThis::add(RadioButtonTiWiener, strWienerChanEst);
+	RadioButtonFreqWiener->setWhatsThis( strWienerChanEst);
+	RadioButtonTiWiener->setWhatsThis( strWienerChanEst);
 
 	/* Linear */
 	const QString strLinearChanEst =
@@ -868,11 +848,11 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		"interpolated. This algorithm causes the lowest CPU load but "
 		"performs much worse than the Wiener interpolation at low SNRs.");
 
-	Q3WhatsThis::add(RadioButtonFreqLinear, strLinearChanEst);
-	Q3WhatsThis::add(RadioButtonTiLinear, strLinearChanEst);
+	RadioButtonFreqLinear->setWhatsThis( strLinearChanEst);
+	RadioButtonTiLinear->setWhatsThis( strLinearChanEst);
 
 	/* DFT Zero Pad */
-	Q3WhatsThis::add(RadioButtonFreqDFT,
+	RadioButtonFreqDFT->setWhatsThis(
 		tr("<b>Channel Estimation Settings:</b> With these "
 		"settings, the channel estimation method in time and frequency "
 		"direction can be selected. The default values use the most powerful "
@@ -887,20 +867,20 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		"of the OFDM spectrum due to the leakage effect."));
 
 	/* Guard Energy */
-	Q3WhatsThis::add(RadioButtonTiSyncEnergy,
+	RadioButtonTiSyncEnergy->setWhatsThis(
 		tr("<b>Guard Energy:</b> Time synchronization "
 		"tracking algorithm utilizes the estimation of the impulse response. "
 		"This method tries to maximize the energy in the guard-interval to set "
 		"the correct timing."));
 
 	/* First Peak */
-	Q3WhatsThis::add(RadioButtonTiSyncFirstPeak,
+	RadioButtonTiSyncFirstPeak->setWhatsThis(
 		tr("<b>First Peak:</b> This algorithms searches for "
 		"the first peak in the estimated impulse response and moves this peak "
 		"to the beginning of the guard-interval (timing tracking algorithm)."));
 
 	/* Save audio as wave */
-	Q3WhatsThis::add(CheckBoxSaveAudioWave,
+	CheckBoxSaveAudioWave->setWhatsThis(
 		tr("<b>Save Audio as WAV:</b> Save the audio signal "
 		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
 		"box will let the user choose a file name for the recording."));
@@ -952,6 +932,6 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		"and no interferer are present since the SNR estimation may be "
 		"not correct.</li></ul>");
 
-	Q3WhatsThis::add(CheckBoxRecFilter, strInterfRej);
-	Q3WhatsThis::add(CheckBoxModiMetric, strInterfRej);
+	CheckBoxRecFilter->setWhatsThis( strInterfRej);
+	CheckBoxModiMetric->setWhatsThis( strInterfRej);
 }

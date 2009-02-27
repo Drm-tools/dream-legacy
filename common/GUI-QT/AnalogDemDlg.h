@@ -29,38 +29,15 @@
  *
 \******************************************************************************/
 
-#include <qtimer.h>
-#include <qstring.h>
-#include <qlabel.h>
-#include <qradiobutton.h>
-#include <qcheckbox.h>
-#include <qtooltip.h>
-#include <q3buttongroup.h>
-#include <qpushbutton.h>
-#include <qcheckbox.h>
-#include <q3filedialog.h>
-#include <qslider.h>
-#include <qwt_dial.h>
-#include <qwt_dial_needle.h>
-#include <qlayout.h>
-#include <q3progressbar.h>
-#include <qcombobox.h>
-#include <q3listbox.h>
-/* This include is for setting the progress bar style */
-#include <qmotifstyle.h>
-//Added by qt3to4:
-#include <QShowEvent>
-#include <QHideEvent>
-#include <QCloseEvent>
 
 #include "DialogUtil.h"
-#include "DRMPlot.h"
 #include "../GlobalDefinitions.h"
 #include "../tables/TableAMSS.h"
+#include <QTimer>
+#include <QMainWindow>
 
-using namespace Qt; // TODO remove this ?
-#include "AnalogDemDlgbase.h"
-#include "AMSSDlgbase.h"
+#include "ui_AnalogMainWindow.h"
+#include "ui_AMSSDlg.h"
 
 /* Definitions ****************************************************************/
 /* Update time of PLL phase dial control */
@@ -71,9 +48,10 @@ using namespace Qt; // TODO remove this ?
 class ReceiverSettingsDlg;
 class CDRMReceiver;
 class CSettings;
+class CDRMPlot;
 
 /* AMSS dialog -------------------------------------------------------------- */
-class CAMSSDlg : public CAMSSDlgBase
+class CAMSSDlg : public QDialog, public Ui_AMSSDlg
 {
 	Q_OBJECT
 
@@ -102,23 +80,24 @@ public slots:
 
 
 /* Analog demodulation dialog ----------------------------------------------- */
-class AnalogDemDlg : public AnalogDemDlgBase
+class AnalogDemDlg : public QMainWindow, public Ui_AnalogMainWindow
 {
 	Q_OBJECT
 
 public:
 	AnalogDemDlg(CDRMReceiver&, CSettings&, ReceiverSettingsDlg&, QWidget* parent = 0,
-		const char* name = 0, bool modal = false, Qt::WFlags f = 0);
+		const char* name = 0, Qt::WFlags f = 0);
 	/* dummy assignment operator to help MSVC8 */
 	AnalogDemDlg& operator=(const AnalogDemDlg&)
 	{ throw "should not happen"; return *this;}
 
-	void 			UpdatePlotsStyle();
+	void 			UpdatePlotStyle();
 
 protected:
 	CDRMReceiver&	Receiver;
 	CSettings&		Settings;
 	ReceiverSettingsDlg* pReceiverSettingsDlg;
+	CDRMPlot*       plot;
 
 	QTimer			Timer;
 	QTimer			TimerPLLPhaseDial;

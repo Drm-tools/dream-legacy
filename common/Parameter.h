@@ -47,8 +47,8 @@
 #include "ServiceInformation.h"
 #include <map>
 #ifdef HAVE_QT
-# include <qthread.h>
-# include <qmutex.h>
+# include <QThread>
+# include <QMutex>
 #endif
 
 /* CS: Coding Scheme */
@@ -1000,7 +1000,9 @@ protected:
 	CLastService LastAudioService;
 	CLastService LastDataService;
 
+#ifdef HAVE_QT
 	QMutex Mutex;
+#endif
 };
 
 #endif // !defined(PARAMETER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

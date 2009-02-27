@@ -48,7 +48,7 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
 	for (i = 0; i < iOutputBlockSize; i++)
 		(*pvecOutputData)[i] = 0;
 
-#ifdef USE_FAAC_LIBRARY
+#ifdef HAVE_LIBFAAC
 	/* AAC encoder ------------------------------------------------------ */
 	/* Resample data to encoder bit-rate */
 	/* Change type of data (short -> real), take left channel! */
@@ -222,7 +222,7 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 										 (_REAL) 0.4 /* 400 ms */ );
 
 	/* Total number of bytes which can be used for text and audio */
-	const int iTotNumBytesForUsage = iTotNumBitsForUsage / BITS_BINARY;
+	//const int iTotNumBytesForUsage = iTotNumBitsForUsage / BITS_BINARY;
 
 	/* Total frame size is input block size minus the bytes for the text
 	   message (if text message is used) */
@@ -273,7 +273,7 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 		iBitRate = (int) (((_REAL) iActEncOutBytes * BITS_BINARY) / iTimeEachAudBloMS * 1000);
 	}
 
-#ifdef USE_FAAC_LIBRARY
+#ifdef HAVE_LIBFAAC
 	/* Open encoder instance */
 	if (hEncoder != NULL)
 		faacEncClose(hEncoder);
@@ -349,7 +349,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 
 	/* Audio service ---------------------------------------------------- */
 
-#ifdef USE_FAAC_LIBRARY
+#ifdef HAVE_LIBFAAC
 	/* Total frame size is input block size minus the bytes for the text
 	   message (if text message is used) */
 	int iTotAudFraSizeBits = iTotNumBitsForUsage;
@@ -478,7 +478,7 @@ CAudioSourceEncoderImplementation::ClearTextMessage()
 
 CAudioSourceEncoderImplementation::~CAudioSourceEncoderImplementation()
 {
-#ifdef USE_FAAC_LIBRARY
+#ifdef HAVE_LIBFAAC
 	/* Close encoder instance afterwards */
 	if (hEncoder != NULL)
 		faacEncClose(hEncoder);
@@ -495,7 +495,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	bool bCurBlockOK;
 	bool bGoodValues;
 
-#ifdef USE_FAAD2_LIBRARY
+#ifdef HAVE_LIBFAAD
 	faacDecFrameInfo DecFrameInfo;
 	short *psDecOutSampleBuf;
 #endif
@@ -505,7 +505,6 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	ReceiverParam.Lock();
 	ReceiverParam.Measurements.audioFrameStatus.reset();
 	ReceiverParam.Unlock();
-
 	/* Check if something went wrong in the initialization routine */
 	if (DoNotProcessData == true)
 	{
@@ -536,7 +535,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	/* Check which audio coding type is used */
 	if (eAudioCoding == CAudioParam::AC_AAC)
 	{
-#ifdef USE_FAAD2_LIBRARY
+#ifdef HAVE_LIBFAAD
 		/* AAC super-frame-header ------------------------------------------- */
 		int iPrevBorder = 0;
 		for (i = 0; i < iNumBorders; i++)
@@ -627,12 +626,12 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	/* Init output block size to zero, this variable is also used for
 	   determining the position for writing the output vector */
 	iOutputBlockSize = 0;
-
+    int iNumCorDecAudio = 0;
 	for (j = 0; j < iNumAudioFrames; j++)
 	{
 		if (eAudioCoding == CAudioParam::AC_AAC)
 		{
-#ifdef USE_FAAD2_LIBRARY
+#ifdef HAVE_LIBFAAD
 			if (bGoodValues == true)
 			{
 				/* Prepare data vector with CRC at the beginning (the definition
@@ -986,6 +985,10 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			vecTempResBufOutOldRight[i] = vecTempResBufOutCurRight[i];
 		}
 	}
+    /* Store the number of correctly decoded audio blocks for the history */
+    ReceiverParam.Lock();
+    ReceiverParam.Measurements.CDAudHist.set(iNumCorDecAudio);
+    ReceiverParam.Unlock();
 }
 
 void
@@ -1015,9 +1018,6 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 	{
 
 		ReceiverParam.Lock();
-
-		/* Init counter for correctly decoded audio blocks */
-		iNumCorDecAudio = 0;
 
 		/* Init "audio was ok" flag */
 		bAudioWasOK = true;
@@ -1072,7 +1072,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 
 		if (eAudioCoding == CAudioParam::AC_AAC)
 		{
-#ifdef USE_FAAD2_LIBRARY
+#ifdef HAVE_LIBFAAD
 			/* Init for AAC decoding ---------------------------------------- */
 			int iAACSampleRate, iNumHeaderBytes, iDRMchanMode = DRMCH_MONO;
 
@@ -1336,7 +1336,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			break;
 
 		case ET_AUDDECODER:
-			/* Audio part should not be decdoded, set flag */
+			/* Audio part should not be decoded, set flag */
 			DoNotProcessAudDecoder = true;
 			break;
 
@@ -1349,24 +1349,12 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 	}
 }
 
-int
-CAudioSourceDecoder::GetNumCorDecAudio()
-{
-	/* Return number of correctly decoded audio blocks. Reset counter
-	   afterwards */
-	const int iRet = iNumCorDecAudio;
-
-	iNumCorDecAudio = 0;
-
-	return iRet;
-}
-
 CAudioSourceDecoder::CAudioSourceDecoder()
-#ifdef USE_FAAD2_LIBRARY
+#ifdef HAVE_LIBFAAD
 :	bUseReverbEffect(true), AudioRev((CReal) 1.0 /* seconds delay */ )
 #endif
 {
-#ifdef USE_FAAD2_LIBRARY
+#ifdef HAVE_LIBFAAD
 	/* Open AACEncoder instance */
 	HandleAACDecoder = NeAACDecOpen();
 
@@ -1378,7 +1366,7 @@ CAudioSourceDecoder::CAudioSourceDecoder()
 
 CAudioSourceDecoder::~CAudioSourceDecoder()
 {
-#ifdef USE_FAAD2_LIBRARY
+#ifdef HAVE_LIBFAAD
 	/* Close decoder handle */
 	NeAACDecClose(HandleAACDecoder);
 #endif

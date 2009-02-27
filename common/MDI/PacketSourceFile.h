@@ -32,13 +32,11 @@
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
 #include "../util/Buffer.h"
+#include "../util/Pacer.h"
 #include "PacketInOut.h"
-#include <qobject.h>
-#include <qdatetime.h>
 
-class CPacketSourceFile : public QObject, public CPacketSource
+class CPacketSourceFile: public CPacketSource
 {
-	Q_OBJECT
 public:
 	CPacketSourceFile();
 	virtual ~CPacketSourceFile();
@@ -47,19 +45,18 @@ public:
 	// Stop sending packets to the sink
 	virtual void ResetPacketSink(void);
 	virtual bool SetOrigin(const string& str);
+	virtual bool Poll();
 
 private:
 
     void readRawOrFF(vector<_BYTE>& vecbydata, int& interval);
     void readPcap(vector<_BYTE>& vecbydata, int& interval);
 
-	CPacketSink		*pPacketSink;
-	QTime			timeKeeper;
-	uint64_t		last_packet_time;
+	CPacketSink*	pPacketSink;
+	CPacer*			pacer;
+	uint64_t        last_packet_time;
     void*			pf;
-	bool		bRaw;
-public slots:
-	void OnDataReceived();
+	bool		    bRaw;
 };
 
 #endif

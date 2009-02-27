@@ -13,16 +13,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -30,16 +30,18 @@
 #ifndef _EPGDEC_H
 #define _EPGDEC_H
 #include "../../GlobalDefinitions.h"
-#include <qdom.h>
+#ifdef HAVE_QT
+# include <qdom.h>
+#endif
 #include <vector>
 using namespace std;
 
 class tag_length_value
 {
 public:
-       
+
       tag_length_value(const _BYTE* p);
-      
+
       bool is_cdata() const { return tag == 1; }
       bool is_epg() const { return tag == 2; }
       bool is_service_information() const { return tag == 3; }
@@ -61,7 +63,8 @@ class CEPGDecoder
     }
     void decode (const vector<_BYTE>&);
 
+#ifdef HAVE_QT
     QDomDocument doc;
-
+#endif
 };
 #endif

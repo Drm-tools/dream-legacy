@@ -1,0 +1,2579 @@
+<ui version="4.0" >
+ <class>TransmitterMainWindow</class>
+ <widget class="QMainWindow" name="TransmitterMainWindow" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>537</width>
+    <height>718</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>Dream Transmitter</string>
+  </property>
+  <property name="windowIcon" >
+   <iconset resource="res/icons.qrc" >
+    <normaloff>:/icons/MainIcon.png</normaloff>:/icons/MainIcon.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget" >
+   <widget class="Q3ButtonGroup" name="ButtonGroupMode" >
+    <property name="geometry" >
+     <rect>
+      <x>152</x>
+      <y>0</y>
+      <width>371</width>
+      <height>55</height>
+     </rect>
+    </property>
+    <property name="title" >
+     <string>Operating Mode</string>
+    </property>
+    <layout class="QHBoxLayout" name="_2" >
+     <property name="spacing" >
+      <number>6</number>
+     </property>
+     <property name="margin" >
+      <number>11</number>
+     </property>
+     <item>
+      <widget class="QRadioButton" name="RadioButtonTransmitter" >
+       <property name="text" >
+        <string>Integrated Transmitter</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="RadioButtonEncoder" >
+       <property name="text" >
+        <string>Encoder</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="RadioButtonModulator" >
+       <property name="text" >
+        <string>Modulator</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="Q3GroupBox" name="GroupInput" >
+    <property name="geometry" >
+     <rect>
+      <x>0</x>
+      <y>60</y>
+      <width>529</width>
+      <height>145</height>
+     </rect>
+    </property>
+    <property name="title" >
+     <string>Indicators</string>
+    </property>
+    <layout class="QGridLayout" name="_3" >
+     <property name="margin" >
+      <number>11</number>
+     </property>
+     <property name="spacing" >
+      <number>6</number>
+     </property>
+     <item row="0" column="0" >
+      <layout class="QHBoxLayout" name="_4" >
+       <property name="spacing" >
+        <number>6</number>
+       </property>
+       <property name="margin" >
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="TextLabelAudioLevel" >
+         <property name="text" >
+          <string>Audio Level [dB]:</string>
+         </property>
+         <property name="alignment" >
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+         </property>
+         <property name="wordWrap" >
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QwtThermo" name="ProgrInputLevel" >
+         <property name="sizePolicy" >
+          <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="2" column="0" >
+      <widget class="Q3ProgressBar" name="ProgressBarCurPict" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="frameShape" >
+        <enum>QFrame::WinPanel</enum>
+       </property>
+       <property name="frameShadow" >
+        <enum>QFrame::Sunken</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" >
+      <widget class="QLabel" name="TextLabelCurPict" >
+       <property name="sizePolicy" >
+        <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text" >
+        <string>TextLabelCurPict</string>
+       </property>
+       <property name="wordWrap" >
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QTabWidget" name="TabWidgetConfigure" >
+    <property name="geometry" >
+     <rect>
+      <x>0</x>
+      <y>210</y>
+      <width>529</width>
+      <height>432</height>
+     </rect>
+    </property>
+    <property name="sizePolicy" >
+     <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="maximumSize" >
+     <size>
+      <width>600</width>
+      <height>32767</height>
+     </size>
+    </property>
+    <widget class="QWidget" name="Channel" >
+     <attribute name="title" >
+      <string>Channel Parameters</string>
+     </attribute>
+     <layout class="QGridLayout" name="_5" >
+      <property name="margin" >
+       <number>11</number>
+      </property>
+      <property name="spacing" >
+       <number>6</number>
+      </property>
+      <item row="0" column="0" colspan="2" >
+       <widget class="Q3ButtonGroup" name="ButtonGroupBandwidth" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="title" >
+         <string>Bandwidth</string>
+        </property>
+        <property name="radioButtonExclusive" >
+         <bool>true</bool>
+        </property>
+        <layout class="QHBoxLayout" name="_6" >
+         <property name="spacing" >
+          <number>6</number>
+         </property>
+         <property name="margin" >
+          <number>11</number>
+         </property>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonBandwidth45" >
+           <property name="text" >
+            <string>4,5 kHz</string>
+           </property>
+           <property name="buttonGroupId" stdset="0" >
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonBandwidth5" >
+           <property name="text" >
+            <string>5 kHz</string>
+           </property>
+           <property name="buttonGroupId" stdset="0" >
+            <number>1</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonBandwidth9" >
+           <property name="text" >
+            <string>9 kHz</string>
+           </property>
+           <property name="buttonGroupId" stdset="0" >
+            <number>2</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonBandwidth10" >
+           <property name="text" >
+            <string>10 kHz</string>
+           </property>
+           <property name="buttonGroupId" stdset="0" >
+            <number>3</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonBandwidth18" >
+           <property name="text" >
+            <string>18 kHz</string>
+           </property>
+           <property name="buttonGroupId" stdset="0" >
+            <number>4</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonBandwidth20" >
+           <property name="text" >
+            <string>20 kHz</string>
+           </property>
+           <property name="buttonGroupId" stdset="0" >
+            <number>5</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="Q3GroupBox" name="GroupBoxSDC" >
+        <property name="title" >
+         <string>Service Data Channel</string>
+        </property>
+        <layout class="QHBoxLayout" name="_7" >
+         <property name="spacing" >
+          <number>6</number>
+         </property>
+         <property name="margin" >
+          <number>11</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="TextLabelSDCConst" >
+           <property name="text" >
+            <string>Constellation Scheme</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="ComboBoxSDCConstellation" />
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <widget class="Q3ButtonGroup" name="ButtonGroupRobustnessMode" >
+        <property name="title" >
+         <string>Robustness Mode</string>
+        </property>
+        <property name="radioButtonExclusive" >
+         <bool>true</bool>
+        </property>
+        <layout class="QHBoxLayout" name="_8" >
+         <property name="spacing" >
+          <number>6</number>
+         </property>
+         <property name="margin" >
+          <number>11</number>
+         </property>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonRMA" >
+           <property name="text" >
+            <string>A</string>
+           </property>
+           <property name="buttonGroupId" stdset="0" >
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonRMB" >
+           <property name="text" >
+            <string>B</string>
+           </property>
+           <property name="buttonGroupId" stdset="0" >
+            <number>1</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonRMC" >
+           <property name="text" >
+            <string>C</string>
+           </property>
+           <property name="buttonGroupId" stdset="0" >
+            <number>2</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonRMD" >
+           <property name="text" >
+            <string>D</string>
+           </property>
+           <property name="buttonGroupId" stdset="0" >
+            <number>3</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="0" >
+       <widget class="Q3GroupBox" name="GroupBoxMSC" >
+        <property name="title" >
+         <string>Main Service Channel</string>
+        </property>
+        <layout class="QGridLayout" name="_9" >
+         <property name="margin" >
+          <number>11</number>
+         </property>
+         <property name="spacing" >
+          <number>6</number>
+         </property>
+         <item row="0" column="1" >
+          <widget class="QComboBox" name="ComboBoxMSCProtLev" />
+         </item>
+         <item row="2" column="0" >
+          <widget class="QLabel" name="TextLabelInterleaver" >
+           <property name="text" >
+            <string>Interleaver Mode</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" >
+          <widget class="QLabel" name="TextLabelProtLev" >
+           <property name="text" >
+            <string>Protection Level</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" >
+          <widget class="QLabel" name="TextLabelMSCConst" >
+           <property name="text" >
+            <string>Constellation Scheme</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" >
+          <widget class="QComboBox" name="ComboBoxMSCConstellation" />
+         </item>
+         <item row="2" column="1" >
+          <widget class="QComboBox" name="ComboBoxMSCInterleaver" />
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="1" >
+       <widget class="Q3GroupBox" name="GroupBoxChannelCapacity" >
+        <property name="title" >
+         <string>Channel Capacity</string>
+        </property>
+        <layout class="QGridLayout" name="_10" >
+         <property name="margin" >
+          <number>11</number>
+         </property>
+         <property name="spacing" >
+          <number>6</number>
+         </property>
+         <item row="0" column="2" >
+          <widget class="QLabel" name="TextLabel2_2" >
+           <property name="text" >
+            <string>Bytes</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" >
+          <widget class="QLabel" name="TextLabel1" >
+           <property name="text" >
+            <string>Bits</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" >
+          <widget class="QLabel" name="TextLabel3" >
+           <property name="text" >
+            <string>FAC</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2" >
+          <widget class="QLabel" name="TextLabelFACCapBytes" >
+           <property name="text" >
+            <string>9</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" >
+          <widget class="QLabel" name="TextLabelFACCapBits" >
+           <property name="text" >
+            <string>72</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0" >
+          <widget class="QLabel" name="TextLabel4" >
+           <property name="text" >
+            <string>SDC</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1" >
+          <widget class="QLabel" name="TextLabelSDCCapBits" >
+           <property name="text" >
+            <string>xxx</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2" >
+          <widget class="QLabel" name="TextLabelSDCCapBytes" >
+           <property name="text" >
+            <string>TextLabel3</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0" >
+          <widget class="QLabel" name="TextLabelMSCCapLab" >
+           <property name="text" >
+            <string>MSC</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1" >
+          <widget class="QLabel" name="TextLabelMSCCapBits" >
+           <property name="text" >
+            <string>xxxx</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2" >
+          <widget class="QLabel" name="TextLabelMSCCapBytes" >
+           <property name="text" >
+            <string>TextLabel4</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="3" column="0" >
+       <spacer name="Spacer7" >
+        <property name="orientation" >
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="3" column="1" >
+       <spacer name="Spacer8" >
+        <property name="orientation" >
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="Streams" >
+     <attribute name="title" >
+      <string>Streams</string>
+     </attribute>
+     <layout class="QGridLayout" name="_11" >
+      <property name="margin" >
+       <number>11</number>
+      </property>
+      <property name="spacing" >
+       <number>6</number>
+      </property>
+      <item row="4" column="3" colspan="2" >
+       <widget class="QPushButton" name="ButtonDeleteStream" >
+        <property name="text" >
+         <string>Delete Selected</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" >
+       <widget class="QLabel" name="TextLabel2_3" >
+        <property name="text" >
+         <string>MSC Capacity (bytes)</string>
+        </property>
+        <property name="wordWrap" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1" >
+       <widget class="QLabel" name="TextLabelMSCBytesTotal" >
+        <property name="text" >
+         <string>TextLabel3</string>
+        </property>
+        <property name="wordWrap" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3" >
+       <widget class="QLabel" name="TextLabel4_2" >
+        <property name="text" >
+         <string>Available</string>
+        </property>
+        <property name="wordWrap" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" >
+       <spacer name="Spacer4" >
+        <property name="orientation" >
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="4" >
+       <widget class="QLabel" name="TextLabelMSCBytesAvailable" >
+        <property name="text" >
+         <string>TextLabel5</string>
+        </property>
+        <property name="wordWrap" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="2" >
+       <widget class="QPushButton" name="ButtonAddStream" >
+        <property name="text" >
+         <string>Add</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2" >
+       <spacer name="Spacer5" >
+        <property name="orientation" >
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="1" column="0" colspan="5" >
+       <widget class="Q3ListView" name="ListViewStreams" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>32767</width>
+          <height>300</height>
+         </size>
+        </property>
+        <column>
+         <property name="text" >
+          <string>Stream</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Type</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Bytes Per Packet</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Packets Per Frame</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Bits Per Frame</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Bytes Per Frame</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <item>
+         <property name="text" >
+          <string>New Item</string>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="5" >
+       <layout class="QHBoxLayout" name="_12" >
+        <property name="spacing" >
+         <number>6</number>
+        </property>
+        <property name="margin" >
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QComboBox" name="ComboBoxStream" />
+        </item>
+        <item>
+         <widget class="QComboBox" name="ComboBoxStreamType" />
+        </item>
+        <item>
+         <widget class="QLineEdit" name="LineEditPacketLen" >
+          <property name="sizePolicy" >
+           <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize" >
+           <size>
+            <width>0</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize" >
+           <size>
+            <width>32767</width>
+            <height>32767</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="ComboBoxPacketsPerFrame" />
+        </item>
+        <item>
+         <widget class="QLineEdit" name="LineEditBitsPerFrame" />
+        </item>
+       </layout>
+      </item>
+      <item row="3" column="2" >
+       <spacer name="Spacer9" >
+        <property name="orientation" >
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="Audio" >
+     <attribute name="title" >
+      <string>Audio</string>
+     </attribute>
+     <widget class="QLabel" name="TextLabel10" >
+      <property name="geometry" >
+       <rect>
+        <x>11</x>
+        <y>11</y>
+        <width>432</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="text" >
+       <string>Stream</string>
+      </property>
+      <property name="wordWrap" >
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="ComboBoxAudioStreamNo" >
+      <property name="geometry" >
+       <rect>
+        <x>449</x>
+        <y>11</y>
+        <width>64</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="maximumSize" >
+       <size>
+        <width>64</width>
+        <height>32767</height>
+       </size>
+      </property>
+     </widget>
+     <widget class="Q3GroupBox" name="GroupBoxAudioConfig" >
+      <property name="geometry" >
+       <rect>
+        <x>11</x>
+        <y>39</y>
+        <width>500</width>
+        <height>82</height>
+       </rect>
+      </property>
+      <property name="sizePolicy" >
+       <sizepolicy vsizetype="MinimumExpanding" hsizetype="Preferred" >
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="title" >
+       <string>Audio</string>
+      </property>
+      <layout class="QGridLayout" name="_13" >
+       <property name="margin" >
+        <number>11</number>
+       </property>
+       <property name="spacing" >
+        <number>6</number>
+       </property>
+       <item row="0" column="2" >
+        <widget class="QCheckBox" name="CheckBoxSBR" >
+         <property name="text" >
+          <string>SBR</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" >
+        <widget class="QLabel" name="TextLabelCodec" >
+         <property name="text" >
+          <string>Codec</string>
+         </property>
+         <property name="wordWrap" >
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" >
+        <widget class="QComboBox" name="ComboBoxCodec" >
+         <item>
+          <property name="text" >
+           <string>AAC</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="0" column="3" >
+        <widget class="QLabel" name="TextLabelAudioBitrate" >
+         <property name="text" >
+          <string>Bit rate</string>
+         </property>
+         <property name="wordWrap" >
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="5" >
+        <widget class="QLabel" name="TextLabel2" >
+         <property name="text" >
+          <string>Mode</string>
+         </property>
+         <property name="wordWrap" >
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="6" colspan="2" >
+        <widget class="QComboBox" name="ComboBoxAudioMode" >
+         <property name="maximumSize" >
+          <size>
+           <width>126</width>
+           <height>32767</height>
+          </size>
+         </property>
+         <property name="toolTip" >
+          <string>Mono/Stereo</string>
+         </property>
+         <item>
+          <property name="text" >
+           <string>Mono</string>
+          </property>
+         </item>
+         <item>
+          <property name="text" >
+           <string>LC Stereo</string>
+          </property>
+         </item>
+         <item>
+          <property name="text" >
+           <string>Parametric Stereo</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="0" column="4" >
+        <widget class="QComboBox" name="ComboBoxAudioBitrate" />
+       </item>
+       <item row="1" column="7" >
+        <widget class="QPushButton" name="PushButtonAudioSourceFileBrowse" >
+         <property name="text" >
+          <string>Browse</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="6" >
+        <widget class="QLineEdit" name="LineEditAudioSourceFile" >
+         <property name="maximumSize" >
+          <size>
+           <width>128</width>
+           <height>32767</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="4" colspan="2" >
+        <widget class="QCheckBox" name="CheckBoxAudioSourceIsFile" >
+         <property name="text" >
+          <string>Read From File</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1" colspan="3" >
+        <widget class="QComboBox" name="ComboBoxAudioSource" >
+         <property name="maximumSize" >
+          <size>
+           <width>128</width>
+           <height>32767</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" >
+        <widget class="QLabel" name="TextLabelAudioSource" >
+         <property name="text" >
+          <string>Source</string>
+         </property>
+         <property name="wordWrap" >
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="Q3GroupBox" name="GroupBoxTextMessage" >
+      <property name="geometry" >
+       <rect>
+        <x>10</x>
+        <y>130</y>
+        <width>500</width>
+        <height>186</height>
+       </rect>
+      </property>
+      <property name="sizePolicy" >
+       <sizepolicy vsizetype="Expanding" hsizetype="Preferred" >
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="title" >
+       <string>Text Message</string>
+      </property>
+      <layout class="QGridLayout" name="_14" >
+       <property name="margin" >
+        <number>11</number>
+       </property>
+       <property name="spacing" >
+        <number>6</number>
+       </property>
+       <item row="0" column="0" >
+        <widget class="QCheckBox" name="CheckBoxEnableTextMessage" >
+         <property name="enabled" >
+          <bool>true</bool>
+         </property>
+         <property name="sizePolicy" >
+          <sizepolicy vsizetype="Minimum" hsizetype="Minimum" >
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text" >
+          <string>Enable</string>
+         </property>
+         <property name="checked" >
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item rowspan="2" row="1" column="0" >
+        <widget class="Q3ListView" name="ListViewTextMessages" >
+         <column>
+          <property name="text" >
+           <string>Text</string>
+          </property>
+          <property name="clickable" >
+           <bool>true</bool>
+          </property>
+          <property name="resizable" >
+           <bool>false</bool>
+          </property>
+         </column>
+         <item>
+          <property name="text" >
+           <string>New Item</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+       <item row="1" column="1" >
+        <widget class="QPushButton" name="PushButtonDeleteText" >
+         <property name="text" >
+          <string>&amp;Delete</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1" >
+        <widget class="QPushButton" name="PushButtonClearAllText" >
+         <property name="text" >
+          <string>&amp;Clear All</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0" >
+        <widget class="QLineEdit" name="LineEditTextMessage" />
+       </item>
+       <item row="3" column="1" >
+        <widget class="QPushButton" name="PushButtonAddText" >
+         <property name="text" >
+          <string>&amp;Add</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="Data" >
+     <attribute name="title" >
+      <string>Data</string>
+     </attribute>
+     <layout class="QGridLayout" name="_15" >
+      <property name="margin" >
+       <number>11</number>
+      </property>
+      <property name="spacing" >
+       <number>6</number>
+      </property>
+      <item row="0" column="0" >
+       <layout class="QHBoxLayout" name="_16" >
+        <property name="spacing" >
+         <number>6</number>
+        </property>
+        <property name="margin" >
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="TextLabel10_2" >
+          <property name="text" >
+           <string>Stream</string>
+          </property>
+          <property name="wordWrap" >
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="ComboBoxDataStreamNo" />
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="1" >
+       <layout class="QHBoxLayout" name="_17" >
+        <property name="spacing" >
+         <number>6</number>
+        </property>
+        <property name="margin" >
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="TextLabel10_2_3" >
+          <property name="text" >
+           <string>Packet Id</string>
+          </property>
+          <property name="wordWrap" >
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="ComboBoxDataPacketId" />
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0" colspan="2" >
+       <widget class="Q3GroupBox" name="GroupBoxMOSlideshowApplication" >
+        <property name="title" >
+         <string>MOT Slideshow Application</string>
+        </property>
+        <layout class="QGridLayout" name="_18" >
+         <property name="margin" >
+          <number>11</number>
+         </property>
+         <property name="spacing" >
+          <number>6</number>
+         </property>
+         <item row="1" column="0" >
+          <widget class="QPushButton" name="PushButtonClearAllFileNames" >
+           <property name="text" >
+            <string>&amp;Clear All</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" >
+          <widget class="QPushButton" name="PushButtonAddFile" >
+           <property name="text" >
+            <string>&amp;Add</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="2" >
+          <widget class="Q3ListView" name="ListViewFileNames" >
+           <column>
+            <property name="text" >
+             <string>Column 1</string>
+            </property>
+            <property name="clickable" >
+             <bool>true</bool>
+            </property>
+            <property name="resizable" >
+             <bool>true</bool>
+            </property>
+           </column>
+           <item>
+            <property name="text" >
+             <string>New Item</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="1" >
+       <spacer name="Spacer12" >
+        <property name="orientation" >
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="Services" >
+     <attribute name="title" >
+      <string>Services</string>
+     </attribute>
+     <layout class="QGridLayout" name="_19" >
+      <property name="margin" >
+       <number>11</number>
+      </property>
+      <property name="spacing" >
+       <number>6</number>
+      </property>
+      <item row="0" column="0" >
+       <widget class="QLabel" name="TextLabelServices" >
+        <property name="text" >
+         <string>Services</string>
+        </property>
+        <property name="wordWrap" >
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" colspan="4" >
+       <widget class="Q3GroupBox" name="GroupBox10" >
+        <property name="title" >
+         <string>Service Data</string>
+        </property>
+        <layout class="QGridLayout" name="_20" >
+         <property name="margin" >
+          <number>11</number>
+         </property>
+         <property name="spacing" >
+          <number>6</number>
+         </property>
+         <item row="2" column="0" colspan="2" >
+          <widget class="QLabel" name="TextLabelServiceLanguage" >
+           <property name="text" >
+            <string>FAC Language</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2" colspan="2" >
+          <widget class="QComboBox" name="ComboBoxFACLanguage" />
+         </item>
+         <item row="2" column="4" colspan="2" >
+          <spacer name="Spacer16" >
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType" >
+            <enum>QSizePolicy::Expanding</enum>
+           </property>
+           <property name="sizeHint" stdset="0" >
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="2" column="8" >
+          <widget class="QLineEdit" name="LineEditSDCLanguage" />
+         </item>
+         <item row="1" column="8" >
+          <widget class="QLineEdit" name="LineEditCountry" />
+         </item>
+         <item row="1" column="0" >
+          <widget class="QLabel" name="TextLabelServiceLabel" >
+           <property name="text" >
+            <string>Label</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" colspan="3" >
+          <widget class="QLineEdit" name="LineEditServiceLabel" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="4" >
+          <spacer name="Spacer14" >
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType" >
+            <enum>QSizePolicy::Expanding</enum>
+           </property>
+           <property name="sizeHint" stdset="0" >
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="7" colspan="2" >
+          <widget class="QLineEdit" name="LineEditServiceID" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Fixed" hsizetype="Preferred" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3" >
+          <widget class="QComboBox" name="ComboBoxShortID" >
+           <property name="maximumSize" >
+            <size>
+             <width>48</width>
+             <height>32767</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" colspan="2" >
+          <widget class="QLabel" name="TextLabel1_4" >
+           <property name="text" >
+            <string>Short ID</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" >
+          <spacer name="Spacer38" >
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType" >
+            <enum>QSizePolicy::Expanding</enum>
+           </property>
+           <property name="sizeHint" stdset="0" >
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="5" colspan="2" >
+          <widget class="QLabel" name="TextLabelServiceID" >
+           <property name="text" >
+            <string>Service ID</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="6" colspan="2" >
+          <widget class="QLabel" name="TextLabel3_2" >
+           <property name="text" >
+            <string>Country</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="6" colspan="2" >
+          <widget class="QLabel" name="TextLabel2_4" >
+           <property name="text" >
+            <string>SDC Language</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4" >
+          <spacer name="Spacer15" >
+           <property name="orientation" >
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeType" >
+            <enum>QSizePolicy::Expanding</enum>
+           </property>
+           <property name="sizeHint" stdset="0" >
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="2" >
+       <widget class="Q3GroupBox" name="GroupBox8" >
+        <property name="title" >
+         <string>Audio Component</string>
+        </property>
+        <layout class="QGridLayout" name="_21" >
+         <property name="margin" >
+          <number>11</number>
+         </property>
+         <property name="spacing" >
+          <number>6</number>
+         </property>
+         <item row="0" column="3" >
+          <widget class="QComboBox" name="ComboBoxServiceAudioStream" >
+           <property name="maximumSize" >
+            <size>
+             <width>48</width>
+             <height>32767</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" >
+          <widget class="QLabel" name="TextLabelProgramType" >
+           <property name="text" >
+            <string>Program Type</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" colspan="3" >
+          <widget class="QComboBox" name="ComboBoxProgramType" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2" >
+          <widget class="QLabel" name="TextLabelServiceStream" >
+           <property name="text" >
+            <string>Stream</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="2" >
+          <widget class="QCheckBox" name="CheckBoxAudioComp" >
+           <property name="text" >
+            <string>Enable</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="3" column="2" colspan="2" >
+       <widget class="Q3GroupBox" name="GroupBox9" >
+        <property name="title" >
+         <string>Data Component</string>
+        </property>
+        <layout class="QGridLayout" name="_22" >
+         <property name="margin" >
+          <number>11</number>
+         </property>
+         <property name="spacing" >
+          <number>6</number>
+         </property>
+         <item row="0" column="4" >
+          <widget class="QComboBox" name="ComboBoxServicePacketID" >
+           <property name="maximumSize" >
+            <size>
+             <width>48</width>
+             <height>32767</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3" colspan="2" >
+          <widget class="QComboBox" name="ComboBoxAppType" />
+         </item>
+         <item row="1" column="0" colspan="3" >
+          <widget class="QLabel" name="TextLabel1_3" >
+           <property name="text" >
+            <string>Application Type</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="3" >
+          <widget class="QLabel" name="TextLabelServicePacketID" >
+           <property name="text" >
+            <string>Packet ID</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2" >
+          <widget class="QComboBox" name="ComboBoxServiceDataStream" >
+           <property name="maximumSize" >
+            <size>
+             <width>48</width>
+             <height>32767</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" >
+          <widget class="QLabel" name="TextLabel1_5" >
+           <property name="text" >
+            <string>Stream</string>
+           </property>
+           <property name="wordWrap" >
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" >
+          <widget class="QCheckBox" name="CheckBoxDataComp" >
+           <property name="text" >
+            <string>Enable</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="4" column="0" >
+       <widget class="QPushButton" name="PushButtonAddService" >
+        <property name="text" >
+         <string>Add</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1" colspan="2" >
+       <spacer name="Spacer13" >
+        <property name="orientation" >
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="4" column="3" >
+       <widget class="QPushButton" name="PushButtonDeleteService" >
+        <property name="text" >
+         <string>Delete Selected</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0" >
+       <spacer name="Spacer40" >
+        <property name="orientation" >
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="5" column="3" >
+       <spacer name="Spacer41" >
+        <property name="orientation" >
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="1" column="0" colspan="5" >
+       <widget class="Q3ListView" name="ListViewServices" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize" >
+         <size>
+          <width>32767</width>
+          <height>104</height>
+         </size>
+        </property>
+        <column>
+         <property name="text" >
+          <string>Short ID</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Label</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Service ID</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>FAC Language</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>SDC Language</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Country</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Type</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Audio Stream</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Data Stream</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Packet ID</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <item>
+         <property name="text" >
+          <string>New Item</string>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="5" >
+       <spacer name="Spacer34" >
+        <property name="orientation" >
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="2" column="4" colspan="2" >
+       <spacer name="Spacer36" >
+        <property name="orientation" >
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="3" column="4" >
+       <spacer name="Spacer35" >
+        <property name="orientation" >
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="4" column="4" >
+       <spacer name="Spacer39" >
+        <property name="orientation" >
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="MDIOut" >
+     <attribute name="title" >
+      <string>MDI Output</string>
+     </attribute>
+     <layout class="QGridLayout" name="_23" >
+      <property name="margin" >
+       <number>11</number>
+      </property>
+      <property name="spacing" >
+       <number>6</number>
+      </property>
+      <item row="0" column="0" colspan="2" >
+       <widget class="Q3ListView" name="ListViewMDIOutputs" >
+        <property name="maximumSize" >
+         <size>
+          <width>400</width>
+          <height>300</height>
+         </size>
+        </property>
+        <column>
+         <property name="text" >
+          <string>Port/File</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Address</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <column>
+         <property name="text" >
+          <string>Interface</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+        <item>
+         <property name="text" >
+          <string>New Item</string>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+         <property name="text" >
+          <string/>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="1" >
+       <widget class="QPushButton" name="PushButtonAddMDIDest" >
+        <property name="text" >
+         <string>Add IP</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2" >
+       <widget class="QPushButton" name="PushButtonDeleteMDIOutput" >
+        <property name="text" >
+         <string>Delete Selected</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" >
+       <layout class="QHBoxLayout" name="_24" >
+        <item>
+         <widget class="QLabel" name="TextLabel1_6_2" >
+          <property name="text" >
+           <string>Output Fillename</string>
+          </property>
+          <property name="wordWrap" >
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="LineEditMDIOutputFile" >
+          <property name="maximumSize" >
+           <size>
+            <width>256</width>
+            <height>32767</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="PushButtonMDIOutBrowse" >
+          <property name="text" >
+           <string>Browse</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="1" >
+       <widget class="QPushButton" name="PushButtonAddMDIFileDest" >
+        <property name="text" >
+         <string>Add File</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" >
+       <layout class="QGridLayout" name="_25" >
+        <item row="0" column="0" >
+         <widget class="QLabel" name="TextLabel8_2" >
+          <property name="sizePolicy" >
+           <sizepolicy vsizetype="Preferred" hsizetype="Minimum" >
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text" >
+           <string>Host/Group</string>
+          </property>
+          <property name="wordWrap" >
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1" >
+         <widget class="QComboBox" name="ComboBoxMDIoutInterface" >
+          <property name="sizePolicy" >
+           <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize" >
+           <size>
+            <width>128</width>
+            <height>32767</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" >
+         <widget class="QLabel" name="TextLabel9_2" >
+          <property name="sizePolicy" >
+           <sizepolicy vsizetype="Preferred" hsizetype="Minimum" >
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text" >
+           <string>Output Interface</string>
+          </property>
+          <property name="wordWrap" >
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" >
+         <widget class="QLabel" name="TextLabel7_2" >
+          <property name="sizePolicy" >
+           <sizepolicy vsizetype="Preferred" hsizetype="Minimum" >
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text" >
+           <string>Port</string>
+          </property>
+          <property name="wordWrap" >
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" >
+         <widget class="QLineEdit" name="LineEditMDIOutAddr" >
+          <property name="sizePolicy" >
+           <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize" >
+           <size>
+            <width>128</width>
+            <height>32767</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1" >
+         <widget class="QLineEdit" name="LineEditMDIoutPort" >
+          <property name="sizePolicy" >
+           <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximumSize" >
+           <size>
+            <width>64</width>
+            <height>32767</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="MDIIn" >
+     <attribute name="title" >
+      <string>MDI Input</string>
+     </attribute>
+     <layout class="QGridLayout" name="_26" >
+      <item row="0" column="0" >
+       <layout class="QGridLayout" name="_27" >
+        <item row="1" column="0" colspan="2" >
+         <widget class="QCheckBox" name="CheckBoxMDIinMcast" >
+          <property name="text" >
+           <string>Multicast</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" >
+         <widget class="QLabel" name="TextLabel7_3" >
+          <property name="text" >
+           <string>Port</string>
+          </property>
+          <property name="wordWrap" >
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0" colspan="2" >
+         <widget class="QLabel" name="TextLabel9_3" >
+          <property name="text" >
+           <string>Interface</string>
+          </property>
+          <property name="wordWrap" >
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2" >
+         <widget class="QComboBox" name="ComboBoxMDIinInterface" >
+          <property name="maximumSize" >
+           <size>
+            <width>128</width>
+            <height>32767</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="0" colspan="2" >
+         <widget class="QLabel" name="textLabel1" >
+          <property name="text" >
+           <string>Group</string>
+          </property>
+          <property name="wordWrap" >
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" >
+         <widget class="QLineEdit" name="LineEditMDIinPort" >
+          <property name="maximumSize" >
+           <size>
+            <width>48</width>
+            <height>32767</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2" >
+         <widget class="QLineEdit" name="LineEditMDIinGroup" >
+          <property name="maximumSize" >
+           <size>
+            <width>128</width>
+            <height>32767</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0" >
+       <layout class="QHBoxLayout" name="_28" >
+        <item>
+         <widget class="QCheckBox" name="CheckBoxReadMDIFile" >
+          <property name="text" >
+           <string>Read From File</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="TextLabel1_6" >
+          <property name="text" >
+           <string>Input Fillename</string>
+          </property>
+          <property name="wordWrap" >
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="LineEditMDIInputFile" >
+          <property name="maximumSize" >
+           <size>
+            <width>256</width>
+            <height>32767</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="PushButtonMDIInBrowse" >
+          <property name="text" >
+           <string>Browse</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="0" >
+       <spacer name="spacer228" >
+        <property name="orientation" >
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeType" >
+         <enum>QSizePolicy::Expanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0" >
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="COFDM" >
+     <attribute name="title" >
+      <string>COFDM</string>
+     </attribute>
+     <layout class="QGridLayout" name="_29" >
+      <property name="margin" >
+       <number>11</number>
+      </property>
+      <property name="spacing" >
+       <number>6</number>
+      </property>
+      <item row="0" column="0" >
+       <layout class="QHBoxLayout" name="_30" >
+        <property name="spacing" >
+         <number>6</number>
+        </property>
+        <property name="margin" >
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="TextLabelIF" >
+          <property name="text" >
+           <string>Intermediate Frequency</string>
+          </property>
+          <property name="wordWrap" >
+           <bool>false</bool>
+          </property>
+          <property name="indent" >
+           <number>-1</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="LineEditSndCrdIF" >
+          <property name="sizePolicy" >
+           <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize" >
+           <size>
+            <width>70</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize" >
+           <size>
+            <width>32767</width>
+            <height>32767</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="TextLabelIFUnit" >
+          <property name="text" >
+           <string> Hz</string>
+          </property>
+          <property name="wordWrap" >
+           <bool>false</bool>
+          </property>
+          <property name="indent" >
+           <number>-1</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0" >
+       <widget class="Q3ButtonGroup" name="ButtonGroupOutput" >
+        <property name="sizePolicy" >
+         <sizepolicy vsizetype="Minimum" hsizetype="Minimum" >
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize" >
+         <size>
+          <width>0</width>
+          <height>32</height>
+         </size>
+        </property>
+        <property name="title" >
+         <string>Mode</string>
+        </property>
+        <layout class="QHBoxLayout" name="_31" >
+         <property name="spacing" >
+          <number>6</number>
+         </property>
+         <property name="margin" >
+          <number>11</number>
+         </property>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonOutIQNeg" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text" >
+            <string>I / Q (neg)</string>
+           </property>
+           <property name="buttonGroupId" stdset="0" >
+            <number>0</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonOutIQPos" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text" >
+            <string>I / Q (pos)</string>
+           </property>
+           <property name="buttonGroupId" stdset="0" >
+            <number>2</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonOutEP" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text" >
+            <string>E / P</string>
+           </property>
+           <property name="buttonGroupId" stdset="0" >
+            <number>3</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QRadioButton" name="RadioButtonOutReal" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text" >
+            <string>Real val.</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="3" column="0" >
+       <layout class="QGridLayout" name="_32" >
+        <item row="0" column="1" >
+         <widget class="QPushButton" name="PushButtonCOFDMAddAudio" >
+          <property name="text" >
+           <string>Add</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" >
+         <layout class="QHBoxLayout" name="_33" >
+          <item>
+           <widget class="QLabel" name="TextLabel1_2" >
+            <property name="text" >
+             <string>Sound Device</string>
+            </property>
+            <property name="wordWrap" >
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="ComboBoxCOFDMdest" >
+            <property name="sizePolicy" >
+             <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="0" >
+         <layout class="QHBoxLayout" name="_34" >
+          <item>
+           <widget class="QLabel" name="TextLabel1_6_2_2" >
+            <property name="text" >
+             <string>Output Fillename</string>
+            </property>
+            <property name="wordWrap" >
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="LineEditCOFDMOutputFile" >
+            <property name="maximumSize" >
+             <size>
+              <width>256</width>
+              <height>32767</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="PushButtonCOFDMBrowse" >
+            <property name="text" >
+             <string>Browse</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item row="1" column="1" >
+         <widget class="QPushButton" name="PushButtonCOFDMAddFile" >
+          <property name="text" >
+           <string>Add</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="2" column="1" >
+       <widget class="QPushButton" name="PushButtonCOFDMDeleteSelected" >
+        <property name="text" >
+         <string>Delete Selected</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" >
+       <widget class="Q3ListView" name="ListViewCOFDM" >
+        <property name="maximumSize" >
+         <size>
+          <width>32767</width>
+          <height>100</height>
+         </size>
+        </property>
+        <column>
+         <property name="text" >
+          <string>Output</string>
+         </property>
+         <property name="clickable" >
+          <bool>true</bool>
+         </property>
+         <property name="resizable" >
+          <bool>true</bool>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="layoutWidget" >
+    <property name="geometry" >
+     <rect>
+      <x>0</x>
+      <y>650</y>
+      <width>523</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="_35" >
+     <property name="spacing" >
+      <number>6</number>
+     </property>
+     <property name="margin" >
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="ButtonStartStop" >
+       <property name="text" >
+        <string>&amp;Start</string>
+       </property>
+       <property name="autoDefault" >
+        <bool>true</bool>
+       </property>
+       <property name="default" >
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="Horizontal Spacing2" >
+       <property name="orientation" >
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeType" >
+        <enum>QSizePolicy::Expanding</enum>
+       </property>
+       <property name="sizeHint" stdset="0" >
+        <size>
+         <width>20</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="buttonClose" >
+       <property name="text" >
+        <string>&amp;Close</string>
+       </property>
+       <property name="autoDefault" >
+        <bool>true</bool>
+       </property>
+       <property name="default" >
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QLabel" name="logo" >
+    <property name="geometry" >
+     <rect>
+      <x>10</x>
+      <y>10</y>
+      <width>132</width>
+      <height>46</height>
+     </rect>
+    </property>
+    <property name="text" >
+     <string/>
+    </property>
+    <property name="pixmap" >
+     <pixmap resource="res/icons.qrc" >:/icons/LogoSmall.png</pixmap>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar" >
+   <property name="geometry" >
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>537</width>
+     <height>19</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar" />
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>Q3GroupBox</class>
+   <extends>QGroupBox</extends>
+   <header>Qt3Support/Q3GroupBox</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>Q3ButtonGroup</class>
+   <extends>Q3GroupBox</extends>
+   <header>Qt3Support/Q3ButtonGroup</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>Q3ListView</class>
+   <extends>Q3Frame</extends>
+   <header>q3listview.h</header>
+  </customwidget>
+  <customwidget>
+   <class>Q3ProgressBar</class>
+   <extends>QFrame</extends>
+   <header>Qt3Support/Q3ProgressBar</header>
+  </customwidget>
+  <customwidget>
+   <class>QwtThermo</class>
+   <extends>QWidget</extends>
+   <header>qwt_thermo.h</header>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="res/icons.qrc" />
+ </resources>
+ <connections/>
+</ui>

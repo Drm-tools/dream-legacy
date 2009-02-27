@@ -35,16 +35,71 @@
 #include "../DABMOT.h"
 #include "../../util/Utilities.h"
 
+#ifdef HAVE_QT
 static QDomElement element(QDomDocument& doc, const tag_length_value& tlv);
+#else
+
+class DomDocument;
+
+struct DomNode
+{
+    void appendChild(const DomNode& n)
+    {
+        children.push_back(n);
+    }
+    enum { document,element,text} nodeType;
+    DomDocument* doc;
+    vector<DomNode> children;
+};
+
+struct DomElement: public DomNode
+{
+    void setAttribute (const string& n, const string& v)
+    {
+        attributes[n]=v;
+    }
+    map<string, string> attributes;
+    string name;
+};
+
+struct DomText : public DomNode
+{
+    string text;
+};
+
+struct DomDocument: public DomNode
+{
+    DomElement createElement(const string& name)
+    {
+        DomElement* n = new DomElement;
+        n->doc = this;
+        n->name = name;
+        return *n;
+    }
+    DomText createTextNode(const string& text)
+    {
+        DomText* n = new DomText;
+        n->doc = this;
+        n->text = text;
+        return *n;
+    }
+};
+
+static DomElement element(DomDocument& doc, const tag_length_value& tlv);
+#endif
 
 void
 CEPGDecoder::decode (const vector<_BYTE>& vecData)
 {
     /* clear the doc, allowing re-use */
+#ifdef HAVE_QT
     doc.setContent (QString (""));
+#endif
     tag_length_value tlv(&vecData[0]);
     if(tlv.is_epg()) {
+#ifdef HAVE_QT
       doc.appendChild (element(doc, tlv));
+#endif
     }
 }
 
@@ -303,11 +358,19 @@ tag_length_value::tag_length_value(const _BYTE* q)
   value = p;
 }
 
+#ifdef HAVE_QT
 static QDomElement
 element(QDomDocument& doc, const tag_length_value& tlv)
 {
   QString name (element_tables[tlv.tag].element_name);
   QDomElement e = doc.createElement (name);
+#else
+static DomElement
+element(DomDocument& doc, const tag_length_value& tlv)
+{
+  string name (element_tables[tlv.tag].element_name);
+  DomElement e = doc.createElement (name);
+#endif
   map<string,string> attr;
   _BYTE* end = tlv.value+tlv.length;
   dectab* at = element_tables[tlv.tag].tags;
@@ -327,7 +390,13 @@ element(QDomDocument& doc, const tag_length_value& tlv)
       a = b;
   }
   for(map<string,string>::iterator i = attr.begin(); i != attr.end(); i++)
+  {
+#ifdef HAVE_QT
     e.setAttribute (QString(i->first.c_str()), QString().fromUtf8(i->second.c_str()));
+#else
+    e.setAttribute (i->first, i->second);
+#endif
+  }
   _BYTE* p = a.value;
   while(p<end)
   {
@@ -342,7 +411,11 @@ element(QDomDocument& doc, const tag_length_value& tlv)
 	}
       else if(a.is_cdata()) {
           string value = decode_string(a.value, a.length);
+#ifdef HAVE_QT
 	  QDomText t = doc.createTextNode (QString ().fromUtf8 (value.c_str()));
+#else
+	  DomText t = doc.createTextNode (value);
+#endif
 	  e.appendChild (t);
       }
       p = a.value+a.length;

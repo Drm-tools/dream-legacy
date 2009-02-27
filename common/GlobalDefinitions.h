@@ -52,39 +52,6 @@ using namespace std; /* Because of the library: "complex" */
 #define _DEBUG_
 #undef _DEBUG_
 
-#if (!defined(HAVE_CONFIG_H)) && (!defined(HAVE_QT))
-/* For Windows set flags here, otherwise it is set by configure */
-
-/* Define whether using GUI or non-GUI receiver */
-# define HAVE_QT
-# define USE_QT_GUI
-//# undef USE_QT_GUI
-
-/* Define to get com port auto detection on Win2K and beyond */
-# define HAVE_SETUPAPI
-//# undef HAVE_SETUPAPI
-
-/* Activate or disable faad2 library (AAC decoding) */
-# define USE_FAAD2_LIBRARY
-//# undef USE_FAAD2_LIBRARY
-
-# define USE_FAAC_LIBRARY
-//# undef USE_FAAC_LIBRARY
-
-# define HAVE_LIBPCAP
-//# undef HAVE_LIBPCAP
-
-# define HAVE_LIBHAMLIB
-//# undef HAVE_LIBHAMLIB
-
-/* Define if you have Hamlib >= 1.2.1 */
-# define HAVE_RIG_PARSE_MODE
-#  define HAVE_LIBZ 1
-//# undef HAVE_LIBZ
-
-#endif
-
-
 /* Choose algorithms -------------------------------------------------------- */
 /* There are two algorithms available for frequency offset estimation for
    tracking mode: Using frequency pilots or the guard-interval correlation. In

@@ -29,10 +29,10 @@
 
 #include "EPG.h"
 #include "epgutil.h"
-#include <qfile.h>
-#include <q3textstream.h>
+#include <QFile>
+#include <QTextstream>
 #include <QStringList>
-#include <qregexp.h>
+#include <QRegexp>
 #include <iostream>
 
 const
@@ -1285,7 +1285,7 @@ EPG::getFile (CEPGDecoder & epg, const QString & fileName)
 	file.readBlock ((char *) &vecData.front (), file.size ());
 	file.close ();
 	epg.decode (vecData);
-	QDomNodeList programmes = epg.doc.elementsByTagName ("programme");
+    QDomNodeList programmes = epg.doc.elementsByTagName ("programme");
 	parseDoc (programmes.item (0));
 }
 
@@ -1444,10 +1444,9 @@ EPG::saveChannels (const QString & fileName)
 		}
 		ensemble.appendChild (service);
 	}
-	Q3TextStream stream (&f);
+	QTextStream stream (&f);
 	stream << doc.toString ();
 	f.close ();
-
 }
 
 void

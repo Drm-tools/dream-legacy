@@ -55,7 +55,7 @@
 #include <QShowEvent>
 #include <QHideEvent>
 
-#include "StationsDlgbase.h"
+#include "ui_StationsDlg.h"
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 #include "../util/Settings.h"
@@ -212,7 +212,7 @@ public:
 };
 
 
-class StationsDlg : public CStationsDlgBase
+class StationsDlg : public QDialog, public Ui_StationsDlg
 {
 	Q_OBJECT
 

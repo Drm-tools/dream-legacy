@@ -42,15 +42,14 @@
 #include "../DrmSimulation.h"
 #include "../util/Settings.h"
 #ifdef HAVE_LIBHAMLIB
-#include "../util/Hamlib.h"
+# include "../util/Hamlib.h"
 #endif
 #ifdef USE_QT_GUI
-# include <qapplication.h>
-# include <qthread.h>
-# include <qmessagebox.h>
-//Added by qt3to4:
-#include <QTranslator>
-# include "DRMDialog.h"
+# include <QApplication>
+# include <QThread>
+# include <QMessagebox>
+# include <QTranslator>
+# include "fdrmdialog.h"
 # include "TransmDlg.h"
 #endif
 #include <iostream>
@@ -153,7 +152,7 @@ main(int argc, char **argv)
 
 			DRMReceiver.Init();
 
-			DRMDialog MainDlg(DRMReceiver, Settings, 0, 0, false, Qt::WStyle_MinMax);
+			DRMMainWindow MainDlg(DRMReceiver, Settings, 0, 0, Qt::WStyle_MinMax);
 
 			/* Start working thread */
 			DRMReceiver.start();
@@ -180,8 +179,7 @@ main(int argc, char **argv)
 
 			DRMTransmitter.LoadSettings(Settings);
 
-			TransmDialog MainDlg(DRMTransmitter, Settings, NULL, NULL, false, Qt::WStyle_MinMax);
-
+			TransmDialog MainDlg(DRMTransmitter, Settings, NULL, NULL, Qt::WStyle_MinMax);
 			/* Set main window */
 			app.setMainWidget(&MainDlg);
 
@@ -262,7 +260,7 @@ main(int argc, char **argv)
 
 			DRMSimulation.SimScript();
 			DRMReceiver.LoadSettings(Settings);
-			DRMReceiver.SetReceiverMode(RM_DRM);
+			DRMReceiver.SetReceiverMode(DRM);
 			DRMReceiver.Start();
 			DRMReceiver.SaveSettings(Settings);
 		}

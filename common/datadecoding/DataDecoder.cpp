@@ -438,13 +438,6 @@ CDataDecoder::DecodeEPG(const CParameter & ReceiverParam)
 				iScopeId = ReceiverParam.Service[iEPGService].iServiceID;
 			fileName = epgFilename(NewObj.ScopeStart, iScopeId,
 								   NewObj.iContentSubType, advanced);
-
-#if !defined(HAVE_LIBZ) && !defined(HAVE_LIBFREEIMAGE)
-			const string& s = NewObj.strName;
-			if (s.size() >= 3)
-				if (s.substr(s.size() - 3, 3) == ".gz")
-					fileName += ".gz";
-#endif
 		}
 		else
 		{

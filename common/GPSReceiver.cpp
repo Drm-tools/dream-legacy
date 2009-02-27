@@ -28,12 +28,6 @@
 \******************************************************************************/
 
 #include "GPSReceiver.h"
-
-#ifdef HAVE_QT
-# include <q3socket.h>
-# include <q3signal.h>
-#endif
-
 #include <sstream>
 #include <iomanip>
 using namespace std;
@@ -41,10 +35,11 @@ using namespace std;
 const unsigned short CGPSReceiver::c_usReconnectIntervalSeconds = 30;
 
 CGPSReceiver::CGPSReceiver(CParameter& p, CSettings& s):
-	Parameters(p),m_Settings(s),m_pSocket(NULL),m_iCounter(0),
+	Parameters(p),m_Settings(s),m_iCounter(0),
 	m_sHost("localhost"),m_iPort(2947)
 {
 #ifdef HAVE_QT
+    m_pSocket = NULL;
     m_pTimer = new QTimer(this);
 	m_pTimerDataTimeout = new QTimer(this);
 #endif
@@ -65,9 +60,10 @@ void CGPSReceiver::open()
 	Parameters.Lock();
 	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
 	Parameters.Unlock();
+#ifdef HAVE_QT
 	if(m_pSocket == NULL)
 	{
-		m_pSocket = new Q3Socket();
+		m_pSocket = new QTcpSocket();
 		if(m_pSocket == NULL)
 			return;
 
@@ -77,10 +73,12 @@ void CGPSReceiver::open()
 	}
 
 	m_pSocket->connectToHost(m_sHost.c_str(), m_iPort);
+#endif
 }
 
 void CGPSReceiver::close()
 {
+#ifdef HAVE_QT
 	if(m_pSocket == NULL)
 		return;
 
@@ -94,6 +92,7 @@ void CGPSReceiver::close()
 	disconnect(m_pSocket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
 	delete m_pSocket;
 	m_pSocket = NULL;
+#endif
 }
 
 void CGPSReceiver::DecodeGPSDReply(string Reply)
@@ -248,10 +247,12 @@ void CGPSReceiver::DecodeY(string Value)
 
 void CGPSReceiver::slotInit()
 {
+#ifdef HAVE_QT
 	close();
 	//disconnect(m_pTimer);
 	m_pTimer->stop();
 	open();
+#endif
 }
 
 void CGPSReceiver::slotConnected()
@@ -261,6 +262,7 @@ void CGPSReceiver::slotConnected()
 	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
 	Parameters.Unlock();
 	// clear current buffer
+#ifdef HAVE_QT
 	while(m_pSocket->canReadLine())
 		m_pSocket->readLine();
 
@@ -269,6 +271,7 @@ void CGPSReceiver::slotConnected()
 	disconnect(m_pTimerDataTimeout, 0, 0, 0);	// disconnect everything connected from the timer
 	connect( m_pTimerDataTimeout, SIGNAL(timeout()), SLOT(slotTimeout()) );
 	m_pTimerDataTimeout->start(c_usReconnectIntervalSeconds*1000);
+#endif
 }
 
 void CGPSReceiver::slotTimeout()
@@ -279,11 +282,12 @@ void CGPSReceiver::slotTimeout()
 	{
 		if (m_iCounter < 0) // to stop it wrapping round (eventually)
 			m_iCounter = 1;
-
+#ifdef HAVE_QT
 		m_pTimerDataTimeout->stop();
 		//disconnect(m_pTimerDataTimeout);
 		close();
 		open();
+#endif
 	}
 	else
 	{
@@ -299,15 +303,19 @@ void CGPSReceiver::slotReadyRead()
 	Parameters.Lock();
 	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_DATA_AVAILABLE);
 	Parameters.Unlock();
+#ifdef HAVE_QT
 	while (m_pSocket->canReadLine())
 		DecodeGPSDReply((const char*) m_pSocket->readLine());
 	m_pTimerDataTimeout->start(5*1000); // if no data in 5 seconds signal GPS_RX_NO_DATA
+#endif
 }
 
 void CGPSReceiver::slotSocketError(int)
 {
+#ifdef HAVE_QT
 //	close()
 	disconnect(m_pTimer, 0, 0, 0);	// disconnect everything connected to the timer
 	connect( m_pTimer, SIGNAL(timeout()), SLOT(slotInit()) );
 	m_pTimer->start(c_usReconnectIntervalSeconds*1000, true);
+#endif
 }

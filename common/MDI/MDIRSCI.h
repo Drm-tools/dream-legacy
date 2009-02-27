@@ -50,6 +50,8 @@
 #define MAX_NUM_RSI_PRESETS 9
 
 /* Classes ********************************************************************/
+
+
 class CDIIn : public CPacketSink
 {
 public:
@@ -62,10 +64,10 @@ public:
 
 protected:
 
-	string						strOrigin;
-	CMDIInBuffer	  			queue;
-	CPacketSource*				source;
-	CPft						Pft;
+	string					strOrigin;
+	CMDIInBuffer	  		queue;
+	CPacketSource*			source;
+	CPft					Pft;
 
 	bool					bDIInEnabled;
 };
@@ -108,8 +110,8 @@ public:
 
 protected:
 
-	string						strDestination;
-	CRSISubscriberSocket		sink;
+	string					strDestination;
+	CRSISubscriberSocket	sink;
 
 	bool					bUseAFCRC;
 

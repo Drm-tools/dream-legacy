@@ -10,7 +10,7 @@
 				<Option platforms="Windows;" />
 				<Option output="Dream.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="Release" />
-				<Option type="1" />
+				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="--mode DRMRX D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
@@ -18,7 +18,25 @@
 					<Add option="-W" />
 					<Add option="-fexceptions" />
 					<Add option="-DNDEBUG" />
+					<Add option="-DHAVE_QT" />
+					<Add option="-DUSE_QT_GUI" />
+					<Add option="-DQT_THREAD_SUPPORT" />
+					<Add option="-DQT_DLL" />
+					<Add option="-DQT_QT3SUPPORT_LIB" />
+					<Add option="-DQT3_SUPPORT" />
+					<Add option="-DQT_XML_LIB" />
+					<Add option="-DQT_GUI_LIB" />
+					<Add option="-DQT_NETWORK_LIB" />
+					<Add option="-DQT_CORE_LIB" />
 				</Compiler>
+				<Linker>
+					<Add library="Qt3Support4" />
+					<Add library="QtCore4" />
+					<Add library="QtNetwork4" />
+					<Add library="QtGUI4" />
+					<Add library="QtXML4" />
+					<Add library="qwt5" />
+				</Linker>
 			</Target>
 			<Target title="Win32 Debug">
 				<Option output="Dreamd" prefix_auto="1" extension_auto="1" />
@@ -28,25 +46,58 @@
 				<Option parameters="--mode DRMRX D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-W" />
+					<Add option="-Wall" />
+					<Add option="-pg" />
 					<Add option="-g" />
 					<Add option="-fexceptions" />
 					<Add option="-D_DEBUG" />
+					<Add option="-DHAVE_QT" />
+					<Add option="-DUSE_QT_GUI" />
+					<Add option="-DQT_THREAD_SUPPORT" />
+					<Add option="-DQT_DLL" />
+					<Add option="-DQT_QT3SUPPORT_LIB" />
+					<Add option="-DQT3_SUPPORT" />
+					<Add option="-DQT_XML_LIB" />
+					<Add option="-DQT_GUI_LIB" />
+					<Add option="-DQT_NETWORK_LIB" />
+					<Add option="-DQT_CORE_LIB" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg -lgmon" />
+					<Add library="Qt3Support4" />
+					<Add library="QtCore4" />
+					<Add library="QtNetwork4" />
+					<Add library="QtGUI4" />
+					<Add library="QtXML4" />
+					<Add library="qwt5" />
+				</Linker>
+			</Target>
+			<Target title="Win32CLI">
+				<Option platforms="Windows;" />
+				<Option output="cdream.exe" prefix_auto="0" extension_auto="0" />
+				<Option object_output="windows\Release" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option use_console_runner="0" />
+				<Option parameters="--mode DRMRX D:\RTLwithSlideshow_ModeB_10kHz.wav" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+					<Add option="-fexceptions" />
+					<Add option="-DNDEBUG" />
 				</Compiler>
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-D__INTERLOCKED_DECLARED" />
 			<Add option="-DHAVE_STDINT_H" />
+			<Add option="-DHAVE_LIBPCAP" />
+			<Add option="-DHAVE_HAMLIB" />
+			<Add option="-DHAVE_LIBFAAD" />
+			<Add option="-DHAVE_LIBFAAC" />
+			<Add option="-DHAVE_LIBZ" />
 			<Add option="-D_WINDOWS" />
 			<Add option="-DWIN32" />
-			<Add option="-DQT_THREAD_SUPPORT" />
-			<Add option="-DQT_DLL" />
-			<Add option="-DQT_QT3SUPPORT_LIB" />
-			<Add option="-DQT3_SUPPORT" />
-			<Add option="-DQT_XML_LIB" />
-			<Add option="-DQT_GUI_LIB" />
-			<Add option="-DQT_NETWORK_LIB" />
-			<Add option="-DQT_CORE_LIB" />
+			<Add option="-D__USE_NTOSKRNL__" />
 			<Add directory="$(QTDIR)\include" />
 			<Add directory="$(QTDIR)\include\QtCore" />
 			<Add directory="..\libs" />
@@ -63,21 +114,14 @@
 		<Linker>
 			<Add library="faac" />
 			<Add library="faad" />
-			<Add library="hamlib" />
 			<Add library="fftw" />
 			<Add library="rfftw" />
-			<Add library="qwt5" />
 			<Add library="z" />
 			<Add library="wsock32" />
 			<Add library="winmm" />
 			<Add library="setupapi" />
+			<Add library="sndfile" />
 			<Add library="wpcap" />
-			<Add library="..\..\..\bin\libsndfile-1.dll" />
-			<Add library="Qt3Support4" />
-			<Add library="QtCore4" />
-			<Add library="QtNetwork4" />
-			<Add library="QtGUI4" />
-			<Add library="QtXML4" />
 			<Add directory="$(QTDIR)\lib" />
 			<Add directory="D:\dream\qwt-qt4\lib" />
 			<Add directory="..\libs" />
@@ -107,35 +151,127 @@
 		<Unit filename="..\common\GPSData.h" />
 		<Unit filename="..\common\GPSReceiver.cpp" />
 		<Unit filename="..\common\GPSReceiver.h" />
-		<Unit filename="..\common\GUI-QT\AnalogDemDlg.cpp" />
-		<Unit filename="..\common\GUI-QT\AnalogDemDlg.h" />
-		<Unit filename="..\common\GUI-QT\DRMPlot.cpp" />
-		<Unit filename="..\common\GUI-QT\DRMPlot.h" />
-		<Unit filename="..\common\GUI-QT\DialogUtil.cpp" />
-		<Unit filename="..\common\GUI-QT\DialogUtil.h" />
-		<Unit filename="..\common\GUI-QT\EPGDlg.cpp" />
-		<Unit filename="..\common\GUI-QT\EPGDlg.h" />
-		<Unit filename="..\common\GUI-QT\LatLongEditDlg.cpp" />
-		<Unit filename="..\common\GUI-QT\LiveScheduleDlg.cpp" />
-		<Unit filename="..\common\GUI-QT\LiveScheduleDlg.h" />
-		<Unit filename="..\common\GUI-QT\Loghelper.cpp" />
-		<Unit filename="..\common\GUI-QT\MultColorLED.cpp" />
-		<Unit filename="..\common\GUI-QT\MultColorLED.h" />
-		<Unit filename="..\common\GUI-QT\MultSettingsDlg.cpp" />
-		<Unit filename="..\common\GUI-QT\MultSettingsDlg.h" />
-		<Unit filename="..\common\GUI-QT\MultimediaDlg.cpp" />
-		<Unit filename="..\common\GUI-QT\MultimediaDlg.h" />
-		<Unit filename="..\common\GUI-QT\ReceiverSettingsDlg.cpp" />
-		<Unit filename="..\common\GUI-QT\ReceiverSettingsDlg.h" />
-		<Unit filename="..\common\GUI-QT\StationsDlg.cpp" />
-		<Unit filename="..\common\GUI-QT\StationsDlg.h" />
-		<Unit filename="..\common\GUI-QT\TransmDlg.cpp" />
-		<Unit filename="..\common\GUI-QT\TransmDlg.h" />
-		<Unit filename="..\common\GUI-QT\fdrmdialog.cpp" />
-		<Unit filename="..\common\GUI-QT\fdrmdialog.h" />
+		<Unit filename="..\common\GUI-QT\AnalogDemDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\AnalogDemDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\DRMMainWindow.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\DRMMainWindow.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\DRMPlot.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\DRMPlot.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\DialogUtil.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\DialogUtil.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\EPGDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\EPGDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\LatLongEditDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\LatLongEditDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\LiveScheduleDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\LiveScheduleDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\Loghelper.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\MultColorLED.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\MultColorLED.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\MultSettingsDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\MultSettingsDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\MultimediaDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\MultimediaDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\ReceiverSettingsDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\ReceiverSettingsDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\StationsDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\StationsDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\SystemEvalDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\SystemEvalDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\TransmDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\TransmDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
 		<Unit filename="..\common\GUI-QT\main.cpp" />
-		<Unit filename="..\common\GUI-QT\systemevalDlg.cpp" />
-		<Unit filename="..\common\GUI-QT\systemevalDlg.h" />
+		<Unit filename="..\common\GUI-QT\res\qrc_icons.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
 		<Unit filename="..\common\GlobalDefinitions.h" />
 		<Unit filename="..\common\IQInputFilter.cpp" />
 		<Unit filename="..\common\IQInputFilter.h" />
@@ -159,8 +295,14 @@
 		<Unit filename="..\common\MDI\PacketSinkFile.h" />
 		<Unit filename="..\common\MDI\PacketSocketNull.cpp" />
 		<Unit filename="..\common\MDI\PacketSocketNull.h" />
-		<Unit filename="..\common\MDI\PacketSocketQT.cpp" />
-		<Unit filename="..\common\MDI\PacketSocketQT.h" />
+		<Unit filename="..\common\MDI\PacketSocketQT.cpp">
+			<Option target="Win32 Debug" />
+			<Option target="Win32 Release" />
+		</Unit>
+		<Unit filename="..\common\MDI\PacketSocketQT.h">
+			<Option target="Win32 Debug" />
+			<Option target="Win32 Release" />
+		</Unit>
 		<Unit filename="..\common\MDI\PacketSourceFile.cpp" />
 		<Unit filename="..\common\MDI\PacketSourceFile.h" />
 		<Unit filename="..\common\MDI\Pft.cpp" />
@@ -221,8 +363,14 @@
 		<Unit filename="..\common\datadecoding\Journaline.h" />
 		<Unit filename="..\common\datadecoding\MOTSlideShow.cpp" />
 		<Unit filename="..\common\datadecoding\MOTSlideShow.h" />
-		<Unit filename="..\common\datadecoding\epg\EPG.cpp" />
-		<Unit filename="..\common\datadecoding\epg\EPG.h" />
+		<Unit filename="..\common\datadecoding\epg\EPG.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\common\datadecoding\epg\EPG.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
 		<Unit filename="..\common\datadecoding\epg\epgdec.cpp" />
 		<Unit filename="..\common\datadecoding\epg\epgdec.h" />
 		<Unit filename="..\common\datadecoding\epg\epgutil.cpp" />
@@ -343,63 +491,126 @@
 		<Unit filename="Source\Pacer.cpp" />
 		<Unit filename="Source\Sound.cpp" />
 		<Unit filename="Source\Sound.h" />
-		<Unit filename="moc\AMSSDlgbase.cpp" />
-		<Unit filename="moc\AMSSDlgbase.h" />
-		<Unit filename="moc\AboutDlgbase.cpp" />
-		<Unit filename="moc\AboutDlgbase.h" />
-		<Unit filename="moc\AnalogDemDlgbase.cpp" />
-		<Unit filename="moc\AnalogDemDlgbase.h" />
-		<Unit filename="moc\EPGDlgbase.cpp" />
-		<Unit filename="moc\EPGDlgbase.h" />
-		<Unit filename="moc\LatLongEditDlgbase.cpp" />
-		<Unit filename="moc\LatLongEditDlgbase.h" />
-		<Unit filename="moc\LiveScheduleDlgbase.cpp" />
-		<Unit filename="moc\LiveScheduleDlgbase.h" />
-		<Unit filename="moc\MultSettingsDlgbase.cpp" />
-		<Unit filename="moc\MultSettingsDlgbase.h" />
-		<Unit filename="moc\MultimediaDlgbase.cpp" />
-		<Unit filename="moc\MultimediaDlgbase.h" />
-		<Unit filename="moc\ReceiverSettingsDlgbase.cpp" />
-		<Unit filename="moc\ReceiverSettingsDlgbase.h" />
-		<Unit filename="moc\StationsDlgbase.cpp" />
-		<Unit filename="moc\StationsDlgbase.h" />
-		<Unit filename="moc\TransmDlgbase.cpp" />
-		<Unit filename="moc\TransmDlgbase.h" />
-		<Unit filename="moc\fdrmdialogbase.cpp" />
-		<Unit filename="moc\fdrmdialogbase.h" />
-		<Unit filename="moc\moc_AMSSDlgbase.cpp" />
-		<Unit filename="moc\moc_AboutDlgbase.cpp" />
-		<Unit filename="moc\moc_AnalogDemDlg.cpp" />
-		<Unit filename="moc\moc_AnalogDemDlgbase.cpp" />
-		<Unit filename="moc\moc_DRMPlot.cpp" />
-		<Unit filename="moc\moc_DialogUtil.cpp" />
-		<Unit filename="moc\moc_EPGDlg.cpp" />
-		<Unit filename="moc\moc_EPGDlgbase.cpp" />
-		<Unit filename="moc\moc_GPSReceiver.cpp" />
-		<Unit filename="moc\moc_LatLongEditDlg.cpp" />
-		<Unit filename="moc\moc_LatLongEditDlgbase.cpp" />
-		<Unit filename="moc\moc_LiveScheduleDlg.cpp" />
-		<Unit filename="moc\moc_LiveScheduleDlgbase.cpp" />
-		<Unit filename="moc\moc_Loghelper.cpp" />
-		<Unit filename="moc\moc_MultColorLED.cpp" />
-		<Unit filename="moc\moc_MultSettingsDlg.cpp" />
-		<Unit filename="moc\moc_MultSettingsDlgbase.cpp" />
-		<Unit filename="moc\moc_MultimediaDlg.cpp" />
-		<Unit filename="moc\moc_MultimediaDlgbase.cpp" />
-		<Unit filename="moc\moc_PacketSocketQT.cpp" />
-		<Unit filename="moc\moc_PacketSourceFile.cpp" />
-		<Unit filename="moc\moc_ReceiverSettingsDlg.cpp" />
-		<Unit filename="moc\moc_ReceiverSettingsDlgbase.cpp" />
-		<Unit filename="moc\moc_StationsDlg.cpp" />
-		<Unit filename="moc\moc_StationsDlgbase.cpp" />
-		<Unit filename="moc\moc_TransmDlg.cpp" />
-		<Unit filename="moc\moc_TransmDlgbase.cpp" />
-		<Unit filename="moc\moc_fdrmdialog.cpp" />
-		<Unit filename="moc\moc_fdrmdialogbase.cpp" />
-		<Unit filename="moc\moc_systemevalDlg.cpp" />
-		<Unit filename="moc\moc_systemevalDlgbase.cpp" />
-		<Unit filename="moc\systemevalDlgbase.cpp" />
-		<Unit filename="moc\systemevalDlgbase.h" />
+		<Unit filename="moc\moc_AnalogDemDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_DRMPlot.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_DialogUtil.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_EPGDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_GPSReceiver.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_LatLongEditDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_LiveScheduleDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_Loghelper.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_MultColorLED.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_MultSettingsDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_MultimediaDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_PacketSocketQT.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_ReceiverSettingsDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_StationsDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_SystemEvalDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_TransmDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\moc_fdrmdialog.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\ui_AMSSDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\ui_AboutDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\ui_AnalogMainWindow.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\ui_DRMDialog.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\ui_EPGDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\ui_LatLongEditDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\ui_LiveScheduleDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\ui_MultSettingsDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\ui_MultimediaDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\ui_ReceiverSettingsDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\ui_StationsDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\ui_SystemEvalDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="moc\ui_TransmitterMainWindow.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
 		<Unit filename="resource.h" />
 		<Extensions>
 			<code_completion />

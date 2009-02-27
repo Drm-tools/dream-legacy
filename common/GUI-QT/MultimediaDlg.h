@@ -29,31 +29,27 @@
 #ifndef _MULTIMEDIADLG_H
 #define _MULTIMEDIADLG_H
 
-#include <q3textbrowser.h>
-#include <qmime.h>
-#include <qimage.h>
-#include <qtimer.h>
-#include <qpushbutton.h>
-#include <qlabel.h>
-#include <qmenubar.h>
+#include <QTextbrowser>
+#include <QImage>
+#include <QTimer>
+#include <QPushbutton>
+#include <QLabel>
+#include <QMenubar>
 #include <q3popupmenu.h>
-#include <qlayout.h>
-#include <q3filedialog.h>
-#include <qdatetime.h>
-#include <qregexp.h>
-#include <qtooltip.h>
-#include <q3textstream.h>
-#include <qfileinfo.h>
-#include <qdir.h>
-#include <qmessagebox.h>
-#include <qfontdialog.h>
-#include <qfont.h>
-#include <q3stylesheet.h>
-//Added by qt3to4:
+#include <QLayout>
+#include <QFiledialog>
+#include <QDatetime>
+#include <QRegexp>
+#include <QTooltip>
+#include <QTextstream>
+#include <QFileinfo>
+#include <QDir>
+#include <QMessagebox>
+#include <QFont.h>
 #include <QShowEvent>
 #include <QHideEvent>
 
-#include "MultimediaDlgbase.h"
+#include "ui_MultimediaDlg.h"
 #include "MultColorLED.h"
 #include "DialogUtil.h"
 #include "../GlobalDefinitions.h"
@@ -97,7 +93,7 @@ protected:
 	int				iNumHist;
 };
 
-class MultimediaDlg : public MultimediaDlgBase
+class MultimediaDlg : public QDialog, Ui_MultimediaDlg
 {
 	Q_OBJECT
 

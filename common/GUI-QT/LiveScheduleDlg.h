@@ -27,25 +27,23 @@
 
 #include <q3header.h>
 #include <q3listview.h>
-#include <qpixmap.h>
-#include <qradiobutton.h>
-#include <qtimer.h>
-#include <qmessagebox.h>
-#include <qmenubar.h>
 #include <q3popupmenu.h>
-#include <qlayout.h>
-#include <q3whatsthis.h>
-#include <qlabel.h>
-#include <q3filedialog.h>
-#include <q3textstream.h>
-#include <qcheckbox.h>
-#include <qthread.h>
-#include <q3filedialog.h>
-//Added by qt3to4:
+
+#include <QPixmap>
+#include <QRadiobutton>
+#include <QTimer>
+#include <QMessagebox>
+#include <QMenubar>
+#include <QLayout>
+#include <QLabel>
+#include <QFiledialog>
+#include <QTextstream>
+#include <QCheckbox>
+#include <QThread>
 #include <QShowEvent>
 #include <QHideEvent>
 
-#include "LiveScheduleDlgbase.h"
+#include "ui_LiveScheduleDlg.h"
 #include "../DrmReceiver.h"
 #include "../util/Settings.h"
 #include "DialogUtil.h"
@@ -142,7 +140,7 @@ public:
 };
 
 
-class LiveScheduleDlg : public CLiveScheduleDlgBase
+class LiveScheduleDlg : public QDialog, public Ui_LiveScheduleDlg
 {
 	Q_OBJECT
 
@@ -161,7 +159,7 @@ public:
 	void SaveSettings(CSettings&);
 
 	int				iCurrentSortColumn;
-	bool		bCurrentSortAscending;
+	bool		    bCurrentSortAscending;
 
 protected:
 	void			SetStationsView();
@@ -182,10 +180,10 @@ protected:
 	QPixmap						BitmCubePink;
 	QTimer						TimerList;
 	QTimer						TimerUTCLabel;
-	bool					bShowAll;
-	Q3PopupMenu*					pViewMenu;
-	Q3PopupMenu*					pPreviewMenu;
-	Q3PopupMenu*					pFileMenu;
+	bool					    bShowAll;
+	Q3PopupMenu*				pViewMenu;
+	Q3PopupMenu*				pPreviewMenu;
+	Q3PopupMenu*				pFileMenu;
 
 	vector<MyListLiveViewItem*>	vecpListItems;
 	QMutex						ListItemsMutex;

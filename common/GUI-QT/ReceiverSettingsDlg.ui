@@ -1,0 +1,962 @@
+<ui version="4.0" stdsetdef="1" >
+  <author></author>
+  <comment></comment>
+  <exportmacro></exportmacro>
+  <class>ReceiverSettingsDlg</class>
+  <widget class="QDialog" name="ReceiverSettingsDlg" >
+    <property name="geometry" >
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>350</width>
+        <height>392</height>
+      </rect>
+    </property>
+    <property name="windowTitle" >
+      <string>Settings</string>
+    </property>
+    <property name="windowIcon" >
+      <pixmap>image0</pixmap>
+    </property>
+    <property name="sizeGripEnabled" >
+      <bool>true</bool>
+    </property>
+    <layout class="QGridLayout" >
+      <property name="margin" >
+        <number>11</number>
+      </property>
+      <property name="spacing" >
+        <number>6</number>
+      </property>
+      <item row="1" column="0" >
+        <layout class="QHBoxLayout" >
+          <property name="margin" >
+            <number>0</number>
+          </property>
+          <property name="spacing" >
+            <number>6</number>
+          </property>
+          <item>
+            <spacer name="Spacer10" >
+              <property name="sizeHint" >
+                <size>
+                  <width>20</width>
+                  <height>20</height>
+                </size>
+              </property>
+              <property name="sizeType" >
+                <enum>QSizePolicy::Expanding</enum>
+              </property>
+              <property name="orientation" >
+                <enum>Qt::Horizontal</enum>
+              </property>
+            </spacer>
+          </item>
+          <item>
+            <widget class="QPushButton" name="buttonOk" >
+              <property name="windowTitle" >
+                <string/>
+              </property>
+              <property name="text" >
+                <string>&amp;Close</string>
+              </property>
+              <property name="autoDefault" >
+                <bool>true</bool>
+              </property>
+              <property name="default" >
+                <bool>true</bool>
+              </property>
+            </widget>
+          </item>
+        </layout>
+      </item>
+      <item row="0" column="0" >
+        <widget class="QTabWidget" name="TabWidget" >
+          <widget class="QWidget" name="sync" >
+            <attribute name="title" >
+              <string>Sync</string>
+            </attribute>
+            <layout class="QVBoxLayout" >
+              <property name="margin" >
+                <number>11</number>
+              </property>
+              <property name="spacing" >
+                <number>6</number>
+              </property>
+              <item>
+                <widget class="Q3GroupBox" name="GroupBox8" >
+                  <property name="title" >
+                    <string>Channel Estimation</string>
+                  </property>
+                  <layout class="QGridLayout" >
+                    <property name="margin" >
+                      <number>11</number>
+                    </property>
+                    <property name="spacing" >
+                      <number>6</number>
+                    </property>
+                    <item row="0" column="0" >
+                      <widget class="Q3ButtonGroup" name="ButtonGroupChanEstFreqInt" >
+                        <property name="title" >
+                          <string>Frequency Interpolation</string>
+                        </property>
+                        <property name="alignment" >
+                          <set>Qt::AlignVCenter|Qt::AlignLeft</set>
+                        </property>
+                        <layout class="QHBoxLayout" >
+                          <property name="margin" >
+                            <number>9</number>
+                          </property>
+                          <property name="spacing" >
+                            <number>6</number>
+                          </property>
+                          <item>
+                            <widget class="QRadioButton" name="RadioButtonFreqWiener" >
+                              <property name="sizePolicy" >
+                                <sizepolicy>
+                                  <hsizetype>1</hsizetype>
+                                  <vsizetype>1</vsizetype>
+                                </sizepolicy>
+                              </property>
+                              <property name="text" >
+                                <string>Wiener</string>
+                              </property>
+                            </widget>
+                          </item>
+                          <item>
+                            <widget class="QRadioButton" name="RadioButtonFreqLinear" >
+                              <property name="sizePolicy" >
+                                <sizepolicy>
+                                  <hsizetype>1</hsizetype>
+                                  <vsizetype>1</vsizetype>
+                                </sizepolicy>
+                              </property>
+                              <property name="text" >
+                                <string>Linear</string>
+                              </property>
+                            </widget>
+                          </item>
+                          <item>
+                            <widget class="QRadioButton" name="RadioButtonFreqDFT" >
+                              <property name="sizePolicy" >
+                                <sizepolicy>
+                                  <hsizetype>1</hsizetype>
+                                  <vsizetype>1</vsizetype>
+                                </sizepolicy>
+                              </property>
+                              <property name="text" >
+                                <string>DFT Zero Pad.</string>
+                              </property>
+                            </widget>
+                          </item>
+                        </layout>
+                      </widget>
+                    </item>
+                    <item row="1" column="0" >
+                      <widget class="Q3ButtonGroup" name="ButtonGroupChanEstTimeInt" >
+                        <property name="title" >
+                          <string>Time Interpolation</string>
+                        </property>
+                        <property name="alignment" >
+                          <set>Qt::AlignVCenter|Qt::AlignLeft</set>
+                        </property>
+                        <layout class="QGridLayout" >
+                          <property name="margin" >
+                            <number>11</number>
+                          </property>
+                          <property name="spacing" >
+                            <number>6</number>
+                          </property>
+                          <item row="0" column="0" >
+                            <widget class="QRadioButton" name="RadioButtonTiWiener" >
+                              <property name="sizePolicy" >
+                                <sizepolicy>
+                                  <hsizetype>1</hsizetype>
+                                  <vsizetype>1</vsizetype>
+                                </sizepolicy>
+                              </property>
+                              <property name="text" >
+                                <string>Wiener</string>
+                              </property>
+                            </widget>
+                          </item>
+                          <item row="0" column="1" >
+                            <widget class="QRadioButton" name="RadioButtonTiLinear" >
+                              <property name="sizePolicy" >
+                                <sizepolicy>
+                                  <hsizetype>1</hsizetype>
+                                  <vsizetype>1</vsizetype>
+                                </sizepolicy>
+                              </property>
+                              <property name="text" >
+                                <string>Linear</string>
+                              </property>
+                            </widget>
+                          </item>
+                        </layout>
+                      </widget>
+                    </item>
+                  </layout>
+                </widget>
+              </item>
+              <item>
+                <widget class="Q3ButtonGroup" name="ButtonGroupTimeSyncTrack" >
+                  <property name="title" >
+                    <string>Time Sync Tracking</string>
+                  </property>
+                  <property name="alignment" >
+                    <set>Qt::AlignVCenter|Qt::AlignLeft</set>
+                  </property>
+                  <layout class="QHBoxLayout" >
+                    <property name="margin" >
+                      <number>11</number>
+                    </property>
+                    <property name="spacing" >
+                      <number>6</number>
+                    </property>
+                    <item>
+                      <widget class="QRadioButton" name="RadioButtonTiSyncEnergy" >
+                        <property name="sizePolicy" >
+                          <sizepolicy>
+                            <hsizetype>1</hsizetype>
+                            <vsizetype>1</vsizetype>
+                          </sizepolicy>
+                        </property>
+                        <property name="text" >
+                          <string>Guard Energy</string>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
+                      <widget class="QRadioButton" name="RadioButtonTiSyncFirstPeak" >
+                        <property name="sizePolicy" >
+                          <sizepolicy>
+                            <hsizetype>1</hsizetype>
+                            <vsizetype>1</vsizetype>
+                          </sizepolicy>
+                        </property>
+                        <property name="text" >
+                          <string>First Peak</string>
+                        </property>
+                      </widget>
+                    </item>
+                  </layout>
+                </widget>
+              </item>
+            </layout>
+          </widget>
+          <widget class="QWidget" name="misc" >
+            <attribute name="title" >
+              <string>Misc</string>
+            </attribute>
+            <layout class="QGridLayout" >
+              <property name="margin" >
+                <number>11</number>
+              </property>
+              <property name="spacing" >
+                <number>6</number>
+              </property>
+              <item row="0" column="0" >
+                <widget class="Q3GroupBox" name="GroupBox9" >
+                  <property name="title" >
+                    <string>Interferer Rejection</string>
+                  </property>
+                  <widget class="QCheckBox" name="CheckBoxModiMetric" >
+                    <property name="geometry" >
+                      <rect>
+                        <x>12</x>
+                        <y>43</y>
+                        <width>153</width>
+                        <height>17</height>
+                      </rect>
+                    </property>
+                    <property name="text" >
+                      <string>Modified &amp;Metrics</string>
+                    </property>
+                  </widget>
+                  <widget class="QCheckBox" name="CheckBoxRecFilter" >
+                    <property name="geometry" >
+                      <rect>
+                        <x>12</x>
+                        <y>23</y>
+                        <width>153</width>
+                        <height>17</height>
+                      </rect>
+                    </property>
+                    <property name="text" >
+                      <string>&amp;Bandpass Filter</string>
+                    </property>
+                  </widget>
+                </widget>
+              </item>
+              <item row="1" column="0" >
+                <widget class="QCheckBox" name="CheckBoxFlipSpec" >
+                  <property name="text" >
+                    <string>&amp;Flip Input Spectrum</string>
+                  </property>
+                </widget>
+              </item>
+              <item row="2" column="0" >
+                <widget class="Q3GroupBox" name="GroupBoxMiscSettings" >
+                  <property name="title" >
+                    <string>MLC</string>
+                  </property>
+                  <property name="alignment" >
+                    <set>Qt::AlignVCenter|Qt::AlignLeft</set>
+                  </property>
+                  <layout class="QHBoxLayout" >
+                    <property name="margin" >
+                      <number>9</number>
+                    </property>
+                    <property name="spacing" >
+                      <number>30</number>
+                    </property>
+                    <item>
+                      <layout class="QVBoxLayout" >
+                        <property name="margin" >
+                          <number>0</number>
+                        </property>
+                        <property name="spacing" >
+                          <number>6</number>
+                        </property>
+                        <item>
+                          <widget class="QLabel" name="TextNumOfIterations" >
+                            <property name="sizePolicy" >
+                              <sizepolicy>
+                                <hsizetype>1</hsizetype>
+                                <vsizetype>1</vsizetype>
+                              </sizepolicy>
+                            </property>
+                            <property name="text" >
+                              <string>Number Of Iterations</string>
+                            </property>
+                            <property name="alignment" >
+                              <set>Qt::AlignCenter</set>
+                            </property>
+                            <property name="wordWrap" >
+                              <bool>false</bool>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <widget class="QSlider" name="SliderNoOfIterations" >
+                            <property name="sizePolicy" >
+                              <sizepolicy>
+                                <hsizetype>7</hsizetype>
+                                <vsizetype>0</vsizetype>
+                              </sizepolicy>
+                            </property>
+                            <property name="minimumSize" >
+                              <size>
+                                <width>100</width>
+                                <height>0</height>
+                              </size>
+                            </property>
+                            <property name="maximum" >
+                              <number>6</number>
+                            </property>
+                            <property name="pageStep" >
+                              <number>1</number>
+                            </property>
+                            <property name="orientation" >
+                              <enum>Qt::Horizontal</enum>
+                            </property>
+                            <property name="tickPosition" >
+                              <enum>QSlider::TicksBothSides</enum>
+                            </property>
+                          </widget>
+                        </item>
+                      </layout>
+                    </item>
+                  </layout>
+                </widget>
+              </item>
+            </layout>
+          </widget>
+          <widget class="QWidget" name="audio" >
+            <attribute name="title" >
+              <string>Audio</string>
+            </attribute>
+            <layout class="QGridLayout" >
+              <property name="margin" >
+                <number>11</number>
+              </property>
+              <property name="spacing" >
+                <number>6</number>
+              </property>
+              <item row="0" column="0" >
+                <widget class="QCheckBox" name="CheckBoxMuteAudio" >
+                  <property name="text" >
+                    <string>Mute &amp;Audio</string>
+                  </property>
+                </widget>
+              </item>
+              <item row="1" column="0" >
+                <widget class="QCheckBox" name="CheckBoxSaveAudioWave" >
+                  <property name="text" >
+                    <string>&amp;Save Audio as WAV</string>
+                  </property>
+                </widget>
+              </item>
+              <item row="2" column="0" >
+                <widget class="QCheckBox" name="CheckBoxReverb" >
+                  <property name="text" >
+                    <string>&amp;Reverberation</string>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </widget>
+          <widget class="QWidget" name="logging" >
+            <attribute name="title" >
+              <string>Logging</string>
+            </attribute>
+            <widget class="QWidget" name="Layout13" >
+              <property name="geometry" >
+                <rect>
+                  <x>19</x>
+                  <y>21</y>
+                  <width>197</width>
+                  <height>174</height>
+                </rect>
+              </property>
+              <layout class="QVBoxLayout" >
+                <property name="margin" >
+                  <number>0</number>
+                </property>
+                <property name="spacing" >
+                  <number>6</number>
+                </property>
+                <item>
+                  <widget class="QCheckBox" name="CheckBoxWriteLog" >
+                    <property name="text" >
+                      <string>&amp;Log To File</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QCheckBox" name="CheckBoxLogLatLng" >
+                    <property name="text" >
+                      <string>Log &amp;Position Data</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <widget class="QCheckBox" name="CheckBoxLogSigStr" >
+                    <property name="text" >
+                      <string>Log Receive Level</string>
+                    </property>
+                  </widget>
+                </item>
+                <item>
+                  <layout class="QVBoxLayout" >
+                    <property name="margin" >
+                      <number>0</number>
+                    </property>
+                    <property name="spacing" >
+                      <number>6</number>
+                    </property>
+                    <item>
+                      <widget class="QLabel" name="TextStartDelay" >
+                        <property name="sizePolicy" >
+                          <sizepolicy>
+                            <hsizetype>1</hsizetype>
+                            <vsizetype>1</vsizetype>
+                          </sizepolicy>
+                        </property>
+                        <property name="text" >
+                          <string>Start Delay</string>
+                        </property>
+                        <property name="alignment" >
+                          <set>Qt::AlignCenter</set>
+                        </property>
+                        <property name="wordWrap" >
+                          <bool>false</bool>
+                        </property>
+                      </widget>
+                    </item>
+                    <item>
+                      <layout class="QHBoxLayout" >
+                        <property name="margin" >
+                          <number>0</number>
+                        </property>
+                        <property name="spacing" >
+                          <number>6</number>
+                        </property>
+                        <item>
+                          <widget class="QLabel" name="TextLabel1_2" >
+                            <property name="text" >
+                              <string>0 s</string>
+                            </property>
+                            <property name="wordWrap" >
+                              <bool>false</bool>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <widget class="QSlider" name="SliderLogStartDelay" >
+                            <property name="sizePolicy" >
+                              <sizepolicy>
+                                <hsizetype>7</hsizetype>
+                                <vsizetype>0</vsizetype>
+                              </sizepolicy>
+                            </property>
+                            <property name="minimumSize" >
+                              <size>
+                                <width>100</width>
+                                <height>0</height>
+                              </size>
+                            </property>
+                            <property name="maximum" >
+                              <number>120</number>
+                            </property>
+                            <property name="pageStep" >
+                              <number>1</number>
+                            </property>
+                            <property name="orientation" >
+                              <enum>Qt::Horizontal</enum>
+                            </property>
+                            <property name="tickPosition" >
+                              <enum>QSlider::TicksBothSides</enum>
+                            </property>
+                            <property name="tickInterval" >
+                              <number>15</number>
+                            </property>
+                          </widget>
+                        </item>
+                        <item>
+                          <widget class="QLabel" name="TextLabel2" >
+                            <property name="text" >
+                              <string>120 s</string>
+                            </property>
+                            <property name="wordWrap" >
+                              <bool>false</bool>
+                            </property>
+                          </widget>
+                        </item>
+                      </layout>
+                    </item>
+                  </layout>
+                </item>
+              </layout>
+            </widget>
+          </widget>
+          <widget class="QWidget" name="gps" >
+            <attribute name="title" >
+              <string>GPS</string>
+            </attribute>
+            <layout class="QGridLayout" >
+              <property name="margin" >
+                <number>11</number>
+              </property>
+              <property name="spacing" >
+                <number>6</number>
+              </property>
+              <item row="0" column="0" >
+                <widget class="Q3GroupBox" name="GroupReceiverCoord" >
+                  <property name="sizePolicy" >
+                    <sizepolicy>
+                      <hsizetype>5</hsizetype>
+                      <vsizetype>7</vsizetype>
+                    </sizepolicy>
+                  </property>
+                  <property name="minimumSize" >
+                    <size>
+                      <width>0</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                  <property name="title" >
+                    <string>Default Receiver coordinates</string>
+                  </property>
+                  <layout class="QGridLayout" >
+                    <property name="margin" >
+                      <number>11</number>
+                    </property>
+                    <property name="spacing" >
+                      <number>6</number>
+                    </property>
+                    <item row="0" column="1" >
+                      <widget class="QLabel" name="TextLabel1_3" >
+                        <property name="text" >
+                          <string>Degrees</string>
+                        </property>
+                        <property name="wordWrap" >
+                          <bool>false</bool>
+                        </property>
+                      </widget>
+                    </item>
+                    <item rowspan="1" row="0" column="3" colspan="2" >
+                      <widget class="QLabel" name="TextLabel2_3" >
+                        <property name="text" >
+                          <string>Minutes</string>
+                        </property>
+                        <property name="wordWrap" >
+                          <bool>false</bool>
+                        </property>
+                      </widget>
+                    </item>
+                    <item row="1" column="0" >
+                      <widget class="QLabel" name="TextLatitude" >
+                        <property name="text" >
+                          <string>Latitude   </string>
+                        </property>
+                        <property name="wordWrap" >
+                          <bool>false</bool>
+                        </property>
+                      </widget>
+                    </item>
+                    <item row="2" column="0" >
+                      <widget class="QLabel" name="TextLongitude" >
+                        <property name="text" >
+                          <string>Longitude</string>
+                        </property>
+                        <property name="wordWrap" >
+                          <bool>false</bool>
+                        </property>
+                      </widget>
+                    </item>
+                    <item row="1" column="4" >
+                      <widget class="QLabel" name="TextLabel4" >
+                        <property name="text" >
+                          <string>'</string>
+                        </property>
+                        <property name="wordWrap" >
+                          <bool>false</bool>
+                        </property>
+                      </widget>
+                    </item>
+                    <item row="1" column="5" >
+                      <widget class="QComboBox" name="ComboBoxNS" >
+                        <property name="maxCount" >
+                          <number>2</number>
+                        </property>
+                        <item>
+                          <property name="text" >
+                            <string>N</string>
+                          </property>
+                        </item>
+                        <item>
+                          <property name="text" >
+                            <string>S</string>
+                          </property>
+                        </item>
+                      </widget>
+                    </item>
+                    <item row="1" column="3" >
+                      <widget class="QLineEdit" name="LineEditLatMinutes" />
+                    </item>
+                    <item row="1" column="2" >
+                      <widget class="QLabel" name="TextLabel3" >
+                        <property name="text" >
+                          <string>°</string>
+                        </property>
+                        <property name="wordWrap" >
+                          <bool>false</bool>
+                        </property>
+                      </widget>
+                    </item>
+                    <item row="1" column="1" >
+                      <widget class="QLineEdit" name="LineEditLatDegrees" />
+                    </item>
+                    <item row="2" column="3" >
+                      <widget class="QLineEdit" name="LineEditLngMinutes" />
+                    </item>
+                    <item row="2" column="1" >
+                      <widget class="QLineEdit" name="LineEditLngDegrees" />
+                    </item>
+                    <item row="2" column="4" >
+                      <widget class="QLabel" name="TextLabel4_2" >
+                        <property name="text" >
+                          <string>'</string>
+                        </property>
+                        <property name="wordWrap" >
+                          <bool>false</bool>
+                        </property>
+                      </widget>
+                    </item>
+                    <item row="2" column="2" >
+                      <widget class="QLabel" name="TextLabel3_2" >
+                        <property name="text" >
+                          <string>°</string>
+                        </property>
+                        <property name="wordWrap" >
+                          <bool>false</bool>
+                        </property>
+                      </widget>
+                    </item>
+                    <item row="2" column="5" >
+                      <widget class="QComboBox" name="ComboBoxEW" >
+                        <property name="maxCount" >
+                          <number>2</number>
+                        </property>
+                        <item>
+                          <property name="text" >
+                            <string>E</string>
+                          </property>
+                        </item>
+                        <item>
+                          <property name="text" >
+                            <string>W</string>
+                          </property>
+                        </item>
+                      </widget>
+                    </item>
+                  </layout>
+                </widget>
+              </item>
+              <item row="1" column="0" >
+                <widget class="Q3GroupBox" name="GroupGPS" >
+                  <property name="title" >
+                    <string>GPS</string>
+                  </property>
+                  <layout class="QGridLayout" >
+                    <property name="margin" >
+                      <number>11</number>
+                    </property>
+                    <property name="spacing" >
+                      <number>6</number>
+                    </property>
+                    <item rowspan="1" row="0" column="0" colspan="2" >
+                      <layout class="QGridLayout" >
+                        <property name="margin" >
+                          <number>0</number>
+                        </property>
+                        <property name="spacing" >
+                          <number>6</number>
+                        </property>
+                        <item row="0" column="0" >
+                          <widget class="QCheckBox" name="CheckBoxUseGPS" >
+                            <property name="text" >
+                              <string>Use GPS</string>
+                            </property>
+                          </widget>
+                        </item>
+                        <item row="1" column="2" >
+                          <widget class="QLineEdit" name="LineEditGPSPort" />
+                        </item>
+                        <item row="0" column="2" >
+                          <widget class="QLineEdit" name="LineEditGPSHost" />
+                        </item>
+                        <item row="1" column="3" >
+                          <spacer name="Spacer6" >
+                            <property name="sizeHint" >
+                              <size>
+                                <width>20</width>
+                                <height>20</height>
+                              </size>
+                            </property>
+                            <property name="sizeType" >
+                              <enum>QSizePolicy::Expanding</enum>
+                            </property>
+                            <property name="orientation" >
+                              <enum>Qt::Horizontal</enum>
+                            </property>
+                          </spacer>
+                        </item>
+                        <item row="1" column="0" >
+                          <spacer name="Spacer4" >
+                            <property name="sizeHint" >
+                              <size>
+                                <width>20</width>
+                                <height>20</height>
+                              </size>
+                            </property>
+                            <property name="sizeType" >
+                              <enum>QSizePolicy::Expanding</enum>
+                            </property>
+                            <property name="orientation" >
+                              <enum>Qt::Horizontal</enum>
+                            </property>
+                          </spacer>
+                        </item>
+                        <item row="0" column="3" >
+                          <spacer name="Spacer5" >
+                            <property name="sizeHint" >
+                              <size>
+                                <width>20</width>
+                                <height>20</height>
+                              </size>
+                            </property>
+                            <property name="sizeType" >
+                              <enum>QSizePolicy::Expanding</enum>
+                            </property>
+                            <property name="orientation" >
+                              <enum>Qt::Horizontal</enum>
+                            </property>
+                          </spacer>
+                        </item>
+                        <item row="0" column="1" >
+                          <widget class="QLabel" name="GPSHost" >
+                            <property name="text" >
+                              <string>Host</string>
+                            </property>
+                            <property name="wordWrap" >
+                              <bool>false</bool>
+                            </property>
+                          </widget>
+                        </item>
+                        <item row="1" column="1" >
+                          <widget class="QLabel" name="GPSPort" >
+                            <property name="text" >
+                              <string>Port</string>
+                            </property>
+                            <property name="wordWrap" >
+                              <bool>false</bool>
+                            </property>
+                          </widget>
+                        </item>
+                      </layout>
+                    </item>
+                    <item row="1" column="1" >
+                      <spacer name="Spacer6_2" >
+                        <property name="sizeHint" >
+                          <size>
+                            <width>20</width>
+                            <height>20</height>
+                          </size>
+                        </property>
+                        <property name="sizeType" >
+                          <enum>QSizePolicy::Expanding</enum>
+                        </property>
+                        <property name="orientation" >
+                          <enum>Qt::Horizontal</enum>
+                        </property>
+                      </spacer>
+                    </item>
+                    <item row="1" column="0" >
+                      <widget class="QCheckBox" name="CheckBoxDisplayGPS" >
+                        <property name="text" >
+                          <string>Display GPS Data</string>
+                        </property>
+                      </widget>
+                    </item>
+                  </layout>
+                </widget>
+              </item>
+            </layout>
+          </widget>
+          <widget class="QWidget" name="Rig" >
+            <attribute name="title" >
+              <string>Rig</string>
+            </attribute>
+            <layout class="QGridLayout" >
+              <property name="margin" >
+                <number>11</number>
+              </property>
+              <property name="spacing" >
+                <number>6</number>
+              </property>
+              <item row="3" column="1" >
+                <widget class="QCheckBox" name="CheckBoxEnableSMeter" >
+                  <property name="text" >
+                    <string>Enable S-Meter</string>
+                  </property>
+                </widget>
+              </item>
+              <item rowspan="4" row="0" column="0" colspan="1" >
+                <widget class="Q3ListView" name="ListViewRig" >
+                  <column>
+                    <property name="text" >
+                      <string>Column 1</string>
+                    </property>
+                    <property name="clickable" >
+                      <bool>true</bool>
+                    </property>
+                    <property name="resizable" >
+                      <bool>true</bool>
+                    </property>
+                  </column>
+                  <item>
+                    <property name="text" >
+                      <string>New Item</string>
+                    </property>
+                    <property name="pixmap" >
+                      <pixmap/>
+                    </property>
+                  </item>
+                </widget>
+              </item>
+              <item row="0" column="1" >
+                <widget class="Q3ListView" name="ListViewPort" >
+                  <column>
+                    <property name="text" >
+                      <string>Column 1</string>
+                    </property>
+                    <property name="clickable" >
+                      <bool>true</bool>
+                    </property>
+                    <property name="resizable" >
+                      <bool>true</bool>
+                    </property>
+                  </column>
+                  <item>
+                    <property name="text" >
+                      <string>New Item</string>
+                    </property>
+                    <property name="pixmap" >
+                      <pixmap/>
+                    </property>
+                  </item>
+                </widget>
+              </item>
+              <item row="2" column="1" >
+                <widget class="QRadioButton" name="RadioButtonPerMode" >
+                  <property name="text" >
+                    <string>Rig Per Mode/Band</string>
+                  </property>
+                </widget>
+              </item>
+              <item row="1" column="1" >
+                <widget class="QRadioButton" name="RadioButtonAll" >
+                  <property name="text" >
+                    <string>One Rig For All Modes</string>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </widget>
+        </widget>
+      </item>
+    </layout>
+  </widget>
+  <tabstops>
+    <tabstop>LineEditLatDegrees</tabstop>
+    <tabstop>LineEditLatMinutes</tabstop>
+    <tabstop>ComboBoxNS</tabstop>
+    <tabstop>LineEditLngDegrees</tabstop>
+    <tabstop>LineEditLngMinutes</tabstop>
+    <tabstop>ComboBoxEW</tabstop>
+    <tabstop>CheckBoxUseGPS</tabstop>
+    <tabstop>LineEditGPSHost</tabstop>
+    <tabstop>LineEditGPSPort</tabstop>
+    <tabstop>RadioButtonFreqWiener</tabstop>
+    <tabstop>RadioButtonFreqLinear</tabstop>
+    <tabstop>RadioButtonFreqDFT</tabstop>
+    <tabstop>RadioButtonTiWiener</tabstop>
+    <tabstop>RadioButtonTiLinear</tabstop>
+    <tabstop>RadioButtonTiSyncEnergy</tabstop>
+    <tabstop>RadioButtonTiSyncFirstPeak</tabstop>
+    <tabstop>CheckBoxRecFilter</tabstop>
+    <tabstop>CheckBoxModiMetric</tabstop>
+    <tabstop>CheckBoxFlipSpec</tabstop>
+    <tabstop>SliderNoOfIterations</tabstop>
+    <tabstop>ListViewRig</tabstop>
+    <tabstop>ListViewPort</tabstop>
+    <tabstop>CheckBoxEnableSMeter</tabstop>
+    <tabstop>buttonOk</tabstop>
+    <tabstop>TabWidget</tabstop>
+    <tabstop>CheckBoxMuteAudio</tabstop>
+    <tabstop>CheckBoxSaveAudioWave</tabstop>
+    <tabstop>CheckBoxReverb</tabstop>
+    <tabstop>CheckBoxWriteLog</tabstop>
+    <tabstop>CheckBoxLogLatLng</tabstop>
+    <tabstop>CheckBoxLogSigStr</tabstop>
+    <tabstop>SliderLogStartDelay</tabstop>
+  </tabstops>
+  <images>
+    <image name="image0" >
+      <data format="XPM.GZ" length="800" >789c6dd1c94ec3301006e07b9e226a6e15826c7662210e7d00104724c4c1dbc4699b2e69ba22de1dcf2414a862e7e0ef4fbc8cf3300ddf5e9fc3e943b0eb6457eb503bd98653b36f9af3fbc7d367304978e89f5484c9e42e98dc873a7c59af2c8eb77e1ce58ca52551120b9695808c06e63d0d51302e689d3d51332132a442b29869c1901762c24ccf3331632038f244cc792c4ae481c879d27336301502b921963c131269899233a1902d92671c249d4a134591cb1c59234b2152452bef903ad3a5a1b94014da182ab0236a0d36462e90c6dad8d2c747a49556418a5c12fd6ba08de60301a8de35121248a1403644e63b55b4227228802aaa88d6773a862352a3ff75d37eb2482aad958cfe647efbcab90aacb966a69e2f7c5bbaa6364316d9d57ab3f5ad5e3436ea3309ce676ddb6e6b07b2cf5485d9ce75fb4355a93ed3aecf8ea7f3d2e9dbec72cd7ee7ceae73c7f6183bcbd899476b1bbd83ff77f5f5187c035969ca1a</data>
+    </image>
+  </images>
+</ui>

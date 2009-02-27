@@ -27,13 +27,11 @@
 \******************************************************************************/
 
 #include "../GlobalDefinitions.h"
-#include "TransmDlgbase.h"
+#include "ui_TransmitterMainWindow.h"
 #include "../util/Utilities.h"
 #include <vector>
-#include <qtimer.h>
-//Added by qt3to4:
-#include <QCloseEvent>
-#include <Q3PopupMenu>
+#include <QDialog>
+#include <QTimer>
 
 /* Classes ********************************************************************/
 class CDRMTransmitterInterface;
@@ -41,7 +39,7 @@ class CSettings;
 class QMenuBar;
 class Q3PopupMenu;
 
-class TransmDialog : public TransmDlgBase
+class TransmDialog : public QMainWindow, public Ui_TransmitterMainWindow
 {
 	Q_OBJECT
 
@@ -49,7 +47,7 @@ public:
 	TransmDialog(
 		CDRMTransmitterInterface& tx,
 		CSettings&,
-		QWidget* parent=0, const char* name=0, bool modal=false, Qt::WFlags f=0);
+		QWidget* parent=0, const char* name=0, Qt::WFlags f=0);
 	virtual ~TransmDialog();
 	/* dummy assignment operator to help MSVC8 */
 	TransmDialog& operator=(const TransmDialog&)
@@ -90,7 +88,7 @@ protected:
 	virtual void		closeEvent(QCloseEvent* ce);
 
 	QMenuBar*			pMenu;
-	Q3PopupMenu*			pSettingsMenu;
+	Q3PopupMenu*		pSettingsMenu;
 	QTimer				Timer;
 
 	CDRMTransmitterInterface&	DRMTransmitter;

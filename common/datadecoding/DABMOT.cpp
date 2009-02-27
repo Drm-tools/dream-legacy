@@ -38,9 +38,7 @@
 #ifdef HAVE_LIBZ
 #include <zlib.h>
 #else
-#ifdef HAVE_LIBFREEIMAGE
-# include <FreeImage.h>
-#endif
+#error "ZLIB not found"
 #endif
 
 /* Implementation *************************************************************/
@@ -1395,7 +1393,6 @@ CReassembler::gzGetOriginalSize() const
 bool
 CReassembler::uncompress()
 {
-#ifdef HAVE_LIBZ
 	CVector < _BYTE > vecbRawDataOut;
 	/* Extract the original file size */
 	unsigned long dest_len = gzGetOriginalSize();
@@ -1437,44 +1434,6 @@ CReassembler::uncompress()
 		vecData.Init(0);
 		return false;
 	}
-#else
-#	ifdef HAVE_LIBFREEIMAGE
-	CVector < _BYTE > vecbRawDataOut;
-	CVector < _BYTE > &vecbRawDataIn = vecData;
-	/* Extract the original file size */
-	const unsigned long dest_len = gzGetOriginalSize();
-
-	if (dest_len < MAX_DEC_NUM_BYTES_ZIP_DATA)
-	{
-		vecbRawDataOut.Init(dest_len);
-
-		/* Actual decompression call */
-		const int zerr = FreeImage_ZLibGUnzip(&vecbRawDataOut[0],
-											  dest_len, &vecbRawDataIn[0],
-											  vecbRawDataIn.Size());
-
-		if (zerr > 0)
-		{
-			/* Copy data */
-			vecData.Init(zerr);
-			vecData = vecbRawDataOut;
-			return true;
-		}
-		else
-		{
-			vecData.Init(0);
-			return false;
-		}
-	}
-	else
-	{
-		vecData.Init(0);
-		return false;
-	}
-#	else
-	return false;
-#	endif
-#endif
 }
 
 static const char *txt[] = { "txt", "txt", "html", 0 };

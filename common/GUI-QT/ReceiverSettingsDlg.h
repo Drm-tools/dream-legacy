@@ -31,14 +31,14 @@
 #include <QShowEvent>
 #include <QHideEvent>
 
-#include "ReceiverSettingsDlgbase.h"
+#include "ui_ReceiverSettingsDlg.h"
 
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
 class CDRMReceiver;
 
-class ReceiverSettingsDlg : public ReceiverSettingsDlgBase
+class ReceiverSettingsDlg : public QDialog, public Ui_ReceiverSettingsDlg
 {
 	Q_OBJECT
 

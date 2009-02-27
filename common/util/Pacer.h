@@ -19,6 +19,7 @@ public:
 	~CPacer();
 	uint64_t nstogo();
 	void wait();
+	void changeInterval(uint64_t ns) { interval = ns; }
 protected:
 	uint64_t timekeeper;
 	uint64_t interval;

@@ -281,8 +281,10 @@ CParameter::CParameter():
  eRobustnessMode(RM_ROBUSTNESS_MODE_B),
  eSpectOccup(SO_3),
  LastAudioService(),
- LastDataService(),
- Mutex()
+ LastDataService()
+#ifdef HAVE_QT
+ ,Mutex()
+#endif
 {
 	GenerateRandomSerialNumber();
 	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);

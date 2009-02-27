@@ -29,25 +29,21 @@
 #if !defined(DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_)
 #define DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_
 
-#include <qmenubar.h>
 #include <q3popupmenu.h>
-#include <qevent.h>
 #include <q3textview.h>
-#include <qlabel.h>
-#include <q3whatsthis.h>
-//Added by qt3to4:
+#include <QMenubar>
+#include <QEvent>
+#include <QLabel>
+#include <QWhatsthis>
 #include <QCustomEvent>
 
-#include "AboutDlgbase.h"
+#include "ui_AboutDlg.h"
 #include "../DrmReceiver.h"
 
 #ifdef USE_QT_GUI
 # include <qwt_global.h> /* for extract the library version */
 #endif
 
-#ifdef HAVE_LIBFREEIMAGE
-# include <FreeImage.h> /* for extract the library version */
-#endif
 
 /* Definitions ****************************************************************/
 
@@ -71,7 +67,7 @@ public:
 
 
 /* About dialog ------------------------------------------------------------- */
-class CAboutDlg : public CAboutDlgBase
+class CAboutDlg : public QDialog, public Ui_AboutDlg
 {
 	Q_OBJECT
 
@@ -93,7 +89,7 @@ protected:
 	CAboutDlg AboutDlg;
 
 public slots:
-	void OnHelpWhatsThis() {Q3WhatsThis::enterWhatsThisMode();}
+	void OnHelpWhatsThis() {QWhatsThis::enterWhatsThisMode();}
 	void OnHelpAbout() {AboutDlg.exec();}
 };
 

@@ -592,7 +592,7 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 
 StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
-	CStationsDlgBase(parent, name, modal, f),
+	QDialog(parent, name, modal, f), Ui_StationsDlg(),
 	DRMReceiver(NDRMR), Settings(NSettings), DRMSchedule(),
 	BitmCubeGreen(), BitmCubeYellow(), BitmCubeRed(), BitmCubeOrange(), BitmCubePink(),
 	TimerList(), TimerUTCLabel(), TimerSMeter(), TimerEditFrequency(), TimerMonitorFrequency(), TimerTuning(),
@@ -602,6 +602,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	vecpListItems(0),
 	ListItemsMutex()
 {
+    setupUi(this);
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
@@ -738,6 +739,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(&TimerEditFrequency, SIGNAL(timeout()), this, SLOT(OnTimerEditFrequency()));
 	connect(&TimerMonitorFrequency, SIGNAL(timeout()), this, SLOT(OnTimerMonitorFrequency()));
 	connect(&TimerTuning, SIGNAL(timeout()), this, SLOT(OnTimerTuning()));
+	connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
 
 	TimerList.stop();
 	TimerUTCLabel.stop();

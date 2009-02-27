@@ -30,24 +30,23 @@
 #ifndef _EPGDLG_H
 #define _EPGDLG_H
 
-#include <qwidget.h>
-#include <qdatetime.h>
-#include <qpushbutton.h>
-#include <qspinbox.h>
-#include <qcombobox.h>
-#include <qstringlist.h>
-#include <qmessagebox.h>
-#include <q3textbrowser.h>
+#include <QWidget>
+#include <QDatetime>
+#include <QPushbutton>
+#include <QSpinbox>
+#include <QCombobox>
+#include <QStringlist>
+#include <QMessagebox>
+#include <QTextbrowser>
 #include <q3listview.h>
-#include <qlabel.h>
-#include <qtimer.h>
-#include <qpixmap.h>
-//Added by qt3to4:
+#include <QLabel>
+#include <QTimer>
+#include <QPixmap>
 #include <QShowEvent>
 #include <QHideEvent>
 #include <map>
 
-#include "EPGDlgbase.h"
+#include "ui_EPGDlg.h"
 #include "../DrmReceiver.h"
 #include "../datadecoding/epg/EPG.h"
 #include "../util/Settings.h"
@@ -66,7 +65,7 @@
 #define COL_DURATION	4
 
 /* Classes ********************************************************************/
-class EPGDlg : public CEPGDlgbase
+class EPGDlg : public QDialog, public Ui_EPGDlg
 {
 	Q_OBJECT
 

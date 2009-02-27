@@ -1,26 +1,20 @@
 TEMPLATE	= app
 TARGET		= dream
-QT          += qt3support
+QT          += qt3support network xml
 CONFIG		+= qt warn_on release thread
-DEFINES		+= HAVE_QT
+DEFINES		+= HAVE_QT USE_QT_GUI
 INCLUDEPATH	+= libs
 INCLUDEPATH	+= common/GUI-QT
 VPATH		+= common/GUI-QT
 LIBS 		+= -Llibs
 DEFINES		+= HAVE_LIBFAAC HAVE_LIBFAAD HAVE_LIBPCAP HAVE_LIBZ HAVE_FFTW_H
-DEFINES		+= USE_FAAC_LIBRARY USE_FAAD2_LIBRARY USE_QT_GUI
-#The following line was changed from FORMS to FORMS3 by qt3to4
-FORMS3		+= TransmDlgbase.ui
-FORMS       += DRMDialog.ui
-FORMS3		+= AnalogDemDlgbase.ui
-#The following line was changed from FORMS to FORMS3 by qt3to4
-FORMS3		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
-#The following line was changed from FORMS to FORMS3 by qt3to4
-FORMS3		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
-#The following line was changed from FORMS to FORMS3 by qt3to4
-FORMS3		+= MultSettingsDlgbase.ui AboutDlgbase.ui
-#The following line was changed from FORMS to FORMS3 by qt3to4
-FORMS3		+= ReceiverSettingsDlgbase.ui LatLongEditDlgbase.ui
+FORMS       += DRMMainWindow.ui AnalogMainWindow.ui TransmitterMainWindow.ui
+FORMS       += AMSSDlg.ui MultimediaDlg.ui SystemEvalDlg.ui
+FORMS		+= LiveScheduleDlg.ui StationsDlg.ui EPGDlg.ui
+FORMS		+= MultSettingsDlg.ui AboutDlg.ui
+FORMS		+= ReceiverSettingsDlg.ui LatLongEditDlg.ui
+RCC_DIR     =  common/GUI-QT/res
+RESOURCES   += common/GUI-QT/res/icons.qrc
 
 macx {
 	CONFIG		+= portaudio
@@ -167,7 +161,7 @@ common/GUI-QT/AnalogDemDlg.h   \
 common/GUI-QT/DialogUtil.h   \
 common/GUI-QT/DRMPlot.h   \
 common/GUI-QT/EPGDlg.h   \
-common/GUI-QT/DRMDialog.h   \
+common/GUI-QT/DRMMainWindow.h   \
 common/GUI-QT/LiveScheduleDlg.h   \
 common/GUI-QT/LatLongEditDlg.h \
 common/GUI-QT/MultColorLED.h   \
@@ -176,7 +170,7 @@ common/GUI-QT/MultSettingsDlg.h   \
 common/GUI-QT/ReceiverSettingsDlg.h \
 common/GUI-QT/Loghelper.h \
 common/GUI-QT/StationsDlg.h   \
-common/GUI-QT/systemevalDlg.h   \
+common/GUI-QT/SystemEvalDlg.h   \
 common/GUI-QT/TransmDlg.h   \
 common/InputResample.h   \
 common/interleaver/BlockInterleaver.h   \
@@ -299,7 +293,7 @@ common/GUI-QT/AnalogDemDlg.cpp   \
 common/GUI-QT/DialogUtil.cpp   \
 common/GUI-QT/DRMPlot.cpp   \
 common/GUI-QT/EPGDlg.cpp   \
-common/GUI-QT/DRMDialog.cpp   \
+common/GUI-QT/DRMMainWindow.cpp   \
 common/GUI-QT/LiveScheduleDlg.cpp   \
 common/GUI-QT/main.cpp   \
 common/GUI-QT/LatLongEditDlg.cpp \
@@ -309,7 +303,7 @@ common/GUI-QT/MultSettingsDlg.cpp   \
 common/GUI-QT/ReceiverSettingsDlg.cpp \
 common/GUI-QT/Loghelper.cpp \
 common/GUI-QT/StationsDlg.cpp   \
-common/GUI-QT/systemevalDlg.cpp   \
+common/GUI-QT/SystemEvalDlg.cpp   \
 common/GUI-QT/TransmDlg.cpp   \
 common/InputResample.cpp   \
 common/interleaver/BlockInterleaver.cpp   \
@@ -372,8 +366,5 @@ common/util/Reassemble.cpp   \
 common/util/Settings.cpp   \
 common/util/Utilities.cpp   \
 common/Version.cpp
-#The following line was inserted by qt3to4
-QT += network xml
-#The following line was inserted by qt3to4
-CONFIG += uic3
+
 

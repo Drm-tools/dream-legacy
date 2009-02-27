@@ -27,27 +27,14 @@
 \******************************************************************************/
 
 
-#include <QDialog>
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
-#include "ui_DRMDialog.h"
+# include "Loghelper.h"
+#include "ui_DRMMainWindow.h"
 #include "DialogUtil.h"
-#include "systemevalDlg.h"
-#include "MultimediaDlg.h"
-#include "StationsDlg.h"
-#include "LiveScheduleDlg.h"
-#include "Loghelper.h"
-#include "EPGDlg.h"
-#include "AnalogDemDlg.h"
-#include "MultSettingsDlg.h"
 #include "MultColorLED.h"
 #include "../util/Vector.h"
-//Added by qt3to4:
-#include <QShowEvent>
-#include <QHideEvent>
-#include <Q3PopupMenu>
-#include <QCloseEvent>
-
+#include <QMainWindow>
 
 /* Define for application types */
 #define AT_MOTSLISHOW 2
@@ -56,45 +43,53 @@
 #define AT_MOTEPG 	7
 
 /* Classes ********************************************************************/
+class SystemEvalDlg;
+class MultimediaDlg;
+class StationsDlg;
+class LiveScheduleDlg;
+class EPGDlg;
+class AnalogDemDlg;
 class ReceiverSettingsDlg;
+class MultSettingsDlg;
 
-class DRMDialog : public QDialog, public Ui_DRMDialog
+class DRMMainWindow : public QMainWindow, public Ui_DRMMainWindow
 {
 	Q_OBJECT
 
 public:
-	DRMDialog(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
-		bool modal = false,	Qt::WFlags f = 0);
-	virtual ~DRMDialog();
+	DRMMainWindow(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+	const char* name = 0,	Qt::WFlags f = 0);
+	virtual ~DRMMainWindow();
 	/* dummy assignment operator to help MSVC8 */
-	DRMDialog& operator=(const DRMDialog&)
+	DRMMainWindow& operator=(const DRMMainWindow&)
 	{ throw "should not happen"; return *this;}
 
 protected:
 	CDRMReceiver&		DRMReceiver;
 	CSettings&			Settings;
 
-	systemevalDlg*		pSysEvalDlg;
+	SystemEvalDlg*		pSysEvalDlg;
 	MultimediaDlg*		pMultiMediaDlg;
 	StationsDlg*		pStationsDlg;
 	LiveScheduleDlg*	pLiveScheduleDlg;
 	EPGDlg*				pEPGDlg;
 	AnalogDemDlg*		pAnalogDemDlg;
 	ReceiverSettingsDlg* pReceiverSettingsDlg;
-	Loghelper			loghelper;
+	MultSettingsDlg*    pMultSettingsDlg;
+    Loghelper			loghelper;
 	QMenuBar*			pMenu;
-	Q3PopupMenu*			pReceiverModeMenu;
-	Q3PopupMenu*			pSettingsMenu;
-	Q3PopupMenu*			pPlotStyleMenu;
+	Q3PopupMenu*		pReceiverModeMenu;
+	Q3PopupMenu*		pSettingsMenu;
+	Q3PopupMenu*		pPlotStyleMenu;
 	int					iCurSelServiceGUI;
 	int					iOldNoServicesGUI;
 	QTimer				Timer;
 
-	bool		bSysEvalDlgWasVis;
-	bool		bMultMedDlgWasVis;
-	bool		bLiveSchedDlgWasVis;
-	bool		bStationsDlgWasVis;
-	bool		bEPGDlgWasVis;
+	bool		        bSysEvalDlgWasVis;
+	bool	        	bMultMedDlgWasVis;
+	bool		        bLiveSchedDlgWasVis;
+	bool		        bStationsDlgWasVis;
+	bool		        bEPGDlgWasVis;
 	EDemodulationType	eReceiverMode;
 
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
@@ -120,13 +115,6 @@ public slots:
 	void OnButtonService2();
 	void OnButtonService3();
 	void OnButtonService4();
-	void OnViewEvalDlg();
-	void OnViewMultiMediaDlg();
-	void OnViewStationsDlg();
-	void OnViewLiveScheduleDlg();
-	void OnViewEPGDlg();
-	void OnViewMultSettingsDlg();
-	void OnViewReceiverSettingsDlg();
 	void OnNewDRMAcquisition();
 	void OnSwitchToDRM();
 	void OnSwitchToAM();

@@ -49,15 +49,15 @@ void CPacketSocketNull::SendPacket(const vector<_BYTE>&, uint32_t, uint16_t)
 
 bool CPacketSocketNull::SetOrigin(const string&)
 {
-	return true;
+	return false;
 }
 
 bool CPacketSocketNull::SetDestination(const string&)
 {
-	return true;
+	return false;
 }
 
 bool CPacketSocketNull::GetDestination(string&)
 {
-	return true;
+	return false;
 }

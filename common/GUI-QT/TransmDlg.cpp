@@ -27,32 +27,31 @@
 \******************************************************************************/
 
 #include "TransmDlg.h"
-#include <qpushbutton.h>
-#include <qstring.h>
-#include <qlabel.h>
-#include <qradiobutton.h>
-#include <qcheckbox.h>
-#include <qlineedit.h>
-#include <qtabwidget.h>
-#include <qcombobox.h>
-#include <qstring.h>
 #include <q3buttongroup.h>
 #include <q3multilineedit.h>
 #include <q3listview.h>
 #include <q3filedialog.h>
-#include <qfileinfo.h>
-#include <qstringlist.h>
-#include <qmenubar.h>
-#include <q3popupmenu.h>
-#include <qlayout.h>
-#include <qthread.h>
-#include <qwt_thermo.h>
-#include <q3whatsthis.h>
 #include <q3progressbar.h>
-#include <qmessagebox.h>
-#include <qhostaddress.h>
-//Added by qt3to4:
+
+#include <QPushbutton>
+#include <QString>
+#include <QLabel>
+#include <QRadiobutton>
+#include <QCheckbox>
+#include <QLineedit>
+#include <QTabwidget>
+#include <QCombobox>
+#include <QString>
+#include <QFileInfo>
+#include <QStringlist>
+#include <QMenubar>
+#include <QLayout>
+#include <QThread>
+#include <QMessagebox>
+#include <QHostaddress>
 #include <QCloseEvent>
+#include <QWhatsThis>
+#include <qwt_thermo.h>
 
 #include "DialogUtil.h"
 #include "../DrmTransmitter.h"
@@ -62,9 +61,10 @@
 #include <fstream>
 
 TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
-	QWidget* parent, const char* name, bool modal, Qt::WFlags f
+	QWidget* parent, const char* name, Qt::WFlags f
 	):
-	TransmDlgBase(parent, name, modal, f),
+	QMainWindow(parent, name, f),
+	Ui_TransmitterMainWindow(),
 	pMenu(NULL), pSettingsMenu(NULL), Timer(),
 	DRMTransmitter(tx), Settings(NSettings),
 	bIsStarted(false),vecIpIf()
@@ -73,6 +73,8 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 	size_t t;
 	vector<string> vecAudioDevices;
 
+    setupUi(this);
+
 	/* recover window size and position */
 	CWinGeom s;
 	Settings.Get("Transmit Dialog", s);
@@ -80,7 +82,7 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 			setGeometry(WinGeom);
 
-	SetDialogCaption(this, tr("Dream DRM Transmitter"));
+    setCaption(tr("Dream DRM Transmitter"));
 
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -210,7 +212,7 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
-	gridLayout->setMenuBar(pMenu);
+	setMenuBar(pMenu);
 
 	/* NOT implemented yet */
     ComboBoxCodec->setEnabled(false);
@@ -882,11 +884,11 @@ void TransmDialog::OnButtonAudioSourceFileBrowse()
     LineEditAudioSourceFile->setText(s);
 }
 
-void TransmDialog::OnLineEditAudioSourceFileChanged(const QString& str)
+void TransmDialog::OnLineEditAudioSourceFileChanged(const QString&)
 {
 }
 
-void TransmDialog::OnToggleCheckBoxAudioSourceIsFile(bool bState)
+void TransmDialog::OnToggleCheckBoxAudioSourceIsFile(bool)
 {
 }
 
@@ -1182,7 +1184,7 @@ TransmDialog::OnButtonMDIInBrowse()
 }
 
 void
-TransmDialog::OnToggleCheckBoxReadMDIFile(bool bState)
+TransmDialog::OnToggleCheckBoxReadMDIFile(bool)
 {
 }
 
@@ -1935,18 +1937,18 @@ void TransmDialog::EnableAllControlsForSet()
 
 void TransmDialog::OnHelpWhatsThis()
 {
-	Q3WhatsThis::enterWhatsThisMode();
+	QWhatsThis::enterWhatsThisMode();
 }
 
 void TransmDialog::AddWhatsThisHelp()
 {
 	/* Dream Logo */
-	Q3WhatsThis::add(PixmapLabelDreamLogo,
+	logo->setWhatsThis(
 		tr("<b>Dream Logo:</b> This is the official logo of "
 		"the Dream software."));
 
 	/* Input Level */
-	Q3WhatsThis::add(ProgrInputLevel,
+	ProgrInputLevel->setWhatsThis(
 		tr("<b>Input Level:</b> The input level meter shows "
 		"the relative input signal peak level in dB. If the level is too high, "
 		"the meter turns from green to red."));
@@ -1964,10 +1966,10 @@ void TransmDialog::AddWhatsThisHelp()
 		"</i> As robustness mode B, but with severe delay and "
 		"Doppler spread</li></ul>");
 
-	Q3WhatsThis::add(RadioButtonRMA, strRobustnessMode);
-	Q3WhatsThis::add(RadioButtonRMB, strRobustnessMode);
-	Q3WhatsThis::add(RadioButtonRMC, strRobustnessMode);
-	Q3WhatsThis::add(RadioButtonRMD, strRobustnessMode);
+	RadioButtonRMA->setWhatsThis( strRobustnessMode);
+	RadioButtonRMB->setWhatsThis( strRobustnessMode);
+	RadioButtonRMC->setWhatsThis( strRobustnessMode);
+	RadioButtonRMD->setWhatsThis( strRobustnessMode);
 
 	/* Bandwidth */
 	const QString strBandwidth =
@@ -1976,12 +1978,12 @@ void TransmDialog::AddWhatsThisHelp()
 		"bandwidth constellations are possible, e.g., DRM robustness mode D "
 		"and C are only defined for the bandwidths 10 kHz and 20 kHz.");
 
-	Q3WhatsThis::add(RadioButtonBandwidth45, strBandwidth);
-	Q3WhatsThis::add(RadioButtonBandwidth5, strBandwidth);
-	Q3WhatsThis::add(RadioButtonBandwidth9, strBandwidth);
-	Q3WhatsThis::add(RadioButtonBandwidth10, strBandwidth);
-	Q3WhatsThis::add(RadioButtonBandwidth18, strBandwidth);
-	Q3WhatsThis::add(RadioButtonBandwidth20, strBandwidth);
+	RadioButtonBandwidth45->setWhatsThis( strBandwidth);
+	RadioButtonBandwidth5->setWhatsThis( strBandwidth);
+	RadioButtonBandwidth9->setWhatsThis( strBandwidth);
+	RadioButtonBandwidth10->setWhatsThis( strBandwidth);
+	RadioButtonBandwidth18->setWhatsThis( strBandwidth);
+	RadioButtonBandwidth20->setWhatsThis( strBandwidth);
 
 	/* Output intermediate frequency of DRM signal */
 	const QString strOutputIF =
@@ -1992,9 +1994,9 @@ void TransmDialog::AddWhatsThisHelp()
 		"should be chosen that the DRM signal lies entirely inside the "
 		"sound-card bandwidth.");
 
-	Q3WhatsThis::add(TextLabelIF, strOutputIF);
-	Q3WhatsThis::add(LineEditSndCrdIF, strOutputIF);
-	Q3WhatsThis::add(TextLabelIFUnit, strOutputIF);
+	TextLabelIF->setWhatsThis( strOutputIF);
+	LineEditSndCrdIF->setWhatsThis( strOutputIF);
+	TextLabelIFUnit->setWhatsThis( strOutputIF);
 
 	/* Output format */
 	const QString strOutputFormat =
@@ -2014,10 +2016,10 @@ void TransmDialog::AddWhatsThisHelp()
 		"is output on the left channel and the phase is output on the right "
 		"channel.</li></ul>");
 
-	Q3WhatsThis::add(RadioButtonOutReal, strOutputFormat);
-	Q3WhatsThis::add(RadioButtonOutIQPos, strOutputFormat);
-	Q3WhatsThis::add(RadioButtonOutIQNeg, strOutputFormat);
-	Q3WhatsThis::add(RadioButtonOutEP, strOutputFormat);
+	RadioButtonOutReal->setWhatsThis( strOutputFormat);
+	RadioButtonOutIQPos->setWhatsThis( strOutputFormat);
+	RadioButtonOutIQNeg->setWhatsThis( strOutputFormat);
+	RadioButtonOutEP->setWhatsThis( strOutputFormat);
 
 	/* MSC interleaver mode */
 	const QString strInterleaver =
@@ -2028,8 +2030,8 @@ void TransmDialog::AddWhatsThisHelp()
 		"the interleaver length the longer the delay until (after a "
 		"re-synchronization) audio can be heard.");
 
-	Q3WhatsThis::add(TextLabelInterleaver, strInterleaver);
-	Q3WhatsThis::add(ComboBoxMSCInterleaver, strInterleaver);
+	TextLabelInterleaver->setWhatsThis( strInterleaver);
+	ComboBoxMSCInterleaver->setWhatsThis( strInterleaver);
 }
 
 void

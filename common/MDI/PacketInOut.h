@@ -64,6 +64,7 @@ public:
 	// Stop sending packets to the sink
 	virtual void ResetPacketSink(void) = 0;
 	virtual bool SetOrigin(const string& str) = 0;
+	virtual bool Poll() = 0;
 };
 
 

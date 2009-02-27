@@ -28,19 +28,20 @@
 \******************************************************************************/
 
 #include "EPGDlg.h"
-#include <qregexp.h>
-//Added by qt3to4:
+#include <QRegexp.h>
 #include <QShowEvent>
 #include <QPixmap>
 #include <QHideEvent>
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, Qt::WFlags f)
-:CEPGDlgbase(parent, name, modal, f),BitmCubeGreen(),date(QDate::currentDate()),
-do_updates(false),epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
+:QDialog(parent, name, modal, f),Ui_EPGDlg(),BitmCubeGreen(),
+date(QDate::currentDate()),do_updates(false),
+epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
 Settings(NSettings),Timer(),sids()
 {
 	/* recover window size and position */
+    setupUi(this);
 	CWinGeom s;
 	Settings.Get("EPG Dialog", s);
 	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);

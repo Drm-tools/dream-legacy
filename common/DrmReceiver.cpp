@@ -87,7 +87,10 @@ bRigUpdateForAllModes(false),
 filename(""),
 pSoundInInterface(new CSoundInNull),
 bRigUpdateNeeded(false),
-pHamlib(NULL), pDrmRec(NULL), mutex(),
+pHamlib(NULL), pDrmRec(NULL),
+#ifdef USE_QT_GUI
+ mutex(),
+#endif
 eWantedChanSel(CS_MIX_CHAN),
 bOnBoardDemod(false), bOnBoardDemodWanted(false)
 {
@@ -710,12 +713,6 @@ CDRMReceiver::UtilizeDRM(bool& bEnoughData)
 										   AudSoDecBuf))
 		{
 			bEnoughData = true;
-
-			/* Store the number of correctly decoded audio blocks for
-			 *                            the history */
-			 // TODO - move to AudioSourceDecoder ?
-			 int n = AudioSourceDecoder.GetNumCorDecAudio();
-            Parameters.Measurements.CDAudHist.set(n);
 		}
 	}
 }

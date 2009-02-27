@@ -26,7 +26,6 @@
 \******************************************************************************/
 
 #include "MultSettingsDlg.h"
-//Added by qt3to4:
 #include <QShowEvent>
 #include <QHideEvent>
 
@@ -34,8 +33,9 @@
 
 MultSettingsDlg::MultSettingsDlg(CSettings& NSettings, QWidget* parent,
 	const char* name, bool modal, Qt::WFlags f) :
-	CMultSettingsDlgBase(parent, name, modal, f), Settings(NSettings)
+	QDialog(parent, name, modal, f), Ui_MultSettingsDlg(), Settings(NSettings)
 {
+    setupUi(this);
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 

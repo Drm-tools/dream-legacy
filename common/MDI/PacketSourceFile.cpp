@@ -58,7 +58,7 @@ const size_t iAFHeaderLen = 10;
 const size_t iAFCRCLen = 2;
 
 CPacketSourceFile::CPacketSourceFile():pPacketSink(NULL),
-timeKeeper(), last_packet_time(0),
+pacer(NULL), last_packet_time(0),
  pf(NULL), bRaw(true)
 {
 }
@@ -83,8 +83,7 @@ CPacketSourceFile::SetOrigin(const string& str)
 	}
 	if ( pf != NULL)
 	{
-		timeKeeper = QTime::currentTime();
-		QTimer::singleShot(0, this, SLOT(OnDataReceived()));
+		pacer = new CPacer(uint64_t(400000000));
 	}
 	return pf != NULL;
 }
@@ -115,12 +114,12 @@ CPacketSourceFile::ResetPacketSink()
 	pPacketSink = NULL;
 }
 
-void
-CPacketSourceFile::OnDataReceived ()
+bool
+CPacketSourceFile::Poll()
 {
 	if(pf==NULL)
-		return;
-
+		return false;
+	if(pacer) pacer->wait();
 	vector<_BYTE> vecbydata (iMaxPacketSize);
 	int interval;
 	if(bRaw)
@@ -131,12 +130,7 @@ CPacketSourceFile::OnDataReceived ()
 	/* Decode the incoming packet */
 	if (pPacketSink != NULL)
 		pPacketSink->SendPacket(vecbydata);
-	QTime iNow = QTime::currentTime();
-	int iDelay = interval - timeKeeper.msecsTo(iNow);
-	if(iDelay<0)
-		 iDelay = 0;
-	QTimer::singleShot(iDelay, this, SLOT(OnDataReceived()));
-	timeKeeper = timeKeeper.addMSecs(interval);
+    return true;
 }
 
 void
@@ -286,8 +280,7 @@ CPacketSourceFile::readPcap(vector<_BYTE>& vecbydata, int& interval)
 	uint8_t proto = pkt_data[link_len+9];
 	if(proto != 0x11) // UDP
 	{
-		 /* not a UDP datagram, skip it and ask for another immediately */
-		 QTimer::singleShot(1, this, SLOT(OnDataReceived()));
+		 /* not a UDP datagram, skip it */
 		 return;
 	}
 	int udp_ip_hdr_len = 4*(pkt_data[link_len] & 0x0f) + 8;
@@ -296,14 +289,14 @@ CPacketSourceFile::readPcap(vector<_BYTE>& vecbydata, int& interval)
 	vecbydata.resize (data_len);
 	for(int i=0; i<data_len; i++)
 		 vecbydata[i] = pkt_data[link_len+udp_ip_hdr_len+i];
-	if(last_packet_time == 0)
-	{
-		 last_packet_time = 1000*uint64_t(packet_time.tv_sec);
-		 last_packet_time += uint64_t(packet_time.tv_usec)/1000;
-	}
 	uint64_t pt;
 	pt = 1000*uint64_t(packet_time.tv_sec);
 	pt += uint64_t(packet_time.tv_usec)/1000;
+	if(last_packet_time == 0)
+	{
+		 last_packet_time = pt - 400;
+	}
+	//pacer->changeInterval(1000000ULL*(pt - last_packet_time));
 	interval = pt - last_packet_time;
 	last_packet_time = pt;
 }

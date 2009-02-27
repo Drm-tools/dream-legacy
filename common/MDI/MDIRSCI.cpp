@@ -45,12 +45,12 @@
 #include "MDIRSCI.h"
 #include "../DrmReceiver.h"
 #ifdef HAVE_QT
-#  include "PacketSocketQT.h"
-#  include "PacketSourceFile.h"
-#  include <qhostaddress.h>
+# include "PacketSocketQT.h"
+# include <qhostaddress.h>
 #else
 # include "PacketSocketNull.h"
 #endif
+#include "PacketSourceFile.h"
 #include <sstream>
 #include <iomanip>
 
@@ -644,10 +644,8 @@ bool CDIIn::SetOrigin(const string& str)
 		// try a file
 		delete source;
 		source = NULL;
-#ifdef HAVE_QT
 		source = new CPacketSourceFile;
 		bOK = source->SetOrigin(str);
-#endif
 	}
 	if (bOK)
 	{
@@ -675,6 +673,8 @@ void CDIIn::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16_t)
 
 void CDIIn::ProcessData(CParameter& Parameter, CVectorEx<_BINARY>& vecOutputData, int& iOutputBlockSize)
 {
+	if(source)
+        source->Poll(); // nothing for QT sockets, vital for Pacer driven files
 	vector<_BYTE> vecbydata;
 	queue.Get(vecbydata);
 	iOutputBlockSize = vecbydata.size()*BITS_BINARY;
@@ -687,7 +687,7 @@ void CDIIn::ProcessData(CParameter& Parameter, CVectorEx<_BINARY>& vecOutputData
 /******************************************************************************\
 * DI receive status, send control                                             *
 \******************************************************************************/
-CUpstreamDI::CUpstreamDI() : CDIIn(), sink(), bUseAFCRC(true), bMDIOutEnabled(false)
+CUpstreamDI::CUpstreamDI() : /*CDIIn(),*/ sink(), bUseAFCRC(true), bMDIOutEnabled(false)
 {
 	/* Init constant tag */
 	TagItemGeneratorProTyRSCI.GenTag();

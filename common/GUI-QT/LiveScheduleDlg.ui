@@ -1,0 +1,211 @@
+<ui version="4.0" stdsetdef="1" >
+  <author></author>
+  <comment></comment>
+  <exportmacro></exportmacro>
+  <class>LiveScheduleDlg</class>
+  <widget class="QDialog" name="LiveScheduleDlg" >
+    <property name="geometry" >
+      <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>667</width>
+        <height>413</height>
+      </rect>
+    </property>
+    <property name="sizePolicy" >
+      <sizepolicy>
+        <hsizetype>1</hsizetype>
+        <vsizetype>1</vsizetype>
+      </sizepolicy>
+    </property>
+    <property name="cursor" >
+      <cursor>0</cursor>
+    </property>
+    <property name="windowTitle" >
+      <string>Live Schedule</string>
+    </property>
+    <property name="windowIcon" >
+      <pixmap>image0</pixmap>
+    </property>
+    <property name="sizeGripEnabled" >
+      <bool>true</bool>
+    </property>
+    <layout class="QGridLayout" >
+      <property name="margin" >
+        <number>11</number>
+      </property>
+      <property name="spacing" >
+        <number>6</number>
+      </property>
+      <item row="0" column="0" >
+        <widget class="Q3ListView" name="ListViewStations" >
+          <property name="cursor" >
+            <cursor>0</cursor>
+          </property>
+          <property name="allColumnsShowFocus" >
+            <bool>true</bool>
+          </property>
+          <property name="showSortIndicator" >
+            <bool>true</bool>
+          </property>
+          <column>
+            <property name="text" >
+              <string>Column 1</string>
+            </property>
+            <property name="clickable" >
+              <bool>true</bool>
+            </property>
+            <property name="resizable" >
+              <bool>true</bool>
+            </property>
+          </column>
+          <item>
+            <property name="text" >
+              <string>New Item</string>
+            </property>
+            <property name="pixmap" >
+              <pixmap/>
+            </property>
+          </item>
+        </widget>
+      </item>
+      <item row="1" column="0" >
+        <layout class="QHBoxLayout" >
+          <property name="margin" >
+            <number>0</number>
+          </property>
+          <property name="spacing" >
+            <number>6</number>
+          </property>
+          <item>
+            <layout class="QVBoxLayout" >
+              <property name="margin" >
+                <number>0</number>
+              </property>
+              <property name="spacing" >
+                <number>6</number>
+              </property>
+              <item>
+                <layout class="QHBoxLayout" >
+                  <property name="margin" >
+                    <number>0</number>
+                  </property>
+                  <property name="spacing" >
+                    <number>6</number>
+                  </property>
+                  <item>
+                    <widget class="QLabel" name="TextLabelUTCTime" >
+                      <property name="frameShape" >
+                        <enum>QFrame::Panel</enum>
+                      </property>
+                      <property name="frameShadow" >
+                        <enum>QFrame::Sunken</enum>
+                      </property>
+                      <property name="text" >
+                        <string>TextLabelUTCTime</string>
+                      </property>
+                      <property name="wordWrap" >
+                        <bool>false</bool>
+                      </property>
+                    </widget>
+                  </item>
+                  <item>
+                    <layout class="QHBoxLayout" >
+                      <property name="margin" >
+                        <number>0</number>
+                      </property>
+                      <property name="spacing" >
+                        <number>6</number>
+                      </property>
+                    </layout>
+                  </item>
+                </layout>
+              </item>
+            </layout>
+          </item>
+          <item>
+            <spacer name="Spacer4" >
+              <property name="sizeHint" >
+                <size>
+                  <width>20</width>
+                  <height>20</height>
+                </size>
+              </property>
+              <property name="sizeType" >
+                <enum>QSizePolicy::Minimum</enum>
+              </property>
+              <property name="orientation" >
+                <enum>Qt::Horizontal</enum>
+              </property>
+            </spacer>
+          </item>
+          <item>
+            <widget class="QCheckBox" name="CheckBoxFreeze" >
+              <property name="sizePolicy" >
+                <sizepolicy>
+                  <hsizetype>1</hsizetype>
+                  <vsizetype>0</vsizetype>
+                </sizepolicy>
+              </property>
+              <property name="text" >
+                <string>F&amp;reeze</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <spacer name="Spacer5" >
+              <property name="sizeHint" >
+                <size>
+                  <width>20</width>
+                  <height>20</height>
+                </size>
+              </property>
+              <property name="sizeType" >
+                <enum>QSizePolicy::Expanding</enum>
+              </property>
+              <property name="orientation" >
+                <enum>Qt::Horizontal</enum>
+              </property>
+            </spacer>
+          </item>
+          <item>
+            <layout class="QVBoxLayout" >
+              <property name="margin" >
+                <number>0</number>
+              </property>
+              <property name="spacing" >
+                <number>6</number>
+              </property>
+              <item>
+                <widget class="QPushButton" name="buttonOk" >
+                  <property name="text" >
+                    <string>&amp;Close</string>
+                  </property>
+                  <property name="autoDefault" >
+                    <bool>true</bool>
+                  </property>
+                  <property name="default" >
+                    <bool>true</bool>
+                  </property>
+                </widget>
+              </item>
+            </layout>
+          </item>
+        </layout>
+      </item>
+    </layout>
+  </widget>
+  <images>
+    <image name="image0" >
+      <data format="XPM.GZ" length="788" >789c6dd1c96e83301006e03b4f61855b54256c3658551fa1528f95aa1ebc0d26094948c85af5ddcb0c346d226c2edf0f8367603e65ef6faf6c3a0ff6ad6a2bc38c573b36b587babe7c7cbe7c059358b0ee4a0a164f9e82c98c1916669c2785432a62ced30290e1c0aca7254a2e24d5b644c3a54c911ac9236e24475e8831b73dcfc4948314c8133113912c9007a21071cfebc0444ae4965888542aa4232ac1a5463648910a50d49521ca3c5319b2421652269adebc439ad414966a81288db534e09e680cb808b9445ae722470f1f914e390d097245ec6e031db4180840f36e9010430239b226f26ed3446ba2801c68a292e8ba4d6d78222dfa470feb370b953646abf05fd61d5f7a5f82b3b7cc568b65b756beaeec90856ebdd96255b5ac5dd8670a7c97354d33ab3ca83ed325663bbf6f0f65a9fbccf83e3b9ece2b6f1eb3cb2dfbabbdde6ac7ce18eb65ace7d1d946bfc1fdb7fa7e0e7e007dbfc31f</data>
+    </image>
+  </images>
+  <connections>
+    <connection>
+      <sender>buttonOk</sender>
+      <signal>clicked()</signal>
+      <receiver>CLiveScheduleDlgBase</receiver>
+      <slot>accept()</slot>
+    </connection>
+  </connections>
+</ui>

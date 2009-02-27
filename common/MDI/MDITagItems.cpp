@@ -539,7 +539,7 @@ CTagItemGeneratorRDEL::GenTag(bool bIsValid, const vector<CMeasurements::CRdel>&
 		/* Length: 3 bytes per value = 16 bits */
 		PrepareTag(24 * rdel.size());
 
-		for (int i = 0; i < rdel.size(); i++)
+		for (size_t i = 0; i < rdel.size(); i++)
 		{
 			/* percentage for this window */
 			Enqueue((uint32_t) rdel[i].threshold, BITS_BINARY);
@@ -1163,7 +1163,7 @@ CTagItemGeneratorPowerSpectralDensity::GenTag(CParameter & Parameter)
 
 	PrepareTag(psd.size() * BITS_BINARY);
 
-	for (int i = 0; i < psd.size(); i++)
+	for (size_t i = 0; i < psd.size(); i++)
 	{
 		uint32_t p = uint8_t(psd[i] * _REAL(-2.0));
 		Enqueue(uint32_t(p), BITS_BINARY);
@@ -1194,7 +1194,7 @@ CTagItemGeneratorPowerImpulseResponse::GenTag(CParameter & Parameter)
 	Enqueue(uint32_t(int(pir.rStart * _REAL(256.0))), 2*BITS_BINARY);
 	Enqueue(uint32_t(int(end * _REAL(256.0))), 2*BITS_BINARY);
 
-	for (int i = 0; i < pir.data.size(); i++)
+	for (size_t i = 0; i < pir.data.size(); i++)
 	{
 		uint32_t p = uint8_t((pir.data[i]+rOffset) * _REAL(-2.0));
 		Enqueue(p, BITS_BINARY);
@@ -1270,8 +1270,8 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 		GenEmptyTag();
         return;
 	}
-	if (pilots.size() != iNumSymPerFrame / iScatPilTimeInt
-		|| pilots[0].size() != ((iNumCarrier - 1) / iScatPilFreqInt + 1))
+	if (pilots.size() != size_t(iNumSymPerFrame / iScatPilTimeInt)
+		|| pilots[0].size() != size_t((iNumCarrier - 1) / iScatPilFreqInt + 1))
 	{
 		GenEmptyTag();
 #if 0

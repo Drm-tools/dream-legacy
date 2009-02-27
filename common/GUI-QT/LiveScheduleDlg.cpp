@@ -26,9 +26,7 @@
 \******************************************************************************/
 
 #include "LiveScheduleDlg.h"
-//Added by qt3to4:
-#include <Q3TextStream>
-#include <Q3CString>
+#include <QTextStream>
 #include <QHideEvent>
 #include <Q3PopupMenu>
 #include <QShowEvent>
@@ -329,13 +327,11 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign& AltFreqSign)
 LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
 								 QWidget * parent, const char *name,
 								 bool modal, Qt::WFlags f):
-CLiveScheduleDlgBase(parent, name, modal, f),
-DRMReceiver(NDRMR),
-vecpListItems(),
-strCurrentSavePath("."),
-iColStationID(0),
-iWidthColStationID(0)
+QDialog(parent, name, modal, f), Ui_LiveScheduleDlg(),
+DRMReceiver(NDRMR),vecpListItems(),strCurrentSavePath("."),
+iColStationID(0),iWidthColStationID(0)
 {
+    setupUi(this);
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
@@ -435,7 +431,8 @@ iWidthColStationID(0)
 	connect(ListViewStations->header(), SIGNAL(clicked(int)),
 			this, SLOT(OnHeaderClicked(int)));
 
-	/* Check boxes */
+	connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
+
 	connect(CheckBoxFreeze, SIGNAL(clicked()), this, SLOT(OnCheckFreeze()));
 
 	TimerList.stop();
@@ -709,9 +706,9 @@ LiveScheduleDlg::LoadSchedule()
 			/* Do UTF-8 to string conversion with the label strings */
 			QString strStationName =
 				QString().
-				fromUtf8(Q3CString
-						 (Parameters.
-						  Service[iCurSelAudioServ].strLabel.c_str()));
+				fromUtf8(
+						 Parameters.
+						  Service[iCurSelAudioServ].strLabel.c_str());
 
 			/* add station name on the title of the dialog */
 			if (strStationName != "")
@@ -964,7 +961,7 @@ LiveScheduleDlg::OnSave()
 
 		QString strPath = strCurrentSavePath + "/"
 				+ strStationName + "_" + "LiveSchedule.html";
-		strFileName = Q3FileDialog::getSaveFileName(strPath, "*.html", this);
+		strFileName = QFileDialog::getSaveFileName(strPath, "*.html", this);
 
 		if (!strFileName.isNull())
 		{
@@ -974,7 +971,7 @@ LiveScheduleDlg::OnSave()
 
 			if (FileObj.open(QIODevice::WriteOnly))
 			{
-				Q3TextStream TextStream(&FileObj);
+				QTextStream TextStream(&FileObj);
 				TextStream << strText;	/* Actual writing */
 				FileObj.close();
 				/* TODO ini files are latin 1 but the storage path could contain non-latin characters,
@@ -990,7 +987,7 @@ void
 LiveScheduleDlg::AddWhatsThisHelp()
 {
 	/* Stations List */
-	Q3WhatsThis::add(ListViewStations,
+	ListViewStations->setWhatsThis(
 					tr("<b>Live Schedule List:</b> In the live schedule list "
 					   "it's possible to view AFS (Alternative Frequency Signalling) "
 					   "information transmitted with the current DRM or AMSS signal.</b>"
@@ -1009,13 +1006,13 @@ LiveScheduleDlg::AddWhatsThisHelp()
 					   "The list can be sorted by clicking on the headline of the column."));
 
 	/* UTC time label */
-	Q3WhatsThis::add(TextLabelUTCTime,
+	TextLabelUTCTime->setWhatsThis(
 					tr("<b>UTC Time:</b> Shows the current Coordinated "
 					   "Universal Time (UTC) which is also known as Greenwich Mean Time "
 					   "(GMT)."));
 
 	/* Check box freeze */
-	Q3WhatsThis::add(CheckBoxFreeze,
+	CheckBoxFreeze->setWhatsThis(
 					tr
 					("<b>Freeze:</b> If this check box is selected the live schedule is frozen."));
 }

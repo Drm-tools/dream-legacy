@@ -35,35 +35,26 @@
 #ifdef _WIN32
 # include <windows.h>
 #endif
-#ifdef HAVE_LIBFREEIMAGE
-# include <FreeImage.h>
-#endif
 #include "MultimediaDlg.h"
 #include "../datadecoding/Journaline.h"
-//Added by qt3to4:
-#include <Q3TextStream>
-#include <Q3CString>
+#include <Q3PopupMenu>
+
+#include <QFontDialog>
+#include <QTextStream>
 #include <QPixmap>
 #include <QHideEvent>
-#include <Q3PopupMenu>
 #include <QShowEvent>
 
 /* Implementation *************************************************************/
 MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f)
-	: MultimediaDlgBase(parent, name, modal, f),
+	: QDialog(parent, name, modal, f), Ui_MultimediaDlg(),
 	Parameters(*NDRMR.GetParameters()), DataDecoder(*NDRMR.GetDataDecoder()),
 	strCurrentSavePath("."), strDirMOTCache("MOTCache")
 {
 
-	/* Add body's stylesheet */
-	Q3StyleSheetItem* styleBody =
-		new Q3StyleSheetItem(TextBrowser->styleSheet(), "stylebody");
-
-	styleBody->setFontFamily(fontTextBrowser.family());
-	styleBody->setFontSize(fontTextBrowser.pointSize());
-	styleBody->setFontWeight(fontTextBrowser.weight());
-	styleBody->setFontItalic(fontTextBrowser.italic());
+    setupUi(this);
+    textBrowser->setFont(fontTextBrowser);
 
 	/* Picture controls should be invisable. These controls are only used for
 	   storing the resources */
@@ -133,19 +124,13 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 
 
 	/* Connect controls */
-	connect(PushButtonStepBack, SIGNAL(clicked()),
-		this, SLOT(OnButtonStepBack()));
-	connect(PushButtonStepForw, SIGNAL(clicked()),
-		this, SLOT(OnButtonStepForw()));
-	connect(PushButtonJumpBegin, SIGNAL(clicked()),
-		this, SLOT(OnButtonJumpBegin()));
-	connect(PushButtonJumpEnd, SIGNAL(clicked()),
-		this, SLOT(OnButtonJumpEnd()));
-	connect(TextBrowser, SIGNAL(textChanged()),
-		this, SLOT(OnTextChanged()));
+	connect(ButtonStepBack, SIGNAL(clicked()), this, SLOT(OnButtonStepBack()));
+	connect(ButtonStepForward, SIGNAL(clicked()), this, SLOT(OnButtonStepForw()));
+	connect(ButtonJumpBegin, SIGNAL(clicked()), this, SLOT(OnButtonJumpBegin()));
+	connect(ButtonJumpEnd, SIGNAL(clicked()), this, SLOT(OnButtonJumpEnd()));
+	connect(textBrowser, SIGNAL(textChanged()), this, SLOT(OnTextChanged()));
 
-	connect(&Timer, SIGNAL(timeout()),
-		this, SLOT(OnTimer()));
+	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
 	Timer.stop();
 }
@@ -183,17 +168,17 @@ void MultimediaDlg::InitApplication(CDataDecoder::EAppType eNewAppType)
 void MultimediaDlg::OnTextChanged()
 {
 	/* Check, if the current text is a link ID or regular text */
-	if (TextBrowser->text().compare(TextBrowser->text().left(1), "<") != 0)
+	if (textBrowser->text().compare(textBrowser->text().left(1), "<") != 0)
 	{
 		/* Save old ID */
 		NewIDHistory.Add(iCurJourObjID);
 
 		/* Set text to news ID text which was selected by the user */
-		iCurJourObjID = TextBrowser->text().toInt();
+		iCurJourObjID = textBrowser->text().toInt();
 		SetJournalineText();
 
 		/* Enable back button */
-		PushButtonStepBack->setEnabled(true);
+		ButtonStepBack->setEnabled(true);
 	}
 }
 
@@ -202,7 +187,7 @@ void MultimediaDlg::OnTimer()
 	CMOTObject	NewObj;
 	QPixmap		NewImage;
 	int			iCurNumPict;
-	bool	bMainPage;
+	bool	    bMainPage;
 	bool	bShowInfo = true;
 
 	Parameters.Lock();
@@ -322,7 +307,7 @@ void MultimediaDlg::OnTimer()
 				}
 				else
 				{
-					TextBrowser->setText("<center><h2>" +
+					textBrowser->setText("<center><h2>" +
 						tr("MOT Broadcast Web Site")
 						+ "</h2><br>"
 						+ tr("The home page is available")
@@ -396,7 +381,7 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 	DataDecoder.GetNews(iCurJourID, News);
 
 	/* Decode UTF-8 coding for title */
-	strTitle = QString().fromUtf8(Q3CString(News.sTitle.c_str()));
+	strTitle = QString().fromUtf8(News.sTitle.c_str());
 
 	strItems = "";
 	for (int i = 0; i < News.vecItem.Size(); i++)
@@ -405,8 +390,7 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 		if (bHTMLExport == false)
 		{
 			/* Decode UTF-8 coding of this item text */
-			strCurItem = QString().fromUtf8(
-				Q3CString(News.vecItem[i].sText.c_str()));
+			strCurItem = QString().fromUtf8(News.vecItem[i].sText.c_str());
 		}
 		else
 		{
@@ -469,8 +453,8 @@ void MultimediaDlg::SetJournalineText()
 		+ strFhGIISText;
 
 	/* Only update text browser if text has changed */
-	if (TextBrowser->text().compare(strAllText) != 0)
-		TextBrowser->setText(strAllText);
+	if (textBrowser->text().compare(strAllText) != 0)
+		textBrowser->setText(strAllText);
 
 	/* Enable / disable "save" menu item if title is present or not */
 	if (strTitle == "")
@@ -490,7 +474,7 @@ void MultimediaDlg::LoadSettings(const CSettings& Settings)
 		setGeometry(WinGeom);
 
 	/* Store the default font */
-	fontDefault = TextBrowser->font();
+	fontDefault = textBrowser->font();
 
 	/* Retrieve the setting saved into the .ini file */
 	string str = strDirMOTCache.latin1();
@@ -539,7 +523,7 @@ void MultimediaDlg::SaveSettings(CSettings& Settings)
 	s = strDirMOTCache.latin1();
 	Settings.Put("Multimedia Dialog", "MOTCache", s);
 
-	/* Store current TextBrowser font */
+	/* Store current textBrowser font */
 	Settings.Put("Multimedia Dialog","fontfamily", fontTextBrowser.family().latin1());
 	Settings.Put("Multimedia Dialog","fontpointsize", fontTextBrowser.pointSize());
 	Settings.Put("Multimedia Dialog","fontweight", fontTextBrowser.weight());
@@ -579,7 +563,7 @@ void MultimediaDlg::OnButtonStepBack()
 
 		/* If root ID is reached, disable back button */
 		if (iCurJourObjID == 0)
-			PushButtonStepBack->setEnabled(false);
+			ButtonStepBack->setEnabled(false);
 
 		SetJournalineText();
 		break;
@@ -652,19 +636,19 @@ void MultimediaDlg::SetSlideShowPicture()
 		/* If the text is empty there is segmentation fault
 			 browsing the images */
 
-		TextBrowser->setText("<br>");
+		textBrowser->setText("<br>");
 
 		/* Set new picture in source factory and set it in text control */
 		Q3MimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
 			NewImage.convertToImage());
 
-		TextBrowser->setText("<center><img source=\"MOTSlideShowimage\">"
+		textBrowser->setText("<center><img source=\"MOTSlideShowimage\">"
 			"</center>");
 	}
 	else
 	{
 		/* Show text that tells the user of load failure */
-		TextBrowser->setText("<br><br><center><b>" + tr("Image could not be "
+		textBrowser->setText("<br><br><center><b>" + tr("Image could not be "
 			"loaded, ") +
 			 QString(vecbyCurPict.strFormat.c_str()) +
 			 tr("-format not supported by this version of QT!") +
@@ -673,11 +657,11 @@ void MultimediaDlg::SetSlideShowPicture()
 	}
 
 	/* Remove previous tool tip */
-	QToolTip::remove(TextBrowser);
+	QToolTip::remove(textBrowser);
 
 	/* Add tool tip showing the name of the picture */
 	if (imagename.length() != 0)
-		QToolTip::add(TextBrowser,imagename);
+		QToolTip::add(textBrowser,imagename);
 
 	UpdateAccButtonsSlideShow();
 }
@@ -701,25 +685,25 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 	if (iCurImagePos <= 0)
 	{
 		/* We are already at the beginning */
-		PushButtonStepBack->setEnabled(false);
-		PushButtonJumpBegin->setEnabled(false);
+		ButtonStepBack->setEnabled(false);
+		ButtonJumpBegin->setEnabled(false);
 	}
 	else
 	{
-		PushButtonStepBack->setEnabled(true);
-		PushButtonJumpBegin->setEnabled(true);
+		ButtonStepBack->setEnabled(true);
+		ButtonJumpBegin->setEnabled(true);
 	}
 
 	if (iCurImagePos == GetIDLastPicture())
 	{
 		/* We are already at the end */
-		PushButtonStepForw->setEnabled(false);
-		PushButtonJumpEnd->setEnabled(false);
+		ButtonStepForward->setEnabled(false);
+		ButtonJumpEnd->setEnabled(false);
 	}
 	else
 	{
-		PushButtonStepForw->setEnabled(true);
-		PushButtonJumpEnd->setEnabled(true);
+		ButtonStepForward->setEnabled(true);
+		ButtonJumpEnd->setEnabled(true);
 	}
 
 	QString strTotImages = QString().setNum(GetIDLastPicture() + 1);
@@ -727,7 +711,7 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 
 	QString strSep("");
 
-	for (size_t i = 0; i < (strTotImages.length() - strNumImage.length()); i++)
+	for (int i = 0; i < (strTotImages.length() - strNumImage.length()); i++)
 		strSep += " ";
 
 	LabelCurPicNum->setText(strSep + strNumImage + "/" + strTotImages);
@@ -736,7 +720,7 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 	if (iCurImagePos < 0)
 	{
 		/* Init text browser window */
-		TextBrowser->setText("<center><h2>" +
+		textBrowser->setText("<center><h2>" +
 			tr("MOT Slideshow Viewer") + "</h2></center>");
 	}
 }
@@ -778,7 +762,7 @@ void MultimediaDlg::OnSave()
 				strDefFileName += "." + strExt;
 
 		strFileName =
-			Q3FileDialog::getSaveFileName(strCurrentSavePath + "/" + strDefFileName,
+			QFileDialog::getSaveFileName(strCurrentSavePath + "/" + strDefFileName,
 			strFilter, this);
 
 		/* Check if user not hit the cancel button */
@@ -811,7 +795,7 @@ void MultimediaDlg::OnSave()
 				QDateTime().currentDateTime().toString() + "</i></font></p>"
 				"</body>\n</html>";
 
-			strFileName = Q3FileDialog::getSaveFileName(strCurrentSavePath + "/" +
+			strFileName = QFileDialog::getSaveFileName(strCurrentSavePath + "/" +
 				strTitle + ".html", "*.html", this);
 
 			if (!strFileName.isNull())
@@ -823,7 +807,7 @@ void MultimediaDlg::OnSave()
 
 				if (FileObj.open(QIODevice::WriteOnly))
 				{
-					Q3TextStream TextStream(&FileObj);
+					QTextStream TextStream(&FileObj);
 					TextStream << strJornalineText; /* Actual writing */
 					FileObj.close();
 				}
@@ -839,8 +823,7 @@ void MultimediaDlg::OnSave()
 void MultimediaDlg::OnSaveAll()
 {
 	/* Let the user choose a directory */
-	QString strDirName =
-		Q3FileDialog::getExistingDirectory(NULL, this);
+	QString strDirName = QFileDialog::getExistingDirectory(NULL, this);
 
 	if (!strDirName.isNull())
 	{
@@ -885,7 +868,7 @@ void MultimediaDlg::ClearAllSlideShow()
 	UpdateAccButtonsSlideShow();
 
 	/* Remove tool tips */
-	QToolTip::remove(TextBrowser);
+	QToolTip::remove(textBrowser);
 }
 
 void MultimediaDlg::InitNotSupported()
@@ -894,15 +877,15 @@ void MultimediaDlg::InitNotSupported()
 	pFileMenu->setItemEnabled(0, false);
 	pFileMenu->setItemEnabled(1, false);
 	pFileMenu->setItemEnabled(2, false);
-	PushButtonStepForw->hide();
-	PushButtonJumpBegin->hide();
-	PushButtonJumpEnd->hide();
+	ButtonStepForward->hide();
+	ButtonJumpBegin->hide();
+	ButtonJumpEnd->hide();
 	LabelCurPicNum->hide();
-	PushButtonStepBack->hide();
-	QToolTip::remove(TextBrowser);
+	ButtonStepBack->hide();
+	QToolTip::remove(textBrowser);
 
 	/* Show that application is not supported */
-	TextBrowser->setText("<center><h2>" + tr("No data service or data service "
+	textBrowser->setText("<center><h2>" + tr("No data service or data service "
 		"not supported.") + "</h2></center>");
 }
 
@@ -912,21 +895,21 @@ void MultimediaDlg::InitBroadcastWebSite()
 	pFileMenu->setItemEnabled(0, false);
 	pFileMenu->setItemEnabled(1, false);
 	pFileMenu->setItemEnabled(2, false);
-	PushButtonStepForw->show();
-	PushButtonStepForw->setEnabled(false);
-	PushButtonJumpBegin->hide();
-	PushButtonJumpEnd->hide();
+	ButtonStepForward->show();
+	ButtonStepForward->setEnabled(false);
+	ButtonJumpBegin->hide();
+	ButtonJumpEnd->hide();
 	LabelCurPicNum->hide();
-	PushButtonStepBack->hide();
-	QToolTip::remove(TextBrowser);
+	ButtonStepBack->hide();
+	QToolTip::remove(textBrowser);
 
 	if (strBWSHomePage != "")
 	{
 		/* This is the button for opening the browser */
-		PushButtonStepForw->setEnabled(true);
+		ButtonStepForward->setEnabled(true);
 
 		/* Display text that index page was received an can be opened */
-		TextBrowser->setText("<center><h2>" + tr("MOT Broadcast Web Site")
+		textBrowser->setText("<center><h2>" + tr("MOT Broadcast Web Site")
 			+ "</h2><br>"
 			+ tr("The homepage is available.")
 			+ "<br><br>" +
@@ -936,7 +919,7 @@ void MultimediaDlg::InitBroadcastWebSite()
 	else
 	{
 		/* Show initial text */
-		TextBrowser->setText("<center><h2>" + tr("MOT Broadcast Web Site") +
+		textBrowser->setText("<center><h2>" + tr("MOT Broadcast Web Site") +
 			"</h2></center>");
 
 		/* Create the cache directory if not exist */
@@ -948,10 +931,10 @@ void MultimediaDlg::InitBroadcastWebSite()
 void MultimediaDlg::InitMOTSlideShow()
 {
 	/* Make all browse buttons visible */
-	PushButtonStepBack->show();
-	PushButtonStepForw->show();
-	PushButtonJumpBegin->show();
-	PushButtonJumpEnd->show();
+	ButtonStepBack->show();
+	ButtonStepForward->show();
+	ButtonJumpBegin->show();
+	ButtonJumpEnd->show();
 	LabelCurPicNum->show();
 
 	/* Set current image position to the last picture and display it (if at
@@ -962,7 +945,7 @@ void MultimediaDlg::InitMOTSlideShow()
 	else
 	{
 		/* Remove tool tips */
-		QToolTip::remove(TextBrowser);
+		QToolTip::remove(textBrowser);
 	}
 
 	/* Update buttons and menu */
@@ -979,22 +962,22 @@ void MultimediaDlg::InitJournaline()
 	pFileMenu->setItemEnabled(2, false);
 
 	/* Only one back button is visible and enabled */
-	PushButtonStepForw->hide();
-	PushButtonJumpBegin->hide();
-	PushButtonJumpEnd->hide();
+	ButtonStepForward->hide();
+	ButtonJumpBegin->hide();
+	ButtonJumpEnd->hide();
 	LabelCurPicNum->hide();
 
 	/* Show back button and disable it because we always start at the root
 	   object */
-	PushButtonStepBack->show();
-	PushButtonStepBack->setEnabled(false);
+	ButtonStepBack->show();
+	ButtonStepBack->setEnabled(false);
 
 	/* Init text browser window */
 	iCurJourObjID = 0;
 	SetJournalineText();
 
 	/* Remove tool tips */
-	QToolTip::remove(TextBrowser);
+	QToolTip::remove(textBrowser);
 
 	NewIDHistory.Reset();
 }
@@ -1015,11 +998,11 @@ void MultimediaDlg::CreateDirectories(const QString& filename)
 */
 	int i = 0;
 
-	while (uint(i) < filename.length())
+	while (i < filename.length())
 	{
 		bool bFound = false;
 
-		while ((uint(i) < filename.length()) && (bFound == false))
+		while ((i < filename.length()) && (bFound == false))
 		{
 			if (filename[i] == '/')
 				bFound = true;
@@ -1140,22 +1123,15 @@ void MultimediaDlg::OnSetFont()
 	if (bok == true)
 	{
 		/* Store the current text and then reset it */
-		QString strOldText = TextBrowser->text();
-		TextBrowser->setText("<br>");
+		QString strOldText = textBrowser->text();
+		textBrowser->setText("<br>");
 
 		/* Set the new font */
 		fontTextBrowser = newFont;
 
-		/* Change the body stylesheet */
-		Q3StyleSheetItem* styleBody =
-			TextBrowser->styleSheet()->item("stylebody");
-
-		styleBody->setFontFamily(fontTextBrowser.family());
-		styleBody->setFontSize(fontTextBrowser.pointSize());
-		styleBody->setFontWeight(fontTextBrowser.weight());
-		styleBody->setFontItalic(fontTextBrowser.italic());
+		textBrowser->setFont(fontTextBrowser);
 
 		/* Restore the text for refresh it with the new font */
-		TextBrowser->setText(strOldText);
+		textBrowser->setText(strOldText);
 	}
 }

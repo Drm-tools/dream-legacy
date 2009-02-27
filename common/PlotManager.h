@@ -89,8 +89,11 @@ public:
 	void GetAudioSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
 
 	void GetFACVectorSpace(vector<_COMPLEX>&);
-	void GetSDCVectorSpace(vector<_COMPLEX>&, ECodScheme&);
-	void GetMSCVectorSpace(vector<_COMPLEX>&, ECodScheme&);
+	void GetSDCVectorSpace(vector<_COMPLEX>&);
+	void GetMSCVectorSpace(vector<_COMPLEX>&);
+
+	ECodScheme GetSDCCodingScheme();
+	ECodScheme GetMSCCodingScheme();
 
 	void GetAnalogBWParameters(_REAL& rCenterFreq, _REAL& rBW);
     _REAL GetAnalogCurMixFreqOffs() const;

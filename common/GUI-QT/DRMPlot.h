@@ -30,27 +30,21 @@
 #define DRMPLOT_H__FD6B2345234523453_804E1606C2AC__INCLUDED_
 
 #include <qwt_plot.h>
-#include <qwt_plot_canvas.h>
-#include <qwt_scale_draw.h>
-#include <qwt_symbol.h>
-#include <qwt_text.h>
 #include <qwt_plot_grid.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_marker.h>
 #include <qwt_plot_spectrogram.h>
-#include <qpainter.h>
-#include <qtimer.h>
-#include <q3whatsthis.h>
-//Added by qt3to4:
+#include <qwt_symbol.h>
+#include <QTimer>
 #include <QShowEvent>
 #include <QMouseEvent>
 #include <QHideEvent>
 #include "../PlotManager.h"
+#include "../util/Settings.h"
 #include <deque>
 
 /* Definitions ****************************************************************/
 #define GUI_CONTROL_UPDATE_WATERFALL			100	/* Milliseconds */
-
 
 /* Define the plot color profiles */
 /* BLUEWHITE */
@@ -119,33 +113,39 @@ protected:
     size_t height;
 };
 
-class CDRMPlot : public QwtPlot
+class CDRMPlot : public QObject
 {
+
     Q_OBJECT
 
 public:
 
-	CDRMPlot(QWidget *p = 0, const char *name = 0);
-	virtual ~CDRMPlot() {}
+	CDRMPlot(QwtPlot*);
+	virtual ~CDRMPlot();
 
 	/* This function has to be called before chart can be used! */
 	void SetPlotManager(CPlotManager* pm) {pPlotManager = pm;}
 
 	void SetupChart(const CPlotManager::EPlotType eNewType);
-	CPlotManager::EPlotType GetChartType() const {return CurCharType;}
+	void SetupChartNow();
+	void UpdateChartNow();
+	CPlotManager::EPlotType GetChartType() const {return CurrentChartType;}
 	void Update() {OnTimerChart();}
+	void start() { TimerChart.start();}
+	void stop() { TimerChart.stop();}
+	void load(const CSettings& s, const string& section);
+	void save(CSettings& s, const string& section);
 
 	void SetPlotStyle(const int iNewStyleID);
 
 protected:
 	void SetAvIR();
 	void SetTranFct();
-	void SetAudioSpec();
+	void SetAudioSpectrum();
 	void SetPSD();
 	void SetSNRSpectrum();
-	void SetInpSpec();
+	void SetInpSpectrum();
 	void SetInpPSD();
-    void SetInpPSDAnalog();
 	void SetInpSpecWaterf();
 	void SetFreqSamOffsHist();
 	void SetDopplerDelayHist();
@@ -154,6 +154,21 @@ protected:
 	void SetSDCConst();
 	void SetMSCConst();
 	void SetAllConst();
+	void UpdateAvIR();
+	void UpdateTranFct();
+	void UpdateAudioSpectrum();
+	void UpdatePSD();
+	void UpdateSNRSpectrum();
+	void UpdateInpSpectrum();
+	void UpdateInpPSD();
+	void UpdateInpSpecWaterf();
+	void UpdateFreqSamOffsHist();
+	void UpdateDopplerDelayHist();
+	void UpdateSNRAudHist();
+	void UpdateFACConst();
+	void UpdateSDCConst();
+	void UpdateMSCConst();
+	void UpdateAllConst();
     void SetData(QwtPlotCurve* curve, vector<_COMPLEX>& veccData);
 
 	void SpectrumPlotDefaults(const QString&, const QString&, uint);
@@ -162,8 +177,6 @@ protected:
     QwtPlotCurve* ScatterCurve(const QString& title, const QwtSymbol& s);
 
 	void AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType);
-    virtual void showEvent(QShowEvent* pEvent);
-	virtual void hideEvent(QHideEvent* pEvent);
 
 	/* Colors */
 	QColor			MainPenColorPlot;
@@ -181,23 +194,26 @@ protected:
 	ECodScheme      eCurSDCCodingScheme;
 	ECodScheme      eCurMSCCodingScheme;
 
-	CPlotManager::EPlotType		CurCharType;
-	CPlotManager::EPlotType		InitCharType;
 	QwtPlotCurve	*main1curve, *main2curve;
 	QwtPlotCurve	*DCCarrierCurve, *BandwidthMarkerCurve;
 	QwtPlotCurve	*curve1, *curve2, *curve3, *curve4, *curve5, *curve6;
 	QwtSymbol		MarkerSymFAC, MarkerSymSDC, MarkerSymMSC;
-    QwtPlotGrid     grid;
+    QwtPlotGrid*    grid;
     QwtPlotSpectrogram* spectrogram;
     SpectrogramData spectrogramData;
 
+	CPlotManager::EPlotType		CurrentChartType;
+	CPlotManager::EPlotType		WantedChartType;
 	bool		    bOnTimerCharMutexFlag;
 	QTimer			TimerChart;
 
     CPlotManager*   pPlotManager;
 
+    QwtPlot *plot;
+    int             styleId;
+
 public slots:
-	void OnClicked(const QMouseEvent& e);
+	void OnClicked(const QwtDoublePoint& e);
 	void OnTimerChart();
 
 signals:

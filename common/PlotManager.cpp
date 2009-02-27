@@ -67,10 +67,8 @@ void CPlotManager::startPlot(EPlotType e)
         Parameters.Measurements.inputSpectrum.subscribe();
 		break;
 	case INPUT_SIG_PSD:
-        Parameters.Measurements.PSD.subscribe();
-		break;
 	case INPUT_SIG_PSD_ANALOG:
-        Parameters.Measurements.inputSpectrum.subscribe();
+        Parameters.Measurements.PSD.subscribe();
 		break;
 	case AUDIO_SPECTRUM:
         //Parameters.Measurements.subscribe();
@@ -267,7 +265,7 @@ CPlotManager::GetInputPSD(vector<_REAL>& vecrData, _REAL& rStart, _REAL& rStep)
     if(psdOk==false)
         return;
 
-    if(etsi) // if the RSI output is turned on we display that version
+    if(etsi) // if the RSCI output is turned on we display that version
     {
         // starting frequency and frequency step as defined in TS 102 349
         // plot expects the scale values in kHz
@@ -409,16 +407,24 @@ void CPlotManager::GetFACVectorSpace(vector<_COMPLEX>& vec)
     pReceiver->GetFACVectorSpace(vec);
 }
 
-void CPlotManager::GetSDCVectorSpace(vector<_COMPLEX>& vec, ECodScheme& eCS)
+void CPlotManager::GetSDCVectorSpace(vector<_COMPLEX>& vec)
 {
     pReceiver->GetSDCVectorSpace(vec);
-    eCS = pReceiver->GetParameters()->eSDCCodingScheme;
 }
 
-void CPlotManager::GetMSCVectorSpace(vector<_COMPLEX>& vec, ECodScheme& eCS)
+void CPlotManager::GetMSCVectorSpace(vector<_COMPLEX>& vec)
 {
     pReceiver->GetMSCVectorSpace(vec);
-    eCS = pReceiver->GetParameters()->eMSCCodingScheme;
+}
+
+ECodScheme CPlotManager::GetSDCCodingScheme()
+{
+    return pReceiver->GetParameters()->eSDCCodingScheme;
+}
+
+ECodScheme CPlotManager::GetMSCCodingScheme()
+{
+    return pReceiver->GetParameters()->eMSCCodingScheme;
 }
 
 _REAL CPlotManager::GetDCFrequency()

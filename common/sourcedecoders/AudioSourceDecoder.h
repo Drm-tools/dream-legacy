@@ -35,10 +35,10 @@
 #include "../datadecoding/DataDecoder.h"
 #include "../util/Utilities.h"
 
-#ifdef USE_FAAD2_LIBRARY
+#ifdef HAVE_LIBFAAD
 # include "neaacdec.h"
 #endif
-#ifdef USE_FAAC_LIBRARY
+#ifdef HAVE_LIBFAAC
 # include "faac.h"
 #endif
 
@@ -134,7 +134,7 @@ class CAudioSourceEncoderImplementation
 {
 public:
 	CAudioSourceEncoderImplementation() : bUsingTextMessage(false)
-#ifdef USE_FAAC_LIBRARY
+#ifdef HAVE_LIBFAAC
 		, hEncoder(NULL)
 #endif
 		{}
@@ -145,13 +145,13 @@ public:
 
 protected:
 	CTextMessageEncoder		TextMessage;
-	bool				bUsingTextMessage;
+	bool				    bUsingTextMessage;
 	int						iTotNumBitsForUsage;
 
-#ifdef USE_FAAC_LIBRARY
+#ifdef HAVE_LIBFAAC
 	faacEncHandle			hEncoder;
 	faacEncConfigurationPtr CurEncFormat;
-
+#endif
 	unsigned long			lNumSampEncIn;
 	unsigned long			lMaxBytesEncOut;
 	unsigned long			lEncSamprate;
@@ -166,7 +166,6 @@ protected:
 	CAudioResample			ResampleObj;
 	CVector<_REAL>			vecTempResBufIn;
 	CVector<_REAL>			vecTempResBufOut;
-#endif
 
 public:
 		virtual void InitInternalTx(CParameter &TransmParam, int &iInputBlockSize, int &iOutputBlockSize);
@@ -230,7 +229,6 @@ public:
 
 	virtual ~CAudioSourceDecoder();
 
-	int GetNumCorDecAudio();
 	void SetReverbEffect(const bool bNER) {bUseReverbEffect = bNER;}
 	bool GetReverbEffect() {return bUseReverbEffect;}
 
@@ -244,13 +242,12 @@ protected:
 	};
 
 	/* General */
-	bool			DoNotProcessData;
-	bool			DoNotProcessAudDecoder;
+	bool		    	DoNotProcessData;
+	bool			    DoNotProcessAudDecoder;
 	int					iTotalFrameSize;
-	int					iNumCorDecAudio;
 
 	/* Text message */
-	bool			bTextMessageUsed;
+	bool			    bTextMessageUsed;
 	CTextMessageDecoder	TextMessage;
 	CVector<_BINARY>	vecbiTextMessBuf;
 
@@ -268,8 +265,8 @@ protected:
 	CVector<_REAL>		vecTempResBufOutOldRight;
 
 	/* Drop-out masking (reverberation) */
-	bool			bAudioWasOK;
-	bool			bUseReverbEffect;
+	bool			    bAudioWasOK;
+	bool			    bUseReverbEffect;
 	CAudioReverb		AudioRev;
 
 	int					iLenDecOutPerChan;
@@ -278,7 +275,7 @@ protected:
 	CAudioParam::EAudCod	eAudioCoding;
 
 
-#ifdef USE_FAAD2_LIBRARY /* AAC decoding */
+#ifdef HAVE_LIBFAAD /* AAC decoding */
 	NeAACDecHandle		HandleAACDecoder;
 
 	CVector<_BYTE>		vecbyPrepAudioFrame;
@@ -302,7 +299,7 @@ protected:
 	int					iNumHigherProtectedBits;
 	int					iNumLowerProtectedBits;
 
-	bool			bCELPCRC;
+	bool			    bCELPCRC;
 	CCRC				CELPCRCObject;
 
 #ifdef USE_CELP_DECODER

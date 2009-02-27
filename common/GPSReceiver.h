@@ -32,15 +32,20 @@
 #include "Parameter.h"
 #include "util/Settings.h"
 #ifdef HAVE_QT
-# include <q3socket.h>
-# include <qthread.h>
-# include <qmutex.h>
-# include <qtimer.h>
+# include <QTcpSocket>
+# include <QThread>
+# include <QMutex>
+# include <QTimer>
 #endif
 
-class CGPSReceiver : public QObject
+class CGPSReceiver
+#ifdef HAVE_QT
+ : public QObject
 {
 	Q_OBJECT
+#else
+{
+#endif
 public:
 	CGPSReceiver(CParameter&, CSettings&);
 	virtual ~CGPSReceiver();
@@ -62,8 +67,8 @@ protected:
 
 	CParameter&	Parameters;
 	CSettings&	m_Settings;
-	Q3Socket*	m_pSocket;
 #ifdef HAVE_QT
+	QTcpSocket*	m_pSocket;
 	QTimer*		m_pTimer;
 	QTimer*		m_pTimerDataTimeout;
 #endif
@@ -71,7 +76,11 @@ protected:
 	string		m_sHost;
 	int			m_iPort;
 
+#ifdef HAVE_QT
 public slots:
+#else
+public:
+#endif
 
 	void slotInit();
 	void slotConnected();

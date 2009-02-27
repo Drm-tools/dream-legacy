@@ -28,9 +28,9 @@
 \******************************************************************************/
 
 #include <qdom.h>
-#include <qmap.h>
-#include <qstring.h>
-#include <qdatetime.h>
+#include <QMap>
+#include <QString>
+#include <QDatetime>
 #include "../../GlobalDefinitions.h"
 #include "../../Parameter.h"
 #include "../DABMOT.h"

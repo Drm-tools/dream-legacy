@@ -430,7 +430,6 @@ void CReceiveData::CalculatePSD(vector<_REAL>& vecrData,
 
         /* Length of spectrum vector including Nyquist frequency */
         const int iLenSpecWithNyFreq = iLenPSDAvEachBlock / 2 + 1;
-
         /* Init input and output vectors */
         vecrData.resize(iLenSpecWithNyFreq);
 
@@ -474,13 +473,11 @@ void CReceiveData::CalculatePSD(vector<_REAL>& vecrData,
                         vecrData[i] = (_REAL) 10.0 * log10(rNormSqMag);
                 else
                         vecrData[i] = RET_VAL_LOG_0;
-
-                //vecrScale[i] = (_REAL) i * rFactorScale;
         }
 }
 
 /* Calculate PSD and put it into the CParameter class.
- * The data will be used by the chart plotter and rsi output.
+ * The data will be used by the chart plotter and RSCI output.
  */
 void CReceiveData::PutPSD(CParameter &ReceiverParam)
 {
