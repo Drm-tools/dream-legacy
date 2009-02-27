@@ -49,7 +49,7 @@
 # include <QThread>
 # include <QMessagebox>
 # include <QTranslator>
-# include "fdrmdialog.h"
+# include "DRMMainWindow.h"
 # include "TransmDlg.h"
 #endif
 #include <iostream>

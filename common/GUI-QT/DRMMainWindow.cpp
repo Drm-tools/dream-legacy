@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include <iostream>
-#include "fdrmdialog.h"
+#include "DRMMainWindow.h"
 #include <qlabel.h>
 #include <qpushbutton.h>
 #include <qtimer.h>
