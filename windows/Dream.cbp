@@ -330,8 +330,6 @@
 		<Unit filename="..\common\OFDM.h" />
 		<Unit filename="..\common\Parameter.cpp" />
 		<Unit filename="..\common\Parameter.h" />
-		<Unit filename="..\common\PlotManager.cpp" />
-		<Unit filename="..\common\PlotManager.h" />
 		<Unit filename="..\common\ReceptLog.cpp" />
 		<Unit filename="..\common\ReceptLog.h" />
 		<Unit filename="..\common\SDC\SDC.h" />
