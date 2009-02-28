@@ -204,7 +204,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 	Parameter.Lock();
 	int iNumSymPerFrame = Parameter.CellMappingTable.iNumSymPerFrame;
 	bool bMeasurePSD = Parameter.Measurements.PSD.wanted();
-	bool bMeasureInputSpectrum = Parameter.Measurements.inputSpectrum.wanted();
+	bool bMeasureInputSpectrum = Parameter.Measurements.InputSpectrum.wanted();
 	Parameter.Unlock();
 
 	/* OPH: update free-running symbol counter */
@@ -572,7 +572,7 @@ void CReceiveData::PutInputSpec(CParameter &ReceiverParam)
 	}
 
     ReceiverParam.Lock();
-	ReceiverParam.Measurements.inputSpectrum.set(spec);
+	ReceiverParam.Measurements.InputSpectrum.set(spec);
     ReceiverParam.Unlock();
 }
 

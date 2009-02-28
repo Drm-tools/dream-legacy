@@ -254,12 +254,8 @@ public:
 	void SetNoiRedType(const ENoiRedType eNewType);
 	ENoiRedType GetNoiRedType() {return NoiRedType;}
 
-	void GetBWParameters(CReal& rCenterFreq, CReal& rBW)
-		{rCenterFreq = rBPNormCentOffsTot; rBW = rBPNormBW;}
 
 	bool GetPLLPhase(CReal& rPhaseOut);
-	CReal GetCurMixFreqOffs() const
-		{return rNormCurMixFreqOffs * SOUNDCRD_SAMPLE_RATE;}
 
 	bool GetFrameBoundary() {return iFreeSymbolCounter==0;}
 

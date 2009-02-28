@@ -28,6 +28,7 @@
 
 #include "../util/Settings.h"
 #include "DRMPlot.h"
+#include "../DrmReceiver.h"
 #include <limits>
 #include <algorithm>
 #include <functional>
@@ -72,15 +73,56 @@ void boundValues(const vector<T>& vec, T& min, T&max)
 	}
 }
 
-CDRMPlot::CDRMPlot(QwtPlot *p, CDRMReceiver* rec) :
-	CurrentChartType(CPlotManager::NONE_OLD), WantedChartType(CPlotManager::NONE_OLD),
-	grid(NULL), spectrogram(NULL),bOnTimerCharMutexFlag(false),pPlotManager(NULL),
-	plot(p)
+class TransferFunction : unary_function<CComplex,double>
 {
+public:
+    double operator() (CComplex) const;
+};
 
-    //addWidget(plot);  // TODO needed ?
-    pPlotManager = new CPlotManager(rec);
+double TransferFunction::operator()(CComplex val) const
+{
+    const _REAL rNormData = (_REAL) numeric_limits<_SAMPLE>::max() * numeric_limits<_SAMPLE>::max();
+    const _REAL rNormSqMagChanEst = SqMag(val) / rNormData;
 
+    if (rNormSqMagChanEst > 0)
+        return (_REAL) 10.0 * Log10(rNormSqMagChanEst);
+    else
+        return RET_VAL_LOG_0;
+}
+
+class GroupDelay : unary_function<CComplex,double>
+{
+public:
+    GroupDelay(CComplex init, CReal tu):rOldPhase(Angle(init)),rTu(tu){}
+    double operator() (CComplex);
+private:
+    CReal rOldPhase;
+    CReal rTu;
+};
+
+double GroupDelay::operator()(CComplex val)
+{
+    CReal rCurphase = Angle(val);
+    CReal rDiffPhase = rCurphase - rOldPhase;
+
+    /* Store phase */
+    rOldPhase = rCurphase;
+
+    /* Take care of wrap around of angle() function */
+    if (rDiffPhase > WRAP_AROUND_BOUND_GRP_DLY)
+        rDiffPhase -= 2.0 * crPi;
+    if (rDiffPhase < -WRAP_AROUND_BOUND_GRP_DLY)
+        rDiffPhase += 2.0 * crPi;
+
+    /* Apply normalization */
+    return rDiffPhase * rTu * 1000.0 /* ms */;
+}
+
+CDRMPlot::CDRMPlot(QwtPlot *p, CParameter* param) :
+	CurrentChartType(NONE_OLD), WantedChartType(NONE_OLD),
+	grid(NULL), spectrogram(NULL),bOnTimerCharMutexFlag(false),
+	Parameters(*param), plot(p)
+{
     grid = new QwtPlotGrid();
 
 	/* Grid defaults */
@@ -176,7 +218,7 @@ void CDRMPlot::load(const CSettings& s, const string& section)
         plot->setGeometry(WinGeom);
 	}
 	SetPlotStyle(s.Get(section, "plotstyle", 0));
-	SetupChart(CPlotManager::EPlotType(s.Get(section, "plottype", 0)));
+	SetupChart(EPlotType(s.Get(section, "plottype", 0)));
 }
 
 void CDRMPlot::save(CSettings& s, const string& section)
@@ -216,14 +258,14 @@ void CDRMPlot::OnTimerChart()
 
 	bool chartChangeNeeded = false;
 
-    ECodScheme e = pPlotManager->GetSDCCodingScheme();
+    ECodScheme e = Parameters.eSDCCodingScheme;
     if(e!=eCurSDCCodingScheme)
     {
         eCurSDCCodingScheme = e;
         chartChangeNeeded = true;
     }
 
-    e = pPlotManager->GetMSCCodingScheme();
+    e = Parameters.eMSCCodingScheme;
     if(e!=eCurMSCCodingScheme)
     {
         eCurMSCCodingScheme = e;
@@ -247,75 +289,75 @@ void CDRMPlot::OnTimerChart()
 
 void CDRMPlot::SetupChartNow()
 {
-    pPlotManager->endPlot(CurrentChartType);
-    pPlotManager->startPlot(WantedChartType);
+    endPlot(CurrentChartType);
+    startPlot(WantedChartType);
 
     plot->clear();
 
 	switch (WantedChartType)
 	{
-	case CPlotManager::AVERAGED_IR:
+	case AVERAGED_IR:
 		SetAvIR();
 		break;
 
-	case CPlotManager::TRANSFERFUNCTION:
+	case TRANSFERFUNCTION:
 		SetTranFct();
 		break;
 
-	case CPlotManager::POWER_SPEC_DENSITY:
+	case POWER_SPEC_DENSITY:
 		SetPSD();
 		break;
 
-	case CPlotManager::SNR_SPECTRUM:
+	case SNR_SPECTRUM:
 		SetSNRSpectrum();
 		break;
 
-	case CPlotManager::INPUTSPECTRUM_NO_AV:
+	case INPUTSPECTRUM_NO_AV:
 		SetInpSpectrum();
 		break;
 
-	case CPlotManager::INP_SPEC_WATERF:
+	case INP_SPEC_WATERF:
 		SetInpSpecWaterf();
 		break;
 
-	case CPlotManager::INPUT_SIG_PSD:
-	case CPlotManager::INPUT_SIG_PSD_ANALOG:
+	case INPUT_SIG_PSD:
+	case INPUT_SIG_PSD_ANALOG:
 		SetInpPSD();
 		break;
 
-	case CPlotManager::AUDIO_SPECTRUM:
+	case AUDIO_SPECTRUM:
 		SetAudioSpectrum();
 		break;
 
-	case CPlotManager::FREQ_SAM_OFFS_HIST:
+	case FREQ_SAM_OFFS_HIST:
 		SetFreqSamOffsHist();
 		break;
 
-	case CPlotManager::DOPPLER_DELAY_HIST:
+	case DOPPLER_DELAY_HIST:
 		SetDopplerDelayHist();
 		break;
 
-	case CPlotManager::SNR_AUDIO_HIST:
+	case SNR_AUDIO_HIST:
 		SetSNRAudHist();
 		break;
 
-	case CPlotManager::FAC_CONSTELLATION:
+	case FAC_CONSTELLATION:
 		SetFACConst();
 		break;
 
-	case CPlotManager::SDC_CONSTELLATION:
+	case SDC_CONSTELLATION:
 		SetSDCConst();
 		break;
 
-	case CPlotManager::MSC_CONSTELLATION:
+	case MSC_CONSTELLATION:
 		SetMSCConst();
 		break;
 
-	case CPlotManager::ALL_CONSTELLATION:
+	case ALL_CONSTELLATION:
 		SetAllConst();
 		break;
 
-	case CPlotManager::NONE_OLD:
+	case NONE_OLD:
 		break;
 	}
 	CurrentChartType = WantedChartType;
@@ -325,79 +367,79 @@ void CDRMPlot::UpdateChartNow()
 {
 	switch (CurrentChartType)
 	{
-	case CPlotManager::AVERAGED_IR:
+	case AVERAGED_IR:
 		UpdateAvIR();
 		break;
 
-	case CPlotManager::TRANSFERFUNCTION:
+	case TRANSFERFUNCTION:
 		UpdateTranFct();
 		break;
 
-	case CPlotManager::POWER_SPEC_DENSITY:
+	case POWER_SPEC_DENSITY:
 		UpdatePSD();
 		break;
 
-	case CPlotManager::SNR_SPECTRUM:
+	case SNR_SPECTRUM:
 		UpdateSNRSpectrum();
 		break;
 
-	case CPlotManager::INPUTSPECTRUM_NO_AV:
+	case INPUTSPECTRUM_NO_AV:
 		UpdateInpSpectrum();
 		break;
 
-	case CPlotManager::INP_SPEC_WATERF:
+	case INP_SPEC_WATERF:
 		UpdateInpSpecWaterf();
 		break;
 
-	case CPlotManager::INPUT_SIG_PSD:
-	case CPlotManager::INPUT_SIG_PSD_ANALOG:
+	case INPUT_SIG_PSD:
+	case INPUT_SIG_PSD_ANALOG:
 		UpdateInpPSD();
 		break;
 
-	case CPlotManager::AUDIO_SPECTRUM:
+	case AUDIO_SPECTRUM:
 		UpdateAudioSpectrum();
 		break;
 
-	case CPlotManager::FREQ_SAM_OFFS_HIST:
+	case FREQ_SAM_OFFS_HIST:
 		UpdateFreqSamOffsHist();
 		break;
 
-	case CPlotManager::DOPPLER_DELAY_HIST:
+	case DOPPLER_DELAY_HIST:
 		UpdateDopplerDelayHist();
 		break;
 
-	case CPlotManager::SNR_AUDIO_HIST:
+	case SNR_AUDIO_HIST:
 		UpdateSNRAudHist();
 		break;
 
-	case CPlotManager::FAC_CONSTELLATION:
+	case FAC_CONSTELLATION:
 		UpdateFACConst();
 		break;
 
-	case CPlotManager::SDC_CONSTELLATION:
+	case SDC_CONSTELLATION:
 		UpdateSDCConst();
 		break;
 
-	case CPlotManager::MSC_CONSTELLATION:
+	case MSC_CONSTELLATION:
 		UpdateMSCConst();
 		break;
 
-	case CPlotManager::ALL_CONSTELLATION:
+	case ALL_CONSTELLATION:
 		UpdateAllConst();
 		break;
 
-	case CPlotManager::NONE_OLD:
+	case NONE_OLD:
 		break;
 	}
     plot->replot();
 }
 
-void CDRMPlot::SetupChart(const CPlotManager::EPlotType eNewType)
+void CDRMPlot::SetupChart(const EPlotType eNewType)
 {
-	if (eNewType == CPlotManager::NONE_OLD)
+	if (eNewType == NONE_OLD)
         return;
 
-    if(eNewType == CPlotManager::INP_SPEC_WATERF)
+    if(eNewType == INP_SPEC_WATERF)
     {
     }
     {
@@ -417,39 +459,188 @@ void CDRMPlot::SetupChart(const CPlotManager::EPlotType eNewType)
     /* Set up timer */
     switch (eNewType)
     {
-    case CPlotManager::INP_SPEC_WATERF:
+    case INP_SPEC_WATERF:
         /* Very fast update */
         TimerChart.changeInterval(GUI_CONTROL_UPDATE_WATERFALL);
         break;
 
-    case CPlotManager::AVERAGED_IR:
-    case CPlotManager::TRANSFERFUNCTION:
-    case CPlotManager::POWER_SPEC_DENSITY:
-    case CPlotManager::INPUT_SIG_PSD:
-    case CPlotManager::INPUT_SIG_PSD_ANALOG:
-    case CPlotManager::SNR_SPECTRUM:
+    case AVERAGED_IR:
+    case TRANSFERFUNCTION:
+    case POWER_SPEC_DENSITY:
+    case INPUT_SIG_PSD:
+    case INPUT_SIG_PSD_ANALOG:
+    case SNR_SPECTRUM:
         /* Fast update */
         TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME_FAST);
         break;
 
-    case CPlotManager::FAC_CONSTELLATION:
-    case CPlotManager::SDC_CONSTELLATION:
-    case CPlotManager::MSC_CONSTELLATION:
-    case CPlotManager::ALL_CONSTELLATION:
-    case CPlotManager::INPUTSPECTRUM_NO_AV:
-    case CPlotManager::AUDIO_SPECTRUM:
-    case CPlotManager::FREQ_SAM_OFFS_HIST:
-    case CPlotManager::DOPPLER_DELAY_HIST:
-    case CPlotManager::SNR_AUDIO_HIST:
+    case FAC_CONSTELLATION:
+    case SDC_CONSTELLATION:
+    case MSC_CONSTELLATION:
+    case ALL_CONSTELLATION:
+    case INPUTSPECTRUM_NO_AV:
+    case AUDIO_SPECTRUM:
+    case FREQ_SAM_OFFS_HIST:
+    case DOPPLER_DELAY_HIST:
+    case SNR_AUDIO_HIST:
         /* Slow update of plot */
         TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME);
         break;
 
-    case CPlotManager::NONE_OLD:
+    case NONE_OLD:
         break;
     }
     SetupChartNow();
 }
+
+
+void CDRMPlot::startPlot(EPlotType e)
+{
+
+    Parameters.Lock();
+    const _REAL rDRMFrameDur =
+        _REAL(Parameters.CellMappingTable.iFFTSizeN + Parameters.CellMappingTable.iGuardSize)
+        /
+		_REAL(SOUNDCRD_SAMPLE_RATE * Parameters.CellMappingTable.iNumSymPerFrame);
+	switch (e)
+	{
+	case AVERAGED_IR:
+        Parameters.Measurements.PIR.subscribe();
+		break;
+	case TRANSFERFUNCTION:
+        Parameters.Measurements.ChannelEstimate.subscribe();
+		break;
+	case POWER_SPEC_DENSITY:
+        //Parameters.Measurements.subscribe();
+		break;
+	case SNR_SPECTRUM:
+        //Parameters.Measurements.subscribe();
+		break;
+	case INPUTSPECTRUM_NO_AV:
+        Parameters.Measurements.InputSpectrum.subscribe();
+		break;
+	case INP_SPEC_WATERF:
+        Parameters.Measurements.InputSpectrum.subscribe();
+		break;
+	case INPUT_SIG_PSD:
+	case INPUT_SIG_PSD_ANALOG:
+        Parameters.Measurements.PSD.subscribe();
+		break;
+	case AUDIO_SPECTRUM:
+        Parameters.Measurements.AudioSpectrum.subscribe();
+		break;
+	case FREQ_SAM_OFFS_HIST:
+        Parameters.Measurements.FreqSyncValHist.subscribe();
+        Parameters.Measurements.SamOffsValHist.subscribe();
+        Parameters.Measurements.FreqSyncValHist.configure(LEN_HIST_PLOT_SYNC_PARMS, rDRMFrameDur);
+        Parameters.Measurements.SamOffsValHist.configure(LEN_HIST_PLOT_SYNC_PARMS, rDRMFrameDur);
+		break;
+	case DOPPLER_DELAY_HIST:
+        Parameters.Measurements.Doppler.subscribe();
+        //Parameters.Measurements.Doppler.configure(LEN_HIST_PLOT_SYNC_PARMS, rDRMFrameDur);
+        Parameters.Measurements.Delay.subscribe();
+        //Parameters.Measurements.Delay.configure(LEN_HIST_PLOT_SYNC_PARMS, rDRMFrameDur);
+		break;
+	case SNR_AUDIO_HIST:
+        Parameters.Measurements.SNRHist.subscribe();
+        Parameters.Measurements.SNRHist.configure(LEN_HIST_PLOT_SYNC_PARMS, rDRMFrameDur);
+        Parameters.Measurements.audioFrameStatus.subscribe();
+        Parameters.Measurements.audioFrameStatus.configure(LEN_HIST_PLOT_SYNC_PARMS, rDRMFrameDur);
+		break;
+	case FAC_CONSTELLATION:
+        Parameters.Measurements.FACVectorSpace.subscribe();
+		break;
+	case SDC_CONSTELLATION:
+        Parameters.Measurements.SDCVectorSpace.subscribe();
+		break;
+	case MSC_CONSTELLATION:
+        Parameters.Measurements.MSCVectorSpace.subscribe();
+		break;
+	case ALL_CONSTELLATION:
+        Parameters.Measurements.FACVectorSpace.subscribe();
+        Parameters.Measurements.SDCVectorSpace.subscribe();
+        Parameters.Measurements.MSCVectorSpace.subscribe();
+		break;
+	case NONE_OLD:
+		break;
+	}
+    Parameters.Unlock();
+}
+
+void CDRMPlot::endPlot(EPlotType e)
+{
+
+    Parameters.Lock();
+	switch (e)
+	{
+	case AVERAGED_IR:
+        Parameters.Measurements.PIR.unsubscribe();
+		break;
+	case TRANSFERFUNCTION:
+        Parameters.Measurements.ChannelEstimate.unsubscribe();
+		break;
+	case POWER_SPEC_DENSITY:
+        //Parameters.Measurements.subscribe();
+		break;
+	case SNR_SPECTRUM:
+        //Parameters.Measurements.subscribe();
+		break;
+	case INPUTSPECTRUM_NO_AV:
+        Parameters.Measurements.InputSpectrum.unsubscribe();
+		break;
+	case INP_SPEC_WATERF:
+        Parameters.Measurements.InputSpectrum.unsubscribe();
+		break;
+	case INPUT_SIG_PSD:
+        Parameters.Measurements.PSD.subscribe();
+		break;
+	case INPUT_SIG_PSD_ANALOG:
+        Parameters.Measurements.InputSpectrum.unsubscribe();
+		break;
+	case AUDIO_SPECTRUM:
+        Parameters.Measurements.AudioSpectrum.subscribe();
+		break;
+	case FREQ_SAM_OFFS_HIST:
+        Parameters.Measurements.FreqSyncValHist.unsubscribe();
+        Parameters.Measurements.SamOffsValHist.unsubscribe();
+		break;
+	case DOPPLER_DELAY_HIST:
+        Parameters.Measurements.Doppler.unsubscribe();
+        Parameters.Measurements.Delay.unsubscribe();
+		break;
+	case SNR_AUDIO_HIST:
+        Parameters.Measurements.SNRHist.unsubscribe();
+        Parameters.Measurements.audioFrameStatus.unsubscribe();
+		break;
+	case FAC_CONSTELLATION:
+        Parameters.Measurements.FACVectorSpace.unsubscribe();
+		break;
+	case SDC_CONSTELLATION:
+        Parameters.Measurements.SDCVectorSpace.unsubscribe();
+		break;
+	case MSC_CONSTELLATION:
+        Parameters.Measurements.MSCVectorSpace.unsubscribe();
+		break;
+	case ALL_CONSTELLATION:
+        Parameters.Measurements.FACVectorSpace.unsubscribe();
+        Parameters.Measurements.SDCVectorSpace.unsubscribe();
+        Parameters.Measurements.MSCVectorSpace.unsubscribe();
+		break;
+	case NONE_OLD:
+		break;
+	}
+    Parameters.Unlock();
+}
+
+/*
+void CDRMPlot::Init()
+{
+
+    Parameters.Measurements.Doppler.reset();
+    Parameters.Measurements.SNRHist.reset();
+    // TODO - why not the other histories ?
+}
+*/
 
 void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 {
@@ -498,7 +689,33 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 	plot->setCanvasBackground(BckgrdColorPlot);
 
 	/* Make sure that plot are being initialized again */
-	WantedChartType = CPlotManager::NONE_OLD;
+	WantedChartType = NONE_OLD;
+}
+
+/* Duration of OFDM symbol */
+_REAL CDRMPlot::GetSymbolDuration()
+{
+
+	Parameters.Lock();
+    _REAL r = _REAL(Parameters.CellMappingTable.iFFTSizeN + Parameters.CellMappingTable.iGuardSize)
+        /
+        _REAL(SOUNDCRD_SAMPLE_RATE);
+	Parameters.Unlock();
+    return r;
+}
+
+_REAL CDRMPlot::GetFrameDuration()
+{
+
+	Parameters.Lock();
+	/* Duration of DRM frame */
+	_REAL r = _REAL(Parameters.CellMappingTable.iNumSymPerFrame)
+        *
+        _REAL(Parameters.CellMappingTable.iFFTSizeN+Parameters.CellMappingTable.iGuardSize)
+        /
+		_REAL(SOUNDCRD_SAMPLE_RATE);
+	Parameters.Unlock();
+    return r;
 }
 
 void CDRMPlot::SetData(QwtPlotCurve* curve, vector<_COMPLEX>& veccData)
@@ -577,7 +794,10 @@ void CDRMPlot::UpdateAvIR()
 {
     CMeasurements::CPIR pir;
     /* Get data from module */
-    if(pPlotManager->GetAvPoDeSp(pir)==false)
+    Parameters.Lock();
+    bool b = Parameters.Measurements.PIR.get(pir);
+    Parameters.Unlock();
+    if(!b)
     {
         return; // data not being generated yet
     }
@@ -669,7 +889,30 @@ void CDRMPlot::SetTranFct()
 void CDRMPlot::UpdateTranFct()
 {
     vector<double> transferFunc, groupDelay, scale;
-    pPlotManager->GetTransferFunction(transferFunc, groupDelay);
+	vector<_COMPLEX> veccChanEst;
+
+    Parameters.Lock();
+    bool b = Parameters.Measurements.ChannelEstimate.get(veccChanEst);
+    int iFFTSizeN = Parameters.CellMappingTable.iFFTSizeN;
+    Parameters.Unlock();
+
+    if(b==false || veccChanEst.size()==0)
+        return; // not running yet
+
+    int iNumCarrier = veccChanEst.size();
+
+    transferFunc.resize(iNumCarrier);
+    transform(
+        veccChanEst.begin(), veccChanEst.end(),
+        transferFunc.begin(),
+        TransferFunction()
+    );
+
+	groupDelay.resize(iNumCarrier);
+    transform(veccChanEst.begin(), veccChanEst.end(),
+        groupDelay.begin(),
+        GroupDelay(veccChanEst[0], CReal(iFFTSizeN) / CReal(SOUNDCRD_SAMPLE_RATE))
+    );
 
 	scale.resize(transferFunc.size());
     generate(scale.begin(), scale.end(), scaleGen());
@@ -710,9 +953,17 @@ void CDRMPlot::SetAudioSpectrum()
 void CDRMPlot::UpdateAudioSpectrum()
 {
     /* Get data from module */
-    vector<_REAL> vecrData, vecrScale;
-    pPlotManager->GetAudioSpec(vecrData, vecrScale);
-	main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
+    vector<_REAL> vecrData;
+    Parameters.Lock();
+    bool b = Parameters.Measurements.AudioSpectrum.get(vecrData);
+    Parameters.Unlock();
+    if(b)
+    {
+        vector<_REAL> vecrScale(vecrData.size());
+        const _REAL rFactorScale = (_REAL)SOUNDCRD_SAMPLE_RATE/vecrData.size()/2000.0;
+        generate(vecrScale.begin(), vecrScale.end(), scaleGen(rFactorScale));
+        main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
+    }
 }
 
 void CDRMPlot::SetFreqSamOffsHist()
@@ -747,14 +998,22 @@ void CDRMPlot::SetFreqSamOffsHist()
 void CDRMPlot::UpdateFreqSamOffsHist()
 {
 	/* Calculate time scale */
-    _REAL rTs = pPlotManager->GetSymbolDuration();
+    _REAL rTs = GetSymbolDuration();
 	_REAL rStep = -rTs;
 	_REAL rStart = (1-LEN_HIST_PLOT_SYNC_PARMS)*rTs;
 	plot->setAxisScale(QwtPlot::xBottom, rStart, 0.0);
 
     vector<double> vecrFreqOffs, vecrSamOffs, vecrScale;
-    _REAL rFreqOffAcquVal;
-	pPlotManager->GetFreqSamOffsHist( vecrFreqOffs, vecrSamOffs, rFreqOffAcquVal);
+
+	Parameters.Lock();
+	/* Value from frequency acquisition */
+	_REAL rFreqOffAcquVal = Parameters.rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
+
+    // TODO set the max on the measurement objects to LEN_HIST_PLOT_SYNC_PARMS
+    Parameters.Measurements.FreqSyncValHist.get(vecrFreqOffs);
+    Parameters.Measurements.SamOffsValHist.get(vecrSamOffs);
+
+	Parameters.Unlock();
 
     /* left axis title can change */
 	QString strYLeftLabel = tr("Freq. Offset [Hz] rel. to ")+QString().setNum(rFreqOffAcquVal) + " Hz";
@@ -826,8 +1085,12 @@ void CDRMPlot::SetDopplerDelayHist()
 void CDRMPlot::UpdateDopplerDelayHist()
 {
     vector<double> vecrDelay, vecrDoppler, vecrScale;
-	pPlotManager->GetDopplerDelHist(vecrDelay, vecrDoppler);
-	_REAL rStep = pPlotManager->GetFrameDuration()/60.0;
+	Parameters.Lock();
+	Parameters.Measurements.Delay.get(vecrDelay);
+	Parameters.Measurements.Doppler.get(vecrDoppler);
+	Parameters.Unlock();
+
+	_REAL rStep = GetFrameDuration()/60.0;
 	_REAL rStart = -(rStep*_REAL(LEN_HIST_PLOT_SYNC_PARMS-1));
     plot->setAxisScale(QwtPlot::xBottom, rStart, 0.0);
 	vecrScale.resize(vecrDelay.size());
@@ -868,7 +1131,14 @@ void CDRMPlot::SetSNRAudHist()
 void CDRMPlot::UpdateSNRAudHist()
 {
     vector<double> vecrSNR, vecrAudio, vecrScale;
-    pPlotManager->GetSNRHist(vecrSNR, vecrAudio);
+	/* Duration of DRM frame */
+	Parameters.Lock();
+    Parameters.Measurements.SNRHist.get(vecrSNR);
+    vector<int> v;
+    Parameters.Measurements.CDAudHist.get(v);
+    vecrAudio.resize(v.size());
+    vecrAudio.assign(v.begin(), v.end());
+	Parameters.Unlock();
 
 	/* Customized auto-scaling. We adjust the y scale maximum so that it
 	   is not more than "rMaxDisToMax" to the curve */
@@ -898,7 +1168,7 @@ void CDRMPlot::UpdateSNRAudHist()
 	const double rRatioAudSNR = 1.5;
 	const double dMaxYScaleAudio = dMaxYScaleSNR * rRatioAudSNR;
 
-	_REAL rStep = pPlotManager->GetFrameDuration()/60.0;
+	_REAL rStep = GetFrameDuration()/60.0;
 	_REAL rStart = -(rStep*_REAL(LEN_HIST_PLOT_SYNC_PARMS-1));
 
 	/* Apply scale to plot */
@@ -980,9 +1250,25 @@ void CDRMPlot::SetPSD()
 
 void CDRMPlot::UpdatePSD()
 {
-    vector<_REAL> vecrData, vecrScale;
-    pPlotManager->GetPowDenSpec(vecrData, vecrScale);
-	main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
+    vector<_REAL> vecrData;
+    Parameters.Lock();
+    bool b = Parameters.Measurements.PowerDensitySpectrum.get(vecrData);
+    Parameters.Unlock();
+    if(b)
+    {
+        vector<_REAL> vecrScale(vecrData.size());
+        // TODO convert to generator
+        int iLenPowSpec = vecrData.size();
+		const _REAL rFactorScale =
+			(_REAL) SOUNDCRD_SAMPLE_RATE / iLenPowSpec / 2000;
+
+		/* Apply the normalization (due to the FFT) */
+		for (int i = 0; i < iLenPowSpec; i++)
+		{
+			vecrScale[i] = (_REAL) i * rFactorScale;
+		}
+        main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
+    }
 }
 
 void CDRMPlot::SetSNRSpectrum()
@@ -1008,11 +1294,17 @@ void CDRMPlot::SetSNRSpectrum()
 
 void CDRMPlot::UpdateSNRSpectrum()
 {
-    vector<_REAL> vecrData, vecrScale;
-    /* Get data from module */
-    pPlotManager->GetSNRProfile(vecrData, vecrScale);
+    vector<_REAL> vecrData;
+    Parameters.Lock();
+    bool b = Parameters.Measurements.SNRProfile.get(vecrData);
+    Parameters.Unlock();
+    if(b == false)
+        return;
 
-	const int iSize = vecrScale.size();
+	const int iSize = vecrData.size();
+
+    vector<_REAL> vecrScale(iSize);
+    // TODO Scale
 
 	/* Fixed scale for x-axis */
 	plot->setAxisScale(QwtPlot::xBottom, 0.0, double(iSize));
@@ -1052,17 +1344,19 @@ void CDRMPlot::SetInpSpectrum()
 void CDRMPlot::UpdateInpSpectrum()
 {
     vector<_REAL> vecrData, vecrScale;
-    SetDCCarrier(pPlotManager->GetDCFrequency());
-    _REAL rStart, rStep;
-    pPlotManager->GetInputSpectrum(vecrData, rStart, rStep);
+    SetDCCarrier(Parameters.GetDCFrequency());
+    Parameters.Lock();
+    Parameters.Measurements.InputSpectrum.get(vecrData);
+    Parameters.Unlock();
+    _REAL rStep = _REAL(SOUNDCRD_SAMPLE_RATE) / _REAL(vecrData.size()) / 2000.0;
 	vecrScale.resize(vecrData.size());
-    generate(vecrScale.begin(), vecrScale.end(), scaleGen(rStep, rStart));
+    generate(vecrScale.begin(), vecrScale.end(), scaleGen(rStep));
 	main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
 }
 
 void CDRMPlot::SetInpPSD()
 {
-    if(WantedChartType==CPlotManager::INPUT_SIG_PSD_ANALOG)
+    if(WantedChartType==INPUT_SIG_PSD_ANALOG)
     {
         /* Insert line for bandwidth marker behind main curves */
         BandwidthMarkerCurve = new QwtPlotCurve(tr("Filter bandwidth"));
@@ -1078,17 +1372,44 @@ void CDRMPlot::UpdateInpPSD()
 {
     _REAL rStart, rStep;
     vector<_REAL> vecrData;
-    pPlotManager->GetInputPSD(vecrData, rStart, rStep);
+    // read it from the parameter structure
+    Parameters.Lock();
+    bool psdOk = Parameters.Measurements.PSD.get(vecrData);
+    bool etsi = Parameters.Measurements.bETSIPSD;
+    Parameters.Unlock();
+
+    if(psdOk==false)
+        return;
+
+    if(etsi) // if the RSCI output is turned on we display that version
+    {
+        // starting frequency and frequency step as defined in TS 102 349
+        // plot expects the scale values in kHz
+        rStart = _REAL(-7.875) + VIRTUAL_INTERMED_FREQ/_REAL(1000.0);
+        rStep =_REAL(0.1875);
+
+    }
+    else // Traditional Dream values
+    {
+        rStart = 0.0;
+        rStep = _REAL(SOUNDCRD_SAMPLE_RATE) / _REAL(vecrData.size()) / 2000.0;
+    }
     vector<_REAL> vecrScale(vecrData.size());
     generate(vecrScale.begin(), vecrScale.end(), scaleGen(rStep, rStart));
 
-    if(WantedChartType==CPlotManager::INPUT_SIG_PSD_ANALOG)
+    if(WantedChartType==INPUT_SIG_PSD_ANALOG)
     {
-        SetDCCarrier(pPlotManager->GetAnalogCurMixFreqOffs());
+        _REAL r;
+        Parameters.Lock();
+        bool b = Parameters.Measurements.AnalogCurMixFreqOffs.get(r);
 
         /* Insert marker for filter bandwidth if required */
         _REAL rBWCenter, rBWWidth;
-        pPlotManager->GetAnalogBWParameters(rBWCenter, rBWWidth);
+        Parameters.Measurements.AnalogBW.get(rBWWidth);
+        Parameters.Measurements.AnalogCenterFreq.get(rBWCenter);
+        Parameters.Unlock();
+        if(b)
+            SetDCCarrier(r);
         if (rBWWidth != (_REAL) 0.0)
         {
             double dX[4], dY[4];
@@ -1107,7 +1428,7 @@ void CDRMPlot::UpdateInpPSD()
     }
     else
     {
-        SetDCCarrier(pPlotManager->GetDCFrequency());
+        SetDCCarrier(Parameters.GetDCFrequency());
     }
 	main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
 }
@@ -1181,9 +1502,12 @@ void CDRMPlot::SetInpSpecWaterf()
 
 void CDRMPlot::UpdateInpSpecWaterf()
 {
-    _REAL rStart, rStep;
     vector<_REAL> vecrData;
-    pPlotManager->GetInputSpectrum(vecrData, rStep, rStart);
+    Parameters.Lock();
+    Parameters.Measurements.InputSpectrum.get(vecrData);
+    Parameters.Unlock();
+    _REAL rStart = 0.0;
+    _REAL rStep = _REAL(SOUNDCRD_SAMPLE_RATE) / _REAL(vecrData.size()) / 2000.0;
     vector<_REAL> vecrScale(vecrData.size());
     generate(vecrScale.begin(), vecrScale.end(), scaleGen(rStep, rStart));
     spectrogramData.setData(vecrData);
@@ -1224,8 +1548,11 @@ void CDRMPlot::SetFACConst()
 void CDRMPlot::UpdateFACConst()
 {
     vector<_COMPLEX> veccData;
-	pPlotManager->GetFACVectorSpace(veccData);
-	SetData(curve1, veccData);
+    Parameters.Lock();
+    bool b = Parameters.Measurements.FACVectorSpace.get(veccData);
+    Parameters.Unlock();
+    if(b)
+        SetData(curve1, veccData);
 }
 
 void CDRMPlot::SetSDCConst()
@@ -1237,8 +1564,11 @@ void CDRMPlot::SetSDCConst()
 void CDRMPlot::UpdateSDCConst()
 {
     vector<_COMPLEX> veccData;
-	pPlotManager->GetSDCVectorSpace(veccData);
-	SetData(curve2, veccData);
+    Parameters.Lock();
+    bool b = Parameters.Measurements.SDCVectorSpace.get(veccData);
+    Parameters.Unlock();
+    if(b)
+        SetData(curve2, veccData);
 }
 
 void CDRMPlot::SetMSCConst()
@@ -1251,8 +1581,11 @@ void CDRMPlot::SetMSCConst()
 void CDRMPlot::UpdateMSCConst()
 {
     vector<_COMPLEX> veccData;
-	pPlotManager->GetMSCVectorSpace(veccData);
-	SetData(curve3, veccData);
+    Parameters.Lock();
+    bool b = Parameters.Measurements.MSCVectorSpace.get(veccData);
+    Parameters.Unlock();
+    if(b)
+        SetData(curve3, veccData);
 }
 
 void CDRMPlot::SetAllConst()
@@ -1288,13 +1621,13 @@ void CDRMPlot::OnClicked(const QwtDoublePoint& p)
 	}
 }
 
-void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
+void CDRMPlot::AddWhatsThisHelpChar(const EPlotType NCharType)
 {
 	QString strCurPlotHelp;
 
 	switch (NCharType)
 	{
-	case CPlotManager::AVERAGED_IR:
+	case AVERAGED_IR:
 		/* Impulse Response */
 		strCurPlotHelp =
 			tr("<b>Impulse Response:</b> This plot shows "
@@ -1312,7 +1645,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
 			"estimation.");
 		break;
 
-	case CPlotManager::TRANSFERFUNCTION:
+	case TRANSFERFUNCTION:
 		/* Transfer Function */
 		strCurPlotHelp =
 			tr("<b>Transfer Function / Group Delay:</b> "
@@ -1320,10 +1653,10 @@ void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
 			"the estimated channel at each sub-carrier.");
 		break;
 
-	case CPlotManager::FAC_CONSTELLATION:
-	case CPlotManager::SDC_CONSTELLATION:
-	case CPlotManager::MSC_CONSTELLATION:
-	case CPlotManager::ALL_CONSTELLATION:
+	case FAC_CONSTELLATION:
+	case SDC_CONSTELLATION:
+	case MSC_CONSTELLATION:
+	case ALL_CONSTELLATION:
 		/* Constellations */
 		strCurPlotHelp =
 			tr("<b>FAC, SDC, MSC:</b> The plots show the "
@@ -1332,7 +1665,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
 			"and MSC can have 4-QAM, 16-QAM or 64-QAM modulation.");
 		break;
 
-	case CPlotManager::POWER_SPEC_DENSITY:
+	case POWER_SPEC_DENSITY:
 		/* Shifted PSD */
 		strCurPlotHelp =
 			tr("<b>Shifted PSD:</b> This plot shows the "
@@ -1343,14 +1676,14 @@ void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
 			"This plot represents the frequency synchronized OFDM spectrum. "
 			"If the frequency synchronization was successful, the useful "
 			"signal really shows up only inside the actual DRM bandwidth "
-			"since the side loops have in this case CPlotManager::only energy between the "
+			"since the side loops have in this case only energy between the "
 			"samples in the frequency domain. On the sample positions outside "
 			"the actual DRM spectrum, the DRM signal has zero crossings "
 			"because of the orthogonality. Therefore this spectrum represents "
 			"NOT the actual spectrum but the \"idealized\" OFDM spectrum.");
 		break;
 
-	case CPlotManager::SNR_SPECTRUM:
+	case SNR_SPECTRUM:
 		/* SNR Spectrum (Weighted MER on MSC Cells) */
 		strCurPlotHelp =
 			tr("<b>SNR Spectrum (Weighted MER on MSC Cells):</b> "
@@ -1358,7 +1691,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
 			"separately.");
 		break;
 
-	case CPlotManager::INPUTSPECTRUM_NO_AV:
+	case INPUTSPECTRUM_NO_AV:
 		/* Input Spectrum */
 		strCurPlotHelp =
 			tr("<b>Input Spectrum:</b> This plot shows the "
@@ -1373,8 +1706,8 @@ void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
 			"the sound card frequency range, the strongest signal is chosen.");
 		break;
 
-	case CPlotManager::INPUT_SIG_PSD:
-	case CPlotManager::INPUT_SIG_PSD_ANALOG:
+	case INPUT_SIG_PSD:
+	case INPUT_SIG_PSD_ANALOG:
 		/* Input PSD */
 		strCurPlotHelp =
 			tr("<b>Input PSD:</b> This plot shows the "
@@ -1384,7 +1717,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
 			"dashed vertical line shows the estimated DC frequency.");
 		break;
 
-	case CPlotManager::AUDIO_SPECTRUM:
+	case AUDIO_SPECTRUM:
 		/* Audio Spectrum */
 		strCurPlotHelp =
 			tr("<b>Audio Spectrum:</b> This plot shows the "
@@ -1395,7 +1728,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
 			"spectrum.");
 		break;
 
-	case CPlotManager::FREQ_SAM_OFFS_HIST:
+	case FREQ_SAM_OFFS_HIST:
 		/* Frequency Offset / Sample Rate Offset History */
 		strCurPlotHelp =
 			tr("<b>Frequency Offset / Sample Rate Offset History:"
@@ -1406,7 +1739,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
 			"quality.");
 		break;
 
-	case CPlotManager::DOPPLER_DELAY_HIST:
+	case DOPPLER_DELAY_HIST:
 		/* Doppler / Delay History */
 		strCurPlotHelp =
 			tr("<b>Doppler / Delay History:</b> "
@@ -1415,7 +1748,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
 			"values might be responsable for audio drop-outs.");
 		break;
 
-	case CPlotManager::SNR_AUDIO_HIST:
+	case SNR_AUDIO_HIST:
 		/* SNR History */
 		strCurPlotHelp =
 			tr("<b>SNR History:</b> "
@@ -1426,7 +1759,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
 			"or 12 kHz AAC core bandwidth).");
 		break;
 
-	case CPlotManager::INP_SPEC_WATERF:
+	case INP_SPEC_WATERF:
 		/* Waterfall Display of Input Spectrum */
 		strCurPlotHelp =
 			tr("<b>Waterfall Display of Input Spectrum:</b> "
@@ -1434,7 +1767,7 @@ void CDRMPlot::AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType)
 			"different colors represent different levels.");
 		break;
 
-	case CPlotManager::NONE_OLD:
+	case NONE_OLD:
 		break;
 	}
 

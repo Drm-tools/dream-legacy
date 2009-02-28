@@ -144,7 +144,7 @@ protected:
 
 	CShiftRegister<_REAL>	vecrInpData;
 
-	bool				bFippedSpectrum;
+	bool				    bFippedSpectrum;
 
 	EInChanSel				eInChanSelection;
 

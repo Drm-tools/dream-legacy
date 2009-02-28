@@ -102,18 +102,16 @@ public:
 	void SetSoundBlocking(const bool bNewBl)
 		{bNewSoundBlocking = bNewBl; SetInitFlag();}
 
-	void GetAudioSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
-
 	void SetOutChanSel(const EOutChanSel eNS) {eOutChanSel = eNS;}
 	EOutChanSel GetOutChanSel() {return eOutChanSel;}
 
 protected:
 	CSoundOutInterface*		pSound;
 	CSoundOutInterface*		pSoundFile;
-	bool				bMuteAudio;
-	bool				bDoWriteWaveFile;
-	bool				bSoundBlocking;
-	bool				bNewSoundBlocking;
+	bool				    bMuteAudio;
+	bool				    bDoWriteWaveFile;
+	bool				    bSoundBlocking;
+	bool				    bNewSoundBlocking;
 	vector<_SAMPLE>			vecsTmpAudData;
 	EOutChanSel				eOutChanSel;
 	_REAL					rMixNormConst;
@@ -124,8 +122,9 @@ protected:
 	CComplexVector			veccFFTOutput;
 	CRealVector				vecrHammingWindow;
 
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+	virtual void InitInternal(CParameter&);
+	virtual void ProcessDataInternal(CParameter&);
+	void putAudioSpec(CParameter&);
 };
 
 class CGenSimData : public CTransmitterModul<_BINARY, _BINARY>

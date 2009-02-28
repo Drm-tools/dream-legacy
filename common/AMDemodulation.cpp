@@ -63,6 +63,11 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		iFreeSymbolCounter = 0;
 	}
 
+	// parameter for plots
+    ReceiverParam.Measurements.AnalogCenterFreq.set(rBPNormCentOffsTot);
+    ReceiverParam.Measurements.AnalogBW.set(rBPNormBW);
+    ReceiverParam.Measurements.AnalogCurMixFreqOffs.set(rNormCurMixFreqOffs * SOUNDCRD_SAMPLE_RATE);
+
 	ReceiverParam.Unlock();
 
 	/* Frequency offset estimation if requested */

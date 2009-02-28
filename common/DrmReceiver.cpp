@@ -324,12 +324,6 @@ CDRMReceiver::SetAnalogFilterBWHz(int iNew)
 }
 
 void
-CDRMReceiver::GetAnalogBWParameters(CReal& rCenterFreq, CReal& rBW)
-{
-	AMDemodulation.GetBWParameters(rCenterFreq, rBW);
-}
-
-void
 CDRMReceiver::SetAnalogDemodAcq(_REAL rNewNorCen)
 {
 	/* Set the frequency where the AM demodulation should look for the

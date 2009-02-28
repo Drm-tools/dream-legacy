@@ -103,9 +103,9 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	setMenuBar(pMenu);
 
 	/* Init main plot */
-    plot = new CDRMPlot(SpectrumPlot, &Receiver);
+    plot = new CDRMPlot(SpectrumPlot, Receiver.GetParameters());
 	plot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
-	plot->SetupChart(CPlotManager::INPUT_SIG_PSD_ANALOG);
+	plot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
 	connect(plot, SIGNAL(xAxisValSet(double)), this, SLOT(OnChartxAxisValSet(double)));
 
 	SliderBandwidth->setRange(0, SOUNDCRD_SAMPLE_RATE / 2);
@@ -373,6 +373,7 @@ void AnalogDemDlg::OnSwitchToDRM()
 void AnalogDemDlg::OnTimer()
 {
 	bool b;
+	_REAL r;
 
 	switch(Receiver.GetReceiverMode())
 	{
@@ -381,8 +382,9 @@ void AnalogDemDlg::OnTimer()
 		break;
 	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
 		/* Carrier frequency of AM signal */
+        Receiver.GetParameters()->Measurements.AnalogCurMixFreqOffs.get(r);
 		TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
-		+ QString().setNum(Receiver.GetAnalogCurMixFreqOffs(), 'f', 2) + " Hz</b>");
+		+ QString().setNum(r, 'f', 2) + " Hz</b>");
 		b = Receiver.GetUseAnalogHWDemod();
 		if(b)
 		{
@@ -560,9 +562,9 @@ void AnalogDemDlg::OnButtonWaterfall()
 {
 	/* Toggle between normal spectrum plot and waterfall spectrum plots */
 	if (ButtonWaterfall->isChecked())
-		plot->SetupChart(CPlotManager::INP_SPEC_WATERF);
+		plot->SetupChart(CDRMPlot::INP_SPEC_WATERF);
 	else
-		plot->SetupChart(CPlotManager::INPUT_SIG_PSD_ANALOG);
+		plot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
 }
 
 void AnalogDemDlg::OnButtonAMSS()

@@ -179,7 +179,6 @@ public:
 	void					SetInitResOff(_REAL rNRO)
 								{rInitResampleOffset = rNRO;}
 
-	CReal					GetAnalogCurMixFreqOffs() const { return AMDemodulation.GetCurMixFreqOffs(); }
 	void					SetAnalogDemodType(EDemodulationType);
 	EDemodulationType		GetAnalogDemodType() { return AMDemodulation.GetDemodType(); }
 	int						GetAnalogFilterBWHz();
@@ -198,7 +197,6 @@ public:
 	CAGC::EType				GetAnalogAGCType();
 	void					SetAnalogNoiseReductionType(const CAMDemodulation::ENoiRedType eNewType);
 	CAMDemodulation::ENoiRedType GetAnalogNoiseReductionType();
-	void					GetAnalogBWParameters(CReal& rCenterFreq, CReal& rBW);
 
 	void					SetUseAnalogHWDemod(bool);
 	bool					GetUseAnalogHWDemod();
@@ -254,18 +252,6 @@ public:
 
 	void SetFlippedSpectrum(bool bNewF) {ReceiveData.SetFlippedSpectrum(bNewF);}
 	bool GetFlippedSpectrum() {return ReceiveData.GetFlippedSpectrum();}
-
-	void GetAudioSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
-		{ WriteData.GetAudioSpec(vecrData, vecrScale); }
-
-	void GetFACVectorSpace(vector<_COMPLEX>& vec)
-		{ FACMLCDecoder.GetVectorSpace(vec); }
-
-	void GetSDCVectorSpace(vector<_COMPLEX>& vec)
-		{ SDCMLCDecoder.GetVectorSpace(vec); }
-
-	void GetMSCVectorSpace(vector<_COMPLEX>& vec)
-		{ MSCMLCDecoder.GetVectorSpace(vec); }
 
 	bool GetReverbEffect() { return AudioSourceDecoder.GetReverbEffect(); }
 	void SetReverbEffect(bool bVal)

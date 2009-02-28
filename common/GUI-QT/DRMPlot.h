@@ -36,11 +36,8 @@
 #include <qwt_plot_spectrogram.h>
 #include <qwt_symbol.h>
 #include <QTimer>
-#include <QShowEvent>
-#include <QMouseEvent>
-#include <QHideEvent>
+#include "../Parameter.h"
 #include "../util/Settings.h"
-#include "../PlotManager.h"
 #include <deque>
 
 /* Definitions ****************************************************************/
@@ -120,13 +117,34 @@ class CDRMPlot : public QObject
 
 public:
 
-	CDRMPlot(QwtPlot*, CDRMReceiver*);
+	enum EPlotType
+	{
+		INPUT_SIG_PSD = 0, /* default */
+		TRANSFERFUNCTION = 1,
+		FAC_CONSTELLATION = 2,
+		SDC_CONSTELLATION = 3,
+		MSC_CONSTELLATION = 4,
+		POWER_SPEC_DENSITY = 5,
+		INPUTSPECTRUM_NO_AV = 6,
+		AUDIO_SPECTRUM = 7,
+		FREQ_SAM_OFFS_HIST = 8,
+		DOPPLER_DELAY_HIST = 9,
+		ALL_CONSTELLATION = 10,
+		SNR_AUDIO_HIST = 11,
+		AVERAGED_IR = 12,
+		SNR_SPECTRUM = 13,
+		INPUT_SIG_PSD_ANALOG = 14,
+		INP_SPEC_WATERF = 15,
+		NONE_OLD = 16 /* None must always be the last element! (see settings) */
+	};
+
+	CDRMPlot(QwtPlot*, CParameter*);
 	virtual ~CDRMPlot();
 
-	void SetupChart(const CPlotManager::EPlotType eNewType);
+	void SetupChart(const EPlotType eNewType);
 	void SetupChartNow();
 	void UpdateChartNow();
-	CPlotManager::EPlotType GetChartType() const {return CurrentChartType;}
+	EPlotType GetChartType() const {return CurrentChartType;}
 	void Update() {OnTimerChart();}
 	void start() { TimerChart.start();}
 	void stop() { TimerChart.stop();}
@@ -167,13 +185,17 @@ protected:
 	void UpdateMSCConst();
 	void UpdateAllConst();
     void SetData(QwtPlotCurve* curve, vector<_COMPLEX>& veccData);
+    void startPlot(EPlotType);
+    void endPlot(EPlotType);
+    _REAL GetSymbolDuration();
+    _REAL GetFrameDuration();
 
 	void SpectrumPlotDefaults(const QString&, const QString&, uint);
 	void SetDCCarrier(double);
     void ConstellationPlotDefaults(const QString& title, double limit, int n);
     QwtPlotCurve* ScatterCurve(const QString& title, const QwtSymbol& s);
 
-	void AddWhatsThisHelpChar(const CPlotManager::EPlotType NCharType);
+	void AddWhatsThisHelpChar(const EPlotType NCharType);
 
 	/* Colors */
 	QColor			MainPenColorPlot;
@@ -199,12 +221,12 @@ protected:
     QwtPlotSpectrogram* spectrogram;
     SpectrogramData spectrogramData;
 
-	CPlotManager::EPlotType		CurrentChartType;
-	CPlotManager::EPlotType		WantedChartType;
+	EPlotType		CurrentChartType;
+	EPlotType		WantedChartType;
 	bool		    bOnTimerCharMutexFlag;
 	QTimer			TimerChart;
 
-    CPlotManager*   pPlotManager;
+    CParameter&     Parameters;
 
     QwtPlot*        plot;
     int             styleId;

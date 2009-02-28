@@ -199,33 +199,32 @@ void CMLCEncoder::InitInternal(CParameter& TransmParam)
 /******************************************************************************\
 * MLC-decoder                                                                  *
 \******************************************************************************/
-void CMLCDecoder::ProcessDataInternal(CParameter&)
+void CMLCDecoder::ProcessDataInternal(CParameter& Parameter)
 {
-	int			i, j, k;
-	int			iElementCounter;
+	int		i, j, k;
+	int		iElementCounter;
 	bool	bIteration;
 
+    vector<_COMPLEX> vecSigSpacBuf(iInputBlockSize);
 	/* Save input signal for signal constellation. We cannot use the copy
 	   operator of vector because the input vector is not of the same size as
 	   our intermediate buffer, therefore the "for"-loop */
 	for (i = 0; i < iInputBlockSize; i++)
 		vecSigSpacBuf[i] = (*pvecInputData)[i].cSig;
-
-
-
-#if 0
-// TEST
-static FILE* pFile = fopen("test/constellation.dat", "w");
-if (eChannelType == CParameter::CT_MSC) {
-for (i = 0; i < iInputBlockSize; i++)
-	fprintf(pFile, "%e %e\n", vecSigSpacBuf[i].real(), vecSigSpacBuf[i].imag());
-fflush(pFile);
-}
-// close all;load constellation.dat;constellation=complex(constellation(:,1),constellation(:,2));plot(constellation,'.')
-#endif
-
-
-
+    Parameter.Lock();
+    switch(eChannelType)
+    {
+        case CT_MSC:
+            Parameter.Measurements.MSCVectorSpace.set(vecSigSpacBuf);
+            break;
+        case CT_SDC:
+            Parameter.Measurements.SDCVectorSpace.set(vecSigSpacBuf);
+            break;
+        case CT_FAC:
+            Parameter.Measurements.FACVectorSpace.set(vecSigSpacBuf);
+            break;
+    }
+    Parameter.Unlock();
 
 	/* Iteration loop */
 	for (k = 0; k < iNumIterations + 1; k++)
@@ -418,7 +417,6 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 	/* Metric */
 	MLCMetric.Init(iN_mux, eCodingScheme);
 
-
 	/* Allocate memory for internal bit (metric) -buffers ------------------- */
 	vecMetric.Init(iNumEncBits);
 
@@ -430,35 +428,10 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 	for (i = 0; i < MC_MAX_NUM_LEVELS; i++)
 		vecSubsetDef[i].Init(iNumEncBits);
 
-	/* Init buffer for signal space */
-	vecSigSpacBuf.Init(iN_mux);
-
 	/* Define block-size for input and output */
 	iInputBlockSize = iN_mux;
 	iOutputBlockSize = iNumOutBits;
 }
-
-void CMLCDecoder::GetVectorSpace(vector<_COMPLEX>& veccData)
-{
-	/* Init output vectors */
-	veccData.resize(iN_mux);
-
-	/* Do copying of data only if vector is of non-zero length which means that
-	   the module was already initialized */
-	if (iN_mux != 0)
-	{
-		/* Lock resources */
-		Lock();
-
-		/* Copy vectors */
-		for (int i = 0; i < iN_mux; i++)
-			veccData[i] = vecSigSpacBuf[i];
-
-		/* Release resources */
-		Unlock();
-	}
-}
-
 
 /******************************************************************************\
 * MLC base class                                                               *

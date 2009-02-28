@@ -477,7 +477,7 @@ void SystemEvalDlg::UpdateFAC(CParameter& Parameters)
 
 void SystemEvalDlg::InitialisePlots()
 {
-    plot = new CDRMPlot(MainPlot, &DRMReceiver);
+    plot = new CDRMPlot(MainPlot, DRMReceiver.GetParameters());
     plot->stop();
 	plot->load(Settings, "System Evaluation Dialog");
 	plot->save(Settings, "System Evaluation Dialog");
@@ -511,7 +511,7 @@ void SystemEvalDlg::showPlots()
 	for (size_t i = 0; i < iNumChartWin; i++)
 	{
 	    QwtPlot* p = new QwtPlot();
-		CDRMPlot* pNewPlot = new CDRMPlot(p, &DRMReceiver);
+		CDRMPlot* pNewPlot = new CDRMPlot(p, DRMReceiver.GetParameters());
 
 		stringstream s;
 		s << "Chart Window " << i;
@@ -547,7 +547,7 @@ void SystemEvalDlg::hidePlots()
 void SystemEvalDlg::OnItemClicked (QTreeWidgetItem * item, int column )
 {
 	/* Get char type from selected item and setup chart */
-	plot->SetupChart(CPlotManager::EPlotType(item->text(1).toInt()));
+	plot->SetupChart(CDRMPlot::EPlotType(item->text(1).toInt()));
 }
 
 void SystemEvalDlg::OnCustomContextMenuRequested ( const QPoint&)
@@ -565,8 +565,8 @@ void SystemEvalDlg::OnCustomContextMenuRequested ( const QPoint&)
 void SystemEvalDlg::newPlot(int pt)
 {
     QwtPlot* p = new QwtPlot(NULL);
-    CDRMPlot* pNewPlot = new CDRMPlot(p, &DRMReceiver);
-    pNewPlot->SetupChart(CPlotManager::EPlotType(pt));
+    CDRMPlot* pNewPlot = new CDRMPlot(p, DRMReceiver.GetParameters());
+    pNewPlot->SetupChart(CDRMPlot::EPlotType(pt));
     plots.push_back(pNewPlot);
     p->resize(200, 150);
     p->show();

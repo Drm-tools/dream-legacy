@@ -165,7 +165,6 @@ public:
 	bool bETSIPSD; // ETSI PSD scale or old Dream ?
 
 	CPointMeasure<vector<_REAL> > PSD;
-	CPointMeasure<vector<_REAL> > inputSpectrum;
 
 	CPointMeasure<_REAL> SigStr;
 	CPointMeasure<_REAL> IFSigStr;
@@ -183,18 +182,24 @@ public:
 
     CPointMeasure<CPIR> PIR;
 
+    CPointMeasure<_REAL> AnalogCurMixFreqOffs;
+    CPointMeasure<_REAL> AnalogBW;
+    CPointMeasure<_REAL> AnalogCenterFreq;
+
+    CPointMeasure<vector<_COMPLEX> > FACVectorSpace;
+    CPointMeasure<vector<_COMPLEX> > SDCVectorSpace;
+    CPointMeasure<vector<_COMPLEX> > MSCVectorSpace;
+    CPointMeasure<vector<_REAL> > PowerDensitySpectrum;
+    CPointMeasure<vector<_REAL> > InputSpectrum;
+    CPointMeasure<vector<_REAL> > AudioSpectrum;
 	CPointMeasure<vector<vector<_COMPLEX> > > Pilots;
 
 	CTimeSeries<_REAL>	FreqSyncValHist;
 	CTimeSeries<_REAL>	SamOffsValHist;
 	CTimeSeries<_REAL>	SNRHist;
+    CPointMeasure<vector<_REAL> > SNRProfile;
 	CTimeSeries<int>	CDAudHist;
-/*
-	int						iSymbolCount;
-	_REAL					rSumDopplerHist;
-	_REAL					rSumSNRHist;
-	int						iCurrentCDAud;
-*/
+
 protected:
 
 };

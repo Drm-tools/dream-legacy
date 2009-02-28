@@ -165,6 +165,8 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Store data in buffer for spectrum calculation */
 	vecsOutputData.AddEnd((*pvecInputData), iInputBlockSize);
+
+	putAudioSpec(ReceiverParam);
 }
 
 void CWriteData::InitInternal(CParameter&)
@@ -231,19 +233,15 @@ void CWriteData::StopWriteWaveFile()
 	Unlock();
 }
 
-void CWriteData::GetAudioSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
+void CWriteData::putAudioSpec(CParameter& Parameter)
 {
+    if(!Parameter.Measurements.AudioSpectrum.wanted())
+        return;
+
 	/* Real input signal -> symmetrical spectrum -> use only half of spectrum */
 	const int iLenPowSpec = NUM_SMPLS_4_AUDIO_SPECTRUM / 2;
 
-	/* Init output vectors */
-	vecrData.resize(iLenPowSpec);
-	vecrScale.resize(iLenPowSpec);
-
 	int i;
-
-	/* Lock resources */
-	Lock();
 
 	/* Init vector storing the average spectrum with zeros */
 	CVector<_REAL> veccAvSpectrum(iLenPowSpec, (_REAL) 0.0);
@@ -280,20 +278,20 @@ void CWriteData::GetAudioSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
 	const _REAL rFactorScale = (_REAL)SOUNDCRD_SAMPLE_RATE/iLenPowSpec/2000;
 
 	/* Apply the normalization (due to the FFT) */
+	vector<_REAL> vecrData(iLenPowSpec);
 	for (i = 0; i < iLenPowSpec; i++)
 	{
 		const _REAL rNormPowSpec = veccAvSpectrum[i] / rNormData;
-
 		if (rNormPowSpec > 0)
 			vecrData[i] = (_REAL) 10.0 * log10(rNormPowSpec);
 		else
 			vecrData[i] = RET_VAL_LOG_0;
-
-		vecrScale[i] = (_REAL) i * rFactorScale;
 	}
 
 	/* Release resources */
-	Unlock();
+	Parameter.Lock();
+	Parameter.Measurements.AudioSpectrum.set(vecrData);
+	Parameter.Unlock();
 }
 
 

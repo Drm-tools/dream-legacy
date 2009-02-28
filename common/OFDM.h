@@ -78,7 +78,6 @@ public:
 	COFDMDemodulation() : iLenPowSpec(0) {}
 	virtual ~COFDMDemodulation() {}
 
-	void GetPowDenSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
 
 protected:
 	CFftPlans				FftPlan;
@@ -96,9 +95,9 @@ protected:
 
 	CReal					rLamPSD;
 
-
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+	void putPowDenSpec(CParameter& Parameter);
 };
 
 class COFDMDemodSimulation :

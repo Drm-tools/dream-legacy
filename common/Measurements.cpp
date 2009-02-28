@@ -34,12 +34,15 @@ CMeasurements::CMeasurements():
     Doppler(),Rdop(),Delay(),Rdel(),
     interference(),
     rMaxPSDwrtSig(0.0), rMaxPSDFreq(0.0),
-    bETSIPSD(false),PSD(),inputSpectrum(),
+    bETSIPSD(false),PSD(),
     SigStr(),IFSigStr(),
     ChannelEstimate(), audioFrameStatus(),
-    PIR(), Pilots(),
-    FreqSyncValHist(), SamOffsValHist(),
-    SNRHist(), CDAudHist()
+    PIR(),
+    AnalogCurMixFreqOffs(), AnalogBW(), AnalogCenterFreq(),
+    FACVectorSpace(), SDCVectorSpace(), MSCVectorSpace(),
+    PowerDensitySpectrum(), InputSpectrum(), AudioSpectrum(),
+    Pilots(), FreqSyncValHist(), SamOffsValHist(), SNRHist(),
+    SNRProfile(), CDAudHist()
 {
 }
 

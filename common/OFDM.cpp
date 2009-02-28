@@ -112,7 +112,7 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 /******************************************************************************\
 * OFDM-demodulation                                                            *
 \******************************************************************************/
-void COFDMDemodulation::ProcessDataInternal(CParameter&)
+void COFDMDemodulation::ProcessDataInternal(CParameter& Parameter)
 {
 	int i;
 
@@ -155,8 +155,11 @@ void COFDMDemodulation::ProcessDataInternal(CParameter&)
 
 	/* Save averaged spectrum for plotting ---------------------------------- */
 	/* Average power (using power of this tap) (first order IIR filter) */
+	/* TODO merge this loop with the one in putPowDenSpec */
 	for (i = 0; i < iLenPowSpec; i++)
 		IIR1(vecrPowSpec[i], SqMag(veccFFTOutput[i]), rLamPSD);
+
+    putPowDenSpec(Parameter);
 }
 
 void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
@@ -187,25 +190,19 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	ReceiverParam.Unlock();
 }
 
-void COFDMDemodulation::GetPowDenSpec(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
+void COFDMDemodulation::putPowDenSpec(CParameter& Parameter)
 {
-	/* Init output vectors */
-	vecrData.resize(iLenPowSpec);
-	vecrScale.resize(iLenPowSpec);
 
 	/* Do copying of data only if vector is of non-zero length which means that
 	   the module was already initialized */
 	if (iLenPowSpec != 0)
 	{
-		/* Lock resources */
-		Lock();
+        /* Init output vectors */
+        vector<_REAL> vecrData(iLenPowSpec);
 
 		/* Init the constants for scale and normalization */
 		const _REAL rNormData =
 			(_REAL) iDFTSize * iDFTSize * numeric_limits<_SAMPLE>::max() * numeric_limits<_SAMPLE>::max();
-
-		const _REAL rFactorScale =
-			(_REAL) SOUNDCRD_SAMPLE_RATE / iLenPowSpec / 2000;
 
 		/* Apply the normalization (due to the FFT) */
 		for (int i = 0; i < iLenPowSpec; i++)
@@ -217,11 +214,10 @@ void COFDMDemodulation::GetPowDenSpec(vector<_REAL>& vecrData, vector<_REAL>& ve
 			else
 				vecrData[i] = RET_VAL_LOG_0;
 
-			vecrScale[i] = (_REAL) i * rFactorScale;
 		}
-
-		/* Release resources */
-		Unlock();
+		Parameter.Lock();
+		Parameter.Measurements.PowerDensitySpectrum.set(vecrData);
+		Parameter.Unlock();
 	}
 }
 

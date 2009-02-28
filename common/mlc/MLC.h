@@ -102,7 +102,7 @@ public:
 	virtual ~CMLCDecoder() {}
 
 	_REAL GetAccMetric() const {return 10 * log10(rAccMetric);}
-	void GetVectorSpace(vector<_COMPLEX>& veccData);
+	void putVectorSpace(CPointMeasure<vector<_COMPLEX> >&);
 	void SetNumIterations(int iNewNumIterations)
 		{iInitNumIterations = iNewNumIterations; SetInitFlag();}
 	int GetInitNumIterations() const {return iInitNumIterations;}
@@ -125,9 +125,6 @@ protected:
 
 	/* Accumulated metric */
 	_REAL				rAccMetric;
-
-	/* Internal buffer for GetVectorSpace function */
-	CVector<_COMPLEX>	vecSigSpacBuf;
 
 	int					iNumIterations;
 	int					iInitNumIterations;
