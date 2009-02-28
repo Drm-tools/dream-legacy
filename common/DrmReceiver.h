@@ -53,7 +53,6 @@
 #include "AMDemodulation.h"
 #include "AMSSDemodulation.h"
 #include "soundinterface.h"
-#include "PlotManager.h"
 
 #ifdef USE_QT_GUI
 # include <QThread>
@@ -308,7 +307,6 @@ public:
 	void					SetRigComPort(const string&);
 	bool				    GetRigChangeInProgress();
 	CParameter*				GetParameters() {return &Parameters;}
-	CPlotManager*			GetPlotManager() {return &PlotManager;}
 
 	void					InitsForWaveMode();
 	void					InitsForSpectrumOccup();
@@ -448,8 +446,6 @@ protected:
 	/* Counter for unlocked frames, to keep generating RSCI even when unlocked */
 	int						iUnlockedCount;
 	time_t					time_keeper;
-
-	CPlotManager PlotManager;
 };
 
 #endif // !defined(DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

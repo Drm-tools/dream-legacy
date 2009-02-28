@@ -30,9 +30,15 @@
 #define _SYSTEMEVALUATIONDLG_H
 
 #include "ui_SystemEvalDlg.h"
+#include "../Parameter.h"
+#include <QTimer>
+#include <vector>
 
 class CDRMReceiver;
 class CSettings;
+class CGPSReceiver;
+class CDRMPlot;
+class CParameter;
 
 class SystemEvalDlg : public QDialog, public Ui_SystemEvalDlg
 {
@@ -45,9 +51,51 @@ public:
 	virtual ~SystemEvalDlg();
 
 	void UpdatePlotStyle() {}
+
+protected:
+
+    virtual void		showEvent(QShowEvent* pEvent);
+	virtual void		hideEvent(QHideEvent* pEvent);
+
+    void AddWhatsThisHelp();
+    void InitialiseLEDs();
+    void UpdateLEDs(CParameter& Parameters);
+    void SetStatus(CMultColorLED*, ETypeRxStatus);
+    void InitialiseGPS();
+    void UpdateGPS(CParameter& Parameters);
+    void InitialiseMERetc();
+    void UpdateMERetc(CParameter& Parameters);
+    void InitialiseFAC();
+    void UpdateFAC(CParameter& Parameters);
+    void InitialisePlots();
+    void UpdatePlots();
+    void showPlots();
+    void hidePlots();
+    void newPlot(int);
+    void InitialiseFrequency();
+    void UpdateFrequency();
+
+    CDRMReceiver&   DRMReceiver;
+    CSettings&      Settings;
+    CGPSReceiver*   pGPSReceiver;
+    CDRMPlot*       plot;
+    vector<CDRMPlot*> plots;
+    QTimer*         timer;
+    QTimer*         timerTuning;
+    QTimer*         timerLineEditFrequency;
+
+    bool bTuningInProgress;
+
 public slots:
+
+    void OnTimer();
+    void OnTimerTuning();
+    void OnTimerLineEditFrequency();
+    void OnLineEditFrequencyChanged(const QString&);
 	void EnableGPS(bool);
 	void ShowGPS(bool);
+	void OnItemClicked (QTreeWidgetItem*, int);
+	void OnCustomContextMenuRequested ( const QPoint&);
 };
 
 #endif

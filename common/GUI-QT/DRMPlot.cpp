@@ -72,13 +72,14 @@ void boundValues(const vector<T>& vec, T& min, T&max)
 	}
 }
 
-CDRMPlot::CDRMPlot(QwtPlot *p) :
+CDRMPlot::CDRMPlot(QwtPlot *p, CDRMReceiver* rec) :
 	CurrentChartType(CPlotManager::NONE_OLD), WantedChartType(CPlotManager::NONE_OLD),
 	grid(NULL), spectrogram(NULL),bOnTimerCharMutexFlag(false),pPlotManager(NULL),
 	plot(p)
 {
 
     //addWidget(plot);  // TODO needed ?
+    pPlotManager = new CPlotManager(rec);
 
     grid = new QwtPlotGrid();
 
@@ -197,6 +198,9 @@ void CDRMPlot::save(CSettings& s, const string& section)
         s.Put(section, "plottype", (int) GetChartType());
         s.Put(section, "plotstyle", styleId);
     }
+    // if its a free standing window, close it
+    if(plot->parent() == NULL)
+        plot->close();
 }
 
 void CDRMPlot::OnTimerChart()

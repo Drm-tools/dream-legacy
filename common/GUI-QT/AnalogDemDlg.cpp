@@ -103,8 +103,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	setMenuBar(pMenu);
 
 	/* Init main plot */
-    plot = new CDRMPlot(SpectrumPlot);
-	plot->SetPlotManager(Receiver.GetPlotManager());
+    plot = new CDRMPlot(SpectrumPlot, &Receiver);
 	plot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 	plot->SetupChart(CPlotManager::INPUT_SIG_PSD_ANALOG);
 	connect(plot, SIGNAL(xAxisValSet(double)), this, SLOT(OnChartxAxisValSet(double)));

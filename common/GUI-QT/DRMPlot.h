@@ -39,8 +39,8 @@
 #include <QShowEvent>
 #include <QMouseEvent>
 #include <QHideEvent>
-#include "../PlotManager.h"
 #include "../util/Settings.h"
+#include "../PlotManager.h"
 #include <deque>
 
 /* Definitions ****************************************************************/
@@ -120,11 +120,8 @@ class CDRMPlot : public QObject
 
 public:
 
-	CDRMPlot(QwtPlot*);
+	CDRMPlot(QwtPlot*, CDRMReceiver*);
 	virtual ~CDRMPlot();
-
-	/* This function has to be called before chart can be used! */
-	void SetPlotManager(CPlotManager* pm) {pPlotManager = pm;}
 
 	void SetupChart(const CPlotManager::EPlotType eNewType);
 	void SetupChartNow();
@@ -209,7 +206,7 @@ protected:
 
     CPlotManager*   pPlotManager;
 
-    QwtPlot *plot;
+    QwtPlot*        plot;
     int             styleId;
 
 public slots:

@@ -71,9 +71,7 @@ public:
 		NONE_OLD = 16 /* None must always be the last element! (see settings) */
 	};
 
-	CPlotManager();
-
-	void SetReceiver(CDRMReceiver *pRx) {pReceiver = pRx;}
+	CPlotManager(CDRMReceiver*);
 
 	void Init();
 

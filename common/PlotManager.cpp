@@ -33,8 +33,8 @@
 #include "DrmReceiver.h"
 #include <iostream>
 
-CPlotManager::CPlotManager() :
-	pReceiver(0)
+CPlotManager::CPlotManager(CDRMReceiver* rec) :
+	pReceiver(rec)
 {
 }
 

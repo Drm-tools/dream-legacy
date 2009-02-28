@@ -69,7 +69,6 @@ time_keeper(0)
 	AMParameters.SetReceiver(this);
 	DRMParameters.SetReceiver(this);
 	downstreamRSCI.SetReceiver(this);
-	PlotManager.SetReceiver(this);
 	SoundInProxy.pDrmRec = this;
 }
 
@@ -1252,10 +1251,6 @@ CDRMReceiver::InitsForAllModules()
 void
 CDRMReceiver::InitsForWaveMode()
 {
-	/* Reset averaging of the parameter histories (needed, e.g., because the
-	   number of OFDM symbols per DRM frame might have changed) */
-	PlotManager.Init();
-
 	/* After a new robustness mode was detected, give the time synchronization
 	   a bit more time for its job */
 	iAcquDetecCnt = 0;
