@@ -88,8 +88,6 @@ public:
 	enum ETypeIntTime {TLINEAR, TWIENER};
 	enum ETypeSNREst {SNR_FAC, SNR_PIL};
 
-	void GetSNRProfile(vector<_REAL>& vecrData, vector<_REAL>& vecrScale);
-
 	CTimeLinear* GetTimeLinear() {return &TimeLinear;}
 	CTimeWiener* GetTimeWiener() {return &TimeWiener;}
 	CTimeSyncTrack* GetTimeSyncTrack() {return &TimeSyncTrack;}
@@ -198,9 +196,11 @@ protected:
 	_REAL CalAndBoundSNR(const _REAL rSignalEst, const _REAL rNoiseEst);
 
 	/* OPH: RSCI interference tag calculation */
-	void CalculateRint(CParameter& ReceiverParam);
+	void CalculateRint(CParameter&);
 	void UpdateRSIPilotStore(CParameter& ReceiverParam, CVectorEx<_COMPLEX>* pvecInputData,
 		CVector<int>& veciMapTab, CVector<_COMPLEX>& veccPilotCells, const int iSymbolCounter);
+	void CalculateSNRProfile(CParameter&);
+
 
 	CMatrix<_COMPLEX>	matcRSIPilotStore;
 	int iTimeDiffAccuRSI; /* Accumulator for time differences for RSI pilot output */

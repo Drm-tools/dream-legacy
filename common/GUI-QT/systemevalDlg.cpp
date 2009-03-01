@@ -322,7 +322,8 @@ void SystemEvalDlg::UpdateMERetc(CParameter& Parameters)
         ValueWiener->setText(sdoppler+" / "+sdelay);
 
         /* Sample frequency offset estimation */
-        const _REAL rCurSamROffs = Parameters.rResampleOffset;
+        _REAL rCurSamROffs = 0.0;
+         bool b = Parameters.Measurements.SampleFrequencyOffset.get(rCurSamROffs);
 
         /* Display value in [Hz] and [ppm] (parts per million) */
         ValueSampFreqOffset->setText(

@@ -59,10 +59,10 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 	if (iFreeSymbolCounter >= iNumSymPerFrame)
 	{
 		iFreeSymbolCounter = 0;
-        ReceiverParam.Measurements.FreqSyncValHist.set(
-            ReceiverParam.rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE
-        );
 	}
+    ReceiverParam.Measurements.FrequencySyncValue.set(
+        ReceiverParam.rFreqOffsetTrack * SOUNDCRD_SAMPLE_RATE
+    );
 
 	if (bAquisition == true)
 	{

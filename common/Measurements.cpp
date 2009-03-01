@@ -41,7 +41,7 @@ CMeasurements::CMeasurements():
     AnalogCurMixFreqOffs(), AnalogBW(), AnalogCenterFreq(),
     FACVectorSpace(), SDCVectorSpace(), MSCVectorSpace(),
     PowerDensitySpectrum(), InputSpectrum(), AudioSpectrum(),
-    Pilots(), FreqSyncValHist(), SamOffsValHist(), SNRHist(),
+    Pilots(), FrequencySyncValue(), SampleFrequencyOffset(), SNRHist(),
     SNRProfile(), CDAudHist()
 {
 }

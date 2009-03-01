@@ -192,7 +192,6 @@ CDRMPlot::CDRMPlot(QwtPlot *p, CParameter* param) :
     plot->setIcon(QPixmap(":/icons/MainIcon.png"));
 
 	/* Connections */
-	// TODO use a QwtPlotPicker http://qwt.sourceforge.net/class_qwt_plot_picker.html
 	QwtPlotPicker* picker = new QwtPlotPicker(
         QwtPlot::xBottom, QwtPlot::yLeft, QwtPicker::PointSelection,
         QwtPicker::NoRubberBand, QwtPicker::AlwaysOff, plot->canvas()
@@ -511,10 +510,10 @@ void CDRMPlot::startPlot(EPlotType e)
         Parameters.Measurements.ChannelEstimate.subscribe();
 		break;
 	case POWER_SPEC_DENSITY:
-        //Parameters.Measurements.subscribe();
+        Parameters.Measurements.PowerDensitySpectrum.subscribe();
 		break;
 	case SNR_SPECTRUM:
-        //Parameters.Measurements.subscribe();
+        Parameters.Measurements.SNRProfile.subscribe();
 		break;
 	case INPUTSPECTRUM_NO_AV:
         Parameters.Measurements.InputSpectrum.subscribe();
@@ -530,10 +529,10 @@ void CDRMPlot::startPlot(EPlotType e)
         Parameters.Measurements.AudioSpectrum.subscribe();
 		break;
 	case FREQ_SAM_OFFS_HIST:
-        Parameters.Measurements.FreqSyncValHist.subscribe();
-        Parameters.Measurements.SamOffsValHist.subscribe();
-        Parameters.Measurements.FreqSyncValHist.configure(LEN_HIST_PLOT_SYNC_PARMS, rDRMFrameDur);
-        Parameters.Measurements.SamOffsValHist.configure(LEN_HIST_PLOT_SYNC_PARMS, rDRMFrameDur);
+        Parameters.Measurements.FrequencySyncValue.subscribe();
+        Parameters.Measurements.SampleFrequencyOffset.subscribe();
+        Parameters.Measurements.FrequencySyncValue.configure(LEN_HIST_PLOT_SYNC_PARMS, rDRMFrameDur);
+        Parameters.Measurements.SampleFrequencyOffset.configure(LEN_HIST_PLOT_SYNC_PARMS, rDRMFrameDur);
 		break;
 	case DOPPLER_DELAY_HIST:
         Parameters.Measurements.Doppler.subscribe();
@@ -580,10 +579,10 @@ void CDRMPlot::endPlot(EPlotType e)
         Parameters.Measurements.ChannelEstimate.unsubscribe();
 		break;
 	case POWER_SPEC_DENSITY:
-        //Parameters.Measurements.subscribe();
+        Parameters.Measurements.PowerDensitySpectrum.unsubscribe();
 		break;
 	case SNR_SPECTRUM:
-        //Parameters.Measurements.subscribe();
+        Parameters.Measurements.SNRProfile.unsubscribe();
 		break;
 	case INPUTSPECTRUM_NO_AV:
         Parameters.Measurements.InputSpectrum.unsubscribe();
@@ -592,17 +591,17 @@ void CDRMPlot::endPlot(EPlotType e)
         Parameters.Measurements.InputSpectrum.unsubscribe();
 		break;
 	case INPUT_SIG_PSD:
-        Parameters.Measurements.PSD.subscribe();
+        Parameters.Measurements.PSD.unsubscribe();
 		break;
 	case INPUT_SIG_PSD_ANALOG:
         Parameters.Measurements.InputSpectrum.unsubscribe();
 		break;
 	case AUDIO_SPECTRUM:
-        Parameters.Measurements.AudioSpectrum.subscribe();
+        Parameters.Measurements.AudioSpectrum.unsubscribe();
 		break;
 	case FREQ_SAM_OFFS_HIST:
-        Parameters.Measurements.FreqSyncValHist.unsubscribe();
-        Parameters.Measurements.SamOffsValHist.unsubscribe();
+        Parameters.Measurements.FrequencySyncValue.unsubscribe();
+        Parameters.Measurements.SampleFrequencyOffset.unsubscribe();
 		break;
 	case DOPPLER_DELAY_HIST:
         Parameters.Measurements.Doppler.unsubscribe();
@@ -966,6 +965,7 @@ void CDRMPlot::UpdateAudioSpectrum()
     }
 }
 
+
 void CDRMPlot::SetFreqSamOffsHist()
 {
     plot->setTitle(tr("Rel. Frequency Offset / Sample Rate Offset History"));
@@ -995,23 +995,89 @@ void CDRMPlot::SetFreqSamOffsHist()
     plot->setAxisScale(QwtPlot::yRight, -5.0, 5.0);
 }
 
+#if 1
+// TODO - get starting point at right of chart
+void CDRMPlot::UpdateFreqSamOffsHist()
+{
+	/* Duration of OFDM symbol */
+	const _REAL rTs = GetSymbolDuration();
+
+    vector<double> vecrFreqOffs, vecrSamOffs;
+
+	Parameters.Lock();
+	/* Value from frequency acquisition */
+	_REAL rFreqOffsetAcqui = Parameters.rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
+
+    // TODO set the max on the measurement objects to LEN_HIST_PLOT_SYNC_PARMS
+    Parameters.Measurements.FrequencySyncValue.get(vecrFreqOffs);
+    Parameters.Measurements.SampleFrequencyOffset.get(vecrSamOffs);
+
+	Parameters.Unlock();
+
+	plot->setAxisTitle(QwtPlot::yLeft, tr("Freq. Offset [Hz] rel. to ")+QString().setNum(rFreqOffsetAcqui)+" Hz");
+
+	vector<double> vecrScale(LEN_HIST_PLOT_SYNC_PARMS, 0.0);
+	/* Calculate time scale */
+	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
+		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rTs;
+
+	/* Customized auto-scaling. We adjust the y scale so that it is not larger than rMinScaleRange"  */
+	const _REAL rMinScaleRange = 1.0; /* Hz */
+
+	/* Get maximum and minimum values */
+	double MaxFreq = -numeric_limits<double>::max();
+	double MinFreq = numeric_limits<double>::max();
+
+	for (size_t i = 0; i < vecrFreqOffs.size(); i++)
+	{
+		if (vecrFreqOffs[i] > MaxFreq)
+			MaxFreq = vecrFreqOffs[i];
+
+		if (vecrFreqOffs[i] < MinFreq)
+			MinFreq = vecrFreqOffs[i];
+	}
+	/* Apply scale to plot */
+	plot->setAxisScale(QwtPlot::yLeft,
+            floor(MinFreq / rMinScaleRange), ceil(MaxFreq / rMinScaleRange));
+
+	double MaxSam = -numeric_limits<double>::max();
+	double MinSam = numeric_limits<double>::max();
+	for (size_t i = 0; i < vecrSamOffs.size(); i++)
+	{
+		if (vecrSamOffs[i] > MaxSam)
+			MaxSam = vecrSamOffs[i];
+
+		if (vecrSamOffs[i] < MinSam)
+			MinSam = vecrSamOffs[i];
+	}
+	plot->setAxisScale(QwtPlot::yRight,
+            floor(MinSam / rMinScaleRange), ceil(MaxSam / rMinScaleRange));
+
+	plot->setAxisScale(QwtPlot::xBottom, vecrScale[0], 0.0);
+
+    main1curve->setData(&vecrScale[vecrScale.size()-vecrFreqOffs.size()],
+                            &vecrFreqOffs[0], vecrFreqOffs.size());
+    main2curve->setData(&vecrScale[vecrScale.size()-vecrSamOffs.size()],
+                            &vecrSamOffs[0], vecrSamOffs.size());
+}
+#else
 void CDRMPlot::UpdateFreqSamOffsHist()
 {
 	/* Calculate time scale */
     _REAL rTs = GetSymbolDuration();
-	_REAL rStep = -rTs;
+	_REAL rStep = -rTs; // -rTs; double negative ?
 	_REAL rStart = (1-LEN_HIST_PLOT_SYNC_PARMS)*rTs;
 	plot->setAxisScale(QwtPlot::xBottom, rStart, 0.0);
 
-    vector<double> vecrFreqOffs, vecrSamOffs, vecrScale;
+    vector<double> vecrFreqOffs, vecrSamOffs;
 
 	Parameters.Lock();
 	/* Value from frequency acquisition */
 	_REAL rFreqOffAcquVal = Parameters.rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
 
     // TODO set the max on the measurement objects to LEN_HIST_PLOT_SYNC_PARMS
-    Parameters.Measurements.FreqSyncValHist.get(vecrFreqOffs);
-    Parameters.Measurements.SamOffsValHist.get(vecrSamOffs);
+    Parameters.Measurements.FrequencySyncValue.get(vecrFreqOffs);
+    Parameters.Measurements.SampleFrequencyOffset.get(vecrSamOffs);
 
 	Parameters.Unlock();
 
@@ -1032,9 +1098,9 @@ void CDRMPlot::UpdateFreqSamOffsHist()
         double ymin = floor(MinFreq / rMinScaleRange);
         double ymax = ceil(MaxFreq / rMinScaleRange);
         plot->setAxisScale(QwtPlot::yLeft, ymin, ymax);
-        vecrScale.resize(vecrFreqOffs.size());
+        vector<double> vecrScale(vecrFreqOffs.size());
         _REAL rLeft = -_REAL(vecrFreqOffs.size()-1)*rStep;
-        generate(vecrScale.begin(), vecrScale.end(), scaleGen(rStep, rLeft));
+        generate(vecrScale.begin(), vecrScale.end(), scaleGen(rStep, -rLeft));
         main1curve->setData(&vecrScale[0], &vecrFreqOffs[0], vecrFreqOffs.size());
     }
 
@@ -1047,12 +1113,12 @@ void CDRMPlot::UpdateFreqSamOffsHist()
         double ymax = ceil(MaxSam / rMinScaleRange);
         plot->setAxisScale(QwtPlot::yRight, ymin, ymax);
         _REAL rLeft = -_REAL(vecrSamOffs.size()-1)*rStep;
-        vecrScale.resize(vecrSamOffs.size());
-        generate(vecrScale.begin(), vecrScale.end(), scaleGen(rStep, rLeft));
+        vector<double> vecrScale(vecrSamOffs.size());
+        generate(vecrScale.begin(), vecrScale.end(), scaleGen(rStep, -rLeft));
         main2curve->setData(&vecrScale[0], &vecrSamOffs[0], vecrSamOffs.size());
     }
 }
-
+#endif
 void CDRMPlot::SetDopplerDelayHist()
 {
     plot->setTitle(tr("Delay / Doppler History"));
@@ -1257,16 +1323,8 @@ void CDRMPlot::UpdatePSD()
     if(b)
     {
         vector<_REAL> vecrScale(vecrData.size());
-        // TODO convert to generator
-        int iLenPowSpec = vecrData.size();
-		const _REAL rFactorScale =
-			(_REAL) SOUNDCRD_SAMPLE_RATE / iLenPowSpec / 2000;
-
-		/* Apply the normalization (due to the FFT) */
-		for (int i = 0; i < iLenPowSpec; i++)
-		{
-			vecrScale[i] = (_REAL) i * rFactorScale;
-		}
+        _REAL rFactorScale = _REAL(SOUNDCRD_SAMPLE_RATE) / _REAL(vecrData.size()) / 2000.0;
+        generate(vecrScale.begin(), vecrScale.end(), scaleGen(rFactorScale));
         main1curve->setData(&vecrScale[0], &vecrData[0], vecrData.size());
     }
 }
@@ -1304,7 +1362,8 @@ void CDRMPlot::UpdateSNRSpectrum()
 	const int iSize = vecrData.size();
 
     vector<_REAL> vecrScale(iSize);
-    // TODO Scale
+    // TODO - do we want to count excluded carriers ?
+    generate(vecrScale.begin(), vecrScale.end(), scaleGen());
 
 	/* Fixed scale for x-axis */
 	plot->setAxisScale(QwtPlot::xBottom, 0.0, double(iSize));
@@ -1466,7 +1525,7 @@ void SpectrogramData::setHeight(size_t h)
 {
     height = h;
     // left top width height
-    setBoundingRect(QwtDoubleRect(0.0, 0.0, SOUNDCRD_SAMPLE_RATE / 2000, h));
+    setBoundingRect(QwtDoubleRect(0.0, 0.0, _REAL(SOUNDCRD_SAMPLE_RATE) / 2000.0, h));
 }
 
 void SpectrogramData::setData(vector<double>& row)
@@ -1490,7 +1549,7 @@ void CDRMPlot::SetInpSpecWaterf()
     // spectrogram uses scales to determine value range
     // each pixel represents one sample (400 ms ?)
     plot->setAxisScale(QwtPlot::yLeft, 0.0, CanvSize.height());
-    plot->setAxisScale(QwtPlot::xBottom, 0.0, SOUNDCRD_SAMPLE_RATE / 2000);
+    plot->setAxisScale(QwtPlot::xBottom, 0.0, _REAL(SOUNDCRD_SAMPLE_RATE) / 2000.0);
     grid->enableX(false);
     grid->enableY(false);
 

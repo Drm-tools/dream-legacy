@@ -194,8 +194,8 @@ public:
     CPointMeasure<vector<_REAL> > AudioSpectrum;
 	CPointMeasure<vector<vector<_COMPLEX> > > Pilots;
 
-	CTimeSeries<_REAL>	FreqSyncValHist;
-	CTimeSeries<_REAL>	SamOffsValHist;
+	CTimeSeries<_REAL>	FrequencySyncValue;
+	CTimeSeries<_REAL>	SampleFrequencyOffset;
 	CTimeSeries<_REAL>	SNRHist;
     CPointMeasure<vector<_REAL> > SNRProfile;
 	CTimeSeries<int>	CDAudHist;

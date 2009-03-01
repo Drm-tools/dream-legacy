@@ -563,9 +563,15 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			/* Calculate interference tag */
 			CalculateRint(ReceiverParam);
 		}
-		// TODO - better place for this ?
-        ReceiverParam.Measurements.SamOffsValHist.set(ReceiverParam.rResampleOffset);
+
+		if (ReceiverParam.Measurements.SNRProfile.wanted())
+		{
+			CalculateSNRProfile(ReceiverParam);
+		}
 	}
+
+    // TODO - better place for this ?
+    ReceiverParam.Measurements.SampleFrequencyOffset.set(ReceiverParam.rResampleOffset);
 
 	ReceiverParam.Unlock();
 
@@ -1152,38 +1158,29 @@ _REAL CChannelEstimation::GetMinDelay()
 }
 #endif
 
-void CChannelEstimation::GetSNRProfile(vector<_REAL>& vecrData, vector<_REAL>& vecrScale)
+void CChannelEstimation::CalculateSNRProfile(CParameter& ReceiverParam)
 {
-	int i;
-
-	/* Init output vectors */
-	vecrData.resize(iNumCarrier);
-	vecrScale.resize(iNumCarrier);
 
 	/* Do copying of data only if vector is of non-zero length which means that
 	   the module was already initialized */
 	if (iNumCarrier != 0)
 	{
-		/* Lock resources */
-		Lock();
 
 		/* We want to suppress the carriers on which no SNR measurement can be
 		   performed (DC carrier, frequency pilots carriers) */
 		int iNewNumCar = 0;
-		for (i = 0; i < iNumCarrier; i++)
+		for (int i = 0; i < iNumCarrier; i++)
 		{
 			if (vecrSigEstMSC[i] != (_REAL) 0.0)
 				iNewNumCar++;
 		}
 
-		/* Init output vectors for new size */
-		vecrData.resize(iNewNumCar);
-		vecrScale.resize(iNewNumCar);
+        vector<_REAL> vecrData(iNewNumCar);
 
 		/* Copy data in output vector and set scale
 		   (carrier index as x-scale) */
 		int iCurOutIndx = 0;
-		for (i = 0; i < iNumCarrier; i++)
+		for (int i = 0; i < iNumCarrier; i++)
 		{
 			/* Suppress carriers where no SNR measurement is possible */
 			if (vecrSigEstMSC[i] != (_REAL) 0.0)
@@ -1200,15 +1197,10 @@ void CChannelEstimation::GetSNRProfile(vector<_REAL>& vecrData, vector<_REAL>& v
 				else
 					vecrData[iCurOutIndx] = (_REAL) 0.0;
 
-				/* Scale (carrier index) */
-				vecrScale[iCurOutIndx] = i;
-
 				iCurOutIndx++;
 			}
 		}
-
-		/* Release resources */
-		Unlock();
+		ReceiverParam.Measurements.SNRProfile.set(vecrData);
 	}
 }
 
