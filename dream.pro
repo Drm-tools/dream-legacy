@@ -71,7 +71,7 @@ win32 {
     }
     else {
         TEMPLATE	= vcapp
-        LIBS 		+= libsndfile-1.lib zdll.lib libqwt.lib
+        LIBS 		+= libsndfile-1.lib zdll.lib qwt5.lib
         LIBS		+= libfaac.lib libfaad.lib
         LIBS		+= libfftw.lib setupapi.lib ws2_32.lib winmm.lib
         QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:"MSVCRTD, LIBCMT"
@@ -144,7 +144,6 @@ common/datadecoding/MOTSlideShow.h   \
 common/DataIO.h   \
 common/drmchannel/ChannelSimulation.h   \
 common/ReceptLog.h   \
-common/PlotManager.h   \
 common/ServiceInformation.h   \
 common/DrmReceiver.h   \
 common/DRMSignalIO.h   \
@@ -278,7 +277,6 @@ common/datadecoding/MOTSlideShow.cpp   \
 common/DataIO.cpp   \
 common/drmchannel/ChannelSimulation.cpp   \
 common/ReceptLog.cpp   \
-common/PlotManager.cpp   \
 common/ServiceInformation.cpp   \
 common/DrmReceiver.cpp   \
 common/DRMSignalIO.cpp   \
