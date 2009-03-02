@@ -160,6 +160,8 @@ public:
 	void Load(int argc, char** argv);
 	void Save();
 	void Clear();
+	void Clear(const string& section);
+	void Clear(const string& section, const string& key);
 	string Get(const string& section, const string& key, const string& def="") const;
 	void Put(const string& section, const string& key, const string& value);
 	bool Get(const string& section, const string& key, const bool def) const;

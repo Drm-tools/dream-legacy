@@ -149,7 +149,7 @@ public:
 	void start() { TimerChart.start();}
 	void stop() { TimerChart.stop();}
 	void load(const CSettings& s, const string& section);
-	void save(CSettings& s, const string& section);
+    bool save(CSettings& s, const string& section);
 
 	void SetPlotStyle(const int iNewStyleID);
 

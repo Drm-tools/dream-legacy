@@ -220,7 +220,7 @@ void CDRMPlot::load(const CSettings& s, const string& section)
 	SetupChart(EPlotType(s.Get(section, "plottype", 0)));
 }
 
-void CDRMPlot::save(CSettings& s, const string& section)
+bool CDRMPlot::save(CSettings& s, const string& section)
 {
     /* Check, if window wasn't closed by the user */
     if (plot->isVisible())
@@ -238,10 +238,12 @@ void CDRMPlot::save(CSettings& s, const string& section)
         /* Convert plot type into an integer type. TODO: better solution */
         s.Put(section, "plottype", (int) GetChartType());
         s.Put(section, "plotstyle", styleId);
+        // if its a free standing window, close it
+        if(plot->parent() == NULL)
+            plot->close();
+        return true;
     }
-    // if its a free standing window, close it
-    if(plot->parent() == NULL)
-        plot->close();
+    return false;
 }
 
 void CDRMPlot::OnTimerChart()
@@ -496,11 +498,9 @@ void CDRMPlot::SetupChart(const EPlotType eNewType)
 void CDRMPlot::startPlot(EPlotType e)
 {
 
+    const _REAL rDRMFrameDur = GetFrameDuration();
     Parameters.Lock();
-    const _REAL rDRMFrameDur =
-        _REAL(Parameters.CellMappingTable.iFFTSizeN + Parameters.CellMappingTable.iGuardSize)
-        /
-		_REAL(SOUNDCRD_SAMPLE_RATE * Parameters.CellMappingTable.iNumSymPerFrame);
+
 	switch (e)
 	{
 	case AVERAGED_IR:
@@ -694,27 +694,15 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 /* Duration of OFDM symbol */
 _REAL CDRMPlot::GetSymbolDuration()
 {
-
-	Parameters.Lock();
-    _REAL r = _REAL(Parameters.CellMappingTable.iFFTSizeN + Parameters.CellMappingTable.iGuardSize)
+     return _REAL(Parameters.CellMappingTable.iFFTSizeN + Parameters.CellMappingTable.iGuardSize)
         /
         _REAL(SOUNDCRD_SAMPLE_RATE);
-	Parameters.Unlock();
-    return r;
 }
 
+/* Duration of DRM frame */
 _REAL CDRMPlot::GetFrameDuration()
 {
-
-	Parameters.Lock();
-	/* Duration of DRM frame */
-	_REAL r = _REAL(Parameters.CellMappingTable.iNumSymPerFrame)
-        *
-        _REAL(Parameters.CellMappingTable.iFFTSizeN+Parameters.CellMappingTable.iGuardSize)
-        /
-		_REAL(SOUNDCRD_SAMPLE_RATE);
-	Parameters.Unlock();
-    return r;
+	return _REAL(Parameters.CellMappingTable.iNumSymPerFrame) * GetSymbolDuration();
 }
 
 void CDRMPlot::SetData(QwtPlotCurve* curve, vector<_COMPLEX>& veccData)
@@ -993,132 +981,90 @@ void CDRMPlot::SetFreqSamOffsHist()
     // initial values
     plot->setAxisScale(QwtPlot::yLeft, -10.0, 10.0);
     plot->setAxisScale(QwtPlot::yRight, -5.0, 5.0);
+
+    // fixed X-axis
+	Parameters.Lock();
+	/* Duration of OFDM symbol */
+	const _REAL rTs = GetSymbolDuration();
+	Parameters.Unlock();
 }
 
-#if 1
 // TODO - get starting point at right of chart
 void CDRMPlot::UpdateFreqSamOffsHist()
 {
-	/* Duration of OFDM symbol */
-	const _REAL rTs = GetSymbolDuration();
 
     vector<double> vecrFreqOffs, vecrSamOffs;
 
 	Parameters.Lock();
+	/* Duration of OFDM symbol */
+	const _REAL rTs = GetSymbolDuration();
 	/* Value from frequency acquisition */
-	_REAL rFreqOffsetAcqui = Parameters.rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
+	const _REAL rFreqOffsetAcqui = Parameters.rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
 
-    // TODO set the max on the measurement objects to LEN_HIST_PLOT_SYNC_PARMS
     Parameters.Measurements.FrequencySyncValue.get(vecrFreqOffs);
     Parameters.Measurements.SampleFrequencyOffset.get(vecrSamOffs);
 
 	Parameters.Unlock();
 
-	plot->setAxisTitle(QwtPlot::yLeft, tr("Freq. Offset [Hz] rel. to ")+QString().setNum(rFreqOffsetAcqui)+" Hz");
+	plot->setAxisTitle(QwtPlot::yLeft, tr("Freq. Offset [Hz] rel. to ")
+        +QString().setNum(rFreqOffsetAcqui)+" Hz");
 
 	vector<double> vecrScale(LEN_HIST_PLOT_SYNC_PARMS, 0.0);
 	/* Calculate time scale */
+#if 1
+	const _REAL rLeft = rTs*(1- LEN_HIST_PLOT_SYNC_PARMS);
+    generate(vecrScale.begin(), vecrScale.end(), scaleGen(rTs, rLeft));
+#else
 	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
 		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rTs;
-
-	/* Customized auto-scaling. We adjust the y scale so that it is not larger than rMinScaleRange"  */
-	const _REAL rMinScaleRange = 1.0; /* Hz */
-
-	/* Get maximum and minimum values */
-	double MaxFreq = -numeric_limits<double>::max();
-	double MinFreq = numeric_limits<double>::max();
-
-	for (size_t i = 0; i < vecrFreqOffs.size(); i++)
-	{
-		if (vecrFreqOffs[i] > MaxFreq)
-			MaxFreq = vecrFreqOffs[i];
-
-		if (vecrFreqOffs[i] < MinFreq)
-			MinFreq = vecrFreqOffs[i];
-	}
-	/* Apply scale to plot */
-	plot->setAxisScale(QwtPlot::yLeft,
-            floor(MinFreq / rMinScaleRange), ceil(MaxFreq / rMinScaleRange));
-
-	double MaxSam = -numeric_limits<double>::max();
-	double MinSam = numeric_limits<double>::max();
-	for (size_t i = 0; i < vecrSamOffs.size(); i++)
-	{
-		if (vecrSamOffs[i] > MaxSam)
-			MaxSam = vecrSamOffs[i];
-
-		if (vecrSamOffs[i] < MinSam)
-			MinSam = vecrSamOffs[i];
-	}
-	plot->setAxisScale(QwtPlot::yRight,
-            floor(MinSam / rMinScaleRange), ceil(MaxSam / rMinScaleRange));
-
+#endif
 	plot->setAxisScale(QwtPlot::xBottom, vecrScale[0], 0.0);
 
-    main1curve->setData(&vecrScale[vecrScale.size()-vecrFreqOffs.size()],
-                            &vecrFreqOffs[0], vecrFreqOffs.size());
-    main2curve->setData(&vecrScale[vecrScale.size()-vecrSamOffs.size()],
-                            &vecrSamOffs[0], vecrSamOffs.size());
-}
-#else
-void CDRMPlot::UpdateFreqSamOffsHist()
-{
-	/* Calculate time scale */
-    _REAL rTs = GetSymbolDuration();
-	_REAL rStep = -rTs; // -rTs; double negative ?
-	_REAL rStart = (1-LEN_HIST_PLOT_SYNC_PARMS)*rTs;
-	plot->setAxisScale(QwtPlot::xBottom, rStart, 0.0);
-
-    vector<double> vecrFreqOffs, vecrSamOffs;
-
-	Parameters.Lock();
-	/* Value from frequency acquisition */
-	_REAL rFreqOffAcquVal = Parameters.rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
-
-    // TODO set the max on the measurement objects to LEN_HIST_PLOT_SYNC_PARMS
-    Parameters.Measurements.FrequencySyncValue.get(vecrFreqOffs);
-    Parameters.Measurements.SampleFrequencyOffset.get(vecrSamOffs);
-
-	Parameters.Unlock();
-
-    /* left axis title can change */
-	QString strYLeftLabel = tr("Freq. Offset [Hz] rel. to ")+QString().setNum(rFreqOffAcquVal) + " Hz";
-    plot->setAxisTitle(QwtPlot::yLeft, strYLeftLabel);
-
-	/* Customized auto-scaling. We adjust the y scale so that it is not larger
-	   than rMinScaleRange"  */
-	const _REAL rMinScaleRange = (_REAL) 1.0; /* Hz */
+	/* Customized auto-scaling. We adjust the y scale so that it
+	 is not larger than rMinScaleRange"  */
+	const _REAL rMinScaleRange = 1.0; /* Hz */
 
     if(vecrFreqOffs.size()>0)
     {
+
         /* Get maximum and minimum values */
-        _REAL MinFreq, MaxFreq;
-        boundValues(vecrFreqOffs, MinFreq, MaxFreq);
+        double MaxFreq = -numeric_limits<double>::max();
+        double MinFreq = numeric_limits<double>::max();
+
+        for (size_t i = 0; i < vecrFreqOffs.size(); i++)
+        {
+            if (vecrFreqOffs[i] > MaxFreq)
+                MaxFreq = vecrFreqOffs[i];
+
+            if (vecrFreqOffs[i] < MinFreq)
+                MinFreq = vecrFreqOffs[i];
+        }
         /* Apply scale to plot */
-        double ymin = floor(MinFreq / rMinScaleRange);
-        double ymax = ceil(MaxFreq / rMinScaleRange);
-        plot->setAxisScale(QwtPlot::yLeft, ymin, ymax);
-        vector<double> vecrScale(vecrFreqOffs.size());
-        _REAL rLeft = -_REAL(vecrFreqOffs.size()-1)*rStep;
-        generate(vecrScale.begin(), vecrScale.end(), scaleGen(rStep, -rLeft));
-        main1curve->setData(&vecrScale[0], &vecrFreqOffs[0], vecrFreqOffs.size());
+        plot->setAxisScale(QwtPlot::yLeft,
+                floor(MinFreq / rMinScaleRange), ceil(MaxFreq / rMinScaleRange));
+        main1curve->setData(&vecrScale[vecrScale.size()-vecrFreqOffs.size()],
+                                &vecrFreqOffs[0], vecrFreqOffs.size());
     }
 
     if(vecrSamOffs.size()>0)
     {
-        _REAL MinSam, MaxSam;
-        boundValues(vecrSamOffs, MinSam, MaxSam);
-        /* Apply scale to plot */
-        double ymin = floor(MinSam / rMinScaleRange);
-        double ymax = ceil(MaxSam / rMinScaleRange);
-        plot->setAxisScale(QwtPlot::yRight, ymin, ymax);
-        _REAL rLeft = -_REAL(vecrSamOffs.size()-1)*rStep;
-        vector<double> vecrScale(vecrSamOffs.size());
-        generate(vecrScale.begin(), vecrScale.end(), scaleGen(rStep, -rLeft));
-        main2curve->setData(&vecrScale[0], &vecrSamOffs[0], vecrSamOffs.size());
+        double MaxSam = -numeric_limits<double>::max();
+        double MinSam = numeric_limits<double>::max();
+        for (size_t i = 0; i < vecrSamOffs.size(); i++)
+        {
+            if (vecrSamOffs[i] > MaxSam)
+                MaxSam = vecrSamOffs[i];
+
+            if (vecrSamOffs[i] < MinSam)
+                MinSam = vecrSamOffs[i];
+        }
+        plot->setAxisScale(QwtPlot::yRight,
+                floor(MinSam / rMinScaleRange), ceil(MaxSam / rMinScaleRange));
+        main2curve->setData(&vecrScale[vecrScale.size()-vecrSamOffs.size()],
+                                &vecrSamOffs[0], vecrSamOffs.size());
     }
 }
-#endif
+
 void CDRMPlot::SetDopplerDelayHist()
 {
     plot->setTitle(tr("Delay / Doppler History"));
@@ -1152,11 +1098,11 @@ void CDRMPlot::UpdateDopplerDelayHist()
 {
     vector<double> vecrDelay, vecrDoppler, vecrScale;
 	Parameters.Lock();
+	_REAL rStep = GetFrameDuration()/60.0;
 	Parameters.Measurements.Delay.get(vecrDelay);
 	Parameters.Measurements.Doppler.get(vecrDoppler);
 	Parameters.Unlock();
 
-	_REAL rStep = GetFrameDuration()/60.0;
 	_REAL rStart = -(rStep*_REAL(LEN_HIST_PLOT_SYNC_PARMS-1));
     plot->setAxisScale(QwtPlot::xBottom, rStart, 0.0);
 	vecrScale.resize(vecrDelay.size());
@@ -1199,6 +1145,7 @@ void CDRMPlot::UpdateSNRAudHist()
     vector<double> vecrSNR, vecrAudio, vecrScale;
 	/* Duration of DRM frame */
 	Parameters.Lock();
+	_REAL rStep = GetFrameDuration()/60.0;
     Parameters.Measurements.SNRHist.get(vecrSNR);
     vector<int> v;
     Parameters.Measurements.CDAudHist.get(v);
@@ -1234,7 +1181,6 @@ void CDRMPlot::UpdateSNRAudHist()
 	const double rRatioAudSNR = 1.5;
 	const double dMaxYScaleAudio = dMaxYScaleSNR * rRatioAudSNR;
 
-	_REAL rStep = GetFrameDuration()/60.0;
 	_REAL rStart = -(rStep*_REAL(LEN_HIST_PLOT_SYNC_PARMS-1));
 
 	/* Apply scale to plot */

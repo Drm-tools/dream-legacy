@@ -488,6 +488,7 @@ void SystemEvalDlg::InitialisePlots()
     if(l.size()==1)
     {
         l[0]->setSelected(true);
+        ChartSelector->scrollToItem(l[0]);
     }
 
 	/* Connect controls ----------------------------------------------------- */
@@ -531,15 +532,25 @@ void SystemEvalDlg::hidePlots()
     plot->stop();
 	plot->save(Settings, "System Evaluation Dialog");
 
-	/* Store size and position of all additional chart windows */
-	for (size_t i = 0; i < plots.size(); i++)
+	int n = Settings.Get("System Evaluation Dialog", "numchartwin", 0);
+	for (size_t i = 0; i < n; i++)
 	{
         stringstream s;
         s << "Chart Window " << i;
-        plots[i]->save(Settings, s.str());
+        Settings.Clear(s.str());
+	}
+
+	/* Store size and position of all additional chart windows */
+	n=0;
+	for (size_t i = 0; i < plots.size(); i++)
+	{
+        stringstream s;
+        s << "Chart Window " << n;
+        if(plots[i]->save(Settings, s.str()))
+            n++;
         plots[i]->stop();
 	}
-	Settings.Put("System Evaluation Dialog", "numchartwin", int(plots.size()));
+	Settings.Put("System Evaluation Dialog", "numchartwin", n);
 
 	/* We do not need the pointers anymore, reset vector */
 	plots.clear();

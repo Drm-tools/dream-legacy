@@ -65,6 +65,29 @@ CSettings::Get(const string & section, const string & key, const string & def) c
 	return GetIniSetting(section, key, def);
 }
 
+void CSettings::Clear()
+{
+    ini.clear();
+}
+
+void CSettings::Clear(const string& section)
+{
+    map<string, INISection>::iterator s = ini.find(section);
+    if(s!=ini.end())
+        ini.erase(s);
+}
+
+void CSettings::Clear(const string& section, const string& key)
+{
+    map<string, INISection>::iterator s = ini.find(section);
+    if(s!=ini.end())
+    {
+        map<string, string>::iterator k = s->second.find(key);
+        if(k!=s->second.end())
+            s->second.erase(k);
+    }
+}
+
 void
 CSettings::Put(const string & section, const string & key, const string& value)
 {

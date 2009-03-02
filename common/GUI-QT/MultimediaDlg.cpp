@@ -54,6 +54,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 {
 
     setupUi(this);
+    connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
     textBrowser->setFont(fontTextBrowser);
 
 	/* Picture controls should be invisable. These controls are only used for
