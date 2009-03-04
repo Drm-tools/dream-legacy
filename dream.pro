@@ -39,7 +39,6 @@ unix {
 	DEFINES		+= HAVE_STRINGS_H HAVE_STRING_H STDC_HEADERS
 	DEFINES		+= HAVE_INTTYPES_H HAVE_STDINT_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H HAVE_UNISTD_H
 	!macx {
-		MAKEFILE	= Makefile.qt
         INCLUDEPATH	+= /usr/include/qwt-qt4
 		INCLUDEPATH	+= linux
 		LIBS 		+= -lrt -lqwt-qt4
