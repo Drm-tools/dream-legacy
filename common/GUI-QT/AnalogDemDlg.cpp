@@ -30,10 +30,7 @@
 
 #include "AnalogDemDlg.h"
 #include <QMessagebox>
-#include <QHideEvent>
 #include <Q3PopupMenu>
-#include <QShowEvent>
-#include <QCloseEvent>
 #include <QDateTime>
 #include <QToolTip>
 #include <QFileDialog>
@@ -44,7 +41,6 @@
 # include "ReceiverSettingsDlg.h"
 # include "DRMPlot.h"
 
-// TODO Make Plot work
 // TODO Rename
 // TODO improve layout (simplify?)
 
@@ -215,7 +211,6 @@ void AnalogDemDlg::hideEvent(QHideEvent*)
 	s.iHSize = WinGeom.height();
 	s.iWSize = WinGeom.width();
 	Settings.Put("AM Dialog", s);
-	Settings.Put("GUI", "mode", string("AMRX"));
 }
 
 void AnalogDemDlg::closeEvent(QCloseEvent* ce)

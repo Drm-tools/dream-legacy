@@ -12,7 +12,7 @@
 				<Option object_output="Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode DRMRX D:\RTLwithSlideshow_ModeB_10kHz.wav" />
+				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -43,7 +43,7 @@
 				<Option object_output="Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode DRMRX D:\RTLwithSlideshow_ModeB_10kHz.wav" />
+				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-W" />
 					<Add option="-Wall" />

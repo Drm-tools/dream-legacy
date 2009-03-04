@@ -169,7 +169,7 @@ public:
 #endif
 	void					LoadSettings(CSettings&); // can write to settings to set defaults
 	void					SaveSettings(CSettings&);
-	void					Init();
+	//void					Init();
 	void					Start();
 	void					Stop();
 	void					RequestNewAcquisition() { bRestartFlag = true; }
@@ -183,6 +183,7 @@ public:
 	EDemodulationType		GetAnalogDemodType() { return AMDemodulation.GetDemodType(); }
 	int						GetAnalogFilterBWHz();
 	void					SetAnalogFilterBWHz(int);
+	void					SetAnalogFilterBWHz(EDemodulationType, int);
 
 	void					SetAnalogDemodAcq(_REAL rNewNorCen);
 

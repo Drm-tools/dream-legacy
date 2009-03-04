@@ -464,7 +464,7 @@ CMatlibVector<T> CMatlibVector<T>::operator()(const int iFrom,
 											  const int iStep,
 											  const int iTo) const
 {
-	CMatlibVector<T> vecRet(abs(iTo - iFrom) / abs(iStep) + 1, VTY_TEMP);
+    CMatlibVector<T> vecRet(size_t(abs(float(iTo - iFrom)) / abs(float(iStep))) + 1, VTY_TEMP);
 	int iOutPos = 0;
 	int i;
 

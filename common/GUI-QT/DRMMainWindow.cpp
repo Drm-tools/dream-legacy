@@ -991,7 +991,6 @@ void DRMMainWindow::closeEvent(QCloseEvent* ce)
 	 */
 	if(eReceiverMode == DRM)
 	{
-		Settings.Put("GUI", "mode", string("DRMRX"));
 		/* remember the state of the windows */
 		Settings.Put("DRM Dialog", "visible", true);
 		Settings.Put("AM Dialog", "visible", false);
@@ -1028,7 +1027,6 @@ void DRMMainWindow::closeEvent(QCloseEvent* ce)
 	}
 	else
 	{
-		Settings.Put("GUI", "mode", string("AMRX"));
 		Settings.Put("DRM Dialog", "visible", false);
 		Settings.Put("AM Dialog", "visible", true);
 		Settings.Put("Stations Dialog", "visible", pStationsDlg->isVisible());

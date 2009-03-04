@@ -286,7 +286,6 @@ CParameter::CParameter():
  ,Mutex()
 #endif
 {
-	GenerateRandomSerialNumber();
 	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
 }
 
@@ -1163,9 +1162,9 @@ void CParameter::GenerateReceiverID()
 			sSerialNumber += "_";
 
 	if (sSerialNumber.length() > 6)
-		sSerialNumber.erase(6, pDRMRec->GetParameters()->sSerialNumber.length()-6);
+        sSerialNumber = sSerialNumber.substr(0, 6);
 
-	sReceiverID += pDRMRec->GetParameters()->sSerialNumber;
+	sReceiverID += sSerialNumber;
 }
 
 void CParameter::GenerateRandomSerialNumber()
@@ -1183,14 +1182,9 @@ void CParameter::GenerateRandomSerialNumber()
 			randomChars[q] = (char(q)-26)+48;
 	}
 
-	char serialNumTemp[7];
-
+    sSerialNumber = "______";
 	for (size_t i=0; i < 6; i++)
-		serialNumTemp[i] = randomChars[(int) 35.0*rand()/RAND_MAX];
-
-	serialNumTemp[6] = '\0';
-
-	sSerialNumber = serialNumTemp;
+		sSerialNumber[i] = randomChars[(int) 35.0*rand()/RAND_MAX];
 }
 
 string CServiceDefinition::Frequency(size_t n) const

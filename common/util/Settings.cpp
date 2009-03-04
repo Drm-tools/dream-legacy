@@ -41,6 +41,7 @@
 #include <iostream>
 #include <iomanip>
 #include <limits>
+#include <cstdlib>
 
 /* Implementation *************************************************************/
 void
@@ -199,11 +200,18 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
+		/* Modulation ----------------------------------------------------------- */
+		if (GetStringArgument(argc, argv, i, "--modn", "--modn", strArgument) == true)
+		{
+			Put("Receiver", "modulation", strArgument);
+			continue;
+		}
+
 		/* old DRM transmitter mode flag ---------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-t", "--transmitter") == true)
 		{
 			bIsReceiver = false;
-			Put("0", "mode", string("DRMTX"));
+			Put("0", "mode", string("TX"));
 			continue;
 		}
 

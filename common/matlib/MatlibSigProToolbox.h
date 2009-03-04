@@ -30,6 +30,7 @@
 
 #include "Matlib.h"
 #include "MatlibStdToolbox.h"
+#include <cstdlib>
 
 const _REAL crPi = _REAL(3.14159265358979323846);
 

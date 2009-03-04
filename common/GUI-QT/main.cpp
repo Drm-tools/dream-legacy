@@ -126,7 +126,7 @@ main(int argc, char **argv)
 			exit(0);
 		}
 
-		if (strMode == "DRMRX" || strMode == "AMRX")
+		if (strMode == "RX")
 		{
 			CDRMReceiver DRMReceiver;
 
@@ -150,8 +150,6 @@ main(int argc, char **argv)
 #endif
 			DRMReceiver.LoadSettings(Settings);
 
-			DRMReceiver.Init();
-
 			DRMMainWindow MainDlg(DRMReceiver, Settings, 0, 0, Qt::WStyle_MinMax);
 
 			/* Start working thread */
@@ -173,7 +171,7 @@ main(int argc, char **argv)
 #endif
 			DRMReceiver.SaveSettings(Settings);
 		}
-		else if (strMode == "DRMTX" || strMode == "DRMENC" || strMode == "DRMMOD")
+		else if (strMode == "TX" || strMode == "ENC" || strMode == "MOD")
 		{
 			CDRMTransmitter DRMTransmitter;
 

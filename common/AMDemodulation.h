@@ -259,8 +259,9 @@ public:
 
 	bool GetFrameBoundary() {return iFreeSymbolCounter==0;}
 
-	void SetFilterBWHz(const int iBw);
-	int GetFilterBWHz(const EDemodulationType eType);
+	void SetFilterBWHz(int);
+	void SetFilterBWHz(EDemodulationType, int);
+	int GetFilterBWHz(EDemodulationType eType);
 	int GetFilterBWHz();
 
 	void SetDemodType(EDemodulationType);

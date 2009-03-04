@@ -323,6 +323,11 @@ CDRMReceiver::SetAnalogFilterBWHz(int iNew)
 	AMDemodulation.SetFilterBWHz(iNew);
 }
 
+void CDRMReceiver::SetAnalogFilterBWHz(EDemodulationType eNew, int iNew)
+{
+	AMDemodulation.SetFilterBWHz(eNew, iNew);
+}
+
 void
 CDRMReceiver::SetAnalogDemodAcq(_REAL rNewNorCen)
 {
@@ -823,22 +828,6 @@ CDRMReceiver::DetectAcquiFAC()
 }
 
 void
-CDRMReceiver::Init()
-{
-	/* Set flags so that we have only one loop in the Run() routine which is
-	   enough for initializing all modues */
-	bDoInitRun = true;
-	Parameters.bRunThread = true;
-
-	/* Run once */
-	Run();
-
-	/* Reset flags */
-	bDoInitRun = false;
-	Parameters.bRunThread = false;
-}
-
-void
 CDRMReceiver::SetReceiverMode(EDemodulationType eNewMode)
 {
 	eNewReceiverMode = eNewMode;
@@ -851,9 +840,6 @@ CDRMReceiver::InitReceiverMode()
 	switch(eNewReceiverMode)
 	{
 	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
-		/* we have been in AM mode before, and have our own parameters but
-			* we might need some state from the DRM mode params
-			*/
 		switch(eReceiverMode)
 		{
 		case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
@@ -865,9 +851,6 @@ CDRMReceiver::InitReceiverMode()
  			AMParameters.rSigStrengthCorrection = Parameters.rSigStrengthCorrection;
  			AMParameters.FrontEndParameters = Parameters.FrontEndParameters;
  			AMParameters.GPSData = Parameters.GPSData;
-			AMParameters.sSerialNumber = Parameters.sSerialNumber;
-			AMParameters.sReceiverID  = Parameters.sReceiverID;
-			AMParameters.sDataFilesDirectory = Parameters.sDataFilesDirectory;
 			AMParameters.SetFrequency(Parameters.GetFrequency());
 			break;
 		case NONE:
@@ -887,23 +870,19 @@ CDRMReceiver::InitReceiverMode()
 		AMParameters.ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
 		AMParameters.ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
 
-		SoundInProxy.SetMode(AMDemodulation.GetDemodType());
+		//SoundInProxy.SetMode(eNewReceiverMode);
+		//AMDemodulation.SetDemodType(eNewReceiverMode);
 		break;
 
 	case DRM:
-		/* we have been in DRM mode before, and have our own parameters but
-		 * we might need some state from the AM mode params
-		 */
 		switch(eReceiverMode)
 		{
 		case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
 			/* AM to DRM switch - grab some common stuff */
+			DRMParameters.bRunThread = Parameters.bRunThread;
  			DRMParameters.rSigStrengthCorrection = Parameters.rSigStrengthCorrection;
  			DRMParameters.FrontEndParameters = Parameters.FrontEndParameters;
  			DRMParameters.GPSData = Parameters.GPSData;
-			DRMParameters.sSerialNumber = Parameters.sSerialNumber;
-			DRMParameters.sReceiverID  = Parameters.sReceiverID;
-			DRMParameters.sDataFilesDirectory = Parameters.sDataFilesDirectory;
 			DRMParameters.SetFrequency(Parameters.GetFrequency());
 			break;
 		case DRM:
@@ -978,7 +957,7 @@ CDRMReceiver::Start()
 
 	}
 	while (Parameters.bRunThread);
-
+cerr << "bRunThread is " << Parameters.bRunThread << " DRM " << DRMParameters.bRunThread << " AM " << AMParameters.bRunThread;
 	SoundInProxy.pSoundInInterface->Close();
 	pSoundOutInterface->Close();
 }
@@ -1575,59 +1554,59 @@ CDRMReceiver::saveSDCtoFile()
 void
 CDRMReceiver::LoadSettings(CSettings& s)
 {
-	string strMode = s.Get("0", "mode", string("DRMRX"));
 
-	if (strMode == "DRMRX")
+	/* Serial Number */
+	string sSerialNumber = s.Get("Receiver", "serialnumber", string(""));
+	if(sSerialNumber == "")
+	{
+		DRMParameters.GenerateRandomSerialNumber();
+	}
+	else
+        DRMParameters.sSerialNumber = sSerialNumber;
+    /* Receiver ID */
+	s.Put("Receiver", "serialnumber", DRMParameters.sSerialNumber);
+
+	DRMParameters.GenerateReceiverID();
+
+	/* Data files directory */
+	string sDataFilesDirectory = s.Get(
+	   "Receiver", "datafilesdirectory", DRMParameters.sDataFilesDirectory);
+	// remove trailing slash if there
+	size_t p = sDataFilesDirectory.find_last_not_of("/\\");
+	if(p != string::npos)
+		sDataFilesDirectory.erase(p+1);
+	s.Put("Receiver", "datafilesdirectory", Parameters.sDataFilesDirectory);
+
+	DRMParameters.sDataFilesDirectory = sDataFilesDirectory;
+
+    /* Copy to AM */
+    AMParameters.sSerialNumber = DRMParameters.sSerialNumber;
+    AMParameters.sReceiverID  = DRMParameters.sReceiverID;
+    AMParameters.sDataFilesDirectory = DRMParameters.sDataFilesDirectory;
+
+	string strMode = s.Get("Receiver", "modulation", string("DRM"));
+
+	if (strMode == "DRM")
 	{
 		eReceiverMode = DRM;
 		Parameters = DRMParameters;
 	}
 	else
 	{
+        eReceiverMode = AM;
 		Parameters = AMParameters;
-		if (strMode == "AMRX")
-			eReceiverMode = AM;
-		else if (strMode == "USBRX")
+		if (strMode == "USB")
 			eReceiverMode = USB;
-		else if (strMode == "LSBRX")
+		else if (strMode == "LSB")
 			eReceiverMode = LSB;
-		else if (strMode == "CWRX")
+		else if (strMode == "CW")
 			eReceiverMode = CW;
-		else if (strMode == "NBFMRX")
+		else if (strMode == "NBFM")
 			eReceiverMode = NBFM;
-		else if (strMode == "WBFMRX")
+		else if (strMode == "WBFM")
 			eReceiverMode = WBFM;
-		else
-			eReceiverMode = AM;
 	}
-
 	eNewReceiverMode = eReceiverMode;
-
-	size_t p;
-
-	int i;
-	/* Serial Number */
-	string sValue = s.Get("Receiver", "serialnumber");
-	if (sValue != "")
-	{
-		// Pad to a minimum of 6 characters
-		while (sValue.length() < 6)
-			sValue += "_";
-		Parameters.sSerialNumber = sValue;
-	}
-
-	Parameters.GenerateReceiverID();
-
-	/* Data files directory */
-	string sDataFilesDirectory = s.Get(
-	   "Receiver", "datafilesdirectory", Parameters.sDataFilesDirectory);
-	// remove trailing slash if there
-	p = sDataFilesDirectory.find_last_not_of("/\\");
-	if(p != string::npos)
-		sDataFilesDirectory.erase(p+1);
-
-	Parameters.sDataFilesDirectory = sDataFilesDirectory;
-	s.Put("Receiver", "datafilesdirectory", Parameters.sDataFilesDirectory);
 
 	/* Sync */
 	SetFreqInt(CChannelEstimation::ETypeIntFreq(s.Get("Receiver", "frequencyinterpolation", int(CChannelEstimation::FWIENER))));
@@ -1728,22 +1707,26 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	/* auto frequency acquisition */
 	AMDemodulation.EnableAutoFreqAcq(s.Get("AM Demodulation", "autofreqacq", 0));
 
-	AMDemodulation.SetDemodType(AM);
-	AMDemodulation.SetFilterBWHz(s.Get("AM Demodulation", "filterbwam", 10000));
-	AMDemodulation.SetDemodType(LSB);
-	AMDemodulation.SetFilterBWHz(s.Get("AM Demodulation", "filterbwlsb", 5000));
-	AMDemodulation.SetDemodType(USB);
-	AMDemodulation.SetFilterBWHz(s.Get("AM Demodulation", "filterbwusb", 5000));
-	AMDemodulation.SetDemodType(CW);
-	AMDemodulation.SetFilterBWHz(s.Get("AM Demodulation", "filterbwcw", 150));
+	AMDemodulation.SetFilterBWHz(AM, s.Get("AM Demodulation", "filterbwam", 10000));
+	AMDemodulation.SetFilterBWHz(LSB, s.Get("AM Demodulation", "filterbwlsb", 5000));
+	AMDemodulation.SetFilterBWHz(USB, s.Get("AM Demodulation", "filterbwusb", 5000));
+	AMDemodulation.SetFilterBWHz(CW, s.Get("AM Demodulation", "filterbwcw", 150));
 
 	/* FM Parameters */
-	AMDemodulation.SetDemodType(NBFM);
-	AMDemodulation.SetFilterBWHz(s.Get("FM Demodulation", "nbfilterbw", 6000));
-	AMDemodulation.SetDemodType(WBFM);
-	AMDemodulation.SetFilterBWHz(s.Get("FM Demodulation", "wbfilterbw", 80000));
+	AMDemodulation.SetFilterBWHz(NBFM, s.Get("FM Demodulation", "nbfilterbw", 6000));
+	AMDemodulation.SetFilterBWHz(WBFM, s.Get("FM Demodulation", "wbfilterbw", 80000));
 
-
+    switch(eReceiverMode)
+    {
+        case AM:
+        case LSB:
+        case USB:
+        case CW:
+        case NBFM:
+        case WBFM:
+            AMDemodulation.SetDemodType(eReceiverMode);
+            break;
+    }
 	/* upstream RSCI */
 	str = s.Get("command", "rsiin");
 	if(str != "")
@@ -1761,7 +1744,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 		upstreamRSCI.SetDestination(str);
 
 	/* downstream RSCI */
-	for(i = 0; i<MAX_NUM_RSI_SUBSCRIBERS; i++)
+	for(int i = 0; i<MAX_NUM_RSI_SUBSCRIBERS; i++)
 	{
 		stringstream ss;
 		ss << "rsiout" << i;
@@ -1787,7 +1770,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 		}
 	}
 
-	for (i=1; i<=MAX_NUM_RSI_PRESETS; i++)
+	for (int i=1; i<=MAX_NUM_RSI_PRESETS; i++)
 	{
 		// define presets in same format as --rsioutprofile
 		stringstream ss;
@@ -1869,32 +1852,36 @@ CDRMReceiver::LoadSettings(CSettings& s)
 void
 CDRMReceiver::SaveSettings(CSettings& s)
 {
+    s.Put("0", "mode", string("RX"));
+    string modn;
+
 	switch(eReceiverMode)
 	{
 	case DRM:
-		s.Put("0", "mode", string("DRMRX"));
+        modn = "DRM";
 		break;
 	case AM:
-		s.Put("0", "mode", string("AMRX"));
+        modn = "AM";
 		break;
 	case  USB:
-		s.Put("0", "mode", string("USBRX"));
+        modn = "USB";
 		break;
 	case  LSB:
-		s.Put("0", "mode", string("LSBRX"));
+        modn = "LSB";
 		break;
 	case  CW:
-		s.Put("0", "mode", string("CWRX"));
+        modn = "CW";
 		break;
 	case  NBFM:
-		s.Put("0", "mode", string("NBFMRX"));
+        modn = "NBFM";
 		break;
 	case  WBFM:
-		s.Put("0", "mode", string("WBFMRX"));
+        modn = "WBFM";
 		break;
 	case NONE:
 		;
 	}
+    s.Put("Receiver", "modulation", modn);
 
 	/* Receiver ------------------------------------------------------------- */
 

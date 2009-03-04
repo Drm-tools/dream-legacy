@@ -387,11 +387,21 @@ void CAMDemodulation::SetAcqFreq(const CReal rNewNormCenter)
 }
 
 void
-CAMDemodulation::SetFilterBWHz(const int iBw)
+CAMDemodulation::SetFilterBWHz(int iBw)
 {
 	Lock();
 	iFilterBWHz[eDemodType] = iBw;
 	SetBPFilter(CReal(iBw)/CReal(SOUNDCRD_SAMPLE_RATE));
+	Unlock();
+}
+
+void
+CAMDemodulation::SetFilterBWHz(EDemodulationType eType, int iBw)
+{
+	Lock();
+	iFilterBWHz[eType] = iBw;
+	if(eType == eDemodType) // otherwise it will be done when we change demod type
+        SetBPFilter(CReal(iBw)/CReal(SOUNDCRD_SAMPLE_RATE));
 	Unlock();
 }
 
@@ -402,7 +412,7 @@ CAMDemodulation::GetFilterBWHz()
 }
 
 int
-CAMDemodulation::GetFilterBWHz(const EDemodulationType eType)
+CAMDemodulation::GetFilterBWHz(EDemodulationType eType)
 {
 	Lock();
 	int v = iFilterBWHz[eType];
