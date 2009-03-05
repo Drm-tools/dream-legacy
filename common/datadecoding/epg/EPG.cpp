@@ -30,9 +30,9 @@
 #include "EPG.h"
 #include "epgutil.h"
 #include <QFile>
-#include <QTextstream>
+#include <QTextStream>
 #include <QStringList>
-#include <QRegexp>
+#include <QRegExp>
 #include <iostream>
 
 const

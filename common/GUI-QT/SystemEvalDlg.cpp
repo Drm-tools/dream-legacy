@@ -28,7 +28,7 @@
 
 #include "SystemEvalDlg.h"
 #include "DRMPlot.h"
-#include "../DRMReceiver.h"
+#include "../DrmReceiver.h"
 #include "../util/Settings.h"
 #include "../GPSReceiver.h"
 #include <QDateTime>

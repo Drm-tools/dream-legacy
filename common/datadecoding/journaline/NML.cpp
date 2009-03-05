@@ -55,7 +55,7 @@
 /// @file       NML.cpp
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: NML.cpp,v 1.2.2.4 2009/02/27 07:02:54 jcable Exp $
+/// $Id: NML.cpp,v 1.2.2.5 2009/03/05 23:14:15 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///
@@ -67,9 +67,13 @@
 //////////////////////////////////////////////////////////////////////////////
 
 #include <zlib.h>
+#include <cstdlib>
+#include <cstring>
 #include "NML.h"
 #include "Splitter.h"
 #include "cpplog.h"
+
+using namespace std;
 
 #ifdef _MSC_VER
 # pragma warning (disable: 4786)

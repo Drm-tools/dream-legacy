@@ -31,14 +31,14 @@
 #define _EPGDLG_H
 
 #include <QWidget>
-#include <QDatetime>
-#include <QPushbutton>
-#include <QSpinbox>
-#include <QCombobox>
-#include <QStringlist>
-#include <QMessagebox>
-#include <QTextbrowser>
-#include <q3listview.h>
+#include <QDateTime>
+#include <QPushButton>
+#include <QSpinBox>
+#include <QComboBox>
+#include <QStringList>
+#include <QMessageBox>
+#include <QTextBrowser>
+#include <Q3ListView>
 #include <QLabel>
 #include <QTimer>
 #include <QPixmap>

@@ -30,19 +30,19 @@
  *
 \******************************************************************************/
 
-#include <q3listview>
-#include <QFiledialog>
+#include <Q3ListView>
+#include <QFileDialog>
 #include <QLabel>
-#include <QLineedit>
-#include <QCombobox>
-#include <QPushbutton>
+#include <QLineEdit>
+#include <QComboBox>
+#include <QPushButton>
 #include <QValidator>
-#include <QMessagebox>
-#include <QCheckbox>
+#include <QMessageBox>
+#include <QCheckBox>
 #include <QSlider>
-#include <QRadiobutton>
-#include <q3buttongroup>
-#include <QTabwidget>
+#include <QRadioButton>
+#include <Q3ButtonGroup>
+#include <QTabWidget>
 #include <QPixmap>
 #include <QHideEvent>
 #include <QShowEvent>

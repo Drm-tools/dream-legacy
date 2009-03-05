@@ -31,10 +31,10 @@ using namespace std;
 #include <QLineEdit>
 #include <QShowEvent>
 #include <QShowEvent>
-#include <QStringlist>
+#include <QStringList>
 #include <QLabel>
-#include <QCombobox>
-#include <QPushbutton>
+#include <QComboBox>
+#include <QPushButton>
 #include <QValidator>
 #include "LatLongEditDlg.h"
 #include "ReceiverSettingsDlg.h"

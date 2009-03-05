@@ -58,6 +58,7 @@
 ***
 ***
 **/
+#include <cstring>
 #include "newsobject.h"
 #include "cpplog.h"
 

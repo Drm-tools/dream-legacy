@@ -29,23 +29,23 @@
 #ifndef _MULTIMEDIADLG_H
 #define _MULTIMEDIADLG_H
 
-#include <QTextbrowser>
+#include <QTextBrowser>
 #include <QImage>
 #include <QTimer>
-#include <QPushbutton>
+#include <QPushButton>
 #include <QLabel>
-#include <QMenubar>
+#include <QMenuBar>
 #include <q3popupmenu.h>
 #include <QLayout>
-#include <QFiledialog>
-#include <QDatetime>
-#include <QRegexp>
-#include <QTooltip>
-#include <QTextstream>
-#include <QFileinfo>
+#include <QFileDialog>
+#include <QDateTime>
+#include <QRegExp>
+#include <QToolTip>
+#include <QTextStream>
+#include <QFileInfo>
 #include <QDir>
-#include <QMessagebox>
-#include <QFont.h>
+#include <QMessageBox>
+#include <QFont>
 #include <QShowEvent>
 #include <QHideEvent>
 

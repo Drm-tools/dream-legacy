@@ -47,7 +47,7 @@
 #ifdef USE_QT_GUI
 # include <QApplication>
 # include <QThread>
-# include <QMessagebox>
+# include <QMessageBox>
 # include <QTranslator>
 # include "DRMMainWindow.h"
 # include "TransmDlg.h"

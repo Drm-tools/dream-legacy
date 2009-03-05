@@ -34,6 +34,7 @@
 #include "DABMOT.h"
 #include "../util/Utilities.h"
 #include <algorithm>
+#include <cstring>
 #include <cctype>
 #ifdef HAVE_LIBZ
 #include <zlib.h>

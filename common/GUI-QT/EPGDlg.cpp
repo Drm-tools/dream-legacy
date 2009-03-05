@@ -28,7 +28,7 @@
 \******************************************************************************/
 
 #include "EPGDlg.h"
-#include <QRegexp.h>
+#include <QRegExp>
 #include <QShowEvent>
 #include <QPixmap>
 #include <QHideEvent>

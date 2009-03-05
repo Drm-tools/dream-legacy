@@ -29,7 +29,7 @@
 \******************************************************************************/
 
 #include "AnalogDemDlg.h"
-#include <QMessagebox>
+#include <QMessageBox>
 #include <Q3PopupMenu>
 #include <QDateTime>
 #include <QToolTip>

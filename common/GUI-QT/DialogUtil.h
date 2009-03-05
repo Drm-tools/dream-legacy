@@ -31,10 +31,10 @@
 
 #include <q3popupmenu.h>
 #include <q3textview.h>
-#include <QMenubar>
+#include <QMenuBar>
 #include <QEvent>
 #include <QLabel>
-#include <QWhatsthis>
+#include <QWhatsThis>
 #include <QCustomEvent>
 
 #include "ui_AboutDlg.h"

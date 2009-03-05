@@ -25,20 +25,20 @@
  *
 \******************************************************************************/
 
-#include <q3header.h>
-#include <q3listview.h>
-#include <q3popupmenu.h>
+#include <Q3Header>
+#include <Q3ListView>
+#include <Q3PopupMenu>
 
 #include <QPixmap>
-#include <QRadiobutton>
+#include <QRadioButton>
 #include <QTimer>
-#include <QMessagebox>
-#include <QMenubar>
+#include <QMessageBox>
+#include <QMenuBar>
 #include <QLayout>
 #include <QLabel>
-#include <QFiledialog>
-#include <QTextstream>
-#include <QCheckbox>
+#include <QFileDialog>
+#include <QTextStream>
+#include <QCheckBox>
 #include <QThread>
 #include <QShowEvent>
 #include <QHideEvent>
