@@ -420,6 +420,7 @@ protected:
 
 	bool					bDoInitRun;
 	bool					bRestartFlag;
+	bool					bRunning;
 
 	_REAL					rInitResampleOffset;
 

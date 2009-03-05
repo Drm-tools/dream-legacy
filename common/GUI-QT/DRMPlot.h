@@ -39,6 +39,7 @@
 #include "../Parameter.h"
 #include "../util/Settings.h"
 #include <deque>
+#include <map>
 
 /* Definitions ****************************************************************/
 #define GUI_CONTROL_UPDATE_WATERFALL			100	/* Milliseconds */
@@ -86,6 +87,15 @@
 
 
 /* Classes ********************************************************************/
+class PlotDetails
+{
+public:
+    int timerInterval; // milliseconds
+    QString aboutText;
+    //void start()=0;
+    //void stop()=0;
+};
+
 class SpectrogramData: public QwtRasterData
 {
 public:
@@ -146,8 +156,8 @@ public:
 	void UpdateChartNow();
 	EPlotType GetChartType() const {return CurrentChartType;}
 	void Update() {OnTimerChart();}
-	void start() { TimerChart.start();}
-	void stop() { TimerChart.stop();}
+	void start();
+	void stop();
 	void load(const CSettings& s, const string& section);
     bool save(CSettings& s, const string& section);
 
@@ -195,8 +205,6 @@ protected:
     void ConstellationPlotDefaults(const QString& title, double limit, int n);
     QwtPlotCurve* ScatterCurve(const QString& title, const QwtSymbol& s);
 
-	void AddWhatsThisHelpChar(const EPlotType NCharType);
-
 	/* Colors */
 	QColor			MainPenColorPlot;
 	QColor			MainPenColorConst;
@@ -230,6 +238,7 @@ protected:
 
     QwtPlot*        plot;
     int             styleId;
+    map<int,PlotDetails> plotDetails;
 
 public slots:
 	void OnClicked(const QwtDoublePoint& e);

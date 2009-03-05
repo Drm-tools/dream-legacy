@@ -270,7 +270,6 @@ CParameter::CParameter():
  ReceiveStatus(),
  FrontEndParameters(),
  AltFreqSign(),
- bRunThread(false),
  bUsingMultimedia(false),
  CellMappingTable(),
  GPSData(), Measurements(),
@@ -337,7 +336,6 @@ CParameter::CParameter(const CParameter& p):
  ReceiveStatus(p.ReceiveStatus),
  FrontEndParameters(p.FrontEndParameters),
  AltFreqSign(p.AltFreqSign),
- bRunThread(p.bRunThread),
  bUsingMultimedia(p.bUsingMultimedia),
  CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
  GPSData(p.GPSData), Measurements(p.Measurements),
@@ -403,7 +401,6 @@ CParameter& CParameter::operator=(const CParameter& p)
 	ReceiveStatus = p.ReceiveStatus;
 	FrontEndParameters = p.FrontEndParameters;
 	AltFreqSign = p.AltFreqSign;
-	bRunThread = p.bRunThread;
 	bUsingMultimedia = p.bUsingMultimedia;
 	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup); // don't copy CMatrix
 	GPSData = p.GPSData;

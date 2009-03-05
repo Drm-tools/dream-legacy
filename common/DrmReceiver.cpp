@@ -61,7 +61,8 @@ MSCDecBuf(MAX_NUM_STREAMS), MSCUseBuf(MAX_NUM_STREAMS),
 MSCSendBuf(MAX_NUM_STREAMS), iAcquRestartCnt(0),
 iAcquDetecCnt(0), iGoodSignCnt(0), eReceiverMode(DRM),
 eNewReceiverMode(DRM), iAudioStreamID(STREAM_ID_NOT_USED),
-iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(false), bRestartFlag(false),
+iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(false),
+bRestartFlag(false),bRunning(false),
 rInitResampleOffset((_REAL) 0.0),
 iFreqkHz(0),
 time_keeper(0)
@@ -503,7 +504,7 @@ CDRMReceiver::Run()
 	}
 
 	/* decoding */
-	while (bEnoughData && Parameters.bRunThread)
+	while (bEnoughData && bRunning)
 	{
 		/* Init flag */
 		bEnoughData = false;
@@ -847,7 +848,6 @@ CDRMReceiver::InitReceiverMode()
 			break;
 		case DRM:
 			/* DRM to AM switch - grab some common stuff */
-			AMParameters.bRunThread = Parameters.bRunThread;
  			AMParameters.rSigStrengthCorrection = Parameters.rSigStrengthCorrection;
  			AMParameters.FrontEndParameters = Parameters.FrontEndParameters;
  			AMParameters.GPSData = Parameters.GPSData;
@@ -873,13 +873,11 @@ CDRMReceiver::InitReceiverMode()
 		//SoundInProxy.SetMode(eNewReceiverMode);
 		//AMDemodulation.SetDemodType(eNewReceiverMode);
 		break;
-
 	case DRM:
 		switch(eReceiverMode)
 		{
 		case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
 			/* AM to DRM switch - grab some common stuff */
-			DRMParameters.bRunThread = Parameters.bRunThread;
  			DRMParameters.rSigStrengthCorrection = Parameters.rSigStrengthCorrection;
  			DRMParameters.FrontEndParameters = Parameters.FrontEndParameters;
  			DRMParameters.GPSData = Parameters.GPSData;
@@ -949,15 +947,14 @@ void
 CDRMReceiver::Start()
 {
 	/* Set run flag so that the thread can work */
-	Parameters.bRunThread = true;
+	bRunning = true;
 
 	do
 	{
 		Run();
 
 	}
-	while (Parameters.bRunThread);
-cerr << "bRunThread is " << Parameters.bRunThread << " DRM " << DRMParameters.bRunThread << " AM " << AMParameters.bRunThread;
+	while (bRunning);
 	SoundInProxy.pSoundInInterface->Close();
 	pSoundOutInterface->Close();
 }
@@ -965,7 +962,7 @@ cerr << "bRunThread is " << Parameters.bRunThread << " DRM " << DRMParameters.bR
 void
 CDRMReceiver::Stop()
 {
-	Parameters.bRunThread = false;
+	bRunning = false;
 }
 
 void

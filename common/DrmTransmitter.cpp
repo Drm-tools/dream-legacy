@@ -35,7 +35,7 @@
 /* Implementation *************************************************************/
 CDRMTransmitter::CDRMTransmitter():
     CDRMTransmitterInterface(),
-	TransmParam(), eOpMode(T_TX),
+	TransmParam(), eOpMode(T_TX), bRunning(false),
 	strMDIinAddr(), MDIoutAddr(),
 	Encoder(), Modulator(),
 	MDIIn(), DecodeMDI(), pMDIOut(new CMDIOut())
@@ -154,7 +154,7 @@ CDRMTransmitter::SetReadFromFile(const string & strNFN)
 void
 CDRMTransmitter::Stop()
 {
-	TransmParam.bRunThread = false;
+	bRunning = false;
 }
 
 void CDRMTransmitter::Start()
@@ -207,12 +207,12 @@ void CDRMTransmitter::Start()
         }
 
         /* Set run flag */
-        TransmParam.bRunThread = true;
+        bRunning = true;
         cout << "Tx: starting, in:" << (MDIIn.GetInEnabled()?"MDI":"Encoder")
              << ", out: " << (pMDIOut->GetOutEnabled()?"MDI":"COFDM")
              << endl; cout.flush();
 
-		while (TransmParam.bRunThread)
+		while (bRunning)
 		{
 			if(eOpMode == T_MOD)
 			{

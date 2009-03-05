@@ -200,11 +200,140 @@ CDRMPlot::CDRMPlot(QwtPlot *p, CParameter* param) :
 	connect(&TimerChart, SIGNAL(timeout()), this, SLOT(OnTimerChart()));
 
 	TimerChart.stop();
+
+	PlotDetails pd;
+	pd.aboutText = 	tr("<b>Input PSD:</b> This plot shows the "
+			"estimated power spectral density (PSD) of the input signal. The "
+			"PSD is estimated by averaging some Hamming Window weighted "
+			"Fourier transformed blocks of the input signal samples. The "
+			"dashed vertical line shows the estimated DC frequency.");
+	pd.timerInterval = GUI_CONTROL_UPDATE_TIME_FAST;
+	plotDetails[INPUT_SIG_PSD] = pd;
+	plotDetails[INPUT_SIG_PSD_ANALOG] = pd;
+
+	pd.aboutText = 	tr("<b>Waterfall Display of Input Spectrum:</b> "
+			"The input spectrum is displayed as a waterfall type. The "
+			"different colors represent different levels.");
+	pd.timerInterval = GUI_CONTROL_UPDATE_WATERFALL;
+	plotDetails[INP_SPEC_WATERF] = pd;
+
+	pd.aboutText = 	tr("<b>SNR Spectrum (Weighted MER on MSC Cells):</b> "
+			"This plot shows the Weighted MER on MSC cells for each carrier "
+			"separately.");
+	pd.timerInterval = GUI_CONTROL_UPDATE_TIME_FAST;
+	plotDetails[SNR_SPECTRUM] = pd;
+
+	pd.aboutText = 	tr("<b>Shifted PSD:</b> This plot shows the "
+			"estimated Power Spectrum Density (PSD) of the input signal. The "
+			"DC frequency (red dashed vertical line) is fixed at 6 kHz. If "
+			"the frequency offset acquisition was successful, the rectangular "
+			"DRM spectrum should show up with a center frequency of 6 kHz. "
+			"This plot represents the frequency synchronized OFDM spectrum. "
+			"If the frequency synchronization was successful, the useful "
+			"signal really shows up only inside the actual DRM bandwidth "
+			"since the side loops have in this case only energy between the "
+			"samples in the frequency domain. On the sample positions outside "
+			"the actual DRM spectrum, the DRM signal has zero crossings "
+			"because of the orthogonality. Therefore this spectrum represents "
+			"NOT the actual spectrum but the \"idealized\" OFDM spectrum.");
+	pd.timerInterval = GUI_CONTROL_UPDATE_TIME_FAST;
+	plotDetails[POWER_SPEC_DENSITY] = pd;
+
+	pd.aboutText = 	tr("<b>Impulse Response:</b> This plot shows "
+			"the estimated Impulse Response (IR) of the channel based on the "
+			"channel estimation. It is the averaged, Hamming Window weighted "
+			"Fourier back transformation of the transfer function. The length "
+			"of PDS estimation and time synchronization tracking is based on "
+			"this function. The two red dashed vertical lines show the "
+			"beginning and the end of the guard-interval. The two black dashed "
+			"vertical lines show the estimated beginning and end of the PDS of "
+			"the channel (derived from the averaged impulse response "
+			"estimation). If the \"First Peak\" timing tracking method is "
+			"chosen, a bound for peak estimation (horizontal dashed red line) "
+			"is shown. Only peaks above this bound are used for timing "
+			"estimation.");
+	pd.timerInterval = GUI_CONTROL_UPDATE_TIME_FAST;
+	plotDetails[AVERAGED_IR] = pd;
+
+	pd.aboutText = 	tr("<b>Transfer Function / Group Delay:</b> "
+			"This plot shows the squared magnitude and the group delay of "
+			"the estimated channel at each sub-carrier.");
+	pd.timerInterval = GUI_CONTROL_UPDATE_TIME_FAST;
+	plotDetails[TRANSFERFUNCTION] = pd;
+
+	pd.aboutText = 	tr("<b>Input Spectrum:</b> This plot shows the "
+			"Fast Fourier Transformation (FFT) of the input signal. This plot "
+			"is active in both modes, analog and digital. There is no "
+			"averaging applied. The screen shot of the Evaluation Dialog shows "
+			"the significant shape of a DRM signal (almost rectangular). The "
+			"dashed vertical line shows the estimated DC frequency. This line "
+			"is very important for the analog AM demodulation. Each time a "
+			"new carrier frequency is acquired, the red line shows the "
+			"selected AM spectrum. If more than one AM spectrums are within "
+			"the sound card frequency range, the strongest signal is chosen.");
+	pd.timerInterval = GUI_CONTROL_UPDATE_TIME;
+	plotDetails[INPUTSPECTRUM_NO_AV] = pd;
+
+	pd.aboutText = 	tr("<b>Audio Spectrum:</b> This plot shows the "
+			"averaged audio spectrum of the currently played audio. With this "
+			"plot the actual audio bandwidth can easily determined. Since a "
+			"linear scale is used for the frequency axis, most of the energy "
+			"of the signal is usually concentrated on the far left side of the "
+			"spectrum.");
+	pd.timerInterval = GUI_CONTROL_UPDATE_TIME;
+	plotDetails[AUDIO_SPECTRUM] = pd;
+
+	pd.aboutText = 	tr("<b>SNR History:</b> "
+			"The history of the values for the "
+			"SNR and correctly decoded audio blocks is shown. The maximum "
+			"achievable number of correctly decoded audio blocks per DRM "
+			"frame is 10 or 5 depending on the audio sample rate (24 kHz "
+			"or 12 kHz AAC core bandwidth).");
+	pd.timerInterval = GUI_CONTROL_UPDATE_TIME;
+	plotDetails[SNR_AUDIO_HIST] = pd;
+
+	pd.aboutText = 	tr("<b>Frequency Offset / Sample Rate Offset History:"
+			"</b> The history "
+			"of the values for frequency offset and sample rate offset "
+			"estimation is shown. If the frequency offset drift is very small, "
+			"this is an indication that the analog front end is of high "
+			"quality.");
+	pd.timerInterval = GUI_CONTROL_UPDATE_TIME;
+	plotDetails[FREQ_SAM_OFFS_HIST] = pd;
+
+	pd.aboutText = 	tr("<b>Doppler / Delay History:</b> "
+			"The history of the values for the "
+			"Doppler and Impulse response length is shown. Large Doppler "
+			"values might be responsable for audio drop-outs.");
+	pd.timerInterval = GUI_CONTROL_UPDATE_TIME;
+	plotDetails[DOPPLER_DELAY_HIST] = pd;
+
+	pd.aboutText = 	tr("<b>FAC, SDC, MSC:</b> The plots show the "
+			"constellations of the FAC, SDC and MSC logical channel of the DRM "
+			"stream. Depending on the current transmitter settings, the SDC "
+			"and MSC can have 4-QAM, 16-QAM or 64-QAM modulation.");
+	pd.timerInterval = GUI_CONTROL_UPDATE_TIME;
+	plotDetails[FAC_CONSTELLATION] = pd;
+	plotDetails[SDC_CONSTELLATION] = pd;
+	plotDetails[MSC_CONSTELLATION] = pd;
+	plotDetails[ALL_CONSTELLATION] = pd;
 }
 
 CDRMPlot::~CDRMPlot()
 {
     // TODO - do we need stuff here or does QT do it all ?
+}
+
+void CDRMPlot::start()
+{
+	startPlot(CurrentChartType);
+    TimerChart.start();
+}
+
+void CDRMPlot::stop()
+{
+    TimerChart.stop();
+	endPlot(CurrentChartType);
 }
 
 void CDRMPlot::load(const CSettings& s, const string& section)
@@ -244,6 +373,12 @@ bool CDRMPlot::save(CSettings& s, const string& section)
         return true;
     }
     return false;
+}
+
+void CDRMPlot::SetupChart(const EPlotType eNewType)
+{
+    /* Set internal variable */
+    WantedChartType = eNewType;
 }
 
 void CDRMPlot::OnTimerChart()
@@ -292,6 +427,9 @@ void CDRMPlot::SetupChartNow()
 {
     endPlot(CurrentChartType);
     startPlot(WantedChartType);
+
+	plot->setWhatsThis(plotDetails[WantedChartType].aboutText);
+    TimerChart.setInterval(plotDetails[WantedChartType].timerInterval);
 
     plot->clear();
 
@@ -435,71 +573,11 @@ void CDRMPlot::UpdateChartNow()
     plot->replot();
 }
 
-void CDRMPlot::SetupChart(const EPlotType eNewType)
-{
-	if (eNewType == NONE_OLD)
-        return;
-
-    if(eNewType == INP_SPEC_WATERF)
-    {
-    }
-    {
-        if(spectrogram)
-        {
-            spectrogram->detach();
-            spectrogram = NULL;
-        }
-    }
-
-    /* Set internal variable */
-    WantedChartType = eNewType;
-
-    /* Update help text connected with the plot widget */
-    AddWhatsThisHelpChar(eNewType);
-
-    /* Set up timer */
-    switch (eNewType)
-    {
-    case INP_SPEC_WATERF:
-        /* Very fast update */
-        TimerChart.changeInterval(GUI_CONTROL_UPDATE_WATERFALL);
-        break;
-
-    case AVERAGED_IR:
-    case TRANSFERFUNCTION:
-    case POWER_SPEC_DENSITY:
-    case INPUT_SIG_PSD:
-    case INPUT_SIG_PSD_ANALOG:
-    case SNR_SPECTRUM:
-        /* Fast update */
-        TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME_FAST);
-        break;
-
-    case FAC_CONSTELLATION:
-    case SDC_CONSTELLATION:
-    case MSC_CONSTELLATION:
-    case ALL_CONSTELLATION:
-    case INPUTSPECTRUM_NO_AV:
-    case AUDIO_SPECTRUM:
-    case FREQ_SAM_OFFS_HIST:
-    case DOPPLER_DELAY_HIST:
-    case SNR_AUDIO_HIST:
-        /* Slow update of plot */
-        TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME);
-        break;
-
-    case NONE_OLD:
-        break;
-    }
-    SetupChartNow();
-}
-
-
 void CDRMPlot::startPlot(EPlotType e)
 {
-
-    const _REAL rDRMFrameDur = GetFrameDuration();
+cerr << "startPlot(" << int(e) << ")" << endl;
     Parameters.Lock();
+    const _REAL rDRMFrameDur = GetFrameDuration();
 
 	switch (e)
 	{
@@ -568,6 +646,7 @@ void CDRMPlot::startPlot(EPlotType e)
 
 void CDRMPlot::endPlot(EPlotType e)
 {
+cerr << "endPlot(" << int(e) << ")" << endl;
 
     Parameters.Lock();
 	switch (e)
@@ -589,6 +668,7 @@ void CDRMPlot::endPlot(EPlotType e)
 		break;
 	case INP_SPEC_WATERF:
         Parameters.Measurements.InputSpectrum.unsubscribe();
+        spectrogram->detach();
 		break;
 	case INPUT_SIG_PSD:
         Parameters.Measurements.PSD.unsubscribe();
@@ -1501,8 +1581,10 @@ void CDRMPlot::SetInpSpecWaterf()
 
     // TODO check with cvs plot->Layout()->setAlignCanvasToScales(true);
     spectrogramData.setHeight(CanvSize.height());
-    spectrogram = new QwtPlotSpectrogram();
+    if(spectrogram == NULL)
+        spectrogram = new QwtPlotSpectrogram();
     spectrogram->attach(plot);
+    cerr << "SetInpSpecWaterf" << endl;
 }
 
 void CDRMPlot::UpdateInpSpecWaterf()
@@ -1511,6 +1593,11 @@ void CDRMPlot::UpdateInpSpecWaterf()
     Parameters.Lock();
     Parameters.Measurements.InputSpectrum.get(vecrData);
     Parameters.Unlock();
+    if(vecrData.size()==0)
+    {
+        cerr << "InpSpecWaterf - no data" << endl;
+        return;
+    }
     _REAL rStart = 0.0;
     _REAL rStep = _REAL(SOUNDCRD_SAMPLE_RATE) / _REAL(vecrData.size()) / 2000.0;
     vector<_REAL> vecrScale(vecrData.size());
@@ -1624,158 +1711,4 @@ void CDRMPlot::OnClicked(const QwtDoublePoint& p)
 		/* Emit signal containing normalized selected frequency */
 		emit xAxisValSet(dFreq / dMaxxBottom);
 	}
-}
-
-void CDRMPlot::AddWhatsThisHelpChar(const EPlotType NCharType)
-{
-	QString strCurPlotHelp;
-
-	switch (NCharType)
-	{
-	case AVERAGED_IR:
-		/* Impulse Response */
-		strCurPlotHelp =
-			tr("<b>Impulse Response:</b> This plot shows "
-			"the estimated Impulse Response (IR) of the channel based on the "
-			"channel estimation. It is the averaged, Hamming Window weighted "
-			"Fourier back transformation of the transfer function. The length "
-			"of PDS estimation and time synchronization tracking is based on "
-			"this function. The two red dashed vertical lines show the "
-			"beginning and the end of the guard-interval. The two black dashed "
-			"vertical lines show the estimated beginning and end of the PDS of "
-			"the channel (derived from the averaged impulse response "
-			"estimation). If the \"First Peak\" timing tracking method is "
-			"chosen, a bound for peak estimation (horizontal dashed red line) "
-			"is shown. Only peaks above this bound are used for timing "
-			"estimation.");
-		break;
-
-	case TRANSFERFUNCTION:
-		/* Transfer Function */
-		strCurPlotHelp =
-			tr("<b>Transfer Function / Group Delay:</b> "
-			"This plot shows the squared magnitude and the group delay of "
-			"the estimated channel at each sub-carrier.");
-		break;
-
-	case FAC_CONSTELLATION:
-	case SDC_CONSTELLATION:
-	case MSC_CONSTELLATION:
-	case ALL_CONSTELLATION:
-		/* Constellations */
-		strCurPlotHelp =
-			tr("<b>FAC, SDC, MSC:</b> The plots show the "
-			"constellations of the FAC, SDC and MSC logical channel of the DRM "
-			"stream. Depending on the current transmitter settings, the SDC "
-			"and MSC can have 4-QAM, 16-QAM or 64-QAM modulation.");
-		break;
-
-	case POWER_SPEC_DENSITY:
-		/* Shifted PSD */
-		strCurPlotHelp =
-			tr("<b>Shifted PSD:</b> This plot shows the "
-			"estimated Power Spectrum Density (PSD) of the input signal. The "
-			"DC frequency (red dashed vertical line) is fixed at 6 kHz. If "
-			"the frequency offset acquisition was successful, the rectangular "
-			"DRM spectrum should show up with a center frequency of 6 kHz. "
-			"This plot represents the frequency synchronized OFDM spectrum. "
-			"If the frequency synchronization was successful, the useful "
-			"signal really shows up only inside the actual DRM bandwidth "
-			"since the side loops have in this case only energy between the "
-			"samples in the frequency domain. On the sample positions outside "
-			"the actual DRM spectrum, the DRM signal has zero crossings "
-			"because of the orthogonality. Therefore this spectrum represents "
-			"NOT the actual spectrum but the \"idealized\" OFDM spectrum.");
-		break;
-
-	case SNR_SPECTRUM:
-		/* SNR Spectrum (Weighted MER on MSC Cells) */
-		strCurPlotHelp =
-			tr("<b>SNR Spectrum (Weighted MER on MSC Cells):</b> "
-			"This plot shows the Weighted MER on MSC cells for each carrier "
-			"separately.");
-		break;
-
-	case INPUTSPECTRUM_NO_AV:
-		/* Input Spectrum */
-		strCurPlotHelp =
-			tr("<b>Input Spectrum:</b> This plot shows the "
-			"Fast Fourier Transformation (FFT) of the input signal. This plot "
-			"is active in both modes, analog and digital. There is no "
-			"averaging applied. The screen shot of the Evaluation Dialog shows "
-			"the significant shape of a DRM signal (almost rectangular). The "
-			"dashed vertical line shows the estimated DC frequency. This line "
-			"is very important for the analog AM demodulation. Each time a "
-			"new carrier frequency is acquired, the red line shows the "
-			"selected AM spectrum. If more than one AM spectrums are within "
-			"the sound card frequency range, the strongest signal is chosen.");
-		break;
-
-	case INPUT_SIG_PSD:
-	case INPUT_SIG_PSD_ANALOG:
-		/* Input PSD */
-		strCurPlotHelp =
-			tr("<b>Input PSD:</b> This plot shows the "
-			"estimated power spectral density (PSD) of the input signal. The "
-			"PSD is estimated by averaging some Hamming Window weighted "
-			"Fourier transformed blocks of the input signal samples. The "
-			"dashed vertical line shows the estimated DC frequency.");
-		break;
-
-	case AUDIO_SPECTRUM:
-		/* Audio Spectrum */
-		strCurPlotHelp =
-			tr("<b>Audio Spectrum:</b> This plot shows the "
-			"averaged audio spectrum of the currently played audio. With this "
-			"plot the actual audio bandwidth can easily determined. Since a "
-			"linear scale is used for the frequency axis, most of the energy "
-			"of the signal is usually concentrated on the far left side of the "
-			"spectrum.");
-		break;
-
-	case FREQ_SAM_OFFS_HIST:
-		/* Frequency Offset / Sample Rate Offset History */
-		strCurPlotHelp =
-			tr("<b>Frequency Offset / Sample Rate Offset History:"
-			"</b> The history "
-			"of the values for frequency offset and sample rate offset "
-			"estimation is shown. If the frequency offset drift is very small, "
-			"this is an indication that the analog front end is of high "
-			"quality.");
-		break;
-
-	case DOPPLER_DELAY_HIST:
-		/* Doppler / Delay History */
-		strCurPlotHelp =
-			tr("<b>Doppler / Delay History:</b> "
-			"The history of the values for the "
-			"Doppler and Impulse response length is shown. Large Doppler "
-			"values might be responsable for audio drop-outs.");
-		break;
-
-	case SNR_AUDIO_HIST:
-		/* SNR History */
-		strCurPlotHelp =
-			tr("<b>SNR History:</b> "
-			"The history of the values for the "
-			"SNR and correctly decoded audio blocks is shown. The maximum "
-			"achievable number of correctly decoded audio blocks per DRM "
-			"frame is 10 or 5 depending on the audio sample rate (24 kHz "
-			"or 12 kHz AAC core bandwidth).");
-		break;
-
-	case INP_SPEC_WATERF:
-		/* Waterfall Display of Input Spectrum */
-		strCurPlotHelp =
-			tr("<b>Waterfall Display of Input Spectrum:</b> "
-			"The input spectrum is displayed as a waterfall type. The "
-			"different colors represent different levels.");
-		break;
-
-	case NONE_OLD:
-		break;
-	}
-
-	/* Main plot */
-	plot->setWhatsThis(strCurPlotHelp);
 }

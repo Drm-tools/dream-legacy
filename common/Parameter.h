@@ -972,7 +972,7 @@ class CParameter : public CDumpable
 
 	_REAL GetNominalBandwidth();
 	_REAL GetSysToNomBWCorrFact();
-	bool bRunThread;
+	//bool bRunThread;
 	bool bUsingMultimedia;
 
 	CCellMappingTable CellMappingTable;

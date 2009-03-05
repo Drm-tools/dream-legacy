@@ -40,7 +40,7 @@ public:
     CMeasure() { reset(); }
     virtual ~CMeasure() {}
     void subscribe() { subscriptions++; }
-    void unsubscribe() { --subscriptions; }
+    void unsubscribe() { --subscriptions; if(subscriptions<0) subscriptions=0; }
     bool wanted() const { return subscriptions>0; }
     void setAvailable() { available=true; }
     bool getAvailable() { return available; }
@@ -49,7 +49,7 @@ public:
     void invalidate() { validdata=false; }
 protected:
     bool available, validdata;
-    unsigned int subscriptions;
+    int subscriptions;
 };
 
 template<typename T>

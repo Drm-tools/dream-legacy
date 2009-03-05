@@ -80,12 +80,12 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	Q_CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
 		new CSoundCardSelMenu(Receiver.GetSoundInInterface(), Receiver.GetSoundOutInterface(), this));
-	pSettingsMenu->insertItem(tr("&DRM (digital)"), this,
-		SLOT(OnSwitchToDRM()), Qt::CTRL+Qt::Key_D);
-	pSettingsMenu->insertItem(tr("New &AM Acquisition"), this,
-		SLOT(OnNewAMAcquisition()), Qt::CTRL+Qt::Key_A);
-	pSettingsMenu->insertItem(tr("&Receiver settings..."), this,
-		SLOT(OnViewReceiverSettingsDlg()));
+	pSettingsMenu->insertItem(tr("&DRM (digital)"),
+        this, SLOT(OnSwitchToDRM()), Qt::CTRL+Qt::Key_D);
+	pSettingsMenu->insertItem(tr("New &AM Acquisition"),
+        this, SLOT(OnNewAMAcquisition()), Qt::CTRL+Qt::Key_A);
+	pSettingsMenu->insertItem(tr("&Receiver settings..."),
+        pReceiverSettingsDlg, SLOT(show()));
 
 	/* Main menu bar -------------------------------------------------------- */
 	QMenuBar* pMenu = new QMenuBar(this);
@@ -164,11 +164,6 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     Timer.stop();
     TimerPLLPhaseDial.stop();
     plot->stop();
-}
-
-void AnalogDemDlg::OnViewReceiverSettingsDlg()
-{
-	pReceiverSettingsDlg->show();
 }
 
 void AnalogDemDlg::showEvent(QShowEvent*)

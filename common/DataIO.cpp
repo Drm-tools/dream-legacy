@@ -360,8 +360,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 
 		if (iCounter == iNumSimBlocks)
 		{
-			TransmParam.bRunThread = false;
-			iCounter = 0;
+            throw string("simulation ended");
 		}
 		break;
 
@@ -434,8 +433,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 			/* A minimum simulation time must be elapsed */
 			if (iCounter >= iMinNumBlocks)
 			{
-				TransmParam.bRunThread = false;
-				iCounter = 0;
+			    throw string("simulation ended");
 			}
 		}
 		break;

@@ -120,12 +120,11 @@ void CDRMSimulation::Run()
 	Init();
 
 	/* Set run flag */
-	Param.bRunThread = true;
 	MSC_FAC_SDC_MapBuf[0] = &IntlBuf;
 	MSC_FAC_SDC_MapBuf[1] = &FACMapBuf;
 	MSC_FAC_SDC_MapBuf[2] = &SDCMapBuf;
 
-	while (Param.bRunThread)
+	while (true) // we will be thrown out of this at the end of the run
 	{
 		/**********************************************************************\
 		* Transmitter														   *

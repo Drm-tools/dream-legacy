@@ -126,7 +126,6 @@ public slots:
 	void OnButtonWaterfall();
 	void OnButtonAMSS();
 	void OnSwitchToDRM();
-	void OnViewReceiverSettingsDlg();
 
 signals:
 	void SwitchToDRM();

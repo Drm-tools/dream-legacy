@@ -88,6 +88,8 @@ protected:
 
 	CParameter				TransmParam;
 	ETxOpMode				eOpMode;
+	bool                    bRunning;
+
 	string					strMDIinAddr;
 	vector<string>			MDIoutAddr;
 
