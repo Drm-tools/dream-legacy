@@ -34,6 +34,7 @@
 #include <fstream>
 #include <sstream>
 #include <map>
+#include <algorithm>
 
 #define ALSA_PCM_NEW_HW_PARAMS_API
 #define ALSA_PCM_NEW_SW_PARAMS_API
