@@ -206,7 +206,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 	bool bMeasurePSD = Parameter.Measurements.PSD.wanted();
 	bool bMeasureInputSpectrum = Parameter.Measurements.InputSpectrum.wanted();
 	Parameter.Unlock();
-//cerr << "CReceiveData PSD: " << bMeasurePSD << " InputSpectrum: " << bMeasureInputSpectrum << endl;
+
 	/* OPH: update free-running symbol counter */
 	iFreeSymbolCounter++;
 	if (iFreeSymbolCounter >= iNumSymPerFrame)

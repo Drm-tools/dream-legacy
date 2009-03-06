@@ -156,7 +156,7 @@ void CTagItemDecoderRpir::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 	if (iLen == 0)
 	{
-		pParameter->Measurements.PIR.reset();
+		pParameter->Measurements.PIR.invalidate();
 		return;
 	}
 

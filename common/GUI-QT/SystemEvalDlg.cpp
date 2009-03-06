@@ -532,8 +532,8 @@ void SystemEvalDlg::hidePlots()
     plot->stop();
 	plot->save(Settings, "System Evaluation Dialog");
 
-	int n = Settings.Get("System Evaluation Dialog", "numchartwin", 0);
-	for (size_t i = 0; i < n; i++)
+	int n = Settings.Get("System Evaluation Dialog", "numchartwin", int(0));
+	for (int i = 0; i < n; i++)
 	{
         stringstream s;
         s << "Chart Window " << i;

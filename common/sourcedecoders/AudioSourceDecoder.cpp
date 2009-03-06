@@ -503,7 +503,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	bGoodValues = false;
 
 	ReceiverParam.Lock();
-	ReceiverParam.Measurements.audioFrameStatus.reset();
+	ReceiverParam.Measurements.audioFrameStatus.invalidate();
 	ReceiverParam.Unlock();
 	/* Check if something went wrong in the initialization routine */
 	if (DoNotProcessData == true)
@@ -1314,12 +1314,17 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 		/* Clear reverberation object */
 		AudioRev.Clear();
 
-		/* With this parameter we define the maximum lenght of the output
+		/* With this parameter we define the maximum length of the output
 		   buffer. The cyclic buffer is only needed if we do a sample rate
 		   correction due to a difference compared to the transmitter. But for
 		   now we do not correct and we could stay with a single buffer
 		   Maybe TODO: sample rate correction to avoid audio dropouts */
 		iMaxOutputBlockSize = iMaxLenResamplerOutput;
+
+        /* Reset value used for the history because if an audio service was selected
+           but then only a data service is selected, the value would remain with the
+           last state */
+        ReceiverParam.Measurements.CDAudHist.invalidate();
 
 		ReceiverParam.Unlock();
 	}

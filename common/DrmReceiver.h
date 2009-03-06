@@ -365,9 +365,7 @@ protected:
 	CDownstreamDI			downstreamRSCI;
 
 	/* Parameters */
-	CParameter				DRMParameters;
-	CParameter				AMParameters;
-	CParameter&				Parameters;
+	CParameter				Parameters;
 
 	/* Buffers */
 	CSingleBuffer<_REAL>			AMDataBuf;

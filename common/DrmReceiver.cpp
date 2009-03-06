@@ -55,8 +55,7 @@ ChannelEstimation(),
 UtilizeFACData(), UtilizeSDCData(), MSCDemultiplexer(),
 AudioSourceDecoder(),
 upstreamRSCI(), DecodeRSIMDI(), downstreamRSCI(),
-DRMParameters(), AMParameters(), Parameters(DRMParameters),
-RSIPacketBuf(),
+Parameters(),RSIPacketBuf(),
 MSCDecBuf(MAX_NUM_STREAMS), MSCUseBuf(MAX_NUM_STREAMS),
 MSCSendBuf(MAX_NUM_STREAMS), iAcquRestartCnt(0),
 iAcquDetecCnt(0), iGoodSignCnt(0), eReceiverMode(DRM),
@@ -67,8 +66,7 @@ rInitResampleOffset((_REAL) 0.0),
 iFreqkHz(0),
 time_keeper(0)
 {
-	AMParameters.SetReceiver(this);
-	DRMParameters.SetReceiver(this);
+	Parameters.SetReceiver(this);
 	downstreamRSCI.SetReceiver(this);
 	SoundInProxy.pDrmRec = this;
 }
@@ -841,59 +839,21 @@ CDRMReceiver::InitReceiverMode()
 	switch(eNewReceiverMode)
 	{
 	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
-		switch(eReceiverMode)
-		{
-		case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
-			/* AM to AM switch - re-acquisition requested - no special action */
-			break;
-		case DRM:
-			/* DRM to AM switch - grab some common stuff */
- 			AMParameters.rSigStrengthCorrection = Parameters.rSigStrengthCorrection;
- 			AMParameters.FrontEndParameters = Parameters.FrontEndParameters;
- 			AMParameters.GPSData = Parameters.GPSData;
-			AMParameters.SetFrequency(Parameters.GetFrequency());
-			break;
-		case NONE:
-			/* Start from cold in AM mode - no special action */
-			break;
-		}
-		Parameters = AMParameters;
 
 		/* Tell the SDC decoder that it's AMSS to decode (no AFS index) */
 		UtilizeSDCData.GetSDCReceive()->SetSDCType(CSDCReceive::SDC_AMSS);
 
 		/* Set the receive status - this affects the RSI output */
-		AMParameters.ReceiveStatus.TSync.SetStatus(NOT_PRESENT);
-		AMParameters.ReceiveStatus.FSync.SetStatus(NOT_PRESENT);
-		AMParameters.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
-		AMParameters.ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
-		AMParameters.ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
-		AMParameters.ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
+		Parameters.ReceiveStatus.TSync.SetStatus(NOT_PRESENT);
+		Parameters.ReceiveStatus.FSync.SetStatus(NOT_PRESENT);
+		Parameters.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
+		Parameters.ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
+		Parameters.ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
+		Parameters.ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
 
-		//SoundInProxy.SetMode(eNewReceiverMode);
-		//AMDemodulation.SetDemodType(eNewReceiverMode);
 		break;
 	case DRM:
-		switch(eReceiverMode)
-		{
-		case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
-			/* AM to DRM switch - grab some common stuff */
- 			DRMParameters.rSigStrengthCorrection = Parameters.rSigStrengthCorrection;
- 			DRMParameters.FrontEndParameters = Parameters.FrontEndParameters;
- 			DRMParameters.GPSData = Parameters.GPSData;
-			DRMParameters.SetFrequency(Parameters.GetFrequency());
-			break;
-		case DRM:
-			/* DRM to DRM switch - re-acquisition requested - no special action */
-			break;
-		case NONE:
-			/* Start from cold in DRM mode - no special action */
-			break;
-		}
-		Parameters = DRMParameters;
-
 		UtilizeSDCData.GetSDCReceive()->SetSDCType(CSDCReceive::SDC_DRM);
-		SoundInProxy.SetMode(DRM);
 		break;
 	case NONE:
 		return;
@@ -903,6 +863,7 @@ CDRMReceiver::InitReceiverMode()
 	/* Reset new mode flag */
 	eNewReceiverMode = NONE;
 
+    SoundInProxy.SetMode(eReceiverMode);
 	SoundInProxy.Update();
 
 	/* Init all modules */
@@ -1329,14 +1290,6 @@ CDRMReceiver::InitsForMSCDemux()
 	}
 	InitsForAudParam();
 	InitsForDataParam();
-
-	/* Reset value used for the history because if an audio service was selected
-	   but then only a data service is selected, the value would remain with the
-	   last state */
-    Parameters.Measurements.CDAudHist.reset();
-    // TODO - here or in plotmanager ?
-    Parameters.Measurements.CDAudHist.configure(LEN_HIST_PLOT_SYNC_PARMS, 0);
-
 }
 
 void
@@ -1552,57 +1505,48 @@ void
 CDRMReceiver::LoadSettings(CSettings& s)
 {
 
+	string strMode = s.Get("Receiver", "modulation", string("DRM"));
+
 	/* Serial Number */
 	string sSerialNumber = s.Get("Receiver", "serialnumber", string(""));
 	if(sSerialNumber == "")
 	{
-		DRMParameters.GenerateRandomSerialNumber();
+		Parameters.GenerateRandomSerialNumber();
 	}
 	else
-        DRMParameters.sSerialNumber = sSerialNumber;
+        Parameters.sSerialNumber = sSerialNumber;
     /* Receiver ID */
-	s.Put("Receiver", "serialnumber", DRMParameters.sSerialNumber);
+	s.Put("Receiver", "serialnumber", Parameters.sSerialNumber);
 
-	DRMParameters.GenerateReceiverID();
+	Parameters.GenerateReceiverID();
 
 	/* Data files directory */
 	string sDataFilesDirectory = s.Get(
-	   "Receiver", "datafilesdirectory", DRMParameters.sDataFilesDirectory);
+	   "Receiver", "datafilesdirectory", Parameters.sDataFilesDirectory);
 	// remove trailing slash if there
 	size_t p = sDataFilesDirectory.find_last_not_of("/\\");
 	if(p != string::npos)
 		sDataFilesDirectory.erase(p+1);
 	s.Put("Receiver", "datafilesdirectory", Parameters.sDataFilesDirectory);
 
-	DRMParameters.sDataFilesDirectory = sDataFilesDirectory;
-
-    /* Copy to AM */
-    AMParameters.sSerialNumber = DRMParameters.sSerialNumber;
-    AMParameters.sReceiverID  = DRMParameters.sReceiverID;
-    AMParameters.sDataFilesDirectory = DRMParameters.sDataFilesDirectory;
-
-	string strMode = s.Get("Receiver", "modulation", string("DRM"));
+	Parameters.sDataFilesDirectory = sDataFilesDirectory;
 
 	if (strMode == "DRM")
-	{
 		eReceiverMode = DRM;
-		Parameters = DRMParameters;
-	}
-	else
-	{
+    else if (strMode == "AM")
         eReceiverMode = AM;
-		Parameters = AMParameters;
-		if (strMode == "USB")
-			eReceiverMode = USB;
-		else if (strMode == "LSB")
-			eReceiverMode = LSB;
-		else if (strMode == "CW")
-			eReceiverMode = CW;
-		else if (strMode == "NBFM")
-			eReceiverMode = NBFM;
-		else if (strMode == "WBFM")
-			eReceiverMode = WBFM;
-	}
+    else if (strMode == "USB")
+        eReceiverMode = USB;
+    else if (strMode == "LSB")
+        eReceiverMode = LSB;
+    else if (strMode == "CW")
+        eReceiverMode = CW;
+    else if (strMode == "NBFM")
+        eReceiverMode = NBFM;
+    else if (strMode == "WBFM")
+        eReceiverMode = WBFM;
+    else
+        eReceiverMode = NONE;
 	eNewReceiverMode = eReceiverMode;
 
 	/* Sync */

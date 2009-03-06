@@ -528,7 +528,7 @@ _COMPLEX CTapgain::Update()
 void CTapgain::gausstp(_REAL taps[], _REAL& s, int& over) const
 {
 	/* Calculate impulse response of FIR filter to implement
-	the Watterson modell (Gaussian PSD) */
+	the Watterson model (Gaussian PSD) */
 
 	/* "2 * s" is the doppler spread */
 	for (int n = 0; n < (FIRLENGTH * over); n++)

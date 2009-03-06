@@ -37,18 +37,15 @@
 class CMeasure
 {
 public:
-    CMeasure() { reset(); }
+    CMeasure():validdata(false),subscriptions(0) {}
     virtual ~CMeasure() {}
     void subscribe() { subscriptions++; }
     void unsubscribe() { --subscriptions; if(subscriptions<0) subscriptions=0; }
     bool wanted() const { return subscriptions>0; }
-    void setAvailable() { available=true; }
-    bool getAvailable() { return available; }
-    virtual void reset() { subscriptions=0; available=false; validdata=false;}
     virtual bool valid() const { return validdata; }
-    void invalidate() { validdata=false; }
+    virtual void invalidate() { validdata=false; }
 protected:
-    bool available, validdata;
+    bool validdata;
     int subscriptions;
 };
 
@@ -82,7 +79,7 @@ public:
     {
         max=_max; step=_step;
     }
-    virtual void reset() { CMeasure::reset(); history.clear();}
+    void invalidate() { CMeasure::invalidate(); history.clear();}
     _REAL interval() { return step; }
     void set(const T& v)
     {
@@ -128,7 +125,7 @@ public:
     bool getCurrent(T&) const;
     bool getMean(T&);
     bool getMinMax(T&, T&);
-    virtual void reset();
+    virtual void invalidate();
     void dump(ostream&) const;
 protected:
     T sum, cur, min, max;
@@ -211,9 +208,9 @@ min(numeric_limits<T>::max()),max(numeric_limits<T>::min()),num(0)
 }
 
 template<typename T>
-void CMinMaxMean<T>::reset()
+void CMinMaxMean<T>::invalidate()
 {
-    CMeasure::reset();
+    CMeasure::invalidate();
     sum = 0;
 	num = 0;
 	min = numeric_limits<T>::max();
@@ -255,7 +252,7 @@ T CMinMaxMean<T>::getMean()
 	T mean = 0;
 	if(num>0)
 		mean = sum / T(num);
-    reset();
+    invalidate();
 	return mean;
 }
 
@@ -277,7 +274,7 @@ bool CMinMaxMean<T>::getMinMax(T& minOut, T& maxOut)
         return false;
     minOut = min;
     maxOut = max;
-    reset();
+    invalidate();
     return true;
 }
 

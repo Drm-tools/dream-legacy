@@ -32,18 +32,21 @@
  *
 \******************************************************************************/
 
-#ifdef _WIN32
-# include <windows.h>
-#endif
 #include "MultimediaDlg.h"
+#include "../DrmReceiver.h"
 #include "../datadecoding/Journaline.h"
 #include <Q3PopupMenu>
-
+#include <QMenuBar>
+#include <QMessageBox>
+#include <QFileDialog>
+#include <QToolTip>
+#include <QFileInfo>
+#include <QTextStream>
 #include <QFontDialog>
 #include <QTextStream>
-#include <QPixmap>
-#include <QHideEvent>
-#include <QShowEvent>
+#include <QDateTime>
+#include <QProcess>
+#include <Q3MimeSourceFactory>
 
 /* Implementation *************************************************************/
 MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
@@ -57,28 +60,17 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
     textBrowser->setFont(fontTextBrowser);
 
-	/* Picture controls should be invisable. These controls are only used for
-	   storing the resources */
-	PixmapFhGIIS->hide();
-	PixmapLogoJournaline->hide();
-
-	/* Set pictures in source factory */
-	Q3MimeSourceFactory::defaultFactory()->setImage("PixmapFhGIIS",
-		PixmapFhGIIS->pixmap()->convertToImage());
-	Q3MimeSourceFactory::defaultFactory()->setImage("PixmapLogoJournaline",
-		PixmapLogoJournaline->pixmap()->convertToImage());
-
 	/* Set FhG IIS text */
 	strFhGIISText =
-		"<table><tr><td><img source=\"PixmapFhGIIS\"></td>"
-		"<td><font face=\"" + QString(FONT_COURIER) + "\" size=\"-1\">Features NewsService "
+		"<table><tr><td><img src=\":/icons/fhgiis.bmp\"></td>"
+		"<td><font face=\"Courier\" size=\"-1\">Features NewsService "
 		"Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
 		"Germany. For more information visit http://www.iis.fhg.de/dab"
 		"</font></td></tr></table>";
 
 	/* Set Journaline headline text */
 	strJournalineHeadText =
-		"<table><tr><td><img source=\"PixmapLogoJournaline\"></td>"
+		"<table><tr><td><img src=\":/icons/LogoJournaline.png\"></td>"
 		"<td valign=\"middle\"><h2>NewsService Journaline" + QString(QChar(174)) /* (R) */ +
 		"</h2></td></tr></table>";
 
@@ -227,8 +219,8 @@ void MultimediaDlg::OnTimer()
 		if (DataDecoder.GetMOTObject(NewObj, eAppType) == true)
 		{
 			/* Store received picture */
-			iCurNumPict = vecRawImages.Size();
-			vecRawImages.Add(NewObj);
+			iCurNumPict = vecRawImages.size();
+			vecRawImages.push_back(NewObj);
 
 			/* If the last received picture was selected, automatically show
 			   new picture */
@@ -300,24 +292,8 @@ void MultimediaDlg::OnTimer()
 			if (bMainPage == true)
 			{
 				/* The home page is available */
-				if (bZipped == false)
-				{
-					/* Set new homepage file name and init dialog */
-					strBWSHomePage = strNewObjName;
-					InitBroadcastWebSite();
-				}
-				else
-				{
-					textBrowser->setText("<center><h2>" +
-						tr("MOT Broadcast Web Site")
-						+ "</h2><br>"
-						+ tr("The home page is available")
-						+ "<br><br>"
-						+ tr("Impossible to uncompress the home page.<br>"
-						"For uncompress data compile Dream with zlib or Freeimage.<br>"
-						"Compress files will be saved on disk here:<br>" +
-						strDirMOTCache + "/") + "</center>");
-				}
+                strBWSHomePage = strNewObjName;
+                InitBroadcastWebSite();
 			}
 		}
 		break;
@@ -370,7 +346,7 @@ void MultimediaDlg::OnTimer()
 				strTitle += " [" + strLabel + strServiceID + "]";
 		}
 	}
-	SetDialogCaption(this, strTitle);
+	setCaption(strTitle);
 }
 
 void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
@@ -586,7 +562,7 @@ void MultimediaDlg::OnButtonStepForw()
 
 	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
 		/* Try to open browser */
-		if (!openBrowser(this, strDirMOTCache + "/" + strBWSHomePage))
+		if (QProcess::execute(strDirMOTCache + "/" + strBWSHomePage))
 		{
 			QMessageBox::information(this, "Dream",
 				tr("Failed to start the default browser.\n"
@@ -621,11 +597,6 @@ void MultimediaDlg::SetSlideShowPicture()
 	/* Copy current image from image storage vector */
 	CMOTObject vecbyCurPict(vecRawImages[iCurImagePos]);
 
-	/* The standard version of QT does not have jpeg support, if FreeImage
-	   library is installed, the following routine converts the picture to
-	   png which can be displayed */
-	JpgToPng(vecbyCurPict);
-
 	CVector<_BYTE>& imagedata = vecbyCurPict.Body.vecData;
 	const QString imagename(vecbyCurPict.strName.c_str());
 
@@ -652,7 +623,7 @@ void MultimediaDlg::SetSlideShowPicture()
 		textBrowser->setText("<br><br><center><b>" + tr("Image could not be "
 			"loaded, ") +
 			 QString(vecbyCurPict.strFormat.c_str()) +
-			 tr("-format not supported by this version of QT!") +
+			 tr("-format not supported") +
 			"</b><br><br><br>" + tr("If you want to view the image, "
 			"save it to file and use an external viewer") + "</center>");
 	}
@@ -860,7 +831,7 @@ void MultimediaDlg::OnSaveAll()
 void MultimediaDlg::ClearAllSlideShow()
 {
 	/* Init vector which will store the received images with zero size */
-	vecRawImages.Init(0);
+	vecRawImages.clear();
 
 	/* Init current image position */
 	iCurImagePos = -1;
@@ -1067,51 +1038,6 @@ void MultimediaDlg::SaveMOTObject(const CVector<_BYTE>& vecbRawData,
 		/* Close the file afterwards */
 		fclose(pFiBody);
 	}
-}
-
-bool MultimediaDlg::openBrowser(QWidget *widget, const QString &filename)
-{
-	bool bResult = false;
-
-#ifdef _WIN32
-	/* Running in an MS Windows environment */
-	if (NULL != widget)
-	{
-		QString f = filename;
-
-		bResult = (ShellExecute(NULL, "open",
-			f.replace(QRegExp("/"),"\\").latin1(), NULL, NULL, SW_SHOWNORMAL) > (HINSTANCE)32);
-	}
-#else
-	Q_UNUSED(widget);
-
-	/* try with KDE */
-	string strStartBrowser = "kfmclient exec \"";
-	strStartBrowser += filename.latin1();
-	strStartBrowser += "\"";
-	int retval = system(strStartBrowser.c_str());
-
-	if (retval != -1)
-	{
-		if ((WEXITSTATUS(retval) != 1) && (retval != 0))
-		{
-			/* try with gnome */
-			strStartBrowser = "gnome-open \"";
-			strStartBrowser += filename.latin1();
-			strStartBrowser += "\"";
-			retval = system(strStartBrowser.c_str());
-		}
-	}
-
-	if ((WEXITSTATUS(retval) == 1) || (retval == 0))
-		bResult = true;
-#endif
-
-	return bResult;
-}
-
-void MultimediaDlg::JpgToPng(CMOTObject&) // TODO - remove
-{
 }
 
 void MultimediaDlg::OnSetFont()

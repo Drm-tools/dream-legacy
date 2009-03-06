@@ -30,29 +30,17 @@
 #define DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_
 
 #include <q3popupmenu.h>
-#include <q3textview.h>
 #include <QMenuBar>
 #include <QEvent>
-#include <QLabel>
 #include <QWhatsThis>
 #include <QCustomEvent>
 
 #include "ui_AboutDlg.h"
 #include "../DrmReceiver.h"
-
-#ifdef USE_QT_GUI
-# include <qwt_global.h> /* for extract the library version */
-#endif
-
+#include <qwt_global.h> /* for extract the library version */
 
 /* Definitions ****************************************************************/
 
-/* Definition for Courier font */
-#ifdef _WIN32
-	#define FONT_COURIER    "Courier New"
-#else
-	#define FONT_COURIER    "Courier"
-#endif
 /* Classes ********************************************************************/
 /* DRM events --------------------------------------------------------------- */
 class DRMEvent : public QCustomEvent

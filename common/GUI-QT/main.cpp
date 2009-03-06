@@ -129,6 +129,7 @@ main(int argc, char **argv)
 		if (strMode == "RX")
 		{
 			CDRMReceiver DRMReceiver;
+			DRMReceiver.LoadSettings(Settings);
 
 			/* First, initialize the working thread. This should be done in an extra
 			   routine since we cannot 100% assume that the working thread is
@@ -148,7 +149,6 @@ main(int argc, char **argv)
 				DRMReceiver.SetHamlib(pHamlib);
 			}
 #endif
-			DRMReceiver.LoadSettings(Settings);
 
 			DRMMainWindow MainDlg(DRMReceiver, Settings, 0, 0, Qt::WStyle_MinMax);
 

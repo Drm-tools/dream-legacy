@@ -29,33 +29,10 @@
 #ifndef _MULTIMEDIADLG_H
 #define _MULTIMEDIADLG_H
 
-#include <QTextBrowser>
-#include <QImage>
-#include <QTimer>
-#include <QPushButton>
-#include <QLabel>
-#include <QMenuBar>
-#include <q3popupmenu.h>
-#include <QLayout>
-#include <QFileDialog>
-#include <QDateTime>
-#include <QRegExp>
-#include <QToolTip>
-#include <QTextStream>
-#include <QFileInfo>
-#include <QDir>
-#include <QMessageBox>
-#include <QFont>
-#include <QShowEvent>
-#include <QHideEvent>
-
+#include <vector>
 #include "ui_MultimediaDlg.h"
-#include "MultColorLED.h"
-#include "DialogUtil.h"
-#include "../GlobalDefinitions.h"
-#include "../DrmReceiver.h"
 #include "../datadecoding/DABMOT.h"
-#include "../util/Settings.h"
+#include "../datadecoding/DataDecoder.h"
 
 /* Definitions ****************************************************************/
 /* Maximum number of levels. A maximum of 20 hierarchy levels is set
@@ -63,6 +40,11 @@
 #define MAX_NUM_LEV_JOURNALINE			20
 
 /* Classes ********************************************************************/
+class CDRMReceiver;
+class CParameter;
+class CSettings;
+class Q3PopupMenu;
+
 class CNewIDHistory
 {
 public:
@@ -89,7 +71,7 @@ public:
 	void Reset() {iNumHist = 0;}
 
 protected:
-	CVector<int>	veciNewsID;
+	std::vector<int> veciNewsID;
 	int				iNumHist;
 };
 
@@ -115,10 +97,8 @@ protected:
 
 	QTimer					Timer;
 	QMenuBar*				pMenu;
-	Q3PopupMenu*				pFileMenu;
-	virtual void			showEvent(QShowEvent* pEvent);
-	virtual void			hideEvent(QHideEvent* pEvent);
-	CVector<CMOTObject>		vecRawImages;
+	Q3PopupMenu*			pFileMenu;
+	std::vector<CMOTObject>	vecRawImages;
 	int						iCurImagePos;
 	QString					strFhGIISText;
 	QString					strJournalineHeadText;
@@ -130,13 +110,15 @@ protected:
 	QString					strBWSHomePage;
 	QFont					fontTextBrowser;
 	QFont					fontDefault;
-	bool				bAddRefresh;
+	bool				    bAddRefresh;
 	int						iRefresh;
 
+	virtual void			showEvent(QShowEvent* pEvent);
+	virtual void			hideEvent(QHideEvent* pEvent);
 	void SetSlideShowPicture();
 	void SetJournalineText();
 	void UpdateAccButtonsSlideShow();
-	int GetIDLastPicture() {return vecRawImages.Size() - 1;}
+	int GetIDLastPicture() {return vecRawImages.size() - 1;}
 	void SaveMOTObject(const CVector<_BYTE>& vecbRawData, const QString& strFileName);
 	void CreateDirectories(const QString& filename);
 	void ClearAllSlideShow();
@@ -148,15 +130,11 @@ protected:
 	void InitJournaline();
 	void InitBroadcastWebSite();
 
-	void JpgToPng(CMOTObject& NewPic);
-
 	void ExtractJournalineBody(const int iCurJourID, const bool bHTMLExport,
 		QString &strTitle, QString &strItems);
 
 	void SetCurrentSavePath(const QString strFileName);
 	void AddRefreshHeader(const QString& strFileName);
-
-	bool openBrowser(QWidget *widget, const QString &filename);
 
 public slots:
 	void OnTimer();

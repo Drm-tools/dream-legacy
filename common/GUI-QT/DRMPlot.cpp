@@ -575,7 +575,6 @@ void CDRMPlot::UpdateChartNow()
 
 void CDRMPlot::startPlot(EPlotType e)
 {
-cerr << "startPlot(" << int(e) << ")" << endl;
     Parameters.Lock();
     const _REAL rDRMFrameDur = GetFrameDuration();
 
@@ -621,8 +620,8 @@ cerr << "startPlot(" << int(e) << ")" << endl;
 	case SNR_AUDIO_HIST:
         Parameters.Measurements.SNRHist.subscribe();
         Parameters.Measurements.SNRHist.configure(LEN_HIST_PLOT_SYNC_PARMS, rDRMFrameDur);
-        Parameters.Measurements.audioFrameStatus.subscribe();
-        Parameters.Measurements.audioFrameStatus.configure(LEN_HIST_PLOT_SYNC_PARMS, rDRMFrameDur);
+        Parameters.Measurements.CDAudHist.subscribe();
+        Parameters.Measurements.CDAudHist.configure(LEN_HIST_PLOT_SYNC_PARMS, rDRMFrameDur);
 		break;
 	case FAC_CONSTELLATION:
         Parameters.Measurements.FACVectorSpace.subscribe();
@@ -646,8 +645,6 @@ cerr << "startPlot(" << int(e) << ")" << endl;
 
 void CDRMPlot::endPlot(EPlotType e)
 {
-cerr << "endPlot(" << int(e) << ")" << endl;
-
     Parameters.Lock();
 	switch (e)
 	{
@@ -671,10 +668,8 @@ cerr << "endPlot(" << int(e) << ")" << endl;
         spectrogram->detach();
 		break;
 	case INPUT_SIG_PSD:
-        Parameters.Measurements.PSD.unsubscribe();
-		break;
 	case INPUT_SIG_PSD_ANALOG:
-        Parameters.Measurements.InputSpectrum.unsubscribe();
+        Parameters.Measurements.PSD.unsubscribe();
 		break;
 	case AUDIO_SPECTRUM:
         Parameters.Measurements.AudioSpectrum.unsubscribe();
@@ -689,7 +684,7 @@ cerr << "endPlot(" << int(e) << ")" << endl;
 		break;
 	case SNR_AUDIO_HIST:
         Parameters.Measurements.SNRHist.unsubscribe();
-        Parameters.Measurements.audioFrameStatus.unsubscribe();
+        Parameters.Measurements.CDAudHist.unsubscribe();
 		break;
 	case FAC_CONSTELLATION:
         Parameters.Measurements.FACVectorSpace.unsubscribe();
@@ -710,16 +705,6 @@ cerr << "endPlot(" << int(e) << ")" << endl;
 	}
     Parameters.Unlock();
 }
-
-/*
-void CDRMPlot::Init()
-{
-
-    Parameters.Measurements.Doppler.reset();
-    Parameters.Measurements.SNRHist.reset();
-    // TODO - why not the other histories ?
-}
-*/
 
 void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 {
@@ -1584,7 +1569,6 @@ void CDRMPlot::SetInpSpecWaterf()
     if(spectrogram == NULL)
         spectrogram = new QwtPlotSpectrogram();
     spectrogram->attach(plot);
-    cerr << "SetInpSpecWaterf" << endl;
 }
 
 void CDRMPlot::UpdateInpSpecWaterf()
@@ -1595,7 +1579,6 @@ void CDRMPlot::UpdateInpSpecWaterf()
     Parameters.Unlock();
     if(vecrData.size()==0)
     {
-        cerr << "InpSpecWaterf - no data" << endl;
         return;
     }
     _REAL rStart = 0.0;
