@@ -614,8 +614,7 @@ void MultimediaDlg::SetSlideShowPicture()
 		Q3MimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
 			NewImage.convertToImage());
 
-		textBrowser->setText("<center><img source=\"MOTSlideShowimage\">"
-			"</center>");
+		textBrowser->setText("<center><img src=\"MOTSlideShowimage\"></center>");
 	}
 	else
 	{

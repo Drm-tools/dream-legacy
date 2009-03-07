@@ -207,14 +207,6 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
-		/* old DRM transmitter mode flag ---------------------------------------- */
-		if (GetFlagArgument(argc, argv, i, "-t", "--transmitter") == true)
-		{
-			bIsReceiver = false;
-			Put("0", "mode", string("TX"));
-			continue;
-		}
-
 		/* Flip spectrum flag ----------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-p", "--flipspectrum") == true)
 		{
@@ -555,8 +547,8 @@ CSettings::UsageArguments(char **argv)
 	return
 		"Usage: " + string(argv[0]) + " [option] [argument]\n"
 		"Recognized options:\n"
-		"      --mode                  operating mode: DRMTX, DRMMOD, DRMENC, DRMRX, AMRX\n"
-		"  -t, --transmitter           DRM transmitter mode\n"
+		"  --mode                      operating mode: TX, MOD, ENC, RX (default)\n"
+		"  --modn                      modulation type DRM (default), AM, USB, LSB, CW, NBFM, WBFM\n"
 		"  -p, --flipspectrum          flip input spectrum\n"
 		"  -i <n>, --mlciter <n>       number of MLC iterations (allowed range: 0...4 default: 1)\n"
 		"  -s <r>, --sampleoff <r>     sample rate offset initial value [Hz] (allowed range: -200.0...200.0)\n"

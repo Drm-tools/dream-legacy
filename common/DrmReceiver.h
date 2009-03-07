@@ -81,44 +81,16 @@ class CSettings;
 class CHamlib;
 class CRigCaps;
 
+template<typename T>
+struct Request
+{
+    Request(const T& v) { current = wanted = v; }
+    T current;
+    T wanted;
+};
+
 enum EInpTy { SoundCard, Dummy, Shm, File, RSCI };
 enum ERecState {RS_TRACKING, RS_ACQUISITION};
-
-class CSoundInProxy : public CSelectionInterface
-{
-public:
-	CSoundInProxy();
-	virtual 			~CSoundInProxy();
-	virtual void		Enumerate(vector<string>&);
-	virtual int			GetDev();
-	virtual void		SetDev(int iNewDev);
-	void				SetMode(EDemodulationType);
-	void				SetHamlib(CHamlib*);
-	void				SetRigModelForAllModes(int);
-	void				SetRigModel(int);
-	void				SetReadPCMFromFile(const string strNFN);
-	void				SetUsingDI(const string strSource);
-	void				Update();
-
-protected:
-
-	EInpTy				pcmInput, pcmWantedInput;
-	int					iWantedSoundDev;
-	int					iWantedRig;
-	EDemodulationType	eWantedRigMode;
-	bool			    bRigUpdateForAllModes;
-	string				filename;
-public:
-	CSoundInInterface*	pSoundInInterface;
-	bool				bRigUpdateNeeded;
-	CHamlib*			pHamlib;
-	CDRMReceiver*		pDrmRec;
-#ifdef USE_QT_GUI
-	QMutex				mutex;
-#endif
-	EInChanSel			eWantedChanSel;
-	bool				bOnBoardDemod, bOnBoardDemodWanted;
-};
 
 class CSplitFAC : public CSplitModul<_BINARY>
 {
@@ -267,7 +239,7 @@ public:
 
 
 	/* Get pointer to internal modules */
-	CSelectionInterface*	GetSoundInInterface() {return &SoundInProxy;}
+	CSelectionInterface*	GetSoundInInterface() {return pSoundInInterface;}
 	CSelectionInterface*	GetSoundOutInterface() {return pSoundOutInterface;}
 	CUtilizeFACData*		GetFAC() {return &UtilizeFACData;}
 	CUtilizeSDCData*		GetSDC() {return &UtilizeSDCData;}
@@ -309,6 +281,7 @@ public:
 protected:
 
 	void					InitReceiverMode();
+    void                    UpdateHamlibAndSoundInput();
 	bool					doSetFrequency();
 	void					SetInStartMode();
 	void					SetInTrackingMode();
@@ -326,7 +299,7 @@ protected:
 	void					saveSDCtoFile();
 
 	/* Modules */
-	CSoundInProxy			SoundInProxy;
+	CSoundInInterface*		pSoundInInterface;
 	CSoundOutInterface*		pSoundOutInterface;
 	CReceiveData			ReceiveData;
 	COnboardDecoder			OnboardDecoder;
@@ -432,6 +405,16 @@ protected:
 	/* Counter for unlocked frames, to keep generating RSCI even when unlocked */
 	int						iUnlockedCount;
 	time_t					time_keeper;
+	Request<bool>           onBoardDemod;
+	Request<EInpTy>         pcmInput;
+	Request<int>            soundDev;
+	Request<int>            rig;
+	Request<EDemodulationType> rigMode;
+	Request<EInChanSel>     chanSel;
+	string                  strPCMFile;
+	bool                    bRigUpdateNeeded;
+	bool                    bRigUpdateForAllModes;
+    CHamlib*                pHamlib;
 };
 
 #endif // !defined(DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

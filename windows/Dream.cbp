@@ -10,7 +10,7 @@
 				<Option platforms="Windows;" />
 				<Option output="Dream.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="Release" />
-				<Option type="1" />
+				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
@@ -91,7 +91,7 @@
 		<Compiler>
 			<Add option="-DHAVE_STDINT_H" />
 			<Add option="-DHAVE_LIBPCAP" />
-			<Add option="-DHAVE_HAMLIB" />
+			<Add option="-DHAVE_LIBHAMLIB" />
 			<Add option="-DHAVE_LIBFAAD" />
 			<Add option="-DHAVE_LIBFAAC" />
 			<Add option="-DHAVE_LIBZ" />
@@ -102,7 +102,7 @@
 			<Add directory="$(QTDIR)\include\QtCore" />
 			<Add directory="..\libs" />
 			<Add directory="..\common\GUI-QT" />
-			<Add directory="moc" />
+			<Add directory="..\moc" />
 			<Add directory="..\..\faac\include" />
 			<Add directory="..\..\faad2\include" />
 			<Add directory="..\..\qwt-qt4\src" />
@@ -122,6 +122,7 @@
 			<Add library="setupapi" />
 			<Add library="sndfile" />
 			<Add library="wpcap" />
+			<Add library="hamlib" />
 			<Add directory="$(QTDIR)\lib" />
 			<Add directory="D:\dream\qwt-qt4\lib" />
 			<Add directory="..\libs" />
@@ -484,132 +485,132 @@
 		<Unit filename="..\common\util\Utilities.cpp" />
 		<Unit filename="..\common\util\Utilities.h" />
 		<Unit filename="..\common\util\Vector.h" />
+		<Unit filename="..\moc\moc_AnalogDemDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_DRMMainWindow.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_DRMPlot.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_DialogUtil.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_EPGDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_GPSReceiver.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_LatLongEditDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_LiveScheduleDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_Loghelper.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_MultColorLED.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_MultSettingsDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_MultimediaDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_PacketSocketQT.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_ReceiverSettingsDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_StationsDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_SystemEvalDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_TransmDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_AMSSDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_AboutDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_AnalogMainWindow.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_DRMMainWindow.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_EPGDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_LatLongEditDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_LiveScheduleDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_MultSettingsDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_MultimediaDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_ReceiverSettingsDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_StationsDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_SystemEvalDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_TransmitterMainWindow.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+		</Unit>
 		<Unit filename="Dream.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
 		<Unit filename="Source\Pacer.cpp" />
 		<Unit filename="Source\Sound.cpp" />
 		<Unit filename="Source\Sound.h" />
-		<Unit filename="moc\moc_AnalogDemDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_DRMMainWindow.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_DRMPlot.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_DialogUtil.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_EPGDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_GPSReceiver.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_LatLongEditDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_LiveScheduleDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_Loghelper.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_MultColorLED.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_MultSettingsDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_MultimediaDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_PacketSocketQT.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_ReceiverSettingsDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_StationsDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_SystemEvalDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\moc_TransmDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\ui_AMSSDlg.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\ui_AboutDlg.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\ui_AnalogMainWindow.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\ui_DRMDialog.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\ui_EPGDlg.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\ui_LatLongEditDlg.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\ui_LiveScheduleDlg.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\ui_MultSettingsDlg.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\ui_MultimediaDlg.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\ui_ReceiverSettingsDlg.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\ui_StationsDlg.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\ui_SystemEvalDlg.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
-		<Unit filename="moc\ui_TransmitterMainWindow.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-		</Unit>
 		<Unit filename="resource.h" />
 		<Extensions>
 			<code_completion />

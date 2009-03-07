@@ -39,7 +39,7 @@ public:
 	virtual ~CSoundInNull() {}
 
 	virtual void		Init(int, bool, int) {}
-	virtual bool	Read(vector<_SAMPLE>&) { return false; }
+	virtual bool	    Read(vector<_SAMPLE>&) { return false; }
 	virtual void		Enumerate(vector<string>&choices) { choices.push_back("(File or Network)"); }
 	virtual int			GetDev() { return iDev; }
 	virtual void		SetDev(int iNewDev) { iDev = iNewDev; }
@@ -55,7 +55,7 @@ public:
 	virtual ~CSoundOutNull(){}
 
 	virtual void		Init(int, bool, int) {}
-	virtual bool	Write(vector<_SAMPLE>&) { return false;}
+	virtual bool	    Write(vector<_SAMPLE>&) { return false;}
 	virtual void		Enumerate(vector<string>& choices) {choices.push_back("(None)");}
 	virtual int			GetDev() { return iDev; }
 	virtual void		SetDev(int iNewDev) { iDev = iNewDev; }

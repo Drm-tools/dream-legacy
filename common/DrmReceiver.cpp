@@ -48,7 +48,7 @@ const int
 
 /* Implementation *************************************************************/
 CDRMReceiver::CDRMReceiver():
-SoundInProxy(), pSoundOutInterface(new CSoundOut),
+pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
 ReceiveData(), WriteData(pSoundOutInterface),
 FreqSyncAcq(),
 ChannelEstimation(),
@@ -63,188 +63,88 @@ eNewReceiverMode(DRM), iAudioStreamID(STREAM_ID_NOT_USED),
 iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(false),
 bRestartFlag(false),bRunning(false),
 rInitResampleOffset((_REAL) 0.0),
-iFreqkHz(0),
-time_keeper(0)
+iFreqkHz(0),time_keeper(0),
+onBoardDemod(false),pcmInput(SoundCard),soundDev(0),
+rig(0),rigMode(DRM),chanSel(CS_MIX_CHAN),
+strPCMFile(),bRigUpdateNeeded(true),bRigUpdateForAllModes(false),
+pHamlib(NULL)
 {
 	Parameters.SetReceiver(this);
 	downstreamRSCI.SetReceiver(this);
-	SoundInProxy.pDrmRec = this;
 }
 
 CDRMReceiver::~CDRMReceiver()
 {
+	delete pSoundInInterface;
 	delete pSoundOutInterface;
 }
 
-CSoundInProxy::CSoundInProxy():
-pcmInput(Dummy), pcmWantedInput(Dummy),
-iWantedSoundDev(-1),
-iWantedRig(0),
-eWantedRigMode(NONE),
-bRigUpdateForAllModes(false),
-filename(""),
-pSoundInInterface(new CSoundInNull),
-bRigUpdateNeeded(false),
-pHamlib(NULL), pDrmRec(NULL),
-#ifdef USE_QT_GUI
- mutex(),
-#endif
-eWantedChanSel(CS_MIX_CHAN),
-bOnBoardDemod(false), bOnBoardDemodWanted(false)
-{
-}
-
-CSoundInProxy::~CSoundInProxy()
-{
-	delete pSoundInInterface;
-}
-
 void
-CSoundInProxy::SetMode(EDemodulationType eNewMode)
+CDRMReceiver::UpdateHamlibAndSoundInput()
 {
-	eWantedRigMode = eNewMode;
-}
-
-void CSoundInProxy::SetHamlib(CHamlib* p)
-{
-    if(pHamlib)
-        delete pHamlib;
-	pHamlib = p;
-	if(pHamlib)
-	{
 #ifdef HAVE_LIBHAMLIB
-		SetRigModel(pHamlib->GetWantedRigModel());
-#endif
-	}
-}
-
-void
-CSoundInProxy::SetReadPCMFromFile(const string strNFN)
-{
-	filename = strNFN;
-	bool bIsIQ = false;
-	string ext;
-	size_t p = strNFN.rfind('.');
-	if (p != string::npos)
-		ext = strNFN.substr(p + 1);
-	if (ext.substr(0, 2) == "iq")
-		bIsIQ = true;
-	if (ext.substr(0, 2) == "IQ")
-		bIsIQ = true;
-
-	if (bIsIQ)
-		eWantedChanSel = CS_IQ_POS_ZERO;
-	else
-		eWantedChanSel = CS_MIX_CHAN;
-	pcmWantedInput = File;
-	SetHamlib(NULL);
-}
-
-void CSoundInProxy::SetUsingDI(const string strSource)
-{
-    filename = strSource;
-    pcmInput = pcmWantedInput = RSCI;
-    SetHamlib(NULL);
-}
-
-void CSoundInProxy::SetRigModelForAllModes(int iID)
-{
-	iWantedRig = iID;
-	bRigUpdateForAllModes = true;
-	bRigUpdateNeeded=true;
-}
-
-void CSoundInProxy::SetRigModel(int iID)
-{
-	iWantedRig = iID;
-	bRigUpdateForAllModes = false;
-	bRigUpdateNeeded=true;
-}
-
-void
-CSoundInProxy::Enumerate(vector<string>& s)
-{
-	pSoundInInterface->Enumerate(s);
-}
-
-int
-CSoundInProxy::GetDev()
-{
-	return pSoundInInterface->GetDev();
-}
-
-void
-CSoundInProxy::SetDev(int iNewDev)
-{
-	iWantedSoundDev = iNewDev;
-	pDrmRec->SetReceiverMode(pDrmRec->GetReceiverMode());
-}
-
-void
-CSoundInProxy::Update()
-{
-	int iSoundDev = pSoundInInterface->GetDev();
-#ifdef HAVE_LIBHAMLIB
-	if(pHamlib)
+	if(pcmInput.wanted != RSCI && pcmInput.wanted != File && pHamlib != NULL)
 	{
-		rig_model_t iRig = pHamlib->GetRigModel();
-		EDemodulationType eMode = pHamlib->GetRigMode();
+        rig.current = pHamlib->GetRigModel();
+		rigMode.current = pHamlib->GetRigMode();
 		CRigCaps old_caps, new_caps;
-		pHamlib->GetRigCaps(iRig, old_caps);
-		pHamlib->GetRigCaps(iWantedRig, new_caps);
-		if(eMode != eWantedRigMode || iRig != iWantedRig)
+		pHamlib->GetRigCaps(rig.current, old_caps);
+		pHamlib->GetRigCaps(rig.wanted, new_caps);
+		if(rigMode.current != rigMode.wanted || rig.current != rig.wanted)
 		{
 			if(bRigUpdateForAllModes)
-				pHamlib->SetRigModelForAllModes(iWantedRig);
+				pHamlib->SetRigModelForAllModes(rig.wanted);
 			else
-				pHamlib->SetRigModel(eWantedRigMode, iWantedRig);
+				pHamlib->SetRigModel(rigMode.wanted, rig.wanted);
+            rig.current = rig.wanted;
 
-			if(new_caps.attribute(eWantedRigMode, "audiotype")=="shm")
+			if(new_caps.attribute(rigMode.wanted, "audiotype")=="shm")
 			{
-				pcmWantedInput = Shm;
-				filename = new_caps.get_config("if_path");
+				pcmInput.wanted = Shm;
+				strPCMFile = new_caps.get_config("if_path");
 			}
 			else
 			{
-				pcmWantedInput = SoundCard;
-				string snddevin = new_caps.attribute(eWantedRigMode, "snddevin");
+				pcmInput.wanted = SoundCard;
+				string snddevin = new_caps.attribute(rigMode.wanted, "snddevin");
 				if(snddevin != "")
 				{
 					stringstream s(snddevin);
-					s >> iWantedSoundDev;
+					s >> soundDev.wanted;
 				}
 			}
-			if(new_caps.attribute(eWantedRigMode, "onboarddemod")=="must")
+			if(new_caps.attribute(rigMode.wanted, "onboarddemod")=="must")
 			{
-				bOnBoardDemod = true;
+				onBoardDemod.current = true;
 			}
-			else if(new_caps.attribute(eWantedRigMode, "onboarddemod")=="can")
+			else if(new_caps.attribute(rigMode.wanted, "onboarddemod")=="can")
 			{
-				bOnBoardDemod = bOnBoardDemodWanted;
+				onBoardDemod.current = onBoardDemod.wanted;
 			}
 			else
 			{
-				bOnBoardDemod = false;
+				onBoardDemod.current = false;
 			}
 		}
 		else
 		{
-            pcmWantedInput = SoundCard;
+            pcmInput.wanted = SoundCard;
 		}
 		stringstream s;
-		s << iWantedSoundDev;
-		pHamlib->set_attribute(eMode, "snddevin", s.str());
+		s << soundDev.wanted;
+		pHamlib->set_attribute(rigMode.wanted, "snddevin", s.str()); // save for persistence
+		rigMode.current = rigMode.wanted;
 	}
 	else
 	{
-	    if(pcmWantedInput != RSCI && pcmWantedInput != File)
-            pcmWantedInput = SoundCard;
+	    if(pcmInput.wanted == Dummy || pcmInput.wanted == Shm)
+            pcmInput.wanted = SoundCard;
 	}
 #endif
-	if(pcmInput!=pcmWantedInput)
+	if(pcmInput.current != pcmInput.wanted)
 	{
 		delete pSoundInInterface;
-		switch(pcmWantedInput)
+		switch(pcmInput.wanted)
 		{
 		case Shm:
 			{
@@ -261,7 +161,7 @@ CSoundInProxy::Update()
 		case File:
 			{
 				CSoundFileIn *pf = new CSoundFileIn;
-				pf->SetFileName(filename);
+				pf->SetFileName(strPCMFile);
 				pSoundInInterface = pf;
 			}
 			break;
@@ -271,11 +171,13 @@ CSoundInProxy::Update()
 		default:
 			;
 		}
-		pcmInput = pcmWantedInput;
+		pcmInput.current = pcmInput.wanted;
 	}
-	if(iWantedSoundDev != iSoundDev)
+	soundDev.current = pSoundInInterface->GetDev();
+	if(soundDev.current != soundDev.wanted)
 	{
-		pSoundInInterface->SetDev(iWantedSoundDev);
+		pSoundInInterface->SetDev(soundDev.wanted);
+		soundDev.current = soundDev.wanted;
 	}
 	bRigUpdateNeeded = false;
 }
@@ -284,8 +186,8 @@ void
 CDRMReceiver::SetEnableSMeter(bool bNew)
 {
 #ifdef HAVE_LIBHAMLIB
-	if(SoundInProxy.pHamlib)
-		SoundInProxy.pHamlib->SetEnableSMeter(bNew);
+	if(pHamlib)
+		pHamlib->SetEnableSMeter(bNew);
 #endif
 }
 
@@ -293,21 +195,21 @@ bool
 CDRMReceiver::GetEnableSMeter()
 {
 #ifdef HAVE_LIBHAMLIB
-	if(SoundInProxy.pHamlib)
-		return SoundInProxy.pHamlib->GetEnableSMeter();
+	if(pHamlib)
+		return pHamlib->GetEnableSMeter();
 #endif
 	return false;
 }
 
 void CDRMReceiver::SetUseAnalogHWDemod(bool bUse)
 {
-	SoundInProxy.bOnBoardDemodWanted = bUse;
+	onBoardDemod.wanted = bUse;
 	eNewReceiverMode = eReceiverMode; // trigger an update!
 }
 
 bool CDRMReceiver::GetUseAnalogHWDemod()
 {
-	return SoundInProxy.bOnBoardDemod;
+	return onBoardDemod.current;
 }
 
 int
@@ -445,7 +347,7 @@ CDRMReceiver::Run()
 	}
 	else
 	{
-		if(SoundInProxy.bOnBoardDemod)
+		if(onBoardDemod.current)
 		{
 			OnboardDecoder.ReadData(Parameters, AMAudioBuf);
 		}
@@ -830,7 +732,6 @@ void
 CDRMReceiver::SetReceiverMode(EDemodulationType eNewMode)
 {
 	eNewReceiverMode = eNewMode;
-	SoundInProxy.SetMode(eNewMode);
 }
 
 void
@@ -863,8 +764,7 @@ CDRMReceiver::InitReceiverMode()
 	/* Reset new mode flag */
 	eNewReceiverMode = NONE;
 
-    SoundInProxy.SetMode(eReceiverMode);
-	SoundInProxy.Update();
+	UpdateHamlibAndSoundInput();
 
 	/* Init all modules */
 	SetInStartMode();
@@ -879,7 +779,7 @@ CDRMReceiver::InitReceiverMode()
 bool
 CDRMReceiver::GetRigChangeInProgress()
 {
-	return SoundInProxy.bRigUpdateNeeded;
+	return bRigUpdateNeeded;
 }
 
 
@@ -916,7 +816,7 @@ CDRMReceiver::Start()
 
 	}
 	while (bRunning);
-	SoundInProxy.pSoundInInterface->Close();
+	pSoundInInterface->Close();
 	pSoundOutInterface->Close();
 }
 
@@ -1096,9 +996,9 @@ CDRMReceiver::InitsForAllModules()
 		MSCSendBuf[i].Clear();
 	}
 
-	if(SoundInProxy.bOnBoardDemod)
+	if(onBoardDemod.current)
 	{
-		OnboardDecoder.SetSoundInterface(SoundInProxy.pSoundInInterface);
+		OnboardDecoder.SetSoundInterface(pSoundInInterface);
 		OnboardDecoder.SetInitFlag();
 	}
 	else
@@ -1109,8 +1009,8 @@ CDRMReceiver::InitsForAllModules()
 		InputResample.SetInitFlag();
 		AMSSExtractBits.SetInitFlag();
 		AMSSDecode.SetInitFlag();
-		ReceiveData.SetInChanSel(SoundInProxy.eWantedChanSel);
-		ReceiveData.SetSoundInterface(SoundInProxy.pSoundInInterface);
+		ReceiveData.SetInChanSel(chanSel.wanted);
+		ReceiveData.SetSoundInterface(pSoundInInterface);
 		ReceiveData.SetInitFlag();
 	}
 	InputResample.SetInitFlag();
@@ -1187,13 +1087,13 @@ CDRMReceiver::InitsForWaveMode()
 	iAcquDetecCnt = 0;
 
 	/* Set init flags */
-	ReceiveData.SetSoundInterface(SoundInProxy.pSoundInInterface);
+	ReceiveData.SetSoundInterface(pSoundInInterface);
 	ReceiveData.SetInitFlag();
 	InputResample.SetInitFlag();
 	FreqSyncAcq.SetInitFlag();
 	Split.SetInitFlag();
 	AMDemodulation.SetInitFlag();
-	ReceiveData.SetSoundInterface(SoundInProxy.pSoundInInterface);
+	ReceiveData.SetSoundInterface(pSoundInInterface);
 	OnboardDecoder.SetInitFlag();
 	AudioSourceEncoder.SetInitFlag();
 
@@ -1364,8 +1264,8 @@ bool CDRMReceiver::doSetFrequency()
 		WriteIQFile.NewFrequency(Parameters);
 
 #ifdef HAVE_LIBHAMLIB
-		if(SoundInProxy.pHamlib)
-			return SoundInProxy.pHamlib->SetFrequency(iFreqkHz);
+		if(pHamlib)
+			return pHamlib->SetFrequency(iFreqkHz);
 #endif
 		return true;
 	}
@@ -1389,33 +1289,61 @@ CDRMReceiver::SetRSIRecording(bool bOn, const char cProfile)
 void
 CDRMReceiver::SetReadPCMFromFile(const string strNFN)
 {
-	SoundInProxy.SetReadPCMFromFile(strNFN);
+	strPCMFile = strNFN;
+	bool bIsIQ = false;
+	string ext;
+	size_t p = strNFN.rfind('.');
+	if (p != string::npos)
+		ext = strNFN.substr(p + 1);
+	if (ext.substr(0, 2) == "iq")
+		bIsIQ = true;
+	if (ext.substr(0, 2) == "IQ")
+		bIsIQ = true;
+
+	if (bIsIQ)
+		chanSel.wanted = CS_IQ_POS_ZERO;
+	else
+		chanSel.wanted = CS_MIX_CHAN;
+	pcmInput.wanted = File;
+	SetHamlib(NULL);
 	eNewReceiverMode = eReceiverMode; // trigger an update!
 }
 
 void CDRMReceiver::SetHamlib(CHamlib* p)
 {
-	SoundInProxy.SetHamlib(p);
+    if(pHamlib)
+        delete pHamlib;
+	pHamlib = p;
+	if(pHamlib)
+	{
+#ifdef HAVE_LIBHAMLIB
+		SetRigModel(pHamlib->GetWantedRigModel());
+#endif
+	}
 }
 
 void CDRMReceiver::SetRigModelForAllModes(int iID)
 {
-	SoundInProxy.SetRigModelForAllModes(iID);
+	rig.wanted = iID;
+	bRigUpdateForAllModes = true;
+	bRigUpdateNeeded=true;
 	eNewReceiverMode = eReceiverMode; // trigger an update!
 }
 
 void CDRMReceiver::SetRigModel(int iID)
 {
-	SoundInProxy.SetRigModel(iID);
+	rig.wanted = iID;
+	bRigUpdateForAllModes = false;
+	bRigUpdateNeeded=true;
 	eNewReceiverMode = eReceiverMode; // trigger an update!
 }
 
 int CDRMReceiver::GetRigModel() const
 {
 #ifdef HAVE_LIBHAMLIB
-	if(SoundInProxy.pHamlib)
+	if(pHamlib)
 	{
-		return SoundInProxy.pHamlib->GetRigModel();
+		return pHamlib->GetRigModel();
 	}
 #endif
 	return 0;
@@ -1424,40 +1352,40 @@ int CDRMReceiver::GetRigModel() const
 void CDRMReceiver::GetRigList(map<int,CRigCaps>& rigs) const
 {
 #ifdef HAVE_LIBHAMLIB
-	if(SoundInProxy.pHamlib)
-		SoundInProxy.pHamlib->GetRigList(rigs);
+	if(pHamlib)
+		pHamlib->GetRigList(rigs);
 #endif
 }
 
 void CDRMReceiver::GetRigCaps(CRigCaps& caps) const
 {
 #ifdef HAVE_LIBHAMLIB
-	if(SoundInProxy.pHamlib)
-		SoundInProxy.pHamlib->GetRigCaps(caps);
+	if(pHamlib)
+		pHamlib->GetRigCaps(caps);
 #endif
 }
 
 void CDRMReceiver::GetRigCaps(int model, CRigCaps& caps) const
 {
 #ifdef HAVE_LIBHAMLIB
-	if(SoundInProxy.pHamlib)
-		SoundInProxy.pHamlib->GetRigCaps(model, caps);
+	if(pHamlib)
+		pHamlib->GetRigCaps(model, caps);
 #endif
 }
 
 void CDRMReceiver::GetComPortList(map<string,string>& ports) const
 {
 #ifdef HAVE_LIBHAMLIB
-	if(SoundInProxy.pHamlib)
-		SoundInProxy.pHamlib->GetPortList(ports);
+	if(pHamlib)
+		pHamlib->GetPortList(ports);
 #endif
 }
 
 string CDRMReceiver::GetRigComPort() const
 {
 #ifdef HAVE_LIBHAMLIB
-	if(SoundInProxy.pHamlib)
-		return SoundInProxy.pHamlib->GetComPort();
+	if(pHamlib)
+		return pHamlib->GetComPort();
 #endif
 	return "";
 }
@@ -1465,8 +1393,8 @@ string CDRMReceiver::GetRigComPort() const
 void CDRMReceiver::SetRigComPort(const string& s)
 {
 #ifdef HAVE_LIBHAMLIB
-	if(SoundInProxy.pHamlib)
-		SoundInProxy.pHamlib->SetComPort(s);
+	if(pHamlib)
+		pHamlib->SetComPort(s);
 #endif
 }
 
@@ -1557,25 +1485,22 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	/* Receiver ------------------------------------------------------------- */
 
 	/* Sound In device */
-	SoundInProxy.SetDev(s.Get("Receiver", "snddevin", 0));
+	pSoundInInterface->SetDev(s.Get("Receiver", "snddevin", 0));
 
 	/* Sound Out device */
 	pSoundOutInterface->SetDev(s.Get("Receiver", "snddevout", 0));
 
-	string strInFile;
 	string str;
-	string strInFileExt;
-	int n;
 
 	/* input from file (code for bare rs, pcap files moved to CSettings) */
-	strInFile = s.Get("command", "fileio");
-	if(strInFile != "")
-		SetReadPCMFromFile(strInFile);
+	str = s.Get("command", "fileio", string(""));
+	if(str != "")
+		SetReadPCMFromFile(str);
 
 	/* Flip spectrum flag */
 	ReceiveData.SetFlippedSpectrum(s.Get("Receiver", "flipspectrum", false));
 
-	n = s.Get("command", "inchansel", -1);
+	int n = s.Get("command", "inchansel", -1);
 	switch (n)
 	{
 	case 0:
@@ -1669,14 +1594,15 @@ CDRMReceiver::LoadSettings(CSettings& s)
             break;
     }
 	/* upstream RSCI */
-	str = s.Get("command", "rsiin");
+    str = s.Get("command", "rsiin");
 	if(str != "")
 	{
 		bool bOK = upstreamRSCI.SetOrigin(str); // its a port
 		if(!bOK)
             throw CGenErr(string("can't open RSCI input ")+str);
 		// disable sound input
-		SoundInProxy.SetUsingDI(str);
+        pcmInput.current = pcmInput.wanted = RSCI;
+        SetHamlib(NULL);
 		Parameters.Measurements.bETSIPSD = true;
 	}
 
@@ -1847,7 +1773,7 @@ CDRMReceiver::SaveSettings(CSettings& s)
 	s.Put("Receiver", "tracking", int(GetTiSyncTracType()));
 
 	/* Sound In device */
-	s.Put("Receiver", "snddevin", SoundInProxy.GetDev());
+	s.Put("Receiver", "snddevin", pSoundOutInterface->GetDev());
 
 	/* Sound Out device */
 	s.Put("Receiver", "snddevout", pSoundOutInterface->GetDev());

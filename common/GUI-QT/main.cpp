@@ -109,7 +109,7 @@ main(int argc, char **argv)
 			}
 #endif
 
-		string strMode = Settings.Get("0", "mode", string("DRMRX"));
+		string strMode = Settings.Get("0", "mode", string("RX"));
 
 		bool bShowHelp = Settings.Get("command", "help", 0);
 		if(bShowHelp)
@@ -136,13 +136,14 @@ main(int argc, char **argv)
 			   ready before the GUI thread */
 
 #ifdef HAVE_LIBHAMLIB
-			/* initialise Hamlib first, so that when the Receiver is initialised it can
-			 * tune the front end
+			/* initialise Hamlib first, so that when the Receiver is
+			 * initialised it can tune the front end
 			 */
 
-			CHamlib* pHamlib = NULL;
-			string rsi = Settings.Get("command", "rsiin");
-			if(rsi == "") /* don't initialise hamlib if RSCI input is requested */
+            CHamlib *pHamlib = NULL;
+			string rsi = Settings.Get("command", "rsiin", string(""));
+            string fio = Settings.Get("command", "fileio", string(""));
+			if(rsi == "" && fio == "") /* don't initialise hamlib if RSCI or file input is requested */
 			{
 				pHamlib = new CHamlib(*DRMReceiver.GetParameters());
 				pHamlib->LoadSettings(Settings);
@@ -161,7 +162,7 @@ main(int argc, char **argv)
 			app.exec();
 
 #ifdef HAVE_LIBHAMLIB
-			if(pHamlib) /* don't initialise hamlib if RSCI input is requested */
+			if(pHamlib)
 			{
 				pHamlib->StopSMeter();
 				if (pHamlib->wait(1000) == false)
