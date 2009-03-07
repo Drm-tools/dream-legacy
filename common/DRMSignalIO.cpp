@@ -134,7 +134,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	for(i=0; i<vecOutputs.size(); i++)
 	{
 
-		CSoundOutInterface* pSound;
+        CSoundOutInterface* pSound;
 		const string& s = vecOutputs[i];
 		string ext;
 		size_t p = s.rfind('.');

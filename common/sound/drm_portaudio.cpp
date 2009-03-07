@@ -123,7 +123,7 @@ void CPa_Static::enumerate()
            	capture_names.push_back(api+deviceInfo->name);
            	capture_devices.push_back(i);
 		}
-		if(deviceInfo->maxInputChannels > 1)
+		if(deviceInfo->maxOutputChannels > 1)
 		{
            	play_names.push_back(api+deviceInfo->name);
            	play_devices.push_back(i);
@@ -184,7 +184,7 @@ CPaCommon::Init(int iNewBufferSize, bool bNewBlocking, int iChannels)
 {
 	if (device_changed == false)
 		return;
-	
+
 	channels = iChannels;
 
 	if(is_capture)
@@ -224,7 +224,6 @@ CPaCommon::ReInit()
 	Close();
 
 	PaStreamParameters pParameters;
-
 	memset(&pParameters, sizeof(pParameters), 0);
 	pParameters.channelCount = channels;
 	pParameters.hostApiSpecificStreamInfo = NULL;
@@ -246,13 +245,15 @@ CPaCommon::ReInit()
  	if(pParameters.device == paNoDevice)
 		return;
 
+
 	double srate = 48000;
 	unsigned long minRingBufferSize;
 	int err;
+	const PaDeviceInfo* info = Pa_GetDeviceInfo(pParameters.device);
 
 	if (is_capture)
 	{
-		pParameters.suggestedLatency = Pa_GetDeviceInfo(pParameters.device)->defaultLowInputLatency;
+		pParameters.suggestedLatency = info->defaultLowInputLatency;
 		minRingBufferSize = 2*iBufferSize*sizeof(_SAMPLE);
 	}
 	else
@@ -282,8 +283,11 @@ CPaCommon::ReInit()
 		err = Pa_OpenStream(&stream, NULL, &pParameters, srate,
 							framesPerBuffer, paNoFlag, playbackCallback,
 							(void *) this);
+
 		if (err != paNoError)
+		{
 			throw string("PortAudio error: ") + Pa_GetErrorText(err);
+		}
 	}
 
 	unsigned long n = 2;

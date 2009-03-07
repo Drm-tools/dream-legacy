@@ -44,7 +44,7 @@ CDRMModulator::CDRMModulator():
 void
 CDRMModulator::GetSoundOutChoices(vector<string>& v)
 {
-	CSoundOut s;
+    CSoundOut s;
 	s.Enumerate(v);
 }
 

@@ -1484,11 +1484,30 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	/* Receiver ------------------------------------------------------------- */
 
+    vector<string> vs;
+    int dev;
+
 	/* Sound In device */
-	pSoundInInterface->SetDev(s.Get("Receiver", "snddevin", 0));
+	dev = s.Get("Receiver", "snddevin", 0);
+	pSoundInInterface->Enumerate(vs);
+	if(vs.size()>0)
+	{
+	    if(dev>=vs.size())
+            dev = vs.size()-1;
+        pSoundInInterface->SetDev(dev);
+	}
+
+	vs.clear();
 
 	/* Sound Out device */
-	pSoundOutInterface->SetDev(s.Get("Receiver", "snddevout", 0));
+	dev = s.Get("Receiver", "snddevout", 0);
+	pSoundOutInterface->Enumerate(vs);
+	if(vs.size()>0)
+	{
+	    if(dev>=vs.size())
+            dev = vs.size()-1;
+        pSoundOutInterface->SetDev(dev);
+	}
 
 	string str;
 

@@ -48,7 +48,7 @@ CDRMEncoder::CDRMEncoder():
 void
 CDRMEncoder::GetSoundInChoices(vector<string>& v)
 {
-	CSoundIn s;
+    CSoundIn s;
 	s.Enumerate(v);
 }
 

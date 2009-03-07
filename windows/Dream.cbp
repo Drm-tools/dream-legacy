@@ -10,7 +10,7 @@
 				<Option platforms="Windows;" />
 				<Option output="Dream.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="Release" />
-				<Option type="0" />
+				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
@@ -87,6 +87,75 @@
 					<Add option="-DNDEBUG" />
 				</Compiler>
 			</Target>
+			<Target title="Portaudio Release">
+				<Option platforms="Windows;" />
+				<Option output="Dream.exe" prefix_auto="0" extension_auto="0" />
+				<Option object_output="Release" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+					<Add option="-fexceptions" />
+					<Add option="-DNDEBUG" />
+					<Add option="-DUSE_PORTAUDIO" />
+					<Add option="-DHAVE_QT" />
+					<Add option="-DUSE_QT_GUI" />
+					<Add option="-DQT_THREAD_SUPPORT" />
+					<Add option="-DQT_DLL" />
+					<Add option="-DQT_QT3SUPPORT_LIB" />
+					<Add option="-DQT3_SUPPORT" />
+					<Add option="-DQT_XML_LIB" />
+					<Add option="-DQT_GUI_LIB" />
+					<Add option="-DQT_NETWORK_LIB" />
+					<Add option="-DQT_CORE_LIB" />
+				</Compiler>
+				<Linker>
+					<Add library="Qt3Support4" />
+					<Add library="QtCore4" />
+					<Add library="QtNetwork4" />
+					<Add library="QtGUI4" />
+					<Add library="QtXML4" />
+					<Add library="qwt5" />
+				</Linker>
+			</Target>
+			<Target title="Portaudio Debug">
+				<Option platforms="Windows;" />
+				<Option output="Dreamd.exe" prefix_auto="0" extension_auto="0" />
+				<Option object_output="Debug" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add option="-W" />
+					<Add option="-pg" />
+					<Add option="-g" />
+					<Add option="-fexceptions" />
+					<Add option="-D_DEBUG" />
+					<Add option="-DUSE_PORTAUDIO" />
+					<Add option="-DHAVE_QT" />
+					<Add option="-DUSE_QT_GUI" />
+					<Add option="-DQT_THREAD_SUPPORT" />
+					<Add option="-DQT_DLL" />
+					<Add option="-DQT_QT3SUPPORT_LIB" />
+					<Add option="-DQT3_SUPPORT" />
+					<Add option="-DQT_XML_LIB" />
+					<Add option="-DQT_GUI_LIB" />
+					<Add option="-DQT_NETWORK_LIB" />
+					<Add option="-DQT_CORE_LIB" />
+				</Compiler>
+				<Linker>
+					<Add option="-pg -lgmon" />
+					<Add library="Qt3Support4" />
+					<Add library="QtCore4" />
+					<Add library="QtNetwork4" />
+					<Add library="QtGUI4" />
+					<Add library="QtXML4" />
+					<Add library="qwt5" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-DHAVE_STDINT_H" />
@@ -123,6 +192,7 @@
 			<Add library="sndfile" />
 			<Add library="wpcap" />
 			<Add library="hamlib" />
+			<Add library="..\libs\PortAudio.dll" />
 			<Add directory="$(QTDIR)\lib" />
 			<Add directory="D:\dream\qwt-qt4\lib" />
 			<Add directory="..\libs" />
@@ -155,123 +225,183 @@
 		<Unit filename="..\common\GUI-QT\AnalogDemDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\AnalogDemDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\DRMMainWindow.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\DRMMainWindow.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\DRMPlot.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\DRMPlot.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\DialogUtil.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\DialogUtil.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\EPGDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\EPGDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\LatLongEditDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\LatLongEditDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\LiveScheduleDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\LiveScheduleDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\Loghelper.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\MultColorLED.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\MultColorLED.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\MultSettingsDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\MultSettingsDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\MultimediaDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\MultimediaDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\ReceiverSettingsDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\ReceiverSettingsDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\StationsDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\StationsDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\SystemEvalDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\SystemEvalDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\TransmDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\TransmDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\main.cpp" />
 		<Unit filename="..\common\GUI-QT\res\qrc_icons.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GlobalDefinitions.h" />
 		<Unit filename="..\common\IQInputFilter.cpp" />
@@ -299,10 +429,14 @@
 		<Unit filename="..\common\MDI\PacketSocketQT.cpp">
 			<Option target="Win32 Debug" />
 			<Option target="Win32 Release" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\MDI\PacketSocketQT.h">
 			<Option target="Win32 Debug" />
 			<Option target="Win32 Release" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\MDI\PacketSourceFile.cpp" />
 		<Unit filename="..\common\MDI\PacketSourceFile.h" />
@@ -366,10 +500,14 @@
 		<Unit filename="..\common\datadecoding\epg\EPG.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\datadecoding\epg\EPG.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\datadecoding\epg\epgdec.cpp" />
 		<Unit filename="..\common\datadecoding\epg\epgdec.h" />
@@ -437,6 +575,23 @@
 		<Unit filename="..\common\resample\ResampleFilter.h" />
 		<Unit filename="..\common\selectioninterface.h" />
 		<Unit filename="..\common\sound.h" />
+		<Unit filename="..\common\sound\drm_portaudio.cpp">
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\sound\drm_portaudio.h">
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\sound\pa_ringbuffer.c">
+			<Option compilerVar="CC" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\sound\pa_ringbuffer.h">
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
 		<Unit filename="..\common\sound\soundfile.cpp" />
 		<Unit filename="..\common\sound\soundfile.h" />
 		<Unit filename="..\common\sound\soundnull.h" />
@@ -488,129 +643,197 @@
 		<Unit filename="..\moc\moc_AnalogDemDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_DRMMainWindow.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_DRMPlot.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_DialogUtil.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_EPGDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_GPSReceiver.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_LatLongEditDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_LiveScheduleDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_Loghelper.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_MultColorLED.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_MultSettingsDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_MultimediaDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_PacketSocketQT.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_ReceiverSettingsDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_StationsDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_SystemEvalDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_TransmDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_AMSSDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_AboutDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_AnalogMainWindow.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_DRMMainWindow.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_EPGDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_LatLongEditDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_LiveScheduleDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_MultSettingsDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_MultimediaDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_ReceiverSettingsDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_StationsDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_SystemEvalDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_TransmitterMainWindow.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="Dream.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
 		<Unit filename="Source\Pacer.cpp" />
-		<Unit filename="Source\Sound.cpp" />
-		<Unit filename="Source\Sound.h" />
+		<Unit filename="Source\Sound.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Win32CLI" />
+		</Unit>
+		<Unit filename="Source\Sound.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Win32CLI" />
+		</Unit>
 		<Unit filename="resource.h" />
 		<Extensions>
 			<code_completion />
