@@ -77,7 +77,7 @@ public:
 	virtual bool SetOrigin(const string& str);
 
 	virtual bool GetDestination(string& str);
-	virtual bool Poll() {} // not used
+	virtual bool Poll() { return false; } // not used
 
 private:
 	CPacketSink *pPacketSink;
