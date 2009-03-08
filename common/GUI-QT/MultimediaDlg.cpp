@@ -598,7 +598,7 @@ void MultimediaDlg::OnButtonJumpBegin()
 void MultimediaDlg::OnButtonJumpEnd()
 {
 	/* Go to last received picture */
-	iCurImagePos = GetIDLastPicture();
+	iCurImagePos = vecImages.size()-1;
 	SetSlideShowPicture();
 }
 
@@ -647,7 +647,7 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 		ButtonJumpBegin->setEnabled(true);
 	}
 
-	if (iCurImagePos == GetIDLastPicture())
+	if (iCurImagePos == int(vecImages.size()-1))
 	{
 		/* We are already at the end */
 		ButtonStepForward->setEnabled(false);
@@ -659,7 +659,7 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 		ButtonJumpEnd->setEnabled(true);
 	}
 
-	QString strTotImages = QString().setNum(GetIDLastPicture() + 1);
+	QString strTotImages = QString().setNum(vecImages.size());
 	QString strNumImage = QString().setNum(iCurImagePos + 1);
 
 	QString strSep("");
@@ -696,12 +696,14 @@ void MultimediaDlg::OnSave()
 	{
 	case CDataDecoder::AT_MOTSLISHOW:
 
-		strExt = ""; //QString(vecRawImages[iCurImagePos].strFormat.c_str());
-
-		if (strExt.length() == 0)
-			strFilter = "*.*";
-		else
+		int n = vecImageNames[iCurImagePos].lastIndexOf('.');
+		if(n>=0)
+		{
+            strExt = vecImageNames[iCurImagePos].mid(n+1);
 			strFilter = "*." + strExt;
+		}
+		else
+			strFilter = "*.*";
 
 		/* Show "save file" dialog */
 		/* Set file name */
@@ -722,7 +724,7 @@ void MultimediaDlg::OnSave()
 		if (!strFileName.isNull())
 		{
 			SetCurrentSavePath(strFileName);
-			//SaveMOTObject(vecRawImages[iCurImagePos].Body.vecData, strFileName);
+			vecImages[iCurImagePos].save(strFileName);
 		}
 		break;
 
@@ -785,12 +787,10 @@ void MultimediaDlg::OnSaveAll()
 			strDirName += "/";
 
 		/* Loop over all pictures received yet */
-		for (int j = 0; j < GetIDLastPicture() + 1; j++)
+		for (size_t j = 0; j < vecImages.size(); j++)
 		{
-#if 0
-			const CMOTObject& o = vecRawImages[j];
-			QString strFileName = o.strName.c_str();
-			QString strExt = QString(o.strFormat.c_str());
+			const QImage& o = vecImages[j];
+			QString strFileName = vecImageNames[j];
 
 			if (strFileName.length() == 0)
 			{
@@ -802,11 +802,7 @@ void MultimediaDlg::OnSaveAll()
 			/* Add directory and ending */
 			strFileName = strDirName + strFileName;
 
-			if ((strFileName.contains(".") == 0) && (strExt.length() > 0))
-				strFileName += "." + strExt;
-
-			SaveMOTObject(o.Body.vecData, strFileName);
-#endif
+			o.save(strFileName);
 		}
 	}
 }
@@ -895,7 +891,7 @@ void MultimediaDlg::InitMOTSlideShow()
 
 	/* Set current image position to the last picture and display it (if at
 	   least one picture is available) */
-	iCurImagePos = GetIDLastPicture();
+	iCurImagePos = vecImages.size()-1;
 	if (iCurImagePos >= 0)
 		SetSlideShowPicture();
 	else

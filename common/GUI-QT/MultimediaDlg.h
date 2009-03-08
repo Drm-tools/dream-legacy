@@ -120,7 +120,6 @@ protected:
 	void SetSlideShowPicture();
 	void SetJournalineText();
 	void UpdateAccButtonsSlideShow();
-	int GetIDLastPicture() {return vecImages.size() - 1;}
 	void SaveMOTObject(const CVector<_BYTE>& vecbRawData, const QString& strFileName);
 	void CreateDirectories(const QString& filename);
 	void ClearAllSlideShow();
