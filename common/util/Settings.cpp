@@ -42,6 +42,7 @@
 #include <iomanip>
 #include <limits>
 #include <cstdlib>
+#include <cstring>
 
 /* Implementation *************************************************************/
 void

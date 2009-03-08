@@ -28,6 +28,8 @@
 
 #include "soundfile.h"
 #include "../GlobalDefinitions.h"
+#include <cstdlib>
+#include <cstring>
 #include <iostream>
 
 /* Implementation *************************************************************/

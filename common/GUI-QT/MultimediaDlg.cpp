@@ -691,12 +691,13 @@ void MultimediaDlg::OnSave()
 	QString strDefFileName;
 	QString strExt;
 	QString strFilter;
+	int n;
 
 	switch (eAppType)
 	{
 	case CDataDecoder::AT_MOTSLISHOW:
 
-		int n = vecImageNames[iCurImagePos].lastIndexOf('.');
+		n = vecImageNames[iCurImagePos].lastIndexOf('.');
 		if(n>=0)
 		{
             strExt = vecImageNames[iCurImagePos].mid(n+1);

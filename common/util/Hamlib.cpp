@@ -25,6 +25,7 @@
  *
 \******************************************************************************/
 
+#include <cstdlib>
 #include "Hamlib.h"
 #ifdef HAVE_LIBHAMLIB
 #include "../Parameter.h"

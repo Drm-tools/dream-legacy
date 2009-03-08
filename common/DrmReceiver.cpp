@@ -150,7 +150,7 @@ CDRMReceiver::UpdateHamlibAndSoundInput()
 			{
 # ifdef __linux__
     			CShmSoundIn* ShmSoundIn = new CShmSoundIn;
-				ShmSoundIn->SetShmPath(filename);
+				ShmSoundIn->SetShmPath(strPCMFile);
 				ShmSoundIn->SetName("Radio Card");
 				ShmSoundIn->SetShmChannels(1);
 				ShmSoundIn->SetWantedChannels(2);

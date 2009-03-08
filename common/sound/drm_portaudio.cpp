@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "drm_portaudio.h"
+#include <cstring>
 #include <iostream>
 
 /* This routine will be called by the PortAudio engine when audio is needed.
