@@ -98,7 +98,9 @@ protected:
 	QTimer					Timer;
 	QMenuBar*				pMenu;
 	Q3PopupMenu*			pFileMenu;
-	std::vector<CMOTObject>	vecRawImages;
+	QTextDocument           document;
+	std::vector<QImage>     vecImages;
+	std::vector<QString>	vecImageNames;
 	int						iCurImagePos;
 	QString					strFhGIISText;
 	QString					strJournalineHeadText;
@@ -118,7 +120,7 @@ protected:
 	void SetSlideShowPicture();
 	void SetJournalineText();
 	void UpdateAccButtonsSlideShow();
-	int GetIDLastPicture() {return vecRawImages.size() - 1;}
+	int GetIDLastPicture() {return vecImages.size() - 1;}
 	void SaveMOTObject(const CVector<_BYTE>& vecbRawData, const QString& strFileName);
 	void CreateDirectories(const QString& filename);
 	void ClearAllSlideShow();

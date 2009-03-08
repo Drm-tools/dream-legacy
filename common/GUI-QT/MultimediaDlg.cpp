@@ -59,6 +59,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
     setupUi(this);
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
     textBrowser->setFont(fontTextBrowser);
+    textBrowser->setDocument(&document);
 
 	/* Set FhG IIS text */
 	strFhGIISText =
@@ -219,8 +220,19 @@ void MultimediaDlg::OnTimer()
 		if (DataDecoder.GetMOTObject(NewObj, eAppType) == true)
 		{
 			/* Store received picture */
-			iCurNumPict = vecRawImages.size();
-			vecRawImages.push_back(NewObj);
+			iCurNumPict = vecImageNames.size();
+            CVector<_BYTE>& imagedata = NewObj.Body.vecData;
+
+            /* Load picture in QT format */
+			QPixmap pic;
+            if (pic.loadFromData(&imagedata[0], imagedata.size()))
+            {
+                /* Set new picture in source factory */
+                vecImages.push_back(QImage(pic));
+                vecImageNames.push_back(NewObj.strName.c_str());
+                QString ref = QString("slides://image%1").arg(iCurNumPict);
+                document.addResource(QTextDocument::ImageResource, QUrl(ref), QVariant(vecImages[iCurNumPict]));
+            }
 
 			/* If the last received picture was selected, automatically show
 			   new picture */
@@ -592,45 +604,15 @@ void MultimediaDlg::OnButtonJumpEnd()
 
 void MultimediaDlg::SetSlideShowPicture()
 {
-	QPixmap		NewImage;
-
-	/* Copy current image from image storage vector */
-	CMOTObject vecbyCurPict(vecRawImages[iCurImagePos]);
-
-	CVector<_BYTE>& imagedata = vecbyCurPict.Body.vecData;
-	const QString imagename(vecbyCurPict.strName.c_str());
-
-	/* Load picture in QT format */
-	if (NewImage.loadFromData(&imagedata[0], imagedata.size()))
-	{
-		/* The slideshow pictures are not
-           updated correctly without this line: */
-		/* If the text is empty there is segmentation fault
-			 browsing the images */
-
-		textBrowser->setText("<br>");
-
-		/* Set new picture in source factory and set it in text control */
-		Q3MimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
-			NewImage.convertToImage());
-
-		textBrowser->setText("<center><img src=\"MOTSlideShowimage\"></center>");
-	}
-	else
-	{
-		/* Show text that tells the user of load failure */
-		textBrowser->setText("<br><br><center><b>" + tr("Image could not be "
-			"loaded, ") +
-			 QString(vecbyCurPict.strFormat.c_str()) +
-			 tr("-format not supported") +
-			"</b><br><br><br>" + tr("If you want to view the image, "
-			"save it to file and use an external viewer") + "</center>");
-	}
+    textBrowser->setText("<br>");
+    QString ref = QString("slides://image%1").arg(iCurImagePos);
+    textBrowser->setText("<center><img src=\""+ref+"\"></center>");
 
 	/* Remove previous tool tip */
 	QToolTip::remove(textBrowser);
 
 	/* Add tool tip showing the name of the picture */
+	const QString imagename = vecImageNames[iCurImagePos];
 	if (imagename.length() != 0)
 		QToolTip::add(textBrowser,imagename);
 
@@ -714,7 +696,7 @@ void MultimediaDlg::OnSave()
 	{
 	case CDataDecoder::AT_MOTSLISHOW:
 
-		strExt = QString(vecRawImages[iCurImagePos].strFormat.c_str());
+		strExt = ""; //QString(vecRawImages[iCurImagePos].strFormat.c_str());
 
 		if (strExt.length() == 0)
 			strFilter = "*.*";
@@ -723,7 +705,7 @@ void MultimediaDlg::OnSave()
 
 		/* Show "save file" dialog */
 		/* Set file name */
-		strDefFileName = vecRawImages[iCurImagePos].strName.c_str();
+		strDefFileName = vecImageNames[iCurImagePos];
 
 		/* Use default file name if no file name was transmitted */
 		if (strDefFileName.length() == 0)
@@ -740,7 +722,7 @@ void MultimediaDlg::OnSave()
 		if (!strFileName.isNull())
 		{
 			SetCurrentSavePath(strFileName);
-			SaveMOTObject(vecRawImages[iCurImagePos].Body.vecData, strFileName);
+			//SaveMOTObject(vecRawImages[iCurImagePos].Body.vecData, strFileName);
 		}
 		break;
 
@@ -805,6 +787,7 @@ void MultimediaDlg::OnSaveAll()
 		/* Loop over all pictures received yet */
 		for (int j = 0; j < GetIDLastPicture() + 1; j++)
 		{
+#if 0
 			const CMOTObject& o = vecRawImages[j];
 			QString strFileName = o.strName.c_str();
 			QString strExt = QString(o.strFormat.c_str());
@@ -823,6 +806,7 @@ void MultimediaDlg::OnSaveAll()
 				strFileName += "." + strExt;
 
 			SaveMOTObject(o.Body.vecData, strFileName);
+#endif
 		}
 	}
 }
@@ -830,7 +814,8 @@ void MultimediaDlg::OnSaveAll()
 void MultimediaDlg::ClearAllSlideShow()
 {
 	/* Init vector which will store the received images with zero size */
-	vecRawImages.clear();
+	vecImages.clear();
+	vecImageNames.clear();
 
 	/* Init current image position */
 	iCurImagePos = -1;
