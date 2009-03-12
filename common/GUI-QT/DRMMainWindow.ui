@@ -7059,8 +7059,172 @@
      <height>19</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuView" >
+    <property name="title" >
+     <string>View</string>
+    </property>
+    <addaction name="actionDetails" />
+    <addaction name="actionStations" />
+    <addaction name="actionAFS" />
+    <addaction name="actionEPG" />
+    <addaction name="separator" />
+    <addaction name="actionExit" />
+   </widget>
+   <widget class="QMenu" name="menuSettings" >
+    <property name="title" >
+     <string>Settings</string>
+    </property>
+    <widget class="QMenu" name="menuSound_Card_Selection" >
+     <property name="title" >
+      <string>Sound Card Selection</string>
+     </property>
+    </widget>
+    <widget class="QMenu" name="menuPlot_Style" >
+     <property name="title" >
+      <string>Plot Style</string>
+     </property>
+     <addaction name="actionBlue_White" />
+     <addaction name="actionGreen_Black" />
+     <addaction name="actionBlack_Grey" />
+    </widget>
+    <addaction name="menuSound_Card_Selection" />
+    <addaction name="actionAM" />
+    <addaction name="actionDRM" />
+    <addaction name="separator" />
+    <addaction name="actionSet_Display_Colour" />
+    <addaction name="menuPlot_Style" />
+    <addaction name="separator" />
+    <addaction name="actionClear_EPG_Cache" />
+    <addaction name="actionSettings" />
+   </widget>
+   <widget class="QMenu" name="menu" >
+    <property name="title" >
+     <string>?</string>
+    </property>
+    <addaction name="actionWhatsThis" />
+    <addaction name="separator" />
+    <addaction name="actionAbout" />
+   </widget>
+   <addaction name="menuView" />
+   <addaction name="menuSettings" />
+   <addaction name="menu" />
   </widget>
   <widget class="QStatusBar" name="statusbar" />
+  <action name="actionWhatsThis" >
+   <property name="text" >
+    <string>&amp;What's This</string>
+   </property>
+   <property name="shortcut" >
+    <string>Shift+F1</string>
+   </property>
+   <property name="shortcutContext" >
+    <enum>Qt::WindowShortcut</enum>
+   </property>
+  </action>
+  <action name="actionAbout" >
+   <property name="text" >
+    <string>About ...</string>
+   </property>
+  </action>
+  <action name="actionSoundIn" >
+   <property name="text" >
+    <string>Sound &amp;In</string>
+   </property>
+  </action>
+  <action name="actionSoundOut" >
+   <property name="text" >
+    <string>Sound &amp;Out</string>
+   </property>
+  </action>
+  <action name="actionAM" >
+   <property name="text" >
+    <string>&amp;AM (analog)</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="actionDRM" >
+   <property name="text" >
+    <string>New &amp;DRM Acquisition</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+D</string>
+   </property>
+  </action>
+  <action name="actionSet_Display_Colour" >
+   <property name="text" >
+    <string>Set Display Colour ...</string>
+   </property>
+  </action>
+  <action name="actionClear_EPG_Cache" >
+   <property name="text" >
+    <string>Clear EPG Cache</string>
+   </property>
+  </action>
+  <action name="actionBlue_White" >
+   <property name="text" >
+    <string>Blue / White</string>
+   </property>
+  </action>
+  <action name="actionGreen_Black" >
+   <property name="text" >
+    <string>Green / Black</string>
+   </property>
+  </action>
+  <action name="actionBlack_Grey" >
+   <property name="text" >
+    <string>Black / Grey</string>
+   </property>
+  </action>
+  <action name="actionDetails" >
+   <property name="text" >
+    <string>&amp;Reception Details ...</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="actionStations" >
+   <property name="text" >
+    <string>&amp;Station List ...</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionAFS" >
+   <property name="text" >
+    <string>Alternative &amp;Frequencies ...</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionEPG" >
+   <property name="text" >
+    <string>Programme &amp;Guide</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+E</string>
+   </property>
+  </action>
+  <action name="actionExit" >
+   <property name="text" >
+    <string>Exit</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionSettings" >
+   <property name="text" >
+    <string>Receiver &amp;Settings</string>
+   </property>
+   <property name="shortcutContext" >
+    <enum>Qt::WidgetShortcut</enum>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

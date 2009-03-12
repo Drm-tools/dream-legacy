@@ -34,6 +34,7 @@
 #include "../util/CRC.h"
 #include "DABMOT.h"
 #include "MOTSlideShow.h"
+#include "../Parameter.h"
 
 class CJournaline;
 class CNews;
@@ -85,23 +86,18 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 	CDataDecoder& operator=(const CDataDecoder&)
 	{ throw "should not happen"; return *this;}
 
-    enum EAppType
-    { AT_NOT_SUP, AT_MOTSLISHOW, AT_JOURNALINE,
-	AT_MOTBROADCASTWEBSITE, AT_MOTTPEG, AT_DGPS, AT_TMC, AT_MOTEPG,
-	    AT_JAVA
-    };
-
     bool GetMOTObject (CMOTObject & NewPic, const EAppType eAppTypeReq);
     bool GetMOTDirectory (CMOTDirectory & MOTDirectoryOut, const EAppType eAppTypeReq);
 
     void GetNews (const int iObjID, CNews & News);
+
     EAppType GetAppType ()
     {
 		return eAppType[iServPacketID];
     }
 
 	/* Parameter for activate/deactivate EPG decoding */
-	void		SetDecodeEPG(const bool bDecEPG) {bDecodeEPG = bDecEPG;}
+	void	SetDecodeEPG(const bool bDecEPG) {bDecodeEPG = bDecEPG;}
 	bool	GetDecodeEPG() {return bDecodeEPG;}
 
   protected:
@@ -139,7 +135,7 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     virtual void InitInternal (CParameter & ReceiverParam);
     virtual void ProcessDataInternal (CParameter & ReceiverParam);
 
-	bool	bDecodeEPG; /* enable/disable epg decoding */
+	bool bDecodeEPG; /* enable/disable epg decoding */
     int iEPGService;
     int iEPGPacketID;
     void DecodeEPG(const CParameter& ReceiverParam);

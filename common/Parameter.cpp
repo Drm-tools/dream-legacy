@@ -118,7 +118,7 @@ CDataParam::CDataParam():
     ePacketModInd(PM_PACKET_MODE),
     eDataUnitInd(DU_DATA_UNITS),
     eAppDomain(AD_DAB_SPEC_APP),
-    iUserAppIdent(0)
+    eUserAppIdent(AT_NOT_SUP)
 {
 }
 
@@ -127,7 +127,7 @@ CDataParam::CDataParam(const CDataParam& DataParam):
     ePacketModInd(DataParam.ePacketModInd),
     eDataUnitInd(DataParam.eDataUnitInd),
     eAppDomain(DataParam.eAppDomain),
-    iUserAppIdent(DataParam.iUserAppIdent)
+    eUserAppIdent(DataParam.eUserAppIdent)
 {
 }
 
@@ -136,7 +136,7 @@ CDataParam& CDataParam::operator=(const CDataParam& DataParam)
     ePacketModInd = DataParam.ePacketModInd;
     eDataUnitInd = DataParam.eDataUnitInd;
     eAppDomain = DataParam.eAppDomain;
-    iUserAppIdent = DataParam.iUserAppIdent;
+    eUserAppIdent = DataParam.eUserAppIdent;
     return *this;
 }
 
@@ -151,7 +151,7 @@ bool CDataParam::operator!=(const CDataParam& DataParam)
         if (eAppDomain != DataParam.eAppDomain)
             return true;
         if (DataParam.eAppDomain == AD_DAB_SPEC_APP)
-            if (iUserAppIdent != DataParam.iUserAppIdent)
+            if (eUserAppIdent != DataParam.eUserAppIdent)
                 return true;
     }
     return false;
@@ -1479,7 +1479,7 @@ CDataParam::dump(ostream& out) const
 {
     out << "{ DataUnits: " << int(eDataUnitInd) << "," << endl;
     out << "AppDomain: " << int(eAppDomain) << "," << endl;
-    out << "UserAppIdent: " << "0x" << hex << iUserAppIdent << dec << "}" << endl;
+    out << "UserAppIdent: " << "0x" << hex << int(eUserAppIdent) << dec << "}" << endl;
 }
 
 void

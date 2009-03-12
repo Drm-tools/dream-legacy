@@ -41,7 +41,7 @@
       <number>0</number>
      </property>
      <item>
-      <widget class="QTextBrowser" name="textBrowser" />
+      <widget class="JLBrowser" name="textBrowser" />
      </item>
      <item>
       <widget class="QLabel" name="PixmapFhGIIS" >
@@ -237,6 +237,11 @@
    <class>CMultColorLED</class>
    <extends>QWidget</extends>
    <header>MultColorLED.h</header>
+  </customwidget>
+  <customwidget>
+   <class>JLBrowser</class>
+   <extends>QTextBrowser</extends>
+   <header>jlbrowser.h</header>
   </customwidget>
  </customwidgets>
  <resources>

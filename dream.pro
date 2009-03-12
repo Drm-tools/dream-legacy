@@ -9,7 +9,7 @@ VPATH		+= common/GUI-QT
 LIBS 		+= -Llibs
 DEFINES		+= HAVE_LIBFAAC HAVE_LIBFAAD HAVE_LIBPCAP HAVE_LIBZ HAVE_FFTW_H
 FORMS       += DRMMainWindow.ui AnalogMainWindow.ui TransmitterMainWindow.ui
-FORMS       += AMSSDlg.ui MultimediaDlg.ui SystemEvalDlg.ui
+FORMS       += AMSSDlg.ui SystemEvalDlg.ui JLViewer.ui BWSViewer.ui SlideShowViewer.ui
 FORMS		+= LiveScheduleDlg.ui StationsDlg.ui EPGDlg.ui
 FORMS		+= MultSettingsDlg.ui AboutDlg.ui
 FORMS		+= ReceiverSettingsDlg.ui LatLongEditDlg.ui
@@ -172,13 +172,16 @@ common/GUI-QT/DRMMainWindow.h   \
 common/GUI-QT/LiveScheduleDlg.h   \
 common/GUI-QT/LatLongEditDlg.h \
 common/GUI-QT/MultColorLED.h   \
-common/GUI-QT/MultimediaDlg.h   \
+common/GUI-QT/JLViewer.h   \
+common/GUI-QT/SlideShowViewer.h   \
+common/GUI-QT/BWSViewer.h   \
 common/GUI-QT/MultSettingsDlg.h   \
 common/GUI-QT/ReceiverSettingsDlg.h \
 common/GUI-QT/Loghelper.h \
 common/GUI-QT/StationsDlg.h   \
 common/GUI-QT/SystemEvalDlg.h   \
 common/GUI-QT/TransmDlg.h   \
+common/GUI-QT/jlbrowser.h   \
 common/InputResample.h   \
 common/interleaver/BlockInterleaver.h   \
 common/interleaver/SymbolInterleaver.h   \
@@ -304,13 +307,16 @@ common/GUI-QT/LiveScheduleDlg.cpp   \
 common/GUI-QT/main.cpp   \
 common/GUI-QT/LatLongEditDlg.cpp \
 common/GUI-QT/MultColorLED.cpp   \
-common/GUI-QT/MultimediaDlg.cpp   \
+common/GUI-QT/JLViewer.cpp   \
+common/GUI-QT/SlideShowViewer.cpp   \
+common/GUI-QT/BWSViewer.cpp   \
 common/GUI-QT/MultSettingsDlg.cpp   \
 common/GUI-QT/ReceiverSettingsDlg.cpp \
 common/GUI-QT/Loghelper.cpp \
 common/GUI-QT/StationsDlg.cpp   \
 common/GUI-QT/SystemEvalDlg.cpp   \
 common/GUI-QT/TransmDlg.cpp   \
+common/GUI-QT/jlbrowser.cpp   \
 common/InputResample.cpp   \
 common/interleaver/BlockInterleaver.cpp   \
 common/interleaver/SymbolInterleaver.cpp   \

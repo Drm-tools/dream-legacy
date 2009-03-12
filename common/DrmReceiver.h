@@ -148,6 +148,7 @@ public:
 	EAcqStat				GetAcquiState() {return Parameters.eAcquiState;}
 	EDemodulationType		GetReceiverMode() {return eReceiverMode;}
 	void					SetReceiverMode(EDemodulationType eNewMode);
+	void					SetReceiverMode(const string&);
 	void					SetInitResOff(_REAL rNRO)
 								{rInitResampleOffset = rNRO;}
 

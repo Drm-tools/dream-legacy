@@ -41,10 +41,16 @@ public:
     JLBrowser(QWidget * parent = 0 );
     ~JLBrowser() {}
     QVariant loadResource ( int type, const QUrl & name );
+    bool changed();
+    void setDecoder(CDataDecoder*d) { datadecoder = d; }
+
+protected:
 
     CDataDecoder*   datadecoder;
     QString         strFhGIISText;
     QString         strJournalineHeadText;
+    int             total;
+    int             ready;
 };
 
 #endif

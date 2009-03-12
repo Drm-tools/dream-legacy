@@ -34,7 +34,6 @@
 #include "../GlobalDefinitions.h"
 #include "../tables/TableAMSS.h"
 #include <QTimer>
-#include <QMainWindow>
 
 #include "ui_AnalogMainWindow.h"
 #include "ui_AMSSDlg.h"
@@ -85,7 +84,7 @@ class AnalogDemDlg : public QMainWindow, public Ui_AnalogMainWindow
 	Q_OBJECT
 
 public:
-	AnalogDemDlg(CDRMReceiver&, CSettings&, ReceiverSettingsDlg&, QWidget* parent = 0,
+	AnalogDemDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, Qt::WFlags f = 0);
 	/* dummy assignment operator to help MSVC8 */
 	AnalogDemDlg& operator=(const AnalogDemDlg&)
@@ -97,17 +96,20 @@ protected:
 	CDRMReceiver&	Receiver;
 	CSettings&		Settings;
 	ReceiverSettingsDlg* pReceiverSettingsDlg;
+	QDialog*        stationsDlg;
+	QDialog*        liveScheduleDlg;
 	CDRMPlot*       plot;
 
 	QTimer			Timer;
 	QTimer			TimerPLLPhaseDial;
 	CAMSSDlg		AMSSDlg;
+	bool            quitWanted;
 
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
-    virtual void	showEvent(QShowEvent* pEvent);
-	virtual void	hideEvent(QHideEvent* pEvent);
-	virtual void	closeEvent(QCloseEvent* pEvent);
+    void	        showEvent(QShowEvent* pEvent);
+    void	        hideEvent(QHideEvent* pEvent);
+    void	        closeEvent(QCloseEvent* pEvent);
 
 public slots:
 	void OnTimer();
@@ -125,11 +127,5 @@ public slots:
 	void OnNewAMAcquisition() {Receiver.RequestNewAcquisition();}
 	void OnButtonWaterfall();
 	void OnButtonAMSS();
-	void OnSwitchToDRM();
-
-signals:
-	void SwitchToDRM();
-	void ViewStationsDlg();
-	void ViewLiveScheduleDlg();
-	void Closed();
+    void OnSwitchToDRM();
 };

@@ -30,29 +30,27 @@
 
 #include "AnalogDemDlg.h"
 #include <QMessageBox>
-#include <Q3PopupMenu>
 #include <QDateTime>
-#include <QToolTip>
 #include <QFileDialog>
 #include <QMotifStyle>
 #include <QStringListModel>
 #include <qwt_dial_needle.h>
 
-# include "ReceiverSettingsDlg.h"
-# include "DRMPlot.h"
+#include "ReceiverSettingsDlg.h"
+#include "StationsDlg.h"
+#include "LiveScheduleDlg.h"
+#include "DRMPlot.h"
 
 // TODO Rename
 // TODO improve layout (simplify?)
 
 /* Implementation *************************************************************/
 AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
-	ReceiverSettingsDlg& NReceiverSettingsDlg,
 	QWidget* parent, const char* name, Qt::WFlags f):
     QMainWindow(parent, name, f), Ui_AnalogMainWindow(),
 	Receiver(NDRMR), Settings(NSettings),
-	pReceiverSettingsDlg(&NReceiverSettingsDlg),
-	plot(NULL),
-	AMSSDlg(NDRMR, Settings, parent, name, false, f)
+	pReceiverSettingsDlg(NULL), plot(NULL),
+	AMSSDlg(NDRMR, Settings, parent, name, false, f), quitWanted(true)
 {
     setupUi(this);
 	CWinGeom s;
@@ -64,39 +62,33 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
+    pReceiverSettingsDlg = new ReceiverSettingsDlg(Receiver, Settings, this);
+
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
-	Q3PopupMenu* EvalWinMenu = new Q3PopupMenu(this);
-	Q_CHECK_PTR(EvalWinMenu);
-	EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
-		SIGNAL(ViewStationsDlg()), Qt::CTRL+Qt::Key_T);
-	EvalWinMenu->insertItem(tr("&Live Schedule Dialog..."), this,
-		SIGNAL(ViewLiveScheduleDlg()), Qt::CTRL+Qt::Key_L);
-	EvalWinMenu->insertSeparator();
-	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), Qt::CTRL+Qt::Key_Q);
+	connect(actionExit, SIGNAL(triggered()), this, SLOT(close()));
 
+    CSoundCardSelMenu* pSoundInMenu = new CSoundCardSelMenu(Receiver.GetSoundInInterface(), menuSound_Card_Selection);
+    CSoundCardSelMenu* pSoundOutMenu = new CSoundCardSelMenu(Receiver.GetSoundOutInterface(), menuSound_Card_Selection);
+    pSoundInMenu->setTitle(tr("Sound &In"));
+    pSoundOutMenu->setTitle(tr("Sound &Out"));
 	/* Settings menu  ------------------------------------------------------- */
-	Q3PopupMenu* pSettingsMenu = new Q3PopupMenu(this);
-	Q_CHECK_PTR(pSettingsMenu);
-	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
-		new CSoundCardSelMenu(Receiver.GetSoundInInterface(), Receiver.GetSoundOutInterface(), this));
-	pSettingsMenu->insertItem(tr("&DRM (digital)"),
-        this, SLOT(OnSwitchToDRM()), Qt::CTRL+Qt::Key_D);
-	pSettingsMenu->insertItem(tr("New &AM Acquisition"),
-        this, SLOT(OnNewAMAcquisition()), Qt::CTRL+Qt::Key_A);
-	pSettingsMenu->insertItem(tr("&Receiver settings..."),
-        pReceiverSettingsDlg, SLOT(show()));
+	connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnSwitchToDRM()));
+	connect(actionAM, SIGNAL(triggered()), this, SLOT(OnNewAMAcquisition()));
+	connect(actionReceiver_Settings, SIGNAL(triggered()), pReceiverSettingsDlg, SLOT(show()));
 
-	/* Main menu bar -------------------------------------------------------- */
-	QMenuBar* pMenu = new QMenuBar(this);
-	Q_CHECK_PTR(pMenu);
-	pMenu->insertItem(tr("&View"), EvalWinMenu);
-	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
-	pMenu->insertItem(tr("&?"), new CDreamHelpMenu(this));
-	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
-	/* Now tell the Window about the menu */
-	setMenuBar(pMenu);
+	/* Stations window */
+	stationsDlg = new StationsDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
+	if(Settings.Get("Stations Dialog", "visible", false))
+        stationsDlg->show();
+	connect(actionStations, SIGNAL(triggered()), stationsDlg, SLOT(show()));
+
+	/* Live Schedule window */
+	liveScheduleDlg = new LiveScheduleDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
+	if(Settings.Get("Live Schedule Dialog", "visible", false))
+        liveScheduleDlg->show();
+	connect(actionAFS, SIGNAL(triggered()), liveScheduleDlg, SLOT(show()));
 
 	/* Init main plot */
     plot = new CDRMPlot(SpectrumPlot, Receiver.GetParameters());
@@ -119,26 +111,18 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	PhaseDial->setFrameShadow(QwtDial::Plain);
 	PhaseDial->setScaleOptions(QwtDial::ScaleTicks);
 
-
 	/* Update controls */
 	UpdateControls();
 
-
 	/* Connect controls ----------------------------------------------------- */
-	connect(ButtonDRM, SIGNAL(clicked()),
-		this, SLOT(OnSwitchToDRM()));
-	connect(ButtonAMSS, SIGNAL(clicked()),
-		this, SLOT(OnButtonAMSS()));
-	connect(ButtonWaterfall, SIGNAL(clicked()),
-		this, SLOT(OnButtonWaterfall()));
+	connect(ButtonDRM, SIGNAL(clicked()), this, SLOT(OnSwitchToDRM()));
+	connect(ButtonAMSS, SIGNAL(clicked()), this, SLOT(OnButtonAMSS()));
+	connect(ButtonWaterfall, SIGNAL(clicked()), this, SLOT(OnButtonWaterfall()));
 
 	/* Button groups */
-	connect(ButtonGroupDemodulation, SIGNAL(clicked(int)),
-		this, SLOT(OnRadioDemodulation(int)));
-	connect(ButtonGroupAGC, SIGNAL(clicked(int)),
-		this, SLOT(OnRadioAGC(int)));
-	connect(ButtonGroupNoiseReduction, SIGNAL(clicked(int)),
-		this, SLOT(OnRadioNoiRed(int)));
+	connect(ButtonGroupDemodulation, SIGNAL(clicked(int)), this, SLOT(OnRadioDemodulation(int)));
+	connect(ButtonGroupAGC, SIGNAL(clicked(int)), this, SLOT(OnRadioAGC(int)));
+	connect(ButtonGroupNoiseReduction, SIGNAL(clicked(int)), this, SLOT(OnRadioNoiRed(int)));
 
 	/* Slider */
 	connect(SliderBandwidth, SIGNAL(valueChanged(int)),
@@ -154,20 +138,20 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(PLLButton, SIGNAL(clicked ()), this, SLOT(OnCheckPLL()));
 
 	/* Timers */
-	connect(&Timer, SIGNAL(timeout()),
-		this, SLOT(OnTimer()));
-	connect(&TimerPLLPhaseDial, SIGNAL(timeout()),
-		this, SLOT(OnTimerPLLPhaseDial()));
+	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
+	connect(&TimerPLLPhaseDial, SIGNAL(timeout()), this, SLOT(OnTimerPLLPhaseDial()));
 
 
 	/* Don't activate real-time timers, wait for show event */
     Timer.stop();
     TimerPLLPhaseDial.stop();
     plot->stop();
+    cerr << "Analog constructed" << endl;
 }
 
 void AnalogDemDlg::showEvent(QShowEvent*)
 {
+    cerr << "Analog show" << endl;
 	OnTimer();
 	OnTimerPLLPhaseDial();
 
@@ -210,33 +194,31 @@ void AnalogDemDlg::hideEvent(QHideEvent*)
 
 void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 {
-	/* stop real-time timers */
-	Timer.stop();
-	TimerPLLPhaseDial.stop();
-
-	Settings.Put("AMSS Dialog", "visible", AMSSDlg.isVisible());
-
-	/* tell every other window to close too */
-	emit Closed();
-
-	/* Save window geometry data */
-	CWinGeom s;
-	QRect WinGeom = geometry();
-	s.iXPos = WinGeom.x();
-	s.iYPos = WinGeom.y();
-	s.iHSize = WinGeom.height();
-	s.iWSize = WinGeom.width();
-	Settings.Put("AM Dialog", s);
-
-	/* request that the working thread stops */
-	Receiver.Stop();
-	(void)Receiver.wait(5000);
-	if(!Receiver.isFinished())
-	{
-		QMessageBox::critical(this, "Dream", "Exit\n",
-				"Termination of working thread failed");
-	}
+    cerr << "Quit wanted " << quitWanted << endl;
+    if(quitWanted)
+    {
+        /* request that the working thread stops */
+        Receiver.Stop();
+        (void)Receiver.wait(5000);
+        if(!Receiver.isFinished())
+        {
+            QMessageBox::critical(this, "Dream", "Exit\n",
+                    "Termination of working thread failed");
+        }
+        Settings.Put("command", "quit", 1);
+    }
+    else
+    {
+        Settings.Put("command", "quit", 0);
+    }
 	ce->accept();
+}
+
+void AnalogDemDlg::OnSwitchToDRM()
+{
+    Settings.Put("Receiver", "modulation", string("DRM"));
+	quitWanted = false;
+	close();
 }
 
 void AnalogDemDlg::UpdateControls()
@@ -354,12 +336,6 @@ void AnalogDemDlg::UpdatePlotStyle()
 	plot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 }
 
-void AnalogDemDlg::OnSwitchToDRM()
-{
-	this->hide();
-	SwitchToDRM();
-}
-
 void AnalogDemDlg::OnTimer()
 {
 	bool b;
@@ -368,7 +344,7 @@ void AnalogDemDlg::OnTimer()
 	switch(Receiver.GetReceiverMode())
 	{
 	case DRM:
-		OnSwitchToDRM();
+        close();
 		break;
 	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
 		/* Carrier frequency of AM signal */

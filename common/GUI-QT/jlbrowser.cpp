@@ -31,7 +31,8 @@
 #include "../datadecoding/Journaline.h"
 
 JLBrowser::JLBrowser(QWidget * parent)
-: QTextBrowser(parent),datadecoder(NULL)
+: QTextBrowser(parent),datadecoder(NULL),strFhGIISText(),strJournalineHeadText(),
+    total(0),ready(0)
 {
 
 	/* Set FhG IIS text */
@@ -49,23 +50,62 @@ JLBrowser::JLBrowser(QWidget * parent)
 		"</h2></td></tr></table>";
 }
 
+bool JLBrowser::changed()
+{
+	if(datadecoder==NULL)
+        return false;
+
+    int JourID = source().toString().toInt();
+
+	CNews News;
+	datadecoder->GetNews(JourID, News);
+
+    int new_total=News.vecItem.Size();
+    int new_ready=0;
+    bool dirty = false;
+
+	for (int i = 0; i < new_total; i++)
+	{
+		switch(News.vecItem[i].iLink)
+		{
+        case JOURNALINE_IS_NO_LINK: /* Only text, no link */
+        case JOURNALINE_LINK_NOT_ACTIVE:
+			break;
+        default:
+            new_ready++;
+		}
+	}
+	if(new_total != total)
+	{
+	    total = new_total;
+	    dirty = true;
+	}
+	if(new_ready != ready)
+	{
+	    ready = new_ready;
+	    dirty = true;
+	}
+	return dirty;
+}
+
 QVariant JLBrowser::loadResource( int type, const QUrl & name )
 {
 	/* Get news from actual Journaline decoder */
-	CNews News;
 	if(datadecoder==NULL)
         return QVariant::Invalid;
 
     int JourID = name.toString().toInt();
 
-cerr << "JLB " << JourID << " name " << name.toString().toStdString() << endl;
+	CNews News;
 	datadecoder->GetNews(JourID, News);
 
 	/* Decode UTF-8 coding for title */
 	QString strTitle = QString().fromUtf8(News.sTitle.c_str());
 
 	QString strItems = "";
-	for (int i = 0; i < News.vecItem.Size(); i++)
+	ready = 0;
+	total = News.vecItem.Size();
+	for (int i = 0; i < total; i++)
 	{
 		QString strCurItem = QString().fromUtf8(News.vecItem[i].sText.c_str());
 
@@ -82,6 +122,7 @@ cerr << "JLB " << JourID << " name " << name.toString().toStdString() << endl;
 			strItems += QString("<li>") + strCurItem + QString("</li>");
 			break;
         default:
+            ready++;
             QString strLinkStr = QString("%1").arg(News.vecItem[i].iLink);
             /* Un-ordered list item with link */
             strItems += QString("<li><a href=\"") + strLinkStr +
@@ -99,8 +140,8 @@ cerr << "JLB " << JourID << " name " << name.toString().toStdString() << endl;
 		"<tr><td><stylebody><ul type=\"square\">" + strItems +
 		"</ul></stylebody></td></tr>"
 		"<tr><td><hr></td></tr>" /* horizontial line */
-		"</table>";
-		//+ strFhGIISText;
+		"</table>"
+		+ strFhGIISText;
 
     return strAllText;
 }

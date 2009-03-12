@@ -12,7 +12,7 @@
 				<Option object_output="Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
+				<Option parameters="--mode RX --modn AM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -43,7 +43,7 @@
 				<Option object_output="Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
+				<Option parameters="--mode RX --modn AM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-W" />
 					<Add option="-Wall" />
@@ -93,7 +93,7 @@
 				<Option object_output="Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
+				<Option parameters="--mode RX --modn AM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -234,6 +234,18 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
+		<Unit filename="..\common\GUI-QT\BWSViewer.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\BWSViewer.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
 		<Unit filename="..\common\GUI-QT\DRMMainWindow.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -277,6 +289,18 @@
 			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\EPGDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\JLViewer.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\JLViewer.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
@@ -336,18 +360,6 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
-		<Unit filename="..\common\GUI-QT\MultimediaDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-			<Option target="Portaudio Release" />
-			<Option target="Portaudio Debug" />
-		</Unit>
-		<Unit filename="..\common\GUI-QT\MultimediaDlg.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-			<Option target="Portaudio Release" />
-			<Option target="Portaudio Debug" />
-		</Unit>
 		<Unit filename="..\common\GUI-QT\ReceiverSettingsDlg.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -355,6 +367,18 @@
 			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\ReceiverSettingsDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\SlideShowViewer.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\SlideShowViewer.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
@@ -391,6 +415,18 @@
 			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\TransmDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\jlbrowser.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\jlbrowser.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
@@ -646,6 +682,12 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
+		<Unit filename="..\moc\moc_BWSViewer.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
 		<Unit filename="..\moc\moc_DRMMainWindow.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -671,6 +713,12 @@
 			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_GPSReceiver.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_JLViewer.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
@@ -706,12 +754,6 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
-		<Unit filename="..\moc\moc_MultimediaDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-			<Option target="Portaudio Release" />
-			<Option target="Portaudio Debug" />
-		</Unit>
 		<Unit filename="..\moc\moc_PacketSocketQT.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -719,6 +761,12 @@
 			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_ReceiverSettingsDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_SlideShowViewer.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
@@ -742,6 +790,12 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
+		<Unit filename="..\moc\moc_jlbrowser.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
 		<Unit filename="..\moc\ui_AMSSDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -760,6 +814,12 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
+		<Unit filename="..\moc\ui_BWSViewer.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
 		<Unit filename="..\moc\ui_DRMMainWindow.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -767,6 +827,12 @@
 			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_EPGDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\moc\ui_JLViewer.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
@@ -790,13 +856,13 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
-		<Unit filename="..\moc\ui_MultimediaDlg.h">
+		<Unit filename="..\moc\ui_ReceiverSettingsDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
-		<Unit filename="..\moc\ui_ReceiverSettingsDlg.h">
+		<Unit filename="..\moc\ui_SlideShowViewer.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />

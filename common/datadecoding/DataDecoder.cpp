@@ -518,42 +518,10 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 			{
 				/* Get application identifier of current selected service, only
 				   used with DAB */
-				const int iDABUserAppIdent = dataParam.iUserAppIdent;
+                eAppType[iServPacketID] = dataParam.eUserAppIdent;
 
-				switch (iDABUserAppIdent)
-				{
-				case 2:		/* MOTSlideshow */
-					eAppType[iServPacketID] = AT_MOTSLISHOW;
-					break;
-
-				case 3:		/* MOT Broadcast Web Site */
-					eAppType[iServPacketID] = AT_MOTBROADCASTWEBSITE;
-					break;
-
-				case 4:
-					eAppType[iServPacketID] = AT_MOTTPEG;
-					break;
-
-				case 5:
-					eAppType[iServPacketID] = AT_DGPS;
-					break;
-
-				case 6:
-					eAppType[iServPacketID] = AT_TMC;
-					break;
-
-				case 7:
-					eAppType[iServPacketID] = AT_MOTEPG;
-					break;
-
-				case 8:
-					eAppType[iServPacketID] = AT_JAVA;
-					break;
-
-					/* The preliminary 11-bit user Application Type ID for the
-					   NewsService Journaline shall be 0x44A */
-				case 0x44A:	/* Journaline */
-					eAppType[iServPacketID] = AT_JOURNALINE;
+                if(eAppType[iServPacketID] == AT_JOURNALINE)
+                {
 
 					/* Check, if service ID of Journaline application has
 					   changed, that indicates that a new transmission is
@@ -567,15 +535,14 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 					if (iOldJournalineServiceID != iNewServID)
 					{
 
-// Problem: if two different services point to the same stream, they have different
-// IDs and the Journaline is reset! TODO: fix this problem...
+                    // Problem: if two different services point to the same stream, they have different
+                    // IDs and the Journaline is reset! TODO: fix this problem...
 
 						/* Reset Journaline decoder and store the new service
 						   ID number */
 						Journaline.Reset();
 						iOldJournalineServiceID = iNewServID;
 					}
-					break;
 				}
 			}
 
@@ -607,7 +574,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 		for (size_t j = 0; j < ReceiverParam.DataParam[i].size(); j++)
 		{
 			if ((ReceiverParam.DataParam[i][j].eAppDomain == CDataParam::AD_DAB_SPEC_APP)
-			&& (ReceiverParam.DataParam[i][j].iUserAppIdent == 7))
+			&& (ReceiverParam.DataParam[i][j].eUserAppIdent == AT_MOTTPEG))
 			{
 				iEPGService = i;
 				iEPGPacketID = j;

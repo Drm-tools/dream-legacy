@@ -79,6 +79,18 @@ enum EDemodulationType { DRM, AM, USB, LSB, CW, NBFM, WBFM, NONE };
 enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
 
+enum EAppType
+{ AT_NOT_SUP = 0,
+  AT_MOTSLISHOW = 2,
+  AT_JOURNALINE = 0x44A,
+  AT_MOTBROADCASTWEBSITE = 3,
+  AT_MOTTPEG = 4,
+  AT_DGPS = 5,
+  AT_TMC = 6,
+  AT_MOTEPG = 7,
+  AT_JAVA = 8
+};
+
 /* Classes ********************************************************************/
     class CDRMReceiver; // forward
 
@@ -145,8 +157,8 @@ enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		EDatUnit eDataUnitInd;	/* Data unit indicator */
 
 		// "DAB specified application" not yet implemented!!!
-		EApplDomain eAppDomain;	/* Application domain */
-		int iUserAppIdent;		/* User application identifier, only DAB */
+		EApplDomain eAppDomain;	    /* Application domain */
+		EAppType    eUserAppIdent;	/* User application identifier, only DAB */
 
 		CDataParam();
 		CDataParam(const CDataParam&);

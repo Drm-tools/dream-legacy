@@ -35,7 +35,6 @@
 #include "journaline/newssvcdec.h"
 #include "journaline/dabdatagroupdecoder.h"
 
-
 /* Definitions ****************************************************************/
 /* Definitions for links which objects are not yet received or items which
    do not have links (no menu) */
@@ -63,6 +62,7 @@ public:
 class CJournaline
 {
 public:
+
 	CJournaline();
 	virtual ~CJournaline();
 

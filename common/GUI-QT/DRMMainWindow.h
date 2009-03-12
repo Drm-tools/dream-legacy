@@ -36,21 +36,7 @@
 #include "../util/Vector.h"
 #include <QMainWindow>
 
-/* Define for application types */
-#define AT_MOTSLISHOW 2
-#define AT_MOTBROADCASTWEBSITE 3
-#define AT_JOURNALINE 0x44A
-#define AT_MOTEPG 	7
-
 /* Classes ********************************************************************/
-class SystemEvalDlg;
-class MultimediaDlg;
-class StationsDlg;
-class LiveScheduleDlg;
-class EPGDlg;
-class AnalogDemDlg;
-class ReceiverSettingsDlg;
-class MultSettingsDlg;
 
 class DRMMainWindow : public QMainWindow, public Ui_DRMMainWindow
 {
@@ -65,37 +51,29 @@ public:
 	{ throw "should not happen"; return *this;}
 
 protected:
-	CDRMReceiver&		DRMReceiver;
-	CSettings&			Settings;
 
-	SystemEvalDlg*		pSysEvalDlg;
-	MultimediaDlg*		pMultiMediaDlg;
-	StationsDlg*		pStationsDlg;
-	LiveScheduleDlg*	pLiveScheduleDlg;
-	EPGDlg*				pEPGDlg;
-	AnalogDemDlg*		pAnalogDemDlg;
-	ReceiverSettingsDlg* pReceiverSettingsDlg;
-	MultSettingsDlg*    pMultSettingsDlg;
-    Loghelper			loghelper;
-	QMenuBar*			pMenu;
-	Q3PopupMenu*		pReceiverModeMenu;
-	Q3PopupMenu*		pSettingsMenu;
-	Q3PopupMenu*		pPlotStyleMenu;
-	int					iCurSelServiceGUI;
-	int					iOldNoServicesGUI;
-	QTimer				Timer;
+	CDRMReceiver&	Receiver;
+	CSettings&		Settings;
 
-	bool		        bSysEvalDlgWasVis;
-	bool	        	bMultMedDlgWasVis;
-	bool		        bLiveSchedDlgWasVis;
-	bool		        bStationsDlgWasVis;
-	bool		        bEPGDlgWasVis;
+	QMainWindow*    jlViewer;
+	QMainWindow*    bwsViewer;
+	QMainWindow*    slideShowViewer;
+	QDialog*        sysEvalDlg;
+	QDialog*        stationsDlg;
+	QDialog*        liveScheduleDlg;
+	QDialog*        epgDlg;
+	QDialog*        receiverSettingsDlg;
+	QDialog*        multSettingsDlg;
+
+    Loghelper		loghelper;
+	int				iCurSelServiceGUI;
+	int				iOldNoServicesGUI;
+	QTimer			Timer;
+
 	EDemodulationType	eReceiverMode;
+	bool            quitWanted;
 
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
-	virtual void	closeEvent(QCloseEvent* ce);
-	virtual void	showEvent(QShowEvent* pEvent);
-	void			hideEvent(QHideEvent* pEvent);
 	void			SetService(int iNewServiceID);
 	void			AddWhatsThisHelp();
 	void			UpdateDisplay();
@@ -105,9 +83,9 @@ protected:
 	QString			GetTypeString(const int iServiceID);
 
 	void			SetDisplayColor(const QColor newColor);
-
-	void			ChangeGUIModeToDRM();
-	void			ChangeGUIModeToAM();
+    void	        showEvent(QShowEvent* pEvent);
+    void	        hideEvent(QHideEvent* pEvent);
+    void            closeEvent(QCloseEvent*);
 
 public slots:
 	void OnTimer();
@@ -116,8 +94,6 @@ public slots:
 	void OnButtonService3();
 	void OnButtonService4();
 	void OnNewDRMAcquisition();
-	void OnSwitchToDRM();
-	void OnSwitchToAM();
 	void OnMenuSetDisplayColor();
-	void OnMenuPlotStyle(int value);
+    void OnSwitchToAnalog();
 };

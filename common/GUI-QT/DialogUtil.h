@@ -29,15 +29,11 @@
 #if !defined(DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_)
 #define DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_
 
-#include <q3popupmenu.h>
-#include <QMenuBar>
-#include <QEvent>
+#include <QMenu>
 #include <QWhatsThis>
-#include <QCustomEvent>
 
 #include "ui_AboutDlg.h"
 #include "../DrmReceiver.h"
-#include <qwt_global.h> /* for extract the library version */
 
 /* Definitions ****************************************************************/
 
@@ -66,7 +62,7 @@ public:
 
 
 /* Help menu ---------------------------------------------------------------- */
-class CDreamHelpMenu : public Q3PopupMenu
+class CDreamHelpMenu : public QMenu
 {
 	Q_OBJECT
 
@@ -83,27 +79,20 @@ public slots:
 
 
 /* Sound card selection menu ------------------------------------------------ */
-class CSoundCardSelMenu : public Q3PopupMenu
+class CSoundCardSelMenu : public QMenu
 {
 	Q_OBJECT
 
 public:
-	CSoundCardSelMenu(CSelectionInterface* pNSIn,
-						CSelectionInterface* pNSOut, QWidget* parent = 0);
+	CSoundCardSelMenu(CSelectionInterface* pNS, QWidget* parent = 0);
 
 protected:
-	CSelectionInterface*	pSoundInIF;
-	CSelectionInterface*	pSoundOutIF;
-	vector<string>			vecSoundInNames;
-	vector<string>			vecSoundOutNames;
-	int						iNumSoundInDev;
-	int						iNumSoundOutDev;
-	Q3PopupMenu*				pSoundInMenu;
-	Q3PopupMenu*				pSoundOutMenu;
+	CSelectionInterface*	pSoundIF;
+	vector<string>			vecNames;
+	int						iNumDev;
 
 public slots:
-	void OnSoundInDevice(int id);
-	void OnSoundOutDevice(int id);
+	void OnSoundDevice(QAction*);
 };
 
 

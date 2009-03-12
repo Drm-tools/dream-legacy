@@ -324,11 +324,11 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign& AltFreqSign)
 	}
 }
 
-LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
+LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR, CSettings& s,
 								 QWidget * parent, const char *name,
 								 bool modal, Qt::WFlags f):
 QDialog(parent, name, modal, f), Ui_LiveScheduleDlg(),
-DRMReceiver(NDRMR),vecpListItems(),strCurrentSavePath("."),
+DRMReceiver(NDRMR), settings(s), vecpListItems(),strCurrentSavePath("."),
 iColStationID(0),iWidthColStationID(0)
 {
     setupUi(this);
@@ -435,34 +435,24 @@ iColStationID(0),iWidthColStationID(0)
 
 	connect(CheckBoxFreeze, SIGNAL(clicked()), this, SLOT(OnCheckFreeze()));
 
-	TimerList.stop();
-	TimerUTCLabel.stop();
-}
-
-LiveScheduleDlg::~LiveScheduleDlg()
-{
-}
-void
-LiveScheduleDlg::LoadSettings(const CSettings& Settings)
-{
 	/* recover window size and position */
-	CWinGeom s;
-	Settings.Get("Live Schedule Dialog", s);
-	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+	CWinGeom g;
+	settings.Get("Live Schedule Dialog", g);
+	const QRect WinGeom(g.iXPos, g.iYPos, g.iWSize, g.iHSize);
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
 
 	/* Set sorting behaviour of the list */
-	iCurrentSortColumn = Settings.Get("Live Schedule Dialog", "sortcolumn", 0);
-	bCurrentSortAscending = Settings.Get("Live Schedule Dialog", "sortascending", true);
+	iCurrentSortColumn = settings.Get("Live Schedule Dialog", "sortcolumn", 0);
+	bCurrentSortAscending = settings.Get("Live Schedule Dialog", "sortascending", true);
 	ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
 	/* Retrieve the setting saved into the .ini file */
 	string str = strCurrentSavePath.latin1();
-	str = Settings.Get("Live Schedule Dialog", "storagepath", str);
+	str = settings.Get("Live Schedule Dialog", "storagepath", str);
 	strCurrentSavePath = str.c_str();
 
 	/* Set stations in list view which are active right now */
-	bShowAll = Settings.Get("Live Schedule Dialog", "showall", false);
+	bShowAll = settings.Get("Live Schedule Dialog", "showall", false);
 
 	if (bShowAll)
 		pViewMenu->setItemChecked(1, true);
@@ -470,7 +460,7 @@ LiveScheduleDlg::LoadSettings(const CSettings& Settings)
 		pViewMenu->setItemChecked(0, true);
 
 	/* Set stations preview */
-	switch (Settings.Get("Live Schedule Dialog", "preview", 0))
+	switch (settings.Get("Live Schedule Dialog", "preview", 0))
 	{
 	case NUM_SECONDS_PREV_5MIN:
 		pPreviewMenu->setItemChecked(1, true);
@@ -493,33 +483,12 @@ LiveScheduleDlg::LoadSettings(const CSettings& Settings)
 		break;
 	}
 
+	TimerList.stop();
+	TimerUTCLabel.stop();
 }
 
-void
-LiveScheduleDlg::SaveSettings(CSettings& Settings)
+LiveScheduleDlg::~LiveScheduleDlg()
 {
-	/* save window geometry data */
-	QRect WinGeom = geometry();
-	CWinGeom c;
-	c.iXPos = WinGeom.x();
-	c.iYPos = WinGeom.y();
-	c.iHSize = WinGeom.height();
-	c.iWSize = WinGeom.width();
-	Settings.Put("Live Schedule Dialog", c);
-
-	/* Store preview settings */
-	Settings.Put("Live Schedule Dialog", "preview", DRMSchedule.GetSecondsPreview());
-
-	/* Store sort settings */
-	Settings.Put("Live Schedule Dialog", "sortcolumn", iCurrentSortColumn);
-	Settings.Put("Live Schedule Dialog", "sortascending", bCurrentSortAscending);
-
-	/* Store preview settings */
-	Settings.Put("Live Schedule Dialog", "showall", bShowAll);
-
-	/* Store save path */
-	string str = strCurrentSavePath.latin1();
-	Settings.Put("Live Schedule Dialog", "storagepath", str);
 }
 
 void
@@ -743,6 +712,28 @@ LiveScheduleDlg::hideEvent(QHideEvent *)
 	TimerList.stop();
 	TimerUTCLabel.stop();
 
+	/* save window geometry data */
+	QRect WinGeom = geometry();
+	CWinGeom c;
+	c.iXPos = WinGeom.x();
+	c.iYPos = WinGeom.y();
+	c.iHSize = WinGeom.height();
+	c.iWSize = WinGeom.width();
+	settings.Put("Live Schedule Dialog", c);
+
+	/* Store preview settings */
+	settings.Put("Live Schedule Dialog", "preview", DRMSchedule.GetSecondsPreview());
+
+	/* Store sort settings */
+	settings.Put("Live Schedule Dialog", "sortcolumn", iCurrentSortColumn);
+	settings.Put("Live Schedule Dialog", "sortascending", bCurrentSortAscending);
+
+	/* Store preview settings */
+	settings.Put("Live Schedule Dialog", "showall", bShowAll);
+
+	/* Store save path */
+	string str = strCurrentSavePath.latin1();
+	settings.Put("Live Schedule Dialog", "storagepath", str);
 }
 
 void

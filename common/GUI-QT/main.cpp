@@ -50,6 +50,7 @@
 # include <QMessageBox>
 # include <QTranslator>
 # include "DRMMainWindow.h"
+# include "AnalogDemDlg.h"
 # include "TransmDlg.h"
 #endif
 #include <iostream>
@@ -129,37 +130,52 @@ main(int argc, char **argv)
 		if (strMode == "RX")
 		{
 			CDRMReceiver DRMReceiver;
-			DRMReceiver.LoadSettings(Settings);
-
-			/* First, initialize the working thread. This should be done in an extra
-			   routine since we cannot 100% assume that the working thread is
-			   ready before the GUI thread */
-
 #ifdef HAVE_LIBHAMLIB
-			/* initialise Hamlib first, so that when the Receiver is
-			 * initialised it can tune the front end
-			 */
-
             CHamlib *pHamlib = NULL;
-			string rsi = Settings.Get("command", "rsiin", string(""));
+            string rsi = Settings.Get("command", "rsiin", string(""));
             string fio = Settings.Get("command", "fileio", string(""));
-			if(rsi == "" && fio == "") /* don't initialise hamlib if RSCI or file input is requested */
-			{
-				pHamlib = new CHamlib(*DRMReceiver.GetParameters());
-				pHamlib->LoadSettings(Settings);
-				DRMReceiver.SetHamlib(pHamlib);
-			}
+            if(rsi == "" && fio == "") /* don't initialise hamlib if RSCI or file input is requested */
+            {
+                pHamlib = new CHamlib(*DRMReceiver.GetParameters());
+                DRMReceiver.SetHamlib(pHamlib);
+            }
 #endif
+            DRMReceiver.LoadSettings(Settings);
+            do
+            {
 
-			DRMMainWindow MainDlg(DRMReceiver, Settings, 0, 0, Qt::WStyle_MinMax);
+                /* First, initialize the working thread. This should be done in an extra
+                   routine since we cannot 100% assume that the working thread is
+                   ready before the GUI thread */
 
-			/* Start working thread */
-			DRMReceiver.start();
+                QMainWindow* MainDlg;
 
-			/* Set main window */
-			app.setMainWidget(&MainDlg);
+                string strMode = Settings.Get("Receiver", "modulation", string("DRM"));
+                if(strMode=="DRM")
+                {
+                    MainDlg = new DRMMainWindow(DRMReceiver, Settings,
+                        0, 0, Qt::WStyle_MinMax);
+                }
+                else
+                {
+                    MainDlg = new AnalogDemDlg(DRMReceiver, Settings,
+                        0, 0, Qt::WStyle_MinMax);
+                }
 
-			app.exec();
+                MainDlg->setAttribute(Qt::WA_DeleteOnClose);
+                MainDlg->show();
+
+                DRMReceiver.SetReceiverMode(strMode);
+
+                /* Start working thread */
+                DRMReceiver.start();
+
+                /* Set main window */
+                app.setMainWidget(MainDlg);
+
+                app.exec();
+
+            } while(Settings.Get("command", "quit", int(0))==0);
 
 #ifdef HAVE_LIBHAMLIB
 			if(pHamlib)

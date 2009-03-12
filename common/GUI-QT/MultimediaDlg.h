@@ -29,7 +29,9 @@
 #ifndef _MULTIMEDIADLG_H
 #define _MULTIMEDIADLG_H
 
+#include <QTextDocument>
 #include <vector>
+#include <map>
 #include "ui_MultimediaDlg.h"
 #include "../datadecoding/DABMOT.h"
 #include "../datadecoding/DataDecoder.h"
@@ -99,13 +101,13 @@ protected:
 	QMenuBar*				pMenu;
 	Q3PopupMenu*			pFileMenu;
 	QTextDocument           document;
-	std::vector<QImage>     vecImages;
-	std::vector<QString>	vecImageNames;
+	vector<QImage>          vecImages;
+	vector<QString>         vecImageNames;
 	int						iCurImagePos;
 	QString					strFhGIISText;
 	QString					strJournalineHeadText;
 	int						iCurJourObjID;
-	CDataDecoder::EAppType	eAppType;
+	EAppType	            eAppType;
 	CNewIDHistory			NewIDHistory;
 	QString					strCurrentSavePath;
 	QString					strDirMOTCache;
@@ -124,7 +126,7 @@ protected:
 	void CreateDirectories(const QString& filename);
 	void ClearAllSlideShow();
 
-	void InitApplication(CDataDecoder::EAppType eNewAppType);
+	void InitApplication(EAppType eNewAppType);
 
 	void InitNotSupported();
 	void InitMOTSlideShow();

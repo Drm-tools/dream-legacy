@@ -58,8 +58,8 @@ upstreamRSCI(), DecodeRSIMDI(), downstreamRSCI(),
 Parameters(),RSIPacketBuf(),
 MSCDecBuf(MAX_NUM_STREAMS), MSCUseBuf(MAX_NUM_STREAMS),
 MSCSendBuf(MAX_NUM_STREAMS), iAcquRestartCnt(0),
-iAcquDetecCnt(0), iGoodSignCnt(0), eReceiverMode(DRM),
-eNewReceiverMode(DRM), iAudioStreamID(STREAM_ID_NOT_USED),
+iAcquDetecCnt(0), iGoodSignCnt(0), eReceiverMode(NONE),
+eNewReceiverMode(NONE), iAudioStreamID(STREAM_ID_NOT_USED),
 iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(false),
 bRestartFlag(false),bRunning(false),
 rInitResampleOffset((_REAL) 0.0),
@@ -726,6 +726,27 @@ CDRMReceiver::DetectAcquiFAC()
 			iGoodSignCnt++;
 		}
 	}
+}
+
+void
+CDRMReceiver::SetReceiverMode(const string& strMode)
+{
+	if (strMode == "DRM")
+		eNewReceiverMode = DRM;
+    else if (strMode == "AM")
+        eNewReceiverMode = AM;
+    else if (strMode == "USB")
+        eNewReceiverMode = USB;
+    else if (strMode == "LSB")
+        eNewReceiverMode = LSB;
+    else if (strMode == "CW")
+        eNewReceiverMode = CW;
+    else if (strMode == "NBFM")
+        eNewReceiverMode = NBFM;
+    else if (strMode == "WBFM")
+        eNewReceiverMode = WBFM;
+    else
+        eNewReceiverMode = NONE;
 }
 
 void
@@ -1432,7 +1453,6 @@ CDRMReceiver::saveSDCtoFile()
 void
 CDRMReceiver::LoadSettings(CSettings& s)
 {
-
 	string strMode = s.Get("Receiver", "modulation", string("DRM"));
 
 	/* Serial Number */
@@ -1459,23 +1479,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	Parameters.sDataFilesDirectory = sDataFilesDirectory;
 
-	if (strMode == "DRM")
-		eReceiverMode = DRM;
-    else if (strMode == "AM")
-        eReceiverMode = AM;
-    else if (strMode == "USB")
-        eReceiverMode = USB;
-    else if (strMode == "LSB")
-        eReceiverMode = LSB;
-    else if (strMode == "CW")
-        eReceiverMode = CW;
-    else if (strMode == "NBFM")
-        eReceiverMode = NBFM;
-    else if (strMode == "WBFM")
-        eReceiverMode = WBFM;
-    else
-        eReceiverMode = NONE;
-	eNewReceiverMode = eReceiverMode;
+    SetReceiverMode(strMode);
 
 	/* Sync */
 	SetFreqInt(CChannelEstimation::ETypeIntFreq(s.Get("Receiver", "frequencyinterpolation", int(CChannelEstimation::FWIENER))));
@@ -1492,7 +1496,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	pSoundInInterface->Enumerate(vs);
 	if(vs.size()>0)
 	{
-	    if(dev>=vs.size())
+	    if(dev>=int(vs.size()))
             dev = vs.size()-1;
         pSoundInInterface->SetDev(dev);
 	}
@@ -1504,7 +1508,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	pSoundOutInterface->Enumerate(vs);
 	if(vs.size()>0)
 	{
-	    if(dev>=vs.size())
+	    if(dev>=int(vs.size()))
             dev = vs.size()-1;
         pSoundOutInterface->SetDev(dev);
 	}
@@ -1601,7 +1605,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	AMDemodulation.SetFilterBWHz(NBFM, s.Get("FM Demodulation", "nbfilterbw", 6000));
 	AMDemodulation.SetFilterBWHz(WBFM, s.Get("FM Demodulation", "wbfilterbw", 80000));
 
-    switch(eReceiverMode)
+    switch(eNewReceiverMode)
     {
         case AM:
         case LSB:
@@ -1711,6 +1715,12 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	/* Activate/Deactivate EPG decoding */
 	DataDecoder.SetDecodeEPG(s.Get("EPG", "decodeepg", true));
+
+
+#ifdef HAVE_LIBHAMLIB
+    if(pHamlib)
+        pHamlib->LoadSettings(s);
+#endif
 
 	/* Front-end - combine into Hamlib? */
 	CFrontEndParameters& FrontEndParameters = Parameters.FrontEndParameters;

@@ -146,7 +146,7 @@ class LiveScheduleDlg : public QDialog, public Ui_LiveScheduleDlg
 
 public:
 
-	LiveScheduleDlg(CDRMReceiver&,
+	LiveScheduleDlg(CDRMReceiver&, CSettings& s,
 		QWidget* parent = 0,
 		const char* name = 0, bool modal = false, Qt::WFlags f = 0);
 	virtual ~LiveScheduleDlg();
@@ -155,8 +155,6 @@ public:
 	{ throw "should not happen"; return *this;}
 
 	void LoadSchedule();
-	void LoadSettings(const CSettings&);
-	void SaveSettings(CSettings&);
 
 	int				iCurrentSortColumn;
 	bool		    bCurrentSortAscending;
@@ -171,6 +169,7 @@ protected:
 	QString			ExtractTime(const CAltFreqSched& schedule);
 
 	CDRMReceiver&				DRMReceiver;
+	CSettings&                  settings;
 	CDRMLiveSchedule			DRMSchedule;
 	QPixmap						BitmCubeGreen;
 	QPixmap						BitmCubeGreenLittle;

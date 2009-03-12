@@ -46,7 +46,6 @@
 #include <QTextStream>
 #include <QDateTime>
 #include <QProcess>
-#include <Q3MimeSourceFactory>
 
 /* Implementation *************************************************************/
 MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
@@ -57,6 +56,8 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 {
 
     setupUi(this);
+    textBrowser->datadecoder = &DataDecoder;
+
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
     textBrowser->setFont(fontTextBrowser);
     textBrowser->setDocument(&document);
@@ -162,11 +163,11 @@ void MultimediaDlg::InitApplication(CDataDecoder::EAppType eNewAppType)
 void MultimediaDlg::OnTextChanged()
 {
 	/* Check, if the current text is a link ID or regular text */
+//cerr << (textBrowser->text().toStdString()) << endl;
 	if (textBrowser->text().compare(textBrowser->text().left(1), "<") != 0)
 	{
 		/* Save old ID */
 		NewIDHistory.Add(iCurJourObjID);
-
 		/* Set text to news ID text which was selected by the user */
 		iCurJourObjID = textBrowser->text().toInt();
 		SetJournalineText();
@@ -375,48 +376,25 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
 	strItems = "";
 	for (int i = 0; i < News.vecItem.Size(); i++)
 	{
-		QString strCurItem;
-		if (bHTMLExport == false)
-		{
-			/* Decode UTF-8 coding of this item text */
-			strCurItem = QString().fromUtf8(News.vecItem[i].sText.c_str());
-		}
-		else
-		{
-			/* In case of HTML export, do not decode UTF-8 coding */
-			strCurItem = News.vecItem[i].sText.c_str();
-		}
+		QString strCurItem = QString().fromUtf8(News.vecItem[i].sText.c_str());
 
 		/* Replace \n by html command <br> */
 		strCurItem = strCurItem.replace(QRegExp("\n"), "<br>");
 
-		if (News.vecItem[i].iLink == JOURNALINE_IS_NO_LINK)
+		switch(News.vecItem[i].iLink)
 		{
-			/* Only text, no link */
+        case JOURNALINE_IS_NO_LINK: /* Only text, no link */
 			strItems += strCurItem + QString("<br>");
-		}
-		else if (News.vecItem[i].iLink == JOURNALINE_LINK_NOT_ACTIVE)
-		{
+			break;
+        case JOURNALINE_LINK_NOT_ACTIVE:
 			/* Un-ordered list item without link */
 			strItems += QString("<li>") + strCurItem + QString("</li>");
-		}
-		else
-		{
-			if (bHTMLExport == false)
-			{
-				QString strLinkStr = QString().setNum(News.vecItem[i].iLink);
-
-				/* Un-ordered list item with link */
-				strItems += QString("<li><a href=\"") + strLinkStr +
-					QString("\">") + strCurItem +
-					QString("</a></li>");
-
-				/* Store link location in factory (stores ID) */
-				Q3MimeSourceFactory::defaultFactory()->
-					setText(strLinkStr, strLinkStr);
-			}
-			else
-				strItems += QString("<li>") + strCurItem + QString("</li>");
+			break;
+        default:
+            QString strLinkStr = QString("%1").arg(News.vecItem[i].iLink);
+            /* Un-ordered list item with link */
+            strItems += QString("<li><a href=\"") + strLinkStr +
+                QString("\">") + strCurItem + QString("</a></li>");
 		}
 	}
 }
@@ -731,6 +709,7 @@ void MultimediaDlg::OnSave()
 
 	case CDataDecoder::AT_JOURNALINE:
 		{
+#if 0
 			/* Save to file current journaline page */
 			QString strTitle("");
 			QString strItems("");
@@ -768,6 +747,7 @@ void MultimediaDlg::OnSave()
 					FileObj.close();
 				}
 			}
+#endif
 		}
 		break;
 
@@ -1043,3 +1023,4 @@ void MultimediaDlg::OnSetFont()
 		textBrowser->setText(strOldText);
 	}
 }
+

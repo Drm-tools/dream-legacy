@@ -50,7 +50,7 @@
 # include <wtap.h>
 #endif
 #include <sndfile.h>
-#include <Q3PopupMenu>
+#include <qwt_global.h> /* to extract the library version */
 
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */
@@ -197,7 +197,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
 
 
 /* Help menu ---------------------------------------------------------------- */
-CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : Q3PopupMenu(parent)
+CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QMenu(parent)
 {
 	/* Standard help menu consists of about and what's this help */
 	insertItem(tr("What's &This"), this ,
@@ -208,66 +208,38 @@ CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : Q3PopupMenu(parent)
 
 
 /* Sound card selection menu ------------------------------------------------ */
-CSoundCardSelMenu::CSoundCardSelMenu(
-	CSelectionInterface* pNSIn, CSelectionInterface* pNSOut, QWidget* parent) :
-	Q3PopupMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
+CSoundCardSelMenu::CSoundCardSelMenu(CSelectionInterface* pNS, QWidget* parent) :
+	QMenu(parent), pSoundIF(pNS)
 {
-	pSoundInMenu = new Q3PopupMenu(parent);
-	Q_CHECK_PTR(pSoundInMenu);
-	pSoundOutMenu = new Q3PopupMenu(parent);
-	Q_CHECK_PTR(pSoundOutMenu);
-	int i;
-
 	/* Get sound device names */
-	pSoundInIF->Enumerate(vecSoundInNames);
-	iNumSoundInDev = vecSoundInNames.size();
-	for (i = 0; i < iNumSoundInDev; i++)
+	pSoundIF->Enumerate(vecNames);
+	iNumDev = vecNames.size();
+
+	int iDefaultDev = pSoundIF->GetDev();
+	if ((iDefaultDev > iNumDev) || (iDefaultDev < 0))
+		iDefaultDev = iNumDev;
+
+	QActionGroup* group = new QActionGroup(this);
+	for (size_t i = 0; i < size_t(iNumDev); i++)
 	{
-		QString name(vecSoundInNames[i].c_str());
+		QString name(vecNames[i].c_str());
 		if(name.find("blaster", 0, false)>=0)
 			name += " (has problems on some platforms)";
-		pSoundInMenu->insertItem(name, this, SLOT(OnSoundInDevice(int)), 0, i);
+        QAction* a = new QAction(group);
+        a->setText(name);
+        a->setData(i);
+        a->setCheckable(true);
+        if(i==size_t(iDefaultDev))
+            a->setChecked(true);
+        addAction(a);
 	}
-
-	pSoundOutIF->Enumerate(vecSoundOutNames);
-	iNumSoundOutDev = vecSoundOutNames.size();
-	for (i = 0; i < iNumSoundOutDev; i++)
-	{
-		pSoundOutMenu->insertItem(QString(vecSoundOutNames[i].c_str()), this,
-			SLOT(OnSoundOutDevice(int)), 0, i);
-	}
-
-	/* Set default device. If no valid device was selected, select
-	   "Wave mapper" */
-	int iDefaultInDev = pSoundInIF->GetDev();
-	if ((iDefaultInDev > iNumSoundInDev) || (iDefaultInDev < 0))
-		iDefaultInDev = iNumSoundInDev;
-
-	int iDefaultOutDev = pSoundOutIF->GetDev();
-	if ((iDefaultOutDev > iNumSoundOutDev) || (iDefaultOutDev < 0))
-		iDefaultOutDev = iNumSoundOutDev;
-
-	pSoundInMenu->setItemChecked(iDefaultInDev, true);
-	pSoundOutMenu->setItemChecked(iDefaultOutDev, true);
-
-	insertItem(tr("Sound &In"), pSoundInMenu);
-	insertItem(tr("Sound &Out"), pSoundOutMenu);
+    connect(group, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundDevice(QAction*)));
+    parent->addAction(menuAction());
 }
 
-void CSoundCardSelMenu::OnSoundInDevice(int id)
+void CSoundCardSelMenu::OnSoundDevice(QAction* a)
 {
-	pSoundInIF->SetDev(id);
-
-	/* Taking care of checks in the menu. "+ 1" because of wave mapper entry */
-	for (int i = 0; i < iNumSoundInDev + 1; i++)
-		pSoundInMenu->setItemChecked(i, i == id);
-}
-
-void CSoundCardSelMenu::OnSoundOutDevice(int id)
-{
-	pSoundOutIF->SetDev(id);
-
-	/* Taking care of checks in the menu. "+ 1" because of wave mapper entry */
-	for (int i = 0; i < iNumSoundOutDev + 1; i++)
-		pSoundOutMenu->setItemChecked(i, i == id);
+    int id = a->data().toInt();
+	pSoundIF->SetDev(id);
+    a->setChecked(true);
 }
