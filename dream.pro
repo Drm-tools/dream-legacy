@@ -30,7 +30,7 @@ macx {
 	INCLUDEPATH	+= /Developer/dream/include
 	INCLUDEPATH	+= /Developer/qwt-5.1.1/include
 	LIBS 		+= -L/Developer/dream/lib
-	LIBS 		+= -L/Developer/qwt-5.1.1/lib
+	LIBS 		+= -L/Developer/qwt-5.1.1/lib -lqwt
 	LIBS 		+= -framework CoreFoundation -framework CoreServices
 	LIBS 		+= -framework CoreAudio -framework AudioToolbox -framework AudioUnit
 }
