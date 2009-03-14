@@ -33,7 +33,8 @@
 SlideShowViewer::SlideShowViewer(CDRMReceiver& rec, CSettings& s,
         QWidget* parent,
 		const char* name, Qt::WFlags f):
-		QMainWindow(parent, name, f), Ui_SlideShowViewer(), Timer(), receiver(rec), settings(s)
+		QMainWindow(parent, name, f), Ui_SlideShowViewer(), Timer(), strCurrentSavePath(),
+		receiver(rec), settings(s),vecImages(),vecImageNames(),iCurImagePos(-1)
 {
     setupUi(this);
 
@@ -55,54 +56,14 @@ SlideShowViewer::SlideShowViewer(CDRMReceiver& rec, CSettings& s,
 
 	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
-	/* Add the service description into the dialog caption */
-	QString strTitle = tr("MOT Slide Show");
+    actionClear_All->setEnabled(false);
+    actionSave->setEnabled(false);
+    actionSave_All->setEnabled(false);
 
-    CParameter& Parameters = *receiver.GetParameters();
-    Parameters.Lock();
-    const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
-    const uint32_t iAudioServiceID = Parameters.Service[iCurSelAudioServ].iServiceID;
-
-    /* Get current data service */
-    const int iCurSelDataServ = Parameters.GetCurSelDataService();
-    CService service = Parameters.Service[iCurSelDataServ];
-    Parameters.Unlock();
-
-
-    if (service.IsActive())
-    {
-        /* Do UTF-8 to QString (UNICODE) conversion with the label strings */
-        QString strLabel = QString().fromUtf8(service.strLabel.c_str()).stripWhiteSpace();
-
-
-        /* Service ID (plot number in hexadecimal format) */
-        QString strServiceID = "";
-
-        /* show the ID only if differ from the audio service */
-        if ((service.iServiceID != 0) && (service.iServiceID != iAudioServiceID))
-        {
-            if (strLabel != "")
-                strLabel += " ";
-
-            strServiceID = "- ID:" +
-                QString().setNum(long(service.iServiceID), 16).upper();
-        }
-
-        /* add the description on the title of the dialog */
-        if (strLabel != "" || strServiceID != "")
-            strTitle += " [" + strLabel + strServiceID + "]";
-    }
-	setCaption(strTitle);
-
-	/* Get window geometry data and apply it */
-	CWinGeom g;
-	settings.Get("SlideShow", g);
-	const QRect WinGeom(g.iXPos, g.iYPos, g.iWSize, g.iHSize);
-
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-		setGeometry(WinGeom);
-
-	strCurrentSavePath = settings.Get("SlideShow", "storagepath", strCurrentSavePath);
+    ButtonStepBack->setEnabled(false);
+    ButtonStepForward->setEnabled(false);
+    ButtonJumpBegin->setEnabled(false);
+    ButtonJumpEnd->setEnabled(false);
 
 	Timer.stop();
 }
@@ -142,6 +103,7 @@ void SlideShowViewer::OnTimer()
     /* Poll the data decoder module for new picture */
     if (DataDecoder.GetMOTObject(NewObj, AT_MOTSLISHOW) == true)
     {
+cerr << "got picture" << endl;
         /* Store received picture */
         int iCurNumPict = vecImageNames.size();
         CVector<_BYTE>& imagedata = NewObj.Body.vecData;
@@ -198,6 +160,53 @@ void SlideShowViewer::OnClearAll()
 
 void SlideShowViewer::showEvent(QShowEvent*)
 {
+	/* Get window geometry data and apply it */
+	CWinGeom g;
+	settings.Get("SlideShow", g);
+	const QRect WinGeom(g.iXPos, g.iYPos, g.iWSize, g.iHSize);
+
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+
+	strCurrentSavePath = settings.Get("SlideShow", "storagepath", strCurrentSavePath);
+
+    CParameter& Parameters = *receiver.GetParameters();
+    Parameters.Lock();
+    const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
+    const uint32_t iAudioServiceID = Parameters.Service[iCurSelAudioServ].iServiceID;
+
+    /* Get current data service */
+    const int iCurSelDataServ = Parameters.GetCurSelDataService();
+    CService service = Parameters.Service[iCurSelDataServ];
+    Parameters.Unlock();
+
+	/* Add the service description into the dialog caption */
+	QString strTitle = tr("MOT Slide Show");
+
+    if (service.IsActive())
+    {
+        /* Do UTF-8 to QString (UNICODE) conversion with the label strings */
+        QString strLabel = QString().fromUtf8(service.strLabel.c_str()).stripWhiteSpace();
+
+        /* Service ID (plot number in hexadecimal format) */
+        QString strServiceID = "";
+
+        /* show the ID only if differ from the audio service */
+        if ((service.iServiceID != 0) && (service.iServiceID != iAudioServiceID))
+        {
+            if (strLabel != "")
+                strLabel += " ";
+
+            strServiceID = "- ID:" +
+                QString().setNum(long(service.iServiceID), 16).upper();
+        }
+
+        /* add the description on the title of the dialog */
+        if (strLabel != "" || strServiceID != "")
+            strTitle += " [" + strLabel + strServiceID + "]";
+    }
+	setCaption(strTitle);
+
 	/* Update window */
 	OnTimer();
 

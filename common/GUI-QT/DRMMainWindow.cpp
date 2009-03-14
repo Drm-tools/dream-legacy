@@ -26,77 +26,48 @@
  *
 \******************************************************************************/
 
-#include <iostream>
 #include "DRMMainWindow.h"
-#include <qlabel.h>
-#include <qpushbutton.h>
-#include <qtimer.h>
-#include <qstring.h>
-#include <qmenubar.h>
-#include <q3popupmenu.h>
-#include <qwt_thermo.h>
-#include <qevent.h>
-#include <qlayout.h>
-#include <qpalette.h>
-#include <qcolordialog.h>
-#include <QHideEvent>
-#include <QShowEvent>
-#include <QCloseEvent>
-#include <QMessageBox>
-#include <fstream>
 #include "ReceiverSettingsDlg.h"
 #include "LiveScheduleDlg.h"
 #include "StationsDlg.h"
 #include "SystemEvalDlg.h"
-# include "MultimediaDlg.h"
-# include "EPGDlg.h"
-# include "MultSettingsDlg.h"
+#include "MultimediaDlg.h"
+#include "EPGDlg.h"
+#include "MultSettingsDlg.h"
 #include "JLViewer.h"
 #include "BWSViewer.h"
 #include "SlideShowViewer.h"
-/* TODO
-
-*/
+#include <QColorDialog>
+#include <QButtonGroup>
+#include <iostream>
 
 /* Implementation *************************************************************/
 DRMMainWindow::DRMMainWindow(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, Qt::WFlags f)
 	:QMainWindow(parent, name, f),  Ui_DRMMainWindow(),
-	Receiver(NDRMR),
-	Settings(NSettings),
-	loghelper(NDRMR, NSettings),
-	eReceiverMode(NONE), quitWanted(true)
+	Receiver(NDRMR), Settings(NSettings),
+    jlViewer(NULL), bwsViewer(NULL), slideShowViewer(NULL),
+	sysEvalDlg(NULL), stationsDlg(NULL), liveScheduleDlg(NULL),
+	epgDlg(NULL), receiverSettingsDlg(NULL), multSettingsDlg(NULL),
+	loghelper(NDRMR, NSettings), iCurSelServiceGUI(-1), iOldNoServicesGUI(0),
+	Timer(), eReceiverMode(NONE), quitWanted(true)
 {
     setupUi(this);
-	/* recover window size and position */
-	CWinGeom s;
-	Settings.Get("DRM Dialog", s);
-	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-			setGeometry(WinGeom);
 
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
 	/* Evaluation window */
 	sysEvalDlg = new SystemEvalDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
-	if(Settings.Get("System Evaluation Dialog", "visible", false))
-        sysEvalDlg->show();
 
 	/* Stations window */
 	stationsDlg = new StationsDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
-	if(Settings.Get("Stations Dialog", "visible", false))
-        stationsDlg->show();
 
 	/* Live Schedule window */
 	liveScheduleDlg = new LiveScheduleDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
-	if(Settings.Get("Live Schedule Dialog", "visible", false))
-        liveScheduleDlg->show();
 
 	/* Programme Guide Window */
 	epgDlg = new EPGDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
-	if(Settings.Get("EPG Dialog", "visible", false))
-        epgDlg->show();
 
     /* receiver settings window */
 	receiverSettingsDlg = new ReceiverSettingsDlg(Receiver, Settings, this, "", true, Qt::WType_Dialog);
@@ -124,7 +95,7 @@ DRMMainWindow::DRMMainWindow(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Digi controls */
 	/* Set display color */
-	SetDisplayColor(CRGBConversion::int2RGB(Settings.Get("DRM Dialog", "colorscheme", 0xff0000)));
+	SetDisplayColor(CRGBConversion::int2RGB(Settings.Get("DRMGUI", "colorscheme", 0xff0000)));
 
 	/* Reset text */
 	LabelBitrate->setText("");
@@ -155,25 +126,27 @@ DRMMainWindow::DRMMainWindow(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	Parameters.Unlock();
 
-	iCurSelServiceGUI = 0;
-	iOldNoServicesGUI = 0;
-
-	PushButtonService1->setOn(true);
-	PushButtonService1->setEnabled(false);
-	PushButtonService2->setEnabled(false);
-	PushButtonService3->setEnabled(false);
-	PushButtonService4->setEnabled(false);
-
 	/* Update times for color LEDs */
 	CLED_FAC->SetUpdateTime(1500);
 	CLED_SDC->SetUpdateTime(1500);
 	CLED_MSC->SetUpdateTime(600);
 
+	iCurSelServiceGUI = 0;
+	iOldNoServicesGUI = 0;
+
+	PushButtonService1->setEnabled(false);
+	PushButtonService2->setEnabled(false);
+	PushButtonService3->setEnabled(false);
+	PushButtonService4->setEnabled(false);
+
+    QButtonGroup* serviceGroup = new QButtonGroup(this);
+    serviceGroup->addButton(PushButtonService1, 0);
+    serviceGroup->addButton(PushButtonService2, 1);
+    serviceGroup->addButton(PushButtonService3, 2);
+    serviceGroup->addButton(PushButtonService4, 3);
+
 	/* Connect buttons */
-	connect(PushButtonService1, SIGNAL(clicked()), this, SLOT(OnButtonService1()));
-	connect(PushButtonService2, SIGNAL(clicked()), this, SLOT(OnButtonService2()));
-	connect(PushButtonService3, SIGNAL(clicked()), this, SLOT(OnButtonService3()));
-	connect(PushButtonService4, SIGNAL(clicked()), this, SLOT(OnButtonService4()));
+	connect(serviceGroup, SIGNAL(buttonClicked(int)), this, SLOT(SetService(int)));
 
 	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
@@ -250,6 +223,7 @@ void DRMMainWindow::OnTimer()
 		}
 		break;
 	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
+        quitWanted = false;
         close();
 		break;
 	case NONE: // wait until working thread starts operating
@@ -656,74 +630,7 @@ void DRMMainWindow::OnNewDRMAcquisition()
 void DRMMainWindow::OnSwitchToAnalog()
 {
     // User must then select if wants FM, etc. TODO - allow direct mode changes
-    Settings.Put("Receiver", "modulation", string("AM"));
-	quitWanted = false;
-	close();
-}
-
-void DRMMainWindow::OnButtonService1()
-{
-	if (PushButtonService1->isOn())
-	{
-		/* Set all other buttons up */
-		if (PushButtonService2->isOn()) PushButtonService2->setOn(false);
-		if (PushButtonService3->isOn()) PushButtonService3->setOn(false);
-		if (PushButtonService4->isOn()) PushButtonService4->setOn(false);
-	}
-	else
-	{
-		PushButtonService1->setOn(true);
-		SetService(0);
-	}
-}
-
-void DRMMainWindow::OnButtonService2()
-{
-	if (PushButtonService2->isOn())
-	{
-		/* Set all other buttons up */
-		if (PushButtonService1->isOn()) PushButtonService1->setOn(false);
-		if (PushButtonService3->isOn()) PushButtonService3->setOn(false);
-		if (PushButtonService4->isOn()) PushButtonService4->setOn(false);
-	}
-	else
-	{
-		PushButtonService2->setOn(true);
-		SetService(1);
-	}
-
-}
-
-void DRMMainWindow::OnButtonService3()
-{
-	if (PushButtonService3->isOn())
-	{
-		/* Set all other buttons up */
-		if (PushButtonService1->isOn()) PushButtonService1->setOn(false);
-		if (PushButtonService2->isOn()) PushButtonService2->setOn(false);
-		if (PushButtonService4->isOn()) PushButtonService4->setOn(false);
-	}
-	else
-    {
-		PushButtonService3->setOn(true);
-		SetService(2);
-    }
-}
-
-void DRMMainWindow::OnButtonService4()
-{
-	if (PushButtonService4->isOn())
-	{
-		/* Set all other buttons up */
-		if (PushButtonService1->isOn()) PushButtonService1->setOn(false);
-		if (PushButtonService2->isOn()) PushButtonService2->setOn(false);
-		if (PushButtonService3->isOn()) PushButtonService3->setOn(false);
-	}
-	else
-	{
-		PushButtonService4->setOn(true);
-		SetService(3);
-	}
+    Receiver.SetReceiverMode(AM);
 }
 
 void DRMMainWindow::SetService(int iNewServiceID)
@@ -739,11 +646,11 @@ void DRMMainWindow::SetService(int iNewServiceID)
 	Parameters.SetCurSelDataService(iNewServiceID);
 	iCurSelServiceGUI = iNewServiceID;
 
-	/* If service is only data service or has a multimedia content
-	   , activate multimedia window */
 	EStreamType eAudDataFlag = Parameters.Service[iNewServiceID].eAudDataFlag;
 	Parameters.Unlock();
 
+	/* If service is only data service or has a multimedia content
+	   , activate multimedia window */
 	if (eAudDataFlag == SF_DATA)
 	{
 		Parameters.Lock();
@@ -781,18 +688,35 @@ void DRMMainWindow::SetService(int iNewServiceID)
 
 void DRMMainWindow::OnMenuSetDisplayColor()
 {
-    const QColor color = CRGBConversion::int2RGB(Settings.Get("DRM Dialog", "colorscheme", 0xff0000));
+    const QColor color = CRGBConversion::int2RGB(Settings.Get("DRMGUI", "colorscheme", 0xff0000));
     const QColor newColor = QColorDialog::getColor( color, this);
     if (newColor.isValid())
 	{
 		/* Store new color and update display */
 		SetDisplayColor(newColor);
-    	Settings.Put("DRM Dialog", "colorscheme", CRGBConversion::RGB2int(newColor));
+    	Settings.Put("DRMGUI", "colorscheme", CRGBConversion::RGB2int(newColor));
 	}
 }
 
 void DRMMainWindow::showEvent(QShowEvent* pEvent)
 {
+ 	/* default close action is to exit */
+    quitWanted = true;
+	/* recover window size and position */
+	CWinGeom s;
+	Settings.Get("DRMGUI", s);
+	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+			setGeometry(WinGeom);
+	if(Settings.Get("DRMGUI", "SEDvisible", false))
+        sysEvalDlg->show();
+	if(Settings.Get("DRMGUI", "Stationsvisible", false))
+        stationsDlg->show();
+	if(Settings.Get("DRMGUI", "AFSvisible", false))
+        liveScheduleDlg->show();
+	if(Settings.Get("DRMGUI", "EPGvisible", false))
+        epgDlg->show();
+
 	/* Activate real-time timers */
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
@@ -800,17 +724,13 @@ void DRMMainWindow::showEvent(QShowEvent* pEvent)
 void DRMMainWindow::hideEvent(QHideEvent* pEvent)
 {
     /* remember the state of the windows */
-    Settings.Put("DRM Dialog", "visible", true);
-    Settings.Put("AM Dialog", "visible", false);
-    Settings.Put("Live Schedule Dialog", "visible", liveScheduleDlg->isVisible());
-    Settings.Put("System Evaluation Dialog", "visible", sysEvalDlg->isVisible());
-    Settings.Put("Stations Dialog", "visible", stationsDlg->isVisible());
-    Settings.Put("EPG Dialog", "visible", epgDlg->isVisible());
+    Settings.Put("DRMGUI", "AFSvisible", liveScheduleDlg->isVisible());
+    Settings.Put("DRMGUI", "SEDvisible", sysEvalDlg->isVisible());
+    Settings.Put("DRMGUI", "Stationsvisible", stationsDlg->isVisible());
+    Settings.Put("DRMGUI", "EPGvisible", epgDlg->isVisible());
     /* stop any asynchronous GUI actions */
     loghelper.EnableLog(false);
     Timer.stop();
-
-    /* now close all the windows except the main window */
 
     liveScheduleDlg->hide();
     sysEvalDlg->hide();
@@ -818,19 +738,27 @@ void DRMMainWindow::hideEvent(QHideEvent* pEvent)
     stationsDlg->hide();
     if(jlViewer)
     {
-        Settings.Put("Journaline", "visible", jlViewer->isVisible());
+        Settings.Put("DRMGUI", "JLvisible", jlViewer->isVisible());
         jlViewer->close();
     }
     if(bwsViewer)
     {
-        Settings.Put("BWS", "visible", bwsViewer->isVisible());
+        Settings.Put("DRMGUI", "BWSvisible", bwsViewer->isVisible());
         bwsViewer->close();
     }
     if(slideShowViewer)
     {
-        Settings.Put("SlideShow", "visible", slideShowViewer->isVisible());
+        Settings.Put("DRMGUI", "SSvisible", slideShowViewer->isVisible());
         slideShowViewer->close();
     }
+
+	CWinGeom s;
+	QRect WinGeom = geometry();
+	s.iXPos = WinGeom.x();
+	s.iYPos = WinGeom.y();
+	s.iHSize = WinGeom.height();
+	s.iWSize = WinGeom.width();
+	Settings.Put("DRMGUI", s);
 }
 
 void DRMMainWindow::closeEvent(QCloseEvent* ce)
@@ -851,20 +779,8 @@ void DRMMainWindow::closeEvent(QCloseEvent* ce)
             QMessageBox::critical(this, "Dream", "Exit\n",
                 "Termination of working thread failed");
         }
-        Settings.Put("command", "quit", 1);
+        qApp->quit();
     }
-    else
-    {
-        Settings.Put("command", "quit", 0);
-    }
-
-	CWinGeom s;
-	QRect WinGeom = geometry();
-	s.iXPos = WinGeom.x();
-	s.iYPos = WinGeom.y();
-	s.iHSize = WinGeom.height();
-	s.iWSize = WinGeom.width();
-	Settings.Put("DRM Dialog", s);
 
 	/* now let QT close us */
 	ce->accept();

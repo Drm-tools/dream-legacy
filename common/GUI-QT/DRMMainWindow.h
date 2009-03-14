@@ -74,7 +74,6 @@ protected:
 	bool            quitWanted;
 
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
-	void			SetService(int iNewServiceID);
 	void			AddWhatsThisHelp();
 	void			UpdateDisplay();
 	void			ClearDisplay();
@@ -88,12 +87,10 @@ protected:
     void            closeEvent(QCloseEvent*);
 
 public slots:
+
 	void OnTimer();
-	void OnButtonService1();
-	void OnButtonService2();
-	void OnButtonService3();
-	void OnButtonService4();
 	void OnNewDRMAcquisition();
 	void OnMenuSetDisplayColor();
     void OnSwitchToAnalog();
+	void SetService(int);
 };

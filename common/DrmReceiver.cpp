@@ -844,6 +844,7 @@ CDRMReceiver::Start()
 void
 CDRMReceiver::Stop()
 {
+    cerr << "DRMReceiver stop" << endl;
 	bRunning = false;
 }
 
@@ -1479,8 +1480,6 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	Parameters.sDataFilesDirectory = sDataFilesDirectory;
 
-    SetReceiverMode(strMode);
-
 	/* Sync */
 	SetFreqInt(CChannelEstimation::ETypeIntFreq(s.Get("Receiver", "frequencyinterpolation", int(CChannelEstimation::FWIENER))));
 	SetTimeInt(CChannelEstimation::ETypeIntTime(s.Get("Receiver", "timeinterpolation", int(CChannelEstimation::TWIENER))));
@@ -1743,6 +1742,10 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	/* Wanted RF Frequency */
 	iFreqkHz = s.Get("Receiver", "frequency", 0);
 	doSetFrequency();
+
+    // Put this right at the end so that eNewReceiverMode is correct and Rx starts
+    SetReceiverMode(strMode);
+
 }
 
 void

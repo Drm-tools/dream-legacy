@@ -49,9 +49,8 @@
 # include <QThread>
 # include <QMessageBox>
 # include <QTranslator>
-# include "DRMMainWindow.h"
-# include "AnalogDemDlg.h"
 # include "TransmDlg.h"
+# include "RxApp.h"
 #endif
 #include <iostream>
 
@@ -61,11 +60,13 @@
 * Using GUI with QT                                                            *
 \******************************************************************************/
 
+
 int
 main(int argc, char **argv)
 {
 	/* create app before running Settings.Load to consume platform/QT parameters */
 	QApplication app(argc, argv);
+	RxApp m;
 
 #if defined(__APPLE__)
 	/* find plugins on MacOs when deployed in a bundle */
@@ -84,9 +85,8 @@ main(int argc, char **argv)
 	   activated, this function will immediately return */
 	DRMSimulation.SimScript();
 
-	CSettings Settings;
 	/* Parse arguments and load settings from init-file */
-	Settings.Load(argc, argv);
+	m.Settings.Load(argc, argv);
 
 	try
 	{
@@ -95,29 +95,29 @@ main(int argc, char **argv)
 		/* works for both transmit and receive. GUI is low, working is normal.
 		 * the working thread does not need to know what the setting is.
 		 */
-			if (Settings.Get("GUI", "processpriority", 1) != 0)
+			if (m.Settings.Get("GUI", "processpriority", 1) != 0)
 			{
 				/* Set priority class for this application */
 				SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 
 				/* Low priority for GUI thread */
 				SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
-				Settings.Put("GUI", "processpriority", 1);
+				m.Settings.Put("GUI", "processpriority", 1);
 			}
 			else
 			{
-				Settings.Put("GUI", "processpriority", 0);
+				m.Settings.Put("GUI", "processpriority", 0);
 			}
 #endif
 
-		string strMode = Settings.Get("0", "mode", string("RX"));
+		string strMode = m.Settings.Get("0", "mode", string("RX"));
 
-		bool bShowHelp = Settings.Get("command", "help", 0);
+		bool bShowHelp = m.Settings.Get("command", "help", 0);
 		if(bShowHelp)
 		{
-			string strError = Settings.Get("command", "error", string(""));
+			string strError = m.Settings.Get("command", "error", string(""));
 
-			string strHelp = Settings.UsageArguments(argv);
+			string strHelp = m.Settings.UsageArguments(argv);
 			if(strError != "")
 			{
 				strHelp = strError + " is not a valid argument\n" + strHelp;
@@ -129,53 +129,24 @@ main(int argc, char **argv)
 
 		if (strMode == "RX")
 		{
-			CDRMReceiver DRMReceiver;
 #ifdef HAVE_LIBHAMLIB
             CHamlib *pHamlib = NULL;
-            string rsi = Settings.Get("command", "rsiin", string(""));
-            string fio = Settings.Get("command", "fileio", string(""));
+            string rsi = m.Settings.Get("command", "rsiin", string(""));
+            string fio = m.Settings.Get("command", "fileio", string(""));
             if(rsi == "" && fio == "") /* don't initialise hamlib if RSCI or file input is requested */
             {
-                pHamlib = new CHamlib(*DRMReceiver.GetParameters());
-                DRMReceiver.SetHamlib(pHamlib);
+                pHamlib = new CHamlib(*m.Receiver.GetParameters());
+                m.Receiver.SetHamlib(pHamlib);
             }
 #endif
-            DRMReceiver.LoadSettings(Settings);
-            do
-            {
+            m.Receiver.LoadSettings(m.Settings);
 
-                /* First, initialize the working thread. This should be done in an extra
-                   routine since we cannot 100% assume that the working thread is
-                   ready before the GUI thread */
+            m.doNewMainWindow();
 
-                QMainWindow* MainDlg;
+            /* Start working thread */
+            m.Receiver.start();
 
-                string strMode = Settings.Get("Receiver", "modulation", string("DRM"));
-                if(strMode=="DRM")
-                {
-                    MainDlg = new DRMMainWindow(DRMReceiver, Settings,
-                        0, 0, Qt::WStyle_MinMax);
-                }
-                else
-                {
-                    MainDlg = new AnalogDemDlg(DRMReceiver, Settings,
-                        0, 0, Qt::WStyle_MinMax);
-                }
-
-                MainDlg->setAttribute(Qt::WA_DeleteOnClose);
-                MainDlg->show();
-
-                DRMReceiver.SetReceiverMode(strMode);
-
-                /* Start working thread */
-                DRMReceiver.start();
-
-                /* Set main window */
-                app.setMainWidget(MainDlg);
-
-                app.exec();
-
-            } while(Settings.Get("command", "quit", int(0))==0);
+            app.exec();
 
 #ifdef HAVE_LIBHAMLIB
 			if(pHamlib)
@@ -183,18 +154,18 @@ main(int argc, char **argv)
 				pHamlib->StopSMeter();
 				if (pHamlib->wait(1000) == false)
 					cout << "error terminating rig polling thread" << endl;
-				pHamlib->SaveSettings(Settings);
+				pHamlib->SaveSettings(m.Settings);
 			}
 #endif
-			DRMReceiver.SaveSettings(Settings);
+			m.Receiver.SaveSettings(m.Settings);
 		}
 		else if (strMode == "TX" || strMode == "ENC" || strMode == "MOD")
 		{
 			CDRMTransmitter DRMTransmitter;
 
-			DRMTransmitter.LoadSettings(Settings);
+			DRMTransmitter.LoadSettings(m.Settings);
 
-			TransmDialog MainDlg(DRMTransmitter, Settings, NULL, NULL, Qt::WStyle_MinMax);
+			TransmDialog MainDlg(DRMTransmitter, m.Settings, NULL, NULL, Qt::WStyle_MinMax);
 			/* Set main window */
 			app.setMainWidget(&MainDlg);
 
@@ -202,11 +173,11 @@ main(int argc, char **argv)
 			MainDlg.show();
 			app.exec();
 
-			DRMTransmitter.SaveSettings(Settings);
+			DRMTransmitter.SaveSettings(m.Settings);
 		}
 		else
 		{
-			QMessageBox::information(0, "Dream", Settings.UsageArguments(argv).c_str());
+			QMessageBox::information(0, "Dream", m.Settings.UsageArguments(argv).c_str());
 		}
 	}
 
@@ -224,7 +195,7 @@ main(int argc, char **argv)
 	}
 
 	/* Save settings to init-file */
-	Settings.Save();
+	m.Settings.Save();
 
 	return 0;
 }

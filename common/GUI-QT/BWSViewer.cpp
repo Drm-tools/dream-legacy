@@ -52,54 +52,6 @@ BWSViewer::BWSViewer(CDRMReceiver& rec, CSettings& s,
 
 	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
-	/* Add the service description into the dialog caption */
-	QString strTitle = tr("MOT Slide Show");
-
-    CParameter& Parameters = *receiver.GetParameters();
-    Parameters.Lock();
-    const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
-    const uint32_t iAudioServiceID = Parameters.Service[iCurSelAudioServ].iServiceID;
-
-    /* Get current data service */
-    const int iCurSelDataServ = Parameters.GetCurSelDataService();
-    CService service = Parameters.Service[iCurSelDataServ];
-    Parameters.Unlock();
-
-    if (service.IsActive())
-    {
-        /* Do UTF-8 to QString (UNICODE) conversion with the label strings */
-        QString strLabel = QString().fromUtf8(service.strLabel.c_str()).stripWhiteSpace();
-
-
-        /* Service ID (plot number in hexadecimal format) */
-        QString strServiceID = "";
-
-        /* show the ID only if differ from the audio service */
-        if ((service.iServiceID != 0) && (service.iServiceID != iAudioServiceID))
-        {
-            if (strLabel != "")
-                strLabel += " ";
-
-            strServiceID = "- ID:" +
-                QString().setNum(long(service.iServiceID), 16).upper();
-        }
-
-        /* add the description on the title of the dialog */
-        if (strLabel != "" || strServiceID != "")
-            strTitle += " [" + strLabel + strServiceID + "]";
-    }
-	setCaption(strTitle);
-
-	/* Get window geometry data and apply it */
-	CWinGeom g;
-	settings.Get("BWS", g);
-	const QRect WinGeom(g.iXPos, g.iYPos, g.iWSize, g.iHSize);
-
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-		setGeometry(WinGeom);
-
-	strCurrentSavePath = settings.Get("BWS", "storagepath", strCurrentSavePath);
-
 	Timer.stop();
 }
 
@@ -160,6 +112,53 @@ void BWSViewer::OnClearAll()
 
 void BWSViewer::showEvent(QShowEvent*)
 {
+	/* Get window geometry data and apply it */
+	CWinGeom g;
+	settings.Get("BWS", g);
+	const QRect WinGeom(g.iXPos, g.iYPos, g.iWSize, g.iHSize);
+
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+
+	strCurrentSavePath = settings.Get("BWS", "storagepath", strCurrentSavePath);
+
+    CParameter& Parameters = *receiver.GetParameters();
+    Parameters.Lock();
+    const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
+    const uint32_t iAudioServiceID = Parameters.Service[iCurSelAudioServ].iServiceID;
+
+    /* Get current data service */
+    const int iCurSelDataServ = Parameters.GetCurSelDataService();
+    CService service = Parameters.Service[iCurSelDataServ];
+    Parameters.Unlock();
+
+    QString strTitle("MOT Broadcast Website");
+
+    if (service.IsActive())
+    {
+        /* Do UTF-8 to QString (UNICODE) conversion with the label strings */
+        QString strLabel = QString().fromUtf8(service.strLabel.c_str()).stripWhiteSpace();
+
+
+        /* Service ID (plot number in hexadecimal format) */
+        QString strServiceID = "";
+
+        /* show the ID only if differ from the audio service */
+        if ((service.iServiceID != 0) && (service.iServiceID != iAudioServiceID))
+        {
+            if (strLabel != "")
+                strLabel += " ";
+
+            strServiceID = "- ID:" +
+                QString().setNum(long(service.iServiceID), 16).upper();
+        }
+
+        /* add the description on the title of the dialog */
+        if (strLabel != "" || strServiceID != "")
+            strTitle += " [" + strLabel + strServiceID + "]";
+    }
+	setCaption(strTitle);
+
 	/* Update window */
 	OnTimer();
 

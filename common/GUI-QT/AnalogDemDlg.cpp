@@ -49,12 +49,13 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, Qt::WFlags f):
     QMainWindow(parent, name, f), Ui_AnalogMainWindow(),
 	Receiver(NDRMR), Settings(NSettings),
-	pReceiverSettingsDlg(NULL), plot(NULL),
-	AMSSDlg(NDRMR, Settings, parent, name, false, f), quitWanted(true)
+	pReceiverSettingsDlg(NULL), stationsDlg(NULL), liveScheduleDlg(NULL),
+	plot(NULL),Timer(),TimerPLLPhaseDial(),
+	AMSSDlg(NDRMR, Settings, this, name, false, f), quitWanted(true)
 {
     setupUi(this);
 	CWinGeom s;
-	Settings.Get("AM Dialog", s);
+	Settings.Get("AnalogGUI", s);
 	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 			setGeometry(WinGeom);
@@ -80,14 +81,10 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Stations window */
 	stationsDlg = new StationsDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
-	if(Settings.Get("Stations Dialog", "visible", false))
-        stationsDlg->show();
 	connect(actionStations, SIGNAL(triggered()), stationsDlg, SLOT(show()));
 
 	/* Live Schedule window */
 	liveScheduleDlg = new LiveScheduleDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
-	if(Settings.Get("Live Schedule Dialog", "visible", false))
-        liveScheduleDlg->show();
 	connect(actionAFS, SIGNAL(triggered()), liveScheduleDlg, SLOT(show()));
 
 	/* Init main plot */
@@ -146,24 +143,31 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     Timer.stop();
     TimerPLLPhaseDial.stop();
     plot->stop();
-    cerr << "Analog constructed" << endl;
 }
 
 void AnalogDemDlg::showEvent(QShowEvent*)
 {
-    cerr << "Analog show" << endl;
 	OnTimer();
 	OnTimerPLLPhaseDial();
+
+ 	/* default close action is to exit */
+    quitWanted = true;
 
 	/* Activate real-time timers */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 
 	/* Open AMSS window */
-	if (Settings.Get("AMSS Dialog", "visible", false) == true)
+	if (Settings.Get("AnalogGUI", "AMSSvisible", false) == true)
 		AMSSDlg.show();
 	else
 		AMSSDlg.hide();
+
+	if(Settings.Get("AnalogGUI", "Stationsvisible", false))
+        stationsDlg->show();
+
+	if(Settings.Get("AnalogGUI", "AFSvisible", false))
+        liveScheduleDlg->show();
 
     plot->start();
 
@@ -176,9 +180,13 @@ void AnalogDemDlg::hideEvent(QHideEvent*)
 	Timer.stop();
 	TimerPLLPhaseDial.stop();
 
-	/* Close AMSS window */
-	Settings.Put("AMSS Dialog", "visible", AMSSDlg.isVisible());
+	/* Close windows */
+	Settings.Put("AnalogGUI", "AMSSvisible", AMSSDlg.isVisible());
 	AMSSDlg.hide();
+	Settings.Put("AnalogGUI", "Stationsvisible", stationsDlg->isVisible());
+	stationsDlg->hide();
+	Settings.Put("AnalogGUI", "AFSvisible", liveScheduleDlg->isVisible());
+	liveScheduleDlg->hide();
 
     plot->stop();
 
@@ -189,12 +197,11 @@ void AnalogDemDlg::hideEvent(QHideEvent*)
 	s.iYPos = WinGeom.y();
 	s.iHSize = WinGeom.height();
 	s.iWSize = WinGeom.width();
-	Settings.Put("AM Dialog", s);
+	Settings.Put("AnalogGUI", s);
 }
 
 void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 {
-    cerr << "Quit wanted " << quitWanted << endl;
     if(quitWanted)
     {
         /* request that the working thread stops */
@@ -205,20 +212,14 @@ void AnalogDemDlg::closeEvent(QCloseEvent* ce)
             QMessageBox::critical(this, "Dream", "Exit\n",
                     "Termination of working thread failed");
         }
-        Settings.Put("command", "quit", 1);
-    }
-    else
-    {
-        Settings.Put("command", "quit", 0);
+        qApp->quit();
     }
 	ce->accept();
 }
 
 void AnalogDemDlg::OnSwitchToDRM()
 {
-    Settings.Put("Receiver", "modulation", string("DRM"));
-	quitWanted = false;
-	close();
+    Receiver.SetReceiverMode(DRM);
 }
 
 void AnalogDemDlg::UpdateControls()
@@ -344,6 +345,7 @@ void AnalogDemDlg::OnTimer()
 	switch(Receiver.GetReceiverMode())
 	{
 	case DRM:
+        quitWanted = false;
         close();
 		break;
 	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
@@ -695,11 +697,6 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	Settings(NSettings)
 {
     setupUi(this);
-	CWinGeom s;
-	Settings.Get("AMSS Dialog", s);
-	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-			setGeometry(WinGeom);
 
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -755,6 +752,12 @@ void CAMSSDlg::hideEvent(QHideEvent*)
 
 void CAMSSDlg::showEvent(QShowEvent*)
 {
+	CWinGeom s;
+	Settings.Get("AMSS Dialog", s);
+	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+			setGeometry(WinGeom);
+
 	OnTimer();
 	OnTimerPLLPhaseDial();
 
