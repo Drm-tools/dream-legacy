@@ -38,7 +38,6 @@
 #include "../DrmReceiver.h"
 #include "../datadecoding/epg/epgutil.h"
 #include "../util/Settings.h"
-#include "MultimediaDlg.h"
 #include "ui_MultSettingsDlg.h"
 
 /* Definitions ****************************************************************/

@@ -31,7 +31,6 @@
 #include "LiveScheduleDlg.h"
 #include "StationsDlg.h"
 #include "SystemEvalDlg.h"
-#include "MultimediaDlg.h"
 #include "EPGDlg.h"
 #include "MultSettingsDlg.h"
 #include "JLViewer.h"

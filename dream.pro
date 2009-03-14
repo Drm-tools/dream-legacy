@@ -164,6 +164,7 @@ common/SigProc.h   \
 common/GlobalDefinitions.h   \
 common/GPSData.h   \
 common/GPSReceiver.h   \
+common/GUI-QT/RxApp.h   \
 common/GUI-QT/AnalogDemDlg.h   \
 common/GUI-QT/DialogUtil.h   \
 common/GUI-QT/DRMPlot.h   \
@@ -298,6 +299,7 @@ common/DrmModulator.cpp   \
 common/FAC/FAC.cpp   \
 common/GPSData.cpp   \
 common/GPSReceiver.cpp   \
+common/GUI-QT/RxApp.cpp  \
 common/GUI-QT/AnalogDemDlg.cpp   \
 common/GUI-QT/DialogUtil.cpp   \
 common/GUI-QT/DRMPlot.cpp   \
