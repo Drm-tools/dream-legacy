@@ -30,6 +30,13 @@
 #include "ReceptLog.h"
 #include <iomanip>
 #include <iostream>
+/* TODO
+
+- Simone: logfile (short log):
+  * after changing frequency, the minutes are not reset, so it just continues counting
+  the minutes where the previous log had stopped
+  * the delay for writing the log is only applied on the first log when starting Dream, would be nice
+  to apply a delay after changing frequency (currently you never get label/mode information in the header, or the previous one)
 
 /* implementation --------------------------------------------- */
 

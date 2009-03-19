@@ -12,7 +12,7 @@
 				<Option object_output="Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode RX --modn AM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
+				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -93,7 +93,7 @@
 				<Option object_output="Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode RX --modn AM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
+				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -372,6 +372,18 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
+		<Unit filename="..\common\GUI-QT\RxApp.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\RxApp.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
 		<Unit filename="..\common\GUI-QT\SlideShowViewer.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -415,6 +427,18 @@
 			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\TransmDlg.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\bwsbrowser.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\bwsbrowser.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
@@ -766,6 +790,12 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
+		<Unit filename="..\moc\moc_RxApp.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
 		<Unit filename="..\moc\moc_SlideShowViewer.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -785,6 +815,12 @@
 			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_TransmDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_bwsbrowser.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />

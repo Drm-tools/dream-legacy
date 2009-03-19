@@ -183,6 +183,7 @@ common/GUI-QT/StationsDlg.h   \
 common/GUI-QT/SystemEvalDlg.h   \
 common/GUI-QT/TransmDlg.h   \
 common/GUI-QT/jlbrowser.h   \
+common/GUI-QT/bwsbrowser.h   \
 common/InputResample.h   \
 common/interleaver/BlockInterleaver.h   \
 common/interleaver/SymbolInterleaver.h   \
@@ -319,6 +320,7 @@ common/GUI-QT/StationsDlg.cpp   \
 common/GUI-QT/SystemEvalDlg.cpp   \
 common/GUI-QT/TransmDlg.cpp   \
 common/GUI-QT/jlbrowser.cpp   \
+common/GUI-QT/bwsbrowser.cpp   \
 common/InputResample.cpp   \
 common/interleaver/BlockInterleaver.cpp   \
 common/interleaver/SymbolInterleaver.cpp   \

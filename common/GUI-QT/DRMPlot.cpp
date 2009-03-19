@@ -43,7 +43,15 @@
 #include <QLayout>
 #include <iostream>
 
-/* TODO - see if we have lost any dynamic rescaling */
+/* TODO - see if we have lost any dynamic rescaling
+
+
+Simone: - waterfall spectrum: could be improved, can´t see much of the signal itself,
+ it´s all blue
+- plotstyle: does not work from settings menu, but is OK from command line
+
+Tear-off charts not working ?
+ */
 
 /* Implementation *************************************************************/
 class scaleGen

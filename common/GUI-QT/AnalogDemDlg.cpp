@@ -43,6 +43,12 @@
 
 // TODO Rename
 // TODO improve layout (simplify?)
+// TODO - check audio
+/*
+- AM mode- looks OK but I do not get any audio
+- AM window- some problems with the size, can´t see all buttons
+- AMSS window, background colour for label area missing
+*/
 
 /* Implementation *************************************************************/
 AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,

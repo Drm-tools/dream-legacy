@@ -1514,6 +1514,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	string str;
 
+    /* TODO Test all file modes - PCAP, RSCI, ... */
 	/* input from file (code for bare rs, pcap files moved to CSettings) */
 	str = s.Get("command", "fileio", string(""));
 	if(str != "")

@@ -566,20 +566,28 @@ class CMOTDABDec
     {
     }
 
-    /* client methods */
-    void GetNextObject (CMOTObject & NewMOTObject);
-
-    void GetObject (CMOTObject & NewMOTObject, TTransportID TransportID)
+    TTransportID GetNextTid ()
     {
-	NewMOTObject = MOTCarousel[TransportID];
+        if (!qiNewObjects.empty())
+        {
+            TTransportID firstNew = qiNewObjects.front();
+            qiNewObjects.pop();
+            return firstNew;
+        }
+        return -1;
+    }
+
+    CMOTObject& GetObject (TTransportID TransportID)
+    {
+        return MOTCarousel[TransportID];
     }
 
     void GetDirectory (CMOTDirectory & MOTDirectoryOut)
     {
-	MOTDirectoryOut = MOTDirectory;
+        MOTDirectoryOut = MOTDirectory;
     }
 
-    bool NewObjectAvailable ();
+    bool NewObjectAvailable () { return qiNewObjects.empty() == false; }
 
     /* push from lower level */
     void AddDataUnit (CVector < _BINARY > &vecbiNewData);

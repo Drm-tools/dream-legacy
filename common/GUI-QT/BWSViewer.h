@@ -50,16 +50,17 @@ protected:
 	std::string             strCurrentSavePath;
 	CDRMReceiver&           receiver;
 	CSettings&              settings;
+	QString                 homeUrl;
 
 public slots:
 	void OnTimer();
 	void OnButtonStepBack();
 	void OnButtonStepForward();
-	void OnButtonJumpBegin();
-	void OnButtonJumpEnd();
+	void OnButtonHome();
 	void OnSave();
 	void OnSaveAll();
 	void OnClearAll();
+	void onSetProfile(bool);
     void showEvent(QShowEvent*);
     void hideEvent(QHideEvent*);
 };

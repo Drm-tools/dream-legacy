@@ -502,6 +502,7 @@ void SystemEvalDlg::InitialisePlots()
     ChartSelector->hideColumn(1);
 }
 
+// TODO - do we need this ?
 void SystemEvalDlg::UpdatePlots()
 {
 }
@@ -577,9 +578,11 @@ void SystemEvalDlg::OnCustomContextMenuRequested ( const QPoint&)
 void SystemEvalDlg::newPlot(int pt)
 {
     QwtPlot* p = new QwtPlot(NULL);
+    p->setAttribute(Qt::WA_QuitOnClose, false);
     CDRMPlot* pNewPlot = new CDRMPlot(p, DRMReceiver.GetParameters());
     pNewPlot->SetupChart(CDRMPlot::EPlotType(pt));
     plots.push_back(pNewPlot);
+    pNewPlot->start();
     p->resize(200, 150);
     p->show();
 }

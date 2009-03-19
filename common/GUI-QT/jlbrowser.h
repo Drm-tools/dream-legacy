@@ -29,7 +29,6 @@
 #ifndef _JLBROWSER_H
 #define _JLBROWSER_H
 
-#include <map>
 #include <QTextBrowser>
 
 class CDataDecoder;

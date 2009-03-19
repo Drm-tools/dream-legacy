@@ -33,7 +33,8 @@
 BWSViewer::BWSViewer(CDRMReceiver& rec, CSettings& s,
         QWidget* parent,
 		const char* name, Qt::WFlags f):
-		QMainWindow(parent, name, f), Ui_BWSViewer(), Timer(), receiver(rec), settings(s)
+		QMainWindow(parent, name, f), Ui_BWSViewer(), Timer(), receiver(rec), settings(s),
+		homeUrl("")
 {
     setupUi(this);
 
@@ -43,12 +44,17 @@ BWSViewer::BWSViewer(CDRMReceiver& rec, CSettings& s,
 	connect(actionSave, SIGNAL(triggered()), SLOT(OnSave()));
 	connect(actionSave_All, SIGNAL(triggered()), SLOT(OnSaveAll()));
 	connect(actionClose, SIGNAL(triggered()), SLOT(close()));
+	connect(actionRestricted_Profile_Only, SIGNAL(triggered(bool)), SLOT(onSetProfile(bool)));
 
 	/* Update time for color LED */
 	LEDStatus->SetUpdateTime(1000);
 
 	/* Connect controls */
 	connect(ButtonStepBack, SIGNAL(clicked()), this, SLOT(OnButtonStepBack()));
+	connect(ButtonStepForward, SIGNAL(clicked()), this, SLOT(OnButtonStepForward()));
+	connect(ButtonHome, SIGNAL(clicked()), this, SLOT(OnButtonHome()));
+
+    OnClearAll();
 
 	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
@@ -83,19 +89,33 @@ void BWSViewer::OnTimer()
 		LEDStatus->SetLight(0); /* GREEN */
 		break;
 	}
+
+    if(textBrowser->changed())
+    {
+        textBrowser->reload();
+    }
+
+    if(homeUrl=="")
+    {
+        homeUrl = textBrowser->homeUrl();
+        if(homeUrl!="")
+            textBrowser->setSource(QUrl(homeUrl));
+    }
 }
 
 void BWSViewer::OnButtonStepBack()
 {
+    textBrowser->backward();
 }
+
 void BWSViewer::OnButtonStepForward()
 {
+    textBrowser->forward();
 }
-void BWSViewer::OnButtonJumpBegin()
+
+void BWSViewer::OnButtonHome()
 {
-}
-void BWSViewer::OnButtonJumpEnd()
-{
+    textBrowser->home();
 }
 
 void BWSViewer::OnSave()
@@ -108,6 +128,21 @@ void BWSViewer::OnSaveAll()
 
 void BWSViewer::OnClearAll()
 {
+    textBrowser->clear();
+    textBrowser->clearHistory();
+	textBrowser->setToolTip("");
+
+    actionClear_All->setEnabled(false);
+    actionSave->setEnabled(false);
+    actionSave_All->setEnabled(false);
+    ButtonStepBack->setEnabled(false);
+    ButtonStepForward->setEnabled(false);
+    ButtonHome->setEnabled(false);
+}
+
+void BWSViewer::onSetProfile(bool isChecked)
+{
+    textBrowser->setRestrictedProfile(isChecked);
 }
 
 void BWSViewer::showEvent(QShowEvent*)

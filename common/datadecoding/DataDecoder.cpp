@@ -421,8 +421,8 @@ CDataDecoder::DecodeEPG(const CParameter & ReceiverParam)
 		&& (iEPGPacketID >= 0)
 		&& MOTObject[iEPGPacketID].NewObjectAvailable())
 	{
-		CMOTObject NewObj;
-		MOTObject[iEPGPacketID].GetNextObject(NewObj);
+	    TTransportID tid = MOTObject[iEPGPacketID].GetNextTid();
+		CMOTObject NewObj = MOTObject[iEPGPacketID].GetObject(tid);
 		string fileName;
 		bool advanced = false;
 		if (NewObj.iContentType == 7)
@@ -583,32 +583,35 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 	}
 }
 
-bool
-	CDataDecoder::GetMOTObject(CMOTObject & NewObj,
-							   const EAppType eAppTypeReq)
+TTransportID CDataDecoder::GetNextTid ()
 {
-	bool bReturn = false;
-
-	/* Lock resources */
 	Lock();
-
-	/* Check if data service is current MOT application */
-	if ((DoNotProcessData == false)
-		&& (eAppType[iServPacketID] == eAppTypeReq)
-		&& MOTObject[iServPacketID].NewObjectAvailable())
+	if (DoNotProcessData)
 	{
-		MOTObject[iServPacketID].GetNextObject(NewObj);
-		bReturn = true;
+	    Unlock();
+	    return -1;
 	}
-	/* Release resources */
+    TTransportID tid = MOTObject[iServPacketID].GetNextTid();
 	Unlock();
-
-	return bReturn;
+    return tid;
 }
 
 bool
-	CDataDecoder::GetMOTDirectory(CMOTDirectory & MOTDirectoryOut,
-								  const EAppType eAppTypeReq)
+CDataDecoder::GetObject(CMOTObject& o, TTransportID TransportID)
+{
+    bool ok = false;
+	Lock();
+	if (DoNotProcessData == false)
+	{
+        o = MOTObject[iServPacketID].GetObject(TransportID);
+        ok = true;
+	}
+	Unlock();
+	return ok;
+}
+
+bool
+CDataDecoder::GetMOTDirectory(CMOTDirectory & MOTDirectoryOut)
 {
 	bool bReturn = false;
 
@@ -616,8 +619,7 @@ bool
 	Lock();
 
 	/* Check if data service is current MOT application */
-	if ((DoNotProcessData == false)
-		&& (eAppType[iServPacketID] == eAppTypeReq))
+	if (DoNotProcessData == false)
 	{
 		MOTObject[iServPacketID].GetDirectory(MOTDirectoryOut);
 		bReturn = true;

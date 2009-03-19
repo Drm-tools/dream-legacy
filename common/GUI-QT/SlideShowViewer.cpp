@@ -29,11 +29,12 @@
 #include "SlideShowViewer.h"
 #include "../util/Settings.h"
 #include "../DrmReceiver.h"
+#include <QFileDialog>
 
 SlideShowViewer::SlideShowViewer(CDRMReceiver& rec, CSettings& s,
         QWidget* parent,
 		const char* name, Qt::WFlags f):
-		QMainWindow(parent, name, f), Ui_SlideShowViewer(), Timer(), strCurrentSavePath(),
+		QMainWindow(parent, name, f), Ui_SlideShowViewer(), Timer(), strCurrentSavePath("."),
 		receiver(rec), settings(s),vecImages(),vecImageNames(),iCurImagePos(-1)
 {
     setupUi(this);
@@ -56,14 +57,7 @@ SlideShowViewer::SlideShowViewer(CDRMReceiver& rec, CSettings& s,
 
 	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
-    actionClear_All->setEnabled(false);
-    actionSave->setEnabled(false);
-    actionSave_All->setEnabled(false);
-
-    ButtonStepBack->setEnabled(false);
-    ButtonStepForward->setEnabled(false);
-    ButtonJumpBegin->setEnabled(false);
-    ButtonJumpEnd->setEnabled(false);
+    OnClearAll();
 
 	Timer.stop();
 }
@@ -98,12 +92,13 @@ void SlideShowViewer::OnTimer()
 	}
 
 	CDataDecoder& DataDecoder = *receiver.GetDataDecoder();
-	CMOTObject	NewObj;
 
     /* Poll the data decoder module for new picture */
-    if (DataDecoder.GetMOTObject(NewObj, AT_MOTSLISHOW) == true)
+    TTransportID tid = DataDecoder.GetNextTid();
+    if (tid>=0)
     {
-cerr << "got picture" << endl;
+        CMOTObject	NewObj;
+        DataDecoder.GetObject(NewObj, tid);
         /* Store received picture */
         int iCurNumPict = vecImageNames.size();
         CVector<_BYTE>& imagedata = NewObj.Body.vecData;
@@ -148,14 +143,38 @@ void SlideShowViewer::OnButtonJumpEnd()
 
 void SlideShowViewer::OnSave()
 {
+    QString fileName = QString(strCurrentSavePath.c_str()) + "/" + vecImageNames[iCurImagePos];
+    fileName = QFileDialog::getSaveFileName(this, tr("Save File"),
+                            fileName,
+                            tr("Images (*.png *.jpg)"));
+    vecImages[iCurImagePos].save(fileName);
+    strCurrentSavePath = QDir(fileName).path().toUtf8().data();
 }
 
 void SlideShowViewer::OnSaveAll()
 {
+    QString dir = QFileDialog::getExistingDirectory(this, tr("Open Directory"), strCurrentSavePath.c_str());
+    for(size_t i=0; i<vecImages.size(); i++)
+    {
+        vecImages[i].save(dir+"/"+vecImageNames[i]);
+    }
+    strCurrentSavePath = dir.toUtf8().data();
 }
 
 void SlideShowViewer::OnClearAll()
 {
+    vecImages.clear();
+    vecImageNames.clear();
+    iCurImagePos = -1;
+
+    actionClear_All->setEnabled(false);
+    actionSave->setEnabled(false);
+    actionSave_All->setEnabled(false);
+
+    ButtonStepBack->setEnabled(false);
+    ButtonStepForward->setEnabled(false);
+    ButtonJumpBegin->setEnabled(false);
+    ButtonJumpEnd->setEnabled(false);
 }
 
 void SlideShowViewer::showEvent(QShowEvent*)

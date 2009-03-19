@@ -130,9 +130,7 @@ QVariant JLBrowser::loadResource( int type, const QUrl & name )
 		}
 	}
 
-	/* Set html text. Standard design. The first character must be a "<". This
-	   is used to identify whether normal text is displayed or an ID was set */
-	QString strAllText =
+	return
 		strJournalineHeadText +
 		"<table>"
 		"<tr><td><hr></td></tr>" /* horizontial line */
@@ -142,7 +140,5 @@ QVariant JLBrowser::loadResource( int type, const QUrl & name )
 		"<tr><td><hr></td></tr>" /* horizontial line */
 		"</table>"
 		+ strFhGIISText;
-
-    return strAllText;
 }
 

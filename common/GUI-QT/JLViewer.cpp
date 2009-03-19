@@ -56,10 +56,7 @@ JLViewer::JLViewer(CDRMReceiver& rec, CSettings& s, QWidget* parent,
 	connect(textBrowser, SIGNAL(backwardAvailable(bool)), ButtonStepBack, SLOT(setEnabled(bool)));
 	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
-    actionClear_All->setEnabled(false);
-    actionSave->setEnabled(false);
-    actionSave_All->setEnabled(false);
-    ButtonStepBack->setEnabled(false);
+    OnClearAll();
 
 	Timer.stop();
 }
@@ -193,7 +190,9 @@ void JLViewer::OnTimer()
 	}
 
     if(textBrowser->changed())
+    {
         textBrowser->reload();
+    }
 }
 
 void JLViewer::OnButtonStepBack()
@@ -211,6 +210,13 @@ void JLViewer::OnSaveAll()
 
 void JLViewer::OnClearAll()
 {
+    actionClear_All->setEnabled(false);
+    actionSave->setEnabled(false);
+    actionSave_All->setEnabled(false);
+    ButtonStepBack->setEnabled(false);
+    textBrowser->clear();
+    textBrowser->clearHistory();
+    // TODO - clear JL object cache ?
 }
 
 void JLViewer::OnSetFont()

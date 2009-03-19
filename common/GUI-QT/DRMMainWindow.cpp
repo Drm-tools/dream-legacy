@@ -634,16 +634,12 @@ void DRMMainWindow::OnSwitchToAnalog()
 
 void DRMMainWindow::SetService(int iNewServiceID)
 {
-    if(iCurSelServiceGUI == iNewServiceID)
-        return;
-
 	CParameter& Parameters = *Receiver.GetParameters();
 
 	Parameters.Lock();
 
 	Parameters.SetCurSelAudioService(iNewServiceID);
 	Parameters.SetCurSelDataService(iNewServiceID);
-	iCurSelServiceGUI = iNewServiceID;
 
 	EStreamType eAudDataFlag = Parameters.Service[iNewServiceID].eAudDataFlag;
 	Parameters.Unlock();
@@ -671,18 +667,20 @@ void DRMMainWindow::SetService(int iNewServiceID)
                 break;
             case AT_JOURNALINE:
                 if(jlViewer==NULL)
-                    jlViewer = new BWSViewer(Receiver, Settings, this, "", Qt::WStyle_MinMax);
+                    jlViewer = new JLViewer(Receiver, Settings, this, "", Qt::WStyle_MinMax);
                 jlViewer->show();
                 break;
             case AT_MOTSLISHOW:
                 if(slideShowViewer==NULL)
-                    slideShowViewer = new BWSViewer(Receiver, Settings, this, "", Qt::WStyle_MinMax);
+                    slideShowViewer = new SlideShowViewer(Receiver, Settings, this, "", Qt::WStyle_MinMax);
                 slideShowViewer->show();
                 break;
             default:
                 QMessageBox::information(this, "Dream", tr("unsupported data application"));
         }
 	}
+
+	iCurSelServiceGUI = iNewServiceID;
 }
 
 void DRMMainWindow::OnMenuSetDisplayColor()

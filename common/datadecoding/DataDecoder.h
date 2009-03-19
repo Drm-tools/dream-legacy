@@ -86,9 +86,9 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 	CDataDecoder& operator=(const CDataDecoder&)
 	{ throw "should not happen"; return *this;}
 
-    bool GetMOTObject (CMOTObject & NewPic, const EAppType eAppTypeReq);
-    bool GetMOTDirectory (CMOTDirectory & MOTDirectoryOut, const EAppType eAppTypeReq);
-
+    bool GetMOTDirectory (CMOTDirectory & MOTDirectoryOut);
+    TTransportID GetNextTid();
+    bool GetObject(CMOTObject&, TTransportID);
     void GetNews (const int iObjID, CNews & News);
 
     EAppType GetAppType ()
@@ -96,7 +96,7 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 		return eAppType[iServPacketID];
     }
 
-	/* Parameter for activate/deactivate EPG decoding */
+	/* Parameter to activate/deactivate EPG decoding */
 	void	SetDecodeEPG(const bool bDecEPG) {bDecodeEPG = bDecEPG;}
 	bool	GetDecodeEPG() {return bDecodeEPG;}
 

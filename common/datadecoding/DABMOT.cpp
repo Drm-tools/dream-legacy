@@ -577,11 +577,6 @@ CMOTDABEnc::Reset()
 /******************************************************************************\
 * Decoder                                                                      *
 \******************************************************************************/
-bool
-CMOTDABDec::NewObjectAvailable()
-{
-	return qiNewObjects.empty() == false;
-}
 
 /*static void dump(vector<_BYTE> b, size_t o, size_t n)
 {
@@ -596,21 +591,6 @@ printf("%c", c);
 printf("\n");
 }*/
 
-void
-CMOTDABDec::GetNextObject(CMOTObject & NewMOTObject)
-{
-	if (!qiNewObjects.empty())
-	{
-		TTransportID firstNew = qiNewObjects.front();
-		qiNewObjects.pop();
-		NewMOTObject = MOTCarousel[firstNew];
-	}
-	else
-	{
-		fprintf(stderr, "GetObject called when queue empty\n");
-		fflush(stderr);
-	}
-}
 
 void
 CMOTDABDec::DeliverIfReady(TTransportID TransportID)

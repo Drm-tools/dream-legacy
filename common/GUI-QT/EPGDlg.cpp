@@ -33,6 +33,13 @@
 #include <QPixmap>
 #include <QHideEvent>
 
+/* TODO (Simone)
+- EPG:
+  * let Dream remember the selected service from last time looking at the guide (at least within the same session)
+  * any chance to download the EPG files automatically when the EPG is not embedded in the main service (i.e. when it is
+    in service 4 as currently on DLR)
+*/
+
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, Qt::WFlags f)
 :QDialog(parent, name, modal, f),Ui_EPGDlg(),BitmCubeGreen(),
