@@ -3,10 +3,9 @@
  * Copyright (c) 2009
  *
  * Author(s):
- *	 Julian Cable
+ *	Julian Cable
  *
- * Description: Broadcast Website Specialisation of TextBrowser
- *
+ * Description: base class for DAB/DRM Data Applications
  *
  ******************************************************************************
  *
@@ -26,32 +25,34 @@
  *
 \******************************************************************************/
 
-#ifndef _BWSBROWSER_H
-#define _BWSBROWSER_H
+#ifndef _DATAAPPLICATION_H
+#define _DATAAPPLICATION_H
 
-#include <map>
-#include <QTextBrowser>
-#include "../datadecoding/DABMOT.h"
+#include "../util/Vector.h"
 
-class BWSBrowser : public QTextBrowser
+class CParameter;
+
+class DataApplication
 {
-	Q_OBJECT
 public:
-    BWSBrowser(QWidget * parent = 0 );
-    ~BWSBrowser() {}
-    QVariant loadResource ( int type, const QUrl & name );
-    bool changed();
-    void setDecoder(CMOTDABDec *d) { decoder = d; }
-    void setRestrictedProfile(bool b) { restricted = b; }
-    bool restrictedProfile() { return restricted; }
-    QString homeUrl() const { return shomeUrl; }
 
-protected:
+	DataApplication(CParameter&):serviceid(0) {}
+	virtual ~DataApplication() {}
 
-    CMOTDABDec*   decoder;
-    std::map<QString,CMOTObject> pages;
-    QString shomeUrl;
-    bool restricted;
+	virtual void AddDataUnit(CVector<_BINARY>&) = 0;
+
+    uint32_t serviceid;
+};
+
+class DataApplicationFactory
+{
+public:
+
+	DataApplicationFactory() {}
+	virtual ~DataApplicationFactory() {}
+
+	virtual DataApplication* create(CParameter&) = 0;
+
 };
 
 #endif

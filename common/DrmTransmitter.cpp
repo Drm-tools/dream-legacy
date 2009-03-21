@@ -31,6 +31,7 @@
 #include "DrmTransmitter.h"
 #include "mlc/MLC.h"
 #include <sstream>
+#include <ctime>
 
 /* Implementation *************************************************************/
 CDRMTransmitter::CDRMTransmitter():
@@ -46,12 +47,16 @@ CDRMTransmitter::CDRMTransmitter():
 	/* Init frame ID counter (index) */
 	TransmParam.iFrameIDTransm = 0;
 
-	/* Date, time. TODO: use computer system time... */
-	TransmParam.iDay = 0;
-	TransmParam.iMonth = 0;
-	TransmParam.iYear = 0;
-	TransmParam.iUTCHour = 0;
-	TransmParam.iUTCMin = 0;
+	time_t t;
+	time(&t);
+    tm gmt = *gmtime(&t);
+
+	/* Date, time. */
+	TransmParam.iDay = gmt.tm_mday;
+	TransmParam.iMonth = gmt.tm_mon+1;
+	TransmParam.iYear = 1900+gmt.tm_year;
+	TransmParam.iUTCHour = gmt.tm_hour;
+	TransmParam.iUTCMin = gmt.tm_min;
 }
 
 void

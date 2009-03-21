@@ -27,14 +27,25 @@
 \******************************************************************************/
 
 #include "DataDecoder.h"
-#include "./epg/epgutil.h"
 #include "Journaline.h"
+#include "DABMOT.h"
+#include "MOTSlideShow.h"
+#include "EPGDecoder.h"
 #include <iostream>
 
 /* Implementation *************************************************************/
 /******************************************************************************\
 * Encoder                                                                      *
 \******************************************************************************/
+CDataEncoder::CDataEncoder():MOTSlideShowEncoder(new CMOTSlideShowEncoder())
+{
+}
+
+CDataEncoder::~CDataEncoder()
+{
+    delete MOTSlideShowEncoder;
+}
+
 void
 CDataEncoder::GeneratePacket(CVector < _BINARY > &vecbiPacket)
 {
@@ -123,7 +134,7 @@ CDataEncoder::GeneratePacket(CVector < _BINARY > &vecbiPacket)
 	if (bLastFlag == true)
 	{
 		/* Generate new data unit */
-		MOTSlideShowEncoder.GetDataUnit(vecbiCurDataUnit);
+		MOTSlideShowEncoder->GetDataUnit(vecbiCurDataUnit);
 		vecbiCurDataUnit.ResetBitAccess();
 
 		/* Reset data pointer and continuity index */
@@ -166,10 +177,10 @@ CDataEncoder::Init(CParameter & Param)
 	Param.Unlock();
 
 	/* Init DAB MOT encoder object */
-	MOTSlideShowEncoder.Init();
+	MOTSlideShowEncoder->Init();
 
 	/* Generate first data unit */
-	MOTSlideShowEncoder.GetDataUnit(vecbiCurDataUnit);
+	MOTSlideShowEncoder->GetDataUnit(vecbiCurDataUnit);
 	vecbiCurDataUnit.ResetBitAccess();
 
 	/* Reset pointer to current position in data unit and continuity index */
@@ -183,23 +194,208 @@ CDataEncoder::Init(CParameter & Param)
 /******************************************************************************\
 * Decoder                                                                      *
 \******************************************************************************/
-CDataDecoder::CDataDecoder ():iServPacketID (0), DoNotProcessData (true),
-	Journaline(*new CJournaline()),
-	iOldJournalineServiceID (0), bDecodeEPG(true)
+CDataDecoder::CDataDecoder ():factory()
 {
-		for(size_t i=0; i<MAX_NUM_PACK_PER_STREAM; i++)
-			eAppType[i] = AT_NOT_SUP;
+    for(size_t i=0; i<MAX_NUM_PACK_PER_STREAM; i++)
+    {
+        app[i] = NULL;
+    }
+    setApplication(CDataParam::AD_DAB_SPEC_APP, AT_MOTSLISHOW, new CMOTDABDecFactory());
+    setApplication(CDataParam::AD_DAB_SPEC_APP, AT_MOTBROADCASTWEBSITE, new CMOTDABDecFactory());
+    setApplication(CDataParam::AD_DAB_SPEC_APP, AT_MOTTPEG, new EPGDecoderFactory());
+    setApplication(CDataParam::AD_DAB_SPEC_APP, AT_JOURNALINE, new JournalineFactory());
 }
 
 CDataDecoder::~CDataDecoder ()
 {
-	delete &Journaline;
+    for(map<int, map<int, DataApplicationFactory*> >::iterator i=factory.begin();
+        i!=factory.end(); i++)
+    {
+        for(map<int, DataApplicationFactory*>::iterator j = i->second.begin();
+            j!=i->second.end(); j++)
+        {
+            delete j->second;
+        }
+    }
+    for(size_t i=0; i<MAX_NUM_PACK_PER_STREAM; i++)
+    {
+        if(app[i])
+            delete app[i];
+    }
 }
 
 void
 CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 {
-	int i, j;
+    if(ReceiverParam.Stream[
+        ReceiverParam.GetCurSelDataService()
+        ].ePacketModInd == PM_PACKET_MODE)
+    {
+        CCRC CRCObject;
+
+        /* CRC check for all packets -------------------------------------------- */
+        /* Reset bit extraction access */
+        (*pvecInputData).ResetBitAccess();
+
+        for (int i = 0; i < iNumDataPackets; i++)
+        {
+            /* Check the CRC of this packet */
+            CRCObject.Reset(16);
+
+            /* "- 2": 16 bits for CRC at the end */
+            for (int j = 0; j < iTotalPacketSize - 2; j++)
+            {
+                _BYTE b =pvecInputData->Separate(BITS_BINARY);
+                CRCObject.AddByte(b);
+            }
+
+            /* Store result in vector and show CRC in multimedia window */
+            uint16_t crc = pvecInputData->Separate(16);
+            if (CRCObject.CheckCRC(crc) == true)
+            {
+                veciCRCOk[i] = 1;	/* CRC ok */
+                ReceiverParam.ReceiveStatus.MOT.SetStatus(RX_OK);
+            }
+            else
+            {
+                veciCRCOk[i] = 0;	/* CRC wrong */
+                ReceiverParam.ReceiveStatus.MOT.SetStatus(CRC_ERROR);
+            }
+        }
+
+        /* Extract packet data -------------------------------------------------- */
+        /* Reset bit extraction access */
+        (*pvecInputData).ResetBitAccess();
+
+        for (int i = 0; i < iNumDataPackets; i++)
+        {
+            /* Check if CRC was ok */
+            if (veciCRCOk[i] == 1)
+            {
+                decodePacket(*pvecInputData);
+            }
+            else
+            {
+                /* Skip incorrect packet */
+                for (int j = 0; j < iTotalPacketSize; j++)
+                    (*pvecInputData).Separate(BITS_BINARY);
+            }
+        }
+    }
+    else // stream based processing - pass the whole MSC stream segment
+    {
+        if(app[0])
+            app[0]->AddDataUnit(*pvecInputData);
+    }
+}
+
+void
+CDataDecoder::InitInternal(CParameter & ReceiverParam)
+{
+	int iTotalNumInputBits;
+	int iTotalNumInputBytes;
+
+	/* Get current data stream ID
+        currently we can only decode one stream !!!
+        but we can decode all the packet ids from this stream
+	 */
+	int d = ReceiverParam.GetCurSelDataService();
+	iStreamID = ReceiverParam.Service[d].iDataStream;
+
+	/* Get number of total input bits (and bytes) for this module */
+	iTotalNumInputBits = ReceiverParam.iNumDataDecoderBits;
+	iTotalNumInputBytes = iTotalNumInputBits / BITS_BINARY;
+
+	/* Set input block size */
+	iInputBlockSize = iTotalNumInputBits;
+
+    if(ReceiverParam.Stream[iStreamID].ePacketModInd == PM_PACKET_MODE)
+    {
+        /* Calculate total packet size. DRM standard: packet length: this
+           field indicates the length in bytes of the data field of each
+           packet specified as an unsigned binary number (the total packet
+           length is three bytes longer as it includes the header and CRC
+           fields) */
+        iTotalPacketSize = ReceiverParam.Stream[iStreamID].iPacketLen + 3;
+
+        /* Check total packet size, could be wrong due to wrong SDC */
+        if ((iTotalPacketSize <= 0) ||
+            (iTotalPacketSize > iTotalNumInputBytes))
+        {
+            return;
+        }
+
+        /* Maximum number of bits for the data part in a packet
+           ("- 3" because two bits for CRC and one for the header) */
+        iMaxPacketDataSize = (iTotalPacketSize - 3) * BITS_BINARY;
+
+        /* Number of data packets in one data block */
+        iNumDataPackets = iTotalNumInputBytes / iTotalPacketSize;
+
+        /* Init vector for storing the CRC results for each packet */
+        veciCRCOk.Init(iNumDataPackets);
+
+        /* Reset data units for all possible data IDs */
+        for (int i = 0; i < MAX_NUM_PACK_PER_STREAM; i++)
+        {
+            DataUnit[i].Reset();
+
+            /* Reset continuity index (CI) */
+            iContInd[i] = 0;
+
+            // TODO - keep the app if its the same app and the same serviceid
+            if(app[i])
+                delete app[i];
+            app[i] = createApp(ReceiverParam.DataParam[iStreamID][i], ReceiverParam);
+            // TODO save the service ID
+            //app[i]->serviceid = iNewServID;
+        }
+	}
+	else // init for stream based processing
+	{
+	    if(app[0])
+            delete app[0];
+        app[0] = createApp(ReceiverParam.DataParam[iStreamID][0], ReceiverParam);
+	}
+}
+
+DataApplication *CDataDecoder::getApplication(int packetId)
+{
+    // TODO - stream based apps
+    if((packetId>=0) && (packetId<MAX_NUM_PACK_PER_STREAM))
+        return app[packetId];
+    return NULL;
+}
+
+DataApplication *CDataDecoder::createApp(const CDataParam& dp, CParameter& p)
+{
+    if((dp.eAppDomain == CDataParam::AD_DAB_SPEC_APP) && dp.eUserAppIdent == AT_NOT_SUP)
+    {
+        return NULL;
+    }
+
+    // match domain
+    map<int, map<int, DataApplicationFactory*> >::const_iterator
+        f = factory.find(dp.eAppDomain);
+    if(f==factory.end())
+    {
+        return NULL;
+    }
+
+    // match application
+    map<int, DataApplicationFactory*>::const_iterator
+        ff = f->second.find(dp.eUserAppIdent);
+    if(ff==f->second.end())
+    {
+        return NULL;
+    }
+
+    // we have an app for this application type
+    return ff->second->create(p);
+}
+
+void CDataDecoder::decodePacket(CVector<_BINARY>& data)
+{
 	int iPacketID;
 	int iNewContInd;
 	int iNewPacketDataSize;
@@ -208,439 +404,125 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	_BINARY biFirstFlag;
 	_BINARY biLastFlag;
 	_BINARY biPadPackInd;
-	CCRC CRCObject;
 
-	/* Check if something went wrong in the initialization routine */
-	if (DoNotProcessData == true)
-		return;
+    /* Read header data --------------------------------------------- */
+    /* First flag */
+    biFirstFlag = (_BINARY) data.Separate(1);
 
-	/* CRC check for all packets -------------------------------------------- */
-	/* Reset bit extraction access */
-	(*pvecInputData).ResetBitAccess();
+    /* Last flag */
+    biLastFlag = (_BINARY) data.Separate(1);
 
-	for (j = 0; j < iNumDataPackets; j++)
-	{
-		/* Check the CRC of this packet */
-		CRCObject.Reset(16);
+    /* Packet ID */
+    iPacketID = (int) (*pvecInputData).Separate(2);
 
-		/* "- 2": 16 bits for CRC at the end */
-		for (i = 0; i < iTotalPacketSize - 2; i++)
-		{
-			_BYTE b =pvecInputData->Separate(BITS_BINARY);
-			CRCObject.AddByte(b);
-		}
+    /* Padded packet indicator (PPI) */
+    biPadPackInd = (_BINARY) data.Separate(1);
 
-		/* Store result in vector and show CRC in multimedia window */
-		uint16_t crc = pvecInputData->Separate(16);
-		if (CRCObject.CheckCRC(crc) == true)
-		{
-			veciCRCOk[j] = 1;	/* CRC ok */
-			ReceiverParam.ReceiveStatus.MOT.SetStatus(RX_OK);
-		}
-		else
-		{
-			veciCRCOk[j] = 0;	/* CRC wrong */
-			ReceiverParam.ReceiveStatus.MOT.SetStatus(CRC_ERROR);
-		}
-	}
+    /* Continuity index (CI) */
+    iNewContInd = (int) data.Separate(3);
 
-	/* Extract packet data -------------------------------------------------- */
-	/* Reset bit extraction access */
-	(*pvecInputData).ResetBitAccess();
+    /* Act on parameters given in header */
+    /* Continuity index: this 3-bit field shall increment by one
+       modulo-8 for each packet with this packet Id */
+    if ((iContInd[iPacketID] + 1) % 8 != iNewContInd)
+        DataUnit[iPacketID].bOK = false;
 
-	for (j = 0; j < iNumDataPackets; j++)
-	{
-		/* Check if CRC was ok */
-		if (veciCRCOk[j] == 1)
-		{
-			/* Read header data --------------------------------------------- */
-			/* First flag */
-			biFirstFlag = (_BINARY) (*pvecInputData).Separate(1);
+    /* Store continuity index */
+    iContInd[iPacketID] = iNewContInd;
 
-			/* Last flag */
-			biLastFlag = (_BINARY) (*pvecInputData).Separate(1);
+    /* Reset flag for data unit ok when receiving the first packet of
+       a new data unit */
+    if (biFirstFlag == true)
+    {
+        DataUnit[iPacketID].Reset();
+        DataUnit[iPacketID].bOK = true;
+    }
 
-			/* Packet ID */
-			iPacketID = (int) (*pvecInputData).Separate(2);
+    /* If all packets are received correctely, data unit is ready */
+    if (biLastFlag == true)
+    {
+        if (DataUnit[iPacketID].bOK == true)
+            DataUnit[iPacketID].bReady = true;
+    }
 
-			/* Padded packet indicator (PPI) */
-			biPadPackInd = (_BINARY) (*pvecInputData).Separate(1);
+    /* Data field --------------------------------------------------- */
+    /* Get size of new data block */
+    if (biPadPackInd == true)
+    {
+        /* Padding is present: the first byte gives the number of
+           useful data bytes in the data field. */
+        iNewPacketDataSize =
+            (int) data.Separate(BITS_BINARY) *
+            BITS_BINARY;
 
-			/* Continuity index (CI) */
-			iNewContInd = (int) (*pvecInputData).Separate(3);
+        if (iNewPacketDataSize > iMaxPacketDataSize)
+        {
+            /* Error, reset flags */
+            DataUnit[iPacketID].bOK = false;
+            DataUnit[iPacketID].bReady = false;
 
-			/* Act on parameters given in header */
-			/* Continuity index: this 3-bit field shall increment by one
-			   modulo-8 for each packet with this packet Id */
-			if ((iContInd[iPacketID] + 1) % 8 != iNewContInd)
-				DataUnit[iPacketID].bOK = false;
+            /* Set values to read complete packet size */
+            iNewPacketDataSize = iNewPacketDataSize;
+            iNumSkipBytes = 2;	/* Only CRC has to be skipped */
+        }
+        else
+        {
+            /* Number of unused bytes ("- 2" because we also have the
+               one byte which stored the size, the other byte is the
+               header) */
+            iNumSkipBytes = iTotalPacketSize - 2 -
+                iNewPacketDataSize / BITS_BINARY;
+        }
 
-			/* Store continuity index */
-			iContInd[iPacketID] = iNewContInd;
+        /* Packets with no useful data are permitted if no packet
+           data is available to fill the logical frame. The PPI
+           shall be set to 1 and the first byte of the data field
+           shall be set to 0 to indicate no useful data. The first
+           and last flags shall be set to 1. The continuity index
+           shall be incremented for these empty packets */
+        if ((biFirstFlag == true) &&
+            (biLastFlag == true) && (iNewPacketDataSize == 0))
+        {
+            /* Packet with no useful data, reset flag */
+            DataUnit[iPacketID].bReady = false;
+        }
+    }
+    else
+    {
+        iNewPacketDataSize = iMaxPacketDataSize;
 
-			/* Reset flag for data unit ok when receiving the first packet of
-			   a new data unit */
-			if (biFirstFlag == true)
-			{
-				DataUnit[iPacketID].Reset();
-				DataUnit[iPacketID].bOK = true;
-			}
+        /* All bytes are useful bytes, only CRC has to be skipped */
+        iNumSkipBytes = 2;
+    }
 
-			/* If all packets are received correctely, data unit is ready */
-			if (biLastFlag == true)
-			{
-				if (DataUnit[iPacketID].bOK == true)
-					DataUnit[iPacketID].bReady = true;
-			}
+    /* Add new data to data unit vector (bit-wise copying) */
+    iOldPacketDataSize = DataUnit[iPacketID].vecbiData.Size();
 
-			/* Data field --------------------------------------------------- */
-			/* Get size of new data block */
-			if (biPadPackInd == true)
-			{
-				/* Padding is present: the first byte gives the number of
-				   useful data bytes in the data field. */
-				iNewPacketDataSize =
-					(int) (*pvecInputData).Separate(BITS_BINARY) *
-					BITS_BINARY;
+    DataUnit[iPacketID].vecbiData.Enlarge(iNewPacketDataSize);
 
-				if (iNewPacketDataSize > iMaxPacketDataSize)
-				{
-					/* Error, reset flags */
-					DataUnit[iPacketID].bOK = false;
-					DataUnit[iPacketID].bReady = false;
+    /* Read useful bits */
+    for (int i = 0; i < iNewPacketDataSize; i++)
+        DataUnit[iPacketID].vecbiData[iOldPacketDataSize + i] =
+            (_BINARY) data.Separate(1);
 
-					/* Set values to read complete packet size */
-					iNewPacketDataSize = iNewPacketDataSize;
-					iNumSkipBytes = 2;	/* Only CRC has to be skipped */
-				}
-				else
-				{
-					/* Number of unused bytes ("- 2" because we also have the
-					   one byte which stored the size, the other byte is the
-					   header) */
-					iNumSkipBytes = iTotalPacketSize - 2 -
-						iNewPacketDataSize / BITS_BINARY;
-				}
+    /* Read bytes which are not used */
+    for (int i = 0; i < iNumSkipBytes; i++)
+        data.Separate(BITS_BINARY);
 
-				/* Packets with no useful data are permitted if no packet
-				   data is available to fill the logical frame. The PPI
-				   shall be set to 1 and the first byte of the data field
-				   shall be set to 0 to indicate no useful data. The first
-				   and last flags shall be set to 1. The continuity index
-				   shall be incremented for these empty packets */
-				if ((biFirstFlag == true) &&
-					(biLastFlag == true) && (iNewPacketDataSize == 0))
-				{
-					/* Packet with no useful data, reset flag */
-					DataUnit[iPacketID].bReady = false;
-				}
-			}
-			else
-			{
-				iNewPacketDataSize = iMaxPacketDataSize;
+    /* Use data unit ------------------------------------------------ */
+    if (DataUnit[iPacketID].bReady == true)
+    {
+        /* Decode all IDs regardless whether activated or not
+           (iPacketID == or != iServPacketID) */
+        /* Only DAB multimedia is supported */
+        //cout << "new data unit for packet id " << iPacketID << " apptype " << eAppType[iPacketID] << endl;
 
-				/* All bytes are useful bytes, only CRC has to be skipped */
-				iNumSkipBytes = 2;
-			}
+        if(app[iPacketID])
+            app[iPacketID]->AddDataUnit(DataUnit[iPacketID].vecbiData);
 
-			/* Add new data to data unit vector (bit-wise copying) */
-			iOldPacketDataSize = DataUnit[iPacketID].vecbiData.Size();
-
-			DataUnit[iPacketID].vecbiData.Enlarge(iNewPacketDataSize);
-
-			/* Read useful bits */
-			for (i = 0; i < iNewPacketDataSize; i++)
-				DataUnit[iPacketID].vecbiData[iOldPacketDataSize + i] =
-					(_BINARY) (*pvecInputData).Separate(1);
-
-			/* Read bytes which are not used */
-			for (i = 0; i < iNumSkipBytes; i++)
-				(*pvecInputData).Separate(BITS_BINARY);
-
-			/* Use data unit ------------------------------------------------ */
-			if (DataUnit[iPacketID].bReady == true)
-			{
-				/* Decode all IDs regardless whether activated or not
-				   (iPacketID == or != iServPacketID) */
-				/* Only DAB multimedia is supported */
-				//cout << "new data unit for packet id " << iPacketID << " apptype " << eAppType[iPacketID] << endl;
-
-				switch (eAppType[iPacketID])
-				{
-				case AT_MOTSLISHOW:	/* MOTSlideshow */
-					/* Packet unit decoding */
-					MOTObject[iPacketID].
-						AddDataUnit(DataUnit[iPacketID].vecbiData);
-					break;
-				case AT_MOTEPG:	/* EPG */
-					/* Packet unit decoding */
-					if(iEPGPacketID == -1)
-					{
-                        cerr << "data unit received but EPG packetId not set" << endl;
-                        iEPGPacketID = iPacketID;
-					}
-					MOTObject[iEPGPacketID].AddDataUnit(DataUnit[iPacketID].
-														vecbiData);
-					break;
-
-				case AT_MOTBROADCASTWEBSITE:	/* MOT Broadcast Web Site */
-					/* Packet unit decoding */
-					MOTObject[iPacketID].AddDataUnit(DataUnit[iPacketID].
-													 vecbiData);
-					break;
-
-				case AT_JOURNALINE:
-					Journaline.AddDataUnit(DataUnit[iPacketID].vecbiData);
-					break;
-				default:		/* do nothing */
-					;
-				}
-
-				/* Packet was used, reset it now for new filling with new data
-				   (this will also reset the flag
-				   "DataUnit[iPacketID].bReady") */
-				DataUnit[iPacketID].Reset();
-			}
-		}
-		else
-		{
-			/* Skip incorrect packet */
-			for (i = 0; i < iTotalPacketSize; i++)
-				(*pvecInputData).Separate(BITS_BINARY);
-		}
-	}
-	if ((iEPGService >= 0) && (GetDecodeEPG() == true))	/* if EPG decoding is active */
-		DecodeEPG(ReceiverParam);
-}
-
-void
-CDataDecoder::DecodeEPG(const CParameter & ReceiverParam)
-{
-	/* Application Decoding - must run all the time and in background */
-	if ((DoNotProcessData == false)
-		&& (iEPGPacketID >= 0)
-		&& MOTObject[iEPGPacketID].NewObjectAvailable())
-	{
-	    TTransportID tid = MOTObject[iEPGPacketID].GetNextTid();
-		CMOTObject NewObj = MOTObject[iEPGPacketID].GetObject(tid);
-		string fileName;
-		bool advanced = false;
-		if (NewObj.iContentType == 7)
-		{
-			for (size_t i = 0; i < NewObj.vecbProfileSubset.size(); i++)
-				if (NewObj.vecbProfileSubset[i] == 2)
-				{
-					advanced = true;
-					break;
-				}
-			int iScopeId = NewObj.iScopeId;
-			if (iScopeId == 0)
-				iScopeId = ReceiverParam.Service[iEPGService].iServiceID;
-			fileName = epgFilename(NewObj.ScopeStart, iScopeId,
-								   NewObj.iContentSubType, advanced);
-		}
-		else
-		{
-			fileName = NewObj.strName;
-		}
-
-		string path = ReceiverParam.sDataFilesDirectory + "/epg/" + fileName;
-		mkdirs(path);
-		FILE *f = fopen(path.c_str(), "wb");
-		if (f)
-		{
-			fwrite(&NewObj.Body.vecData.front(), 1,
-				   NewObj.Body.vecData.size(), f);
-			fclose(f);
-		}
-	}
-}
-
-void
-CDataDecoder::InitInternal(CParameter & ReceiverParam)
-{
-	int iTotalNumInputBits;
-	int iTotalNumInputBytes;
-	int iCurDataStreamID;
-	int iCurSelDataServ;
-
-	/* Init error flag */
-	DoNotProcessData = false;
-
-	/* Get current selected data service */
-	iCurSelDataServ = ReceiverParam.GetCurSelDataService();
-
-	/* Get current data stream ID */
-	iCurDataStreamID = ReceiverParam.Service[iCurSelDataServ].iDataStream;
-
-	/* Get number of total input bits (and bytes) for this module */
-	iTotalNumInputBits = ReceiverParam.iNumDataDecoderBits;
-	iTotalNumInputBytes = iTotalNumInputBits / BITS_BINARY;
-
-	/* Get the packet ID of the selected service */
-	iServPacketID = ReceiverParam.Service[iCurSelDataServ].iPacketID;
-
-	/* Init application type (will be overwritten by correct type later */
-	eAppType[iServPacketID] = AT_NOT_SUP;
-
-	CDataParam& dataParam = ReceiverParam.DataParam[iCurDataStreamID][iServPacketID];
-
-	/* Check, if service is activated. Also, only packet services can be
-	   decoded */
-	if ((iCurDataStreamID != STREAM_ID_NOT_USED) &&
-		(dataParam.ePacketModInd == PM_PACKET_MODE))
-	{
-		/* Calculate total packet size. DRM standard: packet length: this
-		   field indicates the length in bytes of the data field of each
-		   packet specified as an unsigned binary number (the total packet
-		   length is three bytes longer as it includes the header and CRC
-		   fields) */
-		iTotalPacketSize = ReceiverParam.Stream[iCurDataStreamID].iPacketLen + 3;
-
-		/* Check total packet size, could be wrong due to wrong SDC */
-		if ((iTotalPacketSize <= 0) ||
-			(iTotalPacketSize > iTotalNumInputBytes))
-		{
-			/* Set error flag */
-			DoNotProcessData = true;
-		}
-		else
-		{
-			/* Maximum number of bits for the data part in a packet
-			   ("- 3" because two bits for CRC and one for the header) */
-			iMaxPacketDataSize = (iTotalPacketSize - 3) * BITS_BINARY;
-
-			/* Number of data packets in one data block */
-			iNumDataPackets = iTotalNumInputBytes / iTotalPacketSize;
-
-			/* Only DAB application supported */
-			if (dataParam.eAppDomain == CDataParam::AD_DAB_SPEC_APP)
-			{
-				/* Get application identifier of current selected service, only
-				   used with DAB */
-                eAppType[iServPacketID] = dataParam.eUserAppIdent;
-
-                if(eAppType[iServPacketID] == AT_JOURNALINE)
-                {
-
-					/* Check, if service ID of Journaline application has
-					   changed, that indicates that a new transmission is
-					   received -> reset decoder in this case. Otherwise
-					   use old buffer. That ensures that the decoder keeps
-					   old data in buffer when synchronization was lost for
-					   a short time */
-					const uint32_t iNewServID =
-						ReceiverParam.Service[iCurSelDataServ].iServiceID;
-
-					if (iOldJournalineServiceID != iNewServID)
-					{
-
-                    // Problem: if two different services point to the same stream, they have different
-                    // IDs and the Journaline is reset! TODO: fix this problem...
-
-						/* Reset Journaline decoder and store the new service
-						   ID number */
-						Journaline.Reset();
-						iOldJournalineServiceID = iNewServID;
-					}
-				}
-			}
-
-			/* Init vector for storing the CRC results for each packet */
-			veciCRCOk.Init(iNumDataPackets);
-
-			/* Reset data units for all possible data IDs */
-			for (int i = 0; i < MAX_NUM_PACK_PER_STREAM; i++)
-			{
-				DataUnit[i].Reset();
-
-				/* Reset continuity index (CI) */
-				iContInd[i] = 0;
-			}
-		}
-	}
-	else
-		DoNotProcessData = true;
-
-	/* Set input block size */
-	iInputBlockSize = iTotalNumInputBits;
-
-	iEPGService = -1;			/* no service */
-	iEPGPacketID = -1;
-
-	/* look for EPG */
-	for (size_t i = 0; i < ReceiverParam.DataParam.size(); i++)
-	{
-		for (size_t j = 0; j < ReceiverParam.DataParam[i].size(); j++)
-		{
-			if ((ReceiverParam.DataParam[i][j].eAppDomain == CDataParam::AD_DAB_SPEC_APP)
-			&& (ReceiverParam.DataParam[i][j].eUserAppIdent == AT_MOTTPEG))
-			{
-				iEPGService = i;
-				iEPGPacketID = j;
-			}
-		}
-	}
-}
-
-TTransportID CDataDecoder::GetNextTid ()
-{
-	Lock();
-	if (DoNotProcessData)
-	{
-	    Unlock();
-	    return -1;
-	}
-    TTransportID tid = MOTObject[iServPacketID].GetNextTid();
-	Unlock();
-    return tid;
-}
-
-bool
-CDataDecoder::GetObject(CMOTObject& o, TTransportID TransportID)
-{
-    bool ok = false;
-	Lock();
-	if (DoNotProcessData == false)
-	{
-        o = MOTObject[iServPacketID].GetObject(TransportID);
-        ok = true;
-	}
-	Unlock();
-	return ok;
-}
-
-bool
-CDataDecoder::GetMOTDirectory(CMOTDirectory & MOTDirectoryOut)
-{
-	bool bReturn = false;
-
-	/* Lock resources */
-	Lock();
-
-	/* Check if data service is current MOT application */
-	if (DoNotProcessData == false)
-	{
-		MOTObject[iServPacketID].GetDirectory(MOTDirectoryOut);
-		bReturn = true;
-	}
-	/* Release resources */
-	Unlock();
-
-	return bReturn;
-}
-
-void
-CDataDecoder::GetNews(const int iObjID, CNews & News)
-{
-	/* Lock resources */
-	Lock();
-
-	/* Check if data service is Journaline application */
-	if ((DoNotProcessData == false)
-		&& (eAppType[iServPacketID] == AT_JOURNALINE))
-		Journaline.GetNews(iObjID, News);
-
-	/* Release resources */
-	Unlock();
+        /* Packet was used, reset it now for new filling with new data
+           (this will also reset the flag
+           "DataUnit[iPacketID].bReady") */
+        DataUnit[iPacketID].Reset();
+    }
 }

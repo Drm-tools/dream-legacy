@@ -54,6 +54,8 @@
 #endif
 #include <iostream>
 
+// TODO remove momentary openning of main window on exit
+
 /* Implementation *************************************************************/
 #ifdef USE_QT_GUI
 /******************************************************************************\

@@ -29,6 +29,7 @@
 #include "SlideShowViewer.h"
 #include "../util/Settings.h"
 #include "../DrmReceiver.h"
+#include "../datadecoding/DABMOT.h"
 #include <QFileDialog>
 
 SlideShowViewer::SlideShowViewer(CDRMReceiver& rec, CSettings& s,
@@ -71,7 +72,10 @@ void SlideShowViewer::OnTimer()
     CParameter& Parameters = *receiver.GetParameters();
 	Parameters.Lock();
 	ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
+	int shortID = Parameters.GetCurSelDataService();
+	int packetID = Parameters.Service[shortID].iPacketID;
 	Parameters.Unlock();
+
 	switch(status)
 	{
 	case NOT_PRESENT:
@@ -92,13 +96,16 @@ void SlideShowViewer::OnTimer()
 	}
 
 	CDataDecoder& DataDecoder = *receiver.GetDataDecoder();
+	CMOTDABDec *motdec = (CMOTDABDec*)DataDecoder.getApplication(packetID);
+
+	if(motdec==NULL)
+        return;
 
     /* Poll the data decoder module for new picture */
-    TTransportID tid = DataDecoder.GetNextTid();
+    TTransportID tid = motdec->GetNextTid();
     if (tid>=0)
     {
-        CMOTObject	NewObj;
-        DataDecoder.GetObject(NewObj, tid);
+        CMOTObject	NewObj = motdec->GetObject(tid);
         /* Store received picture */
         int iCurNumPict = vecImageNames.size();
         CVector<_BYTE>& imagedata = NewObj.Body.vecData;

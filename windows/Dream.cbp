@@ -551,8 +551,11 @@
 		<Unit filename="..\common\chanest\TimeWiener.h" />
 		<Unit filename="..\common\datadecoding\DABMOT.cpp" />
 		<Unit filename="..\common\datadecoding\DABMOT.h" />
+		<Unit filename="..\common\datadecoding\DataApplication.h" />
 		<Unit filename="..\common\datadecoding\DataDecoder.cpp" />
 		<Unit filename="..\common\datadecoding\DataDecoder.h" />
+		<Unit filename="..\common\datadecoding\EPGDecoder.cpp" />
+		<Unit filename="..\common\datadecoding\EPGDecoder.h" />
 		<Unit filename="..\common\datadecoding\Journaline.cpp" />
 		<Unit filename="..\common\datadecoding\Journaline.h" />
 		<Unit filename="..\common\datadecoding\MOTSlideShow.cpp" />

@@ -1714,7 +1714,8 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	MSCMLCDecoder.SetNumIterations(s.Get("Receiver", "mlciter", 0));
 
 	/* Activate/Deactivate EPG decoding */
-	DataDecoder.SetDecodeEPG(s.Get("EPG", "decodeepg", true));
+	//DataDecoder.SetDecodeEPG(s.Get("EPG", "decodeepg", true));
+	// TODO epg option
 
 
 #ifdef HAVE_LIBHAMLIB
@@ -1818,7 +1819,7 @@ CDRMReceiver::SaveSettings(CSettings& s)
 	s.Put("Receiver", "frequency", iFreqkHz);
 
 	/* Active/Deactivate EPG decoding */
-	s.Put("EPG", "decodeepg", DataDecoder.GetDecodeEPG());
+	//s.Put("EPG", "decodeepg", DataDecoder.GetDecodeEPG());
 
 
 	/* AM Parameters */

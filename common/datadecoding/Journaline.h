@@ -28,8 +28,8 @@
 #if !defined(JOURNALINE_H__3B0UBVE987346456363LIHGEW982__INCLUDED_)
 #define JOURNALINE_H__3B0UBVE987346456363LIHGEW982__INCLUDED_
 
+#include "DataApplication.h"
 #include "../GlobalDefinitions.h"
-#include "../util/Vector.h"
 
 #include "journaline/NML.h"
 #include "journaline/newssvcdec.h"
@@ -59,11 +59,11 @@ public:
 };
 
 
-class CJournaline
+class CJournaline: public DataApplication
 {
 public:
 
-	CJournaline();
+	CJournaline(CParameter&);
 	virtual ~CJournaline();
 
 	void GetNews(int iObjID, CNews& News);
@@ -82,6 +82,13 @@ protected:
 	static void dg_cb(const DAB_DATAGROUP_DECODER_msc_datagroup_header_t*,
 		const unsigned long len, const unsigned char* buf, void* data)
 		{NEWS_SVC_DEC_putData(((CJournaline*) data)->newsdec, len, buf);}
+};
+
+class JournalineFactory: public DataApplicationFactory
+{
+public:
+
+	DataApplication* create(CParameter& p) { return new CJournaline(p); }
 };
 
 #endif // !defined(JOURNALINE_H__3B0UBVE987346456363LIHGEW982__INCLUDED_)

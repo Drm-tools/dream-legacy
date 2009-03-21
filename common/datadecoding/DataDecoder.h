@@ -32,12 +32,14 @@
 #include "../GlobalDefinitions.h"
 #include "../util/ReceiverModul.h"
 #include "../util/CRC.h"
-#include "DABMOT.h"
-#include "MOTSlideShow.h"
+#include "DataApplication.h"
 #include "../Parameter.h"
 
-class CJournaline;
 class CNews;
+class CMOTSlideShowEncoder;
+class CMOTDirectory;
+class CMOTObject;
+typedef int TTransportID;
 
 /* Definitions ****************************************************************/
 /* Maximum number of packets per stream */
@@ -49,23 +51,19 @@ class CNews;
 class CDataEncoder
 {
   public:
-    CDataEncoder ()
-    {
-    }
-    virtual ~ CDataEncoder ()
-    {
-    }
+    CDataEncoder();
+    virtual ~CDataEncoder ();
 
     int Init (CParameter & Param);
     void GeneratePacket (CVector < _BINARY > &vecbiPacket);
 
     CMOTSlideShowEncoder *GetSliShowEnc ()
     {
-	return &MOTSlideShowEncoder;
+        return MOTSlideShowEncoder;
     }
 
   protected:
-    CMOTSlideShowEncoder MOTSlideShowEncoder;
+    CMOTSlideShowEncoder* MOTSlideShowEncoder;
     CVector < _BINARY > vecbiCurDataUnit;
 
     int iPacketLen;
@@ -86,19 +84,12 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 	CDataDecoder& operator=(const CDataDecoder&)
 	{ throw "should not happen"; return *this;}
 
-    bool GetMOTDirectory (CMOTDirectory & MOTDirectoryOut);
-    TTransportID GetNextTid();
-    bool GetObject(CMOTObject&, TTransportID);
-    void GetNews (const int iObjID, CNews & News);
-
-    EAppType GetAppType ()
+	void setApplication(int domain, int appId, DataApplicationFactory* fact)
     {
-		return eAppType[iServPacketID];
+        factory[domain][appId] = fact;
     }
 
-	/* Parameter to activate/deactivate EPG decoding */
-	void	SetDecodeEPG(const bool bDecEPG) {bDecodeEPG = bDecEPG;}
-	bool	GetDecodeEPG() {return bDecodeEPG;}
+    DataApplication *getApplication(int packetId);
 
   protected:
     class CDataUnit
@@ -119,27 +110,18 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     int iTotalPacketSize;
     int iNumDataPackets;
     int iMaxPacketDataSize;
-    int iServPacketID;
+    int iStreamID;
     CVector < int >veciCRCOk;
-
-    bool DoNotProcessData;
 
     int iContInd[MAX_NUM_PACK_PER_STREAM];
     CDataUnit DataUnit[MAX_NUM_PACK_PER_STREAM];
-    CMOTDABDec MOTObject[MAX_NUM_PACK_PER_STREAM];
-    CJournaline& Journaline;
-    uint32_t iOldJournalineServiceID;
+    DataApplication* app[MAX_NUM_PACK_PER_STREAM];
+    map<int, map<int, DataApplicationFactory*> > factory;
 
-    EAppType eAppType[MAX_NUM_PACK_PER_STREAM];
-
-    virtual void InitInternal (CParameter & ReceiverParam);
-    virtual void ProcessDataInternal (CParameter & ReceiverParam);
-
-	bool bDecodeEPG; /* enable/disable epg decoding */
-    int iEPGService;
-    int iEPGPacketID;
-    void DecodeEPG(const CParameter& ReceiverParam);
-
+    virtual void InitInternal (CParameter&);
+    virtual void ProcessDataInternal (CParameter&);
+    DataApplication *createApp(const CDataParam&, CParameter&);
+    void decodePacket(CVector<_BINARY>& data);
 };
 
 

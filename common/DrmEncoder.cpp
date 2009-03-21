@@ -31,6 +31,7 @@
 #include "util/Settings.h"
 #include "Parameter.h"
 #include "DrmEncoder.h"
+#include "datadecoding/MOTSlideShow.h"
 
 #include "sound.h"
 #include "sound/soundfile.h"

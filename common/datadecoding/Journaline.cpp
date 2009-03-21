@@ -29,7 +29,7 @@
 
 /* Implementation *************************************************************/
 
-CJournaline::CJournaline() : dgdec(NULL), newsdec(NULL)
+CJournaline::CJournaline(CParameter& p) : DataApplication(p), dgdec(NULL), newsdec(NULL)
 {
 	/* This will be the first call to the Journaline decoder open function, the
 	   pointer to the decoders must have a defined value (NULL) to avoid

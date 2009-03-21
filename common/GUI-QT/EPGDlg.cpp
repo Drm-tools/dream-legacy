@@ -29,15 +29,12 @@
 
 #include "EPGDlg.h"
 #include <QRegExp>
-#include <QShowEvent>
-#include <QPixmap>
-#include <QHideEvent>
+#include <ctime>
 
-/* TODO (Simone)
-- EPG:
-  * let Dream remember the selected service from last time looking at the guide (at least within the same session)
-  * any chance to download the EPG files automatically when the EPG is not embedded in the main service (i.e. when it is
-    in service 4 as currently on DLR)
+/*
+    TODO: handle case where the EPG is not embedded in the main service
+    (e.g. when it is in service 4 as currently on DLR)
+    DONE: persist the selected service id across sessions
 */
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
@@ -45,18 +42,9 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
 :QDialog(parent, name, modal, f),Ui_EPGDlg(),BitmCubeGreen(),
 date(QDate::currentDate()),do_updates(false),
 epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
-Settings(NSettings),Timer(),sids()
+Settings(NSettings),Timer(),sids(),currentSID(0)
 {
-	/* recover window size and position */
     setupUi(this);
-	CWinGeom s;
-	Settings.Get("EPG Dialog", s);
-	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-		setGeometry(WinGeom);
-
-	/* auto resize of the programme name column */
-	Data->setColumnWidthMode(COL_NAME, Q3ListView::Maximum);
 
 	/* Define size of the bitmaps */
 	const int iXSize = 8;
@@ -88,8 +76,9 @@ Settings(NSettings),Timer(),sids()
     year->setMinValue(0000);
     year->setMaxValue(3000);
 
-	/* show a label if EPG decoding is disabled */
-	if (DRMReceiver.GetDataDecoder()->GetDecodeEPG() == true)
+	/* TODO show a label if EPG decoding is disabled */
+	//if (DRMReceiver.GetDataDecoder()->GetDecodeEPG() == true)
+	if(false)
 		TextEPGDisabled->hide();
 	else
 		TextEPGDisabled->show();
@@ -148,6 +137,22 @@ void EPGDlg::showEvent(QShowEvent *)
     int sNo = Parameters.GetCurSelAudioService();
     uint32_t sid = Parameters.Service[sNo].iServiceID;
 
+	/* recover window size and position */
+	CWinGeom s;
+	Settings.Get("EPG Dialog", s);
+	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+
+	/* auto resize of the programme name column */
+	Data->setColumnWidthMode(COL_NAME, Q3ListView::Maximum);
+
+    /* restore selected service */
+    bool ok=false;
+    currentSID = QString(Settings.Get("EPG Dialog", "serviceid", string("0")).c_str()).toULong(&ok, 16);
+    if(!ok)
+        currentSID=0;
+
     // use the current date
     date = QDate::currentDate();
     // update the channels combobox from the epg
@@ -189,6 +194,7 @@ void EPGDlg::hideEvent(QHideEvent*)
 	s.iHSize = WinGeom.height();
 	s.iWSize = WinGeom.width();
 	Settings.Put("EPG Dialog", s);
+    Settings.Put("EPG Dialog", "serviceid", QString("%1").arg(currentSID, 16).toStdString());
 }
 
 void EPGDlg::previousDay()
@@ -250,7 +256,10 @@ void EPGDlg::select()
     d.year = date.year();
     d.month = date.month();
     d.day = date.day();
-    epg.select(sids[chan], d);
+
+    currentSID = sids[chan];
+    epg.select(currentSID, d);
+
     if(epg.progs.count()==0) {
 	    (void) new Q3ListViewItem(Data, tr("no data"));
 	    return;

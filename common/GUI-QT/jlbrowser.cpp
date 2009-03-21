@@ -27,11 +27,10 @@
 \******************************************************************************/
 
 #include "jlbrowser.h"
-#include "../datadecoding/DataDecoder.h"
 #include "../datadecoding/Journaline.h"
 
 JLBrowser::JLBrowser(QWidget * parent)
-: QTextBrowser(parent),datadecoder(NULL),strFhGIISText(),strJournalineHeadText(),
+: QTextBrowser(parent),decoder(NULL),strFhGIISText(),strJournalineHeadText(),
     total(0),ready(0)
 {
 
@@ -52,13 +51,13 @@ JLBrowser::JLBrowser(QWidget * parent)
 
 bool JLBrowser::changed()
 {
-	if(datadecoder==NULL)
+	if(decoder==NULL)
         return false;
 
     int JourID = source().toString().toInt();
 
 	CNews News;
-	datadecoder->GetNews(JourID, News);
+	decoder->GetNews(JourID, News);
 
     int new_total=News.vecItem.Size();
     int new_ready=0;
@@ -91,13 +90,13 @@ bool JLBrowser::changed()
 QVariant JLBrowser::loadResource( int type, const QUrl & name )
 {
 	/* Get news from actual Journaline decoder */
-	if(datadecoder==NULL)
+	if(decoder==NULL)
         return QVariant::Invalid;
 
     int JourID = name.toString().toInt();
 
 	CNews News;
-	datadecoder->GetNews(JourID, News);
+	decoder->GetNews(JourID, News);
 
 	/* Decode UTF-8 coding for title */
 	QString strTitle = QString().fromUtf8(News.sTitle.c_str());

@@ -892,6 +892,11 @@ class CParameter : public CDumpable
 	/* information about services gathered from SDC, EPG and web schedules */
 	map<uint32_t,CServiceInformation> ServiceInformation;
 
+    /* used so receiver can tell DataDecoder (for example) which stream its processing
+       should be set before calling the Init routine
+    */
+    int iStreamID;
+
 	/* These values are used to set input and output block sizes of some modules */
 	int iNumBitsHierarchFrameTotal;
 	int iNumDecodedBitsMSC;

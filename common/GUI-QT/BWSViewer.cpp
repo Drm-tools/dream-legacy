@@ -167,6 +167,11 @@ void BWSViewer::showEvent(QShowEvent*)
     CService service = Parameters.Service[iCurSelDataServ];
     Parameters.Unlock();
 
+    CDataDecoder* dec = receiver.GetDataDecoder();
+	CMOTDABDec *decoder = (CMOTDABDec*)dec->getApplication(service.iPacketID);
+
+    textBrowser->setDecoder(decoder);
+
     QString strTitle("MOT Broadcast Website");
 
     if (service.IsActive())

@@ -30,22 +30,8 @@
 #ifndef _EPGDLG_H
 #define _EPGDLG_H
 
-#include <QWidget>
-#include <QDateTime>
-#include <QPushButton>
-#include <QSpinBox>
-#include <QComboBox>
-#include <QStringList>
-#include <QMessageBox>
-#include <QTextBrowser>
-#include <Q3ListView>
-#include <QLabel>
-#include <QTimer>
-#include <QPixmap>
-#include <QShowEvent>
-#include <QHideEvent>
 #include <map>
-
+#include <QTimer>
 #include "ui_EPGDlg.h"
 #include "../DrmReceiver.h"
 #include "../datadecoding/epg/EPG.h"
@@ -83,20 +69,21 @@ public:
 
 protected:
 
-    virtual	void showEvent(QShowEvent *e);
-	virtual void hideEvent(QHideEvent* pEvent);
+    void showEvent(QShowEvent *e);
+	void hideEvent(QHideEvent* pEvent);
 
 	bool IsActive(const QString& start, const QString& duration, const tm& now);
 
 	QPixmap			BitmCubeGreen;
 
-    QDate date;
-    bool do_updates;
-    EPG epg;
+    QDate           date;
+    bool            do_updates;
+    EPG             epg;
 	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
 	QTimer			Timer;
 	map<QString,uint32_t> sids;
+	uint32_t        currentSID;
 
 public slots:
     void nextDay();

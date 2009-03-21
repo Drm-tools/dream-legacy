@@ -37,7 +37,6 @@ JLViewer::JLViewer(CDRMReceiver& rec, CSettings& s, QWidget* parent,
 		QMainWindow(parent, name, f), Ui_JLViewer(), Timer(), receiver(rec), settings(s)
 {
     setupUi(this);
-    textBrowser->setDecoder(receiver.GetDataDecoder());
 
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
     textBrowser->setDocument(&document);
@@ -97,9 +96,14 @@ void JLViewer::showEvent(QShowEvent*)
     const uint32_t iAudioServiceID = Parameters.Service[iCurSelAudioServ].iServiceID;
 
     /* Get current data service */
-    const int iCurSelDataServ = Parameters.GetCurSelDataService();
-    CService service = Parameters.Service[iCurSelDataServ];
-    Parameters.Unlock();
+    int shortID = Parameters.GetCurSelDataService();
+    CService service = Parameters.Service[shortID];
+	Parameters.Unlock();
+
+    CDataDecoder* dec = receiver.GetDataDecoder();
+	CJournaline *decoder = (CJournaline*)dec->getApplication(service.iPacketID);
+
+    textBrowser->setDecoder(decoder);
 
 	/* Add the service description into the dialog caption */
 	QString strTitle = tr("Journaline");

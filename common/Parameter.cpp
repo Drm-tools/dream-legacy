@@ -236,6 +236,7 @@ CParameter::CParameter():
  sDataFilesDirectory("."),
  MSCPrLe(),
  Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
+ AudioParam(),DataParam(),ServiceInformation(), iStreamID(0),
  iNumBitsHierarchFrameTotal(0),
  iNumDecodedBitsMSC(0),
  iNumSDCBitsPerSFrame(0),
@@ -305,6 +306,8 @@ CParameter::CParameter(const CParameter& p):
  sDataFilesDirectory(p.sDataFilesDirectory),
  MSCPrLe(p.MSCPrLe),
  Stream(p.Stream), Service(p.Service),
+ AudioParam(p.AudioParam),DataParam(p.DataParam),
+ ServiceInformation(p.ServiceInformation), iStreamID(p.iStreamID),
  iNumBitsHierarchFrameTotal(p.iNumBitsHierarchFrameTotal),
  iNumDecodedBitsMSC(p.iNumDecodedBitsMSC),
  iNumSDCBitsPerSFrame(p.iNumSDCBitsPerSFrame),
@@ -367,6 +370,10 @@ CParameter& CParameter::operator=(const CParameter& p)
 	MSCPrLe = p.MSCPrLe;
 	Stream = p.Stream;
 	Service = p.Service;
+    AudioParam = p.AudioParam;
+    DataParam = p.DataParam;
+    ServiceInformation = p.ServiceInformation;
+    iStreamID = p.iStreamID;
 	iNumBitsHierarchFrameTotal = p.iNumBitsHierarchFrameTotal;
 	iNumDecodedBitsMSC = p.iNumDecodedBitsMSC;
 	iNumSDCBitsPerSFrame = p.iNumSDCBitsPerSFrame;

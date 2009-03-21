@@ -3,9 +3,10 @@
  * Copyright (c) 2009
  *
  * Author(s):
- *	 Julian Cable
+ *	Julian Cable
  *
- * Description: Broadcast Website Specialisation of TextBrowser
+ * Description:
+ *	ETSI DAB/DRM Electronic Programme Guide class
  *
  *
  ******************************************************************************
@@ -26,32 +27,36 @@
  *
 \******************************************************************************/
 
-#ifndef _BWSBROWSER_H
-#define _BWSBROWSER_H
+#ifndef _EGPDECODER_H
+#define _EGPDECODER_H
 
-#include <map>
-#include <QTextBrowser>
-#include "../datadecoding/DABMOT.h"
+#include "DataApplication.h"
+#include "DABMOT.h"
+#include <string>
 
-class BWSBrowser : public QTextBrowser
+class EPGDecoder: public DataApplication
 {
-	Q_OBJECT
 public:
-    BWSBrowser(QWidget * parent = 0 );
-    ~BWSBrowser() {}
-    QVariant loadResource ( int type, const QUrl & name );
-    bool changed();
-    void setDecoder(CMOTDABDec *d) { decoder = d; }
-    void setRestrictedProfile(bool b) { restricted = b; }
-    bool restrictedProfile() { return restricted; }
-    QString homeUrl() const { return shomeUrl; }
+
+	EPGDecoder(CParameter&);
+	virtual ~EPGDecoder();
+
+	void AddDataUnit(CVector<_BINARY>&);
+	void Reset();
 
 protected:
 
-    CMOTDABDec*   decoder;
-    std::map<QString,CMOTObject> pages;
-    QString shomeUrl;
-    bool restricted;
+    CMOTDABDec motdecoder;
+    std::string saveDir;
+
 };
+
+class EPGDecoderFactory: public DataApplicationFactory
+{
+public:
+
+	DataApplication* create(CParameter& p) { return new EPGDecoder(p); }
+};
+
 
 #endif

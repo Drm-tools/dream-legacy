@@ -32,6 +32,7 @@
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
 #include "../util/CRC.h"
+#include "DataApplication.h"
 #include <time.h>
 #include <map>
 #include <queue>
@@ -555,14 +556,15 @@ class CMOTDABEnc
 
 /* Decoder ------------------------------------------------------------------ */
 
-class CMOTDABDec
+class CMOTDABDec : public DataApplication
 {
   public:
 
-    CMOTDABDec ():MOTmode (unknown)
+    CMOTDABDec(CParameter& p):DataApplication(p),MOTmode (unknown)
     {
     }
-    virtual ~ CMOTDABDec ()
+
+    virtual ~CMOTDABDec ()
     {
     }
 
@@ -611,6 +613,14 @@ class CMOTDABDec
     map < TTransportID, CMOTObject > MOTCarousel;
     queue < TTransportID > qiNewObjects;
 };
+
+class CMOTDABDecFactory: public DataApplicationFactory
+{
+public:
+
+	DataApplication* create(CParameter& p) { return new CMOTDABDec(p); }
+};
+
 
 #endif // !defined(DABMOT_H__3B0UBVE98732KJVEW363E7A0D31912__INCLUDED_)
 

@@ -31,7 +31,7 @@
 
 #include <QTextBrowser>
 
-class CDataDecoder;
+class CJournaline;
 
 class JLBrowser : public QTextBrowser
 {
@@ -41,11 +41,11 @@ public:
     ~JLBrowser() {}
     QVariant loadResource ( int type, const QUrl & name );
     bool changed();
-    void setDecoder(CDataDecoder*d) { datadecoder = d; }
+    void setDecoder(CJournaline*d) { decoder = d; }
 
 protected:
 
-    CDataDecoder*   datadecoder;
+    CJournaline*    decoder;
     QString         strFhGIISText;
     QString         strJournalineHeadText;
     int             total;

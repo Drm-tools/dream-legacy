@@ -27,44 +27,42 @@
 \******************************************************************************/
 
 #include "bwsbrowser.h"
-#include "../datadecoding/DataDecoder.h"
 
 BWSBrowser::BWSBrowser(QWidget * parent)
-: QTextBrowser(parent),datadecoder(NULL), shomeUrl(""), restricted(false)
+: QTextBrowser(parent),decoder(NULL), shomeUrl(""), restricted(false)
 {
 }
 
 bool BWSBrowser::changed()
 {
-	if(datadecoder==NULL)
+	if(decoder==NULL)
         return false;
 
-    TTransportID tid = datadecoder->GetNextTid();
+
+    TTransportID tid = decoder->GetNextTid();
     if (tid>=0)
     {
-        CMOTObject obj;
-        datadecoder->GetObject(obj, tid);
+        CMOTObject obj = decoder->GetObject(tid);
         pages[obj.strName.c_str()] = obj;
 cerr << tid << " " << obj.strName << endl;
         CMOTDirectory MOTDir;
 
-        if (datadecoder->GetMOTDirectory(MOTDir) == TRUE)
+        decoder->GetDirectory(MOTDir);
+
+        /* Checks if the DirectoryIndex has values */
+        if (MOTDir.DirectoryIndex.size() > 0)
         {
-            /* Checks if the DirectoryIndex has values */
-            if (MOTDir.DirectoryIndex.size() > 0)
+            if(restricted)
             {
-                if(restricted)
-                {
-                    if(MOTDir.DirectoryIndex.find(BASIC_PROFILE) != MOTDir.DirectoryIndex.end())
-                        shomeUrl = MOTDir.DirectoryIndex[BASIC_PROFILE].c_str();
-                }
-                else
-                {
-                    if(MOTDir.DirectoryIndex.find(UNRESTRICTED_PC_PROFILE) != MOTDir.DirectoryIndex.end())
-                        shomeUrl = MOTDir.DirectoryIndex[UNRESTRICTED_PC_PROFILE].c_str();
-                    else if(MOTDir.DirectoryIndex.find(BASIC_PROFILE) != MOTDir.DirectoryIndex.end())
-                        shomeUrl = MOTDir.DirectoryIndex[BASIC_PROFILE].c_str();
-                }
+                if(MOTDir.DirectoryIndex.find(BASIC_PROFILE) != MOTDir.DirectoryIndex.end())
+                    shomeUrl = MOTDir.DirectoryIndex[BASIC_PROFILE].c_str();
+            }
+            else
+            {
+                if(MOTDir.DirectoryIndex.find(UNRESTRICTED_PC_PROFILE) != MOTDir.DirectoryIndex.end())
+                    shomeUrl = MOTDir.DirectoryIndex[UNRESTRICTED_PC_PROFILE].c_str();
+                else if(MOTDir.DirectoryIndex.find(BASIC_PROFILE) != MOTDir.DirectoryIndex.end())
+                    shomeUrl = MOTDir.DirectoryIndex[BASIC_PROFILE].c_str();
             }
         }
     }
