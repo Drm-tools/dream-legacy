@@ -186,7 +186,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="close" >
+      <widget class="QPushButton" name="closeButton" >
        <property name="text" >
         <string>&amp;Close</string>
        </property>
@@ -256,93 +256,7 @@
          </spacer>
         </item>
         <item>
-         <widget class="Q3Frame" name="Frame4" >
-          <property name="sizePolicy" >
-           <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize" >
-           <size>
-            <width>190</width>
-            <height>30</height>
-           </size>
-          </property>
-          <property name="frameShape" >
-           <enum>QFrame::StyledPanel</enum>
-          </property>
-          <property name="frameShadow" >
-           <enum>QFrame::Raised</enum>
-          </property>
-          <property name="lineWidth" >
-           <number>0</number>
-          </property>
-          <widget class="QPushButton" name="Next" >
-           <property name="geometry" >
-            <rect>
-             <x>159</x>
-             <y>4</y>
-             <width>25</width>
-             <height>21</height>
-            </rect>
-           </property>
-           <property name="text" >
-            <string/>
-           </property>
-           <property name="icon" >
-            <iconset resource="res/icons.qrc" >
-             <normaloff>:/icons/StepForw.png</normaloff>:/icons/StepForw.png</iconset>
-           </property>
-          </widget>
-          <widget class="QPushButton" name="Prev" >
-           <property name="geometry" >
-            <rect>
-             <x>4</x>
-             <y>4</y>
-             <width>25</width>
-             <height>21</height>
-            </rect>
-           </property>
-           <property name="text" >
-            <string/>
-           </property>
-           <property name="icon" >
-            <iconset resource="res/icons.qrc" >
-             <normaloff>:/icons/StepBack.png</normaloff>:/icons/StepBack.png</iconset>
-           </property>
-          </widget>
-          <widget class="QSpinBox" name="month" >
-           <property name="geometry" >
-            <rect>
-             <x>69</x>
-             <y>4</y>
-             <width>40</width>
-             <height>21</height>
-            </rect>
-           </property>
-          </widget>
-          <widget class="QSpinBox" name="year" >
-           <property name="geometry" >
-            <rect>
-             <x>109</x>
-             <y>4</y>
-             <width>50</width>
-             <height>21</height>
-            </rect>
-           </property>
-          </widget>
-          <widget class="QSpinBox" name="day" >
-           <property name="geometry" >
-            <rect>
-             <x>29</x>
-             <y>4</y>
-             <width>40</width>
-             <height>21</height>
-            </rect>
-           </property>
-          </widget>
-         </widget>
+         <widget class="QDateEdit" name="dateEdit" />
         </item>
         <item>
          <spacer name="Spacer4_2" >
@@ -410,12 +324,7 @@
   <tabstop>Data</tabstop>
   <tabstop>pages</tabstop>
   <tabstop>channel</tabstop>
-  <tabstop>Prev</tabstop>
-  <tabstop>day</tabstop>
-  <tabstop>month</tabstop>
-  <tabstop>year</tabstop>
-  <tabstop>Next</tabstop>
-  <tabstop>close</tabstop>
+  <tabstop>closeButton</tabstop>
  </tabstops>
  <resources>
   <include location="res/icons.qrc" />

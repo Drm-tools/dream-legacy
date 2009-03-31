@@ -29,19 +29,34 @@
 #define _DATAAPPLICATION_H
 
 #include "../util/Vector.h"
-
+#ifdef USE_QT_GUI
+# include <QMutex>
+#endif
 class CParameter;
 
 class DataApplication
 {
 public:
 
-	DataApplication(CParameter&):serviceid(0) {}
+	DataApplication(CParameter&):serviceid(0)
+#ifdef USE_QT_GUI
+    , mutex()
+#endif
+    {}
 	virtual ~DataApplication() {}
 
 	virtual void AddDataUnit(CVector<_BINARY>&) = 0;
 
     uint32_t serviceid;
+protected:
+#ifdef USE_QT_GUI
+    QMutex mutex;
+    void Lock() { mutex.lock();}
+    void Unlock() { mutex.unlock(); }
+#else
+    void Lock() {}
+    void Unlock() {}
+#endif
 };
 
 class DataApplicationFactory

@@ -279,8 +279,8 @@ CTagItemGeneratorSDCChanInf::GenTag(CParameter & Parameter)
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hierarchical data */
 		if ((*i == 0) &&
-			((Parameter.eMSCCodingScheme == CS_3_HMSYM) ||
-			 (Parameter.eMSCCodingScheme == CS_3_HMMIX)))
+			((Parameter.Channel.eMSCmode == CS_3_HMSYM) ||
+			 (Parameter.Channel.eMSCmode == CS_3_HMMIX)))
 		{
 			/* Protection level for hierarchical */
 			Enqueue((uint32_t) Parameter.MSCPrLe.iHierarch, 2);
@@ -764,7 +764,7 @@ CTagItemGeneratorProfile::GetProfiles()
 }
 
 void
-CTagItemGeneratorRxDemodMode::GenTag(EDemodulationType eMode)	// rdmo
+CTagItemGeneratorRxDemodMode::GenTag(EModulationType eMode)	// rdmo
 {
 	PrepareTag(4 * BITS_BINARY);
 	string s;

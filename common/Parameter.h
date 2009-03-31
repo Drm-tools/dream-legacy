@@ -74,7 +74,7 @@ enum EStreamType { SF_AUDIO, SF_DATA };
 
 enum EPackMod { PM_SYNCHRON_STR_MODE, PM_PACKET_MODE }; /* PM: Packet Mode */
 
-enum EDemodulationType { DRM, AM, USB, LSB, CW, NBFM, WBFM, NONE };
+enum EModulationType { DRM, AM, USB, LSB, CW, NBFM, WBFM, NONE };
 
 enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
@@ -91,8 +91,34 @@ enum EAppType
   AT_JAVA = 8
 };
 
+/* SI: Symbol Interleaver */
+enum ESymIntMod { SI_LONG, SI_SHORT };
+
+enum ERxEvent {
+    ServiceReconfiguration, ChannelReconfiguration, Tune, Reinitialise,
+    SelectAudioComponent, SelectDataComponent, None
+};
+
 /* Classes ********************************************************************/
     class CDRMReceiver; // forward
+
+    class CChannel : public CDumpable
+    {
+    public:
+        CChannel();
+        virtual ~CChannel() {}
+        bool bEnhancementLayerInUse;
+        int iFrameId;
+        bool bAFSindexValid;
+        ERobMode eRobustness;
+        ESpecOcc eSpectrumOccupancy;
+        ESymIntMod eInterleaverDepth;
+        ECodScheme eMSCmode, eSDCmode;
+        int iNumAudioServices;
+        int iNumDataServices;
+        int iReconfigurationIndex;
+		void dump(ostream&) const;
+     };
 
 	class CAudioParam : public CDumpable
 	{
@@ -159,6 +185,7 @@ enum EAppType
 		// "DAB specified application" not yet implemented!!!
 		EApplDomain eAppDomain;	    /* Application domain */
 		EAppType    eUserAppIdent;	/* User application identifier, only DAB */
+		vector<uint8_t> applicationData;
 
 		CDataParam();
 		CDataParam(const CDataParam&);
@@ -234,6 +261,20 @@ enum EAppType
 			iPartB = NewMSCProtLev.iPartB;
 			iHierarch = NewMSCProtLev.iHierarch;
 			return *this;
+		}
+		bool operator==(const CMSCProtLev& p)
+		{
+		    if(iPartA!=p.iPartA)
+                return false;
+		    if(iPartB!=p.iPartB)
+                return false;
+		    if(iHierarch!=p.iHierarch)
+                return false;
+            return true;
+		}
+		bool operator!=(const CMSCProtLev& p)
+		{
+		    return !((*this)==p);
 		}
 
 		int iPartA;				/* MSC protection level for part A */
@@ -511,19 +552,13 @@ enum EAppType
 
 		CAltFreqSign():
             CDumpable(),
-            vecRegions(16),vecSchedules(16),vecMultiplexes(),vecOtherServices(),
-			bRegionVersionFlag(false),bScheduleVersionFlag(false),
-			bMultiplexVersionFlag(false),bOtherServicesVersionFlag(false)
+            vecRegions(16),vecSchedules(16),vecMultiplexes(),vecOtherServices()
 		{
 		}
 
 		CAltFreqSign(const CAltFreqSign& a):
             CDumpable(),vecRegions(a.vecRegions),
-			vecSchedules(a.vecSchedules), vecMultiplexes(a.vecMultiplexes),
-			bRegionVersionFlag(a.bRegionVersionFlag),
-			bScheduleVersionFlag(a.bScheduleVersionFlag),
-			bMultiplexVersionFlag(a.bMultiplexVersionFlag),
-			bOtherServicesVersionFlag(a.bOtherServicesVersionFlag)
+			vecSchedules(a.vecSchedules), vecMultiplexes(a.vecMultiplexes)
 		{
 		}
 
@@ -532,55 +567,23 @@ enum EAppType
 			vecRegions = a.vecRegions;
 			vecSchedules = a.vecSchedules;
 			vecMultiplexes = a.vecMultiplexes;
-			bRegionVersionFlag = a.bRegionVersionFlag;
-			bScheduleVersionFlag = a.bScheduleVersionFlag;
-			bMultiplexVersionFlag = a.bMultiplexVersionFlag;
-			bOtherServicesVersionFlag = a.bOtherServicesVersionFlag;
 			return *this;
-		}
-
-		void ResetRegions(bool b)
-		{
-			vecRegions.clear();
-			vecRegions.resize(16);
-			bRegionVersionFlag=b;
-		}
-
-		void ResetSchedules(bool b)
-		{
-			vecSchedules.clear();
-			vecSchedules.resize(16);
-			bScheduleVersionFlag=b;
-		}
-
-		void ResetMultiplexes(bool b)
-		{
-			vecMultiplexes.clear();
-			bMultiplexVersionFlag=b;
-		}
-
-		void ResetOtherServices(bool b)
-		{
-			vecOtherServices.clear();
-			bOtherServicesVersionFlag=b;
 		}
 
 		void Reset()
 		{
-			ResetRegions(false);
-			ResetSchedules(false);
-			ResetMultiplexes(false);
-			ResetOtherServices(false);
+			vecRegions.clear();
+			vecRegions.resize(16);
+			vecSchedules.clear();
+			vecSchedules.resize(16);
+			vecMultiplexes.clear();
+			vecOtherServices.clear();
 		}
 
 		vector < vector<CAltFreqRegion> > vecRegions; // outer vector indexed by regionID
 		vector < vector<CAltFreqSched> > vecSchedules; // outer vector indexed by scheduleID
 		vector < CMultiplexDefinition > vecMultiplexes;
 		vector < COtherService > vecOtherServices;
-		bool bRegionVersionFlag;
-		bool bScheduleVersionFlag;
-		bool bMultiplexVersionFlag;
-		bool bOtherServicesVersionFlag;
 		void dump(ostream&) const;
 	};
 
@@ -758,7 +761,25 @@ enum EAppType
 		void dump(ostream&) const;
 	};
 
-class CParameter : public CDumpable
+class CCoreParameter : public CDumpable
+{
+public:
+    CCoreParameter();
+	CCoreParameter(const CCoreParameter&);
+    virtual ~CCoreParameter() {}
+	CCoreParameter& operator=(const CCoreParameter&);
+
+	int GetStreamLen(const int iStreamID);
+
+	CChannel Channel;
+	CMSCProtLev MSCPrLe;
+	vector<CStream> Stream;
+	vector<CAudioParam> AudioParam; /* index by streamID */
+	vector<vector<CDataParam> > DataParam; /* first index streamID, second index packetID */
+	void dump(ostream&) const;
+};
+
+class CParameter : public CCoreParameter
 {
   public:
 	CParameter();
@@ -767,11 +788,6 @@ class CParameter : public CDumpable
 	CParameter& operator=(const CParameter&);
 
 	/* Enumerations --------------------------------------------------------- */
-	/* AS: AFS in SDC is valid or not */
-	enum EAFSVali { AS_VALID, AS_NOT_VALID };
-
-	/* SI: Symbol Interleaver */
-	enum ESymIntMod { SI_LONG, SI_SHORT };
 
 	/* ST: Simulation Type */
 	enum ESimType
@@ -780,25 +796,14 @@ class CParameter : public CDumpable
 	};
 
 	/* Misc. Functions ------------------------------------------------------ */
-	void SetReceiver(CDRMReceiver* p);
-	EDemodulationType GetReceiverMode();
 	void GenerateRandomSerialNumber();
 	void GenerateReceiverID();
 	void ResetServicesStreams();
 	void GetActiveServices(set<int>& actServ);
 	void GetActiveStreams(set<int>& actStr);
 
-	void SetNumDecodedBitsMSC(const int iNewNumDecodedBitsMSC);
-	void SetNumDecodedBitsSDC(const int iNewNumDecodedBitsSDC);
-	void SetNumBitsHieraFrTot(const int iNewNumBitsHieraFrTot);
-
-	bool SetWaveMode(const ERobMode eNewWaveMode);
-	ERobMode GetWaveMode() const { return eRobustnessMode; }
-
 	void SetFrequency(int iNewFrequency) { iFrequency = iNewFrequency; }
 	int GetFrequency() { return iFrequency; }
-
-	void SetServiceParameters(int iShortID, const CService& newService);
 
 	void SetCurSelAudioService(const int iNewService);
 	int GetCurSelAudioService() const { return iCurSelAudioService; }
@@ -811,9 +816,6 @@ class CParameter : public CDumpable
 		iCurSelDataService = 0;
 	}
 
-	void EnableMultimedia(const bool bFlag);
-	bool GetEnableMultimedia() const { return bUsingMultimedia; }
-
 	_REAL GetDCFrequency() const
 	{
 		return SOUNDCRD_SAMPLE_RATE * (rFreqOffsetAcqui + rFreqOffsetTrack);
@@ -823,40 +825,10 @@ class CParameter : public CDumpable
 	_REAL PartABLenRatio(const int iShortID);
 
 	/* Parameters controlled by FAC ----------------------------------------- */
-	void SetInterleaverDepth(const ESymIntMod eNewDepth);
-	ESymIntMod GetInterleaverDepth()
-	{
-		return eSymbolInterlMode;
-	}
 
-	void SetMSCCodingScheme(const ECodScheme eNewScheme);
-	void SetSDCCodingScheme(const ECodScheme eNewScheme);
-
-	void SetSpectrumOccup(ESpecOcc eNewSpecOcc);
-	ESpecOcc GetSpectrumOccup() const
-	{
-		return eSpectOccup;
-	}
-
-	void SetNumOfServices(const size_t iNNumAuSe, const size_t iNNumDaSe);
-	size_t GetTotNumServices()
-	{
-		return iNumAudioService + iNumDataService;
-	}
-
-	void SetAudDataFlag(const int iShortID, const EStreamType iNewADaFl);
 	void SetServiceID(const int iShortID, const uint32_t iNewServiceID);
 
-	CDRMReceiver* pDRMRec;
-
-	/* Symbol interleaver mode (long or short interleaving) */
-	ESymIntMod eSymbolInterlMode;
-
-	ECodScheme eMSCCodingScheme;	/* MSC coding scheme */
-	ECodScheme eSDCCodingScheme;	/* SDC coding scheme */
-
-	size_t iNumAudioService;
-	size_t iNumDataService;
+	EModulationType eModulation;
 
 	/* AMSS */
 	int iAMSSCarrierMode;
@@ -869,33 +841,13 @@ class CParameter : public CDumpable
 	/* Directory for data files */
 	string sDataFilesDirectory;
 
-
-	/* Parameters controlled by SDC ----------------------------------------- */
-	void SetAudioParam(const int iShortID, const CAudioParam& NewAudParam);
-	CAudioParam GetAudioParam(const int iShortID);
-	CDataParam GetDataParam(const int iShortID);
-	void SetDataParam(const int iShortID, const CDataParam& NewDataParam);
-
-	void SetMSCProtLev(const CMSCProtLev NewMSCPrLe, const bool bWithHierarch);
-	void SetStreamLen(const int iStreamID, const int iNewLenPartA, const int iNewLenPartB);
-	void GetStreamLen(const int iStreamID, int& iLenPartA, int& iLenPartB);
-	int GetStreamLen(const int iStreamID);
-
-	/* Protection levels for MSC */
-	CMSCProtLev MSCPrLe;
-
-	vector<CStream> Stream;
 	vector<CService> Service;
-	vector<CAudioParam> AudioParam; /* index by streamID */
-	vector<vector<CDataParam> > DataParam; /* first index streamID, second index packetID */
+
+	/* information about the next configuration */
+	CCoreParameter NextConfig;
 
 	/* information about services gathered from SDC, EPG and web schedules */
 	map<uint32_t,CServiceInformation> ServiceInformation;
-
-    /* used so receiver can tell DataDecoder (for example) which stream its processing
-       should be set before calling the Init routine
-    */
-    int iStreamID;
 
 	/* These values are used to set input and output block sizes of some modules */
 	int iNumBitsHierarchFrameTotal;
@@ -912,10 +864,6 @@ class CParameter : public CDumpable
 	/* UTC (hours and minutes) */
 	int iUTCHour;
 	int iUTCMin;
-
-	/* Identifies the current frame. This parameter is set by FAC */
-	int iFrameIDTransm;
-	int iFrameIDReceiv;
 
 	/* Synchronization ------------------------------------------------------ */
 	_REAL rFreqOffsetAcqui;
@@ -968,6 +916,7 @@ class CParameter : public CDumpable
 	CReceiveStatus ReceiveStatus;
 	CFrontEndParameters FrontEndParameters;
 	CAltFreqSign AltFreqSign;
+	CAltFreqSign AltFreqSignNext;
 
 	void Lock()
 	{
@@ -989,14 +938,14 @@ class CParameter : public CDumpable
 
 	_REAL GetNominalBandwidth();
 	_REAL GetSysToNomBWCorrFact();
-	//bool bRunThread;
-	bool bUsingMultimedia;
 
 	CCellMappingTable CellMappingTable;
 
 	CGPSData GPSData;
 
 	CMeasurements Measurements;
+
+    ERxEvent RxEvent;
 
     void dump(ostream&) const;
 
@@ -1009,9 +958,6 @@ protected:
 	/* Current selected audio service for processing */
 	int iCurSelAudioService;
 	int iCurSelDataService;
-
-	ERobMode eRobustnessMode;	/* E.g.: Mode A, B, C or D */
-	ESpecOcc eSpectOccup;
 
 	/* For resync to last service------------------------------------------- */
 	CLastService LastAudioService;

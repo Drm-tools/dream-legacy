@@ -32,8 +32,8 @@
 #include "GlobalDefinitions.h"
 #include "DataIO.h"
 #include "util/Buffer.h"
-#include "sourcedecoders/AudioSourceDecoder.h"
-#include "datadecoding/DataDecoder.h"
+#include "sourcedecoders/AudioSourceEncoder.h"
+#include "datadecoding/DataEncoder.h"
 #include "util/Utilities.h"
 #include <map>
 #include "util/TransmitterModul_impl.h"

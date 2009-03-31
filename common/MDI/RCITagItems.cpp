@@ -51,7 +51,7 @@ void CTagItemGeneratorCfre::GenTag(int iNewFreqkHz)
 
 string CTagItemGeneratorCfre::GetTagName(void) {return "cfre";}
 
-void CTagItemGeneratorCdmo::GenTag(const EDemodulationType eMode) // cdmo
+void CTagItemGeneratorCdmo::GenTag(const EModulationType eMode) // cdmo
 {
 	PrepareTag(4 * BITS_BINARY);
 	string s;

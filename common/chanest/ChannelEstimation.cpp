@@ -72,11 +72,10 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	{
 		/* Frame ID of this FAC block stands for the new block. We need
 		   the ID of the old block, therefore we have to subtract "1" */
-		iCurrentFrameID = ReceiverParam.iFrameIDReceiv - 1;
+		iCurrentFrameID = ReceiverParam.Channel.iFrameId - 1;
 		if (iCurrentFrameID < 0)
 			iCurrentFrameID = NUM_FRAMES_IN_SUPERFRAME - 1;
 	}
-
 	/* Set absolute symbol position */
 	const int iCurSymbIDTiInt =
 		iCurrentFrameID * iNumSymPerFrame + iSymbolCounter;
@@ -423,7 +422,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			/* Get tentative decision for this MSC QAM symbol and calculate
 			   squared distance as a measure for the noise. MSC can be 16 or
 			   64 QAM */
-			switch (ReceiverParam.eMSCCodingScheme)
+			switch (ReceiverParam.Channel.eMSCmode)
 			{
 			case CS_3_SM:
 			case CS_3_HMSYM:
@@ -647,7 +646,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	   be "0" since in mode D no 5 kHz mode is defined (see DRM-standard).
 	   Therefore we can also use this variable to get information whether
 	   mode D is active or not (by simply write: "if (iDCPos != 0)") */
-	if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_D)
+	if (ReceiverParam.Channel.eRobustness == RM_ROBUSTNESS_MODE_D)
 	{
 		/* Identify DC carrier position */
 		for (int i = 0; i < iNumCarrier; i++)
@@ -818,7 +817,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 	/* Inits for Wiener interpolation in frequency direction ---------------- */
 	/* Length of wiener filter */
-	switch (ReceiverParam.GetWaveMode())
+	switch (ReceiverParam.Channel.eRobustness)
 	{
 	case RM_ROBUSTNESS_MODE_A:
 		iLengthWiener = LEN_WIENER_FILT_FREQ_RMA;

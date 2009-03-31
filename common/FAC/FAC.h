@@ -37,6 +37,7 @@
 
 
 /* Classes ********************************************************************/
+
 class CFACTransmit
 {
 public:
@@ -60,6 +61,7 @@ public:
 	CFACReceive() {}
 	virtual ~CFACReceive() {}
 
+	static bool ChannelData(CVector<_BINARY>*, CChannel&, bool bSetRobm=false);
 	/* "pbiFACData" contains 72 bits */
 	bool FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter);
 

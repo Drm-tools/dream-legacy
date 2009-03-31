@@ -402,14 +402,14 @@ void CDRMPlot::OnTimerChart()
 
 	bool chartChangeNeeded = false;
 
-    ECodScheme e = Parameters.eSDCCodingScheme;
+    ECodScheme e = Parameters.Channel.eSDCmode;
     if(e!=eCurSDCCodingScheme)
     {
         eCurSDCCodingScheme = e;
         chartChangeNeeded = true;
     }
 
-    e = Parameters.eMSCCodingScheme;
+    e = Parameters.Channel.eMSCmode;
     if(e!=eCurMSCCodingScheme)
     {
         eCurMSCCodingScheme = e;

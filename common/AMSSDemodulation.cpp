@@ -365,7 +365,7 @@ void CAMSSDecode::ProcessDataInternal(CParameter& ReceiverParam)
 		for (j=0; j < iTotalDataEntityGroupSegments * DATA_ENTITY_GROUP_SEGMENT_SIZE_BITS; j++)
 			(*pvecOutputData)[j] = bDataEntityGroup[j];
 
-		ReceiverParam.SetNumDecodedBitsSDC(iTotalDataEntityGroupSegments * DATA_ENTITY_GROUP_SEGMENT_SIZE_BITS);
+		ReceiverParam.iNumSDCBitsPerSFrame = iTotalDataEntityGroupSegments * DATA_ENTITY_GROUP_SEGMENT_SIZE_BITS;
 		iOutputBlockSize = iTotalDataEntityGroupSegments * DATA_ENTITY_GROUP_SEGMENT_SIZE_BITS;
 	}
 	else

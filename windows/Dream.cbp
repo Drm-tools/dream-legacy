@@ -93,7 +93,7 @@
 				<Option object_output="Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
+				<Option parameters="--mode RX --modn DRM D:\DKULTUR_EPG1.rsA" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -126,7 +126,7 @@
 				<Option object_output="Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
+				<Option parameters="D:\DKULTUR_EPG1.rsA" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -222,13 +222,13 @@
 		<Unit filename="..\common\GPSData.h" />
 		<Unit filename="..\common\GPSReceiver.cpp" />
 		<Unit filename="..\common\GPSReceiver.h" />
-		<Unit filename="..\common\GUI-QT\AnalogDemDlg.cpp">
+		<Unit filename="..\common\GUI-QT\AnalogMainWindow.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
-		<Unit filename="..\common\GUI-QT\AnalogDemDlg.h">
+		<Unit filename="..\common\GUI-QT\AnalogMainWindow.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
@@ -426,7 +426,13 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
-		<Unit filename="..\common\GUI-QT\TransmDlg.h">
+		<Unit filename="..\common\GUI-QT\TransmitterMainWindow.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\TransmitterMainWindow.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
@@ -530,7 +536,9 @@
 		<Unit filename="..\common\ReceptLog.h" />
 		<Unit filename="..\common\SDC\SDC.h" />
 		<Unit filename="..\common\SDC\SDCReceive.cpp" />
+		<Unit filename="..\common\SDC\SDCReceive.h" />
 		<Unit filename="..\common\SDC\SDCTransmit.cpp" />
+		<Unit filename="..\common\SDC\SDCTransmit.h" />
 		<Unit filename="..\common\ServiceInformation.cpp" />
 		<Unit filename="..\common\ServiceInformation.h" />
 		<Unit filename="..\common\SigProc.h" />
@@ -554,6 +562,8 @@
 		<Unit filename="..\common\datadecoding\DataApplication.h" />
 		<Unit filename="..\common\datadecoding\DataDecoder.cpp" />
 		<Unit filename="..\common\datadecoding\DataDecoder.h" />
+		<Unit filename="..\common\datadecoding\DataEncoder.cpp" />
+		<Unit filename="..\common\datadecoding\DataEncoder.h" />
 		<Unit filename="..\common\datadecoding\EPGDecoder.cpp" />
 		<Unit filename="..\common\datadecoding\EPGDecoder.h" />
 		<Unit filename="..\common\datadecoding\Journaline.cpp" />
@@ -661,6 +671,8 @@
 		<Unit filename="..\common\soundinterface.h" />
 		<Unit filename="..\common\sourcedecoders\AudioSourceDecoder.cpp" />
 		<Unit filename="..\common\sourcedecoders\AudioSourceDecoder.h" />
+		<Unit filename="..\common\sourcedecoders\AudioSourceEncoder.cpp" />
+		<Unit filename="..\common\sourcedecoders\AudioSourceEncoder.h" />
 		<Unit filename="..\common\sync\FreqSyncAcq.cpp" />
 		<Unit filename="..\common\sync\FreqSyncAcq.h" />
 		<Unit filename="..\common\sync\SyncUsingPil.cpp" />

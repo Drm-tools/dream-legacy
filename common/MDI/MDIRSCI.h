@@ -99,7 +99,7 @@ public:
 	bool GetOutEnabled() {return bMDIOutEnabled;}
 	void SetAFPktCRC(const bool bNAFPktCRC) {bUseAFCRC=bNAFPktCRC;}
 	void SetFrequency(int iNewFreqkHz);
-	void SetReceiverMode(EDemodulationType eNewMode);
+	void SetReceiverMode(EModulationType eNewMode);
 	void SetService(int iServiceID);
 
 	bool GetDestination(string& strArgument);

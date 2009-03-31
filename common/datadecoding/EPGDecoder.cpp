@@ -30,10 +30,12 @@
 #include "EPGDecoder.h"
 #include "epg/epgutil.h"
 #include "../Parameter.h"
+#include <iostream>
 
 EPGDecoder::EPGDecoder(CParameter& p):DataApplication(p),motdecoder(p)
 {
-    saveDir = p.sDataFilesDirectory + "/sDataFilesDirectoryepg/";
+    saveDir = p.sDataFilesDirectory + "/epg/";
+    cerr << "new EPG decoder" << endl;
 }
 
 EPGDecoder::~EPGDecoder()
@@ -42,6 +44,7 @@ EPGDecoder::~EPGDecoder()
 
 void EPGDecoder::AddDataUnit(CVector<_BINARY>& vecbidata)
 {
+    cerr << "EPG new data unit" << endl;
     motdecoder.AddDataUnit(vecbidata);
 	if (motdecoder.NewObjectAvailable())
 	{

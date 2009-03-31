@@ -113,7 +113,7 @@ Param.iSpecChDoppler = 2; /* Hz (integer value!) */
 
 		/* The associated code rate is R = 0,6 and the modulation is 64-QAM */
 		Param.MSCPrLe.iPartB = 1;
-		Param.eMSCCodingScheme = CS_3_SM;
+		Param.Channel.eMSCmode = CS_3_SM;
 
 
 		/* Choose the type of channel estimation algorithms used for simlation */
@@ -132,22 +132,22 @@ Param.iSpecChDoppler = 2; /* Hz (integer value!) */
 
 		if (Param.iDRMChannelNum < 3)
 		{
-			Param.SetWaveMode(RM_ROBUSTNESS_MODE_A);
-			Param.SetSpectrumOccup(SO_2);
-			Param.eSymbolInterlMode = CParameter::SI_SHORT;
+			Param.Channel.eRobustness = RM_ROBUSTNESS_MODE_A;
+			Param.Channel.eSpectrumOccupancy = SO_2;
+			Param.Channel.eInterleaverDepth = SI_SHORT;
 		}
 		else if ((Param.iDRMChannelNum == 8) || (Param.iDRMChannelNum == 10))
 		{
 			/* Special setting for channel 8 */
-			Param.SetWaveMode(RM_ROBUSTNESS_MODE_B);
-			Param.SetSpectrumOccup(SO_0);
-			Param.eSymbolInterlMode = CParameter::SI_LONG;
+			Param.Channel.eRobustness = RM_ROBUSTNESS_MODE_B;
+			Param.Channel.eSpectrumOccupancy = SO_0;
+			Param.Channel.eInterleaverDepth = SI_LONG;
 		}
 		else
 		{
-			Param.SetWaveMode(RM_ROBUSTNESS_MODE_B);
-			Param.SetSpectrumOccup(SO_3);
-			Param.eSymbolInterlMode = CParameter::SI_LONG;
+			Param.Channel.eRobustness = RM_ROBUSTNESS_MODE_B;
+			Param.Channel.eSpectrumOccupancy = SO_3;
+			Param.Channel.eInterleaverDepth = SI_LONG;
 		}
 
 
@@ -315,7 +315,7 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
 
 
 	/* Robustness mode and spectrum occupancy ------------------------------- */
-	switch (SaveParam.GetWaveMode())
+	switch (SaveParam.Channel.eRobustness)
 	{
 	case RM_ROBUSTNESS_MODE_A:
 		strFileName += "A";
@@ -332,7 +332,7 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
 	case RM_NO_MODE_DETECTED:
 		break;
 	}
-	switch (SaveParam.GetSpectrumOccup())
+	switch (SaveParam.Channel.eSpectrumOccupancy)
 	{
 	case SO_0:
 		strFileName += "0_";
@@ -400,7 +400,7 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
 
 
 	/* MSC coding scheme ---------------------------------------------------- */
-	switch (SaveParam.eMSCCodingScheme)
+	switch (SaveParam.Channel.eMSCmode)
 	{
 	case CS_1_SM:
 		break;

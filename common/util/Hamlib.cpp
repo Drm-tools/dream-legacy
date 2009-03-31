@@ -60,14 +60,18 @@
 	This code is based on patches and example code from Tomi Manninen and
 	Stephane Fillod (developer of hamlib)
 */
-CHamlib::CHamlib(CParameter& p): mutex(), Parameters(p), pRig(NULL),
+CHamlib::CHamlib(CParameter& p):
+#ifdef HAVE_QT
+    mutex(),
+#endif
+    Parameters(p), pRig(NULL),
 bSMeterWanted(false), bEnableSMeter(false),
 ModelID(), WantedModelID(), eRigMode(DRM), CapsHamlibModels(),
 iFrequencykHz(0), iFrequencyOffsetkHz(0)
 {
 	for(size_t j=DRM; j<=WBFM; j++)
 	{
-		EDemodulationType e = EDemodulationType(j);
+		EModulationType e = EModulationType(j);
 		ModelID[e] = WantedModelID[e] = 0;
 	}
 
@@ -341,7 +345,7 @@ CHamlib::SetComPort(const string & port)
 
 string CHamlib::GetComPort() const
 {
-	map<EDemodulationType,rig_model_t>::const_iterator e = ModelID.find(eRigMode);
+	map<EModulationType,rig_model_t>::const_iterator e = ModelID.find(eRigMode);
 	if(e==ModelID.end())
 		return "";
 	CRigMap::const_iterator m = CapsHamlibModels.find(e->second);
@@ -469,7 +473,7 @@ CHamlib::LoadSettings(CSettings & s)
 	CapsHamlibModels[RIG_MODEL_ELEKTOR507].set_config("offset", "-12");
 #endif
 
-	eRigMode = EDemodulationType(s.Get("Hamlib", "mode", 0));
+	eRigMode = EModulationType(s.Get("Hamlib", "mode", 0));
 	bSMeterWanted = s.Get("Hamlib", "smeter", false);
 
 	for(CRigMap::iterator r = CapsHamlibModels.begin(); r != CapsHamlibModels.end(); r++)
@@ -485,10 +489,10 @@ CHamlib::LoadSettings(CSettings & s)
 	{
 		stringstream sec;
 		sec << "Hamlib-" << enums[j];
-		WantedModelID[EDemodulationType(j)] = s.Get(sec.str(), "model", 0);
+		WantedModelID[EModulationType(j)] = s.Get(sec.str(), "model", 0);
 	}
 	/* Initial mode/band */
-	eRigMode = EDemodulationType(s.Get("Hamlib", "mode", int(DRM)));
+	eRigMode = EModulationType(s.Get("Hamlib", "mode", int(DRM)));
 
 	rig_model_t model = WantedModelID[eRigMode];
 
@@ -515,16 +519,16 @@ CHamlib::SaveSettings(CSettings & s) const
 	{
 		stringstream sec;
 		sec << "Hamlib-" << enums[j];
-		EDemodulationType e = EDemodulationType(j);
+		EModulationType e = EModulationType(j);
 
-		map<EDemodulationType,rig_model_t>::const_iterator m = ModelID.find(e);
+		map<EModulationType,rig_model_t>::const_iterator m = ModelID.find(e);
 		if(m!=ModelID.end() && m->second != 0)
 		{
 			s.Put(sec.str(), "model", m->second);
 		}
 		else
 		{
-			map<EDemodulationType,rig_model_t>::const_iterator m = WantedModelID.find(e);
+			map<EModulationType,rig_model_t>::const_iterator m = WantedModelID.find(e);
 			if(m!=WantedModelID.end() && m->second != 0)
 				s.Put(sec.str(), "model", m->second);
 		}
@@ -677,13 +681,13 @@ CHamlib::SetRigModelForAllModes(rig_model_t model)
 {
 	for(size_t j=DRM; j<=WBFM; j++)
 	{
-		WantedModelID[EDemodulationType(j)] = model;
+		WantedModelID[EModulationType(j)] = model;
 	}
 	SetRigModel(eRigMode,  WantedModelID[eRigMode]);
 }
 
 void
-CHamlib::SetRigModel(EDemodulationType eNewMode, rig_model_t model)
+CHamlib::SetRigModel(EModulationType eNewMode, rig_model_t model)
 {
 	// close the rig
 	rig_model_t old_model = ModelID[eRigMode];
@@ -739,9 +743,9 @@ CHamlib::SetRigModel(EDemodulationType eNewMode, rig_model_t model)
 }
 
 int
-CRigCaps::mode(EDemodulationType m, const string& key) const
+CRigCaps::mode(EModulationType m, const string& key) const
 {
-	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
 	if(s==settings.end())
 		return -1;
 	map<string,int>::const_iterator k = s->second.modes.find(key);
@@ -751,9 +755,9 @@ CRigCaps::mode(EDemodulationType m, const string& key) const
 }
 
 void
-CRigCaps::get_level(EDemodulationType m, const string& key, int& val) const
+CRigCaps::get_level(EModulationType m, const string& key, int& val) const
 {
-	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
 	if(s==settings.end())
 		return;
 	map<string,value_t>::const_iterator k = s->second.levels.find(key);
@@ -763,9 +767,9 @@ CRigCaps::get_level(EDemodulationType m, const string& key, int& val) const
 }
 
 void
-CRigCaps::get_level(EDemodulationType m, const string& key, float& val) const
+CRigCaps::get_level(EModulationType m, const string& key, float& val) const
 {
-	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
 	if(s==settings.end())
 		return;
 	map<string,value_t>::const_iterator k = s->second.levels.find(key);
@@ -775,9 +779,9 @@ CRigCaps::get_level(EDemodulationType m, const string& key, float& val) const
 }
 
 string
-CRigCaps::function(EDemodulationType m, const string& key) const
+CRigCaps::function(EModulationType m, const string& key) const
 {
-	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
 	if(s==settings.end())
 		return "";
 	map<string,string>::const_iterator k = s->second.functions.find(key);
@@ -787,9 +791,9 @@ CRigCaps::function(EDemodulationType m, const string& key) const
 }
 
 string
-CRigCaps::attribute(EDemodulationType m, const string& key) const
+CRigCaps::attribute(EModulationType m, const string& key) const
 {
-	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
 	if(s==settings.end())
 		return "";
 	map<string,string>::const_iterator k = s->second.attributes.find(key);
@@ -799,9 +803,9 @@ CRigCaps::attribute(EDemodulationType m, const string& key) const
 }
 
 void
-CRigCaps::get_parameter(EDemodulationType m, const string& key, int& val) const
+CRigCaps::get_parameter(EModulationType m, const string& key, int& val) const
 {
-	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
 	if(s==settings.end())
 		return;
 	map<string,value_t>::const_iterator k = s->second.parameters.find(key);
@@ -811,9 +815,9 @@ CRigCaps::get_parameter(EDemodulationType m, const string& key, int& val) const
 }
 
 void
-CRigCaps::get_parameter(EDemodulationType m, const string& key, float& val) const
+CRigCaps::get_parameter(EModulationType m, const string& key, float& val) const
 {
-	map<EDemodulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
+	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
 	if(s==settings.end())
 		return;
 	map<string,value_t>::const_iterator k = s->second.parameters.find(key);
@@ -823,13 +827,13 @@ CRigCaps::get_parameter(EDemodulationType m, const string& key, float& val) cons
 }
 
 void
-CRigCaps::set_mode(EDemodulationType m, const string& key, const string& val)
+CRigCaps::set_mode(EModulationType m, const string& key, const string& val)
 {
 	settings[m].modes[key] = atoi(val.c_str());
 }
 
 void
-CRigCaps::set_level(EDemodulationType m, const string& key, const string& val)
+CRigCaps::set_level(EModulationType m, const string& key, const string& val)
 {
 	setting_t setting = rig_parse_level(key.c_str());
 	if (RIG_LEVEL_IS_FLOAT(setting))
@@ -839,19 +843,19 @@ CRigCaps::set_level(EDemodulationType m, const string& key, const string& val)
 }
 
 void
-CRigCaps::set_function(EDemodulationType m, const string& key, const string& val)
+CRigCaps::set_function(EModulationType m, const string& key, const string& val)
 {
 	settings[m].functions[key] = val;
 }
 
 void
-CRigCaps::set_attribute(EDemodulationType m, const string& key, const string& val)
+CRigCaps::set_attribute(EModulationType m, const string& key, const string& val)
 {
 	settings[m].attributes[key] = val;
 }
 
 void
-CRigCaps::set_parameter(EDemodulationType m, const string& key, const string& val)
+CRigCaps::set_parameter(EModulationType m, const string& key, const string& val)
 {
 	setting_t setting = rig_parse_parm(key.c_str());
 	if (RIG_LEVEL_IS_FLOAT(setting))
@@ -861,7 +865,7 @@ CRigCaps::set_parameter(EDemodulationType m, const string& key, const string& va
 }
 
 void
-CRigCaps::SetRigModes(RIG* pRig, EDemodulationType eRigMode)
+CRigCaps::SetRigModes(RIG* pRig, EModulationType eRigMode)
 {
 	const map<string,int>& modes = settings[eRigMode].modes;
 
@@ -878,7 +882,7 @@ CRigCaps::SetRigModes(RIG* pRig, EDemodulationType eRigMode)
 }
 
 void
-CRigCaps::SetRigLevels(RIG* pRig, EDemodulationType eRigMode)
+CRigCaps::SetRigLevels(RIG* pRig, EModulationType eRigMode)
 {
 	const map<string,value_t>& levels = settings[eRigMode].levels;
 
@@ -895,7 +899,7 @@ CRigCaps::SetRigLevels(RIG* pRig, EDemodulationType eRigMode)
 }
 
 void
-CRigCaps::SetRigFuncs(RIG* pRig, EDemodulationType eRigMode)
+CRigCaps::SetRigFuncs(RIG* pRig, EModulationType eRigMode)
 {
 	const map<string,string>& functions = settings[eRigMode].functions;
 
@@ -915,7 +919,7 @@ CRigCaps::SetRigFuncs(RIG* pRig, EDemodulationType eRigMode)
 }
 
 void
-CRigCaps::SetRigParams(RIG* pRig, EDemodulationType eRigMode)
+CRigCaps::SetRigParams(RIG* pRig, EModulationType eRigMode)
 {
 	const map<string,value_t>& parameters = settings[eRigMode].parameters;
 
@@ -959,7 +963,7 @@ CRigCaps::LoadSettings(const CSettings& s, const string& secpref)
 		set_config(i->first, i->second);
 	for(size_t j=DRM; j<=WBFM; j++)
 	{
-		EDemodulationType m = EDemodulationType(j);
+		EModulationType m = EModulationType(j);
 		string section = secpref + string(enums[j]) + string("-");
 		sec.clear();
 		s.Get(section+"modes", sec);
@@ -991,7 +995,7 @@ CRigCaps::SaveSettings(CSettings& s, const string& sec) const
 		s.Put(sec+"config", i->first, i->second);
 	}
 
-	for(map<EDemodulationType,CRigModeSpecificSettings>::const_iterator j=settings.begin();
+	for(map<EModulationType,CRigModeSpecificSettings>::const_iterator j=settings.begin();
 		j!=settings.end(); j++)
 	{
 		const CRigModeSpecificSettings& settings = j->second;

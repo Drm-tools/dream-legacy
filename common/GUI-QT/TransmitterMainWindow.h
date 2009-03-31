@@ -39,18 +39,18 @@ class CSettings;
 class QMenuBar;
 class Q3PopupMenu;
 
-class TransmDialog : public QMainWindow, public Ui_TransmitterMainWindow
+class TransmitterMainWindow : public QMainWindow, public Ui_TransmitterMainWindow
 {
 	Q_OBJECT
 
 public:
-	TransmDialog(
+	TransmitterMainWindow(
 		CDRMTransmitterInterface& tx,
 		CSettings&,
 		QWidget* parent=0, const char* name=0, Qt::WFlags f=0);
-	virtual ~TransmDialog();
+	virtual ~TransmitterMainWindow();
 	/* dummy assignment operator to help MSVC8 */
-	TransmDialog& operator=(const TransmDialog&)
+	TransmitterMainWindow& operator=(const TransmitterMainWindow&)
 	{ throw "should not happen"; return *this;}
 
 protected:

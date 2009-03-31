@@ -37,7 +37,7 @@
 \******************************************************************************/
 
 #include "MDIDecode.h"
-#include "../SDC/SDC.h"
+#include "../SDC/SDCReceive.h"
 #include <iostream>
 
 void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
@@ -69,7 +69,7 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 	}
 
 	if (TagPacketDecoder.TagItemDecoderRobMod.IsReady())
-		Parameters.SetWaveMode(TagPacketDecoder.TagItemDecoderRobMod.eRobMode);
+		Parameters.Channel.eRobustness = TagPacketDecoder.TagItemDecoderRobMod.eRobMode;
 
 	Parameters.Unlock();
 
@@ -121,7 +121,7 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 		/* If receiver is correctly initialized, the input vector should be
 		   large enough for the SDC data */
 		const int iLenSDCDataBits = pvecOutputData2->Size();
-		Parameters.SetNumDecodedBitsSDC(iLenBitsMDISDCdata);
+		Parameters.iNumSDCBitsPerSFrame = iLenBitsMDISDCdata;
 
 		if (iLenSDCDataBits >= iLenBitsMDISDCdata)
 		{
@@ -211,16 +211,18 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 		/* Get the audio parameters for decoding the coded AM */
 		CAudioParam AudioParam = TagPacketDecoder.TagItemDecoderAMAudio.AudioParams;
 		/* Write the audio settings into the parameter object
-		 * CParameter takes care of keeping separate data for AM and DRM
 		 */
 		Parameters.Lock();
-		Parameters.SetAudioParam(0, AudioParam);
+		Parameters.AudioParam[0] = AudioParam;
 
-		Parameters.SetStreamLen(0, 0, iStreamLen/BITS_BINARY);
-		Parameters.SetNumOfServices(1,0);
+		Parameters.Stream[0].iLenPartA = 0;
+		Parameters.Stream[0].iLenPartB = iStreamLen/BITS_BINARY;
+		Parameters.iNumDecodedBitsMSC = iStreamLen; // is this necessary?
+
+		Parameters.Channel.iNumAudioServices = 1;
+		Parameters.Channel.iNumDataServices = 0;
 		Parameters.Service[0].iAudioStream = 0;
 		Parameters.SetCurSelAudioService(0);
-		Parameters.SetNumDecodedBitsMSC(iStreamLen); // is this necessary?
 
 		Parameters.Service[0].strLabel = "";
 		Parameters.Service[0].strCountryCode = "";

@@ -71,7 +71,7 @@ protected:
     void UpdatePlots();
     void showPlots();
     void hidePlots();
-    void newPlot(int);
+    void newPlot(int, const string&);
     void InitialiseFrequency();
     void UpdateFrequency();
 

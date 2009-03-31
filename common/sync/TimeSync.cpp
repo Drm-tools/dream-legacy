@@ -376,9 +376,12 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 						/* Set wave mode */
 						ReceiverParam.Lock();
-						if (ReceiverParam.
-							SetWaveMode(GetRModeFromInd(iDetectedRModeInd)) == true)
+						ERobMode eRobm = GetRModeFromInd(iDetectedRModeInd);
+						if(eRobm != ReceiverParam.Channel.eRobustness)
 						{
+						    ReceiverParam.NextConfig.Channel = ReceiverParam.Channel;
+						    ReceiverParam.NextConfig.Channel.eRobustness = eRobm;
+						    ReceiverParam.RxEvent = ChannelReconfiguration;
 							/* Reset output cyclic-buffer because wave mode has
 							   changed and the data written in the buffer is not
 							   valid anymore */
@@ -657,7 +660,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Set the selected robustness mode index */
-	iSelectedMode = GetIndFromRMode(ReceiverParam.GetWaveMode());
+	iSelectedMode = GetIndFromRMode(ReceiverParam.Channel.eRobustness);
 
 	/* Init init count for timing sync (one symbol) */
 	iTiSyncInitCnt = iDecSymBS / iStepSizeGuardCorr;

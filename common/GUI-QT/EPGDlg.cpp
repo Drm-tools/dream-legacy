@@ -31,57 +31,35 @@
 #include <QRegExp>
 #include <ctime>
 
-/*
-    TODO: handle case where the EPG is not embedded in the main service
-    (e.g. when it is in service 4 as currently on DLR)
-    DONE: persist the selected service id across sessions
-*/
-
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, Qt::WFlags f)
 :QDialog(parent, name, modal, f),Ui_EPGDlg(),BitmCubeGreen(),
 date(QDate::currentDate()),do_updates(false),
 epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
-Settings(NSettings),Timer(),sids(),currentSID(0)
+Settings(NSettings),Timer(),currentSID(0)
 {
     setupUi(this);
 
-	/* Define size of the bitmaps */
-	const int iXSize = 8;
-	const int iYSize = 8;
-
-	/* Create bitmaps */
-	BitmCubeGreen.resize(iXSize, iYSize);
+	/* Create 8x8 bitmap */
+	BitmCubeGreen.resize(8, 8);
 	BitmCubeGreen.fill(QColor(0, 255, 0));
 
 	/* Connections ---------------------------------------------------------- */
-	connect(&Timer, SIGNAL(timeout()),
-		this, SLOT(OnTimer()));
+	connect(dateEdit, SIGNAL(dateChanged(const QDate&)), this, SLOT(setDate(const QDate&)));
+	connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
+	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
 	/* Deactivate real-time timer */
 	Timer.stop();
 
-	connect(Prev, SIGNAL(clicked()), this, SLOT(previousDay()));
-	connect(Next, SIGNAL(clicked()), this, SLOT(nextDay()));
-	connect(channel, SIGNAL(activated(const QString&)), this
-		, SLOT(selectChannel(const QString&)));
-	connect(day, SIGNAL(valueChanged(int)), this, SLOT(setDay(int)));
-	connect(month, SIGNAL(valueChanged(int)), this, SLOT(setMonth(int)));
-	connect(year, SIGNAL(valueChanged(int)), this, SLOT(setYear(int)));
-
-    day->setMinValue(1);
-    day->setMaxValue(31);
-    month->setMinValue(1);
-    month->setMaxValue(12);
-    year->setMinValue(0000);
-    year->setMaxValue(3000);
 
 	/* TODO show a label if EPG decoding is disabled */
 	//if (DRMReceiver.GetDataDecoder()->GetDecodeEPG() == true)
-	if(false)
+	if(true)
 		TextEPGDisabled->hide();
 	else
 		TextEPGDisabled->show();
+    dateEdit->setCalendarPopup(true);
 }
 
 EPGDlg::~EPGDlg()
@@ -133,9 +111,6 @@ void EPGDlg::OnTimer()
 void EPGDlg::showEvent(QShowEvent *)
 {
     CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock();
-    int sNo = Parameters.GetCurSelAudioService();
-    uint32_t sid = Parameters.Service[sNo].iServiceID;
 
 	/* recover window size and position */
 	CWinGeom s;
@@ -152,30 +127,29 @@ void EPGDlg::showEvent(QShowEvent *)
     currentSID = QString(Settings.Get("EPG Dialog", "serviceid", string("0")).c_str()).toULong(&ok, 16);
     if(!ok)
         currentSID=0;
-
-    // use the current date
-    date = QDate::currentDate();
     // update the channels combobox from the epg
     channel->clear();
-    int n = -1;
-	sids.clear();
+    int n = -1, m = -1;
+	Parameters.Lock();
     for (map < uint32_t, CServiceInformation >::const_iterator i = Parameters.ServiceInformation.begin();
          i != Parameters.ServiceInformation.end(); i++) {
 		QString channel_label = QString().fromUtf8(i->second.label.begin()->c_str());
 		uint32_t channel_id = i->second.id;
-		sids[channel_label] = channel_id;
-    	channel->insertItem(channel_label);
-    	if (channel_id == sid) {
-    	    n = channel->currentItem();
-        }
+    	channel->insertItem(++n, channel_label, channel_id);
+    	if(channel_id == currentSID)
+    	{
+    	    m = n;
+    	}
     }
 	Parameters.Unlock();
-    // update the current selection
-    if (n >= 0) {
-	    channel->setCurrentItem(n);
-    }
+	if(m>=0)
+        channel->setCurrentIndex(m);
+
     do_updates = true;
-    setDate();
+
+    date = QDate::currentDate();
+    dateEdit->setDate(date);
+
     select();
 
 	/* Activate real-time timer when window is shown */
@@ -197,48 +171,14 @@ void EPGDlg::hideEvent(QHideEvent*)
     Settings.Put("EPG Dialog", "serviceid", QString("%1").arg(currentSID, 16).toStdString());
 }
 
-void EPGDlg::previousDay()
+void EPGDlg::setDate(const QDate& d)
 {
-    date = date.addDays(-1);
-    setDate();
-}
-
-void EPGDlg::nextDay()
-{
-    date = date.addDays(1);
-    setDate();
-}
-
-void EPGDlg::setDate()
-{
-    day->setValue(date.day());
-    month->setValue(date.month());
-    year->setValue(date.year());
+    date = d;
+    select();
 }
 
 void EPGDlg::selectChannel(const QString &)
 {
-    select();
-}
-
-void EPGDlg::setDay(int n)
-{
-    date.setYMD(date.year(), date.month(), n);
-    setDate();
-    select();
-}
-
-void EPGDlg::setMonth(int n)
-{
-    date.setYMD(date.year(), n, date.day());
-    setDate();
-    select();
-}
-
-void EPGDlg::setYear(int n)
-{
-    date.setYMD(n, date.month(), date.day());
-    setDate();
     select();
 }
 
@@ -251,13 +191,12 @@ void EPGDlg::select()
     Data->clear();
     basic->setText(tr("no basic profile data"));
     advanced->setText(tr("no advanced profile data"));
-    QString chan = channel->currentText();
     CDateAndTime d;
     d.year = date.year();
     d.month = date.month();
     d.day = date.day();
 
-    currentSID = sids[chan];
+    currentSID = channel->itemData(channel->currentIndex()).toUInt();
     epg.select(currentSID, d);
 
     if(epg.progs.count()==0) {

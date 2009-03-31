@@ -30,15 +30,13 @@
 #include "ReceptLog.h"
 #include <iomanip>
 #include <iostream>
+/* DONE - reset minutes (and stats) when retuning */
+
 /* TODO
+  Apply the start delay after re-tuning
+  Better: put a log file header in on syncing with the DRM stream
+*/
 
-- Simone: logfile (short log):
-  * after changing frequency, the minutes are not reset, so it just continues counting
-  the minutes where the previous log had stopped
-  * the delay for writing the log is only applied on the first log when starting Dream, would be nice
-  to apply a delay after changing frequency (currently you never get label/mode information in the header, or the previous one)
-
-/* implementation --------------------------------------------- */
 
 void
 CReceptLog::Start(const string & filename)
@@ -47,7 +45,7 @@ CReceptLog::Start(const string & filename)
 	if (File.is_open())
 	{
 		bLogActivated = true;
-		writeHeader();
+		bHeaderNeeded = true;
 	}
 	init();
 }
@@ -67,6 +65,14 @@ CReceptLog::Update()
 {
 	if (!bLogActivated)
 		return;
+    if(bHeaderNeeded)
+    {
+        if(Parameters.GetAcquiState() == AS_WITH_SIGNAL)
+        {
+				writeHeader();
+				bHeaderNeeded = false;
+        }
+    }
 	writeParameters();
 }
 
@@ -75,7 +81,7 @@ char
 CReceptLog::GetRobModeStr()
 {
 	char chRobMode = 'X';
-	switch (Parameters.GetWaveMode())
+	switch (Parameters.Channel.eRobustness)
 	{
 	case RM_ROBUSTNESS_MODE_A:
 		chRobMode = 'A';
@@ -98,6 +104,51 @@ CReceptLog::GetRobModeStr()
 		break;
 	}
 	return chRobMode;
+}
+
+
+void
+CReceptLog::SetLogFrequency(int iNew)
+{
+	if(iNew != iFrequency)
+	{
+		if(bLogActivated)
+		{
+			writeTrailer();
+			iFrequency = iNew;
+			init();
+			writeHeader();
+		}
+		else
+		{
+			iFrequency = iNew;
+		}
+	}
+}
+
+string CReceptLog::strdate(time_t t)
+{
+	struct tm * today;
+	stringstream s;
+
+	today = gmtime(&t);		/* Always UTC */
+
+	s << setfill('0')
+	  << setw(4) << today->tm_year + 1900 << "-"
+	  << setw(2) << today->tm_mon + 1 << "-" << setw(2) << today->tm_mday;
+	return s.str();
+}
+
+string CReceptLog::strtime(time_t t)
+{
+	struct tm * today;
+	stringstream s;
+
+	today = gmtime(&t);		/* Always UTC */
+
+	s << setfill('0')
+	  << setw(2) << today->tm_hour << ":" << setw(2) << today-> tm_min << ":" << setw(2) << today->tm_sec;
+	return s.str();
 }
 
 void
@@ -133,7 +184,7 @@ CShortLog::writeHeader()
 		label = Parameters.Service[iCurSelServ].strLabel;
 		bitrate = Parameters.GetBitRateKbps(iCurSelServ, false);
 		RobMode = GetRobModeStr();
-		SpecOcc = Parameters.GetSpectrumOccup();
+		SpecOcc = Parameters.Channel.eSpectrumOccupancy;
 	}
 
 	Parameters.Unlock();
@@ -352,7 +403,7 @@ CLongLog::writeParameters()
 		iCurProtLevPartA = Parameters.MSCPrLe.iPartA;
 		iCurProtLevPartB = Parameters.MSCPrLe.iPartB;
 		iCurProtLevPartH = Parameters.MSCPrLe.iHierarch;
-		switch (Parameters.eMSCCodingScheme)
+		switch (Parameters.Channel.eMSCmode)
 		{
 		case CS_3_SM:
 			iCurMSCSc = 0;
@@ -445,47 +496,4 @@ CLongLog::writeTrailer()
 		return; /* allow updates when file closed */
 
 	File << endl << endl;
-}
-
-void
-CReceptLog::SetLogFrequency(int iNew)
-{
-	if(iNew != iFrequency)
-	{
-		if(bLogActivated)
-		{
-			writeTrailer();
-			iFrequency = iNew;
-			writeHeader();
-		}
-		else
-		{
-			iFrequency = iNew;
-		}
-	}
-}
-
-string CReceptLog::strdate(time_t t)
-{
-	struct tm * today;
-	stringstream s;
-
-	today = gmtime(&t);		/* Always UTC */
-
-	s << setfill('0')
-	  << setw(4) << today->tm_year + 1900 << "-"
-	  << setw(2) << today->tm_mon + 1 << "-" << setw(2) << today->tm_mday;
-	return s.str();
-}
-
-string CReceptLog::strtime(time_t t)
-{
-	struct tm * today;
-	stringstream s;
-
-	today = gmtime(&t);		/* Always UTC */
-
-	s << setfill('0')
-	  << setw(2) << today->tm_hour << ":" << setw(2) << today-> tm_min << ":" << setw(2) << today->tm_sec;
-	return s.str();
 }

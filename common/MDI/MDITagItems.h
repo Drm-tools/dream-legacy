@@ -260,7 +260,7 @@ protected:
 class CTagItemGeneratorRxDemodMode : public CTagItemGeneratorWithProfiles /* rdmo */
 {
 public:
-	void GenTag(EDemodulationType eMode);
+	void GenTag(EModulationType eMode);
 protected:
 	virtual string GetTagName();
 	virtual string GetProfiles(); // Return a string containing the set of profiles for this tag

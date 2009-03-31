@@ -28,29 +28,33 @@
 
 #include "RxApp.h"
 #include "DRMMainWindow.h"
-#include "AnalogDemDlg.h"
+#include "AnalogMainWindow.h"
 #include <iostream>
 using namespace std;
 
 void RxApp::doNewMainWindow()
 {
-        if(qApp->closingDown())
+        if(qApp->closingDown() || Receiver.isFinished())
             return;
 
         QMainWindow* MainDlg;
 
-        switch(Receiver.GetReceiverMode())
+        CParameter& Parameters = *Receiver.GetParameters();
+        Parameters.Lock();
+        EModulationType eModulation = Parameters.eModulation;
+        Parameters.Unlock();
+
+        switch(eModulation)
         {
         case NONE:
             // wait for receiver to get into a mode
             QTimer::singleShot(1000, this, SLOT(doNewMainWindow()));
             return;
-            break;
         case DRM:
             MainDlg = new DRMMainWindow(Receiver, Settings, 0, 0, Qt::WStyle_MinMax);
             break;
         default:
-            MainDlg = new AnalogDemDlg(Receiver, Settings, 0, 0, Qt::WStyle_MinMax);
+            MainDlg = new AnalogMainWindow(Receiver, Settings, 0, 0, Qt::WStyle_MinMax);
         }
 
         MainDlg->setAttribute(Qt::WA_QuitOnClose, false);

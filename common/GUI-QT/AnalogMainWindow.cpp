@@ -28,7 +28,7 @@
  *
 \******************************************************************************/
 
-#include "AnalogDemDlg.h"
+#include "AnalogMainWindow.h"
 #include <QMessageBox>
 #include <QDateTime>
 #include <QFileDialog>
@@ -41,7 +41,6 @@
 #include "LiveScheduleDlg.h"
 #include "DRMPlot.h"
 
-// TODO Rename
 // TODO improve layout (simplify?)
 // TODO - check audio
 /*
@@ -51,7 +50,7 @@
 */
 
 /* Implementation *************************************************************/
-AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
+AnalogMainWindow::AnalogMainWindow(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, Qt::WFlags f):
     QMainWindow(parent, name, f), Ui_AnalogMainWindow(),
 	Receiver(NDRMR), Settings(NSettings),
@@ -151,7 +150,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     plot->stop();
 }
 
-void AnalogDemDlg::showEvent(QShowEvent*)
+void AnalogMainWindow::showEvent(QShowEvent*)
 {
 	OnTimer();
 	OnTimerPLLPhaseDial();
@@ -180,7 +179,7 @@ void AnalogDemDlg::showEvent(QShowEvent*)
 	UpdateControls();
 }
 
-void AnalogDemDlg::hideEvent(QHideEvent*)
+void AnalogMainWindow::hideEvent(QHideEvent*)
 {
 	/* stop real-time timers */
 	Timer.stop();
@@ -206,7 +205,7 @@ void AnalogDemDlg::hideEvent(QHideEvent*)
 	Settings.Put("AnalogGUI", s);
 }
 
-void AnalogDemDlg::closeEvent(QCloseEvent* ce)
+void AnalogMainWindow::closeEvent(QCloseEvent* ce)
 {
     if(quitWanted)
     {
@@ -223,15 +222,23 @@ void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 	ce->accept();
 }
 
-void AnalogDemDlg::OnSwitchToDRM()
+void AnalogMainWindow::OnSwitchToDRM()
 {
-    Receiver.SetReceiverMode(DRM);
+    CParameter& Parameter = *Receiver.GetParameters();
+    Parameter.Lock();
+    Parameter.eModulation = DRM;
+    Parameter.RxEvent = ChannelReconfiguration;
+    Parameter.Unlock();
 }
 
-void AnalogDemDlg::UpdateControls()
+void AnalogMainWindow::UpdateControls()
 {
+    CParameter& Parameter = *Receiver.GetParameters();
+    Parameter.Lock();
+    EModulationType eModulation = Parameter.eModulation;
+    Parameter.Unlock();
 	/* Set demodulation type */
-	switch (Receiver.GetReceiverMode())
+	switch (eModulation)
 	{
 	case AM:
 		if (!RadioButtonDemAM->isChecked())
@@ -329,7 +336,7 @@ void AnalogDemDlg::UpdateControls()
     PhaseDial->setEnabled(Receiver.AnalogPLLEnabled());
 }
 
-void AnalogDemDlg::OnCheckOnBoardDemod()
+void AnalogMainWindow::OnCheckOnBoardDemod()
 {
 	if (CheckBoxOnBoardDemod->isChecked() == true)
 		Receiver.SetUseAnalogHWDemod(true);
@@ -337,18 +344,22 @@ void AnalogDemDlg::OnCheckOnBoardDemod()
 		Receiver.SetUseAnalogHWDemod(false);
 }
 
-void AnalogDemDlg::UpdatePlotStyle()
+void AnalogMainWindow::UpdatePlotStyle()
 {
 	/* Update main plot window */
 	plot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 }
 
-void AnalogDemDlg::OnTimer()
+void AnalogMainWindow::OnTimer()
 {
 	bool b;
 	_REAL r;
 
-	switch(Receiver.GetReceiverMode())
+    CParameter& Parameter = *Receiver.GetParameters();
+    Parameter.Lock();
+    EModulationType eModulation = Parameter.eModulation;
+    Parameter.Unlock();
+	switch(eModulation)
 	{
 	case DRM:
         quitWanted = false;
@@ -378,7 +389,7 @@ void AnalogDemDlg::OnTimer()
 	}
 }
 
-void AnalogDemDlg::OnTimerPLLPhaseDial()
+void AnalogMainWindow::OnTimerPLLPhaseDial()
 {
 	CReal rCurPLLPhase;
 
@@ -396,41 +407,48 @@ void AnalogDemDlg::OnTimerPLLPhaseDial()
 	}
 }
 
-void AnalogDemDlg::OnRadioDemodulation(int iID)
+void AnalogMainWindow::OnRadioDemodulation(int iID)
 {
 	/* Receiver takes care of setting appropriate filter BW */
+	EModulationType eModulation = AM;
 	switch (iID)
 	{
 	case 0:
-		Receiver.SetReceiverMode(AM);
+		eModulation = AM;
 		break;
 
 	case 1:
-		Receiver.SetReceiverMode(LSB);
+		eModulation = LSB;
 		break;
 
 	case 2:
-		Receiver.SetReceiverMode(USB);
+		eModulation = USB;
 		break;
 
 	case 3:
-		Receiver.SetReceiverMode(CW);
+		eModulation = CW;
 		break;
 
 	case 4:
-		Receiver.SetReceiverMode(NBFM);
+		eModulation = NBFM;
 		break;
 
 	case 5:
-		Receiver.SetReceiverMode(WBFM);
+		eModulation = WBFM;
 		break;
 	}
+
+    CParameter& Parameter = *Receiver.GetParameters();
+    Parameter.Lock();
+    Parameter.eModulation = eModulation;
+    Parameter.RxEvent = ChannelReconfiguration;
+    Parameter.Unlock();
 
 	/* Update controls */
 	UpdateControls();
 }
 
-void AnalogDemDlg::OnRadioAGC(int iID)
+void AnalogMainWindow::OnRadioAGC(int iID)
 {
 	switch (iID)
 	{
@@ -452,7 +470,7 @@ void AnalogDemDlg::OnRadioAGC(int iID)
 	}
 }
 
-void AnalogDemDlg::OnRadioNoiRed(int iID)
+void AnalogMainWindow::OnRadioNoiRed(int iID)
 {
 	switch (iID)
 	{
@@ -474,32 +492,32 @@ void AnalogDemDlg::OnRadioNoiRed(int iID)
 	}
 }
 
-void AnalogDemDlg::OnSliderBWChange(int value)
+void AnalogMainWindow::OnSliderBWChange(int value)
 {
 	/* Set new filter in processing module */
 	Receiver.SetAnalogFilterBWHz(value);
 	TextLabelBandWidth->setText(QString().setNum(value) + tr(" Hz"));
 }
 
-void AnalogDemDlg::OnCheckAutoFreqAcq()
+void AnalogMainWindow::OnCheckAutoFreqAcq()
 {
 	/* Set parameter in working thread module */
 	Receiver.EnableAnalogAutoFreqAcq(CheckBoxAutoFreqAcq->isChecked());
 }
 
-void AnalogDemDlg::OnCheckPLL()
+void AnalogMainWindow::OnCheckPLL()
 {
 	/* Set parameter in working thread module */
 	Receiver.EnableAnalogPLL(PLLButton->isChecked());
 }
 
-void AnalogDemDlg::OnCheckBoxMuteAudio()
+void AnalogMainWindow::OnCheckBoxMuteAudio()
 {
 	/* Set parameter in working thread module */
 	Receiver.MuteAudio(CheckBoxMuteAudio->isChecked());
 }
 
-void AnalogDemDlg::OnCheckSaveAudioWAV()
+void AnalogMainWindow::OnCheckSaveAudioWAV()
 {
 /*
 	This code is copied in SystemEvalDlg.cpp. If you do changes here, you should
@@ -526,13 +544,13 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
 		Receiver.StopWriteWaveFile();
 }
 
-void AnalogDemDlg::OnChartxAxisValSet(double dVal)
+void AnalogMainWindow::OnChartxAxisValSet(double dVal)
 {
 	/* Set new frequency in receiver module */
 	Receiver.SetAnalogDemodAcq(dVal);
 }
 
-void AnalogDemDlg::OnButtonWaterfall()
+void AnalogMainWindow::OnButtonWaterfall()
 {
 	/* Toggle between normal spectrum plot and waterfall spectrum plots */
 	if (ButtonWaterfall->isChecked())
@@ -541,14 +559,22 @@ void AnalogDemDlg::OnButtonWaterfall()
 		plot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
 }
 
-void AnalogDemDlg::OnButtonAMSS()
+void AnalogMainWindow::OnButtonAMSS()
 {
 	/* Open AMSS window and set in foreground */
 	AMSSDlg.show();
 	AMSSDlg.raise();
 }
 
-void AnalogDemDlg::AddWhatsThisHelp()
+void AnalogMainWindow::OnNewAMAcquisition()
+{
+    CParameter& Parameter = *Receiver.GetParameters();
+    Parameter.Lock();
+    Parameter.RxEvent = Reinitialise;
+    Parameter.Unlock();
+}
+
+void AnalogMainWindow::AddWhatsThisHelp()
 {
 	/* Noise Reduction */
 	const QString strNoiseReduction =

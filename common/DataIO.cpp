@@ -635,7 +635,15 @@ void CGenerateFACData::InitInternal(CParameter& TransmParam)
 void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	/* Do not use received FAC data in case of simulation */
-	if (bSyncInput == false)
+	if (bSyncInput) // Simulation
+	{
+		/* In case of simulation no FAC data is used,
+           we have to increase the counter here */
+		ReceiverParam.Channel.iFrameId++;
+		if (ReceiverParam.Channel.iFrameId == NUM_FRAMES_IN_SUPERFRAME)
+			ReceiverParam.Channel.iFrameId = 0;
+	}
+	else
 	{
 		bCRCOk = FACReceive.FACParam(pvecInputData, ReceiverParam);
 		/* Set FAC status for RSCI, log file & GUI */
@@ -645,26 +653,15 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 			ReceiverParam.ReceiveStatus.FAC.SetStatus(CRC_ERROR);
 	}
 
-	if ((bSyncInput == true) || (bCRCOk == false))
-	{
-		/* If FAC CRC check failed we should increase the frame-counter
-		   manually. If only FAC data was corrupted, the others can still
-		   decode if they have the right frame number. In case of simulation
-		   no FAC data is used, we have to increase the counter here */
-		ReceiverParam.iFrameIDReceiv++;
-
-		if (ReceiverParam.iFrameIDReceiv == NUM_FRAMES_IN_SUPERFRAME)
-			ReceiverParam.iFrameIDReceiv = 0;
-	}
 }
 
 void CUtilizeFACData::InitInternal(CParameter& ReceiverParam)
 {
 
-// This should be in FAC class in an Init() routine which has to be defined, this
-// would be cleaner code! TODO
-/* Init frame ID so that a "0" comes after increasing the init value once */
-ReceiverParam.iFrameIDReceiv = NUM_FRAMES_IN_SUPERFRAME - 1;
+    // This should be in FAC class in an Init() routine which has to be defined, this
+    // would be cleaner code! TODO
+    /* Init frame ID so that a "0" comes after increasing the init value once */
+    ReceiverParam.Channel.iFrameId = NUM_FRAMES_IN_SUPERFRAME - 1;
 
 	/* Reset flag */
 	bCRCOk = false;
@@ -692,26 +689,22 @@ void CGenerateSDCData::InitInternal(CParameter& TransmParam)
 /* Receiver */
 void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	bool bSDCOK = false;
-
 	/* Decode SDC block and return CRC status */
 	CSDCReceive::ERetStatus eStatus = SDCReceive.SDCParam(pvecInputData, ReceiverParam);
-
 	ReceiverParam.Lock();
 	switch(eStatus)
 	{
 	case CSDCReceive::SR_OK:
 		ReceiverParam.ReceiveStatus.SDC.SetStatus(RX_OK);
-		bSDCOK = true;
 		break;
 
 	case CSDCReceive::SR_BAD_CRC:
 		/* SDC block depends on only a few parameters: robustness mode,
-		   DRM bandwidth and coding scheme (can be 4 or 16 QAM). If we
+		   spectrum occupancy and coding scheme (can be 4 or 16 QAM). If we
 		   initialize these parameters with resonable parameters it might
 		   be possible that these are the correct parameters. Therefore
 		   try to decode SDC even in case FAC wasn't decoded. That might
-		   speed up the DRM signal acqisition. But quite often it is the
+		   speed up the DRM signal acquisition. But quite often it is the
 		   case that the parameters are not correct. In this case do not
 		   show a red light if SDC CRC was not ok */
 		if (bFirstBlock == false)

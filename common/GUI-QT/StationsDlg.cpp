@@ -1399,28 +1399,6 @@ void StationsDlg::OnListItemClicked(Q3ListViewItem* item)
 		   will emit a "value changed" signal which sets the new frequency.
 		   Therefore, here is no call to "SetFrequency()" needed.*/
 		QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
-
-		/* If the mode has changed re-initialise the receiver */
-		EDemodulationType eCurrentMode = DRMReceiver.GetReceiverMode();
-
-		/* if "bReInitOnFrequencyChange" is not true, initiate a reinit when
-		 schedule mode is different from receiver mode */
-		switch (DRMSchedule.GetSchedMode())
-		{
-		case CDRMSchedule::SM_DRM:
-			if (eCurrentMode != DRM)
-				DRMReceiver.SetReceiverMode(DRM);
-			if (bReInitOnFrequencyChange)
-				DRMReceiver.RequestNewAcquisition();
-			break;
-
-		case CDRMSchedule::SM_ANALOG:
-			if (eCurrentMode != AM) // this is an AM schedule, we don't have an FM schedule yet!
-				DRMReceiver.SetReceiverMode(AM);
-			if (bReInitOnFrequencyChange)
-				DRMReceiver.RequestNewAcquisition();
-			break;
-		}
 	}
 }
 

@@ -8,25 +8,25 @@
  * Description:
  *	Symbol interleaver for MSC-symbols
  *	We have to support long and short symbol interleaving. Long interleaving
- *	spans over iD times iN_MUX interleaver blocks. To create a "block-wise 
+ *	spans over iD times iN_MUX interleaver blocks. To create a "block-wise
  *	cycle-buffer" we shift the indices (stored in a table) each time a complete
  *	block was written. Thus, we dont need to copy data since we only modify
- *	the indices. 
+ *	the indices.
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -48,10 +48,10 @@ void CSymbInterleaver::ProcessDataInternal(CParameter&)
 		matcInterlMemory[veciCurIndex[0]][i] = (*pvecInputData)[i];
 
 	/* Interleave data according to the interleaver table. Use the
-	   the interleaver-blocks described in the DRM-standard 
+	   the interleaver-blocks described in the DRM-standard
 	   (Ro(i) = i (mod D)  -> "i % iD") */
 	for (i = 0; i < iInputBlockSize; i++)
-		(*pvecInputData)[i] = 
+		(*pvecInputData)[i] =
 			matcInterlMemory[veciCurIndex[i % iD]][veciIntTable[i]];
 
 	/* Set new indices. Move blocks (virtually) forward */
@@ -68,7 +68,7 @@ void CSymbInterleaver::InitInternal(CParameter& TransmParam)
 {
 	int i;
 
-	TransmParam.Lock(); 
+	TransmParam.Lock();
 
 	/* Set internal parameters */
 	iN_MUX = TransmParam.CellMappingTable.iNumUsefMSCCellsPerFrame;
@@ -80,13 +80,13 @@ void CSymbInterleaver::InitInternal(CParameter& TransmParam)
 	MakeTable(veciIntTable, iN_MUX, SYMB_INTERL_CONST_T_0);
 
 	/* Set interleaver depth */
-	switch (TransmParam.eSymbolInterlMode)
+	switch (TransmParam.Channel.eInterleaverDepth)
 	{
-	case CParameter::SI_LONG:
+	case SI_LONG:
 		iD = D_LENGTH_LONG_INTERL;
 		break;
 
-	case CParameter::SI_SHORT:
+	case SI_SHORT:
 		iD = D_LENGTH_SHORT_INTERL;
 		break;
 	}
@@ -108,7 +108,7 @@ void CSymbInterleaver::InitInternal(CParameter& TransmParam)
 	   accept more cells than one logical MSC frame is long */
 	iMaxOutputBlockSize = 2 * iN_MUX;
 
-	TransmParam.Unlock(); 
+	TransmParam.Unlock();
 }
 
 
@@ -120,10 +120,10 @@ void CSymbDeinterleaver::ProcessDataInternal(CParameter&)
 	int i, j;
 
 	/* Deinterleave data according to the deinterleaver table. Use the
-	   the interleaver-blocks described in the DRM-standard 
+	   the interleaver-blocks described in the DRM-standard
 	   (Ro(i) = i (mod D)  -> "i % iD") */
 	for (i = 0; i < iInputBlockSize; i++)
-		matcDeinterlMemory[veciCurIndex[i % iD]][veciIntTable[i]] = 
+		matcDeinterlMemory[veciCurIndex[i % iD]][veciIntTable[i]] =
 			(*pvecInputData)[i];
 
 	/* Read data from current block (index "iD - 1")*/
@@ -148,14 +148,14 @@ void CSymbDeinterleaver::ProcessDataInternal(CParameter&)
 		iOutputBlockSize = 0;
 	}
 	else
-		iOutputBlockSize = iN_MUX; 
+		iOutputBlockSize = iN_MUX;
 }
 
 void CSymbDeinterleaver::InitInternal(CParameter& ReceiverParam)
 {
 	int i;
 
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 
 	/* Set internal parameters */
 	iN_MUX = ReceiverParam.CellMappingTable.iNumUsefMSCCellsPerFrame;
@@ -167,13 +167,13 @@ void CSymbDeinterleaver::InitInternal(CParameter& ReceiverParam)
 	MakeTable(veciIntTable, iN_MUX, SYMB_INTERL_CONST_T_0);
 
 	/* Set interleaver depth */
-	switch (ReceiverParam.eSymbolInterlMode)
+	switch (ReceiverParam.Channel.eInterleaverDepth)
 	{
-	case CParameter::SI_LONG:
+	case SI_LONG:
 		iD = D_LENGTH_LONG_INTERL;
 		break;
 
-	case CParameter::SI_SHORT:
+	case SI_SHORT:
 		iD = D_LENGTH_SHORT_INTERL;
 		break;
 	}
@@ -182,7 +182,7 @@ void CSymbDeinterleaver::InitInternal(CParameter& ReceiverParam)
 	matcDeinterlMemory.Init(D_LENGTH_LONG_INTERL, iN_MUX
 #ifdef USE_ERASURE_FOR_FASTER_ACQ
 		, CEquSig(ERASURE_TAG_VALUE, ERASURE_TAG_VALUE) /* Init with erasures */
-#endif		
+#endif
 		);
 
 	/* Index for addressing the buffers */
@@ -209,5 +209,5 @@ void CSymbDeinterleaver::InitInternal(CParameter& ReceiverParam)
 	iInputBlockSize = iN_MUX;
 	iMaxOutputBlockSize = iN_MUX;
 
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 }

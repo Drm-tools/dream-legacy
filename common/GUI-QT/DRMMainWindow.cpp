@@ -117,9 +117,6 @@ DRMMainWindow::DRMMainWindow(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	Parameters.Lock();
 
-	/* Enable multimedia */
-	Parameters.EnableMultimedia(true);
-
 	/* Init current selected service */
 	Parameters.ResetCurSelAudDatServ();
 
@@ -193,33 +190,35 @@ void DRMMainWindow::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 
 void DRMMainWindow::OnTimer()
 {
-	EDemodulationType eNewReceiverMode = Receiver.GetReceiverMode();
-	switch(eNewReceiverMode)
+    int iCurSelAudioServ;
+    CParameter& Parameter = *Receiver.GetParameters();
+    Parameter.Lock();
+    EModulationType eModulation = Parameter.eModulation;
+    Parameter.Unlock();
+
+	switch(eModulation)
 	{
 	case DRM:
-		{
-			CParameter& Parameters = *Receiver.GetParameters();
-			Parameters.Lock();
+        Parameter.Lock();
 
-			/* Input level meter */
-			ProgrInputLevel->setValue(Parameters.GetIFSignalLevel());
+        /* Input level meter */
+        ProgrInputLevel->setValue(Parameter.GetIFSignalLevel());
 
-            int iCurSelAudioServ = Parameters.GetCurSelAudioService();
-            if(Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
-                SetStatus(CLED_MSC, Parameters.ReceiveStatus.MOT.GetStatus());
-            else
-                SetStatus(CLED_MSC, Parameters.ReceiveStatus.Audio.GetStatus());
-			SetStatus(CLED_SDC, Parameters.ReceiveStatus.SDC.GetStatus());
-			SetStatus(CLED_FAC, Parameters.ReceiveStatus.FAC.GetStatus());
+        iCurSelAudioServ = Parameter.GetCurSelAudioService();
+        if(Parameter.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
+            SetStatus(CLED_MSC, Parameter.ReceiveStatus.MOT.GetStatus());
+        else
+            SetStatus(CLED_MSC, Parameter.ReceiveStatus.Audio.GetStatus());
+        SetStatus(CLED_SDC, Parameter.ReceiveStatus.SDC.GetStatus());
+        SetStatus(CLED_FAC, Parameter.ReceiveStatus.FAC.GetStatus());
 
-			Parameters.Unlock();
+        Parameter.Unlock();
 
-			/* Check if receiver does receive a signal */
-			if(Receiver.GetAcquiState() == AS_WITH_SIGNAL)
-				UpdateDisplay();
-			else
-				ClearDisplay();
-		}
+        /* Check if receiver does receive a signal */
+        if(Receiver.GetAcquiState() == AS_WITH_SIGNAL)
+            UpdateDisplay();
+        else
+            ClearDisplay();
 		break;
 	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
         quitWanted = false;
@@ -495,7 +494,8 @@ void DRMMainWindow::UpdateDisplay()
 
 	/* Service selector ------------------------------------------------- */
 	/* Enable only so many number of channel switches as present in the stream */
-	const int iNumServices = Parameters.GetTotNumServices();
+	const int iNumServices
+        = Parameters.Channel.iNumAudioServices+Parameters.Channel.iNumDataServices;
 
 	QString m_StaticService[MAX_NUM_SERVICES] = {"", "", "", ""};
 
@@ -551,8 +551,7 @@ void DRMMainWindow::UpdateDisplay()
 
 				/* Bit-rate of connected data stream */
 				m_StaticService[i] += " (" + QString().setNum(
-				Parameters.GetBitRateKbps(i, true), 'f', 2) +
-					" kbps)";
+				Parameters.GetBitRateKbps(i, true), 'f', 2) + " kbps)";
 			}
 
 			switch (i)
@@ -576,7 +575,7 @@ void DRMMainWindow::UpdateDisplay()
 		}
 	}
 
-	/* detect if AFS informations are available */
+	/* detect if AFS information is available */
 	if ((Parameters.AltFreqSign.vecMultiplexes.size() > 0) || (Parameters.AltFreqSign.vecOtherServices.size() > 0))
 	{
 		/* show AFS label */
@@ -623,25 +622,32 @@ void DRMMainWindow::ClearDisplay()
 
 void DRMMainWindow::OnNewDRMAcquisition()
 {
-	Receiver.RequestNewAcquisition();
+    CParameter& Parameters = *Receiver.GetParameters();
+    Parameters.Lock();
+    Parameters.RxEvent = Reinitialise;
+    Parameters.Unlock();
 }
 
 void DRMMainWindow::OnSwitchToAnalog()
 {
+    CParameter& Parameters = *Receiver.GetParameters();
+    Parameters.Lock();
+    Parameters.eModulation = AM;
     // User must then select if wants FM, etc. TODO - allow direct mode changes
-    Receiver.SetReceiverMode(AM);
+    Parameters.RxEvent = ChannelReconfiguration;
+    Parameters.Unlock();
 }
 
-void DRMMainWindow::SetService(int iNewServiceID)
+void DRMMainWindow::SetService(int shortID)
 {
 	CParameter& Parameters = *Receiver.GetParameters();
 
 	Parameters.Lock();
 
-	Parameters.SetCurSelAudioService(iNewServiceID);
-	Parameters.SetCurSelDataService(iNewServiceID);
+	Parameters.SetCurSelAudioService(shortID);
+	Parameters.SetCurSelDataService(shortID);
 
-	EStreamType eAudDataFlag = Parameters.Service[iNewServiceID].eAudDataFlag;
+	EStreamType eAudDataFlag = Parameters.Service[shortID].eAudDataFlag;
 	Parameters.Unlock();
 
 	/* If service is only data service or has a multimedia content
@@ -649,15 +655,16 @@ void DRMMainWindow::SetService(int iNewServiceID)
 	if (eAudDataFlag == SF_DATA)
 	{
 		Parameters.Lock();
-		int iStreamID = Parameters.Service[iNewServiceID].iDataStream;
-		int iPacketID = Parameters.Service[iNewServiceID].iPacketID;
+		int iStreamID = Parameters.Service[shortID].iDataStream;
+		int iPacketID = Parameters.Service[shortID].iPacketID;
 		CDataParam& dataParam = Parameters.DataParam[iStreamID][iPacketID];
 		EAppType eAppIdent = dataParam.eUserAppIdent;
 		Parameters.Unlock();
-
+		QString sid = QString("%1").arg(Parameters.Service[shortID].iServiceID, 0, 16);
         switch(eAppIdent)
         {
             case AT_MOTEPG:
+                Settings.Put("EPG Dialog", "serviceid", sid.toStdString());
                 epgDlg->show();
                 break;
             case AT_MOTBROADCASTWEBSITE:
@@ -680,7 +687,7 @@ void DRMMainWindow::SetService(int iNewServiceID)
         }
 	}
 
-	iCurSelServiceGUI = iNewServiceID;
+	iCurSelServiceGUI = shortID;
 }
 
 void DRMMainWindow::OnMenuSetDisplayColor()
@@ -765,7 +772,6 @@ void DRMMainWindow::closeEvent(QCloseEvent* ce)
 	 * close so that the user knows the program has completed
 	 * when the window closes
 	 */
-
     if(quitWanted)
     {
         /* request that the working thread stops */
@@ -778,7 +784,6 @@ void DRMMainWindow::closeEvent(QCloseEvent* ce)
         }
         qApp->quit();
     }
-
 	/* now let QT close us */
 	ce->accept();
 }

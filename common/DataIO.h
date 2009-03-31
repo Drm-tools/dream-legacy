@@ -38,7 +38,8 @@
 #include "util/TransmitterModul.h"
 #include "util/SimulationModul.h"
 #include "FAC/FAC.h"
-#include "SDC/SDC.h"
+#include "SDC/SDCReceive.h"
+#include "SDC/SDCTransmit.h"
 #include "TextMessage.h"
 #include "AMDemodulation.h" // For CMixer
 
@@ -223,7 +224,7 @@ public:
 	CUtilizeSDCData() {}
 	virtual ~CUtilizeSDCData() {}
 
-	CSDCReceive* GetSDCReceive() {return &SDCReceive;}
+    void SetSDCType(ESDCType e) { SDCReceive.SetSDCType(e); }
 
 protected:
 	CSDCReceive SDCReceive;

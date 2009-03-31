@@ -30,7 +30,6 @@
 #ifndef _EPGDLG_H
 #define _EPGDLG_H
 
-#include <map>
 #include <QTimer>
 #include "ui_EPGDlg.h"
 #include "../DrmReceiver.h"
@@ -64,7 +63,6 @@ public:
 	EPGDlg& operator=(const EPGDlg&)
 	{ throw "should not happen"; return *this;}
 
-    void setDate();
     void select();
 
 protected:
@@ -82,16 +80,11 @@ protected:
 	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
 	QTimer			Timer;
-	map<QString,uint32_t> sids;
 	uint32_t        currentSID;
 
 public slots:
-    void nextDay();
-    void previousDay();
-    void selectChannel(const QString&);
-    void setDay(int);
-    void setMonth(int);
-    void setYear(int);
+    void setDate(const QDate&);
+    void selectChannel(const QString &);
 	void OnTimer();
 };
 

@@ -26,7 +26,7 @@
  *
 \******************************************************************************/
 
-#include "SDC.h"
+#include "SDCTransmit.h"
 
 
 /* Implementation *************************************************************/
@@ -81,7 +81,7 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 
 
 // Only working for either one audio or data service!
-if (Parameter.iNumAudioService == 1)
+if (Parameter.Channel.iNumAudioServices == 1)
 {
 	/* Type 9 */
 	DataEntityType9(vecbiData, 0, Parameter);
@@ -166,7 +166,7 @@ void CSDCTransmit::DataEntityType0(CVector<_BINARY>& vecbiData,
 								   CParameter& Parameter)
 {
 	/* 24 bits for each stream description + 4 bits for protection levels */
-	const int iNumBitsTotal = 4 + Parameter.GetTotNumServices() * 24;
+	const int iNumBitsTotal = 4 + Parameter.Stream.size() * 24;
 
 	/* Init return vector (storing this data block) */
 	vecbiData.Init(iNumBitsTotal + NUM_BITS_HEADER_SDC);
@@ -191,13 +191,13 @@ void CSDCTransmit::DataEntityType0(CVector<_BINARY>& vecbiData,
 	/* Protection level for part B */
 	vecbiData.Enqueue((uint32_t) Parameter.MSCPrLe.iPartB, 2);
 
-	for (size_t i = 0; i < Parameter.GetTotNumServices(); i++)
+	for (size_t i = 0; i < Parameter.Stream.size(); i++)
 	{
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hirarchical data */
 		if ((i == 0) &&
-			((Parameter.eMSCCodingScheme == CS_3_HMSYM) ||
-			(Parameter.eMSCCodingScheme == CS_3_HMMIX)))
+			((Parameter.Channel.eMSCmode == CS_3_HMSYM) ||
+			(Parameter.Channel.eMSCmode == CS_3_HMMIX)))
 		{
 			/* Protection level for hierarchical */
 			vecbiData.Enqueue((uint32_t) Parameter.MSCPrLe.iHierarch, 2);

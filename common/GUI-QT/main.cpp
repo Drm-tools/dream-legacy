@@ -49,12 +49,10 @@
 # include <QThread>
 # include <QMessageBox>
 # include <QTranslator>
-# include "TransmDlg.h"
+# include "TransmitterMainWindow.h"
 # include "RxApp.h"
 #endif
 #include <iostream>
-
-// TODO remove momentary openning of main window on exit
 
 /* Implementation *************************************************************/
 #ifdef USE_QT_GUI
@@ -79,13 +77,6 @@ main(int argc, char **argv)
 	QTranslator translator(0);
 	if (translator.load("dreamtr"))
 		app.installTranslator(&translator);
-
-	CDRMSimulation DRMSimulation;
-
-	/* Call simulation script. If simulation is activated, application is
-	   automatically exit in that routine. If in the script no simulation is
-	   activated, this function will immediately return */
-	DRMSimulation.SimScript();
 
 	/* Parse arguments and load settings from init-file */
 	m.Settings.Load(argc, argv);
@@ -167,7 +158,7 @@ main(int argc, char **argv)
 
 			DRMTransmitter.LoadSettings(m.Settings);
 
-			TransmDialog MainDlg(DRMTransmitter, m.Settings, NULL, NULL, Qt::WStyle_MinMax);
+			TransmitterMainWindow MainDlg(DRMTransmitter, m.Settings, NULL, NULL, Qt::WStyle_MinMax);
 			/* Set main window */
 			app.setMainWidget(&MainDlg);
 
@@ -176,6 +167,16 @@ main(int argc, char **argv)
 			app.exec();
 
 			DRMTransmitter.SaveSettings(m.Settings);
+		}
+		else if (strMode == "SIM")
+		{
+
+            CDRMSimulation DRMSimulation;
+
+            /* Call simulation script. If simulation is activated, application is
+               automatically exit in that routine. If in the script no simulation is
+               activated, this function will immediately return */
+            DRMSimulation.SimScript();
 		}
 		else
 		{

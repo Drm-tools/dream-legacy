@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include "MLC.h"
-
+#include <iostream>
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -358,9 +358,7 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 
 
 	/* First, calculate all necessary parameters for decoding process */
-	ReceiverParam.Lock();
 	CalculateParam(ReceiverParam, eChannelType);
-	ReceiverParam.Unlock();
 
 	/* Reasonable number of iterations depends on coding scheme. With a
 	   4-QAM no iteration is possible */
@@ -441,6 +439,8 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 	int i;
 	int iMSCDataLenPartA;
 
+	Parameter.Lock();
+
 	switch (iNewChannelType)
 	{
 	/* FAC ********************************************************************/
@@ -487,7 +487,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 
 	/* SDC ********************************************************************/
 	case CT_SDC:
-		eCodingScheme = Parameter.eSDCCodingScheme;
+		eCodingScheme = Parameter.Channel.eSDCmode;
 		iN_mux = Parameter.CellMappingTable.iNumSDCCellsPerSFrame;
 
 		iNumEncBits = iN_mux * 2;
@@ -584,13 +584,13 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 		}
 
 		/* Set number of bits for one SDC-block */
-		Parameter.SetNumDecodedBitsSDC(iL[1]);
+		Parameter.iNumSDCBitsPerSFrame = iL[1];
 		break;
 
 
 	/* MSC ********************************************************************/
 	case CT_MSC:
-		eCodingScheme = Parameter.eMSCCodingScheme;
+		eCodingScheme = Parameter.Channel.eMSCmode;
 		iN_mux = Parameter.CellMappingTable.iNumUsefMSCCellsPerFrame;
 
 		/* Data length for part A is the sum of all lengths of the streams */
@@ -977,12 +977,21 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			break;
 		}
 
-		/* Set number of output bits for next module */
-		Parameter.SetNumDecodedBitsMSC(iL[0] + iL[1] + iL[2]);
+        if(Parameter.iNumDecodedBitsMSC != (iL[0] + iL[1] + iL[2])
+        || 	Parameter.iNumBitsHierarchFrameTotal != iL[2])
+        {
+            /* Set number of output bits for next module */
+            Parameter.iNumDecodedBitsMSC = iL[0] + iL[1] + iL[2];
+            /* Set total number of bits for hierarchical frame (needed for MSC
+               demultiplexer module) */
+            Parameter.iNumBitsHierarchFrameTotal = iL[2];
 
-		/* Set total number of bits for hierarchical frame (needed for MSC
-		   demultiplexer module) */
-		Parameter.SetNumBitsHieraFrTot(iL[2]);
+            cerr << "MSC mismatch between MLC decoder and SDC" << endl;
+
+            Parameter.RxEvent = ServiceReconfiguration;
+        }
+
 		break;
 	}
+	Parameter.Unlock();
 }

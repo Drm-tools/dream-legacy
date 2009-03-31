@@ -6,7 +6,7 @@
  *	Volker Fischer, Andrew Murphy
  *
  * Description:
- *	See AnalogDemDlg.cpp
+ *	See AnalogMainWindow.cpp
  *
  * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
  *	- Additional widgets for displaying AMSS information
@@ -79,15 +79,15 @@ public slots:
 
 
 /* Analog demodulation dialog ----------------------------------------------- */
-class AnalogDemDlg : public QMainWindow, public Ui_AnalogMainWindow
+class AnalogMainWindow : public QMainWindow, public Ui_AnalogMainWindow
 {
 	Q_OBJECT
 
 public:
-	AnalogDemDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+	AnalogMainWindow(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, Qt::WFlags f = 0);
 	/* dummy assignment operator to help MSVC8 */
-	AnalogDemDlg& operator=(const AnalogDemDlg&)
+	AnalogMainWindow& operator=(const AnalogMainWindow&)
 	{ throw "should not happen"; return *this;}
 
 	void 			UpdatePlotStyle();
@@ -124,7 +124,7 @@ public slots:
 	void OnChartxAxisValSet(double dVal);
 	void OnSliderBWChange(int value);
 	void OnRadioNoiRed(int iID);
-	void OnNewAMAcquisition() {Receiver.RequestNewAcquisition();}
+	void OnNewAMAcquisition();
 	void OnButtonWaterfall();
 	void OnButtonAMSS();
     void OnSwitchToDRM();

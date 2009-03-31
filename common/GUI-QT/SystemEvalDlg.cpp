@@ -368,23 +368,23 @@ void SystemEvalDlg::UpdateFAC(CParameter& Parameters)
 	QString strFACInfo;
 
 	/* Robustness mode #################### */
-	QChar robm = QString("ABCD")[Parameters.GetWaveMode()];
+	QChar robm = QString("ABCD")[Parameters.Channel.eRobustness];
 
     const float so[] = {4.5,5,9,10,18,20};
-    float spectrum_occupancy = so[Parameters.GetSpectrumOccup()];
+    float spectrum_occupancy = so[Parameters.Channel.eSpectrumOccupancy];
 
     strFACInfo = robm+QString(" / %1 kHz").arg(spectrum_occupancy);
 
 	FACDRMModeBWV->setText(strFACInfo); /* Value */
 
 	/* Interleaver Depth #################### */
-	switch (Parameters.eSymbolInterlMode)
+	switch (Parameters.Channel.eInterleaverDepth)
 	{
-	case CParameter::SI_LONG:
+	case SI_LONG:
 		strFACInfo = tr("2 s (Long Interleaving)");
 		break;
 
-	case CParameter::SI_SHORT:
+	case SI_SHORT:
 		strFACInfo = tr("400 ms (Short Interleaving)");
 		break;
 	}
@@ -394,7 +394,7 @@ void SystemEvalDlg::UpdateFAC(CParameter& Parameters)
 
 	/* SDC, MSC mode #################### */
 	/* SDC */
-	switch (Parameters.eSDCCodingScheme)
+	switch (Parameters.Channel.eSDCmode)
 	{
 	case CS_1_SM:
 		strFACInfo = "4-QAM / ";
@@ -409,7 +409,7 @@ void SystemEvalDlg::UpdateFAC(CParameter& Parameters)
 	}
 
 	/* MSC */
-	switch (Parameters.eMSCCodingScheme)
+	switch (Parameters.Channel.eMSCmode)
 	{
 	case CS_2_SM:
 		strFACInfo += "SM 16-QAM";
@@ -442,9 +442,9 @@ void SystemEvalDlg::UpdateFAC(CParameter& Parameters)
 
 	/* Number of services #################### */
 	strFACInfo = tr("Audio: ");
-	strFACInfo += QString().setNum(Parameters.iNumAudioService);
+	strFACInfo += QString().setNum(Parameters.Channel.iNumAudioServices);
 	strFACInfo += tr(" / Data: ");
-	strFACInfo +=QString().setNum(Parameters.iNumDataService);
+	strFACInfo +=QString().setNum(Parameters.Channel.iNumDataServices);
 
 	FACNumServicesV->setText(strFACInfo); /* Value */
 
@@ -480,16 +480,6 @@ void SystemEvalDlg::InitialisePlots()
 {
     plot = new CDRMPlot(MainPlot, DRMReceiver.GetParameters());
     plot->stop();
-	plot->load(Settings, "System Evaluation Dialog");
-	plot->save(Settings, "System Evaluation Dialog");
-	int pt = int(plot->GetChartType());
-	QString plottype = QString("%1").arg(pt);
-    QList<QTreeWidgetItem *> l = ChartSelector->findItems(plottype, Qt::MatchRecursive, 1);
-    if(l.size()==1)
-    {
-        l[0]->setSelected(true);
-        ChartSelector->scrollToItem(l[0]);
-    }
 
 	/* Connect controls ----------------------------------------------------- */
 
@@ -513,19 +503,22 @@ void SystemEvalDlg::showPlots()
 	const size_t iNumChartWin = Settings.Get("System Evaluation Dialog", "numchartwin", 0);
 	for (size_t i = 0; i < iNumChartWin; i++)
 	{
-	    QwtPlot* p = new QwtPlot();
-		CDRMPlot* pNewPlot = new CDRMPlot(p, DRMReceiver.GetParameters());
-
 		stringstream s;
 		s << "Chart Window " << i;
-		pNewPlot->load(Settings, s.str());
-		p->show();
-
-		/* Add window pointer in vector (needed for closing the windows) */
-		plots.push_back(pNewPlot);
+		newPlot(0, s.str());
 	}
-	// restart the timer for the main plot
+	/* Restore main plot */
+	plot->load(Settings, "System Evaluation Dialog");
 	plot->start();
+	// TODO - make this work
+	int pt = int(plot->GetChartType());
+	QString plottype = QString("%1").arg(pt);
+    QList<QTreeWidgetItem *> l = ChartSelector->findItems(plottype, Qt::MatchRecursive, 1);
+    if(l.size()==1)
+    {
+        l[0]->setSelected(true);
+        ChartSelector->scrollToItem(l[0]);
+    }
 }
 
 void SystemEvalDlg::hidePlots()
@@ -561,6 +554,7 @@ void SystemEvalDlg::OnItemClicked (QTreeWidgetItem * item, int column )
 {
 	/* Get char type from selected item and setup chart */
 	plot->SetupChart(CDRMPlot::EPlotType(item->text(1).toInt()));
+	plot->start();
 }
 
 void SystemEvalDlg::OnCustomContextMenuRequested ( const QPoint&)
@@ -569,21 +563,27 @@ void SystemEvalDlg::OnCustomContextMenuRequested ( const QPoint&)
 	// right clicking also selects so we don't need to use the point parameter ?
 	QTreeWidgetItem* item = ChartSelector->currentItem();	if (item != NULL)
 	{
-		/* Open new chart window and add window pointer in vector
-		   (needed for closing the windows) */
-        newPlot(item->text(1).toInt());
+		/* Open new chart window */
+        newPlot(item->text(1).toInt(), "");
 	}
 }
 
-void SystemEvalDlg::newPlot(int pt)
+void SystemEvalDlg::newPlot(int pt, const string& setting)
 {
     QwtPlot* p = new QwtPlot(NULL);
     p->setAttribute(Qt::WA_QuitOnClose, false);
     CDRMPlot* pNewPlot = new CDRMPlot(p, DRMReceiver.GetParameters());
-    pNewPlot->SetupChart(CDRMPlot::EPlotType(pt));
     plots.push_back(pNewPlot);
+    if(setting == "")
+    {
+        pNewPlot->SetupChart(CDRMPlot::EPlotType(pt));
+        p->resize(200, 150);
+    }
+    else
+    {
+		pNewPlot->load(Settings, setting);
+    }
     pNewPlot->start();
-    p->resize(200, 150);
     p->show();
 }
 

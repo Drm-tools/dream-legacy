@@ -260,12 +260,12 @@ public:
 	bool GetFrameBoundary() {return iFreeSymbolCounter==0;}
 
 	void SetFilterBWHz(int);
-	void SetFilterBWHz(EDemodulationType, int);
-	int GetFilterBWHz(EDemodulationType eType);
+	void SetFilterBWHz(EModulationType, int);
+	int GetFilterBWHz(EModulationType eType);
 	int GetFilterBWHz();
 
-	void SetDemodType(EDemodulationType);
-	EDemodulationType GetDemodType() { return eDemodType; }
+	void SetDemodType(EModulationType);
+	EModulationType GetDemodType() { return eDemodType; }
 
 protected:
 	void SetBPFilter(const CReal rNewBPNormBW);
@@ -310,7 +310,7 @@ protected:
 	CAGC						AGC;
 	CNoiseReduction				NoiseReduction;
 	ENoiRedType					NoiRedType;
-	EDemodulationType 			eDemodType;
+	EModulationType 			eDemodType;
 
 	/* OPH: counter to count symbols within a frame in order to generate */
 	/* RSCI output */

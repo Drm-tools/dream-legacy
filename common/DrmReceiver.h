@@ -43,6 +43,7 @@
 #include "InputResample.h"
 #include "datadecoding/DataDecoder.h"
 #include "sourcedecoders/AudioSourceDecoder.h"
+#include "sourcedecoders/AudioSourceEncoder.h"
 #include "mlc/MLC.h"
 #include "interleaver/SymbolInterleaver.h"
 #include "ofdmcellmapping/OFDMCellMapping.h"
@@ -144,19 +145,15 @@ public:
 	//void					Init();
 	void					Start();
 	void					Stop();
-	void					RequestNewAcquisition() { bRestartFlag = true; }
 	EAcqStat				GetAcquiState() {return Parameters.eAcquiState;}
-	EDemodulationType		GetReceiverMode() {return eReceiverMode;}
-	void					SetReceiverMode(EDemodulationType eNewMode);
-	void					SetReceiverMode(const string&);
 	void					SetInitResOff(_REAL rNRO)
 								{rInitResampleOffset = rNRO;}
 
-	void					SetAnalogDemodType(EDemodulationType);
-	EDemodulationType		GetAnalogDemodType() { return AMDemodulation.GetDemodType(); }
+	void					SetAnalogDemodType(EModulationType);
+	EModulationType		GetAnalogDemodType() { return AMDemodulation.GetDemodType(); }
 	int						GetAnalogFilterBWHz();
 	void					SetAnalogFilterBWHz(int);
-	void					SetAnalogFilterBWHz(EDemodulationType, int);
+	void					SetAnalogFilterBWHz(EModulationType, int);
 
 	void					SetAnalogDemodAcq(_REAL rNewNorCen);
 
@@ -276,8 +273,6 @@ public:
 	void					InitsForInterlDepth();
 	void					InitsForMSCCodSche();
 	void					InitsForSDCCodSche();
-	void					InitsForMSC();
-	void					InitsForMSCDemux();
 
 protected:
 
@@ -383,19 +378,13 @@ protected:
 	int						iGoodSignCnt;
 	int						iDelayedTrackModeCnt;
 	ERecState				eReceiverState;
-	EDemodulationType		eReceiverMode;
-	EDemodulationType		eNewReceiverMode;
-
-	int						iAudioStreamID;
-	int						iDataStreamID;
-
+	int                     iAudioStreamID;
+	int                     iDataStreamID; // or more than one?
 
 	bool					bDoInitRun;
-	bool					bRestartFlag;
 	bool					bRunning;
 
 	_REAL					rInitResampleOffset;
-
 
 	CVectorEx<_BINARY>		vecbiMostRecentSDC;
 	int						iFreqkHz;
@@ -410,7 +399,7 @@ protected:
 	Request<EInpTy>         pcmInput;
 	Request<int>            soundDev;
 	Request<int>            rig;
-	Request<EDemodulationType> rigMode;
+	Request<EModulationType> rigMode;
 	Request<EInChanSel>     chanSel;
 	string                  strPCMFile;
 	bool                    bRigUpdateNeeded;

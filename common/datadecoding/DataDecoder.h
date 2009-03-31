@@ -45,36 +45,6 @@ typedef int TTransportID;
 /* Maximum number of packets per stream */
 #define MAX_NUM_PACK_PER_STREAM					4
 
-
-/* Classes ********************************************************************/
-/* Encoder ------------------------------------------------------------------ */
-class CDataEncoder
-{
-  public:
-    CDataEncoder();
-    virtual ~CDataEncoder ();
-
-    int Init (CParameter & Param);
-    void GeneratePacket (CVector < _BINARY > &vecbiPacket);
-
-    CMOTSlideShowEncoder *GetSliShowEnc ()
-    {
-        return MOTSlideShowEncoder;
-    }
-
-  protected:
-    CMOTSlideShowEncoder* MOTSlideShowEncoder;
-    CVector < _BINARY > vecbiCurDataUnit;
-
-    int iPacketLen;
-    int iTotalPacketSize;
-    int iCurDataPointer;
-    int iPacketID;
-    int iContinInd;
-};
-
-
-/* Decoder ------------------------------------------------------------------ */
 class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 {
   public:
@@ -89,7 +59,8 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
         factory[domain][appId] = fact;
     }
 
-    DataApplication *getApplication(int packetId);
+    DataApplication *getApplication(int packetId=0);
+    void SetStream(int id) { iStreamID = id; }
 
   protected:
     class CDataUnit

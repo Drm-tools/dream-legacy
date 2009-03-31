@@ -33,8 +33,8 @@
 BWSViewer::BWSViewer(CDRMReceiver& rec, CSettings& s,
         QWidget* parent,
 		const char* name, Qt::WFlags f):
-		QMainWindow(parent, name, f), Ui_BWSViewer(), Timer(), receiver(rec), settings(s),
-		homeUrl("")
+		QMainWindow(parent, name, f), Ui_BWSViewer(), Timer(),
+		receiver(rec), settings(s), homeUrl(""), decoderSet(false)
 {
     setupUi(this);
 
@@ -70,7 +70,23 @@ void BWSViewer::OnTimer()
     CParameter& Parameters = *receiver.GetParameters();
 	Parameters.Lock();
 	ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
+    /* Get current data service */
+    const int iCurSelDataServ = Parameters.GetCurSelDataService();
+    CService service = Parameters.Service[iCurSelDataServ];
 	Parameters.Unlock();
+
+    if(!decoderSet)
+    {
+        CDataDecoder* dec = receiver.GetDataDecoder();
+        CMOTDABDec *decoder = (CMOTDABDec*)dec->getApplication(service.iPacketID);
+
+        if(decoder)
+        {
+            textBrowser->setDecoder(decoder);
+            decoderSet = true;
+        }
+    }
+
 	switch(status)
 	{
 	case NOT_PRESENT:
@@ -161,16 +177,10 @@ void BWSViewer::showEvent(QShowEvent*)
     Parameters.Lock();
     const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
     const uint32_t iAudioServiceID = Parameters.Service[iCurSelAudioServ].iServiceID;
-
     /* Get current data service */
     const int iCurSelDataServ = Parameters.GetCurSelDataService();
     CService service = Parameters.Service[iCurSelDataServ];
     Parameters.Unlock();
-
-    CDataDecoder* dec = receiver.GetDataDecoder();
-	CMOTDABDec *decoder = (CMOTDABDec*)dec->getApplication(service.iPacketID);
-
-    textBrowser->setDecoder(decoder);
 
     QString strTitle("MOT Broadcast Website");
 

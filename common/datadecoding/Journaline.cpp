@@ -58,6 +58,8 @@ void CJournaline::ResetOpenJournalineDecoder()
 	/* No extended header will be used */
 	unsigned long extended_header_len = 0;
 
+	Lock();
+
 	/* If decoder was initialized before, delete old instance */
 	if (newsdec != NULL)
 		NEWS_SVC_DEC_deleteDec(newsdec);
@@ -70,6 +72,8 @@ void CJournaline::ResetOpenJournalineDecoder()
 	dgdec = DAB_DATAGROUP_DECODER_createDec(dg_cb, this);
 	newsdec = NEWS_SVC_DEC_createDec(obj_avail_cb, max_memory, &max_objects,
 		extended_header_len, this);
+
+   Unlock();
 }
 
 void CJournaline::AddDataUnit(CVector<_BINARY>& vecbiNewData)
@@ -86,7 +90,9 @@ void CJournaline::AddDataUnit(CVector<_BINARY>& vecbiNewData)
 			vecbyData[i] = (_BYTE) vecbiNewData.Separate(BITS_BINARY);
 
 		/* Add new data unit to Journaline decoder library */
+		Lock();
 		DAB_DATAGROUP_DECODER_putData(dgdec, iSizeBytes, &vecbyData[0]);
+		Unlock();
 	}
 }
 
@@ -99,6 +105,7 @@ void CJournaline::GetNews(const int iObjID, CNews& News)
 	NML::RawNewsObject_t rno;
 	unsigned long elen = 0;
 	unsigned long len = 0;
+	Lock();
 	if (NEWS_SVC_DEC_get_news_object(newsdec, iObjID, &elen, &len, rno.nml))
 	{
 		rno.nml_len = static_cast<unsigned short>(len);
@@ -155,4 +162,5 @@ void CJournaline::GetNews(const int iObjID, CNews& News)
 
 		delete nml;
 	}
+	Unlock();
 }

@@ -56,7 +56,7 @@
 ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	QDialog(parent, name, modal, f), Ui_ReceiverSettingsDlg(),
-	DRMReceiver(NRx), Settings(NSettings), loading(true),
+	Receiver(NRx), Settings(NSettings), loading(true),
 	no_rig(NULL), no_port(NULL), last_port(NULL), TimerRig(), iWantedrigModel(0)
 {
     setupUi(this);
@@ -82,7 +82,7 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	bEnableRig = false;
 #endif
 
-	if(DRMReceiver.GetRSIIn()->GetInEnabled())
+	if(Receiver.GetRSIIn()->GetInEnabled())
 		bEnableRig = false;
 
 	if(bEnableRig == false)
@@ -161,12 +161,12 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 ReceiverSettingsDlg::~ReceiverSettingsDlg()
 {
 	double latitude, longitude;
-	DRMReceiver.GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
+	Receiver.GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
 	Settings.Put("Logfile", "latitude", latitude);
 	Settings.Put("Logfile", "longitude", longitude);
 
-	if(DRMReceiver.GetIsWriteWaveFile())
-		DRMReceiver.StopWriteWaveFile();
+	if(Receiver.GetIsWriteWaveFile())
+		Receiver.StopWriteWaveFile();
 
 	Settings.Put("Receiver", "rigpermode", RadioButtonPerMode->isChecked());
 }
@@ -188,7 +188,7 @@ void ReceiverSettingsDlg::hideEvent(QHideEvent*)
  */
 void ReceiverSettingsDlg::setDefaults()
 {
-	CParameter& Parameters = *(DRMReceiver.GetParameters());
+	CParameter& Parameters = *(Receiver.GetParameters());
 
 	/* these won't get into the ini file unless we use GPS or have this: */
 	double latitude = Settings.Get("Logfile", "latitude", 100.0);
@@ -251,12 +251,12 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	loading = true; // prevent executive actions during reading state
 
 	/* Sync ----------------------------------------------------------------- */
-	if (DRMReceiver.GetTimeInt() == CChannelEstimation::TWIENER)
+	if (Receiver.GetTimeInt() == CChannelEstimation::TWIENER)
 		RadioButtonTiWiener->setChecked(true);
 	else
 		RadioButtonTiLinear->setChecked(true);
 
-	switch(DRMReceiver.GetFreqInt())
+	switch(Receiver.GetFreqInt())
 	{
 	case CChannelEstimation::FLINEAR:
 		RadioButtonFreqLinear->setChecked(true);
@@ -268,22 +268,22 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 		RadioButtonFreqWiener->setChecked(true);
 	}
 
-	if (DRMReceiver.GetTiSyncTracType() == CTimeSyncTrack::TSFIRSTPEAK)
+	if (Receiver.GetTiSyncTracType() == CTimeSyncTrack::TSFIRSTPEAK)
 		RadioButtonTiSyncFirstPeak->setChecked(true);
 	else
 		RadioButtonTiSyncEnergy->setChecked(true);
 
 	/* Misc ----------------------------------------------------------------- */
-	CheckBoxRecFilter->setChecked(DRMReceiver.GetRecFilter());
-	CheckBoxModiMetric->setChecked(DRMReceiver.GetIntCons());
-	CheckBoxFlipSpec->setChecked(DRMReceiver.GetFlippedSpectrum());
-	SliderNoOfIterations->setValue(DRMReceiver.GetInitNumIterations());
+	CheckBoxRecFilter->setChecked(Receiver.GetRecFilter());
+	CheckBoxModiMetric->setChecked(Receiver.GetIntCons());
+	CheckBoxFlipSpec->setChecked(Receiver.GetFlippedSpectrum());
+	SliderNoOfIterations->setValue(Receiver.GetInitNumIterations());
 
 	/* Audio ---------------------------------------------------------------- */
 
-	CheckBoxMuteAudio->setChecked(DRMReceiver.GetMuteAudio());
-	CheckBoxReverb->setChecked(DRMReceiver.GetReverbEffect());
-	CheckBoxSaveAudioWave->setChecked(DRMReceiver.GetIsWriteWaveFile());
+	CheckBoxMuteAudio->setChecked(Receiver.GetMuteAudio());
+	CheckBoxReverb->setChecked(Receiver.GetReverbEffect());
+	CheckBoxSaveAudioWave->setChecked(Receiver.GetIsWriteWaveFile());
 
 	/* GPS */
 	ExtractReceiverCoordinates();
@@ -297,11 +297,11 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 // TODO chose one rig for everything or a rig per band
 	map<rig_model_t, CRigCaps> rigs;
 	map<string,Q3ListViewItem*> manufacturers;
-	rig_model_t current = DRMReceiver.GetRigModel();
+	rig_model_t current = Receiver.GetRigModel();
 
-	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
+	CheckBoxEnableSMeter->setChecked(Receiver.GetEnableSMeter());
 
-	DRMReceiver.GetRigList(rigs);
+	Receiver.GetRigList(rigs);
 
 	no_rig = new Q3ListViewItem(new Q3ListViewItem(ListViewRig, tr("[None]")), tr("None"), "0", "");
 	Q3ListViewItem* selected_rig = no_rig;
@@ -356,7 +356,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	/* COM port selection --------------------------------------------------- */
 	no_port = new Q3ListViewItem(ListViewPort, tr("None"), "");
 	map<string,string> ports;
-	DRMReceiver.GetComPortList(ports);
+	Receiver.GetComPortList(ports);
 	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
 	{
 		last_port = new Q3ListViewItem(ListViewPort, p->first.c_str(), p->second.c_str());
@@ -417,7 +417,7 @@ void ReceiverSettingsDlg::OnComboBoxEWHighlighted(int)
 
 void ReceiverSettingsDlg::SetLatLng()
 {
-	CParameter& Parameters = *DRMReceiver.GetParameters();
+	CParameter& Parameters = *Receiver.GetParameters();
 	double latitude, longitude;
 
 	longitude = (LineEditLngDegrees->text().toDouble()
@@ -450,7 +450,7 @@ void ReceiverSettingsDlg::ButtonOkClicked()
 void ReceiverSettingsDlg::ExtractReceiverCoordinates()
 {
 	QString sVal, sDir;
-	CParameter& Parameters = *DRMReceiver.GetParameters();
+	CParameter& Parameters = *Receiver.GetParameters();
 
 	double latitude, longitude;
 
@@ -484,56 +484,56 @@ void ReceiverSettingsDlg::ExtractReceiverCoordinates()
 
 void ReceiverSettingsDlg::OnRadioTimeLinear()
 {
-	if (DRMReceiver.GetTimeInt() != CChannelEstimation::TLINEAR)
-		DRMReceiver.SetTimeInt(CChannelEstimation::TLINEAR);
+	if (Receiver.GetTimeInt() != CChannelEstimation::TLINEAR)
+		Receiver.SetTimeInt(CChannelEstimation::TLINEAR);
 }
 
 void ReceiverSettingsDlg::OnRadioTimeWiener()
 {
-	if (DRMReceiver.GetTimeInt() != CChannelEstimation::TWIENER)
-		DRMReceiver.SetTimeInt(CChannelEstimation::TWIENER);
+	if (Receiver.GetTimeInt() != CChannelEstimation::TWIENER)
+		Receiver.SetTimeInt(CChannelEstimation::TWIENER);
 }
 
 void ReceiverSettingsDlg::OnRadioFrequencyLinear()
 {
-	if (DRMReceiver.GetFreqInt() != CChannelEstimation::FLINEAR)
-		DRMReceiver.SetFreqInt(CChannelEstimation::FLINEAR);
+	if (Receiver.GetFreqInt() != CChannelEstimation::FLINEAR)
+		Receiver.SetFreqInt(CChannelEstimation::FLINEAR);
 }
 
 void ReceiverSettingsDlg::OnRadioFrequencyDft()
 {
-	if (DRMReceiver.GetFreqInt() != CChannelEstimation::FDFTFILTER)
-		DRMReceiver.SetFreqInt(CChannelEstimation::FDFTFILTER);
+	if (Receiver.GetFreqInt() != CChannelEstimation::FDFTFILTER)
+		Receiver.SetFreqInt(CChannelEstimation::FDFTFILTER);
 }
 
 void ReceiverSettingsDlg::OnRadioFrequencyWiener()
 {
-	if (DRMReceiver.GetFreqInt() != CChannelEstimation::FWIENER)
-		DRMReceiver.SetFreqInt(CChannelEstimation::FWIENER);
+	if (Receiver.GetFreqInt() != CChannelEstimation::FWIENER)
+		Receiver.SetFreqInt(CChannelEstimation::FWIENER);
 }
 
 void ReceiverSettingsDlg::OnRadioTiSyncFirstPeak()
 {
-	if (DRMReceiver.GetTiSyncTracType() !=
+	if (Receiver.GetTiSyncTracType() !=
 		CTimeSyncTrack::TSFIRSTPEAK)
 	{
-		DRMReceiver.SetTiSyncTracType(CTimeSyncTrack::TSFIRSTPEAK);
+		Receiver.SetTiSyncTracType(CTimeSyncTrack::TSFIRSTPEAK);
 	}
 }
 
 void ReceiverSettingsDlg::OnRadioTiSyncEnergy()
 {
-	if (DRMReceiver.GetTiSyncTracType() !=
+	if (Receiver.GetTiSyncTracType() !=
 		CTimeSyncTrack::TSENERGY)
 	{
-		DRMReceiver.SetTiSyncTracType(CTimeSyncTrack::TSENERGY);
+		Receiver.SetTiSyncTracType(CTimeSyncTrack::TSENERGY);
 	}
 }
 
 void ReceiverSettingsDlg::OnSliderIterChange(int value)
 {
 	/* Set new value in working thread module */
-	DRMReceiver.SetNumIterations(value);
+	Receiver.SetNumIterations(value);
 
 	/* Show the new value in the label control */
 	TextNumOfIterations->setText(tr("MLC: Number of Iterations: ") +
@@ -543,40 +543,43 @@ void ReceiverSettingsDlg::OnSliderIterChange(int value)
 void ReceiverSettingsDlg::OnCheckFlipSpectrum()
 {
 	/* Set parameter in working thread module */
-	DRMReceiver.SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
+	Receiver.SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
 }
 
 void ReceiverSettingsDlg::OnCheckRecFilter()
 {
 	/* Set parameter in working thread module */
-	DRMReceiver.SetRecFilter(CheckBoxRecFilter->isChecked());
+	Receiver.SetRecFilter(CheckBoxRecFilter->isChecked());
 
 	/* If filter status is changed, a new aquisition is necessary */
-	DRMReceiver.RequestNewAcquisition();
+    CParameter& Parameters = *Receiver.GetParameters();
+    Parameters.Lock();
+    Parameters.RxEvent = Reinitialise;
+    Parameters.Unlock();
 }
 
 void ReceiverSettingsDlg::OnCheckModiMetric()
 {
 	/* Set parameter in working thread module */
-	DRMReceiver.SetIntCons(CheckBoxModiMetric->isChecked());
+	Receiver.SetIntCons(CheckBoxModiMetric->isChecked());
 }
 
 void ReceiverSettingsDlg::OnCheckBoxMuteAudio()
 {
 	/* Set parameter in working thread module */
-	DRMReceiver.MuteAudio(CheckBoxMuteAudio->isChecked());
+	Receiver.MuteAudio(CheckBoxMuteAudio->isChecked());
 }
 
 void ReceiverSettingsDlg::OnCheckBoxReverb()
 {
 	/* Set parameter in working thread module */
-	DRMReceiver.SetReverbEffect(CheckBoxReverb->isChecked());
+	Receiver.SetReverbEffect(CheckBoxReverb->isChecked());
 }
 
 void ReceiverSettingsDlg::OnCheckSaveAudioWAV()
 {
 /*
-	This code is copied in AnalogDemDlg.cpp. If you do changes here, you should
+	This code is copied in AnalogMainWindow.cpp. If you do changes here, you should
 	apply the changes in the other file, too
 */
 	if (CheckBoxSaveAudioWave->isChecked() == true)
@@ -588,7 +591,7 @@ void ReceiverSettingsDlg::OnCheckSaveAudioWAV()
 		/* Check if user not hit the cancel button */
 		if (!strFileName.isNull())
 		{
-			DRMReceiver.StartWriteWaveFile(strFileName.latin1());
+			Receiver.StartWriteWaveFile(strFileName.latin1());
 		}
 		else
 		{
@@ -597,7 +600,7 @@ void ReceiverSettingsDlg::OnCheckSaveAudioWAV()
 		}
 	}
 	else
-		DRMReceiver.StopWriteWaveFile();
+		Receiver.StopWriteWaveFile();
 }
 
 void ReceiverSettingsDlg::OnCheckWriteLog()
@@ -628,14 +631,14 @@ void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
 {
 	if(loading)
 		return;
-	DRMReceiver.SetEnableSMeter(on);
+	Receiver.SetEnableSMeter(on);
 }
 
 void ReceiverSettingsDlg::checkRig(int iID)
 {
 #ifdef HAVE_LIBHAMLIB
 	/* is s-meter enabled ? */
-	CheckBoxEnableSMeter->setChecked(DRMReceiver.GetEnableSMeter());
+	CheckBoxEnableSMeter->setChecked(Receiver.GetEnableSMeter());
 
 	if(iID == 0)
 	{
@@ -645,11 +648,11 @@ void ReceiverSettingsDlg::checkRig(int iID)
 	}
 
 	CRigCaps caps;
-	DRMReceiver.GetRigCaps(iID, caps);
+	Receiver.GetRigCaps(iID, caps);
 	if(caps.hamlib_caps.port_type == RIG_PORT_SERIAL)
 	{
 		ListViewPort->setEnabled(true);
-		string strPort = DRMReceiver.GetRigComPort();
+		string strPort = Receiver.GetRigComPort();
 		if(strPort!="")
 		{
 			last_port = no_port;
@@ -679,21 +682,21 @@ void ReceiverSettingsDlg::OnRigSelected(Q3ListViewItem* item)
 #ifdef HAVE_LIBHAMLIB
 	iWantedrigModel = item->text(1).toInt();
 	CRigCaps caps;
-	DRMReceiver.GetRigCaps(iWantedrigModel, caps);
+	Receiver.GetRigCaps(iWantedrigModel, caps);
 	if(caps.hamlib_caps.port_type == RIG_PORT_SERIAL)
 	{
 		ListViewPort->setEnabled(true);
 		if(last_port == NULL || last_port == no_port)
 			return;
 		/*
-		string strPort = DRMReceiver.GetRigComPort();
+		string strPort = Receiver.GetRigComPort();
 		if(last_port == NULL || last_port == no_port)
 		{
 			last_port = ListViewPort->firstChild();
 		}
 		if(strPort=="")
 		{
-			DRMReceiver.SetRigComPort(last_port->text(1).latin1());
+			Receiver.SetRigComPort(last_port->text(1).latin1());
 		}
 		else
 		{
@@ -705,15 +708,15 @@ void ReceiverSettingsDlg::OnRigSelected(Q3ListViewItem* item)
 			}
 		}
 		*/
-		DRMReceiver.SetRigComPort(last_port->text(1).latin1());
+		Receiver.SetRigComPort(last_port->text(1).latin1());
 		ListViewPort->ensureItemVisible(last_port);
 		ListViewPort->setSelected(last_port, true);
 	}
 
 	if(RadioButtonAll->isChecked())
-		DRMReceiver.SetRigModelForAllModes(iWantedrigModel);
+		Receiver.SetRigModelForAllModes(iWantedrigModel);
 	else
-		DRMReceiver.SetRigModel(iWantedrigModel);
+		Receiver.SetRigModel(iWantedrigModel);
 
 	TimerRig.start(500);
 #endif
@@ -722,12 +725,12 @@ void ReceiverSettingsDlg::OnRigSelected(Q3ListViewItem* item)
 void ReceiverSettingsDlg::OnTimerRig()
 {
 #ifdef HAVE_LIBHAMLIB
-	if(DRMReceiver.GetRigChangeInProgress())
+	if(Receiver.GetRigChangeInProgress())
 		return;
 
 	TimerRig.stop();
 
-	rig_model_t current = DRMReceiver.GetRigModel();
+	rig_model_t current = Receiver.GetRigModel();
 	if(current == iWantedrigModel)
 	{
 		checkRig(current);
@@ -749,7 +752,7 @@ void ReceiverSettingsDlg::OnComPortSelected(Q3ListViewItem* item)
 	string s = item->text(1).latin1();
 	last_port = item;
 #ifdef HAVE_LIBHAMLIB
-	DRMReceiver.SetRigComPort(s);
+	Receiver.SetRigComPort(s);
 #endif
 }
 

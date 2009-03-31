@@ -570,26 +570,40 @@ class CMOTDABDec : public DataApplication
 
     TTransportID GetNextTid ()
     {
+        TTransportID id = -1;
+        Lock();
         if (!qiNewObjects.empty())
         {
             TTransportID firstNew = qiNewObjects.front();
             qiNewObjects.pop();
-            return firstNew;
+            id = firstNew;
         }
-        return -1;
+        Unlock();
+        return id;
     }
 
-    CMOTObject& GetObject (TTransportID TransportID)
+    CMOTObject GetObject (TTransportID TransportID)
     {
-        return MOTCarousel[TransportID];
+        Lock();
+        CMOTObject r = MOTCarousel[TransportID];
+        Unlock();
+        return r;
     }
 
-    void GetDirectory (CMOTDirectory & MOTDirectoryOut)
+    void GetDirectory (CMOTDirectory& MOTDirectoryOut)
     {
+        Lock();
         MOTDirectoryOut = MOTDirectory;
+        Unlock();
     }
 
-    bool NewObjectAvailable () { return qiNewObjects.empty() == false; }
+    bool NewObjectAvailable ()
+    {
+        Lock();
+        bool b = qiNewObjects.empty() == false;
+        Unlock();
+        return b;
+    }
 
     /* push from lower level */
     void AddDataUnit (CVector < _BINARY > &vecbiNewData);

@@ -190,7 +190,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 // the first "old pilots" were stored. Also, an "initial frequecy offset
 // estimate" should be made and rFreqOffsetTrack should be set to this value!
 
-			if ((ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_D) &&
+			if ((ReceiverParam.Channel.eRobustness == RM_ROBUSTNESS_MODE_D) &&
 				(i < 2))
 			{
 				cOldFreqPil[i] = -(*pvecInputData)[iPosFreqPil[i]];
@@ -316,7 +316,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 
 	/* Init internal parameters from global struct */
 	iNumCarrier = ReceiverParam.CellMappingTable.iNumCarrier;
-	eCurRobMode = ReceiverParam.GetWaveMode();
+	eCurRobMode = ReceiverParam.Channel.eRobustness;
 
 	/* Check if symbol number per frame has changed. If yes, reset the
 	   symbol counter */

@@ -34,7 +34,8 @@
 
 JLViewer::JLViewer(CDRMReceiver& rec, CSettings& s, QWidget* parent,
 		const char* name, Qt::WFlags f):
-		QMainWindow(parent, name, f), Ui_JLViewer(), Timer(), receiver(rec), settings(s)
+		QMainWindow(parent, name, f), Ui_JLViewer(), Timer(),
+		receiver(rec), settings(s), decoderSet(false)
 {
     setupUi(this);
 
@@ -102,8 +103,12 @@ void JLViewer::showEvent(QShowEvent*)
 
     CDataDecoder* dec = receiver.GetDataDecoder();
 	CJournaline *decoder = (CJournaline*)dec->getApplication(service.iPacketID);
-
-    textBrowser->setDecoder(decoder);
+	if(decoder)
+	{
+        textBrowser->setDecoder(decoder);
+        decoderSet = true;
+	}
+	textBrowser->setSource(QUrl("0"));
 
 	/* Add the service description into the dialog caption */
 	QString strTitle = tr("Journaline");
@@ -132,8 +137,6 @@ void JLViewer::showEvent(QShowEvent*)
             strTitle += " [" + strLabel + strServiceID + "]";
     }
 	setCaption(strTitle);
-
-	textBrowser->setSource(QUrl("0"));
 
 	/* Update window */
 	OnTimer();
@@ -173,7 +176,23 @@ void JLViewer::OnTimer()
     CParameter& Parameters = *receiver.GetParameters();
 	Parameters.Lock();
 	ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
+
+    /* Get current data service */
+    int shortID = Parameters.GetCurSelDataService();
+    CService service = Parameters.Service[shortID];
 	Parameters.Unlock();
+
+    if(!decoderSet)
+    {
+        CDataDecoder* dec = receiver.GetDataDecoder();
+        CJournaline *decoder = (CJournaline*)dec->getApplication(service.iPacketID);
+        if(decoder)
+        {
+            textBrowser->setDecoder(decoder);
+            decoderSet = true;
+        }
+    }
+
 	switch(status)
 	{
 	case NOT_PRESENT:

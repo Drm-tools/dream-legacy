@@ -142,14 +142,14 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 void CDownstreamDI::SendLockedFrame(CParameter& Parameter)
 {
 
-	TagItemGeneratorRobMod.GenTag(Parameter.GetWaveMode());
-	TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode());
+	TagItemGeneratorRobMod.GenTag(Parameter.Channel.eRobustness);
+	TagItemGeneratorRxDemodMode.GenTag(Parameter.eModulation);
 
 	/* SDC channel information tag must be created here because it must be sent
 	   with each AF packet */
 	TagItemGeneratorSDCChanInf.GenTag(Parameter);
 
-    if(Parameter.pDRMRec)
+    if(Parameter.eModulation != NONE)
     {
         bool bValid;
         _REAL rVal;
@@ -212,35 +212,32 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 	/* mode is unknown - make empty robm tag */
 	TagItemGeneratorRobMod.GenEmptyTag();
 
-   if(Parameter.pDRMRec)
-   {
-        TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode());
+    TagItemGeneratorRxDemodMode.GenTag(Parameter.eModulation);
 
-        TagItemGeneratorSDCChanInf.GenEmptyTag();
+    TagItemGeneratorSDCChanInf.GenEmptyTag();
 
-        TagItemGeneratorReceiverStatus.GenTag(Parameter);
+    TagItemGeneratorReceiverStatus.GenTag(Parameter);
 
-        TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
+    TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
 
-        TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
+    TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
 
-        TagItemGeneratorPilots.GenEmptyTag();
+    TagItemGeneratorPilots.GenEmptyTag();
 
-        TagItemGeneratorRNIP.GenTag(true,
-            Parameter.Measurements.rMaxPSDFreq,
-            Parameter.Measurements.rMaxPSDwrtSig
-        );
+    TagItemGeneratorRNIP.GenTag(true,
+        Parameter.Measurements.rMaxPSDFreq,
+        Parameter.Measurements.rMaxPSDwrtSig
+    );
 
-        /* Generate some other tags */
-        TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
-        TagItemGeneratorRxFrequency.GenTag(true, Parameter.GetFrequency()); /* rfre */
-        TagItemGeneratorRxActivated.GenTag(true); /* ract */
-        _REAL rSigStr;
-        bool bValid = Parameter.Measurements.SigStrstat.getCurrent(rSigStr);
-        TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr);
+    /* Generate some other tags */
+    TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
+    TagItemGeneratorRxFrequency.GenTag(true, Parameter.GetFrequency()); /* rfre */
+    TagItemGeneratorRxActivated.GenTag(true); /* ract */
+    _REAL rSigStr;
+    bool bValid = Parameter.Measurements.SigStrstat.getCurrent(rSigStr);
+    TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr);
 
-        TagItemGeneratorGPS.GenTag(true, Parameter.GPSData);	/* rgps */
-   }
+    TagItemGeneratorGPS.GenTag(true, Parameter.GPSData);	/* rgps */
 
 	GenDIPacket();
 }
@@ -262,7 +259,7 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 	TagItemGeneratorRobMod.GenEmptyTag();
 
 	/* demod mode */
-	TagItemGeneratorRxDemodMode.GenTag(Parameter.GetReceiverMode());
+	TagItemGeneratorRxDemodMode.GenTag(Parameter.eModulation);
 
 	TagItemGeneratorSDCChanInf.GenEmptyTag();
 
@@ -719,7 +716,7 @@ void CUpstreamDI::SetFrequency(int iNewFreqkHz)
 	sink.TransmitPacket(TagPacketGenerator);
 }
 
-void CUpstreamDI::SetReceiverMode(EDemodulationType eNewMode)
+void CUpstreamDI::SetReceiverMode(EModulationType eNewMode)
 {
 	if(bMDIOutEnabled==false)
 		return;

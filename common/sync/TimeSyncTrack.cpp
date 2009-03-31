@@ -454,7 +454,7 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 
 	/* Weights for peak bound calculation, in Eq. (19), special values for
 	   robustness mode D! */
-	if (Parameter.GetWaveMode() == RM_ROBUSTNESS_MODE_D)
+	if (Parameter.Channel.eRobustness == RM_ROBUSTNESS_MODE_D)
 	{
 		rConst1 = pow((_REAL) 10.0, (_REAL) -TETA1_DIST_FROM_MAX_DB_RMD / 10);
 		rConst2 = pow((_REAL) 10.0, (_REAL) TETA2_DIST_FROM_MIN_DB_RMD / 10);

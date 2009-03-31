@@ -29,7 +29,6 @@
 #include <iostream>
 #include <sstream>
 #include "util/Settings.h"
-#include "Parameter.h"
 #include "DrmEncoder.h"
 #include "datadecoding/MOTSlideShow.h"
 
@@ -191,8 +190,8 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 	if (bIsAudio == true)
 	{
 		/* Audio */
-		Parameters.iNumAudioService = 1;
-		Parameters.iNumDataService = 0;
+		Parameters.Channel.iNumAudioServices = 1;
+		Parameters.Channel.iNumDataServices = 0;
 
 		Parameters.Service[0].eAudDataFlag = SF_AUDIO;
 		Parameters.Service[0].iAudioStream = 0;
@@ -219,8 +218,8 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 	else
 	{
 		/* Data */
-		Parameters.iNumAudioService = 0;
-		Parameters.iNumDataService = 1;
+		Parameters.Channel.iNumAudioServices = 0;
+		Parameters.Channel.iNumDataServices = 1;
 
 		Parameters.Service[0].eAudDataFlag = SF_DATA;
 		Parameters.Service[0].iDataStream = 0;
@@ -260,8 +259,8 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 	   Available bandwidths:
 	   SO_0: 4.5 kHz, SO_1: 5 kHz, SO_2: 9 kHz, SO_3: 10 kHz, SO_4: 18 kHz,
 	   SO_5: 20 kHz */
-	Parameters.SetWaveMode(ERobMode(s.Get("Encoder", "robm", RM_ROBUSTNESS_MODE_B)));
-	Parameters.SetSpectrumOccup(ESpecOcc(s.Get("Encoder", "spectrum_occupancy", SO_3)));
+	Parameters.Channel.eRobustness = ERobMode(s.Get("Encoder", "robm", RM_ROBUSTNESS_MODE_B));
+	Parameters.Channel.eSpectrumOccupancy = ESpecOcc(s.Get("Encoder", "spectrum_occupancy", SO_3));
 
 	/* Protection levels for MSC. Depend on the modulation scheme. Look at
 	   TableMLC.h, iCodRateCombMSC16SM, iCodRateCombMSC64SM,
@@ -272,20 +271,20 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 
 	/* Interleaver mode of MSC service. Long interleaving (2 s): SI_LONG,
 	   short interleaving (400 ms): SI_SHORT */
-	Parameters.eSymbolInterlMode
-		= CParameter::ESymIntMod(s.Get("Encoder", "interleaving", CParameter::SI_LONG));
+	Parameters.Channel.eInterleaverDepth
+		= ESymIntMod(s.Get("Encoder", "interleaving", SI_LONG));
 
 	/* MSC modulation scheme. Available modes:
 	   16-QAM standard mapping (SM): CS_2_SM,
 	   64-QAM standard mapping (SM): CS_3_SM,
 	   64-QAM symmetrical hierarchical mapping (HMsym): CS_3_HMSYM,
 	   64-QAM mixture of the previous two mappings (HMmix): CS_3_HMMIX */
-	Parameters.eMSCCodingScheme = ECodScheme(s.Get("Encoder", "mscmod", CS_3_SM));
+	Parameters.Channel.eMSCmode = ECodScheme(s.Get("Encoder", "mscmod", CS_3_SM));
 
 	/* SDC modulation scheme. Available modes:
 	   4-QAM standard mapping (SM): CS_1_SM,
 	   16-QAM standard mapping (SM): CS_2_SM */
-	Parameters.eSDCCodingScheme = ECodScheme(s.Get("Encoder", "sdcmod", CS_2_SM));
+	Parameters.Channel.eSDCmode = ECodScheme(s.Get("Encoder", "sdcmod", CS_2_SM));
 
 	iSoundInDev = s.Get("Encoder", "snddevin", -1);
 	strInputFileName = s.Get("Encoder", "inputfile", string(""));
@@ -336,14 +335,14 @@ CDRMEncoder::SaveSettings(CSettings& s, CParameter& Parameters)
 	s.Put("Encoder", "ISOlanguage", Parameters.Service[0].strLanguageCode);
 	s.Put("Encoder", "ISOCountry", Parameters.Service[0].strCountryCode);
 
-	s.Put("Encoder", "robm", Parameters.GetWaveMode());
-	s.Put("Encoder", "spectrum_occupancy", Parameters.GetSpectrumOccup());
+	s.Put("Encoder", "robm", Parameters.Channel.eRobustness);
+	s.Put("Encoder", "spectrum_occupancy", Parameters.Channel.eSpectrumOccupancy);
 	s.Put("Encoder", "PartAProt", Parameters.MSCPrLe.iPartA);
 	s.Put("Encoder", "PartBProt", Parameters.MSCPrLe.iPartB);
 	s.Put("Encoder", "HierarchicalProt", Parameters.MSCPrLe.iHierarch);
-	s.Put("Encoder", "interleaving", Parameters.eSymbolInterlMode);
-	s.Put("Encoder", "mscmod", Parameters.eMSCCodingScheme);
-	s.Put("Encoder", "sdcmod", Parameters.eSDCCodingScheme);
+	s.Put("Encoder", "interleaving", Parameters.Channel.eInterleaverDepth);
+	s.Put("Encoder", "mscmod", Parameters.Channel.eMSCmode);
+	s.Put("Encoder", "sdcmod", Parameters.Channel.eSDCmode);
 	s.Put("Encoder", "snddevin", iSoundInDev);
 	s.Put("Encoder", "inputfile", strInputFileName);
 	for(i=0; i<Parameters.Stream.size(); i++)

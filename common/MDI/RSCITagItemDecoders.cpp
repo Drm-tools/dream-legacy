@@ -382,19 +382,26 @@ void CTagItemDecoderCdmo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	if (pDRMReceiver == NULL)
 		return;
 
+    CParameter& Parameters = *(pDRMReceiver->GetParameters());
+    Parameters.Lock();
+    EModulationType eNew = DRM;
 	if(s == "drm_")
-		pDRMReceiver->SetReceiverMode(DRM);
+        eNew = DRM;
 	if(s == "am__")
-		pDRMReceiver->SetReceiverMode(AM);
+        eNew = AM;
 	else if (s == "lsb_")
-		pDRMReceiver->SetReceiverMode(LSB);
+        eNew = LSB;
 	else if (s == "usb_")
-		pDRMReceiver->SetReceiverMode(USB);
+        eNew = USB;
 	else if (s == "wbfm")
-		pDRMReceiver->SetReceiverMode(WBFM);
+        eNew = WBFM;
 	else if (s == "nbfm")
-		pDRMReceiver->SetReceiverMode(NBFM);
+        eNew = NBFM;
 		// synchronous AM?
+    if(Parameters.eModulation != eNew)
+        Parameters.RxEvent = ChannelReconfiguration;
+    Parameters.eModulation = eNew;
+    Parameters.Unlock();
 
 }
 

@@ -134,6 +134,9 @@ common/chanest/TimeLinear.h   \
 common/chanest/TimeWiener.h   \
 common/datadecoding/DABMOT.h   \
 common/datadecoding/DataDecoder.h   \
+common/datadecoding/DataApplication.h   \
+common/datadecoding/DataEncoder.h   \
+common/datadecoding/EPGDecoder.h   \
 common/datadecoding/epg/EPG.h   \
 common/datadecoding/epg/epgdec.h   \
 common/datadecoding/epg/epgutil.h   \
@@ -165,11 +168,12 @@ common/GlobalDefinitions.h   \
 common/GPSData.h   \
 common/GPSReceiver.h   \
 common/GUI-QT/RxApp.h   \
-common/GUI-QT/AnalogDemDlg.h   \
 common/GUI-QT/DialogUtil.h   \
 common/GUI-QT/DRMPlot.h   \
 common/GUI-QT/EPGDlg.h   \
+common/GUI-QT/AnalogMainWindow.h   \
 common/GUI-QT/DRMMainWindow.h   \
+common/GUI-QT/TransmitterMainWindow.h   \
 common/GUI-QT/LiveScheduleDlg.h   \
 common/GUI-QT/LatLongEditDlg.h \
 common/GUI-QT/MultColorLED.h   \
@@ -181,7 +185,6 @@ common/GUI-QT/ReceiverSettingsDlg.h \
 common/GUI-QT/Loghelper.h \
 common/GUI-QT/StationsDlg.h   \
 common/GUI-QT/SystemEvalDlg.h   \
-common/GUI-QT/TransmDlg.h   \
 common/GUI-QT/jlbrowser.h   \
 common/GUI-QT/bwsbrowser.h   \
 common/InputResample.h   \
@@ -234,6 +237,7 @@ common/sound.h   \
 common/sound/soundnull.h   \
 common/sound/soundfile.h   \
 common/sourcedecoders/AudioSourceDecoder.h   \
+common/sourcedecoders/AudioSourceEncoder.h   \
 common/sync/FreqSyncAcq.h   \
 common/sync/SyncUsingPil.h   \
 common/sync/TimeSync.h   \
@@ -275,6 +279,8 @@ common/chanest/TimeLinear.cpp   \
 common/chanest/TimeWiener.cpp   \
 common/datadecoding/DABMOT.cpp   \
 common/datadecoding/DataDecoder.cpp   \
+common/datadecoding/DataEncoder.cpp   \
+common/datadecoding/EPGDecoder.cpp   \
 common/datadecoding/epg/EPG.cpp   \
 common/datadecoding/epg/epgdec.cpp   \
 common/datadecoding/epg/epgutil.cpp   \
@@ -301,11 +307,12 @@ common/FAC/FAC.cpp   \
 common/GPSData.cpp   \
 common/GPSReceiver.cpp   \
 common/GUI-QT/RxApp.cpp  \
-common/GUI-QT/AnalogDemDlg.cpp   \
 common/GUI-QT/DialogUtil.cpp   \
 common/GUI-QT/DRMPlot.cpp   \
 common/GUI-QT/EPGDlg.cpp   \
+common/GUI-QT/AnalogMainWindow.cpp   \
 common/GUI-QT/DRMMainWindow.cpp   \
+common/GUI-QT/TransmitterMainWindow.cpp   \
 common/GUI-QT/LiveScheduleDlg.cpp   \
 common/GUI-QT/main.cpp   \
 common/GUI-QT/LatLongEditDlg.cpp \
@@ -318,7 +325,6 @@ common/GUI-QT/ReceiverSettingsDlg.cpp \
 common/GUI-QT/Loghelper.cpp \
 common/GUI-QT/StationsDlg.cpp   \
 common/GUI-QT/SystemEvalDlg.cpp   \
-common/GUI-QT/TransmDlg.cpp   \
 common/GUI-QT/jlbrowser.cpp   \
 common/GUI-QT/bwsbrowser.cpp   \
 common/InputResample.cpp   \
@@ -367,6 +373,7 @@ common/SDC/SDCTransmit.cpp   \
 common/SimulationParameters.cpp   \
 common/sound/soundfile.cpp   \
 common/sourcedecoders/AudioSourceDecoder.cpp   \
+common/sourcedecoders/AudioSourceEncoder.cpp   \
 common/sync/FreqSyncAcq.cpp   \
 common/sync/SyncUsingPil.cpp   \
 common/sync/TimeSync.cpp   \

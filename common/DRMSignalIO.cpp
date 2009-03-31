@@ -502,7 +502,7 @@ void CReceiveData::PutPSD(CParameter &ReceiverParam)
 
         //_REAL rIFCentreFrequency = ReceiverParam.FrontEndParameters.rIFCentreFreq;
 
-        ESpecOcc eSpecOcc = ReceiverParam.GetSpectrumOccup();
+        ESpecOcc eSpecOcc = ReceiverParam.Channel.eSpectrumOccupancy;
         if (eSpecOcc == SO_4 || eSpecOcc == SO_5)
         {
             iStartBin = 0;
@@ -527,7 +527,6 @@ void CReceiveData::PutPSD(CParameter &ReceiverParam)
         iEndBin = iVecSize-1;
 	}
 
-    // TODO - see if we actually ever need this complicated loop
 	vector<_REAL> psd(iVecSize);
 	for (i=iStartIndex, j=iStartBin; j<=iEndBin; i++,j++)
 		psd[i] = vecrData[j];
@@ -630,7 +629,7 @@ void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam,
 	}
 
 	/* Add on the calibration factor for the current mode */
-	switch(ReceiverParam.GetReceiverMode())
+	switch(ReceiverParam.eModulation)
 	{
 	case DRM:
 		rCorrection += ReceiverParam.FrontEndParameters.rCalFactorDRM;
@@ -662,7 +661,7 @@ void CReceiveData::CalculatePSDInterferenceTag(CParameter &ReceiverParam,
 	_REAL rFreqSearchMin = rIFCentreFrequency - _REAL(RNIP_SEARCH_RANGE_NARROW);
 	_REAL rFreqSearchMax = rIFCentreFrequency + _REAL(RNIP_SEARCH_RANGE_NARROW);
 
-	ESpecOcc eSpecOcc = ReceiverParam.GetSpectrumOccup();
+	ESpecOcc eSpecOcc = ReceiverParam.Channel.eSpectrumOccupancy;
 
 	if (ReceiverParam.GetAcquiState() == AS_WITH_SIGNAL &&
 		(eSpecOcc == SO_4 || eSpecOcc == SO_5) )

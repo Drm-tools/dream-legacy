@@ -595,6 +595,7 @@ printf("\n");
 void
 CMOTDABDec::DeliverIfReady(TTransportID TransportID)
 {
+    Lock();
 	CMOTObject & o = MOTCarousel[TransportID];
 	if ((!o.bComplete) && o.bHasHeader && o.Body.Ready())
 	{
@@ -608,6 +609,7 @@ CMOTDABDec::DeliverIfReady(TTransportID TransportID)
 		//cout << o << endl;;
 		qiNewObjects.push(TransportID);
 	}
+    Unlock();
 }
 
 void

@@ -57,14 +57,14 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 
 	/* Service parameters (only use service 0) ------------------------------- */
 	/* Data service */
-	Param.SetNumOfServices(0,1);
-
-	Param.SetAudDataFlag(0,  SF_DATA);
+	Param.Channel.iNumAudioServices =0;
+	Param.Channel.iNumDataServices = 1;
 
 	CDataParam DataParam;
 	DataParam.ePacketModInd = PM_SYNCHRON_STR_MODE;
-	Param.SetDataParam(0, DataParam);
+	Param.DataParam[0][0] = DataParam;
 
+    Param.Service[0].eAudDataFlag = SF_DATA;
 	Param.Service[0].iDataStream = 0;
 
 	//Param.SetCurSelDataService(1); /* Service ID must be set for activation */
@@ -82,26 +82,23 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	Param.iUTCHour = 0;
 	Param.iUTCMin = 0;
 
-	/* Frame IDs */
-	Param.iFrameIDTransm = 0;
-	Param.iFrameIDReceiv = 0;
-
 	/* Initialize synchronization parameters */
 	Param.rResampleOffset = (_REAL) 0.0;
 	Param.rFreqOffsetAcqui = (_REAL) VIRTUAL_INTERMED_FREQ / SOUNDCRD_SAMPLE_RATE;
 	Param.rFreqOffsetTrack = (_REAL) 0.0;
 	Param.iTimingOffsTrack = 0;
 
-	Param.SetWaveMode(RM_ROBUSTNESS_MODE_B);
-	Param.SetSpectrumOccup(SO_3);
+	Param.Channel.eRobustness = RM_ROBUSTNESS_MODE_B;
+	Param.Channel.eSpectrumOccupancy = SO_3;
+	Param.Channel.iFrameId = 0;
 
 	Param.MSCPrLe.iPartA = 1;
 	Param.MSCPrLe.iPartB = 1;
 	Param.MSCPrLe.iHierarch = 0;
 
-	Param.eSymbolInterlMode = CParameter::SI_SHORT;
-	Param.eMSCCodingScheme = CS_3_SM;
-	Param.eSDCCodingScheme = CS_2_SM;
+	Param.Channel.eInterleaverDepth = SI_SHORT;
+	Param.Channel.eMSCmode = CS_3_SM;
+	Param.Channel.eSDCmode = CS_2_SM;
 
 	/* DRM channel parameters */
 	Param.iDRMChannelNum = 1;

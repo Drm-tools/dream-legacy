@@ -28,6 +28,7 @@
 
 #include "jlbrowser.h"
 #include "../datadecoding/Journaline.h"
+#include <iostream>
 
 JLBrowser::JLBrowser(QWidget * parent)
 : QTextBrowser(parent),decoder(NULL),strFhGIISText(),strJournalineHeadText(),
@@ -52,7 +53,9 @@ JLBrowser::JLBrowser(QWidget * parent)
 bool JLBrowser::changed()
 {
 	if(decoder==NULL)
+	{
         return false;
+	}
 
     int JourID = source().toString().toInt();
 
@@ -89,44 +92,45 @@ bool JLBrowser::changed()
 
 QVariant JLBrowser::loadResource( int type, const QUrl & name )
 {
-	/* Get news from actual Journaline decoder */
-	if(decoder==NULL)
-        return QVariant::Invalid;
+	QString strItems, strTitle;
 
-    int JourID = name.toString().toInt();
-
-	CNews News;
-	decoder->GetNews(JourID, News);
-
-	/* Decode UTF-8 coding for title */
-	QString strTitle = QString().fromUtf8(News.sTitle.c_str());
-
-	QString strItems = "";
-	ready = 0;
-	total = News.vecItem.Size();
-	for (int i = 0; i < total; i++)
+	if(decoder)
 	{
-		QString strCurItem = QString().fromUtf8(News.vecItem[i].sText.c_str());
+        /* Get news from actual Journaline decoder */
+        int JourID = name.toString().toInt();
 
-		/* Replace \n by html command <br> */
-		strCurItem = strCurItem.replace(QRegExp("\n"), "<br>");
+        CNews News;
+        decoder->GetNews(JourID, News);
 
-		switch(News.vecItem[i].iLink)
-		{
-        case JOURNALINE_IS_NO_LINK: /* Only text, no link */
-			strItems += strCurItem + QString("<br>");
-			break;
-        case JOURNALINE_LINK_NOT_ACTIVE:
-			/* Un-ordered list item without link */
-			strItems += QString("<li>") + strCurItem + QString("</li>");
-			break;
-        default:
-            ready++;
-            QString strLinkStr = QString("%1").arg(News.vecItem[i].iLink);
-            /* Un-ordered list item with link */
-            strItems += QString("<li><a href=\"") + strLinkStr +
-                QString("\">") + strCurItem + QString("</a></li>");
-		}
+        /* Decode UTF-8 coding for title */
+        strTitle = QString().fromUtf8(News.sTitle.c_str());
+
+        ready = 0;
+        total = News.vecItem.Size();
+        for (int i = 0; i < total; i++)
+        {
+            QString strCurItem = QString().fromUtf8(News.vecItem[i].sText.c_str());
+
+            /* Replace \n by html command <br> */
+            strCurItem = strCurItem.replace(QRegExp("\n"), "<br>");
+
+            switch(News.vecItem[i].iLink)
+            {
+            case JOURNALINE_IS_NO_LINK: /* Only text, no link */
+                strItems += strCurItem + QString("<br>");
+                break;
+            case JOURNALINE_LINK_NOT_ACTIVE:
+                /* Un-ordered list item without link */
+                strItems += QString("<li>") + strCurItem + QString("</li>");
+                break;
+            default:
+                ready++;
+                QString strLinkStr = QString("%1").arg(News.vecItem[i].iLink);
+                /* Un-ordered list item with link */
+                strItems += QString("<li><a href=\"") + strLinkStr +
+                    QString("\">") + strCurItem + QString("</a></li>");
+            }
+        }
 	}
 
 	return

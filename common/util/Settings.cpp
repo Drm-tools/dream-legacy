@@ -543,7 +543,7 @@ CSettings::ParseArguments(int argc, char **argv)
 string
 CSettings::UsageArguments(char **argv)
 {
-// TODO: Use macro definitions for help text, too (instead of hard-coded numbers)!
+// TODO: Internationalisation
 
 	return
 		"Usage: " + string(argv[0]) + " [option] [argument]\n"

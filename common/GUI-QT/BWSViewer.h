@@ -51,6 +51,7 @@ protected:
 	CDRMReceiver&           receiver;
 	CSettings&              settings;
 	QString                 homeUrl;
+	bool                    decoderSet;
 
 public slots:
 	void OnTimer();

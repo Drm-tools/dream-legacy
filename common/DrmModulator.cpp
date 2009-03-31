@@ -69,10 +69,10 @@ void
 CDRMModulator::Init(CParameter& Parameter)
 {
 	cerr << "Modulator initialised with"
-		<< " MSC mode " << int(Parameter.eMSCCodingScheme)
-		<< " SDC mode " << int(Parameter.eSDCCodingScheme)
-		<< " robm " << int(Parameter.GetWaveMode())
-		<< " spectrum occupancy " << int(Parameter.GetSpectrumOccup()) << endl;
+		<< " MSC mode " << int(Parameter.Channel.eMSCmode)
+		<< " SDC mode " << int(Parameter.Channel.eSDCmode)
+		<< " robm " << int(Parameter.Channel.eRobustness)
+		<< " spectrum occupancy " << int(Parameter.Channel.eSpectrumOccupancy) << endl;
 
 	/* Defines number of cells, important! */
 	OFDMCellMapping.Init(Parameter, CarMapBuf);

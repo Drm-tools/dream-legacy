@@ -125,7 +125,7 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 	}
 	else
 	{
-		if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_A)
+		if (ReceiverParam.Channel.eRobustness == RM_ROBUSTNESS_MODE_A)
 		{
 			iNumDCCarriers = 3;
 			iStartDCCar = abs(ReceiverParam.CellMappingTable.iCarrierKmin) - 1;
@@ -144,7 +144,7 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 	iStartCnt = 20;
 
 	/* Additional delay from long interleaving has to be considered */
-	if (ReceiverParam.GetInterleaverDepth() == CParameter::SI_LONG)
+	if (ReceiverParam.Channel.eInterleaverDepth == SI_LONG)
 		iStartCnt += ReceiverParam.CellMappingTable.iNumSymPerFrame * D_LENGTH_LONG_INTERL;
 
 

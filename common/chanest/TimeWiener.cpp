@@ -271,7 +271,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	GenFiltPhaseTable(ReceiverParam.CellMappingTable.matiMapTab, iNumCarrier, iNumSymPerFrame, iScatPilTimeInt);
 
 	/* Init length of filter and maximum value of sigma (doppler) */
-	switch (ReceiverParam.GetWaveMode())
+	switch (ReceiverParam.Channel.eRobustness)
 	{
 	case RM_ROBUSTNESS_MODE_A:
 		iLengthWiener = LEN_WIENER_FILT_TIME_RMA;

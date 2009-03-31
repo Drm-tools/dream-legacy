@@ -26,41 +26,18 @@
  *
 \******************************************************************************/
 
-#include "TransmDlg.h"
-#include <q3buttongroup.h>
-#include <q3multilineedit.h>
-#include <q3listview.h>
-#include <q3filedialog.h>
-#include <q3progressbar.h>
-
-#include <QPushButton>
-#include <QString>
-#include <QLabel>
-#include <QRadioButton>
-#include <QCheckBox>
-#include <QLineEdit>
-#include <QTabWidget>
-#include <QComboBox>
-#include <QString>
-#include <QFileInfo>
-#include <QStringList>
-#include <QMenuBar>
-#include <QLayout>
-#include <QThread>
-#include <QMessageBox>
+#include "TransmitterMainWindow.h"
 #include <QHostAddress>
+#include <q3filedialog.h>
+#include <QMessageBox>
+#include <QFileInfo>
 #include <QCloseEvent>
-#include <QWhatsThis>
-#include <qwt_thermo.h>
-
 #include "DialogUtil.h"
 #include "../DrmTransmitter.h"
-#include "../Parameter.h"
-#include "../util/Settings.h"
 #include <sstream>
 #include <fstream>
 
-TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
+TransmitterMainWindow::TransmitterMainWindow(CDRMTransmitterInterface& tx, CSettings& NSettings,
 	QWidget* parent, const char* name, Qt::WFlags f
 	):
 	QMainWindow(parent, name, f),
@@ -421,12 +398,12 @@ TransmDialog::TransmDialog(CDRMTransmitterInterface& tx, CSettings& NSettings,
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
-TransmDialog::~TransmDialog()
+TransmitterMainWindow::~TransmitterMainWindow()
 {
 }
 
 void
-TransmDialog::closeEvent(QCloseEvent* ce)
+TransmitterMainWindow::closeEvent(QCloseEvent* ce)
 {
 	/* Stop transmitter if needed */
 	if (bIsStarted == true)
@@ -436,12 +413,12 @@ TransmDialog::closeEvent(QCloseEvent* ce)
 	ce->accept();
 }
 
-void TransmDialog::OnButtonClose()
+void TransmitterMainWindow::OnButtonClose()
 {
     this->close(false);
 }
 
-void TransmDialog::OnTimer()
+void TransmitterMainWindow::OnTimer()
 {
 	/* Set value for input level meter (only in "start" mode) */
 	if (bIsStarted == true)
@@ -484,7 +461,7 @@ void TransmDialog::OnTimer()
 }
 
 void
-TransmDialog::GetFromTransmitter()
+TransmitterMainWindow::GetFromTransmitter()
 {
 	switch(DRMTransmitter.GetOperatingMode())
 	{
@@ -521,10 +498,10 @@ TransmDialog::GetFromTransmitter()
 }
 
 void
-TransmDialog::GetChannel()
+TransmitterMainWindow::GetChannel()
 {
 	/* Robustness mode */
-	switch (DRMTransmitter.GetParameters()->GetWaveMode())
+	switch (DRMTransmitter.GetParameters()->Channel.eRobustness)
 	{
 	case RM_ROBUSTNESS_MODE_A:
 		RadioButtonRMA->setChecked(true);
@@ -547,7 +524,7 @@ TransmDialog::GetChannel()
 	}
 
 	/* Bandwidth */
-	switch (DRMTransmitter.GetParameters()->GetSpectrumOccup())
+	switch (DRMTransmitter.GetParameters()->Channel.eSpectrumOccupancy)
 	{
 	case SO_0:
 		RadioButtonBandwidth45->setChecked(true);
@@ -574,18 +551,18 @@ TransmDialog::GetChannel()
 		break;
 	}
 
-	switch (DRMTransmitter.GetParameters()->eSymbolInterlMode)
+	switch (DRMTransmitter.GetParameters()->Channel.eInterleaverDepth)
 	{
-	case CParameter::SI_LONG:
+	case SI_LONG:
 		ComboBoxMSCInterleaver->setCurrentItem(0);
 		break;
 
-	case CParameter::SI_SHORT:
+	case SI_SHORT:
 		ComboBoxMSCInterleaver->setCurrentItem(1);
 		break;
 	}
 
-	switch (DRMTransmitter.GetParameters()->eMSCCodingScheme)
+	switch (DRMTransmitter.GetParameters()->Channel.eMSCmode)
 	{
 	case CS_1_SM:
 		break;
@@ -611,7 +588,7 @@ TransmDialog::GetChannel()
 	UpdateMSCProtLevCombo(); /* options depend on MSC Constellation */
 	ComboBoxMSCProtLev->setCurrentItem(DRMTransmitter.GetParameters()->MSCPrLe.iPartB);
 
-	switch (DRMTransmitter.GetParameters()->eSDCCodingScheme)
+	switch (DRMTransmitter.GetParameters()->Channel.eSDCmode)
 	{
 	case CS_1_SM:
 		ComboBoxSDCConstellation->setCurrentItem(0);
@@ -627,45 +604,45 @@ TransmDialog::GetChannel()
 }
 
 void
-TransmDialog::SetChannel()
+TransmitterMainWindow::SetChannel()
 {
     CParameter& Parameters = *DRMTransmitter.GetParameters();
 	/* Spectrum Occupancy */
 	if(RadioButtonBandwidth45->isChecked())
-		Parameters.SetSpectrumOccup(SO_0);
+		Parameters.Channel.eSpectrumOccupancy = SO_0;
 	if(RadioButtonBandwidth5->isChecked())
-		Parameters.SetSpectrumOccup(SO_1);
+		Parameters.Channel.eSpectrumOccupancy = SO_1;
 	if(RadioButtonBandwidth9->isChecked())
-		Parameters.SetSpectrumOccup(SO_2);
+		Parameters.Channel.eSpectrumOccupancy = SO_2;
 	if(RadioButtonBandwidth10->isChecked())
-		Parameters.SetSpectrumOccup(SO_3);
+		Parameters.Channel.eSpectrumOccupancy = SO_3;
 	if(RadioButtonBandwidth18->isChecked())
-		Parameters.SetSpectrumOccup(SO_4);
+		Parameters.Channel.eSpectrumOccupancy = SO_4;
 	if(RadioButtonBandwidth20->isChecked())
-		Parameters.SetSpectrumOccup(SO_5);
+		Parameters.Channel.eSpectrumOccupancy = SO_5;
 
 	/* MSC Protection Level */
 	CMSCProtLev MSCPrLe;
 	MSCPrLe.iPartB = ComboBoxMSCProtLev->currentItem();
-	Parameters.SetMSCProtLev(MSCPrLe, false);
+	Parameters.MSCPrLe = MSCPrLe;
 
 	/* MSC Constellation Scheme */
 	switch(ComboBoxMSCConstellation->currentItem())
 	{
 	case 0:
-		Parameters.eMSCCodingScheme = CS_2_SM;
+		Parameters.Channel.eMSCmode = CS_2_SM;
 		break;
 
 	case 1:
-		Parameters.eMSCCodingScheme = CS_3_SM;
+		Parameters.Channel.eMSCmode = CS_3_SM;
 		break;
 
 	case 2:
-		Parameters.eMSCCodingScheme = CS_3_HMSYM;
+		Parameters.Channel.eMSCmode = CS_3_HMSYM;
 		break;
 
 	case 3:
-		Parameters.eMSCCodingScheme = CS_3_HMMIX;
+		Parameters.Channel.eMSCmode = CS_3_HMMIX;
 		break;
 	}
 
@@ -673,10 +650,10 @@ TransmDialog::SetChannel()
 	switch(ComboBoxMSCInterleaver->currentItem())
 	{
 	case 0:
-		Parameters.eSymbolInterlMode = CParameter::SI_LONG;
+		Parameters.Channel.eInterleaverDepth = SI_LONG;
 		break;
 	case 1:
-		Parameters.eSymbolInterlMode = CParameter::SI_SHORT;
+		Parameters.Channel.eInterleaverDepth = SI_SHORT;
 		break;
 	}
 
@@ -685,11 +662,11 @@ TransmDialog::SetChannel()
 	switch(ComboBoxSDCConstellation->currentItem())
 	{
 	case 0:
-		Parameters.eSDCCodingScheme = CS_1_SM;
+		Parameters.Channel.eSDCmode = CS_1_SM;
 		break;
 
 	case 1:
-		Parameters.eSDCCodingScheme = CS_2_SM;
+		Parameters.Channel.eSDCmode = CS_2_SM;
 		break;
 	default:
 		;
@@ -697,19 +674,19 @@ TransmDialog::SetChannel()
 
 	/* Robustness Mode */
 	if(RadioButtonRMA->isChecked())
-		Parameters.SetWaveMode(RM_ROBUSTNESS_MODE_A);
+		Parameters.Channel.eRobustness = RM_ROBUSTNESS_MODE_A;
 	if(RadioButtonRMB->isChecked())
-		Parameters.SetWaveMode(RM_ROBUSTNESS_MODE_B);
+		Parameters.Channel.eRobustness = RM_ROBUSTNESS_MODE_B;
 	if(RadioButtonRMC->isChecked())
-		Parameters.SetWaveMode(RM_ROBUSTNESS_MODE_C);
+		Parameters.Channel.eRobustness = RM_ROBUSTNESS_MODE_C;
 	if(RadioButtonRMD->isChecked())
-		Parameters.SetWaveMode(RM_ROBUSTNESS_MODE_D);
+		Parameters.Channel.eRobustness = RM_ROBUSTNESS_MODE_D;
 
 	UpdateCapacities();
 }
 
 void
-TransmDialog::UpdateCapacities()
+TransmitterMainWindow::UpdateCapacities()
 {
 	DRMTransmitter.CalculateChannelCapacities();
 
@@ -724,7 +701,7 @@ TransmDialog::UpdateCapacities()
 }
 
 void
-TransmDialog::GetStreams()
+TransmitterMainWindow::GetStreams()
 {
 	for(size_t i=0; i<DRMTransmitter.GetParameters()->Stream.size(); i++)
 	{
@@ -772,7 +749,7 @@ TransmDialog::GetStreams()
 }
 
 void
-TransmDialog::SetStreams()
+TransmitterMainWindow::SetStreams()
 {
 	DRMTransmitter.GetParameters()->Stream.resize(ListViewStreams->childCount());
 	Q3ListViewItemIterator it(ListViewStreams);
@@ -807,7 +784,7 @@ TransmDialog::SetStreams()
 }
 
 void
-TransmDialog::GetAudio(int iStreamNo)
+TransmitterMainWindow::GetAudio(int iStreamNo)
 {
     string fn = DRMTransmitter.GetReadFromFile();
     LineEditAudioSourceFile->setText(fn.c_str());
@@ -838,7 +815,7 @@ TransmDialog::GetAudio(int iStreamNo)
 }
 
 void
-TransmDialog::SetAudio(int iStreamNo)
+TransmitterMainWindow::SetAudio(int iStreamNo)
 {
 	CAudioParam& AudioParam = DRMTransmitter.GetParameters()->AudioParam[iStreamNo];
 
@@ -871,11 +848,11 @@ TransmDialog::SetAudio(int iStreamNo)
 		AudioParam.eAudioSamplRate = CAudioParam::AS_12KHZ;
 }
 
-void TransmDialog::OnComboBoxAudioSourceActivated(int iID)
+void TransmitterMainWindow::OnComboBoxAudioSourceActivated(int iID)
 {
 }
 
-void TransmDialog::OnButtonAudioSourceFileBrowse()
+void TransmitterMainWindow::OnButtonAudioSourceFileBrowse()
 {
 	QString s( Q3FileDialog::getOpenFileName(
 		QString::null, "Wave Files (*.wav)", this ) );
@@ -884,20 +861,20 @@ void TransmDialog::OnButtonAudioSourceFileBrowse()
     LineEditAudioSourceFile->setText(s);
 }
 
-void TransmDialog::OnLineEditAudioSourceFileChanged(const QString&)
+void TransmitterMainWindow::OnLineEditAudioSourceFileChanged(const QString&)
 {
 }
 
-void TransmDialog::OnToggleCheckBoxAudioSourceIsFile(bool)
+void TransmitterMainWindow::OnToggleCheckBoxAudioSourceIsFile(bool)
 {
 }
 
-void TransmDialog::OnToggleCheckBoxEnableTextMessage(bool bState)
+void TransmitterMainWindow::OnToggleCheckBoxEnableTextMessage(bool bState)
 {
 	EnableTextMessage(bState);
 }
 
-void TransmDialog::EnableTextMessage(const bool bFlag)
+void TransmitterMainWindow::EnableTextMessage(const bool bFlag)
 {
 	if (bFlag == true)
 	{
@@ -916,7 +893,7 @@ void TransmDialog::EnableTextMessage(const bool bFlag)
 }
 
 void
-TransmDialog:: GetData(int iStreamNo, int iPacketId)
+TransmitterMainWindow:: GetData(int iStreamNo, int iPacketId)
 {
 	CDataParam& DataParam = DRMTransmitter.GetParameters()->DataParam[iStreamNo][iPacketId];
 
@@ -935,13 +912,17 @@ TransmDialog:: GetData(int iStreamNo, int iPacketId)
 }
 
 void
-TransmDialog::SetData(int iStreamNo, int iPacketId)
+TransmitterMainWindow::SetData(int iStreamNo, int iPacketId)
 {
-	CDataParam& DataParam = DRMTransmitter.GetParameters()->DataParam[iStreamNo][iPacketId];
+	CParameter& Parameters = *DRMTransmitter.GetParameters();
+
+	Parameters.SetCurSelDataService(0); // TODO
+	CDataParam& DataParam = Parameters.DataParam[iStreamNo][iPacketId];
 
 	/* Init SlideShow application */
-	DataParam.eDataUnitInd = CDataParam::DU_DATA_UNITS;
 	DataParam.eAppDomain = CDataParam::AD_DAB_SPEC_APP;
+	DataParam.ePacketModInd = PM_PACKET_MODE;
+	DataParam.eDataUnitInd = CDataParam::DU_DATA_UNITS;
 
 	/* Set file names for data application */
 	DRMTransmitter.ClearPics();
@@ -962,7 +943,7 @@ TransmDialog::SetData(int iStreamNo, int iPacketId)
 }
 
 void
-TransmDialog::GetServices()
+TransmitterMainWindow::GetServices()
 {
 	const vector<CService>& Service = DRMTransmitter.GetParameters()->Service;
 	for(size_t i=0; i<Service.size(); i++)
@@ -991,10 +972,10 @@ TransmDialog::GetServices()
 }
 
 void
-TransmDialog::SetServices()
+TransmitterMainWindow::SetServices()
 {
-	DRMTransmitter.GetParameters()->iNumDataService=0;
-	DRMTransmitter.GetParameters()->iNumAudioService=0;
+	DRMTransmitter.GetParameters()->Channel.iNumDataServices=0;
+	DRMTransmitter.GetParameters()->Channel.iNumAudioServices=0;
 
 	Q3ListViewItemIterator sit(ListViewServices);
 	for (; sit.current(); sit++)
@@ -1016,7 +997,7 @@ TransmDialog::SetServices()
 		if(sA=="-")
 		{
 			Service.iAudioStream = STREAM_ID_NOT_USED;
-			DRMTransmitter.GetParameters()->iNumDataService++;
+			DRMTransmitter.GetParameters()->Channel.iNumDataServices++;
 			Service.eAudDataFlag = SF_DATA;
             for(int i=0; i<ComboBoxAppType->count(); i++)
                 if(ComboBoxAppType->text(i)==type)
@@ -1025,7 +1006,7 @@ TransmDialog::SetServices()
 		else
 		{
 			Service.iAudioStream = sA.toUInt();
-			DRMTransmitter.GetParameters()->iNumAudioService++;
+			DRMTransmitter.GetParameters()->Channel.iNumAudioServices++;
 			Service.eAudDataFlag = SF_AUDIO;
             for(int i=0; i<ComboBoxProgramType->count(); i++)
                 if(ComboBoxProgramType->text(i)==type)
@@ -1039,12 +1020,12 @@ TransmDialog::SetServices()
 			Service.iPacketID = 4;
 		else
 			Service.iPacketID = sP.toUInt();
-		DRMTransmitter.GetParameters()->SetServiceParameters(iShortID, Service);
+		DRMTransmitter.GetParameters()->Service[iShortID] = Service;
 	}
 }
 
 void
-TransmDialog::SetTransmitter()
+TransmitterMainWindow::SetTransmitter()
 {
 	CDRMTransmitterInterface::ETxOpMode eMod = CDRMTransmitterInterface::T_TX;
 
@@ -1053,6 +1034,7 @@ TransmDialog::SetTransmitter()
 		SetChannel();
 		SetStreams();
 		SetAudio(ComboBoxAudioStreamNo->currentItem());
+		// TODO - which service(s) is the data associated to ?
 		SetData(
             ComboBoxDataStreamNo->currentItem(),
             ComboBoxDataPacketId->currentItem()
@@ -1079,7 +1061,7 @@ TransmDialog::SetTransmitter()
 /* MDI Input */
 
 void
-TransmDialog::GetMDIIn()
+TransmitterMainWindow::GetMDIIn()
 {
 	QString addr = DRMTransmitter.GetMDIIn().c_str();
 	QFileInfo f(addr);
@@ -1123,7 +1105,7 @@ TransmDialog::GetMDIIn()
 }
 
 void
-TransmDialog::SetMDIIn()
+TransmitterMainWindow::SetMDIIn()
 {
 	if(CheckBoxReadMDIFile->isChecked())
 	{
@@ -1149,32 +1131,32 @@ TransmDialog::SetMDIIn()
 
 
 void
-TransmDialog::OnLineEditMDIinPortChanged(const QString& str)
+TransmitterMainWindow::OnLineEditMDIinPortChanged(const QString& str)
 {
 }
 
 void
-TransmDialog::OnToggleCheckBoxMDIinMcast(bool bState)
+TransmitterMainWindow::OnToggleCheckBoxMDIinMcast(bool bState)
 {
 }
 
 void
-TransmDialog::OnLineEditMDIinGroupChanged(const QString& str)
+TransmitterMainWindow::OnLineEditMDIinGroupChanged(const QString& str)
 {
 }
 
 void
-TransmDialog::OnComboBoxMDIinInterfaceActivated(int iID)
+TransmitterMainWindow::OnComboBoxMDIinInterfaceActivated(int iID)
 {
 }
 
 void
-TransmDialog::OnLineEditMDIInputFileChanged(const QString& str)
+TransmitterMainWindow::OnLineEditMDIInputFileChanged(const QString& str)
 {
 }
 
 void
-TransmDialog::OnButtonMDIInBrowse()
+TransmitterMainWindow::OnButtonMDIInBrowse()
 {
 	QString s( Q3FileDialog::getOpenFileName(
 		"out.pcap", "Capture Files (*.pcap)", this ) );
@@ -1184,14 +1166,14 @@ TransmDialog::OnButtonMDIInBrowse()
 }
 
 void
-TransmDialog::OnToggleCheckBoxReadMDIFile(bool)
+TransmitterMainWindow::OnToggleCheckBoxReadMDIFile(bool)
 {
 }
 
 /* MDI Output */
 
 void
-TransmDialog::GetMDIOut()
+TransmitterMainWindow::GetMDIOut()
 {
 	vector<string> MDIoutAddr;
 	DRMTransmitter.GetMDIOut(MDIoutAddr);
@@ -1225,7 +1207,7 @@ TransmDialog::GetMDIOut()
 }
 
 void
-TransmDialog::SetMDIOut()
+TransmitterMainWindow::SetMDIOut()
 {
 	vector<string> MDIoutAddr;
 	Q3ListViewItemIterator it(ListViewMDIOutputs);
@@ -1257,7 +1239,7 @@ TransmDialog::SetMDIOut()
 }
 
 void
-TransmDialog::OnButtonAddMDIDest()
+TransmitterMainWindow::OnButtonAddMDIDest()
 {
 	QString dest = LineEditMDIOutAddr->text();
 	if(dest == "...")
@@ -1270,7 +1252,7 @@ TransmDialog::OnButtonAddMDIDest()
 }
 
 void
-TransmDialog::OnButtonAddMDIFileDest()
+TransmitterMainWindow::OnButtonAddMDIFileDest()
 {
 	QString file = LineEditMDIOutputFile->text();
 	if(file != "")
@@ -1278,14 +1260,14 @@ TransmDialog::OnButtonAddMDIFileDest()
 }
 
 void
-TransmDialog::OnButtonDeleteMDIOutput()
+TransmitterMainWindow::OnButtonDeleteMDIOutput()
 {
 	Q3ListViewItem* p = ListViewMDIOutputs->selectedItem();
 	if(p)
 		delete p;
 }
 
-void TransmDialog::OnButtonMDIOutBrowse()
+void TransmitterMainWindow::OnButtonMDIOutBrowse()
 {
     QString s( Q3FileDialog::getSaveFileName(
 			"out.pcap", "Capture Files (*.pcap)", this ) );
@@ -1294,23 +1276,23 @@ void TransmDialog::OnButtonMDIOutBrowse()
     LineEditMDIOutputFile->setText(s);
 }
 
-void TransmDialog::OnComboBoxMDIoutInterfaceActivated(int)
+void TransmitterMainWindow::OnComboBoxMDIoutInterfaceActivated(int)
 {
 }
 
-void TransmDialog::OnLineEditMDIOutAddrChanged(const QString& str)
+void TransmitterMainWindow::OnLineEditMDIOutAddrChanged(const QString& str)
 {
 }
 
-void TransmDialog::OnLineEditMDIOutputFileChanged(const QString& str)
+void TransmitterMainWindow::OnLineEditMDIOutputFileChanged(const QString& str)
 {
 }
 
-void TransmDialog::OnLineEditMDIoutPortChanged(const QString& str)
+void TransmitterMainWindow::OnLineEditMDIoutPortChanged(const QString& str)
 {
 }
 
-void TransmDialog::OnMDIOutListItemClicked(Q3ListViewItem* item)
+void TransmitterMainWindow::OnMDIOutListItemClicked(Q3ListViewItem* item)
 {
 	QString dest = item->text(1);
 	if(dest == "")
@@ -1332,7 +1314,7 @@ void TransmDialog::OnMDIOutListItemClicked(Q3ListViewItem* item)
 /* COFDM */
 
 void
-TransmDialog::GetCOFDM()
+TransmitterMainWindow::GetCOFDM()
 {
 	/* Output mode (real valued, I / Q or E / P) */
 	switch (DRMTransmitter.GetParameters()->eOutputFormat)
@@ -1363,7 +1345,7 @@ TransmDialog::GetCOFDM()
 }
 
 void
-TransmDialog::SetCOFDM()
+TransmitterMainWindow::SetCOFDM()
 {
 	DRMTransmitter.GetParameters()->rCarOffset = LineEditSndCrdIF->text().toFloat();
 
@@ -1385,43 +1367,43 @@ TransmDialog::SetCOFDM()
 	DRMTransmitter.SetCOFDMOutputs(COFDMOutputs);
 }
 
-void TransmDialog::OnComboBoxCOFDMDestActivated(int)
+void TransmitterMainWindow::OnComboBoxCOFDMDestActivated(int)
 {
 }
 
-void TransmDialog::OnLineEditCOFDMOutputFileChanged(const QString&)
+void TransmitterMainWindow::OnLineEditCOFDMOutputFileChanged(const QString&)
 {
 }
 
-void TransmDialog::OnComboBoxCOFDMdestActivated(int)
+void TransmitterMainWindow::OnComboBoxCOFDMdestActivated(int)
 {
 }
 
-void TransmDialog::OnTextChangedSndCrdIF(const QString&)
+void TransmitterMainWindow::OnTextChangedSndCrdIF(const QString&)
 {
 }
 
 void
-TransmDialog::OnButtonCOFDMAddAudio()
+TransmitterMainWindow::OnButtonCOFDMAddAudio()
 {
 	(void) new Q3ListViewItem(ListViewCOFDM, ComboBoxCOFDMdest->currentText());
 }
 
-void TransmDialog::OnButtonCOFDMAddFile()
+void TransmitterMainWindow::OnButtonCOFDMAddFile()
 {
 	QString file = LineEditCOFDMOutputFile->text();
 	if(file != "")
 		(void) new Q3ListViewItem(ListViewCOFDM, file);
 }
 
-void TransmDialog::OnButtonCOFDMDeleteSelected()
+void TransmitterMainWindow::OnButtonCOFDMDeleteSelected()
 {
 	Q3ListViewItem* p = ListViewCOFDM->selectedItem();
 	if(p)
 		delete p;
 }
 
-void TransmDialog::OnCOFDMOutListItemClicked(Q3ListViewItem* item)
+void TransmitterMainWindow::OnCOFDMOutListItemClicked(Q3ListViewItem* item)
 {
 	Q3ListViewItem* p = ListViewCOFDM->selectedItem();
 	if(p)
@@ -1442,7 +1424,7 @@ void TransmDialog::OnCOFDMOutListItemClicked(Q3ListViewItem* item)
 	}
 }
 
-void TransmDialog::OnButtonCOFDMBrowse()
+void TransmitterMainWindow::OnButtonCOFDMBrowse()
 {
 	QString s( Q3FileDialog::getSaveFileName(
 		"cofdm.wav", "Wave Files (*.wav)", this ) );
@@ -1452,7 +1434,7 @@ void TransmDialog::OnButtonCOFDMBrowse()
 }
 
 void
-TransmDialog::OnRadioMode(int)
+TransmitterMainWindow::OnRadioMode(int)
 {
 	TabWidgetConfigure->removePage(Channel);
 	TabWidgetConfigure->removePage(Streams);
@@ -1492,7 +1474,7 @@ TransmDialog::OnRadioMode(int)
 }
 
 void
-TransmDialog::OnLineEditPacketLenChanged(const QString& str)
+TransmitterMainWindow::OnLineEditPacketLenChanged(const QString& str)
 {
 	if(str=="-")
 		return;
@@ -1511,7 +1493,7 @@ TransmDialog::OnLineEditPacketLenChanged(const QString& str)
 }
 
 void
-TransmDialog::OnComboBoxPacketsPerFrameActivated(const QString& str)
+TransmitterMainWindow::OnComboBoxPacketsPerFrameActivated(const QString& str)
 {
 	if(ComboBoxPacketsPerFrame->currentText()=="-")
 		return;
@@ -1521,7 +1503,7 @@ TransmDialog::OnComboBoxPacketsPerFrameActivated(const QString& str)
 }
 
 void
-TransmDialog::OnComboBoxStreamTypeActivated(int item)
+TransmitterMainWindow::OnComboBoxStreamTypeActivated(int item)
 {
 	size_t bits = 8*TextLabelMSCBytesAvailable->text().toInt();
 	switch(item)
@@ -1546,7 +1528,7 @@ TransmDialog::OnComboBoxStreamTypeActivated(int item)
 	}
 }
 
-void TransmDialog::OnStreamsListItemClicked(Q3ListViewItem* item)
+void TransmitterMainWindow::OnStreamsListItemClicked(Q3ListViewItem* item)
 {
 	LineEditBitsPerFrame->setText(item->text(4));
     QString type =  item->text(1);
@@ -1554,7 +1536,7 @@ void TransmDialog::OnStreamsListItemClicked(Q3ListViewItem* item)
 }
 
 void
-TransmDialog::OnButtonAddStream()
+TransmitterMainWindow::OnButtonAddStream()
 {
 	int bits = LineEditBitsPerFrame->text().toInt();
 	(void) new Q3ListViewItem(ListViewStreams,
@@ -1574,7 +1556,7 @@ TransmDialog::OnButtonAddStream()
 }
 
 void
-TransmDialog::OnButtonDeleteStream()
+TransmitterMainWindow::OnButtonDeleteStream()
 {
 	Q3ListViewItem* p = ListViewStreams->selectedItem();
 	if(p)
@@ -1593,7 +1575,7 @@ TransmDialog::OnButtonDeleteStream()
 	}
 }
 
-void TransmDialog::OnButtonStartStop()
+void TransmitterMainWindow::OnButtonStartStop()
 {
 	if (bIsStarted == true)
 	{
@@ -1622,7 +1604,7 @@ void TransmDialog::OnButtonStartStop()
 	}
 }
 
-void TransmDialog::EnableAudio(const bool bFlag)
+void TransmitterMainWindow::EnableAudio(const bool bFlag)
 {
 	if (bFlag == true)
 	{
@@ -1636,7 +1618,7 @@ void TransmDialog::EnableAudio(const bool bFlag)
 	}
 }
 
-void TransmDialog::EnableData(const bool bFlag)
+void TransmitterMainWindow::EnableData(const bool bFlag)
 {
 	if (bFlag == true)
 	{
@@ -1654,26 +1636,26 @@ void TransmDialog::EnableData(const bool bFlag)
 	}
 }
 
-void TransmDialog::OnPushButtonAddText()
+void TransmitterMainWindow::OnPushButtonAddText()
 {
 	QString msg = LineEditTextMessage->text();
 	if(msg != "")
 		(void) new Q3ListViewItem(ListViewTextMessages, msg);
 }
 
-void TransmDialog::OnPushButtonDeleteText()
+void TransmitterMainWindow::OnPushButtonDeleteText()
 {
 	Q3ListViewItem* p = ListViewTextMessages->selectedItem();
 	if(p)
 		delete p;
 }
 
-void TransmDialog::OnButtonClearAllText()
+void TransmitterMainWindow::OnButtonClearAllText()
 {
     ListViewTextMessages->clear();
 }
 
-void TransmDialog::AddSlide(const QString& path)
+void TransmitterMainWindow::AddSlide(const QString& path)
 {
     QFileInfo FileInfo(path);
 
@@ -1686,7 +1668,7 @@ void TransmDialog::AddSlide(const QString& path)
         FileInfo.filePath()));
 }
 
-void TransmDialog::OnPushButtonAddFileName()
+void TransmitterMainWindow::OnPushButtonAddFileName()
 {
 	/* Show "open file" dialog. Let the user select more than one file */
 	QStringList list = Q3FileDialog::getOpenFileNames(
@@ -1703,23 +1685,23 @@ void TransmDialog::OnPushButtonAddFileName()
 	}
 }
 
-void TransmDialog::OnButtonClearAllFileNames()
+void TransmitterMainWindow::OnButtonClearAllFileNames()
 {
 	/* Clear list box for file names */
 	ListViewFileNames->clear();
 }
 
-void TransmDialog::OnTextChangedServiceID(const QString& strID)
+void TransmitterMainWindow::OnTextChangedServiceID(const QString& strID)
 {
 	(void)strID; // TODO
 }
 
-void TransmDialog::OnTextChangedServiceLabel(const QString& strLabel)
+void TransmitterMainWindow::OnTextChangedServiceLabel(const QString& strLabel)
 {
 	(void)strLabel; // TODO
 }
 
-void TransmDialog::OnButtonAddService()
+void TransmitterMainWindow::OnButtonAddService()
 {
 	Q3ListViewItem* v = new Q3ListViewItem(ListViewServices,
         ComboBoxShortID->currentText(),
@@ -1750,7 +1732,7 @@ void TransmDialog::OnButtonAddService()
 	ComboBoxShortID->setCurrentItem(0);
 }
 
-void TransmDialog::OnButtonDeleteService()
+void TransmitterMainWindow::OnButtonDeleteService()
 {
 	Q3ListViewItem* p = ListViewServices->selectedItem();
 	if(p)
@@ -1766,7 +1748,7 @@ void TransmDialog::OnButtonDeleteService()
 	ComboBoxShortID->setCurrentItem(0);
 }
 
-void TransmDialog::OnServicesListItemClicked(Q3ListViewItem* item)
+void TransmitterMainWindow::OnServicesListItemClicked(Q3ListViewItem* item)
 {
 	choseComboBoxItem(ComboBoxShortID, item->text(0));
 	LineEditServiceLabel->setText(item->text(1));
@@ -1797,17 +1779,17 @@ void TransmDialog::OnServicesListItemClicked(Q3ListViewItem* item)
 	}
 }
 
-void TransmDialog::OnComboBoxMSCInterleaverActivated(int)
+void TransmitterMainWindow::OnComboBoxMSCInterleaverActivated(int)
 {
 	SetChannel();
 }
 
-void TransmDialog::OnComboBoxSDCConstellationActivated(int)
+void TransmitterMainWindow::OnComboBoxSDCConstellationActivated(int)
 {
 	SetChannel();
 }
 
-void TransmDialog::OnComboBoxMSCConstellationActivated(int)
+void TransmitterMainWindow::OnComboBoxMSCConstellationActivated(int)
 {
 	/* Protection level must be re-adjusted when
 	 * constellation mode was changed */
@@ -1815,12 +1797,12 @@ void TransmDialog::OnComboBoxMSCConstellationActivated(int)
 	SetChannel();
 }
 
-void TransmDialog::OnComboBoxMSCProtLevActivated(int)
+void TransmitterMainWindow::OnComboBoxMSCProtLevActivated(int)
 {
 	SetChannel();
 }
 
-void TransmDialog::UpdateMSCProtLevCombo()
+void TransmitterMainWindow::UpdateMSCProtLevCombo()
 {
 	if(ComboBoxMSCConstellation->currentItem()==0)
 	{
@@ -1843,12 +1825,12 @@ void TransmDialog::UpdateMSCProtLevCombo()
 	ComboBoxMSCProtLev->setCurrentItem(1);
 }
 
-void TransmDialog::OnRadioBandwidth(int)
+void TransmitterMainWindow::OnRadioBandwidth(int)
 {
 	SetChannel();
 }
 
-void TransmDialog::OnRadioRobustnessMode(int iID)
+void TransmitterMainWindow::OnRadioRobustnessMode(int iID)
 {
 	/* Check, which bandwidth's are possible with this robustness mode */
 	switch (iID)
@@ -1902,7 +1884,7 @@ void TransmDialog::OnRadioRobustnessMode(int iID)
 	SetChannel();
 }
 
-void TransmDialog::DisableAllControlsForSet()
+void TransmitterMainWindow::DisableAllControlsForSet()
 {
 	Channel->setEnabled(false);
 	Streams->setEnabled(false);
@@ -1916,7 +1898,7 @@ void TransmDialog::DisableAllControlsForSet()
 	GroupInput->setEnabled(true); /* For run-mode */
 }
 
-void TransmDialog::EnableAllControlsForSet()
+void TransmitterMainWindow::EnableAllControlsForSet()
 {
 	Channel->setEnabled(true);
 	Streams->setEnabled(true);
@@ -1935,12 +1917,12 @@ void TransmDialog::EnableAllControlsForSet()
 	TextLabelCurPict->setText("");
 }
 
-void TransmDialog::OnHelpWhatsThis()
+void TransmitterMainWindow::OnHelpWhatsThis()
 {
 	QWhatsThis::enterWhatsThisMode();
 }
 
-void TransmDialog::AddWhatsThisHelp()
+void TransmitterMainWindow::AddWhatsThisHelp()
 {
 	/* Dream Logo */
 	logo->setWhatsThis(
@@ -2035,7 +2017,7 @@ void TransmDialog::AddWhatsThisHelp()
 }
 
 void
-TransmDialog::choseComboBoxItem(QComboBox* box, const QString& text)
+TransmitterMainWindow::choseComboBoxItem(QComboBox* box, const QString& text)
 {
 	int i=0;
 	for(i=0; i<box->count(); i++)

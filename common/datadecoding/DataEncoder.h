@@ -1,12 +1,12 @@
 /******************************************************************************\
- * British Broadcasting Corporation
- * Copyright (c) 2009
+ * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
+ * Copyright (c) 2001
  *
  * Author(s):
- *	 Julian Cable
+ *	Volker Fischer
  *
- * Description: Journaline Viewer
- *
+ * Description:
+ *	See DataDecoder.cpp
  *
  ******************************************************************************
  *
@@ -26,43 +26,38 @@
  *
 \******************************************************************************/
 
-#ifndef _JLVIEWER_H
-#define _JLVIEWER_H
+#ifndef _DATAENCODER_H
+#define _DATAENCODER_H
 
-#include <QTextDocument>
-#include "ui_JLViewer.h"
-#include <string>
+#include "../GlobalDefinitions.h"
+#include "../Parameter.h"
+#include "../util/Vector.h"
 
-class CDRMReceiver;
-class CSettings;
+class CMOTSlideShowEncoder;
 
-class JLViewer : public QMainWindow, Ui_JLViewer
+class CDataEncoder
 {
-	Q_OBJECT
+  public:
+    CDataEncoder();
+    virtual ~CDataEncoder ();
 
-public:
-	JLViewer(CDRMReceiver&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, Qt::WFlags f = 0);
-	virtual ~JLViewer();
+    int Init (CParameter & Param);
+    void GeneratePacket (CVector < _BINARY > &vecbiPacket);
 
-protected:
+    CMOTSlideShowEncoder *GetSliShowEnc ()
+    {
+        return MOTSlideShowEncoder;
+    }
 
-    QTimer Timer;
-	QTextDocument           document;
-	std::string             strCurrentSavePath;
-	CDRMReceiver&           receiver;
-	CSettings&              settings;
-	bool                    decoderSet;
+  protected:
+    CMOTSlideShowEncoder* MOTSlideShowEncoder;
+    CVector < _BINARY > vecbiCurDataUnit;
 
-public slots:
-	void OnTimer();
-	void OnButtonStepBack();
-	void OnSave();
-	void OnSaveAll();
-	void OnClearAll();
-	void OnSetFont();
-    void showEvent(QShowEvent*);
-    void hideEvent(QHideEvent*);
+    int iPacketLen;
+    int iTotalPacketSize;
+    int iCurDataPointer;
+    int iPacketID;
+    int iContinInd;
 };
 
 #endif

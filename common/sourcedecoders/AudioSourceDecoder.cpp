@@ -29,465 +29,6 @@
 #include "AudioSourceDecoder.h"
 #include "../util/ReceiverModul_impl.h"
 
-/* Implementation *************************************************************/
-/******************************************************************************\
-* Encoder                                                                      *
-\******************************************************************************/
-void
-CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
-													   *pvecInputData,
-													   CVectorEx < _BINARY >
-													   *pvecOutputData,
-													   int &iInputBlockSize,
-													   int &iOutputBlockSize)
-{
-	int i, j;
-
-	/* Reset data to zero. This is important since usually not all data is used
-	   and this data has to be set to zero as defined in the DRM standard */
-	for (i = 0; i < iOutputBlockSize; i++)
-		(*pvecOutputData)[i] = 0;
-
-#ifdef HAVE_LIBFAAC
-	/* AAC encoder ------------------------------------------------------ */
-	/* Resample data to encoder bit-rate */
-	/* Change type of data (short -> real), take left channel! */
-	for (i = 0; i < iInputBlockSize / 2; i++)
-		vecTempResBufIn[i] = (*pvecInputData)[i * 2];
-
-	/* Resample data */
-	ResampleObj.Resample(vecTempResBufIn, vecTempResBufOut);
-
-	/* Split data in individual audio blocks */
-	for (j = 0; j < iNumAACFrames; j++)
-	{
-		/* Convert _REAL type to _SAMPLE type, copy in smaller buffer */
-		for (unsigned long k = 0; k < lNumSampEncIn; k++)
-		{
-			vecsEncInData[k] = _SAMPLE(vecTempResBufOut[j * lNumSampEncIn + k]);
-		}
-
-		/* Actual AAC encoding */
-		CVector < unsigned char >vecsTmpData(lMaxBytesEncOut);
-		int bytesEncoded = faacEncEncode(hEncoder,
-										 (int32_t *) & vecsEncInData[0],
-										 lNumSampEncIn, &vecsTmpData[0],
-										 lMaxBytesEncOut);
-
-		if (bytesEncoded > 0)
-		{
-			/* Extract CRC */
-			aac_crc_bits[j] = vecsTmpData[0];
-
-			/* Extract actual data */
-			for (i = 0; i < bytesEncoded - 1 /* "-1" for CRC */ ; i++)
-				audio_frame[j][i] = vecsTmpData[i + 1];
-
-			/* Store block lengths for boarders in AAC super-frame-header */
-			veciFrameLength[j] = bytesEncoded - 1;
-		}
-		else
-		{
-			/* Encoder is in initialization phase, reset CRC and length */
-			aac_crc_bits[j] = 0;
-			veciFrameLength[j] = 0;
-		}
-	}
-
-	/* Write data to output vector */
-	/* First init buffer with zeros */
-	for (i = 0; i < iOutputBlockSize; i++)
-		(*pvecOutputData)[i] = 0;
-
-	/* Reset bit extraction access */
-	(*pvecOutputData).ResetBitAccess();
-
-	/* AAC super-frame-header */
-	int iAccFrameLength = 0;
-	for (j = 0; j < iNumAACFrames - 1; j++)
-	{
-		iAccFrameLength += veciFrameLength[j];
-
-	/* Frame border in bytes (12 bits) */
-		(*pvecOutputData).Enqueue(iAccFrameLength, 12);
-	}
-
-		/* Byte-alignment (4 bits) in case of 10 audio frames */
-	if (iNumAACFrames == 10)
-		(*pvecOutputData).Enqueue(0, 4);
-
-	/* Higher protected part */
-		int iCurNumBytes = 0;
-	for (j = 0; j < iNumAACFrames; j++)
-	{
-		/* Data */
-		for (i = 0; i < iNumHigherProtectedBytes; i++)
-		{
-			/* Check if enough data is available, set data to 0 if not */
-			if (i < veciFrameLength[j])
-				(*pvecOutputData).Enqueue(audio_frame[j][i], 8);
-			else
-				(*pvecOutputData).Enqueue(0, 8);
-
-			iCurNumBytes++;
-		}
-
-		/* CRCs */
-		(*pvecOutputData).Enqueue(aac_crc_bits[j], 8);
-	}
-
-	/* Lower protected part */
-	for (j = 0; j < iNumAACFrames; j++)
-	{
-		for (i = iNumHigherProtectedBytes; i < veciFrameLength[j]; i++)
-		{
-			/* If encoder produced too many bits, we have to drop them */
-			if (iCurNumBytes < iAudioPayloadLen)
-				(*pvecOutputData).Enqueue(audio_frame[j][i], 8);
-
-			iCurNumBytes++;
-		}
-	}
-
-#ifdef _DEBUG_
-	/* Save number of bits actually used by audio encoder */
-	static FILE *pFile = fopen("test/audbits.dat", "w");
-	fprintf(pFile, "%d %d\n", iAudioPayloadLen, iCurNumBytes);
-	fflush(pFile);
-#endif
-#endif
-
-	/* text message application ---------------------------- */
-	/* Last four bytes in stream are written */
-	if (bUsingTextMessage == true)
-	{
-		/* Always four bytes for text message "piece" */
-		CVector < _BINARY >
-			vecbiTextMessBuf(BITS_BINARY * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
-
-		/* Get a "piece" */
-		TextMessage.Encode(vecbiTextMessBuf);
-
-		/* Calculate start point for text message */
-		const int iByteStartTextMess =
-			iTotNumBitsForUsage -
-			BITS_BINARY * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
-
-		/* Add text message bytes to output stream */
-		for (i = iByteStartTextMess; i < iTotNumBitsForUsage; i++)
-			(*pvecOutputData)[i] =
-				vecbiTextMessBuf[i - iByteStartTextMess];
-	}
-}
-
-void
-CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
-												  int &iInputBlockSize,
-												  int &iOutputBlockSize)
-{
-
-
-	TransmParam.Lock();
-
-	int iCurStreamID = -1;
-
-	// find the first audio service and use its stream
-	for(size_t i=0; i<TransmParam.Service.size(); i++)
-	{
-	    if(TransmParam.Service[i].eAudDataFlag==SF_AUDIO)
-            iCurStreamID = TransmParam.Service[i].iAudioStream;
-	}
-
-	/* Set the total available number of bits, byte aligned */
-	iTotNumBitsForUsage = TransmParam.GetStreamLen(iCurStreamID) * BITS_BINARY;
-
-	CAudioParam::EAudSamRat sampleRate = TransmParam.AudioParam[iCurStreamID].eAudioSamplRate;
-
-	if(TransmParam.AudioParam[iCurStreamID].eAudioMode != CAudioParam::AM_MONO)
-        throw CGenErr("Audio - can only do mono, but stereo selected");
-
-    int iLenPartA = TransmParam.Stream[iCurStreamID].iLenPartA;
-    int iLenPartB = TransmParam.Stream[iCurStreamID].iLenPartB;
-
-    if(iLenPartB == 0)
-        throw CGenErr("Audio - requested block length is zero");
-
-    bUsingTextMessage = TransmParam.AudioParam[iCurStreamID].bTextflag;
-
-	TransmParam.Unlock();
-
-	/* Calculate number of input samples in mono. Audio block are always
-	   400 ms long */
-	const int iNumInSamplesMono = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
-										 (_REAL) 0.4 /* 400 ms */ );
-
-	/* Total number of bytes which can be used for text and audio */
-	//const int iTotNumBytesForUsage = iTotNumBitsForUsage / BITS_BINARY;
-
-	/* Total frame size is input block size minus the bytes for the text
-	   message (if text message is used) */
-	int iTotAudFraSizeBits = iTotNumBitsForUsage;
-	if (bUsingTextMessage == true)
-	{
-		iTotAudFraSizeBits -= BITS_BINARY * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
-	}
-
-	/* Set encoder sample rate. This parameter decides other parameters */
-
-	int iTimeEachAudBloMS = 40;
-	int iNumHeaderBytes = 14;
-
-	switch(sampleRate)
-	{
-	case CAudioParam::AS_12KHZ:
-		lEncSamprate = 12000;
-		iTimeEachAudBloMS = 80;	/* ms */
-		iNumAACFrames = 5;
-		iNumHeaderBytes = 6;
-		break;
-
-	case CAudioParam::AS_24KHZ:
-		lEncSamprate = 24000;
-		iTimeEachAudBloMS = 40;	/* ms */
-		iNumAACFrames = 10;
-		iNumHeaderBytes = 14;
-		break;
-	}
-
-	/* The audio_payload_length is derived from the length of the audio
-	   super frame (data_length_of_part_A + data_length_of_part_B)
-	   subtracting the audio super frame overhead (bytes used for the audio
-	   super frame header() and for the aac_crc_bits) (5.3.1.1, Table 5) */
-	iAudioPayloadLen = iTotAudFraSizeBits / BITS_BINARY - iNumHeaderBytes - iNumAACFrames /* for CRCs */ ;
-
-	const int iActEncOutBytes = (int) (iAudioPayloadLen / iNumAACFrames);
-
-	// TEST needed since 960 transform length is not yet implemented in faac!
-	int iBitRate;
-	if (lNumSampEncIn == 1024)
-	{
-		iBitRate = (int) (((_REAL) iActEncOutBytes * BITS_BINARY * 960.0 / 1024.0) / iTimeEachAudBloMS * 1000);
-	}
-	else
-	{
-		iBitRate = (int) (((_REAL) iActEncOutBytes * BITS_BINARY) / iTimeEachAudBloMS * 1000);
-	}
-
-#ifdef HAVE_LIBFAAC
-	/* Open encoder instance */
-	if (hEncoder != NULL)
-		faacEncClose(hEncoder);
-
-	hEncoder = faacEncOpen(lEncSamprate, 1 /* mono */ , &lNumSampEncIn, &lMaxBytesEncOut);
-	/* Set encoder configuration */
-	CurEncFormat = faacEncGetCurrentConfiguration(hEncoder);
-	CurEncFormat->inputFormat = FAAC_INPUT_16BIT;
-	CurEncFormat->useTns = 1;
-	CurEncFormat->aacObjectType = LOW;
-	CurEncFormat->mpegVersion = MPEG4;
-	CurEncFormat->outputFormat = 0;	/* (0 = Raw; 1 = ADTS -> Raw) */
-	CurEncFormat->bitRate = iBitRate;
-	CurEncFormat->bandWidth = 0;	/* Let the encoder choose the bandwidth */
-	faacEncSetConfiguration(hEncoder, CurEncFormat);
-#endif
-
-	/* Init storage for actual data, CRCs and frame lengths */
-	audio_frame.Init(iNumAACFrames, lMaxBytesEncOut);
-	vecsEncInData.Init(lNumSampEncIn);
-	aac_crc_bits.Init(iNumAACFrames);
-	veciFrameLength.Init(iNumAACFrames);
-
-	/* Additional buffers needed for resampling since we need conversation
-		   between _SAMPLE and _REAL */
-	vecTempResBufIn.Init(iNumInSamplesMono);
-	vecTempResBufOut.Init(lNumSampEncIn * iNumAACFrames, (_REAL) 0.0);
-
-	/* Init resample objects */
-	// TEST needed since 960 transform length is not yet implemented in faac!
-	if (lNumSampEncIn == 1024)
-	{
-		ResampleObj.Init(iNumInSamplesMono,
-						 (_REAL) lEncSamprate / SOUNDCRD_SAMPLE_RATE *
-						 1024.0 / 960.0);
-	}
-	else
-	{
-		ResampleObj.Init(iNumInSamplesMono,
-							 (_REAL) lEncSamprate / SOUNDCRD_SAMPLE_RATE);
-	}
-
-	/* Calculate number of bytes for higher protected blocks */
-
-	iNumHigherProtectedBytes = (iLenPartA - iNumHeaderBytes - iNumAACFrames /* CRC bytes */ )
-                                / iNumAACFrames;
-
-	if (iNumHigherProtectedBytes < 0)
-		iNumHigherProtectedBytes = 0;
-
-	/* Define input and output block size */
-	iOutputBlockSize = iTotNumBitsForUsage;
-	iInputBlockSize = iNumInSamplesMono * 2 /* stereo */ ;
-}
-
-void
-CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
-												  int &iInputBlockSize,
-												  int &iOutputBlockSize)
-{
-	Param.Lock();
-
-	/* Calculate number of input samples in mono. Audio block are always 400 ms long */
-	const int iNumInSamplesMono = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
-										 (_REAL) 0.4 /* 400 ms */ );
-
-	/* Set the total available number of bits, byte aligned */
-	iTotNumBitsForUsage =
-		(Param.Stream[0].iLenPartA + Param.Stream[0].iLenPartB) * BITS_BINARY;
-
-	/* Total number of bytes which can be used for data and audio */
-	//const int iTotNumBytesForUsage = iTotNumBitsForUsage / BITS_BINARY;
-
-	/* Audio service ---------------------------------------------------- */
-
-#ifdef HAVE_LIBFAAC
-	/* Total frame size is input block size minus the bytes for the text
-	   message (if text message is used) */
-	int iTotAudFraSizeBits = iTotNumBitsForUsage;
-	if (bUsingTextMessage == true)
-		iTotAudFraSizeBits -= BITS_BINARY * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
-
-	/* Set encoder sample rate. This parameter decides other parameters */
-	// TEST make threshold decision TODO: improvement
-	if (iTotAudFraSizeBits > 7000)	/* in bits! */
-		lEncSamprate = 24000;
-	else
-		lEncSamprate = 12000;
-
-	int iTimeEachAudBloMS = 40;
-	int iNumHeaderBytes = 14;
-
-	switch (lEncSamprate)
-	{
-	case 12000:
-		iTimeEachAudBloMS = 80;	/* ms */
-		iNumAACFrames = 5;
-		iNumHeaderBytes = 6;
-		Param.AudioParam[0].eAudioSamplRate = CAudioParam::AS_12KHZ;	/* Set parameter in global struct */
-		break;
-
-	case 24000:
-		iTimeEachAudBloMS = 40;	/* ms */
-		iNumAACFrames = 10;
-		iNumHeaderBytes = 14;
-		Param.AudioParam[0].eAudioSamplRate = CAudioParam::AS_24KHZ;	/* Set parameter in global struct */
-		break;
-	}
-
-	/* The audio_payload_length is derived from the length of the audio
-	   super frame (data_length_of_part_A + data_length_of_part_B)
-	   subtracting the audio super frame overhead (bytes used for the audio
-	   super frame header() and for the aac_crc_bits) (5.3.1.1, Table 5) */
-	iAudioPayloadLen = iTotAudFraSizeBits / BITS_BINARY -
-		iNumHeaderBytes - iNumAACFrames /* for CRCs */ ;
-
-	const int iActEncOutBytes = (int) (iAudioPayloadLen / iNumAACFrames);
-
-	/* Set to mono */
-	Param.AudioParam[0].eAudioMode = CAudioParam::AM_MONO;
-
-	/* Open encoder instance */
-	if (hEncoder != NULL)
-		faacEncClose(hEncoder);
-
-	hEncoder = faacEncOpen(lEncSamprate, 1 /* mono */ ,
-						   &lNumSampEncIn, &lMaxBytesEncOut);
-
-// TEST needed since 960 transform length is not yet implemented in faac!
-	int iBitRate;
-	if (lNumSampEncIn == 1024)
-	{
-		iBitRate = (int) (((_REAL) iActEncOutBytes * BITS_BINARY * 960.0 /
-						   1024.0) / iTimeEachAudBloMS * 1000);
-	}
-	else
-	{
-		iBitRate = (int) (((_REAL) iActEncOutBytes * BITS_BINARY) /
-						  iTimeEachAudBloMS * 1000);
-	}
-
-	/* Set encoder configuration */
-	CurEncFormat = faacEncGetCurrentConfiguration(hEncoder);
-	CurEncFormat->inputFormat = FAAC_INPUT_16BIT;
-	CurEncFormat->useTns = 1;
-	CurEncFormat->aacObjectType = LOW;
-	CurEncFormat->mpegVersion = MPEG4;
-	CurEncFormat->outputFormat = 0;	/* (0 = Raw; 1 = ADTS -> Raw) */
-	CurEncFormat->bitRate = iBitRate;
-	CurEncFormat->bandWidth = 0;	/* Let the encoder choose the bandwidth */
-	faacEncSetConfiguration(hEncoder, CurEncFormat);
-
-	/* Init storage for actual data, CRCs and frame lengths */
-	audio_frame.Init(iNumAACFrames, lMaxBytesEncOut);
-	vecsEncInData.Init(lNumSampEncIn);
-	aac_crc_bits.Init(iNumAACFrames);
-	veciFrameLength.Init(iNumAACFrames);
-
-	/* Additional buffers needed for resampling since we need conversation
-	   between _SAMPLE and _REAL */
-	vecTempResBufIn.Init(iNumInSamplesMono);
-	vecTempResBufOut.Init(lNumSampEncIn * iNumAACFrames, (_REAL) 0.0);
-
-	/* Init resample objects */
-// TEST needed since 960 transform length is not yet implemented in faac!
-	if (lNumSampEncIn == 1024)
-	{
-		ResampleObj.Init(iNumInSamplesMono,
-						 (_REAL) lEncSamprate / SOUNDCRD_SAMPLE_RATE *
-						 1024.0 / 960.0);
-	}
-	else
-	{
-		ResampleObj.Init(iNumInSamplesMono,
-						 (_REAL) lEncSamprate / SOUNDCRD_SAMPLE_RATE);
-	}
-
-	/* Calculate number of bytes for higher protected blocks */
-	iNumHigherProtectedBytes = 0;
-#endif
-
-	/* Define input and output block size */
-	iOutputBlockSize = iTotNumBitsForUsage;
-	iInputBlockSize = iNumInSamplesMono * 2 /* stereo */ ;
-
-	Param.Unlock();
-}
-
-void
-CAudioSourceEncoderImplementation::SetTextMessage(const string & strText)
-{
-	/* Set text message in text message object */
-	TextMessage.SetMessage(strText);
-}
-
-void
-CAudioSourceEncoderImplementation::ClearTextMessage()
-{
-	/* Clear all text segments */
-	TextMessage.ClearAllText();
-}
-
-CAudioSourceEncoderImplementation::~CAudioSourceEncoderImplementation()
-{
-#ifdef HAVE_LIBFAAC
-	/* Close encoder instance afterwards */
-	if (hEncoder != NULL)
-		faacEncClose(hEncoder);
-#endif
-}
-
-/******************************************************************************\
-* Decoder                                                                      *
-\******************************************************************************/
 void
 CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 {
@@ -530,7 +71,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	}
 
 	/* Reset bit extraction access */
-	(*pvecInputData).ResetBitAccess();
+	pvecInputData->ResetBitAccess();
 
 	/* Check which audio coding type is used */
 	if (eAudioCoding == CAudioParam::AC_AAC)
@@ -541,7 +82,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 		for (i = 0; i < iNumBorders; i++)
 		{
 			/* Frame border in bytes (12 bits) */
-			const int iFrameBorder = (*pvecInputData).Separate(12);
+			const int iFrameBorder = pvecInputData->Separate(12);
 
 			/* The length is difference between borders */
 			veciFrameLength[i] = iFrameBorder - iPrevBorder;
@@ -550,7 +91,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 
 		/* Byte-alignment (4 bits) in case of 10 audio frames */
 		if (iNumBorders == 9)
-			(*pvecInputData).Separate(4);
+			pvecInputData->Separate(4);
 
 		/* Frame length of last frame */
 		veciFrameLength[iNumBorders] = iAudioPayloadLen - iPrevBorder;
@@ -573,10 +114,10 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			{
 				/* Extract higher protected part bytes (8 bits per byte) */
 				for (j = 0; j < iNumHigherProtectedBytes; j++)
-					audio_frame[i][j] = _BINARY((*pvecInputData).Separate(8));
+					audio_frame[i][j] = _BINARY(pvecInputData->Separate(8));
 
 				/* Extract CRC bits (8 bits) */
-				aac_crc_bits[i] = _BINARY((*pvecInputData).Separate(8));
+				aac_crc_bits[i] = _BINARY(pvecInputData->Separate(8));
 			}
 
 			/* Lower-protected part */
@@ -591,7 +132,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				for (j = 0; j < iNumLowerProtectedBytes; j++)
 				{
 					audio_frame[i][iNumHigherProtectedBytes + j] =
-						_BINARY((*pvecInputData).Separate(8));
+						_BINARY(pvecInputData->Separate(8));
 				}
 			}
 		}
@@ -607,18 +148,18 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 
 			/* Extract higher protected part bits */
 			for (j = 0; j < iNumHigherProtectedBits; j++)
-				celp_frame[i].Enqueue((*pvecInputData).Separate(1), 1);
+				celp_frame[i].Enqueue(pvecInputData->Separate(1), 1);
 
 			/* Extract CRC bits (8 bits) if used */
 			if (bCELPCRC == true)
-				celp_crc_bits[i] = _BINARY((*pvecInputData).Separate(8));
+				celp_crc_bits[i] = _BINARY(pvecInputData->Separate(8));
 		}
 
 		/* Lower-protected part */
 		for (i = 0; i < iNumAudioFrames; i++)
 		{
 			for (j = 0; j < iNumLowerProtectedBits; j++)
-				celp_frame[i].Enqueue((*pvecInputData).Separate(1), 1);
+				celp_frame[i].Enqueue(pvecInputData->Separate(1), 1);
 		}
 	}
 

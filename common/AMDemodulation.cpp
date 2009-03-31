@@ -361,7 +361,7 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW)
 
 /* Interface functions ------------------------------------------------------ */
 void
-CAMDemodulation::SetDemodType(const EDemodulationType eNewType)
+CAMDemodulation::SetDemodType(const EModulationType eNewType)
 {
 	/* Lock resources */
 	Lock();
@@ -396,7 +396,7 @@ CAMDemodulation::SetFilterBWHz(int iBw)
 }
 
 void
-CAMDemodulation::SetFilterBWHz(EDemodulationType eType, int iBw)
+CAMDemodulation::SetFilterBWHz(EModulationType eType, int iBw)
 {
 	Lock();
 	iFilterBWHz[eType] = iBw;
@@ -412,7 +412,7 @@ CAMDemodulation::GetFilterBWHz()
 }
 
 int
-CAMDemodulation::GetFilterBWHz(EDemodulationType eType)
+CAMDemodulation::GetFilterBWHz(EModulationType eType)
 {
 	Lock();
 	int v = iFilterBWHz[eType];

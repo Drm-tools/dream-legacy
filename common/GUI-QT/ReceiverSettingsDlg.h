@@ -59,7 +59,7 @@ protected:
 
 	void			AddWhatsThisHelp();
 
-	CDRMReceiver&	DRMReceiver;
+	CDRMReceiver&	Receiver;
 	CSettings&		Settings;
 	bool			loading;
 	Q3ListViewItem*  no_rig;

@@ -70,7 +70,7 @@ protected:
 	int				iOldNoServicesGUI;
 	QTimer			Timer;
 
-	EDemodulationType	eReceiverMode;
+	EModulationType	eReceiverMode;
 	bool            quitWanted;
 
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
