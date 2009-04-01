@@ -146,8 +146,8 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	/* Number of services */
 	/* Use Table */
-	pbiFACData->Enqueue(iTableNumOfServices[Parameter.Channel.iNumAudioServices]
-		[Parameter.Channel.iNumDataServices], 4);
+	pbiFACData->Enqueue(iTableNumOfServices[Parameter.ServiceParameters.iNumAudioServices]
+		[Parameter.ServiceParameters.iNumDataServices], 4);
 
 	/* Reconfiguration index (not used) */
 	pbiFACData->Enqueue((uint32_t) 0, 3);
@@ -164,13 +164,13 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 		FACRepetitionCounter = 0;
 
 	/* Service identifier */
-	pbiFACData->Enqueue(Parameter.Service[iCurShortID].iServiceID, 24);
+	pbiFACData->Enqueue(Parameter.ServiceParameters.Service[iCurShortID].iServiceID, 24);
 
 	/* Short ID */
 	pbiFACData->Enqueue((uint32_t) iCurShortID, 2);
 
 	/* CA indication */
-	switch (Parameter.Service[iCurShortID].eCAIndication)
+	switch (Parameter.ServiceParameters.Service[iCurShortID].eCAIndication)
 	{
 	case CService::CA_NOT_USED:
 		pbiFACData->Enqueue(0 /* 0 */, 1);
@@ -183,10 +183,10 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	/* Language */
 	pbiFACData->Enqueue(
-		(uint32_t) Parameter.Service[iCurShortID].iLanguage, 4);
+		(uint32_t) Parameter.ServiceParameters.Service[iCurShortID].iLanguage, 4);
 
 	/* Audio/Data flag */
-	switch (Parameter.Service[iCurShortID].eAudDataFlag)
+	switch (Parameter.ServiceParameters.Service[iCurShortID].eAudDataFlag)
 	{
 	case SF_AUDIO:
 		pbiFACData->Enqueue(0 /* 0 */, 1);
@@ -198,7 +198,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	/* Service descriptor */
 	pbiFACData->Enqueue(
-		(uint32_t) Parameter.Service[iCurShortID].iServiceDescr, 5);
+		(uint32_t) Parameter.ServiceParameters.Service[iCurShortID].iServiceDescr, 5);
 
 	/* Rfa */
 	pbiFACData->Enqueue(uint32_t(0), 7);
@@ -233,7 +233,7 @@ void CFACTransmit::Init(CParameter& Parameter)
 
 	for (set<int>::iterator i = actServ.begin(); i!=actServ.end(); i++)
 	{
-		if (Parameter.Service[*i].eAudDataFlag == SF_AUDIO)
+		if (Parameter.ServiceParameters.Service[*i].eAudDataFlag == SF_AUDIO)
 		{
 			veciAudioServ.push_back(*i);
 			iNumAudio++;
@@ -375,14 +375,14 @@ void CFACTransmit::Init(CParameter& Parameter)
 /******************************************************************************\
 * CFACReceive																   *
 \******************************************************************************/
-bool CFACReceive::ChannelData(CVector<_BINARY>* pbiData, CChannel& fc, bool bSetRobm)
+bool CFACReceive::ChannelData(CVector<_BINARY>* pbiData, CCoreParameter& fc, bool bSetRobm)
 {
 		/* Base/Enhancement flag */
-		fc.bEnhancementLayerInUse = pbiData->Separate(1);
+		fc.Channel.bEnhancementLayerInUse = pbiData->Separate(1);
 
         if(bSetRobm)
         {
-            fc.eRobustness = (ERobMode)(pbiData->Separate(2));
+            fc.Channel.eRobustness = (ERobMode)(pbiData->Separate(2));
         }
         else
         {
@@ -390,23 +390,23 @@ bool CFACReceive::ChannelData(CVector<_BINARY>* pbiData, CChannel& fc, bool bSet
             switch (pbiData->Separate(2))
             {
             case 0: /* 00 */
-                fc.iFrameId = 0;
-                fc.bAFSindexValid = true;
+                fc.Channel.iFrameId = 0;
+                fc.Channel.bAFSindexValid = true;
                 break;
 
             case 1: /* 01 */
-                fc.iFrameId = 1;
-                fc.bAFSindexValid = false;
+                fc.Channel.iFrameId = 1;
+                fc.Channel.bAFSindexValid = false;
                 break;
 
             case 2: /* 10 */
-                fc.iFrameId = 2;
-                fc.bAFSindexValid = false;
+                fc.Channel.iFrameId = 2;
+                fc.Channel.bAFSindexValid = false;
                 break;
 
             case 3: /* 11 */
-                fc.iFrameId = 0;
-                fc.bAFSindexValid = false;
+                fc.Channel.iFrameId = 0;
+                fc.Channel.bAFSindexValid = false;
                 break;
             }
         }
@@ -414,27 +414,27 @@ bool CFACReceive::ChannelData(CVector<_BINARY>* pbiData, CChannel& fc, bool bSet
 		switch (pbiData->Separate(4))
 		{
 		case 0: /* 0000 */
-			fc.eSpectrumOccupancy = SO_0;
+			fc.Channel.eSpectrumOccupancy = SO_0;
 			break;
 
 		case 1: /* 0001 */
-			fc.eSpectrumOccupancy = SO_1;
+			fc.Channel.eSpectrumOccupancy = SO_1;
 			break;
 
 		case 2: /* 0010 */
-			fc.eSpectrumOccupancy = SO_2;
+			fc.Channel.eSpectrumOccupancy = SO_2;
 			break;
 
 		case 3: /* 0011 */
-			fc.eSpectrumOccupancy = SO_3;
+			fc.Channel.eSpectrumOccupancy = SO_3;
 			break;
 
 		case 4: /* 0100 */
-			fc.eSpectrumOccupancy = SO_4;
+			fc.Channel.eSpectrumOccupancy = SO_4;
 			break;
 
 		case 5: /* 0101 */
-			fc.eSpectrumOccupancy = SO_5;
+			fc.Channel.eSpectrumOccupancy = SO_5;
 			break;
 		}
 
@@ -442,11 +442,11 @@ bool CFACReceive::ChannelData(CVector<_BINARY>* pbiData, CChannel& fc, bool bSet
 		switch (pbiData->Separate(1))
 		{
 		case 0: /* 0 */
-			fc.eInterleaverDepth = SI_LONG;
+			fc.Channel.eInterleaverDepth = SI_LONG;
 			break;
 
 		case 1: /* 1 */
-			fc.eInterleaverDepth = SI_SHORT;
+			fc.Channel.eInterleaverDepth = SI_SHORT;
 			break;
 		}
 
@@ -454,19 +454,19 @@ bool CFACReceive::ChannelData(CVector<_BINARY>* pbiData, CChannel& fc, bool bSet
 		switch (pbiData->Separate(2))
 		{
 		case 0: /* 00 */
-			fc.eMSCmode = CS_3_SM;
+			fc.Channel.eMSCmode = CS_3_SM;
 			break;
 
 		case 1: /* 01 */
-			fc.eMSCmode = CS_3_HMMIX;
+			fc.Channel.eMSCmode = CS_3_HMMIX;
 			break;
 
 		case 2: /* 10 */
-			fc.eMSCmode = CS_3_HMSYM;
+			fc.Channel.eMSCmode = CS_3_HMSYM;
 			break;
 
 		case 3: /* 11 */
-			fc.eMSCmode = CS_2_SM;
+			fc.Channel.eMSCmode = CS_2_SM;
 			break;
 		}
 
@@ -474,27 +474,27 @@ bool CFACReceive::ChannelData(CVector<_BINARY>* pbiData, CChannel& fc, bool bSet
 		switch (pbiData->Separate(1))
 		{
 		case 0: /* 0 */
-			fc.eSDCmode = CS_2_SM;
+			fc.Channel.eSDCmode = CS_2_SM;
 			break;
 
 		case 1: /* 1 */
-			fc.eSDCmode = CS_1_SM;
+			fc.Channel.eSDCmode = CS_1_SM;
 			break;
 		}
 
 		/* Number of services */
 		/* Search table for entry */
-		int iNumServTabEntry = pbiData->Separate(4);
+		int iNumServField = pbiData->Separate(4);
 		for (int i = 0; i < 5; i++)
 			for (int j = 0; j < 5; j++)
-				if (iNumServTabEntry == iTableNumOfServices[i][j])
+				if (iNumServField == iTableNumOfServices[i][j])
 				{
-				    fc.iNumAudioServices = i;
-				    fc.iNumDataServices = j;
+				    fc.ServiceParameters.iNumAudioServices = i;
+				    fc.ServiceParameters.iNumDataServices = j;
 				}
 
 		/* Reconfiguration index */
-		fc.iReconfigurationIndex = pbiData->Separate(3);
+		fc.Channel.iReconfigurationIndex = pbiData->Separate(3);
 
 		/* rfu */
 		/* Do not use rfu */
@@ -524,31 +524,46 @@ bool CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		/* Reset separation function */
 		pbiFACData->ResetBitAccess();
 
-
 		/* Channel parameters ----------------------------------------------- */
-		CChannel Channel;
+		CCoreParameter param;
 
-        ChannelData(pbiFACData, Channel);
-        if(Channel.eRobustness != Parameter.Channel.eRobustness)
-        {
-            Parameter.RxEvent = ChannelReconfiguration;
-        }
-        if(Channel.eSpectrumOccupancy != Parameter.Channel.eSpectrumOccupancy)
-        {
-            Parameter.RxEvent = ChannelReconfiguration;
-        }
-        if(Channel.eSDCmode != Parameter.Channel.eSDCmode)
-        {
-            Parameter.RxEvent = ChannelReconfiguration;
-        }
-        if(Channel.eMSCmode != Parameter.Channel.eMSCmode)
-        {
-            Parameter.RxEvent = ChannelReconfiguration;
-        }
+        ChannelData(pbiFACData, param);
+        int iNumAudioServices, iNumDataServices;
 
 		Parameter.Lock();
 
-        Parameter.Channel = Channel;
+        // No robustness mode in the FAC
+        param.Channel.eRobustness = Parameter.NextConfig.Channel.eRobustness;
+
+        if(param.Channel.eSpectrumOccupancy != Parameter.Channel.eSpectrumOccupancy)
+        {
+            Parameter.RxEvent = ChannelReconfiguration;
+        }
+        if(param.Channel.eSDCmode != Parameter.Channel.eSDCmode)
+        {
+            Parameter.RxEvent = ChannelReconfiguration;
+        }
+        if(param.Channel.eMSCmode != Parameter.Channel.eMSCmode)
+        {
+            Parameter.RxEvent = ChannelReconfiguration;
+        }
+        if(Parameter.ServiceParameters.iNumAudioServices != iNumAudioServices)
+        {
+            Parameter.ServiceParameters.iNumAudioServices = iNumAudioServices;
+            Parameter.RxEvent = ServiceReconfiguration;
+        }
+        if(Parameter.ServiceParameters.iNumDataServices != iNumDataServices)
+        {
+            Parameter.ServiceParameters.iNumDataServices = iNumDataServices;
+            Parameter.RxEvent = ServiceReconfiguration;
+        }
+
+        Parameter.NextConfig = param;
+
+        // should not be in the coreconfig!
+        Parameter.Channel.iFrameId = param.Channel.iFrameId;
+        //Parameter.Channel = Channel;
+        //cerr << "FAC:Channel: "; Channel.dump(cerr);
 
 		/* Service parameters ----------------------------------------------- */
         uint32_t	iServiceID;
@@ -567,31 +582,31 @@ bool CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		switch (pbiFACData->Separate(1))
 		{
 		case 0: /* 0 */
-			Parameter.Service[iShortID].eCAIndication = CService::CA_NOT_USED;
+			Parameter.ServiceParameters.Service[iShortID].eCAIndication = CService::CA_NOT_USED;
 			break;
 
 		case 1: /* 1 */
-			Parameter.Service[iShortID].eCAIndication = CService::CA_USED;
+			Parameter.ServiceParameters.Service[iShortID].eCAIndication = CService::CA_USED;
 			break;
 		}
 
 		/* Language */
-		Parameter.Service[iShortID].iLanguage = pbiFACData->Separate(4);
+		Parameter.ServiceParameters.Service[iShortID].iLanguage = pbiFACData->Separate(4);
 
 		/* Audio/Data flag */
 		switch (pbiFACData->Separate(1))
 		{
 		case 0: /* 0 */
-			Parameter.Service[iShortID].eAudDataFlag = SF_AUDIO;
+			Parameter.ServiceParameters.Service[iShortID].eAudDataFlag = SF_AUDIO;
 			break;
 
 		case 1: /* 1 */
-			Parameter.Service[iShortID].eAudDataFlag = SF_DATA;
+			Parameter.ServiceParameters.Service[iShortID].eAudDataFlag = SF_DATA;
 			break;
 		}
 
 		/* Service descriptor */
-		Parameter.Service[iShortID].iServiceDescr = pbiFACData->Separate(5);
+		Parameter.ServiceParameters.Service[iShortID].iServiceDescr = pbiFACData->Separate(5);
 
 		Parameter.Unlock();
 

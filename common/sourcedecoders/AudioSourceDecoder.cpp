@@ -570,11 +570,11 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 		iCurSelServ = ReceiverParam.GetCurSelAudioService();
 
 		/* Current audio stream ID */
-		iCurAudioStreamID = ReceiverParam.Service[iCurSelServ].iAudioStream;
+		iCurAudioStreamID = ReceiverParam.ServiceParameters.Service[iCurSelServ].iAudioStream;
 
 		/* The requirement for this module is that the stream is used and the
 		   service is an audio service. Check it here */
-		if ((ReceiverParam.Service[iCurSelServ].eAudDataFlag != SF_AUDIO) ||
+		if ((ReceiverParam.ServiceParameters.Service[iCurSelServ].eAudDataFlag != SF_AUDIO) ||
 			(iCurAudioStreamID == STREAM_ID_NOT_USED))
 		{
 			throw CInitErr(ET_ALL);
@@ -618,7 +618,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			int iAACSampleRate, iNumHeaderBytes, iDRMchanMode = DRMCH_MONO;
 
 			/* Length of higher protected part of audio stream */
-			const int iLenAudHigh = ReceiverParam.Stream[iCurAudioStreamID].iLenPartA;
+			const int iLenAudHigh = ReceiverParam.MSCParameters.Stream[iCurAudioStreamID].iLenPartA;
 
 			/* Set number of AAC frames in a AAC super-frame */
 			switch (AudioParam.eAudioSamplRate)	/* Only 12 kHz and 24 kHz is allowed */

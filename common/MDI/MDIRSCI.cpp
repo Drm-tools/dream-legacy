@@ -100,7 +100,7 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 )
 {
 	TagItemGeneratorFAC.GenTag(Parameter, FACData.Get(NUM_FAC_BITS_PER_BLOCK));
-	int iBits = Parameter.iNumSDCBitsPerSFrame;
+	int iBits = Parameter.iNumSDCBitsPerSuperFrame;
 	if(iBits>SDCData.GetFillLevel())
 		iBits = 0;
 	TagItemGeneratorSDC.GenTag(Parameter, SDCData.Get(iBits));
@@ -778,7 +778,7 @@ CMDIOut::InitInternal(CParameter& Parameter)
 {
 	iFrameCount = 0;
 	iInputBlockSize = NUM_FAC_BITS_PER_BLOCK;
-	iInputBlockSize2 = Parameter.iNumSDCBitsPerSFrame;
+	iInputBlockSize2 = Parameter.iNumSDCBitsPerSuperFrame;
 	veciInputBlockSize.resize(MAX_NUM_STREAMS);
 	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
 		veciInputBlockSize[i] = Parameter.GetStreamLen(i);
@@ -793,7 +793,7 @@ CMDIOut::ProcessDataInternal(CParameter& Parameter)
 	switch(iFrameCount)
 	{
 	case 0:
-		iInputBlockSize = Parameter.iNumSDCBitsPerSFrame;
+		iInputBlockSize = Parameter.iNumSDCBitsPerSuperFrame;
 		iFrameCount = 1;
 		break;
 	case 1:

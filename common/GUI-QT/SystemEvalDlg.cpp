@@ -108,7 +108,7 @@ void SystemEvalDlg::InitialiseLEDs()
 void SystemEvalDlg::UpdateLEDs(CParameter& Parameters)
 {
     int iCurSelAudioServ = Parameters.GetCurSelAudioService();
-    if(Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
+    if(Parameters.ServiceParameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
         SetStatus(LEDMSC, Parameters.ReceiveStatus.MOT.GetStatus());
     else
         SetStatus(LEDMSC, Parameters.ReceiveStatus.Audio.GetStatus());
@@ -434,17 +434,17 @@ void SystemEvalDlg::UpdateFAC(CParameter& Parameters)
 	FACSDCMSCModeV->setText(strFACInfo); /* Value */
 
 	/* Code rates #################### */
-	strFACInfo = QString().setNum(Parameters.MSCPrLe.iPartB);
+	strFACInfo = QString().setNum(Parameters.MSCParameters.ProtectionLevel.iPartB);
 	strFACInfo += " / ";
-	strFACInfo += QString().setNum(Parameters.MSCPrLe.iPartA);
+	strFACInfo += QString().setNum(Parameters.MSCParameters.ProtectionLevel.iPartA);
 
 	FACCodeRateV->setText(strFACInfo); /* Value */
 
 	/* Number of services #################### */
 	strFACInfo = tr("Audio: ");
-	strFACInfo += QString().setNum(Parameters.Channel.iNumAudioServices);
+	strFACInfo += QString().setNum(Parameters.ServiceParameters.iNumAudioServices);
 	strFACInfo += tr(" / Data: ");
-	strFACInfo +=QString().setNum(Parameters.Channel.iNumDataServices);
+	strFACInfo +=QString().setNum(Parameters.ServiceParameters.iNumDataServices);
 
 	FACNumServicesV->setText(strFACInfo); /* Value */
 

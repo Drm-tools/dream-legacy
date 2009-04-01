@@ -178,10 +178,10 @@ CShortLog::writeHeader()
 	}
 	int iCurSelServ = Parameters.GetCurSelAudioService();
 
-	if (Parameters.Service[iCurSelServ].IsActive())
+	if (Parameters.ServiceParameters.Service[iCurSelServ].IsActive())
 	{
 		/* Service label (UTF-8 encoded string -> convert ? TODO locale) */
-		label = Parameters.Service[iCurSelServ].strLabel;
+		label = Parameters.ServiceParameters.Service[iCurSelServ].strLabel;
 		bitrate = Parameters.GetBitRateKbps(iCurSelServ, false);
 		RobMode = GetRobModeStr();
 		SpecOcc = Parameters.Channel.eSpectrumOccupancy;
@@ -400,9 +400,9 @@ CLongLog::writeParameters()
 	if (Parameters.ReceiveStatus.FAC.GetStatus() == RX_OK)
 	{
 		/* Copy protection levels */
-		iCurProtLevPartA = Parameters.MSCPrLe.iPartA;
-		iCurProtLevPartB = Parameters.MSCPrLe.iPartB;
-		iCurProtLevPartH = Parameters.MSCPrLe.iHierarch;
+		iCurProtLevPartA = Parameters.MSCParameters.ProtectionLevel.iPartA;
+		iCurProtLevPartB = Parameters.MSCParameters.ProtectionLevel.iPartB;
+		iCurProtLevPartH = Parameters.MSCParameters.ProtectionLevel.iHierarch;
 		switch (Parameters.Channel.eMSCmode)
 		{
 		case CS_3_SM:

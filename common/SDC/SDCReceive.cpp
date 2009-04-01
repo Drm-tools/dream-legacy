@@ -63,7 +63,7 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 	if (eSDCType == SDC_DRM)
 	{
 		iLengthDataFieldBytes =
-			(int) ((_REAL) (Parameter.iNumSDCBitsPerSFrame - 20) / 8);
+			(int) ((_REAL) (Parameter.iNumSDCBitsPerSuperFrame - 20) / 8);
 
 		/* 20 bits from AFS index and CRC */
 		iUsefulBitsSDC= 20 + iLengthDataFieldBytes * 8;
@@ -71,13 +71,12 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 	else	// SDC_AMSS
 	{
 		iLengthDataFieldBytes =
-			(int) ((_REAL) (Parameter.iNumSDCBitsPerSFrame - 16) / 8);
+			(int) ((_REAL) (Parameter.iNumSDCBitsPerSuperFrame - 16) / 8);
 
 		/* 16 bits from CRC */
 		iUsefulBitsSDC = 16 + iLengthDataFieldBytes * 8;
 	}
 	Parameter.Unlock();
-
 	/* CRC ------------------------------------------------------------------ */
 	/* Check the CRC of this data block */
 	CRCObject.Reset(16);
@@ -106,6 +105,7 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 		iNumBytesForCRCCheck = iUsefulBitsSDC / BITS_BINARY - 2;
 	}
 
+//cerr << "SDC: len " << Parameter.iNumSDCBitsPerSFrame << " crcbytes " << iNumBytesForCRCCheck << endl;
 	for (int i = 0; i < iNumBytesForCRCCheck; i++)
 		CRCObject.AddByte((_BYTE) pbiData->Separate(BITS_BINARY));
 
@@ -146,6 +146,8 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 			else
 				bVersionFlag = true;
 
+            CCoreParameter cp;
+
 			/* Data entity type */
 			/* First calculate number of bits for this entity ("+ 4" because of:
 			   "The body of the data entities shall be at least 4 bits long. The
@@ -157,7 +159,20 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 			switch (pbiData->Separate(4))
 			{
 			case 0: /* Type 0 */
-				bError = DataEntityType0(pbiData, iLengthOfBody, Parameter, bVersionFlag);
+				bError = DataEntityType0(pbiData, iLengthOfBody, cp);
+                /* service reconfiguration is pending if changing current or next
+                 * and is different from current!!!
+                 */
+                if(!(Parameter.MSCParameters == cp.MSCParameters))
+                {
+                    bServiceReconfigurationPending = true;
+                    Parameter.Lock();
+                    if(bVersionFlag)
+                        Parameter.NextConfig.MSCParameters = cp.MSCParameters;
+                    else
+                        Parameter.NextConfig.MSCParameters = cp.MSCParameters;
+                    Parameter.Unlock();
+                }
 				break;
 
 			case 1: /* Type 1 */
@@ -202,6 +217,14 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 
 			case 12: /* Type 12 */
 				bError = DataEntityType12(pbiData, iLengthOfBody, Parameter);
+				break;
+
+			case 13: /* Type 13 */
+				bError = DataEntityType13(pbiData, iLengthOfBody, Parameter, bVersionFlag);
+				break;
+
+			case 14: /* Type 14 */
+				bError = DataEntityType14(pbiData, iLengthOfBody, Parameter, bVersionFlag);
 				break;
 
 			default:
@@ -249,7 +272,7 @@ CSDCReceive::ERetStatus CSDCReceive::SDCIParam(CVector<_BINARY>* pbiData,
 	int iLengthOfBody = (pbiData->Size()-8) / BITS_BINARY;
 	pbiData->ResetBitAccess();
 	(void)pbiData->Separate(4);
-	if(DataEntityType0(pbiData, iLengthOfBody, Parameter, 0))
+	if(DataEntityType0(pbiData, iLengthOfBody, Parameter))
 		return SR_BAD_DATA;
 	else
 		return SR_OK;
@@ -261,8 +284,7 @@ CSDCReceive::ERetStatus CSDCReceive::SDCIParam(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 bool CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
-									  CParameter& Parameter,
-									  const bool bForNextConfig)
+									  CCoreParameter& Parameter)
 {
 	/* The receiver may determine the number of streams present in the multiplex
 	   by dividing the length field of the header by three (6.4.3.1) */
@@ -272,10 +294,6 @@ bool CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 	/* Check number of streams for overflow */
 	if (iNumStreams > MAX_NUM_STREAMS)
 		return true; // TODO - whats the safe consumption rule?
-
-    CCoreParameter& param = Parameter.NextConfig;
-//    if(bForNextConfig)
-//       param = Parameter.NextConfig;
 
     CMSCProtLev				MSCPrLe;
     int						iLenPartA;
@@ -291,16 +309,14 @@ bool CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
     /* Reset hierarchical flag (hierarchical present or not) */
     bool bWithHierarch = false;
 
-    Parameter.Lock();
-
     /* Set stream parameters */
     for (int i = 0; i < iNumStreams; i++)
     {
         /* In case of hierachical modulation stream 0 describes the protection
            level and length of hierarchical data */
         if ((i == 0) &&
-            ((param.Channel.eMSCmode == CS_3_HMSYM) ||
-            (param.Channel.eMSCmode == CS_3_HMMIX)))
+            ((Parameter.Channel.eMSCmode == CS_3_HMSYM) ||
+            (Parameter.Channel.eMSCmode == CS_3_HMMIX)))
         {
             /* Protection level for hierarchical */
             MSCPrLe.iHierarch = pbiData->Separate(2);
@@ -327,28 +343,13 @@ bool CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
             iLenPartB = pbiData->Separate(12);
         }
 
-        /* service reconfiguration is pending if changing current or next
-         * and is different from current!!!
-         */
-        if(Parameter.Stream[i].iLenPartA != iLenPartA)
-            bServiceReconfigurationPending = true;
-        if(Parameter.Stream[i].iLenPartB != iLenPartB)
-            bServiceReconfigurationPending = true;
-
-        /* Set new parameters in global struct */
-        param.Stream[i].iLenPartA = iLenPartA;
-        param.Stream[i].iLenPartB = iLenPartB;
+        /* Set new Parameter.NextConfigeters in global struct */
+        Parameter.MSCParameters.Stream[i].iLenPartA = iLenPartA;
+        Parameter.MSCParameters.Stream[i].iLenPartB = iLenPartB;
     }
 
-    if(Parameter.MSCPrLe != MSCPrLe)
-    {
-        bServiceReconfigurationPending = true;
-        cerr << "new MSCPrLe" << endl;
-    }
     /* Set new parameters in global struct */
-    param.MSCPrLe = MSCPrLe;
-
-    Parameter.Unlock();
+    Parameter.MSCParameters.ProtectionLevel = MSCPrLe;
 
 	return bError;
 }
@@ -387,10 +388,10 @@ bool CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
 
 		/* store label string in the current service structure */
 		Parameter.Lock();
-		Parameter.Service[iTempShortID].strLabel = strLabel;
+		Parameter.ServiceParameters.Service[iTempShortID].strLabel = strLabel;
 		/* and keep it in the persistent service information store.
 		 * But only if the FAC has already seen the sid. */
-		uint32_t sid = Parameter.Service[iTempShortID].iServiceID;
+		uint32_t sid = Parameter.ServiceParameters.Service[iTempShortID].iServiceID;
 		if(sid != SERV_ID_NOT_USED)
 		{
 			(void)Parameter.ServiceInformation[sid].label.insert(strLabel);
@@ -804,24 +805,24 @@ bool CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 
 	Parameter.Lock();
 
-	if(Parameter.Service[iShortID].iDataStream != iStreamID)
+	if(Parameter.ServiceParameters.Service[iShortID].iDataStream != iStreamID)
         bServiceReconfigurationPending = true;
-	if(Parameter.Service[iShortID].iPacketID != iPacketID)
+	if(Parameter.ServiceParameters.Service[iShortID].iPacketID != iPacketID)
         bServiceReconfigurationPending = true;
 
-	if(Parameter.Stream[iStreamID].iPacketLen != iPacketLen)
+	if(Parameter.MSCParameters.Stream[iStreamID].iPacketLen != iPacketLen)
         bServiceReconfigurationPending = true;
 	if(Parameter.DataParam[iStreamID][iPacketID]!= DataParam)
         bServiceReconfigurationPending = true;
 
-	Parameter.Service[iShortID].iDataStream = iStreamID;
-	Parameter.Service[iShortID].iPacketID = iPacketID;
+	Parameter.ServiceParameters.Service[iShortID].iDataStream = iStreamID;
+	Parameter.ServiceParameters.Service[iShortID].iPacketID = iPacketID;
 
     size_t n = iStreamID+1;
-    if(Parameter.NextConfig.Stream.size()<n)
-        Parameter.NextConfig.Stream.resize(n);
+    if(Parameter.NextConfig.MSCParameters.Stream.size()<n)
+        Parameter.NextConfig.MSCParameters.Stream.resize(n);
 
-	Parameter.NextConfig.Stream[iStreamID].iPacketLen = iPacketLen;
+	Parameter.NextConfig.MSCParameters.Stream[iStreamID].iPacketLen = iPacketLen;
     if(Parameter.NextConfig.DataParam.size()<n)
         Parameter.NextConfig.DataParam.resize(n);
     n = iPacketID+1;
@@ -1188,13 +1189,13 @@ bool CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 	{
 		Parameter.Lock();
 
-		if(Parameter.Service[iShortID].iAudioStream != iStreamID)
+		if(Parameter.ServiceParameters.Service[iShortID].iAudioStream != iStreamID)
             bServiceReconfigurationPending = true;
 
 		if(Parameter.AudioParam[iStreamID] != AudParam)
             bServiceReconfigurationPending = true;
 
-		Parameter.Service[iShortID].iAudioStream = iStreamID;
+		Parameter.ServiceParameters.Service[iShortID].iAudioStream = iStreamID;
 
         size_t n = iStreamID+1;
 
@@ -1223,7 +1224,7 @@ bool CSDCReceive::DataEntityType10(CVector<_BINARY>* pbiData,
     if(bForNextConfig)
     {
 		Parameter.Lock();
-        CFACReceive::ChannelData(pbiData, Parameter.NextConfig.Channel, true);
+        CFACReceive::ChannelData(pbiData, Parameter.NextConfig, true);
         if(Parameter.Channel.iReconfigurationIndex>0)
         {
             const CChannel& current = Parameter.Channel;
@@ -1457,28 +1458,28 @@ bool CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
 	   audience of the service according to ISO 639-2 using three lower case
 	   characters as specified by ISO 8859-1. If the language is not specified,
 	   the field shall contain three "-" characters */
-	Parameter.Service[iShortID].strLanguageCode = "";
+	Parameter.ServiceParameters.Service[iShortID].strLanguageCode = "";
 	for (i = 0; i < 3; i++)
 	{
 		/* Get character */
 		const char cNewChar = char(pbiData->Separate(8));
 
 		/* Append new character */
-		Parameter.Service[iShortID].strLanguageCode.append(&cNewChar, 1);
+		Parameter.ServiceParameters.Service[iShortID].strLanguageCode.append(&cNewChar, 1);
 	}
 
 	/* Country code: this 16-bit field identifies the country of origin of the
 	   service (the site of the studio) according to ISO 3166 using two lower
 	   case characters as specified by ISO 8859-1. If the country code is not
 	   specified, the field shall contain two "-" characters */
-	Parameter.Service[iShortID].strCountryCode = "";
+	Parameter.ServiceParameters.Service[iShortID].strCountryCode = "";
 	for (i = 0; i < 2; i++)
 	{
 		/* Get character */
 		const char cNewChar = char(pbiData->Separate(8));
 
 		/* Append new character */
-		Parameter.Service[iShortID].strCountryCode.append(&cNewChar, 1);
+		Parameter.ServiceParameters.Service[iShortID].strCountryCode.append(&cNewChar, 1);
 	}
 	Parameter.Unlock();
 
@@ -1491,6 +1492,7 @@ bool CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
 bool CSDCReceive::DataEntityType13(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter, const bool bVersion)
 {
+    pbiData->Separate(iLengthOfBody * 8 + 4); // TODO
 }
 
 /******************************************************************************\
@@ -1499,4 +1501,5 @@ bool CSDCReceive::DataEntityType13(CVector<_BINARY>* pbiData, const int iLengthO
 bool CSDCReceive::DataEntityType14(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter, const bool bForNextConfig)
 {
+    pbiData->Separate(iLengthOfBody * 8 + 4); // TODO
 }

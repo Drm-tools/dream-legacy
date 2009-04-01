@@ -37,7 +37,6 @@
 #include "BWSViewer.h"
 #include "SlideShowViewer.h"
 #include <QColorDialog>
-#include <QButtonGroup>
 #include <iostream>
 
 /* Implementation *************************************************************/
@@ -48,13 +47,11 @@ DRMMainWindow::DRMMainWindow(CDRMReceiver& NDRMR, CSettings& NSettings,
     jlViewer(NULL), bwsViewer(NULL), slideShowViewer(NULL),
 	sysEvalDlg(NULL), stationsDlg(NULL), liveScheduleDlg(NULL),
 	epgDlg(NULL), receiverSettingsDlg(NULL), multSettingsDlg(NULL),
-	loghelper(NDRMR, NSettings), iCurSelServiceGUI(-1), iOldNoServicesGUI(0),
+	serviceGroup(NULL),
+	loghelper(NDRMR, NSettings), iCurSelServiceGUI(-1),
 	Timer(), eReceiverMode(NONE), quitWanted(true)
 {
     setupUi(this);
-
-	/* Set help text for the controls */
-	AddWhatsThisHelp();
 
 	/* Evaluation window */
 	sysEvalDlg = new SystemEvalDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
@@ -113,29 +110,12 @@ DRMMainWindow::DRMMainWindow(CDRMReceiver& NDRMR, CSettings& NSettings,
 	ProgrInputLevel->setAlarmLevel(-12.5);
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
 
-	CParameter& Parameters = *Receiver.GetParameters();
-
-	Parameters.Lock();
-
-	/* Init current selected service */
-	Parameters.ResetCurSelAudDatServ();
-
-	Parameters.Unlock();
-
 	/* Update times for color LEDs */
 	CLED_FAC->SetUpdateTime(1500);
 	CLED_SDC->SetUpdateTime(1500);
 	CLED_MSC->SetUpdateTime(600);
 
-	iCurSelServiceGUI = 0;
-	iOldNoServicesGUI = 0;
-
-	PushButtonService1->setEnabled(false);
-	PushButtonService2->setEnabled(false);
-	PushButtonService3->setEnabled(false);
-	PushButtonService4->setEnabled(false);
-
-    QButtonGroup* serviceGroup = new QButtonGroup(this);
+    serviceGroup = new QButtonGroup(this);
     serviceGroup->addButton(PushButtonService1, 0);
     serviceGroup->addButton(PushButtonService2, 1);
     serviceGroup->addButton(PushButtonService3, 2);
@@ -159,6 +139,9 @@ DRMMainWindow::DRMMainWindow(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Disable text message label */
 	TextTextMessage->setText("");
 	TextTextMessage->setEnabled(false);
+
+	/* Set help text for the controls */
+	AddWhatsThisHelp();
 
 }
 
@@ -205,7 +188,7 @@ void DRMMainWindow::OnTimer()
         ProgrInputLevel->setValue(Parameter.GetIFSignalLevel());
 
         iCurSelAudioServ = Parameter.GetCurSelAudioService();
-        if(Parameter.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
+        if(Parameter.ServiceParameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
             SetStatus(CLED_MSC, Parameter.ReceiveStatus.MOT.GetStatus());
         else
             SetStatus(CLED_MSC, Parameter.ReceiveStatus.Audio.GetStatus());
@@ -229,56 +212,15 @@ void DRMMainWindow::OnTimer()
 	}
 }
 
-void DRMMainWindow::UpdateDisplay()
+void DRMMainWindow::ShowTextMessage(const CAudioParam& AudioParam)
 {
-	CParameter& Parameters = *(Receiver.GetParameters());
-
-	Parameters.Lock();
-
-	/* Receiver does receive a DRM signal ------------------------------- */
-	/* First get current selected services */
-	int iCurSelAudioServ = Parameters.GetCurSelAudioService();
-
-	/* If the current audio service is not active or is an only data service
-	   select the first audio service available */
-
-	if (!Parameters.Service[iCurSelAudioServ].IsActive() ||
-	    Parameters.Service[iCurSelAudioServ].iAudioStream == STREAM_ID_NOT_USED ||
-	    Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
-	{
-		int i = 0;
-		bool bStop = false;
-
-		while ((bStop == false) && (i < MAX_NUM_SERVICES))
-		{
-			if (Parameters.Service[i].IsActive() &&
-			    Parameters.Service[i].iAudioStream != STREAM_ID_NOT_USED &&
-			    Parameters.Service[i].eAudDataFlag == SF_AUDIO)
-			{
-				iCurSelAudioServ = i;
-				bStop = true;
-			}
-			else
-				i++;
-		}
-	}
-
-	int iAudioStream = Parameters.Service[iCurSelAudioServ].iAudioStream;
-
-	/* If selected service is audio and text message is true */
-	if (
-		(Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_AUDIO)
-	&&	(iAudioStream != STREAM_ID_NOT_USED)
-	&&	(Parameters.AudioParam[iAudioStream].bTextflag == true)
-	)
+	if(AudioParam.bTextflag)
 	{
 		/* Activate text window */
 		TextTextMessage->setEnabled(true);
 
 		/* Text message of current selected audio service (UTF-8 decoding) */
-		QString textMessage = QString().fromUtf8(
-            Parameters.AudioParam[iAudioStream].strTextMessage.c_str()
-        );
+		QString textMessage = QString().fromUtf8(AudioParam.strTextMessage.c_str());
 		QString formattedMessage = "";
 		for (int i = 0; i < textMessage.length(); i++)
 		{
@@ -324,13 +266,61 @@ void DRMMainWindow::UpdateDisplay()
 		/* Clear Text */
 		TextTextMessage->setText("");
 	}
+}
+
+void DRMMainWindow::UpdateDisplay()
+{
+	CParameter& Parameters = *(Receiver.GetParameters());
+
+	Parameters.Lock();
+
+	/* Receiver does receive a DRM signal ------------------------------- */
+	/* First get current selected services */
+	int iCurSelAudioServ = Parameters.GetCurSelAudioService();
+
+	const vector<CService>& Service = Parameters.ServiceParameters.Service;
+
+	/* If the current audio service is not active or is an only data service
+	   select the first audio service available */
+
+	if (!Service[iCurSelAudioServ].IsActive() ||
+	    Service[iCurSelAudioServ].iAudioStream == STREAM_ID_NOT_USED ||
+	    Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
+	{
+		for(int i=0; i < MAX_NUM_SERVICES; i++)
+		{
+			if (Service[i].IsActive() &&
+			    Service[i].iAudioStream != STREAM_ID_NOT_USED &&
+			    Service[i].eAudDataFlag == SF_AUDIO)
+			{
+				iCurSelAudioServ = i;
+				break;
+			}
+		}
+	}
+
+	int iAudioStream = Service[iCurSelAudioServ].iAudioStream;
+
+	/* If selected service is audio and text message is true */
+	if ((Service[iCurSelAudioServ].eAudDataFlag == SF_AUDIO) && (iAudioStream != STREAM_ID_NOT_USED))
+	{
+	    ShowTextMessage(Parameters.AudioParam[iAudioStream]);
+	}
+	else
+	{
+		/* Deactivate text window */
+		TextTextMessage->setEnabled(false);
+
+		/* Clear Text */
+		TextTextMessage->setText("");
+	}
 
 	/* Check whether service parameters were not transmitted yet */
-	if (Parameters.Service[iCurSelAudioServ].IsActive())
+	if (Service[iCurSelAudioServ].IsActive())
 	{
 		/* Service label (UTF-8 encoded string -> convert) */
 		LabelServiceLabel->setText(QString().fromUtf8(
-			Parameters.Service[iCurSelAudioServ].
+			Service[iCurSelAudioServ].
 			strLabel.c_str()));
 
 		/* Bit-rate */
@@ -357,7 +347,7 @@ void DRMMainWindow::UpdateDisplay()
 
 		/* Service ID (plot number in hexadecimal format) */
 		const long iServiceID = (long) Parameters.
-			Service[iCurSelAudioServ].iServiceID;
+			ServiceParameters.Service[iCurSelAudioServ].iServiceID;
 
 		if (iServiceID != 0)
 		{
@@ -374,11 +364,11 @@ void DRMMainWindow::UpdateDisplay()
 		LabelStereoMono->setText(GetTypeString(iCurSelAudioServ));
 
 		/* Language and program type labels (only for audio service) */
-		if (Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_AUDIO)
+		if (Service[iCurSelAudioServ].eAudDataFlag == SF_AUDIO)
 		{
 		/* SDC Language */
 		const string strLangCode = Parameters.
-			Service[iCurSelAudioServ].strLanguageCode;
+			ServiceParameters.Service[iCurSelAudioServ].strLanguageCode;
 
 		if ((!strLangCode.empty()) && (strLangCode != "---"))
 		{
@@ -389,7 +379,7 @@ void DRMMainWindow::UpdateDisplay()
 		{
 			/* FAC Language */
 			const int iLanguageID = Parameters.
-				Service[iCurSelAudioServ].iLanguage;
+				ServiceParameters.Service[iCurSelAudioServ].iLanguage;
 
 			if ((iLanguageID > 0) &&
 				(iLanguageID < LEN_TABLE_LANGUAGE_CODE))
@@ -403,7 +393,7 @@ void DRMMainWindow::UpdateDisplay()
 
 			/* Program type */
 			const int iProgrammTypeID = Parameters.
-				Service[iCurSelAudioServ].iServiceDescr;
+				ServiceParameters.Service[iCurSelAudioServ].iServiceDescr;
 
 			if ((iProgrammTypeID > 0) &&
 				(iProgrammTypeID < LEN_TABLE_PROG_TYPE_CODE))
@@ -417,7 +407,7 @@ void DRMMainWindow::UpdateDisplay()
 
 		/* Country code */
 		const string strCntryCode = Parameters.
-			Service[iCurSelAudioServ].strCountryCode;
+			ServiceParameters.Service[iCurSelAudioServ].strCountryCode;
 
 		if ((!strCntryCode.empty()) && (strCntryCode != "--"))
 		{
@@ -445,78 +435,38 @@ void DRMMainWindow::UpdateDisplay()
 	/* Make sure a possible service was selected. If not, correct. Make sure
 	   an audio service is selected. If we have a data only service, we do
 	   not want to have the button pressed */
-	if (((!Parameters.Service[iCurSelServiceGUI].IsActive()) ||
+
+	if (iCurSelServiceGUI>0 && ((!Service[iCurSelServiceGUI].IsActive()) ||
 		(iCurSelServiceGUI != iCurSelAudioServ) &&
-		Parameters.Service[iCurSelAudioServ].IsActive()) &&
+		Service[iCurSelAudioServ].IsActive()) &&
 		/* Make sure current selected audio service is not a data only
 		   service */
-		(Parameters.Service[iCurSelAudioServ].IsActive() &&
-		(Parameters.Service[iCurSelAudioServ].eAudDataFlag != SF_DATA)))
+		(Service[iCurSelAudioServ].IsActive() &&
+		(Service[iCurSelAudioServ].eAudDataFlag != SF_DATA)))
 	{
 		/* Reset checks */
-		PushButtonService1->setOn(false);
-		PushButtonService2->setOn(false);
-		PushButtonService3->setOn(false);
-		PushButtonService4->setOn(false);
 
-		/* Set right flag */
-		switch (iCurSelAudioServ)
-		{
-		case 0:
-			PushButtonService1->setOn(true);
-			iCurSelServiceGUI = 0;
-			break;
-
-		case 1:
-			PushButtonService2->setOn(true);
-			iCurSelServiceGUI = 1;
-			break;
-
-		case 2:
-			PushButtonService3->setOn(true);
-			iCurSelServiceGUI = 2;
-			break;
-
-		case 3:
-			PushButtonService4->setOn(true);
-			iCurSelServiceGUI = 3;
-			break;
-		}
+        iCurSelServiceGUI = iCurSelAudioServ;
+		serviceGroup->button(iCurSelServiceGUI)->setOn(true);
 	}
-	else if (Parameters.Service[iCurSelServiceGUI].eAudDataFlag == SF_DATA)
+	else if (Service[iCurSelServiceGUI].eAudDataFlag == SF_DATA)
 	{
-		/* In case we only have data services, reset checks */
-		PushButtonService1->setOn(false);
-		PushButtonService2->setOn(false);
-		PushButtonService3->setOn(false);
-		PushButtonService4->setOn(false);
+		/* In case we only have data services, set all off (TODO - review this policy */
+		serviceGroup->button(iCurSelServiceGUI)->setOn(true);
+		serviceGroup->button(iCurSelServiceGUI)->setOn(false);
 	}
 
 	/* Service selector ------------------------------------------------- */
-	/* Enable only so many number of channel switches as present in the stream */
-	const int iNumServices
-        = Parameters.Channel.iNumAudioServices+Parameters.Channel.iNumDataServices;
 
 	QString m_StaticService[MAX_NUM_SERVICES] = {"", "", "", ""};
-
-	/* Reset all buttons only if number of services has changed */
-	if (iOldNoServicesGUI != iNumServices)
-	{
-		PushButtonService1->setEnabled(false);
-		PushButtonService2->setEnabled(false);
-		PushButtonService3->setEnabled(false);
-		PushButtonService4->setEnabled(false);
-	}
-	iOldNoServicesGUI = iNumServices;
 
 	for (int i = 0; i < MAX_NUM_SERVICES; i++)
 	{
 		/* Check, if service is used */
-		if (Parameters.Service[i].IsActive())
+		if (Service[i].IsActive())
 		{
 			/* Do UTF-8 to string conversion with the label strings */
-			QString strLabel = QString().fromUtf8(
-			Parameters.Service[i].strLabel.c_str());
+			QString strLabel = QString().fromUtf8(Service[i].strLabel.c_str());
 
 			/* Label for service selection button (service label, codec
 			   and Mono / Stereo information) */
@@ -535,11 +485,11 @@ void DRMMainWindow::UpdateDisplay()
 			}
 
 			/* Show, if a multimedia stream is connected to this service */
-			if ((Parameters.Service[i].eAudDataFlag ==SF_AUDIO) &&
-				(Parameters.Service[i].iDataStream != STREAM_ID_NOT_USED))
+			if ((Service[i].eAudDataFlag ==SF_AUDIO) &&
+				(Service[i].iDataStream != STREAM_ID_NOT_USED))
 			{
-				int iStreamID = Parameters.Service[i].iDataStream;
-				int iPacketID = Parameters.Service[i].iPacketID;
+				int iStreamID = Service[i].iDataStream;
+				int iPacketID = Service[i].iPacketID;
 				CDataParam& dataParam = Parameters.DataParam[iStreamID][iPacketID];
 
 				if (dataParam.eUserAppIdent == AT_MOTEPG)
@@ -554,32 +504,17 @@ void DRMMainWindow::UpdateDisplay()
 				Parameters.GetBitRateKbps(i, true), 'f', 2) + " kbps)";
 			}
 
-			switch (i)
-			{
-			case 0:
-				PushButtonService1->setEnabled(true);
-				break;
-
-			case 1:
-				PushButtonService2->setEnabled(true);
-				break;
-
-			case 2:
-				PushButtonService3->setEnabled(true);
-				break;
-
-			case 3:
-				PushButtonService4->setEnabled(true);
-				break;
-			}
+			serviceGroup->button(i)->setEnabled(true);
 		}
+        else
+			serviceGroup->button(i)->setEnabled(false);
 	}
 
 	/* detect if AFS information is available */
 	if ((Parameters.AltFreqSign.vecMultiplexes.size() > 0) || (Parameters.AltFreqSign.vecOtherServices.size() > 0))
 	{
 		/* show AFS label */
-		if (Parameters.Service[0].eAudDataFlag == SF_AUDIO) m_StaticService[0] += tr(" + AFS");
+		if (Service[0].eAudDataFlag == SF_AUDIO) m_StaticService[0] += tr(" + AFS");
 	}
 
 	Parameters.Unlock();
@@ -647,20 +582,23 @@ void DRMMainWindow::SetService(int shortID)
 	Parameters.SetCurSelAudioService(shortID);
 	Parameters.SetCurSelDataService(shortID);
 
-	EStreamType eAudDataFlag = Parameters.Service[shortID].eAudDataFlag;
+    const CService& s = Parameters.ServiceParameters.Service[shortID];
+    uint32_t iServiceID = s.iServiceID;
+    EStreamType eAudDataFlag = s.eAudDataFlag;
+    EAppType eAppIdent = AT_NOT_SUP;
+
+	if (eAudDataFlag == SF_DATA)
+	{
+		eAppIdent = Parameters.DataParam[s.iDataStream][s.iPacketID].eUserAppIdent;
+	}
+
 	Parameters.Unlock();
 
 	/* If service is only data service or has a multimedia content
 	   , activate multimedia window */
 	if (eAudDataFlag == SF_DATA)
 	{
-		Parameters.Lock();
-		int iStreamID = Parameters.Service[shortID].iDataStream;
-		int iPacketID = Parameters.Service[shortID].iPacketID;
-		CDataParam& dataParam = Parameters.DataParam[iStreamID][iPacketID];
-		EAppType eAppIdent = dataParam.eUserAppIdent;
-		Parameters.Unlock();
-		QString sid = QString("%1").arg(Parameters.Service[shortID].iServiceID, 0, 16);
+		QString sid = QString("%1").arg(iServiceID, 0, 16);
         switch(eAppIdent)
         {
             case AT_MOTEPG:
@@ -720,6 +658,15 @@ void DRMMainWindow::showEvent(QShowEvent* pEvent)
         liveScheduleDlg->show();
 	if(Settings.Get("DRMGUI", "EPGvisible", false))
         epgDlg->show();
+
+	CParameter& Parameters = *Receiver.GetParameters();
+
+	Parameters.Lock();
+
+	/* Init current selected service */
+	Parameters.ResetCurSelAudDatServ();
+
+	Parameters.Unlock();
 
 	/* Activate real-time timers */
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
@@ -788,24 +735,24 @@ void DRMMainWindow::closeEvent(QCloseEvent* ce)
 	ce->accept();
 }
 
-QString DRMMainWindow::GetCodecString(const int iServiceID)
+QString DRMMainWindow::GetCodecString(const int shortID)
 {
 
-	CParameter& Parameters = *Receiver.GetParameters();
+	const CParameter& Parameters = *Receiver.GetParameters();
 
+    const CService& s = Parameters.ServiceParameters.Service[shortID];
 
 	/* First check if it is audio or data service */
-	if (Parameters.Service[iServiceID].eAudDataFlag == SF_AUDIO)
+	if (s.eAudDataFlag == SF_AUDIO)
 	{
 		/* Audio service */
-		int iAudioStream = Parameters.Service[iServiceID].iAudioStream;
 
-        if (iAudioStream == STREAM_ID_NOT_USED)
+        if (s.iAudioStream == STREAM_ID_NOT_USED)
         {
            return QString("Waiting for stream info");
         }
 
-		CAudioParam& audioParam = Parameters.AudioParam[iAudioStream];
+		const CAudioParam& audioParam = Parameters.AudioParam[s.iAudioStream];
 
 		QString strReturn;
 
@@ -850,21 +797,23 @@ QString DRMMainWindow::GetCodecString(const int iServiceID)
 	}
 }
 
-QString DRMMainWindow::GetTypeString(const int iServiceID)
+QString DRMMainWindow::GetTypeString(const int shortID)
 {
 	QString strReturn;
 
-	CParameter& Parameters = *Receiver.GetParameters();
+	const CParameter& Parameters = *Receiver.GetParameters();
+    const CService& s = Parameters.ServiceParameters.Service[shortID];
+
 	/* First check if it is audio or data service */
-	if (Parameters.Service[iServiceID].eAudDataFlag == SF_AUDIO)
+	if (s.eAudDataFlag == SF_AUDIO)
 	{
-        if (Parameters.Service[iServiceID].iAudioStream == STREAM_ID_NOT_USED)
+        if (s.iAudioStream == STREAM_ID_NOT_USED)
         {
            return QString("Waiting for stream info");
         }
 
 		/* Audio service */
-		CAudioParam& audioParam = Parameters.AudioParam[Parameters.Service[iServiceID].iAudioStream];
+		const CAudioParam& audioParam = Parameters.AudioParam[s.iAudioStream];
 		/* Mono-Stereo */
 		switch (audioParam.eAudioMode)
 		{
@@ -883,14 +832,12 @@ QString DRMMainWindow::GetTypeString(const int iServiceID)
 	}
 	else
 	{
-        if (Parameters.Service[iServiceID].iDataStream == STREAM_ID_NOT_USED)
+        if (s.iDataStream == STREAM_ID_NOT_USED)
         {
            return QString("Waiting for stream info");
         }
 		/* Data service */
-		CDataParam& dataParam = Parameters.DataParam[
-				Parameters.Service[iServiceID].iDataStream]
-				[Parameters.Service[iServiceID].iPacketID];
+		const CDataParam& dataParam = Parameters.DataParam[s.iDataStream][s.iPacketID];
 		if (dataParam.ePacketModInd == PM_PACKET_MODE)
 		{
 			if (dataParam.eAppDomain == CDataParam::AD_DAB_SPEC_APP)
@@ -1084,10 +1031,9 @@ void DRMMainWindow::AddWhatsThisHelp()
 		"In this case the alternative frequencies can be viewed by opening the Live Schedule Dialog."
 	);
 
-	PushButtonService1->setWhatsThis( strServiceSel);
-	PushButtonService2->setWhatsThis( strServiceSel);
-	PushButtonService3->setWhatsThis( strServiceSel);
-	PushButtonService4->setWhatsThis( strServiceSel);
+    for(int i=0; i<MAX_NUM_SERVICES; i++)
+        serviceGroup->button(i)->setWhatsThis( strServiceSel);
+
 	TextMiniService1->setWhatsThis( strServiceSel);
 	TextMiniService2->setWhatsThis( strServiceSel);
 	TextMiniService3->setWhatsThis( strServiceSel);

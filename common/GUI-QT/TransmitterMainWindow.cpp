@@ -586,7 +586,7 @@ TransmitterMainWindow::GetChannel()
 
 	/* MSC Protection Level */
 	UpdateMSCProtLevCombo(); /* options depend on MSC Constellation */
-	ComboBoxMSCProtLev->setCurrentItem(DRMTransmitter.GetParameters()->MSCPrLe.iPartB);
+	ComboBoxMSCProtLev->setCurrentItem(DRMTransmitter.GetParameters()->MSCParameters.ProtectionLevel.iPartB);
 
 	switch (DRMTransmitter.GetParameters()->Channel.eSDCmode)
 	{
@@ -624,7 +624,7 @@ TransmitterMainWindow::SetChannel()
 	/* MSC Protection Level */
 	CMSCProtLev MSCPrLe;
 	MSCPrLe.iPartB = ComboBoxMSCProtLev->currentItem();
-	Parameters.MSCPrLe = MSCPrLe;
+	Parameters.MSCParameters.ProtectionLevel = MSCPrLe;
 
 	/* MSC Constellation Scheme */
 	switch(ComboBoxMSCConstellation->currentItem())
@@ -694,8 +694,8 @@ TransmitterMainWindow::UpdateCapacities()
 	TextLabelMSCCapBytes->setText(QString::number(DRMTransmitter.GetParameters()->iNumDecodedBitsMSC/8));
 	TextLabelMSCBytesTotal->setText(QString::number(DRMTransmitter.GetParameters()->iNumDecodedBitsMSC/8));
 
-	TextLabelSDCCapBits->setText(QString::number(DRMTransmitter.GetParameters()->iNumSDCBitsPerSFrame));
-	TextLabelSDCCapBytes->setText(QString::number(DRMTransmitter.GetParameters()->iNumSDCBitsPerSFrame/8));
+	TextLabelSDCCapBits->setText(QString::number(DRMTransmitter.GetParameters()->iNumSDCBitsPerSuperFrame));
+	TextLabelSDCCapBytes->setText(QString::number(DRMTransmitter.GetParameters()->iNumSDCBitsPerSuperFrame/8));
 
 	TextLabelMSCBytesAvailable->setText(TextLabelMSCCapBytes->text());
 }
@@ -703,9 +703,9 @@ TransmitterMainWindow::UpdateCapacities()
 void
 TransmitterMainWindow::GetStreams()
 {
-	for(size_t i=0; i<DRMTransmitter.GetParameters()->Stream.size(); i++)
+	for(size_t i=0; i<DRMTransmitter.GetParameters()->MSCParameters.Stream.size(); i++)
 	{
-		const CStream& stream = DRMTransmitter.GetParameters()->Stream[i];
+		const CStream& stream = DRMTransmitter.GetParameters()->MSCParameters.Stream[i];
         int bytes = stream.iLenPartB; // EEP Only
         if(stream.iLenPartA != 0)
         {
@@ -751,12 +751,12 @@ TransmitterMainWindow::GetStreams()
 void
 TransmitterMainWindow::SetStreams()
 {
-	DRMTransmitter.GetParameters()->Stream.resize(ListViewStreams->childCount());
+	DRMTransmitter.GetParameters()->MSCParameters.Stream.resize(ListViewStreams->childCount());
 	Q3ListViewItemIterator it(ListViewStreams);
 	for (; it.current(); it++)
 	{
 	    int iStreamID = it.current()->text(0).toInt();
-        CStream& stream = DRMTransmitter.GetParameters()->Stream[iStreamID];
+        CStream& stream = DRMTransmitter.GetParameters()->MSCParameters.Stream[iStreamID];
 	    QString type =  it.current()->text(1);
 	    int iType = 0;
         for(int i=0; i<ComboBoxStreamType->count(); i++)
@@ -945,7 +945,7 @@ TransmitterMainWindow::SetData(int iStreamNo, int iPacketId)
 void
 TransmitterMainWindow::GetServices()
 {
-	const vector<CService>& Service = DRMTransmitter.GetParameters()->Service;
+	const vector<CService>& Service = DRMTransmitter.GetParameters()->ServiceParameters.Service;
 	for(size_t i=0; i<Service.size(); i++)
 	{
 		Q3ListViewItem* v = new Q3ListViewItem(ListViewServices, QString::number(i),
@@ -974,8 +974,8 @@ TransmitterMainWindow::GetServices()
 void
 TransmitterMainWindow::SetServices()
 {
-	DRMTransmitter.GetParameters()->Channel.iNumDataServices=0;
-	DRMTransmitter.GetParameters()->Channel.iNumAudioServices=0;
+	DRMTransmitter.GetParameters()->ServiceParameters.iNumDataServices=0;
+	DRMTransmitter.GetParameters()->ServiceParameters.iNumAudioServices=0;
 
 	Q3ListViewItemIterator sit(ListViewServices);
 	for (; sit.current(); sit++)
@@ -997,7 +997,7 @@ TransmitterMainWindow::SetServices()
 		if(sA=="-")
 		{
 			Service.iAudioStream = STREAM_ID_NOT_USED;
-			DRMTransmitter.GetParameters()->Channel.iNumDataServices++;
+			DRMTransmitter.GetParameters()->ServiceParameters.iNumDataServices++;
 			Service.eAudDataFlag = SF_DATA;
             for(int i=0; i<ComboBoxAppType->count(); i++)
                 if(ComboBoxAppType->text(i)==type)
@@ -1006,7 +1006,7 @@ TransmitterMainWindow::SetServices()
 		else
 		{
 			Service.iAudioStream = sA.toUInt();
-			DRMTransmitter.GetParameters()->Channel.iNumAudioServices++;
+			DRMTransmitter.GetParameters()->ServiceParameters.iNumAudioServices++;
 			Service.eAudDataFlag = SF_AUDIO;
             for(int i=0; i<ComboBoxProgramType->count(); i++)
                 if(ComboBoxProgramType->text(i)==type)
@@ -1020,7 +1020,7 @@ TransmitterMainWindow::SetServices()
 			Service.iPacketID = 4;
 		else
 			Service.iPacketID = sP.toUInt();
-		DRMTransmitter.GetParameters()->Service[iShortID] = Service;
+		DRMTransmitter.GetParameters()->ServiceParameters.Service[iShortID] = Service;
 	}
 }
 

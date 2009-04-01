@@ -73,7 +73,7 @@ void SlideShowViewer::OnTimer()
 	Parameters.Lock();
 	ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
 	int shortID = Parameters.GetCurSelDataService();
-	int packetID = Parameters.Service[shortID].iPacketID;
+	int packetID = Parameters.ServiceParameters.Service[shortID].iPacketID;
 	Parameters.Unlock();
 
 	switch(status)
@@ -199,11 +199,11 @@ void SlideShowViewer::showEvent(QShowEvent*)
     CParameter& Parameters = *receiver.GetParameters();
     Parameters.Lock();
     const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
-    const uint32_t iAudioServiceID = Parameters.Service[iCurSelAudioServ].iServiceID;
+    const uint32_t iAudioServiceID = Parameters.ServiceParameters.Service[iCurSelAudioServ].iServiceID;
 
     /* Get current data service */
     const int iCurSelDataServ = Parameters.GetCurSelDataService();
-    CService service = Parameters.Service[iCurSelDataServ];
+    CService service = Parameters.ServiceParameters.Service[iCurSelDataServ];
     Parameters.Unlock();
 
 	/* Add the service description into the dialog caption */

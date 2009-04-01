@@ -584,7 +584,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 		}
 
 		/* Set number of bits for one SDC-block */
-		Parameter.iNumSDCBitsPerSFrame = iL[1];
+		Parameter.iNumSDCBitsPerSuperFrame = iL[1];
 		break;
 
 
@@ -594,10 +594,10 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 		iN_mux = Parameter.CellMappingTable.iNumUsefMSCCellsPerFrame;
 
 		/* Data length for part A is the sum of all lengths of the streams */
-		iMSCDataLenPartA = Parameter.Stream[0].iLenPartA +
-						   Parameter.Stream[1].iLenPartA +
-						   Parameter.Stream[2].iLenPartA +
-						   Parameter.Stream[3].iLenPartA;
+		iMSCDataLenPartA = Parameter.MSCParameters.Stream[0].iLenPartA +
+						   Parameter.MSCParameters.Stream[1].iLenPartA +
+						   Parameter.MSCParameters.Stream[2].iLenPartA +
+						   Parameter.MSCParameters.Stream[3].iLenPartA;
 
 		switch (eCodingScheme)
 		{
@@ -609,11 +609,11 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			{
 				/* Protection Level A */
 				iCodeRate[i][0] =
-					iCodRateCombMSC16SM[Parameter.MSCPrLe.iPartA][i];
+					iCodRateCombMSC16SM[Parameter.MSCParameters.ProtectionLevel.iPartA][i];
 
 				/* Protection Level B */
 				iCodeRate[i][1] =
-					iCodRateCombMSC16SM[Parameter.MSCPrLe.iPartB][i];
+					iCodRateCombMSC16SM[Parameter.MSCParameters.ProtectionLevel.iPartB][i];
 			}
 
 			/* Define interleaver sequence for all levels */
@@ -626,20 +626,20 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			/* N_1 = ceil(8 * X / (2 * RY_Icm * sum(R_p)) * RY_Icm */
 			iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (2 *
 				/* RY_Icm */
-				(_REAL) iCodRateCombMSC16SM[Parameter.MSCPrLe.iPartA][2] *
+				(_REAL) iCodRateCombMSC16SM[Parameter.MSCParameters.ProtectionLevel.iPartA][2] *
 				(
 				/* R_0 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC16SM[
-					Parameter.MSCPrLe.iPartA][0]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][0]][0] /
 					iPuncturingPatterns[iCodRateCombMSC16SM[
-					Parameter.MSCPrLe.iPartA][0]][1] +
+					Parameter.MSCParameters.ProtectionLevel.iPartA][0]][1] +
 				/* R_1 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC16SM[
-					Parameter.MSCPrLe.iPartA][1]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][0] /
 					iPuncturingPatterns[iCodRateCombMSC16SM[
-					Parameter.MSCPrLe.iPartA][1]][1]))) *
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][1]))) *
 				/* RY_Icm */
-				iCodRateCombMSC16SM[Parameter.MSCPrLe.iPartA][2];
+				iCodRateCombMSC16SM[Parameter.MSCParameters.ProtectionLevel.iPartA][2];
 
 			/* Check if result can be possible, if not -> correct. This can
 			   happen, if a wrong number is in "Param.Stream[x].iLenPartA" */
@@ -655,17 +655,17 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 				/* M_p,1 = 2 * N_1 * R_p */
 				iM[i][0] = (int) (2 * iN[0] *
 					(_REAL) iPuncturingPatterns[iCodRateCombMSC16SM[
-					Parameter.MSCPrLe.iPartA][i]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][0] /
 					iPuncturingPatterns[iCodRateCombMSC16SM[
-					Parameter.MSCPrLe.iPartA][i]][1]);
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][1]);
 
 				/* M_p,2 = RX_p * floor((2 * N_2 - 12) / RY_p) */
 				iM[i][1] =
 					iPuncturingPatterns[iCodRateCombMSC16SM[
-					Parameter.MSCPrLe.iPartB][i]][0] *
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][0] *
 					(int) ((_REAL) (2 * iN[1] - 12) /
 					iPuncturingPatterns[iCodRateCombMSC16SM[
-					Parameter.MSCPrLe.iPartB][i]][1]);
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][1]);
 			}
 
 
@@ -688,11 +688,11 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			{
 				/* Protection Level A */
 				iCodeRate[i][0] =
-					iCodRateCombMSC64SM[Parameter.MSCPrLe.iPartA][i];
+					iCodRateCombMSC64SM[Parameter.MSCParameters.ProtectionLevel.iPartA][i];
 
 				/* Protection Level B */
 				iCodeRate[i][1] =
-					iCodRateCombMSC64SM[Parameter.MSCPrLe.iPartB][i];
+					iCodRateCombMSC64SM[Parameter.MSCParameters.ProtectionLevel.iPartB][i];
 			}
 
 			/* Define interleaver sequence for all levels */
@@ -705,25 +705,25 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			/* N_1 = ceil(8 * X / (2 * RY_Icm * sum(R_p)) * RY_Icm */
 			iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (2 *
 				/* RY_Icm */
-				(_REAL) iCodRateCombMSC64SM[Parameter.MSCPrLe.iPartA][3] *
+				(_REAL) iCodRateCombMSC64SM[Parameter.MSCParameters.ProtectionLevel.iPartA][3] *
 				(
 				/* R_0 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC64SM[
-					Parameter.MSCPrLe.iPartA][0]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][0]][0] /
 					iPuncturingPatterns[iCodRateCombMSC64SM[
-					Parameter.MSCPrLe.iPartA][0]][1] +
+					Parameter.MSCParameters.ProtectionLevel.iPartA][0]][1] +
 				/* R_1 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC64SM[
-					Parameter.MSCPrLe.iPartA][1]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][0] /
 					iPuncturingPatterns[iCodRateCombMSC64SM[
-					Parameter.MSCPrLe.iPartA][1]][1] +
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][1] +
 				/* R_2 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC64SM[
-					Parameter.MSCPrLe.iPartA][2]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][2]][0] /
 					iPuncturingPatterns[iCodRateCombMSC64SM[
-					Parameter.MSCPrLe.iPartA][2]][1]))) *
+					Parameter.MSCParameters.ProtectionLevel.iPartA][2]][1]))) *
 				/* RY_Icm */
-				iCodRateCombMSC64SM[Parameter.MSCPrLe.iPartA][3];
+				iCodRateCombMSC64SM[Parameter.MSCParameters.ProtectionLevel.iPartA][3];
 
 			/* Check if result can be possible, if not -> correct. This can
 			   happen, if a wrong number is in "Param.Stream[x].iLenPartA" */
@@ -739,17 +739,17 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 				/* M_p,1 = 2 * N_1 * R_p */
 				iM[i][0] = (int) (2 * iN[0] *
 					(_REAL) iPuncturingPatterns[iCodRateCombMSC64SM[
-					Parameter.MSCPrLe.iPartA][i]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][0] /
 					iPuncturingPatterns[iCodRateCombMSC64SM[
-					Parameter.MSCPrLe.iPartA][i]][1]);
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][1]);
 
 				/* M_p,2 = RX_p * floor((2 * N_2 - 12) / RY_p) */
 				iM[i][1] =
 					iPuncturingPatterns[iCodRateCombMSC64SM[
-					Parameter.MSCPrLe.iPartB][i]][0] *
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][0] *
 					(int) ((_REAL) (2 * iN[1] - 12) /
 					iPuncturingPatterns[iCodRateCombMSC64SM[
-					Parameter.MSCPrLe.iPartB][i]][1]);
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][1]);
 			}
 
 
@@ -771,17 +771,17 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			/* VSPP (Hierachical) */
 			iCodeRate[0][0] = 0;
 			iCodeRate[0][1] =
-				iCodRateCombMSC64HMsym[Parameter.MSCPrLe.iHierarch][0];
+				iCodRateCombMSC64HMsym[Parameter.MSCParameters.ProtectionLevel.iHierarch][0];
 
 			for (i = 1; i < 3; i++)
 			{
 				/* Protection Level A */
 				iCodeRate[i][0] =
-					iCodRateCombMSC64HMsym[Parameter.MSCPrLe.iPartA][i];
+					iCodRateCombMSC64HMsym[Parameter.MSCParameters.ProtectionLevel.iPartA][i];
 
 				/* Protection Level B */
 				iCodeRate[i][1] =
-					iCodRateCombMSC64HMsym[Parameter.MSCPrLe.iPartB][i];
+					iCodRateCombMSC64HMsym[Parameter.MSCParameters.ProtectionLevel.iPartB][i];
 			}
 
 			/* Define interleaver sequence for all levels */
@@ -794,20 +794,20 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			/* N_1 = ceil(8 * X / (2 * RY_Icm * sum(R_p)) * RY_Icm */
 			iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (2 *
 				/* RY_Icm */
-				(_REAL) iCodRateCombMSC64HMsym[Parameter.MSCPrLe.iPartA][3] *
+				(_REAL) iCodRateCombMSC64HMsym[Parameter.MSCParameters.ProtectionLevel.iPartA][3] *
 				(
 				/* R_1 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMsym[
-					Parameter.MSCPrLe.iPartA][1]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][0] /
 					iPuncturingPatterns[iCodRateCombMSC64HMsym[
-					Parameter.MSCPrLe.iPartA][1]][1] +
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][1] +
 				/* R_2 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMsym[
-					Parameter.MSCPrLe.iPartA][2]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][2]][0] /
 					iPuncturingPatterns[iCodRateCombMSC64HMsym[
-					Parameter.MSCPrLe.iPartA][2]][1]))) *
+					Parameter.MSCParameters.ProtectionLevel.iPartA][2]][1]))) *
 				/* RY_Icm */
-				iCodRateCombMSC64HMsym[Parameter.MSCPrLe.iPartA][3];
+				iCodRateCombMSC64HMsym[Parameter.MSCParameters.ProtectionLevel.iPartA][3];
 
 			/* Check if result can be possible, if not -> correct. This can
 			   happen, if a wrong number is in "Param.Stream[x].iLenPartA" */
@@ -825,27 +825,27 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			/* M_0,2 = RX_0 * floor((2 * (N_1 + N_2) - 12) / RY_0) */
 			iM[0][1] =
 				iPuncturingPatterns[iCodRateCombMSC64HMsym[
-				Parameter.MSCPrLe.iHierarch][0]][0] *
+				Parameter.MSCParameters.ProtectionLevel.iHierarch][0]][0] *
 				(int) ((_REAL) (2 * (iN[0] + iN[1]) - 12) /
 				iPuncturingPatterns[iCodRateCombMSC64HMsym[
-				Parameter.MSCPrLe.iHierarch][0]][1]);
+				Parameter.MSCParameters.ProtectionLevel.iHierarch][0]][1]);
 
 			for (i = 1; i < 3; i++)
 			{
 				/* M_p,1 = 2 * N_1 * R_p */
 				iM[i][0] = (int) (2 * iN[0] *
 					(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMsym[
-					Parameter.MSCPrLe.iPartA][i]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][0] /
 					iPuncturingPatterns[iCodRateCombMSC64HMsym[
-					Parameter.MSCPrLe.iPartA][i]][1]);
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][1]);
 
 				/* M_p,2 = RX_p * floor((2 * N_2 - 12) / RY_p) */
 				iM[i][1] =
 					iPuncturingPatterns[iCodRateCombMSC64HMsym[
-					Parameter.MSCPrLe.iPartB][i]][0] *
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][0] *
 					(int) ((_REAL) (2 * iN[1] - 12) /
 					iPuncturingPatterns[iCodRateCombMSC64HMsym[
-					Parameter.MSCPrLe.iPartB][i]][1]);
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][1]);
 			}
 
 
@@ -867,17 +867,17 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			/* VSPP (Hierachical) */
 			iCodeRate[0][0] = 0;
 			iCodeRate[0][1] =
-				iCodRateCombMSC64HMmix[Parameter.MSCPrLe.iHierarch][0];
+				iCodRateCombMSC64HMmix[Parameter.MSCParameters.ProtectionLevel.iHierarch][0];
 
 			for (i = 1; i < 6; i++)
 			{
 				/* Protection Level A */
 				iCodeRate[i][0] =
-					iCodRateCombMSC64HMmix[Parameter.MSCPrLe.iPartA][i];
+					iCodRateCombMSC64HMmix[Parameter.MSCParameters.ProtectionLevel.iPartA][i];
 
 				/* Protection Level B */
 				iCodeRate[i][1] =
-					iCodRateCombMSC64HMmix[Parameter.MSCPrLe.iPartB][i];
+					iCodRateCombMSC64HMmix[Parameter.MSCParameters.ProtectionLevel.iPartB][i];
 			}
 
 			/* Define interleaver sequence for all levels */
@@ -890,35 +890,35 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			/* N_1 = ceil(8 * X / (RY_Icm * sum(R_p)) * RY_Icm */
 			iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (
 				/* RY_Icm */
-				(_REAL) iCodRateCombMSC64HMmix[Parameter.MSCPrLe.iPartA][6] *
+				(_REAL) iCodRateCombMSC64HMmix[Parameter.MSCParameters.ProtectionLevel.iPartA][6] *
 				(
 				/* R_1 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartA][1]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][0] /
 					iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartA][1]][1] +
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][1] +
 				/* R_2 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartA][2]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][2]][0] /
 					iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartA][2]][1] +
+					Parameter.MSCParameters.ProtectionLevel.iPartA][2]][1] +
 				/* R_3 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartA][3]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][3]][0] /
 					iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartA][3]][1] +
+					Parameter.MSCParameters.ProtectionLevel.iPartA][3]][1] +
 				/* R_4 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartA][4]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][4]][0] /
 					iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartA][4]][1] +
+					Parameter.MSCParameters.ProtectionLevel.iPartA][4]][1] +
 				/* R_5 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartA][5]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][5]][0] /
 					iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartA][5]][1]))) *
+					Parameter.MSCParameters.ProtectionLevel.iPartA][5]][1]))) *
 				/* RY_Icm */
-				iCodRateCombMSC64HMmix[Parameter.MSCPrLe.iPartA][6];
+				iCodRateCombMSC64HMmix[Parameter.MSCParameters.ProtectionLevel.iPartA][6];
 
 			/* Check if result can be possible, if not -> correct. This can
 			   happen, if a wrong number is in "Param.Stream[x].iLenPartA" */
@@ -937,28 +937,28 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			/* M_0,2Re = RX_0Re * floor((N_1 + N_2 - 12) / RY_0Re) */
 			iM[0][1] =
 				iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameter.MSCPrLe.iHierarch][0]][0] *
+				Parameter.MSCParameters.ProtectionLevel.iHierarch][0]][0] *
 				(int) ((_REAL) (iN[0] + iN[1] - 12) /
 				iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameter.MSCPrLe.iHierarch][0]][1]);
+				Parameter.MSCParameters.ProtectionLevel.iHierarch][0]][1]);
 
 			for (i = 1; i < 6; i++)
 			{
 				/* M_p,1Re;Im = 2 * N_1 * R_pRe;Im */
 				iM[i][0] = (int) (iN[0] *
 					(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartA][i]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][0] /
 					iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartA][i]][1]);
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][1]);
 
 				/* M_p,2Re;Im =
 				   RX_pRe;Im * floor((2 * N_2 - 12) / RY_pRe;Im) */
 				iM[i][1] =
 					iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartB][i]][0] *
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][0] *
 					(int) ((_REAL) (iN[1] - 12) /
 					iPuncturingPatterns[iCodRateCombMSC64HMmix[
-					Parameter.MSCPrLe.iPartB][i]][1]);
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][1]);
 			}
 
 

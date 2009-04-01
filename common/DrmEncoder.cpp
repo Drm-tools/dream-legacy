@@ -181,7 +181,8 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 {
 	/* Either one audio or one data service can be chosen */
 
-	Parameters.Service.resize(1);
+
+	Parameters.ServiceParameters.Service.resize(1);
 
 	bool bIsAudio = s.Get("Encoder", "audioservice", 1);
 
@@ -190,11 +191,12 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 	if (bIsAudio == true)
 	{
 		/* Audio */
-		Parameters.Channel.iNumAudioServices = 1;
-		Parameters.Channel.iNumDataServices = 0;
 
-		Parameters.Service[0].eAudDataFlag = SF_AUDIO;
-		Parameters.Service[0].iAudioStream = 0;
+		Parameters.ServiceParameters.iNumAudioServices = 1;
+		Parameters.ServiceParameters.iNumDataServices = 0;
+
+		Parameters.ServiceParameters.Service[0].eAudDataFlag = SF_AUDIO;
+		Parameters.ServiceParameters.Service[0].iAudioStream = 0;
 
 		/* Text message */
 		Parameters.AudioParam[0].bTextflag = s.Get("Encoder", "textmessages", 1);
@@ -213,17 +215,17 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 		}
 
 		/* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
-		Parameters.Service[0].iServiceDescr = s.Get("Encoder", "genre", 15); /* 15 -> other music */
+		Parameters.ServiceParameters.Service[0].iServiceDescr = s.Get("Encoder", "genre", 15); /* 15 -> other music */
 	}
 	else
 	{
 		/* Data */
-		Parameters.Channel.iNumAudioServices = 0;
-		Parameters.Channel.iNumDataServices = 1;
+		Parameters.ServiceParameters.iNumAudioServices = 0;
+		Parameters.ServiceParameters.iNumDataServices = 1;
 
-		Parameters.Service[0].eAudDataFlag = SF_DATA;
-		Parameters.Service[0].iDataStream = 0;
-		Parameters.Service[0].iPacketID = 0;
+		Parameters.ServiceParameters.Service[0].eAudDataFlag = SF_DATA;
+		Parameters.ServiceParameters.Service[0].iDataStream = 0;
+		Parameters.ServiceParameters.Service[0].iPacketID = 0;
 
 		/* Init SlideShow application */
 		Parameters.DataParam[0][0].eDataUnitInd = CDataParam::DU_DATA_UNITS;
@@ -231,21 +233,21 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 
 		/* The value 0 indicates that the application details are provided
 		   solely by SDC data entity type 5 */
-		Parameters.Service[0].iServiceDescr = 0;
+		Parameters.ServiceParameters.Service[0].iServiceDescr = 0;
 	}
 
 	/* Init service parameters, 24 bit unsigned integer number */
-	Parameters.Service[0].iServiceID = s.Get("Encoder", "sid", 0);
+	Parameters.ServiceParameters.Service[0].iServiceID = s.Get("Encoder", "sid", 0);
 
 	/* Service label data. Up to 16 bytes defining the label using UTF-8 coding */
-	Parameters.Service[0].strLabel = s.Get("Encoder", "label", string("Dream Test"));
+	Parameters.ServiceParameters.Service[0].strLabel = s.Get("Encoder", "label", string("Dream Test"));
 
 	/* FAC Language (see TableFAC.h, "strTableLanguageCode[]") */
-	Parameters.Service[0].iLanguage = s.Get("Encoder", "language", 5);	/* 5 -> english */
+	Parameters.ServiceParameters.Service[0].iLanguage = s.Get("Encoder", "language", 5);	/* 5 -> english */
 
 	/* SDC Language and Country */
-	Parameters.Service[0].strLanguageCode = s.Get("Encoder", "ISOlanguage", string("eng"));
-	Parameters.Service[0].strCountryCode = s.Get("Encoder", "ISOCountry", string("gb"));
+	Parameters.ServiceParameters.Service[0].strLanguageCode = s.Get("Encoder", "ISOlanguage", string("eng"));
+	Parameters.ServiceParameters.Service[0].strCountryCode = s.Get("Encoder", "ISOCountry", string("gb"));
 
 	/**************************************************************************/
 	/* Robustness mode and spectrum occupancy. Available transmission modes:
@@ -265,9 +267,9 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 	/* Protection levels for MSC. Depend on the modulation scheme. Look at
 	   TableMLC.h, iCodRateCombMSC16SM, iCodRateCombMSC64SM,
 	   iCodRateCombMSC64HMsym, iCodRateCombMSC64HMmix for available numbers */
-	Parameters.MSCPrLe.iPartA = s.Get("Encoder", "PartAProt", 0);
-	Parameters.MSCPrLe.iPartB = s.Get("Encoder", "PartBProt", 1);
-	Parameters.MSCPrLe.iHierarch = s.Get("Encoder", "HierarchicalProt", 0);
+	Parameters.MSCParameters.ProtectionLevel.iPartA = s.Get("Encoder", "PartAProt", 0);
+	Parameters.MSCParameters.ProtectionLevel.iPartB = s.Get("Encoder", "PartBProt", 1);
+	Parameters.MSCParameters.ProtectionLevel.iHierarch = s.Get("Encoder", "HierarchicalProt", 0);
 
 	/* Interleaver mode of MSC service. Long interleaving (2 s): SI_LONG,
 	   short interleaving (400 ms): SI_SHORT */
@@ -290,7 +292,7 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 	strInputFileName = s.Get("Encoder", "inputfile", string(""));
 
 	/* streams - do when know MSC Capacity */
-	Parameters.Stream.clear();
+	Parameters.MSCParameters.Stream.clear();
     for(size_t i=0; i<4; i++)
     {
         stringstream ss;
@@ -312,14 +314,14 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
             stream.iPacketLen = 45;	/* TEST */
         }
         if(stream.iLenPartA != -1)
-            Parameters.Stream.push_back(stream);
+            Parameters.MSCParameters.Stream.push_back(stream);
     }
 }
 
 void
 CDRMEncoder::SaveSettings(CSettings& s, CParameter& Parameters)
 {
-	s.Put("Encoder", "audioservice", (Parameters.Service[0].eAudDataFlag == SF_AUDIO)?1:0);
+	s.Put("Encoder", "audioservice", (Parameters.ServiceParameters.Service[0].eAudDataFlag == SF_AUDIO)?1:0);
 	s.Put("Encoder", "textmessages", Parameters.AudioParam[0].bTextflag);
 	size_t i;
 	for(i=0; i<vecstrTexts.size(); i++)
@@ -328,30 +330,30 @@ CDRMEncoder::SaveSettings(CSettings& s, CParameter& Parameters)
         ss << "textmessage" << i;
         s.Put("Encoder", ss.str(), vecstrTexts[i]);
 	}
-	s.Put("Encoder", "genre", Parameters.Service[0].iServiceDescr);
-	s.Put("Encoder", "sid", int(Parameters.Service[0].iServiceID));
-	s.Put("Encoder", "label", Parameters.Service[0].strLabel);
-	s.Put("Encoder", "language", Parameters.Service[0].iLanguage);
-	s.Put("Encoder", "ISOlanguage", Parameters.Service[0].strLanguageCode);
-	s.Put("Encoder", "ISOCountry", Parameters.Service[0].strCountryCode);
+	s.Put("Encoder", "genre", Parameters.ServiceParameters.Service[0].iServiceDescr);
+	s.Put("Encoder", "sid", int(Parameters.ServiceParameters.Service[0].iServiceID));
+	s.Put("Encoder", "label", Parameters.ServiceParameters.Service[0].strLabel);
+	s.Put("Encoder", "language", Parameters.ServiceParameters.Service[0].iLanguage);
+	s.Put("Encoder", "ISOlanguage", Parameters.ServiceParameters.Service[0].strLanguageCode);
+	s.Put("Encoder", "ISOCountry", Parameters.ServiceParameters.Service[0].strCountryCode);
 
 	s.Put("Encoder", "robm", Parameters.Channel.eRobustness);
 	s.Put("Encoder", "spectrum_occupancy", Parameters.Channel.eSpectrumOccupancy);
-	s.Put("Encoder", "PartAProt", Parameters.MSCPrLe.iPartA);
-	s.Put("Encoder", "PartBProt", Parameters.MSCPrLe.iPartB);
-	s.Put("Encoder", "HierarchicalProt", Parameters.MSCPrLe.iHierarch);
+	s.Put("Encoder", "PartAProt", Parameters.MSCParameters.ProtectionLevel.iPartA);
+	s.Put("Encoder", "PartBProt", Parameters.MSCParameters.ProtectionLevel.iPartB);
+	s.Put("Encoder", "HierarchicalProt", Parameters.MSCParameters.ProtectionLevel.iHierarch);
 	s.Put("Encoder", "interleaving", Parameters.Channel.eInterleaverDepth);
 	s.Put("Encoder", "mscmod", Parameters.Channel.eMSCmode);
 	s.Put("Encoder", "sdcmod", Parameters.Channel.eSDCmode);
 	s.Put("Encoder", "snddevin", iSoundInDev);
 	s.Put("Encoder", "inputfile", strInputFileName);
-	for(i=0; i<Parameters.Stream.size(); i++)
+	for(i=0; i<Parameters.MSCParameters.Stream.size(); i++)
 	{
         stringstream ss;
         ss << "s" << i << "PartALen";
-        s.Put("Encoder", ss.str(), Parameters.Stream[i].iLenPartA);
+        s.Put("Encoder", ss.str(), Parameters.MSCParameters.Stream[i].iLenPartA);
         ss.str("");
         ss << "s" << i << "PartBLen";
-        s.Put("Encoder", ss.str(), Parameters.Stream[0].iLenPartB);
+        s.Put("Encoder", ss.str(), Parameters.MSCParameters.Stream[0].iLenPartB);
 	}
 }

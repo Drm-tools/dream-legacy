@@ -100,13 +100,13 @@ enum ERxEvent {
 };
 
 /* Classes ********************************************************************/
-    class CDRMReceiver; // forward
-
     class CChannel : public CDumpable
     {
     public:
         CChannel();
         virtual ~CChannel() {}
+		void dump(ostream&) const;
+
         bool bEnhancementLayerInUse;
         int iFrameId;
         bool bAFSindexValid;
@@ -114,11 +114,69 @@ enum ERxEvent {
         ESpecOcc eSpectrumOccupancy;
         ESymIntMod eInterleaverDepth;
         ECodScheme eMSCmode, eSDCmode;
-        int iNumAudioServices;
-        int iNumDataServices;
         int iReconfigurationIndex;
-		void dump(ostream&) const;
+        int iNumServField; // for convenience
      };
+
+	class CMSCProtLev : public CDumpable
+	{
+	  public:
+
+		CMSCProtLev():CDumpable(),iPartA(0),iPartB(0),iHierarch(0) {}
+		CMSCProtLev(const CMSCProtLev& p):
+		CDumpable(),iPartA(p.iPartA),iPartB(p.iPartB),iHierarch(p.iHierarch) {}
+		CMSCProtLev& operator=(const CMSCProtLev& NewMSCProtLev)
+		{
+			iPartA = NewMSCProtLev.iPartA;
+			iPartB = NewMSCProtLev.iPartB;
+			iHierarch = NewMSCProtLev.iHierarch;
+			return *this;
+		}
+		bool operator==(const CMSCProtLev& p) const
+		{
+		    if(iPartA!=p.iPartA)
+                return false;
+		    if(iPartB!=p.iPartB)
+                return false;
+		    if(iHierarch!=p.iHierarch)
+                return false;
+            return true;
+		}
+
+		int iPartA;				/* MSC protection level for part A */
+		int iPartB;				/* MSC protection level for part B */
+		int iHierarch;			/* MSC protection level for hierachical frame */
+		void dump(ostream&) const;
+	};
+
+	class CStream : public CDumpable
+	{
+	  public:
+
+		CStream();
+		CStream(const CStream&);
+		CStream& operator=(const CStream&);
+		bool operator==(const CStream&) const;
+		void dump(ostream&) const;
+
+		int iLenPartA;			/* Data length for part A */
+		int iLenPartB;			/* Data length for part B */
+		EStreamType eAudDataFlag; /* stream is audio or data */
+		EPackMod ePacketModInd;	/* Packet mode indicator for data streams */
+		int iPacketLen;			/* Packet length for packet streams */
+	};
+
+    class CMSCParameters : public CDumpable
+    {
+    public:
+        CMSCParameters();
+        virtual ~CMSCParameters() {}
+        bool operator==(const CMSCParameters&) const;
+		void dump(ostream&) const;
+
+        CMSCProtLev ProtectionLevel;
+        vector<CStream> Stream;
+    };
 
 	class CAudioParam : public CDumpable
 	{
@@ -205,12 +263,12 @@ enum ERxEvent {
 		CService();
 		CService(const CService& s);
 		CService& operator=(const CService& s);
+		void dump(ostream&) const;
 
 		bool IsActive() const
 		{
 			return iServiceID != SERV_ID_NOT_USED;
 		}
-		void dump(ostream&) const;
 
 		uint32_t iServiceID;
 		ECACond eCAIndication;
@@ -231,57 +289,17 @@ enum ERxEvent {
 		int iPacketID;
 	};
 
-	class CStream : public CDumpable
-	{
-	  public:
-
-		CStream();
-		CStream(const CStream&);
-		CStream& operator=(const CStream&);
-		bool operator==(const CStream&);
+    class CServiceParameters : public CDumpable
+    {
+        public:
+        CServiceParameters();
+        virtual ~CServiceParameters() {}
 		void dump(ostream&) const;
 
-		int iLenPartA;			/* Data length for part A */
-		int iLenPartB;			/* Data length for part B */
-		EStreamType eAudDataFlag; /* stream is audio or data */
-		EPackMod ePacketModInd;	/* Packet mode indicator for data streams */
-		int iPacketLen;			/* Packet length for packet streams */
-	};
-
-	class CMSCProtLev : public CDumpable
-	{
-	  public:
-
-		CMSCProtLev():CDumpable(),iPartA(0),iPartB(0),iHierarch(0) {}
-		CMSCProtLev(const CMSCProtLev& p):
-		CDumpable(),iPartA(p.iPartA),iPartB(p.iPartB),iHierarch(p.iHierarch) {}
-		CMSCProtLev& operator=(const CMSCProtLev& NewMSCProtLev)
-		{
-			iPartA = NewMSCProtLev.iPartA;
-			iPartB = NewMSCProtLev.iPartB;
-			iHierarch = NewMSCProtLev.iHierarch;
-			return *this;
-		}
-		bool operator==(const CMSCProtLev& p)
-		{
-		    if(iPartA!=p.iPartA)
-                return false;
-		    if(iPartB!=p.iPartB)
-                return false;
-		    if(iHierarch!=p.iHierarch)
-                return false;
-            return true;
-		}
-		bool operator!=(const CMSCProtLev& p)
-		{
-		    return !((*this)==p);
-		}
-
-		int iPartA;				/* MSC protection level for part A */
-		int iPartB;				/* MSC protection level for part B */
-		int iHierarch;			/* MSC protection level for hierachical frame */
-		void dump(ostream&) const;
-	};
+        int iNumAudioServices;
+        int iNumDataServices;
+        vector<CService> Service;
+    };
 
 	/* Alternative Frequency Signalling ************************************** */
 	/* Alternative frequency signalling Schedules informations class */
@@ -307,7 +325,7 @@ enum ERxEvent {
 			return *this;
 		}
 
-		bool operator==(const CAltFreqSched& nAFS)
+		bool operator==(const CAltFreqSched& nAFS) const
 		{
 			if (iDayCode != nAFS.iDayCode)
 				return false;
@@ -357,7 +375,7 @@ enum ERxEvent {
 			return *this;
 		}
 
-		bool operator==(const CAltFreqRegion& nAFR)
+		bool operator==(const CAltFreqRegion& nAFR) const
 		{
 			if (iLatitude != nAFR.iLatitude)
 				return false;
@@ -520,7 +538,7 @@ enum ERxEvent {
 			return *this;
 		}
 
-		bool operator==(const COtherService& nAF)
+		bool operator==(const COtherService& nAF) const
 		{
 			if (CServiceDefinition(*this) != nAF)
 				return false;
@@ -772,10 +790,10 @@ public:
 	int GetStreamLen(const int iStreamID);
 
 	CChannel Channel;
-	CMSCProtLev MSCPrLe;
-	vector<CStream> Stream;
+	CMSCParameters MSCParameters;
 	vector<CAudioParam> AudioParam; /* index by streamID */
 	vector<vector<CDataParam> > DataParam; /* first index streamID, second index packetID */
+	CServiceParameters ServiceParameters;
 	void dump(ostream&) const;
 };
 
@@ -837,11 +855,8 @@ class CParameter : public CCoreParameter
 	string sReceiverID;
 	string sSerialNumber;
 
-
 	/* Directory for data files */
 	string sDataFilesDirectory;
-
-	vector<CService> Service;
 
 	/* information about the next configuration */
 	CCoreParameter NextConfig;
@@ -852,7 +867,7 @@ class CParameter : public CCoreParameter
 	/* These values are used to set input and output block sizes of some modules */
 	int iNumBitsHierarchFrameTotal;
 	int iNumDecodedBitsMSC;
-	int iNumSDCBitsPerSFrame;	/* Number of SDC bits per super-frame */
+	int iNumSDCBitsPerSuperFrame;	/* Number of SDC bits per super-frame */
 	int iNumAudioDecoderBits;	/* Number of input bits for audio module */
 	int iNumDataDecoderBits;	/* Number of input bits for data decoder module */
 

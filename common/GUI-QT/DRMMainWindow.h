@@ -35,6 +35,7 @@
 #include "MultColorLED.h"
 #include "../util/Vector.h"
 #include <QMainWindow>
+#include <QButtonGroup>
 
 /* Classes ********************************************************************/
 
@@ -64,10 +65,10 @@ protected:
 	QDialog*        epgDlg;
 	QDialog*        receiverSettingsDlg;
 	QDialog*        multSettingsDlg;
+    QButtonGroup*   serviceGroup;
 
     Loghelper		loghelper;
 	int				iCurSelServiceGUI;
-	int				iOldNoServicesGUI;
 	QTimer			Timer;
 
 	EModulationType	eReceiverMode;
@@ -80,6 +81,7 @@ protected:
 
 	QString			GetCodecString(const int iServiceID);
 	QString			GetTypeString(const int iServiceID);
+	void            ShowTextMessage(const CAudioParam&);
 
 	void			SetDisplayColor(const QColor newColor);
     void	        showEvent(QShowEvent* pEvent);

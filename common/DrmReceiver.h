@@ -102,7 +102,7 @@ class CSplitFAC : public CSplitModul<_BINARY>
 class CSplitSDC : public CSplitModul<_BINARY>
 {
 	void SetInputBlockSize(CParameter& p)
-		{this->iInputBlockSize = p.iNumSDCBitsPerSFrame;}
+		{this->iInputBlockSize = p.iNumSDCBitsPerSuperFrame;}
 };
 
 class CSplitMSC : public CSplitModul<_BINARY>

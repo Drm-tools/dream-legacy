@@ -399,8 +399,11 @@ void CTagItemDecoderCdmo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
         eNew = NBFM;
 		// synchronous AM?
     if(Parameters.eModulation != eNew)
+    {
         Parameters.RxEvent = ChannelReconfiguration;
-    Parameters.eModulation = eNew;
+        cerr << "RSCI old: " << Parameters.eModulation << " new: " << eNew << endl;
+        Parameters.eModulation = eNew;
+    }
     Parameters.Unlock();
 
 }

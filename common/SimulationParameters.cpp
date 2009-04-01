@@ -112,7 +112,7 @@ Param.iSpecChDoppler = 2; /* Hz (integer value!) */
 		iNumItMLC = 1;
 
 		/* The associated code rate is R = 0,6 and the modulation is 64-QAM */
-		Param.MSCPrLe.iPartB = 1;
+		Param.MSCParameters.ProtectionLevel.iPartB = 1;
 		Param.Channel.eMSCmode = CS_3_SM;
 
 
@@ -395,7 +395,7 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
 
 
 	/* Protection level part B ---------------------------------------------- */
-	sprintf(chNumTmpLong, "PL%d_", SaveParam.MSCPrLe.iPartB);
+	sprintf(chNumTmpLong, "PL%d_", SaveParam.MSCParameters.ProtectionLevel.iPartB);
 	strFileName += chNumTmpLong;
 
 

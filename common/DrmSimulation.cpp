@@ -57,22 +57,22 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 
 	/* Service parameters (only use service 0) ------------------------------- */
 	/* Data service */
-	Param.Channel.iNumAudioServices =0;
-	Param.Channel.iNumDataServices = 1;
+	Param.ServiceParameters.iNumAudioServices =0;
+	Param.ServiceParameters.iNumDataServices = 1;
 
 	CDataParam DataParam;
 	DataParam.ePacketModInd = PM_SYNCHRON_STR_MODE;
 	Param.DataParam[0][0] = DataParam;
 
-    Param.Service[0].eAudDataFlag = SF_DATA;
-	Param.Service[0].iDataStream = 0;
+    Param.ServiceParameters.Service[0].eAudDataFlag = SF_DATA;
+	Param.ServiceParameters.Service[0].iDataStream = 0;
 
 	//Param.SetCurSelDataService(1); /* Service ID must be set for activation */
 	Param.SetCurSelDataService(0); /* Service ID must be set for activation */
 
 	/* Stream */
-    Param.Stream[0].iLenPartA = 0;
-    Param.Stream[0].iLenPartB = 0; // EEP, if "= 0"
+    Param.MSCParameters.Stream[0].iLenPartA = 0;
+    Param.MSCParameters.Stream[0].iLenPartB = 0; // EEP, if "= 0"
 
 
 	/* Date, time */
@@ -92,13 +92,13 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	Param.Channel.eSpectrumOccupancy = SO_3;
 	Param.Channel.iFrameId = 0;
 
-	Param.MSCPrLe.iPartA = 1;
-	Param.MSCPrLe.iPartB = 1;
-	Param.MSCPrLe.iHierarch = 0;
-
 	Param.Channel.eInterleaverDepth = SI_SHORT;
 	Param.Channel.eMSCmode = CS_3_SM;
 	Param.Channel.eSDCmode = CS_2_SM;
+
+	Param.MSCParameters.ProtectionLevel.iPartA = 1;
+	Param.MSCParameters.ProtectionLevel.iPartB = 1;
+	Param.MSCParameters.ProtectionLevel.iHierarch = 0;
 
 	/* DRM channel parameters */
 	Param.iDRMChannelNum = 1;

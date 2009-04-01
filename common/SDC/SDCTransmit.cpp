@@ -42,7 +42,7 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 	/* Calculate length of data field in bytes
 	   (consistant to table 61 in (6.4.1)) */
 	const int iLengthDataFieldBytes =
-		(int) ((_REAL) (Parameter.iNumSDCBitsPerSFrame - 20) / 8);
+		(int) ((_REAL) (Parameter.iNumSDCBitsPerSuperFrame - 20) / 8);
 
 	/* 20 bits from AFS index and CRC */
 	const int iUsefulBitsSDC = 20 + iLengthDataFieldBytes * 8;
@@ -81,7 +81,7 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 
 
 // Only working for either one audio or data service!
-if (Parameter.Channel.iNumAudioServices == 1)
+if (Parameter.ServiceParameters.iNumAudioServices == 1)
 {
 	/* Type 9 */
 	DataEntityType9(vecbiData, 0, Parameter);
@@ -166,7 +166,7 @@ void CSDCTransmit::DataEntityType0(CVector<_BINARY>& vecbiData,
 								   CParameter& Parameter)
 {
 	/* 24 bits for each stream description + 4 bits for protection levels */
-	const int iNumBitsTotal = 4 + Parameter.Stream.size() * 24;
+	const int iNumBitsTotal = 4 + Parameter.MSCParameters.Stream.size() * 24;
 
 	/* Init return vector (storing this data block) */
 	vecbiData.Init(iNumBitsTotal + NUM_BITS_HEADER_SDC);
@@ -186,12 +186,12 @@ void CSDCTransmit::DataEntityType0(CVector<_BINARY>& vecbiData,
 
 	/* Actual body ---------------------------------------------------------- */
 	/* Protection level for part A */
-	vecbiData.Enqueue((uint32_t) Parameter.MSCPrLe.iPartA, 2);
+	vecbiData.Enqueue((uint32_t) Parameter.MSCParameters.ProtectionLevel.iPartA, 2);
 
 	/* Protection level for part B */
-	vecbiData.Enqueue((uint32_t) Parameter.MSCPrLe.iPartB, 2);
+	vecbiData.Enqueue((uint32_t) Parameter.MSCParameters.ProtectionLevel.iPartB, 2);
 
-	for (size_t i = 0; i < Parameter.Stream.size(); i++)
+	for (size_t i = 0; i < Parameter.MSCParameters.Stream.size(); i++)
 	{
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hirarchical data */
@@ -200,21 +200,21 @@ void CSDCTransmit::DataEntityType0(CVector<_BINARY>& vecbiData,
 			(Parameter.Channel.eMSCmode == CS_3_HMMIX)))
 		{
 			/* Protection level for hierarchical */
-			vecbiData.Enqueue((uint32_t) Parameter.MSCPrLe.iHierarch, 2);
+			vecbiData.Enqueue((uint32_t) Parameter.MSCParameters.ProtectionLevel.iHierarch, 2);
 
 			/* rfu */
 			vecbiData.Enqueue((uint32_t) 0, 10);
 
 			/* Data length for hierarchical */
-			vecbiData.Enqueue((uint32_t) Parameter.Stream[i].iLenPartB, 12);
+			vecbiData.Enqueue((uint32_t) Parameter.MSCParameters.Stream[i].iLenPartB, 12);
 		}
 		else
 		{
 			/* Data length for part A */
-			vecbiData.Enqueue((uint32_t) Parameter.Stream[i].iLenPartA, 12);
+			vecbiData.Enqueue((uint32_t) Parameter.MSCParameters.Stream[i].iLenPartA, 12);
 
 			/* Data length for part B */
-			vecbiData.Enqueue((uint32_t) Parameter.Stream[i].iLenPartB, 12);
+			vecbiData.Enqueue((uint32_t) Parameter.MSCParameters.Stream[i].iLenPartB, 12);
 		}
 	}
 }
@@ -230,7 +230,7 @@ void CSDCTransmit::DataEntityType1(CVector<_BINARY>& vecbiData, int ServiceID,
 
 	/* Length of label. Label is a variable length field of up to 16 bytes
 	   defining the label using UTF-8 coding */
-	const int iLenLabelTmp = Parameter.Service[ServiceID].strLabel.length();
+	const int iLenLabelTmp = Parameter.ServiceParameters.Service[ServiceID].strLabel.length();
 	if (iLenLabelTmp > 16)
 		iLenLabel = 16;
 	else
@@ -266,7 +266,7 @@ void CSDCTransmit::DataEntityType1(CVector<_BINARY>& vecbiData, int ServiceID,
 	/* Set all characters of label string */
 	for (int i = 0; i < iLenLabel; i++)
 	{
-		const char cNewChar = Parameter.Service[ServiceID].strLabel[i];
+		const char cNewChar = Parameter.ServiceParameters.Service[ServiceID].strLabel[i];
 
 		/* Set character */
 		vecbiData.Enqueue((uint32_t) cNewChar, 8);
@@ -281,8 +281,8 @@ void CSDCTransmit::DataEntityType5(CVector<_BINARY>& vecbiData, int ShortID,
 								   CParameter& Parameter)
 {
 	int	iNumBitsTotal = 0;
-	int iStreamID = Parameter.Service[ShortID].iDataStream;
-	int iPacketID = Parameter.Service[ShortID].iPacketID;
+	int iStreamID = Parameter.ServiceParameters.Service[ShortID].iDataStream;
+	int iPacketID = Parameter.ServiceParameters.Service[ShortID].iPacketID;
 
 	if(iStreamID == STREAM_ID_NOT_USED)
 		return;
@@ -321,7 +321,7 @@ void CSDCTransmit::DataEntityType5(CVector<_BINARY>& vecbiData, int ShortID,
 	vecbiData.Enqueue((uint32_t) ShortID, 2);
 
 	/* Stream Id */
-	vecbiData.Enqueue((uint32_t) Parameter.Service[ShortID].iDataStream, 2);
+	vecbiData.Enqueue((uint32_t) Parameter.ServiceParameters.Service[ShortID].iDataStream, 2);
 
 	/* Packet mode indicator */
 	switch (dataParam.ePacketModInd)
@@ -368,7 +368,7 @@ void CSDCTransmit::DataEntityType5(CVector<_BINARY>& vecbiData, int ShortID,
 
 		/* Packet length */
 		vecbiData.Enqueue(
-			(uint32_t) Parameter.Stream[iStreamID].iPacketLen, 8);
+			(uint32_t) Parameter.MSCParameters.Stream[iStreamID].iPacketLen, 8);
 
 		break;
 	}
@@ -393,7 +393,7 @@ vecbiData.Enqueue((uint32_t) 2, 11);
 void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ShortID,
 								   CParameter& Parameter)
 {
-	int iAudioStream = Parameter.Service[ShortID].iAudioStream;
+	int iAudioStream = Parameter.ServiceParameters.Service[ShortID].iAudioStream;
 
 	if(iAudioStream == STREAM_ID_NOT_USED)
 		return;
@@ -590,8 +590,8 @@ void CSDCTransmit::DataEntityType12(CVector<_BINARY>& vecbiData, int ShortID,
 	vecbiData.Init(iNumBitsTotal + NUM_BITS_HEADER_SDC);
 	vecbiData.ResetBitAccess();
 
-	string strLanguageCode = Parameter.Service[ShortID].strLanguageCode;
-	string strCountryCode = Parameter.Service[ShortID].strCountryCode;
+	string strLanguageCode = Parameter.ServiceParameters.Service[ShortID].strLanguageCode;
+	string strCountryCode = Parameter.ServiceParameters.Service[ShortID].strCountryCode;
 
 	if(strLanguageCode == "")
 		strLanguageCode = "---";

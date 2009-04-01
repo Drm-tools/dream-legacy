@@ -45,8 +45,6 @@ eRobustness(RM_ROBUSTNESS_MODE_B),
 eSpectrumOccupancy(SO_3),
 eInterleaverDepth(SI_LONG),
 eMSCmode(), eSDCmode(),
-iNumAudioServices(0),
-iNumDataServices(0),
 iReconfigurationIndex(0)
 {
 }
@@ -235,7 +233,8 @@ CStream& CStream::operator=(const CStream& Stream)
     return *this;
 }
 
-bool CStream::operator==(const CStream& Stream)
+bool CStream::operator==(const CStream& Stream) const
+
 {
     if (iLenPartA != Stream.iLenPartA)
         return false;
@@ -244,14 +243,34 @@ bool CStream::operator==(const CStream& Stream)
     return true;
 }
 
+CMSCParameters::CMSCParameters()
+:CDumpable(),ProtectionLevel(),
+Stream(MAX_NUM_STREAMS)
+{
+}
+
+bool CMSCParameters::operator==(const CMSCParameters& p) const
+{
+    if(!(ProtectionLevel == p.ProtectionLevel))
+        return false;
+    if(Stream != p.Stream)
+        return false;
+    return true;
+}
+
+CServiceParameters::CServiceParameters()
+:CDumpable(),iNumAudioServices(0), iNumDataServices(0), Service(MAX_NUM_SERVICES)
+{
+}
+
 CCoreParameter::CCoreParameter():CDumpable(),Channel(),
-MSCPrLe(),Stream(MAX_NUM_STREAMS),AudioParam(),DataParam()
+MSCParameters(),AudioParam(),DataParam()
 {
 }
 
 CCoreParameter::CCoreParameter(const CCoreParameter& p)
 :CDumpable(p),Channel(p.Channel),
-MSCPrLe(p.MSCPrLe),Stream(p.Stream),
+MSCParameters(p.MSCParameters),
 AudioParam(p.AudioParam),DataParam(p.DataParam)
 {
 }
@@ -259,8 +278,7 @@ AudioParam(p.AudioParam),DataParam(p.DataParam)
 CCoreParameter& CCoreParameter::operator=(const CCoreParameter& p)
 {
     Channel = p.Channel;
-    MSCPrLe = p.MSCPrLe;
-    Stream = p.Stream;
+    MSCParameters = p.MSCParameters;
     AudioParam = p.AudioParam;
     DataParam = p.DataParam;
 	return *this;
@@ -269,7 +287,7 @@ CCoreParameter& CCoreParameter::operator=(const CCoreParameter& p)
 int CCoreParameter::GetStreamLen(const int iStreamID)
 {
 	if(iStreamID != STREAM_ID_NOT_USED)
-		return Stream[iStreamID].iLenPartA + Stream[iStreamID].iLenPartB;
+		return MSCParameters.Stream[iStreamID].iLenPartA + MSCParameters.Stream[iStreamID].iLenPartB;
 	else
 		return 0;
 }
@@ -280,12 +298,11 @@ CParameter::CParameter():CCoreParameter(),
  sReceiverID("                "),
  sSerialNumber(),
  sDataFilesDirectory("."),
- Service(MAX_NUM_SERVICES),
  NextConfig(),
  ServiceInformation(),
  iNumBitsHierarchFrameTotal(0),
  iNumDecodedBitsMSC(0),
- iNumSDCBitsPerSFrame(0),
+ iNumSDCBitsPerSuperFrame(0),
  iNumAudioDecoderBits(0),
  iNumDataDecoderBits(0),
  iYear(0),
@@ -341,12 +358,11 @@ CParameter::CParameter(const CParameter& p):
  sReceiverID(p.sReceiverID),
  sSerialNumber(p.sSerialNumber),
  sDataFilesDirectory(p.sDataFilesDirectory),
- Service(p.Service),
  NextConfig(p.NextConfig),
  ServiceInformation(p.ServiceInformation),
  iNumBitsHierarchFrameTotal(p.iNumBitsHierarchFrameTotal),
  iNumDecodedBitsMSC(p.iNumDecodedBitsMSC),
- iNumSDCBitsPerSFrame(p.iNumSDCBitsPerSFrame),
+ iNumSDCBitsPerSuperFrame(p.iNumSDCBitsPerSuperFrame),
  iNumAudioDecoderBits(p.iNumAudioDecoderBits),
  iNumDataDecoderBits(p.iNumDataDecoderBits),
  iYear(p.iYear), iMonth(p.iMonth), iDay(p.iDay),
@@ -395,12 +411,11 @@ CParameter& CParameter::operator=(const CParameter& p)
 	sReceiverID = p.sReceiverID;
 	sSerialNumber = p.sSerialNumber;
 	sDataFilesDirectory = p.sDataFilesDirectory;
-	Service = p.Service;
     NextConfig = p.NextConfig;
     ServiceInformation = p.ServiceInformation;
 	iNumBitsHierarchFrameTotal = p.iNumBitsHierarchFrameTotal;
 	iNumDecodedBitsMSC = p.iNumDecodedBitsMSC;
-	iNumSDCBitsPerSFrame = p.iNumSDCBitsPerSFrame;
+	iNumSDCBitsPerSuperFrame = p.iNumSDCBitsPerSuperFrame;
 	iNumAudioDecoderBits = p.iNumAudioDecoderBits;
 	iNumDataDecoderBits = p.iNumDataDecoderBits;
 	iYear = p.iYear;
@@ -455,26 +470,26 @@ void CParameter::ResetServicesStreams()
 		 * in order to reselect current service automatically after a resync */
 
 		if (iCurSelAudioService > 0)
-			LastAudioService.Save(iCurSelAudioService, Service[iCurSelAudioService].iServiceID);
+			LastAudioService.Save(iCurSelAudioService, ServiceParameters.Service[iCurSelAudioService].iServiceID);
 
 		if (iCurSelDataService > 0)
-			LastDataService.Save(iCurSelDataService, Service[iCurSelDataService].iServiceID);
+			LastDataService.Save(iCurSelDataService, ServiceParameters.Service[iCurSelDataService].iServiceID);
 
 		/* Reset everything to possible start values */
 		for (i = 0; i < MAX_NUM_SERVICES; i++)
 		{
-			Service[i].iAudioStream = STREAM_ID_NOT_USED;
-			Service[i].iDataStream = STREAM_ID_NOT_USED;
-			Service[i].iPacketID = 0;
+			ServiceParameters.Service[i].iAudioStream = STREAM_ID_NOT_USED;
+			ServiceParameters.Service[i].iDataStream = STREAM_ID_NOT_USED;
+			ServiceParameters.Service[i].iPacketID = 0;
 
-			Service[i].iServiceID = SERV_ID_NOT_USED;
-			Service[i].eCAIndication = CService::CA_NOT_USED;
-			Service[i].iLanguage = 0;
-			Service[i].strCountryCode = "";
-			Service[i].strLanguageCode = "";
-			Service[i].eAudDataFlag = SF_AUDIO;
-			Service[i].iServiceDescr = 0;
-			Service[i].strLabel = "";
+			ServiceParameters.Service[i].iServiceID = SERV_ID_NOT_USED;
+			ServiceParameters.Service[i].eCAIndication = CService::CA_NOT_USED;
+			ServiceParameters.Service[i].iLanguage = 0;
+			ServiceParameters.Service[i].strCountryCode = "";
+			ServiceParameters.Service[i].strLanguageCode = "";
+			ServiceParameters.Service[i].eAudDataFlag = SF_AUDIO;
+			ServiceParameters.Service[i].iServiceDescr = 0;
+			ServiceParameters.Service[i].strLabel = "";
 		}
 		/* force constructors to run */
 		AudioParam.clear();
@@ -485,8 +500,8 @@ void CParameter::ResetServicesStreams()
 
 		for (i = 0; i < MAX_NUM_STREAMS; i++)
 		{
-			Stream[i].iLenPartA = 0;
-			Stream[i].iLenPartB = 0;
+			MSCParameters.Stream[i].iLenPartA = 0;
+			MSCParameters.Stream[i].iLenPartB = 0;
 			DataParam[i].resize(1);
 		}
 	}
@@ -508,17 +523,17 @@ void CParameter::ResetServicesStreams()
 		AudioParam[0].eHVXCRate = CAudioParam::HR_2_KBIT;
 		AudioParam[0].bHVXCCRC = false;
 
-		Service[0].iServiceID = SERV_ID_NOT_USED;
-		Service[0].eCAIndication = CService::CA_NOT_USED;
-		Service[0].iLanguage = 0;
-		Service[0].strCountryCode = "";
-		Service[0].strLanguageCode = "";
-		Service[0].eAudDataFlag = SF_AUDIO;
-		Service[0].iServiceDescr = 0;
-		Service[0].strLabel = "";
+		ServiceParameters.Service[0].iServiceID = SERV_ID_NOT_USED;
+		ServiceParameters.Service[0].eCAIndication = CService::CA_NOT_USED;
+		ServiceParameters.Service[0].iLanguage = 0;
+		ServiceParameters.Service[0].strCountryCode = "";
+		ServiceParameters.Service[0].strLanguageCode = "";
+		ServiceParameters.Service[0].eAudDataFlag = SF_AUDIO;
+		ServiceParameters.Service[0].iServiceDescr = 0;
+		ServiceParameters.Service[0].strLabel = "";
 
-		Stream[0].iLenPartA = 0;
-		Stream[0].iLenPartB = 1044;
+		MSCParameters.Stream[0].iLenPartA = 0;
+		MSCParameters.Stream[0].iLenPartB = 1044;
 	}
 
 	/* Reset alternative frequencies */
@@ -540,7 +555,7 @@ void CParameter::GetActiveServices(set<int>& actServ)
 	/* Get active services */
 	for (int i = 0; i < MAX_NUM_SERVICES; i++)
 	{
-		if (Service[i].IsActive())
+		if (ServiceParameters.Service[i].IsActive())
 			/* A service is active, add ID to set */
 			actServ.insert(i);
 	}
@@ -554,15 +569,15 @@ void CParameter::GetActiveStreams(set<int>& actStr)
 	/* Determine which streams are active */
 	for (int i = 0; i < MAX_NUM_SERVICES; i++)
 	{
-		if (Service[i].IsActive())
+		if (ServiceParameters.Service[i].IsActive())
 		{
 			/* Audio stream */
-			if (Service[i].iAudioStream != STREAM_ID_NOT_USED)
-				actStr.insert(Service[i].iAudioStream);
+			if (ServiceParameters.Service[i].iAudioStream != STREAM_ID_NOT_USED)
+				actStr.insert(ServiceParameters.Service[i].iAudioStream);
 
 			/* Data stream */
-			if (Service[i].iDataStream != STREAM_ID_NOT_USED)
-				actStr.insert(Service[i].iDataStream);
+			if (ServiceParameters.Service[i].iDataStream != STREAM_ID_NOT_USED)
+				actStr.insert(ServiceParameters.Service[i].iDataStream);
 		}
 	}
 }
@@ -573,22 +588,22 @@ _REAL CParameter::GetBitRateKbps(const int iShortID, const bool bAudData)
 	int iLen = 0;
 
 	/* First, check if audio or data service and get lengths */
-	if (Service[iShortID].eAudDataFlag == SF_AUDIO)
+	if (ServiceParameters.Service[iShortID].eAudDataFlag == SF_AUDIO)
 	{
 		/* Check if we want to get the data stream connected to an audio
 		   stream */
 		if (bAudData == true)
 		{
-			iLen = GetStreamLen( Service[iShortID].iDataStream);
+			iLen = GetStreamLen( ServiceParameters.Service[iShortID].iDataStream);
 		}
 		else
 		{
-			iLen = GetStreamLen( Service[iShortID].iAudioStream);
+			iLen = GetStreamLen( ServiceParameters.Service[iShortID].iAudioStream);
 		}
 	}
 	else
 	{
-		iLen = GetStreamLen( Service[iShortID].iDataStream);
+		iLen = GetStreamLen( ServiceParameters.Service[iShortID].iDataStream);
 	}
 
 	/* We have 3 frames with time duration of 1.2 seconds. Bit rate should be
@@ -602,22 +617,22 @@ _REAL CParameter::PartABLenRatio(const int iShortID)
 	int iLenB = 0;
 
 	/* Get the length of protection part A and B */
-	if (Service[iShortID].eAudDataFlag == SF_AUDIO)
+	if (ServiceParameters.Service[iShortID].eAudDataFlag == SF_AUDIO)
 	{
 		/* Audio service */
-		if (Service[iShortID].iAudioStream != STREAM_ID_NOT_USED)
+		if (ServiceParameters.Service[iShortID].iAudioStream != STREAM_ID_NOT_USED)
 		{
-			iLenA = Stream[Service[iShortID].iAudioStream].iLenPartA;
-			iLenB = Stream[Service[iShortID].iAudioStream].iLenPartB;
+			iLenA = MSCParameters.Stream[ServiceParameters.Service[iShortID].iAudioStream].iLenPartA;
+			iLenB = MSCParameters.Stream[ServiceParameters.Service[iShortID].iAudioStream].iLenPartB;
 		}
 	}
 	else
 	{
 		/* Data service */
-		if (Service[iShortID].iDataStream != STREAM_ID_NOT_USED)
+		if (ServiceParameters.Service[iShortID].iDataStream != STREAM_ID_NOT_USED)
 		{
-			iLenA = Stream[Service[iShortID].iDataStream].iLenPartA;
-			iLenB = Stream[Service[iShortID].iDataStream].iLenPartB;
+			iLenA = MSCParameters.Stream[ServiceParameters.Service[iShortID].iDataStream].iLenPartA;
+			iLenB = MSCParameters.Stream[ServiceParameters.Service[iShortID].iDataStream].iLenPartB;
 		}
 	}
 
@@ -636,7 +651,7 @@ void CParameter::SetCurSelAudioService(const int iNewService)
 	   possible to select a "data-only" service and still listen to the audio of
 	   the last selected service */
 	if ((iCurSelAudioService != iNewService) &&
-		(Service[iNewService].iAudioStream != STREAM_ID_NOT_USED))
+		(ServiceParameters.Service[iNewService].iAudioStream != STREAM_ID_NOT_USED))
 	{
 		iCurSelAudioService = iNewService;
 
@@ -654,7 +669,7 @@ void CParameter::SetCurSelDataService(const int iNewService)
 	   service to be able to decode data service and listen to audio at the
 	   same time */
 	if ((iCurSelDataService != iNewService) &&
-		(Service[iNewService].iDataStream != STREAM_ID_NOT_USED))
+		(ServiceParameters.Service[iNewService].iDataStream != STREAM_ID_NOT_USED))
 	{
 		iCurSelDataService = iNewService;
 
@@ -666,13 +681,13 @@ void CParameter::SetCurSelDataService(const int iNewService)
 
 void CParameter::SetServiceID(const int iShortID, const uint32_t iNewServiceID)
 {
-	if (Service[iShortID].iServiceID != iNewServiceID)
+	if (ServiceParameters.Service[iShortID].iServiceID != iNewServiceID)
 	{
 		/* JFBC - what is this for? */
-		if ((iShortID == 0) && (Service[0].iServiceID > 0))
+		if ((iShortID == 0) && (ServiceParameters.Service[0].iServiceID > 0))
 			ResetServicesStreams();
 
-		Service[iShortID].iServiceID = iNewServiceID;
+		ServiceParameters.Service[iShortID].iServiceID = iNewServiceID;
 
 
 		/* If the receiver has lost the sync automatically restore
@@ -1165,9 +1180,20 @@ CChannel::dump(ostream& out) const
     out << "InterleaverDepth: " << eInterleaverDepth << endl;
     out << "MSCmode: " << eMSCmode << endl;
     out << "SDCmode: " << eSDCmode << endl;
+    out << "ReconfigurationIndex: " << iReconfigurationIndex << " }" << endl;
+}
+
+void CMSCParameters::dump(ostream& out) const
+{
+    out << "ProtectionLevel: "; ProtectionLevel.dump(out); out << "," << endl;
+    out << "Stream: "; ::dump(out, Stream); out << "," << endl;
+}
+
+void CServiceParameters::dump(ostream& out) const
+{
     out << "NumAudioServices: " << iNumAudioServices << endl;
     out << "NumDataServices: " << iNumDataServices << endl;
-    out << "ReconfigurationIndex: " << iReconfigurationIndex << " }" << endl;
+    out << "Service: "; ::dump(out, Service); out << "," << endl;
 }
 
 void
@@ -1333,9 +1359,9 @@ void
 CCoreParameter::dump(ostream& out) const
 {
     out << "{ " << endl;
-    Channel.dump(out);
-    out << "MSCPrLe: "; MSCPrLe.dump(out); out << "," << endl;
-    out << "Stream: "; ::dump(out, Stream); out << "," << endl;
+    out << "Channel: "; Channel.dump(out);
+     out << "MSC: "; MSCParameters.dump(out);
+    out << "Service: "; ServiceParameters.dump(out); out << "," << endl;
     out << "AudioParam: "; ::dump(out, AudioParam); out << "," << endl;
     out << "DataParam: "; ::dump(out, DataParam);
     out << "}" << endl;
@@ -1350,7 +1376,6 @@ CParameter::dump(ostream& out) const
     out << "ReceiverID: '" <<  sReceiverID << "'," << endl;
     out << "SerialNumber '" <<  sSerialNumber << "'," << endl;
     out << "DataFilesDirectory: '" <<  sDataFilesDirectory << "'," << endl;
-    out << "Service: "; ::dump(out, Service); out << "," << endl;
     out << "ServiceInformation: {" << endl;
     // TODO make CServiceInformation dumpable
     string sep = "";
@@ -1372,7 +1397,7 @@ CParameter::dump(ostream& out) const
     out << "}" << endl;
     out << "NumBitsHierarchFrameTotal: " <<  iNumBitsHierarchFrameTotal << "," << endl;
     out << "NumDecodedBitsMSC: " <<  iNumDecodedBitsMSC << "," << endl;
-    out << "NumSDCBitsPerSFrame: " <<  iNumSDCBitsPerSFrame << "," << endl;
+    out << "NumSDCBitsPerSuperFrame: " <<  iNumSDCBitsPerSuperFrame << "," << endl;
     out << "NumAudioDecoderBits: " <<  iNumAudioDecoderBits << "," << endl;
     out << "NumDataDecoderBits: " <<  iNumDataDecoderBits << "," << endl;
     out << "Year: " <<  iYear << "," << endl;

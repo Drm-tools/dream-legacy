@@ -187,10 +187,10 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 	int iCurStreamID = -1;
 
 	// find the first audio service and use its stream
-	for(size_t i=0; i<TransmParam.Service.size(); i++)
+	for(size_t i=0; i<TransmParam.ServiceParameters.Service.size(); i++)
 	{
-	    if(TransmParam.Service[i].eAudDataFlag==SF_AUDIO)
-            iCurStreamID = TransmParam.Service[i].iAudioStream;
+	    if(TransmParam.ServiceParameters.Service[i].eAudDataFlag==SF_AUDIO)
+            iCurStreamID = TransmParam.ServiceParameters.Service[i].iAudioStream;
 	}
 
 	/* Set the total available number of bits, byte aligned */
@@ -201,8 +201,8 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 	if(TransmParam.AudioParam[iCurStreamID].eAudioMode != CAudioParam::AM_MONO)
         throw CGenErr("Audio - can only do mono, but stereo selected");
 
-    int iLenPartA = TransmParam.Stream[iCurStreamID].iLenPartA;
-    int iLenPartB = TransmParam.Stream[iCurStreamID].iLenPartB;
+    int iLenPartA = TransmParam.MSCParameters.Stream[iCurStreamID].iLenPartA;
+    int iLenPartB = TransmParam.MSCParameters.Stream[iCurStreamID].iLenPartB;
 
     if(iLenPartB == 0)
         throw CGenErr("Audio - requested block length is zero");
@@ -337,7 +337,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 
 	/* Set the total available number of bits, byte aligned */
 	iTotNumBitsForUsage =
-		(Param.Stream[0].iLenPartA + Param.Stream[0].iLenPartB) * BITS_BINARY;
+		(Param.MSCParameters.Stream[0].iLenPartA + Param.MSCParameters.Stream[0].iLenPartB) * BITS_BINARY;
 
 	/* Total number of bytes which can be used for data and audio */
 	//const int iTotNumBytesForUsage = iTotNumBitsForUsage / BITS_BINARY;

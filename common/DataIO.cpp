@@ -683,7 +683,7 @@ void CGenerateSDCData::ProcessDataInternal(CParameter& TransmParam)
 void CGenerateSDCData::InitInternal(CParameter& TransmParam)
 {
 	/* Define block-size for output */
-	iOutputBlockSize = TransmParam.iNumSDCBitsPerSFrame;
+	iOutputBlockSize = TransmParam.iNumSDCBitsPerSuperFrame;
 }
 
 /* Receiver */
@@ -728,7 +728,7 @@ void CUtilizeSDCData::InitInternal(CParameter& ReceiverParam)
 	bFirstBlock = true;
 
 	/* Define block-size for input */
-	iInputBlockSize = ReceiverParam.iNumSDCBitsPerSFrame;
+	iInputBlockSize = ReceiverParam.iNumSDCBitsPerSuperFrame;
 }
 
 

@@ -317,13 +317,17 @@ CDRMReceiver::Run()
 	switch(Parameters.RxEvent)
 	{
 	    case ChannelReconfiguration:
+	 cerr << "RxEvent ChannelReconfiguration" << endl;
             InitReceiverMode();
             break;
 	    case ServiceReconfiguration:
-            Parameters.Stream = Parameters.NextConfig.Stream;
+	 cerr << "RxEvent ServiceReconfiguration" << endl;
+            /* Reinitialise MSC Demultiplexer */
+            Parameters.MSCParameters = Parameters.NextConfig.MSCParameters;
             Parameters.AudioParam = Parameters.NextConfig.AudioParam;
             Parameters.DataParam = Parameters.NextConfig.DataParam;
             MSCDemultiplexer.SetInitFlag();
+            /* Reinitialise component decoders */
             for (size_t i = 0; i < MSCDecBuf.size(); i++)
             {
                 SplitMSC[i].SetStream(i);
@@ -334,7 +338,6 @@ CDRMReceiver::Run()
             }
             InitsForAudParam();
             InitsForDataParam();
-
             break;
         case Tune:
             InitReceiverMode();
@@ -343,15 +346,24 @@ CDRMReceiver::Run()
             /* Define with which parameters the receiver should try to decode the
                signal. If we are correct with our assumptions, the receiver does not
                need to reinitialize */
-            Parameters.NextConfig.Channel.eRobustness = RM_ROBUSTNESS_MODE_B;
+            Parameters.NextConfig.Channel.eRobustness = RM_ROBUSTNESS_MODE_A;
             Parameters.NextConfig.Channel.eSpectrumOccupancy = SO_3;
 
             /* Set initial MLC parameters */
             Parameters.NextConfig.Channel.eInterleaverDepth = SI_LONG;
             Parameters.NextConfig.Channel.eMSCmode = CS_3_SM;
             Parameters.NextConfig.Channel.eSDCmode = CS_2_SM;
+
+            /* Number of audio and data services */
+            Parameters.ServiceParameters.iNumAudioServices = 0;
+            Parameters.ServiceParameters.iNumDataServices = 0;
+
+            /* Protection levels */
+            Parameters.NextConfig.MSCParameters.ProtectionLevel.iPartA = 0;
+            Parameters.NextConfig.MSCParameters.ProtectionLevel.iPartB = 1;
+            Parameters.NextConfig.MSCParameters.ProtectionLevel.iHierarch = 0;
+
             InitReceiverMode();
-            //SetInStartMode();
             break;
         case SelectAudioComponent:
             InitsForAudParam();
@@ -433,7 +445,7 @@ CDRMReceiver::Run()
 		SplitFAC.ProcessData(Parameters, FACDecBuf, FACUseBuf, FACSendBuf);
 
 		/* if we have an SDC block, make a copy and keep it until the next frame is to be sent */
-		if (SDCDecBuf.GetFillLevel() == Parameters.iNumSDCBitsPerSFrame)
+		if (SDCDecBuf.GetFillLevel() == Parameters.iNumSDCBitsPerSuperFrame)
 		{
 			SplitSDC.ProcessData(Parameters, SDCDecBuf, SDCUseBuf, SDCSendBuf);
 		}
@@ -958,6 +970,7 @@ CDRMReceiver::SetInStartMode()
         Parameters.Channel.eRobustness,
         Parameters.Channel.eSpectrumOccupancy
     );
+    Parameters.Channel.iFrameId = 0; // arbitrary ?
 
 	/* Select the service we want to decode. Always zero, because we do not
 	   know how many services are transmitted in the signal we want to
@@ -971,18 +984,6 @@ CDRMReceiver::SetInStartMode()
 	/* Set the following parameters to zero states (initial states) --------- */
 	Parameters.ResetServicesStreams();
 	Parameters.ResetCurSelAudDatServ();
-
-	/* Protection levels */
-	Parameters.MSCPrLe.iPartA = 0;
-	Parameters.MSCPrLe.iPartB = 1;
-	Parameters.MSCPrLe.iHierarch = 0;
-
-	/* Number of audio and data services */
-	Parameters.Channel.iNumAudioServices = 0;
-	Parameters.Channel.iNumDataServices = 0;
-
-	/* We start with FAC ID = 0 (arbitrary) */
-	Parameters.Channel.iFrameId = 0;
 
 	/* Set synchronization parameters */
 	Parameters.rResampleOffset = rInitResampleOffset;	/* Initial resample offset */
@@ -1285,7 +1286,7 @@ void
 CDRMReceiver::InitsForAudParam()
 {
 	int iShortID = Parameters.GetCurSelAudioService();
-	int iStreamID = Parameters.Service[iShortID].iAudioStream;
+	int iStreamID = Parameters.ServiceParameters.Service[iShortID].iAudioStream;
 	if(iStreamID != STREAM_ID_NOT_USED)
 	{
 		int audiobits = Parameters.GetStreamLen(iStreamID) * BITS_BINARY;
@@ -1300,7 +1301,7 @@ void
 CDRMReceiver::InitsForDataParam()
 {
 	int iShortID = Parameters.GetCurSelDataService();
-	int iStreamID = Parameters.Service[iShortID].iDataStream;
+	int iStreamID = Parameters.ServiceParameters.Service[iShortID].iDataStream;
 	if(iStreamID != STREAM_ID_NOT_USED)
 	{
         int databits = Parameters. GetStreamLen(iStreamID) * BITS_BINARY;
@@ -1371,7 +1372,6 @@ CDRMReceiver::SetRSIRecording(bool bOn, const char cProfile)
 void
 CDRMReceiver::SetReadPCMFromFile(const string strNFN)
 {
-    cerr << "SetReadPCMFromFile " << strNFN << endl;
 	strPCMFile = strNFN;
 	bool bIsIQ = false;
 	string ext;

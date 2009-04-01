@@ -58,7 +58,7 @@ CDataDecoder::~CDataDecoder ()
 void
 CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 {
-    if(ReceiverParam.Stream[
+    if(ReceiverParam.MSCParameters.Stream[
         ReceiverParam.GetCurSelDataService()
         ].ePacketModInd == PM_PACKET_MODE)
     {
@@ -133,14 +133,14 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 	/* Set input block size */
 	iInputBlockSize = iTotalNumInputBits;
 
-    if(ReceiverParam.Stream[iStreamID].ePacketModInd == PM_PACKET_MODE)
+    if(ReceiverParam.MSCParameters.Stream[iStreamID].ePacketModInd == PM_PACKET_MODE)
     {
         /* Calculate total packet size. DRM standard: packet length: this
            field indicates the length in bytes of the data field of each
            packet specified as an unsigned binary number (the total packet
            length is three bytes longer as it includes the header and CRC
            fields) */
-        iTotalPacketSize = ReceiverParam.Stream[iStreamID].iPacketLen + 3;
+        iTotalPacketSize = ReceiverParam.MSCParameters.Stream[iStreamID].iPacketLen + 3;
 
         /* Check total packet size, could be wrong due to wrong SDC */
         if ((iTotalPacketSize <= 0) ||

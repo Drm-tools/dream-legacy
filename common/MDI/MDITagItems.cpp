@@ -210,7 +210,7 @@ CTagItemGeneratorSDC::GenTag(CParameter & Parameter, CVectorEx < _BINARY > *pvec
 		return;
 	}
 
-	if (pvecbiData->Size() < Parameter.iNumSDCBitsPerSFrame)
+	if (pvecbiData->Size() < Parameter.iNumSDCBitsPerSuperFrame)
 	{
 		PrepareTag(0);
 		return;
@@ -219,12 +219,12 @@ CTagItemGeneratorSDC::GenTag(CParameter & Parameter, CVectorEx < _BINARY > *pvec
 	/* Fixed by O.Haffenden, BBC R&D */
 	/* The input SDC vector is 4 bits SDC index + a whole number of bytes plus padding. */
 	/* The padding is not sent in the MDI */
-	const int iLenSDCDataBits = BITS_BINARY * ((Parameter.iNumSDCBitsPerSFrame - 4) / BITS_BINARY) + 4;
+	const int iLenSDCDataBits = BITS_BINARY * ((Parameter.iNumSDCBitsPerSuperFrame - 4) / BITS_BINARY) + 4;
 
 	/* Length: "length SDC block" bytes. Our SDC data vector does not
 	   contain the 4 bits "Rfu" */
 	PrepareTag(iLenSDCDataBits + 4);
-	//CVectorEx < _BINARY > *pvecbiSDCData = SDCData.Get(Parameter.iNumSDCBitsPerSFrame);
+	//CVectorEx < _BINARY > *pvecbiSDCData = SDCData.Get(Parameter.iNumSDCBitsPerSuperFrame);
 
 	/* Service Description Channel Block */
 	pvecbiData->ResetBitAccess();
@@ -268,10 +268,10 @@ CTagItemGeneratorSDCChanInf::GenTag(CParameter & Parameter)
 	Enqueue((uint32_t) 0, 4);
 
 	/* PLA */
-	Enqueue((uint32_t) Parameter.MSCPrLe.iPartA, 2);
+	Enqueue((uint32_t) Parameter.MSCParameters.ProtectionLevel.iPartA, 2);
 
 	/* PLB */
-	Enqueue((uint32_t) Parameter.MSCPrLe.iPartB, 2);
+	Enqueue((uint32_t) Parameter.MSCParameters.ProtectionLevel.iPartB, 2);
 
 	/* n + 1 stream description(s) */
 	for (set<int>::iterator i = actStreams.begin(); i!=actStreams.end(); i++)
@@ -283,21 +283,21 @@ CTagItemGeneratorSDCChanInf::GenTag(CParameter & Parameter)
 			 (Parameter.Channel.eMSCmode == CS_3_HMMIX)))
 		{
 			/* Protection level for hierarchical */
-			Enqueue((uint32_t) Parameter.MSCPrLe.iHierarch, 2);
+			Enqueue((uint32_t) Parameter.MSCParameters.ProtectionLevel.iHierarch, 2);
 
 			/* rfu */
 			Enqueue((uint32_t) 0, 10);
 
 			/* Data length for hierarchical (always stream 0) */
-			Enqueue((uint32_t) Parameter.Stream[0].iLenPartB, 12);
+			Enqueue((uint32_t) Parameter.MSCParameters.Stream[0].iLenPartB, 12);
 		}
 		else
 		{
 			/* Data length for part A */
-			Enqueue((uint32_t) Parameter.Stream[*i].iLenPartA, 12);
+			Enqueue((uint32_t) Parameter.MSCParameters.Stream[*i].iLenPartA, 12);
 
 			/* Data length for part B */
-			Enqueue((uint32_t) Parameter.Stream[*i].iLenPartB, 12);
+			Enqueue((uint32_t) Parameter.MSCParameters.Stream[*i].iLenPartB, 12);
 		}
 	}
 }
@@ -1352,7 +1352,7 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 {
 
 	const int iLenStrData =
-		BITS_BINARY * (Parameter.Stream[0].iLenPartA + Parameter.Stream[0].iLenPartB);
+		BITS_BINARY * (Parameter.MSCParameters.Stream[0].iLenPartA + Parameter.MSCParameters.Stream[0].iLenPartB);
 	// Only generate this tag if stream input data is not of zero length
 	if (iLenStrData == 0)
 		return;

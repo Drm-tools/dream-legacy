@@ -49,7 +49,7 @@ public:
 
 protected:
 	bool DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-							 CParameter& Parameter, const bool bVersion);
+							 CCoreParameter&);
 	bool DataEntityType1(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter);
 // ...
