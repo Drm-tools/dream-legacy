@@ -81,7 +81,7 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 
 
 // Only working for either one audio or data service!
-if (Parameter.ServiceParameters.iNumAudioServices == 1)
+if (Parameter.FACParameters.iNumAudioServices == 1)
 {
 	/* Type 9 */
 	DataEntityType9(vecbiData, 0, Parameter);
@@ -230,7 +230,7 @@ void CSDCTransmit::DataEntityType1(CVector<_BINARY>& vecbiData, int ServiceID,
 
 	/* Length of label. Label is a variable length field of up to 16 bytes
 	   defining the label using UTF-8 coding */
-	const int iLenLabelTmp = Parameter.ServiceParameters.Service[ServiceID].strLabel.length();
+	const int iLenLabelTmp = Parameter.Service[ServiceID].strLabel.length();
 	if (iLenLabelTmp > 16)
 		iLenLabel = 16;
 	else
@@ -266,7 +266,7 @@ void CSDCTransmit::DataEntityType1(CVector<_BINARY>& vecbiData, int ServiceID,
 	/* Set all characters of label string */
 	for (int i = 0; i < iLenLabel; i++)
 	{
-		const char cNewChar = Parameter.ServiceParameters.Service[ServiceID].strLabel[i];
+		const char cNewChar = Parameter.Service[ServiceID].strLabel[i];
 
 		/* Set character */
 		vecbiData.Enqueue((uint32_t) cNewChar, 8);
@@ -281,8 +281,8 @@ void CSDCTransmit::DataEntityType5(CVector<_BINARY>& vecbiData, int ShortID,
 								   CParameter& Parameter)
 {
 	int	iNumBitsTotal = 0;
-	int iStreamID = Parameter.ServiceParameters.Service[ShortID].iDataStream;
-	int iPacketID = Parameter.ServiceParameters.Service[ShortID].iPacketID;
+	int iStreamID = Parameter.Service[ShortID].iDataStream;
+	int iPacketID = Parameter.Service[ShortID].iPacketID;
 
 	if(iStreamID == STREAM_ID_NOT_USED)
 		return;
@@ -321,7 +321,7 @@ void CSDCTransmit::DataEntityType5(CVector<_BINARY>& vecbiData, int ShortID,
 	vecbiData.Enqueue((uint32_t) ShortID, 2);
 
 	/* Stream Id */
-	vecbiData.Enqueue((uint32_t) Parameter.ServiceParameters.Service[ShortID].iDataStream, 2);
+	vecbiData.Enqueue((uint32_t) Parameter.Service[ShortID].iDataStream, 2);
 
 	/* Packet mode indicator */
 	switch (dataParam.ePacketModInd)
@@ -393,7 +393,7 @@ vecbiData.Enqueue((uint32_t) 2, 11);
 void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ShortID,
 								   CParameter& Parameter)
 {
-	int iAudioStream = Parameter.ServiceParameters.Service[ShortID].iAudioStream;
+	int iAudioStream = Parameter.Service[ShortID].iAudioStream;
 
 	if(iAudioStream == STREAM_ID_NOT_USED)
 		return;
@@ -590,8 +590,8 @@ void CSDCTransmit::DataEntityType12(CVector<_BINARY>& vecbiData, int ShortID,
 	vecbiData.Init(iNumBitsTotal + NUM_BITS_HEADER_SDC);
 	vecbiData.ResetBitAccess();
 
-	string strLanguageCode = Parameter.ServiceParameters.Service[ShortID].strLanguageCode;
-	string strCountryCode = Parameter.ServiceParameters.Service[ShortID].strCountryCode;
+	string strLanguageCode = Parameter.Service[ShortID].strLanguageCode;
+	string strCountryCode = Parameter.Service[ShortID].strCountryCode;
 
 	if(strLanguageCode == "")
 		strLanguageCode = "---";

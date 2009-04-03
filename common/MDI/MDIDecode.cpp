@@ -219,17 +219,17 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 		Parameters.MSCParameters.Stream[0].iLenPartB = iStreamLen/BITS_BINARY;
 		Parameters.iNumDecodedBitsMSC = iStreamLen; // is this necessary?
 
-		Parameters.ServiceParameters.iNumAudioServices = 1;
-		Parameters.ServiceParameters.iNumDataServices = 0;
-		Parameters.ServiceParameters.Service[0].iAudioStream = 0;
+		Parameters.FACParameters.iNumAudioServices = 1;
+		Parameters.FACParameters.iNumDataServices = 0;
+		Parameters.Service[0].iAudioStream = 0;
 		Parameters.SetCurSelAudioService(0);
 
-		Parameters.ServiceParameters.Service[0].strLabel = "";
-		Parameters.ServiceParameters.Service[0].strCountryCode = "";
-		Parameters.ServiceParameters.Service[0].iLanguage = 0;
-		Parameters.ServiceParameters.Service[0].strLanguageCode = "";
-		Parameters.ServiceParameters.Service[0].iServiceDescr = 0;
-		Parameters.ServiceParameters.Service[0].iServiceID = 0;
+		Parameters.Service[0].strLabel = "";
+		Parameters.Service[0].strCountryCode = "";
+		Parameters.Service[0].iLanguage = 0;
+		Parameters.Service[0].strLanguageCode = "";
+		Parameters.Service[0].iServiceDescr = 0;
+		Parameters.Service[0].iServiceID = 0;
 
 		Parameters.Unlock();
 	}

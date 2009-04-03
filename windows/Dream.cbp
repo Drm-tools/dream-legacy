@@ -420,12 +420,6 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
-		<Unit filename="..\common\GUI-QT\TransmDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-			<Option target="Portaudio Release" />
-			<Option target="Portaudio Debug" />
-		</Unit>
 		<Unit filename="..\common\GUI-QT\TransmitterMainWindow.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -715,7 +709,7 @@
 		<Unit filename="..\common\util\Utilities.cpp" />
 		<Unit filename="..\common\util\Utilities.h" />
 		<Unit filename="..\common\util\Vector.h" />
-		<Unit filename="..\moc\moc_AnalogDemDlg.cpp">
+		<Unit filename="..\moc\moc_AnalogMainWindow.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
@@ -829,7 +823,7 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
-		<Unit filename="..\moc\moc_TransmDlg.cpp">
+		<Unit filename="..\moc\moc_TransmitterMainWindow.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />

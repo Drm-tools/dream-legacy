@@ -396,14 +396,14 @@ void CAMSSDecode::DecodeBlock1(CVector<_BINARY>& bBits, CParameter& ReceiverPara
 	iLanguage = bBits.Separate(4);
 	iServiceID = bBits.Separate(24);
 
-	if (iServiceID != ReceiverParam.ServiceParameters.Service[0].iServiceID)
+	if (iServiceID != ReceiverParam.Service[0].iServiceID)
 	{
 		ReceiverParam.ResetServicesStreams();
 	}
 
 	ReceiverParam.iAMSSCarrierMode = iAMSSCarrierMode;
-	ReceiverParam.ServiceParameters.Service[0].iLanguage = iLanguage;
-	ReceiverParam.ServiceParameters.Service[0].iServiceID = iServiceID;
+	ReceiverParam.Service[0].iLanguage = iLanguage;
+	ReceiverParam.Service[0].iServiceID = iServiceID;
 
 	if ( (bVersionFlag != bLocalVersionFlag) || blFirstEverBlock1)	// discard entire current data entity group
 	{

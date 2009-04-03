@@ -639,9 +639,9 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 	{
 		/* In case of simulation no FAC data is used,
            we have to increase the counter here */
-		ReceiverParam.Channel.iFrameId++;
-		if (ReceiverParam.Channel.iFrameId == NUM_FRAMES_IN_SUPERFRAME)
-			ReceiverParam.Channel.iFrameId = 0;
+		ReceiverParam.FACParameters.iFrameId++;
+		if (ReceiverParam.FACParameters.iFrameId == NUM_FRAMES_IN_SUPERFRAME)
+			ReceiverParam.FACParameters.iFrameId = 0;
 	}
 	else
 	{
@@ -661,7 +661,7 @@ void CUtilizeFACData::InitInternal(CParameter& ReceiverParam)
     // This should be in FAC class in an Init() routine which has to be defined, this
     // would be cleaner code! TODO
     /* Init frame ID so that a "0" comes after increasing the init value once */
-    ReceiverParam.Channel.iFrameId = NUM_FRAMES_IN_SUPERFRAME - 1;
+    ReceiverParam.FACParameters.iFrameId = NUM_FRAMES_IN_SUPERFRAME - 1;
 
 	/* Reset flag */
 	bCRCOk = false;

@@ -28,6 +28,8 @@
 
 #include "AudioSourceDecoder.h"
 #include "../util/ReceiverModul_impl.h"
+#include <windows.h>
+#include <fstream>
 
 void
 CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
@@ -39,6 +41,13 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 #ifdef HAVE_LIBFAAD
 	faacDecFrameInfo DecFrameInfo;
 	short *psDecOutSampleBuf;
+#endif
+
+#if 0
+ofstream f("audio.txt", ios::app);
+ReceiverParam.dump(f);
+this->dump(f);
+f.close();
 #endif
 
 	bGoodValues = false;
@@ -106,7 +115,6 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				bGoodValues = false;
 			}
 		}
-
 		if (bGoodValues == true)
 		{
 			/* Higher-protected part */
@@ -178,7 +186,6 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				/* Prepare data vector with CRC at the beginning (the definition
 				   with faad2 DRM interface) */
 				vecbyPrepAudioFrame[0] = aac_crc_bits[j];
-
 				for (i = 0; i < veciFrameLength[j]; i++)
 					vecbyPrepAudioFrame[i + 1] = audio_frame[j][i];
 
@@ -234,7 +241,6 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 															 [0],
 															 veciFrameLength
 															 [j] + 1);
-
 				/* OPH: add frame status to vector for RSCI */
 				ReceiverParam.Lock();
 				ReceiverParam.Measurements.audioFrameStatus.set(DecFrameInfo.error != 0);
@@ -547,6 +553,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 	int iCurSelServ;
 	int iAudioSampleRate;
 
+    HANDLE hinstLib = LoadLibrary(TEXT("libfaad2.dll"));
 	/* Init error flags and output block size parameter. The output block
 	   size is set in the processing routine. We must set it here in case
 	   of an error in the initialization, this part in the processing
@@ -570,11 +577,10 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 		iCurSelServ = ReceiverParam.GetCurSelAudioService();
 
 		/* Current audio stream ID */
-		iCurAudioStreamID = ReceiverParam.ServiceParameters.Service[iCurSelServ].iAudioStream;
-
+		iCurAudioStreamID = ReceiverParam.Service[iCurSelServ].iAudioStream;
 		/* The requirement for this module is that the stream is used and the
 		   service is an audio service. Check it here */
-		if ((ReceiverParam.ServiceParameters.Service[iCurSelServ].eAudDataFlag != SF_AUDIO) ||
+		if ((ReceiverParam.Service[iCurSelServ].eAudDataFlag != SF_AUDIO) ||
 			(iCurAudioStreamID == STREAM_ID_NOT_USED))
 		{
 			throw CInitErr(ET_ALL);
@@ -687,7 +693,6 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			   (5.3.1.1, Table 5) */
 			iAudioPayloadLen = iTotalFrameSize / BITS_BINARY -
 				iNumHeaderBytes - iNumAudioFrames;
-
 			/* Check iAudioPayloadLen value, only positive values make sense */
 			if (iAudioPayloadLen < 0)
 				throw CInitErr(ET_AUDDECODER);
@@ -915,5 +920,41 @@ CAudioSourceDecoder::~CAudioSourceDecoder()
 #ifdef HAVE_LIBFAAD
 	/* Close decoder handle */
 	NeAACDecClose(HandleAACDecoder);
+#endif
+}
+
+void CAudioSourceDecoder::dump(ostream& o)
+{
+
+	/* General */
+	o << "DoNotProcessData: " << DoNotProcessData << endl;
+	o << "DoNotProcessAudDecoder: " << DoNotProcessAudDecoder << endl;
+	o << "iTotalFrameSize: " << iTotalFrameSize << endl;
+	o << "iStreamID: " << iStreamID << endl;
+
+	/* Text message */
+	o << "bTextMessageUsed: " <<		    bTextMessageUsed << endl;
+
+	/* Resampling */
+    o << "iResOutBlockSize: " << iResOutBlockSize << endl;
+
+	/* Drop-out masking (reverberation) */
+	o << "bAudioWasOK: " <<		    bAudioWasOK << endl;
+	o << "bUseReverbEffect: " <<		    bUseReverbEffect << endl;
+
+	o << "iLenDecOutPerChan: " <<			iLenDecOutPerChan << endl;
+	o << "iNumAudioFrames: " <<			iNumAudioFrames << endl;
+
+	o << "eAudioCoding: " <<	int(eAudioCoding) << endl;
+
+
+#ifdef HAVE_LIBFAAD /* AAC decoding */
+
+	o << "iNumBorders: " <<			iNumBorders << endl;
+	o << "iNumHigherProtectedBytes: " << 			iNumHigherProtectedBytes << endl;
+	o << "iMaxLenOneAudFrame: " <<			iMaxLenOneAudFrame << endl;
+
+	o << "iBadBlockCount: " <<			iBadBlockCount << endl;
+	o << "iAudioPayloadLen: " <<			iAudioPayloadLen << endl;
 #endif
 }

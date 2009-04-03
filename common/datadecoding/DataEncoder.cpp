@@ -162,11 +162,11 @@ CDataEncoder::Init(CParameter & Param)
 	const int iCurSelDataServ = Param.GetCurSelDataService();
 
 	iPacketLen = Param.MSCParameters.Stream[
-        Param.ServiceParameters.Service[iCurSelDataServ].iDataStream
+        Param.Service[iCurSelDataServ].iDataStream
         ].iPacketLen * BITS_BINARY;
 	iTotalPacketSize = iPacketLen + 24 /* CRC + header = 24 bits */ ;
 
-	iPacketID = Param.ServiceParameters.Service[iCurSelDataServ].iPacketID;
+	iPacketID = Param.Service[iCurSelDataServ].iPacketID;
 
 	Param.Unlock();
 

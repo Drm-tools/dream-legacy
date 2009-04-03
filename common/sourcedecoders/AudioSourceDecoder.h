@@ -134,6 +134,8 @@ public:
 	void SetReverbEffect(const bool bNER) {bUseReverbEffect = bNER;}
 	bool GetReverbEffect() {return bUseReverbEffect;}
 
+    void dump(ostream&);
+
 protected:
 	enum EInitErr {ET_ALL, ET_AUDDECODER}; /* ET: Error type */
 	class CInitErr

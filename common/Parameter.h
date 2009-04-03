@@ -108,14 +108,10 @@ enum ERxEvent {
 		void dump(ostream&) const;
 
         bool bEnhancementLayerInUse;
-        int iFrameId;
-        bool bAFSindexValid;
         ERobMode eRobustness;
         ESpecOcc eSpectrumOccupancy;
         ESymIntMod eInterleaverDepth;
         ECodScheme eMSCmode, eSDCmode;
-        int iReconfigurationIndex;
-        int iNumServField; // for convenience
      };
 
 	class CMSCProtLev : public CDumpable
@@ -123,15 +119,6 @@ enum ERxEvent {
 	  public:
 
 		CMSCProtLev():CDumpable(),iPartA(0),iPartB(0),iHierarch(0) {}
-		CMSCProtLev(const CMSCProtLev& p):
-		CDumpable(),iPartA(p.iPartA),iPartB(p.iPartB),iHierarch(p.iHierarch) {}
-		CMSCProtLev& operator=(const CMSCProtLev& NewMSCProtLev)
-		{
-			iPartA = NewMSCProtLev.iPartA;
-			iPartB = NewMSCProtLev.iPartB;
-			iHierarch = NewMSCProtLev.iHierarch;
-			return *this;
-		}
 		bool operator==(const CMSCProtLev& p) const
 		{
 		    if(iPartA!=p.iPartA)
@@ -142,6 +129,7 @@ enum ERxEvent {
                 return false;
             return true;
 		}
+		bool operator!=(const CMSCProtLev &other) const {return !(*this == other);}
 
 		int iPartA;				/* MSC protection level for part A */
 		int iPartB;				/* MSC protection level for part B */
@@ -154,9 +142,8 @@ enum ERxEvent {
 	  public:
 
 		CStream();
-		CStream(const CStream&);
-		CStream& operator=(const CStream&);
 		bool operator==(const CStream&) const;
+		bool operator!=(const CStream &other) const {return !(*this == other);}
 		void dump(ostream&) const;
 
 		int iLenPartA;			/* Data length for part A */
@@ -170,8 +157,11 @@ enum ERxEvent {
     {
     public:
         CMSCParameters();
+        CMSCParameters(const CMSCParameters&);
         virtual ~CMSCParameters() {}
+        CMSCParameters& operator=(const CMSCParameters&);
         bool operator==(const CMSCParameters&) const;
+		bool operator!=(const CMSCParameters &other) const {return !(*this == other);}
 		void dump(ostream&) const;
 
         CMSCProtLev ProtectionLevel;
@@ -200,7 +190,8 @@ enum ERxEvent {
         CAudioParam();
         CAudioParam(const CAudioParam&);
         CAudioParam& operator=(const CAudioParam&);
-		bool operator!=(const CAudioParam&);
+		bool operator==(const CAudioParam&) const;
+		bool operator!=(const CAudioParam &other) const {return !(*this == other);}
 		void dump(ostream&) const;
 
 		/* Text-message */
@@ -235,6 +226,13 @@ enum ERxEvent {
 		/* AD: Application Domain */
 		enum EApplDomain { AD_DRM_SPEC_APP, AD_DAB_SPEC_APP, AD_OTHER_SPEC_APP };
 
+		CDataParam();
+		CDataParam(const CDataParam&);
+        CDataParam& operator=(const CDataParam&);
+        bool operator==(const CDataParam&) const;
+		bool operator!=(const CDataParam &other) const {return !(*this == other);}
+		void dump(ostream&) const;
+
 		EPackMod ePacketModInd;	/* Packet mode indicator */
 
 		/* In case of packet mode ------------------------------------------- */
@@ -245,12 +243,24 @@ enum ERxEvent {
 		EAppType    eUserAppIdent;	/* User application identifier, only DAB */
 		vector<uint8_t> applicationData;
 
-		CDataParam();
-		CDataParam(const CDataParam&);
-        CDataParam& operator=(const CDataParam&);
-        bool operator!=(const CDataParam&);
-		void dump(ostream&) const;
 	};
+
+    class CCoreParameter : public CDumpable
+    {
+    public:
+        CCoreParameter();
+        CCoreParameter(const CCoreParameter&);
+        virtual ~CCoreParameter() {}
+        CCoreParameter& operator=(const CCoreParameter&);
+
+        int GetStreamLen(const int iStreamID);
+
+        CChannel Channel;
+        CMSCParameters MSCParameters;
+        vector<CAudioParam> AudioParam; /* index by streamID */
+        vector<vector<CDataParam> > DataParam; /* first index streamID, second index packetID */
+        void dump(ostream&) const;
+    };
 
 	class CService : public CDumpable
 	{
@@ -262,6 +272,7 @@ enum ERxEvent {
 
 		CService();
 		CService(const CService& s);
+		virtual ~CService() {}
 		CService& operator=(const CService& s);
 		void dump(ostream&) const;
 
@@ -288,18 +299,6 @@ enum ERxEvent {
 		int iDataStream;
 		int iPacketID;
 	};
-
-    class CServiceParameters : public CDumpable
-    {
-        public:
-        CServiceParameters();
-        virtual ~CServiceParameters() {}
-		void dump(ostream&) const;
-
-        int iNumAudioServices;
-        int iNumDataServices;
-        vector<CService> Service;
-    };
 
 	/* Alternative Frequency Signalling ************************************** */
 	/* Alternative frequency signalling Schedules informations class */
@@ -741,61 +740,35 @@ enum ERxEvent {
 		enum ESMeterCorrectionType {S_METER_CORRECTION_TYPE_CAL_FACTOR_ONLY, S_METER_CORRECTION_TYPE_AGC_ONLY, S_METER_CORRECTION_TYPE_AGC_RSSI};
 
 		// Constructor
-		CFrontEndParameters():
-            CDumpable(),
-			eSMeterCorrectionType(S_METER_CORRECTION_TYPE_CAL_FACTOR_ONLY), rSMeterBandwidth(10000.0),
-				rDefaultMeasurementBandwidth(10000.0), bAutoMeasurementBandwidth(true), rCalFactorAM(0.0),
-				rCalFactorDRM(0.0), rIFCentreFreq(12000.0)
-			{}
-		CFrontEndParameters(const CFrontEndParameters& p):
-            CDumpable(),
-			eSMeterCorrectionType(p.eSMeterCorrectionType), rSMeterBandwidth(p.rSMeterBandwidth),
-			rDefaultMeasurementBandwidth(p.rDefaultMeasurementBandwidth),
-			bAutoMeasurementBandwidth(p.bAutoMeasurementBandwidth),
-			rCalFactorAM(p.rCalFactorAM), rCalFactorDRM(p.rCalFactorDRM),
-			rIFCentreFreq(p.rIFCentreFreq)
-			{}
-		CFrontEndParameters& operator=(const CFrontEndParameters& p)
-		{
-			eSMeterCorrectionType = p.eSMeterCorrectionType;
-			rSMeterBandwidth = p.rSMeterBandwidth;
-			rDefaultMeasurementBandwidth = p.rDefaultMeasurementBandwidth;
-			bAutoMeasurementBandwidth = p.bAutoMeasurementBandwidth;
-			rCalFactorAM = p.rCalFactorAM;
-			rCalFactorDRM = p.rCalFactorDRM;
-			rIFCentreFreq = p.rIFCentreFreq;
-			return *this;
-		}
+		CFrontEndParameters();
+		void dump(ostream&) const;
 
 		ESMeterCorrectionType eSMeterCorrectionType;
 		_REAL rSMeterBandwidth; // The bandwidth the S-meter uses to do the measurement
-
 		_REAL rDefaultMeasurementBandwidth; // Bandwidth to do measurement if not synchronised
 		bool bAutoMeasurementBandwidth; // true: use the current FAC bandwidth if locked, false: use default bandwidth always
 		_REAL rCalFactorAM;
 		_REAL rCalFactorDRM;
 		_REAL rIFCentreFreq;
 
-		void dump(ostream&) const;
 	};
 
-class CCoreParameter : public CDumpable
-{
-public:
-    CCoreParameter();
-	CCoreParameter(const CCoreParameter&);
-    virtual ~CCoreParameter() {}
-	CCoreParameter& operator=(const CCoreParameter&);
 
-	int GetStreamLen(const int iStreamID);
+    class CFACParameters : public CDumpable
+    {
+      public:
 
-	CChannel Channel;
-	CMSCParameters MSCParameters;
-	vector<CAudioParam> AudioParam; /* index by streamID */
-	vector<vector<CDataParam> > DataParam; /* first index streamID, second index packetID */
-	CServiceParameters ServiceParameters;
-	void dump(ostream&) const;
-};
+        CFACParameters();
+        virtual ~CFACParameters() {}
+		bool operator==(const CFACParameters&) const;
+		void dump(ostream&) const;
+
+        int iFrameId;
+        bool bAFSindexValid;
+        int iReconfigurationIndex;
+        int iNumAudioServices;
+        int iNumDataServices;
+    };
 
 class CParameter : public CCoreParameter
 {
@@ -860,6 +833,10 @@ class CParameter : public CCoreParameter
 
 	/* information about the next configuration */
 	CCoreParameter NextConfig;
+
+    CFACParameters  FACParameters;
+
+    vector<CService> Service;
 
 	/* information about services gathered from SDC, EPG and web schedules */
 	map<uint32_t,CServiceInformation> ServiceInformation;
@@ -931,7 +908,6 @@ class CParameter : public CCoreParameter
 	CReceiveStatus ReceiveStatus;
 	CFrontEndParameters FrontEndParameters;
 	CAltFreqSign AltFreqSign;
-	CAltFreqSign AltFreqSignNext;
 
 	void Lock()
 	{

@@ -45,7 +45,7 @@ CDRMTransmitter::CDRMTransmitter():
 	TransmParam.ResetServicesStreams();
 
 	/* Init frame ID counter (index) */
-	TransmParam.Channel.iFrameId = 0;
+	TransmParam.FACParameters.iFrameId = 0;
 
 	time_t t;
 	time(&t);

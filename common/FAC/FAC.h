@@ -61,7 +61,7 @@ public:
 	CFACReceive() {}
 	virtual ~CFACReceive() {}
 
-	static bool ChannelData(CVector<_BINARY>*, CCoreParameter&, bool bSetRobm=false);
+	static bool ChannelData(CVector<_BINARY>*, CCoreParameter&, CFACParameters&, bool bSetRobm=false);
 	/* "pbiFACData" contains 72 bits */
 	bool FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter);
 

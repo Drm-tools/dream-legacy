@@ -188,7 +188,7 @@ void DRMMainWindow::OnTimer()
         ProgrInputLevel->setValue(Parameter.GetIFSignalLevel());
 
         iCurSelAudioServ = Parameter.GetCurSelAudioService();
-        if(Parameter.ServiceParameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
+        if(Parameter.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
             SetStatus(CLED_MSC, Parameter.ReceiveStatus.MOT.GetStatus());
         else
             SetStatus(CLED_MSC, Parameter.ReceiveStatus.Audio.GetStatus());
@@ -212,15 +212,13 @@ void DRMMainWindow::OnTimer()
 	}
 }
 
-void DRMMainWindow::ShowTextMessage(const CAudioParam& AudioParam)
+void DRMMainWindow::ShowTextMessage(const string& strTextMessage)
 {
-	if(AudioParam.bTextflag)
-	{
 		/* Activate text window */
 		TextTextMessage->setEnabled(true);
 
 		/* Text message of current selected audio service (UTF-8 decoding) */
-		QString textMessage = QString().fromUtf8(AudioParam.strTextMessage.c_str());
+		QString textMessage = QString().fromUtf8(strTextMessage.c_str());
 		QString formattedMessage = "";
 		for (int i = 0; i < textMessage.length(); i++)
 		{
@@ -257,15 +255,6 @@ void DRMMainWindow::ShowTextMessage(const CAudioParam& AudioParam)
 		}
 		formattedMessage = "<center>" + formattedMessage + "</center>";
 		TextTextMessage->setText(formattedMessage);
-	}
-	else
-	{
-		/* Deactivate text window */
-		TextTextMessage->setEnabled(false);
-
-		/* Clear Text */
-		TextTextMessage->setText("");
-	}
 }
 
 void DRMMainWindow::UpdateDisplay()
@@ -278,7 +267,7 @@ void DRMMainWindow::UpdateDisplay()
 	/* First get current selected services */
 	int iCurSelAudioServ = Parameters.GetCurSelAudioService();
 
-	const vector<CService>& Service = Parameters.ServiceParameters.Service;
+	const vector<CService>& Service = Parameters.Service;
 
 	/* If the current audio service is not active or is an only data service
 	   select the first audio service available */
@@ -304,7 +293,18 @@ void DRMMainWindow::UpdateDisplay()
 	/* If selected service is audio and text message is true */
 	if ((Service[iCurSelAudioServ].eAudDataFlag == SF_AUDIO) && (iAudioStream != STREAM_ID_NOT_USED))
 	{
-	    ShowTextMessage(Parameters.AudioParam[iAudioStream]);
+        if(Parameters.AudioParam[iAudioStream].bTextflag)
+        {
+            ShowTextMessage(Parameters.AudioParam[iAudioStream].strTextMessage);
+        }
+        else
+        {
+            /* Deactivate text window */
+            TextTextMessage->setEnabled(false);
+
+            /* Clear Text */
+            TextTextMessage->setText("");
+        }
 	}
 	else
 	{
@@ -320,8 +320,7 @@ void DRMMainWindow::UpdateDisplay()
 	{
 		/* Service label (UTF-8 encoded string -> convert) */
 		LabelServiceLabel->setText(QString().fromUtf8(
-			Service[iCurSelAudioServ].
-			strLabel.c_str()));
+			Service[iCurSelAudioServ].strLabel.c_str()));
 
 		/* Bit-rate */
 		QString strBitrate = QString().setNum(Parameters.
@@ -346,16 +345,14 @@ void DRMMainWindow::UpdateDisplay()
 		LabelBitrate->setText(strBitrate);
 
 		/* Service ID (plot number in hexadecimal format) */
-		const long iServiceID = (long) Parameters.
-			ServiceParameters.Service[iCurSelAudioServ].iServiceID;
+		uint32_t iServiceID = Service[iCurSelAudioServ].iServiceID;
 
+        QString sServiceID;
 		if (iServiceID != 0)
 		{
-			LabelServiceID->setText("ID:" +
-				QString().setNum(iServiceID, 16).upper());
+			sServiceID = "ID:" + QString().setNum(iServiceID, 16).upper();
 		}
-		else
-			LabelServiceID->setText("");
+        LabelServiceID->setText(sServiceID);
 
 		/* Codec label */
 		LabelCodec->setText(GetCodecString(iCurSelAudioServ));
@@ -366,34 +363,33 @@ void DRMMainWindow::UpdateDisplay()
 		/* Language and program type labels (only for audio service) */
 		if (Service[iCurSelAudioServ].eAudDataFlag == SF_AUDIO)
 		{
-		/* SDC Language */
-		const string strLangCode = Parameters.
-			ServiceParameters.Service[iCurSelAudioServ].strLanguageCode;
+            /* SDC Language */
+            const string strLangCode = Parameters.
+                Service[iCurSelAudioServ].strLanguageCode;
 
-		if ((!strLangCode.empty()) && (strLangCode != "---"))
-		{
-			 LabelLanguage->
-				setText(QString(GetISOLanguageName(strLangCode).c_str()));
-		}
-		else
-		{
-			/* FAC Language */
-			const int iLanguageID = Parameters.
-				ServiceParameters.Service[iCurSelAudioServ].iLanguage;
+            if ((!strLangCode.empty()) && (strLangCode != "---"))
+            {
+                 LabelLanguage->
+                    setText(QString(GetISOLanguageName(strLangCode).c_str()));
+            }
+            else
+            {
+                /* FAC Language */
+                const int iLanguageID = Parameters.
+                    Service[iCurSelAudioServ].iLanguage;
 
-			if ((iLanguageID > 0) &&
-				(iLanguageID < LEN_TABLE_LANGUAGE_CODE))
-			{
-				LabelLanguage->setText(
-					strTableLanguageCode[iLanguageID].c_str());
-			}
-			else
-				LabelLanguage->setText("");
-		}
+                if ((iLanguageID > 0) &&
+                    (iLanguageID < LEN_TABLE_LANGUAGE_CODE))
+                {
+                    LabelLanguage->setText(
+                        strTableLanguageCode[iLanguageID].c_str());
+                }
+                else
+                    LabelLanguage->setText("");
+            }
 
 			/* Program type */
-			const int iProgrammTypeID = Parameters.
-				ServiceParameters.Service[iCurSelAudioServ].iServiceDescr;
+			const int iProgrammTypeID = Service[iCurSelAudioServ].iServiceDescr;
 
 			if ((iProgrammTypeID > 0) &&
 				(iProgrammTypeID < LEN_TABLE_PROG_TYPE_CODE))
@@ -406,13 +402,11 @@ void DRMMainWindow::UpdateDisplay()
 		}
 
 		/* Country code */
-		const string strCntryCode = Parameters.
-			ServiceParameters.Service[iCurSelAudioServ].strCountryCode;
+		const string strCntryCode = Service[iCurSelAudioServ].strCountryCode;
 
 		if ((!strCntryCode.empty()) && (strCntryCode != "--"))
 		{
-			LabelCountryCode->
-				setText(QString(GetISOCountryName(strCntryCode).c_str()));
+			LabelCountryCode->setText(GetISOCountryName(strCntryCode).c_str());
 		}
 		else
 			LabelCountryCode->setText("");
@@ -582,7 +576,7 @@ void DRMMainWindow::SetService(int shortID)
 	Parameters.SetCurSelAudioService(shortID);
 	Parameters.SetCurSelDataService(shortID);
 
-    const CService& s = Parameters.ServiceParameters.Service[shortID];
+    const CService& s = Parameters.Service[shortID];
     uint32_t iServiceID = s.iServiceID;
     EStreamType eAudDataFlag = s.eAudDataFlag;
     EAppType eAppIdent = AT_NOT_SUP;
@@ -740,7 +734,7 @@ QString DRMMainWindow::GetCodecString(const int shortID)
 
 	const CParameter& Parameters = *Receiver.GetParameters();
 
-    const CService& s = Parameters.ServiceParameters.Service[shortID];
+    const CService& s = Parameters.Service[shortID];
 
 	/* First check if it is audio or data service */
 	if (s.eAudDataFlag == SF_AUDIO)
@@ -802,7 +796,7 @@ QString DRMMainWindow::GetTypeString(const int shortID)
 	QString strReturn;
 
 	const CParameter& Parameters = *Receiver.GetParameters();
-    const CService& s = Parameters.ServiceParameters.Service[shortID];
+    const CService& s = Parameters.Service[shortID];
 
 	/* First check if it is audio or data service */
 	if (s.eAudDataFlag == SF_AUDIO)

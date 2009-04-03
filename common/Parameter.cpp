@@ -39,13 +39,10 @@
 
 CChannel::CChannel():CDumpable(),
 bEnhancementLayerInUse(false),
-iFrameId(0),
-bAFSindexValid(false),
 eRobustness(RM_ROBUSTNESS_MODE_B),
 eSpectrumOccupancy(SO_3),
 eInterleaverDepth(SI_LONG),
-eMSCmode(), eSDCmode(),
-iReconfigurationIndex(0)
+eMSCmode(), eSDCmode()
 {
 }
 
@@ -88,41 +85,41 @@ CAudioParam& CAudioParam::operator=(const CAudioParam& ap)
     return *this;
 }
 
-bool CAudioParam::operator!=(const CAudioParam& AudioParam)
+bool CAudioParam::operator==(const CAudioParam& AudioParam) const
 {
     if (eAudioCoding != AudioParam.eAudioCoding)
-        return true;
+        return false;
     if (eSBRFlag != AudioParam.eSBRFlag)
-        return true;
+        return false;
     if (eAudioSamplRate != AudioParam.eAudioSamplRate)
-        return true;
+        return false;
     if (bTextflag != AudioParam.bTextflag)
-        return true;
+        return false;
     if (bEnhanceFlag != AudioParam.bEnhanceFlag)
-        return true;
+        return false;
 
     switch (AudioParam.eAudioCoding)
     {
     case AC_AAC:
         if (eAudioMode != AudioParam.eAudioMode)
-            return true;
+            return false;
         break;
 
     case AC_CELP:
         if (bCELPCRC != AudioParam.bCELPCRC)
-            return true;
+            return false;
         if (iCELPIndex != AudioParam.iCELPIndex)
-            return true;
+            return false;
         break;
 
     case AC_HVXC:
         if (eHVXCRate != AudioParam.eHVXCRate)
-            return true;
+            return false;
         if (bHVXCCRC != AudioParam.bHVXCCRC)
-            return true;
+            return false;
         break;
     }
-    return false;
+    return true;
 }
 
 CDataParam::CDataParam():
@@ -155,25 +152,25 @@ CDataParam& CDataParam::operator=(const CDataParam& DataParam)
     return *this;
 }
 
-bool CDataParam::operator!=(const CDataParam& DataParam)
+bool CDataParam::operator==(const CDataParam& DataParam) const
 {
     if (ePacketModInd != DataParam.ePacketModInd)
-        return true;
+        return false;
     if (DataParam.ePacketModInd == PM_PACKET_MODE)
     {
         if (eDataUnitInd != DataParam.eDataUnitInd)
-            return true;
+            return false;
         if (eAppDomain != DataParam.eAppDomain)
-            return true;
+            return false;
         if (DataParam.eAppDomain == AD_DAB_SPEC_APP)
         {
             if (eUserAppIdent != DataParam.eUserAppIdent)
-                return true;
+                return false;
             if(applicationData != DataParam.applicationData)
-                return true;
+                return false;
         }
     }
-    return false;
+    return true;
 }
 
 CService::CService():
@@ -217,22 +214,6 @@ eAudDataFlag(SF_AUDIO),ePacketModInd(PM_PACKET_MODE),iPacketLen(0)
 {
 }
 
-CStream::CStream(const CStream& s):
-CDumpable(),iLenPartA(s.iLenPartA), iLenPartB(s.iLenPartB),
-eAudDataFlag(s.eAudDataFlag),ePacketModInd(s.ePacketModInd),
-iPacketLen(s.iPacketLen)
-{
-}
-
-CStream& CStream::operator=(const CStream& Stream)
-{
-    iLenPartA=Stream.iLenPartA; iLenPartB=Stream.iLenPartB;
-    eAudDataFlag = Stream.eAudDataFlag;
-    ePacketModInd=Stream.ePacketModInd;
-    iPacketLen=Stream.iPacketLen;
-    return *this;
-}
-
 bool CStream::operator==(const CStream& Stream) const
 
 {
@@ -243,10 +224,43 @@ bool CStream::operator==(const CStream& Stream) const
     return true;
 }
 
+CFACParameters::CFACParameters()
+:CDumpable(),iFrameId(0),bAFSindexValid(false),iReconfigurationIndex(0),
+iNumAudioServices(0),iNumDataServices()
+{
+}
+
+bool CFACParameters::operator==(const CFACParameters& p) const
+{
+    if (iFrameId != p.iFrameId)
+        return false;
+    if (bAFSindexValid != p.bAFSindexValid)
+        return false;
+    if (iReconfigurationIndex != p.iReconfigurationIndex)
+        return false;
+    if (iNumAudioServices != p.iNumAudioServices)
+        return false;
+    if (iNumDataServices != p.iNumDataServices)
+        return false;
+    return true;
+}
+
 CMSCParameters::CMSCParameters()
 :CDumpable(),ProtectionLevel(),
 Stream(MAX_NUM_STREAMS)
 {
+}
+
+CMSCParameters::CMSCParameters(const CMSCParameters& p)
+:CDumpable(p),ProtectionLevel(p.ProtectionLevel),
+Stream(p.Stream)
+{
+}
+
+CMSCParameters& CMSCParameters::operator=(const CMSCParameters& p)
+{
+    ProtectionLevel = p.ProtectionLevel;
+    Stream = p.Stream;
 }
 
 bool CMSCParameters::operator==(const CMSCParameters& p) const
@@ -256,11 +270,6 @@ bool CMSCParameters::operator==(const CMSCParameters& p) const
     if(Stream != p.Stream)
         return false;
     return true;
-}
-
-CServiceParameters::CServiceParameters()
-:CDumpable(),iNumAudioServices(0), iNumDataServices(0), Service(MAX_NUM_SERVICES)
-{
 }
 
 CCoreParameter::CCoreParameter():CDumpable(),Channel(),
@@ -299,6 +308,8 @@ CParameter::CParameter():CCoreParameter(),
  sSerialNumber(),
  sDataFilesDirectory("."),
  NextConfig(),
+ FACParameters(),
+ Service(MAX_NUM_SERVICES),
  ServiceInformation(),
  iNumBitsHierarchFrameTotal(0),
  iNumDecodedBitsMSC(0),
@@ -331,7 +342,6 @@ CParameter::CParameter():CCoreParameter(),
  iOffUsfExtr(0),
  ReceiveStatus(),
  FrontEndParameters(),
- AltFreqSign(), AltFreqSignNext(),
  CellMappingTable(),
  GPSData(), Measurements(),
  RxEvent(None),
@@ -359,6 +369,8 @@ CParameter::CParameter(const CParameter& p):
  sSerialNumber(p.sSerialNumber),
  sDataFilesDirectory(p.sDataFilesDirectory),
  NextConfig(p.NextConfig),
+ FACParameters(p.FACParameters),
+ Service(p.Service),
  ServiceInformation(p.ServiceInformation),
  iNumBitsHierarchFrameTotal(p.iNumBitsHierarchFrameTotal),
  iNumDecodedBitsMSC(p.iNumDecodedBitsMSC),
@@ -389,7 +401,6 @@ CParameter::CParameter(const CParameter& p):
  ReceiveStatus(p.ReceiveStatus),
  FrontEndParameters(p.FrontEndParameters),
  AltFreqSign(p.AltFreqSign),
- AltFreqSignNext(p.AltFreqSignNext),
  CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
  GPSData(p.GPSData), Measurements(p.Measurements),  RxEvent(p.RxEvent),
  rSysSimSNRdB(p.rSysSimSNRdB),
@@ -412,6 +423,8 @@ CParameter& CParameter::operator=(const CParameter& p)
 	sSerialNumber = p.sSerialNumber;
 	sDataFilesDirectory = p.sDataFilesDirectory;
     NextConfig = p.NextConfig;
+    FACParameters = p.FACParameters;
+    Service = p.Service;
     ServiceInformation = p.ServiceInformation;
 	iNumBitsHierarchFrameTotal = p.iNumBitsHierarchFrameTotal;
 	iNumDecodedBitsMSC = p.iNumDecodedBitsMSC;
@@ -445,7 +458,6 @@ CParameter& CParameter::operator=(const CParameter& p)
 	ReceiveStatus = p.ReceiveStatus;
 	FrontEndParameters = p.FrontEndParameters;
 	AltFreqSign = p.AltFreqSign;
-    AltFreqSignNext = p.AltFreqSignNext;
 	CellMappingTable.MakeTable(Channel.eRobustness, Channel.eSpectrumOccupancy);
 	GPSData = p.GPSData;
 	Measurements = p.Measurements;
@@ -470,26 +482,26 @@ void CParameter::ResetServicesStreams()
 		 * in order to reselect current service automatically after a resync */
 
 		if (iCurSelAudioService > 0)
-			LastAudioService.Save(iCurSelAudioService, ServiceParameters.Service[iCurSelAudioService].iServiceID);
+			LastAudioService.Save(iCurSelAudioService, Service[iCurSelAudioService].iServiceID);
 
 		if (iCurSelDataService > 0)
-			LastDataService.Save(iCurSelDataService, ServiceParameters.Service[iCurSelDataService].iServiceID);
+			LastDataService.Save(iCurSelDataService, Service[iCurSelDataService].iServiceID);
 
 		/* Reset everything to possible start values */
 		for (i = 0; i < MAX_NUM_SERVICES; i++)
 		{
-			ServiceParameters.Service[i].iAudioStream = STREAM_ID_NOT_USED;
-			ServiceParameters.Service[i].iDataStream = STREAM_ID_NOT_USED;
-			ServiceParameters.Service[i].iPacketID = 0;
+			Service[i].iAudioStream = STREAM_ID_NOT_USED;
+			Service[i].iDataStream = STREAM_ID_NOT_USED;
+			Service[i].iPacketID = 0;
 
-			ServiceParameters.Service[i].iServiceID = SERV_ID_NOT_USED;
-			ServiceParameters.Service[i].eCAIndication = CService::CA_NOT_USED;
-			ServiceParameters.Service[i].iLanguage = 0;
-			ServiceParameters.Service[i].strCountryCode = "";
-			ServiceParameters.Service[i].strLanguageCode = "";
-			ServiceParameters.Service[i].eAudDataFlag = SF_AUDIO;
-			ServiceParameters.Service[i].iServiceDescr = 0;
-			ServiceParameters.Service[i].strLabel = "";
+			Service[i].iServiceID = SERV_ID_NOT_USED;
+			Service[i].eCAIndication = CService::CA_NOT_USED;
+			Service[i].iLanguage = 0;
+			Service[i].strCountryCode = "";
+			Service[i].strLanguageCode = "";
+			Service[i].eAudDataFlag = SF_AUDIO;
+			Service[i].iServiceDescr = 0;
+			Service[i].strLabel = "";
 		}
 		/* force constructors to run */
 		AudioParam.clear();
@@ -523,14 +535,14 @@ void CParameter::ResetServicesStreams()
 		AudioParam[0].eHVXCRate = CAudioParam::HR_2_KBIT;
 		AudioParam[0].bHVXCCRC = false;
 
-		ServiceParameters.Service[0].iServiceID = SERV_ID_NOT_USED;
-		ServiceParameters.Service[0].eCAIndication = CService::CA_NOT_USED;
-		ServiceParameters.Service[0].iLanguage = 0;
-		ServiceParameters.Service[0].strCountryCode = "";
-		ServiceParameters.Service[0].strLanguageCode = "";
-		ServiceParameters.Service[0].eAudDataFlag = SF_AUDIO;
-		ServiceParameters.Service[0].iServiceDescr = 0;
-		ServiceParameters.Service[0].strLabel = "";
+		Service[0].iServiceID = SERV_ID_NOT_USED;
+		Service[0].eCAIndication = CService::CA_NOT_USED;
+		Service[0].iLanguage = 0;
+		Service[0].strCountryCode = "";
+		Service[0].strLanguageCode = "";
+		Service[0].eAudDataFlag = SF_AUDIO;
+		Service[0].iServiceDescr = 0;
+		Service[0].strLabel = "";
 
 		MSCParameters.Stream[0].iLenPartA = 0;
 		MSCParameters.Stream[0].iLenPartB = 1044;
@@ -555,7 +567,7 @@ void CParameter::GetActiveServices(set<int>& actServ)
 	/* Get active services */
 	for (int i = 0; i < MAX_NUM_SERVICES; i++)
 	{
-		if (ServiceParameters.Service[i].IsActive())
+		if (Service[i].IsActive())
 			/* A service is active, add ID to set */
 			actServ.insert(i);
 	}
@@ -569,15 +581,15 @@ void CParameter::GetActiveStreams(set<int>& actStr)
 	/* Determine which streams are active */
 	for (int i = 0; i < MAX_NUM_SERVICES; i++)
 	{
-		if (ServiceParameters.Service[i].IsActive())
+		if (Service[i].IsActive())
 		{
 			/* Audio stream */
-			if (ServiceParameters.Service[i].iAudioStream != STREAM_ID_NOT_USED)
-				actStr.insert(ServiceParameters.Service[i].iAudioStream);
+			if (Service[i].iAudioStream != STREAM_ID_NOT_USED)
+				actStr.insert(Service[i].iAudioStream);
 
 			/* Data stream */
-			if (ServiceParameters.Service[i].iDataStream != STREAM_ID_NOT_USED)
-				actStr.insert(ServiceParameters.Service[i].iDataStream);
+			if (Service[i].iDataStream != STREAM_ID_NOT_USED)
+				actStr.insert(Service[i].iDataStream);
 		}
 	}
 }
@@ -588,22 +600,22 @@ _REAL CParameter::GetBitRateKbps(const int iShortID, const bool bAudData)
 	int iLen = 0;
 
 	/* First, check if audio or data service and get lengths */
-	if (ServiceParameters.Service[iShortID].eAudDataFlag == SF_AUDIO)
+	if (Service[iShortID].eAudDataFlag == SF_AUDIO)
 	{
 		/* Check if we want to get the data stream connected to an audio
 		   stream */
 		if (bAudData == true)
 		{
-			iLen = GetStreamLen( ServiceParameters.Service[iShortID].iDataStream);
+			iLen = GetStreamLen( Service[iShortID].iDataStream);
 		}
 		else
 		{
-			iLen = GetStreamLen( ServiceParameters.Service[iShortID].iAudioStream);
+			iLen = GetStreamLen( Service[iShortID].iAudioStream);
 		}
 	}
 	else
 	{
-		iLen = GetStreamLen( ServiceParameters.Service[iShortID].iDataStream);
+		iLen = GetStreamLen( Service[iShortID].iDataStream);
 	}
 
 	/* We have 3 frames with time duration of 1.2 seconds. Bit rate should be
@@ -617,22 +629,22 @@ _REAL CParameter::PartABLenRatio(const int iShortID)
 	int iLenB = 0;
 
 	/* Get the length of protection part A and B */
-	if (ServiceParameters.Service[iShortID].eAudDataFlag == SF_AUDIO)
+	if (Service[iShortID].eAudDataFlag == SF_AUDIO)
 	{
 		/* Audio service */
-		if (ServiceParameters.Service[iShortID].iAudioStream != STREAM_ID_NOT_USED)
+		if (Service[iShortID].iAudioStream != STREAM_ID_NOT_USED)
 		{
-			iLenA = MSCParameters.Stream[ServiceParameters.Service[iShortID].iAudioStream].iLenPartA;
-			iLenB = MSCParameters.Stream[ServiceParameters.Service[iShortID].iAudioStream].iLenPartB;
+			iLenA = MSCParameters.Stream[Service[iShortID].iAudioStream].iLenPartA;
+			iLenB = MSCParameters.Stream[Service[iShortID].iAudioStream].iLenPartB;
 		}
 	}
 	else
 	{
 		/* Data service */
-		if (ServiceParameters.Service[iShortID].iDataStream != STREAM_ID_NOT_USED)
+		if (Service[iShortID].iDataStream != STREAM_ID_NOT_USED)
 		{
-			iLenA = MSCParameters.Stream[ServiceParameters.Service[iShortID].iDataStream].iLenPartA;
-			iLenB = MSCParameters.Stream[ServiceParameters.Service[iShortID].iDataStream].iLenPartB;
+			iLenA = MSCParameters.Stream[Service[iShortID].iDataStream].iLenPartA;
+			iLenB = MSCParameters.Stream[Service[iShortID].iDataStream].iLenPartB;
 		}
 	}
 
@@ -651,7 +663,7 @@ void CParameter::SetCurSelAudioService(const int iNewService)
 	   possible to select a "data-only" service and still listen to the audio of
 	   the last selected service */
 	if ((iCurSelAudioService != iNewService) &&
-		(ServiceParameters.Service[iNewService].iAudioStream != STREAM_ID_NOT_USED))
+		(Service[iNewService].iAudioStream != STREAM_ID_NOT_USED))
 	{
 		iCurSelAudioService = iNewService;
 
@@ -669,7 +681,7 @@ void CParameter::SetCurSelDataService(const int iNewService)
 	   service to be able to decode data service and listen to audio at the
 	   same time */
 	if ((iCurSelDataService != iNewService) &&
-		(ServiceParameters.Service[iNewService].iDataStream != STREAM_ID_NOT_USED))
+		(Service[iNewService].iDataStream != STREAM_ID_NOT_USED))
 	{
 		iCurSelDataService = iNewService;
 
@@ -681,13 +693,13 @@ void CParameter::SetCurSelDataService(const int iNewService)
 
 void CParameter::SetServiceID(const int iShortID, const uint32_t iNewServiceID)
 {
-	if (ServiceParameters.Service[iShortID].iServiceID != iNewServiceID)
+	if (Service[iShortID].iServiceID != iNewServiceID)
 	{
 		/* JFBC - what is this for? */
-		if ((iShortID == 0) && (ServiceParameters.Service[0].iServiceID > 0))
+		if ((iShortID == 0) && (Service[0].iServiceID > 0))
 			ResetServicesStreams();
 
-		ServiceParameters.Service[iShortID].iServiceID = iNewServiceID;
+		Service[iShortID].iServiceID = iNewServiceID;
 
 
 		/* If the receiver has lost the sync automatically restore
@@ -1114,6 +1126,13 @@ CAltFreqSched::IsActive(const time_t ltime)
 	return false;
 }
 
+CFrontEndParameters::CFrontEndParameters():CDumpable(),
+eSMeterCorrectionType(S_METER_CORRECTION_TYPE_CAL_FACTOR_ONLY), rSMeterBandwidth(10000.0),
+rDefaultMeasurementBandwidth(10000.0), bAutoMeasurementBandwidth(true), rCalFactorAM(0.0),
+rCalFactorDRM(0.0), rIFCentreFreq(12000.0)
+{
+}
+
 ostream& operator<<(ostream& out, const CDumpable& d)
 {
     d.dump(out);
@@ -1173,27 +1192,26 @@ CChannel::dump(ostream& out) const
 {
     // TODO
     out << "{ EnhancementLayerInUse: " << bEnhancementLayerInUse << endl;
-    out << "FrameId: " << iFrameId << endl;
-    out << "AFSindexValid: " << bAFSindexValid << endl;
     out << "Robustness: " << eRobustness << endl;
     out << "SpectrumOccupancy: " << eSpectrumOccupancy << endl;
     out << "InterleaverDepth: " << eInterleaverDepth << endl;
     out << "MSCmode: " << eMSCmode << endl;
     out << "SDCmode: " << eSDCmode << endl;
-    out << "ReconfigurationIndex: " << iReconfigurationIndex << " }" << endl;
+}
+
+void CFACParameters::dump(ostream& out) const
+{
+    out << "{ iFrameId: " << iFrameId << "," << endl;
+    out << "bAFSindexValid: " << bAFSindexValid << "," << endl;
+    out << "iReconfigurationIndex: " << iReconfigurationIndex << "," << endl;
+    out << "NumAudioServices: " << iNumAudioServices << "," << endl;
+    out << "NumDataServices: " << iNumDataServices << "}" << endl;
 }
 
 void CMSCParameters::dump(ostream& out) const
 {
     out << "ProtectionLevel: "; ProtectionLevel.dump(out); out << "," << endl;
     out << "Stream: "; ::dump(out, Stream); out << "," << endl;
-}
-
-void CServiceParameters::dump(ostream& out) const
-{
-    out << "NumAudioServices: " << iNumAudioServices << endl;
-    out << "NumDataServices: " << iNumDataServices << endl;
-    out << "Service: "; ::dump(out, Service); out << "," << endl;
 }
 
 void
@@ -1361,7 +1379,6 @@ CCoreParameter::dump(ostream& out) const
     out << "{ " << endl;
     out << "Channel: "; Channel.dump(out);
      out << "MSC: "; MSCParameters.dump(out);
-    out << "Service: "; ServiceParameters.dump(out); out << "," << endl;
     out << "AudioParam: "; ::dump(out, AudioParam); out << "," << endl;
     out << "DataParam: "; ::dump(out, DataParam);
     out << "}" << endl;
@@ -1376,6 +1393,9 @@ CParameter::dump(ostream& out) const
     out << "ReceiverID: '" <<  sReceiverID << "'," << endl;
     out << "SerialNumber '" <<  sSerialNumber << "'," << endl;
     out << "DataFilesDirectory: '" <<  sDataFilesDirectory << "'," << endl;
+    out << "NextConfig: "; NextConfig.dump(out); out << ", " << endl;
+    out << "FACParameters: "; FACParameters.dump(out); out << ", " << endl;
+    out << "Service: "; ::dump(out, Service); out << ", " << endl;
     out << "ServiceInformation: {" << endl;
     // TODO make CServiceInformation dumpable
     string sep = "";

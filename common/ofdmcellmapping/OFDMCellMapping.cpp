@@ -41,7 +41,7 @@ void COFDMCellMapping::ProcessDataInternal(CParameter& TransmParam)
 	/* Mapping of the data and pilot cells on the OFDM symbol --------------- */
 	/* Set absolute symbol position */
 	int iSymbolCounterAbs =
-		TransmParam.Channel.iFrameId * iNumSymPerFrame + iSymbolCounter;
+		TransmParam.FACParameters.iFrameId * iNumSymPerFrame + iSymbolCounter;
 	/* Init temporary counter */
 	int iDummyCellCounter = 0;
 	int iMSCCounter = 0;
@@ -101,14 +101,14 @@ void COFDMCellMapping::ProcessDataInternal(CParameter& TransmParam)
 		iSymbolCounter = 0;
 
 		/* Increase frame-counter (ID) (Used also in FAC.cpp) */
-		TransmParam.Channel.iFrameId++;
-		if (TransmParam.Channel.iFrameId == NUM_FRAMES_IN_SUPERFRAME)
-			TransmParam.Channel.iFrameId = 0;
+		TransmParam.FACParameters.iFrameId++;
+		if (TransmParam.FACParameters.iFrameId == NUM_FRAMES_IN_SUPERFRAME)
+			TransmParam.FACParameters.iFrameId = 0;
 	}
 
 	/* Set absolute symbol position (for updated relative positions) */
 	iSymbolCounterAbs =
-		TransmParam.Channel.iFrameId * iNumSymPerFrame + iSymbolCounter;
+		TransmParam.FACParameters.iFrameId * iNumSymPerFrame + iSymbolCounter;
 
 	/* Set input block-sizes for next symbol */
 	iInputBlockSize = cmt.veciNumMSCSym[iSymbolCounterAbs];
@@ -128,7 +128,7 @@ void COFDMCellMapping::InitInternal(CParameter& TransmParam)
 	iSymbolCounter = 0;
 
 	/* Init frame ID */
-	TransmParam.Channel.iFrameId = 0;
+	TransmParam.FACParameters.iFrameId = 0;
 
 	/* Choose right dummy cells for MSC QAM scheme */
 	switch (TransmParam.Channel.eMSCmode)
@@ -254,7 +254,7 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Frame ID of this FAC block stands for the "current" block. We need
 		   the ID of the next block, therefore we have to add "1" */
-		int iNewFrameID = ReceiverParam.Channel.iFrameId + 1;
+		int iNewFrameID = ReceiverParam.FACParameters.iFrameId + 1;
 		if (iNewFrameID == NUM_FRAMES_IN_SUPERFRAME)
 			iNewFrameID = 0;
 

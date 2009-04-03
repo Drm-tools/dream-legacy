@@ -81,7 +81,7 @@ protected:
 
 	QString			GetCodecString(const int iServiceID);
 	QString			GetTypeString(const int iServiceID);
-	void            ShowTextMessage(const CAudioParam&);
+	void            ShowTextMessage(const string&);
 
 	void			SetDisplayColor(const QColor newColor);
     void	        showEvent(QShowEvent* pEvent);

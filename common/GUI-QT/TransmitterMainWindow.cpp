@@ -945,7 +945,7 @@ TransmitterMainWindow::SetData(int iStreamNo, int iPacketId)
 void
 TransmitterMainWindow::GetServices()
 {
-	const vector<CService>& Service = DRMTransmitter.GetParameters()->ServiceParameters.Service;
+	const vector<CService>& Service = DRMTransmitter.GetParameters()->Service;
 	for(size_t i=0; i<Service.size(); i++)
 	{
 		Q3ListViewItem* v = new Q3ListViewItem(ListViewServices, QString::number(i),
@@ -974,8 +974,8 @@ TransmitterMainWindow::GetServices()
 void
 TransmitterMainWindow::SetServices()
 {
-	DRMTransmitter.GetParameters()->ServiceParameters.iNumDataServices=0;
-	DRMTransmitter.GetParameters()->ServiceParameters.iNumAudioServices=0;
+	DRMTransmitter.GetParameters()->FACParameters.iNumDataServices=0;
+	DRMTransmitter.GetParameters()->FACParameters.iNumAudioServices=0;
 
 	Q3ListViewItemIterator sit(ListViewServices);
 	for (; sit.current(); sit++)
@@ -997,7 +997,7 @@ TransmitterMainWindow::SetServices()
 		if(sA=="-")
 		{
 			Service.iAudioStream = STREAM_ID_NOT_USED;
-			DRMTransmitter.GetParameters()->ServiceParameters.iNumDataServices++;
+			DRMTransmitter.GetParameters()->FACParameters.iNumDataServices++;
 			Service.eAudDataFlag = SF_DATA;
             for(int i=0; i<ComboBoxAppType->count(); i++)
                 if(ComboBoxAppType->text(i)==type)
@@ -1006,7 +1006,7 @@ TransmitterMainWindow::SetServices()
 		else
 		{
 			Service.iAudioStream = sA.toUInt();
-			DRMTransmitter.GetParameters()->ServiceParameters.iNumAudioServices++;
+			DRMTransmitter.GetParameters()->FACParameters.iNumAudioServices++;
 			Service.eAudDataFlag = SF_AUDIO;
             for(int i=0; i<ComboBoxProgramType->count(); i++)
                 if(ComboBoxProgramType->text(i)==type)
@@ -1020,7 +1020,7 @@ TransmitterMainWindow::SetServices()
 			Service.iPacketID = 4;
 		else
 			Service.iPacketID = sP.toUInt();
-		DRMTransmitter.GetParameters()->ServiceParameters.Service[iShortID] = Service;
+		DRMTransmitter.GetParameters()->Service[iShortID] = Service;
 	}
 }
 

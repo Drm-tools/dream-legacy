@@ -178,10 +178,10 @@ CShortLog::writeHeader()
 	}
 	int iCurSelServ = Parameters.GetCurSelAudioService();
 
-	if (Parameters.ServiceParameters.Service[iCurSelServ].IsActive())
+	if (Parameters.Service[iCurSelServ].IsActive())
 	{
 		/* Service label (UTF-8 encoded string -> convert ? TODO locale) */
-		label = Parameters.ServiceParameters.Service[iCurSelServ].strLabel;
+		label = Parameters.Service[iCurSelServ].strLabel;
 		bitrate = Parameters.GetBitRateKbps(iCurSelServ, false);
 		RobMode = GetRobModeStr();
 		SpecOcc = Parameters.Channel.eSpectrumOccupancy;

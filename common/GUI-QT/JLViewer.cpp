@@ -94,11 +94,11 @@ void JLViewer::showEvent(QShowEvent*)
     CParameter& Parameters = *receiver.GetParameters();
     Parameters.Lock();
     const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
-    const uint32_t iAudioServiceID = Parameters.ServiceParameters.Service[iCurSelAudioServ].iServiceID;
+    const uint32_t iAudioServiceID = Parameters.Service[iCurSelAudioServ].iServiceID;
 
     /* Get current data service */
     int shortID = Parameters.GetCurSelDataService();
-    CService service = Parameters.ServiceParameters.Service[shortID];
+    CService service = Parameters.Service[shortID];
 	Parameters.Unlock();
 
     CDataDecoder* dec = receiver.GetDataDecoder();
@@ -179,7 +179,7 @@ void JLViewer::OnTimer()
 
     /* Get current data service */
     int shortID = Parameters.GetCurSelDataService();
-    CService service = Parameters.ServiceParameters.Service[shortID];
+    CService service = Parameters.Service[shortID];
 	Parameters.Unlock();
 
     if(!decoderSet)

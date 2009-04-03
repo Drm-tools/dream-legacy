@@ -72,7 +72,7 @@ void BWSViewer::OnTimer()
 	ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
     /* Get current data service */
     const int iCurSelDataServ = Parameters.GetCurSelDataService();
-    CService service = Parameters.ServiceParameters.Service[iCurSelDataServ];
+    CService service = Parameters.Service[iCurSelDataServ];
 	Parameters.Unlock();
 
     if(!decoderSet)
@@ -176,10 +176,10 @@ void BWSViewer::showEvent(QShowEvent*)
     CParameter& Parameters = *receiver.GetParameters();
     Parameters.Lock();
     const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
-    const uint32_t iAudioServiceID = Parameters.ServiceParameters.Service[iCurSelAudioServ].iServiceID;
+    const uint32_t iAudioServiceID = Parameters.Service[iCurSelAudioServ].iServiceID;
     /* Get current data service */
     const int iCurSelDataServ = Parameters.GetCurSelDataService();
-    CService service = Parameters.ServiceParameters.Service[iCurSelDataServ];
+    CService service = Parameters.Service[iCurSelDataServ];
     Parameters.Unlock();
 
     QString strTitle("MOT Broadcast Website");

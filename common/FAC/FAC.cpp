@@ -49,7 +49,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	/* Identity */
 	/* Manage index of FAC block in super-frame */
-	switch (Parameter.Channel.iFrameId)
+	switch (Parameter.FACParameters.iFrameId)
 	{
 	case 0:
 		/* Assuming AFS is valid (AFS not used here), if AFS is not valid, the
@@ -146,8 +146,8 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	/* Number of services */
 	/* Use Table */
-	pbiFACData->Enqueue(iTableNumOfServices[Parameter.ServiceParameters.iNumAudioServices]
-		[Parameter.ServiceParameters.iNumDataServices], 4);
+	pbiFACData->Enqueue(iTableNumOfServices[Parameter.FACParameters.iNumAudioServices]
+		[Parameter.FACParameters.iNumDataServices], 4);
 
 	/* Reconfiguration index (not used) */
 	pbiFACData->Enqueue((uint32_t) 0, 3);
@@ -164,13 +164,13 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 		FACRepetitionCounter = 0;
 
 	/* Service identifier */
-	pbiFACData->Enqueue(Parameter.ServiceParameters.Service[iCurShortID].iServiceID, 24);
+	pbiFACData->Enqueue(Parameter.Service[iCurShortID].iServiceID, 24);
 
 	/* Short ID */
 	pbiFACData->Enqueue((uint32_t) iCurShortID, 2);
 
 	/* CA indication */
-	switch (Parameter.ServiceParameters.Service[iCurShortID].eCAIndication)
+	switch (Parameter.Service[iCurShortID].eCAIndication)
 	{
 	case CService::CA_NOT_USED:
 		pbiFACData->Enqueue(0 /* 0 */, 1);
@@ -183,10 +183,10 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	/* Language */
 	pbiFACData->Enqueue(
-		(uint32_t) Parameter.ServiceParameters.Service[iCurShortID].iLanguage, 4);
+		(uint32_t) Parameter.Service[iCurShortID].iLanguage, 4);
 
 	/* Audio/Data flag */
-	switch (Parameter.ServiceParameters.Service[iCurShortID].eAudDataFlag)
+	switch (Parameter.Service[iCurShortID].eAudDataFlag)
 	{
 	case SF_AUDIO:
 		pbiFACData->Enqueue(0 /* 0 */, 1);
@@ -198,7 +198,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	/* Service descriptor */
 	pbiFACData->Enqueue(
-		(uint32_t) Parameter.ServiceParameters.Service[iCurShortID].iServiceDescr, 5);
+		(uint32_t) Parameter.Service[iCurShortID].iServiceDescr, 5);
 
 	/* Rfa */
 	pbiFACData->Enqueue(uint32_t(0), 7);
@@ -233,7 +233,7 @@ void CFACTransmit::Init(CParameter& Parameter)
 
 	for (set<int>::iterator i = actServ.begin(); i!=actServ.end(); i++)
 	{
-		if (Parameter.ServiceParameters.Service[*i].eAudDataFlag == SF_AUDIO)
+		if (Parameter.Service[*i].eAudDataFlag == SF_AUDIO)
 		{
 			veciAudioServ.push_back(*i);
 			iNumAudio++;
@@ -375,7 +375,10 @@ void CFACTransmit::Init(CParameter& Parameter)
 /******************************************************************************\
 * CFACReceive																   *
 \******************************************************************************/
-bool CFACReceive::ChannelData(CVector<_BINARY>* pbiData, CCoreParameter& fc, bool bSetRobm)
+bool CFACReceive::ChannelData(CVector<_BINARY>* pbiData,
+    CCoreParameter& fc,
+    CFACParameters& fp,
+    bool bSetRobm)
 {
 		/* Base/Enhancement flag */
 		fc.Channel.bEnhancementLayerInUse = pbiData->Separate(1);
@@ -390,23 +393,23 @@ bool CFACReceive::ChannelData(CVector<_BINARY>* pbiData, CCoreParameter& fc, boo
             switch (pbiData->Separate(2))
             {
             case 0: /* 00 */
-                fc.Channel.iFrameId = 0;
-                fc.Channel.bAFSindexValid = true;
+                fp.iFrameId = 0;
+                fp.bAFSindexValid = true;
                 break;
 
             case 1: /* 01 */
-                fc.Channel.iFrameId = 1;
-                fc.Channel.bAFSindexValid = false;
+                fp.iFrameId = 1;
+                fp.bAFSindexValid = false;
                 break;
 
             case 2: /* 10 */
-                fc.Channel.iFrameId = 2;
-                fc.Channel.bAFSindexValid = false;
+                fp.iFrameId = 2;
+                fp.bAFSindexValid = false;
                 break;
 
             case 3: /* 11 */
-                fc.Channel.iFrameId = 0;
-                fc.Channel.bAFSindexValid = false;
+                fp.iFrameId = 0;
+                fp.bAFSindexValid = false;
                 break;
             }
         }
@@ -489,12 +492,12 @@ bool CFACReceive::ChannelData(CVector<_BINARY>* pbiData, CCoreParameter& fc, boo
 			for (int j = 0; j < 5; j++)
 				if (iNumServField == iTableNumOfServices[i][j])
 				{
-				    fc.ServiceParameters.iNumAudioServices = i;
-				    fc.ServiceParameters.iNumDataServices = j;
+				    fp.iNumAudioServices = i;
+				    fp.iNumDataServices = j;
 				}
 
 		/* Reconfiguration index */
-		fc.Channel.iReconfigurationIndex = pbiData->Separate(3);
+		fp.iReconfigurationIndex = pbiData->Separate(3);
 
 		/* rfu */
 		/* Do not use rfu */
@@ -527,8 +530,7 @@ bool CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		/* Channel parameters ----------------------------------------------- */
 		CCoreParameter param;
 
-        ChannelData(pbiFACData, param);
-        int iNumAudioServices, iNumDataServices;
+        ChannelData(pbiFACData, param, Parameter.FACParameters);
 
 		Parameter.Lock();
 
@@ -547,23 +549,8 @@ bool CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
         {
             Parameter.RxEvent = ChannelReconfiguration;
         }
-        if(Parameter.ServiceParameters.iNumAudioServices != iNumAudioServices)
-        {
-            Parameter.ServiceParameters.iNumAudioServices = iNumAudioServices;
-            Parameter.RxEvent = ServiceReconfiguration;
-        }
-        if(Parameter.ServiceParameters.iNumDataServices != iNumDataServices)
-        {
-            Parameter.ServiceParameters.iNumDataServices = iNumDataServices;
-            Parameter.RxEvent = ServiceReconfiguration;
-        }
 
-        Parameter.NextConfig = param;
-
-        // should not be in the coreconfig!
-        Parameter.Channel.iFrameId = param.Channel.iFrameId;
-        //Parameter.Channel = Channel;
-        //cerr << "FAC:Channel: "; Channel.dump(cerr);
+        Parameter.NextConfig.Channel = param.Channel;
 
 		/* Service parameters ----------------------------------------------- */
         uint32_t	iServiceID;
@@ -582,31 +569,31 @@ bool CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		switch (pbiFACData->Separate(1))
 		{
 		case 0: /* 0 */
-			Parameter.ServiceParameters.Service[iShortID].eCAIndication = CService::CA_NOT_USED;
+			Parameter.Service[iShortID].eCAIndication = CService::CA_NOT_USED;
 			break;
 
 		case 1: /* 1 */
-			Parameter.ServiceParameters.Service[iShortID].eCAIndication = CService::CA_USED;
+			Parameter.Service[iShortID].eCAIndication = CService::CA_USED;
 			break;
 		}
 
 		/* Language */
-		Parameter.ServiceParameters.Service[iShortID].iLanguage = pbiFACData->Separate(4);
+		Parameter.Service[iShortID].iLanguage = pbiFACData->Separate(4);
 
 		/* Audio/Data flag */
 		switch (pbiFACData->Separate(1))
 		{
 		case 0: /* 0 */
-			Parameter.ServiceParameters.Service[iShortID].eAudDataFlag = SF_AUDIO;
+			Parameter.Service[iShortID].eAudDataFlag = SF_AUDIO;
 			break;
 
 		case 1: /* 1 */
-			Parameter.ServiceParameters.Service[iShortID].eAudDataFlag = SF_DATA;
+			Parameter.Service[iShortID].eAudDataFlag = SF_DATA;
 			break;
 		}
 
 		/* Service descriptor */
-		Parameter.ServiceParameters.Service[iShortID].iServiceDescr = pbiFACData->Separate(5);
+		Parameter.Service[iShortID].iServiceDescr = pbiFACData->Separate(5);
 
 		Parameter.Unlock();
 
@@ -622,9 +609,9 @@ bool CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		/* Data is corrupted, do not use it. */
         /* Increase the frame-counter manually. If only FAC data was corrupted,
            the others can still decode if they have the right frame number. */
-		Parameter.Channel.iFrameId++;
-		if (Parameter.Channel.iFrameId == NUM_FRAMES_IN_SUPERFRAME)
-			Parameter.Channel.iFrameId = 0;
+		Parameter.FACParameters.iFrameId++;
+		if (Parameter.FACParameters.iFrameId == NUM_FRAMES_IN_SUPERFRAME)
+			Parameter.FACParameters.iFrameId = 0;
 
 		/* Return CRC failure as false */
 		return false;

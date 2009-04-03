@@ -146,8 +146,6 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 			else
 				bVersionFlag = true;
 
-            CCoreParameter cp;
-
 			/* Data entity type */
 			/* First calculate number of bits for this entity ("+ 4" because of:
 			   "The body of the data entities shall be at least 4 bits long. The
@@ -159,20 +157,7 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 			switch (pbiData->Separate(4))
 			{
 			case 0: /* Type 0 */
-				bError = DataEntityType0(pbiData, iLengthOfBody, cp);
-                /* service reconfiguration is pending if changing current or next
-                 * and is different from current!!!
-                 */
-                if(!(Parameter.MSCParameters == cp.MSCParameters))
-                {
-                    bServiceReconfigurationPending = true;
-                    Parameter.Lock();
-                    if(bVersionFlag)
-                        Parameter.NextConfig.MSCParameters = cp.MSCParameters;
-                    else
-                        Parameter.NextConfig.MSCParameters = cp.MSCParameters;
-                    Parameter.Unlock();
-                }
+				bError = DataEntityType0(pbiData, iLengthOfBody, Parameter, bVersionFlag);
 				break;
 
 			case 1: /* Type 1 */
@@ -242,12 +227,12 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 
         // these two tests are ordered so Channel reconfigurations dominate
         // Service reconfiguations
-        if(Parameter.Channel.iReconfigurationIndex==0 && bServiceReconfigurationPending)
+        if(Parameter.FACParameters.iReconfigurationIndex==0 && bServiceReconfigurationPending)
         {
             Parameter.RxEvent = ServiceReconfiguration;
             bServiceReconfigurationPending = false;
         }
-        if(Parameter.Channel.iReconfigurationIndex==0 && bChannelReconfigurationPending)
+        if(Parameter.FACParameters.iReconfigurationIndex==0 && bChannelReconfigurationPending)
         {
             Parameter.RxEvent = ChannelReconfiguration;
             bChannelReconfigurationPending = false;
@@ -272,7 +257,7 @@ CSDCReceive::ERetStatus CSDCReceive::SDCIParam(CVector<_BINARY>* pbiData,
 	int iLengthOfBody = (pbiData->Size()-8) / BITS_BINARY;
 	pbiData->ResetBitAccess();
 	(void)pbiData->Separate(4);
-	if(DataEntityType0(pbiData, iLengthOfBody, Parameter))
+	if(DataEntityType0(pbiData, iLengthOfBody, Parameter, 0))
 		return SR_BAD_DATA;
 	else
 		return SR_OK;
@@ -284,7 +269,8 @@ CSDCReceive::ERetStatus CSDCReceive::SDCIParam(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 bool CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
-									  CCoreParameter& Parameter)
+									  CParameter& Parameter,
+									  const bool bForNextConfig)
 {
 	/* The receiver may determine the number of streams present in the multiplex
 	   by dividing the length field of the header by three (6.4.3.1) */
@@ -295,16 +281,14 @@ bool CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 	if (iNumStreams > MAX_NUM_STREAMS)
 		return true; // TODO - whats the safe consumption rule?
 
-    CMSCProtLev				MSCPrLe;
-    int						iLenPartA;
-    int						iLenPartB;
+    CMSCParameters          msc;
 
    /* Get protection levels */
     /* Protection level for part A */
-    MSCPrLe.iPartA = pbiData->Separate(2);
+    msc.ProtectionLevel.iPartA = pbiData->Separate(2);
 
     /* Protection level for part B */
-    MSCPrLe.iPartB = pbiData->Separate(2);
+    msc.ProtectionLevel.iPartB = pbiData->Separate(2);
 
     /* Reset hierarchical flag (hierarchical present or not) */
     bool bWithHierarch = false;
@@ -319,8 +303,8 @@ bool CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
             (Parameter.Channel.eMSCmode == CS_3_HMMIX)))
         {
             /* Protection level for hierarchical */
-            MSCPrLe.iHierarch = pbiData->Separate(2);
-            bWithHierarch = true;
+            msc.ProtectionLevel.iHierarch = pbiData->Separate(2);
+            bWithHierarch = true; // TODO how did we use this ??
 
             /* rfu: these 10 bits shall be reserved for future use by the stream
                description field and shall be set to zero until they are
@@ -329,28 +313,44 @@ bool CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
                 bError = true;
 
             /* Length of part A is zero with hierarchical modulation */
-            iLenPartA = 0;
+            msc.Stream[i].iLenPartA = 0;
 
             /* Data length for hierarchical */
-            iLenPartB = pbiData->Separate(12);
+            msc.Stream[i].iLenPartA = pbiData->Separate(12);
         }
         else
         {
             /* Data length for part A */
-            iLenPartA = pbiData->Separate(12);
+            msc.Stream[i].iLenPartA = pbiData->Separate(12);
 
             /* Data length for part B */
-            iLenPartB = pbiData->Separate(12);
+            msc.Stream[i].iLenPartB = pbiData->Separate(12);
         }
-
-        /* Set new Parameter.NextConfigeters in global struct */
-        Parameter.MSCParameters.Stream[i].iLenPartA = iLenPartA;
-        Parameter.MSCParameters.Stream[i].iLenPartB = iLenPartB;
     }
 
     /* Set new parameters in global struct */
-    Parameter.MSCParameters.ProtectionLevel = MSCPrLe;
 
+    /* service reconfiguration is pending if changing current or next
+     * and is different from current!!!
+
+     iReconfigurationIndex   bForNextConfig
+             0                  f      crash reconfig
+             0                  t      not valid
+             !=0                f      ignore
+             !=0                t      signalled reconfig
+     */
+    Parameter.Lock();
+    if(!(Parameter.MSCParameters == msc))
+    {
+        bool bReconf = Parameter.FACParameters.iReconfigurationIndex!=0;
+
+        if(bForNextConfig == bReconf)
+        {
+            bServiceReconfigurationPending = true;
+            Parameter.NextConfig.MSCParameters = msc;
+        }
+    }
+    Parameter.Unlock();
 	return bError;
 }
 
@@ -388,10 +388,10 @@ bool CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
 
 		/* store label string in the current service structure */
 		Parameter.Lock();
-		Parameter.ServiceParameters.Service[iTempShortID].strLabel = strLabel;
+		Parameter.Service[iTempShortID].strLabel = strLabel;
 		/* and keep it in the persistent service information store.
 		 * But only if the FAC has already seen the sid. */
-		uint32_t sid = Parameter.ServiceParameters.Service[iTempShortID].iServiceID;
+		uint32_t sid = Parameter.Service[iTempShortID].iServiceID;
 		if(sid != SERV_ID_NOT_USED)
 		{
 			(void)Parameter.ServiceInformation[sid].label.insert(strLabel);
@@ -805,9 +805,9 @@ bool CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 
 	Parameter.Lock();
 
-	if(Parameter.ServiceParameters.Service[iShortID].iDataStream != iStreamID)
+	if(Parameter.Service[iShortID].iDataStream != iStreamID)
         bServiceReconfigurationPending = true;
-	if(Parameter.ServiceParameters.Service[iShortID].iPacketID != iPacketID)
+	if(Parameter.Service[iShortID].iPacketID != iPacketID)
         bServiceReconfigurationPending = true;
 
 	if(Parameter.MSCParameters.Stream[iStreamID].iPacketLen != iPacketLen)
@@ -815,8 +815,8 @@ bool CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 	if(Parameter.DataParam[iStreamID][iPacketID]!= DataParam)
         bServiceReconfigurationPending = true;
 
-	Parameter.ServiceParameters.Service[iShortID].iDataStream = iStreamID;
-	Parameter.ServiceParameters.Service[iShortID].iPacketID = iPacketID;
+	Parameter.Service[iShortID].iDataStream = iStreamID;
+	Parameter.Service[iShortID].iPacketID = iPacketID;
 
     size_t n = iStreamID+1;
     if(Parameter.NextConfig.MSCParameters.Stream.size()<n)
@@ -1189,13 +1189,13 @@ bool CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 	{
 		Parameter.Lock();
 
-		if(Parameter.ServiceParameters.Service[iShortID].iAudioStream != iStreamID)
+		if(Parameter.Service[iShortID].iAudioStream != iStreamID)
             bServiceReconfigurationPending = true;
 
 		if(Parameter.AudioParam[iStreamID] != AudParam)
             bServiceReconfigurationPending = true;
 
-		Parameter.ServiceParameters.Service[iShortID].iAudioStream = iStreamID;
+		Parameter.Service[iShortID].iAudioStream = iStreamID;
 
         size_t n = iStreamID+1;
 
@@ -1224,8 +1224,8 @@ bool CSDCReceive::DataEntityType10(CVector<_BINARY>* pbiData,
     if(bForNextConfig)
     {
 		Parameter.Lock();
-        CFACReceive::ChannelData(pbiData, Parameter.NextConfig, true);
-        if(Parameter.Channel.iReconfigurationIndex>0)
+        CFACReceive::ChannelData(pbiData, Parameter.NextConfig, Parameter.FACParameters, true);
+        if(Parameter.FACParameters.iReconfigurationIndex>0)
         {
             const CChannel& current = Parameter.Channel;
             const CChannel& next = Parameter.NextConfig.Channel;
@@ -1458,28 +1458,28 @@ bool CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
 	   audience of the service according to ISO 639-2 using three lower case
 	   characters as specified by ISO 8859-1. If the language is not specified,
 	   the field shall contain three "-" characters */
-	Parameter.ServiceParameters.Service[iShortID].strLanguageCode = "";
+	Parameter.Service[iShortID].strLanguageCode = "";
 	for (i = 0; i < 3; i++)
 	{
 		/* Get character */
 		const char cNewChar = char(pbiData->Separate(8));
 
 		/* Append new character */
-		Parameter.ServiceParameters.Service[iShortID].strLanguageCode.append(&cNewChar, 1);
+		Parameter.Service[iShortID].strLanguageCode.append(&cNewChar, 1);
 	}
 
 	/* Country code: this 16-bit field identifies the country of origin of the
 	   service (the site of the studio) according to ISO 3166 using two lower
 	   case characters as specified by ISO 8859-1. If the country code is not
 	   specified, the field shall contain two "-" characters */
-	Parameter.ServiceParameters.Service[iShortID].strCountryCode = "";
+	Parameter.Service[iShortID].strCountryCode = "";
 	for (i = 0; i < 2; i++)
 	{
 		/* Get character */
 		const char cNewChar = char(pbiData->Separate(8));
 
 		/* Append new character */
-		Parameter.ServiceParameters.Service[iShortID].strCountryCode.append(&cNewChar, 1);
+		Parameter.Service[iShortID].strCountryCode.append(&cNewChar, 1);
 	}
 	Parameter.Unlock();
 

@@ -355,8 +355,8 @@ CDRMReceiver::Run()
             Parameters.NextConfig.Channel.eSDCmode = CS_2_SM;
 
             /* Number of audio and data services */
-            Parameters.ServiceParameters.iNumAudioServices = 0;
-            Parameters.ServiceParameters.iNumDataServices = 0;
+            Parameters.FACParameters.iNumAudioServices = 0;
+            Parameters.FACParameters.iNumDataServices = 0;
 
             /* Protection levels */
             Parameters.NextConfig.MSCParameters.ProtectionLevel.iPartA = 0;
@@ -970,7 +970,7 @@ CDRMReceiver::SetInStartMode()
         Parameters.Channel.eRobustness,
         Parameters.Channel.eSpectrumOccupancy
     );
-    Parameters.Channel.iFrameId = 0; // arbitrary ?
+    Parameters.FACParameters.iFrameId = 0; // arbitrary ?
 
 	/* Select the service we want to decode. Always zero, because we do not
 	   know how many services are transmitted in the signal we want to
@@ -1286,7 +1286,7 @@ void
 CDRMReceiver::InitsForAudParam()
 {
 	int iShortID = Parameters.GetCurSelAudioService();
-	int iStreamID = Parameters.ServiceParameters.Service[iShortID].iAudioStream;
+	int iStreamID = Parameters.Service[iShortID].iAudioStream;
 	if(iStreamID != STREAM_ID_NOT_USED)
 	{
 		int audiobits = Parameters.GetStreamLen(iStreamID) * BITS_BINARY;
@@ -1301,7 +1301,7 @@ void
 CDRMReceiver::InitsForDataParam()
 {
 	int iShortID = Parameters.GetCurSelDataService();
-	int iStreamID = Parameters.ServiceParameters.Service[iShortID].iDataStream;
+	int iStreamID = Parameters.Service[iShortID].iDataStream;
 	if(iStreamID != STREAM_ID_NOT_USED)
 	{
         int databits = Parameters. GetStreamLen(iStreamID) * BITS_BINARY;

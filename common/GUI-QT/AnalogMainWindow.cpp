@@ -806,19 +806,19 @@ void CAMSSDlg::OnTimer()
 	Parameters.Lock();
 
 	/* Show label if available */
-	if ((Parameters.ServiceParameters.Service[0].IsActive()) && (Parameters.ServiceParameters.Service[0].strLabel != ""))
+	if ((Parameters.Service[0].IsActive()) && (Parameters.Service[0].strLabel != ""))
 	{
 		/* Service label (UTF-8 encoded string -> convert) */
 		TextAMSSServiceLabel->setText(QString().fromUtf8(
-            Parameters.ServiceParameters.Service[0].strLabel.c_str()));
+            Parameters.Service[0].strLabel.c_str()));
 	}
 	else
 		TextAMSSServiceLabel->setText(tr(""));
 
 	/* Country code */
-	const string strCntryCode = Parameters.ServiceParameters.Service[0].strCountryCode; /* must be of 2 lowercase chars */
+	const string strCntryCode = Parameters.Service[0].strCountryCode; /* must be of 2 lowercase chars */
 
-	if ((Parameters.ServiceParameters.Service[0].IsActive()) && (!strCntryCode.empty()) && (strCntryCode != "--"))
+	if ((Parameters.Service[0].IsActive()) && (!strCntryCode.empty()) && (strCntryCode != "--"))
 	{
 		TextAMSSCountryCode->
 			setText(QString(GetISOCountryName(strCntryCode).c_str()));
@@ -828,15 +828,15 @@ void CAMSSDlg::OnTimer()
 
 	/* SDC Language code */
 
-	if (Parameters.ServiceParameters.Service[0].IsActive())
+	if (Parameters.Service[0].IsActive())
 	{
-		const string strLangCode = Parameters.ServiceParameters.Service[0].strLanguageCode; /* must be of 3 lowercase chars */
+		const string strLangCode = Parameters.Service[0].strLanguageCode; /* must be of 3 lowercase chars */
 
 		if ((!strLangCode.empty()) && (strLangCode != "---"))
 			 TextAMSSLanguage->
 				setText(QString(GetISOLanguageName(strLangCode).c_str()));
 		else
-			TextAMSSLanguage->setText(QString(strTableLanguageCode[Parameters.ServiceParameters.Service[0].iLanguage].c_str()));
+			TextAMSSLanguage->setText(QString(strTableLanguageCode[Parameters.Service[0].iLanguage].c_str()));
 	}
 	else
 		TextAMSSLanguage->setText("");
@@ -1030,7 +1030,7 @@ void CAMSSDlg::OnTimer()
 	TextAMSSAMCarrierMode->setText("");
 
 	if (Receiver.GetAMSSDecode()->GetLockStatus() == CAMSSDecode::NO_SYNC
-	|| Parameters.ServiceParameters.Service[0].iServiceID == SERV_ID_NOT_USED
+	|| Parameters.Service[0].iServiceID == SERV_ID_NOT_USED
 	)
 	{
 		TextAMSSInfo->setText(tr("No AMSS detected"));
@@ -1044,10 +1044,10 @@ void CAMSSDlg::OnTimer()
 		{
 			TextAMSSInfo->setText("");
 
-			TextAMSSLanguage->setText(QString(strTableLanguageCode[Parameters.ServiceParameters.Service[0].iLanguage].c_str()));
+			TextAMSSLanguage->setText(QString(strTableLanguageCode[Parameters.Service[0].iLanguage].c_str()));
 
 			TextAMSSServiceID->setText("ID:" + QString().setNum(
-				(long) Parameters.ServiceParameters.Service[0].iServiceID, 16).upper());
+				(long) Parameters.Service[0].iServiceID, 16).upper());
 
 			TextAMSSAMCarrierMode->setText(QString(strTableAMSSCarrierMode[Parameters.iAMSSCarrierMode].c_str()));
 		}

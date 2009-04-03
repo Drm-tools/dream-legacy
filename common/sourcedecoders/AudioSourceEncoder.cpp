@@ -187,10 +187,10 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 	int iCurStreamID = -1;
 
 	// find the first audio service and use its stream
-	for(size_t i=0; i<TransmParam.ServiceParameters.Service.size(); i++)
+	for(size_t i=0; i<TransmParam.Service.size(); i++)
 	{
-	    if(TransmParam.ServiceParameters.Service[i].eAudDataFlag==SF_AUDIO)
-            iCurStreamID = TransmParam.ServiceParameters.Service[i].iAudioStream;
+	    if(TransmParam.Service[i].eAudDataFlag==SF_AUDIO)
+            iCurStreamID = TransmParam.Service[i].iAudioStream;
 	}
 
 	/* Set the total available number of bits, byte aligned */

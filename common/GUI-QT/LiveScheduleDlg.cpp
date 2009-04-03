@@ -670,13 +670,13 @@ LiveScheduleDlg::LoadSchedule()
 		const int iCurSelAudioServ =
 			Parameters.GetCurSelAudioService();
 
-		if (Parameters.ServiceParameters.Service[iCurSelAudioServ].IsActive())
+		if (Parameters.Service[iCurSelAudioServ].IsActive())
 		{
 			/* Do UTF-8 to string conversion with the label strings */
 			QString strStationName =
 				QString().
 				fromUtf8(
-						 Parameters.ServiceParameters.
+						 Parameters.
 						  Service[iCurSelAudioServ].strLabel.c_str());
 
 			/* add station name on the title of the dialog */
@@ -744,7 +744,7 @@ LiveScheduleDlg::SetStationsView()
     CParameter& Parameters = *DRMReceiver.GetParameters();
 	Parameters.Lock();
     int sNo = Parameters.GetCurSelAudioService();
-    string thisServiceLabel = Parameters.ServiceParameters.Service[sNo].strLabel;
+    string thisServiceLabel = Parameters.Service[sNo].strLabel;
 	Parameters.Unlock();
 
 	ListItemsMutex.lock();
@@ -897,7 +897,7 @@ LiveScheduleDlg::OnSave()
 		Parameters.GetCurSelAudioService();
 	/* Do UTF-8 to QString (UNICODE) conversion with the station name strings */
 	QString strStationName =
-		QString().fromUtf8(Parameters.ServiceParameters.Service[iCurSelAudioServ].strLabel.c_str());
+		QString().fromUtf8(Parameters.Service[iCurSelAudioServ].strLabel.c_str());
 
 	Parameters.Unlock();
 
