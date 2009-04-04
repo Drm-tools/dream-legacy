@@ -38,7 +38,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	bool bGoodValues;
 
 #ifdef HAVE_LIBFAAD
-	faacDecFrameInfo DecFrameInfo;
+	NeAACDecFrameInfo DecFrameInfo;
 	short *psDecOutSampleBuf;
 #endif
 
@@ -719,8 +719,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			veciFrameLength.Init(iNumAudioFrames);
 
 			/* Init AAC-decoder */
-			NeAACDecInitDRM(&HandleAACDecoder, iAACSampleRate,
-							(unsigned char) iDRMchanMode);
+			NeAACDecInitDRM(&HandleAACDecoder, iAACSampleRate, (unsigned char) iDRMchanMode);
 #else
 			/* No AAC decoder available */
 			throw CInitErr(ET_AUDDECODER);
@@ -904,6 +903,27 @@ CAudioSourceDecoder::CAudioSourceDecoder()
 #endif
 {
 #ifdef HAVE_LIBFAAD
+# ifdef DYNAMIC_LINK_CODECS
+#  ifdef _WIN32
+    hFaaDlib = LoadLibrary(TEXT("libfaad2.dll"));
+    if(hFaaDlib)
+    {
+        NeAACDecOpen = (NeAACDecOpen_t)GetProcAddress(hFaaDlib, TEXT("NeAACDecOpen"));
+        NeAACDecInitDRM = (NeAACDecInitDRM_t)GetProcAddress(hFaaDlib, TEXT("NeAACDecInitDRM"));
+        NeAACDecClose = (NeAACDecClose_t)GetProcAddress(hFaaDlib, TEXT("NeAACDecClose"));
+        NeAACDecDecode = (NeAACDecDecode_t)GetProcAddress(hFaaDlib, TEXT("NeAACDecDecode"));
+    }
+#  else
+    hFaaDlib = dlopen("libfaad2.so", RTLD_LOCAL | RTLD_NOW);
+    if(hFaaDlib)
+    {
+        NeAACDecOpen = (NeAACDecOpen_t*)dlsym(hFaaDlib, "NeAACDecOpen");
+        NeAACDecInitDRM = (NeAACDecInitDRM_t*)dlsym(hFaaDlib, "NeAACDecInitDRM");
+        NeAACDecClose = (NeAACDecClose_t*)dlsym(hFaaDlib, "NeAACDecClose");
+        NeAACDecDecode = (NeAACDecDecode_t*)dlsym(hFaaDlib,"NeAACDecDecode");
+    }
+#  endif
+# endif
 	/* Open AACEncoder instance */
 	HandleAACDecoder = NeAACDecOpen();
 
