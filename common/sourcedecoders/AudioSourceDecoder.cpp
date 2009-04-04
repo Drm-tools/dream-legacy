@@ -28,7 +28,6 @@
 
 #include "AudioSourceDecoder.h"
 #include "../util/ReceiverModul_impl.h"
-#include <windows.h>
 #include <fstream>
 
 void
@@ -553,7 +552,6 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 	int iCurSelServ;
 	int iAudioSampleRate;
 
-    HANDLE hinstLib = LoadLibrary(TEXT("libfaad2.dll"));
 	/* Init error flags and output block size parameter. The output block
 	   size is set in the processing routine. We must set it here in case
 	   of an error in the initialization, this part in the processing
