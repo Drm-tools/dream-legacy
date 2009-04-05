@@ -531,9 +531,8 @@ CDRMReceiver::Run()
 			break;
 		}
 	}
-
 	/* Play and/or save the audio */
-	if (iAudioStreamID != STREAM_ID_NOT_USED)
+	if ((eModulation != DRM) || (iAudioStreamID != STREAM_ID_NOT_USED))
 	{
 		if (WriteData.WriteData(Parameters, AudSoDecBuf))
 		{
@@ -761,8 +760,8 @@ void
 CDRMReceiver::DemodulateAM(bool& bEnoughData)
 {
 	/* The incoming samples are split 2 ways.
-	   One set is passed to the existing AM demodulator.
-	   The other set is passed to the new AMSS demodulator.
+	   One set is passed to the AM demodulator.
+	   The other set is passed to the AMSS demodulator.
 	   The AMSS and AM demodulators work completely independently
 	 */
 	if (Split.ProcessData(Parameters, DemodDataBuf, AMDataBuf, AMSSDataBuf))
