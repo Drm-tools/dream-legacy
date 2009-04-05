@@ -55,6 +55,7 @@
 #include <iomanip>
 
 /* Implementation *************************************************************/
+
 CDownstreamDI::CDownstreamDI() : iLogFraCnt(0), pDrmReceiver(NULL),
 	bMDIOutEnabled(false), bMDIInEnabled(false),bIsRecording(false),
 	iFrequency(0), strRecordType(),

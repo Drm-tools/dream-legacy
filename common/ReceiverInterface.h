@@ -107,6 +107,7 @@ public:
 	virtual CAMSSDecode*			GetAMSSDecode()=0;
 	virtual CDataDecoder*			GetDataDecoder()=0;
 
+	virtual bool                    End()=0;
 };
 
 #endif

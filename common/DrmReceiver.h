@@ -33,7 +33,6 @@
 #define DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
 #include "ReceiverInterface.h"
-#include "GlobalDefinitions.h"
 #include "util/ReceiverModul_impl.h"
 #include "MDI/MDIRSCI.h" /* OPH: need this near the top so winsock2 is included before winsock */
 #include "MDI/MDIDecode.h"
@@ -143,6 +142,7 @@ public:
 	//void					Init();
 	void					Start();
 	void					Stop();
+	bool                    End();
 	EAcqStat				GetAcquiState() {return Parameters.eAcquiState;}
 	void					SetInitResOff(_REAL rNRO)
 								{rInitResampleOffset = rNRO;}
@@ -264,6 +264,8 @@ public:
 	bool				    GetRigChangeInProgress();
 	CParameter*				GetParameters() {return &Parameters;}
 
+	void					InitReceiverMode(EModulationType);
+	void					InitsForAllModules(EModulationType);
 	void					InitsForWaveMode();
 	void					InitsForSpectrumOccup();
 	void					InitsForNoDecBitsSDC();
@@ -275,13 +277,11 @@ public:
 
 protected:
 
-	void					InitReceiverMode();
     void                    UpdateHamlibAndSoundInput();
 	bool					doSetFrequency();
 	void					SetInStartMode();
 	void					SetInTrackingMode();
 	void					SetInTrackingModeDelayed();
-	void					InitsForAllModules();
 	void					Run();
 	void					DemodulateDRM(bool&);
 	void					DecodeDRM(bool&, bool&);

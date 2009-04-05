@@ -35,8 +35,14 @@ using namespace std;
 void RxApp::doNewMainWindow()
 {
         if(qApp->closingDown() || Receiver.isFinished())
+        {
+            if(qApp->closingDown())
+                cerr << "quitting because app closing down" << endl;
+            if(Receiver.isFinished())
+                cerr << "quitting because Receiver isFinished" << endl;
             return;
-
+        }
+// TODO this is crashing on mode change ?????
         QMainWindow* MainDlg;
 
         CParameter& Parameters = *Receiver.GetParameters();

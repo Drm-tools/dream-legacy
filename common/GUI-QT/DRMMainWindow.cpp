@@ -27,7 +27,6 @@
 \******************************************************************************/
 
 #include "DRMMainWindow.h"
-#include "../DrmReceiver.h"
 #include "ReceiverSettingsDlg.h"
 #include "LiveScheduleDlg.h"
 #include "StationsDlg.h"
@@ -717,9 +716,7 @@ void DRMMainWindow::closeEvent(QCloseEvent* ce)
     if(quitWanted)
     {
         /* request that the working thread stops */
-        ((CDRMReceiver*)&Receiver)->Stop();
-        (void)((CDRMReceiver*)&Receiver)->wait(5000);
-        if(!((CDRMReceiver*)&Receiver)->isFinished())
+        if(!Receiver.End())
         {
             QMessageBox::critical(this, "Dream", "Exit\n",
                 "Termination of working thread failed");

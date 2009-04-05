@@ -314,11 +314,16 @@ CDRMReceiver::Run()
 	 */
 	/* The parameter changes are done through flags, the actual initialization
 	 * is done in this (the working) thread to avoid problems with shared data */
-	switch(Parameters.RxEvent)
+    Parameters.Lock();
+    ERxEvent RxEvent = Parameters.RxEvent;
+    EModulationType eModulation = Parameters.eModulation;
+    Parameters.RxEvent = None;
+    Parameters.Unlock();
+	switch(RxEvent)
 	{
 	    case ChannelReconfiguration:
 	 cerr << "RxEvent ChannelReconfiguration" << endl;
-            InitReceiverMode();
+            InitReceiverMode(eModulation);
             break;
 	    case ServiceReconfiguration:
 	 cerr << "RxEvent ServiceReconfiguration" << endl;
@@ -340,7 +345,7 @@ CDRMReceiver::Run()
             InitsForDataParam();
             break;
         case Tune:
-            InitReceiverMode();
+            InitReceiverMode(eModulation);
             break;
         case Reinitialise:
             /* Define with which parameters the receiver should try to decode the
@@ -363,7 +368,7 @@ CDRMReceiver::Run()
             Parameters.NextConfig.MSCParameters.ProtectionLevel.iPartB = 1;
             Parameters.NextConfig.MSCParameters.ProtectionLevel.iHierarch = 0;
 
-            InitReceiverMode();
+            InitReceiverMode(eModulation);
             break;
         case SelectAudioComponent:
             InitsForAudParam();
@@ -374,7 +379,6 @@ CDRMReceiver::Run()
         case None:
             break;
 	}
-    Parameters.RxEvent = None;
 
 	/* Input - from upstream RSCI or input and demodulation from sound card / file */
 
@@ -422,7 +426,7 @@ CDRMReceiver::Run()
 				bEnoughData = true;
 			}
 
-			switch(Parameters.eModulation)
+			switch(eModulation)
 			{
 			case DRM:
 					DemodulateDRM(bEnoughData);
@@ -439,7 +443,7 @@ CDRMReceiver::Run()
 	}
 
 	/* Split the data for downstream RSCI and local processing. TODO make this conditional */
-	switch(Parameters.eModulation)
+	switch(eModulation)
 	{
 	case DRM:
 		SplitFAC.ProcessData(Parameters, FACDecBuf, FACUseBuf, FACSendBuf);
@@ -476,7 +480,7 @@ CDRMReceiver::Run()
 			bEnoughData = true;
 		}
 
-		switch(Parameters.eModulation)
+		switch(eModulation)
 		{
 		case DRM:
 			UtilizeDRM(bEnoughData);
@@ -492,7 +496,7 @@ CDRMReceiver::Run()
 	/* output to downstream RSCI */
 	if (downstreamRSCI.GetOutEnabled())
 	{
-		switch(Parameters.eModulation)
+		switch(eModulation)
 		{
 		case DRM:
 			if (Parameters.eAcquiState == AS_NO_SIGNAL)
@@ -866,9 +870,9 @@ CDRMReceiver::DetectAcquiFAC()
 }
 
 void
-CDRMReceiver::InitReceiverMode()
+CDRMReceiver::InitReceiverMode(EModulationType eModulation)
 {
-	switch(Parameters.eModulation)
+	switch(eModulation)
 	{
 	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
 
@@ -898,7 +902,7 @@ CDRMReceiver::InitReceiverMode()
 	if (upstreamRSCI.GetOutEnabled() == true)
 	{
 	    // TODO - is this enough ?
-		upstreamRSCI.SetReceiverMode(Parameters.eModulation);
+		upstreamRSCI.SetReceiverMode(eModulation);
 	}
 }
 
@@ -956,6 +960,14 @@ CDRMReceiver::Stop()
 	bRunning = false;
 }
 
+bool
+CDRMReceiver::End()
+{
+    Stop();
+    (void)wait(5000);
+    return isFinished();
+}
+
 void
 CDRMReceiver::SetInStartMode()
 {
@@ -991,10 +1003,12 @@ CDRMReceiver::SetInStartMode()
 	Parameters.rFreqOffsetTrack = (_REAL) 0.0;
 	Parameters.iTimingOffsTrack = 0;
 
+    EModulationType eModulation = Parameters.eModulation;
+
 	Parameters.Unlock();
 
 	/* Initialization of the modules */
-	InitsForAllModules();
+	InitsForAllModules(eModulation);
 
 	/* Activate acquisition */
 	FreqSyncAcq.StartAcquisition();
@@ -1090,7 +1104,7 @@ CDRMReceiver::SetInTrackingModeDelayed()
 }
 
 void
-CDRMReceiver::InitsForAllModules()
+CDRMReceiver::InitsForAllModules(EModulationType eModulation)
 {
 	//Parameters.Measurements.SetRSCIDefaults(downstreamRSCI.GetOutEnabled());
 
@@ -1118,7 +1132,7 @@ CDRMReceiver::InitsForAllModules()
 	}
 	else
 	{
-		AMDemodulation.SetDemodType(Parameters.eModulation);
+		AMDemodulation.SetDemodType(eModulation);
 		AMDemodulation.SetInitFlag();
 		AMSSPhaseDemod.SetInitFlag();
 		InputResample.SetInitFlag();
@@ -1805,7 +1819,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	iFreqkHz = s.Get("Receiver", "frequency", 0);
 	doSetFrequency();
 
-    // Put this right at the end so that Parameters.eModulation is correct and Rx starts
+    // Put this right at the end so that eModulation is correct and Rx starts
 	if (strMode == "DRM")
 		Parameters.eModulation = DRM;
     else if (strMode == "AM")

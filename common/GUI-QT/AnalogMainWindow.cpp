@@ -36,11 +36,11 @@
 #include <QStringListModel>
 #include <qwt_dial_needle.h>
 
-#include "../DrmReceiver.h"
 #include "ReceiverSettingsDlg.h"
 #include "StationsDlg.h"
 #include "LiveScheduleDlg.h"
 #include "DRMPlot.h"
+#include "../AMSSDemodulation.h"
 
 // TODO improve layout (simplify?)
 // TODO - check audio
@@ -210,10 +210,7 @@ void AnalogMainWindow::closeEvent(QCloseEvent* ce)
 {
     if(quitWanted)
     {
-        /* request that the working thread stops */
-        ((CDRMReceiver*)&Receiver)->Stop();
-        (void)((QThread*)&Receiver)->wait(5000);
-        if(!((CDRMReceiver*)&Receiver)->isFinished())
+        if(!Receiver.End())
         {
             QMessageBox::critical(this, "Dream", "Exit\n",
                     "Termination of working thread failed");
@@ -368,9 +365,16 @@ void AnalogMainWindow::OnTimer()
 		break;
 	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
 		/* Carrier frequency of AM signal */
-        Receiver.GetParameters()->Measurements.AnalogCurMixFreqOffs.get(r);
-		TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
-		+ QString().setNum(r, 'f', 2) + " Hz</b>");
+        b = Receiver.GetParameters()->Measurements.AnalogCurMixFreqOffs.get(r);
+        if(b)
+        {
+            TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
+            + QString().setNum(r, 'f', 2) + " Hz</b>");
+        }
+        else
+        {
+            TextFreqOffset->setText(tr("Carrier Frequency not available"));
+        }
 		b = Receiver.GetUseAnalogHWDemod();
 		if(b)
 		{
