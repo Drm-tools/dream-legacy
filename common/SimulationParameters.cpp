@@ -46,8 +46,8 @@ void CDRMSimulation::SimScript()
 	CVector<_REAL>						vecrMSE;
 	string								strSimFile;
 	string								strSpecialRemark;
-	CChannelEstimation::ETypeIntFreq	eChanEstFreqIntType;
-	CChannelEstimation::ETypeIntTime	eChanEstTimIntType;
+	ETypeIntFreq	                    eChanEstFreqIntType;
+	ETypeIntTime	                    eChanEstTimIntType;
 
 
 	/**************************************************************************\
@@ -117,8 +117,8 @@ Param.iSpecChDoppler = 2; /* Hz (integer value!) */
 
 
 		/* Choose the type of channel estimation algorithms used for simlation */
-		eChanEstFreqIntType = CChannelEstimation::FWIENER;//FDFTFILTER;//FLINEAR;
-		eChanEstTimIntType = CChannelEstimation::TWIENER;//TLINEAR;
+		eChanEstFreqIntType = FWIENER;//FDFTFILTER;//FLINEAR;
+		eChanEstTimIntType = TWIENER;//TLINEAR;
 
 
 		/* Define which synchronization algorithms we want to use */
@@ -362,11 +362,11 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
 		/* Time direction */
 		switch (ChannelEstimation.GetTimeInt())
 		{
-		case CChannelEstimation::TLINEAR:
+		case TLINEAR:
 			strFileName += "Tl";
 			break;
 
-		case CChannelEstimation::TWIENER:
+		case TWIENER:
 			strFileName += "Tw";
 			break;
 		}
@@ -374,15 +374,15 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
 		/* Frequency direction */
 		switch (ChannelEstimation.GetFreqInt())
 		{
-		case CChannelEstimation::FLINEAR:
+		case FLINEAR:
 			strFileName += "Fl_";
 			break;
 
-		case CChannelEstimation::FDFTFILTER:
+		case FDFTFILTER:
 			strFileName += "Fd_";
 			break;
 
-		case CChannelEstimation::FWIENER:
+		case FWIENER:
 			strFileName += "Fw_";
 			break;
 		}

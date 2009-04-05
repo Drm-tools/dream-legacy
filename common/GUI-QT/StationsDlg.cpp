@@ -590,7 +590,7 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 	}
 }
 
-StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
+StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	QDialog(parent, name, modal, f), Ui_StationsDlg(),
 	DRMReceiver(NDRMR), Settings(NSettings), DRMSchedule(),

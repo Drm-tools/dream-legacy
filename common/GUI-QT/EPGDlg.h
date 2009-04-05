@@ -32,9 +32,9 @@
 
 #include <QTimer>
 #include "ui_EPGDlg.h"
-#include "../DrmReceiver.h"
 #include "../datadecoding/epg/EPG.h"
 #include "../util/Settings.h"
+#include "../ReceiverInterface.h"
 
 /* Definitions ****************************************************************/
 #define COL_NAME	1
@@ -56,7 +56,7 @@ class EPGDlg : public QDialog, public Ui_EPGDlg
 
 public:
 
-	EPGDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+	EPGDlg(ReceiverInterface&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = false, Qt::WFlags f = 0);
 	virtual ~EPGDlg();
 	/* dummy assignment operator to help MSVC8 */
@@ -77,7 +77,7 @@ protected:
     QDate           date;
     bool            do_updates;
     EPG             epg;
-	CDRMReceiver&	DRMReceiver;
+	ReceiverInterface&	DRMReceiver;
 	CSettings&		Settings;
 	QTimer			Timer;
 	uint32_t        currentSID;

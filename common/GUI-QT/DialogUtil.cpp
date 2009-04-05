@@ -49,6 +49,9 @@
 #ifdef HAVE_LIBWIRETAP
 # include <wtap.h>
 #endif
+#ifdef HAVE_LIBFAAD
+# include "neaacdec.h"
+#endif
 #include <sndfile.h>
 #include <qwt_global.h> /* to extract the library version */
 

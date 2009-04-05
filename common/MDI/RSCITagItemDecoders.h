@@ -30,9 +30,8 @@
 #define RSCI_TAG_ITEM_DECODERS_H_INCLUDED
 
 #include "TagItemDecoder.h"
-#include "../Parameter.h"
+#include "../ReceiverInterface.h"
 
-class CDRMReceiver;
 class CRSISubscriber;
 
 // RSCI Status
@@ -134,10 +133,10 @@ class CTagItemDecoderRCI : public CTagItemDecoder
 {
 public:
 	CTagItemDecoderRCI(const string& s) : pDRMReceiver(NULL),tag(s) {}
-	void SetReceiver(CDRMReceiver *pReceiver) {pDRMReceiver = pReceiver;}
+	void SetReceiver(ReceiverInterface *pReceiver) {pDRMReceiver = pReceiver;}
 	virtual string GetTagName() { return tag; }
 protected:
-	CDRMReceiver *pDRMReceiver;
+	ReceiverInterface *pDRMReceiver;
 	string tag;
 };
 

@@ -31,13 +31,14 @@
 \******************************************************************************/
 
 #include "RSISubscriber.h"
-#include "../DrmReceiver.h"
 #include "TagPacketGenerator.h"
+#include "Pft.h"
 #ifdef HAVE_QT
 # include "PacketSocketQT.h"
 #else
 # include "PacketSocketNull.h"
 #endif
+#include <iostream>
 
 CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink),
 	cProfile('0'), iSubsamplingFactor(1), bNeedPft(false),
@@ -53,7 +54,7 @@ CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink),
 	TagPacketDecoderRSCIControl.SetSubscriber(this);
 }
 
-void CRSISubscriber::SetReceiver(CDRMReceiver *pReceiver)
+void CRSISubscriber::SetReceiver(ReceiverInterface *pReceiver)
 {
 	pDRMReceiver = pReceiver;
 	TagPacketDecoderRSCIControl.SetReceiver(pReceiver);

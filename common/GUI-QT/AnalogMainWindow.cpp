@@ -36,6 +36,7 @@
 #include <QStringListModel>
 #include <qwt_dial_needle.h>
 
+#include "../DrmReceiver.h"
 #include "ReceiverSettingsDlg.h"
 #include "StationsDlg.h"
 #include "LiveScheduleDlg.h"
@@ -50,7 +51,7 @@
 */
 
 /* Implementation *************************************************************/
-AnalogMainWindow::AnalogMainWindow(CDRMReceiver& NDRMR, CSettings& NSettings,
+AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, Qt::WFlags f):
     QMainWindow(parent, name, f), Ui_AnalogMainWindow(),
 	Receiver(NDRMR), Settings(NSettings),
@@ -210,9 +211,9 @@ void AnalogMainWindow::closeEvent(QCloseEvent* ce)
     if(quitWanted)
     {
         /* request that the working thread stops */
-        Receiver.Stop();
-        (void)Receiver.wait(5000);
-        if(!Receiver.isFinished())
+        ((CDRMReceiver*)&Receiver)->Stop();
+        (void)((QThread*)&Receiver)->wait(5000);
+        if(!((CDRMReceiver*)&Receiver)->isFinished())
         {
             QMessageBox::critical(this, "Dream", "Exit\n",
                     "Termination of working thread failed");
@@ -277,22 +278,22 @@ void AnalogMainWindow::UpdateControls()
 	/* Set AGC type */
 	switch (Receiver.GetAnalogAGCType())
 	{
-	case CAGC::AT_NO_AGC:
+	case AT_NO_AGC:
 		if (!RadioButtonAGCOff->isChecked())
 			RadioButtonAGCOff->setChecked(true);
 		break;
 
-	case CAGC::AT_SLOW:
+	case AT_SLOW:
 		if (!RadioButtonAGCSlow->isChecked())
 			RadioButtonAGCSlow->setChecked(true);
 		break;
 
-	case CAGC::AT_MEDIUM:
+	case AT_MEDIUM:
 		if (!RadioButtonAGCMed->isChecked())
 			RadioButtonAGCMed->setChecked(true);
 		break;
 
-	case CAGC::AT_FAST:
+	case AT_FAST:
 		if (!RadioButtonAGCFast->isChecked())
 			RadioButtonAGCFast->setChecked(true);
 		break;
@@ -301,22 +302,22 @@ void AnalogMainWindow::UpdateControls()
 	/* Set noise reduction type */
 	switch (Receiver.GetAnalogNoiseReductionType())
 	{
-	case CAMDemodulation::NR_OFF:
+	case NR_OFF:
 		if (!RadioButtonNoiRedOff->isChecked())
 			RadioButtonNoiRedOff->setChecked(true);
 		break;
 
-	case CAMDemodulation::NR_LOW:
+	case NR_LOW:
 		if (!RadioButtonNoiRedLow->isChecked())
 			RadioButtonNoiRedLow->setChecked(true);
 		break;
 
-	case CAMDemodulation::NR_MEDIUM:
+	case NR_MEDIUM:
 		if (!RadioButtonNoiRedMed->isChecked())
 			RadioButtonNoiRedMed->setChecked(true);
 		break;
 
-	case CAMDemodulation::NR_HIGH:
+	case NR_HIGH:
 		if (!RadioButtonNoiRedHigh->isChecked())
 			RadioButtonNoiRedHigh->setChecked(true);
 		break;
@@ -453,19 +454,19 @@ void AnalogMainWindow::OnRadioAGC(int iID)
 	switch (iID)
 	{
 	case 0:
-		Receiver.SetAnalogAGCType(CAGC::AT_NO_AGC);
+		Receiver.SetAnalogAGCType(AT_NO_AGC);
 		break;
 
 	case 1:
-		Receiver.SetAnalogAGCType(CAGC::AT_SLOW);
+		Receiver.SetAnalogAGCType(AT_SLOW);
 		break;
 
 	case 2:
-		Receiver.SetAnalogAGCType(CAGC::AT_MEDIUM);
+		Receiver.SetAnalogAGCType(AT_MEDIUM);
 		break;
 
 	case 3:
-		Receiver.SetAnalogAGCType(CAGC::AT_FAST);
+		Receiver.SetAnalogAGCType(AT_FAST);
 		break;
 	}
 }
@@ -475,19 +476,19 @@ void AnalogMainWindow::OnRadioNoiRed(int iID)
 	switch (iID)
 	{
 	case 0:
-		Receiver.SetAnalogNoiseReductionType(CAMDemodulation::NR_OFF);
+		Receiver.SetAnalogNoiseReductionType(NR_OFF);
 		break;
 
 	case 1:
-		Receiver.SetAnalogNoiseReductionType(CAMDemodulation::NR_LOW);
+		Receiver.SetAnalogNoiseReductionType(NR_LOW);
 		break;
 
 	case 2:
-		Receiver.SetAnalogNoiseReductionType(CAMDemodulation::NR_MEDIUM);
+		Receiver.SetAnalogNoiseReductionType(NR_MEDIUM);
 		break;
 
 	case 3:
-		Receiver.SetAnalogNoiseReductionType(CAMDemodulation::NR_HIGH);
+		Receiver.SetAnalogNoiseReductionType(NR_HIGH);
 		break;
 	}
 }
@@ -723,7 +724,7 @@ void AnalogMainWindow::AddWhatsThisHelp()
 
 	Added phase offset display for AMSS demodulation loop.
 */
-CAMSSDlg::CAMSSDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
+CAMSSDlg::CAMSSDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	QDialog(parent, name, modal, f), Ui_AMSSDlg(), Receiver(NDRMR),
 	Settings(NSettings)

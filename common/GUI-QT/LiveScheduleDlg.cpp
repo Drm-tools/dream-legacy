@@ -324,7 +324,7 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign& AltFreqSign)
 	}
 }
 
-LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR, CSettings& s,
+LiveScheduleDlg::LiveScheduleDlg(ReceiverInterface& NDRMR, CSettings& s,
 								 QWidget * parent, const char *name,
 								 bool modal, Qt::WFlags f):
 QDialog(parent, name, modal, f), Ui_LiveScheduleDlg(),

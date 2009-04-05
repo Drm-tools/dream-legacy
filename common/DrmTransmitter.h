@@ -33,6 +33,8 @@
 #include "DrmEncoder.h"
 #include "DrmModulator.h"
 #include "DrmTransmitterInterface.h"
+#include "MDI/MDIRSCI.h"
+#include "MDI/MDIDecode.h"
 
 /* Classes ********************************************************************/
 class CSettings;

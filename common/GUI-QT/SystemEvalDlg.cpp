@@ -28,12 +28,11 @@
 
 #include "SystemEvalDlg.h"
 #include "DRMPlot.h"
-#include "../DrmReceiver.h"
 #include "../util/Settings.h"
 #include "../GPSReceiver.h"
 #include <QDateTime>
 
-SystemEvalDlg::SystemEvalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
+SystemEvalDlg::SystemEvalDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
     QWidget* parent, const char* name, bool modal, Qt::WFlags f)
 : QDialog(parent, name, modal, f), Ui_SystemEvalDlg(),
     DRMReceiver(NDRMR), Settings(NSettings), pGPSReceiver(NULL),
@@ -592,7 +591,7 @@ void SystemEvalDlg::newPlot(int pt, const string& setting)
 void SystemEvalDlg::InitialiseFrequency()
 {
 	/* If RSCI in is enabled, disable retuning */
-	if (DRMReceiver.GetRSIIn()->GetInEnabled() == true)
+	if (DRMReceiver.UpstreamDIInputEnabled() == true)
 	{
 		EdtFrequency->setText("0");
 		EdtFrequency->setEnabled(false);

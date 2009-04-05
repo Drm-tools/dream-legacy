@@ -28,11 +28,11 @@
 
 #include "SlideShowViewer.h"
 #include "../util/Settings.h"
-#include "../DrmReceiver.h"
 #include "../datadecoding/DABMOT.h"
+#include "../datadecoding/DataDecoder.h"
 #include <QFileDialog>
 
-SlideShowViewer::SlideShowViewer(CDRMReceiver& rec, CSettings& s,
+SlideShowViewer::SlideShowViewer(ReceiverInterface& rec, CSettings& s,
         QWidget* parent,
 		const char* name, Qt::WFlags f):
 		QMainWindow(parent, name, f), Ui_SlideShowViewer(), Timer(), strCurrentSavePath("."),

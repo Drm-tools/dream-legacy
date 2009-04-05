@@ -26,9 +26,10 @@
  *
 \******************************************************************************/
 
-#include "../util/Settings.h"
 #include "DRMPlot.h"
-#include "../DrmReceiver.h"
+#include "../util/Settings.h"
+#include "../matlib/Matlib.h"
+#include "../chanest/ChannelEstimation.h"
 #include <limits>
 #include <algorithm>
 #include <functional>
@@ -43,6 +44,9 @@
 #include <QLayout>
 #include <iostream>
 
+/* Length of the history for synchronization parameters (used for the plot) */
+#define LEN_HIST_PLOT_SYNC_PARMS		2250
+
 /* TODO - see if we have lost any dynamic rescaling
 
 
@@ -50,7 +54,7 @@ Simone: - waterfall spectrum: could be improved, can´t see much of the signal it
  it´s all blue
 - plotstyle: does not work from settings menu, but is OK from command line
 
-Tear-off charts not working ?
+
  */
 
 /* Implementation *************************************************************/

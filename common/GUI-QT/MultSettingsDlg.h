@@ -35,7 +35,6 @@
 #include <QShowEvent>
 #include <QHideEvent>
 
-#include "../DrmReceiver.h"
 #include "../datadecoding/epg/epgutil.h"
 #include "../util/Settings.h"
 #include "ui_MultSettingsDlg.h"

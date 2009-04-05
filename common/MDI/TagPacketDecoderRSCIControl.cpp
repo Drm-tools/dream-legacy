@@ -58,7 +58,7 @@ CTagPacketDecoderRSCIControl::CTagPacketDecoderRSCIControl(void)
 }
 
 
-void CTagPacketDecoderRSCIControl::SetReceiver(CDRMReceiver *pReceiver)
+void CTagPacketDecoderRSCIControl::SetReceiver(ReceiverInterface *pReceiver)
 {
 	pDRMReceiver = pReceiver;
 	TagItemDecoderCact.SetReceiver(pReceiver);

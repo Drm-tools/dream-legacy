@@ -30,8 +30,8 @@
 #define _RXAPP_H
 
 #include <QObject>
-#include "../DrmReceiver.h"
 #include "../util/Settings.h"
+#include "../DrmReceiver.h"
 
 class RxApp : public QObject
 {

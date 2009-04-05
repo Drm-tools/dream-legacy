@@ -27,8 +27,8 @@
 \******************************************************************************/
 
 #include "Parameter.h"
-#include "DrmReceiver.h"
 #include "Version.h"
+#include "util/SimulationModul.h"
 #include <limits>
 #include <sstream>
 #include <iomanip>
@@ -1168,19 +1168,6 @@ void dump(ostream& out, const CVector<T>& vec)
     for(int i=0; i<vec.Size(); i++)
     {
 //        out << sep; ::dump(out, vec[i]); out << endl;
-        out << sep << vec[i] << endl;
-        sep = ", ";
-    }
-    out << "]" << endl;
-}
-
-template<typename T>
-void dump(ostream& out, const CMatlibVector<T>& vec)
-{
-    out << "[ " << endl;
-    string sep = "";
-    for(int i=0; i<vec.Size(); i++)
-    {
         out << sep << vec[i] << endl;
         sep = ", ";
     }

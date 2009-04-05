@@ -33,7 +33,7 @@
 #include <QWhatsThis>
 
 #include "ui_AboutDlg.h"
-#include "../DrmReceiver.h"
+#include "../selectioninterface.h"
 
 /* Definitions ****************************************************************/
 

@@ -165,7 +165,7 @@ public:
 	virtual bool GetOutEnabled() {return bMDIOutEnabled;}
 	virtual bool GetInEnabled() {return bMDIInEnabled;}
 	void GetNextPacket(CSingleBuffer<_BINARY>&	buf);
-	void SetReceiver(CDRMReceiver *pReceiver);
+	void SetReceiver(ReceiverInterface *pReceiver);
 
 	/* CPacketSink */
 	virtual void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
@@ -178,8 +178,8 @@ protected:
 
 	void ResetTags();
 
-	uint32_t					iLogFraCnt;
-	CDRMReceiver*				pDrmReceiver;
+	uint32_t				iLogFraCnt;
+	ReceiverInterface*	pDrmReceiver;
 
 	bool					bMDIOutEnabled;
 	bool					bMDIInEnabled;

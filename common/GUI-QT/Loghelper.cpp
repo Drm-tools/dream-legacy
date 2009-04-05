@@ -29,7 +29,7 @@
 #include "Loghelper.h"
 
 /* Implementation *************************************************************/
-Loghelper::Loghelper(CDRMReceiver& NDRMR, CSettings& NSettings):
+Loghelper::Loghelper(ReceiverInterface& NDRMR, CSettings& NSettings):
 	DRMReceiver(NDRMR), Settings(NSettings),
 	TimerLogFileLong(), TimerLogFileShort(), TimerLogFileStart(),
 	shortLog(*NDRMR.GetParameters()), longLog(*NDRMR.GetParameters()),

@@ -28,9 +28,9 @@
 
 #include "BWSViewer.h"
 #include "../util/Settings.h"
-#include "../DrmReceiver.h"
+#include "../datadecoding/DataDecoder.h"
 
-BWSViewer::BWSViewer(CDRMReceiver& rec, CSettings& s,
+BWSViewer::BWSViewer(ReceiverInterface& rec, CSettings& s,
         QWidget* parent,
 		const char* name, Qt::WFlags f):
 		QMainWindow(parent, name, f), Ui_BWSViewer(), Timer(),

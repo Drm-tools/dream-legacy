@@ -32,7 +32,8 @@
 #include "ui_BWSViewer.h"
 #include <string>
 
-class CDRMReceiver;
+#include "../ReceiverInterface.h"
+
 class CSettings;
 
 class BWSViewer : public QMainWindow, Ui_BWSViewer
@@ -40,7 +41,7 @@ class BWSViewer : public QMainWindow, Ui_BWSViewer
 	Q_OBJECT
 
 public:
-	BWSViewer(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+	BWSViewer(ReceiverInterface&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, Qt::WFlags f = 0);
 	virtual ~BWSViewer();
 
@@ -48,7 +49,7 @@ protected:
 
     QTimer Timer;
 	std::string             strCurrentSavePath;
-	CDRMReceiver&           receiver;
+	ReceiverInterface&  receiver;
 	CSettings&              settings;
 	QString                 homeUrl;
 	bool                    decoderSet;

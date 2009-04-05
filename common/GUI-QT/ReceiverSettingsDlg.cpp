@@ -48,12 +48,13 @@
 #include <QShowEvent>
 #include "ReceiverSettingsDlg.h"
 #include "../GlobalDefinitions.h"
-#include "../DrmReceiver.h"
 #include "../util/Hamlib.h"
 
 /* Implementation *************************************************************/
 
-ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings,
+ReceiverSettingsDlg::ReceiverSettingsDlg(
+    ReceiverInterface& NRx,
+    CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	QDialog(parent, name, modal, f), Ui_ReceiverSettingsDlg(),
 	Receiver(NRx), Settings(NSettings), loading(true),
@@ -82,7 +83,7 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings
 	bEnableRig = false;
 #endif
 
-	if(Receiver.GetRSIIn()->GetInEnabled())
+	if(Receiver.UpstreamDIInputEnabled())
 		bEnableRig = false;
 
 	if(bEnableRig == false)
@@ -251,24 +252,24 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	loading = true; // prevent executive actions during reading state
 
 	/* Sync ----------------------------------------------------------------- */
-	if (Receiver.GetTimeInt() == CChannelEstimation::TWIENER)
+	if (Receiver.GetTimeInt() == TWIENER)
 		RadioButtonTiWiener->setChecked(true);
 	else
 		RadioButtonTiLinear->setChecked(true);
 
 	switch(Receiver.GetFreqInt())
 	{
-	case CChannelEstimation::FLINEAR:
+	case FLINEAR:
 		RadioButtonFreqLinear->setChecked(true);
 		break;
-	case CChannelEstimation::FDFTFILTER:
+	case FDFTFILTER:
 		RadioButtonFreqDFT->setChecked(true);
 		break;
-	case CChannelEstimation::FWIENER:
+	case FWIENER:
 		RadioButtonFreqWiener->setChecked(true);
 	}
 
-	if (Receiver.GetTiSyncTracType() == CTimeSyncTrack::TSFIRSTPEAK)
+	if (Receiver.GetTiSyncTracType() == TSFIRSTPEAK)
 		RadioButtonTiSyncFirstPeak->setChecked(true);
 	else
 		RadioButtonTiSyncEnergy->setChecked(true);
@@ -484,49 +485,48 @@ void ReceiverSettingsDlg::ExtractReceiverCoordinates()
 
 void ReceiverSettingsDlg::OnRadioTimeLinear()
 {
-	if (Receiver.GetTimeInt() != CChannelEstimation::TLINEAR)
-		Receiver.SetTimeInt(CChannelEstimation::TLINEAR);
+	if (Receiver.GetTimeInt() != TLINEAR)
+		Receiver.SetTimeInt(TLINEAR);
 }
 
 void ReceiverSettingsDlg::OnRadioTimeWiener()
 {
-	if (Receiver.GetTimeInt() != CChannelEstimation::TWIENER)
-		Receiver.SetTimeInt(CChannelEstimation::TWIENER);
+	if (Receiver.GetTimeInt() != TWIENER)
+		Receiver.SetTimeInt(TWIENER);
 }
 
 void ReceiverSettingsDlg::OnRadioFrequencyLinear()
 {
-	if (Receiver.GetFreqInt() != CChannelEstimation::FLINEAR)
-		Receiver.SetFreqInt(CChannelEstimation::FLINEAR);
+	if (Receiver.GetFreqInt() != FLINEAR)
+		Receiver.SetFreqInt(FLINEAR);
 }
 
 void ReceiverSettingsDlg::OnRadioFrequencyDft()
 {
-	if (Receiver.GetFreqInt() != CChannelEstimation::FDFTFILTER)
-		Receiver.SetFreqInt(CChannelEstimation::FDFTFILTER);
+	if (Receiver.GetFreqInt() != FDFTFILTER)
+		Receiver.SetFreqInt(FDFTFILTER);
 }
 
 void ReceiverSettingsDlg::OnRadioFrequencyWiener()
 {
-	if (Receiver.GetFreqInt() != CChannelEstimation::FWIENER)
-		Receiver.SetFreqInt(CChannelEstimation::FWIENER);
+	if (Receiver.GetFreqInt() != FWIENER)
+		Receiver.SetFreqInt(FWIENER);
 }
 
 void ReceiverSettingsDlg::OnRadioTiSyncFirstPeak()
 {
 	if (Receiver.GetTiSyncTracType() !=
-		CTimeSyncTrack::TSFIRSTPEAK)
+		TSFIRSTPEAK)
 	{
-		Receiver.SetTiSyncTracType(CTimeSyncTrack::TSFIRSTPEAK);
+		Receiver.SetTiSyncTracType(TSFIRSTPEAK);
 	}
 }
 
 void ReceiverSettingsDlg::OnRadioTiSyncEnergy()
 {
-	if (Receiver.GetTiSyncTracType() !=
-		CTimeSyncTrack::TSENERGY)
+	if (Receiver.GetTiSyncTracType() != TSENERGY)
 	{
-		Receiver.SetTiSyncTracType(CTimeSyncTrack::TSENERGY);
+		Receiver.SetTiSyncTracType(TSENERGY);
 	}
 }
 

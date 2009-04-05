@@ -43,7 +43,6 @@
 \******************************************************************************/
 
 #include "MDIRSCI.h"
-#include "../DrmReceiver.h"
 #ifdef HAVE_QT
 # include "PacketSocketQT.h"
 # include <qhostaddress.h>
@@ -52,6 +51,7 @@
 #endif
 #include "PacketSourceFile.h"
 #include <sstream>
+#include <iostream>
 #include <iomanip>
 
 /* Implementation *************************************************************/
@@ -300,7 +300,7 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 	GenDIPacket();
 }
 
-void CDownstreamDI::SetReceiver(CDRMReceiver *pReceiver)
+void CDownstreamDI::SetReceiver(ReceiverInterface *pReceiver)
 {
 	pDrmReceiver = pReceiver;
 	for(vector<CRSISubscriber*>::iterator i = RSISubscribers.begin();

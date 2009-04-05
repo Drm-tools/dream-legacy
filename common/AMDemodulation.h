@@ -168,7 +168,6 @@ protected:
 class CAGC
 {
 public:
-	enum EType {AT_NO_AGC, AT_SLOW, AT_MEDIUM, AT_FAST};
 
 	CAGC() : eType(AT_MEDIUM) {}
 	void Init(const int iNewBlockSize);
@@ -237,8 +236,6 @@ public:
 	CAMDemodulation();
 	virtual ~CAMDemodulation() {}
 
-	enum ENoiRedType {NR_OFF, NR_LOW, NR_MEDIUM, NR_HIGH};
-
 	void SetAcqFreq(const CReal rNewNormCenter);
 
 	void EnableAutoFreqAcq(const bool bNewEn)
@@ -248,8 +245,8 @@ public:
 	void EnablePLL(const bool bNewEn) {bPLLIsEnabled = bNewEn;}
 	bool PLLEnabled() {return bPLLIsEnabled;}
 
-	void SetAGCType(const CAGC::EType eNewType);
-	CAGC::EType GetAGCType() {return AGC.GetType();}
+	void SetAGCType(const EType eNewType);
+	EType GetAGCType() {return AGC.GetType();}
 
 	void SetNoiRedType(const ENoiRedType eNewType);
 	ENoiRedType GetNoiRedType() {return NoiRedType;}

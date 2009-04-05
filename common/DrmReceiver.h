@@ -32,6 +32,7 @@
 #if !defined(DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
 #define DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
+#include "ReceiverInterface.h"
 #include "GlobalDefinitions.h"
 #include "util/ReceiverModul_impl.h"
 #include "MDI/MDIRSCI.h" /* OPH: need this near the top so winsock2 is included before winsock */
@@ -72,9 +73,6 @@
 /* Number of FAC blocks for delayed tracking mode switch (caused by time needed
    for initalizing the channel estimation */
 #define NUM_FAC_DEL_TRACK_SWITCH		2
-
-/* Length of the history for synchronization parameters (used for the plot) */
-#define LEN_HIST_PLOT_SYNC_PARMS		2250
 
 
 /* Classes ********************************************************************/
@@ -123,9 +121,9 @@ class CSplitAudio : public CSplitModul<_SAMPLE>
 		{this->iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE * (_REAL) 0.4 /* 400 ms */) * 2 /* stereo */;}
 };
 
-class CDRMReceiver
+class CDRMReceiver : public ReceiverInterface
 #ifdef USE_QT_GUI
-	: public QThread
+	, public QThread
 #endif
 {
 public:
@@ -150,7 +148,7 @@ public:
 								{rInitResampleOffset = rNRO;}
 
 	void					SetAnalogDemodType(EModulationType);
-	EModulationType		GetAnalogDemodType() { return AMDemodulation.GetDemodType(); }
+	EModulationType		    GetAnalogDemodType() { return AMDemodulation.GetDemodType(); }
 	int						GetAnalogFilterBWHz();
 	void					SetAnalogFilterBWHz(int);
 	void					SetAnalogFilterBWHz(EModulationType, int);
@@ -164,10 +162,10 @@ public:
 	bool					AnalogPLLEnabled();
 	bool					GetAnalogPLLPhase(CReal& rPhaseOut);
 
-	void					SetAnalogAGCType(const CAGC::EType eNewType);
-	CAGC::EType				GetAnalogAGCType();
-	void					SetAnalogNoiseReductionType(const CAMDemodulation::ENoiRedType eNewType);
-	CAMDemodulation::ENoiRedType GetAnalogNoiseReductionType();
+	void					SetAnalogAGCType(const EType eNewType);
+	EType				    GetAnalogAGCType();
+	void					SetAnalogNoiseReductionType(const ENoiRedType eNewType);
+	ENoiRedType             GetAnalogNoiseReductionType();
 
 	void					SetUseAnalogHWDemod(bool);
 	bool					GetUseAnalogHWDemod();
@@ -179,20 +177,21 @@ public:
 	void					SetIQRecording(bool);
 	void					SetRSIRecording(bool, const char);
 	void					SetHamlib(CHamlib*);
+	bool				    UpstreamDIInputEnabled() { return upstreamRSCI.GetInEnabled(); }
 
 	void					SetReadPCMFromFile(const string strNFN);
 
 	/* Channel Estimation */
-	void SetFreqInt(CChannelEstimation::ETypeIntFreq eNewTy)
+	void SetFreqInt(ETypeIntFreq eNewTy)
 		{ChannelEstimation.SetFreqInt(eNewTy);}
 
-	CChannelEstimation::ETypeIntFreq GetFreqInt()
+	ETypeIntFreq GetFreqInt()
 		{return ChannelEstimation.GetFreqInt();}
 
-	void SetTimeInt(CChannelEstimation::ETypeIntTime eNewTy)
+	void SetTimeInt(ETypeIntTime eNewTy)
 		{ChannelEstimation.SetTimeInt(eNewTy);}
 
-	CChannelEstimation::ETypeIntTime GetTimeInt() const
+	ETypeIntTime GetTimeInt() const
 		{return ChannelEstimation.GetTimeInt();}
 
 	void SetIntCons(const bool bNewIntCons)
@@ -201,16 +200,16 @@ public:
 	bool GetIntCons()
 		{return ChannelEstimation.GetIntCons();}
 
-	void SetSNREst(CChannelEstimation::ETypeSNREst eNewTy)
+	void SetSNREst(ETypeSNREst eNewTy)
 		{ChannelEstimation.SetSNREst(eNewTy);}
 
-	CChannelEstimation::ETypeSNREst GetSNREst()
+	ETypeSNREst GetSNREst()
 		{return ChannelEstimation.GetSNREst();}
 
-	void SetTiSyncTracType(CTimeSyncTrack::ETypeTiSyncTrac eNewTy)
+	void SetTiSyncTracType(ETypeTiSyncTrac eNewTy)
      {ChannelEstimation.GetTimeSyncTrack()->SetTiSyncTracType(eNewTy);}
 
-	CTimeSyncTrack::ETypeTiSyncTrac GetTiSyncTracType()
+	ETypeTiSyncTrac GetTiSyncTracType()
 		{return ChannelEstimation.GetTimeSyncTrack()->GetTiSyncTracType();}
 
 	int GetInitNumIterations()

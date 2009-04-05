@@ -30,6 +30,19 @@
 #include "../util/ReceiverModul_impl.h"
 #include <fstream>
 
+#ifdef HAVE_LIBFAAD
+# ifdef DYNAMIC_LINK_CODECS
+NeAACDecHandle NEAACDECAPI NeAACDecOpenDummy(void) { return NULL; }
+char NEAACDECAPI NeAACDecInitDRMDummy(NeAACDecHandle*, unsigned long, unsigned char) { return 0; }
+void NEAACDECAPI NeAACDecCloseDummy(NeAACDecHandle) {}
+void* NEAACDECAPI NeAACDecDecodeDummy(NeAACDecHandle,NeAACDecFrameInfo* info,unsigned char *,unsigned long)
+{
+    info->error = 1;
+    return NULL;
+}
+# endif
+#endif
+
 void
 CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 {
@@ -719,7 +732,9 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			veciFrameLength.Init(iNumAudioFrames);
 
 			/* Init AAC-decoder */
-			NeAACDecInitDRM(&HandleAACDecoder, iAACSampleRate, (unsigned char) iDRMchanMode);
+            if(HandleAACDecoder)
+                NeAACDecInitDRM(&HandleAACDecoder,
+                    iAACSampleRate, (unsigned char) iDRMchanMode);
 #else
 			/* No AAC decoder available */
 			throw CInitErr(ET_AUDDECODER);
@@ -904,6 +919,10 @@ CAudioSourceDecoder::CAudioSourceDecoder()
 {
 #ifdef HAVE_LIBFAAD
 # ifdef DYNAMIC_LINK_CODECS
+    NeAACDecOpen = NeAACDecOpenDummy;
+    NeAACDecInitDRM = NeAACDecInitDRMDummy;
+    NeAACDecClose = NeAACDecCloseDummy;
+    NeAACDecDecode = NeAACDecDecodeDummy;
 #  ifdef _WIN32
     hFaaDlib = LoadLibrary(TEXT("libfaad2.dll"));
     if(hFaaDlib)
@@ -923,13 +942,18 @@ CAudioSourceDecoder::CAudioSourceDecoder()
         NeAACDecDecode = (NeAACDecDecode_t*)dlsym(hFaaDlib,"NeAACDecDecode");
     }
 #  endif
+    if(NeAACDecInitDRM == NULL) // Might be non-DRM version of FAAD2
+    {
+        NeAACDecInitDRM = NeAACDecInitDRMDummy;
+    }
 # endif
 	/* Open AACEncoder instance */
 	HandleAACDecoder = NeAACDecOpen();
 
 	/* Decoder MUST be initialized at least once, therefore do it here in the
 	   constructor with arbitrary values to be sure that this is satisfied */
-	NeAACDecInitDRM(&HandleAACDecoder, 24000, DRMCH_MONO);
+    if(HandleAACDecoder)
+        NeAACDecInitDRM(&HandleAACDecoder, 24000, DRMCH_MONO);
 #endif
 }
 

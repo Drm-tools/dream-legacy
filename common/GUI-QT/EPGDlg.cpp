@@ -31,7 +31,7 @@
 #include <QRegExp>
 #include <ctime>
 
-EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
+EPGDlg::EPGDlg(ReceiverInterface& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, Qt::WFlags f)
 :QDialog(parent, name, modal, f),Ui_EPGDlg(),BitmCubeGreen(),
 date(QDate::currentDate()),do_updates(false),

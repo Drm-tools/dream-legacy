@@ -28,6 +28,14 @@
 
 #include "AudioSourceEncoder.h"
 
+CAudioSourceEncoderImplementation::CAudioSourceEncoderImplementation()
+	 : bUsingTextMessage(false)
+#ifdef HAVE_LIBFAAC
+		, hEncoder(NULL)
+#endif
+{
+}
+
 void
 CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
 													   *pvecInputData,

@@ -30,13 +30,13 @@
 //Added by qt3to4:
 #include <QShowEvent>
 #include <QHideEvent>
+#include <../ReceiverInterface.h>
 
 #include "ui_ReceiverSettingsDlg.h"
 
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
-class CDRMReceiver;
 
 class ReceiverSettingsDlg : public QDialog, public Ui_ReceiverSettingsDlg
 {
@@ -44,7 +44,8 @@ class ReceiverSettingsDlg : public QDialog, public Ui_ReceiverSettingsDlg
 
 public:
 
-	ReceiverSettingsDlg(CDRMReceiver& NRx, CSettings& NSettings, QWidget* parent = 0,
+	ReceiverSettingsDlg(ReceiverInterface& NRx, CSettings& NSettings,
+        QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~ReceiverSettingsDlg();
 
@@ -59,7 +60,7 @@ protected:
 
 	void			AddWhatsThisHelp();
 
-	CDRMReceiver&	Receiver;
+	ReceiverInterface&	Receiver;
 	CSettings&		Settings;
 	bool			loading;
 	Q3ListViewItem*  no_rig;

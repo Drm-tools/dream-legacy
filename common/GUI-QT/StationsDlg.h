@@ -29,6 +29,7 @@
 #ifndef _STATIONS_DLG_H
 #define _STATIONS_DLG_H
 
+#include <QMutex>
 #include <q3header.h>
 #include <q3listview.h>
 #include <qpixmap.h>
@@ -56,9 +57,9 @@
 #include <QHideEvent>
 
 #include "ui_StationsDlg.h"
-#include "../DrmReceiver.h"
 #include "../util/Vector.h"
 #include "../util/Settings.h"
+#include "../ReceiverInterface.h"
 
 
 /* Definitions ****************************************************************/
@@ -218,7 +219,7 @@ class StationsDlg : public QDialog, public Ui_StationsDlg
 
 public:
 
-	StationsDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+	StationsDlg(ReceiverInterface&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = false, Qt::WFlags f = 0);
 	virtual ~StationsDlg();
 	/* dummy assignment operator to help MSVC8 */
@@ -247,7 +248,7 @@ protected:
 	void			AddUpdateDateTime();
 	void			SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM);
 
-	CDRMReceiver&				DRMReceiver;
+	ReceiverInterface&		DRMReceiver;
 	CSettings&					Settings;
 
 	CDRMSchedule				DRMSchedule;
@@ -266,13 +267,13 @@ protected:
 	bool					bTuningInProgress;
 	bool					bShowAll;
 	bool					bReInitOnFrequencyChange;
-	Q3UrlOperator				UrlUpdateSchedule;
-	Q3PopupMenu*					pViewMenu;
-	Q3PopupMenu*					pPreviewMenu;
-	Q3PopupMenu*					pUpdateMenu;
+	Q3UrlOperator			UrlUpdateSchedule;
+	Q3PopupMenu*			pViewMenu;
+	Q3PopupMenu*			pPreviewMenu;
+	Q3PopupMenu*			pUpdateMenu;
 
-	vector<MyListViewItem*>		vecpListItems;
-	QMutex						ListItemsMutex;
+	vector<MyListViewItem*>	vecpListItems;
+	QMutex					ListItemsMutex;
 
 public slots:
 	void OnTimerList();

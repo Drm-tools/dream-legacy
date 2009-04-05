@@ -51,24 +51,26 @@
 # include <QMutex>
 #endif
 
+enum EType {AT_NO_AGC, AT_SLOW, AT_MEDIUM, AT_FAST};
+
+enum ENoiRedType {NR_OFF, NR_LOW, NR_MEDIUM, NR_HIGH};
+
+enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL}; // Acquisition state of receiver
+
 /* CS: Coding Scheme */
 enum ECodScheme { CS_1_SM, CS_2_SM, CS_3_SM, CS_3_HMSYM, CS_3_HMMIX };
 
 /* CT: Channel Type */
 enum EChanType { CT_MSC, CT_SDC, CT_FAC };
 
-enum ETypeIntFreq
-{ FLINEAR, FDFTFILTER, FWIENER };
-enum ETypeIntTime
-{ TLINEAR, TWIENER };
-enum ETypeSNREst
-{ SNR_FAC, SNR_PIL };
-enum ETypeRxStatus
-{ NOT_PRESENT, CRC_ERROR, DATA_ERROR, RX_OK };
-	/* RM: Receiver mode (analog or digital demodulation) */
+enum ETypeIntFreq { FLINEAR, FDFTFILTER, FWIENER };
+enum ETypeIntTime { TLINEAR, TWIENER };
+enum ETypeSNREst { SNR_FAC, SNR_PIL };
+enum ETypeRxStatus { NOT_PRESENT, CRC_ERROR, DATA_ERROR, RX_OK };
+enum ETypeTiSyncTrac {TSENERGY, TSFIRSTPEAK};
 
-	/* Acquisition state of receiver */
-enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
+
+	/* RM: Receiver mode (analog or digital demodulation) */
 
 enum EStreamType { SF_AUDIO, SF_DATA };
 

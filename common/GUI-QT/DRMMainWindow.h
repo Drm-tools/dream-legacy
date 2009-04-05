@@ -28,7 +28,6 @@
 
 
 #include "../GlobalDefinitions.h"
-#include "../DrmReceiver.h"
 # include "Loghelper.h"
 #include "ui_DRMMainWindow.h"
 #include "DialogUtil.h"
@@ -44,7 +43,7 @@ class DRMMainWindow : public QMainWindow, public Ui_DRMMainWindow
 	Q_OBJECT
 
 public:
-	DRMMainWindow(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+	DRMMainWindow(ReceiverInterface&, CSettings&, QWidget* parent = 0,
 	const char* name = 0,	Qt::WFlags f = 0);
 	virtual ~DRMMainWindow();
 	/* dummy assignment operator to help MSVC8 */
@@ -53,7 +52,7 @@ public:
 
 protected:
 
-	CDRMReceiver&	Receiver;
+	ReceiverInterface&	Receiver;
 	CSettings&		Settings;
 
 	QMainWindow*    jlViewer;

@@ -30,22 +30,20 @@
 #define _SYSTEMEVALUATIONDLG_H
 
 #include "ui_SystemEvalDlg.h"
-#include "../Parameter.h"
+#include "../ReceiverInterface.h"
 #include <QTimer>
 #include <vector>
 
-class CDRMReceiver;
 class CSettings;
 class CGPSReceiver;
 class CDRMPlot;
-class CParameter;
 
 class SystemEvalDlg : public QDialog, public Ui_SystemEvalDlg
 {
 	Q_OBJECT
 
 public:
-	SystemEvalDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+	SystemEvalDlg(ReceiverInterface&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = false, Qt::WFlags f = 0);
 
 	virtual ~SystemEvalDlg();
@@ -75,7 +73,7 @@ protected:
     void InitialiseFrequency();
     void UpdateFrequency();
 
-    CDRMReceiver&   DRMReceiver;
+    ReceiverInterface&   DRMReceiver;
     CSettings&      Settings;
     CGPSReceiver*   pGPSReceiver;
     CDRMPlot*       plot;

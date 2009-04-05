@@ -37,7 +37,7 @@
 #include "AFPacketGenerator.h"
 
 class CPacketSink;
-class CDRMReceiver;
+class ReceiverInterface;
 class CTagPacketGenerator;
 
 class CRSIPreset
@@ -55,7 +55,7 @@ public:
 
 	/* provide a pointer to the receiver for incoming RCI commands */
 	/* leave it set to NULL if you want incoming commands to be ignored */
-	void SetReceiver(CDRMReceiver *pReceiver);
+	void SetReceiver(ReceiverInterface *pReceiver);
 
 	/* Set the profile for this subscriber - could be different for different subscribers */
 	void SetProfile(const char c);
@@ -90,7 +90,7 @@ protected:
 	map<int, CRSIPreset> mapPresets;
 
 private:
-	CDRMReceiver *pDRMReceiver;
+	ReceiverInterface *pDRMReceiver;
 	CAFPacketGenerator AFPacketGenerator;
 
 	bool bUseAFCRC;

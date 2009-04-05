@@ -30,10 +30,7 @@
 #define _SLIDESHOWVIEWER_H
 
 #include "ui_SlideShowViewer.h"
-#include <string>
-#include <vector>
-
-class CDRMReceiver;
+#include "../ReceiverInterface.h"
 class CSettings;
 
 class SlideShowViewer : public QMainWindow, Ui_SlideShowViewer
@@ -41,7 +38,7 @@ class SlideShowViewer : public QMainWindow, Ui_SlideShowViewer
 	Q_OBJECT
 
 public:
-	SlideShowViewer(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+	SlideShowViewer(ReceiverInterface&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, Qt::WFlags f = 0);
 	virtual ~SlideShowViewer();
 
@@ -51,7 +48,7 @@ protected:
     void                    UpdateButtons();
     QTimer Timer;
 	std::string             strCurrentSavePath;
-	CDRMReceiver&           receiver;
+	ReceiverInterface&  receiver;
 	CSettings&              settings;
 	std::vector<QPixmap>    vecImages;
 	std::vector<QString>    vecImageNames;

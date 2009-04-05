@@ -44,10 +44,10 @@
 #include <QHideEvent>
 
 #include "ui_LiveScheduleDlg.h"
-#include "../DrmReceiver.h"
-#include "../util/Settings.h"
 #include "DialogUtil.h"
-#include <vector>
+#include "../util/Settings.h"
+#include "../Parameter.h"
+#include <../ReceiverInterface.h>
 
 /* Definitions ****************************************************************/
 /* Define the timer interval of updating the list view */
@@ -146,7 +146,7 @@ class LiveScheduleDlg : public QDialog, public Ui_LiveScheduleDlg
 
 public:
 
-	LiveScheduleDlg(CDRMReceiver&, CSettings& s,
+	LiveScheduleDlg(ReceiverInterface&, CSettings& s,
 		QWidget* parent = 0,
 		const char* name = 0, bool modal = false, Qt::WFlags f = 0);
 	virtual ~LiveScheduleDlg();
@@ -168,7 +168,7 @@ protected:
 	QString			ExtractDaysFlagString(const int iDayCode);
 	QString			ExtractTime(const CAltFreqSched& schedule);
 
-	CDRMReceiver&				DRMReceiver;
+	ReceiverInterface&		DRMReceiver;
 	CSettings&                  settings;
 	CDRMLiveSchedule			DRMSchedule;
 	QPixmap						BitmCubeGreen;

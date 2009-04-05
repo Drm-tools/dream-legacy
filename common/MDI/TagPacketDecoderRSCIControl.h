@@ -32,7 +32,7 @@
 #include "TagPacketDecoder.h"
 #include "RSCITagItemDecoders.h"
 
-class CDRMReceiver;
+class ReceiverInterface;
 class CRSISubscriber;
 
 class CTagPacketDecoderRSCIControl : public CTagPacketDecoder
@@ -43,12 +43,12 @@ public:
 
 	// Sets the object's pointer to the receiver which it will send commands to.
 	// This MUST be called soon after construction.
-	void SetReceiver(CDRMReceiver *pReceiver);
+	void SetReceiver(ReceiverInterface *pReceiver);
 	void SetSubscriber(CRSISubscriber *pSubscriber);
 
 private:
 	// Decoders send settings to the receiver
-	CDRMReceiver * pDRMReceiver;
+	ReceiverInterface * pDRMReceiver;
 
 	// Decoders for each of the tag items in the vocabulary
 	CTagItemDecoderCact			TagItemDecoderCact;

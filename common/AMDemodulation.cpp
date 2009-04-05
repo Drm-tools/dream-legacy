@@ -420,7 +420,7 @@ CAMDemodulation::GetFilterBWHz(EModulationType eType)
 	return v;
 }
 
-void CAMDemodulation::SetAGCType(const CAGC::EType eNewType)
+void CAMDemodulation::SetAGCType(const EType eNewType)
 {
 	/* Lock resources */
 	Lock();

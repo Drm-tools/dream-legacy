@@ -31,7 +31,7 @@
 
 
 #include "DialogUtil.h"
-#include "../GlobalDefinitions.h"
+#include "../ReceiverInterface.h"
 #include "../tables/TableAMSS.h"
 #include <QTimer>
 
@@ -45,7 +45,6 @@
 
 /* Classes ********************************************************************/
 class ReceiverSettingsDlg;
-class CDRMReceiver;
 class CSettings;
 class CDRMPlot;
 
@@ -55,14 +54,14 @@ class CAMSSDlg : public QDialog, public Ui_AMSSDlg
 	Q_OBJECT
 
 public:
-	CAMSSDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
+	CAMSSDlg(ReceiverInterface&, CSettings&, QWidget* parent = 0, const char* name = 0,
 		bool modal = false, Qt::WFlags f = 0);
 	/* dummy assignment operator to help MSVC8 */
 	CAMSSDlg& operator=(const CAMSSDlg&)
 	{ throw "should not happen"; return *this;}
 
 protected:
-	CDRMReceiver&	Receiver;
+	ReceiverInterface&	Receiver;
 	CSettings&		Settings;
 
 	QTimer			Timer;
@@ -84,7 +83,7 @@ class AnalogMainWindow : public QMainWindow, public Ui_AnalogMainWindow
 	Q_OBJECT
 
 public:
-	AnalogMainWindow(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+	AnalogMainWindow(ReceiverInterface&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, Qt::WFlags f = 0);
 	/* dummy assignment operator to help MSVC8 */
 	AnalogMainWindow& operator=(const AnalogMainWindow&)
@@ -93,7 +92,7 @@ public:
 	void 			UpdatePlotStyle();
 
 protected:
-	CDRMReceiver&	Receiver;
+	ReceiverInterface&	Receiver;
 	CSettings&		Settings;
 	ReceiverSettingsDlg* pReceiverSettingsDlg;
 	QDialog*        stationsDlg;

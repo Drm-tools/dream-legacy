@@ -84,10 +84,6 @@ public:
 		bInterfConsid(false) {}
 	virtual ~CChannelEstimation() {}
 
-	enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};
-	enum ETypeIntTime {TLINEAR, TWIENER};
-	enum ETypeSNREst {SNR_FAC, SNR_PIL};
-
 	CTimeLinear* GetTimeLinear() {return &TimeLinear;}
 	CTimeWiener* GetTimeWiener() {return &TimeWiener;}
 	CTimeSyncTrack* GetTimeSyncTrack() {return &TimeSyncTrack;}

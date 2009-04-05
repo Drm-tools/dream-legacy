@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "DRMMainWindow.h"
+#include "../DrmReceiver.h"
 #include "ReceiverSettingsDlg.h"
 #include "LiveScheduleDlg.h"
 #include "StationsDlg.h"
@@ -40,7 +41,7 @@
 #include <iostream>
 
 /* Implementation *************************************************************/
-DRMMainWindow::DRMMainWindow(CDRMReceiver& NDRMR, CSettings& NSettings,
+DRMMainWindow::DRMMainWindow(ReceiverInterface& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, Qt::WFlags f)
 	:QMainWindow(parent, name, f),  Ui_DRMMainWindow(),
 	Receiver(NDRMR), Settings(NSettings),
@@ -716,9 +717,9 @@ void DRMMainWindow::closeEvent(QCloseEvent* ce)
     if(quitWanted)
     {
         /* request that the working thread stops */
-        Receiver.Stop();
-        (void)Receiver.wait(5000);
-        if(!Receiver.isFinished())
+        ((CDRMReceiver*)&Receiver)->Stop();
+        (void)((CDRMReceiver*)&Receiver)->wait(5000);
+        if(!((CDRMReceiver*)&Receiver)->isFinished())
         {
             QMessageBox::critical(this, "Dream", "Exit\n",
                 "Termination of working thread failed");

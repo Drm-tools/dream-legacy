@@ -278,24 +278,24 @@ CDRMReceiver::GetAnalogPLLPhase(CReal& rPhaseOut)
 
 
 void
-CDRMReceiver::SetAnalogAGCType(const CAGC::EType eNewType)
+CDRMReceiver::SetAnalogAGCType(const EType eNewType)
 {
 	AMDemodulation.SetAGCType(eNewType);
 }
 
-CAGC::EType
+EType
 CDRMReceiver::GetAnalogAGCType()
 {
 	return AMDemodulation.GetAGCType();
 }
 
 void
-CDRMReceiver::SetAnalogNoiseReductionType(const CAMDemodulation::ENoiRedType eNewType)
+CDRMReceiver::SetAnalogNoiseReductionType(const ENoiRedType eNewType)
 {
 	AMDemodulation.SetNoiRedType(eNewType);
 }
 
-CAMDemodulation::ENoiRedType
+ENoiRedType
 CDRMReceiver::GetAnalogNoiseReductionType()
 {
 	return AMDemodulation.GetNoiRedType();
@@ -1542,9 +1542,9 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	Parameters.sDataFilesDirectory = sDataFilesDirectory;
 
 	/* Sync */
-	SetFreqInt(CChannelEstimation::ETypeIntFreq(s.Get("Receiver", "frequencyinterpolation", int(CChannelEstimation::FWIENER))));
-	SetTimeInt(CChannelEstimation::ETypeIntTime(s.Get("Receiver", "timeinterpolation", int(CChannelEstimation::TWIENER))));
-	SetTiSyncTracType(CTimeSyncTrack::ETypeTiSyncTrac(s.Get("Receiver", "tracking", 0)));
+	SetFreqInt(ETypeIntFreq(s.Get("Receiver", "frequencyinterpolation", int(FWIENER))));
+	SetTimeInt(ETypeIntTime(s.Get("Receiver", "timeinterpolation", int(TWIENER))));
+	SetTiSyncTracType(ETypeTiSyncTrac(s.Get("Receiver", "tracking", 0)));
 
 	/* Receiver ------------------------------------------------------------- */
 
@@ -1645,10 +1645,10 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	/* AM Parameters */
 
 	/* AGC */
-	AMDemodulation.SetAGCType((CAGC::EType)s.Get("AM Demodulation", "agc", 0));
+	AMDemodulation.SetAGCType(EType(s.Get("AM Demodulation", "agc", 0)));
 
 	/* noise reduction */
-	AMDemodulation.SetNoiRedType((CAMDemodulation::ENoiRedType)s.Get("AM Demodulation", "noisered", 0));
+	AMDemodulation.SetNoiRedType(ENoiRedType(s.Get("AM Demodulation", "noisered", 0)));
 
 	/* pll enabled/disabled */
 	AMDemodulation.EnablePLL(s.Get("AM Demodulation", "enablepll", 0));

@@ -29,10 +29,10 @@
 #include "JLViewer.h"
 #include "jlbrowser.h"
 #include "../util/Settings.h"
-#include "../DrmReceiver.h"
+#include <../datadecoding/DataDecoder.h>
 #include <QFontDialog>
 
-JLViewer::JLViewer(CDRMReceiver& rec, CSettings& s, QWidget* parent,
+JLViewer::JLViewer(ReceiverInterface& rec, CSettings& s, QWidget* parent,
 		const char* name, Qt::WFlags f):
 		QMainWindow(parent, name, f), Ui_JLViewer(), Timer(),
 		receiver(rec), settings(s), decoderSet(false)
