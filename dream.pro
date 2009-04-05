@@ -231,6 +231,7 @@ common/Parameter.h   \
 common/resample/Resample.h   \
 common/resample/ResampleFilter.h   \
 common/SDC/SDC.h   \
+common/ReceiverInterface.h   \
 common/selectioninterface.h   \
 common/soundinterface.h   \
 common/sound.h   \
