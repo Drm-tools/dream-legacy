@@ -462,6 +462,9 @@
             </disabled>
            </palette>
           </property>
+          <property name="styleSheet" >
+           <string notr="true" >background: black</string>
+          </property>
           <property name="frameShape" >
            <enum>QFrame::NoFrame</enum>
           </property>

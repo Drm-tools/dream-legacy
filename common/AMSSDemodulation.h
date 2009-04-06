@@ -31,7 +31,6 @@
 
 #include "util/ReceiverModul.h"
 #include "matlib/Matlib.h"
-#include "resample/Resample.h"
 #include "AMDemodulation.h"
 
 #define AMSS_PLL_LOOP_GAIN						((CReal) 0.00015)
@@ -234,7 +233,7 @@ protected:
 	void			DecodeBlock2(CVector<_BINARY>& bBits);
 
 	void			ApplyOffsetWord(CVector<_BINARY>& bBlockBits, CVector<_BINARY>& offset);
-	bool		CheckCRC(CVector<_BINARY>& bBits);
+	bool		    CheckCRC(CVector<_BINARY>& bBits);
 
 	void			ResetStatus(CParameter& ReveiverParam);
 

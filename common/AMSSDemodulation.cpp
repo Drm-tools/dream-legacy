@@ -27,10 +27,9 @@
  *
 \******************************************************************************/
 
-#include "AMDemodulation.h"
 #include "AMSSDemodulation.h"
-
 #include <fstream>
+#include <iostream>
 using namespace std;
 
 /* Implementation *************************************************************/
@@ -275,7 +274,6 @@ void CAMSSExtractBits::InitInternal(CParameter& ReceiverParam)
 	/* The output buffer is a cyclic buffer, we have to specify the total
 	   buffer size */
 	iMaxOutputBlockSize = (iSymbolBlockSize/AMSS_12kHz_SAMPLES_PER_BIT) + 2;
-
 	iInputBlockSize = iSymbolBlockSize;
 	iOutputBlockSize = 0;
 
@@ -358,7 +356,6 @@ void CAMSSDecode::ProcessDataInternal(CParameter& ReceiverParam)
 			iIntakeBufferPos = AMSS_BLOCK_SIZE_BITS-1;
 		}
 	}
-
 
 	if (iPercentageDataEntityGroupComplete >= 100)
 	{
@@ -488,12 +485,13 @@ int CAMSSDecode::DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam)
 	bool bBlock1Test = CheckCRC(bBitsBlock1);
 	bool bBlock2Test = CheckCRC(bBitsBlock2);
 
+    iCurrentBlock = 0;
 	if (bBlock1Test)
 		iCurrentBlock =  1;
 	else if (bBlock2Test)
 		iCurrentBlock = 2;
 
-	if (bBlock1Test || bBlock2Test)
+	if (iCurrentBlock != 0)
 	{
 		//ReceiverParam.Service[0].iServiceID++;
 		for (i=0; i < AMSS_BLOCK_SIZE_BITS; i++)
@@ -798,8 +796,6 @@ bool CAMSSDecode::CheckCRC(CVector<_BINARY>& bBits)
 	else
 		return false;
 }
-
-
 
 void CAMSSDecode::ApplyOffsetWord(CVector<_BINARY>& bBlockBits, CVector<_BINARY>& bOffset)
 {

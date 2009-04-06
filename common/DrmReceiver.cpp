@@ -48,6 +48,9 @@
 #include "sound/soundfile.h"
 #include <fstream>
 
+// TODO - does this need to be a qthread anymore ?
+// TODO - lock/unlock the Parameter object more consistantly
+
 const int
 	CDRMReceiver::MAX_UNLOCKED_COUNT = 2;
 
@@ -322,11 +325,9 @@ CDRMReceiver::Run()
 	switch(RxEvent)
 	{
 	    case ChannelReconfiguration:
-	 cerr << "RxEvent ChannelReconfiguration" << endl;
             InitReceiverMode(eModulation);
             break;
 	    case ServiceReconfiguration:
-	 cerr << "RxEvent ServiceReconfiguration" << endl;
             /* Reinitialise MSC Demultiplexer */
             Parameters.MSCParameters = Parameters.NextConfig.MSCParameters;
             Parameters.AudioParam = Parameters.NextConfig.AudioParam;
@@ -532,7 +533,7 @@ CDRMReceiver::Run()
 		}
 	}
 	/* Play and/or save the audio */
-	if ((eModulation != DRM) || (iAudioStreamID != STREAM_ID_NOT_USED))
+	if (iAudioStreamID != STREAM_ID_NOT_USED)
 	{
 		if (WriteData.WriteData(Parameters, AudSoDecBuf))
 		{
@@ -792,8 +793,7 @@ CDRMReceiver::DecodeAM(bool& bEnoughData)
 	}
 
 	/* AMSS bit extraction */
-	if (AMSSExtractBits.
-		ProcessData(Parameters, AMSSResPhaseBuf, AMSSBitsBuf))
+	if (AMSSExtractBits.ProcessData(Parameters, AMSSResPhaseBuf, AMSSBitsBuf))
 	{
 		bEnoughData = true;
 	}
@@ -877,6 +877,8 @@ CDRMReceiver::InitReceiverMode(EModulationType eModulation)
 
 		/* Tell the SDC decoder that it's AMSS to decode (no AFS index) */
 		UtilizeSDCData.SetSDCType(SDC_AMSS);
+		/* set stream */
+		iAudioStreamID = 0;
 		break;
 	case DRM:
 		UtilizeSDCData.SetSDCType(SDC_DRM);
@@ -900,7 +902,6 @@ CDRMReceiver::InitReceiverMode(EModulationType eModulation)
 
 	if (upstreamRSCI.GetOutEnabled() == true)
 	{
-	    // TODO - is this enough ?
 		upstreamRSCI.SetReceiverMode(eModulation);
 	}
 }
@@ -955,7 +956,6 @@ CDRMReceiver::Start()
 void
 CDRMReceiver::Stop()
 {
-    cerr << "DRMReceiver stop" << endl;
 	bRunning = false;
 }
 

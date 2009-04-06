@@ -42,14 +42,6 @@
 #include "DRMPlot.h"
 #include "../AMSSDemodulation.h"
 
-// TODO improve layout (simplify?)
-// TODO - check audio
-/*
-- AM mode- looks OK but I do not get any audio
-- AM window- some problems with the size, can´t see all buttons
-- AMSS window, background colour for label area missing
-*/
-
 /* Implementation *************************************************************/
 AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, Qt::WFlags f):
@@ -83,7 +75,6 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnSwitchToDRM()));
 	connect(actionAM, SIGNAL(triggered()), this, SLOT(OnNewAMAcquisition()));
 	connect(actionReceiver_Settings, SIGNAL(triggered()), pReceiverSettingsDlg, SLOT(show()));
-
 
 	/* Stations window */
 	stationsDlg = new StationsDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
@@ -137,13 +128,11 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	connect(CheckBoxAutoFreqAcq, SIGNAL(clicked()), this, SLOT(OnCheckAutoFreqAcq()));
 	connect(CheckBoxOnBoardDemod, SIGNAL(clicked()), this, SLOT(OnCheckOnBoardDemod()));
 
-
 	connect(PLLButton, SIGNAL(clicked ()), this, SLOT(OnCheckPLL()));
 
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 	connect(&TimerPLLPhaseDial, SIGNAL(timeout()), this, SLOT(OnTimerPLLPhaseDial()));
-
 
 	/* Don't activate real-time timers, wait for show event */
     Timer.stop();
@@ -154,14 +143,12 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 void AnalogMainWindow::showEvent(QShowEvent*)
 {
 	OnTimer();
-	OnTimerPLLPhaseDial();
 
  	/* default close action is to exit */
     quitWanted = true;
 
-	/* Activate real-time timers */
+	/* Activate real-time timer */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
-	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 
 	/* Open AMSS window */
 	if (Settings.Get("AnalogGUI", "AMSSvisible", false) == true)
@@ -174,6 +161,8 @@ void AnalogMainWindow::showEvent(QShowEvent*)
 
 	if(Settings.Get("AnalogGUI", "AFSvisible", false))
         liveScheduleDlg->show();
+
+    PLLButton->setChecked(Settings.Get("AnalogGUI", "pll", true));
 
     plot->start();
 
@@ -193,6 +182,8 @@ void AnalogMainWindow::hideEvent(QHideEvent*)
 	stationsDlg->hide();
 	Settings.Put("AnalogGUI", "AFSvisible", liveScheduleDlg->isVisible());
 	liveScheduleDlg->hide();
+
+    Settings.Put("AnalogGUI", "pll", PLLButton->isChecked());
 
     plot->stop();
 
@@ -331,7 +322,7 @@ void AnalogMainWindow::UpdateControls()
 	CheckBoxAutoFreqAcq->
 		setChecked(Receiver.AnalogAutoFreqAcqEnabled());
 
-    PhaseDial->setEnabled(Receiver.AnalogPLLEnabled());
+    PLLButton->setChecked(Receiver.AnalogPLLEnabled());
 }
 
 void AnalogMainWindow::OnCheckOnBoardDemod()
@@ -392,10 +383,18 @@ void AnalogMainWindow::OnTimer()
 	case NONE:
 		break;
 	}
+	if(!AMSSDlg.isVisible())
+        ButtonAMSS->setChecked(false);
 }
 
 void AnalogMainWindow::OnTimerPLLPhaseDial()
 {
+    if(!Receiver.AnalogPLLEnabled()) // probablly not needed - maybe dangerous ?
+    {
+        PLLButton->setChecked(false);
+        return;
+    }
+
 	CReal rCurPLLPhase;
 
 	if (Receiver.GetAnalogPLLPhase(rCurPLLPhase) == true)
@@ -513,7 +512,20 @@ void AnalogMainWindow::OnCheckAutoFreqAcq()
 void AnalogMainWindow::OnCheckPLL()
 {
 	/* Set parameter in working thread module */
-	Receiver.EnableAnalogPLL(PLLButton->isChecked());
+	if(PLLButton->isChecked())
+	{
+        Receiver.EnableAnalogPLL(true);
+        PhaseDial->setEnabled(true);
+        OnTimerPLLPhaseDial();
+        TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
+	}
+	else
+	{
+        Receiver.EnableAnalogPLL(false);
+        PhaseDial->setEnabled(false);
+        TimerPLLPhaseDial.stop();
+	}
+
 }
 
 void AnalogMainWindow::OnCheckBoxMuteAudio()
@@ -566,9 +578,16 @@ void AnalogMainWindow::OnButtonWaterfall()
 
 void AnalogMainWindow::OnButtonAMSS()
 {
-	/* Open AMSS window and set in foreground */
-	AMSSDlg.show();
-	AMSSDlg.raise();
+    if(ButtonAMSS->isChecked())
+    {
+        /* Open AMSS window and set in foreground */
+        AMSSDlg.show();
+        AMSSDlg.raise();
+    }
+    else
+    {
+        AMSSDlg.hide();
+    }
 }
 
 void AnalogMainWindow::OnNewAMAcquisition()
@@ -805,25 +824,24 @@ void CAMSSDlg::showEvent(QShowEvent*)
 
 void CAMSSDlg::OnTimer()
 {
-	int j;
-
 	CParameter& Parameters = *Receiver.GetParameters();
 	Parameters.Lock();
+	const CService& Service = Parameters.Service[0];
 
 	/* Show label if available */
-	if ((Parameters.Service[0].IsActive()) && (Parameters.Service[0].strLabel != ""))
+	if ((Service.IsActive()) && (Service.strLabel != ""))
 	{
 		/* Service label (UTF-8 encoded string -> convert) */
 		TextAMSSServiceLabel->setText(QString().fromUtf8(
-            Parameters.Service[0].strLabel.c_str()));
+            Service.strLabel.c_str()));
 	}
 	else
 		TextAMSSServiceLabel->setText(tr(""));
 
 	/* Country code */
-	const string strCntryCode = Parameters.Service[0].strCountryCode; /* must be of 2 lowercase chars */
+	const string strCntryCode = Service.strCountryCode; /* must be of 2 lowercase chars */
 
-	if ((Parameters.Service[0].IsActive()) && (!strCntryCode.empty()) && (strCntryCode != "--"))
+	if ((Service.IsActive()) && (!strCntryCode.empty()) && (strCntryCode != "--"))
 	{
 		TextAMSSCountryCode->
 			setText(QString(GetISOCountryName(strCntryCode).c_str()));
@@ -833,15 +851,15 @@ void CAMSSDlg::OnTimer()
 
 	/* SDC Language code */
 
-	if (Parameters.Service[0].IsActive())
+	if (Service.IsActive())
 	{
-		const string strLangCode = Parameters.Service[0].strLanguageCode; /* must be of 3 lowercase chars */
+		const string strLangCode = Service.strLanguageCode; /* must be of 3 lowercase chars */
 
 		if ((!strLangCode.empty()) && (strLangCode != "---"))
 			 TextAMSSLanguage->
 				setText(QString(GetISOLanguageName(strLangCode).c_str()));
 		else
-			TextAMSSLanguage->setText(QString(strTableLanguageCode[Parameters.Service[0].iLanguage].c_str()));
+			TextAMSSLanguage->setText(QString(strTableLanguageCode[Service.iLanguage].c_str()));
 	}
 	else
 		TextAMSSLanguage->setText("");
@@ -914,7 +932,7 @@ void CAMSSDlg::OnTimer()
 			case 1:
 			case 2:
 				/* AM or DRM, freq in kHz */
-				for (j = 0; j < iNumAltFreqs; j++)
+				for (int j = 0; j < iNumAltFreqs; j++)
 				{
 					freqEntry +=
 						QString().setNum((long) Parameters.
@@ -941,7 +959,7 @@ void CAMSSDlg::OnTimer()
 			case 4:
 			case 5:
 				/* 'FM1 frequency' - 87.5 to 107.9 MHz (100 kHz steps) */
-				for (j = 0; j < iNumAltFreqs; j++)
+				for (int j = 0; j < iNumAltFreqs; j++)
 				{
 					freqEntry +=
 						QString().setNum((float) (87.5 + 0.1 * Receiver.
@@ -976,7 +994,7 @@ void CAMSSDlg::OnTimer()
 			case 7:
 			case 8:
 				/* 'FM2 frequency'- 76.0 to 90.0 MHz (100 kHz steps) */
-				for (j = 0; j < iNumAltFreqs; j++)
+				for (int j = 0; j < iNumAltFreqs; j++)
 				{
 					freqEntry +=
 						QString().setNum((float) (76.0 + 0.1 * Receiver.
@@ -1035,7 +1053,7 @@ void CAMSSDlg::OnTimer()
 	TextAMSSAMCarrierMode->setText("");
 
 	if (Receiver.GetAMSSDecode()->GetLockStatus() == CAMSSDecode::NO_SYNC
-	|| Parameters.Service[0].iServiceID == SERV_ID_NOT_USED
+	|| Service.iServiceID == SERV_ID_NOT_USED
 	)
 	{
 		TextAMSSInfo->setText(tr("No AMSS detected"));
@@ -1049,14 +1067,16 @@ void CAMSSDlg::OnTimer()
 		{
 			TextAMSSInfo->setText("");
 
-			TextAMSSLanguage->setText(QString(strTableLanguageCode[Parameters.Service[0].iLanguage].c_str()));
+			TextAMSSLanguage->setText(QString(strTableLanguageCode[Service.iLanguage].c_str()));
 
 			TextAMSSServiceID->setText("ID:" + QString().setNum(
-				(long) Parameters.Service[0].iServiceID, 16).upper());
+				(long) Service.iServiceID, 16).upper());
 
 			TextAMSSAMCarrierMode->setText(QString(strTableAMSSCarrierMode[Parameters.iAMSSCarrierMode].c_str()));
 		}
 	}
+
+	Parameters.Unlock();
 
 	TextDataEntityGroupStatus->setText(Receiver.GetAMSSDecode()->
 		GetDataEntityGroupStatus());
@@ -1069,7 +1089,6 @@ void CAMSSDlg::OnTimer()
 	ProgressBarAMSS->setValue(Receiver.GetAMSSDecode()->
 		GetPercentageDataEntityGroupComplete());
 
-	Parameters.Unlock();
 }
 
 void CAMSSDlg::OnTimerPLLPhaseDial()
