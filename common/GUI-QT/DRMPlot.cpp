@@ -58,6 +58,73 @@ Simone: - waterfall spectrum: could be improved, can´t see much of the signal it
  */
 
 /* Implementation *************************************************************/
+
+
+class WaterfallColorMap: public QwtColorMap
+{
+public:
+    WaterfallColorMap();
+    WaterfallColorMap(const QwtLinearColorMap &);
+    virtual ~WaterfallColorMap();
+    WaterfallColorMap &operator=(const WaterfallColorMap &);
+    virtual QwtColorMap *copy() const;
+virtual QRgb rgb(const QwtDoubleInterval &, double value) const;
+virtual unsigned char colorIndex(const QwtDoubleInterval &, double value) const;
+private:
+};
+
+WaterfallColorMap::WaterfallColorMap():QwtColorMap()
+{
+}
+
+WaterfallColorMap::WaterfallColorMap(const QwtLinearColorMap &m)
+:QwtColorMap(m)
+{
+}
+
+WaterfallColorMap::~WaterfallColorMap()
+{
+}
+
+WaterfallColorMap& WaterfallColorMap::operator=(const WaterfallColorMap &m)
+{
+    *(QwtColorMap*)this = *(QwtColorMap*)&m;
+}
+
+QwtColorMap *WaterfallColorMap::copy() const
+{
+    return new WaterfallColorMap;
+}
+
+QRgb WaterfallColorMap::rgb(const QwtDoubleInterval & interval, double value) const
+{
+    const int iMaxHue = 359; /* Range of "Hue" is 0-359 */
+    const int iMaxSat = 255; /* Range of saturation is 0-255 */
+
+    /* Translate dB-values in colors */
+    const int iCurCol =
+        (int) Round((value - MIN_VAL_INP_SPEC_Y_AXIS_DB) /
+        (MAX_VAL_INP_SPEC_Y_AXIS_DB - MIN_VAL_INP_SPEC_Y_AXIS_DB) *
+        iMaxHue);
+
+		/* Reverse colors and add some offset (to make it look a bit nicer) */
+		const int iColOffset = 60;
+		int iFinalCol = iMaxHue - iColOffset - iCurCol;
+		if (iFinalCol < 0) /* Prevent from out-of-range */
+			iFinalCol = 0;
+
+		/* Also change saturation to get dark colors when low level */
+		const int iCurSat = (int) ((1 - (_REAL) iFinalCol / iMaxHue) * iMaxSat);
+
+		return QColor(iFinalCol, iCurSat, iCurSat, QColor::Hsv).rgb();
+}
+
+unsigned char WaterfallColorMap::colorIndex(const QwtDoubleInterval &, double value) const
+{
+    return 0;
+}
+
+
 class scaleGen
 {
 public:
@@ -1580,6 +1647,8 @@ void CDRMPlot::SetInpSpecWaterf()
     spectrogramData.setHeight(CanvSize.height());
     if(spectrogram == NULL)
         spectrogram = new QwtPlotSpectrogram();
+
+    spectrogram->setColorMap(*new WaterfallColorMap);
     spectrogram->attach(plot);
 }
 
