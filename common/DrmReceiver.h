@@ -264,6 +264,8 @@ public:
 	bool				    GetRigChangeInProgress();
 	CParameter*				GetParameters() {return &Parameters;}
 
+protected:
+
 	void					InitReceiverMode(EModulationType);
 	void					InitsForAllModules(EModulationType);
 	void					InitsForWaveMode();
@@ -275,20 +277,17 @@ public:
 	void					InitsForMSCCodSche();
 	void					InitsForSDCCodSche();
 
-protected:
-
     void                    UpdateHamlibAndSoundInput();
 	bool					doSetFrequency();
 	void					SetInStartMode();
 	void					SetInTrackingMode();
 	void					SetInTrackingModeDelayed();
 	void					Run();
-	void					DemodulateDRM(bool&);
-	void					DecodeDRM(bool&, bool&);
-	void					UtilizeDRM(bool&);
-	void					DemodulateAM(bool&);
-	void					DecodeAM(bool&);
-	void					UtilizeAM(bool&);
+	bool					DemodulateDRM(bool&);
+	bool					UtilizeDRM();
+	bool					DemodulateAM();
+	bool					DemodulateAMSS();
+	bool					UtilizeAMSS();
 	void					DetectAcquiFAC();
 	void					DetectAcquiSymbol();
 	void					saveSDCtoFile();

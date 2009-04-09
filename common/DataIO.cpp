@@ -696,7 +696,6 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 	{
 	case CSDCReceive::SR_OK:
 		ReceiverParam.ReceiveStatus.SDC.SetStatus(RX_OK);
-		cerr << "SDC CRC OK" << endl;
 		break;
 
 	case CSDCReceive::SR_BAD_CRC:
@@ -710,7 +709,6 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 		   show a red light if SDC CRC was not ok */
 		if (bFirstBlock == false)
 			ReceiverParam.ReceiveStatus.SDC.SetStatus(CRC_ERROR);
-		cerr << "SDC CRC BAD" << endl;
 		break;
 
 	case CSDCReceive::SR_BAD_DATA:
