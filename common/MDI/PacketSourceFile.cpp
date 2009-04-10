@@ -32,8 +32,11 @@
 #include <iostream>
 #include <errno.h>
 #include <QTimer>
-#include <QStringlist>
+#include <QStringList>
 
+#ifndef _WIN32
+# include <arpa/inet.h> // for ntohs, ntohl
+#endif
 #ifdef HAVE_LIBPCAP
 # include <pcap.h>
 #endif

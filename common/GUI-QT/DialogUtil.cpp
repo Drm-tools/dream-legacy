@@ -231,7 +231,7 @@ CSoundCardSelMenu::CSoundCardSelMenu(CSelectionInterface* pNS, QWidget* parent) 
 			name += " (has problems on some platforms)";
         QAction* a = new QAction(group);
         a->setText(name);
-        a->setData(i);
+        a->setData(int(i));
         a->setCheckable(true);
         if(i==size_t(iDefaultDev))
             a->setChecked(true);
