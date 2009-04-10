@@ -927,10 +927,10 @@ CAudioSourceDecoder::CAudioSourceDecoder()
     hFaaDlib = LoadLibrary(TEXT("libfaad2.dll"));
     if(hFaaDlib)
     {
-        NeAACDecOpen = (NeAACDecOpen_t)GetProcAddress(hFaaDlib, TEXT("NeAACDecOpen"));
-        NeAACDecInitDRM = (NeAACDecInitDRM_t)GetProcAddress(hFaaDlib, TEXT("NeAACDecInitDRM"));
-        NeAACDecClose = (NeAACDecClose_t)GetProcAddress(hFaaDlib, TEXT("NeAACDecClose"));
-        NeAACDecDecode = (NeAACDecDecode_t)GetProcAddress(hFaaDlib, TEXT("NeAACDecDecode"));
+        NeAACDecOpen = (NeAACDecOpen_t*)GetProcAddress(hFaaDlib, TEXT("NeAACDecOpen"));
+        NeAACDecInitDRM = (NeAACDecInitDRM_t*)GetProcAddress(hFaaDlib, TEXT("NeAACDecInitDRM"));
+        NeAACDecClose = (NeAACDecClose_t*)GetProcAddress(hFaaDlib, TEXT("NeAACDecClose"));
+        NeAACDecDecode = (NeAACDecDecode_t*)GetProcAddress(hFaaDlib, TEXT("NeAACDecDecode"));
     }
 #  else
     hFaaDlib = dlopen("libfaad2.so", RTLD_LOCAL | RTLD_NOW);

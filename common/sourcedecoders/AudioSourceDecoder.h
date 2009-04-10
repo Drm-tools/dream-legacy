@@ -81,10 +81,10 @@ typedef struct NeAACDecFrameInfo
     /* PS: 0: off, 1: on */
     unsigned char ps;
 } NeAACDecFrameInfo;
-    typedef NeAACDecHandle NEAACDECAPI (*NeAACDecOpen_t)(void);
-    typedef char NEAACDECAPI (*NeAACDecInitDRM_t)(NeAACDecHandle*, unsigned long, unsigned char);
-    typedef void NEAACDECAPI (*NeAACDecClose_t)(NeAACDecHandle);
-    typedef void* NEAACDECAPI (*NeAACDecDecode_t)(NeAACDecHandle,NeAACDecFrameInfo*,unsigned char *,unsigned long);
+    typedef NeAACDecHandle NEAACDECAPI (NeAACDecOpen_t)(void);
+    typedef char NEAACDECAPI (NeAACDecInitDRM_t)(NeAACDecHandle*, unsigned long, unsigned char);
+    typedef void NEAACDECAPI (NeAACDecClose_t)(NeAACDecHandle);
+    typedef void* NEAACDECAPI (NeAACDecDecode_t)(NeAACDecHandle,NeAACDecFrameInfo*,unsigned char *,unsigned long);
 # else
 #  include "neaacdec.h"
 # endif
@@ -255,10 +255,10 @@ protected:
 #  else
     void* hFaaDlib;
 #  endif
-    NeAACDecOpen_t NeAACDecOpen;
-    NeAACDecInitDRM_t NeAACDecInitDRM;
-    NeAACDecClose_t NeAACDecClose;
-    NeAACDecDecode_t NeAACDecDecode;
+    NeAACDecOpen_t *NeAACDecOpen;
+    NeAACDecInitDRM_t *NeAACDecInitDRM;
+    NeAACDecClose_t *NeAACDecClose;
+    NeAACDecDecode_t *NeAACDecDecode;
 # endif
 #endif
 
