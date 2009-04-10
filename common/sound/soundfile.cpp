@@ -284,7 +284,7 @@ CSoundFileOut::SetDev(const string& s)
 }
 
 void
-CSoundFileOut::Init(int iNewBufferSize, bool bNewBlocking, int iChannels)
+CSoundFileOut::Init(int, bool, int iChannels)
 {
 	string s = files[dev];
 	string ext;

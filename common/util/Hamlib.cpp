@@ -34,6 +34,7 @@
 #include <iostream>
 #include "../Parameter.h"
 #if defined(_WIN32)
+# define NOMINMAX
 # ifdef HAVE_SETUPAPI
 #  ifndef INITGUID
 #   define INITGUID 1
@@ -354,7 +355,7 @@ string CHamlib::GetComPort() const
 	return m->second.get_config("rig_pathname");
 }
 
-int CHamlib::level(RIG* rig, const struct confparams *parm, rig_ptr_t data)
+int CHamlib::level(RIG* rig, const struct confparams *, rig_ptr_t data)
 {
 	CHamlib & Hamlib = *((CHamlib *) data);
 	(void)rig;
@@ -362,7 +363,7 @@ int CHamlib::level(RIG* rig, const struct confparams *parm, rig_ptr_t data)
 	return 1;					/* !=0, we want them all! */
 }
 
-int CHamlib::parm(RIG* rig, const struct confparams *parm, rig_ptr_t data)
+int CHamlib::parm(RIG* rig, const struct confparams *, rig_ptr_t data)
 {
 	CHamlib & Hamlib = *((CHamlib *) data);
 	(void)rig;
@@ -370,7 +371,7 @@ int CHamlib::parm(RIG* rig, const struct confparams *parm, rig_ptr_t data)
 	return 1;					/* !=0, we want them all! */
 }
 
-int CHamlib::token(const struct confparams *parm, rig_ptr_t data)
+int CHamlib::token(const struct confparams *, rig_ptr_t data)
 {
 	CHamlib & Hamlib = *((CHamlib *) data);
 	(void)Hamlib;

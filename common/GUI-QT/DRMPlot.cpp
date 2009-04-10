@@ -89,6 +89,7 @@ WaterfallColorMap::~WaterfallColorMap()
 WaterfallColorMap& WaterfallColorMap::operator=(const WaterfallColorMap &m)
 {
     *(QwtColorMap*)this = *(QwtColorMap*)&m;
+	return *this;
 }
 
 QwtColorMap *WaterfallColorMap::copy() const
@@ -96,7 +97,7 @@ QwtColorMap *WaterfallColorMap::copy() const
     return new WaterfallColorMap;
 }
 
-QRgb WaterfallColorMap::rgb(const QwtDoubleInterval & interval, double value) const
+QRgb WaterfallColorMap::rgb(const QwtDoubleInterval &, double value) const
 {
     const int iMaxHue = 359; /* Range of "Hue" is 0-359 */
     const int iMaxSat = 255; /* Range of saturation is 0-255 */
@@ -119,7 +120,7 @@ QRgb WaterfallColorMap::rgb(const QwtDoubleInterval & interval, double value) co
 		return QColor(iFinalCol, iCurSat, iCurSat, QColor::Hsv).rgb();
 }
 
-unsigned char WaterfallColorMap::colorIndex(const QwtDoubleInterval &, double value) const
+unsigned char WaterfallColorMap::colorIndex(const QwtDoubleInterval&, double) const
 {
     return 0;
 }
@@ -853,14 +854,16 @@ void CDRMPlot::SetData(QwtPlotCurve* curve, vector<_COMPLEX>& veccData)
 {
 	const int iPoints = veccData.size();
 	/* Copy data from vector into a temporary array */
-	double pdX[iPoints];
-	double pdY[iPoints];
+	double *pdX = new double[iPoints];
+	double *pdY = new double[iPoints];
 	for (int i = 0; i < iPoints; i++)
 	{
 		pdX[i] = veccData[i].real();
 		pdY[i] = veccData[i].imag();
 	}
 	curve->setData(pdX, pdY, iPoints);
+	delete[] pdX;
+	delete[] pdY;
 }
 
 void CDRMPlot::SetAvIR()
@@ -1129,7 +1132,7 @@ void CDRMPlot::SetFreqSamOffsHist()
     // fixed X-axis
 	Parameters.Lock();
 	/* Duration of OFDM symbol */
-	const _REAL rTs = GetSymbolDuration();
+	//const _REAL rTs = GetSymbolDuration(); TODO ?
 	Parameters.Unlock();
 }
 

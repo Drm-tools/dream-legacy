@@ -862,6 +862,7 @@ bool CSDCReceive::DataEntityType6(CVector<_BINARY>* pbiData,
 		/* If version flag has changed, delete all data for this entity type and save flag */
 		bType7ListVersion = bVersion;
 	}
+	return false;
 }
 
 /******************************************************************************\
@@ -1493,6 +1494,7 @@ bool CSDCReceive::DataEntityType13(CVector<_BINARY>* pbiData, const int iLengthO
 							 CParameter&, const bool)
 {
     pbiData->Separate(iLengthOfBody * 8 + 4); // TODO
+	return true; // not implemented
 }
 
 /******************************************************************************\
@@ -1502,4 +1504,5 @@ bool CSDCReceive::DataEntityType14(CVector<_BINARY>* pbiData, const int iLengthO
 							 CParameter&, const bool)
 {
     pbiData->Separate(iLengthOfBody * 8 + 4); // TODO
+	return true; // not implemented
 }

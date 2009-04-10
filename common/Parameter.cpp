@@ -261,6 +261,7 @@ CMSCParameters& CMSCParameters::operator=(const CMSCParameters& p)
 {
     ProtectionLevel = p.ProtectionLevel;
     Stream = p.Stream;
+	return *this;
 }
 
 bool CMSCParameters::operator==(const CMSCParameters& p) const

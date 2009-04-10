@@ -669,7 +669,7 @@ void CDIIn::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16_t)
 		queue.Put(vecbydata);
 }
 
-void CDIIn::ProcessData(CParameter& Parameter, CVectorEx<_BINARY>& vecOutputData, int& iOutputBlockSize)
+void CDIIn::ProcessData(CParameter&, CVectorEx<_BINARY>& vecOutputData, int& iOutputBlockSize)
 {
 	if(source)
         source->Poll(); // nothing for QT sockets, vital for Pacer driven files
@@ -740,7 +740,7 @@ void CUpstreamDI::SetService(int iServiceID)
 }
 
 void
-CUpstreamDI::InitInternal(CParameter& Parameter)
+CUpstreamDI::InitInternal(CParameter&)
 {
 	iInputBlockSize = 1; /* anything is enough but not zero */
 	iMaxOutputBlockSize = 2048*BITS_BINARY; /* bigger than an ethernet packet */
@@ -753,7 +753,7 @@ CUpstreamDI::ProcessDataInternal(CParameter& Parameter)
 }
 
 void
-CMDIIn::InitInternal(CParameter& Parameter)
+CMDIIn::InitInternal(CParameter&)
 {
 	//outputs[0].iBlockSize = 1; /* packet */
 	iMaxOutputBlockSize = 1500*BITS_BINARY;
@@ -761,7 +761,7 @@ CMDIIn::InitInternal(CParameter& Parameter)
 }
 
 void
-CMDIIn::ProcessDataInternal(CParameter& Parameter)
+CMDIIn::ProcessDataInternal(CParameter&)
 {
 	size_t i;
 	vector<_BYTE> vecbydata;

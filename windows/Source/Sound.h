@@ -30,6 +30,7 @@
 #define AFX_SOUNDIN_H__9518A621_7F78_11D3_8C0D_EEBF182CF549__INCLUDED_
 
 #include "../../common/soundinterface.h"
+#define NOMINMAX
 #include <windows.h>
 #include <mmsystem.h>
 
@@ -51,7 +52,7 @@ public:
 	virtual ~CSoundIn();
 
 	virtual void		Init(int iNewBufferSize, bool bNewBlocking=true, int iChannels=2);
-	virtual bool	Read(vector<_SAMPLE>& data);
+	virtual bool		Read(vector<_SAMPLE>& data);
 	virtual void		Enumerate(vector<string>&);
 	virtual int			GetDev();
 	virtual void		SetDev(int iNewDev);
@@ -64,12 +65,12 @@ protected:
 
 	vector<string>	vecstrDevices;
 	int				iCurDev;
-	WAVEFORMATEX	sWaveFormatEx;
-	BOOLEAN			bChangDev;
-	HANDLE			m_WaveEvent;
+	bool			bChangDev;
 	int				iBufferSize;
 	int				iWhichBuffer;
-	bool		bBlocking;
+	bool			bBlocking;
+	WAVEFORMATEX	sWaveFormatEx;
+	HANDLE			m_WaveEvent;
 
 	/* Wave in */
 	WAVEINCAPS		m_WaveInDevCaps;
@@ -100,12 +101,12 @@ protected:
 
 	vector<string>	vecstrDevices;
 	int				iCurDev;
-	WAVEFORMATEX	sWaveFormatEx;
-	BOOLEAN			bChangDev;
-	HANDLE			m_WaveEvent;
+	bool			bChangDev;
 	int				iBufferSize;
 	int				iWhichBuffer;
-	bool		bBlocking;
+	bool			bBlocking;
+	WAVEFORMATEX	sWaveFormatEx;
+	HANDLE			m_WaveEvent;
 
 	/* Wave out */
 	WAVEOUTCAPS		m_WaveOutDevCaps;

@@ -33,6 +33,7 @@
 #ifdef _WIN32
   /* Always include winsock2.h before windows.h */
     /* winsock2.h is already included into libpcap */
+# define NOMINMAX
 # include <winsock2.h>
 # include <ws2tcpip.h>
 # include <windows.h>

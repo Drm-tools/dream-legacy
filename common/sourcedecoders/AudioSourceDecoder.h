@@ -36,6 +36,7 @@
 #ifdef HAVE_LIBFAAD
 # ifdef DYNAMIC_LINK_CODECS
 #  ifdef _WIN32
+#   define NOMINMAX
 #   include <windows.h>
 #   pragma pack(push, 8)
 #   ifndef NEAACDECAPI

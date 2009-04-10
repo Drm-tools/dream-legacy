@@ -37,6 +37,7 @@
 #ifdef HAVE_LIBFAAC
 # ifdef DYNAMIC_LINK_CODECS
 #  ifdef _WIN32
+#   define NOMINMAX
 #   include <windows.h>
 #   ifndef FAACAPI
 #    define FAACAPI __stdcall
