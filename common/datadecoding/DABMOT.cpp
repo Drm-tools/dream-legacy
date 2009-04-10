@@ -36,11 +36,7 @@
 #include <algorithm>
 #include <cstring>
 #include <cctype>
-#ifdef HAVE_LIBZ
 #include <zlib.h>
-#else
-#error "ZLIB not found"
-#endif
 
 /* Implementation *************************************************************/
 ostream & operator<<(ostream & out, CDateAndTime & d)

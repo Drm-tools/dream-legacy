@@ -29,6 +29,7 @@
 #include <sstream>
 
 #ifdef _WIN32
+# define NOMINMAX
 /* Always include winsock2.h before windows.h */
 # include <winsock2.h>
 # include <ws2tcpip.h>

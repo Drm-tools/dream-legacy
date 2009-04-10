@@ -125,8 +125,8 @@
 		bool operator()(const std::string& x, const std::string& y) const;
 	};
 	/* These typedefs just make the code a bit more readable */
-	typedef std::map<string, string, StlIniCompareStringNoCase > INISection;
-	typedef std::map<string, INISection , StlIniCompareStringNoCase > INIFile;
+	typedef map<string, string, StlIniCompareStringNoCase > INISection;
+	typedef map<string, INISection , StlIniCompareStringNoCase > INIFile;
 
 	class CWinGeom
 	{

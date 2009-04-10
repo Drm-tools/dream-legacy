@@ -1327,7 +1327,7 @@ void StationsDlg::SetStationsView()
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT);
 }
 
-void StationsDlg::OnFreqCntNewValue(double dVal)
+void StationsDlg::OnFreqCntNewValue(double)
 {
 	// wait an inter-digit timeout
 	TimerEditFrequency.start(GUI_TIMER_INTER_DIGIT, true);

@@ -714,7 +714,7 @@ bool CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
 bool CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
 									  CParameter& Parameter,
-									  const bool bForNextConfig)
+									  const bool)
 {
 	/* Short ID (the short ID is the index of the service-array) */
 	const int iShortID = pbiData->Separate(2);
@@ -839,8 +839,8 @@ bool CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 * Data entity Type 6 (Announcement support and switching data entity)          *
 \******************************************************************************/
 bool CSDCReceive::DataEntityType6(CVector<_BINARY>* pbiData,
-									  const int iLengthOfBody,
-									  CParameter& Parameter,
+									  const int,
+									  CParameter&,
 									  const bool bVersion)
 {
     int iReferencedShortIDs = pbiData->Separate(4);
@@ -1003,7 +1003,7 @@ bool CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData,
 bool CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
 									  CParameter& Parameter,
-									  const bool bForNextConfig)
+									  const bool)
 {
     CAudioParam AudParam;
 
@@ -1216,7 +1216,7 @@ bool CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 * Data entity Type 10 (FAC channel parameters data entity)                     *
 \******************************************************************************/
 bool CSDCReceive::DataEntityType10(CVector<_BINARY>* pbiData,
-									   const int iLengthOfBody,
+									   const int,
 									   CParameter& Parameter,
 									   const bool bForNextConfig)
 {
@@ -1490,7 +1490,7 @@ bool CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
 * Data entity Type 13 (detailed region definition data entity)                       *
 \******************************************************************************/
 bool CSDCReceive::DataEntityType13(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-							 CParameter& Parameter, const bool bVersion)
+							 CParameter&, const bool)
 {
     pbiData->Separate(iLengthOfBody * 8 + 4); // TODO
 }
@@ -1499,7 +1499,7 @@ bool CSDCReceive::DataEntityType13(CVector<_BINARY>* pbiData, const int iLengthO
 * Data entity Type 14 (Packet stream FEC parameters data entity)                       *
 \******************************************************************************/
 bool CSDCReceive::DataEntityType14(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-							 CParameter& Parameter, const bool bForNextConfig)
+							 CParameter&, const bool)
 {
     pbiData->Separate(iLengthOfBody * 8 + 4); // TODO
 }

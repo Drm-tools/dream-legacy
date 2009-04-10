@@ -29,6 +29,7 @@
 \******************************************************************************/
 
 #ifdef _WIN32
+# define NOMINMAX
 # ifdef _WIN32_WINNT
 #  undef _WIN32_WINNT
 # endif
@@ -36,7 +37,6 @@
 # include <windows.h>
 #endif
 
-#include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../DrmTransmitter.h"
 #include "../DrmSimulation.h"

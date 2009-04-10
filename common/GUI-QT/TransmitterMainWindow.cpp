@@ -848,7 +848,7 @@ TransmitterMainWindow::SetAudio(int iStreamNo)
 		AudioParam.eAudioSamplRate = CAudioParam::AS_12KHZ;
 }
 
-void TransmitterMainWindow::OnComboBoxAudioSourceActivated(int iID)
+void TransmitterMainWindow::OnComboBoxAudioSourceActivated(int)
 {
 }
 
@@ -1131,27 +1131,27 @@ TransmitterMainWindow::SetMDIIn()
 
 
 void
-TransmitterMainWindow::OnLineEditMDIinPortChanged(const QString& str)
+TransmitterMainWindow::OnLineEditMDIinPortChanged(const QString&)
 {
 }
 
 void
-TransmitterMainWindow::OnToggleCheckBoxMDIinMcast(bool bState)
+TransmitterMainWindow::OnToggleCheckBoxMDIinMcast(bool)
 {
 }
 
 void
-TransmitterMainWindow::OnLineEditMDIinGroupChanged(const QString& str)
+TransmitterMainWindow::OnLineEditMDIinGroupChanged(const QString&)
 {
 }
 
 void
-TransmitterMainWindow::OnComboBoxMDIinInterfaceActivated(int iID)
+TransmitterMainWindow::OnComboBoxMDIinInterfaceActivated(int)
 {
 }
 
 void
-TransmitterMainWindow::OnLineEditMDIInputFileChanged(const QString& str)
+TransmitterMainWindow::OnLineEditMDIInputFileChanged(const QString&)
 {
 }
 
@@ -1280,15 +1280,15 @@ void TransmitterMainWindow::OnComboBoxMDIoutInterfaceActivated(int)
 {
 }
 
-void TransmitterMainWindow::OnLineEditMDIOutAddrChanged(const QString& str)
+void TransmitterMainWindow::OnLineEditMDIOutAddrChanged(const QString&)
 {
 }
 
-void TransmitterMainWindow::OnLineEditMDIOutputFileChanged(const QString& str)
+void TransmitterMainWindow::OnLineEditMDIOutputFileChanged(const QString&)
 {
 }
 
-void TransmitterMainWindow::OnLineEditMDIoutPortChanged(const QString& str)
+void TransmitterMainWindow::OnLineEditMDIoutPortChanged(const QString&)
 {
 }
 
@@ -1403,7 +1403,7 @@ void TransmitterMainWindow::OnButtonCOFDMDeleteSelected()
 		delete p;
 }
 
-void TransmitterMainWindow::OnCOFDMOutListItemClicked(Q3ListViewItem* item)
+void TransmitterMainWindow::OnCOFDMOutListItemClicked(Q3ListViewItem*)
 {
 	Q3ListViewItem* p = ListViewCOFDM->selectedItem();
 	if(p)

@@ -322,14 +322,19 @@ void SystemEvalDlg::UpdateMERetc(CParameter& Parameters)
 
         /* Sample frequency offset estimation */
         _REAL rCurSamROffs = 0.0;
-         bool b = Parameters.Measurements.SampleFrequencyOffset.get(rCurSamROffs);
-
-        /* Display value in [Hz] and [ppm] (parts per million) */
-        ValueSampFreqOffset->setText(
-            QString().setNum(rCurSamROffs, 'f', 2) + " Hz (" +
-            QString().setNum((int) (rCurSamROffs / SOUNDCRD_SAMPLE_RATE * 1e6))
-            + " ppm)");
-
+        bool b = Parameters.Measurements.SampleFrequencyOffset.get(rCurSamROffs);
+		if(b)
+		{
+			/* Display value in [Hz] and [ppm] (parts per million) */
+			ValueSampFreqOffset->setText(
+				QString().setNum(rCurSamROffs, 'f', 2) + " Hz (" +
+				QString().setNum((int) (rCurSamROffs / SOUNDCRD_SAMPLE_RATE * 1e6))
+				+ " ppm)");
+		}
+		else
+		{
+			ValueSampFreqOffset->setText("--");
+		}
     }
     else
     {
@@ -549,7 +554,7 @@ void SystemEvalDlg::hidePlots()
 	plots.clear();
 }
 
-void SystemEvalDlg::OnItemClicked (QTreeWidgetItem * item, int column )
+void SystemEvalDlg::OnItemClicked (QTreeWidgetItem * item, int)
 {
 	/* Get char type from selected item and setup chart */
 	plot->SetupChart(CDRMPlot::EPlotType(item->text(1).toInt()));
@@ -628,7 +633,7 @@ void SystemEvalDlg::UpdateFrequency()
 	}
 }
 
-void SystemEvalDlg::OnLineEditFrequencyChanged(const QString& str)
+void SystemEvalDlg::OnLineEditFrequencyChanged(const QString&)
 {
 	// wait an inter-digit timeout
 	timerLineEditFrequency->start(500, true);

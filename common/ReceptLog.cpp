@@ -30,6 +30,7 @@
 #include "ReceptLog.h"
 #include <iomanip>
 #include <iostream>
+#include <cmath>
 /* DONE - reset minutes (and stats) when retuning */
 
 /* TODO
@@ -276,7 +277,7 @@ CShortLog::writeParameters()
 {
 	Parameters.Lock();
 
-	int iAverageSNR = (int) round(Parameters.Measurements.SNRstat.getMean());
+	int iAverageSNR = (int) floor(Parameters.Measurements.SNRstat.getMean()+.5);
 	int iNumCRCOkFAC = Parameters.ReceiveStatus.FAC.GetOKCount();
 	int iNumCRCOkMSC = Parameters.ReceiveStatus.Audio.GetOKCount();
 
@@ -292,7 +293,7 @@ CShortLog::writeParameters()
 		iTmpNumAAC = Parameters.iNumAudioFrames;
 
 	if (bRxlEnabled)
-		iRXL = (int)round(Parameters.Measurements.SigStrstat.getMean());
+		iRXL = (int)floor(Parameters.Measurements.SigStrstat.getMean()+.5);
 
 	Parameters.Unlock();
 

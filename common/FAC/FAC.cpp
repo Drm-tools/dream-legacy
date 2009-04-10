@@ -375,7 +375,7 @@ void CFACTransmit::Init(CParameter& Parameter)
 /******************************************************************************\
 * CFACReceive																   *
 \******************************************************************************/
-bool CFACReceive::ChannelData(CVector<_BINARY>* pbiData,
+void CFACReceive::ChannelData(CVector<_BINARY>* pbiData,
     CCoreParameter& fc,
     CFACParameters& fp,
     bool bSetRobm)

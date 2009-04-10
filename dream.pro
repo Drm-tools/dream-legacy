@@ -1,13 +1,13 @@
 TEMPLATE	= app
 TARGET		= dream
 QT          += qt3support network xml
-CONFIG		+= qt warn_on release thread hamlib portaudio
+CONFIG		+= qt warn_on release thread hamlib
 DEFINES		+= HAVE_QT USE_QT_GUI
 INCLUDEPATH	+= libs
 INCLUDEPATH	+= common/GUI-QT
 VPATH		+= common/GUI-QT
 LIBS 		+= -Llibs
-DEFINES		+= HAVE_LIBFAAC HAVE_LIBFAAD HAVE_LIBPCAP HAVE_LIBZ HAVE_FFTW_H
+DEFINES		+= HAVE_LIBFAAC HAVE_LIBFAAD
 FORMS       += DRMMainWindow.ui AnalogMainWindow.ui TransmitterMainWindow.ui
 FORMS       += AMSSDlg.ui SystemEvalDlg.ui JLViewer.ui BWSViewer.ui SlideShowViewer.ui
 FORMS		+= LiveScheduleDlg.ui StationsDlg.ui EPGDlg.ui
@@ -55,10 +55,10 @@ win32 {
     DEFINES		-= UNICODE
 	DEFINES		+= HAVE_SETUPAPI
     SOURCES		+= windows/Source/Pacer.cpp
+    LIBS        += -L../qwt-qt4/lib
+    INCLUDEPATH += ../qwt-qt4/include
     win32-g++ {
         DEFINES		+= HAVE_STDINT_H HAVE_STDLIB_H __INTERLOCKED_DECLARED HAVE_LIBPCAP
-        INCLUDEPATH += ../qwt-qt4/include
-        LIBS        += -L../qwt-qt4/lib
         LIBS 		+= -lsndfile -lz -lfaac -lfaad -lrfftw -lfftw -lqwt5
         LIBS        += -lwpcap -lstdc++
         LIBS 		+= -lsetupapi -lws2_32

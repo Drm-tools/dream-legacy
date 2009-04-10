@@ -74,17 +74,17 @@ void CSettings::Clear()
 
 void CSettings::Clear(const string& section)
 {
-    map<string, INISection>::iterator s = ini.find(section);
+    INIFile::iterator s = ini.find(section);
     if(s!=ini.end())
         ini.erase(s);
 }
 
 void CSettings::Clear(const string& section, const string& key)
 {
-    map<string, INISection>::iterator s = ini.find(section);
+    INIFile::iterator s = ini.find(section);
     if(s!=ini.end())
     {
-        map<string, string>::iterator k = s->second.find(key);
+        INISection::iterator k = s->second.find(key);
         if(k!=s->second.end())
             s->second.erase(k);
     }
@@ -182,7 +182,6 @@ CSettings::Put(const string& section, const CWinGeom& value)
 void
 CSettings::ParseArguments(int argc, char **argv)
 {
-	bool bIsReceiver = true;
 	_REAL rArgument;
 	string strArgument;
 	int mdioutnum = 0;

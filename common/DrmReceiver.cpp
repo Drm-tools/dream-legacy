@@ -698,6 +698,7 @@ CDRMReceiver::UtilizeDRM()
 			bEnoughData = true;
 		}
 	}
+	return bEnoughData;
 }
 
 bool

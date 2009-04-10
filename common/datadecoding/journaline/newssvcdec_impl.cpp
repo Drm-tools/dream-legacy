@@ -59,33 +59,21 @@
 ***
 **/
 
-
-#ifdef _MSC_VER
-#define TIM_DEF
-#include <wtypes.h>
-#undef min
-
-#pragma warning(disable: 4100)
-#pragma warning(disable: 4786)
-
-#endif
-
-
-#if defined(_MSC_VER) && (_MSC_VER==1200)
-// for Visual Studio 6.0, define min (algorithm) as _MIN
-#define min _MIN
-
-#pragma warning(disable:4512)
+#if 0
+# ifdef _MSC_VER
+#  define TIM_DEF
+#  include <wtypes.h>
+#  undef min
+#  pragma warning(disable: 4100)
+#  pragma warning(disable: 4786)
+# endif
 #endif
 
 #include <algorithm>
-#include <time.h>
+#include <ctime>
 #ifdef WIN32
+# define NOMINMAX
 # include <windows.h> // for GetTickCount
-#endif
-
-#if defined(_MSC_VER) && (_MSC_VER==1200)
-#pragma warning(default:4512)
 #endif
 
 #include "dabdatagroupdecoder.h"
