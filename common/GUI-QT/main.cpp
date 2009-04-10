@@ -70,7 +70,7 @@ main(int argc, char **argv)
 
 #if defined(__APPLE__)
 	/* find plugins on MacOs when deployed in a bundle */
-	app.setLibraryPaths(app.applicationDirPath()+"../PlugIns");
+	QCoreApplication::addLibraryPath(QCoreApplication::applicationDirPath()+"../PlugIns");
 #endif
 
 	/* Load and install multi-language support (if available) */
