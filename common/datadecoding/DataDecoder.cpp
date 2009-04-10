@@ -224,22 +224,22 @@ void CDataDecoder::decodePacket(CVector<_BINARY>& data)
 	int iNewPacketDataSize;
 	int iOldPacketDataSize;
 	int iNumSkipBytes;
-	_BINARY biFirstFlag;
-	_BINARY biLastFlag;
-	_BINARY biPadPackInd;
+	bool bFirstFlag;
+	bool bLastFlag;
+	bool bPadPackInd;
 
     /* Read header data --------------------------------------------- */
     /* First flag */
-    biFirstFlag = (_BINARY) data.Separate(1);
+	bFirstFlag = (data.Separate(1)==1)?true:false;
 
     /* Last flag */
-    biLastFlag = (_BINARY) data.Separate(1);
+    bLastFlag = (data.Separate(1))?true:false;
 
     /* Packet ID */
     iPacketID = (int) (*pvecInputData).Separate(2);
 
     /* Padded packet indicator (PPI) */
-    biPadPackInd = (_BINARY) data.Separate(1);
+    bPadPackInd = (data.Separate(1))?true:false;
 
     /* Continuity index (CI) */
     iNewContInd = (int) data.Separate(3);
@@ -255,14 +255,14 @@ void CDataDecoder::decodePacket(CVector<_BINARY>& data)
 
     /* Reset flag for data unit ok when receiving the first packet of
        a new data unit */
-    if (biFirstFlag == true)
+    if (bFirstFlag == true)
     {
         DataUnit[iPacketID].Reset();
         DataUnit[iPacketID].bOK = true;
     }
 
     /* If all packets are received correctely, data unit is ready */
-    if (biLastFlag == true)
+    if (bLastFlag == true)
     {
         if (DataUnit[iPacketID].bOK == true)
             DataUnit[iPacketID].bReady = true;
@@ -270,7 +270,7 @@ void CDataDecoder::decodePacket(CVector<_BINARY>& data)
 
     /* Data field --------------------------------------------------- */
     /* Get size of new data block */
-    if (biPadPackInd == true)
+    if (bPadPackInd)
     {
         /* Padding is present: the first byte gives the number of
            useful data bytes in the data field. */
@@ -303,8 +303,7 @@ void CDataDecoder::decodePacket(CVector<_BINARY>& data)
            shall be set to 0 to indicate no useful data. The first
            and last flags shall be set to 1. The continuity index
            shall be incremented for these empty packets */
-        if ((biFirstFlag == true) &&
-            (biLastFlag == true) && (iNewPacketDataSize == 0))
+        if (bFirstFlag && bLastFlag && (iNewPacketDataSize == 0))
         {
             /* Packet with no useful data, reset flag */
             DataUnit[iPacketID].bReady = false;
