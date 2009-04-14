@@ -933,7 +933,11 @@ CAudioSourceDecoder::CAudioSourceDecoder()
         NeAACDecDecode = (NeAACDecDecode_t*)GetProcAddress(hFaaDlib, TEXT("NeAACDecDecode"));
     }
 #  else
+#   if defined(__APPLE__)
+    hFaaDlib = dlopen("libfaad.dylib", RTLD_LOCAL | RTLD_NOW);
+#   else
     hFaaDlib = dlopen("libfaad2.so", RTLD_LOCAL | RTLD_NOW);
+#   endif
     if(hFaaDlib)
     {
         NeAACDecOpen = (NeAACDecOpen_t*)dlsym(hFaaDlib, "NeAACDecOpen");

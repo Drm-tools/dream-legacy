@@ -718,8 +718,7 @@ void DRMMainWindow::closeEvent(QCloseEvent* ce)
         /* request that the working thread stops */
         if(!Receiver.End())
         {
-            QMessageBox::critical(this, "Dream", "Exit\n",
-                "Termination of working thread failed");
+            QMessageBox::critical(this, "Dream", ("Exit"), tr("Termination of working thread failed"));
         }
         qApp->quit();
     }

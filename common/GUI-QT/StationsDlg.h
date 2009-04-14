@@ -29,32 +29,11 @@
 #ifndef _STATIONS_DLG_H
 #define _STATIONS_DLG_H
 
-#include <QMutex>
-#include <q3header.h>
-#include <q3listview.h>
-#include <qpixmap.h>
-#include <q3buttongroup.h>
-#include <qradiobutton.h>
-#include <qtimer.h>
-#include <qmessagebox.h>
-#include <qcombobox.h>
-#include <q3urloperator.h>
-#include <q3networkprotocol.h>
-#include <qdir.h>
-#include <qmenubar.h>
-#include <q3popupmenu.h>
-#include <qlayout.h>
-#include <qthread.h>
-#include <qaction.h>
-#include <q3whatsthis.h>
-#include <qlabel.h>
-#include <qfileinfo.h>
-#include <qdatetime.h>
+#include <QTimer>
+#include <QNetworkAccessManager>
+#include <Q3PopupMenu>
 #include <qwt_thermo.h>
 #include <qwt_counter.h>
-//Added by qt3to4:
-#include <QShowEvent>
-#include <QHideEvent>
 
 #include "ui_StationsDlg.h"
 #include "../util/Vector.h"
@@ -156,22 +135,19 @@ public:
 };
 
 
-class CDRMSchedule
+class CTxSchedule
 {
 public:
-	CDRMSchedule(): StationsTable(),eSchedMode(SM_DRM),iSecondsPreview(0) {}
+	CTxSchedule(): StationsTable(),iSecondsPreview(0) {}
 
-	virtual ~CDRMSchedule() {}
+	virtual ~CTxSchedule() {}
 
-	enum ESchedMode {SM_DRM, SM_ANALOG};
 	enum StationState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
 
-	void ReadStatTabFromFile(const ESchedMode eNewSchM);
+	void ReadStatTabFromFile(const string&);
 	void ReadIniFile(FILE* pFile);
 	void ReadCSVFile(FILE* pFile);
-
-	ESchedMode GetSchedMode() {return eSchedMode;}
-	void SetSchedMode(const ESchedMode eNewSchM) {eSchedMode = eNewSchM; StationsTable.clear();};
+	void clear() { StationsTable.clear(); }
 
 	int GetStationNumber() {return StationsTable.size();}
 	CStationsItem& GetItem(const int iPos) {return StationsTable[iPos];}
@@ -190,7 +166,6 @@ protected:
 	bool IsActive(const int iPos, const time_t ltime);
 
 	vector<CStationsItem>	StationsTable;
-	ESchedMode				eSchedMode;
 
 	/* Minutes for stations preview in seconds if zero then no active */
 	int						iSecondsPreview;
@@ -226,54 +201,51 @@ public:
 	StationsDlg& operator=(const StationsDlg&)
 	{ throw "should not happen"; return *this;}
 
-	void LoadSchedule(CDRMSchedule::ESchedMode eNewSchM);
-	void SetCurrentSchedule(const CDRMSchedule::ESchedMode eNewSchM);
-	bool CheckFilter(const int iPos);
+protected:
 
+	void    LoadSchedule(const string&);
+	bool    CheckFilter(const int iPos);
 
-	void LoadSettings(const CSettings&);
-	void SaveSettings(CSettings&);
+	void    LoadSettings(const CSettings&);
+	void    SaveSettings(CSettings&);
+
+	void	SetStationsView();
+	void	ClearStationsView();
+	void    showEvent(QShowEvent* pEvent);
+	void	hideEvent(QHideEvent* pEvent);
+	void	AddWhatsThisHelp();
+	void	SetUTCTimeLabel();
+	void	EnableSMeter(const bool bStatus);
+
+	ReceiverInterface&	Receiver;
+	CSettings&		Settings;
+	CTxSchedule	    Schedule;
+	QPixmap			BitmCubeGreen;
+	QPixmap			BitmCubeYellow;
+	QPixmap			BitmCubeRed;
+	QPixmap			BitmCubeOrange;
+	QPixmap			BitmCubePink;
+	QTimer			TimerList;
+	QTimer			TimerUTCLabel;
+	QTimer			TimerSMeter;
+	QTimer			TimerEditFrequency;
+	QTimer			TimerMonitorFrequency;
+	QTimer			TimerTuning;
 
 	int				iCurrentSortColumn;
-	bool		bCurrentSortAscending;
+	bool		    bCurrentSortAscending;
+	bool			bShowAll;
+	bool		    bTuningInProgress;
+	bool			bReInitOnFrequencyChange;
+	EModulationType eModulation;
 
-protected:
-	void			SetStationsView();
-	void			ClearStationsView();
-	virtual void	showEvent(QShowEvent* pEvent);
-	void			hideEvent(QHideEvent* pEvent);
-	void			AddWhatsThisHelp();
-	void			SetUTCTimeLabel();
-	void			EnableSMeter(const bool bStatus);
-	void			AddUpdateDateTime();
-	void			SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM);
-
-	ReceiverInterface&		DRMReceiver;
-	CSettings&					Settings;
-
-	CDRMSchedule				DRMSchedule;
-	QPixmap						BitmCubeGreen;
-	QPixmap						BitmCubeYellow;
-	QPixmap						BitmCubeRed;
-	QPixmap						BitmCubeOrange;
-	QPixmap						BitmCubePink;
-	QTimer						TimerList;
-	QTimer						TimerUTCLabel;
-	QTimer						TimerSMeter;
-	QTimer						TimerEditFrequency;
-	QTimer						TimerMonitorFrequency;
-	QTimer						TimerTuning;
-
-	bool					bTuningInProgress;
-	bool					bShowAll;
-	bool					bReInitOnFrequencyChange;
-	Q3UrlOperator			UrlUpdateSchedule;
-	Q3PopupMenu*			pViewMenu;
-	Q3PopupMenu*			pPreviewMenu;
-	Q3PopupMenu*			pUpdateMenu;
+	QNetworkAccessManager* networkManager;
+	Q3PopupMenu*	pViewMenu;
+	Q3PopupMenu*	pPreviewMenu;
+	Q3PopupMenu*	pUpdateMenu;
 
 	vector<MyListViewItem*>	vecpListItems;
-	QMutex					ListItemsMutex;
+	QMutex			ListItemsMutex;
 
 public slots:
 	void OnTimerList();
@@ -283,7 +255,7 @@ public slots:
 	void OnTimerMonitorFrequency();
 	void OnTimerTuning();
 	void OnListItemClicked(Q3ListViewItem* item);
-	void OnUrlFinished(Q3NetworkOperation* pNetwOp);
+	void OnUrlFinished(QNetworkReply*);
 	void OnShowStationsMenu(int iID);
 	void OnShowPreviewMenu(int iID);
 	void OnGetUpdate();

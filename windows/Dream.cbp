@@ -110,6 +110,7 @@
 					<Add option="-DQT_GUI_LIB" />
 					<Add option="-DQT_NETWORK_LIB" />
 					<Add option="-DQT_CORE_LIB" />
+					<Add option="-DDYNAMIC_LINK_CODECS" />
 				</Compiler>
 				<Linker>
 					<Add library="Qt3Support4" />
@@ -126,7 +127,7 @@
 				<Option object_output="Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="D:\DKULTUR_EPG1.rsA" />
+				<Option parameters="D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />

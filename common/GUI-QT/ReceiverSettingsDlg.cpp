@@ -738,7 +738,7 @@ void ReceiverSettingsDlg::OnTimerRig()
 	else
 	{
 		// could not select this rig
-		QMessageBox::information( this, "Dream", "failed to select rig" );
+		QMessageBox::information( this, "Dream", tr("failed to select rig"));
 		ListViewRig->ensureItemVisible(no_rig);
 		ListViewRig->setSelected(no_rig, true);
 	}

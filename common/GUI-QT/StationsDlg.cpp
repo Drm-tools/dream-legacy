@@ -30,16 +30,18 @@
 
 #include "StationsDlg.h"
 #include "../tables/TableStations.h"
-#include <qdatetime.h>
-#include <q3ftp.h>
-# include <q3http.h>
-//Added by qt3to4:
-#include <QHideEvent>
-#include <Q3PopupMenu>
-#include <QShowEvent>
+#include <QMenuBar>
+#include <QFileInfo>
+#include <QFile>
+#include <QDir>
+#include <QMessageBox>
+#include <QDateTime>
+#include <QUrl>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 
 /* Implementation *************************************************************/
-void CDRMSchedule::UpdateStringListForFilter(const CStationsItem StationsItem)
+void CTxSchedule::UpdateStringListForFilter(const CStationsItem StationsItem)
 {
 QStringList result;
 
@@ -61,60 +63,14 @@ QString strLanguage = QString(StationsItem.strLanguage.c_str());
      ListLanguages.append(strLanguage);
 }
 
-void StationsDlg::FilterChanged(const QString&)
-{
-	/* Update list view */
-	SetStationsView();
-}
-
-bool StationsDlg::CheckFilter(const int iPos)
-{
-bool bCheck = true;
-QString sFilter = "";
-
-	sFilter = ComboBoxFilterTarget->currentText();
-
-	if ((sFilter != "") &&
-		(QString(DRMSchedule.GetItem(iPos).strTarget.c_str()) != sFilter))
-		bCheck = false;
-
-	sFilter = ComboBoxFilterCountry->currentText();
-
-	if ((sFilter != "") &&
-		(QString(DRMSchedule.GetItem(iPos).strCountry.c_str()) != sFilter))
-		bCheck = false;
-
-	sFilter = ComboBoxFilterLanguage->currentText();
-
-	if ((sFilter != "") &&
-		(QString(DRMSchedule.GetItem(iPos).strLanguage.c_str()) != sFilter))
-		bCheck = false;
-
-return bCheck;
-}
-
-void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
+void CTxSchedule::ReadStatTabFromFile(const string& path)
 {
 	const int	iMaxLenName = 256;
 	char		cName[iMaxLenName];
-	FILE*		pFile = NULL;
-
-	/* Save new mode */
-	SetSchedMode(eNewSchM);
+	FILE*		pFile = fopen(path.c_str(), "r");
 
 	/* Open file and init table for stations */
-	StationsTable.clear();
-
-	switch (eNewSchM)
-	{
-	case SM_DRM:
-		pFile = fopen(DRMSCHEDULE_INI_FILE_NAME, "r");
-		break;
-
-	case SM_ANALOG:
-		pFile = fopen(AMSCHEDULE_INI_FILE_NAME, "r");
-		break;
-	}
+	clear();
 
 	/* Check if opening of file was successful */
 	if (pFile == 0)
@@ -128,14 +84,13 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 	fclose(pFile);
 }
 
-void CDRMSchedule::ReadIniFile(FILE* pFile)
+void CTxSchedule::ReadIniFile(FILE* pFile)
 {
 	const int	iMaxLenName = 256;
 	char		cName[iMaxLenName];
 	int			iFileStat;
-	bool	bReadOK = true;
+	bool	    bReadOK = true;
 
-	//fgets(cName, iMaxLenName, pFile); /* Remove "[DRMSchedule]" */
 	do
 	{
 		CStationsItem StationsItem;
@@ -234,7 +189,7 @@ void CDRMSchedule::ReadIniFile(FILE* pFile)
 	} while (!((iFileStat == EOF) || (bReadOK == false)));
 }
 
-void CDRMSchedule::ReadCSVFile(FILE* pFile)
+void CTxSchedule::ReadCSVFile(FILE* pFile)
 {
 	const int	iMaxLenRow = 1024;
 	char		cRow[iMaxLenRow];
@@ -436,7 +391,7 @@ if(fields[5]=="TAG")
 	} while(!feof(pFile));
 }
 
-CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
+CTxSchedule::StationState CTxSchedule::CheckState(const int iPos)
 {
 	/* Get system time */
 	time_t ltime;
@@ -465,7 +420,7 @@ CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
 	}
 }
 
-bool CDRMSchedule::IsActive(const int iPos, const time_t ltime)
+bool CTxSchedule::IsActive(const int iPos, const time_t ltime)
 {
 	/* Calculate time in UTC */
 	struct tm* gmtCur = gmtime(&ltime);
@@ -593,11 +548,13 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	QDialog(parent, name, modal, f), Ui_StationsDlg(),
-	DRMReceiver(NDRMR), Settings(NSettings), DRMSchedule(),
+	Receiver(NDRMR), Settings(NSettings), Schedule(),
 	BitmCubeGreen(), BitmCubeYellow(), BitmCubeRed(), BitmCubeOrange(), BitmCubePink(),
-	TimerList(), TimerUTCLabel(), TimerSMeter(), TimerEditFrequency(), TimerMonitorFrequency(), TimerTuning(),
-	bTuningInProgress(false), bShowAll(false), bReInitOnFrequencyChange(false),
-	UrlUpdateSchedule(),
+	TimerList(), TimerUTCLabel(), TimerSMeter(), TimerEditFrequency(), TimerMonitorFrequency(),
+	TimerTuning(),
+	iCurrentSortColumn(0), bCurrentSortAscending(true), bShowAll(false),
+	bTuningInProgress(false), bReInitOnFrequencyChange(false), eModulation(DRM),
+	networkManager(NULL),
 	pViewMenu(NULL), pPreviewMenu(NULL), pUpdateMenu(NULL),
 	vecpListItems(0),
 	ListItemsMutex()
@@ -605,13 +562,6 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
     setupUi(this);
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
-
-	/* recover window size and position */
-	CWinGeom s;
-	Settings.Get("Stations Dialog", s);
-	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-		setGeometry(WinGeom);
 
 	/* Define size of the bitmaps */
 	const int iXSize = 13;
@@ -688,27 +638,27 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	{
 	case NUM_SECONDS_PREV_5MIN:
 		pPreviewMenu->setItemChecked(1, true);
-		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
+		Schedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
 		break;
 
 	case NUM_SECONDS_PREV_15MIN:
 		pPreviewMenu->setItemChecked(2, true);
-		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
+		Schedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
 		break;
 
 	case NUM_SECONDS_PREV_30MIN:
 		pPreviewMenu->setItemChecked(3, true);
-		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
+		Schedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
 		break;
 
 	default: /* case 0, also takes care of out of value parameters */
 		pPreviewMenu->setItemChecked(0, true);
-		DRMSchedule.SetSecondsPreview(0);
+		Schedule.SetSecondsPreview(0);
 		break;
 	}
 
 	pViewMenu->insertSeparator();
-	pViewMenu->insertItem(tr("Stations &preview"),pPreviewMenu);
+	pViewMenu->insertItem(tr("Stations &preview"), pPreviewMenu);
 
 	SetStationsView();
 
@@ -727,10 +677,8 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	/* Now tell the layout about the menu */
 	gridLayout->setMenuBar(pMenu);
 
-	/* Register the network protocols (ftp, http). Needed for the schedule download */
-	Q3NetworkProtocol::registerNetworkProtocol("ftp", new Q3NetworkProtocolFactory<Q3Ftp>);
-	Q3NetworkProtocol::registerNetworkProtocol("http", new Q3NetworkProtocolFactory<Q3Http>);
-
+    networkManager = new QNetworkAccessManager(this);
+    connect(networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(OnUrlFinished(QNetworkReply*)));
 
 	/* Connections ---------------------------------------------------------- */
 	connect(&TimerList, SIGNAL(timeout()), this, SLOT(OnTimerList()));
@@ -754,9 +702,6 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	connect(ListViewStations->header(), SIGNAL(clicked(int)),
 		this, SLOT(OnHeaderClicked(int)));
 
-	connect(&UrlUpdateSchedule, SIGNAL(finished(Q3NetworkOperation*)),
-		this, SLOT(OnUrlFinished(Q3NetworkOperation*)));
-
 	connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
 		this, SLOT(OnFreqCntNewValue(double)));
 
@@ -777,6 +722,39 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 StationsDlg::~StationsDlg()
 {
 }
+
+void StationsDlg::FilterChanged(const QString&)
+{
+	/* Update list view */
+	SetStationsView();
+}
+
+bool StationsDlg::CheckFilter(const int iPos)
+{
+    bool bCheck = true;
+    QString sFilter = "";
+
+	sFilter = ComboBoxFilterTarget->currentText();
+
+	if ((sFilter != "") &&
+		(QString(Schedule.GetItem(iPos).strTarget.c_str()) != sFilter))
+		bCheck = false;
+
+	sFilter = ComboBoxFilterCountry->currentText();
+
+	if ((sFilter != "") &&
+		(QString(Schedule.GetItem(iPos).strCountry.c_str()) != sFilter))
+		bCheck = false;
+
+	sFilter = ComboBoxFilterLanguage->currentText();
+
+	if ((sFilter != "") &&
+		(QString(Schedule.GetItem(iPos).strLanguage.c_str()) != sFilter))
+		bCheck = false;
+
+    return bCheck;
+}
+
 
 void StationsDlg::SetUTCTimeLabel()
 {
@@ -819,19 +797,19 @@ void StationsDlg::OnShowPreviewMenu(int iID)
 	switch (iID)
 	{
 	case 1:
-		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
+		Schedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
 		break;
 
 	case 2:
-		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
+		Schedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
 		break;
 
 	case 3:
-		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
+		Schedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
 		break;
 
 	default: /* case 0: */
-		DRMSchedule.SetSecondsPreview(0);
+		Schedule.SetSecondsPreview(0);
 		break;
 	}
 
@@ -845,155 +823,78 @@ void StationsDlg::OnShowPreviewMenu(int iID)
 	pPreviewMenu->setItemChecked(3, 3 == iID);
 }
 
-void StationsDlg::AddUpdateDateTime()
-{
-/*
-	Set time and date of current DRM schedule in the menu text for
-	querying a new schedule (online schedule update).
-	If no schedule file exists, do not show any time and date.
-*/
-	/* make sure we check the correct file (DRM or AM schedule) */
-	QString strFile;
-	switch (DRMSchedule.GetSchedMode())
-	{
-		case CDRMSchedule::SM_DRM:
-			strFile = DRMSCHEDULE_INI_FILE_NAME;
-			pUpdateMenu->setItemEnabled(0, true);
-			break;
-
-		case CDRMSchedule::SM_ANALOG:
-			strFile = AMSCHEDULE_INI_FILE_NAME;
-			pUpdateMenu->setItemEnabled(0, true);
-			break;
-	}
-
-	/* init with empty string in case there is no schedule file */
-	QString s = "";
-
-	/* get time and date information */
-	QFileInfo f = QFileInfo(strFile);
-	if (f.exists()) /* make sure the DRM schedule file exists */
-	{
-		/* use QT-type of data string for displaying */
-		s = tr(" (last update: ")
-			+ f.lastModified().date().toString() + ")";
-	}
-
-	pUpdateMenu->changeItem(0, tr("&Get Update") + s + "...");
-}
-
 void StationsDlg::OnGetUpdate()
 {
-	switch (DRMSchedule.GetSchedMode())
-	{
-		case CDRMSchedule::SM_DRM:
-			if (QMessageBox::information(this, tr("Dream Schedule Update"),
-				tr("Dream tries to download the newest DRM schedule\nfrom "
-				"www.drm-dx.de (powered by Klaus Schneider).\nYour computer "
-				"must be connected to the internet.\n\nThe current file "
-				"DRMSchedule.ini will be overwritten.\nDo you want to "
-				"continue?"),
-				QMessageBox::Yes, QMessageBox::No) == 3 /* Yes */)
-			{
-				/* Try to download the current schedule. Copy the file to the
-		   		current working directory (which is "QDir().absFilePath(NULL)") */
-				UrlUpdateSchedule.copy(QString(DRM_SCHEDULE_UPDATE_FILE),
-					QString(QDir().absFilePath(NULL)));
-			}
-			break;
-
-		case CDRMSchedule::SM_ANALOG:
-			QDate d = QDate::currentDate();
-			int wk = d.weekNumber();
-			int yr = d.year();
-			QString y,w;
-			if(wk <= 13)
-			{
-				w = "b";
-				y = QString::number(yr-1);
-			}
-			else if(wk <= 43)
-			{
-				w = "a";
-				y = QString::number(yr);
-			}
-			else
-			{
-				w = "b";
-				y = QString::number(yr);
-			}
-			QString path = QString(AM_SCHEDULE_UPDATE_FILE).arg(w, y.right(2));
-			if (QMessageBox::information(this, tr("Dream Schedule Update"),
-				tr("Dream tries to download the newest EIBI AM schedule.\n"
-				"  Your computer must be connected to the internet.\n\n"
-				"The current file AMSchedule.ini will be overwritten.\n"
-				"Do you want to continue?"),
-				QMessageBox::Yes, QMessageBox::No) == 3 /* Yes */)
-			{
-				/* Try to download the current schedule. Copy the file to the
-		   		current working directory (which is "QDir().absFilePath(NULL)") */
-				UrlUpdateSchedule.copy(path,
-					QString(QDir().absFilePath(NULL))+"/AMSchedule.ini", false, false);
-			}
-			break;
-	}
-
+    QString path;
+    QString fname = (eModulation==DRM)?DRMSCHEDULE_INI_FILE_NAME:AMSCHEDULE_INI_FILE_NAME;
+    if (QMessageBox::question(this, tr("Dream Schedule Update"),
+        QString(tr("Dream tries to download the newest schedule\nfrom the internet.\n\n"
+            "The current file %1 will be overwritten.\n"
+            "Do you want to continue?")).arg(fname),
+            QMessageBox::Ok|QMessageBox::Cancel) != QMessageBox::Ok)
+    {
+        return;
+    }
+    if(eModulation==DRM)
+    {
+        path = DRM_SCHEDULE_UPDATE_FILE;
+    }
+    else
+    {
+        QDate d = QDate::currentDate();
+        int wk = d.weekNumber();
+        int yr = d.year();
+        QString y,w;
+        if(wk <= 13)
+        {
+            w = "b";
+            y = QString::number(yr-1);
+        }
+        else if(wk <= 43)
+        {
+            w = "a";
+            y = QString::number(yr);
+        }
+        else
+        {
+            w = "b";
+            y = QString::number(yr);
+        }
+        path = QString(AM_SCHEDULE_UPDATE_FILE).arg(w, y.right(2));
+    }
+    /* Try to download the current schedule. */
+    QNetworkReply * reply = networkManager->get(QNetworkRequest(QUrl(path)));
+    if(reply == NULL)
+    {
+        cerr << "bad request " << path.toStdString() << endl;
+        return;
+    }
 }
 
-void StationsDlg::OnUrlFinished(Q3NetworkOperation* pNetwOp)
+void StationsDlg::OnUrlFinished(QNetworkReply* reply)
 {
+    QString fname = (eModulation==DRM)?DRMSCHEDULE_INI_FILE_NAME:AMSCHEDULE_INI_FILE_NAME;
+
 	/* Check that pointer points to valid object */
-	if (pNetwOp)
+	if (reply)
 	{
-		if (pNetwOp->state() == Q3NetworkProtocol::StFailed)
+		if (reply->error() != QNetworkReply::NoError)
 		{
-			/* Something went wrong -> stop all network operations */
-			UrlUpdateSchedule.stop();
-
-			/* Notify the user of the failure */
-			switch (DRMSchedule.GetSchedMode())
-			{
-				case CDRMSchedule::SM_DRM:
-					QMessageBox::information(this, "Dream",
-						tr("Update failed. The following things may caused the "
-						"failure:\n"
-						"\t- the internet connection was not set up properly\n"
-						"\t- the server www.drm-dx.de is currently not available\n"
-						"\t- the file 'DRMSchedule.ini' could not be written"),
-						QMessageBox::Ok);
-					break;
-				case CDRMSchedule::SM_ANALOG:
-					QMessageBox::information(this, "Dream",
-						tr("Update failed. The following things may caused the failure:\n"
-						"\t- the internet connection was not set up properly\n"
-						"\t- the server www.susi-und-strolch.de is currently not available\n"
-						"\t- the file 'AMSchedule.ini' could not be written"),
-						QMessageBox::Ok);
-					break;
-			}
+            QMessageBox::information(this, "Dream", QString(tr(
+                "Update failed. The following things may caused the failure:\n"
+                "\t- the internet connection was not set up properly\n"
+                "\t- the server is currently not available\n"
+                "\t- the file %1 could not be written")).arg(fname));
+			return;
 		}
 
-		/* We are interested in the state of the final put function */
-		if (pNetwOp->operation() == Q3NetworkProtocol::OpPut)
-		{
-			if (pNetwOp->state() == Q3NetworkProtocol::StDone)
-			{
-				/* Notify the user that update was successful */
-#ifdef _WIN32
-				QMessageBox::warning(this, "Dream", tr("Update successful.\n"
-					"Due to network problems with the Windows version of QT, "
-					"the Dream software must be restarted after a schedule "
-					"update.\nPlease exit Dream now."),
-					tr("Ok"));
-#else
-				QMessageBox::information(this, "Dream",
-					tr("Update successful."), QMessageBox::Ok);
-#endif
-
-				/* Read updated ini-file */
-				LoadSchedule(DRMSchedule.GetSchedMode());
-			}
-		}
+        QMessageBox::information(this, "Dream", tr("Update successful."));
+        QFile f(fname);
+        f.open(QIODevice::WriteOnly);
+        f.write(reply->readAll());
+        f.close();
+        /* Read updated ini-file */
+        LoadSchedule(fname.toStdString());
 	}
 }
 
@@ -1016,17 +917,20 @@ void StationsDlg::hideEvent(QHideEvent*)
 	Settings.Put("Stations Dialog", c);
 
 	/* Store preview settings */
-	Settings.Put("Stations Dialog", "preview", DRMSchedule.GetSecondsPreview());
+	Settings.Put("Stations Dialog", "preview", Schedule.GetSecondsPreview());
 
 	/* Store sort settings */
-	switch (DRMSchedule.GetSchedMode())
+	switch (eModulation)
 	{
-	case CDRMSchedule::SM_DRM:
+	case DRM:
 		Settings.Put("Stations Dialog", "sortcolumndrm", iCurrentSortColumn);
 		Settings.Put("Stations Dialog", "sortascendingdrm", bCurrentSortAscending);
 		break;
 
-	case CDRMSchedule::SM_ANALOG:
+	case NONE: // not really likely
+        break;
+
+	default:
 		Settings.Put("Stations Dialog", "sortcolumnanalog", iCurrentSortColumn);
 		Settings.Put("Stations Dialog", "sortascendinganalog", bCurrentSortAscending);
 		break;
@@ -1035,30 +939,27 @@ void StationsDlg::hideEvent(QHideEvent*)
 
 void StationsDlg::showEvent(QShowEvent*)
 {
-	QwtCounterFrequency->setValue(DRMReceiver.GetFrequency());
+	/* recover window size and position */
+	CWinGeom s;
+	Settings.Get("Stations Dialog", s);
+	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+
+    QString fname = (eModulation==DRM)?DRMSCHEDULE_INI_FILE_NAME:AMSCHEDULE_INI_FILE_NAME;
+	QwtCounterFrequency->setValue(Receiver.GetFrequency());
 
 	/* Load the schedule if necessary */
-	if (DRMSchedule.GetStationNumber() == 0)
-		LoadSchedule(DRMSchedule.GetSchedMode());
+	if (Schedule.GetStationNumber() == 0)
+		LoadSchedule(fname.toStdString());
 
 	/* If number of stations is zero, we assume that the ini file is missing */
-	if (DRMSchedule.GetStationNumber() == 0)
+	if (Schedule.GetStationNumber() == 0)
 	{
-		if (DRMSchedule.GetSchedMode() == CDRMSchedule::SM_DRM)
-		{
-			QMessageBox::information(this, "Dream", tr("The file "
-				DRMSCHEDULE_INI_FILE_NAME
-				" could not be found or contains no data.\nNo "
-				"stations can be displayed.\nTry to download this file by "
-				"using the 'Update' menu."), QMessageBox::Ok);
-		}
-		else
-		{
-			QMessageBox::information(this, "Dream", tr("The file "
-				AMSCHEDULE_INI_FILE_NAME
-				" could not be found or contains no data.\nNo "
-				"stations can be displayed."), QMessageBox::Ok);
-		}
+        QMessageBox::information(this, "Dream", QString(tr(
+            "The file %1 could not be found or contains no data.\n"
+            "No stations can be displayed.\n"
+            "Try to download this file by using the 'Update' menu.")).arg(fname));
 	}
 
 	/* Update window */
@@ -1070,9 +971,6 @@ void StationsDlg::showEvent(QShowEvent*)
 	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
 	TimerSMeter.start(GUI_TIMER_S_METER);
 	TimerMonitorFrequency.start(GUI_TIMER_UPDATE_FREQUENCY);
-
-	/* add last update information on menu item */
-	AddUpdateDateTime();
 }
 
 void StationsDlg::OnTimerList()
@@ -1097,80 +995,49 @@ QString MyListViewItem::key(int column, bool ascending) const
 		return Q3ListViewItem::key(column, ascending);
 }
 
-void StationsDlg::SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM)
+void StationsDlg::LoadSchedule(const string& fname)
 {
-	/* Store the current sort settings before switching */
-	if (eNewSchM != DRMSchedule.GetSchedMode())
-	{
-		switch (DRMSchedule.GetSchedMode())
-		{
-		case CDRMSchedule::SM_DRM:
-			Settings.Put("Stations Dialog", "sortcolumndrm", iCurrentSortColumn);
-			Settings.Put("Stations Dialog", "sortascendingdrm", bCurrentSortAscending);
-			break;
-
-		case CDRMSchedule::SM_ANALOG:
-			Settings.Put("Stations Dialog", "sortcolumnanalog", iCurrentSortColumn);
-			Settings.Put("Stations Dialog", "sortascendinganalog", bCurrentSortAscending);
-			break;
-		}
-	}
-
-	/* Set sorting behaviour of the list */
-	switch (eNewSchM)
-	{
-	case CDRMSchedule::SM_DRM:
-		iCurrentSortColumn = Settings.Get("Stations Dialog", "sortcolumndrm", 0);
-		bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendingdrm", true);
-		break;
-
-	case CDRMSchedule::SM_ANALOG:
-		iCurrentSortColumn = Settings.Get("Stations Dialog", "sortcolumnanalog", 0);
-		bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendinganalog", true);
-		break;
-	}
-	ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
-}
-
-void StationsDlg::SetCurrentSchedule(const CDRMSchedule::ESchedMode eNewSchM)
-{
-	SetSortSettings(eNewSchM);
-
-	/* Save new mode */
-	DRMSchedule.SetSchedMode(eNewSchM);
-}
-
-void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
-{
-	SetSortSettings(eNewSchM);
-
 	ClearStationsView();
 	/* Empty the string lists for combos filter */
-	DRMSchedule.ListTargets = QStringList("");
-	DRMSchedule.ListCountries = QStringList("");
-	DRMSchedule.ListLanguages = QStringList("");
+	Schedule.ListTargets = QStringList("");
+	Schedule.ListCountries = QStringList("");
+	Schedule.ListLanguages = QStringList("");
 
 	ComboBoxFilterTarget->clear();
 	ComboBoxFilterCountry->clear();
 	ComboBoxFilterLanguage->clear();
 
 	/* Read initialization file */
-	DRMSchedule.ReadStatTabFromFile(eNewSchM);
+	Schedule.ReadStatTabFromFile(fname);
 
-	DRMSchedule.ListTargets.sort();
-	DRMSchedule.ListCountries.sort();
-	DRMSchedule.ListLanguages.sort();
+	Schedule.ListTargets.sort();
+	Schedule.ListCountries.sort();
+	Schedule.ListLanguages.sort();
 
-	ComboBoxFilterTarget->insertStringList(DRMSchedule.ListTargets);
-	ComboBoxFilterCountry->insertStringList(DRMSchedule.ListCountries);
-	ComboBoxFilterLanguage->insertStringList(DRMSchedule.ListLanguages);
+	ComboBoxFilterTarget->insertStringList(Schedule.ListTargets);
+	ComboBoxFilterCountry->insertStringList(Schedule.ListCountries);
+	ComboBoxFilterLanguage->insertStringList(Schedule.ListLanguages);
 
 	/* Update list view */
 	SetStationsView();
 
-	/* Add last update information on menu item if the dialog is visible */
-	if (this->isVisible())
-		AddUpdateDateTime();
+	/* Add last update information on menu item */
+
+    pUpdateMenu->setItemEnabled(0, true);
+
+	/* init with empty string in case there is no schedule file */
+	QString s = "";
+
+	/* get time and date information */
+	QFileInfo f = QFileInfo(fname.c_str());
+	if (f.exists()) /* make sure the schedule file exists */
+	{
+		/* use QT-type of data string for displaying */
+		s = tr(" (last update: ")
+			+ f.lastModified().date().toString() + ")";
+	}
+
+	pUpdateMenu->changeItem(0, tr("&Get Update") + s + "...");
 }
 
 void StationsDlg::ClearStationsView()
@@ -1206,7 +1073,7 @@ void StationsDlg::SetStationsView()
 	   by another thread */
 	ListItemsMutex.lock();
 
-	const size_t iNumStations = DRMSchedule.GetStationNumber();
+	const size_t iNumStations = Schedule.GetStationNumber();
 	bool bListHastChanged = false;
 
 	/* if the list got smaller, we need to free some memory */
@@ -1223,10 +1090,10 @@ void StationsDlg::SetStationsView()
 	/* Add new item for each station in list view */
 	for (i = 0; i < iNumStations; i++)
 	{
-		CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
+		CTxSchedule::StationState iState = Schedule.CheckState(i);
 
 		if (!(((bShowAll == false) &&
-			(iState == CDRMSchedule::IS_INACTIVE))
+			(iState == CTxSchedule::IS_INACTIVE))
 			|| (CheckFilter(i) == false)))
 		{
 			/* Only insert item if it is not already in the list */
@@ -1235,7 +1102,7 @@ void StationsDlg::SetStationsView()
 				/* Get power of the station. We have to do a special treatment
 				   here, because we want to avoid having a "0" in the list when
 				   a "?" was in the schedule-ini-file */
-				const _REAL rPower = DRMSchedule.GetItem(i).rPower;
+				const _REAL rPower = Schedule.GetItem(i).rPower;
 
 				QString strPower;
 				if (rPower == (_REAL) 0.0)
@@ -1245,20 +1112,19 @@ void StationsDlg::SetStationsView()
 
 				/* Generate new list item with all necessary column entries */
 				vecpListItems[i] = new MyListViewItem(ListViewStations,
-					DRMSchedule.GetItem(i).strName.c_str()     /* name */,
+					Schedule.GetItem(i).strName.c_str()     /* name */,
 					QString().sprintf("%04d-%04d",
-					DRMSchedule.GetItem(i).GetStartTimeNum(),
-					DRMSchedule.GetItem(i).GetStopTimeNum())   /* time */,
-					QString().setNum(DRMSchedule.GetItem(i).iFreq) /* freq. */,
-					DRMSchedule.GetItem(i).strTarget.c_str()   /* target */,
+					Schedule.GetItem(i).GetStartTimeNum(),
+					Schedule.GetItem(i).GetStopTimeNum())   /* time */,
+					QString().setNum(Schedule.GetItem(i).iFreq) /* freq. */,
+					Schedule.GetItem(i).strTarget.c_str()   /* target */,
 					strPower                                   /* power */,
-					DRMSchedule.GetItem(i).strCountry.c_str()  /* country */,
-					DRMSchedule.GetItem(i).strSite.c_str()     /* site */,
-					DRMSchedule.GetItem(i).strLanguage.c_str() /* language */);
+					Schedule.GetItem(i).strCountry.c_str()  /* country */,
+					Schedule.GetItem(i).strSite.c_str()     /* site */,
+					Schedule.GetItem(i).strLanguage.c_str() /* language */);
 
 				/* Show list of days */
-				vecpListItems[i]->setText(8,
-					DRMSchedule.GetItem(i).strDaysShow.c_str());
+				vecpListItems[i]->setText(8, Schedule.GetItem(i).strDaysShow.c_str());
 
 				/* Insert this new item in list. The item object is destroyed by
 				   the list view control when this is destroyed */
@@ -1272,16 +1138,16 @@ void StationsDlg::SetStationsView()
 			   special pixmap */
 			switch (iState)
 			{
-				case CDRMSchedule::IS_ACTIVE:
+				case CTxSchedule::IS_ACTIVE:
 					vecpListItems[i]->setPixmap(0, BitmCubeGreen);
 					break;
-				case CDRMSchedule::IS_PREVIEW:
+				case CTxSchedule::IS_PREVIEW:
 					vecpListItems[i]->setPixmap(0, BitmCubeOrange);
 					break;
-				case CDRMSchedule::IS_SOON_INACTIVE:
+				case CTxSchedule::IS_SOON_INACTIVE:
 					vecpListItems[i]->setPixmap(0, BitmCubePink);
 					break;
-				case CDRMSchedule::IS_INACTIVE:
+				case CTxSchedule::IS_INACTIVE:
 					vecpListItems[i]->setPixmap(0, BitmCubeRed);
 					break;
 				default:
@@ -1337,11 +1203,11 @@ void StationsDlg::OnFreqCntNewValue(double)
 void StationsDlg::OnTimerEditFrequency()
 {
 	// commit the frequency if different
-	int iTunedFrequency = DRMReceiver.GetFrequency();
+	int iTunedFrequency = Receiver.GetFrequency();
 	int iDisplayedFreq = (int)QwtCounterFrequency->value();
 	if(iTunedFrequency != iDisplayedFreq)
 	{
-		DRMReceiver.SetFrequency(iDisplayedFreq);
+		Receiver.SetFrequency(iDisplayedFreq);
 		bTuningInProgress = true;
 		TimerTuning.start(GUI_TIME_TO_TUNE, true);
 	}
@@ -1365,7 +1231,7 @@ void StationsDlg::OnTimerMonitorFrequency()
 	 * frequency could be changed by evaluation dialog
 	 * or RSCI
 	 */
-	int iTunedFrequency = DRMReceiver.GetFrequency();
+	int iTunedFrequency = Receiver.GetFrequency();
 	int iDisplayedFreq = (int)QwtCounterFrequency->value();
 	if(iTunedFrequency == iDisplayedFreq)
 	{
@@ -1376,6 +1242,44 @@ void StationsDlg::OnTimerMonitorFrequency()
 		if(bTuningInProgress == false)
 			QwtCounterFrequency->setValue(iTunedFrequency);
 	}
+	CParameter& Parameters = *Receiver.GetParameters();
+	Parameters.Lock();
+	EModulationType eNewMode = Parameters.eModulation;
+	Parameters.Unlock();
+	if (eModulation != eNewMode)
+	{
+        /* Store the current sort settings before switching */
+		switch (eModulation)
+		{
+		case DRM:
+			Settings.Put("Stations Dialog", "sortcolumndrm", iCurrentSortColumn);
+			Settings.Put("Stations Dialog", "sortascendingdrm", bCurrentSortAscending);
+			break;
+
+		default:
+			Settings.Put("Stations Dialog", "sortcolumnanalog", iCurrentSortColumn);
+			Settings.Put("Stations Dialog", "sortascendinganalog", bCurrentSortAscending);
+			break;
+		}
+	}
+    eModulation = eNewMode;
+    Schedule.clear();
+    LoadSchedule((eModulation==DRM)?DRMSCHEDULE_INI_FILE_NAME:AMSCHEDULE_INI_FILE_NAME);
+
+	/* Set sorting behaviour of the list */
+	switch (eModulation)
+	{
+	case DRM:
+		iCurrentSortColumn = Settings.Get("Stations Dialog", "sortcolumndrm", 0);
+		bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendingdrm", true);
+		break;
+
+	default:
+		iCurrentSortColumn = Settings.Get("Stations Dialog", "sortcolumnanalog", 0);
+		bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendinganalog", true);
+		break;
+	}
+	ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
 }
 
 void StationsDlg::OnHeaderClicked(int c)
@@ -1404,7 +1308,7 @@ void StationsDlg::OnListItemClicked(Q3ListViewItem* item)
 
 void StationsDlg::OnTimerSMeter()
 {
-	bool bSMeter = DRMReceiver.GetEnableSMeter();
+	bool bSMeter = Receiver.GetEnableSMeter();
 	EnableSMeter(bSMeter);
 }
 
@@ -1412,9 +1316,9 @@ void StationsDlg::EnableSMeter(const bool bStatus)
 {
 	/* Need both, GUI "enabled" and signal strength valid before s-meter is used */
 	_REAL rSigStr;
-	DRMReceiver.GetParameters()->Lock();
-	bool bValid = DRMReceiver.GetParameters()->Measurements.SigStrstat.getCurrent(rSigStr);
-	DRMReceiver.GetParameters()->Unlock();
+	Receiver.GetParameters()->Lock();
+	bool bValid = Receiver.GetParameters()->Measurements.SigStrstat.getCurrent(rSigStr);
+	Receiver.GetParameters()->Unlock();
 
 	if((bStatus == true) && (bValid == true))
 	{
@@ -1445,7 +1349,7 @@ void StationsDlg::EnableSMeter(const bool bStatus)
 void StationsDlg::AddWhatsThisHelp()
 {
 	/* Stations List */
-	Q3WhatsThis::add(ListViewStations,
+	ListViewStations->setWhatsThis(
 		tr("<b>Stations List:</b> In the stations list "
 		"view all DRM stations which are stored in the DRMSchedule.ini file "
 		"are shown. It is possible to show only active stations by changing a "
@@ -1465,7 +1369,7 @@ void StationsDlg::AddWhatsThisHelp()
 		"is automatically updated."));
 
 	/* Frequency Counter */
-	Q3WhatsThis::add(QwtCounterFrequency,
+	QwtCounterFrequency->setWhatsThis(
 		tr("<b>Frequency Counter:</b> The current frequency "
 		"value can be changed by using this counter. The tuning steps are "
 		"100 kHz for the  buttons with three arrows, 10 kHz for the "
@@ -1474,7 +1378,7 @@ void StationsDlg::AddWhatsThisHelp()
 		"increased / decreased automatically."));
 
 	/* UTC time label */
-	Q3WhatsThis::add(TextLabelUTCTime,
+	TextLabelUTCTime->setWhatsThis(
 		tr("<b>UTC Time:</b> Shows the current Coordinated "
 		"Universal Time (UTC) which is nearly the same as Greenwich Mean Time "
 		"(GMT)."));
@@ -1487,7 +1391,7 @@ void StationsDlg::AddWhatsThisHelp()
 		"front-ends controlled by hamlib support this feature. If the s-meter "
 		"is not available, the controls are disabled.");
 
-	Q3WhatsThis::add(TextLabelSMeter, strSMeter);
-	Q3WhatsThis::add(ProgrSigStrength, strSMeter);
+	TextLabelSMeter->setWhatsThis(strSMeter);
+	ProgrSigStrength->setWhatsThis(strSMeter);
 #endif
 }

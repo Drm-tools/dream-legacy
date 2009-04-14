@@ -38,7 +38,9 @@
 #include <qdatetime.h>
 
 #ifdef _WIN32
+# ifndef NOMINMAX
 #  define NOMINMAX
+# endif
 /* Always include winsock2.h before windows.h */
 # include <winsock2.h>
 # include <ws2tcpip.h>

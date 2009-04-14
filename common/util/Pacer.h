@@ -4,7 +4,9 @@
 #include "../GlobalDefinitions.h"
 
 #ifdef _WIN32
-# define NOMINMAX
+# ifndef NOMINMAX
+#  define NOMINMAX
+# endif
 # ifdef _WIN32_WINNT
 #  undef _WIN32_WINNT
 # endif

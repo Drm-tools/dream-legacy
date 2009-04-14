@@ -28,41 +28,103 @@
 
 #include "AudioSourceEncoder.h"
 
+#ifdef HAVE_LIBFAAC
+# ifdef DYNAMIC_LINK_CODECS
+
+int FAACAPI dummyfaacEncGetVersion(char **, char **) { return 0; }
+faacEncConfigurationPtr FAACAPI dummyfaacEncGetCurrentConfiguration(faacEncHandle) { return NULL; }
+
+int FAACAPI dummyfaacEncSetConfiguration(faacEncHandle, faacEncConfigurationPtr) { return 0; }
+
+faacEncHandle FAACAPI dummyfaacEncOpen(unsigned long,
+				  unsigned int,
+				  unsigned long *,
+				  unsigned long *) { return NULL; }
+
+int FAACAPI dummyfaacEncGetDecoderSpecificInfo(faacEncHandle, unsigned char **,
+					  unsigned long *) { return 0; }
+
+int FAACAPI dummyfaacEncEncode(faacEncHandle, int32_t *, unsigned int,
+			 unsigned char *,
+			 unsigned int) { return 0; }
+# endif
+#endif
+
+int FAACAPI dummyfaacEncClose(faacEncHandle) { return 0; }
+
 CAudioSourceEncoderImplementation::CAudioSourceEncoderImplementation()
 	 : bUsingTextMessage(false)
 #ifdef HAVE_LIBFAAC
 		, hEncoder(NULL)
 #endif
 {
+#ifdef HAVE_LIBFAAD
+# ifdef DYNAMIC_LINK_CODECS
+    faacEncGetVersion = dummyfaacEncGetVersion;
+    faacEncGetCurrentConfiguration = dummyfaacEncGetCurrentConfiguration;
+    faacEncSetConfiguration = dummyfaacEncSetConfiguration;
+    faacEncOpen = faacEncOpen;
+    faacEncGetDecoderSpecificInfo = dummyfaacEncGetDecoderSpecificInfo;
+    faacEncEncode = dummyfaacEncEncode;
+    faacEncClose = dummyfaacEncClose;
+#  ifdef _WIN32
+    hlib = LoadLibrary(TEXT("libfaac.dll"));
+    if(hlib)
+    {
+        faacEncGetVersion = (faacEncGetVersion_t*)GetProcAddress(hlib, TEXT("faacEncGetVersion"));
+        faacEncGetCurrentConfiguration = (faacEncGetCurrentConfiguration_t*)GetProcAddress(hlib, TEXT("faacEncGetCurrentConfiguration"));
+        faacEncSetConfiguration = (faacEncSetConfiguration_t*)GetProcAddress(hlib, TEXT("faacEncSetConfiguration"));
+        faacEncOpen = (faacEncOpen_t*)GetProcAddress(hlib, TEXT("faacEncOpen"));
+        faacEncGetDecoderSpecificInfo = (faacEncGetDecoderSpecificInfo_t*)GetProcAddress(hlib, TEXT("faacEncGetDecoderSpecificInfo"));
+        faacEncEncode = (faacEncEncode_t*)GetProcAddress(hlib, TEXT("faacEncEncode"));
+        faacEncClose = (faacEncClose_t*)GetProcAddress(hlib, TEXT("faacEncClose"));
+    }
+#  else
+#   if defined(__APPLE__)
+    hlib = dlopen("libfaac.dylib", RTLD_LOCAL | RTLD_NOW);
+#   else
+    hlib = dlopen("libfaac.so", RTLD_LOCAL | RTLD_NOW);
+#   endif
+    if(hlib)
+    {
+        faacEncGetVersion = (faacEncGetVersion_t*)dlsym(hlib, "faacEncGetVersion");
+        faacEncGetCurrentConfiguration = (faacEncGetCurrentConfiguration_t*)dlsym(hlib, "faacEncGetCurrentConfiguration");
+        faacEncSetConfiguration = (faacEncSetConfiguration_t*)dlsym(hlib, "faacEncSetConfiguration");
+        faacEncOpen = (faacEncOpen_t*)dlsym(hlib, "faacEncOpen");
+        faacEncGetDecoderSpecificInfo = (faacEncGetDecoderSpecificInfo_t*)dlsym(hlib, "faacEncGetDecoderSpecificInfo");
+        faacEncEncode = (faacEncEncode_t*)dlsym(hlib, "faacEncEncode");
+        faacEncClose = (faacEncClose_t*)dlsym(hlib, "faacEncClose");
+    }
+#  endif
+# endif
+#endif
 }
 
 void
-CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
-													   *pvecInputData,
-													   CVectorEx < _BINARY >
-													   *pvecOutputData,
-													   int &iInputBlockSize,
-													   int &iOutputBlockSize)
+CAudioSourceEncoderImplementation::ProcessDataInternal
+(
+    CVectorEx <_SAMPLE>* pvecInputData,
+    CVectorEx < _BINARY >* pvecOutputData,
+    int& iInputBlockSize, int& iOutputBlockSize
+)
 {
-	int i, j;
-
 	/* Reset data to zero. This is important since usually not all data is used
 	   and this data has to be set to zero as defined in the DRM standard */
-	for (i = 0; i < iOutputBlockSize; i++)
+	for (int i = 0; i < iOutputBlockSize; i++)
 		(*pvecOutputData)[i] = 0;
 
 #ifdef HAVE_LIBFAAC
 	/* AAC encoder ------------------------------------------------------ */
 	/* Resample data to encoder bit-rate */
 	/* Change type of data (short -> real), take left channel! */
-	for (i = 0; i < iInputBlockSize / 2; i++)
+	for (int i = 0; i < iInputBlockSize / 2; i++)
 		vecTempResBufIn[i] = (*pvecInputData)[i * 2];
 
 	/* Resample data */
 	ResampleObj.Resample(vecTempResBufIn, vecTempResBufOut);
 
 	/* Split data in individual audio blocks */
-	for (j = 0; j < iNumAACFrames; j++)
+	for (int j = 0; j < iNumAACFrames; j++)
 	{
 		/* Convert _REAL type to _SAMPLE type, copy in smaller buffer */
 		for (unsigned long k = 0; k < lNumSampEncIn; k++)
@@ -71,7 +133,7 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
 		}
 
 		/* Actual AAC encoding */
-		CVector < unsigned char >vecsTmpData(lMaxBytesEncOut);
+		CVector<unsigned char>vecsTmpData(lMaxBytesEncOut);
 		int bytesEncoded = faacEncEncode(hEncoder,
 										 (int32_t *) & vecsEncInData[0],
 										 lNumSampEncIn, &vecsTmpData[0],
@@ -83,7 +145,7 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
 			aac_crc_bits[j] = vecsTmpData[0];
 
 			/* Extract actual data */
-			for (i = 0; i < bytesEncoded - 1 /* "-1" for CRC */ ; i++)
+			for (int i = 0; i < bytesEncoded - 1 /* "-1" for CRC */ ; i++)
 				audio_frame[j][i] = vecsTmpData[i + 1];
 
 			/* Store block lengths for boarders in AAC super-frame-header */
@@ -99,7 +161,7 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
 
 	/* Write data to output vector */
 	/* First init buffer with zeros */
-	for (i = 0; i < iOutputBlockSize; i++)
+	for (int i = 0; i < iOutputBlockSize; i++)
 		(*pvecOutputData)[i] = 0;
 
 	/* Reset bit extraction access */
@@ -107,7 +169,7 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
 
 	/* AAC super-frame-header */
 	int iAccFrameLength = 0;
-	for (j = 0; j < iNumAACFrames - 1; j++)
+	for (int j = 0; j < iNumAACFrames - 1; j++)
 	{
 		iAccFrameLength += veciFrameLength[j];
 
@@ -121,10 +183,10 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
 
 	/* Higher protected part */
 		int iCurNumBytes = 0;
-	for (j = 0; j < iNumAACFrames; j++)
+	for (int j = 0; j < iNumAACFrames; j++)
 	{
 		/* Data */
-		for (i = 0; i < iNumHigherProtectedBytes; i++)
+		for (int i = 0; i < iNumHigherProtectedBytes; i++)
 		{
 			/* Check if enough data is available, set data to 0 if not */
 			if (i < veciFrameLength[j])
@@ -140,9 +202,9 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
 	}
 
 	/* Lower protected part */
-	for (j = 0; j < iNumAACFrames; j++)
+	for (int j = 0; j < iNumAACFrames; j++)
 	{
-		for (i = iNumHigherProtectedBytes; i < veciFrameLength[j]; i++)
+		for (int i = iNumHigherProtectedBytes; i < veciFrameLength[j]; i++)
 		{
 			/* If encoder produced too many bits, we have to drop them */
 			if (iCurNumBytes < iAudioPayloadLen)
@@ -177,16 +239,17 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
 			BITS_BINARY * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
 
 		/* Add text message bytes to output stream */
-		for (i = iByteStartTextMess; i < iTotNumBitsForUsage; i++)
+		for (int i = iByteStartTextMess; i < iTotNumBitsForUsage; i++)
 			(*pvecOutputData)[i] =
 				vecbiTextMessBuf[i - iByteStartTextMess];
 	}
 }
 
 void
-CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
-												  int &iInputBlockSize,
-												  int &iOutputBlockSize)
+CAudioSourceEncoderImplementation::InitInternalTx
+(
+    CParameter & TransmParam, int &iInputBlockSize, int &iOutputBlockSize
+)
 {
 
 

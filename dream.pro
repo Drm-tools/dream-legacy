@@ -73,7 +73,7 @@ win32 {
     }
     !portaudio {
         HEADERS		+= windows/Source/Sound.h windows/Source/SoundWin.h
-        SOURCES		+= windows/Source/Pacer.cpp windows/Source/Sound.cpp
+        SOURCES		+= windows/Source/Sound.cpp
         LIBS        += -lwinmm
     }
 }
