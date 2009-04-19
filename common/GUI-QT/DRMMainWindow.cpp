@@ -447,13 +447,17 @@ void DRMMainWindow::UpdateDisplay()
 		/* Reset checks */
 
         iCurSelServiceGUI = iCurSelAudioServ;
-		serviceGroup->button(iCurSelServiceGUI)->setOn(true);
+		if(iCurSelServiceGUI>=0 && iCurSelServiceGUI<=3)
+			serviceGroup->button(iCurSelServiceGUI)->setOn(true);
 	}
 	else if (Service[iCurSelServiceGUI].eAudDataFlag == SF_DATA)
 	{
 		/* In case we only have data services, set all off (TODO - review this policy */
-		serviceGroup->button(iCurSelServiceGUI)->setOn(true);
-		serviceGroup->button(iCurSelServiceGUI)->setOn(false);
+		if(iCurSelServiceGUI>=0 && iCurSelServiceGUI<=3)
+		{
+			serviceGroup->button(iCurSelServiceGUI)->setOn(true);
+			serviceGroup->button(iCurSelServiceGUI)->setOn(false);
+		}
 	}
 
 	/* Service selector ------------------------------------------------- */
