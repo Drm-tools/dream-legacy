@@ -5,8 +5,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>528</width>
-    <height>734</height>
+    <width>536</width>
+    <height>743</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -17,11 +17,14 @@
     <normaloff>:/icons/MainIcon.png</normaloff>:/icons/MainIcon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget" >
-   <layout class="QVBoxLayout" name="verticalLayout" >
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout" >
+   <layout class="QGridLayout" name="gridLayout" >
+    <item row="0" column="0" >
+     <layout class="QHBoxLayout" name="horizontalLayout_2" >
       <item>
        <widget class="QLabel" name="logo" >
+        <property name="whatsThis" >
+         <string>&lt;b>Dream Logo:&lt;/b> This is the official logo of the Dream software.</string>
+        </property>
         <property name="text" >
          <string/>
         </property>
@@ -31,17 +34,11 @@
        </widget>
       </item>
       <item>
-       <widget class="Q3ButtonGroup" name="ButtonGroupMode" >
+       <widget class="QGroupBox" name="groupBoxMode" >
         <property name="title" >
          <string>Operating Mode</string>
         </property>
-        <layout class="QHBoxLayout" name="_2" >
-         <property name="spacing" >
-          <number>6</number>
-         </property>
-         <property name="margin" >
-          <number>11</number>
-         </property>
+        <layout class="QHBoxLayout" name="horizontalLayout" >
          <item>
           <widget class="QRadioButton" name="RadioButtonTransmitter" >
            <property name="text" >
@@ -68,19 +65,13 @@
       </item>
      </layout>
     </item>
-    <item>
-     <widget class="Q3GroupBox" name="GroupInput" >
+    <item row="1" column="0" >
+     <widget class="QGroupBox" name="Indicators" >
       <property name="title" >
        <string>Indicators</string>
       </property>
-      <layout class="QGridLayout" name="_3" >
-       <property name="margin" >
-        <number>11</number>
-       </property>
-       <property name="spacing" >
-        <number>6</number>
-       </property>
-       <item row="0" column="0" >
+      <layout class="QVBoxLayout" name="verticalLayout_2" >
+       <item>
         <layout class="QHBoxLayout" name="_4" >
          <property name="spacing" >
           <number>6</number>
@@ -88,6 +79,19 @@
          <property name="margin" >
           <number>0</number>
          </property>
+         <item>
+          <widget class="QwtThermo" name="ProgrInputLevel" >
+           <property name="sizePolicy" >
+            <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="whatsThis" >
+            <string>&lt;b>Input Level:&lt;/b> The input level meter shows the relative input signal peak level in dB. If the level is too high, the meter turns from green to red.</string>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="QLabel" name="TextLabelAudioLevel" >
            <property name="text" >
@@ -101,35 +105,9 @@
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QwtThermo" name="ProgrInputLevel" >
-           <property name="sizePolicy" >
-            <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
         </layout>
        </item>
-       <item row="2" column="0" >
-        <widget class="Q3ProgressBar" name="ProgressBarCurPict" >
-         <property name="sizePolicy" >
-          <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="frameShape" >
-          <enum>QFrame::WinPanel</enum>
-         </property>
-         <property name="frameShadow" >
-          <enum>QFrame::Sunken</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0" >
+       <item>
         <widget class="QLabel" name="TextLabelCurPict" >
          <property name="sizePolicy" >
           <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
@@ -145,10 +123,17 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QProgressBar" name="ProgressBarCurPict" >
+         <property name="value" >
+          <number>24</number>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
-    <item>
+    <item row="2" column="0" >
      <widget class="QTabWidget" name="TabWidgetConfigure" >
       <property name="sizePolicy" >
        <sizepolicy vsizetype="Fixed" hsizetype="Expanding" >
@@ -163,44 +148,30 @@
        </size>
       </property>
       <property name="currentIndex" >
-       <number>5</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="Channel" >
        <attribute name="title" >
         <string>Channel Parameters</string>
        </attribute>
-       <layout class="QGridLayout" name="_5" >
-        <property name="margin" >
-         <number>11</number>
-        </property>
-        <property name="spacing" >
-         <number>6</number>
-        </property>
-        <item row="0" column="0" colspan="2" >
-         <widget class="Q3ButtonGroup" name="ButtonGroupBandwidth" >
-          <property name="sizePolicy" >
-           <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+       <layout class="QGridLayout" name="gridLayout_2" >
+        <item row="0" column="0" >
+         <widget class="QGroupBox" name="groupBoxSpectrumOccupancy" >
+          <property name="whatsThis" >
+           <string>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">Spectrum Occupancy:&lt;/span> The spectrum occupancy is the gross bandwidth of the generated DRM signal. Not all DRM robustness mode / bandwidth constellations are possible, e.g., DRM robustness mode D and C are only defined for the bandwidths 10 kHz and 20 kHz. &lt;/p>&lt;/body>&lt;/html></string>
           </property>
           <property name="title" >
-           <string>Bandwidth</string>
+           <string>Spectrum Occupancy</string>
           </property>
-          <property name="radioButtonExclusive" >
-           <bool>true</bool>
-          </property>
-          <layout class="QHBoxLayout" name="_6" >
-           <property name="spacing" >
-            <number>6</number>
-           </property>
-           <property name="margin" >
-            <number>11</number>
-           </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_4" >
            <item>
             <widget class="QRadioButton" name="RadioButtonBandwidth45" >
              <property name="text" >
-              <string>4,5 kHz</string>
+              <string>4.5 kHz</string>
              </property>
              <property name="buttonGroupId" stdset="0" >
               <number>0</number>
@@ -260,270 +231,287 @@
           </layout>
          </widget>
         </item>
-        <item row="1" column="1" >
-         <widget class="Q3GroupBox" name="GroupBoxSDC" >
-          <property name="title" >
-           <string>Service Data Channel</string>
-          </property>
-          <layout class="QHBoxLayout" name="_7" >
-           <property name="spacing" >
-            <number>6</number>
-           </property>
-           <property name="margin" >
-            <number>11</number>
-           </property>
-           <item>
-            <widget class="QLabel" name="TextLabelSDCConst" >
-             <property name="text" >
-              <string>Constellation Scheme</string>
-             </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="ComboBoxSDCConstellation" />
-           </item>
-          </layout>
-         </widget>
-        </item>
         <item row="1" column="0" >
-         <widget class="Q3ButtonGroup" name="ButtonGroupRobustnessMode" >
-          <property name="title" >
-           <string>Robustness Mode</string>
-          </property>
-          <property name="radioButtonExclusive" >
-           <bool>true</bool>
-          </property>
-          <layout class="QHBoxLayout" name="_8" >
-           <property name="spacing" >
-            <number>6</number>
-           </property>
-           <property name="margin" >
-            <number>11</number>
-           </property>
-           <item>
-            <widget class="QRadioButton" name="RadioButtonRMA" >
-             <property name="text" >
-              <string>A</string>
+         <layout class="QHBoxLayout" name="horizontalLayout_6" >
+          <item>
+           <widget class="QGroupBox" name="groupBoxRobustness" >
+            <property name="whatsThis" >
+             <string>&lt;b>DRM Robustness Mode:&lt;/b> In a DRM system, 
+four possible robustness modes are defined to adapt the system to 
+different channel conditions. According to the DRM standard:
+&lt;ul>&lt;li>&lt;i>Mode A:&lt;/i> Gaussian channels, with 
+minor fading&lt;/li>&lt;li>&lt;i>Mode B:&lt;/i> Time 
+and frequency selective channels, with longer delay spread
+&lt;/li>&lt;li>&lt;i>Mode C:&lt;/i> As robustness mode B, 
+but with higher Doppler spread&lt;/li>&lt;li>&lt;i>Mode D:
+&lt;/i> As robustness mode B, but with severe delay and 
+Doppler spread&lt;/li>&lt;/ul>
+</string>
+            </property>
+            <property name="title" >
+             <string>Robustness Mode</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_3" >
+             <item>
+              <widget class="QRadioButton" name="RadioButtonRMA" >
+               <property name="text" >
+                <string>A</string>
+               </property>
+               <property name="buttonGroupId" stdset="0" >
+                <number>0</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="RadioButtonRMB" >
+               <property name="text" >
+                <string>B</string>
+               </property>
+               <property name="buttonGroupId" stdset="0" >
+                <number>1</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="RadioButtonRMC" >
+               <property name="text" >
+                <string>C</string>
+               </property>
+               <property name="buttonGroupId" stdset="0" >
+                <number>2</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QRadioButton" name="RadioButtonRMD" >
+               <property name="text" >
+                <string>D</string>
+               </property>
+               <property name="buttonGroupId" stdset="0" >
+                <number>3</number>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="GroupBoxSDC" >
+            <property name="title" >
+             <string>Service Data Channel</string>
+            </property>
+            <layout class="QHBoxLayout" name="_7" >
+             <property name="spacing" >
+              <number>6</number>
              </property>
-             <property name="buttonGroupId" stdset="0" >
-              <number>0</number>
+             <property name="margin" >
+              <number>11</number>
              </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="RadioButtonRMB" >
-             <property name="text" >
-              <string>B</string>
-             </property>
-             <property name="buttonGroupId" stdset="0" >
-              <number>1</number>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="RadioButtonRMC" >
-             <property name="text" >
-              <string>C</string>
-             </property>
-             <property name="buttonGroupId" stdset="0" >
-              <number>2</number>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QRadioButton" name="RadioButtonRMD" >
-             <property name="text" >
-              <string>D</string>
-             </property>
-             <property name="buttonGroupId" stdset="0" >
-              <number>3</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
+             <item>
+              <widget class="QLabel" name="TextLabelSDCConst" >
+               <property name="text" >
+                <string>Constellation Scheme</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="ComboBoxSDCConstellation" />
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item row="2" column="0" >
-         <widget class="Q3GroupBox" name="GroupBoxMSC" >
-          <property name="title" >
-           <string>Main Service Channel</string>
-          </property>
-          <layout class="QGridLayout" name="_9" >
-           <property name="margin" >
-            <number>11</number>
-           </property>
-           <property name="spacing" >
-            <number>6</number>
-           </property>
-           <item row="0" column="1" >
-            <widget class="QComboBox" name="ComboBoxMSCProtLev" />
-           </item>
-           <item row="2" column="0" >
-            <widget class="QLabel" name="TextLabelInterleaver" >
-             <property name="text" >
-              <string>Interleaver Mode</string>
+         <layout class="QHBoxLayout" name="horizontalLayout_5" >
+          <item>
+           <widget class="QGroupBox" name="GroupBoxMSC" >
+            <property name="title" >
+             <string>Main Service Channel</string>
+            </property>
+            <layout class="QGridLayout" name="_9" >
+             <property name="margin" >
+              <number>11</number>
              </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
+             <property name="spacing" >
+              <number>6</number>
              </property>
-            </widget>
-           </item>
-           <item row="0" column="0" >
-            <widget class="QLabel" name="TextLabelProtLev" >
-             <property name="text" >
-              <string>Protection Level</string>
+             <item row="0" column="1" >
+              <widget class="QComboBox" name="ComboBoxMSCProtLev" />
+             </item>
+             <item row="2" column="0" >
+              <widget class="QLabel" name="TextLabelInterleaver" >
+               <property name="text" >
+                <string>Interleaver Mode</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0" >
+              <widget class="QLabel" name="TextLabelProtLev" >
+               <property name="text" >
+                <string>Protection Level</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0" >
+              <widget class="QLabel" name="TextLabelMSCConst" >
+               <property name="text" >
+                <string>Constellation Scheme</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1" >
+              <widget class="QComboBox" name="ComboBoxMSCConstellation" />
+             </item>
+             <item row="2" column="1" >
+              <widget class="QComboBox" name="ComboBoxMSCInterleaver" >
+               <property name="whatsThis" >
+                <string>&lt;b>MSC interleaver mode:&lt;/b> The symbol interleaver depth can be either short (approx. 400 ms) or long (approx. 2 s). The longer the interleaver the better the channel decoder can correct errors from slow fading signals. But the longer the interleaver length the longer the delay until (after a re-synchronization) audio can be heard.
+</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="GroupBoxChannelCapacity" >
+            <property name="title" >
+             <string>Channel Capacity</string>
+            </property>
+            <layout class="QGridLayout" name="_10" >
+             <property name="margin" >
+              <number>11</number>
              </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
+             <property name="spacing" >
+              <number>6</number>
              </property>
-            </widget>
-           </item>
-           <item row="1" column="0" >
-            <widget class="QLabel" name="TextLabelMSCConst" >
-             <property name="text" >
-              <string>Constellation Scheme</string>
-             </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1" >
-            <widget class="QComboBox" name="ComboBoxMSCConstellation" />
-           </item>
-           <item row="2" column="1" >
-            <widget class="QComboBox" name="ComboBoxMSCInterleaver" />
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="2" column="1" >
-         <widget class="Q3GroupBox" name="GroupBoxChannelCapacity" >
-          <property name="title" >
-           <string>Channel Capacity</string>
-          </property>
-          <layout class="QGridLayout" name="_10" >
-           <property name="margin" >
-            <number>11</number>
-           </property>
-           <property name="spacing" >
-            <number>6</number>
-           </property>
-           <item row="0" column="2" >
-            <widget class="QLabel" name="TextLabel2_2" >
-             <property name="text" >
-              <string>Bytes</string>
-             </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="1" >
-            <widget class="QLabel" name="TextLabel1" >
-             <property name="text" >
-              <string>Bits</string>
-             </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0" >
-            <widget class="QLabel" name="TextLabel3" >
-             <property name="text" >
-              <string>FAC</string>
-             </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="2" >
-            <widget class="QLabel" name="TextLabelFACCapBytes" >
-             <property name="text" >
-              <string>9</string>
-             </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1" >
-            <widget class="QLabel" name="TextLabelFACCapBits" >
-             <property name="text" >
-              <string>72</string>
-             </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0" >
-            <widget class="QLabel" name="TextLabel4" >
-             <property name="text" >
-              <string>SDC</string>
-             </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1" >
-            <widget class="QLabel" name="TextLabelSDCCapBits" >
-             <property name="text" >
-              <string>xxx</string>
-             </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2" >
-            <widget class="QLabel" name="TextLabelSDCCapBytes" >
-             <property name="text" >
-              <string>TextLabel3</string>
-             </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0" >
-            <widget class="QLabel" name="TextLabelMSCCapLab" >
-             <property name="text" >
-              <string>MSC</string>
-             </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1" >
-            <widget class="QLabel" name="TextLabelMSCCapBits" >
-             <property name="text" >
-              <string>xxxx</string>
-             </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="2" >
-            <widget class="QLabel" name="TextLabelMSCCapBytes" >
-             <property name="text" >
-              <string>TextLabel4</string>
-             </property>
-             <property name="wordWrap" >
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
+             <item row="0" column="2" >
+              <widget class="QLabel" name="TextLabel2_2" >
+               <property name="text" >
+                <string>Bytes</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1" >
+              <widget class="QLabel" name="TextLabel1" >
+               <property name="text" >
+                <string>Bits</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0" >
+              <widget class="QLabel" name="TextLabel3" >
+               <property name="text" >
+                <string>FAC</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2" >
+              <widget class="QLabel" name="TextLabelFACCapBytes" >
+               <property name="text" >
+                <string>9</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1" >
+              <widget class="QLabel" name="TextLabelFACCapBits" >
+               <property name="text" >
+                <string>72</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0" >
+              <widget class="QLabel" name="TextLabel4" >
+               <property name="text" >
+                <string>SDC</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1" >
+              <widget class="QLabel" name="TextLabelSDCCapBits" >
+               <property name="text" >
+                <string>xxx</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="2" >
+              <widget class="QLabel" name="TextLabelSDCCapBytes" >
+               <property name="text" >
+                <string>TextLabel3</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0" >
+              <widget class="QLabel" name="TextLabelMSCCapLab" >
+               <property name="text" >
+                <string>MSC</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1" >
+              <widget class="QLabel" name="TextLabelMSCCapBits" >
+               <property name="text" >
+                <string>xxxx</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="2" >
+              <widget class="QLabel" name="TextLabelMSCCapBytes" >
+               <property name="text" >
+                <string>TextLabel4</string>
+               </property>
+               <property name="wordWrap" >
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item row="3" column="0" >
          <spacer name="Spacer7" >
@@ -535,24 +523,8 @@
           </property>
           <property name="sizeHint" stdset="0" >
            <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="3" column="1" >
-         <spacer name="Spacer8" >
-          <property name="orientation" >
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeType" >
-           <enum>QSizePolicy::Expanding</enum>
-          </property>
-          <property name="sizeHint" stdset="0" >
-           <size>
-            <width>20</width>
-            <height>20</height>
+            <width>195</width>
+            <height>144</height>
            </size>
           </property>
          </spacer>
@@ -563,20 +535,7 @@
        <attribute name="title" >
         <string>Streams</string>
        </attribute>
-       <layout class="QGridLayout" name="_11" >
-        <property name="margin" >
-         <number>11</number>
-        </property>
-        <property name="spacing" >
-         <number>6</number>
-        </property>
-        <item row="4" column="3" colspan="2" >
-         <widget class="QPushButton" name="ButtonDeleteStream" >
-          <property name="text" >
-           <string>Delete Selected</string>
-          </property>
-         </widget>
-        </item>
+       <layout class="QGridLayout" name="gridLayout_4" >
         <item row="0" column="0" >
          <widget class="QLabel" name="TextLabel2_3" >
           <property name="text" >
@@ -591,16 +550,6 @@
          <widget class="QLabel" name="TextLabelMSCBytesTotal" >
           <property name="text" >
            <string>TextLabel3</string>
-          </property>
-          <property name="wordWrap" >
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3" >
-         <widget class="QLabel" name="TextLabel4_2" >
-          <property name="text" >
-           <string>Available</string>
           </property>
           <property name="wordWrap" >
            <bool>false</bool>
@@ -623,6 +572,16 @@
           </property>
          </spacer>
         </item>
+        <item row="0" column="3" >
+         <widget class="QLabel" name="TextLabel4_2" >
+          <property name="text" >
+           <string>Available</string>
+          </property>
+          <property name="wordWrap" >
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="4" >
          <widget class="QLabel" name="TextLabelMSCBytesAvailable" >
           <property name="text" >
@@ -631,131 +590,6 @@
           <property name="wordWrap" >
            <bool>false</bool>
           </property>
-         </widget>
-        </item>
-        <item row="4" column="0" colspan="2" >
-         <widget class="QPushButton" name="ButtonAddStream" >
-          <property name="text" >
-           <string>Add</string>
-          </property>
-         </widget>
-        </item>
-        <item row="4" column="2" >
-         <spacer name="Spacer5" >
-          <property name="orientation" >
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeType" >
-           <enum>QSizePolicy::Expanding</enum>
-          </property>
-          <property name="sizeHint" stdset="0" >
-           <size>
-            <width>20</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="1" column="0" colspan="5" >
-         <widget class="Q3ListView" name="ListViewStreams" >
-          <property name="sizePolicy" >
-           <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximumSize" >
-           <size>
-            <width>32767</width>
-            <height>300</height>
-           </size>
-          </property>
-          <column>
-           <property name="text" >
-            <string>Stream</string>
-           </property>
-           <property name="clickable" >
-            <bool>true</bool>
-           </property>
-           <property name="resizable" >
-            <bool>true</bool>
-           </property>
-          </column>
-          <column>
-           <property name="text" >
-            <string>Type</string>
-           </property>
-           <property name="clickable" >
-            <bool>true</bool>
-           </property>
-           <property name="resizable" >
-            <bool>true</bool>
-           </property>
-          </column>
-          <column>
-           <property name="text" >
-            <string>Bytes Per Packet</string>
-           </property>
-           <property name="clickable" >
-            <bool>true</bool>
-           </property>
-           <property name="resizable" >
-            <bool>true</bool>
-           </property>
-          </column>
-          <column>
-           <property name="text" >
-            <string>Packets Per Frame</string>
-           </property>
-           <property name="clickable" >
-            <bool>true</bool>
-           </property>
-           <property name="resizable" >
-            <bool>true</bool>
-           </property>
-          </column>
-          <column>
-           <property name="text" >
-            <string>Bits Per Frame</string>
-           </property>
-           <property name="clickable" >
-            <bool>true</bool>
-           </property>
-           <property name="resizable" >
-            <bool>true</bool>
-           </property>
-          </column>
-          <column>
-           <property name="text" >
-            <string>Bytes Per Frame</string>
-           </property>
-           <property name="clickable" >
-            <bool>true</bool>
-           </property>
-           <property name="resizable" >
-            <bool>true</bool>
-           </property>
-          </column>
-          <item>
-           <property name="text" >
-            <string>New Item</string>
-           </property>
-           <property name="text" >
-            <string/>
-           </property>
-           <property name="text" >
-            <string/>
-           </property>
-           <property name="text" >
-            <string/>
-           </property>
-           <property name="text" >
-            <string/>
-           </property>
-           <property name="text" >
-            <string/>
-           </property>
-          </item>
          </widget>
         </item>
         <item row="2" column="0" colspan="5" >
@@ -767,10 +601,17 @@
            <number>0</number>
           </property>
           <item>
-           <widget class="QComboBox" name="ComboBoxStream" />
+           <widget class="QComboBox" name="ComboBoxStream" >
+            <property name="insertPolicy" >
+             <enum>QComboBox::InsertAlphabetically</enum>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QComboBox" name="ComboBoxStreamType" />
+          </item>
+          <item>
+           <widget class="QLineEdit" name="LineEditBytesPerFrame" />
           </item>
           <item>
            <widget class="QLineEdit" name="LineEditPacketLen" >
@@ -797,9 +638,6 @@
           <item>
            <widget class="QComboBox" name="ComboBoxPacketsPerFrame" />
           </item>
-          <item>
-           <widget class="QLineEdit" name="LineEditBitsPerFrame" />
-          </item>
          </layout>
         </item>
         <item row="3" column="2" >
@@ -817,6 +655,77 @@
            </size>
           </property>
          </spacer>
+        </item>
+        <item row="4" column="0" colspan="2" >
+         <widget class="QPushButton" name="ButtonAddStream" >
+          <property name="text" >
+           <string>Add</string>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2" >
+         <spacer name="Spacer5" >
+          <property name="orientation" >
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeType" >
+           <enum>QSizePolicy::Expanding</enum>
+          </property>
+          <property name="sizeHint" stdset="0" >
+           <size>
+            <width>20</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="4" column="3" colspan="2" >
+         <widget class="QPushButton" name="ButtonDeleteStream" >
+          <property name="text" >
+           <string>Delete Selected</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="5" >
+         <widget class="QTableWidget" name="tableWidgetStreams" >
+          <property name="selectionMode" >
+           <enum>QAbstractItemView::SingleSelection</enum>
+          </property>
+          <property name="selectionBehavior" >
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="showGrid" >
+           <bool>false</bool>
+          </property>
+          <property name="gridStyle" >
+           <enum>Qt::SolidLine</enum>
+          </property>
+          <column>
+           <property name="text" >
+            <string>Stream</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>Type</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>Bytes Per Frame</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>Bytes Per Packet</string>
+           </property>
+          </column>
+          <column>
+           <property name="text" >
+            <string>Packets Per Frame</string>
+           </property>
+          </column>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -856,7 +765,7 @@
          </size>
         </property>
        </widget>
-       <widget class="Q3GroupBox" name="GroupBoxAudioConfig" >
+       <widget class="QGroupBox" name="GroupBoxAudioConfig" >
         <property name="geometry" >
          <rect>
           <x>11</x>
@@ -1004,7 +913,7 @@
          </item>
         </layout>
        </widget>
-       <widget class="Q3GroupBox" name="GroupBoxTextMessage" >
+       <widget class="QGroupBox" name="GroupBoxTextMessage" >
         <property name="geometry" >
          <rect>
           <x>10</x>
@@ -1153,7 +1062,7 @@
          </layout>
         </item>
         <item row="1" column="0" colspan="2" >
-         <widget class="Q3GroupBox" name="GroupBoxMOSlideshowApplication" >
+         <widget class="QGroupBox" name="GroupBoxMOSlideshowApplication" >
           <property name="title" >
            <string>MOT Slideshow Application</string>
           </property>
@@ -1241,7 +1150,7 @@
          </widget>
         </item>
         <item row="2" column="0" colspan="4" >
-         <widget class="Q3GroupBox" name="GroupBox10" >
+         <widget class="QGroupBox" name="GroupBox10" >
           <property name="title" >
            <string>Service Data</string>
           </property>
@@ -1341,6 +1250,9 @@
                <height>32767</height>
               </size>
              </property>
+             <property name="insertPolicy" >
+              <enum>QComboBox::InsertAlphabetically</enum>
+             </property>
             </widget>
            </item>
            <item row="0" column="1" colspan="2" >
@@ -1419,7 +1331,7 @@
          </widget>
         </item>
         <item row="3" column="0" colspan="2" >
-         <widget class="Q3GroupBox" name="GroupBox8" >
+         <widget class="QGroupBox" name="GroupBox8" >
           <property name="title" >
            <string>Audio Component</string>
           </property>
@@ -1481,7 +1393,7 @@
          </widget>
         </item>
         <item row="3" column="2" colspan="2" >
-         <widget class="Q3GroupBox" name="GroupBox9" >
+         <widget class="QGroupBox" name="GroupBox9" >
           <property name="title" >
            <string>Data Component</string>
           </property>
@@ -2196,113 +2108,89 @@
        <attribute name="title" >
         <string>COFDM</string>
        </attribute>
-       <layout class="QGridLayout" name="_29" >
-        <property name="margin" >
-         <number>11</number>
-        </property>
-        <property name="spacing" >
-         <number>6</number>
-        </property>
+       <layout class="QGridLayout" name="gridLayout_3" >
         <item row="0" column="0" >
-         <layout class="QHBoxLayout" name="_30" >
-          <property name="spacing" >
-           <number>6</number>
+         <widget class="QFrame" name="frame" >
+          <property name="whatsThis" >
+           <string>Output intermediate frequency of DRM signal:&lt;/b> sets the output intermediate frequency (IF) of the generated DRM signal in the 'sound-card pass-band'. In some DRM modes, the IF is located at the edge of the DRM signal, in other modes it is centered. The IF should be chosen that the DRM signal lies entirely inside the sound-card bandwidth.
+</string>
           </property>
-          <property name="margin" >
-           <number>0</number>
+          <property name="frameShape" >
+           <enum>QFrame::NoFrame</enum>
           </property>
-          <item>
-           <widget class="QLabel" name="TextLabelIF" >
-            <property name="text" >
-             <string>Intermediate Frequency</string>
-            </property>
-            <property name="wordWrap" >
-             <bool>false</bool>
-            </property>
-            <property name="indent" >
-             <number>-1</number>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="LineEditSndCrdIF" >
-            <property name="sizePolicy" >
-             <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize" >
-             <size>
-              <width>70</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize" >
-             <size>
-              <width>32767</width>
-              <height>32767</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="TextLabelIFUnit" >
-            <property name="text" >
-             <string> Hz</string>
-            </property>
-            <property name="wordWrap" >
-             <bool>false</bool>
-            </property>
-            <property name="indent" >
-             <number>-1</number>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="1" column="0" >
-         <widget class="Q3ButtonGroup" name="ButtonGroupOutput" >
-          <property name="sizePolicy" >
-           <sizepolicy vsizetype="Minimum" hsizetype="Minimum" >
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
+          <property name="frameShadow" >
+           <enum>QFrame::Plain</enum>
           </property>
-          <property name="minimumSize" >
-           <size>
-            <width>0</width>
-            <height>32</height>
-           </size>
-          </property>
-          <property name="title" >
-           <string>Mode</string>
-          </property>
-          <layout class="QHBoxLayout" name="_31" >
-           <property name="spacing" >
-            <number>6</number>
-           </property>
-           <property name="margin" >
-            <number>11</number>
-           </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_8" >
            <item>
-            <widget class="QRadioButton" name="RadioButtonOutIQNeg" >
-             <property name="sizePolicy" >
-              <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
+            <widget class="QLabel" name="TextLabelIF" >
              <property name="text" >
-              <string>I / Q (neg)</string>
+              <string>Intermediate Frequency</string>
              </property>
-             <property name="buttonGroupId" stdset="0" >
-              <number>0</number>
+             <property name="wordWrap" >
+              <bool>false</bool>
+             </property>
+             <property name="indent" >
+              <number>-1</number>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QRadioButton" name="RadioButtonOutIQPos" >
+            <widget class="QLineEdit" name="LineEditSndCrdIF" >
+             <property name="sizePolicy" >
+              <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize" >
+              <size>
+               <width>70</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize" >
+              <size>
+               <width>32767</width>
+               <height>32767</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="TextLabelIFUnit" >
+             <property name="text" >
+              <string> Hz</string>
+             </property>
+             <property name="wordWrap" >
+              <bool>false</bool>
+             </property>
+             <property name="indent" >
+              <number>-1</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="0" >
+         <widget class="QGroupBox" name="groupBoxOutput" >
+          <property name="whatsThis" >
+           <string>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
+p, li { white-space: pre-wrap; }
+&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;">
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">Output format:&lt;/span> Since the sound-card outputs signals in stereo format, it is possible to output the DRM signal in three formats: &lt;/p>
+&lt;ul style="-qt-list-indent: 1;">&lt;li style=" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">real valued&lt;/span> output on both, left and right, sound-card channels&lt;/li>
+&lt;li style=" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">E/P&lt;/span> output which is the envelope and phase on separate channels. This output type cannot be used if the Dream transmitter is compiled with a sound-card sample rate of 48 kHz since the spectrum of these components exceed the bandwidth of 20 kHz. The envelope signal is output on the left channel and the phase is output on the right channel.&lt;/li>
+&lt;li style=" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">I/Q &lt;/span>output which is the in-phase and quadrature component of the complex base-band signal at the desired IF. In-phase is output on the left channel and quadrature on the right channel.&lt;/li>&lt;/ul>&lt;/body>&lt;/html></string>
+          </property>
+          <property name="title" >
+           <string>Output</string>
+          </property>
+          <layout class="QHBoxLayout" name="horizontalLayout_7" >
+           <item>
+            <widget class="QRadioButton" name="RadioButtonOutReal" >
              <property name="sizePolicy" >
               <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
                <horstretch>0</horstretch>
@@ -2310,10 +2198,7 @@
               </sizepolicy>
              </property>
              <property name="text" >
-              <string>I / Q (pos)</string>
-             </property>
-             <property name="buttonGroupId" stdset="0" >
-              <number>2</number>
+              <string>Real val.</string>
              </property>
             </widget>
            </item>
@@ -2334,7 +2219,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QRadioButton" name="RadioButtonOutReal" >
+            <widget class="QRadioButton" name="RadioButtonOutIQPos" >
              <property name="sizePolicy" >
               <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
                <horstretch>0</horstretch>
@@ -2342,11 +2227,58 @@
               </sizepolicy>
              </property>
              <property name="text" >
-              <string>Real val.</string>
+              <string>I / Q (pos)</string>
+             </property>
+             <property name="buttonGroupId" stdset="0" >
+              <number>2</number>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QRadioButton" name="RadioButtonOutIQNeg" >
+             <property name="sizePolicy" >
+              <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text" >
+              <string>I / Q (neg)</string>
+             </property>
+             <property name="buttonGroupId" stdset="0" >
+              <number>0</number>
              </property>
             </widget>
            </item>
           </layout>
+         </widget>
+        </item>
+        <item row="2" column="0" >
+         <widget class="Q3ListView" name="ListViewCOFDM" >
+          <property name="maximumSize" >
+           <size>
+            <width>32767</width>
+            <height>100</height>
+           </size>
+          </property>
+          <column>
+           <property name="text" >
+            <string>Output</string>
+           </property>
+           <property name="clickable" >
+            <bool>true</bool>
+           </property>
+           <property name="resizable" >
+            <bool>true</bool>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item row="2" column="1" >
+         <widget class="QPushButton" name="PushButtonCOFDMDeleteSelected" >
+          <property name="text" >
+           <string>Delete Selected</string>
+          </property>
          </widget>
         </item>
         <item row="3" column="0" >
@@ -2422,39 +2354,11 @@
           </item>
          </layout>
         </item>
-        <item row="2" column="1" >
-         <widget class="QPushButton" name="PushButtonCOFDMDeleteSelected" >
-          <property name="text" >
-           <string>Delete Selected</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0" >
-         <widget class="Q3ListView" name="ListViewCOFDM" >
-          <property name="maximumSize" >
-           <size>
-            <width>32767</width>
-            <height>100</height>
-           </size>
-          </property>
-          <column>
-           <property name="text" >
-            <string>Output</string>
-           </property>
-           <property name="clickable" >
-            <bool>true</bool>
-           </property>
-           <property name="resizable" >
-            <bool>true</bool>
-           </property>
-          </column>
-         </widget>
-        </item>
        </layout>
       </widget>
      </widget>
     </item>
-    <item>
+    <item row="3" column="0" >
      <layout class="QHBoxLayout" name="_35" >
       <property name="spacing" >
        <number>6</number>
@@ -2513,35 +2417,55 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>528</width>
+     <width>536</width>
      <height>19</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile" >
+    <property name="title" >
+     <string>File</string>
+    </property>
+    <addaction name="action_Exit" />
+   </widget>
+   <widget class="QMenu" name="menu" >
+    <property name="title" >
+     <string>?</string>
+    </property>
+    <addaction name="actionWhats_This" />
+    <addaction name="separator" />
+    <addaction name="actionAbout" />
+   </widget>
+   <addaction name="menuFile" />
+   <addaction name="menu" />
   </widget>
   <widget class="QStatusBar" name="statusbar" />
+  <action name="actionWhats_This" >
+   <property name="text" >
+    <string>What's This</string>
+   </property>
+   <property name="shortcut" >
+    <string>Shift+F1</string>
+   </property>
+  </action>
+  <action name="actionAbout" >
+   <property name="text" >
+    <string>About...</string>
+   </property>
+  </action>
+  <action name="action_Exit" >
+   <property name="text" >
+    <string>Exit</string>
+   </property>
+   <property name="shortcut" >
+    <string>Alt+E</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>Q3GroupBox</class>
-   <extends>QGroupBox</extends>
-   <header>Qt3Support/Q3GroupBox</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>Q3ButtonGroup</class>
-   <extends>Q3GroupBox</extends>
-   <header>Qt3Support/Q3ButtonGroup</header>
-   <container>1</container>
-  </customwidget>
   <customwidget>
    <class>Q3ListView</class>
    <extends>Q3Frame</extends>
    <header>q3listview.h</header>
-  </customwidget>
-  <customwidget>
-   <class>Q3ProgressBar</class>
-   <extends>QFrame</extends>
-   <header>Qt3Support/Q3ProgressBar</header>
   </customwidget>
   <customwidget>
    <class>QwtThermo</class>

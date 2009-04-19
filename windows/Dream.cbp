@@ -93,7 +93,7 @@
 				<Option object_output="Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode RX --modn DRM D:\DKULTUR_EPG1.rsA" />
+				<Option parameters="--mode TX" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -127,7 +127,7 @@
 				<Option object_output="Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="D:\RTLwithSlideshow_ModeB_10kHz.wav" />
+				<Option parameters="--mode TX" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />

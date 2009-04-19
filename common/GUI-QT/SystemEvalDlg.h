@@ -94,6 +94,7 @@ public slots:
 	void ShowGPS(bool);
 	void OnItemClicked (QTreeWidgetItem*, int);
 	void OnCustomContextMenuRequested ( const QPoint&);
+	void OnHelpWhatsThis();
 };
 
 #endif

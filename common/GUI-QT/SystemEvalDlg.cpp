@@ -31,6 +31,7 @@
 #include "../util/Settings.h"
 #include "../GPSReceiver.h"
 #include <QDateTime>
+#include <QWhatsThis>
 
 SystemEvalDlg::SystemEvalDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
     QWidget* parent, const char* name, bool modal, Qt::WFlags f)
@@ -915,4 +916,9 @@ void SystemEvalDlg::AddWhatsThisHelp()
 		"groups by using the left / right arrow keys.<br>A separate chart "
 		"window for a selected item can be opened by right click on the item "
 		"and click on the context menu item."));
+}
+
+void SystemEvalDlg::OnHelpWhatsThis()
+{
+	QWhatsThis::enterWhatsThisMode();
 }

@@ -140,17 +140,14 @@ void CMLCEncoder::ProcessDataInternal(CParameter&)
 				   vecEncOutBuffer[5], pvecOutputData);
 }
 
-void CMLCEncoder::InitInternal(CParameter& TransmParam)
+void CMLCEncoder::InitInternal(CParameter& Parameters)
 {
 	int i;
 	int	iNumInBits;
 
-	TransmParam.Lock();
-	CalculateParam(TransmParam, eChannelType);
-	TransmParam.Unlock();
+	CalculateParam(Parameters, eChannelType);
 
 	iNumInBits = iL[0] + iL[1] + iL[2];
-
 
 	/* Init modules --------------------------------------------------------- */
 	/* Energy dispersal */

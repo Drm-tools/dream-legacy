@@ -32,12 +32,213 @@
 #include <vector>
 #include <QDialog>
 #include <QTimer>
+#include <QButtonGroup>
 
 /* Classes ********************************************************************/
 class CDRMTransmitterInterface;
 class CSettings;
-class QMenuBar;
-class Q3PopupMenu;
+
+class ChannelEditor: public QObject
+{
+	Q_OBJECT
+public:
+    ChannelEditor(Ui_TransmitterMainWindow&);
+    virtual ~ChannelEditor() {}
+
+    void    setupUi();
+	void	GetFrom(CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&);
+
+public slots:
+	void OnComboBoxSDCConstellationActivated(int iID);
+	void OnComboBoxMSCInterleaverActivated(int iID);
+	void OnComboBoxMSCConstellationActivated(int iID);
+	void OnComboBoxMSCProtLevActivated(int iID);
+	void OnRadioBandwidth(int iID);
+	void OnRadioRobustnessMode(int iID);
+    void OnMSCCapacityChanged(int);
+    void OnSDCCapacityChanged(int);
+
+signals:
+
+    void MSCCapacityChanged();
+    void SDCCapacityChanged();
+
+protected:
+	void	UpdateMSCProtLevCombo();
+
+    Ui_TransmitterMainWindow& ui;
+    QButtonGroup* robustnessGroup;
+    QButtonGroup* soGroup;
+};
+
+class StreamEditor: public QObject
+{
+	Q_OBJECT
+public:
+    StreamEditor(Ui_TransmitterMainWindow&);
+    virtual ~StreamEditor() {}
+
+    void    setupUi();
+	void	GetFrom(CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&);
+
+public slots:
+	void OnButtonAddStream();
+	void OnButtonDeleteStream();
+	void OnComboBoxStreamTypeActivated(int item);
+	void OnComboBoxPacketsPerFrameActivated(const QString& str);
+	void OnLineEditPacketLenChanged(const QString& str);
+	void OnItemSelectionChanged();
+    void OnMSCCapacityChanged(int);
+protected:
+    Ui_TransmitterMainWindow& ui;
+};
+
+class AudioComponentEditor: public QObject
+{
+	Q_OBJECT
+public:
+    AudioComponentEditor(Ui_TransmitterMainWindow&);
+    virtual ~AudioComponentEditor() {}
+
+    void    setupUi();
+	void	GetFrom(CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&);
+
+public slots:
+	void OnComboBoxSourceActivated(int iID);
+	void OnToggleCheckBoxEnableTextMessage(bool bState);
+	void OnPushButtonAddText();
+	void OnPushButtonDeleteText();
+	void OnButtonClearAllText();
+	void OnButtonFileBrowse();
+	void OnLineEditFileChanged(const QString& str);
+	void OnToggleCheckBoxSourceIsFile(bool bState);
+protected:
+	void EnableTextMessage(const bool bFlag);
+	void EnableAudio(const bool bFlag);
+
+    Ui_TransmitterMainWindow& ui;
+};
+
+class DataComponentEditor: public QObject
+{
+	Q_OBJECT
+public:
+    DataComponentEditor(Ui_TransmitterMainWindow&);
+    virtual ~DataComponentEditor() {}
+
+    void    setupUi();
+	void	GetFrom(CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&);
+
+public slots:
+	void OnPushButtonAddFileName();
+	void OnButtonClearAllFileNames();
+protected:
+	void EnableData(const bool bFlag);
+    void AddSlide(const QString& path);
+
+    Ui_TransmitterMainWindow& ui;
+};
+
+class ServicesEditor: public QObject
+{
+	Q_OBJECT
+public:
+    ServicesEditor(Ui_TransmitterMainWindow&);
+    virtual ~ServicesEditor() {}
+
+    void    setupUi();
+	void	GetFrom(CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&);
+
+public slots:
+	void OnTextChangedLabel(const QString& strLabel);
+	void OnTextChangedServiceID(const QString& strID);
+	void OnButtonAdd();
+	void OnButtonDelete();
+	void OnListItemClicked(Q3ListViewItem* item);
+protected:
+    Ui_TransmitterMainWindow& ui;
+};
+
+class COFDMEditor: public QObject
+{
+	Q_OBJECT
+public:
+    COFDMEditor(Ui_TransmitterMainWindow&);
+    virtual ~COFDMEditor() {}
+
+    void    setupUi();
+	void	GetFrom(CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&);
+
+public slots:
+	void OnComboBoxDestActivated(int iID);
+	void OnComboBoxFileDestActivated(int iID);
+	void OnTextChangedSndCrdIF(const QString& strIF);
+	void OnButtonAddAudio();
+	void OnLineEditFileChanged(const QString& str);
+	void OnButtonAddFile();
+	void OnButtonDeleteSelected();
+	void OnButtonBrowse();
+	void OnListItemClicked(Q3ListViewItem* item);
+protected:
+    Ui_TransmitterMainWindow& ui;
+    QButtonGroup* outputGroup;
+};
+
+class MDIInputEditor: public QObject
+{
+	Q_OBJECT
+public:
+    MDIInputEditor(Ui_TransmitterMainWindow&);
+    virtual ~MDIInputEditor() {}
+
+    void    setupUi();
+	void	GetFrom(CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&);
+
+public slots:
+	void OnLineEditPortChanged(const QString& str);
+	void OnToggleCheckBoxMcast(bool bState);
+	void OnLineEditGroupChanged(const QString& str);
+	void OnComboBoxInterfaceActivated(int iID);
+	void OnLineEditFileChanged(const QString& str);
+	void OnButtonBrowse();
+	void OnToggleCheckBoxReadFile(bool bState);
+protected:
+    Ui_TransmitterMainWindow& ui;
+	vector<CIpIf>       vecIpIf;
+};
+
+class MDIOutputEditor: public QObject
+{
+	Q_OBJECT
+public:
+    MDIOutputEditor(Ui_TransmitterMainWindow&);
+    virtual ~MDIOutputEditor() {}
+
+    void    setupUi();
+	void	GetFrom(CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&);
+
+public slots:
+	void OnButtonAddDest();
+	void OnButtonAddFileDest();
+	void OnButtonDeleteOutput();
+	void OnButtonBrowse();
+	void OnComboBoxInterfaceActivated(int iID);
+	void OnLineEditAddrChanged(const QString& str);
+	void OnLineEditFileChanged(const QString& str);
+	void OnLineEditPortChanged(const QString& str);
+	void OnListItemClicked(Q3ListViewItem* item);
+protected:
+    Ui_TransmitterMainWindow& ui;
+	vector<CIpIf>       vecIpIf;
+};
 
 class TransmitterMainWindow : public QMainWindow, public Ui_TransmitterMainWindow
 {
@@ -55,120 +256,37 @@ public:
 
 protected:
 
-	void				DisableAllControlsForSet();
-	void				EnableAllControlsForSet();
+	void		DisableAllControlsForSet();
+	void		EnableAllControlsForSet();
 
-	void				UpdateMSCProtLevCombo();
-	void				EnableTextMessage(const bool bFlag);
-	void				EnableAudio(const bool bFlag);
-	void				EnableData(const bool bFlag);
-	void				AddWhatsThisHelp();
-	void				choseComboBoxItem(QComboBox* box, const QString& text);
-	void				GetFromTransmitter();
-	void				SetTransmitter();
-	void				GetChannel();
-	void				SetChannel();
-	void				GetStreams();
-	void				SetStreams();
-	void				GetAudio(int);
-	void				SetAudio(int);
-	void				GetData(int, int);
-	void				SetData(int, int);
-	void				GetServices();
-	void				SetServices();
-	void				GetCOFDM();
-	void				SetCOFDM();
-	void				GetMDIIn();
-	void				SetMDIIn();
-	void				SetMDIOut();
-	void				GetMDIOut();
-	void				UpdateCapacities();
-    void                AddSlide(const QString& path);
+	void		GetFromTransmitter();
+	void		SetTransmitter();
 
-	virtual void		closeEvent(QCloseEvent* ce);
-
-	QMenuBar*			pMenu;
-	Q3PopupMenu*		pSettingsMenu;
-	QTimer				Timer;
+	void		closeEvent(QCloseEvent* ce);
 
 	CDRMTransmitterInterface&	DRMTransmitter;
 	CSettings&			Settings;
-	bool			bIsStarted;
-	vector<CIpIf>vecIpIf;
+	QTimer				Timer;
+	bool			    bIsStarted;
 
+    ChannelEditor       channelEditor;
+    StreamEditor        streamEditor;
+    AudioComponentEditor    audioComponentEditor;
+    DataComponentEditor dataComponentEditor;
+    ServicesEditor      servicesEditor;
+    COFDMEditor         cofdmEditor;
+    MDIInputEditor      mdiInputEditor;
+    MDIOutputEditor     mdiOutputEditor;
 
 public slots:
+	void OnRadioMode(int iID);
 	void OnButtonStartStop();
 	void OnButtonClose();
 	void OnTimer();
 	void OnHelpWhatsThis();
-
-	/* Channel */
-	void OnComboBoxSDCConstellationActivated(int iID);
-	void OnComboBoxMSCInterleaverActivated(int iID);
-	void OnComboBoxMSCConstellationActivated(int iID);
-	void OnComboBoxMSCProtLevActivated(int iID);
-	void OnRadioBandwidth(int iID);
-	void OnRadioRobustnessMode(int iID);
-	void OnRadioMode(int iID);
-
-	/* Audio */
-	void OnComboBoxAudioSourceActivated(int iID);
-	void OnToggleCheckBoxEnableTextMessage(bool bState);
-	void OnPushButtonAddText();
-	void OnPushButtonDeleteText();
-	void OnButtonClearAllText();
-	void OnButtonAudioSourceFileBrowse();
-	void OnLineEditAudioSourceFileChanged(const QString& str);
-	void OnToggleCheckBoxAudioSourceIsFile(bool bState);
-
-	/* Data */
-	void OnPushButtonAddFileName();
-	void OnButtonClearAllFileNames();
-
-	/* streams */
-	void OnButtonAddStream();
-	void OnButtonDeleteStream();
-	void OnComboBoxStreamTypeActivated(int item);
-	void OnComboBoxPacketsPerFrameActivated(const QString& str);
-	void OnLineEditPacketLenChanged(const QString& str);
-	void OnStreamsListItemClicked(Q3ListViewItem* item);
-
-	/* services */
-	void OnTextChangedServiceLabel(const QString& strLabel);
-	void OnTextChangedServiceID(const QString& strID);
-	void OnButtonAddService();
-	void OnButtonDeleteService();
-	void OnServicesListItemClicked(Q3ListViewItem* item);
-
-    /* MDI Input */
-	void OnLineEditMDIinPortChanged(const QString& str);
-	void OnToggleCheckBoxMDIinMcast(bool bState);
-	void OnLineEditMDIinGroupChanged(const QString& str);
-	void OnComboBoxMDIinInterfaceActivated(int iID);
-	void OnLineEditMDIInputFileChanged(const QString& str);
-	void OnButtonMDIInBrowse();
-	void OnToggleCheckBoxReadMDIFile(bool bState);
-
-    /* MDI Output */
-	void OnButtonAddMDIDest();
-	void OnButtonAddMDIFileDest();
-	void OnButtonDeleteMDIOutput();
-	void OnButtonMDIOutBrowse();
-	void OnComboBoxMDIoutInterfaceActivated(int iID);
-	void OnLineEditMDIOutAddrChanged(const QString& str);
-	void OnLineEditMDIOutputFileChanged(const QString& str);
-	void OnLineEditMDIoutPortChanged(const QString& str);
-	void OnMDIOutListItemClicked(Q3ListViewItem* item);
-
-    /* COFDM */
-	void OnComboBoxCOFDMDestActivated(int iID);
-	void OnTextChangedSndCrdIF(const QString& strIF);
-	void OnButtonCOFDMAddAudio();
-	void OnComboBoxCOFDMdestActivated(int iID);
-	void OnLineEditCOFDMOutputFileChanged(const QString& str);
-	void OnButtonCOFDMAddFile();
-	void OnButtonCOFDMDeleteSelected();
-	void OnButtonCOFDMBrowse();
-	void OnCOFDMOutListItemClicked(Q3ListViewItem* item);
+    void OnMSCCapacityChanged();
+    void OnSDCCapacityChanged();
+signals:
+    void MSCCapacityChanged(int);
+    void SDCCapacityChanged(int);
 };

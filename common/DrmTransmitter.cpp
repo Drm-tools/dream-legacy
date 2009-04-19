@@ -33,46 +33,78 @@
 #include <sstream>
 #include <ctime>
 
+
 /* Implementation *************************************************************/
 CDRMTransmitter::CDRMTransmitter():
     CDRMTransmitterInterface(),
-	TransmParam(), eOpMode(T_TX), bRunning(false),
+	Parameters(), eOpMode(T_TX), bRunning(false),
 	strMDIinAddr(), MDIoutAddr(),
-	Encoder(), Modulator(),
-	MDIIn(), DecodeMDI(), pMDIOut(new CMDIOut())
+	pEncoder(NULL), pModulator(NULL),
+	pMDIIn(NULL), pDecodeMDI(NULL), pMDIOut(NULL)
 {
 	/* Init streams */
-	TransmParam.ResetServicesStreams();
+	Parameters.ResetServicesStreams();
 
 	/* Init frame ID counter (index) */
-	TransmParam.FACParameters.iFrameId = 0;
+	Parameters.FACParameters.iFrameId = 0;
 
 	time_t t;
 	time(&t);
     tm gmt = *gmtime(&t);
 
 	/* Date, time. */
-	TransmParam.iDay = gmt.tm_mday;
-	TransmParam.iMonth = gmt.tm_mon+1;
-	TransmParam.iYear = 1900+gmt.tm_year;
-	TransmParam.iUTCHour = gmt.tm_hour;
-	TransmParam.iUTCMin = gmt.tm_min;
+	Parameters.iDay = gmt.tm_mday;
+	Parameters.iMonth = gmt.tm_mon+1;
+	Parameters.iYear = 1900+gmt.tm_year;
+	Parameters.iUTCHour = gmt.tm_hour;
+	Parameters.iUTCMin = gmt.tm_min;
 }
 
 void
 CDRMTransmitter::CalculateChannelCapacities()
 {
-	CSingleBuffer<_COMPLEX>	DummyBuf;
-	CMSCMLCEncoder			MSCMLCEncoder;
-	CSDCMLCEncoder			SDCMLCEncoder;
-	SDCMLCEncoder.Init(TransmParam, DummyBuf);
-	MSCMLCEncoder.Init(TransmParam, DummyBuf);
+    CMLC mlc;
+    mlc.CalculateParam(Parameters, CT_FAC);
+    mlc.CalculateParam(Parameters, CT_SDC);
+    mlc.CalculateParam(Parameters, CT_MSC);
+	//CSingleBuffer<_COMPLEX>	DummyBuf;
+	//CMSCMLCEncoder			MSCMLCEncoder;
+	//CSDCMLCEncoder			SDCMLCEncoder;
+	//SDCMLCEncoder.Init(Parameters, DummyBuf);
+	//MSCMLCEncoder.Init(Parameters, DummyBuf);
 }
 
 void
 CDRMTransmitter::SetOperatingMode(const ETxOpMode eNewOpMode)
 {
 	eOpMode = eNewOpMode;
+    if(pEncoder)
+        delete pEncoder;
+    if(pModulator)
+        delete pModulator;
+    if(pMDIIn)
+        delete pMDIIn;
+    if(pDecodeMDI)
+        delete pDecodeMDI;
+    pEncoder = NULL;
+    pModulator = NULL;
+    pMDIIn = NULL;
+    pDecodeMDI = NULL;
+    switch(eOpMode)
+    {
+    case T_TX:
+        pEncoder = new CDRMEncoder();
+        pModulator = new CDRMModulator();
+        break;
+    case T_ENC:
+        pEncoder = new CDRMEncoder();
+        pMDIOut = new CMDIOut();
+        break;
+    case T_MOD:
+        pMDIIn = new CMDIIn();
+        pDecodeMDI = new CDecodeMDI();
+        pModulator = new CDRMModulator();
+    }
 }
 
 CDRMTransmitter::ETxOpMode
@@ -85,75 +117,133 @@ void
 CDRMTransmitter::
 GetSoundInChoices(vector<string>& v)
 {
-	Encoder.GetSoundInChoices(v);
+    if(pEncoder)
+        pEncoder->GetSoundInChoices(v);
+    else
+        v.clear();
 }
 
 void
 CDRMTransmitter::
 GetSoundOutChoices(vector<string>& v)
 {
-	Modulator.GetSoundOutChoices(v);
+    if(pModulator)
+        pModulator->GetSoundOutChoices(v);
+    else
+        v.clear();
+}
+
+int
+CDRMTransmitter::
+GetSoundInInterface()
+{
+    if(pEncoder)
+        return pEncoder->GetSoundInInterface();
+    else
+        return -1;
 }
 
 void
 CDRMTransmitter::
 SetSoundInInterface(int i)
 {
-	Encoder.SetSoundInInterface(i);
+    if(pEncoder)
+        pEncoder->SetSoundInInterface(i);
 }
+
 
 _REAL CDRMTransmitter::GetLevelMeter()
 {
-	return Encoder.GetLevelMeter();
+    if(pEncoder)
+        return pEncoder->GetLevelMeter();
+    else
+        return 0.0;
 }
 
 void
 CDRMTransmitter::AddTextMessage(const string& strText)
 {
-	Encoder.AddTextMessage(strText);
+    if(pEncoder)
+        pEncoder->AddTextMessage(strText);
 }
 
 void
 CDRMTransmitter::ClearTextMessages()
 {
-	Encoder.ClearTextMessages();
+    if(pEncoder)
+        pEncoder->ClearTextMessages();
 }
 
 void
 CDRMTransmitter::GetTextMessages(vector<string>& v)
 {
-	Encoder.GetTextMessages(v);
+    if(pEncoder)
+        pEncoder->GetTextMessages(v);
+    else
+        v.clear();
 }
 
 
 void
 CDRMTransmitter::AddPic(const string& strFileName, const string& strFormat)
 {
-	Encoder.AddPic(strFileName, strFormat);
+    if(pEncoder)
+        pEncoder->AddPic(strFileName, strFormat);
 }
 
 void
 CDRMTransmitter::ClearPics()
 {
-	Encoder.ClearPics();
+    if(pEncoder)
+        pEncoder->ClearPics();
 }
 
 void
 CDRMTransmitter::GetPics(map<string,string>& m)
 {
-    Encoder.GetPics(m);
+    if(pEncoder)
+        pEncoder->GetPics(m);
 }
 
 bool
 CDRMTransmitter::GetTransStat(string& strCPi, _REAL& rCPe)
 {
-	return Encoder.GetTransStat(strCPi, rCPe);
+    if(pEncoder)
+        return pEncoder->GetTransStat(strCPi, rCPe);
+    else
+        return false;
 }
 
 void
 CDRMTransmitter::SetReadFromFile(const string & strNFN)
 {
-	Encoder.SetReadFromFile(strNFN);
+    if(pEncoder)
+        pEncoder->SetReadFromFile(strNFN);
+}
+
+string
+CDRMTransmitter::GetReadFromFile()
+{
+    if(pEncoder)
+        return pEncoder->GetReadFromFile();
+    else
+        return "";
+}
+
+void
+CDRMTransmitter::SetCOFDMOutputs(const vector<string>& o)
+{
+    if(pModulator)
+        pModulator->SetOutputs(o);
+}
+
+void
+CDRMTransmitter::GetCOFDMOutputs(vector<string>& o)
+{
+    if(pModulator)
+        pModulator->GetOutputs(o);
+    else
+        o.clear();
 }
 
 void
@@ -175,47 +265,48 @@ void CDRMTransmitter::Start()
         switch(eOpMode)
         {
         case T_TX:
-            TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
-            TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
-            Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
-            Modulator.Init(TransmParam);
+            Parameters.ReceiveStatus.FAC.SetStatus(RX_OK);
+            Parameters.ReceiveStatus.SDC.SetStatus(RX_OK);
+            pEncoder->Init(Parameters, FACBuf, SDCBuf, MSCBuf);
+            pModulator->Init(Parameters);
             break;
         case T_ENC:
             if(MDIoutAddr.size()==0)
                 throw CGenErr("Encoder with no outputs");
-            TransmParam.ReceiveStatus.FAC.SetStatus(RX_OK);
-            TransmParam.ReceiveStatus.SDC.SetStatus(RX_OK);
-            Encoder.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
+            Parameters.ReceiveStatus.FAC.SetStatus(RX_OK);
+            Parameters.ReceiveStatus.SDC.SetStatus(RX_OK);
+            pEncoder->Init(Parameters, FACBuf, SDCBuf, MSCBuf);
+            /* set the output address */
+            for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
             {
-                // delete the old pMDIOut and get a new one so that we discard the
-                // old destinations
-                CMDIOut* old = pMDIOut;
-                delete old;
-                pMDIOut = new CMDIOut();
-                /* set the output address */
-                for(vector<string>::const_iterator s = MDIoutAddr.begin(); s!=MDIoutAddr.end(); s++)
-                    pMDIOut->AddSubscriber(*s, "", 'M');
+                pMDIOut->AddSubscriber(*s, "", 'M');
             }
-            pMDIOut->Init(TransmParam);
+            pMDIOut->Init(Parameters);
             break;
         case T_MOD:
-            if(strMDIinAddr != "")
+            if(strMDIinAddr == "")
             {
-                MDIIn.SetOrigin(strMDIinAddr);
-            }
-            else
                 throw CGenErr("Modulator with no input");
+            }
+            pMDIIn->SetOrigin(strMDIinAddr);
             bInSync = false;
-            MDIIn.Init(TransmParam, MDIPacketBuf);
-            DecodeMDI.Init(TransmParam, FACBuf, SDCBuf, MSCBuf);
-
+            pMDIIn->Init(Parameters, MDIPacketBuf);
+            pDecodeMDI->Init(Parameters, FACBuf, SDCBuf, MSCBuf);
         }
 
         /* Set run flag */
         bRunning = true;
-        cout << "Tx: starting, in:" << (MDIIn.GetInEnabled()?"MDI":"Encoder")
-             << ", out: " << (pMDIOut->GetOutEnabled()?"MDI":"COFDM")
-             << endl; cout.flush();
+        switch(eOpMode)
+        {
+        case T_TX:
+            cout << "Tx: starting, in: Encoder, out: COFDM" << endl;
+            break;
+        case T_ENC:
+            cout << "Tx: starting, in: Encoder, out: MDI" << endl;
+            break;
+        case T_MOD:
+            cout << "Tx: starting, in: MDI, out: COFDM" << endl;
+        }
 
 		while (bRunning)
 		{
@@ -230,20 +321,20 @@ void CDRMTransmitter::Start()
 					MDIPacketBuf.SetRequestFlag(true);
 				}
 				MDIPacketBuf.Clear();
-				MDIIn.ReadData(TransmParam, MDIPacketBuf);
+				pMDIIn->ReadData(Parameters, MDIPacketBuf);
 				if(MDIPacketBuf.GetFillLevel()>0)
 				{
 					//DecodeMDI.Expect(MDIPacketBuf.GetFillLevel());
-					DecodeMDI.ProcessData(TransmParam, MDIPacketBuf, FACBuf, SDCBuf, MSCBuf);
+					pDecodeMDI->ProcessData(Parameters, MDIPacketBuf, FACBuf, SDCBuf, MSCBuf);
 				}
 				if(bInSync==false && FACBuf.GetFillLevel()>0)
 				{
 					CFACReceive FACReceive;
-					bool bCRCOk = FACReceive.FACParam(FACBuf.QueryWriteBuffer(), TransmParam);
+					bool bCRCOk = FACReceive.FACParam(FACBuf.QueryWriteBuffer(), Parameters);
 					if(bCRCOk)
 					{
 						cerr << "Got SDCI & FAC" << endl;
-						Modulator.Init(TransmParam);
+						pModulator->Init(Parameters);
 						if(SDCBuf.GetFillLevel()>0)
 						{
 							cerr << "got SDC" << endl;
@@ -265,17 +356,17 @@ void CDRMTransmitter::Start()
 			}
 			else
 			{
-				Encoder.ReadData(TransmParam, FACBuf, SDCBuf, MSCBuf);
+				pEncoder->ReadData(Parameters, FACBuf, SDCBuf, MSCBuf);
 			}
 
 			if(eOpMode == T_ENC)
 			{
-				pMDIOut->WriteData(TransmParam, FACBuf, SDCBuf, MSCBuf);
+				pMDIOut->WriteData(Parameters, FACBuf, SDCBuf, MSCBuf);
 			}
 			else
 			{
 				if(bInSync)
-					Modulator.WriteData(TransmParam, FACBuf, SDCBuf, MSCBuf);
+					pModulator->WriteData(Parameters, FACBuf, SDCBuf, MSCBuf);
 				/* TODO - set bInSync false on error */
 			}
 		}
@@ -285,33 +376,42 @@ void CDRMTransmitter::Start()
 		ErrorMessage(GenErr.strError);
 	}
 	if(eOpMode != T_ENC)
-		Modulator.Cleanup(TransmParam);
+		pModulator->Cleanup(Parameters);
 	if(eOpMode != T_MOD)
-		Encoder.Cleanup(TransmParam);
+		pEncoder->Cleanup(Parameters);
 }
 
 void
 CDRMTransmitter::LoadSettings(CSettings& s)
 {
-	string mode = s.Get("0", "mode", string("DRMTX"));
-	strMDIinAddr = s.Get("Transmitter", "MDIin", string(""));
-	for(size_t i=0; i<100; i++)
+	string mode = s.Get("0", "mode", string("TX"));
+	if(mode == "TX")
 	{
-	    stringstream ss;
-        ss << "MDIout" << i;
-        string addr = s.Get("Transmitter", ss.str(), string("[none]"));
-        if(addr == "[none]")
-            break;
-        MDIoutAddr.push_back(addr);
+        SetOperatingMode(T_TX);
+        pEncoder->LoadSettings(s, Parameters);
+        pModulator->LoadSettings(s, Parameters);
 	}
-	if(mode == "DRMTX")
-		eOpMode = T_TX;
-	if(mode == "DRMENC")
-		eOpMode = T_ENC;
-	if(mode == "DRMMOD")
-		eOpMode = T_MOD;
-	Encoder.LoadSettings(s, TransmParam);
-	Modulator.LoadSettings(s, TransmParam);
+	if(mode == "ENC")
+	{
+        SetOperatingMode(T_ENC);
+        pEncoder->LoadSettings(s, Parameters);
+        for(size_t i=0; i<100; i++)
+        {
+            stringstream ss;
+            ss << "MDIout" << i;
+            string addr = s.Get("Transmitter", ss.str(), string("[none]"));
+            if(addr == "[none]")
+                break;
+            MDIoutAddr.push_back(addr);
+            cerr << addr << endl;
+        }
+	}
+	if(mode == "MOD")
+	{
+        SetOperatingMode(T_MOD);
+        pModulator->LoadSettings(s, Parameters);
+        strMDIinAddr = s.Get("Transmitter", "MDIin", string(""));
+	}
 }
 
 void
@@ -320,22 +420,24 @@ CDRMTransmitter::SaveSettings(CSettings& s)
 	switch(eOpMode)
 	{
 	case T_TX:
-		s.Put("0", "mode", string("DRMTX"));
+		s.Put("0", "mode", string("TX"));
+        pEncoder->SaveSettings(s, Parameters);
+        pModulator->SaveSettings(s, Parameters);
 		break;
 	case T_ENC:
-		s.Put("0", "mode", string("DRMENC"));
+		s.Put("0", "mode", string("ENC"));
+        pEncoder->SaveSettings(s, Parameters);
+        for(size_t i=0; i<MDIoutAddr.size(); i++)
+        {
+            stringstream ss;
+            ss << "MDIout" << i;
+            s.Put("Transmitter", ss.str(), MDIoutAddr[i]);
+        }
 		break;
 	case T_MOD:
-		s.Put("0", "mode", string("DRMMOD"));
+		s.Put("0", "mode", string("MOD"));
+        pModulator->SaveSettings(s, Parameters);
+        s.Put("Transmitter", "MDIin", strMDIinAddr);
 		break;
 	}
-	s.Put("Transmitter", "MDIin", strMDIinAddr);
-	for(size_t i=0; i<MDIoutAddr.size(); i++)
-	{
-	    stringstream ss;
-        ss << "MDIout" << i;
-        s.Put("Transmitter", ss.str(), MDIoutAddr[i]);
-	}
-	Encoder.SaveSettings(s, TransmParam);
-	Modulator.SaveSettings(s, TransmParam);
 }

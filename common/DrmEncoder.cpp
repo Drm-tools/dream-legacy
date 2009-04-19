@@ -43,6 +43,7 @@ CDRMEncoder::CDRMEncoder():
 	vecstrTexts(), vecstrPics(), vecstrPicTypes(),
 	iSoundInDev(-1), bUseUEP(false)
 {
+    cerr << "Encoder constructed" << endl;
 }
 
 void
@@ -93,6 +94,7 @@ CDRMEncoder::ClearPics()
 void
 CDRMEncoder::GetPics(map<string,string>& m)
 {
+    m.clear();
 	for(size_t i=0; i<vecstrPics.size(); i++)
 		m[vecstrPics[i]] = vecstrPicTypes[i];
 }

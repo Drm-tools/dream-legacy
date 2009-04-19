@@ -29,7 +29,9 @@
 #include "DrmSimulation.h"
 
 #ifdef _WIN32
-# define NOMINMAX
+# ifndef NOMINMAX
+#  define NOMINMAX
+# endif
 # include <windows.h>
 #else
 # ifdef HAVE_UNISTD_H

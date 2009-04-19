@@ -29,7 +29,12 @@
 #ifndef _DRM_TRANSMITTERINTERFACE_H
 #define _DRM_TRANSMITTERINTERFACE_H
 
+#ifdef USE_QT_GUI
+# include <QThread>
+#endif
+
 class CParameter;
+class CSettings;
 
 class CDRMTransmitterInterface
 #ifdef USE_QT_GUI
@@ -51,6 +56,9 @@ public:
 #endif
 	virtual void			Start()=0;
 	virtual void			Stop()=0;
+
+	virtual void			LoadSettings(CSettings&)=0;
+	virtual void			SaveSettings(CSettings&)=0;
 
 	virtual void			SetOperatingMode(const ETxOpMode)=0;
 	virtual ETxOpMode		GetOperatingMode()=0;

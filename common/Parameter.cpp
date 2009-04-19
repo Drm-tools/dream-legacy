@@ -504,26 +504,24 @@ void CParameter::ResetServicesStreams()
 			Service[i].iServiceDescr = 0;
 			Service[i].strLabel = "";
 		}
-		/* force constructors to run */
+		// let the SDC configure this
 		AudioParam.clear();
 		DataParam.clear();
+		MSCParameters.Stream.clear(); // lose old information
 		/* allow index by streamID */
-		AudioParam.resize(MAX_NUM_STREAMS);
-		DataParam.resize(MAX_NUM_STREAMS);
-
+		MSCParameters.Stream.resize(MAX_NUM_STREAMS);
 		for (i = 0; i < MAX_NUM_STREAMS; i++)
 		{
 			MSCParameters.Stream[i].iLenPartA = 0;
 			MSCParameters.Stream[i].iLenPartB = 0;
-			DataParam[i].resize(1);
 		}
 	}
 	else
 	{
 
 		// Set up encoded AM audio parameters
-		AudioParam.resize(1);
-		DataParam.clear();
+		AudioParam.clear(); // lose old data
+		DataParam.clear(); // no data apps
 		AudioParam[0].strTextMessage = "";
 		AudioParam[0].eAudioCoding = CAudioParam::AC_AAC;
 		AudioParam[0].eSBRFlag = CAudioParam::SB_NOT_USED;
@@ -1157,6 +1155,19 @@ void dump(ostream& out, const vector<T>& vec)
         sep = ", ";
     }
     out << "]";
+}
+
+template<typename K, typename V>
+void dump(ostream& out, const map<K,V>& val)
+{
+    string sep = "";
+    out << "{";
+    for(typename map<K,V>::const_iterator i = val.begin(); i !=val.end(); i++)
+    {
+        out << sep; ::dump(out, i->first); out << ": "; ::dump(out, i->second);
+        sep = ", ";
+    }
+    out << "}";
 }
 
 //for_each(a.begin(); a.end(); dump);

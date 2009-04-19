@@ -259,8 +259,8 @@ enum ERxEvent {
 
         CChannel Channel;
         CMSCParameters MSCParameters;
-        vector<CAudioParam> AudioParam; /* index by streamID */
-        vector<vector<CDataParam> > DataParam; /* first index streamID, second index packetID */
+        map<int, CAudioParam> AudioParam; /* key with by streamID */
+        map<int, map<int, CDataParam> > DataParam; /* first key streamID, second key packetID */
         void dump(ostream&) const;
     };
 

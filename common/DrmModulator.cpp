@@ -39,6 +39,7 @@ CDRMModulator::CDRMModulator():
 	MSCMLCEncoder(), SymbInterleaver(), FACMLCEncoder(), SDCMLCEncoder(),
 	OFDMCellMapping(), OFDMModulation()
 {
+    cerr << "Modulator Contructed" << endl;
 }
 
 void

@@ -50,24 +50,23 @@
 class CTextMessage
 {
 public:
-	CTextMessage() : iNumSeg(0) {}
+	CTextMessage(): vvbiSegment() {}
 	virtual ~CTextMessage() {}
 
-	CVector<_BINARY>&	operator[](const int iI) {return vvbiSegment[iI];}
+    CVector<_BINARY>&	operator[](const int iI) {return vvbiSegment[iI];}
 
 	void				SetText(const string& strMessage, const _BINARY biToggleBit);
-    int			        GetNumSeg() const {return iNumSeg;}
-	int			        GetSegSize(const int iSegID) const;
+    size_t              GetNumSeg() const {return vvbiSegment.size();}
+	size_t		        GetSegSize(size_t) const;
 
 protected:
-	CVector<CVector<_BINARY> >	vvbiSegment;
-	int							iNumSeg;
+	vector<CVector<_BINARY> >	vvbiSegment;
 };
 
 class CTextMessageEncoder
 {
 public:
-	CTextMessageEncoder() : vecstrText(0), iNumMess(0) {}
+	CTextMessageEncoder() : vecstrText() {}
 	virtual ~CTextMessageEncoder() {}
 
 	void Encode(CVector<_BINARY>& pData);
@@ -76,11 +75,10 @@ public:
 
 protected:
 	CTextMessage	CurTextMessage;
-	CVector<string>	vecstrText;
-	int				iSegCnt;
-	int				iByteCnt;
-	int				iNumMess;
-	int				iMessCnt;
+	vector<string>	vecstrText;
+	size_t			iSegCnt;
+	size_t			iByteCnt;
+	size_t			iMessCnt;
 	_BINARY			biToggleBit;
 };
 

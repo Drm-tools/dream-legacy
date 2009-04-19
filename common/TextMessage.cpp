@@ -35,14 +35,12 @@
 \******************************************************************************/
 void CTextMessageEncoder::Encode(CVector<_BINARY>& pData)
 {
-	int j;
-
 	/* Set data for this piece from segment data */
 	for (int i = 0; i < NUM_BYTES_TEXT_MESS_IN_AUD_STR; i++)
 	{
 		if (iByteCnt < CurTextMessage.GetSegSize(iSegCnt))
 		{
-			for (j = 0; j < BITS_BINARY; j++)
+			for (int j = 0; j < BITS_BINARY; j++)
 				pData[i * BITS_BINARY + j] =
 					(_BINARY) CurTextMessage[iSegCnt].Separate(1);
 		}
@@ -50,7 +48,7 @@ void CTextMessageEncoder::Encode(CVector<_BINARY>& pData)
 		{
 			/* If the length of the last segment is not a multiple of four then
 			   the incomplete frame shall be padded with 0x00 bytes */
-			for (j = 0; j < BITS_BINARY; j++)
+			for (int j = 0; j < BITS_BINARY; j++)
 				pData[i * BITS_BINARY + j] = 0;
 		}
 
@@ -70,30 +68,30 @@ void CTextMessageEncoder::Encode(CVector<_BINARY>& pData)
 		{
 			iSegCnt = 0;
 
-
 			/* Use next message --------------------------------------------- */
 			iMessCnt++;
-			if (iMessCnt == iNumMess)
+			if (iMessCnt >= vecstrText.size())
 				iMessCnt = 0;
 
 			/* Take care of toggle bit. If only one message is sent, toggle bit
 			   must not be changed */
-			if (iNumMess != 1)
+			if (vecstrText.size() > 1)
 				biToggleBit = !biToggleBit;
 
-			CurTextMessage.SetText(vecstrText[iMessCnt], biToggleBit);
+			if (vecstrText.size() > 0)
+                CurTextMessage.SetText(vecstrText[iMessCnt], biToggleBit);
 		}
 
 		/* Reset bit access of segment which is used next */
-		CurTextMessage[iSegCnt].ResetBitAccess();
+		if (iSegCnt < CurTextMessage.GetNumSeg())
+            CurTextMessage[iSegCnt].ResetBitAccess();
 	}
 }
 
 void CTextMessageEncoder::SetMessage(const string& strMessage)
 {
 	/* Allocate memory for new text message, store text and increment counter */
-	vecstrText.Add(strMessage);
-	iNumMess++;
+	vecstrText.push_back(strMessage);
 
 	/* Init first message. TODO: this is always done when an additional text
 	   is set but can only be done once. But for that we need an initialization
@@ -109,29 +107,26 @@ void CTextMessageEncoder::SetMessage(const string& strMessage)
 
 void CTextMessageEncoder::ClearAllText()
 {
-	vecstrText.Init(0);
-	iNumMess = 0;
+	vecstrText.clear();
 	iSegCnt = 0; /* Segment counter */
 	iByteCnt = 0; /* Byte counter */
 	iMessCnt = 0; /* Message counter */
 	biToggleBit = 0;
+	CurTextMessage.SetText("", biToggleBit);
 }
 
 void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 {
-	int		i, j;
-	int		iNumBodyBytes;
+	size_t	iNumBodyBytes;
 	_BINARY	biFirstFlag;
 	_BINARY	biLastFlag;
 	CCRC	CRCObject;
 
-	/* Get length of text message.
-	   TODO: take care of multiple byte characters (UTF-8 coding)! */
-	int iLenBytesOfText = strMessage.length();
+	size_t iLenBytesOfText = strMessage.length();
 
 	/* Calculate required number of segments. The body shall contain 16 bytes
 	   of character data */
-	iNumSeg = (int) ceil((_REAL) iLenBytesOfText / BYTES_PER_SEG_TEXT_MESS);
+	size_t iNumSeg = (int) ceil((_REAL) iLenBytesOfText / BYTES_PER_SEG_TEXT_MESS);
 
 	/* The text message may comprise up to 8 segments. Check the number of
 	   segments, if number is larger, cut message */
@@ -141,18 +136,18 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 		iLenBytesOfText = iNumSeg * BYTES_PER_SEG_TEXT_MESS;
 	}
 
-	/* Allocate memory for segment pointer */
-	vvbiSegment.Init(iNumSeg);
+	/* Allocate memory for segments */
 
+	vvbiSegment.resize(iNumSeg);
 
 	/* Generate segments ---------------------------------------------------- */
 	/* Reset position in string */
-	int iPosInStr = 0;
+	size_t iPosInStr = 0;
 
-	for (i = 0; i < iNumSeg; i++)
+	for (size_t i = 0; i < iNumSeg; i++)
 	{
 		/* Calculate number of bytes for body */
-		const int iRemainingBytes = iLenBytesOfText - iPosInStr;
+        size_t iRemainingBytes = iLenBytesOfText - iPosInStr;
 
 		/* All segments should have the maximum number of bytes per segment
 		   except the last one which takes the remaining bytes */
@@ -170,7 +165,7 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 
 
 		/* Generate "beginning of segment" identification by "all 0xFF" ----- */
-		for (j = 0; j < NUM_BYTES_TEXT_MESS_IN_AUD_STR; j++)
+		for (int j = 0; j < NUM_BYTES_TEXT_MESS_IN_AUD_STR; j++)
 			vvbiSegment[i].Enqueue((uint32_t) 0xFF, BITS_BINARY);
 
 
@@ -222,7 +217,7 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 
 		/* Body ------------------------------------------------------------- */
 		/* Set body bytes */
-		for (j = 0; j < iNumBodyBytes; j++)
+		for (size_t j = 0; j < iNumBodyBytes; j++)
 		{
 			vvbiSegment[i].Enqueue((uint32_t) strMessage.at(iPosInStr),
 				BITS_BINARY);
@@ -240,7 +235,7 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 		CRCObject.Reset(16);
 
 		/* "byLengthBody" was defined in the header */
-		for (j = 0; j < iNumBodyBytes + 2 /* Header */; j++)
+		for (size_t j = 0; j < iNumBodyBytes + 2 /* Header */; j++)
 			CRCObject.AddByte((_BYTE) vvbiSegment[i].Separate(BITS_BINARY));
 
 		/* Now, pointer in "enqueue"-function is back at the same place,
@@ -253,11 +248,11 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 	}
 }
 
-int CTextMessage::GetSegSize(const int iSegID) const
+size_t CTextMessage::GetSegSize(size_t iSegID) const
 {
-    if(iSegID>= vvbiSegment.Size())
+    if(iSegID>= vvbiSegment.size())
         return 0;
-    return vvbiSegment[iSegID].Size() / BITS_BINARY;
+    return vvbiSegment[iSegID].size() / BITS_BINARY;
 }
 
 /******************************************************************************\

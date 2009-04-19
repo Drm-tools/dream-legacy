@@ -30,7 +30,6 @@
 #include "../GlobalDefinitions.h"
 # include "Loghelper.h"
 #include "ui_DRMMainWindow.h"
-#include "DialogUtil.h"
 #include "MultColorLED.h"
 #include "../util/Vector.h"
 #include <QMainWindow>
@@ -73,7 +72,7 @@ protected:
 	EModulationType	eReceiverMode;
 	bool            quitWanted;
 
-	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
+	void            SetStatus(CMultColorLED* LED, ETypeRxStatus state);
 	void			AddWhatsThisHelp();
 	void			UpdateDisplay();
 	void			ClearDisplay();
@@ -94,4 +93,5 @@ public slots:
 	void OnMenuSetDisplayColor();
     void OnSwitchToAnalog();
 	void SetService(int);
+	void OnHelpWhatsThis();
 };

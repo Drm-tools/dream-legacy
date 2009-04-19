@@ -127,4 +127,5 @@ public slots:
 	void OnButtonWaterfall();
 	void OnButtonAMSS();
     void OnSwitchToDRM();
+	void OnHelpWhatsThis();
 };

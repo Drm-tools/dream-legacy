@@ -66,17 +66,17 @@ public:
 	void					ClearPics();
 	void					GetPics(map<string,string>&);
 
-	bool				GetTransStat(string& strCPi, _REAL& rCPe);
+	bool				    GetTransStat(string& strCPi, _REAL& rCPe);
 
 	void					GetSoundInChoices(vector<string>&);
 	void					SetSoundInInterface(int);
-	int						GetSoundInInterface() { return Encoder.GetSoundInInterface(); }
+	int						GetSoundInInterface();
 	void 					SetReadFromFile(const string& strNFN);
-	string					GetReadFromFile() { return Encoder.GetReadFromFile(); }
+	string					GetReadFromFile();
 
 	void					GetSoundOutChoices(vector<string>&);
-	void					SetCOFDMOutputs(const vector<string>& o) { Modulator.SetOutputs(o); }
-	void					GetCOFDMOutputs(vector<string>& o) { Modulator.GetOutputs(o); }
+	void					SetCOFDMOutputs(const vector<string>& o);
+	void					GetCOFDMOutputs(vector<string>& o);
 
 	void					SetMDIIn(const string& s) { strMDIinAddr = s; }
 	string					GetMDIIn() { return strMDIinAddr; }
@@ -84,21 +84,21 @@ public:
 	void					SetMDIOut(const vector<string>& v) { MDIoutAddr = v; }
 	void					GetMDIOut(vector<string>& v) { v = MDIoutAddr; }
 
-	virtual CParameter*		GetParameters() { return &TransmParam; }
+	virtual CParameter*		GetParameters() { return &Parameters; }
 
 protected:
 
-	CParameter				TransmParam;
+	CParameter				Parameters;
 	ETxOpMode				eOpMode;
 	bool                    bRunning;
 
 	string					strMDIinAddr;
 	vector<string>			MDIoutAddr;
 
-	CDRMEncoder				Encoder;
-	CDRMModulator			Modulator;
-	CMDIIn					MDIIn;
-	CDecodeMDI				DecodeMDI;
+	CDRMEncoder*			pEncoder;
+	CDRMModulator*			pModulator;
+	CMDIIn*					pMDIIn;
+	CDecodeMDI*				pDecodeMDI;
 	CMDIOut*				pMDIOut;
 };
 

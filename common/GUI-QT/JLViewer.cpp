@@ -161,7 +161,7 @@ void JLViewer::hideEvent(QHideEvent*)
 	settings.Put("Journaline", c);
 
 	/* Store save path */
-	settings.Put("Journaline ","storagepath", strCurrentSavePath);
+	settings.Put("Journaline","storagepath", strCurrentSavePath);
 
     QFont fontTextBrowser = textBrowser->currentFont();
 	/* Store current textBrowser font */

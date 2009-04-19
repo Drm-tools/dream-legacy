@@ -818,16 +818,10 @@ bool CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 	Parameter.Service[iShortID].iDataStream = iStreamID;
 	Parameter.Service[iShortID].iPacketID = iPacketID;
 
-    size_t n = iStreamID+1;
-    if(Parameter.NextConfig.MSCParameters.Stream.size()<n)
-        Parameter.NextConfig.MSCParameters.Stream.resize(n);
+    Parameter.NextConfig.MSCParameters.Stream.resize(MAX_NUM_STREAMS); // TODO check if useful
 
 	Parameter.NextConfig.MSCParameters.Stream[iStreamID].iPacketLen = iPacketLen;
-    if(Parameter.NextConfig.DataParam.size()<n)
-        Parameter.NextConfig.DataParam.resize(n);
-    n = iPacketID+1;
-    if(Parameter.NextConfig.DataParam[iStreamID].size()<n)
-        Parameter.NextConfig.DataParam[iStreamID].resize(n);
+	// map takes care of creating entries
 	Parameter.NextConfig.DataParam[iStreamID][iPacketID] = DataParam;
 
 	Parameter.Unlock();
@@ -1198,11 +1192,7 @@ bool CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
 
 		Parameter.Service[iShortID].iAudioStream = iStreamID;
 
-        size_t n = iStreamID+1;
-
-        if(Parameter.NextConfig.AudioParam.size()<n)
-            Parameter.NextConfig.AudioParam.resize(n);
-
+        // map takes care of creating entries
         Parameter.NextConfig.AudioParam[iStreamID] = AudParam;
 
 		Parameter.Unlock();

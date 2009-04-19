@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "DRMMainWindow.h"
+#include "DialogUtil.h"
 #include "ReceiverSettingsDlg.h"
 #include "LiveScheduleDlg.h"
 #include "StationsDlg.h"
@@ -88,6 +89,11 @@ DRMMainWindow::DRMMainWindow(ReceiverInterface& NDRMR, CSettings& NSettings,
 	connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnNewDRMAcquisition()));
 	connect(actionSet_Display_Colour, SIGNAL(triggered()), this, SLOT(OnMenuSetDisplayColor()));
 	connect(actionSettings, SIGNAL(triggered()), receiverSettingsDlg, SLOT(show()));
+
+    /* Help Menu */
+    CAboutDlg* pAboutDlg = new CAboutDlg(this);
+	connect(actionWhatsThis, SIGNAL(triggered()), this, SLOT(OnHelpWhatsThis()));
+	connect(actionAbout, SIGNAL(triggered()), pAboutDlg, SLOT(show()));
 
 	/* Digi controls */
 	/* Set display color */
@@ -743,7 +749,7 @@ QString DRMMainWindow::GetCodecString(const int shortID)
            return QString("Waiting for stream info");
         }
 
-		const CAudioParam& audioParam = Parameters.AudioParam[s.iAudioStream];
+		const CAudioParam& audioParam = Parameters.AudioParam.find(s.iAudioStream)->second;
 
 		QString strReturn;
 
@@ -804,7 +810,7 @@ QString DRMMainWindow::GetTypeString(const int shortID)
         }
 
 		/* Audio service */
-		const CAudioParam& audioParam = Parameters.AudioParam[s.iAudioStream];
+		const CAudioParam& audioParam = Parameters.AudioParam.find(s.iAudioStream)->second;
 		/* Mono-Stereo */
 		switch (audioParam.eAudioMode)
 		{
@@ -828,7 +834,7 @@ QString DRMMainWindow::GetTypeString(const int shortID)
            return QString("Waiting for stream info");
         }
 		/* Data service */
-		const CDataParam& dataParam = Parameters.DataParam[s.iDataStream][s.iPacketID];
+		const CDataParam& dataParam = Parameters.DataParam.find(s.iDataStream)->second.find(s.iPacketID)->second;
 		if (dataParam.ePacketModInd == PM_PACKET_MODE)
 		{
 			if (dataParam.eAppDomain == CDataParam::AD_DAB_SPEC_APP)
@@ -1029,4 +1035,9 @@ void DRMMainWindow::AddWhatsThisHelp()
 	TextMiniService2->setWhatsThis( strServiceSel);
 	TextMiniService3->setWhatsThis( strServiceSel);
 	TextMiniService4->setWhatsThis( strServiceSel);
+}
+
+void DRMMainWindow::OnHelpWhatsThis()
+{
+	QWhatsThis::enterWhatsThisMode();
 }

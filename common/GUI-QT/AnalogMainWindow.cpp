@@ -725,6 +725,10 @@ void AnalogMainWindow::AddWhatsThisHelp()
 	CheckBoxOnBoardDemod->setWhatsThis(strOnBoard);
 }
 
+void AnalogMainWindow::OnHelpWhatsThis()
+{
+	QWhatsThis::enterWhatsThisMode();
+}
 
 /******************************************************************************\
 * AMSS controls                                                                *
