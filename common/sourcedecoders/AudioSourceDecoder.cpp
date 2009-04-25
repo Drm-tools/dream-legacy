@@ -29,6 +29,7 @@
 #include "AudioSourceDecoder.h"
 #include "../util/ReceiverModul_impl.h"
 #include <fstream>
+#include <sstream>
 
 #ifdef HAVE_LIBFAAD
 # ifdef DYNAMIC_LINK_CODECS
@@ -96,8 +97,8 @@ static void WriteAACFrame(CParameter& Parameters,
 // Store CELP-data in file
 static void WriteCELPFrame(CParameter& Parameters, CVector<_BINARY>& celp_frame, int bits)
 {
-	char cDummy[200];
-	string strCELPTestFileName = "test/celp_";
+	stringstream fname;
+	fname << "test/celp_";
 	Parameters.Lock();
 	/* Get current selected audio service */
 	int iCurSelServ = Parameters.GetCurSelAudioService();
@@ -108,26 +109,22 @@ static void WriteCELPFrame(CParameter& Parameters, CVector<_BINARY>& celp_frame,
 	const CAudioParam& AudioParam = Parameters.AudioParam[iCurAudioStreamID];
 	if (AudioParam.eAudioSamplRate == CAudioParam::AS_8_KHZ)
 	{
-		strCELPTestFileName += "8kHz_";
-		strCELPTestFileName +=
-			_itoa(iTableCELP8kHzUEPParams[AudioParam.iCELPIndex][0], cDummy, 10);
+		fname << "8kHz_" << iTableCELP8kHzUEPParams[AudioParam.iCELPIndex][0];
 	}
 	else
 	{
-		strCELPTestFileName += "16kHz_";
-		strCELPTestFileName +=
-			_itoa(iTableCELP16kHzUEPParams[AudioParam.iCELPIndex][0], cDummy, 10);
+		fname << "16kHz_" << iTableCELP16kHzUEPParams[AudioParam.iCELPIndex][0];
 	}
-	strCELPTestFileName += "bps";
+	fname << "bps";
 
 	if (AudioParam.eSBRFlag == CAudioParam::SB_USED)
 	{
-		strCELPTestFileName += "_sbr";
+		fname << "_sbr";
 	}
-	strCELPTestFileName += ".dat";
+	fname << ".dat";
 	Parameters.Unlock();
 
-	static FILE *pFile2 = fopen(strCELPTestFileName.c_str(), "wb");
+	static FILE *pFile2 = fopen(fname.str().c_str(), "wb");
 	int iNewFrL = (int) Ceil((CReal) bits / 8);
 	fwrite((void *) &iNewFrL, size_t(4), size_t(1), pFile2);	// frame length
 	celp_frame.ResetBitAccess();
