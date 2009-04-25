@@ -238,13 +238,13 @@ protected:
 #ifdef HAVE_LIBFAAD /* AAC decoding */
 	NeAACDecHandle		HandleAACDecoder;
 
-	CVector<_BYTE>		vecbyPrepAudioFrame;
-	CVector<_BYTE>		aac_crc_bits;
-	CMatrix<_BYTE>		audio_frame;
+	vector<_BYTE>		vecbyPrepAudioFrame;
+	vector<_BYTE>		aac_crc_bits;
+	vector<
+		vector<_BYTE> >	audio_frame;
 
-	CVector<int>		veciFrameLength;
+	vector<int>			veciFrameLength;
 
-	int					iNumBorders;
 	int					iNumHigherProtectedBytes;
 	int					iMaxLenOneAudFrame;
 
@@ -267,7 +267,7 @@ protected:
 
 	/* CELP decoding */
 	CMatrix<_BINARY>	celp_frame;
-	CVector<_BYTE>		celp_crc_bits;
+	vector<_BYTE>		celp_crc_bits;
 	int					iNumHigherProtectedBits;
 	int					iNumLowerProtectedBits;
 

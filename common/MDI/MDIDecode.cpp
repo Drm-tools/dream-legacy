@@ -190,7 +190,7 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 		}
 		else
 		{
-			cout << "MSC str" << i << " not properly initialised can accept " << iLen << " got " << iStreamLen << endl;
+			cerr << "MSC str" << i << " not properly initialised can accept " << iLen << " got " << iStreamLen << endl;
 		}
     }
 

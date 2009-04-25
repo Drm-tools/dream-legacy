@@ -436,15 +436,12 @@ void CMLC::CalculateParam(CParameter& Parameters, int iNewChannelType)
 	switch (iNewChannelType)
 	{
 	case CT_FAC:
-cerr << "CT_FAC" << endl;
 		CalculateFACParam(Parameters);
 		break;
 	case CT_SDC:
-cerr << "CT_SDC" << endl;
 		CalculateSDCParam(Parameters);
 		break;
 	case CT_MSC:
-cerr << "CT_MSC" << endl;
 		CalculateMSCParam(Parameters);
 	}
 	Parameters.Unlock();
@@ -589,7 +586,6 @@ void CMLC::CalculateSDCParam(CParameter& Parameters)
 
 	/* Set number of bits for one SDC-block */
 	Parameters.iNumSDCBitsPerSuperFrame = iL[1];
-	cerr << "SDC: cells " << iN_mux << " bits " << Parameters.iNumSDCBitsPerSuperFrame << endl;
 }
 
 void CMLC::CalculateMSCParam(CParameter& Parameters)
@@ -602,12 +598,10 @@ void CMLC::CalculateMSCParam(CParameter& Parameters)
 	{
 		iMSCDataLenPartA += Parameters.MSCParameters.Stream[i].iLenPartA;
 	}
-cerr << "MSC " << Parameters.Channel.eMSCmode << endl;
 	switch (Parameters.Channel.eMSCmode)
 	{
 	case CS_2_SM:
 		iLevels = 2;
-cerr << "MSC 16QAM" << endl;
 		/* Code rates for prot.-Level A and B for each level */
 		for (int i = 0; i < 2; i++)
 		{
@@ -991,10 +985,8 @@ cerr << "MSC 16QAM " << iN[0] << ", " << iN[1] << endl;
 		   demultiplexer module) */
 		Parameters.iNumBitsHierarchFrameTotal = iL[2];
 
-		cerr << "MSC mismatch between MLC decoder and SDC" << endl;
+		//cerr << "MSC mismatch between MLC decoder and SDC" << endl;
 
 		Parameters.RxEvent = ServiceReconfiguration;
 	}
-
-cerr << "MSC: " << iN_mux << ", " << iL[0] << ", " << iL[1] << ", " << iL[2] << endl;
 }
