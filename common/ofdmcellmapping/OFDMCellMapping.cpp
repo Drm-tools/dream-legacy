@@ -296,10 +296,6 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 
 void COFDMCellDemapping::InitInternal(CParameter& ReceiverParam)
 {
-	ReceiverParam.CellMappingTable.MakeTable(
-		ReceiverParam.Channel.eRobustness,
-		ReceiverParam.Channel.eSpectrumOccupancy
-	);
 	const CCellMappingTable& cmt = ReceiverParam.CellMappingTable;
 
 	iNumSymPerFrame = cmt.iNumSymPerFrame;

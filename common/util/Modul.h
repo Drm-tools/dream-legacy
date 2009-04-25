@@ -41,7 +41,7 @@
 /* Classes ********************************************************************/
 /* CModul ------------------------------------------------------------------- */
 template<class TInput, class TOutput>
-class CModul
+class CModul  
 {
 public:
 	CModul();
@@ -93,28 +93,28 @@ template<class TInput, class TOutput>
 void CModul<TInput, TOutput>::ProcessDataThreadSave(CParameter& Parameter)
 {
 	/* Get a lock for the resources */
-	this->Lock();
+	Lock();
 
 	/* Call processing routine of derived modul */
-	this->ProcessDataInternal(Parameter);
+	ProcessDataInternal(Parameter);
 
 	/* Unlock resources */
-	this->Unlock();
+	Unlock();
 }
 
 template<class TInput, class TOutput>
 void CModul<TInput, TOutput>::InitThreadSave(CParameter& Parameter)
 {
 	/* Get a lock for the resources */
-	this->Lock();
+	Lock();
 
 	try
 	{
 		/* Call init of derived modul */
-		this->InitInternal(Parameter);
+		InitInternal(Parameter);
 
 		/* Unlock resources */
-		this->Unlock();
+		Unlock();
 	}
 
 	catch (CGenErr)
@@ -134,11 +134,11 @@ void CModul<TInput, TOutput>::Init(CParameter& Parameter)
 	iInputBlockSize = 0;
 
 	/* Call init of derived modul */
-	this->InitThreadSave(Parameter);
+	InitThreadSave(Parameter);
 }
 
 template<class TInput, class TOutput>
-void CModul<TInput, TOutput>::Init(CParameter& Parameter,
+void CModul<TInput, TOutput>::Init(CParameter& Parameter, 
 								   CBuffer<TOutput>& OutputBuffer)
 {
 	/* Init some internal variables */
@@ -147,7 +147,7 @@ void CModul<TInput, TOutput>::Init(CParameter& Parameter,
 	iOutputBlockSize = 0;
 
 	/* Call init of derived modul */
-	this->InitThreadSave(Parameter);
+	InitThreadSave(Parameter);
 
 	/* Init output transfer buffer */
 	if (iMaxOutputBlockSize != 0)

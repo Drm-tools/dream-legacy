@@ -15,7 +15,6 @@ FORMS		+= MultSettingsDlg.ui AboutDlg.ui
 FORMS		+= ReceiverSettingsDlg.ui LatLongEditDlg.ui
 RCC_DIR     =  common/GUI-QT/res
 RESOURCES   += common/GUI-QT/res/icons.qrc
-TRANSLATIONS = common/GUI-QT/languages/drm.fr.ts common/GUI-QT/languages/dreamtr.es.ts
 UI_DIR		= moc
 MOC_DIR		= moc
 debug {

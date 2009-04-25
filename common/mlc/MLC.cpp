@@ -33,7 +33,6 @@
 /******************************************************************************\
 * MLC-encoder                                                                  *
 \******************************************************************************/
-
 void CMLCEncoder::ProcessDataInternal(CParameter&)
 {
 	int	i, j;
@@ -141,12 +140,17 @@ void CMLCEncoder::ProcessDataInternal(CParameter&)
 				   vecEncOutBuffer[5], pvecOutputData);
 }
 
-void CMLCEncoder::InitInternal(CParameter& Parameters)
+void CMLCEncoder::InitInternal(CParameter& TransmParam)
 {
 	int i;
 	int	iNumInBits;
-	CalculateParam(Parameters, eChannelType);
+
+	TransmParam.Lock();
+	CalculateParam(TransmParam, eChannelType);
+	TransmParam.Unlock();
+
 	iNumInBits = iL[0] + iL[1] + iL[2];
+
 
 	/* Init modules --------------------------------------------------------- */
 	/* Energy dispersal */
@@ -174,6 +178,7 @@ void CMLCEncoder::InitInternal(CParameter& Parameters)
 	/* QAM-mapping */
 	QAMMapping.Init(iN_mux, eCodingScheme);
 
+
 	/* Allocate memory for internal bit-buffers ----------------------------- */
 	for (i = 0; i < iLevels; i++)
 	{
@@ -194,7 +199,6 @@ void CMLCEncoder::InitInternal(CParameter& Parameters)
 /******************************************************************************\
 * MLC-decoder                                                                  *
 \******************************************************************************/
-
 void CMLCDecoder::ProcessDataInternal(CParameter& Parameter)
 {
 	int		i, j, k;
@@ -430,74 +434,22 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 /******************************************************************************\
 * MLC base class                                                               *
 \******************************************************************************/
-void CMLC::CalculateParam(CParameter& Parameters, int iNewChannelType)
+void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 {
-	Parameters.Lock();
+	int i;
+	int iMSCDataLenPartA;
+
+	Parameter.Lock();
+
 	switch (iNewChannelType)
 	{
+	/* FAC ********************************************************************/
 	case CT_FAC:
-		CalculateFACParam(Parameters);
-		break;
-	case CT_SDC:
-		CalculateSDCParam(Parameters);
-		break;
-	case CT_MSC:
-		CalculateMSCParam(Parameters);
-	}
-	Parameters.Unlock();
-}
+		eCodingScheme = CS_1_SM;
+		iN_mux = NUM_FAC_CELLS;
 
-void CMLC::CalculateFACParam(CParameter& Parameters)
-{
-	eCodingScheme = CS_1_SM;
-	iN_mux = NUM_FAC_CELLS;
+		iNumEncBits = NUM_FAC_CELLS * 2;
 
-	iNumEncBits = NUM_FAC_CELLS * 2;
-
-	iLevels = 1;
-
-	/* Code rates for prot.-Level A and B for each level */
-	/* Protection Level A */
-	iCodeRate[0][0] = 0;
-
-	/* Protection Level B */
-	iCodeRate[0][1] = iCodRateCombFDC4SM;
-
-	/* Define interleaver sequence for all levels */
-	piInterlSequ = iInterlSequ4SM;
-
-
-	/* iN: Number of OFDM-cells of each protection level ---------------- */
-	iN[0] = 0;
-	iN[1] = iN_mux;
-
-
-	/* iM: Number of bits each level ------------------------------------ */
-	iM[0][0] = 0;
-	iM[0][1] = NUM_FAC_BITS_PER_BLOCK;
-
-
-	/* iL: Number of bits each protection level ------------------------- */
-	/* Higher protected part */
-	iL[0] = 0;
-
-	/* Lower protected part */
-	iL[1] = iM[0][1];
-
-	/* Very strong protected part (VSPP) */
-	iL[2] = 0;
-}
-
-void CMLC::CalculateSDCParam(CParameter& Parameters)
-{
-	eCodingScheme = Parameters.Channel.eSDCmode;
-	iN_mux = Parameters.CellMappingTable.iNumSDCCellsPerSFrame;
-
-	iNumEncBits = iN_mux * 2;
-
-	switch (eCodingScheme)
-	{
-	case CS_1_SM:
 		iLevels = 1;
 
 		/* Code rates for prot.-Level A and B for each level */
@@ -505,26 +457,23 @@ void CMLC::CalculateSDCParam(CParameter& Parameters)
 		iCodeRate[0][0] = 0;
 
 		/* Protection Level B */
-		iCodeRate[0][1] = iCodRateCombSDC4SM;
+		iCodeRate[0][1] = iCodRateCombFDC4SM;
 
 		/* Define interleaver sequence for all levels */
 		piInterlSequ = iInterlSequ4SM;
 
 
-		/* iN: Number of OFDM-cells of each protection level ------------ */
+		/* iN: Number of OFDM-cells of each protection level ---------------- */
 		iN[0] = 0;
 		iN[1] = iN_mux;
 
-		/* iM: Number of bits each level -------------------------------- */
+
+		/* iM: Number of bits each level ------------------------------------ */
 		iM[0][0] = 0;
-
-		/* M_0,2 = RX_0 * floor((2 * N_SDC - 12) / RY_0) */
-		iM[0][1] = iPuncturingPatterns[iCodRateCombSDC4SM][0] *
-			(int) ((_REAL) (2 * iN_mux - 12) /
-			iPuncturingPatterns[iCodRateCombSDC4SM][1]);
+		iM[0][1] = NUM_FAC_BITS_PER_BLOCK;
 
 
-		/* iL: Number of bits each protection level --------------------- */
+		/* iL: Number of bits each protection level ------------------------- */
 		/* Higher protected part */
 		iL[0] = 0;
 
@@ -535,458 +484,514 @@ void CMLC::CalculateSDCParam(CParameter& Parameters)
 		iL[2] = 0;
 		break;
 
-	case CS_2_SM:
-		iLevels = 2;
 
-		/* Code rates for prot.-Level A and B for each level */
-		for (int i = 0; i < 2; i++)
-		{
-			/* Protection Level A */
-			iCodeRate[i][0] = 0;
-
-			/* Protection Level B */
-			iCodeRate[i][1] = iCodRateCombSDC16SM[i];
-		}
-
-		/* Define interleaver sequence for all levels */
-		piInterlSequ = iInterlSequ16SM;
-
-
-		/* iN: Number of OFDM-cells of each protection level ------------ */
-		iN[0] = 0;
-		iN[1] = iN_mux;
-
-		/* iM: Number of bits each level -------------------------------- */
-		/* M_p,2 = RX_p * floor((N_2 - 6) / RY_p) */
-		for (int i = 0; i < 2; i++)
-		{
-			iM[i][0] = 0;
-
-			/* M_p,2 = RX_p * floor((2 * N_SDC - 12) / RY_p) */
-			iM[i][1] = iPuncturingPatterns[iCodRateCombSDC16SM[i]][0] *
-				(int) ((_REAL) (2 * iN[1] - 12) /
-				iPuncturingPatterns[iCodRateCombSDC16SM[i]][1]);
-		}
-
-
-		/* iL: Number of bits each protection level --------------------- */
-		/* Higher protected part */
-		iL[0] = 0;
-
-		/* Lower protected part */
-		iL[1] = iM[0][1] + iM[1][1];
-
-		/* Very strong protected part (VSPP) */
-		iL[2] = 0;
-		break;
-
-	default:
-		break;
-	}
-
-	/* Set number of bits for one SDC-block */
-	Parameters.iNumSDCBitsPerSuperFrame = iL[1];
-}
-
-void CMLC::CalculateMSCParam(CParameter& Parameters)
-{
-	iN_mux = Parameters.CellMappingTable.iNumUsefMSCCellsPerFrame;
-
-	/* Data length for part A is the sum of all lengths of the streams */
-	int iMSCDataLenPartA = 0;
-	for(size_t i=0; i<Parameters.MSCParameters.Stream.size(); i++)
-	{
-		iMSCDataLenPartA += Parameters.MSCParameters.Stream[i].iLenPartA;
-	}
-	switch (Parameters.Channel.eMSCmode)
-	{
-	case CS_2_SM:
-		iLevels = 2;
-		/* Code rates for prot.-Level A and B for each level */
-		for (int i = 0; i < 2; i++)
-		{
-			/* Protection Level A */
-			iCodeRate[i][0] =
-				iCodRateCombMSC16SM[Parameters.MSCParameters.ProtectionLevel.iPartA][i];
-
-			/* Protection Level B */
-			iCodeRate[i][1] =
-				iCodRateCombMSC16SM[Parameters.MSCParameters.ProtectionLevel.iPartB][i];
-		}
-
-		/* Define interleaver sequence for all levels */
-		piInterlSequ = iInterlSequ16SM;
+	/* SDC ********************************************************************/
+	case CT_SDC:
+		eCodingScheme = Parameter.Channel.eSDCmode;
+		iN_mux = Parameter.CellMappingTable.iNumSDCCellsPerSFrame;
 
 		iNumEncBits = iN_mux * 2;
 
-
-		/* iN: Number of OFDM-cells of each protection level ------------ */
-		/* N_1 = ceil(8 * X / (2 * RY_Icm * sum(R_p)) * RY_Icm */
-		iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (2 *
-			/* RY_Icm */
-			(_REAL) iCodRateCombMSC16SM[Parameters.MSCParameters.ProtectionLevel.iPartA][2] *
-			(
-			/* R_0 */
-			(_REAL) iPuncturingPatterns[iCodRateCombMSC16SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][0]][0] /
-				iPuncturingPatterns[iCodRateCombMSC16SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][0]][1] +
-			/* R_1 */
-			(_REAL) iPuncturingPatterns[iCodRateCombMSC16SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][1]][0] /
-				iPuncturingPatterns[iCodRateCombMSC16SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][1]][1]))) *
-			/* RY_Icm */
-			iCodRateCombMSC16SM[Parameters.MSCParameters.ProtectionLevel.iPartA][2];
-
-		/* Check if result can be possible, if not -> correct. This can
-		   happen, if a wrong number is in "Param.Stream[x].iLenPartA" */
-		if (iN[0] > iN_mux)
-			iN[0] = 0;
-
-		iN[1] = iN_mux - iN[0];
-cerr << "MSC 16QAM " << iN[0] << ", " << iN[1] << endl;
-
-		/* iM: Number of bits each level -------------------------------- */
-		for (int i = 0; i < 2; i++)
+		switch (eCodingScheme)
 		{
-			cerr << "PL " << Parameters.MSCParameters.ProtectionLevel.iPartB << endl;
-			/* M_p,1 = 2 * N_1 * R_p */
-			iM[i][0] = (int) (2 * iN[0] *
+		case CS_1_SM:
+			iLevels = 1;
+
+			/* Code rates for prot.-Level A and B for each level */
+			/* Protection Level A */
+			iCodeRate[0][0] = 0;
+
+			/* Protection Level B */
+			iCodeRate[0][1] = iCodRateCombSDC4SM;
+
+			/* Define interleaver sequence for all levels */
+			piInterlSequ = iInterlSequ4SM;
+
+
+			/* iN: Number of OFDM-cells of each protection level ------------ */
+			iN[0] = 0;
+			iN[1] = iN_mux;
+
+
+			/* iM: Number of bits each level -------------------------------- */
+			iM[0][0] = 0;
+
+			/* M_0,2 = RX_0 * floor((2 * N_SDC - 12) / RY_0) */
+			iM[0][1] = iPuncturingPatterns[iCodRateCombSDC4SM][0] *
+				(int) ((_REAL) (2 * iN_mux - 12) /
+				iPuncturingPatterns[iCodRateCombSDC4SM][1]);
+
+
+			/* iL: Number of bits each protection level --------------------- */
+			/* Higher protected part */
+			iL[0] = 0;
+
+			/* Lower protected part */
+			iL[1] = iM[0][1];
+
+			/* Very strong protected part (VSPP) */
+			iL[2] = 0;
+			break;
+
+		case CS_2_SM:
+			iLevels = 2;
+
+			/* Code rates for prot.-Level A and B for each level */
+			for (i = 0; i < 2; i++)
+			{
+				/* Protection Level A */
+				iCodeRate[i][0] = 0;
+
+				/* Protection Level B */
+				iCodeRate[i][1] = iCodRateCombSDC16SM[i];
+			}
+
+			/* Define interleaver sequence for all levels */
+			piInterlSequ = iInterlSequ16SM;
+
+
+			/* iN: Number of OFDM-cells of each protection level ------------ */
+			iN[0] = 0;
+			iN[1] = iN_mux;
+
+
+			/* iM: Number of bits each level -------------------------------- */
+			/* M_p,2 = RX_p * floor((N_2 - 6) / RY_p) */
+			for (i = 0; i < 2; i++)
+			{
+				iM[i][0] = 0;
+
+				/* M_p,2 = RX_p * floor((2 * N_SDC - 12) / RY_p) */
+				iM[i][1] = iPuncturingPatterns[iCodRateCombSDC16SM[i]][0] *
+					(int) ((_REAL) (2 * iN[1] - 12) /
+					iPuncturingPatterns[iCodRateCombSDC16SM[i]][1]);
+			}
+
+
+			/* iL: Number of bits each protection level --------------------- */
+			/* Higher protected part */
+			iL[0] = 0;
+
+			/* Lower protected part */
+			iL[1] = iM[0][1] + iM[1][1];
+
+			/* Very strong protected part (VSPP) */
+			iL[2] = 0;
+			break;
+
+		default:
+			break;
+		}
+
+		/* Set number of bits for one SDC-block */
+		Parameter.iNumSDCBitsPerSuperFrame = iL[1];
+		break;
+
+
+	/* MSC ********************************************************************/
+	case CT_MSC:
+		eCodingScheme = Parameter.Channel.eMSCmode;
+		iN_mux = Parameter.CellMappingTable.iNumUsefMSCCellsPerFrame;
+
+		/* Data length for part A is the sum of all lengths of the streams */
+		iMSCDataLenPartA = Parameter.MSCParameters.Stream[0].iLenPartA +
+						   Parameter.MSCParameters.Stream[1].iLenPartA +
+						   Parameter.MSCParameters.Stream[2].iLenPartA +
+						   Parameter.MSCParameters.Stream[3].iLenPartA;
+
+		switch (eCodingScheme)
+		{
+		case CS_2_SM:
+			iLevels = 2;
+
+			/* Code rates for prot.-Level A and B for each level */
+			for (i = 0; i < 2; i++)
+			{
+				/* Protection Level A */
+				iCodeRate[i][0] =
+					iCodRateCombMSC16SM[Parameter.MSCParameters.ProtectionLevel.iPartA][i];
+
+				/* Protection Level B */
+				iCodeRate[i][1] =
+					iCodRateCombMSC16SM[Parameter.MSCParameters.ProtectionLevel.iPartB][i];
+			}
+
+			/* Define interleaver sequence for all levels */
+			piInterlSequ = iInterlSequ16SM;
+
+			iNumEncBits = iN_mux * 2;
+
+
+			/* iN: Number of OFDM-cells of each protection level ------------ */
+			/* N_1 = ceil(8 * X / (2 * RY_Icm * sum(R_p)) * RY_Icm */
+			iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (2 *
+				/* RY_Icm */
+				(_REAL) iCodRateCombMSC16SM[Parameter.MSCParameters.ProtectionLevel.iPartA][2] *
+				(
+				/* R_0 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC16SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][i]][0] /
-				iPuncturingPatterns[iCodRateCombMSC16SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][i]][1]);
+					Parameter.MSCParameters.ProtectionLevel.iPartA][0]][0] /
+					iPuncturingPatterns[iCodRateCombMSC16SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][0]][1] +
+				/* R_1 */
+				(_REAL) iPuncturingPatterns[iCodRateCombMSC16SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][0] /
+					iPuncturingPatterns[iCodRateCombMSC16SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][1]))) *
+				/* RY_Icm */
+				iCodRateCombMSC16SM[Parameter.MSCParameters.ProtectionLevel.iPartA][2];
 
-			/* M_p,2 = RX_p * floor((2 * N_2 - 12) / RY_p) */
-			iM[i][1] =
-				iPuncturingPatterns[iCodRateCombMSC16SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartB][i]][0] *
-				(int) ((_REAL) (2 * iN[1] - 12) /
-				iPuncturingPatterns[iCodRateCombMSC16SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartB][i]][1]);
-		}
+			/* Check if result can be possible, if not -> correct. This can
+			   happen, if a wrong number is in "Param.Stream[x].iLenPartA" */
+			if (iN[0] > iN_mux)
+				iN[0] = 0;
 
-
-		/* iL: Number of bits each protection level --------------------- */
-		/* Higher protected part */
-		iL[0] = iM[0][0] + iM[1][0];
-
-		/* Lower protected part */
-		iL[1] = iM[0][1] + iM[1][1];
-
-		/* Very strong protected part (VSPP) */
-		iL[2] = 0;
-		break;
-
-	case CS_3_SM:
-		iLevels = 3;
-
-		/* Code rates for prot.-Level A and B for each level */
-		for (int i = 0; i < 3; i++)
-		{
-			/* Protection Level A */
-			iCodeRate[i][0] =
-				iCodRateCombMSC64SM[Parameters.MSCParameters.ProtectionLevel.iPartA][i];
-
-			/* Protection Level B */
-			iCodeRate[i][1] =
-				iCodRateCombMSC64SM[Parameters.MSCParameters.ProtectionLevel.iPartB][i];
-		}
-
-		/* Define interleaver sequence for all levels */
-		piInterlSequ = iInterlSequ64SM;
-
-		iNumEncBits = iN_mux * 2;
+			iN[1] = iN_mux - iN[0];
 
 
-		/* iN: Number of OFDM-cells of each protection level ------------ */
-		/* N_1 = ceil(8 * X / (2 * RY_Icm * sum(R_p)) * RY_Icm */
-		iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (2 *
-			/* RY_Icm */
-			(_REAL) iCodRateCombMSC64SM[Parameters.MSCParameters.ProtectionLevel.iPartA][3] *
-			(
-			/* R_0 */
-			(_REAL) iPuncturingPatterns[iCodRateCombMSC64SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][0]][0] /
-				iPuncturingPatterns[iCodRateCombMSC64SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][0]][1] +
-			/* R_1 */
-			(_REAL) iPuncturingPatterns[iCodRateCombMSC64SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][1]][0] /
-				iPuncturingPatterns[iCodRateCombMSC64SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][1]][1] +
-			/* R_2 */
-			(_REAL) iPuncturingPatterns[iCodRateCombMSC64SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][2]][0] /
-				iPuncturingPatterns[iCodRateCombMSC64SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][2]][1]))) *
-			/* RY_Icm */
-			iCodRateCombMSC64SM[Parameters.MSCParameters.ProtectionLevel.iPartA][3];
+			/* iM: Number of bits each level -------------------------------- */
+			for (i = 0; i < 2; i++)
+			{
+				/* M_p,1 = 2 * N_1 * R_p */
+				iM[i][0] = (int) (2 * iN[0] *
+					(_REAL) iPuncturingPatterns[iCodRateCombMSC16SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][0] /
+					iPuncturingPatterns[iCodRateCombMSC16SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][1]);
 
-		/* Check if result can be possible, if not -> correct. This can
-		   happen, if a wrong number is in "Param.Stream[x].iLenPartA" */
-		if (iN[0] > iN_mux)
-			iN[0] = 0;
-
-		iN[1] = iN_mux - iN[0];
+				/* M_p,2 = RX_p * floor((2 * N_2 - 12) / RY_p) */
+				iM[i][1] =
+					iPuncturingPatterns[iCodRateCombMSC16SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][0] *
+					(int) ((_REAL) (2 * iN[1] - 12) /
+					iPuncturingPatterns[iCodRateCombMSC16SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][1]);
+			}
 
 
-		/* iM: Number of bits each level -------------------------------- */
-		for (int i = 0; i < 3; i++)
-		{
-			/* M_p,1 = 2 * N_1 * R_p */
-			iM[i][0] = (int) (2 * iN[0] *
+			/* iL: Number of bits each protection level --------------------- */
+			/* Higher protected part */
+			iL[0] = iM[0][0] + iM[1][0];
+
+			/* Lower protected part */
+			iL[1] = iM[0][1] + iM[1][1];
+
+			/* Very strong protected part (VSPP) */
+			iL[2] = 0;
+			break;
+
+		case CS_3_SM:
+			iLevels = 3;
+
+			/* Code rates for prot.-Level A and B for each level */
+			for (i = 0; i < 3; i++)
+			{
+				/* Protection Level A */
+				iCodeRate[i][0] =
+					iCodRateCombMSC64SM[Parameter.MSCParameters.ProtectionLevel.iPartA][i];
+
+				/* Protection Level B */
+				iCodeRate[i][1] =
+					iCodRateCombMSC64SM[Parameter.MSCParameters.ProtectionLevel.iPartB][i];
+			}
+
+			/* Define interleaver sequence for all levels */
+			piInterlSequ = iInterlSequ64SM;
+
+			iNumEncBits = iN_mux * 2;
+
+
+			/* iN: Number of OFDM-cells of each protection level ------------ */
+			/* N_1 = ceil(8 * X / (2 * RY_Icm * sum(R_p)) * RY_Icm */
+			iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (2 *
+				/* RY_Icm */
+				(_REAL) iCodRateCombMSC64SM[Parameter.MSCParameters.ProtectionLevel.iPartA][3] *
+				(
+				/* R_0 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC64SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][i]][0] /
-				iPuncturingPatterns[iCodRateCombMSC64SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][i]][1]);
+					Parameter.MSCParameters.ProtectionLevel.iPartA][0]][0] /
+					iPuncturingPatterns[iCodRateCombMSC64SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][0]][1] +
+				/* R_1 */
+				(_REAL) iPuncturingPatterns[iCodRateCombMSC64SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][0] /
+					iPuncturingPatterns[iCodRateCombMSC64SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][1] +
+				/* R_2 */
+				(_REAL) iPuncturingPatterns[iCodRateCombMSC64SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][2]][0] /
+					iPuncturingPatterns[iCodRateCombMSC64SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][2]][1]))) *
+				/* RY_Icm */
+				iCodRateCombMSC64SM[Parameter.MSCParameters.ProtectionLevel.iPartA][3];
 
-			/* M_p,2 = RX_p * floor((2 * N_2 - 12) / RY_p) */
-			iM[i][1] =
-				iPuncturingPatterns[iCodRateCombMSC64SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartB][i]][0] *
-				(int) ((_REAL) (2 * iN[1] - 12) /
-				iPuncturingPatterns[iCodRateCombMSC64SM[
-				Parameters.MSCParameters.ProtectionLevel.iPartB][i]][1]);
-		}
+			/* Check if result can be possible, if not -> correct. This can
+			   happen, if a wrong number is in "Param.Stream[x].iLenPartA" */
+			if (iN[0] > iN_mux)
+				iN[0] = 0;
 
-
-		/* iL: Number of bits each protection level --------------------- */
-		/* Higher protected part */
-		iL[0] = iM[0][0] + iM[1][0] + iM[2][0];
-
-		/* Lower protected part */
-		iL[1] = iM[0][1] + iM[1][1] + iM[2][1];
-
-		/* Very strong protected part (VSPP) */
-		iL[2] = 0;
-		break;
-
-	case CS_3_HMSYM:
-		iLevels = 3;
-
-		/* Code rates for prot.-Level A and B for each level */
-		/* VSPP (Hierachical) */
-		iCodeRate[0][0] = 0;
-		iCodeRate[0][1] =
-			iCodRateCombMSC64HMsym[Parameters.MSCParameters.ProtectionLevel.iHierarch][0];
-
-		for (int i = 1; i < 3; i++)
-		{
-			/* Protection Level A */
-			iCodeRate[i][0] =
-				iCodRateCombMSC64HMsym[Parameters.MSCParameters.ProtectionLevel.iPartA][i];
-
-			/* Protection Level B */
-			iCodeRate[i][1] =
-				iCodRateCombMSC64HMsym[Parameters.MSCParameters.ProtectionLevel.iPartB][i];
-		}
-
-		/* Define interleaver sequence for all levels */
-		piInterlSequ = iInterlSequ64HMsym;
-
-		iNumEncBits = iN_mux * 2;
+			iN[1] = iN_mux - iN[0];
 
 
-		/* iN: Number of OFDM-cells of each protection level ------------ */
-		/* N_1 = ceil(8 * X / (2 * RY_Icm * sum(R_p)) * RY_Icm */
-		iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (2 *
-			/* RY_Icm */
-			(_REAL) iCodRateCombMSC64HMsym[Parameters.MSCParameters.ProtectionLevel.iPartA][3] *
-			(
-			/* R_1 */
-			(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMsym[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][1]][0] /
-				iPuncturingPatterns[iCodRateCombMSC64HMsym[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][1]][1] +
-			/* R_2 */
-			(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMsym[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][2]][0] /
-				iPuncturingPatterns[iCodRateCombMSC64HMsym[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][2]][1]))) *
-			/* RY_Icm */
-			iCodRateCombMSC64HMsym[Parameters.MSCParameters.ProtectionLevel.iPartA][3];
+			/* iM: Number of bits each level -------------------------------- */
+			for (i = 0; i < 3; i++)
+			{
+				/* M_p,1 = 2 * N_1 * R_p */
+				iM[i][0] = (int) (2 * iN[0] *
+					(_REAL) iPuncturingPatterns[iCodRateCombMSC64SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][0] /
+					iPuncturingPatterns[iCodRateCombMSC64SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][1]);
 
-		/* Check if result can be possible, if not -> correct. This can
-		   happen, if a wrong number is in "Param.Stream[x].iLenPartA" */
-		if (iN[0] > iN_mux)
-			iN[0] = 0;
-
-		iN[1] = iN_mux - iN[0];
+				/* M_p,2 = RX_p * floor((2 * N_2 - 12) / RY_p) */
+				iM[i][1] =
+					iPuncturingPatterns[iCodRateCombMSC64SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][0] *
+					(int) ((_REAL) (2 * iN[1] - 12) /
+					iPuncturingPatterns[iCodRateCombMSC64SM[
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][1]);
+			}
 
 
-		/* iM: Number of bits each level -------------------------------- */
-		/* Level 0, contains the VSPP, treated differently */
-		/* M_0,1 */
-		iM[0][0] = 0;
+			/* iL: Number of bits each protection level --------------------- */
+			/* Higher protected part */
+			iL[0] = iM[0][0] + iM[1][0] + iM[2][0];
 
-		/* M_0,2 = RX_0 * floor((2 * (N_1 + N_2) - 12) / RY_0) */
-		iM[0][1] =
-			iPuncturingPatterns[iCodRateCombMSC64HMsym[
-			Parameters.MSCParameters.ProtectionLevel.iHierarch][0]][0] *
-			(int) ((_REAL) (2 * (iN[0] + iN[1]) - 12) /
-			iPuncturingPatterns[iCodRateCombMSC64HMsym[
-			Parameters.MSCParameters.ProtectionLevel.iHierarch][0]][1]);
+			/* Lower protected part */
+			iL[1] = iM[0][1] + iM[1][1] + iM[2][1];
 
-		for (int i = 1; i < 3; i++)
-		{
-			/* M_p,1 = 2 * N_1 * R_p */
-			iM[i][0] = (int) (2 * iN[0] *
+			/* Very strong protected part (VSPP) */
+			iL[2] = 0;
+			break;
+
+		case CS_3_HMSYM:
+			iLevels = 3;
+
+			/* Code rates for prot.-Level A and B for each level */
+			/* VSPP (Hierachical) */
+			iCodeRate[0][0] = 0;
+			iCodeRate[0][1] =
+				iCodRateCombMSC64HMsym[Parameter.MSCParameters.ProtectionLevel.iHierarch][0];
+
+			for (i = 1; i < 3; i++)
+			{
+				/* Protection Level A */
+				iCodeRate[i][0] =
+					iCodRateCombMSC64HMsym[Parameter.MSCParameters.ProtectionLevel.iPartA][i];
+
+				/* Protection Level B */
+				iCodeRate[i][1] =
+					iCodRateCombMSC64HMsym[Parameter.MSCParameters.ProtectionLevel.iPartB][i];
+			}
+
+			/* Define interleaver sequence for all levels */
+			piInterlSequ = iInterlSequ64HMsym;
+
+			iNumEncBits = iN_mux * 2;
+
+
+			/* iN: Number of OFDM-cells of each protection level ------------ */
+			/* N_1 = ceil(8 * X / (2 * RY_Icm * sum(R_p)) * RY_Icm */
+			iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (2 *
+				/* RY_Icm */
+				(_REAL) iCodRateCombMSC64HMsym[Parameter.MSCParameters.ProtectionLevel.iPartA][3] *
+				(
+				/* R_1 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMsym[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][i]][0] /
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][0] /
+					iPuncturingPatterns[iCodRateCombMSC64HMsym[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][1] +
+				/* R_2 */
+				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMsym[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][2]][0] /
+					iPuncturingPatterns[iCodRateCombMSC64HMsym[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][2]][1]))) *
+				/* RY_Icm */
+				iCodRateCombMSC64HMsym[Parameter.MSCParameters.ProtectionLevel.iPartA][3];
+
+			/* Check if result can be possible, if not -> correct. This can
+			   happen, if a wrong number is in "Param.Stream[x].iLenPartA" */
+			if (iN[0] > iN_mux)
+				iN[0] = 0;
+
+			iN[1] = iN_mux - iN[0];
+
+
+			/* iM: Number of bits each level -------------------------------- */
+			/* Level 0, contains the VSPP, treated differently */
+			/* M_0,1 */
+			iM[0][0] = 0;
+
+			/* M_0,2 = RX_0 * floor((2 * (N_1 + N_2) - 12) / RY_0) */
+			iM[0][1] =
 				iPuncturingPatterns[iCodRateCombMSC64HMsym[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][i]][1]);
-
-			/* M_p,2 = RX_p * floor((2 * N_2 - 12) / RY_p) */
-			iM[i][1] =
+				Parameter.MSCParameters.ProtectionLevel.iHierarch][0]][0] *
+				(int) ((_REAL) (2 * (iN[0] + iN[1]) - 12) /
 				iPuncturingPatterns[iCodRateCombMSC64HMsym[
-				Parameters.MSCParameters.ProtectionLevel.iPartB][i]][0] *
-				(int) ((_REAL) (2 * iN[1] - 12) /
-				iPuncturingPatterns[iCodRateCombMSC64HMsym[
-				Parameters.MSCParameters.ProtectionLevel.iPartB][i]][1]);
-		}
+				Parameter.MSCParameters.ProtectionLevel.iHierarch][0]][1]);
+
+			for (i = 1; i < 3; i++)
+			{
+				/* M_p,1 = 2 * N_1 * R_p */
+				iM[i][0] = (int) (2 * iN[0] *
+					(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMsym[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][0] /
+					iPuncturingPatterns[iCodRateCombMSC64HMsym[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][1]);
+
+				/* M_p,2 = RX_p * floor((2 * N_2 - 12) / RY_p) */
+				iM[i][1] =
+					iPuncturingPatterns[iCodRateCombMSC64HMsym[
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][0] *
+					(int) ((_REAL) (2 * iN[1] - 12) /
+					iPuncturingPatterns[iCodRateCombMSC64HMsym[
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][1]);
+			}
 
 
-		/* iL: Number of bits each protection level --------------------- */
-		/* Higher protected part */
-		iL[0] = iM[1][0] + iM[2][0];
+			/* iL: Number of bits each protection level --------------------- */
+			/* Higher protected part */
+			iL[0] = iM[1][0] + iM[2][0];
 
-		/* Lower protected part */
-		iL[1] = iM[1][1] + iM[2][1];
+			/* Lower protected part */
+			iL[1] = iM[1][1] + iM[2][1];
 
-		/* Very strong protected part (VSPP) */
-		iL[2] = iM[0][1];
-		break;
+			/* Very strong protected part (VSPP) */
+			iL[2] = iM[0][1];
+			break;
 
-	case CS_3_HMMIX:
-		iLevels = 6;
+		case CS_3_HMMIX:
+			iLevels = 6;
 
-		/* Code rates for prot.-Level A and B for each level */
-		/* VSPP (Hierachical) */
-		iCodeRate[0][0] = 0;
-		iCodeRate[0][1] =
-			iCodRateCombMSC64HMmix[Parameters.MSCParameters.ProtectionLevel.iHierarch][0];
+			/* Code rates for prot.-Level A and B for each level */
+			/* VSPP (Hierachical) */
+			iCodeRate[0][0] = 0;
+			iCodeRate[0][1] =
+				iCodRateCombMSC64HMmix[Parameter.MSCParameters.ProtectionLevel.iHierarch][0];
 
-		for (int i = 1; i < 6; i++)
-		{
-			/* Protection Level A */
-			iCodeRate[i][0] =
-				iCodRateCombMSC64HMmix[Parameters.MSCParameters.ProtectionLevel.iPartA][i];
+			for (i = 1; i < 6; i++)
+			{
+				/* Protection Level A */
+				iCodeRate[i][0] =
+					iCodRateCombMSC64HMmix[Parameter.MSCParameters.ProtectionLevel.iPartA][i];
 
-			/* Protection Level B */
-			iCodeRate[i][1] =
-				iCodRateCombMSC64HMmix[Parameters.MSCParameters.ProtectionLevel.iPartB][i];
-		}
+				/* Protection Level B */
+				iCodeRate[i][1] =
+					iCodRateCombMSC64HMmix[Parameter.MSCParameters.ProtectionLevel.iPartB][i];
+			}
 
-		/* Define interleaver sequence for all levels */
-		piInterlSequ = iInterlSequ64HMmix;
+			/* Define interleaver sequence for all levels */
+			piInterlSequ = iInterlSequ64HMmix;
 
-		iNumEncBits = iN_mux;
-
-
-		/* iN: Number of OFDM-cells of each protection level ------------ */
-		/* N_1 = ceil(8 * X / (RY_Icm * sum(R_p)) * RY_Icm */
-		iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (
-			/* RY_Icm */
-			(_REAL) iCodRateCombMSC64HMmix[Parameters.MSCParameters.ProtectionLevel.iPartA][6] *
-			(
-			/* R_1 */
-			(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][1]][0] /
-				iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][1]][1] +
-			/* R_2 */
-			(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][2]][0] /
-				iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][2]][1] +
-			/* R_3 */
-			(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][3]][0] /
-				iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][3]][1] +
-			/* R_4 */
-			(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][4]][0] /
-				iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][4]][1] +
-			/* R_5 */
-			(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][5]][0] /
-				iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][5]][1]))) *
-			/* RY_Icm */
-			iCodRateCombMSC64HMmix[Parameters.MSCParameters.ProtectionLevel.iPartA][6];
-
-		/* Check if result can be possible, if not -> correct. This can
-		   happen, if a wrong number is in "Param.Stream[x].iLenPartA" */
-		if (iN[0] > iN_mux)
-			iN[0] = 0;
-
-		iN[1] = iN_mux - iN[0];
+			iNumEncBits = iN_mux;
 
 
-		/* iM: Number of bits each level -------------------------------- */
-		/* Real-parts of level 0, they contain the VSPP and treated
-		   differently */
-		/* M_0,1Re */
-		iM[0][0] = 0;
-
-		/* M_0,2Re = RX_0Re * floor((N_1 + N_2 - 12) / RY_0Re) */
-		iM[0][1] =
-			iPuncturingPatterns[iCodRateCombMSC64HMmix[
-			Parameters.MSCParameters.ProtectionLevel.iHierarch][0]][0] *
-			(int) ((_REAL) (iN[0] + iN[1] - 12) /
-			iPuncturingPatterns[iCodRateCombMSC64HMmix[
-			Parameters.MSCParameters.ProtectionLevel.iHierarch][0]][1]);
-
-		for (int i = 1; i < 6; i++)
-		{
-			/* M_p,1Re;Im = 2 * N_1 * R_pRe;Im */
-			iM[i][0] = (int) (iN[0] *
+			/* iN: Number of OFDM-cells of each protection level ------------ */
+			/* N_1 = ceil(8 * X / (RY_Icm * sum(R_p)) * RY_Icm */
+			iN[0] = (int) ceil(8 * (_REAL) iMSCDataLenPartA / (
+				/* RY_Icm */
+				(_REAL) iCodRateCombMSC64HMmix[Parameter.MSCParameters.ProtectionLevel.iPartA][6] *
+				(
+				/* R_1 */
 				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][i]][0] /
-				iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartA][i]][1]);
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][0] /
+					iPuncturingPatterns[iCodRateCombMSC64HMmix[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][1]][1] +
+				/* R_2 */
+				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][2]][0] /
+					iPuncturingPatterns[iCodRateCombMSC64HMmix[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][2]][1] +
+				/* R_3 */
+				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][3]][0] /
+					iPuncturingPatterns[iCodRateCombMSC64HMmix[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][3]][1] +
+				/* R_4 */
+				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][4]][0] /
+					iPuncturingPatterns[iCodRateCombMSC64HMmix[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][4]][1] +
+				/* R_5 */
+				(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][5]][0] /
+					iPuncturingPatterns[iCodRateCombMSC64HMmix[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][5]][1]))) *
+				/* RY_Icm */
+				iCodRateCombMSC64HMmix[Parameter.MSCParameters.ProtectionLevel.iPartA][6];
 
-			/* M_p,2Re;Im =
-			   RX_pRe;Im * floor((2 * N_2 - 12) / RY_pRe;Im) */
-			iM[i][1] =
+			/* Check if result can be possible, if not -> correct. This can
+			   happen, if a wrong number is in "Param.Stream[x].iLenPartA" */
+			if (iN[0] > iN_mux)
+				iN[0] = 0;
+
+			iN[1] = iN_mux - iN[0];
+
+
+			/* iM: Number of bits each level -------------------------------- */
+			/* Real-parts of level 0, they contain the VSPP and treated
+			   differently */
+			/* M_0,1Re */
+			iM[0][0] = 0;
+
+			/* M_0,2Re = RX_0Re * floor((N_1 + N_2 - 12) / RY_0Re) */
+			iM[0][1] =
 				iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartB][i]][0] *
-				(int) ((_REAL) (iN[1] - 12) /
+				Parameter.MSCParameters.ProtectionLevel.iHierarch][0]][0] *
+				(int) ((_REAL) (iN[0] + iN[1] - 12) /
 				iPuncturingPatterns[iCodRateCombMSC64HMmix[
-				Parameters.MSCParameters.ProtectionLevel.iPartB][i]][1]);
+				Parameter.MSCParameters.ProtectionLevel.iHierarch][0]][1]);
+
+			for (i = 1; i < 6; i++)
+			{
+				/* M_p,1Re;Im = 2 * N_1 * R_pRe;Im */
+				iM[i][0] = (int) (iN[0] *
+					(_REAL) iPuncturingPatterns[iCodRateCombMSC64HMmix[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][0] /
+					iPuncturingPatterns[iCodRateCombMSC64HMmix[
+					Parameter.MSCParameters.ProtectionLevel.iPartA][i]][1]);
+
+				/* M_p,2Re;Im =
+				   RX_pRe;Im * floor((2 * N_2 - 12) / RY_pRe;Im) */
+				iM[i][1] =
+					iPuncturingPatterns[iCodRateCombMSC64HMmix[
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][0] *
+					(int) ((_REAL) (iN[1] - 12) /
+					iPuncturingPatterns[iCodRateCombMSC64HMmix[
+					Parameter.MSCParameters.ProtectionLevel.iPartB][i]][1]);
+			}
+
+
+			/* iL: Number of bits each protection level --------------------- */
+			/* Higher protected part */
+			iL[0] = iM[1][0] + iM[2][0] + iM[3][0] + iM[4][0] + iM[5][0];
+
+			/* Lower protected part */
+			iL[1] = iM[1][1] + iM[2][1] + iM[3][1] + iM[4][1] + iM[5][1];
+
+			/* Very strong protected part (VSPP) */
+			iL[2] = iM[0][1];
+			break;
+
+		default:
+			break;
 		}
 
+        if(Parameter.iNumDecodedBitsMSC != (iL[0] + iL[1] + iL[2])
+        || 	Parameter.iNumBitsHierarchFrameTotal != iL[2])
+        {
+            /* Set number of output bits for next module */
+            Parameter.iNumDecodedBitsMSC = iL[0] + iL[1] + iL[2];
+            /* Set total number of bits for hierarchical frame (needed for MSC
+               demultiplexer module) */
+            Parameter.iNumBitsHierarchFrameTotal = iL[2];
 
-		/* iL: Number of bits each protection level --------------------- */
-		/* Higher protected part */
-		iL[0] = iM[1][0] + iM[2][0] + iM[3][0] + iM[4][0] + iM[5][0];
+            cerr << "MSC mismatch between MLC decoder and SDC" << endl;
 
-		/* Lower protected part */
-		iL[1] = iM[1][1] + iM[2][1] + iM[3][1] + iM[4][1] + iM[5][1];
+            Parameter.RxEvent = ServiceReconfiguration;
+        }
 
-		/* Very strong protected part (VSPP) */
-		iL[2] = iM[0][1];
-		break;
-
-	default:
 		break;
 	}
-
-	if(Parameters.iNumDecodedBitsMSC != (iL[0] + iL[1] + iL[2])
-	|| 	Parameters.iNumBitsHierarchFrameTotal != iL[2])
-	{
-		/* Set number of output bits for next module */
-		Parameters.iNumDecodedBitsMSC = iL[0] + iL[1] + iL[2];
-		/* Set total number of bits for hierarchical frame (needed for MSC
-		   demultiplexer module) */
-		Parameters.iNumBitsHierarchFrameTotal = iL[2];
-
-		//cerr << "MSC mismatch between MLC decoder and SDC" << endl;
-
-		Parameters.RxEvent = ServiceReconfiguration;
-	}
+	Parameter.Unlock();
 }
