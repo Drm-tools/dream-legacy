@@ -44,12 +44,11 @@ public:
 	virtual ~CSDCReceive() {}
 
 	ERetStatus SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
-	ERetStatus SDCIParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
 	void SetSDCType(ESDCType sdcType) { eSDCType = sdcType; }
 
-protected:
 	bool DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody,
                              CParameter& Parameter, const bool bVersion);
+protected:
 	bool DataEntityType1(CVector<_BINARY>* pbiData, const int iLengthOfBody,
 							 CParameter& Parameter);
 // ...

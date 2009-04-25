@@ -70,8 +70,8 @@ void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter)
 	pvecInputData2 = NULL;
 	pvecInputData3 = NULL;
 	/* Init base-class */
-	//CModul<TInput, TOutput>::Init(Parameter); we dont want the "thread safe" ness
-	this->InitInternal(Parameter);
+	CModul<TInput, TOutput>::Init(Parameter);//? we dont want the "thread safe" ness
+	//this->InitInternal(Parameter);
 }
 
 template<class TInput, class TOutput>
@@ -88,8 +88,8 @@ void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter,
 	veciInputBlockSize.clear();
 
 	/* Init base-class */
-	//CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
-	this->InitInternal(Parameter);
+	this->CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
+	//this->InitInternal(Parameter);
 
 	/* Init output transfer buffer */
 	InitTransferBuffer(OutputBuffer, this->iMaxOutputBlockSize, this->iOutputBlockSize);
@@ -123,8 +123,8 @@ void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter,
 	}
 
 	/* Init base-class */
-	//CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
-	this->InitInternal(Parameter);
+	this->CModul<TInput, TOutput>::Init(Parameter, OutputBuffer);
+	//this->InitInternal(Parameter);
 
 	InitTransferBuffer(OutputBuffer, this->iMaxOutputBlockSize, this->iOutputBlockSize);
 	InitTransferBuffer(OutputBuffer2, this->iMaxOutputBlockSize2, this->iOutputBlockSize2);

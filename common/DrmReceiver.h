@@ -305,12 +305,12 @@ protected:
 	CSyncUsingPil			SyncUsingPil;
 	CChannelEstimation		ChannelEstimation;
 	COFDMCellDemapping		OFDMCellDemapping;
-	CFACMLCDecoder			FACMLCDecoder;
+	CMLCDecoder				FACMLCDecoder;
 	CUtilizeFACData			UtilizeFACData;
-	CSDCMLCDecoder			SDCMLCDecoder;
+	CMLCDecoder				SDCMLCDecoder;
 	CUtilizeSDCData			UtilizeSDCData;
 	CSymbDeinterleaver		SymbDeinterleaver;
-	CMSCMLCDecoder			MSCMLCDecoder;
+	CMLCDecoder				MSCMLCDecoder;
 	CMSCDemultiplexer		MSCDemultiplexer;
 	CAudioSourceDecoder		AudioSourceDecoder;
 	CDataDecoder			DataDecoder;

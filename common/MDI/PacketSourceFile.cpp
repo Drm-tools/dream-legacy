@@ -117,7 +117,9 @@ CPacketSourceFile::Poll()
 
 	/* Decode the incoming packet */
 	if (pPacketSink != NULL)
+	{
 		pPacketSink->SendPacket(vecbydata);
+	}
     return true;
 }
 

@@ -436,32 +436,30 @@ void DRMMainWindow::UpdateDisplay()
 	   an audio service is selected. If we have a data only service, we do
 	   not want to have the button pressed */
 
-	if (iCurSelServiceGUI>0 && ((!Service[iCurSelServiceGUI].IsActive()) ||
-		(iCurSelServiceGUI != iCurSelAudioServ) &&
-		Service[iCurSelAudioServ].IsActive()) &&
-		/* Make sure current selected audio service is not a data only
-		   service */
-		(Service[iCurSelAudioServ].IsActive() &&
-		(Service[iCurSelAudioServ].eAudDataFlag != SF_DATA)))
+	if((iCurSelServiceGUI>=0) && (iCurSelServiceGUI<MAX_NUM_SERVICES))
 	{
-		/* Reset checks */
-
-        iCurSelServiceGUI = iCurSelAudioServ;
-		if(iCurSelServiceGUI>=0 && iCurSelServiceGUI<=3)
-			serviceGroup->button(iCurSelServiceGUI)->setOn(true);
+	    if(Service[iCurSelServiceGUI].IsActive()==false)
+	    {
+            serviceGroup->button(iCurSelServiceGUI)->setOn(false);
+            iCurSelServiceGUI = -1;
+	    }
+	    if((iCurSelServiceGUI != iCurSelAudioServ)
+        && Service[iCurSelAudioServ].IsActive()
+        && (Service[iCurSelAudioServ].eAudDataFlag == SF_AUDIO)
+        )
+        {
+            iCurSelServiceGUI = iCurSelAudioServ;
+            serviceGroup->button(iCurSelServiceGUI)->setOn(true);
+        }
 	}
-	else if (Service[iCurSelServiceGUI].eAudDataFlag == SF_DATA)
+
+	if((iCurSelServiceGUI==-1) && Service[iCurSelAudioServ].IsActive())
 	{
-		/* In case we only have data services, set all off (TODO - review this policy */
-		if(iCurSelServiceGUI>=0 && iCurSelServiceGUI<=3)
-		{
-			serviceGroup->button(iCurSelServiceGUI)->setOn(true);
-			serviceGroup->button(iCurSelServiceGUI)->setOn(false);
-		}
+        iCurSelServiceGUI = iCurSelAudioServ;
+        serviceGroup->button(iCurSelServiceGUI)->setOn(true);
 	}
 
 	/* Service selector ------------------------------------------------- */
-
 	QString m_StaticService[MAX_NUM_SERVICES] = {"", "", "", ""};
 
 	for (int i = 0; i < MAX_NUM_SERVICES; i++)
@@ -479,8 +477,7 @@ void DRMMainWindow::UpdateDisplay()
 			m_StaticService[i] += GetTypeString(i);
 
 			/* Bit-rate (only show if greater than 0) */
-			const _REAL rBitRate =
-				Parameters.GetBitRateKbps(i, false);
+			const _REAL rBitRate = Parameters.GetBitRateKbps(i, false);
 
 			if (rBitRate > (_REAL) 0.0)
 			{
@@ -579,6 +576,9 @@ void DRMMainWindow::OnSwitchToAnalog()
 
 void DRMMainWindow::SetService(int shortID)
 {
+    if((shortID<0) || (shortID>=MAX_NUM_SERVICES))
+        return;
+
 	CParameter& Parameters = *Receiver.GetParameters();
 
 	Parameters.Lock();
@@ -627,6 +627,8 @@ void DRMMainWindow::SetService(int shortID)
             default:
                 QMessageBox::information(this, "Dream", tr("unsupported data application"));
         }
+        /* In case we only have data services, set all off (TODO - review this policy */
+        serviceGroup->button(shortID)->setOn(false);
 	}
 
 	iCurSelServiceGUI = shortID;

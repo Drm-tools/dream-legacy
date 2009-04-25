@@ -117,12 +117,12 @@ protected:
 	/* Transmitter modules */
 	CGenSimData				GenSimData;
 
-	CMSCMLCEncoder			MSCMLCEncoder;
+	CMLCEncoder				MSCMLCEncoder;
 	CSymbInterleaver		SymbInterleaver;
 	CGenerateFACData		GenerateFACData;
-	CFACMLCEncoder			FACMLCEncoder;
+	CMLCEncoder				FACMLCEncoder;
 	CGenerateSDCData		GenerateSDCData;
-	CSDCMLCEncoder			SDCMLCEncoder;
+	CMLCEncoder				SDCMLCEncoder;
 	COFDMCellMapping		OFDMCellMapping;
 	COFDMModulation			OFDMModulation;
 
@@ -137,12 +137,12 @@ protected:
 	CSyncUsingPil			SyncUsingPil;
 	CChannelEstimation		ChannelEstimation;
 	COFDMCellDemapping		OFDMCellDemapping;
-	CFACMLCDecoder			FACMLCDecoder;
+	CMLCDecoder				FACMLCDecoder;
 	CUtilizeFACData			UtilizeFACData;
-	CSDCMLCDecoder			SDCMLCDecoder;
+	CMLCDecoder				SDCMLCDecoder;
 	CUtilizeSDCData			UtilizeSDCData;
 	CSymbDeinterleaver		SymbDeinterleaver;
-	CMSCMLCDecoder			MSCMLCDecoder;
+	CMLCDecoder				MSCMLCDecoder;
 
 	/* Simulation modules */
 	CEvaSimData				EvaSimData;

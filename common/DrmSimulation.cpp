@@ -43,12 +43,13 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 	OFDMDemodBuf(), SyncUsingPilBuf(), ChanEstBuf(),
 	MSCCarDemapBuf(), FACCarDemapBuf(), SDCCarDemapBuf(), DeintlBuf(),
 	FACDecBuf(), SDCDecBuf(), MSCMLCDecBuf(), GenSimData(),
-	MSCMLCEncoder(), SymbInterleaver(), GenerateFACData(), FACMLCEncoder(),
-	GenerateSDCData(), SDCMLCEncoder(), OFDMCellMapping(), OFDMModulation(),
+	MSCMLCEncoder(CT_MSC), SymbInterleaver(), GenerateFACData(), FACMLCEncoder(CT_FAC),
+	GenerateSDCData(), SDCMLCEncoder(CT_SDC), OFDMCellMapping(), OFDMModulation(),
 	DRMChannel(), InputResample(), FreqSyncAcq(), TimeSync(), OFDMDemodulation(),
-	SyncUsingPil(), ChannelEstimation(), OFDMCellDemapping(), FACMLCDecoder(), UtilizeFACData(),
-	SDCMLCDecoder(), UtilizeSDCData(), SymbDeinterleaver(), MSCMLCDecoder(), EvaSimData(),
-	OFDMDemodSimulation(), IdealChanEst(), DataConvChanResam()
+	SyncUsingPil(), ChannelEstimation(), OFDMCellDemapping(),
+	FACMLCDecoder(CT_FAC), UtilizeFACData(),
+	SDCMLCDecoder(CT_SDC), UtilizeSDCData(), SymbDeinterleaver(), MSCMLCDecoder(CT_MSC),
+	EvaSimData(), OFDMDemodSimulation(), IdealChanEst(), DataConvChanResam()
 {
 	/* Set all parameters to meaningful value for startup state. If we want to
 	   make a simulation we just have to specify the important values */

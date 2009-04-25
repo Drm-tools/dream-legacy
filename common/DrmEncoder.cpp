@@ -183,6 +183,7 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 {
 	/* Either one audio or one data service can be chosen */
 
+	Parameters.Lock();
 
 	Parameters.Service.resize(1);
 
@@ -201,8 +202,9 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 		Parameters.Service[0].iAudioStream = 0;
 
 		/* Text message */
-		Parameters.AudioParam[0].bTextflag = s.Get("Encoder", "textmessages", 1);
-		if(Parameters.AudioParam[0].bTextflag)
+		bool bTextflag = s.Get("Encoder", "textmessages", 1);
+		Parameters.AudioParam[0].bTextflag = bTextflag;
+		if(bTextflag)
 		{
             vecstrTexts.clear();
             for(size_t i=0; i<100; i++)
@@ -211,7 +213,9 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
                 ss << "textmessage" << i;
                 string msg = s.Get("Encoder", ss.str(), string("(end)"));
                 if(msg == "(end)")
+                {
                     break;
+                }
                 vecstrTexts.push_back(msg);
             }
 		}
@@ -318,6 +322,7 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
         if(stream.iLenPartA != -1)
             Parameters.MSCParameters.Stream.push_back(stream);
     }
+	Parameters.Unlock();
 }
 
 void

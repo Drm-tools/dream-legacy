@@ -109,9 +109,19 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 	if (TagPacketDecoder.TagItemDecoderSDCChanInf.IsReady())
 	{
 		CVector<_BINARY>& vecbisdciData = TagPacketDecoder.TagItemDecoderSDCChanInf.vecbidata;
-		// sdci not decoded later - will allow decoding/modulation before first SDC received
-		CSDCReceive sdci;
-		sdci.SDCIParam(&vecbisdciData, Parameters);
+        int iLengthOfBody = (vecbisdciData.Size()-8) / BITS_BINARY;
+        CMSCParameters msc;
+        vecbisdciData.ResetBitAccess();
+        (void)vecbisdciData.Separate(4);
+        CSDCReceive sdc;
+        bool bError = sdc.DataEntityType0(
+            &vecbisdciData, iLengthOfBody, Parameters, false);
+		if(bError==false)
+		{
+			Parameters.Lock();
+            Parameters.MSCParameters = Parameters.NextConfig.MSCParameters;
+			Parameters.Unlock();
+		}
 	}
 
 	pvecOutputData2->Reset(0);

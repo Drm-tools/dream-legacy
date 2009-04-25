@@ -42,9 +42,9 @@ public:
 	CBuffer() : iBufferSize(0), bRequestFlag(false) {}
 	virtual	~CBuffer() {}
 
-	void			SetRequestFlag(const bool bNewRequestFlag)
-						{bRequestFlag = bNewRequestFlag;}
-	bool		GetRequestFlag() const {return bRequestFlag;}
+	void						SetRequestFlag(const bool bNewRequestFlag)
+									{bRequestFlag = bNewRequestFlag;}
+	bool		    			GetRequestFlag() const {return bRequestFlag;}
 
 	/* Virtual function to be declared by the derived object */
 	virtual void				Init(const int iNewBufferSize);
@@ -55,10 +55,9 @@ public:
 	virtual int					GetFillLevel() const = 0;
 
 protected:
-	CVectorEx<TData>	vecBuffer;
-	int					iBufferSize;
-
-	bool			bRequestFlag;
+	CVectorEx<TData>			vecBuffer;
+	int							iBufferSize;
+	bool						bRequestFlag;
 };
 
 /* Single block buffer */

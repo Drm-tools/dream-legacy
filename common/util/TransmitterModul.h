@@ -62,9 +62,9 @@ public:
 									CBuffer<TOutput>& OutputBuffer,
 									CBuffer<TOutput>& OutputBuffer2,
 									vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
-	virtual bool	WriteData(CParameter& Parameter,
+	virtual bool		WriteData(CParameter& Parameter,
 								  CBuffer<TInput>& InputBuffer);
-	virtual bool	WriteData(CParameter& Parameter,
+	virtual bool		WriteData(CParameter& Parameter,
 								  CBuffer<TInput>& InputBuffer,
 								  CBuffer<TInput>& InputBuffer2,
 								  vector<CSingleBuffer<TInput> >& vecInputBuffer);

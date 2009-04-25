@@ -38,6 +38,7 @@
 
 #include "MDITagItemDecoders.h"
 #include "../Parameter.h"
+#include "../SDC/SDCReceive.h"
 #include <iostream>
 
 string CTagItemDecoderProTy::GetTagName(void) {return "*ptr";}
@@ -218,10 +219,6 @@ void CTagItemDecoderSDCChanInf::DecodeTag(CVector<_BINARY>& vecbiTag, const int 
 			Enqueue(vecbiTag.Separate(BITS_BINARY), BITS_BINARY);
 	}
 	SetReady(true);
-	// sdci not decoded later - will allow decoding/modulation before first SDC received
-	//CSDCReceive sdci;
-	// no Parameters.Lock(); SDCIParam calls block decoder which locks
-	//sdci.SDCIParam(&vecbidata, Parameters);
 }
 
 string CTagItemDecoderRxDemodMode::GetTagName(void) {return "rdmo";}

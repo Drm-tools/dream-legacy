@@ -45,7 +45,7 @@
 #include "MDIRSCI.h"
 #ifdef HAVE_QT
 # include "PacketSocketQT.h"
-# include <qhostaddress.h>
+# include <QHostAddress>
 #else
 # include "PacketSocketNull.h"
 #endif
@@ -747,9 +747,9 @@ CUpstreamDI::InitInternal(CParameter&)
 }
 
 void
-CUpstreamDI::ProcessDataInternal(CParameter& Parameter)
+CUpstreamDI::ProcessDataInternal(CParameter& Parameters)
 {
-	CDIIn::ProcessData(Parameter, *pvecOutputData, iOutputBlockSize);
+	CDIIn::ProcessData(Parameters, *pvecOutputData, iOutputBlockSize);
 }
 
 void
@@ -761,40 +761,32 @@ CMDIIn::InitInternal(CParameter&)
 }
 
 void
-CMDIIn::ProcessDataInternal(CParameter&)
+CMDIIn::ProcessDataInternal(CParameter& Parameters)
 {
-	size_t i;
-	vector<_BYTE> vecbydata;
-	queue.Get(vecbydata);
-	volatile size_t bits = vecbydata.size()*BITS_BINARY;
-	iOutputBlockSize = bits;
-	(*pvecOutputData).Init(bits);
-	(*pvecOutputData).ResetBitAccess();
-	for(i=0; i<vecbydata.size(); i++)
-		(*pvecOutputData).Enqueue(vecbydata[i], BITS_BINARY);
+    CDIIn::ProcessData(Parameters, *pvecOutputData, iOutputBlockSize);
 }
 
 void
-CMDIOut::InitInternal(CParameter& Parameter)
+CMDIOut::InitInternal(CParameter& Parameters)
 {
 	iFrameCount = 0;
 	iInputBlockSize = NUM_FAC_BITS_PER_BLOCK;
-	iInputBlockSize2 = Parameter.iNumSDCBitsPerSuperFrame;
+	iInputBlockSize2 = Parameters.iNumSDCBitsPerSuperFrame;
 	veciInputBlockSize.resize(MAX_NUM_STREAMS);
 	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
-		veciInputBlockSize[i] = Parameter.GetStreamLen(i);
+		veciInputBlockSize[i] = Parameters.GetStreamLen(i);
 	vecpvecInputData.resize(MAX_NUM_STREAMS);
 
 }
 
 void
-CMDIOut::ProcessDataInternal(CParameter& Parameter)
+CMDIOut::ProcessDataInternal(CParameter& Parameters)
 {
-	SendLockedFrame(Parameter, pvecInputData, pvecInputData2, vecpvecInputData);
+	SendLockedFrame(Parameters, pvecInputData, pvecInputData2, vecpvecInputData);
 	switch(iFrameCount)
 	{
 	case 0:
-		iInputBlockSize = Parameter.iNumSDCBitsPerSuperFrame;
+		iInputBlockSize = Parameters.iNumSDCBitsPerSuperFrame;
 		iFrameCount = 1;
 		break;
 	case 1:

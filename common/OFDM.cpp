@@ -131,14 +131,12 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& Parameter)
 		   side of the DC frequency */
 		for (i = iShiftedKmin; i < 0; i++)
 		{
-			(*pvecOutputData)[i - iShiftedKmin] =
-				veccFFTOutput[iDFTSize + i] / (CReal) iDFTSize;
+			(*pvecOutputData)[i - iShiftedKmin] = veccFFTOutput[iDFTSize + i] / (CReal) iDFTSize;
 		}
 
 		for (i = 0; i < iShiftedKmax + 1; i++)
 		{
-			(*pvecOutputData)[i - iShiftedKmin] =
-				veccFFTOutput[i] / (CReal) iDFTSize;
+			(*pvecOutputData)[i - iShiftedKmin] = veccFFTOutput[i] / (CReal) iDFTSize;
 		}
 	}
 	else
@@ -147,19 +145,14 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& Parameter)
 		   can be cut in one step */
 		for (i = iShiftedKmin; i < iShiftedKmax + 1; i++)
 		{
-			(*pvecOutputData)[i - iShiftedKmin] =
-				veccFFTOutput[i] / (CReal) iDFTSize;
+			(*pvecOutputData)[i - iShiftedKmin] = veccFFTOutput[i] / (CReal) iDFTSize;
 		}
 	}
 
-
-	/* Save averaged spectrum for plotting ---------------------------------- */
-	/* Average power (using power of this tap) (first order IIR filter) */
-	/* TODO merge this loop with the one in putPowDenSpec */
-	for (i = 0; i < iLenPowSpec; i++)
-		IIR1(vecrPowSpec[i], SqMag(veccFFTOutput[i]), rLamPSD);
-
-    putPowDenSpec(Parameter);
+	/* Save averaged spectrum for plotting only if vector is of non-zero
+		length which means that the module was already initialized */
+	if (iLenPowSpec != 0)
+		putPowDenSpec(Parameter);
 }
 
 void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
@@ -192,33 +185,30 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 void COFDMDemodulation::putPowDenSpec(CParameter& Parameter)
 {
+	/* Init output vectors */
+	vector<_REAL> vecrData(iLenPowSpec);
 
-	/* Do copying of data only if vector is of non-zero length which means that
-	   the module was already initialized */
-	if (iLenPowSpec != 0)
+	/* Init the constants for scale and normalization */
+	const _REAL rNormData =
+		(_REAL) iDFTSize * iDFTSize * numeric_limits<_SAMPLE>::max() * numeric_limits<_SAMPLE>::max();
+
+	/* Apply the normalization (due to the FFT) */
+	for (int i = 0; i < iLenPowSpec; i++)
 	{
-        /* Init output vectors */
-        vector<_REAL> vecrData(iLenPowSpec);
+		/* Average power (using power of this tap) (first order IIR filter) */
+		IIR1(vecrPowSpec[i], SqMag(veccFFTOutput[i]), rLamPSD);
 
-		/* Init the constants for scale and normalization */
-		const _REAL rNormData =
-			(_REAL) iDFTSize * iDFTSize * numeric_limits<_SAMPLE>::max() * numeric_limits<_SAMPLE>::max();
+		const _REAL rNormPowSpec = vecrPowSpec[i] / rNormData;
 
-		/* Apply the normalization (due to the FFT) */
-		for (int i = 0; i < iLenPowSpec; i++)
-		{
-			const _REAL rNormPowSpec = vecrPowSpec[i] / rNormData;
+		if (rNormPowSpec > 0)
+			vecrData[i] = (_REAL) 10.0 * log10(rNormPowSpec);
+		else
+			vecrData[i] = RET_VAL_LOG_0;
 
-			if (rNormPowSpec > 0)
-				vecrData[i] = (_REAL) 10.0 * log10(rNormPowSpec);
-			else
-				vecrData[i] = RET_VAL_LOG_0;
-
-		}
-		Parameter.Lock();
-		Parameter.Measurements.PowerDensitySpectrum.set(vecrData);
-		Parameter.Unlock();
 	}
+	Parameter.Lock();
+	Parameter.Measurements.PowerDensitySpectrum.set(vecrData);
+	Parameter.Unlock();
 }
 
 

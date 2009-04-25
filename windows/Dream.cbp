@@ -9,7 +9,7 @@
 			<Target title="Win32 Release">
 				<Option platforms="Windows;" />
 				<Option output="Dream.exe" prefix_auto="0" extension_auto="0" />
-				<Option object_output="Release" />
+				<Option object_output="..\Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
@@ -40,7 +40,7 @@
 			</Target>
 			<Target title="Win32 Debug">
 				<Option output="Dreamd" prefix_auto="1" extension_auto="1" />
-				<Option object_output="Debug" />
+				<Option object_output="..\Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option parameters="--mode RX --modn AM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
@@ -75,7 +75,7 @@
 			<Target title="Win32CLI">
 				<Option platforms="Windows;" />
 				<Option output="cdream.exe" prefix_auto="0" extension_auto="0" />
-				<Option object_output="windows\Release" />
+				<Option object_output="..\Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
@@ -90,10 +90,10 @@
 			<Target title="Portaudio Release">
 				<Option platforms="Windows;" />
 				<Option output="Dream.exe" prefix_auto="0" extension_auto="0" />
-				<Option object_output="Release" />
+				<Option object_output="..\Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode TX" />
+				<Option parameters="--mode MOD" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -124,10 +124,10 @@
 			<Target title="Portaudio Debug">
 				<Option platforms="Windows;" />
 				<Option output="Dreamd.exe" prefix_auto="0" extension_auto="0" />
-				<Option object_output="Debug" />
+				<Option object_output="..\Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode TX" />
+				<Option parameters="--mode MOD" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />

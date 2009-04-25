@@ -38,37 +38,33 @@
 class CBitInterleaver: public CBlockInterleaver
 {
 public:
-	CBitInterleaver() {}
+	CBitInterleaver():CBlockInterleaver(),
+	vecInterlMemory1(),vecInterlMemory2()
+	{}
 	virtual ~CBitInterleaver() {}
 
 	void Init(int iNewx_in1, int iNewx_in2, int it_0);
 	void Interleave(CVector<_DECISION>& InputData);
 
 protected:
-	int					ix_in1;
-	int					ix_in2;
-	CVector<int>		veciIntTable1;
-	CVector<int>		veciIntTable2;
-	CVector<_DECISION>	vecInterlMemory1;
-	CVector<_DECISION>	vecInterlMemory2;
+	vector<_DECISION>	vecInterlMemory1;
+	vector<_DECISION>	vecInterlMemory2;
 };
 
 class CBitDeinterleaver: public CBlockInterleaver
 {
 public:
-	CBitDeinterleaver() {}
+	CBitDeinterleaver():CBlockInterleaver(),
+	vecDeinterlMemory1(),vecDeinterlMemory2()
+	{}
 	virtual ~CBitDeinterleaver() {}
 
 	void Init(int iNewx_in1, int iNewx_in2, int it_0);
 	void Deinterleave(CVector<CDistance>& vecInput);
 
 protected:
-	int					ix_in1;
-	int					ix_in2;
-	CVector<int>		veciIntTable1;
-	CVector<int>		veciIntTable2;
-	CVector<CDistance>	vecDeinterlMemory1;
-	CVector<CDistance>	vecDeinterlMemory2;
+	vector<CDistance>	vecDeinterlMemory1;
+	vector<CDistance>	vecDeinterlMemory2;
 };
 
 

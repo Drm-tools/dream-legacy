@@ -36,10 +36,9 @@ CDRMModulator::CDRMModulator():
 	MLCEncBuf(), CarMapBuf(), OFDMModBuf(),
 	IntlBuf(), FACMapBuf(), SDCMapBuf(),
 	TransmitData(),
-	MSCMLCEncoder(), SymbInterleaver(), FACMLCEncoder(), SDCMLCEncoder(),
-	OFDMCellMapping(), OFDMModulation()
+	MSCMLCEncoder(CT_MSC), FACMLCEncoder(CT_FAC), SDCMLCEncoder(CT_SDC),
+	SymbInterleaver(), OFDMCellMapping(), OFDMModulation()
 {
-    cerr << "Modulator Contructed" << endl;
 }
 
 void
@@ -67,26 +66,24 @@ CDRMModulator::GetOutputs(vector<string>& o)
 }
 
 void
-CDRMModulator::Init(CParameter& Parameter)
+CDRMModulator::Init(CParameter& Parameters)
 {
 	cerr << "Modulator initialised with"
-		<< " MSC mode " << int(Parameter.Channel.eMSCmode)
-		<< " SDC mode " << int(Parameter.Channel.eSDCmode)
-		<< " robm " << int(Parameter.Channel.eRobustness)
-		<< " spectrum occupancy " << int(Parameter.Channel.eSpectrumOccupancy) << endl;
+		<< " MSC mode " << int(Parameters.Channel.eMSCmode)
+		<< " SDC mode " << int(Parameters.Channel.eSDCmode)
+		<< " robm " << int(Parameters.Channel.eRobustness)
+		<< " spectrum occupancy " << int(Parameters.Channel.eSpectrumOccupancy) << endl;
 
 	/* Defines number of cells, important! */
-	OFDMCellMapping.Init(Parameter, CarMapBuf);
+	OFDMCellMapping.Init(Parameters, CarMapBuf);
 
 	/* Defines number of SDC bits per super-frame */
-	SDCMLCEncoder.Init(Parameter, SDCMapBuf);
-
-	MSCMLCEncoder.Init(Parameter, MLCEncBuf);
-	SymbInterleaver.Init(Parameter, IntlBuf);
-	FACMLCEncoder.Init(Parameter, FACMapBuf);
-	OFDMModulation.Init(Parameter, OFDMModBuf);
-
-	TransmitData.Init(Parameter);
+	SDCMLCEncoder.Init(Parameters, SDCMapBuf);
+	MSCMLCEncoder.Init(Parameters, MLCEncBuf);
+	SymbInterleaver.Init(Parameters, IntlBuf);
+	FACMLCEncoder.Init(Parameters, FACMapBuf);
+	OFDMModulation.Init(Parameters, OFDMModBuf);
+	TransmitData.Init(Parameters);
 }
 
 void
@@ -94,7 +91,7 @@ CDRMModulator::WriteData(CParameter& Parameters,
 				CBuffer<_BINARY>& FACBuf, CBuffer<_BINARY>& SDCBuf,
 				vector<CSingleBuffer<_BINARY> >& MSCBuf)
 {
-#if 1
+#if 0
 	cerr << "Fill: " << FACBuf.GetFillLevel() << " " << SDCBuf.GetFillLevel() << " " << MSCBuf[0].GetFillLevel() << endl;
 	cerr << "MSC MLC Int SDC FAC Car FDM" << endl;
 	cerr <<  " "  << MSCBuf[0].GetRequestFlag();

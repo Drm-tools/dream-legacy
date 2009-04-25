@@ -33,6 +33,8 @@
 #include <QDialog>
 #include <QTimer>
 #include <QButtonGroup>
+#include <QStandardItemModel>
+#include <QStringListModel>
 
 /* Classes ********************************************************************/
 class CDRMTransmitterInterface;
@@ -89,10 +91,11 @@ public slots:
 	void OnComboBoxStreamTypeActivated(int item);
 	void OnComboBoxPacketsPerFrameActivated(const QString& str);
 	void OnLineEditPacketLenChanged(const QString& str);
-	void OnItemSelectionChanged();
+	void OnItemClicked(const QModelIndex&);
     void OnMSCCapacityChanged(int);
 protected:
     Ui_TransmitterMainWindow& ui;
+    QStandardItemModel* streams;
 };
 
 class AudioComponentEditor: public QObject
@@ -120,6 +123,7 @@ protected:
 	void EnableAudio(const bool bFlag);
 
     Ui_TransmitterMainWindow& ui;
+    QStandardItemModel* textMessages;
 };
 
 class DataComponentEditor: public QObject
@@ -141,6 +145,7 @@ protected:
     void AddSlide(const QString& path);
 
     Ui_TransmitterMainWindow& ui;
+    QStandardItemModel* pictures;
 };
 
 class ServicesEditor: public QObject
@@ -159,9 +164,10 @@ public slots:
 	void OnTextChangedServiceID(const QString& strID);
 	void OnButtonAdd();
 	void OnButtonDelete();
-	void OnListItemClicked(Q3ListViewItem* item);
+	void OnItemClicked(const QModelIndex&);
 protected:
     Ui_TransmitterMainWindow& ui;
+    QStandardItemModel* services;
 };
 
 class COFDMEditor: public QObject
@@ -184,10 +190,11 @@ public slots:
 	void OnButtonAddFile();
 	void OnButtonDeleteSelected();
 	void OnButtonBrowse();
-	void OnListItemClicked(Q3ListViewItem* item);
+	void OnItemClicked(const QModelIndex&);
 protected:
     Ui_TransmitterMainWindow& ui;
     QButtonGroup* outputGroup;
+    QStandardItemModel* destinations;
 };
 
 class MDIInputEditor: public QObject
@@ -234,10 +241,11 @@ public slots:
 	void OnLineEditAddrChanged(const QString& str);
 	void OnLineEditFileChanged(const QString& str);
 	void OnLineEditPortChanged(const QString& str);
-	void OnListItemClicked(Q3ListViewItem* item);
+	void OnItemClicked(const QModelIndex&);
 protected:
     Ui_TransmitterMainWindow& ui;
 	vector<CIpIf>       vecIpIf;
+    QStandardItemModel* destinations;
 };
 
 class TransmitterMainWindow : public QMainWindow, public Ui_TransmitterMainWindow

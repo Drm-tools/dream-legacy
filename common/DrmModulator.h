@@ -50,7 +50,7 @@ public:
 	void					LoadSettings(CSettings&, CParameter&);
 	void					SaveSettings(CSettings&, CParameter&);
 	void					Init(CParameter& Parameter);
-	void					WriteData(CParameter& Parameter, 
+	void					WriteData(CParameter& Parameter,
 								CBuffer<_BINARY>& FACBuf, CBuffer<_BINARY>& SDCBuf,
 								vector<CSingleBuffer<_BINARY> >& MSCBuf);
 	void					Cleanup(CParameter&);
@@ -70,12 +70,12 @@ protected:
 
 	/* Modules */
 	CTransmitData			TransmitData;
-	CMSCMLCEncoder			MSCMLCEncoder;
+	CMLCEncoder				MSCMLCEncoder;
+	CMLCEncoder				FACMLCEncoder;
+	CMLCEncoder				SDCMLCEncoder;
 	CSymbInterleaver		SymbInterleaver;
-	CFACMLCEncoder			FACMLCEncoder;
-	CSDCMLCEncoder			SDCMLCEncoder;
 	COFDMCellMapping		OFDMCellMapping;
 	COFDMModulation			OFDMModulation;
 };
 
-#endif 
+#endif

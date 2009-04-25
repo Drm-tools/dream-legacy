@@ -251,19 +251,6 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 	}
 }
 
-CSDCReceive::ERetStatus CSDCReceive::SDCIParam(CVector<_BINARY>* pbiData,
-											  CParameter& Parameter)
-{
-	int iLengthOfBody = (pbiData->Size()-8) / BITS_BINARY;
-	pbiData->ResetBitAccess();
-	(void)pbiData->Separate(4);
-	if(DataEntityType0(pbiData, iLengthOfBody, Parameter, 0))
-		return SR_BAD_DATA;
-	else
-		return SR_OK;
-}
-
-
 /******************************************************************************\
 * Data entity Type 0 (Multiplex description data entity)					   *
 \******************************************************************************/
@@ -274,14 +261,19 @@ bool CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 {
 	/* The receiver may determine the number of streams present in the multiplex
 	   by dividing the length field of the header by three (6.4.3.1) */
+
+    CMSCParameters msc;
+	/* The receiver may determine the number of streams present in the multiplex
+	   by dividing the length field of the header by three (6.4.3.1) */
 	const int iNumStreams = iLengthOfBody / 3;
-    bool                    bError = false;
 
 	/* Check number of streams for overflow */
 	if (iNumStreams > MAX_NUM_STREAMS)
 		return true; // TODO - whats the safe consumption rule?
 
-    CMSCParameters          msc;
+	//msc.Stream.resize(iNumStreams);
+
+    bool bError = false;
 
    /* Get protection levels */
     /* Protection level for part A */
@@ -293,14 +285,14 @@ bool CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
     /* Reset hierarchical flag (hierarchical present or not) */
     bool bWithHierarch = false;
 
+    ECodScheme eMSCmode = Parameter.Channel.eMSCmode;
+
     /* Set stream parameters */
     for (int i = 0; i < iNumStreams; i++)
     {
         /* In case of hierachical modulation stream 0 describes the protection
            level and length of hierarchical data */
-        if ((i == 0) &&
-            ((Parameter.Channel.eMSCmode == CS_3_HMSYM) ||
-            (Parameter.Channel.eMSCmode == CS_3_HMMIX)))
+        if ((i == 0) && ((eMSCmode == CS_3_HMSYM) || (eMSCmode == CS_3_HMMIX)))
         {
             /* Protection level for hierarchical */
             msc.ProtectionLevel.iHierarch = pbiData->Separate(2);

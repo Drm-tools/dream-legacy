@@ -63,47 +63,77 @@ CDRMTransmitter::CDRMTransmitter():
 void
 CDRMTransmitter::CalculateChannelCapacities()
 {
-    CMLC mlc;
+    CMLC mlc(CT_MSC);
     mlc.CalculateParam(Parameters, CT_FAC);
     mlc.CalculateParam(Parameters, CT_SDC);
     mlc.CalculateParam(Parameters, CT_MSC);
-	//CSingleBuffer<_COMPLEX>	DummyBuf;
-	//CMSCMLCEncoder			MSCMLCEncoder;
-	//CSDCMLCEncoder			SDCMLCEncoder;
-	//SDCMLCEncoder.Init(Parameters, DummyBuf);
-	//MSCMLCEncoder.Init(Parameters, DummyBuf);
 }
 
 void
 CDRMTransmitter::SetOperatingMode(const ETxOpMode eNewOpMode)
 {
 	eOpMode = eNewOpMode;
-    if(pEncoder)
-        delete pEncoder;
-    if(pModulator)
-        delete pModulator;
-    if(pMDIIn)
-        delete pMDIIn;
-    if(pDecodeMDI)
-        delete pDecodeMDI;
-    pEncoder = NULL;
-    pModulator = NULL;
-    pMDIIn = NULL;
-    pDecodeMDI = NULL;
     switch(eOpMode)
     {
     case T_TX:
-        pEncoder = new CDRMEncoder();
-        pModulator = new CDRMModulator();
+ 		if(pMDIIn)
+ 		{
+			delete pMDIIn;
+			pMDIIn = NULL;
+ 		}
+		if(pDecodeMDI)
+		{
+			delete pDecodeMDI;
+			pDecodeMDI = NULL;
+		}
+		if(pMDIOut)
+		{
+			delete pMDIOut;
+			pMDIIn = NULL;
+		}
+		if(pEncoder == NULL)
+			pEncoder = new CDRMEncoder();
+		if(pModulator == NULL)
+			pModulator = new CDRMModulator();
         break;
     case T_ENC:
-        pEncoder = new CDRMEncoder();
-        pMDIOut = new CMDIOut();
+ 		if(pMDIIn)
+ 		{
+			delete pMDIIn;
+			pMDIIn = NULL;
+ 		}
+		if(pDecodeMDI)
+		{
+			delete pDecodeMDI;
+			pDecodeMDI = NULL;
+		}
+		if(pModulator)
+		{
+			delete pModulator;
+			pModulator = NULL;
+		}
+		if(pEncoder == NULL)
+			pEncoder = new CDRMEncoder();
+		if(pMDIOut == NULL)
+			pMDIOut = new CMDIOut();
         break;
     case T_MOD:
-        pMDIIn = new CMDIIn();
-        pDecodeMDI = new CDecodeMDI();
-        pModulator = new CDRMModulator();
+		if(pEncoder)
+		{
+			delete pEncoder;
+			pEncoder = NULL;
+		}
+		if(pMDIOut)
+		{
+			delete pMDIOut;
+			pMDIOut = NULL;
+		}
+		if(pMDIIn == NULL)
+			pMDIIn = new CMDIIn();
+		if(pDecodeMDI == NULL)
+			pDecodeMDI = new CDecodeMDI();
+		if(pModulator == NULL)
+			pModulator = new CDRMModulator();
     }
 }
 
@@ -333,11 +363,12 @@ void CDRMTransmitter::Start()
 					bool bCRCOk = FACReceive.FACParam(FACBuf.QueryWriteBuffer(), Parameters);
 					if(bCRCOk)
 					{
-						cerr << "Got SDCI & FAC" << endl;
+						Parameters.Lock();
+						Parameters.Channel = Parameters.NextConfig.Channel;
+						Parameters.Unlock();
 						pModulator->Init(Parameters);
 						if(SDCBuf.GetFillLevel()>0)
 						{
-							cerr << "got SDC" << endl;
 							bInSync = true;
 						}
 						else
@@ -403,7 +434,6 @@ CDRMTransmitter::LoadSettings(CSettings& s)
             if(addr == "[none]")
                 break;
             MDIoutAddr.push_back(addr);
-            cerr << addr << endl;
         }
 	}
 	if(mode == "MOD")
