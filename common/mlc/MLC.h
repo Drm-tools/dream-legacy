@@ -47,13 +47,12 @@
 class CMLC
 {
 public:
-	CMLC(EChanType ct) : iN_mux(0), eChannelType(ct) {}
+	CMLC(EChanType e) : iN_mux(0), eChannelType(e) {}
 	virtual ~CMLC() {}
 
 	void CalculateParam(CParameter& Parameter, int iNewChannelType);
 
 protected:
-
 	int	iLevels;
 	/* No input bits for each level. First index: Level, second index:
 	   Protection level.
@@ -71,35 +70,25 @@ protected:
 
 	EChanType	eChannelType;
 	ECodScheme	eCodingScheme;
-
-	void CalculateFACParam(CParameter& Parameter);
-	void CalculateSDCParam(CParameter& Parameter);
-	void CalculateMSCParam(CParameter& Parameter);
-
 };
 
 class CMLCEncoder : public CTransmitterModul<_BINARY, _COMPLEX>,
 					public CMLC
 {
 public:
-	CMLCEncoder(EChanType ct):CTransmitterModul<_BINARY, _COMPLEX>(),CMLC(ct),
-	ConvEncoder(MC_MAX_NUM_LEVELS), BitInterleaver(2),
-	QAMMapping(), EnergyDisp(),
-	vecEncInBuffer(MC_MAX_NUM_LEVELS),vecEncOutBuffer(MC_MAX_NUM_LEVELS)
-	{
-	}
+	CMLCEncoder(EChanType e):CMLC(e) {}
 	virtual ~CMLCEncoder() {}
 
 protected:
-	vector<CConvEncoder>		ConvEncoder;
+	CConvEncoder		ConvEncoder[MC_MAX_NUM_LEVELS];
 	/* Two different types of interleaver table */
-	vector<CBitInterleaver>		BitInterleaver;
-	CQAMMapping					QAMMapping;
-	CEnergyDispersal			EnergyDisp;
+	CBitInterleaver		BitInterleaver[2];
+	CQAMMapping			QAMMapping;
+	CEnergyDispersal	EnergyDisp;
 
 	/* Internal buffers */
-	vector<CVector<_DECISION> >	vecEncInBuffer;
-	vector<CVector<_DECISION> >	vecEncOutBuffer;
+	CVector<_DECISION>	vecEncInBuffer[MC_MAX_NUM_LEVELS];
+	CVector<_DECISION>	vecEncOutBuffer[MC_MAX_NUM_LEVELS];
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& Parameter);
@@ -109,16 +98,7 @@ class CMLCDecoder : public CReceiverModul<CEquSig, _BINARY>,
 					public CMLC
 {
 public:
-	CMLCDecoder(EChanType ct):CReceiverModul<CEquSig, _BINARY>(),CMLC(ct),
-	ViterbiDecoder(MC_MAX_NUM_LEVELS), MLCMetric(),
-	BitDeinterleaver(2), BitInterleaver(2),
-	ConvEncoder(MC_MAX_NUM_LEVELS), EnergyDisp(),
-	vecMetric(),
-	vecDecOutBits(MC_MAX_NUM_LEVELS), vecSubsetDef(MC_MAX_NUM_LEVELS),
-	iNumOutBits(0), rAccMetric(0.0), iNumIterations(0),
-	iInitNumIterations(MC_NUM_ITERATIONS), iIndexLastBranch(0)
-	{
-	}
+	CMLCDecoder(EChanType e) : CMLC(e), iInitNumIterations(MC_NUM_ITERATIONS) {}
 	virtual ~CMLCDecoder() {}
 
 	_REAL GetAccMetric() const {return 10 * log10(rAccMetric);}
@@ -128,30 +108,30 @@ public:
 	int GetInitNumIterations() const {return iInitNumIterations;}
 
 protected:
-	vector<CViterbiDecoder>		ViterbiDecoder;
-	CMLCMetric					MLCMetric;
+	CViterbiDecoder		ViterbiDecoder[MC_MAX_NUM_LEVELS];
+	CMLCMetric			MLCMetric;
 	/* Two different types of deinterleaver table */
-	vector<CBitDeinterleaver>	BitDeinterleaver;
-	vector<CBitInterleaver>		BitInterleaver;
-	vector<CConvEncoder>		ConvEncoder;
-	CEnergyDispersal			EnergyDisp;
+	CBitDeinterleaver	BitDeinterleaver[2];
+	CBitInterleaver		BitInterleaver[2];
+	CConvEncoder		ConvEncoder[MC_MAX_NUM_LEVELS];
+	CEnergyDispersal	EnergyDisp;
 
 	/* Internal buffers */
-	CVector<CDistance>			vecMetric;
+	CVector<CDistance>	vecMetric;
 
-	vector<CVector<_DECISION> >	vecDecOutBits;
-	vector<CVector<_DECISION> >	vecSubsetDef;
-	int							iNumOutBits;
+	CVector<_DECISION>	vecDecOutBits[MC_MAX_NUM_LEVELS];
+	CVector<_DECISION>	vecSubsetDef[MC_MAX_NUM_LEVELS];
+	int					iNumOutBits;
 
 	/* Accumulated metric */
-	_REAL						rAccMetric;
+	_REAL				rAccMetric;
 
-	int							iNumIterations;
-	int							iInitNumIterations;
-	int							iIndexLastBranch;
+	int					iNumIterations;
+	int					iInitNumIterations;
+	int					iIndexLastBranch;
 
-	virtual void InitInternal(CParameter&);
-	virtual void ProcessDataInternal(CParameter&);
+	virtual void InitInternal(CParameter& ReceiverParam);
+	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
 
 #endif // !defined(MLC_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

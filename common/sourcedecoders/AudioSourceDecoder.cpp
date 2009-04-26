@@ -150,10 +150,19 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & Parameters)
 	short *psDecOutSampleBuf;
 #endif
 
-#if 1
+#if 0
 ofstream f("audio.txt", ios::app);
 Parameters.dump(f);
 this->dump(f);
+f << "iInputBlockSize: " << iInputBlockSize << endl;
+f.close();
+f.open("audio.bin", ios::app|ios::binary);
+vector<uint8_t> v(iTotalFrameSize/8);
+pvecInputData->ResetBitAccess();
+for (int i = 0; i < iTotalFrameSize/8; i++)
+	v[i] = pvecInputData->Separate(8);
+pvecInputData->ResetBitAccess();
+f.write((char*)&v[0], v.size());
 f.close();
 #endif
 

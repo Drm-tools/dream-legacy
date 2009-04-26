@@ -50,11 +50,22 @@
 
 #include "MSCMultiplexer.h"
 #include <iostream>
+#include <Fstream>
 
 /* Implementation *************************************************************/
 void CMSCDemultiplexer::ProcessDataInternal(CParameter&)
 {
- 	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
+#if 1
+ofstream f("msc.bin", ios::app|ios::binary);
+vector<uint8_t> v(iInputBlockSize/8);
+pvecInputData->ResetBitAccess();
+for (size_t i = 0; i < v.size(); i++)
+	v[i] = pvecInputData->Separate(8);
+pvecInputData->ResetBitAccess();
+f.write((char*)&v[0], v.size());
+f.close();
+#endif
+	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
 		ExtractData(*pvecInputData, *vecpvecOutputData[i], StreamPos[i]);
 }
 
