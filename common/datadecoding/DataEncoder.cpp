@@ -184,3 +184,18 @@ CDataEncoder::Init(CParameter & Param)
 	/* Return total packet size */
 	return iTotalPacketSize;
 }
+
+void CDataEncoder::AddPic(const string& strFileName, const string& strFormat)
+{
+	MOTSlideShowEncoder->AddFileName(strFileName, strFormat);
+}
+
+void CDataEncoder::ClearPics()
+{
+	MOTSlideShowEncoder->ClearAllFileNames();
+}
+
+bool CDataEncoder::GetTransStat(string& strCPi, _REAL& rCPe) const
+{
+	return MOTSlideShowEncoder->GetTransStat(strCPi, rCPe);
+}

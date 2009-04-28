@@ -35,35 +35,6 @@
    <property name="spacing" >
     <number>6</number>
    </property>
-   <item row="0" column="0" >
-    <widget class="Q3ListView" name="ListViewStations" >
-     <property name="cursor" >
-      <cursorShape>ArrowCursor</cursorShape>
-     </property>
-     <property name="allColumnsShowFocus" >
-      <bool>true</bool>
-     </property>
-     <property name="showSortIndicator" >
-      <bool>true</bool>
-     </property>
-     <column>
-      <property name="text" >
-       <string>Column 1</string>
-      </property>
-      <property name="clickable" >
-       <bool>true</bool>
-      </property>
-      <property name="resizable" >
-       <bool>true</bool>
-      </property>
-     </column>
-     <item>
-      <property name="text" >
-       <string>New Item</string>
-      </property>
-     </item>
-    </widget>
-   </item>
    <item row="2" column="0" >
     <layout class="QHBoxLayout" >
      <property name="spacing" >
@@ -181,7 +152,7 @@
        <item>
         <widget class="QLabel" name="TextLabelSMeter" >
          <property name="text" >
-          <string>S-Meter [dB]
+          <string>S-Meter [dB]&#xd;
 (relative to S9):</string>
          </property>
          <property name="wordWrap" >
@@ -252,17 +223,11 @@
     </layout>
    </item>
    <item row="1" column="0" >
-    <widget class="Q3GroupBox" name="GroupBoxFilter" >
+    <widget class="QGroupBox" name="groupBoxFilters" >
      <property name="title" >
       <string>Filters</string>
      </property>
-     <layout class="QHBoxLayout" >
-      <property name="spacing" >
-       <number>6</number>
-      </property>
-      <property name="margin" >
-       <number>11</number>
-      </property>
+     <layout class="QHBoxLayout" name="horizontalLayout" >
       <item>
        <widget class="QLabel" name="TextLabelTarget" >
         <property name="text" >
@@ -326,20 +291,34 @@
      </layout>
     </widget>
    </item>
+   <item row="0" column="0" >
+    <widget class="QTableView" name="stationsView" >
+     <property name="editTriggers" >
+      <set>QAbstractItemView::NoEditTriggers</set>
+     </property>
+     <property name="showDropIndicator" stdset="0" >
+      <bool>false</bool>
+     </property>
+     <property name="dragDropOverwriteMode" >
+      <bool>false</bool>
+     </property>
+     <property name="alternatingRowColors" >
+      <bool>true</bool>
+     </property>
+     <property name="selectionMode" >
+      <enum>QAbstractItemView::SingleSelection</enum>
+     </property>
+     <property name="selectionBehavior" >
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+     <property name="showGrid" >
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>Q3GroupBox</class>
-   <extends>QGroupBox</extends>
-   <header>Qt3Support/Q3GroupBox</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>Q3ListView</class>
-   <extends>Q3Frame</extends>
-   <header>q3listview.h</header>
-  </customwidget>
   <customwidget>
    <class>QwtCounter</class>
    <extends>QWidget</extends>

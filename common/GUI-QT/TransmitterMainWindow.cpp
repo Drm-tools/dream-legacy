@@ -121,7 +121,7 @@ TransmitterMainWindow::TransmitterMainWindow(CDRMTransmitterInterface& tx, CSett
 
 	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
-	GetFromTransmitter();
+	GetFrom(DRMTransmitter);
 	OnRadioMode(0);
 
 	Timer.stop();
@@ -147,7 +147,7 @@ TransmitterMainWindow::closeEvent(QCloseEvent* ce)
 	if (bIsStarted == true)
 		OnButtonStartStop();
 	else
-		SetTransmitter(); // so Transmitter save settings has the latest info
+		PutTo(DRMTransmitter); // so Transmitter save settings has the latest info
 	ce->accept();
 }
 
@@ -155,14 +155,14 @@ void TransmitterMainWindow::OnMSCCapacityChanged()
 {
     channelEditor.PutTo(DRMTransmitter);
     DRMTransmitter.CalculateChannelCapacities();
-    emit MSCCapacityChanged(DRMTransmitter.GetParameters()->iNumDecodedBitsMSC);
+    emit MSCCapacityChanged(DRMTransmitter.NumBitsMSC());
 }
 
 void TransmitterMainWindow::OnSDCCapacityChanged()
 {
     channelEditor.PutTo(DRMTransmitter);
     DRMTransmitter.CalculateChannelCapacities();
-    emit SDCCapacityChanged(DRMTransmitter.GetParameters()->iNumSDCBitsPerSuperFrame);
+    emit SDCCapacityChanged(DRMTransmitter.NumBitsSDCsuperFrame());
 }
 
 void TransmitterMainWindow::OnButtonClose()
@@ -200,7 +200,7 @@ void TransmitterMainWindow::OnTimer()
 }
 
 void
-TransmitterMainWindow::GetFromTransmitter()
+TransmitterMainWindow::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 {
 	switch(DRMTransmitter.GetOperatingMode())
 	{
@@ -231,7 +231,7 @@ TransmitterMainWindow::GetFromTransmitter()
 }
 
 void
-TransmitterMainWindow::SetTransmitter()
+TransmitterMainWindow::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 {
 	CDRMTransmitterInterface::ETxOpMode eMod = CDRMTransmitterInterface::T_TX;
 
@@ -251,24 +251,24 @@ TransmitterMainWindow::SetTransmitter()
     switch(eMod)
 	{
     case CDRMTransmitterInterface::T_ENC:
-		channelEditor.GetFrom(DRMTransmitter);
-		streamEditor.GetFrom(DRMTransmitter);
-		audioComponentEditor.GetFrom(DRMTransmitter);
-		dataComponentEditor.GetFrom(DRMTransmitter);
-		servicesEditor.GetFrom(DRMTransmitter);
-		mdiOutputEditor.GetFrom(DRMTransmitter);
+		channelEditor.PutTo(DRMTransmitter);
+		streamEditor.PutTo(DRMTransmitter);
+		audioComponentEditor.PutTo(DRMTransmitter);
+		dataComponentEditor.PutTo(DRMTransmitter);
+		servicesEditor.PutTo(DRMTransmitter);
+		mdiOutputEditor.PutTo(DRMTransmitter);
 		break;
     case CDRMTransmitterInterface::T_TX:
-		channelEditor.GetFrom(DRMTransmitter);
-		streamEditor.GetFrom(DRMTransmitter);
-		audioComponentEditor.GetFrom(DRMTransmitter);
-		dataComponentEditor.GetFrom(DRMTransmitter);
-		servicesEditor.GetFrom(DRMTransmitter);
-		cofdmEditor.GetFrom(DRMTransmitter);
+		channelEditor.PutTo(DRMTransmitter);
+		streamEditor.PutTo(DRMTransmitter);
+		audioComponentEditor.PutTo(DRMTransmitter);
+		dataComponentEditor.PutTo(DRMTransmitter);
+		servicesEditor.PutTo(DRMTransmitter);
+		cofdmEditor.PutTo(DRMTransmitter);
 		break;
     case CDRMTransmitterInterface::T_MOD:
-		mdiInputEditor.GetFrom(DRMTransmitter);
-		cofdmEditor.GetFrom(DRMTransmitter);
+		mdiInputEditor.PutTo(DRMTransmitter);
+		cofdmEditor.PutTo(DRMTransmitter);
 	}
 }
 
@@ -334,7 +334,7 @@ void TransmitterMainWindow::OnButtonStartStop()
 	}
 	else
 	{
-		SetTransmitter();
+		PutTo(DRMTransmitter);
 		DRMTransmitter.start();
 		ButtonStartStop->setText(tr("&Stop"));
 		DisableAllControlsForSet();
@@ -431,9 +431,10 @@ void ChannelEditor::setupUi()
 }
 
 void
-ChannelEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
+ChannelEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 {
-    const CChannel& channel = DRMTransmitter.GetParameters()->Channel;
+    CChannel channel;
+	 DRMTransmitter.GetChannel(channel);
 
     robustnessGroup->button(channel.eRobustness)->setChecked(true);
 	soGroup->button(channel.eSpectrumOccupancy)->setChecked(true);
@@ -473,7 +474,9 @@ ChannelEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
 
 	/* MSC Protection Level */
 	UpdateMSCProtLevCombo(); /* options depend on MSC Constellation */
-	ui.ComboBoxMSCProtLev->setCurrentItem(DRMTransmitter.GetParameters()->MSCParameters.ProtectionLevel.iPartB);
+	CMSCParameters msc;
+	DRMTransmitter.GetMSC(msc);
+	ui.ComboBoxMSCProtLev->setCurrentItem(msc.ProtectionLevel.iPartB);
 
 	switch (channel.eSDCmode)
 	{
@@ -492,40 +495,38 @@ ChannelEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
 }
 
 void
-ChannelEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
+ChannelEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 {
-    CParameter& Parameters = *DRMTransmitter.GetParameters();
-
+	CMSCParameters MSCParameters;
+	CChannel channel;
 	/* Spectrum Occupancy */
-    Parameters.Channel.eSpectrumOccupancy = ESpecOcc(soGroup->checkedId());
+    channel.eSpectrumOccupancy = ESpecOcc(soGroup->checkedId());
 
 	/* MSC Protection Level */
 	CMSCProtLev MSCPrLe;
 	MSCPrLe.iPartB = ui.ComboBoxMSCProtLev->currentItem();
-	Parameters.MSCParameters.ProtectionLevel = MSCPrLe;
+	MSCParameters.ProtectionLevel = MSCPrLe;
 
-	Parameters.Channel.eMSCmode
+	channel.eMSCmode
         = ECodScheme(ui.ComboBoxMSCConstellation->itemData(
             ui.ComboBoxMSCConstellation->currentItem()
             ).toInt());
 
-    Parameters.Channel.eInterleaverDepth
+    channel.eInterleaverDepth
         = ESymIntMod(ui.ComboBoxMSCInterleaver->itemData(
             ui.ComboBoxMSCInterleaver->currentItem()
     ).toInt());
 
-    Parameters.Channel.eSDCmode
+    channel.eSDCmode
         = ECodScheme(ui.ComboBoxSDCConstellation->itemData(
             ui.ComboBoxSDCConstellation->currentItem()
     ).toInt());
 
 	/* Robustness Mode */
-    Parameters.Channel.eRobustness = ERobMode(robustnessGroup->checkedId());
+    channel.eRobustness = ERobMode(robustnessGroup->checkedId());
 
-    Parameters.CellMappingTable.MakeTable(
-        Parameters.Channel.eRobustness,
-        Parameters.Channel.eSpectrumOccupancy
-    );
+	DRMTransmitter.PutMSC(MSCParameters);
+	DRMTransmitter.PutChannel(channel);
 }
 
 void ChannelEditor::OnComboBoxMSCInterleaverActivated(int)
@@ -674,11 +675,12 @@ void StreamEditor::setupUi()
 }
 
 void
-StreamEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
+StreamEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 {
-    CParameter& Parameters = *DRMTransmitter.GetParameters();
+	CMSCParameters MSCParameters;
+	DRMTransmitter.GetMSC(MSCParameters);
 
-    size_t n = Parameters.MSCParameters.Stream.size();
+    size_t n = MSCParameters.Stream.size();
 
     streams->setRowCount(0);
 
@@ -693,7 +695,7 @@ StreamEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
 
 	for(size_t i=0; i<n; i++)
 	{
-		const CStream& stream = Parameters.MSCParameters.Stream[i];
+		const CStream& stream = MSCParameters.Stream[i];
         int bytes = stream.iLenPartB; // EEP Only
         if(stream.iLenPartA != 0)
         {
@@ -726,9 +728,11 @@ StreamEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
 }
 
 void
-StreamEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
+StreamEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 {
-    CMSCParameters& MSCParameters = DRMTransmitter.GetParameters()->MSCParameters;
+	CMSCParameters MSCParameters;
+	DRMTransmitter.GetMSC(MSCParameters);
+
     int n = streams->rowCount();
 	MSCParameters.Stream.resize(n);
 	for (int i=0; i<n; i++)
@@ -944,7 +948,7 @@ void AudioComponentEditor::setupUi()
 }
 
 void
-AudioComponentEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
+AudioComponentEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 {
 	vector<string> vecAudioDevices;
 	DRMTransmitter.GetSoundInChoices(vecAudioDevices);
@@ -971,9 +975,9 @@ AudioComponentEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
         }
     }
 
-    CParameter& Parameters = *DRMTransmitter.GetParameters();
-    for(map<int,CAudioParam>::const_iterator i=Parameters.AudioParam.begin();
-                                            i!=Parameters.AudioParam.end(); i++)
+	map<int,CAudioParam> a;
+	DRMTransmitter.GetAudio(a);
+    for(map<int,CAudioParam>::const_iterator i=a.begin(); i!=a.end(); i++)
     {
         ui.ComboBoxAudioStreamNo->setCurrentIndex(ui.ComboBoxAudioStreamNo->findText(QString::number(i->first)));
         if(i->second.bTextflag == true)
@@ -997,14 +1001,15 @@ AudioComponentEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
 }
 
 void
-AudioComponentEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
+AudioComponentEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 {
     int iStreamNo = ui.ComboBoxAudioStreamNo->currentText().toInt();
-	CAudioParam& AudioParam = DRMTransmitter.GetParameters()->AudioParam[iStreamNo];
 
 	if(ui.CheckBoxAudioSourceIsFile->isChecked())
 	{
-		DRMTransmitter.SetReadFromFile(ui.LineEditAudioSourceFile->text().latin1());
+		const char * fname = ui.LineEditAudioSourceFile->text().toUtf8().constData();
+		cerr << fname << endl;
+		DRMTransmitter.SetReadFromFile(fname);
 	}
 	else
 	{
@@ -1012,9 +1017,11 @@ AudioComponentEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
 		DRMTransmitter.SetSoundInInterface(iAudSrc);
 	}
 
-	AudioParam.bTextflag = ui.CheckBoxEnableTextMessage->isChecked();
+	map<int,CAudioParam> a;
 
-	if(AudioParam.bTextflag)
+	a[iStreamNo].bTextflag = ui.CheckBoxEnableTextMessage->isChecked();
+
+	if(a[iStreamNo].bTextflag)
 	{
 		DRMTransmitter.ClearTextMessages();
         for (int i=0; i<textMessages->rowCount(); i++)
@@ -1024,10 +1031,12 @@ AudioComponentEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
 	}
 
 	/* TODO - let the user choose */
-	if (DRMTransmitter.GetParameters()->GetStreamLen(0) > 7000)
-		AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;
+	bool b = true;
+	if (b) // DRMTransmitter.GetParameters()->GetStreamLen(0) > 7000)
+		a[iStreamNo].eAudioSamplRate = CAudioParam::AS_24KHZ;
 	else
-		AudioParam.eAudioSamplRate = CAudioParam::AS_12KHZ;
+		a[iStreamNo].eAudioSamplRate = CAudioParam::AS_12KHZ;
+	DRMTransmitter.PutAudio(a);
 }
 
 void AudioComponentEditor::OnComboBoxSourceActivated(int)
@@ -1119,12 +1128,12 @@ void DataComponentEditor::setupUi()
 }
 
 void
-DataComponentEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
+DataComponentEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 {
-	CParameter& Parameters = *DRMTransmitter.GetParameters();
-
-	for(map<int, map<int, CDataParam> >::const_iterator i=Parameters.DataParam.begin();
-                                                        i!=Parameters.DataParam.end(); i++)
+	map<int, map<int, CDataParam> > d;
+	DRMTransmitter.GetData(d);
+	for(map<int, map<int, CDataParam> >::const_iterator i=d.begin();
+                                                        i!=d.end(); i++)
 	{
 	    int stream = i->first;
 	    for(map<int, CDataParam>::const_iterator j=i->second.begin(); j!=i->second.end(); j++)
@@ -1153,11 +1162,8 @@ DataComponentEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
 }
 
 void
-DataComponentEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
+DataComponentEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 {
-	CParameter& Parameters = *DRMTransmitter.GetParameters();
-
-	Parameters.DataParam.clear();
 
     if(ui.ComboBoxDataStreamNo->currentText() == "-")
         return;
@@ -1168,12 +1174,14 @@ DataComponentEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
     int iStreamNo = ui.ComboBoxDataStreamNo->currentText().toInt();
     int iPacketId = ui.ComboBoxDataPacketId->currentText().toInt();
 
-	Parameters.DataParam.clear();
+	map<int, map<int, CDataParam> > dataParam;
 
 	/* Init SlideShow application */
-	Parameters.DataParam[iStreamNo][iPacketId].eAppDomain = CDataParam::AD_DAB_SPEC_APP;
-	Parameters.DataParam[iStreamNo][iPacketId].ePacketModInd = PM_PACKET_MODE;
-	Parameters.DataParam[iStreamNo][iPacketId].eDataUnitInd = CDataParam::DU_DATA_UNITS;
+	dataParam[iStreamNo][iPacketId].eAppDomain = CDataParam::AD_DAB_SPEC_APP;
+	dataParam[iStreamNo][iPacketId].ePacketModInd = PM_PACKET_MODE;
+	dataParam[iStreamNo][iPacketId].eDataUnitInd = CDataParam::DU_DATA_UNITS;
+
+	DRMTransmitter.PutData(dataParam);
 
 	/* file names for data application */
 	DRMTransmitter.ClearPics();
@@ -1319,9 +1327,11 @@ void ServicesEditor::setupUi()
 }
 
 void
-ServicesEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
+ServicesEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 {
-	const vector<CService>& Service = DRMTransmitter.GetParameters()->Service;
+	vector<CService> Service;
+	int a,d;
+	DRMTransmitter.GetServices(Service, a, d);
 	for(size_t i=0; i<Service.size(); i++)
 	{
 	    QList<QStandardItem*> l;
@@ -1369,11 +1379,12 @@ ServicesEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
 }
 
 void
-ServicesEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
+ServicesEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 {
-	DRMTransmitter.GetParameters()->FACParameters.iNumDataServices=0;
-	DRMTransmitter.GetParameters()->FACParameters.iNumAudioServices=0;
+	int iNumDataServices=0;
+	int iNumAudioServices=0;
 
+	vector<CService> s(4);
 	for (int i=0; i<services->rowCount(); i++)
 	{
 		int iShortID = services->item(i, 0)->text().toUInt();
@@ -1391,14 +1402,14 @@ ServicesEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
 		if(sA=="-")
 		{
 			Service.iAudioStream = STREAM_ID_NOT_USED;
-			DRMTransmitter.GetParameters()->FACParameters.iNumDataServices++;
+			iNumDataServices++;
 			Service.eAudDataFlag = SF_DATA;
             Service.iServiceDescr = ui.ComboBoxAppType->findText(type);
 		}
 		else
 		{
 			Service.iAudioStream = sA.toUInt();
-			DRMTransmitter.GetParameters()->FACParameters.iNumAudioServices++;
+			iNumAudioServices++;
 			Service.eAudDataFlag = SF_AUDIO;
             Service.iServiceDescr = ui.ComboBoxProgramType->findText(type);
 		}
@@ -1410,8 +1421,9 @@ ServicesEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
 			Service.iPacketID = 4;
 		else
 			Service.iPacketID = sP.toUInt();
-		DRMTransmitter.GetParameters()->Service[iShortID] = Service;
+		s[iShortID] = Service;
 	}
+	DRMTransmitter.PutServices(s, iNumAudioServices, iNumDataServices);
 }
 
 void ServicesEditor::OnTextChangedServiceID(const QString& strID)
@@ -1544,15 +1556,14 @@ void COFDMEditor::setupUi()
 }
 
 void
-COFDMEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
+COFDMEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 {
-    CParameter& Parameters = *DRMTransmitter.GetParameters();
 
 	/* Output mode (real valued, I / Q or E / P) */
-    outputGroup->button(Parameters.eOutputFormat)->setChecked(true);
+    outputGroup->button(DRMTransmitter.GetOutputFormat())->setChecked(true);
 
 	/* Sound card IF */
-	ui.LineEditSndCrdIF->setText(QString().number(Parameters.rCarOffset, 'f', 2));
+	ui.LineEditSndCrdIF->setText(QString().number(DRMTransmitter.GetCarrierOffset(), 'f', 2));
 
 	/* Get sound device names */
 	vector<string> vecAudioDevices;
@@ -1574,14 +1585,10 @@ COFDMEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
 }
 
 void
-COFDMEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
+COFDMEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 {
-    CParameter& Parameters = *DRMTransmitter.GetParameters();
-
-	Parameters.rCarOffset = ui.LineEditSndCrdIF->text().toFloat();
-
-    Parameters.eOutputFormat = EOutFormat(outputGroup->checkedId());
-
+	DRMTransmitter.SetCarrierOffset(ui.LineEditSndCrdIF->text().toFloat());
+	DRMTransmitter.SetOutputFormat(EOutFormat(outputGroup->checkedId()));
 	vector<string> COFDMOutputs;
 	for(int i=0; i<destinations->rowCount(); i++)
 	{
@@ -1688,7 +1695,7 @@ void MDIInputEditor::setupUi()
 }
 
 void
-MDIInputEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
+MDIInputEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 {
 	QString addr = DRMTransmitter.GetMDIIn().c_str();
 	QFileInfo f(addr);
@@ -1741,11 +1748,11 @@ MDIInputEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
 }
 
 void
-MDIInputEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
+MDIInputEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 {
 	if(ui.CheckBoxReadMDIFile->isChecked())
 	{
-		DRMTransmitter.SetMDIIn(ui.LineEditMDIInputFile->text().latin1());
+		DRMTransmitter.SetMDIIn(ui.LineEditMDIInputFile->text().toUtf8().constData());
 	}
 	else
 	{
@@ -1761,7 +1768,7 @@ MDIInputEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
 				addr = ":"+addr;
 			addr = iface+":"+addr;
 		}
-		DRMTransmitter.SetMDIIn(addr.latin1());
+		DRMTransmitter.SetMDIIn(addr.toUtf8().constData());
 	}
 }
 
@@ -1840,7 +1847,7 @@ void MDIOutputEditor::setupUi()
 }
 
 void
-MDIOutputEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
+MDIOutputEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 {
 	vector<string> MDIoutAddr;
 	DRMTransmitter.GetMDIOut(MDIoutAddr);
@@ -1882,7 +1889,7 @@ MDIOutputEditor::GetFrom(CDRMTransmitterInterface& DRMTransmitter)
 }
 
 void
-MDIOutputEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter)
+MDIOutputEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 {
 	vector<string> MDIoutAddr;
 	for (int i=0; i<destinations->rowCount(); i++)

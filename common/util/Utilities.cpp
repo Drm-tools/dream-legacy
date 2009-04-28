@@ -29,7 +29,9 @@
 #include <sstream>
 
 #ifdef _WIN32
-# define NOMINMAX
+# ifndef NOMINMAX
+#  define NOMINMAX
+# endif
 /* Always include winsock2.h before windows.h */
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -105,7 +107,7 @@ CSignalLevelMeter::Update(const CVector < _REAL > vecsVal)
 	//Mutex.Unlock();
 }
 
-_REAL CSignalLevelMeter::Level()
+_REAL CSignalLevelMeter::Level() const
 {
 	//Mutex.Lock();
 	const _REAL

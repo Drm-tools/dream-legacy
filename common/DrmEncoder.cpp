@@ -47,7 +47,7 @@ CDRMEncoder::CDRMEncoder():
 }
 
 void
-CDRMEncoder::GetSoundInChoices(vector<string>& v)
+CDRMEncoder::GetSoundInChoices(vector<string>& v) const
 {
     CSoundIn s;
 	s.Enumerate(v);
@@ -72,7 +72,7 @@ CDRMEncoder::ClearTextMessages()
 }
 
 void
-CDRMEncoder::GetTextMessages(vector<string>& v)
+CDRMEncoder::GetTextMessages(vector<string>& v) const
 {
     v = vecstrTexts;
 }
@@ -92,7 +92,7 @@ CDRMEncoder::ClearPics()
 }
 
 void
-CDRMEncoder::GetPics(map<string,string>& m)
+CDRMEncoder::GetPics(map<string,string>& m) const
 {
     m.clear();
 	for(size_t i=0; i<vecstrPics.size(); i++)
@@ -100,9 +100,9 @@ CDRMEncoder::GetPics(map<string,string>& m)
 }
 
 bool
-CDRMEncoder::GetTransStat(string& strCPi, _REAL& rCPe)
+CDRMEncoder::GetTransStat(string& strCPi, _REAL& rCPe) const
 {
-	return DataEncoder.GetSliShowEnc()->GetTransStat(strCPi, rCPe);
+	return DataEncoder.GetTransStat(strCPi, rCPe);
 }
 
 void
@@ -141,9 +141,9 @@ CDRMEncoder::Init(CParameter& Parameters,
 		AudioSourceEncoder.SetTextMessage(vecstrTexts[i]);
 	AudioSourceEncoder.Init(Parameters, MSCBuf[0]);
 
-	DataEncoder.GetSliShowEnc()->ClearAllFileNames();
+	DataEncoder.ClearPics();
 	for(i=0; i<vecstrPics.size(); i++)
-		DataEncoder.GetSliShowEnc()->AddFileName(vecstrPics[i], vecstrPicTypes[i]);
+		DataEncoder.AddPic(vecstrPics[i], vecstrPicTypes[i]);
 	DataEncoder.Init(Parameters);
 	SignalLevelMeter.Init(0);
 }
@@ -326,10 +326,10 @@ CDRMEncoder::LoadSettings(CSettings& s, CParameter& Parameters)
 }
 
 void
-CDRMEncoder::SaveSettings(CSettings& s, CParameter& Parameters)
+CDRMEncoder::SaveSettings(CSettings& s, const CParameter& Parameters) const
 {
 	s.Put("Encoder", "audioservice", (Parameters.Service[0].eAudDataFlag == SF_AUDIO)?1:0);
-	s.Put("Encoder", "textmessages", Parameters.AudioParam[0].bTextflag);
+	s.Put("Encoder", "textmessages", Parameters.AudioParam.find(0)->second.bTextflag);
 	size_t i;
 	for(i=0; i<vecstrTexts.size(); i++)
 	{

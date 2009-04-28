@@ -42,7 +42,7 @@ CDRMModulator::CDRMModulator():
 }
 
 void
-CDRMModulator::GetSoundOutChoices(vector<string>& v)
+CDRMModulator::GetSoundOutChoices(vector<string>& v) const
 {
     CSoundOut s;
 	s.Enumerate(v);
@@ -60,7 +60,7 @@ CDRMModulator::SetOutputs(const vector<string>& o)
 }
 
 void
-CDRMModulator::GetOutputs(vector<string>& o)
+CDRMModulator::GetOutputs(vector<string>& o) const
 {
 	TransmitData.GetOutputs(o);
 }
@@ -170,7 +170,7 @@ CDRMModulator::LoadSettings(CSettings& s, CParameter& Parameters)
 }
 
 void
-CDRMModulator::SaveSettings(CSettings& s, CParameter& Parameters)
+CDRMModulator::SaveSettings(CSettings& s, const CParameter& Parameters) const
 {
 	s.Put("Modulator", "if", Parameters.rCarOffset);
 	s.Put("Modulator", "output_format", Parameters.eOutputFormat);

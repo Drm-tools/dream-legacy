@@ -52,7 +52,7 @@ CMOTSlideShowEncoder::GetTransStat (string & strCurPict, _REAL & rCurPerc)
     strCurPict = strCurObjName;
     rCurPerc = MOTDAB.GetProgPerc ();
 
-    if (vecPicFileNames.Size () != 0)
+    if (vecPicFileNames.size () != 0)
 		return true;
     else
 		return false;
@@ -66,16 +66,16 @@ CMOTSlideShowEncoder::Init ()
     iPictureCnt = 0;
     strCurObjName = "";
 
-    MOTDAB.Reset ();
+    MOTDAB.Reset();
 
-    AddNextPicture ();
+    AddNextPicture();
 }
 
 void
 CMOTSlideShowEncoder::AddNextPicture ()
 {
     /* Make sure at least one picture is in container */
-    if (vecPicFileNames.Size () > 0)
+    if (vecPicFileNames.size() > 0)
       {
 	  /* Get current file name */
 	  strCurObjName = vecPicFileNames[iPictureCnt].strName;
@@ -112,7 +112,7 @@ CMOTSlideShowEncoder::AddNextPicture ()
 
 	  /* Set file counter to next picture, test for wrap around */
 	  iPictureCnt++;
-	  if (iPictureCnt == vecPicFileNames.Size ())
+	  if (iPictureCnt == vecPicFileNames.size())
 	      iPictureCnt = 0;
       }
 }
@@ -124,8 +124,8 @@ CMOTSlideShowEncoder::AddFileName (const string & strFileName,
     /* Only ContentSubType "JFIF" (JPEG) and ContentSubType "PNG" are allowed
        for SlideShow application (not tested here!) */
     /* Add file name to the list */
-    const int iOldNumObj = vecPicFileNames.Size ();
-    vecPicFileNames.Enlarge (1);
-    vecPicFileNames[iOldNumObj].strName = strFileName;
-    vecPicFileNames[iOldNumObj].strFormat = strFormat;
+    SPicDescr d;
+    d.strName = strFileName;
+    d.strFormat = strFormat;
+    vecPicFileNames.push_back(d);
 }

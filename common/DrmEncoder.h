@@ -50,7 +50,7 @@ public:
 							CDRMEncoder();
 	virtual 				~CDRMEncoder() {}
 	void					LoadSettings(CSettings&, CParameter&);
-	void					SaveSettings(CSettings&, CParameter&);
+	void					SaveSettings(CSettings&, const CParameter&) const;
 
 	void					Init(CParameter&,
 								CBuffer<_BINARY>& FACBuf, CBuffer<_BINARY>& SDCBuf,
@@ -60,24 +60,23 @@ public:
 								vector<CSingleBuffer<_BINARY> >& MSCBuf);
 	void					Cleanup(CParameter&);
 
-	_REAL					GetLevelMeter() {return SignalLevelMeter.Level();}
+	_REAL					GetLevelMeter() const {return SignalLevelMeter.Level();}
 
 	/* Source Encoder Interface */
 	void					AddTextMessage(const string& strText);
 	void					ClearTextMessages();
-	void					GetTextMessages(vector<string>&);
+	void					GetTextMessages(vector<string>&) const;
 
-
-	void					GetSoundInChoices(vector<string>&);
+	void					GetSoundInChoices(vector<string>&) const;
 	void					SetSoundInInterface(int);
-	int						GetSoundInInterface() { return iSoundInDev; }
+	int						GetSoundInInterface() const { return iSoundInDev; }
 	void 					SetReadFromFile(const string& strNFN);
-	string					GetReadFromFile() { return strInputFileName; }
+	string					GetReadFromFile() const { return strInputFileName; }
 
 	void					AddPic(const string& strFileName, const string& strFormat);
 	void					ClearPics();
-	void					GetPics(map<string,string>&);
-	bool				GetTransStat(string& strCPi, _REAL& rCPe);
+	void					GetPics(map<string,string>&) const;
+	bool					GetTransStat(string& strCPi, _REAL& rCPe) const;
 protected:
 
 	/* Buffers */

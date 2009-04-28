@@ -44,7 +44,7 @@ void CTransmitData::SetOutputs(const vector<string>& o)
 	vecOutputs = o;
 }
 
-void CTransmitData::GetOutputs(vector<string>& o)
+void CTransmitData::GetOutputs(vector<string>& o) const
 {
 	o = vecOutputs;
 }

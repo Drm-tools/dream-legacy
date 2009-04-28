@@ -138,14 +138,14 @@ CDRMTransmitter::SetOperatingMode(const ETxOpMode eNewOpMode)
 }
 
 CDRMTransmitter::ETxOpMode
-CDRMTransmitter::GetOperatingMode()
+CDRMTransmitter::GetOperatingMode() const
 {
 	return eOpMode;
 }
 
 void
 CDRMTransmitter::
-GetSoundInChoices(vector<string>& v)
+GetSoundInChoices(vector<string>& v) const
 {
     if(pEncoder)
         pEncoder->GetSoundInChoices(v);
@@ -155,7 +155,7 @@ GetSoundInChoices(vector<string>& v)
 
 void
 CDRMTransmitter::
-GetSoundOutChoices(vector<string>& v)
+GetSoundOutChoices(vector<string>& v) const
 {
     if(pModulator)
         pModulator->GetSoundOutChoices(v);
@@ -165,7 +165,7 @@ GetSoundOutChoices(vector<string>& v)
 
 int
 CDRMTransmitter::
-GetSoundInInterface()
+GetSoundInInterface() const
 {
     if(pEncoder)
         return pEncoder->GetSoundInInterface();
@@ -182,7 +182,7 @@ SetSoundInInterface(int i)
 }
 
 
-_REAL CDRMTransmitter::GetLevelMeter()
+_REAL CDRMTransmitter::GetLevelMeter() const
 {
     if(pEncoder)
         return pEncoder->GetLevelMeter();
@@ -205,7 +205,7 @@ CDRMTransmitter::ClearTextMessages()
 }
 
 void
-CDRMTransmitter::GetTextMessages(vector<string>& v)
+CDRMTransmitter::GetTextMessages(vector<string>& v) const
 {
     if(pEncoder)
         pEncoder->GetTextMessages(v);
@@ -229,19 +229,31 @@ CDRMTransmitter::ClearPics()
 }
 
 void
-CDRMTransmitter::GetPics(map<string,string>& m)
+CDRMTransmitter::GetPics(map<string,string>& m) const
 {
     if(pEncoder)
         pEncoder->GetPics(m);
 }
 
 bool
-CDRMTransmitter::GetTransStat(string& strCPi, _REAL& rCPe)
+CDRMTransmitter::GetTransStat(string& strCPi, _REAL& rCPe) const
 {
     if(pEncoder)
         return pEncoder->GetTransStat(strCPi, rCPe);
     else
         return false;
+}
+
+void
+CDRMTransmitter::GetData(map<int, map<int,CDataParam> >& d) const
+{
+	d = Parameters.DataParam;
+}
+
+void
+CDRMTransmitter::PutData(const map<int, map<int,CDataParam> >& d)
+{
+	Parameters.DataParam = d;
 }
 
 void
@@ -252,12 +264,24 @@ CDRMTransmitter::SetReadFromFile(const string & strNFN)
 }
 
 string
-CDRMTransmitter::GetReadFromFile()
+CDRMTransmitter::GetReadFromFile() const
 {
     if(pEncoder)
         return pEncoder->GetReadFromFile();
     else
         return "";
+}
+
+void
+CDRMTransmitter::GetAudio(map<int,CAudioParam>& a) const
+{
+	a = Parameters.AudioParam;
+}
+
+void
+CDRMTransmitter::PutAudio(const map<int,CAudioParam>& a)
+{
+	Parameters.AudioParam = a;
 }
 
 void
@@ -268,12 +292,35 @@ CDRMTransmitter::SetCOFDMOutputs(const vector<string>& o)
 }
 
 void
-CDRMTransmitter::GetCOFDMOutputs(vector<string>& o)
+CDRMTransmitter::GetCOFDMOutputs(vector<string>& o) const
 {
     if(pModulator)
         pModulator->GetOutputs(o);
     else
         o.clear();
+}
+
+void
+CDRMTransmitter::PutChannel(const CChannel& c)
+{
+	Parameters.Channel=c;
+    Parameters.CellMappingTable.MakeTable(c.eRobustness, c.eSpectrumOccupancy);
+}
+
+void
+CDRMTransmitter::GetServices(vector<CService>& s, int& naudio, int& ndata) const
+{
+	s= Parameters.Service;
+	naudio = Parameters.FACParameters.iNumAudioServices;
+	ndata = Parameters.FACParameters.iNumDataServices;
+}
+
+void
+CDRMTransmitter::PutServices(const vector<CService>& s, int naudio, int ndata)
+{
+	Parameters.Service = s;
+	Parameters.FACParameters.iNumAudioServices = naudio;
+	Parameters.FACParameters.iNumDataServices = ndata;
 }
 
 void
@@ -445,7 +492,7 @@ CDRMTransmitter::LoadSettings(CSettings& s)
 }
 
 void
-CDRMTransmitter::SaveSettings(CSettings& s)
+CDRMTransmitter::SaveSettings(CSettings& s) const
 {
 	switch(eOpMode)
 	{

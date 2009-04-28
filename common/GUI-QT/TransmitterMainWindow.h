@@ -26,7 +26,7 @@
  *
 \******************************************************************************/
 
-#include "../GlobalDefinitions.h"
+#include "../Parameter.h"
 #include "ui_TransmitterMainWindow.h"
 #include "../util/Utilities.h"
 #include <vector>
@@ -48,8 +48,8 @@ public:
     virtual ~ChannelEditor() {}
 
     void    setupUi();
-	void	GetFrom(CDRMTransmitterInterface&);
-	void	PutTo(CDRMTransmitterInterface&);
+	void	GetFrom(const CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&) const;
 
 public slots:
 	void OnComboBoxSDCConstellationActivated(int iID);
@@ -82,8 +82,8 @@ public:
     virtual ~StreamEditor() {}
 
     void    setupUi();
-	void	GetFrom(CDRMTransmitterInterface&);
-	void	PutTo(CDRMTransmitterInterface&);
+	void	GetFrom(const CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&) const;
 
 public slots:
 	void OnButtonAddStream();
@@ -106,8 +106,8 @@ public:
     virtual ~AudioComponentEditor() {}
 
     void    setupUi();
-	void	GetFrom(CDRMTransmitterInterface&);
-	void	PutTo(CDRMTransmitterInterface&);
+	void	GetFrom(const CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&) const;
 
 public slots:
 	void OnComboBoxSourceActivated(int iID);
@@ -134,8 +134,8 @@ public:
     virtual ~DataComponentEditor() {}
 
     void    setupUi();
-	void	GetFrom(CDRMTransmitterInterface&);
-	void	PutTo(CDRMTransmitterInterface&);
+	void	GetFrom(const CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&) const;
 
 public slots:
 	void OnPushButtonAddFileName();
@@ -156,8 +156,8 @@ public:
     virtual ~ServicesEditor() {}
 
     void    setupUi();
-	void	GetFrom(CDRMTransmitterInterface&);
-	void	PutTo(CDRMTransmitterInterface&);
+	void	GetFrom(const CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&) const;
 
 public slots:
 	void OnTextChangedLabel(const QString& strLabel);
@@ -178,8 +178,8 @@ public:
     virtual ~COFDMEditor() {}
 
     void    setupUi();
-	void	GetFrom(CDRMTransmitterInterface&);
-	void	PutTo(CDRMTransmitterInterface&);
+	void	GetFrom(const CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&) const;
 
 public slots:
 	void OnComboBoxDestActivated(int iID);
@@ -205,8 +205,8 @@ public:
     virtual ~MDIInputEditor() {}
 
     void    setupUi();
-	void	GetFrom(CDRMTransmitterInterface&);
-	void	PutTo(CDRMTransmitterInterface&);
+	void	GetFrom(const CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&) const;
 
 public slots:
 	void OnLineEditPortChanged(const QString& str);
@@ -229,8 +229,8 @@ public:
     virtual ~MDIOutputEditor() {}
 
     void    setupUi();
-	void	GetFrom(CDRMTransmitterInterface&);
-	void	PutTo(CDRMTransmitterInterface&);
+	void	GetFrom(const CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&) const;
 
 public slots:
 	void OnButtonAddDest();
@@ -262,13 +262,13 @@ public:
 	TransmitterMainWindow& operator=(const TransmitterMainWindow&)
 	{ throw "should not happen"; return *this;}
 
+	void	GetFrom(const CDRMTransmitterInterface&);
+	void	PutTo(CDRMTransmitterInterface&) const;
+
 protected:
 
 	void		DisableAllControlsForSet();
 	void		EnableAllControlsForSet();
-
-	void		GetFromTransmitter();
-	void		SetTransmitter();
 
 	void		closeEvent(QCloseEvent* ce);
 

@@ -52,22 +52,19 @@ class CMOTSlideShowEncoder
     void GetDataUnit (CVector < _BINARY > &vecbiNewData);
 
     void AddFileName (const string & strFileName, const string & strFormat);
-    void ClearAllFileNames ()
-    {
-	vecPicFileNames.Init (0);
-    }
+    void ClearAllFileNames () { vecPicFileNames.clear();}
     bool GetTransStat (string & strCurPict, _REAL & rCurPerc);
 
   protected:
     struct SPicDescr
     {
-	string strName, strFormat;
+		string strName, strFormat;
     };
     void AddNextPicture ();
 
     CMOTDABEnc MOTDAB;
 
-    CVector < SPicDescr > vecPicFileNames;
+    vector <SPicDescr> vecPicFileNames;
     int iPictureCnt;
 
     string strCurObjName;

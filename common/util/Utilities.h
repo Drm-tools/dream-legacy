@@ -58,7 +58,7 @@ public:
 	void Update(const _REAL rVal);
 	void Update(const vector<_SAMPLE> vecrVal);
 	void Update(const CVector<_REAL> vecrVal);
-	_REAL Level();
+	_REAL Level() const;
 
 protected:
 	void doUpdate(const _REAL rVal);

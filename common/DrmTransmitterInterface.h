@@ -58,41 +58,58 @@ public:
 	virtual void			Stop()=0;
 
 	virtual void			LoadSettings(CSettings&)=0;
-	virtual void			SaveSettings(CSettings&)=0;
+	virtual void			SaveSettings(CSettings&) const = 0;
 
 	virtual void			SetOperatingMode(const ETxOpMode)=0;
-	virtual ETxOpMode		GetOperatingMode()=0;
+	virtual ETxOpMode		GetOperatingMode() const = 0;
 
 	virtual void			CalculateChannelCapacities()=0;
 
-	virtual _REAL 			GetLevelMeter()=0;
+	virtual _REAL 			GetLevelMeter() const = 0;
 
 	/* Source Encoder Interface */
 	virtual void			AddTextMessage(const string& strText)=0;
 	virtual void			ClearTextMessages()=0;
-	virtual void			GetTextMessages(vector<string>&)=0;
+	virtual void			GetTextMessages(vector<string>&) const = 0;
 	virtual void			AddPic(const string& strFileName, const string& strFormat)=0;
 	virtual void			ClearPics()=0;
-	virtual void			GetPics(map<string,string>&)=0;
-	virtual bool		GetTransStat(string& strCPi, _REAL& rCPe)=0;
+	virtual void			GetPics(map<string,string>&) const = 0;
+	virtual bool			GetTransStat(string& strCPi, _REAL& rCPe) const = 0;
+	virtual void			GetData(map<int, map<int,CDataParam> >&) const = 0;
+	virtual void			PutData(const map<int, map<int,CDataParam> >&) = 0;
 
-	virtual void			GetSoundInChoices(vector<string>&)=0;
+	virtual void			GetSoundInChoices(vector<string>&) const = 0;
 	virtual void			SetSoundInInterface(int)=0;
-	virtual int				GetSoundInInterface()=0;
+	virtual int				GetSoundInInterface() const = 0;
 	virtual void 			SetReadFromFile(const string& strNFN)=0;
-	virtual string			GetReadFromFile()=0;
+	virtual string			GetReadFromFile() const = 0;
+	virtual void			GetAudio(map<int,CAudioParam>&) const = 0;
+	virtual void			PutAudio(const map<int,CAudioParam>&)=0;
 
-	virtual void			GetSoundOutChoices(vector<string>&)=0;
-	virtual void			GetCOFDMOutputs(vector<string>&)=0;
+	virtual void			GetSoundOutChoices(vector<string>&) const = 0;
+	virtual void			GetCOFDMOutputs(vector<string>&) const = 0;
 	virtual void			SetCOFDMOutputs(const vector<string>&)=0;
+	virtual double			GetCarrierOffset() const = 0;
+	virtual void			SetCarrierOffset(double) = 0;
+	virtual EOutFormat		GetOutputFormat() const = 0;
+	virtual void			SetOutputFormat(EOutFormat) = 0;
 
 	virtual void			SetMDIIn(const string& s)=0;
-	virtual string			GetMDIIn()=0;
+	virtual string			GetMDIIn() const = 0;
 
 	virtual void			SetMDIOut(const vector<string>& v)=0;
-	virtual void			GetMDIOut(vector<string>&)=0;
+	virtual void			GetMDIOut(vector<string>&) const = 0;
 
-	virtual CParameter*		GetParameters()=0;
+	virtual void			GetChannel(CChannel&) const = 0;
+	virtual void			PutChannel(const CChannel&) = 0;
+
+	virtual void			GetMSC(CMSCParameters&) const = 0;
+	virtual void			PutMSC(const CMSCParameters&) = 0;
+
+	virtual void			GetServices(vector<CService>&, int&, int&) const = 0;
+	virtual void			PutServices(const vector<CService>&, int, int) = 0;
+	virtual int				NumBitsMSC() const = 0;
+	virtual int				NumBitsSDCsuperFrame() const = 0;
 
 };
 

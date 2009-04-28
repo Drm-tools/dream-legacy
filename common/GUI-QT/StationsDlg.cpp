@@ -29,7 +29,6 @@
 \******************************************************************************/
 
 #include "StationsDlg.h"
-#include "../tables/TableStations.h"
 #include <QMenuBar>
 #include <QFileInfo>
 #include <QFile>
@@ -39,563 +38,36 @@
 #include <QUrl>
 #include <QNetworkRequest>
 #include <QNetworkReply>
-
-/* Implementation *************************************************************/
-void CTxSchedule::UpdateStringListForFilter(const CStationsItem StationsItem)
-{
-QStringList result;
-
-QString strTarget = QString(StationsItem.strTarget.c_str());
-QString strCountry = QString(StationsItem.strCountry.c_str());
-QString strLanguage = QString(StationsItem.strLanguage.c_str());
-
-   result = ListTargets.grep(strTarget);
-   if (result.isEmpty())
-     ListTargets.append(strTarget);
-
-   result = ListCountries.grep(strCountry);
-   if (result.isEmpty())
-     ListCountries.append(strCountry);
-
-
-   result = ListLanguages.grep(strLanguage);
-   if (result.isEmpty())
-     ListLanguages.append(strLanguage);
-}
-
-void CTxSchedule::ReadStatTabFromFile(const string& path)
-{
-	const int	iMaxLenName = 256;
-	char		cName[iMaxLenName];
-	FILE*		pFile = fopen(path.c_str(), "r");
-
-	/* Open file and init table for stations */
-	clear();
-
-	/* Check if opening of file was successful */
-	if (pFile == 0)
-		return;
-
-	fgets(cName, iMaxLenName, pFile); /* Remove "[DRMSchedule]" */
-	if(cName[0] == '[')
-		ReadIniFile(pFile);
-	else
-		ReadCSVFile(pFile);
-	fclose(pFile);
-}
-
-void CTxSchedule::ReadIniFile(FILE* pFile)
-{
-	const int	iMaxLenName = 256;
-	char		cName[iMaxLenName];
-	int			iFileStat;
-	bool	    bReadOK = true;
-
-	do
-	{
-		CStationsItem StationsItem;
-
-		/* Start stop time */
-		int iStartTime, iStopTime;
-		iFileStat = fscanf(pFile, "StartStopTimeUTC=%04d-%04d\n",
-			&iStartTime, &iStopTime);
-
-		if (iFileStat != 2)
-			bReadOK = false;
-		else
-		{
-			StationsItem.SetStartTimeNum(iStartTime);
-			StationsItem.SetStopTimeNum(iStopTime);
-		}
-
-		/* Days */
-		/* Init days with the "irregular" marker in case no valid string could
-		   be read */
-		string strNewDaysFlags = FLAG_STR_IRREGULAR_TRANSM;
-
-		iFileStat = fscanf(pFile, "Days[SMTWTFS]=%255[^\n|^\r]\n", cName);
-		if (iFileStat != 1)
-			fscanf(pFile, "\n");
-		else
-		{
-			/* Check for length of input string (must be 7) */
-			const string strTMP = cName;
-			if (strTMP.length() == 7)
-				strNewDaysFlags = strTMP;
-		}
-
-		/* Frequency */
-		iFileStat = fscanf(pFile, "Frequency=%d\n", &StationsItem.iFreq);
-		if (iFileStat != 1)
-			bReadOK = false;
-
-		/* Target */
-		iFileStat = fscanf(pFile, "Target=%255[^\n|^\r]\n", cName);
-		if (iFileStat != 1)
-			fscanf(pFile, "\n");
-		else
-			StationsItem.strTarget = cName;
-
-		/* Power */
-		iFileStat = fscanf(pFile, "Power=%255[^\n|^\r]\n", cName);
-		if (iFileStat != 1)
-			fscanf(pFile, "\n");
-		else
-			StationsItem.rPower = QString(cName).toFloat();
-
-		/* Name of the station */
-		iFileStat = fscanf(pFile, "Programme=%255[^\n|^\r]\n", cName);
-		if (iFileStat != 1)
-			fscanf(pFile, "\n");
-		else
-			StationsItem.strName = cName;
-
-		/* Language */
-		iFileStat = fscanf(pFile, "Language=%255[^\n|^\r]\n", cName);
-		if (iFileStat != 1)
-			fscanf(pFile, "\n");
-		else
-			StationsItem.strLanguage = cName;
-
-		/* Site */
-		iFileStat = fscanf(pFile, "Site=%255[^\n|^\r]\n", cName);
-		if (iFileStat != 1)
-			fscanf(pFile, "\n");
-		else
-			StationsItem.strSite = cName;
-
-		/* Country */
-		iFileStat = fscanf(pFile, "Country=%255[^\n|^\r]\n", cName);
-		if (iFileStat != 1)
-			fscanf(pFile, "\n");
-		else
-			StationsItem.strCountry = cName;
-
-		iFileStat = fscanf(pFile, "\n");
-
-		/* Check for error before applying data */
-		if (bReadOK == true)
-		{
-			/* Set "days flag string" and generate strings for displaying active
-			   days */
-			StationsItem.SetDaysFlagString(strNewDaysFlags);
-
-			/* Add new item in table */
-			StationsTable.push_back(StationsItem);
-
-			UpdateStringListForFilter(StationsItem);
-		}
-
-	} while (!((iFileStat == EOF) || (bReadOK == false)));
-}
-
-void CTxSchedule::ReadCSVFile(FILE* pFile)
-{
-	const int	iMaxLenRow = 1024;
-	char		cRow[iMaxLenRow];
-	CStationData data;
-
-	do {
-		CStationsItem StationsItem;
-
-		fgets(cRow, iMaxLenRow, pFile);
-		vector<string> fields;
-		stringstream ss(cRow);
-		do {
-			string s;
-			getline(ss, s, ';');
-			fields.push_back(s);
-		} while(!ss.eof());
-
-		StationsItem.iFreq = atol(fields[0].c_str());
-
-		if(fields[1] == "")
-		{
-			StationsItem.SetStartTimeNum(0);
-			StationsItem.SetStopTimeNum(2400);
-		}
-		else
-		{
-			QStringList times = QStringList::split("-", fields[1].c_str());
-			StationsItem.SetStartTimeNum(times[0].toInt());
-			StationsItem.SetStopTimeNum(times[1].toInt());
-		}
-
-		if(fields[2].length()>0)
-		{
-			stringstream ss(fields[2]);
-			char c;
-			enum Days { Sunday=0, Monday=1, Tuesday=2, Wednesday=3,
-						Thursday=4, Friday=5, Saturday=6 };
-			Days first=Sunday, last=Sunday;
-			enum { no, in, done } range_state = no;
-			// Days[SMTWTFS]=1111111
-			string strDays = "0000000";
-			while(!ss.eof())
-			{
-				ss >> c;
-				switch(c)
-				{
-					case '-':
-						range_state = in;
-						break;
-					case 'M':
-						ss >> c;
-						last = Monday;
-						break;
-					case 'T':
-						ss >> c;
-						last = (c=='u')?Tuesday:Thursday;
-						break;
-					case 'W':
-						ss >> c;
-						last = Wednesday;
-						break;
-					case 'F':
-						ss >> c;
-						last = Friday;
-						break;
-					case 'S':
-						ss >> c;
-						last = (c=='u')?Sunday:Saturday;
-						break;
-				}
-				switch(range_state)
-				{
-					case no:
-						strDays[last] = '1';
-						break;
-					case in:
-						first = last;
-						range_state = done;
-						break;
-					case done:
-						if(first<last)
-						{
-							for(int d=first; d<=last; d++)
-								strDays[d] = '1';
-						}
-						range_state = no;
-						break;
-				}
-			}
-			StationsItem.SetDaysFlagString(strDays);
-		}
-		else
-			StationsItem.SetDaysFlagString("1111111");
-
-		//StationsItem.rPower = 0.0;
-//0   ;1        ;2    ;3  ;4               ;5;6;7;8;9;10
-//1170;1600-1700;Mo-Fr;USA;Voice of America;E; ; ;0; ;
-		string homecountry;
-		if(fields.size()>3)
-		{
-			homecountry = fields[3];
-			string c = data.itu_r_country(homecountry);
-			if(c == "")
-				StationsItem.strCountry = homecountry;
-			else
-				StationsItem.strCountry = c;
-		}
-
-		if(fields.size()>4)
-			StationsItem.strName = fields[4];
-
-		if(fields.size()>5)
-		{
-			StationsItem.strLanguage = data.eibi_language(fields[5]);
-		}
-
-		if(fields.size()>6)
-		{
-			string s = fields[6];
-			string t = data.eibi_target(s);
-			if(t == "")
-			{
-				string c = data.itu_r_country(s);
-				if(c == "")
-					StationsItem.strTarget = s;
-				else
-					StationsItem.strTarget = c;
-			}
-			else
-			{
-				StationsItem.strTarget = t;
-			}
-		}
-		string country;
-		string stn;
-		if(fields.size()>7)
-		{
-			string s  = StationsItem.strSite = fields[7];
-			if(s=="") // unknown or main Tx site of the home country
-			{
-				country = homecountry;
-			}
-			else
-			{
-				size_t i=0;
-				s += '-';
-				if(s[0]=='/') // transmitted from another country
-					i++;
-				string a,b;
-				while(s[i]!='-')
-					a += s[i++];
-				i++;
-				if(i<s.length())
-					while(s[i]!='-')
-						b += s[i++];
-				if(s[0]=='/')
-				{
-					country = a;
-					stn = b;
-				}
-				else
-				{
-					if(a.length()==3)
-					{
-						country = a;
-						stn = b;
-					}
-					else
-					{
-						country = homecountry;
-						stn = a;
-					}
-				}
-			}
-		}
-		else
-		{
-			country = homecountry;
-		}
-		string site = data.eibi_station(country, stn);
-		if(site == "")
-		{
-			//cout << StationsItem.iFreq << " [" << StationsItem.strSite << "] [" << country << "] [" << stn << "]" << endl;
-		}
-		else
-		{
-			StationsItem.strSite = site;
-		}
-
-		/* Add new item in table */
-		StationsTable.push_back(StationsItem);
-
-if(fields[5]=="TAG")
-{
-		//cout << " " << StationsItem.iStartHour << " " <<  StationsItem.iStartMinute << " " <<  StationsItem.iStopHour << " " <<  StationsItem.iStopMinute << " " <<  StationsItem.iFreq << " " <<  StationsItem.strName << " " <<  StationsItem.strTarget << " " <<  StationsItem.strLanguage << " " <<  StationsItem.strSite << " " <<  StationsItem.strCountry << " " <<  StationsItem.strDaysFlags << " " <<  StationsItem.strDaysShow << " " <<  StationsItem.rPower << " " << endl;
-}
-		UpdateStringListForFilter(StationsItem);
-
-	} while(!feof(pFile));
-}
-
-CTxSchedule::StationState CTxSchedule::CheckState(const int iPos)
-{
-	/* Get system time */
-	time_t ltime;
-	time(&ltime);
-
-	if (IsActive(iPos, ltime) == true)
-	{
-		/* Check if the station soon will be inactive */
-		if (IsActive(iPos, ltime + NUM_SECONDS_SOON_INACTIVE) == true)
-			return IS_ACTIVE;
-		else
-			return IS_SOON_INACTIVE;
-	}
-	else
-	{
-		/* Station is not active, check preview condition */
-		if (iSecondsPreview > 0)
-		{
-			if (IsActive(iPos, ltime + iSecondsPreview) == true)
-				return IS_PREVIEW;
-			else
-				return IS_INACTIVE;
-		}
-		else
-			return IS_INACTIVE;
-	}
-}
-
-bool CTxSchedule::IsActive(const int iPos, const time_t ltime)
-{
-	/* Calculate time in UTC */
-	struct tm* gmtCur = gmtime(&ltime);
-	const time_t lCurTime = mktime(gmtCur);
-
-	/* Get stop time */
-	struct tm* gmtStop = gmtime(&ltime);
-	gmtStop->tm_hour = StationsTable[iPos].iStopHour;
-	gmtStop->tm_min = StationsTable[iPos].iStopMinute;
-	const time_t lStopTime = mktime(gmtStop);
-
-	/* Get start time */
-	struct tm* gmtStart = gmtime(&ltime);
-	gmtStart->tm_hour = StationsTable[iPos].iStartHour;
-	gmtStart->tm_min = StationsTable[iPos].iStartMinute;
-	const time_t lStartTime = mktime(gmtStart);
-
-	/* Check, if stop time is on next day */
-	bool bSecondDay = false;
-	if (lStopTime < lStartTime)
-	{
-		/* Check, if we are at the first or the second day right now */
-		if (lCurTime < lStopTime)
-		{
-			/* Second day. Increase day count */
-			gmtCur->tm_wday++;
-
-			/* Check that value is valid (range 0 - 6) */
-			if (gmtCur->tm_wday > 6)
-				gmtCur->tm_wday = 0;
-
-			/* Set flag */
-			bSecondDay = true;
-		}
-	}
-
-	/* Check day
-	   tm_wday: day of week (0 - 6; Sunday = 0). "strDaysFlags" are coded with
-	   pseudo binary representation. A one signalls that day is active. The most
-	   significant 1 is the sunday, then followed the monday and so on. */
-	if ((StationsTable[iPos].strDaysFlags[gmtCur->tm_wday] ==
-		CHR_ACTIVE_DAY_MARKER) ||
-		/* Check also for special case: days are 0000000. This is reserved for
-		   DRM test transmissions or irregular transmissions. We define here
-		   that these stations are transmitting every day */
-		(StationsTable[iPos].strDaysFlags == FLAG_STR_IRREGULAR_TRANSM))
-	{
-		/* Check time interval */
-		if (lStopTime > lStartTime)
-		{
-			if ((lCurTime >= lStartTime) && (lCurTime < lStopTime))
-				return true;
-		}
-		else
-		{
-			if (bSecondDay == false)
-			{
-				/* First day. Only check if we are after start time */
-				if (lCurTime >= lStartTime)
-					return true;
-			}
-			else
-			{
-				/* Second day. Only check if we are before stop time */
-				if (lCurTime < lStopTime)
-					return true;
-			}
-		}
-	}
-
-	return false;
-}
-
-void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
-{
-	/* Set internal "days flag" string and "show days" string */
-	strDaysFlags = strNewDaysFlags;
-	strDaysShow = "";
-
-	/* Init days string vector */
-	const QString strDayDef [] =
-	{
-		QObject::tr("Sun"),
-		QObject::tr("Mon"),
-		QObject::tr("Tue"),
-		QObject::tr("Wed"),
-		QObject::tr("Thu"),
-		QObject::tr("Fri"),
-		QObject::tr("Sat")
-	};
-
-	/* First test for day constellations which allow to apply special names */
-	if (strDaysFlags == FLAG_STR_IRREGULAR_TRANSM)
-		strDaysShow = QObject::tr("irregular").latin1();
-	else if (strDaysFlags == "1111111")
-		strDaysShow = QObject::tr("daily").latin1();
-	else if (strDaysFlags == "1111100")
-		strDaysShow = QObject::tr("from Sun to Thu").latin1();
-	else if (strDaysFlags == "1111110")
-		strDaysShow = QObject::tr("from Sun to Fri").latin1();
-	else if (strDaysFlags == "0111110")
-		strDaysShow = QObject::tr("from Mon to Fri").latin1();
-	else if (strDaysFlags == "0111111")
-		strDaysShow = QObject::tr("from Mon to Sat").latin1();
-	else
-	{
-		/* No special name could be applied, just list all active days */
-		for (int i = 0; i < 7; i++)
-		{
-			/* Check if day is active */
-			if (strDaysFlags[i] == CHR_ACTIVE_DAY_MARKER)
-			{
-				/* Set commas in between the days, to not set a comma at
-				   the beginning */
-				if (strDaysShow != "")
-					strDaysShow += ",";
-
-				/* Add current day */
-				strDaysShow += strDayDef[i].latin1();
-			}
-		}
-	}
-}
+#include <QHeaderView>
 
 StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	QDialog(parent, name, modal, f), Ui_StationsDlg(),
 	Receiver(NDRMR), Settings(NSettings), Schedule(),
-	BitmCubeGreen(), BitmCubeYellow(), BitmCubeRed(), BitmCubeOrange(), BitmCubePink(),
 	TimerList(), TimerUTCLabel(), TimerSMeter(), TimerEditFrequency(), TimerMonitorFrequency(),
 	TimerTuning(),
 	iCurrentSortColumn(0), bCurrentSortAscending(true), bShowAll(false),
 	bTuningInProgress(false), bReInitOnFrequencyChange(false), eModulation(DRM),
 	networkManager(NULL),
 	pViewMenu(NULL), pPreviewMenu(NULL), pUpdateMenu(NULL),
-	vecpListItems(0),
 	ListItemsMutex()
 {
     setupUi(this);
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-	/* Define size of the bitmaps */
-	const int iXSize = 13;
-	const int iYSize = 13;
-
-	/* Create bitmaps */
-	BitmCubeGreen.resize(iXSize, iYSize);
-	BitmCubeGreen.fill(QColor(0, 255, 0));
-	BitmCubeYellow.resize(iXSize, iYSize);
-	BitmCubeYellow.fill(QColor(255, 255, 0));
-	BitmCubeRed.resize(iXSize, iYSize);
-	BitmCubeRed.fill(QColor(255, 0, 0));
-	BitmCubeOrange.resize(iXSize, iYSize);
-	BitmCubeOrange.fill(QColor(255, 128, 0));
-	BitmCubePink.resize(iXSize, iYSize);
-	BitmCubePink.fill(QColor(255, 128, 128));
-
 	/* Clear list box for file names and set up columns */
-	ListViewStations->clear();
+    //stations = new QStandardItemModel(this);
+    proxyModel = new QSortFilterProxyModel(this);
+    proxyModel->setSourceModel(&Schedule);
 
-	/* We assume that one column is already there */
-	ListViewStations->setColumnText(0, tr("Station Name"));
-	ListViewStations->addColumn(tr("Time [UTC]"));
-	ListViewStations->addColumn(tr("Frequency [kHz]"));
-	ListViewStations->addColumn(tr("Target"));
-	ListViewStations->addColumn(tr("Power [kW]"));
-	ListViewStations->addColumn(tr("Country"));
-	ListViewStations->addColumn(tr("Site"));
-	ListViewStations->addColumn(tr("Language"));
-	ListViewStations->addColumn(tr("Days"));
+	stationsView->setModel(proxyModel);
+	stationsView->setSortingEnabled(true);
+	stationsView->horizontalHeader()->setVisible(true);
 
 	/* Set right alignment for numeric columns */
-	ListViewStations->setColumnAlignment(2, Qt::AlignRight);
-	ListViewStations->setColumnAlignment(4, Qt::AlignRight);
+	//stationsView->setColumnAlignment(2, Qt::AlignRight);
+	//stationsView->setColumnAlignment(4, Qt::AlignRight);
 
 	/* Set up frequency selector control (QWTCounter control) */
 	QwtCounterFrequency->setRange(0.0, 30000.0, 1.0);
@@ -660,7 +132,7 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	pViewMenu->insertSeparator();
 	pViewMenu->insertItem(tr("Stations &preview"), pPreviewMenu);
 
-	SetStationsView();
+	//SetStationsView();
 
 	/* Update menu ---------------------------------------------------------- */
 	pUpdateMenu = new Q3PopupMenu(this);
@@ -696,21 +168,18 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	TimerMonitorFrequency.stop();
 	TimerTuning.stop();
 
-	connect(ListViewStations, SIGNAL(selectionChanged(Q3ListViewItem*)),
-		this, SLOT(OnListItemClicked(Q3ListViewItem*)));
-
-	connect(ListViewStations->header(), SIGNAL(clicked(int)),
-		this, SLOT(OnHeaderClicked(int)));
+	connect(stationsView, SIGNAL(activated(const QModelIndex&)),
+		this, SLOT(OnItemClicked(const QModelIndex&)));
 
 	connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
 		this, SLOT(OnFreqCntNewValue(double)));
 
 	connect(ComboBoxFilterTarget, SIGNAL(activated(const QString&)),
-		this, SLOT(FilterChanged(const QString&)));
+		this, SLOT(OnFilterByTarget(const QString&)));
 	connect(ComboBoxFilterCountry, SIGNAL(activated(const QString&)),
-		this, SLOT(FilterChanged(const QString&)));
+		this, SLOT(OnFilterByCountry(const QString&)));
 	connect(ComboBoxFilterLanguage, SIGNAL(activated(const QString&)),
-		this, SLOT(FilterChanged(const QString&)));
+		this, SLOT(OnFilterByLanguage(const QString&)));
 
 	ProgrSigStrength->setRange(S_METER_THERMO_MIN, S_METER_THERMO_MAX);
 	ProgrSigStrength->setOrientation(Qt::Horizontal, QwtThermo::TopScale);
@@ -723,36 +192,27 @@ StationsDlg::~StationsDlg()
 {
 }
 
-void StationsDlg::FilterChanged(const QString&)
+void StationsDlg::OnFilterByTarget(const QString& s)
 {
-	/* Update list view */
-	SetStationsView();
+	proxyModel->setFilterRegExp(QRegExp(s, Qt::CaseInsensitive, QRegExp::FixedString));
+	proxyModel->setFilterKeyColumn(3);
+}
+
+void StationsDlg::OnFilterByCountry(const QString& s)
+{
+	proxyModel->setFilterRegExp(QRegExp(s, Qt::CaseInsensitive, QRegExp::FixedString));
+	proxyModel->setFilterKeyColumn(5);
+}
+
+void StationsDlg::OnFilterByLanguage(const QString& s)
+{
+	proxyModel->setFilterRegExp(QRegExp(s, Qt::CaseInsensitive, QRegExp::FixedString));
+	proxyModel->setFilterKeyColumn(7);
 }
 
 bool StationsDlg::CheckFilter(const int iPos)
 {
-    bool bCheck = true;
-    QString sFilter = "";
-
-	sFilter = ComboBoxFilterTarget->currentText();
-
-	if ((sFilter != "") &&
-		(QString(Schedule.GetItem(iPos).strTarget.c_str()) != sFilter))
-		bCheck = false;
-
-	sFilter = ComboBoxFilterCountry->currentText();
-
-	if ((sFilter != "") &&
-		(QString(Schedule.GetItem(iPos).strCountry.c_str()) != sFilter))
-		bCheck = false;
-
-	sFilter = ComboBoxFilterLanguage->currentText();
-
-	if ((sFilter != "") &&
-		(QString(Schedule.GetItem(iPos).strLanguage.c_str()) != sFilter))
-		bCheck = false;
-
-    return bCheck;
+    return false;
 }
 
 
@@ -779,13 +239,13 @@ void StationsDlg::OnShowStationsMenu(int iID)
 	{
 		bShowAll = false;
 		/* clear all and reload. If the list is long this increases performance */
-		ClearStationsView();
+		Schedule.clear();
 	}
 	else
 		bShowAll = true;
 
 	/* Update list view */
-	SetStationsView();
+	//SetStationsView();
 
 	/* Taking care of checks in the menu */
 	pViewMenu->setItemChecked(0, 0 == iID);
@@ -814,7 +274,7 @@ void StationsDlg::OnShowPreviewMenu(int iID)
 	}
 
 	/* Update list view */
-	SetStationsView();
+	//SetStationsView();
 
 	/* Taking care of checks in the menu */
 	pPreviewMenu->setItemChecked(0, 0 == iID);
@@ -837,7 +297,7 @@ void StationsDlg::OnGetUpdate()
     }
     if(eModulation==DRM)
     {
-        path = DRM_SCHEDULE_UPDATE_FILE;
+        path = DRM_SCHEDULE_UPDATE_URL;
     }
     else
     {
@@ -860,13 +320,13 @@ void StationsDlg::OnGetUpdate()
             w = "b";
             y = QString::number(yr);
         }
-        path = QString(AM_SCHEDULE_UPDATE_FILE).arg(w, y.right(2));
+        path = QString(AM_SCHEDULE_UPDATE_URL).arg(w, y.right(2));
     }
     /* Try to download the current schedule. */
     QNetworkReply * reply = networkManager->get(QNetworkRequest(QUrl(path)));
     if(reply == NULL)
     {
-        cerr << "bad request " << path.toStdString() << endl;
+        //cerr << "bad request " << path.toStdString() << endl;
         return;
     }
 }
@@ -894,7 +354,25 @@ void StationsDlg::OnUrlFinished(QNetworkReply* reply)
         f.write(reply->readAll());
         f.close();
         /* Read updated ini-file */
-        LoadSchedule(fname.toStdString());
+        Schedule.load(fname.toStdString());
+
+		/* Add last update information on menu item */
+
+		pUpdateMenu->setItemEnabled(0, true);
+
+		/* init with empty string in case there is no schedule file */
+		QString s = "";
+
+		/* get time and date information */
+		QFileInfo fi = QFileInfo(fname);
+		if (fi.exists()) /* make sure the schedule file exists */
+		{
+			/* use QT-type of data string for displaying */
+			s = tr(" (last update: ")
+				+ fi.lastModified().date().toString() + ")";
+		}
+
+		pUpdateMenu->changeItem(0, tr("&Get Update") + s + "...");
 	}
 }
 
@@ -950,11 +428,18 @@ void StationsDlg::showEvent(QShowEvent*)
 	QwtCounterFrequency->setValue(Receiver.GetFrequency());
 
 	/* Load the schedule if necessary */
-	if (Schedule.GetStationNumber() == 0)
-		LoadSchedule(fname.toStdString());
+	if (Schedule.rowCount() == 0)
+		Schedule.load(fname.toStdString());
+
+	stationsView->setSortingEnabled(true);
+	stationsView->horizontalHeader()->setVisible(true);
+
+	ComboBoxFilterTarget->insertStringList(Schedule.ListTargets);
+	ComboBoxFilterCountry->insertStringList(Schedule.ListCountries);
+	ComboBoxFilterLanguage->insertStringList(Schedule.ListLanguages);
 
 	/* If number of stations is zero, we assume that the ini file is missing */
-	if (Schedule.GetStationNumber() == 0)
+	if (Schedule.rowCount() == 0)
 	{
         QMessageBox::information(this, "Dream", QString(tr(
             "The file %1 could not be found or contains no data.\n"
@@ -976,86 +461,7 @@ void StationsDlg::showEvent(QShowEvent*)
 void StationsDlg::OnTimerList()
 {
 	/* Update list view */
-	SetStationsView();
-}
-
-QString MyListViewItem::key(int column, bool ascending) const
-{
-	/* Reimplement "key()" function to get correct sorting behaviour */
-	if ((column == 2) || (column == 4))
-	{
-		/* These columns are filled with numbers. Some items may have numbers
-		   after the comma, therefore multiply with 10000 (which moves the
-		   numbers in front of the comma). Afterwards append zeros at the
-		   beginning so that positive integer numbers are sorted correctly */
-		return QString(QString().setNum((long int)
-			(text(column).toFloat() * 10000.0))).rightJustify(20, '0');
-	}
-    else
-		return Q3ListViewItem::key(column, ascending);
-}
-
-void StationsDlg::LoadSchedule(const string& fname)
-{
-	ClearStationsView();
-	/* Empty the string lists for combos filter */
-	Schedule.ListTargets = QStringList("");
-	Schedule.ListCountries = QStringList("");
-	Schedule.ListLanguages = QStringList("");
-
-	ComboBoxFilterTarget->clear();
-	ComboBoxFilterCountry->clear();
-	ComboBoxFilterLanguage->clear();
-
-	/* Read initialization file */
-	Schedule.ReadStatTabFromFile(fname);
-
-	Schedule.ListTargets.sort();
-	Schedule.ListCountries.sort();
-	Schedule.ListLanguages.sort();
-
-	ComboBoxFilterTarget->insertStringList(Schedule.ListTargets);
-	ComboBoxFilterCountry->insertStringList(Schedule.ListCountries);
-	ComboBoxFilterLanguage->insertStringList(Schedule.ListLanguages);
-
-	/* Update list view */
-	SetStationsView();
-
-	/* Add last update information on menu item */
-
-    pUpdateMenu->setItemEnabled(0, true);
-
-	/* init with empty string in case there is no schedule file */
-	QString s = "";
-
-	/* get time and date information */
-	QFileInfo f = QFileInfo(fname.c_str());
-	if (f.exists()) /* make sure the schedule file exists */
-	{
-		/* use QT-type of data string for displaying */
-		s = tr(" (last update: ")
-			+ f.lastModified().date().toString() + ")";
-	}
-
-	pUpdateMenu->changeItem(0, tr("&Get Update") + s + "...");
-}
-
-void StationsDlg::ClearStationsView()
-{
-	/* Delete all old list view items (it is important that the vector
-	   "vecpListItems" was initialized to 0 at creation of the global object
-	   otherwise this may cause an segmentation fault) */
-	ListItemsMutex.lock();
-	ListViewStations->clear();
-	/*
-	for (size_t i = 0; i < vecpListItems.size(); i++)
-	{
-		if (vecpListItems[i] != NULL)
-			delete vecpListItems[i];
-	}
-	*/
-	vecpListItems.clear();
-	ListItemsMutex.unlock();
+	//SetStationsView();
 }
 
 void StationsDlg::SetStationsView()
@@ -1064,131 +470,23 @@ void StationsDlg::SetStationsView()
 	/* Stop the timer and disable the list */
 	TimerList.stop();
 
-	const bool bListFocus = ListViewStations->hasFocus();
+	const bool bListFocus = stationsView->hasFocus();
 
-	ListViewStations->setUpdatesEnabled(false);
-	ListViewStations->setEnabled(false);
+	stationsView->setUpdatesEnabled(false);
+	stationsView->setEnabled(false);
 
 	/* Set lock because of list view items. These items could be changed
 	   by another thread */
 	ListItemsMutex.lock();
-
-	const size_t iNumStations = Schedule.GetStationNumber();
-	bool bListHastChanged = false;
-
-	/* if the list got smaller, we need to free some memory */
-	for (i = iNumStations; i < vecpListItems.size(); i++)
-	{
-		if (vecpListItems[i] != NULL)
-			delete vecpListItems[i];
-	}
-	/* resize will leave all existing elements alone and add
-	 * nulls in case the list needed to get bigger
-	 */
-	vecpListItems.resize(iNumStations, (MyListViewItem*) NULL);
-
-	/* Add new item for each station in list view */
-	for (i = 0; i < iNumStations; i++)
-	{
-		CTxSchedule::StationState iState = Schedule.CheckState(i);
-
-		if (!(((bShowAll == false) &&
-			(iState == CTxSchedule::IS_INACTIVE))
-			|| (CheckFilter(i) == false)))
-		{
-			/* Only insert item if it is not already in the list */
-			if (vecpListItems[i] == NULL)
-			{
-				/* Get power of the station. We have to do a special treatment
-				   here, because we want to avoid having a "0" in the list when
-				   a "?" was in the schedule-ini-file */
-				const _REAL rPower = Schedule.GetItem(i).rPower;
-
-				QString strPower;
-				if (rPower == (_REAL) 0.0)
-					strPower = "?";
-				else
-					strPower.setNum(rPower);
-
-				/* Generate new list item with all necessary column entries */
-				vecpListItems[i] = new MyListViewItem(ListViewStations,
-					Schedule.GetItem(i).strName.c_str()     /* name */,
-					QString().sprintf("%04d-%04d",
-					Schedule.GetItem(i).GetStartTimeNum(),
-					Schedule.GetItem(i).GetStopTimeNum())   /* time */,
-					QString().setNum(Schedule.GetItem(i).iFreq) /* freq. */,
-					Schedule.GetItem(i).strTarget.c_str()   /* target */,
-					strPower                                   /* power */,
-					Schedule.GetItem(i).strCountry.c_str()  /* country */,
-					Schedule.GetItem(i).strSite.c_str()     /* site */,
-					Schedule.GetItem(i).strLanguage.c_str() /* language */);
-
-				/* Show list of days */
-				vecpListItems[i]->setText(8, Schedule.GetItem(i).strDaysShow.c_str());
-
-				/* Insert this new item in list. The item object is destroyed by
-				   the list view control when this is destroyed */
-				ListViewStations->insertItem(vecpListItems[i]);
-
-				/* Set flag for sorting the list */
-				bListHastChanged = true;
-			}
-
-			/* Check, if station is currently transmitting. If yes, set
-			   special pixmap */
-			switch (iState)
-			{
-				case CTxSchedule::IS_ACTIVE:
-					vecpListItems[i]->setPixmap(0, BitmCubeGreen);
-					break;
-				case CTxSchedule::IS_PREVIEW:
-					vecpListItems[i]->setPixmap(0, BitmCubeOrange);
-					break;
-				case CTxSchedule::IS_SOON_INACTIVE:
-					vecpListItems[i]->setPixmap(0, BitmCubePink);
-					break;
-				case CTxSchedule::IS_INACTIVE:
-					vecpListItems[i]->setPixmap(0, BitmCubeRed);
-					break;
-				default:
-					vecpListItems[i]->setPixmap(0, BitmCubeRed);
-					break;
-			}
-		}
-		else
-		{
-			/* Delete this item since it is not used anymore */
-			if (vecpListItems[i] != NULL)
-			{
-				/* If one deletes a item in QT list view, it is
-				   automaticall removed from the list and the list gets
-				   repainted */
-				delete vecpListItems[i];
-
-				/* Reset pointer so we can distinguish if it is used or not */
-				vecpListItems[i] = NULL;
-
-				/* Set flag for sorting the list */
-				bListHastChanged = true;
-			}
-		}
-	}
-
-	/* Sort the list if items have changed */
-	if (bListHastChanged == true)
-		ListViewStations->sort();
-
+	Schedule.update();
 	ListItemsMutex.unlock();
 
 	/* Start the timer and enable the list */
-	ListViewStations->setUpdatesEnabled(true);
-	ListViewStations->setEnabled(true);
-
-	/* to update the scrollbars */
-	ListViewStations->triggerUpdate();
+	stationsView->setUpdatesEnabled(true);
+	stationsView->setEnabled(true);
 
 	if (bListFocus == true)
-		ListViewStations->setFocus();
+		stationsView->setFocus();
 
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT);
 }
@@ -1212,12 +510,14 @@ void StationsDlg::OnTimerEditFrequency()
 		TimerTuning.start(GUI_TIME_TO_TUNE, true);
 	}
 
-	Q3ListViewItem* item = ListViewStations->selectedItem();
+#if 0
+	Q3ListViewItem* item = stationsView->selectedItem();
 	if(item)
 	{
 		if(QString(item->text(2)).toInt() != iDisplayedFreq)
-			ListViewStations->clearSelection();
+			stationsView->clearSelection();
 	}
+#endif
 }
 
 void StationsDlg::OnTimerTuning()
@@ -1263,8 +563,7 @@ void StationsDlg::OnTimerMonitorFrequency()
 		}
 	}
     eModulation = eNewMode;
-    Schedule.clear();
-    LoadSchedule((eModulation==DRM)?DRMSCHEDULE_INI_FILE_NAME:AMSCHEDULE_INI_FILE_NAME);
+    Schedule.load((eModulation==DRM)?DRMSCHEDULE_INI_FILE_NAME:AMSCHEDULE_INI_FILE_NAME);
 
 	/* Set sorting behaviour of the list */
 	switch (eModulation)
@@ -1279,22 +578,11 @@ void StationsDlg::OnTimerMonitorFrequency()
 		bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendinganalog", true);
 		break;
 	}
-	ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
 }
 
-void StationsDlg::OnHeaderClicked(int c)
+void StationsDlg::OnItemClicked(const QModelIndex& item)
 {
-	/* Store the "direction" of sorting */
-	if (iCurrentSortColumn == c)
-		bCurrentSortAscending = !bCurrentSortAscending;
-	else
-		bCurrentSortAscending = true;
-
-	iCurrentSortColumn = c;
-}
-
-void StationsDlg::OnListItemClicked(Q3ListViewItem* item)
-{
+#if 0
 	/* Check that it is a valid item (!= 0) */
 	if (item)
 	{
@@ -1304,6 +592,7 @@ void StationsDlg::OnListItemClicked(Q3ListViewItem* item)
 		   Therefore, here is no call to "SetFrequency()" needed.*/
 		QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
 	}
+#endif
 }
 
 void StationsDlg::OnTimerSMeter()
@@ -1349,7 +638,7 @@ void StationsDlg::EnableSMeter(const bool bStatus)
 void StationsDlg::AddWhatsThisHelp()
 {
 	/* Stations List */
-	ListViewStations->setWhatsThis(
+	stationsView->setWhatsThis(
 		tr("<b>Stations List:</b> In the stations list "
 		"view all DRM stations which are stored in the DRMSchedule.ini file "
 		"are shown. It is possible to show only active stations by changing a "

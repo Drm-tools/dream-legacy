@@ -41,13 +41,12 @@ class CDataEncoder
     CDataEncoder();
     virtual ~CDataEncoder ();
 
-    int Init (CParameter & Param);
-    void GeneratePacket (CVector < _BINARY > &vecbiPacket);
+    int				Init (CParameter & Param);
+    void			GeneratePacket (CVector < _BINARY > &vecbiPacket);
 
-    CMOTSlideShowEncoder *GetSliShowEnc ()
-    {
-        return MOTSlideShowEncoder;
-    }
+	void			AddPic(const string& strFileName, const string& strFormat);
+	void			ClearPics();
+	bool			GetTransStat(string& strCPi, _REAL& rCPe) const;
 
   protected:
     CMOTSlideShowEncoder* MOTSlideShowEncoder;

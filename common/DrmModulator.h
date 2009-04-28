@@ -48,16 +48,16 @@ public:
 							CDRMModulator();
 	virtual 				~CDRMModulator() {}
 	void					LoadSettings(CSettings&, CParameter&);
-	void					SaveSettings(CSettings&, CParameter&);
+	void					SaveSettings(CSettings&, const CParameter&) const;
 	void					Init(CParameter& Parameter);
 	void					WriteData(CParameter& Parameter,
 								CBuffer<_BINARY>& FACBuf, CBuffer<_BINARY>& SDCBuf,
 								vector<CSingleBuffer<_BINARY> >& MSCBuf);
 	void					Cleanup(CParameter&);
 
-	void					GetSoundOutChoices(vector<string>&);
+	void					GetSoundOutChoices(vector<string>&) const;
 	void					SetOutputs(const vector<string>& o);
-	void					GetOutputs(vector<string>& o);
+	void					GetOutputs(vector<string>& o) const;
 
 protected:
 

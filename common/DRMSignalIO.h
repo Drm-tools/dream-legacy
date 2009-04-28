@@ -95,7 +95,7 @@ public:
 		{rDefCarOffset = rNewCarOffset;}
 
 	void	SetOutputs(const vector<string>& o);
-	void	GetOutputs(vector<string>& o);
+	void	GetOutputs(vector<string>& o) const;
 
 	void Stop();
 

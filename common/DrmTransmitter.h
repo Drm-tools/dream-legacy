@@ -45,46 +45,62 @@ public:
 							CDRMTransmitter();
 	virtual 				~CDRMTransmitter() {}
 	void					LoadSettings(CSettings&); // can write to settings to set defaults
-	void					SaveSettings(CSettings&);
+	void					SaveSettings(CSettings&) const;
 
 	void					Start();
 	void					Stop();
 
 	void					SetOperatingMode(const ETxOpMode);
-	ETxOpMode				GetOperatingMode();
+	ETxOpMode				GetOperatingMode() const;
 
 	void					CalculateChannelCapacities();
 
-	_REAL 					GetLevelMeter();
+	_REAL 					GetLevelMeter() const;
 
 	/* Source Encoder Interface */
 	void					AddTextMessage(const string& strText);
 	void					ClearTextMessages();
-	void					GetTextMessages(vector<string>&);
+	void					GetTextMessages(vector<string>&) const;
 
 	void					AddPic(const string& strFileName, const string& strFormat);
 	void					ClearPics();
-	void					GetPics(map<string,string>&);
+	void					GetPics(map<string,string>&) const;
+	bool				    GetTransStat(string& strCPi, _REAL& rCPe) const;
+	void					GetData(map<int, map<int,CDataParam> >&) const;
+	void					PutData(const map<int, map<int,CDataParam> >&);
 
-	bool				    GetTransStat(string& strCPi, _REAL& rCPe);
-
-	void					GetSoundInChoices(vector<string>&);
+	void					GetSoundInChoices(vector<string>&) const;
 	void					SetSoundInInterface(int);
-	int						GetSoundInInterface();
+	int						GetSoundInInterface() const;
 	void 					SetReadFromFile(const string& strNFN);
-	string					GetReadFromFile();
+	string					GetReadFromFile() const;
+	void					GetAudio(map<int,CAudioParam>&) const;
+	void					PutAudio(const map<int,CAudioParam>&);
 
-	void					GetSoundOutChoices(vector<string>&);
+	void					GetSoundOutChoices(vector<string>&) const;
 	void					SetCOFDMOutputs(const vector<string>& o);
-	void					GetCOFDMOutputs(vector<string>& o);
+	void					GetCOFDMOutputs(vector<string>& o) const;
+	double					GetCarrierOffset() const { return Parameters.rCarOffset;}
+	void					SetCarrierOffset(double r) {Parameters.rCarOffset=r;}
+	EOutFormat				GetOutputFormat() const {return Parameters.eOutputFormat;}
+	void					SetOutputFormat(EOutFormat e) {Parameters.eOutputFormat=e;}
 
 	void					SetMDIIn(const string& s) { strMDIinAddr = s; }
-	string					GetMDIIn() { return strMDIinAddr; }
+	string					GetMDIIn() const { return strMDIinAddr; }
 
 	void					SetMDIOut(const vector<string>& v) { MDIoutAddr = v; }
-	void					GetMDIOut(vector<string>& v) { v = MDIoutAddr; }
+	void					GetMDIOut(vector<string>& v) const { v = MDIoutAddr; }
 
-	virtual CParameter*		GetParameters() { return &Parameters; }
+	void					GetChannel(CChannel& c) const { c = Parameters.Channel;}
+	void					PutChannel(const CChannel& c);
+
+	void					GetMSC(CMSCParameters& msc) const {msc=Parameters.MSCParameters;}
+	void					PutMSC(const CMSCParameters& msc) {Parameters.MSCParameters=msc;}
+
+	void					GetServices(vector<CService>&, int&, int&) const;
+	void					PutServices(const vector<CService>&, int, int);
+	int						NumBitsMSC() const { return Parameters.iNumDecodedBitsMSC; }
+	int						NumBitsSDCsuperFrame() const { return Parameters.iNumSDCBitsPerSuperFrame; }
 
 protected:
 
