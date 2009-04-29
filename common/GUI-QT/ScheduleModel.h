@@ -55,10 +55,13 @@ extern const char* AMSCHEDULE_INI_FILE_NAME;
 #define CHR_ACTIVE_DAY_MARKER			'1'
 
 /* Classes ********************************************************************/
-class CStationsItem
+class CScheduleItem
 {
 public:
-	CStationsItem() : iStartHour(0), iStartMinute(0), iStopHour(0),
+
+	enum State {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
+
+	CScheduleItem() : iStartHour(0), iStartMinute(0), iStopHour(0),
 		iStopMinute(0), iFreq(0), strName(""),
 		strTarget(""), strLanguage(""), strSite(""),
 		strCountry(""), strDaysFlags(""), strDaysShow(""),
@@ -80,6 +83,7 @@ public:
 	}
 
 	void SetDaysFlagString(const string strNewDaysFlags);
+	bool IsActive(time_t ltime, int iSecondsPreview) const;
 
 	int		iStartHour;
 	int		iStartMinute;
@@ -94,6 +98,7 @@ public:
 	string	strDaysFlags;
 	string	strDaysShow;
 	_REAL	rPower;
+	State	state;
 };
 
 
@@ -109,15 +114,11 @@ public:
 	QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
 	QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
 
-	enum StationState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
-
 	void ReadIniFile(FILE* pFile);
 	void ReadCSVFile(FILE* pFile);
-	void clear() { StationsTable.clear(); }
+	void clear() { ScheduleTable.clear(); }
 	void load(const string&);
 	void update();
-
-	StationState CheckState(const int iPos) const;
 
 	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
 	int GetSecondsPreview() const {return iSecondsPreview;}
@@ -127,9 +128,8 @@ public:
 	QStringList			ListLanguages;
 
 protected:
-	bool IsActive(const int iPos, const time_t ltime) const;
 
-	vector<CStationsItem>	StationsTable;
+	vector<CScheduleItem>	ScheduleTable;
 
 	/* Minutes for stations preview in seconds if zero then no active */
 	int				iSecondsPreview;

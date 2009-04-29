@@ -39,6 +39,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QHeaderView>
+#include <iostream>
 
 StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
@@ -56,18 +57,14 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-	/* Clear list box for file names and set up columns */
-    //stations = new QStandardItemModel(this);
     proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setSourceModel(&Schedule);
+	proxyModel->setFilterKeyColumn(0); // actually we don't care
+	proxyModel->setFilterRole(Qt::UserRole);
 
 	stationsView->setModel(proxyModel);
 	stationsView->setSortingEnabled(true);
 	stationsView->horizontalHeader()->setVisible(true);
-
-	/* Set right alignment for numeric columns */
-	//stationsView->setColumnAlignment(2, Qt::AlignRight);
-	//stationsView->setColumnAlignment(4, Qt::AlignRight);
 
 	/* Set up frequency selector control (QWTCounter control) */
 	QwtCounterFrequency->setRange(0.0, 30000.0, 1.0);
@@ -168,7 +165,7 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	TimerMonitorFrequency.stop();
 	TimerTuning.stop();
 
-	connect(stationsView, SIGNAL(activated(const QModelIndex&)),
+	connect(stationsView, SIGNAL(clicked(const QModelIndex&)),
 		this, SLOT(OnItemClicked(const QModelIndex&)));
 
 	connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
@@ -192,22 +189,27 @@ StationsDlg::~StationsDlg()
 {
 }
 
-void StationsDlg::OnFilterByTarget(const QString& s)
+void StationsDlg::OnFilterByTarget(const QString&)
 {
-	proxyModel->setFilterRegExp(QRegExp(s, Qt::CaseInsensitive, QRegExp::FixedString));
-	proxyModel->setFilterKeyColumn(3);
+	QString target = ComboBoxFilterTarget->currentText();
+	if(target=="") target = "[^#]*";
+	QString country = ComboBoxFilterCountry->currentText();
+	if(country=="") country = "[^#]*";
+	QString language = ComboBoxFilterLanguage->currentText();
+	if(language=="") language = "[^#]*";
+	QString r = QString("%1#%2#%3#%4").arg(target).arg(country).arg(language).arg(bShowAll?".":"1");
+	//cerr << "filter " << r.toStdString() << endl;
+	proxyModel->setFilterRegExp(QRegExp(r));
 }
 
-void StationsDlg::OnFilterByCountry(const QString& s)
+void StationsDlg::OnFilterByCountry(const QString&)
 {
-	proxyModel->setFilterRegExp(QRegExp(s, Qt::CaseInsensitive, QRegExp::FixedString));
-	proxyModel->setFilterKeyColumn(5);
+	OnFilterByTarget("");
 }
 
-void StationsDlg::OnFilterByLanguage(const QString& s)
+void StationsDlg::OnFilterByLanguage(const QString&)
 {
-	proxyModel->setFilterRegExp(QRegExp(s, Qt::CaseInsensitive, QRegExp::FixedString));
-	proxyModel->setFilterKeyColumn(7);
+	OnFilterByTarget("");
 }
 
 bool StationsDlg::CheckFilter(const int iPos)
@@ -244,9 +246,6 @@ void StationsDlg::OnShowStationsMenu(int iID)
 	else
 		bShowAll = true;
 
-	/* Update list view */
-	//SetStationsView();
-
 	/* Taking care of checks in the menu */
 	pViewMenu->setItemChecked(0, 0 == iID);
 	pViewMenu->setItemChecked(1, 1 == iID);
@@ -272,9 +271,6 @@ void StationsDlg::OnShowPreviewMenu(int iID)
 		Schedule.SetSecondsPreview(0);
 		break;
 	}
-
-	/* Update list view */
-	//SetStationsView();
 
 	/* Taking care of checks in the menu */
 	pPreviewMenu->setItemChecked(0, 0 == iID);
@@ -431,9 +427,6 @@ void StationsDlg::showEvent(QShowEvent*)
 	if (Schedule.rowCount() == 0)
 		Schedule.load(fname.toStdString());
 
-	stationsView->setSortingEnabled(true);
-	stationsView->horizontalHeader()->setVisible(true);
-
 	ComboBoxFilterTarget->insertStringList(Schedule.ListTargets);
 	ComboBoxFilterCountry->insertStringList(Schedule.ListCountries);
 	ComboBoxFilterLanguage->insertStringList(Schedule.ListLanguages);
@@ -460,8 +453,7 @@ void StationsDlg::showEvent(QShowEvent*)
 
 void StationsDlg::OnTimerList()
 {
-	/* Update list view */
-	//SetStationsView();
+	Schedule.update();
 }
 
 void StationsDlg::SetStationsView()
@@ -548,51 +540,17 @@ void StationsDlg::OnTimerMonitorFrequency()
 	Parameters.Unlock();
 	if (eModulation != eNewMode)
 	{
-        /* Store the current sort settings before switching */
-		switch (eModulation)
-		{
-		case DRM:
-			Settings.Put("Stations Dialog", "sortcolumndrm", iCurrentSortColumn);
-			Settings.Put("Stations Dialog", "sortascendingdrm", bCurrentSortAscending);
-			break;
-
-		default:
-			Settings.Put("Stations Dialog", "sortcolumnanalog", iCurrentSortColumn);
-			Settings.Put("Stations Dialog", "sortascendinganalog", bCurrentSortAscending);
-			break;
-		}
-	}
-    eModulation = eNewMode;
-    Schedule.load((eModulation==DRM)?DRMSCHEDULE_INI_FILE_NAME:AMSCHEDULE_INI_FILE_NAME);
-
-	/* Set sorting behaviour of the list */
-	switch (eModulation)
-	{
-	case DRM:
-		iCurrentSortColumn = Settings.Get("Stations Dialog", "sortcolumndrm", 0);
-		bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendingdrm", true);
-		break;
-
-	default:
-		iCurrentSortColumn = Settings.Get("Stations Dialog", "sortcolumnanalog", 0);
-		bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendinganalog", true);
-		break;
+		hide();
 	}
 }
 
 void StationsDlg::OnItemClicked(const QModelIndex& item)
 {
-#if 0
-	/* Check that it is a valid item (!= 0) */
-	if (item)
-	{
-		/* Third text of list view item is frequency -> text(2)
-		   Set value in frequency counter control QWT. Setting this parameter
-		   will emit a "value changed" signal which sets the new frequency.
-		   Therefore, here is no call to "SetFrequency()" needed.*/
-		QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
-	}
-#endif
+	/* Third column (column 2) of stationsView is frequency.
+	   Set value in frequency counter control QWT. Setting this parameter
+	   will emit a "value changed" signal which sets the new frequency.
+	   Therefore, here no call to "SetFrequency()" is needed.*/
+	QwtCounterFrequency->setValue(item.sibling(item.row(),2).data().toInt());
 }
 
 void StationsDlg::OnTimerSMeter()

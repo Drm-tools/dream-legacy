@@ -55,6 +55,7 @@ CTagPacketDecoder::Error
 CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 {
 	int i;
+	static uint32_t iLastSeqNo = 0xffffffff;
 
 	/* CRC check ------------------------------------------------------------ */
 	CCRC CRCObject;
@@ -106,13 +107,14 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	   (2 bytes long -> 16 bits) */
 
     // TODO: use sequence number somehow!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	const int iCurSeqNum = (int) vecbiAFPkt.Separate(16);
+	const uint32_t iCurSeqNum = (int) vecbiAFPkt.Separate(16);
 	//cout << "AF " << iCurSeqNum << endl;
-	(void)iCurSeqNum;
-	/*iSeqNumber++;
-	if (iSeqNumber > 0xFFFF)
-		iSeqNumber = 0;
-	*/
+
+	iLastSeqNo++;
+	if((iLastSeqNo!=0) && (iCurSeqNum != iLastSeqNo)) // don't check on initial
+		cerr << "Sequence Number Error expected " << iLastSeqNo << " got " << iCurSeqNum << endl;
+	iLastSeqNo = iCurSeqNum;
+
 	/* AR: AF protocol Revision -
 	   a field combining the CF, MAJ and MIN fields */
 	/* CF: CRC Flag, 0 if the CRC field is not used (CRC value shall be
