@@ -86,18 +86,13 @@ public:
 
 protected:
 
-	void    LoadSchedule(const string&);
-	bool    CheckFilter(const int iPos);
-
 	void    LoadSettings(const CSettings&);
 	void    SaveSettings(CSettings&);
+	void    LoadSchedule(const string&);
 
-	void	SetStationsView();
-	void	ClearStationsView();
 	void    showEvent(QShowEvent* pEvent);
 	void	hideEvent(QHideEvent* pEvent);
 	void	AddWhatsThisHelp();
-	void	SetUTCTimeLabel();
 	void	EnableSMeter(const bool bStatus);
 
 	ReceiverInterface&	Receiver;
@@ -123,24 +118,27 @@ protected:
 	Q3PopupMenu*	pUpdateMenu;
 
     QSortFilterProxyModel* proxyModel;
-	QMutex			ListItemsMutex;
+    QModelIndex		selection;
+    bool			somethingSelected;
 
 public slots:
 	void OnTimerList();
-	void OnTimerUTCLabel() {SetUTCTimeLabel();}
+	void OnFilterChanged(const QString&);
+	void OnItemClicked(const QModelIndex&);
+	void OnShowStationsMenu(int iID);
+	void OnShowPreviewMenu(int iID);
+
+	void OnGetUpdate();
+	void OnUrlFinished(QNetworkReply*);
+
+	void OnTimerUTCLabel();
+
 	void OnTimerSMeter();
+
 	void OnTimerEditFrequency();
 	void OnTimerMonitorFrequency();
 	void OnTimerTuning();
-	void OnItemClicked(const QModelIndex&);
-	void OnUrlFinished(QNetworkReply*);
-	void OnShowStationsMenu(int iID);
-	void OnShowPreviewMenu(int iID);
-	void OnGetUpdate();
 	void OnFreqCntNewValue(double dVal);
-	void OnFilterByTarget(const QString&);
-	void OnFilterByCountry(const QString&);
-	void OnFilterByLanguage(const QString&);
 
 };
 

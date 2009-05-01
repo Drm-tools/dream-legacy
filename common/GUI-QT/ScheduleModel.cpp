@@ -149,6 +149,7 @@ CTxSchedule::data ( const QModelIndex& index, int role) const
 			.arg(item.strCountry.c_str())
 			.arg(item.strLanguage.c_str())
 			.arg((item.state==CScheduleItem::IS_INACTIVE)?0:1);
+			cerr << "filter value " << r.toStdString() << endl;
 			return r;
 		}
 		break;
@@ -197,14 +198,15 @@ CTxSchedule::update()
 	// change the active state
 	for(size_t i=0; i<ScheduleTable.size(); i++)
 	{
-		CScheduleItem& item = ScheduleTable[i];
+		const CScheduleItem& item = ScheduleTable[i];
+		CScheduleItem::State newstate = CScheduleItem::IS_INACTIVE;
 		if (item.IsActive(ltime, iSecondsPreview) == true)
 		{
 			/* Check if the station soon will be inactive */
 			if (item.IsActive(ltime + NUM_SECONDS_SOON_INACTIVE, iSecondsPreview) == true)
-				item.state = CScheduleItem::IS_ACTIVE;
+				newstate = CScheduleItem::IS_ACTIVE;
 			else
-				item.state = CScheduleItem::IS_SOON_INACTIVE;
+				newstate = CScheduleItem::IS_SOON_INACTIVE;
 		}
 		else
 		{
@@ -212,12 +214,17 @@ CTxSchedule::update()
 			if (iSecondsPreview > 0)
 			{
 				if (item.IsActive(ltime + iSecondsPreview, iSecondsPreview) == true)
-					item.state = CScheduleItem::IS_PREVIEW;
+					newstate = CScheduleItem::IS_PREVIEW;
 				else
-					item.state = CScheduleItem::IS_INACTIVE;
+					newstate = CScheduleItem::IS_INACTIVE;
 			}
 			else
-				ScheduleTable[i].state = CScheduleItem::IS_INACTIVE;
+				newstate = CScheduleItem::IS_INACTIVE;
+		}
+		if(newstate != item.state)
+		{
+			ScheduleTable[i].state = newstate;
+			emit dataChanged(index(i,0),index(i,columnCount()));
 		}
 	}
 }

@@ -268,14 +268,8 @@ protected:
 
 	void					InitReceiverMode(EModulationType);
 	void					InitsForAllModules(EModulationType);
-	void					InitsForWaveMode();
-	void					InitsForSpectrumOccup();
-	void					InitsForNoDecBitsSDC();
 	void					InitsForAudParam();
 	void					InitsForDataParam();
-	void					InitsForInterlDepth();
-	void					InitsForMSCCodSche();
-	void					InitsForSDCCodSche();
 
     void                    UpdateHamlibAndSoundInput();
 	bool					doSetFrequency();

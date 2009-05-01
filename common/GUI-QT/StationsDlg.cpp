@@ -50,8 +50,7 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	iCurrentSortColumn(0), bCurrentSortAscending(true), bShowAll(false),
 	bTuningInProgress(false), bReInitOnFrequencyChange(false), eModulation(DRM),
 	networkManager(NULL),
-	pViewMenu(NULL), pPreviewMenu(NULL), pUpdateMenu(NULL),
-	ListItemsMutex()
+	pViewMenu(NULL), pPreviewMenu(NULL), pUpdateMenu(NULL), selection(), somethingSelected(false)
 {
     setupUi(this);
 	/* Set help text for the controls */
@@ -72,9 +71,6 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button1, 1); /* Increment */
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button2, 10);
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button3, 100);
-
-	/* Init UTC time shown with a label control */
-	SetUTCTimeLabel();
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
@@ -172,11 +168,11 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 		this, SLOT(OnFreqCntNewValue(double)));
 
 	connect(ComboBoxFilterTarget, SIGNAL(activated(const QString&)),
-		this, SLOT(OnFilterByTarget(const QString&)));
+		this, SLOT(OnFilterChanged(const QString&)));
 	connect(ComboBoxFilterCountry, SIGNAL(activated(const QString&)),
-		this, SLOT(OnFilterByCountry(const QString&)));
+		this, SLOT(OnFilterChanged(const QString&)));
 	connect(ComboBoxFilterLanguage, SIGNAL(activated(const QString&)),
-		this, SLOT(OnFilterByLanguage(const QString&)));
+		this, SLOT(OnFilterChanged(const QString&)));
 
 	ProgrSigStrength->setRange(S_METER_THERMO_MIN, S_METER_THERMO_MAX);
 	ProgrSigStrength->setOrientation(Qt::Horizontal, QwtThermo::TopScale);
@@ -189,7 +185,7 @@ StationsDlg::~StationsDlg()
 {
 }
 
-void StationsDlg::OnFilterByTarget(const QString&)
+void StationsDlg::OnFilterChanged(const QString&)
 {
 	QString target = ComboBoxFilterTarget->currentText();
 	if(target=="") target = "[^#]*";
@@ -198,27 +194,12 @@ void StationsDlg::OnFilterByTarget(const QString&)
 	QString language = ComboBoxFilterLanguage->currentText();
 	if(language=="") language = "[^#]*";
 	QString r = QString("%1#%2#%3#%4").arg(target).arg(country).arg(language).arg(bShowAll?".":"1");
-	//cerr << "filter " << r.toStdString() << endl;
+	cerr << "filter " << r.toStdString() << endl;
 	proxyModel->setFilterRegExp(QRegExp(r));
 }
 
-void StationsDlg::OnFilterByCountry(const QString&)
-{
-	OnFilterByTarget("");
-}
 
-void StationsDlg::OnFilterByLanguage(const QString&)
-{
-	OnFilterByTarget("");
-}
-
-bool StationsDlg::CheckFilter(const int iPos)
-{
-    return false;
-}
-
-
-void StationsDlg::SetUTCTimeLabel()
+void StationsDlg::OnTimerUTCLabel()
 {
 	/* Get current UTC time */
 	time_t ltime;
@@ -249,6 +230,8 @@ void StationsDlg::OnShowStationsMenu(int iID)
 	/* Taking care of checks in the menu */
 	pViewMenu->setItemChecked(0, 0 == iID);
 	pViewMenu->setItemChecked(1, 1 == iID);
+
+	OnFilterChanged("");
 }
 
 void StationsDlg::OnShowPreviewMenu(int iID)
@@ -351,6 +334,7 @@ void StationsDlg::OnUrlFinished(QNetworkReply* reply)
         f.close();
         /* Read updated ini-file */
         Schedule.load(fname.toStdString());
+        somethingSelected = false;
 
 		/* Add last update information on menu item */
 
@@ -454,33 +438,7 @@ void StationsDlg::showEvent(QShowEvent*)
 void StationsDlg::OnTimerList()
 {
 	Schedule.update();
-}
-
-void StationsDlg::SetStationsView()
-{
-	size_t i;
-	/* Stop the timer and disable the list */
-	TimerList.stop();
-
-	const bool bListFocus = stationsView->hasFocus();
-
-	stationsView->setUpdatesEnabled(false);
-	stationsView->setEnabled(false);
-
-	/* Set lock because of list view items. These items could be changed
-	   by another thread */
-	ListItemsMutex.lock();
-	Schedule.update();
-	ListItemsMutex.unlock();
-
-	/* Start the timer and enable the list */
-	stationsView->setUpdatesEnabled(true);
-	stationsView->setEnabled(true);
-
-	if (bListFocus == true)
-		stationsView->setFocus();
-
-	TimerList.start(GUI_TIMER_LIST_VIEW_STAT);
+	cerr << stationsView->currentIndex().row() << endl;
 }
 
 void StationsDlg::OnFreqCntNewValue(double)
@@ -502,14 +460,15 @@ void StationsDlg::OnTimerEditFrequency()
 		TimerTuning.start(GUI_TIME_TO_TUNE, true);
 	}
 
-#if 0
-	Q3ListViewItem* item = stationsView->selectedItem();
-	if(item)
+	// deselect table item
+	if(somethingSelected)
 	{
-		if(QString(item->text(2)).toInt() != iDisplayedFreq)
+		if(selection.data().toInt() != iDisplayedFreq)
+		{
 			stationsView->clearSelection();
+			somethingSelected = false;
+		}
 	}
-#endif
 }
 
 void StationsDlg::OnTimerTuning()
@@ -550,7 +509,9 @@ void StationsDlg::OnItemClicked(const QModelIndex& item)
 	   Set value in frequency counter control QWT. Setting this parameter
 	   will emit a "value changed" signal which sets the new frequency.
 	   Therefore, here no call to "SetFrequency()" is needed.*/
-	QwtCounterFrequency->setValue(item.sibling(item.row(),2).data().toInt());
+	selection = item.sibling(item.row(), 2);
+	somethingSelected = true;
+	QwtCounterFrequency->setValue(selection.data().toInt());
 }
 
 void StationsDlg::OnTimerSMeter()

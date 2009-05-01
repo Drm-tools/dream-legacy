@@ -113,6 +113,7 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
         CMSCParameters msc;
         vecbisdciData.ResetBitAccess();
         (void)vecbisdciData.Separate(4);
+
         CSDCReceive sdc;
         bool bError = sdc.DataEntityType0(
             &vecbisdciData, iLengthOfBody, Parameters, false);

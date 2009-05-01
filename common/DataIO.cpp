@@ -700,7 +700,6 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Decode SDC block and return CRC status */
 	CSDCReceive::ERetStatus eStatus = SDCReceive.SDCParam(pvecInputData, ReceiverParam);
 	ReceiverParam.Lock();
-	cerr << int(eStatus) << endl;
 	switch(eStatus)
 	{
 	case CSDCReceive::SR_OK:
