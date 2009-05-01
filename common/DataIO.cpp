@@ -648,9 +648,17 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 		bCRCOk = FACReceive.FACParam(pvecInputData, ReceiverParam);
 		/* Set FAC status for RSCI, log file & GUI */
 		if(bCRCOk)
-			ReceiverParam.ReceiveStatus.FAC.SetStatus(RX_OK);
+		{
+			if(ReceiverParam.ReceiveStatus.FAC.GetStatus()!=RX_OK)
+			{
+				ReceiverParam.RxEvent = ChannelReconfiguration;
+				ReceiverParam.ReceiveStatus.FAC.SetStatus(RX_OK);
+			}
+		}
         else
+        {
 			ReceiverParam.ReceiveStatus.FAC.SetStatus(CRC_ERROR);
+        }
 	}
 
 }
@@ -692,6 +700,7 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Decode SDC block and return CRC status */
 	CSDCReceive::ERetStatus eStatus = SDCReceive.SDCParam(pvecInputData, ReceiverParam);
 	ReceiverParam.Lock();
+	cerr << int(eStatus) << endl;
 	switch(eStatus)
 	{
 	case CSDCReceive::SR_OK:
