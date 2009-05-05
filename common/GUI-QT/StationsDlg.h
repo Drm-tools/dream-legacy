@@ -32,7 +32,6 @@
 #include <QTimer>
 #include <QNetworkAccessManager>
 #include <QSortFilterProxyModel>
-#include <Q3PopupMenu>
 #include <qwt_thermo.h>
 #include <qwt_counter.h>
 
@@ -105,30 +104,21 @@ protected:
 	QTimer			TimerMonitorFrequency;
 	QTimer			TimerTuning;
 
-	int				iCurrentSortColumn;
-	bool		    bCurrentSortAscending;
-	bool			bShowAll;
 	bool		    bTuningInProgress;
 	bool			bReInitOnFrequencyChange;
 	EModulationType eModulation;
 
 	QNetworkAccessManager* networkManager;
-	Q3PopupMenu*	pViewMenu;
-	Q3PopupMenu*	pPreviewMenu;
-	Q3PopupMenu*	pUpdateMenu;
-
     QSortFilterProxyModel* proxyModel;
-    QModelIndex		selection;
-    bool			somethingSelected;
 
 public slots:
 	void OnTimerList();
 	void OnFilterChanged(const QString&);
 	void OnItemClicked(const QModelIndex&);
-	void OnShowStationsMenu(int iID);
-	void OnShowPreviewMenu(int iID);
+	void OnShowActive(int);
+	void OnSelectPreview(int);
 
-	void OnGetUpdate();
+	void OnGetUpdate(bool);
 	void OnUrlFinished(QNetworkReply*);
 
 	void OnTimerUTCLabel();

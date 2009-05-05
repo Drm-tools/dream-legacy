@@ -120,7 +120,11 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 		if(bError==false)
 		{
 			Parameters.Lock();
-            Parameters.MSCParameters = Parameters.NextConfig.MSCParameters;
+			if(Parameters.MSCParameters != Parameters.NextConfig.MSCParameters)
+			{
+				Parameters.MSCParameters = Parameters.NextConfig.MSCParameters;
+				Parameters.RxEvent = ServiceReconfiguration;
+			}
 			Parameters.Unlock();
 		}
 	}

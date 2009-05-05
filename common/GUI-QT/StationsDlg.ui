@@ -190,6 +190,13 @@
         <number>0</number>
        </property>
        <item>
+        <widget class="QPushButton" name="pushButtonGetUpdate" >
+         <property name="text" >
+          <string>Get Update</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="Spacer3_2" >
          <property name="orientation" >
           <enum>Qt::Vertical</enum>
@@ -285,6 +292,23 @@
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelPreview" >
+        <property name="text" >
+         <string>Preview</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="comboBoxPreview" />
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkBoxShowActive" >
+        <property name="text" >
+         <string>Active Stations Only</string>
         </property>
        </widget>
       </item>

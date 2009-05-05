@@ -149,7 +149,6 @@ CTxSchedule::data ( const QModelIndex& index, int role) const
 			.arg(item.strCountry.c_str())
 			.arg(item.strLanguage.c_str())
 			.arg((item.state==CScheduleItem::IS_INACTIVE)?0:1);
-			cerr << "filter value " << r.toStdString() << endl;
 			return r;
 		}
 		break;

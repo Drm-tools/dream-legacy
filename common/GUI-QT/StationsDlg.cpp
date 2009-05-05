@@ -47,10 +47,8 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	Receiver(NDRMR), Settings(NSettings), Schedule(),
 	TimerList(), TimerUTCLabel(), TimerSMeter(), TimerEditFrequency(), TimerMonitorFrequency(),
 	TimerTuning(),
-	iCurrentSortColumn(0), bCurrentSortAscending(true), bShowAll(false),
 	bTuningInProgress(false), bReInitOnFrequencyChange(false), eModulation(DRM),
-	networkManager(NULL),
-	pViewMenu(NULL), pPreviewMenu(NULL), pUpdateMenu(NULL), selection(), somethingSelected(false)
+	networkManager(NULL)
 {
     setupUi(this);
 	/* Set help text for the controls */
@@ -60,6 +58,7 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
     proxyModel->setSourceModel(&Schedule);
 	proxyModel->setFilterKeyColumn(0); // actually we don't care
 	proxyModel->setFilterRole(Qt::UserRole);
+	proxyModel->setDynamicSortFilter(true);
 
 	stationsView->setModel(proxyModel);
 	stationsView->setSortingEnabled(true);
@@ -72,80 +71,22 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button2, 10);
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button3, 100);
 
-	/* Set Menu ***************************************************************/
-	/* View menu ------------------------------------------------------------ */
-	pViewMenu = new Q3PopupMenu(this);
-	Q_CHECK_PTR(pViewMenu);
-	pViewMenu->insertItem(tr("Show &only active stations"), this,
-		SLOT(OnShowStationsMenu(int)), 0, 0);
-	pViewMenu->insertItem(tr("Show &all stations"), this,
-		SLOT(OnShowStationsMenu(int)), 0, 1);
-
-	/* Set stations in list view which are active right now */
-	bShowAll = false;
-	pViewMenu->setItemChecked(0, true);
-
-	/* Stations Preview menu ------------------------------------------------ */
-	pPreviewMenu = new Q3PopupMenu(this);
-	Q_CHECK_PTR(pPreviewMenu);
-	pPreviewMenu->insertItem(tr("&Disabled"), this,
-		SLOT(OnShowPreviewMenu(int)), 0, 0);
-	pPreviewMenu->insertItem(tr("&5 minutes"), this,
-		SLOT(OnShowPreviewMenu(int)), 0, 1);
-	pPreviewMenu->insertItem(tr("&15 minutes"), this,
-		SLOT(OnShowPreviewMenu(int)), 0, 2);
-	pPreviewMenu->insertItem(tr("&30 minutes"), this,
-		SLOT(OnShowPreviewMenu(int)), 0, 3);
 
 	/* Set stations preview */
-	/* Retrieve the setting saved into the .ini file */
-	switch (Settings.Get("Stations Dialog", "preview", NUM_SECONDS_PREV_5MIN))
-	{
-	case NUM_SECONDS_PREV_5MIN:
-		pPreviewMenu->setItemChecked(1, true);
-		Schedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
-		break;
-
-	case NUM_SECONDS_PREV_15MIN:
-		pPreviewMenu->setItemChecked(2, true);
-		Schedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
-		break;
-
-	case NUM_SECONDS_PREV_30MIN:
-		pPreviewMenu->setItemChecked(3, true);
-		Schedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
-		break;
-
-	default: /* case 0, also takes care of out of value parameters */
-		pPreviewMenu->setItemChecked(0, true);
-		Schedule.SetSecondsPreview(0);
-		break;
-	}
-
-	pViewMenu->insertSeparator();
-	pViewMenu->insertItem(tr("Stations &preview"), pPreviewMenu);
-
-	//SetStationsView();
-
-	/* Update menu ---------------------------------------------------------- */
-	pUpdateMenu = new Q3PopupMenu(this);
-	Q_CHECK_PTR(pUpdateMenu);
-	pUpdateMenu->insertItem(tr("&Get Update..."), this, SLOT(OnGetUpdate()), 0, 0);
-
-	/* Main menu bar -------------------------------------------------------- */
-	QMenuBar* pMenu = new QMenuBar(this);
-	Q_CHECK_PTR(pMenu);
-	pMenu->insertItem(tr("&View"), pViewMenu);
-	pMenu->insertItem(tr("&Update"), pUpdateMenu); /* String "Update" used below */
-	pMenu->setSeparator(QMenuBar::InWindowsStyle);
-
-	/* Now tell the layout about the menu */
-	gridLayout->setMenuBar(pMenu);
+	comboBoxPreview->addItem(tr("Disabled"), 0);
+	comboBoxPreview->addItem(tr("5 minutes"), NUM_SECONDS_PREV_5MIN);
+	comboBoxPreview->addItem(tr("15 minutes"), NUM_SECONDS_PREV_15MIN);
+	comboBoxPreview->addItem(tr("30 minutes"), NUM_SECONDS_PREV_30MIN);
 
     networkManager = new QNetworkAccessManager(this);
     connect(networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(OnUrlFinished(QNetworkReply*)));
 
 	/* Connections ---------------------------------------------------------- */
+	connect(pushButtonGetUpdate, SIGNAL(clicked(bool)), this, SLOT(OnGetUpdate(bool)));
+
+	connect(comboBoxPreview, SIGNAL(currentIndexChanged(int)), this, SLOT(OnSelectPreview(int)));
+	connect(checkBoxShowActive, SIGNAL(stateChanged(int)), this, SLOT(OnShowActive(int)));
+
 	connect(&TimerList, SIGNAL(timeout()), this, SLOT(OnTimerList()));
 	connect(&TimerUTCLabel, SIGNAL(timeout()), this, SLOT(OnTimerUTCLabel()));
 	connect(&TimerSMeter, SIGNAL(timeout()), this, SLOT(OnTimerSMeter()));
@@ -193,8 +134,8 @@ void StationsDlg::OnFilterChanged(const QString&)
 	if(country=="") country = "[^#]*";
 	QString language = ComboBoxFilterLanguage->currentText();
 	if(language=="") language = "[^#]*";
-	QString r = QString("%1#%2#%3#%4").arg(target).arg(country).arg(language).arg(bShowAll?".":"1");
-	cerr << "filter " << r.toStdString() << endl;
+	bool bShowActive = checkBoxShowActive->isChecked();
+	QString r = QString("%1#%2#%3#%4").arg(target).arg(country).arg(language).arg(bShowActive?"1":".");
 	proxyModel->setFilterRegExp(QRegExp(r));
 }
 
@@ -215,54 +156,19 @@ void StationsDlg::OnTimerUTCLabel()
 		TextLabelUTCTime->setText(strUTCTime);
 }
 
-void StationsDlg::OnShowStationsMenu(int iID)
+void StationsDlg::OnShowActive(int state)
 {
-	/* Show only active stations if ID is 0, else show all */
-	if (iID == 0)
-	{
-		bShowAll = false;
-		/* clear all and reload. If the list is long this increases performance */
-		Schedule.clear();
-	}
-	else
-		bShowAll = true;
-
-	/* Taking care of checks in the menu */
-	pViewMenu->setItemChecked(0, 0 == iID);
-	pViewMenu->setItemChecked(1, 1 == iID);
-
 	OnFilterChanged("");
 }
 
-void StationsDlg::OnShowPreviewMenu(int iID)
+void StationsDlg::OnSelectPreview(int index)
 {
-	switch (iID)
-	{
-	case 1:
-		Schedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
-		break;
-
-	case 2:
-		Schedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
-		break;
-
-	case 3:
-		Schedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
-		break;
-
-	default: /* case 0: */
-		Schedule.SetSecondsPreview(0);
-		break;
-	}
-
-	/* Taking care of checks in the menu */
-	pPreviewMenu->setItemChecked(0, 0 == iID);
-	pPreviewMenu->setItemChecked(1, 1 == iID);
-	pPreviewMenu->setItemChecked(2, 2 == iID);
-	pPreviewMenu->setItemChecked(3, 3 == iID);
+	Schedule.SetSecondsPreview(comboBoxPreview->itemData(index).toInt());
+	Schedule.update();
+	OnFilterChanged(""); // kind of
 }
 
-void StationsDlg::OnGetUpdate()
+void StationsDlg::OnGetUpdate(bool)
 {
     QString path;
     QString fname = (eModulation==DRM)?DRMSCHEDULE_INI_FILE_NAME:AMSCHEDULE_INI_FILE_NAME;
@@ -334,11 +240,8 @@ void StationsDlg::OnUrlFinished(QNetworkReply* reply)
         f.close();
         /* Read updated ini-file */
         Schedule.load(fname.toStdString());
-        somethingSelected = false;
 
-		/* Add last update information on menu item */
-
-		pUpdateMenu->setItemEnabled(0, true);
+		/* Add last update information */
 
 		/* init with empty string in case there is no schedule file */
 		QString s = "";
@@ -351,9 +254,63 @@ void StationsDlg::OnUrlFinished(QNetworkReply* reply)
 			s = tr(" (last update: ")
 				+ fi.lastModified().date().toString() + ")";
 		}
-
-		pUpdateMenu->changeItem(0, tr("&Get Update") + s + "...");
+		pushButtonGetUpdate->setToolTip(s);
 	}
+}
+
+void StationsDlg::showEvent(QShowEvent*)
+{
+	/* recover window size and position */
+	CWinGeom s;
+	Settings.Get("Stations Dialog", s);
+	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+
+    QString fname = (eModulation==DRM)?DRMSCHEDULE_INI_FILE_NAME:AMSCHEDULE_INI_FILE_NAME;
+	QwtCounterFrequency->setValue(Receiver.GetFrequency());
+
+	/* Retrieve the setting saved into the .ini file */
+	int seconds = Settings.Get("Stations Dialog", "preview", NUM_SECONDS_PREV_5MIN);
+	int index = comboBoxPreview->findData(seconds);
+	if(index == -1)
+	{
+		comboBoxPreview->setCurrentIndex(0);
+		Schedule.SetSecondsPreview(0);
+	}
+	else
+	{
+		comboBoxPreview->setCurrentIndex(index);
+		Schedule.SetSecondsPreview(seconds);
+	}
+
+	/* Load the schedule if necessary */
+	if (Schedule.rowCount() == 0)
+		Schedule.load(fname.toStdString());
+
+	ComboBoxFilterTarget->insertStringList(Schedule.ListTargets);
+	ComboBoxFilterCountry->insertStringList(Schedule.ListCountries);
+	ComboBoxFilterLanguage->insertStringList(Schedule.ListLanguages);
+
+	/* If number of stations is zero, we assume that the ini file is missing */
+	if (Schedule.rowCount() == 0)
+	{
+        QMessageBox::information(this, "Dream", QString(tr(
+            "The file %1 could not be found or contains no data.\n"
+            "No stations can be displayed.\n"
+            "Try to download this file by using the 'Update' menu.")).arg(fname));
+	}
+
+	/* Update window */
+	OnFilterChanged("");
+	OnTimerUTCLabel();
+	OnTimerList();
+
+	/* Activate timers when window is shown */
+	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
+	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
+	TimerSMeter.start(GUI_TIMER_S_METER);
+	TimerMonitorFrequency.start(GUI_TIMER_UPDATE_FREQUENCY);
 }
 
 void StationsDlg::hideEvent(QHideEvent*)
@@ -376,7 +333,7 @@ void StationsDlg::hideEvent(QHideEvent*)
 
 	/* Store preview settings */
 	Settings.Put("Stations Dialog", "preview", Schedule.GetSecondsPreview());
-
+#if 0 //TODO get from view
 	/* Store sort settings */
 	switch (eModulation)
 	{
@@ -393,52 +350,13 @@ void StationsDlg::hideEvent(QHideEvent*)
 		Settings.Put("Stations Dialog", "sortascendinganalog", bCurrentSortAscending);
 		break;
 	}
-}
-
-void StationsDlg::showEvent(QShowEvent*)
-{
-	/* recover window size and position */
-	CWinGeom s;
-	Settings.Get("Stations Dialog", s);
-	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-		setGeometry(WinGeom);
-
-    QString fname = (eModulation==DRM)?DRMSCHEDULE_INI_FILE_NAME:AMSCHEDULE_INI_FILE_NAME;
-	QwtCounterFrequency->setValue(Receiver.GetFrequency());
-
-	/* Load the schedule if necessary */
-	if (Schedule.rowCount() == 0)
-		Schedule.load(fname.toStdString());
-
-	ComboBoxFilterTarget->insertStringList(Schedule.ListTargets);
-	ComboBoxFilterCountry->insertStringList(Schedule.ListCountries);
-	ComboBoxFilterLanguage->insertStringList(Schedule.ListLanguages);
-
-	/* If number of stations is zero, we assume that the ini file is missing */
-	if (Schedule.rowCount() == 0)
-	{
-        QMessageBox::information(this, "Dream", QString(tr(
-            "The file %1 could not be found or contains no data.\n"
-            "No stations can be displayed.\n"
-            "Try to download this file by using the 'Update' menu.")).arg(fname));
-	}
-
-	/* Update window */
-	OnTimerUTCLabel();
-	OnTimerList();
-
-	/* Activate timers when window is shown */
-	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
-	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
-	TimerSMeter.start(GUI_TIMER_S_METER);
-	TimerMonitorFrequency.start(GUI_TIMER_UPDATE_FREQUENCY);
+#endif
 }
 
 void StationsDlg::OnTimerList()
 {
 	Schedule.update();
-	cerr << stationsView->currentIndex().row() << endl;
+	proxyModel->invalidate();
 }
 
 void StationsDlg::OnFreqCntNewValue(double)
@@ -459,14 +377,24 @@ void StationsDlg::OnTimerEditFrequency()
 		bTuningInProgress = true;
 		TimerTuning.start(GUI_TIME_TO_TUNE, true);
 	}
-
-	// deselect table item
-	if(somethingSelected)
+	QItemSelectionModel* sm = stationsView->selectionModel();
+	if(sm->hasSelection())
 	{
+		QModelIndex selection = sm->selectedRows(2)[0];
+		// deselect table item
 		if(selection.data().toInt() != iDisplayedFreq)
 		{
-			stationsView->clearSelection();
-			somethingSelected = false;
+			sm->clearSelection();
+#if 0 // TODO 0 not working
+			for(int i=0; i<proxyModel->rowCount(); i++)
+			{
+				QModelIndex mi = proxyModel->index(i,2);
+				if(mi.data().toInt() == iDisplayedFreq)
+				{
+					sm->select(mi, QItemSelectionModel::Rows);
+				}
+			}
+#endif
 		}
 	}
 }
@@ -500,6 +428,7 @@ void StationsDlg::OnTimerMonitorFrequency()
 	if (eModulation != eNewMode)
 	{
 		hide();
+		Schedule.clear();
 	}
 }
 
@@ -509,8 +438,7 @@ void StationsDlg::OnItemClicked(const QModelIndex& item)
 	   Set value in frequency counter control QWT. Setting this parameter
 	   will emit a "value changed" signal which sets the new frequency.
 	   Therefore, here no call to "SetFrequency()" is needed.*/
-	selection = item.sibling(item.row(), 2);
-	somethingSelected = true;
+	QModelIndex selection = item.sibling(item.row(), 2);
 	QwtCounterFrequency->setValue(selection.data().toInt());
 }
 
