@@ -42,11 +42,9 @@
 #include "../ReceiverInterface.h"
 
 /* Definitions ****************************************************************/
-/* Define the timer interval of updating the list view */
-#define GUI_TIMER_LIST_VIEW_STAT		30000 /* ms (30 seconds) */
 
 /* Define the timer interval of updating the UTC label */
-#define GUI_TIMER_UTC_TIME_LABEL		1000 /* ms (1 second) */
+#define GUI_TIMER		500 /* ms (0.5 second) */
 
 /* Define the timer interval of updating s-meter */
 #define GUI_TIMER_S_METER				300 /* ms (0.3 seconds) */
@@ -76,7 +74,7 @@ class StationsDlg : public QDialog, public Ui_StationsDlg
 
 public:
 
-	StationsDlg(ReceiverInterface&, CSettings&, QWidget* parent = 0,
+	StationsDlg(ReceiverInterface&, CSettings&, bool, QWidget* parent = 0,
 		const char* name = 0, bool modal = false, Qt::WFlags f = 0);
 	virtual ~StationsDlg();
 	/* dummy assignment operator to help MSVC8 */
@@ -97,8 +95,7 @@ protected:
 	ReceiverInterface&	Receiver;
 	CSettings&		Settings;
 	CTxSchedule	    Schedule;
-	QTimer			TimerList;
-	QTimer			TimerUTCLabel;
+	QTimer			TimerClock;
 	QTimer			TimerSMeter;
 	QTimer			TimerEditFrequency;
 	QTimer			TimerMonitorFrequency;
@@ -106,22 +103,23 @@ protected:
 
 	bool		    bTuningInProgress;
 	bool			bReInitOnFrequencyChange;
-	EModulationType eModulation;
+	QString			ScheduleFile;
 
 	QNetworkAccessManager* networkManager;
     QSortFilterProxyModel* proxyModel;
 
 public slots:
-	void OnTimerList();
+
 	void OnFilterChanged(const QString&);
 	void OnItemClicked(const QModelIndex&);
 	void OnShowActive(int);
 	void OnSelectPreview(int);
 
-	void OnGetUpdate(bool);
+	void OnGetAnalogUpdate(bool);
+	void OnGetDRMUpdate(bool);
 	void OnUrlFinished(QNetworkReply*);
 
-	void OnTimerUTCLabel();
+	void OnTimerClock();
 
 	void OnTimerSMeter();
 
@@ -129,7 +127,6 @@ public slots:
 	void OnTimerMonitorFrequency();
 	void OnTimerTuning();
 	void OnFreqCntNewValue(double dVal);
-
 };
 
 #endif

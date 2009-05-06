@@ -58,7 +58,7 @@ DRMMainWindow::DRMMainWindow(ReceiverInterface& NDRMR, CSettings& NSettings,
 	sysEvalDlg = new SystemEvalDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
 
 	/* Stations window */
-	stationsDlg = new StationsDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
+	stationsDlg = new StationsDlg(Receiver, Settings, true, this, "", false, Qt::WStyle_MinMax);
 
 	/* Live Schedule window */
 	liveScheduleDlg = new LiveScheduleDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);

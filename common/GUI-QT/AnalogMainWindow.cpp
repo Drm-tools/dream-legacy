@@ -52,11 +52,6 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	AMSSDlg(NDRMR, Settings, this, name, false, f), quitWanted(true)
 {
     setupUi(this);
-	CWinGeom s;
-	Settings.Get("AnalogGUI", s);
-	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-			setGeometry(WinGeom);
 
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -77,7 +72,7 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	connect(actionReceiver_Settings, SIGNAL(triggered()), pReceiverSettingsDlg, SLOT(show()));
 
 	/* Stations window */
-	stationsDlg = new StationsDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
+	stationsDlg = new StationsDlg(Receiver, Settings, false, this, "", false, Qt::WStyle_MinMax);
 	connect(actionStations, SIGNAL(triggered()), stationsDlg, SLOT(show()));
 
 	/* Live Schedule window */
@@ -142,6 +137,12 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 
 void AnalogMainWindow::showEvent(QShowEvent*)
 {
+	CWinGeom s;
+	Settings.Get("AnalogGUI", s);
+	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+			setGeometry(WinGeom);
+
 	OnTimer();
 
  	/* default close action is to exit */

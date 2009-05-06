@@ -41,14 +41,14 @@
 #include <QHeaderView>
 #include <iostream>
 
-StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
+StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings, bool drm,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	QDialog(parent, name, modal, f), Ui_StationsDlg(),
 	Receiver(NDRMR), Settings(NSettings), Schedule(),
-	TimerList(), TimerUTCLabel(), TimerSMeter(), TimerEditFrequency(), TimerMonitorFrequency(),
+	TimerClock(), TimerSMeter(), TimerEditFrequency(), TimerMonitorFrequency(),
 	TimerTuning(),
-	bTuningInProgress(false), bReInitOnFrequencyChange(false), eModulation(DRM),
-	networkManager(NULL)
+	bTuningInProgress(false), bReInitOnFrequencyChange(false),
+	ScheduleFile(), networkManager(NULL)
 {
     setupUi(this);
 	/* Set help text for the controls */
@@ -82,21 +82,29 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
     connect(networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(OnUrlFinished(QNetworkReply*)));
 
 	/* Connections ---------------------------------------------------------- */
-	connect(pushButtonGetUpdate, SIGNAL(clicked(bool)), this, SLOT(OnGetUpdate(bool)));
+
+	if(drm)
+	{
+		ScheduleFile = DRMSCHEDULE_INI_FILE_NAME;
+		connect(pushButtonGetUpdate, SIGNAL(clicked(bool)), this, SLOT(OnGetDRMUpdate(bool)));
+	}
+	else
+	{
+		ScheduleFile = AMSCHEDULE_INI_FILE_NAME;
+		connect(pushButtonGetUpdate, SIGNAL(clicked(bool)), this, SLOT(OnGetAnalogUpdate(bool)));
+	}
 
 	connect(comboBoxPreview, SIGNAL(currentIndexChanged(int)), this, SLOT(OnSelectPreview(int)));
 	connect(checkBoxShowActive, SIGNAL(stateChanged(int)), this, SLOT(OnShowActive(int)));
 
-	connect(&TimerList, SIGNAL(timeout()), this, SLOT(OnTimerList()));
-	connect(&TimerUTCLabel, SIGNAL(timeout()), this, SLOT(OnTimerUTCLabel()));
+	connect(&TimerClock, SIGNAL(timeout()), this, SLOT(OnTimerClock()));
 	connect(&TimerSMeter, SIGNAL(timeout()), this, SLOT(OnTimerSMeter()));
 	connect(&TimerEditFrequency, SIGNAL(timeout()), this, SLOT(OnTimerEditFrequency()));
 	connect(&TimerMonitorFrequency, SIGNAL(timeout()), this, SLOT(OnTimerMonitorFrequency()));
 	connect(&TimerTuning, SIGNAL(timeout()), this, SLOT(OnTimerTuning()));
 	connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
 
-	TimerList.stop();
-	TimerUTCLabel.stop();
+	TimerClock.stop();
 	TimerSMeter.stop();
 	TimerEditFrequency.stop();
 	TimerMonitorFrequency.stop();
@@ -120,6 +128,15 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
 	ProgrSigStrength->setAlarmLevel(S_METER_THERMO_ALARM);
 	ProgrSigStrength->setAlarmColor(QColor(255, 0, 0));
 	ProgrSigStrength->setScale(S_METER_THERMO_MIN, S_METER_THERMO_MAX, 10.0);
+
+	QFileInfo fi = QFileInfo(ScheduleFile);
+	if (!fi.exists()) /* make sure the schedule file exists */
+	{
+        QMessageBox::information(this, "Dream", QString(tr(
+            "The file %1 could not be found or contains no data.\n"
+            "No stations can be displayed.\n"
+            "Try to download this file by using the 'Update' button.")).arg(ScheduleFile));
+	}
 }
 
 StationsDlg::~StationsDlg()
@@ -140,20 +157,36 @@ void StationsDlg::OnFilterChanged(const QString&)
 }
 
 
-void StationsDlg::OnTimerUTCLabel()
+void StationsDlg::OnTimerClock()
 {
 	/* Get current UTC time */
 	time_t ltime;
 	time(&ltime);
 	struct tm* gmtCur = gmtime(&ltime);
 
-	/* Generate time in format "UTC 12:00" */
+	/* Generate time in format "12:00 UTC" */
 	QString strUTCTime = QString().sprintf("%02d:%02d UTC",
 		gmtCur->tm_hour, gmtCur->tm_min);
 
-	/* Only apply if time label does not show the correct time */
-	if (TextLabelUTCTime->text().compare(strUTCTime))
-		TextLabelUTCTime->setText(strUTCTime);
+	/* Load the schedule if necessary
+	 * Defer if we need to display the clock
+	 */
+	if ((Schedule.rowCount() == 0) && (TextLabelUTCTime->text() == strUTCTime))
+	{
+        setCursor(Qt::WaitCursor);
+        Schedule.load(ScheduleFile.toStdString());
+        setCursor(Qt::ArrowCursor);
+	}
+
+	if(gmtCur->tm_sec == 0)
+	{
+        setCursor(Qt::WaitCursor);
+		Schedule.update();
+		proxyModel->invalidate();
+        setCursor(Qt::ArrowCursor);
+	}
+
+	TextLabelUTCTime->setText(strUTCTime);
 }
 
 void StationsDlg::OnShowActive(int state)
@@ -168,58 +201,64 @@ void StationsDlg::OnSelectPreview(int index)
 	OnFilterChanged(""); // kind of
 }
 
-void StationsDlg::OnGetUpdate(bool)
+void StationsDlg::OnGetAnalogUpdate(bool)
 {
-    QString path;
-    QString fname = (eModulation==DRM)?DRMSCHEDULE_INI_FILE_NAME:AMSCHEDULE_INI_FILE_NAME;
     if (QMessageBox::question(this, tr("Dream Schedule Update"),
         QString(tr("Dream tries to download the newest schedule\nfrom the internet.\n\n"
             "The current file %1 will be overwritten.\n"
-            "Do you want to continue?")).arg(fname),
+            "Do you want to continue?")).arg(ScheduleFile),
             QMessageBox::Ok|QMessageBox::Cancel) != QMessageBox::Ok)
     {
         return;
     }
-    if(eModulation==DRM)
-    {
-        path = DRM_SCHEDULE_UPDATE_URL;
-    }
-    else
-    {
-        QDate d = QDate::currentDate();
-        int wk = d.weekNumber();
-        int yr = d.year();
-        QString y,w;
-        if(wk <= 13)
-        {
-            w = "b";
-            y = QString::number(yr-1);
-        }
-        else if(wk <= 43)
-        {
-            w = "a";
-            y = QString::number(yr);
-        }
-        else
-        {
-            w = "b";
-            y = QString::number(yr);
-        }
-        path = QString(AM_SCHEDULE_UPDATE_URL).arg(w, y.right(2));
-    }
+	QDate d = QDate::currentDate();
+	int wk = d.weekNumber();
+	int yr = d.year();
+	QString y,w;
+	if(wk <= 13)
+	{
+		w = "b";
+		y = QString::number(yr-1);
+	}
+	else if(wk <= 43)
+	{
+		w = "a";
+		y = QString::number(yr);
+	}
+	else
+	{
+		w = "b";
+		y = QString::number(yr);
+	}
+	QString path = QString(AM_SCHEDULE_UPDATE_URL).arg(w, y.right(2));
     /* Try to download the current schedule. */
     QNetworkReply * reply = networkManager->get(QNetworkRequest(QUrl(path)));
     if(reply == NULL)
     {
-        //cerr << "bad request " << path.toStdString() << endl;
+        return;
+    }
+}
+
+void StationsDlg::OnGetDRMUpdate(bool)
+{
+    if (QMessageBox::question(this, tr("Dream Schedule Update"),
+        QString(tr("Dream tries to download the newest schedule\nfrom the internet.\n\n"
+            "The current file %1 will be overwritten.\n"
+            "Do you want to continue?")).arg(ScheduleFile),
+            QMessageBox::Ok|QMessageBox::Cancel) != QMessageBox::Ok)
+    {
+        return;
+    }
+    /* Try to download the current schedule. */
+    QNetworkReply * reply = networkManager->get(QNetworkRequest(QUrl(DRM_SCHEDULE_UPDATE_URL)));
+    if(reply == NULL)
+    {
         return;
     }
 }
 
 void StationsDlg::OnUrlFinished(QNetworkReply* reply)
 {
-    QString fname = (eModulation==DRM)?DRMSCHEDULE_INI_FILE_NAME:AMSCHEDULE_INI_FILE_NAME;
-
 	/* Check that pointer points to valid object */
 	if (reply)
 	{
@@ -229,17 +268,18 @@ void StationsDlg::OnUrlFinished(QNetworkReply* reply)
                 "Update failed. The following things may caused the failure:\n"
                 "\t- the internet connection was not set up properly\n"
                 "\t- the server is currently not available\n"
-                "\t- the file %1 could not be written")).arg(fname));
+                "\t- the file %1 could not be written")).arg(ScheduleFile));
 			return;
 		}
 
         QMessageBox::information(this, "Dream", tr("Update successful."));
-        QFile f(fname);
+        QFile f(ScheduleFile);
         f.open(QIODevice::WriteOnly);
         f.write(reply->readAll());
         f.close();
-        /* Read updated ini-file */
-        Schedule.load(fname.toStdString());
+
+        /* trigger reading updated ini-file */
+        Schedule.clear();
 
 		/* Add last update information */
 
@@ -247,7 +287,7 @@ void StationsDlg::OnUrlFinished(QNetworkReply* reply)
 		QString s = "";
 
 		/* get time and date information */
-		QFileInfo fi = QFileInfo(fname);
+		QFileInfo fi = QFileInfo(ScheduleFile);
 		if (fi.exists()) /* make sure the schedule file exists */
 		{
 			/* use QT-type of data string for displaying */
@@ -267,7 +307,6 @@ void StationsDlg::showEvent(QShowEvent*)
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
 
-    QString fname = (eModulation==DRM)?DRMSCHEDULE_INI_FILE_NAME:AMSCHEDULE_INI_FILE_NAME;
 	QwtCounterFrequency->setValue(Receiver.GetFrequency());
 
 	/* Retrieve the setting saved into the .ini file */
@@ -284,31 +323,15 @@ void StationsDlg::showEvent(QShowEvent*)
 		Schedule.SetSecondsPreview(seconds);
 	}
 
-	/* Load the schedule if necessary */
-	if (Schedule.rowCount() == 0)
-		Schedule.load(fname.toStdString());
-
 	ComboBoxFilterTarget->insertStringList(Schedule.ListTargets);
 	ComboBoxFilterCountry->insertStringList(Schedule.ListCountries);
 	ComboBoxFilterLanguage->insertStringList(Schedule.ListLanguages);
 
-	/* If number of stations is zero, we assume that the ini file is missing */
-	if (Schedule.rowCount() == 0)
-	{
-        QMessageBox::information(this, "Dream", QString(tr(
-            "The file %1 could not be found or contains no data.\n"
-            "No stations can be displayed.\n"
-            "Try to download this file by using the 'Update' menu.")).arg(fname));
-	}
-
 	/* Update window */
 	OnFilterChanged("");
-	OnTimerUTCLabel();
-	OnTimerList();
 
 	/* Activate timers when window is shown */
-	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
-	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
+	TimerClock.start(GUI_TIMER); /* Stations list */
 	TimerSMeter.start(GUI_TIMER_S_METER);
 	TimerMonitorFrequency.start(GUI_TIMER_UPDATE_FREQUENCY);
 }
@@ -316,8 +339,7 @@ void StationsDlg::showEvent(QShowEvent*)
 void StationsDlg::hideEvent(QHideEvent*)
 {
 	/* Deactivate real-time timers */
-	TimerList.stop();
-	TimerUTCLabel.stop();
+	TimerClock.stop();
 	TimerSMeter.stop();
 	EnableSMeter(false);
 
@@ -351,12 +373,6 @@ void StationsDlg::hideEvent(QHideEvent*)
 		break;
 	}
 #endif
-}
-
-void StationsDlg::OnTimerList()
-{
-	Schedule.update();
-	proxyModel->invalidate();
 }
 
 void StationsDlg::OnFreqCntNewValue(double)
@@ -420,15 +436,6 @@ void StationsDlg::OnTimerMonitorFrequency()
 	{
 		if(bTuningInProgress == false)
 			QwtCounterFrequency->setValue(iTunedFrequency);
-	}
-	CParameter& Parameters = *Receiver.GetParameters();
-	Parameters.Lock();
-	EModulationType eNewMode = Parameters.eModulation;
-	Parameters.Unlock();
-	if (eModulation != eNewMode)
-	{
-		hide();
-		Schedule.clear();
 	}
 }
 
