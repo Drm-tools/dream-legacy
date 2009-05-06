@@ -185,6 +185,7 @@ common/GUI-QT/MultSettingsDlg.h   \
 common/GUI-QT/ReceiverSettingsDlg.h \
 common/GUI-QT/Loghelper.h \
 common/GUI-QT/StationsDlg.h   \
+common/GUI-QT/ScheduleModel.h   \
 common/GUI-QT/SystemEvalDlg.h   \
 common/GUI-QT/jlbrowser.h   \
 common/GUI-QT/bwsbrowser.h   \
@@ -325,6 +326,7 @@ common/GUI-QT/BWSViewer.cpp   \
 common/GUI-QT/MultSettingsDlg.cpp   \
 common/GUI-QT/ReceiverSettingsDlg.cpp \
 common/GUI-QT/Loghelper.cpp \
+common/GUI-QT/ScheduleModel.cpp   \
 common/GUI-QT/StationsDlg.cpp   \
 common/GUI-QT/SystemEvalDlg.cpp   \
 common/GUI-QT/jlbrowser.cpp   \
