@@ -47,7 +47,7 @@ public:
 	bool SetDestination(const string& str);
 	bool SetOrigin(const string& str);
 	bool GetDestination(string& str);
-    bool Poll() {} // not used
+        bool Poll() {return false;} // not used
 };
 
 #endif
