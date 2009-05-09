@@ -54,14 +54,14 @@ class CAMSSDlg : public QDialog, public Ui_AMSSDlg
 	Q_OBJECT
 
 public:
-	CAMSSDlg(ReceiverInterface&, CSettings&, QWidget* parent = 0, const char* name = 0,
+	CAMSSDlg(AnalogReceiverInterface&, CSettings&, QWidget* parent = 0, const char* name = 0,
 		bool modal = false, Qt::WFlags f = 0);
 	/* dummy assignment operator to help MSVC8 */
 	CAMSSDlg& operator=(const CAMSSDlg&)
 	{ throw "should not happen"; return *this;}
 
 protected:
-	ReceiverInterface&	Receiver;
+	AnalogReceiverInterface&	Receiver;
 	CSettings&		Settings;
 
 	QTimer			Timer;

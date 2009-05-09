@@ -130,7 +130,12 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings, bool dr
 	ProgrSigStrength->setScale(S_METER_THERMO_MIN, S_METER_THERMO_MAX, 10.0);
 
 	QFileInfo fi = QFileInfo(ScheduleFile);
-	if (!fi.exists()) /* make sure the schedule file exists */
+	if (fi.exists()) /* make sure the schedule file exists */
+	{
+		QString s = tr(" (last update: ") + fi.lastModified().date().toString() + ")";
+		pushButtonGetUpdate->setToolTip(s);
+	}
+	else
 	{
         QMessageBox::information(this, "Dream", QString(tr(
             "The file %1 could not be found or contains no data.\n"
@@ -273,6 +278,8 @@ void StationsDlg::OnUrlFinished(QNetworkReply* reply)
 		}
 
         QMessageBox::information(this, "Dream", tr("Update successful."));
+
+        /* Save downloaded data to schedule file */
         QFile f(ScheduleFile);
         f.open(QIODevice::WriteOnly);
         f.write(reply->readAll());
@@ -282,19 +289,12 @@ void StationsDlg::OnUrlFinished(QNetworkReply* reply)
         Schedule.clear();
 
 		/* Add last update information */
-
-		/* init with empty string in case there is no schedule file */
-		QString s = "";
-
-		/* get time and date information */
 		QFileInfo fi = QFileInfo(ScheduleFile);
-		if (fi.exists()) /* make sure the schedule file exists */
+		if (fi.exists()) /* make sure the schedule file exists (we know it does! */
 		{
-			/* use QT-type of data string for displaying */
-			s = tr(" (last update: ")
-				+ fi.lastModified().date().toString() + ")";
+			QString s = tr(" (last update: ") + fi.lastModified().date().toString() + ")";
+			pushButtonGetUpdate->setToolTip(s);
 		}
-		pushButtonGetUpdate->setToolTip(s);
 	}
 }
 

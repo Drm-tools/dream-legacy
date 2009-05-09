@@ -51,6 +51,58 @@
 // TODO - does this need to be a qthread anymore ?
 // TODO - lock/unlock the Parameter object more consistantly
 
+CAMSSReceiver::CAMSSReceiver()
+:PhaseDemod(),ExtractBits(),Decode(), InputResample(),
+PhaseBuf(),	ResPhaseBuf(), BitsBuf()
+{
+}
+
+void CAMSSReceiver::Init()
+{
+	InputResample.SetInitFlag();
+	PhaseDemod.SetInitFlag();
+	ExtractBits.SetInitFlag();
+	Decode.SetInitFlag();
+
+	PhaseBuf.Clear();
+	ResPhaseBuf.Clear();
+	BitsBuf.Clear();
+}
+
+bool
+CAMSSReceiver::Demodulate(
+	CParameter& Parameters,
+	CSingleBuffer<_REAL>& DataBuf,
+	CSingleBuffer<_BINARY>& SDCBuf
+)
+{
+    bool bEnoughData = false;
+	/* AMSS phase demodulation */
+	if (PhaseDemod.ProcessData(Parameters, DataBuf, PhaseBuf))
+	{
+		bEnoughData = true;
+	}
+
+	/* AMSS resampling */
+	if (InputResample.ProcessData(Parameters, PhaseBuf, ResPhaseBuf))
+	{
+		bEnoughData = true;
+	}
+
+	/* AMSS bit extraction */
+	if (ExtractBits.ProcessData(Parameters, ResPhaseBuf, BitsBuf))
+	{
+		bEnoughData = true;
+	}
+
+	/* AMSS data decoding */
+	if (Decode.ProcessData(Parameters, BitsBuf, SDCBuf))
+	{
+		bEnoughData = true;
+	}
+	return bEnoughData;
+}
+
 const int
 	CDRMReceiver::MAX_UNLOCKED_COUNT = 2;
 
@@ -249,7 +301,7 @@ CDRMReceiver::SetAnalogDemodAcq(_REAL rNewNorCen)
      * look for the aquisition.
      */
     AMDemodulation.SetAcqFreq(rNewNorCen);
-    AMSSPhaseDemod.SetAcqFreq(rNewNorCen);
+    AMSSReceiver.SetAcqFreq(rNewNorCen);
 }
 
 void
@@ -282,7 +334,6 @@ CDRMReceiver::GetAnalogPLLPhase(CReal& rPhaseOut)
 {
 	return AMDemodulation.GetPLLPhase(rPhaseOut);
 }
-
 
 void
 CDRMReceiver::SetAnalogAGCType(const EType eNewType)
@@ -446,10 +497,33 @@ CDRMReceiver::Run()
 					bEnoughData |= DemodulateDRM(bFrameToSend);
 					break;
 			case AM:
-					bEnoughData |= DemodulateAM() | DemodulateAMSS();
+					/* The incoming samples are split 2 ways.
+					   One set is passed to the AM demodulator.
+					   The other set is passed to the AMSS demodulator.
+					   The AMSS and AM demodulators work completely independently
+					 */
+					if (Split.ProcessData(Parameters, DemodDataBuf, AMDataBuf, AMSSDataBuf))
+					{
+						bEnoughData = true;
+					}
+
+					/* AMSS Demodulation */
+					if(AMSSReceiver.Demodulate(Parameters, AMSSDataBuf, SDCDecBuf))
+					{
+						bEnoughData = true;
+					}
+
+					/* AM demodulation ------------------------------------------ */
+					if (AMDemodulation.ProcessData(Parameters, AMDataBuf, AMAudioBuf))
+					{
+						bEnoughData = true;
+					}
 					break;
 			case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
-					bEnoughData |= DemodulateAM();
+					if (AMDemodulation.ProcessData(Parameters, AMDataBuf, AMAudioBuf))
+					{
+						bEnoughData = true;
+					}
 					break;
 			case NONE:
 					break;
@@ -467,6 +541,7 @@ CDRMReceiver::Run()
 		if (SDCDecBuf.GetFillLevel() == iNumSDCBitsPerSuperFrame)
 		{
 			SplitSDC.ProcessData(Parameters, SDCDecBuf, SDCUseBuf, SDCSendBuf);
+			bEnoughData = true;
 		}
 
 		for (i = 0; i < MSCDecBuf.size(); i++)
@@ -477,6 +552,15 @@ CDRMReceiver::Run()
 		}
 		break;
 	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
+		/* if input is from RSCI we need to decode the audio */
+		if (upstreamRSCI.GetInEnabled() == true)
+		{
+			if (AudioSourceDecoder.ProcessData(Parameters, MSCUseBuf[iAudioStreamID], AMAudioBuf))
+			{
+				bEnoughData = true;
+			}
+		}
+		/* split the received linear audio for playout and RSCI output */
 		SplitAudio.ProcessData(Parameters, AMAudioBuf, AudSoDecBuf, AMSoEncBuf);
 		break;
 	case NONE:
@@ -501,7 +585,10 @@ CDRMReceiver::Run()
 			bEnoughData |= UtilizeDRM();
 			break;
 		case AM:
-			bEnoughData |= UtilizeAMSS();
+			if (UtilizeSDCData.WriteData(Parameters, SDCDecBuf))
+			{
+				bEnoughData = true;
+			}
 			break;
         case USB: case LSB: case  CW: case  NBFM: case  WBFM:
             break; // RDS ?
@@ -542,7 +629,7 @@ CDRMReceiver::Run()
 				bFrameToSend = true;
 
 			if (bFrameToSend)
-				downstreamRSCI.SendAMFrame(Parameters, MSCSendBuf[0]);
+				downstreamRSCI.SendAMFrame(Parameters, MSCSendBuf[iAudioStreamID]);
 			break;
 		case NONE:
 			break;
@@ -583,6 +670,7 @@ CDRMReceiver::DemodulateDRM(bool& bFrameToSend)
 	if (TimeSync.ProcessData(Parameters, FreqSyncAcqBuf, TimeSyncBuf))
 	{
 		bEnoughData = true;
+		//cerr << "TimeSync OK" << endl;
 		/* Use count of OFDM-symbols for detecting
 		 * aquisition state for acquisition detection
 		 * only if no signal was decoded before */
@@ -665,7 +753,6 @@ bool
 CDRMReceiver::UtilizeDRM()
 {
     bool bEnoughData = false;
-
 	if (UtilizeFACData.WriteData(Parameters, FACUseBuf))
 	{
 		bEnoughData = true;
@@ -703,67 +790,6 @@ CDRMReceiver::UtilizeDRM()
 	return bEnoughData;
 }
 
-bool
-CDRMReceiver::DemodulateAM()
-{
-    bool bEnoughData = false;
-	/* The incoming samples are split 2 ways.
-	   One set is passed to the AM demodulator.
-	   The other set is passed to the AMSS demodulator.
-	   The AMSS and AM demodulators work completely independently
-	 */
-	if (Split.ProcessData(Parameters, DemodDataBuf, AMDataBuf, AMSSDataBuf))
-	{
-		bEnoughData = true;
-	}
-
-	/* AM demodulation ------------------------------------------ */
-	if (AMDemodulation.ProcessData(Parameters, AMDataBuf, AMAudioBuf))
-	{
-		bEnoughData = true;
-	}
-
-	/* AMSS phase demodulation */
-	if (AMSSPhaseDemod.ProcessData(Parameters, AMSSDataBuf, AMSSPhaseBuf))
-	{
-		bEnoughData = true;
-	}
-	return bEnoughData;
-}
-
-bool
-CDRMReceiver::DemodulateAMSS()
-{
-    bool bEnoughData = false;
-	/* AMSS resampling */
-	if (InputResample.ProcessData(Parameters, AMSSPhaseBuf, AMSSResPhaseBuf))
-	{
-		bEnoughData = true;
-	}
-
-	/* AMSS bit extraction */
-	if (AMSSExtractBits.ProcessData(Parameters, AMSSResPhaseBuf, AMSSBitsBuf))
-	{
-		bEnoughData = true;
-	}
-
-	/* AMSS data decoding */
-	if (AMSSDecode.ProcessData(Parameters, AMSSBitsBuf, SDCDecBuf))
-	{
-		bEnoughData = true;
-	}
-	return bEnoughData;
-}
-
-bool
-CDRMReceiver::UtilizeAMSS()
-{
-	if (UtilizeSDCData.WriteData(Parameters, SDCDecBuf))
-	{
-		return true;
-	}
-	return false;
-}
 
 void
 CDRMReceiver::DetectAcquiFAC()
@@ -778,27 +804,15 @@ CDRMReceiver::DetectAcquiFAC()
 		return;
 
 	/* Acquisition switch */
-	if (!UtilizeFACData.GetCRCOk())
+	if (UtilizeFACData.GetCRCOk())
 	{
-		/* Reset "good signal" count */
-		iGoodSignCnt = 0;
+		iGoodSignCnt++;
 
-		iAcquRestartCnt++;
-
-		/* Check situation when receiver must be set back in start mode */
-		if ((eAcquiState == AS_WITH_SIGNAL)
-			&& (iAcquRestartCnt > NUM_FAC_FRA_U_ACQ_WITH))
-		{
-			SetInStartMode();
-		}
-	}
-	else
-	{
 		/* Set the receiver state to "with signal" not until two successive FAC
 		   frames are "ok", because there is only a 8-bit CRC which is not good
 		   for many bit errors. But it is very unlikely that we have two
 		   successive FAC blocks "ok" if no good signal is received */
-		if (iGoodSignCnt > 0)
+		if (iGoodSignCnt >= 2)
 		{
             Parameters.Lock();
             Parameters.eAcquiState = AS_WITH_SIGNAL;
@@ -820,7 +834,20 @@ CDRMReceiver::DetectAcquiFAC()
 			/* Set in tracking mode */
 			SetInTrackingMode();
 
-			iGoodSignCnt++;
+		}
+	}
+	else
+	{
+		/* Reset "good signal" count */
+		iGoodSignCnt = 0;
+
+		iAcquRestartCnt++;
+
+		/* Check situation when receiver must be set back in start mode */
+		if ((eAcquiState == AS_WITH_SIGNAL)
+		&& (iAcquRestartCnt > NUM_FAC_FRA_U_ACQ_WITH))
+		{
+			SetInStartMode();
 		}
 	}
 }
@@ -843,16 +870,6 @@ CDRMReceiver::InitReceiverMode(EModulationType eModulation)
 	case NONE:
 		return;
 	}
-
-    /* Set the receive status - this affects the RSI output */
-    Parameters.Lock();
-    Parameters.ReceiveStatus.TSync.SetStatus(NOT_PRESENT);
-    Parameters.ReceiveStatus.FSync.SetStatus(NOT_PRESENT);
-    Parameters.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
-    Parameters.ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
-    Parameters.ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
-    Parameters.ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
-    Parameters.Unlock();
 
 	UpdateHamlibAndSoundInput();
 
@@ -987,23 +1004,14 @@ CDRMReceiver::SetInStartMode()
 	/* Set flag for receiver state */
 	eReceiverState = RS_ACQUISITION;
 
+	Parameters.Unlock();
+
 	/* Reset counters for acquisition decision, "good signal" and delayed
 	   tracking mode counter */
 	iAcquRestartCnt = 0;
 	iAcquDetecCnt = 0;
 	iGoodSignCnt = 0;
 	iDelayedTrackModeCnt = NUM_FAC_DEL_TRACK_SWITCH;
-
-	/* Reset GUI lights */
-	Parameters.ReceiveStatus.Interface.SetStatus(NOT_PRESENT);
-	Parameters.ReceiveStatus.TSync.SetStatus(NOT_PRESENT);
-	Parameters.ReceiveStatus.FSync.SetStatus(NOT_PRESENT);
-	Parameters.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
-	Parameters.ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
-	Parameters.ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
-	Parameters.ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
-
-	Parameters.Unlock();
 
 	/* In case upstreamRSCI is enabled, go directly to tracking mode, do not activate the
 	   synchronization units */
@@ -1094,10 +1102,7 @@ CDRMReceiver::InitsForAllModules(EModulationType eModulation)
 	{
 		AMDemodulation.SetDemodType(eModulation);
 		AMDemodulation.SetInitFlag();
-		AMSSPhaseDemod.SetInitFlag();
-		InputResample.SetInitFlag();
-		AMSSExtractBits.SetInitFlag();
-		AMSSDecode.SetInitFlag();
+		AMSSReceiver.Init();
 		ReceiveData.SetInChanSel(chanSel.wanted);
 		ReceiveData.SetSoundInterface(pSoundInInterface);
 		ReceiveData.SetInitFlag();
@@ -1142,9 +1147,6 @@ CDRMReceiver::InitsForAllModules(EModulationType eModulation)
 	IQRecordDataBuf.Clear();
 
 	AMSSDataBuf.Clear();
-	AMSSPhaseBuf.Clear();
-	AMSSResPhaseBuf.Clear();
-	AMSSBitsBuf.Clear();
 
 	InpResBuf.Clear();
 	FreqSyncAcqBuf.Clear();

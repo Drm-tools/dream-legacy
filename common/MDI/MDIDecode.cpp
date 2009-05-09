@@ -136,7 +136,13 @@ void CDecodeRSIMDI::ProcessData(CParameter& Parameters,
 		/* If receiver is correctly initialized, the input vector should be
 		   large enough for the SDC data */
 		const int iLenSDCDataBits = pvecOutputData2->Size();
-		Parameters.iNumSDCBitsPerSuperFrame = iLenBitsMDISDCdata;
+		if(Parameters.iNumSDCBitsPerSuperFrame != iLenBitsMDISDCdata)
+		{
+			Parameters.Lock();
+			Parameters.iNumSDCBitsPerSuperFrame = iLenBitsMDISDCdata;
+			Parameters.RxEvent = ChannelReconfiguration;
+			Parameters.Unlock();
+		}
 
 		if (iLenSDCDataBits >= iLenBitsMDISDCdata)
 		{
@@ -265,7 +271,7 @@ void CDecodeRSI::InitInternal(CParameter& Parameters)
 	iOutputBlockSize2 = 0;
 	iMaxOutputBlockSize2 = 1024;
 	/*
-	iOutputBlockSize2 = Parameters.iNumSDCBitsPerSFrame;
+	iOutputBlockSize2 = Parameters.iNumSDCBitsPerSuperFrame;
 	if(iOutputBlockSize2 == 0)
 		iMaxOutputBlockSize2 = 1024;
 	*/

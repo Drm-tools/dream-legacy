@@ -33,19 +33,24 @@
 #include "Parameter.h"
 
 class CSelectionInterface;
-class CAMSSPhaseDemod;
-class CAMSSDecode;
 class CDataDecoder;
 class CRigCaps;
 
-class ReceiverInterface
+class AnalogReceiverInterface
 {
 public:
-    virtual ~ReceiverInterface() {} // avoids some compiler warnings
+    virtual ~AnalogReceiverInterface() {} // avoids some compiler warnings
+
+	virtual CParameter*				GetAnalogParameters()=0;
 	virtual CSelectionInterface*	GetSoundInInterface()=0;
 	virtual CSelectionInterface*	GetSoundOutInterface()=0;
+	virtual void                    MuteAudio(bool)=0;
+	virtual bool                    GetMuteAudio()=0;
+	virtual bool                    GetIsWriteWaveFile()=0;
+	virtual void                    StartWriteWaveFile(const string&)=0;
+	virtual void                    StopWriteWaveFile()=0;
+
 	virtual void					SetAnalogDemodAcq(_REAL)=0;
-	virtual CParameter*				GetParameters()=0;
 	virtual EType				    GetAnalogAGCType()=0;
 	virtual ENoiRedType             GetAnalogNoiseReductionType()=0;
 	virtual void					SetUseAnalogHWDemod(bool)=0;
@@ -59,11 +64,25 @@ public:
 	virtual void					SetAnalogFilterBWHz(int)=0;
 	virtual void					EnableAnalogAutoFreqAcq(const bool)=0;
 	virtual void					EnableAnalogPLL(const bool)=0;
-	virtual void                    MuteAudio(bool)=0;
-	virtual bool                    GetMuteAudio()=0;
-	virtual bool                    GetIsWriteWaveFile()=0;
-	virtual void                    StartWriteWaveFile(const string&)=0;
-	virtual void                    StopWriteWaveFile()=0;
+
+	virtual EAMSSBlockLockStat		GetAMSSLockStatus() =0;
+	virtual bool					GetAMSSBlock1Status() =0;
+	virtual char*					GetAMSSDataEntityGroupStatus() =0;
+	virtual int						GetCurrentAMSSBlock() =0;
+	virtual char*					GetCurrentAMSSBlockBits()=0;
+	virtual int						GetPercentageAMSSDataEntityGroupComplete()=0;
+
+	virtual bool					GetAMSSPLLPhase(_REAL&) =0;
+	virtual bool                    End()=0;
+};
+
+class ReceiverInterface : public AnalogReceiverInterface
+{
+public:
+
+    virtual ~ReceiverInterface() {} // avoids some compiler warnings
+
+	virtual CParameter*				GetParameters()=0;
 
 	virtual EAcqStat				GetAcquiState()=0;
 	virtual bool		 			SetFrequency(int)=0;
@@ -103,11 +122,8 @@ public:
 	virtual void					SetIQRecording(bool)=0;
 	virtual void					SetRSIRecording(bool, const char)=0;
 
-	virtual CAMSSPhaseDemod*		GetAMSSPhaseDemod()=0;
-	virtual CAMSSDecode*			GetAMSSDecode()=0;
 	virtual CDataDecoder*			GetDataDecoder()=0;
 
-	virtual bool                    End()=0;
 };
 
 #endif

@@ -105,7 +105,7 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 		iNumBytesForCRCCheck = iUsefulBitsSDC / BITS_BINARY - 2;
 	}
 
-//cerr << "SDC: len " << Parameter.iNumSDCBitsPerSFrame << " crcbytes " << iNumBytesForCRCCheck << endl;
+//cerr << "SDC: len " << Parameter.iNumSDCBitsPerSuperFrame << " crcbytes " << iNumBytesForCRCCheck << endl;
 	for (int i = 0; i < iNumBytesForCRCCheck; i++)
 		CRCObject.AddByte((_BYTE) pbiData->Separate(BITS_BINARY));
 

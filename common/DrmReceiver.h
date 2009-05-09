@@ -120,6 +120,39 @@ class CSplitAudio : public CSplitModul<_SAMPLE>
 		{this->iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE * (_REAL) 0.4 /* 400 ms */) * 2 /* stereo */;}
 };
 
+class CAMSSReceiver
+{
+public:
+	CAMSSReceiver();
+	virtual ~CAMSSReceiver() {}
+
+	void	Init();
+	bool	Demodulate(CParameter& Parameters,
+				CSingleBuffer<_REAL>& DataBuf, CSingleBuffer<_BINARY>& SDCBuf);
+	void	SetAcqFreq(_REAL rNewNorCen) { PhaseDemod.SetAcqFreq(rNewNorCen); }
+	bool	GetPLLPhase(_REAL& r) { return PhaseDemod.GetPLLPhase(r); }
+	EAMSSBlockLockStat	GetLockStatus() { return Decode.GetLockStatus(); }
+	bool	GetBlock1Status() { return Decode.GetBlock1Status(); }
+	char*	GetDataEntityGroupStatus()
+								{ return Decode.GetDataEntityGroupStatus(); }
+	int		GetCurrentBlock() { return Decode.GetCurrentBlock(); }
+	char*	GetCurrentBlockBits()
+								{ return Decode.GetCurrentBlockBits(); }
+	int		GetPercentageDataEntityGroupComplete()
+								{ return Decode.GetPercentageDataEntityGroupComplete(); }
+
+protected:
+
+	CAMSSPhaseDemod				PhaseDemod;
+	CAMSSExtractBits			ExtractBits;
+	CAMSSDecode					Decode;
+	CInputResample				InputResample;
+
+	CSingleBuffer<_REAL>		PhaseBuf;
+	CCyclicBuffer<_REAL>		ResPhaseBuf;
+	CCyclicBuffer<_BINARY>		BitsBuf;
+};
+
 class CDRMReceiver : public ReceiverInterface
 #ifdef USE_QT_GUI
 	, public QThread
@@ -181,6 +214,17 @@ public:
 
 	void					SetReadPCMFromFile(const string strNFN);
 
+	bool					GetAMSSPLLPhase(_REAL& r) { return AMSSReceiver.GetPLLPhase(r);}
+	EAMSSBlockLockStat		GetAMSSLockStatus() { return AMSSReceiver.GetLockStatus(); }
+	bool					GetAMSSBlock1Status() { return AMSSReceiver.GetBlock1Status(); }
+	char*					GetAMSSDataEntityGroupStatus()
+								{ return AMSSReceiver.GetDataEntityGroupStatus(); }
+	int						GetCurrentAMSSBlock() { return AMSSReceiver.GetCurrentBlock(); }
+	char*					GetCurrentAMSSBlockBits()
+								{ return AMSSReceiver.GetCurrentBlockBits(); }
+	int						GetPercentageAMSSDataEntityGroupComplete()
+								{ return AMSSReceiver.GetPercentageDataEntityGroupComplete(); }
+
 	/* Channel Estimation */
 	void SetFreqInt(ETypeIntFreq eNewTy)
 		{ChannelEstimation.SetFreqInt(eNewTy);}
@@ -238,19 +282,7 @@ public:
 	/* Get pointer to internal modules */
 	CSelectionInterface*	GetSoundInInterface() {return pSoundInInterface;}
 	CSelectionInterface*	GetSoundOutInterface() {return pSoundOutInterface;}
-	CUtilizeFACData*		GetFAC() {return &UtilizeFACData;}
-	CUtilizeSDCData*		GetSDC() {return &UtilizeSDCData;}
-	CTimeSync*				GetTimeSync() {return &TimeSync;}
-	COFDMDemodulation*		GetOFDMDemod() {return &OFDMDemodulation;}
-	CSyncUsingPil*			GetSyncUsPil() {return &SyncUsingPil;}
 	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
-	CAMSSPhaseDemod*		GetAMSSPhaseDemod() {return &AMSSPhaseDemod;}
-	CAMSSDecode*			GetAMSSDecode() {return &AMSSDecode;}
-	CFreqSyncAcq*			GetFreqSyncAcq() {return &FreqSyncAcq;}
-	CAudioSourceDecoder*	GetAudSorceDec() {return &AudioSourceDecoder;}
-	CUpstreamDI*			GetRSIIn() {return &upstreamRSCI;}
-	CDownstreamDI*			GetRSIOut() {return &downstreamRSCI;}
-	CChannelEstimation*		GetChannelEstimation() {return &ChannelEstimation;}
 
 	void					SetRigModelForAllModes(int);
 	void					SetRigModel(int);
@@ -263,6 +295,7 @@ public:
 	void					SetRigComPort(const string&);
 	bool				    GetRigChangeInProgress();
 	CParameter*				GetParameters() {return &Parameters;}
+	CParameter*				GetAnalogParameters() {return &Parameters;}
 
 protected:
 
@@ -279,9 +312,6 @@ protected:
 	void					Run();
 	bool					DemodulateDRM(bool&);
 	bool					UtilizeDRM();
-	bool					DemodulateAM();
-	bool					DemodulateAMSS();
-	bool					UtilizeAMSS();
 	void					DetectAcquiFAC();
 	void					DetectAcquiSymbol();
 	void					saveSDCtoFile();
@@ -290,9 +320,9 @@ protected:
 	CSoundInInterface*		pSoundInInterface;
 	CSoundOutInterface*		pSoundOutInterface;
 	CReceiveData			ReceiveData;
+	CInputResample			InputResample;
 	COnboardDecoder			OnboardDecoder;
 	CWriteData				WriteData;
-	CInputResample			InputResample;
 	CFreqSyncAcq			FreqSyncAcq;
 	CTimeSync				TimeSync;
 	COFDMDemodulation		OFDMDemodulation;
@@ -312,14 +342,13 @@ protected:
 	CSplit					SplitForIQRecord;
 	CWriteIQFile			WriteIQFile;
 	CSplitAudio				SplitAudio;
+	CAMDemodulation			AMDemodulation;
+	CAMSSReceiver			AMSSReceiver;
+
 	CAudioSourceEncoderRx	AudioSourceEncoder; // For encoding the audio for RSI
 	CSplitFAC				SplitFAC;
 	CSplitSDC				SplitSDC;
 	CSplitMSC				SplitMSC[MAX_NUM_STREAMS];
-	CAMDemodulation			AMDemodulation;
-	CAMSSPhaseDemod			AMSSPhaseDemod;
-	CAMSSExtractBits		AMSSExtractBits;
-	CAMSSDecode				AMSSDecode;
 
 	CUpstreamDI				upstreamRSCI;
 	CDecodeRSI				DecodeRSIMDI;
@@ -331,9 +360,6 @@ protected:
 	/* Buffers */
 	CSingleBuffer<_REAL>			AMDataBuf;
 	CSingleBuffer<_REAL>			AMSSDataBuf;
-	CSingleBuffer<_REAL>			AMSSPhaseBuf;
-	CCyclicBuffer<_REAL>			AMSSResPhaseBuf;
-	CCyclicBuffer<_BINARY>			AMSSBitsBuf;
 
 	CSingleBuffer<_REAL>			DemodDataBuf;
 	CSingleBuffer<_REAL>			IQRecordDataBuf;

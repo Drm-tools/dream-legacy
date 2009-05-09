@@ -80,7 +80,7 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	connect(actionAFS, SIGNAL(triggered()), liveScheduleDlg, SLOT(show()));
 
 	/* Init main plot */
-    plot = new CDRMPlot(SpectrumPlot, Receiver.GetParameters());
+    plot = new CDRMPlot(SpectrumPlot, Receiver.GetAnalogParameters());
 	plot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 	plot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
 	connect(plot, SIGNAL(xAxisValSet(double)), this, SLOT(OnChartxAxisValSet(double)));
@@ -213,7 +213,7 @@ void AnalogMainWindow::closeEvent(QCloseEvent* ce)
 
 void AnalogMainWindow::OnSwitchToDRM()
 {
-    CParameter& Parameter = *Receiver.GetParameters();
+    CParameter& Parameter = *Receiver.GetAnalogParameters();
     Parameter.Lock();
     Parameter.eModulation = DRM;
     Parameter.RxEvent = ChannelReconfiguration;
@@ -222,7 +222,7 @@ void AnalogMainWindow::OnSwitchToDRM()
 
 void AnalogMainWindow::UpdateControls()
 {
-    CParameter& Parameter = *Receiver.GetParameters();
+    CParameter& Parameter = *Receiver.GetAnalogParameters();
     Parameter.Lock();
     EModulationType eModulation = Parameter.eModulation;
     Parameter.Unlock();
@@ -344,7 +344,7 @@ void AnalogMainWindow::OnTimer()
 	bool b;
 	_REAL r;
 
-    CParameter& Parameter = *Receiver.GetParameters();
+    CParameter& Parameter = *Receiver.GetAnalogParameters();
     Parameter.Lock();
     EModulationType eModulation = Parameter.eModulation;
     Parameter.Unlock();
@@ -356,7 +356,7 @@ void AnalogMainWindow::OnTimer()
 		break;
 	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
 		/* Carrier frequency of AM signal */
-        b = Receiver.GetParameters()->Measurements.AnalogCurMixFreqOffs.get(r);
+        b = Receiver.GetAnalogParameters()->Measurements.AnalogCurMixFreqOffs.get(r);
         if(b)
         {
             TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
@@ -442,7 +442,7 @@ void AnalogMainWindow::OnRadioDemodulation(int iID)
 		break;
 	}
 
-    CParameter& Parameter = *Receiver.GetParameters();
+    CParameter& Parameter = *Receiver.GetAnalogParameters();
     Parameter.Lock();
     Parameter.eModulation = eModulation;
     Parameter.RxEvent = ChannelReconfiguration;
@@ -592,7 +592,7 @@ void AnalogMainWindow::OnButtonAMSS()
 
 void AnalogMainWindow::OnNewAMAcquisition()
 {
-    CParameter& Parameter = *Receiver.GetParameters();
+    CParameter& Parameter = *Receiver.GetAnalogParameters();
     Parameter.Lock();
     Parameter.RxEvent = Reinitialise;
     Parameter.Unlock();
@@ -751,9 +751,9 @@ void AnalogMainWindow::OnHelpWhatsThis()
 
 	Added phase offset display for AMSS demodulation loop.
 */
-CAMSSDlg::CAMSSDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
+CAMSSDlg::CAMSSDlg(AnalogReceiverInterface& R, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
-	QDialog(parent, name, modal, f), Ui_AMSSDlg(), Receiver(NDRMR),
+	QDialog(parent, name, modal, f), Ui_AMSSDlg(), Receiver(R),
 	Settings(NSettings)
 {
     setupUi(this);
@@ -828,7 +828,7 @@ void CAMSSDlg::showEvent(QShowEvent*)
 
 void CAMSSDlg::OnTimer()
 {
-	CParameter& Parameters = *Receiver.GetParameters();
+	CParameter& Parameters = *Receiver.GetAnalogParameters();
 	Parameters.Lock();
 	const CService& Service = Parameters.Service[0];
 
@@ -967,7 +967,7 @@ void CAMSSDlg::OnTimer()
 				{
 					freqEntry +=
 						QString().setNum((float) (87.5 + 0.1 * Receiver.
-						GetParameters()->AltFreqSign.
+						GetAnalogParameters()->AltFreqSign.
 						vecOtherServices[i].veciFrequencies[j]), 'f', 1);
 
 					if (j != iNumAltFreqs-1)
@@ -1002,7 +1002,7 @@ void CAMSSDlg::OnTimer()
 				{
 					freqEntry +=
 						QString().setNum((float) (76.0 + 0.1 * Receiver.
-						GetParameters()->AltFreqSign.
+						GetAnalogParameters()->AltFreqSign.
 						vecOtherServices[i].veciFrequencies[j]), 'f', 1);
 
 					if (j != iNumAltFreqs-1)
@@ -1056,7 +1056,7 @@ void CAMSSDlg::OnTimer()
 	TextAMSSServiceID->setText("");
 	TextAMSSAMCarrierMode->setText("");
 
-	if (Receiver.GetAMSSDecode()->GetLockStatus() == CAMSSDecode::NO_SYNC
+	if (Receiver.GetAMSSLockStatus() == NO_SYNC
 	|| Service.iServiceID == SERV_ID_NOT_USED
 	)
 	{
@@ -1067,7 +1067,7 @@ void CAMSSDlg::OnTimer()
 		TextAMSSInfo->setText(tr("Awaiting AMSS data..."));
 
 		/* Display 'block 1' info */
-		if (Receiver.GetAMSSDecode()->GetBlock1Status())
+		if (Receiver.GetAMSSBlock1Status())
 		{
 			TextAMSSInfo->setText("");
 
@@ -1082,16 +1082,13 @@ void CAMSSDlg::OnTimer()
 
 	Parameters.Unlock();
 
-	TextDataEntityGroupStatus->setText(Receiver.GetAMSSDecode()->
-		GetDataEntityGroupStatus());
+	TextDataEntityGroupStatus->setText(Receiver.GetAMSSDataEntityGroupStatus());
 
-	TextCurrentBlock->setText(QString().setNum(Receiver.GetAMSSDecode()->
-		GetCurrentBlock(), 10));
+	TextCurrentBlock->setText(QString().setNum(Receiver.GetCurrentAMSSBlock(), 10));
 
-	TextBlockBits->setText(Receiver.GetAMSSDecode()->GetCurrentBlockBits());
+	TextBlockBits->setText(Receiver.GetCurrentAMSSBlockBits());
 
-	ProgressBarAMSS->setValue(Receiver.GetAMSSDecode()->
-		GetPercentageDataEntityGroupComplete());
+	ProgressBarAMSS->setValue(Receiver.GetPercentageAMSSDataEntityGroupComplete());
 
 }
 
@@ -1099,7 +1096,7 @@ void CAMSSDlg::OnTimerPLLPhaseDial()
 {
 	CReal rCurPLLPhase;
 
-	if (Receiver.GetAMSSPhaseDemod()->GetPLLPhase(rCurPLLPhase) == true)
+	if (Receiver.GetAMSSPLLPhase(rCurPLLPhase) == true)
 	{
 		/* Set current PLL phase (convert radiant in degree) */
 		PhaseDialAMSS->setValue(rCurPLLPhase * (CReal) 360.0 / (2 * crPi));
