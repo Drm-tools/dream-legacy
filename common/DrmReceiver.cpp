@@ -108,7 +108,7 @@ const int
 
 /* Implementation *************************************************************/
 CDRMReceiver::CDRMReceiver():
-pSoundInInterface(new CSoundIn), pSoundOutInterface(new CSoundOut),
+pSoundOutInterface(new CSoundOut),
 ReceiveData(), WriteData(pSoundOutInterface),
 FreqSyncAcq(),
 ChannelEstimation(),
@@ -127,8 +127,9 @@ rInitResampleOffset((_REAL) 0.0), iFreqkHz(0),time_keeper(0),
 onBoardDemod(false),pcmInput(SoundCard),soundDev(0),
 rig(0),rigMode(DRM),chanSel(CS_MIX_CHAN),
 strPCMFile(),bRigUpdateNeeded(true),bRigUpdateForAllModes(false),
-pHamlib(NULL)
+pHamlib(NULL),soundIn(soundDev)
 {
+	soundIn.real = new CSoundIn();
 	downstreamRSCI.SetReceiver(this);
     DataDecoder.setApplication(CDataParam::AD_DAB_SPEC_APP, AT_MOTSLISHOW, new CMOTDABDecFactory());
     DataDecoder.setApplication(CDataParam::AD_DAB_SPEC_APP, AT_MOTBROADCASTWEBSITE, new CMOTDABDecFactory());
@@ -138,111 +139,104 @@ pHamlib(NULL)
 
 CDRMReceiver::~CDRMReceiver()
 {
-	delete pSoundInInterface;
+	delete soundIn.real;
 	delete pSoundOutInterface;
 }
 
 void
-CDRMReceiver::UpdateHamlibAndSoundInput()
+CDRMReceiver::SetSoundInput(EInpTy wanted)
+{
+	if(soundIn.real)
+	{
+		delete soundIn.real;
+		soundIn.real = NULL;
+	}
+	switch(wanted)
+	{
+	case SoundCard:
+		soundIn.real = new CSoundIn;
+		break;
+	case Dummy:
+		soundIn.real = new CSoundInNull;
+		break;
+	case Shm:
+		{
+# ifdef __linux__
+			CShmSoundIn* ShmSoundIn = new CShmSoundIn;
+			ShmSoundIn->SetShmPath(strPCMFile);
+			ShmSoundIn->SetName("Radio Card");
+			ShmSoundIn->SetShmChannels(1);
+			ShmSoundIn->SetWantedChannels(2);
+			soundIn.real = ShmSoundIn;
+# endif
+		}
+		break;
+	case File:
+		{
+			CSoundFileIn *pf = new CSoundFileIn;
+			pf->SetFileName(strPCMFile);
+			soundIn.real = pf;
+		}
+		break;
+	case RSCI:
+		soundIn.real = new CSoundInNull;
+	}
+}
+
+void
+CDRMReceiver::RigUpdate()
 {
 #ifdef HAVE_LIBHAMLIB
-	if(pcmInput.wanted != RSCI && pcmInput.wanted != File && pHamlib != NULL)
+	rig.current = pHamlib->GetRigModel();
+	rigMode.current = pHamlib->GetRigMode();
+	CRigCaps old_caps, new_caps;
+	pHamlib->GetRigCaps(rig.current, old_caps);
+	pHamlib->GetRigCaps(rig.wanted, new_caps);
+	if(rigMode.current != rigMode.wanted || rig.current != rig.wanted)
 	{
-        rig.current = pHamlib->GetRigModel();
-		rigMode.current = pHamlib->GetRigMode();
-		CRigCaps old_caps, new_caps;
-		pHamlib->GetRigCaps(rig.current, old_caps);
-		pHamlib->GetRigCaps(rig.wanted, new_caps);
-		if(rigMode.current != rigMode.wanted || rig.current != rig.wanted)
-		{
-			if(bRigUpdateForAllModes)
-				pHamlib->SetRigModelForAllModes(rig.wanted);
-			else
-				pHamlib->SetRigModel(rigMode.wanted, rig.wanted);
-            rig.current = rig.wanted;
+		if(bRigUpdateForAllModes)
+			pHamlib->SetRigModelForAllModes(rig.wanted);
+		else
+			pHamlib->SetRigModel(rigMode.wanted, rig.wanted);
+		rig.current = rig.wanted;
 
-			if(new_caps.attribute(rigMode.wanted, "audiotype")=="shm")
-			{
-				pcmInput.wanted = Shm;
-				strPCMFile = new_caps.get_config("if_path");
-			}
-			else
-			{
-				pcmInput.wanted = SoundCard;
-				string snddevin = new_caps.attribute(rigMode.wanted, "snddevin");
-				if(snddevin != "")
-				{
-					stringstream s(snddevin);
-					s >> soundDev.wanted;
-				}
-			}
-			if(new_caps.attribute(rigMode.wanted, "onboarddemod")=="must")
-			{
-				onBoardDemod.current = true;
-			}
-			else if(new_caps.attribute(rigMode.wanted, "onboarddemod")=="can")
-			{
-				onBoardDemod.current = onBoardDemod.wanted;
-			}
-			else
-			{
-				onBoardDemod.current = false;
-			}
+		if(new_caps.attribute(rigMode.wanted, "audiotype")=="shm")
+		{
+			pcmInput.wanted = Shm;
+			strPCMFile = new_caps.get_config("if_path");
 		}
 		else
 		{
-            pcmInput.wanted = SoundCard;
+			pcmInput.wanted = SoundCard;
+			string snddevin = new_caps.attribute(rigMode.wanted, "snddevin");
+			if(snddevin != "")
+			{
+				stringstream s(snddevin);
+				s >> soundDev.wanted;
+			}
 		}
-		stringstream s;
-		s << soundDev.wanted;
-		pHamlib->set_attribute(rigMode.wanted, "snddevin", s.str()); // save for persistence
-		rigMode.current = rigMode.wanted;
+		if(new_caps.attribute(rigMode.wanted, "onboarddemod")=="must")
+		{
+			onBoardDemod.current = true;
+		}
+		else if(new_caps.attribute(rigMode.wanted, "onboarddemod")=="can")
+		{
+			onBoardDemod.current = onBoardDemod.wanted;
+		}
+		else
+		{
+			onBoardDemod.current = false;
+		}
 	}
 	else
 	{
-	    if(pcmInput.wanted == Dummy || pcmInput.wanted == Shm)
-            pcmInput.wanted = SoundCard;
+		pcmInput.wanted = SoundCard;
 	}
+	stringstream s;
+	s << soundDev.wanted;
+	pHamlib->set_attribute(rigMode.wanted, "snddevin", s.str()); // save for persistence
+	rigMode.current = rigMode.wanted;
 #endif
-	if(pcmInput.current != pcmInput.wanted)
-	{
-		delete pSoundInInterface;
-		switch(pcmInput.wanted)
-		{
-		case Shm:
-			{
-# ifdef __linux__
-    			CShmSoundIn* ShmSoundIn = new CShmSoundIn;
-				ShmSoundIn->SetShmPath(strPCMFile);
-				ShmSoundIn->SetName("Radio Card");
-				ShmSoundIn->SetShmChannels(1);
-				ShmSoundIn->SetWantedChannels(2);
-				pSoundInInterface = ShmSoundIn;
-# endif
-			}
-			break;
-		case File:
-			{
-				CSoundFileIn *pf = new CSoundFileIn;
-				pf->SetFileName(strPCMFile);
-				pSoundInInterface = pf;
-			}
-			break;
-		case SoundCard:
-			pSoundInInterface = new CSoundIn;
-			break;
-		default:
-			;
-		}
-		pcmInput.current = pcmInput.wanted;
-	}
-	soundDev.current = pSoundInInterface->GetDev();
-	if(soundDev.current != soundDev.wanted)
-	{
-		pSoundInInterface->SetDev(soundDev.wanted);
-		soundDev.current = soundDev.wanted;
-	}
-	bRigUpdateNeeded = false;
 }
 
 void
@@ -380,10 +374,17 @@ CDRMReceiver::Run()
     Parameters.RxEvent = None;
     Parameters.Unlock();
 
+    bool initNeeded = false;
+
 	switch(RxEvent)
 	{
 	    case ChannelReconfiguration:
-            InitReceiverMode(eModulation);
+			// initialise channel from NextConfig
+			// - might have been signalled or detected
+            Parameters.Lock();
+			Parameters.Channel = Parameters.NextConfig.Channel;
+			Parameters.Unlock();
+			initNeeded = true;
             break;
 	    case ServiceReconfiguration:
             /* Reinitialise MSC Demultiplexer */
@@ -405,33 +406,33 @@ CDRMReceiver::Run()
             InitsForAudParam();
             InitsForDataParam();
             break;
-        case Tune:
-            InitReceiverMode(eModulation);
+        case Tune: // TODO - is this right ? Is this actually used ?
+			initNeeded = true;
             break;
-        case Reinitialise:
+        case Reinitialise: // TODO - Test this
             /* Define with which parameters the receiver should try to decode the
                signal. If we are correct with our assumptions, the receiver does not
                need to reinitialize */
             Parameters.Lock();
-            Parameters.NextConfig.Channel.eRobustness = RM_ROBUSTNESS_MODE_A;
-            Parameters.NextConfig.Channel.eSpectrumOccupancy = SO_3;
+            Parameters.Channel.eRobustness = RM_ROBUSTNESS_MODE_A;
+            Parameters.Channel.eSpectrumOccupancy = SO_3;
 
             /* Set initial MLC parameters */
-            Parameters.NextConfig.Channel.eInterleaverDepth = SI_LONG;
-            Parameters.NextConfig.Channel.eMSCmode = CS_3_SM;
-            Parameters.NextConfig.Channel.eSDCmode = CS_2_SM;
+            Parameters.Channel.eInterleaverDepth = SI_LONG;
+            Parameters.Channel.eMSCmode = CS_3_SM;
+            Parameters.Channel.eSDCmode = CS_2_SM;
 
             /* Number of audio and data services */
-            Parameters.FACParameters.iNumAudioServices = 0;
+            Parameters.FACParameters.iNumAudioServices = 1;
             Parameters.FACParameters.iNumDataServices = 0;
 
             /* Protection levels */
-            Parameters.NextConfig.MSCParameters.ProtectionLevel.iPartA = 0;
-            Parameters.NextConfig.MSCParameters.ProtectionLevel.iPartB = 1;
-            Parameters.NextConfig.MSCParameters.ProtectionLevel.iHierarch = 0;
+            Parameters.MSCParameters.ProtectionLevel.iPartA = 0;
+            Parameters.MSCParameters.ProtectionLevel.iPartB = 1;
+            Parameters.MSCParameters.ProtectionLevel.iHierarch = 0;
             Parameters.Unlock();
 
-            InitReceiverMode(eModulation);
+			initNeeded = true;
             break;
         case SelectAudioComponent:
             InitsForAudParam();
@@ -442,6 +443,56 @@ CDRMReceiver::Run()
         case None:
             break;
 	}
+
+	/* check for Rig change */
+	if(bRigUpdateNeeded)
+	{
+		RigUpdate();
+		bRigUpdateNeeded = false;
+	}
+
+	/* check for OFDM source change */
+	if(pcmInput.current != pcmInput.wanted)
+	{
+		SetSoundInput(pcmInput.wanted);
+		pcmInput.current = pcmInput.wanted;
+		initNeeded = true;
+	}
+
+	if(soundDev.current != soundDev.wanted)
+	{
+		soundIn.real->SetDev(soundDev.wanted);
+		soundDev.current = soundDev.wanted;
+		initNeeded = true;
+	}
+
+	if(initNeeded)
+	{
+		switch(eModulation)
+		{
+		case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
+
+			/* Tell the SDC decoder that it's AMSS to decode (no AFS index) */
+			UtilizeSDCData.SetSDCType(SDC_AMSS);
+			/* set stream */
+			iAudioStreamID = 0;
+			break;
+		case DRM:
+			UtilizeSDCData.SetSDCType(SDC_DRM);
+			break;
+		case NONE:
+			return;
+		}
+
+		/* Init all modules */
+		SetInStartMode();
+
+		if (upstreamRSCI.GetOutEnabled() == true)
+		{
+			upstreamRSCI.SetReceiverMode(eModulation);
+		}
+	}
+    initNeeded = false;
 
 	/* Input - from upstream RSCI or input and demodulation from sound card / file */
 
@@ -852,42 +903,11 @@ CDRMReceiver::DetectAcquiFAC()
 	}
 }
 
-void
-CDRMReceiver::InitReceiverMode(EModulationType eModulation)
-{
-	switch(eModulation)
-	{
-	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
-
-		/* Tell the SDC decoder that it's AMSS to decode (no AFS index) */
-		UtilizeSDCData.SetSDCType(SDC_AMSS);
-		/* set stream */
-		iAudioStreamID = 0;
-		break;
-	case DRM:
-		UtilizeSDCData.SetSDCType(SDC_DRM);
-		break;
-	case NONE:
-		return;
-	}
-
-	UpdateHamlibAndSoundInput();
-
-	/* Init all modules */
-	SetInStartMode();
-
-	if (upstreamRSCI.GetOutEnabled() == true)
-	{
-		upstreamRSCI.SetReceiverMode(eModulation);
-	}
-}
-
 bool
 CDRMReceiver::GetRigChangeInProgress()
 {
 	return bRigUpdateNeeded;
 }
-
 
 #ifdef USE_QT_GUI
 void
@@ -927,7 +947,7 @@ CDRMReceiver::Start()
 	}
 	while (bRunning);
 
-	pSoundInInterface->Close();
+	soundIn.real->Close();
 	pSoundOutInterface->Close();
 }
 
@@ -951,9 +971,6 @@ CDRMReceiver::SetInStartMode()
 	iUnlockedCount = MAX_UNLOCKED_COUNT;
 
 	Parameters.Lock();
-
-    // initialise channel from NextConfig - might have been signalled or detected or defaulted
-    Parameters.Channel = Parameters.NextConfig.Channel;
 
 	Parameters.CellMappingTable.MakeTable(
         Parameters.Channel.eRobustness,
@@ -1095,7 +1112,7 @@ CDRMReceiver::InitsForAllModules(EModulationType eModulation)
 
 	if(onBoardDemod.current)
 	{
-		OnboardDecoder.SetSoundInterface(pSoundInInterface);
+		OnboardDecoder.SetSoundInterface(soundIn.real);
 		OnboardDecoder.SetInitFlag();
 	}
 	else
@@ -1104,7 +1121,7 @@ CDRMReceiver::InitsForAllModules(EModulationType eModulation)
 		AMDemodulation.SetInitFlag();
 		AMSSReceiver.Init();
 		ReceiveData.SetInChanSel(chanSel.wanted);
-		ReceiveData.SetSoundInterface(pSoundInInterface);
+		ReceiveData.SetSoundInterface(soundIn.real);
 		ReceiveData.SetInitFlag();
 	}
 	InputResample.SetInitFlag();
@@ -1314,9 +1331,6 @@ void CDRMReceiver::SetRigModel(int iID)
 	rig.wanted = iID;
 	bRigUpdateForAllModes = false;
 	bRigUpdateNeeded=true;
-	Parameters.Lock();
-	Parameters.RxEvent = ChannelReconfiguration; // trigger an update!
-	Parameters.Unlock();
 }
 
 int CDRMReceiver::GetRigModel() const
@@ -1456,12 +1470,12 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	/* Sound In device */
 	dev = s.Get("Receiver", "snddevin", 0);
-	pSoundInInterface->Enumerate(vs);
+	soundIn.real->Enumerate(vs);
 	if(vs.size()>0)
 	{
 	    if(dev>=int(vs.size()))
             dev = vs.size()-1;
-        pSoundInInterface->SetDev(dev);
+        soundIn.real->SetDev(dev);
 	}
 
 	vs.clear();

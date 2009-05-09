@@ -39,7 +39,7 @@ public:
 
 	/* sound card interface - used by ReadData */
 	virtual void		Init(int iNewBufferSize, bool bNewBlocking=true, int iChannels=2)=0;
-	virtual bool	Read(vector<_SAMPLE>& data)=0;
+	virtual bool		Read(vector<_SAMPLE>& data)=0;
 	virtual void		Close()=0;
 
 };
@@ -51,7 +51,7 @@ public:
 
 	/* sound card interface - used by WriteData */
 	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2)=0;
-	virtual bool	Write(vector<_SAMPLE>& data)=0;
+	virtual bool		Write(vector<_SAMPLE>& data)=0;
 	virtual void		Close()=0;
 };
 

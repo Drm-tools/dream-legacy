@@ -120,6 +120,18 @@ class CSplitAudio : public CSplitModul<_SAMPLE>
 		{this->iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE * (_REAL) 0.4 /* 400 ms */) * 2 /* stereo */;}
 };
 
+class CSoundInProxy : public CSelectionInterface
+{
+public:
+	CSoundInProxy(Request<int>& r):real(NULL),request(r) {}
+	virtual ~CSoundInProxy() {}
+	void		Enumerate(vector<string>& v) { if(real) real->Enumerate(v); }
+	int			GetDev() { return request.current; }
+	void		SetDev(int iNewDev) { request.current = iNewDev; }
+	CSoundInInterface *real;
+	Request<int>& request;
+};
+
 class CAMSSReceiver
 {
 public:
@@ -280,7 +292,7 @@ public:
 
 
 	/* Get pointer to internal modules */
-	CSelectionInterface*	GetSoundInInterface() {return pSoundInInterface;}
+	CSelectionInterface*	GetSoundInInterface() {return &soundIn;}
 	CSelectionInterface*	GetSoundOutInterface() {return pSoundOutInterface;}
 	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
 
@@ -299,12 +311,12 @@ public:
 
 protected:
 
-	void					InitReceiverMode(EModulationType);
 	void					InitsForAllModules(EModulationType);
 	void					InitsForAudParam();
 	void					InitsForDataParam();
 
-    void                    UpdateHamlibAndSoundInput();
+	void					SetSoundInput(EInpTy wanted);
+	void					RigUpdate();
 	bool					doSetFrequency();
 	void					SetInStartMode();
 	void					SetInTrackingMode();
@@ -317,7 +329,6 @@ protected:
 	void					saveSDCtoFile();
 
 	/* Modules */
-	CSoundInInterface*		pSoundInInterface;
 	CSoundOutInterface*		pSoundOutInterface;
 	CReceiveData			ReceiveData;
 	CInputResample			InputResample;
@@ -423,6 +434,7 @@ protected:
 	bool                    bRigUpdateNeeded;
 	bool                    bRigUpdateForAllModes;
     CHamlib*                pHamlib;
+    CSoundInProxy			soundIn;
 };
 
 #endif // !defined(DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
