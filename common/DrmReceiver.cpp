@@ -124,10 +124,10 @@ iAcquDetecCnt(0), iGoodSignCnt(0),
 iAudioStreamID(STREAM_ID_NOT_USED),iDataStreamID(STREAM_ID_NOT_USED),
 bDoInitRun(false), bRunning(false),
 rInitResampleOffset((_REAL) 0.0), iFreqkHz(0),time_keeper(0),
-onBoardDemod(false),pcmInput(SoundCard),soundDev(0),
+onBoardDemod(false),pcmInput(SoundCard),
 rig(0),rigMode(DRM),chanSel(CS_MIX_CHAN),
 strPCMFile(),bRigUpdateNeeded(true),bRigUpdateForAllModes(false),
-pHamlib(NULL),soundIn(new CSoundIn(),soundDev)
+pHamlib(NULL),soundIn(new CSoundIn())
 {
 	downstreamRSCI.SetReceiver(this);
     DataDecoder.setApplication(CDataParam::AD_DAB_SPEC_APP, AT_MOTSLISHOW, new CMOTDABDecFactory());
@@ -213,7 +213,7 @@ CDRMReceiver::RigUpdate()
 			if(snddevin != "")
 			{
 				stringstream s(snddevin);
-				s >> soundDev.wanted;
+				s >> soundIn.deviceNo.wanted;
 			}
 		}
 		if(new_caps.attribute(rigMode.wanted, "onboarddemod")=="must")
@@ -234,7 +234,7 @@ CDRMReceiver::RigUpdate()
 		pcmInput.wanted = SoundCard;
 	}
 	stringstream s;
-	s << soundDev.wanted;
+	s << soundIn.deviceNo.wanted;
 	pHamlib->set_attribute(rigMode.wanted, "snddevin", s.str()); // save for persistence
 	rigMode.current = rigMode.wanted;
 #endif
@@ -461,10 +461,10 @@ CDRMReceiver::Run()
 		initNeeded = true;
 	}
 
-	if(soundDev.current != soundDev.wanted)
+	if(soundIn.deviceNo.current != soundIn.deviceNo.wanted)
 	{
-		soundIn.real->SetDev(soundDev.wanted);
-		soundDev.current = soundDev.wanted;
+		soundIn.real->SetDev(soundIn.deviceNo.wanted);
+		soundIn.deviceNo.current = soundIn.deviceNo.wanted;
 		initNeeded = true;
 	}
 

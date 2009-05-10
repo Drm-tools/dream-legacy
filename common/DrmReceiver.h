@@ -123,13 +123,13 @@ class CSplitAudio : public CSplitModul<_SAMPLE>
 class CSoundInProxy : public CSelectionInterface
 {
 public:
-	CSoundInProxy(CSoundInInterface* s, Request<int>& r):real(s),request(r) {}
+	CSoundInProxy(CSoundInInterface* s):real(s),deviceNo(0) {}
 	virtual ~CSoundInProxy() {}
 	void		Enumerate(vector<string>& v) { if(real) real->Enumerate(v); }
-	int			GetDev() { return request.current; }
-	void		SetDev(int iNewDev) { request.current = iNewDev; }
+	int			GetDev() { return deviceNo.current; }
+	void		SetDev(int iNewDev) { deviceNo.wanted = iNewDev; }
 	CSoundInInterface *real;
-	Request<int>& request;
+	Request<int> deviceNo;
 };
 
 class CAMSSReceiver
@@ -426,7 +426,6 @@ protected:
 	time_t					time_keeper;
 	Request<bool>           onBoardDemod;
 	Request<EInpTy>         pcmInput;
-	Request<int>            soundDev;
 	Request<int>            rig;
 	Request<EModulationType> rigMode;
 	Request<EInChanSel>     chanSel;
