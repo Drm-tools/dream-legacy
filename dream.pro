@@ -1,23 +1,24 @@
 TEMPLATE	= app
 TARGET		= dream
-QT          += qt3support network xml
-CONFIG		+= qt warn_on release thread hamlib
+QT          	+= qt3support network xml
+CONFIG		+= qt warn_on release thread hamlib portaudio
 DEFINES		+= HAVE_QT USE_QT_GUI
 INCLUDEPATH	+= libs
 INCLUDEPATH	+= common/GUI-QT
 VPATH		+= common/GUI-QT
 LIBS 		+= -Llibs
 DEFINES		+= HAVE_LIBFAAC HAVE_LIBFAAD
-FORMS       += DRMMainWindow.ui AnalogMainWindow.ui TransmitterMainWindow.ui
-FORMS       += AMSSDlg.ui SystemEvalDlg.ui JLViewer.ui BWSViewer.ui SlideShowViewer.ui
+FORMS       	+= DRMMainWindow.ui AnalogMainWindow.ui TransmitterMainWindow.ui
+FORMS       	+= AMSSDlg.ui SystemEvalDlg.ui JLViewer.ui BWSViewer.ui SlideShowViewer.ui
 FORMS		+= LiveScheduleDlg.ui StationsDlg.ui EPGDlg.ui
 FORMS		+= MultSettingsDlg.ui AboutDlg.ui
 FORMS		+= ReceiverSettingsDlg.ui LatLongEditDlg.ui
-RCC_DIR     =  common/GUI-QT/res
-RESOURCES   += common/GUI-QT/res/icons.qrc
-TRANSLATIONS = common/GUI-QT/languages/drm.fr.ts common/GUI-QT/languages/dreamtr.es.ts
+RCC_DIR     	=  common/GUI-QT/res
+RESOURCES   	+= common/GUI-QT/res/icons.qrc
+TRANSLATIONS 	= common/GUI-QT/languages/drm.fr.ts common/GUI-QT/languages/dreamtr.es.ts
 UI_DIR		= moc
 MOC_DIR		= moc
+
 debug {
     OBJECTS_DIR	= Debug
 }
@@ -27,7 +28,6 @@ release {
 
 macx {
 	RC_FILE		= common/GUI-QT/res/macicons.icns
-	INCLUDEPATH	+= darwin
 	INCLUDEPATH	+= /Developer/dream/include
 	INCLUDEPATH	+= /Developer/qwt-5.1.1/include
 	LIBS 		+= -L/Developer/dream/lib
@@ -38,45 +38,40 @@ macx {
 
 unix {
 	LIBS 		+= -lsndfile -lpcap -lz -lfaac -lfaad -lrfftw -lfftw
-    DEFINES		+= HAVE_RFFTW_H HAVE_LIBPCAP
+    	DEFINES		+= HAVE_RFFTW_H HAVE_LIBPCAP
 	DEFINES		+= HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H
 	DEFINES		+= HAVE_STRINGS_H HAVE_STRING_H STDC_HEADERS
 	DEFINES		+= HAVE_INTTYPES_H HAVE_STDINT_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H HAVE_UNISTD_H
-    SOURCES		+= linux/source/Pacer.cpp
+    	SOURCES		+= linux/source/Pacer.cpp
 	!macx {
-        INCLUDEPATH	+= /usr/include/qwt-qt4
+        	INCLUDEPATH	+= /usr/include/qwt-qt4
 		INCLUDEPATH	+= linux
 		LIBS 		+= -lrt -lqwt-qt4
-        SOURCES		+= linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c
-        HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
+        	SOURCES		+= linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c
+        	HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
 	}
 }
 
 win32 {
-    DEFINES		-= UNICODE
-	DEFINES		+= HAVE_SETUPAPI
-    SOURCES		+= windows/Source/Pacer.cpp
-    LIBS        += -L../qwt-qt4/lib
-    INCLUDEPATH += ../qwt-qt4/include
-    win32-g++ {
-        DEFINES		+= HAVE_STDINT_H HAVE_STDLIB_H __INTERLOCKED_DECLARED HAVE_LIBPCAP
-        LIBS 		+= -lsndfile -lz -lfaac -lfaad -lrfftw -lfftw -lqwt5
-        LIBS        += -lwpcap -lstdc++
-        LIBS 		+= -lsetupapi -lws2_32
-    }
-    else {
-        TEMPLATE	= vcapp
-        LIBS 		+= libsndfile-1.lib zdll.lib qwt5.lib
-        LIBS		+= libfaac.lib libfaad.lib
-        LIBS		+= libfftw.lib setupapi.lib ws2_32.lib
-        QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:"MSVCRTD, LIBCMT"
-        QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
-    }
-    !portaudio {
-        HEADERS		+= windows/Source/Sound.h windows/Source/SoundWin.h
-        SOURCES		+= windows/Source/Sound.cpp
-        LIBS        += -lwinmm
-    }
+	DEFINES		-= UNICODE
+	DEFINES		+= HAVE_SETUPAPI NOMINMAX
+	SOURCES		+= windows/Source/Pacer.cpp
+	LIBS        	+= -L../qwt-qt4/lib
+	INCLUDEPATH 	+= ../qwt-qt4/include
+	win32-g++ {
+		DEFINES	+= HAVE_STDINT_H HAVE_STDLIB_H __INTERLOCKED_DECLARED HAVE_LIBPCAP
+		LIBS 	+= -lsndfile -lz -lfaac -lfaad -lrfftw -lfftw -lqwt5
+		LIBS	+= -lwpcap -lstdc++
+		LIBS 	+= -lsetupapi -lws2_32
+	}
+	else {
+		TEMPLATE	= vcapp
+		LIBS 		+= libsndfile-1.lib zdll.lib qwt5.lib
+		LIBS		+= libfaac.lib libfaad.lib
+		LIBS		+= libfftw.lib setupapi.lib ws2_32.lib
+        	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:"MSVCRTD, LIBCMT"
+		QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
+	}
 }
 
 hamlib {
@@ -90,27 +85,33 @@ hamlib {
 		LIBS 	+= -framework IOKit
 	}
 	win32 {
-        win32-g++ {
-            LIBS 	+= -lhamlib
-        } else {
-            LIBS	+= libhamlib.lib
-        }
-    }
+		win32-g++ {
+		    LIBS 	+= -lhamlib
+		} else {
+		    LIBS	+= libhamlib.lib
+		}
+	}
 }
 
 portaudio {
 	DEFINES		+= USE_PORTAUDIO
 	HEADERS		+= common/sound/pa_ringbuffer.h common/sound/drm_portaudio.h
 	SOURCES		+= common/sound/drm_portaudio.cpp common/sound/pa_ringbuffer.c
-    win32-g++ {
-        LIBS 	+= ./libs/PortAudio.dll
-    } else {
-        LIBS 	+= -lportaudio
-    }
+	win32-g++ {
+		LIBS 	+= ./libs/PortAudio.dll
+	} else {
+		LIBS 	+= -lportaudio
+	}
 }
 
+winmm {
+	CONFIG		-= portaudio
+	HEADERS		+= windows/Source/Sound.h windows/Source/SoundWin.h
+	SOURCES		+= windows/Source/Sound.cpp
+	LIBS		+= -lwinmm
+}
 alsa {
-    CONFIG      -= portaudio
+	CONFIG		-= portaudio
 	DEFINES		+= USE_ALSA
 	HEADERS		+= linux/source/soundcommon.h  linux/source/soundin.h  linux/source/soundout.h
 	SOURCES		+= linux/source/alsa.cpp linux/source/soundcommon.cpp
@@ -118,7 +119,7 @@ alsa {
 }
 
 jack {
-    CONFIG      -= portaudio
+	CONFIG		-= portaudio
 	DEFINES		+= USE_JACK
 	HEADERS		+= linux/source/soundcommon.h  linux/source/soundin.h  linux/source/soundout.h
 	SOURCES		+= linux/source/jack.cpp linux/source/soundcommon.cpp
@@ -393,5 +394,3 @@ common/util/Reassemble.cpp   \
 common/util/Settings.cpp   \
 common/util/Utilities.cpp   \
 common/Version.cpp
-
-
