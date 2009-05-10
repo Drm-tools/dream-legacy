@@ -45,18 +45,13 @@ void* NEAACDECAPI NeAACDecDecodeDummy(NeAACDecHandle,NeAACDecFrameInfo* info,uns
 #endif
 
 // Store AAC-data in file
-static void WriteAACFrame(CParameter& Parameters,
+static void WriteAACFrame(int iStreamID, CParameter& Parameters,
 	const vector<_BYTE>& vecbyPrepAudioFrame, int iFrameLen)
 {
 	string strAACTestFileName = "test/aac_";
 	Parameters.Lock();
-	/* Get current selected audio service */
-	int iCurSelServ = Parameters.GetCurSelAudioService();
 
-	/* Current audio stream ID */
-	int iCurAudioStreamID = Parameters.Service[iCurSelServ].iAudioStream;
-
-	const CAudioParam& AudioParam = Parameters.AudioParam[iCurAudioStreamID];
+	const CAudioParam& AudioParam = Parameters.AudioParam[iStreamID];
 
 	if (AudioParam.eAudioSamplRate == CAudioParam::AS_12KHZ)
 	{
@@ -95,18 +90,14 @@ static void WriteAACFrame(CParameter& Parameters,
 }
 
 // Store CELP-data in file
-static void WriteCELPFrame(CParameter& Parameters, CVector<_BINARY>& celp_frame, int bits)
+static void WriteCELPFrame(int iStreamID, CParameter& Parameters,
+	CVector<_BINARY>& celp_frame, int bits)
 {
 	stringstream fname;
 	fname << "test/celp_";
 	Parameters.Lock();
-	/* Get current selected audio service */
-	int iCurSelServ = Parameters.GetCurSelAudioService();
 
-	/* Current audio stream ID */
-	int iCurAudioStreamID = Parameters.Service[iCurSelServ].iAudioStream;
-
-	const CAudioParam& AudioParam = Parameters.AudioParam[iCurAudioStreamID];
+	const CAudioParam& AudioParam = Parameters.AudioParam[iStreamID];
 	if (AudioParam.eAudioSamplRate == CAudioParam::AS_8_KHZ)
 	{
 		fname << "8kHz_" << iTableCELP8kHzUEPParams[AudioParam.iCELPIndex][0];
@@ -312,7 +303,7 @@ f.close();
 					vecbyPrepAudioFrame[i + 1] = audio_frame[j][i];
 
 #if 0
-				WriteAACFrame(Parameters, vecbyPrepAudioFrame, veciFrameLength[j]);
+				WriteAACFrame(iStreamID, Parameters, vecbyPrepAudioFrame, veciFrameLength[j]);
 #endif
 
 				/* Call decoder routine */
@@ -407,7 +398,7 @@ f.close();
 			Parameters.Unlock();
 
 #if 0
-			WriteCELPFrame(Parameters, celp_frame[j], iNumHigherProtectedBits+iNumLowerProtectedBits);
+			WriteCELPFrame(iStreamID, Parameters, celp_frame[j], iNumHigherProtectedBits+iNumLowerProtectedBits);
 #endif
 
 #ifdef USE_CELP_DECODER
@@ -584,9 +575,7 @@ CAudioSourceDecoder::InitInternal(CParameter& Parameters)
 	Requirement for AAC decoding are the requirements above plus "audio coding
 	is AAC"
 */
-	int iCurAudioStreamID;
 	int iMaxLenResamplerOutput;
-	int iCurSelServ;
 	int iAudioSampleRate;
 
 	/* Init error flags and output block size parameter. The output block
@@ -605,23 +594,15 @@ CAudioSourceDecoder::InitInternal(CParameter& Parameters)
 		/* Init "audio was ok" flag */
 		bAudioWasOK = true;
 
-		/* Get number of total input bits for this module */
-		iInputBlockSize = Parameters.iNumAudioDecoderBits;
-
-		/* Get current selected audio service */
-		iCurSelServ = Parameters.GetCurSelAudioService();
-
-		/* Current audio stream ID */
-		iCurAudioStreamID = Parameters.Service[iCurSelServ].iAudioStream;
-		/* The requirement for this module is that the stream is used and the
-		   service is an audio service. Check it here */
-		if ((Parameters.Service[iCurSelServ].eAudDataFlag != SF_AUDIO) ||
-			(iCurAudioStreamID == STREAM_ID_NOT_USED))
+		if (iStreamID == STREAM_ID_NOT_USED)
 		{
 			throw CInitErr(ET_ALL);
 		}
 
-		CAudioParam& AudioParam = Parameters.AudioParam[iCurAudioStreamID];
+		/* Get number of total input bits for this module */
+		iInputBlockSize = Parameters.GetStreamLen(iStreamID) * BITS_BINARY;
+
+		CAudioParam& AudioParam = Parameters.AudioParam[iStreamID];
 
 		/* Init text message application ------------------------------------ */
 		switch (AudioParam.bTextflag)
@@ -659,7 +640,7 @@ CAudioSourceDecoder::InitInternal(CParameter& Parameters)
 			int iAACSampleRate, iNumHeaderBytes, iDRMchanMode = DRMCH_MONO;
 
 			/* Length of higher protected part of audio stream */
-			const int iLenAudHigh = Parameters.MSCParameters.Stream[iCurAudioStreamID].iLenPartA;
+			const int iLenAudHigh = Parameters.MSCParameters.Stream[iStreamID].iLenPartA;
 
 			/* Set number of AAC frames in a AAC super-frame */
 			switch (AudioParam.eAudioSamplRate)	/* Only 12 kHz and 24 kHz is allowed */

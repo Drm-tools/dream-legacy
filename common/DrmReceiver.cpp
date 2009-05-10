@@ -127,9 +127,8 @@ rInitResampleOffset((_REAL) 0.0), iFreqkHz(0),time_keeper(0),
 onBoardDemod(false),pcmInput(SoundCard),soundDev(0),
 rig(0),rigMode(DRM),chanSel(CS_MIX_CHAN),
 strPCMFile(),bRigUpdateNeeded(true),bRigUpdateForAllModes(false),
-pHamlib(NULL),soundIn(soundDev)
+pHamlib(NULL),soundIn(new CSoundIn(),soundDev)
 {
-	soundIn.real = new CSoundIn();
 	downstreamRSCI.SetReceiver(this);
     DataDecoder.setApplication(CDataParam::AD_DAB_SPEC_APP, AT_MOTSLISHOW, new CMOTDABDecFactory());
     DataDecoder.setApplication(CDataParam::AD_DAB_SPEC_APP, AT_MOTBROADCASTWEBSITE, new CMOTDABDecFactory());
@@ -187,6 +186,8 @@ void
 CDRMReceiver::RigUpdate()
 {
 #ifdef HAVE_LIBHAMLIB
+	if(pHamlib==NULL)
+		return;
 	rig.current = pHamlib->GetRigModel();
 	rigMode.current = pHamlib->GetRigMode();
 	CRigCaps old_caps, new_caps;
@@ -393,6 +394,7 @@ CDRMReceiver::Run()
             Parameters.AudioParam = Parameters.NextConfig.AudioParam;
             Parameters.DataParam = Parameters.NextConfig.DataParam;
             Parameters.Unlock();
+            MSCMLCDecoder.SetInitFlag(); // protection levels
             MSCDemultiplexer.SetInitFlag();
             /* Reinitialise component decoders */
             for (size_t i = 0; i < MSCDecBuf.size(); i++)
@@ -1184,23 +1186,16 @@ CDRMReceiver::InitsForAllModules(EModulationType eModulation)
 	AMSoEncBuf.Clear();
 }
 
-
 void
 CDRMReceiver::InitsForAudParam()
 {
     Parameters.Lock();
 	int iShortID = Parameters.GetCurSelAudioService();
-	int iStreamID = Parameters.Service[iShortID].iAudioStream;
-	if(iStreamID != STREAM_ID_NOT_USED)
-	{
-		int audiobits = Parameters.GetStreamLen(iStreamID) * BITS_BINARY;
-		Parameters.iNumAudioDecoderBits = audiobits;
-	}
+	iAudioStreamID = Parameters.Service[iShortID].iAudioStream;
 	Parameters.Unlock();
 
-	AudioSourceDecoder.SetStream(iStreamID);
+	AudioSourceDecoder.SetStream(iAudioStreamID);
 	AudioSourceDecoder.SetInitFlag();
-	iAudioStreamID = iStreamID;
 }
 
 void
@@ -1208,17 +1203,11 @@ CDRMReceiver::InitsForDataParam()
 {
     Parameters.Lock();
 	int iShortID = Parameters.GetCurSelDataService();
-	int iStreamID = Parameters.Service[iShortID].iDataStream;
-	if(iStreamID != STREAM_ID_NOT_USED)
-	{
-        int databits = Parameters. GetStreamLen(iStreamID) * BITS_BINARY;
-        Parameters.iNumDataDecoderBits = databits;
-	}
+	iDataStreamID = Parameters.Service[iShortID].iDataStream;
 	Parameters.Unlock();
 
-	DataDecoder.SetStream(iStreamID);
+	DataDecoder.SetStream(iDataStreamID);
 	DataDecoder.SetInitFlag();
-	iDataStreamID = iStreamID;
 }
 
 // TODO change rig if requested frequency not supported but another rig can support.

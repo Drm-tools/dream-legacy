@@ -213,7 +213,7 @@ CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QMenu(parent)
 
 /* Sound card selection menu ------------------------------------------------ */
 CSoundCardSelMenu::CSoundCardSelMenu(CSelectionInterface* pNS, QWidget* parent) :
-	QMenu(parent), pSoundIF(pNS)
+	QMenu(parent), pSoundIF(pNS), vecNames(), iNumDev(0)
 {
 	/* Get sound device names */
 	pSoundIF->Enumerate(vecNames);

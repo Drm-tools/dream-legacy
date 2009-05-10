@@ -315,8 +315,6 @@ CParameter::CParameter():CCoreParameter(),
  iNumBitsHierarchFrameTotal(0),
  iNumDecodedBitsMSC(0),
  iNumSDCBitsPerSuperFrame(0),
- iNumAudioDecoderBits(0),
- iNumDataDecoderBits(0),
  iYear(0),
  iMonth(0),
  iDay(0),
@@ -376,8 +374,6 @@ CParameter::CParameter(const CParameter& p):
  iNumBitsHierarchFrameTotal(p.iNumBitsHierarchFrameTotal),
  iNumDecodedBitsMSC(p.iNumDecodedBitsMSC),
  iNumSDCBitsPerSuperFrame(p.iNumSDCBitsPerSuperFrame),
- iNumAudioDecoderBits(p.iNumAudioDecoderBits),
- iNumDataDecoderBits(p.iNumDataDecoderBits),
  iYear(p.iYear), iMonth(p.iMonth), iDay(p.iDay),
  iUTCHour(p.iUTCHour), iUTCMin(p.iUTCMin),
  rFreqOffsetAcqui(p.rFreqOffsetAcqui),
@@ -430,8 +426,6 @@ CParameter& CParameter::operator=(const CParameter& p)
 	iNumBitsHierarchFrameTotal = p.iNumBitsHierarchFrameTotal;
 	iNumDecodedBitsMSC = p.iNumDecodedBitsMSC;
 	iNumSDCBitsPerSuperFrame = p.iNumSDCBitsPerSuperFrame;
-	iNumAudioDecoderBits = p.iNumAudioDecoderBits;
-	iNumDataDecoderBits = p.iNumDataDecoderBits;
 	iYear = p.iYear;
 	iMonth = p.iMonth;
 	iDay = p.iDay;
@@ -1417,8 +1411,6 @@ CParameter::dump(ostream& out) const
     out << "NumBitsHierarchFrameTotal: " <<  iNumBitsHierarchFrameTotal << "," << endl;
     out << "NumDecodedBitsMSC: " <<  iNumDecodedBitsMSC << "," << endl;
     out << "NumSDCBitsPerSuperFrame: " <<  iNumSDCBitsPerSuperFrame << "," << endl;
-    out << "NumAudioDecoderBits: " <<  iNumAudioDecoderBits << "," << endl;
-    out << "NumDataDecoderBits: " <<  iNumDataDecoderBits << "," << endl;
     out << "Year: " <<  iYear << "," << endl;
     out << "Month: " <<  iMonth << "," << endl;
     out << "Day: " <<  iDay << "," << endl;

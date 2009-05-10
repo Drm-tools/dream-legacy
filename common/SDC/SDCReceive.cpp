@@ -332,10 +332,9 @@ bool CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
              !=0                t      signalled reconfig
      */
     Parameter.Lock();
-    if(!(Parameter.MSCParameters == msc))
+    if(Parameter.MSCParameters != msc)
     {
         bool bReconf = Parameter.FACParameters.iReconfigurationIndex!=0;
-
         if(bForNextConfig == bReconf)
         {
             bServiceReconfigurationPending = true;

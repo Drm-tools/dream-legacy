@@ -123,12 +123,14 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 void
 CDataDecoder::InitInternal(CParameter & ReceiverParam)
 {
-	int iTotalNumInputBits;
-	int iTotalNumInputBytes;
-
 	/* Get number of total input bits (and bytes) for this module */
-	iTotalNumInputBits = ReceiverParam.iNumDataDecoderBits;
-	iTotalNumInputBytes = iTotalNumInputBits / BITS_BINARY;
+	int iTotalNumInputBits = 0;
+	if(iStreamID != STREAM_ID_NOT_USED)
+	{
+        iTotalNumInputBits = ReceiverParam. GetStreamLen(iStreamID) * BITS_BINARY;
+	}
+
+	int iTotalNumInputBytes = iTotalNumInputBits / BITS_BINARY;
 
 	/* Set input block size */
 	iInputBlockSize = iTotalNumInputBits;

@@ -123,7 +123,7 @@ class CSplitAudio : public CSplitModul<_SAMPLE>
 class CSoundInProxy : public CSelectionInterface
 {
 public:
-	CSoundInProxy(Request<int>& r):real(NULL),request(r) {}
+	CSoundInProxy(CSoundInInterface* s, Request<int>& r):real(s),request(r) {}
 	virtual ~CSoundInProxy() {}
 	void		Enumerate(vector<string>& v) { if(real) real->Enumerate(v); }
 	int			GetDev() { return request.current; }

@@ -852,8 +852,6 @@ class CParameter : public CCoreParameter
 	int iNumBitsHierarchFrameTotal;
 	int iNumDecodedBitsMSC;
 	int iNumSDCBitsPerSuperFrame;	/* Number of SDC bits per super-frame */
-	int iNumAudioDecoderBits;	/* Number of input bits for audio module */
-	int iNumDataDecoderBits;	/* Number of input bits for data decoder module */
 
 	/* Date */
 	int iYear;
