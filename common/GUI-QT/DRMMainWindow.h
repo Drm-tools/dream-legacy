@@ -43,7 +43,7 @@ class DRMMainWindow : public QMainWindow, public Ui_DRMMainWindow
 
 public:
 	DRMMainWindow(ReceiverInterface&, CSettings&, QWidget* parent = 0,
-	const char* name = 0,	Qt::WFlags f = 0);
+	Qt::WFlags f = 0);
 	virtual ~DRMMainWindow();
 	/* dummy assignment operator to help MSVC8 */
 	DRMMainWindow& operator=(const DRMMainWindow&)
@@ -62,7 +62,6 @@ protected:
 	QDialog*        liveScheduleDlg;
 	QDialog*        epgDlg;
 	QDialog*        receiverSettingsDlg;
-	QDialog*        multSettingsDlg;
     QButtonGroup*   serviceGroup;
 
     Loghelper		loghelper;
@@ -85,12 +84,14 @@ protected:
     void	        showEvent(QShowEvent* pEvent);
     void	        hideEvent(QHideEvent* pEvent);
     void            closeEvent(QCloseEvent*);
+	bool			TryShowDataWindow(int);
 
 public slots:
 
 	void OnTimer();
 	void OnNewDRMAcquisition();
 	void OnMenuSetDisplayColor();
+	void OnMenuDataApplication();
     void OnSwitchToAnalog();
 	void SetService(int);
 	void OnHelpWhatsThis();

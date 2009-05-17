@@ -29,7 +29,6 @@
 \******************************************************************************/
 
 #ifdef _WIN32
-# define NOMINMAX
 # ifdef _WIN32_WINNT
 #  undef _WIN32_WINNT
 # endif
@@ -123,23 +122,23 @@ main(int argc, char **argv)
 		if (strMode == "RX")
 		{
 #ifdef HAVE_LIBHAMLIB
-            CHamlib *pHamlib = NULL;
-            string rsi = m.Settings.Get("command", "rsiin", string(""));
-            string fio = m.Settings.Get("command", "fileio", string(""));
-            if(rsi == "" && fio == "") /* don't initialise hamlib if RSCI or file input is requested */
-            {
-                pHamlib = new CHamlib(*m.Receiver.GetParameters());
-                m.Receiver.SetHamlib(pHamlib);
-            }
+	    CHamlib *pHamlib = NULL;
+	    string rsi = m.Settings.Get("command", "rsiin", string(""));
+	    string fio = m.Settings.Get("command", "fileio", string(""));
+	    if(rsi == "" && fio == "") /* don't initialise hamlib if RSCI or file input is requested */
+	    {
+		pHamlib = new CHamlib(*m.Receiver.GetParameters());
+		m.Receiver.SetHamlib(pHamlib);
+	    }
 #endif
-            m.Receiver.LoadSettings(m.Settings);
+	    m.Receiver.LoadSettings(m.Settings);
 
-            m.doNewMainWindow();
+	    m.doNewMainWindow();
 
-            /* Start working thread */
-            m.Receiver.start();
+	    /* Start working thread */
+	    m.Receiver.start();
 
-            app.exec();
+	    app.exec();
 
 #ifdef HAVE_LIBHAMLIB
 			if(pHamlib)
@@ -158,9 +157,10 @@ main(int argc, char **argv)
 
 			DRMTransmitter.LoadSettings(m.Settings);
 
-			TransmitterMainWindow MainDlg(DRMTransmitter, m.Settings, NULL, NULL, Qt::WStyle_MinMax);
+			TransmitterMainWindow MainDlg(DRMTransmitter, m.Settings, NULL, NULL, Qt::WindowMinMaxButtonsHint);
 			/* Set main window */
-			app.setMainWidget(&MainDlg);
+			//app.setMainWidget(&MainDlg);
+			//setMainWidget - TODO You need not have a main widget; connecting lastWindowClosed() to quit() is an alternative.
 
 			/* Show dialog */
 			MainDlg.show();
@@ -171,12 +171,12 @@ main(int argc, char **argv)
 		else if (strMode == "SIM")
 		{
 
-            CDRMSimulation DRMSimulation;
+	    CDRMSimulation DRMSimulation;
 
-            /* Call simulation script. If simulation is activated, application is
-               automatically exit in that routine. If in the script no simulation is
-               activated, this function will immediately return */
-            DRMSimulation.SimScript();
+	    /* Call simulation script. If simulation is activated, application is
+	       automatically exit in that routine. If in the script no simulation is
+	       activated, this function will immediately return */
+	    DRMSimulation.SimScript();
 		}
 		else
 		{

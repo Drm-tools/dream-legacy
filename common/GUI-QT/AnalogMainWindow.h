@@ -54,8 +54,7 @@ class CAMSSDlg : public QDialog, public Ui_AMSSDlg
 	Q_OBJECT
 
 public:
-	CAMSSDlg(AnalogReceiverInterface&, CSettings&, QWidget* parent = 0, const char* name = 0,
-		bool modal = false, Qt::WFlags f = 0);
+	CAMSSDlg(AnalogReceiverInterface&, CSettings&, QWidget* parent = 0, Qt::WFlags f = 0);
 	/* dummy assignment operator to help MSVC8 */
 	CAMSSDlg& operator=(const CAMSSDlg&)
 	{ throw "should not happen"; return *this;}
@@ -84,7 +83,7 @@ class AnalogMainWindow : public QMainWindow, public Ui_AnalogMainWindow
 
 public:
 	AnalogMainWindow(ReceiverInterface&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, Qt::WFlags f = 0);
+		Qt::WFlags f = 0);
 	/* dummy assignment operator to help MSVC8 */
 	AnalogMainWindow& operator=(const AnalogMainWindow&)
 	{ throw "should not happen"; return *this;}
@@ -92,40 +91,40 @@ public:
 	void 			UpdatePlotStyle();
 
 protected:
-	ReceiverInterface&	Receiver;
-	CSettings&		Settings;
-	ReceiverSettingsDlg* pReceiverSettingsDlg;
-	QDialog*        stationsDlg;
-	QDialog*        liveScheduleDlg;
-	CDRMPlot*       plot;
+    ReceiverInterface&      Receiver;
+    CSettings&              Settings;
+    ReceiverSettingsDlg*    pReceiverSettingsDlg;
+    QDialog*                stationsDlg;
+    QDialog*                liveScheduleDlg;
+    CDRMPlot*               plot;
 
-	QTimer			Timer;
-	QTimer			TimerPLLPhaseDial;
-	CAMSSDlg		AMSSDlg;
-	bool            quitWanted;
+    QTimer                  Timer;
+    QTimer                  TimerPLLPhaseDial;
+    CAMSSDlg                AMSSDlg;
+    bool                    quitWanted;
 
-	void			UpdateControls();
-	void			AddWhatsThisHelp();
-    void	        showEvent(QShowEvent* pEvent);
-    void	        hideEvent(QHideEvent* pEvent);
-    void	        closeEvent(QCloseEvent* pEvent);
+    void                    UpdateControls();
+    void                    AddWhatsThisHelp();
+    void                    showEvent(QShowEvent* pEvent);
+    void                    hideEvent(QHideEvent* pEvent);
+    void                    closeEvent(QCloseEvent* pEvent);
 
 public slots:
-	void OnTimer();
-	void OnTimerPLLPhaseDial();
-	void OnRadioDemodulation(int iID);
-	void OnRadioAGC(int iID);
-	void OnCheckBoxMuteAudio();
-	void OnCheckSaveAudioWAV();
-	void OnCheckAutoFreqAcq();
-	void OnCheckPLL();
-	void OnCheckOnBoardDemod();
-	void OnChartxAxisValSet(double dVal);
-	void OnSliderBWChange(int value);
-	void OnRadioNoiRed(int iID);
-	void OnNewAMAcquisition();
-	void OnButtonWaterfall();
-	void OnButtonAMSS();
+    void OnTimer();
+    void OnTimerPLLPhaseDial();
+    void OnRadioDemodulation(int iID);
+    void OnRadioAGC(int iID);
+    void OnCheckBoxMuteAudio();
+    void OnCheckBoxReverb();
+    void OnCheckSaveAudioWAV();
+    void OnCheckAutoFreqAcq();
+    void OnCheckPLL();
+    void OnChartxAxisValSet(double dVal);
+    void OnSliderBWChange(int value);
+    void OnRadioNoiRed(int iID);
+    void OnNewAMAcquisition();
+    void OnButtonWaterfall();
+    void OnButtonAMSS();
     void OnSwitchToDRM();
-	void OnHelpWhatsThis();
+    void OnHelpWhatsThis();
 };

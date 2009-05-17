@@ -126,8 +126,7 @@ bDoInitRun(false), bRunning(false),
 rInitResampleOffset((_REAL) 0.0), iFreqkHz(0),time_keeper(0),
 onBoardDemod(false),pcmInput(SoundCard),
 rig(0),rigMode(DRM),chanSel(CS_MIX_CHAN),
-strPCMFile(),bRigUpdateNeeded(true),bRigUpdateForAllModes(false),
-pHamlib(NULL),soundIn(new CSoundIn())
+strPCMFile(),pHamlib(NULL),soundIn(new CSoundIn())
 {
 	downstreamRSCI.SetReceiver(this);
     DataDecoder.setApplication(CDataParam::AD_DAB_SPEC_APP, AT_MOTSLISHOW, new CMOTDABDecFactory());
@@ -188,17 +187,12 @@ CDRMReceiver::RigUpdate()
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib==NULL)
 		return;
-	rig.current = pHamlib->GetRigModel();
-	rigMode.current = pHamlib->GetRigMode();
 	CRigCaps old_caps, new_caps;
 	pHamlib->GetRigCaps(rig.current, old_caps);
 	pHamlib->GetRigCaps(rig.wanted, new_caps);
 	if(rigMode.current != rigMode.wanted || rig.current != rig.wanted)
 	{
-		if(bRigUpdateForAllModes)
-			pHamlib->SetRigModelForAllModes(rig.wanted);
-		else
-			pHamlib->SetRigModel(rigMode.wanted, rig.wanted);
+		pHamlib->SetRigModel(rig.wanted);
 		rig.current = rig.wanted;
 
 		if(new_caps.attribute(rigMode.wanted, "audiotype")=="shm")
@@ -235,7 +229,8 @@ CDRMReceiver::RigUpdate()
 	}
 	stringstream s;
 	s << soundIn.deviceNo.wanted;
-	pHamlib->set_attribute(rigMode.wanted, "snddevin", s.str()); // save for persistence
+	pHamlib->SetModulation(rigMode.wanted);
+	pHamlib->set_attribute(rig.current, rigMode.wanted, "snddevin", s.str()); // save for persistence
 	rigMode.current = rigMode.wanted;
 #endif
 }
@@ -447,10 +442,9 @@ CDRMReceiver::Run()
 	}
 
 	/* check for Rig change */
-	if(bRigUpdateNeeded)
+	if(rig.wanted != rig.current)
 	{
 		RigUpdate();
-		bRigUpdateNeeded = false;
 	}
 
 	/* check for OFDM source change */
@@ -908,7 +902,7 @@ CDRMReceiver::DetectAcquiFAC()
 bool
 CDRMReceiver::GetRigChangeInProgress()
 {
-	return bRigUpdateNeeded;
+	return rig.wanted != rig.current;
 }
 
 #ifdef USE_QT_GUI
@@ -1296,41 +1290,13 @@ void CDRMReceiver::SetHamlib(CHamlib* p)
 {
     if(pHamlib)
         delete pHamlib;
-	pHamlib = p;
-	if(pHamlib)
-	{
-#ifdef HAVE_LIBHAMLIB
-		SetRigModel(pHamlib->GetWantedRigModel());
-#endif
-	}
-}
-
-void CDRMReceiver::SetRigModelForAllModes(int iID)
-{
-	rig.wanted = iID;
-	bRigUpdateForAllModes = true;
-	bRigUpdateNeeded=true;
-	Parameters.Lock();
-	Parameters.RxEvent = ChannelReconfiguration; // trigger an update!
-	Parameters.Unlock();
+    pHamlib = p;
 }
 
 void CDRMReceiver::SetRigModel(int iID)
 {
 	rig.wanted = iID;
-	bRigUpdateForAllModes = false;
-	bRigUpdateNeeded=true;
-}
-
-int CDRMReceiver::GetRigModel() const
-{
-#ifdef HAVE_LIBHAMLIB
-	if(pHamlib)
-	{
-		return pHamlib->GetRigModel();
-	}
-#endif
-	return 0;
+	//rigMode.wanted = e;
 }
 
 void CDRMReceiver::GetRigList(map<int,CRigCaps>& rigs) const
@@ -1338,14 +1304,6 @@ void CDRMReceiver::GetRigList(map<int,CRigCaps>& rigs) const
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
 		pHamlib->GetRigList(rigs);
-#endif
-}
-
-void CDRMReceiver::GetRigCaps(CRigCaps& caps) const
-{
-#ifdef HAVE_LIBHAMLIB
-	if(pHamlib)
-		pHamlib->GetRigCaps(caps);
 #endif
 }
 
@@ -1362,6 +1320,14 @@ void CDRMReceiver::GetComPortList(map<string,string>& ports) const
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
 		pHamlib->GetPortList(ports);
+#endif
+}
+
+string CDRMReceiver::GetRigInfo() const
+{
+#ifdef HAVE_LIBHAMLIB
+	if(pHamlib)
+		return pHamlib->GetInfo();
 #endif
 }
 
@@ -1383,34 +1349,17 @@ void CDRMReceiver::SetRigComPort(const string& s)
 }
 
 /* TEST store information about alternative frequency transmitted in SDC */
+/* Current AFS data is stored in the ServiceInformation record for the service with
+   shortid 0
+*/
 void
 CDRMReceiver::saveSDCtoFile()
 {
-	static FILE *pFile = NULL;
-
-	if(pFile == NULL)
-		pFile = fopen("test/altfreq.dat", "w");
-
+	ofstream out("test/altfreq.dat", ios::app);
 	Parameters.Lock();
-	size_t inum = Parameters.AltFreqSign.vecMultiplexes.size();
-	for (size_t z = 0; z < inum; z++)
-	{
-		fprintf(pFile, "sync:%d sr:", Parameters.AltFreqSign.vecMultiplexes[z].bIsSyncMultplx);
-
-		for (int k = 0; k < 4; k++)
-				fprintf(pFile, "%d", Parameters.AltFreqSign.vecMultiplexes[z].  veciServRestrict[k]);
-		fprintf(pFile, " fr:");
-
-		for (size_t kk = 0; kk < Parameters.AltFreqSign.vecMultiplexes[z].veciFrequencies.size(); kk++)
-			fprintf(pFile, "%d ", Parameters.AltFreqSign.vecMultiplexes[z].  veciFrequencies[kk]);
-
-		fprintf(pFile, " rID:%d sID:%d   /   ",
-					Parameters.AltFreqSign.vecMultiplexes[z].iRegionID,
-					Parameters.AltFreqSign.vecMultiplexes[z].iScheduleID);
-	}
+	Parameters.ServiceInformation[Parameters.Service[0].iServiceID].AltFreqSign.dump(out);
 	Parameters.Unlock();
-	fprintf(pFile, "\n");
-	fflush(pFile);
+	out.close();
 }
 
 void

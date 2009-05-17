@@ -33,7 +33,6 @@
 #ifdef _WIN32
   /* Always include winsock2.h before windows.h */
     /* winsock2.h is already included into libpcap */
-# define NOMINMAX
 # include <winsock2.h>
 # include <ws2tcpip.h>
 # include <windows.h>
@@ -78,33 +77,33 @@ void CPacketSinkFile::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint1
 {
 	if (bChangeReceived) // something has changed, so close the file if it's open
 	{
-        if (pFile)
-        {
+	if (pFile)
+	{
 			close();
 		}
-        pFile = 0;
+	pFile = 0;
 		bChangeReceived = false;
 	}
 
     if (!bIsRecording) // not recording
     {
-            if (pFile != 0) // close file if one is open
-            {
-                    close();
-                    pFile = 0;
-            }
-            return;
+	    if (pFile != 0) // close file if one is open
+	    {
+		    close();
+		    pFile = 0;
+	    }
+	    return;
     }
 
     if (!pFile) // either wasn't open, or we just closed it
     {
-            open();
-            if (!pFile)
-          {
-                    // Failed to open
-                    bIsRecording = false;
-                    return;
-            }
+	    open();
+	    if (!pFile)
+	  {
+		    // Failed to open
+		    bIsRecording = false;
+		    return;
+	    }
     }
 
 	write(vecbydata);

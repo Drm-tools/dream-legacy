@@ -42,6 +42,7 @@
 #include <QPixmap>
 #include <QFrame>
 #include <QLayout>
+#include <QIcon>
 #include <iostream>
 
 /* Length of the history for synchronization parameters (used for the plot) */
@@ -117,7 +118,7 @@ QRgb WaterfallColorMap::rgb(const QwtDoubleInterval &, double value) const
 		/* Also change saturation to get dark colors when low level */
 		const int iCurSat = (int) ((1 - (_REAL) iFinalCol / iMaxHue) * iMaxSat);
 
-		return QColor(iFinalCol, iCurSat, iCurSat, QColor::Hsv).rgb();
+		return QColor::fromHsv(iFinalCol, iCurSat, iCurSat).rgb();
 }
 
 unsigned char WaterfallColorMap::colorIndex(const QwtDoubleInterval&, double) const
@@ -268,8 +269,8 @@ CDRMPlot::CDRMPlot(QwtPlot *p, CParameter* param) :
     plot->insertLegend(new QwtLegend(), QwtPlot::RightLegend);
 
     /* For torn off plots */
-	plot->setCaption(tr("Chart Window"));
-    plot->setIcon(QPixmap(":/icons/MainIcon.png"));
+	plot->setWindowTitle(tr("Chart Window"));
+    plot->setWindowIcon(QIcon(QPixmap(":/icons/MainIcon.png")));
 
 	/* Connections */
 	QwtPlotPicker* picker = new QwtPlotPicker(
@@ -879,7 +880,7 @@ void CDRMPlot::SetAvIR()
     plot->setAxisTitle(QwtPlot::yLeft, tr("IR [dB]"));
     plot->setAxisScale(QwtPlot::yLeft, -20.0, 40.0);
 
-    plot->canvas()->setBackgroundMode(Qt::PaletteBackground);
+    plot->canvas()->setBackgroundRole(QPalette::Window);
 
     /* Insert curves */
     curve1 = new QwtPlotCurve(tr("Guard-interval beginning"));
@@ -996,7 +997,7 @@ void CDRMPlot::SetTranFct()
     grid->enableX(true);
     grid->enableY(true);
     plot->setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
-    plot->canvas()->setBackgroundMode(Qt::PaletteBackground);
+    plot->canvas()->setBackgroundRole(QPalette::Window);
 
     plot->enableAxis(QwtPlot::yLeft, true);
     plot->setAxisTitle(QwtPlot::yLeft, tr("TF [dB]"));
@@ -1066,7 +1067,7 @@ void CDRMPlot::SetAudioSpectrum()
     plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
     plot->enableAxis(QwtPlot::yLeft, true);
     plot->setAxisTitle(QwtPlot::yLeft, "AS [dB]");
-    plot->canvas()->setBackgroundMode(Qt::PaletteBackground);
+    plot->canvas()->setBackgroundRole(QPalette::Window);
 
     /* Fixed scale */
     plot->setAxisScale(QwtPlot::yLeft, (double) -90.0, (double) -20.0);
@@ -1110,7 +1111,7 @@ void CDRMPlot::SetFreqSamOffsHist()
     plot->setAxisTitle(QwtPlot::xBottom, tr("Time [s]"));
     plot->enableAxis(QwtPlot::yLeft, true);
     plot->setAxisTitle(QwtPlot::yRight, tr("Sample Rate Offset [Hz]"));
-    plot->canvas()->setBackgroundMode(Qt::PaletteBackground);
+    plot->canvas()->setBackgroundRole(QPalette::Window);
     plot->enableAxis(QwtPlot::yLeft, true);
 
     /* Add main curves */
@@ -1222,7 +1223,7 @@ void CDRMPlot::SetDopplerDelayHist()
     plot->enableAxis(QwtPlot::yLeft, true);
     plot->setAxisTitle(QwtPlot::yLeft, tr("Delay [ms]"));
     plot->setAxisTitle(QwtPlot::yRight, tr("Doppler [Hz]"));
-    plot->canvas()->setBackgroundMode(Qt::PaletteBackground);
+    plot->canvas()->setBackgroundRole(QPalette::Window);
 
     /* Fixed scale */
     plot->setAxisScale(QwtPlot::yLeft, (double) 0.0, (double) 10.0);
@@ -1272,7 +1273,7 @@ void CDRMPlot::SetSNRAudHist()
     plot->enableAxis(QwtPlot::yLeft, true);
     plot->setAxisTitle(QwtPlot::yLeft, tr("SNR [dB]"));
     plot->setAxisTitle(QwtPlot::yRight, tr("Corr. Dec. Audio / DRM-Frame"));
-    plot->canvas()->setBackgroundMode(Qt::PaletteBackground);
+    plot->canvas()->setBackgroundRole(QPalette::Window);
 
     /* Add main curves */
     main1curve = new QwtPlotCurve(tr("SNR"));
@@ -1362,7 +1363,7 @@ void CDRMPlot::SpectrumPlotDefaults(
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
 	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, axistitle+" [dB]");
-	plot->canvas()->setBackgroundMode(Qt::PaletteBackground);
+    plot->canvas()->setBackgroundRole(QPalette::Window);
 
 	/* Fixed scale */
 	plot->setAxisScale(QwtPlot::xBottom,
@@ -1431,7 +1432,7 @@ void CDRMPlot::SetSNRSpectrum()
     plot->setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
     plot->enableAxis(QwtPlot::yLeft, true);
     plot->setAxisTitle(QwtPlot::yLeft, tr("WMER [dB]"));
-    plot->canvas()->setBackgroundMode(Qt::PaletteBackground);
+    plot->canvas()->setBackgroundRole(QPalette::Window);
 
     /* Add main curve */
     main1curve = new QwtPlotCurve(tr("SNR Spectrum"));
@@ -1682,7 +1683,7 @@ void CDRMPlot::ConstellationPlotDefaults(const QString& title, double limit, int
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
 	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
-	plot->canvas()->setBackgroundMode(Qt::PaletteBackground);
+    plot->canvas()->setBackgroundRole(QPalette::Window);
 	double step = limit/n;
 	plot->setAxisScale(QwtPlot::xBottom, -limit, limit, step);
 	plot->setAxisScale(QwtPlot::yLeft, -limit, limit, step);

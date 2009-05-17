@@ -27,9 +27,6 @@
 \******************************************************************************/
 
 #include "MDIInBuffer.h"
-#ifdef HAVE_QT
-#include <qdatetime.h>
-#endif
 #include <iostream>
 
 /* write the received packet to the buffer, if the previous one was not read yet
@@ -58,8 +55,7 @@ CMDIInBuffer::Get(vector<_BYTE>& data)
 {
 #ifdef HAVE_QT
 	guard.lock();
-	QTime t;
-	t.start();
+	//QTime t;t.start();
 	if(buffer.empty())
 	{
 		if(blocker.wait(&guard, 1000))

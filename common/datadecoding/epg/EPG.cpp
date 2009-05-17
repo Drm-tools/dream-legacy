@@ -1264,10 +1264,6 @@ EPG::select (const uint32_t chan, const CDateAndTime & d)
 	/* look for the advanced profile */
 	fileName = dir + "/" + QString (epgFilename (d, chan, 1, true).c_str ());
 	getFile (advanced, fileName);
-	if (progs.count () == 0)
-	{
-		return;
-	}
 }
 
 void
@@ -1282,7 +1278,7 @@ EPG::getFile (CEPGDecoder & epg, const QString & fileName)
 	vector < _BYTE > vecData;
 	vecData.resize (file.size ());
 	vecData.resize (file.size ());
-	file.readBlock ((char *) &vecData.front (), file.size ());
+	file.read((char *) &vecData.front (), file.size ());
 	file.close ();
 	epg.decode (vecData);
     QDomNodeList programmes = epg.doc.elementsByTagName ("programme");
@@ -1348,7 +1344,7 @@ EPG::parseDoc (const QDomNode & n)
 					if (e.tagName () == "genre")
 					{
 						QString genre = e.attribute ("href", "");
-						int i = genre.findRev (':');
+						int i = genre.lastIndexOf (':');
 						if (i != -1)
 							genre = genre.mid (i + 1);
 						QString type = e.attribute ("type", "main");
@@ -1367,10 +1363,10 @@ EPG::parseDoc (const QDomNode & n)
                 start = p.actualTime;
             else
                 start = p.time;
-            QMap<QDateTime,CProg>::ConstIterator existing = progs.find(start);
+            QMap<QDateTime,CProg>::const_iterator existing = progs.find(start);
 			if (existing != progs.end())
 			{
-			    p.augment(existing.data());
+			    p.augment(existing.value());
 			}
             progs[start] = p;
 		}
@@ -1480,7 +1476,7 @@ EPG::loadChannels (const QString & fileName)
 				{
 					QDomElement s = e.toElement ();
 					if (s.tagName () == "shortName")
-						name = s.text().utf8().constData();
+						name = s.text().toUtf8().constData();
 					if (s.tagName () == "serviceID")
 						sid = s.attribute ("id", "0");
 				}
@@ -1500,7 +1496,7 @@ QDateTime EPG::parseTime(const QString & time)
     if(time=="")
         return QDateTime(); // invalid
     QRegExp q("[-T:+]");
-    QStringList sl = QStringList::split(q, time);
+    QStringList sl = time.split(q);
     QDateTime t(
         QDate(sl[0].toUInt(), sl[1].toUInt(), sl[2].toUInt()),
         QTime(sl[3].toUInt(), sl[4].toUInt(), sl[5].toUInt())
@@ -1523,6 +1519,6 @@ int EPG::parseDuration (const QString & duration)
     if(duration=="")
         return 0; // invalid
 	QRegExp r ("[PTHMS]");
-	QStringList dur = QStringList::split (r, duration);
+	QStringList dur = duration.split(r);
 	return 60*dur[0].toInt()+dur[1].toInt();
 }

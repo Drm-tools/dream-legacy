@@ -67,7 +67,7 @@
        <item>
         <widget class="QLabel" name="TextLabelAuthorNames" >
          <property name="text" >
-          <string>Volker Fischer, Alexander Kurpiers, Andrea Russo&#xd;
+          <string>Volker Fischer, Alexander Kurpiers, Andrea Russo&#xd;&#xd;
 Julian Cable, Andrew Murphy, Oliver Haffenden</string>
          </property>
          <property name="wordWrap" >
@@ -78,10 +78,10 @@ Julian Cable, Andrew Murphy, Oliver Haffenden</string>
        <item>
         <widget class="QLabel" name="TextLabelCopyright" >
          <property name="text" >
-          <string>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
-p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;">
+          <string>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">&#xd;
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">&#xd;
+p, li { white-space: pre-wrap; }&#xd;
+&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;">&#xd;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-size:8pt;">Copyright (C) 2001 - 2009&lt;/span>&lt;/p>&lt;/body>&lt;/html></string>
          </property>
          <property name="wordWrap" >
@@ -129,9 +129,15 @@ p, li { white-space: pre-wrap; }
     </layout>
    </item>
    <item>
-    <widget class="Q3TextView" native="1" name="TextViewCredits" >
-     <property name="text" stdset="0" >
-      <string>TextViewCredits</string>
+    <widget class="QTextBrowser" name="textBrowserCredits" >
+     <property name="frameShape" >
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow" >
+      <enum>QFrame::Sunken</enum>
+     </property>
+     <property name="openExternalLinks" >
+      <bool>true</bool>
      </property>
     </widget>
    </item>
@@ -176,13 +182,6 @@ p, li { white-space: pre-wrap; }
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>Q3TextView</class>
-   <extends>QWidget</extends>
-   <header>q3textview.h</header>
-  </customwidget>
- </customwidgets>
  <resources>
   <include location="res/icons.qrc" />
  </resources>

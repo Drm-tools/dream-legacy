@@ -43,7 +43,7 @@
 
 StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings, bool drm,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
-	QDialog(parent, name, modal, f), Ui_StationsDlg(),
+	QDialog(parent, f), Ui_StationsDlg(),
 	Receiver(NDRMR), Settings(NSettings), Schedule(),
 	TimerClock(), TimerSMeter(), TimerEditFrequency(), TimerMonitorFrequency(),
 	TimerTuning(),
@@ -51,101 +51,170 @@ StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings, bool dr
 	ScheduleFile(), networkManager(NULL)
 {
     setupUi(this);
-	/* Set help text for the controls */
-	AddWhatsThisHelp();
+    /* Set help text for the controls */
+    AddWhatsThisHelp();
 
     proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setSourceModel(&Schedule);
-	proxyModel->setFilterKeyColumn(0); // actually we don't care
-	proxyModel->setFilterRole(Qt::UserRole);
-	proxyModel->setDynamicSortFilter(true);
+    proxyModel->setFilterKeyColumn(0); // actually we don't care
+    proxyModel->setFilterRole(Qt::UserRole);
+    proxyModel->setDynamicSortFilter(true);
 
-	stationsView->setModel(proxyModel);
-	stationsView->setSortingEnabled(true);
-	stationsView->horizontalHeader()->setVisible(true);
+    stationsView->setModel(proxyModel);
+    stationsView->setSortingEnabled(true);
+    stationsView->horizontalHeader()->setVisible(true);
 
-	/* Set up frequency selector control (QWTCounter control) */
-	QwtCounterFrequency->setRange(0.0, 30000.0, 1.0);
-	QwtCounterFrequency->setNumButtons(3); /* Three buttons on each side */
-	QwtCounterFrequency->setIncSteps(QwtCounter::Button1, 1); /* Increment */
-	QwtCounterFrequency->setIncSteps(QwtCounter::Button2, 10);
-	QwtCounterFrequency->setIncSteps(QwtCounter::Button3, 100);
+    /* Set up frequency selector control (QWTCounter control) */
+    QwtCounterFrequency->setRange(0.0, 30000.0, 1.0);
+    QwtCounterFrequency->setNumButtons(3); /* Three buttons on each side */
+    QwtCounterFrequency->setIncSteps(QwtCounter::Button1, 1); /* Increment */
+    QwtCounterFrequency->setIncSteps(QwtCounter::Button2, 10);
+    QwtCounterFrequency->setIncSteps(QwtCounter::Button3, 100);
 
-
-	/* Set stations preview */
-	comboBoxPreview->addItem(tr("Disabled"), 0);
-	comboBoxPreview->addItem(tr("5 minutes"), NUM_SECONDS_PREV_5MIN);
-	comboBoxPreview->addItem(tr("15 minutes"), NUM_SECONDS_PREV_15MIN);
-	comboBoxPreview->addItem(tr("30 minutes"), NUM_SECONDS_PREV_30MIN);
+    /* Set stations preview */
+    comboBoxPreview->addItem(tr("Disabled"), 0);
+    comboBoxPreview->addItem(tr("5 minutes"), NUM_SECONDS_PREV_5MIN);
+    comboBoxPreview->addItem(tr("15 minutes"), NUM_SECONDS_PREV_15MIN);
+    comboBoxPreview->addItem(tr("30 minutes"), NUM_SECONDS_PREV_30MIN);
 
     networkManager = new QNetworkAccessManager(this);
     connect(networkManager, SIGNAL(finished(QNetworkReply*)), this, SLOT(OnUrlFinished(QNetworkReply*)));
 
-	/* Connections ---------------------------------------------------------- */
+    /* Connections ---------------------------------------------------------- */
 
-	if(drm)
-	{
-		ScheduleFile = DRMSCHEDULE_INI_FILE_NAME;
-		connect(pushButtonGetUpdate, SIGNAL(clicked(bool)), this, SLOT(OnGetDRMUpdate(bool)));
-	}
-	else
-	{
-		ScheduleFile = AMSCHEDULE_INI_FILE_NAME;
-		connect(pushButtonGetUpdate, SIGNAL(clicked(bool)), this, SLOT(OnGetAnalogUpdate(bool)));
-	}
+    if(drm)
+    {
+	    ScheduleFile = DRMSCHEDULE_INI_FILE_NAME;
+	    connect(pushButtonGetUpdate, SIGNAL(clicked(bool)), this, SLOT(OnGetDRMUpdate(bool)));
+    }
+    else
+    {
+	    ScheduleFile = AMSCHEDULE_INI_FILE_NAME;
+	    connect(pushButtonGetUpdate, SIGNAL(clicked(bool)), this, SLOT(OnGetAnalogUpdate(bool)));
+    }
 
-	connect(comboBoxPreview, SIGNAL(currentIndexChanged(int)), this, SLOT(OnSelectPreview(int)));
-	connect(checkBoxShowActive, SIGNAL(stateChanged(int)), this, SLOT(OnShowActive(int)));
+    connect(comboBoxPreview, SIGNAL(currentIndexChanged(int)), this, SLOT(OnSelectPreview(int)));
+    connect(checkBoxShowActive, SIGNAL(stateChanged(int)), this, SLOT(OnShowActive(int)));
 
-	connect(&TimerClock, SIGNAL(timeout()), this, SLOT(OnTimerClock()));
-	connect(&TimerSMeter, SIGNAL(timeout()), this, SLOT(OnTimerSMeter()));
-	connect(&TimerEditFrequency, SIGNAL(timeout()), this, SLOT(OnTimerEditFrequency()));
-	connect(&TimerMonitorFrequency, SIGNAL(timeout()), this, SLOT(OnTimerMonitorFrequency()));
-	connect(&TimerTuning, SIGNAL(timeout()), this, SLOT(OnTimerTuning()));
-	connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
+    connect(&TimerClock, SIGNAL(timeout()), this, SLOT(OnTimerClock()));
+    connect(&TimerSMeter, SIGNAL(timeout()), this, SLOT(OnTimerSMeter()));
+    connect(&TimerEditFrequency, SIGNAL(timeout()), this, SLOT(OnTimerEditFrequency()));
+    connect(&TimerMonitorFrequency, SIGNAL(timeout()), this, SLOT(OnTimerMonitorFrequency()));
+    connect(&TimerTuning, SIGNAL(timeout()), this, SLOT(OnTimerTuning()));
+    connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
 
-	TimerClock.stop();
-	TimerSMeter.stop();
-	TimerEditFrequency.stop();
-	TimerMonitorFrequency.stop();
-	TimerTuning.stop();
+    TimerClock.stop();
+    TimerSMeter.stop();
+    TimerEditFrequency.stop();
+    TimerMonitorFrequency.stop();
+    TimerTuning.stop();
 
-	connect(stationsView, SIGNAL(clicked(const QModelIndex&)),
-		this, SLOT(OnItemClicked(const QModelIndex&)));
+    connect(stationsView, SIGNAL(clicked(const QModelIndex&)),
+	    this, SLOT(OnItemClicked(const QModelIndex&)));
 
-	connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
-		this, SLOT(OnFreqCntNewValue(double)));
+    connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
+	    this, SLOT(OnFreqCntNewValue(double)));
 
-	connect(ComboBoxFilterTarget, SIGNAL(activated(const QString&)),
-		this, SLOT(OnFilterChanged(const QString&)));
-	connect(ComboBoxFilterCountry, SIGNAL(activated(const QString&)),
-		this, SLOT(OnFilterChanged(const QString&)));
-	connect(ComboBoxFilterLanguage, SIGNAL(activated(const QString&)),
-		this, SLOT(OnFilterChanged(const QString&)));
-
-	ProgrSigStrength->setRange(S_METER_THERMO_MIN, S_METER_THERMO_MAX);
-	ProgrSigStrength->setOrientation(Qt::Horizontal, QwtThermo::TopScale);
-	ProgrSigStrength->setAlarmLevel(S_METER_THERMO_ALARM);
-	ProgrSigStrength->setAlarmColor(QColor(255, 0, 0));
-	ProgrSigStrength->setScale(S_METER_THERMO_MIN, S_METER_THERMO_MAX, 10.0);
-
-	QFileInfo fi = QFileInfo(ScheduleFile);
-	if (fi.exists()) /* make sure the schedule file exists */
-	{
-		QString s = tr(" (last update: ") + fi.lastModified().date().toString() + ")";
-		pushButtonGetUpdate->setToolTip(s);
-	}
-	else
-	{
-        QMessageBox::information(this, "Dream", QString(tr(
-            "The file %1 could not be found or contains no data.\n"
-            "No stations can be displayed.\n"
-            "Try to download this file by using the 'Update' button.")).arg(ScheduleFile));
-	}
+    connect(ComboBoxFilterTarget, SIGNAL(activated(const QString&)),
+	    this, SLOT(OnFilterChanged(const QString&)));
+    connect(ComboBoxFilterCountry, SIGNAL(activated(const QString&)),
+	    this, SLOT(OnFilterChanged(const QString&)));
+    connect(ComboBoxFilterLanguage, SIGNAL(activated(const QString&)),
+	    this, SLOT(OnFilterChanged(const QString&)));
 }
 
 StationsDlg::~StationsDlg()
 {
+}
+void StationsDlg::showEvent(QShowEvent*)
+{
+    /* recover window size and position */
+    CWinGeom s;
+    Settings.Get("Stations Dialog", s);
+    const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+    if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+	setGeometry(WinGeom);
+
+    QwtCounterFrequency->setValue(Receiver.GetFrequency());
+
+    /* Retrieve the setting saved into the .ini file */
+    int seconds = Settings.Get("Stations Dialog", "preview", NUM_SECONDS_PREV_5MIN);
+    int index = comboBoxPreview->findData(seconds);
+    if(index == -1)
+    {
+	comboBoxPreview->setCurrentIndex(0);
+	Schedule.SetSecondsPreview(0);
+    }
+    else
+    {
+	comboBoxPreview->setCurrentIndex(index);
+	Schedule.SetSecondsPreview(seconds);
+    }
+
+    ComboBoxFilterTarget->addItems(Schedule.ListTargets);
+    ComboBoxFilterCountry->addItems(Schedule.ListCountries);
+    ComboBoxFilterLanguage->addItems(Schedule.ListLanguages);
+
+    QFileInfo fi = QFileInfo(ScheduleFile);
+    if (fi.exists()) /* make sure the schedule file exists */
+    {
+	QString s = tr(" (last update: ") + fi.lastModified().date().toString() + ")";
+	pushButtonGetUpdate->setToolTip(s);
+    }
+    else
+    {
+	QMessageBox::information(this, "Dream", QString(tr(
+	"The file %1 could not be found or contains no data.\n"
+	"No stations can be displayed.\n"
+	"Try to download this file by using the 'Update' button.")).arg(ScheduleFile));
+    }
+
+    /* Update window */
+    OnFilterChanged("");
+
+    /* Activate timers when window is shown */
+    TimerClock.start(GUI_TIMER); /* Stations list */
+    TimerSMeter.start(GUI_TIMER_S_METER);
+    TimerMonitorFrequency.start(GUI_TIMER_UPDATE_FREQUENCY);
+}
+
+void StationsDlg::hideEvent(QHideEvent*)
+{
+    /* Deactivate real-time timers */
+    TimerClock.stop();
+    TimerSMeter.stop();
+    EnableSMeter(false);
+
+    /* Set window geometry data in DRMReceiver module */
+    QRect WinGeom = geometry();
+
+    CWinGeom c;
+    c.iXPos = WinGeom.x();
+    c.iYPos = WinGeom.y();
+    c.iHSize = WinGeom.height();
+    c.iWSize = WinGeom.width();
+    Settings.Put("Stations Dialog", c);
+
+    /* Store preview settings */
+    Settings.Put("Stations Dialog", "preview", Schedule.GetSecondsPreview());
+#if 0 //TODO get from view
+    /* Store sort settings */
+    switch (eModulation)
+    {
+    case DRM:
+	    Settings.Put("Stations Dialog", "sortcolumndrm", iCurrentSortColumn);
+	    Settings.Put("Stations Dialog", "sortascendingdrm", bCurrentSortAscending);
+	    break;
+
+    case NONE: // not really likely
+    break;
+
+    default:
+	    Settings.Put("Stations Dialog", "sortcolumnanalog", iCurrentSortColumn);
+	    Settings.Put("Stations Dialog", "sortascendinganalog", bCurrentSortAscending);
+	    break;
+    }
+#endif
 }
 
 void StationsDlg::OnFilterChanged(const QString&)
@@ -160,7 +229,6 @@ void StationsDlg::OnFilterChanged(const QString&)
 	QString r = QString("%1#%2#%3#%4").arg(target).arg(country).arg(language).arg(bShowActive?"1":".");
 	proxyModel->setFilterRegExp(QRegExp(r));
 }
-
 
 void StationsDlg::OnTimerClock()
 {
@@ -178,17 +246,17 @@ void StationsDlg::OnTimerClock()
 	 */
 	if ((Schedule.rowCount() == 0) && (TextLabelUTCTime->text() == strUTCTime))
 	{
-        setCursor(Qt::WaitCursor);
-        Schedule.load(ScheduleFile.toStdString());
-        setCursor(Qt::ArrowCursor);
+	setCursor(Qt::WaitCursor);
+	Schedule.load(ScheduleFile.toStdString());
+	setCursor(Qt::ArrowCursor);
 	}
 
 	if(gmtCur->tm_sec == 0)
 	{
-        setCursor(Qt::WaitCursor);
+	setCursor(Qt::WaitCursor);
 		Schedule.update();
 		proxyModel->invalidate();
-        setCursor(Qt::ArrowCursor);
+	setCursor(Qt::ArrowCursor);
 	}
 
 	TextLabelUTCTime->setText(strUTCTime);
@@ -209,12 +277,12 @@ void StationsDlg::OnSelectPreview(int index)
 void StationsDlg::OnGetAnalogUpdate(bool)
 {
     if (QMessageBox::question(this, tr("Dream Schedule Update"),
-        QString(tr("Dream tries to download the newest schedule\nfrom the internet.\n\n"
-            "The current file %1 will be overwritten.\n"
-            "Do you want to continue?")).arg(ScheduleFile),
-            QMessageBox::Ok|QMessageBox::Cancel) != QMessageBox::Ok)
+	QString(tr("Dream tries to download the newest schedule\nfrom the internet.\n\n"
+	    "The current file %1 will be overwritten.\n"
+	    "Do you want to continue?")).arg(ScheduleFile),
+	    QMessageBox::Ok|QMessageBox::Cancel) != QMessageBox::Ok)
     {
-        return;
+	return;
     }
 	QDate d = QDate::currentDate();
 	int wk = d.weekNumber();
@@ -240,25 +308,25 @@ void StationsDlg::OnGetAnalogUpdate(bool)
     QNetworkReply * reply = networkManager->get(QNetworkRequest(QUrl(path)));
     if(reply == NULL)
     {
-        return;
+	return;
     }
 }
 
 void StationsDlg::OnGetDRMUpdate(bool)
 {
     if (QMessageBox::question(this, tr("Dream Schedule Update"),
-        QString(tr("Dream tries to download the newest schedule\nfrom the internet.\n\n"
-            "The current file %1 will be overwritten.\n"
-            "Do you want to continue?")).arg(ScheduleFile),
-            QMessageBox::Ok|QMessageBox::Cancel) != QMessageBox::Ok)
+	QString(tr("Dream tries to download the newest schedule\nfrom the internet.\n\n"
+	    "The current file %1 will be overwritten.\n"
+	    "Do you want to continue?")).arg(ScheduleFile),
+	    QMessageBox::Ok|QMessageBox::Cancel) != QMessageBox::Ok)
     {
-        return;
+	return;
     }
     /* Try to download the current schedule. */
     QNetworkReply * reply = networkManager->get(QNetworkRequest(QUrl(DRM_SCHEDULE_UPDATE_URL)));
     if(reply == NULL)
     {
-        return;
+	return;
     }
 }
 
@@ -269,24 +337,24 @@ void StationsDlg::OnUrlFinished(QNetworkReply* reply)
 	{
 		if (reply->error() != QNetworkReply::NoError)
 		{
-            QMessageBox::information(this, "Dream", QString(tr(
-                "Update failed. The following things may caused the failure:\n"
-                "\t- the internet connection was not set up properly\n"
-                "\t- the server is currently not available\n"
-                "\t- the file %1 could not be written")).arg(ScheduleFile));
+	    QMessageBox::information(this, "Dream", QString(tr(
+		"Update failed. The following things may caused the failure:\n"
+		"\t- the internet connection was not set up properly\n"
+		"\t- the server is currently not available\n"
+		"\t- the file %1 could not be written")).arg(ScheduleFile));
 			return;
 		}
 
-        QMessageBox::information(this, "Dream", tr("Update successful."));
+	QMessageBox::information(this, "Dream", tr("Update successful."));
 
-        /* Save downloaded data to schedule file */
-        QFile f(ScheduleFile);
-        f.open(QIODevice::WriteOnly);
-        f.write(reply->readAll());
-        f.close();
+	/* Save downloaded data to schedule file */
+	QFile f(ScheduleFile);
+	f.open(QIODevice::WriteOnly);
+	f.write(reply->readAll());
+	f.close();
 
-        /* trigger reading updated ini-file */
-        Schedule.clear();
+	/* trigger reading updated ini-file */
+	Schedule.clear();
 
 		/* Add last update information */
 		QFileInfo fi = QFileInfo(ScheduleFile);
@@ -298,87 +366,11 @@ void StationsDlg::OnUrlFinished(QNetworkReply* reply)
 	}
 }
 
-void StationsDlg::showEvent(QShowEvent*)
-{
-	/* recover window size and position */
-	CWinGeom s;
-	Settings.Get("Stations Dialog", s);
-	const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
-	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-		setGeometry(WinGeom);
-
-	QwtCounterFrequency->setValue(Receiver.GetFrequency());
-
-	/* Retrieve the setting saved into the .ini file */
-	int seconds = Settings.Get("Stations Dialog", "preview", NUM_SECONDS_PREV_5MIN);
-	int index = comboBoxPreview->findData(seconds);
-	if(index == -1)
-	{
-		comboBoxPreview->setCurrentIndex(0);
-		Schedule.SetSecondsPreview(0);
-	}
-	else
-	{
-		comboBoxPreview->setCurrentIndex(index);
-		Schedule.SetSecondsPreview(seconds);
-	}
-
-	ComboBoxFilterTarget->insertStringList(Schedule.ListTargets);
-	ComboBoxFilterCountry->insertStringList(Schedule.ListCountries);
-	ComboBoxFilterLanguage->insertStringList(Schedule.ListLanguages);
-
-	/* Update window */
-	OnFilterChanged("");
-
-	/* Activate timers when window is shown */
-	TimerClock.start(GUI_TIMER); /* Stations list */
-	TimerSMeter.start(GUI_TIMER_S_METER);
-	TimerMonitorFrequency.start(GUI_TIMER_UPDATE_FREQUENCY);
-}
-
-void StationsDlg::hideEvent(QHideEvent*)
-{
-	/* Deactivate real-time timers */
-	TimerClock.stop();
-	TimerSMeter.stop();
-	EnableSMeter(false);
-
-	/* Set window geometry data in DRMReceiver module */
-	QRect WinGeom = geometry();
-
-	CWinGeom c;
-	c.iXPos = WinGeom.x();
-	c.iYPos = WinGeom.y();
-	c.iHSize = WinGeom.height();
-	c.iWSize = WinGeom.width();
-	Settings.Put("Stations Dialog", c);
-
-	/* Store preview settings */
-	Settings.Put("Stations Dialog", "preview", Schedule.GetSecondsPreview());
-#if 0 //TODO get from view
-	/* Store sort settings */
-	switch (eModulation)
-	{
-	case DRM:
-		Settings.Put("Stations Dialog", "sortcolumndrm", iCurrentSortColumn);
-		Settings.Put("Stations Dialog", "sortascendingdrm", bCurrentSortAscending);
-		break;
-
-	case NONE: // not really likely
-        break;
-
-	default:
-		Settings.Put("Stations Dialog", "sortcolumnanalog", iCurrentSortColumn);
-		Settings.Put("Stations Dialog", "sortascendinganalog", bCurrentSortAscending);
-		break;
-	}
-#endif
-}
-
 void StationsDlg::OnFreqCntNewValue(double)
 {
 	// wait an inter-digit timeout
-	TimerEditFrequency.start(GUI_TIMER_INTER_DIGIT, true);
+	TimerEditFrequency.setSingleShot(true);
+	TimerEditFrequency.start(GUI_TIMER_INTER_DIGIT);
 	bTuningInProgress = true;
 }
 
@@ -391,7 +383,8 @@ void StationsDlg::OnTimerEditFrequency()
 	{
 		Receiver.SetFrequency(iDisplayedFreq);
 		bTuningInProgress = true;
-		TimerTuning.start(GUI_TIME_TO_TUNE, true);
+		TimerEditFrequency.setSingleShot(true);
+		TimerTuning.start(GUI_TIME_TO_TUNE);
 	}
 	QItemSelectionModel* sm = stationsView->selectionModel();
 	if(sm->hasSelection())
@@ -401,7 +394,7 @@ void StationsDlg::OnTimerEditFrequency()
 		if(selection.data().toInt() != iDisplayedFreq)
 		{
 			sm->clearSelection();
-#if 0 // TODO 0 not working
+#if 0 // TODO 0 not working - this should select a row matching the tuned frequency
 			for(int i=0; i<proxyModel->rowCount(); i++)
 			{
 				QModelIndex mi = proxyModel->index(i,2);
@@ -465,27 +458,22 @@ void StationsDlg::EnableSMeter(const bool bStatus)
 
 	if((bStatus == true) && (bValid == true))
 	{
-		/* Init progress bar for input s-meter */
-		ProgrSigStrength->setAlarmEnabled(true);
-		ProgrSigStrength->setValue(rSigStr);
-		ProgrSigStrength->setFillColor(QColor(0, 190, 0));
-
-		ProgrSigStrength->setEnabled(true);
-		TextLabelSMeter->setEnabled(true);
-		ProgrSigStrength->show();
-		TextLabelSMeter->show();
+	    /* Init progress bar for input s-meter */
+	    ProgrSigStrength->setValue(rSigStr);
+	    ProgrSigStrength->setEnabled(true);
+	    ProgrSigStrength->show();
+	    TextLabelSMeter->setEnabled(true);
+	    TextLabelSMeter->show();
 	}
 	else
 	{
-		/* Set s-meter control in "disabled" status */
-		ProgrSigStrength->setAlarmEnabled(false);
-		ProgrSigStrength->setValue(S_METER_THERMO_MAX);
-		ProgrSigStrength->setFillColor(palette().disabled().light());
-
-		ProgrSigStrength->setEnabled(false);
-		TextLabelSMeter->setEnabled(false);
-		ProgrSigStrength->hide();
-		TextLabelSMeter->hide();
+	    /* Set s-meter control in "disabled" status */
+	    ProgrSigStrength->setAlarmEnabled(false);
+	    ProgrSigStrength->setValue(0.0);
+	    ProgrSigStrength->setEnabled(false);
+	    ProgrSigStrength->hide();
+	    TextLabelSMeter->setEnabled(false);
+	    TextLabelSMeter->hide();
 	}
 }
 

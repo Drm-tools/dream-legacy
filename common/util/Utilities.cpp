@@ -29,9 +29,6 @@
 #include <sstream>
 
 #ifdef _WIN32
-# ifndef NOMINMAX
-#  define NOMINMAX
-# endif
 /* Always include winsock2.h before windows.h */
 # include <winsock2.h>
 # include <ws2tcpip.h>
@@ -147,7 +144,7 @@ CDRMBandpassFilt::Process(CVector < _COMPLEX > &veccData)
 
 void
 CDRMBandpassFilt::Init(int iNewBlockSize, _REAL rOffsetHz,
-                        CReal rSignalBW, CReal rMargin)
+			CReal rSignalBW, CReal rMargin)
 {
 	/* Set internal parameter */
 	iBlockSize = iNewBlockSize;

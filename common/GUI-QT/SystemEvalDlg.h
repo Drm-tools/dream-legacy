@@ -73,7 +73,7 @@ protected:
     void InitialiseFrequency();
     void UpdateFrequency();
 
-    ReceiverInterface&   DRMReceiver;
+    ReceiverInterface&   Receiver;
     CSettings&      Settings;
     CGPSReceiver*   pGPSReceiver;
     CDRMPlot*       plot;
@@ -90,11 +90,14 @@ public slots:
     void OnTimerTuning();
     void OnTimerLineEditFrequency();
     void OnLineEditFrequencyChanged(const QString&);
-	void EnableGPS(bool);
-	void ShowGPS(bool);
-	void OnItemClicked (QTreeWidgetItem*, int);
-	void OnCustomContextMenuRequested ( const QPoint&);
-	void OnHelpWhatsThis();
+    void EnableGPS(bool);
+    void OnCheckBoxMuteAudio();
+    void OnCheckBoxReverb();
+    void OnCheckSaveAudioWAV();
+    void ShowGPS(bool);
+    void OnItemClicked (QTreeWidgetItem*, int);
+    void OnCustomContextMenuRequested ( const QPoint&);
+    void OnHelpWhatsThis();
 };
 
 #endif

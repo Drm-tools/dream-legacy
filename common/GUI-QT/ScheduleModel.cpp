@@ -44,22 +44,14 @@ const char* DRMSCHEDULE_INI_FILE_NAME = "DRMSchedule.ini";
 const char* AMSCHEDULE_INI_FILE_NAME = "AMSchedule.ini";
 
 CTxSchedule::CTxSchedule(): ScheduleTable(), iSecondsPreview(0),
-BitmCubeGreen(), BitmCubeYellow(), BitmCubeRed(), BitmCubeOrange(), BitmCubePink()
+BitmCubeGreen(13,13), BitmCubeYellow(13,13), BitmCubeRed(13,13),
+BitmCubeOrange(13,13), BitmCubePink(13,13)
 {
-	/* Define size of the bitmaps */
-	const int iXSize = 13;
-	const int iYSize = 13;
-
 	/* Create bitmaps */
-	BitmCubeGreen.resize(iXSize, iYSize);
 	BitmCubeGreen.fill(QColor(0, 255, 0));
-	BitmCubeYellow.resize(iXSize, iYSize);
 	BitmCubeYellow.fill(QColor(255, 255, 0));
-	BitmCubeRed.resize(iXSize, iYSize);
 	BitmCubeRed.fill(QColor(255, 0, 0));
-	BitmCubeOrange.resize(iXSize, iYSize);
 	BitmCubeOrange.fill(QColor(255, 128, 0));
-	BitmCubePink.resize(iXSize, iYSize);
 	BitmCubePink.fill(QColor(255, 128, 128));
 }
 
@@ -138,7 +130,7 @@ CTxSchedule::data ( const QModelIndex& index, int role) const
 				return item.strLanguage.c_str();
 				break;
 			case 8:
-				return item.strDaysShow.c_str();
+				return item.strDaysShow;
 				break;
 		}
 		break;
@@ -266,15 +258,15 @@ CTxSchedule::load(const string& path)
 		QString strCountry = QString(ScheduleTable[i].strCountry.c_str());
 		QString strLanguage = QString(ScheduleTable[i].strLanguage.c_str());
 
-		result = ListTargets.grep(strTarget);
+		result = ListTargets.filter(strTarget);
 		if (result.isEmpty())
 			ListTargets.append(strTarget);
 
-		result = ListCountries.grep(strCountry);
+		result = ListCountries.filter(strCountry);
 		if (result.isEmpty())
 			ListCountries.append(strCountry);
 
-		result = ListLanguages.grep(strLanguage);
+		result = ListLanguages.filter(strLanguage);
 		if (result.isEmpty())
 			ListLanguages.append(strLanguage);
 	}
@@ -402,15 +394,15 @@ void CTxSchedule::ReadCSVFile(FILE* pFile)
 		CScheduleItem StationsItem;
 
 		fgets(cRow, iMaxLenRow, pFile);
-		vector<string> fields;
+		QStringList fields;
 		stringstream ss(cRow);
 		do {
 			string s;
 			getline(ss, s, ';');
-			fields.push_back(s);
+			fields.push_back(s.c_str());
 		} while(!ss.eof());
 
-		StationsItem.iFreq = atol(fields[0].c_str());
+		StationsItem.iFreq = fields[0].toInt();
 
 		if(fields[1] == "")
 		{
@@ -419,14 +411,14 @@ void CTxSchedule::ReadCSVFile(FILE* pFile)
 		}
 		else
 		{
-			QStringList times = QStringList::split("-", fields[1].c_str());
+			QStringList times = fields[1].split("-");
 			StationsItem.SetStartTimeNum(times[0].toInt());
 			StationsItem.SetStopTimeNum(times[1].toInt());
 		}
 
 		if(fields[2].length()>0)
 		{
-			stringstream ss(fields[2]);
+			stringstream ss(fields[2].toStdString());
 			char c;
 			enum Days { Sunday=0, Monday=1, Tuesday=2, Wednesday=3,
 						Thursday=4, Friday=5, Saturday=6 };
@@ -493,7 +485,7 @@ void CTxSchedule::ReadCSVFile(FILE* pFile)
 		string homecountry;
 		if(fields.size()>3)
 		{
-			homecountry = fields[3];
+			homecountry = fields[3].toStdString();
 			string c = data.itu_r_country(homecountry);
 			if(c == "")
 				StationsItem.strCountry = homecountry;
@@ -502,16 +494,16 @@ void CTxSchedule::ReadCSVFile(FILE* pFile)
 		}
 
 		if(fields.size()>4)
-			StationsItem.strName = fields[4];
+			StationsItem.strName = fields[4].toStdString();
 
 		if(fields.size()>5)
 		{
-			StationsItem.strLanguage = data.eibi_language(fields[5]);
+			StationsItem.strLanguage = data.eibi_language(fields[5].toStdString());
 		}
 
 		if(fields.size()>6)
 		{
-			string s = fields[6];
+			string s = fields[6].toStdString();
 			string t = data.eibi_target(s);
 			if(t == "")
 			{
@@ -530,7 +522,7 @@ void CTxSchedule::ReadCSVFile(FILE* pFile)
 		string stn;
 		if(fields.size()>7)
 		{
-			string s  = StationsItem.strSite = fields[7];
+			string s  = StationsItem.strSite = fields[7].toStdString();
 			if(s=="") // unknown or main Tx site of the home country
 			{
 				country = homecountry;
@@ -682,32 +674,31 @@ void CScheduleItem::SetDaysFlagString(const string strNewDaysFlags)
 
 	/* First test for day constellations which allow to apply special names */
 	if (strDaysFlags == FLAG_STR_IRREGULAR_TRANSM)
-		strDaysShow = QObject::tr("irregular").latin1();
+		strDaysShow = QObject::tr("irregular");
 	else if (strDaysFlags == "1111111")
-		strDaysShow = QObject::tr("daily").latin1();
+		strDaysShow = QObject::tr("daily");
 	else if (strDaysFlags == "1111100")
-		strDaysShow = QObject::tr("from Sun to Thu").latin1();
+		strDaysShow = QObject::tr("Sun to Thu");
 	else if (strDaysFlags == "1111110")
-		strDaysShow = QObject::tr("from Sun to Fri").latin1();
+		strDaysShow = QObject::tr("Sun to Fri");
 	else if (strDaysFlags == "0111110")
-		strDaysShow = QObject::tr("from Mon to Fri").latin1();
+		strDaysShow = QObject::tr("weekdays");
+	else if (strDaysFlags == "1000001")
+		strDaysShow = QObject::tr("weekends");
 	else if (strDaysFlags == "0111111")
-		strDaysShow = QObject::tr("from Mon to Sat").latin1();
+		strDaysShow = QObject::tr("Mon to Sat");
 	else
 	{
 		/* No special name could be applied, just list all active days */
+		QString sep = "";
 		for (int i = 0; i < 7; i++)
 		{
 			/* Check if day is active */
 			if (strDaysFlags[i] == CHR_ACTIVE_DAY_MARKER)
 			{
-				/* Set commas in between the days, to not set a comma at
-				   the beginning */
-				if (strDaysShow != "")
-					strDaysShow += ",";
-
 				/* Add current day */
-				strDaysShow += strDayDef[i].latin1();
+				strDaysShow += sep + strDayDef[i];
+				sep = ", ";
 			}
 		}
 	}

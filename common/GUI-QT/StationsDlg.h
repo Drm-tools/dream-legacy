@@ -54,12 +54,6 @@
 #define GUI_TIMER_INTER_DIGIT			500 /* ms (0.5 seconds) */
 #define GUI_TIME_TO_TUNE				2000 /* ms (2 seconds) */
 
-/* s-meter thermo parameters */
-#define S_METER_THERMO_MIN				((_REAL) -60.0) /* dB */
-#define S_METER_THERMO_MAX				((_REAL) 60.0) /* dB */
-#define S_METER_THERMO_ALARM			((_REAL) 0.0) /* dB */
-
-
 /* File handle type */
 #ifdef _WIN32
 # define FILE_HANDLE					Qt::HANDLE

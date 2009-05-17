@@ -402,7 +402,7 @@ bool CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
-									  CParameter& Parameter,
+									  CParameter& Parameters,
 									  const bool bVersion)
 {
 	int			i;
@@ -577,13 +577,16 @@ bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 	//cerr << endl;
 
 	/* Now, set data in global struct */
-	Parameter.Lock();
+	Parameters.Lock();
+
+	Parameters.bMuxHasAFS = true;
+	CAltFreqSign& PAltFreqSign = Parameters.ServiceInformation[Parameters.Service[0].iServiceID].AltFreqSign;
 
 	/* Check the version flag */
 	if (bVersion != bType3ListVersion)
 	{
 		/* If version flag has changed, delete all data for this entity type and save flag */
-		Parameter.AltFreqSign.vecMultiplexes.clear();
+		PAltFreqSign.vecMultiplexes.clear();
 		bType3ListVersion = bVersion;
 	}
 	/* Enhancement layer is not supported */
@@ -607,19 +610,19 @@ bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		}
 
 		/* Now apply temporary object to global struct (first check if new object is not already there) */
-		int iCurNumAltFreq = Parameter.AltFreqSign.vecMultiplexes.size();
+		int iCurNumAltFreq = PAltFreqSign.vecMultiplexes.size();
 
 		bool bAltFreqIsAlreadyThere = false;
 		for (i = 0; i < iCurNumAltFreq; i++)
 		{
-			if (Parameter.AltFreqSign.vecMultiplexes[i] == AltFreq)
+			if (PAltFreqSign.vecMultiplexes[i] == AltFreq)
 				bAltFreqIsAlreadyThere = true;
 		}
 
 		if (bAltFreqIsAlreadyThere == false)
-			Parameter.AltFreqSign.vecMultiplexes.push_back(AltFreq);
+			PAltFreqSign.vecMultiplexes.push_back(AltFreq);
 	}
-	Parameter.Unlock();
+	Parameters.Unlock();
 
 	return false;
 }
@@ -630,7 +633,7 @@ bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 bool CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
-									  CParameter& Parameter,
+									  CParameter& Parameters,
 									  const bool bVersion)
 {
 	/* Check length -> must be 4 bytes */
@@ -670,17 +673,20 @@ bool CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
 
 
 	/* Now apply temporary object to global struct */
-	Parameter.Lock();
+	Parameters.Lock();
+
+	Parameters.bMuxHasAFS = true;
+	CAltFreqSign& PAltFreqSign = Parameters.ServiceInformation[Parameters.Service[0].iServiceID].AltFreqSign;
+
 	/* Check the version flag */
 	if (bVersion != bType4ListVersion)
 	{
 		/* If version flag has changed, delete all data for this entity type and save flag */
-		Parameter.AltFreqSign.vecSchedules.clear();
+		PAltFreqSign.vecSchedules.clear();
 		bType4ListVersion = bVersion;
 	}
 
-	vector<CAltFreqSched>& vecSchedules =
-				Parameter.AltFreqSign.vecSchedules[iScheduleID];
+	vector<CAltFreqSched>& vecSchedules = PAltFreqSign.vecSchedules[iScheduleID];
 
 	/*(first check if new object is not already there) */
 
@@ -694,7 +700,7 @@ bool CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
 	if (bAltFreqSchedIsAlreadyThere == false)
 		vecSchedules.push_back(Sched);
 
-	Parameter.Unlock();
+	Parameters.Unlock();
 
 	return false;
 }
@@ -855,7 +861,7 @@ bool CSDCReceive::DataEntityType6(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 bool CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 									  const int iLengthOfBody,
-									  CParameter& Parameter,
+									  CParameter& Parameters,
 									  const bool bVersion)
 {
 	size_t i;
@@ -927,16 +933,20 @@ bool CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 	}
 
 	/* Now apply temporary object to global struct */
-	Parameter.Lock();
+	Parameters.Lock();
+
+	Parameters.bMuxHasAFS = true;
+	CAltFreqSign& PAltFreqSign = Parameters.ServiceInformation[Parameters.Service[0].iServiceID].AltFreqSign;
+
 	/* Check the version flag */
 	if (bVersion != bType7ListVersion)
 	{
 		/* If version flag has changed, delete all data for this entity type and save flag */
-		Parameter.AltFreqSign.vecRegions.clear();
+		PAltFreqSign.vecRegions.clear();
 		bType7ListVersion = bVersion;
 	}
 
-	vector<CAltFreqRegion>& vecRegions = Parameter.AltFreqSign.vecRegions[iRegionID];
+	vector<CAltFreqRegion>& vecRegions = PAltFreqSign.vecRegions[iRegionID];
 
 	/*(first check if new object is not already there) */
 
@@ -950,7 +960,7 @@ bool CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 	if (bAltFreqRegionIsAlreadyThere == false)
 		vecRegions.push_back(Region);
 
-	Parameter.Unlock();
+	Parameters.Unlock();
 
 	return false;
 }
@@ -1235,7 +1245,7 @@ bool CSDCReceive::DataEntityType10(CVector<_BINARY>* pbiData,
 \******************************************************************************/
 bool CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 									   const int iLengthOfBody,
-									   CParameter& Parameter,
+									   CParameter& Parameters,
 									   const bool bVersion)
 {
 	size_t i;
@@ -1253,7 +1263,7 @@ bool CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 	const int iShortIDAnnounceFlag = pbiData->Separate(1);
 
 	/* Short Id / announcement field */
-	OtherService.iShortID = pbiData->Separate(2);
+	int iShortID = pbiData->Separate(2);
 
 	/* Region/Schedule flag: this field indicates whether the list of
 	   frequencies is restricted by region and/or schedule or not */
@@ -1388,27 +1398,35 @@ bool CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 		return false; // no error, but we don't support announcements
 
 	/* Now, set data in global struct */
-	Parameter.Lock();
+	Parameters.Lock();
+
+	Parameters.bMuxHasAFS = true;
+
+	uint32_t sid = Parameters.Service[iShortID].iServiceID;
+	vector<COtherService>& vecOtherServices = Parameters.ServiceInformation[sid].AltFreqSign.vecOtherServices;
+
 	/* Check the version flag */
 	if (bVersion != bType11ListVersion)
 	{
 		/* If version flag has changed, delete all data for this entity type and save flag */
-		Parameter.AltFreqSign.vecOtherServices.clear();
+		vecOtherServices.clear();
 		bType11ListVersion = bVersion;
 	}
 
-	/* (first check if new object is not already there) */
-	const size_t iCurNumAltFreqOtherServices = Parameter.AltFreqSign.vecOtherServices.size();
-
 	bool bAltFreqIsAlreadyThere = false;
-	for (i = 0; i < iCurNumAltFreqOtherServices; i++)
+	for (i = 0; i < vecOtherServices.size(); i++)
 	{
-		if (Parameter.AltFreqSign.vecOtherServices[i] == OtherService)
+		if (vecOtherServices[i] == OtherService)
 				bAltFreqIsAlreadyThere = true;
 	}
 	if (bAltFreqIsAlreadyThere == false)
-			Parameter.AltFreqSign.vecOtherServices.push_back(OtherService);
-	Parameter.Unlock();
+	{
+			vecOtherServices.push_back(OtherService);
+			cerr << "added other service " << hex
+			<< OtherService.iServiceID << " to " << sid << dec << endl;
+	}
+
+	Parameters.Unlock();
 
 	return false;
 }

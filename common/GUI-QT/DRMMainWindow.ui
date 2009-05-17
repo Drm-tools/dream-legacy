@@ -6749,7 +6749,7 @@
         <number>2</number>
        </property>
        <property name="text" >
-        <string>TextTextMessage</string>
+        <string>TextMessage</string>
        </property>
        <property name="alignment" >
         <set>Qt::AlignCenter</set>
@@ -7067,6 +7067,7 @@
     <addaction name="actionStations" />
     <addaction name="actionAFS" />
     <addaction name="actionEPG" />
+    <addaction name="actionData_Application" />
     <addaction name="separator" />
     <addaction name="actionExit" />
    </widget>
@@ -7198,7 +7199,7 @@
     <string>Alternative &amp;Frequencies ...</string>
    </property>
    <property name="shortcut" >
-    <string>Ctrl+F</string>
+    <string>Ctrl+A</string>
    </property>
   </action>
   <action name="actionEPG" >
@@ -7223,6 +7224,14 @@
    </property>
    <property name="shortcutContext" >
     <enum>Qt::WidgetShortcut</enum>
+   </property>
+  </action>
+  <action name="actionData_Application" >
+   <property name="text" >
+    <string>Data Application</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+D</string>
    </property>
   </action>
  </widget>

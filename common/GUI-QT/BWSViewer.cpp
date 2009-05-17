@@ -33,7 +33,7 @@
 BWSViewer::BWSViewer(ReceiverInterface& rec, CSettings& s,
         QWidget* parent,
 		const char* name, Qt::WFlags f):
-		QMainWindow(parent, name, f), Ui_BWSViewer(), Timer(),
+		QMainWindow(parent, f), Ui_BWSViewer(), Timer(),
 		receiver(rec), settings(s), homeUrl(""), decoderSet(false)
 {
     setupUi(this);
@@ -94,15 +94,15 @@ void BWSViewer::OnTimer()
 		break;
 
 	case CRC_ERROR:
-		LEDStatus->SetLight(2); /* RED */
+		LEDStatus->SetLight(CMultColorLED::RL_RED); /* RED */
 		break;
 
 	case DATA_ERROR:
-		LEDStatus->SetLight(1); /* YELLOW */
+		LEDStatus->SetLight(CMultColorLED::RL_YELLOW); /* YELLOW */
 		break;
 
 	case RX_OK:
-		LEDStatus->SetLight(0); /* GREEN */
+		LEDStatus->SetLight(CMultColorLED::RL_GREEN); /* GREEN */
 		break;
 	}
 
@@ -187,7 +187,7 @@ void BWSViewer::showEvent(QShowEvent*)
     if (service.IsActive())
     {
         /* Do UTF-8 to QString (UNICODE) conversion with the label strings */
-        QString strLabel = QString().fromUtf8(service.strLabel.c_str()).stripWhiteSpace();
+        QString strLabel = QString().fromUtf8(service.strLabel.c_str()).trimmed();
 
 
         /* Service ID (plot number in hexadecimal format) */
@@ -200,14 +200,14 @@ void BWSViewer::showEvent(QShowEvent*)
                 strLabel += " ";
 
             strServiceID = "- ID:" +
-                QString().setNum(long(service.iServiceID), 16).upper();
+                QString().setNum(long(service.iServiceID), 16).toUpper();
         }
 
         /* add the description on the title of the dialog */
         if (strLabel != "" || strServiceID != "")
             strTitle += " [" + strLabel + strServiceID + "]";
     }
-	setCaption(strTitle);
+	setWindowTitle(strTitle);
 
 	/* Update window */
 	OnTimer();

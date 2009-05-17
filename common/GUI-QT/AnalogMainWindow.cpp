@@ -44,12 +44,12 @@
 
 /* Implementation *************************************************************/
 AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSettings,
-	QWidget* parent, const char* name, Qt::WFlags f):
-    QMainWindow(parent, name, f), Ui_AnalogMainWindow(),
+	QWidget* parent, Qt::WFlags f):
+    QMainWindow(parent, f), Ui_AnalogMainWindow(),
 	Receiver(NDRMR), Settings(NSettings),
 	pReceiverSettingsDlg(NULL), stationsDlg(NULL), liveScheduleDlg(NULL),
 	plot(NULL),Timer(),TimerPLLPhaseDial(),
-	AMSSDlg(NDRMR, Settings, this, name, false, f), quitWanted(true)
+	AMSSDlg(NDRMR, Settings, this, f), quitWanted(true)
 {
     setupUi(this);
 
@@ -72,11 +72,11 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	connect(actionReceiver_Settings, SIGNAL(triggered()), pReceiverSettingsDlg, SLOT(show()));
 
 	/* Stations window */
-	stationsDlg = new StationsDlg(Receiver, Settings, false, this, "", false, Qt::WStyle_MinMax);
+	stationsDlg = new StationsDlg(Receiver, Settings, false, this, "", false, Qt::WindowMinMaxButtonsHint);
 	connect(actionStations, SIGNAL(triggered()), stationsDlg, SLOT(show()));
 
 	/* Live Schedule window */
-	liveScheduleDlg = new LiveScheduleDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
+	liveScheduleDlg = new LiveScheduleDlg(Receiver, Settings, this, "", false, Qt::WindowMinMaxButtonsHint);
 	connect(actionAFS, SIGNAL(triggered()), liveScheduleDlg, SLOT(show()));
 
 	/* Init main plot */
@@ -86,7 +86,7 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	connect(plot, SIGNAL(xAxisValSet(double)), this, SLOT(OnChartxAxisValSet(double)));
 
 	SliderBandwidth->setRange(0, SOUNDCRD_SAMPLE_RATE / 2);
-	SliderBandwidth->setTickmarks(QSlider::TicksBothSides);
+	SliderBandwidth->setTickPosition(QSlider::TicksBothSides);
 	SliderBandwidth->setTickInterval(1000); /* Each kHz a tick */
 	SliderBandwidth->setPageStep(1000); /* Hz */
 
@@ -119,9 +119,9 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 
 	/* Check boxes */
 	connect(CheckBoxMuteAudio, SIGNAL(clicked()), this, SLOT(OnCheckBoxMuteAudio()));
+	connect(CheckBoxReverb, SIGNAL(clicked()), this, SLOT(OnCheckBoxReverb()));
 	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWAV()));
 	connect(CheckBoxAutoFreqAcq, SIGNAL(clicked()), this, SLOT(OnCheckAutoFreqAcq()));
-	connect(CheckBoxOnBoardDemod, SIGNAL(clicked()), this, SLOT(OnCheckOnBoardDemod()));
 
 	connect(PLLButton, SIGNAL(clicked ()), this, SLOT(OnCheckPLL()));
 
@@ -145,7 +145,7 @@ void AnalogMainWindow::showEvent(QShowEvent*)
 
 	OnTimer();
 
- 	/* default close action is to exit */
+	/* default close action is to exit */
     quitWanted = true;
 
 	/* Activate real-time timer */
@@ -158,10 +158,10 @@ void AnalogMainWindow::showEvent(QShowEvent*)
 		AMSSDlg.hide();
 
 	if(Settings.Get("AnalogGUI", "Stationsvisible", false))
-        stationsDlg->show();
+	stationsDlg->show();
 
 	if(Settings.Get("AnalogGUI", "AFSvisible", false))
-        liveScheduleDlg->show();
+	liveScheduleDlg->show();
 
     PLLButton->setChecked(Settings.Get("AnalogGUI", "pll", true));
 
@@ -202,11 +202,11 @@ void AnalogMainWindow::closeEvent(QCloseEvent* ce)
 {
     if(quitWanted)
     {
-        if(!Receiver.End())
-        {
-            QMessageBox::critical(this, "Dream", tr("Exit"), tr("Termination of working thread failed"));
-        }
-        qApp->quit();
+	if(!Receiver.End())
+	{
+	    QMessageBox::critical(this, "Dream", tr("Exit"), tr("Termination of working thread failed"));
+	}
+	qApp->quit();
     }
 	ce->accept();
 }
@@ -325,14 +325,6 @@ void AnalogMainWindow::UpdateControls()
     PLLButton->setChecked(Receiver.AnalogPLLEnabled());
 }
 
-void AnalogMainWindow::OnCheckOnBoardDemod()
-{
-	if (CheckBoxOnBoardDemod->isChecked() == true)
-		Receiver.SetUseAnalogHWDemod(true);
-	else
-		Receiver.SetUseAnalogHWDemod(false);
-}
-
 void AnalogMainWindow::UpdatePlotStyle()
 {
 	/* Update main plot window */
@@ -351,48 +343,36 @@ void AnalogMainWindow::OnTimer()
 	switch(eModulation)
 	{
 	case DRM:
-        quitWanted = false;
-        close();
-		break;
-	case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
-		/* Carrier frequency of AM signal */
-        b = Receiver.GetAnalogParameters()->Measurements.AnalogCurMixFreqOffs.get(r);
-        if(b)
-        {
-            TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
-            + QString().setNum(r, 'f', 2) + " Hz</b>");
-        }
-        else
-        {
-            TextFreqOffset->setText(tr("Carrier Frequency not available"));
-        }
-		b = Receiver.GetUseAnalogHWDemod();
-		if(b)
-		{
-			CheckBoxOnBoardDemod->setEnabled(true);
-			CheckBoxOnBoardDemod->setChecked(true);
-			//EDemodType eMode = Parameters.eDemodType;
-			/* TODO enable & disable the Onboard checkbox according to the rig caps */
-		}
-		else
-		{
-			//CheckBoxOnBoardDemod->setEnabled(false);
-		}
-		UpdateControls();
-		break;
+	    quitWanted = false;
+	    close();
+		    break;
+	    case AM: case  USB: case  LSB: case  CW: case  NBFM: case  WBFM:
+		    /* Carrier frequency of AM signal */
+	    b = Receiver.GetAnalogParameters()->Measurements.AnalogCurMixFreqOffs.get(r);
+	    if(b)
+	    {
+		TextFreqOffset->setText(tr("Carrier<br>Frequency:<br><b>")
+		+ QString().setNum(r, 'f', 2) + " Hz</b>");
+	    }
+	    else
+	    {
+		TextFreqOffset->setText(tr("Carrier Frequency not available"));
+	    }
+	    UpdateControls();
+	    break;
 	case NONE:
-		break;
+		    break;
 	}
 	if(!AMSSDlg.isVisible())
-        ButtonAMSS->setChecked(false);
+	ButtonAMSS->setChecked(false);
 }
 
 void AnalogMainWindow::OnTimerPLLPhaseDial()
 {
     if(!Receiver.AnalogPLLEnabled()) // probablly not needed - maybe dangerous ?
     {
-        PLLButton->setChecked(false);
-        return;
+	PLLButton->setChecked(false);
+	return;
     }
 
 	CReal rCurPLLPhase;
@@ -401,13 +381,13 @@ void AnalogMainWindow::OnTimerPLLPhaseDial()
 	{
 		/* Set current PLL phase (convert radiant in degree) */
 		PhaseDial->setValue(rCurPLLPhase * (CReal) 360.0 / (2 * crPi));
-        PhaseDial->setEnabled(true);
+	PhaseDial->setEnabled(true);
 	}
 	else
 	{
 		/* Reset dial */
 		PhaseDial->setValue((CReal) 0.0);
-        PhaseDial->setEnabled(false);
+	PhaseDial->setEnabled(false);
 	}
 }
 
@@ -514,16 +494,16 @@ void AnalogMainWindow::OnCheckPLL()
 	/* Set parameter in working thread module */
 	if(PLLButton->isChecked())
 	{
-        Receiver.EnableAnalogPLL(true);
-        PhaseDial->setEnabled(true);
-        OnTimerPLLPhaseDial();
-        TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
+	Receiver.EnableAnalogPLL(true);
+	PhaseDial->setEnabled(true);
+	OnTimerPLLPhaseDial();
+	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 	}
 	else
 	{
-        Receiver.EnableAnalogPLL(false);
-        PhaseDial->setEnabled(false);
-        TimerPLLPhaseDial.stop();
+	Receiver.EnableAnalogPLL(false);
+	PhaseDial->setEnabled(false);
+	TimerPLLPhaseDial.stop();
 	}
 
 }
@@ -532,6 +512,12 @@ void AnalogMainWindow::OnCheckBoxMuteAudio()
 {
 	/* Set parameter in working thread module */
 	Receiver.MuteAudio(CheckBoxMuteAudio->isChecked());
+}
+
+void AnalogMainWindow::OnCheckBoxReverb()
+{
+	/* Set parameter in working thread module */
+	Receiver.SetReverbEffect(CheckBoxReverb->isChecked());
 }
 
 void AnalogMainWindow::OnCheckSaveAudioWAV()
@@ -544,12 +530,12 @@ void AnalogMainWindow::OnCheckSaveAudioWAV()
 	{
 		/* Show "save file" dialog */
 		QString strFileName =
-			QFileDialog::getSaveFileName("DreamOut.wav", "*.wav", this);
+			QFileDialog::getSaveFileName(this, "DreamOut.wav", "*.wav");
 
 		/* Check if user not hit the cancel button */
 		if (!strFileName.isNull())
 		{
-			Receiver.StartWriteWaveFile(strFileName.latin1());
+			Receiver.StartWriteWaveFile(strFileName.toStdString());
 		}
 		else
 		{
@@ -580,13 +566,13 @@ void AnalogMainWindow::OnButtonAMSS()
 {
     if(ButtonAMSS->isChecked())
     {
-        /* Open AMSS window and set in foreground */
-        AMSSDlg.show();
-        AMSSDlg.raise();
+	/* Open AMSS window and set in foreground */
+	AMSSDlg.show();
+	AMSSDlg.raise();
     }
     else
     {
-        AMSSDlg.hide();
+	AMSSDlg.hide();
     }
 }
 
@@ -719,11 +705,6 @@ void AnalogMainWindow::AddWhatsThisHelp()
 	GroupBoxAutoFreqAcq->setWhatsThis(strAutoFreqAcqu);
 	CheckBoxAutoFreqAcq->setWhatsThis(strAutoFreqAcqu);
 
-	const QString strOnBoard =
-		tr("<b>On Board Demod:</b> When checked, the receiver will use a hardware demodulator."
-			" When clear the software demodulator will be used. Different H/W may not support"
-			" one or other of the options.");
-	CheckBoxOnBoardDemod->setWhatsThis(strOnBoard);
 }
 
 void AnalogMainWindow::OnHelpWhatsThis()
@@ -752,9 +733,8 @@ void AnalogMainWindow::OnHelpWhatsThis()
 	Added phase offset display for AMSS demodulation loop.
 */
 CAMSSDlg::CAMSSDlg(AnalogReceiverInterface& R, CSettings& NSettings,
-	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
-	QDialog(parent, name, modal, f), Ui_AMSSDlg(), Receiver(R),
-	Settings(NSettings)
+	QWidget* parent, Qt::WFlags f) : QDialog(parent, f), Ui_AMSSDlg(),
+	Receiver(R), Settings(NSettings)
 {
     setupUi(this);
 
@@ -837,7 +817,7 @@ void CAMSSDlg::OnTimer()
 	{
 		/* Service label (UTF-8 encoded string -> convert) */
 		TextAMSSServiceLabel->setText(QString().fromUtf8(
-            Service.strLabel.c_str()));
+	    Service.strLabel.c_str()));
 	}
 	else
 		TextAMSSServiceLabel->setText(tr(""));
@@ -888,7 +868,10 @@ void CAMSSDlg::OnTimer()
 	}
 
 	/* Get number of alternative services */
-	const size_t iNumAltServices = Parameters.AltFreqSign.vecOtherServices.size();
+	const uint32_t sid = Parameters.Service[0].iServiceID;
+	const CAltFreqSign AltFreqSign = Parameters.ServiceInformation[sid].AltFreqSign;
+
+	const size_t iNumAltServices = AltFreqSign.vecOtherServices.size();
 
 	if (iNumAltServices != 0)
 	{
@@ -901,7 +884,8 @@ void CAMSSDlg::OnTimer()
 
 		for (size_t i = 0; i < iNumAltServices; i++)
 		{
-			switch (Parameters.AltFreqSign.vecOtherServices[i].iSystemID)
+			const COtherService& OtherService = AltFreqSign.vecOtherServices[i];
+			switch (OtherService.iSystemID)
 			{
 			case 0:
 				freqEntry = "DRM:";
@@ -926,11 +910,9 @@ void CAMSSDlg::OnTimer()
 				break;
 			}
 
-			const int iNumAltFreqs = Parameters.AltFreqSign.vecOtherServices[i].veciFrequencies.size();
+			const int iNumAltFreqs = OtherService.veciFrequencies.size();
 
-			const int iSystemID = Parameters.AltFreqSign.vecOtherServices[i].iSystemID;
-
-			switch (iSystemID)
+			switch (OtherService.iSystemID)
 			{
 			case 0:
 			case 1:
@@ -939,8 +921,8 @@ void CAMSSDlg::OnTimer()
 				for (int j = 0; j < iNumAltFreqs; j++)
 				{
 					freqEntry +=
-						QString().setNum((long) Parameters.
-						AltFreqSign.vecOtherServices[i].
+						QString().setNum((long)
+						OtherService.
 						veciFrequencies[j], 10);
 
 					if (j != iNumAltFreqs-1)
@@ -948,14 +930,13 @@ void CAMSSDlg::OnTimer()
 				}
 				freqEntry += " kHz";
 
-
-				if (iSystemID == 0 || iSystemID == 1)
+				if (OtherService.iSystemID == 0 || OtherService.iSystemID == 1)
 				{
 					freqEntry += " ID:";
 					freqEntry +=
-						QString().setNum((long) Parameters.
-						AltFreqSign.vecOtherServices[i].
-						iServiceID, 16).upper();
+						QString().setNum((long)
+						OtherService.
+						iServiceID, 16).toUpper();
 				}
 				break;
 
@@ -966,31 +947,29 @@ void CAMSSDlg::OnTimer()
 				for (int j = 0; j < iNumAltFreqs; j++)
 				{
 					freqEntry +=
-						QString().setNum((float) (87.5 + 0.1 * Receiver.
-						GetAnalogParameters()->AltFreqSign.
-						vecOtherServices[i].veciFrequencies[j]), 'f', 1);
+						QString().setNum((float) (87.5 + 0.1 * OtherService.veciFrequencies[j]), 'f', 1);
 
 					if (j != iNumAltFreqs-1)
 						freqEntry += ",";
 				}
 				freqEntry += " MHz";
 
-				if (iSystemID == 3)
+				if (OtherService.iSystemID == 3)
 				{
 					freqEntry += " ECC+PI:";
 					freqEntry +=
-						QString().setNum((long) Parameters.
-						AltFreqSign.vecOtherServices[i].
-						iServiceID, 16).upper();
+						QString().setNum((long)
+						OtherService.
+						iServiceID, 16).toUpper();
 				}
 
-				if (iSystemID == 4)
+				if (OtherService.iSystemID == 4)
 				{
 					freqEntry += " PI:";
 					freqEntry +=
-						QString().setNum((long) Parameters.
-						AltFreqSign.vecOtherServices[i].
-						iServiceID, 16).upper();
+						QString().setNum((long)
+						OtherService.
+						iServiceID, 16).toUpper();
 				}
 				break;
 
@@ -1001,31 +980,25 @@ void CAMSSDlg::OnTimer()
 				for (int j = 0; j < iNumAltFreqs; j++)
 				{
 					freqEntry +=
-						QString().setNum((float) (76.0 + 0.1 * Receiver.
-						GetAnalogParameters()->AltFreqSign.
-						vecOtherServices[i].veciFrequencies[j]), 'f', 1);
-
+						QString().setNum((float) (76.0 + 0.1 *
+							OtherService.veciFrequencies[j]), 'f', 1);
 					if (j != iNumAltFreqs-1)
 						freqEntry += ",";
 				}
 				freqEntry += " MHz";
 
-				if (iSystemID == 6)
+				if (OtherService.iSystemID == 6)
 				{
 					freqEntry += " ECC+PI:";
 					freqEntry +=
-						QString().setNum((long) Parameters.
-						AltFreqSign.vecOtherServices[i].
-						iServiceID, 16).upper();
+						QString().setNum((long) OtherService.iServiceID, 16).toUpper();
 				}
 
-				if (iSystemID == 7)
+				if (OtherService.iSystemID == 7)
 				{
 					freqEntry += " PI:";
 					freqEntry +=
-						QString().setNum((long) Parameters.
-						AltFreqSign.vecOtherServices[i].
-						iServiceID, 16).upper();
+						QString().setNum((long) OtherService.iServiceID, 16).toUpper();
 				}
 				break;
 
@@ -1034,8 +1007,7 @@ void CAMSSDlg::OnTimer()
 				break;
 			}
 
-			if (Parameters.AltFreqSign.
-				vecOtherServices[i].bSameService)
+			if (OtherService.bSameService)
 			{
 				freqEntry += " (same service)";
 			}
@@ -1074,7 +1046,7 @@ void CAMSSDlg::OnTimer()
 			TextAMSSLanguage->setText(QString(strTableLanguageCode[Service.iLanguage].c_str()));
 
 			TextAMSSServiceID->setText("ID:" + QString().setNum(
-				(long) Service.iServiceID, 16).upper());
+				(long) Service.iServiceID, 16).toUpper());
 
 			TextAMSSAMCarrierMode->setText(QString(strTableAMSSCarrierMode[Parameters.iAMSSCarrierMode].c_str()));
 		}

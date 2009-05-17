@@ -99,7 +99,8 @@ void Loghelper::EnableLog(bool b)
 {
 	if(b)
 	{
-		TimerLogFileStart.start(1000*iLogDelay, true);
+		TimerLogFileStart.setSingleShot(true);
+		TimerLogFileStart.start(1000*iLogDelay);
 	}
 	else
 	{

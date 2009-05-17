@@ -108,11 +108,9 @@ public:
 
 	virtual void	 				SetEnableSMeter(bool)=0;
 	virtual bool		 			GetEnableSMeter()=0;
-	virtual void					SetRigModelForAllModes(int)=0;
-	virtual void					SetRigModel(int)=0;
-	virtual int						GetRigModel() const =0;
+	virtual void					SetRigModel( int)=0;
+	virtual string					GetRigInfo() const = 0;
 	virtual void					GetRigList(map<int, CRigCaps>&) const =0;
-	virtual void					GetRigCaps(CRigCaps&) const =0;
 	virtual void					GetRigCaps(int, CRigCaps&) const =0;
 	virtual void					GetComPortList(map<string,string>&) const =0;
 	virtual string					GetRigComPort() const =0;

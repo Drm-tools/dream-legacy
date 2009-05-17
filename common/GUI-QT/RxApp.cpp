@@ -52,10 +52,10 @@ void RxApp::doNewMainWindow()
             QTimer::singleShot(1000, this, SLOT(doNewMainWindow()));
             return;
         case DRM:
-            MainDlg = new DRMMainWindow(Receiver, Settings, 0, 0, Qt::WStyle_MinMax);
+            MainDlg = new DRMMainWindow(Receiver, Settings, NULL, Qt::WindowMinMaxButtonsHint);
             break;
         default:
-            MainDlg = new AnalogMainWindow(Receiver, Settings, 0, 0, Qt::WStyle_MinMax);
+            MainDlg = new AnalogMainWindow(Receiver, Settings, NULL, Qt::WindowMinMaxButtonsHint);
         }
 
         MainDlg->setAttribute(Qt::WA_QuitOnClose, false);

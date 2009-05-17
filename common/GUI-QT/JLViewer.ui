@@ -92,6 +92,13 @@
        </spacer>
       </item>
       <item>
+       <widget class="QPushButton" name="pushButtonClearCache" >
+        <property name="text" >
+         <string>Clear Cache</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="buttonOk" >
         <property name="text" >
          <string>&amp;Close</string>

@@ -32,11 +32,13 @@
 #include "../GPSReceiver.h"
 #include <QDateTime>
 #include <QWhatsThis>
+#include <QFileDialog>
+#include <iostream>
 
 SystemEvalDlg::SystemEvalDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
     QWidget* parent, const char* name, bool modal, Qt::WFlags f)
-: QDialog(parent, name, modal, f), Ui_SystemEvalDlg(),
-    DRMReceiver(NDRMR), Settings(NSettings), pGPSReceiver(NULL),
+: QDialog(parent, f), Ui_SystemEvalDlg(),
+    Receiver(NDRMR), Settings(NSettings), pGPSReceiver(NULL),
     plot(NULL),plots(),
     timer(NULL), timerTuning(NULL), timerLineEditFrequency(NULL),
     bTuningInProgress(false)
@@ -47,17 +49,20 @@ SystemEvalDlg::SystemEvalDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
     timerTuning = new QTimer(this);
     timerLineEditFrequency = new QTimer(this);
 
-	connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
-	connect(timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
+    connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
+    connect(timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
+    connect(CheckBoxMuteAudio, SIGNAL(clicked()), this, SLOT(OnCheckBoxMuteAudio()));
+    connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWAV()));
+    connect(CheckBoxReverb, SIGNAL(clicked()), this, SLOT(OnCheckBoxReverb()));
 
     AddWhatsThisHelp();
 
     InitialiseLEDs();
     InitialiseGPS();
-	InitialiseMERetc();
-	InitialiseFAC();
-	InitialisePlots();
-	InitialiseFrequency();
+    InitialiseMERetc();
+    InitialiseFAC();
+    InitialisePlots();
+    InitialiseFrequency();
 }
 
 SystemEvalDlg::~SystemEvalDlg()
@@ -80,7 +85,7 @@ void SystemEvalDlg::hideEvent(QHideEvent*)
 
 void SystemEvalDlg::OnTimer()
 {
-    CParameter& Parameters = *(DRMReceiver.GetParameters());
+    CParameter& Parameters = *(Receiver.GetParameters());
 
 	Parameters.Lock();
 	UpdateLEDs(Parameters);
@@ -109,9 +114,9 @@ void SystemEvalDlg::UpdateLEDs(CParameter& Parameters)
 {
     int iCurSelAudioServ = Parameters.GetCurSelAudioService();
     if(Parameters.Service[iCurSelAudioServ].eAudDataFlag == SF_DATA)
-        SetStatus(LEDMSC, Parameters.ReceiveStatus.MOT.GetStatus());
+	SetStatus(LEDMSC, Parameters.ReceiveStatus.MOT.GetStatus());
     else
-        SetStatus(LEDMSC, Parameters.ReceiveStatus.Audio.GetStatus());
+	SetStatus(LEDMSC, Parameters.ReceiveStatus.Audio.GetStatus());
     SetStatus(LEDSDC, Parameters.ReceiveStatus.SDC.GetStatus());
     SetStatus(LEDFAC, Parameters.ReceiveStatus.FAC.GetStatus());
     SetStatus(LEDFrameSync, Parameters.ReceiveStatus.FSync.GetStatus());
@@ -128,15 +133,15 @@ void SystemEvalDlg::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 		break;
 
 	case CRC_ERROR:
-		LED->SetLight(2); /* RED */
+		LED->SetLight(CMultColorLED::RL_RED); /* RED */
 		break;
 
 	case DATA_ERROR:
-		LED->SetLight(1); /* YELLOW */
+		LED->SetLight(CMultColorLED::RL_YELLOW); /* YELLOW */
 		break;
 
 	case RX_OK:
-		LED->SetLight(0); /* GREEN */
+		LED->SetLight(CMultColorLED::RL_GREEN); /* GREEN */
 		break;
 	}
 }
@@ -152,7 +157,7 @@ void SystemEvalDlg::InitialiseGPS()
 
 void SystemEvalDlg::EnableGPS(bool b)
 {
-	CParameter& Parameters = *DRMReceiver.GetParameters();
+	CParameter& Parameters = *Receiver.GetParameters();
 	Parameters.Lock();
 	if(b)
 	{
@@ -180,15 +185,15 @@ void SystemEvalDlg::UpdateGPS(CParameter& Parameters)
 	switch (Parameters.GPSData.GetStatus())
 	{
 		case CGPSData::GPS_RX_NOT_CONNECTED:
-			LEDGPS->SetLight(2); // Red
+			LEDGPS->SetLight(CMultColorLED::RL_RED); // Red
 			break;
 
 		case CGPSData::GPS_RX_NO_DATA:
-			LEDGPS->SetLight(1); // Yellow
+			LEDGPS->SetLight(CMultColorLED::RL_YELLOW); // Yellow
 			break;
 
 		case CGPSData::GPS_RX_DATA_AVAILABLE:
-			LEDGPS->SetLight(0); // Green
+			LEDGPS->SetLight(CMultColorLED::RL_GREEN); // Green
 			break;
 	}
 
@@ -255,75 +260,75 @@ void SystemEvalDlg::UpdateMERetc(CParameter& Parameters)
 
 	bool bValid = Parameters.Measurements.SigStrstat.getCurrent(rSigStr);
     if (bValid)
-        ValueRF->setText(QString().setNum(rSigStr, 'f', 1) + " dBuV");
+	ValueRF->setText(QString().setNum(rSigStr, 'f', 1) + " dBuV");
     else
-        ValueRF->setText("---");
+	ValueRF->setText("---");
 
     /* Show SNR if receiver is in tracking mode */
-    if (DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
+    if (Receiver.GetAcquiState() == AS_WITH_SIGNAL)
     {
-        /* Get a consistant snapshot */
+	/* Get a consistant snapshot */
 
-        /* We only get SNR from a local DREAM Front-End */
-        _REAL rSNR = Parameters.GetSNR();
-        if (rSNR >= 0.0)
-        {
-            /* SNR */
-            ValueSNR->setText("<b>" + QString().setNum(rSNR, 'f', 1) + " dB</b>");
-        }
-        else
-        {
-            ValueSNR->setText("<b>---</b>");
-        }
+	/* We only get SNR from a local DREAM Front-End */
+	_REAL rSNR = Parameters.GetSNR();
+	if (rSNR >= 0.0)
+	{
+	    /* SNR */
+	    ValueSNR->setText("<b>" + QString().setNum(rSNR, 'f', 1) + " dB</b>");
+	}
+	else
+	{
+	    ValueSNR->setText("<b>---</b>");
+	}
 
-        /* We get MER from a local DREAM Front-End or an RSCI input but not an MDI input */
-        _REAL rMER=0.0, rWMERMSC=0.0;
-        QString sMER="---", sWMERMSC="---";
-        if (Parameters.Measurements.WMERMSC.get(rWMERMSC))
-        {
-            sWMERMSC = QString().setNum(rWMERMSC, 'f', 1) + " dB";
-        }
-        if (Parameters.Measurements.MER.get(rMER))
-        {
-            sMER = QString().setNum(rMER, 'f', 1) + " dB";
-        }
-        ValueMERWMER->setText("<b>"+sWMERMSC+" / "+sMER+"</b>");
+	/* We get MER from a local DREAM Front-End or an RSCI input but not an MDI input */
+	_REAL rMER=0.0, rWMERMSC=0.0;
+	QString sMER="---", sWMERMSC="---";
+	if (Parameters.Measurements.WMERMSC.get(rWMERMSC))
+	{
+	    sWMERMSC = QString().setNum(rWMERMSC, 'f', 1) + " dB";
+	}
+	if (Parameters.Measurements.MER.get(rMER))
+	{
+	    sMER = QString().setNum(rMER, 'f', 1) + " dB";
+	}
+	ValueMERWMER->setText("<b>"+sWMERMSC+" / "+sMER+"</b>");
 
-        /* Doppler estimation (assuming Gaussian doppler spectrum) */
-        QString sdoppler = "";
-        QString sdelay = "";
-        _REAL rVal;
-        vector<_REAL> vecrVal;
-        vector<CMeasurements::CRdel> rdel;
-        if(Parameters.Measurements.Rdop.get(rVal))
-        {
-            sdoppler += QString().setNum(rVal, 'f', 2) + " ";
-        }
-        if(Parameters.Measurements.Doppler.get(rVal))
-        {
-            sdoppler += QString().setNum(rVal, 'f', 2) + " ";
-        }
-        if(Parameters.Measurements.Rdel.get(rdel))
-        {
-            sdelay += QString().setNum(rdel[0].interval, 'f', 2) + " ";
-        }
-        if (Parameters.Measurements.Delay.get(rVal))
-        {
-            sdelay += QString().setNum(rVal, 'f', 2) + " ";
-        }
-        if(sdoppler=="")
-            sdoppler = "---";
-        else
-            sdoppler += "Hz";
-        if(sdelay=="")
-            sdelay = "---";
-        else
-            sdelay += "ms";
-        ValueWiener->setText(sdoppler+" / "+sdelay);
+	/* Doppler estimation (assuming Gaussian doppler spectrum) */
+	QString sdoppler = "";
+	QString sdelay = "";
+	_REAL rVal;
+	vector<_REAL> vecrVal;
+	vector<CMeasurements::CRdel> rdel;
+	if(Parameters.Measurements.Rdop.get(rVal))
+	{
+	    sdoppler += QString().setNum(rVal, 'f', 2) + " ";
+	}
+	if(Parameters.Measurements.Doppler.get(rVal))
+	{
+	    sdoppler += QString().setNum(rVal, 'f', 2) + " ";
+	}
+	if(Parameters.Measurements.Rdel.get(rdel))
+	{
+	    sdelay += QString().setNum(rdel[0].interval, 'f', 2) + " ";
+	}
+	if (Parameters.Measurements.Delay.get(rVal))
+	{
+	    sdelay += QString().setNum(rVal, 'f', 2) + " ";
+	}
+	if(sdoppler=="")
+	    sdoppler = "---";
+	else
+	    sdoppler += "Hz";
+	if(sdelay=="")
+	    sdelay = "---";
+	else
+	    sdelay += "ms";
+	ValueWiener->setText(sdoppler+" / "+sdelay);
 
-        /* Sample frequency offset estimation */
-        _REAL rCurSamROffs = 0.0;
-        bool b = Parameters.Measurements.SampleFrequencyOffset.get(rCurSamROffs);
+	/* Sample frequency offset estimation */
+	_REAL rCurSamROffs = 0.0;
+	bool b = Parameters.Measurements.SampleFrequencyOffset.get(rCurSamROffs);
 		if(b)
 		{
 			/* Display value in [Hz] and [ppm] (parts per million) */
@@ -339,10 +344,10 @@ void SystemEvalDlg::UpdateMERetc(CParameter& Parameters)
     }
     else
     {
-        ValueSNR->setText("<b>---</b>");
-        ValueMERWMER->setText("<b>---</b>");
-        ValueWiener->setText("--- / ---");
-        ValueSampFreqOffset->setText("---");
+	ValueSNR->setText("<b>---</b>");
+	ValueMERWMER->setText("<b>---</b>");
+	ValueWiener->setText("--- / ---");
+	ValueSampFreqOffset->setText("---");
     }
 
 #ifdef _DEBUG_
@@ -350,9 +355,9 @@ void SystemEvalDlg::UpdateMERetc(CParameter& Parameters)
 
 	/* Metric values */
 	ValueFreqOffset->setText(tr("Metrics [dB]: MSC: ")
-	+ QString().setNum(DRMReceiver.GetMSCMLC()->GetAccMetric(), 'f', 2)
-	+ "\nSDC: " + QString().setNum( DRMReceiver.GetSDCMLC()->GetAccMetric(), 'f', 2)
-	+ " / FAC: " + QString().setNum( DRMReceiver.GetFACMLC()->GetAccMetric(), 'f', 2));
+	+ QString().setNum(Receiver.GetMSCMLC()->GetAccMetric(), 'f', 2)
+	+ "\nSDC: " + QString().setNum( Receiver.GetSDCMLC()->GetAccMetric(), 'f', 2)
+	+ " / FAC: " + QString().setNum( Receiver.GetFACMLC()->GetAccMetric(), 'f', 2));
 #else
 	/* DC frequency */
 	ValueFreqOffset->setText(QString().setNum(Parameters.GetDCFrequency(), 'f', 2)+" Hz");
@@ -483,7 +488,7 @@ void SystemEvalDlg::UpdateFAC(CParameter& Parameters)
 
 void SystemEvalDlg::InitialisePlots()
 {
-    plot = new CDRMPlot(MainPlot, DRMReceiver.GetParameters());
+    plot = new CDRMPlot(MainPlot, Receiver.GetParameters());
     plot->stop();
 
 	/* Connect controls ----------------------------------------------------- */
@@ -521,8 +526,8 @@ void SystemEvalDlg::showPlots()
     QList<QTreeWidgetItem *> l = ChartSelector->findItems(plottype, Qt::MatchRecursive, 1);
     if(l.size()==1)
     {
-        l[0]->setSelected(true);
-        ChartSelector->scrollToItem(l[0]);
+	l[0]->setSelected(true);
+	ChartSelector->scrollToItem(l[0]);
     }
 }
 
@@ -534,20 +539,20 @@ void SystemEvalDlg::hidePlots()
 	int n = Settings.Get("System Evaluation Dialog", "numchartwin", int(0));
 	for (int i = 0; i < n; i++)
 	{
-        stringstream s;
-        s << "Chart Window " << i;
-        Settings.Clear(s.str());
+	stringstream s;
+	s << "Chart Window " << i;
+	Settings.Clear(s.str());
 	}
 
 	/* Store size and position of all additional chart windows */
 	n=0;
 	for (size_t i = 0; i < plots.size(); i++)
 	{
-        stringstream s;
-        s << "Chart Window " << n;
-        if(plots[i]->save(Settings, s.str()))
-            n++;
-        plots[i]->stop();
+	stringstream s;
+	s << "Chart Window " << n;
+	if(plots[i]->save(Settings, s.str()))
+	    n++;
+	plots[i]->stop();
 	}
 	Settings.Put("System Evaluation Dialog", "numchartwin", n);
 
@@ -569,7 +574,7 @@ void SystemEvalDlg::OnCustomContextMenuRequested ( const QPoint&)
 	QTreeWidgetItem* item = ChartSelector->currentItem();	if (item != NULL)
 	{
 		/* Open new chart window */
-        newPlot(item->text(1).toInt(), "");
+	newPlot(item->text(1).toInt(), "");
 	}
 }
 
@@ -577,12 +582,12 @@ void SystemEvalDlg::newPlot(int pt, const string& setting)
 {
     QwtPlot* p = new QwtPlot(NULL);
     p->setAttribute(Qt::WA_QuitOnClose, false);
-    CDRMPlot* pNewPlot = new CDRMPlot(p, DRMReceiver.GetParameters());
+    CDRMPlot* pNewPlot = new CDRMPlot(p, Receiver.GetParameters());
     plots.push_back(pNewPlot);
     if(setting == "")
     {
-        pNewPlot->SetupChart(CDRMPlot::EPlotType(pt));
-        p->resize(200, 150);
+	pNewPlot->SetupChart(CDRMPlot::EPlotType(pt));
+	p->resize(200, 150);
     }
     else
     {
@@ -597,20 +602,20 @@ void SystemEvalDlg::newPlot(int pt, const string& setting)
 void SystemEvalDlg::InitialiseFrequency()
 {
 	/* If RSCI in is enabled, disable retuning */
-	if (DRMReceiver.UpstreamDIInputEnabled() == true)
+	if (Receiver.UpstreamDIInputEnabled() == true)
 	{
 		EdtFrequency->setText("0");
 		EdtFrequency->setEnabled(false);
 	}
 	else
 	{
-        connect(timerLineEditFrequency, SIGNAL(timeout()), this, SLOT(OnTimerLineEditFrequency()));
-        connect(timerTuning, SIGNAL(timeout()), this, SLOT(OnTimerTuning()));
+	connect(timerLineEditFrequency, SIGNAL(timeout()), this, SLOT(OnTimerLineEditFrequency()));
+	connect(timerTuning, SIGNAL(timeout()), this, SLOT(OnTimerTuning()));
 
-        connect( EdtFrequency, SIGNAL(textChanged(const QString&)),
-            this, SLOT(OnLineEditFrequencyChanged(const QString&)) );
+	connect( EdtFrequency, SIGNAL(textChanged(const QString&)),
+	    this, SLOT(OnLineEditFrequencyChanged(const QString&)) );
 
-        EdtFrequency->setValidator(new QIntValidator(100, 120000, EdtFrequency));
+	EdtFrequency->setValidator(new QIntValidator(100, 120000, EdtFrequency));
 	}
 }
 
@@ -621,7 +626,7 @@ void SystemEvalDlg::UpdateFrequency()
 	 * or RSCI
 	 * Don't update if already correct - would create loops
 	 */
-	int iFrequency = DRMReceiver.GetFrequency();
+	int iFrequency = Receiver.GetFrequency();
 	int iFreq = EdtFrequency->text().toInt();
 	if(iFrequency != iFreq)
 	{
@@ -637,7 +642,8 @@ void SystemEvalDlg::UpdateFrequency()
 void SystemEvalDlg::OnLineEditFrequencyChanged(const QString&)
 {
 	// wait an inter-digit timeout
-	timerLineEditFrequency->start(500, true);
+	timerLineEditFrequency->setSingleShot(true);
+	timerLineEditFrequency->start(500);
 	bTuningInProgress = true;
 }
 
@@ -645,18 +651,57 @@ void SystemEvalDlg::OnTimerLineEditFrequency()
 {
 	// commit the frequency if different
 	int iFreq = EdtFrequency->text().toInt();
-	int iFrequency = DRMReceiver.GetFrequency();
+	int iFrequency = Receiver.GetFrequency();
 	if(iFreq != iFrequency)
 	{
-		DRMReceiver.SetFrequency(iFreq);
+		Receiver.SetFrequency(iFreq);
 		bTuningInProgress = true;
-		timerTuning->start(2000, true);
+		timerTuning->setSingleShot(true);
+		timerTuning->start(2000);
 	}
 }
 
 void SystemEvalDlg::OnTimerTuning()
 {
 	bTuningInProgress = false;
+}
+void SystemEvalDlg::OnCheckBoxMuteAudio()
+{
+	/* Set parameter in working thread module */
+	Receiver.MuteAudio(CheckBoxMuteAudio->isChecked());
+}
+
+void SystemEvalDlg::OnCheckBoxReverb()
+{
+	/* Set parameter in working thread module */
+	Receiver.SetReverbEffect(CheckBoxReverb->isChecked());
+}
+
+void SystemEvalDlg::OnCheckSaveAudioWAV()
+{
+/*
+	This code is copied in SystemEvalDlg.cpp. If you do changes here, you should
+	apply the changes in the other file, too
+*/
+	if (CheckBoxSaveAudioWave->isChecked() == true)
+	{
+		/* Show "save file" dialog */
+		QString strFileName =
+			QFileDialog::getSaveFileName(this, "DreamOut.wav", "*.wav");
+
+		/* Check if user not hit the cancel button */
+		if (!strFileName.isNull())
+		{
+			Receiver.StartWriteWaveFile(strFileName.toStdString());
+		}
+		else
+		{
+			/* User hit the cancel button, uncheck the button */
+			CheckBoxSaveAudioWave->setChecked(false);
+		}
+	}
+	else
+		Receiver.StopWriteWaveFile();
 }
 
 void SystemEvalDlg::AddWhatsThisHelp()
@@ -901,6 +946,24 @@ void SystemEvalDlg::AddWhatsThisHelp()
 
 	FACTimeDateL->setWhatsThis( strTimeDate);
 	FACTimeDateV->setWhatsThis( strTimeDate);
+
+	/* Mute Audio */
+	CheckBoxMuteAudio->setWhatsThis(
+		tr("<b>Mute Audio:</b> The audio can be muted by "
+		"checking this box. The reaction of checking or unchecking this box "
+		"is delayed by approx. 1 second due to the audio buffers."));
+
+	/* Reverberation Effect */
+	CheckBoxReverb->setWhatsThis(
+		tr("<b>Reverberation Effect:</b> If this check box is checked, a "
+		"reverberation effect is applied each time an audio drop-out occurs. "
+		"With this effect it is possible to mask short drop-outs."));
+
+	/* Save audio as wave */
+	CheckBoxSaveAudioWave->setWhatsThis(
+		tr("<b>Save Audio as WAV:</b> Save the audio signal "
+		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
+		"box will let the user choose a file name for the recording."));
 
 	/* TODO - Test the right click popup */
 

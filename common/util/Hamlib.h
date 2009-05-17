@@ -91,7 +91,7 @@ public:
 		return s->second;
 	}
 	void	set_config(const string& key, const string& val) { config[key] = val; }
-	int		mode(EModulationType m, const string& key) const;
+	int	mode(EModulationType m, const string& key) const;
 	void	get_level(EModulationType m, const string& key, int& val) const;
 	void	get_level(EModulationType m, const string& key, float& val) const;
 	string	function(EModulationType m, const string& key) const;
@@ -109,7 +109,7 @@ public:
 	void	SetRigLevels(RIG*, EModulationType);
 	void	SetRigFuncs(RIG*, EModulationType);
 	void	SetRigParams(RIG*, EModulationType);
-	int		SetRigConfig(RIG*);
+	int	SetRigConfig(RIG*);
 
 	void	LoadSettings(const CSettings&, const string& sec);
 	void	SaveSettings(CSettings&, const string& sec) const;
@@ -136,52 +136,30 @@ public:
 
 	virtual void	run();
 
-	bool		    SetFrequency(const int iFreqkHz);
+	bool			SetFrequency(const int iFreqkHz);
 	void 			SetEnableSMeter(const bool bStatus); // sets/clears wanted flag and starts/stops
-	bool		    GetEnableSMeter(); // returns wanted flag
+	bool			GetEnableSMeter(); // returns wanted flag
 	void 			StopSMeter(); // stops (clears run flag) but leaves wanted flag alone
 
 	/* backend selection */
 	void			GetRigList(CRigMap&);
-	void			SetRigModelForAllModes(rig_model_t model);
-	void			SetRigModel(EModulationType eNMod, rig_model_t model);
-	rig_model_t		GetRigModel() const
-					{
-						map<EModulationType,rig_model_t>::const_iterator e = ModelID.find(eRigMode);
-						if(e!=ModelID.end())
-							return e->second;
-						return 0;
-					}
-	rig_model_t		GetWantedRigModel() const { return GetWantedRigModel(eRigMode); }
-	rig_model_t		GetWantedRigModel(EModulationType mode) const
-					{
-						map<EModulationType,rig_model_t>::const_iterator e = WantedModelID.find(mode);
-						if(e!=WantedModelID.end())
-							return e->second;
-						return 0;
-					}
-	EModulationType		GetRigMode() const {return eRigMode;}
+	void			SetRigModel(rig_model_t model);
+	void			SetModulation(EModulationType);
 
 	/* com port selection */
 	void			GetPortList(map<string,string>&) const;
 	void			SetComPort(const string&);
 	string			GetComPort() const;
-	string			GetInfo() const;
+	string			GetInfo() const { if(pRig) return rig_get_info(pRig); return ""; }
 	void			GetRigCaps(rig_model_t model, CRigCaps& caps) const
 					{
 						CRigMap::const_iterator r = CapsHamlibModels.find(model);
 						if(r!=CapsHamlibModels.end())
 							caps = r->second;
 					}
-	void			GetRigCaps(CRigCaps& caps) const
+	void			set_attribute(rig_model_t r, EModulationType e, const string& key, const string& val)
 					{
-						map<EModulationType,rig_model_t>::const_iterator e = ModelID.find(eRigMode);
-						if(e!=ModelID.end())
-							GetRigCaps(e->second, caps);
-					}
-	void			set_attribute(EModulationType m, const string& key, const string& val)
-					{
-						CapsHamlibModels[ModelID[m]].set_attribute(m, key, val);
+						CapsHamlibModels[r].set_attribute(e, key, val);
 					}
 	void			LoadSettings(CSettings& s);
 	void			SaveSettings(CSettings& s) const;
@@ -192,7 +170,7 @@ protected:
 	static int		token(const struct confparams *, rig_ptr_t);
 	static int		level(RIG*, const struct confparams *, rig_ptr_t);
 	static int		parm(RIG*, const struct confparams *, rig_ptr_t);
-	void			OpenRig();
+	void			OpenRig(rig_model_t);
 	void			CloseRig();
 
 #ifdef HAVE_QT
@@ -201,12 +179,9 @@ protected:
 	CParameter&		Parameters;
 	RIG*			pRig;
 	bool			bSMeterWanted, bEnableSMeter;
-	map<EModulationType,rig_model_t>
-					ModelID, WantedModelID;
-	EModulationType		eRigMode;
-	CRigMap			 CapsHamlibModels;
-	int             iFrequencykHz;
-	int             iFrequencyOffsetkHz;
+	CRigMap			CapsHamlibModels;
+	int			iFrequencykHz;
+	int			iFrequencyOffsetkHz;
 };
 #  else
 struct CHamlib

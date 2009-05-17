@@ -33,43 +33,41 @@
 #include "StationsDlg.h"
 #include "SystemEvalDlg.h"
 #include "EPGDlg.h"
-#include "MultSettingsDlg.h"
 #include "JLViewer.h"
 #include "BWSViewer.h"
 #include "SlideShowViewer.h"
-#include <QColorDialog>
 #include <iostream>
+
+#include <QMessageBox>
+#include <QColorDialog>
 
 /* Implementation *************************************************************/
 DRMMainWindow::DRMMainWindow(ReceiverInterface& NDRMR, CSettings& NSettings,
-	QWidget* parent, const char* name, Qt::WFlags f)
-	:QMainWindow(parent, name, f),  Ui_DRMMainWindow(),
+	QWidget* parent, Qt::WFlags f)
+	:QMainWindow(parent, f),  Ui_DRMMainWindow(),
 	Receiver(NDRMR), Settings(NSettings),
     jlViewer(NULL), bwsViewer(NULL), slideShowViewer(NULL),
 	sysEvalDlg(NULL), stationsDlg(NULL), liveScheduleDlg(NULL),
-	epgDlg(NULL), receiverSettingsDlg(NULL), multSettingsDlg(NULL),
-	serviceGroup(NULL),
+	epgDlg(NULL), receiverSettingsDlg(NULL),serviceGroup(NULL),
 	loghelper(NDRMR, NSettings), iCurSelServiceGUI(-1),
 	Timer(), eReceiverMode(NONE), quitWanted(true)
 {
     setupUi(this);
 
 	/* Evaluation window */
-	sysEvalDlg = new SystemEvalDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
+	sysEvalDlg = new SystemEvalDlg(Receiver, Settings, this, "", false, Qt::WindowMinMaxButtonsHint);
 
 	/* Stations window */
-	stationsDlg = new StationsDlg(Receiver, Settings, true, this, "", false, Qt::WStyle_MinMax);
+	stationsDlg = new StationsDlg(Receiver, Settings, true, this, "", false, Qt::WindowMinMaxButtonsHint);
 
 	/* Live Schedule window */
-	liveScheduleDlg = new LiveScheduleDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
+	liveScheduleDlg = new LiveScheduleDlg(Receiver, Settings, this, "", false, Qt::WindowMinMaxButtonsHint);
 
 	/* Programme Guide Window */
-	epgDlg = new EPGDlg(Receiver, Settings, this, "", false, Qt::WStyle_MinMax);
+	epgDlg = new EPGDlg(Receiver, Settings, this, "", false, Qt::WindowMinMaxButtonsHint);
 
     /* receiver settings window */
-	receiverSettingsDlg = new ReceiverSettingsDlg(Receiver, Settings, this, "", true, Qt::WType_Dialog);
-
-	multSettingsDlg = new MultSettingsDlg(Settings, this, "", true, Qt::WStyle_Dialog);
+	receiverSettingsDlg = new ReceiverSettingsDlg(Receiver, Settings, this, Qt::Dialog);
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
@@ -88,6 +86,7 @@ DRMMainWindow::DRMMainWindow(ReceiverInterface& NDRMR, CSettings& NSettings,
 	connect(actionAM, SIGNAL(triggered()), this, SLOT(OnSwitchToAnalog()));
 	connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnNewDRMAcquisition()));
 	connect(actionSet_Display_Colour, SIGNAL(triggered()), this, SLOT(OnMenuSetDisplayColor()));
+	connect(actionData_Application, SIGNAL(triggered()), this, SLOT(OnMenuDataApplication()));
 	connect(actionSettings, SIGNAL(triggered()), receiverSettingsDlg, SLOT(show()));
 
     /* Help Menu */
@@ -164,15 +163,15 @@ void DRMMainWindow::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 		break;
 
 	case CRC_ERROR:
-		LED->SetLight(2); /* RED */
+		LED->SetLight(CMultColorLED::RL_RED); /* RED */
 		break;
 
 	case DATA_ERROR:
-		LED->SetLight(1); /* YELLOW */
+		LED->SetLight(CMultColorLED::RL_YELLOW); /* YELLOW */
 		break;
 
 	case RX_OK:
-		LED->SetLight(0); /* GREEN */
+		LED->SetLight(CMultColorLED::RL_GREEN); /* GREEN */
 		break;
 	}
 }
@@ -356,7 +355,7 @@ void DRMMainWindow::UpdateDisplay()
         QString sServiceID;
 		if (iServiceID != 0)
 		{
-			sServiceID = "ID:" + QString().setNum(iServiceID, 16).upper();
+			sServiceID = "ID:" + QString().setNum(iServiceID, 16).toUpper();
 		}
         LabelServiceID->setText(sServiceID);
 
@@ -440,7 +439,7 @@ void DRMMainWindow::UpdateDisplay()
 	{
 	    if(Service[iCurSelServiceGUI].IsActive()==false)
 	    {
-            serviceGroup->button(iCurSelServiceGUI)->setOn(false);
+            serviceGroup->button(iCurSelServiceGUI)->setChecked(false);
             iCurSelServiceGUI = -1;
 	    }
 	    if((iCurSelServiceGUI != iCurSelAudioServ)
@@ -449,14 +448,14 @@ void DRMMainWindow::UpdateDisplay()
         )
         {
             iCurSelServiceGUI = iCurSelAudioServ;
-            serviceGroup->button(iCurSelServiceGUI)->setOn(true);
+            serviceGroup->button(iCurSelServiceGUI)->setChecked(true);
         }
 	}
 
 	if((iCurSelServiceGUI==-1) && Service[iCurSelAudioServ].IsActive())
 	{
         iCurSelServiceGUI = iCurSelAudioServ;
-        serviceGroup->button(iCurSelServiceGUI)->setOn(true);
+        serviceGroup->button(iCurSelServiceGUI)->setChecked(true);
 	}
 
 	/* Service selector ------------------------------------------------- */
@@ -512,7 +511,7 @@ void DRMMainWindow::UpdateDisplay()
 	}
 
 	/* detect if AFS information is available */
-	if ((Parameters.AltFreqSign.vecMultiplexes.size() > 0) || (Parameters.AltFreqSign.vecOtherServices.size() > 0))
+	if (Parameters.bMuxHasAFS)
 	{
 		/* show AFS label */
 		if (Service[0].eAudDataFlag == SF_AUDIO) m_StaticService[0] += tr(" + AFS");
@@ -586,6 +585,21 @@ void DRMMainWindow::SetService(int shortID)
 	Parameters.SetCurSelAudioService(shortID);
 	Parameters.SetCurSelDataService(shortID);
 
+	Parameters.Unlock();
+
+	iCurSelServiceGUI = shortID;
+
+	if(TryShowDataWindow(shortID))
+	{
+		/* In case we only have data services, set all off (TODO - review this policy */
+		//serviceGroup->button(shortID)->setOn(false);
+	}
+}
+
+bool DRMMainWindow::TryShowDataWindow(int shortID)
+{
+	CParameter& Parameters = *Receiver.GetParameters();
+	Parameters.Lock();
     const CService& s = Parameters.Service[shortID];
     uint32_t iServiceID = s.iServiceID;
     EStreamType eAudDataFlag = s.eAudDataFlag;
@@ -595,43 +609,51 @@ void DRMMainWindow::SetService(int shortID)
 	{
 		eAppIdent = Parameters.DataParam[s.iDataStream][s.iPacketID].eUserAppIdent;
 	}
-
 	Parameters.Unlock();
 
-	/* If service is only data service or has a multimedia content
-	   , activate multimedia window */
-	if (eAudDataFlag == SF_DATA)
-	{
-		QString sid = QString("%1").arg(iServiceID, 0, 16);
-        switch(eAppIdent)
-        {
-            case AT_MOTEPG:
-                Settings.Put("EPG Dialog", "serviceid", sid.toStdString());
-                epgDlg->show();
-                break;
-            case AT_MOTBROADCASTWEBSITE:
-                if(bwsViewer==NULL)
-                    bwsViewer = new BWSViewer(Receiver, Settings, this, "", Qt::WStyle_MinMax);
-                bwsViewer->show();
-                break;
-            case AT_JOURNALINE:
-                if(jlViewer==NULL)
-                    jlViewer = new JLViewer(Receiver, Settings, this, "", Qt::WStyle_MinMax);
-                jlViewer->show();
-                break;
-            case AT_MOTSLISHOW:
-                if(slideShowViewer==NULL)
-                    slideShowViewer = new SlideShowViewer(Receiver, Settings, this, "", Qt::WStyle_MinMax);
-                slideShowViewer->show();
-                break;
-            default:
-                QMessageBox::information(this, "Dream", tr("unsupported data application"));
-        }
-        /* In case we only have data services, set all off (TODO - review this policy */
-        serviceGroup->button(shortID)->setOn(false);
-	}
+	if (eAudDataFlag != SF_DATA)
+		return false;
 
-	iCurSelServiceGUI = shortID;
+	/* If service has a data application, activate its window */
+
+	QString sid = QString("%1").arg(iServiceID, 0, 16);
+	switch(eAppIdent)
+	{
+		case AT_MOTEPG:
+			Settings.Put("EPG Dialog", "serviceid", sid.toStdString());
+			epgDlg->show();
+			break;
+		case AT_MOTBROADCASTWEBSITE:
+			if(bwsViewer==NULL)
+				bwsViewer = new BWSViewer(Receiver, Settings, this, "", Qt::WindowMinMaxButtonsHint);
+			bwsViewer->show();
+			break;
+		case AT_JOURNALINE:
+			if(jlViewer==NULL)
+				jlViewer = new JLViewer(Receiver, Settings, this, "", Qt::WindowMinMaxButtonsHint);
+			jlViewer->show();
+			break;
+		case AT_MOTSLISHOW:
+			if(slideShowViewer==NULL)
+				slideShowViewer = new SlideShowViewer(Receiver, Settings, this, "", Qt::WindowMinMaxButtonsHint);
+			slideShowViewer->show();
+			break;
+		default:
+			QMessageBox::information(this, "Dream", tr("unsupported data application"));
+	}
+	return true;
+}
+
+void DRMMainWindow::OnMenuDataApplication()
+{
+	if(TryShowDataWindow(iCurSelServiceGUI))
+	{
+		// do nothing
+	}
+	else
+	{
+		QMessageBox::information(this, "Dream", tr("service has no data application"));
+	}
 }
 
 void DRMMainWindow::OnMenuSetDisplayColor()
@@ -918,30 +940,30 @@ void DRMMainWindow::SetDisplayColor(const QColor newColor)
 		QPalette CurPal(vecpWidgets[i]->palette());
 
 		/* Change colors */
-		CurPal.setColor(QPalette::Active, QColorGroup::Foreground, newColor);
-		CurPal.setColor(QPalette::Active, QColorGroup::Button, newColor);
-		CurPal.setColor(QPalette::Active, QColorGroup::Text, newColor);
-		CurPal.setColor(QPalette::Active, QColorGroup::Light, newColor);
-		CurPal.setColor(QPalette::Active, QColorGroup::Dark, newColor);
+		CurPal.setColor(QPalette::Active, QPalette::Foreground, newColor);
+		CurPal.setColor(QPalette::Active, QPalette::Button, newColor);
+		CurPal.setColor(QPalette::Active, QPalette::Text, newColor);
+		CurPal.setColor(QPalette::Active, QPalette::Light, newColor);
+		CurPal.setColor(QPalette::Active, QPalette::Dark, newColor);
 
-		CurPal.setColor(QPalette::Inactive, QColorGroup::Foreground, newColor);
-		CurPal.setColor(QPalette::Inactive, QColorGroup::Button, newColor);
-		CurPal.setColor(QPalette::Inactive, QColorGroup::Text, newColor);
-		CurPal.setColor(QPalette::Inactive, QColorGroup::Light, newColor);
-		CurPal.setColor(QPalette::Inactive, QColorGroup::Dark, newColor);
+		CurPal.setColor(QPalette::Inactive, QPalette::Foreground, newColor);
+		CurPal.setColor(QPalette::Inactive, QPalette::Button, newColor);
+		CurPal.setColor(QPalette::Inactive, QPalette::Text, newColor);
+		CurPal.setColor(QPalette::Inactive, QPalette::Light, newColor);
+		CurPal.setColor(QPalette::Inactive, QPalette::Dark, newColor);
 
 		/* Special treatment for text message window. This should always be
 		   black color of the text */
 		if (vecpWidgets[i] == TextTextMessage)
 		{
-			CurPal.setColor(QPalette::Active, QColorGroup::Text, Qt::black);
-			CurPal.setColor(QPalette::Active, QColorGroup::Foreground, Qt::black);
-			CurPal.setColor(QPalette::Inactive, QColorGroup::Text, Qt::black);
-			CurPal.setColor(QPalette::Inactive, QColorGroup::Foreground, Qt::black);
+			CurPal.setColor(QPalette::Active, QPalette::Text, Qt::black);
+			CurPal.setColor(QPalette::Active, QPalette::Foreground, Qt::black);
+			CurPal.setColor(QPalette::Inactive, QPalette::Text, Qt::black);
+			CurPal.setColor(QPalette::Inactive, QPalette::Foreground, Qt::black);
 
 			/* We need to specify special color for disabled */
-			CurPal.setColor(QPalette::Disabled, QColorGroup::Light, Qt::black);
-			CurPal.setColor(QPalette::Disabled, QColorGroup::Dark, Qt::black);
+			CurPal.setColor(QPalette::Disabled, QPalette::Light, Qt::black);
+			CurPal.setColor(QPalette::Disabled, QPalette::Dark, Qt::black);
 		}
 
 		/* Set new palette */

@@ -34,9 +34,9 @@
 #if !defined(AFX_MULTCOLORLED_H__FD6B49B5_87DF_48DD_A873_804E1606C2AC__INCLUDED_)
 #define AFX_MULTCOLORLED_H__FD6B49B5_87DF_48DD_A873_804E1606C2AC__INCLUDED_
 
-#include <qlabel.h>
-#include <qpixmap.h>
-#include <qtimer.h>
+#include <QLabel>
+#include <QPixmap>
+#include <QTimer>
 
 
 /* Definitions ****************************************************************/
@@ -52,6 +52,7 @@ class CMultColorLED : public QLabel
     Q_OBJECT
 
 public:
+	enum ELightColor {RL_GREY, RL_RED, RL_GREEN, RL_YELLOW};
 	CMultColorLED(QWidget* parent, const char * name = 0, Qt::WFlags f = 0);
 	virtual ~CMultColorLED() {}
 
@@ -61,7 +62,6 @@ public:
 
 
 protected:
-	enum ELightColor {RL_GREY, RL_RED, RL_GREEN, RL_YELLOW};
 
 	QPixmap			BitmCubeGreen;
 	QPixmap			BitmCubeYellow;

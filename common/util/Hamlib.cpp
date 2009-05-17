@@ -34,7 +34,6 @@
 #include <iostream>
 #include "../Parameter.h"
 #if defined(_WIN32)
-# define NOMINMAX
 # ifdef HAVE_SETUPAPI
 #  ifndef INITGUID
 #   define INITGUID 1
@@ -66,16 +65,9 @@ CHamlib::CHamlib(CParameter& p):
     mutex(),
 #endif
     Parameters(p), pRig(NULL),
-bSMeterWanted(false), bEnableSMeter(false),
-ModelID(), WantedModelID(), eRigMode(DRM), CapsHamlibModels(),
+bSMeterWanted(false), bEnableSMeter(false),CapsHamlibModels(),
 iFrequencykHz(0), iFrequencyOffsetkHz(0)
 {
-	for(size_t j=DRM; j<=WBFM; j++)
-	{
-		EModulationType e = EModulationType(j);
-		ModelID[e] = WantedModelID[e] = 0;
-	}
-
 	/* Load all available front-end remotes in hamlib library */
 	rig_load_all_backends();
 
@@ -338,18 +330,20 @@ CHamlib::GetPortList(map < string, string > &ports) const
 void
 CHamlib::SetComPort(const string & port)
 {
-	rig_model_t model = ModelID[eRigMode];
+	rig_model_t model = 0;
+	if(pRig)
+		model = pRig->caps->rig_model;
 	if(model!=0)
 		CapsHamlibModels[model].set_config("rig_pathname", port);
-	SetRigModel(eRigMode, model); // close and re-open
+	SetRigModel(model); // close and re-open
 }
 
 string CHamlib::GetComPort() const
 {
-	map<EModulationType,rig_model_t>::const_iterator e = ModelID.find(eRigMode);
-	if(e==ModelID.end())
-		return "";
-	CRigMap::const_iterator m = CapsHamlibModels.find(e->second);
+	rig_model_t model = 0;
+	if(pRig)
+		model = pRig->caps->rig_model;
+	CRigMap::const_iterator m = CapsHamlibModels.find(model);
 	if(m==CapsHamlibModels.end())
 		return "";
 	return m->second.get_config("rig_pathname");
@@ -474,7 +468,7 @@ CHamlib::LoadSettings(CSettings & s)
 	CapsHamlibModels[RIG_MODEL_ELEKTOR507].set_config("offset", "-12");
 #endif
 
-	eRigMode = EModulationType(s.Get("Hamlib", "mode", 0));
+	EModulationType eRigMode = EModulationType(s.Get("Hamlib", "mode", 0));
 	bSMeterWanted = s.Get("Hamlib", "smeter", false);
 
 	for(CRigMap::iterator r = CapsHamlibModels.begin(); r != CapsHamlibModels.end(); r++)
@@ -485,17 +479,10 @@ CHamlib::LoadSettings(CSettings & s)
 		r->second.LoadSettings(s, section.str());
 	}
 
-	/* Hamlib Model ID */
-	for(size_t j=DRM; j<=WBFM; j++)
-	{
-		stringstream sec;
-		sec << "Hamlib-" << enums[j];
-		WantedModelID[EModulationType(j)] = s.Get(sec.str(), "model", 0);
-	}
 	/* Initial mode/band */
 	eRigMode = EModulationType(s.Get("Hamlib", "mode", int(DRM)));
 
-	rig_model_t model = WantedModelID[eRigMode];
+	//rig_model_t model = WantedModelID[eRigMode];
 
 	/* extract config from -C command line arg */
 	string command_line_config = s.Get("command", "hamlib-config", string(""));
@@ -506,7 +493,7 @@ CHamlib::LoadSettings(CSettings & s)
 		while (getline(params, name, '='))
 		{
 			getline(params, value, ',');
-			CapsHamlibModels[model].set_config(name, value);
+			//CapsHamlibModels[model].set_config(name, value);
 				// TODO support levels, params, etc.
 		}
 	}
@@ -515,28 +502,8 @@ CHamlib::LoadSettings(CSettings & s)
 void
 CHamlib::SaveSettings(CSettings & s) const
 {
-	/* Hamlib Model ID */
-	for(size_t j=DRM; j<=WBFM; j++)
-	{
-		stringstream sec;
-		sec << "Hamlib-" << enums[j];
-		EModulationType e = EModulationType(j);
-
-		map<EModulationType,rig_model_t>::const_iterator m = ModelID.find(e);
-		if(m!=ModelID.end() && m->second != 0)
-		{
-			s.Put(sec.str(), "model", m->second);
-		}
-		else
-		{
-			map<EModulationType,rig_model_t>::const_iterator m = WantedModelID.find(e);
-			if(m!=WantedModelID.end() && m->second != 0)
-				s.Put(sec.str(), "model", m->second);
-		}
-	}
 
 	s.Put("Hamlib", "smeter", bSMeterWanted);
-	s.Get("Hamlib", "mode", int(eRigMode));
 
 	for(CRigMap::const_iterator r = CapsHamlibModels.begin(); r != CapsHamlibModels.end(); r++)
 	{
@@ -624,19 +591,18 @@ void CHamlib::run()
 }
 
 void
-CHamlib::OpenRig()
+CHamlib::OpenRig(rig_model_t model)
 {
-	rig_model_t iRig = ModelID[eRigMode];
-	cerr << "CHamlib::OpenRig " << int(eRigMode) << " " << iRig << " " << abs(iRig) << endl;
+	cerr << "CHamlib::OpenRig " << model << " " << abs(model) << endl;
 	/* Init rig (negative rig numbers indicate modified rigs */
-	pRig = rig_init(abs(iRig));
+	pRig = rig_init(abs(model));
 	if (pRig == NULL)
 	{
 		cerr << "Initialization of hamlib failed." << endl;
 		return;
 	}
 
-	int ret = CapsHamlibModels[iRig].SetRigConfig(pRig);
+	int ret = CapsHamlibModels[model].SetRigConfig(pRig);
 
 	if(ret != RIG_OK)
 	{
@@ -678,27 +644,27 @@ CHamlib::CloseRig()
 }
 
 void
-CHamlib::SetRigModelForAllModes(rig_model_t model)
+CHamlib::SetModulation(EModulationType eRigMode)
 {
-	for(size_t j=DRM; j<=WBFM; j++)
-	{
-		WantedModelID[EModulationType(j)] = model;
-	}
-	SetRigModel(eRigMode,  WantedModelID[eRigMode]);
+	if(pRig==NULL)
+		return;
+	rig_model_t model = pRig->caps->rig_model;
+	CRigCaps& RigCaps = CapsHamlibModels[model];
+	RigCaps.SetRigModes(pRig, eRigMode);
+	RigCaps.SetRigLevels(pRig, eRigMode);
+	RigCaps.SetRigFuncs(pRig, eRigMode);
+	RigCaps.SetRigParams(pRig, eRigMode);
+	stringstream offset(RigCaps.get_config("offset"));
+	offset >> iFrequencyOffsetkHz;
+
+	if (iFrequencykHz != 0)
+		  SetFrequency(iFrequencykHz);
 }
 
 void
-CHamlib::SetRigModel(EModulationType eNewMode, rig_model_t model)
+CHamlib::SetRigModel(rig_model_t model)
 {
-	// close the rig
-	rig_model_t old_model = ModelID[eRigMode];
-
-	if(old_model!=0)
-		CloseRig();
-
-	/* Set value for current selected model ID */
-	eRigMode = eNewMode;
-	ModelID[eRigMode] = model;
+	CloseRig();
 
 	/* if no Rig is wanted we are done */
 	if(model == 0)
@@ -711,9 +677,7 @@ CHamlib::SetRigModel(EModulationType eNewMode, rig_model_t model)
 		return;
 	}
 
-	CRigCaps& RigCaps = CapsHamlibModels[ModelID[eRigMode]];
-
-	OpenRig();
+	OpenRig(model);
 
 	if (pRig == NULL)
 	{
@@ -724,19 +688,10 @@ CHamlib::SetRigModel(EModulationType eNewMode, rig_model_t model)
 	/* Ignore result, some rigs don't have support for this */
 	rig_set_powerstat(pRig, RIG_POWER_ON);
 
-	RigCaps.SetRigModes(pRig, eRigMode);
-	RigCaps.SetRigLevels(pRig, eRigMode);
-	RigCaps.SetRigFuncs(pRig, eRigMode);
-	RigCaps.SetRigParams(pRig, eRigMode);
 
 	if(pRig==NULL)
 		return; // something went wrong
 
-	stringstream offset(RigCaps.get_config("offset"));
-	offset >> iFrequencyOffsetkHz;
-
-	if (iFrequencykHz != 0)
-		  SetFrequency(iFrequencykHz);
 
 	/* Check if s-meter capabilities are available */
 	if(bSMeterWanted && rig_has_get_level(pRig, RIG_LEVEL_STRENGTH))

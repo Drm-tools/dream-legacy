@@ -98,7 +98,7 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout" >
       <item>
-       <widget class="Q3ButtonGroup" name="ButtonGroupBW" >
+       <widget class="QGroupBox" name="ButtonGroupBW" >
         <property name="title" >
          <string>Filter Bandwidth</string>
         </property>
@@ -130,7 +130,7 @@
        </widget>
       </item>
       <item>
-       <widget class="Q3ButtonGroup" name="ButtonGroupNoiseReduction" >
+       <widget class="QGroupBox" name="ButtonGroupNoiseReduction" >
         <property name="title" >
          <string>Noise Reduction</string>
         </property>
@@ -189,7 +189,7 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_8" >
       <item>
-       <widget class="Q3ButtonGroup" name="ButtonGroupDemodulation" >
+       <widget class="QGroupBox" name="ButtonGroupDemodulation" >
         <property name="sizePolicy" >
          <sizepolicy vsizetype="Preferred" hsizetype="Preferred" >
           <horstretch>0</horstretch>
@@ -261,7 +261,7 @@
        </widget>
       </item>
       <item>
-       <widget class="Q3ButtonGroup" name="ButtonGroupAGC" >
+       <widget class="QGroupBox" name="ButtonGroupAGC" >
         <property name="title" >
          <string>AGC</string>
         </property>
@@ -320,7 +320,7 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_6" >
       <item>
-       <widget class="Q3GroupBox" name="GroupBoxAudio" >
+       <widget class="QGroupBox" name="GroupBoxAudio" >
         <property name="title" >
          <string>Audio</string>
         </property>
@@ -339,11 +339,18 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QCheckBox" name="CheckBoxReverb" >
+           <property name="text" >
+            <string>&amp;Reverberation</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>
       <item>
-       <widget class="Q3GroupBox" name="GroupBoxAutoFreqAcq" >
+       <widget class="QGroupBox" name="GroupBoxAutoFreqAcq" >
         <property name="title" >
          <string>Auto Frequency Acquisition</string>
         </property>
@@ -352,22 +359,6 @@
           <widget class="QCheckBox" name="CheckBoxAutoFreqAcq" >
            <property name="text" >
             <string>Enable</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item>
-       <widget class="Q3GroupBox" name="GroupBoxDemod" >
-        <property name="title" >
-         <string>H/W or S/W</string>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_2" >
-         <item>
-          <widget class="QCheckBox" name="CheckBoxOnBoardDemod" >
-           <property name="text" >
-            <string>On Board</string>
            </property>
           </widget>
          </item>
@@ -547,18 +538,6 @@
   </action>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>Q3GroupBox</class>
-   <extends>QGroupBox</extends>
-   <header>Qt3Support/Q3GroupBox</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>Q3ButtonGroup</class>
-   <extends>Q3GroupBox</extends>
-   <header>Qt3Support/Q3ButtonGroup</header>
-   <container>1</container>
-  </customwidget>
   <customwidget>
    <class>QwtPlot</class>
    <extends>QFrame</extends>

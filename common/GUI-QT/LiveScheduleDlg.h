@@ -25,29 +25,15 @@
  *
 \******************************************************************************/
 
-#include <Q3Header>
-#include <Q3ListView>
-#include <Q3PopupMenu>
-
-#include <QPixmap>
-#include <QRadioButton>
-#include <QTimer>
-#include <QMessageBox>
-#include <QMenuBar>
-#include <QLayout>
-#include <QLabel>
-#include <QFileDialog>
-#include <QTextStream>
-#include <QCheckBox>
-#include <QThread>
-#include <QShowEvent>
-#include <QHideEvent>
-
-#include "ui_LiveScheduleDlg.h"
 #include "DialogUtil.h"
 #include "../util/Settings.h"
 #include "../Parameter.h"
 #include <../ReceiverInterface.h>
+
+#include "ui_LiveScheduleDlg.h"
+#include <QTimer>
+#include <QAbstractTableModel>
+#include <QSortFilterProxyModel>
 
 /* Definitions ****************************************************************/
 /* Define the timer interval of updating the list view */
@@ -70,40 +56,51 @@
 #define CHR_ACTIVE_DAY_MARKER			'1'
 
 /* Classes ********************************************************************/
+
 class CLiveScheduleItem
 {
 public:
 	CLiveScheduleItem() : strFreq(""), strTarget(""), iServiceID(SERV_ID_NOT_USED),
-	strSystem(""), bInsideTargetArea(false) {}
+	strSystem("") {}
+	virtual ~CLiveScheduleItem() {}
 
-	bool IsActive(const time_t ltime);
+	enum State {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
 
-	string		strFreq;
-	string		strTarget;
-	uint32_t	iServiceID;
-	string		strSystem;
-	bool	bInsideTargetArea;
-	CAltFreqSched Schedule;
+	void			updateState(const time_t ltime, int iPreview);
+	QString			ExtractDaysFlagString() const;
+	QString			ExtractTime() const;
+
+	string			strFreq;
+	string			strTarget;
+	string			strStation;
+	uint32_t		iServiceID;
+	string			strSystem;
+	CAltFreqSched 	schedule;
+
+	State			state;
+	bool			InsideTargetArea;
 };
 
-class CDRMLiveSchedule
+class CDRMLiveSchedule: public QAbstractTableModel
 {
 public:
-	CDRMLiveSchedule():StationsTable(),iSecondsPreview(0),
-	dReceiverLatitude(0),dReceiverLongitude(0)
-	{}
+	CDRMLiveSchedule();
 
 	virtual ~CDRMLiveSchedule() {}
 
-	enum StationState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
-	int GetStationNumber() {return StationsTable.size();}
-	CLiveScheduleItem& GetItem(const int iPos) {return StationsTable[iPos];}
-	StationState CheckState(const int iPos);
 
-	void LoadAFSInformations(const CAltFreqSign& AltFreqSign);
+	int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
+	int columnCount ( const QModelIndex & parent = QModelIndex() ) const;
+	QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
+	QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
+
+	void LoadAFSInformation(
+		const map <uint32_t,CServiceInformation>& ServiceInformation);
 
 	void LoadServiceDefinition(const CServiceDefinition& service,
-			const CAltFreqSign& AltFreqSign, const uint32_t iServiceID=SERV_ID_NOT_USED);
+			const CServiceInformation& ServiceInformation);
+
+	void update();
 
 	void DecodeTargets(const vector<CAltFreqRegion> vecAltFreqRegions,
 		string& strRegions , bool& bIntoTargetArea);
@@ -113,10 +110,11 @@ public:
 
 	void SetReceiverCoordinates(double latitude, double longitude);
 
-protected:
-	bool IsActive(const int iPos, const time_t ltime);
+	QString toHTML(const QString& StationName);
 
-	vector<CLiveScheduleItem>	StationsTable;
+protected:
+
+	vector<CLiveScheduleItem>	ScheduleTable;
 
 	/* Minutes for stations preview in seconds if zero then no active */
 	int			iSecondsPreview;
@@ -124,21 +122,14 @@ protected:
 	/* receiver coordinates */
 	double		dReceiverLatitude;
 	double		dReceiverLongitude;
+
+	QPixmap		BitmCubeGreen;
+	QPixmap		BitmCubeGreenLittle;
+	QPixmap		BitmCubeYellow;
+	QPixmap		BitmCubeRed;
+	QPixmap		BitmCubeOrange;
+	QPixmap		BitmCubePink;
 };
-
-class MyListLiveViewItem : public Q3ListViewItem
-{
-public:
-	MyListLiveViewItem(Q3ListView* parent, QString s1, QString s2 = QString::null,
-		QString s3 = QString::null, QString s4 = QString::null,
-		QString s5 = QString::null, QString s6 = QString::null,
-		QString s7 = QString::null, QString s8 = QString::null) :
-		Q3ListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
-
-	/* Custom "key()" function for correct sorting behaviour */
-	virtual QString key(int column, bool ascending) const;
-};
-
 
 class LiveScheduleDlg : public QDialog, public Ui_LiveScheduleDlg
 {
@@ -154,48 +145,35 @@ public:
 	LiveScheduleDlg& operator=(const LiveScheduleDlg&)
 	{ throw "should not happen"; return *this;}
 
-	void LoadSchedule();
+	void					LoadSchedule();
 
-	int				iCurrentSortColumn;
-	bool		    bCurrentSortAscending;
+	int						iCurrentSortColumn;
+	bool				    bCurrentSortAscending;
 
 protected:
-	void			SetStationsView();
-	void			AddWhatsThisHelp();
-	void			SetUTCTimeLabel();
-	virtual void	showEvent(QShowEvent* pEvent);
-	virtual void	hideEvent(QHideEvent* pEvent);
-	QString			ExtractDaysFlagString(const int iDayCode);
-	QString			ExtractTime(const CAltFreqSched& schedule);
+	void					SetStationsView();
+	void					AddWhatsThisHelp();
+	void					showEvent(QShowEvent* pEvent);
+	void					hideEvent(QHideEvent* pEvent);
 
 	ReceiverInterface&		DRMReceiver;
-	CSettings&                  settings;
-	CDRMLiveSchedule			DRMSchedule;
-	QPixmap						BitmCubeGreen;
-	QPixmap						BitmCubeGreenLittle;
-	QPixmap						BitmCubeYellow;
-	QPixmap						BitmCubeRed;
-	QPixmap						BitmCubeOrange;
-	QPixmap						BitmCubePink;
-	QTimer						TimerList;
-	QTimer						TimerUTCLabel;
-	bool					    bShowAll;
-	Q3PopupMenu*				pViewMenu;
-	Q3PopupMenu*				pPreviewMenu;
-	Q3PopupMenu*				pFileMenu;
+	CSettings&				Settings;
+	CDRMLiveSchedule		Schedule;
+	QTimer					TimerList;
+	QTimer					TimerUTCLabel;
+	bool					bShowAll;
 
-	vector<MyListLiveViewItem*>	vecpListItems;
-	QMutex						ListItemsMutex;
-	QString						strCurrentSavePath;
-	int							iColStationID;
-	int							iWidthColStationID;
+	QMutex					ListItemsMutex;
+	QString					strCurrentSavePath;
+    QSortFilterProxyModel* 	proxyModel;
 
 public slots:
 	void OnTimerList();
-	void OnTimerUTCLabel() {SetUTCTimeLabel();}
-	void OnShowStationsMenu(int iID);
-	void OnShowPreviewMenu(int iID);
-	void OnHeaderClicked(int c);
+	void OnTimerUTCLabel();
 	void OnSave();
 	void OnCheckFreeze();
+	void OnFilterChanged(const QString&);
+	void OnItemClicked(const QModelIndex&);
+	void OnShowActive(int);
+	void OnSelectPreview(int);
 };

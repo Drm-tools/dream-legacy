@@ -26,17 +26,45 @@
 \******************************************************************************/
 
 #include "../util/Settings.h"
-#include "qtimer.h"
-//Added by qt3to4:
-#include <QShowEvent>
-#include <QHideEvent>
 #include <../ReceiverInterface.h>
 
 #include "ui_ReceiverSettingsDlg.h"
+#include <QTimer>
+#include <QShowEvent>
+#include <QHideEvent>
+#include <QAbstractItemModel>
 
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
+
+#ifdef HAVE_LIBHAMLIB
+# include "../util/Hamlib.h"
+
+class RigModel : public QAbstractItemModel
+{
+public:
+
+    RigModel();
+    virtual ~RigModel() {}
+
+    int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
+    int columnCount ( const QModelIndex & parent = QModelIndex() ) const;
+    QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
+    QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
+    QModelIndex index(int row, int column,
+		  const QModelIndex &parent = QModelIndex()) const;
+    QModelIndex parent(const QModelIndex &child) const;
+    void load(ReceiverInterface&);
+
+protected:
+
+    QPixmap	BitmLittleGreenSquare;
+    struct rig { rig_caps caps; int parent; };
+    struct make : public rig { vector<rig> model; };
+    vector<make> rigs;
+};
+#endif
 
 class ReceiverSettingsDlg : public QDialog, public Ui_ReceiverSettingsDlg
 {
@@ -45,69 +73,67 @@ class ReceiverSettingsDlg : public QDialog, public Ui_ReceiverSettingsDlg
 public:
 
 	ReceiverSettingsDlg(ReceiverInterface& NRx, CSettings& NSettings,
-        QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
+	QWidget* parent = 0, Qt::WFlags f = 0);
 	virtual ~ReceiverSettingsDlg();
 
 protected:
-	virtual void	showEvent(QShowEvent* pEvent);
-	virtual void	hideEvent(QHideEvent* pEvent);
+	void		showEvent(QShowEvent* pEvent);
+	void		hideEvent(QHideEvent* pEvent);
 
-	bool 	    	ValidInput(const QLineEdit* le);
-	void			ExtractReceiverCoordinates();
-	void			setDefaults();
-	void 			checkRig(int);
+	bool		ValidInput(const QLineEdit* le);
+	void		ExtractReceiverCoordinates();
+	void		setDefaults();
 
-	void			AddWhatsThisHelp();
+	void		AddWhatsThisHelp();
 
 	ReceiverInterface&	Receiver;
-	CSettings&		Settings;
-	bool			loading;
-	Q3ListViewItem*  no_rig;
-	Q3ListViewItem*	no_port;
-	Q3ListViewItem*	last_port;
-	QTimer			TimerRig;
-	int				iWantedrigModel;
+	CSettings&	Settings;
+	bool		loading;
+	QTimer		TimerRig;
+	int		iWantedrigModel;
+#ifdef HAVE_LIBHAMLIB
+	RigModel	Rigs;
+#endif
 
 signals:
-	void StartStopLog(bool);
-	void LogPosition(bool);
-	void LogSigStr(bool);
-	void SetLogStartDelay(long);
-	void StartStopGPS(bool);
-	void ShowHideGPS(bool);
+	void 		StartStopLog(bool);
+	void 		LogPosition(bool);
+	void 		LogSigStr(bool);
+	void 		SetLogStartDelay(long);
+	void 		StartStopGPS(bool);
+	void 		ShowHideGPS(bool);
 
 public slots:
-	void OnTimerRig();
-	void OnLineEditLatDegChanged(const QString& str);
-	void OnLineEditLatMinChanged(const QString& str);
-	void OnComboBoxNSHighlighted(int iID);
-	void OnLineEditLngDegChanged(const QString& str);
-	void OnLineEditLngMinChanged(const QString& str);
-	void OnComboBoxEWHighlighted(int iID);
-	void SetLatLng();
-	void OnCheckBoxUseGPS();
-	void OnCheckBoxDisplayGPS();
-	void OnRadioTimeLinear();
-	void OnRadioTimeWiener();
-	void OnRadioFrequencyLinear();
-	void OnRadioFrequencyDft();
-	void OnRadioFrequencyWiener();
-	void OnRadioTiSyncFirstPeak();
-	void OnRadioTiSyncEnergy();
-	void OnSliderIterChange(int value);
-	void OnSliderLogStartDelayChange(int value);
-	void ButtonOkClicked();
-	void OnCheckFlipSpectrum();
-	void OnCheckBoxMuteAudio();
-	void OnCheckBoxReverb();
-	void OnCheckWriteLog();
-    void OnCheckBoxLogLatLng();
-    void OnCheckBoxLogSigStr();
-	void OnCheckSaveAudioWAV();
-	void OnCheckRecFilter();
-	void OnCheckModiMetric();
-	void OnCheckEnableSMeterToggled(bool);
-	void OnRigSelected(Q3ListViewItem* item);
-	void OnComPortSelected(Q3ListViewItem* item);
+	void 		OnButtonClose();
+	void 		OnLineEditLatDegChanged(const QString& str);
+	void 		OnLineEditLatMinChanged(const QString& str);
+	void 		OnComboBoxNSHighlighted(int iID);
+	void 		OnLineEditLngDegChanged(const QString& str);
+	void 		OnLineEditLngMinChanged(const QString& str);
+	void 		OnComboBoxEWHighlighted(int iID);
+	void 		SetLatLng();
+	void 		OnCheckBoxUseGPS();
+	void 		OnCheckBoxDisplayGPS();
+	void 		OnRadioTimeLinear();
+	void 		OnRadioTimeWiener();
+	void 		OnRadioFrequencyLinear();
+	void 		OnRadioFrequencyDft();
+	void 		OnRadioFrequencyWiener();
+	void 		OnRadioTiSyncFirstPeak();
+	void 		OnRadioTiSyncEnergy();
+	void 		OnSliderIterChange(int value);
+	void 		OnSliderLogStartDelayChange(int value);
+	void 		OnCheckFlipSpectrum();
+	void 		OnCheckWriteLog();
+	void 		OnCheckBoxLogLatLng();
+	void 		OnCheckBoxLogSigStr();
+	void 		OnCheckRecFilter();
+	void 		OnCheckModiMetric();
+	void 		OnTimerRig();
+	void 		OnRigSelected(const QModelIndex&);
+	void 		OnComboBoxRigPort(int);
+	void		OnButtonRigAllModes();
+	void 		OnCheckEnableSMeterToggled(bool);
+	void		OnButtonTestRig();
+	void		OnButtonApplyRigSettings();
 };

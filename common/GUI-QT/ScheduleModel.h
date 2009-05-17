@@ -96,7 +96,7 @@ public:
 	string	strSite;
 	string	strCountry;
 	string	strDaysFlags;
-	string	strDaysShow;
+	QString	strDaysShow;
 	_REAL	rPower;
 	State	state;
 };

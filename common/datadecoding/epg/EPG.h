@@ -27,7 +27,7 @@
  *
 \******************************************************************************/
 
-#include <qdom.h>
+#include <QDomDocument>
 #include <QMap>
 #include <QString>
 #include <QDateTime>

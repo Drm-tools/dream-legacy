@@ -65,7 +65,7 @@ class CMOTSlideShowEncoder
     CMOTDABEnc MOTDAB;
 
     vector <SPicDescr> vecPicFileNames;
-    int iPictureCnt;
+    size_t iPictureCnt;
 
     string strCurObjName;
 };

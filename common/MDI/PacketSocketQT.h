@@ -33,25 +33,9 @@
 #include "../util/Vector.h"
 #include "../util/Buffer.h"
 
-#include <q3socketdevice.h>
-#include <qsocketnotifier.h>
-#include <qdatetime.h>
-
-#ifdef _WIN32
-# ifndef NOMINMAX
-#  define NOMINMAX
-# endif
-/* Always include winsock2.h before windows.h */
-# include <winsock2.h>
-# include <ws2tcpip.h>
-# include <windows.h>
-#else
-# include <netinet/in.h>
-# include <arpa/inet.h>
-typedef int SOCKET;
-# define SOCKET_ERROR				(-1)
-# define INVALID_SOCKET				(-1)
-#endif
+#include <QUdpSocket>
+#include <QSocketNotifier>
+#include <QDateTime>
 
 /* Maximum number of bytes received from the network interface. Maximum data
    rate of DRM is approx. 80 kbps. One MDI packet must be sent each DRM frame
@@ -85,14 +69,13 @@ public:
 private:
 	CPacketSink *pPacketSink;
 
-	QHostAddress				HostAddrOut;
-	int							iHostPortOut;
+	QHostAddress			HostAddrOut;
+	int						iHostPortOut;
 
-	Q3SocketDevice				SocketDevice;
-	QSocketNotifier*			pSocketNotivRead;
+	QUdpSocket				Socket;
 
 public slots:
-	void OnDataReceived();
+	void readPendingDatagrams();
 
 };
 

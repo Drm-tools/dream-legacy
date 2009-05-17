@@ -27,7 +27,6 @@
 \******************************************************************************/
 
 #ifdef _WIN32
-# define NOMINMAX
 # include <winsock2.h>
 #endif
 #include "DialogUtil.h"
@@ -59,7 +58,7 @@
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */
 CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f)
-	: QDialog(parent, name, modal, f), Ui_AboutDlg()
+	: QDialog(parent, f), Ui_AboutDlg()
 {
     setupUi(this);
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
@@ -67,7 +66,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
 	char  sfversion [128] ;
 	sf_command (NULL, SFC_GET_LIB_VERSION, sfversion, sizeof (sfversion)) ;
 	/* Set the text for the about dialog html text control */
-	TextViewCredits->setText(
+	textBrowserCredits->setText(
 		"<p>" /* General description of Dream software */
 		"<big><b>Dream</b> " + tr("is a software implementation of a Digital "
 		"Radio Mondiale (DRM) receiver. With Dream, DRM broadcasts can be received "
@@ -135,19 +134,19 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
 #endif
 		"</ul><br><br><hr/><br><br>"
 		"<center><b>HISTORY</b></center><br>"
-        "The Dream software development was started at <i>Darmstadt University "
-        "of Technology</i> at the Institute of Communication Technology by <i>Volker "
-        "Fischer</i> and <i>Alexander Kurpiers</i> in 2001-2005. "
-        "The core digital signal processing and most of the GUI were the "
-        "result of this development.<br>In 2005, <i>Andrew Murphy</i> of the <i>British "
-        "Broadcasting Corporation</i> added code for an "
-        "AMSS demodulator. <i>Oliver Haffenden</i> and <i>Julian Cable</i> (also <i>BBC</i>) rewrote "
-        "the MDI interface and added RSCI support. The EPG was implemented by "
-        "<i>Julian Cable</i> and the Broadcast Website and AFS features as well as many "
-        "other GUI improvements were implemented by <i>Andrea Russo</i>."
+	"The Dream software development was started at <i>Darmstadt University "
+	"of Technology</i> at the Institute of Communication Technology by <i>Volker "
+	"Fischer</i> and <i>Alexander Kurpiers</i> in 2001-2005. "
+	"The core digital signal processing and most of the GUI were the "
+	"result of this development.<br>In 2005, <i>Andrew Murphy</i> of the <i>British "
+	"Broadcasting Corporation</i> added code for an "
+	"AMSS demodulator. <i>Oliver Haffenden</i> and <i>Julian Cable</i> (also <i>BBC</i>) rewrote "
+	"the MDI interface and added RSCI support. The EPG was implemented by "
+	"<i>Julian Cable</i> and the Broadcast Website and AFS features as well as many "
+	"other GUI improvements were implemented by <i>Andrea Russo</i>."
 		"<br>Right now the code is mainly maintained by <i>Julian Cable</i>."
 		"Quality Assurance and user testing is provided by <i>Simone St&ouml;ppler</i>"
-        "<br><br><br>"
+	"<br><br><br>"
 		"<center><b>CREDITS</b></center><br>"
 		"We want to thank all the contributors to the Dream software (in "
 		"alphabetical order):<br><br>"
@@ -199,15 +198,14 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
 	TextLabelVersion->setText(strVersionText);
 }
 
-
 /* Help menu ---------------------------------------------------------------- */
 CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QMenu(parent)
 {
 	/* Standard help menu consists of about and what's this help */
-	insertItem(tr("What's &This"), this ,
+	addAction(tr("What's &This"), this ,
 		SLOT(OnHelpWhatsThis()), Qt::SHIFT+Qt::Key_F1);
-	insertSeparator();
-	insertItem(tr("&About..."), this, SLOT(OnHelpAbout()));
+	addSeparator();
+	addAction(tr("&About..."), this, SLOT(OnHelpAbout()));
 }
 
 
@@ -215,30 +213,42 @@ CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QMenu(parent)
 CSoundCardSelMenu::CSoundCardSelMenu(CSelectionInterface* pNS, QWidget* parent) :
 	QMenu(parent), pSoundIF(pNS), vecNames(), iNumDev(0)
 {
-	/* Get sound device names */
-	pSoundIF->Enumerate(vecNames);
-	iNumDev = vecNames.size();
-
-	int iDefaultDev = pSoundIF->GetDev();
-	if ((iDefaultDev > iNumDev) || (iDefaultDev < 0))
-		iDefaultDev = iNumDev;
-
-	QActionGroup* group = new QActionGroup(this);
-	for (size_t i = 0; i < size_t(iNumDev); i++)
-	{
-		QString name(vecNames[i].c_str());
-		if(name.find("blaster", 0, false)>=0)
-			name += " (has problems on some platforms)";
-        QAction* a = new QAction(group);
-        a->setText(name);
-        a->setData(int(i));
-        a->setCheckable(true);
-        if(i==size_t(iDefaultDev))
-            a->setChecked(true);
-        addAction(a);
-	}
+	group = new QActionGroup(this);
     connect(group, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundDevice(QAction*)));
     parent->addAction(menuAction());
+}
+
+void CSoundCardSelMenu::showEvent(QShowEvent* pEvent)
+{
+	/* Get sound device names */
+	vector<string> newNames;
+	pSoundIF->Enumerate(newNames);
+	if(newNames != vecNames)
+	{
+		vecNames = newNames;
+
+		clear(); // remove all menu options
+
+		iNumDev = vecNames.size();
+
+		int iDefaultDev = pSoundIF->GetDev();
+		if ((iDefaultDev > iNumDev) || (iDefaultDev < 0))
+			iDefaultDev = iNumDev;
+
+		for (size_t i = 0; i < size_t(iNumDev); i++)
+		{
+			QString name(vecNames[i].c_str());
+			if(name.indexOf("blaster", 0, Qt::CaseInsensitive)>=0)
+				name += " (has problems on some platforms)";
+			QAction* a = new QAction(group);
+			a->setText(name);
+			a->setData(int(i));
+			a->setCheckable(true);
+			if(i==size_t(iDefaultDev))
+				a->setChecked(true);
+			addAction(a);
+		}
+	}
 }
 
 void CSoundCardSelMenu::OnSoundDevice(QAction* a)

@@ -22,8 +22,6 @@
 					<Add option="-DUSE_QT_GUI" />
 					<Add option="-DQT_THREAD_SUPPORT" />
 					<Add option="-DQT_DLL" />
-					<Add option="-DQT_QT3SUPPORT_LIB" />
-					<Add option="-DQT3_SUPPORT" />
 					<Add option="-DQT_XML_LIB" />
 					<Add option="-DQT_GUI_LIB" />
 					<Add option="-DQT_NETWORK_LIB" />
@@ -55,8 +53,6 @@
 					<Add option="-DUSE_QT_GUI" />
 					<Add option="-DQT_THREAD_SUPPORT" />
 					<Add option="-DQT_DLL" />
-					<Add option="-DQT_QT3SUPPORT_LIB" />
-					<Add option="-DQT3_SUPPORT" />
 					<Add option="-DQT_XML_LIB" />
 					<Add option="-DQT_GUI_LIB" />
 					<Add option="-DQT_NETWORK_LIB" />
@@ -93,7 +89,7 @@
 				<Option object_output="..\Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode RX D:\x.pcap" />
+				<Option parameters="--mode RX D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -104,8 +100,6 @@
 					<Add option="-DUSE_QT_GUI" />
 					<Add option="-DQT_THREAD_SUPPORT" />
 					<Add option="-DQT_DLL" />
-					<Add option="-DQT_QT3SUPPORT_LIB" />
-					<Add option="-DQT3_SUPPORT" />
 					<Add option="-DQT_XML_LIB" />
 					<Add option="-DQT_GUI_LIB" />
 					<Add option="-DQT_NETWORK_LIB" />
@@ -127,7 +121,7 @@
 				<Option object_output="..\Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode RX D:\x.pcap" />
+				<Option parameters="D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -140,8 +134,6 @@
 					<Add option="-DUSE_QT_GUI" />
 					<Add option="-DQT_THREAD_SUPPORT" />
 					<Add option="-DQT_DLL" />
-					<Add option="-DQT_QT3SUPPORT_LIB" />
-					<Add option="-DQT3_SUPPORT" />
 					<Add option="-DQT_XML_LIB" />
 					<Add option="-DQT_GUI_LIB" />
 					<Add option="-DQT_NETWORK_LIB" />
@@ -157,6 +149,9 @@
 					<Add library="qwt5" />
 				</Linker>
 			</Target>
+			<Environment>
+				<Variable name="QTDIR" value="D:\Qt\2009.02\qt" />
+			</Environment>
 		</Build>
 		<Compiler>
 			<Add option="-DHAVE_STDINT_H" />
@@ -344,18 +339,6 @@
 			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\MultColorLED.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-			<Option target="Portaudio Release" />
-			<Option target="Portaudio Debug" />
-		</Unit>
-		<Unit filename="..\common\GUI-QT\MultSettingsDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-			<Option target="Portaudio Release" />
-			<Option target="Portaudio Debug" />
-		</Unit>
-		<Unit filename="..\common\GUI-QT\MultSettingsDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
@@ -794,12 +777,6 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
-		<Unit filename="..\moc\moc_MultSettingsDlg.cpp">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-			<Option target="Portaudio Release" />
-			<Option target="Portaudio Debug" />
-		</Unit>
 		<Unit filename="..\moc\moc_PacketSocketQT.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -903,12 +880,6 @@
 			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\ui_LiveScheduleDlg.h">
-			<Option target="Win32 Release" />
-			<Option target="Win32 Debug" />
-			<Option target="Portaudio Release" />
-			<Option target="Portaudio Debug" />
-		</Unit>
-		<Unit filename="..\moc\ui_MultSettingsDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />

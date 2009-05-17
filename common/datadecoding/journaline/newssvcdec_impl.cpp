@@ -1,50 +1,50 @@
-/* 
+/*
  *
  * This file is part of the 'NewsService Journaline(R) Decoder'
- * 
+ *
  * Copyright (c) 2003, 2004 by Fraunhofer IIS, Erlangen, Germany
- * 
+ *
  * --------------------------------------------------------------------
- * 
+ *
  * For NON-COMMERCIAL USE,
  * the 'NewsService Journaline(R) Decoder' is free software;
  * you can redistribute it and/or modify it under the terms of
  * the GNU General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
- * 
+ *
  * The 'NewsService Journaline(R) Decoder' is distributed in the hope
  * that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with the 'NewsService Journaline(R) Decoder';
  * if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
- * 
+ *
+ *
  * If you use this software in a project with user interaction, please
  * provide the following text to the user in an appropriate place:
  * "Features NewsService Journaline(R) decoder technology by
  * Fraunhofer IIS, Erlangen, Germany.
  * For more information visit http://www.iis.fhg.de/dab"
- * 
+ *
  * --------------------------------------------------------------------
- * 
+ *
  * To use the 'NewsService Journaline(R) Decoder' software for
  * COMMERCIAL purposes, please contact Fraunhofer IIS for a
  * commercial license (see below for contact information)!
- * 
+ *
  * --------------------------------------------------------------------
- * 
+ *
  * Contact:
  *   Fraunhofer IIS, Department 'Broadcast Applications'
  *   Am Wolfsmantel 33, 91058 Erlangen, Germany
  *   http://www.iis.fraunhofer.de/dab
  *   mailto:bc-info@iis.fraunhofer.de
- * 
+ *
  */
 
 /**
@@ -72,7 +72,6 @@
 #include <algorithm>
 #include <ctime>
 #ifdef WIN32
-# define NOMINMAX
 # include <windows.h> // for GetTickCount
 #endif
 
@@ -153,7 +152,7 @@ void NEWS_SVC_DEC_deleteDec(
 		NEWS_SVC_DEC_decoder_t decoder
 		)
 {
-	NEWS_SVC_DEC_IMPL_t *dec=(NEWS_SVC_DEC_IMPL_t*)(decoder);	
+	NEWS_SVC_DEC_IMPL_t *dec=(NEWS_SVC_DEC_IMPL_t*)(decoder);
 	if(dec->d_magicId!=NEWS_SVC_MAGIC_ID)
 	{
 		if(showDdNewsSvcDecErr)
@@ -180,7 +179,7 @@ unsigned long NEWS_SVC_DEC_putData(
 		log_info << "NEWS_SVC_DEC_putData" << endmsg;
 	}
 
-	NEWS_SVC_DEC_IMPL_t *dec=(NEWS_SVC_DEC_IMPL_t*)(decoder);	
+	NEWS_SVC_DEC_IMPL_t *dec=(NEWS_SVC_DEC_IMPL_t*)(decoder);
 	if(dec->d_magicId!=NEWS_SVC_MAGIC_ID)
 	{
 		if(showDdNewsSvcDecErr)
@@ -314,7 +313,7 @@ unsigned long NEWS_SVC_DEC_putData(
 			{
 				chg_list[0].status=NEWS_SVC_DEC_OBJ_RECEIVED;
 			}
-			
+
 			dec->d_update(
 				no_of_elem,
 				chg_list,
@@ -375,7 +374,7 @@ int NEWS_SVC_DEC_IMPL_garbage_collection(NEWS_SVC_DEC_IMPL_t *dec,
 			log_info << "erase object with id: " << std::hex <<
 			obj_id << endmsg;
 		}
-		
+
 		if(dec->d_update)
 		{
 			NEWS_SVC_DEC_IMPL_watch_list_t &l=dec->d_watch_list;
@@ -385,7 +384,7 @@ int NEWS_SVC_DEC_IMPL_garbage_collection(NEWS_SVC_DEC_IMPL_t *dec,
 				NEWS_SVC_DEC_obj_availability_t chg_list[no_of_elem];
 				chg_list[0].object_id=static_cast<unsigned short>(obj_id);
 				chg_list[0].status=NEWS_SVC_DEC_OBJ_REMOVED;
-			
+
 				dec->d_update(
 					no_of_elem,
 					chg_list,
@@ -413,7 +412,7 @@ int NEWS_SVC_DEC_get_news_object(
 	{
 		log_info << "NEWS_SVC_DEC_get_news_object object_id: " << object_id << endmsg;
 	}
-	NEWS_SVC_DEC_IMPL_t *dec=(NEWS_SVC_DEC_IMPL_t*)(decoder);	
+	NEWS_SVC_DEC_IMPL_t *dec=(NEWS_SVC_DEC_IMPL_t*)(decoder);
 	if(dec->d_magicId!=NEWS_SVC_MAGIC_ID)
 	{
 		if(showDdNewsSvcDecErr)
@@ -442,7 +441,7 @@ int NEWS_SVC_DEC_watch_objects(
 	unsigned long number_of_elements,
 	NEWS_SVC_DEC_obj_availability_t *watch_list)
 {
-	NEWS_SVC_DEC_IMPL_t *dec=(NEWS_SVC_DEC_IMPL_t*)(decoder);	
+	NEWS_SVC_DEC_IMPL_t *dec=(NEWS_SVC_DEC_IMPL_t*)(decoder);
 	if(dec->d_magicId!=NEWS_SVC_MAGIC_ID)
 	{
 		if(showDdNewsSvcDecErr)
@@ -499,7 +498,7 @@ int NEWS_SVC_DEC_get_object_availability(
 	unsigned long number_of_elements,
 	NEWS_SVC_DEC_obj_availability_t *query_list)
 {
-	NEWS_SVC_DEC_IMPL_t *dec=(NEWS_SVC_DEC_IMPL_t*)(decoder);	
+	NEWS_SVC_DEC_IMPL_t *dec=(NEWS_SVC_DEC_IMPL_t*)(decoder);
 	if(dec->d_magicId!=NEWS_SVC_MAGIC_ID)
 	{
 		if(showDdNewsSvcDecErr)
@@ -546,7 +545,7 @@ int NEWS_SVC_DEC_keep_in_cache(
 	unsigned short *object_ids
 	)
 {
-	NEWS_SVC_DEC_IMPL_t *dec=(NEWS_SVC_DEC_IMPL_t*)(decoder);	
+	NEWS_SVC_DEC_IMPL_t *dec=(NEWS_SVC_DEC_IMPL_t*)(decoder);
 	if(dec->d_magicId!=NEWS_SVC_MAGIC_ID)
 	{
 		if(showDdNewsSvcDecErr)

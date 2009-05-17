@@ -37,9 +37,6 @@
 #ifdef HAVE_LIBFAAC
 # ifdef DYNAMIC_LINK_CODECS
 #  ifdef _WIN32
-#   ifndef NOMINMAX
-#    define NOMINMAX
-#   endif
 #   include <windows.h>
 #   ifndef FAACAPI
 #    define FAACAPI __stdcall
@@ -206,12 +203,12 @@ protected:
 #  endif
     faacEncGetVersion_t*    faacEncGetVersion;
     faacEncGetCurrentConfiguration_t*
-                            faacEncGetCurrentConfiguration;
+			    faacEncGetCurrentConfiguration;
     faacEncSetConfiguration_t*
-                            faacEncSetConfiguration;
+			    faacEncSetConfiguration;
     faacEncOpen_t*          faacEncOpen;
     faacEncGetDecoderSpecificInfo_t*
-                            faacEncGetDecoderSpecificInfo;
+			    faacEncGetDecoderSpecificInfo;
     faacEncEncode_t*        faacEncEncode;
     faacEncClose_t*         faacEncClose;
 # endif

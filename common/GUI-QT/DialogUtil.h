@@ -39,11 +39,11 @@
 
 /* Classes ********************************************************************/
 /* DRM events --------------------------------------------------------------- */
-class DRMEvent : public QCustomEvent
+class DRMEvent : public QEvent
 {
 public:
 	DRMEvent(const int iNewMeTy, const int iNewSt) :
-		QCustomEvent(QEvent::User + 11), iMessType(iNewMeTy), iStatus(iNewSt) {}
+		QEvent(Type(QEvent::User + 11)), iMessType(iNewMeTy), iStatus(iNewSt) {}
 
 	int iMessType;
 	int iStatus;
@@ -85,11 +85,13 @@ class CSoundCardSelMenu : public QMenu
 
 public:
 	CSoundCardSelMenu(CSelectionInterface* pNS, QWidget* parent = 0);
+    void showEvent(QShowEvent* pEvent);
 
 protected:
 	CSelectionInterface*	pSoundIF;
 	vector<string>			vecNames;
 	int						iNumDev;
+	QActionGroup*			group;
 
 public slots:
 	void OnSoundDevice(QAction*);
@@ -117,12 +119,5 @@ public:
 		return QColor((iValue >> 16) & 255, (iValue >> 8) & 255, iValue & 255);
 	}
 };
-
-
-inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
-{
-	pDlg->setCaption(sCap);
-}
-
 
 #endif // DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_

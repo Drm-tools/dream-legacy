@@ -1,6 +1,6 @@
 TEMPLATE	= app
 TARGET		= dream
-QT          	+= qt3support network xml
+QT			+= network xml
 CONFIG		+= qt warn_on release thread hamlib portaudio
 DEFINES		+= HAVE_QT USE_QT_GUI
 INCLUDEPATH	+= libs
@@ -8,10 +8,9 @@ INCLUDEPATH	+= common/GUI-QT
 VPATH		+= common/GUI-QT
 LIBS 		+= -Llibs
 DEFINES		+= HAVE_LIBFAAC HAVE_LIBFAAD
-FORMS       	+= DRMMainWindow.ui AnalogMainWindow.ui TransmitterMainWindow.ui
-FORMS       	+= AMSSDlg.ui SystemEvalDlg.ui JLViewer.ui BWSViewer.ui SlideShowViewer.ui
-FORMS		+= LiveScheduleDlg.ui StationsDlg.ui EPGDlg.ui
-FORMS		+= MultSettingsDlg.ui AboutDlg.ui
+FORMS		+= DRMMainWindow.ui AnalogMainWindow.ui TransmitterMainWindow.ui
+FORMS		+= AMSSDlg.ui SystemEvalDlg.ui JLViewer.ui BWSViewer.ui SlideShowViewer.ui
+FORMS		+= LiveScheduleDlg.ui StationsDlg.ui EPGDlg.ui AboutDlg.ui
 FORMS		+= ReceiverSettingsDlg.ui LatLongEditDlg.ui
 RCC_DIR     	=  common/GUI-QT/res
 RESOURCES   	+= common/GUI-QT/res/icons.qrc
@@ -44,32 +43,33 @@ unix {
 	DEFINES		+= HAVE_INTTYPES_H HAVE_STDINT_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H HAVE_UNISTD_H
     	SOURCES		+= linux/source/Pacer.cpp
 	!macx {
-        	INCLUDEPATH	+= /usr/include/qwt-qt4
+		INCLUDEPATH	+= /usr/include/qwt-qt4
 		INCLUDEPATH	+= linux
 		LIBS 		+= -lrt -lqwt-qt4
-        	SOURCES		+= linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c
-        	HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
+		SOURCES		+= linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c
+		HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
 	}
 }
 
 win32 {
 	DEFINES		-= UNICODE
-	DEFINES		+= HAVE_SETUPAPI NOMINMAX
+	DEFINES		+= HAVE_SETUPAPI
 	SOURCES		+= windows/Source/Pacer.cpp
 	LIBS        	+= -L../qwt-qt4/lib
 	INCLUDEPATH 	+= ../qwt-qt4/include
 	win32-g++ {
-		DEFINES	+= HAVE_STDINT_H HAVE_STDLIB_H __INTERLOCKED_DECLARED HAVE_LIBPCAP
+		DEFINES	+= HAVE_STDINT_H HAVE_STDLIB_H HAVE_LIBPCAP
 		LIBS 	+= -lsndfile -lz -lfaac -lfaad -lrfftw -lfftw -lqwt5
 		LIBS	+= -lwpcap -lstdc++
 		LIBS 	+= -lsetupapi -lws2_32
 	}
 	else {
+		DEFINES		+= NOMINMAX
 		TEMPLATE	= vcapp
 		LIBS 		+= libsndfile-1.lib zdll.lib qwt5.lib
 		LIBS		+= libfaac.lib libfaad.lib
 		LIBS		+= libfftw.lib setupapi.lib ws2_32.lib
-        	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:"MSVCRTD, LIBCMT"
+		QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:"MSVCRTD, LIBCMT"
 		QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
 	}
 }
@@ -182,7 +182,6 @@ common/GUI-QT/MultColorLED.h   \
 common/GUI-QT/JLViewer.h   \
 common/GUI-QT/SlideShowViewer.h   \
 common/GUI-QT/BWSViewer.h   \
-common/GUI-QT/MultSettingsDlg.h   \
 common/GUI-QT/ReceiverSettingsDlg.h \
 common/GUI-QT/Loghelper.h \
 common/GUI-QT/StationsDlg.h   \
@@ -324,7 +323,6 @@ common/GUI-QT/MultColorLED.cpp   \
 common/GUI-QT/JLViewer.cpp   \
 common/GUI-QT/SlideShowViewer.cpp   \
 common/GUI-QT/BWSViewer.cpp   \
-common/GUI-QT/MultSettingsDlg.cpp   \
 common/GUI-QT/ReceiverSettingsDlg.cpp \
 common/GUI-QT/Loghelper.cpp \
 common/GUI-QT/ScheduleModel.cpp   \

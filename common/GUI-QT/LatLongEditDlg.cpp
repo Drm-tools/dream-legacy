@@ -45,7 +45,7 @@ const QChar ring = '\xb0';
 LatLongEditDlg::LatLongEditDlg(
 	QLineEdit* s,
 		QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
-	QDialog(parent, name, modal, f), Ui_LatLongEditDlg(), d(s)
+	QDialog(parent, f), Ui_LatLongEditDlg(), d(s)
 {
 
 	/* Connections */
@@ -67,24 +67,24 @@ void LatLongEditDlg::showEvent(QShowEvent*)
 	if(d==NULL)
 		return;
 	QString t = d->text();
-	QStringList a = QStringList::split("'", t);
-	QStringList b = QStringList::split(ring, a[0]);
+	QStringList a = t.split("'");
+	QStringList b = a[0].split(ring);
 
 	ComboBoxNSEW->clear();
 	/* Set the validators for the receiver coordinate */
 	if(a[1]=="N" || a[1]=="S")
 	{
 		LineEditDegrees->setValidator(new QIntValidator(0, 90, LineEditDegrees));
-		ComboBoxNSEW->insertItem("N");
-		ComboBoxNSEW->insertItem("S");
-		ComboBoxNSEW->setCurrentItem((a[1]=="N")?0:1);
+		ComboBoxNSEW->addItem("N");
+		ComboBoxNSEW->addItem("S");
+		ComboBoxNSEW->setCurrentIndex((a[1]=="N")?0:1);
 	}
 	else
 	{
 		LineEditDegrees->setValidator(new QIntValidator(0, 180, LineEditDegrees));
-		ComboBoxNSEW->insertItem("E");
-		ComboBoxNSEW->insertItem("W");
-		ComboBoxNSEW->setCurrentItem((a[1]=="E")?0:1);
+		ComboBoxNSEW->addItem("E");
+		ComboBoxNSEW->addItem("W");
+		ComboBoxNSEW->setCurrentIndex((a[1]=="E")?0:1);
 	}
 	LineEditMinutes->setValidator(new QIntValidator(0, 59, LineEditMinutes));
 	LineEditDegrees->setText(b[0]);

@@ -6,7 +6,7 @@
     <x>0</x>
     <y>0</y>
     <width>702</width>
-    <height>424</height>
+    <height>446</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -19,8 +19,8 @@
   <property name="sizeGripEnabled" >
    <bool>true</bool>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2" >
-   <item>
+  <layout class="QGridLayout" name="gridLayout" >
+   <item row="0" column="0" colspan="4" >
     <layout class="QHBoxLayout" name="horizontalLayout_6" >
      <item>
       <widget class="QFrame" name="frame_3" >
@@ -913,7 +913,7 @@
      </item>
     </layout>
    </item>
-   <item>
+   <item row="1" column="0" colspan="4" >
     <widget class="QFrame" name="frame" >
      <property name="frameShape" >
       <enum>QFrame::Box</enum>
@@ -1195,8 +1195,18 @@
      </layout>
     </widget>
    </item>
-   <item>
+   <item row="2" column="0" >
     <layout class="QHBoxLayout" name="horizontalLayout" >
+     <item>
+      <widget class="QLabel" name="label" >
+       <property name="text" >
+        <string>Tune</string>
+       </property>
+       <property name="buddy" >
+        <cstring>EdtFrequency</cstring>
+       </property>
+      </widget>
+     </item>
      <item>
       <widget class="QLineEdit" name="EdtFrequency" >
        <property name="minimumSize" >
@@ -1213,39 +1223,61 @@
        </property>
       </widget>
      </item>
+    </layout>
+   </item>
+   <item row="2" column="1" >
+    <spacer name="horizontalSpacer" >
+     <property name="orientation" >
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0" >
+      <size>
+       <width>160</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="2" column="2" >
+    <layout class="QHBoxLayout" name="horizontalLayout_5" >
      <item>
-      <spacer name="Spacer3" >
-       <property name="orientation" >
-        <enum>Qt::Horizontal</enum>
+      <widget class="QCheckBox" name="CheckBoxMuteAudio" >
+       <property name="text" >
+        <string>Mute Audio</string>
        </property>
-       <property name="sizeType" >
-        <enum>QSizePolicy::Expanding</enum>
-       </property>
-       <property name="sizeHint" stdset="0" >
-        <size>
-         <width>693</width>
-         <height>18</height>
-        </size>
-       </property>
-      </spacer>
+      </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="buttonOk" >
-       <property name="windowTitle" >
-        <string/>
-       </property>
+      <widget class="QCheckBox" name="CheckBoxSaveAudioWave" >
        <property name="text" >
-        <string>&amp;Close</string>
+        <string>Save Audio</string>
        </property>
-       <property name="autoDefault" >
-        <bool>true</bool>
-       </property>
-       <property name="default" >
-        <bool>true</bool>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="CheckBoxReverb" >
+       <property name="text" >
+        <string>&amp;Reverberation</string>
        </property>
       </widget>
      </item>
     </layout>
+   </item>
+   <item row="2" column="3" >
+    <widget class="QPushButton" name="buttonOk" >
+     <property name="windowTitle" >
+      <string/>
+     </property>
+     <property name="text" >
+      <string>&amp;Close</string>
+     </property>
+     <property name="autoDefault" >
+      <bool>true</bool>
+     </property>
+     <property name="default" >
+      <bool>true</bool>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>

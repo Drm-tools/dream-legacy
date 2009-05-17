@@ -266,7 +266,7 @@ void CGPSReceiver::slotConnected()
 	while(m_pSocket->canReadLine())
 		m_pSocket->readLine();
 
-	m_pSocket->writeBlock("W1\n",2);	// try to force gpsd into watcher mode
+	m_pSocket->write("W1\n",2);	// try to force gpsd into watcher mode
 
 	disconnect(m_pTimerDataTimeout, 0, 0, 0);	// disconnect everything connected from the timer
 	connect( m_pTimerDataTimeout, SIGNAL(timeout()), SLOT(slotTimeout()) );
@@ -316,6 +316,7 @@ void CGPSReceiver::slotSocketError(int)
 //	close()
 	disconnect(m_pTimer, 0, 0, 0);	// disconnect everything connected to the timer
 	connect( m_pTimer, SIGNAL(timeout()), SLOT(slotInit()) );
-	m_pTimer->start(c_usReconnectIntervalSeconds*1000, true);
+	m_pTimer->setSingleShot(true);
+	m_pTimer->start(c_usReconnectIntervalSeconds*1000);
 #endif
 }

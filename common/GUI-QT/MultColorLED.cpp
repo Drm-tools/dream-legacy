@@ -28,32 +28,27 @@
 \******************************************************************************/
 
 #include "MultColorLED.h"
-//Added by qt3to4:
-#include <Q3Frame>
+#include <QFrame>
 #include <QLabel>
 
 
 /* Implementation *************************************************************/
 CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) :
-	QLabel(parent, name, f)
+	QLabel(parent, f),
+	BitmCubeGreen(13, 13),BitmCubeRed(13, 13),
+	BitmCubeGrey(13, 13),BitmCubeYellow(13, 13)
+
 {
-	/* Define size of the bitmaps */
-	const int iXSize = 13;
-	const int iYSize = 13;
 
 	/* Create bitmaps */
-	BitmCubeGreen.resize(iXSize, iYSize);
 	BitmCubeGreen.fill(QColor(0, 255, 0));
-	BitmCubeRed.resize(iXSize, iYSize);
 	BitmCubeRed.fill(QColor(255, 0, 0));
-	BitmCubeGrey.resize(iXSize, iYSize);
 	BitmCubeGrey.fill(QColor(192, 192, 192));
-	BitmCubeYellow.resize(iXSize, iYSize);
 	BitmCubeYellow.fill(QColor(255, 255, 0));
 
 	/* Set modified style */
-	setFrameShape(Q3Frame::Panel);
-	setFrameShadow(Q3Frame::Sunken);
+	setFrameShape(QFrame::Panel);
+	setFrameShadow(QFrame::Sunken);
 	setIndent(0);
 
 	/* Init color flags */
@@ -74,6 +69,9 @@ CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) 
 	connect(&TimerYellowLight, SIGNAL(timeout()),
 		this, SLOT(OnTimerYellowLight()));
 
+	TimerRedLight.setSingleShot(true);
+	TimerGreenLight.setSingleShot(true);
+	TimerYellowLight.setSingleShot(true);
 	TimerRedLight.stop();
 	TimerGreenLight.stop();
 	TimerYellowLight.stop();
@@ -157,22 +155,22 @@ void CMultColorLED::SetLight(int iNewStatus)
 {
 	switch (iNewStatus)
 	{
-	case 0:
+	case RL_GREEN:
 		/* Green light */
 		bFlagGreenLi = true;
-		TimerGreenLight.changeInterval(iUpdateTime);
+		TimerGreenLight.start(iUpdateTime);
 		break;
 
-	case 1:
+	case RL_YELLOW:
 		/* Yellow light */
 		bFlagYellowLi = true;
-		TimerYellowLight.changeInterval(iUpdateTime);
+		TimerYellowLight.start(iUpdateTime);
 		break;
 
-	case 2:
+	case RL_RED:
 		/* Red light */
 		bFlagRedLi = true;
-		TimerRedLight.changeInterval(iUpdateTime);
+		TimerRedLight.start(iUpdateTime);
 		break;
 	}
 

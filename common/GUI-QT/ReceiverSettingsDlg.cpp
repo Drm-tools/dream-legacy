@@ -30,133 +30,294 @@
  *
 \******************************************************************************/
 
-#include <Q3ListView>
-#include <QFileDialog>
-#include <QLabel>
-#include <QLineEdit>
-#include <QComboBox>
-#include <QPushButton>
-#include <QValidator>
-#include <QMessageBox>
-#include <QCheckBox>
-#include <QSlider>
-#include <QRadioButton>
-#include <Q3ButtonGroup>
-#include <QTabWidget>
-#include <QPixmap>
-#include <QHideEvent>
-#include <QShowEvent>
 #include "ReceiverSettingsDlg.h"
 #include "../GlobalDefinitions.h"
-#include "../util/Hamlib.h"
+#include <QFileDialog>
+#include <QMessageBox>
+#include <iostream>
 
 /* Implementation *************************************************************/
+
+#ifdef HAVE_LIBHAMLIB
+
+RigModel::RigModel() : QAbstractItemModel(),BitmLittleGreenSquare(5,5),rigs()
+{
+    BitmLittleGreenSquare.fill(QColor(0, 255, 0));
+}
+
+QModelIndex RigModel::index(int row, int column,
+		  const QModelIndex &parent) const
+{
+    if(parent.isValid())
+    {
+    	const rig* r = (const rig*)parent.internalPointer();
+    	if(r->parent==-1) // its a make - what we expect!
+    	{
+		const make *m = reinterpret_cast<const make*>(r);
+		if(m->model.size()>row)
+		{
+		    return createIndex(row, column, (void*)&m->model[row]);
+		}
+    	} // else its wrong, drop through
+    }
+    else
+    {
+    	if(rigs.size()>row)
+    	{
+	    return createIndex(row, column, (void*)&rigs[row]);
+    	}
+    }
+    return QModelIndex();
+}
+
+QModelIndex RigModel::parent(const QModelIndex &child) const
+{
+    if(child.isValid())
+    {
+    	const rig* r = (const rig*)child.internalPointer();
+    	if(r->parent!=-1) // its a model - what we expect!
+    	{
+	    size_t p = r->parent;
+	    return createIndex(p, 0, (void*)&rigs[p]);
+    	} // else its wrong, drop through
+    }
+    return QModelIndex();
+}
+
+int RigModel::rowCount (const QModelIndex& parent) const
+{
+    if(parent.isValid())
+    {
+    	const rig* r = (const rig*)parent.internalPointer();
+    	if(r->parent==-1) // its a make - what we expect!
+    	{
+		const make *m = reinterpret_cast<const make*>(r);
+		return m->model.size();
+    	}
+    	else // its a model - stop descending
+    	{
+    		return 0;
+    	}
+    }
+    else
+    {
+	return rigs.size();
+    }
+}
+
+int RigModel::columnCount (const QModelIndex& parent) const
+{
+	return 3;
+}
+
+QVariant RigModel::data (const QModelIndex& index, int role) const
+{
+    const rig* r = (const rig*)index.internalPointer();
+    if(r->parent==-1)
+    {
+	switch(role)
+	{
+	case Qt::DecorationRole:
+	    break;
+	case Qt::DisplayRole:
+	    if(index.column()==0)
+	    {
+		if(rigs.size()>index.row())
+		    return rigs[index.row()].caps.mfg_name;
+	    }
+	    break;
+	case Qt::UserRole:
+	    break;
+	case Qt::TextAlignmentRole:
+	    break;
+	}
+    }
+    else
+    {
+	switch(role)
+	{
+	case Qt::DecorationRole:
+	    if(index.column()==0)
+	    {
+		QIcon icon;
+		//icon.addPixmap(BitmCubeGreen);
+		return icon;
+	    }
+	    break;
+	case Qt::DisplayRole:
+	    switch(index.column())
+	    {
+		case 0:
+		    return r->caps.model_name;
+		break;
+		case 1:
+		    return r->caps.rig_model;
+		    break;
+		case 2:
+		    return rig_strstatus(r->caps.status);
+		    break;
+	    }
+	    break;
+	case Qt::UserRole:
+	    {
+		QString r;
+		return r;
+	    }
+	    break;
+	case Qt::TextAlignmentRole:
+	    switch(index.column())
+	    {
+		case 1:
+			return QVariant(Qt::AlignRight|Qt::AlignVCenter);
+			break;
+		default:
+			return QVariant(Qt::AlignLeft|Qt::AlignVCenter);
+	    }
+	}
+    }
+    return QVariant();
+}
+
+
+void
+RigModel::load(ReceiverInterface& Receiver)
+{
+    CRigMap r;
+    Receiver.GetRigList(r);
+    for(CRigMap::const_iterator i=r.begin(); i!=r.end(); i++)
+    {
+    	const rig_caps& caps = i->second.hamlib_caps;
+	    rig_model_t model = caps.rig_model;
+	    string make_name = caps.mfg_name;
+	    size_t n = rigs.size();
+	    bool found = false;
+	    for(size_t i=0; i<n; i++)
+	    {
+		if(make_name == rigs[i].caps.mfg_name)
+		{
+			n = i;
+			found = true;
+			break;
+		}
+	    }
+	    if(found==false)
+	    {
+		    // new make
+		    make m;
+		    m.caps = caps;
+		    m.parent = -1;
+		    rigs.push_back(m);
+	    }
+	    rig r;
+	    r.caps = caps;
+	    r.parent = n;
+	    rigs[n].model.push_back(r);
+    }
+    reset();
+}
+
+QVariant RigModel::headerData ( int section, Qt::Orientation orientation, int role ) const
+{
+    if(role != Qt::DisplayRole)
+	    return QVariant();
+    if(orientation != Qt::Horizontal)
+	    return QVariant();
+    switch(section)
+    {
+	case 0: return tr("Rig"); break;
+	case 1: return tr("ID"); break;
+	case 2: return tr("Status"); break;
+    }
+    return "";
+}
+#endif
 
 ReceiverSettingsDlg::ReceiverSettingsDlg(
     ReceiverInterface& NRx,
     CSettings& NSettings,
-	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
-	QDialog(parent, name, modal, f), Ui_ReceiverSettingsDlg(),
+	QWidget* parent, Qt::WFlags f) :
+	QDialog(parent, f), Ui_ReceiverSettingsDlg(),
 	Receiver(NRx), Settings(NSettings), loading(true),
-	no_rig(NULL), no_port(NULL), last_port(NULL), TimerRig(), iWantedrigModel(0)
+	TimerRig(),iWantedrigModel(0)
 {
     setupUi(this);
 
-	bool bEnableRig = true;
+    bool bEnableRig = false;
 #ifdef HAVE_LIBHAMLIB
-	/* Rig Selection */
-	ListViewRig->setSelectionMode(Q3ListView::Single);
-	ListViewRig->setRootIsDecorated(true);
-	ListViewRig->setAllColumnsShowFocus(true);
-	ListViewRig->setColumnText(0, "Rig");
-	ListViewRig->addColumn("ID");
-	ListViewRig->addColumn("Status");
-	ListViewRig->clear();
-	/* COM port selection --------------------------------------------------- */
-	ListViewPort->setSelectionMode(Q3ListView::Single);
-	ListViewPort->setAllColumnsShowFocus(true);
-	ListViewPort->setColumnText(0, tr("Name"));
-	ListViewPort->addColumn(tr("Port"));
-	ListViewPort->clear();
-#else
-	/* Tabs */
-	bEnableRig = false;
+    bEnableRig = true;
+    treeViewRig->setModel(&Rigs);
+    Rigs.load(Receiver);
 #endif
 
-	if(Receiver.UpstreamDIInputEnabled())
-		bEnableRig = false;
+    if(Receiver.UpstreamDIInputEnabled())
+	bEnableRig = false;
 
-	if(bEnableRig == false)
-	{
-		TabWidget->removePage(Rig);
-	}
+    if(bEnableRig == false)
+    {
+	    TabWidget->removeTab(TabWidget->indexOf(Rig));
+    }
 
-	/* Connections */
+    /* Connections */
 
-	connect(buttonOk, SIGNAL(clicked()), SLOT(ButtonOkClicked()) );
-	connect(LineEditLatDegrees, SIGNAL(textChanged(const QString&)), SLOT(OnLineEditLatDegChanged(const QString&)));
-	connect(LineEditLatMinutes, SIGNAL(textChanged(const QString&)), SLOT(OnLineEditLatMinChanged(const QString&)));
-	connect(ComboBoxNS, SIGNAL(highlighted(int)), SLOT(OnComboBoxNSHighlighted(int)) );
-	connect(LineEditLngDegrees, SIGNAL(textChanged(const QString&)), SLOT(OnLineEditLngDegChanged(const QString&)));
-	connect(LineEditLngMinutes, SIGNAL(textChanged(const QString&)), SLOT(OnLineEditLngMinChanged(const QString&)));
-	connect(ComboBoxEW, SIGNAL(highlighted(int)), SLOT(OnComboBoxEWHighlighted(int)) );
+    connect(buttonClose, SIGNAL(clicked()), SLOT(OnButtonClose()) );
+    connect(LineEditLatDegrees, SIGNAL(textChanged(const QString&)), SLOT(OnLineEditLatDegChanged(const QString&)));
+    connect(LineEditLatMinutes, SIGNAL(textChanged(const QString&)), SLOT(OnLineEditLatMinChanged(const QString&)));
+    connect(ComboBoxNS, SIGNAL(highlighted(int)), SLOT(OnComboBoxNSHighlighted(int)) );
+    connect(LineEditLngDegrees, SIGNAL(textChanged(const QString&)), SLOT(OnLineEditLngDegChanged(const QString&)));
+    connect(LineEditLngMinutes, SIGNAL(textChanged(const QString&)), SLOT(OnLineEditLngMinChanged(const QString&)));
+    connect(ComboBoxEW, SIGNAL(highlighted(int)), SLOT(OnComboBoxEWHighlighted(int)) );
 
-	connect(SliderLogStartDelay, SIGNAL(valueChanged(int)),
-		this, SLOT(OnSliderLogStartDelayChange(int)));
+    connect(SliderLogStartDelay, SIGNAL(valueChanged(int)),
+	    this, SLOT(OnSliderLogStartDelayChange(int)));
 
-	connect(SliderNoOfIterations, SIGNAL(valueChanged(int)),
-		this, SLOT(OnSliderIterChange(int)));
+    connect(SliderNoOfIterations, SIGNAL(valueChanged(int)),
+	    this, SLOT(OnSliderIterChange(int)));
 
-	/* Radio buttons */
-	connect(RadioButtonTiLinear, SIGNAL(clicked()),
-		this, SLOT(OnRadioTimeLinear()));
-	connect(RadioButtonTiWiener, SIGNAL(clicked()),
-		this, SLOT(OnRadioTimeWiener()));
-	connect(RadioButtonFreqLinear, SIGNAL(clicked()),
-		this, SLOT(OnRadioFrequencyLinear()));
-	connect(RadioButtonFreqDFT, SIGNAL(clicked()),
-		this, SLOT(OnRadioFrequencyDft()));
-	connect(RadioButtonFreqWiener, SIGNAL(clicked()),
-		this, SLOT(OnRadioFrequencyWiener()));
-	connect(RadioButtonTiSyncEnergy, SIGNAL(clicked()),
-		this, SLOT(OnRadioTiSyncEnergy()));
-	connect(RadioButtonTiSyncFirstPeak, SIGNAL(clicked()),
-		this, SLOT(OnRadioTiSyncFirstPeak()));
+    /* Radio buttons */
+    connect(RadioButtonTiLinear, SIGNAL(clicked()),
+	    this, SLOT(OnRadioTimeLinear()));
+    connect(RadioButtonTiWiener, SIGNAL(clicked()),
+	    this, SLOT(OnRadioTimeWiener()));
+    connect(RadioButtonFreqLinear, SIGNAL(clicked()),
+	    this, SLOT(OnRadioFrequencyLinear()));
+    connect(RadioButtonFreqDFT, SIGNAL(clicked()),
+	    this, SLOT(OnRadioFrequencyDft()));
+    connect(RadioButtonFreqWiener, SIGNAL(clicked()),
+	    this, SLOT(OnRadioFrequencyWiener()));
+    connect(RadioButtonTiSyncEnergy, SIGNAL(clicked()),
+	    this, SLOT(OnRadioTiSyncEnergy()));
+    connect(RadioButtonTiSyncFirstPeak, SIGNAL(clicked()),
+	    this, SLOT(OnRadioTiSyncFirstPeak()));
 
-	/* Check boxes */
-	connect(CheckBoxUseGPS, SIGNAL(clicked()), SLOT(OnCheckBoxUseGPS()) );
-	connect(CheckBoxDisplayGPS, SIGNAL(clicked()), SLOT(OnCheckBoxDisplayGPS()) );
-	connect(CheckBoxFlipSpec, SIGNAL(clicked()), this, SLOT(OnCheckFlipSpectrum()));
-	connect(CheckBoxMuteAudio, SIGNAL(clicked()), this, SLOT(OnCheckBoxMuteAudio()));
-	connect(CheckBoxWriteLog, SIGNAL(clicked()), this, SLOT(OnCheckWriteLog()));
-	connect(CheckBoxRecFilter, SIGNAL(clicked()), this, SLOT(OnCheckRecFilter()));
-	connect(CheckBoxModiMetric, SIGNAL(clicked()), this, SLOT(OnCheckModiMetric()));
-	connect(CheckBoxReverb, SIGNAL(clicked()), this, SLOT(OnCheckBoxReverb()));
-	connect(CheckBoxLogLatLng, SIGNAL(clicked()), this, SLOT(OnCheckBoxLogLatLng()));
-	connect(CheckBoxLogSigStr, SIGNAL(clicked()), this, SLOT(OnCheckBoxLogSigStr()));
-	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWAV()));
+    /* Check boxes */
+    connect(CheckBoxUseGPS, SIGNAL(clicked()), SLOT(OnCheckBoxUseGPS()) );
+    connect(CheckBoxDisplayGPS, SIGNAL(clicked()), SLOT(OnCheckBoxDisplayGPS()) );
+    connect(CheckBoxFlipSpec, SIGNAL(clicked()), this, SLOT(OnCheckFlipSpectrum()));
+    connect(CheckBoxWriteLog, SIGNAL(clicked()), this, SLOT(OnCheckWriteLog()));
+    connect(CheckBoxRecFilter, SIGNAL(clicked()), this, SLOT(OnCheckRecFilter()));
+    connect(CheckBoxModiMetric, SIGNAL(clicked()), this, SLOT(OnCheckModiMetric()));
+    connect(CheckBoxLogLatLng, SIGNAL(clicked()), this, SLOT(OnCheckBoxLogLatLng()));
+    connect(CheckBoxLogSigStr, SIGNAL(clicked()), this, SLOT(OnCheckBoxLogSigStr()));
 
-	connect(CheckBoxEnableSMeter, SIGNAL(toggled(bool)), this, SLOT(OnCheckEnableSMeterToggled(bool)));
+#ifdef HAVE_LIBHAMLIB
+    connect(CheckBoxEnableSMeter, SIGNAL(toggled(bool)), this, SLOT(OnCheckEnableSMeterToggled(bool)));
+    connect(treeViewRig, SIGNAL(activated (const QModelIndex&)),
+	    this, SLOT(OnRigSelected(const QModelIndex&)));
+    connect(comboBoxRigPort, SIGNAL(currentIndexChanged(int)),
+	    this, SLOT(OnComboBoxRigPort(int)));
 
-	connect(ListViewRig, SIGNAL(selectionChanged(Q3ListViewItem*)),
-		this, SLOT(OnRigSelected(Q3ListViewItem*)));
-	connect(ListViewPort, SIGNAL(selectionChanged(Q3ListViewItem*)),
-		this, SLOT(OnComPortSelected(Q3ListViewItem*)));
+    connect(&TimerRig, SIGNAL(timeout()), this, SLOT(OnTimerRig()));
 
-	connect(&TimerRig, SIGNAL(timeout()), this, SLOT(OnTimerRig()));
+    connect(pushButtonUseRigForAllModes, SIGNAL(clicked()), this, SLOT(OnButtonRigAllModes()));
+    connect(pushButtonApplyRig, SIGNAL(clicked()), this, SLOT(OnButtonApplyRigSettings()));
+    connect(pushButtonTestRig, SIGNAL(clicked()), this, SLOT(OnButtonTestRig()));
+#endif
+    TimerRig.stop();
 
-	TimerRig.stop();
+    /* Set help text for the controls */
+    AddWhatsThisHelp();
 
-	/* Set help text for the controls */
-	AddWhatsThisHelp();
-
-	Q3ButtonGroup* bg = new Q3ButtonGroup(this);
-	bg->hide();
-	bg->insert(RadioButtonAll, 0);
-	bg->insert(RadioButtonPerMode, 1);
-
-
-	setDefaults();
+    setDefaults();
 }
 
 ReceiverSettingsDlg::~ReceiverSettingsDlg()
@@ -165,86 +326,6 @@ ReceiverSettingsDlg::~ReceiverSettingsDlg()
 	Receiver.GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
 	Settings.Put("Logfile", "latitude", latitude);
 	Settings.Put("Logfile", "longitude", longitude);
-
-	if(Receiver.GetIsWriteWaveFile())
-		Receiver.StopWriteWaveFile();
-
-	Settings.Put("Receiver", "rigpermode", RadioButtonPerMode->isChecked());
-}
-
-void ReceiverSettingsDlg::hideEvent(QHideEvent*)
-{
-	ListViewRig->clear();
-	ListViewPort->clear();
-	no_rig = NULL;
-	no_port = NULL;
-	last_port = NULL;
-}
-
-/* this sets default values into the dialog and ini file for
- * items not covered in other places. It is currently called
- * from the constructor and contains items which can only
- * be modified in this dialog or on the command line.
- * (lat/long is still looking for a good home)
- */
-void ReceiverSettingsDlg::setDefaults()
-{
-	CParameter& Parameters = *(Receiver.GetParameters());
-
-	/* these won't get into the ini file unless we use GPS or have this: */
-	double latitude = Settings.Get("Logfile", "latitude", 100.0);
-	double longitude = Settings.Get("Logfile", "longitude", 0.0);
-	if(latitude<=90.0)
-	{
-		Parameters.GPSData.SetPositionAvailable(true);
-		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
-		Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
-	}
-	else
-	{
-		latitude = 0.0;
-		Parameters.GPSData.SetPositionAvailable(false);
-	}
-
-	/* Start log file flag */
-	CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", false));
-
-    /* log file flag for storing signal strength in long log */
-	CheckBoxLogSigStr->setChecked(Settings.Get("Logfile", "enablerxl", false));
-
-	/* log file flag for storing lat/long in long log */
-	CheckBoxLogLatLng->setChecked(Settings.Get("Logfile", "enablepositiondata", false));
-
-	/* logging delay value */
-	int iLogDelay = Settings.Get("Logfile", "delay", 0);
-	SliderLogStartDelay->setValue(iLogDelay);
-
-	/* GPS ------------------------------------------------------------------- */
-	string host = Settings.Get("GPS", "host", string("localhost"));
-    LineEditGPSHost->setText(host.c_str());
-
-	int port = Settings.Get("GPS", "port", 2947);
-    LineEditGPSPort->setText(QString("%1").arg(port));
-
-	CheckBoxUseGPS->setChecked(Settings.Get("GPS", "usegpsd", false));
-	CheckBoxDisplayGPS->setChecked(Settings.Get("GPS", "showgps", false));
-
-	if(Settings.Get("Receiver", "rigpermode", false))
-		RadioButtonPerMode->setChecked(true);
-	else
-		RadioButtonAll->setChecked(true);
-
-	/* get the defaults into the ini file */
-	Settings.Put("Logfile", "latitude", latitude);
-	Settings.Put("Logfile", "longitude", longitude);
-	Settings.Put("Logfile", "enablelog", CheckBoxWriteLog->isChecked());
-	Settings.Put("Logfile", "enablerxl", CheckBoxLogSigStr->isChecked());
-	Settings.Put("Logfile", "enablepositiondata", CheckBoxLogLatLng->isChecked());
-	Settings.Put("Logfile", "delay", iLogDelay);
-	Settings.Put("GPS", "usegpsd", CheckBoxUseGPS->isChecked());
-	Settings.Put("GPS", "showgps", CheckBoxDisplayGPS->isChecked());
-	Settings.Put("GPS", "host", host);
-	Settings.Put("GPS", "port", port);
 }
 
 void ReceiverSettingsDlg::showEvent(QShowEvent*)
@@ -280,101 +361,116 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	CheckBoxFlipSpec->setChecked(Receiver.GetFlippedSpectrum());
 	SliderNoOfIterations->setValue(Receiver.GetInitNumIterations());
 
-	/* Audio ---------------------------------------------------------------- */
-
-	CheckBoxMuteAudio->setChecked(Receiver.GetMuteAudio());
-	CheckBoxReverb->setChecked(Receiver.GetReverbEffect());
-	CheckBoxSaveAudioWave->setChecked(Receiver.GetIsWriteWaveFile());
-
 	/* GPS */
 	ExtractReceiverCoordinates();
 
 	/* Rig */
 #ifdef HAVE_LIBHAMLIB
-	QPixmap	BitmLittleGreenSquare;
-	BitmLittleGreenSquare.resize(5, 5);
-	BitmLittleGreenSquare.fill(QColor(0, 255, 0));
 
-// TODO chose one rig for everything or a rig per band
-	map<rig_model_t, CRigCaps> rigs;
-	map<string,Q3ListViewItem*> manufacturers;
-	rig_model_t current = Receiver.GetRigModel();
+	// TODO chose one rig for everything or a rig per mode / ? band ?
+	//map<rig_model_t, CRigCaps> rigs;
+	//map<string,Q3ListViewItem*> manufacturers;
+	//rig_model_t current = Receiver.GetRigModel();
 
 	CheckBoxEnableSMeter->setChecked(Receiver.GetEnableSMeter());
 
-	Receiver.GetRigList(rigs);
-
-	no_rig = new Q3ListViewItem(new Q3ListViewItem(ListViewRig, tr("[None]")), tr("None"), "0", "");
-	Q3ListViewItem* selected_rig = no_rig;
-	for (map<rig_model_t, CRigCaps>::const_iterator i=rigs.begin(); i!=rigs.end(); i++)
-	{
-		/* Store model ID */
-		Q3ListViewItem* man, *model=NULL;
-		rig_model_t iModelID = i->first;
-		const CRigCaps& rig = i->second;
-
-		string m;
-		if(rig.hamlib_caps.mfg_name == NULL)
-			continue;
-		m = rig.hamlib_caps.mfg_name;
-		map<string,Q3ListViewItem*>::const_iterator mfr = manufacturers.find(m);
-		if(mfr==manufacturers.end())
-		{
-			manufacturers[m] = man = new Q3ListViewItem(ListViewRig, m.c_str());
-		}
-		else
-		{
-			man = mfr->second;
-		}
-
-		if(iModelID<0)
-		{
-			string model_name = string(rig.hamlib_caps.model_name)+" (DRM)";
-			model = new Q3ListViewItem(
-				man,
-				model_name.c_str(),
-				QString::number(iModelID),
-				rig_strstatus(rig.hamlib_caps.status)
-			);
-			model->setPixmap(0, BitmLittleGreenSquare);
-			man->setPixmap(0, BitmLittleGreenSquare);
-		}
-		else
-		{
-			model = new Q3ListViewItem(
-				man, rig.hamlib_caps.model_name,
-				QString::number(iModelID),
-				rig_strstatus(rig.hamlib_caps.status)
-			);
-		}
-		/* Check for selected Rig */
-		if (current == iModelID)
-		{
-			selected_rig = model;
-		}
-	}
-
-	/* COM port selection --------------------------------------------------- */
-	no_port = new Q3ListViewItem(ListViewPort, tr("None"), "");
 	map<string,string> ports;
 	Receiver.GetComPortList(ports);
-	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
+	comboBoxRigPort->addItem("None");
+	for(map<string,string>::const_iterator
+	    it = ports.begin(); it!=ports.end(); it++)
 	{
-		last_port = new Q3ListViewItem(ListViewPort, p->first.c_str(), p->second.c_str());
+	    comboBoxRigPort->addItem(it->first.c_str(), it->second.c_str());
 	}
-
-	checkRig(current);
-
-	/* do this last so can update the com port, etc depending on rig type */
-	ListViewRig->ensureItemVisible(selected_rig);
-	ListViewRig->setSelected(selected_rig, true);
 #endif
 	loading = false; // loading completed
 }
 
+void ReceiverSettingsDlg::hideEvent(QHideEvent*)
+{
+#ifdef HAVE_LIBHAMLIB
+#endif
+}
+
+/* this sets default values into the dialog and ini file for
+ * items not covered in other places. It is currently called
+ * from the constructor and contains items which can only
+ * be modified in this dialog or on the command line.
+ * (lat/long is still looking for a good home)
+ */
+void ReceiverSettingsDlg::setDefaults()
+{
+    CParameter& Parameters = *(Receiver.GetParameters());
+
+    /* these won't get into the ini file unless we use GPS or have this: */
+    double latitude = Settings.Get("Logfile", "latitude", 100.0);
+    double longitude = Settings.Get("Logfile", "longitude", 0.0);
+    if(latitude<=90.0)
+    {
+	    Parameters.GPSData.SetPositionAvailable(true);
+	    Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
+	    Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
+    }
+    else
+    {
+	    latitude = 0.0;
+	    Parameters.GPSData.SetPositionAvailable(false);
+    }
+
+    /* Start log file flag */
+    CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", false));
+
+    /* log file flag for storing signal strength in long log */
+    CheckBoxLogSigStr->setChecked(Settings.Get("Logfile", "enablerxl", false));
+
+    /* log file flag for storing lat/long in long log */
+    CheckBoxLogLatLng->setChecked(Settings.Get("Logfile", "enablepositiondata", false));
+
+    /* logging delay value */
+    int iLogDelay = Settings.Get("Logfile", "delay", 0);
+    SliderLogStartDelay->setValue(iLogDelay);
+
+    /* GPS ------------------------------------------------------------------- */
+    string host = Settings.Get("GPS", "host", string("localhost"));
+    LineEditGPSHost->setText(host.c_str());
+
+    int port = Settings.Get("GPS", "port", 2947);
+    LineEditGPSPort->setText(QString("%1").arg(port));
+
+    CheckBoxUseGPS->setChecked(Settings.Get("GPS", "usegpsd", false));
+    CheckBoxDisplayGPS->setChecked(Settings.Get("GPS", "showgps", false));
+
+
+    /* get the defaults into the ini file */
+    Settings.Put("Logfile", "latitude", latitude);
+    Settings.Put("Logfile", "longitude", longitude);
+    Settings.Put("Logfile", "enablelog", CheckBoxWriteLog->isChecked());
+    Settings.Put("Logfile", "enablerxl", CheckBoxLogSigStr->isChecked());
+    Settings.Put("Logfile", "enablepositiondata", CheckBoxLogLatLng->isChecked());
+    Settings.Put("Logfile", "delay", iLogDelay);
+    Settings.Put("GPS", "usegpsd", CheckBoxUseGPS->isChecked());
+    Settings.Put("GPS", "showgps", CheckBoxDisplayGPS->isChecked());
+    Settings.Put("GPS", "host", host);
+    Settings.Put("GPS", "port", port);
+}
+/* when the dialog closes save the contents of any controls which don't have
+ * their own slot handlers
+ */
+
+void ReceiverSettingsDlg::OnButtonClose()
+{
+	/* save current settings */
+	Settings.Put("GPS", "host", LineEditGPSHost->text().toStdString());
+	Settings.Put("GPS", "port", LineEditGPSPort->text().toInt());
+
+	accept(); /* close the dialog */
+}
+
+// = GPS Tab ==============================================================
+
 void ReceiverSettingsDlg::OnCheckBoxUseGPS()
 {
-	Settings.Put("GPS", "host", string(LineEditGPSHost->text().latin1()));
+	Settings.Put("GPS", "host", LineEditGPSHost->text().toStdString());
 	Settings.Put("GPS", "port", LineEditGPSPort->text().toInt());
 	Settings.Put("GPS", "usegpsd", CheckBoxUseGPS->isChecked());
 	emit StartStopGPS(CheckBoxUseGPS->isChecked());
@@ -435,19 +531,6 @@ void ReceiverSettingsDlg::SetLatLng()
 	Parameters.Unlock();
 }
 
-/* when the dialog closes save the contents of any controls which don't have
- * their own slot handlers
- */
-
-void ReceiverSettingsDlg::ButtonOkClicked()
-{
-	/* save current settings */
-	Settings.Put("GPS", "host", string(LineEditGPSHost->text().latin1()));
-	Settings.Put("GPS", "port", LineEditGPSPort->text().toInt());
-
-	accept(); /* close the dialog */
-}
-
 void ReceiverSettingsDlg::ExtractReceiverCoordinates()
 {
 	QString sVal, sDir;
@@ -462,26 +545,28 @@ void ReceiverSettingsDlg::ExtractReceiverCoordinates()
 	if(latitude<0.0)
 	{
 		latitude = 0.0 - latitude;
-		ComboBoxNS->setCurrentItem(1);
+		ComboBoxNS->setCurrentIndex(1);
 	}
 	else
 	{
-		ComboBoxNS->setCurrentItem(0);
+		ComboBoxNS->setCurrentIndex(0);
 	}
 	LineEditLatDegrees->setText(QString::number(int(latitude)));
 	LineEditLatMinutes->setText(QString::number(60.0*(latitude-int(latitude))));
 	if(longitude<0.0)
 	{
 		longitude = 0.0 - longitude;
-		ComboBoxEW->setCurrentItem(1);
+		ComboBoxEW->setCurrentIndex(1);
 	}
 	else
 	{
-		ComboBoxEW->setCurrentItem(0);
+		ComboBoxEW->setCurrentIndex(0);
 	}
 	LineEditLngDegrees->setText(QString::number(int(longitude)));
 	LineEditLngMinutes->setText(QString::number(60.0*(longitude-int(longitude))));
 }
+
+// = Sync Tab ==============================================================
 
 void ReceiverSettingsDlg::OnRadioTimeLinear()
 {
@@ -564,45 +649,6 @@ void ReceiverSettingsDlg::OnCheckModiMetric()
 	Receiver.SetIntCons(CheckBoxModiMetric->isChecked());
 }
 
-void ReceiverSettingsDlg::OnCheckBoxMuteAudio()
-{
-	/* Set parameter in working thread module */
-	Receiver.MuteAudio(CheckBoxMuteAudio->isChecked());
-}
-
-void ReceiverSettingsDlg::OnCheckBoxReverb()
-{
-	/* Set parameter in working thread module */
-	Receiver.SetReverbEffect(CheckBoxReverb->isChecked());
-}
-
-void ReceiverSettingsDlg::OnCheckSaveAudioWAV()
-{
-/*
-	This code is copied in AnalogMainWindow.cpp. If you do changes here, you should
-	apply the changes in the other file, too
-*/
-	if (CheckBoxSaveAudioWave->isChecked() == true)
-	{
-		/* Show "save file" dialog */
-		QString strFileName =
-			QFileDialog::getSaveFileName(tr("DreamOut.wav"), "*.wav", this);
-
-		/* Check if user not hit the cancel button */
-		if (!strFileName.isNull())
-		{
-			Receiver.StartWriteWaveFile(strFileName.latin1());
-		}
-		else
-		{
-			/* User hit the cancel button, uncheck the button */
-			CheckBoxSaveAudioWave->setChecked(false);
-		}
-	}
-	else
-		Receiver.StopWriteWaveFile();
-}
-
 void ReceiverSettingsDlg::OnCheckWriteLog()
 {
 	emit StartStopLog(CheckBoxWriteLog->isChecked());
@@ -634,52 +680,63 @@ void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
 	Receiver.SetEnableSMeter(on);
 }
 
-void ReceiverSettingsDlg::checkRig(int iID)
+void
+ReceiverSettingsDlg::OnButtonRigAllModes()
 {
-#ifdef HAVE_LIBHAMLIB
+    checkBoxDRM->setChecked(true);
+    checkBoxAM->setChecked(true);
+    checkBoxFM->setChecked(true);
+    checkBoxUSB->setChecked(true);
+    checkBoxLSB->setChecked(true);
+    checkBoxCW->setChecked(true);
+    checkBoxNBFM->setChecked(true);
+}
+
+void
+ReceiverSettingsDlg::OnButtonTestRig()
+{
+#if 0
 	/* is s-meter enabled ? */
 	CheckBoxEnableSMeter->setChecked(Receiver.GetEnableSMeter());
 
-	if(iID == 0)
-	{
-		ListViewPort->setEnabled(true);
-		ListViewPort->clearSelection();
-		return;
-	}
-
 	CRigCaps caps;
-	Receiver.GetRigCaps(iID, caps);
+	Receiver.GetRigCaps(0, caps);
 	if(caps.hamlib_caps.port_type == RIG_PORT_SERIAL)
 	{
-		ListViewPort->setEnabled(true);
+		//ListViewPort->setEnabled(true);
 		string strPort = Receiver.GetRigComPort();
 		if(strPort!="")
 		{
-			last_port = no_port;
-			Q3ListViewItemIterator it( ListViewPort );
-			for ( ; it.current(); ++it )
-			{
-				if ( it.current()->text(1).latin1() == strPort.c_str() )
-					last_port = it.current();
-			}
-			ListViewPort->ensureItemVisible(last_port);
-			ListViewPort->setSelected(last_port, true);
+			//last_port = no_port;
+			//Q3ListViewItemIterator it( ListViewPort );
+			//for ( ; it.current(); ++it )
+			//{
+			//	if ( it.current()->text(1).latin1() == strPort.c_str() )
+			//		last_port = it.current();
+			//}
+			//ListViewPort->ensureItemVisible(last_port);
+			//ListViewPort->setSelected(last_port, true);
 		}
 	}
 	else
 	{
-		ListViewPort->setEnabled(false);
-		ListViewPort->clearSelection();
+		//ListViewPort->setEnabled(false);
+		//ListViewPort->clearSelection();
 	}
 #endif
 }
 
-void ReceiverSettingsDlg::OnRigSelected(Q3ListViewItem* item)
+void
+ReceiverSettingsDlg::OnButtonApplyRigSettings()
+{
+}
+
+void ReceiverSettingsDlg::OnRigSelected(const QModelIndex& index)
 {
 	if(loading)
 		return;
 
-#ifdef HAVE_LIBHAMLIB
+#if 0 //def HAVE_LIBHAMLIB
 	iWantedrigModel = item->text(1).toInt();
 	CRigCaps caps;
 	Receiver.GetRigCaps(iWantedrigModel, caps);
@@ -729,30 +786,16 @@ void ReceiverSettingsDlg::OnTimerRig()
 		return;
 
 	TimerRig.stop();
-
-	rig_model_t current = Receiver.GetRigModel();
-	if(current == iWantedrigModel)
-	{
-		checkRig(current);
-	}
-	else
-	{
-		// could not select this rig
-		QMessageBox::information( this, "Dream", tr("failed to select rig"));
-		ListViewRig->ensureItemVisible(no_rig);
-		ListViewRig->setSelected(no_rig, true);
-	}
 #endif
 }
 
-void ReceiverSettingsDlg::OnComPortSelected(Q3ListViewItem* item)
+void ReceiverSettingsDlg::OnComboBoxRigPort(int)
 {
 	if(loading)
 		return;
-	string s = item->text(1).latin1();
-	last_port = item;
 #ifdef HAVE_LIBHAMLIB
-	Receiver.SetRigComPort(s);
+	//last_port = item;
+	Receiver.SetRigComPort(comboBoxRigPort->currentText().toStdString());
 #endif
 }
 
@@ -793,18 +836,6 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		tr("<b>Flip Input Spectrum:</b> Checking this box "
 		"will flip or invert the input spectrum. This is necessary if the "
 		"mixer in the front-end uses the lower side band."));
-
-	/* Mute Audio */
-	CheckBoxMuteAudio->setWhatsThis(
-		tr("<b>Mute Audio:</b> The audio can be muted by "
-		"checking this box. The reaction of checking or unchecking this box "
-		"is delayed by approx. 1 second due to the audio buffers."));
-
-	/* Reverberation Effect */
-	CheckBoxReverb->setWhatsThis(
-		tr("<b>Reverberation Effect:</b> If this check box is checked, a "
-		"reverberation effect is applied each time an audio drop-out occurs. "
-		"With this effect it is possible to mask short drop-outs."));
 
 	/* Log File */
 	CheckBoxWriteLog->setWhatsThis(
@@ -881,12 +912,6 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		tr("<b>First Peak:</b> This algorithms searches for "
 		"the first peak in the estimated impulse response and moves this peak "
 		"to the beginning of the guard-interval (timing tracking algorithm)."));
-
-	/* Save audio as wave */
-	CheckBoxSaveAudioWave->setWhatsThis(
-		tr("<b>Save Audio as WAV:</b> Save the audio signal "
-		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
-		"box will let the user choose a file name for the recording."));
 
 	/* Interferer Rejection */
 	const QString strInterfRej =

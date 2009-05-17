@@ -41,7 +41,7 @@
 TransmitterMainWindow::TransmitterMainWindow(CDRMTransmitterInterface& tx, CSettings& NSettings,
 	QWidget* parent, const char* name, Qt::WFlags f
 	):
-	QMainWindow(parent, name, f),
+	QMainWindow(parent, f),
 	Ui_TransmitterMainWindow(),
 	DRMTransmitter(tx), Settings(NSettings),
     Timer(), bIsStarted(false),
@@ -71,7 +71,7 @@ TransmitterMainWindow::TransmitterMainWindow(CDRMTransmitterInterface& tx, CSett
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 			setGeometry(WinGeom);
 
-    setCaption(tr("Dream DRM Transmitter"));
+    setWindowTitle(tr("Dream DRM Transmitter"));
 
 	/* Init controls with default settings */
 	ButtonStartStop->setText(tr("&Start"));
@@ -167,7 +167,7 @@ void TransmitterMainWindow::OnSDCCapacityChanged()
 
 void TransmitterMainWindow::OnButtonClose()
 {
-    this->close(false);
+    (void)this->close();
 }
 
 void TransmitterMainWindow::OnTimer()
@@ -275,14 +275,7 @@ TransmitterMainWindow::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 void
 TransmitterMainWindow::OnRadioMode(int)
 {
-	TabWidgetConfigure->removePage(Channel);
-	TabWidgetConfigure->removePage(Streams);
-	TabWidgetConfigure->removePage(Audio);
-	TabWidgetConfigure->removePage(Data);
-	TabWidgetConfigure->removePage(Services);
-	TabWidgetConfigure->removePage(MDIOut);
-	TabWidgetConfigure->removePage(MDIIn);
-	TabWidgetConfigure->removePage(COFDM);
+	TabWidgetConfigure->clear();
 
 	if(RadioButtonTransmitter->isChecked())
 	{
@@ -292,7 +285,7 @@ TransmitterMainWindow::OnRadioMode(int)
 		TabWidgetConfigure->addTab(Data, tr("Data"));
 		TabWidgetConfigure->addTab(Services, tr("Services"));
 		TabWidgetConfigure->addTab(COFDM, tr("COFDM"));
-		TabWidgetConfigure->showPage(Channel);
+		TabWidgetConfigure->setCurrentWidget(Channel);
 	}
 	if(RadioButtonEncoder->isChecked())
 	{
@@ -302,13 +295,13 @@ TransmitterMainWindow::OnRadioMode(int)
 		TabWidgetConfigure->addTab(Data, tr("Data"));
 		TabWidgetConfigure->addTab(Services, tr("Services"));
 		TabWidgetConfigure->addTab(MDIOut, tr("MDI Output"));
-		TabWidgetConfigure->showPage(Channel);
+		TabWidgetConfigure->setCurrentWidget(Channel);
 	}
 	if(RadioButtonModulator->isChecked())
 	{
 		TabWidgetConfigure->addTab(MDIIn, tr("MDI Input"));
 		TabWidgetConfigure->addTab(COFDM, tr("COFDM"));
-		TabWidgetConfigure->showPage(COFDM);
+		TabWidgetConfigure->setCurrentWidget(COFDM);
 	}
 }
 
@@ -442,11 +435,11 @@ ChannelEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 	switch (channel.eInterleaverDepth)
 	{
 	case SI_LONG:
-		ui.ComboBoxMSCInterleaver->setCurrentItem(0);
+		ui.ComboBoxMSCInterleaver->setCurrentIndex(0);
 		break;
 
 	case SI_SHORT:
-		ui.ComboBoxMSCInterleaver->setCurrentItem(1);
+		ui.ComboBoxMSCInterleaver->setCurrentIndex(1);
 		break;
 	}
 
@@ -456,19 +449,19 @@ ChannelEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 		break;
 
 	case CS_2_SM:
-		ui.ComboBoxMSCConstellation->setCurrentItem(0);
+		ui.ComboBoxMSCConstellation->setCurrentIndex(0);
 		break;
 
 	case CS_3_SM:
-		ui.ComboBoxMSCConstellation->setCurrentItem(1);
+		ui.ComboBoxMSCConstellation->setCurrentIndex(1);
 		break;
 
 	case CS_3_HMSYM:
-//		ui.ComboBoxMSCConstellation->setCurrentItem(2);
+//		ui.ComboBoxMSCConstellation->setCurrentIndex(2);
 		break;
 
 	case CS_3_HMMIX:
-//		ui.ComboBoxMSCConstellation->setCurrentItem(3);
+//		ui.ComboBoxMSCConstellation->setCurrentIndex(3);
 		break;
 	}
 
@@ -476,16 +469,16 @@ ChannelEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 	UpdateMSCProtLevCombo(); /* options depend on MSC Constellation */
 	CMSCParameters msc;
 	DRMTransmitter.GetMSC(msc);
-	ui.ComboBoxMSCProtLev->setCurrentItem(msc.ProtectionLevel.iPartB);
+	ui.ComboBoxMSCProtLev->setCurrentIndex(msc.ProtectionLevel.iPartB);
 
 	switch (channel.eSDCmode)
 	{
 	case CS_1_SM:
-		ui.ComboBoxSDCConstellation->setCurrentItem(0);
+		ui.ComboBoxSDCConstellation->setCurrentIndex(0);
 		break;
 
 	case CS_2_SM:
-		ui.ComboBoxSDCConstellation->setCurrentItem(1);
+		ui.ComboBoxSDCConstellation->setCurrentIndex(1);
 		break;
 	default:
 		;
@@ -504,22 +497,22 @@ ChannelEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 
 	/* MSC Protection Level */
 	CMSCProtLev MSCPrLe;
-	MSCPrLe.iPartB = ui.ComboBoxMSCProtLev->currentItem();
+	MSCPrLe.iPartB = ui.ComboBoxMSCProtLev->currentIndex();
 	MSCParameters.ProtectionLevel = MSCPrLe;
 
 	channel.eMSCmode
         = ECodScheme(ui.ComboBoxMSCConstellation->itemData(
-            ui.ComboBoxMSCConstellation->currentItem()
+            ui.ComboBoxMSCConstellation->currentIndex()
             ).toInt());
 
     channel.eInterleaverDepth
         = ESymIntMod(ui.ComboBoxMSCInterleaver->itemData(
-            ui.ComboBoxMSCInterleaver->currentItem()
+            ui.ComboBoxMSCInterleaver->currentIndex()
     ).toInt());
 
     channel.eSDCmode
         = ECodScheme(ui.ComboBoxSDCConstellation->itemData(
-            ui.ComboBoxSDCConstellation->currentItem()
+            ui.ComboBoxSDCConstellation->currentIndex()
     ).toInt());
 
 	/* Robustness Mode */
@@ -550,25 +543,25 @@ void ChannelEditor::OnComboBoxMSCProtLevActivated(int)
 
 void ChannelEditor::UpdateMSCProtLevCombo()
 {
-	if(ui.ComboBoxMSCConstellation->currentItem()==0)
+	if(ui.ComboBoxMSCConstellation->currentIndex()==0)
 	{
 		/* Only two protection levels possible in 16 QAM mode */
 		ui.ComboBoxMSCProtLev->clear();
-		ui.ComboBoxMSCProtLev->insertItem("0", 0);
-		ui.ComboBoxMSCProtLev->insertItem("1", 1);
+		ui.ComboBoxMSCProtLev->insertItem(0, "0", 0);
+		ui.ComboBoxMSCProtLev->insertItem(1, "1", 1);
 	}
 	else
 	{
 		/* Four protection levels defined */
 		ui.ComboBoxMSCProtLev->clear();
-		ui.ComboBoxMSCProtLev->insertItem("0", 0);
-		ui.ComboBoxMSCProtLev->insertItem("1", 1);
-		ui.ComboBoxMSCProtLev->insertItem("2", 2);
-		ui.ComboBoxMSCProtLev->insertItem("3", 3);
+		ui.ComboBoxMSCProtLev->insertItem(0, "0", 0);
+		ui.ComboBoxMSCProtLev->insertItem(1, "1", 1);
+		ui.ComboBoxMSCProtLev->insertItem(2, "2", 2);
+		ui.ComboBoxMSCProtLev->insertItem(3, "3", 3);
 	}
 
 	/* PutTo protection level to 1 */
-	ui.ComboBoxMSCProtLev->setCurrentItem(1);
+	ui.ComboBoxMSCProtLev->setCurrentIndex(1);
 }
 
 void ChannelEditor::OnRadioBandwidth(int)
@@ -686,7 +679,7 @@ StreamEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 
     if(n==0) // default to 1 audio stream filling MSC
     {
-        ui.ComboBoxStreamType->setCurrentItem(0);
+        ui.ComboBoxStreamType->setCurrentIndex(0);
         ui.LineEditBytesPerFrame->setText(ui.TextLabelMSCBytesTotal->text());
         ui.LineEditPacketLen->setText("");
 		OnButtonAddStream();
@@ -702,22 +695,22 @@ StreamEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
             QMessageBox::information(NULL, "Dream", tr("UEP stream read from transmitter - ignored"),
             QMessageBox::Ok);
         }
-		ui.ComboBoxStream->setCurrentItem(i);
+		ui.ComboBoxStream->setCurrentIndex(i);
 		if(stream.eAudDataFlag == SF_AUDIO)
 		{
-			ui.ComboBoxStreamType->setCurrentItem(0);
+			ui.ComboBoxStreamType->setCurrentIndex(0);
 			ui.LineEditPacketLen->setText("");
 		}
 		else
 		{
 			if(stream.ePacketModInd == PM_PACKET_MODE)
 			{
-				ui.ComboBoxStreamType->setCurrentItem(1);
+				ui.ComboBoxStreamType->setCurrentIndex(1);
 				ui.LineEditPacketLen->setText(QString::number(stream.iPacketLen));
 			}
 			else
 			{
-				ui.ComboBoxStreamType->setCurrentItem(2);
+				ui.ComboBoxStreamType->setCurrentIndex(2);
 				ui.LineEditPacketLen->setText("");
 				ui.ComboBoxPacketsPerFrame->clear();
 			}
@@ -772,8 +765,8 @@ StreamEditor::OnLineEditPacketLenChanged(const QString& str)
         size_t bytes = ui.TextLabelMSCBytesAvailable->text().toInt();
         size_t max_packets = bytes/(packet_len);
         for(size_t i=1; i<=max_packets; i++)
-            ui.ComboBoxPacketsPerFrame->insertItem(QString::number(i));
-        ui.ComboBoxPacketsPerFrame->setCurrentItem(0);
+            ui.ComboBoxPacketsPerFrame->addItem(QString::number(i));
+        ui.ComboBoxPacketsPerFrame->setCurrentIndex(0);
 	}
 }
 
@@ -833,7 +826,7 @@ StreamEditor::OnButtonAddStream()
 {
 	int bytes=0;
 	QString plen, packets;
-	switch(ui.ComboBoxStreamType->currentItem())
+	switch(ui.ComboBoxStreamType->currentIndex())
 	{
 	case 0: // audio
 	case 2: // data_stream
@@ -854,9 +847,9 @@ StreamEditor::OnButtonAddStream()
     streams->setItem(row, 3, new QStandardItem(plen));
     streams->setItem(row, 4, new QStandardItem(packets));
 
-	ui.ComboBoxStream->removeItem(ui.ComboBoxStream->currentItem());
-	ui.ComboBoxStream->setCurrentItem(0);
-	ui.ComboBoxStreamType->setCurrentItem(0);
+	ui.ComboBoxStream->removeItem(ui.ComboBoxStream->currentIndex());
+	ui.ComboBoxStream->setCurrentIndex(0);
+	ui.ComboBoxStreamType->setCurrentIndex(0);
 	int availbytes = ui.TextLabelMSCBytesAvailable->text().toInt();
 	ui.TextLabelMSCBytesAvailable->setText(QString::number(availbytes-bytes));
     ui.LineEditBytesPerFrame->setText(ui.TextLabelMSCBytesAvailable->text());
@@ -873,7 +866,7 @@ StreamEditor::OnButtonDeleteStream()
     QString stream = streams->item(row, 0)->text();
     int bytes = streams->item(row, 2)->text().toInt();
     streams->removeRow(row);
-    ui.ComboBoxStream->insertItem(stream);
+    ui.ComboBoxStream->addItem(stream);
     int availbytes = ui.TextLabelMSCBytesAvailable->text().toInt();
     ui.TextLabelMSCBytesAvailable->setText(QString::number(availbytes+bytes));
     ui.LineEditBytesPerFrame->setText(ui.TextLabelMSCBytesAvailable->text());
@@ -911,11 +904,11 @@ AudioComponentEditor::AudioComponentEditor(Ui_TransmitterMainWindow& u)
 void AudioComponentEditor::setupUi()
 {
     ui.ComboBoxAudioStreamNo->clear();
-	ui.ComboBoxAudioStreamNo->insertItem("-");
-	ui.ComboBoxAudioStreamNo->insertItem("0");
-	ui.ComboBoxAudioStreamNo->insertItem("1");
-	ui.ComboBoxAudioStreamNo->insertItem("2");
-	ui.ComboBoxAudioStreamNo->insertItem("3");
+	ui.ComboBoxAudioStreamNo->insertItem(0, "-", -1);
+	ui.ComboBoxAudioStreamNo->insertItem(1, "0", 0);
+	ui.ComboBoxAudioStreamNo->insertItem(2, "1", 1);
+	ui.ComboBoxAudioStreamNo->insertItem(3, "2", 2);
+	ui.ComboBoxAudioStreamNo->insertItem(4, "3", 3);
 
 	textMessages = new QStandardItemModel();
 	QStringList labels;
@@ -955,9 +948,9 @@ AudioComponentEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 	ui.ComboBoxAudioSource->clear();
 	for (size_t t = 0; t < vecAudioDevices.size(); t++)
 	{
-		ui.ComboBoxAudioSource->insertItem(QString(vecAudioDevices[t].c_str()), t);
+		ui.ComboBoxAudioSource->insertItem(t, QString(vecAudioDevices[t].c_str()), t);
 	}
-	ui.ComboBoxAudioSource->setCurrentItem(0);
+	ui.ComboBoxAudioSource->setCurrentIndex(0);
     string fn = DRMTransmitter.GetReadFromFile();
     ui.LineEditAudioSourceFile->setText(fn.c_str());
     if(fn == "")
@@ -965,13 +958,13 @@ AudioComponentEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
         int iAudSrc = DRMTransmitter.GetSoundInInterface();
         if((iAudSrc>=0) && (iAudSrc<ui.ComboBoxAudioSource->count()))
         {
-            ui.ComboBoxAudioSource->setCurrentItem(iAudSrc);
+            ui.ComboBoxAudioSource->setCurrentIndex(iAudSrc);
         }
         else
         {
             int n = ui.ComboBoxAudioSource->count();
             if(n>0)
-                ui.ComboBoxAudioSource->setCurrentItem(n-1);
+                ui.ComboBoxAudioSource->setCurrentIndex(n-1);
         }
     }
 
@@ -1013,7 +1006,7 @@ AudioComponentEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 	}
 	else
 	{
-		int iAudSrc = ui.ComboBoxAudioSource->currentItem();
+		int iAudSrc = ui.ComboBoxAudioSource->currentIndex();
 		DRMTransmitter.SetSoundInInterface(iAudSrc);
 	}
 
@@ -1045,8 +1038,8 @@ void AudioComponentEditor::OnComboBoxSourceActivated(int)
 
 void AudioComponentEditor::OnButtonFileBrowse()
 {
-	QString s( QFileDialog::getOpenFileName(
-		QString::null, "Wave Files (*.wav)", NULL ) );
+	QString s( QFileDialog::getOpenFileName(NULL,
+		QString::null, "Wave Files (*.wav)") );
 	if ( s.isEmpty() )
 		return;
     ui.LineEditAudioSourceFile->setText(s);
@@ -1102,18 +1095,18 @@ DataComponentEditor::DataComponentEditor(Ui_TransmitterMainWindow& u)
 void DataComponentEditor::setupUi()
 {
     ui.ComboBoxDataStreamNo->clear();
-	ui.ComboBoxDataStreamNo->insertItem("-");
-	ui.ComboBoxDataStreamNo->insertItem("0");
-	ui.ComboBoxDataStreamNo->insertItem("1");
-	ui.ComboBoxDataStreamNo->insertItem("2");
-	ui.ComboBoxDataStreamNo->insertItem("3");
+	ui.ComboBoxDataStreamNo->insertItem(0, "-", -1);
+	ui.ComboBoxDataStreamNo->insertItem(1, "0", 0);
+	ui.ComboBoxDataStreamNo->insertItem(2, "1", 1);
+	ui.ComboBoxDataStreamNo->insertItem(3, "2", 2);
+	ui.ComboBoxDataStreamNo->insertItem(4, "3", 3);
 
     ui.ComboBoxDataPacketId->clear();
-	ui.ComboBoxDataPacketId->insertItem("-");
-	ui.ComboBoxDataPacketId->insertItem("0");
-	ui.ComboBoxDataPacketId->insertItem("1");
-	ui.ComboBoxDataPacketId->insertItem("2");
-	ui.ComboBoxDataPacketId->insertItem("3");
+	ui.ComboBoxDataPacketId->insertItem(0, "-", -1);
+	ui.ComboBoxDataPacketId->insertItem(1, "0", 0);
+	ui.ComboBoxDataPacketId->insertItem(2, "1", 1);
+	ui.ComboBoxDataPacketId->insertItem(3, "2", 2);
+	ui.ComboBoxDataPacketId->insertItem(4, "3", 3);
 
     pictures = new QStandardItemModel();
 	QStringList labels;
@@ -1142,9 +1135,9 @@ DataComponentEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
             if(j->second.eAppDomain == CDataParam::AD_DAB_SPEC_APP)
             {
                 // we only do slideshow!
-                int idx = ui.ComboBoxDataStreamNo->findText(QString::number(stream));
+                int idx = ui.ComboBoxDataStreamNo->findData(stream);
                 ui.ComboBoxDataStreamNo->setCurrentIndex(idx);
-                idx = ui.ComboBoxDataPacketId->findText(QString::number(packetId));
+                idx = ui.ComboBoxDataPacketId->findData(packetId);
                 ui.ComboBoxDataPacketId->setCurrentIndex(idx);
                 /* file names for data application */
                 map<string,string> m;
@@ -1171,8 +1164,8 @@ DataComponentEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
     if(ui.ComboBoxDataPacketId->currentText() == "-")
         return;
 
-    int iStreamNo = ui.ComboBoxDataStreamNo->currentText().toInt();
-    int iPacketId = ui.ComboBoxDataPacketId->currentText().toInt();
+    int iStreamNo = ui.ComboBoxDataStreamNo->itemData(ui.ComboBoxDataStreamNo->currentIndex()).toInt();
+    int iPacketId = ui.ComboBoxDataPacketId->itemData(ui.ComboBoxDataPacketId->currentIndex()).toInt();
 
 	map<int, map<int, CDataParam> > dataParam;
 
@@ -1193,7 +1186,7 @@ DataComponentEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 
 		/* Extract format string */
 		QFileInfo FileInfo(strFileName);
-		const QString strFormat = FileInfo.extension(false);
+		const QString strFormat = FileInfo.suffix();
 
 		DRMTransmitter.AddPic(strFileName.toUtf8().constData(), strFormat.toUtf8().constData());
 	}
@@ -1213,8 +1206,8 @@ void DataComponentEditor::AddSlide(const QString& path)
 void DataComponentEditor::OnPushButtonAddFileName()
 {
 	/* Show "open file" dialog. Let the user select more than one file */
-	QStringList list = QFileDialog::getOpenFileNames(
-		tr("Image Files (*.png *.jpg *.jpeg *.jfif)"), NULL);
+	QStringList list = QFileDialog::getOpenFileNames(NULL,
+		tr("Image Files (*.png *.jpg *.jpeg *.jfif)"));
 
 	/* Check if user not hit the cancel button */
 	if (!list.isEmpty())
@@ -1260,20 +1253,20 @@ void ServicesEditor::setupUi()
 {
 	/* Language */
 	for (int i = 0; i < LEN_TABLE_LANGUAGE_CODE; i++)
-		ui.ComboBoxFACLanguage->insertItem(strTableLanguageCode[i].c_str(), i);
+		ui.ComboBoxFACLanguage->insertItem(i, strTableLanguageCode[i].c_str(), i);
 
 	/* Program type */
 	for (int i = 0; i < LEN_TABLE_PROG_TYPE_CODE; i++)
-		ui.ComboBoxProgramType->insertItem(strTableProgTypCod[i].c_str(), i);
+		ui.ComboBoxProgramType->insertItem(i, strTableProgTypCod[i].c_str(), i);
 
 	/* services */
-	ui.ComboBoxStreamType->insertItem(tr("audio"));
-	ui.ComboBoxStreamType->insertItem(tr("data packet"));
-	ui.ComboBoxStreamType->insertItem(tr("data stream"));
-	ui.ComboBoxStream->insertItem("0");
-	ui.ComboBoxStream->insertItem("1");
-	ui.ComboBoxStream->insertItem("2");
-	ui.ComboBoxStream->insertItem("3");
+	ui.ComboBoxStreamType->addItem(tr("audio"));
+	ui.ComboBoxStreamType->addItem(tr("data packet"));
+	ui.ComboBoxStreamType->addItem(tr("data stream"));
+	ui.ComboBoxStream->insertItem(0, "0", 0);
+	ui.ComboBoxStream->insertItem(1, "1", 1);
+	ui.ComboBoxStream->insertItem(2, "2", 2);
+	ui.ComboBoxStream->insertItem(3, "3", 3);
 
     services = new QStandardItemModel();
 	QStringList labels;
@@ -1282,36 +1275,29 @@ void ServicesEditor::setupUi()
             << tr("Audio Stream") << tr("Data Stream") << tr("Packet ID");
 	services->setHorizontalHeaderLabels(labels);
 	ui.treeViewServices->setModel(services);
-	ui.ComboBoxShortID->insertItem("0");
-	ui.ComboBoxShortID->insertItem("1");
-	ui.ComboBoxShortID->insertItem("2");
-	ui.ComboBoxShortID->insertItem("3");
 
     ui.ComboBoxServiceAudioStream->clear();
-	ui.ComboBoxServiceAudioStream->insertItem("0");
-	ui.ComboBoxServiceAudioStream->insertItem("1");
-	ui.ComboBoxServiceAudioStream->insertItem("2");
-	ui.ComboBoxServiceAudioStream->insertItem("3");
-
     ui.ComboBoxServiceDataStream->clear();
-	ui.ComboBoxServiceDataStream->insertItem("0");
-	ui.ComboBoxServiceDataStream->insertItem("1");
-	ui.ComboBoxServiceDataStream->insertItem("2");
-	ui.ComboBoxServiceDataStream->insertItem("3");
+	for(int i=0; i<4; i++)
+	{
+		QString s("0");
+		s[0] = '0'+i;
+		ui.ComboBoxShortID->insertItem(i,s,i);
+		ui.ComboBoxServiceAudioStream->insertItem(i,s,i);
+		ui.ComboBoxServiceDataStream->insertItem(i,s,i);
+	}
 
     ui.ComboBoxServicePacketID->clear();
-	ui.ComboBoxServicePacketID->insertItem("0");
-	ui.ComboBoxServicePacketID->insertItem("1");
-	ui.ComboBoxServicePacketID->insertItem("2");
-	ui.ComboBoxServicePacketID->insertItem("3");
+	ui.ComboBoxServicePacketID->insertItem(0, "0", 0);
+	ui.ComboBoxServicePacketID->insertItem(1, "0", 0);
 
     ui.ComboBoxAppType->clear();
-    ui.ComboBoxAppType->insertItem(tr("Normal"));
-    ui.ComboBoxAppType->insertItem(tr("Engineering Test"));
+    ui.ComboBoxAppType->addItem(tr("Normal"));
+    ui.ComboBoxAppType->addItem(tr("Engineering Test"));
 	for (int t = 1; t < 31; t++)
 	{
 	    QString reserved = QString(tr("Reserved"))+" (%1)";
-		ui.ComboBoxAppType->insertItem(reserved.arg(t));
+		ui.ComboBoxAppType->addItem(reserved.arg(t));
 	}
 
 	connect(ui.PushButtonAddService, SIGNAL(clicked()),
@@ -1338,18 +1324,18 @@ ServicesEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
         l.push_back(new QStandardItem(QString::number(i)));
         l.push_back(new QStandardItem(QString::fromUtf8(Service[i].strLabel.c_str())));
         l.push_back(new QStandardItem(QString::number(ulong(Service[i].iServiceID), 16)));
-        l.push_back(new QStandardItem(ui.ComboBoxFACLanguage->text(Service[i].iLanguage)));
+        l.push_back(new QStandardItem(ui.ComboBoxFACLanguage->itemText(Service[i].iLanguage)));
         l.push_back(new QStandardItem(Service[i].strLanguageCode.c_str()));
         l.push_back(new QStandardItem(Service[i].strCountryCode.c_str()));
 		if(Service[i].iAudioStream!=STREAM_ID_NOT_USED)
 		{
 		    /* audio overrides data */
-            l.push_back(new QStandardItem(ui.ComboBoxProgramType->text(Service[i].iServiceDescr)));
+            l.push_back(new QStandardItem(ui.ComboBoxProgramType->itemText(Service[i].iServiceDescr)));
 		}
 		else if(Service[i].iDataStream != STREAM_ID_NOT_USED)
 		{
 		    /* audio overrides data */
-            l.push_back(new QStandardItem(ui.ComboBoxAppType->text(Service[i].iServiceDescr)));
+            l.push_back(new QStandardItem(ui.ComboBoxAppType->itemText(Service[i].iServiceDescr)));
 		}
 		else
 		{
@@ -1477,13 +1463,13 @@ void ServicesEditor::OnButtonAdd()
         l.push_back(new QStandardItem(""));
     }
     services->appendRow(l);
-	ui.ComboBoxShortID->setCurrentItem(0);
+	ui.ComboBoxShortID->setCurrentIndex(0);
 }
 
 void ServicesEditor::OnButtonDelete()
 {
     services->removeRow(ui.treeViewServices->currentIndex().row());
-	ui.ComboBoxShortID->setCurrentItem(0);
+	ui.ComboBoxShortID->setCurrentIndex(0);
 }
 
 void ServicesEditor::OnItemClicked(const QModelIndex& index)
@@ -1570,9 +1556,9 @@ COFDMEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 	DRMTransmitter.GetSoundOutChoices(vecAudioDevices);
 	for (size_t t = 0; t < vecAudioDevices.size(); t++)
 	{
-		ui.ComboBoxCOFDMdest->insertItem(QString(vecAudioDevices[t].c_str()));
+		ui.ComboBoxCOFDMdest->addItem(QString(vecAudioDevices[t].c_str()));
 	}
-	ui.ComboBoxCOFDMdest->setCurrentItem(0);
+	ui.ComboBoxCOFDMdest->setCurrentIndex(0);
 	destinations->setRowCount(0);
 	vector<string> COFDMOutputs;
 	DRMTransmitter.GetCOFDMOutputs(COFDMOutputs);
@@ -1645,15 +1631,15 @@ void COFDMEditor::OnItemClicked(const QModelIndex& index)
     QString s = destinations->item(index.row(), 0)->text();
     int i = ui.ComboBoxCOFDMdest->findText(s);
     if(i>=0)
-        ui.ComboBoxCOFDMdest->setCurrentItem(i);
+        ui.ComboBoxCOFDMdest->setCurrentIndex(i);
     else
         ui.LineEditCOFDMOutputFile->setText(s);
 }
 
 void COFDMEditor::OnButtonBrowse()
 {
-	QString s( QFileDialog::getSaveFileName(
-		"cofdm.wav", "Wave Files (*.wav)", NULL ) );
+	QString s( QFileDialog::getSaveFileName(NULL,
+		"cofdm.wav", "Wave Files (*.wav)" ) );
 	if ( s.isEmpty() )
 		return;
 	ui.LineEditCOFDMOutputFile->setText(s);
@@ -1675,7 +1661,7 @@ void MDIInputEditor::setupUi()
     GetNetworkInterfaces(vecIpIf);
     for(size_t i=0; i<vecIpIf.size(); i++)
     {
-        ui.ComboBoxMDIoutInterface->insertItem(vecIpIf[i].name.c_str());
+        ui.ComboBoxMDIoutInterface->addItem(vecIpIf[i].name.c_str());
     }
 
 	connect(ui.PushButtonMDIInBrowse, SIGNAL(clicked()),
@@ -1716,7 +1702,7 @@ MDIInputEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 		ui.LineEditMDIInputFile->setText("");
 		QString port,group,ifname="any";
 
-		QStringList parts = QStringList::split(":", addr, true);
+		QStringList parts = addr.split(":", QString::KeepEmptyParts);
 		switch(parts.count())
 		{
 		case 1:
@@ -1743,7 +1729,7 @@ MDIInputEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
         ui.LineEditMDIinGroup->setText(group);
         ui.LineEditMDIinPort->setText(port);
         int item = ui.ComboBoxMDIinInterface->findText(ifname);
-        ui.ComboBoxMDIinInterface->setCurrentItem(item);
+        ui.ComboBoxMDIinInterface->setCurrentIndex(item);
 	}
 }
 
@@ -1801,8 +1787,8 @@ MDIInputEditor::OnLineEditFileChanged(const QString&)
 void
 MDIInputEditor::OnButtonBrowse()
 {
-	QString s( QFileDialog::getOpenFileName(
-		"out.pcap", "Capture Files (*.pcap)", NULL ) );
+	QString s( QFileDialog::getOpenFileName(NULL,
+		"out.pcap", "Capture Files (*.pcap)" ) );
 	if ( s.isEmpty() )
 		return;
     ui.LineEditMDIInputFile->setText(s);
@@ -1823,7 +1809,7 @@ void MDIOutputEditor::setupUi()
     GetNetworkInterfaces(vecIpIf);
     for(size_t i=0; i<vecIpIf.size(); i++)
     {
-        ui.ComboBoxMDIoutInterface->insertItem(vecIpIf[i].name.c_str());
+        ui.ComboBoxMDIoutInterface->addItem(vecIpIf[i].name.c_str());
     }
 
 	connect(ui.PushButtonAddMDIDest, SIGNAL(clicked()),
@@ -1854,7 +1840,7 @@ MDIOutputEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
     for(size_t i=0; i<MDIoutAddr.size(); i++)
     {
         QString addr = MDIoutAddr[i].c_str();
-        QStringList parts = QStringList::split(":", addr, true);
+        QStringList parts = addr.split(":", QString::KeepEmptyParts);
         QList<QStandardItem*> l;
         switch(parts.count())
         {
@@ -1910,7 +1896,7 @@ MDIOutputEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 		{
 			addr = iface+":"+dest+":"+port;
 		}
-		MDIoutAddr.push_back(string(addr.utf8()));
+		MDIoutAddr.push_back(string(addr.toStdString()));
 	}
 	DRMTransmitter.SetMDIOut(MDIoutAddr);
 }
@@ -1948,8 +1934,8 @@ MDIOutputEditor::OnButtonDeleteOutput()
 
 void MDIOutputEditor::OnButtonBrowse()
 {
-    QString s( QFileDialog::getSaveFileName(
-			"out.pcap", "Capture Files (*.pcap)", NULL ) );
+    QString s( QFileDialog::getSaveFileName(NULL,
+			"out.pcap", "Capture Files (*.pcap)" ) );
     if ( s.isEmpty() )
         return;
     ui.LineEditMDIOutputFile->setText(s);

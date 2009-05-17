@@ -296,16 +296,15 @@ public:
 	CSelectionInterface*	GetSoundOutInterface() {return pSoundOutInterface;}
 	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
 
-	void					SetRigModelForAllModes(int);
 	void					SetRigModel(int);
-	int						GetRigModel() const;
-	void					GetRigList(map<int, CRigCaps>&) const;
-	void					GetRigCaps(CRigCaps&) const;
+	string					GetRigInfo() const;
+	void					GetRigList(map<int, CRigCaps>&);
 	void					GetRigCaps(int, CRigCaps&) const;
+	void					GetRigList(map<int, CRigCaps>&) const;
 	void					GetComPortList(map<string,string>& ports) const;
 	string					GetRigComPort() const;
 	void					SetRigComPort(const string&);
-	bool				    GetRigChangeInProgress();
+	bool				    	GetRigChangeInProgress();
 	CParameter*				GetParameters() {return &Parameters;}
 	CParameter*				GetAnalogParameters() {return &Parameters;}
 
@@ -430,8 +429,6 @@ protected:
 	Request<EModulationType> rigMode;
 	Request<EInChanSel>     chanSel;
 	string                  strPCMFile;
-	bool                    bRigUpdateNeeded;
-	bool                    bRigUpdateForAllModes;
     CHamlib*                pHamlib;
     CSoundInProxy			soundIn;
 };

@@ -29,36 +29,34 @@
 \******************************************************************************/
 
 #include "PacketSocketQT.h"
-#include <qstringlist.h>
-#include <qtimer.h>
+#include <QStringList>
+#include <QTimer>
 #include <iostream>
 #include <sstream>
 #include <errno.h>
 
+#ifdef _WIN32
+/* Always include winsock2.h before windows.h */
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# include <windows.h>
+#else
+# include <netinet/in.h>
+# include <arpa/inet.h>
+typedef int SOCKET;
+# define SOCKET_ERROR				(-1)
+# define INVALID_SOCKET				(-1)
+#endif
+
 CPacketSocketQT::CPacketSocketQT():
-	pPacketSink(NULL), HostAddrOut(), iHostPortOut(-1),
-	SocketDevice(Q3SocketDevice:: Datagram /* UDP */ ),
-	pSocketNotivRead(NULL)
+	pPacketSink(NULL), HostAddrOut(), iHostPortOut(-1),Socket()
 {
-	/* Generate the socket notifier and connect the signal */
-	pSocketNotivRead = new QSocketNotifier(SocketDevice.socket(),
-											QSocketNotifier::Read);
-
 	/* Connect the "activated" signal */
-	QObject::connect(pSocketNotivRead, SIGNAL(activated(int)),
-					  this, SLOT(OnDataReceived()));
-
-	/* allow connection when others are listening */
-	SocketDevice.setAddressReusable(true);
+	QObject::connect(&Socket,SIGNAL(readyRead()),this,SLOT(readPendingDatagrams()));
 }
 
 CPacketSocketQT::~CPacketSocketQT()
 {
-	if(pSocketNotivRead)
-	{
-		pSocketNotivRead->disconnect();
-		delete pSocketNotivRead;
-	}
 }
 
 // Set the sink which will receive the packets
@@ -82,16 +80,16 @@ CPacketSocketQT::SendPacket(const vector < _BYTE > &vecbydata, uint32_t addr, ui
 	int bytes_written;
 	/* Send packet to network */
 	if(addr==0)
-		bytes_written = SocketDevice.writeBlock((char*)&vecbydata[0], vecbydata.size(), HostAddrOut, iHostPortOut);
+		bytes_written = Socket.writeDatagram((char*)&vecbydata[0], vecbydata.size(), HostAddrOut, iHostPortOut);
 	else
-		bytes_written = SocketDevice.writeBlock((char*)&vecbydata[0], vecbydata.size(), QHostAddress(addr), port);
+		bytes_written = Socket.writeDatagram((char*)&vecbydata[0], vecbydata.size(), QHostAddress(addr), port);
 	/* should we throw an exception or silently accept? */
 	/* the most likely cause is that we are sending unicast and no-one
 	   is listening, or the interface is down, there is no route */
 	if(bytes_written == -1)
 	{
-		Q3SocketDevice::Error x = SocketDevice.error();
-		if(x != Q3SocketDevice::NetworkFailure)
+		QAbstractSocket::SocketError x = Socket.error();
+		if(x != QAbstractSocket::NetworkError)
 			qDebug("error sending packet");
 	}
 }
@@ -108,19 +106,20 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 	int ttl = 127;
 	bool bAddressOK = true;
 	bool portOK;
-	QStringList parts = QStringList::split(":", strNewAddr.c_str(), true);
+	QString addr(strNewAddr.c_str());
+	QStringList parts = addr.split(":");
 	switch(parts.count())
 	{
 	case 1:
-		bAddressOK = HostAddrOut.setAddress("127.0.0.1");
+		HostAddrOut.setAddress(QHostAddress::LocalHost);
 		iHostPortOut = parts[0].toUInt(&portOK);
-		bAddressOK &= portOK;
+		bAddressOK = portOK;
 		break;
 	case 2:
 		bAddressOK = HostAddrOut.setAddress(parts[0]);
 		iHostPortOut = parts[1].toUInt(&portOK);
 		bAddressOK &= portOK;
-    	if(setsockopt(SocketDevice.socket(), IPPROTO_IP, IP_TTL,
+    	if(setsockopt(Socket.socketDescriptor(), IPPROTO_IP, IP_TTL,
 				(char*)&ttl, sizeof(ttl))==SOCKET_ERROR)
 			bAddressOK = false;
 		break;
@@ -131,12 +130,12 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 			bAddressOK = HostAddrOut.setAddress(parts[1]);
 			iHostPortOut = parts[2].toUInt(&portOK);
 			bAddressOK &= portOK;
-			const SOCKET s = SocketDevice.socket();
+			const SOCKET s = Socket.socketDescriptor();
 			uint32_t mc_if = htonl(AddrInterface.toIPv4Address());
 			if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF,
 						(char *) &mc_if, sizeof(mc_if)) == SOCKET_ERROR)
 				bAddressOK = false;
-    		if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL,
+		if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_TTL,
 						(char*) &ttl, sizeof(ttl)) == SOCKET_ERROR)
 				bAddressOK = false;
 		}
@@ -152,7 +151,7 @@ bool
 CPacketSocketQT::GetDestination(string & str)
 {
 	stringstream s;
-	s << HostAddrOut.toString().latin1() << ":" << iHostPortOut;
+	s << HostAddrOut.toString().toStdString() << ":" << iHostPortOut;
 	str = s.str();
 	return true;
 }
@@ -170,7 +169,8 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 	 */
 	int iPort=-1;
 	QHostAddress AddrGroup, AddrInterface;
-	QStringList parts = QStringList::split(":", strNewAddr.c_str(), true);
+	QString addr(strNewAddr.c_str());
+	QStringList parts = addr.split(":");
 	bool ok=true;
 	switch(parts.count())
 	{
@@ -204,24 +204,25 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 	if(gp == 0)
 	{
 		/* Initialize the listening socket. */
-		SocketDevice.bind(AddrInterface, iPort);
+		Socket.bind(AddrInterface, iPort);
 	}
 	else if((gp & 0xe0000000) == 0xe0000000)	/* multicast! */
 	{
 		struct ip_mreq mreq;
 
 		/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
-		bool ok = SocketDevice.bind(QHostAddress(Q_UINT32(0)), iPort);
+		bool ok = Socket.bind(QHostAddress::Any, iPort,
+			QUdpSocket::ShareAddress|QUdpSocket::ReuseAddressHint);
 		if(ok == false)
 		{
-			//QSocketDevice::Error x = SocketDevice.error();
+			//QAbstractSocket::Error x = Socket.error();
 			throw CGenErr("Can't bind to port to receive packets");
 		}
 
 		mreq.imr_multiaddr.s_addr = htonl(AddrGroup.toIPv4Address());
 		mreq.imr_interface.s_addr = htonl(AddrInterface.toIPv4Address());
 
-		const SOCKET s = SocketDevice.socket();
+		const SOCKET s = Socket.socketDescriptor();
 		int n = setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *) &mreq,
 							sizeof(mreq));
 		if(n == SOCKET_ERROR)
@@ -235,27 +236,25 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 	else /* one address specified, but not multicast - listen on a specific interface */
 	{
 		/* Initialize the listening socket. */
-		SocketDevice.bind(AddrGroup, iPort);
+		Socket.bind(AddrGroup, iPort);
 	}
 	return true;
 }
 
-void
-CPacketSocketQT::OnDataReceived()
+void CPacketSocketQT::readPendingDatagrams()
 {
-	vector < _BYTE > vecbydata(MAX_SIZE_BYTES_NETW_BUF);
+	while (Socket.hasPendingDatagrams()) {
+		vector<_BYTE> datagram;
+		datagram.resize(Socket.pendingDatagramSize());
+		QHostAddress sender;
+		quint16 senderPort;
 
-	/* Read block from network interface */
-	const int iNumBytesRead = SocketDevice.readBlock((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
+		Socket.readDatagram((char*)&datagram[0], datagram.size(),
+		&sender, &senderPort);
 
-	if(iNumBytesRead > 0)
-	{
-		/* Decode the incoming packet */
 		if(pPacketSink != NULL)
 		{
-			vecbydata.resize(iNumBytesRead);
-			uint32_t addr = SocketDevice.peerAddress().toIPv4Address();
-			pPacketSink->SendPacket(vecbydata, addr, SocketDevice.peerPort());
+			pPacketSink->SendPacket(datagram, sender.toIPv4Address(), senderPort);
 		}
 	}
 }
