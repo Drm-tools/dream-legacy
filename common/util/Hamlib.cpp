@@ -70,10 +70,6 @@ iFrequencykHz(0), iFrequencyOffsetkHz(0)
 {
 	/* Load all available front-end remotes in hamlib library */
 	rig_load_all_backends();
-
-	/* Get all models which are available.
-	 * A call-back function is called to return the different rigs */
-	rig_list_foreach(PrintHamlibModelList, this);
 }
 
 CHamlib::~CHamlib()
@@ -86,25 +82,35 @@ CHamlib::~CHamlib()
 }
 
 int
-CHamlib::PrintHamlibModelList(const rig_caps *caps, void *data)
+CHamlib::rig_enumerator(const rig_caps *caps, void *data)
 {
-	/* Access data members of class through pointer ((CHamlib*) data) */
-	CHamlib* This = (CHamlib *)data;
-
-	rig_model_t model = caps->rig_model;
-
-	/* Store new model in class. */
-	stringstream s;
-	s << caps->rig_model;
-	CRigCaps& r = This->CapsHamlibModels[model];
-	r.hamlib_caps = *caps;
+	CRigMap& map = *(CRigMap *)data;
+	map.rigs[caps->mfg_name][caps->model_name] = caps->rig_model;
 	return 1;					/* !=0, we want them all! */
 }
 
 void
 CHamlib::GetRigList(CRigMap& rigs)
 {
-	rigs = CapsHamlibModels;
+
+	/* Get all models which are available.
+	 * A call-back function is called to return the different rigs */
+	rig_list_foreach(rig_enumerator, &rigs);
+}
+
+void
+CHamlib::GetRigCaps(rig_model_t model, CRigCaps& caps) const
+{
+	map<rig_model_t,CRigCaps>::const_iterator r = CapsHamlibModels.find(model);
+	if(r!=CapsHamlibModels.end())
+		caps = r->second;
+	else
+	{
+	    CRigCaps c;
+	    c.hamlib_caps = *rig_get_caps(model);
+	    CapsHamlibModels[model] = c;
+	    caps = c;
+	}
 }
 
 void
@@ -173,11 +179,11 @@ CHamlib::GetPortList(map < string, string > &ports) const
 	LibHalContext *hal_ctx;
 
 	dbus_error_init (&error);
- 	if ((hal_ctx = libhal_ctx_new ()) == NULL) {
- 		LIBHAL_FREE_DBUS_ERROR (&error);
- 		return ;
- 	}
- 	if (!libhal_ctx_set_dbus_connection (hal_ctx, dbus_bus_get (DBUS_BUS_SYSTEM, &error))) {
+	if ((hal_ctx = libhal_ctx_new ()) == NULL) {
+		LIBHAL_FREE_DBUS_ERROR (&error);
+		return ;
+	}
+	if (!libhal_ctx_set_dbus_connection (hal_ctx, dbus_bus_get (DBUS_BUS_SYSTEM, &error))) {
 		fprintf (stderr, "error: libhal_ctx_set_dbus_connection: %s: %s\n", error.name, error.message);
 		LIBHAL_FREE_DBUS_ERROR (&error);
 		return ;
@@ -190,7 +196,7 @@ CHamlib::GetPortList(map < string, string > &ports) const
 		fprintf (stderr, "Could not initialise connection to hald.\n"
 		"Normally this means the HAL daemon (hald) is not running or not ready.\n");
 		return ;
- 	}
+	}
 
 	udis = libhal_find_device_by_capability (hal_ctx, "serial", &num_udis, &error);
 
@@ -201,10 +207,10 @@ CHamlib::GetPortList(map < string, string > &ports) const
 	}
 	for (int i = 0; i < num_udis; i++) {
 		/*
-  		linux.device_file = '/dev/ttyS0'  (string)
-  		info.product = '16550A-compatible COM port'  (string)
-  		serial.type = 'platform'  (string)
-  		serial.port = 0  (0x0)  (int)
+		linux.device_file = '/dev/ttyS0'  (string)
+		info.product = '16550A-compatible COM port'  (string)
+		serial.type = 'platform'  (string)
+		serial.port = 0  (0x0)  (int)
 		*/
 		char *dev = libhal_device_get_property_string (hal_ctx, udis[i], "linux.device_file", &error);
 		char *prod = libhal_device_get_property_string (hal_ctx, udis[i], "info.product", &error);
@@ -262,19 +268,19 @@ CHamlib::GetPortList(map < string, string > &ports) const
     classesToMatch = IOServiceMatching(kIOSerialBSDServiceValue);
     if (classesToMatch == NULL)
     {
-        printf("IOServiceMatching returned a NULL dictionary.\n");
+	printf("IOServiceMatching returned a NULL dictionary.\n");
     }
     else
 	{
-        CFDictionarySetValue(classesToMatch,
-                             CFSTR(kIOSerialBSDTypeKey),
-                             CFSTR(kIOSerialBSDRS232Type));
+	CFDictionarySetValue(classesToMatch,
+			     CFSTR(kIOSerialBSDTypeKey),
+			     CFSTR(kIOSerialBSDRS232Type));
 
 	}
     kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault, classesToMatch, &serialPortIterator);
     if (KERN_SUCCESS != kernResult)
     {
-        printf("IOServiceGetMatchingServices returned %d\n", kernResult);
+	printf("IOServiceGetMatchingServices returned %d\n", kernResult);
     }
 
     io_object_t		comPort;
@@ -283,31 +289,31 @@ CHamlib::GetPortList(map < string, string > &ports) const
 
     while ((comPort = IOIteratorNext(serialPortIterator)))
     {
-        CFStringRef	bsdPathAsCFString;
+	CFStringRef	bsdPathAsCFString;
 
 		// Get the callout device's path (/dev/cu.xxxxx). The callout device should almost always be
 		// used: the dialin device (/dev/tty.xxxxx) would be used when monitoring a serial port for
 		// incoming calls, e.g. a fax listener.
 
 		bsdPathAsCFString = CFStringRef(IORegistryEntryCreateCFProperty(comPort,
-                                                            CFSTR(kIOCalloutDeviceKey),
-                                                            kCFAllocatorDefault,
-                                                            0));
-        if (bsdPathAsCFString)
-        {
-            Boolean result;
+							    CFSTR(kIOCalloutDeviceKey),
+							    kCFAllocatorDefault,
+							    0));
+	if (bsdPathAsCFString)
+	{
+	    Boolean result;
 			char bsdPath[256];
 
-            // Convert the path from a CFString to a C (NUL-terminated) string for use
+	    // Convert the path from a CFString to a C (NUL-terminated) string for use
 			// with the POSIX open() call.
 
 			result = CFStringGetCString(bsdPathAsCFString,
-                                        bsdPath,
-                                        sizeof(bsdPath),
-                                        kCFStringEncodingUTF8);
-            CFRelease(bsdPathAsCFString);
+					bsdPath,
+					sizeof(bsdPath),
+					kCFStringEncodingUTF8);
+	    CFRelease(bsdPathAsCFString);
 
-            if (result)
+	    if (result)
 			{
 				// make the name a bit more friendly for the menu
 				string s,t=bsdPath;
@@ -317,10 +323,10 @@ CHamlib::GetPortList(map < string, string > &ports) const
 				else
 					s = t;
 				ports[s] = bsdPath;
-            }
-        }
+	    }
+	}
 
-        // Release the io_service_t now that we are done with it.
+	// Release the io_service_t now that we are done with it.
 
 		(void) IOObjectRelease(comPort);
     }
@@ -343,7 +349,7 @@ string CHamlib::GetComPort() const
 	rig_model_t model = 0;
 	if(pRig)
 		model = pRig->caps->rig_model;
-	CRigMap::const_iterator m = CapsHamlibModels.find(model);
+	map<rig_model_t,CRigCaps>::const_iterator m = CapsHamlibModels.find(model);
 	if(m==CapsHamlibModels.end())
 		return "";
 	return m->second.get_config("rig_pathname");
@@ -471,7 +477,8 @@ CHamlib::LoadSettings(CSettings & s)
 	EModulationType eRigMode = EModulationType(s.Get("Hamlib", "mode", 0));
 	bSMeterWanted = s.Get("Hamlib", "smeter", false);
 
-	for(CRigMap::iterator r = CapsHamlibModels.begin(); r != CapsHamlibModels.end(); r++)
+	for(map<rig_model_t,CRigCaps>::iterator
+	    r = CapsHamlibModels.begin(); r != CapsHamlibModels.end(); r++)
 	{
 		stringstream section;
 		rig_model_t model = r->first;
@@ -505,7 +512,8 @@ CHamlib::SaveSettings(CSettings & s) const
 
 	s.Put("Hamlib", "smeter", bSMeterWanted);
 
-	for(CRigMap::const_iterator r = CapsHamlibModels.begin(); r != CapsHamlibModels.end(); r++)
+	for(map<rig_model_t,CRigCaps>::const_iterator
+	    r = CapsHamlibModels.begin(); r != CapsHamlibModels.end(); r++)
 	{
 		if(r->first != 0)
 		{
@@ -575,7 +583,7 @@ void CHamlib::run()
 		{
 			Parameters.Lock();
 			// Apply any correction
-            const _REAL S9_DBuV = 34.0; // S9 in dBuV for converting HamLib S-meter readings
+	    const _REAL S9_DBuV = 34.0; // S9 in dBuV for converting HamLib S-meter readings
 			Parameters.Measurements.SigStrstat.addSample(_REAL(val.i) + S9_DBuV + Parameters.rSigStrengthCorrection);
 			Parameters.Unlock();
 #ifdef USE_QT_GUI
@@ -670,7 +678,7 @@ CHamlib::SetRigModel(rig_model_t model)
 	if(model == 0)
 		return;
 
-	CRigMap::iterator m = CapsHamlibModels.find(model);
+	map<rig_model_t,CRigCaps>::iterator m = CapsHamlibModels.find(model);
 	if (m == CapsHamlibModels.end())
 	{
 		cerr << "invalid rig model ID selected: " << model;

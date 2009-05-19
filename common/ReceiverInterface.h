@@ -35,6 +35,7 @@
 class CSelectionInterface;
 class CDataDecoder;
 class CRigCaps;
+class CRigMap;
 
 class AnalogReceiverInterface
 {
@@ -110,7 +111,7 @@ public:
 	virtual bool		 			GetEnableSMeter()=0;
 	virtual void					SetRigModel( int)=0;
 	virtual string					GetRigInfo() const = 0;
-	virtual void					GetRigList(map<int, CRigCaps>&) const =0;
+	virtual void					GetRigList(CRigMap&) const =0;
 	virtual void					GetRigCaps(int, CRigCaps&) const =0;
 	virtual void					GetComPortList(map<string,string>&) const =0;
 	virtual string					GetRigComPort() const =0;

@@ -82,6 +82,17 @@ public:
 	{
 		hamlib_caps.mfg_name = NULL;
 	}
+	CRigCaps(const CRigCaps& c) : settings(c.settings), config(c.config)
+	{
+	    memcpy(&hamlib_caps, &c.hamlib_caps, sizeof(rig_caps));
+	}
+	const CRigCaps& operator=(const CRigCaps& c)
+	{
+	    settings = c.settings;
+	    config = c.config;
+	    memcpy(&hamlib_caps, &c.hamlib_caps, sizeof(rig_caps));
+	    return *this;
+	}
 
 	string get_config(const string& key) const
 	{
@@ -122,7 +133,10 @@ public:
 	rig_caps hamlib_caps;
 };
 
-typedef map<rig_model_t,CRigCaps> CRigMap;
+struct CRigMap
+{
+    map<string,map<string,rig_model_t> > rigs;
+};
 
 /* Hamlib interface --------------------------------------------------------- */
 class CHamlib
@@ -151,12 +165,7 @@ public:
 	void			SetComPort(const string&);
 	string			GetComPort() const;
 	string			GetInfo() const { if(pRig) return rig_get_info(pRig); return ""; }
-	void			GetRigCaps(rig_model_t model, CRigCaps& caps) const
-					{
-						CRigMap::const_iterator r = CapsHamlibModels.find(model);
-						if(r!=CapsHamlibModels.end())
-							caps = r->second;
-					}
+	void			GetRigCaps(rig_model_t model, CRigCaps& caps) const;
 	void			set_attribute(rig_model_t r, EModulationType e, const string& key, const string& val)
 					{
 						CapsHamlibModels[r].set_attribute(e, key, val);
@@ -166,7 +175,7 @@ public:
 
 protected:
 
-	static int		PrintHamlibModelList(const rig_caps* caps, void* data);
+	static int		rig_enumerator(const rig_caps* caps, void* data);
 	static int		token(const struct confparams *, rig_ptr_t);
 	static int		level(RIG*, const struct confparams *, rig_ptr_t);
 	static int		parm(RIG*, const struct confparams *, rig_ptr_t);
@@ -179,7 +188,8 @@ protected:
 	CParameter&		Parameters;
 	RIG*			pRig;
 	bool			bSMeterWanted, bEnableSMeter;
-	CRigMap			CapsHamlibModels;
+	map<rig_model_t,CRigCaps>
+				CapsHamlibModels;
 	int			iFrequencykHz;
 	int			iFrequencyOffsetkHz;
 };

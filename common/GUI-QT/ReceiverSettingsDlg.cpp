@@ -1,6 +1,5 @@
 /******************************************************************************\
- * British Broadcasting Corporation
- * Copyright (c) 2007
+ * British Broadcasting Corporation * Copyright (c) 2007
  *
  * Author(s):
  *	Julian Cable, Andrea Russo
@@ -34,61 +33,20 @@
 #include "../GlobalDefinitions.h"
 #include <QFileDialog>
 #include <QMessageBox>
+#include <algorithm>
 #include <iostream>
 
 /* Implementation *************************************************************/
 
+
 #ifdef HAVE_LIBHAMLIB
 
-RigModel::RigModel() : QAbstractItemModel(),BitmLittleGreenSquare(5,5),rigs()
-{
-    BitmLittleGreenSquare.fill(QColor(0, 255, 0));
-}
-
-QModelIndex RigModel::index(int row, int column,
-		  const QModelIndex &parent) const
+int
+RigTypesModel::rowCount ( const QModelIndex & parent ) const
 {
     if(parent.isValid())
     {
-    	const rig* r = (const rig*)parent.internalPointer();
-    	if(r->parent==-1) // its a make - what we expect!
-    	{
-		const make *m = reinterpret_cast<const make*>(r);
-		if(m->model.size()>row)
-		{
-		    return createIndex(row, column, (void*)&m->model[row]);
-		}
-    	} // else its wrong, drop through
-    }
-    else
-    {
-    	if(rigs.size()>row)
-    	{
-	    return createIndex(row, column, (void*)&rigs[row]);
-    	}
-    }
-    return QModelIndex();
-}
-
-QModelIndex RigModel::parent(const QModelIndex &child) const
-{
-    if(child.isValid())
-    {
-    	const rig* r = (const rig*)child.internalPointer();
-    	if(r->parent!=-1) // its a model - what we expect!
-    	{
-	    size_t p = r->parent;
-	    return createIndex(p, 0, (void*)&rigs[p]);
-    	} // else its wrong, drop through
-    }
-    return QModelIndex();
-}
-
-int RigModel::rowCount (const QModelIndex& parent) const
-{
-    if(parent.isValid())
-    {
-    	const rig* r = (const rig*)parent.internalPointer();
+    	const model_index* r = (const model_index*)parent.internalPointer();
     	if(r->parent==-1) // its a make - what we expect!
     	{
 		const make *m = reinterpret_cast<const make*>(r);
@@ -96,7 +54,7 @@ int RigModel::rowCount (const QModelIndex& parent) const
     	}
     	else // its a model - stop descending
     	{
-    		return 0;
+		return 0;
     	}
     }
     else
@@ -105,15 +63,17 @@ int RigModel::rowCount (const QModelIndex& parent) const
     }
 }
 
-int RigModel::columnCount (const QModelIndex& parent) const
+int
+RigTypesModel::columnCount ( const QModelIndex & parent) const
 {
-	return 3;
+    return 1;
 }
 
-QVariant RigModel::data (const QModelIndex& index, int role) const
+QVariant
+RigTypesModel::data ( const QModelIndex & index, int role) const
 {
-    const rig* r = (const rig*)index.internalPointer();
-    if(r->parent==-1)
+    const model_index* i = (const model_index*)index.internalPointer();
+    if(i->parent==-1)
     {
 	switch(role)
 	{
@@ -122,8 +82,8 @@ QVariant RigModel::data (const QModelIndex& index, int role) const
 	case Qt::DisplayRole:
 	    if(index.column()==0)
 	    {
-		if(rigs.size()>index.row())
-		    return rigs[index.row()].caps.mfg_name;
+		if(int(rigs.size())>index.row())
+		    return rigs[index.row()].name.c_str();
 	    }
 	    break;
 	case Qt::UserRole:
@@ -134,34 +94,22 @@ QVariant RigModel::data (const QModelIndex& index, int role) const
     }
     else
     {
+	const rig *r = reinterpret_cast<const rig*>(i);
 	switch(role)
 	{
 	case Qt::DecorationRole:
-	    if(index.column()==0)
-	    {
-		QIcon icon;
-		//icon.addPixmap(BitmCubeGreen);
-		return icon;
-	    }
 	    break;
 	case Qt::DisplayRole:
 	    switch(index.column())
 	    {
 		case 0:
-		    return r->caps.model_name;
+		    return r->name.c_str();
 		break;
-		case 1:
-		    return r->caps.rig_model;
-		    break;
-		case 2:
-		    return rig_strstatus(r->caps.status);
-		    break;
 	    }
 	    break;
 	case Qt::UserRole:
 	    {
-		QString r;
-		return r;
+		return r->model;
 	    }
 	    break;
 	case Qt::TextAlignmentRole:
@@ -178,42 +126,196 @@ QVariant RigModel::data (const QModelIndex& index, int role) const
     return QVariant();
 }
 
+QVariant
+RigTypesModel::headerData ( int section, Qt::Orientation orientation, int role) const
+{
+    if(role != Qt::DisplayRole)
+	    return QVariant();
+    if(orientation != Qt::Horizontal)
+	    return QVariant();
+    switch(section)
+    {
+	case 0: return tr("Rig Make/Model"); break;
+    }
+    return "";
+}
+
+QModelIndex
+RigTypesModel::index(int row, int column, const QModelIndex &parent) const
+{
+    if(parent.isValid())
+    {
+    	const model_index* r = (const model_index*)parent.internalPointer();
+    	if(r->parent==-1) // its a make - what we expect!
+    	{
+		const make *m = reinterpret_cast<const make*>(r);
+		if(int(m->model.size())>row)
+		{
+		    return createIndex(row, column, (void*)&m->model[row]);
+		}
+    	} // else its wrong, drop through
+    }
+    else
+    {
+    	if(int(rigs.size())>row)
+    	{
+	    return createIndex(row, column, (void*)&rigs[row]);
+    	}
+    }
+    return QModelIndex();
+}
+
+QModelIndex
+RigTypesModel::parent(const QModelIndex &child) const
+{
+    if(child.isValid())
+    {
+    	const model_index* r = (const model_index*)child.internalPointer();
+    	if(r->parent!=-1) // its a model - what we expect!
+    	{
+	    size_t p = r->parent;
+	    return createIndex(p, 0, (void*)&rigs[p]);
+    	} // else its wrong, drop through
+    }
+    return QModelIndex();
+}
 
 void
-RigModel::load(ReceiverInterface& Receiver)
+RigTypesModel::load(ReceiverInterface& Receiver)
 {
     CRigMap r;
     Receiver.GetRigList(r);
-    for(CRigMap::const_iterator i=r.begin(); i!=r.end(); i++)
+    for(map<string,map<string,rig_model_t> >::const_iterator
+	i=r.rigs.begin(); i!=r.rigs.end(); i++)
     {
-    	const rig_caps& caps = i->second.hamlib_caps;
-	    rig_model_t model = caps.rig_model;
-	    string make_name = caps.mfg_name;
-	    size_t n = rigs.size();
-	    bool found = false;
-	    for(size_t i=0; i<n; i++)
-	    {
-		if(make_name == rigs[i].caps.mfg_name)
-		{
-			n = i;
-			found = true;
-			break;
-		}
-	    }
-	    if(found==false)
-	    {
-		    // new make
-		    make m;
-		    m.caps = caps;
-		    m.parent = -1;
-		    rigs.push_back(m);
-	    }
+	make m;
+	m.name = i->first;
+	m.parent = -1;
+	size_t n = rigs.size();
+	for(map<string,rig_model_t>::const_iterator
+	    j = i->second.begin(); j!=i->second.end(); j++)
+	{
 	    rig r;
-	    r.caps = caps;
+	    r.name = j->first;
+	    r.model = j->second;
 	    r.parent = n;
-	    rigs[n].model.push_back(r);
+	    m.model.push_back(r);
+	}
+	rigs.push_back(m);
     }
     reset();
+}
+
+RigModel::RigModel() : QAbstractItemModel(),BitmLittleGreenSquare(5,5),rigs()
+{
+    BitmLittleGreenSquare.fill(QColor(0, 255, 0));
+}
+
+QModelIndex RigModel::index(int row, int column,
+		  const QModelIndex &parent) const
+{
+    if(parent.isValid())
+    {
+    }
+    else
+    {
+	return createIndex(row, column, (void*)&rigs[row]);
+    }
+    return QModelIndex();
+}
+
+QModelIndex RigModel::parent(const QModelIndex &child) const
+{
+    if(child.isValid())
+    {
+    	const model_index* r = (const model_index*)child.internalPointer();
+    	if(r->parent!=-1) // its a model - what we expect!
+    	{
+	    size_t p = r->parent;
+	    return createIndex(p, 0, (void*)&rigs[p]);
+    	} // else its wrong, drop through
+    }
+    return QModelIndex();
+}
+
+int RigModel::rowCount (const QModelIndex& parent) const
+{
+    if(parent.isValid())
+    {
+	return 0;
+    }
+    else
+    {
+	return rigs.size();
+    }
+}
+
+int RigModel::columnCount (const QModelIndex& parent) const
+{
+	return 3;
+}
+
+QVariant RigModel::data (const QModelIndex& index, int role) const
+{
+    const model_index* i = (const model_index*)index.internalPointer();
+    if(i->parent==-1)
+    {
+	switch(role)
+	{
+	case Qt::DecorationRole:
+	    break;
+	case Qt::DisplayRole:
+	    switch(index.column())
+	    {
+		case 0:
+		    return rigs[index.row()].caps.hamlib_caps.model_name;
+		break;
+		case 1:
+		    return rigs[index.row()].caps.hamlib_caps.rig_model;
+		    break;
+		case 2:
+		    return rig_strstatus(rigs[index.row()].caps.hamlib_caps.status);
+		    break;
+	    }
+	    break;
+	case Qt::UserRole:
+	    return rigs[index.row()].caps.hamlib_caps.rig_model;
+	    break;
+	case Qt::TextAlignmentRole:
+	    switch(index.column())
+	    {
+		case 1:
+			return QVariant(Qt::AlignRight|Qt::AlignVCenter);
+			break;
+		default:
+			return QVariant(Qt::AlignLeft|Qt::AlignVCenter);
+	    }
+	    break;
+	}
+    }
+    else
+    {
+#if 0
+	const rig *r = reinterpret_cast<const rig*>(i);
+	switch(role)
+	{
+	case Qt::DecorationRole:
+	    if(index.column()==0)
+	    {
+		QIcon icon;
+		//icon.addPixmap(BitmCubeGreen);
+		return icon;
+	    }
+	    break;
+	case Qt::DisplayRole:
+	    break;
+	case Qt::UserRole:
+	    break;
+	case Qt::TextAlignmentRole:
+	}
+#endif
+    }
+    return QVariant();
 }
 
 QVariant RigModel::headerData ( int section, Qt::Orientation orientation, int role ) const
@@ -230,6 +332,17 @@ QVariant RigModel::headerData ( int section, Qt::Orientation orientation, int ro
     }
     return "";
 }
+
+void
+RigModel::add(const CRigCaps& caps)
+{
+    rig r;
+    //memcpy(&r.caps, &caps, sizeof(CRigCaps));
+    r.caps = caps;
+    r.parent = -1;
+    rigs.push_back(r);
+    reset();
+}
 #endif
 
 ReceiverSettingsDlg::ReceiverSettingsDlg(
@@ -245,8 +358,9 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
     bool bEnableRig = false;
 #ifdef HAVE_LIBHAMLIB
     bEnableRig = true;
-    treeViewRig->setModel(&Rigs);
-    Rigs.load(Receiver);
+    treeViewRigTypes->setModel(&RigTypes);
+    RigTypes.load(Receiver);
+    treeViewRigs->setModel(&Rigs);
 #endif
 
     if(Receiver.UpstreamDIInputEnabled())
@@ -300,19 +414,18 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
     connect(CheckBoxLogSigStr, SIGNAL(clicked()), this, SLOT(OnCheckBoxLogSigStr()));
 
 #ifdef HAVE_LIBHAMLIB
+    connect(pushButtonAddRig, SIGNAL(clicked()), this, SLOT(OnButtonAddRig()));
+    connect(pushButtonRemoveRig, SIGNAL(clicked()), this, SLOT(OnButtonRemoveRig()));
     connect(CheckBoxEnableSMeter, SIGNAL(toggled(bool)), this, SLOT(OnCheckEnableSMeterToggled(bool)));
-    connect(treeViewRig, SIGNAL(activated (const QModelIndex&)),
+    connect(treeViewRigTypes, SIGNAL(clicked (const QModelIndex&)),
 	    this, SLOT(OnRigSelected(const QModelIndex&)));
-    connect(comboBoxRigPort, SIGNAL(currentIndexChanged(int)),
-	    this, SLOT(OnComboBoxRigPort(int)));
 
     connect(&TimerRig, SIGNAL(timeout()), this, SLOT(OnTimerRig()));
 
-    connect(pushButtonUseRigForAllModes, SIGNAL(clicked()), this, SLOT(OnButtonRigAllModes()));
     connect(pushButtonApplyRig, SIGNAL(clicked()), this, SLOT(OnButtonApplyRigSettings()));
-    connect(pushButtonTestRig, SIGNAL(clicked()), this, SLOT(OnButtonTestRig()));
-#endif
     TimerRig.stop();
+    //TimerRig.setSingleShot(true);
+#endif
 
     /* Set help text for the controls */
     AddWhatsThisHelp();
@@ -370,17 +483,37 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	// TODO chose one rig for everything or a rig per mode / ? band ?
 	//map<rig_model_t, CRigCaps> rigs;
 	//map<string,Q3ListViewItem*> manufacturers;
-	//rig_model_t current = Receiver.GetRigModel();
+
+	rig_model_t current = 0;
+
 
 	CheckBoxEnableSMeter->setChecked(Receiver.GetEnableSMeter());
 
 	map<string,string> ports;
 	Receiver.GetComPortList(ports);
-	comboBoxRigPort->addItem("None");
+	///comboBoxRigPort->addItem("None");
 	for(map<string,string>::const_iterator
 	    it = ports.begin(); it!=ports.end(); it++)
 	{
-	    comboBoxRigPort->addItem(it->first.c_str(), it->second.c_str());
+	    //comboBoxRigPort->addItem(it->first.c_str(), it->second.c_str());
+	}
+
+	CRigCaps caps;
+	Receiver.GetRigCaps(current, caps);
+	if(caps.hamlib_caps.port_type == RIG_PORT_SERIAL)
+	{
+		//comboBoxRigPort->setEnabled(true);
+		string strPort = Receiver.GetRigComPort();
+		if(strPort!="")
+		{
+		    //comboBoxRigPort->setCurrentIndex(
+			//comboBoxRigPort->findText(strPort.c_str()));
+		}
+	}
+	else
+	{
+		//comboBoxRigPort->setEnabled(false);
+		//comboBoxRigPort->setCurrentIndex(0);
 	}
 #endif
 	loading = false; // loading completed
@@ -681,123 +814,86 @@ void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
 }
 
 void
-ReceiverSettingsDlg::OnButtonRigAllModes()
+ReceiverSettingsDlg::OnRigTypeSelected(const QModelIndex&)
 {
-    checkBoxDRM->setChecked(true);
-    checkBoxAM->setChecked(true);
-    checkBoxFM->setChecked(true);
-    checkBoxUSB->setChecked(true);
-    checkBoxLSB->setChecked(true);
-    checkBoxCW->setChecked(true);
-    checkBoxNBFM->setChecked(true);
 }
 
 void
-ReceiverSettingsDlg::OnButtonTestRig()
+ReceiverSettingsDlg::OnRigSelected(const QModelIndex&)
 {
-#if 0
-	/* is s-meter enabled ? */
-	CheckBoxEnableSMeter->setChecked(Receiver.GetEnableSMeter());
+}
 
-	CRigCaps caps;
-	Receiver.GetRigCaps(0, caps);
-	if(caps.hamlib_caps.port_type == RIG_PORT_SERIAL)
-	{
-		//ListViewPort->setEnabled(true);
-		string strPort = Receiver.GetRigComPort();
-		if(strPort!="")
-		{
-			//last_port = no_port;
-			//Q3ListViewItemIterator it( ListViewPort );
-			//for ( ; it.current(); ++it )
-			//{
-			//	if ( it.current()->text(1).latin1() == strPort.c_str() )
-			//		last_port = it.current();
-			//}
-			//ListViewPort->ensureItemVisible(last_port);
-			//ListViewPort->setSelected(last_port, true);
-		}
-	}
-	else
-	{
-		//ListViewPort->setEnabled(false);
-		//ListViewPort->clearSelection();
-	}
-#endif
+void
+ReceiverSettingsDlg::OnButtonAddRig()
+{
+    CRigCaps caps;
+    rig_model_t model = treeViewRigTypes->currentIndex().data(Qt::UserRole).toInt();
+    Receiver.GetRigCaps(model, caps);
+    Rigs.add(caps);
+}
+
+void
+ReceiverSettingsDlg::OnButtonRemoveRig()
+{
 }
 
 void
 ReceiverSettingsDlg::OnButtonApplyRigSettings()
 {
-}
+    if(loading)
+	    return;
 
-void ReceiverSettingsDlg::OnRigSelected(const QModelIndex& index)
-{
-	if(loading)
-		return;
-
-#if 0 //def HAVE_LIBHAMLIB
-	iWantedrigModel = item->text(1).toInt();
+#ifdef HAVE_LIBHAMLIB
+	iWantedrigModel = treeViewRigs->currentIndex().data(Qt::UserRole).toInt();
 	CRigCaps caps;
 	Receiver.GetRigCaps(iWantedrigModel, caps);
 	if(caps.hamlib_caps.port_type == RIG_PORT_SERIAL)
 	{
-		ListViewPort->setEnabled(true);
-		if(last_port == NULL || last_port == no_port)
-			return;
-		/*
-		string strPort = Receiver.GetRigComPort();
-		if(last_port == NULL || last_port == no_port)
-		{
-			last_port = ListViewPort->firstChild();
-		}
-		if(strPort=="")
-		{
-			Receiver.SetRigComPort(last_port->text(1).latin1());
-		}
-		else
-		{
-			QListViewItemIterator it( ListViewPort );
-			for ( ; it.current(); ++it )
-			{
-				if ( it.current()->text(1).latin1() == strPort.c_str() )
-					last_port = it.current();
-			}
-		}
-		*/
-		Receiver.SetRigComPort(last_port->text(1).latin1());
-		ListViewPort->ensureItemVisible(last_port);
-		ListViewPort->setSelected(last_port, true);
+	    string strPort = "";//comboBoxRigPort->currentText().toStdString();
+	    if(strPort!="")
+	    {
+		    Receiver.SetRigComPort(strPort);
+	    }
 	}
 
-	if(RadioButtonAll->isChecked())
-		Receiver.SetRigModelForAllModes(iWantedrigModel);
-	else
-		Receiver.SetRigModel(iWantedrigModel);
-
+	Receiver.SetRigModel(iWantedrigModel);
+#endif
 	TimerRig.start(500);
+}
+
+#if 0
+void ReceiverSettingsDlg::OnRigSelected(const QModelIndex& index)
+{
+#ifdef HAVE_LIBHAMLIB
+    int iWantedRigModel = index.data(Qt::UserRole).toInt();
+    CRigCaps caps;
+    Receiver.GetRigCaps(iWantedRigModel, caps);
+    comboBoxRigPort->setEnabled(caps.hamlib_caps.port_type == RIG_PORT_SERIAL);
 #endif
 }
+#endif
 
 void ReceiverSettingsDlg::OnTimerRig()
 {
 #ifdef HAVE_LIBHAMLIB
-	if(Receiver.GetRigChangeInProgress())
-		return;
+    if(Receiver.GetRigChangeInProgress())
+	    return;
+    labelRigInfo->setText(Receiver.GetRigInfo().c_str());
 
-	TimerRig.stop();
+    TimerRig.stop();
 #endif
 }
 
+#if 0
 void ReceiverSettingsDlg::OnComboBoxRigPort(int)
 {
-	if(loading)
-		return;
+    if(loading)
+	    return;
 #ifdef HAVE_LIBHAMLIB
-	//last_port = item;
-	Receiver.SetRigComPort(comboBoxRigPort->currentText().toStdString());
+    Receiver.SetRigComPort(comboBoxRigPort->currentText().toStdString());
 #endif
 }
+#endif
 
 void ReceiverSettingsDlg::AddWhatsThisHelp()
 {

@@ -377,68 +377,68 @@ CDRMReceiver::Run()
 	    case ChannelReconfiguration:
 			// initialise channel from NextConfig
 			// - might have been signalled or detected
-            Parameters.Lock();
+	    Parameters.Lock();
 			Parameters.Channel = Parameters.NextConfig.Channel;
 			Parameters.Unlock();
 			initNeeded = true;
-            break;
+	    break;
 	    case ServiceReconfiguration:
-            /* Reinitialise MSC Demultiplexer */
-            Parameters.Lock();
-            Parameters.MSCParameters = Parameters.NextConfig.MSCParameters;
-            Parameters.AudioParam = Parameters.NextConfig.AudioParam;
-            Parameters.DataParam = Parameters.NextConfig.DataParam;
-            Parameters.Unlock();
-            MSCMLCDecoder.SetInitFlag(); // protection levels
-            MSCDemultiplexer.SetInitFlag();
-            /* Reinitialise component decoders */
-            for (size_t i = 0; i < MSCDecBuf.size(); i++)
-            {
-                SplitMSC[i].SetStream(i);
-                SplitMSC[i].SetInitFlag();
-                MSCDecBuf[i].Clear();
-                MSCUseBuf[i].Clear();
-                MSCSendBuf[i].Clear();
-            }
-            InitsForAudParam();
-            InitsForDataParam();
-            break;
-        case Tune: // TODO - is this right ? Is this actually used ?
+	    /* Reinitialise MSC Demultiplexer */
+	    Parameters.Lock();
+	    Parameters.MSCParameters = Parameters.NextConfig.MSCParameters;
+	    Parameters.AudioParam = Parameters.NextConfig.AudioParam;
+	    Parameters.DataParam = Parameters.NextConfig.DataParam;
+	    Parameters.Unlock();
+	    MSCMLCDecoder.SetInitFlag(); // protection levels
+	    MSCDemultiplexer.SetInitFlag();
+	    /* Reinitialise component decoders */
+	    for (size_t i = 0; i < MSCDecBuf.size(); i++)
+	    {
+		SplitMSC[i].SetStream(i);
+		SplitMSC[i].SetInitFlag();
+		MSCDecBuf[i].Clear();
+		MSCUseBuf[i].Clear();
+		MSCSendBuf[i].Clear();
+	    }
+	    InitsForAudParam();
+	    InitsForDataParam();
+	    break;
+	case Tune: // TODO - is this right ? Is this actually used ?
 			initNeeded = true;
-            break;
-        case Reinitialise: // TODO - Test this
-            /* Define with which parameters the receiver should try to decode the
-               signal. If we are correct with our assumptions, the receiver does not
-               need to reinitialize */
-            Parameters.Lock();
-            Parameters.Channel.eRobustness = RM_ROBUSTNESS_MODE_A;
-            Parameters.Channel.eSpectrumOccupancy = SO_3;
+	    break;
+	case Reinitialise: // TODO - Test this
+	    /* Define with which parameters the receiver should try to decode the
+	       signal. If we are correct with our assumptions, the receiver does not
+	       need to reinitialize */
+	    Parameters.Lock();
+	    Parameters.Channel.eRobustness = RM_ROBUSTNESS_MODE_A;
+	    Parameters.Channel.eSpectrumOccupancy = SO_3;
 
-            /* Set initial MLC parameters */
-            Parameters.Channel.eInterleaverDepth = SI_LONG;
-            Parameters.Channel.eMSCmode = CS_3_SM;
-            Parameters.Channel.eSDCmode = CS_2_SM;
+	    /* Set initial MLC parameters */
+	    Parameters.Channel.eInterleaverDepth = SI_LONG;
+	    Parameters.Channel.eMSCmode = CS_3_SM;
+	    Parameters.Channel.eSDCmode = CS_2_SM;
 
-            /* Number of audio and data services */
-            Parameters.FACParameters.iNumAudioServices = 1;
-            Parameters.FACParameters.iNumDataServices = 0;
+	    /* Number of audio and data services */
+	    Parameters.FACParameters.iNumAudioServices = 1;
+	    Parameters.FACParameters.iNumDataServices = 0;
 
-            /* Protection levels */
-            Parameters.MSCParameters.ProtectionLevel.iPartA = 0;
-            Parameters.MSCParameters.ProtectionLevel.iPartB = 1;
-            Parameters.MSCParameters.ProtectionLevel.iHierarch = 0;
-            Parameters.Unlock();
+	    /* Protection levels */
+	    Parameters.MSCParameters.ProtectionLevel.iPartA = 0;
+	    Parameters.MSCParameters.ProtectionLevel.iPartB = 1;
+	    Parameters.MSCParameters.ProtectionLevel.iHierarch = 0;
+	    Parameters.Unlock();
 
 			initNeeded = true;
-            break;
-        case SelectAudioComponent:
-            InitsForAudParam();
-            break;
-        case SelectDataComponent:
-            InitsForDataParam();
-            break;
-        case None:
-            break;
+	    break;
+	case SelectAudioComponent:
+	    InitsForAudParam();
+	    break;
+	case SelectDataComponent:
+	    InitsForDataParam();
+	    break;
+	case None:
+	    break;
 	}
 
 	/* check for Rig change */
@@ -637,8 +637,8 @@ CDRMReceiver::Run()
 				bEnoughData = true;
 			}
 			break;
-        case USB: case LSB: case  CW: case  NBFM: case  WBFM:
-            break; // RDS ?
+	case USB: case LSB: case  CW: case  NBFM: case  WBFM:
+	    break; // RDS ?
 		case NONE:
 			break;
 		}
@@ -861,9 +861,9 @@ CDRMReceiver::DetectAcquiFAC()
 		   successive FAC blocks "ok" if no good signal is received */
 		if (iGoodSignCnt >= 2)
 		{
-            Parameters.Lock();
-            Parameters.eAcquiState = AS_WITH_SIGNAL;
-            Parameters.Unlock();
+	    Parameters.Lock();
+	    Parameters.eAcquiState = AS_WITH_SIGNAL;
+	    Parameters.Unlock();
 
 			/* Take care of delayed tracking mode switch */
 			if (iDelayedTrackModeCnt > 0)
@@ -969,8 +969,8 @@ CDRMReceiver::SetInStartMode()
 	Parameters.Lock();
 
 	Parameters.CellMappingTable.MakeTable(
-        Parameters.Channel.eRobustness,
-        Parameters.Channel.eSpectrumOccupancy
+	Parameters.Channel.eRobustness,
+	Parameters.Channel.eSpectrumOccupancy
     );
     Parameters.FACParameters.iFrameId = 0; // arbitrary ?
 
@@ -1091,8 +1091,8 @@ CDRMReceiver::InitsForAllModules(EModulationType eModulation)
 
 /*  TODO - why is this here and when would one unsubscribe ?
 	if (Parameters.FrontEndParameters.eSMeterCorrectionType !=
-                CFrontEndParameters::S_METER_CORRECTION_TYPE_CAL_FACTOR_ONLY)
-        Parameters.Measurements.subscribe(CMeasurements::PSD);
+		CFrontEndParameters::S_METER_CORRECTION_TYPE_CAL_FACTOR_ONLY)
+	Parameters.Measurements.subscribe(CMeasurements::PSD);
 */
 	/* Set init flags */
 	SplitFAC.SetInitFlag();
@@ -1289,7 +1289,7 @@ CDRMReceiver::SetReadPCMFromFile(const string strNFN)
 void CDRMReceiver::SetHamlib(CHamlib* p)
 {
     if(pHamlib)
-        delete pHamlib;
+	delete pHamlib;
     pHamlib = p;
 }
 
@@ -1299,7 +1299,7 @@ void CDRMReceiver::SetRigModel(int iID)
 	//rigMode.wanted = e;
 }
 
-void CDRMReceiver::GetRigList(map<int,CRigCaps>& rigs) const
+void CDRMReceiver::GetRigList(CRigMap& rigs) const
 {
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
@@ -1326,9 +1326,10 @@ void CDRMReceiver::GetComPortList(map<string,string>& ports) const
 string CDRMReceiver::GetRigInfo() const
 {
 #ifdef HAVE_LIBHAMLIB
-	if(pHamlib)
-		return pHamlib->GetInfo();
+    if(pHamlib)
+	return pHamlib->GetInfo();
 #endif
+    return "";
 }
 
 string CDRMReceiver::GetRigComPort() const
@@ -1377,7 +1378,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 		Parameters.GenerateRandomSerialNumber();
 	}
 	else
-        Parameters.sSerialNumber = sSerialNumber;
+	Parameters.sSerialNumber = sSerialNumber;
     /* Receiver ID */
 	s.Put("Receiver", "serialnumber", Parameters.sSerialNumber);
 
@@ -1412,8 +1413,8 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	if(vs.size()>0)
 	{
 	    if(dev>=int(vs.size()))
-            dev = vs.size()-1;
-        soundIn.real->SetDev(dev);
+	    dev = vs.size()-1;
+	soundIn.real->SetDev(dev);
 	}
 
 	vs.clear();
@@ -1424,8 +1425,8 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	if(vs.size()>0)
 	{
 	    if(dev>=int(vs.size()))
-            dev = vs.size()-1;
-        pSoundOutInterface->SetDev(dev);
+	    dev = vs.size()-1;
+	pSoundOutInterface->SetDev(dev);
 	}
 
 	string str;
@@ -1522,14 +1523,14 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
     switch(Parameters.eModulation)
     {
-        case AM:
-        case LSB:
-        case USB:
-        case CW:
-        case NBFM:
-        case WBFM:
-            AMDemodulation.SetDemodType(Parameters.eModulation);
-            break;
+	case AM:
+	case LSB:
+	case USB:
+	case CW:
+	case NBFM:
+	case WBFM:
+	    AMDemodulation.SetDemodType(Parameters.eModulation);
+	    break;
     }
 	/* upstream RSCI */
     str = s.Get("command", "rsiin");
@@ -1537,10 +1538,10 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	{
 		bool bOK = upstreamRSCI.SetOrigin(str); // its a port
 		if(!bOK)
-            throw CGenErr(string("can't open RSCI input ")+str);
+	    throw CGenErr(string("can't open RSCI input ")+str);
 		// disable sound input
-        pcmInput.current = pcmInput.wanted = RSCI;
-        SetHamlib(NULL);
+	pcmInput.current = pcmInput.wanted = RSCI;
+	SetHamlib(NULL);
 		Parameters.Measurements.bETSIPSD = true;
 	}
 
@@ -1559,7 +1560,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 			ss.str("");
 			ss << "rsioutprofile" << i;
 			string profile = s.Get("command", ss.str(), string("A"));
-            Parameters.Measurements.bETSIPSD = true;
+	    Parameters.Measurements.bETSIPSD = true;
 
 			// Check whether the profile has a subsampling ratio (e.g. --rsioutprofile A20)
 			int iSubsamplingFactor = 1;
@@ -1635,7 +1636,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 #ifdef HAVE_LIBHAMLIB
     if(pHamlib)
-        pHamlib->LoadSettings(s);
+	pHamlib->LoadSettings(s);
 #endif
 
 	/* Front-end - combine into Hamlib? */
@@ -1669,19 +1670,19 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	if (strMode == "DRM")
 		Parameters.eModulation = DRM;
     else if (strMode == "AM")
-        Parameters.eModulation = AM;
+	Parameters.eModulation = AM;
     else if (strMode == "USB")
-        Parameters.eModulation = USB;
+	Parameters.eModulation = USB;
     else if (strMode == "LSB")
-        Parameters.eModulation = LSB;
+	Parameters.eModulation = LSB;
     else if (strMode == "CW")
-        Parameters.eModulation = CW;
+	Parameters.eModulation = CW;
     else if (strMode == "NBFM")
-        Parameters.eModulation = NBFM;
+	Parameters.eModulation = NBFM;
     else if (strMode == "WBFM")
-        Parameters.eModulation = WBFM;
+	Parameters.eModulation = WBFM;
     else
-        Parameters.eModulation = NONE;
+	Parameters.eModulation = NONE;
     Parameters.Unlock();
 }
 
@@ -1694,25 +1695,25 @@ CDRMReceiver::SaveSettings(CSettings& s)
 	switch(Parameters.eModulation)
 	{
 	case DRM:
-        modn = "DRM";
+	modn = "DRM";
 		break;
 	case AM:
-        modn = "AM";
+	modn = "AM";
 		break;
 	case  USB:
-        modn = "USB";
+	modn = "USB";
 		break;
 	case  LSB:
-        modn = "LSB";
+	modn = "LSB";
 		break;
 	case  CW:
-        modn = "CW";
+	modn = "CW";
 		break;
 	case  NBFM:
-        modn = "NBFM";
+	modn = "NBFM";
 		break;
 	case  WBFM:
-        modn = "WBFM";
+	modn = "WBFM";
 		break;
 	case NONE:
 		;

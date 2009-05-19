@@ -41,6 +41,33 @@
 #ifdef HAVE_LIBHAMLIB
 # include "../util/Hamlib.h"
 
+class RigTypesModel : public QAbstractItemModel
+{
+public:
+
+    RigTypesModel():QAbstractItemModel(),rigs() {}
+    virtual ~RigTypesModel() {}
+
+    int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
+    int columnCount ( const QModelIndex & parent = QModelIndex() ) const;
+    QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
+    QVariant headerData ( int section, Qt::Orientation orientation, int role = Qt::DisplayRole ) const;
+    QModelIndex index(int row, int column,
+		  const QModelIndex &parent = QModelIndex()) const;
+    QModelIndex parent(const QModelIndex &child) const;
+    void load(ReceiverInterface&);
+
+protected:
+
+    struct model_index { int parent; };
+    struct rig : public model_index { string name; rig_model_t model; };
+    struct make : public model_index {
+	string name;
+	vector<rig> model;
+    };
+    vector<make> rigs;
+};
+
 class RigModel : public QAbstractItemModel
 {
 public:
@@ -55,14 +82,17 @@ public:
     QModelIndex index(int row, int column,
 		  const QModelIndex &parent = QModelIndex()) const;
     QModelIndex parent(const QModelIndex &child) const;
-    void load(ReceiverInterface&);
+    void add(const CRigCaps&);
 
 protected:
 
     QPixmap	BitmLittleGreenSquare;
-    struct rig { rig_caps caps; int parent; };
-    struct make : public rig { vector<rig> model; };
-    vector<make> rigs;
+    struct model_index { int parent; };
+    struct rig : public model_index {
+	CRigCaps caps;
+    };
+    vector<rig> rigs;
+
 };
 #endif
 
@@ -92,6 +122,7 @@ protected:
 	QTimer		TimerRig;
 	int		iWantedrigModel;
 #ifdef HAVE_LIBHAMLIB
+	RigTypesModel	RigTypes;
 	RigModel	Rigs;
 #endif
 
@@ -130,10 +161,10 @@ public slots:
 	void 		OnCheckRecFilter();
 	void 		OnCheckModiMetric();
 	void 		OnTimerRig();
+	void 		OnRigTypeSelected(const QModelIndex&);
 	void 		OnRigSelected(const QModelIndex&);
-	void 		OnComboBoxRigPort(int);
-	void		OnButtonRigAllModes();
 	void 		OnCheckEnableSMeterToggled(bool);
-	void		OnButtonTestRig();
+	void 		OnButtonAddRig();
+	void 		OnButtonRemoveRig();
 	void		OnButtonApplyRigSettings();
 };

@@ -298,9 +298,8 @@ public:
 
 	void					SetRigModel(int);
 	string					GetRigInfo() const;
-	void					GetRigList(map<int, CRigCaps>&);
+	void					GetRigList(CRigMap&) const;
 	void					GetRigCaps(int, CRigCaps&) const;
-	void					GetRigList(map<int, CRigCaps>&) const;
 	void					GetComPortList(map<string,string>& ports) const;
 	string					GetRigComPort() const;
 	void					SetRigComPort(const string&);
