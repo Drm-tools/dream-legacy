@@ -108,7 +108,7 @@ CHamlib::GetRigCaps(rig_model_t model, CRigCaps& caps) const
 	{
 	    CRigCaps c;
 	    c.hamlib_caps = *rig_get_caps(model);
-	    CapsHamlibModels[model] = c;
+	    //CapsHamlibModels[model] = c;
 	    caps = c;
 	}
 }
