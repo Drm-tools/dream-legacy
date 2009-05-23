@@ -64,7 +64,7 @@ DRMMainWindow::DRMMainWindow(ReceiverInterface& NDRMR, CSettings& NSettings,
 	liveScheduleDlg = new LiveScheduleDlg(Receiver, Settings, this, "", false, Qt::WindowMinMaxButtonsHint);
 
 	/* Programme Guide Window */
-	epgDlg = new EPGDlg(Receiver, Settings, this, "", false, Qt::WindowMinMaxButtonsHint);
+        epgDlg = new EPGDlg(Receiver, Settings, this, Qt::WindowMinMaxButtonsHint);
 
     /* receiver settings window */
 	receiverSettingsDlg = new ReceiverSettingsDlg(Receiver, Settings, this, Qt::Dialog);
@@ -668,7 +668,7 @@ void DRMMainWindow::OnMenuSetDisplayColor()
 	}
 }
 
-void DRMMainWindow::showEvent(QShowEvent* pEvent)
+void DRMMainWindow::showEvent(QShowEvent*)
 {
 	/* default close action is to exit */
     quitWanted = true;
@@ -700,7 +700,7 @@ void DRMMainWindow::showEvent(QShowEvent* pEvent)
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
-void DRMMainWindow::hideEvent(QHideEvent* pEvent)
+void DRMMainWindow::hideEvent(QHideEvent*)
 {
     /* remember the state of the windows */
     Settings.Put("DRMGUI", "AFSvisible", liveScheduleDlg->isVisible());

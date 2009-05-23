@@ -77,8 +77,7 @@ class EPGDlg : public QDialog, public Ui_EPGDlg
 
 public:
 
-	EPGDlg(ReceiverInterface&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = false, Qt::WFlags f = 0);
+        EPGDlg(ReceiverInterface&, CSettings&, QWidget* parent = 0, Qt::WFlags f = 0);
 	virtual ~EPGDlg();
 	/* dummy assignment operator to help MSVC8 */
 	EPGDlg& operator=(const EPGDlg&)

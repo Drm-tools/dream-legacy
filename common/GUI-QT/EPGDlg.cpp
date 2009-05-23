@@ -37,12 +37,12 @@ BitmCubeGreen(8, 8)
 	BitmCubeGreen.fill(QColor(0, 255, 0));
 }
 
-int EPGModel::rowCount(const QModelIndex&parent) const
+int EPGModel::rowCount(const QModelIndex&) const
 {
 	return progs.size();
 }
 
-int EPGModel::columnCount(const QModelIndex&parent) const
+int EPGModel::columnCount(const QModelIndex&) const
 {
 	return 5;
 }
@@ -184,8 +184,7 @@ EPGModel::select (const uint32_t chan, const CDateAndTime & d)
 	reset();
 }
 
-EPGDlg::EPGDlg(ReceiverInterface& NDRMR, CSettings& NSettings, QWidget* parent,
-               const char* name, bool modal, Qt::WFlags f)
+EPGDlg::EPGDlg(ReceiverInterface& NDRMR, CSettings& NSettings, QWidget* parent, Qt::WFlags f)
 :QDialog(parent, f),Ui_EPGDlg(),
 date(QDate::currentDate()),
 epg(*NDRMR.GetParameters()),DRMReceiver(NDRMR),
