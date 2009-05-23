@@ -1,6 +1,6 @@
 TEMPLATE	= app
 TARGET		= dream
-QT			+= network xml
+QT		+= network xml
 CONFIG		+= qt warn_on release thread hamlib portaudio
 DEFINES		+= HAVE_QT USE_QT_GUI
 INCLUDEPATH	+= libs
@@ -55,8 +55,7 @@ win32 {
 	DEFINES		-= UNICODE
 	DEFINES		+= HAVE_SETUPAPI
 	SOURCES		+= windows/Source/Pacer.cpp
-	LIBS        	+= -L../qwt-qt4/lib
-	INCLUDEPATH 	+= ../qwt-qt4/include
+	INCLUDEPATH 	+= libs/qwt
 	win32-g++ {
 		DEFINES	+= HAVE_STDINT_H HAVE_STDLIB_H HAVE_LIBPCAP
 		LIBS 	+= -lsndfile -lz -lfaac -lfaad -lrfftw -lfftw -lqwt5

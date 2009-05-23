@@ -159,7 +159,7 @@ public:
 	void start();
 	void stop();
 	void load(const CSettings& s, const string& section);
-    bool save(CSettings& s, const string& section);
+	bool save(CSettings& s, const string& section);
 
 	void SetPlotStyle(const int iNewStyleID);
 

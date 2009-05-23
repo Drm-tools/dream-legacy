@@ -33,6 +33,7 @@
 #include "../GlobalDefinitions.h"
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QButtonGroup>
 #include <algorithm>
 #include <iostream>
 
@@ -351,7 +352,8 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
 	QWidget* parent, Qt::WFlags f) :
 	QDialog(parent, f), Ui_ReceiverSettingsDlg(),
 	Receiver(NRx), Settings(NSettings), loading(true),
-	TimerRig(),iWantedrigModel(0)
+	TimerRig(),iWantedrigModel(0),
+	bgTimeInterp(NULL), bgFreqInterp(NULL), bgTiSync(NULL), bgChanSel(NULL)
 {
     setupUi(this);
 
@@ -388,20 +390,32 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
 	    this, SLOT(OnSliderIterChange(int)));
 
     /* Radio buttons */
-    connect(RadioButtonTiLinear, SIGNAL(clicked()),
-	    this, SLOT(OnRadioTimeLinear()));
-    connect(RadioButtonTiWiener, SIGNAL(clicked()),
-	    this, SLOT(OnRadioTimeWiener()));
-    connect(RadioButtonFreqLinear, SIGNAL(clicked()),
-	    this, SLOT(OnRadioFrequencyLinear()));
-    connect(RadioButtonFreqDFT, SIGNAL(clicked()),
-	    this, SLOT(OnRadioFrequencyDft()));
-    connect(RadioButtonFreqWiener, SIGNAL(clicked()),
-	    this, SLOT(OnRadioFrequencyWiener()));
-    connect(RadioButtonTiSyncEnergy, SIGNAL(clicked()),
-	    this, SLOT(OnRadioTiSyncEnergy()));
-    connect(RadioButtonTiSyncFirstPeak, SIGNAL(clicked()),
-	    this, SLOT(OnRadioTiSyncFirstPeak()));
+    bgTimeInterp = new QButtonGroup(this);
+    bgTimeInterp->addButton(RadioButtonTiWiener, 0);
+    bgTimeInterp->addButton(RadioButtonTiLinear, 0);
+    bgFreqInterp = new QButtonGroup(this);
+    bgFreqInterp->addButton(RadioButtonFreqWiener, 0);
+    bgFreqInterp->addButton(RadioButtonFreqLinear, 0);
+    bgFreqInterp->addButton(RadioButtonFreqDFT, 0);
+    bgTiSync = new QButtonGroup(this);
+    bgTiSync->addButton(RadioButtonTiSyncEnergy, 0);
+    bgTiSync->addButton(RadioButtonTiSyncFirstPeak, 0);
+    bgChanSel = new QButtonGroup(this);
+    bgChanSel->addButton(radioButtonLeft, CS_LEFT_CHAN);
+    bgChanSel->addButton(radioButtonRight, CS_RIGHT_CHAN);
+    bgChanSel->addButton(radioButtonMix, CS_MIX_CHAN);
+    bgChanSel->addButton(radioButtonIQPos, CS_IQ_POS);
+    bgChanSel->addButton(radioButtonIQNeg, CS_IQ_NEG);
+    bgChanSel->addButton(radioButtonIQPosZero, CS_IQ_POS_ZERO);
+    bgChanSel->addButton(radioButtonIQNegZero, CS_IQ_NEG_ZERO);
+    connect(bgTimeInterp, SIGNAL(buttonClicked(int)),
+	    this, SLOT(OnSelTimeInterp(int)));
+    connect(bgFreqInterp, SIGNAL(buttonClicked(int)),
+	    this, SLOT(OnSelFrequencyInterp(int)));
+    connect(bgTiSync, SIGNAL(buttonClicked(int)),
+	    this, SLOT(OnSelTiSync(int)));
+    connect(bgChanSel, SIGNAL(buttonClicked(int)),
+	    this, SLOT(OnSelInputChan(int)));
 
     /* Check boxes */
     connect(CheckBoxUseGPS, SIGNAL(clicked()), SLOT(OnCheckBoxUseGPS()) );
@@ -416,7 +430,7 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
 #ifdef HAVE_LIBHAMLIB
     connect(pushButtonAddRig, SIGNAL(clicked()), this, SLOT(OnButtonAddRig()));
     connect(pushButtonRemoveRig, SIGNAL(clicked()), this, SLOT(OnButtonRemoveRig()));
-    connect(CheckBoxEnableSMeter, SIGNAL(toggled(bool)), this, SLOT(OnCheckEnableSMeterToggled(bool)));
+    //connect(CheckBoxEnableSMeter, SIGNAL(toggled(bool)), this, SLOT(OnCheckEnableSMeterToggled(bool)));
     connect(treeViewRigTypes, SIGNAL(clicked (const QModelIndex&)),
 	    this, SLOT(OnRigSelected(const QModelIndex&)));
 
@@ -445,34 +459,18 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 {
 	loading = true; // prevent executive actions during reading state
 
-	/* Sync ----------------------------------------------------------------- */
-	if (Receiver.GetTimeInt() == TWIENER)
-		RadioButtonTiWiener->setChecked(true);
-	else
-		RadioButtonTiLinear->setChecked(true);
+	/* DRM ----------------------------------------------------------------- */
+	bgTimeInterp->button(int(Receiver.GetTimeInt()))->setChecked(true);
+	bgFreqInterp->button(int(Receiver.GetFreqInt()))->setChecked(true);
+	bgTiSync->button(int(Receiver.GetTiSyncTracType()))->setChecked(true);
 
-	switch(Receiver.GetFreqInt())
-	{
-	case FLINEAR:
-		RadioButtonFreqLinear->setChecked(true);
-		break;
-	case FDFTFILTER:
-		RadioButtonFreqDFT->setChecked(true);
-		break;
-	case FWIENER:
-		RadioButtonFreqWiener->setChecked(true);
-	}
-
-	if (Receiver.GetTiSyncTracType() == TSFIRSTPEAK)
-		RadioButtonTiSyncFirstPeak->setChecked(true);
-	else
-		RadioButtonTiSyncEnergy->setChecked(true);
-
-	/* Misc ----------------------------------------------------------------- */
 	CheckBoxRecFilter->setChecked(Receiver.GetRecFilter());
 	CheckBoxModiMetric->setChecked(Receiver.GetIntCons());
-	CheckBoxFlipSpec->setChecked(Receiver.GetFlippedSpectrum());
 	SliderNoOfIterations->setValue(Receiver.GetInitNumIterations());
+
+	/* Input ----------------------------------------------------------------- */
+	bgChanSel->button(int(Receiver.GetChannelSelection()))->setChecked(true);
+	CheckBoxFlipSpec->setChecked(Receiver.GetFlippedSpectrum());
 
 	/* GPS */
 	ExtractReceiverCoordinates();
@@ -699,69 +697,40 @@ void ReceiverSettingsDlg::ExtractReceiverCoordinates()
 	LineEditLngMinutes->setText(QString::number(60.0*(longitude-int(longitude))));
 }
 
-// = Sync Tab ==============================================================
+// = DRM Tab ==============================================================
 
-void ReceiverSettingsDlg::OnRadioTimeLinear()
+void ReceiverSettingsDlg::OnSelTimeInterp(int iId)
 {
-	if (Receiver.GetTimeInt() != TLINEAR)
-		Receiver.SetTimeInt(TLINEAR);
+    Receiver.SetTimeInt(ETypeIntTime(iId));
 }
 
-void ReceiverSettingsDlg::OnRadioTimeWiener()
+void ReceiverSettingsDlg::OnSelFrequencyIterp(int iId)
 {
-	if (Receiver.GetTimeInt() != TWIENER)
-		Receiver.SetTimeInt(TWIENER);
+    Receiver.SetFreqInt(ETypeIntFreq(iId));
 }
 
-void ReceiverSettingsDlg::OnRadioFrequencyLinear()
-{
-	if (Receiver.GetFreqInt() != FLINEAR)
-		Receiver.SetFreqInt(FLINEAR);
-}
 
-void ReceiverSettingsDlg::OnRadioFrequencyDft()
+void ReceiverSettingsDlg::OnSelTiSync(int iId)
 {
-	if (Receiver.GetFreqInt() != FDFTFILTER)
-		Receiver.SetFreqInt(FDFTFILTER);
-}
 
-void ReceiverSettingsDlg::OnRadioFrequencyWiener()
-{
-	if (Receiver.GetFreqInt() != FWIENER)
-		Receiver.SetFreqInt(FWIENER);
-}
+    Receiver.SetTiSyncTracType(ETypeTiSyncTrac(iId));
 
-void ReceiverSettingsDlg::OnRadioTiSyncFirstPeak()
-{
-	if (Receiver.GetTiSyncTracType() !=
-		TSFIRSTPEAK)
-	{
-		Receiver.SetTiSyncTracType(TSFIRSTPEAK);
-	}
-}
-
-void ReceiverSettingsDlg::OnRadioTiSyncEnergy()
-{
-	if (Receiver.GetTiSyncTracType() != TSENERGY)
-	{
-		Receiver.SetTiSyncTracType(TSENERGY);
-	}
 }
 
 void ReceiverSettingsDlg::OnSliderIterChange(int value)
 {
-	/* Set new value in working thread module */
 	Receiver.SetNumIterations(value);
+}
 
-	/* Show the new value in the label control */
-	TextNumOfIterations->setText(tr("MLC: Number of Iterations: ") +
-		QString().setNum(value));
+// input TAB
+void ReceiverSettingsDlg::OnSelInputChan(int iId)
+{
+    Receiver.SetChannelSelection(EInChanSel(iId));
 }
 
 void ReceiverSettingsDlg::OnCheckFlipSpectrum()
 {
-	/* Set parameter in working thread module */
-	Receiver.SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
+    Receiver.SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
 }
 
 void ReceiverSettingsDlg::OnCheckRecFilter()
@@ -924,7 +893,6 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		"<br>The recommended number of iterations given in the DRM "
 		"standard is one iteration (number of iterations = 1).");
 
-	TextNumOfIterations->setWhatsThis( strNumOfIterations);
 	SliderNoOfIterations->setWhatsThis( strNumOfIterations);
 
 	/* Flip Input Spectrum */

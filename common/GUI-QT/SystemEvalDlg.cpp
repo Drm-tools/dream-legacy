@@ -33,6 +33,7 @@
 #include <QDateTime>
 #include <QWhatsThis>
 #include <QFileDialog>
+#include <QMessageBox>
 #include <iostream>
 
 SystemEvalDlg::SystemEvalDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
@@ -93,7 +94,6 @@ void SystemEvalDlg::OnTimer()
 	UpdateFAC(Parameters);
 	UpdateGPS(Parameters);
 	Parameters.Unlock();
-	UpdatePlots();
 	UpdateFrequency();
 }
 
@@ -502,11 +502,6 @@ void SystemEvalDlg::InitialisePlots()
     ChartSelector->hideColumn(1);
 }
 
-// TODO - do we need this ?
-void SystemEvalDlg::UpdatePlots()
-{
-}
-
 void SystemEvalDlg::showPlots()
 {
 	/* Restore chart windows */
@@ -519,7 +514,12 @@ void SystemEvalDlg::showPlots()
 	}
 	/* Restore main plot */
 	plot->load(Settings, "System Evaluation Dialog");
-	plot->start();
+	try {
+	    plot->start();
+	} catch(const char* e)
+	{
+	    QMessageBox::information(this, "Problem", e);
+	}
 	// TODO - make this work
 	int pt = int(plot->GetChartType());
 	QString plottype = QString("%1").arg(pt);
@@ -562,16 +562,22 @@ void SystemEvalDlg::hidePlots()
 
 void SystemEvalDlg::OnItemClicked (QTreeWidgetItem * item, int)
 {
-	/* Get char type from selected item and setup chart */
-	plot->SetupChart(CDRMPlot::EPlotType(item->text(1).toInt()));
+    /* Get char type from selected item and setup chart */
+    plot->SetupChart(CDRMPlot::EPlotType(item->text(1).toInt()));
+    try {
 	plot->start();
+    } catch(const char* e)
+    {
+	QMessageBox::information(this, "Problem", e);
+    }
 }
 
 void SystemEvalDlg::OnCustomContextMenuRequested ( const QPoint&)
 {
 	/* Get chart type from current selected list view item */
 	// right clicking also selects so we don't need to use the point parameter ?
-	QTreeWidgetItem* item = ChartSelector->currentItem();	if (item != NULL)
+	QTreeWidgetItem* item = ChartSelector->currentItem();
+	if (item != NULL)
 	{
 		/* Open new chart window */
 	newPlot(item->text(1).toInt(), "");
@@ -580,7 +586,9 @@ void SystemEvalDlg::OnCustomContextMenuRequested ( const QPoint&)
 
 void SystemEvalDlg::newPlot(int pt, const string& setting)
 {
-    QwtPlot* p = new QwtPlot(NULL);
+    QwtPlot* p = NULL; p = new QwtPlot(NULL); // quiet warning
+    if(p==NULL)
+	return; // should never happen, but language allows it
     p->setAttribute(Qt::WA_QuitOnClose, false);
     CDRMPlot* pNewPlot = new CDRMPlot(p, Receiver.GetParameters());
     plots.push_back(pNewPlot);
@@ -593,7 +601,12 @@ void SystemEvalDlg::newPlot(int pt, const string& setting)
     {
 		pNewPlot->load(Settings, setting);
     }
-    pNewPlot->start();
+    try {
+	pNewPlot->start();
+    } catch(const char* e)
+    {
+    	QMessageBox::information(this, "Problem", e);
+    }
     p->show();
 }
 

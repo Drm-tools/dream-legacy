@@ -211,6 +211,8 @@ public:
 	EType				    GetAnalogAGCType();
 	void					SetAnalogNoiseReductionType(const ENoiRedType eNewType);
 	ENoiRedType             GetAnalogNoiseReductionType();
+	EInChanSel		GetChannelSelection() { return ReceiveData.GetInChanSel(); }
+	void			SetChannelSelection(EInChanSel e) { return ReceiveData.SetInChanSel(e); }
 
 	void					SetUseAnalogHWDemod(bool);
 	bool					GetUseAnalogHWDemod();

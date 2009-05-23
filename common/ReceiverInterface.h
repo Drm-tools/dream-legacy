@@ -51,29 +51,30 @@ public:
 	virtual void                    StartWriteWaveFile(const string&)=0;
 	virtual void                    StopWriteWaveFile()=0;
 
-	virtual void					SetAnalogDemodAcq(_REAL)=0;
-	virtual EType				    GetAnalogAGCType()=0;
+	virtual void			SetAnalogDemodAcq(_REAL)=0;
+	virtual EType			GetAnalogAGCType()=0;
 	virtual ENoiRedType             GetAnalogNoiseReductionType()=0;
-	virtual void					SetUseAnalogHWDemod(bool)=0;
-	virtual bool					GetUseAnalogHWDemod()=0;
-	virtual int						GetAnalogFilterBWHz()=0;
-	virtual bool					AnalogAutoFreqAcqEnabled()=0;
-	virtual bool					AnalogPLLEnabled()=0;
-	virtual bool					GetAnalogPLLPhase(_REAL&)=0;
-	virtual void					SetAnalogAGCType(const EType)=0;
-	virtual void					SetAnalogNoiseReductionType(const ENoiRedType)=0;
-	virtual void					SetAnalogFilterBWHz(int)=0;
-	virtual void					EnableAnalogAutoFreqAcq(const bool)=0;
-	virtual void					EnableAnalogPLL(const bool)=0;
+	virtual EInChanSel		GetChannelSelection()=0;
+	virtual void			SetChannelSelection(EInChanSel)=0;
+	virtual void			SetUseAnalogHWDemod(bool)=0;
+	virtual bool			GetUseAnalogHWDemod()=0;
+	virtual int			GetAnalogFilterBWHz()=0;
+	virtual bool			AnalogAutoFreqAcqEnabled()=0;
+	virtual bool			AnalogPLLEnabled()=0;
+	virtual bool			GetAnalogPLLPhase(_REAL&)=0;
+	virtual void			SetAnalogAGCType(const EType)=0;
+	virtual void			SetAnalogNoiseReductionType(const ENoiRedType)=0;
+	virtual void			SetAnalogFilterBWHz(int)=0;
+	virtual void			EnableAnalogAutoFreqAcq(const bool)=0;
+	virtual void			EnableAnalogPLL(const bool)=0;
 
-	virtual EAMSSBlockLockStat		GetAMSSLockStatus() =0;
-	virtual bool					GetAMSSBlock1Status() =0;
-	virtual char*					GetAMSSDataEntityGroupStatus() =0;
-	virtual int						GetCurrentAMSSBlock() =0;
-	virtual char*					GetCurrentAMSSBlockBits()=0;
-	virtual int						GetPercentageAMSSDataEntityGroupComplete()=0;
-
-	virtual bool					GetAMSSPLLPhase(_REAL&) =0;
+	virtual EAMSSBlockLockStat	GetAMSSLockStatus() =0;
+	virtual bool			GetAMSSBlock1Status() =0;
+	virtual char*			GetAMSSDataEntityGroupStatus() =0;
+	virtual int			GetCurrentAMSSBlock() =0;
+	virtual char*			GetCurrentAMSSBlockBits()=0;
+	virtual int			GetPercentageAMSSDataEntityGroupComplete()=0;
+	virtual bool			GetAMSSPLLPhase(_REAL&) =0;
 	virtual bool                    End()=0;
 };
 

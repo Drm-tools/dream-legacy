@@ -72,8 +72,6 @@
 
 enum EFileOutFormat { OFF_RAW, OFF_TXT, OFF_WAV };
 
-enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
-		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO};
 
 
 /* Classes ********************************************************************/
@@ -165,9 +163,9 @@ protected:
 	void PutInputSpec(CParameter&);
 	void PutPSD(CParameter&);
 	void CalculatePSD(vector<_REAL>& vecrData,
-           int iLenPSDAvEachBlock = LEN_PSD_AV_EACH_BLOCK,
-           int iNumAvBlocksPSD = NUM_AV_BLOCKS_PSD,
-           int iPSDOverlap = 0);
+	   int iLenPSDAvEachBlock = LEN_PSD_AV_EACH_BLOCK,
+	   int iNumAvBlocksPSD = NUM_AV_BLOCKS_PSD,
+	   int iPSDOverlap = 0);
 
 	void CalculateSigStrengthCorrection(CParameter &ReceiverParam, const vector<_REAL> &vecrPSD);
 	void CalculatePSDInterferenceTag(CParameter &ReceiverParam, const vector<_REAL> &vecrPSD);

@@ -121,6 +121,8 @@ protected:
 	bool		loading;
 	QTimer		TimerRig;
 	int		iWantedrigModel;
+	QButtonGroup	*bgTimeInterp, *bgFreqInterp, *bgTiSync, *bgChanSel;
+
 #ifdef HAVE_LIBHAMLIB
 	RigTypesModel	RigTypes;
 	RigModel	Rigs;
@@ -145,15 +147,12 @@ public slots:
 	void 		SetLatLng();
 	void 		OnCheckBoxUseGPS();
 	void 		OnCheckBoxDisplayGPS();
-	void 		OnRadioTimeLinear();
-	void 		OnRadioTimeWiener();
-	void 		OnRadioFrequencyLinear();
-	void 		OnRadioFrequencyDft();
-	void 		OnRadioFrequencyWiener();
-	void 		OnRadioTiSyncFirstPeak();
-	void 		OnRadioTiSyncEnergy();
+	void 		OnSelTimeInterp(int);
+	void 		OnSelFrequencyIterp(int);
+	void 		OnSelTiSync(int);
 	void 		OnSliderIterChange(int value);
 	void 		OnSliderLogStartDelayChange(int value);
+	void 		OnSelInputChan(int);
 	void 		OnCheckFlipSpectrum();
 	void 		OnCheckWriteLog();
 	void 		OnCheckBoxLogLatLng();

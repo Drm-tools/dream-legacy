@@ -66,7 +66,6 @@ protected:
     void InitialiseFAC();
     void UpdateFAC(CParameter& Parameters);
     void InitialisePlots();
-    void UpdatePlots();
     void showPlots();
     void hidePlots();
     void newPlot(int, const string&);

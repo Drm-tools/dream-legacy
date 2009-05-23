@@ -51,6 +51,9 @@
 # include <QMutex>
 #endif
 
+enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
+		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO};
+
 enum EType {AT_NO_AGC, AT_SLOW, AT_MEDIUM, AT_FAST};
 
 enum ENoiRedType {NR_OFF, NR_LOW, NR_MEDIUM, NR_HIGH};
@@ -110,15 +113,15 @@ enum EAMSSBlockLockStat {
     class CChannel : public CDumpable
     {
     public:
-        CChannel();
-        virtual ~CChannel() {}
+	CChannel();
+	virtual ~CChannel() {}
 		void dump(ostream&) const;
 
-        bool bEnhancementLayerInUse;
-        ERobMode eRobustness;
-        ESpecOcc eSpectrumOccupancy;
-        ESymIntMod eInterleaverDepth;
-        ECodScheme eMSCmode, eSDCmode;
+	bool bEnhancementLayerInUse;
+	ERobMode eRobustness;
+	ESpecOcc eSpectrumOccupancy;
+	ESymIntMod eInterleaverDepth;
+	ECodScheme eMSCmode, eSDCmode;
      };
 
 	class CMSCProtLev : public CDumpable
@@ -129,12 +132,12 @@ enum EAMSSBlockLockStat {
 		bool operator==(const CMSCProtLev& p) const
 		{
 		    if(iPartA!=p.iPartA)
-                return false;
+		return false;
 		    if(iPartB!=p.iPartB)
-                return false;
+		return false;
 		    if(iHierarch!=p.iHierarch)
-                return false;
-            return true;
+		return false;
+	    return true;
 		}
 		bool operator!=(const CMSCProtLev &other) const {return !(*this == other);}
 
@@ -163,16 +166,16 @@ enum EAMSSBlockLockStat {
     class CMSCParameters : public CDumpable
     {
     public:
-        CMSCParameters();
-        CMSCParameters(const CMSCParameters&);
-        virtual ~CMSCParameters() {}
-        CMSCParameters& operator=(const CMSCParameters&);
-        bool operator==(const CMSCParameters&) const;
+	CMSCParameters();
+	CMSCParameters(const CMSCParameters&);
+	virtual ~CMSCParameters() {}
+	CMSCParameters& operator=(const CMSCParameters&);
+	bool operator==(const CMSCParameters&) const;
 		bool operator!=(const CMSCParameters &other) const {return !(*this == other);}
 		void dump(ostream&) const;
 
-        CMSCProtLev ProtectionLevel;
-        vector<CStream> Stream;
+	CMSCProtLev ProtectionLevel;
+	vector<CStream> Stream;
     };
 
 	class CAudioParam : public CDumpable
@@ -194,9 +197,9 @@ enum EAMSSBlockLockStat {
 		/* AS: Audio Sampling rate */
 		enum EAudSamRat { AS_8_KHZ, AS_12KHZ, AS_16KHZ, AS_24KHZ };
 
-        CAudioParam();
-        CAudioParam(const CAudioParam&);
-        CAudioParam& operator=(const CAudioParam&);
+	CAudioParam();
+	CAudioParam(const CAudioParam&);
+	CAudioParam& operator=(const CAudioParam&);
 		bool operator==(const CAudioParam&) const;
 		bool operator!=(const CAudioParam &other) const {return !(*this == other);}
 		void dump(ostream&) const;
@@ -235,8 +238,8 @@ enum EAMSSBlockLockStat {
 
 		CDataParam();
 		CDataParam(const CDataParam&);
-        CDataParam& operator=(const CDataParam&);
-        bool operator==(const CDataParam&) const;
+	CDataParam& operator=(const CDataParam&);
+	bool operator==(const CDataParam&) const;
 		bool operator!=(const CDataParam &other) const {return !(*this == other);}
 		void dump(ostream&) const;
 
@@ -255,18 +258,18 @@ enum EAMSSBlockLockStat {
     class CCoreParameter : public CDumpable
     {
     public:
-        CCoreParameter();
-        CCoreParameter(const CCoreParameter&);
-        virtual ~CCoreParameter() {}
-        CCoreParameter& operator=(const CCoreParameter&);
+	CCoreParameter();
+	CCoreParameter(const CCoreParameter&);
+	virtual ~CCoreParameter() {}
+	CCoreParameter& operator=(const CCoreParameter&);
 
-        int GetStreamLen(const int iStreamID);
+	int GetStreamLen(const int iStreamID);
 
-        CChannel Channel;
-        CMSCParameters MSCParameters;
-        map<int, CAudioParam> AudioParam; /* key with by streamID */
-        map<int, map<int, CDataParam> > DataParam; /* first key streamID, second key packetID */
-        void dump(ostream&) const;
+	CChannel Channel;
+	CMSCParameters MSCParameters;
+	map<int, CAudioParam> AudioParam; /* key with by streamID */
+	map<int, map<int, CDataParam> > DataParam; /* first key streamID, second key packetID */
+	void dump(ostream&) const;
     };
 
 	class CService : public CDumpable
@@ -375,7 +378,7 @@ enum EAMSSBlockLockStat {
 		{
 		}
 		CReceiveStatus(const CReceiveStatus& s):
-            CDumpable(),FSync(s.FSync), TSync(s.TSync),
+	    CDumpable(),FSync(s.FSync), TSync(s.TSync),
 			Interface(s.Interface), FAC(s.FAC), SDC(s.SDC),
 			Audio(s.Audio),LLAudio(s.LLAudio),MOT(s.MOT)
 		{
@@ -461,16 +464,16 @@ enum EAMSSBlockLockStat {
     {
       public:
 
-        CFACParameters();
-        virtual ~CFACParameters() {}
+	CFACParameters();
+	virtual ~CFACParameters() {}
 		bool operator==(const CFACParameters&) const;
 		void dump(ostream&) const;
 
-        int iFrameId;
-        bool bAFSindexValid;
-        int iReconfigurationIndex;
-        int iNumAudioServices;
-        int iNumDataServices;
+	int iFrameId;
+	bool bAFSindexValid;
+	int iReconfigurationIndex;
+	int iNumAudioServices;
+	int iNumDataServices;
     };
 
 class CParameter : public CCoreParameter

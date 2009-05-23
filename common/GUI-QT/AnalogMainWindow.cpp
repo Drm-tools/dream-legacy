@@ -49,7 +49,8 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	Receiver(NDRMR), Settings(NSettings),
 	pReceiverSettingsDlg(NULL), stationsDlg(NULL), liveScheduleDlg(NULL),
 	plot(NULL),Timer(),TimerPLLPhaseDial(),
-	AMSSDlg(NDRMR, Settings, this, f), quitWanted(true)
+	AMSSDlg(NDRMR, Settings, this, f), quitWanted(true),
+	bgDemod(), bgAGC(), bgNoiseRed()
 {
     setupUi(this);
 
@@ -109,9 +110,23 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	connect(ButtonWaterfall, SIGNAL(clicked()), this, SLOT(OnButtonWaterfall()));
 
 	/* Button groups */
-	connect(ButtonGroupDemodulation, SIGNAL(clicked(int)), this, SLOT(OnRadioDemodulation(int)));
-	connect(ButtonGroupAGC, SIGNAL(clicked(int)), this, SLOT(OnRadioAGC(int)));
-	connect(ButtonGroupNoiseReduction, SIGNAL(clicked(int)), this, SLOT(OnRadioNoiRed(int)));
+	bgDemod.addButton(RadioButtonDemWBFM, int(WBFM));
+	bgDemod.addButton(RadioButtonDemNBFM, int(NBFM));
+	bgDemod.addButton(RadioButtonDemCW, int(CW));
+	bgDemod.addButton(RadioButtonDemUSB, int(USB));
+	bgDemod.addButton(RadioButtonDemLSB, int(LSB));
+	bgDemod.addButton(RadioButtonDemAM, int(AM));
+	bgAGC.addButton(RadioButtonAGCOff, int(AT_NO_AGC));
+	bgAGC.addButton(RadioButtonAGCSlow, int(AT_SLOW));
+	bgAGC.addButton(RadioButtonAGCMed, int(AT_MEDIUM));
+	bgAGC.addButton(RadioButtonAGCFast, int(AT_FAST));
+	bgNoiseRed.addButton(RadioButtonNoiRedOff, int(NR_OFF));
+	bgNoiseRed.addButton(RadioButtonNoiRedLow, int(NR_LOW));
+	bgNoiseRed.addButton(RadioButtonNoiRedMed, int(NR_MEDIUM));
+	bgNoiseRed.addButton(RadioButtonNoiRedHigh, int(NR_HIGH));
+	connect(&bgDemod, SIGNAL(buttonClicked(int)), this, SLOT(OnRadioDemodulation(int)));
+	connect(&bgAGC, SIGNAL(buttonClicked(int)), this, SLOT(OnRadioAGC(int)));
+	connect(&bgNoiseRed, SIGNAL(buttonClicked(int)), this, SLOT(OnRadioNoiRed(int)));
 
 	/* Slider */
 	connect(SliderBandwidth, SIGNAL(valueChanged(int)),
@@ -165,7 +180,12 @@ void AnalogMainWindow::showEvent(QShowEvent*)
 
     PLLButton->setChecked(Settings.Get("AnalogGUI", "pll", true));
 
-    plot->start();
+    try {
+	plot->start();
+    } catch(const char* e)
+    {
+	QMessageBox::information(this, "Problem", e);
+    }
 
 	UpdateControls();
 }
@@ -394,37 +414,9 @@ void AnalogMainWindow::OnTimerPLLPhaseDial()
 void AnalogMainWindow::OnRadioDemodulation(int iID)
 {
 	/* Receiver takes care of setting appropriate filter BW */
-	EModulationType eModulation = AM;
-	switch (iID)
-	{
-	case 0:
-		eModulation = AM;
-		break;
-
-	case 1:
-		eModulation = LSB;
-		break;
-
-	case 2:
-		eModulation = USB;
-		break;
-
-	case 3:
-		eModulation = CW;
-		break;
-
-	case 4:
-		eModulation = NBFM;
-		break;
-
-	case 5:
-		eModulation = WBFM;
-		break;
-	}
-
     CParameter& Parameter = *Receiver.GetAnalogParameters();
     Parameter.Lock();
-    Parameter.eModulation = eModulation;
+    Parameter.eModulation = EModulationType(iID);
     Parameter.RxEvent = ChannelReconfiguration;
     Parameter.Unlock();
 
@@ -434,46 +426,12 @@ void AnalogMainWindow::OnRadioDemodulation(int iID)
 
 void AnalogMainWindow::OnRadioAGC(int iID)
 {
-	switch (iID)
-	{
-	case 0:
-		Receiver.SetAnalogAGCType(AT_NO_AGC);
-		break;
-
-	case 1:
-		Receiver.SetAnalogAGCType(AT_SLOW);
-		break;
-
-	case 2:
-		Receiver.SetAnalogAGCType(AT_MEDIUM);
-		break;
-
-	case 3:
-		Receiver.SetAnalogAGCType(AT_FAST);
-		break;
-	}
+	Receiver.SetAnalogAGCType(EType(iID));
 }
 
 void AnalogMainWindow::OnRadioNoiRed(int iID)
 {
-	switch (iID)
-	{
-	case 0:
-		Receiver.SetAnalogNoiseReductionType(NR_OFF);
-		break;
-
-	case 1:
-		Receiver.SetAnalogNoiseReductionType(NR_LOW);
-		break;
-
-	case 2:
-		Receiver.SetAnalogNoiseReductionType(NR_MEDIUM);
-		break;
-
-	case 3:
-		Receiver.SetAnalogNoiseReductionType(NR_HIGH);
-		break;
-	}
+	Receiver.SetAnalogNoiseReductionType(ENoiRedType(iID));
 }
 
 void AnalogMainWindow::OnSliderBWChange(int value)

@@ -170,11 +170,11 @@
 			<Add directory="..\moc" />
 			<Add directory="..\..\faac\include" />
 			<Add directory="..\..\faad2\include" />
-			<Add directory="..\..\qwt-qt4\src" />
 			<Add directory="$(QTDIR)\include\QtNetwork" />
 			<Add directory="$(QTDIR)\include\QtGUI" />
 			<Add directory="$(QTDIR)\include\Qt3Support" />
 			<Add directory="$(QTDIR)\include\QtXML" />
+			<Add directory="..\libs\qwt" />
 		</Compiler>
 		<Linker>
 			<Add library="faac" />
@@ -190,7 +190,6 @@
 			<Add library="hamlib" />
 			<Add library="..\libs\PortAudio.dll" />
 			<Add directory="$(QTDIR)\lib" />
-			<Add directory="D:\dream\qwt-qt4\lib" />
 			<Add directory="..\libs" />
 		</Linker>
 		<Unit filename="..\common\AMDemodulation.cpp" />

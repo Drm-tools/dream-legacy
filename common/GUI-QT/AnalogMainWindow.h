@@ -102,6 +102,7 @@ protected:
     QTimer                  TimerPLLPhaseDial;
     CAMSSDlg                AMSSDlg;
     bool                    quitWanted;
+    QButtonGroup	    bgDemod, bgAGC, bgNoiseRed;
 
     void                    UpdateControls();
     void                    AddWhatsThisHelp();
