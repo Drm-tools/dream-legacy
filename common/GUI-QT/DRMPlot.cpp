@@ -955,9 +955,14 @@ void CDRMPlot::UpdateAvIR()
     /* Vertical bounds -------------------------------------------------- */
     double dX[2], dY[2];
 
+
+#if QWT_VERSION < 0x050200
+    dY[0] = plot->axisScaleDiv(QwtPlot::yLeft)->lBound();
+    dY[1] = plot->axisScaleDiv(QwtPlot::yLeft)->hBound();
+#else
     dY[0] = plot->axisScaleDiv(QwtPlot::yLeft)->lowerBound();
     dY[1] = plot->axisScaleDiv(QwtPlot::yLeft)->upperBound();
-
+#endif
     /* These bounds show the beginning and end of the guard-interval */
 
     /* Left bound */
@@ -1773,7 +1778,11 @@ void CDRMPlot::OnClicked(const QwtDoublePoint& p)
 	const double dFreq = p.x();
 
 	/* Send normalized frequency to receiver */
-	const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom)->upperBound();
+#if QWT_VERSION < 0x050200
+        const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom)->hBound();
+#else
+        const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom)->upperBound();
+#endif
 	/* Check if value is valid */
 	if (dMaxxBottom != (double) 0.0)
 	{
