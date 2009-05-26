@@ -515,6 +515,8 @@ SOURCE=..\common\datadecoding\epg\epgutil.cpp
 # End Source File
 # End Group
 # Begin Group "journaline"
+
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=..\common\datadecoding\journaline\crc_8_16.c
@@ -1013,6 +1015,8 @@ SOURCE=..\common\datadecoding\epg\epgutil.h
 # End Source File
 # End Group
 # Begin Group "Header journaline"
+
+# PROP Default_Filter ""
 # Begin Source File
 
 SOURCE=..\common\datadecoding\journaline\cpplog.h
