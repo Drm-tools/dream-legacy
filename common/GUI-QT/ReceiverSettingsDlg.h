@@ -148,7 +148,7 @@ public slots:
 	void 		OnCheckBoxUseGPS();
 	void 		OnCheckBoxDisplayGPS();
 	void 		OnSelTimeInterp(int);
-	void 		OnSelFrequencyIterp(int);
+        void 		OnSelFrequencyInterp(int);
 	void 		OnSelTiSync(int);
 	void 		OnSliderIterChange(int value);
 	void 		OnSliderLogStartDelayChange(int value);

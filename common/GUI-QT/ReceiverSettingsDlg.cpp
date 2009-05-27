@@ -704,7 +704,7 @@ void ReceiverSettingsDlg::OnSelTimeInterp(int iId)
     Receiver.SetTimeInt(ETypeIntTime(iId));
 }
 
-void ReceiverSettingsDlg::OnSelFrequencyIterp(int iId)
+void ReceiverSettingsDlg::OnSelFrequencyInterp(int iId)
 {
     Receiver.SetFreqInt(ETypeIntFreq(iId));
 }
