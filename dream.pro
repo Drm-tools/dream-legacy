@@ -1,7 +1,7 @@
 TEMPLATE	= app
 TARGET		= dream
 QT		+= network xml
-CONFIG		+= qt warn_on release thread hamlib portaudio
+CONFIG		+= qt warn_on thread hamlib portaudio
 DEFINES		+= HAVE_QT USE_QT_GUI
 INCLUDEPATH	+= libs
 INCLUDEPATH	+= common/GUI-QT
@@ -20,9 +20,12 @@ MOC_DIR		= moc
 
 debug {
     OBJECTS_DIR	= Debug
+    LIBS += -L /usr/src/dream/qwt-5.1.2/qwt-5.1.2/lib -lqwt
+
 }
-release {
+else {
     OBJECTS_DIR	= Release
+    LIBS 		+= -lqwt-qt4
 }
 
 macx {
@@ -36,7 +39,7 @@ macx {
 }
 
 unix {
-	LIBS 		+= -lsndfile -lpcap -lz -lfaac -lfaad -lrfftw -lfftw
+        LIBS 		+= -lsndfile -lpcap -lz -lfaac_drm -lfaad_drm -lrfftw -lfftw
     	DEFINES		+= HAVE_RFFTW_H HAVE_LIBPCAP
 	DEFINES		+= HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H
 	DEFINES		+= HAVE_STRINGS_H HAVE_STRING_H STDC_HEADERS
@@ -45,7 +48,7 @@ unix {
 	!macx {
 		INCLUDEPATH	+= /usr/include/qwt-qt4
 		INCLUDEPATH	+= linux
-		LIBS 		+= -lrt -lqwt-qt4
+                LIBS 		+= -lrt
 		SOURCES		+= linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c
 		HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
 	}
