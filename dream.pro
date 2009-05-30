@@ -20,12 +20,9 @@ MOC_DIR		= moc
 
 debug {
     OBJECTS_DIR	= Debug
-    LIBS += -L /usr/src/dream/qwt-5.1.2/qwt-5.1.2/lib -lqwt
-
 }
 else {
     OBJECTS_DIR	= Release
-    LIBS 		+= -lqwt-qt4
 }
 
 macx {
@@ -47,6 +44,7 @@ unix {
     	SOURCES		+= linux/source/Pacer.cpp
 	!macx {
 		INCLUDEPATH	+= /usr/include/qwt-qt4
+		LIBS 		+= -lqwt-qt4
 		INCLUDEPATH	+= linux
                 LIBS 		+= -lrt
 		SOURCES		+= linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c
