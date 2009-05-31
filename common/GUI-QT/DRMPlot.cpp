@@ -885,8 +885,14 @@ void CDRMPlot::SetAvIR()
 {
     plot->setTitle(tr("Channel Impulse Response"));
     plot->enableAxis(QwtPlot::yRight, false);
+
+    grid = new QwtPlotGrid();
+    grid->enableXMin(false);
+    grid->enableYMin(false);
     grid->enableX(true);
     grid->enableY(true);
+    grid->attach(plot);
+
     plot->setAxisTitle(QwtPlot::xBottom, tr("Time [ms]"));
 
     /* Fixed vertical scale  */
@@ -1011,8 +1017,14 @@ void CDRMPlot::UpdateAvIR()
 void CDRMPlot::SetTranFct()
 {
     plot->setTitle(tr("Channel Transfer Function / Group Delay"));
+
+    grid = new QwtPlotGrid();
+    grid->enableXMin(false);
+    grid->enableYMin(false);
     grid->enableX(true);
     grid->enableY(true);
+    grid->attach(plot);
+
     plot->setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
 
     plot->enableAxis(QwtPlot::yLeft, true);
@@ -1078,8 +1090,14 @@ void CDRMPlot::SetAudioSpectrum()
 {
     plot->setTitle(tr("Audio Spectrum"));
     plot->enableAxis(QwtPlot::yRight, false);
+
+    grid = new QwtPlotGrid();
+    grid->enableXMin(false);
+    grid->enableYMin(false);
     grid->enableX(true);
     grid->enableY(true);
+    grid->attach(plot);
+
     plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
     plot->enableAxis(QwtPlot::yLeft, true);
     plot->setAxisTitle(QwtPlot::yLeft, "AS [dB]");
@@ -1121,8 +1139,14 @@ void CDRMPlot::SetFreqSamOffsHist()
 {
     plot->setTitle(tr("Rel. Frequency Offset / Sample Rate Offset History"));
     plot->enableAxis(QwtPlot::yRight);
+
+    grid = new QwtPlotGrid();
+    grid->enableXMin(false);
+    grid->enableYMin(false);
     grid->enableX(true);
     grid->enableY(true);
+    grid->attach(plot);
+
     plot->setAxisTitle(QwtPlot::xBottom, tr("Time [s]"));
     plot->enableAxis(QwtPlot::yLeft, true);
     plot->setAxisTitle(QwtPlot::yRight, tr("Sample Rate Offset [Hz]"));
@@ -1231,8 +1255,14 @@ void CDRMPlot::SetDopplerDelayHist()
 {
     plot->setTitle(tr("Delay / Doppler History"));
     plot->enableAxis(QwtPlot::yRight);
+
+    grid = new QwtPlotGrid();
+    grid->enableXMin(false);
+    grid->enableYMin(false);
     grid->enableX(true);
     grid->enableY(true);
+    grid->attach(plot);
+
     plot->setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
     plot->enableAxis(QwtPlot::yLeft, true);
     plot->setAxisTitle(QwtPlot::yLeft, tr("Delay [ms]"));
@@ -1280,8 +1310,14 @@ void CDRMPlot::SetSNRAudHist()
 {
     plot->setTitle(tr("SNR / Correctly Decoded Audio History"));
     plot->enableAxis(QwtPlot::yRight);
+
+    grid = new QwtPlotGrid();
+    grid->enableXMin(false);
+    grid->enableYMin(false);
     grid->enableX(true);
     grid->enableY(true);
+    grid->attach(plot);
+
     plot->setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
     plot->enableAxis(QwtPlot::yLeft, true);
     plot->setAxisTitle(QwtPlot::yLeft, tr("SNR [dB]"));
@@ -1369,8 +1405,14 @@ void CDRMPlot::SpectrumPlotDefaults(
 {
 	plot->setTitle(title);
 	plot->enableAxis(QwtPlot::yRight, false);
+
+	grid = new QwtPlotGrid();
+	grid->enableXMin(false);
+	grid->enableYMin(false);
 	grid->enableX(true);
 	grid->enableY(true);
+	grid->attach(plot);
+
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
 	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, axistitle+" [dB]");
@@ -1437,8 +1479,14 @@ void CDRMPlot::SetSNRSpectrum()
 {
     plot->setTitle(tr("SNR Spectrum (Weighted MER on MSC Cells)"));
     plot->enableAxis(QwtPlot::yRight, false);
+
+    grid = new QwtPlotGrid();
+    grid->enableXMin(false);
+    grid->enableYMin(false);
     grid->enableX(true);
     grid->enableY(true);
+    grid->attach(plot);
+
     plot->setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
     plot->enableAxis(QwtPlot::yLeft, true);
     plot->setAxisTitle(QwtPlot::yLeft, tr("WMER [dB]"));
@@ -1683,10 +1731,16 @@ void CDRMPlot::UpdateInpSpecWaterf()
 
 void CDRMPlot::ConstellationPlotDefaults(const QString& title, double limit, int n)
 {
-	plot->setTitle(title+" "+tr("Constellation"));
-	plot->enableAxis(QwtPlot::yRight, false);
-	grid->enableX(true);
-	grid->enableY(true);
+    plot->setTitle(title+" "+tr("Constellation"));
+    plot->enableAxis(QwtPlot::yRight, false);
+
+    grid = new QwtPlotGrid();
+    grid->enableXMin(false);
+    grid->enableYMin(false);
+    grid->enableX(true);
+    grid->enableY(true);
+    grid->attach(plot);
+
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
 	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));

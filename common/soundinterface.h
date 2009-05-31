@@ -35,7 +35,7 @@
 class CSoundInInterface : public CSelectionInterface
 {
 public:
-	virtual 			~CSoundInInterface() {}
+	virtual 		~CSoundInInterface() {}
 
 	/* sound card interface - used by ReadData */
 	virtual void		Init(int iNewBufferSize, bool bNewBlocking=true, int iChannels=2)=0;
@@ -47,7 +47,7 @@ public:
 class CSoundOutInterface : public CSelectionInterface
 {
 public:
-	virtual 			~CSoundOutInterface() {}
+	virtual 		~CSoundOutInterface() {}
 
 	/* sound card interface - used by WriteData */
 	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2)=0;

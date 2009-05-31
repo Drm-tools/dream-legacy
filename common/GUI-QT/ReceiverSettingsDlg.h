@@ -59,7 +59,7 @@ public:
 
 protected:
 
-    struct model_index { int parent; };
+    struct model_index { int parent; virtual ~model_index(){} };
     struct rig : public model_index { string name; rig_model_t model; };
     struct make : public model_index {
 	string name;
@@ -82,17 +82,39 @@ public:
     QModelIndex index(int row, int column,
 		  const QModelIndex &parent = QModelIndex()) const;
     QModelIndex parent(const QModelIndex &child) const;
-    void add(const CRigCaps&);
+    void add(const rig_caps&);
 
 protected:
 
     QPixmap	BitmLittleGreenSquare;
     struct model_index { int parent; };
     struct rig : public model_index {
-	CRigCaps caps;
+	rig_caps caps;
     };
     vector<rig> rigs;
 
+};
+
+Q_DECLARE_METATYPE(rig_caps)
+
+class SoundChoice : public QAbstractItemModel
+{
+public:
+
+    SoundChoice();
+    virtual ~SoundChoice() {}
+
+    int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
+    int columnCount ( const QModelIndex & parent = QModelIndex() ) const;
+    QVariant data ( const QModelIndex & index, int role = Qt::DisplayRole ) const;
+    QModelIndex index(int row, int column,
+		  const QModelIndex &parent = QModelIndex()) const;
+    QModelIndex parent(const QModelIndex &child) const;
+
+    void set(const CSelectionInterface&);
+
+protected:
+    vector<string> items;
 };
 #endif
 
@@ -121,11 +143,15 @@ protected:
 	bool		loading;
 	QTimer		TimerRig;
 	int		iWantedrigModel;
-	QButtonGroup	*bgTimeInterp, *bgFreqInterp, *bgTiSync, *bgChanSel;
+	QButtonGroup	*bgTimeInterp, *bgFreqInterp, *bgTiSync;
+	QButtonGroup	*bgDRMriq, *bgDRMlrm, *bgDRMiq;
+	QButtonGroup	*bgAMriq, *bgAMlrm, *bgAMiq;
+	QButtonGroup	*bgHamriq, *bgHamlrm, *bgHamiq;
 
 #ifdef HAVE_LIBHAMLIB
 	RigTypesModel	RigTypes;
 	RigModel	Rigs;
+	SoundChoice	soundcards;
 #endif
 
 signals:
@@ -148,12 +174,17 @@ public slots:
 	void 		OnCheckBoxUseGPS();
 	void 		OnCheckBoxDisplayGPS();
 	void 		OnSelTimeInterp(int);
-        void 		OnSelFrequencyInterp(int);
+	void 		OnSelFrequencyInterp(int);
 	void 		OnSelTiSync(int);
 	void 		OnSliderIterChange(int value);
+	void 		OnRadioDRMRealIQ(int);
+	void 		OnRadioAMRealIQ(int);
+	void 		OnRadioHamRealIQ(int);
+	void 		OnButtonDRMApply();
+	void 		OnButtonAMApply();
+	void 		OnButtonFMApply();
+	void 		OnButtonHamApply();
 	void 		OnSliderLogStartDelayChange(int value);
-	void 		OnSelInputChan(int);
-	void 		OnCheckFlipSpectrum();
 	void 		OnCheckWriteLog();
 	void 		OnCheckBoxLogLatLng();
 	void 		OnCheckBoxLogSigStr();
@@ -165,5 +196,5 @@ public slots:
 	void 		OnCheckEnableSMeterToggled(bool);
 	void 		OnButtonAddRig();
 	void 		OnButtonRemoveRig();
-	void		OnButtonApplyRigSettings();
+	void		OnButtonConnectRig();
 };

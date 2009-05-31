@@ -181,7 +181,7 @@ void AnalogMainWindow::showEvent(QShowEvent*)
     PLLButton->setChecked(Settings.Get("AnalogGUI", "pll", true));
 
     try {
-	plot->start();
+ 	plot->start();
     } catch(const char* e)
     {
 	QMessageBox::information(this, "Problem", e);

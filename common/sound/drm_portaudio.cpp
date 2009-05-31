@@ -96,9 +96,10 @@ struct CPa_Static
 static CPa_Static Pa_Static;
 
 CPaCommon::CPaCommon(bool cap):ringBuffer(),xruns(0),stream(NULL),
-			names(), devices(), dev(-1),
-			is_capture(cap), blocking(true), device_changed(true), xrun(false),
-			framesPerBuffer(0), ringBufferData(NULL), channels(2)
+	//names(), devices(),
+	dev(-1),
+	is_capture(cap), blocking(true), device_changed(true), xrun(false),
+	framesPerBuffer(0), ringBufferData(NULL), channels(2)
 {
 }
 
@@ -110,11 +111,12 @@ CPaCommon::~CPaCommon()
 }
 
 void
-CPaCommon::Enumerate(vector <string>& choices)
+CPaCommon::Enumerate(vector <string>& choices) const
 {
 	vector <string> tmp;
-	names.clear();
-	devices.clear();
+	//names.clear();
+	//devices.clear();
+	choices.clear();
 	int numDevices = Pa_GetDeviceCount();
 	if (numDevices < 0)
 		throw string("PortAudio error: ") + Pa_GetErrorText(numDevices);
@@ -131,16 +133,18 @@ CPaCommon::Enumerate(vector <string>& choices)
 		}
 		if(is_capture && (deviceInfo->maxInputChannels > 1))
 		{
-           	names.push_back(api+deviceInfo->name);
-           	devices.push_back(i);
+			choices.push_back(api+deviceInfo->name);
+			//names.push_back(api+deviceInfo->name);
+			//devices.push_back(i);
 		}
 		if(!is_capture && (deviceInfo->maxOutputChannels > 1))
 		{
-           	names.push_back(api+deviceInfo->name);
-           	devices.push_back(i);
+			choices.push_back(api+deviceInfo->name);
+			//names.push_back(api+deviceInfo->name);
+			//devices.push_back(i);
 		}
 	}
-	choices = names;
+	//choices = names;
 }
 
 void
@@ -210,7 +214,8 @@ CPaCommon::ReInit()
 	pParameters.hostApiSpecificStreamInfo = NULL;
 	pParameters.sampleFormat = fmt(_SAMPLE(0));
 
-	if(dev < 0 || dev >= int(devices.size()))
+	if(dev < 0 || dev >= Pa_GetDeviceCount())
+	//if(dev < 0 || dev >= int(devices.size()))
 	{
 		if(is_capture)
 			pParameters.device = Pa_GetDefaultInputDevice();
@@ -219,8 +224,8 @@ CPaCommon::ReInit()
 	}
 	else
 	{
-		cout << "opening " << names[dev] << endl;
-		pParameters.device = devices[dev];
+		//cout << "opening " << names[dev] << endl;
+		pParameters.device = dev;//devices[dev];
 	}
 
  	if(pParameters.device == paNoDevice)

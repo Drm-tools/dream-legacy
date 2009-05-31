@@ -40,6 +40,7 @@
 #include <QNetworkReply>
 #include <QHeaderView>
 #include <iostream>
+#include <..\util\Hamlib.h>
 
 StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings, bool drm,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
@@ -444,8 +445,11 @@ void StationsDlg::OnItemClicked(const QModelIndex& item)
 
 void StationsDlg::OnTimerSMeter()
 {
-	bool bSMeter = Receiver.GetEnableSMeter();
-	EnableSMeter(bSMeter);
+	CRig* rig = Receiver.GetCurrentRig();
+	if(rig)
+	{
+		EnableSMeter(rig->GetEnableSMeter());
+	}
 }
 
 void StationsDlg::EnableSMeter(const bool bStatus)

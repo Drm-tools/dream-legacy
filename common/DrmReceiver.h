@@ -77,7 +77,7 @@
 /* Classes ********************************************************************/
 class CSettings;
 class CHamlib;
-class CRigCaps;
+class CRig;
 
 template<typename T>
 struct Request
@@ -125,9 +125,9 @@ class CSoundInProxy : public CSelectionInterface
 public:
 	CSoundInProxy(CSoundInInterface* s):real(s),deviceNo(0) {}
 	virtual ~CSoundInProxy() {}
-	void		Enumerate(vector<string>& v) { if(real) real->Enumerate(v); }
-	int			GetDev() { return deviceNo.current; }
-	void		SetDev(int iNewDev) { deviceNo.wanted = iNewDev; }
+	void	Enumerate(vector<string>& v) const { if(real) real->Enumerate(v); }
+	int	GetDev() { return deviceNo.current; }
+	void	SetDev(int iNewDev) { deviceNo.wanted = iNewDev; }
 	CSoundInInterface *real;
 	Request<int> deviceNo;
 };
@@ -155,10 +155,10 @@ public:
 
 protected:
 
-	CAMSSPhaseDemod				PhaseDemod;
-	CAMSSExtractBits			ExtractBits;
-	CAMSSDecode					Decode;
-	CInputResample				InputResample;
+	CAMSSPhaseDemod			PhaseDemod;
+	CAMSSExtractBits		ExtractBits;
+	CAMSSDecode			Decode;
+	CInputResample			InputResample;
 
 	CSingleBuffer<_REAL>		PhaseBuf;
 	CCyclicBuffer<_REAL>		ResPhaseBuf;
@@ -298,14 +298,14 @@ public:
 	CSelectionInterface*	GetSoundOutInterface() {return pSoundOutInterface;}
 	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
 
-	void					SetRigModel(int);
-	string					GetRigInfo() const;
 	void					GetRigList(CRigMap&) const;
-	void					GetRigCaps(int, CRigCaps&) const;
-	void					GetComPortList(map<string,string>& ports) const;
-	string					GetRigComPort() const;
-	void					SetRigComPort(const string&);
+	void					GetRigSettings(CRigSettings&,
+							int, EModulationType) const;
+	void					SetRigModel(int);
 	bool				    	GetRigChangeInProgress();
+	CRig*					GetRig(int) const;
+	const rig_caps*				GetRigCaps(int) const;
+	CRig*					GetCurrentRig() const;
 	CParameter*				GetParameters() {return &Parameters;}
 	CParameter*				GetAnalogParameters() {return &Parameters;}
 
@@ -431,6 +431,7 @@ protected:
 	Request<EInChanSel>     chanSel;
 	string                  strPCMFile;
     CHamlib*                pHamlib;
+    CRig*           pRig;
     CSoundInProxy			soundIn;
 };
 

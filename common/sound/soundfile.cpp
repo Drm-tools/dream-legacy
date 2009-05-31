@@ -46,7 +46,7 @@ CSoundFileIn::~CSoundFileIn()
 }
 
 void
-CSoundFileIn::Enumerate(vector<string>& c)
+CSoundFileIn::Enumerate(vector<string>& c) const
 {
 	c.clear();
 	c.push_back(strInFileName);

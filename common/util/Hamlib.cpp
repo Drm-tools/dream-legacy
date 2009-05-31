@@ -27,355 +27,298 @@
 
 #include <cstdlib>
 #include "Hamlib.h"
-#ifdef HAVE_LIBHAMLIB
+
 #include "../Parameter.h"
 #include "Settings.h"
 #include <sstream>
 #include <iostream>
 #include "../Parameter.h"
-#if defined(_WIN32)
-# ifdef HAVE_SETUPAPI
-#  ifndef INITGUID
-#   define INITGUID 1
-#  endif
-#  include <windows.h>
-#  include <setupapi.h>
-#  if defined(_MSC_VER) && (_MSC_VER < 1400) || defined(__MINGW32__)
-    DEFINE_GUID(GUID_DEVINTERFACE_COMPORT, 0x86e0d1e0L, 0x8089,
-    0x11d0, 0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73);
-#  endif
-# endif
-#elif defined(__APPLE__)
-#include <CoreFoundation/CoreFoundation.h>
-#include <IOKit/IOKitLib.h>
-#include <IOKit/serial/IOSerialKeys.h>
-#elif defined(__linux)
-# ifdef HAVE_LIBHAL
-#  include <hal/libhal.h>
-# endif
-#endif
 
 /* Implementation *************************************************************/
 /*
 	This code is based on patches and example code from Tomi Manninen and
 	Stephane Fillod (developer of hamlib)
 */
-CHamlib::CHamlib(CParameter& p):
-#ifdef HAVE_QT
-    mutex(),
-#endif
-    Parameters(p), pRig(NULL),
-bSMeterWanted(false), bEnableSMeter(false),CapsHamlibModels(),
-iFrequencykHz(0), iFrequencyOffsetkHz(0)
+
+void
+CRigSettings::LoadSettings(CSettings& s, const string& secpref)
 {
-	/* Load all available front-end remotes in hamlib library */
-	rig_load_all_backends();
+#if 0
+	INISection sec;
+	s.Get(secpref+"config", sec);
+	INISection::iterator i;
+	for (i=sec.begin(); i!=sec.end(); i++)
+		config[i->first] = i->second;
+	sec.clear();
+	s.Get(section+"modes", sec);
+	for (i=sec.begin(); i!=sec.end(); i++)
+	    modes[i->first] = i->second;
+	sec.clear();
+	s.Get(section+"int-levels", sec);
+	for (i=sec.begin(); i!=sec.end(); i++)
+	    ilevel[i->first] = atoi(i->second.;
+	sec.clear();
+	s.Get(section+"functions", sec);
+	for (i=sec.begin(); i!=sec.end(); i++)
+	    set_function(m, i->first, i->second);
+	sec.clear();
+	s.Get(section+"parameters", sec);
+	for (i=sec.begin(); i!=sec.end(); i++)
+	    set_parameter(m, i->first, i->second);
+	s.Get(section+"attributes", sec);
+	for (i=sec.begin(); i!=sec.end(); i++)
+	    set_attribute(m, i->first, i->second);
+#endif
+}
+
+void
+CRigSettings::SaveSettings(CSettings& s, const string& section) const
+{
+	map<string,int>::const_iterator i;
+	map<string,string>::const_iterator st;
+	map<string,float>::const_iterator f;
+
+	for (i=modes.begin(); i!=modes.end(); i++)
+	    s.Put(section+"modes", i->first, i->second);
+
+	for (i=ilevels.begin(); i!=ilevels.end(); i++)
+	{
+	    s.Put(section+"int-levels", i->first, i->second);
+	}
+	for (f=flevels.begin(); f!=flevels.end(); f++)
+	{
+	    s.Put(section+"float-levels", f->first, f->second);
+	}
+	for (i=iparameters.begin(); i!=iparameters.end(); i++)
+	{
+	    s.Put(section+"int-parameters", i->first, i->second);
+	}
+	for (f=fparameters.begin(); f!=fparameters.end(); f++)
+	{
+	    s.Put(section+"float-parameters", f->first, f->second);
+	}
+
+	for (st=functions.begin(); st!=functions.end(); st++)
+	    s.Put(section+"functions", st->first, st->second);
+
+
+	for (st=attributes.begin(); st!=attributes.end(); st++)
+	    s.Put(section+"attributes", st->first, st->second);
+}
+
+void CRigSettings::apply(Rig& rig) const
+{
+    // modes
+    for (map < string, int >::const_iterator i = modes.begin(); i != modes.end(); i++)
+    {
+	rmode_t mode = rig_parse_mode(i->first.c_str());
+	if (mode != RIG_MODE_NONE)
+	{
+	    rig.setMode(mode, i->second);
+	}
+    }
+    // levels
+    for (map <string,int>::const_iterator i = ilevels.begin(); i != ilevels.end(); i++)
+    {
+	setting_t setting = rig_parse_level(i->first.c_str());
+	if (setting != RIG_LEVEL_NONE)
+	{
+	    rig.setLevel(setting, i->second);
+	}
+    }
+    for (map <string,float>::const_iterator i = flevels.begin(); i != flevels.end(); i++)
+    {
+	setting_t setting = rig_parse_level(i->first.c_str());
+	if (setting != RIG_LEVEL_NONE)
+	{
+	    rig.setLevel(setting, i->second);
+	}
+    }
+    // funcs
+    for (map < string, string >::const_iterator i = functions.begin();
+	    i != functions.end(); i++)
+    {
+	setting_t setting = rig_parse_func(i->first.c_str());
+	if (setting != RIG_FUNC_NONE)
+	{
+	    rig.setFunc(setting, atoi(i->second.c_str()));
+	}
+    }
+    // params
+    for (map<string,int>::const_iterator i = iparameters.begin();
+	    i != iparameters.end(); i++)
+    {
+	setting_t setting = rig_parse_parm(i->first.c_str());
+	if (setting != RIG_PARM_NONE)
+	{
+	    rig.setParm(setting, i->second);
+	}
+    }
+    for (map<string,float>::const_iterator i = fparameters.begin();
+	    i != fparameters.end(); i++)
+    {
+	setting_t setting = rig_parse_parm(i->first.c_str());
+	if (setting != RIG_PARM_NONE)
+	{
+	    rig.setParm(setting, i->second);
+	}
+    }
+}
+
+CRig::CRig(CParameter& p, rig_model_t m):Rig(m),
+bSMeterWanted(false), bEnableSMeter(false),iOffset(0),
+#ifdef HAVE_QT
+	mutex(),
+#endif
+	Parameters(p)
+
+{
+}
+
+CRig::~CRig()
+{
+}
+
+void
+CRig::SetComPort(const string & port)
+{
+    close();
+    setConf("rig_pathname", port.c_str());
+}
+
+string CRig::GetComPort() const
+{
+    char r[1000];
+    const_cast<CRig*>(this)->getConf("rig_pathname", r);
+    return r;
+}
+
+void
+CRig::set_for_mode(CRigSettings s)
+{
+    s.apply(*this);
+    for (map<string,string>::const_iterator i = s.config.begin();
+	    i != s.config.end(); i++)
+    {
+	if (i->first == "offset")
+	{
+	    iOffset = atoi(i->second.c_str());
+	}
+	else
+	{
+	    setConf(i->first.c_str(), i->second.c_str());
+	}
+    }
+}
+
+bool
+CRig::SetFrequency(const int iFreqkHz)
+{
+    setFreq(iFreqkHz+iOffset);
+    return true; // TODO
+}
+
+
+void CRig::SetEnableSMeter(const bool bStatus)
+{
+    bSMeterWanted = bStatus;
+    if (bStatus)
+    {
+#ifdef USE_QT_GUI
+	if (bEnableSMeter==false)
+	{
+	    start(); // don't do this except in GUI thread - see CReceiverSettings
+	}
+#endif
+    }
+    else
+    {
+	StopSMeter();
+    }
+}
+
+bool CRig::GetEnableSMeter()
+{
+    return bEnableSMeter;
+}
+
+void CRig::StopSMeter()
+{
+    Parameters.Lock();
+    Parameters.Measurements.SigStrstat.invalidate();
+    Parameters.Unlock();
+    bEnableSMeter = false;
+}
+
+void CRig::run()
+{
+    bEnableSMeter = true;
+    while (bEnableSMeter)
+    {
+	int val;
+	mutex.lock();
+	getLevel(RIG_LEVEL_STRENGTH, val);
+	mutex.unlock();
+	    Parameters.Lock();
+	    // Apply any correction
+	    const _REAL S9_DBuV = 34.0; // S9 in dBuV for converting HamLib S-meter readings
+	    Parameters.Measurements.SigStrstat.addSample(_REAL(val) + S9_DBuV + Parameters.rSigStrengthCorrection);
+	    Parameters.Unlock();
+#ifdef USE_QT_GUI
+	    msleep(400);
+#endif
+    }
+}
+
+CHamlib::CHamlib():
+#ifdef HAVE_QT
+	mutex()
+#endif
+{
+    /* Load all available front-end remotes in hamlib library */
+    rig_load_all_backends();
 }
 
 CHamlib::~CHamlib()
 {
-	if (pRig != NULL)
-	{
-		/* close everything */
-		CloseRig();
-	}
 }
 
 int
 CHamlib::rig_enumerator(const rig_caps *caps, void *data)
 {
-	CRigMap& map = *(CRigMap *)data;
-	map.rigs[caps->mfg_name][caps->model_name] = caps->rig_model;
-	return 1;					/* !=0, we want them all! */
+    CRigMap& map = *(CRigMap *)data;
+    map.rigs[caps->mfg_name][caps->model_name] = caps->rig_model;
+    return 1;					/* !=0, we want them all! */
 }
 
-void
-CHamlib::GetRigList(CRigMap& rigs)
+int
+CHamlib::rig_enumerator1(const rig_caps *caps, void *data)
 {
-
-	/* Get all models which are available.
-	 * A call-back function is called to return the different rigs */
-	rig_list_foreach(rig_enumerator, &rigs);
-}
-
-void
-CHamlib::GetRigCaps(rig_model_t model, CRigCaps& caps) const
-{
-	map<rig_model_t,CRigCaps>::const_iterator r = CapsHamlibModels.find(model);
-	if(r!=CapsHamlibModels.end())
-		caps = r->second;
-	else
-	{
-	    CRigCaps c;
-	    c.hamlib_caps = *rig_get_caps(model);
-	    //CapsHamlibModels[model] = c;
-	    caps = c;
-	}
-}
-
-void
-CHamlib::GetPortList(map < string, string > &ports) const
-{
-	ports.clear();
-/* Config string for com-port selection is different for each platform */
-#ifdef _WIN32
-# ifdef HAVE_SETUPAPI
-	GUID guid = GUID_DEVINTERFACE_COMPORT;
-	HDEVINFO hDevInfoSet = SetupDiGetClassDevs(&guid, NULL, NULL,
-											   DIGCF_PRESENT |
-											   DIGCF_DEVICEINTERFACE);
-	if (hDevInfoSet != INVALID_HANDLE_VALUE)
-	{
-		SP_DEVINFO_DATA devInfo;
-		devInfo.cbSize = sizeof(SP_DEVINFO_DATA);
-		for (int i = 0; SetupDiEnumDeviceInfo(hDevInfoSet, i, &devInfo); i++)
-		{
-			HKEY hDeviceKey =
-				SetupDiOpenDevRegKey(hDevInfoSet, &devInfo, DICS_FLAG_GLOBAL,
-									 0, DIREG_DEV, KEY_QUERY_VALUE);
-			if (hDeviceKey)
-			{
-				char szPortName[256];
-				DWORD dwSize = sizeof(szPortName);
-				DWORD dwType = 0;
-				if ((RegQueryValueExA
-					 (hDeviceKey, "PortName", NULL, &dwType,
-					  reinterpret_cast < LPBYTE > (szPortName),
-					  &dwSize) == ERROR_SUCCESS) && (dwType == REG_SZ))
-				{
-					char szFriendlyName[256];
-					DWORD dwSize = sizeof(szFriendlyName);
-					DWORD dwType = 0;
-					if (SetupDiGetDeviceRegistryPropertyA
-						(hDevInfoSet, &devInfo, SPDRP_DEVICEDESC, &dwType,
-						 reinterpret_cast < PBYTE > (szFriendlyName), dwSize,
-						 &dwSize) && (dwType == REG_SZ))
-						ports[string(szFriendlyName) + " " + szPortName] = szPortName;
-					else
-						ports[szPortName] = szPortName;
-				}
-
-				RegCloseKey(hDeviceKey);
-			}
-		}
-
-		SetupDiDestroyDeviceInfoList(hDevInfoSet);
-	}
-# endif
-	if (ports.empty())
-	{
-		ports["COM1"] = "COM1";
-		ports["COM2"] = "COM2";
-		ports["COM3"] = "COM3 ";
-		ports["COM4"] = "COM4 ";
-		ports["COM5"] = "COM5 ";
-	}
-#elif defined(__linux)
-	bool bOK = false;
-# ifdef HAVE_LIBHAL
-	int num_udis;
-	char **udis;
-	DBusError error;
-	LibHalContext *hal_ctx;
-
-	dbus_error_init (&error);
-	if ((hal_ctx = libhal_ctx_new ()) == NULL) {
-		LIBHAL_FREE_DBUS_ERROR (&error);
-		return ;
-	}
-	if (!libhal_ctx_set_dbus_connection (hal_ctx, dbus_bus_get (DBUS_BUS_SYSTEM, &error))) {
-		fprintf (stderr, "error: libhal_ctx_set_dbus_connection: %s: %s\n", error.name, error.message);
-		LIBHAL_FREE_DBUS_ERROR (&error);
-		return ;
-	}
-	if (!libhal_ctx_init (hal_ctx, &error)) {
-		if (dbus_error_is_set(&error)) {
-			fprintf (stderr, "error: libhal_ctx_init: %s: %s\n", error.name, error.message);
-			LIBHAL_FREE_DBUS_ERROR (&error);
-		}
-		fprintf (stderr, "Could not initialise connection to hald.\n"
-		"Normally this means the HAL daemon (hald) is not running or not ready.\n");
-		return ;
-	}
-
-	udis = libhal_find_device_by_capability (hal_ctx, "serial", &num_udis, &error);
-
-	if (dbus_error_is_set (&error)) {
-		fprintf (stderr, "error: %s: %s\n", error.name, error.message);
-		LIBHAL_FREE_DBUS_ERROR (&error);
-		return ;
-	}
-	for (int i = 0; i < num_udis; i++) {
-		/*
-		linux.device_file = '/dev/ttyS0'  (string)
-		info.product = '16550A-compatible COM port'  (string)
-		serial.type = 'platform'  (string)
-		serial.port = 0  (0x0)  (int)
-		*/
-		char *dev = libhal_device_get_property_string (hal_ctx, udis[i], "linux.device_file", &error);
-		char *prod = libhal_device_get_property_string (hal_ctx, udis[i], "info.product", &error);
-		char *type = libhal_device_get_property_string (hal_ctx, udis[i], "serial.type", &error);
-		int port = libhal_device_get_property_int(hal_ctx, udis[i], "serial.port", &error);
-		ostringstream s;
-		s << port << " - " << type << " [" << prod << "]";
-		ports[s.str()] = dev;
-		libhal_free_string (dev);
-		libhal_free_string (prod);
-		libhal_free_string (type);
-		bOK = true;
-	}
-
-	libhal_free_string_array (udis);
-# else
-	FILE *p = popen("hal-find-by-capability --capability serial", "r");
-	while (!feof(p))
-	{
-		char buf[1024];
-		fgets(buf, sizeof(buf), p);
-		if (strlen(buf) > 0)
-		{
-			string s =
-				string("hal-get-property --key serial.device --udi ") +
-				buf;
-			FILE *p2 = popen(s.c_str(), "r");
-			fgets(buf, sizeof(buf), p2);
-			size_t n = strlen(buf);
-			if (n > 0)
-			{
-				if (buf[n - 1] == '\n')
-					buf[n - 1] = 0;
-				ports[buf] = buf;
-				bOK = true;
-				buf[0] = 0;
-			}
-			pclose(p2);
-		}
-	}
-	pclose(p);
-# endif
-	if (!bOK)
-	{
-		ports["ttyS0"] = "/dev/ttyS0";
-		ports["ttyS1"] = "/dev/ttyS1";
-		ports["ttyUSB0"] = "/dev/ttyUSB0";
-	}
-#elif defined(__APPLE__)
-	io_iterator_t serialPortIterator;
-    kern_return_t			kernResult;
-    CFMutableDictionaryRef	classesToMatch;
-
-    // Serial devices are instances of class IOSerialBSDClient
-    classesToMatch = IOServiceMatching(kIOSerialBSDServiceValue);
-    if (classesToMatch == NULL)
+    rig_caps* c = reinterpret_cast<rig_caps*>(data);
+    if(c->rig_model == caps->rig_model)
     {
-	printf("IOServiceMatching returned a NULL dictionary.\n");
+    	*c = *caps;
+    	return 0;
     }
-    else
-	{
-	CFDictionarySetValue(classesToMatch,
-			     CFSTR(kIOSerialBSDTypeKey),
-			     CFSTR(kIOSerialBSDRS232Type));
-
-	}
-    kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault, classesToMatch, &serialPortIterator);
-    if (KERN_SUCCESS != kernResult)
-    {
-	printf("IOServiceGetMatchingServices returned %d\n", kernResult);
-    }
-
-    io_object_t		comPort;
-
-    // Iterate across all ports found.
-
-    while ((comPort = IOIteratorNext(serialPortIterator)))
-    {
-	CFStringRef	bsdPathAsCFString;
-
-		// Get the callout device's path (/dev/cu.xxxxx). The callout device should almost always be
-		// used: the dialin device (/dev/tty.xxxxx) would be used when monitoring a serial port for
-		// incoming calls, e.g. a fax listener.
-
-		bsdPathAsCFString = CFStringRef(IORegistryEntryCreateCFProperty(comPort,
-							    CFSTR(kIOCalloutDeviceKey),
-							    kCFAllocatorDefault,
-							    0));
-	if (bsdPathAsCFString)
-	{
-	    Boolean result;
-			char bsdPath[256];
-
-	    // Convert the path from a CFString to a C (NUL-terminated) string for use
-			// with the POSIX open() call.
-
-			result = CFStringGetCString(bsdPathAsCFString,
-					bsdPath,
-					sizeof(bsdPath),
-					kCFStringEncodingUTF8);
-	    CFRelease(bsdPathAsCFString);
-
-	    if (result)
-			{
-				// make the name a bit more friendly for the menu
-				string s,t=bsdPath;
-				size_t p = t.find('.');
-				if(p<string::npos)
-					s = t.substr(p+1);
-				else
-					s = t;
-				ports[s] = bsdPath;
-	    }
-	}
-
-	// Release the io_service_t now that we are done with it.
-
-		(void) IOObjectRelease(comPort);
-    }
-#endif
+    return 1;					/* !=0, we want them all! */
 }
 
 void
-CHamlib::SetComPort(const string & port)
+CHamlib::GetRigList(CRigMap& rigs) const
 {
-	rig_model_t model = 0;
-	if(pRig)
-		model = pRig->caps->rig_model;
-	if(model!=0)
-		CapsHamlibModels[model].set_config("rig_pathname", port);
-	SetRigModel(model); // close and re-open
+
+    /* Get all models which are available.
+     * A call-back function is called to return the different rigs */
+    rig_list_foreach(rig_enumerator, &rigs);
 }
 
-string CHamlib::GetComPort() const
+const rig_caps*
+CHamlib::GetRigCaps(rig_model_t m) const
 {
-	rig_model_t model = 0;
-	if(pRig)
-		model = pRig->caps->rig_model;
-	map<rig_model_t,CRigCaps>::const_iterator m = CapsHamlibModels.find(model);
-	if(m==CapsHamlibModels.end())
-		return "";
-	return m->second.get_config("rig_pathname");
-}
-
-int CHamlib::level(RIG* rig, const struct confparams *, rig_ptr_t data)
-{
-	CHamlib & Hamlib = *((CHamlib *) data);
-	(void)rig;
-	(void)Hamlib;
-	return 1;					/* !=0, we want them all! */
-}
-
-int CHamlib::parm(RIG* rig, const struct confparams *, rig_ptr_t data)
-{
-	CHamlib & Hamlib = *((CHamlib *) data);
-	(void)rig;
-	(void)Hamlib;
-	return 1;					/* !=0, we want them all! */
-}
-
-int CHamlib::token(const struct confparams *, rig_ptr_t data)
-{
-	CHamlib & Hamlib = *((CHamlib *) data);
-	(void)Hamlib;
-	return 1;					/* !=0, we want them all! */
+    rig_caps* caps = new rig_caps;
+    caps->rig_model = m;
+    rig_list_foreach(rig_enumerator1, caps);
+    return caps;
 }
 
 static const char *enums[] = {"DRM", "AM", "USB", "LSB", "CW", "NBFM", "WBFM" };
@@ -383,618 +326,160 @@ static const char *enums[] = {"DRM", "AM", "USB", "LSB", "CW", "NBFM", "WBFM" };
 void
 CHamlib::LoadSettings(CSettings & s)
 {
-	CRigCaps rigcaps;
 
 #ifdef RIG_MODEL_G303
-	/* Winradio G303 */
-	CapsHamlibModels[RIG_MODEL_G303].set_level(DRM, "ATT", "0");
-	CapsHamlibModels[RIG_MODEL_G303].set_level(DRM, "AGC", "3");
+    /* Winradio G303 */
+    rigmodemap[RIG_MODEL_G303][DRM].ilevels["ATT"]=0;
+    rigmodemap[RIG_MODEL_G303][DRM].ilevels["AGC"]=3;
 #endif
 
 #ifdef RIG_MODEL_G313
-	/* Winradio G313 */
-	CapsHamlibModels[RIG_MODEL_G313].set_level(DRM, "ATT", "0");
-	CapsHamlibModels[RIG_MODEL_G313].set_level(DRM, "AGC", "3");
+    /* Winradio G313 */
+    rigmodemap[RIG_MODEL_G313][DRM].ilevels["ATT"]=0;
+    rigmodemap[RIG_MODEL_G313][DRM].ilevels["AGC"]=3;
 # ifdef __linux
-	CapsHamlibModels[RIG_MODEL_G313].set_config("if_path", "/dreamg3xxif");
-	CapsHamlibModels[RIG_MODEL_G313].set_attribute(DRM, "audiotype", "shm");
-	CapsHamlibModels[RIG_MODEL_G313].set_attribute(AM, "audiotype", "shm");
-	CapsHamlibModels[RIG_MODEL_G313].set_attribute(USB, "audiotype", "shm");
-	CapsHamlibModels[RIG_MODEL_G313].set_attribute(LSB, "audiotype", "shm");
-	CapsHamlibModels[RIG_MODEL_G313].set_attribute(NBFM, "audiotype", "shm");
-	CapsHamlibModels[RIG_MODEL_G313].set_attribute(WBFM, "audiotype", "shm");
+    CapsHamlibModels[RIG_MODEL_G313].set_config("if_path", "/dreamg3xxif");
+    CapsHamlibModels[RIG_MODEL_G313].set_attribute(DRM, "audiotype", "shm");
+    CapsHamlibModels[RIG_MODEL_G313].set_attribute(AM, "audiotype", "shm");
+    CapsHamlibModels[RIG_MODEL_G313].set_attribute(USB, "audiotype", "shm");
+    CapsHamlibModels[RIG_MODEL_G313].set_attribute(LSB, "audiotype", "shm");
+    CapsHamlibModels[RIG_MODEL_G313].set_attribute(NBFM, "audiotype", "shm");
+    CapsHamlibModels[RIG_MODEL_G313].set_attribute(WBFM, "audiotype", "shm");
 # endif
 #endif
 
 #ifdef RIG_MODEL_G315
-	/* Winradio G315 */
-	CapsHamlibModels[RIG_MODEL_G315].set_level(DRM, "ATT", "0");
-	CapsHamlibModels[RIG_MODEL_G315].set_level(DRM, "AGC", "3");
+    /* Winradio G315 */
+    rigmodemap[RIG_MODEL_G315][DRM].ilevels["ATT"]=0;
+    rigmodemap[RIG_MODEL_G315][DRM].ilevels["AGC"]=3;
 # ifdef __linux
-	CapsHamlibModels[RIG_MODEL_G315].set_config("if_path", "/dreamg3xxif");
-	CapsHamlibModels[RIG_MODEL_G315].set_attribute(DRM, "audiotype", "shm");
-	CapsHamlibModels[RIG_MODEL_G315].set_attribute(AM, "audiotype", "shm");
-	CapsHamlibModels[RIG_MODEL_G315].set_attribute(USB, "audiotype", "shm");
-	CapsHamlibModels[RIG_MODEL_G315].set_attribute(LSB, "audiotype", "shm");
-	CapsHamlibModels[RIG_MODEL_G315].set_attribute(NBFM, "audiotype", "shm");
-	CapsHamlibModels[RIG_MODEL_G315].set_attribute(WBFM, "audiotype", "shm");
+    rigmodemap[RIG_MODEL_G315][DRM].config["if_path"] = "/dreamg3xxif";
+    rigmodemap[RIG_MODEL_G315][AM].attributes["audiotype"] = "shm";
+    rigmodemap[RIG_MODEL_G315][USB].attributes["audiotype"] = "shm";
+    rigmodemap[RIG_MODEL_G315][LSB].attributes["audiotype"] = "shm";
+    rigmodemap[RIG_MODEL_G315][NBFM].attributes["audiotype"] = "shm";
+    rigmodemap[RIG_MODEL_G315][WBFM].attributes["audiotype"] = "shm";
 # endif
-	CapsHamlibModels[RIG_MODEL_G315].set_attribute(WBFM, "onboarddemod", "must");
+    rigmodemap[RIG_MODEL_G315][WBFM].attributes["onboarddemod"] = "must";
 #endif
 
 #ifdef RIG_MODEL_AR7030
-	/* AOR 7030 */
-	CapsHamlibModels[RIG_MODEL_AR7030].set_mode(DRM, "AM", "6");
-	CapsHamlibModels[RIG_MODEL_AR7030].set_level(DRM, "AGC", "5");
+    /* AOR 7030 */
+    rigmodemap[RIG_MODEL_AR7030][DRM].ilevels["AGC"]=5;
+    rigmodemap[-RIG_MODEL_AR7030][DRM].ilevels["AGC"]=5;
 
-	CapsHamlibModels[-RIG_MODEL_AR7030] = CapsHamlibModels[RIG_MODEL_AR7030];
-	CapsHamlibModels[RIG_MODEL_AR7030].set_mode(DRM, "AM", "3");
-
+    rigmodemap[-RIG_MODEL_AR7030][DRM].modes["AM"]=6;
+    rigmodemap[RIG_MODEL_AR7030][DRM].modes["AM"]=3;
 #endif
 
 #ifdef RIG_MODEL_NRD535
-	/* JRC NRD 535 */
-						 /* AGC=slow */
-	CapsHamlibModels[RIG_MODEL_NRD535].set_level(DRM, "AGC", "3");
+    /* JRC NRD 535 */
+    /* AGC=slow */
+    rigmodemap[RIG_MODEL_NRD535][DRM].ilevels["AGC"]=3;
+    rigmodemap[-RIG_MODEL_NRD535][DRM].ilevels["AGC"]=3;
 
-	CapsHamlibModels[-RIG_MODEL_NRD535] = CapsHamlibModels[RIG_MODEL_NRD535];
-
-	CapsHamlibModels[RIG_MODEL_NRD535].set_mode(DRM, "CW", "12000");
-	CapsHamlibModels[RIG_MODEL_NRD535].set_level(DRM, "CWPITCH", "-5000");
-	CapsHamlibModels[RIG_MODEL_NRD535].set_level(DRM, "IF", "-2000");
-	CapsHamlibModels[RIG_MODEL_NRD535].set_config("offset", "3"); /* kHz frequency offset */
+    rigmodemap[RIG_MODEL_NRD535][DRM].modes["CW"]=12000;
+    rigmodemap[RIG_MODEL_NRD535][DRM].ilevels["CWPITCH"]=-5000;
+    rigmodemap[RIG_MODEL_NRD535][DRM].ilevels["IF"]=-2000;
+    rigmodemap[RIG_MODEL_NRD535][DRM].config["offset"]="3";
 #endif
 
 #ifdef RIG_MODEL_RX320
-	/* TenTec RX320D */
-	CapsHamlibModels[RIG_MODEL_RX320].set_level(DRM, "AGC", "3");
+    /* TenTec RX320D */
+    rigmodemap[RIG_MODEL_RX320][DRM].ilevels["AGC"]=3;
+    rigmodemap[-RIG_MODEL_RX320][DRM].ilevels["AGC"]=3;
 
-	CapsHamlibModels[-RIG_MODEL_RX320] = CapsHamlibModels[RIG_MODEL_RX320];
-
-	CapsHamlibModels[RIG_MODEL_RX320].set_mode(DRM, "AM", "6000");
-	CapsHamlibModels[RIG_MODEL_RX320].set_level(DRM, "AF", "1");
+    rigmodemap[RIG_MODEL_RX320][DRM].modes["AM"]=6000;
+    rigmodemap[RIG_MODEL_RX320][DRM].ilevels["AF"]=1;
 
 #endif
 
 #ifdef RIG_MODEL_RX340
-	/* TenTec RX340D */
-	CapsHamlibModels[RIG_MODEL_RX340].set_level(DRM, "AGC", "3");
+    /* TenTec RX340D */
+    rigmodemap[RIG_MODEL_RX340][DRM].ilevels["AGC"]=3;
+    rigmodemap[-RIG_MODEL_RX340][DRM].ilevels["AGC"]=3;
 
-	CapsHamlibModels[-RIG_MODEL_RX340] = CapsHamlibModels[RIG_MODEL_RX340];
-
-	CapsHamlibModels[RIG_MODEL_RX340].set_mode(DRM, "USB", "16000");
-	CapsHamlibModels[RIG_MODEL_RX340].set_level(DRM, "IF", "2000");
-	CapsHamlibModels[RIG_MODEL_RX340].set_level(DRM, "AF", "1");
-	CapsHamlibModels[RIG_MODEL_RX340].set_config("offset", "-12");
+    rigmodemap[RIG_MODEL_RX340][DRM].modes["USB"]=16000;
+    rigmodemap[RIG_MODEL_RX340][DRM].ilevels["IF"]=2000;
+    rigmodemap[RIG_MODEL_RX340][DRM].ilevels["AF"]=1;
+    rigmodemap[RIG_MODEL_RX340][DRM].config["offset"]=-12;
 
 #endif
 
 #ifdef RIG_MODEL_ELEKTOR507
     /* Elektor USB SDR 5/07 */
-	CapsHamlibModels[RIG_MODEL_ELEKTOR507].set_config("offset", "-12");
+    rigmodemap[RIG_MODEL_ELEKTOR507][DRM].config["offset"]="-12";
 #endif
 
-	EModulationType eRigMode = EModulationType(s.Get("Hamlib", "mode", 0));
-	bSMeterWanted = s.Get("Hamlib", "smeter", false);
+    EModulationType eRigMode = EModulationType(s.Get("Hamlib", "mode", 0));
 
-	for(map<rig_model_t,CRigCaps>::iterator
-	    r = CapsHamlibModels.begin(); r != CapsHamlibModels.end(); r++)
+    for (map<rig_model_t,
+		map<EModulationType,CRigSettings>
+		>::iterator
+	    r = rigmodemap.begin(); r != rigmodemap.end(); r++)
+    {
+	stringstream section;
+	rig_model_t model = r->first;
+	section << "Hamlib" << ((model<0)?"-Modified-":"-") << abs(model) << "-";
+	//r->second.LoadSettings(s, section.str());
+    }
+
+    /* Initial mode/band */
+    eRigMode = EModulationType(s.Get("Hamlib", "mode", int(DRM)));
+
+    //rig_model_t model = WantedModelID[eRigMode];
+
+    /* extract config from -C command line arg */
+    string command_line_config = s.Get("command", "hamlib-config", string(""));
+    if (command_line_config!="")
+    {
+	istringstream params(command_line_config);
+	string name, value;
+	while (getline(params, name, '='))
 	{
-		stringstream section;
-		rig_model_t model = r->first;
-		section << "Hamlib" << ((model<0)?"-Modified-":"-") << abs(model) << "-";
-		r->second.LoadSettings(s, section.str());
+	    getline(params, value, ',');
+	    //CapsHamlibModels[model].set_config(name, value);
+	    // TODO support levels, params, etc.
 	}
-
-	/* Initial mode/band */
-	eRigMode = EModulationType(s.Get("Hamlib", "mode", int(DRM)));
-
-	//rig_model_t model = WantedModelID[eRigMode];
-
-	/* extract config from -C command line arg */
-	string command_line_config = s.Get("command", "hamlib-config", string(""));
-	if(command_line_config!="")
-	{
-		istringstream params(command_line_config);
-		string name, value;
-		while (getline(params, name, '='))
-		{
-			getline(params, value, ',');
-			//CapsHamlibModels[model].set_config(name, value);
-				// TODO support levels, params, etc.
-		}
-	}
+    }
 }
 
 void
 CHamlib::SaveSettings(CSettings & s) const
 {
+#if 0
+    //s.Put("Hamlib", "smeter", bSMeterWanted);
 
-	s.Put("Hamlib", "smeter", bSMeterWanted);
-
-	for(map<rig_model_t,CRigCaps>::const_iterator
+    for (map<rig_model_t,CRigCaps>::const_iterator
 	    r = CapsHamlibModels.begin(); r != CapsHamlibModels.end(); r++)
+    {
+	if (r->first != 0)
 	{
-		if(r->first != 0)
-		{
-			stringstream section;
-			rig_model_t model = r->first;
-			section << "Hamlib" << ((model<0)?"-Modified-":"-") << abs(model) << "-";
-			r->second.SaveSettings(s, section.str());
-		}
+	    stringstream section;
+	    rig_model_t model = r->first;
+	    section << "Hamlib" << ((model<0)?"-Modified-":"-") << abs(model) << "-";
+	    r->second.SaveSettings(s, section.str());
 	}
-}
-
-bool
-CHamlib::SetFrequency(const int iFreqkHz)
-{
-    iFrequencykHz = iFreqkHz;
-
-	int iFreqHz = (iFreqkHz + iFrequencyOffsetkHz) * 1000;
-	//cout << "CHamlib::SetFrequency input: " << iFreqkHz << " offset: " << iFrequencyOffsetkHz << " Hz: " << iFreqHz << endl;
-	if (pRig && rig_set_freq(pRig, RIG_VFO_CURR, iFreqHz) == RIG_OK)
-		return true;
-	return false;
-}
-
-void CHamlib::SetEnableSMeter(const bool bStatus)
-{
-	bSMeterWanted = bStatus;
-	if(bStatus)
-	{
-#ifdef USE_QT_GUI
-		if(bEnableSMeter==false)
-		{
-			start(); // don't do this except in GUI thread - see CReceiverSettings
-		}
+    }
 #endif
-	}
-	else
-	{
-		StopSMeter();
-	}
 }
 
-bool CHamlib::GetEnableSMeter()
+bool CHamlib::GetRigSettings(CRigSettings& s,rig_model_t m, EModulationType e) const
 {
-	return bEnableSMeter;
+	map<rig_model_t,
+		map<EModulationType, CRigSettings >
+		>::const_iterator i = rigmodemap.find(m);
+	if(i==rigmodemap.end())
+		return false;
+
+	map<EModulationType, CRigSettings >::const_iterator j = i->second.find(e);
+	if(j==i->second.end())
+		return false;
+	s = j->second;
+	return true;
 }
 
-void CHamlib::StopSMeter()
+void CHamlib::set_attribute(rig_model_t m, EModulationType e, const string& a, const string& v)
 {
-	Parameters.Lock();
-	Parameters.Measurements.SigStrstat.invalidate();
-	Parameters.Unlock();
-	bEnableSMeter = false;
+	rigmodemap[m][e].attributes[a]=v;
 }
-
-void CHamlib::run()
-{
-	bEnableSMeter = true;
-	while(bEnableSMeter)
-	{
-		value_t val;
-		int r = -1;
-		mutex.lock();
-		if(pRig)
-			r = rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &val);
-		mutex.unlock();
-		if(r == 0)
-		{
-			Parameters.Lock();
-			// Apply any correction
-	    const _REAL S9_DBuV = 34.0; // S9 in dBuV for converting HamLib S-meter readings
-			Parameters.Measurements.SigStrstat.addSample(_REAL(val.i) + S9_DBuV + Parameters.rSigStrengthCorrection);
-			Parameters.Unlock();
-#ifdef USE_QT_GUI
-			msleep(400);
-#endif
-		}
-		else
-		{
-			/* If a time-out happened, do not update s-meter anymore (disable it) */
-			bEnableSMeter = false;
-		}
-	}
-}
-
-void
-CHamlib::OpenRig(rig_model_t model)
-{
-	cerr << "CHamlib::OpenRig " << model << " " << abs(model) << endl;
-	/* Init rig (negative rig numbers indicate modified rigs */
-	pRig = rig_init(abs(model));
-	if (pRig == NULL)
-	{
-		cerr << "Initialization of hamlib failed." << endl;
-		return;
-	}
-
-	int ret = CapsHamlibModels[model].SetRigConfig(pRig);
-
-	if(ret != RIG_OK)
-	{
-		cerr << "setrigconfig failed" << endl;
-		return;
-	}
-
-	/* Open rig */
-	ret = rig_open(pRig);
-	if (ret != RIG_OK)
-	{
-		/* Fail! */
-		cerr << "rig_open failed" << endl;
-		CloseRig();
-	}
-}
-
-void
-CHamlib::CloseRig()
-{
-	if(bEnableSMeter)
-	{
-		bEnableSMeter = false;
-#ifdef USE_QT_GUI
-		if(wait(1000) == false)
-			cerr << "error terminating rig polling thread" << endl;
-#endif
-	}
-	/* If rig was already open, close it first */
-	if (pRig != NULL)
-	{
-		/* Close everything */
-		mutex.lock();
-		rig_close(pRig);
-		rig_cleanup(pRig);
-		pRig = NULL;
-		mutex.unlock();
-	}
-}
-
-void
-CHamlib::SetModulation(EModulationType eRigMode)
-{
-	if(pRig==NULL)
-		return;
-	rig_model_t model = pRig->caps->rig_model;
-	CRigCaps& RigCaps = CapsHamlibModels[model];
-	RigCaps.SetRigModes(pRig, eRigMode);
-	RigCaps.SetRigLevels(pRig, eRigMode);
-	RigCaps.SetRigFuncs(pRig, eRigMode);
-	RigCaps.SetRigParams(pRig, eRigMode);
-	stringstream offset(RigCaps.get_config("offset"));
-	offset >> iFrequencyOffsetkHz;
-
-	if (iFrequencykHz != 0)
-		  SetFrequency(iFrequencykHz);
-}
-
-void
-CHamlib::SetRigModel(rig_model_t model)
-{
-	CloseRig();
-
-	/* if no Rig is wanted we are done */
-	if(model == 0)
-		return;
-
-	map<rig_model_t,CRigCaps>::iterator m = CapsHamlibModels.find(model);
-	if (m == CapsHamlibModels.end())
-	{
-		cerr << "invalid rig model ID selected: " << model;
-		return;
-	}
-
-	OpenRig(model);
-
-	if (pRig == NULL)
-	{
-		cerr << "Open Rig failed" << endl;
-		return;
-	}
-
-	/* Ignore result, some rigs don't have support for this */
-	rig_set_powerstat(pRig, RIG_POWER_ON);
-
-
-	if(pRig==NULL)
-		return; // something went wrong
-
-
-	/* Check if s-meter capabilities are available */
-	if(bSMeterWanted && rig_has_get_level(pRig, RIG_LEVEL_STRENGTH))
-		SetEnableSMeter(true);
-}
-
-int
-CRigCaps::mode(EModulationType m, const string& key) const
-{
-	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
-	if(s==settings.end())
-		return -1;
-	map<string,int>::const_iterator k = s->second.modes.find(key);
-	if(k==s->second.modes.end())
-		return -1;
-	return k->second;
-}
-
-void
-CRigCaps::get_level(EModulationType m, const string& key, int& val) const
-{
-	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
-	if(s==settings.end())
-		return;
-	map<string,value_t>::const_iterator k = s->second.levels.find(key);
-	if(k==s->second.levels.end())
-		return;
-	val = k->second.i;
-}
-
-void
-CRigCaps::get_level(EModulationType m, const string& key, float& val) const
-{
-	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
-	if(s==settings.end())
-		return;
-	map<string,value_t>::const_iterator k = s->second.levels.find(key);
-	if(k==s->second.levels.end())
-		return;
-	val = k->second.f;
-}
-
-string
-CRigCaps::function(EModulationType m, const string& key) const
-{
-	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
-	if(s==settings.end())
-		return "";
-	map<string,string>::const_iterator k = s->second.functions.find(key);
-	if(k==s->second.functions.end())
-		return "";
-	return k->second;
-}
-
-string
-CRigCaps::attribute(EModulationType m, const string& key) const
-{
-	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
-	if(s==settings.end())
-		return "";
-	map<string,string>::const_iterator k = s->second.attributes.find(key);
-	if(k==s->second.attributes.end())
-		return "";
-	return k->second;
-}
-
-void
-CRigCaps::get_parameter(EModulationType m, const string& key, int& val) const
-{
-	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
-	if(s==settings.end())
-		return;
-	map<string,value_t>::const_iterator k = s->second.parameters.find(key);
-	if(k==s->second.parameters.end())
-		return;
-	val = k->second.i;
-}
-
-void
-CRigCaps::get_parameter(EModulationType m, const string& key, float& val) const
-{
-	map<EModulationType,CRigModeSpecificSettings>::const_iterator s = settings.find(m);
-	if(s==settings.end())
-		return;
-	map<string,value_t>::const_iterator k = s->second.parameters.find(key);
-	if(k==s->second.parameters.end())
-		return;
-	val = k->second.f;
-}
-
-void
-CRigCaps::set_mode(EModulationType m, const string& key, const string& val)
-{
-	settings[m].modes[key] = atoi(val.c_str());
-}
-
-void
-CRigCaps::set_level(EModulationType m, const string& key, const string& val)
-{
-	setting_t setting = rig_parse_level(key.c_str());
-	if (RIG_LEVEL_IS_FLOAT(setting))
-		settings[m].levels[key].f = atof(val.c_str());
-	else
-		settings[m].levels[key].i = atoi(val.c_str());
-}
-
-void
-CRigCaps::set_function(EModulationType m, const string& key, const string& val)
-{
-	settings[m].functions[key] = val;
-}
-
-void
-CRigCaps::set_attribute(EModulationType m, const string& key, const string& val)
-{
-	settings[m].attributes[key] = val;
-}
-
-void
-CRigCaps::set_parameter(EModulationType m, const string& key, const string& val)
-{
-	setting_t setting = rig_parse_parm(key.c_str());
-	if (RIG_LEVEL_IS_FLOAT(setting))
-		settings[m].parameters[key].f = atof(val.c_str());
-	else
-		settings[m].parameters[key].i = atoi(val.c_str());
-}
-
-void
-CRigCaps::SetRigModes(RIG* pRig, EModulationType eRigMode)
-{
-	const map<string,int>& modes = settings[eRigMode].modes;
-
-	for (map < string, int >::const_iterator i = modes.begin(); i != modes.end(); i++)
-	{
-		rmode_t mode = rig_parse_mode(i->first.c_str());
-		if (mode != RIG_MODE_NONE)
-		{
-			int ret = rig_set_mode(pRig, RIG_VFO_CURR, mode, i->second);
-			if (ret != RIG_OK)
-				cerr << "Rig set mode failed: " << rigerror(ret) << endl;
-		}
-	}
-}
-
-void
-CRigCaps::SetRigLevels(RIG* pRig, EModulationType eRigMode)
-{
-	const map<string,value_t>& levels = settings[eRigMode].levels;
-
-	for (map < string, value_t >::const_iterator i = levels.begin(); i != levels.end(); i++)
-	{
-		setting_t setting = rig_parse_level(i->first.c_str());
-		if (setting != RIG_LEVEL_NONE)
-		{
-			int ret = rig_set_level(pRig, RIG_VFO_CURR, setting, i->second);
-			if (ret != RIG_OK)
-				cerr << "Rig set level failed: " << rigerror(ret) << endl;
-		}
-	}
-}
-
-void
-CRigCaps::SetRigFuncs(RIG* pRig, EModulationType eRigMode)
-{
-	const map<string,string>& functions = settings[eRigMode].functions;
-
-	for (map < string, string >::const_iterator i = functions.begin();
-		 i != functions.end(); i++)
-	{
-		setting_t setting = rig_parse_func(i->first.c_str());
-		if (setting != RIG_FUNC_NONE)
-		{
-			int ret =
-				rig_set_func(pRig, RIG_VFO_CURR, setting,
-							 atoi(i->second.c_str()));
-			if (ret != RIG_OK)
-				cerr << "Rig set func failed: " << rigerror(ret) << endl;
-		}
-	}
-}
-
-void
-CRigCaps::SetRigParams(RIG* pRig, EModulationType eRigMode)
-{
-	const map<string,value_t>& parameters = settings[eRigMode].parameters;
-
-	for (map < string, value_t >::const_iterator i = parameters.begin(); i != parameters.end(); i++)
-	{
-		setting_t setting = rig_parse_parm(i->first.c_str());
-		if (setting != RIG_PARM_NONE)
-		{
-			int ret = rig_set_parm(pRig, setting, i->second);
-			if (ret != RIG_OK)
-				cerr << "Rig set parm failed: " << rigerror(ret) << endl;
-		}
-	}
-}
-
-int
-CRigCaps::SetRigConfig(RIG* pRig)
-{
-	for (map < string, string >::const_iterator i = config.begin();
-		 i != config.end(); i++)
-	{
-		int ret =
-			rig_set_conf(pRig, rig_token_lookup(pRig, i->first.c_str()),
-						 i->second.c_str());
-		if (ret != RIG_OK)
-		{
-			cerr << "Rig set conf failed: " << i->first << "=" << i->second;
-			return ret;
-		}
-	}
-	return RIG_OK;
-}
-
-void
-CRigCaps::LoadSettings(const CSettings& s, const string& secpref)
-{
-	INISection sec;
-	s.Get(secpref+"config", sec);
-	INISection::iterator i;
-	for(i=sec.begin(); i!=sec.end(); i++)
-		set_config(i->first, i->second);
-	for(size_t j=DRM; j<=WBFM; j++)
-	{
-		EModulationType m = EModulationType(j);
-		string section = secpref + string(enums[j]) + string("-");
-		sec.clear();
-		s.Get(section+"modes", sec);
-		for(i=sec.begin(); i!=sec.end(); i++)
-			set_mode(m, i->first, i->second);
-		sec.clear();
-		s.Get(section+"levels", sec);
-		for(i=sec.begin(); i!=sec.end(); i++)
-			set_level(m, i->first, i->second);
-		sec.clear();
-		s.Get(section+"functions", sec);
-		for(i=sec.begin(); i!=sec.end(); i++)
-			set_function(m, i->first, i->second);
-		sec.clear();
-		s.Get(section+"parameters", sec);
-		for(i=sec.begin(); i!=sec.end(); i++)
-			set_parameter(m, i->first, i->second);
-		s.Get(section+"attributes", sec);
-		for(i=sec.begin(); i!=sec.end(); i++)
-			set_attribute(m, i->first, i->second);
-	}
-}
-
-void
-CRigCaps::SaveSettings(CSettings& s, const string& sec) const
-{
-	for(map<string,string>::const_iterator i=config.begin(); i!=config.end(); i++)
-	{
-		s.Put(sec+"config", i->first, i->second);
-	}
-
-	for(map<EModulationType,CRigModeSpecificSettings>::const_iterator j=settings.begin();
-		j!=settings.end(); j++)
-	{
-		const CRigModeSpecificSettings& settings = j->second;
-		map<string,int>::const_iterator k;
-		map<string,string>::const_iterator l;
-		map<string,value_t>::const_iterator v;
-		string section = sec + string(enums[j->first]) + string("-");
-
-		for(k=settings.modes.begin(); k!=settings.modes.end(); k++)
-			s.Put(section+"modes", k->first, k->second);
-
-		for(v=settings.levels.begin(); v!=settings.levels.end(); v++)
-		{
-			setting_t setting = rig_parse_level(v->first.c_str());
-			if (RIG_LEVEL_IS_FLOAT(setting))
-				s.Put(section+"levels", v->first, v->second.f);
-			else
-				s.Put(section+"levels", v->first, v->second.i);
-		}
-
-		for(l=settings.functions.begin(); l!=settings.functions.end(); l++)
-			s.Put(section+"functions", l->first, l->second);
-
-		for(v=settings.parameters.begin(); v!=settings.parameters.end(); v++)
-		{
-			setting_t setting = rig_parse_parm(v->first.c_str());
-			if (RIG_PARM_IS_FLOAT(setting))
-				s.Put(section+"parameters", v->first, v->second.f);
-			else
-				s.Put(section+"parameters", v->first, v->second.i);
-		}
-
-		for(l=settings.attributes.begin(); l!=settings.attributes.end(); l++)
-			s.Put(section+"attributes", l->first, l->second);
-	}
-}
-
-#endif

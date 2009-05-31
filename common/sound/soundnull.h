@@ -38,12 +38,12 @@ public:
 	CSoundInNull():iDev(-1){}
 	virtual ~CSoundInNull() {}
 
-	virtual void		Init(int, bool, int) {}
-	virtual bool	    Read(vector<_SAMPLE>&) { return false; }
-	virtual void		Enumerate(vector<string>&choices) { choices.push_back("(File or Network)"); }
-	virtual int			GetDev() { return iDev; }
-	virtual void		SetDev(int iNewDev) { iDev = iNewDev; }
-	virtual void		Close() {}
+	virtual void	Init(int, bool, int) {}
+	virtual bool	Read(vector<_SAMPLE>&) { return false; }
+	virtual void	Enumerate(vector<string>&choices) const { choices.push_back("(File or Network)"); }
+	virtual int	GetDev() { return iDev; }
+	virtual void	SetDev(int iNewDev) { iDev = iNewDev; }
+	virtual void	Close() {}
 private:
     int iDev;
 };

@@ -159,4 +159,6 @@ inline int Complement2toInt(const unsigned int iSize, CVector<_BINARY>* pbiData)
 
 void GetNetworkInterfaces(vector<CIpIf>& vecIpIf);
 
+void GetComPortList(map<string,string>&);
+
 #endif // !defined(UTILITIES_H__3B0BA660_CA63_4344_B3452345D31912__INCLUDED_)

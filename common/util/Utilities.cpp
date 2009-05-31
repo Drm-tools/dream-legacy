@@ -46,6 +46,27 @@ typedef int SOCKET;
 # define INVALID_SOCKET				(-1)
 #endif
 
+#if defined(_WIN32)
+# ifdef HAVE_SETUPAPI
+#  undef INITGUID
+#  define INITGUID 1
+#  include <windows.h>
+#  include <setupapi.h>
+#  ifndef _MSC_VER
+    DEFINE_GUID(GUID_DEVINTERFACE_COMPORT, 0x86e0d1e0L, 0x8089,
+    0x11d0, 0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73);
+#  endif
+# endif
+#elif defined(__APPLE__)
+#include <CoreFoundation/CoreFoundation.h>
+#include <IOKit/IOKitLib.h>
+#include <IOKit/serial/IOSerialKeys.h>
+#elif defined(__linux)
+# ifdef HAVE_LIBHAL
+#  include <hal/libhal.h>
+# endif
+#endif
+
 #ifdef HAVE_LIBPCAP
 # include <pcap.h>
 #endif
@@ -506,3 +527,224 @@ void GetNetworkInterfaces(vector<CIpIf>& vecIpIf)
 	}
 }
 #endif
+
+void
+GetComPortList(map < string, string > &ports)
+{
+	ports.clear();
+/* Config string for com-port selection is different for each platform */
+#ifdef _WIN32
+# ifdef HAVE_SETUPAPI
+	GUID guid = GUID_DEVINTERFACE_COMPORT;
+	HDEVINFO hDevInfoSet = SetupDiGetClassDevs(&guid, NULL, NULL,
+											   DIGCF_PRESENT |
+											   DIGCF_DEVICEINTERFACE);
+	if (hDevInfoSet != INVALID_HANDLE_VALUE)
+	{
+		SP_DEVINFO_DATA devInfo;
+		devInfo.cbSize = sizeof(SP_DEVINFO_DATA);
+		for (int i = 0; SetupDiEnumDeviceInfo(hDevInfoSet, i, &devInfo); i++)
+		{
+			HKEY hDeviceKey =
+				SetupDiOpenDevRegKey(hDevInfoSet, &devInfo, DICS_FLAG_GLOBAL,
+									 0, DIREG_DEV, KEY_QUERY_VALUE);
+			if (hDeviceKey)
+			{
+				char szPortName[256];
+				DWORD dwSize = sizeof(szPortName);
+				DWORD dwType = 0;
+				if ((RegQueryValueExA
+					 (hDeviceKey, "PortName", NULL, &dwType,
+					  reinterpret_cast < LPBYTE > (szPortName),
+					  &dwSize) == ERROR_SUCCESS) && (dwType == REG_SZ))
+				{
+					char szFriendlyName[256];
+					DWORD dwSize = sizeof(szFriendlyName);
+					DWORD dwType = 0;
+					if (SetupDiGetDeviceRegistryPropertyA
+						(hDevInfoSet, &devInfo, SPDRP_DEVICEDESC, &dwType,
+						 reinterpret_cast < PBYTE > (szFriendlyName), dwSize,
+						 &dwSize) && (dwType == REG_SZ))
+						ports[string(szFriendlyName) + " " + szPortName] = szPortName;
+					else
+						ports[szPortName] = szPortName;
+				}
+
+				RegCloseKey(hDeviceKey);
+			}
+		}
+
+		SetupDiDestroyDeviceInfoList(hDevInfoSet);
+	}
+# endif
+	if (ports.empty())
+	{
+		ports["COM1"] = "COM1";
+		ports["COM2"] = "COM2";
+		ports["COM3"] = "COM3 ";
+		ports["COM4"] = "COM4 ";
+		ports["COM5"] = "COM5 ";
+	}
+#elif defined(__linux)
+	bool bOK = false;
+# ifdef HAVE_LIBHAL
+	int num_udis;
+	char **udis;
+	DBusError error;
+	LibHalContext *hal_ctx;
+
+	dbus_error_init (&error);
+	if ((hal_ctx = libhal_ctx_new ()) == NULL) {
+		LIBHAL_FREE_DBUS_ERROR (&error);
+		return ;
+	}
+	if (!libhal_ctx_set_dbus_connection (hal_ctx, dbus_bus_get (DBUS_BUS_SYSTEM, &error))) {
+		fprintf (stderr, "error: libhal_ctx_set_dbus_connection: %s: %s\n", error.name, error.message);
+		LIBHAL_FREE_DBUS_ERROR (&error);
+		return ;
+	}
+	if (!libhal_ctx_init (hal_ctx, &error)) {
+		if (dbus_error_is_set(&error)) {
+			fprintf (stderr, "error: libhal_ctx_init: %s: %s\n", error.name, error.message);
+			LIBHAL_FREE_DBUS_ERROR (&error);
+		}
+		fprintf (stderr, "Could not initialise connection to hald.\n"
+		"Normally this means the HAL daemon (hald) is not running or not ready.\n");
+		return ;
+	}
+
+	udis = libhal_find_device_by_capability (hal_ctx, "serial", &num_udis, &error);
+
+	if (dbus_error_is_set (&error)) {
+		fprintf (stderr, "error: %s: %s\n", error.name, error.message);
+		LIBHAL_FREE_DBUS_ERROR (&error);
+		return ;
+	}
+	for (int i = 0; i < num_udis; i++) {
+		/*
+		linux.device_file = '/dev/ttyS0'  (string)
+		info.product = '16550A-compatible COM port'  (string)
+		serial.type = 'platform'  (string)
+		serial.port = 0  (0x0)  (int)
+		*/
+		char *dev = libhal_device_get_property_string (hal_ctx, udis[i], "linux.device_file", &error);
+		char *prod = libhal_device_get_property_string (hal_ctx, udis[i], "info.product", &error);
+		char *type = libhal_device_get_property_string (hal_ctx, udis[i], "serial.type", &error);
+		int port = libhal_device_get_property_int(hal_ctx, udis[i], "serial.port", &error);
+		ostringstream s;
+		s << port << " - " << type << " [" << prod << "]";
+		ports[s.str()] = dev;
+		libhal_free_string (dev);
+		libhal_free_string (prod);
+		libhal_free_string (type);
+		bOK = true;
+	}
+
+	libhal_free_string_array (udis);
+# else
+	FILE *p = popen("hal-find-by-capability --capability serial", "r");
+	while (!feof(p))
+	{
+		char buf[1024];
+		fgets(buf, sizeof(buf), p);
+		if (strlen(buf) > 0)
+		{
+			string s =
+				string("hal-get-property --key serial.device --udi ") +
+				buf;
+			FILE *p2 = popen(s.c_str(), "r");
+			fgets(buf, sizeof(buf), p2);
+			size_t n = strlen(buf);
+			if (n > 0)
+			{
+				if (buf[n - 1] == '\n')
+					buf[n - 1] = 0;
+				ports[buf] = buf;
+				bOK = true;
+				buf[0] = 0;
+			}
+			pclose(p2);
+		}
+	}
+	pclose(p);
+# endif
+	if (!bOK)
+	{
+		ports["ttyS0"] = "/dev/ttyS0";
+		ports["ttyS1"] = "/dev/ttyS1";
+		ports["ttyUSB0"] = "/dev/ttyUSB0";
+	}
+#elif defined(__APPLE__)
+	io_iterator_t serialPortIterator;
+    kern_return_t			kernResult;
+    CFMutableDictionaryRef	classesToMatch;
+
+    // Serial devices are instances of class IOSerialBSDClient
+    classesToMatch = IOServiceMatching(kIOSerialBSDServiceValue);
+    if (classesToMatch == NULL)
+    {
+	printf("IOServiceMatching returned a NULL dictionary.\n");
+    }
+    else
+	{
+	CFDictionarySetValue(classesToMatch,
+			     CFSTR(kIOSerialBSDTypeKey),
+			     CFSTR(kIOSerialBSDRS232Type));
+
+	}
+    kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault, classesToMatch, &serialPortIterator);
+    if (KERN_SUCCESS != kernResult)
+    {
+	printf("IOServiceGetMatchingServices returned %d\n", kernResult);
+    }
+
+    io_object_t		comPort;
+
+    // Iterate across all ports found.
+
+    while ((comPort = IOIteratorNext(serialPortIterator)))
+    {
+	CFStringRef	bsdPathAsCFString;
+
+		// Get the callout device's path (/dev/cu.xxxxx). The callout device should almost always be
+		// used: the dialin device (/dev/tty.xxxxx) would be used when monitoring a serial port for
+		// incoming calls, e.g. a fax listener.
+
+		bsdPathAsCFString = CFStringRef(IORegistryEntryCreateCFProperty(comPort,
+							    CFSTR(kIOCalloutDeviceKey),
+							    kCFAllocatorDefault,
+							    0));
+	if (bsdPathAsCFString)
+	{
+	    Boolean result;
+			char bsdPath[256];
+
+	    // Convert the path from a CFString to a C (NUL-terminated) string for use
+			// with the POSIX open() call.
+
+			result = CFStringGetCString(bsdPathAsCFString,
+					bsdPath,
+					sizeof(bsdPath),
+					kCFStringEncodingUTF8);
+	    CFRelease(bsdPathAsCFString);
+
+	    if (result)
+			{
+				// make the name a bit more friendly for the menu
+				string s,t=bsdPath;
+				size_t p = t.find('.');
+				if(p<string::npos)
+					s = t.substr(p+1);
+				else
+					s = t;
+				ports[s] = bsdPath;
+	    }
+	}
+
+	// Release the io_service_t now that we are done with it.
+
+		(void) IOObjectRelease(comPort);
+    }
+#endif
+}
+

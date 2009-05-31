@@ -36,10 +36,10 @@
 class CPaCommon: public CSelectionInterface
 {
 public:
-				CPaCommon(bool);
+	CPaCommon(bool);
 	virtual 	~CPaCommon();
 
-	void		Enumerate(vector<string>& choices);
+	void		Enumerate(vector<string>& choices) const;
 	void		SetDev(int iNewDevice);
 	int			GetDev();
 
@@ -58,8 +58,8 @@ protected:
 	PaSampleFormat fmt(float) { return paFloat32; }
 
 	PaStream *stream;
-	vector<string> names;
-	vector<PaDeviceIndex> devices;
+	//vector<string> names;
+	//vector<PaDeviceIndex> devices;
 	int dev;
 	bool is_capture,blocking,device_changed,xrun;
 	int framesPerBuffer;
@@ -73,7 +73,7 @@ class CPaIn: public CSoundInInterface
 public:
 				CPaIn();
 	virtual 	~CPaIn();
-	void		Enumerate(vector<string>& choices) { hw.Enumerate(choices); }
+	void		Enumerate(vector<string>& choices) const { hw.Enumerate(choices); }
 	void		SetDev(int iNewDevice) { hw.SetDev(iNewDevice); }
 	int			GetDev() { return hw.GetDev(); }
 
@@ -91,9 +91,9 @@ class CPaOut: public CSoundOutInterface
 public:
 				CPaOut();
 	virtual 	~CPaOut();
-	void		Enumerate(vector<string>& choices) { hw.Enumerate(choices); }
+	void		Enumerate(vector<string>& choices) const { hw.Enumerate(choices); }
 	void		SetDev(int iNewDevice) { hw.SetDev(iNewDevice); }
-	int			GetDev() { return hw.GetDev(); }
+	int		GetDev() { return hw.GetDev(); }
 
 	void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
 	void		Close();

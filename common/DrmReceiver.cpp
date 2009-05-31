@@ -126,7 +126,7 @@ bDoInitRun(false), bRunning(false),
 rInitResampleOffset((_REAL) 0.0), iFreqkHz(0),time_keeper(0),
 onBoardDemod(false),pcmInput(SoundCard),
 rig(0),rigMode(DRM),chanSel(CS_MIX_CHAN),
-strPCMFile(),pHamlib(NULL),soundIn(new CSoundIn())
+strPCMFile(),pHamlib(NULL),pRig(NULL),soundIn(new CSoundIn())
 {
 	downstreamRSCI.SetReceiver(this);
     DataDecoder.setApplication(CDataParam::AD_DAB_SPEC_APP, AT_MOTSLISHOW, new CMOTDABDecFactory());
@@ -187,40 +187,58 @@ CDRMReceiver::RigUpdate()
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib==NULL)
 		return;
-	CRigCaps old_caps, new_caps;
-	pHamlib->GetRigCaps(rig.current, old_caps);
-	pHamlib->GetRigCaps(rig.wanted, new_caps);
-	if(rigMode.current != rigMode.wanted || rig.current != rig.wanted)
+	if(rig.current != rig.wanted)
 	{
-		pHamlib->SetRigModel(rig.wanted);
-		rig.current = rig.wanted;
-
-		if(new_caps.attribute(rigMode.wanted, "audiotype")=="shm")
+		if(pRig)
 		{
-			pcmInput.wanted = Shm;
-			strPCMFile = new_caps.get_config("if_path");
+			pRig->close(); // could be done in destructor
+			delete pRig;
+		}
+		pRig = pHamlib->GetRig(Parameters, rig.wanted);
+		if(pRig == NULL)
+			return; // TODO decide if throw is appropriate
+		rig.current = rig.wanted;
+		rigMode.current = NONE;
+		pRig->open();
+	}
+	if(rigMode.current != rigMode.wanted)
+	{
+		CRigSettings s;
+		bool hasSettings = pHamlib->GetRigSettings(s, rig.current, rigMode.wanted);
+		if(hasSettings)
+		{
+			if(s.attributes["audiotype"]=="shm")
+			{
+				pcmInput.wanted = Shm;
+				strPCMFile = s.config["if_path"];
+			}
+			else
+			{
+				pcmInput.wanted = SoundCard;
+				string snddevin = s.attributes["snddevin"];
+				if(snddevin != "")
+				{
+					stringstream s(snddevin);
+					s >> soundIn.deviceNo.wanted;
+				}
+			}
+			if(s.attributes["onboarddemod"]=="must")
+			{
+				onBoardDemod.current = true;
+			}
+			else if(s.attributes["onboarddemod"]=="can")
+			{
+				onBoardDemod.current = onBoardDemod.wanted;
+			}
+			else
+			{
+				onBoardDemod.current = false;
+			}
+			pRig->set_for_mode(s);
 		}
 		else
 		{
 			pcmInput.wanted = SoundCard;
-			string snddevin = new_caps.attribute(rigMode.wanted, "snddevin");
-			if(snddevin != "")
-			{
-				stringstream s(snddevin);
-				s >> soundIn.deviceNo.wanted;
-			}
-		}
-		if(new_caps.attribute(rigMode.wanted, "onboarddemod")=="must")
-		{
-			onBoardDemod.current = true;
-		}
-		else if(new_caps.attribute(rigMode.wanted, "onboarddemod")=="can")
-		{
-			onBoardDemod.current = onBoardDemod.wanted;
-		}
-		else
-		{
-			onBoardDemod.current = false;
 		}
 	}
 	else
@@ -229,7 +247,6 @@ CDRMReceiver::RigUpdate()
 	}
 	stringstream s;
 	s << soundIn.deviceNo.wanted;
-	pHamlib->SetModulation(rigMode.wanted);
 	pHamlib->set_attribute(rig.current, rigMode.wanted, "snddevin", s.str()); // save for persistence
 	rigMode.current = rigMode.wanted;
 #endif
@@ -239,8 +256,8 @@ void
 CDRMReceiver::SetEnableSMeter(bool bNew)
 {
 #ifdef HAVE_LIBHAMLIB
-	if(pHamlib)
-		pHamlib->SetEnableSMeter(bNew);
+	if(pRig)
+		pRig->SetEnableSMeter(bNew);
 #endif
 }
 
@@ -248,8 +265,8 @@ bool
 CDRMReceiver::GetEnableSMeter()
 {
 #ifdef HAVE_LIBHAMLIB
-	if(pHamlib)
-		return pHamlib->GetEnableSMeter();
+	if(pRig)
+		return pRig->GetEnableSMeter();
 #endif
 	return false;
 }
@@ -1239,8 +1256,8 @@ bool CDRMReceiver::doSetFrequency()
 		WriteIQFile.NewFrequency(Parameters);
 
 #ifdef HAVE_LIBHAMLIB
-		if(pHamlib)
-			return pHamlib->SetFrequency(iFreqkHz);
+		if(pRig)
+			return pRig->SetFrequency(iFreqkHz);
 #endif
 		return true;
 	}
@@ -1307,45 +1324,39 @@ void CDRMReceiver::GetRigList(CRigMap& rigs) const
 #endif
 }
 
-void CDRMReceiver::GetRigCaps(int model, CRigCaps& caps) const
+void CDRMReceiver::GetRigSettings(CRigSettings& s, int model, EModulationType mode) const
 {
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
-		pHamlib->GetRigCaps(model, caps);
+		pHamlib->GetRigSettings(s, model, mode);
 #endif
 }
 
-void CDRMReceiver::GetComPortList(map<string,string>& ports) const
+CRig* CDRMReceiver::GetRig(int model) const
 {
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
-		pHamlib->GetPortList(ports);
+		return pHamlib->GetRig(const_cast<CParameter&>(Parameters), model);
 #endif
+	return NULL;
 }
 
-string CDRMReceiver::GetRigInfo() const
-{
-#ifdef HAVE_LIBHAMLIB
-    if(pHamlib)
-	return pHamlib->GetInfo();
-#endif
-    return "";
-}
-
-string CDRMReceiver::GetRigComPort() const
+const rig_caps*
+CDRMReceiver::GetRigCaps(int model) const
 {
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
-		return pHamlib->GetComPort();
+		return pHamlib->GetRigCaps(model);
 #endif
-	return "";
+	return NULL;
 }
 
-void CDRMReceiver::SetRigComPort(const string& s)
+CRig* CDRMReceiver::GetCurrentRig() const
 {
 #ifdef HAVE_LIBHAMLIB
-	if(pHamlib)
-		pHamlib->SetComPort(s);
+	return pRig;
+#else
+	return NULL;
 #endif
 }
 

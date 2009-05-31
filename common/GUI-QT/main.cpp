@@ -127,7 +127,7 @@ main(int argc, char **argv)
 	    string fio = m.Settings.Get("command", "fileio", string(""));
 	    if(rsi == "" && fio == "") /* don't initialise hamlib if RSCI or file input is requested */
 	    {
-		pHamlib = new CHamlib(*m.Receiver.GetParameters());
+		pHamlib = new CHamlib();
 		m.Receiver.SetHamlib(pHamlib);
 	    }
 #endif
@@ -140,7 +140,7 @@ main(int argc, char **argv)
 
 	    app.exec();
 
-#ifdef HAVE_LIBHAMLIB
+#if 0 //def HAVE_LIBHAMLIB
 			if(pHamlib)
 			{
 				pHamlib->StopSMeter();

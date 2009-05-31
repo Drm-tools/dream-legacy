@@ -89,7 +89,6 @@
 				<Option object_output="..\Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="--mode RX D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -121,7 +120,6 @@
 				<Option object_output="..\Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -149,9 +147,6 @@
 					<Add library="qwt5" />
 				</Linker>
 			</Target>
-			<Environment>
-				<Variable name="QTDIR" value="D:\Qt\2009.02\qt" />
-			</Environment>
 		</Build>
 		<Compiler>
 			<Add option="-DHAVE_STDINT_H" />
@@ -174,7 +169,7 @@
 			<Add directory="$(QTDIR)\include\QtGUI" />
 			<Add directory="$(QTDIR)\include\Qt3Support" />
 			<Add directory="$(QTDIR)\include\QtXML" />
-			<Add directory="..\libs\qwt" />
+			<Add directory="..\..\qwt-5.1.1\src" />
 		</Compiler>
 		<Linker>
 			<Add library="faac" />
@@ -191,6 +186,7 @@
 			<Add library="..\libs\PortAudio.dll" />
 			<Add directory="$(QTDIR)\lib" />
 			<Add directory="..\libs" />
+			<Add directory="..\..\qwt-5.1.1\lib" />
 		</Linker>
 		<Unit filename="..\common\AMDemodulation.cpp" />
 		<Unit filename="..\common\AMDemodulation.h" />
@@ -929,9 +925,10 @@
 			<Option target="Win32CLI" />
 		</Unit>
 		<Unit filename="resource.h" />
+		<Unit filename="..\..\rigclass.cc" />
 		<Extensions>
 			<code_completion />
-			<envvars />
+			<envvars set="default" />
 			<debugger />
 			<lib_finder disable_auto="1" />
 		</Extensions>

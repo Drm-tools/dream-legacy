@@ -31,6 +31,8 @@
 
 #include "ReceiverSettingsDlg.h"
 #include "../GlobalDefinitions.h"
+#include "../selectioninterface.h"
+#include "../util/Utilities.h"
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QButtonGroup>
@@ -50,7 +52,7 @@ RigTypesModel::rowCount ( const QModelIndex & parent ) const
     	const model_index* r = (const model_index*)parent.internalPointer();
     	if(r->parent==-1) // its a make - what we expect!
     	{
-		const make *m = reinterpret_cast<const make*>(r);
+		const make *m = dynamic_cast<const make*>(r);
 		return m->model.size();
     	}
     	else // its a model - stop descending
@@ -259,6 +261,8 @@ int RigModel::columnCount (const QModelIndex& parent) const
 QVariant RigModel::data (const QModelIndex& index, int role) const
 {
     const model_index* i = (const model_index*)index.internalPointer();
+    if(i==NULL)
+	return QVariant();
     if(i->parent==-1)
     {
 	switch(role)
@@ -269,18 +273,22 @@ QVariant RigModel::data (const QModelIndex& index, int role) const
 	    switch(index.column())
 	    {
 		case 0:
-		    return rigs[index.row()].caps.hamlib_caps.model_name;
+		    return rigs[index.row()].caps.model_name;
 		break;
 		case 1:
-		    return rigs[index.row()].caps.hamlib_caps.rig_model;
+		    return rigs[index.row()].caps.rig_model;
 		    break;
 		case 2:
-		    return rig_strstatus(rigs[index.row()].caps.hamlib_caps.status);
+		    return rig_strstatus(rigs[index.row()].caps.status);
 		    break;
 	    }
 	    break;
 	case Qt::UserRole:
-	    return rigs[index.row()].caps.hamlib_caps.rig_model;
+	    {
+	    	QVariant var;
+		var.setValue(rigs[index.row()].caps);
+		return var;
+	    }
 	    break;
 	case Qt::TextAlignmentRole:
 	    switch(index.column())
@@ -335,15 +343,64 @@ QVariant RigModel::headerData ( int section, Qt::Orientation orientation, int ro
 }
 
 void
-RigModel::add(const CRigCaps& caps)
+RigModel::add(const rig_caps& caps)
 {
     rig r;
-    //memcpy(&r.caps, &caps, sizeof(CRigCaps));
     r.caps = caps;
     r.parent = -1;
     rigs.push_back(r);
     reset();
 }
+
+SoundChoice::SoundChoice():QAbstractItemModel(), items()
+{
+}
+
+int SoundChoice::rowCount (const QModelIndex&) const
+{
+    return items.size();
+}
+
+int SoundChoice::columnCount (const QModelIndex&) const
+{
+    return 1;
+}
+
+QVariant
+SoundChoice::data (const QModelIndex& index, int role) const
+{
+    switch(role)
+    {
+	case Qt::DecorationRole:
+	    break;
+	case Qt::DisplayRole:
+	    return items[index.row()].c_str();
+	    break;
+	case Qt::UserRole:
+	    return index.internalId();
+	    break;
+	case Qt::TextAlignmentRole:
+	    return QVariant(Qt::AlignLeft|Qt::AlignVCenter);
+    }
+    return QVariant();
+}
+
+QModelIndex SoundChoice::index(int row, int column, const QModelIndex &parent) const
+{
+  return createIndex(row, column, row);
+}
+
+QModelIndex SoundChoice::parent(const QModelIndex&) const
+{
+    return QModelIndex();
+}
+
+void SoundChoice::set(const CSelectionInterface& s)
+{
+	s.Enumerate(items);
+	reset();
+}
+
 #endif
 
 ReceiverSettingsDlg::ReceiverSettingsDlg(
@@ -353,7 +410,13 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
 	QDialog(parent, f), Ui_ReceiverSettingsDlg(),
 	Receiver(NRx), Settings(NSettings), loading(true),
 	TimerRig(),iWantedrigModel(0),
-	bgTimeInterp(NULL), bgFreqInterp(NULL), bgTiSync(NULL), bgChanSel(NULL)
+	bgTimeInterp(NULL), bgFreqInterp(NULL), bgTiSync(NULL),
+	bgDRMriq(NULL), bgDRMlrm(NULL), bgDRMiq(NULL),
+	bgAMriq(NULL), bgAMlrm(NULL), bgAMiq(NULL),
+	bgHamriq(NULL), bgHamlrm(NULL), bgHamiq(NULL)
+#ifdef HAVE_LIBHAMLIB
+	,RigTypes(),Rigs(),soundcards()
+#endif
 {
     setupUi(this);
 
@@ -400,27 +463,61 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
     bgTiSync = new QButtonGroup(this);
     bgTiSync->addButton(RadioButtonTiSyncEnergy, 0);
     bgTiSync->addButton(RadioButtonTiSyncFirstPeak, 0);
-    bgChanSel = new QButtonGroup(this);
-    bgChanSel->addButton(radioButtonLeft, CS_LEFT_CHAN);
-    bgChanSel->addButton(radioButtonRight, CS_RIGHT_CHAN);
-    bgChanSel->addButton(radioButtonMix, CS_MIX_CHAN);
-    bgChanSel->addButton(radioButtonIQPos, CS_IQ_POS);
-    bgChanSel->addButton(radioButtonIQNeg, CS_IQ_NEG);
-    bgChanSel->addButton(radioButtonIQPosZero, CS_IQ_POS_ZERO);
-    bgChanSel->addButton(radioButtonIQNegZero, CS_IQ_NEG_ZERO);
-    connect(bgTimeInterp, SIGNAL(buttonClicked(int)),
-	    this, SLOT(OnSelTimeInterp(int)));
-    connect(bgFreqInterp, SIGNAL(buttonClicked(int)),
-	    this, SLOT(OnSelFrequencyInterp(int)));
-    connect(bgTiSync, SIGNAL(buttonClicked(int)),
-	    this, SLOT(OnSelTiSync(int)));
-    connect(bgChanSel, SIGNAL(buttonClicked(int)),
-	    this, SLOT(OnSelInputChan(int)));
+
+    comboBoxDRMRig->setModel(treeViewRigs->model());
+    comboBoxDRMSound->setModel(&soundcards);
+    bgDRMriq = new QButtonGroup(this);
+    bgDRMriq->addButton(radioButtonDRMReal, 0);
+    bgDRMriq->addButton(radioButtonDRMIQ, 1);
+    bgDRMlrm = new QButtonGroup(this);
+    bgDRMlrm->addButton(radioButtonDRMLeft, CS_LEFT_CHAN);
+    bgDRMlrm->addButton(radioButtonDRMRight, CS_RIGHT_CHAN);
+    bgDRMlrm->addButton(radioButtonDRMMix, CS_MIX_CHAN);
+    bgDRMiq = new QButtonGroup(this);
+    bgDRMiq->addButton(radioButtonDRMIQPos, CS_IQ_POS);
+    bgDRMiq->addButton(radioButtonDRMIQNeg, CS_IQ_NEG);
+
+    comboBoxAMRig->setModel(treeViewRigs->model());
+    comboBoxAMSound->setModel(&soundcards);
+    bgAMriq = new QButtonGroup(this);
+    bgAMriq->addButton(radioButtonAMReal, 0);
+    bgAMriq->addButton(radioButtonAMIQ, 1);
+    bgAMlrm = new QButtonGroup(this);
+    bgAMlrm->addButton(radioButtonAMLeft, CS_LEFT_CHAN);
+    bgAMlrm->addButton(radioButtonAMRight, CS_RIGHT_CHAN);
+    bgAMlrm->addButton(radioButtonAMMix, CS_MIX_CHAN);
+    bgAMiq = new QButtonGroup(this);
+    bgAMiq->addButton(radioButtonAMIQPos, CS_IQ_POS);
+    bgAMiq->addButton(radioButtonAMIQNeg, CS_IQ_NEG);
+
+    comboBoxFMRig->setModel(treeViewRigs->model());
+    comboBoxFMSound->setModel(&soundcards);
+
+    comboBoxHamRig->setModel(treeViewRigs->model());
+    comboBoxHamSound->setModel(&soundcards);
+    bgHamriq = new QButtonGroup(this);
+    bgHamriq->addButton(radioButtonHamReal, 0);
+    bgHamriq->addButton(radioButtonHamIQ, 1);
+    bgHamlrm = new QButtonGroup(this);
+    bgHamlrm->addButton(radioButtonHamLeft, CS_LEFT_CHAN);
+    bgHamlrm->addButton(radioButtonHamRight, CS_RIGHT_CHAN);
+    bgHamlrm->addButton(radioButtonHamMix, CS_MIX_CHAN);
+    bgHamiq = new QButtonGroup(this);
+    bgHamiq->addButton(radioButtonHamIQPos, CS_IQ_POS);
+    bgHamiq->addButton(radioButtonHamIQNeg, CS_IQ_NEG);
+
+    connect(pushButtonDRMApply, SIGNAL(clicked()), SLOT(OnButtonDRMApply()));
+    connect(pushButtonAMApply, SIGNAL(clicked()), SLOT(OnButtonAMApply()));
+    connect(pushButtonFMApply, SIGNAL(clicked()), SLOT(OnButtonFMApply()));
+    connect(pushButtonHamApply, SIGNAL(clicked()), SLOT(OnButtonHamApply()));
+
+    connect(bgDRMriq, SIGNAL(buttonClicked(int)), SLOT(OnRadioDRMRealIQ(int)));
+    connect(bgAMriq, SIGNAL(buttonClicked(int)), SLOT(OnRadioAMRealIQ(int)));
+    connect(bgHamriq, SIGNAL(buttonClicked(int)), SLOT(OnRadioHamRealIQ(int)));
 
     /* Check boxes */
     connect(CheckBoxUseGPS, SIGNAL(clicked()), SLOT(OnCheckBoxUseGPS()) );
     connect(CheckBoxDisplayGPS, SIGNAL(clicked()), SLOT(OnCheckBoxDisplayGPS()) );
-    connect(CheckBoxFlipSpec, SIGNAL(clicked()), this, SLOT(OnCheckFlipSpectrum()));
     connect(CheckBoxWriteLog, SIGNAL(clicked()), this, SLOT(OnCheckWriteLog()));
     connect(CheckBoxRecFilter, SIGNAL(clicked()), this, SLOT(OnCheckRecFilter()));
     connect(CheckBoxModiMetric, SIGNAL(clicked()), this, SLOT(OnCheckModiMetric()));
@@ -431,12 +528,12 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
     connect(pushButtonAddRig, SIGNAL(clicked()), this, SLOT(OnButtonAddRig()));
     connect(pushButtonRemoveRig, SIGNAL(clicked()), this, SLOT(OnButtonRemoveRig()));
     //connect(CheckBoxEnableSMeter, SIGNAL(toggled(bool)), this, SLOT(OnCheckEnableSMeterToggled(bool)));
-    connect(treeViewRigTypes, SIGNAL(clicked (const QModelIndex&)),
+    connect(treeViewRigs, SIGNAL(clicked (const QModelIndex&)),
 	    this, SLOT(OnRigSelected(const QModelIndex&)));
 
     connect(&TimerRig, SIGNAL(timeout()), this, SLOT(OnTimerRig()));
 
-    connect(pushButtonApplyRig, SIGNAL(clicked()), this, SLOT(OnButtonApplyRigSettings()));
+    connect(pushButtonConnectRig, SIGNAL(clicked()), this, SLOT(OnButtonConnectRig()));
     TimerRig.stop();
     //TimerRig.setSingleShot(true);
 #endif
@@ -460,67 +557,108 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 	loading = true; // prevent executive actions during reading state
 
 	/* DRM ----------------------------------------------------------------- */
-	bgTimeInterp->button(int(Receiver.GetTimeInt()))->setChecked(true);
-	bgFreqInterp->button(int(Receiver.GetFreqInt()))->setChecked(true);
-	bgTiSync->button(int(Receiver.GetTiSyncTracType()))->setChecked(true);
+	QAbstractButton* button = NULL;
+	button = bgTimeInterp->button(int(Receiver.GetTimeInt()));
+	if(button) button->setChecked(true);
+	button = bgFreqInterp->button(int(Receiver.GetFreqInt()));
+	if(button) button->setChecked(true);
+	button = bgTiSync->button(int(Receiver.GetTiSyncTracType()));
+	if(button) button->setChecked(true);
 
 	CheckBoxRecFilter->setChecked(Receiver.GetRecFilter());
 	CheckBoxModiMetric->setChecked(Receiver.GetIntCons());
 	SliderNoOfIterations->setValue(Receiver.GetInitNumIterations());
 
 	/* Input ----------------------------------------------------------------- */
-	bgChanSel->button(int(Receiver.GetChannelSelection()))->setChecked(true);
-	CheckBoxFlipSpec->setChecked(Receiver.GetFlippedSpectrum());
+	soundcards.set(*Receiver.GetSoundInInterface());
+
+	comboBoxDRMSound->setCurrentIndex(Settings.Get("Input-DRM", "soundcard", int(0)));
+	int riq = Settings.Get("Input-DRM", "mode", int(0));
+	stackedWidgetDRMip->setCurrentIndex(riq);
+	button = bgDRMriq->button(riq);
+	if(button) button->setChecked(true);
+	button = bgDRMlrm->button(Settings.Get("Input-DRM", "channels", int(0)));
+	if(button) button->setChecked(true);
+	button = bgDRMiq->button(Settings.Get("Input-DRM", "sign", int(0)));
+	if(button) button->setChecked(true);
+	CheckBoxDRMFlipSpec->setChecked(Settings.Get("Input-DRM", "flipspectrum", int(0)));
+
+	comboBoxAMSound->setCurrentIndex(Settings.Get("Input-AM", "soundcard", int(0)));
+	riq = Settings.Get("Input-AM", "mode", int(0));
+	stackedWidgetAMip->setCurrentIndex(riq);
+	button = bgAMriq->button(riq);
+	if(button) button->setChecked(true);
+	button = bgAMlrm->button(Settings.Get("Input-AM", "channels", int(0)));
+	if(button) button->setChecked(true);
+	button = bgAMiq->button(Settings.Get("Input-AM", "sign", int(0)));
+	if(button) button->setChecked(true);
+	CheckBoxAMFlipSpec->setChecked(Settings.Get("Input-AM", "flipspectrum", int(0)));
+
+	comboBoxFMSound->setCurrentIndex(Settings.Get("Input-FM", "soundcard", int(0)));
+
+	comboBoxHamSound->setCurrentIndex(Settings.Get("Input-Ham", "soundcard", int(0)));
+	riq = Settings.Get("Input-Ham", "mode", int(0));
+	stackedWidgetHamip->setCurrentIndex(riq);
+	button = bgHamriq->button(riq);
+	if(button) button->setChecked(true);
+	button = bgHamlrm->button(Settings.Get("Input-Ham", "channels", int(0)));
+	if(button) button->setChecked(true);
+	button = bgHamiq->button(Settings.Get("Input-Ham", "sign", int(0)));
+	if(button) button->setChecked(true);
+	CheckBoxHamFlipSpec->setChecked(Settings.Get("Input-Ham", "flipspectrum", int(0)));
+#ifdef HAVE_LIBHAMLIB
+	comboBoxDRMRig->setCurrentIndex(Settings.Get("Input-DRM", "rig", int(0)));
+	comboBoxAMRig->setCurrentIndex(Settings.Get("Input-AM", "rig", int(0)));
+	comboBoxFMRig->setCurrentIndex(Settings.Get("Input-FM", "rig", int(0)));
+	comboBoxHamRig->setCurrentIndex(Settings.Get("Input-Ham", "rig", int(0)));
+#endif
 
 	/* GPS */
 	ExtractReceiverCoordinates();
 
 	/* Rig */
 #ifdef HAVE_LIBHAMLIB
-
-	// TODO chose one rig for everything or a rig per mode / ? band ?
-	//map<rig_model_t, CRigCaps> rigs;
-	//map<string,Q3ListViewItem*> manufacturers;
-
 	rig_model_t current = 0;
+	CRig* rig = Receiver.GetCurrentRig();
 
+	if(rig)
+		CheckBoxEnableSMeter->setChecked(rig->GetEnableSMeter());
 
-	CheckBoxEnableSMeter->setChecked(Receiver.GetEnableSMeter());
-
-	map<string,string> ports;
-	Receiver.GetComPortList(ports);
-	///comboBoxRigPort->addItem("None");
-	for(map<string,string>::const_iterator
-	    it = ports.begin(); it!=ports.end(); it++)
-	{
-	    //comboBoxRigPort->addItem(it->first.c_str(), it->second.c_str());
-	}
-
-	CRigCaps caps;
-	Receiver.GetRigCaps(current, caps);
-	if(caps.hamlib_caps.port_type == RIG_PORT_SERIAL)
-	{
-		//comboBoxRigPort->setEnabled(true);
-		string strPort = Receiver.GetRigComPort();
-		if(strPort!="")
-		{
-		    //comboBoxRigPort->setCurrentIndex(
-			//comboBoxRigPort->findText(strPort.c_str()));
-		}
-	}
-	else
-	{
-		//comboBoxRigPort->setEnabled(false);
-		//comboBoxRigPort->setCurrentIndex(0);
-	}
 #endif
+
 	loading = false; // loading completed
 }
 
 void ReceiverSettingsDlg::hideEvent(QHideEvent*)
 {
+	// input
+	Settings.Put("Input-DRM", "soundcard", comboBoxDRMSound->currentIndex());
+	Settings.Put("Input-DRM", "mode", stackedWidgetDRMip->currentIndex());
+	Settings.Put("Input-DRM", "channels", bgDRMlrm->checkedId());
+	Settings.Put("Input-DRM", "sign", bgDRMiq->checkedId());
+	Settings.Put("Input-DRM", "flipspectrum", CheckBoxDRMFlipSpec->isChecked());
+
+	Settings.Put("Input-AM", "soundcard", comboBoxAMSound->currentIndex());
+	Settings.Put("Input-AM", "mode", stackedWidgetAMip->currentIndex());
+	Settings.Put("Input-AM", "channels", bgAMlrm->checkedId());
+	Settings.Put("Input-AM", "sign", bgAMiq->checkedId());
+	Settings.Put("Input-AM", "flipspectrum", CheckBoxAMFlipSpec->isChecked());
+
+	Settings.Put("Input-FM", "soundcard", comboBoxFMSound->currentIndex());
+
+	Settings.Put("Input-Ham", "soundcard", comboBoxHamSound->currentIndex());
+	Settings.Put("Input-Ham", "mode", stackedWidgetHamip->currentIndex());
+	Settings.Put("Input-Ham", "channels", bgHamlrm->checkedId());
+	Settings.Put("Input-Ham", "sign", bgHamiq->checkedId());
+	Settings.Put("Input-Ham", "flipspectrum", CheckBoxHamFlipSpec->isChecked());
+
 #ifdef HAVE_LIBHAMLIB
+	Settings.Put("Input-DRM", "rig", comboBoxDRMRig->currentIndex());
+	Settings.Put("Input-AM", "rig", comboBoxAMRig->currentIndex());
+	Settings.Put("Input-FM", "rig", comboBoxFMRig->currentIndex());
+	Settings.Put("Input-Ham", "rig", comboBoxHamRig->currentIndex());
 #endif
+	// rig
 }
 
 /* this sets default values into the dialog and ini file for
@@ -709,7 +847,6 @@ void ReceiverSettingsDlg::OnSelFrequencyInterp(int iId)
     Receiver.SetFreqInt(ETypeIntFreq(iId));
 }
 
-
 void ReceiverSettingsDlg::OnSelTiSync(int iId)
 {
 
@@ -723,14 +860,57 @@ void ReceiverSettingsDlg::OnSliderIterChange(int value)
 }
 
 // input TAB
-void ReceiverSettingsDlg::OnSelInputChan(int iId)
+void 	ReceiverSettingsDlg::OnRadioDRMRealIQ(int i)
 {
-    Receiver.SetChannelSelection(EInChanSel(iId));
+	stackedWidgetDRMip->setCurrentIndex(i);
 }
 
-void ReceiverSettingsDlg::OnCheckFlipSpectrum()
+void 	ReceiverSettingsDlg::OnRadioAMRealIQ(int i)
 {
-    Receiver.SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
+	stackedWidgetAMip->setCurrentIndex(i);
+}
+
+void 	ReceiverSettingsDlg::OnRadioHamRealIQ(int i)
+{
+	stackedWidgetHamip->setCurrentIndex(i);
+}
+
+void ReceiverSettingsDlg::OnButtonDRMApply()
+{
+    Settings.Put("mode", "Input-DRM", bgDRMriq->checkedId());
+    Settings.Put("channels", "Input-DRM", bgDRMlrm->checkedId());
+    Settings.Put("sign", "Input-DRM", bgDRMriq->checkedId());
+    Settings.Put("flipspectrum", "Input-DRM", CheckBoxDRMFlipSpec->isChecked());
+    Settings.Put("rig", "Input-DRM", comboBoxDRMRig->currentText().toStdString());
+    Settings.Put("rig", "Input-DRM", comboBoxDRMSound->currentText().toStdString());
+}
+
+void ReceiverSettingsDlg::OnButtonAMApply()
+{
+    Settings.Put("mode", "Input-AM", bgAMriq->checkedId());
+    Settings.Put("channels", "Input-AM", bgAMlrm->checkedId());
+    Settings.Put("sign", "Input-AM", bgAMiq->checkedId());
+    Settings.Put("flipspectrum", "Input-AM", CheckBoxAMFlipSpec->isChecked());
+    Settings.Put("rig", "Input-AM", comboBoxAMRig->currentText().toStdString());
+    Settings.Put("rig", "Input-AM", comboBoxAMSound->currentText().toStdString());
+}
+
+void ReceiverSettingsDlg::OnButtonFMApply()
+{
+    Settings.Put("rig", "Input-FM", comboBoxFMRig->currentText().toStdString());
+    Settings.Put("rig", "Input-FM", comboBoxFMSound->currentText().toStdString());
+}
+
+void ReceiverSettingsDlg::OnButtonHamApply()
+{
+    Settings.Put("mode", "Input-Ham", bgHamriq->checkedId());
+    Settings.Put("channels", "Input-Ham", bgHamlrm->checkedId());
+    Settings.Put("sign", "Input-Ham", bgHamriq->checkedId());
+    Settings.Put("flipspectrum", "Input-Ham", CheckBoxHamFlipSpec->isChecked());
+    Settings.Put("rig", "Input-Ham", comboBoxHamRig->currentText().toStdString());
+    Settings.Put("rig", "Input-Ham", comboBoxHamSound->currentText().toStdString());
+    //Receiver.SetChannelSelection(EInChanSel(iId));
+    //Receiver.SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
 }
 
 void ReceiverSettingsDlg::OnCheckRecFilter()
@@ -779,7 +959,9 @@ void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
 {
 	if(loading)
 		return;
-	Receiver.SetEnableSMeter(on);
+	CRig* rig = Receiver.GetCurrentRig();
+	if(rig)
+		rig->SetEnableSMeter(on);
 }
 
 void
@@ -788,17 +970,42 @@ ReceiverSettingsDlg::OnRigTypeSelected(const QModelIndex&)
 }
 
 void
-ReceiverSettingsDlg::OnRigSelected(const QModelIndex&)
+ReceiverSettingsDlg::OnRigSelected(const QModelIndex& index)
 {
+#ifdef HAVE_LIBHAMLIB
+    QVariant var = index.data(Qt::UserRole);
+    rig_caps caps = var.value<rig_caps>();
+    if(caps.port_type == RIG_PORT_SERIAL)
+    {
+	comboBoxComPort->setEnabled(true);
+	comboBoxComPort->clear();
+	map<string,string> ports;
+	GetComPortList(ports);
+	for(map<string,string>::const_iterator i=ports.begin();
+		i!=ports.end(); i++)
+	{
+	    comboBoxComPort->addItem(i->first.c_str(), i->second.c_str());
+	}
+    }
+    else if(caps.port_type == RIG_PORT_USB)
+    {
+	comboBoxComPort->setEnabled(true);
+	comboBoxComPort->clear();
+    }
+    else
+    {
+	comboBoxComPort->setEnabled(false);
+    }
+#endif
 }
 
 void
 ReceiverSettingsDlg::OnButtonAddRig()
 {
-    CRigCaps caps;
     rig_model_t model = treeViewRigTypes->currentIndex().data(Qt::UserRole).toInt();
-    Receiver.GetRigCaps(model, caps);
-    Rigs.add(caps);
+    const rig_caps* caps = Receiver.GetRigCaps(model);
+    if(caps)
+	Rigs.add(*caps);
 }
 
 void
@@ -807,21 +1014,22 @@ ReceiverSettingsDlg::OnButtonRemoveRig()
 }
 
 void
-ReceiverSettingsDlg::OnButtonApplyRigSettings()
+ReceiverSettingsDlg::OnButtonConnectRig()
 {
     if(loading)
 	    return;
 
 #ifdef HAVE_LIBHAMLIB
 	iWantedrigModel = treeViewRigs->currentIndex().data(Qt::UserRole).toInt();
-	CRigCaps caps;
-	Receiver.GetRigCaps(iWantedrigModel, caps);
-	if(caps.hamlib_caps.port_type == RIG_PORT_SERIAL)
+	CRig* rig = Receiver.GetRig(iWantedrigModel);
+	if(rig==NULL)
+		return;
+	if(rig->caps && rig->caps->port_type == RIG_PORT_SERIAL)
 	{
 	    string strPort = "";//comboBoxRigPort->currentText().toStdString();
 	    if(strPort!="")
 	    {
-		    Receiver.SetRigComPort(strPort);
+		rig->setConf("rig_pathname", strPort.c_str());
 	    }
 	}
 
@@ -830,24 +1038,14 @@ ReceiverSettingsDlg::OnButtonApplyRigSettings()
 	TimerRig.start(500);
 }
 
-#if 0
-void ReceiverSettingsDlg::OnRigSelected(const QModelIndex& index)
-{
-#ifdef HAVE_LIBHAMLIB
-    int iWantedRigModel = index.data(Qt::UserRole).toInt();
-    CRigCaps caps;
-    Receiver.GetRigCaps(iWantedRigModel, caps);
-    comboBoxRigPort->setEnabled(caps.hamlib_caps.port_type == RIG_PORT_SERIAL);
-#endif
-}
-#endif
-
 void ReceiverSettingsDlg::OnTimerRig()
 {
 #ifdef HAVE_LIBHAMLIB
     if(Receiver.GetRigChangeInProgress())
 	    return;
-    labelRigInfo->setText(Receiver.GetRigInfo().c_str());
+	CRig* rig = Receiver.GetCurrentRig();
+	if(rig)
+	    labelRigInfo->setText(rig->getInfo());
 
     TimerRig.stop();
 #endif
@@ -896,10 +1094,12 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 	SliderNoOfIterations->setWhatsThis( strNumOfIterations);
 
 	/* Flip Input Spectrum */
-	CheckBoxFlipSpec->setWhatsThis(
-		tr("<b>Flip Input Spectrum:</b> Checking this box "
+	const QString s = tr("<b>Flip Input Spectrum:</b> Checking this box "
 		"will flip or invert the input spectrum. This is necessary if the "
-		"mixer in the front-end uses the lower side band."));
+		"mixer in the front-end uses the lower side band.");
+	CheckBoxDRMFlipSpec->setWhatsThis(s);
+	CheckBoxAMFlipSpec->setWhatsThis(s);
+	CheckBoxHamFlipSpec->setWhatsThis(s);
 
 	/* Log File */
 	CheckBoxWriteLog->setWhatsThis(
@@ -909,12 +1109,6 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 		"number of correct decoded MSC blocks are logged including some "
 		"additional information, e.g. the station label and bit-rate. The "
 		"log mechanism works only for audio services using AAC source coding. "
-#ifdef _WIN32
-		"During the logging no Dream windows "
-		"should be moved or re-sized. This can lead to incorrect log files "
-		"(problem with QT timer implementation under Windows). This problem "
-		"does not exist in the Linux version of Dream."
-#endif
 		"<br>The log file will be "
 		"written in the directory were the Dream application was started and "
 		"the name of this file is always DreamLog.txt"));

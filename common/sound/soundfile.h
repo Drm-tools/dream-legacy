@@ -40,24 +40,24 @@ public:
 	CSoundFileIn();
 	virtual ~CSoundFileIn();
 
-	virtual void		Enumerate(vector<string>&);
+	virtual void		Enumerate(vector<string>&) const;
 	virtual void		SetDev(int) {}
-	virtual int			GetDev() { return -1; }
+	virtual int		GetDev() { return -1; }
 	virtual void		SetFileName(const string& strFileName);
 
 	virtual void 		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
-	virtual bool 	Read(vector<_SAMPLE>& data);
+	virtual bool 		Read(vector<_SAMPLE>& data);
 	virtual void 		Close();
 
 protected:
-	FILE*				pFile;
-	string				strInFileName;
+	FILE*			pFile;
+	string			strInFileName;
 	enum {
 		fmt_txt, fmt_raw_mono, fmt_raw_stereo, fmt_other
-		}				eFmt;
-	int					iFileSampleRate;
-	int					iFileChannels;
-	CPacer*				pacer;
+		}			eFmt;
+	int			iFileSampleRate;
+	int			iFileChannels;
+	CPacer*			pacer;
 };
 
 class CSoundFileOut : public CSoundOutInterface
@@ -66,14 +66,14 @@ public:
 	CSoundFileOut();
 	virtual ~CSoundFileOut();
 
-	virtual void		Enumerate(vector<string>& choices) { choices = files; }
+	virtual void		Enumerate(vector<string>& choices) const { choices = files; }
 	virtual void		SetDev(int iNewDevice);
 	virtual void		SetDev(const string& s);
-	virtual int			GetDev() { return dev; }
+	virtual int		GetDev() { return dev; }
 
 	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
 	virtual void		Close();
-	virtual bool	Write(vector<_SAMPLE>& data);
+	virtual bool		Write(vector<_SAMPLE>& data);
 	virtual void		SetFiles(const vector<string>& choices) { files = choices; }
 
 protected:

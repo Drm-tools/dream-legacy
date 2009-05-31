@@ -34,8 +34,10 @@
 
 class CSelectionInterface;
 class CDataDecoder;
-class CRigCaps;
+class CRigSettings;
 class CRigMap;
+class CRig;
+struct rig_caps;
 
 class AnalogReceiverInterface
 {
@@ -108,21 +110,19 @@ public:
 	virtual void                    SetNumIterations(int)=0;
 	virtual int                     GetInitNumIterations()=0;
 
-	virtual void	 				SetEnableSMeter(bool)=0;
-	virtual bool		 			GetEnableSMeter()=0;
-	virtual void					SetRigModel( int)=0;
-	virtual string					GetRigInfo() const = 0;
-	virtual void					GetRigList(CRigMap&) const =0;
-	virtual void					GetRigCaps(int, CRigCaps&) const =0;
-	virtual void					GetComPortList(map<string,string>&) const =0;
-	virtual string					GetRigComPort() const =0;
-	virtual void					SetRigComPort(const string&) =0;
-	virtual bool				    GetRigChangeInProgress()=0;
-	virtual bool				    UpstreamDIInputEnabled()=0;
-	virtual void					SetIQRecording(bool)=0;
-	virtual void					SetRSIRecording(bool, const char)=0;
+	virtual void			GetRigList(CRigMap&) const = 0;
+	virtual void			GetRigSettings(CRigSettings&,
+							int, EModulationType) const = 0;
+	virtual void			SetRigModel( int)=0;
+	virtual bool			GetRigChangeInProgress()=0;
+	virtual CRig*			GetRig(int) const = 0;
+	virtual const rig_caps*		GetRigCaps(int) const = 0;
+	virtual CRig*			GetCurrentRig() const = 0;
+	virtual bool			UpstreamDIInputEnabled()=0;
+	virtual void			SetIQRecording(bool)=0;
+	virtual void			SetRSIRecording(bool, const char)=0;
 
-	virtual CDataDecoder*			GetDataDecoder()=0;
+	virtual CDataDecoder*		GetDataDecoder()=0;
 
 };
 
