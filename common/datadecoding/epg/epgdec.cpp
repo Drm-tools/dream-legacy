@@ -13,16 +13,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -89,7 +89,7 @@ static const char *enums10[] =
 
 static const char *enums11[] = { (char*)3, "main", "secondary", "other" };
 
-static const char *classificationScheme[] = { 
+static const char *classificationScheme[] = {
     0,
     "IntentionCS",
     "FormatCS",
@@ -101,7 +101,7 @@ static const char *classificationScheme[] = {
     "AtmosphereCS",
     0, 0, 0, 0, 0, 0, 0
 };
-  
+
 
 static dectab attribute_tags_epg[] = {
     {"system", enums0, enum_attr},
@@ -210,7 +210,7 @@ static dectab attribute_tags18[] = {
 struct eltab_t {
   const char * element_name;
   dectab* tags;
-  size_t size;      
+  size_t size;
 };
 
 static eltab_t element_tables[] = {
@@ -430,10 +430,6 @@ decode_dateandtime(const _BYTE* p)
     int hours, minutes, seconds = 0;
     int utc_flag, lto_flag, sign = 0, lto = 0;
     mjd = (((((h << 8) | m) << 8) | l) >> 6) & 0x1ffff;
-    CModJulDate ModJulDate(mjd);
-    year = ModJulDate.GetYear();
-    day = ModJulDate.GetDay();
-    month = ModJulDate.GetMonth();
     lto_flag = p[2] & 0x10;
     utc_flag = p[2] & 0x08;
     n = (p[2] << 8) | p[3];
@@ -441,20 +437,56 @@ decode_dateandtime(const _BYTE* p)
     minutes = n & 0x3f;
     n = 4;
     if (utc_flag)
-      {
-	  seconds = p[n] >> 2;
-	  n += 2;
-      }
-    if (lto_flag)
-      {
-	  sign = p[n] & 0x20;
-	  lto = p[n] & 0x3f;
-      }
-    if(hours>=24) {
-      hours -= 24;
-      mjd++;
+    {
+    	seconds = p[n] >> 2;
+    	n += 2;
     }
     stringstream out;
+    string tz = "Z";
+    if (lto_flag)
+    {
+    	sign = p[n] & 0x20;
+    	lto = p[n] & 0x3f;
+    	int mins = 60*hours+minutes;
+    	if(sign)
+    	{
+	    mins -= 30*lto;
+	    if(mins<0)
+	    {
+		mjd--;
+		mins += 24*60;
+	    }
+    	}
+    	else
+    	{
+	    mins += 30*lto;
+	    if(mins>(24*60))
+	    {
+		mjd++;
+		mins -= 24*60;
+	    }
+    	}
+	hours = mins / 60;
+	minutes = mins % 60;
+	stringstream tzs;
+	tzs << (sign ? '-' : '+');
+	int ltoh = lto/2;
+	if(ltoh<10) tzs << '0';
+	tzs << ltoh << ':';
+	int ltom = (30 * lto) % 30;
+	if(ltom<10) tzs << '0';
+	tzs << ltom;
+	tz = tzs.str();
+    }
+    if(hours>=24)
+    {
+	      hours -= 24;
+	      mjd++;
+    }
+    CModJulDate ModJulDate(mjd);
+    year = ModJulDate.GetYear();
+    month = ModJulDate.GetMonth();
+    day = ModJulDate.GetDay();
     out << year << '-';
     if(month<10) out << '0';
     out << int(month) << '-';
@@ -464,13 +496,7 @@ decode_dateandtime(const _BYTE* p)
     if(minutes<10) out << '0';
     out << minutes << ':';
     if(seconds<10) out << '0';
-    out << seconds << (sign ? '-' : '+');
-    int ltoh = lto/2;
-    if(ltoh<10) out << '0';
-    out << ltoh << ':';
-    int ltom = (30 * lto) % 30;
-    if(ltom<10) out << '0';
-    out << ltom;
+    out << seconds << tz;
     return out.str();
 }
 
@@ -484,7 +510,13 @@ decode_duration (const _BYTE* p)
     hours = minutes / 60;
     minutes = minutes % 60;
     stringstream out;
-    out << "PT" << hours << 'H' <<  minutes << 'M' << seconds << 'S';
+    out << "PT";
+    if(hours>0)
+	out << hours << 'H';
+    if(minutes>0)
+	out <<  minutes << 'M';
+    if(seconds>0)
+	out << seconds << 'S';
     return out.str();
 }
 
@@ -505,7 +537,7 @@ decode_attribute_name(const dectab& tab)
 	      return "unknown";
 	  }
 	if (strlen (tab.name) > 64) /* some reasonably big number */
-	  {			
+	  {
 	      return "too long";
 	  }
      return tab.name;
@@ -522,28 +554,28 @@ decode_attribute_value (enum_attr_t format, const _BYTE* p, size_t len)
          return "undecoded enum";
          break;
     case string_attr:
-         return decode_string(p, len); 
+         return decode_string(p, len);
          break;
     case u16_attr:
-         return decode_uint16(p); 
+         return decode_uint16(p);
          break;
     case u24_attr:
-         return decode_uint24(p); 
+         return decode_uint24(p);
          break;
     case datetime_attr:
-         return decode_dateandtime(p); 
+         return decode_dateandtime(p);
          break;
     case duration_attr:
-         return decode_duration(p); 
+         return decode_duration(p);
          break;
     case sid_attr:
-         return decode_sid(p); 
+         return decode_sid(p);
          break;
     case genre_href_attr:
-         return decode_genre_href(p, len); 
+         return decode_genre_href(p, len);
          break;
     case bitrate_attr:
-         return decode_bitrate(p); 
+         return decode_bitrate(p);
          break;
 	default:
 		 return "";
@@ -570,7 +602,7 @@ static void attribute(map<string,string>& out, _BYTE element_tag, tag_length_val
     string name = decode_attribute_name(tab);
     string value;
     if(tab.decode == enum_attr) {
-		// TODO if MSVC6 has ptrdiff_t then remove the int version. 
+		// TODO if MSVC6 has ptrdiff_t then remove the int version.
 #if defined(_MSC_VER) && (_MSC_VER < 1400)
 		int index = tlv.value[0];
 		int num_vals = reinterpret_cast<int>(tab.vals[0]);

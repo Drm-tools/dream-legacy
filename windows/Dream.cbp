@@ -60,6 +60,8 @@
 			<Add library="wsock32" />
 			<Add library="winmm" />
 			<Add library="setupapi" />
+			<Add library="wpcap" />
+			<Add library="sndfile" />
 			<Add directory="$(QTDIR)\lib" />
 			<Add directory="..\libs" />
 		</Linker>

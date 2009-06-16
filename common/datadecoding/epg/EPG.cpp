@@ -13,10 +13,10 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later  
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT  
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
@@ -1499,7 +1499,7 @@ QDateTime EPG::parseTime(const QString & time)
 {
     if(time=="")
         return QDateTime(); // invalid
-    QRegExp q("[-T:+]");
+    QRegExp q("[-T:+Z]");
     QStringList sl = QStringList::split(q, time);
     QDateTime t(
         QDate(sl[0].toUInt(), sl[1].toUInt(), sl[2].toUInt()),
@@ -1520,9 +1520,15 @@ QDateTime EPG::parseTime(const QString & time)
 
 int EPG::parseDuration (const QString & duration)
 {
-    if(duration=="")
+    if(duration[0]!='P')
         return 0; // invalid
-	QRegExp r ("[PTHMS]");
-	QStringList dur = QStringList::split (r, duration);
-	return 60*dur[0].toInt()+dur[1].toInt();
+    QRegExp r ("PT((\\d+)H)?((\\d+)M)?((\\d+)S)?");
+    int pos = r.search( duration );
+    QStringList dur = r.capturedTexts();
+    int h=0, m=0;
+    if(dur[2]!="")
+	h = dur[2].toInt();
+    if(dur[4]!="")
+	m = dur[4].toInt();
+    return 60*h+m;
 }
