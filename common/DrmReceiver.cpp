@@ -488,6 +488,7 @@ CDRMReceiver::UtilizeDRM(_BOOLEAN& bEnoughData)
 		saveSDCtoFile();
 #endif
 	}
+
 	if (UtilizeSDCData.WriteData(ReceiverParam, SDCUseBuf))
 	{
 		bEnoughData = TRUE;

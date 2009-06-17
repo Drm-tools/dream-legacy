@@ -6,7 +6,7 @@
  *	Volker Fischer
  *
  * Description:
- *
+ *	
  *
  ******************************************************************************
  *
@@ -138,13 +138,13 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 			vecsTmpAudData[i] = 0;
 	}
 
-	ReceiverParam.Lock();
+	ReceiverParam.Lock(); 
 	/* Put data to sound card interface. Show sound card state on GUI */
 	if (pSound->Write(vecsTmpAudData) == FALSE)
 		ReceiverParam.ReceiveStatus.Interface.SetStatus(RX_OK);
 	else
 		ReceiverParam.ReceiveStatus.Interface.SetStatus(DATA_ERROR);
-	ReceiverParam.Unlock();
+	ReceiverParam.Unlock(); 
 
 	/* Write data as wave in file */
 	if (bDoWriteWaveFile == TRUE)
@@ -223,12 +223,12 @@ void CWriteData::StartWriteWaveFile(const string strFileName)
 
 void CWriteData::StopWriteWaveFile()
 {
-	Lock();
+	Lock(); 
 
 	WaveFileAudio.Close();
 	bDoWriteWaveFile = FALSE;
 
-	Unlock();
+	Unlock(); 
 }
 
 void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
@@ -244,7 +244,7 @@ void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
 	int i;
 
 	/* Lock resources */
-	Lock();
+	Lock(); 
 
 	/* Init vector storing the average spectrum with zeros */
 	CVector<_REAL> veccAvSpectrum(iLenPowSpec, (_REAL) 0.0);
@@ -294,7 +294,7 @@ void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
 	}
 
 	/* Release resources */
-	Unlock();
+	Unlock(); 
 }
 
 
@@ -652,7 +652,7 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 
 	if ((bSyncInput == TRUE) || (bCRCOk == FALSE))
 	{
-		/* If FAC CRC check failed we should increase the frame-counter
+		/* If FAC CRC check failed we should increase the frame-counter 
 		   manually. If only FAC data was corrupted, the others can still
 		   decode if they have the right frame number. In case of simulation
 		   no FAC data is used, we have to increase the counter here */
@@ -750,7 +750,7 @@ CWriteIQFile::CWriteIQFile() : pFile(0), iFrequency(0), bIsRecording(FALSE), bCh
 {
 }
 
-CWriteIQFile::~CWriteIQFile()
+CWriteIQFile::~CWriteIQFile() 
 {
 	if (pFile != 0)
 		fclose(pFile);

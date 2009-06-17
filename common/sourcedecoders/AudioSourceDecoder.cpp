@@ -28,7 +28,6 @@
 
 #include "AudioSourceDecoder.h"
 #include <iostream>
-#include <fstream>
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -219,7 +218,7 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 
 	int iCurSelServ = 0;		// TEST
 
-	TransmParam.Lock();
+	TransmParam.Lock(); 
 
 	/* Calculate number of input samples in mono. Audio block are always
 	   400 ms long */
@@ -381,7 +380,7 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 	iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
 	iInputBlockSize = iNumInSamplesMono * 2 /* stereo */ ;
 
-	TransmParam.Unlock();
+	TransmParam.Unlock(); 
 }
 
 void
@@ -389,7 +388,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 												  int &iInputBlockSize,
 												  int &iOutputBlockSize)
 {
-	Param.Lock();
+	Param.Lock(); 
 
 	/* Calculate number of input samples in mono. Audio block are always 400 ms long */
 	const int iNumInSamplesMono = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
@@ -516,7 +515,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
 	iOutputBlockSize = iTotNumBitsForUsage;
 	iInputBlockSize = iNumInSamplesMono * 2 /* stereo */ ;
 
-	Param.Unlock();
+	Param.Unlock(); 
 }
 
 void
@@ -562,30 +561,13 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	NeAACDecFrameInfo DecFrameInfo;
 	short *psDecOutSampleBuf;
 #endif
-#if 1
-ofstream o("audio.txt", ios::app);
-//ReceiverParam.dump(o);
-const CAudioParam& p = ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].AudioParam;
-    o << "{ textmessage: '" << p.strTextMessage << "'," << endl;
-    o << "audioCoding: " << int(p.eAudioCoding) << "," << endl;
-    o << "SBRFlag: " << int(p.eSBRFlag) << "," << endl;
-    o << "SampleRate: " << int(p.eAudioSamplRate) << "," << endl;
-    o << "Textflag: " << int(p.bTextflag) << "," << endl;
-    o << "EnhanceFlag: " << int(p.bEnhanceFlag) << "," << endl;
-    o << "AudioMode: " << int(p.eAudioMode) << "," << endl;
-    o << "CELPIndex: " << int(p.iCELPIndex) << "," << endl;
-    o << "CELPCRC: " << int(p.bCELPCRC) << "," << endl;
-    o << "HVXCRate: " << int(p.eHVXCRate) << "," << endl;
-    o << "HVXCCRC: " << int(p.bHVXCCRC) << "}" << endl;
-this->dump(o);
-o.close();
-#endif
+
 	bGoodValues = FALSE;
 
-	ReceiverParam.Lock();
+	ReceiverParam.Lock(); 
 	ReceiverParam.vecbiAudioFrameStatus.Init(0);
 	ReceiverParam.vecbiAudioFrameStatus.ResetBitAccess();
-	ReceiverParam.Unlock();
+	ReceiverParam.Unlock(); 
 
 	/* Check if something went wrong in the initialization routine */
 	if (DoNotProcessData == TRUE)
@@ -639,10 +621,8 @@ o.close();
 
 		/* Check if frame length entries represent possible values */
 		bGoodValues = TRUE;
-		cerr << "iAudioPayloadLen: " << iAudioPayloadLen << endl;
 		for (i = 0; i < iNumAudioFrames; i++)
 		{
-			cerr << i << ": " << veciFrameLength[i] << endl;
 			if ((veciFrameLength[i] < 0) ||
 				(veciFrameLength[i] > iMaxLenOneAudFrame))
 			{
@@ -728,7 +708,7 @@ o.close();
 #if 0
 // Store AAC-data in file
 				string strAACTestFileName = "test/aac_";
-	ReceiverParam.Lock();
+	ReceiverParam.Lock(); 
 				if (ReceiverParam.
 					Service[ReceiverParam.GetCurSelAudioService()].AudioParam.
 					eAudioSamplRate == CAudioParam::AS_12KHZ)
@@ -761,7 +741,7 @@ o.close();
 				{
 					strAACTestFileName += "_sbr";
 				}
-	ReceiverParam.Unlock();
+	ReceiverParam.Unlock(); 
 				strAACTestFileName += ".dat";
 				static FILE *pFile2 = fopen(strAACTestFileName.c_str(), "wb");
 				int iNewFrL = veciFrameLength[j] + 1;
@@ -779,9 +759,9 @@ o.close();
 															 [j] + 1);
 
 				/* OPH: add frame status to vector for RSCI */
-				ReceiverParam.Lock();
+				ReceiverParam.Lock(); 
 				ReceiverParam.vecbiAudioFrameStatus.Add(DecFrameInfo.error == 0 ? 0 : 1);
-				ReceiverParam.Unlock();
+				ReceiverParam.Unlock(); 
 				if (DecFrameInfo.error != 0)
 				{
 					bCurBlockOK = FALSE;	/* Set error flag */
@@ -834,9 +814,9 @@ o.close();
 				/* DRM AAC header was wrong, set flag to "bad block" */
 				bCurBlockOK = FALSE;
 				/* OPH: update audio status vector for RSCI */
-				ReceiverParam.Lock();
+				ReceiverParam.Lock(); 
 				ReceiverParam.vecbiAudioFrameStatus.Add(1);
-				ReceiverParam.Unlock();
+				ReceiverParam.Unlock(); 
 			}
 #endif
 		}
@@ -857,15 +837,15 @@ o.close();
 				bCurBlockOK = TRUE;
 
 			/* OPH: update audio status vector for RSCI */
-			ReceiverParam.Lock();
+			ReceiverParam.Lock(); 
 			ReceiverParam.vecbiAudioFrameStatus.Add(bCurBlockOK == TRUE ? 0 : 1);
-			ReceiverParam.Unlock();
+			ReceiverParam.Unlock(); 
 
 #if 0
 // Store CELP-data in file
 			char cDummy[200];
 			string strCELPTestFileName = "test/celp_";
-			ReceiverParam.Lock();
+			ReceiverParam.Lock(); 
 			if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
 				AudioParam.eAudioSamplRate == CAudioParam::AS_8_KHZ)
 			{
@@ -893,7 +873,7 @@ o.close();
 				strCELPTestFileName += "_sbr";
 			}
 			strCELPTestFileName += ".dat";
-			ReceiverParam.Unlock();
+			ReceiverParam.Unlock(); 
 
 			static FILE *pFile2 = fopen(strCELPTestFileName.c_str(), "wb");
 			int iTotNumBits =
@@ -934,10 +914,10 @@ o.close();
 			if (bAudioWasOK == TRUE)
 			{
 				/* Post message to show that CRC was wrong (yellow light) */
-				ReceiverParam.Lock();
+				ReceiverParam.Lock(); 
 				ReceiverParam.ReceiveStatus.Audio.SetStatus(DATA_ERROR);
 				ReceiverParam.ReceiveStatus.LLAudio.SetStatus(DATA_ERROR);
-				ReceiverParam.Unlock();
+				ReceiverParam.Unlock(); 
 
 				/* Fade-out old block to avoid "clicks" in audio. We use linear
 				   fading which gives a log-fading impression */
@@ -974,10 +954,10 @@ o.close();
 			}
 			else
 			{
-				ReceiverParam.Lock();
+				ReceiverParam.Lock(); 
 				ReceiverParam.ReceiveStatus.Audio.SetStatus(CRC_ERROR);
 				ReceiverParam.ReceiveStatus.LLAudio.SetStatus(CRC_ERROR);
-				ReceiverParam.Unlock();
+				ReceiverParam.Unlock(); 
 
 				if (bUseReverbEffect == TRUE)
 				{
@@ -1004,10 +984,10 @@ o.close();
 			/* Increment correctly decoded audio blocks counter */
 			iNumCorDecAudio++;
 
-			ReceiverParam.Lock();
+			ReceiverParam.Lock(); 
 			ReceiverParam.ReceiveStatus.Audio.SetStatus(RX_OK);
 			ReceiverParam.ReceiveStatus.LLAudio.SetStatus(RX_OK);
-			ReceiverParam.Unlock();
+			ReceiverParam.Unlock(); 
 
 			if (bAudioWasOK == FALSE)
 			{
@@ -1096,7 +1076,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 	try
 	{
 
-		ReceiverParam.Lock();
+		ReceiverParam.Lock(); 
 
 		/* Init counter for correctly decoded audio blocks */
 		iNumCorDecAudio = 0;
@@ -1417,12 +1397,12 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 		   Maybe TODO: sample rate correction to avoid audio dropouts */
 		iMaxOutputBlockSize = iMaxLenResamplerOutput;
 
-		ReceiverParam.Unlock();
+		ReceiverParam.Unlock(); 
 	}
 
 	catch(CInitErr CurErr)
 	{
-		ReceiverParam.Unlock();
+		ReceiverParam.Unlock(); 
 
 		switch (CurErr.eErrType)
 		{
@@ -1477,39 +1457,5 @@ CAudioSourceDecoder::~CAudioSourceDecoder()
 #ifdef USE_FAAD2_LIBRARY
 	/* Close decoder handle */
 	NeAACDecClose(HandleAACDecoder);
-#endif
-}
-
-void CAudioSourceDecoder::dump(ostream& o)
-{
-	/* General */
-	o << "DoNotProcessData: " << DoNotProcessData << endl;
-	o << "DoNotProcessAudDecoder: " << DoNotProcessAudDecoder << endl;
-	o << "iTotalFrameSize: " << iTotalFrameSize << endl;
-//	o << "iStreamID: " << iStreamID << endl;
-
-	/* Text message */
-	o << "bTextMessageUsed: " <<		    bTextMessageUsed << endl;
-
-	/* Resampling */
-    o << "iResOutBlockSize: " << iResOutBlockSize << endl;
-
-	/* Drop-out masking (reverberation) */
-	o << "bAudioWasOK: " <<		    bAudioWasOK << endl;
-	o << "bUseReverbEffect: " <<		bUseReverbEffect << endl;
-
-	o << "iLenDecOutPerChan: " <<		iLenDecOutPerChan << endl;
-	o << "iNumAudioFrames: " <<			iNumAudioFrames << endl;
-
-	o << "eAudioCoding: " <<	int(eAudioCoding) << endl;
-
-
-#ifdef USE_FAAD2_LIBRARY /* AAC decoding */
-
-	o << "iNumHigherProtectedBytes: " << 	iNumHigherProtectedBytes << endl;
-	o << "iMaxLenOneAudFrame: " <<			iMaxLenOneAudFrame << endl;
-
-	o << "iBadBlockCount: " <<				iBadBlockCount << endl;
-	o << "iAudioPayloadLen: " <<			iAudioPayloadLen << endl;
 #endif
 }
