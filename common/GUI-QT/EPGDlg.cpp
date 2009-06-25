@@ -288,7 +288,6 @@ void EPGDlg::select()
         QString s_start, s_duration;
         char s[40];
         tm bdt = *gmtime(&start);
-cerr << start << " " << bdt.tm_hour << ":" << bdt.tm_min << endl;
 
 	// skip entries not on the wanted day
         if((bdt.tm_year+1900) != date.year())
