@@ -47,12 +47,11 @@ class EPG
 	/* assignment operator to help MSVC8 */
 	EPG& operator=(const EPG&);
 
-    void select (const uint32_t chan, const CDateAndTime & d);
     void loadChannels (const QString & fileName);
     void saveChannels (const QString & fileName);
     void addChannel (const string& label, uint32_t sid);
-    void parseDoc (const QDomNode &);
-    void getFile (CEPGDecoder & epg, const QString & fileName);
+    void parseDoc (const QDomDocument &);
+    QDomDocument getFile (const QDate&, uint32_t, bool);
 
     class CProg
     {
@@ -75,8 +74,8 @@ class EPG
     QMap < time_t, CProg > progs;
     QMap < QString, QString > genres;
     QString dir, servicesFilename;
-    CEPGDecoder basic, advanced;
     CParameter& Parameters;
+    QMap < QString, time_t > filesLoaded;
 private:
     static const struct gl { const char *genre; const char* desc; } genre_list[];
     time_t parseTime(const QString & time);

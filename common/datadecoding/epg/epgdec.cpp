@@ -426,7 +426,7 @@ decode_dateandtime(const _BYTE* p)
     uint32_t mjd;
     uint32_t h = p[0], m = p[1], l = p[2];
     uint16_t n, year;
-    _BYTE month, day;
+    int month, day;
     int hours, minutes, seconds = 0;
     int utc_flag, lto_flag, sign = 0, lto = 0;
     mjd = (((((h << 8) | m) << 8) | l) >> 6) & 0x1ffff;
@@ -441,6 +441,7 @@ decode_dateandtime(const _BYTE* p)
     	seconds = p[n] >> 2;
     	n += 2;
     }
+    //cerr << mjd << " " << hours << ":" << minutes;
     stringstream out;
     string tz = "Z";
     if (lto_flag)
@@ -448,7 +449,7 @@ decode_dateandtime(const _BYTE* p)
     	sign = p[n] & 0x20;
     	lto = p[n] & 0x3f;
     	int mins = 60*hours+minutes;
-//    	cerr << mjd << " " << hours << ":" << minutes << " " << mins << " " << sign << " " << lto << endl;
+	//cerr << " lto: " << sign << " " << lto;
     	if(sign)
     	{
 	    mins -= 30*lto;
@@ -499,6 +500,7 @@ decode_dateandtime(const _BYTE* p)
     out << minutes << ':';
     if(seconds<10) out << '0';
     out << seconds << tz;
+    //cerr << " -> " << out.str() << endl;
     return out.str();
 }
 
