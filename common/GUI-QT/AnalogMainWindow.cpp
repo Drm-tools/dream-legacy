@@ -63,11 +63,8 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	/* View menu ------------------------------------------------------------ */
 	connect(actionExit, SIGNAL(triggered()), this, SLOT(close()));
 
-    CSoundCardSelMenu* pSoundInMenu = new CSoundCardSelMenu(Receiver.GetSoundInInterface(), menuSound_Card_Selection);
-    CSoundCardSelMenu* pSoundOutMenu = new CSoundCardSelMenu(Receiver.GetSoundOutInterface(), menuSound_Card_Selection);
-    pSoundInMenu->setTitle(tr("Sound &In"));
-    pSoundOutMenu->setTitle(tr("Sound &Out"));
 	/* Settings menu  ------------------------------------------------------- */
+	connect(actionFM, SIGNAL(triggered()), this, SLOT(OnSwitchToFM()));
 	connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnSwitchToDRM()));
 	connect(actionAM, SIGNAL(triggered()), this, SLOT(OnNewAMAcquisition()));
 	connect(actionReceiver_Settings, SIGNAL(triggered()), pReceiverSettingsDlg, SLOT(show()));
@@ -81,7 +78,7 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	connect(actionAFS, SIGNAL(triggered()), liveScheduleDlg, SLOT(show()));
 
 	/* Init main plot */
-    plot = new CDRMPlot(SpectrumPlot, Receiver.GetAnalogParameters());
+	plot = new CDRMPlot(SpectrumPlot, Receiver.GetAnalogParameters());
 	plot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 	plot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
 	connect(plot, SIGNAL(xAxisValSet(double)), this, SLOT(OnChartxAxisValSet(double)));
@@ -105,12 +102,12 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	UpdateControls();
 
 	/* Connect controls ----------------------------------------------------- */
+	connect(pushButtonFM, SIGNAL(clicked()), this, SLOT(OnSwitchToFM()));
 	connect(ButtonDRM, SIGNAL(clicked()), this, SLOT(OnSwitchToDRM()));
 	connect(ButtonAMSS, SIGNAL(clicked()), this, SLOT(OnButtonAMSS()));
 	connect(ButtonWaterfall, SIGNAL(clicked()), this, SLOT(OnButtonWaterfall()));
 
 	/* Button groups */
-	bgDemod.addButton(RadioButtonDemWBFM, int(WBFM));
 	bgDemod.addButton(RadioButtonDemNBFM, int(NBFM));
 	bgDemod.addButton(RadioButtonDemCW, int(CW));
 	bgDemod.addButton(RadioButtonDemUSB, int(USB));
@@ -240,6 +237,15 @@ void AnalogMainWindow::OnSwitchToDRM()
     Parameter.Unlock();
 }
 
+void AnalogMainWindow::OnSwitchToFM()
+{
+    CParameter& Parameter = *Receiver.GetAnalogParameters();
+    Parameter.Lock();
+    Parameter.eModulation = WBFM;
+    Parameter.RxEvent = ChannelReconfiguration;
+    Parameter.Unlock();
+}
+
 void AnalogMainWindow::UpdateControls()
 {
     CParameter& Parameter = *Receiver.GetAnalogParameters();
@@ -275,10 +281,6 @@ void AnalogMainWindow::UpdateControls()
 		break;
 
 	case WBFM:
-		if (!RadioButtonDemWBFM->isChecked())
-			RadioButtonDemWBFM->setChecked(true);
-		break;
-
 	case DRM: case NONE:
 		break;
 	}
@@ -619,7 +621,6 @@ void AnalogMainWindow::AddWhatsThisHelp()
 	RadioButtonDemUSB->setWhatsThis(strDemodType);
 	RadioButtonDemCW->setWhatsThis(strDemodType);
 	RadioButtonDemNBFM->setWhatsThis(strDemodType);
-	RadioButtonDemWBFM->setWhatsThis(strDemodType);
 
 	/* Mute Audio (same as in systemevaldlg.cpp!) */
 	CheckBoxMuteAudio->setWhatsThis(

@@ -30,7 +30,7 @@
 #ifndef _EPGDEC_H
 #define _EPGDEC_H
 #include "../../GlobalDefinitions.h"
-#ifdef HAVE_QT
+#ifdef QT_XML_LIB
 # include <qdom.h>
 #endif
 #include <vector>
@@ -63,7 +63,7 @@ class CEPGDecoder
     }
     void decode (const vector<_BYTE>&);
 
-#ifdef HAVE_QT
+#ifdef QT_XML_LIB
     QDomDocument doc;
 #endif
 };

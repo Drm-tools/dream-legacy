@@ -125,8 +125,8 @@ iAudioStreamID(STREAM_ID_NOT_USED),iDataStreamID(STREAM_ID_NOT_USED),
 bDoInitRun(false), bRunning(false),
 rInitResampleOffset((_REAL) 0.0), iFreqkHz(0),time_keeper(0),
 onBoardDemod(false),pcmInput(SoundCard),
-rig(0),rigMode(DRM),chanSel(CS_MIX_CHAN),
-strPCMFile(),pHamlib(NULL),pRig(NULL),soundIn(new CSoundIn())
+rig(NULL),chanSel(CS_MIX_CHAN),
+strPCMFile(),pHamlib(NULL),pRig(),soundIn(new CSoundIn())
 {
 	downstreamRSCI.SetReceiver(this);
     DataDecoder.setApplication(CDataParam::AD_DAB_SPEC_APP, AT_MOTSLISHOW, new CMOTDABDecFactory());
@@ -181,6 +181,10 @@ CDRMReceiver::SetSoundInput(EInpTy wanted)
 	}
 }
 
+// TODO make rig and sound card coupling done in the UI, simplify here.
+// Pass rig object into receiver, not model, all pre-configured.
+// pass soundcard how ??
+
 void
 CDRMReceiver::RigUpdate()
 {
@@ -194,13 +198,13 @@ CDRMReceiver::RigUpdate()
 			pRig->close(); // could be done in destructor
 			delete pRig;
 		}
-		pRig = pHamlib->GetRig(Parameters, rig.wanted);
+		pRig = rig.wanted;
 		if(pRig == NULL)
 			return; // TODO decide if throw is appropriate
 		rig.current = rig.wanted;
-		rigMode.current = NONE;
 		pRig->open();
 	}
+# if 0
 	if(rigMode.current != rigMode.wanted)
 	{
 		CRigSettings s;
@@ -248,7 +252,7 @@ CDRMReceiver::RigUpdate()
 	stringstream s;
 	s << soundIn.deviceNo.wanted;
 	pHamlib->set_attribute(rig.current, rigMode.wanted, "snddevin", s.str()); // save for persistence
-	rigMode.current = rigMode.wanted;
+# endif
 #endif
 }
 
@@ -922,7 +926,7 @@ CDRMReceiver::GetRigChangeInProgress()
 	return rig.wanted != rig.current;
 }
 
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 void
 CDRMReceiver::run()
 {
@@ -1310,10 +1314,9 @@ void CDRMReceiver::SetHamlib(CHamlib* p)
     pHamlib = p;
 }
 
-void CDRMReceiver::SetRigModel(int iID)
+void CDRMReceiver::SetRig(CRig* r)
 {
-	rig.wanted = iID;
-	//rigMode.wanted = e;
+	rig.wanted = r;
 }
 
 void CDRMReceiver::GetRigList(CRigMap& rigs) const
@@ -1332,7 +1335,7 @@ void CDRMReceiver::GetRigSettings(CRigSettings& s, int model, EModulationType mo
 #endif
 }
 
-CRig* CDRMReceiver::GetRig(int model) const
+CRig* CDRMReceiver::CreateRig(int model) const
 {
 #ifdef HAVE_LIBHAMLIB
 	if(pHamlib)
@@ -1354,9 +1357,38 @@ CDRMReceiver::GetRigCaps(int model) const
 CRig* CDRMReceiver::GetCurrentRig() const
 {
 #ifdef HAVE_LIBHAMLIB
-	return pRig;
+	map<EModulationType,int>::const_iterator i=rigformode.find(Parameters.eModulation);
+	if(i==rigformode.end())
+		return NULL;
+	return rigs.find(i->second)->second;
 #else
 	return NULL;
+#endif
+}
+
+CRig* CDRMReceiver::GetRig(int id) const
+{
+#ifdef HAVE_LIBHAMLIB
+	map<int,CRig*>::const_iterator i=rigs.find(id);
+	if(i==rigs.end())
+		return NULL;
+	return i->second;
+#else
+	return NULL;
+#endif
+}
+
+void CDRMReceiver::SetRig(int id, CRig* r)
+{
+#ifdef HAVE_LIBHAMLIB
+	rigs[id] = r;
+#endif
+}
+
+void CDRMReceiver::SetRig(EModulationType e, int id)
+{
+#ifdef HAVE_LIBHAMLIB
+	rigformode[e] = id;
 #endif
 }
 

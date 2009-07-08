@@ -30,7 +30,7 @@
 #define MDI_IN_BUFFER_H_INCLUDED
 
 #include "../GlobalDefinitions.h"
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 # include <qwaitcondition.h>
 # include <qmutex.h>
 #endif
@@ -41,7 +41,7 @@ class CMDIInBuffer
 {
 public:
 	CMDIInBuffer() : buffer()
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 	,guard(),blocker()
 #endif
 	{}
@@ -51,7 +51,7 @@ public:
 
 protected:
 	queue< vector<_BYTE> > buffer;
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 	QMutex guard;
 	QWaitCondition blocker;
 #endif

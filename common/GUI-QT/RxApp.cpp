@@ -28,6 +28,7 @@
 
 #include "RxApp.h"
 #include "DRMMainWindow.h"
+#include "FMMainWindow.h"
 #include "AnalogMainWindow.h"
 #include <iostream>
 using namespace std;
@@ -53,6 +54,9 @@ void RxApp::doNewMainWindow()
             return;
         case DRM:
             MainDlg = new DRMMainWindow(Receiver, Settings, NULL, Qt::WindowMinMaxButtonsHint);
+            break;
+        case WBFM:
+            MainDlg = new FMMainWindow(Receiver, Settings, NULL, Qt::WindowMinMaxButtonsHint);
             break;
         default:
             MainDlg = new AnalogMainWindow(Receiver, Settings, NULL, Qt::WindowMinMaxButtonsHint);

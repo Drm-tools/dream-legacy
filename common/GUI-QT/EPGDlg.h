@@ -63,8 +63,7 @@ public:
 	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 	QVariant headerData ( int section, Qt::Orientation orientation, int role) const;
 
-	void select (const uint32_t, const CDateAndTime&);
-	void update();
+	void select (const uint32_t, const QDate&);
 	bool IsActive(const QString& start, const QString& duration, const tm& now);
 
 	QPixmap			BitmCubeGreen;
@@ -88,7 +87,8 @@ public:
 protected:
 
     void showEvent(QShowEvent *e);
-	void hideEvent(QHideEvent* pEvent);
+    void hideEvent(QHideEvent* pEvent);
+    void updateXML(const QDate& date, uint32_t sid, bool advanced);
 
     QDate           date;
     EPGModel        epg;
@@ -101,7 +101,11 @@ protected:
 public slots:
     void setDate(const QDate&);
     void selectChannel(const QString &);
-	void OnTimer();
+    void OnPrev();
+    void OnNext();
+    void OnTimer();
+    void OnClearCache();
+    void OnSave();
 };
 
 #endif

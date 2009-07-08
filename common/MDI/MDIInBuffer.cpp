@@ -36,7 +36,7 @@
 void
 CMDIInBuffer::Put(const vector<_BYTE>& data)
 {
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 	guard.lock();
 	buffer.push(data);
 	blocker.wakeOne();
@@ -53,7 +53,7 @@ CMDIInBuffer::Put(const vector<_BYTE>& data)
 void
 CMDIInBuffer::Get(vector<_BYTE>& data)
 {
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 	guard.lock();
 	//QTime t;t.start();
 	if(buffer.empty())

@@ -45,7 +45,7 @@ class RigTypesModel : public QAbstractItemModel
 {
 public:
 
-    RigTypesModel():QAbstractItemModel(),rigs() {}
+    RigTypesModel();
     virtual ~RigTypesModel() {}
 
     int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
@@ -66,7 +66,28 @@ protected:
 	vector<rig> model;
     };
     vector<make> rigs;
+
+public:
+
+    struct parms
+    {
+    	parms():levels(),mode_for_drm(RIG_MODE_NONE),width_for_drm(0),offset(0){}
+    	map<string,int> levels;
+    	rmode_t mode_for_drm;
+    	pbwidth_t width_for_drm;
+    	int offset;
+    };
+    map<rig_model_t,parms> unmodified, modified;
 };
+
+struct RigData
+{
+  RigData():id(next_id++),rig(NULL){}
+  int id; // persistent id to allow deletes without breaking links
+  CRig* rig;
+  static int next_id;
+};
+Q_DECLARE_METATYPE(RigData)
 
 class RigModel : public QAbstractItemModel
 {
@@ -82,20 +103,16 @@ public:
     QModelIndex index(int row, int column,
 		  const QModelIndex &parent = QModelIndex()) const;
     QModelIndex parent(const QModelIndex &child) const;
-    void add(const rig_caps&);
+    void add(CRig*);
+    void remove(int);
+    void load(const CSettings& settings, ReceiverInterface& Receiver);
+    void save(CSettings& settings);
 
-protected:
+//protected:
 
     QPixmap	BitmLittleGreenSquare;
-    struct model_index { int parent; };
-    struct rig : public model_index {
-	rig_caps caps;
-    };
-    vector<rig> rigs;
-
+    vector<RigData> rigs;
 };
-
-Q_DECLARE_METATYPE(rig_caps)
 
 class SoundChoice : public QAbstractItemModel
 {
@@ -144,7 +161,6 @@ protected:
 	QTimer		TimerRig;
 	int		iWantedrigModel;
 	QButtonGroup	*bgTimeInterp, *bgFreqInterp, *bgTiSync;
-	QButtonGroup	*bgDRMriq, *bgDRMlrm, *bgDRMiq;
 	QButtonGroup	*bgAMriq, *bgAMlrm, *bgAMiq;
 	QButtonGroup	*bgHamriq, *bgHamlrm, *bgHamiq;
 

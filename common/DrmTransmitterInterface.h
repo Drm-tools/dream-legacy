@@ -29,7 +29,7 @@
 #ifndef _DRM_TRANSMITTERINTERFACE_H
 #define _DRM_TRANSMITTERINTERFACE_H
 
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 # include <QThread>
 #endif
 
@@ -37,7 +37,7 @@ class CParameter;
 class CSettings;
 
 class CDRMTransmitterInterface
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 	: public QThread
 #endif
 {
@@ -47,7 +47,7 @@ public:
 	CDRMTransmitterInterface() {}
 	virtual ~CDRMTransmitterInterface() {}
 
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 	void					run() { Start(); }
 #else
 	virtual void			start() {};

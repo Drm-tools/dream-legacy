@@ -38,9 +38,9 @@ CGPSReceiver::CGPSReceiver(CParameter& p, CSettings& s):
 	Parameters(p),m_Settings(s),m_iCounter(0),
 	m_sHost("localhost"),m_iPort(2947)
 {
-#ifdef HAVE_QT
-    m_pSocket = NULL;
-    m_pTimer = new QTimer(this);
+#ifdef QT_NETWORK_LIB
+	m_pSocket = NULL;
+	m_pTimer = new QTimer(this);
 	m_pTimerDataTimeout = new QTimer(this);
 #endif
 
@@ -60,7 +60,7 @@ void CGPSReceiver::open()
 	Parameters.Lock();
 	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
 	Parameters.Unlock();
-#ifdef HAVE_QT
+#ifdef QT_NETWORK_LIB
 	if(m_pSocket == NULL)
 	{
 		m_pSocket = new QTcpSocket();
@@ -78,7 +78,7 @@ void CGPSReceiver::open()
 
 void CGPSReceiver::close()
 {
-#ifdef HAVE_QT
+#ifdef QT_NETWORK_LIB
 	if(m_pSocket == NULL)
 		return;
 
@@ -247,7 +247,7 @@ void CGPSReceiver::DecodeY(string Value)
 
 void CGPSReceiver::slotInit()
 {
-#ifdef HAVE_QT
+#ifdef QT_NETWORK_LIB
 	close();
 	//disconnect(m_pTimer);
 	m_pTimer->stop();
@@ -262,7 +262,7 @@ void CGPSReceiver::slotConnected()
 	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
 	Parameters.Unlock();
 	// clear current buffer
-#ifdef HAVE_QT
+#ifdef QT_NETWORK_LIB
 	while(m_pSocket->canReadLine())
 		m_pSocket->readLine();
 
@@ -282,7 +282,7 @@ void CGPSReceiver::slotTimeout()
 	{
 		if (m_iCounter < 0) // to stop it wrapping round (eventually)
 			m_iCounter = 1;
-#ifdef HAVE_QT
+#ifdef QT_NETWORK_LIB
 		m_pTimerDataTimeout->stop();
 		//disconnect(m_pTimerDataTimeout);
 		close();
@@ -303,7 +303,7 @@ void CGPSReceiver::slotReadyRead()
 	Parameters.Lock();
 	Parameters.GPSData.SetStatus(CGPSData::GPS_RX_DATA_AVAILABLE);
 	Parameters.Unlock();
-#ifdef HAVE_QT
+#ifdef QT_NETWORK_LIB
 	while (m_pSocket->canReadLine())
 		DecodeGPSDReply((const char*) m_pSocket->readLine());
 	m_pTimerDataTimeout->start(5*1000); // if no data in 5 seconds signal GPS_RX_NO_DATA
@@ -312,7 +312,7 @@ void CGPSReceiver::slotReadyRead()
 
 void CGPSReceiver::slotSocketError(int)
 {
-#ifdef HAVE_QT
+#ifdef QT_NETWORK_LIB
 //	close()
 	disconnect(m_pTimer, 0, 0, 0);	// disconnect everything connected to the timer
 	connect( m_pTimer, SIGNAL(timeout()), SLOT(slotInit()) );

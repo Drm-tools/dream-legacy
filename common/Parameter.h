@@ -46,7 +46,7 @@
 #include "GPSData.h"
 #include "ServiceInformation.h"
 #include <map>
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 # include <QThread>
 # include <QMutex>
 #endif
@@ -615,13 +615,13 @@ class CParameter : public CCoreParameter
 
 	void Lock()
 	{
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 		Mutex.lock();
 #endif
 	}
 	void Unlock()
 	{
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 		Mutex.unlock();
 #endif
 	}
@@ -658,7 +658,7 @@ protected:
 	CLastService LastAudioService;
 	CLastService LastDataService;
 
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 	QMutex Mutex;
 #endif
 };

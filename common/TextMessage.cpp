@@ -481,11 +481,11 @@ void CTextMessageDecoder::SetText()
 						/* Get character */
 						char cNewChar = Segment[i].byData[j];
 
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 						/* Append new character */
 						(*pstrText).append(&cNewChar, 1);
 #else
-						/* NOT USE_QT_GUI */
+						/* NOT QT_GUI_LIB */
 						switch (cNewChar)
 						{
 						case 0x0A:

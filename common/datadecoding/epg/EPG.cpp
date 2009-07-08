@@ -34,6 +34,9 @@
 #include <QStringList>
 #include <QRegExp>
 #include <iostream>
+#ifdef _WIN32
+# include <windows.h>
+#endif
 
 const
 	EPG::gl
@@ -1253,132 +1256,134 @@ EPG::addChannel (const string& label, uint32_t sid)
 	Parameters.ServiceInformation[sid].id = sid;
 }
 
-void
-EPG::select (const uint32_t chan, const CDateAndTime & d)
+QDomDocument
+EPG::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
 {
-	progs.clear ();
-	/* look for the basic profile */
-	QString fileName;
-	fileName = dir + "/" + QString (epgFilename (d, chan, 1, false).c_str ());
-	getFile (basic, fileName);
-	/* look for the advanced profile */
-	fileName = dir + "/" + QString (epgFilename (d, chan, 1, true).c_str ());
-	getFile (advanced, fileName);
+    CDateAndTime d;
+    d.year = date.year();
+    d.month = date.month();
+    d.day = date.day();
+
+    QString fileName(epgFilename (d, sid, 1, bAdvanced).c_str ());
+    CEPGDecoder epg;
+    QFile file (dir + "/" +fileName);
+    if (!file.open (QIODevice::ReadOnly))
+    {
+        return epg.doc;
+    }
+    vector < _BYTE > vecData;
+    vecData.resize (file.size ());
+    vecData.resize (file.size ());
+    file.read((char *) &vecData.front (), file.size ());
+    file.close ();
+    epg.decode (vecData);
+    epg.doc.documentElement().insertBefore(
+	epg.doc.createComment(fileName),
+	epg.doc.documentElement().firstChild()
+    );
+    return epg.doc;
 }
 
 void
-EPG::getFile (CEPGDecoder & epg, const QString & fileName)
+EPG::parseDoc (const QDomDocument & doc)
 {
-	epg.doc.setContent (QString (""));
-	QFile file (fileName);
-	if (!file.open (QIODevice::ReadOnly))
-	{
-		return;
-	}
-	vector < _BYTE > vecData;
-	vecData.resize (file.size ());
-	vecData.resize (file.size ());
-	file.read((char *) &vecData.front (), file.size ());
-	file.close ();
-	epg.decode (vecData);
-    QDomNodeList programmes = epg.doc.elementsByTagName ("programme");
-	parseDoc (programmes.item (0));
-}
-
-void
-EPG::parseDoc (const QDomNode & n)
-{
-	QDomNode l1 = n;
-	while (!l1.isNull ())
-	{
-		if (l1.nodeName () == "programme")
-		{
-			CProg p;
-			QDomNode l2 = l1.firstChild ();
-			p.shortId =
-				l1.toElement ().attribute ("shortId", "0").toInt ();
-			while (!l2.isNull ())
-			{
-				if (l2.isElement ())
-				{
-					QDomElement e = l2.toElement ();
-					if (e.tagName () == "location")
-					{
-						QDomNode l3 = e.firstChild ();
-						while (!l3.isNull ())
-						{
-							if (l3.isElement ())
-							{
-								QDomElement e = l3.toElement ();
-								if (e.tagName () == "time")
-								{
-                                    p.actualTime = parseTime(e.attribute ("actualTime", ""));
+    QDomNodeList programmes = doc.elementsByTagName ("programme");
+    if(programmes.size()==0)
+	return;
+    QDomNode l1 = programmes.item (0);
+    while (!l1.isNull ())
+    {
+        if (l1.nodeName () == "programme")
+        {
+            CProg p;
+            QDomNode l2 = l1.firstChild ();
+            p.shortId =
+                l1.toElement ().attribute ("shortId", "0").toInt ();
+            while (!l2.isNull ())
+            {
+                if (l2.isElement ())
+                {
+                    QDomElement e = l2.toElement ();
+                    if (e.tagName () == "location")
+                    {
+                        QDomNode l3 = e.firstChild ();
+                        while (!l3.isNull ())
+                        {
+                            if (l3.isElement ())
+                            {
+                                QDomElement e = l3.toElement ();
+                                if (e.tagName () == "time")
+                                {
+                                    p.actualTime = parseTime(e.attribute ("actualTime"));
                                     p.actualDuration = parseDuration(e.attribute ("actualDuration", ""));
-                                    p.time = parseTime(e.attribute ("time", ""));
+                                    p.time = parseTime(e.attribute ("time"));
                                     p.duration = parseDuration(e.attribute ("duration", ""));
-								}
-							}
-							l3 = l3.nextSibling ();
-						}
-					}
-					if ((e.tagName () == "mediumName") && (p.name == ""))
-						p.name = e.text ();
-					if (e.tagName () == "longName")
-						p.name = e.text ();
-					if (e.tagName () == "mediaDescription")
-					{
-						QDomNode l3 = e.firstChild ();
-						while (!l3.isNull ())
-						{
-							if (l3.isElement ())
-							{
-								QDomElement e = l3.toElement ();
-								if (e.tagName () == "shortDescription")
-								{
-									p.description = e.text ();
-								}
-							}
-							l3 = l3.nextSibling ();
-						}
-					}
-					if (e.tagName () == "genre")
-					{
-						QString genre = e.attribute ("href", "");
-						int i = genre.lastIndexOf (':');
-						if (i != -1)
-							genre = genre.mid (i + 1);
-						QString type = e.attribute ("type", "main");
-						if (type == "main")
-							p.mainGenre.push_back (genres[genre]);
-						else if (type == "secondary")
-							p.secondaryGenre.push_back (genres[genre]);
-						else if (type == "other")
-							p.otherGenre.push_back (genres[genre]);
-					}
-				}
-				l2 = l2.nextSibling ();
-			}
-			QDateTime start;
-			if(p.actualTime.isValid())
+                                }
+                            }
+                            l3 = l3.nextSibling ();
+                        }
+                    }
+                    if ((e.tagName () == "mediumName") && (p.name == ""))
+                        p.name = e.text ();
+                    if (e.tagName () == "longName")
+                        p.name = e.text ();
+                    if (e.tagName () == "mediaDescription")
+                    {
+                        QDomNode l3 = e.firstChild ();
+                        while (!l3.isNull ())
+                        {
+                            if (l3.isElement ())
+                            {
+                                QDomElement e = l3.toElement ();
+                                if (e.tagName () == "shortDescription")
+                                {
+                                    p.description = e.text ();
+                                }
+                            }
+                            l3 = l3.nextSibling ();
+                        }
+                    }
+                    if (e.tagName () == "genre")
+                    {
+                        QString genre = e.attribute ("href", "");
+                        int i = genre.lastIndexOf (':');
+                        if (i != -1)
+                            genre = genre.mid (i + 1);
+                        QString type = e.attribute ("type", "main");
+                        if (type == "main")
+                            p.mainGenre.push_back (genres[genre]);
+                        else if (type == "secondary")
+                            p.secondaryGenre.push_back (genres[genre]);
+                        else if (type == "other")
+                            p.otherGenre.push_back (genres[genre]);
+                    }
+                }
+                l2 = l2.nextSibling ();
+            }
+            time_t start;
+            if (p.actualTime!=0)
                 start = p.actualTime;
             else
                 start = p.time;
-            QMap<QDateTime,CProg>::const_iterator existing = progs.find(start);
-			if (existing != progs.end())
-			{
-			    p.augment(existing.value());
-			}
-            progs[start] = p;
+	    if(min_time<=start && start<=max_time)
+	    {
+		QMap<time_t,CProg>::ConstIterator existing = progs.find(start);
+		if (existing != progs.end())
+		{
+		    p.augment(existing.value());
 		}
-		l1 = l1.nextSibling ();
-	}
+		progs[start] = p;
+	    }
+        }
+        l1 = l1.nextSibling ();
+    }
 }
 
 void EPG::CProg::augment(const CProg& p)
 {
-    if(p.time.isValid())
+    if(p.time!=0)
         time = p.time;
-    if(p.actualTime.isValid())
+    if(p.actualTime!=0)
         actualTime = p.actualTime;
     if(p.duration>0)
         duration = p.duration;
@@ -1491,16 +1496,64 @@ EPG::loadChannels (const QString & fileName)
 	}
 }
 
-QDateTime EPG::parseTime(const QString & time)
+time_t EPG::parseTime(const QString& time)
 {
-    if(time=="")
-        return QDateTime(); // invalid
-    QRegExp q("[-T:+]");
+    time_t t=0;
+    if(time.length()==0)
+    {
+        return t; // invalid
+    }
+    QRegExp q("[-T:+Z]");
     QStringList sl = time.split(q);
-    QDateTime t(
-        QDate(sl[0].toUInt(), sl[1].toUInt(), sl[2].toUInt()),
-        QTime(sl[3].toUInt(), sl[4].toUInt(), sl[5].toUInt())
-    );
+#ifdef _WIN32
+    SYSTEMTIME st;
+    st.wYear = 1970;
+    st.wMonth = 1;
+    st.wDay = 1;
+    st.wHour = 0;
+    st.wMinute = 0;
+    st.wSecond = 0;
+    FILETIME tmp, zero;
+    SystemTimeToFileTime(&st, &tmp);
+    LocalFileTimeToFileTime(&tmp, &zero);
+    ULARGE_INTEGER unix_zero;
+    unix_zero.LowPart = zero.dwLowDateTime;
+    unix_zero.HighPart = zero.dwHighDateTime;
+
+    st.wYear = sl[0].toUInt();
+    st.wMonth = sl[1].toUInt();
+    st.wDay = sl[2].toUInt();
+    st.wHour = sl[3].toUInt();
+    st.wMinute = sl[4].toUInt();
+    st.wSecond = sl[5].toUInt();
+    FILETIME to;
+    SystemTimeToFileTime(&st, &tmp);
+    LocalFileTimeToFileTime(&tmp, &to);
+    ULARGE_INTEGER ft;
+    ft.LowPart = to.dwLowDateTime;
+    ft.HighPart = to.dwHighDateTime;
+
+    if(sl.count()==8)
+    {
+        int hh = sl[6].toInt();
+        int mm = sl[7].toInt();
+        ULARGE_INTEGER offset;
+        offset.QuadPart = 10000000LL*60LL*(60LL*hh+mm);
+        if(time[19]=='+') // + offset means UTC is earlier
+            ft.QuadPart -= offset.QuadPart;
+	else
+            ft.QuadPart += offset.QuadPart;
+    }
+    t = time_t((ft.QuadPart - unix_zero.QuadPart)/10000000LL);
+#else
+    tm bdt;
+    bdt.tm_year = sl[0].toUInt()-1900;
+    bdt.tm_mon = sl[1].toUInt()-1;
+    bdt.tm_mday = sl[2].toUInt();
+    bdt.tm_hour = sl[3].toUInt();
+    bdt.tm_min = sl[4].toUInt();
+    bdt.tm_sec = sl[5].toUInt();
+    t = mktime(&bdt);
     // time zone offset
     if(sl.count()==8)
     {
@@ -1508,9 +1561,11 @@ QDateTime EPG::parseTime(const QString & time)
         int mm = sl[7].toInt();
         int secs = 60*(60*hh+mm);
         if(time[19]=='+') // + offset means UTC is earlier
-            secs = 0 - secs;
-        t = t.addSecs(secs);
+            t -= secs;
+	else
+	    t += secs;
     }
+#endif
     return t;
 }
 
@@ -1518,7 +1573,16 @@ int EPG::parseDuration (const QString & duration)
 {
     if(duration=="")
         return 0; // invalid
-	QRegExp r ("[PTHMS]");
-	QStringList dur = duration.split(r);
-	return 60*dur[0].toInt()+dur[1].toInt();
+    if(duration[0]!='P')
+        return 0; // invalid
+    QRegExp r ("PT((\\d+)H)?((\\d+)M)?((\\d+)S)?");
+    int pos = r.indexIn( duration );
+    QStringList dur = r.capturedTexts();
+    int h=0, m=0;
+    if(dur[2]!="")
+	h = dur[2].toInt();
+    if(dur[4]!="")
+	m = dur[4].toInt();
+    return 60*h+m;
 }
+

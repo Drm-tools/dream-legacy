@@ -28,7 +28,8 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
-
+#ifndef _ANALOGMAINWINDOW_H
+#define _ANALOGMAINWINDOW_H
 
 #include "DialogUtil.h"
 #include "../ReceiverInterface.h"
@@ -126,6 +127,8 @@ public slots:
     void OnNewAMAcquisition();
     void OnButtonWaterfall();
     void OnButtonAMSS();
+    void OnSwitchToFM();
     void OnSwitchToDRM();
     void OnHelpWhatsThis();
 };
+#endif

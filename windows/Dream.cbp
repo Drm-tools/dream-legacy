@@ -95,8 +95,6 @@
 					<Add option="-fexceptions" />
 					<Add option="-DNDEBUG" />
 					<Add option="-DUSE_PORTAUDIO" />
-					<Add option="-DHAVE_QT" />
-					<Add option="-DUSE_QT_GUI" />
 					<Add option="-DQT_THREAD_SUPPORT" />
 					<Add option="-DQT_DLL" />
 					<Add option="-DQT_XML_LIB" />
@@ -285,6 +283,18 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
+		<Unit filename="..\common\GUI-QT\FMMainWindow.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\FMMainWindow.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
 		<Unit filename="..\common\GUI-QT\JLViewer.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -448,6 +458,18 @@
 			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\common\GUI-QT\main.cpp" />
+		<Unit filename="..\common\GUI-QT\receiverinputwidget.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\common\GUI-QT\receiverinputwidget.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
 		<Unit filename="..\common\GUI-QT\res\qrc_icons.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -700,6 +722,7 @@
 		<Unit filename="..\common\util\Utilities.cpp" />
 		<Unit filename="..\common\util\Utilities.h" />
 		<Unit filename="..\common\util\Vector.h" />
+		<Unit filename="..\common\util\rigclass.cc" />
 		<Unit filename="..\moc\moc_AnalogMainWindow.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -731,6 +754,12 @@
 			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_EPGDlg.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_FMMainWindow.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />
@@ -826,6 +855,12 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
+		<Unit filename="..\moc\moc_receiverinputwidget.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
 		<Unit filename="..\moc\ui_AMSSDlg.h">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
@@ -910,6 +945,12 @@
 			<Option target="Portaudio Release" />
 			<Option target="Portaudio Debug" />
 		</Unit>
+		<Unit filename="..\moc\ui_receiverinputwidget.h">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
 		<Unit filename="Dream.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
@@ -925,7 +966,6 @@
 			<Option target="Win32CLI" />
 		</Unit>
 		<Unit filename="resource.h" />
-		<Unit filename="..\..\rigclass.cc" />
 		<Extensions>
 			<code_completion />
 			<envvars set="default" />

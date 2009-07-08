@@ -35,7 +35,7 @@
 #include "../DABMOT.h"
 #include "../../util/Utilities.h"
 
-#ifdef HAVE_QT
+#ifdef QT_XML_LIB
 static QDomElement element(QDomDocument& doc, const tag_length_value& tlv);
 #else
 
@@ -92,12 +92,12 @@ void
 CEPGDecoder::decode (const vector<_BYTE>& vecData)
 {
     /* clear the doc, allowing re-use */
-#ifdef HAVE_QT
+#ifdef QT_XML_LIB
     doc.setContent (QString (""));
 #endif
     tag_length_value tlv(&vecData[0]);
     if(tlv.is_epg()) {
-#ifdef HAVE_QT
+#ifdef QT_XML_LIB
       doc.appendChild (element(doc, tlv));
 #endif
     }
@@ -358,7 +358,7 @@ tag_length_value::tag_length_value(const _BYTE* q)
   value = p;
 }
 
-#ifdef HAVE_QT
+#ifdef QT_XML_LIB
 static QDomElement
 element(QDomDocument& doc, const tag_length_value& tlv)
 {
@@ -391,7 +391,7 @@ element(DomDocument& doc, const tag_length_value& tlv)
   }
   for(map<string,string>::iterator i = attr.begin(); i != attr.end(); i++)
   {
-#ifdef HAVE_QT
+#ifdef QT_XML_LIB
     e.setAttribute (QString(i->first.c_str()), QString().fromUtf8(i->second.c_str()));
 #else
     e.setAttribute (i->first, i->second);
@@ -411,7 +411,7 @@ element(DomDocument& doc, const tag_length_value& tlv)
 	}
       else if(a.is_cdata()) {
           string value = decode_string(a.value, a.length);
-#ifdef HAVE_QT
+#ifdef QT_XML_LIB
 	  QDomText t = doc.createTextNode (QString ().fromUtf8 (value.c_str()));
 #else
 	  DomText t = doc.createTextNode (value);
@@ -503,10 +503,6 @@ decode_dateandtime(const _BYTE* p)
     int hours, minutes, seconds = 0;
     int utc_flag, lto_flag, sign = 0, lto = 0;
     mjd = (((((h << 8) | m) << 8) | l) >> 6) & 0x1ffff;
-    CModJulDate ModJulDate(mjd);
-    year = ModJulDate.GetYear();
-    day = ModJulDate.GetDay();
-    month = ModJulDate.GetMonth();
     lto_flag = p[2] & 0x10;
     utc_flag = p[2] & 0x08;
     n = (p[2] << 8) | p[3];
@@ -514,36 +510,68 @@ decode_dateandtime(const _BYTE* p)
     minutes = n & 0x3f;
     n = 4;
     if (utc_flag)
-      {
-	  seconds = p[n] >> 2;
-	  n += 2;
-      }
-    if (lto_flag)
-      {
-	  sign = p[n] & 0x20;
-	  lto = p[n] & 0x3f;
-      }
-    if(hours>=24) {
-      hours -= 24;
-      mjd++;
+    {
+    	seconds = p[n] >> 2;
+    	n += 2;
     }
     stringstream out;
+    string tz = "Z";
+    if (lto_flag)
+    {
+    	sign = p[n] & 0x20;
+    	lto = p[n] & 0x3f;
+    	int mins = 60*hours+minutes;
+//    	cerr << mjd << " " << hours << ":" << minutes << " " << mins << " " << sign << " " << lto << endl;
+    	if(sign)
+    	{
+	    mins -= 30*lto;
+	    if(mins<0)
+	    {
+		mjd--;
+		mins += 24*60;
+	    }
+    	}
+    	else
+    	{
+	    mins += 30*lto;
+	    if(mins>(24*60))
+	    {
+		mjd++;
+		mins -= 24*60;
+	    }
+    	}
+	hours = mins / 60;
+	minutes = mins % 60;
+	stringstream tzs;
+	tzs << (sign ? '-' : '+');
+	int ltoh = lto/2;
+	if(ltoh<10) tzs << '0';
+	tzs << ltoh << ':';
+	int ltom = (30 * lto) % 30;
+	if(ltom<10) tzs << '0';
+	tzs << ltom;
+	tz = tzs.str();
+    }
+    if(hours>=24)
+    {
+	      hours -= 24;
+	      mjd++;
+    }
+    CModJulDate ModJulDate(mjd);
+    year = ModJulDate.GetYear();
+    month = ModJulDate.GetMonth();
+    day = ModJulDate.GetDay();
     out << year << '-';
     if(month<10) out << '0';
     out << int(month) << '-';
+    if(day<10) out << '0';
     out << int(day) << 'T';
     if(hours<10) out << '0';
     out << hours << ':';
     if(minutes<10) out << '0';
     out << minutes << ':';
     if(seconds<10) out << '0';
-    out << seconds << (sign ? '-' : '+');
-    int ltoh = lto/2;
-    if(ltoh<10) out << '0';
-    out << ltoh << ':';
-    int ltom = (30 * lto) % 30;
-    if(ltom<10) out << '0';
-    out << ltom;
+    out << seconds << tz;
     return out.str();
 }
 
@@ -557,7 +585,13 @@ decode_duration (const _BYTE* p)
     hours = minutes / 60;
     minutes = minutes % 60;
     stringstream out;
-    out << "PT" << hours << 'H' <<  minutes << 'M' << seconds << 'S';
+    out << "PT";
+    if(hours>0)
+	out << hours << 'H';
+    if(minutes>0)
+	out <<  minutes << 'M';
+    if(seconds>0)
+	out << seconds << 'S';
     return out.str();
 }
 

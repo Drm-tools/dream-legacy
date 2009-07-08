@@ -29,7 +29,7 @@
 #define _DATAAPPLICATION_H
 
 #include "../util/Vector.h"
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 # include <QMutex>
 #endif
 class CParameter;
@@ -39,7 +39,7 @@ class DataApplication
 public:
 
 	DataApplication(CParameter&):serviceid(0)
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
     , mutex()
 #endif
     {}
@@ -49,7 +49,7 @@ public:
 
     uint32_t serviceid;
 protected:
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
     QMutex mutex;
     void Lock() { mutex.lock();}
     void Unlock() { mutex.unlock(); }

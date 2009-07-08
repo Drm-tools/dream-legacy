@@ -32,7 +32,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 # include <qthread.h>
 # include <qmutex.h>
 #endif
@@ -92,8 +92,9 @@ struct CRigMap
 };
 
 /* Hamlib interface --------------------------------------------------------- */
+
 class CRig: public Rig
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 	, public QThread
 #endif
 {
@@ -104,18 +105,22 @@ public:
 	virtual void	run();
 
 	bool			SetFrequency(const int iFreqkHz);
+	void			SetFrequencyOffset(const int iOffkHz) { iOffset = iOffkHz; }
+	int			GetFrequencyOffset() { return iOffset; }
 	void 			SetEnableSMeter(const bool bStatus); // sets/clears wanted flag and starts/stops
 	bool			GetEnableSMeter(); // returns wanted flag
 	void 			StopSMeter(); // stops (clears run flag) but leaves wanted flag alone
 	void			SetComPort(const string&);
 	string			GetComPort() const;
-
-	void set_for_mode(CRigSettings s);
+	void			SetDRMMode();
+	void			SetModeForDRM(rmode_t, pbwidth_t);
 
 protected:
 	bool			bSMeterWanted, bEnableSMeter;
 	int iOffset;
-#ifdef HAVE_QT
+	rmode_t mode_for_drm;
+	pbwidth_t width_for_drm;
+#ifdef QT_CORE_LIB
 	QMutex			mutex;
 #endif
 	CParameter&		Parameters;
@@ -148,7 +153,7 @@ protected:
 	map<rig_model_t,
 		map<EModulationType, CRigSettings >
 		>		rigmodemap;
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 	QMutex			mutex;
 #endif
 };

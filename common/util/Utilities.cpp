@@ -47,16 +47,11 @@ typedef int SOCKET;
 #endif
 
 #if defined(_WIN32)
-# ifdef HAVE_SETUPAPI
-#  undef INITGUID
-#  define INITGUID 1
-#  include <windows.h>
-#  include <setupapi.h>
-#  ifndef _MSC_VER
-    DEFINE_GUID(GUID_DEVINTERFACE_COMPORT, 0x86e0d1e0L, 0x8089,
-    0x11d0, 0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73);
-#  endif
+# include <initguid.h>
+# ifndef _MSC_VER
+#  include <ddk/ntddser.h>
 # endif
+# include <setupapi.h>
 #elif defined(__APPLE__)
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOKitLib.h>
@@ -534,7 +529,6 @@ GetComPortList(map < string, string > &ports)
 	ports.clear();
 /* Config string for com-port selection is different for each platform */
 #ifdef _WIN32
-# ifdef HAVE_SETUPAPI
 	GUID guid = GUID_DEVINTERFACE_COMPORT;
 	HDEVINFO hDevInfoSet = SetupDiGetClassDevs(&guid, NULL, NULL,
 											   DIGCF_PRESENT |
@@ -576,7 +570,6 @@ GetComPortList(map < string, string > &ports)
 
 		SetupDiDestroyDeviceInfoList(hDevInfoSet);
 	}
-# endif
 	if (ports.empty())
 	{
 		ports["COM1"] = "COM1";

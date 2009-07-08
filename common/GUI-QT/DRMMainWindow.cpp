@@ -77,12 +77,8 @@ DRMMainWindow::DRMMainWindow(ReceiverInterface& NDRMR, CSettings& NSettings,
 	connect(actionEPG, SIGNAL(triggered()), epgDlg, SLOT(show()));
 	connect(actionExit, SIGNAL(triggered()), this, SLOT(close()));
 
-    CSoundCardSelMenu* pSoundInMenu = new CSoundCardSelMenu(Receiver.GetSoundInInterface(), menuSound_Card_Selection);
-    CSoundCardSelMenu* pSoundOutMenu = new CSoundCardSelMenu(Receiver.GetSoundOutInterface(), menuSound_Card_Selection);
-    pSoundInMenu->setTitle(tr("Sound &In"));
-    pSoundOutMenu->setTitle(tr("Sound &Out"));
-
 	/* Settings menu  ------------------------------------------------------- */
+	connect(actionFM, SIGNAL(triggered()), this, SLOT(OnSwitchToFM()));
 	connect(actionAM, SIGNAL(triggered()), this, SLOT(OnSwitchToAnalog()));
 	connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnNewDRMAcquisition()));
 	connect(actionSet_Display_Colour, SIGNAL(triggered()), this, SLOT(OnMenuSetDisplayColor()));
@@ -568,7 +564,15 @@ void DRMMainWindow::OnSwitchToAnalog()
     CParameter& Parameters = *Receiver.GetParameters();
     Parameters.Lock();
     Parameters.eModulation = AM;
-    // User must then select if wants FM, etc. TODO - allow direct mode changes
+    Parameters.RxEvent = ChannelReconfiguration;
+    Parameters.Unlock();
+}
+
+void DRMMainWindow::OnSwitchToFM()
+{
+    CParameter& Parameters = *Receiver.GetParameters();
+    Parameters.Lock();
+    Parameters.eModulation = WBFM;
     Parameters.RxEvent = ChannelReconfiguration;
     Parameters.Unlock();
 }

@@ -340,7 +340,7 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 		/* log enable flag  ---------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-g", "--enablelog", 0, 1,
 							   rArgument) == true)
@@ -373,7 +373,7 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 		/* Main plot colours ------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-y", "--sysevplotstyle", 0,
 							   MAX_COLOR_SCHEMES_VAL, rArgument) == true)
@@ -567,7 +567,7 @@ CSettings::UsageArguments(char **argv)
 		"                              0: L -> L, R -> R (default);   1: L -> L, R muted;   2: L muted, R -> R\n"
 		"                              3: mix -> L, R muted;   4: L muted, mix -> R\n"
 		"  -e <n>, --decodeepg <n>     enable/disable epg decoding (0: off; 1: on)\n"
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 		"  -g <n>, --enablelog <n>     enable/disable logging (0: no logging; 1: logging\n"
 		"  -r <n>, --frequency <n>     set frequency [kHz] for log file\n"
 		"  -l <n>, --logdelay <n>      delay start of logging by <n> seconds, allowed range: 0...3600)\n"
@@ -598,7 +598,7 @@ CSettings::UsageArguments(char **argv)
 		"  -h, -?, --help             this help text\n"
 		"\n"
 		"Example: " + string(argv[0]) + " -p --sampleoff -0.23 -i 2 -EPG:decodeepg 1"
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 		" -r 6140 --rsiout 127.0.0.1:3002"
 #endif
 		"\n";

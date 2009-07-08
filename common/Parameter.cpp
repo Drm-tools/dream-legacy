@@ -351,7 +351,7 @@ CParameter::CParameter():CCoreParameter(),
  iCurSelDataService(0),
  LastAudioService(),
  LastDataService()
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
  ,Mutex()
 #endif
 {

@@ -43,7 +43,7 @@
 \******************************************************************************/
 
 #include "MDIRSCI.h"
-#ifdef HAVE_QT
+#ifdef QT_NETWORK_LIB
 # include "PacketSocketQT.h"
 # include <QHostAddress>
 #else
@@ -628,7 +628,7 @@ bool CDIIn::SetOrigin(const string& str)
 	strOrigin = str;
 
 	// try a socket
-#ifdef HAVE_QT
+#ifdef QT_NETWORK_LIB
 	source = new CPacketSocketQT;
 #else
 	source = new CPacketSocketNull;

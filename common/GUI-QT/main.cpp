@@ -43,7 +43,7 @@
 #ifdef HAVE_LIBHAMLIB
 # include "../util/Hamlib.h"
 #endif
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 # include <QApplication>
 # include <QThread>
 # include <QMessageBox>
@@ -54,7 +54,7 @@
 #include <iostream>
 
 /* Implementation *************************************************************/
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 /******************************************************************************\
 * Using GUI with QT                                                            *
 \******************************************************************************/
@@ -230,7 +230,7 @@ ErrorMessage(string strErrorString)
 */
 	exit(1);
 }
-#else /* USE_QT_GUI */
+#else /* QT_GUI_LIB */
 /******************************************************************************\
 * No GUI                                                                       *
 \******************************************************************************/
@@ -274,7 +274,7 @@ ErrorMessage(string strErrorString)
 {
 	perror(strErrorString.c_str());
 }
-#endif /* USE_QT_GUI */
+#endif /* QT_GUI_LIB */
 
 void
 DebugError(const char *pchErDescr, const char *pchPar1Descr,

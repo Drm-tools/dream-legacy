@@ -113,9 +113,11 @@ public:
 	virtual void			GetRigList(CRigMap&) const = 0;
 	virtual void			GetRigSettings(CRigSettings&,
 							int, EModulationType) const = 0;
-	virtual void			SetRigModel( int)=0;
+	virtual CRig*			CreateRig(int) const=0;
+	virtual CRig*			GetRig(int) const=0;
+	virtual void			SetRig(int, CRig*)=0;
+	virtual void			SetRig(EModulationType, int)=0;
 	virtual bool			GetRigChangeInProgress()=0;
-	virtual CRig*			GetRig(int) const = 0;
 	virtual const rig_caps*		GetRigCaps(int) const = 0;
 	virtual CRig*			GetCurrentRig() const = 0;
 	virtual bool			UpstreamDIInputEnabled()=0;

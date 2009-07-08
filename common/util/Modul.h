@@ -32,7 +32,7 @@
 
 #include "Buffer.h"
 #include "../Parameter.h"
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 # include <qthread.h>
 # include <qmutex.h>
 #endif
@@ -65,7 +65,7 @@ protected:
 	void				ProcessDataThreadSave(CParameter& Parameter);
 	virtual void		ProcessDataInternal(CParameter& Parameter) = 0;
 
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 	void				Lock() { mutex.lock(); }
 	void				Unlock() { mutex.unlock(); }
 private:

@@ -59,7 +59,7 @@
 /* Maximum carrier frequency  */
 # define MAX_RF_FREQ				120000 /* kHz */
 
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 /* Maximum minutes for delayed log file start */
 # define MAX_SEC_LOG_FI_START		3600 /* seconds */
 

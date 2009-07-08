@@ -55,7 +55,7 @@
 #include "AMSSDemodulation.h"
 #include "soundinterface.h"
 
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 # include <QThread>
 # include <QMutex>
 #endif
@@ -166,7 +166,7 @@ protected:
 };
 
 class CDRMReceiver : public ReceiverInterface
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 	, public QThread
 #endif
 {
@@ -176,7 +176,7 @@ public:
 	virtual ~CDRMReceiver();
 
 	/* For GUI */
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 	virtual void			run();
 #else /* keep the windows builds happy when compiling without the GUI */
 	int						wait(int) { return 0;}
@@ -301,10 +301,13 @@ public:
 	void					GetRigList(CRigMap&) const;
 	void					GetRigSettings(CRigSettings&,
 							int, EModulationType) const;
-	void					SetRigModel(int);
+	void					SetRig(CRig*);
 	bool				    	GetRigChangeInProgress();
-	CRig*					GetRig(int) const;
+	CRig*					CreateRig(int) const;
 	const rig_caps*				GetRigCaps(int) const;
+	CRig*					GetRig(int) const;
+	void					SetRig(int, CRig*);
+	void					SetRig(EModulationType, int);
 	CRig*					GetCurrentRig() const;
 	CParameter*				GetParameters() {return &Parameters;}
 	CParameter*				GetAnalogParameters() {return &Parameters;}
@@ -406,9 +409,9 @@ protected:
 	int						iAcquDetecCnt;
 	int						iGoodSignCnt;
 	int						iDelayedTrackModeCnt;
-	ERecState				eReceiverState;
-	int                     iAudioStreamID;
-	int                     iDataStreamID; // or more than one?
+	ERecState					eReceiverState;
+	int                     			iAudioStreamID;
+	int                     			iDataStreamID; // or more than one?
 
 	bool					bDoInitRun;
 	bool					bRunning;
@@ -426,13 +429,14 @@ protected:
 	time_t					time_keeper;
 	Request<bool>           onBoardDemod;
 	Request<EInpTy>         pcmInput;
-	Request<int>            rig;
-	Request<EModulationType> rigMode;
+	Request<CRig*>           rig;
 	Request<EInChanSel>     chanSel;
 	string                  strPCMFile;
     CHamlib*                pHamlib;
-    CRig*           pRig;
-    CSoundInProxy			soundIn;
+    map<EModulationType,int>	rigformode;
+    map<int,CRig*>	rigs;
+    CRig*     		      pRig;
+    CSoundInProxy		soundIn;
 };
 
 #endif // !defined(DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

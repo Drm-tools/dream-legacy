@@ -29,6 +29,7 @@
 
 #include "EPGDlg.h"
 #include <QRegExp>
+#include <QMessageBox>
 #include <ctime>
 
 EPGModel::EPGModel(CParameter& p) : EPG(p), QAbstractTableModel(),
@@ -50,12 +51,12 @@ int EPGModel::columnCount(const QModelIndex&) const
 QVariant
 EPGModel::data ( const QModelIndex& index, int role) const
 {
-    QMap <QDateTime, EPG::CProg>::const_iterator it = progs.begin();
+	QMap <time_t, EPG::CProg>::const_iterator it = progs.begin();
 	for(int i=0; i<index.row(); i++)
 		it++;
 	const EPG::CProg& p = it.value();
 	QString name, description, genre;
-	QDateTime start;
+	time_t start;
 	int duration;
 
 	switch(role)
@@ -63,7 +64,7 @@ EPGModel::data ( const QModelIndex& index, int role) const
 	case Qt::DecorationRole:
 		if(index.column()==0)
 		{
-			if(p.actualTime.isValid())
+			if(p.actualTime!=0)
 			{
 				duration = p.actualDuration;
 			}
@@ -71,9 +72,10 @@ EPGModel::data ( const QModelIndex& index, int role) const
 			{
 				duration = p.duration;
 			}
-			QDateTime start = it.key();
-			QDateTime end = start.addSecs(duration);
-			if((start <= QDateTime::currentDateTime()) && (QDateTime::currentDateTime() <= end))
+			time_t start = it.key();
+			time_t end = start+60*duration;
+			time_t now = time(NULL);
+			if((start <= now) && (now <= end))
 			{
 				QIcon icon;
 				icon.addPixmap(BitmCubeGreen);
@@ -87,15 +89,19 @@ EPGModel::data ( const QModelIndex& index, int role) const
 		{
 			case 0:
 				// TODO - let user choose time or actualTime if available, or show as tooltip
-				if(p.actualTime.isValid())
 				{
+				    if(p.actualTime!=0)
+				    {
 					start = p.actualTime;
-				}
-				else
-				{
+				    }
+				    else
+				    {
 					start = p.time;
+				    }
+				    tm bdt = *gmtime(&start);
+				    QChar fill('0');
+				    return QString("%1:%2").arg(bdt.tm_hour,2,10,fill).arg(bdt.tm_min,2,10,fill);
 				}
-				return start.toString("hh:mm");
 			break;
 			case 1:
 				if(p.name=="" && p.mainGenre.size()>0)
@@ -126,7 +132,7 @@ EPGModel::data ( const QModelIndex& index, int role) const
 				return genre;
 				break;
 			case 4:
-				if(p.actualTime.isValid())
+				if(p.actualTime!=0)
 				{
 					duration = p.actualDuration;
 				}
@@ -134,7 +140,11 @@ EPGModel::data ( const QModelIndex& index, int role) const
 				{
 					duration = p.duration;
 				}
-				return QString("%1:%2").arg(int(duration/60)).arg(duration%60);
+				ushort hours = duration/60;
+				ushort mins = duration % 60;
+				QChar fill='0';
+				return QString("%1:%2").arg(hours, 2,10,fill).
+							arg(mins,2,10,fill);
 				break;
 		}
 		break;
@@ -173,15 +183,22 @@ bool EPGModel::IsActive(const QString& start, const QString& duration, const tm&
 		return false;
 }
 
-void EPGModel::update()
-{
-}
-
 void
-EPGModel::select (const uint32_t chan, const CDateAndTime & d)
+EPGModel::select (const uint32_t chan, const QDate & date)
 {
-	EPG::select(chan, d);
-	reset();
+    // get schedule for date +/- 1 - will allow user timezones sometime
+    min_time = QDateTime(date).toTime_t();
+    max_time = min_time+86400;
+    for(int i=-1; i<=1; i++)
+    {
+        QDomDocument doc;
+	QDate o = date.addDays(i);
+	doc = getFile (o, chan, false);
+	parseDoc(doc);
+	doc = getFile (o, chan, true);
+	parseDoc(doc);
+    }
+    reset();
 }
 
 EPGDlg::EPGDlg(ReceiverInterface& NDRMR, CSettings& NSettings, QWidget* parent, Qt::WFlags f)
@@ -204,6 +221,10 @@ Settings(NSettings),Timer(),currentSID(0),proxyModel()
 	connect(channel, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(selectChannel(const QString &)));
 	connect(dateEdit, SIGNAL(dateChanged(const QDate&)), this, SLOT(setDate(const QDate&)));
 	connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
+	connect(pushButtonPrev, SIGNAL(clicked()), this, SLOT(OnPrev()));
+	connect(pushButtonNext, SIGNAL(clicked()), this, SLOT(OnNext()));
+	connect(pushButtonClearCache, SIGNAL(clicked()), this, SLOT(OnClearCache()));
+	connect(pushButtonSave, SIGNAL(clicked()), this, SLOT(OnSave()));
 	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
 	/* Deactivate real-time timer */
@@ -232,18 +253,8 @@ void EPGDlg::OnTimer()
 
     if(gmtCur.tm_sec==0) // minute boundary
     {
-        /* today in UTC */
-        QDate todayUTC = QDate(gmtCur.tm_year + 1900, gmtCur.tm_mon + 1, gmtCur.tm_mday);
-
-        if ((basic->toPlainText() == tr("no basic profile data"))
-            || (advanced->toPlainText() == tr("no advanced profile data")))
-        {
-            /* not all information is loaded */
-            select();
-        }
-
-	}
-	epg.update();
+	select();
+    }
 }
 
 void EPGDlg::showEvent(QShowEvent *)
@@ -283,6 +294,7 @@ void EPGDlg::showEvent(QShowEvent *)
     date = QDate::currentDate();
     dateEdit->setDate(date);
 
+    epg.progs.clear();
     select();
 
 	/* Activate real-time timer when window is shown */
@@ -307,33 +319,73 @@ void EPGDlg::hideEvent(QHideEvent*)
 void EPGDlg::setDate(const QDate& d)
 {
     date = d;
+    epg.progs.clear();
     select();
 }
 
 void EPGDlg::selectChannel(const QString &)
 {
+    epg.progs.clear();
     select();
+}
+
+void EPGDlg::OnPrev()
+{
+    dateEdit->setDate(dateEdit->date().addDays(-1));
+}
+
+void EPGDlg::OnNext()
+{
+    dateEdit->setDate(dateEdit->date().addDays(1));
+}
+
+void EPGDlg::OnClearCache()
+{
+ QMessageBox msgBox;
+ msgBox.setText(tr("Sorry - not implemented yet."));
+ msgBox.exec();
+}
+
+void EPGDlg::OnSave()
+{
+ QMessageBox msgBox;
+ msgBox.setText(tr("Sorry - not implemented yet."));
+ msgBox.exec();
+}
+
+void EPGDlg::updateXML(const QDate& date, uint32_t sid, bool adv)
+{
+    QString def;
+    QTextBrowser* browser;
+    if(adv)
+    {
+	def = tr("no advanced profile data");
+	browser = advanced;
+    }
+    else
+    {
+	def = tr("no basic profile data");
+	browser = basic;
+    }
+    QString xml;
+    QDomDocument doc;
+    doc = epg.getFile (date, sid, adv);
+    epg.parseDoc(doc);
+    xml = doc.toString();
+    if (xml.length() > 0)
+    {
+        browser->setText(xml);
+    }
+    else
+    {
+    	browser->setText(def);
+    }
 }
 
 void EPGDlg::select()
 {
-    basic->setText(tr("no basic profile data"));
-    advanced->setText(tr("no advanced profile data"));
-    CDateAndTime d;
-    d.year = date.year();
-    d.month = date.month();
-    d.day = date.day();
-
     currentSID = channel->itemData(channel->currentIndex()).toUInt();
-
-    epg.select(currentSID, d);
-
-    QString xml;
-    xml = epg.basic.doc.toString();
-    if(xml.length() > 0)
-        basic->setText(xml);
-
-    xml = epg.advanced.doc.toString();
-    if(xml.length() > 0)
-        advanced->setText(xml);
+    epg.select(currentSID, date);
+    updateXML(date, currentSID, false);
+    updateXML(date, currentSID, true);
 }

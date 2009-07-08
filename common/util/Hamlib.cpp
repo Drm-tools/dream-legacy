@@ -167,11 +167,11 @@ void CRigSettings::apply(Rig& rig) const
 
 CRig::CRig(CParameter& p, rig_model_t m):Rig(m),
 bSMeterWanted(false), bEnableSMeter(false),iOffset(0),
-#ifdef HAVE_QT
+mode_for_drm(RIG_MODE_AM), width_for_drm(0),
+#ifdef QT_CORE_LIB
 	mutex(),
 #endif
 	Parameters(p)
-
 {
 }
 
@@ -193,23 +193,6 @@ string CRig::GetComPort() const
     return r;
 }
 
-void
-CRig::set_for_mode(CRigSettings s)
-{
-    s.apply(*this);
-    for (map<string,string>::const_iterator i = s.config.begin();
-	    i != s.config.end(); i++)
-    {
-	if (i->first == "offset")
-	{
-	    iOffset = atoi(i->second.c_str());
-	}
-	else
-	{
-	    setConf(i->first.c_str(), i->second.c_str());
-	}
-    }
-}
 
 bool
 CRig::SetFrequency(const int iFreqkHz)
@@ -218,13 +201,28 @@ CRig::SetFrequency(const int iFreqkHz)
     return true; // TODO
 }
 
+void
+CRig::SetDRMMode()
+{
+    if(width_for_drm==0)
+	setMode(mode_for_drm);
+    else
+	setMode(mode_for_drm, width_for_drm);
+}
+
+void
+CRig::SetModeForDRM(rmode_t m, pbwidth_t w)
+{
+    mode_for_drm = m;
+    width_for_drm = w;
+}
 
 void CRig::SetEnableSMeter(const bool bStatus)
 {
     bSMeterWanted = bStatus;
     if (bStatus)
     {
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 	if (bEnableSMeter==false)
 	{
 	    start(); // don't do this except in GUI thread - see CReceiverSettings
@@ -264,14 +262,14 @@ void CRig::run()
 	    const _REAL S9_DBuV = 34.0; // S9 in dBuV for converting HamLib S-meter readings
 	    Parameters.Measurements.SigStrstat.addSample(_REAL(val) + S9_DBuV + Parameters.rSigStrengthCorrection);
 	    Parameters.Unlock();
-#ifdef USE_QT_GUI
+#ifdef QT_GUI_LIB
 	    msleep(400);
 #endif
     }
 }
 
 CHamlib::CHamlib():
-#ifdef HAVE_QT
+#ifdef QT_CORE_LIB
 	mutex()
 #endif
 {
@@ -338,13 +336,12 @@ CHamlib::LoadSettings(CSettings & s)
     rigmodemap[RIG_MODEL_G313][DRM].ilevels["ATT"]=0;
     rigmodemap[RIG_MODEL_G313][DRM].ilevels["AGC"]=3;
 # ifdef __linux
-    CapsHamlibModels[RIG_MODEL_G313].set_config("if_path", "/dreamg3xxif");
-    CapsHamlibModels[RIG_MODEL_G313].set_attribute(DRM, "audiotype", "shm");
-    CapsHamlibModels[RIG_MODEL_G313].set_attribute(AM, "audiotype", "shm");
-    CapsHamlibModels[RIG_MODEL_G313].set_attribute(USB, "audiotype", "shm");
-    CapsHamlibModels[RIG_MODEL_G313].set_attribute(LSB, "audiotype", "shm");
-    CapsHamlibModels[RIG_MODEL_G313].set_attribute(NBFM, "audiotype", "shm");
-    CapsHamlibModels[RIG_MODEL_G313].set_attribute(WBFM, "audiotype", "shm");
+    rigmodemap[RIG_MODEL_G313][DRM].config["if_path"] = "/dreamg3xxif";
+    rigmodemap[RIG_MODEL_G313][AM].attributes["audiotype"] = "shm";
+    rigmodemap[RIG_MODEL_G313][USB].attributes["audiotype"] = "shm";
+    rigmodemap[RIG_MODEL_G313][LSB].attributes["audiotype"] = "shm";
+    rigmodemap[RIG_MODEL_G313][NBFM].attributes["audiotype"] = "shm";
+    rigmodemap[RIG_MODEL_G313][WBFM].attributes["audiotype"] = "shm";
 # endif
 #endif
 

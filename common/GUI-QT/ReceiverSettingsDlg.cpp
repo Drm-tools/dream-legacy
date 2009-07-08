@@ -41,8 +41,57 @@
 
 /* Implementation *************************************************************/
 
-
 #ifdef HAVE_LIBHAMLIB
+
+RigTypesModel::RigTypesModel():QAbstractItemModel(),rigs(),unmodified(),modified()
+{
+	unmodified[RIG_MODEL_G303].levels["ATT"]=0;
+	unmodified[RIG_MODEL_G303].levels["AGC"]=3;
+
+	modified[RIG_MODEL_G303].levels["ATT"]=0;
+	modified[RIG_MODEL_G303].levels["AGC"]=3;
+
+	unmodified[RIG_MODEL_G313].levels["ATT"]=0;
+	unmodified[RIG_MODEL_G313].levels["AGC"]=3;
+
+	modified[RIG_MODEL_G313].levels["ATT"]=0;
+	modified[RIG_MODEL_G313].levels["AGC"]=3;
+
+	unmodified[RIG_MODEL_AR7030].mode_for_drm = RIG_MODE_AM;
+	unmodified[RIG_MODEL_AR7030].width_for_drm = 3000;
+	unmodified[RIG_MODEL_AR7030].levels["AGC"]=5;
+
+	modified[RIG_MODEL_AR7030].mode_for_drm = RIG_MODE_AM;
+	modified[RIG_MODEL_AR7030].width_for_drm = 6000;
+	modified[RIG_MODEL_AR7030].levels["AGC"]=5;
+
+	unmodified[RIG_MODEL_NRD535].mode_for_drm = RIG_MODE_CW;
+	unmodified[RIG_MODEL_NRD535].width_for_drm = 12000;
+	unmodified[RIG_MODEL_NRD535].levels["CWPITCH"]=-5000;
+	unmodified[RIG_MODEL_NRD535].levels["IF"]=-2000;
+	unmodified[RIG_MODEL_NRD535].levels["AGC"]=3;
+	unmodified[RIG_MODEL_NRD535].offset=3;
+
+	modified[RIG_MODEL_NRD535].levels["AGC"]=3;
+	modified[RIG_MODEL_NRD535].offset=3;
+
+	unmodified[RIG_MODEL_RX320].mode_for_drm = RIG_MODE_AM;
+	unmodified[RIG_MODEL_RX320].width_for_drm = 6000;
+	unmodified[RIG_MODEL_RX320].levels["AF"]=1;
+	unmodified[RIG_MODEL_RX320].levels["AGC"]=3;
+
+	modified[RIG_MODEL_RX320].levels["AGC"]=3;
+
+	unmodified[RIG_MODEL_RX340].mode_for_drm = RIG_MODE_USB;
+	unmodified[RIG_MODEL_RX340].width_for_drm = 16000;
+	unmodified[RIG_MODEL_RX340].levels["AF"]=1;
+	unmodified[RIG_MODEL_RX340].levels["IF"]=2000;
+	unmodified[RIG_MODEL_RX340].levels["AGC"]=3;
+	unmodified[RIG_MODEL_RX340].offset=-12;
+
+	modified[RIG_MODEL_RX340].levels["AGC"]=3;
+	modified[RIG_MODEL_RX340].offset=-12;
+}
 
 int
 RigTypesModel::rowCount ( const QModelIndex & parent ) const
@@ -83,11 +132,8 @@ RigTypesModel::data ( const QModelIndex & index, int role) const
 	case Qt::DecorationRole:
 	    break;
 	case Qt::DisplayRole:
-	    if(index.column()==0)
-	    {
-		if(int(rigs.size())>index.row())
-		    return rigs[index.row()].name.c_str();
-	    }
+	    if( (index.column()==0) && (int(rigs.size())>index.row()) )
+		return rigs[index.row()].name.c_str();
 	    break;
 	case Qt::UserRole:
 	    break;
@@ -209,6 +255,8 @@ RigTypesModel::load(ReceiverInterface& Receiver)
     reset();
 }
 
+int RigData::next_id = 0;
+
 RigModel::RigModel() : QAbstractItemModel(),BitmLittleGreenSquare(5,5),rigs()
 {
     BitmLittleGreenSquare.fill(QColor(0, 255, 0));
@@ -222,22 +270,14 @@ QModelIndex RigModel::index(int row, int column,
     }
     else
     {
-	return createIndex(row, column, (void*)&rigs[row]);
+    	if((row>=0) && (row<int(rigs.size())))
+	    return createIndex(row, column, rigs[row].id);
     }
     return QModelIndex();
 }
 
 QModelIndex RigModel::parent(const QModelIndex &child) const
 {
-    if(child.isValid())
-    {
-    	const model_index* r = (const model_index*)child.internalPointer();
-    	if(r->parent!=-1) // its a model - what we expect!
-    	{
-	    size_t p = r->parent;
-	    return createIndex(p, 0, (void*)&rigs[p]);
-    	} // else its wrong, drop through
-    }
     return QModelIndex();
 }
 
@@ -260,11 +300,24 @@ int RigModel::columnCount (const QModelIndex& parent) const
 
 QVariant RigModel::data (const QModelIndex& index, int role) const
 {
-    const model_index* i = (const model_index*)index.internalPointer();
-    if(i==NULL)
-	return QVariant();
-    if(i->parent==-1)
+    int id = int(index.internalId());
+    int i=-1;
+    for(size_t j=0; j<rigs.size(); j++)
     {
+	if(rigs[j].id==id)
+	{
+	    i=j;
+	    break;
+	}
+    }
+    if(i==-1)
+	return QVariant();
+
+    if(true) // no structure visibile at the moment
+    {
+    	CRig* r = rigs[i].rig;
+    	if(r==NULL)
+	    return QVariant();
 	switch(role)
 	{
 	case Qt::DecorationRole:
@@ -273,20 +326,20 @@ QVariant RigModel::data (const QModelIndex& index, int role) const
 	    switch(index.column())
 	    {
 		case 0:
-		    return rigs[index.row()].caps.model_name;
+		    return r->caps->model_name;
 		break;
 		case 1:
-		    return rigs[index.row()].caps.rig_model;
+		    return r->caps->rig_model;
 		    break;
 		case 2:
-		    return rig_strstatus(rigs[index.row()].caps.status);
+		    return rig_strstatus(r->caps->status);
 		    break;
 	    }
 	    break;
 	case Qt::UserRole:
 	    {
-	    	QVariant var;
-		var.setValue(rigs[index.row()].caps);
+		QVariant var;
+		var.setValue(rigs[i]);
 		return var;
 	    }
 	    break;
@@ -343,13 +396,138 @@ QVariant RigModel::headerData ( int section, Qt::Orientation orientation, int ro
 }
 
 void
-RigModel::add(const rig_caps& caps)
+RigModel::add(CRig* rig)
 {
-    rig r;
-    r.caps = caps;
-    r.parent = -1;
+    RigData r;
+    r.rig = rig;
     rigs.push_back(r);
+    cerr << "add rig " << r.id << " at " << rigs.size() << " model " << r.rig->caps->rig_model << endl;
     reset();
+}
+
+void
+RigModel::remove(int id)
+{
+    for(vector<RigData>::iterator i=rigs.begin(); i!=rigs.end(); i++)
+    {
+    	if(i->id == id)
+    	{
+		rigs.erase(i); // rig is still stored in receiver TODO
+		break;
+    	}
+    }
+    reset();
+}
+
+void
+RigModel::load(const CSettings& settings, ReceiverInterface& Receiver)
+{
+    rigs.clear();
+    QString rigids = settings.Get("Hamlib", "rigs", string("")).c_str();
+    if(rigids=="")
+    {
+    	reset();
+	return;
+    }
+    QStringList l = rigids.split(",");
+    rigs.resize(l.size());
+    for(size_t i=0; int(i)<l.size(); i++)
+    {
+	RigData r;
+    	string sectitle = (QString("Rig-")+l.at(i)).toStdString();
+
+	int model = settings.Get(sectitle, "model", int(RIG_MODEL_NONE));
+	r.id = l[i].toInt();
+	r.rig = Receiver.GetRig(r.id);
+	if(r.rig==NULL)
+	    r.rig = Receiver.CreateRig(model);
+	if(r.rig)
+	{
+	    rmode_t mode_for_drm = rmode_t(settings.Get(sectitle, "mode_for_drm", int(RIG_MODE_NONE)));
+	    pbwidth_t width_for_drm = pbwidth_t(settings.Get(sectitle, "width", int(0)));
+	    if(mode_for_drm!=RIG_MODE_NONE)
+	    {
+	    	r.rig->SetModeForDRM(mode_for_drm, width_for_drm);
+	    }
+	    int offset = settings.Get(sectitle, "offset", int(0));
+	    if(offset != 0)
+	    {
+	    	r.rig->SetFrequencyOffset(offset);
+	    }
+	    INISection sec;
+	    settings.Get(sectitle+"-conf", sec);
+	    for(INISection::const_iterator j=sec.begin(); j!=sec.end(); j++)
+	    {
+		r.rig->setConf(j->first.c_str(), j->second.c_str());
+	    }
+	    settings.Get(sectitle+"-levels", sec);
+	    for(INISection::const_iterator j=sec.begin(); j!=sec.end(); j++)
+	    {
+		r.rig->setLevel(rig_parse_level(j->first.c_str()), atoi(j->second.c_str()));
+	    }
+	    rigs[i] = r;
+	}
+    }
+    reset();
+}
+
+void
+RigModel::save(CSettings& settings)
+{
+    stringstream rigids;
+    string sep="";
+    for(size_t i=0; i<rigs.size(); i++)
+    {
+	const RigData& r = rigs[i];
+	// save rig attributes including com port
+	// save by index - allows two or more rigs of same type
+	if(r.rig==NULL)
+		continue; // should not happen
+	stringstream s;
+	s << "Rig-" << r.id;
+	rigids << sep << r.id;
+	sep = ",";
+	string sec = s.str();
+	s.str("");
+	s << r.rig->caps->rig_model;
+	settings.Put(sec, "model", s.str());
+	vector<string> keys;
+	keys.push_back("rig_pathname"); // TODO
+	for(size_t i=0; i<keys.size(); i++)
+	{
+	    char val[200];
+	    r.rig->getConf(keys[i].c_str(), val);
+	    if(strlen(val)>0)
+		settings.Put(sec+"-conf", keys[i], string(val));
+	}
+	keys.clear();
+	keys.push_back("ATT");
+	keys.push_back("AGC");
+	keys.push_back("IF");
+	keys.push_back("CWPITCH");
+	for(size_t i=0; i<keys.size(); i++)
+	{
+	    try {
+		int val;
+		r.rig->getLevel(rig_parse_mode(keys[i].c_str()), val);
+		settings.Put(sec+"-levels", keys[i], val);
+	    } catch(...)
+	    {
+	    	// skip
+	    }
+	}
+	pbwidth_t width;
+	rmode_t m = r.rig->getMode(width);
+	if(m!=RIG_MODE_NONE)
+	{
+	    settings.Put(sec, "mode_for_drm", int(m));
+	    settings.Put(sec, "width", int(width));
+	}
+	int offset = r.rig->GetFrequencyOffset();
+	if(offset!=0)
+	    settings.Put(sec, "offset", offset);
+    }
+    settings.Put("Hamlib", "rigs", rigids.str());
 }
 
 SoundChoice::SoundChoice():QAbstractItemModel(), items()
@@ -411,7 +589,6 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
 	Receiver(NRx), Settings(NSettings), loading(true),
 	TimerRig(),iWantedrigModel(0),
 	bgTimeInterp(NULL), bgFreqInterp(NULL), bgTiSync(NULL),
-	bgDRMriq(NULL), bgDRMlrm(NULL), bgDRMiq(NULL),
 	bgAMriq(NULL), bgAMlrm(NULL), bgAMiq(NULL),
 	bgHamriq(NULL), bgHamlrm(NULL), bgHamiq(NULL)
 #ifdef HAVE_LIBHAMLIB
@@ -464,56 +641,23 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
     bgTiSync->addButton(RadioButtonTiSyncEnergy, 0);
     bgTiSync->addButton(RadioButtonTiSyncFirstPeak, 0);
 
-    comboBoxDRMRig->setModel(treeViewRigs->model());
-    comboBoxDRMSound->setModel(&soundcards);
-    bgDRMriq = new QButtonGroup(this);
-    bgDRMriq->addButton(radioButtonDRMReal, 0);
-    bgDRMriq->addButton(radioButtonDRMIQ, 1);
-    bgDRMlrm = new QButtonGroup(this);
-    bgDRMlrm->addButton(radioButtonDRMLeft, CS_LEFT_CHAN);
-    bgDRMlrm->addButton(radioButtonDRMRight, CS_RIGHT_CHAN);
-    bgDRMlrm->addButton(radioButtonDRMMix, CS_MIX_CHAN);
-    bgDRMiq = new QButtonGroup(this);
-    bgDRMiq->addButton(radioButtonDRMIQPos, CS_IQ_POS);
-    bgDRMiq->addButton(radioButtonDRMIQNeg, CS_IQ_NEG);
+    widgetDRMInput->comboBoxRig->setModel(treeViewRigs->model());
+    widgetDRMInput->comboBoxSound->setModel(&soundcards);
 
-    comboBoxAMRig->setModel(treeViewRigs->model());
-    comboBoxAMSound->setModel(&soundcards);
-    bgAMriq = new QButtonGroup(this);
-    bgAMriq->addButton(radioButtonAMReal, 0);
-    bgAMriq->addButton(radioButtonAMIQ, 1);
-    bgAMlrm = new QButtonGroup(this);
-    bgAMlrm->addButton(radioButtonAMLeft, CS_LEFT_CHAN);
-    bgAMlrm->addButton(radioButtonAMRight, CS_RIGHT_CHAN);
-    bgAMlrm->addButton(radioButtonAMMix, CS_MIX_CHAN);
-    bgAMiq = new QButtonGroup(this);
-    bgAMiq->addButton(radioButtonAMIQPos, CS_IQ_POS);
-    bgAMiq->addButton(radioButtonAMIQNeg, CS_IQ_NEG);
+    widgetAMInput->comboBoxRig->setModel(treeViewRigs->model());
+    widgetAMInput->comboBoxSound->setModel(&soundcards);
 
-    comboBoxFMRig->setModel(treeViewRigs->model());
-    comboBoxFMSound->setModel(&soundcards);
+    widgetFMInput->comboBoxRig->setModel(treeViewRigs->model());
+    widgetFMInput->comboBoxSound->setModel(&soundcards);
+    widgetFMInput->soundInputFrame->setEnabled(false);
 
-    comboBoxHamRig->setModel(treeViewRigs->model());
-    comboBoxHamSound->setModel(&soundcards);
-    bgHamriq = new QButtonGroup(this);
-    bgHamriq->addButton(radioButtonHamReal, 0);
-    bgHamriq->addButton(radioButtonHamIQ, 1);
-    bgHamlrm = new QButtonGroup(this);
-    bgHamlrm->addButton(radioButtonHamLeft, CS_LEFT_CHAN);
-    bgHamlrm->addButton(radioButtonHamRight, CS_RIGHT_CHAN);
-    bgHamlrm->addButton(radioButtonHamMix, CS_MIX_CHAN);
-    bgHamiq = new QButtonGroup(this);
-    bgHamiq->addButton(radioButtonHamIQPos, CS_IQ_POS);
-    bgHamiq->addButton(radioButtonHamIQNeg, CS_IQ_NEG);
+    widgetHamInput->comboBoxRig->setModel(treeViewRigs->model());
+    widgetHamInput->comboBoxSound->setModel(&soundcards);
 
     connect(pushButtonDRMApply, SIGNAL(clicked()), SLOT(OnButtonDRMApply()));
     connect(pushButtonAMApply, SIGNAL(clicked()), SLOT(OnButtonAMApply()));
     connect(pushButtonFMApply, SIGNAL(clicked()), SLOT(OnButtonFMApply()));
     connect(pushButtonHamApply, SIGNAL(clicked()), SLOT(OnButtonHamApply()));
-
-    connect(bgDRMriq, SIGNAL(buttonClicked(int)), SLOT(OnRadioDRMRealIQ(int)));
-    connect(bgAMriq, SIGNAL(buttonClicked(int)), SLOT(OnRadioAMRealIQ(int)));
-    connect(bgHamriq, SIGNAL(buttonClicked(int)), SLOT(OnRadioHamRealIQ(int)));
 
     /* Check boxes */
     connect(CheckBoxUseGPS, SIGNAL(clicked()), SLOT(OnCheckBoxUseGPS()) );
@@ -528,12 +672,15 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
     connect(pushButtonAddRig, SIGNAL(clicked()), this, SLOT(OnButtonAddRig()));
     connect(pushButtonRemoveRig, SIGNAL(clicked()), this, SLOT(OnButtonRemoveRig()));
     //connect(CheckBoxEnableSMeter, SIGNAL(toggled(bool)), this, SLOT(OnCheckEnableSMeterToggled(bool)));
+    connect(treeViewRigTypes, SIGNAL(clicked (const QModelIndex&)),
+	    this, SLOT(OnRigTypeSelected(const QModelIndex&)));
     connect(treeViewRigs, SIGNAL(clicked (const QModelIndex&)),
 	    this, SLOT(OnRigSelected(const QModelIndex&)));
 
     connect(&TimerRig, SIGNAL(timeout()), this, SLOT(OnTimerRig()));
 
     connect(pushButtonConnectRig, SIGNAL(clicked()), this, SLOT(OnButtonConnectRig()));
+    checkBoxModified->setEnabled(false);
     TimerRig.stop();
     //TimerRig.setSingleShot(true);
 #endif
@@ -554,111 +701,90 @@ ReceiverSettingsDlg::~ReceiverSettingsDlg()
 
 void ReceiverSettingsDlg::showEvent(QShowEvent*)
 {
-	loading = true; // prevent executive actions during reading state
+    loading = true; // prevent executive actions during reading state
 
-	/* DRM ----------------------------------------------------------------- */
-	QAbstractButton* button = NULL;
-	button = bgTimeInterp->button(int(Receiver.GetTimeInt()));
-	if(button) button->setChecked(true);
-	button = bgFreqInterp->button(int(Receiver.GetFreqInt()));
-	if(button) button->setChecked(true);
-	button = bgTiSync->button(int(Receiver.GetTiSyncTracType()));
-	if(button) button->setChecked(true);
+    CParameter& Parameters = *Receiver.GetParameters();
 
-	CheckBoxRecFilter->setChecked(Receiver.GetRecFilter());
-	CheckBoxModiMetric->setChecked(Receiver.GetIntCons());
-	SliderNoOfIterations->setValue(Receiver.GetInitNumIterations());
+    Parameters.Lock();
+    EModulationType modn = Parameters.eModulation;
+    Parameters.Unlock();
 
-	/* Input ----------------------------------------------------------------- */
-	soundcards.set(*Receiver.GetSoundInInterface());
+    switch(modn)
+    {
+	case DRM:
+	    pushButtonDRMApply->setText(tr("Apply"));
+	    pushButtonAMApply->setText(tr("Save"));
+	    pushButtonFMApply->setText(tr("Save"));
+	    pushButtonHamApply->setText(tr("Save"));
+	    break;
+	case AM:
+	    pushButtonDRMApply->setText(tr("Save"));
+	    pushButtonAMApply->setText(tr("Apply"));
+	    pushButtonFMApply->setText(tr("Save"));
+	    pushButtonHamApply->setText(tr("Save"));
+	    break;
+	case WBFM:
+	    pushButtonDRMApply->setText(tr("Save"));
+	    pushButtonAMApply->setText(tr("Save"));
+	    pushButtonFMApply->setText(tr("Apply"));
+	    pushButtonHamApply->setText(tr("Save"));
+	    break;
+	default:
+	    pushButtonDRMApply->setText(tr("Save"));
+	    pushButtonAMApply->setText(tr("Save"));
+	    pushButtonFMApply->setText(tr("Save"));
+	    pushButtonHamApply->setText(tr("Apply"));
+    }
 
-	comboBoxDRMSound->setCurrentIndex(Settings.Get("Input-DRM", "soundcard", int(0)));
-	int riq = Settings.Get("Input-DRM", "mode", int(0));
-	stackedWidgetDRMip->setCurrentIndex(riq);
-	button = bgDRMriq->button(riq);
-	if(button) button->setChecked(true);
-	button = bgDRMlrm->button(Settings.Get("Input-DRM", "channels", int(0)));
-	if(button) button->setChecked(true);
-	button = bgDRMiq->button(Settings.Get("Input-DRM", "sign", int(0)));
-	if(button) button->setChecked(true);
-	CheckBoxDRMFlipSpec->setChecked(Settings.Get("Input-DRM", "flipspectrum", int(0)));
+    /* DRM ----------------------------------------------------------------- */
+    QAbstractButton* button = NULL;
+    button = bgTimeInterp->button(int(Receiver.GetTimeInt()));
+    if(button) button->setChecked(true);
+    button = bgFreqInterp->button(int(Receiver.GetFreqInt()));
+    if(button) button->setChecked(true);
+    button = bgTiSync->button(int(Receiver.GetTiSyncTracType()));
+    if(button) button->setChecked(true);
 
-	comboBoxAMSound->setCurrentIndex(Settings.Get("Input-AM", "soundcard", int(0)));
-	riq = Settings.Get("Input-AM", "mode", int(0));
-	stackedWidgetAMip->setCurrentIndex(riq);
-	button = bgAMriq->button(riq);
-	if(button) button->setChecked(true);
-	button = bgAMlrm->button(Settings.Get("Input-AM", "channels", int(0)));
-	if(button) button->setChecked(true);
-	button = bgAMiq->button(Settings.Get("Input-AM", "sign", int(0)));
-	if(button) button->setChecked(true);
-	CheckBoxAMFlipSpec->setChecked(Settings.Get("Input-AM", "flipspectrum", int(0)));
+    CheckBoxRecFilter->setChecked(Receiver.GetRecFilter());
+    CheckBoxModiMetric->setChecked(Receiver.GetIntCons());
+    SliderNoOfIterations->setValue(Receiver.GetInitNumIterations());
 
-	comboBoxFMSound->setCurrentIndex(Settings.Get("Input-FM", "soundcard", int(0)));
-
-	comboBoxHamSound->setCurrentIndex(Settings.Get("Input-Ham", "soundcard", int(0)));
-	riq = Settings.Get("Input-Ham", "mode", int(0));
-	stackedWidgetHamip->setCurrentIndex(riq);
-	button = bgHamriq->button(riq);
-	if(button) button->setChecked(true);
-	button = bgHamlrm->button(Settings.Get("Input-Ham", "channels", int(0)));
-	if(button) button->setChecked(true);
-	button = bgHamiq->button(Settings.Get("Input-Ham", "sign", int(0)));
-	if(button) button->setChecked(true);
-	CheckBoxHamFlipSpec->setChecked(Settings.Get("Input-Ham", "flipspectrum", int(0)));
+    /* Rig - need Rigs populated before input options */
 #ifdef HAVE_LIBHAMLIB
-	comboBoxDRMRig->setCurrentIndex(Settings.Get("Input-DRM", "rig", int(0)));
-	comboBoxAMRig->setCurrentIndex(Settings.Get("Input-AM", "rig", int(0)));
-	comboBoxFMRig->setCurrentIndex(Settings.Get("Input-FM", "rig", int(0)));
-	comboBoxHamRig->setCurrentIndex(Settings.Get("Input-Ham", "rig", int(0)));
+    stackedWidget->setEnabled(false);
+    Rigs.load(Settings, Receiver);
+    CheckBoxEnableSMeter->setChecked(false);
 #endif
 
-	/* GPS */
-	ExtractReceiverCoordinates();
+    /* Input ----------------------------------------------------------------- */
+    soundcards.set(*Receiver.GetSoundInInterface());
 
-	/* Rig */
-#ifdef HAVE_LIBHAMLIB
-	rig_model_t current = 0;
-	CRig* rig = Receiver.GetCurrentRig();
+    widgetDRMInput->load(Settings);
+    widgetAMInput->load(Settings);
+    widgetFMInput->load(Settings);
+    widgetHamInput->load(Settings);
 
-	if(rig)
-		CheckBoxEnableSMeter->setChecked(rig->GetEnableSMeter());
+    /* GPS */
+    ExtractReceiverCoordinates();
 
-#endif
+    loading = false; // loading completed
+}
 
-	loading = false; // loading completed
+static RigData getRig(QComboBox* box)
+{
+    int i = box->currentIndex();
+    QVariant var = box->itemData(i);
+    return var.value<RigData>();
 }
 
 void ReceiverSettingsDlg::hideEvent(QHideEvent*)
 {
 	// input
-	Settings.Put("Input-DRM", "soundcard", comboBoxDRMSound->currentIndex());
-	Settings.Put("Input-DRM", "mode", stackedWidgetDRMip->currentIndex());
-	Settings.Put("Input-DRM", "channels", bgDRMlrm->checkedId());
-	Settings.Put("Input-DRM", "sign", bgDRMiq->checkedId());
-	Settings.Put("Input-DRM", "flipspectrum", CheckBoxDRMFlipSpec->isChecked());
-
-	Settings.Put("Input-AM", "soundcard", comboBoxAMSound->currentIndex());
-	Settings.Put("Input-AM", "mode", stackedWidgetAMip->currentIndex());
-	Settings.Put("Input-AM", "channels", bgAMlrm->checkedId());
-	Settings.Put("Input-AM", "sign", bgAMiq->checkedId());
-	Settings.Put("Input-AM", "flipspectrum", CheckBoxAMFlipSpec->isChecked());
-
-	Settings.Put("Input-FM", "soundcard", comboBoxFMSound->currentIndex());
-
-	Settings.Put("Input-Ham", "soundcard", comboBoxHamSound->currentIndex());
-	Settings.Put("Input-Ham", "mode", stackedWidgetHamip->currentIndex());
-	Settings.Put("Input-Ham", "channels", bgHamlrm->checkedId());
-	Settings.Put("Input-Ham", "sign", bgHamiq->checkedId());
-	Settings.Put("Input-Ham", "flipspectrum", CheckBoxHamFlipSpec->isChecked());
-
-#ifdef HAVE_LIBHAMLIB
-	Settings.Put("Input-DRM", "rig", comboBoxDRMRig->currentIndex());
-	Settings.Put("Input-AM", "rig", comboBoxAMRig->currentIndex());
-	Settings.Put("Input-FM", "rig", comboBoxFMRig->currentIndex());
-	Settings.Put("Input-Ham", "rig", comboBoxHamRig->currentIndex());
-#endif
-	// rig
+	widgetDRMInput->save(Settings);
+	widgetAMInput->save(Settings);
+	widgetFMInput->save(Settings);
+	widgetHamInput->save(Settings);
+	Rigs.save(Settings);
 }
 
 /* this sets default values into the dialog and ini file for
@@ -849,9 +975,7 @@ void ReceiverSettingsDlg::OnSelFrequencyInterp(int iId)
 
 void ReceiverSettingsDlg::OnSelTiSync(int iId)
 {
-
     Receiver.SetTiSyncTracType(ETypeTiSyncTrac(iId));
-
 }
 
 void ReceiverSettingsDlg::OnSliderIterChange(int value)
@@ -862,55 +986,37 @@ void ReceiverSettingsDlg::OnSliderIterChange(int value)
 // input TAB
 void 	ReceiverSettingsDlg::OnRadioDRMRealIQ(int i)
 {
-	stackedWidgetDRMip->setCurrentIndex(i);
+	widgetDRMInput->stackedWidgetip->setCurrentIndex(i);
 }
 
 void 	ReceiverSettingsDlg::OnRadioAMRealIQ(int i)
 {
-	stackedWidgetAMip->setCurrentIndex(i);
+	widgetDRMInput->stackedWidgetip->setCurrentIndex(i);
 }
 
 void 	ReceiverSettingsDlg::OnRadioHamRealIQ(int i)
 {
-	stackedWidgetHamip->setCurrentIndex(i);
+	widgetHamInput->stackedWidgetip->setCurrentIndex(i);
 }
 
 void ReceiverSettingsDlg::OnButtonDRMApply()
 {
-    Settings.Put("mode", "Input-DRM", bgDRMriq->checkedId());
-    Settings.Put("channels", "Input-DRM", bgDRMlrm->checkedId());
-    Settings.Put("sign", "Input-DRM", bgDRMriq->checkedId());
-    Settings.Put("flipspectrum", "Input-DRM", CheckBoxDRMFlipSpec->isChecked());
-    Settings.Put("rig", "Input-DRM", comboBoxDRMRig->currentText().toStdString());
-    Settings.Put("rig", "Input-DRM", comboBoxDRMSound->currentText().toStdString());
+    widgetDRMInput->save(Settings);
 }
 
 void ReceiverSettingsDlg::OnButtonAMApply()
 {
-    Settings.Put("mode", "Input-AM", bgAMriq->checkedId());
-    Settings.Put("channels", "Input-AM", bgAMlrm->checkedId());
-    Settings.Put("sign", "Input-AM", bgAMiq->checkedId());
-    Settings.Put("flipspectrum", "Input-AM", CheckBoxAMFlipSpec->isChecked());
-    Settings.Put("rig", "Input-AM", comboBoxAMRig->currentText().toStdString());
-    Settings.Put("rig", "Input-AM", comboBoxAMSound->currentText().toStdString());
+    widgetAMInput->save(Settings);
 }
 
 void ReceiverSettingsDlg::OnButtonFMApply()
 {
-    Settings.Put("rig", "Input-FM", comboBoxFMRig->currentText().toStdString());
-    Settings.Put("rig", "Input-FM", comboBoxFMSound->currentText().toStdString());
+    widgetFMInput->save(Settings);
 }
 
 void ReceiverSettingsDlg::OnButtonHamApply()
 {
-    Settings.Put("mode", "Input-Ham", bgHamriq->checkedId());
-    Settings.Put("channels", "Input-Ham", bgHamlrm->checkedId());
-    Settings.Put("sign", "Input-Ham", bgHamriq->checkedId());
-    Settings.Put("flipspectrum", "Input-Ham", CheckBoxHamFlipSpec->isChecked());
-    Settings.Put("rig", "Input-Ham", comboBoxHamRig->currentText().toStdString());
-    Settings.Put("rig", "Input-Ham", comboBoxHamSound->currentText().toStdString());
-    //Receiver.SetChannelSelection(EInChanSel(iId));
-    //Receiver.SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
+    widgetHamInput->save(Settings);
 }
 
 void ReceiverSettingsDlg::OnCheckRecFilter()
@@ -965,8 +1071,16 @@ void ReceiverSettingsDlg::OnCheckEnableSMeterToggled(bool on)
 }
 
 void
-ReceiverSettingsDlg::OnRigTypeSelected(const QModelIndex&)
+ReceiverSettingsDlg::OnRigTypeSelected(const QModelIndex& m)
 {
+    QVariant var = m.data(Qt::UserRole);
+    if(var.isValid()==false)
+        return;
+    rig_model_t model = var.toInt();
+    if(RigTypes.modified.find(model)!=RigTypes.modified.end())
+	checkBoxModified->setEnabled(true);
+    else
+	checkBoxModified->setEnabled(false);
 }
 
 void
@@ -974,10 +1088,16 @@ ReceiverSettingsDlg::OnRigSelected(const QModelIndex& index)
 {
 #ifdef HAVE_LIBHAMLIB
     QVariant var = index.data(Qt::UserRole);
-    rig_caps caps = var.value<rig_caps>();
-    if(caps.port_type == RIG_PORT_SERIAL)
+    RigData r = var.value<RigData>();
+    if(r.rig==NULL)
     {
-	comboBoxComPort->setEnabled(true);
+    	QMessageBox::information(this, tr("Hamlib"), tr("Rig not created error"), QMessageBox::Ok);
+    	return;
+    }
+    if(r.rig->caps->port_type == RIG_PORT_SERIAL)
+    {
+	stackedWidget->setEnabled(true);
+	//stackedWidget->setpage(0);
 	comboBoxComPort->clear();
 	map<string,string> ports;
 	GetComPortList(ports);
@@ -986,15 +1106,28 @@ ReceiverSettingsDlg::OnRigSelected(const QModelIndex& index)
 	{
 	    comboBoxComPort->addItem(i->first.c_str(), i->second.c_str());
 	}
-    }
-    else if(caps.port_type == RIG_PORT_USB)
-    {
-	comboBoxComPort->setEnabled(true);
-	comboBoxComPort->clear();
+	int row = index.row();
+	char port[200];
+	r.rig->getConf("rig_pathname", port);
+	if(port[0] != 0)
+	{
+		int n = comboBoxComPort->findData(port);
+		comboBoxComPort->setCurrentIndex(n);
+	}
     }
     else
     {
-	comboBoxComPort->setEnabled(false);
+	comboBoxComPort->clear();
+    	if(r.rig->caps->port_type == RIG_PORT_USB)
+	{
+	    stackedWidget->setEnabled(true);
+	    //stackedWidget->setpage(1);
+	}
+	else
+	{
+	    stackedWidget->setEnabled(false);
+	    //stackedWidget->setpage(0);
+	}
     }
 #endif
 }
@@ -1003,14 +1136,42 @@ void
 ReceiverSettingsDlg::OnButtonAddRig()
 {
     rig_model_t model = treeViewRigTypes->currentIndex().data(Qt::UserRole).toInt();
-    const rig_caps* caps = Receiver.GetRigCaps(model);
-    if(caps)
-	Rigs.add(*caps);
+    CRig* r = Receiver.CreateRig(model);
+    if(r)
+    {
+    	bool parms;
+    	map<rig_model_t,RigTypesModel::parms>::const_iterator pp = RigTypes.unmodified.find(model);
+    	if(checkBoxModified->isChecked())
+    	{
+	    pp=RigTypes.modified.find(model);
+	    parms = (pp!=RigTypes.modified.end());
+    	}
+    	else
+	    parms = (pp!=RigTypes.unmodified.end());
+    	if(parms)
+    	{
+	    const RigTypesModel::parms& p = pp->second;
+	    for(map<string,int>::const_iterator i=p.levels.begin(); i!=p.levels.end(); i++)
+	    {
+		r->setLevel(rig_parse_level(i->first.c_str()), i->second);
+	    }
+	    if(p.mode_for_drm!=RIG_MODE_NONE)
+	    {
+	    	r->SetModeForDRM(p.mode_for_drm, p.width_for_drm);
+	    }
+	    r->SetFrequencyOffset(p.offset);
+    	}
+    	else
+	    r->SetFrequencyOffset(0);
+	Rigs.add(r);
+	//treeViewRigs->setCurrentIndex(Rigs.rowCount()-1);
+    }
 }
 
 void
 ReceiverSettingsDlg::OnButtonRemoveRig()
 {
+    Rigs.remove(treeViewRigs->currentIndex().internalId());
 }
 
 void
@@ -1020,47 +1181,49 @@ ReceiverSettingsDlg::OnButtonConnectRig()
 	    return;
 
 #ifdef HAVE_LIBHAMLIB
-	iWantedrigModel = treeViewRigs->currentIndex().data(Qt::UserRole).toInt();
-	CRig* rig = Receiver.GetRig(iWantedrigModel);
+	int n = treeViewRigs->currentIndex().row();
+	CRig* rig = Rigs.rigs[n].rig;
 	if(rig==NULL)
 		return;
 	if(rig->caps && rig->caps->port_type == RIG_PORT_SERIAL)
 	{
-	    string strPort = "";//comboBoxRigPort->currentText().toStdString();
+	    int index = comboBoxComPort->currentIndex();
+	    string strPort = comboBoxComPort->itemData(index).toString().toStdString();
 	    if(strPort!="")
 	    {
 		rig->setConf("rig_pathname", strPort.c_str());
 	    }
 	}
-
-	Receiver.SetRigModel(iWantedrigModel);
+        labelRigInfo->setText(tr("waiting"));
+	try
+	{
+	    rig->open();
+	} catch(RigException e)
+	{
+            labelRigInfo->setText(tr(e.message));
+	}
 #endif
-	TimerRig.start(500);
+	labelRigInfo->setText(rig->getInfo());
+//	TimerRig.start(500);
 }
 
 void ReceiverSettingsDlg::OnTimerRig()
 {
 #ifdef HAVE_LIBHAMLIB
     if(Receiver.GetRigChangeInProgress())
-	    return;
+    {
+	    labelRigInfo->setText(tr("still waiting"));
+    }
+    else
+    {
 	CRig* rig = Receiver.GetCurrentRig();
 	if(rig)
 	    labelRigInfo->setText(rig->getInfo());
 
-    TimerRig.stop();
+	TimerRig.stop();
+    }
 #endif
 }
-
-#if 0
-void ReceiverSettingsDlg::OnComboBoxRigPort(int)
-{
-    if(loading)
-	    return;
-#ifdef HAVE_LIBHAMLIB
-    Receiver.SetRigComPort(comboBoxRigPort->currentText().toStdString());
-#endif
-}
-#endif
 
 void ReceiverSettingsDlg::AddWhatsThisHelp()
 {
@@ -1097,9 +1260,9 @@ void ReceiverSettingsDlg::AddWhatsThisHelp()
 	const QString s = tr("<b>Flip Input Spectrum:</b> Checking this box "
 		"will flip or invert the input spectrum. This is necessary if the "
 		"mixer in the front-end uses the lower side band.");
-	CheckBoxDRMFlipSpec->setWhatsThis(s);
-	CheckBoxAMFlipSpec->setWhatsThis(s);
-	CheckBoxHamFlipSpec->setWhatsThis(s);
+	widgetDRMInput->CheckBoxFlipSpec->setWhatsThis(s);
+	widgetAMInput->CheckBoxFlipSpec->setWhatsThis(s);
+	widgetHamInput->CheckBoxFlipSpec->setWhatsThis(s);
 
 	/* Log File */
 	CheckBoxWriteLog->setWhatsThis(

@@ -82,7 +82,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QwtDial" name="PhaseDial" >
+         <widget class="QwtDial" native="1" name="PhaseDial" >
           <property name="minimumSize" >
            <size>
             <width>48</width>
@@ -200,13 +200,6 @@
          <string>Demodulation</string>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_3" >
-         <item>
-          <widget class="QRadioButton" name="RadioButtonDemWBFM" >
-           <property name="text" >
-            <string>FM</string>
-           </property>
-          </widget>
-         </item>
          <item>
           <widget class="QRadioButton" name="RadioButtonDemNBFM" >
            <property name="text" >
@@ -401,6 +394,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="pushButtonFM" >
+        <property name="text" >
+         <string>FM</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="ButtonDRM" >
         <property name="windowTitle" >
          <string/>
@@ -442,13 +442,8 @@
     <property name="title" >
      <string>Settings</string>
     </property>
-    <widget class="QMenu" name="menuSound_Card_Selection" >
-     <property name="title" >
-      <string>Sound Card Selection</string>
-     </property>
-    </widget>
-    <addaction name="menuSound_Card_Selection" />
     <addaction name="actionDRM" />
+    <addaction name="actionFM" />
     <addaction name="actionAM" />
     <addaction name="actionReceiver_Settings" />
    </widget>
@@ -504,7 +499,7 @@
   </action>
   <action name="actionDRM" >
    <property name="text" >
-    <string>&amp;DRM (digital)</string>
+    <string>&amp;DRM</string>
    </property>
    <property name="shortcut" >
     <string>Ctrl+D</string>
@@ -536,12 +531,21 @@
     <string>Sound &amp;Out</string>
    </property>
   </action>
+  <action name="actionFM" >
+   <property name="text" >
+    <string>FM</string>
+   </property>
+   <property name="shortcut" >
+    <string>Ctrl+F</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
    <class>QwtPlot</class>
    <extends>QFrame</extends>
    <header>qwt_plot.h</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>QwtDial</class>

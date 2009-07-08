@@ -92,7 +92,8 @@ public slots:
 	void OnNewDRMAcquisition();
 	void OnMenuSetDisplayColor();
 	void OnMenuDataApplication();
-    void OnSwitchToAnalog();
+	void OnSwitchToFM();
+	void OnSwitchToAnalog();
 	void SetService(int);
 	void OnHelpWhatsThis();
 };
