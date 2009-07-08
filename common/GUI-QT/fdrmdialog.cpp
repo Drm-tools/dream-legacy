@@ -660,6 +660,21 @@ void FDRMDialog::UpdateDisplay()
 	Parameters.Unlock();
 
 	/* Set texts */
+	bool initEPG=false;
+	if((!TextMiniService1->text().contains("EPG")) && (m_StaticService[0].contains("EPG")))
+		initEPG=true;
+	if((!TextMiniService2->text().contains("EPG")) && (m_StaticService[1].contains("EPG")))
+		initEPG=true;
+	if((!TextMiniService3->text().contains("EPG")) && (m_StaticService[2].contains("EPG")))
+		initEPG=true;
+	if((!TextMiniService4->text().contains("EPG")) && (m_StaticService[3].contains("EPG")))
+		initEPG=true;
+	if(initEPG)
+	{
+		CDataDecoder* dc = DRMReceiver.GetDataDecoder();
+		dc->SetInitFlag();
+		cerr << "set data init from EPG detect" << endl;
+	}
 	TextMiniService1->setText(m_StaticService[0]);
 	TextMiniService2->setText(m_StaticService[1]);
 	TextMiniService3->setText(m_StaticService[2]);

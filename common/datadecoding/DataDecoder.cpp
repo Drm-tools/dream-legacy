@@ -378,17 +378,15 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 					//cout << iEPGPacketID << " " << iPacketID << endl; cout.flush();
 					if(iEPGPacketID == -1)
 					{
-                        cerr << "data unit received but EPG packetId not set" << endl;
-                        iEPGPacketID = iPacketID;
+						cerr << "data unit received but EPG packetId not set" << endl;
+						iEPGPacketID = iPacketID;
 					}
-                    MOTObject[iEPGPacketID].AddDataUnit(DataUnit[iPacketID].
-														vecbiData);
+					MOTObject[iEPGPacketID].AddDataUnit(DataUnit[iPacketID].vecbiData);
 					break;
 
 				case AT_MOTBROADCASTWEBSITE:	/* MOT Broadcast Web Site */
 					/* Packet unit decoding */
-					MOTObject[iPacketID].AddDataUnit(DataUnit[iPacketID].
-													 vecbiData);
+					MOTObject[iPacketID].AddDataUnit(DataUnit[iPacketID].vecbiData);
 					break;
 
 				case AT_JOURNALINE:
@@ -455,6 +453,7 @@ CDataDecoder::DecodeEPG(const CParameter & ReceiverParam)
 
 		string path = ReceiverParam.sDataFilesDirectory + "/epg/" + fileName;
 		mkdirs(path);
+		//cerr << "writing EPG file " << path << endl;
 		FILE *f = fopen(path.c_str(), "wb");
 		if (f)
 		{
@@ -615,7 +614,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 	iEPGPacketID = -1;
 
 	/* look for EPG */
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i <= 3; i++)
 	{
 		if ((ReceiverParam.Service[i].DataParam.eAppDomain ==
 			 CDataParam::AD_DAB_SPEC_APP)
@@ -623,6 +622,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 		{
 			iEPGService = i;
 			iEPGPacketID = ReceiverParam.Service[i].DataParam.iPacketID;
+			cerr << "EPG packet id " << iEPGPacketID << endl;
 		}
 	}
 }

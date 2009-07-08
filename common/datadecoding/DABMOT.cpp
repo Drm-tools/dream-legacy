@@ -636,7 +636,7 @@ CMOTDABDec::DeliverIfReady(TTransportID TransportID)
 				/* Can't unzip so change the filename */
 				o.strName = string(o.strName.c_str()) + ".gz";
 		}
-		//cout << o << endl;;
+		//cerr << o << endl;;
 		qiNewObjects.push(TransportID);
 	}
 }
@@ -743,7 +743,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 
 		vecbiNewData.Separate(iLenEndUserAddress);
 	}
-	//cout << "MOT: new data unit, tid " << TransportID << " CRC " << bCRCOk << " DG" << iDataGroupType << endl;
+	//cerr << "MOT: new data unit, tid " << TransportID << " CRC " << bCRCOk << " DG" << iDataGroupType << endl;
 
 	/* MSC data group data field -------------------------------------------- */
 	/* If CRC is not used enter if-block, if CRC flag is used, it must be ok to
