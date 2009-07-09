@@ -30,6 +30,7 @@
 #include "EPGDlg.h"
 #include <QRegExp>
 #include <QMessageBox>
+#include <QDir>
 #include <ctime>
 
 EPGModel::EPGModel(CParameter& p) : EPG(p), QAbstractTableModel(),
@@ -341,10 +342,31 @@ void EPGDlg::OnNext()
 
 void EPGDlg::OnClearCache()
 {
- QMessageBox msgBox;
- msgBox.setText(tr("Sorry - not implemented yet."));
- msgBox.exec();
+    string path = Settings.Get("Receiver", string("datafilesdirectory"));
+cerr << path << endl;
+    QDir dir(path.c_str());
+
+	/* Check if the directory exists */
+	if (!dir.exists())
+	{
+		return;
+	}
+	dir.setFilter(QDir::Files | QDir::NoSymLinks);
+
+	QStringList filters;
+	filters << "*.EHA" << "*.EHB";
+	dir.setNameFilters(filters);
+
+	const QFileInfoList& list = dir.entryInfoList();
+
+	for(QFileInfoList::const_iterator fi = list.begin();
+		fi != list.end(); fi++)
+	{
+		/* Is a file so remove it */
+		dir.remove(fi->fileName());
+	}
 }
+
 
 void EPGDlg::OnSave()
 {
