@@ -28,9 +28,11 @@
 \******************************************************************************/
 
 #include "EPGDlg.h"
+#include <QTextStream>
 #include <QRegExp>
 #include <QMessageBox>
 #include <QDir>
+#include <QFileDialog>
 #include <ctime>
 
 EPGModel::EPGModel(CParameter& p) : EPG(p), QAbstractTableModel(),
@@ -342,9 +344,7 @@ void EPGDlg::OnNext()
 
 void EPGDlg::OnClearCache()
 {
-    string path = Settings.Get("Receiver", string("datafilesdirectory"));
-cerr << path << endl;
-    QDir dir(path.c_str());
+    QDir dir(epg.dir);
 
 	/* Check if the directory exists */
 	if (!dir.exists())
@@ -359,20 +359,94 @@ cerr << path << endl;
 
 	const QFileInfoList& list = dir.entryInfoList();
 
+	int n=0;
 	for(QFileInfoList::const_iterator fi = list.begin();
 		fi != list.end(); fi++)
 	{
 		/* Is a file so remove it */
 		dir.remove(fi->fileName());
+		n++;
 	}
+	QMessageBox msgBox(this);
+	 msgBox.setText(QString(tr("deleted %1 files")).arg(n));
+	 msgBox.exec();
 }
 
 
 void EPGDlg::OnSave()
 {
- QMessageBox msgBox;
- msgBox.setText(tr("Sorry - not implemented yet."));
- msgBox.exec();
+	QStringList filters;
+	filters << tr("ETSI XML (*.xml)");
+	if(pages->currentIndex()==0)
+	{
+		filters << tr("Web Page (*.html)") << tr("Comma Separated (*.csv)");
+	}
+	QFileDialog dialog(this);
+	dialog.setNameFilters(filters);
+	dialog.setDirectory(epg.dir);
+	dialog.setAcceptMode(QFileDialog::AcceptSave);
+	dialog.exec();
+	QStringList l = dialog.selectedFiles();
+	if(l.size()==1)
+	{
+		QString nf = dialog.selectedNameFilter();
+		QString fn = l[0];
+		QString text;
+		switch(pages->currentIndex())
+		{
+		case 0: // grid
+			if(nf.contains(".xml"))
+			{
+				fn += ".xml";
+				QDomDocument b,a;
+				bool bb = b.setContent(basic->toPlainText());
+				bool ba = a.setContent(advanced->toPlainText());
+				if(bb && ba)
+				{
+					// TODO merge a into b
+					text = b.toString();
+				}
+				else
+				{
+					if(bb)
+						text = basic->toPlainText();
+					else if(ba)
+						text = advanced->toPlainText();
+					else
+						text = "";
+				}
+			}
+			if(nf.contains(".html"))
+			{
+				fn += ".html";
+				text = epg.toHTML();
+			}
+			if(nf.contains(".csv"))
+			{
+				fn += ".csv";
+				text = epg.toCSV();
+			}
+			break;
+		case 1: // basic
+			fn += ".xml";
+			text = basic->toPlainText();
+			break;
+		case 2: // advanced
+			fn += ".xml";
+			text = advanced->toPlainText();
+			break;
+		}
+		QFile data(fn);
+		if (data.open(QFile::WriteOnly | QFile::Truncate))
+		{
+		     QTextStream out(&data);
+		     out << text;
+		}
+		data.close();
+	}
+	else
+	{
+	}
 }
 
 void EPGDlg::updateXML(const QDate& date, uint32_t sid, bool adv)

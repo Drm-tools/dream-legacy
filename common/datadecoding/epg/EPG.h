@@ -52,6 +52,8 @@ class EPG
     void addChannel (const string& label, uint32_t sid);
     void parseDoc (const QDomDocument &);
     QDomDocument getFile (const QDate&, uint32_t, bool);
+    QString toHTML ();
+    QString toCSV ();
 
     class CProg
     {

@@ -1586,3 +1586,39 @@ int EPG::parseDuration (const QString & duration)
     return 60*h+m;
 }
 
+QString EPG::toHTML ()
+{
+	QString s;
+	QTextStream r(&s);
+	r << "<html><body><table>";
+	for(QMap < time_t, CProg >::const_iterator i=progs.begin(); i!=progs.end(); i++)
+	{
+		const CProg& p = i.value();
+		r << "<tr>";
+		tm bdt = *gmtime(&p.time);
+		r << "<td>" << bdt.tm_hour << ":" << bdt.tm_min << "</td>";
+		r << "<td>" << p.name << "</td>";
+		r << "<td>" << p.description << "</td>";
+		r << "<td>" << (p.duration/60) << ":" << (p.duration%60) << "</td>";
+		r << "</tr>";
+	}
+	r << "</table></body></html>";
+	return s;
+}
+
+QString EPG::toCSV ()
+{
+	QString s;
+	QTextStream r(&s);
+	for(QMap < time_t, CProg >::const_iterator i=progs.begin(); i!=progs.end(); i++)
+	{
+		const CProg& p = i.value();
+		tm bdt = *gmtime(&p.time);
+		r << bdt.tm_hour << ":" << bdt.tm_min << "\t";
+		r << p.name << "\t";
+		r << p.description << "\t";
+		r << (p.duration/60) << ":" << (p.duration%60) << "\t";
+		r << "\n";
+	}
+	return s;
+}
