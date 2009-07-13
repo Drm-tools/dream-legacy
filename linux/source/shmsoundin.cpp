@@ -71,7 +71,7 @@ CShmSoundIn::Init(int iNewBufferSize, bool bNewBlocking, int iChannels)
 }
 
 void
-CShmSoundIn::Enumerate(vector < string > &choices)
+CShmSoundIn::Enumerate(vector<string>& choices) const
 {
 	choices.clear();
 	if(shmid==-1)
@@ -111,7 +111,7 @@ CShmSoundIn::Read(vector<_SAMPLE>& psData)
 		samples = frames;
 	bytes = sizeof(short)*samples;
 
-	
+
 	while(PaUtil_GetShmRingBufferReadAvailable(ringBuffer)<int(bytes))
 	{
 		timespec ts;
@@ -141,7 +141,7 @@ CShmSoundIn::Read(vector<_SAMPLE>& psData)
 			}
 		}
 	}
-	
+
 	return true;
 }
 
