@@ -55,7 +55,7 @@
 /// @file       NML.cpp
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: NML.cpp,v 1.5 2009/03/04 23:33:48 jcable Exp $
+/// $Id: NML.cpp,v 1.6 2009/07/25 08:28:49 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///
@@ -398,10 +398,12 @@ NML* NMLFactory::CreateNML( const NML::RawNewsObject_t& rno, const NMLEscapeCode
 			return n;
 		}
 
+		/*
 		log_info
 			<< "decompressed NML, "
 			<< len << " -> " << ulen
 			<< endmsg;
+		*/
 
 		if( ulen + NML::NML_NR_OF_HEADER_BYTES + rno.extended_header_len > NML::NML_MAX_LEN )
 		{
@@ -416,10 +418,12 @@ NML* NMLFactory::CreateNML( const NML::RawNewsObject_t& rno, const NMLEscapeCode
 		p = uncompressed.nml + NML::NML_NR_OF_HEADER_BYTES + rno.extended_header_len;
 		len = uncompressed.nml_len;
 
+		/*
 		log_info
 			<< "compressed NML len=" << rno.nml_len
 			<< ", uncompressed NML len= " << uncompressed.nml_len
 			<< endmsg;
+		*/
 	}
 	// wasn't compressed, so just copy content
 	else
