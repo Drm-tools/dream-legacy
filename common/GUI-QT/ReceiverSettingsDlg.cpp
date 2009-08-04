@@ -530,23 +530,30 @@ RigModel::save(CSettings& settings)
     settings.Put("Hamlib", "rigs", rigids.str());
 }
 
-SoundChoice::SoundChoice():QAbstractItemModel(), items()
+SoundChoice::SoundChoice(const CSelectionInterface& s, bool t)
+:QAbstractItemModel(), isTree(t), interface(s)
 {
 }
 
-int SoundChoice::rowCount (const QModelIndex&) const
+int SoundChoice::rowCount (const QModelIndex& index) const
 {
-    return items.size();
+    vector<string> s;
+    interface.Enumerate(s);
+    return s.size();
 }
 
-int SoundChoice::columnCount (const QModelIndex&) const
+int SoundChoice::columnCount (const QModelIndex& index) const
 {
+    if(isTree)
+	return 2;
     return 1;
 }
 
 QVariant
 SoundChoice::data (const QModelIndex& index, int role) const
 {
+    vector<string> items;
+    interface.Enumerate(items);
     switch(role)
     {
 	case Qt::DecorationRole:
@@ -573,12 +580,6 @@ QModelIndex SoundChoice::parent(const QModelIndex&) const
     return QModelIndex();
 }
 
-void SoundChoice::set(const CSelectionInterface& s)
-{
-	s.Enumerate(items);
-	reset();
-}
-
 #endif
 
 ReceiverSettingsDlg::ReceiverSettingsDlg(
@@ -590,10 +591,11 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
 	TimerRig(),iWantedrigModel(0),
 	bgTimeInterp(NULL), bgFreqInterp(NULL), bgTiSync(NULL),
 	bgAMriq(NULL), bgAMlrm(NULL), bgAMiq(NULL),
-	bgHamriq(NULL), bgHamlrm(NULL), bgHamiq(NULL)
+	bgHamriq(NULL), bgHamlrm(NULL), bgHamiq(NULL),
 #ifdef HAVE_LIBHAMLIB
-	,RigTypes(),Rigs(),soundcards()
+	RigTypes(),Rigs(),soundcards(),
 #endif
+	soundoutputs()
 {
     setupUi(this);
 
@@ -641,18 +643,19 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
     bgTiSync->addButton(RadioButtonTiSyncEnergy, 0);
     bgTiSync->addButton(RadioButtonTiSyncFirstPeak, 0);
 
+    soundcards = new SoundChoice(*Receiver.GetSoundInInterface());
     widgetDRMInput->comboBoxRig->setModel(treeViewRigs->model());
-    widgetDRMInput->comboBoxSound->setModel(&soundcards);
+    widgetDRMInput->comboBoxSound->setModel(soundcards);
 
     widgetAMInput->comboBoxRig->setModel(treeViewRigs->model());
-    widgetAMInput->comboBoxSound->setModel(&soundcards);
+    widgetAMInput->comboBoxSound->setModel(soundcards);
 
     widgetFMInput->comboBoxRig->setModel(treeViewRigs->model());
-    widgetFMInput->comboBoxSound->setModel(&soundcards);
+    widgetFMInput->comboBoxSound->setModel(soundcards);
     widgetFMInput->soundInputFrame->setEnabled(false);
 
     widgetHamInput->comboBoxRig->setModel(treeViewRigs->model());
-    widgetHamInput->comboBoxSound->setModel(&soundcards);
+    widgetHamInput->comboBoxSound->setModel(soundcards);
 
     connect(pushButtonDRMApply, SIGNAL(clicked()), SLOT(OnButtonDRMApply()));
     connect(pushButtonAMApply, SIGNAL(clicked()), SLOT(OnButtonAMApply()));
@@ -684,6 +687,14 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
     TimerRig.stop();
     //TimerRig.setSingleShot(true);
 #endif
+
+    soundoutputs = new SoundChoice(*Receiver.GetSoundOutInterface(), true);
+    connect(CheckBoxMuteAudio, SIGNAL(clicked()), this, SLOT(OnCheckBoxMuteAudio()));
+    connect(CheckBoxReverb, SIGNAL(clicked()), this, SLOT(OnCheckBoxReverb()));
+    connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWav()));
+    connect(treeViewAudio, SIGNAL(clicked (const QModelIndex&)),
+	    this, SLOT(OnAudioSelected(const QModelIndex&)));
+    treeViewAudio->setModel(soundoutputs);
 
     /* Set help text for the controls */
     AddWhatsThisHelp();
@@ -757,12 +768,17 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 #endif
 
     /* Input ----------------------------------------------------------------- */
-    soundcards.set(*Receiver.GetSoundInInterface());
 
     widgetDRMInput->load(Settings);
     widgetAMInput->load(Settings);
     widgetFMInput->load(Settings);
     widgetHamInput->load(Settings);
+
+
+    /* Audio */
+    CheckBoxMuteAudio->setChecked(Receiver.GetMuteAudio());
+    CheckBoxSaveAudioWave->setChecked(Receiver.GetIsWriteWaveFile());
+    CheckBoxReverb->setChecked(Receiver.GetReverbEffect());
 
     /* GPS */
     ExtractReceiverCoordinates();
@@ -1223,6 +1239,54 @@ void ReceiverSettingsDlg::OnTimerRig()
 	TimerRig.stop();
     }
 #endif
+}
+
+
+void ReceiverSettingsDlg::OnCheckBoxMuteAudio()
+{
+	/* Set parameter in working thread module */
+	Receiver.MuteAudio(CheckBoxMuteAudio->isChecked());
+}
+
+void ReceiverSettingsDlg::OnCheckSaveAudioWav()
+{
+/*
+	This code is copied in SystemEvalDlg.cpp. If you do changes here, you should
+	apply the changes in the other file, too
+*/
+	if (CheckBoxSaveAudioWave->isChecked() == true)
+	{
+		/* Show "save file" dialog */
+		QString strFileName =
+			QFileDialog::getSaveFileName(this, "DreamOut.wav", "*.wav");
+
+		/* Check if user not hit the cancel button */
+		if (!strFileName.isNull())
+		{
+			Receiver.StartWriteWaveFile(strFileName.toStdString());
+		}
+		else
+		{
+			/* User hit the cancel button, uncheck the button */
+			CheckBoxSaveAudioWave->setChecked(false);
+		}
+	}
+	else
+		Receiver.StopWriteWaveFile();
+}
+
+void ReceiverSettingsDlg::OnCheckBoxReverb()
+{
+	/* Set parameter in working thread module */
+	Receiver.SetReverbEffect(CheckBoxReverb->isChecked());
+}
+
+void ReceiverSettingsDlg::OnAudioSelected(const QModelIndex& m)
+{
+    QVariant var = m.data(Qt::UserRole);
+    if(var.isValid()==false)
+        return;
+    Receiver.GetSoundOutInterface()->SetDev(var.toInt());
 }
 
 void ReceiverSettingsDlg::AddWhatsThisHelp()

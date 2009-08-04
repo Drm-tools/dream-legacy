@@ -36,6 +36,141 @@
 #include "../DABMOT.h"
 #include "epgdec.h"
 
+typedef time_t TimePointType;
+typedef uint32_t DurationType;
+typedef string ContentIdType;
+typedef uint32_t TriggerType;
+typedef string CAType;
+typedef uint32_t shortCRIDType;
+typedef string CRIDType;
+typedef bool recommendationType;
+enum broadcastType {on_air,off_air} ;
+typedef QString urlType;
+typedef QString mimeType;
+
+struct EPGTime
+{
+	EPGTime():time(0),actualTime(0),duration(0),actualDuration(0){}
+	TimePointType time, actualTime;
+	DurationType duration,actualDuration;
+	void parse(QDomElement);
+	time_t parseTime(const QString & time);
+	int parseDuration (const QString & duration);
+	void augment(const EPGTime&);
+};
+
+struct EPGRelativeTime
+{
+	EPGRelativeTime():time(0),actualTime(0),duration(0),actualDuration(0){}
+	DurationType time, actualTime;
+	DurationType duration,actualDuration;
+	void augment(const EPGRelativeTime&);
+};
+
+
+struct EPGBearer
+{
+	EPGBearer():id(""),trigger(0){}
+	ContentIdType id;
+	TriggerType trigger;
+	void augment(const EPGBearer&);
+};
+
+struct LocationType
+{
+	vector<EPGTime> time;
+	vector<EPGRelativeTime> relativeTime;
+	vector<EPGBearer> bearer;
+	void parse(QDomElement);
+	void augment(const LocationType&);
+};
+
+struct MessageType
+{
+	QString text;
+	QString lang;
+	void parse(QDomElement);
+};
+
+typedef MessageType shortNameType;
+typedef MessageType mediumNameType;
+typedef MessageType longNameType;
+typedef MessageType keywordsType;
+
+struct ScheduleNameGroup
+{
+	vector<shortNameType> shortName;
+	vector<mediumNameType> mediumName;
+	vector<longNameType> longName;
+};
+
+
+struct GenreType
+{
+	MessageType name;
+	mimeType mimeValue;
+	bool preferred;
+	MessageType definition;
+	QString href;
+	enum {undef,main,secondary,other} type;
+	void parse(QDomElement);
+	void augment(const GenreType&);
+};
+
+struct memberOfType
+{
+	shortCRIDType shortId;
+	CRIDType id;
+	uint32_t index;
+};
+
+struct linkType
+{
+	urlType url;
+	mimeType mimeValue;
+	string lang;
+	string description;
+	TimePointType expiryTime;
+};
+
+struct MediaDescriptionType
+{
+	vector<MessageType> shortDescription;
+	vector<MessageType> longDescription;
+	mimeType mimeValue;
+	string lang;
+	urlType url;
+	string type;
+	uint16_t width;
+	uint16_t height;
+	void parse(QDomElement);
+	void augment(const MediaDescriptionType&);
+};
+
+struct ProgrammeType : public ScheduleNameGroup
+{
+	// note - schema has 1-unbounded ScheduleNameGroup refs but this makes no sense
+	vector<LocationType> location;
+	vector<MediaDescriptionType> mediaDescription;
+	vector<GenreType> genre;
+	CAType CA;
+	vector<keywordsType> keywords;
+	vector<memberOfType> memberOf;
+	vector<linkType> link;
+	shortCRIDType shortId;
+	CRIDType crid;
+	int version;
+	recommendationType recommendation;
+	broadcastType broadcast;
+	uint32_t bitrate;
+	string lang;
+	vector<ProgrammeType> programmeEvent;
+	void parse(QDomElement);
+	time_t start() const;
+	DurationType duration() const;
+	void augment(const ProgrammeType&);
+};
+
 class EPG
 {
   public:
@@ -52,28 +187,10 @@ class EPG
     void addChannel (const string& label, uint32_t sid);
     void parseDoc (const QDomDocument &);
     QDomDocument getFile (const QDate&, uint32_t, bool);
-    QString toHTML ();
-    QString toCSV ();
+    QString toHTML () const;
+    QString toCSV () const;
 
-    class CProg
-    {
-      public:
-
-	  CProg(): time(0), actualTime(0), duration(0), actualDuration(0),
-                name(""), description(""),
-			  crid(""), shortId(0), mainGenre(), secondaryGenre(), otherGenre()
-		{}
-        void augment(const CProg&);
-
-		time_t time, actualTime;
-		int duration, actualDuration;
-		QString name, description;
-		QString crid;
-		uint32_t shortId;
-		vector<QString> mainGenre, secondaryGenre, otherGenre;
-    };
-
-    QMap < time_t, CProg > progs;
+    QMap < shortCRIDType, ProgrammeType > progs;
     QMap < QString, QString > genres;
     QString dir, servicesFilename;
     CEPGDecoder basic, advanced;
@@ -81,6 +198,4 @@ class EPG
     time_t min_time, max_time;
 private:
     static const struct gl { const char *genre; const char* desc; } genre_list[];
-    time_t parseTime(const QString & time);
-    int parseDuration (const QString & duration);
 };

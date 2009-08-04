@@ -42,7 +42,7 @@ public:
 
 	virtual void		Enumerate(vector<string>&) const;
 	virtual void		SetDev(int) {}
-	virtual int		GetDev() { return -1; }
+	virtual int		GetDev() const { return -1; }
 	virtual void		SetFileName(const string& strFileName);
 
 	virtual void 		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
@@ -54,7 +54,7 @@ protected:
 	string			strInFileName;
 	enum {
 		fmt_txt, fmt_raw_mono, fmt_raw_stereo, fmt_other
-		}			eFmt;
+		}		eFmt;
 	int			iFileSampleRate;
 	int			iFileChannels;
 	CPacer*			pacer;
@@ -69,7 +69,7 @@ public:
 	virtual void		Enumerate(vector<string>& choices) const { choices = files; }
 	virtual void		SetDev(int iNewDevice);
 	virtual void		SetDev(const string& s);
-	virtual int		GetDev() { return dev; }
+	virtual int		GetDev() const { return dev; }
 
 	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
 	virtual void		Close();

@@ -41,7 +41,7 @@ public:
 	virtual void	Init(int, bool, int) {}
 	virtual bool	Read(vector<_SAMPLE>&) { return false; }
 	virtual void	Enumerate(vector<string>&choices) const { choices.push_back("(File or Network)"); }
-	virtual int	GetDev() { return iDev; }
+	virtual int	GetDev() const { return iDev; }
 	virtual void	SetDev(int iNewDev) { iDev = iNewDev; }
 	virtual void	Close() {}
 private:

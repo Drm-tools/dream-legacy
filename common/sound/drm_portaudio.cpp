@@ -96,7 +96,6 @@ struct CPa_Static
 static CPa_Static Pa_Static;
 
 CPaCommon::CPaCommon(bool cap):ringBuffer(),xruns(0),stream(NULL),
-	//names(), devices(),
 	dev(-1),
 	is_capture(cap), blocking(true), device_changed(true), xrun(false),
 	framesPerBuffer(0), ringBufferData(NULL), channels(2)
@@ -114,8 +113,6 @@ void
 CPaCommon::Enumerate(vector <string>& choices) const
 {
 	vector <string> tmp;
-	//names.clear();
-	//devices.clear();
 	choices.clear();
 	int numDevices = Pa_GetDeviceCount();
 	if (numDevices < 0)
@@ -134,22 +131,34 @@ CPaCommon::Enumerate(vector <string>& choices) const
 		if(is_capture && (deviceInfo->maxInputChannels > 1))
 		{
 			choices.push_back(api+deviceInfo->name);
-			//names.push_back(api+deviceInfo->name);
-			//devices.push_back(i);
 		}
 		if(!is_capture && (deviceInfo->maxOutputChannels > 1))
 		{
 			choices.push_back(api+deviceInfo->name);
-			//names.push_back(api+deviceInfo->name);
-			//devices.push_back(i);
 		}
 	}
-	//choices = names;
 }
 
 void
-CPaCommon::SetDev(int iNewDevice)
+CPaCommon::SetDev(int iNewDeviceNo)
 {
+	int numDevices = Pa_GetDeviceCount();
+	vector<int> devices;
+	if (numDevices < 0)
+		throw string("PortAudio error: ") + Pa_GetErrorText(numDevices);
+	for (int i = 0; i < numDevices; i++)
+	{
+		const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(i);
+		if(is_capture && (deviceInfo->maxInputChannels > 1))
+		{
+			devices.push_back(i);
+		}
+		if(!is_capture && (deviceInfo->maxOutputChannels > 1))
+		{
+			devices.push_back(i);
+		}
+	}
+	int iNewDevice = devices[iNewDeviceNo];
 	if (dev != iNewDevice)
 	{
 		dev = iNewDevice;
@@ -158,9 +167,30 @@ CPaCommon::SetDev(int iNewDevice)
 }
 
 int
-CPaCommon::GetDev()
+CPaCommon::GetDev() const
 {
-	return dev;
+	int numDevices = Pa_GetDeviceCount();
+	vector<int> devices;
+	if (numDevices < 0)
+		throw string("PortAudio error: ") + Pa_GetErrorText(numDevices);
+	for (int i = 0; i < numDevices; i++)
+	{
+		const PaDeviceInfo *deviceInfo = Pa_GetDeviceInfo(i);
+		if(is_capture && (deviceInfo->maxInputChannels > 1))
+		{
+			devices.push_back(i);
+		}
+		if(!is_capture && (deviceInfo->maxOutputChannels > 1))
+		{
+			devices.push_back(i);
+		}
+	}
+	for(size_t i=0; i<devices.size(); i++)
+	{
+		if(devices[i]==dev)
+			return i;
+	}
+	return -1;
 }
 
 /* buffer_size is in samples - frames would be better */

@@ -54,26 +54,32 @@ int EPGModel::columnCount(const QModelIndex&) const
 QVariant
 EPGModel::data ( const QModelIndex& index, int role) const
 {
-	QMap <time_t, EPG::CProg>::const_iterator it = progs.begin();
+	QMap <shortCRIDType, ProgrammeType>::const_iterator it = progs.begin();
 	for(int i=0; i<index.row(); i++)
 		it++;
-	const EPG::CProg& p = it.value();
+	const ProgrammeType& p = it.value();
 	QString name, description, genre;
 	time_t start;
 	int duration;
+	if(p.location.size()==0)
+		return QVariant(); // TODO better than this
+	const LocationType& loc = p.location[0];
+	if(loc.time.size()==0)
+		return QVariant(); // TODO better than this
+	const EPGTime& t = loc.time[0];
 
 	switch(role)
 	{
 	case Qt::DecorationRole:
 		if(index.column()==0)
 		{
-			if(p.actualTime!=0)
+			if(t.actualTime!=0)
 			{
-				duration = p.actualDuration;
+				duration = t.actualDuration;
 			}
 			else
 			{
-				duration = p.duration;
+				duration = t.duration;
 			}
 			time_t start = it.key();
 			time_t end = start+60*duration;
@@ -93,13 +99,13 @@ EPGModel::data ( const QModelIndex& index, int role) const
 			case 0:
 				// TODO - let user choose time or actualTime if available, or show as tooltip
 				{
-				    if(p.actualTime!=0)
+				    if(t.actualTime!=0)
 				    {
-					start = p.actualTime;
+					start = t.actualTime;
 				    }
 				    else
 				    {
-					start = p.time;
+					start = t.time;
 				    }
 				    tm bdt = *gmtime(&start);
 				    QChar fill('0');
@@ -107,27 +113,29 @@ EPGModel::data ( const QModelIndex& index, int role) const
 				}
 			break;
 			case 1:
-				if(p.name=="" && p.mainGenre.size()>0)
-				name = "unknown " + p.mainGenre[0] + " programme";
-				else
-				  name = p.name;
-				return name;
+				if(p.mediumName.size()>0)
+					return p.mediumName[0].text;
+				if(p.genre.size()>0)
+					return "unknown " + p.genre[0].name.text + " programme";
+				return "";
 				break;
 			case 2:
-				description = p.description;
+				description = p.mediaDescription[0].longDescription[0].text;
+				if(description=="")
+					description = p.mediaDescription[0].shortDescription[0].text;
 				// collapse white space in description
 				description.replace(QRegExp("[\t\r\n ]+"), " ");
 				return description;
 				break;
 			case 3:
-				if(p.mainGenre.size()==0)
+				if(p.genre.size()==0)
 					genre = "";
 				else
 				{
 					QString sep="";
-					for(size_t i=0; i<p.mainGenre.size(); i++) {
-						if(p.mainGenre[i] != "Audio only") {
-							genre = genre+sep+p.mainGenre[i];
+					for(size_t i=0; i<p.genre.size(); i++) {
+						if(p.genre[i].name.text != "Audio only") {
+							genre = genre+sep+p.genre[i].name.text;
 							sep = ", ";
 						}
 					}
@@ -135,13 +143,13 @@ EPGModel::data ( const QModelIndex& index, int role) const
 				return genre;
 				break;
 			case 4:
-				if(p.actualTime!=0)
+				if(t.actualTime!=0)
 				{
-					duration = p.actualDuration;
+					duration = t.actualDuration;
 				}
 				else
 				{
-					duration = p.duration;
+					duration = t.duration;
 				}
 				ushort hours = duration/60;
 				ushort mins = duration % 60;
@@ -403,7 +411,7 @@ void EPGDlg::OnSave()
 				bool ba = a.setContent(advanced->toPlainText());
 				if(bb && ba)
 				{
-					// TODO merge a into b
+					// TODO merge(b, a);
 					text = b.toString();
 				}
 				else

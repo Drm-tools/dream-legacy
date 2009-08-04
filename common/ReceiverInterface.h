@@ -44,7 +44,7 @@ class AnalogReceiverInterface
 public:
     virtual ~AnalogReceiverInterface() {} // avoids some compiler warnings
 
-	virtual CParameter*				GetAnalogParameters()=0;
+	virtual CParameter*		GetAnalogParameters()=0;
 	virtual CSelectionInterface*	GetSoundInInterface()=0;
 	virtual CSelectionInterface*	GetSoundOutInterface()=0;
 	virtual void                    MuteAudio(bool)=0;
@@ -86,11 +86,11 @@ public:
 
     virtual ~ReceiverInterface() {} // avoids some compiler warnings
 
-	virtual CParameter*				GetParameters()=0;
+	virtual CParameter*		GetParameters()=0;
 
-	virtual EAcqStat				GetAcquiState()=0;
-	virtual bool		 			SetFrequency(int)=0;
-	virtual int		 				GetFrequency()=0;
+	virtual EAcqStat		GetAcquiState()=0;
+	virtual bool		 	SetFrequency(int)=0;
+	virtual int		 	GetFrequency()=0;
 
 	virtual void                    SetFreqInt(ETypeIntFreq)=0;
 	virtual ETypeIntFreq            GetFreqInt()=0;

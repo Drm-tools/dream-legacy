@@ -92,7 +92,7 @@ public slots:
     void EnableGPS(bool);
     void OnCheckBoxMuteAudio();
     void OnCheckBoxReverb();
-    void OnCheckSaveAudioWAV();
+    void OnCheckSaveAudioWav();
     void ShowGPS(bool);
     void OnItemClicked (QTreeWidgetItem*, int);
     void OnCustomContextMenuRequested ( const QPoint&);

@@ -126,7 +126,7 @@ public:
 	CSoundInProxy(CSoundInInterface* s):real(s),deviceNo(0) {}
 	virtual ~CSoundInProxy() {}
 	void	Enumerate(vector<string>& v) const { if(real) real->Enumerate(v); }
-	int	GetDev() { return deviceNo.current; }
+	int	GetDev() const { return deviceNo.current; }
 	void	SetDev(int iNewDev) { deviceNo.wanted = iNewDev; }
 	CSoundInInterface *real;
 	Request<int> deviceNo;

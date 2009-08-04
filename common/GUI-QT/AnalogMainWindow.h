@@ -118,7 +118,7 @@ public slots:
     void OnRadioAGC(int iID);
     void OnCheckBoxMuteAudio();
     void OnCheckBoxReverb();
-    void OnCheckSaveAudioWAV();
+    void OnCheckSaveAudioWav();
     void OnCheckAutoFreqAcq();
     void OnCheckPLL();
     void OnChartxAxisValSet(double dVal);

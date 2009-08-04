@@ -33,6 +33,7 @@
 #include <QTextStream>
 #include <QStringList>
 #include <QRegExp>
+#include <algorithm>
 #include <iostream>
 #ifdef _WIN32
 # include <windows.h>
@@ -1295,117 +1296,23 @@ EPG::parseDoc (const QDomDocument & doc)
     {
         if (l1.nodeName () == "programme")
         {
-            CProg p;
-            QDomNode l2 = l1.firstChild ();
-            p.shortId =
-                l1.toElement ().attribute ("shortId", "0").toInt ();
-            while (!l2.isNull ())
-            {
-                if (l2.isElement ())
-                {
-                    QDomElement e = l2.toElement ();
-                    if (e.tagName () == "location")
-                    {
-                        QDomNode l3 = e.firstChild ();
-                        while (!l3.isNull ())
-                        {
-                            if (l3.isElement ())
-                            {
-                                QDomElement e = l3.toElement ();
-                                if (e.tagName () == "time")
-                                {
-                                    p.actualTime = parseTime(e.attribute ("actualTime"));
-                                    p.actualDuration = parseDuration(e.attribute ("actualDuration", ""));
-                                    p.time = parseTime(e.attribute ("time"));
-                                    p.duration = parseDuration(e.attribute ("duration", ""));
-                                }
-                            }
-                            l3 = l3.nextSibling ();
-                        }
-                    }
-                    if ((e.tagName () == "mediumName") && (p.name == ""))
-                        p.name = e.text ();
-                    if (e.tagName () == "longName")
-                        p.name = e.text ();
-                    if (e.tagName () == "mediaDescription")
-                    {
-                        QDomNode l3 = e.firstChild ();
-                        while (!l3.isNull ())
-                        {
-                            if (l3.isElement ())
-                            {
-                                QDomElement e = l3.toElement ();
-                                if (e.tagName () == "shortDescription")
-                                {
-                                    p.description = e.text ();
-                                }
-                            }
-                            l3 = l3.nextSibling ();
-                        }
-                    }
-                    if (e.tagName () == "genre")
-                    {
-                        QString genre = e.attribute ("href", "");
-                        int i = genre.lastIndexOf (':');
-                        if (i != -1)
-                            genre = genre.mid (i + 1);
-                        QString type = e.attribute ("type", "main");
-                        if (type == "main")
-                            p.mainGenre.push_back (genres[genre]);
-                        else if (type == "secondary")
-                            p.secondaryGenre.push_back (genres[genre]);
-                        else if (type == "other")
-                            p.otherGenre.push_back (genres[genre]);
-                    }
-                }
-                l2 = l2.nextSibling ();
-            }
-            time_t start;
-            if (p.actualTime!=0)
-                start = p.actualTime;
-            else
-                start = p.time;
+            ProgrammeType p;
+            p.parse(l1.toElement());
+            time_t start = p.start();
 	    if(min_time<=start && start<=max_time)
 	    {
-		QMap<time_t,CProg>::ConstIterator existing = progs.find(start);
+		QMap<shortCRIDType,ProgrammeType>::ConstIterator existing = progs.find(start);
 		if (existing != progs.end())
 		{
 		    p.augment(existing.value());
 		}
-		progs[start] = p;
 	    }
+            progs[start] = p;
         }
         l1 = l1.nextSibling ();
     }
 }
 
-void EPG::CProg::augment(const CProg& p)
-{
-    if(p.time!=0)
-        time = p.time;
-    if(p.actualTime!=0)
-        actualTime = p.actualTime;
-    if(p.duration>0)
-        duration = p.duration;
-    if(p.actualDuration>0)
-        actualDuration = p.actualDuration;
-    if(crid=="")
-        crid = p.crid;
-    if(name=="")
-        name = p.name;
-    if(description=="")
-        description = p.description;
-    if(shortId==0 && p.shortId!=0)
-        shortId = p.shortId;
-    // assume genres not in both files
-	size_t i;
-	for(i=0; i<p.mainGenre.size(); i++)
-		mainGenre.push_back(p.mainGenre[i]);
-	for(i=0; i<p.secondaryGenre.size(); i++)
-		secondaryGenre.push_back(p.secondaryGenre[i]);
-	for(i=0; i<p.otherGenre.size(); i++)
-		otherGenre.push_back(p.otherGenre[i]);
-}
 
 /*
 <service>
@@ -1496,7 +1403,46 @@ EPG::loadChannels (const QString & fileName)
 	}
 }
 
-time_t EPG::parseTime(const QString& time)
+QString EPG::toHTML () const
+{
+	QString s;
+	QTextStream r(&s);
+	r << "<html><body><table>";
+	for(QMap<shortCRIDType, ProgrammeType>::const_iterator i=progs.begin(); i!=progs.end(); i++)
+	{
+		const ProgrammeType& p = i.value();
+		r << "<tr>";
+		time_t t = p.start();
+		tm bdt = *gmtime(&t);
+		r << "<td>" << bdt.tm_hour << ":" << bdt.tm_min << "</td>";
+		r << "<td>" << p.mediumName[0].text << "</td>";
+		r << "<td>" << p.mediaDescription[0].shortDescription[0].text << "</td>";
+		r << "<td>" << (p.duration()/60) << ":" << (p.duration()%60) << "</td>";
+		r << "</tr>";
+	}
+	r << "</table></body></html>";
+	return s;
+}
+
+QString EPG::toCSV () const
+{
+	QString s;
+	QTextStream r(&s);
+	for(QMap<shortCRIDType, ProgrammeType>::const_iterator i=progs.begin(); i!=progs.end(); i++)
+	{
+		const ProgrammeType& p = i.value();
+		time_t t = p.start();
+		tm bdt = *gmtime(&t);
+		r << bdt.tm_hour << ":" << bdt.tm_min << "\t";
+		r << p.mediumName[0].text << "\t";
+		r << p.mediaDescription[0].shortDescription[0].text << "\t";
+		r << (p.duration()/60) << ":" << (p.duration()%60) << "\t";
+		r << "\n";
+	}
+	return s;
+}
+
+time_t EPGTime::parseTime(const QString& time)
 {
     time_t t=0;
     if(time.length()==0)
@@ -1569,14 +1515,15 @@ time_t EPG::parseTime(const QString& time)
     return t;
 }
 
-int EPG::parseDuration (const QString & duration)
+int EPGTime::parseDuration (const QString & duration)
 {
     if(duration=="")
         return 0; // invalid
     if(duration[0]!='P')
         return 0; // invalid
     QRegExp r ("PT((\\d+)H)?((\\d+)M)?((\\d+)S)?");
-    int pos = r.indexIn( duration );
+    if(r.indexIn( duration ) == -1)
+	return 0;
     QStringList dur = r.capturedTexts();
     int h=0, m=0;
     if(dur[2]!="")
@@ -1586,39 +1533,362 @@ int EPG::parseDuration (const QString & duration)
     return 60*h+m;
 }
 
-QString EPG::toHTML ()
+void EPGTime::parse(QDomElement e)
 {
-	QString s;
-	QTextStream r(&s);
-	r << "<html><body><table>";
-	for(QMap < time_t, CProg >::const_iterator i=progs.begin(); i!=progs.end(); i++)
-	{
-		const CProg& p = i.value();
-		r << "<tr>";
-		tm bdt = *gmtime(&p.time);
-		r << "<td>" << bdt.tm_hour << ":" << bdt.tm_min << "</td>";
-		r << "<td>" << p.name << "</td>";
-		r << "<td>" << p.description << "</td>";
-		r << "<td>" << (p.duration/60) << ":" << (p.duration%60) << "</td>";
-		r << "</tr>";
-	}
-	r << "</table></body></html>";
-	return s;
+    actualTime = parseTime(e.attribute ("actualTime"));
+    actualDuration = parseDuration(e.attribute ("actualDuration", ""));
+    time = parseTime(e.attribute ("time"));
+    duration = parseDuration(e.attribute ("duration", ""));
 }
 
-QString EPG::toCSV ()
+void EPGTime::augment(const EPGTime& t)
 {
-	QString s;
-	QTextStream r(&s);
-	for(QMap < time_t, CProg >::const_iterator i=progs.begin(); i!=progs.end(); i++)
+	if(t.time != 0)
+		time = t.time;
+	if(t.actualTime != 0)
+		actualTime = t.actualTime;
+	if(t.duration != 0)
+		duration = t.duration;
+	if(t.actualDuration != 0)
+		actualDuration = t.actualDuration;
+}
+
+void EPGRelativeTime::augment(const EPGRelativeTime& t)
+{
+	if(t.time != 0)
+		time = t.time;
+	if(t.actualTime != 0)
+		actualTime = t.actualTime;
+	if(t.duration != 0)
+		duration = t.duration;
+	if(t.actualDuration != 0)
+		actualDuration = t.actualDuration;
+}
+
+void EPGBearer::augment(const EPGBearer& b)
+{
+	if(b.trigger!=0)
+		trigger = b.trigger;
+	if(b.id != "")
+		id = b.id;
+}
+
+void LocationType::parse(QDomElement e)
+{
+	QDomNode l3 = e.firstChild ();
+	EPGTime t;
+	while (!l3.isNull ())
 	{
-		const CProg& p = i.value();
-		tm bdt = *gmtime(&p.time);
-		r << bdt.tm_hour << ":" << bdt.tm_min << "\t";
-		r << p.name << "\t";
-		r << p.description << "\t";
-		r << (p.duration/60) << ":" << (p.duration%60) << "\t";
-		r << "\n";
+	    if (l3.isElement ())
+	    {
+		QDomElement e = l3.toElement ();
+		if (e.tagName () == "time")
+		{
+			t.parse(e);
+		}
+	    }
+	    l3 = l3.nextSibling ();
 	}
-	return s;
+	time.push_back(t);
+}
+
+void LocationType::augment(const LocationType& l)
+{
+    if((time.size()==1) && (l.time.size()==1))
+    {
+    	time[0].augment(l.time[0]);
+    }
+    else
+    {
+	for(size_t i=0; i<l.time.size(); i++)
+		time.push_back(l.time[i]);
+    }
+    if((relativeTime.size()==1) && (l.relativeTime.size()==1))
+    {
+    	relativeTime[0].augment(l.relativeTime[0]);
+    }
+    else
+    {
+	for(size_t i=0; i<l.relativeTime.size(); i++)
+		relativeTime.push_back(l.relativeTime[i]);
+    }
+    if((bearer.size()==1) && (l.bearer.size()==1))
+    {
+    	bearer[0].augment(l.bearer[0]);
+    }
+    else
+    {
+	for(size_t i=0; i<l.bearer.size(); i++)
+		bearer.push_back(l.bearer[i]);
+    }
+}
+
+void MessageType::parse(QDomElement e)
+{
+	lang = e.attribute("xml:lang");
+	text = e.text();
+}
+
+void MediaDescriptionType::parse(QDomElement e)
+{
+	QDomNode n = e.firstChild ();
+	while (!n.isNull ())
+	{
+	    if (n.isElement ())
+	    {
+		QDomElement e1 = n.toElement ();
+		if (e1.tagName () == "shortDescription")
+		{
+			MessageType m;
+			m.parse(e1);
+			shortDescription.push_back(m);
+		}
+		if (e1.tagName () == "longDescription")
+		{
+			MessageType m;
+			m.parse(e1);
+			longDescription.push_back(m);
+		}
+	    }
+	    n = n.nextSibling ();
+	}
+}
+
+void MediaDescriptionType::augment(const MediaDescriptionType& m)
+{
+	if((shortDescription.size()==0))
+	{
+		shortDescription = m.shortDescription;
+	}
+	else
+	{
+		for(size_t i=0; i<m.shortDescription.size(); i++)
+			shortDescription.push_back(m.shortDescription[i]);
+	}
+	if((longDescription.size()==0))
+	{
+		longDescription = m.longDescription;
+	}
+	else
+	{
+		for(size_t i=0; i<m.longDescription.size(); i++)
+			longDescription.push_back(m.longDescription[i]);
+	}
+}
+
+void GenreType::parse(QDomElement e)
+{
+	href = e.attribute ("href", "");
+	QString type = e.attribute ("type", "main");
+	if (type == "main")
+	    type = main;
+	else if (type == "secondary")
+	    type = secondary;
+	else if (type == "other")
+	    type = other;
+}
+
+void GenreType::augment(const GenreType& g)
+{
+	if(href=="")
+		href=g.href;
+	if(name.text=="")
+		name = g.name;
+	if(definition.text=="")
+		definition = g.definition;
+	if(mimeValue=="")
+		mimeValue = g.mimeValue;
+	if(g.preferred)
+		preferred = true;
+	if(type==undef)
+		type = g.type;
+}
+
+void ProgrammeType::parse(QDomElement e)
+{
+    shortId = e.attribute ("shortId", "0").toInt ();
+    QDomNode n = e.firstChild ();
+    while (!n.isNull ())
+    {
+	if (n.isElement ())
+	{
+	    QDomElement e = n.toElement ();
+	    if (e.tagName () == "location")
+	    {
+		LocationType l;
+		l.parse(e);
+		location.push_back(l);
+	    }
+	    if (e.tagName () == "shortName")
+	    {
+		MessageType m;
+		m.parse(e);
+		shortName.push_back(m);
+	    }
+	    if (e.tagName () == "mediumName")
+	    {
+		MessageType m;
+		m.parse(e);
+		mediumName.push_back(m);
+	    }
+	    if (e.tagName () == "longName")
+	    {
+		MessageType m;
+		m.parse(e);
+		longName.push_back(m);
+	    }
+	    if (e.tagName () == "mediaDescription")
+	    {
+		MediaDescriptionType m;
+		m.parse(e);
+		mediaDescription.push_back(m);
+	    }
+	    if (e.tagName () == "genre")
+	    {
+		GenreType g;
+		g.parse(e);
+		genre.push_back(g);
+	    }
+	}
+	n = n.nextSibling ();
+    }
+}
+
+time_t ProgrammeType::start() const
+{
+    const LocationType& loc = location[0];
+    const EPGTime& t = loc.time[0];
+    time_t start;
+    if (t.actualTime!=0)
+	start = t.actualTime;
+    else
+	start = t.time;
+    return start;
+}
+
+DurationType ProgrammeType::duration() const
+{
+	const LocationType& loc = location[0];
+	const EPGTime& t = loc.time[0];
+	if(t.actualTime!=0)
+	{
+		return t.actualDuration;
+	}
+	else
+	{
+		return t.duration;
+	}
+}
+
+void ProgrammeType::augment(const ProgrammeType& p)
+{
+	if((location.size()==0))
+	{
+		location = p.location;
+	}
+	else
+	{
+		if(p.location.size()>0)
+			location[0].augment(p.location[0]);
+		// TODO
+	}
+	if(crid=="")
+		crid = p.crid;
+	if((shortName.size()==0))
+	{
+		shortName = p.shortName;
+	}
+	else
+	{
+		for(size_t i=0; i<p.shortName.size(); i++)
+			shortName.push_back(p.shortName[i]);
+		// TODO
+	}
+	if((mediumName.size()==0))
+	{
+		mediumName = p.mediumName;
+	}
+	else
+	{
+		for(size_t i=0; i<p.mediumName.size(); i++)
+			mediumName.push_back(p.mediumName[i]);
+	}
+	if((longName.size()==0))
+	{
+		longName = p.longName;
+	}
+	else
+	{
+		for(size_t i=0; i<p.longName.size(); i++)
+			longName.push_back(p.longName[i]);
+	}
+	if(lang=="")
+		lang = p.lang;
+	if(version==0)
+		version = p.version;
+	if(p.recommendation==0)
+		recommendation = true;
+	if(p.broadcast==off_air)
+		broadcast = p.broadcast;
+	if(bitrate==0)
+		bitrate = p.bitrate;
+	if(CA=="")
+		CA = p.CA;
+	if((genre.size()==0))
+	{
+		genre = p.genre;
+	}
+	else
+	{
+		if(p.genre.size()>0)
+			genre[0].augment(p.genre[0]);
+		// TODO
+	}
+	if((mediaDescription.size()==0))
+	{
+		mediaDescription = p.mediaDescription;
+	}
+	else
+	{
+		if(p.mediaDescription.size()>0)
+			mediaDescription[0].augment(p.mediaDescription[0]);
+		// TODO
+	}
+	if((keywords.size()==0))
+	{
+		keywords = p.keywords;
+	}
+	else
+	{
+		for(size_t i=0; i<p.keywords.size(); i++)
+			keywords.push_back(p.keywords[i]);
+	}
+	if((memberOf.size()==0))
+	{
+		memberOf = p.memberOf;
+	}
+	else
+	{
+		for(size_t i=0; i<p.memberOf.size(); i++)
+			memberOf.push_back(p.memberOf[i]);
+	}
+	if((link.size()==0))
+	{
+		link = p.link;
+	}
+	else
+	{
+		for(size_t i=0; i<p.link.size(); i++)
+			link.push_back(p.link[i]);
+	}
+	if((programmeEvent.size()==0))
+	{
+		programmeEvent = p.programmeEvent;
+	}
+	else
+	{
+		if(p.programmeEvent.size()>0)
+			programmeEvent[0].augment(p.programmeEvent[0]);
+		// TODO
+	}
 }

@@ -1686,7 +1686,7 @@ void SpectrogramData::setData(vector<double>& row)
 
 void CDRMPlot::SetInpSpecWaterf()
 {
-	const QSize CanvSize = plot->canvas()->size();
+    const QSize CanvSize = plot->canvas()->size();
 
     LastCanvasSize = CanvSize;
 
@@ -1699,8 +1699,8 @@ void CDRMPlot::SetInpSpecWaterf()
     // each pixel represents one sample (400 ms ?)
     plot->setAxisScale(QwtPlot::yLeft, 0.0, CanvSize.height());
     plot->setAxisScale(QwtPlot::xBottom, 0.0, _REAL(SOUNDCRD_SAMPLE_RATE) / 2000.0);
-    grid->enableX(false);
-    grid->enableY(false);
+    //grid->enableX(false);
+    //grid->enableY(false);
 
     // TODO check with cvs plot->Layout()->setAlignCanvasToScales(true);
     spectrogramData.setHeight(CanvSize.height());
@@ -1729,8 +1729,9 @@ void CDRMPlot::UpdateInpSpecWaterf()
     spectrogram->setData(spectrogramData);
 }
 
-void CDRMPlot::ConstellationPlotDefaults(const QString& title, double limit, int n)
+void CDRMPlot::ConstellationPlotDefaults(const QString& title, double lim, int n)
 {
+    double limit = int(10.0*lim)/10.0; // one decimal place
     plot->setTitle(title+" "+tr("Constellation"));
     plot->enableAxis(QwtPlot::yRight, false);
 

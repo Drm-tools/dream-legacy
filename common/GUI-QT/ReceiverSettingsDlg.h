@@ -118,7 +118,7 @@ class SoundChoice : public QAbstractItemModel
 {
 public:
 
-    SoundChoice();
+    SoundChoice(const CSelectionInterface&, bool t=false);
     virtual ~SoundChoice() {}
 
     int rowCount ( const QModelIndex & parent = QModelIndex() ) const;
@@ -128,10 +128,9 @@ public:
 		  const QModelIndex &parent = QModelIndex()) const;
     QModelIndex parent(const QModelIndex &child) const;
 
-    void set(const CSelectionInterface&);
-
 protected:
-    vector<string> items;
+    bool isTree;
+    const CSelectionInterface& interface;
 };
 #endif
 
@@ -167,8 +166,9 @@ protected:
 #ifdef HAVE_LIBHAMLIB
 	RigTypesModel	RigTypes;
 	RigModel	Rigs;
-	SoundChoice	soundcards;
+	SoundChoice*	soundcards;
 #endif
+	SoundChoice*	soundoutputs;
 
 signals:
 	void 		StartStopLog(bool);
@@ -213,4 +213,8 @@ public slots:
 	void 		OnButtonAddRig();
 	void 		OnButtonRemoveRig();
 	void		OnButtonConnectRig();
+	void		OnCheckBoxMuteAudio();
+	void		OnCheckSaveAudioWav();
+	void		OnCheckBoxReverb();
+	void		OnAudioSelected(const QModelIndex&);
 };

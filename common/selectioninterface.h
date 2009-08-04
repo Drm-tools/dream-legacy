@@ -37,7 +37,7 @@ class CSelectionInterface
 public:
 	virtual 		~CSelectionInterface() {}
 	virtual void		Enumerate(vector<string>&) const = 0;
-	virtual int		GetDev()=0;
+	virtual int		GetDev() const =0;
 	virtual void		SetDev(int iNewDev)=0;
 	virtual void		SetDev(const string& s)
 	{

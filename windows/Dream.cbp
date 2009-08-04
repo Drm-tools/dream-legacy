@@ -34,6 +34,7 @@
 					<Add library="QtGUI4" />
 					<Add library="QtXML4" />
 					<Add library="qwt5" />
+					<Add library="QtXmlPatterns4" />
 				</Linker>
 			</Target>
 			<Target title="Win32 Debug">
@@ -66,6 +67,7 @@
 					<Add library="QtGUI4" />
 					<Add library="QtXML4" />
 					<Add library="qwt5" />
+					<Add library="QtXmlPatterns4" />
 				</Linker>
 			</Target>
 			<Target title="Win32CLI">
@@ -109,6 +111,7 @@
 					<Add library="QtNetwork4" />
 					<Add library="QtGUI4" />
 					<Add library="QtXML4" />
+					<Add library="QtXmlPatterns4" />
 					<Add library="qwt5" />
 				</Linker>
 			</Target>
@@ -118,6 +121,7 @@
 				<Option object_output="..\Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="--mode RX --modn DRM D:\RTLwithSlideshow_ModeB_10kHz.wav" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -143,6 +147,7 @@
 					<Add library="QtGUI4" />
 					<Add library="QtXML4" />
 					<Add library="qwt5" />
+					<Add library="QtXmlPatterns4" />
 				</Linker>
 			</Target>
 		</Build>
@@ -167,6 +172,7 @@
 			<Add directory="$(QTDIR)\include\QtGUI" />
 			<Add directory="$(QTDIR)\include\Qt3Support" />
 			<Add directory="$(QTDIR)\include\QtXML" />
+			<Add directory="$(QTDIR)\include\QtXmlPatterns" />
 			<Add directory="..\..\qwt-5.1.1\src" />
 		</Compiler>
 		<Linker>

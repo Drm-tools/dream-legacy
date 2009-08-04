@@ -132,7 +132,7 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	/* Check boxes */
 	connect(CheckBoxMuteAudio, SIGNAL(clicked()), this, SLOT(OnCheckBoxMuteAudio()));
 	connect(CheckBoxReverb, SIGNAL(clicked()), this, SLOT(OnCheckBoxReverb()));
-	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWAV()));
+	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWave()));
 	connect(CheckBoxAutoFreqAcq, SIGNAL(clicked()), this, SLOT(OnCheckAutoFreqAcq()));
 
 	connect(PLLButton, SIGNAL(clicked ()), this, SLOT(OnCheckPLL()));
@@ -480,7 +480,7 @@ void AnalogMainWindow::OnCheckBoxReverb()
 	Receiver.SetReverbEffect(CheckBoxReverb->isChecked());
 }
 
-void AnalogMainWindow::OnCheckSaveAudioWAV()
+void AnalogMainWindow::OnCheckSaveAudioWav()
 {
 /*
 	This code is copied in SystemEvalDlg.cpp. If you do changes here, you should

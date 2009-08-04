@@ -53,7 +53,7 @@ SystemEvalDlg::SystemEvalDlg(ReceiverInterface& NDRMR, CSettings& NSettings,
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
     connect(timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
     connect(CheckBoxMuteAudio, SIGNAL(clicked()), this, SLOT(OnCheckBoxMuteAudio()));
-    connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWAV()));
+    connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWav()));
     connect(CheckBoxReverb, SIGNAL(clicked()), this, SLOT(OnCheckBoxReverb()));
 
     AddWhatsThisHelp();
@@ -690,7 +690,7 @@ void SystemEvalDlg::OnCheckBoxReverb()
 	Receiver.SetReverbEffect(CheckBoxReverb->isChecked());
 }
 
-void SystemEvalDlg::OnCheckSaveAudioWAV()
+void SystemEvalDlg::OnCheckSaveAudioWav()
 {
 /*
 	This code is copied in SystemEvalDlg.cpp. If you do changes here, you should
