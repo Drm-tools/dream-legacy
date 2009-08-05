@@ -11,7 +11,7 @@
  *  Hamlib C++ bindings - main file
  *  Copyright (c) 2001-2003 by Stephane Fillod
  *
- *	$Id: rigclass.cc,v 1.1.2.1 2009/06/01 22:08:44 jcable Exp $
+ *	$Id: rigclass.cc,v 1.1.2.2 2009/08/05 08:49:32 jcable Exp $
  *
  *   This library is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU Library General Public License as
@@ -34,7 +34,7 @@
 #endif
 
 #include <hamlib/rig.h>
-#include <hamlib/rigclass.h>
+#include "rigclass.h"
 
 #define CHECK_RIG(cmd) { int _retval = cmd; if (_retval != RIG_OK) \
 							THROW(new RigException (_retval)); }
