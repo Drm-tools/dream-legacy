@@ -42,7 +42,7 @@
 #include <string>
 #include <map>
 
-#include <hamlib/rigclass.h>
+#include "rigclass.h"
 
 class CParameter;
 class CSettings;
