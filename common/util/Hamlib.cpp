@@ -56,7 +56,7 @@ CRigSettings::LoadSettings(CSettings& s, const string& secpref)
 	sec.clear();
 	s.Get(section+"int-levels", sec);
 	for (i=sec.begin(); i!=sec.end(); i++)
-	    ilevel[i->first] = atoi(i->second.;
+	    ilevel[i->first] = atoi(i->second);
 	sec.clear();
 	s.Get(section+"functions", sec);
 	for (i=sec.begin(); i!=sec.end(); i++)

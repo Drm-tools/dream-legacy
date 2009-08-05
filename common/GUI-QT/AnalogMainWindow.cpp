@@ -482,29 +482,7 @@ void AnalogMainWindow::OnCheckBoxReverb()
 
 void AnalogMainWindow::OnCheckSaveAudioWav()
 {
-/*
-	This code is copied in SystemEvalDlg.cpp. If you do changes here, you should
-	apply the changes in the other file, too
-*/
-	if (CheckBoxSaveAudioWave->isChecked() == true)
-	{
-		/* Show "save file" dialog */
-		QString strFileName =
-			QFileDialog::getSaveFileName(this, "DreamOut.wav", "*.wav");
-
-		/* Check if user not hit the cancel button */
-		if (!strFileName.isNull())
-		{
-			Receiver.StartWriteWaveFile(strFileName.toStdString());
-		}
-		else
-		{
-			/* User hit the cancel button, uncheck the button */
-			CheckBoxSaveAudioWave->setChecked(false);
-		}
-	}
-	else
-		Receiver.StopWriteWaveFile();
+	OnSaveAudio(this, CheckBoxSaveAudioWave, Receiver);
 }
 
 void AnalogMainWindow::OnChartxAxisValSet(double dVal)

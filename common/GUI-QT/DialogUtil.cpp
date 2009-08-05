@@ -54,6 +54,7 @@
 #endif
 #include <sndfile.h>
 #include <qwt_global.h> /* to extract the library version */
+#include <QFileDialog>
 
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */
@@ -256,4 +257,27 @@ void CSoundCardSelMenu::OnSoundDevice(QAction* a)
     int id = a->data().toInt();
 	pSoundIF->SetDev(id);
     a->setChecked(true);
+}
+
+void OnSaveAudio(QWidget* parent, QCheckBox* CheckBoxSaveAudioWave, ReceiverInterface& Receiver)
+{
+	if (CheckBoxSaveAudioWave->isChecked() == true)
+	{
+		/* Show "save file" dialog */
+		QString strFileName =
+			QFileDialog::getSaveFileName(parent, "DreamOut.wav", "*.wav");
+
+		/* Check if user not hit the cancel button */
+		if (!strFileName.isNull())
+		{
+			Receiver.StartWriteWaveFile(strFileName.toStdString());
+		}
+		else
+		{
+			/* User hit the cancel button, uncheck the button */
+			CheckBoxSaveAudioWave->setChecked(false);
+		}
+	}
+	else
+		Receiver.StopWriteWaveFile();
 }

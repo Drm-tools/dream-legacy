@@ -28,11 +28,11 @@
 
 #include "SystemEvalDlg.h"
 #include "DRMPlot.h"
+#include "DialogUtil.h"
 #include "../util/Settings.h"
 #include "../GPSReceiver.h"
 #include <QDateTime>
 #include <QWhatsThis>
-#include <QFileDialog>
 #include <QMessageBox>
 #include <iostream>
 
@@ -692,29 +692,7 @@ void SystemEvalDlg::OnCheckBoxReverb()
 
 void SystemEvalDlg::OnCheckSaveAudioWav()
 {
-/*
-	This code is copied in SystemEvalDlg.cpp. If you do changes here, you should
-	apply the changes in the other file, too
-*/
-	if (CheckBoxSaveAudioWave->isChecked() == true)
-	{
-		/* Show "save file" dialog */
-		QString strFileName =
-			QFileDialog::getSaveFileName(this, "DreamOut.wav", "*.wav");
-
-		/* Check if user not hit the cancel button */
-		if (!strFileName.isNull())
-		{
-			Receiver.StartWriteWaveFile(strFileName.toStdString());
-		}
-		else
-		{
-			/* User hit the cancel button, uncheck the button */
-			CheckBoxSaveAudioWave->setChecked(false);
-		}
-	}
-	else
-		Receiver.StopWriteWaveFile();
+	OnSaveAudio(this, CheckBoxSaveAudioWave, Receiver);
 }
 
 void SystemEvalDlg::AddWhatsThisHelp()
@@ -726,7 +704,7 @@ void SystemEvalDlg::AddWhatsThisHelp()
 	const QString strDCFreqOffs =
 		tr("<b>DC Frequency Offset:</b> This is the "
 		"estimation of the DC frequency offset. This offset corresponds "
-		"to the resulting sound card intermedia frequency of the front-end. "
+		"to the resulting intermediate frequency of the front-end. "
 		"This frequency is not restricted to a certain value. The only "
 		"restriction is that the DRM spectrum must be completely inside the "
 		"bandwidth of the sound card.");

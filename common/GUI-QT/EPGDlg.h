@@ -54,6 +54,7 @@
 
 class EPGModel : public EPG, public QAbstractTableModel
 {
+	//Q_OBJECT
 public:
 	EPGModel(CParameter& p);
 	virtual ~EPGModel() {}

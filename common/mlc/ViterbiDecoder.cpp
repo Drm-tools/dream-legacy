@@ -299,11 +299,12 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 #ifdef USE_SIMD
 		/* Do actual trellis update in separate file (assembler implementation) */
 #ifdef USE_MMX
-		TrellisUpdateMMX(
+		TrellisUpdateMMX
 #endif
 #ifdef USE_SSE2
-		TrellisUpdateSSE2(
+		TrellisUpdateSSE2
 #endif
+		(
 			&matdecDecisions[i][0], pCurTrelMetric, pOldTrelMetric,
 			chMet1, chMet2);
 #endif
@@ -584,7 +585,7 @@ CViterbiDecoder::CViterbiDecoder()
 				   there) */
 				i
 				/* Use generator-polynomial j */
-				, j) 
+				, j)
 				/* Shift generated bit to the correct position */
 				<< j;
 
@@ -608,7 +609,7 @@ CViterbiDecoder::CViterbiDecoder()
 				   there) */
 				(i << 1),
 				/* Use generator-polynomial j */
-				j) 
+				j)
 				/* Shift generated bit to the correct position */
 				<< j;
 

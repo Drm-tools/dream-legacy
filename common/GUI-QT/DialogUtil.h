@@ -31,9 +31,11 @@
 
 #include <QMenu>
 #include <QWhatsThis>
+#include <QCheckBox>
 
 #include "ui_AboutDlg.h"
 #include "../selectioninterface.h"
+#include "../ReceiverInterface.h"
 
 /* Definitions ****************************************************************/
 
@@ -119,5 +121,7 @@ public:
 		return QColor((iValue >> 16) & 255, (iValue >> 8) & 255, iValue & 255);
 	}
 };
+
+void OnSaveAudio(QWidget*, QCheckBox*, ReceiverInterface&);
 
 #endif // DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_

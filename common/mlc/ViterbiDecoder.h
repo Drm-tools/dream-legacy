@@ -6,7 +6,7 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
@@ -128,11 +128,12 @@ protected:
 	_VITMETRTYPE			chMet2[MC_NUM_STATES / 2];
 
 #ifdef USE_MMX
-	void TrellisUpdateMMX(
+	void TrellisUpdateMMX
 #endif
 #ifdef USE_SSE2
-	void TrellisUpdateSSE2(
+	void TrellisUpdateSSE2
 #endif
+	(
 		const _DECISIONTYPE* pCurDec,
 		const _VITMETRTYPE* pCurTrelMetric, const _VITMETRTYPE* pOldTrelMetric,
 		const _VITMETRTYPE* pchMet1, const _VITMETRTYPE* pchMet2);

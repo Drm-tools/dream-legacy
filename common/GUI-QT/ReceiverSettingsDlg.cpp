@@ -33,7 +33,7 @@
 #include "../GlobalDefinitions.h"
 #include "../selectioninterface.h"
 #include "../util/Utilities.h"
-#include <QFileDialog>
+#include "DialogUtil.h"
 #include <QMessageBox>
 #include <QButtonGroup>
 #include <algorithm>
@@ -1250,29 +1250,7 @@ void ReceiverSettingsDlg::OnCheckBoxMuteAudio()
 
 void ReceiverSettingsDlg::OnCheckSaveAudioWav()
 {
-/*
-	This code is copied in SystemEvalDlg.cpp. If you do changes here, you should
-	apply the changes in the other file, too
-*/
-	if (CheckBoxSaveAudioWave->isChecked() == true)
-	{
-		/* Show "save file" dialog */
-		QString strFileName =
-			QFileDialog::getSaveFileName(this, "DreamOut.wav", "*.wav");
-
-		/* Check if user not hit the cancel button */
-		if (!strFileName.isNull())
-		{
-			Receiver.StartWriteWaveFile(strFileName.toStdString());
-		}
-		else
-		{
-			/* User hit the cancel button, uncheck the button */
-			CheckBoxSaveAudioWave->setChecked(false);
-		}
-	}
-	else
-		Receiver.StopWriteWaveFile();
+	OnSaveAudio(this, CheckBoxSaveAudioWave, Receiver);
 }
 
 void ReceiverSettingsDlg::OnCheckBoxReverb()
