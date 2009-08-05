@@ -39,7 +39,7 @@ public:
 	virtual 		~CShmSoundIn();
 	virtual void		Enumerate(vector<string>& choices) const;
 	virtual void		SetDev(int);
-	virtual int		GetDev();
+	virtual int		GetDev() const;
 
 	virtual void		Init(int iNewBufferSize, bool bNewBlocking = true, int iChannels=2);
 	virtual void		Close();

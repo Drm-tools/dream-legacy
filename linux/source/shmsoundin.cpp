@@ -85,7 +85,7 @@ CShmSoundIn::SetDev(int iNewDevice)
 }
 
 int
-CShmSoundIn::GetDev()
+CShmSoundIn::GetDev() const
 {
 	if(shmid==-1)
 		return -1;
