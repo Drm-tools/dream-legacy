@@ -40,7 +40,7 @@
 #include <QNetworkReply>
 #include <QHeaderView>
 #include <iostream>
-#include <..\util\Hamlib.h>
+#include "../util/Hamlib.h"
 
 StationsDlg::StationsDlg(ReceiverInterface& NDRMR, CSettings& NSettings, bool drm,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
