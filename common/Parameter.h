@@ -502,9 +502,9 @@ class CParameter : public CCoreParameter
 	void SetFrequency(int iNewFrequency) { iFrequency = iNewFrequency; }
 	int GetFrequency() { return iFrequency; }
 
-	void SetCurSelAudioService(const int iNewService);
+	void SetCurSelAudioService(int);
 	int GetCurSelAudioService() const { return iCurSelAudioService; }
-	void SetCurSelDataService(const int iNewService);
+	void SetCurSelDataService(int);
 	int GetCurSelDataService() const { return iCurSelDataService; }
 
 	void ResetCurSelAudDatServ()

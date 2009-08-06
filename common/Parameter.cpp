@@ -650,38 +650,38 @@ _REAL CParameter::PartABLenRatio(const int iShortID)
 		return (_REAL) 0.0;
 }
 
-void CParameter::SetCurSelAudioService(const int iNewService)
+void CParameter::SetCurSelAudioService(int iShortID)
 {
 	/* Change the current selected audio service ID only if the new ID does
 	   contain an audio service. If not, keep the old ID. In that case it is
 	   possible to select a "data-only" service and still listen to the audio of
 	   the last selected service */
-	if ((iCurSelAudioService != iNewService) &&
-		(Service[iNewService].iAudioStream != STREAM_ID_NOT_USED))
+	if ((iCurSelAudioService != iShortID) &&
+		(Service[iShortID].iAudioStream != STREAM_ID_NOT_USED))
 	{
-		iCurSelAudioService = iNewService;
+		iCurSelAudioService = iShortID;
 
 		LastAudioService.Reset();
 
-        RxEvent = SelectAudioComponent;
+		RxEvent = SelectAudioComponent;
 	}
 }
 
-void CParameter::SetCurSelDataService(const int iNewService)
+void CParameter::SetCurSelDataService(int iShortID)
 {
 	/* Change the current selected data service ID only if the new ID does
 	   contain a data service. If not, keep the old ID. In that case it is
 	   possible to select a "data-only" service and click back to an audio
 	   service to be able to decode data service and listen to audio at the
 	   same time */
-	if ((iCurSelDataService != iNewService) &&
-		(Service[iNewService].iDataStream != STREAM_ID_NOT_USED))
+	if ((iCurSelDataService != iShortID) &&
+		(Service[iShortID].iDataStream != STREAM_ID_NOT_USED))
 	{
-		iCurSelDataService = iNewService;
+		iCurSelDataService = iShortID;
 
 		LastDataService.Reset();
 
-        RxEvent = SelectDataComponent;
+		RxEvent = SelectDataComponent;
 	}
 }
 
@@ -695,21 +695,17 @@ void CParameter::SetServiceID(const int iShortID, const uint32_t iNewServiceID)
 
 		Service[iShortID].iServiceID = iNewServiceID;
 
-
 		/* If the receiver has lost the sync automatically restore
 			last current service selected */
 
-		if ((iShortID > 0) && (iNewServiceID > 0))
+		if(LastAudioService.iServiceID == iNewServiceID)
 		{
-			if(LastAudioService.iServiceID == iNewServiceID)
-			{
-			    SetCurSelAudioService(iNewServiceID);
-			}
+		    SetCurSelAudioService(iShortID);
+		}
 
-			if (LastDataService.iServiceID == iNewServiceID)
-			{
-			    SetCurSelDataService(iNewServiceID);
-			}
+		if (LastDataService.iServiceID == iNewServiceID)
+		{
+		    SetCurSelDataService(iShortID);
 		}
 	}
 }
