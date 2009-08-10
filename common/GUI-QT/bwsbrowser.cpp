@@ -69,7 +69,7 @@ cerr << tid << " " << obj.strName << endl;
     return tid>=0;
 }
 
-QVariant BWSBrowser::loadResource( int type, const QUrl & name )
+QVariant BWSBrowser::loadResource( int, const QUrl & name )
 {
     map<QString,CMOTObject>::const_iterator i = pages.find(name.toString());
 	if(i == pages.end())

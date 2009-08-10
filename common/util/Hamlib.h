@@ -49,8 +49,9 @@ class CSettings;
 
 enum ESMeterState {SS_VALID, SS_NOTVALID, SS_TIMEOUT};
 
-struct CRigSettings
+class CRigSettings
 {
+public:
 	CRigSettings():modes(),ilevels(),flevels(),functions(),
 	iparameters(),fparameters(),config(),attributes()
 	{}
@@ -86,8 +87,9 @@ struct CRigSettings
 	map<string,string> attributes;
 };
 
-struct CRigMap
+class CRigMap
 {
+public:
     map<string,map<string,rig_model_t> > rigs;
 };
 

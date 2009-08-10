@@ -90,7 +90,7 @@ bool JLBrowser::changed()
 	return dirty;
 }
 
-QVariant JLBrowser::loadResource( int type, const QUrl & name )
+QVariant JLBrowser::loadResource( int, const QUrl & name )
 {
 	QString strItems, strTitle;
 

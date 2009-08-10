@@ -28,6 +28,7 @@
 \******************************************************************************/
 
 #include "ServiceInformation.h"
+#include <time.h>
 
 // TODO - don't replicate these in Parameter.cpp
 
