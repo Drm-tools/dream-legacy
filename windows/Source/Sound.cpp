@@ -269,12 +269,12 @@ void CSoundIn::SetDev(int iNewDev)
 	}
 }
 
-void CSoundIn::Enumerate(vector<string>& names)
+void CSoundIn::Enumerate(vector<string>& names) const
 {
 	names = vecstrDevices;
 }
 
-int	CSoundIn::GetDev()
+int	CSoundIn::GetDev() const
 {
 	return iCurDev;
 }
@@ -577,12 +577,12 @@ void CSoundOut::OpenDevice()
 		throw CGenErr("Sound Interface Start, waveOutOpen() failed.");
 }
 
-void CSoundOut::Enumerate(vector<string>& names)
+void CSoundOut::Enumerate(vector<string>& names) const
 {
 	names = vecstrDevices;
 }
 
-int	CSoundOut::GetDev()
+int	CSoundOut::GetDev() const
 {
 	return iCurDev;
 }

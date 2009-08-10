@@ -127,10 +127,14 @@ public:
     QModelIndex index(int row, int column,
 		  const QModelIndex &parent = QModelIndex()) const;
     QModelIndex parent(const QModelIndex &child) const;
+    void update();
 
 protected:
     bool isTree;
     const CSelectionInterface& interface;
+    struct port { string name; int index; int parent; };
+    struct card : public port { vector<port> members;};
+    vector<card> cards;
 };
 #endif
 

@@ -33,29 +33,13 @@
 # include "../windows/Source/Sound.h"
 #endif
 
-#ifdef USE_OSS
-# include "../linux/source/soundin.h"
-# include "../linux/source/soundout.h"
-#endif
-
-#ifdef USE_ALSA
-# include "../linux/source/soundin.h"
-# include "../linux/source/soundout.h"
-#endif
-
-#ifdef USE_JACK
-# include "../linux/source/jack.h"
-typedef CSoundInJack CSoundIn;
-typedef CSoundOutJack CSoundOut;
-#endif
-
 #ifdef USE_PORTAUDIO
 # include "sound/drm_portaudio.h"
 typedef CPaIn CSoundIn;
 typedef CPaOut CSoundOut;
 #endif
 
-#if !defined(_WIN32) &&!defined(USE_OSS) && !defined(USE_ALSA) && !defined(USE_JACK) && !defined(USE_PORTAUDIO)
+#if !defined(_WIN32) && !defined(USE_PORTAUDIO)
 # include "sound/soundnull.h"
 typedef CSoundInNull CSoundIn;
 typedef CSoundOutNull CSoundOut;

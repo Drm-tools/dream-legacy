@@ -132,7 +132,7 @@ AnalogMainWindow::AnalogMainWindow(ReceiverInterface& NDRMR, CSettings& NSetting
 	/* Check boxes */
 	connect(CheckBoxMuteAudio, SIGNAL(clicked()), this, SLOT(OnCheckBoxMuteAudio()));
 	connect(CheckBoxReverb, SIGNAL(clicked()), this, SLOT(OnCheckBoxReverb()));
-	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWave()));
+	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWav()));
 	connect(CheckBoxAutoFreqAcq, SIGNAL(clicked()), this, SLOT(OnCheckAutoFreqAcq()));
 
 	connect(PLLButton, SIGNAL(clicked ()), this, SLOT(OnCheckPLL()));

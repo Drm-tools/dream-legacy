@@ -50,12 +50,12 @@ public:
 	CSoundIn();
 	virtual ~CSoundIn();
 
-	virtual void		Init(int iNewBufferSize, bool bNewBlocking=true, int iChannels=2);
-	virtual bool		Read(vector<_SAMPLE>& data);
-	virtual void		Enumerate(vector<string>&);
-	virtual int			GetDev();
-	virtual void		SetDev(int iNewDev);
-	virtual void		Close();
+	virtual void	Init(int iNewBufferSize, bool bNewBlocking=true, int iChannels=2);
+	virtual bool	Read(vector<_SAMPLE>& data);
+	virtual void	Enumerate(vector<string>&) const;
+	virtual int	GetDev() const;
+	virtual void	SetDev(int iNewDev);
+	virtual void	Close();
 
 protected:
 	void		OpenDevice();
@@ -63,19 +63,19 @@ protected:
 	void		AddBuffer();
 
 	vector<string>	vecstrDevices;
-	int				iCurDev;
-	bool			bChangDev;
-	int				iBufferSize;
-	int				iWhichBuffer;
-	bool			bBlocking;
+	int		iCurDev;
+	bool		bChangDev;
+	int		iBufferSize;
+	int		iWhichBuffer;
+	bool		bBlocking;
 	WAVEFORMATEX	sWaveFormatEx;
-	HANDLE			m_WaveEvent;
+	HANDLE		m_WaveEvent;
 
 	/* Wave in */
-	WAVEINCAPS		m_WaveInDevCaps;
-	HWAVEIN			m_WaveIn;
-	WAVEHDR			m_WaveInHeader[NUM_SOUND_BUFFERS_IN];
-	_SAMPLE*		psSoundcardBuffer[NUM_SOUND_BUFFERS_IN];
+	WAVEINCAPS	m_WaveInDevCaps;
+	HWAVEIN		m_WaveIn;
+	WAVEHDR		m_WaveInHeader[NUM_SOUND_BUFFERS_IN];
+	_SAMPLE*	psSoundcardBuffer[NUM_SOUND_BUFFERS_IN];
 
 };
 
@@ -86,9 +86,9 @@ public:
 	virtual ~CSoundOut();
 
 	virtual void		Init(int iNewBufferSize, bool bNewBlocking=false, int iChannels=2);
-	virtual bool	Write(vector<_SAMPLE>& data);
-	virtual void		Enumerate(vector<string>&);
-	virtual int			GetDev();
+	virtual bool		Write(vector<_SAMPLE>& data);
+	virtual void		Enumerate(vector<string>&) const;
+	virtual int		GetDev() const;
 	virtual void		SetDev(int iNewDev);
 	virtual void		Close();
 
@@ -99,19 +99,19 @@ protected:
 	void		GetDoneBuffer(int& iCntPrepBuf, int& iIndexDoneBuf);
 
 	vector<string>	vecstrDevices;
-	int				iCurDev;
-	bool			bChangDev;
-	int				iBufferSize;
-	int				iWhichBuffer;
-	bool			bBlocking;
+	int		iCurDev;
+	bool		bChangDev;
+	int		iBufferSize;
+	int		iWhichBuffer;
+	bool		bBlocking;
 	WAVEFORMATEX	sWaveFormatEx;
-	HANDLE			m_WaveEvent;
+	HANDLE		m_WaveEvent;
 
 	/* Wave out */
-	WAVEOUTCAPS		m_WaveOutDevCaps;
-	HWAVEOUT		m_WaveOut;
-	_SAMPLE*		psPlaybackBuffer[NUM_SOUND_BUFFERS_OUT];
-	WAVEHDR			m_WaveOutHeader[NUM_SOUND_BUFFERS_OUT];
+	WAVEOUTCAPS	m_WaveOutDevCaps;
+	HWAVEOUT	m_WaveOut;
+	_SAMPLE*	psPlaybackBuffer[NUM_SOUND_BUFFERS_OUT];
+	WAVEHDR		m_WaveOutHeader[NUM_SOUND_BUFFERS_OUT];
 };
 
 #endif // !defined(AFX_SOUNDIN_H__9518A621_7F78_11D3_8C0D_EEBF182CF549__INCLUDED_)

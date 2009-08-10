@@ -531,53 +531,219 @@ RigModel::save(CSettings& settings)
 }
 
 SoundChoice::SoundChoice(const CSelectionInterface& s, bool t)
-:QAbstractItemModel(), isTree(t), interface(s)
+:QAbstractItemModel(), isTree(t), interface(s), cards()
 {
+    update();
+}
+
+void SoundChoice::update()
+{
+    vector<string> s;
+    interface.Enumerate(s);
+    if(isTree)
+    {
+    	cards.resize(0);
+    	map<string,int> apis;
+	for(size_t i=0; i<s.size(); i++)
+	{
+	    size_t n = s[i].find(':');
+	    if(n==string::npos)
+	    {
+	    	card  c;
+	    	c.name = s[i];
+		c.parent = -1;
+		c.index = i;
+	    	cards.push_back(c);
+	    }
+	    else
+	    {
+	    	string api = s[i].substr(0,n);
+	    	map<string,int>::iterator it = apis.find(api);
+	    	size_t cn=0;
+	    	if(it==apis.end())
+	    	{
+	    		cn = cards.size();
+	    		apis[api] = cn;
+	    		card c;
+	    		c.name = api;
+	    		c.parent = -1;
+	    		c.index = -1;
+	    		cards.push_back(c);
+	    	}
+	    	else
+	    	{
+	    		cn = it->second;
+	    	}
+	    	port p;
+	    	p.name = s[i].substr(n+1);
+	    	p.index = i;
+	    	p.parent = cn;
+		cards[cn].members.push_back(p);
+	    }
+	}
+    }
+    else
+    {
+    	cards.resize(s.size());
+	for(size_t i=0; i<s.size(); i++)
+	{
+		cards[i].name = s[i];
+		cards[i].index = i;
+		cards[i].parent = -1;
+	}
+    }
+    for(size_t i=0; i<cards.size(); i++)
+    {
+    	cerr << "{" << cards[i].name << " " << cards[i].index << " " << cards[i].parent << endl;
+    	for(size_t j=0; j<cards[i].members.size(); j++)
+    	{
+    		cerr << "[" << cards[i].members[j].name
+    		<< " " << cards[i].members[j].index
+    		<< " " << cards[i].members[j].parent << "]" << endl;
+    	}
+    	cerr << "}" << endl;
+    }
 }
 
 int SoundChoice::rowCount (const QModelIndex& index) const
 {
-    vector<string> s;
-    interface.Enumerate(s);
-    return s.size();
+    int n=0;
+    int t=0;
+    if(isTree)
+    {
+    	if(index.isValid())
+    	{
+		const port* p = reinterpret_cast<const port*>(index.internalPointer());
+		if(p->parent >= 0)
+		{
+			n = reinterpret_cast<const card*>(p)->members.size();
+			t = 1;
+		}
+		else
+		{
+			n = cards.size();
+			t = 2;
+		}
+    	}
+    	else
+    	{
+		n = cards.size();
+		t = 3;
+    	}
+    }
+    else
+    {
+    	n = cards.size();
+    }
+    cerr << "rowcount " << t << " " << n << endl;
+    return n;
 }
 
 int SoundChoice::columnCount (const QModelIndex& index) const
 {
-    if(isTree)
-	return 2;
     return 1;
 }
 
 QVariant
 SoundChoice::data (const QModelIndex& index, int role) const
 {
-    vector<string> items;
-    interface.Enumerate(items);
+    if(!index.isValid())
+	return QVariant();
+    const port* p = reinterpret_cast<const port*>(index.internalPointer());
+    if(p==NULL)
+	return QVariant();
     switch(role)
     {
 	case Qt::DecorationRole:
 	    break;
 	case Qt::DisplayRole:
-	    return items[index.row()].c_str();
+	    return p->name.c_str();
 	    break;
 	case Qt::UserRole:
-	    return index.internalId();
+	    return p->index;
 	    break;
 	case Qt::TextAlignmentRole:
 	    return QVariant(Qt::AlignLeft|Qt::AlignVCenter);
     }
     return QVariant();
 }
-
-QModelIndex SoundChoice::index(int row, int column, const QModelIndex &parent) const
+/*
+QModelIndex
+RigTypesModel::index(int row, int column, const QModelIndex &parent) const
 {
-  return createIndex(row, column, row);
+    if(parent.isValid())
+    {
+    	const model_index* r = (const model_index*)parent.internalPointer();
+    	if(r->parent==-1) // its a make - what we expect!
+    	{
+		const make *m = reinterpret_cast<const make*>(r);
+		if(int(m->model.size())>row)
+		{
+		    return createIndex(row, column, (void*)&m->model[row]);
+		}
+    	} // else its wrong, drop through
+    }
+    else
+    {
+    	if(int(rigs.size())>row)
+    	{
+	    return createIndex(row, column, (void*)&rigs[row]);
+    	}
+    }
+    return QModelIndex();
 }
 
-QModelIndex SoundChoice::parent(const QModelIndex&) const
+QModelIndex
+RigTypesModel::parent(const QModelIndex &child) const
 {
+    if(child.isValid())
+    {
+    	const model_index* r = (const model_index*)child.internalPointer();
+    	if(r->parent!=-1) // its a model - what we expect!
+    	{
+	    size_t p = r->parent;
+	    return createIndex(p, 0, (void*)&rigs[p]);
+    	} // else its wrong, drop through
+    }
     return QModelIndex();
+}
+
+*/
+QModelIndex SoundChoice::index(int row, int column, const QModelIndex &parent) const
+{
+    if(column!=0)
+	return QModelIndex();
+    if(parent.isValid())
+    {
+	const card* p = reinterpret_cast<const card*>(parent.internalPointer());
+	if(p->members.size()<=row)
+		return QModelIndex();
+	return createIndex(row, 0, (void*)p);
+    }
+    int n = cards.size();
+    if(n<=row)
+    {
+    	cerr << row << " " << n << endl;
+	return QModelIndex();
+    }
+    QModelIndex r = createIndex(row, 0, (void*)&cards[row]);
+    return r;
+}
+
+QModelIndex SoundChoice::parent(const QModelIndex& index) const
+{
+	if(index.isValid())
+	{
+	    const port* p = reinterpret_cast<const port*>(index.internalPointer());
+	    if (p)
+	    {
+	    	if(p->parent>=0)
+	    	{
+		    return createIndex(p->parent, 0, (void*)&cards[p->parent]);
+		}
+	    }
+    	}
+	return QModelIndex();
 }
 
 #endif
@@ -633,15 +799,20 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
 
     /* Radio buttons */
     bgTimeInterp = new QButtonGroup(this);
-    bgTimeInterp->addButton(RadioButtonTiWiener, 0);
-    bgTimeInterp->addButton(RadioButtonTiLinear, 0);
+    bgTimeInterp->addButton(RadioButtonTiWiener, TWIENER);
+    bgTimeInterp->addButton(RadioButtonTiLinear, TLINEAR);
+    connect(bgTimeInterp, SIGNAL(buttonClicked(int)), SLOT(OnSelTimeInterp(int)));
+
     bgFreqInterp = new QButtonGroup(this);
-    bgFreqInterp->addButton(RadioButtonFreqWiener, 0);
-    bgFreqInterp->addButton(RadioButtonFreqLinear, 0);
-    bgFreqInterp->addButton(RadioButtonFreqDFT, 0);
+    bgFreqInterp->addButton(RadioButtonFreqWiener, FWIENER);
+    bgFreqInterp->addButton(RadioButtonFreqLinear, FLINEAR);
+    bgFreqInterp->addButton(RadioButtonFreqDFT, FDFTFILTER);
+    connect(bgFreqInterp, SIGNAL(buttonClicked(int)), SLOT(OnSelFrequencyInterp(int)));
+
     bgTiSync = new QButtonGroup(this);
-    bgTiSync->addButton(RadioButtonTiSyncEnergy, 0);
-    bgTiSync->addButton(RadioButtonTiSyncFirstPeak, 0);
+    bgTiSync->addButton(RadioButtonTiSyncEnergy, TSENERGY);
+    bgTiSync->addButton(RadioButtonTiSyncFirstPeak, TSFIRSTPEAK);
+    connect(bgTiSync, SIGNAL(buttonClicked(int)), SLOT(OnSelTiSync(int)));
 
     soundcards = new SoundChoice(*Receiver.GetSoundInInterface());
     widgetDRMInput->comboBoxRig->setModel(treeViewRigs->model());
@@ -749,7 +920,8 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 
     /* DRM ----------------------------------------------------------------- */
     QAbstractButton* button = NULL;
-    button = bgTimeInterp->button(int(Receiver.GetTimeInt()));
+    int n = Receiver.GetTimeInt();
+    button = bgTimeInterp->button(n);
     if(button) button->setChecked(true);
     button = bgFreqInterp->button(int(Receiver.GetFreqInt()));
     if(button) button->setChecked(true);
@@ -981,6 +1153,7 @@ void ReceiverSettingsDlg::ExtractReceiverCoordinates()
 
 void ReceiverSettingsDlg::OnSelTimeInterp(int iId)
 {
+	cerr << iId << endl;
     Receiver.SetTimeInt(ETypeIntTime(iId));
 }
 
