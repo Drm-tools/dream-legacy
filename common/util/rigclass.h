@@ -6,7 +6,7 @@
 
  *
 
- *	$Id: rigclass.h,v 1.1.2.2 2009/08/10 20:47:33 jcable Exp $
+ *	$Id: rigclass.h,v 1.1.2.3 2009/08/10 22:29:34 jcable Exp $
 
  *
 
@@ -446,7 +446,7 @@ extern "C" {
 
 #if !(defined(__GNUG__)||defined(__SUNPRO_CC))
 
-   extern "C" void exit(int);
+//   extern "C" void exit(int);
 
 #endif
 

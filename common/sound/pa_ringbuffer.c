@@ -1,5 +1,5 @@
 /*
- * $Id: pa_ringbuffer.c,v 1.1.2.1 2007/04/11 22:52:57 jcable Exp $
+ * $Id: pa_ringbuffer.c,v 1.1.2.2 2009/08/10 22:29:33 jcable Exp $
  * Portable Audio I/O Library
  * Ring Buffer utility.
  *
@@ -100,6 +100,11 @@
 #         error Memory barriers are not defined on this system. You can still compile by defining ALLOW_SMP_DANGERS, but SMP safety will not be guaranteed.
 #      endif
 #   endif
+#elif defined(_MSC_VER)
+#include <windows.h>
+#         define PaUtil_FullMemoryBarrier() MemoryBarrier()
+#         define PaUtil_ReadMemoryBarrier() MemoryBarrier()
+#         define PaUtil_WriteMemoryBarrier() MemoryBarrier()
 #else
 #   ifdef ALLOW_SMP_DANGERS
 #      warning Memory barriers not defined on this system or system unknown
