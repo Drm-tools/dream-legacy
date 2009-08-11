@@ -275,7 +275,7 @@ void CWriteData::putAudioSpec(CParameter& Parameter)
 	const _REAL rNormData = (_REAL) NUM_SMPLS_4_AUDIO_SPECTRUM *
 		NUM_SMPLS_4_AUDIO_SPECTRUM * max_sample * max_sample *
 		NUM_BLOCKS_AV_AUDIO_SPEC;
-	const _REAL rFactorScale = (_REAL)SOUNDCRD_SAMPLE_RATE/iLenPowSpec/2000;
+        //const _REAL rFactorScale = (_REAL)SOUNDCRD_SAMPLE_RATE/iLenPowSpec/2000;
 
 	/* Apply the normalization (due to the FFT) */
 	vector<_REAL> vecrData(iLenPowSpec);

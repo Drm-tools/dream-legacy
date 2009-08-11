@@ -1,5 +1,5 @@
 /*
- * $Id: pa_shm_ringbuffer.c,v 1.1.2.1 2007/06/16 17:08:42 jcable Exp $
+ * $Id: pa_shm_ringbuffer.c,v 1.1.2.2 2009/08/11 03:59:54 jcable Exp $
  * Portable Audio I/O Library
  * Ring Buffer utility.
  *
@@ -116,8 +116,9 @@
  * Initialize FIFO.
  * numBytes must be power of 2, returns -1 if not.
  */
-long PaUtil_InitializeShmRingBuffer( PaUtilShmRingBuffer *rbuf, long numBytes, void *dataPtr )
+long PaUtil_InitializeShmRingBuffer( PaUtilShmRingBuffer *rbuf, long numBytes, void *datap)
 {
+    (void)datap;
     if( ((numBytes-1) & numBytes) != 0) return -1; /* Not Power of two. */
     rbuf->bufferSize = numBytes;
     //rbuf->buffer = (char *)dataPtr;

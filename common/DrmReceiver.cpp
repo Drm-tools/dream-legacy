@@ -1574,6 +1574,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 	case WBFM:
 	    AMDemodulation.SetDemodType(Parameters.eModulation);
 	    break;
+        default:;
     }
 	/* upstream RSCI */
     str = s.Get("command", "rsiin");

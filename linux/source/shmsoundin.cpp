@@ -50,7 +50,7 @@ CShmSoundIn::~CShmSoundIn()
  * 2 samples per frame
  */
 void
-CShmSoundIn::Init(int iNewBufferSize, bool bNewBlocking, int iChannels)
+CShmSoundIn::Init(int, bool, int iChannels)
 {
 	shmid = shm_open(shm_path.c_str(), O_RDWR, 0666);
 	if(shmid == -1)
@@ -80,7 +80,7 @@ CShmSoundIn::Enumerate(vector<string>& choices) const
 }
 
 void
-CShmSoundIn::SetDev(int iNewDevice)
+CShmSoundIn::SetDev(int)
 {
 }
 
