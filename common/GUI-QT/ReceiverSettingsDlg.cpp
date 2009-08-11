@@ -313,7 +313,7 @@ QVariant RigModel::data (const QModelIndex& index, int role) const
     if(i==-1)
 	return QVariant();
 
-    if(true) // no structure visibile at the moment
+    if(true) // no structure visible at the moment
     {
     	CRig* r = rigs[i].rig;
     	if(r==NULL)
@@ -592,6 +592,7 @@ void SoundChoice::update()
 		cards[i].parent = -1;
 	}
     }
+#if 0
     for(size_t i=0; i<cards.size(); i++)
     {
     	cerr << "{" << cards[i].name << " " << cards[i].index << " " << cards[i].parent << endl;
@@ -603,6 +604,7 @@ void SoundChoice::update()
     	}
     	cerr << "}" << endl;
     }
+#endif
 }
 
 int SoundChoice::rowCount (const QModelIndex& index) const
@@ -614,15 +616,23 @@ int SoundChoice::rowCount (const QModelIndex& index) const
     	if(index.isValid())
     	{
 		const port* p = reinterpret_cast<const port*>(index.internalPointer());
-		if(p->parent >= 0)
+		if(p)
 		{
-			n = reinterpret_cast<const card*>(p)->members.size();
-			t = 1;
+			if(p->parent >= 0)
+			{
+				n = cards[p->parent].members.size();
+				t = 1;
+			}
+			else
+			{
+				n = cards.size();
+				t = 2;
+			}
 		}
 		else
 		{
-			n = cards.size();
-			t = 2;
+			n = 0;
+			t = 4;
 		}
     	}
     	else
@@ -635,13 +645,31 @@ int SoundChoice::rowCount (const QModelIndex& index) const
     {
     	n = cards.size();
     }
-    cerr << "rowcount " << t << " " << n << endl;
     return n;
 }
 
 int SoundChoice::columnCount (const QModelIndex& index) const
 {
     return 1;
+}
+
+QVariant SoundChoice::headerData ( int section, Qt::Orientation orientation, int role) const
+{
+	if(role != Qt::DisplayRole)
+		return QVariant();
+	if(orientation != Qt::Horizontal)
+		return QVariant();
+	return tr("Device");
+}
+
+bool SoundChoice::hasChildren ( const QModelIndex & parent) const
+{
+    if(!parent.isValid())
+	return true; // root
+    const port* p = reinterpret_cast<const port*>(parent.internalPointer());
+    if(p && (p->parent==-1))
+	return true;
+    return false;
 }
 
 QVariant
@@ -667,64 +695,27 @@ SoundChoice::data (const QModelIndex& index, int role) const
     }
     return QVariant();
 }
-/*
-QModelIndex
-RigTypesModel::index(int row, int column, const QModelIndex &parent) const
-{
-    if(parent.isValid())
-    {
-    	const model_index* r = (const model_index*)parent.internalPointer();
-    	if(r->parent==-1) // its a make - what we expect!
-    	{
-		const make *m = reinterpret_cast<const make*>(r);
-		if(int(m->model.size())>row)
-		{
-		    return createIndex(row, column, (void*)&m->model[row]);
-		}
-    	} // else its wrong, drop through
-    }
-    else
-    {
-    	if(int(rigs.size())>row)
-    	{
-	    return createIndex(row, column, (void*)&rigs[row]);
-    	}
-    }
-    return QModelIndex();
-}
 
-QModelIndex
-RigTypesModel::parent(const QModelIndex &child) const
-{
-    if(child.isValid())
-    {
-    	const model_index* r = (const model_index*)child.internalPointer();
-    	if(r->parent!=-1) // its a model - what we expect!
-    	{
-	    size_t p = r->parent;
-	    return createIndex(p, 0, (void*)&rigs[p]);
-    	} // else its wrong, drop through
-    }
-    return QModelIndex();
-}
-
-*/
 QModelIndex SoundChoice::index(int row, int column, const QModelIndex &parent) const
 {
     if(column!=0)
 	return QModelIndex();
     if(parent.isValid())
     {
-	const card* p = reinterpret_cast<const card*>(parent.internalPointer());
-	if(p->members.size()<=row)
+	const port* p = reinterpret_cast<const card*>(parent.internalPointer());
+	if(p->parent != -1) // at the bottom
+	{
+	    return QModelIndex();
+	}
+	const card* c = reinterpret_cast<const card*>(p);
+	if(int(c->members.size())<=row)
 		return QModelIndex();
-	return createIndex(row, 0, (void*)p);
+	return createIndex(row, 0, (void*)&c->members[row]);
     }
     int n = cards.size();
     if(n<=row)
     {
-    	cerr << row << " " << n << endl;
-	return QModelIndex();
+ 	return QModelIndex();
     }
     QModelIndex r = createIndex(row, 0, (void*)&cards[row]);
     return r;
@@ -1153,8 +1144,7 @@ void ReceiverSettingsDlg::ExtractReceiverCoordinates()
 
 void ReceiverSettingsDlg::OnSelTimeInterp(int iId)
 {
-	cerr << iId << endl;
-    Receiver.SetTimeInt(ETypeIntTime(iId));
+   Receiver.SetTimeInt(ETypeIntTime(iId));
 }
 
 void ReceiverSettingsDlg::OnSelFrequencyInterp(int iId)
