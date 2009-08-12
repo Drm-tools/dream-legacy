@@ -5,7 +5,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>599</width>
+    <width>622</width>
     <height>773</height>
    </rect>
   </property>
@@ -92,7 +92,7 @@
        </size>
       </property>
       <property name="currentIndex" >
-       <number>4</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="Channel" >
        <attribute name="title" >
@@ -102,10 +102,10 @@
         <item row="0" column="0" >
          <widget class="QGroupBox" name="groupBoxSpectrumOccupancy" >
           <property name="whatsThis" >
-           <string>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
-p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;">
+           <string>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">&#xd;
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">&#xd;
+p, li { white-space: pre-wrap; }&#xd;
+&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;">&#xd;
 &lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">Spectrum Occupancy:&lt;/span> The spectrum occupancy is the gross bandwidth of the generated DRM signal. Not all DRM robustness mode / bandwidth constellations are possible, e.g., DRM robustness mode D and C are only defined for the bandwidths 10 kHz and 20 kHz. &lt;/p>&lt;/body>&lt;/html></string>
           </property>
           <property name="title" >
@@ -180,16 +180,16 @@ p, li { white-space: pre-wrap; }
           <item>
            <widget class="QGroupBox" name="groupBoxRobustness" >
             <property name="whatsThis" >
-             <string>&lt;b>DRM Robustness Mode:&lt;/b> In a DRM system, 
-four possible robustness modes are defined to adapt the system to 
-different channel conditions. According to the DRM standard:
-&lt;ul>&lt;li>&lt;i>Mode A:&lt;/i> Gaussian channels, with 
-minor fading&lt;/li>&lt;li>&lt;i>Mode B:&lt;/i> Time 
-and frequency selective channels, with longer delay spread
-&lt;/li>&lt;li>&lt;i>Mode C:&lt;/i> As robustness mode B, 
-but with higher Doppler spread&lt;/li>&lt;li>&lt;i>Mode D:
-&lt;/i> As robustness mode B, but with severe delay and 
-Doppler spread&lt;/li>&lt;/ul>
+             <string>&lt;b>DRM Robustness Mode:&lt;/b> In a DRM system, &#xd;
+four possible robustness modes are defined to adapt the system to &#xd;
+different channel conditions. According to the DRM standard:&#xd;
+&lt;ul>&lt;li>&lt;i>Mode A:&lt;/i> Gaussian channels, with &#xd;
+minor fading&lt;/li>&lt;li>&lt;i>Mode B:&lt;/i> Time &#xd;
+and frequency selective channels, with longer delay spread&#xd;
+&lt;/li>&lt;li>&lt;i>Mode C:&lt;/i> As robustness mode B, &#xd;
+but with higher Doppler spread&lt;/li>&lt;li>&lt;i>Mode D:&#xd;
+&lt;/i> As robustness mode B, but with severe delay and &#xd;
+Doppler spread&lt;/li>&lt;/ul>&#xd;
 </string>
             </property>
             <property name="title" >
@@ -322,7 +322,7 @@ Doppler spread&lt;/li>&lt;/ul>
              <item row="2" column="1" >
               <widget class="QComboBox" name="ComboBoxMSCInterleaver" >
                <property name="whatsThis" >
-                <string>&lt;b>MSC interleaver mode:&lt;/b> The symbol interleaver depth can be either short (approx. 400 ms) or long (approx. 2 s). The longer the interleaver the better the channel decoder can correct errors from slow fading signals. But the longer the interleaver length the longer the delay until (after a re-synchronization) audio can be heard.
+                <string>&lt;b>MSC interleaver mode:&lt;/b> The symbol interleaver depth can be either short (approx. 400 ms) or long (approx. 2 s). The longer the interleaver the better the channel decoder can correct errors from slow fading signals. But the longer the interleaver length the longer the delay until (after a re-synchronization) audio can be heard.&#xd;
 </string>
                </property>
               </widget>
@@ -670,7 +670,7 @@ Doppler spread&lt;/li>&lt;/ul>
         <item row="1" column="0" >
          <layout class="QHBoxLayout" name="horizontalLayout_9" >
           <item>
-           <widget class="QwtThermo" name="ProgrInputLevel" >
+           <widget class="QwtThermo" native="1" name="ProgrInputLevel" >
             <property name="sizePolicy" >
              <sizepolicy vsizetype="Minimum" hsizetype="Expanding" >
               <horstretch>0</horstretch>
@@ -1362,172 +1362,14 @@ Doppler spread&lt;/li>&lt;/ul>
        <attribute name="title" >
         <string>MDI Output</string>
        </attribute>
-       <layout class="QGridLayout" name="_23" >
-        <property name="margin" >
-         <number>11</number>
-        </property>
-        <property name="spacing" >
-         <number>6</number>
-        </property>
-        <item row="1" column="1" >
-         <widget class="QPushButton" name="PushButtonAddMDIDest" >
-          <property name="text" >
-           <string>Add IP</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2" >
-         <widget class="QPushButton" name="PushButtonDeleteMDIOutput" >
-          <property name="text" >
-           <string>Delete Selected</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0" >
-         <layout class="QHBoxLayout" name="_24" >
-          <item>
-           <widget class="QLabel" name="TextLabel1_6_2" >
-            <property name="text" >
-             <string>Output Fillename</string>
-            </property>
-            <property name="wordWrap" >
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLineEdit" name="LineEditMDIOutputFile" >
-            <property name="maximumSize" >
-             <size>
-              <width>256</width>
-              <height>32767</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="PushButtonMDIOutBrowse" >
-            <property name="text" >
-             <string>Browse</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="2" column="1" >
-         <widget class="QPushButton" name="PushButtonAddMDIFileDest" >
-          <property name="text" >
-           <string>Add File</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0" >
-         <layout class="QGridLayout" name="_25" >
-          <item row="0" column="0" >
-           <widget class="QLabel" name="TextLabel8_2" >
-            <property name="sizePolicy" >
-             <sizepolicy vsizetype="Preferred" hsizetype="Minimum" >
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text" >
-             <string>Host/Group</string>
-            </property>
-            <property name="wordWrap" >
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1" >
-           <widget class="QComboBox" name="ComboBoxMDIoutInterface" >
-            <property name="sizePolicy" >
-             <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="maximumSize" >
-             <size>
-              <width>128</width>
-              <height>32767</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0" >
-           <widget class="QLabel" name="TextLabel9_2" >
-            <property name="sizePolicy" >
-             <sizepolicy vsizetype="Preferred" hsizetype="Minimum" >
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text" >
-             <string>Output Interface</string>
-            </property>
-            <property name="wordWrap" >
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0" >
-           <widget class="QLabel" name="TextLabel7_2" >
-            <property name="sizePolicy" >
-             <sizepolicy vsizetype="Preferred" hsizetype="Minimum" >
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="text" >
-             <string>Port</string>
-            </property>
-            <property name="wordWrap" >
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1" >
-           <widget class="QLineEdit" name="LineEditMDIOutAddr" >
-            <property name="sizePolicy" >
-             <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="maximumSize" >
-             <size>
-              <width>128</width>
-              <height>32767</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1" >
-           <widget class="QLineEdit" name="LineEditMDIoutPort" >
-            <property name="sizePolicy" >
-             <sizepolicy vsizetype="Preferred" hsizetype="Expanding" >
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="maximumSize" >
-             <size>
-              <width>64</width>
-              <height>32767</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
+       <layout class="QGridLayout" name="gridLayout_12" >
         <item row="0" column="0" >
-         <widget class="QTreeView" name="treeViewMDIOutputs" >
-          <property name="rootIsDecorated" >
-           <bool>false</bool>
-          </property>
-          <property name="allColumnsShowFocus" >
-           <bool>true</bool>
+         <widget class="DIoutputSelector" native="1" name="widget" >
+          <property name="minimumSize" >
+           <size>
+            <width>380</width>
+            <height>150</height>
+           </size>
           </property>
          </widget>
         </item>
@@ -1695,13 +1537,13 @@ Doppler spread&lt;/li>&lt;/ul>
         <item row="0" column="1" >
          <widget class="QGroupBox" name="groupBoxOutput" >
           <property name="whatsThis" >
-           <string>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
-&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">
-p, li { white-space: pre-wrap; }
-&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;">
-&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">Output format:&lt;/span> Since the sound-card outputs signals in stereo format, it is possible to output the DRM signal in three formats: &lt;/p>
-&lt;ul style="-qt-list-indent: 1;">&lt;li style=" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">real valued&lt;/span> output on both, left and right, sound-card channels&lt;/li>
-&lt;li style=" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">E/P&lt;/span> output which is the envelope and phase on separate channels. This output type cannot be used if the Dream transmitter is compiled with a sound-card sample rate of 48 kHz since the spectrum of these components exceed the bandwidth of 20 kHz. The envelope signal is output on the left channel and the phase is output on the right channel.&lt;/li>
+           <string>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">&#xd;
+&lt;html>&lt;head>&lt;meta name="qrichtext" content="1" />&lt;style type="text/css">&#xd;
+p, li { white-space: pre-wrap; }&#xd;
+&lt;/style>&lt;/head>&lt;body style=" font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;">&#xd;
+&lt;p style=" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">Output format:&lt;/span> Since the sound-card outputs signals in stereo format, it is possible to output the DRM signal in three formats: &lt;/p>&#xd;
+&lt;ul style="-qt-list-indent: 1;">&lt;li style=" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">real valued&lt;/span> output on both, left and right, sound-card channels&lt;/li>&#xd;
+&lt;li style=" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">E/P&lt;/span> output which is the envelope and phase on separate channels. This output type cannot be used if the Dream transmitter is compiled with a sound-card sample rate of 48 kHz since the spectrum of these components exceed the bandwidth of 20 kHz. The envelope signal is output on the left channel and the phase is output on the right channel.&lt;/li>&#xd;
 &lt;li style=" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;">&lt;span style=" font-weight:600;">I/Q &lt;/span>output which is the in-phase and quadrature component of the complex base-band signal at the desired IF. In-phase is output on the left channel and quadrature on the right channel.&lt;/li>&lt;/ul>&lt;/body>&lt;/html></string>
           </property>
           <property name="title" >
@@ -1984,7 +1826,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>599</width>
+     <width>622</width>
      <height>19</height>
     </rect>
    </property>
@@ -2033,11 +1875,18 @@ p, li { white-space: pre-wrap; }
    <class>QwtPlot</class>
    <extends>QFrame</extends>
    <header>qwt_plot.h</header>
+   <container>1</container>
   </customwidget>
   <customwidget>
    <class>QwtThermo</class>
    <extends>QWidget</extends>
    <header>qwt_thermo.h</header>
+  </customwidget>
+  <customwidget>
+   <class>DIoutputSelector</class>
+   <extends>QWidget</extends>
+   <header location="global" >DIoutputSelector.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

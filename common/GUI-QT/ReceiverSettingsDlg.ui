@@ -5,8 +5,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>485</width>
-    <height>478</height>
+    <width>442</width>
+    <height>535</height>
    </rect>
   </property>
   <property name="windowTitle" >
@@ -19,7 +19,7 @@
    <item row="0" column="0" >
     <widget class="QTabWidget" name="TabWidget" >
      <property name="currentIndex" >
-      <number>2</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="drm_2" >
       <attribute name="title" >
@@ -463,36 +463,100 @@
      </widget>
      <widget class="QWidget" name="tab" >
       <attribute name="title" >
-       <string>Audio</string>
+       <string>Output Options</string>
       </attribute>
-      <layout class="QGridLayout" name="gridLayout_16" >
+      <layout class="QGridLayout" name="gridLayout_20" >
        <item row="0" column="0" >
-        <layout class="QHBoxLayout" name="horizontalLayout_6" >
-         <item>
-          <widget class="QCheckBox" name="CheckBoxMuteAudio" >
-           <property name="text" >
-            <string>Mute Audio</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="CheckBoxSaveAudioWave" >
-           <property name="text" >
-            <string>Save Audio</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="CheckBoxReverb" >
-           <property name="text" >
-            <string>&amp;Reverberation</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+        <widget class="QGroupBox" name="groupBoxIQoptions" >
+         <property name="title" >
+          <string>I/Q</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_18" >
+          <item row="0" column="0" >
+           <widget class="QCheckBox" name="CheckBoxRecordIQ" >
+            <property name="text" >
+             <string>Record to File</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1" >
+           <widget class="QLineEdit" name="lineEditIQFile" />
+          </item>
+          <item row="0" column="2" >
+           <widget class="QPushButton" name="pushButtonChooseIQFile" >
+            <property name="text" >
+             <string>Choose</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
        <item row="1" column="0" >
-        <widget class="QTreeView" name="treeViewAudio" />
+        <widget class="QGroupBox" name="groupBoxAudioOptions" >
+         <property name="title" >
+          <string>Audio</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_16" >
+          <item row="0" column="0" colspan="2" >
+           <widget class="QCheckBox" name="CheckBoxReverb" >
+            <property name="text" >
+             <string>&amp;Reverberation</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" >
+           <widget class="QCheckBox" name="CheckBoxMuteAudio" >
+            <property name="text" >
+             <string>Mute</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" >
+           <widget class="QCheckBox" name="CheckBoxRecordAudio" >
+            <property name="text" >
+             <string>Record to File</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1" >
+           <widget class="QLineEdit" name="lineEditAudioFile" />
+          </item>
+          <item row="2" column="2" >
+           <widget class="QPushButton" name="pushButtonChooseAudioFile" >
+            <property name="text" >
+             <string>Choose</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="3" >
+           <widget class="QTreeView" name="treeViewAudio" >
+            <property name="headerHidden" >
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item row="2" column="0" >
+        <widget class="QGroupBox" name="groupBoxNetworkOutputs" >
+         <property name="title" >
+          <string>RSCI</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_19" >
+          <item row="0" column="0" >
+           <widget class="DIoutputSelector" native="1" name="widgetNetworkOutput" >
+            <property name="minimumSize" >
+             <size>
+              <width>380</width>
+              <height>150</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -1016,6 +1080,12 @@
    <class>ReceiverInputWidget</class>
    <extends>QWidget</extends>
    <header>receiverinputwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>DIoutputSelector</class>
+   <extends>QWidget</extends>
+   <header location="global" >DIoutputSelector.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

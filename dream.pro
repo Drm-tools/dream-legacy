@@ -17,7 +17,8 @@ FORMS += DRMMainWindow.ui \
     FMMainWindow.ui \
     AnalogMainWindow.ui \
     TransmitterMainWindow.ui \
-    common/GUI-QT/receiverinputwidget.ui
+    common/GUI-QT/receiverinputwidget.ui \
+    common/GUI-QT/DIoutputSelector.ui
 FORMS += AMSSDlg.ui \
     SystemEvalDlg.ui \
     JLViewer.ui \
@@ -319,7 +320,8 @@ HEADERS += common/Measurements.h \
     common/util/Utilities.h \
     common/util/Vector.h \
     common/Version.h \
-    common/GUI-QT/receiverinputwidget.h
+    common/GUI-QT/receiverinputwidget.h \
+    common/GUI-QT/DIoutputSelector.h
 SOURCES += common/Measurements.cpp \
     common/AMDemodulation.cpp \
     common/AMSSDemodulation.cpp \
@@ -442,3 +444,4 @@ SOURCES += common/Measurements.cpp \
     common/util/Utilities.cpp \
     common/Version.cpp \
     common/GUI-QT/receiverinputwidget.cpp \
+    common/GUI-QT/DIoutputSelector.cpp

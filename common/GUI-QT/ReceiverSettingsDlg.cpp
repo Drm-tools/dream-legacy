@@ -853,7 +853,7 @@ ReceiverSettingsDlg::ReceiverSettingsDlg(
     soundoutputs = new SoundChoice(*Receiver.GetSoundOutInterface(), true);
     connect(CheckBoxMuteAudio, SIGNAL(clicked()), this, SLOT(OnCheckBoxMuteAudio()));
     connect(CheckBoxReverb, SIGNAL(clicked()), this, SLOT(OnCheckBoxReverb()));
-    connect(CheckBoxSaveAudioWave, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWav()));
+    connect(CheckBoxRecordAudio, SIGNAL(clicked()), this, SLOT(OnCheckSaveAudioWav()));
     connect(treeViewAudio, SIGNAL(clicked (const QModelIndex&)),
 	    this, SLOT(OnAudioSelected(const QModelIndex&)));
     treeViewAudio->setModel(soundoutputs);
@@ -940,7 +940,7 @@ void ReceiverSettingsDlg::showEvent(QShowEvent*)
 
     /* Audio */
     CheckBoxMuteAudio->setChecked(Receiver.GetMuteAudio());
-    CheckBoxSaveAudioWave->setChecked(Receiver.GetIsWriteWaveFile());
+    CheckBoxRecordAudio->setChecked(Receiver.GetIsWriteWaveFile());
     CheckBoxReverb->setChecked(Receiver.GetReverbEffect());
 
     /* GPS */
@@ -1413,7 +1413,7 @@ void ReceiverSettingsDlg::OnCheckBoxMuteAudio()
 
 void ReceiverSettingsDlg::OnCheckSaveAudioWav()
 {
-	OnSaveAudio(this, CheckBoxSaveAudioWave, Receiver);
+	OnSaveAudio(this, CheckBoxRecordAudio, Receiver);
 }
 
 void ReceiverSettingsDlg::OnCheckBoxReverb()

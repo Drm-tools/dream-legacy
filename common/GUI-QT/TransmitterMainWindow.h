@@ -1,9 +1,9 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * British Broadcasting Corporation
+ * Copyright (c) 2009
  *
  * Author(s):
- *	Volker Fischer
+ *	Julian Cable
  *
  * Description:
  *
@@ -26,9 +26,13 @@
  *
 \******************************************************************************/
 
+#ifndef _TRANSMITTERMAINWINDOW_H
+#define _TRANSMITTERMAINWINDOW_H
+
 #include "../Parameter.h"
 #include "ui_TransmitterMainWindow.h"
 #include "../util/Utilities.h"
+#include "DIoutputSelector.h"
 #include <vector>
 #include <QDialog>
 #include <QTimer>
@@ -221,33 +225,6 @@ protected:
 	vector<CIpIf>       vecIpIf;
 };
 
-class MDIOutputEditor: public QObject
-{
-	Q_OBJECT
-public:
-    MDIOutputEditor(Ui_TransmitterMainWindow&);
-    virtual ~MDIOutputEditor() {}
-
-    void    setupUi();
-	void	GetFrom(const CDRMTransmitterInterface&);
-	void	PutTo(CDRMTransmitterInterface&) const;
-
-public slots:
-	void OnButtonAddDest();
-	void OnButtonAddFileDest();
-	void OnButtonDeleteOutput();
-	void OnButtonBrowse();
-	void OnComboBoxInterfaceActivated(int iID);
-	void OnLineEditAddrChanged(const QString& str);
-	void OnLineEditFileChanged(const QString& str);
-	void OnLineEditPortChanged(const QString& str);
-	void OnItemClicked(const QModelIndex&);
-protected:
-    Ui_TransmitterMainWindow& ui;
-	vector<CIpIf>       vecIpIf;
-    QStandardItemModel* destinations;
-};
-
 class TransmitterMainWindow : public QMainWindow, public Ui_TransmitterMainWindow
 {
 	Q_OBJECT
@@ -284,7 +261,7 @@ protected:
     ServicesEditor      servicesEditor;
     COFDMEditor         cofdmEditor;
     MDIInputEditor      mdiInputEditor;
-    MDIOutputEditor     mdiOutputEditor;
+    DIoutputSelector     mdiOutputEditor;
 
 public slots:
 	void OnRadioMode(int iID);
@@ -298,3 +275,5 @@ signals:
     void MSCCapacityChanged(int);
     void SDCCapacityChanged(int);
 };
+
+#endif

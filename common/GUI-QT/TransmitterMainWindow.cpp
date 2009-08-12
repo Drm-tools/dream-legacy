@@ -1,6 +1,6 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * British Broadcasting Corporation
+ * Copyright (c) 2009
  *
  * Author(s):
  *	Volker Fischer, Julian Cable
@@ -52,7 +52,7 @@ TransmitterMainWindow::TransmitterMainWindow(CDRMTransmitterInterface& tx, CSett
     servicesEditor(*this),
     cofdmEditor(*this),
     mdiInputEditor(*this),
-    mdiOutputEditor(*this)
+    mdiOutputEditor(this)
 {
     setupUi(this);
     channelEditor.setupUi();
@@ -62,7 +62,6 @@ TransmitterMainWindow::TransmitterMainWindow(CDRMTransmitterInterface& tx, CSett
     servicesEditor.setupUi();
     cofdmEditor.setupUi();
     mdiInputEditor.setupUi();
-    mdiOutputEditor.setupUi();
 
 	/* recover window size and position */
 	CWinGeom s;
@@ -202,6 +201,7 @@ void TransmitterMainWindow::OnTimer()
 void
 TransmitterMainWindow::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
 {
+	vector<string> s;
 	switch(DRMTransmitter.GetOperatingMode())
 	{
 	case CDRMTransmitterInterface::T_ENC:
@@ -210,7 +210,8 @@ TransmitterMainWindow::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
         audioComponentEditor.GetFrom(DRMTransmitter);
 		dataComponentEditor.GetFrom(DRMTransmitter);
 		servicesEditor.GetFrom(DRMTransmitter);
-		mdiOutputEditor.GetFrom(DRMTransmitter);
+		DRMTransmitter.GetMDIOut(s);
+		mdiOutputEditor.load(s);
 		RadioButtonEncoder->setChecked(true);
 		break;
 	case CDRMTransmitterInterface::T_MOD:
@@ -247,6 +248,7 @@ TransmitterMainWindow::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 	DRMTransmitter.SaveSettings(Settings);
 	DRMTransmitter.SetOperatingMode(eMod);
 	DRMTransmitter.LoadSettings(Settings);
+	vector<string> MDIoutAddr;
 
     switch(eMod)
 	{
@@ -256,7 +258,8 @@ TransmitterMainWindow::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
 		audioComponentEditor.PutTo(DRMTransmitter);
 		dataComponentEditor.PutTo(DRMTransmitter);
 		servicesEditor.PutTo(DRMTransmitter);
-		mdiOutputEditor.PutTo(DRMTransmitter);
+		mdiOutputEditor.save(MDIoutAddr);
+		DRMTransmitter.SetMDIOut(MDIoutAddr);
 		break;
     case CDRMTransmitterInterface::T_TX:
 		channelEditor.PutTo(DRMTransmitter);
@@ -1654,15 +1657,13 @@ void MDIInputEditor::setupUi()
 {
 	ui.LineEditMDIinGroup->setEnabled(false);
 	ui.LineEditMDIinGroup->setInputMask("000.000.000.000;_");
-	ui.LineEditMDIOutAddr->setInputMask("000.000.000.000;_");
 	ui.LineEditMDIinPort->setInputMask("00009;_");
-	ui.LineEditMDIoutPort->setInputMask("00009;_");
 
-    GetNetworkInterfaces(vecIpIf);
-    for(size_t i=0; i<vecIpIf.size(); i++)
-    {
-        ui.ComboBoxMDIoutInterface->addItem(vecIpIf[i].name.c_str());
-    }
+	GetNetworkInterfaces(vecIpIf);
+	for(size_t i=0; i<vecIpIf.size(); i++)
+	{
+		ui.ComboBoxMDIinInterface->addItem(vecIpIf[i].name.c_str());
+	}
 
 	connect(ui.PushButtonMDIInBrowse, SIGNAL(clicked()),
 		this, SLOT(OnButtonBrowse()));
@@ -1797,183 +1798,4 @@ MDIInputEditor::OnButtonBrowse()
 void
 MDIInputEditor::OnToggleCheckBoxReadFile(bool)
 {
-}
-
-MDIOutputEditor::MDIOutputEditor(Ui_TransmitterMainWindow& u)
-:QObject(),ui(u), vecIpIf()
-{
-}
-
-void MDIOutputEditor::setupUi()
-{
-    GetNetworkInterfaces(vecIpIf);
-    for(size_t i=0; i<vecIpIf.size(); i++)
-    {
-        ui.ComboBoxMDIoutInterface->addItem(vecIpIf[i].name.c_str());
-    }
-
-	connect(ui.PushButtonAddMDIDest, SIGNAL(clicked()),
-		this, SLOT(OnButtonAddDest()));
-	connect(ui.PushButtonAddMDIFileDest, SIGNAL(clicked()),
-		this, SLOT(OnButtonAddFileDest()));
-	connect(ui.PushButtonDeleteMDIOutput, SIGNAL(clicked()),
-		this, SLOT(OnButtonDeleteOutput()));
-	connect(ui.PushButtonMDIOutBrowse, SIGNAL(clicked()),
-		this, SLOT(OnButtonBrowse()));
-	connect(ui.ComboBoxMDIoutInterface, SIGNAL(activated(int)),
-		this, SLOT(OnComboBoxInterfaceActivated(int)));
-	connect(ui.LineEditMDIOutAddr, SIGNAL(textChanged(const QString&)),
-		this, SLOT(OnLineEditAddrChanged(const QString&)));
-	connect(ui.LineEditMDIOutputFile, SIGNAL(textChanged(const QString&)),
-		this, SLOT(OnLineEditFileChanged(const QString&)));
-	connect(ui.LineEditMDIoutPort, SIGNAL(textChanged(const QString&)),
-		this, SLOT(OnLineEditPortChanged(const QString&)));
-	connect(ui.treeViewMDIOutputs, SIGNAL(clicked(const QModelIndex&)),
-		this, SLOT(OnItemClicked(const QModelIndex&)));
-}
-
-void
-MDIOutputEditor::GetFrom(const CDRMTransmitterInterface& DRMTransmitter)
-{
-	vector<string> MDIoutAddr;
-	DRMTransmitter.GetMDIOut(MDIoutAddr);
-    for(size_t i=0; i<MDIoutAddr.size(); i++)
-    {
-        QString addr = MDIoutAddr[i].c_str();
-        QStringList parts = addr.split(":", QString::KeepEmptyParts);
-        QList<QStandardItem*> l;
-        switch(parts.count())
-        {
-        case 0:
-            l.push_back(new QStandardItem(parts[0]));
-            break;
-        case 1:
-            l.push_back(new QStandardItem(parts[0]));
-            l.push_back(new QStandardItem(""));
-            l.push_back(new QStandardItem("any"));
-            break;
-        case 2:
-            l.push_back(new QStandardItem(parts[1]));
-            l.push_back(new QStandardItem(parts[0]));
-            l.push_back(new QStandardItem("any"));
-            break;
-        case 3:
-            {
-                QString name;
-                for(size_t j=0; j<vecIpIf.size(); j++)
-                {
-                    if(parts[0].toUInt()==vecIpIf[j].addr)
-                        name = vecIpIf[j].name.c_str();
-                }
-                l.push_back(new QStandardItem(parts[2]));
-                l.push_back(new QStandardItem(parts[1]));
-                l.push_back(new QStandardItem(name));
-            }
-        }
-        destinations->appendRow(l);
-    }
-}
-
-void
-MDIOutputEditor::PutTo(CDRMTransmitterInterface& DRMTransmitter) const
-{
-	vector<string> MDIoutAddr;
-	for (int i=0; i<destinations->rowCount(); i++)
-	{
-		QString port = destinations->item(i, 0)->text();
-		QString dest = destinations->item(i, 1)->text();
-		QString iface = destinations->item(i, 2)->text();
-		QString addr;
-		if(dest == "")
-		{
-		    addr = port;
-		}
-		else if(iface=="any")
-		{
-			addr = dest+":"+port;
-		}
-		else
-		{
-			addr = iface+":"+dest+":"+port;
-		}
-		MDIoutAddr.push_back(string(addr.toStdString()));
-	}
-	DRMTransmitter.SetMDIOut(MDIoutAddr);
-}
-
-void
-MDIOutputEditor::OnButtonAddDest()
-{
-	QString dest = ui.LineEditMDIOutAddr->text();
-	if(dest == "...")
-		dest = "";
-    QList<QStandardItem*> l;
-    l.push_back(new QStandardItem(ui.LineEditMDIoutPort->text()));
-    l.push_back(new QStandardItem(dest));
-    l.push_back(new QStandardItem(ui.ComboBoxMDIoutInterface->currentText()));
-    destinations->appendRow(l);
-}
-
-void
-MDIOutputEditor::OnButtonAddFileDest()
-{
-	QString file = ui.LineEditMDIOutputFile->text();
-	if(file != "")
-	{
-        QList<QStandardItem*> l;
-        l.push_back(new QStandardItem(file));
-        destinations->appendRow(l);
-	}
-}
-
-void
-MDIOutputEditor::OnButtonDeleteOutput()
-{
-    destinations->removeRow(ui.treeViewMDIOutputs->currentIndex().row());
-}
-
-void MDIOutputEditor::OnButtonBrowse()
-{
-    QString s( QFileDialog::getSaveFileName(NULL,
-			"out.pcap", "Capture Files (*.pcap)" ) );
-    if ( s.isEmpty() )
-        return;
-    ui.LineEditMDIOutputFile->setText(s);
-}
-
-void MDIOutputEditor::OnComboBoxInterfaceActivated(int)
-{
-}
-
-void MDIOutputEditor::OnLineEditAddrChanged(const QString&)
-{
-}
-
-void MDIOutputEditor::OnLineEditFileChanged(const QString&)
-{
-}
-
-void MDIOutputEditor::OnLineEditPortChanged(const QString&)
-{
-}
-
-void MDIOutputEditor::OnItemClicked(const QModelIndex& index)
-{
-    int row = index.row();
-	QString dest = destinations->item(row,1)->text();
-	if(dest == "")
-	{
-    	ui.LineEditMDIOutputFile->setText(destinations->item(row,0)->text());
-        ui.LineEditMDIoutPort->setText("");
-		ui.LineEditMDIOutAddr->setText("");
-        ui.ComboBoxMDIoutInterface->setCurrentIndex(ui.ComboBoxMDIoutInterface->findText("any"));
-	}
-	else
-	{
-    	ui.LineEditMDIOutputFile->setText("");
-        ui.LineEditMDIoutPort->setText(destinations->item(row,0)->text());
-		ui.LineEditMDIOutAddr->setText(dest);
-        int i = ui.ComboBoxMDIoutInterface->findText(destinations->item(row,2)->text());
-        ui.ComboBoxMDIoutInterface->setCurrentIndex(i);
-	}
 }
