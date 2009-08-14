@@ -402,14 +402,11 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(EdtFrequency, SIGNAL(textChanged ( const QString&)),
 		this, SLOT(OnFrequencyEdited ( const QString &)));
 
-	StopLogTimers();
+	//StopLogTimers();
 
 	/* Logfile -------------------------------------------------------------- */
 
-	/* Start log file flag */
-	CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", FALSE));
-
-    /* log file flag for storing signal strength in long log */
+	/* log file flag for storing signal strength in long log */
 	shortLog.SetRxlEnabled(Settings.Get("Logfile", "enablerxl", FALSE));
 	longLog.SetRxlEnabled(Settings.Get("Logfile", "enablerxl", FALSE));
 
@@ -419,14 +416,17 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* logging delay value */
 	iLogDelay = Settings.Get("Logfile", "delay", 0);
-#if 0
+
+	/* Start log file flag */
+	CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", FALSE));
+
 	/* Activate log file start if necessary. */
 	if (CheckBoxWriteLog->isChecked())
 	{
 		/* One shot timer */
 		TimerLogFileStart.start(iLogDelay * 1000 /* ms */, TRUE);
 	}
-#endif
+
 	/* GPS */
 	_REAL latitude, longitude;
 	/* Latitude string for log file */
