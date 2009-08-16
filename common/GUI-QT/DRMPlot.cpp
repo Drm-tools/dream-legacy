@@ -418,17 +418,14 @@ CDRMPlot::~CDRMPlot()
 
 void CDRMPlot::start()
 {
-#if (QT_VERSION >= QT_VERSION_CHECK(4, 5, 0))
-	throw "Qwt is broken wrt Qt 4.5, no plots available";
-#endif
-	startPlot(CurrentChartType);
+    startPlot(CurrentChartType);
     TimerChart.start();
 }
 
 void CDRMPlot::stop()
 {
     TimerChart.stop();
-	endPlot(CurrentChartType);
+    endPlot(CurrentChartType);
 }
 
 void CDRMPlot::load(const CSettings& s, const string& section)
@@ -961,14 +958,9 @@ void CDRMPlot::UpdateAvIR()
     /* Vertical bounds -------------------------------------------------- */
     double dX[2], dY[2];
 
-
-#if QWT_VERSION < 0x050200
-    dY[0] = plot->axisScaleDiv(QwtPlot::yLeft)->lBound();
-    dY[1] = plot->axisScaleDiv(QwtPlot::yLeft)->hBound();
-#else
     dY[0] = plot->axisScaleDiv(QwtPlot::yLeft)->lowerBound();
     dY[1] = plot->axisScaleDiv(QwtPlot::yLeft)->upperBound();
-#endif
+
     /* These bounds show the beginning and end of the guard-interval */
 
     /* Left bound */
@@ -1833,11 +1825,7 @@ void CDRMPlot::OnClicked(const QwtDoublePoint& p)
 	const double dFreq = p.x();
 
 	/* Send normalized frequency to receiver */
-#if QWT_VERSION < 0x050200
-        const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom)->hBound();
-#else
-        const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom)->upperBound();
-#endif
+	const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom)->upperBound();
 	/* Check if value is valid */
 	if (dMaxxBottom != (double) 0.0)
 	{

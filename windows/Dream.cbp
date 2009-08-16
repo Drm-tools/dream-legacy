@@ -61,13 +61,14 @@
 				</Compiler>
 				<Linker>
 					<Add option="-pg -lgmon" />
-					<Add library="Qt3Support4" />
-					<Add library="QtCore4" />
-					<Add library="QtNetwork4" />
-					<Add library="QtGUI4" />
-					<Add library="QtXML4" />
-					<Add library="qwt5" />
 					<Add library="QtXmlPatterns4" />
+					<Add library="Qt3Supportd4" />
+					<Add library="QtCored4" />
+					<Add library="QtNetworkd4" />
+					<Add library="QtGUId4" />
+					<Add library="QtXMLd4" />
+					<Add library="QtXmlPatternsd4" />
+					<Add library="qwt5" />
 				</Linker>
 			</Target>
 			<Target title="Win32CLI">
@@ -141,15 +142,18 @@
 				</Compiler>
 				<Linker>
 					<Add option="-pg -lgmon" />
-					<Add library="Qt3Support4" />
-					<Add library="QtCore4" />
-					<Add library="QtNetwork4" />
-					<Add library="QtGUI4" />
-					<Add library="QtXML4" />
+					<Add library="Qt3Supportd4" />
+					<Add library="QtCored4" />
+					<Add library="QtNetworkd4" />
+					<Add library="QtGUId4" />
+					<Add library="QtXMLd4" />
+					<Add library="QtXmlPatternsd4" />
 					<Add library="qwt5" />
-					<Add library="QtXmlPatterns4" />
 				</Linker>
 			</Target>
+			<Environment>
+				<Variable name="QTDIR" value="D:\Qt\2009.03\qt" />
+			</Environment>
 		</Build>
 		<Compiler>
 			<Add option="-DHAVE_STDINT_H" />
@@ -160,7 +164,6 @@
 			<Add option="-DHAVE_LIBZ" />
 			<Add option="-D_WINDOWS" />
 			<Add option="-DWIN32" />
-			<Add option="-D__USE_NTOSKRNL__" />
 			<Add directory="$(QTDIR)\include" />
 			<Add directory="$(QTDIR)\include\QtCore" />
 			<Add directory="..\libs" />
@@ -173,7 +176,7 @@
 			<Add directory="$(QTDIR)\include\Qt3Support" />
 			<Add directory="$(QTDIR)\include\QtXML" />
 			<Add directory="$(QTDIR)\include\QtXmlPatterns" />
-			<Add directory="..\..\qwt-5.1.1\src" />
+			<Add directory="..\libs\qwt" />
 		</Compiler>
 		<Linker>
 			<Add library="faac" />
@@ -190,7 +193,7 @@
 			<Add library="..\libs\PortAudio.dll" />
 			<Add directory="$(QTDIR)\lib" />
 			<Add directory="..\libs" />
-			<Add directory="..\..\qwt-5.1.1\lib" />
+			<Add directory="..\..\qwt-5.2.0\lib" />
 		</Linker>
 		<Unit filename="..\common\AMDemodulation.cpp" />
 		<Unit filename="..\common\AMDemodulation.h" />
@@ -748,6 +751,12 @@
 			<Option target="Portaudio Debug" />
 		</Unit>
 		<Unit filename="..\moc\moc_BWSViewer.cpp">
+			<Option target="Win32 Release" />
+			<Option target="Win32 Debug" />
+			<Option target="Portaudio Release" />
+			<Option target="Portaudio Debug" />
+		</Unit>
+		<Unit filename="..\moc\moc_DIoutputSelector.cpp">
 			<Option target="Win32 Release" />
 			<Option target="Win32 Debug" />
 			<Option target="Portaudio Release" />

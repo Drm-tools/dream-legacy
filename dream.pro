@@ -97,7 +97,7 @@ win32 {
     win32-g++ {
 	DEFINES += HAVE_STDINT_H \
 	    HAVE_STDLIB_H \
-	    HAVE_LIBPCAP __INTERLOCKED_DECLARED
+	    HAVE_LIBPCAP # __INTERLOCKED_DECLARED
 	LIBS += -lsndfile \
 	    -lz \
 	    -lfaac \

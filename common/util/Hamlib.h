@@ -32,10 +32,6 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
-#ifdef QT_CORE_LIB
-# include <qthread.h>
-# include <qmutex.h>
-#endif
 
 #ifdef HAVE_LIBHAMLIB
 

@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Julian Cable
  *
  * Description:
  *
@@ -563,7 +563,9 @@ void SystemEvalDlg::hidePlots()
 void SystemEvalDlg::OnItemClicked (QTreeWidgetItem * item, int)
 {
     /* Get char type from selected item and setup chart */
-    plot->SetupChart(CDRMPlot::EPlotType(item->text(1).toInt()));
+    int pt = item->text(1).toInt();
+    cerr << "chose plot type " << pt << endl;
+    plot->SetupChart(CDRMPlot::EPlotType(pt));
     try {
 	plot->start();
     } catch(const char* e)
@@ -574,14 +576,14 @@ void SystemEvalDlg::OnItemClicked (QTreeWidgetItem * item, int)
 
 void SystemEvalDlg::OnCustomContextMenuRequested ( const QPoint&)
 {
-	/* Get chart type from current selected list view item */
-	// right clicking also selects so we don't need to use the point parameter ?
-	QTreeWidgetItem* item = ChartSelector->currentItem();
-	if (item != NULL)
-	{
-		/* Open new chart window */
+    /* Get chart type from current selected list view item */
+    // right clicking also selects so we don't need to use the point parameter
+    QTreeWidgetItem* item = ChartSelector->currentItem();
+    if (item != NULL)
+    {
+	/* Open new chart window */
 	newPlot(item->text(1).toInt(), "");
-	}
+    }
 }
 
 void SystemEvalDlg::newPlot(int pt, const string& setting)
