@@ -35,6 +35,7 @@
 # include <sndfile.h>
 #endif
 #include <cstdlib>
+#include <cstring>
 
 CAudioFileIn::CAudioFileIn(): CSoundInInterface(), pFileReceiver(NULL),
 		strInFileName(), eFmt(fmt_other),

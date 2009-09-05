@@ -35,6 +35,7 @@
 #include "../util/Utilities.h"
 #include <algorithm>
 #include <cctype>
+#include <cstring>
 #ifdef HAVE_LIBZ
 #include <zlib.h>
 #else
