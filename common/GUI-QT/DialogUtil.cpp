@@ -130,7 +130,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"<li><b>ALSA</b> (" + QString(SND_LIB_VERSION_STR) + ") <i>http://www.alsa-project.org</i></li>"
 #endif
 #ifdef USE_PORTAUDIO
-		"<li><b>portaudio</b> ("+QString(Pa_GetVersionText())+") <i>http://www.jackaudio.org</i></li>"
+		"<li><b>portaudio</b> ("+QString(Pa_GetVersionText())+") <i>http://www.portaudio.com</i></li>"
 #endif
 #ifdef USE_JACK
 		"<li><b>libjack</b> (The Jack Audio Connection Kit) <i>http://www.jackaudio.org</i></li>"
