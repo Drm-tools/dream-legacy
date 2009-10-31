@@ -130,7 +130,7 @@ alsa {
 portaudio {
 	DEFINES		+= USE_PORTAUDIO
 	HEADERS		+= common/sound/pa_ringbuffer.h common/sound/drm_portaudio.h
-	SOURCES		+= common/sound/drm_portaudio.cpp
+	SOURCES		+= common/sound/drm_portaudio.cpp common/sound/pa_ringbuffer.c
 	LIBS 		+= -lportaudio
 }
 
