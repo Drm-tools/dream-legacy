@@ -919,7 +919,7 @@ const string strTableCIRAFzones[LEN_TABLE_CIRAF_ZONES] = {
 	"southeast Brazil",  /* 15 */
 	"south Argentina, south Chile, Falkland Islands", /* 16 */
 	"Iceland", /* 17 */
-	"Scandanavia", /* 18 */
+	"Scandinavia", /* 18 */
 	"west Russia northwest", /* 19 */
 	"west Russia north", /* 20 */
 	"central Russia northwest", /* 21 */
