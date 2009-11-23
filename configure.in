@@ -179,17 +179,17 @@ fi
 
 dnl faad2 -----------------------------------------------------------------------
 AC_CHECK_HEADER(neaacdec.h, , enable_faad2=no)
-AC_CHECK_LIB(faad,NeAACDecOpen, , enable_faad2=no, -lm )
+AC_CHECK_LIB(faad_drm,NeAACDecOpen, , enable_faad2=no, -lm )
 if test "x$enable_faad2" = xyes; then
-	AC_CHECK_LIB(faad,NeAACDecInitDRM, , enable_faad2=no, -lm )
+	AC_CHECK_LIB(faad_drm,NeAACDecInitDRM, , enable_faad2=no, -lm )
 	if test "x$enable_faad2" = "xno"; then
-		AC_MSG_ERROR( "*** libfaad build without DRM support ***" )
+		AC_MSG_ERROR( "*** libfaad_drm build without DRM support ***" )
 	fi
 	AC_DEFINE(USE_FAAD2_LIBRARY, 1, [Define if you want to use the faad2 library])
 fi
 
 dnl faac (optional) -------------------------------------------------------------
-AC_HAVE_LIBRARY(faac, , enable_faac=no)
+AC_HAVE_LIBRARY(faac_drm, , enable_faac=no)
 if test "x$enable_faac" = xyes; then
 	AC_DEFINE(USE_FAAC_LIBRARY, 1, [Define if you want to use the faac library])
 fi
