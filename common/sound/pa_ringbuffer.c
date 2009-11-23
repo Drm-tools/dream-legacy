@@ -1,5 +1,5 @@
 /*
- * $Id: pa_ringbuffer.c,v 1.5 2007/06/12 22:30:59 jcable Exp $
+ * $Id: pa_ringbuffer.c,v 1.6 2009/11/23 12:40:17 jcable Exp $
  * Portable Audio I/O Library
  * Ring Buffer utility.
  *
@@ -85,7 +85,7 @@
 #      define PaUtil_FullMemoryBarrier()  asm volatile("sync":::"memory")
 #      define PaUtil_ReadMemoryBarrier()  asm volatile("sync":::"memory")
 #      define PaUtil_WriteMemoryBarrier() asm volatile("sync":::"memory")
-#   elif defined( __i386__ ) || defined( __i486__ ) || defined( __i586__ ) || defined( __i686__ )
+#   elif defined( __i386__ ) || defined( __i486__ ) || defined( __i586__ ) || defined( __i686__ ) || defined( __x86_64 )
 #      define PaUtil_FullMemoryBarrier()  asm volatile("mfence":::"memory")
 #      define PaUtil_ReadMemoryBarrier()  asm volatile("lfence":::"memory")
 #      define PaUtil_WriteMemoryBarrier() asm volatile("sfence":::"memory")
