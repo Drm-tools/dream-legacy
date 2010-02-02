@@ -1102,7 +1102,7 @@ public:
     int iNumAudioFrames;
 
     CVector <_BINARY> vecbiAudioFrameStatus;
-    _BOOLEAN bMeasurePSD;
+    _BOOLEAN bMeasurePSD, bMeasurePSDAlways;
     _REAL rPIRStart;
     _REAL rPIREnd;
 

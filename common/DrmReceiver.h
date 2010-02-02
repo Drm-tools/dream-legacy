@@ -145,6 +145,19 @@ protected:
 	TInput ScaleFactor;
 };
 
+template<class TInput, class TOutput>
+void CConvertModul<TInput,TOutput>::ProcessDataInternal(CParameter&)
+{
+	_REAL r=0.0;
+	for (int i = 0; i < this->iInputBlockSize; i++)
+	{
+		TInput n = TInput((*(this->pvecInputData))[i]*ScaleFactor);
+		(*this->pvecOutputData)[i] = TOutput(n);
+		r+=(_REAL(n)*_REAL(n));
+	}
+	cerr << this->iInputBlockSize << " samples, rms " << sqrt(r/this->iInputBlockSize) << endl;
+}
+
 class CConvertAudio : public CConvertModul<_REAL,_SAMPLE>
 {
 public:

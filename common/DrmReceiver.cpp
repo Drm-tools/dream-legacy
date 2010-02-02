@@ -42,19 +42,6 @@
 #endif
 #include "audiofilein.h"
 
-template<class TInput, class TOutput>
-void CConvertModul<TInput,TOutput>::ProcessDataInternal(CParameter&)
-{
-	_REAL r=0.0;
-	for (int i = 0; i < this->iInputBlockSize; i++)
-	{
-		TInput n = TInput((*(this->pvecInputData))[i]*ScaleFactor);
-		(*this->pvecOutputData)[i] = n;
-		r+=(n*n);
-	}
-	cerr << this->iInputBlockSize << " samples, rms " << sqrt(r/this->iInputBlockSize) << endl;
-}
-
 const int
 CDRMReceiver::MAX_UNLOCKED_COUNT = 2;
 
@@ -739,6 +726,7 @@ CDRMReceiver::InitReceiverMode()
                 /* DRM to AM switch - grab some common stuff */
                 pAMParam->rSigStrengthCorrection = pDRMParam->rSigStrengthCorrection;
                 pAMParam->bMeasurePSD = pDRMParam->bMeasurePSD;
+ 				pAMParam->bMeasurePSDAlways = pDRMParam->bMeasurePSDAlways;
                 pAMParam->bMeasureInterference = pDRMParam->bMeasureInterference;
                 pAMParam->FrontEndParameters = pDRMParam->FrontEndParameters;
                 pAMParam->GPSData = pDRMParam->GPSData;
@@ -796,6 +784,7 @@ CDRMReceiver::InitReceiverMode()
                 /* AM to DRM switch - grab some common stuff */
                 pDRMParam->rSigStrengthCorrection = pAMParam->rSigStrengthCorrection;
                 pDRMParam->bMeasurePSD = pAMParam->bMeasurePSD;
+ 				pDRMParam->bMeasurePSDAlways = pAMParam->bMeasurePSDAlways;
                 pDRMParam->bMeasureInterference = pAMParam->bMeasureInterference;
                 pDRMParam->FrontEndParameters = pAMParam->FrontEndParameters;
                 pDRMParam->GPSData = pAMParam->GPSData;
@@ -1094,7 +1083,10 @@ CDRMReceiver::InitsForAllModules()
         pReceiverParam->bMeasureDelay = FALSE;
         pReceiverParam->bMeasureDoppler = FALSE;
         pReceiverParam->bMeasureInterference = FALSE;
-        pReceiverParam->bMeasurePSD = FALSE;
+		if(pReceiverParam->bMeasurePSDAlways)
+			pReceiverParam->bMeasurePSD = TRUE;
+		else
+			pReceiverParam->bMeasurePSD = FALSE;
     }
 
     /* Set init flags */
@@ -1485,6 +1477,9 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
     /* Receiver ------------------------------------------------------------- */
 
+	/* if 0 then only measure PSD when RSCI in use otherwise always measure it */
+	pReceiverParam->bMeasurePSDAlways =	s.Get("Receiver", "measurepsdalways", 0);
+
     /* Sound In device */
     pSoundInInterface->SetDev(s.Get("Receiver", "snddevin", 0));
 
@@ -1770,6 +1765,9 @@ CDRMReceiver::SaveSettings(CSettings& s)
         s.Put("GUI", "mode", "DRMRX");
 
     /* Receiver ------------------------------------------------------------- */
+
+	/* if 0 then only measure PSD when RSCI in use otherwise always measure it */
+	pReceiverParam->bMeasurePSDAlways =	s.Get("Receiver", "measurepsdalways", 0);
 
     /* Flip spectrum flag */
     s.Put("Receiver", "flipspectrum", ReceiveData.GetFlippedSpectrum());
