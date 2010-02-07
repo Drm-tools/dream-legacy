@@ -381,7 +381,6 @@ TransmDialog::~TransmDialog()
 	s.iHSize = WinGeom.height();
 	s.iWSize = WinGeom.width();
 	Settings.Put("Transmit Dialog", s);
-	Settings.Put("GUI", "mode", string("DRMTX"));
 
 	/* Stop transmitter */
 	if (bIsStarted == TRUE)

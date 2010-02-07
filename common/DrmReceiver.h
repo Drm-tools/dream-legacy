@@ -119,50 +119,18 @@ protected:
 
 class CSplitAudio : public CSplitModul<_SAMPLE>
 {
+protected:
     void SetInputBlockSize(CParameter&)
     {
         this->iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE * (_REAL) 0.4 /* 400 ms */) * 2 /* stereo */;
     }
 };
 
-
-template<class TInput, class TOutput>
-class CConvertModul: public CReceiverModul<TInput, TOutput>
+class CConvertAudio : public CReceiverModul<_REAL,_SAMPLE>
 {
-public:
-	void SetScaleFactor(TInput sf) { ScaleFactor = sf; }
 protected:
-	virtual void SetInputBlockSize(CParameter& ReceiverParam) = 0;
-
-	virtual void InitInternal(CParameter& ReceiverParam)
-	{
-		this->SetInputBlockSize(ReceiverParam);
-		this->iOutputBlockSize = this->iInputBlockSize;
-	}
-
+	virtual void InitInternal(CParameter&);
 	virtual void ProcessDataInternal(CParameter&);
-
-	TInput ScaleFactor;
-};
-
-template<class TInput, class TOutput>
-void CConvertModul<TInput,TOutput>::ProcessDataInternal(CParameter&)
-{
-	_REAL r=0.0;
-	for (int i = 0; i < this->iInputBlockSize; i++)
-	{
-		TInput n = TInput((*(this->pvecInputData))[i]*ScaleFactor);
-		(*this->pvecOutputData)[i] = TOutput(n);
-		r+=(_REAL(n)*_REAL(n));
-	}
-	cerr << this->iInputBlockSize << " samples, rms " << sqrt(r/this->iInputBlockSize) << endl;
-}
-
-class CConvertAudio : public CConvertModul<_REAL,_SAMPLE>
-{
-public:
-	void SetInputBlockSize(CParameter&)
-		{this->iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE * (_REAL) 0.4 /* 400 ms */) * 2 /* stereo */;}
 };
 
 class CDRMReceiver

@@ -39,12 +39,14 @@
 
 CAudioFileIn::CAudioFileIn(): CSoundInInterface(), pFileReceiver(NULL),
         strInFileName(), eFmt(fmt_other),
-        iFileSampleRate(0), iFileChannels(1), pacer(NULL)
+        iFileSampleRate(0), iFileChannels(1), pacer(NULL),buffer(NULL), iBufferSize(0)
 {
 }
 
 CAudioFileIn::~CAudioFileIn()
 {
+	if(buffer!=NULL)
+		delete[] buffer;
     Close();
 }
 
@@ -56,6 +58,7 @@ CAudioFileIn::SetFileName(const string& strFileName)
     size_t p = strInFileName.rfind('.');
     if (p != string::npos)
         ext = strInFileName.substr(p+1);
+	eFmt = fmt_other;
     if (ext == "txt") eFmt = fmt_txt;
     if (ext == "TXT") eFmt = fmt_txt;
     if (ext.substr(0,2) == "iq") eFmt = fmt_raw_stereo;
@@ -87,6 +90,15 @@ CAudioFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 
     /* Check previously a file was being used */
     Close();
+
+	if(buffer!=NULL)
+	{
+		delete[] buffer;
+		buffer=NULL;
+	}
+
+	iBufferSize = iNewBufferSize;
+	buffer = new short[iBufferSize];
 
 #ifdef HAVE_LIBSNDFILE
     SF_INFO sfinfo;
@@ -164,20 +176,19 @@ CAudioFileIn::Read(CVector<short>& psData)
         }
         return FALSE;
     }
-    short *buffer = new short[iFileChannels*iFrames];
 #ifdef HAVE_LIBSNDFILE
-    sf_count_t c = sf_readf_short((SNDFILE*)pFileReceiver, buffer, iFrames);
-    if (c!=iFrames)
-    {
-        /* rewind */
-        sf_seek((SNDFILE*)pFileReceiver, 0, SEEK_SET);
-        c = sf_readf_short((SNDFILE*)pFileReceiver, buffer, iFrames);
-    }
+	sf_count_t c = sf_readf_short((SNDFILE*)pFileReceiver, buffer, iFrames);
+	if (c!=iFrames)
+	{
+		/* rewind */
+		sf_seek((SNDFILE*)pFileReceiver, 0, SEEK_SET);
+		c = sf_readf_short((SNDFILE*)pFileReceiver, buffer, iFrames);
+	}
 #else
-    if (fread(buffer, size_t(2), size_t(iFileChannels*iFrames), pFileReceiver) == size_t(0))
+    if (fread(buffer, sizeof(short), size_t(iFileChannels*iFrames), pFileReceiver) == size_t(0))
     {
         rewind(pFileReceiver);
-        fread(buffer, size_t(2), size_t(iFileChannels*iFrames), pFileReceiver);
+        fread(buffer, sizeof(short), size_t(iFileChannels*iFrames), pFileReceiver);
     }
 #endif
     int oversample_factor = SOUNDCRD_SAMPLE_RATE / iFileSampleRate;
@@ -187,8 +198,8 @@ CAudioFileIn::Read(CVector<short>& psData)
         {
             for (int j = 0; j < oversample_factor; j++)
             {
-                psData[2*(i+j)] = buffer[2*i];
-                psData[2*(i+j)+1] = buffer[2*i+1];
+                psData[2*i+j] = buffer[2*i];
+                psData[2*i+1+j] = buffer[2*i+1];
             }
         }
     }
@@ -198,13 +209,11 @@ CAudioFileIn::Read(CVector<short>& psData)
         {
             for (int j = 0; j < oversample_factor; j++)
             {
-                psData[2*(i+j)] = buffer[i];
-                psData[2*(i+j)+1] = buffer[i];
+                psData[2*i+j] = buffer[i];
+                psData[2*i+1+j] = buffer[i];
             }
         }
     }
-    delete[] buffer;
-
     return FALSE;
 }
 

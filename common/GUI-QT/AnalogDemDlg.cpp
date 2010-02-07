@@ -65,6 +65,8 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
 	pSettingsMenu->insertItem(tr("&DRM (digital)"), this,
 		SLOT(OnSwitchToDRM()), CTRL+Key_D);
+	pSettingsMenu->insertItem(tr("&FM (analog)"), this,
+		SLOT(OnSwitchToFM()), CTRL+Key_F);
 	pSettingsMenu->insertItem(tr("New &AM Acquisition"), this,
 		SLOT(OnNewAMAcquisition()), CTRL+Key_A);
 
@@ -188,7 +190,8 @@ void AnalogDemDlg::hideEvent(QHideEvent*)
 	s.iHSize = WinGeom.height();
 	s.iWSize = WinGeom.width();
 	Settings.Put("AM Dialog", s);
-	Settings.Put("GUI", "mode", string("AMRX"));
+	Settings.Put("Receiver", "mode", int(RM_AM));
+	Settings.Put("GUI", "mode", string("RX"));
 }
 
 void AnalogDemDlg::closeEvent(QCloseEvent* ce)
@@ -326,7 +329,13 @@ void AnalogDemDlg::UpdatePlotsStyle()
 void AnalogDemDlg::OnSwitchToDRM()
 {
 	this->hide();
-	SwitchToDRM();
+	emit SwitchToDRM();
+}
+
+void AnalogDemDlg::OnSwitchToFM()
+{
+	this->hide();
+	emit SwitchToFM();
 }
 
 void AnalogDemDlg::OnTimer()

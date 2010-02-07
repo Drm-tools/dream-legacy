@@ -40,51 +40,27 @@
 #include <qpalette.h>
 #include <qcolordialog.h>
 
-#include "fdrmdialogbase.h"
+#include "fmdialogbase.h"
 #include "DialogUtil.h"
-#include "systemevalDlg.h"
-#include "MultimediaDlg.h"
-#include "StationsDlg.h"
-#include "LiveScheduleDlg.h"
-#include "EPGDlg.h"
-#include "fmdialog.h"
-#include "AnalogDemDlg.h"
-#include "MultSettingsDlg.h"
-#include "GeneralSettingsDlg.h"
 #include "MultColorLED.h"
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 
-
-/* Define for application types */
-#define AT_MOTSLISHOW 2
-#define AT_MOTBROADCASTWEBSITE 3
-#define AT_JOURNALINE 0x44A
-#define AT_MOTEPG 	7
-
 /* Classes ********************************************************************/
-class FDRMDialog : public FDRMDialogBase
+class FMDialog : public FMDialogBase
 {
 	Q_OBJECT
 
 public:
-	FDRMDialog(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
+	FMDialog(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE,	WFlags f = 0);
 
-	virtual ~FDRMDialog();
+	virtual ~FMDialog();
 
 protected:
 	CDRMReceiver&		DRMReceiver;
 	CSettings&			Settings;
 
-	systemevalDlg*		pSysEvalDlg;
-	MultimediaDlg*		pMultiMediaDlg;
-	StationsDlg*		pStationsDlg;
-	LiveScheduleDlg*	pLiveScheduleDlg;
-	EPGDlg*				pEPGDlg;
-	AnalogDemDlg*		pAnalogDemDlg;
-	FMDialog*			pFMDlg;
-	GeneralSettingsDlg* pGeneralSettingsDlg;
 	QMenuBar*			pMenu;
 	QPopupMenu*			pReceiverModeMenu;
 	QPopupMenu*			pSettingsMenu;
@@ -115,27 +91,17 @@ protected:
 
 	void			SetDisplayColor(const QColor newColor);
 
-	void			ChangeGUIModeToDRM();
-	void			ChangeGUIModeToAM();
-	void			ChangeGUIModeToFM();
-
 public slots:
 	void OnTimer();
-	void OnButtonService1();
-	void OnButtonService2();
-	void OnButtonService3();
-	void OnButtonService4();
-	void OnViewEvalDlg();
-	void OnViewMultiMediaDlg();
-	void OnViewStationsDlg();
-	void OnViewLiveScheduleDlg();
-	void OnViewEPGDlg();
-	void OnViewMultSettingsDlg();
-	void OnViewGeneralSettingsDlg();
 	void OnNewDRMAcquisition();
 	void OnSwitchToDRM();
 	void OnSwitchToAM();
-	void OnSwitchToFM();
 	void OnMenuSetDisplayColor();
-	void OnMenuPlotStyle(int value);
+
+signals:
+	void SwitchToDRM();
+	void SwitchToAM();
+	void ViewStationsDlg();
+	void ViewLiveScheduleDlg();
+	void Closed();
 };

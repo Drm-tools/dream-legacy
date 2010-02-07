@@ -4,7 +4,7 @@ CONFIG		+= qt warn_on release thread
 VPATH		+= common/GUI-QT
 INCLUDEPATH	+= libs
 LIBS 		+= -Llibs
-FORMS		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui
+FORMS		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui fmdialogbase.ui
 FORMS		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
 FORMS		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
 FORMS		+= GeneralSettingsDlgbase.ui MultSettingsDlgbase.ui AboutDlgbase.ui
@@ -177,6 +177,7 @@ common/GUI-QT/DialogUtil.h   \
 common/GUI-QT/DRMPlot.h   \
 common/GUI-QT/EPGDlg.h   \
 common/GUI-QT/fdrmdialog.h   \
+common/GUI-QT/fmdialog.h   \
 common/GUI-QT/GeneralSettingsDlg.h   \
 common/GUI-QT/LiveScheduleDlg.h   \
 common/GUI-QT/MultColorLED.h   \
@@ -296,6 +297,7 @@ common/GUI-QT/AnalogDemDlg.cpp   \
 common/GUI-QT/DialogUtil.cpp   \
 common/GUI-QT/DRMPlot.cpp   \
 common/GUI-QT/EPGDlg.cpp   \
+common/GUI-QT/fmdialog.cpp   \
 common/GUI-QT/fdrmdialog.cpp   \
 common/GUI-QT/GeneralSettingsDlg.cpp   \
 common/GUI-QT/LiveScheduleDlg.cpp   \

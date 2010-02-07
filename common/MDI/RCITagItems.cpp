@@ -6,14 +6,14 @@
  *	Volker Fischer, Julian Cable, Oliver Haffenden
  *
  * Description:
- *	Implements Digital Radio Mondiale (DRM) 
- *	(RCI), Receiver Status and Control Interface (RSCI)  
+ *	Implements Digital Radio Mondiale (DRM)
+ *	(RCI), Receiver Status and Control Interface (RSCI)
  *  and Distribution and Communications Protocol (DCP) as described in
  *	ETSI TS 102 349 and ETSI TS 102 821 respectively.
  *
- *  This module derives, from the CTagItemGenerator base class, tag item generators 
+ *  This module derives, from the CTagItemGenerator base class, tag item generators
  *  specialised to generate each of the tag items defined in RCI and RSCI.
- *  . 
+ *  .
  *  An intermediate derived class, CTagItemGeneratorWithProfiles, is used as the
  *  base class for all these tag item generators. This takes care of the common
  *	task of checking whether a given tag is in a particular profile.
@@ -60,6 +60,12 @@ void CTagItemGeneratorCdmo::GenTag(const ERecMode eMode) // cdmo
 		Enqueue((uint32_t) 'd', SIZEOF__BYTE);
 		Enqueue((uint32_t) 'r', SIZEOF__BYTE);
 		Enqueue((uint32_t) 'm', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
+		break;
+	case RM_FM:
+		Enqueue((uint32_t) 'f', SIZEOF__BYTE);
+		Enqueue((uint32_t) 'm', SIZEOF__BYTE);
+		Enqueue((uint32_t) '_', SIZEOF__BYTE);
 		Enqueue((uint32_t) '_', SIZEOF__BYTE);
 		break;
 	case RM_AM:

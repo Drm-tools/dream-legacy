@@ -294,7 +294,7 @@ CDRMReceiver::Run()
         break;
     case RM_FM:
         SplitAudio.ProcessData(ReceiverParam, AMAudioBuf, AudSoDecBuf, AMSoEncBuf);
-        break;
+       break;
     case RM_NONE:
         break;
     }
@@ -597,10 +597,10 @@ CDRMReceiver::UtilizeAM(_BOOLEAN& bEnoughData)
 
 void CDRMReceiver::DemodulateFM(_BOOLEAN& bEnoughData)
 {
-	CParameter & ReceiverParam = *pReceiverParam;
-	if (ConvertAudio.ProcessData(ReceiverParam, DemodDataBuf, AMAudioBuf))
+	if (ConvertAudio.ProcessData(*pReceiverParam, DemodDataBuf, AMAudioBuf))
 	{
 		bEnoughData = TRUE;
+		iAudioStreamID = 0; // TODO
 	}
 }
 
@@ -704,8 +704,6 @@ CDRMReceiver::InitReceiverMode()
                  */
                 pAMParam = new CParameter(*pDRMParam);
             }
-            ConvertAudio.SetInputBlockSize(*pAMParam);
-            ConvertAudio.SetScaleFactor(32767.0); // TODO should it be 32767.0 ?
         }
         else
         {
@@ -716,8 +714,6 @@ CDRMReceiver::InitReceiverMode()
             {
             case RM_AM:
                 /* AM to AM switch */
-            	ConvertAudio.SetInputBlockSize(*pAMParam);
-            	ConvertAudio.SetScaleFactor(32767.0); // TODO should it be 32767.0 ?
                 break;
             case RM_FM:
                 /* AM to FM switch - re-acquisition requested - no special action */
@@ -781,6 +777,7 @@ CDRMReceiver::InitReceiverMode()
             switch (eReceiverMode)
             {
             case RM_AM:
+            case RM_FM:
                 /* AM to DRM switch - grab some common stuff */
                 pDRMParam->rSigStrengthCorrection = pAMParam->rSigStrengthCorrection;
                 pDRMParam->bMeasurePSD = pAMParam->bMeasurePSD;
@@ -1711,13 +1708,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
     /* Activate/Deactivate EPG decoding */
     DataDecoder.SetDecodeEPG(s.Get("EPG", "decodeepg", TRUE));
 
-    string strMode = s.Get("GUI",	"mode");
-
-    if (strMode == "DRMRX")
-        SetReceiverMode(RM_DRM);
-    else if (strMode == "AMRX")
-        SetReceiverMode(RM_AM);
-    //else - leave it as initialised (ie. DRM)
+	SetReceiverMode(ERecMode(s.Get("Receiver", "mode", int(0))));
 
 #ifdef HAVE_LIBHAMLIB
     /* Hamlib --------------------------------------------------------------- */
@@ -1757,12 +1748,7 @@ void
 CDRMReceiver::SaveSettings(CSettings& s)
 {
 
-    if (eReceiverMode == RM_AM)
-        s.Put("GUI", "mode", "AMRX");
-    else if(eReceiverMode == RM_FM)
-        s.Put("GUI", "mode", "FMRX");
-    else
-        s.Put("GUI", "mode", "DRMRX");
+	s.Put("Receiver", "mode", int(eReceiverMode));
 
     /* Receiver ------------------------------------------------------------- */
 
@@ -1851,4 +1837,20 @@ CDRMReceiver::SaveSettings(CSettings& s)
 
     s.Put("Receiver", "datafilesdirectory", pReceiverParam->sDataFilesDirectory);
 
+}
+
+void CConvertAudio::InitInternal(CParameter& Parameter)
+{
+	iInputBlockSize = Parameter.CellMappingTable.iSymbolBlockSize;
+	iOutputBlockSize = 2*iInputBlockSize;
+	iMaxOutputBlockSize = 2 * int((_REAL) SOUNDCRD_SAMPLE_RATE * (_REAL) 0.4 /* 400 ms */);
+}
+
+void CConvertAudio::ProcessDataInternal(CParameter& Parameter)
+{
+	for (int i = 0; i < this->iInputBlockSize; i++)
+	{
+		(*this->pvecOutputData)[2*i] = _SAMPLE((*this->pvecInputData)[i]);
+		(*this->pvecOutputData)[2*i+1] = _SAMPLE((*this->pvecInputData)[i]);
+	}
 }

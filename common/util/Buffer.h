@@ -7,7 +7,7 @@
  *
  * Description:
  * Transfer buffer between different modules
- *	
+ *
  *
  ******************************************************************************
  *
@@ -146,7 +146,7 @@ template<class TData> CVectorEx<TData>* CSingleBuffer<TData>::Get(const int iReq
 	/* Block is read, buffer is now empty again */
 	iFillLevel -= iRequestedSize;
 
-	return &(this->vecBuffer);		
+	return &(this->vecBuffer);
 }
 
 template<class TData> void CSingleBuffer<TData>::Put(const int iOfferedSize)
@@ -209,7 +209,7 @@ template<class TData> CVectorEx<TData>* CCyclicBuffer<TData>::Get(const int iReq
 #ifdef _DEBUG_
 	if (iAvailSpace < iRequestedSize)
 	{
-		DebugError("CyclicBuffer Get()", "Availabe space",
+		DebugError("CyclicBuffer Get()", "Available space",
 			iAvailSpace, "Requested size", iAvailSpace);
 	}
 #endif
@@ -252,7 +252,7 @@ template<class TData> CVectorEx<TData>* CCyclicBuffer<TData>::Get(const int iReq
 	if ((iGet == iPut) && (iRequestedSize > 0))
 		iBufferState = BS_EMPTY;
 
-	return &vecInOutBuffer;		
+	return &vecInOutBuffer;
 }
 
 template<class TData> void CCyclicBuffer<TData>::Put(const int iOfferedSize)

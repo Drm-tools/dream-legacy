@@ -7,15 +7,15 @@
  *
  * Description:
   *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
- *	(MDI), Receiver Status and Control Interface (RSCI)  
+ *	(MDI), Receiver Status and Control Interface (RSCI)
  *  and Distribution and Communications Protocol (DCP) as described in
  *	ETSI TS 102 820,  ETSI TS 102 349 and ETSI TS 102 821 respectively.
  *
  *  This module derives, from the CTagItemDecoder base class, tag item decoders specialised to decode each of the tag
- *  items defined in MDI. 
+ *  items defined in MDI.
  *  They generally write the decoded data into the CMDIPacket object which they hold a
  *  pointer to.
- *	
+ *
  *
  ******************************************************************************
  *
@@ -71,7 +71,7 @@ void CTagItemDecoderProTy::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	/* Get major and minor revision of protocol */
 	p.major = (int) vecbiTag.Separate(16);
 	p.minor = (int) vecbiTag.Separate(16);
-	
+
 	protocols.push_back(p);
 
 	SetReady(TRUE);
@@ -172,7 +172,7 @@ void CTagItemDecoderRobMod::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen
 }
 
 
-string CTagItemDecoderStr::GetTagName(void) 
+string CTagItemDecoderStr::GetTagName(void)
 {
 	switch (iStreamNumber)
 	{
@@ -264,6 +264,8 @@ void CTagItemDecoderRxDemodMode::DecodeTag(CVector<_BINARY>& vecbiTag, int iLen)
 		eMode = RM_DRM;
 	else if (strMode == "am__")
 		eMode = RM_AM;
+	else if (strMode == "fm__")
+		eMode = RM_FM;
 	else
 		eMode = RM_AM;
 

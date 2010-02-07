@@ -329,6 +329,8 @@ void CTagItemDecoderCdmo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		pDRMReceiver->SetReceiverMode(RM_DRM);
 	if(s == "am__")
 		pDRMReceiver->SetReceiverMode(RM_AM);
+	if(s == "fm__")
+		pDRMReceiver->SetReceiverMode(RM_FM);
 }
 
 void CTagItemDecoderCrec::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)

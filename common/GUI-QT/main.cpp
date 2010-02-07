@@ -115,10 +115,7 @@ main(int argc, char **argv)
 
 			DRMReceiver.LoadSettings(Settings);
 
-			if (Settings.Get("AM Dialog", "visible", false))
-				DRMReceiver.SetReceiverMode(RM_AM);
-			else
-				DRMReceiver.SetReceiverMode(RM_DRM);
+			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
 
 			DRMReceiver.Init();
 
@@ -217,7 +214,7 @@ main(int argc, char **argv)
 
 			DRMSimulation.SimScript();
 			DRMReceiver.LoadSettings(Settings);
-			DRMReceiver.SetReceiverMode(RM_DRM);
+			DRMReceiver.SetReceiverMode(eMode(Settings.Get("Receiver", "mode", int(0))));
 			DRMReceiver.Start();
 		}
 		else

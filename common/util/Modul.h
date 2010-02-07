@@ -39,7 +39,7 @@
 /* Classes ********************************************************************/
 /* CModul ------------------------------------------------------------------- */
 template<class TInput, class TOutput>
-class CModul  
+class CModul
 {
 public:
 	CModul();
@@ -52,7 +52,7 @@ protected:
 	CVectorEx<TInput>*	pvecInputData;
 	CVectorEx<TOutput>*	pvecOutputData;
 
-	/* Max block-size are used to determine the size of the requiered buffer */
+	/* Max block-size are used to determine the size of the required buffer */
 	int					iMaxOutputBlockSize;
 	/* Actual read (or written) size of the data */
 	int					iInputBlockSize;
@@ -80,19 +80,19 @@ public:
 	virtual ~CTransmitterModul() {}
 
 	virtual void		Init(CParameter& Parameter);
-	virtual void		Init(CParameter& Parameter, 
+	virtual void		Init(CParameter& Parameter,
 							 CBuffer<TOutput>& OutputBuffer);
-	virtual void		ReadData(CParameter& Parameter, 
+	virtual void		ReadData(CParameter& Parameter,
 								 CBuffer<TOutput>& OutputBuffer);
-	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
-									CBuffer<TInput>& InputBuffer, 
-									CBuffer<TOutput>& OutputBuffer);
-	virtual void		ProcessData(CParameter& Parameter, 
+	virtual _BOOLEAN	ProcessData(CParameter& Parameter,
 									CBuffer<TInput>& InputBuffer,
-									CBuffer<TInput>& InputBuffer2, 
-									CBuffer<TInput>& InputBuffer3, 
 									CBuffer<TOutput>& OutputBuffer);
-	virtual _BOOLEAN	WriteData(CParameter& Parameter, 
+	virtual void		ProcessData(CParameter& Parameter,
+									CBuffer<TInput>& InputBuffer,
+									CBuffer<TInput>& InputBuffer2,
+									CBuffer<TInput>& InputBuffer3,
+									CBuffer<TOutput>& OutputBuffer);
+	virtual _BOOLEAN	WriteData(CParameter& Parameter,
 								  CBuffer<TInput>& InputBuffer);
 
 protected:
@@ -118,42 +118,42 @@ public:
 	virtual void		Init(CParameter& Parameter);
 	virtual void		Init(CParameter& Parameter,
 							 CBuffer<TOutput>& OutputBuffer);
-	virtual void		Init(CParameter& Parameter, 
+	virtual void		Init(CParameter& Parameter,
 							 CBuffer<TOutput>& OutputBuffer,
 							 CBuffer<TOutput>& OutputBuffer2);
-	virtual void		Init(CParameter& Parameter, 
+	virtual void		Init(CParameter& Parameter,
 							 CBuffer<TOutput>& OutputBuffer,
 							 CBuffer<TOutput>& OutputBuffer2,
 							 CBuffer<TOutput>& OutputBuffer3);
-	virtual void		Init(CParameter& Parameter, 
+	virtual void		Init(CParameter& Parameter,
 							 CBuffer<TOutput>& OutputBuffer,
 							 CBuffer<TOutput>& OutputBuffer2,
 							 vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
-	virtual void		Init(CParameter& Parameter, 
+	virtual void		Init(CParameter& Parameter,
 							 vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
-	virtual void		ReadData(CParameter& Parameter, 
+	virtual void		ReadData(CParameter& Parameter,
 								 CBuffer<TOutput>& OutputBuffer);
-	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
-									CBuffer<TInput>& InputBuffer, 
+	virtual _BOOLEAN	ProcessData(CParameter& Parameter,
+									CBuffer<TInput>& InputBuffer,
 									CBuffer<TOutput>& OutputBuffer);
-	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
+	virtual _BOOLEAN	ProcessData(CParameter& Parameter,
 									CBuffer<TInput>& InputBuffer,
-									CBuffer<TOutput>& OutputBuffer, 
+									CBuffer<TOutput>& OutputBuffer,
 									CBuffer<TOutput>& OutputBuffer2);
-	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
+	virtual _BOOLEAN	ProcessData(CParameter& Parameter,
 									CBuffer<TInput>& InputBuffer,
-									CBuffer<TOutput>& OutputBuffer, 
-									CBuffer<TOutput>& OutputBuffer2, 
+									CBuffer<TOutput>& OutputBuffer,
+									CBuffer<TOutput>& OutputBuffer2,
 									CBuffer<TOutput>& OutputBuffer3);
-	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
+	virtual _BOOLEAN	ProcessData(CParameter& Parameter,
 									CBuffer<TInput>& InputBuffer,
-									CBuffer<TOutput>& OutputBuffer, 
-									CBuffer<TOutput>& OutputBuffer2, 
+									CBuffer<TOutput>& OutputBuffer,
+									CBuffer<TOutput>& OutputBuffer2,
 									vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
-	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
+	virtual _BOOLEAN	ProcessData(CParameter& Parameter,
 									CBuffer<TInput>& InputBuffer,
 									vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
-	virtual _BOOLEAN	WriteData(CParameter& Parameter, 
+	virtual _BOOLEAN	WriteData(CParameter& Parameter,
 								  CBuffer<TInput>& InputBuffer);
 
 protected:
@@ -203,19 +203,19 @@ public:
 	virtual void		Init(CParameter& Parameter,
 							 CBuffer<TOutput>& OutputBuffer,
 							 CBuffer<TInOut2>& OutputBuffer2);
-	virtual void		TransferData(CParameter& Parameter, 
-									 CBuffer<TInput>& InputBuffer, 
+	virtual void		TransferData(CParameter& Parameter,
+									 CBuffer<TInput>& InputBuffer,
 									 CBuffer<TOutput>& OutputBuffer);
 
 
 // TEST "ProcessDataIn" "ProcessDataOut"
-	virtual _BOOLEAN	ProcessDataIn(CParameter& Parameter, 
+	virtual _BOOLEAN	ProcessDataIn(CParameter& Parameter,
 									  CBuffer<TInput>& InputBuffer,
 									  CBuffer<TInOut2>& InputBuffer2,
 									  CBuffer<TOutput>& OutputBuffer);
-	virtual _BOOLEAN	ProcessDataOut(CParameter& Parameter, 
+	virtual _BOOLEAN	ProcessDataOut(CParameter& Parameter,
 									   CBuffer<TInput>& InputBuffer,
-									   CBuffer<TOutput>& OutputBuffer, 
+									   CBuffer<TOutput>& OutputBuffer,
 									   CBuffer<TInOut2>& OutputBuffer2);
 
 
@@ -300,7 +300,7 @@ void CModul<TInput, TOutput>::Init(CParameter& Parameter)
 }
 
 template<class TInput, class TOutput>
-void CModul<TInput, TOutput>::Init(CParameter& Parameter, 
+void CModul<TInput, TOutput>::Init(CParameter& Parameter,
 								   CBuffer<TOutput>& OutputBuffer)
 {
 	/* Init some internal variables */
@@ -347,7 +347,7 @@ void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter)
 }
 
 template<class TInput, class TOutput>
-void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter, 
+void CTransmitterModul<TInput, TOutput>::Init(CParameter& Parameter,
 											  CBuffer<TOutput>& OutputBuffer)
 {
 	/* Init some internal variables */
@@ -388,7 +388,7 @@ _BOOLEAN CTransmitterModul<TInput, TOutput>::
 
 		/* Call the underlying processing-routine */
 		this->ProcessDataInternal(Parameter);
-	
+
 		/* Write processed data from internal memory in transfer-buffer */
 		OutputBuffer.Put(this->iOutputBlockSize);
 
@@ -432,7 +432,7 @@ void CTransmitterModul<TInput, TOutput>::
 
 			return;
 		}
-	
+
 		/* Get vectors from transfer-buffers */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
 		pvecInputData2 = InputBuffer2.Get(iInputBlockSize2);
@@ -443,7 +443,7 @@ void CTransmitterModul<TInput, TOutput>::
 
 		/* Call the underlying processing-routine */
 		this->ProcessDataInternal(Parameter);
-	
+
 		/* Write processed data from internal memory in transfer-buffer */
 		OutputBuffer.Put(this->iOutputBlockSize);
 
@@ -466,7 +466,7 @@ void CTransmitterModul<TInput, TOutput>::
 
 		/* Call the underlying processing-routine */
 		this->ProcessDataInternal(Parameter);
-		
+
 		/* Write processed data from internal memory in transfer-buffer */
 		OutputBuffer.Put(this->iOutputBlockSize);
 
@@ -714,7 +714,7 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Query vector from output transfer-buffer for writing */
 		this->pvecOutputData = OutputBuffer.QueryWriteBuffer();
 
@@ -724,7 +724,7 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Call the underlying processing-routine */
 		this->ProcessDataThreadSave(Parameter);
-	
+
 		/* Reset output-buffers if flag was set by processing routine */
 		if (bResetBuf == TRUE)
 		{
@@ -772,14 +772,14 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Query vector from output transfer-buffer for writing */
 		this->pvecOutputData = OutputBuffer.QueryWriteBuffer();
 		pvecOutputData2 = OutputBuffer2.QueryWriteBuffer();
-		
+
 		/* Call the underlying processing-routine */
 		this->ProcessDataThreadSave(Parameter);
-	
+
 		/* Reset output-buffers if flag was set by processing routine */
 		if (bResetBuf == TRUE)
 		{
@@ -840,15 +840,15 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Query vector from output transfer-buffer for writing */
 		this->pvecOutputData = OutputBuffer.QueryWriteBuffer();
 		pvecOutputData2 = OutputBuffer2.QueryWriteBuffer();
 		pvecOutputData3 = OutputBuffer3.QueryWriteBuffer();
-		
+
 		/* Call the underlying processing-routine */
 		this->ProcessDataThreadSave(Parameter);
-	
+
 		/* Reset output-buffers if flag was set by processing routine */
 		if (bResetBuf == TRUE)
 		{
@@ -922,7 +922,7 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Query vector from output transfer-buffer for writing */
 		this->pvecOutputData = OutputBuffer.QueryWriteBuffer();
 		pvecOutputData2 = OutputBuffer2.QueryWriteBuffer();
@@ -931,10 +931,10 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 		{
 			vecpvecOutputData[i] = vecOutputBuffer[i].QueryWriteBuffer();
 		}
-		
+
 		/* Call the underlying processing-routine */
 		this->ProcessDataThreadSave(Parameter);
-	
+
 		/* Reset output-buffers if flag was set by processing routine */
 		if (bResetBuf == TRUE)
 		{
@@ -1009,17 +1009,17 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Query vector from output transfer-buffer for writing */
 		vecpvecOutputData.resize(vecOutputBuffer.size());
 		for(i=0; i<vecOutputBuffer.size(); i++)
 		{
 			vecpvecOutputData[i] = vecOutputBuffer[i].QueryWriteBuffer();
 		}
-		
+
 		/* Call the underlying processing-routine */
 		this->ProcessDataThreadSave(Parameter);
-	
+
 		/* Reset output-buffers if flag was set by processing routine */
 		for(i=0; i<vecOutputBuffer.size(); i++)
 		{
@@ -1113,7 +1113,7 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Call the underlying processing-routine */
 		this->ProcessDataThreadSave(Parameter);
 	}
@@ -1258,7 +1258,7 @@ _BOOLEAN CSimulationModul<TInput, TOutput, TInOut2>::
 
 		/* Get vector from transfer-buffer */
 		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
-	
+
 		/* Query vector from output transfer-buffer for writing */
 		this->pvecOutputData = OutputBuffer.QueryWriteBuffer();
 		pvecOutputData2 = OutputBuffer2.QueryWriteBuffer();

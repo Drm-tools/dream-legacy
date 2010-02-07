@@ -60,7 +60,7 @@ using namespace std; /* Because of the library: "complex" */
 
 /* Define whether using libsndfile for audio file I/O */
 //# define HAVE_LIBSNDFILE
-# undef HAVE_LIBSNDFILE
+# define HAVE_LIBSNDFILE
 
 /* Activate or disable faad2 library (AAC decoding) */
 # define USE_FAAD2_LIBRARY

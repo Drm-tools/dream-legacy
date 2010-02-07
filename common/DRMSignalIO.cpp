@@ -191,6 +191,10 @@ CTransmitData::~CTransmitData()
 /******************************************************************************\
 * Receive data from the sound card                                             *
 \******************************************************************************/
+
+//inline _REAL sample2real(_SAMPLE s) { return _REAL(s)/32768.0; }
+inline _REAL sample2real(_SAMPLE s) { return _REAL(s); }
+
 void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 {
     int i;
@@ -230,20 +234,20 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
     {
     case CS_LEFT_CHAN:
         for (i = 0; i < iOutputBlockSize; i++)
-            (*pvecOutputData)[i] = (_REAL) vecsSoundBuffer[2 * i];
+            (*pvecOutputData)[i] = sample2real(vecsSoundBuffer[2 * i]);
         break;
 
     case CS_RIGHT_CHAN:
         for (i = 0; i < iOutputBlockSize; i++)
-            (*pvecOutputData)[i] = (_REAL) vecsSoundBuffer[2 * i + 1];
+            (*pvecOutputData)[i] = sample2real(vecsSoundBuffer[2 * i + 1]);
         break;
 
     case CS_MIX_CHAN:
         for (i = 0; i < iOutputBlockSize; i++)
         {
             /* Mix left and right channel together */
-            const _REAL rLeftChan = vecsSoundBuffer[2 * i];
-            const _REAL rRightChan = vecsSoundBuffer[2 * i + 1];
+            const _REAL rLeftChan = sample2real(vecsSoundBuffer[2 * i]);
+            const _REAL rRightChan = sample2real(vecsSoundBuffer[2 * i + 1]);
 
             (*pvecOutputData)[i] = (rLeftChan + rRightChan) / 2;
         }
@@ -254,8 +258,8 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
         for (i = 0; i < iOutputBlockSize; i++)
         {
             (*pvecOutputData)[i] =
-                HilbertFilt((_REAL) vecsSoundBuffer[2 * i],
-                            (_REAL) vecsSoundBuffer[2 * i + 1]);
+                HilbertFilt(sample2real(vecsSoundBuffer[2 * i]),
+                            sample2real(vecsSoundBuffer[2 * i + 1]));
         }
         break;
 
@@ -263,8 +267,8 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
         for (i = 0; i < iOutputBlockSize; i++)
         {
             (*pvecOutputData)[i] =
-                HilbertFilt((_REAL) vecsSoundBuffer[2 * i + 1],
-                            (_REAL) vecsSoundBuffer[2 * i]);
+                HilbertFilt(sample2real(vecsSoundBuffer[2 * i + 1]),
+                            sample2real(vecsSoundBuffer[2 * i]));
         }
         break;
 
@@ -273,8 +277,8 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
         {
             /* Shift signal to vitual intermediate frequency before applying
                the Hilbert filtering */
-            _COMPLEX cCurSig = _COMPLEX((_REAL) vecsSoundBuffer[2 * i],
-                                        (_REAL) vecsSoundBuffer[2 * i + 1]);
+            _COMPLEX cCurSig = _COMPLEX(sample2real(vecsSoundBuffer[2 * i]),
+                                        sample2real(vecsSoundBuffer[2 * i + 1]));
 
             cCurSig *= cCurExp;
 
@@ -292,8 +296,8 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
         {
             /* Shift signal to vitual intermediate frequency before applying
                the Hilbert filtering */
-            _COMPLEX cCurSig = _COMPLEX((_REAL) vecsSoundBuffer[2 * i + 1],
-                                        (_REAL) vecsSoundBuffer[2 * i]);
+            _COMPLEX cCurSig = _COMPLEX(sample2real(vecsSoundBuffer[2 * i + 1]),
+                                        sample2real(vecsSoundBuffer[2 * i]));
 
             cCurSig *= cCurExp;
 
@@ -326,7 +330,6 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
                 bFlagInv = FALSE;
         }
     }
-
 
     /* Copy data in buffer for spectrum calculation */
     vecrInpData.AddEnd((*pvecOutputData), iOutputBlockSize);
@@ -377,7 +380,6 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 
     /* OPH: init free-running symbol counter */
     iFreeSymbolCounter = 0;
-
 }
 
 _REAL CReceiveData::HilbertFilt(const _REAL rRe, const _REAL rIm)

@@ -63,7 +63,6 @@ void CReadData::InitInternal(CParameter&)
     SignalLevelMeter.Init(0);
 }
 
-
 /* Receiver ----------------------------------------------------------------- */
 void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 {

@@ -59,6 +59,8 @@ protected:
     int					iFileSampleRate;
     int					iFileChannels;
     CPacer*				pacer;
+    short *buffer;
+    int iBufferSize;
 };
 
 #endif

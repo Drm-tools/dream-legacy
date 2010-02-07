@@ -73,6 +73,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	pSettingsMenu->insertItem(tr("&AM (analog)"), this,
 		SLOT(OnSwitchToAM()), CTRL+Key_A);
+	pSettingsMenu->insertItem(tr("&FM (analog)"), this,
+		SLOT(OnSwitchToFM()), CTRL+Key_F);
 	pSettingsMenu->insertItem(tr("New &DRM Acquisition"), this,
 		SLOT(OnNewDRMAcquisition()), CTRL+Key_D);
 	pSettingsMenu->insertSeparator();
@@ -169,6 +171,9 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Analog demodulation window */
 	pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", FALSE, Qt::WStyle_MinMax);
 
+	/* FM window */
+	pFMDlg = new FMDialog(DRMReceiver, Settings, NULL, "FM Receiver", FALSE, Qt::WStyle_MinMax);
+
 	/* general settings window */
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 	pGeneralSettingsDlg = new GeneralSettingsDlg(Parameters, Settings, this, "", TRUE, Qt::WStyle_Dialog);
@@ -209,12 +214,19 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 		this, SLOT(OnButtonService4()));
 
 	connect(pAnalogDemDlg, SIGNAL(SwitchToDRM()), this, SLOT(OnSwitchToDRM()));
+	connect(pAnalogDemDlg, SIGNAL(SwitchToFM()), this, SLOT(OnSwitchToFM()));
 	connect(pAnalogDemDlg, SIGNAL(ViewStationsDlg()),
 		this, SLOT(OnViewStationsDlg()));
 	connect(pAnalogDemDlg, SIGNAL(ViewLiveScheduleDlg()),
 		this, SLOT(OnViewLiveScheduleDlg()));
 	connect(pAnalogDemDlg, SIGNAL(Closed()),
 		this, SLOT(close()));
+
+	connect(pFMDlg, SIGNAL(SwitchToDRM()), this, SLOT(OnSwitchToDRM()));
+	connect(pFMDlg, SIGNAL(SwitchToAM()), this, SLOT(OnSwitchToAM()));
+	connect(pFMDlg, SIGNAL(Closed()), this, SLOT(close()));
+	connect(pFMDlg, SIGNAL(ViewStationsDlg()), this, SLOT(OnViewStationsDlg()));
+	connect(pFMDlg, SIGNAL(ViewLiveScheduleDlg()), this, SLOT(OnViewLiveScheduleDlg()));
 
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
@@ -292,6 +304,16 @@ void FDRMDialog::OnTimer()
 		{
 			Timer.stop();
 			ChangeGUIModeToAM();
+		} /* otherwise we might still be changing to DRM from AM */
+		break;
+	case RM_FM:
+		/* stopping the timer is normally done by the hide signal, but at startup we
+		 * are already hidden and the hide signal doesn't hit the slot
+		 */
+		if(eReceiverMode != RM_FM)
+		{
+			Timer.stop();
+			ChangeGUIModeToFM();
 		} /* otherwise we might still be changing to DRM from AM */
 		break;
 	case RM_NONE: // wait until working thread starts operating
@@ -784,6 +806,43 @@ void FDRMDialog::ChangeGUIModeToAM()
 	eReceiverMode = RM_AM;
 }
 
+void FDRMDialog::ChangeGUIModeToFM()
+{
+	/* Store visibility state */
+	if (eReceiverMode != RM_NONE)
+	{
+		bSysEvalDlgWasVis = pSysEvalDlg->isVisible();
+		bMultMedDlgWasVis = pMultiMediaDlg->isVisible();
+		bEPGDlgWasVis = pEPGDlg->isVisible();
+	}
+
+	pSysEvalDlg->hide();
+	pMultiMediaDlg->hide();
+	pEPGDlg->hide();
+
+	pSysEvalDlg->StopLogTimers();
+
+	Timer.stop();
+
+	this->hide();
+
+	pFMDlg->show();
+
+	/* Set correct schedule */
+	pStationsDlg->SetCurrentSchedule(CDRMSchedule::SM_ANALOG);
+
+	if (bStationsDlgWasVis == TRUE)
+		pStationsDlg->show();
+
+	if (bLiveSchedDlgWasVis == TRUE)
+		pLiveScheduleDlg->show();
+
+	if (pStationsDlg->isVisible())
+		pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
+
+	eReceiverMode = RM_FM;
+}
+
 void FDRMDialog::showEvent(QShowEvent*)
 {
 	/* Set timer for real-time controls */
@@ -816,6 +875,13 @@ void FDRMDialog::OnSwitchToAM()
 	bStationsDlgWasVis = pStationsDlg->isVisible();
 	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
 	DRMReceiver.SetReceiverMode(RM_AM);
+}
+
+void FDRMDialog::OnSwitchToFM()
+{
+	bStationsDlgWasVis = pStationsDlg->isVisible();
+	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
+	DRMReceiver.SetReceiverMode(RM_FM);
 }
 
 void FDRMDialog::OnButtonService1()
@@ -1017,12 +1083,14 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	 *  stayed open until the system is cleared down and then emitted
 	 *  our signal
 	 */
+	Settings.Put("Receiver", "mode", int(RM_DRM));
+
 	if(eReceiverMode == RM_DRM)
 	{
-		Settings.Put("GUI", "mode", string("DRMRX"));
 		/* remember the state of the windows */
 		Settings.Put("DRM Dialog", "visible", TRUE);
 		Settings.Put("AM Dialog", "visible", FALSE);
+		Settings.Put("FM Dialog", "visible", FALSE);
 		Settings.Put("Stations Dialog", "visible", pStationsDlg->isVisible());
 		Settings.Put("Live Schedule Dialog", "visible", pLiveScheduleDlg->isVisible());
 		Settings.Put("System Evaluation Dialog", "visible", pSysEvalDlg->isVisible());
@@ -1057,9 +1125,17 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	}
 	else
 	{
-		Settings.Put("GUI", "mode", string("AMRX"));
 		Settings.Put("DRM Dialog", "visible", FALSE);
-		Settings.Put("AM Dialog", "visible", TRUE);
+		if(eReceiverMode == RM_AM)
+		{
+			Settings.Put("AM Dialog", "visible", TRUE);
+			Settings.Put("FM Dialog", "visible", FALSE);
+		}
+		else
+		{
+			Settings.Put("AM Dialog", "visible", FALSE);
+			Settings.Put("FM Dialog", "visible", TRUE);
+		}
 		Settings.Put("Stations Dialog", "visible", pStationsDlg->isVisible());
 
 		if (pStationsDlg->isVisible())

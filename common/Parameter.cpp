@@ -324,8 +324,8 @@ void CParameter::ResetServicesStreams()
     if (GetReceiverMode() == RM_DRM)
     {
 
-        /* Store informations about last services selected
-         * this for select current service automatically after a resync */
+        /* Store informations about last service selected
+         * so the current service can be selected automatically after a resync */
 
         if (iCurSelAudioService > 0)
             LastAudioService.Save(iCurSelAudioService, Service[iCurSelAudioService].iServiceID);
@@ -384,7 +384,7 @@ void CParameter::ResetServicesStreams()
         Service[0].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;
         Service[0].AudioParam.bTextflag = FALSE;
         Service[0].AudioParam.bEnhanceFlag = FALSE;
-        Service[0].AudioParam.eAudioMode = CAudioParam::AM_MONO;
+        Service[0].AudioParam.eAudioMode = CAudioParam::AM_MONO; // ? FM could be stereo
         Service[0].AudioParam.iCELPIndex = 0;
         Service[0].AudioParam.bCELPCRC = FALSE;
         Service[0].AudioParam.eHVXCRate = CAudioParam::HR_2_KBIT;
