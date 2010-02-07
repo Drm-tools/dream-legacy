@@ -240,6 +240,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/DialogUtil.cpp \
 	../common/GUI-QT/DRMPlot.cpp \
 	../common/GUI-QT/fdrmdialog.cpp \
+	../common/GUI-QT/fmdialog.cpp \
 	../common/GUI-QT/TransmDlg.cpp \
 	../common/GUI-QT/MultColorLED.cpp \
 	../common/GUI-QT/systemevalDlg.cpp \
@@ -253,6 +254,7 @@ drmqtonly_SOURCES = \
 	../common/MDI/PacketSourceFile.cpp \
 	../common/MDI/PacketSocketQT.cpp \
 	../common/GUI-QT/fdrmdialogbase.ui \
+	../common/GUI-QT/fmdialogbase.ui \
 	../common/GUI-QT/TransmDlgbase.ui \
 	../common/GUI-QT/AboutDlgbase.ui \
 	../common/GUI-QT/systemevalDlgbase.ui \
@@ -267,6 +269,7 @@ drmqtonly_SOURCES = \
 	../common/GPSReceiver.h \
 	../common/GUI-QT/MultimediaDlg.h \
 	../common/GUI-QT/fdrmdialog.h \
+	../common/GUI-QT/fmdialog.h \
 	../common/GUI-QT/TransmDlg.h \
 	../common/GUI-QT/MultColorLED.h \
 	../common/GUI-QT/systemevalDlg.h \
@@ -295,6 +298,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_DRMPlot.cpp \
 	moc/moc_DialogUtil.cpp \
 	moc/moc_fdrmdialog.cpp moc/moc_fdrmdialogbase.cpp moc/fdrmdialogbase.h moc/fdrmdialogbase.cpp \
+	moc/moc_fmdialog.cpp moc/moc_fmdialogbase.cpp moc/fmdialogbase.h moc/fmdialogbase.cpp \
 	moc/moc_TransmDlg.cpp moc/moc_TransmDlgbase.cpp moc/TransmDlgbase.h moc/TransmDlgbase.cpp \
 	moc/moc_systemevalDlg.cpp  moc/moc_systemevalDlgbase.cpp moc/systemevalDlgbase.h \
 	moc/systemevalDlgbase.cpp \
@@ -348,14 +352,26 @@ moc/AboutDlgbase.cpp: ../common/GUI-QT/AboutDlgbase.ui moc/AboutDlgbase.h
 moc/moc_fdrmdialog.cpp: ../common/GUI-QT/fdrmdialog.h
 	$(MOC) ../common/GUI-QT/fdrmdialog.h -o moc/moc_fdrmdialog.cpp
 	
+moc/moc_fmdialog.cpp: ../common/GUI-QT/fmdialog.h
+	$(MOC) ../common/GUI-QT/fmdialog.h -o moc/moc_fmdialog.cpp
+	
 moc/moc_fdrmdialogbase.cpp: moc/fdrmdialogbase.h
 	$(MOC) moc/fdrmdialogbase.h -o moc/moc_fdrmdialogbase.cpp
+
+moc/moc_fmdialogbase.cpp: moc/fmdialogbase.h
+	$(MOC) moc/fmdialogbase.h -o moc/moc_fmdialogbase.cpp
 
 moc/fdrmdialogbase.h: ../common/GUI-QT/fdrmdialogbase.ui
 	$(UIC) ../common/GUI-QT/fdrmdialogbase.ui -o moc/fdrmdialogbase.h
 
+moc/fmdialogbase.h: ../common/GUI-QT/fmdialogbase.ui
+	$(UIC) ../common/GUI-QT/fmdialogbase.ui -o moc/fmdialogbase.h
+
 moc/fdrmdialogbase.cpp: ../common/GUI-QT/fdrmdialogbase.ui moc/fdrmdialogbase.h
 	$(UIC) ../common/GUI-QT/fdrmdialogbase.ui -i moc/fdrmdialogbase.h -o moc/fdrmdialogbase.cpp
+
+moc/fmdialogbase.cpp: ../common/GUI-QT/fmdialogbase.ui moc/fmdialogbase.h
+	$(UIC) ../common/GUI-QT/fmdialogbase.ui -i moc/fmdialogbase.h -o moc/fmdialogbase.cpp
 
 moc/moc_TransmDlg.cpp: ../common/GUI-QT/TransmDlg.h
 	$(MOC) ../common/GUI-QT/TransmDlg.h -o moc/moc_TransmDlg.cpp

@@ -1,10 +1,10 @@
 <!DOCTYPE UI><UI>
-<class>FDRMDialogBase</class>
+<class>FMDialogBase</class>
 <widget>
     <class>QDialog</class>
     <property stdset="1">
         <name>name</name>
-        <cstring>FDRMDialogBase</cstring>
+        <cstring>FMDialogBase</cstring>
     </property>
     <property stdset="1">
         <name>geometry</name>
