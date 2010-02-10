@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /machine:I386
-# ADD LINK32 libfaac.lib libhamlib.lib FreeImage.lib libfftw.lib libfaad.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib wsock32.lib winspool.lib winmm.lib $(QTDIR)\lib\qt-mt230nc.lib $(QTDIR)\lib\qtmain.lib libqwt.lib setupapi.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib:"MSVCRTD" /out:"Release/Dream.exe" /libpath:"../libs"
+# ADD LINK32 libfaac.lib libhamlib.lib libsndfile-1.lib FreeImage.lib libfftw.lib libfaad.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib wsock32.lib winspool.lib winmm.lib $(QTDIR)\lib\qt-mt230nc.lib $(QTDIR)\lib\qtmain.lib libqwt.lib setupapi.lib /nologo /subsystem:windows /machine:I386 /nodefaultlib:"MSVCRTD" /out:"Release/Dream.exe" /libpath:"../libs"
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "FDRM - Win32 Debug"
@@ -81,7 +81,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:windows /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libfaac.lib libhamlib.lib FreeImage.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib wsock32.lib winspool.lib winmm.lib $(QTDIR)\lib\qt-mt230nc.lib $(QTDIR)\lib\qtmain.lib libfftw.lib libfaad.lib libqwt.lib setupapi.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/Dream.exe" /pdbtype:sept /libpath:"../libs"
+# ADD LINK32 libfaac.lib libhamlib.lib libsndfile-1.lib FreeImage.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib wsock32.lib winspool.lib winmm.lib $(QTDIR)\lib\qt-mt230nc.lib $(QTDIR)\lib\qtmain.lib libfftw.lib libfaad.lib libqwt.lib setupapi.lib /nologo /subsystem:windows /debug /machine:I386 /out:"Debug/Dream.exe" /pdbtype:sept /libpath:"../libs"
 
 !ENDIF 
 
@@ -117,6 +117,10 @@ SOURCE=.\moc\EPGDlgbase.cpp
 # Begin Source File
 
 SOURCE=.\moc\fdrmdialogbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\fmdialogbase.cpp
 # End Source File
 # Begin Source File
 
@@ -165,6 +169,14 @@ SOURCE=.\moc\moc_fdrmdialog.cpp
 # Begin Source File
 
 SOURCE=.\moc\moc_fdrmdialogbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_fmdialog.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_fmdialogbase.cpp
 # End Source File
 # Begin Source File
 
@@ -287,6 +299,10 @@ SOURCE="..\common\GUI-QT\fdrmdialog.cpp"
 
 !ENDIF 
 
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\fmdialog.cpp"
 # End Source File
 # Begin Source File
 
@@ -808,6 +824,10 @@ SOURCE="..\common\GUI-QT\fdrmdialog.h"
 # End Source File
 # Begin Source File
 
+SOURCE="..\common\GUI-QT\fmdialog.h"
+# End Source File
+# Begin Source File
+
 SOURCE="..\common\GUI-QT\GeneralSettingsDlg.h"
 # End Source File
 # Begin Source File
@@ -1073,6 +1093,10 @@ SOURCE=..\common\datadecoding\Journaline.h
 # Begin Source File
 
 SOURCE=..\common\datadecoding\MOTSlideShow.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\libs\sndfile.h
 # End Source File
 # End Group
 # Begin Group "Header Utilities"
@@ -1356,6 +1380,11 @@ SOURCE=.\FDRM.rc
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\fdrmdialogbase.ui"
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\fmdialogbase.ui"
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File

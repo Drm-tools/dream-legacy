@@ -179,6 +179,9 @@ void FMDialog::OnTimer()
 			SetStatus(CLED_SDC, Parameters.ReceiveStatus.SDC.GetStatus());
 			SetStatus(CLED_FAC, Parameters.ReceiveStatus.FAC.GetStatus());
 
+			int freq = DRMReceiver.GetFrequency();
+			LabelServiceLabel->setText(QString("%1").arg(double(freq)/1000.0, 5, 'f', 2));
+
 			Parameters.Unlock();
 
 			/* Check if receiver does receive a signal */

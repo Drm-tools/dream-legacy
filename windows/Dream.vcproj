@@ -81,7 +81,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="false"
-				AdditionalDependencies="qt-mt3.lib qtmain.lib zdll.lib qwt.lib libfaac.lib libfaad.lib libhamlib-2.lib libfftw.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib winmm.lib wsock32.lib winspool.lib setupapi.lib"
+				AdditionalDependencies="qt-mt3.lib qtmain.lib zdll.lib qwt.lib libfaac.lib libfaad.lib libhamlib-2.lib libsndfile-1.lib libfftw.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib winmm.lib wsock32.lib winspool.lib setupapi.lib"
 				OutputFile="Release\Dream.exe"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="&quot;$(QTDIR)\lib&quot;;..\libs"
@@ -343,6 +343,10 @@
 			</File>
 			<File
 				RelativePath="..\common\GUI-QT\fdrmdialog.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\common\GUI-QT\fmdialog.cpp"
 				>
 			</File>
 			<File
@@ -913,6 +917,21 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\common\GUI-QT\fmdialog.h"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing ..\common\GUI-QT\fmdialog.h..."
+						CommandLine="$(QTDIR)\bin\moc.exe ..\common\GUI-QT\fmdialog.h -o moc\moc_fmdialog.cpp&#x0D;&#x0A;"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
+						Outputs="moc\moc_fmdialog.cpp"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="..\common\sync\FreqSyncAcq.h"
 				>
 			</File>
@@ -1313,11 +1332,15 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\sound.h"
+				RelativePath="..\libs\sndfile.h"
 				>
 			</File>
 			<File
 				RelativePath="Source\Sound.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\sound.h"
 				>
 			</File>
 			<File
@@ -1552,6 +1575,14 @@
 				>
 			</File>
 			<File
+				RelativePath="moc\moc_fmdialog.cpp"
+				>
+			</File>
+			<File
+				RelativePath="moc\moc_fmdialogbase.cpp"
+				>
+			</File>
+			<File
 				RelativePath="moc\moc_GeneralSettingsDlg.cpp"
 				>
 			</File>
@@ -1666,6 +1697,14 @@
 			</File>
 			<File
 				RelativePath="moc\fdrmdialogbase.h"
+				>
+			</File>
+			<File
+				RelativePath="moc\fmdialogbase.cpp"
+				>
+			</File>
+			<File
+				RelativePath="moc\fmdialogbase.h"
 				>
 			</File>
 			<File
@@ -1857,6 +1896,21 @@
 						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -o moc\fdrmdialogbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -i fdrmdialogbase.h -o moc\fdrmdialogbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\fdrmdialogbase.h -o moc\moc_fdrmdialogbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\fdrmdialogbase.h;moc\fdrmdialogbase.cpp;moc\moc_fdrmdialogbase.cpp"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\common\GUI-QT\fmdialogbase.ui"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Uic&apos;ing ..\common\GUI-QT\fmdialogbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\fmdialogbase.ui -o moc\fmdialogbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\fmdialogbase.ui -i fmdialogbase.h -o moc\fmdialogbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\fmdialogbase.h -o moc\moc_fmdialogbase.cpp&#x0D;&#x0A;"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
+						Outputs="moc\fmdialogbase.h;moc\fmdialogbase.cpp;moc\moc_fmdialogbase.cpp"
 					/>
 				</FileConfiguration>
 			</File>

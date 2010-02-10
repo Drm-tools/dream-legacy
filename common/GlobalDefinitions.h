@@ -72,6 +72,9 @@ using namespace std; /* Because of the library: "complex" */
 //# define HAVE_LIBPCAP
 # undef HAVE_LIBPCAP
 
+# define DLL_EXPORT 1
+//# undef DLL_EXPORT 1
+
 # define HAVE_LIBHAMLIB
 //# undef HAVE_LIBHAMLIB
 
