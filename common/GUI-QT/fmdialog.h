@@ -97,7 +97,6 @@ public slots:
 	void OnSwitchToDRM();
 	void OnSwitchToAM();
 	void OnMenuSetDisplayColor();
-	void OnFrequncyEditted(const QString&);
 
 signals:
 	void SwitchToDRM();
