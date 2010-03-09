@@ -295,6 +295,14 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
+		/* if 0 then only measure PSD when RSCI in use otherwise always measure it ---- */
+		if (GetNumericArgument(argc, argv, i, "--enablepsd", "--enablepsd", 0, 1,
+			rArgument) == TRUE)
+		{
+			Put("Receiver", "measurepsdalways", (int) rArgument);
+			continue;
+		}
+	/*  */
 #ifdef WIN32
 		/* Enable/Disable process priority flag */
 		if (GetNumericArgument
@@ -348,7 +356,7 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
-		
+
 		/* Plot Style main plot ------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-y", "--sysevplotstyle", 0,
 							   MAX_COLOR_SCHEMES_VAL, rArgument) == TRUE)
@@ -533,6 +541,7 @@ CSettings::UsageArguments(char **argv)
 		"  -y <n>, --sysevplotstyle <n> set style for main plot\n"
 		"                              0: blue-white (default);   1: green-black;   2: black-grey\n"
 #endif
+		"  --enablepsd <n>             if 0 then only measure PSD when RSCI in use otherwise always measure it"
 		"  --mdiout <s>                MDI out address format [IP#:]IP#:port (for Content Server)\n"
 		"  --mdiin  <s>                MDI in address (for modulator) [[IP#:]IP:]port\n"
 		"  --rsioutprofile <s>         MDI/RSCI output profile: A|B|C|D|Q|M\n"
@@ -645,7 +654,7 @@ CIniFile::GetIniSetting(const string& section,
 						 const string& key, const string& defaultval) const
 {
 	string result(defaultval);
-	const_cast<CMutex*>(&Mutex)->Lock(); 
+	const_cast<CMutex*>(&Mutex)->Lock();
 	INIFile::const_iterator iSection = ini.find(section);
 	if (iSection != ini.end())
 	{
@@ -653,20 +662,20 @@ CIniFile::GetIniSetting(const string& section,
 		if (apair != iSection->second.end())
 			result = apair->second;
 	}
-	const_cast<CMutex*>(&Mutex)->Unlock(); 
+	const_cast<CMutex*>(&Mutex)->Unlock();
 	return result;
 }
 
 void
 CIniFile::PutIniSetting(const string& section, const string& key, const string& value)
 {
-	Mutex.Lock(); 
+	Mutex.Lock();
 
 	/* null key is ok and empty value is ok but empty both is not useful */
 	if(key != "" || value != "")
 		ini[section][key]=value;
 
-	Mutex.Unlock(); 
+	Mutex.Unlock();
 }
 
 void

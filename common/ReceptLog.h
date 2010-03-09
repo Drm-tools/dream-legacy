@@ -3,10 +3,10 @@
 * Copyright (c) 2001-2007
 *
 * Author(s):
-*gVolker Fischer, Andrew Murphy, Andrea Russo
+* Volker Fischer, Andrew Murphy, Andrea Russo
 *
 * Description:
-*gLogging to a file
+* Logging to a file
 *
 *******************************************************************************
 *
@@ -71,8 +71,6 @@ public:
     int GetDelLogStart() {
         return iSecDelLogStart;
     }
-
-    void SetLogFrequency(int iNew);
 
 protected:
     virtual void init() = 0;

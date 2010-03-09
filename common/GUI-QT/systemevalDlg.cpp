@@ -553,8 +553,6 @@ void systemevalDlg::UpdateControls()
 	{
 		EdtFrequency->setText(QString().setNum(iFrequency));
 		iCurFrequency = iFrequency;
-		longLog.SetLogFrequency(iFrequency);
-		shortLog.SetLogFrequency(iFrequency);
 	}
 }
 
@@ -1247,16 +1245,9 @@ void systemevalDlg::OnTimerLogFileStart()
 		TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
 		TimerLogFileLong.start(1000); /* Every second */
 
-		/* Get frequency from front-end edit control */
-		QString strFreq = EdtFrequency->text();
-		int iFrequency = strFreq.toUInt();
-		longLog.SetLogFrequency(iFrequency);
-		shortLog.SetLogFrequency(iFrequency);
-
 		/* Open log file */
 		shortLog.Start("DreamLog.txt");
 		longLog.Start("DreamLogLong.csv");
-
 	}
 }
 

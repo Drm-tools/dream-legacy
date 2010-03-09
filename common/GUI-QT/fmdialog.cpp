@@ -180,7 +180,9 @@ void FMDialog::OnTimer()
 			SetStatus(CLED_FAC, Parameters.ReceiveStatus.FAC.GetStatus());
 
 			int freq = DRMReceiver.GetFrequency();
-			LabelServiceLabel->setText(QString("%1").arg(double(freq)/1000.0, 5, 'f', 2));
+			QString fs = QString("%1 MHz").arg(double(freq)/1000.0, 5, 'f', 2);
+
+			LabelServiceLabel->setText(fs);
 
 			Parameters.Unlock();
 
@@ -235,11 +237,11 @@ void FMDialog::UpdateDisplay()
 	/* Check whether service parameters were not transmitted yet */
 	if (Parameters.Service[iCurSelAudioServ].IsActive())
 	{
-		/* Service label (UTF-8 encoded string -> convert) */
+		/* Service label (UTF-8 encoded string -> convert)
 		LabelServiceLabel->setText(QString().fromUtf8(QCString(
 			Parameters.Service[iCurSelAudioServ].
 			strLabel.c_str())));
-
+*/
 		/* Bit-rate */
 		QString strBitrate = QString().setNum(Parameters.
 			GetBitRateKbps(iCurSelAudioServ, FALSE), 'f', 2) +
@@ -337,7 +339,7 @@ void FMDialog::UpdateDisplay()
 		}
 	else
 	{
-		LabelServiceLabel->setText(tr("No Service"));
+		//LabelServiceLabel->setText(tr("No Service"));
 
 		LabelBitrate->setText("");
 		LabelCodec->setText("");
@@ -379,7 +381,7 @@ void FMDialog::ClearDisplay()
 	LabelLanguage->setText("");
 	LabelCountryCode->setText("");
 	LabelServiceID->setText("");
-	LabelServiceLabel->setText(tr("Scanning..."));
+	//LabelServiceLabel->setText(tr("Scanning..."));
 }
 
 void FMDialog::showEvent(QShowEvent*)

@@ -60,6 +60,21 @@ CReceptLog::Update()
 {
     if (!bLogActivated)
         return;
+	int iCurrentFrequency = Parameters.GetFrequency();
+    if (iCurrentFrequency != iFrequency)
+    {
+    	// Frequency has changed
+        if (bLogActivated)
+        {
+            writeTrailer();
+            iFrequency = iCurrentFrequency;
+            writeHeader();
+        }
+        else
+        {
+            iFrequency = iCurrentFrequency;
+        }
+    }
     writeParameters();
 }
 
@@ -443,24 +458,6 @@ CLongLog::writeTrailer()
         return; /* allow updates when file closed */
 
     File << endl << endl;
-}
-
-void
-CReceptLog::SetLogFrequency(int iNew)
-{
-    if (iNew != iFrequency)
-    {
-        if (bLogActivated)
-        {
-            writeTrailer();
-            iFrequency = iNew;
-            writeHeader();
-        }
-        else
-        {
-            iFrequency = iNew;
-        }
-    }
 }
 
 string CReceptLog::strdate(time_t t)

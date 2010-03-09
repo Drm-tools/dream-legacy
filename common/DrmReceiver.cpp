@@ -1753,7 +1753,7 @@ CDRMReceiver::SaveSettings(CSettings& s)
     /* Receiver ------------------------------------------------------------- */
 
 	/* if 0 then only measure PSD when RSCI in use otherwise always measure it */
-	pReceiverParam->bMeasurePSDAlways =	s.Get("Receiver", "measurepsdalways", 0);
+	s.Put("Receiver", "measurepsdalways", pReceiverParam->bMeasurePSDAlways);
 
     /* Flip spectrum flag */
     s.Put("Receiver", "flipspectrum", ReceiveData.GetFlippedSpectrum());
