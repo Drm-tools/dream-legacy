@@ -1,9 +1,9 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * British Broadcasting Corporation
+ * Copyright (c) 2010
  *
  * Author(s):
- *	Volker Fischer, Andrea Russo
+ *	Julian Cable
  *
  * Description:
  *
@@ -92,15 +92,14 @@ protected:
 	void			SetDisplayColor(const QColor newColor);
 
 public slots:
+	void OnTune();
 	void OnTimer();
-	void OnNewDRMAcquisition();
+	void OnMenuSetDisplayColor();
 	void OnSwitchToDRM();
 	void OnSwitchToAM();
-	void OnMenuSetDisplayColor();
 
 signals:
-	void SwitchToDRM();
-	void SwitchToAM();
+	void SwitchMode(int);
 	void ViewStationsDlg();
 	void ViewLiveScheduleDlg();
 	void Closed();

@@ -25,8 +25,6 @@ rem * this program; if not, write to the Free Software Foundation, Inc.,
 rem * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 rem *
 rem\******************************************************************************/
-SET QTDIR=D:\Qt\3.3
-
 
 rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GUI-QT\DialogUtil.h -o moc\moc_DialogUtil.cpp

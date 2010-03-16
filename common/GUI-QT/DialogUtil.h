@@ -6,28 +6,30 @@
  *	Volker Fischer, Andrea Russo
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
 
 #if !defined(DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_)
 #define DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_
+
+#include<map>
 
 #include <qmenubar.h>
 #include <qpopupmenu.h>
@@ -40,11 +42,11 @@
 #include "../DrmReceiver.h"
 
 #ifdef USE_QT_GUI
-# include <qwt/qwt_global.h> /* for extract the library version */
+# include <qwt/qwt_global.h> /* to extract the library version */
 #endif
 
 #ifdef HAVE_LIBFREEIMAGE
-# include <FreeImage.h> /* for extract the library version */
+# include <FreeImage.h> /* to extract the library version */
 #endif
 
 /* Definitions ****************************************************************/
@@ -60,7 +62,7 @@
 class DRMEvent : public QCustomEvent
 {
 public:
-	DRMEvent(const int iNewMeTy, const int iNewSt) : 
+	DRMEvent(const int iNewMeTy, const int iNewSt) :
 		QCustomEvent(QEvent::User + 11), iMessType(iNewMeTy), iStatus(iNewSt) {}
 
 	int iMessType;
@@ -161,5 +163,32 @@ inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
 	pDlg->setCaption(sCap + sTitle);
 }
 
+class QAction;
+
+class RemoteMenu : public QObject
+{
+	Q_OBJECT
+
+public:
+	RemoteMenu(CHamlib& h):rigmenus(),specials(),Hamlib(h){}
+	void MakeMenu(QWidget* parent);
+	QPopupMenu* menu(){ return pRemoteMenu; }
+
+public slots:
+	void OnModRigMenu(int iID);
+	void OnRemoteMenu(int iID);
+	void OnComPortMenu(QAction* action);
+
+signals:
+	void SMeterAvailable();
+
+protected:
+	struct Rigmenu {string mfr; QPopupMenu* pMenu;};
+	map<int,Rigmenu> rigmenus;
+	vector<rig_model_t> specials;
+	CHamlib&	Hamlib;
+	QPopupMenu* pRemoteMenu;
+	QPopupMenu* pRemoteMenuOther;
+};
 
 #endif // DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_

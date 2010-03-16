@@ -6,30 +6,31 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
 
+#include "DialogUtil.h"
+#include <qaction.h>
 #ifdef _WIN32
 # include <winsock2.h>
 #endif
-#include "DialogUtil.h"
 #include "../Version.h"
 #ifdef USE_ALSA
 # include <alsa/version.h>
@@ -48,6 +49,24 @@
 #endif
 #ifdef HAVE_LIBWIRETAP
 # include <wtap.h>
+#endif
+
+#if !defined(HAVE_RIG_PARSE_MODE) && defined(HAVE_LIBHAMLIB)
+extern "C"
+{
+	extern rmode_t parse_mode(const char *);
+	extern vfo_t parse_vfo(const char *);
+	extern setting_t parse_func(const char *);
+	extern setting_t parse_level(const char *);
+	extern setting_t parse_parm(const char *);
+	extern const char* strstatus(enum rig_status_e);
+}
+# define rig_parse_mode parse_mode
+# define rig_parse_vfo parse_vfo
+# define rig_parse_func parse_func
+# define rig_parse_level parse_level
+# define rig_parse_parm parse_parm
+# define rig_strstatus strstatus
 #endif
 
 /* Implementation *************************************************************/
@@ -160,7 +179,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"<p>Fillod, Stephane</p>"
 		"<p>Fine, Mark J.</p>"
 		"<p>Manninen, Tomi</p>"
-		"<p>Moore, Josh</p>" 
+		"<p>Moore, Josh</p>"
 		"<p>Pascutto, Gian C.</p>"
 		"<p>Peca, Marek</p>"
 		"<p>Richard, Doyle</p>"
@@ -278,4 +297,192 @@ void CSoundCardSelMenu::OnSoundOutDevice(int id)
 	/* Taking care of checks in the menu. "+ 1" because of wave mapper entry */
 	for (int i = 0; i < iNumSoundOutDev + 1; i++)
 		pSoundOutMenu->setItemChecked(i, i == id);
+}
+
+void RemoteMenu::MakeMenu(QWidget* parent)
+{
+#ifdef HAVE_LIBHAMLIB
+	pRemoteMenu = new QPopupMenu(parent);
+	CHECK_PTR(pRemoteMenu);
+
+	pRemoteMenuOther = new QPopupMenu(parent);
+	CHECK_PTR(pRemoteMenuOther);
+
+	/* Add menu entry "none" */
+	pRemoteMenu->insertItem(tr("None"), this, SLOT(OnRemoteMenu(int)), 0, 0);
+
+	map<rig_model_t,CHamlib::SDrRigCaps> rigs;
+
+	Hamlib.GetRigList(rigs);
+
+	rigmenus.clear();
+
+	/* Add menu entries */
+	_BOOLEAN bCheckWasSet = FALSE;
+	for (map<rig_model_t,CHamlib::SDrRigCaps>::iterator i=rigs.begin(); i!=rigs.end(); i++)
+	{
+		rig_model_t iModelID = i->first;
+		CHamlib::SDrRigCaps& rig = i->second;
+
+		Rigmenu m;
+		int backend = RIG_BACKEND_NUM(iModelID);
+		map<int, Rigmenu>::iterator k = rigmenus.find(backend);
+		if(k == rigmenus.end())
+		{
+			m.mfr = rig.strManufacturer;
+			m.pMenu = new QPopupMenu(pRemoteMenuOther);
+			CHECK_PTR(m.pMenu);
+		}
+		else
+		{
+			m = k->second;
+		}
+
+		/* Create menu objects which belong to an action group. We hope that
+		   QT takes care of all the new objects and deletes them... */
+
+		if (rig.bIsSpecRig == TRUE)
+		{
+			/* Main rigs */
+		/* Set menu string. Should look like: [ID] Manuf. Model */
+			QString strMenuText =
+					"[" + QString().setNum(iModelID) + "] " +
+					rig.strManufacturer.c_str() + " " +
+					rig.strModelName.c_str();
+
+			pRemoteMenu->insertItem(strMenuText, this, SLOT(OnRemoteMenu(int)), 0, iModelID);
+
+			/* Check for checking */
+			if (Hamlib.GetHamlibModelID() == iModelID)
+			{
+				pRemoteMenu->setItemChecked(iModelID, TRUE);
+				bCheckWasSet = TRUE;
+			}
+
+			specials.push_back(iModelID);
+		}
+		else
+		{
+			/* "Other" menu */
+			/* Set menu string. Should look like: [ID] Model (status) */
+			QString strMenuText =
+					"[" + QString().setNum(iModelID) + "] " + rig.strModelName.c_str()
+						+ " (" + rig_strstatus(rig.eRigStatus) + ")";
+			m.pMenu->insertItem(strMenuText, this, SLOT(OnRemoteMenu(int)), 0, iModelID);
+			rigmenus[backend] = m;
+
+			/* Check for checking */
+			if (Hamlib.GetHamlibModelID() == iModelID)
+			{
+				m.pMenu->setItemChecked(iModelID, TRUE);
+				bCheckWasSet = TRUE;
+			}
+		}
+	}
+	for (map<int,Rigmenu>::iterator i=rigmenus.begin(); i!=rigmenus.end(); i++)
+	{
+		pRemoteMenuOther->insertItem(i->second.mfr, i->second.pMenu);
+	}
+
+	/* Add "other" menu */
+	pRemoteMenu->insertItem(tr("Other"), pRemoteMenuOther);
+
+	/* If no rig was selected, set check to "none" */
+	if (bCheckWasSet == FALSE)
+		pRemoteMenu->setItemChecked(0, TRUE);
+
+	/* Separator */
+	pRemoteMenu->insertSeparator();
+
+	/* COM port selection --------------------------------------------------- */
+	/* Toggle action for com port selection menu entries */
+	QActionGroup* agCOMPortSel = new QActionGroup(this, "Com port", TRUE);
+	map<string,string> ports;
+	Hamlib.GetPortList(ports);
+	string strPort = Hamlib.GetComPort();
+	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
+	{
+		QAction* pacMenu = new QAction(p->second.c_str(), p->first.c_str(), 0, agCOMPortSel, 0, TRUE);
+		if(strPort == p->second)
+			pacMenu->setOn(TRUE);
+	}
+
+	/* Add COM port selection menu group to remote menu */
+	agCOMPortSel->addTo(pRemoteMenu);
+
+	/* Action group */
+	connect(agCOMPortSel, SIGNAL(selected(QAction*)), this, SLOT(OnComPortMenu(QAction*)));
+
+	/* Separator */
+	pRemoteMenu->insertSeparator();
+
+	/* Enable special settings for rigs */
+	const int iModRigMenuID = pRemoteMenu->insertItem(tr("With DRM "
+		"Modification"), this, SLOT(OnModRigMenu(int)), 0);
+
+	/* Set check */
+	pRemoteMenu->setItemChecked(iModRigMenuID, Hamlib.GetEnableModRigSettings());
+
+#endif
+}
+
+void RemoteMenu::OnModRigMenu(int iID)
+{
+#ifdef HAVE_LIBHAMLIB
+	if (pRemoteMenu->isItemChecked(iID))
+	{
+		pRemoteMenu->setItemChecked(iID, FALSE);
+		Hamlib.SetEnableModRigSettings(FALSE);
+	}
+	else
+	{
+		pRemoteMenu->setItemChecked(iID, TRUE);
+		Hamlib.SetEnableModRigSettings(TRUE);
+	}
+#endif
+}
+
+void RemoteMenu::OnRemoteMenu(int iID)
+{
+#ifdef HAVE_LIBHAMLIB
+	/* Take care of check */
+	/* We don't care here that not all IDs are in each menu. If there is a
+	   non-valid ID for the menu item, there is simply nothing done */
+	for(size_t i=0; i<specials.size(); i++)
+	{
+		pRemoteMenu->setItemChecked(specials[i], specials[i]==iID);
+	}
+
+	for (map<int,Rigmenu>::iterator i=rigmenus.begin(); i!=rigmenus.end(); i++)
+	{
+		QPopupMenu* pMenu = i->second.pMenu;
+		for(size_t i=0; i<pMenu->count(); i++)
+		{
+			int mID = pMenu->idAt(i);
+			if(mID==iID)
+			{
+				// TODO find a way to highlight the selected menu tree
+				pMenu->setItemChecked(mID, true);
+			}
+			else
+			{
+				pMenu->setItemChecked(mID, false);
+			}
+		}
+	}
+	/* Set ID */
+	Hamlib.SetHamlibModelID(iID);
+	double r;
+	if(Hamlib.GetSMeter(r) == CHamlib::SS_VALID)
+	{
+		emit SMeterAvailable();
+	}
+#endif
+}
+
+void RemoteMenu::OnComPortMenu(QAction* action)
+{
+#ifdef HAVE_LIBHAMLIB
+	Hamlib.SetComPort(action->text().latin1());
+#endif
 }

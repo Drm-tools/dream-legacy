@@ -127,15 +127,14 @@ public slots:
 	void OnChartxAxisValSet(double dVal);
 	void OnSliderBWChange(int value);
 	void OnRadioNoiRed(int iID);
-	void OnNewAMAcquisition() {DRMReceiver.RequestNewAcquisition();}
 	void OnButtonWaterfall();
 	void OnButtonAMSS();
 	void OnSwitchToDRM();
 	void OnSwitchToFM();
 
 signals:
-	void SwitchToDRM();
-	void SwitchToFM();
+	void SwitchMode(int);
+	void NewAMAcquisition();
 	void ViewStationsDlg();
 	void ViewLiveScheduleDlg();
 	void Closed();

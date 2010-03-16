@@ -68,7 +68,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pSettingsMenu->insertItem(tr("&FM (analog)"), this,
 		SLOT(OnSwitchToFM()), CTRL+Key_F);
 	pSettingsMenu->insertItem(tr("New &AM Acquisition"), this,
-		SLOT(OnNewAMAcquisition()), CTRL+Key_A);
+		SIGNAL(NewAMAcquisition()), CTRL+Key_A);
 
 
 	/* Main menu bar -------------------------------------------------------- */
@@ -152,6 +152,16 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		this, SLOT(OnTimerPLLPhaseDial()));
 
 	/* Don't activate real-time timers, wait for show event */
+}
+
+void AnalogDemDlg::OnSwitchToDRM()
+{
+	emit SwitchMode(RM_DRM);
+}
+
+void AnalogDemDlg::OnSwitchToFM()
+{
+	emit SwitchMode(RM_FM);
 }
 
 void AnalogDemDlg::showEvent(QShowEvent*)
@@ -326,24 +336,15 @@ void AnalogDemDlg::UpdatePlotsStyle()
 	MainPlot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 }
 
-void AnalogDemDlg::OnSwitchToDRM()
-{
-	this->hide();
-	emit SwitchToDRM();
-}
-
-void AnalogDemDlg::OnSwitchToFM()
-{
-	this->hide();
-	emit SwitchToFM();
-}
-
 void AnalogDemDlg::OnTimer()
 {
 	switch(DRMReceiver.GetReceiverMode())
 	{
 	case RM_DRM:
-		OnSwitchToDRM();
+		this->hide();
+		break;
+	case RM_FM:
+		this->hide();
 		break;
 	case RM_AM:
 		/* Carrier frequency of AM signal */

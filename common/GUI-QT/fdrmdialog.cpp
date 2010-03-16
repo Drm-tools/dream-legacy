@@ -76,7 +76,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pSettingsMenu->insertItem(tr("&FM (analog)"), this,
 		SLOT(OnSwitchToFM()), CTRL+Key_F);
 	pSettingsMenu->insertItem(tr("New &DRM Acquisition"), this,
-		SLOT(OnNewDRMAcquisition()), CTRL+Key_D);
+		SLOT(OnNewAcquisition()), CTRL+Key_D);
 	pSettingsMenu->insertSeparator();
 	pSettingsMenu->insertItem(tr("Set D&isplay Color..."), this,
 		SLOT(OnMenuSetDisplayColor()));
@@ -213,8 +213,9 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(PushButtonService4, SIGNAL(clicked()),
 		this, SLOT(OnButtonService4()));
 
-	connect(pAnalogDemDlg, SIGNAL(SwitchToDRM()), this, SLOT(OnSwitchToDRM()));
-	connect(pAnalogDemDlg, SIGNAL(SwitchToFM()), this, SLOT(OnSwitchToFM()));
+
+	connect(pAnalogDemDlg, SIGNAL(SwitchMode(int)), this, SLOT(OnSwitchMode(int)));
+	connect(pAnalogDemDlg, SIGNAL(NewAMAcquisition()), this, SLOT(OnNewAcquisition()));
 	connect(pAnalogDemDlg, SIGNAL(ViewStationsDlg()),
 		this, SLOT(OnViewStationsDlg()));
 	connect(pAnalogDemDlg, SIGNAL(ViewLiveScheduleDlg()),
@@ -222,14 +223,12 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(pAnalogDemDlg, SIGNAL(Closed()),
 		this, SLOT(close()));
 
-	connect(pFMDlg, SIGNAL(SwitchToDRM()), this, SLOT(OnSwitchToDRM()));
-	connect(pFMDlg, SIGNAL(SwitchToAM()), this, SLOT(OnSwitchToAM()));
+	connect(pFMDlg, SIGNAL(SwitchMode(int)), this, SLOT(OnSwitchMode(int)));
 	connect(pFMDlg, SIGNAL(Closed()), this, SLOT(close()));
 	connect(pFMDlg, SIGNAL(ViewStationsDlg()), this, SLOT(OnViewStationsDlg()));
 	connect(pFMDlg, SIGNAL(ViewLiveScheduleDlg()), this, SLOT(OnViewLiveScheduleDlg()));
 
-	connect(&Timer, SIGNAL(timeout()),
-		this, SLOT(OnTimer()));
+	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
 	connect(pGeneralSettingsDlg, SIGNAL(StartGPS()), pSysEvalDlg, SLOT(EnableGPS()));
 	connect(pGeneralSettingsDlg, SIGNAL(StopGPS()), pSysEvalDlg, SLOT(DisableGPS()));
@@ -244,6 +243,16 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 FDRMDialog::~FDRMDialog()
 {
+}
+
+void FDRMDialog::OnSwitchToFM()
+{
+	OnSwitchMode(RM_FM);
+}
+
+void FDRMDialog::OnSwitchToAM()
+{
+	OnSwitchMode(RM_AM);
 }
 
 void FDRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
@@ -271,30 +280,30 @@ void FDRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 void FDRMDialog::OnTimer()
 {
 	ERecMode eNewReceiverMode = DRMReceiver.GetReceiverMode();
+	CParameter& Parameters = *DRMReceiver.GetParameters();
 	switch(eNewReceiverMode)
 	{
 	case RM_DRM:
 		if(eReceiverMode != RM_DRM)
-			ChangeGUIModeToDRM();
 		{
-			CParameter& Parameters = *DRMReceiver.GetParameters();
-			Parameters.Lock();
-
-			/* Input level meter */
-			ProgrInputLevel->setValue(Parameters.GetIFSignalLevel());
-
-			SetStatus(CLED_MSC, Parameters.ReceiveStatus.Audio.GetStatus());
-			SetStatus(CLED_SDC, Parameters.ReceiveStatus.SDC.GetStatus());
-			SetStatus(CLED_FAC, Parameters.ReceiveStatus.FAC.GetStatus());
-
-			Parameters.Unlock();
-
-			/* Check if receiver does receive a signal */
-			if(DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
-				UpdateDisplay();
-			else
-				ClearDisplay();
+			ChangeGUIModeToDRM();
 		}
+		Parameters.Lock();
+
+		/* Input level meter */
+		ProgrInputLevel->setValue(Parameters.GetIFSignalLevel());
+
+		SetStatus(CLED_MSC, Parameters.ReceiveStatus.Audio.GetStatus());
+		SetStatus(CLED_SDC, Parameters.ReceiveStatus.SDC.GetStatus());
+		SetStatus(CLED_FAC, Parameters.ReceiveStatus.FAC.GetStatus());
+
+		Parameters.Unlock();
+
+		/* Check if receiver does receive a signal */
+		if(DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
+			UpdateDisplay();
+		else
+			ClearDisplay();
 		break;
 	case RM_AM:
 		/* stopping the timer is normally done by the hide signal, but at startup we
@@ -856,32 +865,18 @@ void FDRMDialog::hideEvent(QHideEvent*)
 	Timer.stop();
 }
 
-void FDRMDialog::OnSwitchToDRM()
-{
-	bStationsDlgWasVis = pStationsDlg->isVisible();
-	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
-
-	DRMReceiver.SetReceiverMode(RM_DRM);
- 	Timer.start(GUI_CONTROL_UPDATE_TIME);
-}
-
-void FDRMDialog::OnNewDRMAcquisition()
+void FDRMDialog::OnNewAcquisition()
 {
 	DRMReceiver.RequestNewAcquisition();
 }
 
-void FDRMDialog::OnSwitchToAM()
+void FDRMDialog::OnSwitchMode(int newMode)
 {
 	bStationsDlgWasVis = pStationsDlg->isVisible();
 	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
-	DRMReceiver.SetReceiverMode(RM_AM);
-}
 
-void FDRMDialog::OnSwitchToFM()
-{
-	bStationsDlgWasVis = pStationsDlg->isVisible();
-	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
-	DRMReceiver.SetReceiverMode(RM_FM);
+	DRMReceiver.SetReceiverMode(ERecMode(newMode));
+ 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
 void FDRMDialog::OnButtonService1()

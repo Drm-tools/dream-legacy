@@ -1,9 +1,9 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * British Broadcasting Corporation
+ * Copyright (c) 2010
  *
  * Author(s):
- *	Volker Fischer, Andrea Russo
+ *	Julian Cable
  *
  * Description:
  *
@@ -27,8 +27,9 @@
 \******************************************************************************/
 
 #include "fmdialog.h"
+#include "DialogUtil.h"
 #include <qmessagebox.h>
-//#include <iostream>
+#include <qinputdialog.h>
 
 /* Implementation *************************************************************/
 FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
@@ -50,14 +51,11 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
-	QPopupMenu* EvalWinMenu = new QPopupMenu(this);
-	CHECK_PTR(EvalWinMenu);
-	EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
-		SIGNAL(ViewStationsDlg()), CTRL+Key_T);
-	EvalWinMenu->insertItem(tr("&Live Schedule Dialog..."), this,
-		SIGNAL(ViewLiveScheduleDlg()), CTRL+Key_L);
-	EvalWinMenu->insertSeparator();
-	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q, 5);
+	QPopupMenu* ViewMenu = new QPopupMenu(this);
+	CHECK_PTR(ViewMenu);
+	ViewMenu->insertItem(tr("&Tune"), this, SLOT(OnTune()), CTRL+Key_T);
+	ViewMenu->insertSeparator();
+	ViewMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q, 5);
 
 	/* Settings menu  ------------------------------------------------------- */
 	pSettingsMenu = new QPopupMenu(this);
@@ -71,13 +69,20 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pSettingsMenu->insertItem(tr("&AM (analog)"), this,
 		SLOT(OnSwitchToAM()), CTRL+Key_A);
 	pSettingsMenu->insertSeparator();
+
+	/* Remote menu  --------------------------------------------------------- */
+	CHamlib& Hamlib = *DRMReceiver.GetHamlib();
+	RemoteMenu* pRemoteMenu = new RemoteMenu(*DRMReceiver.GetHamlib());
+	pRemoteMenu->MakeMenu(this);
+	pSettingsMenu->insertItem(tr("Set &Rig..."), pRemoteMenu->menu(), CTRL+Key_R);
+
 	pSettingsMenu->insertItem(tr("Set D&isplay Color..."), this,
 		SLOT(OnMenuSetDisplayColor()));
 
 	/* Main menu bar -------------------------------------------------------- */
 	pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
-	pMenu->insertItem(tr("&View"), EvalWinMenu);
+	pMenu->insertItem(tr("&View"), ViewMenu);
 	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
 	pMenu->insertItem(tr("&?"), new CDreamHelpMenu(this));
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
@@ -140,6 +145,29 @@ FMDialog::~FMDialog()
 {
 }
 
+void FMDialog::OnSwitchToDRM()
+{
+	emit SwitchMode(RM_DRM);
+}
+
+void FMDialog::OnSwitchToAM()
+{
+	emit SwitchMode(RM_AM);
+}
+
+void FMDialog::OnTune()
+{
+	bool ok;
+	double freq = double(DRMReceiver.GetFrequency())/1000.0;
+// TODO Check Qt2 has this
+	double f = QInputDialog::getDouble(tr("Dream FM"),
+					tr("Frequency (MHz):"), freq, 86.0, 110.0, 2, &ok);
+	if (ok)
+	{
+		DRMReceiver.SetFrequency(int(1000.0*f));
+	}
+}
+
 void FMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 {
 	switch(state)
@@ -167,6 +195,12 @@ void FMDialog::OnTimer()
 	ERecMode eNewReceiverMode = DRMReceiver.GetReceiverMode();
 	switch(eNewReceiverMode)
 	{
+	case RM_DRM:
+		this->hide();
+		break;
+	case RM_AM:
+		this->hide();
+		break;
 	case RM_FM:
 		{
 			CParameter& Parameters = *DRMReceiver.GetParameters();
@@ -395,23 +429,6 @@ void FMDialog::hideEvent(QHideEvent*)
 {
 	/* Deactivate real-time timer */
 	Timer.stop();
-}
-
-void FMDialog::OnNewDRMAcquisition()
-{
-	DRMReceiver.RequestNewAcquisition();
-}
-
-void FMDialog::OnSwitchToDRM()
-{
-	this->hide();
-	emit SwitchToDRM();
-}
-
-void FMDialog::OnSwitchToAM()
-{
-	this->hide();
-	emit SwitchToAM();
 }
 
 void FMDialog::SetService(int iNewServiceID)
