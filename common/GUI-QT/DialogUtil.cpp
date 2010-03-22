@@ -379,9 +379,9 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 			}
 		}
 	}
-	for (map<int,Rigmenu>::iterator i=rigmenus.begin(); i!=rigmenus.end(); i++)
+	for (map<int,Rigmenu>::iterator j=rigmenus.begin(); j!=rigmenus.end(); j++)
 	{
-		pRemoteMenuOther->insertItem(i->second.mfr, i->second.pMenu);
+		pRemoteMenuOther->insertItem(j->second.mfr, j->second.pMenu);
 	}
 
 	/* Add "other" menu */
@@ -448,9 +448,9 @@ void RemoteMenu::OnRemoteMenu(int iID)
 	/* Take care of check */
 	/* We don't care here that not all IDs are in each menu. If there is a
 	   non-valid ID for the menu item, there is simply nothing done */
-	for(size_t i=0; i<specials.size(); i++)
+	for(size_t j=0; j<specials.size(); j++)
 	{
-		pRemoteMenu->setItemChecked(specials[i], specials[i]==iID);
+		pRemoteMenu->setItemChecked(specials[j], specials[j]==iID);
 	}
 
 	for (map<int,Rigmenu>::iterator i=rigmenus.begin(); i!=rigmenus.end(); i++)

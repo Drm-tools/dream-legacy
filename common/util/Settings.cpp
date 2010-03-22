@@ -541,7 +541,7 @@ CSettings::UsageArguments(char **argv)
 		"  -y <n>, --sysevplotstyle <n> set style for main plot\n"
 		"                              0: blue-white (default);   1: green-black;   2: black-grey\n"
 #endif
-		"  --enablepsd <n>             if 0 then only measure PSD when RSCI in use otherwise always measure it"
+		"  --enablepsd <n>             if 0 then only measure PSD when RSCI in use otherwise always measure it\n"
 		"  --mdiout <s>                MDI out address format [IP#:]IP#:port (for Content Server)\n"
 		"  --mdiin  <s>                MDI in address (for modulator) [[IP#:]IP:]port\n"
 		"  --rsioutprofile <s>         MDI/RSCI output profile: A|B|C|D|Q|M\n"
