@@ -214,7 +214,7 @@ main(int argc, char **argv)
 
 			DRMSimulation.SimScript();
 			DRMReceiver.LoadSettings(Settings);
-			DRMReceiver.SetReceiverMode(eMode(Settings.Get("Receiver", "mode", int(0))));
+			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
 			DRMReceiver.Start();
 		}
 		else
