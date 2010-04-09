@@ -396,7 +396,7 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 
 	/* COM port selection --------------------------------------------------- */
 	/* Toggle action for com port selection menu entries */
-	QActionGroup* agCOMPortSel = new QActionGroup(pRemoteMenu, "Com port", TRUE);
+	QActionGroup* agCOMPortSel = new QActionGroup(parent, "Com port", TRUE);
 	map<string,string> ports;
 	Hamlib.GetPortList(ports);
 	string strPort = Hamlib.GetComPort();
@@ -408,9 +408,6 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 		if(strPort == p->second)
 			pacMenu->setOn(TRUE);
 	}
-
-	/* Add COM port selection menu group to remote menu */
-	agCOMPortSel->addTo(pRemoteMenu);
 
 	/* Action group */
 	connect(agCOMPortSel, SIGNAL(selected(QAction*)), this, SLOT(OnComPortMenu(QAction*)));
