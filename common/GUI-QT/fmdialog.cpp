@@ -71,10 +71,12 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pSettingsMenu->insertSeparator();
 
 	/* Remote menu  --------------------------------------------------------- */
+#ifdef HAVE_LIBHAMLIB
 	CHamlib& Hamlib = *DRMReceiver.GetHamlib();
 	RemoteMenu* pRemoteMenu = new RemoteMenu(*DRMReceiver.GetHamlib());
 	pRemoteMenu->MakeMenu(this);
 	pSettingsMenu->insertItem(tr("Set &Rig..."), pRemoteMenu->menu(), CTRL+Key_R);
+#endif
 
 	pSettingsMenu->insertItem(tr("Set D&isplay Color..."), this,
 		SLOT(OnMenuSetDisplayColor()));

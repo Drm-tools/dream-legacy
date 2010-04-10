@@ -163,6 +163,7 @@ inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
 	pDlg->setCaption(sCap + sTitle);
 }
 
+
 class QAction;
 
 class RemoteMenu : public QObject
@@ -170,7 +171,11 @@ class RemoteMenu : public QObject
 	Q_OBJECT
 
 public:
+#ifdef HAVE_LIBHAMLIB
 	RemoteMenu(CHamlib& h):rigmenus(),specials(),Hamlib(h){}
+#else
+	RemoteMenu(){}
+#endif
 	void MakeMenu(QWidget* parent);
 	QPopupMenu* menu(){ return pRemoteMenu; }
 
@@ -183,10 +188,12 @@ signals:
 	void SMeterAvailable();
 
 protected:
-	struct Rigmenu {string mfr; QPopupMenu* pMenu;};
-	map<int,Rigmenu> rigmenus;
-	vector<rig_model_t> specials;
+#ifdef HAVE_LIBHAMLIB
+	struct Rigmenu {std::string mfr; QPopupMenu* pMenu;};
+	std::map<int,Rigmenu> rigmenus;
+	std::vector<rig_model_t> specials;
 	CHamlib&	Hamlib;
+#endif
 	QPopupMenu* pRemoteMenu;
 	QPopupMenu* pRemoteMenuOther;
 };

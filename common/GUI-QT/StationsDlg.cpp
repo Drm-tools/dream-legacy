@@ -509,6 +509,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	SetStationsView();
 
 	/* Remote menu  --------------------------------------------------------- */
+#ifdef HAVE_LIBHAMLIB
 	CHamlib& Hamlib = *DRMReceiver.GetHamlib();
 	pRemoteMenu = new RemoteMenu(*DRMReceiver.GetHamlib());
 	pRemoteMenu->MakeMenu(this);
@@ -523,7 +524,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* S-meter settings */
 	pRemoteMenu->menu()->setItemChecked(iSMeterMenuID, DRMReceiver.GetEnableSMeter());
 	EnableSMeter(DRMReceiver.GetEnableSMeter());
-
+#endif
 	/* Update menu ---------------------------------------------------------- */
 	pUpdateMenu = new QPopupMenu(this);
 	CHECK_PTR(pUpdateMenu);
@@ -565,7 +566,9 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(ListViewStations, SIGNAL(selectionChanged(QListViewItem*)),
 		this, SLOT(OnListItemClicked(QListViewItem*)));
 
+#ifdef HAVE_LIBHAMLIB
 	connect(pRemoteMenu, SIGNAL(SMeterAvailable()), this, SLOT(OnSMeterAvailable()));
+#endif
 
 	connect(ListViewStations->header(), SIGNAL(clicked(int)),
 		this, SLOT(OnHeaderClicked(int)));
@@ -1137,7 +1140,7 @@ void StationsDlg::OnSMeterMenu(int iID)
 {
 	if (DRMReceiver.SignalStrengthAvailable()==FALSE)
 	   return;
-
+#ifdef HAVE_LIBHAMLIB
 	if (pRemoteMenu->menu()->isItemChecked(iID))
 	{
 		pRemoteMenu->menu()->setItemChecked(iID, FALSE);
@@ -1150,6 +1153,7 @@ void StationsDlg::OnSMeterMenu(int iID)
 	}
 
 	EnableSMeter(DRMReceiver.GetEnableSMeter());
+#endif
 }
 
 
