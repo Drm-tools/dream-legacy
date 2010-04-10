@@ -735,7 +735,7 @@ CDRMReceiver::InitReceiverMode()
                 break;
             }
         }
-        pAMParam->eReceiverMode = RM_AM;
+        pAMParam->eReceiverMode = eNewReceiverMode;
         pReceiverParam = pAMParam;
 
         if (pReceiverParam == NULL)
