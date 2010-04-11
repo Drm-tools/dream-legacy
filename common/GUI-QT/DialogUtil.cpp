@@ -51,6 +51,8 @@
 # include <wtap.h>
 #endif
 
+#define OTHER_MENU_ID (666)
+
 #if !defined(HAVE_RIG_PARSE_MODE) && defined(HAVE_LIBHAMLIB)
 extern "C"
 {
@@ -308,17 +310,20 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 	pRemoteMenuOther = new QPopupMenu(parent);
 	CHECK_PTR(pRemoteMenuOther);
 
-	/* Add menu entry "none" */
-	pRemoteMenu->insertItem(tr("None"), this, SLOT(OnRemoteMenu(int)), 0, 0);
-
 	map<rig_model_t,CHamlib::SDrRigCaps> rigs;
 
 	Hamlib.GetRigList(rigs);
 
 	rigmenus.clear();
+	specials.clear();
+	/* Add menu entry "none" */
+	pRemoteMenu->insertItem(tr("None"), this, SLOT(OnRemoteMenu(int)), 0, RIG_MODEL_NONE);
+	pRemoteMenu->setItemChecked(RIG_MODEL_NONE, TRUE);
+	specials.push_back(RIG_MODEL_NONE);
+
+	rig_model_t currentRig = Hamlib.GetHamlibModelID();
 
 	/* Add menu entries */
-	_BOOLEAN bCheckWasSet = FALSE;
 	for (map<rig_model_t,CHamlib::SDrRigCaps>::iterator i=rigs.begin(); i!=rigs.end(); i++)
 	{
 		rig_model_t iModelID = i->first;
@@ -338,13 +343,10 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 			m = k->second;
 		}
 
-		/* Create menu objects which belong to an action group. We hope that
-		   QT takes care of all the new objects and deletes them... */
-
-		if (rig.bIsSpecRig == TRUE)
+		if (rig.bIsSpecRig || (currentRig == iModelID))
 		{
 			/* Main rigs */
-		/* Set menu string. Should look like: [ID] Manuf. Model */
+		    /* Set menu string. Should look like: [ID] Manuf. Model */
 			QString strMenuText =
 					"[" + QString().setNum(iModelID) + "] " +
 					rig.strManufacturer.c_str() + " " +
@@ -353,10 +355,10 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 			pRemoteMenu->insertItem(strMenuText, this, SLOT(OnRemoteMenu(int)), 0, iModelID);
 
 			/* Check for checking */
-			if (Hamlib.GetHamlibModelID() == iModelID)
+			if (currentRig == iModelID)
 			{
+				pRemoteMenu->setItemChecked(RIG_MODEL_NONE, FALSE);
 				pRemoteMenu->setItemChecked(iModelID, TRUE);
-				bCheckWasSet = TRUE;
 			}
 
 			specials.push_back(iModelID);
@@ -374,8 +376,8 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 			/* Check for checking */
 			if (Hamlib.GetHamlibModelID() == iModelID)
 			{
+				pRemoteMenu->setItemChecked(RIG_MODEL_NONE, FALSE);
 				m.pMenu->setItemChecked(iModelID, TRUE);
-				bCheckWasSet = TRUE;
 			}
 		}
 	}
@@ -385,11 +387,7 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 	}
 
 	/* Add "other" menu */
-	pRemoteMenu->insertItem(tr("Other"), pRemoteMenuOther);
-
-	/* If no rig was selected, set check to "none" */
-	if (bCheckWasSet == FALSE)
-		pRemoteMenu->setItemChecked(0, TRUE);
+	pRemoteMenu->insertItem(tr("Other"), pRemoteMenuOther, OTHER_MENU_ID);
 
 	/* Separator */
 	pRemoteMenu->insertSeparator();
@@ -444,24 +442,32 @@ void RemoteMenu::OnModRigMenu(int iID)
 void RemoteMenu::OnRemoteMenu(int iID)
 {
 #ifdef HAVE_LIBHAMLIB
+
 	/* Take care of check */
 	/* We don't care here that not all IDs are in each menu. If there is a
 	   non-valid ID for the menu item, there is simply nothing done */
-	for(size_t j=0; j<specials.size(); j++)
-	{
-		pRemoteMenu->setItemChecked(specials[j], specials[j]==iID);
-	}
-
 	for (map<int,Rigmenu>::iterator i=rigmenus.begin(); i!=rigmenus.end(); i++)
 	{
 		QPopupMenu* pMenu = i->second.pMenu;
-		for(size_t i=0; i<pMenu->count(); i++)
+		for(size_t j=0; j<pMenu->count(); j++)
 		{
-			int mID = pMenu->idAt(i);
+			int mID = pMenu->idAt(j);
 			if(mID==iID)
 			{
-				// TODO find a way to highlight the selected menu tree
 				pMenu->setItemChecked(mID, true);
+				// And if necessary add it to the specials menus
+				if(pRemoteMenu->indexOf(mID)==-1)
+				{
+					map<rig_model_t,CHamlib::SDrRigCaps> rigs;
+					Hamlib.GetRigList(rigs);
+					QString strMenuText =
+							"[" + QString().setNum(mID) + "] " +
+							i->second.mfr.c_str() + " " +
+							rigs[mID].strModelName;
+					int pos = pRemoteMenu->indexOf(OTHER_MENU_ID);
+					pRemoteMenu->insertItem(strMenuText, this, SLOT(OnRemoteMenu(int)), 0, mID, pos);
+					specials.push_back(mID);
+				}
 			}
 			else
 			{
@@ -469,6 +475,13 @@ void RemoteMenu::OnRemoteMenu(int iID)
 			}
 		}
 	}
+
+	// do this after others menu in case we added something
+	for(size_t j=0; j<specials.size(); j++)
+	{
+		pRemoteMenu->setItemChecked(specials[j], specials[j]==iID);
+	}
+
 	/* Set ID */
 	Hamlib.SetHamlibModelID(iID);
 	double r;
