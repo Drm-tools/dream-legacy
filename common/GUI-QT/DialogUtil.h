@@ -198,4 +198,7 @@ protected:
 	QPopupMenu* pRemoteMenuOther;
 };
 
+#define OTHER_MENU_ID (666)
+#define SMETER_MENU_ID (667)
+
 #endif // DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_

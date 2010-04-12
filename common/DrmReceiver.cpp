@@ -67,7 +67,6 @@ CDRMReceiver::CDRMReceiver():
         RigPoll(),
 #endif
         iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
-        bEnableSMeter(FALSE), bSMeterAvail(FALSE),
         bReadFromFile(FALSE), time_keeper(0)
 {
     pReceiverParam = new CParameter(this);
@@ -95,18 +94,6 @@ CDRMReceiver::SetReceiverMode(ERecMode eNewMode)
 {
     if (eReceiverMode!=eNewMode || eNewReceiverMode != RM_NONE)
         eNewReceiverMode = eNewMode;
-}
-
-void
-CDRMReceiver::SetEnableSMeter(_BOOLEAN bNew)
-{
-    bEnableSMeter = bNew;
-}
-
-_BOOLEAN
-CDRMReceiver::GetEnableSMeter()
-{
-    return bEnableSMeter;
 }
 
 void
@@ -179,23 +166,6 @@ CDRMReceiver::Run()
         InitReceiverMode();
 
     CParameter & ReceiverParam = *pReceiverParam;
-
-    /* Check for changes in front end selection */
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
-    if (bEnableSMeter && upstreamRSCI.GetInEnabled() == FALSE)
-    {
-        if (RigPoll.running() == FALSE)
-            RigPoll.start();
-    }
-    else
-    {
-        if (RigPoll.running())
-        {
-            RigPoll.stop();
-            bSMeterAvail = FALSE;
-        }
-    }
-#endif
 
     if (bRestartFlag) /* new acquisition requested by GUI */
     {
@@ -1382,6 +1352,7 @@ void
 CDRMReceiver::CRigPoll::run()
 {
     CHamlib & rig = *(pDRMRec->GetHamlib());
+    bQuit = FALSE;
     while (bQuit == FALSE)
     {
         _REAL r;
@@ -1393,25 +1364,38 @@ CDRMReceiver::CRigPoll::run()
             r += Parameters.rSigStrengthCorrection;
             Parameters.SigStrstat.addSample(r);
             Parameters.Unlock();
-            pDRMRec->bSMeterAvail = TRUE;
+            emit pDRMRec->sigstr(r);
         }
         else
-            pDRMRec->bSMeterAvail = FALSE;
+            emit pDRMRec->sigstr(0.0);
         msleep(400);
     }
 }
 #endif
 
-_BOOLEAN
-CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
+void
+CDRMReceiver::SetEnableSMeter(_BOOLEAN bNew)
 {
-    if (bSMeterAvail == FALSE)
-        return FALSE;
-    CParameter& Parameters = *pReceiverParam;
-    Parameters.Lock();
-    rSigStr = Parameters.SigStrstat.getCurrent();
-    Parameters.Unlock();
-    return TRUE;
+#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
+    if (bNew && upstreamRSCI.GetInEnabled() == FALSE)
+    {
+        if (RigPoll.running() == FALSE)
+            RigPoll.start();
+    }
+    else
+    {
+        if (RigPoll.running())
+        {
+            RigPoll.stop();
+        }
+    }
+#endif
+}
+
+_BOOLEAN
+CDRMReceiver::GetEnableSMeter()
+{
+    return RigPoll.running();
 }
 
 /* TEST store information about alternative frequency transmitted in SDC */
@@ -1710,13 +1694,9 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
 	SetReceiverMode(ERecMode(s.Get("Receiver", "mode", int(0))));
 
-#ifdef HAVE_LIBHAMLIB
     /* Hamlib --------------------------------------------------------------- */
+#ifdef HAVE_LIBHAMLIB
     Hamlib.LoadSettings(s);
-
-    /* Enable s-meter flag */
-    bEnableSMeter = s.Get("Hamlib", "ensmeter", FALSE);
-
 #endif
 
     //andrewm - moved to _after_ hamlib initialisation
@@ -1812,9 +1792,6 @@ CDRMReceiver::SaveSettings(CSettings& s)
 #ifdef HAVE_LIBHAMLIB
     /* Hamlib --------------------------------------------------------------- */
     Hamlib.SaveSettings(s);
-
-    /* Enable s-meter flag */
-    s.Put("Hamlib", "ensmeter", bEnableSMeter);
 #endif
 
     /* Front-end - combine into Hamlib? */

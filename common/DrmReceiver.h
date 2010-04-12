@@ -63,6 +63,8 @@
 # if QT_VERSION >= 0x030000
 #  include <qmutex.h>
 # endif
+# include <qvariant.h> // needed fos Q_OBJECT
+# include <qobject.h> // needed fos Q_OBJECT
 #endif
 
 /* Definitions ****************************************************************/
@@ -135,9 +137,12 @@ protected:
 
 class CDRMReceiver
 #ifdef USE_QT_GUI
-            : public QThread
+            : public QObject, public QThread
 #endif
 {
+#ifdef USE_QT_GUI
+	Q_OBJECT
+#endif
 public:
 
     CDRMReceiver();
@@ -305,10 +310,6 @@ public:
         return &Hamlib;
     }
 #endif
-    _BOOLEAN				SignalStrengthAvailable() {
-        return bSMeterAvail;
-    }
-    _BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
     CParameter*				GetParameters() {
         return pReceiverParam;
@@ -474,7 +475,7 @@ protected:
         virtual void	stop() {
             bQuit=TRUE;
         }
-        void 			SetReceiver(CDRMReceiver* prx) {
+        void SetReceiver(CDRMReceiver* prx) {
             pDRMRec = prx;
         }
     protected:
@@ -489,12 +490,15 @@ protected:
     int						iBwUSB;
     int						iBwCW;
     int						iBwFM;
-    _BOOLEAN				bEnableSMeter;
-    _BOOLEAN				bSMeterAvail;
     _BOOLEAN				bReadFromFile;
     time_t					time_keeper;
 
     CPlotManager PlotManager;
+#ifdef USE_QT_GUI
+public slots:
+signals:
+    void sigstr(double);
+#endif
 };
 
 

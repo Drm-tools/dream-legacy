@@ -402,21 +402,8 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	BitmCubePink.resize(iXSize, iYSize);
 	BitmCubePink.fill(QColor(255, 128, 128));
 
-	if (DRMReceiver.SignalStrengthAvailable())
-	{
-		/* Init progress bar for input s-meter */
-		ProgrSigStrength->setRange(S_METER_THERMO_MIN, S_METER_THERMO_MAX);
-		ProgrSigStrength->setOrientation(QwtThermo::Horizontal, QwtThermo::Top);
-		ProgrSigStrength->setAlarmLevel(S_METER_THERMO_ALARM);
-		ProgrSigStrength->setAlarmColor(QColor(255, 0, 0));
-		ProgrSigStrength->setScale(S_METER_THERMO_MIN, S_METER_THERMO_MAX, 10.0);
-		EnableSMeter(FALSE); /* disable for initialization */
-	}
-	else
-	{
-		ProgrSigStrength->hide();
-		TextLabelSMeter->hide();
-	}
+	ProgrSigStrength->hide();
+	TextLabelSMeter->hide();
 
 	/* Clear list box for file names and set up columns */
 	ListViewStations->clear();
@@ -442,13 +429,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button1, 1); /* Increment */
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button2, 10);
 	QwtCounterFrequency->setIncSteps(QwtCounter::Button3, 100);
-
-	DRMReceiver.GetParameters()->Lock();
-
-	/* Init with current setting in log file */
-	QwtCounterFrequency->setValue(DRMReceiver.GetParameters()->GetFrequency());
-
-	DRMReceiver.GetParameters()->Unlock();
+	QwtCounterFrequency->setValue(DRMReceiver.GetFrequency());
 
 	/* Init UTC time shown with a label control */
 	SetUTCTimeLabel();
@@ -519,11 +500,23 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Enable s-meter */
 	const int iSMeterMenuID = pRemoteMenu->menu()->insertItem(tr("Enable S-Meter"),
-		this, SLOT(OnSMeterMenu(int)), 0);
+		this, SLOT(OnSMeterMenu(int)), 0, SMETER_MENU_ID);
 
-	/* S-meter settings */
-	pRemoteMenu->menu()->setItemChecked(iSMeterMenuID, DRMReceiver.GetEnableSMeter());
-	EnableSMeter(DRMReceiver.GetEnableSMeter());
+	connect(pRemoteMenu, SIGNAL(SMeterAvailable()), this, SLOT(OnSMeterAvailable()));
+	connect(&DRMReceiver, SIGNAL(sigstr(double)), this, SLOT(OnSigStr(double)));
+
+	/* Init progress bar for input s-meter */
+
+	ProgrSigStrength->setRange(S_METER_THERMO_MIN, S_METER_THERMO_MAX);
+	ProgrSigStrength->setOrientation(QwtThermo::Horizontal, QwtThermo::Top);
+	ProgrSigStrength->setAlarmLevel(S_METER_THERMO_ALARM);
+	ProgrSigStrength->setAlarmColor(QColor(255, 0, 0));
+	ProgrSigStrength->setScale(S_METER_THERMO_MIN, S_METER_THERMO_MAX, 10.0);
+
+	ProgrSigStrength->setAlarmEnabled(TRUE);
+	ProgrSigStrength->setValue(S_METER_THERMO_MIN);
+	ProgrSigStrength->setFillColor(QColor(0, 190, 0));
+
 #endif
 	/* Update menu ---------------------------------------------------------- */
 	pUpdateMenu = new QPopupMenu(this);
@@ -549,26 +542,18 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	QNetworkProtocol::registerNetworkProtocol("ftp",
 		new QNetworkProtocolFactory<QFtp>);
 
-
 	/* Connections ---------------------------------------------------------- */
 
 	connect(&TimerList, SIGNAL(timeout()),
 		this, SLOT(OnTimerList()));
 	connect(&TimerUTCLabel, SIGNAL(timeout()),
 		this, SLOT(OnTimerUTCLabel()));
-	connect(&TimerSMeter, SIGNAL(timeout()),
-		this, SLOT(OnTimerSMeter()));
 
 	TimerList.stop();
 	TimerUTCLabel.stop();
-	TimerSMeter.stop();
 
 	connect(ListViewStations, SIGNAL(selectionChanged(QListViewItem*)),
 		this, SLOT(OnListItemClicked(QListViewItem*)));
-
-#ifdef HAVE_LIBHAMLIB
-	connect(pRemoteMenu, SIGNAL(SMeterAvailable()), this, SLOT(OnSMeterAvailable()));
-#endif
 
 	connect(ListViewStations->header(), SIGNAL(clicked(int)),
 		this, SLOT(OnHeaderClicked(int)));
@@ -752,7 +737,7 @@ void StationsDlg::hideEvent(QHideEvent*)
 	/* Deactivate real-time timers */
 	TimerList.stop();
 	TimerUTCLabel.stop();
-	EnableSMeter(FALSE);
+	DisableSMeter();
 
 	/* Set window geometry data in DRMReceiver module */
 	QRect WinGeom = geometry();
@@ -816,10 +801,17 @@ void StationsDlg::showEvent(QShowEvent*)
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
 	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
 
-	EnableSMeter(DRMReceiver.GetEnableSMeter());
-	/* update window */
-	if (DRMReceiver.GetEnableSMeter())
-		OnTimerSMeter();
+	/* S-meter settings */
+	if(Settings.Get("Hamlib", "ensmeter", int(0)))
+	{
+		pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, true);
+		EnableSMeter();
+	}
+	else
+	{
+		pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, false);
+		DisableSMeter();
+	}
 
 	/* add last update information on menu item */
 	AddUpdateDateTime();
@@ -1132,78 +1124,43 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 void StationsDlg::OnSMeterAvailable()
 {
 	/* If model is changed, update s-meter because new rig might have support
-	   for it. Only try to enable s-meter if it is not ID 0 ("none") */
-	EnableSMeter(DRMReceiver.GetEnableSMeter());
+	   for it. */
+	EnableSMeter();
 }
 
 void StationsDlg::OnSMeterMenu(int iID)
 {
-	if (DRMReceiver.SignalStrengthAvailable()==FALSE)
-	   return;
-#ifdef HAVE_LIBHAMLIB
 	if (pRemoteMenu->menu()->isItemChecked(iID))
 	{
 		pRemoteMenu->menu()->setItemChecked(iID, FALSE);
-		DRMReceiver.SetEnableSMeter(FALSE);
+		DisableSMeter();
+		Settings.Put("Hamlib", "ensmeter", 0);
 	}
 	else
 	{
 		pRemoteMenu->menu()->setItemChecked(iID, TRUE);
-		DRMReceiver.SetEnableSMeter(TRUE);
-	}
-
-	EnableSMeter(DRMReceiver.GetEnableSMeter());
-#endif
-}
-
-
-void StationsDlg::OnTimerSMeter()
-{
-	/* Get current s-meter value */
-	_REAL rCurSigStr;
-	_BOOLEAN bValid = DRMReceiver.GetSignalStrength(rCurSigStr);
-
-	/* If a time-out happened, do not update s-meter anymore (disable it) */
-	if (bValid==FALSE)
-	{
-		EnableSMeter(FALSE);
-	}
-	else
-	{
-		if(ProgrSigStrength->isEnabled()==FALSE)
-			EnableSMeter(TRUE);
-		ProgrSigStrength->setValue(rCurSigStr);
+		EnableSMeter();
+		Settings.Put("Hamlib", "ensmeter", 1);
 	}
 }
 
-void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
+void StationsDlg::EnableSMeter()
 {
-	/* Need both, GUI "enabled" and signal strength available before
-	   s-meter is used */
-	if ((bStatus == TRUE) && (DRMReceiver.SignalStrengthAvailable()))
-	{
-		/* Init progress bar for input s-meter */
-		ProgrSigStrength->setAlarmEnabled(TRUE);
-		ProgrSigStrength->setValue(S_METER_THERMO_MIN);
-		ProgrSigStrength->setFillColor(QColor(0, 190, 0));
+	DRMReceiver.SetEnableSMeter(TRUE);
+	ProgrSigStrength->setEnabled(TRUE);
+	TextLabelSMeter->setEnabled(TRUE);
+	ProgrSigStrength->show();
+}
 
-		ProgrSigStrength->setEnabled(TRUE);
-		TextLabelSMeter->setEnabled(TRUE);
+void StationsDlg::DisableSMeter()
+{
+	DRMReceiver.SetEnableSMeter(FALSE);
+	ProgrSigStrength->hide();
+}
 
-		TimerSMeter.start(GUI_TIMER_S_METER);
-	}
-	else
-	{
-		/* Set s-meter control in "disabled" status */
-		ProgrSigStrength->setAlarmEnabled(FALSE);
-		ProgrSigStrength->setValue(S_METER_THERMO_MAX);
-		ProgrSigStrength->setFillColor(palette().disabled().light());
-
-		ProgrSigStrength->setEnabled(FALSE);
-		TextLabelSMeter->setEnabled(FALSE);
-
-		TimerSMeter.stop();
-	}
+void StationsDlg::OnSigStr(double rCurSigStr)
+{
+	ProgrSigStrength->setValue(rCurSigStr);
 }
 
 void StationsDlg::AddWhatsThisHelp()

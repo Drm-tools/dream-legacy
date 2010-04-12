@@ -227,7 +227,8 @@ protected:
 	void			hideEvent(QHideEvent* pEvent);
 	void			AddWhatsThisHelp();
 	void			SetUTCTimeLabel();
-	void			EnableSMeter(const _BOOLEAN bStatus);
+	void			EnableSMeter();
+	void			DisableSMeter();
 	void			AddUpdateDateTime();
 	void			SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM);
 
@@ -242,7 +243,6 @@ protected:
 	QPixmap						BitmCubePink;
 	QTimer						TimerList;
 	QTimer						TimerUTCLabel;
-	QTimer						TimerSMeter;
 	_BOOLEAN					bShowAll;
 	_BOOLEAN					bReInitOnFrequencyChange;
 	QUrlOperator				UrlUpdateSchedule;
@@ -258,9 +258,9 @@ protected:
 public slots:
 	void OnSMeterMenu(int iID);
 	void OnSMeterAvailable();
+	void OnSigStr(double);
 	void OnTimerList();
 	void OnTimerUTCLabel() {SetUTCTimeLabel();}
-	void OnTimerSMeter();
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
 	void OnShowStationsMenu(int iID);

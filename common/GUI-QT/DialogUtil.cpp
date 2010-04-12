@@ -51,8 +51,6 @@
 # include <wtap.h>
 #endif
 
-#define OTHER_MENU_ID (666)
-
 #if !defined(HAVE_RIG_PARSE_MODE) && defined(HAVE_LIBHAMLIB)
 extern "C"
 {
@@ -343,6 +341,14 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 			m = k->second;
 		}
 
+		// add all rigs to "other" menu - specials will appear twice but we only check the specials entry
+		/* Set menu string. Should look like: [ID] Model (status) */
+		QString strMenuText =
+				"[" + QString().setNum(iModelID) + "] " + rig.strModelName.c_str()
+					+ " (" + rig_strstatus(rig.eRigStatus) + ")";
+		m.pMenu->insertItem(strMenuText, this, SLOT(OnRemoteMenu(int)), 0, iModelID);
+		rigmenus[backend] = m;
+
 		if (rig.bIsSpecRig || (currentRig == iModelID))
 		{
 			/* Main rigs */
@@ -363,24 +369,8 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 
 			specials.push_back(iModelID);
 		}
-		else
-		{
-			/* "Other" menu */
-			/* Set menu string. Should look like: [ID] Model (status) */
-			QString strMenuText =
-					"[" + QString().setNum(iModelID) + "] " + rig.strModelName.c_str()
-						+ " (" + rig_strstatus(rig.eRigStatus) + ")";
-			m.pMenu->insertItem(strMenuText, this, SLOT(OnRemoteMenu(int)), 0, iModelID);
-			rigmenus[backend] = m;
-
-			/* Check for checking */
-			if (Hamlib.GetHamlibModelID() == iModelID)
-			{
-				pRemoteMenu->setItemChecked(RIG_MODEL_NONE, FALSE);
-				m.pMenu->setItemChecked(iModelID, TRUE);
-			}
-		}
 	}
+
 	for (map<int,Rigmenu>::iterator j=rigmenus.begin(); j!=rigmenus.end(); j++)
 	{
 		pRemoteMenuOther->insertItem(j->second.mfr.c_str(), j->second.pMenu);
@@ -443,9 +433,7 @@ void RemoteMenu::OnRemoteMenu(int iID)
 {
 #ifdef HAVE_LIBHAMLIB
 
-	/* Take care of check */
-	/* We don't care here that not all IDs are in each menu. If there is a
-	   non-valid ID for the menu item, there is simply nothing done */
+	// if an "others" rig was selected add it to the specials list
 	for (map<int,Rigmenu>::iterator i=rigmenus.begin(); i!=rigmenus.end(); i++)
 	{
 		QPopupMenu* pMenu = i->second.pMenu;
@@ -454,8 +442,7 @@ void RemoteMenu::OnRemoteMenu(int iID)
 			int mID = pMenu->idAt(j);
 			if(mID==iID)
 			{
-				pMenu->setItemChecked(mID, true);
-				// And if necessary add it to the specials menus
+				// if necessary add it to the specials menus
 				if(pRemoteMenu->indexOf(mID)==-1)
 				{
 					map<rig_model_t,CHamlib::SDrRigCaps> rigs;
@@ -469,18 +456,19 @@ void RemoteMenu::OnRemoteMenu(int iID)
 					specials.push_back(mID);
 				}
 			}
-			else
-			{
-				pMenu->setItemChecked(mID, false);
-			}
 		}
 	}
 
+	/* Take care of check */
 	// do this after others menu in case we added something
 	for(size_t j=0; j<specials.size(); j++)
 	{
 		pRemoteMenu->setItemChecked(specials[j], specials[j]==iID);
 	}
+
+	// disable com port - if rig has changed
+	//if(iID != Hamlib.GetHamlibModelID())
+	//	agComPortSel->setChecked(false);
 
 	/* Set ID */
 	Hamlib.SetHamlibModelID(iID);
