@@ -126,6 +126,7 @@ CShortLog::writeHeader()
     ESpecOcc SpecOcc=SO_5;
     _REAL bitrate = 0.0;
 
+	iFrequency = Parameters.GetFrequency();
     Parameters.Lock();
 
     const CGPSData & GPSData = Parameters.GPSData;
