@@ -269,6 +269,11 @@ CPacketSourceFile::readPcap(vector<_BYTE>& vecbydata, int& interval)
 	{
 		link_len=14;
 	}
+	/* linux cooked */
+	if(lt==DLT_LINUX_SLL)
+	{
+		link_len=16;
+	}
 	/* raw IP header ? */
 	if(lt==DLT_RAW)
 	{
