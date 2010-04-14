@@ -7,7 +7,7 @@
  *
  * Description:
  *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
- *	(MDI), Receiver Status and Control Interface (RSCI)  
+ *	(MDI), Receiver Status and Control Interface (RSCI)
  *  and Distribution and Communications Protocol (DCP) as described in
  *	ETSI TS 102 820,  ETSI TS 102 349 and ETSI TS 102 821 respectively.
  *
@@ -19,8 +19,8 @@
  *  should be populated by the constructor of the derived class. This class loops through each TAG item,
  *  checking the TAG name against all the decoders' TAG names. If it matches, it calls the TAG item decoder
  *  itself to do the actual decoding.
- *  
- *  TODO: It would be better to separate the AF decoding into its own class. 
+ *
+ *  TODO: It would be better to separate the AF decoding into its own class.
  *  PFT also needs to be added (again, in its own class).
  *
  ******************************************************************************
@@ -51,7 +51,7 @@ CTagPacketDecoder::CTagPacketDecoder() : vecpTagItemDecoders(0)
 }
 
 // This should be in its own class
-CTagPacketDecoder::Error 
+CTagPacketDecoder::Error
 CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 {
 	int i;
@@ -105,13 +105,16 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	   count, FFFE_[16], FFFF_[16], 0000_[16], 0001_[16], etc.
 	   (2 bytes long -> 16 bits) */
 
-// TODO: use sequence number somehow!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	const int iCurSeqNum = (int) vecbiAFPkt.Separate(16);
 	(void)iCurSeqNum;
-	/*iSeqNumber++;
+	iSeqNumber++;
 	if (iSeqNumber > 0xFFFF)
 		iSeqNumber = 0;
-	*/
+	if(iSeqNumber!=iCurSeqNum)
+	{
+		cerr << "AF SEQ: expected " << iSeqNumber << " got " << iCurSeqNum << endl;
+		iSeqNumber=iCurSeqNum;
+	}
 
 	/* AR: AF protocol Revision -
 	   a field combining the CF, MAJ and MIN fields */
